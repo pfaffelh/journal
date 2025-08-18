@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
-    <title>My First Post — Verso </title><link rel="stylesheet" href="../static/style.css">
+    <title>Basics — Verso </title><link rel="stylesheet" href="../static/style.css">
     <style>:root {
     /** Typography **/
     /* The font family used for headers, ToC entries, etc */
@@ -85,28 +85,21 @@ document.addEventListener("DOMContentLoaded", () => {
           </a><nav class="top" role="navigation">
           <ol>
             <li>
-              <a href="../blog1">Setup</a></li>
+              <a href="../post001">Infrastructure using mathlib</a></li>
             <li>
-              <a href="../blog2">My First Post</a></li>
+              <a href="../postBasics">Basics</a></li>
+            <li>
+              <a href="../post002">Do notation for PMFs</a></li>
             </ol>
           </nav>
         </div>
       </header>
     <main><div class="wrap">
         <h1>
-          My First Post</h1>
+          Basics</h1>
         <p>
-          This post introduces the blog and says what it will do.</p>
-        <p>
-          Here is some syntax-highlighted JSON:</p>
-        <pre class="lexed json"><span class="brace">{</span><span class="str">"one thing"</span><span class="delim">:</span> <span class="arr">[</span><span class="str">"and"</span><span class="delim">,</span> <span class="str">"another"</span><span class="arr">]</span><span class="delim">,</span>
- <span class="str">"and numbers"</span><span class="delim">:</span> <span class="num">1.5</span><span class="delim">,</span>
- <span class="str">"and more"</span><span class="delim">:</span> <span class="arr">[</span><span class="bool">true</span><span class="delim">,</span> <span class="bool">false</span><span class="delim">,</span> <span class="null">null</span><span class="delim">,</span> <span class="brace">{</span><span class="brace">}</span><span class="arr">]</span><span class="brace">}</span>
-</pre><p>
-          And a random code block:</p>
-        <pre>hello
-</pre><p>
-          Verso supports <a href="https://lean-lang.org">links</a> defined later!</p>
+          If <code>a b : Prop</code>, and <code>h : a → b</code>, then <code>¬b → ¬ a</code>. Apparently, this is already implemented in <code>#check mt</code>.
+</p>
         </div>
       </main></body>
   </html>

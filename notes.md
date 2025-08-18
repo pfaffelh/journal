@@ -1,7 +1,9 @@
 ## Usage of this journal
 
 In order to build the website, run
-`lake build; lake exe leancourse --output _out --verbose --depth 2`
+`lake build blog; lake exe blog --output docs`
+
+
 
 ## Current PRs 
 

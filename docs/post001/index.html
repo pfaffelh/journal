@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
-    <title>About — Verso </title><link rel="stylesheet" href="static/style.css">
+    <title>Infrastructure using mathlib — Verso </title><link rel="stylesheet" href="../static/style.css">
     <style>:root {
     /** Typography **/
     /* The font family used for headers, ToC entries, etc */
@@ -80,26 +80,35 @@ document.addEventListener("DOMContentLoaded", () => {
   <body>
     <header>
       <div class="inner-wrap">
-        <a class="logo" href=""><h1>
+        <a class="logo" href="../"><h1>
             Some experiences with mathlib</h1>
           </a><nav class="top" role="navigation">
           <ol>
             <li>
-              <a href="post001">Getting started</a></li>
+              <a href="../post001">Infrastructure using mathlib</a></li>
             <li>
-              <a href="post002">Do notation for PMFs</a></li>
+              <a href="../postBasics">Basics</a></li>
+            <li>
+              <a href="../post002">Do notation for PMFs</a></li>
             </ol>
           </nav>
         </div>
       </header>
     <main><div class="wrap">
-        <div class="frontpage">
-          <h1>
-            About</h1>
+        <h1>
+          Infrastructure using mathlib</h1>
+        <p>
+          When getting started with mathlib, one main issue is the new infrastructure, e.g. using <code>git</code>, using pull requests, setting up <code>vscode</code> etc.</p>
+        <section>
+          <h2>
+            Using github and vscode</h2>
           <p>
-            My name is Peter Pfaffelhuber. I am a professor in mathematics (probability theory) at the University of Freiburg, Germany. These are some notes on my journey with mathlib. It is meant to be a journal for myself, and whoever might be interested.
-</p>
-          </div>
+            Mathlib PRs are now done using a forked repository. When you have this, regularly run the following, in order to keep mathlib up-to-date:</p>
+          <pre>git checkout master
+git fetch upstream
+git merge upstream/master
+git push origin master
+</pre></section>
         </div>
       </main></body>
   </html>
