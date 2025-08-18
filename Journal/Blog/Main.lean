@@ -64,6 +64,7 @@ def theme : Theme := { Theme.default with
 def journal : Site := site Journal.Blog.Front /
   static "static" ← "Journal/Blog/static"
   "post001" Journal.Blog.Started
+  "postBasics" Journal.Blog.Basics
   "post002" Journal.Blog.DoProbability
 
 

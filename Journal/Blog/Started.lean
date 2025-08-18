@@ -1,49 +1,21 @@
 /-
-Copyright (c) 2023-2024 Lean FRO LLC. All rights reserved.
+Copyright (c) 2025-2024 Peter Pfaffelhuber.
 Released under Apache 2.0 license as described in the file LICENSE.
-Author: David Thrane Christiansen
+Author: Peter Pfaffelhuber
 -/
 
 import VersoBlog
-import Verso.Parser
-import Lean.Parser
-open Verso Genre Blog LexedText
+open Verso Genre Blog
 
-open Lean.Parser in
-open Verso.Parser in
-def jsonHl : Highlighter where
-  name := "json"
-  lexer :=
-    token `brace (chFn '{' <|> chFn '}') <|>
-    token `arr (chFn '[' <|> chFn ']') <|>
-    token `delim (chFn ',' <|> chFn ':') <|>
-    token `bool (strFn "true" <|> strFn "false") >> notFollowedByFn (satisfyFn Char.isAlphanum) "number or letter" <|>
-    token `null (strFn "null" <|> strFn "false") <|>
-    token `num (many1Fn (satisfyFn Char.isDigit) >> optionalFn (chFn '.' >> many1Fn (satisfyFn Char.isDigit))) <|>
-    token `str (chFn '"' >> manyFn (satisfyEscFn (· != '"')) >> chFn '"') <|>
-    token `ident (many1Fn (satisfyFn (· ∉ "() \t\n".toList)))
-  tokenClass := fun s => some (toString s.getKind)
+#doc (Page) "Infrastructure using mathlib" =>
 
-define_lexed_text json ← jsonHl
+When getting started with mathlib, one main issue is the new infrastructure, e.g. using `git`, using pull requests, setting up `vscode` etc.
 
-#doc (Page) "Getting started" =>
-
-
-This post introduces the blog and says what it will do.
-
-Here is some syntax-highlighted JSON:
-
-```json
-{"one thing": ["and", "another"],
- "and numbers": 1.5,
- "and more": [true, false, null, {}]}
+# Using github and vscode
+Mathlib PRs are now done using a forked repository. When you have this, regularly run the following, in order to keep mathlib up-to-date:
 ```
-
-And a random code block:
+git checkout master
+git fetch upstream
+git merge upstream/master
+git push origin master
 ```
-hello
-```
-
-Verso supports [links][named link] defined later!
-
-[named link]: https://lean-lang.org
