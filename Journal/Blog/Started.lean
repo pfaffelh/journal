@@ -13,9 +13,25 @@ When getting started with mathlib, one main issue is the new infrastructure, e.g
 
 # Using github and vscode
 Mathlib PRs are now done using a forked repository. When you have this, regularly run the following, in order to keep mathlib up-to-date:
+
+
+## Using git on the command line, reduce merge conflicts
+
+In general, there is `origin`, which is my fork, and `upstream`, which is `mathlib` from `leanprover-community`.
+
+Make sure master is the same on the fork and upstream:
 ```
 git checkout master
 git fetch upstream
-git merge upstream/master
-git push origin master
+git rebase upstream/master
 ```
+
+Now the work on the feature-branch:
+```
+git checkout my-new-feature-branch
+git rebase main (Resolve conflicts, see below)
+git push --force-with-lease origin my-new-feature-branch
+```
+After resolving conflicts for a commit, use git add ., and git rebase --continue
+
+Caution: If your branch is shared, this is dangerous.
