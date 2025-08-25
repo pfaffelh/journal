@@ -44,7 +44,7 @@ lemma PMF.pure_eq_pure (a : α) : δ a = (pure a : PMF α) := by rfl
 section Pi
 
 noncomputable def PMF.piFin : {n : ℕ} → (Fin n → PMF α) → PMF (Fin n → α)
-| 0,     _ => PMF.pure (fun x => nomatch x)  -- es gibt kein x : Fin 0
+| 0, _ => PMF.pure (fun x => nomatch x)  -- es gibt kein x : Fin 0
 | n + 1, ℙ => do
   let X₀ ← PMF.piFin (fun i => ℙ i.castSucc)
   let X' ← ℙ ⟨n, lt_add_one n⟩
@@ -59,6 +59,8 @@ noncomputable def PMF.pi {ι α : Type} [Fintype ι]
     return (fun i => X (e i))
 
 end Pi
+
+-- show independence!
 
 /-
 

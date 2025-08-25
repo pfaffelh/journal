@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2025-2024 Peter Pfaffelhuber.
+Copyright (c) 2025 Peter Pfaffelhuber.
 Released under Apache 2.0 license as described in the file LICENSE.
 Author: Peter Pfaffelhuber
 -/
@@ -29,7 +29,7 @@ git rebase upstream/master
 Now the work on the feature-branch:
 ```
 git checkout my-new-feature-branch
-git rebase main (Resolve conflicts, see below)
+git rebase master (Resolve conflicts, see below)
 git push --force-with-lease origin my-new-feature-branch
 ```
 After resolving conflicts for a commit, use git add ., and git rebase --continue
