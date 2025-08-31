@@ -26,19 +26,31 @@ lemma mem_atTopAbove_iff_of_directed {s : Set α} (h₀ : {y | p y}.Nonempty) (h
 
 end atTopAbove
 
-section Set
+section semilatticeSup
 
-variable {α : Type*} {p : Set α → Prop}
+variable {α : Type*} [SemilatticeSup α] {p : α → Prop}
 
-lemma directedOn_of_unionMem (hp : ∀ (s : Set α) (_ : p s) (t : Set α) (_ : p t), p (s ∪ t)) : DirectedOn (α := Set α) (fun s t ↦ s ⊆ t) p :=
-  fun x hx y hy ↦ ⟨x ∪ y, ⟨hp x hx y hy, union_subset_iff.mp fun ⦃_⦄ a => a⟩⟩
+-- lemma directedOn_of_supMem (hp : ∀ (s : α) (_ : p s) (t : α) (_ : p t), p (s ⊔ t)) : DirectedOn (α := α) (fun s t ↦ s ≤ t) p := by
+--   exact directedOn_of_sup_mem fun ⦃i j⦄ a => hp i a j
 
-lemma mem_atTopAbove_iff_of_unionMem (a : Set (Set α)) (h : {s : Set α | p s }.Nonempty) (hp : ∀ (s : Set α) (_ : p s) (t : Set α) (_ : p t), p (s ∪ t)) : a ∈ atTopAbove p ↔ ∃ K : Set α, p K ∧ ((Filter.principal K).sets ⊆ a) := by
-  rw [mem_atTopAbove_iff_of_directed p h (directedOn_of_unionMem hp)]
+lemma mem_atTopAbove_iff_of_supMem (a : Set α) (h : {s : α | p s }.Nonempty) (hp : ∀ ⦃s t⦄, p s → p t → p (s ⊔ t)) : a ∈ atTopAbove p ↔ ∃ x : α, p x ∧ (Set.Ici x ⊆ a) := by
+  rw [mem_atTopAbove_iff_of_directed p h (directedOn_of_sup_mem hp)]
   simp_all only [mem_principal, exists_prop]
-  rfl
 
-end Set
+end semilatticeSup
+
+section linearOrder
+
+variable {α : Type*} [LinearOrder α] {p : α → Prop}
+
+lemma mem_atTopAbove_iff {s : Set α } (h : {s | p s}.Nonempty) : s ∈ atTopAbove p ↔ ∃ r, p r ∧ Ici r ⊆ s := by
+  rw [mem_atTopAbove_iff_of_supMem s h _]
+  intro s t hs ht
+  obtain (h1 | h2) := max_choice s t
+  · exact h1.symm ▸ hs
+  · exact h2.symm ▸ ht
+
+end linearOrder
 
 section isCompact
 
@@ -46,12 +58,12 @@ variable {α : Type*} [TopologicalSpace α]
 
 lemma mem_iInf_of_isCompact (a : Set (Set α)) : a ∈ atTopAbove IsCompact ↔
     ∃ K : Set α, IsCompact K ∧ ((𝓟 K).sets ⊆ a) :=
-  mem_atTopAbove_iff_of_unionMem a ⟨∅, isCompact_empty⟩ (fun _ hs _ ht => IsCompact.union hs ht)
+  mem_atTopAbove_iff_of_supMem a ⟨∅, isCompact_empty⟩ (fun _ _ hs ht => IsCompact.union hs ht)
 
 lemma mem_iInf_of_isCompactSubset (a : Set (Set α)) (t : Set α) : a ∈ atTopAbove
     (fun s ↦ IsCompact s ∧ s ⊆ t) ↔ ∃ K : Set α, (IsCompact K ∧ K ⊆ t) ∧ ((𝓟 K).sets ⊆ a) :=
-  mem_atTopAbove_iff_of_unionMem a ⟨∅, ⟨isCompact_empty, empty_subset t⟩⟩
-    (fun _ ⟨hs1, hs2⟩ _ ⟨hu1, hu2⟩ ↦ ⟨IsCompact.union hs1 hu1, union_subset hs2 hu2⟩)
+  mem_atTopAbove_iff_of_supMem a ⟨∅, ⟨isCompact_empty, empty_subset t⟩⟩
+    (fun _ _ ⟨hs1, hs2⟩ ⟨hu1, hu2⟩ ↦ ⟨IsCompact.union hs1 hu1, union_subset hs2 hu2⟩)
 
 end isCompact
 
@@ -61,29 +73,28 @@ namespace Measure
 
 section innerRegular
 
-variable {α : Type*} [TopologicalSpace α] [MeasurableSpace α] (ℙ : Measure α) [IsProbabilityMeasure ℙ]
+variable {α : Type*} [MeasurableSpace α] (ℙ : Measure α)
 
-lemma mem_nhdsIci_iff (x : ℝ≥0∞) : s ∈ nhdsSet (Ici x) ↔ ∃ r < x,  Ioi r ⊆ s := by
-  sorry
-
-lemma innerRegular_iff (p q : Set α → Prop) (h₀ : p ∅) (hp : ∀ (s : Set α) (_ : p s) (t : Set α) (_ : p t), p (s ∪ t)) : ℙ.InnerRegularWRT p q ↔ ∀ (t : Set α) (ht : q t ∧ 0 < ℙ t), Tendsto (fun s ↦ ℙ s) (atTopAbove (fun s ↦ p s ∧ s ⊆ t)) (nhdsSet (Ici (ℙ t))) := by
+lemma innerRegular_iff (p q : Set α → Prop) (h₀ : p ∅) (hp : ∀ ⦃ s t ⦄, p s → p t → p (s ∪ t)) : ℙ.InnerRegularWRT p q ↔ ∀ (t : Set α) (_ : q t ∧ 0 < ℙ t), Tendsto (fun s ↦ ℙ s) (atTopAbove (fun s ↦ p s ∧ s ⊆ t)) (atTopAbove (fun y ↦ y < ℙ t)) := by
   have h₀' (t : Set α): {s | p s ∧ s ⊆ t}.Nonempty := ⟨∅, ⟨h₀, empty_subset t⟩⟩
-  have hp' (u : Set α) : ∀ (s : Set α) (_ : p s ∧ s ⊆ u) (t : Set α) (_ : p t ∧ t ⊆ u), p (s ∪ t) ∧ s ∪ t ⊆ u := fun s ⟨hs1, hs2⟩ t ⟨ht1, ht2⟩ ↦ ⟨hp s hs1 t ht1, union_subset hs2 ht2⟩
+  have hp' (u : Set α) : ∀ ⦃ s t : Set α ⦄, p s ∧ s ⊆ u → p t ∧ t ⊆ u → p (s ∪ t) ∧ s ∪ t ⊆ u := fun s t hs ht ↦ ⟨hp hs.1 ht.1, union_subset hs.2 ht.2⟩
   simp only [InnerRegularWRT]
-  simp_rw [tendsto_iff_forall_eventually_mem, mem_nhdsIci_iff]
+  simp_rw [tendsto_iff_forall_eventually_mem]
   change _ ↔ (∀ t, q t ∧ ℙ t > 0→ ∀ s, _ → {x | ℙ x ∈ s} ∈ atTopAbove fun s => p s ∧ s ⊆ t)
-  conv => right ; right ; right ; right ; right ;  rw [mem_atTopAbove_iff_of_unionMem _ (h₀' _) (hp' _)]
-  refine ⟨fun h t ht ↦ fun s hs ↦ ?_, fun h t ht r hr ↦ ?_⟩
-  · obtain ⟨r, ⟨hr1, hr2⟩⟩ := hs
-    obtain ⟨K, ⟨hK1, hK2, hK3⟩⟩ := h ht.1 r hr1
-    refine ⟨K, ⟨hK2, hK1⟩, fun L hL ↦ hr2 <| lt_of_lt_of_le hK3 <| OuterMeasureClass.measure_mono ℙ hL⟩
-  · specialize h t ⟨ht, lt_of_le_of_lt (zero_le r) hr⟩ (Ioi r) _
-    · use r, hr
+  conv => right ; right ; right ; right ; right ;  rw [mem_atTopAbove_iff_of_supMem _ (h₀' _) (hp' _)]
+  refine ⟨fun h t ⟨ht1, ht2⟩ ↦ fun s hs ↦ ?_, fun h t ht r hr ↦ ?_⟩
+  · rw [mem_atTopAbove_iff (by exact ⟨0, ht2⟩)] at hs
+    obtain ⟨r, ⟨hr1, hr2⟩⟩ := hs
+    obtain ⟨K, ⟨hK1, hK2, hK3⟩⟩ := h ht1 r hr1
+    refine ⟨K, ⟨hK2, hK1⟩, fun L hL ↦ hr2 (lt_of_lt_of_le hK3 (OuterMeasureClass.measure_mono ℙ hL)).le  ⟩
+  · obtain ⟨r', ⟨hr'1, hr'2⟩⟩ := exists_between hr
+    specialize h t ⟨ht, lt_of_le_of_lt (zero_le r) hr⟩ (Ici r') _
+    · rw [mem_atTopAbove_iff (by exact ⟨0, lt_of_le_of_lt (zero_le r) hr⟩)]
+      exact ⟨r', hr'2, by rfl⟩
     · obtain ⟨K, ⟨hK2, hK1⟩, hK3⟩ := h
-      exact ⟨K, hK1, hK2, hK3 fun ⦃a⦄ a => a⟩
+      refine ⟨K, hK1, hK2, lt_of_lt_of_le hr'1 <| hK3 (fun ⦃a⦄ a => a)⟩
 
 end innerRegular
-
 
 section tightMeasureSet
 
