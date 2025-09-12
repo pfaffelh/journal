@@ -1,12 +1,33 @@
 import Mathlib
 
-open ENNReal
+open ENNReal NNReal MeasureTheory
 
 open scoped Monad
 
 universe u v
 variable {α β : Type u}
 variable {γ : Type v}
+
+noncomputable def Mbernoulli (p : ℝ≥0) : Measure ℝ := (1 - p) • .dirac 0 + (1 - (1 - p)) • .dirac 1
+
+variable (p : ℝ≥0) (h : p ≤ 1)
+
+def coin : PMF Bool := PMF.bernoulli p h
+
+lemma integral_of_ae_eq_a_or_b {X : Ω → E} {f : E → ℝ} {a b : E} {f : E → ℝ} {μ : Measure Ω}  (hXmeas : AEMeasurable X μ) (hX : ∀ᵐ ω ∂μ, X ω = a ∨ X ω = b) :
+    μ[f ∘ X] = (f a) * (μ {ω | X ω = a}).toReal + (f b) * (μ {ω | X ω = b}).toReal := by
+  sorry
+
+example : Mbernoulli p = ((fun x : Bool ↦ if x = False then 0 else 1) <$> PMF.bernoulli p h).toMeasure := by
+  simp [Mbernoulli, PMF.bernoulli]
+  ext a
+  simp
+
+  sorry
+
+
+
+
 
 section some_notation
 

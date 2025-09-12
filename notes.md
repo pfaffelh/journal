@@ -16,3 +16,5 @@ Find my PRs using
 #25900 pfaffelh_compactSystem3 
 #25899 pfaffelh_compactSystem (ok, 19.8.25)
 
+General page for mathlib PRs:
+https://leanprover-community.github.io/queueboard/
