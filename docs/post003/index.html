@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
-    <title>Infrastructure using mathlib — Verso </title><link rel="stylesheet" href="../static/style.css">
+    <title>Filters in probability — Verso </title><link rel="stylesheet" href="../static/style.css">
     <style>.wrap { max-width: 1000px; margin: 0 auto; }</style><style>:root {
     /** Typography **/
     /* The font family used for headers, ToC entries, etc */
@@ -965,44 +965,45 @@ document.addEventListener("DOMContentLoaded", () => {
       </header>
     <main><div class="wrap">
         <h1>
-          Infrastructure using mathlib</h1>
+          Filters in probability</h1>
         <p>
-          When getting started with mathlib, one main issue is the new infrastructure, e.g. using <code>git</code>, using pull requests, setting up <code>vscode</code> etc.</p>
-        <section>
-          <h2>
-            Setting up upstream</h2>
-          <p>
-            git remote add upstream https://github.com/leanprover-community/mathlib4.git</p>
-          <p>
-            Install the github issues and prs extension in vscode</p>
-          </section>
-        <section>
-          <h2>
-            Using github and vscode</h2>
-          <p>
-            Mathlib PRs are now done using a forked repository. When you have this, regularly run the following, in order to keep mathlib up-to-date:</p>
-          <section>
-            <h3>
-              Using git on the command line, reduce merge conflicts</h3>
-            <p>
-              In general, there is <code>origin</code>, which is my fork, and <code>upstream</code>, which is <code>mathlib</code> from <code>leanprover-community</code>.</p>
-            <p>
-              Make sure master is the same on the fork and upstream:</p>
-            <pre>git checkout master
-git fetch upstream
-git rebase upstream/master
+          Convergence in Mathlib is usually formulated with filters. I wonder how they can be useful in probability. Let us recall what a filter is:</p>
+        <p>
+          Let us see how a filter is defined:</p>
+        <pre>/-- A filter `F` on a type `α` is a collection of sets of `α` which contains the whole `α`,
+is upwards-closed, and is stable under intersection. We do not forbid this collection to be
+all sets of `α`. -/
+structure Filter (α : Type*) where
+  /-- The set of sets that belong to the filter. -/
+  sets : Set (Set α)
+  /-- The set `Set.univ` belongs to any filter. -/
+  univ_sets : Set.univ ∈ sets
+  /-- If a set belongs to a filter, then its superset belongs to the filter as well. -/
+  sets_of_superset {x y} : x ∈ sets → x ⊆ y → y ∈ sets
+  /-- If two sets belong to a filter, then their intersection belongs to the filter as well. -/
+  inter_sets {x y} : x ∈ sets → y ∈ sets → x ∩ y ∈ sets
 </pre><p>
-              Now the work on the feature-branch:</p>
-            <pre>git checkout my-new-feature-branch
-git rebase master (Resolve conflicts, see below)
-git push --force-with-lease origin my-new-feature-branch
-</pre><p>
-              After resolving conflicts for a commit, use git add ., and git rebase --continue</p>
+          Our goal is to formulate tightness in terms of filters. Recall that tigthness means:</p>
+        <code class="hl lean block" data-lean-context="tightness"><span class="keyword token" data-binding="kw-occ-Lean.Parser.Command.definition-1190">def</span><span class="inter-text"> </span><a href="http://site.example/deflink/MeasureTheory.Measure.IsTight" title="Definition"><span class="const token" data-binding="const-MeasureTheory.Measure.IsTight" data-verso-hover="0">MeasureTheory.Measure.IsTight</span></a><span class="inter-text"> </span><span class="unknown token" data-binding="">{</span><span class="var token" data-binding="var-_uniq.2" data-verso-hover="1">α</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:</span><span class="inter-text"> </span><span class="sort token" data-binding="sort-7243200735919010059" data-verso-hover="2">Type</span><span class="inter-text"> </span><span class="level-var token" data-binding="level-var-u_1" data-verso-hover="3">u_1</span><span class="unknown token" data-binding="">}</span><span class="inter-text"> </span><span class="unknown token" data-binding="">[</span><a href="http://site.example/constlink/TopologicalSpace" title="Documentation for TopologicalSpace"><span class="const token" data-binding="const-TopologicalSpace" data-verso-hover="4">TopologicalSpace</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.2" data-verso-hover="1">α</span><span class="unknown token" data-binding="">]</span><span class="inter-text"> </span><span class="unknown token" data-binding="">[</span><a href="http://site.example/constlink/MeasurableSpace" title="Documentation for MeasurableSpace"><span class="const token" data-binding="const-MeasurableSpace" data-verso-hover="5">MeasurableSpace</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.2" data-verso-hover="1">α</span><span class="unknown token" data-binding="">]</span><span class="inter-text"> </span><span class="unknown token" data-binding="">(</span><span class="var token" data-binding="var-_uniq.20" data-verso-hover="6">ℙ</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:</span><span class="inter-text"> </span><a href="http://site.example/constlink/MeasureTheory.Measure" title="Documentation for MeasureTheory.Measure"><span class="const token" data-binding="const-MeasureTheory.Measure" data-verso-hover="7">Measure</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.2" data-verso-hover="1">α</span><span class="unknown token" data-binding="">)</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:</span><span class="inter-text"> </span><span class="sort token" data-binding="sort-14430969920833713138" data-verso-hover="8">Prop</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:=</span><span class="inter-text"> </span><a href="http://site.example/constlink/MeasureTheory.Measure.InnerRegularWRT" title="Documentation for MeasureTheory.Measure.InnerRegularWRT"><span class="const token" data-binding="const-MeasureTheory.Measure.InnerRegularWRT" data-verso-hover="9">InnerRegularWRT</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.20" data-verso-hover="6">ℙ</span><span class="inter-text"> </span><a href="http://site.example/constlink/IsCompact" title="Documentation for IsCompact"><span class="const token" data-binding="const-IsCompact" data-verso-hover="10">IsCompact</span></a><span class="inter-text"> </span><span class="unknown token" data-binding="">(</span><span class="keyword token" data-binding="kw-occ-Lean.Parser.Term.fun-1343">fun</span><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.252" data-verso-hover="11">x</span><span class="inter-text"> </span><span class="unknown token" data-binding="">↦</span><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.252" data-verso-hover="11">x</span><span class="inter-text"> </span><span class="unknown token" data-binding="">=</span><span class="inter-text"> </span><a href="http://site.example/constlink/Set.univ" title="Documentation for Set.univ"><span class="const token" data-binding="const-Set.univ" data-verso-hover="12">Set.univ</span></a><span class="unknown token" data-binding="">)</span><span class="inter-text">
+</span><span class="unknown token" data-binding=""></span></code><code class="hl lean block" data-lean-context="tightness"><span class="keyword token" data-binding="kw-occ-Lean.Parser.Command.definition-1390">def</span><span class="inter-text"> </span><a href="http://site.example/deflink/atTopCompact" title="Definition"><span class="const token" data-binding="const-atTopCompact" data-verso-hover="13">atTopCompact</span></a><span class="inter-text"> </span><span class="unknown token" data-binding="">[</span><a href="http://site.example/constlink/TopologicalSpace" title="Documentation for TopologicalSpace"><span class="const token" data-binding="const-TopologicalSpace" data-verso-hover="4">TopologicalSpace</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.298" data-verso-hover="1">α</span><span class="unknown token" data-binding="">]</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:</span><span class="inter-text"> </span><a href="http://site.example/constlink/Filter" title="Documentation for Filter"><span class="const token" data-binding="const-Filter" data-verso-hover="14">Filter</span></a><span class="inter-text"> </span><span class="unknown token" data-binding="">(</span><a href="http://site.example/constlink/Set" title="Documentation for Set"><span class="const token" data-binding="const-Set" data-verso-hover="15">Set</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.298" data-verso-hover="1">α</span><span class="unknown token" data-binding="">)</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:=</span><span class="inter-text">
+  </span><span class="unknown token" data-binding="">⨅</span><span class="inter-text"> </span><span class="unknown token" data-binding="">(</span><span class="var token" data-binding="var-_uniq.401" data-verso-hover="11">K</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:</span><span class="inter-text"> </span><a href="http://site.example/constlink/Set" title="Documentation for Set"><span class="const token" data-binding="const-Set" data-verso-hover="15">Set</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.306" data-verso-hover="1">α</span><span class="unknown token" data-binding="">)</span><span class="inter-text"> </span><span class="unknown token" data-binding="">(</span><span class="unknown token" data-binding="">_</span><span class="inter-text"> </span><span class="unknown token" data-binding="">:</span><span class="inter-text"> </span><a href="http://site.example/constlink/IsCompact" title="Documentation for IsCompact"><span class="const token" data-binding="const-IsCompact" data-verso-hover="10">IsCompact</span></a><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.401" data-verso-hover="11">K</span><span class="unknown token" data-binding="">)</span><span class="unknown token" data-binding="">,</span><span class="inter-text"> </span><a href="http://site.example/constlink/Filter.principal" title="Documentation for Filter.principal"><span class="const token" data-binding="const-Filter.principal" data-verso-hover="16">Filter.principal</span></a><span class="inter-text"> </span><span class="unknown token" data-binding="">{</span><span class="var token" data-binding="var-_uniq.717" data-verso-hover="11">B</span><span class="inter-text"> </span><span class="unknown token" data-binding="">|</span><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.401" data-verso-hover="11">K</span><span class="inter-text"> </span><span class="unknown token" data-binding="">⊆</span><span class="inter-text"> </span><span class="var token" data-binding="var-_uniq.717" data-verso-hover="11">B</span><span class="unknown token" data-binding="">}</span><span class="inter-text">
+</span><span class="unknown token" data-binding=""></span></code><p>
+          We will show one part of the Prohorov Theorem: If <code>[PolishSpace α]</code>, and <code>S : Set (Measure α)</code> and <code>∀ s ∈ S, IsProbabilityMeasure s</code>, then <code>[IsTightMeasureSet S]</code> implies relative compactness of <code>S</code> in the topology of weak convergence.</p>
+        <ul>
+          <li>
             <p>
-              Caution: If your branch is shared, this is dangerous.
+              A set <code>s</code> in a topological space is compact iff every ultrafilter in <code>s</code> converges.</p>
+            </li>
+          <li>
+            <p>
+              <code>α</code> is equivalent to a measurable subset of a compact space <code>β</code>. (This is not yet implemented in Mathlib.)</p>
+            </li>
+          <li>
+            <p>
+              If <code>IsCompact α</code>, any <code>S : Set (Measure α)</code> is relatively compact.
 </p>
-            </section>
-          </section>
+            </li>
+          </ul>
         </div>
       </main></body>
   </html>

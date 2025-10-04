@@ -3,6 +3,10 @@
 In order to build the website, run
 `lake build blog; lake exe blog --output docs`
 
+In order to display it, run
+`live-server docs`
+This will reload the webpage when it is built new.
+
 ## Current PRs 
 
 Find my PRs using

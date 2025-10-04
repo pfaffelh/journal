@@ -11,6 +11,14 @@ open Verso Genre Blog
 
 When getting started with mathlib, one main issue is the new infrastructure, e.g. using `git`, using pull requests, setting up `vscode` etc.
 
+# Setting up upstream
+git remote add upstream https://github.com/leanprover-community/mathlib4.git
+
+Install the github issues and prs extension in vscode
+
+
+
+
 # Using github and vscode
 Mathlib PRs are now done using a forked repository. When you have this, regularly run the following, in order to keep mathlib up-to-date:
 
