@@ -1,0 +1,129 @@
+html, body {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.inner-wrap, .wrap, .main, .container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/**************************/
+
+nav ol {
+  display: flex;
+  flex-wrap: wrap; /* Wrap to new lines on small screens */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 3rem;
+}
+
+@media (max-width: 600px) {
+  nav ol {
+    flex-direction: column; /* Stack vertically on mobile */
+  }
+}
+
+div.metadata {
+    margin-bottom: 1.5em;
+}
+
+.metadata .authors, .metadata .date {
+    display: inline-block;
+}
+
+.metadata .authors:has(+ .date)::after {
+    content: " | ";
+}
+
+
+.metadata .authors::before {
+    content: "By ";
+}
+
+.metadata .authors .author:has(+ .author)::after {
+    content: ", ";
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: sans-serif;
+}
+
+div.category-directory {
+    margin-top: 2em;
+}
+
+div.category-directory h2 {
+    font-size: 100%;
+}
+
+div.category-directory li {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    font-size: 90%;
+}
+
+div.category-directory li:has( + li)::after {
+    content: ", ";
+}
+
+ul.categories li {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+ul.categories li:first-child::before {
+    content: "In: ";
+}
+
+
+ul.categories li:has( + li)::after {
+    content: ", ";
+}
+
+/**************************/
+
+code {
+    font-family: monospace;
+}
+
+/**************************/
+
+.hl.lean.block {
+  margin-bottom: 2.5rem; /* Match sakura.css's setting for block elements */
+}
+
+/**************************/
+
+.lexed.json .brace {
+    color: #0000aa;
+}
+.lexed.json .arr {
+    color: #008800;
+}
+.lexed.json .delim {
+    color: #808030;
+}
+.lexed.json .str {
+    text-decoration: underline;
+}
+.lexed.json .num {
+    font-weight: bold;
+}
+.lexed.json .null {
+    font-weight: bold;
+    color: #ff0000;
+}
+.lexed.json .bool {
+    color: #aa0;
+}

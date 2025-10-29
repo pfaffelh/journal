@@ -1,0 +1,1 @@
+window.docContents[2].resolve({"/#Notes-on-Mathlib--Basics":{"id":"/#Notes-on-Mathlib--Basics","header":"3. Basics","context":"Notes on Mathlib","contents":"If a b : Prop, and h : a → b, then ¬b → ¬ a. Apparently, this is already implemented in #check mt.\n\n\n"}});

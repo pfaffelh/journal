@@ -8,27 +8,6 @@ universe u v
 variable {α β : Type u}
 variable {γ : Type v}
 
-noncomputable def Mbernoulli (p : ℝ≥0) : Measure ℝ := (1 - p) • .dirac 0 + (1 - (1 - p)) • .dirac 1
-
-variable (p : ℝ≥0) (h : p ≤ 1)
-
-def coin : PMF Bool := PMF.bernoulli p h
-
-lemma integral_of_ae_eq_a_or_b {X : Ω → E} {f : E → ℝ} {a b : E} {f : E → ℝ} {μ : Measure Ω}  (hXmeas : AEMeasurable X μ) (hX : ∀ᵐ ω ∂μ, X ω = a ∨ X ω = b) :
-    μ[f ∘ X] = (f a) * (μ {ω | X ω = a}).toReal + (f b) * (μ {ω | X ω = b}).toReal := by
-  sorry
-
-example : Mbernoulli p = ((fun x : Bool ↦ if x = False then 0 else 1) <$> PMF.bernoulli p h).toMeasure := by
-  simp [Mbernoulli, PMF.bernoulli]
-  ext a
-  simp
-
-  sorry
-
-
-
-
-
 section some_notation
 
 -- `PMF.pure`: Dirac measure
@@ -222,6 +201,17 @@ variable (p : ℝ≥0) (h : p ≤ 1)
 
 def coin : PMF Bool := PMF.bernoulli p h
 
+open PMF
+
+lemma bernoulli_not : (bernoulli p h).map not = bernoulli (1-p) tsub_le_self := by
+  simp only [PMF.map]
+  ext x
+  cases' x <;>
+  simp [tsum_bool, ENNReal.sub_sub_cancel one_ne_top, h]
+
+
+
+
 lemma coin_apply_true : coin p h true = p := rfl
 
 lemma coin_apply_false : coin p h false = 1 - p := rfl
@@ -270,7 +260,8 @@ theorem PMF.map_apply' {α : Type} (f : α → α) (p : PMF α) (b : α) : (f �
 lemma coin_not : not ₓ coin p h = coin (1-p) (zero_le_one_sub _) := by
   simp only [PMF.map, coin]
   ext x
-  cases' x <;> simp [tsum_bool, ENNReal.sub_sub_cancel one_ne_top h]
+  cases' x <;>
+  simp [tsum_bool, ENNReal.sub_sub_cancel one_ne_top, h]
 
 lemma coin_not' : (do let X ← coin p h; return (not X)) = coin (1-p) (zero_le_one_sub _) := by
   rw [do_bind]
@@ -286,19 +277,25 @@ lemma ENNReal.add_cancel {a b c : ℝ≥0∞} (h' : c ≤ b) (ha : a ≠ ∞) (h
       exact tsub_add_cancel_of_le h'
     rw [add_assoc, g]
 
+end one_coin
+
+section two_coins
+
 variable (p₁ p₂ : ℝ≥0) (hp₁ : p₁ ≤ 1) (hp₂ : p₂ ≤ 1)
 
 lemma two_coins_and : ((coin p₁ hp₁) >>= (fun (X : Bool) ↦ X.and <$> coin p₂ hp₂)) = coin (p₁ * p₂) (Left.mul_le_one hp₁ hp₂) := by
-  simp only [map_def', do_bind]
+  simp only [do_bind]
   ext x
-  simp [coin, tsum_bool]
-  cases' x
-  · simp only [cond_false, ↓reduceIte, Bool.false_eq_true, add_zero]
+  rw [coin, coin]
+  sorry
+  /- cases' x
+  · rw [coin_apply_false, PMF.bernoulli, PMF.bernoulli]
+    simp only [cond_false, ↓reduceIte, Bool.false_eq_true, add_zero]
     rw [tsub_add_cancel_of_le hp₂, ENNReal.mul_sub (fun _ _ => (lt_of_le_of_lt hp₁ one_lt_top).ne), mul_one, mul_one, add_cancel, tsub_add_cancel_of_le hp₁]
     · exact mul_le_of_le_one_right' hp₂
     · exact sub_ne_top one_ne_top
     · exact (lt_of_le_of_lt hp₁ one_lt_top).ne
-  · simp only [Bool.true_eq_false, ↓reduceIte, add_zero, mul_zero, zero_add, cond_true]
+  · simp only [Bool.true_eq_false, ↓reduceIte, add_zero, mul_zero, zero_add, cond_true] -/
 
 lemma two_coins_and' :
   (do
@@ -309,20 +306,11 @@ lemma two_coins_and' :
   simp only [Bool.decide_and, Bool.decide_eq_true, do_bind]
   exact two_coins_and p₁ p₂ hp₁ hp₂
 
-lemma two_coins :
-  (do
-    let X ← coin p₁ hp₁;
-    let Y ← coin p₂ hp₂;
-    return (X, Y)
-  ) = coin (p₁ * p₂) (Left.mul_le_one hp₁ hp₂) := by
-  simp only [Bool.decide_and, Bool.decide_eq_true, do_bind]
-  exact two_coins_and p₁ p₂ hp₁ hp₂
-
-end one_coin
+end two_coins
 
 section n_coins
 
-variable {n : ℕ} (p : Fin n → ℝ≥0∞) (hp : ∀ i, p i ≤ 1)
+variable {n : ℕ} (p : Fin n → ℝ≥0) (hp : ∀ i, p i ≤ 1)
 
 noncomputable def PMF.bernoulliChain : PMF (Fin n → Bool) := PMF.piFin (fun i ↦ coin (p i) (hp i))
 
@@ -334,26 +322,18 @@ theorem bernoulliChain_ext (x : Fin n → Bool): PMF.bernoulliChain p hp x = ∏
     exact List.ofFn_inj.mp rfl
   | succ n hn =>
     simp only [PMF.bernoulliChain, PMF.piFin, do_bind] at hn ⊢
-
-
-
     sorry
-
-  sorry
 
 noncomputable def bernoulli_chain : PMF (List Bool) :=
   sequence <| List.ofFn (fun (i : Fin n) ↦ (coin (p i) (hp i)))
 
+/-
 def bernoulli_chain' : PMF (List Bool) :=
   | zero => δ []
   | succ n hn => ((bernoulli_chain' p hp) >>= (fun (X : Bool) ↦ X.and <$> coin p₂ hp₂))
 
   sequence <| List.ofFn (fun (i : Fin n) ↦ (coin (p i) (hp i)))
-
-
-
-lemma two_coins : ((coin p₁ hp₁) >>= (fun (X : Bool) ↦ X.and <$> coin p₂ hp₂)) = coin (p₁ * p₂) (Left.mul_le_one hp₁ hp₂) := by
-  sorry
+-/
 
 lemma eq_pure_iff {α : Type} (ℙ : PMF α) (a : α) : ℙ = δ a ↔ (ℙ a = 1) := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
@@ -368,12 +348,13 @@ lemma eq_pure_iff {α : Type} (ℙ : PMF α) (a : α) : ℙ = δ a ↔ (ℙ a = 
       simp [h']
 
 lemma bernoulli_chain_zero (hn : n = 0) : bernoulli_chain p hp = δ [] := by
-  simp [eq_pure_iff, bernoulli_chain, hn, sequence, pure]
+  simp [bernoulli_chain, hn, sequence, pure]
 
 lemma le_one_of_all_le_one (hp : ∀ i, p i ≤ 1) : ∏ i, p i ≤ 1 := Fintype.prod_le_one hp
 
 lemma all_of_emptyList : (fun x ↦ List.all x id) [] = true := by simp only [List.all_nil]
 
+/-
 lemma bernoulli_chain_all (n : ℕ) (p : Fin n → ℝ≥0∞) (hp : ∀ i, p i ≤ 1) : PMF.map (fun x ↦ List.all x id) (bernoulli_chain p hp) = coin (∏ (i : Fin n), p i) (Fintype.prod_le_one hp) := by
   induction n with
   | zero =>
@@ -399,6 +380,7 @@ lemma n_coins' (n : ℕ) {N : Type} [Fintype N] :
     return X.all (· = true)
   ) = coin (p^n) (pow_le_one₀ (zero_le p) h) := by
   sorry
+-/
 
 end n_coins
 
@@ -431,32 +413,24 @@ theorem binomial₀_eq_binomial : binomial₀ = binomial := by
   induction n with
   | zero =>
     simp [binomial, binomial₀]
-    exact Fin.fin_one_eq_zero k
+    sorry
+    -- exact Fin.fin_one_eq_zero k
   | succ n hn =>
     simp_rw [binomial₀] at *
     rw [do_bind]
-
-
-
-
-
-
-
-    rw [PMF.map_apply]
-    simp [bind_map]
-
-
-
     sorry
-  sorry
 
-  simp [binomial, binomial₀]
+    -- rw [PMF.map_apply]
+    -- simp [bind_map]
 
-  rw [PMF.bind_apply]
 
-  simp [binomial, binomial₀]
-  rw [binomial₀, pure_bind]
-  sorry
+
+  -- simp [binomial, binomial₀]
+
+  -- rw [PMF.bind_apply]
+
+  -- simp [binomial, binomial₀]
+  -- rw [binomial₀, pure_bind]
 
 end PMF
 
@@ -466,7 +440,8 @@ open NNReal
 example (p : ℝ≥0) (h : p ≤ 1) : PMF.bernoulli p h = do return ← PMF.bernoulli p h
   :=  by simp only [bind_pure]
 
-universe u v w
+
+
 
 example (m : Type u → Type v) {α : Type u} [Monad m] [LawfulMonad m] (x : m α) : (do return ← x) = x
   := by exact (bind_pure x)
@@ -484,7 +459,7 @@ example (a : PMF α) (f : α → β) : a.map f = do
   := by
     rfl
 
-example (p : ℝ≥0∞) (h : p ≤ 1) : PMF.bernoulli p h = do
+example (p : ℝ≥0) (h : p ≤ 1) : PMF.bernoulli p h = do
     have h' : 1 - p ≤ 1 := by simp
     let Head ← PMF.bernoulli (1-p) h'
     return !Head
@@ -501,16 +476,16 @@ example (p : ℝ≥0∞) (h : p ≤ 1) : PMF.bernoulli p h = do
     · simp
       rw [tsum_bool]
       simp
-      refine ENNReal.sub_sub_cancel one_ne_top h
+      refine ENNReal.sub_sub_cancel one_ne_top ?_
+      simp [h]
   rw [← h_map]
   rfl
 
-example (p : ℝ≥0∞) (h : p ≤ 1) : (do let X ← PMF.bernoulli p h return X) = do
+example (p : ℝ≥0) (h : p ≤ 1) : (do let X ← PMF.bernoulli p h return X) = do
     have h' : 1 - p ≤ 1 := by simp
     let Head ← PMF.bernoulli (1-p) h'
     return !Head
   := by
-  simp only [bind_pure_comp]
   have h' : 1 - p ≤ 1 := by simp
   have h_map : PMF.map (fun a : Bool ↦ !a) (PMF.bernoulli (1 - p) h') = PMF.bernoulli p h := by
     simp [PMF.map]
@@ -522,11 +497,11 @@ example (p : ℝ≥0∞) (h : p ≤ 1) : (do let X ← PMF.bernoulli p h return 
     · simp
       rw [tsum_bool]
       simp
-      refine ENNReal.sub_sub_cancel one_ne_top h
+      refine ENNReal.sub_sub_cancel one_ne_top (by simp [h])
   rw [← h_map, bind_pure]
   rfl
 
-variable (p : ℝ≥0∞) (h : p ≤ 1)
+variable (p : ℝ≥0) (h : p ≤ 1)
 
 noncomputable def binom : (n : ℕ) → PMF ℕ
   | 0 => PMF.pure 0
@@ -536,12 +511,12 @@ noncomputable def binom : (n : ℕ) → PMF ℕ
     return Head.toNat + X
 
 
-noncomputable def binom' (p : ℝ≥0∞) (h : p ≤ 1) : (n : ℕ) → PMF (Fin (n+1))
+noncomputable def binom' (p : ℝ≥0) (h : p ≤ 1) : (n : ℕ) → PMF (Fin (n+1))
   | 0 => PMF.pure 0
   | n+1 => do
     let Head ← coin p h
     let X ← binom p h n
-    return Head.toNat + X
+    return 0 --Head.toNat + X
 
 example (n : ℕ) : binom' p h n= PMF.binomial p h n := by
   induction n with
@@ -564,7 +539,7 @@ example (α : Type) [MeasurableSpace α] [h : MeasurableSingletonClass α] (x : 
   simp only [MeasureTheory.integral_dirac]
 
 
-example (p : ℝ≥0∞) (h : p ≤ 1) (n : ℕ) : ∫ a, id (a : ℝ) ∂ (binom p h n).toMeasure = n * p.toReal := by
+example (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : ∫ a, id (a : ℝ) ∂ (binom p h n).toMeasure = n * p.toReal := by
   induction n
   · simp [binom]
     simp_rw [PMF.toMeasure_pure]
@@ -584,3 +559,133 @@ noncomputable def Mpure (α : MeasCat) (P : MeasureTheory.Measure α) : (Measure
     let X ← P
     return X
 -/
+
+
+example (p : ℝ) (h : p ≤ 1) : 0 ≤ 1 - p := by exact sub_nonneg_of_le h
+
+noncomputable def Mbernoulli {α : Type} (u v : α) (p : ℝ≥0∞) : OuterMeasure α := (1 - p) • (.dirac u) + (1 - (1 - p)) • (.dirac v)
+
+variable {α : Type}
+
+open Classical
+example {α : Type} (x : ℝ≥0∞) (u : α) (s : Set α) : (x • OuterMeasure.dirac u s) = (if u ∈ s then x else 0) := by
+  simp only [OuterMeasure.dirac_apply]
+  by_cases h : u ∈ s
+  · rw [Set.indicator_of_mem h]
+    simp [h]
+  · rw [Set.indicator_of_notMem h]
+    simp [h]
+
+open Classical
+lemma mbernoulli_apply (u v : α) (s : Set α) (h : u ≠ v) (p : ℝ≥0∞) : (Mbernoulli u v p) s = (if u ∈ s then (1 - (1 - p)) else 0) + (if v ∈ s then (1 - p) else 0) := by
+  simp only [Mbernoulli]
+  simp only [OuterMeasure.coe_add, OuterMeasure.coe_smul, Pi.add_apply, Pi.smul_apply]
+  rw [OuterMeasure.dirac_apply]
+  rw [OuterMeasure.dirac_apply]
+  rw [Set.indicator_of_mem]
+  rw [Set.indicator_of_mem]
+  -- rw [MulAction.one_smul]
+  sorry
+  sorry
+  sorry
+
+variable (p : ℝ≥0) (h : p ≤ 1)
+
+example (p : ℝ) (hp : p ≤ 1) : 0 ≤ 1 - p := by
+  exact sub_nonneg_of_le hp
+
+example (p : ℝ) (hp : 0 ≤ p) : 1 - p ≤ 1 := by
+  exact sub_le_self 1 hp
+
+open MeasureTheory ProbabilityTheory
+
+variable [MeasurableSpace Ω] [MeasurableSpace E]
+lemma integral_of_ae_eq_a_or_b {X : Ω → E} {f : E → ℝ} {a b : E} {f : E → ℝ} {μ : Measure Ω}  (hXmeas : AEMeasurable X μ) (hX : ∀ᵐ ω ∂μ, X ω = a ∨ X ω = b) :
+    μ[ f ∘ X ] = (f a) * (μ {ω | X ω = a}).toReal + (f b) * (μ {ω | X ω = b}).toReal := by
+  sorry
+
+open MeasureTheory
+
+-- This does not work, probably because Measure is not a real Monad, but something weaker.
+
+
+open MeasureTheory
+
+lemma isProbabilityMeasure_dirac {α : Type} [MeasurableSpace α] (u : α) : IsProbabilityMeasure (Measure.dirac u) := by
+  exact Measure.dirac.isProbabilityMeasure
+
+theorem isProbabilityMeasure_join {α : Type*} [MeasurableSpace α]
+  (Ξ : Measure (Measure α)) (hΞ : IsProbabilityMeasure Ξ)
+  (hν : ∀ᵐ ν ∂Ξ, IsProbabilityMeasure ν) :
+  IsProbabilityMeasure (Measure.join Ξ) := by
+  refine isProbabilityMeasure_iff.mpr ?_
+  rw [MeasureTheory.Measure.join_apply MeasurableSet.univ]
+  refine lintegral_eq_const ?_
+  simp [isProbabilityMeasure_iff] at hν
+  exact hν
+
+-- proof: total_mass (Measure.join μ) = ∫ total_mass ν dμ = ∫ 1 dμ = 1
+
+
+open MeasureTheory
+
+/--
+A probability monad that allows measurable-space arguments.
+This is the categorical analogue of the Giry monad, but written
+as a custom typeclass so we can keep `[MeasurableSpace α]` as context.
+-/
+class ProbMonad (m : (α : Type) → [MeasurableSpace α] → Type) where
+  pure : {α : Type} → [MeasurableSpace α] → α → m α
+  bind : {α β : Type} → [MeasurableSpace α] → [MeasurableSpace β] →
+         m α → (α → m β) → m β
+
+/-- A concrete instance: the probability measures on measurable spaces. -/
+structure Prob (α : Type) [MeasurableSpace α] where
+  pm : ProbabilityMeasure α
+
+namespace Prob
+
+-- Allow using coercions `Prob α → ProbabilityMeasure α`
+instance {α} [MeasurableSpace α] : Coe (Prob α) (ProbabilityMeasure α) :=
+  ⟨Prob.pm⟩
+
+-- Define the "pure" operation: Dirac measure
+noncomputable def pure' {α} [MeasurableSpace α] (a : α) : Prob α :=
+  ⟨⟨Measure.dirac a, isProbabilityMeasure_dirac a⟩⟩
+
+-- Define the "bind" operation (the Giry-style join)
+def bind' {α β} [MeasurableSpace α] [MeasurableSpace β]
+    (X : Prob α) (f : α → Prob β) : Prob β :=
+  ⟨⟨Measure.join (X.pm.toMeasure.map (fun a ↦ (f a).pm.toMeasure)),
+     by sorry
+       -- Sketch: total mass of join = ∫ total_mass (f a) dX = ∫ 1 dX = 1
+--       have hX := X.pm.isProbabilityMeasure
+--       have hfa : ∀ a, IsProbabilityMeasure (f a).pm.toMeasure :=
+--         fun a ↦ (f a).pm.isProbabilityMeasure
+--       have := Measure.total_mass_join (X.pm.toMeasure.map fun a ↦ (f a).pm.toMeasure)
+ --      -- The inner total masses are 1, so the integral is 1
+ --      simp [Measure.total_mass_map, hX.total_mass_eq, hfa] at *
+--       exact ⟨rfl⟩
+  ⟩⟩
+
+-- Now the ProbMonad instance
+noncomputable instance : ProbMonad Prob where
+  pure := fun {α} [MeasurableSpace α] a => pure' a
+  bind := fun {α β} [MeasurableSpace α] [MeasurableSpace β] X f => bind' X f
+
+end Prob
+
+open Prob
+
+-- 🔍 Example use:
+variable {Ω : Type} [MeasurableSpace Ω]
+variable {α β γ : Type*}
+variable [MeasurableSpace α] [MeasurableSpace β] [MeasurableSpace γ]
+
+noncomputable def M1 (u : α) : Measure α := Measure.dirac u-- some measure on α
+noncomputable def kernel (v : β): α → Measure β := fun _ ↦ Measure.dirac v-- a measurable function (kernel)
+
+def M_composed (f : α → β → γ) (u : α) (v : β): Measure γ := do
+  let x ← M1 u
+  let y ← kernel x v
+  return (f x y) -- where f : α → β → γ is measurable

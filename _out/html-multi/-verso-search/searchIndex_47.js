@@ -1,0 +1,1 @@
+window.docContents[47].resolve({"/Verso/Images/#Notes-on-Mathlib--Verso--Images":{"id":"/Verso/Images/#Notes-on-Mathlib--Verso--Images","header":"6.5. Images","context":"Notes on Mathlib\u0009Verso","contents":" \n\n"}});

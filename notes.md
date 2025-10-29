@@ -1,10 +1,10 @@
 ## Usage of this journal
 
 In order to build the website, run
-`lake build blog; lake exe blog --output docs`
+`lake build; lake exe journal --depth 1 --output _out`
 
 In order to display it, run
-`live-server docs`
+`live-server _out/html-multi/`
 This will reload the webpage when it is built new.
 
 ## Current PRs 

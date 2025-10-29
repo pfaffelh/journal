@@ -1,7 +1,7 @@
-import VersoBlog
-open Verso Genre Blog
+import VersoManual
+open Verso Genre Manual
 
-#doc (Page) "Do notation for PMFs" =>
+#doc (Manual) "Do notation for PMFs" =>
 
 PMFs are a lawful monad. Therefore we can use do-notation here.
 

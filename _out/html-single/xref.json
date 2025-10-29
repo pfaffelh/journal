@@ -1,0 +1,101 @@
+{"Verso.Genre.Manual.section":
+ {"title": "Sections or chapters of the manual",
+  "description": null,
+  "contents":
+  {"NoM":
+   [{"id": "NoM",
+     "data":
+     {"title": "Notes on Mathlib",
+      "shortTitle": null,
+      "sectionNum": "",
+      "context":
+      [{"title": "Notes on Mathlib", "shortTitle": null, "number": null}]},
+     "address": "/"}]}},
+ "Verso.Genre.Manual.example":
+ {"title": "Verso.Genre.Manual.example",
+  "description": null,
+  "contents":
+  {"n":
+   [{"id": "n",
+     "data":
+     {"/#n":
+      {"display": "n",
+       "context": ["Notes on Mathlib", "Filters in probability"]}},
+     "address": "/"}],
+   "m":
+   [{"id": "m",
+     "data":
+     {"/#m":
+      {"display": "m",
+       "context": ["Notes on Mathlib", "Filters in probability"]}},
+     "address": "/"}],
+   "bogus":
+   [{"id": "bogus",
+     "data":
+     {"/#bogus":
+      {"display": "bogus",
+       "context":
+       ["Notes on Mathlib", "Verso", "Docstrings and other lean code"]}},
+     "address": "/"}],
+   "b2":
+   [{"id": "b2",
+     "data":
+     {"/#b2":
+      {"display": "b2",
+       "context": ["Notes on Mathlib", "Filters in probability"]}},
+     "address": "/"}],
+   "b1":
+   [{"id": "b1",
+     "data":
+     {"/#b1":
+      {"display": "b1",
+       "context": ["Notes on Mathlib", "Filters in probability"]}},
+     "address": "/"}]}},
+ "Verso.Genre.Manual.doc.tech":
+ {"title": "Terminology",
+  "description": "Definitions of technical terms",
+  "contents": {}},
+ "Verso.Genre.Manual.doc.tactic.conv":
+ {"title": "Conversion Tactics",
+  "description": "Tactics for performing targeted rewriting of subterms",
+  "contents": {}},
+ "Verso.Genre.Manual.doc.tactic":
+ {"title": "Tactic Documentation",
+  "description": "Detailed descriptions of tactics",
+  "contents": {}},
+ "Verso.Genre.Manual.doc.option":
+ {"title": "Compiler options", "description": null, "contents": {}},
+ "Verso.Genre.Manual.doc":
+ {"title": "Lean constant reference",
+  "description": "Documentation for Lean constants",
+  "contents":
+  {"[anonymous]": [{"id": "Ultrafilter___mk", "data": null, "address": "/"}],
+   "Ultrafilter.toFilter":
+   [{"id": "Ultrafilter___mk", "data": null, "address": "/"}],
+   "Ultrafilter.mk": [{"id": "Ultrafilter___mk", "data": null, "address": "/"}],
+   "Ultrafilter": [{"id": "Ultrafilter___mk", "data": null, "address": "/"}],
+   "MeasureTheory.IsTightMeasureSet":
+   [{"id": "MeasureTheory___IsTightMeasureSet", "data": null, "address": "/"}],
+   "Lean.Parser.Tactic.apply":
+   [{"id": "Lean___Parser___Tactic___apply", "data": null, "address": "/"}],
+   "Filter.univ_sets": [{"id": "Filter___mk", "data": null, "address": "/"}],
+   "Filter.sets_of_superset":
+   [{"id": "Filter___mk", "data": null, "address": "/"}],
+   "Filter.sets": [{"id": "Filter___mk", "data": null, "address": "/"}],
+   "Filter.mk": [{"id": "Filter___mk", "data": null, "address": "/"}],
+   "Filter.inter_sets": [{"id": "Filter___mk", "data": null, "address": "/"}],
+   "Filter": [{"id": "Filter___mk", "data": null, "address": "/"}]}},
+ "Manual.parserAlias":
+ {"title": "Parser Alias Documentation",
+  "description": "Detailed descriptions of parser aliases",
+  "contents": {}},
+ "Manual.lakeCommand":
+ {"title": "Lake commands",
+  "description": "Detailed descriptions of Lake commands",
+  "contents": {}},
+ "Manual.examples":
+ {"title": "Manual.examples",
+  "description": null,
+  "contents": {"one": [], "Even Numbers": []}},
+ "Manual.envVar":
+ {"title": "Environment Variables", "description": null, "contents": {}}}

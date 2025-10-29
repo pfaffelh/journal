@@ -1,0 +1,1 @@
+window.docContents[72].resolve({"/#Notes-on-Mathlib--Verso--Commands":{"id":"/#Notes-on-Mathlib--Verso--Commands","header":"6.4. Commands","context":"Notes on Mathlib\u0009Verso","contents":"Commnds are single lines with {...}\n\n{include 0 MyChapter}\n\n"}});

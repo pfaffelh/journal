@@ -1,0 +1,97 @@
+{"9":
+ "<code>Filter.sets.{u_1} {α : Type u_1} (self : Filter α) : Set (Set α)</code><span class=\"sep\"></span><code class=\"docstring\">The set of sets that belong to the filter. </code>",
+ "8": "<code>Filter α</code>",
+ "7":
+ "<code>Membership.mem.{u, v} {α : outParam (Type u)} {γ : Type v} [self : Membership α γ] : γ → α → Prop</code><span class=\"sep\"></span><code class=\"docstring\">The membership relation `a ∈ s : Prop` where `a : α`, `s : γ`. \n\nConventions for notations in identifiers:\n\n * The recommended spelling of `∈` in identifiers is `mem`.</code>",
+ "6":
+ "<code>Set.univ.{u} {α : Type u} : Set α</code><span class=\"sep\"></span><code class=\"docstring\">The universal set on a type `α` is the set containing all elements of `α`.\n\nThis is conceptually the \"same as\" `α` (in set theory, it is actually the same), but type theory\nmakes the distinction that `α` is a type while `Set.univ` is a term of type `Set α`. `Set.univ` can\nitself be coerced to a type `↥Set.univ` which is in bijection with (but distinct from) `α`. </code>",
+ "56":
+ "<code>Nat.succ (n : Nat) : Nat</code><span class=\"sep\"></span><code class=\"docstring\">The successor of a natural number `n`.\n\nUsing `Nat.succ n` should usually be avoided in favor of `n + 1`, which is the [simp normal\nform](https://lean-lang.org/doc/reference/4.22.0/find/?domain=Verso.Genre.Manual.section&name=simp-normal-forms).\n</code>",
+ "55":
+ "<code class=\"docstring\">The `sorry` tactic is a temporary placeholder for an incomplete tactic proof,\nclosing the main goal using `exact sorry`.\n\nThis is intended for stubbing-out incomplete parts of a proof while still having a syntactically correct proof skeleton.\nLean will give a warning whenever a proof uses `sorry`, so you aren't likely to miss it,\nbut you can double check if a theorem depends on `sorry` by looking for `sorryAx` in the output\nof the `#print axioms my_thm` command, the axiom used by the implementation of `sorry`.\n</code>",
+ "54":
+ "<code>False : Prop</code><span class=\"sep\"></span><code class=\"docstring\">`False` is the empty proposition. Thus, it has no introduction rules.\nIt represents a contradiction. `False` elimination rule, `False.rec`,\nexpresses the fact that anything follows from a contradiction.\nThis rule is sometimes called ex falso (short for ex falso sequitur quodlibet),\nor the principle of explosion.\nFor more information: [Propositional Logic](https://lean-lang.org/theorem_proving_in_lean4/propositions_and_proofs.html#propositional-logic)\n</code>",
+ "53": "<code>bogus : False</code>",
+ "52":
+ "<code><span class=\"literal string\">\"The answer is 4\"</span> : String</code>",
+ "51":
+ "<code class=\"docstring\">This tactic applies to a goal whose target has the form `x ~ x`,\nwhere `~` is equality, heterogeneous equality or any relation that\nhas a reflexivity lemma tagged with the attribute @[refl].\n</code>",
+ "50":
+ "<code>Eq.{u_1} {α : Sort u_1} : α → α → Prop</code><span class=\"sep\"></span><code class=\"docstring\">The equality relation. It has one introduction rule, `Eq.refl`.\nWe use `a = b` as notation for `Eq a b`.\nA fundamental property of equality is that it is an equivalence relation.\n```\nvariable (α : Type) (a b c d : α)\nvariable (hab : a = b) (hcb : c = b) (hcd : c = d)\n\nexample : a = d :=\n  Eq.trans (Eq.trans hab (Eq.symm hcb)) hcd\n```\nEquality is much more than an equivalence relation, however. It has the important property that every assertion\nrespects the equivalence, in the sense that we can substitute equal expressions without changing the truth value.\nThat is, given `h1 : a = b` and `h2 : p a`, we can construct a proof for `p b` using substitution: `Eq.subst h1 h2`.\nExample:\n```\nexample (α : Type) (a b : α) (p : α → Prop)\n        (h1 : a = b) (h2 : p a) : p b :=\n  Eq.subst h1 h2\n\nexample (α : Type) (a b : α) (p : α → Prop)\n    (h1 : a = b) (h2 : p a) : p b :=\n  h1 ▸ h2\n```\nThe triangle in the second presentation is a macro built on top of `Eq.subst` and `Eq.symm`, and you can enter it by typing `\\t`.\nFor more information: [Equality](https://lean-lang.org/theorem_proving_in_lean4/quantifiers_and_equality.html#equality)\n\n\nConventions for notations in identifiers:\n\n * The recommended spelling of `=` in identifiers is `eq`.</code>",
+ "5":
+ "<code>Set.univ ∈ self.sets</code><span class=\"sep\"></span><code class=\"docstring\">The set `Set.univ` belongs to any filter. </code>",
+ "49":
+ "<code class=\"docstring\">`by tac` constructs a term of the expected type by running the tactic(s) `tac`. </code>",
+ "48": "<code>Nat</code>",
+ "47":
+ "<code class=\"docstring\">`apply e` tries to match the current goal against the conclusion of `e`'s type.\nIf it succeeds, then the tactic returns as many subgoals as the number of premises that\nhave not been fixed by type inference or type class resolution.\nNon-dependent premises are added before dependent ones.\n\nThe `apply` tactic uses higher-order pattern matching, type class resolution,\nand first-order unification with dependent types.\n</code>",
+ "46":
+ "<code>Lean.ParserDescr : Type</code><span class=\"sep\"></span><code class=\"docstring\">A `ParserDescr` is a grammar for parsers. This is used by the `syntax` command\nto produce parsers without having to `import Lean`.\n</code>",
+ "45":
+ "<code class=\"docstring\">`#eval e` evaluates the expression `e` by compiling and evaluating it.\n\n* The command attempts to use `ToExpr`, `Repr`, or `ToString` instances to print the result.\n* If `e` is a monadic value of type `m ty`, then the command tries to adapt the monad `m`\n  to one of the monads that `#eval` supports, which include `IO`, `CoreM`, `MetaM`, `TermElabM`, and `CommandElabM`.\n  Users can define `MonadEval` instances to extend the list of supported monads.\n\nThe `#eval` command gracefully degrades in capability depending on what is imported.\nImporting the `Lean.Elab.Command` module provides full capabilities.\n\nDue to unsoundness, `#eval` refuses to evaluate expressions that depend on `sorry`, even indirectly,\nsince the presence of `sorry` can lead to runtime instability and crashes.\nThis check can be overridden with the `#eval! e` command.\n\nOptions:\n* If `eval.pp` is true (default: true) then tries to use `ToExpr` instances to make use of the\n  usual pretty printer. Otherwise, only tries using `Repr` and `ToString` instances.\n* If `eval.type` is true (default: false) then pretty prints the type of the evaluated value.\n* If `eval.derive.repr` is true (default: true) then attempts to auto-derive a `Repr` instance\n  when there is no other way to print the result.\n\nSee also: `#reduce e` for evaluation by term reduction.\n</code>",
+ "44":
+ "<code>Bool.or (x y : Bool) : Bool</code><span class=\"sep\"></span><code class=\"docstring\">Boolean “or”, also known as disjunction. `or x y` can be written `x || y`.\n\nThe corresponding propositional connective is `Or : Prop → Prop → Prop`, written with the `∨`\noperator.\n\nThe Boolean `or` is a `@[macro_inline]` function in order to give it short-circuiting evaluation:\nif `x` is `true` then `y` is not evaluated at runtime.\n</code>",
+ "43":
+ "<code>Bool.and (x y : Bool) : Bool</code><span class=\"sep\"></span><code class=\"docstring\">Boolean “and”, also known as conjunction. `and x y` can be written `x && y`.\n\nThe corresponding propositional connective is `And : Prop → Prop → Prop`, written with the `∧`\noperator.\n\nThe Boolean `and` is a `@[macro_inline]` function in order to give it short-circuiting evaluation:\nif `x` is `false` then `y` is not evaluated at runtime.\n\n\nConventions for notations in identifiers:\n\n * The recommended spelling of `&&` in identifiers is `and`.\n\n * The recommended spelling of `||` in identifiers is `or`.</code>",
+ "42":
+ "<code>HMul.hMul.{u, v, w} {α : Type u} {β : Type v} {γ : outParam (Type w)} [self : HMul α β γ] : α → β → γ</code><span class=\"sep\"></span><code class=\"docstring\">`a * b` computes the product of `a` and `b`.\nThe meaning of this notation is type-dependent. \n\nConventions for notations in identifiers:\n\n * The recommended spelling of `*` in identifiers is `mul`.</code>",
+ "41":
+ "<code>HAdd.hAdd.{u, v, w} {α : Type u} {β : Type v} {γ : outParam (Type w)} [self : HAdd α β γ] : α → β → γ</code><span class=\"sep\"></span><code class=\"docstring\">`a + b` computes the sum of `a` and `b`.\nThe meaning of this notation is type-dependent. \n\nConventions for notations in identifiers:\n\n * The recommended spelling of `+` in identifiers is `add`.</code>",
+ "40":
+ "<code>Bool.false : Bool</code><span class=\"sep\"></span><code class=\"docstring\">The Boolean value `false`, not to be confused with the proposition `False`. </code>",
+ "4":
+ "<code>Set.{u} (α : Type u) : Type u</code><span class=\"sep\"></span><code class=\"docstring\">A set is a collection of elements of some type `α`.\n\nAlthough `Set` is defined as `α → Prop`, this is an implementation detail which should not be\nrelied on. Instead, `setOf` and membership of a set (`∈`) should be used to convert between sets\nand predicates.\n</code>",
+ "39": "<code>b2 : Bool</code>",
+ "38":
+ "<code>Bool.true : Bool</code><span class=\"sep\"></span><code class=\"docstring\">The Boolean value `true`, not to be confused with the proposition `True`. </code>",
+ "37":
+ "<code>Bool : Type</code><span class=\"sep\"></span><code class=\"docstring\">The Boolean values, `true` and `false`.\n\nLogically speaking, this is equivalent to `Prop` (the type of propositions). The distinction is\npublic important for programming: both propositions and their proofs are erased in the code generator,\nwhile `Bool` corresponds to the Boolean type in most programming languages and carries precisely one\nbit of run-time information.\n</code>",
+ "36": "<code>b1 : Bool</code>",
+ "35": "<code>n : ℕ</code>",
+ "34":
+ "<code>Nat : Type</code><span class=\"sep\"></span><code class=\"docstring\">The natural numbers, starting at zero.\n\nThis type is special-cased by both the kernel and the compiler, and overridden with an efficient\nimplementation. Both use a fast arbitrary-precision arithmetic library (usually\n[GMP](https://gmplib.org/)); at runtime, `Nat` values that are sufficiently small are unboxed.\n</code>",
+ "33": "<code>m : ℕ</code>",
+ "32": "<code>Set 𝓧</code>",
+ "31": "<code>MeasureTheory.Measure 𝓧</code>",
+ "30": "<code>?m.3193</code>",
+ "3":
+ "<code>Set (Set α)</code><span class=\"sep\"></span><code class=\"docstring\">The set of sets that belong to the filter. </code>",
+ "29": "<code>ℕ</code>",
+ "28":
+ "<code class=\"docstring\">The universe of propositions. `Prop ≡ Sort 0`.\n\nEvery proposition is propositionally equal to either `True` or `False`. </code>",
+ "27":
+ "<code>MeasureTheory.Measure.{u_6} (α : Type u_6) [MeasurableSpace α] : Type u_6</code><span class=\"sep\"></span><code class=\"docstring\">A measure is defined to be an outer measure that is countably additive on\nmeasurable sets, with the additional assumption that the outer measure is the canonical\nextension of the restricted measure.\n\nThe measure of a set `s`, denoted `μ s`, is an extended nonnegative real. The real-valued version\nis written `μ.real s`.\n</code>",
+ "26": "<code>Set (MeasureTheory.Measure 𝓧)</code>",
+ "25":
+ "<code>MeasurableSpace.{u_7} (α : Type u_7) : Type u_7</code><span class=\"sep\"></span><code class=\"docstring\">A measurable space is a space equipped with a σ-algebra. </code>",
+ "24": "<code>MeasurableSpace 𝓧</code>",
+ "23":
+ "<code>TopologicalSpace.{u} (X : Type u) : Type u</code><span class=\"sep\"></span><code class=\"docstring\">A topology on `X`. </code>",
+ "22":
+ "<code>LE.le.{u} {α : Type u} [self : LE α] : α → α → Prop</code><span class=\"sep\"></span><code class=\"docstring\">The less-equal relation: `x ≤ y` \n\nConventions for notations in identifiers:\n\n * The recommended spelling of `≤` in identifiers is `le`.\n\n * The recommended spelling of `&lt;=` in identifiers is `le` (prefer `≤` over `&lt;=`).</code>",
+ "21":
+ "<code>∀ (g : Filter α), g.NeBot → g ≤ ↑self → ↑self ≤ g</code><span class=\"sep\"></span><code class=\"docstring\">If `g` is a nontrivial filter that is less than or equal to an ultrafilter, then it is greater\nthan or equal to the ultrafilter. </code>",
+ "20":
+ "<code>Filter.NeBot.{u_1} {α : Type u_1} (f : Filter α) : Prop</code><span class=\"sep\"></span><code class=\"docstring\">A filter is `NeBot` if it is not equal to `⊥`, or equivalently the empty set does not belong to\nthe filter. Bourbaki include this assumption in the definition of a filter but we prefer to have a\n`CompleteLattice` structure on `Filter _`, so we use a typeclass argument in lemmas instead. </code>",
+ "2":
+ "<code>Filter.mk.{u_1} {α : Type u_1} (sets : Set (Set α)) (univ_sets : Set.univ ∈ sets)\n  (sets_of_superset : ∀ {x y : Set α}, x ∈ sets → x ⊆ y → y ∈ sets)\n  (inter_sets : ∀ {x y : Set α}, x ∈ sets → y ∈ sets → x ∩ y ∈ sets) : Filter α</code>",
+ "19":
+ "<code>(↑self).NeBot</code><span class=\"sep\"></span><code class=\"docstring\">An ultrafilter is nontrivial. </code>",
+ "18": "<code>Ultrafilter α</code>",
+ "17":
+ "<code>Filter.{u_1} (α : Type u_1) : Type u_1</code><span class=\"sep\"></span><code class=\"docstring\">A filter `F` on a type `α` is a collection of sets of `α` which contains the whole `α`,\nis upwards-closed, and is stable under intersection. We do not forbid this collection to be\nall sets of `α`. </code>",
+ "16":
+ "<code>Ultrafilter.mk.{u_2} {α : Type u_2} (toFilter : Filter α) (neBot' : toFilter.NeBot)\n  (le_of_le : ∀ (g : Filter α), g.NeBot → g ≤ toFilter → toFilter ≤ g) : Ultrafilter α</code>",
+ "15": "<code>Type u_2</code>",
+ "14":
+ "<code>Inter.inter.{u} {α : Type u} [self : Inter α] : α → α → α</code><span class=\"sep\"></span><code class=\"docstring\">`a ∩ b` is the intersection of`a` and `b`. \n\nConventions for notations in identifiers:\n\n * The recommended spelling of `∩` in identifiers is `inter`.</code>",
+ "13":
+ "<code>∀ {x y : Set α}, x ∈ self.sets → y ∈ self.sets → x ∩ y ∈ self.sets</code><span class=\"sep\"></span><code class=\"docstring\">If two sets belong to a filter, then their intersection belongs to the filter as well. </code>",
+ "12":
+ "<code>HasSubset.Subset.{u} {α : Type u} [self : HasSubset α] : α → α → Prop</code><span class=\"sep\"></span><code class=\"docstring\">Subset relation: `a ⊆ b`  \n\nConventions for notations in identifiers:\n\n * The recommended spelling of `⊆` in identifiers is `subset`.</code>",
+ "11": "<code>Set α</code>",
+ "10":
+ "<code>∀ {x y : Set α}, x ∈ self.sets → x ⊆ y → y ∈ self.sets</code><span class=\"sep\"></span><code class=\"docstring\">If a set belongs to a filter, then its superset belongs to the filter as well. </code>",
+ "1":
+ "<code class=\"docstring\">A type universe. `Type ≡ Type 0`, `Type u ≡ Sort (u + 1)`. </code>",
+ "0": "<code>Type u_1</code>"}

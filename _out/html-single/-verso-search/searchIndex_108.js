@@ -1,0 +1,1 @@
+window.docContents[108].resolve({"/#Notes-on-Mathlib--Verso--Images":{"id":"/#Notes-on-Mathlib--Verso--Images","header":"6.5. Images","context":"Notes on Mathlib\u0009Verso","contents":"This comman d![Alt text](static/logo.png) gives an image in the text.\n\n \n\n"}});

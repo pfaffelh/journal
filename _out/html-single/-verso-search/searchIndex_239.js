@@ -1,0 +1,1 @@
+window.docContents[239].resolve({"/#Notes-on-Mathlib--Infrastructure-using-mathlib":{"id":"/#Notes-on-Mathlib--Infrastructure-using-mathlib","header":"2. Infrastructure using mathlib","context":"Notes on Mathlib","contents":"When getting started with mathlib, one main issue is the new infrastructure, e.g. using git, using pull requests, setting up vscode etc.\n\n\n\n\n\n"}});

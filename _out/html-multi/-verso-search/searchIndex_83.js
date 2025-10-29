@@ -1,0 +1,1 @@
+window.docContents[83].resolve({"/Verso/Questions___/#Notes-on-Mathlib--Verso--Questions___":{"id":"/Verso/Questions___/#Notes-on-Mathlib--Verso--Questions___","header":"6.6. Questions:","context":"Notes on Mathlib\u0009Verso","contents":"How can I write a definition, lemma etc?\n\nWhat is an easy way to make a link to a type?\n\n"}});

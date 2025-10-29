@@ -1,0 +1,1 @@
+window.docContents[250].resolve({"/Verso/#Notes-on-Mathlib--Verso":{"id":"/Verso/#Notes-on-Mathlib--Verso","header":"6. Verso","context":"Notes on Mathlib","contents":"Here is some form of cheatsheet for verso.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"}});

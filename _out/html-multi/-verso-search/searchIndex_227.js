@@ -1,0 +1,1 @@
+window.docContents[227].resolve({"/Verso/#Notes-on-Mathlib--Verso--Error-messages":{"id":"/Verso/#Notes-on-Mathlib--Verso--Error-messages","header":"6.7. Error messages","context":"Notes on Mathlib\u0009Verso","contents":"Error messages might not always be helpful. For example, Mathlib notation might override notation introduced in Verso (e.g. for html).\n\n\n"}});

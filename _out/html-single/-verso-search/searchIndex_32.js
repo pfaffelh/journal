@@ -1,0 +1,1 @@
+window.docContents[32].resolve({"/#Notes-on-Mathlib--Verso--Including-docstrings":{"id":"/#Notes-on-Mathlib--Verso--Including-docstrings","header":"6.6. Including docstrings","context":"Notes on Mathlib\u0009Verso","contents":""}});

@@ -10,6 +10,8 @@ variable {α : Type*} [Preorder α] (p : α → Prop)
 def atTopAbove : Filter α :=
   ⨅ (a : α) (_ : p a), Filter.principal (Set.Ici a)
 
+#print atTopAbove
+
 lemma atTopAbove_eq : atTopAbove p = ⨅ a ∈ {x | p x}, Filter.principal (Set.Ici a) := by rfl
 
 lemma mem_atTopAbove_iff_of_directed {s : Set α} (h₀ : {y | p y}.Nonempty) (h₁ : DirectedOn (fun x y ↦ x ≤ y) p) : s ∈ atTopAbove p ↔ ∃ (x : α) (_ : p x), s ∈ Filter.principal (Set.Ici x) := by
@@ -23,6 +25,9 @@ lemma mem_atTopAbove_iff_of_directed {s : Set α} (h₀ : {y | p y}.Nonempty) (h
     obtain ⟨u, hu1, hu2, hu3⟩ := h₁ s hs1 t ht1
     use u
     refine ⟨hu1, hs2.symm ▸ ?_, ht2.symm ▸ ?_⟩ <;> simp [hu2, hu3]
+
+#check mem_atTopAbove_iff_of_directed
+
 
 end atTopAbove
 

@@ -1,6 +1,6 @@
-import VersoBlog
-open Verso Genre Blog
+import VersoManual
+open Verso Genre Manual
 
-#doc (Page) "Basics" =>
+#doc (Manual) "Basics" =>
 
 If `a b : Prop`, and `h : a → b`, then `¬b → ¬ a`. Apparently, this is already implemented in `#check mt`.
