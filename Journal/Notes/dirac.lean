@@ -6,104 +6,234 @@ open scoped ENNReal NNReal
 
 section PMFassumsofDiracs
 
-variable {α β γ : Type*}
+universe u v w
 
-example (s : Set β) (b : β): MeasurableSet[(OuterMeasure.dirac b).caratheodory] s := by
-  simp only [OuterMeasure.dirac_caratheodory, MeasurableSpace.measurableSet_top]
+variable {α : Type u} {β : Type v} {γ : Type w}
+
+-- example (s : Set β) (b : β): MeasurableSet[(OuterMeasure.dirac b).caratheodory] s := by
+--   simp only [OuterMeasure.dirac_caratheodory, MeasurableSpace.measurableSet_top]
 
 instance topMeasurableSpace : MeasurableSpace β := ⊤
 
 -- Given `f : α → ℝ≥0∞` and `g : α → β`, this is the measure (on `⊤`, i.e. the power set of `β`),
 -- which adds mass `f a` to `g a`.
+-- noncomputable def Function.to_discrete_measure (f : α → ℝ≥0∞) (g : α → β) : @Measure β ⊤ :=
+--   sum (fun a ↦ f a • (OuterMeasure.dirac (g a)).toMeasure
+--     ((OuterMeasure.dirac_caratheodory (g a)).symm ▸ le_top))
 noncomputable def Function.to_discrete_measure (f : α → ℝ≥0∞) (g : α → β) : @Measure β ⊤ :=
-  sum (fun a ↦ f a • (OuterMeasure.dirac (g a)).toMeasure
-    ((OuterMeasure.dirac_caratheodory (g a)).symm ▸ le_top))
+  sum (fun a ↦ f a • (@Measure.dirac β ⊤ (g a)))
+
+def DiscreteMeasure {α : Type u} (β : Type v) : Type (max 0 v):=
+  { μ : @Measure β ⊤ // ∃ (f : α → ℝ≥0∞) (g : α → β), μ = f.to_discrete_measure g}
+
+noncomputable def DiscreteMeasure.f {β α} (μ : @DiscreteMeasure α β) : α → ℝ≥0∞ :=
+  Classical.choose μ.prop
+
+noncomputable def DiscreteMeasure.g {β α} (μ : @DiscreteMeasure α β) : α → β :=
+  Classical.choose (Classical.choose_spec μ.prop)
+
+lemma DiscreteMeasure.eq_to_discrete (μ : @DiscreteMeasure α β) :
+    μ.val = (DiscreteMeasure.f μ).to_discrete_measure (DiscreteMeasure.g μ) := by
+    classical
+    obtain ⟨f, g, hfg⟩ := μ.property
+    simp [DiscreteMeasure.f, DiscreteMeasure.g, hfg]
+
+    sorry
+
+def map (μ : DiscreteMeasure β) (f : β → γ) := μ.val.map f
+
+
+
+lemma Function.to_discrete_measure.isProbabilityMeasure_iff (f : α → ℝ≥0∞) (g : α → β) : (IsProbabilityMeasure (f.to_discrete_measure g)) ↔ ∑' i, f i = 1 := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · rw [← h.measure_univ]
+    simp [to_discrete_measure]
+  · rw [MeasureTheory.isProbabilityMeasure_iff]
+    simp [to_discrete_measure, h]
+
+
+
+@[simp]
+lemma DiscreteMeasure.apply {f : α → ℝ≥0∞} {g : α → β} {s : Set β} : (f.to_discrete_measure g) s = ∑' (i : α), f i * s.indicator (fun _ => 1) (g i) := by
+  simp [to_discrete_measure]
+  rfl
+
+-- add to indicator?
+lemma Set.indicator.mul_indicator_eq (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : f a * s.indicator (fun _ ↦ 1) (g a) = (g⁻¹' s).indicator f a := by
+  simp [Set.indicator]
+  rfl
+
+
+lemma DiscreteMeasure.apply' {f : α → ℝ≥0∞} {g : α → β} {s : Set β} : (f.to_discrete_measure g) s = ∑' (i : α), (g⁻¹' s).indicator f i := by
+  simp only [DiscreteMeasure.apply]
+  simp_rw [Set.indicator.mul_indicator_eq]
+
+lemma DiscreteMeasure.apply'' (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : (f.to_discrete_measure g) s =
+    ∑' (a : g⁻¹' s), (f a) := by
+  simp only [DiscreteMeasure.apply', tsum_subtype]
+
+
+
+-- for ref only
+lemma summable (f : α → ℝ≥0∞) : Summable f := by
+  exact ENNReal.summable
+
+-- delete
+example (y : ℝ) : Set.univ.indicator (fun _ ↦ 1) y = 1 := by
+  apply Set.indicator_of_mem (by trivial) fun x => 1
+
+-- section finite measure
+lemma support_countable (f : α → ℝ≥0∞) (g : α → β) (hf : IsFiniteMeasure (f.to_discrete_measure g)) : (support f).Countable := by
+  simp [to_discrete_measure, isFiniteMeasure_iff] at hf
+  refine Summable.countable_support_ennreal hf.ne
+
+
+
+
+-- section support
+open Classical
+lemma tsum_support (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : (f.to_discrete_measure g) s = (f.to_discrete_measure g) (g '' (support f) ∩ s) := by
+  simp [to_discrete_measure]
+  apply tsum_congr
+  intro b
+  simp only [Set.indicator, support]
+  by_cases hb : f b = 0
+  · rw [hb, zero_mul, zero_mul]
+  · have h₀ : g b ∈ g '' {x | f x ≠ 0} := Set.mem_image_of_mem g hb
+    simp [h₀]
+
+example {α : Type*} (f : α → ℝ≥0∞) (a : α) :
+    ∑' x, f x = f a + ∑' x, (if x = a then 0 else f x) := by
+  exact ENNReal.tsum_eq_add_tsum_ite a
+
+
+example (f : ι → ℝ≥0∞) (i : ι) : ∑' (i : ι), f i = f i + ∑' (j : ι), (Set.univ \{i}).indicator f j := by
+  simp[Set.indicator]
+  apply ENNReal.tsum_eq_add_tsum_ite i
+
+
+/- Additivity for a `to_discrete_measure` not only applies to countable unions, but to arbitrary ones.-/
+lemma m_iUnion (f : α → ℝ≥0∞) (g : α → β) (s : δ → Set β) (hs : Pairwise (Disjoint on s)) : (f.to_discrete_measure g) (⋃ d, s d) = ∑' (d : δ), (f.to_discrete_measure g) (s d) := by
+  simp only [DiscreteMeasure.apply]
+  rw [ENNReal.tsum_comm (f := fun d i ↦ f i * (s d).indicator (fun x => 1) (g i))]
+  apply tsum_congr
+  intro b
+  rw [ENNReal.tsum_mul_left]
+  apply congrArg (HMul.hMul (f b))
+  simp only [Set.indicator, Set.mem_iUnion]
+  by_cases h₀ : ∃ i, g b ∈ s i <;> simp only [h₀, ↓reduceIte]
+  · obtain ⟨i, hi⟩ := h₀
+    rw [ENNReal.tsum_eq_add_tsum_ite i]
+    simp only [hi, ↓reduceIte]
+    nth_rw 1 [← add_zero 1] ; congr
+    apply (ENNReal.tsum_eq_zero.mpr ?_).symm
+    simp_rw [ite_eq_left_iff, ite_eq_right_iff, one_ne_zero, imp_false]
+    exact fun j hj ↦ Disjoint.notMem_of_mem_left (hs (id (Ne.symm hj))) hi
+  · refine (ENNReal.tsum_eq_zero.mpr ?_).symm
+    intro j
+    push_neg at h₀
+    specialize h₀ j
+    simp [h₀]
+
+lemma pairwise_disjoint_singleton_subtype (s : Set α) : Pairwise (Disjoint on fun (x : s) => ({x.val} : Set α)) := by
+  intro a b hab
+  simp_rw [Set.disjoint_singleton_left, Set.mem_singleton_iff]
+  exact Subtype.coe_ne_coe.mpr hab
+
+lemma m_iUnion_singleton (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : (to_discrete_measure f g) s = ∑' (x : s), (to_discrete_measure f g) {x.val} := by
+  nth_rw 1 [← Set.iUnion_of_singleton_coe s]
+  exact _root_.m_iUnion f g _ (pairwise_disjoint_singleton_subtype s)
+
+
+lemma to_id (f : α → ℝ≥0∞) (g : α → β) : (f.to_discrete_measure g) = ((fun b ↦ (f.to_discrete_measure g) {b}).to_discrete_measure id) := by
+  ext s
+  nth_rw 2 [DiscreteMeasure.apply']
+  simp only [Set.preimage_id_eq, id_eq]
+  rw [← tsum_subtype]
+  rw [← m_iUnion_singleton]
+
+-- bind
+
+def bind
+
+
+-- to integral
+variable {E : Type*} [NormedAddCommGroup E]
+
+lemma l1 (b : β) : OuterMeasure.toMeasure (OuterMeasure.dirac b) ((OuterMeasure.dirac_caratheodory b).symm ▸ le_top) = @Measure.dirac β ⊤ b := by
+  rfl
+
+theorem integral_linear_combination_dirac_fintype
+    [NormedSpace ℝ E] [CompleteSpace E]
+    {f : α → ℝ} (hf : 0 ≤ f) {g : α → β} {φ : β → E}
+    :
+    ∫ b : β, φ b ∂ (Function.to_discrete_measure_ofReal f g)
+    = ∑' a : α, f a • φ (g a) := by
+  simp [Function.to_discrete_measure_ofReal, Function.to_discrete_measure]
+  rw [integral_sum_measure]
+  apply tsum_congr (fun b ↦ ?_)
+  rw [integral_smul_measure]
+  simp_rw [l1]
+  rw [integral_dirac, ENNReal.toReal_ofReal (hf b)]
+  sorry
+
+
+
+
+lemma DiscreteMeasure.apply'' (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : f.to_discrete_measure g s =
+    ∑' (a : g⁻¹' s), (f a) := by
+  simp only [DiscreteMeasure.apply', tsum_subtype]
+
+
+
+-- section ofReal
 
 noncomputable def Function.to_discrete_measure_ofReal (f : α → ℝ) (g : α → β): @Measure β ⊤ :=
   Function.to_discrete_measure (ENNReal.ofReal ∘ f) g
 
-lemma to_discrete_measure_apply' (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : f.to_discrete_measure g s =
-    ∑' a, (f a) * s.indicator (fun _ ↦ 1) (g a) := by
-  simp only [to_discrete_measure, MeasurableSpace.measurableSet_top, sum_apply, smul_apply,
-    toMeasure_apply, OuterMeasure.dirac_apply, smul_eq_mul]
-
-lemma indicator_eq (f : α → ℝ≥0∞) (s : Set α) : f a * s.indicator 1 a = s.indicator f a := by
-  simp [Set.indicator]
-
-lemma indicator_eq' (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : f a * s.indicator (fun _ ↦ 1) (g a) = (g⁻¹' s).indicator f a := by
-  simp [Set.indicator]
-  rfl
-
-lemma to_discrete_measure_apply'' (f : α → ℝ≥0∞) (g : α → β) (s : Set β) : f.to_discrete_measure g s =
-    ∑' (a : g⁻¹' s), (f a) := by
-  rw [to_discrete_measure_apply']
-  simp [tsum_subtype]
-  apply tsum_congr
-  intro b
-  rw [indicator_eq' f g s]
-
-lemma to_discrete_measure_apply (f : α → ℝ≥0∞) (g : α → β) (s : Set β) :
-    f.to_discrete_measure g s = ∑' a, (f a) * s.indicator 1 (g a) := by
-  rw [to_discrete_measure_apply']
-  rfl
 
 lemma to_discrete_measure_ofReal_apply (f : α → ℝ) (g : α → β) (s : Set β) :
     f.to_discrete_measure_ofReal g s = ∑' a, (ENNReal.ofReal (f a)) * s.indicator (fun _ ↦ 1) (g a) := by
   rw [to_discrete_measure_ofReal]
-  exact to_discrete_measure_apply (ENNReal.ofReal ∘ f) g s
+  exact DiscreteMeasure.apply
 
-lemma to_discrete_measure_apply_id (f : α → ℝ≥0∞) (s : Set α) : f.to_discrete_measure id s = ∑' a, s.indicator f a := by
-  rw [to_discrete_measure_apply]
-  exact tsum_congr (fun _ ↦ indicator_eq f s)
+@[simp]
+lemma DiscreteMeasure.apply_of_id (f : α → ℝ≥0∞) (s : Set α) : f.to_discrete_measure id s = ∑' a, s.indicator f a := by
+  rw [DiscreteMeasure.apply']
+  simp only [Set.preimage_id_eq, id_eq]
 
-lemma to_discrete_measure_apply_id_singleton (f : α → ℝ≥0∞) (u : α) :
+@[simp]
+lemma DiscreteMeasure.apply_of_id_singleton (f : α → ℝ≥0∞) (u : α) :
     f.to_discrete_measure id {u} = f u := by
-  rw [to_discrete_measure_apply_id, ← tsum_subtype, tsum_singleton]
+  rw [DiscreteMeasure.apply_of_id, ← tsum_subtype, tsum_singleton]
 
-theorem to_discrete_measure_eq_iff {f₁ f₂ : α → ℝ≥0∞} : f₁ = f₂ ↔
+-- section ext
+
+theorem DiscreteMeasure_eq_of_id {f₁ f₂ : α → ℝ≥0∞} : f₁ = f₂ ↔
     f₁.to_discrete_measure id = f₂.to_discrete_measure id := by
   refine ⟨fun h ↦ by rw [h], ?_⟩
   rw [← not_imp_not]
   intro h
-  change f₁ ≠ f₂ at h
-  rw [ne_iff] at h
-  obtain ⟨a, ha⟩ := h
+  obtain ⟨a, ha⟩ := ne_iff.mp h
   change _ ≠ _
   rw [DFunLike.ne_iff]
   use {a}
-  simp [to_discrete_measure_apply_id_singleton, ha]
+  simp only [DiscreteMeasure.apply_of_id_singleton]
+  exact ha
 
-lemma indicator_tsum (s : Set β) (f : β → ℝ≥0∞) (x : β) : (s.indicator f x) = ∑' (a : s), ({ a.val } : Set β).indicator f x := by
-  simp [Set.indicator]
-
-  sorry
 
 example (f : α → ℝ≥0∞): x * ∑' y, f y = ∑' y, x * f y := by
   exact Eq.symm ENNReal.tsum_mul_left
-
-theorem to_discrete_measure_eq_tsum {f : α → ℝ≥0∞} (g : α → β) (s : Set β) :
-    f.to_discrete_measure g s = ∑' (b : s), f.to_discrete_measure g ({ b.val } : Set β) := by
-  rw [to_discrete_measure_apply'']
-  simp_rw [to_discrete_measure_apply'']
-
-
-
-  rw [tsum_subtype]
-  simp_rw [tsum_subtype]
-
-  conv => left; left; simp [indicator_tsum s (fun _ ↦ 1)]
-
-  sorry
 
 theorem to_discrete_measure_eq_iff' {f₁ f₂ : α → ℝ≥0∞} (g₁ g₂ : α → β) : (∀ b : β,  f₁.to_discrete_measure g₁ {b} = f₂.to_discrete_measure g₂ {b}) ↔
     f₁.to_discrete_measure g₁ = f₂.to_discrete_measure g₂ := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · ext s
-    rw [to_discrete_measure_eq_tsum]
-    rw [to_discrete_measure_eq_tsum]
+    simp_rw [DiscreteMeasure.apply] at h ⊢
+    --rw [DiscreteMeasure.eq_tsum]
     apply tsum_congr
-    intro b
-    apply h b.val
+    intro a
+    apply h s.val
   · rw [DFunLike.ext_iff] at h
     intro b
     exact h {b}
@@ -111,7 +241,10 @@ theorem to_discrete_measure_eq_iff' {f₁ f₂ : α → ℝ≥0∞} (g₁ g₂ :
 
 theorem to_discrete_measure_eq_iff'' {f₁ f₂ : α → ℝ≥0∞} (g₁ g₂ : α → β) : (∀ b : β, ∑' a : g₁⁻¹' {b}, f₁ a = ∑' a : g₂⁻¹' {b}, f₂ a) ↔
     f₁.to_discrete_measure g₁ = f₂.to_discrete_measure g₂ := by
-  rw [← to_discrete_measure_eq_iff']
+  simp_rw [to_discrete_measure_eq']
+
+
+
   refine ⟨fun h b ↦ ?_, fun h b ↦ ?_⟩
   ·
     sorry
@@ -120,12 +253,13 @@ theorem to_discrete_measure_eq_iff'' {f₁ f₂ : α → ℝ≥0∞} (g₁ g₂ 
 theorem Function.to_discrete_measure_map (f : α → ℝ≥0∞) (g : α → β) (h : β → γ) :
     (f.to_discrete_measure g).map h = f.to_discrete_measure (h ∘ g) := by
   ext s
-  rw [map_apply (by fun_prop) (by measurability)]
-  rw [to_discrete_measure_apply']
-  rw [to_discrete_measure_apply']
-  apply tsum_congr
-  intro b
-  congr
+  rw [map_apply (by fun_prop) (by measurability), DiscreteMeasure.apply', DiscreteMeasure.apply', Set.preimage_comp]
+
+theorem Function.to_discrete_measure_map_map (f : α → ℝ≥0∞) (g : α → β) (h : β → γ) (i : γ → δ) :
+    (f.to_discrete_measure g).map (i ∘ h) = ((f.to_discrete_measure g).map h).map i := by
+  repeat rw [Function.to_discrete_measure_map]
+  rw [comp_assoc]
+
 
 end PMFassumsofDiracs
 
