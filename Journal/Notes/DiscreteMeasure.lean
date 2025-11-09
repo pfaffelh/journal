@@ -33,6 +33,36 @@ lemma pairwise_disjoint_fiber_subtype (s : Set β) : Pairwise (Disjoint on fun (
   fun _ _ hab ↦ pairwise_disjoint_fiber g (Subtype.coe_ne_coe.mpr hab)
 
 
+-- to Mathlib.MeasureTheory.Measure.AEMeasurable
+lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7} (m : ι → Measure (Measure α)) :
+(sum fun (i : ι) ↦ m i).join = sum fun (i : ι) ↦ (m i).join := by
+  rw [Measure.join]
+  simp_rw [lintegral_sum_measure]
+  simp_rw [Measure.join]
+  ext s hs
+  rw [ofMeasurable_apply]
+  rw [Measure.sum_apply]
+  apply tsum_congr (fun i ↦ ?_)
+  rw [ofMeasurable_apply]
+  repeat assumption
+
+lemma Measure.bind_sum {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {ι : Type u_7} (m : ι → Measure α) (f : α → Measure β) (h : AEMeasurable f (sum fun i => m i)) :
+  (sum fun (i : ι) ↦ m i).bind f = sum fun (i : ι) ↦ (m i).bind f := by
+  rw [Measure.bind]
+  simp_rw [Measure.bind]
+  rw [Measure.map_sum]
+  rw [Measure.join_sum]
+  exact h
+
+lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {R : Type u_4} [SMul R ℝ≥0∞] [IsScalarTower R ℝ≥0∞ ℝ≥0∞] (c : R) (m : Measure α) (f : α → Measure β) :
+  (c • m).bind f = c • (m.bind f) := by
+  rw [Measure.bind]
+  simp_rw [Measure.bind]
+  rw [Measure.map_smul]
+  rw [Measure.join_smul]
+
+
+
 
 
 noncomputable def discreteMeasure (f : α → ℝ≥0∞) : @Measure α ⊤ :=
@@ -177,7 +207,7 @@ by
 
 section map
 
-noncomputable def map (μ : DiscreteMeasure α) (g : α → β) : (DiscreteMeasure β) := ⟨fun b ↦ μ (g⁻¹' {b})⟩
+noncomputable def map (g : α → β) (μ : DiscreteMeasure α) : (DiscreteMeasure β) := ⟨fun b ↦ μ (g⁻¹' {b})⟩
 
 @[simp]
 lemma map_weight (μ : DiscreteMeasure α) (g : α → β) (x : β) : (μ.map g).weight x = μ (g⁻¹' {x}) := by
@@ -234,12 +264,95 @@ lemma map_apply₂ (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.m
 
 end map
 
+
+section lintegral
+
+noncomputable def lintegral (μ : DiscreteMeasure α) (g : α → ℝ≥0∞) : ℝ≥0∞ := ∑' (a : α), μ {a} * (g a)
+
+lemma lintegral_eq_toMeasure (μ : DiscreteMeasure α) (g : α → ℝ≥0∞) : μ.lintegral g = ∫⁻ (a : α), g a ∂ μ.toMeasure := by
+  rw [toMeasure, discreteMeasure, lintegral]
+  simp only [lintegral_sum_measure, lintegral_smul_measure, lintegral_dirac, smul_eq_mul]
+  simp_rw [apply_singleton]
+
+end lintegral
+
+section join
+
+noncomputable def join (m : DiscreteMeasure (DiscreteMeasure α)) : (DiscreteMeasure α) := ⟨fun a ↦ ∑' (μ : DiscreteMeasure α), m {μ} * μ {a}⟩
+
+@[simp]
+lemma join_weight (m : DiscreteMeasure (DiscreteMeasure α)) (x : α) : m.join.weight x = ∑' (μ : DiscreteMeasure α), m {μ} * μ {x} := by
+  rfl
+
+lemma join_apply_eq_toMeasure (m : DiscreteMeasure (DiscreteMeasure α)) (s : Set α) : m.join s = (m.toMeasure.map toMeasure).join s := by
+  rw [Measure.join_apply (mα := ⊤) (hs := by measurability)]
+  rw [lintegral_map (hf := measurable_coe (by trivial)) (hg := by measurability)]
+  rw [← lintegral_eq_toMeasure, apply₂]
+  simp_rw [join_weight, lintegral]
+  rw [ENNReal.tsum_comm]
+  apply tsum_congr (fun μ ↦ ?_)
+  rw [ENNReal.tsum_mul_left]
+  congr
+  rw [m_iUnion_set_singleton]
+
+lemma join_toMeasure (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = (m.toMeasure.map toMeasure).join := by
+  ext s
+  rw [join_apply_eq_toMeasure]
+
+@[simp]
+lemma join_toMeasure' (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = sum (fun μ  ↦ m.weight μ • μ.toMeasure) := by
+  ext s hs
+  rw [join_apply_eq_toMeasure, toMeasure, discreteMeasure, Measure.map_sum (hf := AEMeasurable.of_discrete), Measure.join_sum, Measure.sum_apply _ hs, Measure.sum_apply _ hs]
+  apply tsum_congr (fun μ ↦ ?_)
+  rw [Measure.smul_apply]
+  rw [Measure.map_smul]
+  rw [Measure.join_smul]
+  rw [Measure.smul_apply]
+  rw [smul_eq_mul, smul_eq_mul]
+  rw [Measure.map_dirac]
+  rw [Measure.join_dirac]
+  measurability
+
+lemma join_apply (m : DiscreteMeasure (DiscreteMeasure α)) (s : Set α) : m.join s = ∑' (μ : DiscreteMeasure α), m {μ} * μ s := by
+  simp only [join_toMeasure']
+  rw [Measure.sum_apply (hs := by measurability)]
+  apply tsum_congr (fun μ ↦ ?_)
+  rw [Measure.smul_apply, smul_eq_mul]
+  rw [apply_singleton]
+
+end join
+
 section bind
 
-noncomputable def bind (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) : (DiscreteMeasure β) := ⟨fun b ↦ ∑' (a : α), μ {a} * (g a) {b}⟩
+noncomputable def bind (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) : (DiscreteMeasure β) := (μ.map g).join
 
+lemma bind_apply_eq_toMeasure (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (s : Set β) : μ.bind g s = μ.toMeasure.bind (toMeasure ∘ g) s := by
+  rw [bind, Measure.bind]
+  rw [join_apply_eq_toMeasure]
+  rw [← Measure.map_map (hg := by measurability) (hf := by measurability)]
+  rw [map_toMeasure]
 
+lemma bind_toMeasure (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β)  : (μ.bind g).toMeasure = μ.toMeasure.bind (toMeasure ∘ g) := by
+  ext s
+  rw [bind_apply_eq_toMeasure]
 
+lemma bind_apply (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (s : Set β) : μ.bind g s = sum (fun a ↦ μ.weight a • (g a).toMeasure) s := by
+  rw [bind_apply_eq_toMeasure, toMeasure, discreteMeasure, Measure.bind_sum (h := AEMeasurable.of_discrete)]
+  rw [Measure.sum_apply (hs := by measurability)]
+  rw [Measure.sum_apply (hs := by measurability)]
+  apply tsum_congr (fun b ↦ ?_)
+  rw [Measure.bind_smul]
+  rw [Measure.dirac_bind (f := toMeasure ∘ g) (hf := by measurability)]
+  rfl
+
+lemma bind_apply' (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (s : Set β) : μ.bind g s = ∑' (a : α), μ {a} * (g a) s := by
+  rw [bind_apply, Measure.sum_apply (hs := by measurability)]
+  simp_rw [apply_singleton, Measure.smul_apply]
+  rfl
+
+@[simp]
+lemma bind_weight (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (x : β) : (μ.bind g).weight x = ∑' (a : α), μ {a} * (g a) {x} := by
+  rw [← apply_singleton, bind_apply']
 
 end bind
 
