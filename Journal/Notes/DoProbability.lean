@@ -8,6 +8,34 @@ universe u v
 variable {α β : Type u}
 variable {γ : Type v}
 
+
+open PMF
+
+lemma PMF.bernoulli_not (p : ℝ≥0) (h : p ≤ 1) : (
+    do
+      let X ← PMF.bernoulli p h
+      return (not X))
+    =
+    PMF.bernoulli (1 - p) tsub_le_self := by
+  simp only [LawfulMonad.bind_pure_comp]
+  ext x
+  change map not (PMF.bernoulli p h) x = (PMF.bernoulli (1 - p) _ ) x
+  rw [PMF.map_apply]
+  by_cases h' : x <;> rw [tsum_bool] <;> simp [h']
+  rw [ENNReal.sub_sub_cancel (one_ne_top)]
+  simp only [coe_le_one_iff, h]
+
+
+lemma do_bind (ℙ : PMF α) (κ : α → PMF β) :
+  (do let X ← ℙ; κ X) = (ℙ ∘ κ) := rfl
+
+lemma bernoulli_not : (bernoulli p h).map not = bernoulli (1-p) tsub_le_self := by
+  simp only [PMF.map]
+  ext x
+  cases' x <;>
+  simp [tsum_bool, ENNReal.sub_sub_cancel one_ne_top, h]
+
+
 section some_notation
 
 -- `PMF.pure`: Dirac measure
@@ -202,6 +230,16 @@ variable (p : ℝ≥0) (h : p ≤ 1)
 def coin : PMF Bool := PMF.bernoulli p h
 
 open PMF
+
+lemma coin_not' : (do let X ← coin p h; return (not X)) = coin (1-p) (tsub_le_self) := by
+  simp [PMF.bind]
+  rw [Pure.pure]
+
+  exact coin_not p h
+
+
+lemma do_bind (ℙ : PMF α) (κ : α → PMF β) :
+  (do let X ← ℙ; κ X) = (ℙ ∘ κ) := rfl
 
 lemma bernoulli_not : (bernoulli p h).map not = bernoulli (1-p) tsub_le_self := by
   simp only [PMF.map]
