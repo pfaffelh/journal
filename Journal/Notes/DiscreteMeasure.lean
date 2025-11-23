@@ -585,16 +585,21 @@ example {α β : Type u} (f : α → β) (μ : DiscreteProbabilityMeasure α): f
 lemma map_coe (g : α → β) (μ : DiscreteProbabilityMeasure α) : (μ.map g) = μ.val.map g := by
   rfl
 
-lemma map_map {α β : Type u} (μ : DiscreteProbabilityMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
+example {α β : Type u} (f : α → β) (μ : DiscreteProbabilityMeasure α) : f <$> μ.val = (f <$> μ).val := by rfl
+
+lemma map_map {α β γ: Type u} (μ : DiscreteProbabilityMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
   apply Subtype.ext
-  repeat rw [map_coe]
-  rw [DiscreteMeasure.map_map]
+  simp [map_coe]
+  change h <$> (g <$> μ.val) = (h ∘ g) <$> μ.val
+  simp [Functor.map_map]
+  rfl
 
 theorem id_map (μ : DiscreteProbabilityMeasure α) :
 μ.map id = μ := by
   apply Subtype.ext
-  rw [map_coe]
-  rw [DiscreteMeasure.id_map]
+  simp [map_coe]
+  change id <$> μ.val = μ.val
+  simp [LawfulFunctor.id_map]
 
 -- join
 noncomputable def join (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasure α)) : (DiscreteProbabilityMeasure α) := by
@@ -786,7 +791,9 @@ lemma Bool.mem_not (b : Bool) : not ⁻¹' {b} = {!b} := by
 lemma coin_not (p : ℝ≥0) (h : p ≤ 1) : (coin p h).map not  = coin (1-p) (tsub_le_self) := by
   ext x
   rw [DiscreteProbabilityMeasure.map_coe]
-  cases x <;> rw [map_weight, Bool.mem_not, apply_singleton', coin_weight, coin_weight, tsub_tsub_cancel_of_le h] <;> simp
+  cases x <;> rw [map_weight, Bool.mem_not, apply_singleton', coin_weight, coin_weight] <;> norm_cast
+  rw[tsub_tsub_cancel_of_le h]
+  simp
 
 end coin
 
