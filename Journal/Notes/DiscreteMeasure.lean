@@ -1,4 +1,28 @@
+/-
+Copyright (c) 2025 Peter Pfaffelhuber. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Peter Pfaffelhuber
+-/
+
 import Mathlib
+
+/-!
+# Discrete measures and discrete probability measures
+
+We develop a setup for discrete (probability) measures, which is an alternative to PMFs (Probability Mass Functions). Here, a `μ : DiscreteMeasure` is a sum of `dirac`s with weights given by `μ.weight : α → ℝ≥0∞`. Since `dirac a` is a `@Measure α ⊤`, we immediately have that a `DiscreteMeasure α` is a `@Measure α ⊤`, i.e., it is defined on the power set of `α`. We implement a coercion to `Measure`. Note that `μ : DiscreteMeasure α` is not only σ-additive, but additive; see `DiscreteMeasure.m_iUnion`.
+
+`DiscreteProbabilityMeasure α` is the subtype of `DiscreteMeasure α`, such that `μ : DiscreteProbabilityMeasure α` has `HasSum μ.weight 1` (as for PMFs).
+
+This setup combines the following features:
+
+* We can use the `Measure`-library right from the start (as opposed to `PMF`s). (E.g., integrating wrt a discrete Measure can use linearity in the Measure, and integrating wrt `dirac`. The proofs of the usual properties between `map`, `bind` and `join` can use their counterparts in `Measure`.)
+* We establish that `DiscreteProbabilityMeasure α` is a `LawfulMonad` (as well as `DiscreteMeasure`). In particular, it allows for `do`-notation.
+* We do not only have probability measures in this setup (as in `PMF`), but `DiscreteMeasure`s as well. This will allow for a similar treatment of these two cases. (Discrete measures appear frequently in probability theory in the form of random measures.)
+* It will be easier to connect `DiscreteMeasure` with `Measure` (since they are already measures). E.g., weak convergence of `P : ℕ → DiscreteMeasure α` to some `Measure α` is easy to formulate. (For this, we have to `trim` the `P n`s to the corresponding `MeasureableSpace α` instance.)
+
+As one example, we have started to establish some results on `coin p`, which is a Bernoulli distribution.
+
+-/
 
 open MeasureTheory ProbabilityTheory Measure Function
 
@@ -6,17 +30,17 @@ open scoped ENNReal NNReal
 
 universe u v w
 
-variable {α β δ : Type*}
+variable {α β γ δ : Type*}
 
 -- add to indicator
 lemma Set.indicator.mul_indicator_eq (f : α → ℝ≥0∞) (s : Set α) (a : α) : f a * s.indicator (fun _ ↦ 1) a = s.indicator f a := by
   simp [Set.indicator]
 
 lemma ite_ite (d : Prop) [Decidable d] (a b c : α) : (if d then a else if d then b else c) = (if d then a else c) := by
-  by_cases h : d <;> simp only [h, ↓reduceIte]
+  split_ifs <;> rfl
 
 lemma ite_double (d : Prop) [Decidable d] (a b : α) : (if d then a else if d then b else a) = a := by
-  rw [ite_ite, ite_self]
+  split_ifs <;> rfl
 
 @[simp]
 lemma Set.indicator.mul_indicator_eq' (f : α → ℝ≥0∞) (s : Set α) (a : α) : f a * s.indicator 1 a = s.indicator f a := by
@@ -38,6 +62,14 @@ lemma pairwise_disjoint_fiber' (s : Set β) : Pairwise (Disjoint on fun (x : β)
 
 lemma pairwise_disjoint_fiber_subtype (s : Set β) : Pairwise (Disjoint on fun (x : s) => (g⁻¹' {x.val} : Set α)) :=
   fun _ _ hab ↦ pairwise_disjoint_fiber g (Subtype.coe_ne_coe.mpr hab)
+
+
+
+-- to Function
+
+lemma Function.comp_apply' (f : α → β) (g : β → γ): (g ∘ fun x => f x) = fun x => g (f x) := by
+  simp_rw [← comp_apply]
+
 
 
 -- to Mathlib.MeasureTheory.Measure.AEMeasurable
@@ -62,9 +94,15 @@ lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace �
 
 
 
-
+section discreteMeasures
 
 -- let us start with discrete measures now!
+
+
+/- In this file, all measures are defined on `⊤`, i.e., the power set σ-algebra. Later, we might want to use them on small σ-algebras. For this, then take `toMeasure.trim`. -/
+instance : (MeasurableSpace α) := ⊤
+
+instance : (MeasurableSpace β) := ⊤
 
 structure DiscreteMeasure (α : Type*) where
   weight : α → ℝ≥0∞
@@ -146,6 +184,11 @@ by
 lemma apply_univ (μ : DiscreteMeasure α) : μ Set.univ = ∑' (a : α), μ.weight a := by
   simp
 
+
+lemma apply_univ' (μ : DiscreteMeasure α) (s : δ → Set α) (hs₀ : Pairwise (Disjoint on s)) (hs₁ : Set.univ = ⋃ d, s d): μ Set.univ = ∑' (d : δ), μ (s d) := by
+  rw [hs₁]
+  exact m_iUnion μ s hs₀
+
 lemma isProbabilityMeasure_iff (μ : DiscreteMeasure α) : IsProbabilityMeasure μ.toMeasure ↔ HasSum μ.weight 1 := by
   rw [MeasureTheory.isProbabilityMeasure_iff, DiscreteMeasure.apply_univ, Summable.hasSum_iff ENNReal.summable]
 
@@ -153,17 +196,14 @@ section map
 
 noncomputable def map (g : α → β) (μ : DiscreteMeasure α) : (DiscreteMeasure β) := ⟨fun b ↦ μ (g⁻¹' {b})⟩
 
+noncomputable instance : Functor DiscreteMeasure where
+  map := map
+
 @[simp]
 lemma map_weight (μ : DiscreteMeasure α) (g : α → β) (x : β) : (μ.map g).weight x = μ (g⁻¹' {x}) := by
   rfl
 
-instance topMeasurableSpace'' : MeasurableSpace α := ⊤
-
-instance topMeasurableSpace : MeasurableSpace β := ⊤
-
-instance topMeasurableSpace' : MeasurableSpace γ := ⊤
-
-lemma map_eq_toMeasure (μ : DiscreteMeasure α) (g : α → β) : μ.map g = μ.toMeasure.map g := by
+lemma map_eq_toMeasure (μ : DiscreteMeasure α) (g : α → β) : μ.map g = Measure.map g μ.toMeasure := by
   ext s
   rw [Measure.map_apply (mα := ⊤) (mβ := ⊤) (hf := by measurability) (hs := by measurability)]
   rw [apply'']
@@ -172,18 +212,16 @@ lemma map_eq_toMeasure (μ : DiscreteMeasure α) (g : α → β) : μ.map g = μ
   nth_rw 1 [h]
   exact (m_iUnion _ _ (pairwise_disjoint_fiber_subtype s)).symm
 
--- lemma map_toMeasure (μ : DiscreteMeasure α) (g : α → β)  : (μ.map g).toMeasure = μ.toMeasure.map g := by
---   rw [map_eq_toMeasure]
-
-lemma map_coe  (μ : DiscreteMeasure α) (f : α → β) : ((μ.map f : DiscreteMeasure β) : Measure β) = Measure.map f (μ : Measure α) := by
+lemma map_coe  (μ : DiscreteMeasure α) (f : α → β) : ((μ.map f : DiscreteMeasure β) : @Measure β ⊤) = Measure.map f (μ : @Measure α ⊤) := by
   exact map_eq_toMeasure μ f
 
-lemma map_toMeasure' (μ : DiscreteMeasure α) (g : α → β)  : (μ.map g).toMeasure = sum (fun a ↦ μ.weight a • (@dirac β ⊤ (g a))) := by
+lemma map_toMeasure' (μ : DiscreteMeasure α) (g : α → β)  : (μ.map g).toMeasure = sum (m0 := ⊤) (fun a ↦ μ.weight a • (@dirac β ⊤ (g a))) := by
   rw [map_eq_toMeasure]
   ext s
   rw [toMeasure, Measure.map_sum]
-  simp_rw [Measure.map_smul, Measure.map_dirac (f := g) (hf := (by measurability))]
-  measurability
+  have gh : Measurable g := by measurability
+  simp_rw [Measure.map_smul, @Measure.map_dirac α β ⊤ ⊤ g (by measurability)]
+  apply @AEMeasurable.of_discrete α β ⊤ ⊤
 
 lemma map_map (μ : DiscreteMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
   ext s
@@ -211,6 +249,12 @@ lemma map_apply₁ (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.m
 lemma map_apply''' (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.map g s = ∑' (a : g⁻¹' s), (μ.weight a.val) := by
   rw [map_apply, apply'']
 
+theorem id_map (μ : DiscreteMeasure α) :
+μ.map id = μ := by
+  apply toMeasure_ext'
+  rw [map_coe]
+  exact Measure.map_id
+
 end map
 
 
@@ -232,7 +276,7 @@ noncomputable def join (m : DiscreteMeasure (DiscreteMeasure α)) : (DiscreteMea
 lemma join_weight (m : DiscreteMeasure (DiscreteMeasure α)) (x : α) : m.join.weight x = ∑' (μ : DiscreteMeasure α), m {μ} * μ {x} := by
   rfl
 
-lemma join_coe (m : DiscreteMeasure (DiscreteMeasure α)) : m.join = (m.toMeasure.map toMeasure).join := by
+lemma join_coe (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = Measure.join (mα := ⊤) ((Measure.map toMeasure m.toMeasure)):= by
   ext s
   rw [Measure.join_apply (mα := ⊤) (hs := by measurability)]
   rw [lintegral_map (hf := measurable_coe (by trivial)) (hg := by measurability)]
@@ -244,17 +288,20 @@ lemma join_coe (m : DiscreteMeasure (DiscreteMeasure α)) : m.join = (m.toMeasur
   simp_rw [apply_singleton', ← apply'']
 
 lemma join_toMeasure' (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = sum (fun μ  ↦ m.weight μ • μ.toMeasure) := by
-  ext s hs
-  rw [join_coe, toMeasure, Measure.map_sum (hf := AEMeasurable.of_discrete), Measure.join_sum, Measure.sum_apply _ hs, Measure.sum_apply _ hs]
-  apply tsum_congr (fun μ ↦ ?_)
-  rw [Measure.smul_apply]
-  rw [Measure.map_smul]
-  rw [Measure.join_smul]
-  rw [Measure.smul_apply]
-  rw [smul_eq_mul, smul_eq_mul]
-  rw [Measure.map_dirac]
-  rw [Measure.join_dirac]
-  measurability
+  ext s
+  rw [join_coe, toMeasure, Measure.map_sum (hf := AEMeasurable.of_discrete), Measure.join_sum, Measure.sum_apply, Measure.sum_apply]
+  · apply tsum_congr (fun μ ↦ ?_)
+    rw [Measure.smul_apply]
+    rw [Measure.map_smul]
+    rw [Measure.join_smul]
+    rw [Measure.smul_apply]
+    rw [smul_eq_mul, smul_eq_mul]
+    rw [Measure.map_dirac]
+    rw [Measure.join_dirac]
+    measurability
+  · measurability
+  · measurability
+
 
 lemma join_apply (m : DiscreteMeasure (DiscreteMeasure α)) (s : Set α) : m.join s = ∑' (μ : DiscreteMeasure α), m {μ} * μ s := by
   simp only [join_toMeasure']
@@ -307,45 +354,128 @@ lemma bind_apply (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (s : 
   simp
 
 @[simp]
-lemma bind_weight (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (x : β) : (μ.bind g).weight x = ∑' (a : α), μ.weight a * (g a) {x} := by
-  rw [← apply_singleton', bind_apply]
+lemma bind_weight (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (x : β) : (μ.bind g).weight x = ∑' (a : α), μ.weight a * (g a).weight x := by
+  simp_rw [← apply_singleton', bind_apply, apply_singleton']
 
 lemma join_map_map (m : DiscreteMeasure (DiscreteMeasure α)) (f : α → β) : (map (map f) m).join = map f m.join := by
+
   rw [← bind]
   ext x
   rw [← apply_singleton', bind_apply, map_weight, join_apply]
   apply tsum_congr (fun b ↦ ?_)
-  congr <;> rw [apply_singleton']
+  congr 1
+  rw [apply_singleton']
+  rw [apply_singleton']
   rw [map_weight]
+
+theorem bind_const (μ₁ : DiscreteMeasure α) (μ₂ : DiscreteMeasure β) : (μ₁.bind fun (_ : α) => μ₂) =  (μ₁ Set.univ) • μ₂.toMeasure := by
+  rw [bind_coe]
+  rw [Function.comp_apply']
+  rw [Measure.bind_const]
+
+theorem bind_bind (μ₁ : DiscreteMeasure α) (f : α → DiscreteMeasure β) (g : β → DiscreteMeasure γ) :
+(μ₁.bind f).bind g = μ₁.bind fun (a : α) => (f a).bind g := by
+  apply toMeasure_ext'
+  repeat rw [bind_coe]
+  rw [Measure.bind_bind (hf := AEMeasurable.of_discrete) (hg := AEMeasurable.of_discrete)]
+  congr
+  ext a' s
+  rw [comp_apply, comp_apply, bind_coe]
+
+theorem bind_comm (μ₁ : DiscreteMeasure α) (μ₂ : DiscreteMeasure β) (f : α → β → DiscreteMeasure γ) :
+(μ₁.bind fun (a : α) => μ₂.bind (f a)) = μ₂.bind fun (b : β) => μ₁.bind fun (a : α) => f a b := by
+  ext x
+  repeat simp_rw [bind_weight, ← ENNReal.tsum_mul_left]
+  rw [ENNReal.tsum_comm]
+  apply tsum_congr (fun b ↦ tsum_congr (fun a ↦ ?_))
+  ring
 
 end bind
 
-section coin
+section pure
 
-open Bool ENNReal
-example (p : ℝ≥0) (hp : p ≤ 1): ∑' (b : Bool), (if b then p else (1 - p)) = 1 := by
-  rw [tsum_bool]
-  simp only [false_eq_true, ↓reduceIte]
-  exact tsub_add_cancel_of_le hp
+noncomputable def pure (a : α) : DiscreteMeasure α :=
+  ⟨({a} : Set α).indicator 1⟩
 
-lemma l1 (p : ℝ≥0) (h : p ≤ 1) : 1 - (1 - p) = p := by
-  rw [tsub_tsub_cancel_of_le h]
+@[simp]
+lemma pure_weight (a : α) : (pure a).weight = ({a} : Set α).indicator 1 := rfl
 
-noncomputable def coin (p : ℝ≥0) (_ : p ≤ 1) : DiscreteMeasure Bool :=
-  ⟨fun (b : Bool) ↦ if b then p else (1 - p)⟩
+@[simp]
+lemma pure_apply (a : α) (s : Set α) : (pure a) s = s.indicator 1 a := by
+  rw [apply, pure_weight, Set.indicator_indicator]
+  by_cases h : a ∈ s
+  · rw [Set.inter_eq_self_of_subset_right (Set.singleton_subset_iff.mpr h)]
+    simp only [h, Set.indicator_of_mem, Pi.one_apply]
+    rw [← apply, apply'', tsum_singleton]
+    rfl
+  · rw [Set.inter_singleton_eq_empty.mpr h]
+    simp [h]
 
-lemma coin_weight (p : ℝ≥0) (h : p ≤ 1) (b : Bool) : (coin p h).weight b = if b then p else (1 - p) := by
-  rw [coin]
-  cases b <;> simp
+lemma pure_eq_dirac (a : α) : (pure a).toMeasure = Measure.dirac a := by
+  ext s
+  rw [pure_apply, Measure.dirac_apply]
 
-lemma Bool.mem_not (b : Bool) : not ⁻¹' {b} = {!b} := by
-    ext y; cases' y <;> simp
+lemma map_toDirac : (toMeasure ∘ pure) = @Measure.dirac α  ⊤ := by
+  funext a
+  rw [← pure_eq_dirac]
+  simp only [comp_apply]
 
-lemma coin_not (p : ℝ≥0) (h : p ≤ 1) : (coin p h).map not  = coin (1-p) (tsub_le_self) := by
+lemma pure_coe (a : α) : (pure a) = Measure.dirac a := by
+  ext s
+  rw [pure_apply, Measure.dirac_apply' a (by measurability)]
+
+lemma pure_hasSum (a : α) : HasSum (pure a).weight 1 := by
+  rw [Summable.hasSum_iff ENNReal.summable, ← apply_univ,  pure_coe, dirac_apply_of_mem (Set.mem_univ a)]
+
+lemma map_pure (a : α) (f : α → β) : (pure a).map f = pure (f a) := by
   ext x
-  cases x <;> rw [map_weight, Bool.mem_not, apply_singleton', coin_weight, coin_weight, l1 p h] <;> simp
+  have h : a ∈ (f ⁻¹' {x}) ↔ (x ∈ ({f a} : Set β))  := by exact comm.symm
+  rw [map_weight, pure_weight, pure_apply]
+  exact Set.indicator_eq_indicator (id h) rfl
 
-end coin
+theorem pure_bind (a : α) (f : α → DiscreteMeasure β) :
+(pure a).bind f = f a := by
+  apply toMeasure_ext'
+  rw [bind_coe]
+  rw [pure_eq_dirac]
+  rw [dirac_bind (hf :=  by measurability)]
+  rfl
+
+theorem bind_pure (μ : DiscreteMeasure α) :
+μ.bind pure = μ := by
+  apply toMeasure_ext'
+  rw [bind_coe]
+  rw [Measure.bind, map_toDirac, ← Measure.bind]
+  rw [Measure.bind_dirac]
+
+lemma bind_pure_comp (f : α → β) (μ : DiscreteMeasure α) : μ.bind (fun a ↦ pure (f a)) =  μ.map f := by
+  apply toMeasure_ext'
+  rw [bind_coe, map_coe]
+  rw [Function.comp_apply']
+  simp_rw [pure_eq_dirac]
+  rw [Measure.bind_dirac_eq_map (hf := by measurability)]
+
+end pure
+
+section monad
+
+noncomputable instance : Monad DiscreteMeasure where
+  pure a := pure a
+  bind μ f := μ.bind f
+
+instance : LawfulFunctor DiscreteMeasure where
+  map_const := rfl
+  id_map := id_map
+  comp_map f g μ := (map_map μ f g).symm
+
+instance : LawfulMonad DiscreteMeasure := LawfulMonad.mk'
+  (bind_pure_comp := bind_pure_comp)
+  (id_map := id_map)
+  (pure_bind := pure_bind)
+  (bind_assoc := bind_bind)
+
+end monad
+
 
 end DiscreteMeasure
 
@@ -371,6 +501,9 @@ noncomputable instance : CoeFun (DiscreteProbabilityMeasure α) (fun _ => Set α
   coe μ := μ.val.toMeasure
 
 
+
+
+
 namespace DiscreteProbabilityMeasure
 
 /-- Coercion from `MeasureTheory.DiscreteProbabilityMeasure α` to `MeasureTheory.DiscreteMeasure α`. -/
@@ -388,9 +521,6 @@ def ofDiscreteMeasure (μ : DiscreteMeasure α) (hμ : HasSum μ.weight 1) : Dis
 def ofDiscreteMeasure' (μ : DiscreteMeasure α) (hμ : IsProbabilityMeasure μ.toMeasure) : DiscreteProbabilityMeasure α :=
   ⟨μ, (DiscreteMeasure.isProbabilityMeasure_iff μ).mp hμ⟩
 
---lemma apply (μ : DiscreteProbabilityMeasure α) (s : Set α) : μ s = ∑' (i : α), (μ.val.weight i : ℝ≥0∞) * s.indicator 1 i := by
---  simp
-
 @[simp]
 lemma apply_univ_eq_one (P : DiscreteProbabilityMeasure α) : P Set.univ = 1 := by
   rw [DiscreteMeasure.apply_univ]
@@ -401,15 +531,19 @@ lemma apply_le_one (P : DiscreteProbabilityMeasure α) (s : Set α) : P s ≤ 1 
   exact prob_le_one
 
 lemma apply_ne_top (P : DiscreteProbabilityMeasure α) (s : Set α) : P s ≠ ⊤ := by
-  exact measure_ne_top P s
+  have h : IsProbabilityMeasure P.val.toMeasure := by exact
+    instIsProbabilityMeasureToMeasureValDiscreteMeasureHasSumENNRealWeightOfNatUnconditional P
+  rw [isProbabilityMeasure_iff] at h
+  apply ne_top_of_le_ne_top ENNReal.one_ne_top
+  exact apply_le_one P s
 
 @[simp]
-lemma toProbabilityMeasure_apply (P : DiscreteProbabilityMeasure α) (s : Set α) : P.toProbabilityMeasure.toMeasure s = ∑' (i : α), s.indicator P.val.weight i := by
+lemma toProbabilityMeasure_apply (P : DiscreteProbabilityMeasure α) (s : Set α) : (toProbabilityMeasure P).toMeasure s = ∑' (i : α), s.indicator P.val.weight i := by
   rw [← DiscreteMeasure.apply]
   rfl
 
 lemma singleton_eq_weight (μ : DiscreteProbabilityMeasure α) : (fun (a : α) ↦ μ {a}) = μ.val.weight := by
-  apply DiscreteMeasure.singleton_eq_weight
+  exact μ.val.singleton_eq_weight
 
 @[ext]
 lemma ext {μ₁ μ₂ : DiscreteProbabilityMeasure α}
@@ -434,18 +568,33 @@ by
 
 -- map
 lemma map_isProbabilityMeasure (g : α → β) (μ : DiscreteProbabilityMeasure α) : HasSum (μ.val.map g).weight 1 := by
-  rw [← DiscreteMeasure.isProbabilityMeasure_iff]
-  have h : IsProbabilityMeasure μ.val.toMeasure := by
-    rw [DiscreteMeasure.isProbabilityMeasure_iff μ.val]
-    exact μ.prop
-  rw [DiscreteMeasure.map_coe]
-  rw [@isProbabilityMeasure_map_iff α β ⊤ ⊤ μ.val.toMeasure g (by measurability)]
-  exact h
+  rw [Summable.hasSum_iff ENNReal.summable]
+  simp_rw [μ.val.map_weight]
+  nth_rw 2 [← apply_univ_eq_one μ]
+  rw [μ.val.apply_univ' _ (pairwise_disjoint_fiber g)]
+  ext x
+  simp
 
 noncomputable def map (g : α → β) (μ : DiscreteProbabilityMeasure α) : (DiscreteProbabilityMeasure β) := ⟨⟨fun b ↦ μ (g⁻¹' {b})⟩, map_isProbabilityMeasure g μ⟩
 
-lemma map_eq_toDiscreteMeasure (g : α → β) (μ : DiscreteProbabilityMeasure α) : (μ.map g) = μ.val.map g := by
+noncomputable instance : Functor DiscreteProbabilityMeasure where
+  map := map
+
+example {α β : Type u} (f : α → β) (μ : DiscreteProbabilityMeasure α): f <$> μ = (map f μ) := by rfl
+
+lemma map_coe (g : α → β) (μ : DiscreteProbabilityMeasure α) : (μ.map g) = μ.val.map g := by
   rfl
+
+lemma map_map {α β : Type u} (μ : DiscreteProbabilityMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
+  apply Subtype.ext
+  repeat rw [map_coe]
+  rw [DiscreteMeasure.map_map]
+
+theorem id_map (μ : DiscreteProbabilityMeasure α) :
+μ.map id = μ := by
+  apply Subtype.ext
+  rw [map_coe]
+  rw [DiscreteMeasure.id_map]
 
 -- join
 noncomputable def join (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasure α)) : (DiscreteProbabilityMeasure α) := by
@@ -488,7 +637,7 @@ noncomputable def join (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasu
 
 lemma join_val (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasure α)) : m.join.val = DiscreteMeasure.join (DiscreteMeasure.map Subtype.val m.val) := rfl
 
-lemma join_eq_toDiscreteMeasure (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasure α)) : m.join = (DiscreteMeasure.map Subtype.val m.val).join := by
+lemma join_coe (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasure α)) : m.join = (DiscreteMeasure.map Subtype.val m.val).join := by
   rfl
 
 
@@ -497,87 +646,148 @@ lemma join_eq_toDiscreteMeasure (m : DiscreteProbabilityMeasure (DiscreteProbabi
 -- bind
 noncomputable def bind (μ : DiscreteProbabilityMeasure α) (g : α → DiscreteProbabilityMeasure β) : (DiscreteProbabilityMeasure β) := (μ.map g).join
 
-lemma bind_eq_toDiscreteMeasure (μ : DiscreteProbabilityMeasure α) (g : α → DiscreteProbabilityMeasure β) : μ.bind g = μ.val.bind (Subtype.val ∘ g) := by
-  rw [bind, DiscreteMeasure.bind, join_eq_toDiscreteMeasure]
+lemma bind_coe (μ : DiscreteProbabilityMeasure α) (g : α → DiscreteProbabilityMeasure β) : μ.bind g = μ.val.bind (Subtype.val ∘ g) := by
+  rw [bind, DiscreteMeasure.bind, join_coe]
   congr
   rw [← DiscreteMeasure.map_map]
   congr
 
 lemma join_map_map (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasure α)) (g : α → β) : map g m.join = (map (map g) m).join := by
   ext x
-  rw [map_eq_toDiscreteMeasure, join_eq_toDiscreteMeasure]
-  rw [join_eq_toDiscreteMeasure, map_eq_toDiscreteMeasure]
+  rw [map_coe, join_coe]
+  rw [join_coe, map_coe]
   rw [← DiscreteMeasure.join_map_map]
   rw [DiscreteMeasure.map_map]
   rw [DiscreteMeasure.map_map]
   congr
 
-end DiscreteProbabilityMeasure
+theorem bind_const (μ₁ : DiscreteProbabilityMeasure α) (μ₂ : DiscreteProbabilityMeasure β) : (μ₁.bind fun (x : α) => μ₂) = μ₂ := by
+  apply Subtype.ext
+  rw [bind_coe]
+  rw [Function.comp_apply']
+  apply DiscreteMeasure.toMeasure_ext'
+  rw [DiscreteMeasure.bind_const]
+  rw [measure_univ, one_smul]
 
-open Classical
-noncomputable def DiscreteMeasure.pure (a : α) : DiscreteMeasure α :=
-  ⟨fun b ↦ if b = a then 1 else 0⟩
-
-@[simp]
-lemma DiscreteMeasure.pure_weight (a : α) : (DiscreteMeasure.pure a).weight = fun b ↦ if b = a then 1 else 0 := rfl
-
-@[simp]
-lemma DiscreteMeasure.pure_apply (a : α) (s : Set α) : (DiscreteMeasure.pure a) s = s.indicator 1 a := by
-  simp only [apply, pure_weight, DiscreteMeasure.apply]
-  rw [ENNReal.tsum_eq_add_tsum_ite a]
-
-  -- simp only [↓reduceIte]
-  nth_rw 1 [← add_zero (s.indicator 1 a)]
+theorem bind_bind (μ₁ : DiscreteProbabilityMeasure α) (f : α → DiscreteProbabilityMeasure β) (g : β → DiscreteProbabilityMeasure γ) :
+(μ₁.bind f).bind g = μ₁.bind fun (a : α) => (f a).bind g := by
+  apply Subtype.ext
+  rw [bind_coe]
+  rw [bind_coe]
+  rw [bind_coe]
+  rw [DiscreteMeasure.bind_bind]
   congr
-
-  rw [ENNReal.tsum_eq_zero]
-  intro i
-  exact ite_double (i = a) 0 (s.indicator 1 i)
-
-lemma DiscreteMeasure.pure_coe (a : α) : (DiscreteMeasure.pure a) = Measure.dirac a := by
   ext s
-  rw [DiscreteMeasure.pure_apply, Measure.dirac_apply' a (by measurability)]
+  rw [comp_apply, comp_apply, bind_coe]
 
-open Classical
-noncomputable def DiscreteProbabilityMeasure.pure (a : α) : DiscreteProbabilityMeasure α :=
-  ⟨DiscreteMeasure.pure a, by rw [Summable.hasSum_iff ENNReal.summable, DiscreteMeasure.pure, tsum_ite_eq]⟩
+theorem bind_comm (μ₁ : DiscreteProbabilityMeasure α) (μ₂ : DiscreteProbabilityMeasure β) (f : α → β → DiscreteProbabilityMeasure γ) :
+(μ₁.bind fun (a : α) => μ₂.bind (f a)) = μ₂.bind fun (b : β) => μ₁.bind fun (a : α) => f a b := by
+  apply Subtype.ext
+  repeat rw [bind_coe]
+  rw [Function.comp_apply']
+  rw [Function.comp_apply']
+  simp_rw [bind_coe]
+  rw [DiscreteMeasure.bind_comm]
+  rfl
+section pure
 
-namespace DiscreteProbabilityMeasure
+noncomputable def pure (a : α) : DiscreteProbabilityMeasure α :=
+  ⟨DiscreteMeasure.pure a, DiscreteMeasure.pure_hasSum a⟩
 
 @[simp]
-lemma pure_eq_toDiscreteMeasure (a : α) (s : Set α) : DiscreteProbabilityMeasure.pure a s = (DiscreteMeasure.pure a) s := by
-  simp only [DiscreteProbabilityMeasure.pure, DiscreteMeasure.apply, discreteMeasure_apply, DiscreteMeasure.pure_weight]
+lemma pure_coe (a : α) : DiscreteProbabilityMeasure.pure a = (DiscreteMeasure.pure a) := by
+  rfl
+
+lemma pure_coe' : DiscreteMeasure.pure (α := α)= (Subtype.val ∘ DiscreteProbabilityMeasure.pure) := by
+  rfl
+
+lemma map_pure (a : α) (f : α → β) : (DiscreteProbabilityMeasure.pure a).map f = DiscreteProbabilityMeasure.pure (f a) := by
+  apply Subtype.ext
+  rw [map_coe, pure_coe, DiscreteMeasure.map_pure]
+  rfl
 
 theorem pure_bind (a : α) (f : α → DiscreteProbabilityMeasure β) :
 (pure a).bind f = f a := by
+  -- apply Subtype.ext
   apply Subtype.ext
+  rw [bind_coe, pure_coe]
+  rw [DiscreteMeasure.pure_bind]
+  rfl
+
+theorem bind_pure (μ : DiscreteProbabilityMeasure α) :
+μ.bind pure = μ := by
+  apply Subtype.ext
+  rw [bind_coe, ← pure_coe']
+  rw [DiscreteMeasure.bind_pure]
+
+lemma bind_pure_comp (f : α → β) (μ : DiscreteProbabilityMeasure α) : μ.bind (fun a ↦ pure (f a)) =  μ.map f := by
+  apply Subtype.ext
+  rw [bind_coe, comp_apply', map_coe]
+  simp_rw [pure_coe]
+  rw [DiscreteMeasure.bind_pure_comp]
 
 
-  rw [DiscreteMeasure.apply_singleton]
-  rw [DiscreteMeasure.apply_singleton]
-  rw [bind_eq_toDiscreteMeasure]
-  rw [DiscreteMeasure.bind_weight]
-  -- conv => left; left; intro b; simp?
-  simp_rw [pure_eq_toDiscreteMeasure, DiscreteMeasure.pure_apply, mul_comm]
+end pure
 
-  rw [← tsum_subtype]
+section monad
 
-  , Set.indicator, Set.mem_singleton_iff]
+noncomputable instance : Monad DiscreteProbabilityMeasure where
+  pure a := pure a
+  bind pa pb := pa.bind pb
 
-  simp only [Set.mem_singleton_iff, Pi.one_apply, comp_apply, DiscreteMeasure.apply,
-    discreteMeasure_apply, Set.indicator.mul_indicator_eq', ite_mul, one_mul, zero_mul]
-  rw [Set.mem_singleton]
+instance : LawfulFunctor DiscreteProbabilityMeasure where
+  map_const := rfl
+  id_map := id_map
+  comp_map f g μ := (map_map μ f g).symm
 
+instance : LawfulMonad DiscreteProbabilityMeasure := LawfulMonad.mk'
+  (bind_pure_comp := bind_pure_comp)
+  (id_map := id_map)
+  (pure_bind := pure_bind)
+  (bind_assoc := bind_bind)
 
-  simp?
-
-
-
-
-
-
-  sorry
-
+end monad
 
 end DiscreteProbabilityMeasure
+
+end DiscreteProbabilityMeasure
+
+
+
+namespace DiscreteProbabilityMeasure
+
+section coin
+
+open Bool ENNReal DiscreteMeasure
+
+noncomputable def coin (p : ℝ≥0) (h : p ≤ 1) : DiscreteProbabilityMeasure Bool :=
+  ⟨⟨fun (b : Bool) ↦ if b then (p : ℝ≥0∞) else (1 - p : ℝ≥0∞)⟩, by
+    rw [Summable.hasSum_iff ENNReal.summable]
+    rw [tsum_bool]
+    simp only [false_eq_true, ↓reduceIte]
+    norm_cast
+    exact tsub_add_cancel_of_le h
+  ⟩
+
+
+-- We have do notation (as for PMF)!
+example (p : ℝ≥0) (h : p ≤ 1) : coin p h = do
+  let X ← coin p h
+  return X
+  := by
+  simp
+
+lemma coin_weight (p : ℝ≥0) (h : p ≤ 1) (b : Bool) : (coin p h).1.weight b = if b then (p : ℝ≥0∞) else (1 - p : ℝ≥0∞) := by
+  rfl
+
+lemma Bool.mem_not (b : Bool) : not ⁻¹' {b} = {!b} := by
+    ext y; cases' y <;> simp
+
+lemma coin_not (p : ℝ≥0) (h : p ≤ 1) : (coin p h).map not  = coin (1-p) (tsub_le_self) := by
+  ext x
+  rw [DiscreteProbabilityMeasure.map_coe]
+  cases x <;> rw [map_weight, Bool.mem_not, apply_singleton', coin_weight, coin_weight, tsub_tsub_cancel_of_le h] <;> simp
+
+end coin
+
 end DiscreteProbabilityMeasure
