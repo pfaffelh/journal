@@ -17,7 +17,19 @@ lemma PMF.bernoulli_not (p : ℝ≥0) (h : p ≤ 1) : (
       return (not X))
     =
     PMF.bernoulli (1 - p) tsub_le_self := by
-  simp only [LawfulMonad.bind_pure_comp]
+  rw [LawfulMonad.bind_pure_comp]
+  change map not (PMF.bernoulli p h) = (PMF.bernoulli (1 - p) _ )
+  ext x
+  rw [PMF.bernoulli, PMF.map_apply]
+  rw [tsum_bool]
+  split_ifs
+  simp
+
+
+
+
+
+    simp only [LawfulMonad.bind_pure_comp]
   ext x
   change map not (PMF.bernoulli p h) x = (PMF.bernoulli (1 - p) _ ) x
   rw [PMF.map_apply]

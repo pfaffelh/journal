@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Peter Pfaffelhuber
 -/
 
+import Lean
 import Mathlib
 
 /-!
@@ -202,6 +203,10 @@ noncomputable instance : Functor DiscreteMeasure where
 @[simp]
 lemma map_weight (μ : DiscreteMeasure α) (g : α → β) (x : β) : (μ.map g).weight x = μ (g⁻¹' {x}) := by
   rfl
+
+lemma map_weight' (μ : DiscreteMeasure α) (g : α → β) (x : β) : (μ.map g).weight x =  ∑' (i : α), μ.weight i * ({x} : Set β).indicator 1 (g i) := by
+  rw [map_weight, apply']
+  apply tsum_congr (fun b ↦ by congr)
 
 lemma map_eq_toMeasure (μ : DiscreteMeasure α) (g : α → β) : μ.map g = Measure.map g μ.toMeasure := by
   ext s
@@ -457,24 +462,421 @@ lemma bind_pure_comp (f : α → β) (μ : DiscreteMeasure α) : μ.bind (fun a 
 
 end pure
 
+section seq
+
+/-- The monadic sequencing operation for `DiscreteMeasure`. -/
+noncomputable def seq (q : DiscreteMeasure (α → β)) (p :  Unit → DiscreteMeasure α) : DiscreteMeasure β :=
+  q.bind fun m => (p ()).bind fun a => pure (m a)
+
+lemma bind_map_eq_seq (q : DiscreteMeasure (α → β)) (p : Unit → DiscreteMeasure α) : q.bind (fun m => (p ()).map m) = seq q p := by
+  simp_rw [← bind_pure_comp]
+  rfl
+
+noncomputable instance : Seq DiscreteMeasure where
+  seq := seq
+
+variable (q : DiscreteMeasure (α → β)) (p : Unit → DiscreteMeasure α) (b : β)
+
+
+
+
+open scoped Classical in
+@[simp]
+theorem seq_weight : (seq q p).weight b = ∑' (f : α → β) (a : α), q.weight f * if b = f a then (p ()).weight a else 0 := by
+  rw [seq, bind_weight]
+  simp_rw [bind_weight, pure_weight]
+  simp_rw [Set.indicator, Set.mem_singleton_iff]
+  apply tsum_congr (fun f ↦ ?_)
+  rw [← ENNReal.tsum_mul_left]
+  apply tsum_congr (fun g ↦ ?_)
+  split_ifs <;> simp
+
+open scoped Classical in
+theorem seq_weight' : (seq q p).weight b = ∑' (f : α → β) (a : f⁻¹' {b}), q.weight f * (p ()).weight a := by
+  rw [seq, bind_weight]
+  simp_rw [bind_weight, pure_weight]
+  simp_rw [ENNReal.tsum_mul_left]
+  apply tsum_congr (fun f ↦ ?_)
+  congr 1
+  rw [tsum_subtype]
+  apply tsum_congr (fun g ↦ ?_)
+  nth_rw 2 [← Set.indicator.mul_indicator_eq]
+  congr
+  rw [Set.indicator]
+  rw [Set.indicator]
+  split_ifs with i j h <;> simp
+  exact Ne.elim (fun a => j (id (Eq.symm a))) i
+  exact Ne.elim (fun a => i (id (Eq.symm a))) h
+
+open scoped Classical in
+@[simp]
+theorem seq_weight'' : (seq q p).weight b = ∑' (f : α → β), q.weight f * ∑' (a : α), (f⁻¹' {b}).indicator (p ()).weight a := by
+  rw [seq, bind_weight]
+  simp_rw [bind_weight, pure_weight]
+  simp_rw [Set.indicator, Set.mem_singleton_iff]
+  apply tsum_congr (fun f ↦ ?_)
+  congr
+  ext a
+  simp only [Pi.one_apply, mul_ite, mul_one, mul_zero, Set.mem_preimage, Set.mem_singleton_iff]
+  split_ifs with h' h''
+  simp
+  exact False.elim (h'' (id (Eq.symm h')))
+  (expose_names; exact False.elim (h' (id (Eq.symm h))))
+  rfl
+
+lemma l1 (f : α → ℝ≥0∞) (x : α) : (∑' (a : α), ({x} : Set α).indicator f a) = (f x) := by
+  rw [← tsum_subtype, tsum_singleton]
+
+lemma l1_left (f : α → ℝ≥0∞) (x : α) : (∑' (a : α), (f a * ({x} : Set α).indicator (1 : α → ℝ≥0∞) a)) = (f x) := by
+  simp_rw [Set.indicator.mul_indicator_eq']
+  exact l1 f x
+
+lemma l1_right (f : α → ℝ≥0∞) (x : α) : (∑' (a : α), (({x} : Set α).indicator (1 : α → ℝ≥0∞) a) * (f a)) = (f x) := by
+  simp_rw [mul_comm, Set.indicator.mul_indicator_eq']
+  exact l1 f x
+
+lemma seq_pure {α β : Type u} (g : DiscreteMeasure (α → β)) (x : α) : seq g (fun _ ↦ pure x) = map (fun h => h x) g := by
+  ext b
+  rw [map_weight, apply, seq_weight'']
+  simp_rw [pure_weight]
+  apply tsum_congr (fun c ↦ ?_)
+  simp_rw [Set.indicator_indicator, Set.inter_comm, ← Set.indicator_indicator, ← tsum_subtype, tsum_singleton]
+  nth_rw 2 [← Set.indicator.mul_indicator_eq']
+  congr 1
+
+lemma pure_seq {α β : Type u} (g : (α → β)) (x : Unit → DiscreteMeasure α) : seq (pure g) x = (x ()).map g := by
+  ext b
+  rw [seq_weight'', pure_weight, map_weight, apply]
+  simp_rw [mul_comm, ← ENNReal.tsum_mul_right]
+  rw [ENNReal.tsum_comm]
+  apply tsum_congr (fun c ↦ ?_)
+  let f := fun a ↦ (a ⁻¹' {b}).indicator (x ()).weight c
+  change ∑' (a : α → β), f a * ({g} : Set (α → β)).indicator 1 a= _
+  simp_rw [Set.indicator.mul_indicator_eq']
+  rw [← tsum_subtype, tsum_singleton]
+
+lemma seq_assoc (p : DiscreteMeasure α) (q : DiscreteMeasure (α → β)) (r : DiscreteMeasure (β → γ)) : (r.seq fun _ => q.seq fun _ => p) = ((map comp r).seq fun _ => q).seq fun _ => p := by
+  repeat rw [← bind_map_eq_seq]
+  repeat rw [← bind_pure_comp]
+  repeat rw [bind_bind]
+  simp_rw [pure_bind]
+  congr
+  funext m
+  rw [← bind_pure_comp, bind_bind, ← bind_pure_comp, bind_bind]
+  simp_rw [pure_bind, bind_pure_comp, map_map]
+
+
+
+
+noncomputable def binom₀ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : PMF ℕ := do
+  let choices ← sequence <| List.replicate n (PMF.bernoulli p h)
+  return choices.count true
+
+noncomputable def binom₁ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : PMF ℕ := (sequence <| List.replicate n (PMF.bernoulli p h)).map (List.count true)
+
+
+
+end seq
+
 section monad
 
+noncomputable instance : Applicative DiscreteMeasure where
+  pure := pure
+  map := map
+  seq  := seq
+
+lemma pure_eq_pure (a : α) : Pure.pure a = pure a := by rfl
+
+lemma map_eq_map {α β : Type u} (f : α → β) (p : DiscreteMeasure α) : (Functor.map f p) = (map f p) := rfl
+
+lemma seq_eq_seq {α β : Type u} (p : DiscreteMeasure (α → β)) (q : Unit → DiscreteMeasure α) : Seq.seq p q = seq p q := by
+  rfl
+
+lemma seqLeft_eq_map_seq {α β : Type u} (x : DiscreteMeasure α) (y : DiscreteMeasure β) : x <* y = (map (const β) x).seq fun _ => y := rfl
+
+lemma rightSeq_eq_map_seq {α β : Type u} (x : DiscreteMeasure α) (y : DiscreteMeasure β) : x *> y = const α id <$> x <*> y := rfl
+
 noncomputable instance : Monad DiscreteMeasure where
-  pure a := pure a
-  bind μ f := μ.bind f
+  bind := bind
+  map := map
+
+lemma bind_eq_bind {α β : Type u} (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β)  : (Bind.bind μ g) = (bind μ g) := rfl
 
 instance : LawfulFunctor DiscreteMeasure where
   map_const := rfl
   id_map := id_map
   comp_map f g μ := (map_map μ f g).symm
 
-instance : LawfulMonad DiscreteMeasure := LawfulMonad.mk'
-  (bind_pure_comp := bind_pure_comp)
-  (id_map := id_map)
-  (pure_bind := pure_bind)
-  (bind_assoc := bind_bind)
+instance : LawfulApplicative DiscreteMeasure := LawfulApplicative.mk
+  (seqLeft_eq := seqLeft_eq_map_seq)
+  (seqRight_eq := rightSeq_eq_map_seq)
+  (pure_seq := fun q p ↦ pure_seq q (fun _ ↦ p))
+  (map_pure := by
+    intro α β m a
+    rw [pure_eq_pure, pure_eq_pure, map_eq_map, map_pure])
+  (seq_pure := seq_pure)
+  (seq_assoc := seq_assoc
+)
+
+instance : LawfulMonad DiscreteMeasure :=
+  LawfulMonad.mk
+    (pure_bind := pure_bind)
+    (bind_assoc := bind_bind)
+    (bind_pure_comp := bind_pure_comp)
+    (bind_map := fun q p ↦ bind_map_eq_seq q (fun _ ↦ p))
+
+
+
+
+
+
+
+
+/--
+This instance allows `do` notation for `DiscreteMeasure` to be used across universes, for instance as
+```lean4
+example {R : Type u} [Ring R] (x : PMF ℕ) : PMF R := do
+  let ⟨n⟩ ← ULiftable.up x
+  pure n
+```
+where `x` is in universe `0`, but the return value is in universe `u`.
+-/
+noncomputable instance : ULiftable DiscreteMeasure.{u} DiscreteMeasure.{v} where
+  congr e :=
+    { toFun := map e, invFun := map e.symm
+      left_inv := fun a => by rw [map_map, Equiv.symm_comp_self, id_map]
+      right_inv := fun a => by simp [map_map, id_map]
+      }
 
 end monad
+
+lemma l_map {α β : Type u} (μ : DiscreteMeasure α) (f : α → β) : f <$> μ = map f μ  := rfl
+
+lemma l_seq {α β : Type u} (μ : DiscreteMeasure α) (f : DiscreteMeasure (α → β)) : f <*> μ = seq f (fun _ ↦ μ)  := by
+  rfl
+
+noncomputable def prod {α β : Type u} (μ : DiscreteMeasure α) (ν : DiscreteMeasure β) : DiscreteMeasure (α × β) :=
+(Prod.mk <$> μ) <*> ν
+
+
+noncomputable def pi {α β : Type u} (μ : DiscreteMeasure α) (ν : DiscreteMeasure β)
+  : DiscreteMeasure (α × β) := pure Prod.mk <*> μ <*> ν
+
+noncomputable def pi' {α β : Type u} (μ : DiscreteMeasure α) (q : α →  DiscreteMeasure β) : DiscreteMeasure (α × β) :=
+  do
+    let X ← μ
+    let Y ← q X
+    return (X, Y)
+
+lemma pi'_eq {α β : Type u} (μ : DiscreteMeasure α) (q : α →  DiscreteMeasure β) : pi' μ q = (μ.bind fun X => (q X).bind fun Y => Pure.pure (X, Y)) := by
+  rw [pi']
+  rw [bind_eq_bind]
+  simp_rw [bind_eq_bind]
+
+lemma pi'_eq' {α β : Type u} (μ : DiscreteMeasure α) (q q' : α →  DiscreteMeasure β) : pi' μ q' = (μ.bind fun X => (q X).bind fun Y => Pure.pure (X, Y)) := by
+  simp_rw [pure_eq_pure]
+
+
+  sorry
+
+
+
+lemma l2  (i b : β) : ({i} : Set β).indicator (1 : β → ℝ≥0∞) b = ({b} : Set β).indicator (1 : β → ℝ≥0∞) i := by
+  refine Set.indicator_eq_indicator ?_ rfl
+  simp only [Set.mem_singleton_iff]
+  exact eq_comm
+
+
+lemma pi'_weight {α β : Type u} (μ : DiscreteMeasure α) (q : α →  DiscreteMeasure β) (a : α) (b : β): (pi' μ q).weight (a, b) = μ.weight a * (q a).weight b := by
+  rw [pi']
+  rw [bind_eq_bind]
+  simp_rw [bind_eq_bind, pure_eq_pure]
+  rw [bind_weight]
+  simp_rw [bind_weight, pure_weight]
+  have h (a' : α) (b' : β) : ({(a', b')} : Set (α × β)).indicator (1 : α × β → ℝ≥0∞) (a, b) = (({a'} : Set α).indicator (1 : α → ℝ≥0∞) a) * (({b'} : Set β).indicator (1 : β → ℝ≥0∞) b) := by
+    simp only [Set.indicator]
+    aesop
+  conv => left; left; intro a'; right; left; intro b'; right; rw [h]
+  simp_rw [← mul_assoc]
+  conv => left; left; intro a1; right; left; intro b1; rw [mul_assoc, mul_comm, mul_assoc]
+  simp_rw [ENNReal.tsum_mul_left]
+  conv => left; left; intro a'; right; right; conv => left; intro i; rw [l2]; ; rw [l1_right]
+  conv => left; left; intro a'; rw [mul_comm, mul_assoc]
+  simp_rw [l2, l1_right]
+  rw [mul_comm]
+
+
+example {α β : Type u} (μ : DiscreteMeasure α) (ν : DiscreteMeasure β) : pi μ ν = (Prod.mk <$> μ) <*> ν := by
+  rw [pi]
+  rw [seq_eq_seq]
+  rw [seq_eq_seq]
+  rw [seq_eq_seq]
+  rw [map_eq_map]
+  rw [pure_seq]
+
+lemma pi_eq {α β : Type u} (μ : DiscreteMeasure α) (ν : DiscreteMeasure β)
+  : pi μ ν = (Prod.mk <$> μ) <*> ν := by
+  rw [pi, seq_eq_seq, seq_eq_seq, seq_eq_seq, map_eq_map, pure_seq]
+
+lemma prod_prop1 (a : α) (b : β) : Prod.mk a b = (a,b) := by rfl
+
+lemma prod_prop1a (a : α) (b : β) : (Prod.mk a b).1 = a := by rfl
+
+lemma prod_prop1b (a : α) (b : β) : (Prod.mk a b).2 = b := by rfl
+
+lemma prod_prop2 {a c : α} {b d : β} : (a, b) = (c, d) ↔ a = c ∧ b = d:= by
+  simp only [Prod.mk.injEq]
+
+lemma prod_mk_injective {α β : Type} [Nonempty β] :
+    Injective (Prod.mk : α → β → α × β) := by
+  haveI : Inhabited β := by (expose_names; exact Classical.inhabited_of_nonempty inst)
+  intro a a' h
+  have h' := congrArg (fun f => f default) h
+  simpa using congrArg Prod.fst h'
+
+
+lemma prod_mk_injective' {α β : Type} [Nonempty β] (a : α):
+    Injective (Prod.mk a : β → α × β) := by
+  haveI : Inhabited β := by (expose_names; exact Classical.inhabited_of_nonempty inst)
+  intro b b' h
+  rw [prod_prop2] at h
+  exact h.2
+
+
+
+open scoped Classical in
+lemma prod_prop3 (f : β → α × β) (a : α) : (Prod.mk a = f) ↔ Prod.mk ⁻¹' {f} = {a} := by
+
+  simp_rw [Set.preimage, Set.mem_singleton_iff]
+  refine ⟨fun h ↦  ?_, fun h ↦ ?_ ⟩
+  · sorry
+  · sorry
+
+example (a' : α) (f : α → ℝ≥0∞) : ∑' (a : α), ({a'} : Set α).indicator f a = f a' := by
+  exact l1 f a'
+  sorry
+
+example (a b : α) : a = b ↔ a ∈ ({b} : Set α) := by
+  simp only [Set.mem_singleton_iff]
+
+
+open Classical
+lemma pi_weight {α β : Type u} (μ : DiscreteMeasure α) (ν : DiscreteMeasure β) (a : α) (b : β): (pi μ ν).weight (a,b) = (μ.weight a) * (ν.weight b) := by
+  rw [pi]
+  rw [seq_eq_seq, seq_eq_seq, seq_weight]
+  simp_rw [seq_weight, pure_weight]
+  simp_rw [mul_comm]
+  conv => left; left; intro f; left; intro a1; right; rw [ENNReal.tsum_comm]; left; intro b; rw [l1']
+  simp_rw [← ENNReal.tsum_mul_left]
+  rw [ENNReal.tsum_comm]
+  conv => left; left; intro b1; rw [ENNReal.tsum_comm]; left; intro a2; conv => left; intro a1; right; rw [mul_ite]; rw [← Set.mem_singleton_iff]; ; rw [l1']
+
+
+
+
+
+
+  rw [ENNReal.tsum_comm]; left; left; intro a; simp_rw [mul_comm, l1']
+
+
+
+
+  simp_rw [← ENNReal.tsum_mul_right]
+  rw [ENNReal.tsum_comm]
+  simp_rw [ENNReal.tsum_mul_left]
+
+
+
+
+
+
+
+  rw [seq_eq_bind_map]
+  simp_rw [map_eq_map]
+  rw [bind_eq_bind]
+  rw [bind_weight]
+  simp_rw [map_weight']
+  have h (a_1 : β → α × β) (i : α) : (∑' (i : α), μ.weight i * {a_1}.indicator 1 (Prod.mk i)) = μ.weight i
+
+
+  rw [pi]
+  rw [seq_eq_bind_map]
+  rw [seq_eq_bind_map]
+  rw [bind_eq_bind]
+  rw [bind_eq_bind]
+  simp_rw [map_eq_map]
+  rw [bind_weight]
+  simp_rw [bind_weight, pure_weight]
+  rw [← tsum_subtype]
+
+
+
+
+  simp_rw [map_eq_map]
+  rw [seq_eq_seq]
+  rw [seq_eq_bind_map]
+  rw [bind_eq_bind]
+  rw [bind_weight]
+  simp_rw [map_weight']
+
+
+
+
+
+
+
+
+
+
+
+  rw [seq_weight']
+
+  simp_rw [map_eq_map, map_weight]
+
+
+
+  -- rw [ENNReal.tsum_comm]
+  simp only [map_weight, apply, mul_ite, mul_zero]
+  have h (a : β → α × β) (b : β) : Prod.mk ⁻¹' {a} = if (a b).2 = b then {(a b).1} else (∅ : Set α) := by
+    simp_rw [Set.preimage, Set.mem_singleton_iff]
+    ext x
+    simp
+    sorry
+
+
+
+  refine (Set.preimage_eq_iff_eq_image ?_).mpr ?_
+
+  sorry
+  simp_rw [map_weight]
+
+
+
+
+
+  rw [pi]
+
+  have f : pure Prod.mk <*> μ <*> ν = DiscreteMeasure.map (Prod.mk) μ <*> ν := by
+    rw [map]
+
+    sorry
+  have f' : pure Prod.mk <*> μ <*> ν = DiscreteMeasure.map ((DiscreteMeasure.map (Prod.mk) μ) ν) := by
+    sorry
+
+  rw [f, map_weight (a,b)]
+
+
+
+
+  rfl
+
+
+noncomputable def prodList (l : List (DiscreteMeasure α)) :
+    DiscreteMeasure (List α) :=
+l.foldr
+  (fun μ rest => μ.bind (fun a => rest.map (fun as => a :: as)))
+  (pure [])
+
 
 
 end DiscreteMeasure
@@ -587,12 +989,10 @@ lemma map_coe (g : α → β) (μ : DiscreteProbabilityMeasure α) : (μ.map g) 
 
 example {α β : Type u} (f : α → β) (μ : DiscreteProbabilityMeasure α) : f <$> μ.val = (f <$> μ).val := by rfl
 
-lemma map_map {α β γ: Type u} (μ : DiscreteProbabilityMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
+lemma map_map (μ : DiscreteProbabilityMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
   apply Subtype.ext
   simp [map_coe]
-  change h <$> (g <$> μ.val) = (h ∘ g) <$> μ.val
-  simp [Functor.map_map]
-  rfl
+  rw [DiscreteMeasure.map_map]
 
 theorem id_map (μ : DiscreteProbabilityMeasure α) :
 μ.map id = μ := by
@@ -666,7 +1066,7 @@ lemma join_map_map (m : DiscreteProbabilityMeasure (DiscreteProbabilityMeasure �
   rw [DiscreteMeasure.map_map]
   congr
 
-theorem bind_const (μ₁ : DiscreteProbabilityMeasure α) (μ₂ : DiscreteProbabilityMeasure β) : (μ₁.bind fun (x : α) => μ₂) = μ₂ := by
+theorem bind_const (μ₁ : DiscreteProbabilityMeasure α) (μ₂ : DiscreteProbabilityMeasure β) : (μ₁.bind fun (_ : α) => μ₂) = μ₂ := by
   apply Subtype.ext
   rw [bind_coe]
   rw [Function.comp_apply']
@@ -713,7 +1113,6 @@ lemma map_pure (a : α) (f : α → β) : (DiscreteProbabilityMeasure.pure a).ma
 
 theorem pure_bind (a : α) (f : α → DiscreteProbabilityMeasure β) :
 (pure a).bind f = f a := by
-  -- apply Subtype.ext
   apply Subtype.ext
   rw [bind_coe, pure_coe]
   rw [DiscreteMeasure.pure_bind]
@@ -751,6 +1150,15 @@ instance : LawfulMonad DiscreteProbabilityMeasure := LawfulMonad.mk'
   (pure_bind := pure_bind)
   (bind_assoc := bind_bind)
 
+noncomputable instance : ULiftable DiscreteProbabilityMeasure.{u} DiscreteProbabilityMeasure.{v} where
+  congr e :=
+    { toFun := map e, invFun := map e.symm
+      left_inv := fun a => by
+        simp only [map_map, Equiv.symm_comp_self, id_map]
+      right_inv := fun a => by
+        simp only [map_map, Equiv.self_comp_symm, id_map]
+      }
+
 end monad
 
 end DiscreteProbabilityMeasure
@@ -775,6 +1183,28 @@ noncomputable def coin (p : ℝ≥0) (h : p ≤ 1) : DiscreteProbabilityMeasure 
   ⟩
 
 
+lemma lintegral_coe (μ : DiscreteProbabilityMeasure α) (g : α → ℝ≥0): ∫⁻ (a : α), g a ∂ μ.val.toMeasure = ∑' (a : α),  (μ.val.weight a) * g a := by
+  rw [← DiscreteMeasure.lintegral_eq_toMeasure]
+  rw [DiscreteMeasure.lintegral]
+
+
+lemma lintegral_coin (p : ℝ≥0) (h : p ≤ 1) (g : Bool → ℝ≥0): ∫⁻ (a : Bool), (g a) ∂ (coin p h).val.toMeasure = (1 - p) * (g false) + p * (g true) := by
+  rw [← DiscreteMeasure.lintegral_eq_toMeasure, DiscreteMeasure.lintegral]
+  simp_rw [coin]
+  rw [tsum_bool]
+  split_ifs <;> norm_cast
+
+
+lemma lintegral_map_coin (p : ℝ≥0) (h : p ≤ 1) (g : Bool → ℝ≥0): ∫⁻ (a : ℝ≥0), (id a) ∂ (map g (coin p h)).val.toMeasure = ∫⁻ (a : Bool), (g a) ∂ (coin p h).val.toMeasure := by
+  rw [map_coe, DiscreteMeasure.map_coe, @MeasureTheory.lintegral_map _ _ ⊤ ⊤ _ _ _ (by measurability) (by exact fun ⦃t⦄ a => a), ← DiscreteMeasure.lintegral_eq_toMeasure, DiscreteMeasure.lintegral, ← DiscreteMeasure.lintegral_eq_toMeasure, DiscreteMeasure.lintegral]
+  rfl
+
+
+
+lemma lintegral_coin' (p : ℝ≥0) (h : p ≤ 1) (g : Bool → ℝ): ∫ (a : Bool), (g a) ∂ (coin p h).val.toMeasure = p.toReal * (g true) + (1 - p).toReal * (g false) := by
+  sorry
+
+
 -- We have do notation (as for PMF)!
 example (p : ℝ≥0) (h : p ≤ 1) : coin p h = do
   let X ← coin p h
@@ -795,6 +1225,81 @@ lemma coin_not (p : ℝ≥0) (h : p ≤ 1) : (coin p h).map not  = coin (1-p) (t
   rw[tsub_tsub_cancel_of_le h]
   simp
 
+noncomputable def binom₂ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure ℕ := ((sequence <| List.replicate n (coin p h)).map (List.map Bool.toNat)).map List.sum
+
+
+noncomputable def pi (μs : List (DiscreteMeasure α)) :
+  DiscreteMeasure (List α) := sequence μs
+
+
+#check List.traverse_eq_map_id (α := DiscreteMeasure α) id
+
+example (x : DiscreteMeasure α): List.traverse (id) [x] = ⟨ ⟩ [x] : Id (List (DiscreteMeasure α))) := by
+  rw [List.traverse_eq_map_id (α := DiscreteMeasure α) id [x] ]
+  rfl
+
+lemma pure_sequence (ν : DiscreteMeasure α) : pi [ν] = (ν.map (fun b => [b])) := by
+  rw [pi, sequence]
+  rw [Traversable.map_eq_traverse_id]
+  have h : fun b => [b] = List.singleton := by rfl
+  rw [pi, sequence, Traversable.traverse_eq_map_id']
+
+  simp only [List.traverse_eq_pure, id_eq, List.traverse_nil]
+  -- simp_rw [← List.pure_def]
+  change _ = ν <$> (Pure.pure [])
+
+
+  sorry
+
+
+lemma pi_bind (μ ν : DiscreteMeasure α) : pi [μ, ν] = μ.bind (fun a => ν.map (fun b => [a, b])) := by
+  rw [pi, sequence, Traversable.map_eq_traverse_id]
+  rw [sequence_bind]
+
+  rfl
+
+noncomputable def pi' (μs : List (DiscreteProbabilityMeasure α)) :
+  DiscreteProbabilityMeasure (List α) := sequence μs
+
+
+
+
+
+-- noncomputable def binom₂' (p : ℝ≥0) (h : p ≤ 1) : (n : ℕ) → DiscreteProbabilityMeasure (Fin (n+1)) := fun n ↦ (sequence <| List.replicate n (coin p h)).map (List.count true)
+
+def List.count' {α : Type u} [BEq α] (a : α) (n : ℕ) : (l : List α) → (hl : l.length = n) → Fin (n + 1) := fun l hl ↦ ⟨l.count a, by
+  apply lt_of_le_of_lt List.count_le_length (hl ▸ lt_add_one l.length)⟩
+
+noncomputable def binom₃ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure (Fin (n + 1)) := by
+  have f : (List.replicate n (coin p h)).length = n := by exact List.length_replicate
+  let l := (sequence <| List.replicate n (coin p h))
+
+  -- have l := (sequence <| List.replicate n (coin p h)).map (List.count' true)
+
+  sorry
+
+
+
+
+
+noncomputable def prodList (v : List (DiscreteMeasure α))
+  : DiscreteMeasure (List α) := v.traverse id
+
+
 end coin
 
 end DiscreteProbabilityMeasure
+
+
+
+@[simp]
+lemma traverse_singleton {α β : Type} (a : α) (f : α → m β) [Applicative m] :
+  traverse id [DiscreteMeasure.pure a] = DiscreteMeasure.pure [a] := by
+  simp only [List.traverse_cons, id_eq, List.traverse_nil]
+  rw [seq_pure, Functor.map_map]
+
+  ext x
+  rw [pure_weight]
+  rw [Traversable.traverse_id]
+
+  rfl
