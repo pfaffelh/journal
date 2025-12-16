@@ -1060,23 +1060,70 @@ lemma coin_not (p : ℝ≥0) (h : p ≤ 1) : (coin p h).map not  = coin (1-p) (t
 
 noncomputable def binom₂ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure ℕ := ((sequence <| List.replicate n (coin p h)).map (List.map Bool.toNat)).map List.sum
 
+def ListFin (n : ℕ) (α : Type u) := (Fin n → α)
+
+def ListFin' (n : ℕ) (α β : Type u) : Type u := ReaderT β DiscreteProbabilityMeasure α
+
+def ListFin_const {α : Type u} (n : ℕ) (a : α) : ListFin n α := fun _ ↦ a
+
+instance instFunctorFin (n : ℕ) : Functor (fun α => Fin n → α) where
+  map := comp
+
+
+#check Traversable List
+
+instance instTraversableFin (n : ℕ) : Traversable (fun α => Fin n → α) where
+  traverse := by
+    intro m hm α β bind f
+
+    sorry
+
+
+example (n : ℕ) : MonadReader (Fin n) DiscreteMeasure := by
+  refine { read := ?_ }
+
+  rw [MonadReader]
+
+
+  sorry
+
+
+noncomputable def ber (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure (Fin n → Bool) := sequence <| ListFin_const n (coin p h)
+
 -- a list of independent experiments
 --noncomputable def pi (μs : List (DiscreteMeasure α)) :
 --  DiscreteMeasure (List α) := sequence μs
 
 noncomputable def bernoulliSequence (n : ℕ) (μ : DiscreteMeasure α) :  DiscreteMeasure (List α) := sequence (List.replicate n μ)
 
+end coin
+
+
+
 lemma sequence_nil : sequence ([] : List (DiscreteMeasure α)) = (DiscreteMeasure.pure [] : DiscreteMeasure (List α)) := by
   simp [sequence]
 
 open Classical
 lemma cons_pure_weight (a a' : α) (l l' : List α) : ((DiscreteMeasure.pure ∘ List.cons a') l').weight (a :: l) = if a = a' ∧ l = l' then 1 else 0 := by
-  rw [comp_apply, pure_weight, Set.indicator]
+  rw [comp_apply, DiscreteMeasure.pure_weight, Set.indicator]
   split_ifs with h₁ h₂ h₂ <;> simp only [Set.mem_singleton_iff, List.cons.injEq] at h₁
   · simp only [Pi.one_apply]
   · simp only [Pi.one_apply, one_ne_zero, h₂ h₁]
   · apply False.elim (h₁ h₂)
   · rfl
+
+open Classical
+lemma cons_pure_weight_of_empty (a' : α) : ((DiscreteMeasure.pure ∘ List.cons a') l').weight [] = 0 := by
+  rw [comp_apply, DiscreteMeasure.pure_weight, Set.indicator]
+  simp
+
+open DiscreteMeasure
+lemma cons_map_weight_of_empty (μs : DiscreteMeasure (List α)) (ν : DiscreteMeasure α) : (List.cons <$> ν <*> μs).weight [] = 0 := by
+  simp [monad_norm]
+  rw [← bind_eq_bind, bind_weight]
+  simp_rw [← bind_eq_bind, bind_weight]
+  simp_rw [← pure_eq_pure, cons_pure_weight_of_empty]
+  simp
 
 lemma cons_map_weight (μs : DiscreteMeasure (List α)) (ν : DiscreteMeasure α) (l : List α) (a : α) : (List.cons <$> ν <*> μs).weight (a :: l) = ν.weight a * (μs.weight l) := by
   simp [monad_norm]
@@ -1096,10 +1143,20 @@ lemma cons_map_weight (μs : DiscreteMeasure (List α)) (ν : DiscreteMeasure α
 lemma sequence_cons (μs : List (DiscreteMeasure α)) (ν : DiscreteMeasure α) : sequence (ν::μs) = List.cons <$> ν <*> (sequence μs) := by
   rfl
 
+lemma sequence_weight_cons_of_empty (μs : List (DiscreteMeasure α)) (ν : DiscreteMeasure α) : (sequence (ν::μs)).weight [] = 0 := by
+  exact cons_map_weight_of_empty (sequence μs) ν
+
 lemma sequence_weight_cons (μs : List (DiscreteMeasure α)) (ν : DiscreteMeasure α) (l : List α) (a : α) : (sequence (ν::μs)).weight (a::l) = (ν.weight a)*((sequence μs).weight l) := by
   exact cons_map_weight (sequence μs) ν l a
 
-lemma sequence_weight (μs : List (DiscreteMeasure α)) (l : List α) (hl : l.length = μs.length) :
+lemma nsupport_weight (μ : DiscreteMeasure α) (P : α → Prop) (hμ : μ.toMeasure {a : α | ¬ P a} = 0) (a : α) (ha : ¬ P a) : μ.weight a = 0 :=
+  by
+  rw [DiscreteMeasure.apply, ENNReal.tsum_eq_zero] at hμ
+  specialize hμ a
+  simp only [Set.mem_setOf_eq, ha, not_false_eq_true, Set.indicator_of_mem] at hμ
+  exact hμ
+
+lemma sequence_weight₀ (μs : List (DiscreteMeasure α)) (l : List α) (hl : l.length = μs.length) :
     (sequence μs).weight l = List.prod ((μs.map weight).zipWith (fun a b ↦ a b) l) :=
   by
   induction μs generalizing l with
@@ -1116,53 +1173,46 @@ lemma sequence_weight (μs : List (DiscreteMeasure α)) (l : List α) (hl : l.le
       rw [ih l hl]
       simp
 
+lemma sequence_weight₁ (μs : List (DiscreteMeasure α)) (l : List α) (hl : ¬ l.length = μs.length) :
+    (sequence μs).weight l = 0 :=
+  by
+  induction μs generalizing l with
+  | nil =>
+    rw [sequence_nil, pure_weight]
+    simpa using hl
+    | cons μ μs ih =>
+      cases l with
+      | nil =>
+        simp at hl
+        rw [sequence_weight_cons_of_empty]
+      | cons a l =>
+        simp [List.length_cons] at hl
+        rw [sequence_weight_cons]
+        rw [ih l hl]
+        simp
 
+lemma sequence_weight (μs : List (DiscreteMeasure α)) (l : List α) :
+    (sequence μs).weight l = if l.length = μs.length then List.prod ((μs.map weight).zipWith (fun a b ↦ a b) l) else 0 :=
+  by
+  split_ifs with hl
+  · exact sequence_weight₀ μs l hl
+  · exact sequence_weight₁ μs l hl
+
+@[simp]
 lemma prod_apply_replicate (l : List α) (f : α → β) :
   l.map f = (List.replicate l.length f).zipWith (fun a b ↦ a b) l := by
   induction l with
   | nil => simp
   | cons a l ih => simp [List.length, ih]; rfl
 
-lemma bernoulliSequence_weight (n : ℕ) (μ : DiscreteMeasure α) (l : List α) (hl : l.length = n) :
-    (bernoulliSequence n μ).weight l = List.prod (l.map μ.weight) := by
-  rw [bernoulliSequence, ← hl, sequence_weight]
-  · rw [List.map_replicate]
-    rw [prod_apply_replicate]
-  · simp only [List.length_replicate]
-
 lemma cons_eq_append_singleton (a : α) (l : List α) : (a::l) = [a] ++ l := by
   simp only [List.cons_append, List.nil_append]
 
-example (a a' : α) (l' : List α) : (a::l) = [a] ++ l := by simp only [List.cons_append,
-  List.nil_append]
 
-example (a a' : α) (l' : List α) : List.count a (a'::l') = (List.count a [a']) + (List.count a l') := by
-  rw [cons_eq_append_singleton]
-  simp only [List.count, List.countP_append]
-
-lemma count_cons (a a' : α) (l' : List α) : List.count a (a'::l') = (if a' = a then 1 else 0) + (List.count a l') := by
-  rw [cons_eq_append_singleton]
-  simp only [List.count, List.countP_append, List.countP_singleton, beq_iff_eq]
-
-
-#check ContinuousMul
-
-lemma multipliable_one : Multipliable (fun _ ↦ (1 : ℝ≥0∞) : α → ℝ≥0∞) := ⟨1, hasProd_one⟩
-
-lemma HasProd.eventually_one (g : α → ℝ≥0∞) (hg : (g.mulSupport).Finite) : Multipliable g := by
-  use ∏ (a : hg.toFinset), g a.val
-  rw [← hasProd_subtype_iff_of_mulSupport_subset hg.coe_toFinset.symm.le]
-  exact hasProd_fintype (g ∘ Subtype.val) (SummationFilter.unconditional ↑↑hg.toFinset)
-
-example (l l': List α) (f : α → ℝ≥0∞) : (List.map f (l++l')).sum = (List.map f l).sum +  (List.map f l').sum := by
-  simp only [List.map_append, List.sum_append]
-
-lemma List.nmem_toFinset (b : α) (l : List α) : b ∉ l.toFinset ↔ b ∉ l := by
+lemma List.nmem_toFinset (b : α) (l : List α) [DecidableEq α] : b ∉ l.toFinset ↔ b ∉ l := by
   rw [List.mem_toFinset]
 
-
-
-lemma tprod_eq_prod_of_pow_count (l : List α) (f : α → ℝ≥0∞) : (∏' a, (f a)^(l.count a)) = (∏ a ∈ l.toFinset, f a ^ (l.count a)) := by
+lemma tprod_eq_prod_of_pow_count (l : List α) (f : α → ℝ≥0∞) [DecidableEq α] : (∏' a, (f a)^(l.count (α := α) a)) = (∏ a ∈ l.toFinset, f a ^ (l.count (α := α) a)) := by
   rw [tprod_eq_prod]
   intro b hb
   rw [List.nmem_toFinset, ← List.count_eq_zero] at hb
@@ -1175,18 +1225,35 @@ lemma tsum_eq_sum_of_mul_count (l : List α) (f : α → ℝ≥0∞) : (∑' a, 
   rw [hb]
   ring
 
-example (l : List α) (f : α → ℝ≥0∞) : (List.map f l).sum = ∑' (a : α), (l.count a) * (f a) := by
+lemma list_map_sum_eq_count (l : List α) (f : α → ℝ≥0∞) : (List.map f l).sum = ∑' (a : α), (l.count a) * (f a) := by
   rw [tsum_eq_sum_of_mul_count]
   rw [Finset.sum_list_map_count]
   simp only [nsmul_eq_mul]
 
-example (l : List α) (f : α → ℝ≥0∞) : (List.map f l).prod = ∏' (a : α), (f a) ^ (l.count a) := by
+lemma list_map_prod_eq_count (l : List α) (f : α → ℝ≥0∞) [DecidableEq α] : (List.map f l).prod = ∏' (a : α), (f a) ^ (l.count a) := by
   rw [tprod_eq_prod_of_pow_count]
   exact Finset.prod_list_map_count l f
 
 
 
 
+lemma bernoulliSequence_weight (n : ℕ) (μ : DiscreteMeasure α) (l : List α) :
+    (bernoulliSequence n μ).weight l = ({l : List α | l.length = n}.indicator (fun l ↦ (List.prod (l.map μ.weight))) l) := by
+  rw [Set.indicator]
+  split_ifs with hl
+  · rw [bernoulliSequence, ← hl, sequence_weight]
+    simp
+  · simp only [Set.mem_setOf_eq] at hl
+    rw [bernoulliSequence, sequence_weight]
+    simp [hl]
+
+lemma bernoulliSequence_weight' (n : ℕ) (μ : DiscreteMeasure α) [DecidableEq α] (l : List α) :
+    (bernoulliSequence n μ).weight l = ({l : List α | l.length = n}.indicator (fun l ↦ (∏' (a : α), (μ.weight a) ^ (l.count (α := α) a))) l) := by
+  rw [bernoulliSequence_weight n μ l, Set.indicator]
+  split_ifs with hl <;> simp at hl
+  · rw [list_map_prod_eq_count]
+    simp only [Set.mem_setOf_eq, hl, Set.indicator_of_mem]
+  · simp [hl]
 
 lemma pure_sequence (ν : DiscreteMeasure α) : sequence [ν] = (ν.map (fun b => [b])) := by
   simp [sequence]
@@ -1200,6 +1267,77 @@ lemma sequence_bind (μ ν : DiscreteMeasure α) : sequence [μ, ν] = μ.bind (
 
 noncomputable def pi' (μs : List (DiscreteProbabilityMeasure α)) :
   DiscreteProbabilityMeasure (List α) := sequence μs
+
+
+
+noncomputable def binom₃ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) [DecidableEq Bool]: DiscreteMeasure ℕ := (bernoulliSequence n (coin p h).val).map (List.count (α := Bool) true)
+
+def truePositionsNat (l : List Bool) : Finset ℕ :=
+(Finset.range l.length).filter (fun i => l[i]? = some true)
+
+noncomputable def binom₄ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) [DecidableEq Bool]: DiscreteMeasure ℕ := (bernoulliSequence n (coin p h).val).map (Finset.card ∘ truePositionsNat)
+
+example (P : α → Prop) (f : α → ℝ≥0∞) : (∑' (a : α), if P a then f a else 0) = (∑' (a : {a : α | P a}), f a) := by
+  rw [tsum_subtype]
+  congr
+
+lemma List.length_sub_count_false (l : List Bool) [DecidableEq Bool]: l.length - l.count true = l.count false := by
+  rw [Nat.sub_eq_iff_eq_add (List.count_le_length)]
+  sorry
+
+def truePositions (l : List Bool) : Finset (Fin l.length) :=
+  (Finset.univ.filter fun i => l.get i = true)
+
+
+
+example (l : List Bool) : l.count false + l.count true = l.length  := by
+  exact List.count_false_add_count_true l
+
+lemma count_encard_eq_choose (k n : ℕ) [DecidableEq Bool] : (List.count true ⁻¹' {k} ∩ {l | l.length = n}).encard  = (Nat.choose n k) := by
+  induction n with
+  | zero =>
+    simp
+    by_cases hk : k = 0
+    · simp [hk]
+      sorry
+    · simp [hk]
+      sorry
+  | succ n hn =>
+
+    sorry
+
+open List
+
+lemma binom_weight [DecidableEq Bool] (p : ℝ≥0) (h : p ≤ 1) (n k : ℕ) : (binom₄ p h n).weight k = (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k) := by
+  have g (i : List Bool) (s : Set ℕ): (s.indicator (@OfNat.ofNat (ℕ → ℝ≥0∞) 1 One.toOfNat1) (List.count true i)) = ((List.count (α := Bool) true)⁻¹' s).indicator (fun _ ↦ 1) i := by
+    sorry
+  calc
+    ((binom₄ p h n).weight k) = (∑' (i : List Bool),
+    {l | l.length = n}.indicator (fun l => ∏' (a : Bool), (coin p h).1.weight a ^ List.count (α := Bool) a l) i *
+      ({k} : Set ℕ).indicator 1 (List.count (α := Bool) true i)) := by
+      rw [binom₄, map_weight']
+      simp_rw [bernoulliSequence_weight' n (coin p h).val]
+    _ = ∑' (i : List Bool),
+    (List.count true ⁻¹' {k} ∩ {l | l.length = n}).indicator
+      (fun l => ∏' (a : Bool), (coin p h).1.weight a ^ List.count a l) i := by
+        simp_rw [g _ ({k} : Set ℕ)]
+        simp_rw [Set.indicator.mul_indicator_eq]
+        rw [Set.indicator_indicator]
+    _ = ∑' (x : ↑(List.count true ⁻¹' {k} ∩ {l | l.length = n})), ↑p ^ List.count true ↑x * (1 - ↑p) ^ List.count false ↑x := by
+        rw [← tsum_subtype]
+        simp_rw [tprod_bool, coin_weight, mul_comm]
+        simp only [↓reduceIte, Bool.false_eq_true]
+    _ = ∑' (x : ↑(List.count true ⁻¹' {k} ∩ {l | l.length = n})), ↑p ^ k * (1 - ↑p) ^ (n - k) := by
+        congr
+        ext x
+        rw [x.prop.1, ← List.length_sub_count_false, x.prop.2, x.prop.1]
+    _ = (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k) := by
+        simp
+        rw [mul_comm]
+        congr
+        norm_cast
+        rw [count_encard_eq_choose]
+
 
 
 
