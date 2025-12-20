@@ -6,6 +6,7 @@ Authors: Peter Pfaffelhuber
 
 import Lean
 import Mathlib
+import Batteries
 
 /-!
 # Discrete measures and discrete probability measures
@@ -1060,36 +1061,6 @@ lemma coin_not (p : ℝ≥0) (h : p ≤ 1) : (coin p h).map not  = coin (1-p) (t
 
 noncomputable def binom₂ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure ℕ := ((sequence <| List.replicate n (coin p h)).map (List.map Bool.toNat)).map List.sum
 
-def ListFin (n : ℕ) (α : Type u) := (Fin n → α)
-
-def ListFin' (n : ℕ) (α β : Type u) : Type u := ReaderT β DiscreteProbabilityMeasure α
-
-def ListFin_const {α : Type u} (n : ℕ) (a : α) : ListFin n α := fun _ ↦ a
-
-instance instFunctorFin (n : ℕ) : Functor (fun α => Fin n → α) where
-  map := comp
-
-
-#check Traversable List
-
-instance instTraversableFin (n : ℕ) : Traversable (fun α => Fin n → α) where
-  traverse := by
-    intro m hm α β bind f
-
-    sorry
-
-
-example (n : ℕ) : MonadReader (Fin n) DiscreteMeasure := by
-  refine { read := ?_ }
-
-  rw [MonadReader]
-
-
-  sorry
-
-
-noncomputable def ber (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure (Fin n → Bool) := sequence <| ListFin_const n (coin p h)
-
 -- a list of independent experiments
 --noncomputable def pi (μs : List (DiscreteMeasure α)) :
 --  DiscreteMeasure (List α) := sequence μs
@@ -1275,6 +1246,14 @@ noncomputable def binom₃ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) [DecidableEq Bo
 def truePositionsNat (l : List Bool) : Finset ℕ :=
 (Finset.range l.length).filter (fun i => l[i]? = some true)
 
+lemma filter_eq_count (l : List Bool) : (truePositionsNat l).card = l.count true := by
+  simp [truePositionsNat]
+
+  refine Finset.card_eq_of_bijective ?_ (fun a => ?_) ?_ ?_
+
+  sorry
+
+
 noncomputable def binom₄ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) [DecidableEq Bool]: DiscreteMeasure ℕ := (bernoulliSequence n (coin p h).val).map (Finset.card ∘ truePositionsNat)
 
 example (P : α → Prop) (f : α → ℝ≥0∞) : (∑' (a : α), if P a then f a else 0) = (∑' (a : {a : α | P a}), f a) := by
@@ -1288,33 +1267,179 @@ lemma List.length_sub_count_false (l : List Bool) [DecidableEq Bool]: l.length -
 def truePositions (l : List Bool) : Finset (Fin l.length) :=
   (Finset.univ.filter fun i => l.get i = true)
 
+def truePositions' (l : List Bool) [DecidableEq Bool] : Finset ℕ := (l.indexesOf true).toFinset
+
+lemma indexesOf_length_eq_count (l : List α) (a : α) [DecidableEq α] : (l.indexesOf a).length = l.count a := by
+  induction l with
+  | nil =>
+    simp
+  | cons b k hk =>
+    rw [List.count_cons, List.indexesOf_cons]
+    split_ifs with h <;> simp [h, hk]
+
+lemma indexesOf_nodup (l : List α) (a : α) [DecidableEq α] : (l.indexesOf a).Nodup := by
+  apply List.Sublist.nodup (l₂ := List.range l.length)
+  · exact idxsOf_sublist l a
+  · exact List.nodup_range
+
+
+lemma filter_eq_count' (l : List Bool) [DecidableEq Bool] : (truePositions' l).card = l.count true := by
+  simp [truePositions']
+  rw [List.card_toFinset]
+  rw [List.Nodup.dedup (indexesOf_nodup l true)]
+  rw [indexesOf_length_eq_count]
+
 
 
 example (l : List Bool) : l.count false + l.count true = l.length  := by
   exact List.count_false_add_count_true l
 
-lemma count_encard_eq_choose (k n : ℕ) [DecidableEq Bool] : (List.count true ⁻¹' {k} ∩ {l | l.length = n}).encard  = (Nat.choose n k) := by
-  induction n with
-  | zero =>
-    simp
-    by_cases hk : k = 0
-    · simp [hk]
-      sorry
-    · simp [hk]
-      sorry
-  | succ n hn =>
+example (s : Set α) (hs : s = ∅) : s.encard = 0 := by exact Set.encard_eq_zero.mpr hs
+
+lemma list_count_induction (k : ℕ) (a : Bool) (l : List Bool) : (a::l).count true = k ↔ (a = true ∧ l.count true = k-1 ∧ k ≠ 0) ∨ (a = false ∧ (l.count true = k)) := by
+  rw [List.count_cons]
+  by_cases h' : a = true <;> refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · simp [h'] at h ⊢
+    constructor
+    · exact Nat.eq_sub_of_add_eq h
+    · exact Nat.ne_zero_of_lt (b := List.count true l) <| h.symm ▸ lt_add_one (List.count true l)
+  · simp [h'] at h ⊢
+    apply Eq.symm
+    rw [← Nat.sub_eq_iff_eq_add, h.1]
+    simp [Nat.one_le_iff_ne_zero, h]
+  · simp [h'] at h ⊢ ; rw [h]
+  · simp [h'] at h ⊢ ; rw [h]
+
+lemma length_succ_iff (n : ℕ) (l : List α) (hl : l ≠ []): l.length = n+1 ↔ (l.tail).length = n := by
+  simp only [List.length_tail]
+  refine Iff.symm (Nat.sub_eq_iff_eq_add ?_)
+  refine Nat.one_le_iff_ne_zero.mpr ?_
+  refine Nat.ne_zero_iff_zero_lt.mpr ?_
+  exact List.length_pos_iff.mpr hl
+
+lemma list_length_succ' (l : List α) : l.length > 0 ↔ ∃ (a : α) (l' : List α), l = a::l' := by
+  exact List.length_pos_iff_exists_cons
+
+lemma list_length_succ (l : List α) (n : ℕ) : l.length = n + 1 ↔ ∃ (a : α) (l' : List α), l = a::l' ∧ l'.length = n := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · obtain ⟨a, l', h'⟩ := (List.length_pos_iff_exists_cons (l := l)).mp (h ▸ Nat.zero_lt_succ n)
+    use a, l'
+    simp only [h', List.length_cons, Nat.add_right_cancel_iff] at h
+    exact ⟨h', h⟩
+  · obtain ⟨a, l', ⟨h1, h2⟩⟩ := h
+    exact h1 ▸ (h2.symm ▸ List.length_cons)
+
+def List.lengthSuccess (l : List Bool) (n k : ℕ) : Prop := l.count true = k ∧ l.length = n
+
+lemma List.length_succ_ne_nil (l : List α) (hl : l.length = n+1) : l ≠ [] := by
+  exact List.ne_nil_of_length_eq_add_one hl
+
+@[simp]
+lemma lengthSuccess_zero (l : List Bool) (n : ℕ) : l.count true = 0 ↔  true ∉ l := by
+  exact List.count_eq_zero
+
+
+
+
+@[simp]
+lemma lengthSuccess_nil (l : List Bool) (hl : l = []) (n k : ℕ) : List.lengthSuccess l n (k + 1) = False := by
+  simp [hl, List.lengthSuccess]
+
+@[simp]
+lemma lengthSuccess_zero_succ (l : List Bool) (k : ℕ) : List.lengthSuccess l 0 (k + 1) = False := by
+  simp only [List.lengthSuccess, List.length_eq_zero_iff]
+  rw [and_comm, eq_iff_iff, iff_false, not_and]
+  intro hl ; rw [hl]
+  simp
+
+lemma lengthSuccess_cons (l : List Bool) (hl : l ≠ []) (n k : ℕ) : List.lengthSuccess l (n + 1) (k + 1) ↔ ((l.head hl = true) ∧ List.lengthSuccess l.tail n k) ∨ ((l.head hl = false) ∧ List.lengthSuccess l.tail n (k+1)) := by
+  repeat rw [List.lengthSuccess]
+  conv => left; left; left; right; rw [← List.cons_head_tail (l := l) hl]
+  rw [length_succ_iff _ l hl, List.count_cons, beq_true]
+  by_cases hl' :  l.head hl = true <;> simp [hl']
+
+example (n k : ℕ) : Finset.card { s : Finset (Fin n) | s.card = k } = n.choose k := by
+  rw [← Finset.card_fin n, ← Finset.card_powersetCard]
+  simp only [Finset.card_univ, Finset.univ_filter_card_eq, Finset.card_powersetCard,
+    Fintype.card_fin]
+
+example (n k : ℕ) : { l : List Bool | l.length = n ∧ l.count true = k } ≃
+{ s : Finset (Fin n) | s.card = k } :=
+  { toFun :=
+      fun ⟨l, hl⟩ ↦ hl.1 ▸ ⟨Finset.univ.filter (fun i => l.get i = true),
+        by
+        rw [← hl.2, List.count_eq_length_filter]
+
+
+        simp [hl]
+        rw [← List.count_eq_length_filter]
+
+        rw [← hl.2]
+        rw [List.count_eq_length_filter]
+        simp
+        simp? [hl.2]
+        norm_cast
+
+
+        rw [hl.1]
+        simp [hl]
+        sorry
+        ⟩
+
+    invFun :=
+      by sorry
+    left_inv :=
+      by sorry
+    right_inv :=
+      by sorry }
+
+lemma lengthSuccess_cons? (l : List Bool) (n k : ℕ) : List.lengthSuccess l (n + 1) (k + 1) ↔ ((l.head? = true) ∧ List.lengthSuccess l.tail n k) ∨ ((l.head? = false) ∧ List.lengthSuccess l.tail n (k+1)) := by
+  repeat rw [List.lengthSuccess]
+  by_cases hl' :  l.head? = true
+  · simp [hl']
 
     sorry
+  · simp [hl']
+    sorry
+  rw [length_succ_iff _ l hl, List.count_cons, beq_true]
+
+
+lemma count_encard0_eq_choose' (k : ℕ) : { l : List Bool | List.lengthSuccess l 0 k }.encard = if k = 0 then 1 else 0 := by
+  simp [List.lengthSuccess]
+
+  simp [List.lengthSuccess]
+  refine Set.encard_eq_one.mpr ?_
+  use List.replicate n false
+  ext x
+  simp
+  rw [List.eq_replicate_iff, List.count_eq_zero, and_comm]
+  simp
+
+lemma count_encard0_eq_choose (n : ℕ) : { l : List Bool | List.lengthSuccess l n 0 }.encard  = 1 := by
+  simp [List.lengthSuccess]
+  refine Set.encard_eq_one.mpr ?_
+  use List.replicate n false
+  ext x
+  simp
+  rw [List.eq_replicate_iff, List.count_eq_zero, and_comm]
+  simp
+
+example (s t : Set α) (hst : Disjoint s t): (s ∪ t).encard = s.encard  + t.encard := by
+  exact Set.encard_union_eq hst
+
+example (P Q : α → Prop) (h : Set.disjoint P Q) : {a | P a ∨ Q a}.encard = {a | P a}.encard + {a | Q a}.encard := by
+  apply?
+
 
 open List
 
 lemma binom_weight [DecidableEq Bool] (p : ℝ≥0) (h : p ≤ 1) (n k : ℕ) : (binom₄ p h n).weight k = (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k) := by
-  have g (i : List Bool) (s : Set ℕ): (s.indicator (@OfNat.ofNat (ℕ → ℝ≥0∞) 1 One.toOfNat1) (List.count true i)) = ((List.count (α := Bool) true)⁻¹' s).indicator (fun _ ↦ 1) i := by
+  have g (i : List Bool) (s : Set ℕ): (s.indicator (@OfNat.ofNat (ℕ → ℝ≥0∞) 1 One.toOfNat1) ((Finset.card ∘ truePositionsNat) i)) = (((Finset.card ∘ truePositionsNat))⁻¹' s).indicator (fun _ ↦ 1) i := by
     sorry
   calc
     ((binom₄ p h n).weight k) = (∑' (i : List Bool),
     {l | l.length = n}.indicator (fun l => ∏' (a : Bool), (coin p h).1.weight a ^ List.count (α := Bool) a l) i *
-      ({k} : Set ℕ).indicator 1 (List.count (α := Bool) true i)) := by
+      ({k} : Set ℕ).indicator 1 ((Finset.card ∘ truePositionsNat) i)) := by
       rw [binom₄, map_weight']
       simp_rw [bernoulliSequence_weight' n (coin p h).val]
     _ = ∑' (i : List Bool),
@@ -1364,12 +1489,17 @@ noncomputable def prodList (v : List (DiscreteMeasure α))
   : DiscreteMeasure (List α) := v.traverse id
 
 
-end coin
-
 end DiscreteProbabilityMeasure
 
 
+section combinatorics
 
-lemma traverse_singleton {α β : Type} (a : α) [Applicative m] :
-  traverse id [DiscreteMeasure.pure a] = DiscreteMeasure.pure [a] := by
-  simp
+open scoped BigOperators
+
+variable (n k : ℕ)
+
+def BoolLists := { l : List Bool | l.length = n ∧ l.count true = k }
+
+def TruePositions := { s : Finset (Fin n) | s.card = k }
+
+end combinatorics
