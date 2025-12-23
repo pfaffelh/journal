@@ -59,10 +59,7 @@ lemma pairwise_disjoint_singleton_subtype (s : Set α) : Pairwise (Disjoint on f
   simp_rw [Set.disjoint_singleton_left, Set.mem_singleton_iff]
   exact Subtype.coe_ne_coe.mpr hab
 
-lemma pairwise_disjoint_fiber' (s : Set β) : Pairwise (Disjoint on fun (x : β) => (g⁻¹' {x} : Set α)) := by
-  exact pairwise_disjoint_fiber g
-
-lemma pairwise_disjoint_fiber_subtype (s : Set β) : Pairwise (Disjoint on fun (x : s) => (g⁻¹' {x.val} : Set α)) :=
+lemma pairwise_disjoint_fiber_subtype {g : α → β} (s : Set β) : Pairwise (Disjoint on fun (x : s) => (g⁻¹' {x.val} : Set α)) :=
   fun _ _ hab ↦ pairwise_disjoint_fiber g (Subtype.coe_ne_coe.mpr hab)
 
 
@@ -70,7 +67,7 @@ lemma pairwise_disjoint_fiber_subtype (s : Set β) : Pairwise (Disjoint on fun (
 -- to Function
 
 lemma Function.comp_apply' (f : α → β) (g : β → γ): (g ∘ fun x => f x) = fun x => g (f x) := by
-  simp_rw [← comp_apply]
+  rfl
 
 
 
@@ -79,16 +76,13 @@ lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7
 (sum fun (i : ι) ↦ m i).join = sum fun (i : ι) ↦ (m i).join := by
   simp_rw [Measure.join, lintegral_sum_measure]
   ext s hs
-  rw [ofMeasurable_apply, Measure.sum_apply]
+  rw [ofMeasurable_apply s hs, Measure.sum_apply _ hs]
   apply tsum_congr (fun i ↦ ?_)
-  rw [ofMeasurable_apply]
-  repeat assumption
+  rw [ofMeasurable_apply s hs]
 
 lemma Measure.bind_sum {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {ι : Type u_7} (m : ι → Measure α) (f : α → Measure β) (h : AEMeasurable f (sum fun i => m i)) :
   (sum fun (i : ι) ↦ m i).bind f = sum fun (i : ι) ↦ (m i).bind f := by
-  simp_rw [Measure.bind]
-  rw [Measure.map_sum, Measure.join_sum]
-  exact h
+  simp_rw [Measure.bind, Measure.map_sum h, Measure.join_sum]
 
 lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {R : Type u_4} [SMul R ℝ≥0∞] [IsScalarTower R ℝ≥0∞ ℝ≥0∞] (c : R) (m : Measure α) (f : α → Measure β) :
   (c • m).bind f = c • (m.bind f) := by
@@ -101,7 +95,7 @@ section discreteMeasures
 -- let us start with discrete measures now!
 
 
-/- In this file, all measures are defined on `⊤`, i.e., the power set σ-algebra. Later, we might want to use them on small σ-algebras. For this, then take `toMeasure.trim`. -/
+/- In this file, all measures are defined on `⊤`, i.e., the power set σ-algebra. Later, we might want to use them on smaller σ-algebras. For this, then take `toMeasure.trim`. -/
 instance : (MeasurableSpace α) := ⊤
 
 instance : (MeasurableSpace β) := ⊤
@@ -1243,204 +1237,86 @@ noncomputable def pi' (μs : List (DiscreteProbabilityMeasure α)) :
 
 noncomputable def binom₃ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) [DecidableEq Bool]: DiscreteMeasure ℕ := (bernoulliSequence n (coin p h).val).map (List.count (α := Bool) true)
 
-def truePositionsNat (l : List Bool) : Finset ℕ :=
-(Finset.range l.length).filter (fun i => l[i]? = some true)
+lemma List.mem_idxsOf_lt (l : List α) [DecidableEq α] (a : α) (i : ℕ) (hi : i ∈ List.idxsOf a l) : i < l.length := by
+  simp only [List.mem_idxsOf_iff_getElem_sub_pos, zero_le, tsub_zero, beq_iff_eq, true_and] at hi
+  exact hi.1
 
-lemma filter_eq_count (l : List Bool) : (truePositionsNat l).card = l.count true := by
-  simp [truePositionsNat]
+def trueFinset (l : List Bool) (n : ℕ) (hl : n = l.length) : Finset (Fin n) := ((l.idxsOf true).pmap Fin.mk (fun i ↦ hl ▸ fun hi ↦ List.mem_idxsOf_lt l true i hi)).toFinset
 
-  refine Finset.card_eq_of_bijective ?_ (fun a => ?_) ?_ ?_
-
-  sorry
-
-
-noncomputable def binom₄ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) [DecidableEq Bool]: DiscreteMeasure ℕ := (bernoulliSequence n (coin p h).val).map (Finset.card ∘ truePositionsNat)
-
-example (P : α → Prop) (f : α → ℝ≥0∞) : (∑' (a : α), if P a then f a else 0) = (∑' (a : {a : α | P a}), f a) := by
-  rw [tsum_subtype]
-  congr
-
-lemma List.length_sub_count_false (l : List Bool) [DecidableEq Bool]: l.length - l.count true = l.count false := by
-  rw [Nat.sub_eq_iff_eq_add (List.count_le_length)]
-  sorry
-
-def truePositions (l : List Bool) : Finset (Fin l.length) :=
-  (Finset.univ.filter fun i => l.get i = true)
-
-def truePositions' (l : List Bool) [DecidableEq Bool] : Finset ℕ := (l.indexesOf true).toFinset
-
-lemma indexesOf_length_eq_count (l : List α) (a : α) [DecidableEq α] : (l.indexesOf a).length = l.count a := by
-  induction l with
-  | nil =>
-    simp
-  | cons b k hk =>
-    rw [List.count_cons, List.indexesOf_cons]
-    split_ifs with h <;> simp [h, hk]
-
-lemma indexesOf_nodup (l : List α) (a : α) [DecidableEq α] : (l.indexesOf a).Nodup := by
-  apply List.Sublist.nodup (l₂ := List.range l.length)
-  · exact idxsOf_sublist l a
-  · exact List.nodup_range
-
-
-lemma filter_eq_count' (l : List Bool) [DecidableEq Bool] : (truePositions' l).card = l.count true := by
-  simp [truePositions']
-  rw [List.card_toFinset]
-  rw [List.Nodup.dedup (indexesOf_nodup l true)]
-  rw [indexesOf_length_eq_count]
-
-
-
-example (l : List Bool) : l.count false + l.count true = l.length  := by
-  exact List.count_false_add_count_true l
-
-example (s : Set α) (hs : s = ∅) : s.encard = 0 := by exact Set.encard_eq_zero.mpr hs
-
-lemma list_count_induction (k : ℕ) (a : Bool) (l : List Bool) : (a::l).count true = k ↔ (a = true ∧ l.count true = k-1 ∧ k ≠ 0) ∨ (a = false ∧ (l.count true = k)) := by
-  rw [List.count_cons]
-  by_cases h' : a = true <;> refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-  · simp [h'] at h ⊢
-    constructor
-    · exact Nat.eq_sub_of_add_eq h
-    · exact Nat.ne_zero_of_lt (b := List.count true l) <| h.symm ▸ lt_add_one (List.count true l)
-  · simp [h'] at h ⊢
-    apply Eq.symm
-    rw [← Nat.sub_eq_iff_eq_add, h.1]
-    simp [Nat.one_le_iff_ne_zero, h]
-  · simp [h'] at h ⊢ ; rw [h]
-  · simp [h'] at h ⊢ ; rw [h]
-
-lemma length_succ_iff (n : ℕ) (l : List α) (hl : l ≠ []): l.length = n+1 ↔ (l.tail).length = n := by
-  simp only [List.length_tail]
-  refine Iff.symm (Nat.sub_eq_iff_eq_add ?_)
-  refine Nat.one_le_iff_ne_zero.mpr ?_
-  refine Nat.ne_zero_iff_zero_lt.mpr ?_
-  exact List.length_pos_iff.mpr hl
-
-lemma list_length_succ' (l : List α) : l.length > 0 ↔ ∃ (a : α) (l' : List α), l = a::l' := by
-  exact List.length_pos_iff_exists_cons
-
-lemma list_length_succ (l : List α) (n : ℕ) : l.length = n + 1 ↔ ∃ (a : α) (l' : List α), l = a::l' ∧ l'.length = n := by
-  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-  · obtain ⟨a, l', h'⟩ := (List.length_pos_iff_exists_cons (l := l)).mp (h ▸ Nat.zero_lt_succ n)
-    use a, l'
-    simp only [h', List.length_cons, Nat.add_right_cancel_iff] at h
-    exact ⟨h', h⟩
-  · obtain ⟨a, l', ⟨h1, h2⟩⟩ := h
-    exact h1 ▸ (h2.symm ▸ List.length_cons)
-
-def List.lengthSuccess (l : List Bool) (n k : ℕ) : Prop := l.count true = k ∧ l.length = n
-
-lemma List.length_succ_ne_nil (l : List α) (hl : l.length = n+1) : l ≠ [] := by
-  exact List.ne_nil_of_length_eq_add_one hl
-
-@[simp]
-lemma lengthSuccess_zero (l : List Bool) (n : ℕ) : l.count true = 0 ↔  true ∉ l := by
-  exact List.count_eq_zero
-
-
-
-
-@[simp]
-lemma lengthSuccess_nil (l : List Bool) (hl : l = []) (n k : ℕ) : List.lengthSuccess l n (k + 1) = False := by
-  simp [hl, List.lengthSuccess]
-
-@[simp]
-lemma lengthSuccess_zero_succ (l : List Bool) (k : ℕ) : List.lengthSuccess l 0 (k + 1) = False := by
-  simp only [List.lengthSuccess, List.length_eq_zero_iff]
-  rw [and_comm, eq_iff_iff, iff_false, not_and]
-  intro hl ; rw [hl]
-  simp
-
-lemma lengthSuccess_cons (l : List Bool) (hl : l ≠ []) (n k : ℕ) : List.lengthSuccess l (n + 1) (k + 1) ↔ ((l.head hl = true) ∧ List.lengthSuccess l.tail n k) ∨ ((l.head hl = false) ∧ List.lengthSuccess l.tail n (k+1)) := by
-  repeat rw [List.lengthSuccess]
-  conv => left; left; left; right; rw [← List.cons_head_tail (l := l) hl]
-  rw [length_succ_iff _ l hl, List.count_cons, beq_true]
-  by_cases hl' :  l.head hl = true <;> simp [hl']
-
-example (n k : ℕ) : Finset.card { s : Finset (Fin n) | s.card = k } = n.choose k := by
-  rw [← Finset.card_fin n, ← Finset.card_powersetCard]
-  simp only [Finset.card_univ, Finset.univ_filter_card_eq, Finset.card_powersetCard,
-    Fintype.card_fin]
-
-example (n k : ℕ) : { l : List Bool | l.length = n ∧ l.count true = k } ≃
-{ s : Finset (Fin n) | s.card = k } :=
-  { toFun :=
-      fun ⟨l, hl⟩ ↦ hl.1 ▸ ⟨Finset.univ.filter (fun i => l.get i = true),
-        by
-        rw [← hl.2, List.count_eq_length_filter]
-
-
-        simp [hl]
-        rw [← List.count_eq_length_filter]
-
-        rw [← hl.2]
-        rw [List.count_eq_length_filter]
-        simp
-        simp? [hl.2]
-        norm_cast
-
-
-        rw [hl.1]
-        simp [hl]
-        sorry
-        ⟩
-
-    invFun :=
-      by sorry
-    left_inv :=
-      by sorry
-    right_inv :=
-      by sorry }
-
-lemma lengthSuccess_cons? (l : List Bool) (n k : ℕ) : List.lengthSuccess l (n + 1) (k + 1) ↔ ((l.head? = true) ∧ List.lengthSuccess l.tail n k) ∨ ((l.head? = false) ∧ List.lengthSuccess l.tail n (k+1)) := by
-  repeat rw [List.lengthSuccess]
-  by_cases hl' :  l.head? = true
-  · simp [hl']
-
-    sorry
-  · simp [hl']
-    sorry
-  rw [length_succ_iff _ l hl, List.count_cons, beq_true]
-
-
-lemma count_encard0_eq_choose' (k : ℕ) : { l : List Bool | List.lengthSuccess l 0 k }.encard = if k = 0 then 1 else 0 := by
-  simp [List.lengthSuccess]
-
-  simp [List.lengthSuccess]
-  refine Set.encard_eq_one.mpr ?_
-  use List.replicate n false
-  ext x
-  simp
-  rw [List.eq_replicate_iff, List.count_eq_zero, and_comm]
-  simp
-
-lemma count_encard0_eq_choose (n : ℕ) : { l : List Bool | List.lengthSuccess l n 0 }.encard  = 1 := by
-  simp [List.lengthSuccess]
-  refine Set.encard_eq_one.mpr ?_
-  use List.replicate n false
-  ext x
-  simp
-  rw [List.eq_replicate_iff, List.count_eq_zero, and_comm]
-  simp
-
-example (s t : Set α) (hst : Disjoint s t): (s ∪ t).encard = s.encard  + t.encard := by
-  exact Set.encard_union_eq hst
-
-example (P Q : α → Prop) (h : Set.disjoint P Q) : {a | P a ∨ Q a}.encard = {a | P a}.encard + {a | Q a}.encard := by
-  apply?
-
+lemma filter_eq_count'' (n : ℕ) (l : List Bool) (hl : n = l.length) : (trueFinset l n hl).card = l.count true := by
+  rw [trueFinset, List.card_toFinset, List.Nodup.dedup, List.length_pmap, List.length_idxsOf]
+  refine List.Nodup.pmap (by simp only [Fin.mk.injEq, imp_self, implies_true])
+    (by simp only [List.nodup_idxsOf])
 
 open List
 
-lemma binom_weight [DecidableEq Bool] (p : ℝ≥0) (h : p ≤ 1) (n k : ℕ) : (binom₄ p h n).weight k = (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k) := by
-  have g (i : List Bool) (s : Set ℕ): (s.indicator (@OfNat.ofNat (ℕ → ℝ≥0∞) 1 One.toOfNat1) ((Finset.card ∘ truePositionsNat) i)) = (((Finset.card ∘ truePositionsNat))⁻¹' s).indicator (fun _ ↦ 1) i := by
-    sorry
+lemma List.ofFn_trueFinset (n : ℕ) (l : List Bool) (hl : n = l.length): (List.ofFn fun i => decide (i ∈ trueFinset l n hl)) = l := by
+  apply List.ext_get
+  · simp only [hl, List.length_ofFn]
+  · intro i hi₁ hi₂
+    simp [trueFinset, hi₂]
+
+lemma trueFinset_eq_Fn (n : ℕ) (s : Finset (Fin n)) :
+  s = (trueFinset (List.ofFn fun i => decide (i ∈ s)) n (by simp only [List.length_ofFn])) := by
+  simp only [trueFinset]
+  ext x
+  simp
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · use x.val
+    use ⟨x.prop, ?_⟩
+    simp [h]
+  · obtain ⟨y, ⟨⟨hy11, hy12⟩, hy2⟩⟩ := h
+    rwa [← hy2]
+
+def Equiv.ListBool_trueFinset (k n : ℕ) : { l : List Bool | n = l.length ∧ l.count true = k } ≃ { s : Finset (Fin n) | s.card = k } where
+  toFun := fun ⟨l, hl⟩ ↦ ⟨trueFinset l n hl.1,
+  by
+    rw [Set.mem_setOf_eq, filter_eq_count'' n l hl.1]
+    exact (filter_eq_count'' n l hl.1) ▸ hl.2⟩
+  invFun := fun ⟨s, hs⟩ ↦ ⟨List.ofFn (fun i ↦ i ∈ s), by
+    simp only [Set.mem_setOf_eq, List.length_ofFn, true_and]
+    rw [← filter_eq_count'' n _ (by simp)]
+    rw [← trueFinset_eq_Fn n s]
+    exact hs⟩
+  left_inv := by
+    simp only [LeftInverse, Set.coe_setOf, Set.mem_setOf_eq, Subtype.forall, Subtype.mk.injEq,
+      forall_and_index]
+    exact fun l hl hyp ↦ ofFn_trueFinset n l hl
+  right_inv := by
+    simp [RightInverse, LeftInverse]
+    intro s hs
+    exact Eq.symm (trueFinset_eq_Fn n s)
+
+lemma Finset.cardk_card (n k : ℕ) : Finset.card { s : Finset (Fin n) | s.card = k } = n.choose k := by
+  rw [← Finset.card_fin n, ← Finset.card_powersetCard]
+  simp
+
+lemma Set.cardk_encard (n k : ℕ) : Set.encard { s : Finset (Fin n) | s.card = k } = n.choose k := by
+  rw [← Finset.cardk_card, ← Set.encard_coe_eq_coe_finsetCard]
+  congr ; simp
+
+lemma count_encard_eq_choose (k n : ℕ) : { l : List Bool | n = l.length ∧ l.count true = k}.encard = (n.choose k) := by
+  haveI h : Finite ↑{l | n = l.length ∧ List.count true l = k} := by
+    apply Finite.of_equiv (α := { s : Finset (Fin n) | s.card = k })
+    exact (Equiv.ListBool_trueFinset k n).symm
+  rw [Set.encard_congr (Equiv.ListBool_trueFinset k n)]
+  exact Set.cardk_encard n k
+
+-- TODO: This should hold in greater generality, but is actually not so easy to prove...
+--private lemma List.length_eq_sum_count_of_bool (l : List Bool) : l.length = ∑' (a : Bool), l.count a := by
+--  rw [← List.count_true_add_count_false, tsum_bool, add_comm]
+
+lemma List.length_sub_count_false (l : List Bool) : l.length - l.count true = l.count false := by
+  rw [Nat.sub_eq_iff_eq_add (List.count_le_length), add_comm, List.count_true_add_count_false]
+
+lemma binom_weight (p : ℝ≥0) (h : p ≤ 1) (n k : ℕ) : (binom₃ p h n).weight k = (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k) := by
+  have g (i : List Bool) (s : Set ℕ): (s.indicator (@OfNat.ofNat (ℕ → ℝ≥0∞) 1 One.toOfNat1) ((List.count true i))) = (((List.count true))⁻¹' s).indicator (fun _ ↦ 1) i := by
+    rfl
   calc
-    ((binom₄ p h n).weight k) = (∑' (i : List Bool),
+    ((binom₃ p h n).weight k) = (∑' (i : List Bool),
     {l | l.length = n}.indicator (fun l => ∏' (a : Bool), (coin p h).1.weight a ^ List.count (α := Bool) a l) i *
-      ({k} : Set ℕ).indicator 1 ((Finset.card ∘ truePositionsNat) i)) := by
-      rw [binom₄, map_weight']
+      ({k} : Set ℕ).indicator 1 ((List.count true i))) := by
+      rw [binom₃, map_weight']
       simp_rw [bernoulliSequence_weight' n (coin p h).val]
     _ = ∑' (i : List Bool),
     (List.count true ⁻¹' {k} ∩ {l | l.length = n}).indicator
@@ -1461,7 +1337,9 @@ lemma binom_weight [DecidableEq Bool] (p : ℝ≥0) (h : p ≤ 1) (n k : ℕ) : 
         rw [mul_comm]
         congr
         norm_cast
-        rw [count_encard_eq_choose]
+        simp_rw [eq_comm (b := n)]
+        rw [Set.inter_comm, ← count_encard_eq_choose k n]
+        rfl
 
 
 
@@ -1473,7 +1351,7 @@ lemma binom_weight [DecidableEq Bool] (p : ℝ≥0) (h : p ≤ 1) (n k : ℕ) : 
 def List.count' {α : Type u} [BEq α] (a : α) (n : ℕ) : (l : List α) → (hl : l.length = n) → Fin (n + 1) := fun l hl ↦ ⟨l.count a, by
   apply lt_of_le_of_lt List.count_le_length (hl ▸ lt_add_one l.length)⟩
 
-noncomputable def binom₃ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure (Fin (n + 1)) := by
+noncomputable def binom₅ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure (Fin (n + 1)) := by
   have f : (List.replicate n (coin p h)).length = n := by exact List.length_replicate
   let l := (sequence <| List.replicate n (coin p h))
 
@@ -1503,3 +1381,61 @@ def BoolLists := { l : List Bool | l.length = n ∧ l.count true = k }
 def TruePositions := { s : Finset (Fin n) | s.card = k }
 
 end combinatorics
+
+
+example (f g : α → ℝ≥0∞) : ∑' (a : α), (f a + g a) = ∑' (a : α), f a + ∑' (a : α), g a := by
+  exact ENNReal.tsum_add
+
+example (a b : α) : a = b ↔ b ∈ ({a} : Set α) := by
+  simp only [Set.mem_singleton_iff]
+  exact comm
+
+example (f : α → ℝ≥0) (b : α) : ∑' (a : α), f a = f b + (∑' (a : α), if a = b then 0 else f a) := by
+  apply NNReal.tsum_eq_add_tsum_ite
+
+example (f : α → ℝ≥0∞) (b : α) : ∑' (a : α), f a = f b + (∑' (a : α), if a = b then 0 else f a) := by
+  apply ENNReal.tsum_eq_add_tsum_ite
+
+@[simp]
+lemma List.count_eq_tsum_indicator [BEq α] [DecidableEq α] (l : List α) {b : α} : l.count b = ∑ (i : Fin (l.length)), ({l[i.val]} : Set α).indicator 1 b := by
+  -- simp [List.count, List.countP]
+
+
+
+  rw [List.count_eq_length_filter]
+
+
+  -- rw [tsum_subtype]
+  simp_rw [Set.indicator]
+  conv => right; right; intro x; simp only [Set.mem_singleton_iff, Pi.one_apply]
+  simp only [Finset.sum_boole, Nat.cast_id]
+
+
+  induction l with
+  | nil => simp
+  | cons a l hl =>
+    rw [List.count_cons, hl]
+    conv => right; right; simp only [List.length_cons]
+
+
+
+
+
+
+    sorry
+#check List.count_eq_length_filter
+
+lemma List.length_eq_tsum_count (l : List α) : l.length = ∑' (a : α), l.count a := by
+  calc
+    l.length = ∑' (i : Fin (l.length)), 1 := by
+      simp
+    _ = ∑' (i : Fin (l.length)) (a : α), ({l[i]} : Set α).indicator 1 a := by
+      apply tsum_congr (fun b ↦ ?_)
+      rw [← tsum_subtype]
+      simp
+    _ = ∑' (a : α), ∑' (i : Fin (l.length)), ({l[i]} : Set α).indicator 1 a := by
+      -- apply Summable.tsum_comm
+      sorry
+    _ = ∑' (a : α), l.count a := by
+      apply tsum_congr (fun b ↦ ?_)
+      simp
