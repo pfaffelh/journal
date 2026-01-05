@@ -4,9 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Peter Pfaffelhuber
 -/
 
-import Lean
 import Mathlib
-import Batteries
 
 /-!
 # Discrete measures and discrete probability measures
@@ -22,7 +20,7 @@ This setup combines the following features:
 * We do not only have probability measures in this setup (as in `PMF`), but `DiscreteMeasure`s as well. This will allow for a similar treatment of these two cases. (Discrete measures appear frequently in probability theory in the form of random measures.)
 * It will be easier to connect `DiscreteMeasure` with `Measure` (since they are already measures). E.g., weak convergence of `P : ℕ → DiscreteMeasure α` to some `Measure α` is easy to formulate. (For this, we have to `trim` the `P n`s to the corresponding `MeasureableSpace α` instance.)
 
-As one example, we have started to establish some results on `coin p`, which is a Bernoulli distribution.
+As one example, we have started to establish some results on `coin p`, which is a Bernoulli distribution, as well as alternative formulations for the usual binomial distribution.
 
 -/
 
@@ -34,7 +32,7 @@ universe u v w
 
 variable {α β γ δ : Type*}
 
--- add to indicator
+-- add to Set.indicator
 
 --@[simp]
 --lemma Set.indicator.mul_indicator_eq' (f : α → ℝ≥0∞) (s : Set α) (a : α) : f a * s.indicator (fun _ ↦ 1) a = s.indicator f a := by
@@ -43,7 +41,7 @@ variable {α β γ δ : Type*}
 -- currently not used
 @[simp]
 lemma Set.indicator.ite_ite (d : Prop) [Decidable d] (a b c : α) : (if d then a else if d then b else c) = (if d then a else c) := by
-  split_ifs <;> rfl
+  grind
 
 lemma Set.indicator_comm_singleton (i b : β) : ({i} : Set β).indicator (1 : β → ℝ≥0∞) b = ({b} : Set β).indicator (1 : β → ℝ≥0∞) i := by
   refine Set.indicator_eq_indicator ?_ rfl
@@ -56,8 +54,7 @@ lemma Set.indicator_sum_singleton (f : α → ℝ≥0∞) (x : α) : (∑' (a : 
 -- used frequently
 @[simp]
 lemma Set.indicator.mul_indicator_eq (f : α → ℝ≥0∞) (s : Set α) (a : α) : f a * s.indicator 1 a = s.indicator f a := by
-  simp only [indicator, Pi.one_apply, mul_ite, mul_one, mul_zero]
-
+  simp only [Set.indicator, Pi.one_apply, mul_ite, mul_one, mul_zero]
 
 
 -- add to Set.PairwiseDisjoint
@@ -80,6 +77,7 @@ lemma Function.comp_apply'  {β : Sort u_1} {δ : Sort u_2} {α : Sort u_3} {f :
 
 
 -- to Mathlib.MeasureTheory.Measure.AEMeasurable
+-- join commutes with sum
 lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7} (m : ι → Measure (Measure α)) :
 (sum m).join = sum fun (i : ι) ↦ (m i).join := by
   simp_rw [Measure.join, lintegral_sum_measure]
@@ -88,10 +86,12 @@ lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7
   apply tsum_congr (fun i ↦ ?_)
   rw [ofMeasurable_apply s hs]
 
+-- bind commutes with sum
 lemma Measure.bind_sum {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {ι : Type u_7} (m : ι → Measure α) (f : α → Measure β) (h : AEMeasurable f (sum fun i => m i)) :
   (sum fun (i : ι) ↦ m i).bind f = sum fun (i : ι) ↦ (m i).bind f := by
   simp_rw [Measure.bind, Measure.map_sum h, Measure.join_sum]
 
+-- scalar multiplication commutes with bind
 lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {R : Type u_4} [SMul R ℝ≥0∞] [IsScalarTower R ℝ≥0∞ ℝ≥0∞] (c : R) (m : Measure α) (f : α → Measure β) :
   (c • m).bind f = c • (m.bind f) := by
   simp_rw [Measure.bind, Measure.map_smul, Measure.join_smul]
@@ -457,11 +457,7 @@ theorem seq_weight' : (seq q p).weight b = ∑' (f : α → β) (a : f⁻¹' {b}
   apply tsum_congr (fun f ↦ ?_)
   congr 1
   apply tsum_congr (fun g ↦ ?_)
-  split_ifs with h₀ h₁ h₂
-  · rfl
-  · exact False.elim (h₁ (id (Eq.symm h₀)))
-  · exact False.elim (h₀ (id (Eq.symm h₂)))
-  · rfl
+  grind
 
 @[simp]
 theorem seq_weight'' : (seq q p).weight b = ∑' (f : α → β), q.weight f * ∑' (a : α), (f⁻¹' {b}).indicator (p ()).weight a := by
@@ -470,11 +466,7 @@ theorem seq_weight'' : (seq q p).weight b = ∑' (f : α → β), q.weight f * �
   congr
   funext a
   simp only [Pi.one_apply, mul_ite, mul_one, mul_zero, Set.mem_preimage, Set.mem_singleton_iff]
-  split_ifs with h₀ h₁ h₂
-  · rfl
-  · exact False.elim (h₁ (id (Eq.symm h₀)))
-  · exact False.elim (h₀ (id (Eq.symm h₂)))
-  · rfl
+  grind
 
 lemma seq_pure {α β : Type u} (g : DiscreteMeasure (α → β)) (x : α) : seq g (fun _ ↦ pure x) = map (fun h => h x) g := by
   ext b
@@ -588,18 +580,12 @@ section sequence
 lemma sequence_nil : sequence ([] : List (DiscreteMeasure α)) = (DiscreteMeasure.pure [] : DiscreteMeasure (List α)) := by
   simp [sequence]
 
-
-
 -- Measures on lists
 
 open Classical
 lemma cons_pure_weight (a a' : α) (l l' : List α) : ((DiscreteMeasure.pure ∘ List.cons a') l').weight (a :: l) = if a = a' ∧ l = l' then 1 else 0 := by
   rw [comp_apply, DiscreteMeasure.pure_weight, Set.indicator]
-  split_ifs with h₁ h₂ h₂ <;> simp only [Set.mem_singleton_iff, List.cons.injEq] at h₁
-  · simp only [Pi.one_apply]
-  · simp only [Pi.one_apply, one_ne_zero, h₂ h₁]
-  · apply False.elim (h₁ h₂)
-  · rfl
+  simp only [Set.mem_singleton_iff, List.cons.injEq, Pi.one_apply]
 
 open Classical
 lemma cons_pure_weight_of_empty (a' : α) : ((DiscreteMeasure.pure ∘ List.cons a') l').weight [] = 0 := by
@@ -631,8 +617,6 @@ lemma cons_map_weight (μs : DiscreteMeasure (List α)) (ν : DiscreteMeasure α
 
 lemma sequence_cons (μs : List (DiscreteMeasure α)) (ν : DiscreteMeasure α) : sequence (ν::μs) = List.cons <$> ν <*> (sequence μs) := by
   rfl
-
-#check Traversable
 
 lemma sequence_weight_cons_of_empty (μs : List (DiscreteMeasure α)) (ν : DiscreteMeasure α) : (sequence (ν::μs)).weight [] = 0 := by
   exact cons_map_weight_of_empty (sequence μs) ν
@@ -769,8 +753,6 @@ section DiscreteProbabilityMeasure
 /-- A `DiscreteProbabilityMeasure` is a `DiscreteMeasure` with the property `IsProbabilityMeasure`. -/
 def DiscreteProbabilityMeasure' (α : Type*) : Type _ :=
   { μ : DiscreteMeasure α // HasSum μ.weight 1 }
-
-#check Subtype.mk
 
 structure DiscreteProbabilityMeasure (α : Type*) where
   toDiscreteMeasure : DiscreteMeasure α
@@ -1075,17 +1057,26 @@ noncomputable instance : ULiftable DiscreteProbabilityMeasure.{u} DiscreteProbab
         simp only [map_map, Equiv.self_comp_symm, id_map]
       }
 
+-- We have do notation (as for PMF)!
+example (μ : DiscreteProbabilityMeasure α) : μ = do
+  let X ← μ
+  return X
+  := by
+  simp
+
 end monad
 
-end DiscreteProbabilityMeasure
+section lintegral
+
+lemma lintegral_coe (μ : DiscreteProbabilityMeasure α) (g : α → ℝ≥0): ∫⁻ (a : α), g a ∂ μ.toDiscreteMeasure.toMeasure = ∑' (a : α),  (μ.toDiscreteMeasure.weight a) * g a := by
+  rw [← DiscreteMeasure.lintegral_eq_toMeasure]
+  rw [DiscreteMeasure.lintegral]
+
+end lintegral
 
 end DiscreteProbabilityMeasure
 
-
-
-
-
-
+end DiscreteProbabilityMeasure
 
 
 namespace DiscreteProbabilityMeasure
@@ -1107,53 +1098,34 @@ noncomputable def iidSequence (n : ℕ) (μ : DiscreteProbabilityMeasure α) :  
 lemma iidSequence_coe (n : ℕ) (μ : DiscreteProbabilityMeasure α) : (iidSequence n μ).toDiscreteMeasure = (DiscreteMeasure.iidSequence n μ.toDiscreteMeasure) := by
   rw [iidSequence, sequence_coe, DiscreteMeasure.iidSequence, List.map_replicate]
 
--- lintegral_sum_iidSequence
+-- todo lintegral_sum_iidSequence
 
 end sequence
 section coin
 
-open Bool ENNReal -- DiscreteMeasure
+open Bool ENNReal
 
-noncomputable def coin (p : ℝ≥0) (h : p ≤ 1) : DiscreteProbabilityMeasure Bool :=
-  ⟨⟨fun (b : Bool) ↦ if b then (p : ℝ≥0∞) else (1 - p : ℝ≥0∞)⟩, by
-    rw [Summable.hasSum_iff ENNReal.summable]
-    rw [tsum_bool]
-    simp only [false_eq_true, ↓reduceIte]
-    norm_cast
-    exact tsub_add_cancel_of_le h
-  ⟩
+noncomputable def coin (p : ℝ≥0) (h : p ≤ 1) : DiscreteProbabilityMeasure Bool where
+  toDiscreteMeasure := ⟨fun (b : Bool) ↦ if b then (p : ℝ≥0∞) else (1 - p : ℝ≥0∞)⟩
+  hasSum_one := by
+    simp [Summable.hasSum_iff ENNReal.summable, h]
 
-lemma lintegral_coe (μ : DiscreteProbabilityMeasure α) (g : α → ℝ≥0): ∫⁻ (a : α), g a ∂ μ.toDiscreteMeasure.toMeasure = ∑' (a : α),  (μ.toDiscreteMeasure.weight a) * g a := by
-  rw [← DiscreteMeasure.lintegral_eq_toMeasure]
-  rw [DiscreteMeasure.lintegral]
+lemma coin_weight (p : ℝ≥0) (h : p ≤ 1) (b : Bool) : (coin p h).1.weight b = if b then (p : ℝ≥0∞) else (1 - p : ℝ≥0∞) := by
+  rfl
 
 lemma lintegral_coin (p : ℝ≥0) (h : p ≤ 1) (g : Bool → ℝ≥0∞): ∫⁻ (a : Bool), (g a) ∂ (coin p h).toDiscreteMeasure.toMeasure = (1 - p) * (g false) + p * (g true) := by
   rw [← DiscreteMeasure.lintegral_eq_toMeasure, DiscreteMeasure.lintegral]
   simp_rw [coin]
   rw [tsum_bool]
-  split_ifs <;> norm_cast
+  grind
 
 lemma lintegral_map_coin (p : ℝ≥0) (h : p ≤ 1) (g : Bool → ℝ≥0): ∫⁻ (a : ℝ≥0), (id a) ∂ (map g (coin p h)).toDiscreteMeasure.toMeasure = ∫⁻ (a : Bool), (g a) ∂ (coin p h).toDiscreteMeasure.toMeasure := by
   rw [map_coe, DiscreteMeasure.map_coe, @MeasureTheory.lintegral_map _ _ ⊤ ⊤ _ _ _ (by measurability) (by exact fun ⦃t⦄ a => a), ← DiscreteMeasure.lintegral_eq_toMeasure, DiscreteMeasure.lintegral, ← DiscreteMeasure.lintegral_eq_toMeasure, DiscreteMeasure.lintegral]
   rfl
 
-#check Coe Nat Real
-
-
 lemma expectation_coin (p : ℝ≥0) (h : p ≤ 1) : ∫⁻ (a : Bool), ({true} : Set Bool).indicator 1 a ∂ (coin p h).toDiscreteMeasure.toMeasure = p := by
   rw [lintegral_coin]
   simp
-
-
--- We have do notation (as for PMF)!
-example (p : ℝ≥0) (h : p ≤ 1) : coin p h = do
-  let X ← coin p h
-  return X
-  := by
-  simp
-
-lemma coin_weight (p : ℝ≥0) (h : p ≤ 1) (b : Bool) : (coin p h).1.weight b = if b then (p : ℝ≥0∞) else (1 - p : ℝ≥0∞) := by
-  rfl
 
 lemma Bool.mem_not (b : Bool) : not ⁻¹' {b} = {!b} := by
     ext y; cases' y <;> simp
@@ -1167,20 +1139,140 @@ lemma coin_not (p : ℝ≥0) (h : p ≤ 1) : (coin p h).map not  = coin (1-p) (t
 
 end coin
 
-noncomputable def binom₂ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure ℕ := ((sequence <| List.replicate n (coin p h)).map (List.map Bool.toNat)).map List.sum
-
--- a list of independent experiments
---noncomputable def pi (μs : List (DiscreteMeasure α)) :
---  DiscreteMeasure (List α) := sequence μs
-
-
 section binom
 
-noncomputable def binom₃ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) [DecidableEq Bool]: DiscreteProbabilityMeasure ℕ := (DiscreteProbabilityMeasure.iidSequence n (coin p h)).map (List.count (α := Bool) true)
+-- Defining the binomial distribution via the weights
+noncomputable def binom₁ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure ℕ where
+  toDiscreteMeasure := ⟨fun k ↦ (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k)⟩
+  hasSum_one := by
+    have g : ∑' (k : ℕ), (p : ℝ≥0∞) ^ k * (1 - p) ^ (n - k) * (n.choose k) = ∑ (k ∈ Finset.range (n + 1)), p ^ k * (1 - p) ^ (n - k) * (n.choose k) := by
+      simp only [ENNReal.coe_finset_sum, ENNReal.coe_mul, ENNReal.coe_pow, ENNReal.coe_sub,
+        ENNReal.coe_one, ENNReal.coe_natCast]
+      refine tsum_eq_sum (fun b hb ↦ ?_)
+      simp only [Finset.mem_range, not_lt, mul_eq_zero, pow_eq_zero_iff', ENNReal.coe_eq_zero, ne_eq, Nat.cast_eq_zero] at hb ⊢
+      exact Or.inr (Nat.choose_eq_zero_iff.mpr hb)
+    rw [Summable.hasSum_iff ENNReal.summable, g, ← add_pow p (1 - p) n]
+    simp [h]
+
+-- Defining the binomial distribution as the sum of toNats in a sequence of Bernoulli trials
+noncomputable def binom₂ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure ℕ := ((sequence <| List.replicate n (coin p h)).map (List.map Bool.toNat)).map List.sum
+
+-- Defining the binomial distribution as the count of trues in a sequence of Bernoulli trials
+noncomputable def binom₃ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure ℕ := (DiscreteProbabilityMeasure.iidSequence n (coin p h)).map (List.count (α := Bool) true)
+
+-- To List.bool
+lemma List.sum_eq_count : List.sum ∘ List.map Bool.toNat = List.count true := by
+  ext l
+  induction l with
+  | nil =>
+    simp
+  | cons a l hl => grind
+
+lemma binom₂_eq_binom₃ : binom₂ = binom₃ := by
+  funext p h n
+  rw [binom₂, binom₃, iidSequence, map_map, List.sum_eq_count]
+
+-- As in `binom₃` but using `do`-notation.
+noncomputable def binom₄ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) :=
+  do
+    let X ← sequence (List.replicate n (coin p h))
+    return X.count true
+
+lemma binom₃_eq_binom₄ : binom₃ = binom₄ := by
+  funext p hp n
+  rw [binom₃, binom₄, iidSequence]
+  simp [monad_norm]
+
+-- Defining the binomial distribution inductively
+noncomputable def binom₅ (p : ℝ≥0) (h : p ≤ 1) : (n : ℕ) → DiscreteProbabilityMeasure ℕ
+  | 0 => DiscreteProbabilityMeasure.pure 0
+  | n+1 => do
+    let X ← binom₅ p h n
+    let Head ← coin p h
+    return X + Head.toNat
+
+lemma binom₅_succ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : binom₅ p h (n + 1) = (binom₅ p h n >>= fun X => coin p h >>= Pure.pure ∘ fun a => X + a.toNat)
+  := by
+  simp [binom₅, monad_norm]
+
+lemma binom₅_succ' (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : binom₅ p h (n + 1) = (coin p h >>= fun a => binom₅ p h n >>= Pure.pure ∘ fun X => X + a.toNat)
+  := by
+  simp [binom₅_succ, ← bind_eq_bind]
+  rw [DiscreteProbabilityMeasure.bind_comm]
+  rfl
+
+-- `binom₅` using do-notation
+lemma binom₅_induction(p : ℝ≥0) (h : p ≤ 1) (P : ℕ → DiscreteProbabilityMeasure ℕ) (zero : P 0 = pure 0) (succ : ∀ n, P (n + 1) = do
+    let X ← P n
+    let Head ← coin p h
+    return X + Head.toNat) : P = binom₅ p h := by
+  funext n
+  induction n with
+  | zero =>
+    simp [binom₅, zero]
+  | succ n hn =>
+    simp [monad_norm, binom₅] at succ ⊢
+    rw [succ n, hn]
+
+
+lemma LawfulMonad.sum_induction (n : ℕ) {m : Type → Type} [Monad m] [LawfulMonad m] (x : m ℕ) (P : ℕ → m ℕ) (hP : ∀ n, P n =
+  do
+    let mut sum := 0
+    for _ in (List.range n) do
+      let X ← x
+      sum := sum + X
+    return sum) :
+  P (n + 1) =
+  do
+    let sum ← P n
+    let X ← x
+    return sum + X
+    := by
+  have h : List.range (n + 1) = ((List.range n).append [n]) := by
+    simp only [List.range_succ, List.append_eq]
+  simp at hP ⊢
+  simp [monad_norm] at hP ⊢
+  simp [hP, h]
+
+noncomputable def binom₆ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) :=
+  do
+    let mut S := 0
+    for _ in List.range n do
+      let X ← Bool.toNat <$> (coin p h)
+      S := S + X
+    return S
+
+lemma binom₆_succ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : binom₆ p h (n + 1) = do
+  let S ← binom₆ p h n
+  let X ← Bool.toNat <$> coin p h
+  return S + X
+  := by
+  exact LawfulMonad.sum_induction _ _ _ (fun n ↦ rfl)
+
+lemma binom₆_norm (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : binom₆ p h n = List.foldlM (fun b _ => coin p h >>= Pure.pure ∘ fun c => b + c.toNat) 0 (List.range n) := by
+  simp [binom₆]
+  simp [monad_norm]
+
+lemma binom₃_eq_binom₅ : binom₃ = binom₅ := by
+  funext p hp n
+  rw [binom₃, iidSequence]
+  simp [monad_norm]
+  induction n with
+  | zero =>
+    simp [binom₅, sequence]
+  | succ n hn =>
+    rw [List.replicate_succ, sequence, List.traverse_cons, ← sequence, binom₅_succ']
+    rw [← hn]
+    simp [monad_norm] at hn ⊢
+    have f (X : Bool) (a : List Bool) : List.count true (X :: a) = List.count true a + X.toNat := by
+      rw [List.count_cons]
+      simp only [beq_true, Nat.add_left_cancel_iff]
+      split_ifs with h <;> simp [h]
+    simp_rw [f]
+
 
 lemma List.mem_idxsOf_lt (l : List α) [DecidableEq α] (a : α) (i : ℕ) (hi : i ∈ List.idxsOf a l) : i < l.length := by
-  simp only [List.mem_idxsOf_iff_getElem_sub_pos, zero_le, tsub_zero, beq_iff_eq, true_and] at hi
-  exact hi.1
+  grind
 
 def trueFinset (l : List Bool) (n : ℕ) (hl : n = l.length) : Finset (Fin n) := ((l.idxsOf true).pmap Fin.mk (fun i ↦ hl ▸ fun hi ↦ List.mem_idxsOf_lt l true i hi)).toFinset
 
@@ -1246,7 +1338,9 @@ lemma count_encard_eq_choose (k n : ℕ) : { l : List Bool | n = l.length ∧ l.
 lemma List.length_sub_count_false (l : List Bool) : l.length - l.count true = l.count false := by
   rw [Nat.sub_eq_iff_eq_add (List.count_le_length), add_comm, List.count_true_add_count_false]
 
-lemma binom_weight (p : ℝ≥0) (h : p ≤ 1) (n k : ℕ) : (binom₃ p h n).toDiscreteMeasure.weight k = (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k) := by
+lemma binom₁_eq_binom₃ : binom₃ = binom₁ := by
+  ext p h n k
+  rw [binom₁]
   have g (i : List Bool) (s : Set ℕ): (s.indicator (@OfNat.ofNat (ℕ → ℝ≥0∞) 1 One.toOfNat1) ((List.count true i))) = (((List.count true))⁻¹' s).indicator 1 i := by
     rfl
   calc

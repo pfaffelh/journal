@@ -199,3 +199,63 @@ l.foldr
 
 noncomputable def prodList' (v : List (DiscreteMeasure α))
   : DiscreteMeasure (List α) := v.traverse id
+
+
+
+
+
+-- In der Art könnte man die hypergeometrische Verteilung definieren
+noncomputable def binom₇ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) :=
+  do
+    let mut S := (0 : ℕ)
+    for _ in [1:n] do
+      let X ← coin (S/n) (by
+        sorry)
+      S := S + X.toNat
+    return S
+
+
+
+open Lean.Order
+
+noncomputable instance : Lean.Order.PartialOrder (DiscreteProbabilityMeasure α) where
+  rel d1 d2 := ∀ x, d1 x ≤ d2 x
+  rel_refl a := by rfl
+  rel_trans h1 h2 _ := le_trans (h1 _) (h2 _)
+  rel_antisymm h1 h2 := by
+    funext
+
+
+
+
+    funext (fun _ => ENNReal.le_antisymm (h1 _) (h2 _))
+
+
+noncomputable instance : MonoBind DiscreteProbabilityMeasure where
+  bind_mono_left := by
+    intro α β d₁ d₂ f h₁₂ y
+    unfold bind instBindDistr
+    dsimp
+    apply ENNReal.sum_mono
+    intro x
+    apply ENNReal.mul_mono
+    · apply h₁₂
+    · apply ENNReal.le_refl
+
+  bind_mono_right := by
+    intro α β Distr f₁ f₂ h₁₂ y
+    apply ENNReal.sum_mono
+    intro x
+    apply ENNReal.mul_mono
+    · apply ENNReal.le_refl
+    · apply h₁₂
+
+
+noncomputable def geom (p : ℝ≥0) (h : p ≤ 1) : DiscreteProbabilityMeasure Nat := do
+  let head ← coin p h
+  if head then
+    return 0
+  else
+    let n ← geom p h
+    return (n + 1)
+partial_fixpoint
