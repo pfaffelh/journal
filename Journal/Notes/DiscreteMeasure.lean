@@ -958,8 +958,6 @@ section seq
 noncomputable def seq (q : DiscreteProbabilityMeasure (α → β)) (p :  Unit → DiscreteProbabilityMeasure α) : DiscreteProbabilityMeasure β :=
   q.bind fun m => (p ()).bind fun a => pure (m a)
 
-#check CoeFun
-
 lemma seq_coe (q : DiscreteProbabilityMeasure (α → β)) (p :  Unit → DiscreteProbabilityMeasure α) : q.seq p = q.toDiscreteMeasure.seq (toDiscreteMeasure ∘ p) := by
   rw [seq, DiscreteMeasure.seq, bind_coe, comp_apply']
   simp_rw [bind_coe]
@@ -1249,6 +1247,15 @@ lemma binom₆_succ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : binom₆ p h (n + 1)
   := by
   exact LawfulMonad.sum_induction _ _ _ (fun n ↦ rfl)
 
+lemma binom₅_eq_binom₆ : binom₅ = binom₆ := by
+  funext p hp n
+  induction n with
+  | zero =>
+    simp [binom₅, binom₆]
+  | succ n hn =>
+    rw [binom₆_succ, ← hn, binom₅_succ]
+    simp [monad_norm]
+
 lemma binom₆_norm (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : binom₆ p h n = List.foldlM (fun b _ => coin p h >>= Pure.pure ∘ fun c => b + c.toNat) 0 (List.range n) := by
   simp [binom₆]
   simp [monad_norm]
@@ -1375,3 +1382,76 @@ lemma binom₁_eq_binom₃ : binom₃ = binom₁ := by
 end binom
 
 end DiscreteProbabilityMeasure
+
+section support
+
+section DiscreteMeasure
+
+namespace DiscreteMeasure
+
+def support (μ : DiscreteMeasure α) : Set α :=
+  Function.support μ.weight
+
+@[simp]
+theorem mem_support_iff (μ : DiscreteMeasure α) (a : α) : a ∈ μ.support ↔ μ.weight a ≠ 0 := Iff.rfl
+
+theorem support_subset_iff (μ : DiscreteMeasure α) (s : Set α) : μ.support ⊆ s ↔ ∀ a ∉ s, μ.weight a = 0 := by
+  exact support_subset_iff'
+
+@[simp]
+theorem support_nonempty {μ : DiscreteMeasure α} (hμ : ∑' (i : α), μ.weight i ≠ 0) : μ.support.Nonempty := by
+  apply Function.support_nonempty_iff.2
+  simp only [ne_eq, ENNReal.tsum_eq_zero, not_forall] at hμ
+  obtain ⟨x, hx⟩ := hμ
+  exact fun a => hx (congrFun a x)
+
+@[simp]
+theorem support_countable (μ : DiscreteMeasure α) (hμ : ∑' (i : α), μ.weight i ≠ ⊤) : μ.support.Countable := by
+  apply Summable.countable_support_ennreal hμ
+
+def restrict (μ : DiscreteMeasure α) (s : Set α) : DiscreteMeasure s := ⟨fun a ↦ μ.weight a.val⟩
+
+lemma restrict_weight (μ : DiscreteMeasure α) (s : Set α) (a : s) : (μ.restrict s).weight a = μ.weight a := by
+  simp [restrict]
+
+end DiscreteMeasure
+
+end DiscreteMeasure
+
+namespace DiscreteProbabilityMeasure
+
+lemma hasSum_tsum (p : DiscreteProbabilityMeasure α) : ∑' (a : α), p.toDiscreteMeasure.weight a = 1 := by
+  exact HasSum.tsum_eq p.hasSum_one
+
+@[simp]
+theorem support_nonempty (p : DiscreteProbabilityMeasure α) : p.toDiscreteMeasure.support.Nonempty := DiscreteMeasure.support_nonempty <| ne_zero_of_eq_one (HasSum.tsum_eq p.hasSum_one)
+
+@[simp]
+theorem support_countable (p : DiscreteProbabilityMeasure α) : p.toDiscreteMeasure.support.Countable := by
+  apply DiscreteMeasure.support_countable
+  exact (HasSum.tsum_eq p.hasSum_one) ▸ ENNReal.one_ne_top
+
+def restrict (p : DiscreteProbabilityMeasure α) (s : Set α) (hs : p.toDiscreteMeasure.support ⊆ s) : DiscreteProbabilityMeasure s where
+  toDiscreteMeasure := p.toDiscreteMeasure.restrict s
+  hasSum_one := by
+    simp_rw [Summable.hasSum_iff ENNReal.summable, DiscreteMeasure.restrict_weight, ← HasSum.tsum_eq p.hasSum_one]
+    exact tsum_subtype_eq_of_support_subset hs
+
+def restrict' (p : DiscreteProbabilityMeasure α) (P : α → Prop) (hP : p.toDiscreteMeasure.support ⊆ {a | P a}) : DiscreteProbabilityMeasure {a : α // P a} := restrict p {a | P a} hP
+
+noncomputable def restrict_toFin (p : DiscreteProbabilityMeasure ℕ) (n : ℕ) (hP : p.toDiscreteMeasure.support ⊆ {k | k < n + 1}) : DiscreteProbabilityMeasure (Fin (n + 1)) where
+  toDiscreteMeasure := (p.restrict {k | k < n + 1} hP).map (fun k ↦ Fin.mk k.val k.prop)
+  hasSum_one := by apply map_isProbabilityMeasure
+
+lemma support_binom₁ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : (binom₁ p h n).toDiscreteMeasure.support ⊆ {k | k < n + 1} := by
+  rw [DiscreteMeasure.support_subset_iff]
+  intro a ha
+  simp only [Set.mem_setOf_eq, not_lt, binom₁, mul_eq_zero, pow_eq_zero_iff', ENNReal.coe_eq_zero, ne_eq, Nat.cast_eq_zero] at ha ⊢
+  exact Or.inr (Nat.choose_eq_zero_iff.mpr ha)
+
+noncomputable def binom₁_Fin' (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : DiscreteProbabilityMeasure (Fin (n + 1)) :=
+  (binom₁ p h n).restrict_toFin n (support_binom₁ p h n)
+
+end DiscreteProbabilityMeasure
+
+end support
