@@ -56,7 +56,6 @@ lemma Set.indicator_sum_singleton (f : α → ℝ≥0∞) (x : α) : (∑' (a : 
 lemma Set.indicator.mul_indicator_eq (f : α → ℝ≥0∞) (s : Set α) (a : α) : f a * s.indicator 1 a = s.indicator f a := by
   simp only [Set.indicator, Pi.one_apply, mul_ite, mul_one, mul_zero]
 
-
 -- add to Set.PairwiseDisjoint
 lemma Set.PairwiseDisjoint.singleton_subtype (s : Set α) : Pairwise (Disjoint on fun (x : s) => ({x.val} : Set α)) := by
   intro a b hab
@@ -1212,6 +1211,7 @@ lemma binom₅_induction(p : ℝ≥0) (h : p ≤ 1) (P : ℕ → DiscreteProbabi
     simp [monad_norm, binom₅] at succ ⊢
     rw [succ n, hn]
 
+open Std.Do
 
 lemma LawfulMonad.sum_induction (n : ℕ) {m : Type → Type} [Monad m] [LawfulMonad m] (x : m ℕ) (P : ℕ → m ℕ) (hP : ∀ n, P n =
   do
@@ -1455,3 +1455,83 @@ noncomputable def binom₁_Fin' (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : Discrete
 end DiscreteProbabilityMeasure
 
 end support
+
+
+
+/- The following is deprecated. The reason is that the monad instance is not good to work with in computations. -/
+
+section DiscreteMeasure'
+
+open MeasureTheory
+
+open scoped ENNReal
+
+def DiscreteMeasure' (α : Type*) := @Measure α ⊤
+namespace DiscreteMeasure'
+
+noncomputable instance : Coe (DiscreteMeasure' α) (@Measure α ⊤) where
+  coe := id
+
+def toMeasure (μ : DiscreteMeasure' α) : @Measure α ⊤ := μ
+
+noncomputable instance : CoeFun (DiscreteMeasure' α) (fun _ => Set α → ℝ≥0∞) where
+  coe μ := μ.toMeasure
+
+noncomputable def map {α β : Type*} (f : α → β) (μ : DiscreteMeasure' α) : DiscreteMeasure' β :=
+  @Measure.map _ _ ⊤ ⊤ f μ
+
+noncomputable def pure {α : Type*} (x : α) : DiscreteMeasure' α := @Measure.dirac α ⊤ x
+
+noncomputable def bind (q : DiscreteMeasure' α) (f : α → DiscreteMeasure' β) : DiscreteMeasure' β := @Measure.bind _ _ ⊤ ⊤ q f
+
+lemma map_comp {α β γ : Type*} (f : α → β) (g : β → γ) (μ : DiscreteMeasure' α) :
+    map g (map f μ) = map (g ∘ f) μ := by
+  apply @Measure.map_map _ _ _ ⊤ ⊤ ⊤ μ g f (by measurability) (by measurability)
+
+lemma bind_pure_comp {α β : Type*} (f : α → β) (μ : DiscreteMeasure' α) :
+    bind μ (fun x ↦ pure (f x)) = map f μ := by
+  apply @Measure.bind_dirac_eq_map _ _ ⊤ ⊤ μ f (by measurability)
+
+lemma id_map {α : Type*} (μ : DiscreteMeasure' α) : map id μ = μ := Measure.map_id
+
+lemma pure_bind (a : α) (f : α → DiscreteMeasure' β) : bind (pure a) f = f a := by
+  apply @Measure.dirac_bind _ _ ⊤ ⊤ f (by measurability)
+
+lemma bind_bind {α β γ : Type*} (μ : DiscreteMeasure' α) (f : α → DiscreteMeasure' β) (g : β → DiscreteMeasure' γ) :
+    bind (bind μ f) g = bind μ (fun x ↦ bind (f x) g) := @Measure.bind_bind _ _ ⊤ ⊤ _ ⊤ μ f g (AEMeasurable.of_discrete) (AEMeasurable.of_discrete)
+
+noncomputable instance : Monad DiscreteMeasure' where
+  pure := pure
+  map := map
+  bind := bind
+
+instance : LawfulFunctor DiscreteMeasure' where
+  map_const := rfl
+  id_map := id_map
+  comp_map _ _ _ := (map_comp _ _ _).symm
+
+instance : LawfulMonad DiscreteMeasure' := LawfulMonad.mk'
+  (bind_pure_comp := bind_pure_comp)
+  (id_map := id_map)
+  (pure_bind := pure_bind)
+  (bind_assoc := bind_bind)
+
+noncomputable def fromWeight {α : Type*} (w : α → ℝ≥0∞) : DiscreteMeasure' α :=
+  sum fun a ↦ (w a) • (@Measure.dirac α ⊤ a)
+
+lemma apply (w : α → ℝ≥0∞) (s : Set α) :
+    (fromWeight w) s = ∑' (i : α), s.indicator w i := by
+  simp [toMeasure, fromWeight]
+
+noncomputable def coin (p : ℝ≥0) (h : p ≤ 1) : DiscreteMeasure' Bool := (p : ℝ≥0∞) • dirac true + ((1 - p) : ℝ≥0∞) • dirac false
+
+noncomputable def binomial (p : ℝ≥0) (h : p ≤ 1) : (n : ℕ) → DiscreteMeasure' ℕ
+  | 0 => return 0
+  | n + 1 => do
+    let x ← binomial p h n
+    let y ← coin p h
+    return x + y.toNat
+
+end DiscreteMeasure'
+
+end DiscreteMeasure'
