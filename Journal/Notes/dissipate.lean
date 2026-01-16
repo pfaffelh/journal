@@ -34,10 +34,10 @@ theorem dissipate_eq {s : ℕ → Set β} {n : ℕ} : dissipate s n = ⋂ k < n 
   simp_rw [Nat.lt_add_one_iff, dissipate]
 
 theorem dissipate_eq_ofFin {s : ℕ → Set β} {n : ℕ} : dissipate s n = ⋂ (k : Fin (n + 1)), s k := by
-  simp [dissipate_eq]
+  rw [dissipate]
   ext x
   simp only [mem_iInter]
-  refine ⟨fun h i ↦ h i.val i.prop, fun h i hi ↦ h ⟨i, hi⟩⟩
+  refine ⟨fun h i ↦ h i.val (Fin.is_le i), fun h i hi ↦ h ⟨i, lt_succ_of_le hi⟩⟩
 
 @[simp]
 theorem dissipate_eq_accumulate_compl [LE α] {s : α → Set β} {x : α} :
@@ -73,13 +73,7 @@ theorem dissipate_nonempty_mono [Preorder α] {x y} (h : y ≤ x) :
 
 @[simp]
 theorem dissipate_dissipate [Preorder α] {s : α → Set β} {x : α} :
-    ⋂ y, ⋂ (_ : y ≤ x), dissipate s y = dissipate s x := by
-  apply Subset.antisymm
-  · apply iInter_mono fun z y hy ↦ ?_
-    simp only [mem_iInter, mem_dissipate] at *
-    exact fun h ↦ hy h z (le_refl z)
-  · simp only [subset_iInter_iff]
-    exact fun i j ↦ dissipate_subset_dissipate j
+    ⋂ y, ⋂ (_ : y ≤ x), dissipate s y = dissipate s x := biInf_le_eq_of_antitone antitone_dissipate x
 
 @[simp]
 theorem iInter_dissipate [Preorder α] : ⋂ x, dissipate s x = ⋂ x, s x := by
@@ -153,3 +147,35 @@ lemma IsPiSystem.dissipate_mem {s : ℕ → Set α} {p : Set (Set α)}
     apply hp (dissipate s n) (hn (Nonempty.left h')) (s (n+1)) (h (n+1)) h'
 
 end Set
+
+/-
+lemma biSup_monotone [SupSet α] [Preorder α] [Preorder β] {f : β → α} : Antitone (fun b ↦ ⨆ (b' ≤ b), f b') := by
+  intro b c hbc
+  simp
+  sorry
+
+lemma biInf_antitone [InfSet α] [Preorder α] [Preorder β] {f : β → α} : Antitone (fun b ↦ ⨅ (b' ≤ b), f b') := by
+  intro b c hbc
+  simp
+  sorry
+
+
+example [Preorder α] (f : α → Set β) (hf : Antitone f) :
+⨅ y ≤ x, f y = f x := by
+  exact biInf_le_eq_of_antitone hf x
+
+lemma partialInfs_eq_dissipate' (f : ℕ → Set α) :
+  partialSups (α := OrderDual (Set α)) f =
+    { toFun := fun n ↦ (⋂ k ≤ n, f k : Set α)
+      monotone' := by
+        simp_rw [← dissipate_def]
+        intro n m hnm
+        apply dissipate_subset_dissipate hnm
+} :=
+by
+  rw [partialSups_eq_accumulate]
+  ext y
+  simp only [OrderHom.coe_mk]
+  simp_rw [partialSups_eq_accumulate]
+  rfl
+-/
