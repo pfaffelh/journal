@@ -33,7 +33,6 @@ variable {α β γ δ : Type*}
 
 -- to Set.indicator
 
-@[simp]
 lemma Set.indicator_sum_singleton (f : α → ℝ≥0∞) (x : α) : (∑' (a : α), ({x} : Set α).indicator f a) = (f x) := by
   rw [← tsum_subtype, tsum_singleton]
 
@@ -108,12 +107,12 @@ lemma toMeasure_apply₂ (μ : MF α) (s : Set α) : μ.toMeasure s = ∑' (a : 
   simp [toMeasure_apply, tsum_subtype]
 
 @[simp]
-lemma toMeasure_apply_singleton (μ : MF α) (a : α) :
+lemma apply_singleton (μ : MF α) (a : α) :
     ∑' (i : α), ({a} : Set α).indicator μ i = μ a := by
   rw [← tsum_subtype, tsum_singleton]
 
 @[simp]
-lemma toMeasure_apply_singleton' (μ : MF α) (a : α) : μ.toMeasure {a} = μ a := by
+lemma toMeasure_apply_singleton (μ : MF α) (a : α) : μ.toMeasure {a} = μ a := by
   simp [toMeasure_apply]
 
 lemma toMeasure_singleton_eq_weight (μ : MF α) : (fun (a : α) ↦ μ.toMeasure {a}) = μ := by
@@ -172,11 +171,14 @@ lemma toMeasure_apply_univ' (μ : MF α) (s : δ → Set α) (hs₀ : Pairwise (
 theorem toMeasure_injective : (toMeasure : MF α → @Measure α ⊤).Injective := by
   intro μ ν h
   ext x
-  rw [← toMeasure_apply_singleton' μ, ← toMeasure_apply_singleton' ν, h]
+  rw [← toMeasure_apply_singleton μ, ← toMeasure_apply_singleton ν, h]
 
 @[simp]
 theorem toMeasure_inj {μ ν : MF α} : μ.toMeasure = ν.toMeasure ↔ μ = ν :=
   toMeasure_injective.eq_iff
+
+theorem toMeasure_ext {μ ν : MF α} (h : μ.toMeasure = ν.toMeasure) : μ = ν :=
+  toMeasure_injective.eq_iff.mp h
 
 theorem toMeasure_mono {s t : Set α} {μ : MF α} (h : s ∩ μ.support ⊆ t) : μ.toMeasure s ≤ μ.toMeasure t := by
   rw [← μ.toMeasure_apply_inter_support]
@@ -236,7 +238,7 @@ theorem toMeasure_apply_eq_toMeasure_univ_iff (p : MF α) (s : Set α) (ha : p.t
     simp [Set.inter_eq_self_of_subset_right h₀]
 
 theorem apply_eq_toMeasure_univ_iff (p : MF α) (hp : p ≠ fun _ ↦ 0) (a : α) (ha : p a ≠ ⊤) : p a = p.toMeasure Set.univ ↔ p.support = {a} := by
-  rw [← MF.toMeasure_apply_singleton' p a, toMeasure_apply_eq_toMeasure_univ_iff]
+  rw [← MF.toMeasure_apply_singleton p a, toMeasure_apply_eq_toMeasure_univ_iff]
   · refine ⟨fun h₀ ↦ ?_, fun h₀ ↦ h₀.le⟩
     apply le_antisymm h₀
     simp at h₀ ⊢
@@ -252,7 +254,7 @@ theorem apply_eq_toMeasure_univ_iff (p : MF α) (hp : p ≠ fun _ ↦ 0) (a : α
   simp [ha]
 
 theorem coe_le_toMeasure_univ (p : MF α) (a : α) : p a ≤ p.toMeasure Set.univ := by
-  rw [← MF.toMeasure_apply_singleton' p a]
+  rw [← MF.toMeasure_apply_singleton p a]
   exact MF.toMeasure_mono fun ⦃a_1⦄ a => trivial
 
 end IsFiniteOrProbabilityMeasure
@@ -266,15 +268,15 @@ namespace Measure
 /-- Given that `α` is a countable, measurable space with all singleton sets measurable,
 we can convert any probability measure into a `MF`, where the mass of a point
 is the measure of the singleton set under the original measure. -/
-def toMF [Countable α] [hmeas : MeasurableSpace α] [MeasurableSingletonClass α] (μ : Measure α)
+def toMF [hmeas : MeasurableSpace α] (μ : Measure α)
     : MF α :=  fun x => μ ({x} : Set α)
 
-variable [Countable α] [MeasurableSpace α] [MeasurableSingletonClass α] (μ : Measure α)
+variable [MeasurableSpace α] (μ : Measure α)
 
 theorem toMF_apply (x : α) : μ.toMF x = μ {x} := rfl
 
 @[simp]
-theorem toMF_toMeasure : μ.toMF.toMeasure.trim (m := by infer_instance) (m0 := ⊤) (hm := le_top) = μ := by
+theorem toMF_toMeasure [MeasurableSingletonClass α] [Countable α] : μ.toMF.toMeasure.trim (m := by infer_instance) (m0 := ⊤) (hm := le_top) = μ := by
   apply Measure.ext
   intro s hs
   rw [trim_measurableSet_eq _ hs]
@@ -289,7 +291,7 @@ namespace MF
 
 section countable
 
-variable [Countable α] (p : MF α)
+variable (p : MF α)
 
 @[simp]
 theorem toMeasure_toMF : toMF p.toMeasure (hmeas := ⊤) = p := by
@@ -298,14 +300,14 @@ theorem toMeasure_toMF : toMF p.toMeasure (hmeas := ⊤) = p := by
 
 variable  [hmeas : MeasurableSpace α] [MeasurableSingletonClass α]
 
-theorem toMeasure_eq_iff_eq_toMF (μ : Measure α) :
+theorem toMeasure_eq_iff_eq_toMF [Countable α] (μ : Measure α) :
     p.toMeasure.trim (m := by infer_instance) (m0 := ⊤) (hm := le_top) = μ ↔ p = μ.toMF := by
   rw [Measure.ext_iff]
   conv => left; intro s hs; rw [trim_measurableSet_eq _ hs]
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · ext x
     specialize h {x} (measurableSet_singleton x)
-    rw [MF.toMeasure_apply_singleton'] at h
+    rw [MF.toMeasure_apply_singleton] at h
     rw [h]
     rfl
   · intro s hs
@@ -319,6 +321,7 @@ end countable
 
 section map
 
+/-- The functorial action of a function on a `PMF`. -/
 noncomputable def map (g : α → β) (μ : MF α) : MF β := fun b ↦ μ.toMeasure (g⁻¹' {b})
 
 noncomputable instance : Functor MF where
@@ -352,56 +355,207 @@ lemma map_toMeasure' (μ : MF α) (g : α → β)  : (μ.map g).toMeasure = sum 
   apply @AEMeasurable.of_discrete α β ⊤ ⊤
 
 lemma map_map (μ : MF α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
-  ext x
-  rw [← toMeasure_apply_singleton', ← apply_singleton', map_coe, map_coe, map_coe]
-  rw [Measure.map_map (by measurability) (by measurability)]
+  rw [← toMeasure_inj, map_coe, map_coe, map_coe, Measure.map_map (by measurability) (by measurability)]
 
-lemma map_apply₀ (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.map g s = μ (g⁻¹' s) := by
+lemma toMeasure_map_apply (μ : MF α) (g : α → β) (s : Set β) : (μ.map g).toMeasure s = μ.toMeasure (g⁻¹' s) := by
   rw [map_coe]
   exact Measure.map_apply (by measurability) (by measurability)
 
-lemma map_apply₁ (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.map g s = ∑' (a : α), μ.weight a * s.indicator 1 (g a) := by
+lemma map_apply (μ : MF α) (g : α → β) (x : β) : μ.map g x = μ.toMeasure (g⁻¹' {x}) := by
+  rw [← toMeasure_apply_singleton (map g μ)]
+  apply toMeasure_map_apply
+
+lemma toMeasure_map_apply₁ (μ : MF α) (g : α → β) (s : Set β) : (μ.map g).toMeasure s = ∑' (a : α), μ a * s.indicator 1 (g a) := by
   rw [map_toMeasure']
   simp
 
-lemma map_apply₂ (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.map g s = ∑' (a : α), (g⁻¹' s).indicator μ.weight a := by
+lemma toMeasure_map_apply₂ (μ : MF α) (g : α → β) (s : Set β) : (μ.map g).toMeasure s = ∑' (a : α), (g⁻¹' s).indicator μ a := by
   rw [map_toMeasure']
   simp only [MeasurableSpace.measurableSet_top, sum_apply, smul_apply, dirac_apply', smul_eq_mul]
   apply tsum_congr (fun b ↦ ?_)
-  exact Set.indicator.mul_indicator_eq μ.weight (fun b => s (g b)) b
+  exact Set.indicator.mul_indicator_eq μ (fun b => s (g b)) b
 
-lemma map_apply₃ (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.map g s = ∑' (b : s), μ (g⁻¹' {b.val}) := by
-  rw [apply₂]
+lemma toMeasure_map_apply₃ (μ : MF α) (g : α → β) (s : Set β) : (μ.map g).toMeasure s = ∑' (b : s), μ.toMeasure (g⁻¹' {b.val}) := by
+  rw [toMeasure_apply₂]
   rfl
 
-lemma map_apply₄ (μ : DiscreteMeasure α) (g : α → β) (s : Set β) : μ.map g s = ∑' (a : g⁻¹' s), (μ.weight a.val) := by
-  rw [map_apply₀, apply₂]
+lemma toMeasure_map_apply₄ (μ : MF α) (g : α → β) (s : Set β) : (μ.map g).toMeasure s = ∑' (a : g⁻¹' s), (μ a.val) := by
+  rw [toMeasure_map_apply, toMeasure_apply₂]
 
-theorem id_map (μ : DiscreteMeasure α) :
-μ.map id = μ := toMeasure_ext' <| (map_coe μ id) ▸ Measure.map_id
+theorem id_map (μ : MF α) :
+μ.map id = μ := toMeasure_ext <| (map_coe μ id) ▸ Measure.map_id
 
 end map
 
-section pure
+section lintegral
 
-noncomputable def pure (a : α) : MF α := ({a} : Set α).indicator 1
+lemma lintegral_eq_toMeasure (μ : MF α) (g : α → ℝ≥0∞) : ∫⁻ (a : α), g a ∂ μ.toMeasure = ∑' (a : α), μ a * (g a) := by
+  rw [toMeasure]
+  simp
+
+-- TODO: integral_map
+
+end lintegral
+section join
+
+
+/-- The monadic join operation for `PMF`. -/
+noncomputable def join (m : MF (MF α)) : (MF α) := fun a ↦ ∑' (μ : MF α), m μ * μ a
 
 @[simp]
+lemma join_weight (m : MF (MF α)) (x : α) : m.join x = ∑' (μ : MF α), m μ * μ x := by
+  rfl
+
+instance : MeasurableSpace (MF α) := ⊤
+
+lemma join_coe (m : MF (MF α)) : m.join.toMeasure = Measure.join (mα := ⊤) ((Measure.map toMeasure m.toMeasure)):= by
+  apply @Measure.ext _ ⊤
+  intro s _
+  rw [Measure.join_apply (mα := ⊤) (hs := by measurability)]
+  rw [lintegral_map (hf := measurable_coe (by trivial)) (hg := by measurability)]
+  rw [lintegral_eq_toMeasure, toMeasure_apply₂]
+  simp_rw [join_weight]
+  rw [ENNReal.tsum_comm]
+  apply tsum_congr (fun μ ↦ ?_)
+  rw [ENNReal.tsum_mul_left, toMeasure_apply₂]
+
+-- join commutes with sum
+-- This goes to MeasureTheory.Measure
+lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7} (m : ι → Measure (Measure α)) :
+(sum m).join = sum fun (i : ι) ↦ (m i).join := by
+  simp_rw [Measure.join, lintegral_sum_measure]
+  ext s hs
+  rw [ofMeasurable_apply s hs, Measure.sum_apply _ hs]
+  apply tsum_congr (fun i ↦ ?_)
+  rw [ofMeasurable_apply s hs]
+
+
+lemma join_toMeasure (m : MF (MF α)) : m.join.toMeasure = sum (fun μ  ↦ m μ • μ.toMeasure) := by
+  apply @Measure.ext _ ⊤
+  intro s _
+  rw [join_coe, toMeasure, Measure.map_sum (hf := AEMeasurable.of_discrete), Measure.join_sum, Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
+  apply tsum_congr (fun μ ↦ ?_)
+  rw [Measure.smul_apply, Measure.map_smul, Measure.join_smul, Measure.smul_apply, smul_eq_mul, smul_eq_mul, Measure.map_dirac, Measure.join_dirac]
+  measurability
+
+lemma toMeasure_join_apply (m : MF (MF α)) (s : Set α) : m.join.toMeasure s = ∑' (μ : MF α), m μ * μ.toMeasure s := by
+  simp only [join_toMeasure]
+  rw [Measure.sum_apply (hs := by measurability)]
+  apply tsum_congr (fun μ ↦ ?_)
+  simp
+
+lemma join_hasSum (m : MF (MF α)) (hm : IsProbabilityMeasure m.toMeasure) (hμ : ∀ μ, m μ ≠ 0 → HasSum μ 1) : HasSum m.join 1 := by
+  rw [Summable.hasSum_iff ENNReal.summable]
+  simp_rw [join_weight]
+  rw [ENNReal.tsum_comm]
+  have h : ∀ μ, m μ * ∑' (a : α), μ a = m μ := by
+    intro μ
+    by_cases hμ' : m μ = 0
+    · rw [hμ', zero_mul]
+    · simp_rw [Summable.hasSum_iff ENNReal.summable] at hμ
+      rw [hμ μ hμ', mul_one]
+  simp_rw [ENNReal.tsum_mul_left, h, ← toMeasure_apply_univ, ← isProbabilityMeasure_iff]
+  exact hm
+
+end join
+
+section bind
+
+/-- The monadic bind operation for `PMF`. -/
+noncomputable def bind (μ : MF α) (g : α → MF β) : (MF β) := (μ.map g).join
+
+lemma toMeasure_bind_apply_eq_toMeasure (μ : MF α) (g : α → MF β) (s : Set β) : (μ.bind g).toMeasure s = μ.toMeasure.bind (toMeasure ∘ g) s := by
+  rw [bind, Measure.bind, join_coe, ← Measure.map_map (hg := by measurability) (hf := by measurability), map_coe]
+
+lemma bind_coe (μ : MF α) (g : α → MF β)  : (μ.bind g).toMeasure = μ.toMeasure.bind (toMeasure ∘ g) := by
+  apply @Measure.ext _ ⊤
+  intro _ _
+  rw [toMeasure_bind_apply_eq_toMeasure]
+
+-- bind commutes with sum
+-- This goes to MeasureTheory.Measure
+lemma Measure.bind_sum {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {ι : Type u_7} (m : ι → Measure α) (f : α → Measure β) (h : AEMeasurable f (sum fun i => m i)) :
+  (sum fun (i : ι) ↦ m i).bind f = sum fun (i : ι) ↦ (m i).bind f := by
+  simp_rw [Measure.bind, Measure.map_sum h, Measure.join_sum]
+
+-- scalar multiplication commutes with bind
+-- This goes to MeasureTheory.Measure
+lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {R : Type u_4} [SMul R ℝ≥0∞] [IsScalarTower R ℝ≥0∞ ℝ≥0∞] (c : R) (m : Measure α) (f : α → Measure β) :
+  (c • m).bind f = c • (m.bind f) := by
+  simp_rw [Measure.bind, Measure.map_smul, Measure.join_smul]
+
+
+lemma bind_toMeasure' (μ : MF α) (g : α → MF β) : (μ.bind g).toMeasure  = sum (fun a ↦ (μ a) • (g a).toMeasure) := by
+  apply @Measure.ext _ ⊤
+  intro s _
+  rw [toMeasure_bind_apply_eq_toMeasure, toMeasure, Measure.bind_sum (h := AEMeasurable.of_discrete), Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
+  simp_rw [Measure.bind_smul, Measure.dirac_bind (f := toMeasure ∘ g) (hf := by measurability)]
+  rfl
+
+lemma toMeasure_bind_apply (μ : MF α) (g : α → MF β) (s : Set β) : (μ.bind g).toMeasure s = ∑' (a : α), μ a * (g a).toMeasure s := by
+  rw [bind_toMeasure']
+  simp
+
+@[simp]
+lemma bind_apply (μ : MF α) (g : α → MF β) (x : β) : (μ.bind g) x = ∑' (a : α), μ a * (g a) x := by
+  simp_rw [← toMeasure_apply_singleton (μ.bind g) x, ← toMeasure_apply_singleton _ x, toMeasure_bind_apply]
+
+lemma join_map_map (m : MF (MF α)) (f : α → β) : (map (map f) m).join = map f m.join := by
+  rw [← bind]
+  ext x
+  rw [← toMeasure_apply_singleton (m.bind (map f)), ← toMeasure_apply_singleton (map f m.join), toMeasure_bind_apply, toMeasure_map_apply, toMeasure_join_apply]
+  apply tsum_congr (fun b ↦ ?_)
+  rw [toMeasure_apply_singleton, MF.map_apply]
+
+-- to Function
+
+lemma Function.comp_apply'  {β : Sort u_1} {δ : Sort u_2} {α : Sort u_3} {f : β → δ} {g : α → β} : (f ∘ fun x => g x) = fun x => f (g x) := by
+  -- simp_rw [← Function.comp_apply]
+  rfl
+
+theorem bind_const (μ₁ : MF α) (μ₂ : MF β) : (μ₁.bind fun (_ : α) => μ₂).toMeasure =  (μ₁.toMeasure Set.univ) • μ₂.toMeasure := by
+  rw [bind_coe, Function.comp_apply', Measure.bind_const]
+
+theorem bind_bind (μ₁ : MF α) (f : α → MF β) (g : β → MF γ) :
+(μ₁.bind f).bind g = μ₁.bind fun (a : α) => (f a).bind g := by
+  apply toMeasure_ext
+  repeat rw [bind_coe]
+  rw [@Measure.bind_bind (hf := AEMeasurable.of_discrete) (hg := AEMeasurable.of_discrete)]
+  congr
+  ext a'
+  rw [comp_apply, comp_apply, bind_coe]
+
+theorem bind_comm (μ₁ : MF α) (μ₂ : MF β) (f : α → β → MF γ) :
+(μ₁.bind fun (a : α) => μ₂.bind (f a)) = μ₂.bind fun (b : β) => μ₁.bind fun (a : α) => f a b := by
+  ext x
+  repeat simp_rw [bind_apply, ← ENNReal.tsum_mul_left]
+  rw [ENNReal.tsum_comm]
+  apply tsum_congr (fun b ↦ tsum_congr (fun a ↦ ?_))
+  ring
+
+end bind
+
+section pure
+
+/-- The pure `MF` puts all the mass lies in one point. The value of `pure a` is `1` at `a` and
+`0` elsewhere. In other words, `pure ∘ toMeasure = Measure.dirac`. -/
+noncomputable def pure (a : α) : MF α := ({a} : Set α).indicator 1
+
 lemma pure_eq (a : α) : pure a = ({a} : Set α).indicator 1 := rfl
 
 @[simp]
-lemma pure_apply (a : α) (s : Set α) : (pure a).toMeasure s = s.indicator 1 a := by
+lemma toMeasure_pure_apply (a : α) (s : Set α) : (pure a).toMeasure s = s.indicator 1 a := by
   rw [toMeasure_apply₁, pure_eq, Set.indicator_indicator]
   by_cases h : a ∈ s
-  · rw [Set.inter_eq_self_of_subset_right (Set.singleton_subset_iff.mpr h)]
-    rw [← tsum_subtype, tsum_singleton]
+  · rw [Set.inter_eq_self_of_subset_right (Set.singleton_subset_iff.mpr h),
+      ← tsum_subtype, tsum_singleton]
     simp [h]
   · rw [Set.inter_singleton_eq_empty.mpr h]
     simp [h]
 
 lemma pure_coe (a : α) : (pure a).toMeasure = @Measure.dirac α ⊤ a := by
   apply @Measure.ext α ⊤
-  simp_rw [pure_apply, Measure.dirac_apply, MeasurableSpace.measurableSet_top, imp_self, implies_true]
+  simp_rw [toMeasure_pure_apply, Measure.dirac_apply, MeasurableSpace.measurableSet_top, imp_self, implies_true]
 
 lemma map_toDirac : (toMeasure ∘ pure) = @Measure.dirac α ⊤ := by
   funext a
@@ -413,23 +567,21 @@ lemma pure_hasSum (a : α) : HasSum (pure a) 1 := by
   rfl
 
 lemma map_pure (a : α) (f : α → β) : (pure a).map f = pure (f a) := by
-  ext x
-  rw [map_weight, pure_weight, pure_apply]
-  exact Set.indicator_eq_indicator (id comm.symm) rfl
+  rw [← toMeasure_inj, pure_coe, map_coe, pure_coe, @Measure.map_dirac _ _ ⊤ ⊤ f (by measurability)]
 
-theorem pure_bind (a : α) (f : α → DiscreteMeasure β) :
+theorem pure_bind (a : α) (f : α → MF β) :
 (pure a).bind f = f a := by
-  apply toMeasure_ext'
+  apply toMeasure_ext
   rw [bind_coe, pure_coe, dirac_bind (hf :=  by measurability)]
   rfl
 
-theorem bind_pure (μ : DiscreteMeasure α) :
+theorem bind_pure (μ : MF α) :
 μ.bind pure = μ := by
-  apply toMeasure_ext'
+  apply toMeasure_ext
   rw [bind_coe, Measure.bind, map_toDirac, ← Measure.bind, Measure.bind_dirac]
 
-lemma bind_pure_comp (f : α → β) (μ : DiscreteMeasure α) : μ.bind (fun a ↦ pure (f a)) =  μ.map f := by
-  apply toMeasure_ext'
+lemma bind_pure_comp (f : α → β) (μ : MF α) : μ.bind (fun a ↦ pure (f a)) =  μ.map f := by
+  apply toMeasure_ext
   simp_rw [bind_coe, map_coe, Function.comp_apply', pure_coe]
   rw [Measure.bind_dirac_eq_map (hf := by measurability)]
 
@@ -439,4 +591,4 @@ end MF
 
 end MeasureTheory
 
-#min_imports
+#lint
