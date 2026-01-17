@@ -1535,3 +1535,21 @@ noncomputable def binomial (p : ℝ≥0) (h : p ≤ 1) : (n : ℕ) → DiscreteM
 end DiscreteMeasure'
 
 end DiscreteMeasure'
+
+variable (m : Type u → Type u) [Monad m] [LawfulMonad m]
+
+lemma seq_pure {α β : Type u} (g : m (α → β)) (x : α) : Seq.seq g (fun _ ↦ Pure.pure x) = Functor.map (fun h => h x) g := by
+  simp [monad_norm]
+
+variable (m : Type u → Type u) [Monad m] [LawfulMonad m]
+
+lemma pure_seq {α β : Type u} (g : (α → β)) (x : Unit → m α) : Seq.seq (Pure.pure g) x = Functor.map g (x ()) := by
+  rw [← LawfulApplicative.pure_seq]
+
+lemma seq_assoc {α β γ : Type u} (p : m α) (q : m (α → β)) (r : m (β → γ)) : (Seq.seq r fun _ => Seq.seq q fun _ => p) = Seq.seq (Seq.seq (Functor.map comp r) fun _ => q) fun _ => p := by
+  simp [monad_norm]
+  rfl
+
+lemma map_seq {α β γ : Type u}(f : β → γ) (u : m (α → β)) (v : m α) : Functor.map f (Seq.seq u (fun _ ↦ v))= Seq.seq (Functor.map (fun (g : α → β) => f ∘ g) u) (fun _ ↦ v) := by
+  simp [monad_norm]
+  rfl
