@@ -169,6 +169,20 @@ lemma iff_isCompactSystem_of_or_univ : IsCompactSystem p ↔
         rw [← h₅ n (le_refl n)]
         apply hd
 
+-- maybe this belongs somewhere else...
+/-- For a ∩-stable set of sets `p` on `α` and a sequence of sets `s` with this attribute,
+`dissipate s n` belongs to `p`. -/
+lemma IsPiSystem.dissipate_mem {s : ℕ → Set α} {p : Set (Set α)}
+    (hp : IsPiSystem p) (h : ∀ n, s n ∈ p) (n : ℕ) (h' : (dissipate s n).Nonempty) :
+      (dissipate s n) ∈ p := by
+  induction n with
+  | zero =>
+    simp only [dissipate_def, Nat.le_zero_eq, iInter_iInter_eq_left]
+    exact h 0
+  | succ n hn =>
+    rw [dissipate_succ] at *
+    apply hp (dissipate s n) (hn (Nonempty.left h')) (s (n+1)) (h (n+1)) h'
+
 theorem iff_directed (hpi : IsPiSystem p) :
     IsCompactSystem p ↔
     ∀ (C : ℕ → Set α), ∀ (_ : Directed (fun (x1 x2 : Set α) => x1 ⊇ x2) C), (∀ i, p (C i)) →

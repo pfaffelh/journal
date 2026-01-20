@@ -43,3 +43,13 @@ git push --force-with-lease origin my-new-feature-branch
 After resolving conflicts for a commit, use git add ., and git rebase --continue
 
 Caution: If your branch is shared, this is dangerous.
+
+If a PR is ready, check using
+```
+git fetch upstream
+git merge upstream/master
+lake update
+lake build Mathlib.MeasureTheory.MassFunction
+lake build Mathlib
+```
+Maybe add `--verbose` to be really sure that everything will work.
