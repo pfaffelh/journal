@@ -38,16 +38,18 @@ variable {α β γ δ : Type*}
 lemma Set.indicator_sum_singleton (f : α → ℝ≥0∞) (x : α) : (∑' (a : α), ({x} : Set α).indicator f a) = (f x) := by
   rw [← tsum_subtype, tsum_singleton]
 
+-- #34138
 @[simp]
 lemma Set.indicator.mul_indicator_eq (f : α → ℝ≥0∞) (s : Set α) (a : α) : f a * s.indicator 1 a = s.indicator f a := by
   simp only [Set.indicator, Pi.one_apply, mul_ite, mul_one, mul_zero]
 
--- add to Set.PairwiseDisjoint
+-- #34138
 lemma Set.PairwiseDisjoint.singleton_subtype (s : Set α) : Pairwise (Disjoint on fun (x : s) => ({x.val} : Set α)) := by
   intro a b hab
   simp_rw [Set.disjoint_singleton_left, Set.mem_singleton_iff]
   exact Subtype.coe_ne_coe.mpr hab
 
+-- #34138
 lemma Set.PairwiseDisjoint.fiber_subtype {g : α → β} (s : Set β) : Pairwise (Disjoint on fun (x : s) => (g⁻¹' {x.val} : Set α)) :=
   fun _ _ hab ↦ pairwise_disjoint_fiber g (Subtype.coe_ne_coe.mpr hab)
 
@@ -59,64 +61,80 @@ open ENNReal MeasureTheory
 
 namespace MeasureTheory
 
+-- #34138
 /-- A mass function, or discrete measures is a function `α → ℝ≥0∞`. -/
 def MassFunction (α : Type u) : Type u := α → ℝ≥0∞
 
 namespace MassFunction
 
+-- #34138
 instance instFunLike : FunLike (MassFunction α) α ℝ≥0∞ where
   coe p a := p a
   coe_injective' _ _ h := h
 
+-- #34138
 @[ext]
 protected theorem ext {v w : MassFunction α} (h : ∀ x, v x = w x) : v = w :=
   DFunLike.ext v w h
 
+-- #34138
 /-- The support of a `MassFunction` is the set where it is nonzero. -/
 def support (w : MassFunction α) : Set α := Function.support w
 
+-- #34138
 @[simp]
 theorem mem_support_iff (w : MassFunction α) (a : α) : a ∈ w.support ↔ w a ≠ 0 := Iff.rfl
 
+-- #34138
 theorem apply_eq_zero_iff (w : MassFunction α) (a : α) : w a = 0 ↔ a ∉ w.support := by
   rw [mem_support_iff, Classical.not_not]
 
+-- #34138
 theorem apply_pos_iff (w : MassFunction α) (a : α) : 0 < w a ↔ a ∈ w.support :=
   pos_iff_ne_zero.trans (w.mem_support_iff a).symm
 
+-- #34138
 /-- The `@Measure α ⊤` as defined through a `MassFunction α` (mass function) through a sum of
 diracs. -/
 noncomputable def toMeasure (w : MassFunction α) : @Measure α ⊤ :=
   Measure.sum (fun a ↦ (w a) • @Measure.dirac α ⊤ a)
 
+-- #34138
 lemma toMeasure_apply (μ : MassFunction α) (s : Set α) :
     μ.toMeasure s = ∑' (i : α), μ i * s.indicator 1 i := by
   simp [toMeasure]
 
+-- #34138
 lemma toMeasure_apply₁ (μ : MassFunction α) (s : Set α) :
     μ.toMeasure s = ∑' (i : α), s.indicator μ i := by
   simp [toMeasure_apply]
 
+-- #34138
 lemma toMeasure_apply₂ (μ : MassFunction α) (s : Set α) : μ.toMeasure s = ∑' (a : s), (μ a) := by
   simp [toMeasure_apply, tsum_subtype]
 
+-- #34138
 @[simp]
 lemma toMeasure_apply_singleton (μ : MassFunction α) (a : α) :
     ∑' (i : α), ({a} : Set α).indicator μ i = μ a := by
   rw [← tsum_subtype, tsum_singleton]
 
+-- #34138
 @[simp]
 lemma toMeasure_apply_singleton' (μ : MassFunction α) (a : α) : μ.toMeasure {a} = μ a := by
   simp [toMeasure_apply]
 
+-- #34138
 lemma toMeasure_singleton_eq (μ : MassFunction α) : (fun (a : α) ↦ μ.toMeasure {a}) = μ := by
   simp [toMeasure_apply]
 
+-- #34138
 theorem toMeasure_apply_eq_zero_iff {μ : MassFunction α} {s : Set α} :
     μ.toMeasure s = 0 ↔ Disjoint μ.support s := by
   rw [toMeasure_apply₁, ENNReal.tsum_eq_zero]
   exact funext_iff.symm.trans Set.indicator_eq_zero'
 
+-- #34138
 @[simp]
 theorem toMeasure_apply_inter_support {μ : MassFunction α} {s : Set α} :
     μ.toMeasure (s ∩ μ.support) = μ.toMeasure s := by
@@ -124,10 +142,12 @@ theorem toMeasure_apply_inter_support {μ : MassFunction α} {s : Set α} :
   apply tsum_congr (fun a ↦ ?_)
   aesop
 
+-- #34138
 theorem toMeasure_apply_eq_of_inter_support_eq {μ : MassFunction α} {s t : Set α}
     (h : s ∩ μ.support = t ∩ μ.support) : μ.toMeasure s = μ.toMeasure t := by
   rw [← toMeasure_apply_inter_support (s := s), ← toMeasure_apply_inter_support (s := t), h]
 
+-- #34138
 /- Additivity for `μ.toMeasure` for a `μ : MassFunction` not only applies to countable unions, but
 to arbitrary ones. -/
 lemma toMeasure_additive (μ : MassFunction α) (s : δ → Set α) (hs : Pairwise (Disjoint on s)) :
@@ -149,45 +169,53 @@ lemma toMeasure_additive (μ : MassFunction α) (s : δ → Set α) (hs : Pairwi
     push_neg at h₀
     simp [h₀ j]
 
+-- #34138
 @[simp]
 theorem toMeasure_apply_finset {μ : MassFunction α} (s : Finset α) : μ.toMeasure s = ∑ x ∈ s, μ x
     := by
-
   rw [toMeasure_apply₁, tsum_eq_sum (s := s)]
   · exact Finset.sum_indicator_subset μ fun ⦃a⦄ a_1 => a_1
   · exact fun b a => Set.indicator_of_notMem a μ
 
+-- #34138
 @[simp]
 theorem toMeasure_apply_fintype {μ : MassFunction α} (s : Set α) [Fintype α] :
     μ.toMeasure s = ∑ x, s.indicator μ x := by
   rw [toMeasure_apply₁]
   exact tsum_fintype (s.indicator μ)
 
+-- #34138
 lemma toMeasure_apply_univ (μ : MassFunction α) : μ.toMeasure Set.univ = ∑' (a : α), μ a := by
   simp [toMeasure_apply]
 
+-- #34138
 lemma toMeasure_apply_univ' (μ : MassFunction α) (s : δ → Set α) (hs₀ : Pairwise (Disjoint on s))
     (hs₁ : Set.univ = ⋃ d, s d) : μ.toMeasure Set.univ = ∑' (d : δ), μ.toMeasure (s d) := by
   rw [hs₁]
   exact toMeasure_additive μ s hs₀
 
+-- #34138
 theorem toMeasure_injective : (toMeasure : MassFunction α → @Measure α ⊤).Injective := by
   intro μ ν h
   ext x
   rw [← toMeasure_apply_singleton' μ, ← toMeasure_apply_singleton' ν, h]
 
+-- #34138
 @[simp]
 theorem toMeasure_inj {μ ν : MassFunction α} : μ.toMeasure = ν.toMeasure ↔ μ = ν :=
   toMeasure_injective.eq_iff
 
+-- #34138
 theorem toMeasure_ext {μ ν : MassFunction α} (h : μ.toMeasure = ν.toMeasure) : μ = ν :=
   toMeasure_inj.mp h
 
+-- #34138
 theorem toMeasure_mono {s t : Set α} {μ : MassFunction α} (h : s ∩ μ.support ⊆ t) :
     μ.toMeasure s ≤ μ.toMeasure t := by
   rw [← μ.toMeasure_apply_inter_support]
   exact OuterMeasureClass.measure_mono μ.toMeasure h
 
+-- #34138
 @[simp]
 theorem restrict_toMeasure_support {μ : MassFunction α} :
     μ.toMeasure.restrict μ.support = μ.toMeasure := by
@@ -430,6 +458,7 @@ lemma join_coe (m : MassFunction (MassFunction α)) : m.join.toMeasure = Measure
   apply tsum_congr (fun μ ↦ ?_)
   rw [ENNReal.tsum_mul_left, toMeasure_apply₂]
 
+-- #34239
 -- join commutes with sum
 -- This goes to MeasureTheory.Measure
 lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7} (m : ι → Measure (Measure α)) :
@@ -455,7 +484,7 @@ lemma toMeasure_join_apply (m : MassFunction (MassFunction α)) (s : Set α) : m
   apply tsum_congr (fun μ ↦ ?_)
   simp
 
--- xxx next PR
+-- #34239
 open Measure in
 theorem isProbabilityMeasure_join [MeasurableSpace α] {m : Measure (Measure α)} [IsProbabilityMeasure m] (hm : ∀ᵐ μ ∂m, IsProbabilityMeasure μ) : IsProbabilityMeasure (m.join) := by
   simp only [isProbabilityMeasure_iff, MeasurableSet.univ, join_apply]
@@ -488,20 +517,20 @@ lemma bind_coe (μ : MassFunction α) (g : α → MassFunction β)  : (μ.bind g
   rw [toMeasure_bind_apply_eq_toMeasure]
 
 
--- xxx next PR
+-- #34239
 open Measure in
 theorem isProbabilityMeasure_bind [MeasurableSpace α] [MeasurableSpace β] {m : Measure α} [IsProbabilityMeasure m] {f : α → Measure β} (hf₀ : AEMeasurable f m) (hf₁ : ∀ᵐ μ ∂m, IsProbabilityMeasure (f μ)) : IsProbabilityMeasure (m.bind f) := by
   simp [Measure.bind]
   apply @isProbabilityMeasure_join _ _ _ (isProbabilityMeasure_map hf₀) ((ae_map_iff hf₀ ProbabilityMeasure.measurableSet_isProbabilityMeasure).mpr hf₁)
 
-
-
+-- #34239
 -- bind commutes with sum
 -- This goes to MeasureTheory.Measure
-lemma Measure.bind_sum {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {ι : Type u_7} (m : ι → Measure α) (f : α → Measure β) (h : AEMeasurable f (sum fun i => m i)) :
+lemma Measure.sum_bind {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {ι : Type u_7} (m : ι → Measure α) (f : α → Measure β) (h : AEMeasurable f (sum fun i => m i)) :
   (sum fun (i : ι) ↦ m i).bind f = sum fun (i : ι) ↦ (m i).bind f := by
   simp_rw [Measure.bind, Measure.map_sum h, Measure.join_sum]
 
+-- #34239
 -- scalar multiplication commutes with bind
 -- This goes to MeasureTheory.Measure
 lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace α} {mβ : MeasurableSpace β} {R : Type u_4} [SMul R ℝ≥0∞] [IsScalarTower R ℝ≥0∞ ℝ≥0∞] (c : R) (m : Measure α) (f : α → Measure β) :
@@ -512,7 +541,7 @@ lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace �
 lemma bind_toMeasure' (μ : MassFunction α) (g : α → MassFunction β) : (μ.bind g).toMeasure  = sum (fun a ↦ (μ a) • (g a).toMeasure) := by
   apply @Measure.ext _ ⊤
   intro s _
-  rw [toMeasure_bind_apply_eq_toMeasure, toMeasure, Measure.bind_sum (h := AEMeasurable.of_discrete), Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
+  rw [toMeasure_bind_apply_eq_toMeasure, toMeasure, Measure.sum_bind (h := AEMeasurable.of_discrete), Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
   simp_rw [Measure.bind_smul, Measure.dirac_bind (f := toMeasure ∘ g) (hf := by measurability)]
   rfl
 
