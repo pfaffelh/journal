@@ -577,7 +577,7 @@ lemma map_seq {α β γ : Type u}(f : β → γ) (u : DiscreteMeasure (α → β
 section sequence
 
 lemma sequence_nil : sequence ([] : List (DiscreteMeasure α)) = (DiscreteMeasure.pure [] : DiscreteMeasure (List α)) := by
-  simp [sequence]
+  exact rfl
 
 -- Measures on lists
 

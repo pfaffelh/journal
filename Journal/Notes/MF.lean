@@ -4,6 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Peter Pfaffelhuber
 -/
 
+-- #34138: Intro to MassFunction
+
+
+
 import Mathlib
 
 -- feat(MeasureTheory): Introduce Mass Function α giving rise to a Measure α ⊤` #34138
@@ -223,6 +227,11 @@ theorem restrict_toMeasure_support {μ : MassFunction α} :
   intro s hs
   rw [Measure.restrict_apply hs, μ.toMeasure_apply_inter_support]
 
+lemma nsupport_weight (μ : MassFunction α) (P : α → Prop) (hμ : μ.toMeasure {a : α | P a} = 0) (a : α) (ha : P a) : μ a = 0 :=
+  by
+  rw [← nonpos_iff_eq_zero, ← MassFunction.toMeasure_apply_singleton' μ a, ← hμ]
+  apply OuterMeasureClass.measure_mono μ.toMeasure
+  simp [ha]
 section IsFiniteOrProbabilityMeasure
 
 lemma isProbabilityMeasure_iff_hasSum {p : MassFunction α} :
@@ -742,7 +751,193 @@ noncomputable instance : ULiftable MassFunction.{u} MassFunction.{v} where
 
 end monad
 
--- next is sequence!
+section sequence
+
+-- `MassFunction`s on lists
+
+@[simp]
+lemma sequence_nil {α : Type u} {f : Type u → Type u} [Applicative f] : sequence ([] : List (f α)) = (Pure.pure []) := by
+  exact List.traverse_nil id
+
+#print sequence
+#check List.traverse_nil
+
+-- @[simp]
+-- lemma sequence_nil : sequence ([] : List (MassFunction α)) = (MassFunction.pure []) := by
+--   exact rfl
+
+lemma sequence_cons {α : Type u} {f : Type u → Type u} [Applicative f] (μs : List (f α)) (ν : f α) : sequence (ν::μs) = List.cons <$> ν <*> (sequence μs) := by
+  exact List.traverse_cons id _ _
+
+open Classical
+lemma cons_pure_weight (a a' : α) (l l' : List α) : ((MassFunction.pure ∘ List.cons a') l') (a :: l) = if a = a' ∧ l = l' then 1 else 0 := by
+  rw [comp_apply, pure, Set.indicator]
+  simp
+
+open Classical
+lemma cons_pure_weight_of_empty (a' : α) : ((MassFunction.pure ∘ List.cons a') l') [] = 0 := by
+  rw [comp_apply, MassFunction.pure, Set.indicator]
+  simp
+
+lemma cons_map_weight_of_empty (μs : MassFunction (List α)) (ν : MassFunction α) : (List.cons <$> ν <*> μs) [] = 0 := by
+  simp [monad_norm]
+  rw [← bind_eq_bind, bind_apply]
+  simp_rw [← bind_eq_bind, bind_apply]
+  simp_rw [← pure_eq_pure, cons_pure_weight_of_empty]
+  simp
+
+lemma cons_map_weight (μs : MassFunction (List α)) (ν : MassFunction α) (l : List α) (a : α) : (List.cons <$> ν <*> μs) (a :: l) = ν a * (μs l) := by
+  simp [monad_norm]
+  rw [← bind_eq_bind, bind_apply]
+  simp_rw [← bind_eq_bind, bind_apply]
+  simp_rw [← pure_eq_pure, cons_pure_weight]
+  have h (a_1 : α) (a_2 : List α) : (if a = a_1 ∧ l = a_2 then 1 else 0) = ({a} : Set α).indicator (1 : α → ℝ≥0∞) a_1 * ({l} : Set (List α)).indicator (1 : List α → ℝ≥0∞) a_2 := by
+    simp only [Set.indicator]
+    aesop
+  simp_rw [h]
+  conv => left; left; intro a1; right; left; intro a2; rw [← mul_assoc]; rw [mul_comm (μs a2) _, mul_assoc]; rw [Set.indicator.mul_indicator_eq]
+  simp_rw [ENNReal.tsum_mul_left]
+  simp_rw [← tsum_subtype, tsum_singleton, ← mul_assoc, Set.indicator.mul_indicator_eq]
+  simp_rw [ENNReal.tsum_mul_right]
+  rw [← tsum_subtype, tsum_singleton]
+
+lemma sequence_weight_cons_of_empty (μs : List (MassFunction α)) (ν : MassFunction α) : (sequence (ν::μs)) [] = 0 := by
+  exact cons_map_weight_of_empty (sequence μs) ν
+
+lemma sequence_weight_cons (μs : List (MassFunction α)) (ν : MassFunction α) (l : List α) (a : α) : (sequence (ν::μs)) (a::l) = (ν a)*((sequence μs) l) := by
+  exact cons_map_weight (sequence μs) ν l a
+
+example (s t : Set α) (h : s ⊆ t) (m : MassFunction α) : m.toMeasure s ≤ m.toMeasure t := by
+  exact
+  OuterMeasureClass.measure_mono m.toMeasure h
+
+example (a : ℝ≥0∞) : a ≤ 0 ↔ a = 0 := by exact nonpos_iff_eq_zero
+
+
+lemma sequence_weight₀ (μs : List (MassFunction α)) (l : List α) (hl : l.length = μs.length) :
+    (sequence μs) l = List.prod (μs.zipWith (fun a b ↦ a b) l) :=
+  by
+  induction μs generalizing l with
+  | nil =>
+    simp only [List.length_nil, List.length_eq_zero_iff] at hl
+    simp [sequence_nil]
+    simp [hl, ← pure_eq_pure, pure_apply]
+  | cons μ μs ih =>
+    cases l with
+    | nil => simp at hl
+    | cons a l =>
+      simp [List.length_cons] at hl
+      rw [sequence_weight_cons]
+      rw [ih l hl]
+      simp
+
+lemma sequence_weight₁ (μs : List (MassFunction α)) (l : List α) (hl : ¬ l.length = μs.length) :
+    (sequence μs) l = 0 :=
+  by
+  induction μs generalizing l with
+  | nil =>
+    rw [sequence_nil, ← pure_eq_pure, pure_apply]
+    simpa using hl
+    | cons μ μs ih =>
+      cases l with
+      | nil =>
+        simp at hl
+        rw [sequence_weight_cons_of_empty]
+      | cons a l =>
+        simp [List.length_cons] at hl
+        rw [sequence_weight_cons]
+        rw [ih l hl]
+        simp
+
+lemma sequence_weight (μs : List (MassFunction α)) (l : List α) :
+    (sequence μs) l = if l.length = μs.length then List.prod (μs.zipWith (fun a b ↦ a b) l) else 0 :=
+  by
+  split_ifs with hl
+  · exact sequence_weight₀ μs l hl
+  · exact sequence_weight₁ μs l hl
+
+lemma sequence_support_subset (μs : List (MassFunction α)) : (sequence μs).support ⊆ {l | l.length = μs.length} := by
+  intro l hl
+  simp at hl
+  simp
+  by_contra h
+  apply hl
+  simp [sequence_weight, h]
+
+
+@[simp]
+lemma prod_apply_replicate (l : List α) (f : α → β) :
+  l.map f = (List.replicate l.length f).zipWith (fun a b ↦ a b) l := by
+  induction l with
+  | nil => simp
+  | cons a l ih => simp [List.length, ih]; rfl
+
+lemma cons_eq_append_singleton (a : α) (l : List α) : (a::l) = [a] ++ l := by
+  simp only [List.cons_append, List.nil_append]
+
+lemma List.nmem_toFinset (b : α) (l : List α) [DecidableEq α] : b ∉ l.toFinset ↔ b ∉ l := by
+  rw [List.mem_toFinset]
+
+lemma tprod_eq_prod_of_pow_count (l : List α) (f : α → ℝ≥0∞) [DecidableEq α] : (∏' a, (f a)^(l.count (α := α) a)) = (∏ a ∈ l.toFinset, f a ^ (l.count (α := α) a)) := by
+  rw [tprod_eq_prod]
+  intro b hb
+  rw [List.nmem_toFinset, ← List.count_eq_zero] at hb
+  rw [hb, pow_zero]
+
+lemma tsum_eq_sum_of_mul_count (l : List α) (f : α → ℝ≥0∞) : (∑' a, (l.count a) * (f a)) = (∑ a ∈ l.toFinset, (l.count a) * f a) := by
+  rw [tsum_eq_sum]
+  intro b hb
+  rw [List.nmem_toFinset, ← List.count_eq_zero] at hb
+  rw [hb]
+  ring
+
+lemma list_map_sum_eq_count (l : List α) (f : α → ℝ≥0∞) : (List.map f l).sum = ∑' (a : α), (l.count a) * (f a) := by
+  rw [tsum_eq_sum_of_mul_count]
+  rw [Finset.sum_list_map_count]
+  simp only [nsmul_eq_mul]
+
+lemma list_map_prod_eq_count (l : List α) (f : α → ℝ≥0∞) [DecidableEq α] : (List.map f l).prod = ∏' (a : α), (f a) ^ (l.count a) := by
+  rw [tprod_eq_prod_of_pow_count]
+  exact Finset.prod_list_map_count l f
+
+-- define marginal distributions
+
+
+
+
+end sequence
+
+section iidSequence
+
+noncomputable def iidSequence (n : ℕ) (μ : MassFunction α) :  MassFunction (List α) := sequence (List.replicate n μ)
+
+lemma iidSequence_weight (n : ℕ) (μ : MassFunction α) (l : List α) :
+    (iidSequence n μ) l = ({l : List α | l.length = n}.indicator (fun l ↦ (List.prod (l.map μ))) l) := by
+  rw [Set.indicator]
+  split_ifs with hl
+  · rw [iidSequence, ← hl]
+    rw [sequence_weight]
+    simp only [List.length_replicate, ↓reduceIte, prod_apply_replicate]
+    rfl
+  · simp only [Set.mem_setOf_eq] at hl
+    rw [iidSequence, sequence_weight]
+    simp [hl]
+
+lemma iidSequence_weight' (n : ℕ) (μ : MassFunction α) [DecidableEq α] (l : List α) :
+    iidSequence n μ l = ({l : List α | l.length = n}.indicator (fun l ↦ (∏' (a : α), (μ a) ^ (l.count (α := α) a))) l) := by
+  rw [iidSequence_weight n μ l, Set.indicator]
+  split_ifs with hl <;> simp at hl
+  · rw [list_map_prod_eq_count]
+    simp only [Set.mem_setOf_eq, hl, Set.indicator_of_mem]
+  · simp [hl]
+
+lemma pure_sequence (ν : MassFunction α) : sequence [ν] = (ν.map (fun b => [b])) := by
+  simp [sequence]
+
+lemma sequence_bind (μ ν : MassFunction α) : sequence [μ, ν] = μ.bind (fun a => ν.map (fun b => [a, b])) := by
+  simp [sequence, monad_norm]
+
+end iidSequence
 
 end MassFunction
 
