@@ -100,8 +100,27 @@ theorem apply_pos_iff (w : MassFunction α) (a : α) : 0 < w a ↔ a ∈ w.suppo
 -- #34138
 /-- The `@Measure α ⊤` as defined through a `MassFunction α` (mass function) through a sum of
 diracs. -/
-noncomputable def toMeasure (w : MassFunction α) : @Measure α ⊤ :=
+noncomputable def toMeasure (w : MassFunction α) : Measure[⊤] α :=
   Measure.sum (fun a ↦ (w a) • @Measure.dirac α ⊤ a)
+
+noncomputable def toMeasure' (w : MassFunction α) (mα : MeasurableSpace α := ⊤) : Measure[mα] α :=
+  Measure.sum (fun a ↦ (w a) • @Measure.dirac α mα a)
+
+lemma toMeasure_trim (w : MassFunction α) [mα : MeasurableSpace α] : (w.toMeasure).trim (le_top) = Measure.sum (fun a ↦ (w a) • Measure.dirac a) := by
+  ext s hs
+  rw [trim_measurableSet_eq _ hs]
+  rw [toMeasure]
+  rw [sum_apply, sum_apply]
+  simp_rw [smul_apply]
+  apply tsum_congr fun b ↦ ?_
+  congr 1
+  simp
+  rw [dirac_apply']
+  exact hs
+  exact hs
+  simp only [MeasurableSpace.measurableSet_top]
+
+
 
 -- #34138
 lemma toMeasure_apply (μ : MassFunction α) (s : Set α) :
@@ -546,7 +565,6 @@ lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace �
   (c • m).bind f = c • (m.bind f) := by
   simp_rw [Measure.bind, Measure.map_smul, Measure.join_smul]
 
-
 lemma bind_toMeasure' (μ : MassFunction α) (g : α → MassFunction β) : (μ.bind g).toMeasure  = sum (fun a ↦ (μ a) • (g a).toMeasure) := by
   apply @Measure.ext _ ⊤
   intro s _
@@ -939,6 +957,17 @@ lemma sequence_bind (μ ν : MassFunction α) : sequence [μ, ν] = μ.bind (fun
 
 end iidSequence
 
+open NNReal
+noncomputable def coinReal (p : ℝ≥0∞) : MassFunction ℝ := fun (b : ℝ) ↦ if b = 1 then (p : ℝ≥0∞) else (if b = 0 then (1 - p : ℝ≥0∞) else 0)
+
+example {α : Type*} [MeasurableSpace α] (P : Measure α) [IsProbabilityMeasure P] (s : Set α) : Measure.map (s.indicator 1) P = (coinReal (P s)).toMeasure.trim (le_top) := by
+  sorry
+
+#check (true.toNat : ℝ)
+
 end MassFunction
+
+-- nonTop
+
 
 end MeasureTheory
