@@ -16,6 +16,10 @@ The function `dissipate` takes `s : α → Set β` with `LE α` and returns `⋂
 In large parts, this file is parallel to `Mathlib.Data.Set.Accumulate`, where
 `Accumulate s := ⋃ y ≤ x, s y` is defined.
 
+PR1 #33975
+
+PR2 all others, and accumulate changes accordingly
+
 -/
 
 open Nat
@@ -24,10 +28,12 @@ variable {α β : Type*} {s : α → Set β}
 
 namespace Set
 
+-- PR1
 /-- `dissipate s` is the intersection of `s y` for `y ≤ x`. -/
 def dissipate [LE α] (s : α → Set β) (x : α) : Set β :=
   ⋂ y ≤ x, s y
 
+-- PR1
 theorem dissipate_def [LE α] {x : α} : dissipate s x = ⋂ y ≤ x, s y := rfl
 
 theorem dissipate_eq {s : ℕ → Set β} {n : ℕ} : dissipate s n = ⋂ k < n + 1, s k := by
@@ -49,20 +55,25 @@ theorem accumulate_eq_dissipate_compl [LE α] {s : α → Set β} {x : α} :
      (Set.dissipate (fun y ↦ (s y)ᶜ) x)ᶜ = Accumulate s x := by
   simp [accumulate_def, dissipate_def]
 
+-- PR1
 @[simp]
 theorem mem_dissipate [LE α] {x : α} {z : β} : z ∈ dissipate s x ↔ ∀ y ≤ x, z ∈ s y := by
   simp [dissipate_def]
 
+-- PR1
 theorem dissipate_subset [LE α] {x y : α} (hy : y ≤ x) : dissipate s x ⊆ s y :=
   biInter_subset_of_mem hy
 
+-- PR1
 theorem iInter_subset_dissipate [LE α] (x : α) : ⋂ i, s i ⊆ dissipate s x := by
   simp only [dissipate, subset_iInter_iff]
   exact fun x h ↦ iInter_subset_of_subset x fun ⦃a⦄ a ↦ a
 
+-- PR1
 theorem antitone_dissipate [Preorder α] : Antitone (dissipate s) :=
   fun _ _ hab ↦ biInter_subset_biInter_left fun _ hz => le_trans hz hab
 
+-- PR1
 @[gcongr]
 theorem dissipate_subset_dissipate [Preorder α] {x y} (h : y ≤ x) :
     dissipate s x ⊆ dissipate s y :=
@@ -71,23 +82,30 @@ theorem dissipate_subset_dissipate [Preorder α] {x y} (h : y ≤ x) :
 theorem dissipate_nonempty_mono [Preorder α] {x y} (h : y ≤ x) :
     (dissipate s x).Nonempty → (dissipate s y).Nonempty := Set.Nonempty.mono <| dissipate_subset_dissipate h
 
+-- PR1 rename to biInter_dissipate
 @[simp]
-theorem dissipate_dissipate [Preorder α] {s : α → Set β} {x : α} :
+theorem biInter_dissipate [Preorder α] {s : α → Set β} {x : α} :
     ⋂ y, ⋂ (_ : y ≤ x), dissipate s y = dissipate s x := biInf_le_eq_of_antitone antitone_dissipate x
 
+-- PR1
 @[simp]
 theorem iInter_dissipate [Preorder α] : ⋂ x, dissipate s x = ⋂ x, s x := by
   apply Subset.antisymm <;> simp_rw [subset_def, dissipate_def, mem_iInter]
   · exact fun z h x' ↦ h x' x' (le_refl x')
   · exact fun z h x' y hy ↦ h y
 
+-- PR1
 @[simp]
 lemma dissipate_bot [PartialOrder α] [OrderBot α] (s : α → Set β) : dissipate s ⊥ = s ⊥ := by
   simp [dissipate_def]
 
+@[simp]
+lemma dissipate_zero_nat (s : ℕ → Set β) : dissipate s 0 = s 0 := by
+  simp [dissipate_def]
+
 open Nat
 
-@[simp]
+-- PR1
 theorem dissipate_succ (s : ℕ → Set α) (n : ℕ) :
   dissipate s (n + 1) = (dissipate s n) ∩ s (n + 1)
     := by

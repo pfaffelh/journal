@@ -259,3 +259,33 @@ noncomputable def geom (p : ℝ≥0) (h : p ≤ 1) : DiscreteProbabilityMeasure 
     let n ← geom p h
     return (n + 1)
 partial_fixpoint
+
+
+@[to_additive]
+lemma Set.mulIndicator_iUnion_of_disjoint (s : δ → Set α) (hs : Pairwise (Disjoint on s)) (f : α → ℝ≥0∞) (i : α) : (⋃ d, s d).mulIndicator f i = ∏' d, (s d).mulIndicator f i := by
+  classical
+  simp only [Set.mulIndicator, Set.mem_iUnion]
+  by_cases h₀ : ∃ d, i ∈ s d <;> simp only [h₀, ↓reduceIte]
+  · obtain ⟨j, hj⟩ := h₀
+    have h : mulSupport (fun d ↦ if i ∈ s d then f i else 1) ⊆ {j} := by
+      intro d hd
+      simp only [mem_mulSupport, ne_eq, ite_eq_right_iff, Classical.not_imp] at hd
+      simp only [Set.mem_singleton_iff]
+      by_contra e
+      obtain r := Set.disjoint_iff_inter_eq_empty.mp (hs e)
+      revert r
+      change s d ∩ s j ≠ ∅
+      rw [← Set.nonempty_iff_ne_empty, Set.nonempty_def]
+      use i
+      exact ⟨hd.1, hj⟩
+    rw [← tprod_subtype_eq_of_mulSupport_subset h]
+    simp only [tprod_fintype, Finset.univ_unique, Set.default_coe_singleton, Finset.prod_singleton,
+      left_eq_ite_iff]
+    intro hj'
+    exact notMem_mulSupport.mp fun a ↦ hj' hj
+  · have g : (fun d ↦ if i ∈ s d then f i else 1) = (fun _ ↦ 1) := by
+      push_neg at h₀
+      ext d
+      simp [h₀]
+    simp_rw [g]
+    exact Eq.symm tprod_one
