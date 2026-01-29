@@ -289,3 +289,54 @@ lemma Set.mulIndicator_iUnion_of_disjoint (s : δ → Set α) (hs : Pairwise (Di
       simp [h₀]
     simp_rw [g]
     exact Eq.symm tprod_one
+
+
+open NNReal
+noncomputable def coinReal (p : ℝ≥0∞) : MassFunction ℝ := fun (b : ℝ) ↦ if b = 1 then (p : ℝ≥0∞) else (if b = 0 then (1 - p : ℝ≥0∞) else 0)
+
+example (a b : Set α) : a ⊆ b ↔ bᶜ ⊆ aᶜ := by exact Iff.symm Set.compl_subset_compl
+
+lemma coinReal_support (p : ℝ≥0∞) : (coinReal p).support ⊆ {0, 1} := by
+  rw [← Set.compl_subset_compl]
+  intro x hx
+  simp only [Set.mem_compl_iff, Set.mem_insert_iff, Set.mem_singleton_iff, not_or] at hx
+  rw [Set.mem_compl_iff, ← apply_eq_zero_iff]
+  simp [coinReal, hx]
+
+example {α : Type*} [MeasurableSpace α] (P : Measure α) [IsProbabilityMeasure P] (s : Set α) (hs : MeasurableSet s) : P sᶜ = 1 - P s := by
+  exact prob_compl_eq_one_sub hs
+
+example {α : Type*} [MeasurableSpace α] (P : Measure α) [IsProbabilityMeasure P] (s : Set α) (hs : MeasurableSet s) : Measure.map (s.indicator 1) P = (coinReal (P s)).toMeasure' _ := by
+  classical
+  ext b hb
+  have h : s.indicator 1 ⁻¹' b = (if 1 ∈ b then s else ∅) ∪ (if 0 ∈ b then sᶜ else ∅) := by
+    sorry
+  rw [Measure.map_apply]
+  rw [h]
+  rw [trim_measurableSet_eq]
+  rw [← toMeasure_apply_inter_support' _ (coinReal_support (P s))]
+  rw [toMeasure_apply₁]
+  by_cases g₀ : 0 ∈ b <;> simp [g₀]
+  · by_cases g₁ : 1 ∈ b <;> simp [g₁]
+    · have hb' : b ∩ {0, 1} = {0, 1} := by sorry
+      simp_rw [hb']
+      sorry
+    · have hb' : b ∩ {0, 1} = {0} := by sorry
+      simp_rw [hb']
+      simp only [toMeasure_apply_singleton]
+      rw [measure_compl hs (measure_ne_top P s)]
+      simp [coinReal]
+  · by_cases g₁ : 1 ∈ b <;> simp [g₁]
+
+
+    sorry
+
+
+    grind
+    sorry
+  rw [h]
+
+
+  sorry
+
+#check (true.toNat : ℝ)

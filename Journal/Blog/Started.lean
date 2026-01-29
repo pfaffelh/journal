@@ -49,7 +49,7 @@ If a PR is ready, check using
 git fetch upstream
 git merge upstream/master
 lake update
-lake build Mathlib.MeasureTheory.MassFunction
+lake build Mathlib.MeasureTheory.Measure.MassFunction
 lake build Mathlib
 ```
 Maybe add `--verbose` to be really sure that everything will work.
