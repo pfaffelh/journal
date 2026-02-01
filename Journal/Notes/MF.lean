@@ -1068,20 +1068,22 @@ lemma List.length_sub_count_false (l : List Bool) : l.length - l.count true = l.
 
 -- PR xxx
 -- should go to List.idxsOf
-lemma List.idxsOf_toFinset_subset_range_length [BEq α] (l : List α) (a : α): (l.idxsOf a).toFinset ⊆ Finset.range (l.length) := by
+lemma List.idxsOf_toFinset_subset_range_length [BEq α] (l : List α) (a : α) :
+    (l.idxsOf a).toFinset ⊆ Finset.range (l.length) := by
   refine Finset.subset_range.mpr (fun x hx ↦ ?_)
-  simp only [List.mem_toFinset, List.mem_idxsOf_iff_getElem_sub_pos, zero_le, tsub_zero,
-    true_and] at hx
+  simp at hx
   exact hx.1
 
 -- PR xxx
 -- should go to List.idxsOf
 @[simp]
-lemma List.idxsOf_toFinset_card_eq_count [BEq α] (l : List α) (a : α):  (l.idxsOf a).toFinset.card = l.count a := by
+lemma List.idxsOf_toFinset_card_eq_count [BEq α] (l : List α) (a : α):
+    (l.idxsOf a).toFinset.card = l.count a := by
   rw [List.card_toFinset, List.Nodup.dedup List.nodup_idxsOf, List.length_idxsOf]
 
 -- PR xxx
-lemma List.ofFn_trueFinset (n : ℕ) (l : List Bool) (hl : l.length = n) : List.ofFn (fun (i : Fin n) => decide (i.val ∈ (l.idxsOf true).toFinset)) = l := by
+lemma List.ofFn_trueFinset (n : ℕ) (l : List Bool) (hl : l.length = n) :
+    List.ofFn (fun (i : Fin n) => decide (i.val ∈ (l.idxsOf true).toFinset)) = l := by
   apply List.ext_get
   · simp only [hl, List.length_ofFn]
   · intro i hi₁ hi₂
@@ -1091,19 +1093,33 @@ lemma List.ofFn_trueFinset (n : ℕ) (l : List Bool) (hl : l.length = n) : List.
 lemma trueFinset_eq_Fn (n : ℕ) (s : Finset ℕ) (hs : s ⊆ Finset.range n) :
   List.toFinset ((List.ofFn fun (i : Fin n) => decide (i.val ∈ s)).idxsOf true) = s := by
   ext x
-  simp only [List.mem_toFinset, List.mem_idxsOf_iff_getElem_sub_pos, zero_le, tsub_zero,
+  simp only [List.mem_toFinset, List.mem_idxsOf_iff_getElem_sub_pos, Nat.zero_le, Nat.sub_zero,
     List.getElem_ofFn, beq_true, decide_eq_true_eq, List.length_ofFn, exists_prop, true_and,
     and_iff_right_iff_imp]
   exact fun h ↦ Finset.mem_range.mp (hs h)
 
 -- PR xxx
-lemma count_true_eq_card {n : ℕ} (s : Finset ℕ) (hs : s ⊆ Finset.range n): List.count true (List.ofFn fun (i : Fin n) => decide (i.val ∈ s)) = s.card := by
+lemma count_true_eq_card {n : ℕ} (s : Finset ℕ) (hs : s ⊆ Finset.range n) :
+    List.count true (List.ofFn fun (i : Fin n) => decide (i.val ∈ s)) = s.card := by
   rw [← List.idxsOf_toFinset_card_eq_count]
   congr
   exact trueFinset_eq_Fn n s hs
 
+
+
 -- PR xxx
-def Equiv_listset_powersetCard {n k : ℕ} :{ l : List Bool | l.length = n ∧ l.count true = k } ≃ Finset.powersetCard k (Finset.range n) where
+def Equiv_functionset_powersetCard {n k : ℕ} : ↥{ f : Fin n → Bool | Finset.card {i | f i = true} = k } ≃ ↥(Finset.powersetCard k (Finset.range n)) where
+  toFun := by sorry
+  invFun := by sorry
+  left_inv := by sorry
+  right_inv := by sorry
+
+example (n : ℕ) : Fintype (Fin n → Bool) := by
+  exact Pi.instFintype
+
+
+
+def Equiv_listset_powersetCard {n k : ℕ} : ↥{ l : List Bool | l.length = n ∧ l.count true = k } ≃ ↥(Finset.powersetCard k (Finset.range n)) where
   toFun := fun ⟨l, hl⟩ ↦ ⟨(l.idxsOf true).toFinset,
   by
     rw [← hl.2, ← hl.1]
@@ -1123,13 +1139,91 @@ def Equiv_listset_powersetCard {n k : ℕ} :{ l : List Bool | l.length = n ∧ l
     simp [RightInverse, LeftInverse]
     exact fun s hs1 hs2 ↦ trueFinset_eq_Fn n s hs1
 
+
 lemma count_encard_eq_choose (k n : ℕ) : { l : List Bool | l.length = n ∧ l.count true = k}.encard = (n.choose k) := by
   rw [Set.encard_congr (Equiv_listset_powersetCard)]
   norm_cast
   rw [Finset.card_powersetCard k (Finset.range n), Finset.card_range]
 
+
+
+
+
+
+def Equiv_list (l : List α) (a : α) : { i : Fin (l.length) // l[i.val] = a } ≃ { x // ∃ (h : x < l.length), l[x] = a } where
+  toFun := fun i ↦ ⟨i.val.val, ⟨i.val.prop, i.prop⟩⟩
+  invFun := fun ⟨x, hx⟩ ↦ ⟨⟨x, hx.1⟩, hx.2⟩
+  left_inv := by
+    simp
+    intro l
+    simp
+  right_inv := by
+    simp
+    intro l
+    simp
+
+def Equiv_function {n : ℕ} (f : Fin n → α) (a : α) : {x : Fin n // f x = a} ≃ {x : ℕ // ∃ (h : x < n), f ⟨x, h⟩ = a} where
+  toFun := fun i ↦ ⟨i.val.val, ⟨i.val.prop, i.prop⟩⟩
+  invFun := fun ⟨x, hx⟩ ↦ ⟨⟨x, hx.1⟩, hx.2⟩
+  left_inv := by
+    intro l
+    simp
+  right_inv := by
+    intro l
+    simp
+
+
+
+open Classical in
+lemma card_eq_count (l : List α) (a : α) : Finset.card {i | l.get i = a} = l.count a := by
+  rw [← List.idxsOf_toFinset_card_eq_count]
+  refine Finset.card_eq_of_equiv ?_
+  simp
+  exact Equiv_list l a
+
+lemma preimage_true_card_eq_count_ofFn {n : ℕ} (f : Fin n → Bool) : Finset.card {x | f x = true} = List.count true (List.ofFn f) := by
+  rw [← List.idxsOf_toFinset_card_eq_count]
+  apply Finset.card_eq_of_equiv
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, List.mem_toFinset,
+    List.mem_idxsOf_iff_getElem_sub_pos, zero_le, tsub_zero, List.getElem_ofFn, beq_true,
+    List.length_ofFn]
+  exact Equiv_function f true
+
+lemma count_true_ofFn_eq_card {n : ℕ} (s : Finset (Fin n)) : List.count true (List.ofFn fun i => decide (i ∈ s)) = s.card := by
+  rw [← preimage_true_card_eq_count_ofFn]
+  simp
+
+-- PR xxx
+def Equiv_ofFnCountTrue_finetsetPowersetCard {n k : ℕ} : { f : Fin n → Bool // List.count true (List.ofFn f) = k } ≃ { x : Finset (Fin n) // Finset.card x = k } where
+  toFun := fun ⟨f, hf⟩ ↦ ⟨{ i | (f i) = true}.toFinset,
+  by
+    simp
+    rw [← hf]
+    exact preimage_true_card_eq_count_ofFn f
+  ⟩
+  invFun := fun ⟨s, hs⟩ ↦ ⟨fun (i : Fin n) ↦ i ∈ s, by
+    rw [← hs]
+    exact count_true_ofFn_eq_card s
+  ⟩
+  left_inv := by
+    intro l
+    simp
+  right_inv := by
+    intro
+    simp
+
+lemma count_card_eq_choose (k n : ℕ) : Finset.card { f : Fin n → Bool | (List.ofFn f).count true = k} = (n.choose k) := by
+  rw [← Finset.card_fin n, ← Finset.card_powersetCard k (Finset.univ : Finset (Fin n))]
+  rw [Finset.card_fin n]
+  apply Finset.card_eq_of_equiv
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_powersetCard,
+    Finset.subset_univ]
+  exact Equiv_ofFnCountTrue_finetsetPowersetCard
+
 lemma binom₁_eq_binom₃ : binom₃ = binom₁ := by
   ext p n k
+  have h : (List.count true ⁻¹' {k} ∩ {l | l.length = n}) = {l : List Bool | l.length = n ∧ l.count true = k} := by sorry
+
   rw [binom₁]
   have g (i : List Bool) (s : Set ℕ): (s.indicator (@OfNat.ofNat (ℕ → ℝ≥0∞) 1 One.toOfNat1) ((List.count true i))) = (((List.count true))⁻¹' s).indicator 1 i := by
     rfl
@@ -1155,13 +1249,56 @@ lemma binom₁_eq_binom₃ : binom₃ = binom₁ := by
         ext x
         rw [x.prop.1, ← List.length_sub_count_false, x.prop.2, x.prop.1]
     _ = (p ^ k * (1 - p) ^ (n - k)) * (Nat.choose n k) := by
-        simp only [ENNReal.tsum_const, ENat.card_coe_set_eq]
+        rw [h]
+
+
+
+
+        simp only [Set.coe_setOf, ENNReal.tsum_const]
         rw [mul_comm]
+        congr
+        rw [← count_card_eq_choose]
+        norm_cast
+
+
+
+
+
+
+
+        simp only [ENNReal.tsum_const, ENat.card_coe_set_eq]
         congr
         norm_cast
         rw [Set.inter_comm, ←  count_encard_eq_choose k n]
         rfl
 
+example (l : List Bool) : List.ofFn l.get = l := by exact List.ofFn_get l
+
+example (f : Fin n → Bool) : (List.ofFn f).length = n := by exact List.length_ofFn
+
+example (f : Fin n → Bool) : (List.ofFn f).get = (fun i ↦ f ⟨i.val, List.length_ofFn ▸ i.prop⟩ ) := by
+
+  apply?
+
+def Equiv_listset_powersetCard {n k : ℕ} :{ l : List Bool | l.length = n ∧ l.count true = k } ≃ {f : Fin n → Bool | (List.ofFn f).count true = k} where
+  toFun := fun ⟨l, hl⟩ ↦ ⟨by simp at hl; exact hl.1 ▸ l.get, by
+    simp at hl
+    simp [hl]
+
+
+    sorry⟩
+  invFun := fun ⟨f, hf⟩ ↦ ⟨List.ofFn f, by
+    simp
+    simp at hf
+    rw [← hf]
+  ⟩
+  left_inv := by
+    intro l
+    simp
+  right_inv := by
+    simp
+    intro
+    simp
 
 
 end binom
@@ -1172,3 +1309,22 @@ end MassFunction
 
 
 end MeasureTheory
+/- The type `Fin n → Bool` and `Vector Bool n` are equivalent by
+using `Vector.get`. -/
+noncomputable def Equiv_fnFinBool_vector (n : ℕ) : (Fin n → Bool) ≃ (Vector Bool n) where
+  toFun := fun f ↦ ⟨(List.ofFn f).toArray, by simp ⟩
+  invFun := fun v i ↦ v.get i
+  left_inv := fun f ↦ by
+    simp only [List.toArray_ofFn, Vector.get_mk, Fin.getElem_fin, Array.getElem_ofFn, Fin.eta]
+  right_inv := fun v ↦ by
+    simp_all only [List.toArray_ofFn, Vector.mk_eq]
+    ext i hi₁ hi₂ : 1
+    · simp_all only [Array.size_ofFn, Vector.size_toArray]
+    · simp_all only [Array.getElem_ofFn, Vector.getElem_toArray]
+      rfl
+
+set_option trace.Meta.synthInstance true
+#check Vector.fintype
+noncomputable instance List.Vector.fintype [Fintype α] {n : ℕ} : Fintype (Vector α n) := by
+  haveI := Fintype.ofFinite α
+  exact _root_.Vector.fintype

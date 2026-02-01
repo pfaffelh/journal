@@ -339,4 +339,88 @@ example {α : Type*} [MeasurableSpace α] (P : Measure α) [IsProbabilityMeasure
 
   sorry
 
-#check (true.toNat : ℝ)
+
+variable {α :Type*}
+
+-- PR xxx
+-- should go to List.idxsOf
+lemma List.idxsOf_toFinset_subset_range_length [BEq α] (l : List α) (a : α) :
+    (l.idxsOf a).toFinset ⊆ Finset.range (l.length) := by
+  refine Finset.subset_range.mpr (fun x hx ↦ ?_)
+  simp only [mem_toFinset, mem_idxsOf_iff_getElem_sub_pos, Nat.zero_le, Nat.sub_zero,
+    true_and] at hx
+  exact hx.1
+
+-- PR xxx
+-- should go to List.idxsOf
+@[simp]
+lemma List.idxsOf_toFinset_card_eq_count [BEq α] (l : List α) (a : α):
+    (l.idxsOf a).toFinset.card = l.count a := by
+  rw [List.card_toFinset, List.Nodup.dedup List.nodup_idxsOf, List.length_idxsOf]
+
+-- PR xxx
+lemma List.ofFn_trueFinset (n : ℕ) (l : List Bool) (hl : l.length = n) :
+    List.ofFn (fun (i : Fin n) => decide (i.val ∈ (l.idxsOf true).toFinset)) = l := by
+  apply List.ext_get
+  · simp only [hl, List.length_ofFn]
+  · intro i hi₁ hi₂
+    simp [hi₂]
+
+-- PR xxx
+lemma trueFinset_eq_Fn (n : ℕ) (s : Finset ℕ) (hs : s ⊆ Finset.range n) :
+  List.toFinset ((List.ofFn fun (i : Fin n) => decide (i.val ∈ s)).idxsOf true) = s := by
+  ext x
+  simp only [List.mem_toFinset, List.mem_idxsOf_iff_getElem_sub_pos, Nat.zero_le, Nat.sub_zero,
+    List.getElem_ofFn, beq_true, decide_eq_true_eq, List.length_ofFn, exists_prop, true_and,
+    and_iff_right_iff_imp]
+  exact fun h ↦ Finset.mem_range.mp (hs h)
+
+-- PR xxx
+lemma count_true_eq_card {n : ℕ} (s : Finset ℕ) (hs : s ⊆ Finset.range n) :
+    List.count true (List.ofFn fun (i : Fin n) => decide (i.val ∈ s)) = s.card := by
+  rw [← List.idxsOf_toFinset_card_eq_count]
+  congr
+  exact trueFinset_eq_Fn n s hs
+
+-- PR xxx
+def Equiv_listset_powersetCard {n k : ℕ} :{ l : List Bool | l.length = n ∧ l.count true = k } ≃ Finset.powersetCard k (Finset.range n) where
+  toFun := fun ⟨l, hl⟩ ↦ ⟨(l.idxsOf true).toFinset,
+  by
+    rw [← hl.2, ← hl.1]
+    exact Finset.mem_powersetCard.mpr ⟨List.idxsOf_toFinset_subset_range_length l true, List.idxsOf_toFinset_card_eq_count l true⟩⟩
+  invFun := fun ⟨s, hs⟩ ↦ ⟨List.ofFn (fun (i : Fin n) ↦ i ∈ s), by
+    simp only [Set.mem_setOf_eq, List.length_ofFn, true_and]
+    simp only [Finset.mem_powersetCard] at hs
+    rw [count_true_eq_card s hs.1]
+    exact hs.2
+  ⟩
+  left_inv := by
+    simp only [LeftInverse, Set.coe_setOf, Set.mem_setOf_eq, Subtype.forall, Subtype.mk.injEq,
+      forall_and_index]
+    intro l hl1 hl2
+    apply List.ofFn_trueFinset _ _ hl1
+  right_inv := by
+    simp [RightInverse, LeftInverse]
+    exact fun s hs1 hs2 ↦ trueFinset_eq_Fn n s hs1
+
+-- PR xxx
+lemma count_encard_eq_choose (k n : ℕ) : { l : List Bool | l.length = n ∧ l.count true = k}.encard = (n.choose k) := by
+  rw [Set.encard_congr (Equiv_listset_powersetCard)]
+  norm_cast
+  rw [Finset.card_powersetCard k (Finset.range n), Finset.card_range]
+
+
+
+section List
+
+/- lemma List_idx_ofFn (n : ℕ) (s : Finset (Fin n)) :
+  List.toFinset ((List.ofFn fun (i : Fin n) => decide (i ∈ s)).idxsOf true) =
+    Finset.image (fun i ↦ i.val) s := by
+  ext x
+  simp only [List.mem_toFinset, List.mem_idxsOf_iff_getElem_sub_pos, Nat.zero_le, Nat.sub_zero,
+    List.getElem_ofFn, beq_true, decide_eq_true_eq, List.length_ofFn, true_and, Finset.mem_image]
+  refine ⟨fun ⟨h1, h2⟩ ↦ ?_, fun ⟨i, h⟩ ↦ ?_⟩
+  · use ⟨x, h1⟩
+  · grind
+-/
+end List
