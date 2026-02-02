@@ -424,3 +424,73 @@ section List
   · grind
 -/
 end List
+
+
+
+variable {α : Type*}
+
+
+@[simp]
+lemma List.Vector.listGet_eq_get {n : ℕ} (l : List.Vector α n) :
+    l.toList.get ≍ l.get := by
+  obtain ⟨l1, l2⟩ := l
+  subst l2
+  rfl
+
+example (n : ℕ) (f : Fin n → α) : (List.ofFn f).length = n := by exact List.length_ofFn
+
+@[simp]
+lemma List.Vector.listOfFn_eq_OfFn {n : ℕ} (f : Fin n → α) :
+    (⟨List.ofFn f, (List.length_ofFn (f := f))⟩ : List.Vector α n) ≍ List.Vector.ofFn f := by
+  obtain ⟨l1, l2⟩ := List.Vector.ofFn f
+  subst l2
+  refine heq_of_eq ?_
+  simp
+
+
+  rfl
+
+example (f : Fin n → α) : (List.Vector.ofFn f).length = n := by
+
+  exact Nat.add_zero n
+
+theorem lget_ofFn {n} (l : List α) (hl : l.length = n) (f : Fin n → α) (i) :
+    List.get (List.ofFn f) i = f ((List.length_ofFn (f := f)).symm ▸ i) := by
+  simp only [List.get_eq_getElem, List.getElem_ofFn]
+  congr
+  · simp
+  · simp
+
+
+#find_home List.Vector.listGet_eq_get
+
+@[simp]
+lemma HEq.get (n : ℕ) (v : List.Vector α n) : v.get ≍ v.val.get := by
+  obtain ⟨v1, v2⟩ := v
+  subst v2
+  rfl
+
+@[simp]
+lemma List.Vector.listOfFn_get {n : ℕ} (v : List.Vector α n) :
+    List.ofFn (List.Vector.get v) = v.val := by
+  rw [← List.ofFn_get v.val]
+  aesop
+
+lemma List.Vector.ofFn_getList {n : ℕ} (v : List.Vector α n) :
+    List.Vector.ofFn (List.get v.val) = v.prop.symm ▸ v := by
+  ext i
+  obtain ⟨v1, v2⟩ := v
+  subst v2
+  simp
+  congr
+
+lemma List.count_eq_card [DecidableEq α] (l : List α) (a : α)
+    [DecidablePred fun i ↦ l.get i = a] :
+    List.count a l = Finset.card {i : Fin l.length | l[i] = a} := by
+  rw [← List.card_idxsOf_toFinset_eq_count]
+  refine card_bij (fun b hb ↦ ⟨b, by aesop⟩) (fun c hc ↦ ?_) (fun d hd1 hd2 hd3 ↦ by simp)
+    (fun e he ↦ by aesop)
+  simp only [mem_toFinset, mem_idxsOf_iff_getElem_sub_pos, Nat.zero_le, Nat.sub_zero, beq_iff_eq,
+    true_and] at hc
+  obtain ⟨d, hd⟩ := hc
+  simp [hd]

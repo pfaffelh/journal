@@ -790,13 +790,16 @@ section sequence
 -- `MassFunction`s on lists
 
 -- to List.traverse or List.sequence
+#check sequence (t := flip List.Vector 0) (f := MassFunction) (List.Vector.nil (α := MassFunction α))
 
 @[simp]
-lemma _root_.List.sequence_nil {α : Type u} {f : Type u → Type u} [Applicative f] : sequence ([] : List (f α)) = (Pure.pure []) := by
+lemma _root_.List.Vector.sequence_nil {α : Type u} {f : Type u → Type u} [Applicative f] : sequence (t := flip List.Vector 0) (List.Vector.nil (α := f α)) = (Pure.pure List.Vector.nil) := by
   rfl
 
 @[simp]
-lemma _root_.List.sequence_cons {α : Type u} {f : Type u → Type u} [Applicative f] (μs : List (f α)) (ν : f α) : List.cons <$> ν <*> (sequence μs) = sequence (ν::μs) := by
+lemma _root_.List.Vector.sequence_cons {α : Type u} {f : Type u → Type u} [Applicative f] (μs : List.Vector (f α) n) (ν : f α) : List.Vector.cons <$> ν <*> (sequence (t := flip List.Vector n) μs) = sequence (t := flip List.Vector (n + 1)) (List.Vector.cons ν μs) := by
+  obtain ⟨μs1, μs2⟩ := μs
+  subst μs2
   rfl
 
 open Classical in
@@ -804,16 +807,47 @@ lemma indicator_mul (a : α) (b : β) (s : Set α) (t : Set β) (f : α → ℝ�
   simp only [Set.indicator]
   aesop
 
+-- infrastructure
+@[simp]
+lemma List.Vector.eq_iff {n : ℕ} (l l' : List.Vector α n) :
+  l = l' ↔ l.toList = l'.toList := by
+  refine Iff.symm (Injective.eq_iff ?_)
+  intro l l' h
+  obtain ⟨lv, lp⟩ := l
+  congr
+
+@[simp]
+lemma List.Vector.cons.injEq {n : ℕ} (a : α) (l : List.Vector α n) (a' : α) (l' : List.Vector α n) :
+  (a ::ᵥ l = a' ::ᵥ l') = (a = a' ∧ l = l') := by
+  simp
+
 open Classical
+lemma List.Vector.pure_cons_apply_cons {n : ℕ} (a a' : α) (l l' : List.Vector α n) : pure (a' ::ᵥ l') (a ::ᵥ l) = (if a = a' ∧ l = l' then 1 else 0) := by
+  rw [pure, Set.indicator]
+  simp
+
+/-
 lemma list_pure_cons_apply_cons (a a' : α) (l l' : List α) : pure (a' :: l') (a :: l) = if a = a' ∧ l = l' then 1 else 0 := by
   rw [pure, Set.indicator]
-  simp
+  simp only [Set.mem_singleton_iff,
+    List.cons.injEq, Pi.one_apply]
+-/
 
-open Classical
+-- no equivalent in List.Vector exists since the length is wrong anyway.
 lemma list_pure_cons_apply_nil {a : α} {l : List α} : pure (a :: l) [] = 0 := by
   rw [pure, Set.indicator]
-  simp
+  simp only [Set.mem_singleton_iff, List.nil_eq, reduceCtorEq, ↓reduceIte]
 
+
+lemma List.Vector.cons_map_seq_do {n : ℕ} (μs : MassFunction (List.Vector α n)) (ν : MassFunction α) :
+  (do
+    let X ← ν
+    let Y ← μs
+    return (X ::ᵥ Y)
+  ) = (List.Vector.cons <$> ν <*> μs) := by
+  simp [monad_norm]
+
+/-
 lemma list_cons_map_seq_do (μs : MassFunction (List α)) (ν : MassFunction α) :
   (do
     let X ← ν
@@ -821,7 +855,17 @@ lemma list_cons_map_seq_do (μs : MassFunction (List α)) (ν : MassFunction α)
     return (X :: Y)
   ) = (List.cons <$> ν <*> μs) := by
   simp [monad_norm]
+-/
 
+lemma List.Vector.sequence_cons_do {n : ℕ} (μs : (List.Vector (MassFunction α) n)) (ν : MassFunction α) :
+  (do
+    let X ← ν
+    let Y ← sequence (t := flip List.Vector n) μs
+    return (X ::ᵥ Y)
+  ) = sequence (t := flip List.Vector (n + 1)) (ν ::ᵥ μs) := by
+  simp [sequence, traverse, monad_norm]
+
+/-
 lemma list_sequence_cons_do (μs : (List (MassFunction  α))) (ν : MassFunction α) :
   (do
     let X ← ν
@@ -829,21 +873,51 @@ lemma list_sequence_cons_do (μs : (List (MassFunction  α))) (ν : MassFunction
     return (X :: Y)
   ) = sequence (ν :: μs) := by
   simp [sequence, monad_norm]
+-/
 
-lemma cons_map_seq_nil (μs : MassFunction (List α)) (ν : MassFunction α) : (ν >>= fun X => μs >>= Pure.pure ∘ List.cons X) = (List.cons <$> ν <*> μs)  := by
+lemma cons_map_seq_nil {n : ℕ} (μs : MassFunction (List.Vector α n)) (ν : MassFunction α) : (ν >>= fun X => μs >>= Pure.pure ∘ List.Vector.cons X) = (List.Vector.cons <$> ν <*> μs)  := by
   simp [monad_norm]
 
-lemma cons_map_seq_apply (μs : MassFunction (List α)) (ν : MassFunction α) (l : List α): (List.cons <$> ν <*> μs) l = ∑' (a : α), ν a * ∑' (a_1 : List α), μs a_1 * pure (a :: a_1) l := by
+/-
+lemma cons_map_seq_nil (μs : MassFunction (List α)) (ν : MassFunction α) : (ν >>= fun X => μs >>= Pure.pure ∘ List.cons X) = (List.cons <$> ν <*> μs)  := by
+  simp [monad_norm]
+-/
+
+lemma cons_map_seq_apply {n : ℕ} (μs : MassFunction (List.Vector α n)) (ν : MassFunction α) (l : List.Vector α (n + 1)): (List.Vector.cons <$> ν <*> μs) l = ∑' (a' : α), ν a' * ∑' (l' : List.Vector α n), μs l' * pure (a' ::ᵥ l') l := by
   simp [monad_norm]
   rw [← bind_eq_bind, bind_apply]
   simp_rw [← bind_eq_bind, bind_apply]
   simp_rw [← pure_eq_pure, comp_apply]
 
-lemma cons_map_seq_apply_nil (μs : MassFunction (List α)) (ν : MassFunction α) : (List.cons <$> ν <*> μs) [] = 0 := by
-  rw [cons_map_seq_apply]
-  simp_rw [list_pure_cons_apply_nil]
-  simp
+/-
+lemma cons_map_seq_apply (μs : MassFunction (List α)) (ν : MassFunction α) (l : List α): (List.cons <$> ν <*> μs) l = ∑' (a : α), ν a * ∑' (a_1 : List α), μs a_1 * pure (a :: a_1) l := by
+  simp [monad_norm]
+  rw [← bind_eq_bind, bind_apply]
+  simp_rw [← bind_eq_bind, bind_apply]
+  simp_rw [← pure_eq_pure, comp_apply]
+-/
 
+-- does not make sense for List.Vector since lengths do not match
+lemma cons_map_seq_apply_nil (μs : MassFunction (List α)) (ν : MassFunction α) : (List.cons <$> ν <*> μs) [] = 0 := by
+  sorry
+  --rw [cons_map_seq_apply]
+  --simp_rw [list_pure_cons_apply_nil]
+  --simp
+
+lemma List.Vector.cons_map_seq_apply_cons {n : ℕ} (μs : MassFunction (List.Vector α n)) (ν : MassFunction α) (l : List.Vector α n) (a : α) : (List.Vector.cons <$> ν <*> μs) (a ::ᵥ l) = ν a * (μs l) := by
+  rw [cons_map_seq_apply]
+  simp_rw [List.Vector.pure_cons_apply_cons]
+  have h (a_1 : α) (a_2 : List.Vector α n) : (if a = a_1 ∧ l = a_2 then 1 else 0) = ({a} : Set α).indicator (1 : α → ℝ≥0∞) a_1 * ({l} : Set (List.Vector α n)).indicator (1 : List.Vector α n → ℝ≥0∞) a_2 := by
+    simp only [Set.indicator]
+    aesop
+  simp_rw [h]
+  conv => left; left; intro a1; right; left; intro a2; rw [← mul_assoc]; rw [mul_comm (μs a2) _, mul_assoc]; rw [Set.indicator.mul_indicator_eq]
+  simp_rw [ENNReal.tsum_mul_left]
+  simp_rw [← tsum_subtype, tsum_singleton, ← mul_assoc, Set.indicator.mul_indicator_eq]
+  simp_rw [ENNReal.tsum_mul_right]
+  rw [← tsum_subtype, tsum_singleton]
+
+/-
 lemma list_cons_map_seq_apply_cons (μs : MassFunction (List α)) (ν : MassFunction α) (l : List α) (a : α) : (List.cons <$> ν <*> μs) (a :: l) = ν a * (μs l) := by
   rw [cons_map_seq_apply]
   simp_rw [list_pure_cons_apply_cons]
@@ -856,23 +930,50 @@ lemma list_cons_map_seq_apply_cons (μs : MassFunction (List α)) (ν : MassFunc
   simp_rw [← tsum_subtype, tsum_singleton, ← mul_assoc, Set.indicator.mul_indicator_eq]
   simp_rw [ENNReal.tsum_mul_right]
   rw [← tsum_subtype, tsum_singleton]
+-/
 
+-- does not make sense for List.Vector
 @[simp]
 lemma sequence_cons_apply_nil (μs : List (MassFunction α)) (ν : MassFunction α) : (sequence (ν::μs)) [] = 0 := by
   simp only [sequence, List.traverse_cons, id_eq]
   exact cons_map_seq_apply_nil (sequence μs) ν
 
+lemma List.Vector.sequence_cons_apply_cons {n : ℕ} (μs : List.Vector (MassFunction α) n) (ν : MassFunction α) (l : List.Vector α n) (a : α) : (sequence (t := flip List.Vector (n + 1)) (ν ::ᵥ μs)) (a ::ᵥ l) = (ν a) * ((sequence (t := flip List.Vector n) μs) l) := by
+  rw [← List.Vector.sequence_cons]
+  exact List.Vector.cons_map_seq_apply_cons (sequence (t := flip List.Vector n) μs) ν l a
+
+/-
 lemma list_sequence_cons_apply_cons (μs : List (MassFunction α)) (ν : MassFunction α) (l : List α) (a : α) : (sequence (ν::μs)) (a::l) = (ν a)*((sequence μs) l) := by
   exact list_cons_map_seq_apply_cons (sequence μs) ν l a
+-/
 
-example (s t : Set α) (h : s ⊆ t) (m : MassFunction α) : m.toMeasure s ≤ m.toMeasure t := by
-  exact
-  OuterMeasureClass.measure_mono m.toMeasure h
+-- infrastructure
+@[simp]
+lemma List.Vector.nil_iff (l : List.Vector α 0) : l = List.Vector.nil := by simp
 
-example (a : ℝ≥0∞) : a ≤ 0 ↔ a = 0 := by exact nonpos_iff_eq_zero
+@[simp]
+lemma List.Vector.nil_val : (List.Vector.nil (α := α)).val = [] := by
+  congr
 
 
-lemma sequence_apply₀ (μs : List (MassFunction α)) (l : List α) (hl : l.length = μs.length) :
+
+lemma sequence_apply₀ {n : ℕ} (μs : List.Vector (MassFunction α) n) (l : List.Vector α n) :
+    (sequence (t := flip List.Vector n) μs) l = List.prod (μs.zipWith (fun a b ↦ a b) l).toList :=
+  by
+  induction μs with
+  | nil =>
+    simp only [List.Vector.nil_iff, List.Vector.sequence_nil]
+    rw [← pure_eq_pure, pure_apply]
+    simp
+  | cons hl =>
+    rw [← List.Vector.cons_head_tail l, List.Vector.sequence_cons_apply_cons]
+    simp only [Nat.succ_eq_add_one, Nat.add_one_sub_one,
+      List.Vector.zipWith_toList, List.Vector.toList_cons]
+    rw [List.zipWith_cons_cons]
+    simp [hl]
+
+/-
+lemma ssequence_apply₀ (μs : List (MassFunction α)) (l : List α) (hl : l.length = μs.length) :
     (sequence μs) l = List.prod (μs.zipWith (fun a b ↦ a b) l) :=
   by
   induction μs generalizing l with
@@ -888,7 +989,10 @@ lemma sequence_apply₀ (μs : List (MassFunction α)) (l : List α) (hl : l.len
       rw [list_sequence_cons_apply_cons]
       rw [ih l hl]
       simp
+-/
 
+-- does not make sense for List.Vector
+/-
 lemma sequence_apply₁ (μs : List (MassFunction α)) (l : List α) (hl : ¬ l.length = μs.length) :
     (sequence μs) l = 0 :=
   by
@@ -921,20 +1025,30 @@ lemma sequence_support_subset (μs : List (MassFunction α)) : (sequence μs).su
   by_contra h
   apply hl
   simp [sequence_apply, h]
+-/
 
+@[simp]
+lemma List.Vector.prod_apply_replicate {n : ℕ} (l : List.Vector α n) (f : α → β) :
+  l.map f = (List.Vector.replicate n f).zipWith (fun a b ↦ a b) l := by
+  induction l with
+  | nil => simp
+  | cons a => simp [a]
 
+/-
 @[simp]
 lemma prod_apply_replicate (l : List α) (f : α → β) :
   l.map f = (List.replicate l.length f).zipWith (fun a b ↦ a b) l := by
   induction l with
   | nil => simp
   | cons a l ih => simp [List.length, ih]; rfl
+-/
 
 lemma cons_eq_append_singleton (a : α) (l : List α) : (a::l) = [a] ++ l := by
   simp only [List.cons_append, List.nil_append]
 
 lemma List.nmem_toFinset (b : α) (l : List α) [DecidableEq α] : b ∉ l.toFinset ↔ b ∉ l := by
   rw [List.mem_toFinset]
+
 
 lemma tprod_eq_prod_of_pow_count (l : List α) (f : α → ℝ≥0∞) [DecidableEq α] : (∏' a, (f a)^(l.count (α := α) a)) = (∏ a ∈ l.toFinset, f a ^ (l.count (α := α) a)) := by
   rw [tprod_eq_prod]
@@ -949,15 +1063,41 @@ lemma tsum_eq_sum_of_mul_count (l : List α) (f : α → ℝ≥0∞) : (∑' a, 
   rw [hb]
   ring
 
+@[simp]
+lemma List.Vector.zipWith_coe {n : ℕ} (f : List.Vector (α → β) n) (l : List.Vector α n) : (List.Vector.zipWith (fun a b => a b) f l).val = (List.zipWith (fun a b => a b) f.val l.val) := by rfl
+
+@[simp]
+lemma List.Vector.replicate_coe {n : ℕ} (a : α) : (List.Vector.replicate n a).val = List.replicate n a := by
+  rfl
+
+lemma List.Vector.map_coe {n : ℕ} (l : List.Vector α n) : (List.Vector.map f l).val = List.map f l.val := by
+  simp only [prod_apply_replicate, zipWith_coe, replicate_coe]
+  refine List.ext_get (by simp) (fun _ _ _ ↦ by simp)
+
+-- def List.Vector.count {n : ℕ} (l : List.Vector α n) (a : α) : Fin (n + 1) := ⟨l.val.count a, lt_of_le_of_lt l.val.count_le_length (lt_of_le_of_lt l.prop.le (lt_add_one n))⟩
+
+lemma List.Vector.map_sum_eq_count {n : ℕ} (l : List.Vector α n) (f : α → ℝ≥0∞) : (List.Vector.map f l).val.sum = ∑' (a : α), (l.val.count a) * (f a) := by
+  rw [tsum_eq_sum_of_mul_count]
+  rw [List.Vector.map_coe]
+  rw [Finset.sum_list_map_count]
+  simp only [nsmul_eq_mul]
+
+/-
 lemma list_map_sum_eq_count (l : List α) (f : α → ℝ≥0∞) : (List.map f l).sum = ∑' (a : α), (l.count a) * (f a) := by
   rw [tsum_eq_sum_of_mul_count]
   rw [Finset.sum_list_map_count]
   simp only [nsmul_eq_mul]
+-/
 
+lemma List.Vector.map_prod_eq_count {n : ℕ} (l : List.Vector α n) (f : α → ℝ≥0∞) [DecidableEq α] : (List.Vector.map f l).val.prod = ∏' (a : α), (f a) ^ (l.val.count a) := by
+  rw [tprod_eq_prod_of_pow_count]
+  exact Finset.prod_list_map_count l.val f
+
+/-
 lemma list_map_prod_eq_count (l : List α) (f : α → ℝ≥0∞) [DecidableEq α] : (List.map f l).prod = ∏' (a : α), (f a) ^ (l.count a) := by
   rw [tprod_eq_prod_of_pow_count]
   exact Finset.prod_list_map_count l f
-
+-/
 -- define marginal distributions
 
 
@@ -967,7 +1107,8 @@ end sequence
 
 section iidSequence
 
-noncomputable def iidSequence (n : ℕ) (μ : MassFunction α) :  MassFunction (List α) := sequence (List.replicate n μ)
+noncomputable def iidSequence (n : ℕ) (μ : MassFunction α) : MassFunction (List.Vector α n) := sequence (t := flip List.Vector n) (List.Vector.replicate n μ)
+
 
 lemma iidSequence_apply (n : ℕ) (μ : MassFunction α) (l : List α) :
     (iidSequence n μ) l = ({l : List α | l.length = n}.indicator (fun l ↦ (List.prod (l.map μ))) l) := by
@@ -1066,159 +1207,75 @@ noncomputable def binom₃ (p : ℝ≥0∞) (n : ℕ) : MassFunction ℕ := (iid
 lemma List.length_sub_count_false (l : List Bool) : l.length - l.count true = l.count false := by
   rw [Nat.sub_eq_iff_eq_add (List.count_le_length), add_comm, List.count_true_add_count_false]
 
--- PR xxx
--- should go to List.idxsOf
-lemma List.idxsOf_toFinset_subset_range_length [BEq α] (l : List α) (a : α) :
-    (l.idxsOf a).toFinset ⊆ Finset.range (l.length) := by
-  refine Finset.subset_range.mpr (fun x hx ↦ ?_)
-  simp at hx
-  exact hx.1
+open Finset
 
--- PR xxx
--- should go to List.idxsOf
-@[simp]
-lemma List.idxsOf_toFinset_card_eq_count [BEq α] (l : List α) (a : α):
+lemma List.card_idxsOf_toFinset_eq_count {α : Type*} [BEq α] (l : List α) (a : α) :
     (l.idxsOf a).toFinset.card = l.count a := by
   rw [List.card_toFinset, List.Nodup.dedup List.nodup_idxsOf, List.length_idxsOf]
 
--- PR xxx
-lemma List.ofFn_trueFinset (n : ℕ) (l : List Bool) (hl : l.length = n) :
-    List.ofFn (fun (i : Fin n) => decide (i.val ∈ (l.idxsOf true).toFinset)) = l := by
-  apply List.ext_get
-  · simp only [hl, List.length_ofFn]
-  · intro i hi₁ hi₂
-    simp [hi₂]
+lemma List.count_ofFn_eq_card [DecidableEq α] (n : ℕ) (f : Fin n → α) (a : α)
+    [DecidablePred fun i ↦ f i = a] :
+    List.count a (List.ofFn f) = Finset.card {i | f i = a} := by
+  rw [← List.card_idxsOf_toFinset_eq_count]
+  let s := {i | f i = a}.toFinset
+  refine card_bij (fun b hb ↦ ⟨b, ?_⟩) (fun c hc ↦ ?_) (fun d hd1 hd2 hd3 ↦ ?_) (fun e he ↦ ?_)
+  · aesop
+  · simp only [List.mem_toFinset, List.mem_idxsOf_iff_getElem_sub_pos, Nat.zero_le, Nat.sub_zero,
+    List.getElem_ofFn, beq_iff_eq, List.length_ofFn, true_and] at hc
+    simp only [Finset.mem_filter, mem_univ, true_and]
+    exact Exists.elim hc fun a_1 a ↦ a
+  · simp
+  · aesop
 
--- PR xxx
-lemma trueFinset_eq_Fn (n : ℕ) (s : Finset ℕ) (hs : s ⊆ Finset.range n) :
-  List.toFinset ((List.ofFn fun (i : Fin n) => decide (i.val ∈ s)).idxsOf true) = s := by
-  ext x
-  simp only [List.mem_toFinset, List.mem_idxsOf_iff_getElem_sub_pos, Nat.zero_le, Nat.sub_zero,
-    List.getElem_ofFn, beq_true, decide_eq_true_eq, List.length_ofFn, exists_prop, true_and,
-    and_iff_right_iff_imp]
-  exact fun h ↦ Finset.mem_range.mp (hs h)
+/-- The types `Fin n → Bool` and `Finset (Fin n)` are eqivalent by using `s : Finset (Fin n)`
+as the set where the `f : Fin n → Bool` is `true`. -/
+def Equiv_fnFinBool_finsetFin (n : ℕ) : (Fin n → Bool) ≃ (Finset (Fin n)) where
+  toFun := fun f ↦ {i | f i}
+  invFun := fun s i ↦ i ∈ s
+  left_inv := fun l ↦ by simp
+  right_inv := fun l ↦ by simp
 
--- PR xxx
-lemma count_true_eq_card {n : ℕ} (s : Finset ℕ) (hs : s ⊆ Finset.range n) :
-    List.count true (List.ofFn fun (i : Fin n) => decide (i.val ∈ s)) = s.card := by
-  rw [← List.idxsOf_toFinset_card_eq_count]
-  congr
-  exact trueFinset_eq_Fn n s hs
+lemma Equiv_fnFinBool_finsetFin_mem_powersetCard_iff (n k : ℕ) (f : Fin n → Bool) :
+    #{i | f i = true} = k ↔ (Equiv_fnFinBool_finsetFin n) f ∈ powersetCard k univ := by
+  simp [Equiv_fnFinBool_finsetFin]
 
+/-- The number of maps `f : Fin n → Bool` with `#{i | f i} = k` equals `n.choose k`. -/
+-- must stay here
+lemma card_fnFinBool {k n : ℕ} : #{ f : Fin n → Bool | #{i | f i} = k } = n.choose k := by
+  conv => right; rw [← card_fin n]
+  rw [← card_powersetCard k (univ : Finset (Fin n))]
+  apply card_equiv (Equiv_fnFinBool_finsetFin n) (fun f ↦ ?_)
+  simp only [mem_filter, mem_univ, true_and]
+  exact Equiv_fnFinBool_finsetFin_mem_powersetCard_iff n k f
 
+/-- The types `List.Vector α n` and `Fin n → α`are eqivalent by using `List.ofFn`. -/
+def Equiv_fnFinBool_listVector (n : ℕ) : List.Vector α n ≃ (Fin n → α) where
+  toFun := fun l i ↦ l.val.get (l.prop.symm ▸ i)
+  invFun := fun f ↦ ⟨List.ofFn f, List.length_ofFn⟩
+  left_inv := fun l ↦ by
+    obtain ⟨val, property⟩ := l
+    subst property
+    simp_rw [List.get_eq_getElem]
+    exact Subtype.ext (List.ofFn_getElem val)
+  right_inv := fun f ↦ by
+    simp only [List.get_eq_getElem, List.getElem_ofFn]
+    ext i
+    congr <;> simp
 
--- PR xxx
-def Equiv_functionset_powersetCard {n k : ℕ} : ↥{ f : Fin n → Bool | Finset.card {i | f i = true} = k } ≃ ↥(Finset.powersetCard k (Finset.range n)) where
-  toFun := by sorry
-  invFun := by sorry
-  left_inv := by sorry
-  right_inv := by sorry
-
-example (n : ℕ) : Fintype (Fin n → Bool) := by
-  exact Pi.instFintype
-
-
-
-def Equiv_listset_powersetCard {n k : ℕ} : ↥{ l : List Bool | l.length = n ∧ l.count true = k } ≃ ↥(Finset.powersetCard k (Finset.range n)) where
-  toFun := fun ⟨l, hl⟩ ↦ ⟨(l.idxsOf true).toFinset,
-  by
-    rw [← hl.2, ← hl.1]
-    exact Finset.mem_powersetCard.mpr ⟨List.idxsOf_toFinset_subset_range_length l true, List.idxsOf_toFinset_card_eq_count l true⟩⟩
-  invFun := fun ⟨s, hs⟩ ↦ ⟨List.ofFn (fun (i : Fin n) ↦ i ∈ s), by
-    simp only [Set.mem_setOf_eq, List.length_ofFn, true_and]
-    simp only [Finset.mem_powersetCard] at hs
-    rw [count_true_eq_card s hs.1]
-    exact hs.2
-  ⟩
-  left_inv := by
-    simp only [LeftInverse, Set.coe_setOf, Set.mem_setOf_eq, Subtype.forall, Subtype.mk.injEq,
-      forall_and_index]
-    intro l hl1 hl2
-    apply List.ofFn_trueFinset _ _ hl1
-  right_inv := by
-    simp [RightInverse, LeftInverse]
-    exact fun s hs1 hs2 ↦ trueFinset_eq_Fn n s hs1
-
-
-lemma count_encard_eq_choose (k n : ℕ) : { l : List Bool | l.length = n ∧ l.count true = k}.encard = (n.choose k) := by
-  rw [Set.encard_congr (Equiv_listset_powersetCard)]
-  norm_cast
-  rw [Finset.card_powersetCard k (Finset.range n), Finset.card_range]
+lemma card_listVector_card {k n : ℕ} :
+    #{v : List.Vector Bool n | v.val.count true = k} = n.choose k := by
+  rw [← card_fnFinBool]
+  apply card_equiv (Equiv_fnFinBool_listVector n) (fun v ↦ ?_)
+  obtain ⟨l, hl⟩ := v
+  simp only [mem_filter, mem_univ, true_and, Equiv_fnFinBool_listVector, List.get_eq_getElem,
+    Equiv.coe_fn_mk]
+  refine ⟨fun h ↦ ?_,fun h ↦ ?_⟩ <;> rw [← h, ← List.count_ofFn_eq_card n _ true] <;> aesop
 
 
 
 
 
 
-def Equiv_list (l : List α) (a : α) : { i : Fin (l.length) // l[i.val] = a } ≃ { x // ∃ (h : x < l.length), l[x] = a } where
-  toFun := fun i ↦ ⟨i.val.val, ⟨i.val.prop, i.prop⟩⟩
-  invFun := fun ⟨x, hx⟩ ↦ ⟨⟨x, hx.1⟩, hx.2⟩
-  left_inv := by
-    simp
-    intro l
-    simp
-  right_inv := by
-    simp
-    intro l
-    simp
-
-def Equiv_function {n : ℕ} (f : Fin n → α) (a : α) : {x : Fin n // f x = a} ≃ {x : ℕ // ∃ (h : x < n), f ⟨x, h⟩ = a} where
-  toFun := fun i ↦ ⟨i.val.val, ⟨i.val.prop, i.prop⟩⟩
-  invFun := fun ⟨x, hx⟩ ↦ ⟨⟨x, hx.1⟩, hx.2⟩
-  left_inv := by
-    intro l
-    simp
-  right_inv := by
-    intro l
-    simp
-
-
-
-open Classical in
-lemma card_eq_count (l : List α) (a : α) : Finset.card {i | l.get i = a} = l.count a := by
-  rw [← List.idxsOf_toFinset_card_eq_count]
-  refine Finset.card_eq_of_equiv ?_
-  simp
-  exact Equiv_list l a
-
-lemma preimage_true_card_eq_count_ofFn {n : ℕ} (f : Fin n → Bool) : Finset.card {x | f x = true} = List.count true (List.ofFn f) := by
-  rw [← List.idxsOf_toFinset_card_eq_count]
-  apply Finset.card_eq_of_equiv
-  simp only [Finset.mem_filter, Finset.mem_univ, true_and, List.mem_toFinset,
-    List.mem_idxsOf_iff_getElem_sub_pos, zero_le, tsub_zero, List.getElem_ofFn, beq_true,
-    List.length_ofFn]
-  exact Equiv_function f true
-
-lemma count_true_ofFn_eq_card {n : ℕ} (s : Finset (Fin n)) : List.count true (List.ofFn fun i => decide (i ∈ s)) = s.card := by
-  rw [← preimage_true_card_eq_count_ofFn]
-  simp
-
--- PR xxx
-def Equiv_ofFnCountTrue_finetsetPowersetCard {n k : ℕ} : { f : Fin n → Bool // List.count true (List.ofFn f) = k } ≃ { x : Finset (Fin n) // Finset.card x = k } where
-  toFun := fun ⟨f, hf⟩ ↦ ⟨{ i | (f i) = true}.toFinset,
-  by
-    simp
-    rw [← hf]
-    exact preimage_true_card_eq_count_ofFn f
-  ⟩
-  invFun := fun ⟨s, hs⟩ ↦ ⟨fun (i : Fin n) ↦ i ∈ s, by
-    rw [← hs]
-    exact count_true_ofFn_eq_card s
-  ⟩
-  left_inv := by
-    intro l
-    simp
-  right_inv := by
-    intro
-    simp
-
-lemma count_card_eq_choose (k n : ℕ) : Finset.card { f : Fin n → Bool | (List.ofFn f).count true = k} = (n.choose k) := by
-  rw [← Finset.card_fin n, ← Finset.card_powersetCard k (Finset.univ : Finset (Fin n))]
-  rw [Finset.card_fin n]
-  apply Finset.card_eq_of_equiv
-  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_powersetCard,
-    Finset.subset_univ]
-  exact Equiv_ofFnCountTrue_finetsetPowersetCard
 
 lemma binom₁_eq_binom₃ : binom₃ = binom₁ := by
   ext p n k
@@ -1307,24 +1364,4 @@ end MassFunction
 
 -- nonTop
 
-
 end MeasureTheory
-/- The type `Fin n → Bool` and `Vector Bool n` are equivalent by
-using `Vector.get`. -/
-noncomputable def Equiv_fnFinBool_vector (n : ℕ) : (Fin n → Bool) ≃ (Vector Bool n) where
-  toFun := fun f ↦ ⟨(List.ofFn f).toArray, by simp ⟩
-  invFun := fun v i ↦ v.get i
-  left_inv := fun f ↦ by
-    simp only [List.toArray_ofFn, Vector.get_mk, Fin.getElem_fin, Array.getElem_ofFn, Fin.eta]
-  right_inv := fun v ↦ by
-    simp_all only [List.toArray_ofFn, Vector.mk_eq]
-    ext i hi₁ hi₂ : 1
-    · simp_all only [Array.size_ofFn, Vector.size_toArray]
-    · simp_all only [Array.getElem_ofFn, Vector.getElem_toArray]
-      rfl
-
-set_option trace.Meta.synthInstance true
-#check Vector.fintype
-noncomputable instance List.Vector.fintype [Fintype α] {n : ℕ} : Fintype (Vector α n) := by
-  haveI := Fintype.ofFinite α
-  exact _root_.Vector.fintype
