@@ -629,9 +629,10 @@ theorem bind_comm (μ₁ : MassFunction α) (μ₂ : MassFunction β) (f : α �
   apply tsum_congr (fun b ↦ tsum_congr (fun a ↦ ?_))
   ring
 
-
-
-
+lemma isProbabilityMeasure_bind_toMeasure {m : MassFunction α} [IsProbabilityMeasure m.toMeasure] {f : α → MassFunction β} (hf₁ : ∀ (a : α), IsProbabilityMeasure (f a).toMeasure) : IsProbabilityMeasure (m.bind f).toMeasure := by
+  rw [bind_coe]
+  refine @isProbabilityMeasure_bind β α ⊤ ⊤ m.toMeasure _ (toMeasure ∘ f) AEMeasurable.of_discrete ?_
+  simp [hf₁]
 
 
 end bind
@@ -653,6 +654,7 @@ lemma toMeasure_pure_apply (a : α) (s : Set α) : (pure a).toMeasure s = s.indi
     simp [h]
   · rw [Set.inter_singleton_eq_empty.mpr h]
     simp [h]
+
 
 lemma pure_coe (a : α) : (pure a).toMeasure = @Measure.dirac α ⊤ a := by
   apply @Measure.ext α ⊤
@@ -686,6 +688,10 @@ lemma bind_pure_comp (f : α → β) (μ : MassFunction α) : μ.bind (fun a ↦
   apply toMeasure_ext
   simp_rw [bind_coe, map_coe, Function.comp_apply', pure_coe]
   rw [Measure.bind_dirac_eq_map (hf := by measurability)]
+
+lemma isProbabilityMeasure_pure_toMeasure (a : α) : IsProbabilityMeasure ((pure a).toMeasure) := by
+  rw [pure_coe]
+  exact @dirac.isProbabilityMeasure α ⊤ a
 
 end pure
 
@@ -725,6 +731,10 @@ theorem seq_apply₂ : seq q p b = ∑' (f : α → β), q f * ∑' (a : α), (f
   funext a
   simp only [Pi.one_apply, mul_ite, mul_one, mul_zero, Set.mem_preimage, Set.mem_singleton_iff]
   grind
+
+lemma isProbabilityMeasure_toMeasure_seq [IsProbabilityMeasure q.toMeasure] [IsProbabilityMeasure (p ()).toMeasure] : IsProbabilityMeasure (seq q p).toMeasure := by
+  rw [bind_map_eq_seq]
+  refine @isProbabilityMeasure_bind_toMeasure β (α → β) q (by infer_instance) (fun m => map m (p ())) (fun a ↦ isProbabilityMeasure_toMeasure_map (p ()) a)
 
 end seq
 
@@ -820,6 +830,9 @@ lemma List.Vector.eq_iff {n : ℕ} (l l' : List.Vector α n) :
 lemma List.Vector.cons.injEq {n : ℕ} (a : α) (l : List.Vector α n) (a' : α) (l' : List.Vector α n) :
   (a ::ᵥ l = a' ::ᵥ l') = (a = a' ∧ l = l') := by
   simp
+
+instance travv (α : Type*) (n : ℕ) : Traversable (flip List.Vector n) := by
+  infer_instance
 
 open Classical
 lemma List.Vector.pure_cons_apply_cons {n : ℕ} (a a' : α) (l l' : List.Vector α n) : pure (a' ::ᵥ l') (a ::ᵥ l) = (if a = a' ∧ l = l' then 1 else 0) := by
@@ -1009,7 +1022,7 @@ lemma sequence_apply₁ (μs : List (MassFunction α)) (l : List α) (hl : ¬ l.
         simp [List.length_cons] at hl
         rw [list_sequence_cons_apply_cons]
         rw [ih l hl]
-        simp
+f        simp
 
 lemma sequence_apply (μs : List (MassFunction α)) (l : List α) :
     (sequence μs) l = if l.length = μs.length then List.prod (μs.zipWith (fun a b ↦ a b) l) else 0 :=
@@ -1099,9 +1112,47 @@ lemma list_map_prod_eq_count (l : List α) (f : α → ℝ≥0∞) [DecidableEq 
   exact Finset.prod_list_map_count l f
 -/
 -- define marginal distributions
+-- set_option maxHeartbeats 0
+lemma isProbabilityMeasure_toMeasure_sequence {n : ℕ} (μs : List.Vector (MassFunction α) n) [∀ i, IsProbabilityMeasure (μs.get i).toMeasure] : IsProbabilityMeasure (sequence (t := flip List.Vector n) μs).toMeasure := by
+  induction n with
+  | zero =>
+    simp [monad_norm]
+    apply isProbabilityMeasure_pure_toMeasure
+  | succ n hn =>
+    let μs.tail' : List.Vector (_) n := μs.tail
+    have g : μs.tail = μs.tail' := by
+      congr
+    rw [← List.Vector.cons_head_tail μs, ← List.Vector.sequence_cons, ← seq_eq_seq, ← map_eq_map, ← List.Vector.get_zero μs]
+    expose_names
+--    have h0 : IsProbabilityMeasure (μs.get 0).toMeasure := by
+--      apply inst 0
+--    have hnI (j : Fin n) : IsProbabilityMeasure (μs.get (Fin.succ j)).toMeasure := by
+--      apply inst (Fin.succ j)
+--    have h4 (i : Fin n) : IsProbabilityMeasure (μs.tail'.get i).toMeasure := by
+--      rw [← g, List.Vector.get_tail]
+--      apply hnI i
+    let β := List.Vector α n
+    let γ := List.Vector α n.succ
+    let q := map (β := β → γ) (α := α) List.Vector.cons (μs.get 0)
+    let p : Unit → MassFunction (List.Vector α n) := fun _ ↦ sequence (t := flip List.Vector n) μs.tail
+
+--    have h1 : IsProbabilityMeasure (p ()).toMeasure := by
+--      simp only [p]
+--      apply @hn μs.tail' h4
+    have h2 : IsProbabilityMeasure q.toMeasure := by
+      apply isProbabilityMeasure_toMeasure_map (μs.get 0)
+    rw [g]
+    exact @isProbabilityMeasure_toMeasure_seq (β := γ) (α := β) (q := q) (p := p) h2
 
 
 
+
+
+
+    -- haveI h3 : @IsProbabilityMeasure (List.Vector α n_1 → List.Vector α (n_1 + 1)) ⊤ (map List.Vector.cons x).toMeasure := by
+    --  apply isProbabilityMeasure_toMeasure_map x
+      sorry
+    -- apply isProbabilityMeasure_toMeasure_seq
 
 end sequence
 
@@ -1110,25 +1161,17 @@ section iidSequence
 noncomputable def iidSequence (n : ℕ) (μ : MassFunction α) : MassFunction (List.Vector α n) := sequence (t := flip List.Vector n) (List.Vector.replicate n μ)
 
 
-lemma iidSequence_apply (n : ℕ) (μ : MassFunction α) (l : List α) :
-    (iidSequence n μ) l = ({l : List α | l.length = n}.indicator (fun l ↦ (List.prod (l.map μ))) l) := by
-  rw [Set.indicator]
-  split_ifs with hl
-  · rw [iidSequence, ← hl]
-    rw [sequence_apply]
-    simp only [List.length_replicate, ↓reduceIte, prod_apply_replicate]
-    rfl
-  · simp only [Set.mem_setOf_eq] at hl
-    rw [iidSequence, sequence_apply]
-    simp [hl]
+lemma iidSequence_apply (n : ℕ) (μ : MassFunction α) (l : List.Vector α n) :
+    (iidSequence n μ) l = (l.map μ).val.prod := by
+  simp only [iidSequence, List.Vector.prod_apply_replicate, List.Vector.zipWith_coe,
+    List.Vector.replicate_coe]
+  rw [sequence_apply₀]
+  congr
 
-lemma iidSequence_apply' (n : ℕ) (μ : MassFunction α) [DecidableEq α] (l : List α) :
-    iidSequence n μ l = ({l : List α | l.length = n}.indicator (fun l ↦ (∏' (a : α), (μ a) ^ (l.count (α := α) a))) l) := by
-  rw [iidSequence_apply n μ l, Set.indicator]
-  split_ifs with hl <;> simp at hl
-  · rw [list_map_prod_eq_count]
-    simp only [Set.mem_setOf_eq, hl, Set.indicator_of_mem]
-  · simp [hl]
+lemma iidSequence_apply' (n : ℕ) (μ : MassFunction α) [DecidableEq α] (l : List.Vector α n) :
+    iidSequence n μ l = (∏' (a : α), (μ a) ^ (l.val.count (α := α) a)) := by
+  rw [iidSequence_apply n μ l]
+  rw [List.Vector.map_prod_eq_count]
 
 lemma pure_sequence (ν : MassFunction α) : sequence [ν] = (ν.map (fun b => [b])) := by
   simp [sequence]
@@ -1176,7 +1219,7 @@ lemma coin_not (p : ℝ≥0) (h : (p : ℝ≥0∞) ≤ 1) : (coin p).map not = c
 
 -- now we come to multiple coins
 
-lemma sequence_coin_apply (p : ℝ≥0∞) (n : ℕ) (l : List Bool) : (iidSequence n (coin p)) l = ({l | l.length = n}.indicator 1 l) * p ^ (l.count true) * (1 - p) ^ (l.count false) := by
+lemma sequence_coin_apply (p : ℝ≥0∞) (n : ℕ) (l : List.Vector Bool n) : (iidSequence n (coin p)) l = ({l | l.length = n}.indicator 1 l) * p ^ (l.val.count true) * (1 - p) ^ (l.val.count false) := by
   rw [iidSequence_apply' n (coin p)]
   simp [coin, Set.indicator]
 
