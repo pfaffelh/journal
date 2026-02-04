@@ -1128,7 +1128,6 @@ lemma card_listVector_card {k n : ℕ} :
 lemma binom₂_eq_binom₁ : binom₂ = binom₁ := by
   ext p n k
   let s (k : ℕ) : Finset (List.Vector Bool n) := {l : List.Vector Bool n | (l.val.count true) = k}
-  let s (k : ℕ) : Finset (List.Vector Bool n) := {l : List.Vector Bool n | (l.val.count true) = k}
   have hs (k : ℕ) : s k = ((fun (l : List.Vector Bool n) => List.count true l.toList) ⁻¹' {k}) := by
     aesop
   have ht (k : ℕ) : ∀ x ∈ s k, x.val.count true = k := by
@@ -1136,13 +1135,15 @@ lemma binom₂_eq_binom₁ : binom₂ = binom₁ := by
   have hf (k : ℕ) : ∀ x ∈ s k, x.val.count false = n - k := by
     intro x hx
     rw [← ht k x hx, List.Vector.length_sub_count_false]
-  have g (i : List.Vector Bool n) : (1 - p) ^ List.count false i.val * p ^ List.count true i.val = (fun (l : List.Vector Bool n) => p ^ List.count true l.val * (1 - p) ^ List.count false l.val) i := by
+  have g (i : List.Vector Bool n) : (1 - p) ^ List.count false i.val * p ^ List.count true i.val =
+    (fun (l : List.Vector Bool n) => p ^ List.count true l.val * (1 - p) ^ List.count false l.val) i := by
     simp [mul_comm]
   rw [binom₁, binom₂, map_apply, toMeasure_apply]
   simp_rw [iidSequence_apply' n (coin p), tprod_bool, coin_apply]
   conv => left; left; intro i; simp only [Bool.false_eq_true, ↓reduceIte]; rw [← hs, g]; rw [Set.indicator.mul_indicator_eq (f := fun l => p ^ List.count true l.val * (1 - p) ^ List.count false l.val) (a := i)]
   rw [tsum_eq_sum (s := s k), ← Finset.tsum_subtype]
-  conv => left; left; intro x; simp; rw [ht k x.val x.prop, hf k x.val x.prop]
+  conv =>
+    left; left; intro x; simp; rw [ht k x.val x.prop, hf k x.val x.prop]
   · simp only [tsum_fintype, univ_eq_attach, sum_const, card_attach, nsmul_eq_mul]
     rw [← card_listVector_card, mul_comm]
   · simp only [Set.indicator_apply_eq_zero, SetLike.mem_coe, mul_eq_zero, pow_eq_zero_iff', ne_eq]
