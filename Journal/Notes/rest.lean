@@ -494,3 +494,18 @@ lemma List.count_eq_card [DecidableEq α] (l : List α) (a : α)
     true_and] at hc
   obtain ⟨d, hd⟩ := hc
   simp [hd]
+
+/- The type `Fin n → Bool` and `Vector Bool n` are equivalent by
+using `Vector.get`. -/
+noncomputable def Equiv_fnFinBool_vector (n : ℕ) : (Fin n → Bool) ≃ (Vector Bool n) where
+  toFun := fun f ↦ ⟨(List.ofFn f).toArray, by simp ⟩
+  invFun := fun v i ↦ v.get i
+  left_inv := fun f ↦ by
+    simp only [List.toArray_ofFn, Vector.get_mk, Fin.getElem_fin, Array.getElem_ofFn, Fin.eta]
+  right_inv := fun v ↦ by
+    simp_all only [List.toArray_ofFn, Vector.mk_eq]
+    ext i hi₁ hi₂ : 1
+    · simp_all only [Array.size_ofFn, Vector.size_toArray]
+    · simp_all only [Array.getElem_ofFn, Vector.getElem_toArray]
+      rfl
+
