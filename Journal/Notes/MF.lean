@@ -1083,8 +1083,14 @@ lemma coin_not (p : ℝ≥0) (h : (p : ℝ≥0∞) ≤ 1) : (coin p).map not = c
   rw [bool_if_not]
 
 lemma Bool_isProbabilityMeasure_not (μ : MassFunction Bool) [IsProbabilityMeasure μ.toMeasure] (b : Bool) : μ (!b) = 1 - μ b := by
-
-  sorry
+  refine ENNReal.eq_sub_of_add_eq' one_ne_top ?_
+  have h : μ.toMeasure Set.univ = μ true + μ false := by
+    simp
+  cases' b with h
+  · rw [Bool.not_false, ← h, ← isProbabilityMeasure_iff]
+    infer_instance
+  · rw [Bool.not_true, add_comm, ← h, ← isProbabilityMeasure_iff]
+    infer_instance
 
 example (a b : Bool) : (!a) = b ↔ ¬a = b := by
   exact not_eq

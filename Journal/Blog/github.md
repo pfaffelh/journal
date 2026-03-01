@@ -1,25 +1,15 @@
-/-
-Copyright (c) 2025 Peter Pfaffelhuber.
-Released under Apache 2.0 license as described in the file LICENSE.
-Author: Peter Pfaffelhuber
--/
-
-import VersoManual
-open Verso Genre Manual
-
-#doc (Manual) "Infrastructure using mathlib" =>
+# Using github and mathlib
 
 When getting started with mathlib, one main issue is the new infrastructure, e.g. using `git`, using pull requests, setting up `vscode` etc.
 
-# Setting up upstream
+## Setting up upstream
+```
 git remote add upstream https://github.com/leanprover-community/mathlib4.git
-
+```
 Install the github issues and prs extension in vscode
 
 
-
-
-# Using github and vscode
+## Using github and vscode
 Mathlib PRs are now done using a forked repository. When you have this, regularly run the following, in order to keep mathlib up-to-date:
 
 
@@ -53,3 +43,6 @@ lake build Mathlib.MeasureTheory.Measure.MassFunction
 lake build Mathlib
 ```
 Maybe add `--verbose` to be really sure that everything will work.
+
+## Doing PR reviews 
+

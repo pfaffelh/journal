@@ -6,7 +6,6 @@ noncomputable def binom₀ (p : ℝ≥0) (h : p ≤ 1) (n : ℕ) : PMF ℕ := do
   let choices ← sequence <| List.replicate n (PMF.bernoulli p h)
   return choices.count true
 
-
 theorem binom_support (p : NNReal) (h0 : 0 < p) (h1 : p < 1) (n : ℕ) :
     (binom₀ p h1.le n).support = Set.Iic n := by
   have : 0 < 1 - p := tsub_pos_of_lt h1

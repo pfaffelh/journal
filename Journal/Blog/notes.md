@@ -1,15 +1,6 @@
-## Usage of this journal
-
-In order to build the website, run
-`lake build; lake exe journal --depth 1 --output _out`
-
-In order to display it, run
-`live-server _out/html-multi/`
-This will reload the webpage when it is built new.
-
 ## Current PRs 
 
-Find my PRs using
+Find my PRs using vscode
 `gh pr list --repo leanprover-community/mathlib4 --author pfaffelh`
 
 ### Current own PRS: 
