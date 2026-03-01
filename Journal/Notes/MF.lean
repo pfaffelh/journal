@@ -1194,7 +1194,7 @@ section uniform
 
 variable {ι : Type*} [Fintype ι] [Inhabited ι]
 
-def uniform : MassFunction ι := fun i ↦ (Finset.univ : Finset ι).card⁻¹
+def uniform : MassFunction ι := fun _ ↦ (Finset.univ : Finset ι).card⁻¹
 
 lemma isProbabilityMeasure_uniform : IsProbabilityMeasure (uniform (ι := ι)).toMeasure := by
   rw [isProbabilityMeasure_iff_tsumOne]
@@ -1207,6 +1207,26 @@ end uniform
 
 
 section binom
+
+example (x y : ℕ) (hx : x < n) (hy : y < m) : x + y < n + m -1 := by
+  linarith
+
+example (n : ℕ) (x : Fin (n + 1)) (y : Bool) : x.val + y.toNat < (n + 1) + 1 := by
+  refine Nat.add_le_add
+
+
+
+
+-- Defining the binomial distribution inductively
+noncomputable def binom_ind (p : ℝ≥0∞) (n : ℕ) : MassFunction (Fin (n + 1)) := match n with
+  | .zero => pure 0
+  | .succ n => do
+    let X ← binom_ind p n
+    let Y ← (coin p)
+    return ⟨X.val + Y.toNat, by linarith⟩
+
+
+fun k ↦ (p ^ k.val * (1 - p) ^ (n - k.val)) * (Nat.choose n k)
 
 -- Defining the binomial distribution via the mass function
 noncomputable def binom₁ (p : ℝ≥0∞) (n : ℕ) : MassFunction (Fin (n + 1)) := fun k ↦ (p ^ k.val * (1 - p) ^ (n - k.val)) * (Nat.choose n k)
@@ -1315,10 +1335,12 @@ def succ_cast (x : Fin (n + 1)) (i : Fin (x + 1)) : Fin (n + 1) := ⟨i.val, lt_
 lemma thinning₁ (p q : ℝ≥0∞) {n : ℕ} (hp : p ≤ 1) (hq : q ≤ 1) : ((binom₁ p n) >>= (fun X ↦ map (succ_cast X) (binom₁ q X.val))) = binom₁ (p * q) n := by
   sorry
 
-lemma thinning₂ (p q : ℝ≥0∞) (hp : p ≤ 1) (hq : q ≤ 1) : (do
-  let X ← coin p
-  let Y ← coin q
-  return X ∧ Y) = coin (p * q) := by
+lemma thinning₂ (p q : ℝ≥0∞) (hp : p ≤ 1) (hq : q ≤ 1) :
+  (do
+    let X ← coin p
+    let Y ← coin q
+    return X ∧ Y)
+  = coin (p * q) := by
   simp [monad_norm]
   simp_rw [← bind_eq_bind]
   haveI h₀ : IsProbabilityMeasure ((coin p).bind fun X => (coin q).bind (Pure.pure ∘ X.and)).toMeasure := by sorry

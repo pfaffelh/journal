@@ -43,3 +43,54 @@ example : ({0} : Set ℕ) = ({0} : Set ℤ) := by
 
 #check SimpleGraph
 #print SimpleGraph
+
+
+
+def IsEven (n : ℕ) := ∃ k, n = 2 * k
+
+example (m n : ℕ) : IsEven m → IsEven (m * n) := by
+  -- Take `k` with `hk : m = 2 * k`
+  intro ⟨k, hk⟩
+  -- We then need to find `l` with `m * n = 2 * l`.
+  -- So, we take `k * n` in the `∃` of `IsEven`.
+  use k * n
+  -- New goal is `⊢ m * n = 2 * (k * n)`
+  -- The rest is rewriting `m = 2 * k` and using associativity
+  rw [hk, mul_assoc]
+
+
+lemma l1 (n : ℕ) : (¬ IsEven n) ↔ ∀ k, n ≠ 2 * k := by
+  simp_rw [IsEven]
+  rw [dvd_iff_exists_eq_mul_right]
+  push_neg
+  rfl
+
+
+
+example (n : ℕ) : IsEven n ↔ IsEven (n*n) := by
+  constructor
+  · intro ⟨k, hk⟩
+    use k * n
+    simp [hk]
+    ring
+  · contrapose
+    intro h
+    obtain h' := (l1 n).mp h
+    rw [l1]
+    intro k
+
+    intro h k
+
+
+
+    intro ⟨k, hk⟩
+    by_contra
+    have h : ¬ IsEven (n * n):= by sorry
+
+    apply h
+
+
+    rw [IsEven]
+    apply?
+    sorry
+  sorry
