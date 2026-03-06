@@ -959,12 +959,15 @@ lemma cons_map_seq_apply_cons [DecidableEq α] {n : ℕ} (μs : MassFunction (Li
   rw [← tsum_subtype, tsum_singleton]
 
 -- MF
+lemma sequence_cons_eq_seq_sequence [DecidableEq α] {n : ℕ} (μs : List.Vector (MassFunction α) n) (ν : MassFunction α) : (sequence (t := flip List.Vector (n + 1)) (ν ::ᵥ μs)) = seq (List.Vector.cons )
+
 lemma sequence_cons_apply_cons [DecidableEq α] {n : ℕ} (μs : List.Vector (MassFunction α) n) (ν : MassFunction α) (l : List.Vector α n) (a : α) : (sequence (t := flip List.Vector (n + 1)) (ν ::ᵥ μs)) (a ::ᵥ l) = (ν a) * ((sequence (t := flip List.Vector n) μs) l) := by
   rw [List.Vector.sequence_cons]
   exact cons_map_seq_apply_cons (sequence (t := flip List.Vector n) μs) ν l a
 
 lemma prod_zipWith {n : ℕ} (f : List.Vector (α → ℝ≥0∞) n) (l : List.Vector α n) : List.prod (f.zipWith (· ·) l).toList = ∏ i, (f.get i) (l.get i) := by
   simp
+
 
   sorry
 
@@ -1208,14 +1211,9 @@ end uniform
 
 section binom
 
-example (x y : ℕ) (hx : x < n) (hy : y < m) : x + y < n + m -1 := by
-  linarith
-
-example (n : ℕ) (x : Fin (n + 1)) (y : Bool) : x.val + y.toNat < (n + 1) + 1 := by
-  refine Nat.add_le_add
-
-
-
+def addBool {n : ℕ} (i : Fin n) : Bool → Fin (n+1)
+| false => Fin.castSucc i
+| true  => Fin.addNat i true.toNat
 
 -- Defining the binomial distribution inductively
 noncomputable def binom_ind (p : ℝ≥0∞) (n : ℕ) : MassFunction (Fin (n + 1)) := match n with
@@ -1223,10 +1221,35 @@ noncomputable def binom_ind (p : ℝ≥0∞) (n : ℕ) : MassFunction (Fin (n + 
   | .succ n => do
     let X ← binom_ind p n
     let Y ← (coin p)
-    return ⟨X.val + Y.toNat, by linarith⟩
+    return addBool X Y
+
+lemma isProbabilityMeasure_binom_ind (p : ℝ≥0∞) (h : p ≤ 1) (n : ℕ) : IsProbabilityMeasure (binom_ind p n).toMeasure := by
+  induction n with
+    | zero =>
+      apply isProbabilityMeasure_pure_toMeasure
+    | succ n hn =>
+      simp [binom_ind, monad_norm]
+      apply isProbabilityMeasure_bind_toMeasure (fun (a : Fin (n + 1)) ↦ ?_)
+      rw [← map_eq_bind_pure_comp, ← map_eq_map]
+      haveI : IsProbabilityMeasure (coin p).toMeasure := by
+        exact isProbabilityMeasure_coin p h
+      refine isProbabilityMeasure_map_toMeasure (coin p) (addBool a)
+
+@[simp]
+lemma List.Vector.count_nil {α : Type u_1} [BEq α] (a : α): List.Vector.countFin (α := α) a List.Vector.nil = 0 := by
+  rw [List.Vector.countFin_eq_count₁ List.Vector.nil a 0]
+  simp
+
+theorem binom_ind_eq_count_true (p : ℝ≥0∞) (n : ℕ) : binom_ind p n = (iidSequence n (coin p)).map (List.Vector.countFin true) := by
+  induction n with
+    | zero =>
+      simp [binom_ind, iidSequence]
+    | succ n h  =>
 
 
-fun k ↦ (p ^ k.val * (1 - p) ^ (n - k.val)) * (Nat.choose n k)
+      sorry
+
+
 
 -- Defining the binomial distribution via the mass function
 noncomputable def binom₁ (p : ℝ≥0∞) (n : ℕ) : MassFunction (Fin (n + 1)) := fun k ↦ (p ^ k.val * (1 - p) ^ (n - k.val)) * (Nat.choose n k)

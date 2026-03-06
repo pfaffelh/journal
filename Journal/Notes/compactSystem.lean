@@ -6,8 +6,15 @@ Authors: Rémy Degenne, Peter Pfaffelhuber, Joachim Breitner
 
 -- feat(Data/Set/Dissipate): Introduce dissipate s x := ⋂ y ≤ x, s y #33975
 
+-- PR 36013 introduce compact systems
+-- PR 36089 Union
+-- PR 36160 Pi
+-- PR 36225 Inter
+
 import Journal.Notes.dissipate
-import Mathlib.Logic.IsEmpty
+import Journal.Notes.cylinders
+import Mathlib.Data.Set.Dissipate
+import Mathlib.Logic.IsEmpty.Basic
 import Mathlib.MeasureTheory.Constructions.Cylinders
 import Mathlib.Order.OmegaCompletePartialOrder
 import Mathlib.Topology.Separation.Hausdorff
@@ -37,31 +44,62 @@ system iff adding `p univ` gives a compact system.
 
 open Set Nat MeasureTheory
 
-variable {α : Type*} {p : Set α → Prop} {C : ℕ → Set α}
+open Set Finset Nat
+
+variable {α : Type*} {S : Set (Set α)} {C : ℕ → Set α}
 
 section definition
 
+-- PR 36013
 /-- A predicate on sets is a compact system if, whenever a countable subfamily has empty intersection,
 then finitely many of them already have empty intersection. -/
-def IsCompactSystem (p : Set α → Prop) : Prop :=
-  ∀ C : ℕ → Set α, (∀ i, p (C i)) → ⋂ i, C i = ∅ → ∃ (n : ℕ), dissipate C n = ∅
+def IsCompactSystem (S : Set (Set α)) : Prop :=
+  ∀ C : ℕ → Set α, (∀ i, C i ∈ S) → ⋂ i, C i = ∅ → ∃ (n : ℕ), dissipate C n = ∅
 
 end definition
 
 namespace IsCompactSystem
 
+-- PR 36013
+lemma of_nonempty_iInter
+    (h : ∀ C : ℕ → Set α, (∀ i, C i ∈ S) → (∀ n, (dissipate C n).Nonempty) → (⋂ i, C i).Nonempty) :
+    IsCompactSystem S := by
+  intro C hC
+  contrapose!
+  exact h C hC
+
+-- PR 36013
+lemma nonempty_iInter (hp : IsCompactSystem S) {C : ℕ → Set α} (hC : ∀ i, C i ∈ S)
+    (h_nonempty : ∀ n, (dissipate C n).Nonempty) :
+    (⋂ i, C i).Nonempty := by
+  revert h_nonempty
+  contrapose!
+  exact hp C hC
+
+-- PR 36013
+theorem iff_nonempty_iInter (S : Set (Set α)) :
+    IsCompactSystem S ↔
+      ∀ C : ℕ → Set α, (∀ i, C i ∈ S) → (∀ n, (dissipate C n).Nonempty) → (⋂ i, C i).Nonempty :=
+  ⟨nonempty_iInter, of_nonempty_iInter⟩
+
+/-
 open Classical in
 /-- In a compact system, given a countable family with `⋂ i, C i = ∅`, we choose the smallest `n`
 with `⋂ (i ≤ n), C i = ∅`. -/
 noncomputable
-def finite_of_empty (hp : IsCompactSystem p) (hC : ∀ i, p (C i))
-    (hC_empty : ⋂ i, C i = ∅) : ℕ := Nat.find (hp C hC hC_empty)
 
+def finite_of_empty (hp : IsCompactSystem S) (hC : ∀ i, C i ∈ S)
+    (hC_empty : ⋂ i, C i = ∅) : ℕ := Nat.find (hp C hC hC_empty)
+-/
+
+/-
+-- PR 36013
 open Classical in
 lemma dissipate_eq_empty (hp : IsCompactSystem p) (hC : ∀ i, p (C i))
     (hC_empty : ⋂ i, C i = ∅) :
     dissipate C (hp.finite_of_empty hC hC_empty) = ∅ := Nat.find_spec (hp C hC hC_empty)
 
+-- PR 36013
 theorem iff_nonempty_iInter (p : Set α → Prop) :
     IsCompactSystem p ↔ (∀ C : ℕ → Set α, (∀ i, p (C i)) → (∀ (n : ℕ),
       (dissipate C n).Nonempty) → (⋂ i, C i).Nonempty) := by
@@ -69,108 +107,127 @@ theorem iff_nonempty_iInter (p : Set α → Prop) :
   push_neg at h2 <;> apply h2
   exact hn
 
-/-- In this equivalent formulation for a compact system,
-note that we use `⋂ k < n, C k` rather than `⋂ k ≤ n, C k`. -/
-lemma iff_nonempty_iInter_of_lt (p : Set α → Prop) : IsCompactSystem p ↔
-    ∀ C : ℕ → Set α, (∀ i, p (C i)) → (∀ n, (⋂ k < n, C k).Nonempty) → (⋂ i, C i).Nonempty := by
-  simp_rw [iff_nonempty_iInter]
-  refine ⟨fun h C hi h'↦ ?_, fun h C hi h' ↦ ?_⟩ <;> apply h C hi
-  · exact fun n ↦ dissipate_eq ▸ (h' (n + 1))
-  · simp_rw [Set.nonempty_iff_ne_empty] at h' ⊢
-    intro n g
-    apply h' n
-    simp_rw [← subset_empty_iff, dissipate] at g ⊢
-    apply le_trans _ g
-    intro x
-    rw [mem_iInter₂, mem_iInter₂]
-    exact fun h i hi ↦ h i hi.le
+-- PR 36013
+-/
 
-lemma iff_nonempty_iInter_of_lt' (p : Set α → Prop) : IsCompactSystem p ↔
-    ∀ C : ℕ → Set α, (∀ i, p (C i)) → (∀ n, (⋂ k : Fin (n + 1), C k).Nonempty) → (⋂ i, C i).Nonempty := by
+-- PR 36089
+lemma iff_nonempty_iInter_of_lt' (S : Set (Set α)) : IsCompactSystem S ↔
+    ∀ C : ℕ → Set α, (∀ i, C i ∈ S) → (∀ n, (⋂ k : Fin (n + 1), C k).Nonempty) → (⋂ i, C i).Nonempty := by
   rw [iff_nonempty_iInter]
   simp_rw [dissipate_eq_ofFin]
 
+
+-- PR 36013
 /-- Any subset of a compact system is a compact system. -/
-theorem mono {C D : (Set α) → Prop} (hD : IsCompactSystem D) (hCD : ∀ s, C s → D s) :
-  IsCompactSystem C := fun s hC hs ↦ hD s (fun i ↦ hCD (s i) (hC i)) hs
+theorem mono {T : Set (Set α)} (hT : IsCompactSystem T) (hST : S ⊆ T) :
+    IsCompactSystem S := fun C hC1 hC2 ↦ hT C (fun i ↦ hST (hC1 i)) hC2
 
-/-- A set system is a compact system iff adding `p ∅` gives a compact system. -/
-lemma iff_isCompactSystem_of_or_empty : IsCompactSystem p ↔
-    IsCompactSystem (fun s ↦ (p s ∨ (s = ∅))) := by
-  refine ⟨fun h s h' hd ↦ ?_, fun h ↦ mono h (fun s ↦ fun a ↦ Or.symm (Or.inr a))⟩
+-- PR 36013
+/-- Inserting `∅` into a compact system gives a compact system. -/
+lemma insert_empty (h : IsCompactSystem S) : IsCompactSystem (insert ∅ S) := by
+  intro s h' hd
   by_cases g : ∃ n, s n = ∅
-  · obtain ⟨n, hn⟩ := g
-    use n
-    apply dissipate_empty_of_mem_empty (Nat.le_refl n) hn
+  · use g.choose
+    rw [← subset_empty_iff] at hd ⊢
+    exact (dissipate_subset le_rfl).trans g.choose_spec.le
   · push_neg at g
-    have hj (i : _) : p (s i) := by
-      simp_rw [Set.nonempty_iff_ne_empty] at g
-      simp only [g, or_false] at h'
-      exact h' i
-    exact h s hj hd
+    refine h s (fun i ↦ ?_) hd
+    specialize g i
+    specialize h' i
+    rw [Set.nonempty_iff_ne_empty] at g
+    simpa [g] using h'
 
-lemma of_IsEmpty (h : IsEmpty α) (p : Set α → Prop) : IsCompactSystem p :=
+-- PR 36013
+@[simp]
+lemma of_IsEmpty [IsEmpty α] (S : Set (Set α)) : IsCompactSystem S :=
   fun s _ _ ↦ ⟨0, Set.eq_empty_of_isEmpty (dissipate s 0)⟩
 
-/-- A set system is a compact system iff adding `p univ` gives a compact system. -/
-lemma iff_isCompactSystem_of_or_univ : IsCompactSystem p ↔
-    IsCompactSystem (fun s ↦ (p s ∨ s = univ)) := by
-  refine ⟨fun h ↦ ?_, fun h ↦ mono h (fun s ↦ fun a ↦ Or.symm (Or.inr a))⟩
-  wlog ht : Nonempty α
-  · rw [not_nonempty_iff] at ht
-    apply of_IsEmpty ht
-  · rw [iff_nonempty_iInter] at h ⊢
-    intro s h' hd
-    classical
-    by_cases h₀ : ∀ n, ¬p (s n)
-    · simp only [h₀, false_or] at h'
-      simp_rw [h', iInter_univ, Set.univ_nonempty]
-    · push_neg at h₀
-      obtain ⟨n, hn⟩ := h₀
-      let s' := fun i ↦ if p (s i) then s i else s n
-      have h₁ : ∀ i, p (s' i) := by
-        intro i
-        by_cases h₁ : p (s i)
-        · simp only [h₁, ↓reduceIte, s']
-        · simp only [h₁, ↓reduceIte, hn, s']
-      have h₃ : ∀ i, (p (s i) → s' i = s i) := fun i h ↦ if_pos h
-      have h₄ : ∀ i, (¬p (s i) → s' i = s n) := fun i h ↦ if_neg h
-      have h₂ : ⋂ i, s i = ⋂ i, s' i := by
-        simp only [s'] at *
-        ext x
-        simp only [mem_iInter]
-        refine ⟨fun h i ↦ ?_, fun h i ↦ ?_⟩
-        · by_cases h' : p (s i) <;> simp only [h', ↓reduceIte, h]
-        · specialize h' i
-          specialize h i
-          rcases h' with a | b
-          · simp only [a, ↓reduceIte] at h
-            exact h
-          · simp only [b, Set.mem_univ]
-      have h₅ (v : ℕ) (hv : n ≤ v) : dissipate s v = dissipate s' v:= by
-        ext x
-        refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩ <;> simp only [dissipate_def, mem_iInter] at h ⊢ <;>
-          intro i hi
-        · by_cases h₅ : p (s i)
-          · exact (h₃ i h₅) ▸ h i hi
-          · exact (h₄ i h₅) ▸ h n hv
-        · by_cases h₅ : p (s i)
-          · exact (h₃ i h₅) ▸ h i hi
-          · have h₆ : s i = univ := by
-              specialize h' i
-              simp only [h₅, false_or] at h'
-              exact h'
-            simp only [h₆, Set.mem_univ]
-      rw [h₂]
-      apply h s' h₁
-      intro k
-      by_cases hnk : n ≤ k
-      · rw [← h₅ k hnk]
-        exact hd k
-      · simp at hnk
-        apply dissipate_nonempty_mono hnk.le
-        rw [← h₅ n (le_refl n)]
-        apply hd
+-- PR 36013
+/-- Inserting `univ` into a compact system gives a compact system. -/
+lemma insert_univ (h : IsCompactSystem S) : IsCompactSystem (insert univ S) := by
+  rcases isEmpty_or_nonempty α with hα | _
+  · simp
+  rw [IsCompactSystem.iff_nonempty_iInter] at h ⊢
+  intro s h' hd
+  by_cases h₀ : ∀ n, s n ∉ S
+  · simp only [mem_insert_iff, h₀, or_false] at h'
+    simp [h']
+  push_neg at h₀
+  classical
+  let n := Nat.find h₀
+  let s' := fun i ↦ if s i ∈ S then s i else s n
+  have h₁ : ∀ i, s' i ∈ S := by simp [s']; grind
+  have h₂ : ⋂ i, s i = ⋂ i, s' i := by ext; simp; grind
+  apply h₂ ▸ h s' h₁
+  by_contra! h_exists_empty
+  obtain ⟨j, hj⟩ := h_exists_empty
+  have h₃ (v : ℕ) (hv : n ≤ v) : dissipate s v = dissipate s' v:= by ext; simp; grind
+  have h₇ : dissipate s' (max j n) = ∅ := by
+    rw [← subset_empty_iff] at hj ⊢
+    exact (antitone_dissipate (Nat.le_max_left j n)).trans hj
+  specialize h₃ (max j n) (Nat.le_max_right j n)
+  specialize hd (max j n)
+  simp [h₃, h₇] at hd
+
+end IsCompactSystem
+
+/-- In this equivalent formulation for a compact system,
+note that we use `⋂ k < n, C k` rather than `⋂ k ≤ n, C k`. -/
+lemma isCompactSystem_iff_nonempty_iInter_of_lt (S : Set (Set α)) :
+    IsCompactSystem S ↔
+      ∀ C : ℕ → Set α, (∀ i, C i ∈ S) → (∀ n, (⋂ k < n, C k).Nonempty) → (⋂ i, C i).Nonempty := by
+  simp_rw [IsCompactSystem.iff_nonempty_iInter]
+  refine ⟨fun h C hi h'↦ h C hi (fun n ↦ dissipate_eq_iInter_lt ▸ (h' (n + 1))),
+    fun h C hi h' ↦ h C hi ?_⟩
+  simp_rw [Set.nonempty_iff_ne_empty] at h' ⊢
+  refine fun n g ↦ h' n ?_
+  simp_rw [← subset_empty_iff, dissipate] at g ⊢
+  exact le_trans (fun x ↦ by simp; grind) g
+
+/-- A set system is a compact system iff adding `∅` gives a compact system. -/
+lemma isCompactSystem_insert_empty_iff :
+    IsCompactSystem (insert ∅ S) ↔ IsCompactSystem S :=
+  ⟨fun h ↦ h.mono (fun _ hs ↦ Set.mem_insert_of_mem ∅ hs), fun h ↦ h.insert_empty⟩
+
+/-- A set system is a compact system iff adding `univ` gives a compact system. -/
+lemma isCompactSystem_insert_univ_iff : IsCompactSystem (insert univ S) ↔ IsCompactSystem S :=
+  ⟨fun h ↦ h.mono (fun _ hs ↦ Set.mem_insert_of_mem univ hs), fun h ↦ h.insert_univ⟩
+
+-- PR 36013
+theorem isCompactSystem_iff_directed (hpi : IsPiSystem S) :
+    IsCompactSystem S ↔
+    ∀ (C : ℕ → Set α), (Directed (fun x1 x2 ↦ x1 ⊇ x2) C) → (∀ i, C i ∈ S) → ⋂ i, C i = ∅ →
+      ∃ n, C n = ∅ := by
+  rw [← isCompactSystem_insert_empty_iff]
+  refine ⟨fun h ↦ fun C hdi hi ↦ ?_, fun h C h1 h2 ↦ ?_⟩
+  · rw [exists_dissipate_eq_empty_iff_of_directed C hdi]
+    exact h C (by simp [hi])
+  · have hpi' : IsPiSystem (insert ∅ S) := hpi.insert_empty
+    rw [← biInter_le_eq_iInter] at h2
+    obtain h' := h (dissipate C) directed_dissipate
+    have h₀ (h₀ : ∀ n, dissipate C n ∈ S ∨ dissipate C n = ∅) (h₁ : ⋂ n, dissipate C n = ∅) :
+        ∃ n, dissipate C n = ∅ := by
+      by_cases! f : ∀ n, dissipate C n ∈ S
+      · apply h' f h₁
+      · obtain ⟨n, hn⟩ := f
+        exact ⟨n, by simpa [hn] using h₀ n⟩
+    obtain h'' := IsPiSystem.dissipate_mem hpi' h1
+    have h₁ : ∀ n, dissipate C n ∈ S ∨ dissipate C n = ∅ := by
+      intro n
+      by_cases g : (dissipate C n).Nonempty
+      · simpa [or_comm] using h'' n g
+      · exact .inr (Set.not_nonempty_iff_eq_empty.mp g)
+    apply h₀ h₁ h2
+
+-- PR 36013
+theorem isCompactSystem_iff_directed' (hpi : IsPiSystem S) :
+    IsCompactSystem S ↔
+    ∀ (C : ℕ → Set α), (Directed (fun x1 x2 ↦ x1 ⊇ x2) C) → (∀ i, C i ∈ S) → (∀ n, (C n).Nonempty) →
+      (⋂ i, C i).Nonempty := by
+  rw [isCompactSystem_iff_directed hpi]
+  refine ⟨fun h1 C h3 h4 ↦ ?_, fun h1 C h3 s ↦ ?_⟩ <;> rw [← not_imp_not] <;> push_neg
+  · exact h1 C h3 h4
+  · exact h1 C h3 s
 
 -- maybe this belongs somewhere else...
 /-- For a ∩-stable set of sets `p` on `α` and a sequence of sets `s` with this attribute,
@@ -186,162 +243,84 @@ lemma IsPiSystem.dissipate_mem {s : ℕ → Set α} {p : Set (Set α)}
     rw [dissipate_succ] at *
     apply hp (dissipate s n) (hn (Nonempty.left h')) (s (n+1)) (h (n+1)) h'
 
-theorem iff_directed (hpi : IsPiSystem p) :
-    IsCompactSystem p ↔
-    ∀ (C : ℕ → Set α), ∀ (_ : Directed (fun (x1 x2 : Set α) => x1 ⊇ x2) C), (∀ i, p (C i)) →
-      ⋂ i, C i = ∅ → ∃ (n : ℕ), C n = ∅ := by
-  rw [iff_isCompactSystem_of_or_empty]
-  refine ⟨fun h ↦ fun C hdi hi ↦ ?_, fun h C h1 h2 ↦ ?_⟩
-  · rw [exists_dissipate_eq_empty_iff_of_directed C hdi]
-    exact h C (fun i ↦ Or.inl (hi i))
-  · have hpi' : IsPiSystem (fun s ↦ p s ∨ s = ∅) := by
-      intro a ha b hb hab
-      rcases ha with ha₁ | ha₂
-      · rcases hb with hb₁ | hb₂
-        · left
-          exact hpi a ha₁ b hb₁ hab
-        · right
-          exact hb₂ ▸ (Set.inter_empty a)
-      · simp only [ha₂, Set.empty_inter]
-        right
-        rfl
-    rw [← biInter_le_eq_iInter] at h2
-    obtain h' := h (dissipate C) directed_dissipate
-    have h₀ : (∀ (n : ℕ), p (dissipate C n) ∨ dissipate C n = ∅) → ⋂ n, dissipate C n = ∅ →
-      ∃ n, dissipate C n = ∅ := by
-      intro h₀ h₁
-      by_cases f : ∀ n, p (dissipate C n)
-      · apply h' f h₁
-      · push_neg at f
-        obtain ⟨n, hn⟩ := f
-        use n
-        specialize h₀ n
-        simp_all only [false_or]
-    obtain h'' := IsPiSystem.dissipate_mem hpi' h1
-    have h₁ :  ∀ (n : ℕ), p (dissipate C n) ∨ dissipate C n = ∅ := by
-      intro n
-      by_cases g : (dissipate C n).Nonempty
-      · exact h'' n g
-      · right
-        exact Set.not_nonempty_iff_eq_empty.mp g
-    apply h₀ h₁ h2
-
-theorem iff_directed' (hpi : IsPiSystem p) :
-    IsCompactSystem p ↔
-    ∀ (C : ℕ → Set α), ∀ (_ : Directed (fun (x1 x2 : Set α) => x1 ⊇ x2) C), (∀ i, p (C i)) →
-    (∀ (n : ℕ), (C n).Nonempty) → (⋂ i, C i).Nonempty  := by
-  rw [IsCompactSystem.iff_directed hpi]
-  refine ⟨fun h1 C h3 h4 ↦ ?_, fun h1 C h3 s ↦ ?_⟩ <;> rw [← not_imp_not] <;> push_neg
-  · exact h1 C h3 h4
-  · exact h1 C h3 s
-
 section IsCompactIsClosed
 
 variable {α : Type*} [TopologicalSpace α]
 
+-- PR 36013
 /-- The set of compact and closed sets is a compact system. -/
-theorem of_isCompact_isClosed :
-    IsCompactSystem (fun s : Set α ↦ IsCompact s ∧ IsClosed s) := by
-  let p := fun (s : Set α) ↦ IsCompact s ∧ IsClosed s
-  have h2 : IsPiSystem p := by
-    intro s hs t ht _
-    refine ⟨IsCompact.inter_left ht.1 hs.2, IsClosed.inter hs.2 ht.2⟩
-  rw [IsCompactSystem.iff_directed' h2]
-  intro s hs h1 h2
-  let s' := fun (i : { j : ℕ | s j ≠ univ}) ↦ s i
-  have hs' : Directed (fun x1 x2 ↦ x1 ⊇ x2) s' := by
-    intro a b
-    obtain ⟨z, hz1, hz2⟩ := hs a.val b.val
-    have hz : s z ≠ univ := fun h ↦ a.prop <| eq_univ_of_subset hz1 h
-    use ⟨z, hz⟩
-  have htcl : ∀ (i : { j : ℕ | s j ≠ univ}), IsClosed (s i) :=
-    fun i ↦ (h1 i).2
-  have htco : ∀ (i : { j : ℕ | s j ≠ univ}), IsCompact (s i) :=
-    fun i ↦ (h1 i).1
-  haveI f : Nonempty α := by
-    apply Exists.nonempty _
-    · exact fun x ↦ x ∈ s 0
-    · exact h2 0
-  by_cases h : Nonempty ↑{j | s j ≠ Set.univ}
-  · have g :  (⋂ i, s' i).Nonempty → (⋂ i, s i).Nonempty := by
-      rw [Set.nonempty_iInter, Set.nonempty_iInter]
-      rintro ⟨x, hx⟩
-      use x
-      intro i
-      by_cases g : s i ≠ univ
-      · exact hx ⟨i, g⟩
-      · simp only [ne_eq, not_not] at g
-        rw [g]
-        simp only [Set.mem_univ]
-    apply g <| IsCompact.nonempty_iInter_of_directed_nonempty_isCompact_isClosed s' hs'
-      (fun j ↦ h2 j) htco htcl
-  · simp only [ne_eq, coe_setOf, nonempty_subtype, not_exists, not_not] at h
-    simp [h]
+theorem isCompactSystem_isCompact_isClosed (α : Type*) [TopologicalSpace α] :
+    IsCompactSystem {s : Set α | IsCompact s ∧ IsClosed s} := by
+  refine IsCompactSystem.of_nonempty_iInter fun C hC_cc h_nonempty ↦ ?_
+  rw [← Set.iInter_dissipate]
+  refine IsCompact.nonempty_iInter_of_sequence_nonempty_isCompact_isClosed (Set.dissipate C)
+    (fun n ↦ ?_) h_nonempty ?_ (fun n ↦ ?_)
+  · exact Set.antitone_dissipate (by lia)
+  · simpa using (hC_cc 0).1
+  · induction n with
+    | zero => simp only [Set.dissipate_zero_nat]; exact (hC_cc 0).2
+    | succ n hn =>
+      rw [Set.dissipate_succ]
+      exact hn.inter (hC_cc (n + 1)).2
 
-/-- The set of sets which are either compact and closed, or `univ`, is a compact system. -/
-theorem of_isCompact_isClosed_or_univ :
-    IsCompactSystem (fun s : Set α ↦ (IsCompact s ∧ IsClosed s) ∨ (s = univ)) := by
-  rw [← iff_isCompactSystem_of_or_univ]
-  exact of_isCompact_isClosed
-
+-- PR 36013
 /-- In a `T2Space` the set of compact sets is a compact system. -/
-theorem of_isCompact [T2Space α] :
-    IsCompactSystem (fun s : Set α ↦ IsCompact s) := by
-  have h : (fun s : Set α ↦ IsCompact s) = (fun s : Set α ↦ IsCompact s ∧ IsClosed s) := by
-    ext s
-    refine ⟨fun h' ↦ ⟨h', h'.isClosed⟩, fun h ↦ h.1⟩
-  exact h ▸ (of_isCompact_isClosed)
+theorem isCompactSystem_isCompact (α : Type*) [TopologicalSpace α] [T2Space α] :
+    IsCompactSystem {s : Set α | IsCompact s} := by
+  convert isCompactSystem_isCompact_isClosed α with s
+  exact ⟨fun hs ↦ ⟨hs, hs.isClosed⟩, fun hs ↦ hs.1⟩
+
+-- PR 36013
+/-- The set of sets which are either compact and closed, or `univ`, is a compact system. -/
+theorem isCompactSystem_insert_univ_isCompact_isClosed (α : Type*) [TopologicalSpace α] :
+    IsCompactSystem (insert univ {s : Set α | IsCompact s ∧ IsClosed s}) :=
+  (isCompactSystem_isCompact_isClosed α).insert_univ
 
 end IsCompactIsClosed
 
-end IsCompactSystem
-
+-- PR 36089
 section PrefixInduction
 
-/-- A version of `Fin.elim` using even more dependent types. -/
-def Fin.elim0'.{u} {α : ℕ → Sort u} : (i : Fin 0) → (α i)
-  | ⟨_, h⟩ => absurd h (Nat.not_lt_zero _)
+-- Should this section be private, or moved to a different file?
 
-variable {β : ℕ → Type*}
-variable (q : ∀ n, (k : (i : Fin n) → (β i)) → Prop)
-variable (step0 : q 0 Fin.elim0')
-variable (step :
-    ∀ n (k : (i : Fin n) → (β i)) (_ : q n k),
-    { a : β n // q (n+1) (Fin.snoc k a)})
-
-/-- In this section, we prove a general induction principle, which we need for the construction
+/- In this section, we prove a general induction principle, which we need for the construction
 `Nat.prefixInduction q step0 step : (k : ℕ) →  (β k)` based on some
 `q : (n : ℕ) → (k : (i : Fin n) → (β i)) → Prop`. For
-the inducation start, `step0 : q 0 _` always holds since `Fin 0` cannot be satisfied, and
+the induction start, `step0 : q 0 _` always holds since `Fin 0` cannot be satisfied, and
 `step : (n : ℕ) → (k : (i : Fin n) → β i) → q n k → { a : β n // q (n + 1) (Fin.snoc k a) })`
 `(n : ℕ) : β n` constructs the next element satisfying `q (n + 1) _` from a proof of `q n k`
 and finding the next element.
 
-In comparisong to other induction principles, the proofs of `q n k` are needed in order to find
+In comparison to other induction principles, the proofs of `q n k` are needed in order to find
 the next element. -/
 
-/- An auxiliary definition for `Nat.prefixInduction`. -/
-def Nat.prefixInduction.aux : ∀ (n : Nat), { k : (i : Fin n) → (β i) // q n k }
-    | 0 => ⟨Fin.elim0', step0⟩
-    | n+1 =>
+
+/- A version of `Fin.elim0` using dependent types. -/
+def Fin.elim0'.{u} (α : ℕ → Sort u) : (i : Fin 0) → (α i)
+  | ⟨_, h⟩ => absurd h (Nat.not_lt_zero _)
+
+variable {β : ℕ → Type*} (q : ∀ n, (k : (i : Fin n) → β i) → Prop) (step0 : q 0 (Fin.elim0' _))
+  (step : ∀ n (k : (i : Fin n) → β i) (_ : q n k), { a : β n // q (n + 1) (Fin.snoc k a)})
+
+def Nat.prefixInduction.aux : ∀ (n : Nat), { k : (i : Fin n) → β i // q n k }
+    | 0 => ⟨Fin.elim0' _, step0⟩
+    | n + 1 =>
       let ⟨k, hk⟩ := aux n
       let ⟨a, ha⟩ := step n k hk
       ⟨Fin.snoc k a, ha⟩
 
-theorem Nat.prefixInduction.auxConsistent :
-  ∀ n (i : Fin n),
-    (Nat.prefixInduction.aux q step0 step (i+1)).1 (Fin.last i) =
+theorem Nat.prefixInduction.auxConsistent (n : ℕ) (i : Fin n) :
+    (Nat.prefixInduction.aux q step0 step (i + 1)).1 (Fin.last i) =
     (Nat.prefixInduction.aux q step0 step n).1 i := by
-  intro n
-  induction n
-  next => simp
-  next n ih =>
+  revert i
+  induction n with
+  | zero => simp
+  | succ n ih =>
     apply Fin.lastCases
     case last => simp
     case cast =>
       intro i
-      simp only [Fin.coe_castSucc]
-      rw [ih, aux]
+      simp_rw [Fin.val_castSucc, ih, aux]
       simp
 
 /-- An induction principle showing that `q : (n : ℕ) → (k : (i : Fin n) → (β i)) → Prop` holds
@@ -349,240 +328,268 @@ for all `n`. `step0` is satisfied by construction since `Fin 0` is empty.
 In the induction `step`, we use that `q n k` holds for showing that `q (n + 1) (Fin.snoc k a)`
 holds for some `a : β n`. -/
 def Nat.prefixInduction (n : Nat) : β n :=
-  (Nat.prefixInduction.aux q step0 step (n+1)).1 (Fin.last n)
+  (Nat.prefixInduction.aux q step0 step (n + 1)).1 (Fin.last n)
 
 theorem Nat.prefixInduction_spec (n : Nat) : q n (Nat.prefixInduction q step0 step ·) := by
-  cases n
-  · convert step0
-  · next n =>
-    have hk := (Nat.prefixInduction.aux q step0 step (n+1)).2
+  cases n with
+  | zero => convert step0
+  | succ n =>
+    have hk := (Nat.prefixInduction.aux q step0 step (n + 1)).2
     convert hk with i
     apply Nat.prefixInduction.auxConsistent
 
 /- Often, `step` can only be proved by showing an `∃` statement. For this case, we use `step'`. -/
-variable (step' : ∀ n (k : (i : Fin n) → (β i)) (_ : q n k), ∃ a, q (n + 1) (Fin.snoc k a))
+variable (step' : ∀ n (k : (i : Fin n) → β i) (_ : q n k), ∃ a, q (n + 1) (Fin.snoc k a))
 
-/-- For `Nat.prefixIndution`, this transforms an exists-statement in the induction step to choosing
-an element. -/
-noncomputable def step_of : (n : ℕ) → (k : (i : Fin n) → (β i)) → (hn : q n k) →
-    { a : β n // q (n + 1) (Fin.snoc k a) } :=
-  fun n k hn ↦ ⟨(step' n k hn).choose, (step' n k hn).choose_spec⟩
-
-/-- An induction principle showing that `q : (n : ℕ) → (k : (i : Fin n) → (β i)) → Prop` holds
-for all `n`. `step0` is satisfied by construction since `Fin 0` is empty.
-In the induction `step`, we use that `q n k` holds for showing that `q (n + 1) (Fin.snoc k a)`
-holds for some `a : β n`. This version is noncomputable since it relies on an `∃`-statement -/
+/-- This version is noncomputable since it relies on an `∃`-statement -/
 noncomputable def Nat.prefixInduction' (n : Nat) : β n :=
-  (Nat.prefixInduction.aux q step0 (fun n k hn ↦ step_of q step' n k hn) (n+1)).1 (Fin.last n)
+  (Nat.prefixInduction.aux q step0
+    (fun n k hn ↦ ⟨(step' n k hn).choose, (step' n k hn).choose_spec⟩) (n + 1)).1 (Fin.last n)
 
 theorem Nat.prefixInduction'_spec (n : Nat) : q n (Nat.prefixInduction' q step0 step' ·) := by
   apply prefixInduction_spec
 
 end PrefixInduction
 
-namespace IsCompactSystem
-
+-- PR 36089
 section Union
 
+/- For a reference of `union.isCompactSystem`, see Pfanzagl, Pierlo.
+Compact Systems of Sets. Springer, 1966, Lemma 1.4. -/
+
+namespace IsCompactSystem
+
+variable {L : ℕ → Finset (Set α)} {n : ℕ} {K : (k : Fin n) → Set α}
+
 /-- `q n K` is the joint property that `∀ (k : Fin n), K k ∈ L k` and
-`∀ N, (⋂ (j : Fin n), K j) ∩ (⋂ (k < N), ⋃₀ (L (n + k)).toSet) ≠ ∅`.` holds. -/
-def q (L : ℕ → Finset (Set α))
-  : ∀ n, (K : (k : Fin n) → (L k)) → Prop := fun n K ↦
-  (∀ N, ((⋂ j, K j) ∩ (⋂ (k < N), ⋃₀ SetLike.coe (L (n + k)))).Nonempty)
+`∀ N, (⋂ (j : Fin n), K j) ∩ (⋂ (k < N), ⋃₀ ↑(L (n + k))) ≠ ∅`.` holds. -/
+def q (L : ℕ → Finset (Set α)) (n : ℕ) (K : (k : Fin n) → Set α) : Prop :=
+  (∀ k : Fin n, K k ∈ L k) ∧ ∀ N, ((⋂ j, K j) ∩ ⋂ k < N, ⋃₀ L (n + k)).Nonempty
 
-lemma q_iff_iInter (L : ℕ → Finset (Set α)) (n : ℕ) (K : (k : Fin n) → (L k)) :
-    q L n K ↔ (∀ (N : ℕ), ((⋂ (j : ℕ) (hj : j < n), K ⟨j, hj⟩) ∩ (⋂ (k < N),
-    ⋃₀ SetLike.coe (L (n + k)))).Nonempty) := by
+lemma q_iff_iInter (hK : ∀ k : Fin n, K k ∈ L k) :
+    q L n K ↔
+      ∀ N, ((⋂ (j : ℕ) (hj : j < n), K ⟨j, hj⟩) ∩
+        (⋂ k < N, ⋃₀ L (n + k))).Nonempty := by
+  simp only [q, hK, implies_true, true_and]
+  congr! 2 with N
+  ext
+  simp
+  grind
+
+lemma q_snoc_iff_iInter (hK : ∀ k : Fin n, K k ∈ L k) (y : Set α) :
+    q L (n + 1) (Fin.snoc K y) ↔
+      y ∈ L n ∧
+        (∀ N, ((⋂ (j : ℕ) (hj : j < n), K ⟨j, hj⟩) ∩ y ∩ (⋂ k < N, ⋃₀ L (n + k))).Nonempty) := by
   simp only [q]
-  refine ⟨fun h N ↦ ?_, fun h N ↦ ?_⟩ <;>
-  specialize h N <;>
-  rw [Set.inter_nonempty_iff_exists_left] at h ⊢ <;>
-  obtain ⟨x, ⟨hx1, hx2⟩⟩ := h <;>
-  refine ⟨x, ⟨?_, hx2⟩⟩ <;>
-  simp only [mem_iInter] at hx1 ⊢
-  · exact fun i hi ↦ hx1 ⟨i, hi⟩
-  · exact fun i ↦ hx1 i.val i.prop
-
-example (i : ℕ) (hi : i ≠ 0) : ∃ j, j + 1 = i := by
-  exact exists_add_one_eq.mpr (zero_lt_of_ne_zero hi)
-
-lemma q_iff_iInter' (L : ℕ → Finset (Set α)) (n : ℕ) (K : (k : Fin n) → (L k)) (y : L n) :
-    q L (n + 1) (Fin.snoc K y) ↔ (∀ (N : ℕ), ((⋂ (j : ℕ) (hj : j < n), K ⟨j, hj⟩) ∩ y.val ∩
-    (⋂ (k < N), ⋃₀ SetLike.coe (L (n + k)))).Nonempty) := by
-  simp [q]
-  refine ⟨fun h N ↦ ?_, fun h N ↦ ?_⟩
-  · specialize h N
-    rw [Set.inter_nonempty_iff_exists_left] at h ⊢
-    obtain ⟨x, ⟨hx1, hx2⟩⟩ := h
+  have h_imp : q L (n + 1) (Fin.snoc K y) → y ∈ L n := by
+    intro ⟨h_mem, h⟩
+    specialize h_mem ⟨n, by grind⟩
+    simpa [Fin.snoc] using h_mem
+  refine ⟨fun h' ↦ ⟨h_imp h', fun N ↦ ?_⟩, fun ⟨hy, h⟩ ↦ ⟨fun k ↦ ?_, fun N ↦ ?_⟩⟩
+  · have ⟨h_mem, h⟩ := h'
+    obtain ⟨x, ⟨hx1, hx2⟩⟩ := h N
     use x
-    simp at hx1 hx2 ⊢
-    refine ⟨⟨?_, ?_⟩, ?_⟩
-    · intro i hi
-      specialize hx1 ⟨i, le_trans hi (le_succ n)⟩
-      simp [Fin.snoc, hi] at hx1
-      exact hx1
-    · specialize hx1 ⟨n, Nat.lt_add_one n⟩
-      simp [Fin.snoc] at hx1
-      exact hx1
-    · intro i hi
-      by_cases h : i = 0
-      · specialize hx1 ⟨n, Nat.lt_add_one n⟩
-        simp [Fin.snoc] at hx1
-        simp [h]
-        refine ⟨y, y.prop, hx1⟩
-      · obtain ⟨j, hj⟩ := exists_add_one_eq.mpr (zero_lt_of_ne_zero h)
-        have hj' : j < N := by
-          rw [← hj] at hi
-          exact lt_of_succ_lt hi
-        specialize hx2 j hj'
-        rw [add_comm] at hj
-        rw [add_assoc, hj] at hx2
-        exact hx2
+    simp only [mem_iInter, mem_sUnion, SetLike.mem_coe, mem_inter_iff] at hx1 hx2 ⊢
+    refine ⟨⟨fun i hi ↦ ?_, ?_⟩, fun i hi ↦ ?_⟩
+    · simpa [Fin.snoc, hi] using hx1 ⟨i, hi.trans_le (le_succ n)⟩
+    · simpa [Fin.snoc] using hx1 ⟨n, Nat.lt_add_one n⟩
+    · have hy := h_imp h'
+      cases i with
+      | zero =>
+        specialize hx1 ⟨n, Nat.lt_add_one n⟩
+        simp only [Fin.snoc, lt_self_iff_false, ↓reduceDIte, cast_eq] at hx1
+        exact ⟨y, hy, hx1⟩
+      | succ n =>
+        have hj' : n < N := by grind
+        grind
+  · unfold Fin.snoc
+    by_cases hkn : k = n
+    · simpa [hkn]
+    · have hkn' : k < n := by grind
+      grind
   · specialize h (N + 1)
     rw [Set.inter_nonempty_iff_exists_left] at h ⊢
     obtain ⟨x, ⟨hx1, hx2⟩⟩ := h
     use x
-    simp at hx1 hx2 ⊢
-    refine ⟨?_, ?_⟩
-    · intro i
-      simp [Fin.snoc]
-      refine Fin.lastCases ?_ (fun i ↦ ?_) i
-      · simp only [Fin.val_last, lt_self_iff_false, ↓reduceDIte, cast_eq]
-        exact hx1.2
-      · simp only [Fin.coe_castSucc, Fin.is_lt, ↓reduceDIte, Fin.castSucc_ne_last,
-        not_false_eq_true, Fin.castLT_eq_castPred, Fin.castPred_castSucc]
-        exact hx1.1 i.val i.prop
-    · intro i hi
-      specialize hx2 (i + 1) (Nat.add_lt_add_right hi 1)
-      rw [add_assoc, add_comm 1 i]
-      exact hx2
+    simp only [mem_inter_iff, mem_iInter, mem_sUnion, SetLike.mem_coe] at hx1 hx2 ⊢
+    exact ⟨by simp [Fin.snoc]; grind, by grind⟩
 
-lemma step0 {L : ℕ → Finset (Set α)} (hL : ∀ N, (⋂ k, ⋂ (_ : k < N), ⋃₀ SetLike.coe (L k)).Nonempty) :
-    q L 0 (Fin.elim0' (α := fun n ↦ {a : Set α // a ∈ L n})) := by
-  intro N
-  simp only [iInter_of_empty, zero_add, univ_inter]
-  exact hL N
+lemma step0 {L : ℕ → Finset (Set α)} (hL : ∀ N, (⋂ k < N, ⋃₀ (L k : Set (Set α))).Nonempty) :
+    q L 0 (Fin.elim0' (fun _ ↦ Set α)) :=
+  ⟨by simp, by simpa using hL⟩
 
 lemma inter_sUnion_eq_empty (s : Set α) (L : Set (Set α)) :
     (∀ a ∈ L, s ∩ a = ∅) ↔ s ∩ ⋃₀ L = ∅ := by
   simp_rw [← disjoint_iff_inter_eq_empty]
-  rw [disjoint_sUnion_right]
+  exact Iff.symm disjoint_sUnion_right
 
-lemma step' {L : ℕ → Finset (Set α)}
-    : ∀ n (K : (k : Fin n) → L k), (q L n K) → ∃ a, q L (n + 1) (Fin.snoc K a) := by
-  intro n K hK
-  simp_rw [q_iff_iInter] at hK
-  simp_rw [q_iff_iInter'] at ⊢
+lemma step' {L : ℕ → Finset (Set α)} (n : ℕ) (K : (k : Fin n) → Set α) (hK : q L n K) :
+    ∃ a, q L (n + 1) (Fin.snoc K a) := by
+  have hK' := hK.1
+  simp_rw [q_iff_iInter hK'] at hK
+  simp_rw [q_snoc_iff_iInter hK'] at ⊢
   by_contra! h
   choose b hb using h
   classical
-  let b' := fun x ↦ dite (x ∈ (L n)) (fun c ↦ b ⟨x, c⟩) (fun _ ↦ 0)
-  have hs : (SetLike.coe (L n)).Nonempty := by
+  let b' := fun x ↦ dite (x ∈ (L n)) (fun c ↦ b x c) (fun _ ↦ 0)
+  have hs : (L n : Set (Set α)).Nonempty := by
     specialize hK 1
-    rw [nonempty_def] at hK ⊢
+    rw [Set.nonempty_def] at hK ⊢
     simp only [lt_one_iff, iInter_iInter_eq_left, add_zero, mem_inter_iff, mem_iInter, mem_sUnion,
       Finset.mem_coe] at hK ⊢
     obtain ⟨x, ⟨hx1, ⟨t, ⟨ht1, ht2⟩⟩⟩⟩ := hK
     use t
   obtain ⟨K0Max, ⟨hK0₁, hK0₂⟩⟩ := Finset.exists_max_image (L (Fin.last n)) b' hs
-  simp_rw [nonempty_iff_ne_empty] at hK
+  simp_rw [Set.nonempty_iff_ne_empty] at hK
   apply hK (b' K0Max + 1)
-  have h₂ (a : L n) : ⋂ k < b' K0Max, ⋃₀ (L (n + k)) ⊆ ⋂ k, ⋂ (_ : k < b a),
-      ⋃₀ SetLike.coe (L (n + k)) := by
+  have h₂ (a : Set α) (ha : a ∈ L n) :
+      ⋂ k < b' K0Max, ⋃₀ L (n + k) ⊆ ⋂ k < b a ha, ⋃₀ (L (n + k) : Set (Set α)) := by
     intro x hx
-    simp at hx ⊢
-    have f : b' a = b a := by
-      simp [b']
-    exact fun i hi ↦ hx i (lt_of_lt_of_le hi (f ▸ hK0₂ a.val a.prop))
-  have h₃ : ∀ (a : { x // x ∈ L ↑(Fin.last n) }), (⋂ j, ⋂ (hj : j < n), ↑(K ⟨j, hj⟩)) ∩ ↑a ∩
-      ⋂ k, ⋂ (_ : k < b' K0Max), ⋃₀ SetLike.coe (L (n + k)) = ∅ := by
-    intro a
-    rw [← subset_empty_iff, ← hb a]
-    apply inter_subset_inter (fun ⦃a⦄ a ↦ a) (h₂ a)
+    simp only [mem_iInter, mem_sUnion, SetLike.mem_coe] at hx ⊢
+    have f : b' a = b a ha := by simp [b', ha]
+    exact fun i hi ↦ hx i (hi.trans_le (f ▸ hK0₂ a ha))
+  have h₃ (a : Set α) (ha : a ∈ L (Fin.last n)) : (⋂ (j) (hj : j < n), K ⟨j, hj⟩) ∩ a ∩
+      ⋂ k < b' K0Max, ⋃₀ L (n + k) = ∅ := by
+    rw [← subset_empty_iff, ← hb a ha]
+    exact inter_subset_inter (fun ⦃a⦄ a ↦ a) (h₂ a ha)
   simp_rw [inter_comm, inter_assoc] at h₃
   simp_rw [← disjoint_iff_inter_eq_empty] at h₃ ⊢
-  simp at h₃
-  have h₃' := disjoint_sUnion_left.mpr h₃
-  rw [disjoint_iff_inter_eq_empty, inter_comm, inter_assoc, ← disjoint_iff_inter_eq_empty] at h₃'
-  apply disjoint_of_subset (fun ⦃a⦄ a ↦ a) _ h₃'
+  simp only [Fin.val_last] at h₃
+  have h₃'' := disjoint_iff_inter_eq_empty.mp (disjoint_sUnion_left.mpr h₃)
+  rw [inter_comm, inter_assoc, ← disjoint_iff_inter_eq_empty] at h₃''
+  apply disjoint_of_subset (fun ⦃a⦄ a ↦ a) _ h₃''
   simp only [subset_inter_iff, subset_iInter_iff]
   refine ⟨fun i hi x hx ↦ ?_, fun x hx ↦ ?_⟩
-  · simp at hx ⊢
+  · simp only [mem_iInter, mem_sUnion, SetLike.mem_coe] at hx ⊢
     obtain ⟨t, ht⟩ := hx i (lt_trans hi (Nat.lt_add_one _))
     use t
-  · simp at hx ⊢
+  · simp only [mem_iInter, mem_sUnion, SetLike.mem_coe] at hx ⊢
     obtain ⟨t, ht⟩ := hx 0 (zero_lt_succ _)
-    simp at ht
     use t
-    exact ht
+    simpa
 
-/-- For `L : ℕ → Finset (Set α)` such that `∀ K ∈ L n, p K` and
-`h : ∀ N, ⋂ k < N, ⋃₀ L k ≠ ∅`, `mem_of_union h n` is some `K : ℕ → Set α` such that `K n ∈ L n`
+/-- For `L : ℕ → Finset (Set α)` such that `L n ⊆ K` and
+`h : ∀ N, ⋂ k < N, ⋃₀ L k ≠ ∅`, `memOfUnion h n` is some `K : ℕ → Set α` such that `K n ∈ L n`
 for all `n` (this is `prop₀`) and `∀ N, ⋂ (j < n, K j) ∩ ⋂ (k < N), (⋃₀ L (n + k)) ≠ ∅`
 (this is `prop₁`.) -/
-noncomputable def mem_of_union (L : ℕ → Finset (Set α))
-  (hL : ∀ N, (⋂ k, ⋂ (_ : k < N), ⋃₀ SetLike.coe (L k)).Nonempty) : (k : ℕ) → L k :=
-  Nat.prefixInduction' (q L) (step0 hL) (step')
+noncomputable def memOfUnion (L : ℕ → Finset (Set α))
+    (hL : ∀ N, (⋂ k < N, ⋃₀ (L k : Set (Set α))).Nonempty) :
+    ℕ → Set α :=
+  Nat.prefixInduction' (q L) (step0 hL) step'
 
-theorem mem_of_union.spec (L : ℕ → Finset (Set α))
-    (hL : ∀ N, (⋂ k, ⋂ (_ : k < N), ⋃₀ SetLike.coe (L k)).Nonempty) (n : ℕ) :
-    (∀ N, ((⋂ (j : Fin n), (mem_of_union L hL) j) ∩ (⋂ (k < N), ⋃₀ SetLike.coe (L (n + k)))).Nonempty) :=
-  Nat.prefixInduction'_spec (β := fun n ↦ {a // a ∈ L n}) (q L) (step0 hL) (step') n
-
-lemma l1 (L : ℕ → Finset (Set α))
-    (hL : ∀ N, (⋂ k, ⋂ (_ : k < N), ⋃₀ SetLike.coe (L k)).Nonempty) (k : ℕ) :
-      (mem_of_union L hL k).val ∈ SetLike.coe (L k) := by
-  exact (mem_of_union L hL k).prop
+theorem memOfUnion.spec (L : ℕ → Finset (Set α))
+    (hL : ∀ N, (⋂ k < N, ⋃₀ (L k : Set (Set α))).Nonempty) (n : ℕ) :
+    q L n (fun k : Fin n ↦ memOfUnion L hL k) :=
+  Nat.prefixInduction'_spec (β := fun _ ↦ Set α) (q L) (step0 hL) step' n
 
 lemma sInter_memOfUnion_nonempty (L : ℕ → Finset (Set α))
-    (hL : ∀ N, (⋂ k, ⋂ (_ : k < N), ⋃₀ SetLike.coe (L k)).Nonempty) (n : ℕ) :
-    (⋂ (j : Fin n), (mem_of_union L hL j).val).Nonempty := by
-  have h := mem_of_union.spec L hL n 0
-  simp only [not_lt_zero, iInter_of_empty, iInter_univ, inter_univ] at h
-  exact h
+    (hL : ∀ N, (⋂ k, ⋂ (_ : k < N), ⋃₀ (L k : Set (Set α))).Nonempty) (n : ℕ) :
+    (⋂ (j : Fin n), memOfUnion L hL j).Nonempty := by
+  simpa using (memOfUnion.spec L hL n).2 0
 
 lemma sInter_memOfUnion_isSubset (L : ℕ → Finset (Set α))
-    (hL : ∀ N, (⋂ k < N, ⋃₀ SetLike.coe (L k)).Nonempty) :
-    (⋂ j, (mem_of_union L hL j)) ⊆ ⋂ k, (⋃₀ SetLike.coe (L k)) := by
+    (hL : ∀ N, (⋂ k < N, ⋃₀ (L k : Set (Set α))).Nonempty) :
+    (⋂ j, memOfUnion L hL j) ⊆ ⋂ k, ⋃₀ L k := by
   exact iInter_mono <| fun n ↦
-  subset_sUnion_of_subset (↑(L n)) (mem_of_union L hL n).val (fun ⦃a⦄ a ↦ a) (l1 L hL n)
+    subset_sUnion_of_subset (L n) (memOfUnion L hL n) (fun ⦃a⦄ a ↦ a)
+      ((memOfUnion.spec L hL (n + 1)).1 ⟨n, by grind⟩)
 
 /-- Finite unions of sets in a compact system. -/
-def union (p : Set α → Prop) : Set α → Prop :=
-  (sUnion '' ({ L : Set (Set α) | L.Finite ∧ ∀ K ∈ L, p K}))
+def union (S : Set (Set α)) : Set (Set α) :=
+  sUnion '' { L : Set (Set α) | L.Finite ∧ L ⊆ S}
 
-lemma union.mem_iff (s : Set α) : union p s ↔ ∃ L : Finset (Set α), s = ⋃₀ L ∧ ∀ K ∈ L, p K := by
+lemma union.mem_iff (s : Set α) : s ∈ union S ↔ ∃ L : Finset (Set α), s = ⋃₀ L ∧ ↑L ⊆ S := by
   refine ⟨fun ⟨L, hL⟩ ↦ ?_, fun h ↦ ?_⟩
   · simp only [mem_setOf_eq] at hL
-    let L' := (hL.1.1).toFinset
-    use L'
-    rw [← hL.2, Finite.coe_toFinset]
-    refine ⟨rfl, fun K hK ↦ ?_⟩
-    rw [Finite.mem_toFinset] at hK
-    apply hL.1.2 K hK
+    use (hL.1.1).toFinset
+    simpa [← hL.2] using hL.1.2
   · obtain ⟨L, hL⟩ := h
     use L
-    simp only [mem_setOf_eq, Finset.finite_toSet, Finset.mem_coe, true_and]
-    refine ⟨hL.2, hL.1.symm⟩
+    simp [hL.1, hL.2]
 
-theorem union.isCompactSystem (p : Set α → Prop) (hp : IsCompactSystem p) :
-    IsCompactSystem (union p) := by
-  rw [iff_nonempty_iInter_of_lt]
+/- If `IsCompactSystem S`, the set of finite unions of sets in `S` is also a compact system. -/
+theorem union.isCompactSystem (S : Set (Set α)) (hS : IsCompactSystem S) :
+    IsCompactSystem (union S) := by
+  simp_rw [isCompactSystem_iff_nonempty_iInter_of_lt, mem_iff]
   intro C hi
-  simp_rw [mem_iff] at hi
   choose L' hL' using hi
   simp_rw [hL']
   intro hL
-  have h₁ := sInter_memOfUnion_nonempty L' hL
-  have h₂ : (∀ (i : ℕ), p ↑(mem_of_union L' hL i)) :=
-    fun i ↦ (hL' i).2 (mem_of_union L' hL i).val (mem_of_union L' hL i).prop
-  have h₃ := (iff_nonempty_iInter_of_lt' p).mp hp (fun k ↦ (mem_of_union L' hL k).val) h₂ h₁
-  have h₄ : ⋂ i, (mem_of_union L' hL) i ⊆ ⋂ i, ⋃₀ SetLike.coe (L' i) := sInter_memOfUnion_isSubset L' hL
-  exact Nonempty.mono h₄ h₃
+  refine Nonempty.mono (sInter_memOfUnion_isSubset L' hL) ?_
+  exact (IsCompactSystem.iff_nonempty_iInter_of_lt' S).mp hS
+    (fun k ↦ memOfUnion L' hL k)
+    (fun i ↦ (hL' i).2 <| (memOfUnion.spec L' hL (i + 1)).1 ⟨i, by grind⟩)
+    (fun n ↦ sInter_memOfUnion_nonempty L' hL (n + 1))
+
+end IsCompactSystem
 
 end Union
 
+section Inter
+
+namespace IsCompactSystem
+
+/-- Finite intersections of sets in a compact system. -/
+def inter (S : Set (Set α)) : Set (Set α) :=
+  sInter '' { L : Set (Set α) | L.Countable ∧ L ⊆ S}
+
+lemma inter.mem_iff (s : Set α) : s ∈ inter S ↔ ∃ L : Set (Set α), L.Countable ∧ s = ⋂₀ L ∧ ↑L ⊆ S := by
+  refine ⟨fun ⟨L, hL⟩ ↦ ?_, fun h ↦ ?_⟩
+  · simp only [mem_setOf_eq] at hL
+    use L
+    simp [hL]
+  · obtain ⟨L, hL⟩ := h
+    use L
+    simp [hL.1, hL.2]
+
+/- If `IsCompactSystem S`, the set of finite unions of sets in `S` is also a compact system. -/
+theorem inter.isCompactSystem (S : Set (Set α)) (hS : IsCompactSystem S) :
+    IsCompactSystem (inter S) := by
+  by_cases h : Nonempty α
+  · rw [IsCompactSystem] at hS ⊢
+    intro D hD₁ hD₂
+    simp_rw [inter.mem_iff] at hD₁
+    choose E hE₁ using hD₁
+    simp [hE₁] at hD₂
+    rw [← sInter_iUnion] at hD₂
+    have hE₃ : (⋃ i, E i).Countable := by
+      simp [hE₁]
+    have hE₄ : (⋃ i, E i) ⊆ S := by
+      simp [hE₁]
+    haveI : Nonempty (⋃ i, E i) := by
+      contrapose! hD₂
+      rw [Set.eq_empty_of_isEmpty (⋃ i, E i)]
+      simp only [sInter_empty]
+      refine nonempty_iff_univ_nonempty.mp h
+    let ⟨x, hx⟩ := this
+    rw [← range_enumerateCountable_of_mem hE₃ hx, sInter_range] at hD₂
+    specialize hS (enumerateCountable hE₃ x)
+    obtain ⟨n, hn⟩ := hS (fun i ↦ hE₄ (enumerateCountable_mem hE₃ hx i)) hD₂
+    have g : ∀ i, ∃ j, enumerateCountable hE₃ x i ∈ E j := by
+      intro i
+      rw [← mem_iUnion]
+      exact enumerateCountable_mem hE₃ hx i
+    choose g hg using g
+    use (Finset.range (n + 1)).sup g
+    refine subset_eq_empty ?_ hn
+    simp [dissipate]
+    intro i hi
+    apply le_trans (b := D (g i)) _ ((hE₁ (g i)).2.1 ▸ sInter_subset_of_mem (hg i))
+    apply biInter_subset_of_mem
+    change g i ≤ (Finset.range (n + 1)).sup g
+    exact le_sup (mem_range_succ_iff.mpr hi)
+  · simp at h
+    exact of_IsEmpty (inter S)
+
+end IsCompactSystem
+
+end Inter
+
+
+-- PR 3
 section pi
+
+namespace IsCompactSystem
 
 variable {ι : Type*} {α : ι → Type*}
 
@@ -592,7 +599,7 @@ theorem iInter_pi_empty_iff {β : Type*} (s : β → Set ι) (t : β → (i : ι
    (⋂ b, ((s b).pi (t b)) = ∅) ↔ (∃ i : ι, ⋂ (b : β) (_: i ∈ s b), (t b i) = ∅):= by
   rw [iInter_eq_empty_iff, not_iff_not.symm]
   push_neg
-  simp only [nonempty_iInter, mem_iInter]
+  simp only [Set.mem_pi, Set.nonempty_iInter, mem_iInter]
   refine ⟨fun ⟨x, hx⟩ i ↦ ?_, fun h ↦ ?_⟩
   · refine ⟨x i, fun j hi ↦ hx j i hi⟩
   · choose x hx using h
@@ -632,9 +639,9 @@ theorem pi (C : (i : ι) → Set (Set (α i))) (hC : ∀ i, IsCompactSystem (C i
   rw [biInter_univ_pi_empty_iff x]
   use i
 
-end pi
-
 end IsCompactSystem
+
+end pi
 
 section ClosedCompactSquareCylinders
 
@@ -650,19 +657,15 @@ def MeasureTheory.compactClosedSquareCylinders : Set (Set (Π i, α i)) :=
 
 /-- Products of compact and closed sets form a compact system. -/
 theorem IsCompactSystem.compactClosedPi :
-    IsCompactSystem (univ.pi '' univ.pi (fun i ↦ { t : Set (α i) | IsCompact t ∧ IsClosed t })) :=
-  IsCompactSystem.pi _ (fun _ ↦ IsCompactSystem.of_isCompact_isClosed)
-/-- Products of compact and closed sets form a compact system. -/
+    IsCompactSystem (univ.pi '' univ.pi (fun i ↦ { t : Set (α i) | IsCompact t ∧ IsClosed t })) := IsCompactSystem.pi _ (fun _ ↦ isCompactSystem_isCompact_isClosed (α _))
 
 theorem IsCompactSystem.compactClosedOrUnivPi :
-    IsCompactSystem (univ.pi '' univ.pi (fun i ↦ { t : Set (α i) | IsCompact t ∧ IsClosed t }
-    ∪ { univ })) :=
-  IsCompactSystem.pi _ (fun _ ↦ IsCompactSystem.of_isCompact_isClosed_or_univ)
+    IsCompactSystem (univ.pi '' univ.pi (fun i ↦ insert univ { t : Set (α i) | IsCompact t ∧ IsClosed t })) := IsCompactSystem.pi _ (fun i ↦ isCompactSystem_insert_univ_isCompact_isClosed (α i))
 
 /-- Compact and closed square cylinders are a compact system. -/
 theorem isCompactSystem.compactClosedSquareCylinders :
-    IsCompactSystem (compactClosedSquareCylinders α) :=
-  IsCompactSystem.mono (IsCompactSystem.compactClosedOrUnivPi _)
-    (squareCylinders_subset_of_or_univ _)
+    IsCompactSystem (compactClosedSquareCylinders α) := by
+  apply IsCompactSystem.mono (IsCompactSystem.compactClosedOrUnivPi _)
+    (MeasureTheory.squareCylinders_subset_of_or_univ _)
 
 end ClosedCompactSquareCylinders

@@ -3,10 +3,8 @@ Copyright (c) 2025 Peter Pfaffelhuber. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Peter Pfaffelhuber
 -/
-import Mathlib.Data.Set.Lattice
-import Mathlib.Order.Directed
 import Mathlib.MeasureTheory.PiSystem
-import Mathlib.Data.Set.Accumulate
+import Mathlib.Data.Set.Dissipate
 
 /-!
 # Dissipate
@@ -18,7 +16,7 @@ In large parts, this file is parallel to `Mathlib.Data.Set.Accumulate`, where
 
 PR1 #33975
 
-PR2 all others, and accumulate changes accordingly
+PR2 PR 36013 various others, and accumulate changes accordingly
 
 -/
 
@@ -29,16 +27,19 @@ variable {α β : Type*} {s : α → Set β}
 namespace Set
 
 -- PR1
-/-- `dissipate s` is the intersection of `s y` for `y ≤ x`. -/
-def dissipate [LE α] (s : α → Set β) (x : α) : Set β :=
+/- `dissipate s` is the intersection of `s y` for `y ≤ x`. -/
+/- def dissipate [LE α] (s : α → Set β) (x : α) : Set β :=
   ⋂ y ≤ x, s y
 
 -- PR1
 theorem dissipate_def [LE α] {x : α} : dissipate s x = ⋂ y ≤ x, s y := rfl
+-/
 
-theorem dissipate_eq {s : ℕ → Set β} {n : ℕ} : dissipate s n = ⋂ k < n + 1, s k := by
+-- PR 36013
+theorem dissipate_eq_iInter_lt {s : ℕ → Set β} {n : ℕ} : dissipate s n = ⋂ k < n + 1, s k := by
   simp_rw [Nat.lt_add_one_iff, dissipate]
 
+-- PR 2
 theorem dissipate_eq_ofFin {s : ℕ → Set β} {n : ℕ} : dissipate s n = ⋂ (k : Fin (n + 1)), s k := by
   rw [dissipate]
   ext x
@@ -47,14 +48,15 @@ theorem dissipate_eq_ofFin {s : ℕ → Set β} {n : ℕ} : dissipate s n = ⋂ 
 
 @[simp]
 theorem dissipate_eq_accumulate_compl [LE α] {s : α → Set β} {x : α} :
-     (Set.Accumulate (fun y ↦ (s y)ᶜ) x)ᶜ = dissipate s x := by
+     (Set.accumulate (fun y ↦ (s y)ᶜ) x)ᶜ = dissipate s x := by
   simp [accumulate_def, dissipate_def]
 
 @[simp]
 theorem accumulate_eq_dissipate_compl [LE α] {s : α → Set β} {x : α} :
-     (Set.dissipate (fun y ↦ (s y)ᶜ) x)ᶜ = Accumulate s x := by
+     (Set.dissipate (fun y ↦ (s y)ᶜ) x)ᶜ = accumulate s x := by
   simp [accumulate_def, dissipate_def]
 
+/-
 -- PR1
 @[simp]
 theorem mem_dissipate [LE α] {x : α} {z : β} : z ∈ dissipate s x ↔ ∀ y ≤ x, z ∈ s y := by
@@ -78,10 +80,12 @@ theorem antitone_dissipate [Preorder α] : Antitone (dissipate s) :=
 theorem dissipate_subset_dissipate [Preorder α] {x y} (h : y ≤ x) :
     dissipate s x ⊆ dissipate s y :=
   antitone_dissipate h
+-/
 
 theorem dissipate_nonempty_mono [Preorder α] {x y} (h : y ≤ x) :
     (dissipate s x).Nonempty → (dissipate s y).Nonempty := Set.Nonempty.mono <| dissipate_subset_dissipate h
 
+/-
 -- PR1 rename to biInter_dissipate
 @[simp]
 theorem biInter_dissipate [Preorder α] {s : α → Set β} {x : α} :
@@ -99,12 +103,14 @@ theorem iInter_dissipate [Preorder α] : ⋂ x, dissipate s x = ⋂ x, s x := by
 lemma dissipate_bot [PartialOrder α] [OrderBot α] (s : α → Set β) : dissipate s ⊥ = s ⊥ := by
   simp [dissipate_def]
 
+-- PR1
 @[simp]
 lemma dissipate_zero_nat (s : ℕ → Set β) : dissipate s 0 = s 0 := by
   simp [dissipate_def]
-
+-/
 open Nat
 
+/-
 -- PR1
 theorem dissipate_succ (s : ℕ → Set α) (n : ℕ) :
   dissipate s (n + 1) = (dissipate s n) ∩ s (n + 1)
@@ -112,11 +118,13 @@ theorem dissipate_succ (s : ℕ → Set α) (n : ℕ) :
   ext x
   simp_all only [dissipate_def, mem_iInter, mem_inter_iff]
   grind
+-/
 
 @[simp]
 lemma dissipate_zero (s : ℕ → Set β) : dissipate s 0 = s 0 := by
   simp [dissipate_def]
 
+-- PR 36013
 /-- For a directed set of sets `s : ℕ → Set α` and `n : ℕ`, there exists `m : ℕ` (maybe
 larger than `n`)such that `s m ⊆ dissipate s n`. -/
 lemma exists_subset_dissipate_of_directed {s : ℕ → Set α}
@@ -132,6 +140,7 @@ lemma exists_subset_dissipate_of_directed {s : ℕ → Set α}
     simp only [subset_inter_iff]
     exact ⟨le_trans hk.1 hm, hk.2⟩
 
+-- PR 36013
 lemma directed_dissipate {s : ℕ → Set α} :
     Directed (fun (x y : Set α) => y ⊆ x) (dissipate s) :=
   antitone_dissipate.directed_ge
@@ -140,6 +149,7 @@ lemma dissipate_empty_of_mem_empty {s : ℕ → Set α} {k n : ℕ} (hk : k ≤ 
   rw [← subset_empty_iff] at h ⊢
   exact le_trans (dissipate_subset hk) h
 
+-- PR 36013
 lemma exists_dissipate_eq_empty_iff_of_directed (C : ℕ → Set α)
     (hd : Directed (fun (x y : Set α) => y ⊆ x) C) :
     (∃ n, C n = ∅) ↔ (∃ n, dissipate C n = ∅) := by
@@ -151,6 +161,7 @@ lemma exists_dissipate_eq_empty_iff_of_directed (C : ℕ → Set α)
     obtain ⟨m, hm⟩ := exists_subset_dissipate_of_directed hd n
     exact Set.Nonempty.mono hm (h m)
 
+-- PR 36013
 /-- For a ∩-stable set of sets `p` on `α` and a sequence of sets `s` with this attribute,
 `dissipate s n` belongs to `p`. -/
 lemma IsPiSystem.dissipate_mem {s : ℕ → Set α} {p : Set (Set α)}
