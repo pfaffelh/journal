@@ -11,9 +11,6 @@ import Mathlib
 
 We develop a setup for discrete (probability) measures, which is an alternative to PMFs (Probability Mass Functions). Here, a `μ : DiscreteMeasure` coerces to a sum of `dirac`s with weights given by `μ.weight : α → ℝ≥0∞`.
 
-
--- xxx Since `dirac a` is a `@Measure α ⊤`, we immediately have that a `DiscreteMeasure α` is a `@Measure α ⊤`, i.e., it is defined on the power set of `α`.
-
 For the coercion to `Measure`, note that `μ : DiscreteMeasure α` is not only σ-additive, but additive; see `DiscreteMeasure.m_iUnion`.
 
 This setup combines the following features:
@@ -30,9 +27,254 @@ open MeasureTheory ProbabilityTheory Measure Function
 
 open scoped ENNReal NNReal
 
+--
+--#37060
+@[to_additive]
+lemma mulSupport_subset_subsingleton_of_disjoint_on_mulSupport [One β] {s : γ → Set α} (f : α → β)
+  (hs : Pairwise (Disjoint on (fun j ↦ s j ∩ f.mulSupport)))
+  (i : α) (j : γ) (hj : i ∈ s j) :
+    (fun d ↦ (s d).mulIndicator f i).mulSupport ⊆ {j} := by
+  simp only [Pairwise, Disjoint, Set.le_eq_subset, Set.subset_inter_iff,] at hs
+  simp only [Set.subset_singleton_iff, mem_mulSupport, ne_eq, Set.mulIndicator_apply_eq_one,
+    Classical.not_imp, and_imp]
+  intro j' hj' hi
+  by_contra h
+  change f i ≠ 1 at hi
+  rw [← mem_mulSupport] at hi
+  simp_rw [← Set.singleton_subset_iff] at hs hj hj' hi
+  simpa only [Set.singleton_subset_iff] using hs h ⟨hj', hi⟩ ⟨hj, hi⟩
+
+@[to_additive]
+lemma mulSupport_subsingleton_of_disjoint [One β] {s : γ → Set α} (f : α → β)
+    (hs : Pairwise (Disjoint on s)) (i : α) (j : γ)
+    (hj : i ∈ s j) : (fun d ↦ (s d).mulIndicator f i).mulSupport ⊆ {j} :=
+  mulSupport_subset_subsingleton_of_disjoint_on_mulSupport f (pairwise_disjoint_mono hs <| fun _ _ hi ↦ hi.1) i j hj
+
+--#37060
+@[to_additive]
+lemma tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α)
+    (i : β) (hi : i ∈ ⋃ d, s d) (hs : Pairwise (Disjoint on (fun j ↦ s j ∩ f.mulSupport))) :
+    ∏' d, (s d).mulIndicator f i = f i := by
+  obtain ⟨j, hj⟩ := Set.mem_iUnion.mp hi
+  rw [← tprod_subtype_eq_of_mulSupport_subset (s := {j})]
+  · aesop
+  · exact mulSupport_subset_subsingleton_of_disjoint_on_mulSupport f hs i j hj
+
+@[to_additive]
+lemma tprod_mulIndicator_of_mem_union_disjoint [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α) (hs : Pairwise (Disjoint on s))
+    (i : β) (hi : i ∈ ⋃ d, s d) : ∏' d, (s d).mulIndicator f i = f i :=
+  tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem  s f i hi (pairwise_disjoint_mono hs <| fun _ _ hi ↦ hi.1)
+
+@[to_additive]
+lemma tprod_mulIndicator_of_notMem [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α) (i : β) (hi : ∀ d, i ∉ s d) :
+    ∏' d, (s d).mulIndicator f i = 1 := by
+  aesop
+
+@[to_additive]
+lemma mulIndicator_iUnion_of_disjoint_on_mulSupport [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α)
+    (hs : Pairwise (Disjoint on (fun j ↦ s j ∩ f.mulSupport))) (i : β) :
+    (⋃ d, s d).mulIndicator f i = ∏' d, (s d).mulIndicator f i := by
+  by_cases h₀ : i ∈ ⋃ d, s d
+  · simp only [h₀, Set.mulIndicator_of_mem]
+    apply Eq.symm <| tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem  _ _ _ h₀ hs
+  · aesop
+
+@[to_additive]
+lemma mulIndicator_iUnion_of_pairwise_disjoint [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (hs : Pairwise (Disjoint on s)) (f : β → α) :
+    (⋃ d, s d).mulIndicator f = fun i ↦ ∏' d, (s d).mulIndicator f i := by
+  ext i
+  exact mulIndicator_iUnion_of_disjoint_on_mulSupport s f (pairwise_disjoint_mono hs <| fun _ _ hi ↦ hi.1) i
+
+-- Set.indicator
+
+-- #34138
+@[simp]
+lemma Set.indicator.mul_indicator_eq (f : α → ℝ≥0∞) (s : Set α) (a : α) : f a * s.indicator 1 a = s.indicator f a := by
+  simp only [Set.indicator, Pi.one_apply, mul_ite, mul_one, mul_zero]
+
+-- #34138
+lemma Set.PairwiseDisjoint.singleton_subtype (s : Set α) : Pairwise (Disjoint on fun (x : s) => ({x.val} : Set α)) := by
+  intro a b hab
+  apply pairwise_disjoint_fiber id
+  exact Subtype.coe_ne_coe.mpr hab
+
+-- #34138
+lemma Set.PairwiseDisjoint.fiber_subtype {g : α → β} (s : Set β) : Pairwise (Disjoint on fun (x : s) => (g⁻¹' {x.val} : Set α)) :=
+  fun _ _ hab ↦ pairwise_disjoint_fiber g (Subtype.coe_ne_coe.mpr hab)
+
+
+-- start `DiscreteMeasure` here.
 universe u v w
 
 variable {α β γ δ : Type*}
+
+structure DiscreteMeasure (α : Type*) : Type _ where
+  weight : α → ℝ≥0∞
+
+namespace MeasureTheory
+
+/-- The `Measure α` as defined through a `DiscreteMeasure α` (mass function) through a sum of
+diracs, using a given `MeasurableSpace α`. -/
+noncomputable def DiscreteMeasure.toMeasure [MeasurableSpace α] (μ : DiscreteMeasure α) : Measure α :=
+  Measure.sum (fun x ↦ μ.weight x • .dirac x)
+
+namespace DiscreteMeasure
+
+noncomputable instance [MeasurableSpace α] : Coe (DiscreteMeasure α) (Measure α) where
+  coe μ := μ.toMeasure
+
+instance instFunLike : FunLike (DiscreteMeasure α) α ℝ≥0∞ where
+  coe p a := p.weight a
+  coe_injective' p q h := by
+    cases p
+    cases q
+    simp_all
+
+@[simp]
+lemma weight_eq (μ : DiscreteMeasure α) (x : α) : μ.weight x = μ x := by rfl
+
+-- #34138
+@[ext]
+protected theorem ext {v w : DiscreteMeasure α} (h : ∀ x, v x = w x) : v = w :=
+  DFunLike.ext v w h
+
+-- #34138
+@[simp]
+theorem mem_support_iff (w : DiscreteMeasure α) (a : α) : a ∈ w.weight.support ↔ w a ≠ 0 := Iff.rfl
+
+-- #34138
+theorem apply_eq_zero_iff (w : DiscreteMeasure α) (a : α) : w a = 0 ↔ a ∉ w.weight.support := by
+  rw [mem_support_iff, Classical.not_not]
+
+-- #34138
+theorem apply_pos_iff (w : DiscreteMeasure α) (a : α) : 0 < w a ↔ a ∈ w.weight.support :=
+  pos_iff_ne_zero.trans (w.mem_support_iff a).symm
+
+-- #34138
+lemma toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (s : Set α) (hs : MeasurableSet s):
+    μ.toMeasure s = ∑' (i : α), μ i * s.indicator 1 i := by
+  rw [toMeasure, sum_apply (hs := hs)]
+  simp_rw [smul_apply, smul_eq_mul, dirac_apply]
+  simp
+
+-- #34138
+lemma toMeasure_apply₁ [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (s : Set α) (hs : MeasurableSet s):
+    μ.toMeasure s = ∑' (i : α), s.indicator μ i := by
+  simp [toMeasure_apply (hs := hs)]
+
+-- #34138
+lemma toMeasure_apply₂ [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (s : Set α) (hs : MeasurableSet s) : μ.toMeasure s = ∑' (a : s), (μ a) := by
+  simp [toMeasure_apply (hs := hs), tsum_subtype]
+
+-- #34138
+@[simp]
+lemma toMeasure_apply_singleton [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (a : α) : μ.toMeasure {a} = μ a := by
+  simp only [toMeasure_apply (hs := measurableSet_singleton a), Set.indicator.mul_indicator_eq, ← tsum_subtype,tsum_singleton]
+
+-- #34138
+theorem toMeasure_apply_eq_zero_iff [MeasurableSpace α] [MeasurableSingletonClass α] {μ : DiscreteMeasure α} {s : Set α} (hs : MeasurableSet s):
+    μ.toMeasure s = 0 ↔ Disjoint μ.weight.support s := by
+  rw [toMeasure_apply₁ (hs := hs), ENNReal.tsum_eq_zero]
+  exact funext_iff.symm.trans Set.indicator_eq_zero'
+
+-- #34138
+@[simp]
+theorem toMeasure_apply_inter_support [MeasurableSpace α] [MeasurableSingletonClass α] {μ : DiscreteMeasure α} {s : Set α} (hs : MeasurableSet s) (h : MeasurableSet μ.weight.support) :
+    μ.toMeasure (s ∩ μ.weight.support) = μ.toMeasure s := by
+  simp only [toMeasure_apply (hs := hs), toMeasure_apply (hs := MeasurableSet.inter hs h)]
+  apply tsum_congr (fun a ↦ ?_)
+  repeat rw [Set.indicator.mul_indicator_eq, Set.indicator]
+  aesop
+
+theorem toMeasure_apply_inter_support' [MeasurableSpace α] [MeasurableSingletonClass α] {μ : DiscreteMeasure α} {s : Set α} (t : Set α) (ht : μ.weight.support ⊆ t) :
+    μ.toMeasure (s ∩ t) = μ.toMeasure s := by
+  rw [← toMeasure_apply_inter_support, ← toMeasure_apply_inter_support (s := s), Set.inter_assoc]
+  congr 1
+  rw [← Set.left_eq_inter, Set.inter_comm] at ht
+  rw [← ht]
+  repeat sorry
+
+-- #34138
+theorem toMeasure_apply_eq_of_inter_support_eq [MeasurableSpace α] [MeasurableSingletonClass α] {μ : DiscreteMeasure α} {s t : Set α} (hs : MeasurableSet s) (ht : MeasurableSet t) (h : MeasurableSet μ.weight.support)
+    (h : s ∩ μ.weight.support = t ∩ μ.weight.support) : μ.toMeasure s = μ.toMeasure t := by
+  rw [← toMeasure_apply_inter_support (s := s) (hs := hs) (h := h), ← toMeasure_apply_inter_support (s := t) (hs₁ := ht), h]
+
+
+-- #34138
+/- Additivity for `μ.toMeasure` for a `μ : DiscreteMeasure` not only applies to countable unions, but
+to arbitrary ones. -/
+lemma toMeasure_additive [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (s : δ → Set α) (h₀ : ∀ d, MeasurableSet (s d)) (h₁ : MeasurableSet (⋃ d, s d)) (hs : Pairwise (Disjoint on s)) :
+    μ.toMeasure (⋃ d, s d) = ∑' (d : δ), μ.toMeasure (s d) := by
+  simp only [toMeasure_apply (hs := h₁), Set.indicator.mul_indicator_eq]
+  conv => right; left; intro d; rw [toMeasure_apply (hs := h₀ _)]
+  simp_rw [Set.indicator.mul_indicator_eq]
+  rw [ENNReal.tsum_comm]
+  apply tsum_congr <| fun b ↦ by rw [indicator_iUnion_of_pairwise_disjoint s hs μ]
+
+-- #34138
+theorem toMeasure_apply_finset [MeasurableSpace α] [MeasurableSingletonClass α] {μ : DiscreteMeasure α} (s : Finset α) : μ.toMeasure s = ∑ x ∈ s, μ x
+    := by
+  rw [toMeasure_apply₁ (hs := by measurability), tsum_eq_sum (s := s)]
+  · exact Finset.sum_indicator_subset μ fun ⦃a⦄ a_1 => a_1
+  · exact fun b a => Set.indicator_of_notMem a μ
+
+-- #34138
+@[simp]
+theorem toMeasure_apply_fintype [MeasurableSpace α] [MeasurableSingletonClass α] {μ : DiscreteMeasure α} (s : Set α) [Fintype α] :
+    μ.toMeasure s = ∑ x, s.indicator μ x := by
+  rw [toMeasure_apply₁ (hs := by measurability)]
+  exact tsum_fintype (s.indicator μ)
+
+-- #34138
+lemma toMeasure_apply_univ [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) : μ.toMeasure Set.univ = ∑' (a : α), μ a := by
+  simp [toMeasure_apply]
+
+-- #34138
+lemma toMeasure_apply_univ' [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (s : δ → Set α) (h : ∀ d, MeasurableSet (s d)) (hs₀ : Pairwise (Disjoint on s))
+    (hs₁ : Set.univ = ⋃ d, s d) : μ.toMeasure Set.univ = ∑' (d : δ), μ.toMeasure (s d) := by
+  rw [hs₁]
+  exact toMeasure_additive μ s h (Eq.symm hs₁ ▸ MeasurableSet.univ) hs₀
+
+
+-- #34138
+theorem toMeasure_injective [MeasurableSpace α] [MeasurableSingletonClass α] : (@toMeasure α _).Injective := by
+  intro μ ν h
+  ext x
+  rw [← toMeasure_apply_singleton μ, ← toMeasure_apply_singleton ν, h]
+
+-- #34138
+@[simp]
+theorem toMeasure_inj [MeasurableSpace α] [MeasurableSingletonClass α] {μ ν : DiscreteMeasure α} : μ.toMeasure = ν.toMeasure ↔ μ = ν :=
+  toMeasure_injective.eq_iff
+
+-- #34138
+theorem toMeasure_ext {μ ν : DiscreteMeasure α} (h : μ.toMeasure = ν.toMeasure) : μ = ν :=
+  toMeasure_inj.mp h
+
+-- #34138
+theorem toMeasure_mono {s t : Set α} {μ : DiscreteMeasure α} (h : s ∩ μ.support ⊆ t) :
+    μ.toMeasure s ≤ μ.toMeasure t := by
+  rw [← μ.toMeasure_apply_inter_support]
+  exact OuterMeasureClass.measure_mono μ.toMeasure h
+
+-- #34138
+@[simp]
+theorem restrict_toMeasure_support {μ : DiscreteMeasure α} :
+    μ.toMeasure.restrict μ.support = μ.toMeasure := by
+  apply @Measure.ext α ⊤
+  intro s hs
+  rw [Measure.restrict_apply hs, μ.toMeasure_apply_inter_support]
+
+
+
+
+
+
+noncomputable def coin (p : ℝ≥0∞) : Measure Bool := (⟨fun | true => p | false => 1 - p⟩ : DiscreteMeasure Bool)
+
+noncomputable def geometric (p : ℝ≥0∞) : Measure ℕ := (⟨fun n ↦ (1 - p) ^ n * p⟩ : DiscreteMeasure ℕ)
+
+
 
 -- add to Set.indicator
 

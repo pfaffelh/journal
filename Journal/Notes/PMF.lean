@@ -1,5 +1,5 @@
 import Mathlib
-import Journal.Notes.DiscreteMeasure
+-- import Journal.Notes.DiscreteMeasure
 
 /- We extend `PMF`s in order to be more useful.
 

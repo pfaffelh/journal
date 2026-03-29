@@ -1,13 +1,11 @@
 import Mathlib
 
-
 instance traversable_list : Traversable (List) := by exact instTraversableList
 
 #check List.traverse
 -- #check List.Vector.mk
 
 example (v : List.Vector α n) : v.val.length = n := by exact List.Vector.length_val v
-
 
 namespace List.Vector
 
