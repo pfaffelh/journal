@@ -266,26 +266,6 @@ open ENNReal MeasureTheory
 
 namespace MeasureTheory
 
-structure DiscreteMeasure (α : Type*) : Type _ where
-  weight : α → ℝ≥0∞
-
--- define by summing weights over a set
-def DiscreteMeasure.toMeasure (μ : DiscreteMeasure α) [MeasurableSpace α] : Measure α :=
-  Measure.sum (fun x ↦ μ.weight x • .dirac x)
-
-instance [MeasurableSpace α] : Coe (DiscreteMeasure α) (Measure α) where
-  coe μ := μ.toMeasure
-
-instance instFunLike : FunLike (DiscreteMeasure α) α ℝ≥0∞ where
-  coe p a := p.weight a
-  coe_injective' p q h := by
-    cases p
-    cases q
-    simp_all
-
-def coin (p : ℝ≥0∞) : Measure Bool := (⟨fun | true => p | false => 1 - p⟩ : DiscreteMeasure Bool)
-
-def geometric (p : ℝ≥0∞) : Measure ℕ := (⟨fun n ↦ (1 - p) ^ n * p⟩ : DiscreteMeasure ℕ)
 
 -- #34138
 /-- A mass function, or discrete measures is a function `α → ℝ≥0∞`. -/
@@ -346,7 +326,7 @@ lemma toMeasure_trim_eq_toMeasure' (w : MassFunction α) [mα : MeasurableSpace 
 -- #34138
 lemma toMeasure_apply (μ : MassFunction α) (s : Set α) :
     μ.toMeasure s = ∑' (i : α), μ i * s.indicator 1 i := by
-  simp [toMeasure]
+  simp? [toMeasure]
 
 -- #34138
 lemma toMeasure_apply₁ (μ : MassFunction α) (s : Set α) :

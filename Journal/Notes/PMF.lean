@@ -29,6 +29,21 @@ variable {α β γ δ : Type*}
 
 namespace PMF
 
+#check geometricPMF α → ℝ≥0∞ 
+
+lemma hp_pos (p q : ℝ) (hp₁ : 0 < p) (hp₂ : p ≤ 1) (hq₁ : 0 < q) (hq₂ : q ≤ 1) : 0 < 1 - (1 - p) * (1 - q) := by 
+  sorry
+
+lemma hp_le_one (p q : ℝ) (hp₁ : 0 < p) (hp₂ : p ≤ 1) (hq₁ : 0 < q) (hq₂ : q ≤ 1) : 1 - (1 - p) * (1 - q) ≤ 1 := by 
+  sorry
+
+example (p q : ℝ) (hp₁ : 0 < p) (hp₂ : p ≤ 1) (hq₁ : 0 < q) (hq₂ : q ≤ 1) : geometricPMF (p := 1 - (1 - p) * (1 - q)) (hp_pos p q hp₁ hp₂ hq₁ hq₂) (hp_le_one p q hp₁ hp₂ hq₁ hq₂) = 
+  do 
+    let X ← geometricPMF hp₁ hp₂ 
+    let Y ← geometricPMF hq₁ hq₂ 
+    return min X Y := by 
+  sorry
+
 def toDiscreteMeasure {α : Type*} (p : PMF α) : DiscreteMeasure α where
   weight := p
 
