@@ -619,7 +619,7 @@ lemma map_apply (μ : MassFunction α) (g : α → β) (x : β) : μ.map g x = �
 
 lemma map_toMeasure_apply₁ (μ : MassFunction α) (g : α → β) (s : Set β) : (μ.map g).toMeasure s = ∑' (a : α), μ a * s.indicator 1 (g a) := by
   rw [map_toMeasure']
-  simp
+  simp?
 
 lemma map_apply₂ (μ : MassFunction α) (g : α → β) (x : β) : μ.map g x = ∑' (a : α), μ a * ({x} : Set β).indicator 1 (g a) := by
   rw[map_apply]

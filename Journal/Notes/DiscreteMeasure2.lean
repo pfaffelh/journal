@@ -101,6 +101,11 @@ lemma Set.PairwiseDisjoint.singleton_subtype (s : Set α) : Pairwise (Disjoint o
 lemma Set.PairwiseDisjoint.fiber_subtype {g : α → β} (s : Set β) : Pairwise (Disjoint on fun (x : s) => (g⁻¹' {x.val} : Set α)) :=
   fun _ _ hab ↦ pairwise_disjoint_fiber g (Subtype.coe_ne_coe.mpr hab)
 
+-- to Function
+
+lemma Function.comp_apply'  {β : Sort u_1} {δ : Sort u_2} {α : Sort u_3} {f : β → δ} {g : α → β} : (f ∘ fun x => g x) = fun x => f (g x) := by
+  -- simp_rw [← Function.comp_apply]
+  rfl
 
 -- start `DiscreteMeasure` here.
 universe u v w
@@ -376,7 +381,6 @@ variable (p : DiscreteMeasure α)
 
 variable  [hmeas : MeasurableSpace α] [MeasurableSingletonClass α]
 
-
 @[simp]
 theorem toMeasure_toDiscreteMeasure : toDiscreteMeasure p.toMeasure = p := by
   ext x
@@ -405,9 +409,6 @@ section map
 
 /-- The functorial action of a function on a `DiscreteMeasure`. -/
 noncomputable def map (g : α → β) (μ : DiscreteMeasure α) : DiscreteMeasure β where weight := fun b ↦ (∑' a, (g⁻¹' {b}).indicator μ.weight a)
-
-noncomputable instance : Functor DiscreteMeasure where
-  map := map
 
 @[simp]
 lemma map_eq [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -452,9 +453,8 @@ lemma map_toMeasure' [MeasurableSpace α] [MeasurableSingletonClass α]
   simp_rw [Measure.map_smul, @Measure.map_dirac α β _ _ g (by measurability)]
   rfl
 
-lemma map_map [MeasurableSpace α] [MeasurableSingletonClass α]
-[MeasurableSpace β] [MeasurableSingletonClass β] [MeasurableSpace γ] [MeasurableSingletonClass γ] (μ : DiscreteMeasure α) (g : α → β) (hg : Measurable g) (h : β → γ) (hh : Measurable h): (μ.map g).map h = μ.map (h ∘ g) := by
-  rw [← toMeasure_inj, map_coe (hf := by measurability), map_coe (hf := hg), map_coe (hf := by measurability), Measure.map_map (by measurability) (by measurability)]
+lemma map_map (μ : DiscreteMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
+  rw [← @toMeasure_inj γ ⊤, @map_coe β γ ⊤ _ ⊤ _ (hf := by measurability), @map_coe α β ⊤ _ ⊤ _ (hf := by measurability), @map_coe α γ ⊤ _ ⊤ _ (hf := by measurability), Measure.map_map (by measurability) (by measurability)]
 
 lemma map_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (hg : Measurable g) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = μ.toMeasure (g⁻¹' s) := by
   rw [map_coe (hf := hg)]
@@ -526,12 +526,71 @@ noncomputable def join (m : DiscreteMeasure (DiscreteMeasure α)) : (DiscreteMea
 lemma join_weight (m : DiscreteMeasure (DiscreteMeasure α)) (x : α) : m.join x = ∑' (μ : DiscreteMeasure α), m μ * μ x := by
   rfl
 
-instance : MeasurableSpace (DiscreteMeasure α) := ⊤
+noncomputable instance instMeasurableSpace [MeasurableSpace α] : MeasurableSpace (DiscreteMeasure α) := MeasurableSpace.comap toMeasure Measure.instMeasurableSpace
 
-lemma Measurable_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] : Measurable (@toMeasure α _) := by
-  measurability
+lemma comap_def [m : MeasurableSpace α] (f : β → α) {s : Set β} : MeasurableSet[m.comap f] s ↔ ∃ s', MeasurableSet[m] s' ∧ f ⁻¹' s' = s := Iff.rfl
 
-lemma join_coe [MeasurableSpace α] [MeasurableSingletonClass α] (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = Measure.join ((Measure.map toMeasure m.toMeasure)):= by
+@[measurability]
+lemma measurable_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] : Measurable (@toMeasure α _) := by
+  intro s hs
+  rw [comap_def]
+  use s
+
+/-
+
+lemma map_def {s : Set β} : MeasurableSet[m.map f] s ↔ MeasurableSet[m] (f ⁻¹' s) := Iff.rfl
+
+
+-- set_option maxHeartbeats 0
+lemma measurable_map [MeasurableSpace α] [MeasurableSingletonClass α]
+[MeasurableSpace β] [MeasurableSingletonClass β] (f : α → β) (hf : Measurable f) : Measurable (map f) := by
+  intro s hs
+  rw [comap_def]
+
+
+  sorry
+
+
+
+noncomputable instance Measure.instMeasurableSingletonClass [MeasurableSpace α] [MeasurableSingletonClass α] : MeasurableSingletonClass (Measure α) := by
+  sorry
+
+  /- refine { measurableSet_singleton := ?_ }
+  intro x
+  refine MeasurableSpace.measurableSet_generateFrom ?_
+  simp
+  use ∅
+  refine MeasurableSpace.measurableSet_generateFrom ?_
+  simp
+
+
+  refine MeasurableSpace.measurableSet_iInf.mpr (fun i => ?_)
+  rw [comap_def]
+  rw [comap_def]
+
+
+  rw [MeasurableSpace.map_def]
+
+
+  apply?
+  refine MeasurableSet.singleton x
+
+  sorry-/
+
+
+noncomputable instance instMeasurableSingletonClass [MeasurableSpace α] [MeasurableSingletonClass α] : MeasurableSingletonClass (DiscreteMeasure α) := by
+  refine { measurableSet_singleton := ?_ }
+  intro x
+  rw [comap_def]
+  use toMeasure '' {x}
+  refine ⟨?_, ?_⟩
+  · sorry
+  · refine Injective.preimage_image toMeasure_injective {x}
+
+
+-/
+
+lemma join_coe [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace (DiscreteMeasure α)] [MeasurableSingletonClass (DiscreteMeasure α)] {h : Measurable (@toMeasure α _)} (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = Measure.join ((Measure.map toMeasure m.toMeasure)):= by
   apply @Measure.ext _ _
   intro s hs
   rw [Measure.join_apply (hs := by measurability)]
@@ -553,16 +612,16 @@ lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7
   apply tsum_congr (fun i ↦ ?_)
   rw [ofMeasurable_apply s hs]
 
-lemma join_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = sum (fun μ  ↦ m μ • μ.toMeasure) := by
+lemma join_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace (DiscreteMeasure α)] [MeasurableSingletonClass (DiscreteMeasure α)] (h : Measurable (@toMeasure α _)) (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = sum (fun μ  ↦ m μ • μ.toMeasure) := by
   apply @Measure.ext _ _
   intro s hs
-  rw [join_coe, toMeasure, Measure.map_sum (hf := AEMeasurable.of_discrete), Measure.join_sum, Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
+  rw [join_coe, toMeasure, Measure.map_sum (hf := by measurability), Measure.join_sum, Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
   apply tsum_congr (fun μ ↦ ?_)
   rw [Measure.smul_apply, Measure.map_smul, Measure.join_smul, Measure.smul_apply, smul_eq_mul, smul_eq_mul, Measure.map_dirac, Measure.join_dirac]
   repeat measurability
 
-lemma join_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] (m : DiscreteMeasure (DiscreteMeasure α)) (s : Set α) (hs : MeasurableSet s): m.join.toMeasure s = ∑' (μ : DiscreteMeasure α), m μ * μ.toMeasure s := by
-  simp only [join_toMeasure]
+lemma join_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace (DiscreteMeasure α)]  [MeasurableSingletonClass (DiscreteMeasure α)] (h : Measurable (@toMeasure α _)) (m : DiscreteMeasure (DiscreteMeasure α)) (s : Set α) (hs : MeasurableSet s): m.join.toMeasure s = ∑' (μ : DiscreteMeasure α), m μ * μ.toMeasure s := by
+  simp only [@join_toMeasure α _ _ _  _ h]
   rw [Measure.sum_apply (hs := by measurability)]
   apply tsum_congr (fun μ ↦ ?_)
   simp
@@ -579,15 +638,24 @@ lemma ae_iff_support [MeasurableSpace α] [MeasurableSingletonClass α] (P : α 
   rw [toMeasure_apply₂ (hs := by measurability)]
   simp
 
-lemma isProbabilityMeasure_join_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] (m : DiscreteMeasure (DiscreteMeasure α)) (hm : IsProbabilityMeasure m.toMeasure) (hμ : ∀ μ, m μ ≠ 0 → IsProbabilityMeasure μ.toMeasure) : IsProbabilityMeasure (m.join).toMeasure := by
-  rw [join_coe]
-  apply @isProbabilityMeasure_join α _ _ (isProbabilityMeasure_map AEMeasurable.of_discrete)
-  simp_rw [← mem_support_iff, ← ae_iff_support (P := fun μ ↦ IsProbabilityMeasure (toMeasure μ)) (hP := by measurability)] at hμ
-  exact (ae_map_iff AEMeasurable.of_discrete (@MeasureTheory.ProbabilityMeasure.measurableSet_isProbabilityMeasure _ _)).mpr hμ
+lemma isProbabilityMeasure_join_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSingletonClass (DiscreteMeasure α)] (m : DiscreteMeasure (DiscreteMeasure α)) (hm : IsProbabilityMeasure m.toMeasure) (hμ : m.weight.support ⊆ {μ | IsProbabilityMeasure μ.toMeasure}) : IsProbabilityMeasure (m.join).toMeasure := by
+  rw [isProbabilityMeasure_iff, toMeasure_apply_univ] at ⊢ hm
+  simp_rw [join_weight]
+  rw [ENNReal.tsum_comm]
+  rw [← Summable.hasSum_iff ENNReal.summable] at ⊢ hm
+  rw [← hasSum_subtype_iff_of_support_subset (s := {μ : DiscreteMeasure α | IsProbabilityMeasure μ.toMeasure})] at ⊢ hm
+  · rw [Summable.hasSum_iff ENNReal.summable] at ⊢ hm
+    simp at ⊢ hm
+    simp_rw [ENNReal.tsum_mul_left]
+    conv => left; left; intro b; right; rw [isProbabilityMeasure_iff_tsumOne.mp b.prop]
+    simp only [mul_one]
+    rw [← hm]
+  · simp at ⊢ hμ
+    exact fun μ' hμ' _ _ ↦ hμ μ' hμ'
+  · exact hμ
+
 
 end join
-
-section bind
 
 /-- The monadic bind operation for `DiscreteMeasure`. -/
 noncomputable def bind (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) : (DiscreteMeasure β) := (μ.map g).join
@@ -597,13 +665,14 @@ noncomputable def mixture {n : ℕ} (p : DiscreteMeasure (Fin n)) (μ : Fin n �
 
 
 
-lemma bind_toMeasure_apply_eq_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (hg : Measurable g) (s : Set β) (hs : MeasurableSet s) : (μ.bind g).toMeasure s = μ.toMeasure.bind (toMeasure ∘ g) s := by
-  rw [bind, Measure.bind, join_coe, ← Measure.map_map (hg := by measurability) (hf := by measurability), map_coe (hf := hg)]
+lemma bind_toMeasure_apply_eq_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] [MeasurableSpace (DiscreteMeasure β)] [MeasurableSingletonClass (DiscreteMeasure β)] {htoβ : Measurable (@toMeasure β _)} (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (hg : Measurable g)
+ : (μ.bind g).toMeasure = μ.toMeasure.bind (toMeasure ∘ g) := by
+  rw [bind, Measure.bind, join_coe (h := htoβ), ← Measure.map_map (hf := hg) (hg := htoβ), map_coe (hf := hg)]
 
-lemma bind_coe [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (hg : Measurable g) : (μ.bind g).toMeasure = μ.toMeasure.bind (toMeasure ∘ g) := by
+lemma bind_coe [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] [MeasurableSpace (DiscreteMeasure β)] [MeasurableSingletonClass (DiscreteMeasure β)] {htoβ : Measurable (@toMeasure β _)} (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (hg : Measurable g) : (μ.bind g).toMeasure = μ.toMeasure.bind (toMeasure ∘ g) := by
   apply @Measure.ext _ _
   intro s hs
-  rw [bind_toMeasure_apply_eq_toMeasure (hg := hg) (hs := hs)]
+  rw [bind_toMeasure_apply_eq_toMeasure (htoβ := htoβ) (hg := hg)]
 
 -- #34239
 open Measure in
@@ -625,40 +694,51 @@ lemma Measure.bind_smul {α : Type u_1} {β : Type u_2} {mα : MeasurableSpace �
   (c • m).bind f = c • (m.bind f) := by
   simp_rw [Measure.bind, Measure.map_smul, Measure.join_smul]
 
-lemma bind_toMeasure (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) : (μ.bind g).toMeasure  = sum (fun a ↦ (μ a) • (g a).toMeasure) := by
-  apply @Measure.ext _ ⊤
+
+lemma bind_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] [MeasurableSpace (DiscreteMeasure β)]  [MeasurableSingletonClass (DiscreteMeasure β)]
+(μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (hg : Measurable g): (μ.bind g).toMeasure  = sum (fun a ↦ (μ a) • (g a).toMeasure) := by
+  apply @Measure.ext _ _
   intro s _
-  rw [bind_toMeasure_apply_eq_toMeasure, toMeasure, Measure.bind_sum (h := AEMeasurable.of_discrete), Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
+  rw [bind_toMeasure_apply_eq_toMeasure (hg := by measurability), toMeasure, Measure.bind_sum (h := by measurability), Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
   simp_rw [Measure.bind_smul, Measure.dirac_bind (f := toMeasure ∘ g) (hf := by measurability)]
   rfl
 
-lemma bind_toMeasure_apply (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (s : Set β) : (μ.bind g).toMeasure s = ∑' (a : α), μ a * (g a).toMeasure s := by
-  rw [bind_toMeasure]
+lemma bind_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] [MeasurableSpace (DiscreteMeasure β)] [MeasurableSingletonClass (DiscreteMeasure β)] (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (hg : Measurable g) (s : Set β) (hs : MeasurableSet s): (μ.bind g).toMeasure s = ∑' (a : α), μ a * (g a).toMeasure s := by
+  rw [bind_toMeasure (hg := hg)]
+  rw [Measure.sum_apply (hs := hs)]
   simp
 
 @[simp]
 lemma bind_apply (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (x : β) : (μ.bind g) x = ∑' (a : α), μ a * (g a) x := by
-  simp_rw [← toMeasure_apply_singleton (μ.bind g) x, ← toMeasure_apply_singleton _ x, bind_toMeasure_apply]
+  simp_rw [← @toMeasure_apply_singleton β ⊤ _ (μ.bind g) x, ← @toMeasure_apply_singleton β ⊤ _ _ x]
+  rw [@bind_toMeasure_apply α β ⊤ _ ⊤ _ (hg := by measurability) (hs := by measurability)]
 
 lemma join_map_map (m : DiscreteMeasure (DiscreteMeasure α)) (f : α → β) : (map (map f) m).join = map f m.join := by
   rw [← bind]
   ext x
-  rw [← toMeasure_apply_singleton (m.bind (map f)), ← toMeasure_apply_singleton (map f m.join), bind_toMeasure_apply, map_toMeasure_apply, join_toMeasure_apply]
+  letI hα₁ : MeasurableSpace α := ⊤
+  letI hα₂ : MeasurableSpace (DiscreteMeasure α) := ⊤
+  haveI hα₃ : MeasurableSingletonClass (DiscreteMeasure α) := by infer_instance
+  letI hβ₁ : MeasurableSpace β := ⊤
+  letI hβ₂ : MeasurableSpace (DiscreteMeasure β) := ⊤
+  haveI hβ₃ : MeasurableSingletonClass (DiscreteMeasure β) := by infer_instance
+  rw [← toMeasure_apply_singleton (m.bind (map f)), ← toMeasure_apply_singleton (map f m.join), bind_toMeasure_apply (hβ := by infer_instance) (hg := by measurability), map_toMeasure_apply (hg := by measurability) (hs := by measurability), join_toMeasure_apply (h := by measurability) (hs := by measurability)]
   apply tsum_congr (fun b ↦ ?_)
   rw [toMeasure_apply_singleton, DiscreteMeasure.map_apply]
 
 
-theorem bind_const (μ₁ : DiscreteMeasure α) (μ₂ : DiscreteMeasure β) : (μ₁.bind fun (_ : α) => μ₂).toMeasure =  (μ₁.toMeasure Set.univ) • μ₂.toMeasure := by
-  rw [bind_coe, Function.comp_apply', Measure.bind_const]
+
+theorem bind_const [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β](μ₁ : DiscreteMeasure α) (μ₂ : DiscreteMeasure β) : (μ₁.bind fun (_ : α) => μ₂).toMeasure =  (μ₁.toMeasure Set.univ) • μ₂.toMeasure := by
+  rw [bind_coe (hg := by measurability), Function.comp_apply', Measure.bind_const]
 
 theorem bind_bind (μ₁ : DiscreteMeasure α) (f : α → DiscreteMeasure β) (g : β → DiscreteMeasure γ) :
 (μ₁.bind f).bind g = μ₁.bind fun (a : α) => (f a).bind g := by
-  apply toMeasure_ext
-  repeat rw [bind_coe]
-  rw [@Measure.bind_bind (hf := AEMeasurable.of_discrete) (hg := AEMeasurable.of_discrete)]
+  apply @toMeasure_ext γ ⊤
+  rw [@bind_coe β γ ⊤ _ ⊤ _ _ _ (by measurability), @bind_coe α β ⊤ _ ⊤ _ _ _ (by measurability), @bind_coe α γ ⊤ _ ⊤ _ _ _ (by measurability)]
+  rw [@Measure.bind_bind α β ⊤ ⊤ γ ⊤ _ _ _ (AEMeasurable.of_discrete) (AEMeasurable.of_discrete)]
   congr
   ext a'
-  rw [comp_apply, comp_apply, bind_coe]
+  rw [comp_apply, comp_apply, @bind_coe β γ ⊤ _ ⊤ _ (hg := by measurability)]
 
 theorem bind_comm (μ₁ : DiscreteMeasure α) (μ₂ : DiscreteMeasure β) (f : α → β → DiscreteMeasure γ) :
 (μ₁.bind fun (a : α) => μ₂.bind (f a)) = μ₂.bind fun (b : β) => μ₁.bind fun (a : α) => f a b := by
@@ -668,10 +748,9 @@ theorem bind_comm (μ₁ : DiscreteMeasure α) (μ₂ : DiscreteMeasure β) (f :
   apply tsum_congr (fun b ↦ tsum_congr (fun a ↦ ?_))
   ring
 
-lemma isProbabilityMeasure_bind_toMeasure {m : DiscreteMeasure α} [hm : IsProbabilityMeasure m.toMeasure] {f : α → DiscreteMeasure β} (hf₁ : ∀ (a : α), IsProbabilityMeasure (f a).toMeasure) : IsProbabilityMeasure (m.bind f).toMeasure := by
-  rw [bind_coe]
-  refine @isProbabilityMeasure_bind β α ⊤ ⊤ m.toMeasure _ (toMeasure ∘ f) AEMeasurable.of_discrete ?_
-  simp [hf₁]
+lemma isProbabilityMeasure_bind_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] {m : DiscreteMeasure α} [hm : IsProbabilityMeasure m.toMeasure] {f : α → DiscreteMeasure β} (hf : Measurable f) (hf₁ : ∀ (a : α), IsProbabilityMeasure (f a).toMeasure) : IsProbabilityMeasure (m.bind f).toMeasure := by
+  rw [bind_coe (hg := hf)]
+  exact @isProbabilityMeasure_bind α β  _ _ m.toMeasure _ (toMeasure ∘ f) (AEMeasurable.comp_measurable sorry hf) (ae_of_all (toMeasure m) hf₁)
 
 
 end bind
@@ -680,9 +759,9 @@ section pure
 
 /-- The pure `DiscreteMeasure` puts all the mass lies in one point. The value of `pure a` is `1` at `a` and
 `0` elsewhere. In other words, `pure ∘ toMeasure = Measure.dirac`. -/
-noncomputable def pure (a : α) : DiscreteMeasure α := ({a} : Set α).indicator 1
+noncomputable def pure (a : α) : DiscreteMeasure α := ⟨({a} : Set α).indicator 1⟩
 
-lemma pure_apply (a : α) : pure a = ({a} : Set α).indicator 1 := rfl
+lemma pure_apply (a b : α) : (pure a) b = ({a} : Set α).indicator 1 b := rfl
 
 @[simp]
 lemma pure_apply_self {a : α} : pure a a = 1 := by
@@ -694,15 +773,17 @@ lemma pure_apply_nonself {a b : α} (h : b ≠ a) : pure a b = 0 := by
   rw [pure_apply]
   simp [h]
 
-lemma pure_comm {a a' : α} : pure a a' = pure a' a := by
+lemma pure_comm {a a' : α} [MeasurableSpace α] [MeasurableSingletonClass α] : pure a a' = pure a' a := by
   rw [pure_apply, pure_apply, Set.indicator, Set.indicator]
   congr 1
   simp only [Set.mem_singleton_iff, eq_iff_iff]
   exact eq_comm
 
 @[simp]
-lemma pure_toMeasure_apply (a : α) (s : Set α) : (pure a).toMeasure s = s.indicator 1 a := by
-  rw [toMeasure_apply₁, pure_apply, Set.indicator_indicator]
+lemma pure_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] (a : α) (s : Set α) (hs : MeasurableSet s): (pure a).toMeasure s = s.indicator 1 a := by
+  rw [toMeasure_apply₁ (hs := hs)]
+  simp_rw [← Set.indicator.mul_indicator_eq (f := (pure a))]
+  simp_rw [pure_apply, Set.indicator.mul_indicator_eq, Set.indicator_indicator]
   by_cases h : a ∈ s
   · rw [Set.inter_eq_self_of_subset_right (Set.singleton_subset_iff.mpr h),
       ← tsum_subtype, tsum_singleton]
@@ -710,52 +791,102 @@ lemma pure_toMeasure_apply (a : α) (s : Set α) : (pure a).toMeasure s = s.indi
   · rw [Set.inter_singleton_eq_empty.mpr h]
     simp [h]
 
-lemma pure_coe (a : α) : (pure a).toMeasure = @Measure.dirac α ⊤ a := by
-  apply @Measure.ext α ⊤
-  simp_rw [pure_toMeasure_apply, Measure.dirac_apply, MeasurableSpace.measurableSet_top, imp_self, implies_true]
+lemma pure_coe [MeasurableSpace α] [MeasurableSingletonClass α]  (a : α) : (pure a).toMeasure = .dirac a := by
+  apply Measure.ext
+  intro s hs
+  simp_rw [pure_toMeasure_apply (hs := hs), Measure.dirac_apply]
 
-lemma toMeasure_pure_eq_dirac : (toMeasure ∘ pure) = @Measure.dirac α ⊤ := by
+lemma toMeasure_pure_eq_dirac [MeasurableSpace α] [MeasurableSingletonClass α] : (toMeasure ∘ @pure α) = .dirac := by
   funext a
   rw [← pure_coe]
   rfl
 
-lemma pure_hasSum (a : α) : HasSum (pure a) 1 := by
-  rw [Summable.hasSum_iff ENNReal.summable, pure_apply, ← tsum_subtype, tsum_singleton]
+lemma pure_hasSum [MeasurableSpace α] [MeasurableSingletonClass α] (a : α) : HasSum (pure a) 1 := by
+  rw [Summable.hasSum_iff ENNReal.summable]
+  simp_rw [pure_apply, ← tsum_subtype, tsum_singleton]
   rfl
 
-lemma map_pure (a : α) (f : α → β) : (pure a).map f = pure (f a) := by
-  rw [← toMeasure_inj, pure_coe, map_coe, pure_coe, @Measure.map_dirac _ _ ⊤ ⊤ f (by measurability)]
+lemma map_pure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (a : α) (f : α → β) (hf : Measurable f): (pure a).map f = pure (f a) := by
+  rw [← toMeasure_inj, pure_coe, map_coe (hf := hf), pure_coe, @Measure.map_dirac _ _ _ _ f (by measurability)]
 
 theorem pure_bind (a : α) (f : α → DiscreteMeasure β) :
 (pure a).bind f = f a := by
-  apply toMeasure_ext
-  rw [bind_coe, pure_coe, dirac_bind (hf :=  by measurability)]
+  apply @toMeasure_ext β ⊤
+  rw [@bind_coe α _ ⊤ _ ⊤ _ (hg := by measurability), @pure_coe α ⊤ _, dirac_bind (hf :=  by measurability)]
   rfl
 
-theorem bind_pure (μ : DiscreteMeasure α) :
+theorem bind_pure  (μ : DiscreteMeasure α) :
 μ.bind pure = μ := by
-  apply toMeasure_ext
-  rw [bind_coe, Measure.bind, toMeasure_pure_eq_dirac, ← Measure.bind, Measure.bind_dirac]
+  apply @toMeasure_ext α ⊤ _
+  rw [@bind_coe α α ⊤ _ ⊤ _, Measure.bind, @toMeasure_pure_eq_dirac α ⊤ _, ← Measure.bind, Measure.bind_dirac]
+  refine @Measurable.of_discrete α (DiscreteMeasure α) ⊤ ?_ _ pure
+
 
 @[simp, monad_norm]
 lemma bind_pure_comp (f : α → β) (μ : DiscreteMeasure α) : μ.bind (fun a ↦ pure (f a)) =  μ.map f := by
-  apply toMeasure_ext
-  simp_rw [bind_coe, map_coe, Function.comp_apply', pure_coe]
+  apply @toMeasure_ext β ⊤ _
+  rw [@bind_coe α _ ⊤ _ ⊤ _ _ _ _, @map_coe α _ ⊤ (hf := by measurability), Function.comp_apply']
+  simp_rw [@pure_coe β ⊤ _ (f _)]
   rw [Measure.bind_dirac_eq_map (hf := by measurability)]
+  sorry
+  sorry
+  sorry
 
-lemma isProbabilityMeasure_pure_toMeasure (a : α) : IsProbabilityMeasure ((pure a).toMeasure) := by
+lemma isProbabilityMeasure_pure_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] (a : α) : IsProbabilityMeasure ((pure a).toMeasure) := by
   rw [pure_coe]
-  exact @dirac.isProbabilityMeasure α ⊤ a
+  exact dirac.isProbabilityMeasure
 
 @[simp]
 lemma tsum_pure (a : α) (f : α → ℝ≥0∞): ∑' (x : α), (f x) * pure a x = f a := by
-  rw [pure_apply]
+  simp_rw [pure_apply]
   simp_rw [Set.indicator.mul_indicator_eq]
   rw [← tsum_subtype]
   simp
 
 end pure
 
+section seq
+
+variable (q :DiscreteMeasure (α → β)) (p : Unit →DiscreteMeasure α) (b : β)
+
+/-- The monadic sequencing operation for `MassFunction`. -/
+-- mf <*> mx := mf >>= fun f => mx >>= fun x => pure (f x)
+noncomputable def seq (q :DiscreteMeasure (α → β)) (p :  Unit →DiscreteMeasure α) :DiscreteMeasure β :=
+  q.bind fun m => (p ()).bind fun a => pure (m a)
+
+@[simp, monad_norm]
+lemma bind_map_eq_seq (q :DiscreteMeasure (α → β)) (p : Unit →DiscreteMeasure α) : seq q p = q.bind (fun m => (p ()).map m) := by
+  simp_rw [← bind_pure_comp]
+  rfl
+
+@[simp]
+theorem seq_apply [DecidableEq β] : seq q p b = ∑' (f : α → β) (a : α), q f * if b = f a then (p ()) a else 0 := by
+  simp_rw [seq, bind_apply, pure_apply, Set.indicator, Set.mem_singleton_iff, ← ENNReal.tsum_mul_left]
+  repeat apply tsum_congr (fun f ↦ ?_)
+  split_ifs <;> simp
+
+theorem seq_apply₁ [DecidableEq β] : seq q p b = ∑' (f : α → β) (a : f⁻¹' {b}), q f * (p ()) a := by
+  simp_rw [seq_apply, ENNReal.tsum_mul_left, tsum_subtype, Set.indicator]
+  apply tsum_congr (fun f ↦ ?_)
+  congr 1
+  apply tsum_congr (fun g ↦ ?_)
+  grind
+
+@[simp]
+theorem seq_apply₂ : seq q p b = ∑' (f : α → β), q f * ∑' (a : α), (f⁻¹' {b}).indicator (p ()) a := by
+  simp_rw [seq, bind_apply, pure_apply, Set.indicator]
+  apply tsum_congr (fun f ↦ ?_)
+  congr
+  funext a
+  simp only [Pi.one_apply, mul_ite, mul_one, mul_zero, Set.mem_preimage, Set.mem_singleton_iff]
+  grind
+
+/-
+lemma isProbabilityMeasure_seq_toMeasure [IsProbabilityMeasure q.toMeasure] [IsProbabilityMeasure (p ()).toMeasure] : IsProbabilityMeasure (seq q p).toMeasure := by
+  rw [bind_map_eq_seq]
+  refine @isProbabilityMeasure_bind_toMeasure β (α → β) q (by infer_instance) (fun m => map m (p ())) (fun a ↦ isProbabilityMeasure_map_toMeasure (p ()) a)
+-/
+end seq
 
 noncomputable instance : Functor DiscreteMeasure where
   map := map
@@ -763,4 +894,61 @@ noncomputable instance : Functor DiscreteMeasure where
 instance : LawfulFunctor DiscreteMeasure where
   map_const := rfl
   id_map := id_map
-  comp_map g h μ := (@map_map _ _ _ ⊤ _ ⊤ _ ⊤ _ μ g (by measurability) h (by measurability)).symm
+  comp_map g h μ := (map_map μ g h).symm
+
+section monad
+
+noncomputable instance : Functor DiscreteMeasure where
+  map := map
+
+noncomputable instance : Seq DiscreteMeasure where
+  seq := seq
+
+noncomputable instance : Monad DiscreteMeasure where
+  pure := pure
+  bind := bind
+
+instance : LawfulFunctor DiscreteMeasure where
+  map_const := rfl
+  id_map := id_map
+  comp_map f g μ := (map_map μ f g).symm
+
+instance : LawfulMonad DiscreteMeasure :=
+  LawfulMonad.mk'
+  (bind_pure_comp := bind_pure_comp)
+  (id_map := id_map)
+  (pure_bind := pure_bind)
+  (bind_assoc := bind_bind)
+  (bind_map :=
+  fun q p ↦ (bind_map_eq_seq q (fun _ ↦ p)).symm)
+
+@[simp, monad_norm]
+lemma pure_eq_pure : @pure α = @Pure.pure DiscreteMeasure _ α := by rfl
+
+@[simp, monad_norm]
+lemma map_eq_map {α β : Type u} (f : α → β) (p : DiscreteMeasure α) : (map f p) = (Functor.map f p) := rfl
+
+@[simp, monad_norm]
+lemma seq_eq_seq {α β : Type u} (p : DiscreteMeasure (α → β)) (q : Unit → DiscreteMeasure α) : seq p q = Seq.seq p q := by
+  rfl
+
+@[simp, monad_norm]
+lemma bind_eq_bind {α β : Type u} (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β)  : (bind μ g) = (Bind.bind μ g) := rfl
+
+/--
+This instance allows `do` notation for `DiscreteMeasure` to be used across universes, for instance as
+```lean4
+example {R : Type u} [Ring R] (x : PMF ℕ) : PMF R := do
+  let ⟨n⟩ ← ULiftable.up x
+  pure n
+```
+where `x` is in universe `0`, but the return value is in universe `u`.
+-/
+noncomputable instance : ULiftable DiscreteMeasure.{u} DiscreteMeasure.{v} where
+  congr e :=
+    { toFun := map e, invFun := map e.symm
+      left_inv := fun a => by rw [map_map, Equiv.symm_comp_self, id_map]
+      right_inv := fun a => by simp [map_map]
+      }
+
+end monad
