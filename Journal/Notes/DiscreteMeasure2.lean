@@ -552,6 +552,16 @@ lemma map_eq' (μ : DiscreteMeasure α) (g : α → β) (x : β) : (μ.map g) x 
   rw [← Set.indicator.mul_indicator_eq]
   rfl
 
+lemma map_eq_of_injAt (μ : DiscreteMeasure α) (g : α → β) (x : α) (hx : ∀ x', g x' = g x → x' = x) (y : β) (hy : g x = y) : (μ.map g) y =  μ x := by
+  rw [map_eq, ← hy]
+  have h : {x} = g ⁻¹' {g x} := (Set.Subset.antisymm (fun ⦃a⦄ => congrArg g) hx)
+  rw [← h, ← tsum_subtype]
+  simp
+
+lemma map_eq_of_inj (μ : DiscreteMeasure α) (g : α → β) (hg : g.Injective) (x : α) (y : β) (hy : g x = y): (μ.map g) y =  μ x := by
+  obtain hg' := fun x' ↦ @hg x' x
+  exact map_eq_of_injAt _ _ _ hg' _ hy
+
 lemma map_eq'' (μ : DiscreteMeasure α) (g : α → β) (x : β) : (μ.map g) x =  ∑' (i : g⁻¹' {x}), μ i := by
   rw [tsum_subtype]
   rfl
@@ -621,11 +631,16 @@ theorem id_map (μ : DiscreteMeasure α) :
   rw [map_eq'']
   simp
 
-theorem isProbabilityMeasure_map_toMeasure [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α)  (hμ : HasSum μ.weight 1) (f : α → β)  : IsProbabilityMeasure (μ.map f).toMeasure := by
+theorem hasSum_map {μ : DiscreteMeasure α} (hμ : HasSum μ.weight 1) (f : α → β)  : HasSum (μ.map f) 1 := by
   letI mα : MeasurableSpace α := ⊤
+  letI mβ : MeasurableSpace β := ⊤
   haveI : IsProbabilityMeasure μ.toMeasure := by exact isProbabilityMeasure_iff_hasSum.mpr hμ
+  rw [← isProbabilityMeasure_iff_hasSum]
   rw [map_coe (hf := Measurable.of_discrete)]
   apply isProbabilityMeasure_map (hf := AEMeasurable.of_discrete)
+
+theorem isProbabilityMeasure_map_toMeasure [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α)  (hμ : HasSum μ.weight 1) (f : α → β)  : IsProbabilityMeasure (μ.map f).toMeasure := by
+  exact isProbabilityMeasure_iff_hasSum.mpr (hasSum_map hμ f)
 
 end map
 
@@ -891,12 +906,17 @@ theorem bind_comm (μ₁ : DiscreteMeasure α) (μ₂ : DiscreteMeasure β) (f :
   exact @isProbabilityMeasure_bind α β  _ _ m.toMeasure _ (toMeasure ∘ f) ((htoβ.comp hf).aemeasurable) (ae_of_all (toMeasure m) hf₁)
 -/
 
-lemma isProbabilityMeasure_bind_toMeasure [MeasurableSpace β] [MeasurableSingletonClass β] {m : DiscreteMeasure α} (hm : HasSum m.weight 1) {f : α → DiscreteMeasure β} (hf₁ : ∀ a ∈ support m.weight, HasSum (f a).weight 1) : IsProbabilityMeasure (m.bind f).toMeasure := by
-  letI : MeasurableSpace α := ⊤
+lemma hasSum_bind {m : DiscreteMeasure α} (hm : HasSum m.weight 1) {f : α → DiscreteMeasure β} (hf₁ : ∀ a ∈ support m.weight, HasSum (f a).weight 1) : HasSum (m.bind f) 1 := by
+  letI : MeasurableSpace β := ⊤
   letI : MeasurableSpace (DiscreteMeasure β) := ⊤
-  rw [bind_coe (hg := by measurability) (htoβ := Measurable.of_discrete)]
+  letI : MeasurableSpace α := ⊤
+  rw [← isProbabilityMeasure_iff_hasSum]
+  rw [bind_coe (htoβ := by measurability) (hg := by measurability)]
   haveI : IsProbabilityMeasure (toMeasure m) := isProbabilityMeasure_iff_hasSum.mpr hm
   exact isProbabilityMeasure_bind AEMeasurable.of_discrete (hf₁ := (ae_iff_support (fun x => IsProbabilityMeasure ((toMeasure ∘ f) x)) trivial m).mpr (fun x hx ↦ isProbabilityMeasure_iff_hasSum.mpr (hf₁ x hx)))
+
+lemma isProbabilityMeasure_bind_toMeasure [MeasurableSpace β] [MeasurableSingletonClass β] {m : DiscreteMeasure α} (hm : HasSum m.weight 1) {f : α → DiscreteMeasure β} (hf₁ : ∀ a ∈ support m.weight, HasSum (f a).weight 1) : IsProbabilityMeasure (m.bind f).toMeasure := by
+  exact isProbabilityMeasure_iff_hasSum.mpr (hasSum_bind hm hf₁)
 
 -- end bind
 
@@ -982,9 +1002,11 @@ lemma bind_pure_comp (f : α → β) (μ : DiscreteMeasure α) : μ.bind (fun a 
   simp_rw [pure_coe]
   rw [Measure.bind_dirac_eq_map (hf := Measurable.of_discrete)]
 
-lemma isProbabilityMeasure_pure_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] (a : α) : IsProbabilityMeasure ((pure a).toMeasure) := by
-  rw [pure_coe]
-  exact dirac.isProbabilityMeasure
+lemma hasSum_pure (a : α) : HasSum (pure a) 1 := by
+  simp_rw [Summable.hasSum_iff ENNReal.summable, pure_apply, ← tsum_subtype]
+  simp
+
+lemma isProbabilityMeasure_pure_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] (a : α) : IsProbabilityMeasure ((pure a).toMeasure) := isProbabilityMeasure_iff_hasSum.mpr (hasSum_pure a)
 
 @[simp]
 lemma tsum_pure (a : α) (f : α → ℝ≥0∞): ∑' (x : α), (f x) * pure a x = f a := by
@@ -1031,10 +1053,13 @@ theorem seq_apply₂ : seq q p b = ∑' (f : α → β), q f * ∑' (a : α), (f
   simp only [Pi.one_apply, mul_ite, mul_one, mul_zero, Set.mem_preimage, Set.mem_singleton_iff]
   grind
 
-lemma isProbabilityMeasure_seq_toMeasure  [MeasurableSpace β] [MeasurableSingletonClass β] {hq : HasSum q.weight 1} {hp : HasSum (p ()).weight 1} : IsProbabilityMeasure (seq q p).toMeasure := by
+lemma hasSum_seq {q : DiscreteMeasure (α → β)} (hq : HasSum q.weight 1) {p : Unit → DiscreteMeasure α} (hp : HasSum (p ()).weight 1) : HasSum (seq q p) 1 := by
   letI hα : MeasurableSpace α := ⊤
   rw [bind_map_eq_seq]
-  apply isProbabilityMeasure_bind_toMeasure hq (fun a ha ↦ isProbabilityMeasure_iff_hasSum.mp <| isProbabilityMeasure_map_toMeasure _ hp _ )
+  apply hasSum_bind hq (fun a _ ↦ hasSum_map hp a)
+
+lemma isProbabilityMeasure_seq_toMeasure  [MeasurableSpace β] [MeasurableSingletonClass β] {q : DiscreteMeasure (α → β)} (hq : HasSum q.weight 1) {p : Unit → DiscreteMeasure α} (hp : HasSum (p ()).weight 1) : IsProbabilityMeasure (seq q p).toMeasure := by
+  exact isProbabilityMeasure_iff_hasSum.mpr (hasSum_seq hq hp)
 
 end seq
 
@@ -1138,20 +1163,21 @@ lemma sequence_cons_apply_cons [DecidableEq α] {n : ℕ} (μs : List.Vector (Di
   rw [List.Vector.sequence_cons]
   exact cons_map_seq_apply_cons (sequence (t := flip List.Vector n) μs) ν l a
 
+lemma zipWith_to_ofFn {n : ℕ} (f : List.Vector (α → ℝ≥0∞) n) (l : List.Vector α n) : (f.zipWith (· ·) l).toList = List.ofFn (fun i => (f.get i) (l.get i)) := by
+  apply List.ext_getElem
+  · simp
+  · intro i h₁ h₂
+    simp only [List.getElem_ofFn, List.Vector.zipWith_toList, List.getElem_zipWith]
+    rfl
 
 lemma prod_zipWith {n : ℕ} (f : List.Vector (α → ℝ≥0∞) n) (l : List.Vector α n) : List.prod (f.zipWith (· ·) l).toList = ∏ i, (f.get i) (l.get i) := by
-  have : (f.zipWith (· ·) l).toList = List.ofFn (fun i => (f.get i) (l.get i)) := by
-    apply List.ext_getElem
-    · simp
-    · intro i h₁ h₂
-      simp only [List.getElem_ofFn, List.Vector.zipWith_toList, List.getElem_zipWith]
-      rfl
-  rw [this, List.prod_ofFn]
+  rw [zipWith_to_ofFn, List.prod_ofFn]
+
 
 
 set_option backward.isDefEq.respectTransparency false
 
-lemma sequence_apply₀ [DecidableEq α] {n : ℕ} (μs : List.Vector (DiscreteMeasure α) n) (l : List.Vector α n) :
+lemma sequence_apply₀ [DecidableEq α] {n : ℕ} (μs : List.Vector (DiscreteMeasure α) n) (l : flip List.Vector n α) :
     (sequence (t := flip List.Vector n) μs) l = List.prod (μs.zipWith (· ·) l).toList :=
   by
   induction μs with
@@ -1167,44 +1193,51 @@ lemma sequence_apply₀ [DecidableEq α] {n : ℕ} (μs : List.Vector (DiscreteM
     rw [List.zipWith_cons_cons]
     simp [hl]
 
-lemma sequence_apply₁ [DecidableEq α] {n : ℕ} (μs : List.Vector (DiscreteMeasure α) n) (l : List.Vector α n) :
-    (sequence (t := flip List.Vector n) μs) l = ∏ i, (μs.get i) (l.get i) :=
+lemma sequence_apply₁ [DecidableEq α] {n : ℕ} (μs : List.Vector (DiscreteMeasure α) n) (l : flip List.Vector n α) :
+    sequence (t := flip List.Vector n) μs l = ∏ i, (List.Vector.get μs i) (List.Vector.get l i) :=
   by
   rw [sequence_apply₀]
-  exact prod_zipWith μs l
+  have h : List.Vector.zipWith (fun x1 x2 => x1 x2) μs l = List.Vector.zipWith (fun x1 x2 => x1 x2) (List.Vector.map (fun x ↦ x.weight) μs) l := by
+    rw [List.Vector.ext_iff]
+    simp
+  rw [h, prod_zipWith]
+  simp
 
 -- TODO: define marginal distributions
 
-lemma isProbabilityMeasure_sequence_toMeasure {n : ℕ} [MeasurableSpace (flip List.Vector n α)] [MeasurableSingletonClass (flip List.Vector n α)] {n : ℕ} (μs : List.Vector (DiscreteMeasure α) n) {hμ : ∀ i, HasSum (μs.get i).weight 1} : IsProbabilityMeasure (sequence (t := flip List.Vector n) μs).toMeasure := by
+lemma hasSum_sequence {n : ℕ} [DecidableEq α] {μs : List.Vector (DiscreteMeasure α) n} (hμ : ∀ i, HasSum (μs.get i).weight 1) : HasSum (sequence (t := flip List.Vector n) μs) 1 := by
   induction n with
   | zero =>
     simp [monad_norm]
-    apply isProbabilityMeasure_pure_toMeasure
+    simp_rw [← pure_eq_pure]
+    apply hasSum_pure
   | succ n hn =>
-    let μs.tail' : List.Vector (_) n := μs.tail
-    have g : μs.tail = μs.tail' := rfl
-    rw [← List.Vector.cons_head_tail μs, List.Vector.sequence_cons, ← seq_eq_seq, ← map_eq_map, ← List.Vector.get_zero μs, g]
-    expose_names
-    have h (i : Fin n) : IsProbabilityMeasure (μs.tail'.get i).toMeasure := by
-      rw [← g, List.Vector.get_tail]
-      exact inst (Fin.succ i)
-    exact @isProbabilityMeasure_seq_toMeasure (β := List.Vector α n.succ) (α := List.Vector α n)
+    rw [← List.Vector.cons_head_tail μs, List.Vector.sequence_cons, ← seq_eq_seq, ← map_eq_map, ← List.Vector.get_zero μs]
+    have h (i : Fin n) : HasSum (μs.tail.get i).weight 1 := by
+      rw [List.Vector.get_tail]
+      simp [hμ]
+    apply @hasSum_seq (β := List.Vector α n.succ) (α := List.Vector α n)
       (q := map (β := List.Vector α n → List.Vector α n.succ) (α := α) List.Vector.cons (μs.get 0))
-      (p := fun (_ : Unit) ↦ sequence (t := flip List.Vector n) μs.tail)
-      (isProbabilityMeasure_map_toMeasure (μs.get 0) List.Vector.cons) (@hn μs.tail' h)
+      (p := fun (_ : Unit) ↦ sequence (t := flip List.Vector n) μs.tail) (hasSum_map (hμ 0) List.Vector.cons) (@hn μs.tail h)
+
+lemma isProbabilityMeasure_sequence_toMeasure {n : ℕ} [MeasurableSpace (flip List.Vector n α)] [MeasurableSingletonClass (flip List.Vector n α)] [DecidableEq α] (μs : List.Vector (DiscreteMeasure α) n) {hμ : ∀ i, HasSum (μs.get i).weight 1} : IsProbabilityMeasure (sequence (t := flip List.Vector n) μs).toMeasure := by
+  exact isProbabilityMeasure_iff_hasSum.mpr <| hasSum_sequence hμ
 
 end sequence
 
 section iidSequence
 
-noncomputable def iidSequence (n : ℕ) (μ : DiscreteMeasure α) : DiscreteMeasure (List.Vector α n) := sequence (t := flip List.Vector n) (List.Vector.replicate n μ)
+noncomputable def iidSequence (n : ℕ) (μ : DiscreteMeasure α) : DiscreteMeasure (flip List.Vector n α) := sequence (t := flip List.Vector n) (List.Vector.replicate n μ)
 
-lemma iidSequence_apply [DecidableEq α] (n : ℕ) (μ : DiscreteMeasure α) (l : List.Vector α n) :
+lemma iidSequence_apply [DecidableEq α] (n : ℕ) (μ : DiscreteMeasure α) (l : flip List.Vector n α) :
     (iidSequence n μ) l = (l.map μ).toList.prod := by
-  rw [iidSequence, List.Vector.toList_map, ← List.map_eq_replicateZipWith,
-    List.Vector.toList_length]
-  rw [sequence_apply₀]
+  have h : n = (List.map (⇑μ) (List.Vector.toList l)).length := by simp
+  rw [iidSequence, sequence_apply₁, List.Vector.toList_map]
+  simp only [List.Vector.get_replicate]
+  rw [← Fin.prod_univ_getElem (List.map (⇑μ) l.toList)]
   congr
+  simp_rw [List.getElem_map, Fin.heq_fun_iff h]
+  exact congrFun rfl
 
 lemma iidSequence_apply₁ {n : ℕ} {μ : DiscreteMeasure α} [DecidableEq α] {l : List.Vector α n} :
     iidSequence n μ l = (∏ a ∈ l.toList.toFinset, (μ a) ^ (List.Vector.countFin a l).val) := by
@@ -1230,6 +1263,7 @@ lemma sequence_bind (μ ν : DiscreteMeasure α) : sequence [μ, ν] = μ.bind (
 
 lemma iidSequence_cons (ν : DiscreteMeasure α) : (ν >>= fun y => (iidSequence n ν) >>= fun x => pure (x.cons y)) = iidSequence (n+1) ν := by
   simp [monad_norm, iidSequence]
+  rfl
 
 end iidSequence
 
@@ -1242,11 +1276,22 @@ noncomputable def coin (p : ℝ≥0∞) : DiscreteMeasure Bool where weight := f
   | false => 1 - p
 
 lemma coin_apply (p : ℝ≥0∞) (b : Bool) : (coin p) b = if b then p else (1 - p) := by
-  by_cases h : b <;> simp only [h, ↓reduceIte] <;> rfl
+  by_cases h : b <;> simp only [h] <;> rfl
+
+lemma coin_apply_true (p : ℝ≥0∞) : (coin p) true = p := by
+  rfl
+
+lemma coin_apply_false (p : ℝ≥0∞) : (coin p) false = 1 - p := by
+  rfl
+
+lemma hasSum_coin (p : ℝ≥0∞) (h : p ≤ 1) : HasSum (coin p) 1 := by
+  rw [Summable.hasSum_iff ENNReal.summable, tsum_bool]
+  rw [coin_apply, coin_apply]
+  simp only [false_eq_true, ↓reduceIte]
+  exact tsub_add_cancel_of_le h
 
 instance isProbabilityMeasure_coin (p : ℝ≥0∞) (h : p ≤ 1) : IsProbabilityMeasure (coin p).toMeasure := by
-  rw [isProbabilityMeasure_iff, toMeasure_apply_univ]
-  simp [coin, h]
+  exact isProbabilityMeasure_iff_hasSum.mpr <| hasSum_coin p h
 
 lemma lintegral_coin_id (p : ℝ≥0∞) (g : Bool → ℝ≥0∞) : ∫⁻ (a : Bool), (g a) ∂ (coin p).toMeasure = (1 - p) * (g false) + p * (g true) := by
   rw [lintegral_eq_toMeasure]
@@ -1257,53 +1302,33 @@ lemma lintegral_coin (p : ℝ≥0∞) : ∫⁻ (a : Bool), ({true} : Set Bool).i
   rw [lintegral_coin_id]
   simp
 
-lemma Bool.mem_not (b : Bool) : not ⁻¹' {b} = {!b} := by
-    ext y; cases' y <;> simp
-
-lemma bool_if_not (x y : ℝ≥0∞) (b : Bool) : (if !b then x else y) = (if b then y else x) := by
-  by_cases h : b <;> simp [h]
-
-lemma coin_not (p : ℝ≥0) (h : (p : ℝ≥0∞) ≤ 1) : (coin p).map not = coin (1-p) := by
-  ext x
-  rw [map_apply, Bool.mem_not, toMeasure_apply_singleton, coin_apply, coin_apply]
-  rw [(ENNReal.sub_sub_cancel one_ne_top h)]
-  rw [bool_if_not]
-
-lemma Bool_isProbabilityMeasure_not (μ : DiscreteMeasure Bool) [IsProbabilityMeasure μ.toMeasure] (b : Bool) : μ (!b) = 1 - μ b := by
+lemma Bool_hasSum_not (μ : DiscreteMeasure Bool) (hμ : HasSum μ 1) (b : Bool) : μ (!b) = 1 - μ b := by
   refine ENNReal.eq_sub_of_add_eq' one_ne_top ?_
-  have h : μ.toMeasure Set.univ = μ true + μ false := by
-    simp
+  rw [Summable.hasSum_iff ENNReal.summable, tsum_bool] at hμ
   cases' b with h
-  · rw [Bool.not_false, ← h, ← isProbabilityMeasure_iff]
-    infer_instance
-  · rw [Bool.not_true, add_comm, ← h, ← isProbabilityMeasure_iff]
-    infer_instance
+  · rw [add_comm] ; simp [hμ]
+  · simp [hμ]
 
-example (a b : Bool) : (!a) = b ↔ ¬a = b := by
-  exact not_eq
-
-lemma Bool_ext (μ ν : DiscreteMeasure Bool) [IsProbabilityMeasure μ.toMeasure] [IsProbabilityMeasure ν.toMeasure] (b : Bool) (h : μ b = ν b) : μ = ν := by
+lemma Bool_ext {μ ν : DiscreteMeasure Bool} (hμ : HasSum μ 1) (hν : HasSum ν 1) (b : Bool) (h : μ b = ν b) : μ = ν := by
   ext a
   cases h' : decide (b = a)
-  · simp only [decide_eq_false_iff_not] at h'
-    change b ≠ a at h'
-    rw [← not_eq] at h'
-    rw [← h']
-    rw [Bool_isProbabilityMeasure_not μ b]
-    rw [Bool_isProbabilityMeasure_not ν b]
-    rw [h]
-  · simp at h'
+  · rw [decide_eq_false_iff_not, ← ne_eq b a, ← not_eq] at h'
+    rw [← h', Bool_hasSum_not μ hμ b, Bool_hasSum_not ν hν b, h]
+  · simp only [decide_eq_true_eq] at h'
     rw [← h', h]
+
+lemma coin_not' (p : ℝ≥0) (h : (p : ℝ≥0∞) ≤ 1) : (coin p).map not = coin (1-p) := by
+  apply Bool_ext (hasSum_map (hasSum_coin p h) not) (hasSum_coin (1 - p) tsub_le_self) true
+  change map not (coin p) true = _
+  rw [coin_apply_true, map_eq_of_inj (coin p) not Bool.not_injective false true Bool.not_false, coin_apply_false]
 
 @[simp]
 lemma Bool_and : Bool.and true = id := by
   rfl
 
+/-
 @[simp]
 lemma Bool_false : Bool.and false = (fun _ ↦ false) := rfl
-
-#check List.all
-
 
 def List.Vector.all {n : ℕ} (l : List.Vector α n) (f : α → Bool) : Bool := l.toList.all f
 
@@ -1374,9 +1399,10 @@ lemma sequence_coin_apply (p : ℝ≥0∞) (n : ℕ) (l : List.Vector Bool n) : 
 lemma massFunctionBool_eq_coin (P : DiscreteMeasure Bool) [IsProbabilityMeasure P.toMeasure] : P = coin (P true) := by
   haveI h : IsProbabilityMeasure (coin (P true)).toMeasure := isProbabilityMeasure_coin (P true) (apply_le_one true)
   exact Bool_ext P (coin (P true)) true (by rfl)
-
+-/
 end coin
 
+/-
 section uniform
 
 variable {ι : Type*} [Fintype ι] [Inhabited ι]
@@ -1392,7 +1418,7 @@ lemma isProbabilityMeasure_uniform : IsProbabilityMeasure (uniform (ι := ι)).t
 
 end uniform
 
-
+-/
 section binom
 
 -- Defining the binomial distribution inductively
@@ -1406,16 +1432,17 @@ noncomputable def binom (p : ℝ≥0∞) (n : ℕ) : DiscreteMeasure (Fin (n + 1
 @[simp]
 lemma binom_zero (p : ℝ≥0∞) : binom p 0 = pure 0 := by rfl
 
-lemma isProbabilityMeasure_binom (p : ℝ≥0∞) (h : p ≤ 1) (n : ℕ) : IsProbabilityMeasure (binom p n).toMeasure := by
+lemma hasSum_binom (p : ℝ≥0∞) (h : p ≤ 1) (n : ℕ) : HasSum (binom p n) 1 := by
   induction n with
     | zero =>
-      apply isProbabilityMeasure_pure_toMeasure
+      apply hasSum_pure
     | succ n hn =>
       simp only [binom, Nat.succ_eq_add_one,
         LawfulMonad.bind_pure_comp, map_eq_bind_pure_comp]
-      exact @isProbabilityMeasure_bind_toMeasure _ _ _ (isProbabilityMeasure_coin p h) _
-        (fun a ↦ isProbabilityMeasure_bind_toMeasure
-        (fun i ↦ isProbabilityMeasure_pure_toMeasure _))
+      refine hasSum_bind (hasSum_coin p h) (fun a ha ↦ hasSum_bind hn (fun b hb ↦ hasSum_pure (addBoolFin.hAdd a b)))
+
+lemma isProbabilityMeasure_binom (p : ℝ≥0∞) (h : p ≤ 1) (n : ℕ) : IsProbabilityMeasure (binom p n).toMeasure := by
+  apply isProbabilityMeasure_iff_hasSum.mpr (hasSum_binom p h n)
 
 lemma binom_succ (p : ℝ≥0∞) (n : ℕ) : binom p (n + 1) = (coin p) >>= fun X ↦  binom p n >>= fun Y ↦ pure (addBoolFin.hAdd X Y) := by rfl
 
@@ -1476,7 +1503,6 @@ lemma Equiv_fnBool_finset_mem_powersetCard_iff  {ι : Type*} [DecidableEq ι] [F
     #{i | f i = true} = k ↔ (Equiv.fnBool_finset) f ∈ powersetCard k univ := by
   simp [Equiv.fnBool_finset]
 
-example : Equiv Bool Prop := by exact Equiv.propEquivBool.symm
 
 -- #34702
 /-- For some `Fintype ι`, the number of maps `f : ι → Bool` with `#{i | f i} = k` equals `n.choose k`. -/
@@ -1498,6 +1524,7 @@ lemma card_listVector_card {k n : ℕ} :
   rw [← List.ofFn_get (l :=  v.toList)] <;> aesop
 
 theorem binom_formula (p : ℝ≥0∞) (n : ℕ) : binom p n = fun (k : Fin (n + 1)) ↦ (p ^ k.val * (1 - p) ^ (n - k.val)) * (Nat.choose n k) := by
+  letI : MeasurableSpace (List.Vector Bool n) := ⊤
   ext k
   let s (k : Fin (n + 1)) : Finset (List.Vector Bool n) := {l : List.Vector Bool n | (List.Vector.countFin true l) = k}
   have hs (k : Fin (n + 1)) : ((fun (l : List.Vector Bool n) => List.Vector.countFin true l) ⁻¹' {k}) = s k := by
@@ -1508,8 +1535,8 @@ theorem binom_formula (p : ℝ≥0∞) (n : ℕ) : binom p n = fun (k : Fin (n +
     intro ⟨x1, x2⟩ hx
     refine Nat.eq_sub_of_add_eq' ?_
     rw [← ht k ⟨x1, x2⟩ hx, List.Vector.countFin, List.Vector.countFin, List.count_true_add_count_false, List.Vector.toList_mk, x2]
-  rw [binom_eq_count_true, map_apply, toMeasure_apply]
-  simp_rw [iidSequence_apply₂ n (coin p), tprod_bool, coin_apply]
+  rw [binom_eq_count_true, map_apply (hg := by measurability), toMeasure_apply (hs := by measurability)]
+  conv => left; left; intro i; left; change (iidSequence n (coin p) : flip List.Vector n Bool → ℝ≥0∞) i; rw [iidSequence_apply₂ n (coin p) i, tprod_bool, coin_apply, coin_apply]
   conv => left; left; intro i; simp only [Bool.false_eq_true, ↓reduceIte]; rw [hs, Set.indicator.mul_indicator_eq (f := fun (i : List.Vector Bool n) ↦ (1 - p) ^ (List.Vector.countFin false i).val * p ^ (List.Vector.countFin true i).val) (a := i)]
   rw [tsum_eq_sum (s := s k), ← Finset.tsum_subtype]
   conv =>
