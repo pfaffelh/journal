@@ -1010,6 +1010,7 @@ lemma cons_map_seq_apply {n : ℕ} (μs : MassFunction (List.Vector α n)) (ν :
   simp_rw [← pure_eq_pure, comp_apply]
 
 lemma pure_cons_apply_cons [DecidableEq α] {n : ℕ} (a a' : α) (l l' : List.Vector α n) : pure (a' ::ᵥ l') (a ::ᵥ l) = (pure a' a) * (pure l' l) := by
+  -- repeat rw [pure_apply]
   repeat rw [pure, Set.indicator]
   aesop
 
@@ -1033,11 +1034,16 @@ lemma sequence_cons_apply_cons [DecidableEq α] {n : ℕ} (μs : List.Vector (Ma
   rw [List.Vector.sequence_cons]
   exact cons_map_seq_apply_cons (sequence (t := flip List.Vector n) μs) ν l a
 
+lemma zipWith_to_ofFn {n : ℕ} (f : List.Vector (α → ℝ≥0∞) n) (l : List.Vector α n) : (f.zipWith (· ·) l).toList = List.ofFn (fun i => (f.get i) (l.get i)) := by
+  apply List.ext_getElem
+  · simp
+  · intro i h₁ h₂
+    simp only [List.getElem_ofFn, List.Vector.zipWith_toList, List.getElem_zipWith]
+    rfl
+
 lemma prod_zipWith {n : ℕ} (f : List.Vector (α → ℝ≥0∞) n) (l : List.Vector α n) : List.prod (f.zipWith (· ·) l).toList = ∏ i, (f.get i) (l.get i) := by
-  simp
+  rw [zipWith_to_ofFn, List.prod_ofFn]
 
-
-  sorry
 set_option backward.isDefEq.respectTransparency false
 
 lemma sequence_apply₀ [DecidableEq α] {n : ℕ} (μs : List.Vector (MassFunction α) n) (l : List.Vector α n) :
