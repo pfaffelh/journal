@@ -234,12 +234,12 @@ lemma toMeasure_apply₁ [MeasurableSpace α] [MeasurableSingletonClass α] (μ 
 
 -- #34138
 lemma toMeasure_apply₂ [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) {s : Set α} (hs : MeasurableSet s) : μ.toMeasure s = ∑' (a : s), (μ a) := by
-  simp [μ.toMeasure_apply hs, tsum_subtype]
+  simp [μ.toMeasure_apply hs, _root_.tsum_subtype]
 
 -- #34138
 @[simp]
 lemma toMeasure_apply_singleton [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (a : α) : μ.toMeasure {a} = μ a := by
-  simp only [μ.toMeasure_apply (measurableSet_singleton a), Set.indicator.mul_indicator_eq, ← tsum_subtype,tsum_singleton]
+  simp only [μ.toMeasure_apply (measurableSet_singleton a), Set.indicator.mul_indicator_eq, ← _root_.tsum_subtype,tsum_singleton]
 
 -- #34138
 theorem toMeasure_apply_eq_zero_iff [MeasurableSpace α] [MeasurableSingletonClass α] {μ : DiscreteMeasure α} {s : Set α} (hs : MeasurableSet s):

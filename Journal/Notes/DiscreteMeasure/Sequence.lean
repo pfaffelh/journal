@@ -60,6 +60,10 @@ lemma sequence_cons_apply_cons [DecidableEq α] (μs : List (DiscreteMeasure α)
   rw [List.sequence_cons]
   exact cons_map_seq_apply_cons (sequence μs) ν l a
 
+@[simp]
+lemma sequence_nil {α : Type u} : sequence ([] : List (DiscreteMeasure α)) = Pure.pure [] := by
+  simp [sequence]
+
 lemma sequence_apply₀ [DecidableEq α] (μs : List (DiscreteMeasure α)) (l : List α) (h : μs.length = l.length) :
     (sequence μs) l = List.prod (μs.zipWith (·.weight ·) l) := by
   induction μs generalizing l with
@@ -85,22 +89,28 @@ lemma sequence_apply_of_not_length [DecidableEq α] (μs : List (DiscreteMeasure
     (sequence μs) l = 0 := by
   induction μs generalizing l with
   | nil =>
-    simp only [sequence, List.length_nil] at h ⊢
-    exact pure_apply_nonself (by rintro rfl; simp at h)
+    rw [ne_comm, List.length_nil, ← Iff.ne List.eq_nil_iff_length_eq_zero] at h
+    exact pure_apply_nonself h
   | cons μ μs ih =>
     cases l with
     | nil =>
-      rw [show (sequence (μ :: μs)) = μ.bind (fun a => (sequence μs).map (List.cons a)) from by
-        rw [sequence_cons_eq_seq_sequence]; simp [monad_norm]]
-      rw [bind_apply]
-      apply ENNReal.tsum_eq_zero.mpr; intro a; apply mul_eq_zero_of_right
-      rw [map_apply₂]
-      apply ENNReal.tsum_eq_zero.mpr; intro l; apply mul_eq_zero_of_right
-      exact pure_apply_nonself (List.cons_ne_nil _ _)
+      rw [List.sequence_cons]
+      simp [monad_norm]
+      rw [← bind_eq_bind, bind_apply]
+      apply ENNReal.tsum_eq_zero.mpr (fun a ↦ ?_); apply mul_eq_zero_of_right
+      simp_rw [← bind_eq_bind, bind_apply, comp_apply]
+      apply ENNReal.tsum_eq_zero.mpr (fun b ↦ ?_); apply mul_eq_zero_of_right
+      apply pure_apply_nonself (by simp)
     | cons a l' =>
       rw [sequence_cons_apply_cons]
       have : μs.length ≠ l'.length := by simpa using h
       rw [ih l' this, mul_zero]
+
+lemma sequence_support [DecidableEq α] {μs : List (DiscreteMeasure α)} :
+    (sequence μs).weight.support ⊆ {l : List α | l.length = μs.length} := by
+  refine support_subset_iff'.mpr (fun l hl ↦ ?_)
+  rw [Set.mem_setOf_eq, eq_comm] at hl
+  exact sequence_apply_of_not_length μs l hl
 
 /-
 lemma sequence_apply₁ [DecidableEq α] (μs : List (DiscreteMeasure α)) (l : List α) :

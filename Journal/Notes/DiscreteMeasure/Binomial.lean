@@ -68,22 +68,12 @@ theorem binom_eq_count_true (p : unitInterval) (n : ℕ) : binom p n = (iidSeque
     simp [Bool.toNat, Bool.cond_eq_ite, add_comm,
       List.count_cons]
 
-
 /-- `binom p n k = 0` when `k > n`, since we can't get more successes than trials. -/
 lemma binom_eq_zero_of_gt (p : unitInterval) (n k : ℕ) (hk : n < k) : binom p n k = 0 := by
-  induction n generalizing k with
-  | zero =>
-    simp only [binom]; exact pure_apply_nonself (by omega)
-  | succ n ih =>
-    change (coin p >>= fun X => binom p n >>= fun Y => pure (X.toNat + Y)) k = 0
-    rw [← bind_eq_bind, bind_apply, ENNReal.tsum_eq_zero]
-    intro b; apply mul_eq_zero_of_right
-    rw [← bind_eq_bind, bind_apply, ENNReal.tsum_eq_zero]
-    intro y
-    by_cases hy : n < y
-    · simp [ih y hy]
-    · apply mul_eq_zero_of_right; rw [pure_apply_nonself]
-      cases b <;> simp [Bool.toNat] <;> omega
+  letI : MeasurableSpace (List Bool) := ⊤
+  rw [binom_eq_count_true,  map_apply (hg := by measurability), iidSequence, toMeasure_apply_eq_zero_iff (hs := by measurability)]
+  apply Set.disjoint_of_subset sequence_support (fun ⦃a⦄ a_1 => a_1)
+  grind
 
 open Finset
 
@@ -130,102 +120,52 @@ lemma card_fnBool {ι : Type*} [DecidableEq ι] [Fintype ι] {k : ℕ} : #{ f : 
   exact Equiv_fnBool_finset_mem_powersetCard_iff k i
 
 -- #34702
+/-- The number of boolean lists of length `n` with exactly `k` trues is `n.choose k`. -/
 lemma card_boolList_count {k n : ℕ} :
-    #{v : List.Vector Bool n | v.toList.count true = k} = n.choose k := by
+    ENat.card ↑({l : List Bool | l.length = n} ∩ {l | List.count true l = k}) = ↑(n.choose k) := by
+  -- Step 1: Transport to List.Vector Bool n
+  have e1 : ↑({l : List Bool | l.length = n} ∩ {l | List.count true l = k}) ≃
+      {v : List.Vector Bool n | v.toList.count true = k} :=
+    { toFun := fun ⟨l, hl, hk⟩ => ⟨⟨l, hl⟩, hk⟩
+      invFun := fun ⟨⟨l, hl⟩, hk⟩ => ⟨l, hl, hk⟩
+      left_inv := fun ⟨_, _, _⟩ => rfl
+      right_inv := fun ⟨⟨_, _⟩, _⟩ => rfl }
+  rw [ENat.card_congr e1, ENat.card_eq_coe_fintype_card, Fintype.card_subtype]
+  -- Step 2: Now #{v : List.Vector Bool n | v.toList.count true = k} = n.choose k
+  simp only [Set.mem_setOf_eq, ENat.coe_inj]
   rw [← card_fin n, ← card_fnBool, card_fin n]
   apply card_equiv (Equiv.vectorEquivFin _ n) (fun v ↦ ?_)
   simp only [mem_filter, mem_univ, true_and, Equiv.vectorEquivFin, Equiv.coe_fn_mk]
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩ <;> rw [← h, ← List.count_ofFn_eq_card _ _ true] <;> congr <;>
   rw [← List.ofFn_get (l := v.toList)] <;> aesop
 
-/-- The binomial formula: `binom p n k = C(n,k) * p^k * (1-p)^(n-k)`. -/
-theorem binom_formula (p : unitInterval) (n k : ℕ) :
-    binom p n k = (ENNReal.ofReal p) ^ k * (ENNReal.ofReal (symm p)) ^ (n - k) * (Nat.choose n k) := by
-  induction n generalizing k with
-  | zero =>
-    simp only [binom]
-    cases k with
-    | zero => simp only [pow_zero, Nat.sub_zero, Nat.choose_zero_right, Nat.cast_one, mul_one]; exact pure_apply_self
-    | succ k =>
-      simp only [Nat.choose_zero_succ, Nat.cast_zero, mul_zero]
-      exact pure_apply_nonself (by omega)
-  | succ n ih =>
-    change (coin p >>= fun X => binom p n >>= fun Y => pure (X.toNat + Y)) k = _
-    rw [← bind_eq_bind, bind_apply]
-    simp_rw [← bind_eq_bind, bind_apply]
-    rw [tsum_bool]
-    simp only [coin_apply, Bool.false_eq_true, ↓reduceIte, Bool.toNat_false, Nat.zero_add,
-      Bool.toNat_true]
-    -- Now LHS is: ofReal(symm p) * ∑' y, binom p n y * pure y k + ofReal p * ∑' y, binom p n y * pure (1 + y) k
-    have hfalse : ∑' y, binom p n y * (DiscreteMeasure.pure y) k = binom p n k := by
-      have : ∀ y, binom p n y * (DiscreteMeasure.pure y) k = if y = k then binom p n k else 0 := by
-        intro y
-        split_ifs with h
-        · subst h; rw [pure_apply_self, mul_one]
-        · rw [pure_apply_nonself (Ne.symm h), mul_zero]
-      simp_rw [this, tsum_ite_eq]
-    have htrue : ∑' y, binom p n y * (DiscreteMeasure.pure (1 + y)) k = if k = 0 then 0 else binom p n (k - 1) := by
-      cases k with
-      | zero =>
-        simp only [ite_true]
-        apply ENNReal.tsum_eq_zero.mpr
-        intro y
-        apply mul_eq_zero_of_right
-        exact pure_apply_nonself (by omega)
-      | succ k' =>
-        rw [if_neg (by omega), show k' + 1 - 1 = k' from by omega]
-        have : ∀ y, binom p n y * (DiscreteMeasure.pure (1 + y)) (k' + 1) = if y = k' then binom p n k' else 0 := by
-          intro y
-          by_cases h : y = k'
-          · subst h
-            rw [if_pos rfl, show 1 + y = y + 1 from by omega, pure_apply_self, mul_one]
-          · rw [if_neg h]
-            apply mul_eq_zero_of_right
-            change (DiscreteMeasure.pure (1 + y)) (k' + 1) = 0
-            exact pure_apply_nonself (show k' + 1 ≠ 1 + y from by omega)
-        simp_rw [this, tsum_ite_eq]
-    rw [hfalse, htrue]
-    rw [ih]
-    cases k with
-    | zero =>
-      simp only [ite_true, mul_zero, add_zero, pow_zero, one_mul, Nat.sub_zero,
-        Nat.choose_zero_right, Nat.cast_one, mul_one]
-      rw [pow_succ, mul_comm]
-    | succ k =>
-      rw [if_neg (by omega), show k + 1 - 1 = k from by omega]
-      rw [ih]
-      rw [Nat.choose_succ_succ]
-      rw [show n + 1 - (k + 1) = n - k from by omega]
-      by_cases hkn : k + 1 ≤ n
-      · have hdk : n - (k + 1) = n - k - 1 := by omega
-        rw [hdk]
-        obtain ⟨m, hm⟩ : ∃ m, n - k = m + 1 := ⟨n - k - 1, by omega⟩
-        rw [show n - k - 1 = m from by omega, hm]
-        rw [pow_succ (ENNReal.ofReal (symm p)) m, pow_succ (ENNReal.ofReal p) k]
-        push_cast
-        ring
-      · push_neg at hkn
-        by_cases hkn' : k = n
-        · subst hkn'
-          simp only [Nat.sub_self, pow_zero, mul_one]
-          have : Nat.choose k (k + 1) = 0 := Nat.choose_eq_zero_of_lt (by omega)
-          rw [this]; simp; rw [pow_succ]; ring
-        · have h1 : Nat.choose n (k + 1) = 0 := Nat.choose_eq_zero_of_lt (by omega)
-          have h2 : Nat.choose n k = 0 := Nat.choose_eq_zero_of_lt (by omega)
-          simp [h1, h2]
-
-theorem binom_eq_iidSequence (p : unitInterval) (n : ℕ) (k : ℕ) :
-    binom p n k =
-    ∑' (l : List Bool), iidSequence n (coin p) l *
-      if l.count true = k then 1 else 0 := by
-  sorry
-
 instance : MeasurableSpace (List Bool) := ⊤
+
+theorem binom_eq_iidSequence'' (p : unitInterval) (n : ℕ) (k : ℕ) :
+    binom p n k =
+    (iidSequence n (coin p)).toMeasure {l | l.count true = k} := by
+  rw [binom_eq_count_true, map_apply (hg := by measurability)]
+  rfl
 
 theorem binom_eq_iidSequence' (p : unitInterval) (n : ℕ) (k : ℕ) :
     binom p n k =
-    (iidSequence n (coin p)).toMeasure {l | l.length = n ∧ l.count true = k} := by
-  sorry
+    (iidSequence n (coin p)).toMeasure ({l | l.length = n} ∩ {l | l.count true = k}) := by
+  have h : n = List.length (List.replicate n (coin p)) := by
+    rw [List.length_replicate]
+  rw [binom_eq_iidSequence'', Set.inter_comm]
+  rw [toMeasure_apply_inter_support (hs := by measurability) (hu := by measurability), iidSequence]
+  apply h ▸ sequence_support
+
+/-- The binomial formula: `binom p n k = C(n,k) * p^k * (1-p)^(n-k)`. -/
+theorem binom_formula (p : unitInterval) (n k : ℕ) :
+    binom p n k = (ENNReal.ofReal p) ^ k * (ENNReal.ofReal (symm p)) ^ (n - k) * (Nat.choose n k) := by
+  have h : ∀ (a : ↑({l : List Bool | l.length = n} ∩ {l | List.count true l = k})),
+      iidSequence n (coin p) a.val = iidSequence a.val.length (coin p) a.val ∧
+      List.count true a.val = k ∧ List.count false a.val = n - k := by
+    rintro ⟨a, ⟨h1, h2⟩⟩; grind
+  rw [binom_eq_iidSequence', toMeasure_apply₂ (hs := by measurability)]
+  simp_rw [mul_comm (a:= ENNReal.ofReal ↑p ^ k), h, iidSequence_apply₂, tprod_bool, coin_apply_false, coin_apply_true, h,
+    ENNReal.tsum_const, card_boolList_count, mul_comm (ENat.toENNReal _), ENat.toENNReal_coe]
 
 end binom
 
