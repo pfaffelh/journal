@@ -8,17 +8,11 @@ import Journal.Notes.DiscreteMeasure.Bernoulli
 import Journal.Notes.DiscreteMeasure.Sequence
 
 /-!
-# DiscreteMeasure: Binomial distribution
+# DiscreteMeasure: Hypergeometric distribution
 
-We define the binomial distribution `binom p n` as a `DiscreteMeasure ℕ`,
-where `binom p n k` is the probability of getting exactly `k` successes in `n`
-independent coin flips with success probability `p`.
+We define the hypergeometric distribution `hypergeometric N K n` as a `DiscreteMeasure ℕ`,
+where `hypergeometric N K n k ` is the probability of getting exactly `k` black balls when drawin `n` balls from an urn with `K` black and `N-K` non-black balls without replacement.
 
-The definition is inductive: `binom p 0 = pure 0` and
-`binom p (n+1) = coin p >>= fun X => binom p n >>= fun Y => pure (Bool.toNat X + Y)`.
-
-We prove the classical binomial formula:
-`binom p n k = p ^ k * (1 - p) ^ (n - k) * (n.choose k)`.
 -/
 
 open MeasureTheory ProbabilityTheory Measure Function Finset unitInterval
@@ -29,14 +23,47 @@ namespace MeasureTheory
 
 namespace DiscreteMeasure
 
+universe u v w
+
+variable {α β γ δ ι : Type*}
+
+-- ι is the set of colors
+
+/-- An urn is a finite collection of balls of different colors. -/
+def urn [Fintype ι] (ball : ι → Type*) [∀ i, Fintype (ball i)] := Σ i, ball i
+
+instance urn.fintype [Fintype ι] (ball : ι → Type*) [∀ i, Fintype (ball i)] : Fintype (urn ball) :=
+  Sigma.instFintype
+
+def urn.color [Fintype ι] {ball : ι → Type*} [∀ i, Fintype (ball i)] (x : urn ball) : ι := x.1
+
+lemma urn.card [Fintype ι] (ball : ι → Type*) [∀ i, Fintype (ball i)] :
+    Fintype.card (urn ball) = ∑ i, Fintype.card (ball i) :=
+  Fintype.card_sigma
+
+
+/-- The hypergeometric  distribution with parameters `N`, `K` and `n`, as a `DiscreteMeasure ℕ`. -/
+noncomputable def hypergeometric (N K n : ℕ) (hNK : K ≤ N) :  DiscreteMeasure ℕ := do
+  let X ← uniform
+
+
+
+
 section binom
 
-/-- The binomial distribution with parameters `p` and `n`, as a `DiscreteMeasure ℕ`. -/
-noncomputable def binom (p : unitInterval) : ℕ → DiscreteMeasure ℕ
+noncomputable def succProb (N : ℕ) (K : ℕ) (hNK : K ≤ N) : unitInterval := ⟨K/N, by
+  refine ⟨div_nonneg (by simp only [Nat.cast_nonneg]) (by simp only [Nat.cast_nonneg]), div_le_one_of_le₀ (by simp only [Nat.cast_le, hNK]) (by simp only [Nat.cast_nonneg])⟩⟩
+
+
+
+/-- The hypergeometric  distribution with parameters `N`, `K` and `n`, as a `DiscreteMeasure ℕ`. -/
+noncomputable def hypergeometric (N K : ℕ) (hNK : K ≤ N) : ℕ → DiscreteMeasure ℕ
   | 0 => pure 0
   | n + 1 => do
-    let X ← coin p
-    let Y ← binom p n
+    let X ← coin (succProb N K hNK)
+    let Y ← hypergeometric (N - 1) (K - X.toNat) (by
+      grind
+      simp) (n - 1)
     pure (X.toNat + Y)
 
 @[simp]
@@ -120,47 +147,24 @@ lemma card_fnBool {ι : Type*} [DecidableEq ι] [Fintype ι] {k : ℕ} : #{ f : 
   exact Equiv_fnBool_finset_mem_powersetCard_iff k i
 
 -- #34702
-/-- Equiv between `powersetCard k univ` (subsets of `Fin n` of size `k`) and
-boolean lists of length `n` with exactly `k` trues. -/
-def Equiv.powersetCard_boolList {n k : ℕ} :
-    ↑(powersetCard k (univ : Finset (Fin n))) ≃
-    {l : List Bool | l.length = n ∧ l.count true = k} where
-  toFun := fun ⟨s, hs⟩ =>
-    have hsm := mem_powersetCard.mp hs
-    ⟨List.ofFn (fun i => decide (i ∈ s)), by simp, by
-      rw [← hsm.2]; simp [List.count_ofFn_eq_card]⟩
-  invFun := fun ⟨l, hl, hk⟩ =>
-    ⟨univ.filter (fun i => l[i.val]'(by omega) = true), by
-      rw [mem_powersetCard]; refine ⟨filter_subset _ _, ?_⟩
-      have : List.count true l = #{i : Fin n | l[i.val]'(by omega) = true} := by
-        rw [← List.count_ofFn_eq_card]
-        congr 1; apply List.ext_getElem (by simp [hl]) (fun i _ _ => by simp)
-      rw [← hk, this]⟩
-  left_inv := fun ⟨s, hs⟩ => by ext1; ext i; simp
-  right_inv := fun ⟨l, hl, hk⟩ => by
-    ext1; apply List.ext_getElem (by simp [hl]) (fun i _ _ => by simp)
-
--- #34702
-lemma card_listVector_card {k n : ℕ} :
-    #{v : List.Vector Bool n | v.toList.count true = k} = n.choose k := by
-  rw [← card_fin n, ← card_fnBool, card_fin n]
-  apply card_equiv (Equiv.vectorEquivFin _ n) (fun v ↦ ?_)
-  simp only [mem_filter, mem_univ, true_and, Equiv.vectorEquivFin, Equiv.coe_fn_mk]
-  refine ⟨fun h ↦ ?_,fun h ↦ ?_⟩ <;> rw [← h, ← List.count_ofFn_eq_card _ _ true] <;> congr <;>
-  rw [← List.ofFn_get (l :=  v.toList)] <;> aesop
-
-
-
 /-- The number of boolean lists of length `n` with exactly `k` trues is `n.choose k`. -/
 lemma card_boolList_count {k n : ℕ} :
-    ENat.card ↑({l : List Bool | l.length = n} ∩ {l | List.count true l = k}) = n.choose k := by
+    ENat.card ↑({l : List Bool | l.length = n} ∩ {l | List.count true l = k}) = ↑(n.choose k) := by
+  -- Step 1: Transport to List.Vector Bool n
   have e1 : ↑({l : List Bool | l.length = n} ∩ {l | List.count true l = k}) ≃
       {v : List.Vector Bool n | v.toList.count true = k} :=
     { toFun := fun ⟨l, hl, hk⟩ => ⟨⟨l, hl⟩, hk⟩
       invFun := fun ⟨⟨l, hl⟩, hk⟩ => ⟨l, hl, hk⟩
       left_inv := fun ⟨_, _, _⟩ => rfl
       right_inv := fun ⟨⟨_, _⟩, _⟩ => rfl }
-  simp_rw [ENat.card_congr e1, ENat.card_eq_coe_fintype_card, Fintype.card_subtype, Set.mem_setOf_eq, ← card_listVector_card]
+  rw [ENat.card_congr e1, ENat.card_eq_coe_fintype_card, Fintype.card_subtype]
+  -- Step 2: Now #{v : List.Vector Bool n | v.toList.count true = k} = n.choose k
+  simp only [Set.mem_setOf_eq, ENat.coe_inj]
+  rw [← card_fin n, ← card_fnBool, card_fin n]
+  apply card_equiv (Equiv.vectorEquivFin _ n) (fun v ↦ ?_)
+  simp only [mem_filter, mem_univ, true_and, Equiv.vectorEquivFin, Equiv.coe_fn_mk]
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩ <;> rw [← h, ← List.count_ofFn_eq_card _ _ true] <;> congr <;>
+  rw [← List.ofFn_get (l := v.toList)] <;> aesop
 
 instance : MeasurableSpace (List Bool) := ⊤
 

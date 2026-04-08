@@ -79,7 +79,7 @@ lemma map_toMeasure
   apply @Measure.ext _ _
   intro s hs
   rw [toMeasure, @Measure.map_sum (hf := AEMeasurable.of_discrete)]
-  simp_rw [Measure.map_smul, @Measure.map_dirac α β _ _ g (by measurability)]
+  simp_rw [Measure.map_smul, Measure.map_dirac]
   rfl
 
 lemma map_map (μ : DiscreteMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
@@ -244,10 +244,13 @@ lemma Measure.join_sum {α : Type u_1} {mα : MeasurableSpace α} {ι : Type u_7
 lemma join_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace (DiscreteMeasure α)] [MeasurableSingletonClass (DiscreteMeasure α)] (h : Measurable (@toMeasure α _)) (m : DiscreteMeasure (DiscreteMeasure α)) : m.join.toMeasure = sum (fun μ  ↦ m μ • μ.toMeasure) := by
   apply Measure.ext
   intro s hs
-  rw [join_coe, toMeasure, Measure.map_sum (hf := by measurability), Measure.join_sum, Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
+  rw [join_coe (h := h), toMeasure, Measure.map_sum (hf := h.aemeasurable), Measure.join_sum, Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
   apply tsum_congr (fun μ ↦ ?_)
-  rw [Measure.smul_apply, Measure.map_smul, Measure.join_smul, Measure.smul_apply, smul_eq_mul, smul_eq_mul, Measure.map_dirac, Measure.join_dirac]
-  repeat measurability
+  rw [Measure.smul_apply, Measure.map_smul, Measure.join_smul, Measure.smul_apply, smul_eq_mul, smul_eq_mul]
+  have hd : Measure.map toMeasure (dirac μ) = dirac (toMeasure μ) := by
+    ext t ht; rw [Measure.map_apply h ht, Measure.dirac_apply' _ ht, Measure.dirac_apply' _ (h ht)]
+    rfl
+  simp [hd, Measure.join_dirac]
 
 lemma join_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace (DiscreteMeasure α)]  [MeasurableSingletonClass (DiscreteMeasure α)] (h : Measurable (@toMeasure α _)) (m : DiscreteMeasure (DiscreteMeasure α)) (s : Set α) (hs : MeasurableSet s): m.join.toMeasure s = ∑' (μ : DiscreteMeasure α), m μ * μ.toMeasure s := by
   simp only [join_toMeasure h]
@@ -466,7 +469,7 @@ lemma pure_hasSum [MeasurableSpace α] [MeasurableSingletonClass α] (a : α) : 
 lemma map_pure (a : α) (f : α → β) : (pure a).map f = pure (f a) := by
   letI : MeasurableSpace α := ⊤
   letI : MeasurableSpace β := ⊤
-  rw [← toMeasure_inj, pure_coe, map_coe (hf := by measurability), pure_coe, Measure.map_dirac (by measurability)]
+  rw [← toMeasure_inj, pure_coe, map_coe (hf := by measurability), pure_coe, Measure.map_dirac]
 
 theorem pure_bind (a : α) (f : α → DiscreteMeasure β) :
 (pure a).bind f = f a := by
