@@ -353,14 +353,13 @@ theorem restrict_toMeasure_support [MeasurableSpace α] [MeasurableSingletonClas
   rw [Measure.restrict_apply hs, μ.toMeasure_apply_inter_support hs hu h]
 
 
-
+example : MeasurableSet (Set.univ : Set ℝ) := by apply?
 
 
 lemma nsupport_weight [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α) (P : α → Prop) (hμ : μ.toMeasure {a : α | P a} = 0) (a : α) (ha : P a) : μ a = 0 :=
   by
   rw [← nonpos_iff_eq_zero, ← DiscreteMeasure.toMeasure_apply_singleton μ a, ← hμ]
-  apply OuterMeasureClass.measure_mono μ.toMeasure
-  simp [ha]
+  exact toMeasure_mono (by measurability) (MeasurableSet.univ) (by simp [ha]) (by simp)
 
 section IsFiniteOrProbabilityMeasure
 

@@ -34,7 +34,7 @@ lemma uniform_apply (i : ι) : (uniform : DiscreteMeasure ι) i = ((Finset.univ 
 
 variable [Inhabited ι]
 
-lemma hasSum_uniform : HasSum (uniform (ι := ι)) 1 := by
+lemma hasSum_uniform : HasSum (uniform (ι := ι)).weight 1 := by
   rw [Summable.hasSum_iff ENNReal.summable]
   simp [uniform_apply, tsum_fintype]
   exact ENNReal.mul_inv_cancel (by simp) (by simp)
