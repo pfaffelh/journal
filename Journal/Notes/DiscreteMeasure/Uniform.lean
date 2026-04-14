@@ -9,8 +9,8 @@ import Journal.Notes.DiscreteMeasure.Monad
 /-!
 # DiscreteMeasure: Uniform distribution
 
-We define `uniform` as the uniform distribution on a finite inhabited type `ι`,
-where each element has weight `(Finset.univ : Finset ι).card⁻¹`.
+We define `uniform` as the uniform distribution on a `Finset ι`,
+where each element has weight `s.card⁻¹`.
 We prove that it is a probability measure.
 -/
 
@@ -22,28 +22,87 @@ namespace MeasureTheory
 
 namespace DiscreteMeasure
 
-section uniform
+section uniformOfFinset
 
-variable {ι : Type*} [Fintype ι]
+variable {ι : Type*} [DecidableEq ι] (s : Finset ι)
 
-noncomputable def uniform : DiscreteMeasure ι where
-  weight := fun _ ↦ ((Finset.univ : Finset ι).card : ℝ≥0∞)⁻¹
+noncomputable def uniformOfFinset (_hs : s.Nonempty) : DiscreteMeasure ι where
+  weight := (s : Set ι).indicator (s.card)⁻¹
+  --fun i ↦ if i ∈ s then (s.card)⁻¹ else 0
 
 @[simp]
-lemma uniform_apply (i : ι) : (uniform : DiscreteMeasure ι) i = ((Finset.univ : Finset ι).card : ℝ≥0∞)⁻¹ := rfl
+lemma uniformOfFinset_apply (hs : s.Nonempty) (i : ι) :
+    uniformOfFinset s hs i = if i ∈ s then (s.card : ℝ≥0∞)⁻¹ else 0 := by
+  show (uniformOfFinset s hs).weight i = _
+  rw [uniformOfFinset]
+  simp [Set.indicator_apply]
 
-variable [Inhabited ι]
+lemma uniformOfFinset_apply' (hs : s.Nonempty) (i : ι) :
+    uniformOfFinset s hs i = (s : Set ι).indicator (s.card)⁻¹ i := by
+  rfl
 
-lemma hasSum_uniform : HasSum (uniform (ι := ι)).weight 1 := by
-  rw [Summable.hasSum_iff ENNReal.summable]
-  simp [uniform_apply, tsum_fintype]
-  exact ENNReal.mul_inv_cancel (by simp) (by simp)
+lemma uniformOfFinset_apply'' (hs : s.Nonempty) (i : ι) :
+    uniformOfFinset s hs i = (s.card : ℝ≥0∞)⁻¹ * (s : Set ι).indicator 1 i := by
+  simp [uniformOfFinset_apply' s hs, Set.indicator_apply, Set.indicator_apply]
 
-lemma isProbabilityMeasure_uniform [MeasurableSpace ι] [MeasurableSingletonClass ι] :
-    IsProbabilityMeasure (uniform (ι := ι)).toMeasure :=
-  isProbabilityMeasure_iff_hasSum.mpr hasSum_uniform
 
-end uniform
+lemma hasSum_uniformOfFinset (hs : s.Nonempty) : HasSum (uniformOfFinset s hs).weight 1 := by
+  simp_rw [Summable.hasSum_iff ENNReal.summable, weight_eq, uniformOfFinset_apply', ← _root_.tsum_subtype]
+  simp [ENNReal.mul_inv_cancel, card_ne_zero.mpr hs, ENNReal.natCast_ne_top]
+
+lemma isProbabilityMeasure_uniformOfFinset [MeasurableSpace ι] [MeasurableSingletonClass ι] :
+    IsProbabilityMeasure (uniformOfFinset s hs).toMeasure :=
+  isProbabilityMeasure_iff_hasSum.mpr (hasSum_uniformOfFinset s hs)
+
+open scoped Classical in
+lemma uniformOfFinset_apply_toMeasure [MeasurableSpace ι] [MeasurableSingletonClass ι]
+    (t : Set ι) (ht : MeasurableSet t) :
+    (uniformOfFinset s hs).toMeasure t = #{x ∈ s | x ∈ t} * (#s : ℝ≥0∞)⁻¹ := by
+  simp only [toMeasure_apply _ ht, uniformOfFinset_apply'', mul_assoc, ENNReal.tsum_mul_left]
+  simp_rw [mul_comm, Set.indicator.mul_indicator_eq]
+  rw [← _root_.tsum_subtype]
+  simp [Set.indicator_apply]
+  rw [Finset.filter_attach', Finset.card_map, Finset.card_attach]
+  congr 3; ext x; simp only [exists_prop, mem_filter, and_self_left]
+
+end uniformOfFinset
+
+section uniformOfFintype
+
+noncomputable def uniformOfFintype (ι : Type*) [Fintype ι] [Nonempty ι] : DiscreteMeasure ι :=
+  uniformOfFinset Finset.univ Finset.univ_nonempty
+
+variable {ι : Type*} [DecidableEq ι] [Fintype ι] [Nonempty ι]
+
+@[simp]
+theorem uniformOfFintype_apply (i : ι) : uniformOfFintype ι i = (Fintype.card ι : ℝ≥0∞)⁻¹ := by
+  simp [uniformOfFintype, Finset.mem_univ, uniformOfFinset_apply]
+
+-- example [Fintype ι] (t : Set ι) : Finset ι := by
+--  exact Finset.empty
+
+open scoped Classical in
+lemma uniformOfFintype_apply_toMeasure [MeasurableSpace ι] [MeasurableSingletonClass ι]
+    (t : Set ι) (ht : MeasurableSet t) :
+    (uniformOfFintype ι).toMeasure t = #t.toFinset * (Fintype.card ι : ℝ≥0∞)⁻¹ := by
+  rw [uniformOfFintype, uniformOfFinset_apply_toMeasure (s := (Finset.univ : Finset ι))
+    (hs := Finset.univ_nonempty) t ht, Finset.card_univ]
+  congr 3
+  ext x
+  simp
+
+
+
+
+@[simp]
+theorem support_uniformOfFintype  :
+    (uniformOfFintype (ι := ι)).weight.support = ⊤ :=
+  Set.ext fun x => by simp
+
+theorem mem_support_uniformOfFintype (i : ι) : i ∈ (uniformOfFintype (ι := ι)).weight.support := by simp
+
+end uniformOfFintype
+
 
 end DiscreteMeasure
 

@@ -5,17 +5,21 @@ Authors: Peter Pfaffelhuber
 -/
 
 import Journal.Notes.DiscreteMeasure.Uniform
---import Journal.Notes.DiscreteMeasure.Sequence
+import Journal.Notes.DiscreteMeasure.Sequence
 
 /-!
-# DiscreteMeasure: Hypergeometric distribution
+# Urn models
 
-We define the hypergeometric distribution `hypergeometric K L n` as a `DiscreteMeasure ℕ`,
+We introduce the model for an urn, frequently used in discrete probability theory. It is defined by `card : ι → ℕ` for some `Fintype ι`, giving the number of balls of each color `i : ι`. The balls in the `u : urn` are represented as the sigma type `u.toSet := Σ i : ι, Fin (u.card i)`. The set of draws of `n` balls without replacement is `u.draw n`, and usually, we will model a uniform distribution over this set. For the results of the experiment, we introduce `u.result (n : ι → ℕ)` and  `u.colResult (n : ι → ℕ) (i : ι)` where `n i` balls of color `i` are drawn, and the result is the number of balls of a given color `i` in the draw.
+
+# Hypergeometric distribution
+
+We use urns to define the hypergeometric distribution `hypergeometric K L n` as a `DiscreteMeasure ℕ`,
 where `hypergeometric K L n k ` is the probability of getting exactly `k` black balls when drawin `n` balls from an urn with `K` black and `L` non-black balls without replacement.
 
 -/
 
-open MeasureTheory ProbabilityTheory Measure Function Finset unitInterval
+open MeasureTheory DiscreteMeasure ProbabilityTheory Measure Function Finset
 
 open scoped ENNReal NNReal
 
@@ -23,14 +27,16 @@ universe u v w
 
 variable {α β γ δ : Type*}
 
-/-- An urn is a finite collection of balls of various colors. The colors form a finite
+section urn
+
+/-- An urn is a finite collection of balls of various colors. The colors are from a finite
 type `ι`, and `card i` gives the number of balls of color `i`. -/
 structure urn (ι : Type*) [Fintype ι] where
   card : ι → ℕ
 
 variable {ι : Type*} [Fintype ι]
 
-/-- The type of all balls in the urn: a pair `⟨color, index⟩` where `color : ι` is the
+/-- Each ball in the urn is given by the pair `⟨color, index⟩` where `color : ι` is the
 color and `index : Fin (u.card color)` identifies the ball within that color. -/
 @[reducible] def urn.toSet (u : urn ι) : Type _ := Σ i : ι, Fin (u.card i)
 
@@ -52,65 +58,35 @@ def urn.draw (u : urn ι) (n : ℕ) : Finset (Finset u.toSet) :=
 lemma urn.draw_mem (u : urn ι) (n : ℕ) (s : Finset u.toSet) : s ∈ u.draw n ↔ #s = n := by simp [urn.draw]
 
 /-- The number of `n`-element draws from an urn with `N` balls is `N.choose n`. -/
-lemma card_draw (u : urn ι) (n : ℕ) :
+lemma draw_card (u : urn ι) (n : ℕ) :
     (u.draw n).card = (∑ i, u.card i).choose n := by
   rw [urn.draw, Finset.card_powersetCard, Finset.card_univ, card_toSet]
 
 /-- The set of draws is nonempty when `n` does not exceed the total number of balls. -/
 lemma draw_nonempty (u : urn ι) (n : ℕ) (hn : n ≤ ∑ i, u.card i) :
     (u.draw n).Nonempty := by
-  rw [← Finset.card_pos, card_draw]
+  rw [← Finset.card_pos, draw_card]
   exact Nat.choose_pos hn
 
-namespace MeasureTheory
-
-namespace DiscreteMeasure
-
-open _root_.MeasureTheory.DiscreteMeasure
-
-lemma urn.nonempty_draw (K L n : ℕ) (hn : n ≤ K + L) : Nonempty (({ card := fun b => if b = true then K else L } : urn Bool).draw n)
- := (draw_nonempty _ n (by simp [hn])).to_subtype
-
-/-- The hypergeometric distribution with parameters `K`, `N`, and `n`: drawing `n` balls
-without replacement from an urn with `K` black and `N - K` non-black balls, returning
-the number of black balls drawn. -/
-noncomputable def hypergeometric (K L n : ℕ) :
-    DiscreteMeasure ℕ :=
-  do
-    let X ← uniform (ι := (⟨fun b ↦ if b then K else L⟩ : urn Bool).draw n)
-    return (X.val.1.map color).count true
-
-open Classical in
-theorem hypergeometric_hasSum (K L n : ℕ) (h : n ≤ K + L) : HasSum (hypergeometric K L n).weight 1 := by
-  haveI := inhabited_of_nonempty <|urn.nonempty_draw K L n h
-  simp [hypergeometric]
-  apply hasSum_map
-  apply hasSum_uniform
+instance draw_nonempty_subtype (u : urn ι) (n : ℕ) [h : Fact (n ≤ ∑ i, u.card i)] :
+    Nonempty ↥(u.draw n) :=
+  (draw_nonempty u n h.out).to_subtype
 
 /-- For each color `i`, the set of `n i`-element subsets of balls of color `i`. -/
-def urn.colorDraw [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (i : ι) : Finset (Finset (Fin (u.card i))) :=
+def urn.colResult [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (i : ι) : Finset (Finset (Fin (u.card i))) :=
   Finset.powersetCard (n i) Finset.univ
 
-lemma urn.colorDraw_mem [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (i : ι) (s :  (Finset (Fin (u.card i)))) : s ∈ urn.colorDraw u n i ↔ s.card = n i := by
-  simp [urn.colorDraw]
+lemma urn.colResult_mem [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (i : ι) (s :  (Finset (Fin (u.card i)))) : s ∈ urn.colResult u n i ↔ s.card = n i := by
+  simp [urn.colResult]
 
 /-- A colored draw: independently choose `n i` balls of each color `i`.
 This is a `piFinset` of per-color draws. -/
-def urn.coloredDraw [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
+def urn.result [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
     Finset (∀ i, Finset (Fin (u.card i))) :=
-  Fintype.piFinset (u.colorDraw n)
+  Fintype.piFinset (u.colResult n)
 
-lemma urn.coloredDraw_mem [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (s : (i : ι) → Finset (Fin (u.card i))) : s ∈ urn.coloredDraw u n ↔ ∀ i, #(s i) = n i := by
-  simp_rw [coloredDraw, Fintype.mem_piFinset, urn.colorDraw_mem]
-
-example [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (f : (i : ι) → Finset (Fin (u.card i))) (hf : f ∈ urn.coloredDraw u n) (i : ι): #(f i) = n i := by
-  simpa [urn.colorDraw] using (Fintype.mem_piFinset.mp hf i)
-
-
-/-- The cardinality of coloredDraw is `∏ i, (u.card i).choose (n i)` — immediate from piFinset. -/
-lemma card_coloredDraw [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
-    (u.coloredDraw n).card = ∏ i, (u.card i).choose (n i) := by
-  simp [urn.coloredDraw, urn.colorDraw, Fintype.card_piFinset, Finset.card_powersetCard]
+lemma urn.result_mem [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (s : (i : ι) → Finset (Fin (u.card i))) : s ∈ urn.result u n ↔ ∀ i, #(s i) = n i := by
+  simp_rw [result, Fintype.mem_piFinset, urn.colResult_mem]
 
 -- Helper: extract balls of a given color from a draw
 private noncomputable def extractColor [DecidableEq ι] {u : urn ι} (d : Finset u.toSet) (i : ι) :
@@ -119,42 +95,46 @@ private noncomputable def extractColor [DecidableEq ι] {u : urn ι} (d : Finset
   --d.preimage (fun j => (⟨i, j⟩ : u.toSet)) (by intro a _ b _ h; cases h; rfl)
 
 -- Helper: reassemble per-color choices into a single draw
-private noncomputable def assembleColor [DecidableEq ι] {u : urn ι} (f : ∀ i, Finset (Fin (u.card i))) :
+private noncomputable def assembleDraw [DecidableEq ι] {u : urn ι} (f : ∀ i, Finset (Fin (u.card i))) :
     Finset u.toSet :=
   (Finset.univ (α := ι)).sigma f
 
-private lemma mem_assembleColor [DecidableEq ι] {u : urn ι} {f : ∀ i, Finset (Fin (u.card i))}
-    {x : u.toSet} : x ∈ assembleColor f ↔ x.2 ∈ f x.1 := by
-  simp [assembleColor]
+private lemma assembleDraw_mem [DecidableEq ι] {u : urn ι} {f : ∀ i, Finset (Fin (u.card i))}
+    {x : u.toSet} : x ∈ assembleDraw f ↔ x.2 ∈ f x.1 := by
+  simp [assembleDraw]
 
-private lemma mem_extractColor [DecidableEq ι] {u : urn ι} {d : Finset u.toSet}
+private lemma extractColor_mem [DecidableEq ι] {u : urn ι} {d : Finset u.toSet}
     {i : ι} {j : Fin (u.card i)} : j ∈ extractColor d i ↔ (⟨i, j⟩ : u.toSet) ∈ d := by
   simp [extractColor]
 
-private lemma assembleColor_extractColor [DecidableEq ι] {u : urn ι} (d : Finset u.toSet) :
-    assembleColor (extractColor d) = d := by
+private lemma assembleDraw_extractColor [DecidableEq ι] {u : urn ι} (d : Finset u.toSet) :
+    assembleDraw (extractColor d) = d := by
   ext ⟨i, j⟩
-  rw [mem_assembleColor, mem_extractColor]
+  rw [assembleDraw_mem, extractColor_mem]
 
-private lemma extractColor_assembleColor [DecidableEq ι] {u : urn ι}
+private lemma extractColor_assembleDraw [DecidableEq ι] {u : urn ι}
     (f : ∀ i, Finset (Fin (u.card i))) :
-    extractColor (assembleColor f) = f := by
+    extractColor (assembleDraw f) = f := by
   ext i j
-  rw [mem_extractColor, mem_assembleColor]
+  rw [extractColor_mem, assembleDraw_mem]
 
-lemma extractColor_mem_coloredDraw [ DecidableEq ι] (u : urn ι) (n : ι → ℕ) (d : Finset u.toSet) (h : ∀ (i : ι), (extractColor d i).card = n i) : extractColor d ∈ urn.coloredDraw u n := by
-  simp [urn.coloredDraw, urn.colorDraw, h]
+lemma extractColor_mem_result [ DecidableEq ι] (u : urn ι) (n : ι → ℕ) (d : Finset u.toSet) (h : ∀ (i : ι), (extractColor d i).card = n i) : extractColor d ∈ urn.result u n := by
+  simp [urn.result, urn.colResult, h]
 
-example [DecidableEq ι
-] (n : ι → ℕ): f ∈ urn.coloredDraw u n
-↔ assembleColor f ∈ u.draw (∑ i, n i) := by
-  simp [urn.coloredDraw_mem, urn.draw_mem]
+noncomputable def urn.result' [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
+    Finset (Finset u.toSet) :=
+  {d : Finset u.toSet | ∀ i, #(extractColor d i) = n i}
 
+def urn.result'_mem [DecidableEq ι] (u : urn ι) (n : ι → ℕ) (d : Finset u.toSet) : d ∈ u.result' n ↔ ∀ i, #(extractColor d i) = n i := by
+  simp [urn.result']
 
-  sorry
+lemma urn.result'_mem_draw [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
+    u.result' n ⊆ u.draw (∑ i, n i) := by
+  intro d hd
+  rw [urn.draw_mem, ← assembleDraw_extractColor d, assembleDraw, Finset.card_sigma]
+  exact Finset.sum_congr rfl (fun i _ => (urn.result'_mem u n d).mp hd i)
 
-
-private lemma count_eq_extractColor_card [DecidableEq ι] {u : urn ι} (d : Finset u.toSet) (i : ι) :
+private lemma count_eq_extractColor_card' [DecidableEq ι] {u : urn ι} (d : Finset u.toSet) (i : ι) :
     (d.val.map color).count i = (extractColor d i).card := by
   rw [Multiset.count_map]
   calc
@@ -165,83 +145,108 @@ private lemma count_eq_extractColor_card [DecidableEq ι] {u : urn ι} (d : Fins
     _ = (extractColor d i).card := by
       rw [Finset.card_map]
 
-private lemma assembleColor_card [DecidableEq ι] {u : urn ι}
-    (f : ∀ i, Finset (Fin (u.card i))) :
-    (assembleColor f).card = ∑ i, (f i).card := by
-  rw [assembleColor, Finset.card_sigma]
+/-- Bijection between draws with fixed color counts and `result` (the piFinset of per-color choices). -/
+noncomputable def equiv_filter_draw_result [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
+    u.result' n ≃ u.result n where
+  toFun := fun ⟨d, hd⟩ =>
+    ⟨extractColor d, extractColor_mem_result u n d ((u.result'_mem n d).mp hd)⟩
+  invFun := fun ⟨f, hf⟩ =>
+    ⟨assembleDraw f, (urn.result'_mem u n _).mpr (fun i => by
+      rw [extractColor_assembleDraw]
+      exact (urn.result_mem u n f).mp hf i)⟩
+  left_inv := fun ⟨d, _⟩ => Subtype.ext (assembleDraw_extractColor d)
+  right_inv := fun ⟨f, _⟩ => Subtype.ext (extractColor_assembleDraw _)
 
-/-- Bijection between draws with fixed color counts and coloredDraw (piFinset). -/
-lemma card_filter_draw_eq_coloredDraw [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
-    #{d ∈ u.draw (∑ i, n i) | ∀ i, (extractColor d i).card = n i} =
-    (u.coloredDraw n).card := by
-  apply Finset.card_bij'
-    (i := fun d _ => extractColor d)
-    (j := fun f _ => assembleColor f)
-    (hi := fun d hd => by
-      simp only [mem_filter] at hd
-      exact extractColor_mem_coloredDraw u n d hd.2)
-    (hj := fun f hf => by
-      simp [urn.coloredDraw_mem] at hf
-      simp [urn.draw_mem, extractColor_assembleColor, assembleColor_card, hf])
-    (left_inv := fun d _ => assembleColor_extractColor d)
-    (right_inv := fun f _ => (extractColor_assembleColor _))
+/-- The cardinality version of the bijection. -/
+lemma result'_card_result [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
+    #(u.result' n) = #(u.result n) := by
+  rw [← Fintype.card_coe, Fintype.card_congr (equiv_filter_draw_result u n),
+    Fintype.card_coe]
+
+/-- The cardinality of result as given by `(n : ι → ℕ)` is `∏ i, (u.card i).choose (n i)` — immediate from piFinset. -/
+lemma result_card [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
+    #(u.result n) = ∏ i, (u.card i).choose (n i) := by
+  simp [urn.result, urn.colResult, Fintype.card_piFinset, Finset.card_powersetCard]
+
+private lemma assembleDraw_card [DecidableEq ι] {u : urn ι}
+    (f : ∀ i, Finset (Fin (u.card i))) :
+    (assembleDraw f).card = ∑ i, (f i).card := by
+  rw [assembleDraw, Finset.card_sigma]
 
 /-- The number of draws with fixed color counts equals `∏ i, (u.card i).choose (n i)`. -/
-lemma cases_card [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
-    #{d ∈ u.draw (∑ i, n i) | ∀ i, (d.val.map color).count i = n i} =
+lemma result'_card [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
+    #(u.result' n) =
     ∏ i, (u.card i).choose (n i) := by
-  simp_rw [count_eq_extractColor_card]
-  rw [card_filter_draw_eq_coloredDraw, card_coloredDraw]
+  rw [result'_card_result, result_card]
 
+end urn
 
-theorem hypergeometric_weight (K L n k : ℕ) (h : n ≤ K + L) :
-    (hypergeometric K L n).weight k =
-    (K.choose k * L.choose (n - k)) / ((K + L).choose n) := by
-  haveI := inhabited_of_nonempty (urn.nonempty_draw K L n h)
-  let u : urn Bool := ⟨fun b ↦ if b then K else L⟩
-  -- hypergeometric unfolds to: (uniform.map f).weight k
-  -- where f X = (X.val.1.map color).count true
-  -- hypergeometric = Bind.bind uniform (Pure.pure ∘ f)
-  -- First convert Bind.bind/Pure.pure to DiscreteMeasure.bind/pure
-  -- hypergeometric K L n = (fun X => f X) <$> uniform = map f uniform
-  -- So (hypergeometric K L n).weight k = ∑' X, uniform X * [f X = k]
-  -- Directly compute using binom_eq_count_true-style approach
-  -- hypergeometric K L n = (fun X => f X) <$> uniform
-  -- weight k = #{X ∈ u.draw n | f X = k} / #(u.draw n)
-  -- Use the monad-to-tsum lemma
-  -- The key computation: unfold everything to a sum
-  -- General lemma: (Bind.bind μ f).weight k = ∑' x, μ.weight x * (f x).weight k
-  -- This is because Bind.bind = DiscreteMeasure.bind by the Monad instance
-  have bind_weight : ∀ {α β : Type} (μ : DiscreteMeasure α)
-      (f : α → DiscreteMeasure β) (y : β),
-      (Bind.bind μ f : DiscreteMeasure β).weight y =
-      ∑' x, μ.weight x * (f x).weight y := fun μ f y => by
-    show (DiscreteMeasure.bind μ f) y = _
-    rw [bind_apply]; rfl
-  simp only [hypergeometric, bind_weight]
-  -- Goal: ∑' x, uniform.weight x * (Pure.pure (f x)).weight k = ...
-  -- Step 1: uniform.weight = const 1/#univ
-  simp_rw [show ∀ X : ↥(u.draw n), uniform.weight X =
-    ((Finset.univ : Finset ↥(u.draw n)).card : ℝ≥0∞)⁻¹ from fun _ => rfl]
-  rw [ENNReal.tsum_mul_left]
-  -- Step 2: Pure.pure m k = if m = k then 1 else 0
-  have pure_weight : ∀ (m : ℕ), (Pure.pure m : DiscreteMeasure ℕ).weight k =
-      if m = k then 1 else 0 := by
-    intro m; show (DiscreteMeasure.pure m).weight k = _
-    unfold DiscreteMeasure.pure; simp [Pi.single_apply, eq_comm]
-  simp_rw [pure_weight]
-  -- Step 3: ∑' x, if f x = k then 1 else 0 = #{x | f x = k}
-  rw [tsum_fintype, Finset.sum_ite, Finset.sum_const_zero, add_zero, Finset.sum_const,
-    nsmul_eq_mul, mul_one]
-  -- Rewrite #univ = #(u.draw n) = (K+L).choose n
-  rw [show Finset.card (Finset.univ : Finset ↥(u.draw n)) = (K + L).choose n from by
-    rw [Finset.card_univ, Fintype.card_coe]; exact card_draw u n]
-  -- Rewrite #{x | f x = k} using cases_card
-  -- This requires relating the Finset.filter to cases_card
-  -- a⁻¹ * b = b / a
-  rw [mul_comm, ENNReal.div_eq_inv_mul]
-  sorry
+section hypergeometric
+
+namespace MeasureTheory
+
+namespace DiscreteMeasure
+
+variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+
+/-- The hypergeometric distribution for drawing `n` balls without replacement from an urn with `u.card i` ι of color `i : ι`, returning
+the number of balls of each colow. -/
+noncomputable def hypergeometric (u : urn ι) (n : ℕ)  [Nonempty (u.draw n)] :
+    DiscreteMeasure (ι → ℕ) :=
+  do
+    let X ← uniformOfFintype (u.draw n)
+    return (fun i => (extractColor X.val i).card)
+
+lemma hypergeometric_eq_map (u : urn ι) (n : ℕ) [Nonempty (u.draw n)] :
+    hypergeometric u n =
+      map (fun X : ↥(u.draw n) => fun b => (extractColor X.val b).card)
+        (uniformOfFintype ↥(u.draw n)) := by
+  simp [hypergeometric]
+
+open Classical in
+theorem hypergeometric_hasSum (u : urn ι) (n : ℕ) [Nonempty (u.draw n)] :
+    HasSum (hypergeometric u n).weight 1 := by
+  rw [hypergeometric_eq_map]
+  exact hasSum_map (hasSum_uniformOfFinset (hs := Finset.univ_nonempty)) _
+
+open Classical in
+theorem hypergeometric_weight (u : urn ι) (m : ι → ℕ) [Nonempty (u.draw (∑ i, m i))] :
+    (hypergeometric u (∑ i, m i)).weight m =
+    (((∑ i, u.card i).choose (∑ i, m i) : ℝ≥0∞))⁻¹ * ∏ i, (u.card i).choose (m i) := by
+  letI : MeasurableSpace (u.draw (∑ i, m i)) := ⊤
+  rw [hypergeometric_eq_map]
+  rw [weight_eq, map_apply (hg := Measurable.of_discrete)]
+  rw [uniformOfFintype_apply_toMeasure (ht := MeasurableSet.of_discrete)]
+  simp only [Fintype.card_coe]
+  rw [draw_card, mul_comm]
+  congr 1
+  have h : ((fun (X : ↥(u.draw (∑ i, m i))) (i : ι) => #(extractColor X.val i))
+      ⁻¹' {m}).toFinset =
+      (u.result' m).preimage Subtype.val
+        Subtype.val_injective.injOn := by
+    ext X
+    simp only [Set.mem_toFinset, Set.mem_preimage, Set.mem_singleton_iff,
+      Finset.mem_preimage, urn.result'_mem, funext_iff]
+  rw [h, Finset.card_preimage]
+  rw [Finset.filter_eq_self.mpr (fun d hd => ⟨⟨d, u.result'_mem_draw m hd⟩, rfl⟩)]
+  rw [result'_card]
+
+open Classical in
+theorem hypergeometricBool_weight (u : urn Bool) (k l : ℕ) [Nonempty ↥(u.draw (k + l))] :
+    (hypergeometric u (k + l)).weight (cond · k l) =
+    (((u.card true + u.card false).choose (k + l) : ℝ≥0∞))⁻¹ * ((u.card true).choose k * (u.card false).choose l) := by
+  let m : Bool → ℕ := (cond · k l)
+  have hm : k + l = ∑ i, m i := by simp [m]
+  haveI : Nonempty ↥(u.draw (∑ i, m i)) := by
+    rw [← hm]
+    infer_instance
+  simp only [hm]
+  rw [hypergeometric_weight]
+  simp
+  rfl
 
 end DiscreteMeasure
 
 end MeasureTheory
+
+end hypergeometric
