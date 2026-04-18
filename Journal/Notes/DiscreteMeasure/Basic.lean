@@ -21,6 +21,43 @@ This setup combines the following features:
 
 As one example, we have started to establish some results on `coin p`, which is a Bernoulli distribution, as well as alternative formulations for the usual binomial distribution.
 
+
+ToDos:
+* I could add sum to any sequence of a type which has a Sum!?
+
+* generalize coin to any Fintype!
+  * the old coin is a newCoin Bool then...
+  * does binomial carry over to multinomial?
+  No, the new coin is only a general DiscreteMeasure. But multinomial is generic in the sense that it can be based on any DiscreteMeasure!
+
+* define a general thinning operation for DiscreteMeasures, and show that it preserves the class of DiscreteMeasures.
+
+A thinning is a bind: we need `thin : α → UniInterval` and `P : DiscreteMeasure α`. Start by drawing a random variable `X` from `P`, `Y \l  coin (P X)`. If `Y = True`, return `X`, else repeat.
+
+A mixture is a y...!?
+
+Sums with random number of summands!
+
+Introduce mixed Poisson! Also important for infinite divisibility!
+
+
+new random variable from another DiscreteMeasure which depends on the first one. We can show that the resulting distribution is again a DiscreteMeasure. This is a generalization of the fact that the thinning of a binomial distribution is again binomial.
+
+* multinomial
+  * can the new coin be used here? (I guess so, but we have to check the details.)
+
+geometric:
+* add throw a coin, it true return 0 else return 1 + itself (is this the definition?)
+* add weights are such that weight n+1 = (1 - p) * weight n, and weight 0 = p
+* Thinning of a geometric distribution is geometric.
+
+negative binomial:
+* define inductively via sums of geometric!
+
+
+
+
+
 -/
 
 open MeasureTheory ProbabilityTheory Measure Function
