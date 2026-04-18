@@ -5,6 +5,7 @@ Authors: Peter Pfaffelhuber
 -/
 
 import Journal.Notes.DiscreteMeasure.Monad
+import Journal.Notes.DiscreteMeasure.Sequence
 
 /-!
 # DiscreteMeasure: Bernoulli distribution (coin) and uniform distribution
@@ -12,7 +13,6 @@ import Journal.Notes.DiscreteMeasure.Monad
 We define `coin p` as the Bernoulli distribution with parameter `p : unitInterval`, i.e., the
 `DiscreteMeasure Bool` with `coin p true = ENNReal.ofReal p` and `coin p false = ENNReal.ofReal (1 - p)`.
 We prove basic properties, including that it is a probability measure.
-We also define a `uniform` distribution on finite types.
 -/
 
 open MeasureTheory ProbabilityTheory Measure Function Finset
@@ -31,7 +31,7 @@ noncomputable def coin (p : unitInterval) : DiscreteMeasure Bool where weight :=
   | true => ENNReal.ofReal p
   | false => ENNReal.ofReal (symm p)
 
-lemma coin_apply (p : unitInterval) (b : Bool) : (coin p) b = if b then ENNReal.ofReal p else ENNReal.ofReal  (symm p) := by
+lemma coin_apply (p : unitInterval) (b : Bool) : (coin p) b = if b then ENNReal.ofReal p else ENNReal.ofReal (symm p) := by
   by_cases h : b <;> simp only [h] <;> rfl
 
 lemma coin_apply_true (p : unitInterval) : (coin p) true = ENNReal.ofReal p := by
@@ -84,9 +84,34 @@ lemma coin_not' (p : unitInterval) : (coin p).map not = coin (unitInterval.symm 
   rw [coin_apply_true, map_eq_of_inj (coin p) not Bool.not_injective false true Bool.not_false]
   rw [coin_apply_false, unitInterval.coe_symm_eq]
 
-@[simp]
-lemma Bool_and : Bool.and true = id := by
-  rfl
+
+
+
+
+lemma sequence_coin (p : List unitInterval) : map List.and (sequence (p.map coin)) = coin p.prod := by
+  letI : MeasurableSpace (List Bool) := ⊤
+  apply Bool_ext _ (hasSum_coin p.prod) true
+  · rw [coin_apply_true, map_apply (hg := by measurability)]
+    rw [toMeasure_apply]
+
+    have h : List.and ⁻¹' {true} = {List.replicate p.length true} := by
+      ext x
+      simp [List.and]
+
+
+
+      sorry
+
+    sorry
+  · apply hasSum_map _ List.and
+    apply hasSum_sequence (fun i => ?_)
+    simp only [List.get_eq_getElem, List.getElem_map]
+    apply hasSum_coin _
+
+
+
+
+
 
 /-
 @[simp]
@@ -163,24 +188,6 @@ lemma massFunctionBool_eq_coin (P : DiscreteMeasure Bool) [IsProbabilityMeasure 
   exact Bool_ext P (coin (P true)) true (by rfl)
 -/
 end coin
-
-/-
-section uniform
-
-variable {ι : Type*} [Fintype ι] [Inhabited ι]
-
-def uniform : DiscreteMeasure ι := fun _ ↦ (Finset.univ : Finset ι).card⁻¹
-
-lemma isProbabilityMeasure_uniform : IsProbabilityMeasure (uniform (ι := ι)).toMeasure := by
-  rw [isProbabilityMeasure_iff_tsumOne]
-  simp [uniform]
-  refine ENNReal.mul_inv_cancel ?_ ?_
-  simp only [ne_eq, Nat.cast_eq_zero, Fintype.card_ne_zero, not_false_eq_true]
-  simp
-
-end uniform
-
--/
 
 end DiscreteMeasure
 

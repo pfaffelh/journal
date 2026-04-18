@@ -8,15 +8,24 @@ import Journal.Notes.DiscreteMeasure.Uniform
 import Journal.Notes.DiscreteMeasure.Sequence
 
 /-!
-# Urn models
+# A multi-color urn
 
-We introduce the model for an urn, frequently used in discrete probability theory. It is defined by `card : ι → ℕ` for some `Fintype ι`, giving the number of balls of each color `i : ι`. The balls in the `u : urn` are represented as the sigma type `u.toSet := Σ i : ι, Fin (u.card i)`. The set of draws of `n` balls without replacement is `u.draw n`, and usually, we will model a uniform distribution over this set. For the results of the experiment, we introduce `u.result (n : ι → ℕ)` and  `u.colResult (n : ι → ℕ) (i : ι)` where `n i` balls of color `i` are drawn, and the result is the number of balls of a given color `i` in the draw.
+We introduce the model for a multi-color urn, frequently used in discrete probability theory. An
+`urn ι` is parametrised by a `Fintype ι` of colors and a function `card : ι → ℕ` giving the number
+of balls of each color `i : ι`. The individual balls are encoded as the sigma type
+`u.toSet := Σ i : ι, Fin (u.card i)`, so that each ball is a pair `⟨color, index⟩`.
+
+For an urn `u : urn ι`, the Finset `u.draw n : Finset (Finset u.toSet)` collects all draws of `n`
+balls without replacement, and `u.result n` (resp. `u.colResult n i`) records the per-color
+configurations where exactly `n i` balls of color `i` have been drawn. We use these to model the
+uniform distribution on draws and read off color statistics.
 
 # Hypergeometric distribution
 
-We use urns to define the hypergeometric distribution `hypergeometric K L n` as a `DiscreteMeasure ℕ`,
-where `hypergeometric K L n k ` is the probability of getting exactly `k` black balls when drawin `n` balls from an urn with `K` black and `L` non-black balls without replacement.
-
+The (multi-color) hypergeometric distribution `hypergeometric u n` describes drawing `n` balls
+without replacement from `u`, with the result given as the function `i ↦ #{ balls of color i in
+the draw}`. The classical two-color case is recovered as `hypergeometricBool_weight` for
+`u : urn Bool`.
 -/
 
 open MeasureTheory DiscreteMeasure ProbabilityTheory Measure Function Finset
@@ -68,7 +77,8 @@ lemma draw_nonempty (u : urn ι) (n : ℕ) (hn : n ≤ ∑ i, u.card i) :
   rw [← Finset.card_pos, draw_card]
   exact Nat.choose_pos hn
 
-instance draw_nonempty_subtype (u : urn ι) (n : ℕ) [h : Fact (n ≤ ∑ i, u.card i)] :
+instance (priority := low) draw_nonempty_subtype (u : urn ι) (n : ℕ)
+    [h : Fact (n ≤ ∑ i, u.card i)] :
     Nonempty ↥(u.draw n) :=
   (draw_nonempty u n h.out).to_subtype
 
@@ -134,6 +144,7 @@ lemma urn.result'_mem_draw [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
   rw [urn.draw_mem, ← assembleDraw_extractColor d, assembleDraw, Finset.card_sigma]
   exact Finset.sum_congr rfl (fun i _ => (urn.result'_mem u n d).mp hd i)
 
+/-
 private lemma count_eq_extractColor_card' [DecidableEq ι] {u : urn ι} (d : Finset u.toSet) (i : ι) :
     (d.val.map color).count i = (extractColor d i).card := by
   rw [Multiset.count_map]
@@ -144,6 +155,7 @@ private lemma count_eq_extractColor_card' [DecidableEq ι] {u : urn ι} (d : Fin
           congr; ext ⟨i', j'⟩; rw [extractColor]; aesop
     _ = (extractColor d i).card := by
       rw [Finset.card_map]
+-/
 
 /-- Bijection between draws with fixed color counts and `result` (the piFinset of per-color choices). -/
 noncomputable def equiv_filter_draw_result [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
@@ -168,10 +180,12 @@ lemma result_card [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
     #(u.result n) = ∏ i, (u.card i).choose (n i) := by
   simp [urn.result, urn.colResult, Fintype.card_piFinset, Finset.card_powersetCard]
 
+/-
 private lemma assembleDraw_card [DecidableEq ι] {u : urn ι}
     (f : ∀ i, Finset (Fin (u.card i))) :
     (assembleDraw f).card = ∑ i, (f i).card := by
   rw [assembleDraw, Finset.card_sigma]
+-/
 
 /-- The number of draws with fixed color counts equals `∏ i, (u.card i).choose (n i)`. -/
 lemma result'_card [DecidableEq ι] (u : urn ι) (n : ι → ℕ) :
@@ -190,7 +204,7 @@ namespace DiscreteMeasure
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
 /-- The hypergeometric distribution for drawing `n` balls without replacement from an urn with `u.card i` ι of color `i : ι`, returning
-the number of balls of each colow. -/
+the number of balls of each color. -/
 noncomputable def hypergeometric (u : urn ι) (n : ℕ)  [Nonempty (u.draw n)] :
     DiscreteMeasure (ι → ℕ) :=
   do
@@ -200,26 +214,23 @@ noncomputable def hypergeometric (u : urn ι) (n : ℕ)  [Nonempty (u.draw n)] :
 lemma hypergeometric_eq_map (u : urn ι) (n : ℕ) [Nonempty (u.draw n)] :
     hypergeometric u n =
       map (fun X : ↥(u.draw n) => fun b => (extractColor X.val b).card)
-        (uniformOfFintype ↥(u.draw n)) := by
-  simp [hypergeometric]
+        (uniformOfFintype ↥(u.draw n)) :=
+  bind_pure_comp _ _
 
-open Classical in
 theorem hypergeometric_hasSum (u : urn ι) (n : ℕ) [Nonempty (u.draw n)] :
     HasSum (hypergeometric u n).weight 1 := by
   rw [hypergeometric_eq_map]
   exact hasSum_map (hasSum_uniformOfFinset (hs := Finset.univ_nonempty)) _
 
-open Classical in
 theorem hypergeometric_weight (u : urn ι) (m : ι → ℕ) [Nonempty (u.draw (∑ i, m i))] :
     (hypergeometric u (∑ i, m i)).weight m =
     (((∑ i, u.card i).choose (∑ i, m i) : ℝ≥0∞))⁻¹ * ∏ i, (u.card i).choose (m i) := by
+  classical
   letI : MeasurableSpace (u.draw (∑ i, m i)) := ⊤
   rw [hypergeometric_eq_map]
   rw [weight_eq, map_apply (hg := Measurable.of_discrete)]
   rw [uniformOfFintype_apply_toMeasure (ht := MeasurableSet.of_discrete)]
   simp only [Fintype.card_coe]
-  rw [draw_card, mul_comm]
-  congr 1
   have h : ((fun (X : ↥(u.draw (∑ i, m i))) (i : ι) => #(extractColor X.val i))
       ⁻¹' {m}).toFinset =
       (u.result' m).preimage Subtype.val
@@ -227,11 +238,10 @@ theorem hypergeometric_weight (u : urn ι) (m : ι → ℕ) [Nonempty (u.draw (�
     ext X
     simp only [Set.mem_toFinset, Set.mem_preimage, Set.mem_singleton_iff,
       Finset.mem_preimage, urn.result'_mem, funext_iff]
-  rw [h, Finset.card_preimage]
-  rw [Finset.filter_eq_self.mpr (fun d hd => ⟨⟨d, u.result'_mem_draw m hd⟩, rfl⟩)]
-  rw [result'_card]
+  rw [h, Finset.card_preimage,
+    Finset.filter_eq_self.mpr (fun d hd => ⟨⟨d, u.result'_mem_draw m hd⟩, rfl⟩),
+    result'_card, draw_card, mul_comm]
 
-open Classical in
 theorem hypergeometricBool_weight (u : urn Bool) (k l : ℕ) [Nonempty ↥(u.draw (k + l))] :
     (hypergeometric u (k + l)).weight (cond · k l) =
     (((u.card true + u.card false).choose (k + l) : ℝ≥0∞))⁻¹ * ((u.card true).choose k * (u.card false).choose l) := by
