@@ -120,27 +120,6 @@ lemma card_fnBool {ι : Type*} [DecidableEq ι] [Fintype ι] {k : ℕ} : #{ f : 
   exact Equiv_fnBool_finset_mem_powersetCard_iff k i
 
 -- #34702
-/-- Equiv between `powersetCard k univ` (subsets of `Fin n` of size `k`) and
-boolean lists of length `n` with exactly `k` trues. -/
-def Equiv.powersetCard_boolList {n k : ℕ} :
-    ↑(powersetCard k (univ : Finset (Fin n))) ≃
-    {l : List Bool | l.length = n ∧ l.count true = k} where
-  toFun := fun ⟨s, hs⟩ =>
-    have hsm := mem_powersetCard.mp hs
-    ⟨List.ofFn (fun i => decide (i ∈ s)), by simp, by
-      rw [← hsm.2]; simp [List.count_ofFn_eq_card]⟩
-  invFun := fun ⟨l, hl, hk⟩ =>
-    ⟨univ.filter (fun i => l[i.val]'(by omega) = true), by
-      rw [mem_powersetCard]; refine ⟨filter_subset _ _, ?_⟩
-      have : List.count true l = #{i : Fin n | l[i.val]'(by omega) = true} := by
-        rw [← List.count_ofFn_eq_card]
-        congr 1; apply List.ext_getElem (by simp [hl]) (fun i _ _ => by simp)
-      rw [← hk, this]⟩
-  left_inv := fun ⟨s, hs⟩ => by ext1; ext i; simp
-  right_inv := fun ⟨l, hl, hk⟩ => by
-    ext1; apply List.ext_getElem (by simp [hl]) (fun i _ _ => by simp)
-
--- #34702
 lemma card_listVector_card {k n : ℕ} :
     #{v : List.Vector Bool n | v.toList.count true = k} = n.choose k := by
   rw [← card_fin n, ← card_fnBool, card_fin n]
@@ -186,7 +165,7 @@ theorem binom_formula (p : unitInterval) (n k : ℕ) :
       iidSequence n (coin p) a.val = iidSequence a.val.length (coin p) a.val ∧
       List.count true a.val = k ∧ List.count false a.val = n - k := by
     rintro ⟨a, ⟨h1, h2⟩⟩; grind
-  rw [binom_eq_iidSequence', toMeasure_apply₂ (hs := by measurability)]
+  rw [binom_eq_iidSequence', toMeasure_apply (hs := by measurability)]
   simp_rw [mul_comm (a:= ENNReal.ofReal ↑p ^ k)]
   simp_rw [h, iidSequence_apply₂, tprod_bool, coin_apply_false, coin_apply_true, h,
     ENNReal.tsum_const, card_boolList_count, mul_comm (ENat.toENNReal _), ENat.toENNReal_coe]

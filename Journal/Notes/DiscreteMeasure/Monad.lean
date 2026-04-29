@@ -63,13 +63,13 @@ lemma map_coe [MeasurableSpace α] [MeasurableSingletonClass α]
   apply Measure.ext
   intro s hs
   rw [Measure.map_apply (hs := hs) (hf := hf)]
-  rw [toMeasure_apply₂ (hs := hs)]
+  rw [toMeasure_apply_eq_tsum_subtype (hs := hs)]
   conv => left; left; intro a; rw [map_eq' μ f a.val]
   have h : f⁻¹' s = ⋃ (i : s), f⁻¹' {i.val} := by simp
   nth_rw 1 [h]
   simp_rw [@toMeasure_additive α s _ _ μ _ (by measurability) (by measurability) (Set.PairwiseDisjoint.fiber_subtype s)]
   apply tsum_congr (fun b ↦ ?_)
-  rw [toMeasure_apply μ (by measurability)]
+  rw [toMeasure_apply_eq_tsum_mul μ (by measurability)]
   rfl
 
 lemma map_toMeasure
@@ -93,29 +93,29 @@ lemma map_apply [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSp
   rw [← toMeasure_apply_singleton (map g μ)]
   apply map_toMeasure_apply (hs := by measurability) (hg := hg)
 
-lemma map_toMeasure_apply₁ [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (a : α), μ a * s.indicator 1 (g a) := by
+lemma map_toMeasure_apply_eq_tsum_mul [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (a : α), μ a * s.indicator 1 (g a) := by
   rw [map_toMeasure]
   rw [sum_apply (hs := hs)]
   simp_rw [smul_apply, dirac_apply' _ hs, smul_eq_mul]
 
-lemma map_apply₂ (μ : DiscreteMeasure α) (g : α → β) (x : β) : μ.map g x = ∑' (a : α), μ a * ({x} : Set β).indicator 1 (g a) := by
+lemma map_apply_eq_tsum_mul (μ : DiscreteMeasure α) (g : α → β) (x : β) : μ.map g x = ∑' (a : α), μ a * ({x} : Set β).indicator 1 (g a) := by
   rw[@map_apply α β ⊤ _ ⊤ _ (hg := by measurability)]
-  rw [@toMeasure_apply α ⊤ _ (hs := by measurability)]
+  rw [@toMeasure_apply_eq_tsum_mul α ⊤ _ (hs := by measurability)]
   apply tsum_congr (fun b ↦ by rfl)
 
-lemma map_toMeasure_apply₂ [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (a : α), (g⁻¹' s).indicator μ a := by
+lemma map_apply_eq_tsum [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (a : α), (g⁻¹' s).indicator μ a := by
   simp_rw [map_toMeasure, sum_apply (hs := hs), smul_apply, dirac_apply' (hs := hs), smul_eq_mul]
   exact tsum_congr (fun b ↦ Set.indicator.mul_indicator_eq μ (fun b => s (g b)) b)
 
-lemma map_toMeasure_apply₃ [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (hg : Measurable g) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (b : s), μ.toMeasure (g⁻¹' {b.val}) := by
-  rw [toMeasure_apply₂ (hs := hs)]
+lemma map_toMeasure_apply_eq_tsum_subtype [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (hg : Measurable g) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (b : s), μ.toMeasure (g⁻¹' {b.val}) := by
+  rw [toMeasure_apply_eq_tsum_subtype (hs := hs)]
   apply tsum_congr (fun b ↦ ?_)
-  rw [toMeasure_apply (hs := by measurability), map_eq']
+  rw [toMeasure_apply_eq_tsum_mul (hs := by measurability), map_eq']
   rfl
 
 lemma map_toMeasure_apply₄ [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (s : Set β) (hs : MeasurableSet s) : (μ.map g).toMeasure s = ∑' (a : g⁻¹' s), (μ a.val) := by
   letI mα : MeasurableSpace α := ⊤
-  rw [map_toMeasure_apply (hg := Measurable.of_discrete) (hs := hs), toMeasure_apply₂ (hs := by measurability)]
+  rw [map_toMeasure_apply (hg := Measurable.of_discrete) (hs := hs), toMeasure_apply_eq_tsum_subtype (hs := by measurability)]
 
 theorem id_map (μ : DiscreteMeasure α) :
 μ.map id = μ := by
@@ -224,11 +224,11 @@ lemma join_coe [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpa
   intro s hs
   rw [Measure.join_apply (hs := by measurability)]
   rw [MeasureTheory.lintegral_map (hf := measurable_coe (by trivial)) (hg := by measurability)]
-  rw [lintegral_eq_toMeasure, toMeasure_apply₂ (hs := hs)]
+  rw [lintegral_eq_toMeasure, toMeasure_apply_eq_tsum_subtype (hs := hs)]
   simp_rw [join_weight]
   rw [ENNReal.tsum_comm]
   apply tsum_congr (fun μ ↦ ?_)
-  rw [ENNReal.tsum_mul_left, toMeasure_apply₂ (hs := hs)]
+  rw [ENNReal.tsum_mul_left, toMeasure_apply_eq_tsum_subtype (hs := hs)]
 
 -- #34239
 -- join commutes with sum
@@ -266,7 +266,7 @@ theorem isProbabilityMeasure_join [MeasurableSpace α] {m : Measure (Measure α)
 
 lemma ae_iff_support [MeasurableSpace α] [MeasurableSingletonClass α] (P : α → Prop) (hP : MeasurableSet {x | P x}) (μ : DiscreteMeasure α) : (∀ᵐ x ∂μ.toMeasure, P x) ↔ (∀ x ∈ μ.weight.support, P x) := by
   simp_rw [ae_iff, mem_support_iff, ne_eq, ← not_imp_comm]
-  rw [toMeasure_apply₂ (hs := by measurability)]
+  rw [toMeasure_apply_eq_tsum_subtype (hs := by measurability)]
   simp
 
 lemma isProbabilityMeasure_join_toMeasure [MeasurableSpace α] [MeasurableSingletonClass α] (m : DiscreteMeasure (DiscreteMeasure α)) (hm : HasSum m.weight 1) (hμ : ∀ μ ∈ m.weight.support, HasSum μ 1) : IsProbabilityMeasure (m.join).toMeasure := by
@@ -441,7 +441,7 @@ lemma pure_comm {a a' : α} : pure a a' = pure a' a := by
 
 @[simp]
 lemma pure_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] (a : α) (s : Set α) (hs : MeasurableSet s): (pure a).toMeasure s = s.indicator 1 a := by
-  rw [toMeasure_apply₁ (hs := hs)]
+  rw [toMeasure_apply (hs := hs)]
   simp_rw [← Set.indicator.mul_indicator_eq (f := (pure a))]
   simp_rw [pure_apply, Set.indicator.mul_indicator_eq, Set.indicator_indicator]
   by_cases h : a ∈ s

@@ -58,7 +58,7 @@ open scoped Classical in
 lemma uniformOfFinset_apply_toMeasure [MeasurableSpace ι] [MeasurableSingletonClass ι]
     (t : Set ι) (ht : MeasurableSet t) :
     (uniformOfFinset s hs).toMeasure t = #{x ∈ s | x ∈ t} * (#s : ℝ≥0∞)⁻¹ := by
-  simp only [toMeasure_apply _ ht, uniformOfFinset_apply'', mul_assoc, ENNReal.tsum_mul_left]
+  simp only [toMeasure_apply_eq_tsum_mul _ ht, uniformOfFinset_apply'', mul_assoc, ENNReal.tsum_mul_left]
   simp_rw [mul_comm, Set.indicator.mul_indicator_eq]
   rw [← _root_.tsum_subtype]
   simp [Set.indicator_apply]

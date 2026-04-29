@@ -52,7 +52,7 @@ lemma cons_map_seq_apply_cons [DecidableEq α] (μs : DiscreteMeasure (List α))
   simp_rw [← mul_assoc, ENNReal.tsum_mul_right, ← mul_assoc, tsum_pure]
 
 -- MF
-lemma sequence_cons_eq_seq_sequence [DecidableEq α] (μs : List (DiscreteMeasure α)) (ν : DiscreteMeasure α) : (sequence (t := List) (ν :: μs)) = (List.cons <$> ν <*> sequence (t := List) μs) := by
+lemma sequence_cons_eq_seq_sequence [DecidableEq α] (μs : List (DiscreteMeasure α)) (ν : DiscreteMeasure α) : (sequence (ν :: μs)) = (List.cons <$> ν <*> sequence μs) := by
   rw [sequence, List.traverse_cons id]
   simp
 
@@ -84,6 +84,10 @@ lemma sequence_apply₀ [DecidableEq α] (μs : List (DiscreteMeasure α)) (l : 
 lemma sequence_apply_of_length [DecidableEq α] (μs : List (DiscreteMeasure α)) (l : List α) (h : μs.length = l.length) :
     (sequence μs) l = List.prod (μs.zipWith (·.weight ·) l) :=
   sequence_apply₀ μs l h
+
+lemma sequence_apply_of_replicate [DecidableEq α] (μs : List (DiscreteMeasure α)) (a : α) :
+    (sequence μs) (List.replicate μs.length a) = (μs.map (fun m ↦ m.weight a)).prod := by
+  sorry
 
 lemma sequence_apply_of_not_length [DecidableEq α] (μs : List (DiscreteMeasure α)) (l : List α) (h : μs.length ≠ l.length) :
     (sequence μs) l = 0 := by
