@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{+w}{  }\PYG{k+kd}{noncomputable}\PYG{+w}{ }\PYG{k+kd}{def}\PYG{+w}{ }\PYG{n}{toMeasure}\PYG{+w}{ }\PYG{o}{[}\PYG{n}{MeasurableSpace}\PYG{+w}{ }\PYG{n}{α}\PYG{o}{]}\PYG{+w}{ }\PYG{o}{:}
+\PYG{+w}{    }\PYG{n}{DiscreteMeasure}\PYG{+w}{ }\PYG{n}{α}\PYG{+w}{ }\PYG{n+nb+bp}{→}\PYG{+w}{ }\PYG{n}{Measure}\PYG{+w}{ }\PYG{n}{α}\PYG{+w}{ }\PYG{o}{:=}
+\PYG{+w}{    }\PYG{k}{fun}\PYG{+w}{ }\PYG{n}{μ}\PYG{+w}{ }\PYG{n+nb+bp}{↦}\PYG{+w}{ }\PYG{n}{Measure.sum}\PYG{+w}{ }\PYG{o}{(}\PYG{k}{fun}\PYG{+w}{ }\PYG{n}{a}\PYG{+w}{ }\PYG{n+nb+bp}{↦}\PYG{+w}{ }\PYG{n}{μ.weight}\PYG{+w}{ }\PYG{n}{a}\PYG{+w}{ }\PYG{n+nb+bp}{•}\PYG{+w}{ }\PYG{n}{Measure.dirac}\PYG{+w}{ }\PYG{n}{a}\PYG{o}{)}
+\end{MintedVerbatim}

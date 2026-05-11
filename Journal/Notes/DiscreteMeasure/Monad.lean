@@ -497,6 +497,22 @@ lemma bind_pure_comp (f : α → β) (μ : DiscreteMeasure α) : μ.bind (fun a 
   simp_rw [pure_coe]
   rw [Measure.bind_dirac_eq_map (hf := Measurable.of_discrete)]
 
+/-- Pushing `map` through `bind`: `(p.bind f).map g = p.bind (fun a => (f a).map g)`. -/
+lemma map_bind (p : DiscreteMeasure α) (f : α → DiscreteMeasure β) (g : β → γ) :
+    (p.bind f).map g = p.bind (fun a => (f a).map g) := by
+  rw [← bind_pure_comp, bind_bind]
+  congr 1
+  funext a
+  rw [bind_pure_comp]
+
+/-- Pushing `bind` past `map`: `(p.map f).bind g = p.bind (fun a => g (f a))`. -/
+lemma bind_map (p : DiscreteMeasure α) (f : α → β) (g : β → DiscreteMeasure γ) :
+    (p.map f).bind g = p.bind (fun a => g (f a)) := by
+  rw [← bind_pure_comp, bind_bind]
+  congr 1
+  funext a
+  rw [pure_bind]
+
 lemma hasSum_pure (a : α) : HasSum (pure a) 1 := by
   simp_rw [Summable.hasSum_iff ENNReal.summable, pure_apply, ← tsum_subtype]
   simp

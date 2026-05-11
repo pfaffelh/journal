@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{+w}{  }\PYG{k+kd}{noncomputable}\PYG{+w}{ }\PYG{k+kd}{def}\PYG{+w}{ }\PYG{n}{coin}\PYG{+w}{ }\PYG{o}{(}\PYG{n}{p}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{unitInterval}\PYG{o}{)}\PYG{+w}{ }\PYG{o}{:}
+\PYG{+w}{      }\PYG{n}{DiscreteMeasure}\PYG{+w}{ }\PYG{n}{Bool}\PYG{+w}{ }\PYG{n}{where}
+\PYG{+w}{    }\PYG{n}{weight}
+\PYG{+w}{    }\PYG{n+nb+bp}{|}\PYG{+w}{ }\PYG{n}{true}\PYG{+w}{  }\PYG{n+nb+bp}{=}\PYG{n+nb+bp}{\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb+bp}{↑}\PYG{n}{p}
+\PYG{+w}{    }\PYG{n+nb+bp}{|}\PYG{+w}{ }\PYG{n}{false}\PYG{+w}{ }\PYG{n+nb+bp}{=}\PYG{n+nb+bp}{\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb+bp}{↑}\PYG{o}{(}\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{n+nb+bp}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{)}
+\end{MintedVerbatim}

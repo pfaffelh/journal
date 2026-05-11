@@ -1,0 +1,731 @@
+\documentclass{beamer}
+\usepackage{background}
+\usepackage{booktabs}
+\usepackage{tikz, rotating}
+\usetikzlibrary{automata, arrows}
+\usetikzlibrary{shapes.geometric}
+\usepackage{tikzsymbols}
+\usepackage{tabularx}
+\usepackage{wrapfig}
+\usetikzlibrary{shapes,backgrounds,patterns, arrows}
+\usepackage{tikzsymbols}
+\usepackage{amsmath, amsfonts, rotating, wasysym}
+\usepackage{mathtools}
+\usepackage{stmaryrd}
+\usepackage{bbm}
+\newcommand{\dickm}[1]{\text{\boldmath ${#1}$}}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{middlegray}{rgb}{0.75,0.75,0.75}
+\definecolor{lightgray}{rgb}{0.8,0.8,0.8}
+\definecolor{lightblue}{rgb}{0.5,0.6,1}
+\definecolor{green4}{rgb}{.1,.5,.1}
+\newcommand{\changefont}[3]{
+\fontfamily{#1} \fontseries{#2} \fontshape{#3} \selectfont}
+
+%\usepackage{minted}
+%\usepackage{fontspec}
+%\setmainfont{dejavu-serif}
+%\setmonofont[Scale=0.85]{dejavu-sans}
+%\setmainfont{FreeSerif}
+%\setmonofont{FreeMono}
+\usepackage{xcolor, graphics}
+\definecolor{mygray}{rgb}{0.97,0.97,0.97}
+\definecolor{LightCyan}{rgb}{0.8784,1,1}
+\newcommand{\leanline}[1]{\mintinline[breaklines, breakafter=_., breaklines]{Lean}{#1}}%\textsuperscript{\textcolor{gray}{\tiny(m)}}}
+\newcommand{\leanlinecolor}{\mintinline[breaklines, breakafter=_., breaklines, bgcolor=LightCyan]{Lean}}
+\usepackage{refcheck}
+
+
+%% ------------------------- document -------------------------------%
+
+\title{Bericht des Studiendekans}
+\author{}
+\date{Retreat Mathematisches Institut, 2025}
+
+\setbeamertemplate{blocks}[rounded][shadow=true]
+\definecolor{darkgreen}{rgb}{0.0,0.4,0.0}
+\definecolor{darkblue}{rgb}{0.1,0.1,0.5}
+\definecolor{darkred}{rgb}{0.5,0.0,0.0}
+\definecolor{middle_magenta}{rgb}{0.8,0.0,0.8}
+\definecolor{middle_blue}{rgb}{0.0,0.0,0.8}
+\definecolor{middle_red}{rgb}{0.8,0.0,0.0}
+\definecolor{middle_green}{rgb}{0.0,0.6,0.0}
+\definecolor{olive}{rgb}{0.44,0.4,0.05}
+\definecolor{gray}{rgb}{0.35,0.35,0.35}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author}{fg=white}
+\setbeamercolor{date}{fg=white}
+
+\begin{document}
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\vspace*{3cm}\hspace*{-10cm}\includegraphics[width=1.80\paperwidth,height=1.33\paperheight]{hintergrund_vortrag1.pdf}}}
+
+\setbeamertemplate{background}{\BgMaterial}
+\begin{frame}
+  \titlepage
+  
+\end{frame}
+
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\hspace*{3.5cm}\includegraphics[width=1.33\paperwidth,height=\paperheight]{hintergrund_vortrag2.pdf}}}
+
+\setbeamertemplate{background}{\BgMaterial}
+
+\begin{frame}
+  \frametitle{Erster Jahrgang des MSc Data \hfill {\tiny (Stand: 12.9.25)}}
+  \begin{itemize}
+    \item {\bf Studierendenstatistik}
+    \item[] Anfänger: 14 (WS24)
+    \item[] Abbrecher: bisher 1 (mit 0 ECTS)
+    \item[] {\color{purple}Internationale Studierende: 5}
+    \item[] {\color{blue}Doppel-Studenten: 4 (MSc Mathe, MSc Info, MEd)}
+
+
+      ~~~
+
+    \item {\bf Bisheriger Studienverlauf der 13 Studierenden}
+    \item[] BAM begonnen 13, abgeschlossen 7
+    \item[] Abgeschlossene ECTS-Punkte (Soll laut PO: 60):
+    $$ {\color{purple}0}, {\color{purple}3}, 3, {\color{blue}6}, {\color{blue}12}, {\color{blue}12}, {\color{purple}12}, {\color{purple}13}, {\color{blue}25}, 32, {\color{purple}37}, 38, 52 $$
+    \item[] Begonnene ECTS-Punkte (nur Einfach-Studierende):
+    $$ {\color{purple}15}, {\color{purple}30}, {\color{purple}30}, 31, {\color{purple}41}, 34, {\color{purple}48}, 49, 52 $$
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+\begin{frame}
+  \frametitle{Überblick Lehrdeputate}
+  \begin{tabular}{|p{9cm}|r|}
+    \hline \textbf{Professorale Lehre} (inkl. JProfs, Böcherer-Linder,
+    Junker, Knies, von Hammerstein) & 160 \\ \hline
+    \textbf{Assistenten} (Brutsche, Demleitner, Gazca, Levine, Johne,
+    Sciaraffia, Sercombe, Stegemeyer, Temkin, Zhang und
+    Doktorand:innen) & 100 \\ \hline \textbf{Summe} & 260 \\ \hline
+  \end{tabular}
+
+  \vspace{1cm}
+  
+  \begin{itemize}
+    \item Pro 1SWS Lehrstunde professoraler Lehre fallen etwa 0.5SWS
+      Assistenten-Lehre an.
+    \item Vorlesungen von Postdocs im WS25 geplant: Levine, Stegemeyer
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+\begin{frame}
+  \frametitle{Example 1: The admixture model}
+  \begin{itemize}
+    \item 
+  \vspace{1cm}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example 2: Hidden Markov Models}
+  \begin{tikzpicture}[node distance=.5cm, >=stealth, every node/.style={draw, align=center}]
+    
+    % Nodes for hidden states
+    \node (z1) [circle] {$z_1$};
+    \node (z2) [circle, right of=z1, xshift=1.5cm] {$z_2$};
+    \node (z3) [circle, right of=z2, xshift=1.5cm] {$z_3$};
+    \node (z4) [circle, right of=z3, xshift=1.5cm] {$z_4$};
+    \node (z5) [circle, right of=z4, xshift=1.5cm] {$z_5$};
+    \node (z6) [circle, right of=z5, xshift=1.5cm] {$z_6$};
+    
+    % Nodes for observations
+    \node (x1) [circle, below of=z1, yshift=-1cm] {$x_1$};
+    \node (x2) [circle, below of=z2, yshift=-1cm] {$x_2$};
+    \node (x3) [circle, below of=z3, yshift=-1cm] {$x_3$};
+    \node (x4) [circle, below of=z4, yshift=-1cm] {$x_4$};
+    \node (x5) [circle, below of=z5, yshift=-1cm] {$x_5$};
+    \node (x6) [circle, below of=z6, yshift=-1cm] {$x_6$};
+    
+    % Arrows between hidden states (transition probabilities)
+    \draw[->] (z1) -- (z2);
+    \draw[->] (z2) -- (z3);
+    \draw[->] (z3) -- (z4);
+    \draw[->] (z4) -- (z5);
+    \draw[->] (z5) -- (z6);
+    
+    % Arrows from hidden states to observations (emission probabilities)
+    \draw[->] (z1) -- (x1);
+    \draw[->] (z2) -- (x2);
+    \draw[->] (z3) -- (x3);
+    \draw[->] (z4) -- (x4);
+    \draw[->] (z5) -- (x5);
+    \draw[->] (z6) -- (x6);
+    
+    % Labels
+    \node[draw=none, left of=z1, xshift=-1cm] {Latent \\ states};
+    \node[draw=none, left of=x1, xshift=-1.2cm] {Observations};
+    
+  \end{tikzpicture} 
+  \begin{itemize}
+    \item 
+  \vspace{1cm}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example 3: Variantional Autoencoder}
+  \begin{itemize}
+    \item \begin{tikzpicture}[node distance=.5cm, >=stealth, every node/.style={draw, align=center}]
+    
+      % Nodes
+      \node (x) [circle] {$x$};
+      \node (encoder) [rectangle, right of=x, text width=2cm, xshift=2cm] {Encoder\\$q_\phi(z | x)$};
+      \node (z) [circle, right of=encoder, xshift=2cm] {$z$};
+      \node (decoder) [rectangle, right of=z, text width=2cm, xshift=2cm] {Decoder\\$p_\theta(x | z)$};
+      \node (x_hat) [circle, right of=decoder, xshift=2cm] {$\hat{x}$};
+      
+      % Arrows
+      \draw[->] (x) -- (encoder);
+      \draw[->] (encoder) -- (z);
+      \draw[->] (z) -- (decoder);
+      \draw[->] (decoder) -- (x_hat);
+      
+      % Labels
+      \node[draw=none, above of=z, yshift=.5cm] {Latent state};
+      \node[draw=none, below of=z, yshift=-.4cm] {$p(z) = \mathcal{N}(0, I)$};
+      \node[draw=none, below of=decoder, yshift=-1.3cm] {$p_\theta(x|z)=$ \\ $\mathcal N(f_\theta(z), \sigma^2 I) $};
+      \node[draw=none, below of=encoder, yshift=-1.3cm] {$q_\phi(x|z)=$ \\ $\mathcal N(\mu_\phi(x), \Sigma_\phi(x)) $};
+      
+  \end{tikzpicture}
+  \vspace{1cm}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example 4: Matrix Factorization (Recommender systems)}
+  \begin{tikzpicture}[node distance=1.5cm, >=stealth, every node/.style={draw, align=center}]
+    
+    % Nodes for matrix decomposition
+    \node (X) [rectangle, minimum width=3cm, minimum height=5cm] {$A$};
+    \node (U) [rectangle, right of=X, xshift=2cm, minimum height=5cm, minimum width=1cm] {$U$};
+    \node (V) [rectangle, right of=U, xshift=2cm, minimum height=1cm, minimum width=3cm] {$V^\top$};
+    
+    % Latent variables
+    \node (eq) [draw=none, right of =X, xshift=.5cm] {$=$};
+    \node (times) [draw=none, right of =U, xshift=-.5cm] {$\cdot$};
+    \node (zX1) [draw=none, left of=X, xshift=-.1cm, yshift=-.3cm] {\begin{rotate}{90}User\end{rotate}};
+    \node (zX4) [draw=none, left of=U, xshift=.8cm, yshift=-.3cm] {\begin{rotate}{90}User\end{rotate}};
+    \node (zX2) [draw=none, above of=X, yshift=1.3cm] {Item};
+    \node (zX3) [draw=none, above of=U, yshift=1.3cm] {Latents};
+    \node (zX5) [draw=none, left of=V, xshift=-.3cm, yshift=-.6cm] {\begin{rotate}{90}Latents\end{rotate}};
+    \node (zX6) [draw=none, above of=V, yshift=-.6cm] {Item};
+    
+    
+    % Labels
+%    \node[draw=none, above of=X, yshift=-0.5cm] {Matrix-Faktorisierung mit latenten Variablen};
+    
+\end{tikzpicture}
+  \begin{itemize}
+    \item 
+  \vspace{1cm}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Claim 1}
+  \begin{itemize}
+    \item Latent factors help to structure data;
+    \item The number of latent factors gives model complexity;
+    \item Latent factors 
+  \vspace{1cm}
+
+\end{itemize}
+\end{frame}
+
+
+\end{document}
+
+\begin{frame}
+  \frametitle{In der Angewandten Mathematik}
+  \begin{itemize}
+  \item Ein mathematisches Modell stellt quantitative Zusammenhänge zwischen Parametern und (potentiellen) Beobachtungen her. 
+  
+  \vspace{1cm}
+
+  \item Denkmodell aus der Populationsgenetik: \\
+  Jedem Individuum $i$ kommt zu gewissen Teilen aus anzestralen Populationen $1,...,K$. 
+  \\[1ex]
+  {\footnotesize Grundlegendes Modell von Pritchard, Stephens, Donnelly 2000}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Das Mischungs.Modell} 
+  \tikzstyle{decision} = [diamond, draw, text badly centered, inner sep=1pt]
+
+  \vspace*{-5cm}
+  
+  \hspace*{-5cm}
+  \begin{tikzpicture}
+    \newcommand{\deltax}{0cm}
+    \draw[fill=pink!30, pink!30] (0cm, 0.5cm) rectangle (11cm, 2cm);
+    \draw[fill=pink!30, pink!30] (4.5cm, -5cm) rectangle (6.5cm, -4.5cm);
+
+    %\node[color=black] at (-0.5cm, 1cm) {$p_{mk}$};
+    
+    \node at (\deltax + .5cm, 1.5cm) {rs1};
+    \node at (\deltax + 1.5cm, 1.5cm) {rs2};
+    \node at (\deltax + 2.5cm, 1.5cm) {rs3};
+    \pie[radius = .2cm, pos={\deltax +0.5cm,1}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {95/, 5/}
+    \pie[radius = .2cm, pos={\deltax+1.5cm,1}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {20/, 80/}
+    \pie[radius = .2cm, pos={\deltax+2.5cm,1}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {10/, 90/}
+    \renewcommand{\deltax}{4cm}   
+    \node at (\deltax+.5cm, 1.5cm) {rs1};
+    \node at (\deltax+1.5cm, 1.5cm) {rs2};
+    \node at (\deltax+2.5cm, 1.5cm) {rs3};
+    \pie[radius = .2cm, pos={\deltax+0.5cm,1cm}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {0/, 100/}
+    \pie[radius = .2cm, pos={\deltax+1.5cm,1cm}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {35/, 65/}
+    \pie[radius = .2cm, pos={\deltax+2.5cm,1cm}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {40/, 60/}
+    \renewcommand{\deltax}{8cm}   
+    \node at (\deltax+.5cm, 1.5cm) {rs1};
+    \node at (\deltax+1.5cm, 1.5cm) {rs2};
+    \node at (\deltax+2.5cm, 1.5cm) {rs3};
+    \pie[radius = .2cm, pos={\deltax+0.5cm,1cm}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {10/, 90/}
+    \pie[radius = .2cm, pos={\deltax+1.5cm,1cm}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {90/, 10/}
+    \pie[radius = .2cm, pos={\deltax+2.5cm,1cm}, before number=\pgfsetfillopacity, after number = \mbox{}, color={black, white}] {70/, 30/}
+    
+    \draw[fill=blue] (0cm, 0cm) rectangle (3cm, .4cm);
+    \draw[fill=green] (4cm, 0cm) rectangle (7cm, .4cm);
+    \draw[fill=yellow] (8cm, 0cm) rectangle (11cm, .4cm);
+    \node at (5.5cm, -4.75cm) {\tiny\begin{tabular}{ccc} rs1 & rs2 & rs3 \\ 1 & 2 & 1 \end{tabular}};
+    \node[decision] at (5.5cm, -4cm) {\Strichmaxerl[2][32][28]};
+    
+
+    % for admixture
+
+    \draw[fill=blue] (4.5cm+0cm, -3.1cm-0cm) rectangle (4.5cm+0.334cm, -3.1cm-.4cm);
+    \draw[fill=green] (4.5cm+0.334cm, -3.1cm-0cm) rectangle (4.5cm+1.632cm, -3.1cm-.4cm);
+    \draw[fill=yellow] (4.5cm+1.632cm, -3.1cm-0cm) rectangle (4.5cm+2cm, -3.1cm-.4cm);
+    \draw[dotted] (4.5cm+0cm, -3.1cm-0cm) -- (0cm, 0cm);
+    \draw[dotted] (4.5cm+0.334cm, -3.1cm-0cm) -- (3cm, 0cm);
+    \draw[dotted] (4.5cm+0.334cm, -3.1cm-0cm) -- (4cm, 0cm);
+    \draw[dotted] (4.5cm+1.632cm, -3.1cm-0cm) -- (7cm, 0cm);
+    \draw[dotted] (4.5cm+1.632cm, -3.1cm-0cm) -- (8cm, 0cm);
+    \draw[dotted] (4.5cm+2cm, -3.1cm-0cm) -- (11cm, 0cm);
+
+    % \node[color=black] at (-0.5cm, 1cm) {$p_{mk}$};
+    % \node[color=black] at (5.5cm, -2.75cm) {$q_{k}$};
+    %\node[color=black] at (2cm, -3.75cm) {$\beta_m = \displaystyle \sum_k p_{mk} q_k$};
+
+    \node[color=white] at (5cm, -5.5cm)
+    {$2 \beta_{rs1}(1-\beta_{rs1}) \cdot \beta_{rs2}^2 \cdot 2
+      \beta_{rs3}(1-\beta_{rs3})$};
+    
+    % \node[color=white] at (8cm, -3.5cm) {Optimize this function with respect to $q$!};
+    % for recent-admixture
+    
+  \end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Das Mischungs.Modell} 
+  \begin{itemize}
+  \item $x_{ijm}$: Anzahl des Allels $j$ in Individuum $i$ bei Marker $m$
+  \item $p_{kjm}$: Häufigkeit von Allel $j$ an Marker $m$ in Population $k$,
+  \item $q_{ik}$: Anteil der Ancestry von Individuum $i$ in Population $k$. 
+  \item Parameter: Maximierung von
+  \begin{align*}
+    \ell(q, p|x)  & = C_x + \frac 1{2MN} \sum_{i=1}^N \sum_{m=1}^M  \sum_{j=1}^{J_m} x_{ijm} \log(q_{i \cdot} p_{\cdot j m}^\top).
+  \end{align*}
+  \item Wie gut sind Schätzer für $p, q$?
+  \item Idee: Auf der rechten Seite stehen $q$ und $p$ nicht getrennt, sondern nur deren Produkt. \\
+  Da $qp = qS^{-1} Sp$, sind $q$ und $p$ nicht eindeutig. Welche Rolle spielt das für Schätzer von $p$ und $q$?
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{In der Angewandten Mathematik}
+  \parbox[t]{0.5\textwidth}{ \includegraphics[width=0.9\textwidth]{EMALAM.png}}
+\end{frame}
+
+\begin{frame}
+  \frametitle{In der Anwendung von Mathematik / Statistik}
+  \parbox[t]{0.5\textwidth}{ \includegraphics[width=0.9\textwidth]{EMALAM2.png}}
+\end{frame}
+
+\begin{frame}
+  \frametitle{In der Anwendung von Mathematik / Statistik}
+  \begin{itemize}
+
+  \item Ziel: Quantifizierung der Realität
+  \item Problem: Nur Aussagen über das Denkmodell formulierbar
+  
+  \vspace{1cm}
+
+  \item Was ist eine anzestrale Population?
+
+  \vspace{1cm}
+
+  \item All models are wrong, but some are useful. (P. O. Box)
+
+
+
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+\begin{frame}
+  \frametitle{In der Angewandten Mathematik}
+  \begin{itemize}
+  \item All models are wrong, but some are useful. (P. O. Box)
+  \item Modellierung: Finden von möglichst wenig mikroskopischen Gesetzen, die ein makroskopisches Phänomen beschreiben. Die Zusammenhänge sind zu quantifizieren.
+  \item Beispiel: 
+
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{In der Empirischen Forschung}
+  \begin{enumerate}
+    \item All models are wrong, but some are useful. (P. O. Box)
+
+
+    \item Aussagen über {\em Alltagsobjekte}: die man jedem Gymnasiasten auf der Straße stellen kann. (Goldbach'sche vermutung) 
+  Hängt manchmal vom Axiomensystem ab.
+
+  Eine halbgeordnete Menge, in der jede Kette eine obere Schranke hat, enthält mindestens ein maximales Element.
+
+
+  \item Aussagen über ein Problem, das man sich "selbst gemacht" hat. 
+  
+  Darunter fällt die "Modellierung" von Phänomenen. Bei mir Stochastik.
+
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{In der Empirischen Forschung}
+  \begin{enumerate}
+    \item All models are wrong, but some are useful. (P. O. Box)
+
+
+    \item Aussagen über {\em Alltagsobjekte}: die man jedem Gymnasiasten auf der Straße stellen kann. (Goldbach'sche vermutung) 
+  Hängt manchmal vom Axiomensystem ab.
+
+  Eine halbgeordnete Menge, in der jede Kette eine obere Schranke hat, enthält mindestens ein maximales Element.
+
+
+  \item Aussagen über ein Problem, das man sich "selbst gemacht" hat. 
+  
+  Darunter fällt die "Modellierung" von Phänomenen. Bei mir Stochastik.
+
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{In der Angewandten Mathematik}
+  \begin{enumerate}
+  \item All models are wrong, but some are useful.
+  \item Modellierung: Finden von möglichst wenig mikroskopischen Gesetzen, die ein makroskopisches Phänomen beschreiben. Die Zusammenhänge sind zu quantifizieren.
+  
+
+\end{itemize}
+
+\end{frame}
+
+
+  Wie finden wir etwas heraus?
+
+  Nicht gemeint ist: 
+  Literatursuche
+  ChatGPT fragen
+  Eine*n Kolleg*in fragen
+  sondern eher:
+  * Wie komme ich zu neuen wissenschaftlichen Erkenntnissen?
+  
+  * Für mich: Was ist eine wissenschaftliche Erkenntnis? -> Etwas, das ich (möglichst gut) veröffentlichen kann. Es muss reproduzierbar sein. 
+  
+  Speziell hier: 
+  * In der empirischen Forschung
+  Repräsentativität einer Stichprobe für eine Grundgesamtheit. (Die Definition der Grundgesamtheit ist manchmal strittig.)
+  
+  * In der Mathematik
+  Verschiedene Fälle, entweder eine einfache Aussage, die man jedem Gymnasiasten auf der Straße stellen kann. (Goldbach'sche vermutung) 
+  Hängt manchmal vom Axiomensystem ab.
+  Eine halbgeordnete Menge, in der jede Kette eine obere Schranke hat, enthält mindestens ein maximales Element.
+  Oder ein Problem, das man sich "selbst gemacht" hat. Darunter fällt die "Modellierung" von Phänomenen. Bei mir Stochastik.
+  
+  * In der Angewandten Mathematik
+  Finden von möglichst wenig mikroskopischen Gesetzen, die ein makroskopisches Phänomen beschreiben. Die Zusammenhänge sind zu quantifizieren.
+  
+  
+  
+  
+  
+  
+  
+  
+    
+    \parbox[t]{0.5\textwidth}{ \includegraphics[width=0.9\textwidth]{BBVA-OpenMind-Change-Wikstrom-Figura1.jpg}}
+  \hspace*{7cm} {\footnotesize Quelle: IFPI 2013}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Digitalisierung/Formalisierung}
+  Software, die mathematische Aussagen formalisieren:
+
+  ~~
+
+  \begin{tabularx}{\textwidth}{l|ccccc}
+    Name     &  Automath & Mizar & Isabelle & Coq  & Lean \\ \hline
+    Year     &  1968     & 1973  & 1986     & 1989 & 2013 \\
+    Tactics  &  no       & no    & yes      & yes  & yes  \\
+    Types    &  simple   & sets  & logic & simple & dependent
+  \end{tabularx}
+
+  \bigskip
+  \bigskip
+  
+  \begin{itemize}
+  \item Seit 2021 gibt es Lean4. Die {\em mathlib} wurde im Juli 2023
+    endgültig nach Lean4 portiert.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Große Formalisierungs-Projekte}
+
+  \begin{itemize}
+  \item Beweis der Kepler-Vermutung (1611): (Hales et al): Erster
+    Beweis 1998; publiziert auf 121 Seite in den {\em Annals of
+      Mathematics} in 2005, wobei viele Rechnungen nicht überprüft
+    wurden; Formalisierung in Isabelle startete 2004, fertig 2014.
+  \end{itemize}
+
+  ~~~~
+  
+  \begin{center}
+  \parbox[t]{0.5\textwidth}{ \includegraphics[width=0.48\textwidth]{kepler.jpg}}
+  \end{center}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Große Formalisierungs-Projekte}
+
+  \begin{itemize}
+  \item Liquid Tensor Experiment (2020--2022): Formalisierung von
+    perfektoiden Räumen; initiiert von Peter Scholze, durchgeführt von
+    Kevin Buzzard, Johan Commelin und anderen.
+
+    ~~~~
+    
+    \parbox[b]{0.35\textwidth}{\em I think the theorem is of utmost
+      foundational importance, so being 99.9\% sure is not
+      enough. \\ \hspace*{1.5cm}{\small (Peter Scholze)} \\ \medskip
+      \mbox{}} \hfill
+    \parbox[t]{0.5\textwidth}{ \includegraphics[width=0.48\textwidth]{LTE.png}}
+
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Große Formalisierungs-Projekte}
+
+  \begin{itemize}
+  \item Beweis der polynomiellen Freimann-Ruzsa-Vermutung ({\em a
+    conjecture described as a 'holy grail of additive combinatorics'},
+    Gowers, Green, Manners, Tao, 2023--2024): Die Formalisierung der
+    Vermutung dauerte nur ein paar Wochen!
+  \end{itemize}
+
+  ~~~~
+  
+  \hspace{1cm}\parbox[t]{0.5\textwidth}{ \includegraphics[width=0.78\textwidth]{Tao.png}}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Große Formalisierungs-Projekte}
+
+  \begin{itemize}
+  \item Beweis von Fermat's letzter Vermutung (1641): Beweis von Wiles
+    1993; Formalisierung in Lean4 startet 2023.
+  \end{itemize}
+
+  ~~~~
+  
+  \parbox[t]{0.5\textwidth}{ \includegraphics[width=0.88\textwidth]{flt.png}}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bemerkungen zu Lean4}
+  \begin{itemize}
+  \item Lean4 ist eine funktionale Programmiersprache. \\[2ex]
+  \item In Lean4 gibt es Terme und Typen. Jeder {\em Term} hat einen
+    {\em Typ}. Beispiel:\\ \leanline{n : ℕ} oder \\
+    \leanline{negneg_of_classical (p : Prop) : (p ∨ ¬ p) → (p ↔ ¬¬ p)}\\[2ex]
+  \item Jeder Typ lässt sich konstruieren, z.B.: \\
+    \leanline{inductive ℕ where}\\
+    \leanline{| zero : ℕ }\\
+    \leanline{| succ (n : ℕ) : ℕ}    \\
+    Die Konstruktion eines \leanline{Prop}-Typs ist sein Beweis. 
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bemerkungen zu Lean4}
+
+  \begin{itemize}
+  \item Lean4 verwendet {\em dependent type theory}, Beispiel: \\
+    \leanline{inductive Vector (A : Type) : Nat → Type u where}\\
+    \leanline{| nil  : Vector A 0}\\
+    \leanline{| cons : A → {n : Nat} → Vector A n → Vector A (n+1)}\\[2ex]
+  \item Der Curry-Howard Isomorphismus wird auch beschrieben als {\em
+    proofs-as-programs} und {\em propositions as types}. Beispiel:\\
+    \leanline{∀ x : Type*, x = x := fun x => rfl}
+  %  \begin{minted}[highlightlines={}, mathescape, numbersep=5pt, framesep=5mm, bgcolor=mygray]{Lean}
+  %    structure Subalgebra
+  %  \end{minted}
+    
+  \end{itemize}
+
+\end{frame}
+\begin{frame}
+  \frametitle{Der Anfang: Das Natural Number Game}
+
+  \parbox[t]{0.5\textwidth}{ \includegraphics[width=\textwidth]{nng.png}}
+
+\end{frame}
+
+\end{document}
+
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\includegraphics[width=1.2\paperwidth,height=\paperheight]{2.png}}}
+\setbeamertemplate{background}{\BgMaterial}
+\begin{frame} \mbox{}
+\end{frame}
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\includegraphics[width=1.2\paperwidth,height=\paperheight]{3.png}}}
+\setbeamertemplate{background}{\BgMaterial}
+\begin{frame} \mbox{}
+\end{frame}
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\includegraphics[width=1.2\paperwidth,height=\paperheight]{4.png}}}
+\setbeamertemplate{background}{\BgMaterial}
+\begin{frame} \mbox{}
+\end{frame}
+
+\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\hspace*{3.5cm}\includegraphics[width=1.33\paperwidth,height=\paperheight]{hintergrund_vortrag2.pdf}}}
+
+\setbeamertemplate{background}{\BgMaterial}
+
+
+\begin{frame}
+  \frametitle{Zweite Folie}
+  \begin{itemize}
+  \item Test
+  M1: Existierende Lean Implementationen
+
+  M2: Recherche nach Modellklassen 
+
+  M3: Lean nach Mathematik
+
+  M4: Mathematik nach Lean
+
+
+	\begin{tabular}{@{}l|cccc|cccc}
+		& \multicolumn{4}{l}{1st year} & \multicolumn{4}{l}{2nd year} \\
+		   & 1 & 2 & 3 & 4 & 1 & 2 & 3 & 4 \\
+		\midrule
+		M1: &  \multicolumn{8}{c}{\cellcolor{msblue}} \\
+		\midrule
+		M2: & \multicolumn{3}{c}{\cellcolor{msblue}} &  \multicolumn{5}{c}{} \\
+		\midrule
+		M3:  & \multicolumn{2}{c}{} & \multicolumn{6}{c}{\cellcolor{msblue}}  \\
+		\midrule
+		M4:  & \multicolumn{4}{c}{} & \multicolumn{4}{c}{\cellcolor{msblue}}  
+	\end{tabular}
+
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bisheriger Fortschritt}
+    \includegraphics[width=10cm]{course} 
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bisheriger Fortschritt}
+    \includegraphics[width=10cm]{paper} 
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Zweite Folie}
+  \begin{itemize}
+  \item Arbeiten bisher: 
+  Lean lernen: Schulmathematik mit Lean
+  Paper: Kolmogorov 
+  Master thesis: LLMs and Lean
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Zweite Folie}
+  \begin{itemize}
+  \item Andere Entwicklungen: Lean nach Mathematik erledigt
+  Sagredo, LeanDojo
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Momentane Herausforderungen}
+  \begin{itemize}
+  \item Zu wenig Trainingsdaten
+  \item Schnittstelle zu Lean auslesen
+  \item Reinforcement learning
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+
+\begin{frame}
+  \frametitle{In der Mathematik}
+  \begin{enumerate}
+  \item Aussagen über {\em Alltagsobjekte}: die man jedem Gymnasiasten auf der Straße stellen kann. (Goldbach'sche vermutung) 
+  Hängt manchmal vom Axiomensystem ab.
+
+  Eine halbgeordnete Menge, in der jede Kette eine obere Schranke hat, enthält mindestens ein maximales Element.
+
+    Eine Idee, wie man mathematische Objekte verknüpfen kann. Dann zu einem Theorem zusammenbauen. 
+
+    https://www.andrew.cmu.edu/user/avigad/meetings/fomm2020/slides/fomm_buzzard.pdf
+
+
+
+
+  \item Aussagen über ein Problem, das man sich "selbst gemacht" hat. 
+  
+  Darunter fällt die "Modellierung" von Phänomenen. Bei mir Stochastik.
+
+\end{itemize}
+
+\end{frame}

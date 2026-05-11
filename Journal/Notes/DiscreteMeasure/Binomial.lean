@@ -165,10 +165,10 @@ theorem binom_formula (p : unitInterval) (n k : ℕ) :
       iidSequence n (coin p) a.val = iidSequence a.val.length (coin p) a.val ∧
       List.count true a.val = k ∧ List.count false a.val = n - k := by
     rintro ⟨a, ⟨h1, h2⟩⟩; grind
-  rw [binom_eq_iidSequence', toMeasure_apply (hs := by measurability)]
-  simp_rw [mul_comm (a:= ENNReal.ofReal ↑p ^ k)]
-  simp_rw [h, iidSequence_apply₂, tprod_bool, coin_apply_false, coin_apply_true, h,
-    ENNReal.tsum_const, card_boolList_count, mul_comm (ENat.toENNReal _), ENat.toENNReal_coe]
+  rw [binom_eq_iidSequence', toMeasure_apply_eq_tsum_subtype (hs := by measurability)]
+  simp_rw [mul_comm (a:= ENNReal.ofReal ↑p ^ k), h, iidSequence_apply₂, tprod_bool,
+    coin_apply_false, coin_apply_true, h, ENNReal.tsum_const, card_boolList_count,
+    mul_comm (ENat.toENNReal _), ENat.toENNReal_coe]
 
 end binom
 

@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{+w}{  }\PYG{k+kd}{theorem}\PYG{+w}{ }\PYG{n}{bind\PYGZus{}bind}\PYG{+w}{ }\PYG{o}{(}\PYG{n}{μ}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{DiscreteMeasure}\PYG{+w}{ }\PYG{n}{α}\PYG{o}{)}
+\PYG{+w}{      }\PYG{o}{(}\PYG{n}{f}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{α}\PYG{+w}{ }\PYG{n+nb+bp}{→}\PYG{+w}{ }\PYG{n}{DiscreteMeasure}\PYG{+w}{ }\PYG{n}{β}\PYG{o}{)}\PYG{+w}{ }\PYG{o}{(}\PYG{n}{g}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{β}\PYG{+w}{ }\PYG{n+nb+bp}{→}\PYG{+w}{ }\PYG{n}{DiscreteMeasure}\PYG{+w}{ }\PYG{n}{γ}\PYG{o}{)}\PYG{+w}{ }\PYG{o}{:}
+\PYG{+w}{      }\PYG{o}{(}\PYG{n}{μ.bind}\PYG{+w}{ }\PYG{n}{f}\PYG{o}{)}\PYG{n+nb+bp}{.}\PYG{n}{bind}\PYG{+w}{ }\PYG{n}{g}\PYG{+w}{ }\PYG{n+nb+bp}{=}\PYG{+w}{ }\PYG{n}{μ.bind}\PYG{+w}{ }\PYG{o}{(}\PYG{k}{fun}\PYG{+w}{ }\PYG{n}{a}\PYG{+w}{ }\PYG{n+nb+bp}{↦}\PYG{+w}{ }\PYG{o}{(}\PYG{n}{f}\PYG{+w}{ }\PYG{n}{a}\PYG{o}{)}\PYG{n+nb+bp}{.}\PYG{n}{bind}\PYG{+w}{ }\PYG{n}{g}\PYG{o}{)}
+\end{MintedVerbatim}

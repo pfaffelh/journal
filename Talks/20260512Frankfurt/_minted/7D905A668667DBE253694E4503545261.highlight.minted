@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{+w}{  }\PYG{k+kd}{structure}\PYG{+w}{ }\PYG{n}{DiscreteMeasure}\PYG{+w}{ }\PYG{o}{(}\PYG{n}{α}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{Type}\PYG{n+nb+bp}{*}\PYG{o}{)}\PYG{+w}{ }\PYG{n}{where}
+\PYG{+w}{    }\PYG{n}{weight}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{α}\PYG{+w}{ }\PYG{n+nb+bp}{→}\PYG{+w}{ }\PYG{n}{ℝ}\PYG{n+nb+bp}{≥}\PYG{l+m+mi}{0}\PYG{n+nb+bp}{∞}
+\end{MintedVerbatim}

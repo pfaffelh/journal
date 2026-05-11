@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k+kd}{inductive}\PYG{+w}{ }\PYG{n}{ℕ}\PYG{+w}{ }\PYG{n}{where}
+\end{MintedVerbatim}
