@@ -1,5 +1,5 @@
-This is LuaHBTeX, Version 1.18.0 (TeX Live 2025/dev/Debian)  (format=lualatex 2026.2.15)  1 MAY 2026 22:17
- system commands enabled.
+This is LuaHBTeX, Version 1.18.0 (TeX Live 2025/dev/Debian)  (format=lualatex 2026.2.15)  13 MAY 2026 10:12
+ restricted system commands enabled.
 **Pfaffelhuber.tex
 (./Pfaffelhuber.tex
 LaTeX2e <2024-11-01> patch level 2
@@ -1118,6 +1118,10 @@ LaTeX Font Info:    Overwriting math alphabet `\mathbbm' in version `bold'
 LaTeX Font Info:    Overwriting math alphabet `\mathbbmss' in version `bold'
 (Font)                  U/bbmss/m/n --> U/bbmss/bx/n on input line 35.
 )
+(/usr/share/texlive/texmf-dist/tex/latex/comment/comment.sty
+\CommentStream=\write5
+
+Excluding comment 'comment')
 (/usr/share/texlive/texmf-dist/tex/latex/minted/minted.sty
 Package: minted 2025/03/06 v3.6.0 Yet another Pygments shim for LaTeX
 
@@ -1138,7 +1142,7 @@ Package: fancyvrb 2024/01/20 4.5c verbatim text (tvz,hv)
 \FV@TabBox=\box111
 \c@FancyVerbLine=\count448
 \FV@StepNumber=\count449
-\FV@OutFile=\write5
+\FV@OutFile=\write6
 )
 (/usr/share/texlive/texmf-dist/tex/latex/upquote/upquote.sty
 Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
@@ -1204,7 +1208,7 @@ Package: pgfopts 2014/07/10 v2.1a LaTeX package options with pgfkeys
 )
 (/usr/share/texlive/texmf-dist/tex/latex/tools/shellesc.sty
 Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
-Package shellesc Info: Unrestricted shell escape enabled on input line 75.
+Package shellesc Info: Restricted shell escape enabled on input line 77.
 )
 (/usr/share/texlive/texmf-dist/tex/latex/float/float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
@@ -1288,7 +1292,7 @@ guage=dflt;"
 (fontspec)             <->s*[0.85]"name:dejavu-sans/BI:mode=node;script=latn;la
 nguage=dflt;"
 
-Package hyperref Info: Option `colorlinks' set `true' on input line 37.
+Package hyperref Info: Option `colorlinks' set `true' on input line 39.
 
 (/usr/share/texlive/texmf-dist/tex/latex/refcheck/refcheck.sty
 Package: refcheck 2013/02/14 v1.9.1
@@ -1297,26 +1301,26 @@ Package: refcheck 2013/02/14 v1.9.1
 (./Pfaffelhuber.aux)
 \openout1 = Pfaffelhuber.aux
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 66.
-LaTeX Font Info:    ... okay on input line 66.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: luatex
@@ -1326,12 +1330,12 @@ LaTeX Font Info:    ... okay on input line 66.
 * layout: <same size as paper>
 * layoutoffset:(h,v)=(0.0pt,0.0pt)
 * modes: includehead includefoot 
-* h-part:(L,W,R)=(28.45274pt, 307.28987pt, 28.45274pt)
-* v-part:(T,H,B)=(0.0pt, 273.14662pt, 0.0pt)
-* \paperwidth=364.19536pt
-* \paperheight=273.14662pt
-* \textwidth=307.28987pt
-* \textheight=244.6939pt
+* h-part:(L,W,R)=(28.45274pt, 398.3386pt, 28.45274pt)
+* v-part:(T,H,B)=(0.0pt, 256.0748pt, 0.0pt)
+* \paperwidth=455.24408pt
+* \paperheight=256.0748pt
+* \textwidth=398.3386pt
+* \textheight=227.62207pt
 * \oddsidemargin=-43.81725pt
 * \evensidemargin=-43.81725pt
 * \topmargin=-72.26999pt
@@ -1374,57 +1378,57 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 66.
+Package hyperref Info: Link coloring ON on input line 68.
 
 (./Pfaffelhuber.out) (./Pfaffelhuber.out)
-\@outlinefile=\write6
+\@outlinefile=\write7
 
-\openout6 = Pfaffelhuber.out
+\openout7 = Pfaffelhuber.out
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmr/m/n --> OT1/cmss/m/n on input line 66.
+(Font)                  OT1/cmr/m/n --> OT1/cmss/m/n on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmr/bx/n --> OT1/cmss/b/n on input line 66.
+(Font)                  OT1/cmr/bx/n --> OT1/cmss/b/n on input line 68.
 \symnumbers=\mathgroup8
 \sympureletters=\mathgroup9
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/lmr/m/n on input line 66.
-LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 66.
+(Font)                  OT1/cmss/m/n --> TU/lmr/m/n on input line 68.
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/cmr/bx/n --> TU/lmss/b/n on input line 66.
+(Font)                  OT1/cmr/bx/n --> TU/lmss/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  OT1/cmr/bx/n --> TU/lmss/b/n on input line 66.
-LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 66.
+(Font)                  OT1/cmr/bx/n --> TU/lmss/b/n on input line 68.
+LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 66.
+(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> TU/lmss/m/n on input line 66.
-LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 66.
+(Font)                  OT1/cmss/bx/n --> TU/lmss/m/n on input line 68.
+LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/cmr/m/it --> TU/lmss/m/it on input line 66.
+(Font)                  OT1/cmr/m/it --> TU/lmss/m/it on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/cmr/bx/it --> TU/lmss/m/it on input line 66.
-LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 66.
+(Font)                  OT1/cmr/bx/it --> TU/lmss/m/it on input line 68.
+LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/cmtt/m/n --> TU/dejavu-sans(0)/m/n on input line 66
+(Font)                  OT1/cmtt/m/n --> TU/dejavu-sans(0)/m/n on input line 68
 .
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/cmtt/m/n --> TU/dejavu-sans(0)/m/n on input line 66
+(Font)                  OT1/cmtt/m/n --> TU/dejavu-sans(0)/m/n on input line 68
 .
 LaTeX Font Info:    Overwriting symbol font `numbers' in version `bold'
-(Font)                  TU/lmss/m/n --> TU/lmss/b/n on input line 66.
+(Font)                  TU/lmss/m/n --> TU/lmss/b/n on input line 68.
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
-(Font)                  TU/lmss/m/it --> TU/lmss/b/it on input line 66.
+(Font)                  TU/lmss/m/it --> TU/lmss/b/it on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `bold'
-(Font)                  OT1/cmss/b/n --> TU/lmr/b/n on input line 66.
+(Font)                  OT1/cmss/b/n --> TU/lmr/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  TU/lmss/b/n --> TU/lmss/b/n on input line 66.
+(Font)                  TU/lmss/b/n --> TU/lmss/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  TU/lmss/m/n --> TU/lmss/b/n on input line 66.
+(Font)                  TU/lmss/m/n --> TU/lmss/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  TU/lmss/m/it --> TU/lmss/b/it on input line 66.
+(Font)                  TU/lmss/m/it --> TU/lmss/b/it on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  TU/dejavu-sans(0)/m/n --> TU/dejavu-sans(0)/b/n on inpu
-t line 66.
+t line 68.
 
 (/usr/share/texlive/texmf-dist/tex/latex/translator/translator-basic-dictionary
 -English.dict
@@ -1457,59 +1461,59 @@ Package fontspec Info:
 
 \symlegacymaths=\mathgroup10
 LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
-(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 66.
-LaTeX Font Info:    Redeclaring math accent \acute on input line 66.
-LaTeX Font Info:    Redeclaring math accent \grave on input line 66.
-LaTeX Font Info:    Redeclaring math accent \ddot on input line 66.
-LaTeX Font Info:    Redeclaring math accent \tilde on input line 66.
-LaTeX Font Info:    Redeclaring math accent \bar on input line 66.
-LaTeX Font Info:    Redeclaring math accent \breve on input line 66.
-LaTeX Font Info:    Redeclaring math accent \check on input line 66.
-LaTeX Font Info:    Redeclaring math accent \hat on input line 66.
-LaTeX Font Info:    Redeclaring math accent \dot on input line 66.
-LaTeX Font Info:    Redeclaring math accent \mathring on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Delta on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Theta on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Xi on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Pi on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Phi on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Psi on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \Omega on input line 66.
-LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 66.
-LaTeX Font Info:    Redeclaring symbol font `operators' on input line 66.
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 68.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 68.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 68.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 68.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 68.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 68.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 68.
+LaTeX Font Info:    Redeclaring math accent \check on input line 68.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 68.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 68.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 68.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 68.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 66.
+(Font)              `operators' in the math version `normal' on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/lmr/m/n on input line 66.
+(Font)                  OT1/cmss/m/n --> TU/lmr/m/n on input line 68.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 66.
+(Font)              `operators' in the math version `bold' on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmss/b/n --> TU/lmr/m/n on input line 66.
+(Font)                  OT1/cmss/b/n --> TU/lmr/m/n on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  TU/lmr/m/n --> TU/lmr/m/n on input line 66.
-LaTeX Font Info:    Redeclaring math alphabet \mathrm on input line 66.
+(Font)                  TU/lmr/m/n --> TU/lmr/m/n on input line 68.
+LaTeX Font Info:    Redeclaring math alphabet \mathrm on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  TU/lmss/m/it --> TU/lmr/m/it on input line 66.
+(Font)                  TU/lmss/m/it --> TU/lmr/m/it on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  TU/lmss/b/n --> TU/lmr/b/n on input line 66.
+(Font)                  TU/lmss/b/n --> TU/lmr/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  TU/lmss/m/n --> TU/lmss/m/n on input line 66.
+(Font)                  TU/lmss/m/n --> TU/lmss/m/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
 (Font)                  TU/dejavu-sans(0)/m/n --> TU/dejavu-sans(0)/m/n on inpu
-t line 66.
+t line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  TU/lmr/m/n --> TU/lmr/b/n on input line 66.
+(Font)                  TU/lmr/m/n --> TU/lmr/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  TU/lmss/b/it --> TU/lmr/b/it on input line 66.
+(Font)                  TU/lmss/b/it --> TU/lmr/b/it on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  TU/lmss/b/n --> TU/lmss/b/n on input line 66.
+(Font)                  TU/lmss/b/n --> TU/lmss/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  TU/dejavu-sans(0)/b/n --> TU/dejavu-sans(0)/b/n on inpu
-t line 66.
+t line 68.
 
 Package: `refcheck' v1.9.1 <2013/02/14>
 options: showrefs, showcites, msgs, chckunlbld
@@ -1518,135 +1522,146 @@ options: showrefs, showcites, msgs, chckunlbld
 <hintergrund_vortrag1.pdf, id=13, 964.60374pt x 542.025pt>
 File: hintergrund_vortrag1.pdf Graphic file (type pdf)
 <use hintergrund_vortrag1.pdf>
-Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 74.
-(luatex.def)             Requested size: 655.56863pt x 363.29546pt.
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 76.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 File: hintergrund_vortrag1.pdf Graphic file (type pdf)
 <use hintergrund_vortrag1.pdf>
-Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 74.
-(luatex.def)             Requested size: 655.56863pt x 363.29546pt.
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 76.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}<./hintergrund_vortrag1.pdf>]
-<leo.jpg, id=49, 301.125pt x 301.125pt>
+<ufr.png, id=26, 1152.305pt x 258.9675pt>
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 139.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+<leo.jpg, id=27, 301.125pt x 301.125pt>
 File: leo.jpg Graphic file (type jpg)
 <use leo.jpg>
-Package luatex.def Info: leo.jpg  used on input line 153.
+Package luatex.def Info: leo.jpg  used on input line 139.
 (luatex.def)             Requested size: 62.59483pt x 62.59596pt.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 153
+<buzzard.jpeg, id=28, 225.84375pt x 225.84375pt>
+File: buzzard.jpeg Graphic file (type jpg)
+<use buzzard.jpeg>
+Package luatex.def Info: buzzard.jpeg  used on input line 139.
+(luatex.def)             Requested size: 62.59483pt x 62.59596pt.
+<johan.jpg, id=29, 144.54pt x 144.54pt>
+File: johan.jpg Graphic file (type jpg)
+<use johan.jpg>
+Package luatex.def Info: johan.jpg  used on input line 139.
+(luatex.def)             Requested size: 62.59428pt x 62.59596pt.
+<tao1.png, id=30, 291.0875pt x 385.44pt>
+File: tao1.png Graphic file (type png)
+<use tao1.png>
+Package luatex.def Info: tao1.png  used on input line 139.
+(luatex.def)             Requested size: 47.27228pt x 62.59596pt.
+<lean_logo.png, id=31, 125.46875pt x 64.24pt>
+File: lean_logo.png Graphic file (type png)
+<use lean_logo.png>
+Package luatex.def Info: lean_logo.png  used on input line 139.
+(luatex.def)             Requested size: 27.78508pt x 14.22636pt.
+
+
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 139.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 139.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
+[2
+
+<./lean_logo.png><./leo.jpg><./buzzard.jpeg><./johan.jpg><./tao1.png><./ufr.png>
+]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 172.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 172
 .
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 153
+LaTeX Font Info:    Trying to load font information for U+msb on input line 172
 .
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for U+wasy on input line 15
-3.
+LaTeX Font Info:    Trying to load font information for U+wasy on input line 17
+2.
 
 (/usr/share/texlive/texmf-dist/tex/latex/wasysym/uwasy.fd
 File: uwasy.fd 2020/01/19 v2.4 Wasy-2 symbol font definitions
 )
 LaTeX Font Info:    Trying to load font information for U+stmry on input line 1
-53.
+72.
 
 (/usr/share/texlive/texmf-dist/tex/latex/stmaryrd/Ustmry.fd)
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <10.95> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 153.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 172.
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <8> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 153.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 172.
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <6> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 153.
-<buzzard.jpeg, id=50, 225.84375pt x 225.84375pt>
-File: buzzard.jpeg Graphic file (type jpg)
-<use buzzard.jpeg>
-Package luatex.def Info: buzzard.jpeg  used on input line 153.
-(luatex.def)             Requested size: 62.59483pt x 62.59596pt.
-<johan.jpg, id=51, 144.54pt x 144.54pt>
-File: johan.jpg Graphic file (type jpg)
-<use johan.jpg>
-Package luatex.def Info: johan.jpg  used on input line 153.
-(luatex.def)             Requested size: 62.59428pt x 62.59596pt.
-<tao1.png, id=52, 291.0875pt x 385.44pt>
-File: tao1.png Graphic file (type png)
-<use tao1.png>
-Package luatex.def Info: tao1.png  used on input line 153.
-(luatex.def)             Requested size: 47.27228pt x 62.59596pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 153--153
-\TU/lmss/m/n/10 leads col-lab-o-ra-tive
- []
-
-<lean_logo.png, id=53, 125.46875pt x 64.24pt>
-File: lean_logo.png Graphic file (type png)
-<use lean_logo.png>
-Package luatex.def Info: lean_logo.png  used on input line 153.
-(luatex.def)             Requested size: 27.78508pt x 14.22636pt.
-
-
-<hintergrund_vortrag2.pdf, id=54, 963.60948pt x 542.025pt>
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 153.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 153.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-[2
-
-<./hintergrund_vortrag2.pdf><./lean_logo.png><./leo.jpg><./buzzard.jpeg><./johan
-.jpg><./tao1.png>]
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 172.
 LaTeX Font Info:    Font shape `TU/dejavu-sans(0)/m/n' will be
-(Font)              scaled to size 9.30756pt on input line 186.
-<import.png, id=89, 1449.415pt x 1058.95625pt>
+(Font)              scaled to size 9.30756pt on input line 172.
+<import.png, id=42, 1449.415pt x 1058.95625pt>
 File: import.png Graphic file (type png)
 <use import.png>
-Package luatex.def Info: import.png  used on input line 186.
+Package luatex.def Info: import.png  used on input line 172.
 (luatex.def)             Requested size: 97.13092pt x 79.6678pt.
 File: lean_logo.png Graphic file (type png)
 <use lean_logo.png>
-Package luatex.def Info: lean_logo.png  used on input line 186.
+Package luatex.def Info: lean_logo.png  used on input line 172.
 (luatex.def)             Requested size: 27.78508pt x 14.22636pt.
 
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 186.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 186.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 172.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 172.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [3
 
 <./import.png>]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 207.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
 File: lean_logo.png Graphic file (type png)
 <use lean_logo.png>
-Package luatex.def Info: lean_logo.png  used on input line 221.
+Package luatex.def Info: lean_logo.png  used on input line 207.
 (luatex.def)             Requested size: 27.78508pt x 14.22636pt.
 
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 221.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 221.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 207.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 207.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [4
 
 ]
-\pydata@fh@_5058FF1E2F174102C8DCE88C64EAC4E4.data.minted=\write7
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 223.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+\pydata@fh@_5058FF1E2F174102C8DCE88C64EAC4E4.data.minted=\write8
 
-\openout7 = _5058FF1E2F174102C8DCE88C64EAC4E4.data.minted
-runsystem(latexminted config  --timestamp 20260501221710 5058FF1E2F174102C8DCE88
+\openout8 = _5058FF1E2F174102C8DCE88C64EAC4E4.data.minted
+runsystem(latexminted config  --timestamp 20260513101231 5058FF1E2F174102C8DCE88
 C64EAC4E4)...executed.
  (./_5058FF1E2F174102C8DCE88C64EAC4E4.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20260501221710 5058FF1E2F174102C8
+runsystem(latexminted cleanconfig  --timestamp 20260513101231 5058FF1E2F174102C8
 DCE88C64EAC4E4)...executed.
 
 (./_minted/default.style.minted)
@@ -1671,107 +1686,160 @@ LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <5> not available
 (./_minted/6477C40A72378931B9839AC5ADA423AD.highlight.minted)
 File: lean_logo.png Graphic file (type png)
 <use lean_logo.png>
-Package luatex.def Info: lean_logo.png  used on input line 237.
+Package luatex.def Info: lean_logo.png  used on input line 223.
 (luatex.def)             Requested size: 27.78508pt x 14.22636pt.
 
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 237.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 237.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 223.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 223.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [5
 
-] (./_minted/272B8A771852B50EDE635FDEA1A43675.highlight.minted)
-Overfull \hbox (210.62543pt too wide) detected at line 265
+]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 255.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+ (./_minted/272B8A771852B50EDE635FDEA1A43675.highlight.minted)
+Overfull \hbox (119.5767pt too wide) detected at line 255
 [] [] []
  []
 
 (./_minted/D9C4064A109B7503D70F778249FC5B45.highlight.minted)
 File: lean_logo.png Graphic file (type png)
 <use lean_logo.png>
-Package luatex.def Info: lean_logo.png  used on input line 265.
+Package luatex.def Info: lean_logo.png  used on input line 255.
 (luatex.def)             Requested size: 27.78508pt x 14.22636pt.
 
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 265.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 265.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 255.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 255.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [6
 
 ]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 282.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+
 \openout4 = Pfaffelhuber.vrb
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 305.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
  (./Pfaffelhuber.vrb
 (./_minted/7D905A668667DBE253694E4503545261.highlight.minted)
 (./_minted/3E65014B32060DE74647B60686FA36A2.highlight.minted)
 (./_minted/4F935777118667F8869139D4F51CF9F6.highlight.minted))
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 315.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 315.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 305.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 305.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [7
 
 ]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 308.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+
 \openout4 = Pfaffelhuber.vrb
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 324.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
  (./Pfaffelhuber.vrb
-\openout7 = _5058FF1E2F174102C8DCE88C64EAC4E4.data.minted
-
-runsystem(latexminted highlight  --timestamp 20260501221710 5058FF1E2F174102C8DC
-E88C64EAC4E4)...executed.
-
 (./_minted/B9E32340B5ECF855899F29F35805A95B.highlight.minted)
 (./_minted/09E8A65D302BA15A9CA90FCC1BAD63B5.highlight.minted))
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 334.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 334.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 324.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 324.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [8
 
 ]
-\openout4 = Pfaffelhuber.vrb
- (./Pfaffelhuber.vrb
-Overfull \hbox (10.19525pt too wide) detected at line 28
-[]
- []
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 336.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+<Kersting_RandVar.png, id=88, 942.52126pt x 311.1625pt>
+File: Kersting_RandVar.png Graphic file (type png)
+<use Kersting_RandVar.png>
+Package luatex.def Info: Kersting_RandVar.png  used on input line 336.
+(luatex.def)             Requested size: 267.52834pt x 88.32138pt.
+<Dinges_RandVar.png, id=89, 1269.74374pt x 311.1625pt>
+File: Dinges_RandVar.png Graphic file (type png)
+<use Dinges_RandVar.png>
+Package luatex.def Info: Dinges_RandVar.png  used on input line 336.
+(luatex.def)             Requested size: 338.59233pt x 82.97519pt.
 
-)
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 365.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 365.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 336.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 336.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [9
 
-]
+<./Kersting_RandVar.png><./Dinges_RandVar.png>]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 339.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+
 \openout4 = Pfaffelhuber.vrb
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 363.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+ (./Pfaffelhuber.vrb)
+
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 363.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 363.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
+[10
+
+] Excluding 'comment' comment.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 394.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+
+\openout4 = Pfaffelhuber.vrb
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 416.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
  (./Pfaffelhuber.vrb
-\openout7 = _5058FF1E2F174102C8DCE88C64EAC4E4.data.minted
-
-runsystem(latexminted highlight  --timestamp 20260501221710 5058FF1E2F174102C8DC
-E88C64EAC4E4)...executed.
-
 (./_minted/29C8EC2F068B300CF4886A9F7D8EC23C.highlight.minted)
 (./_minted/6C0325AF2FDFDF45AD38B992A775C72E.highlight.minted)
 Missing character: There is no μ (U+03BC) in font cmmi10!
@@ -1780,89 +1848,103 @@ Missing character: There is no μ (U+03BC) in font cmmi10!
 Missing character: There is no μ (U+03BC) in font cmmi10!
 (./_minted/5CDFD78587AA799801D213B92EA70EB3.highlight.minted))
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 390.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 390.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-[10
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 416.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 416.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
+[11
 
 ]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 419.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+
 \openout4 = Pfaffelhuber.vrb
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 444.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
  (./Pfaffelhuber.vrb
 (./_minted/E5D62AE50FF321C7F4F46B5ECBE9F847.highlight.minted)
 (./_minted/8220BCAC0BB047A8FB0E2C0BE994B900.highlight.minted)
 (./_minted/936D532DD84EA7B73AC48400264A6878.highlight.minted)
 (./_minted/45F322BC79013106E36ABE3BC71D95AF.highlight.minted)
-\openout7 = _5058FF1E2F174102C8DCE88C64EAC4E4.data.minted
-
-runsystem(latexminted highlight  --timestamp 20260501221710 5058FF1E2F174102C8DC
-E88C64EAC4E4)...executed.
-
 (./_minted/5DF341EA8591F167C60C3328FFFF52C0.highlight.minted
 LaTeX Font Info:    Font shape `TU/dejavu-sans(0)/m/it' will be
 (Font)              scaled to size 9.30756pt on input line 6.
 ))
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 418.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 418.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-[11
-
-] (./_minted/45F322BC79013106E36ABE3BC71D95AF.highlight.minted)
-
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 432.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 432.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 444.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 444.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [12
 
 ]
-\openout4 = Pfaffelhuber.vrb
- (./Pfaffelhuber.vrb
-<BM.png, id=371, 1140.26pt x 534.99875pt>
-File: BM.png Graphic file (type png)
-<use BM.png>
-Package luatex.def Info: BM.png  used on input line 2.
-(luatex.def)             Requested size: 284.52756pt x 133.49629pt.
-)
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 458.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+ (./_minted/45F322BC79013106E36ABE3BC71D95AF.highlight.minted)
 
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 461.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
-File: hintergrund_vortrag2.pdf Graphic file (type pdf)
-<use hintergrund_vortrag2.pdf>
-Package luatex.def Info: hintergrund_vortrag2.pdf  used on input line 461.
-(luatex.def)             Requested size: 484.37666pt x 273.15392pt.
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 458.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 458.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
 [13
 
+]
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 485.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+
+\openout4 = Pfaffelhuber.vrb
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 488.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+ (./Pfaffelhuber.vrb
+<BM.png, id=122, 1140.26pt x 534.99875pt>
+File: BM.png Graphic file (type png)
+<use BM.png>
+Package luatex.def Info: BM.png  used on input line 3.
+(luatex.def)             Requested size: 338.58345pt x 158.86002pt.
+)
+
+File: ufr.png Graphic file (type png)
+<use ufr.png>
+Package luatex.def Info: ufr.png  used on input line 488.
+(luatex.def)             Requested size: 69.62762pt x 15.6491pt.
+File: hintergrund_vortrag1.pdf Graphic file (type pdf)
+<use hintergrund_vortrag1.pdf>
+Package luatex.def Info: hintergrund_vortrag1.pdf  used on input line 488.
+(luatex.def)             Requested size: 819.46078pt x 340.59259pt.
+[14
+
 <./BM.png>]
-\tf@nav=\write8
+\tf@nav=\write9
 
-\openout8 = Pfaffelhuber.nav
-\tf@toc=\write9
+\openout9 = Pfaffelhuber.nav
+\tf@toc=\write10
 
-\openout9 = Pfaffelhuber.toc
-\tf@snm=\write10
+\openout10 = Pfaffelhuber.toc
+\tf@snm=\write11
 
-\openout10 = Pfaffelhuber.snm
-
-\openout7 = _5058FF1E2F174102C8DCE88C64EAC4E4.data.minted
-runsystem(latexminted clean  --timestamp 20260501221710 5058FF1E2F174102C8DCE88C
-64EAC4E4)...executed.
+\openout11 = Pfaffelhuber.snm
  (./Pfaffelhuber.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
@@ -1873,15 +1955,15 @@ Package rerunfilecheck Info: File `Pfaffelhuber.out' has not changed.
 )
 
 Here is how much of LuaTeX's memory you used:
- 36774 strings out of 475512
+ 36858 strings out of 475512
  100000,1648299 words of node,token memory allocated
  1558 words of node memory still in use:
    26 hlist, 9 vlist, 5 rule, 2 disc, 3 local_par, 39 glue, 5 kern, 10 penalty, 
 23 glyph, 51 attribute, 67 glue_spec, 51 attribute_list, 5 write, 10 pdf_colorst
 ack, 1 pdf_setmatrix, 1 pdf_save, 1 pdf_restore nodes
-   avail lists: 1:1,2:1976,3:525,4:1212,5:343,6:69,7:2788,8:44,9:961,10:20,11:21
+   avail lists: 1:3,2:1976,3:263,4:1104,5:276,6:47,7:2451,8:44,9:719,10:20,11:21
 7,12:2
- 58421 multiletter control sequences out of 65536+600000
+ 58460 multiletter control sequences out of 65536+600000
  89 fonts using 20865679 bytes
  128i,15n,116p,568b,929s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/truetype/public/dejavu/DejaVuSans-Oblique.t
@@ -1900,10 +1982,10 @@ m/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.p
 fb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/
 share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on Pfaffelhuber.pdf (13 pages, 1599708 bytes).
+Output written on Pfaffelhuber.pdf (14 pages, 1639422 bytes).
 
-PDF statistics: 488 PDF objects out of 1000 (max. 8388607)
- 407 compressed objects within 5 object streams
- 27 named destinations out of 1000 (max. 131072)
+PDF statistics: 219 PDF objects out of 1000 (max. 8388607)
+ 137 compressed objects within 2 object streams
+ 29 named destinations out of 1000 (max. 131072)
  26 words of extra memory for PDF output out of 10000 (max. 100000000)
 

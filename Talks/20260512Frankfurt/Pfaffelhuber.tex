@@ -1,7 +1,8 @@
 % please run using
 % lualatex --shell-escape ...tex
 
-\documentclass{beamer}
+\documentclass[11pt,aspectratio=169]{beamer}
+\setbeamertemplate{navigation symbols}{}
 \usepackage{background}
 \usepackage{booktabs}
 \usepackage{tikz, rotating}
@@ -24,6 +25,7 @@
 \newcommand{\changefont}[3]{
 \fontfamily{#1} \fontseries{#2} \fontshape{#3} \selectfont}
 
+\usepackage{comment}
 \usepackage{minted}
 \setminted{encoding=utf-8}
 \usepackage{fontspec}
@@ -74,9 +76,12 @@
 \end{frame}
 
 
-\backgroundsetup{scale=1, color=black, opacity=1, angle=0, contents={\hspace*{3.5cm}\includegraphics[width=1.33\paperwidth,height=\paperheight]{hintergrund_vortrag2.pdf}}}
-
-\setbeamertemplate{background}{\BgMaterial}
+% Content slides: no background image, small UFR logo as footer.
+\setbeamertemplate{background}{}
+\setbeamertemplate{footline}{%
+  \hbox{\hskip 0.5cm\includegraphics[height=0.55cm]{ufr.png}\hfill}%
+  \vskip 4pt%
+}
 
 % \begin{frame}
 %   \frametitle{}
@@ -107,48 +112,29 @@
 
   \vspace{0.5em}
 
-  \begin{minipage}[t]{0.48\textwidth}
-    \begin{minipage}[c]{2.6cm}
-      \centering
-      \includegraphics[height=2.2cm,keepaspectratio]{leo.jpg}
-    \end{minipage}\hspace{0.7em} \\[1ex] %
-    \begin{minipage}[c]{3.4cm}
-      {\bf Leonardo di Moura}\\[0.2em]
-      \small started Lean in 2013 at Microsoft.
-    \end{minipage}
+  \begin{minipage}[t]{0.24\textwidth}
+    \centering
+    \includegraphics[height=2.2cm,keepaspectratio]{leo.jpg}\\[1ex]
+    {\bf Leonardo di Moura}\\[0.2em]
+    \small started Lean in 2013 at Microsoft.
   \end{minipage}\hfill
-  \begin{minipage}[t]{0.48\textwidth}
-    \begin{minipage}[c]{2.6cm}
-      \centering
-      \includegraphics[height=2.2cm,keepaspectratio]{buzzard.jpeg}
-    \end{minipage}\hspace{0.7em}\\[1ex]%
-    \begin{minipage}[c]{3.8cm}
-      {\bf Kevin Buzzard}\\[0.2em]
-      \small promotes Lean for mathematicians since 2018.
-    \end{minipage}
-  \end{minipage}
-
-  \vspace{0.6em}
-
-  \begin{minipage}[t]{0.48\textwidth}
-    \begin{minipage}[c]{2.6cm}
-      \centering
-      \includegraphics[height=2.2cm,keepaspectratio]{johan.jpg}
-    \end{minipage}\hspace{0.7em}\\[1ex]%
-    \begin{minipage}[c]{3.2cm}
-      {\bf Johan Commelin}\\[0.2em]
-      \small led the Liquid Tensor Experiment.
-    \end{minipage}
+  \begin{minipage}[t]{0.24\textwidth}
+    \centering
+    \includegraphics[height=2.2cm,keepaspectratio]{buzzard.jpeg}\\[1ex]
+    {\bf Kevin Buzzard}\\[0.2em]
+    \small promotes Lean for mathematicians since 2018.
   \end{minipage}\hfill
-  \begin{minipage}[t]{0.48\textwidth}
-    \begin{minipage}[c]{2.6cm}
-      \centering
-      \includegraphics[height=2.2cm,keepaspectratio]{tao1.png}
-    \end{minipage}\hspace{0.7em} \\[1ex]%
-    \begin{minipage}[c]{3.2cm} 
-      {\bf Terrence Tao}\\[0.2em]
-      \small leads collaborative formalization efforts.
-    \end{minipage}
+  \begin{minipage}[t]{0.24\textwidth}
+    \centering
+    \includegraphics[height=2.2cm,keepaspectratio]{johan.jpg}\\[1ex]
+    {\bf Johan Commelin}\\[0.2em]
+    \small led the Liquid Tensor Experiment.
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.24\textwidth}
+    \centering
+    \includegraphics[height=2.2cm,keepaspectratio]{tao1.png}\\[1ex]
+    {\bf Terrence Tao}\\[0.2em]
+    \small leads collaborative formalization efforts.
   \end{minipage}
 \end{frame}
 
@@ -252,8 +238,12 @@
 
     ~
 
-  \item 
-    Successful compilation of a lean file $\iff$ all proofs in that file are correct.
+  \item[]
+    \begin{center}
+      Successful compilation of a lean file\\
+      $\iff$\\
+      all proofs in that file are correct.
+    \end{center}
 
     ~
 
@@ -333,12 +323,20 @@
   \end{minted}
 \end{frame}
 
+\begin{frame}
+  \frametitle{Random variables}
+
+  \begin{center}
+    \includegraphics[width=0.85\textwidth,height=0.38\textheight,keepaspectratio]{Kersting_RandVar.png}
+
+    \vspace{0.5em}
+
+    \includegraphics[width=0.85\textwidth,height=0.38\textheight,keepaspectratio]{Dinges_RandVar.png}
+  \end{center}
+\end{frame}
+
 \begin{frame}[fragile]
   \frametitle{The probability monad}
-
-  \centerline{\fbox{The probability monad is the Kleisli triple $(\mathrm{DiscreteMeasure},\; \texttt{dirac},\; \texttt{bind})$.}}
-
-  \medskip
 
   \begin{itemize}
   \item $\mathrm{DiscreteMeasure}\,\alpha$ \;=\; discrete probability measures on $\alpha$.
@@ -363,6 +361,34 @@
     \texttt{join} \;&=\; \texttt{bind}\,\mathrm{id} && \text{(average over a random measure $\Xi \sim m$)}
   \end{align*}
 \end{frame}
+
+\begin{comment}
+\begin{frame}[fragile]
+  \frametitle{The probability monad}
+
+  The \leanline{do}-notation definition of \leanline{binom} is definitionally
+  equal to a sequence of \leanline{bind}s and \leanline{pure}:
+
+  \begin{minted}[highlightlines={}, mathescape, numbersep=5pt, framesep=5mm, bgcolor=mygray]{Lean}
+  noncomputable def binom (p : unitInterval) :
+      ℕ → DiscreteMeasure ℕ
+    | 0 => dirac 0
+    | n + 1 => do
+      let X ← coin p
+      let Y ← binom p n
+      return (↑X + Y)
+  \end{minted}
+
+  \begin{minted}[highlightlines={}, mathescape, numbersep=5pt, framesep=5mm, bgcolor=mygray]{Lean}
+    theorem binom_succ (p : unitInterval) (n : ℕ) :
+      binom p (n + 1) =
+        (coin p).bind (fun X => (binom p n).bind 
+          (fun Y => pure (X.toNat + Y)))
+    := rfl
+
+  \end{minted}
+\end{frame}
+\end{comment}
 
 \begin{frame}[fragile]
   \frametitle{The probability monad}
@@ -457,7 +483,8 @@
 
 \begin{frame}[fragile]
   \frametitle{Submitted Dec 1st, 2025}
-  \includegraphics[width=10cm]{BM.png}
+  \centering
+  \includegraphics[width=0.85\textwidth,height=0.82\textheight,keepaspectratio]{BM.png}
 \end{frame}
 
 % \begin{frame}
