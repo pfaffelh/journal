@@ -83,7 +83,12 @@ lemma map_toMeasure
   rfl
 
 lemma map_map (μ : DiscreteMeasure α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
-  rw [← @toMeasure_inj γ ⊤, @map_coe β γ ⊤ _ ⊤ _ (hf := by measurability), @map_coe α β ⊤ _ ⊤ _ (hf := by measurability), @map_coe α γ ⊤ _ ⊤ _ (hf := by measurability), Measure.map_map (by measurability) (by measurability)]
+  letI : MeasurableSpace α := ⊤
+  letI : MeasurableSpace β := ⊤
+  letI : MeasurableSpace γ := ⊤
+  rw [← toMeasure_inj, map_coe (hf := Measurable.of_discrete),
+    map_coe (hf := Measurable.of_discrete), map_coe (hf := Measurable.of_discrete),
+    Measure.map_map Measurable.of_discrete Measurable.of_discrete]
 
 lemma map_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (hg : Measurable g) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = μ.toMeasure (g⁻¹' s) := by
   rw [map_coe (hf := hg)]

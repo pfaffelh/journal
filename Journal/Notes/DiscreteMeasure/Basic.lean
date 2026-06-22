@@ -96,15 +96,8 @@ lemma tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem [CommMonoid �
   · aesop
   · exact mulSupport_subset_subsingleton_of_disjoint_on_mulSupport f hs i j hj
 
-@[to_additive]
-lemma tprod_mulIndicator_of_mem_union_disjoint [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α) (hs : Pairwise (Disjoint on s))
-    (i : β) (hi : i ∈ ⋃ d, s d) : ∏' d, (s d).mulIndicator f i = f i :=
-  tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem  s f i hi (pairwise_disjoint_mono hs <| fun _ _ hi ↦ hi.1)
-
-@[to_additive]
-lemma tprod_mulIndicator_of_notMem [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α) (i : β) (hi : ∀ d, i ∉ s d) :
-    ∏' d, (s d).mulIndicator f i = 1 := by
-  aesop
+-- #37060: `tprod_mulIndicator_of_mem_union_disjoint` and `tprod_mulIndicator_of_notMem`
+-- have landed in mathlib (`Mathlib.Topology.Algebra.InfiniteSum.Basic`); local copies removed.
 
 @[to_additive]
 lemma mulIndicator_iUnion_of_disjoint_on_mulSupport [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α)
@@ -115,11 +108,8 @@ lemma mulIndicator_iUnion_of_disjoint_on_mulSupport [CommMonoid α] [Topological
     apply Eq.symm <| tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem  _ _ _ h₀ hs
   · aesop
 
-@[to_additive]
-lemma mulIndicator_iUnion_of_pairwise_disjoint [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (hs : Pairwise (Disjoint on s)) (f : β → α) :
-    (⋃ d, s d).mulIndicator f = fun i ↦ ∏' d, (s d).mulIndicator f i := by
-  ext i
-  exact mulIndicator_iUnion_of_disjoint_on_mulSupport s f (pairwise_disjoint_mono hs <| fun _ _ hi ↦ hi.1) i
+-- #37060: `mulIndicator_iUnion_of_pairwise_disjoint` has landed in mathlib
+-- (`Mathlib.Topology.Algebra.InfiniteSum.Basic`); local copy removed.
 
 namespace List
 

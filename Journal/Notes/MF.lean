@@ -233,15 +233,8 @@ lemma tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem [CommMonoid �
   · aesop
   · exact mulSupport_subset_subsingleton_of_disjoint_on_mulSupport f hs i j hj
 
-@[to_additive]
-lemma tprod_mulIndicator_of_mem_union_disjoint [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α) (hs : Pairwise (Disjoint on s))
-    (i : β) (hi : i ∈ ⋃ d, s d) : ∏' d, (s d).mulIndicator f i = f i :=
-  tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem  s f i hi (pairwise_disjoint_mono hs <| fun _ _ hi ↦ hi.1)
-
-@[to_additive]
-lemma tprod_mulIndicator_of_notMem [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α) (i : β) (hi : ∀ d, i ∉ s d) :
-    ∏' d, (s d).mulIndicator f i = 1 := by
-  aesop
+-- `tprod_mulIndicator_of_mem_union_disjoint` and `tprod_mulIndicator_of_notMem`
+-- have landed upstream (#37060) and are now in `Mathlib.Topology.Algebra.InfiniteSum.Basic`.
 
 @[to_additive]
 lemma mulIndicator_iUnion_of_disjoint_on_mulSupport [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (f : β → α)
@@ -252,11 +245,8 @@ lemma mulIndicator_iUnion_of_disjoint_on_mulSupport [CommMonoid α] [Topological
     apply Eq.symm <| tprod_mulIndicator_of_pairwise_disjoint_on_mulSupport_of_mem  _ _ _ h₀ hs
   · aesop
 
-@[to_additive]
-lemma mulIndicator_iUnion_of_pairwise_disjoint [CommMonoid α] [TopologicalSpace α] (s : γ → Set β) (hs : Pairwise (Disjoint on s)) (f : β → α) :
-    (⋃ d, s d).mulIndicator f = fun i ↦ ∏' d, (s d).mulIndicator f i := by
-  ext i
-  exact mulIndicator_iUnion_of_disjoint_on_mulSupport s f (pairwise_disjoint_mono hs <| fun _ _ hi ↦ hi.1) i
+-- `mulIndicator_iUnion_of_pairwise_disjoint` has landed upstream (#37060) and is now in
+-- `Mathlib.Topology.Algebra.InfiniteSum.Basic`.
 
 noncomputable section
 
@@ -603,7 +593,7 @@ lemma map_toMeasure' (μ : MassFunction α) (g : α → β)  : (μ.map g).toMeas
   apply @Measure.ext _ ⊤
   intro s hs
   rw [toMeasure, @Measure.map_sum]
-  simp_rw [Measure.map_smul, @Measure.map_dirac α β ⊤ ⊤ g (by measurability)]
+  simp_rw [Measure.map_smul, @Measure.map_dirac' α β ⊤ ⊤ g (by measurability)]
   apply @AEMeasurable.of_discrete α β ⊤ ⊤
 
 lemma map_map (μ : MassFunction α) (g : α → β) (h : β → γ) : (μ.map g).map h = μ.map (h ∘ g) := by
@@ -701,7 +691,7 @@ lemma join_toMeasure (m : MassFunction (MassFunction α)) : m.join.toMeasure = s
   intro s _
   rw [join_coe, toMeasure, Measure.map_sum (hf := AEMeasurable.of_discrete), Measure.join_sum, Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
   apply tsum_congr (fun μ ↦ ?_)
-  rw [Measure.smul_apply, Measure.map_smul, Measure.join_smul, Measure.smul_apply, smul_eq_mul, smul_eq_mul, Measure.map_dirac, Measure.join_dirac]
+  rw [Measure.smul_apply, Measure.map_smul, Measure.join_smul, Measure.smul_apply, smul_eq_mul, smul_eq_mul, Measure.map_dirac', Measure.join_dirac]
   measurability
 
 lemma join_toMeasure_apply (m : MassFunction (MassFunction α)) (s : Set α) : m.join.toMeasure s = ∑' (μ : MassFunction α), m μ * μ.toMeasure s := by
@@ -772,7 +762,7 @@ lemma bind_toMeasure (μ : MassFunction α) (g : α → MassFunction β) : (μ.b
   apply @Measure.ext _ ⊤
   intro s _
   rw [bind_toMeasure_apply_eq_toMeasure, toMeasure, Measure.bind_sum (h := AEMeasurable.of_discrete), Measure.sum_apply (hs := by measurability), Measure.sum_apply (hs := by measurability)]
-  simp_rw [Measure.bind_smul, Measure.dirac_bind (f := toMeasure ∘ g) (hf := by measurability)]
+  simp_rw [Measure.bind_smul, Measure.dirac_bind (f := toMeasure ∘ g) (hf := @Measurable.of_discrete _ _ ⊤ _ _ _)]
   rfl
 
 lemma bind_toMeasure_apply (μ : MassFunction α) (g : α → MassFunction β) (s : Set β) : (μ.bind g).toMeasure s = ∑' (a : α), μ a * (g a).toMeasure s := by
@@ -867,7 +857,7 @@ lemma pure_hasSum (a : α) : HasSum (pure a) 1 := by
   rfl
 
 lemma map_pure (a : α) (f : α → β) : (pure a).map f = pure (f a) := by
-  rw [← toMeasure_inj, pure_coe, map_coe, pure_coe, @Measure.map_dirac _ _ ⊤ ⊤ f (by measurability)]
+  rw [← toMeasure_inj, pure_coe, map_coe, pure_coe, @Measure.map_dirac' _ _ ⊤ ⊤ f (by measurability)]
 
 theorem pure_bind (a : α) (f : α → MassFunction β) :
 (pure a).bind f = f a := by
@@ -1429,12 +1419,7 @@ lemma thinning₁ (p q : ℝ≥0∞) {n : ℕ} (hp : p ≤ 1) (hq : q ≤ 1) : (
     simp [monad_norm] at hd ⊢
     rw [← hd]
     simp
-
-
-
     sorry
-
-  sorry
 
 lemma thinning₂ (p q : ℝ≥0∞) (hp : p ≤ 1) (hq : q ≤ 1) :
   (do
@@ -1509,7 +1494,8 @@ lemma geometric_min (p q : ℝ≥0∞) (hp : p ≤ 1) (hq : q ≤ 1) : geometric
 
   sorry
 
-instance a : HSMul ℝ≥0∞ (MassFunction α) := fun p μ ↦ fun x ↦ p * (μ x)
+instance : HSMul ℝ≥0∞ (MassFunction α) (MassFunction α) where
+  hSMul p μ := fun x ↦ p * (μ x)
 
 
 -- (a, n)
