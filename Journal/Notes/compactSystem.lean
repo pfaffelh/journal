@@ -829,9 +829,10 @@ lemma IsCompactSystem.sum.{u} {𝓚 𝓚' : Type u} {q : Set (Set 𝓚)} {q' : S
   · rintro ⟨hl, hr⟩
     exact ⟨fun | true => Sum.inr ⁻¹' t | false => Sum.inl ⁻¹' t,
       fun | true => hr | false => hl,
-      by ext ⟨b, x⟩; cases b <;> · simp [Equiv.sumEquivSigmaBool]; rfl⟩
+      by ext ⟨b, x⟩; cases b <;> simp [Equiv.sumEquivSigmaBool]⟩
   · rintro ⟨f, hf, hfC⟩
     have slice : ∀ b x, x ∈ f b ↔ (Equiv.sumEquivSigmaBool 𝓚 𝓚').symm ⟨b, x⟩ ∈ t :=
       fun b x => by simpa using Set.ext_iff.mp hfC ⟨b, x⟩
-    exact ⟨by convert hf false using 1; ext x; exact (slice false x).symm,
-            by convert hf true using 1; ext x; exact (slice true x).symm⟩
+    have hl : Sum.inl ⁻¹' t = f false := Set.ext fun x => (slice false x).symm
+    have hr : Sum.inr ⁻¹' t = f true := Set.ext fun x => (slice true x).symm
+    exact ⟨hl ▸ hf false, hr ▸ hf true⟩

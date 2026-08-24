@@ -70,7 +70,7 @@ lemma mulSupport_subset_subsingleton_of_disjoint_on_mulSupport [One β] {s : γ 
   (hs : Pairwise (Disjoint on (fun j ↦ s j ∩ f.mulSupport)))
   (i : α) (j : γ) (hj : i ∈ s j) :
     (fun d ↦ (s d).mulIndicator f i).mulSupport ⊆ {j} := by
-  simp only [Pairwise, Disjoint, Set.le_eq_subset, Set.subset_inter_iff,] at hs
+  simp only [Pairwise, Disjoint, Set.subset_inter_iff] at hs
   simp only [Set.subset_singleton_iff, mem_mulSupport, ne_eq, Set.mulIndicator_apply_eq_one,
     Classical.not_imp, and_imp]
   intro j' hj' hi
@@ -78,7 +78,8 @@ lemma mulSupport_subset_subsingleton_of_disjoint_on_mulSupport [One β] {s : γ 
   change f i ≠ 1 at hi
   rw [← mem_mulSupport] at hi
   simp_rw [← Set.singleton_subset_iff] at hs hj hj' hi
-  simpa only [Set.singleton_subset_iff] using hs h ⟨hj', hi⟩ ⟨hj, hi⟩
+  simpa only [Set.singleton_subset_iff, Set.bot_eq_empty, Set.mem_empty_iff_false]
+    using hs h ⟨hj', hi⟩ ⟨hj, hi⟩
 
 @[to_additive]
 lemma mulSupport_subsingleton_of_disjoint [One β] {s : γ → Set α} (f : α → β)
@@ -224,7 +225,7 @@ noncomputable instance [MeasurableSpace α] : Coe (DiscreteMeasure α) (Measure 
 -- #34138
 instance instFunLike : FunLike (DiscreteMeasure α) α ℝ≥0∞ where
   coe p a := p.weight a
-  coe_injective' p q h := by
+  coe_injective p q h := by
     cases p
     cases q
     simp_all
@@ -253,7 +254,7 @@ theorem apply_pos_iff (w : DiscreteMeasure α) (a : α) : 0 < w a ↔ a ∈ w.we
 lemma toMeasure_apply' [MeasurableSpace α] (μ : DiscreteMeasure α) {s : Set α}
     (hs : MeasurableSet s) : μ.toMeasure s = ∑' (a : α), (μ.weight a) • dirac a s := by
   rw [toMeasure, sum_apply (hs := hs)]
-  simp_rw [smul_apply]
+  simp_rw [Measure.smul_apply]
 
 -- #34138
 lemma toMeasure_apply_eq_tsum_mul [MeasurableSpace α] [MeasurableSingletonClass α] (μ : DiscreteMeasure α)

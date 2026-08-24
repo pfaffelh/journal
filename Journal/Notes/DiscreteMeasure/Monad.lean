@@ -101,7 +101,7 @@ lemma map_apply [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSp
 lemma map_toMeasure_apply_eq_tsum_mul [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (a : α), μ a * s.indicator 1 (g a) := by
   rw [map_toMeasure]
   rw [sum_apply (hs := hs)]
-  simp_rw [smul_apply, dirac_apply' _ hs, smul_eq_mul]
+  simp_rw [Measure.smul_apply, dirac_apply' _ hs, smul_eq_mul]
 
 lemma map_apply_eq_tsum_mul (μ : DiscreteMeasure α) (g : α → β) (x : β) : μ.map g x = ∑' (a : α), μ a * ({x} : Set β).indicator 1 (g a) := by
   rw[@map_apply α β ⊤ _ ⊤ _ (hg := by measurability)]
@@ -109,7 +109,7 @@ lemma map_apply_eq_tsum_mul (μ : DiscreteMeasure α) (g : α → β) (x : β) :
   apply tsum_congr (fun b ↦ by rfl)
 
 lemma map_apply_eq_tsum [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (a : α), (g⁻¹' s).indicator μ a := by
-  simp_rw [map_toMeasure, sum_apply (hs := hs), smul_apply, dirac_apply' (hs := hs), smul_eq_mul]
+  simp_rw [map_toMeasure, sum_apply (hs := hs), Measure.smul_apply, dirac_apply' (hs := hs), smul_eq_mul]
   exact tsum_congr (fun b ↦ Set.indicator.mul_indicator_eq μ (fun b => s (g b)) b)
 
 lemma map_toMeasure_apply_eq_tsum_subtype [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → β) (hg : Measurable g) (s : Set β) (hs : MeasurableSet s): (μ.map g).toMeasure s = ∑' (b : s), μ.toMeasure (g⁻¹' {b.val}) := by
@@ -335,7 +335,7 @@ lemma bind_toMeasure [MeasurableSpace β] [MeasurableSingletonClass β]
   rfl
 
 lemma bind_toMeasure_apply [MeasurableSpace β] [MeasurableSingletonClass β] (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β)  (s : Set β) (hs : MeasurableSet s): (μ.bind g).toMeasure s = ∑' (a : α), μ a * (g a).toMeasure s := by
-  simp_rw [bind_toMeasure, Measure.sum_apply (hs := hs), smul_apply, smul_eq_mul]
+  simp_rw [bind_toMeasure, Measure.sum_apply (hs := hs), Measure.smul_apply, smul_eq_mul]
 
 @[simp]
 lemma bind_apply (μ : DiscreteMeasure α) (g : α → DiscreteMeasure β) (x : β) : (μ.bind g) x = ∑' (a : α), μ a * (g a) x := by
@@ -364,7 +364,7 @@ lemma smul_apply' {α : Type u_1} {R : Type u_6} [SMul R ℝ≥0∞] [IsScalarTo
 
 lemma hSMul_toMeasure_apply [MeasurableSpace α] [MeasurableSingletonClass α] (a : ℝ≥0∞) (x : DiscreteMeasure α) : (a • x).toMeasure = a • x.toMeasure := by
   ext s hs
-  rw [smul_apply]
+  rw [Measure.smul_apply]
 
   sorry
 

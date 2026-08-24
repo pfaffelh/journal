@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & test
 
-This is a Lean 4 project pinned to `leanprover/lean4:v4.30.0-rc1` with mathlib `v4.30.0-rc1`.
+This is a Lean 4 project pinned to `leanprover/lean4:v4.33.1` with mathlib `v4.33.1`.
 
 - `lake build` — build all targets (default targets are `Journal` lib and `journal` exe).
 - `lake build Journal.Notes.DiscreteMeasure.Binomial` — build a single module (CI is the only test harness; module success = "passing").

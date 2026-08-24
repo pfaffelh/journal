@@ -121,9 +121,26 @@ lemma sequence_cons {F : Type u → Type u} [Applicative F] {α : Type u} {n : �
 lemma sequence_bind_cons {F : Type u → Type u} [Monad F] {α : Type u} {n : ℕ} (ν : F α) (μ : List.Vector (F α) n) : sequence (t := flip List.Vector (n + 1)) (ν ::ᵥ μ) = List.Vector.cons <$> ν <*> sequence (t := flip List.Vector n) μ := by
   exact sequence_cons μ ν
 
+/-- Auxiliary: `f <$> x <*> y` written as a `bind`-chain. Stated with plain type variables so
+that it also applies to `sequence` on `flip List.Vector n`, where `<*>` occurs at a type that
+only unfolds at default transparency. -/
+lemma seq_map_eq_bind {F : Type u → Type u} [Monad F] [LawfulMonad F] {α β γ : Type u}
+    (f : α → β → γ) (x : F α) (y : F β) :
+    f <$> x <*> y = x >>= fun a => y >>= fun b => pure (f a b) := by
+  rw [seq_eq_bind_map]; simp [map_eq_bind_pure_comp, bind_assoc]
+
+/-- Auxiliary: push a `map` through a binary `seq`.  Stated with plain type variables so that
+`exact` can still apply it when the `sequence`-types only match up to unfolding `flip`. -/
+lemma seq_map_congr {F : Type u → Type u} [Monad F] [LawfulMonad F] {α β γ δ ζ : Type u}
+    (x : F α) (y : F β) (f : α → γ → ζ) (k : β → γ) (g : α → β → δ) (k' : δ → ζ)
+    (h : ∀ a b, f a (k b) = k' (g a b)) :
+    f <$> x <*> (k <$> y) = k' <$> (g <$> x <*> y) := by
+  rw [seq_map_eq_bind, seq_map_eq_bind]
+  simp only [map_eq_bind_pure_comp, bind_assoc, LawfulMonad.pure_bind, Function.comp_apply, h]
+
 lemma sequence_cons' {F : Type u → Type u} [Monad F] [LawfulMonad F] {α : Type u} {n : ℕ} (ν : F α) (μ : List.Vector (F α) n) : (ν >>= fun y => sequence (t := flip List.Vector n) μ  >>= fun x => pure (List.Vector.cons y x)) = sequence (t := flip List.Vector (n + 1)) (ν ::ᵥ μ) := by
-  simp [monad_norm]
-  rfl
+  rw [sequence_bind_cons]
+  exact (seq_map_eq_bind List.Vector.cons ν _).symm
 
 lemma Injective_toList {n : ℕ} : Injective (toList : List.Vector α n → List α) := by
   intro l l' h
@@ -207,7 +224,7 @@ lemma mulSupport_subset_subsingleton_of_disjoint_on_mulSupport [One β] {s : γ 
   (hs : Pairwise (Disjoint on (fun j ↦ s j ∩ f.mulSupport)))
   (i : α) (j : γ) (hj : i ∈ s j) :
     (fun d ↦ (s d).mulIndicator f i).mulSupport ⊆ {j} := by
-  simp only [Pairwise, Disjoint, Set.le_eq_subset, Set.subset_inter_iff,] at hs
+  simp only [Pairwise, Disjoint, Set.subset_inter_iff] at hs
   simp only [Set.subset_singleton_iff, mem_mulSupport, ne_eq, Set.mulIndicator_apply_eq_one,
     Classical.not_imp, and_imp]
   intro j' hj' hi
@@ -215,7 +232,8 @@ lemma mulSupport_subset_subsingleton_of_disjoint_on_mulSupport [One β] {s : γ 
   change f i ≠ 1 at hi
   rw [← mem_mulSupport] at hi
   simp_rw [← Set.singleton_subset_iff] at hs hj hj' hi
-  simpa only [Set.singleton_subset_iff] using hs h ⟨hj', hi⟩ ⟨hj, hi⟩
+  simpa only [Set.singleton_subset_iff, Set.bot_eq_empty, Set.mem_empty_iff_false]
+    using hs h ⟨hj', hi⟩ ⟨hj, hi⟩
 
 @[to_additive]
 lemma mulSupport_subsingleton_of_disjoint [One β] {s : γ → Set α} (f : α → β)
@@ -259,14 +277,14 @@ namespace MeasureTheory
 
 -- #34138
 /-- A mass function, or discrete measures is a function `α → ℝ≥0∞`. -/
-def MassFunction (α : Type u) : Type u := α → ℝ≥0∞
+@[reducible] def MassFunction (α : Type u) : Type u := α → ℝ≥0∞
 
 namespace MassFunction
 
 -- #34138
 instance instFunLike : FunLike (MassFunction α) α ℝ≥0∞ where
   coe p a := p a
-  coe_injective' _ _ h := h
+  coe_injective _ _ h := h
 
 -- #34138
 @[ext]
@@ -305,7 +323,7 @@ noncomputable def toMeasure' (w : MassFunction α) (mα : MeasurableSpace α) : 
 lemma toMeasure_trim_eq_toMeasure' (w : MassFunction α) [mα : MeasurableSpace α] : (w.toMeasure).trim (le_top) = w.toMeasure' mα := by
   ext s hs
   rw [trim_measurableSet_eq _ hs, toMeasure, toMeasure', sum_apply, sum_apply]
-  simp_rw [smul_apply]
+  simp_rw [Measure.smul_apply]
   · apply tsum_congr fun b ↦ ?_
     congr 1
     simp only [dirac_apply', MeasurableSpace.measurableSet_top]
@@ -618,7 +636,8 @@ lemma map_apply₂ (μ : MassFunction α) (g : α → β) (x : β) : μ.map g x 
 
 lemma map_toMeasure_apply₂ (μ : MassFunction α) (g : α → β) (s : Set β) : (μ.map g).toMeasure s = ∑' (a : α), (g⁻¹' s).indicator μ a := by
   rw [map_toMeasure']
-  simp only [MeasurableSpace.measurableSet_top, sum_apply, smul_apply, dirac_apply', smul_eq_mul]
+  simp only [MeasurableSpace.measurableSet_top, sum_apply, Measure.smul_apply, dirac_apply',
+    smul_eq_mul]
   apply tsum_congr (fun b ↦ ?_)
   exact Set.indicator.mul_indicator_eq μ (fun b => s (g b)) b
 
@@ -1013,8 +1032,7 @@ lemma cons_map_seq_apply_cons [DecidableEq α] {n : ℕ} (μs : MassFunction (Li
 
 -- MF
 lemma sequence_cons_eq_seq_sequence [DecidableEq α] {n : ℕ} (μs : List.Vector (MassFunction α) n) (ν : MassFunction α) : (sequence (t := flip List.Vector (n + 1)) (ν ::ᵥ μs)) = (List.Vector.cons <$> ν <*> sequence (t := flip List.Vector n) μs) := by
-  rw [sequence, sequence, List.Vector.traverse_cons id]
-  simp
+  exact List.Vector.sequence_bind_cons ν μs
 
 -- lemma traverse_cons_eq_seq_traverse [DecidableEq α] {n : ℕ} (f : α → MassFunction β) (μs : List.Vector α n) (ν : α) : (traverse (t := flip List.Vector (n + 1)) (m := MassFunction) f (ν ::ᵥ μs)) = (List.Vector.cons <$> (f ν) <*> traverse (t := flip List.Vector n) (m := MassFunction) f μs) := by
 --  rw [sequence, sequence, List.Vector.traverse_cons id]
@@ -1113,7 +1131,8 @@ lemma sequence_bind (μ ν : MassFunction α) : sequence [μ, ν] = μ.bind (fun
   simp [sequence, monad_norm]
 
 lemma iidSequence_cons (ν : MassFunction α) : (ν >>= fun y => (iidSequence n ν) >>= fun x => pure (x.cons y)) = iidSequence (n+1) ν := by
-  simp [monad_norm, iidSequence]
+  rw [iidSequence, iidSequence, List.Vector.replicate_succ]
+  exact List.Vector.sequence_cons' ν _
 
 end iidSequence
 
@@ -1128,7 +1147,7 @@ noncomputable def coin (p : ℝ≥0∞) : MassFunction Bool := fun
 lemma coin_apply (p : ℝ≥0∞) (b : Bool) : (coin p) b = if b then p else (1 - p) := by
   by_cases h : b <;> simp only [h, ↓reduceIte] <;> rfl
 
-instance isProbabilityMeasure_coin (p : ℝ≥0∞) (h : p ≤ 1) : IsProbabilityMeasure (coin p).toMeasure := by
+lemma isProbabilityMeasure_coin (p : ℝ≥0∞) (h : p ≤ 1) : IsProbabilityMeasure (coin p).toMeasure := by
   rw [isProbabilityMeasure_iff, toMeasure_apply_univ]
   simp [coin, h]
 
@@ -1213,15 +1232,14 @@ lemma multipleCoins_and_eq_coin {n : ℕ} (p : List.Vector ℝ≥0∞ n) (hp : �
 
     sorry
   apply Bool_ext _ _ true
-  obtain ⟨p1, p2⟩ := p
-  subst p2
+  set S : MassFunction (List.Vector Bool n) := sequence (t := flip List.Vector n) (List.Vector.map coin p) with hS
   rw [map_apply]
   rw [List.Vector.all_id_preimage_true]
-  rw [toMeasure_apply_singleton]
+  rw [toMeasure_apply_singleton, hS]
   rw [sequence_apply₁]
-  simp [coin]
+  simp only [List.Vector.get_map, List.Vector.get_replicate, coin_apply, if_true]
   rw [← Fin.prod_univ_getElem]
-  exact rfl
+  exact (Fin.prod_congr' _ p.toList_length).symm
 
 
 
@@ -1312,17 +1330,15 @@ theorem binom_eq_count_true (p : ℝ≥0∞) (n : ℕ) : binom p n = (iidSequenc
     | zero =>
       simp [binom, iidSequence]
     | succ n h  =>
-      rw [binom_seq, h, iidSequence, iidSequence, List.Vector.replicate_succ,
-        List.Vector.sequence_cons]
-      simp only [map_eq_bind_pure_comp, map_eq_map, seq_eq_bind_map, comp_apply,
-        LawfulMonad.bind_pure_comp, bind_assoc, LawfulMonad.pure_bind,
-        Nat.succ_eq_add_one]
-      congr
-      have h (x : Bool) (a : List.Vector Bool n) : addBoolFin.hAdd x (List.Vector.countFin true a) = List.Vector.countFin true (x ::ᵥ a) := by
+      have key (x : Bool) (a : List.Vector Bool n) :
+          addBoolFin.hAdd x (List.Vector.countFin true a)
+            = List.Vector.countFin true (x ::ᵥ a) := by
         cases x <;> rw [Fin.ext_iff] <;> repeat rw [List.Vector.countFin_eq_count₂]
         · exact Nat.add_zero (List.countP.go (fun x => x == true) a.toList 0)
         · simp [List.Vector.countFin_eq_count₂]
-      simp_rw [h]
+      rw [binom_seq, h, iidSequence, iidSequence, List.Vector.replicate_succ,
+        List.Vector.sequence_cons]
+      exact List.Vector.seq_map_congr _ _ _ _ _ _ key
 
 open Finset
 
@@ -1389,9 +1405,11 @@ theorem binom_formula (p : ℝ≥0∞) (n : ℕ) : binom p n = fun (k : Fin (n +
   have ht (k : Fin (n + 1)) : ∀ x ∈ s k, List.Vector.countFin true x = k := by
     aesop
   have hf (k : Fin (n + 1)) : ∀ x ∈ s k, List.Vector.countFin false x = n - k := by
-    intro ⟨x1, x2⟩ hx
+    intro x hx
     refine Nat.eq_sub_of_add_eq' ?_
-    rw [← ht k ⟨x1, x2⟩ hx, List.Vector.countFin, List.Vector.countFin, List.count_true_add_count_false, List.Vector.toList_mk, x2]
+    rw [← ht k x hx]
+    simp only [List.Vector.countFin]
+    rw [List.count_true_add_count_false, x.toList_length]
   rw [binom_eq_count_true, map_apply, toMeasure_apply]
   simp_rw [iidSequence_apply₂ n (coin p), tprod_bool, coin_apply]
   conv => left; left; intro i; simp only [Bool.false_eq_true, ↓reduceIte]; rw [hs, Set.indicator.mul_indicator_eq (f := fun (i : List.Vector Bool n) ↦ (1 - p) ^ (List.Vector.countFin false i).val * p ^ (List.Vector.countFin true i).val) (a := i)]
