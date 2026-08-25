@@ -77,6 +77,8 @@
 \newcommand{\CPS}{\cite{CPS23}}
 \newcommand{\KA}{\cite{Kal21}}
 \newcommand{\JS}{\cite{JS03}}
+\newcommand{\MZ}{\cite{MZ84}}
+\newcommand{\Ku}{\cite{Kurtz91}}
 \newcommand{\BM}{\cite{BM25}}
 \newcommand{\JR}{\cite{JR16}}
 
@@ -6967,6 +6969,85 @@ Lemma~\ref{lem:EKconv} has no proof of its own.
   Section~\ref{ssec:weakstrong} weakens \ref{it:C3a}.
 \end{remark}
 
+\begin{corollary}[Approximation along the paths]
+  \label{cor:EKconvpath}
+  Lemma~\ref{lem:EKconv} remains true if \eqref{eq:approxA} is replaced by the
+  requirement that for each $(f,g) \in A$ there be $(f_n,g_n) \in A_n$ with
+  \begin{equation}
+    \label{eq:approxpath}
+    \lim_{n \to \infty} E^{P^n}\bigl[ \lvert (f_n-f)(X_n(t)) \rvert \bigr] = 0
+    \quad\text{and}\quad
+    \lim_{n \to \infty} E^{P^n}\Bigl[ \int_0^t \lvert (g_n-g)(X_n(u)) \rvert \dif u \Bigr] = 0
+  \end{equation}
+  for every $t \geq 0$.  In particular the conclusion holds if
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:ap_bdd} $\sup_{n \in \N} ( \lVert f_n \rVert + \lVert g_n \rVert ) < \infty$;
+  \item \label{it:ap_ucc} $f_n \to f$ and $g_n \to g$ uniformly on compact subsets of $E$;
+  \item \label{it:ap_cc} $\{X_n\}$ satisfies the compact containment condition \eqref{eq:ccn}.
+  \end{enumerate}
+\end{corollary}
+
+\begin{proof}
+  Only \ref{it:C3c} used \eqref{eq:approxA} in the proof of
+  Lemma~\ref{lem:EKconv}; \ref{it:C3a} and \ref{it:C3b} concern $f$ and $g$ alone
+  and are untouched.  Keeping the notation there, and writing
+  $\Delta^n_r = Y^\circ_r - Y^{\circ,n}_r$, one has for $s \leq t$
+  \[
+    \Delta^n_t(\omega) - \Delta^n_s(\omega)
+      \;=\; (f-f_n)(\omega(t)) - (f-f_n)(\omega(s))
+        - \int_s^t (g-g_n)(\omega(u)) \dif u ,
+  \]
+  so with $C = \sup_i \lVert h_i \rVert^k \geq \lVert Z^\circ_s \rVert$ and
+  $E^{P^n}[(Y^{\circ,n}_t(X_n) - Y^{\circ,n}_s(X_n)) Z^\circ_s(X_n)] = 0$ as before,
+  \begin{align*}
+    \Bigl| E^{P^n}\bigl[ (Y^\circ_t(X_n) - Y^\circ_s(X_n)) Z^\circ_s(X_n) \bigr] \Bigr|
+      \;\leq\;\ & C \sum_{r \in \{s,t\}} E^{P^n}\bigl[ \lvert (f_n-f)(X_n(r)) \rvert \bigr] \\
+      &{}+ C\, E^{P^n}\Bigl[ \int_0^t \lvert (g_n-g)(X_n(u)) \rvert \dif u \Bigr] ,
+  \end{align*}
+  which tends to $0$ by \eqref{eq:approxpath}.  Note that no uniform bound on
+  $f_n$ or $g_n$ is needed: \ref{it:C3b} is bought by boundedness of $f$ and $g$,
+  not of $f_n$ and $g_n$.
+
+  For the sufficient condition, let $t > 0$ and $\eta > 0$, put
+  $M = \sup_n ( \lVert f_n \rVert + \lVert g_n \rVert ) + \lVert f \rVert + \lVert g \rVert$,
+  which is finite by \ref{it:ap_bdd} and $A \subset \Cb \times \Cb$, and use
+  \ref{it:ap_cc} to choose a compact $\Gamma \subset E$ with
+  $\inf_n P\{ X_n(u) \in \Gamma \text{ for all } u \leq t \} \geq 1 - \eta$.  On
+  that event both integrands are at most $\sup_\Gamma |f_n - f|$ resp.\
+  $\sup_\Gamma |g_n - g|$, and off it at most $M$; hence
+  \[
+    \limsup_{n \to \infty} E^{P^n}\bigl[ \lvert (f_n-f)(X_n(t)) \rvert \bigr] \leq M \eta ,
+    \qquad
+    \limsup_{n \to \infty} E^{P^n}\Bigl[ \int_0^t \lvert (g_n-g)(X_n(u)) \rvert \dif u \Bigr]
+      \leq t M \eta ,
+  \]
+  using \ref{it:ap_ucc} for the terms on $\Gamma$.  Let $\eta \downarrow 0$.
+\end{proof}
+
+\begin{remark}[Three rungs of approximation]
+  \label{rem:approxladder}
+  Corollary~\ref{cor:EKconvpath} sits strictly between \EK{} and \CPS:
+  \[
+    \eqref{eq:approxA} \;\Longrightarrow\; \eqref{eq:approxpath}
+      \;\Longrightarrow\; \eqref{eq:cps2}\text{--}\eqref{eq:cps3}
+      \ \text{for } \xi^n = f_n(X^n), \ \varphi^n = g_n(X^n) ,
+  \]
+  the second implication because the test variables $\prod_i h_i(X^n_{t_i})$ are
+  bounded and \eqref{eq:approxpath} controls absolute values.  The three rungs
+  differ in what they are conditions \emph{on}:
+  \eqref{eq:approxA} is a condition on $E$, \eqref{eq:approxpath} a condition on
+  the occupation measures $\int_0^{\cdot} P\{X_n(u) \in \dif x\} \dif u$ and the
+  one-dimensional marginals, and \eqref{eq:cps2}--\eqref{eq:cps3} a condition on
+  the joint laws which moreover permits $\xi^n, \varphi^n$ that are not of the
+  form $h(X^n)$ at all.  The middle rung is the one that costs nothing: its proof
+  is the proof of Lemma~\ref{lem:EKconv} with the estimate taken under $E$
+  instead of over $\omega \in \DE$, and it is what one wants in practice, since
+  approximating operators are typically obtained by localization and then
+  converge only locally uniformly.  It is also free in situ: \ref{it:ap_cc} is
+  the hypothesis one is assuming anyway in Remark~\ref{rem:EKrelcompact} in order
+  to have convergence at all.
+\end{remark}
+
 \begin{remark}[\EK, Remark 4.5.2]
   \label{rem:EKrelcompact}
   Lemma~\ref{lem:EKconv} presupposes convergence.  Suppose $(E,r)$ is Polish and
@@ -7101,6 +7182,39 @@ Theorem~\ref{thm:absconv}.
   $G \in \Filt_s$ was arbitrary, $E^P[Y_t \mid \Filt_s] = Y_s$, and
   $P \in \Msol(\XX)$.
 \end{proof}
+
+\begin{remark}[\ref{it:C1} and \ref{it:C3a} are one hypothesis, and it is not topological]
+  \label{rem:absconvtopfree}
+  The proof invoked \ref{it:C1} and \ref{it:C3a} only through
+  Fact~\ref{fact:cmt}, and only in order to know that certain \emph{real} random
+  variables converge in distribution.  Collecting them: for $t \in D$,
+  $s, r \in D \cap \T_{\leq t}$ and $Z^\circ_s \in \ZZ^\circ_s$, what Steps~0--2
+  used is
+  \begin{equation}
+    \label{eq:C1prime}
+    Y^\circ_r(X^n) \wto Y^\circ_r(X)
+    \qquad\text{and}\qquad
+    \bigl( Y^\circ_t(X^n) - Y^\circ_s(X^n) \bigr) Z^\circ_s(X^n)
+      \;\wto\; \bigl( Y^\circ_t(X) - Y^\circ_s(X) \bigr) Z^\circ_s(X) ,
+  \end{equation}
+  and nothing else --- Step~2 needs only $\varphi_N \circ Y^\circ_r$, a bounded
+  continuous function of the first.  Replacing \ref{it:C1} and \ref{it:C3a} by
+  \eqref{eq:C1prime} therefore leaves the theorem and its proof standing verbatim.
+
+  In that form the path space $F$ carries no topology at all: it is the
+  measurable path space of Setting~\ref{set:abstract} and nothing more is asked
+  of it.  This is worth isolating for two reasons.  First, it locates the only
+  topological hypothesis in Section~\ref{sec:convergence}: \ref{it:C1} presupposes
+  a topology on $F$ and Fact~\ref{fact:cmt} presupposes it separable and metric,
+  whereas \eqref{eq:C1prime} presupposes neither, so a formalization can carry
+  Theorem~\ref{thm:absconv} on a bare measurable space and pay for a topology
+  only where one verifies \eqref{eq:C1prime}.  Second, \eqref{eq:C1prime} is what
+  one is reduced to verifying whenever the topology on $F$ is too weak for the
+  coordinates $\pi_t$ to be continuous --- which is the situation of
+  Section~\ref{ssec:weakstrong}, where they fail at the atoms of the clock, and
+  the situation of Section~\ref{ssec:measureconv}, where they fail everywhere.
+\end{remark}
+
 
 \begin{remark}[Where the index enters]
   \label{rem:absconvindex}
@@ -7830,6 +7944,222 @@ $U$ and $A = U \times C$ this is Definition~\ref{def:Pcont}.
   \ref{rem:atomicdual}).
 \end{remark}
 
+\subsection{Convergence in measure}
+\label{ssec:measureconv}
+
+Every convergence statement so far has been made for the Skorokhod $J_1$
+topology, and $J_1$ asks for a great deal: the approximating processes must place
+their jumps at nearly the right times and of nearly the right sizes.  A sequence
+can fail it for reasons that have nothing to do with the martingale problem --- two
+jumps of $X_n$ merging into one jump of $X$ is the standard example, and $J_1$
+also fails when the jump times are perturbed by a vanishing but non-uniform
+amount.  What survives such perturbations is convergence \emph{in measure} of the
+paths.  \MZ{} showed that this weaker mode has, for quasimartingales, a
+compactness theory that $J_1$ does not have, and Remark~\ref{rem:absconvtopfree}
+makes it cheap to record that the abstract theorem transfers to it.  The point of
+this subsection is that the transfer costs one page and no new machinery: it is
+the last of the three relaxations of Theorem~\ref{thm:absconv} --- \ref{it:C3c}
+in Section~\ref{ssec:diffclocks}, \ref{it:C3a} in Section~\ref{ssec:weakstrong},
+and now \ref{it:C1} itself.
+
+\begin{fact}[Pseudo-paths; \MZ, Section~1 and Lemma~1]
+  \label{fact:pseudopath}
+  Let $\lambda(\dif u) = e^{-u} \dif u$ on $\Rp$ and let $E$ be Polish.  The
+  \emph{pseudo-path} of a Borel map $w : \Rp \to E$ is the image of $\lambda$
+  under $u \mapsto (u, w(u))$, a probability measure on $[0,\infty] \times
+  \hat{E}$ for a compact metrizable $\hat E \supset E$.  This assignment
+  identifies two paths exactly when they agree $\lambda$-a.e., so it is injective
+  on $\DE$, and the topology it induces on $\DE$ --- the \emph{pseudo-path
+  topology} --- is
+  \begin{enumerate}[label=(\roman*)]
+  \item \label{it:pp_meas} exactly the topology of convergence in $\lambda$-measure,
+    hence in Lebesgue measure on compact time intervals;
+  \item \label{it:pp_sep} metrizable and separable, being induced from the weak
+    topology on the laws on a compact metric space; but \emph{not} Polish
+    (B.~V.~Rao; \MZ, Appendix), $\DE$ being merely Borel in that compact space;
+  \item \label{it:pp_sigma} of the same Borel $\sigma$-field on $\DE$ as $J_1$,
+    namely $\sigma(\pi_u : u \in \Rp)$ (\MZ, footnote~2).
+  \end{enumerate}
+  The coordinates $\pi_u$ are, by contrast, discontinuous at every point of $\DE$.
+\end{fact}
+
+\begin{fact}[Tightness; \MZ, Theorem~4, and \Ku]
+  \label{fact:MZtight}
+  For a c\`adl\`ag adapted $X$ with $X_u \in L^1$ and the convention
+  $X_\infty = 0$, let
+  \[
+    V(X) \;=\; \sup_\tau\; E\Bigl[ \sum_i \bigl| E[ X_{t_{i+1}} - X_{t_i} \mid \Filt_{t_i} ] \bigr| \Bigr]
+    \qquad (\tau = \{ 0 = t_0 < t_1 < \dots < t_n < \infty \})
+  \]
+  be its \emph{conditional variation}, so that $V(X) \geq \sup_u E|X_u|$, and call
+  $X$ a quasimartingale if $V(X) < \infty$.  If $P^n$ are laws on $\DE$ under
+  which the coordinate process is a quasimartingale with $\sup_n V < \infty$, then
+  a subsequence of $(P^n)$ converges weakly on $\DE$ in the pseudo-path topology
+  to a law $P$ under which the coordinate process is again a quasimartingale ---
+  in particular is c\`adl\`ag.  \Ku{} extends the criterion to a separable metric
+  state space and identifies the resulting convergence as $J_1$-convergence of
+  time-changed processes.
+\end{fact}
+
+The point of Fact~\ref{fact:MZtight} is what it does \emph{not} require: no
+modulus of continuity, no Aldous condition, no compact containment
+\eqref{eq:ccn}.  A single first-moment bound on the drift, uniform in $n$,
+replaces the whole apparatus behind Remark~\ref{rem:EKrelcompact}.  This is the
+reason to want the following.
+
+\begin{theorem}[Lemma~\ref{lem:EKconv} for convergence in measure; \eqref{T3}]
+  \label{thm:MZconv}
+  Assume \eqref{E3}, let $A \subset \Cb(E) \times \Cb(E)$ and
+  $A_n \subset \Bdd(E) \times \Bdd(E)$, and suppose that for each $(f,g) \in A$
+  there are $(f_n,g_n) \in A_n$ satisfying \eqref{eq:approxA}, or more generally
+  \eqref{eq:approxpath}.  Let $X_n$ solve the martingale problem for $A_n$ with
+  sample paths in $\DE$, let $X$ have sample paths in $\DE$, and suppose
+  \[
+    X_n \;\wto\; X \quad\text{on } \DE \text{ in the pseudo-path topology.}
+  \]
+  Then $X$ is a solution of the martingale problem for $A$.
+\end{theorem}
+
+\begin{proof}
+  The conclusion is a property of the law of $X$ alone, and each hypothesis on
+  $X_n$ is a property of the law of $X_n$ alone --- for the martingale property
+  this is Proposition~\ref{prop:fddchar}.  We may therefore replace the sequence
+  by any subsequence, and may realize all the processes on whatever space is
+  convenient.  Fix $(f,g) \in A$ with approximants $(f_n,g_n)$, and let
+  $Y^\circ_t(\omega) = f(\omega(t)) - \int_0^t g(\omega(u))\dif u$ and
+  $Y^{\circ,n}$ be as in the proof of Lemma~\ref{lem:EKconv}.
+
+  \emph{Step 1: an almost sure realization.}  By
+  Fact~\ref{fact:pseudopath}\ref{it:pp_sep} the pseudo-path topology on $\DE$ is
+  separable metric, so Fact~\ref{fact:PSpolish} provides $\DE$-valued random
+  variables $\tilde X_n, \tilde X$ on one probability space, with the laws of
+  $X_n$ and $X$ --- the same laws on the same $\sigma$-field, by
+  Fact~\ref{fact:pseudopath}\ref{it:pp_sigma} --- and $\tilde X_n \to \tilde X$
+  a.s.\ in the pseudo-path topology.  Being c\`adl\`ag and measurable in $\omega$
+  for each $u$, each $\tilde X_n$ is jointly measurable in $(\omega,u)$.
+
+  \emph{Step 2: from convergence in measure to convergence a.e.}  Write $\rho$ for
+  a metric on $E$ bounded by $1$.  By
+  Fact~\ref{fact:pseudopath}\ref{it:pp_meas}, for a.e.\ $\omega$ the paths
+  $\tilde X_n(\omega,\cdot)$ converge to $\tilde X(\omega,\cdot)$ in
+  $\lambda$-measure, so $\int \rho(\tilde X_n, \tilde X) \dif\lambda \to 0$ a.s.;
+  the integrals being bounded by $1$, dominated convergence gives
+  $E \int \rho(\tilde X_n,\tilde X)\dif\lambda \to 0$, i.e.\ $\tilde X_n \to
+  \tilde X$ in $P \otimes \lambda$-measure.  Pass to a subsequence along which the
+  convergence is $P \otimes \lambda$-a.e.  Fubini now gives both halves of what is
+  needed:
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:mz_fdd} there is $I \subset \Rp$ of full Lebesgue measure ---
+    $\lambda$ and Lebesgue measure being equivalent --- such that
+    $\tilde X_n(r) \to \tilde X(r)$ a.s.\ for every $r \in I$;
+  \item \label{it:mz_int} for a.e.\ $\omega$ the paths converge Lebesgue-a.e.,
+    that is $\tilde X_n(\omega,u) \to \tilde X(\omega,u)$ for a.e.\ $u$; since $g$
+    is bounded and continuous, dominated convergence then gives
+    $\int_0^t |g(\tilde X_n(\omega,u)) - g(\tilde X(\omega,u))| \dif u \to 0$
+    for \emph{every} $t$.
+  \end{enumerate}
+  Let $D \subset I$ be countable and dense; such a set exists because $I$ has full
+  measure, hence is dense, and $\Rp$ is second countable.
+
+  \emph{Step 3: the hypotheses of Theorem~\ref{thm:absconv}.}  We verify
+  \eqref{eq:C1prime} of Remark~\ref{rem:absconvtopfree} together with
+  \ref{it:C2}, \ref{it:C3b} and \ref{it:C3c}, on the set $D$.
+
+  For \ref{it:C2} take the determining set of Example~\ref{ex:determining},
+  built from $D$.  This is legitimate by part~\ref{it:pp_sigma} of
+  Fact~\ref{fact:pseudopath}, which says that the $\sigma$-field in play is the
+  one that example is about.  Its
+  elements are $Z^\circ_s = \prod_{i \leq k} h_i(\pi_{t_i})$ with $t_i \in D \cap
+  [0,s]$ and $h_i \in \Cb(E)$.
+
+  For \eqref{eq:C1prime}, let $r \in D$.  By \ref{it:mz_fdd} and continuity of
+  $f$, $f(\tilde X_n(r)) \to f(\tilde X(r))$ a.s., and by \ref{it:mz_int} the
+  integral term converges a.s.\ as well, so $Y^\circ_r(\tilde X_n) \to
+  Y^\circ_r(\tilde X)$ a.s.  Likewise $Z^\circ_s(\tilde X_n) \to Z^\circ_s(\tilde
+  X)$ a.s., since every $t_i$ lies in $D \subset I$.  Products of a.s.\ convergent
+  sequences converge a.s., hence in distribution, which is \eqref{eq:C1prime}.
+  Note that this is where the argument differs from every earlier one in this
+  section: the coordinates are nowhere continuous, so \ref{it:C3a} is unavailable
+  and \emph{only} the weakened form \eqref{eq:C1prime} can be verified --- and it
+  is verified not by a continuous mapping theorem but by exhibiting the
+  convergence on a common space.
+
+  \ref{it:C3b} holds because $|Y^\circ_r| \leq \lVert f \rVert + t \lVert g\rVert$
+  for $r \leq t$, and \ref{it:C3c} is verified exactly as in
+  Corollary~\ref{cor:EKconvpath}, an estimate that involves no topology.
+
+  \emph{Conclusion.}  Theorem~\ref{thm:absconv}, as amended by
+  Remark~\ref{rem:absconvtopfree}, gives the martingale identity on $D$.  Now $\T
+  = \Rp$ satisfies \eqref{T2b} with the countable dense set $D$ and has no
+  greatest element, and $Y$ is right continuous because $X$ has paths in $\DE$; so
+  the last clause of Theorem~\ref{thm:absconv} upgrades the identity to all of
+  $\T$.
+\end{proof}
+
+\begin{remark}[What convergence in measure costs]
+  \label{rem:MZcost}
+  Four things, of which only the last is serious.
+
+  \emph{The dense set is not explicit.}  Under $J_1$ one takes $D$ to be the
+  continuity set of the limit and knows by Fact~\ref{fact:Dcountable} that its
+  complement is countable.  Here $D$ is an unspecified countable subset of an
+  unspecified Lebesgue-full set, and there is no analogue of
+  Fact~\ref{fact:Dcountable}: \MZ, Theorem~5 gives full measure and no more.  This
+  costs nothing because Theorem~\ref{thm:absconv} was written for an arbitrary
+  dense $D$ from the start, and the passage from $D$ to $\T$ is its Step~3 --- the
+  same regularization that Section~\ref{sec:cadlag} performs in general.  Note the
+  order of business: one does \emph{not} first prove a limit theorem at all times
+  and then regularize; one proves it a.e.\ and lets right continuity do the rest.
+
+  \emph{The path space is not Polish.}  It is separable metric, which is all that
+  Facts~\ref{fact:cmt} and~\ref{fact:PSpolish} were stated for, and this
+  manuscript never used more.  It does mean that a formalization must have the
+  continuous mapping theorem and the Skorokhod representation at that generality
+  and not only for Polish spaces (Section~\ref{ssec:available}).
+
+  \emph{C\`adl\`ag paths of the limit must be known separately.}  In the
+  pseudo-path topology $\DE$ is not closed, and the limit of pseudo-paths of
+  c\`adl\`ag functions need not be one; this is why it is a hypothesis of
+  Theorem~\ref{thm:MZconv} and a conclusion of Fact~\ref{fact:MZtight}, which
+  supplies it from the quasimartingale bound.
+
+  \emph{Nothing about jumps passes to the limit.}  Convergence in measure is blind
+  to any functional that is not an $\dif u$-average or an a.e.-$u$ evaluation:
+  $\sup_{u \leq t} \rho(X_n(u), x_0)$, the jump measure, the number of jumps in
+  $[0,t]$, the value at a prescribed time.  So the mode is exactly right for
+  identifying a limit through a martingale problem --- which is an a.e.-$u$
+  statement, as this proof makes visible --- and wrong for anything that reads the
+  paths pointwise.  Section~\ref{ssec:weakstrong} is the sharp illustration: the
+  functional of Example~\ref{ex:atomicdiscontinuity} is the evaluation at the atom
+  of the clock, so a clock with atoms is precisely a martingale problem that
+  convergence in measure cannot see, and no augmentation repairs it, since
+  Theorem~\ref{thm:absconvaug} augments by coordinates and coordinates are what
+  fail.
+\end{remark}
+
+\begin{remark}[Three topologies, and what a formalization should do]
+  \label{rem:threetopologies}
+  Between $J_1$ and convergence in measure sits Jakubowski's $S$-topology
+  \cite{Jak97}, which retains finite-dimensional convergence outside a
+  \emph{countable} set --- so Fact~\ref{fact:Dcountable} survives --- and for
+  which both Prohorov theorems hold, at the price of not being metrizable, only
+  sequential.  For the present purpose the ordering is clear.
+  Theorem~\ref{thm:absconv} in the form of Remark~\ref{rem:absconvtopfree} asks
+  for no topology at all, so the choice is not a choice about the theorem but
+  about which convergence one can verify in a given application; and a
+  non-metrizable topology is a poor thing to formalize, since
+  Facts~\ref{fact:cmt} and \ref{fact:PSpolish} would both have to be replaced.
+  The recommendation is therefore to formalize
+  Theorem~\ref{thm:absconv} with \eqref{eq:C1prime} in place of \ref{it:C1} and
+  \ref{it:C3a} --- costing nothing, since its proof is unchanged --- and to treat
+  $J_1$, weak-strong convergence and the pseudo-path topology as three ways of
+  discharging one hypothesis, none of which the theorem needs to know about.
+  \Ku{} makes the relation between the outer two precise: convergence in the
+  pseudo-path topology is $J_1$-convergence after a random time change, which is
+  the same move as the clock change of Section~\ref{ssec:diffclocks} with the
+  clock allowed to depend on the path.
+\end{remark}
+
 \subsection{Hawkes processes and their Volterra limit}
 \label{ssec:hawkes}
 
@@ -8147,6 +8477,7 @@ analogy is that \eqref{eq:hawkesrate} \emph{is} a Volterra equation.
 % =====================================================================
 
 \subsection{What is available and what has to be built}
+\label{ssec:available}
 
 Section~\ref{sec:notation} lists the prerequisites; the following is a stocktaking
 of which of them Mathlib already supplies.
@@ -8601,6 +8932,23 @@ Local problems
   & available from Definition~\ref{def:absMP} on
   & primary, not optional, for path-dependent rates
     (Remark~\ref{rem:pathjumpprimary}) \\
+Path space
+  & $\DE$ with $J_1$, Polish
+  & any measurable $F$; \eqref{eq:C1prime}
+  & Remark~\ref{rem:absconvtopfree}: \ref{it:C1} and \ref{it:C3a} are one
+    hypothesis about finitely many real random variables, so
+    Theorem~\ref{thm:absconv} is topology-free and
+    Theorem~\ref{thm:MZconv} follows \\
+Mode of convergence
+  & $J_1$
+  & also convergence in measure
+  & Section~\ref{ssec:measureconv}; \MZ{} tightness needs no compact
+    containment \\
+Approximating operators
+  & $\lVert f_n - f\rVert \to 0$
+  & \eqref{eq:approxpath}, along the paths
+  & Corollary~\ref{cor:EKconvpath}: locally uniform convergence suffices under
+    \eqref{eq:ccn}, which is assumed anyway \\
 Existence from a dual
   & \DGP: $\Rp$, Lebesgue, $E_1$ compact
   & any shift invariant clock, \eqref{E1}, fibred
@@ -8748,10 +9096,27 @@ A.~G.~Hawkes and D.~Oakes.
 \newblock A cluster process representation of a self-exciting process.
 \newblock \emph{J.\ Appl.\ Probab.} \textbf{11} (1974), 493--503.
 
+\bibitem{Jak97}
+A.~Jakubowski.
+\newblock A non-Skorohod topology on the Skorohod space.
+\newblock \emph{Electron.\ J.\ Probab.} \textbf{2} (1997), paper no.~4, 21 pp.
+
 \bibitem{JS03}
 J.~Jacod and A.~N.~Shiryaev.
 \newblock \emph{Limit Theorems for Stochastic Processes}.
 \newblock 2nd edition, Springer, Berlin, 2003.
+
+\bibitem{Kurtz91}
+T.~G.~Kurtz.
+\newblock Random time changes and convergence in distribution under the
+  Meyer--Zheng conditions.
+\newblock \emph{Ann.\ Probab.} \textbf{19} (1991), 1010--1034.
+
+\bibitem{MZ84}
+P.~A.~Meyer and W.~A.~Zheng.
+\newblock Tightness criteria for laws of semimartingales.
+\newblock \emph{Ann.\ Inst.\ H.\ Poincar\'e Probab.\ Statist.} \textbf{20}
+  (1984), 353--372.
 
 \bibitem{JR16}
 T.~Jaisson and M.~Rosenbaum.

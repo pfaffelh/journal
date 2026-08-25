@@ -44,17 +44,18 @@
 \contentsline {subsection}{\numberline {7.3}Jump processes}{80}{subsection.7.3}%
 \contentsline {subsection}{\numberline {7.4}From stochastic differential equations}{84}{subsection.7.4}%
 \contentsline {subsection}{\numberline {7.5}By convergence: the Ethier--Kurtz version}{85}{subsection.7.5}%
-\contentsline {subsection}{\numberline {7.6}By convergence: the abstract theorem}{86}{subsection.7.6}%
-\contentsline {subsection}{\numberline {7.7}By convergence: the general version}{88}{subsection.7.7}%
-\contentsline {subsection}{\numberline {7.8}Approximation on different clocks}{89}{subsection.7.8}%
-\contentsline {subsection}{\numberline {7.9}Relaxing the continuity hypothesis}{92}{subsection.7.9}%
-\contentsline {subsection}{\numberline {7.10}Hawkes processes and their Volterra limit}{97}{subsection.7.10}%
-\contentsline {section}{\numberline {8}Notes for the formalization}{100}{section.8}%
-\contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{100}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Design decisions}{103}{subsection.8.2}%
-\contentsline {section}{\numberline {9}What this manuscript adds to its sources}{105}{section.9}%
-\contentsline {subsection}{\numberline {9.1}Results that are not in the sources}{105}{subsection.9.1}%
-\contentsline {subsection}{\numberline {9.2}The split that organizes everything: uniqueness is not Markovian}{106}{subsection.9.2}%
-\contentsline {subsection}{\numberline {9.3}Generalizations that cost nothing}{107}{subsection.9.3}%
-\contentsline {subsection}{\numberline {9.4}Gaps and slips in the sources}{109}{subsection.9.4}%
-\contentsline {subsection}{\numberline {9.5}Generalizations that turned out to be empty}{109}{subsection.9.5}%
+\contentsline {subsection}{\numberline {7.6}By convergence: the abstract theorem}{87}{subsection.7.6}%
+\contentsline {subsection}{\numberline {7.7}By convergence: the general version}{89}{subsection.7.7}%
+\contentsline {subsection}{\numberline {7.8}Approximation on different clocks}{91}{subsection.7.8}%
+\contentsline {subsection}{\numberline {7.9}Relaxing the continuity hypothesis}{94}{subsection.7.9}%
+\contentsline {subsection}{\numberline {7.10}Convergence in measure}{98}{subsection.7.10}%
+\contentsline {subsection}{\numberline {7.11}Hawkes processes and their Volterra limit}{101}{subsection.7.11}%
+\contentsline {section}{\numberline {8}Notes for the formalization}{104}{section.8}%
+\contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{104}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Design decisions}{107}{subsection.8.2}%
+\contentsline {section}{\numberline {9}What this manuscript adds to its sources}{109}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Results that are not in the sources}{109}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}The split that organizes everything: uniqueness is not Markovian}{110}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Generalizations that cost nothing}{111}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Gaps and slips in the sources}{113}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}Generalizations that turned out to be empty}{113}{subsection.9.5}%

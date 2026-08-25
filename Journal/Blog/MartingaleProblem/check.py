@@ -34,9 +34,20 @@ for n, line in enumerate(s.split('\n'), 1):
             bad = True
             break
 
-for _ in range(3):
+# run until the .aux stabilizes (a structural insertion can need more than 3)
+prev = None
+for _ in range(6):
     subprocess.run(['pdflatex', '-interaction=nonstopmode', TEX],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        aux = io.open(TEX.replace('.tex', '.aux'), encoding='utf-8', errors='replace').read()
+    except FileNotFoundError:
+        aux = None
+    if aux == prev:
+        break
+    prev = aux
+else:
+    print('WARNING: .aux did not stabilize in 6 passes')
 
 log = io.open(TEX.replace('.tex', '.log'), encoding='utf-8', errors='replace').read()
 

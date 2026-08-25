@@ -8,8 +8,9 @@ chronologische Verlauf. Der Plan für das weitere Vorgehen steht in `PLAN.md`.
 
 ## Stand
 
-**2026-08-25** — Manuskript v33, 98 Seiten, kompiliert ohne undefinierte oder
-doppelte Referenzen, 8 Overfull-Boxen (max. 7,7 pt).
+**2026-08-25** — Manuskript v34, 115 Seiten, kompiliert ohne undefinierte oder
+doppelte Referenzen, 10 Overfull-Boxen (max. 7,7 pt, alle unter der 8-pt-Schwelle
+von `check.py`).
 
 | § | Inhalt | Quelle |
 |---|---|---|
@@ -18,8 +19,8 @@ doppelte Referenzen, 8 Overfull-Boxen (max. 7,7 pt).
 | 3 | Abstrakter (lokaler) MP; Markovscher MP für $A$ | CPS23 §3.1, EK86 §4.3 |
 | 4 | Càdlàg-Modifikation, abstrakt und Markovsch | EK86 Thm. 4.3.6 |
 | 5 | Eindeutigkeit **ohne** Markov-Struktur; Markov-Schicht (Shift-Systeme, Pfad-Lift); lokale Theorie; lokale Eindeutigkeit | EK86 Thm. 4.4.2, KA21 §32, JS03 III.2 |
-| 6 | Dualität: Kettenidentität, Rektifikation der Uhr, **jede Uhr lässt Dualität zu** | EK86 Lem. 4.4.10/Thm. 4.4.11 |
-| 7 | Existenz, **fünf** Wege: Halbgruppe, **Dualer** (DGP24, mit Hawkes als Testobjekt), Sprungprozesse, SDEs, Konvergenz | EK86, CPS23, DGP24, JR16 |
+| 6 | Dualität: Kettenidentität über beliebige Treppen; atomlose Uhren per Zeittransformation (`cor:atomless`), atomarer Fall separat | EK86 Lem. 4.4.10/Thm. 4.4.11 |
+| 7 | Existenz, **fünf** Wege: Halbgruppe, **Dualer** (DGP24, mit Hawkes als Testobjekt), Sprungprozesse, SDEs, Konvergenz; Konvergenz in vier Stufen: EK, abstrakt, CPS, **Konvergenz in Maß** (7.10) | EK86, CPS23, DGP24, JR16, MZ84 |
 | 8/9 | Formalisierungsnotizen, Mathlib-Bestandsaufnahme, Design-Entscheidungen | — |
 
 **Erledigt:** Tasks 1, 2, 9–20 sowie Q1–Q3, Q5–Q8. Task 17 (Konsistenz-Durchgang
@@ -29,8 +30,8 @@ gefunden — siehe D39, D40, D43, D44, D48.
 **Offen:** Tasks 3–8 (Lean-Formalisierung; auf Entscheidung des Nutzers pausiert,
 „erst muss die Theorie stehen"), Task 19 (historischer Prozess allgemein — am
 Hawkes-Beispiel durchgeführt, für Genealogien offen), Task 21 (pfadabhängige
-Uhr), Task 22 (Submartingalprobleme), Q4 (Halbgruppen-/Feller-Weg, bewusst
-ruhend).
+Uhr), Task 22 (Submartingalprobleme), Task 23 (§6: gemischte Uhr, echter
+Beweis des rein atomaren Falls), Q4 (Halbgruppen-/Feller-Weg, bewusst ruhend).
 
 ---
 
@@ -2853,6 +2854,79 @@ Fact `DEcompact` bleibt — die ist EKs Aussage über $\DE$ und damit korrekt
 (T3)-spezifisch.
 
 110 Seiten.
+
+### D62 — Approximation nur entlang der Pfade; Konvergenz in Maß  *(2026-08-25)*
+
+Zwei Nutzerfragen beim Lesen von Lem. 7.34 (= EK 4.5.1), beide zutreffend, beide
+mit derselben Antwort: **Thm. `absconv` ist schwächer als es aussieht.**
+
+**(a) „Braucht man $f_n\to f$, $g_n\to g$ nicht nur entlang der Pfade?"** — Ja.
+Der Beweis benutzt $\lVert f_n-f\rVert$ nur als in $\omega$ gleichmäßige
+Schranke, zu klein zu machen ist aber ein $E^{P^n}$-Erwartungswert, und $P^n$
+lädt nur die Pfade von $X_n$. Neu `cor:EKconvpath` mit
+$$E^{P^n}|(f_n-f)(X_n(t))|\to0,\qquad E^{P^n}\int_0^t|(g_n-g)(X_n(u))|\dif u\to0
+\tag{eq:approxpath}$$
+statt (eq:approxA). **Ohne Zusatzhypothese**: (C3b) wird von der Beschränktheit
+von $f,g$ gekauft, nicht von der von $f_n,g_n$. Praktisch brauchbare
+hinreichende Bedingung (ebenfalls in `cor:EKconvpath`): $\sup_n(\lVert
+f_n\rVert+\lVert g_n\rVert)<\infty$ + lokal gleichmäßige Konvergenz + compact
+containment (eq:ccn) — und (eq:ccn) setzt man in Rem. `EKrelcompact` sowieso
+voraus. Approximierende Operatoren entstehen typisch durch Lokalisierung und
+konvergieren dann eben nur lokal gleichmäßig. Neu `rem:approxladder`: drei
+Sprossen (eq:approxA) ⟹ (eq:approxpath) ⟹ (eq:cps2)–(eq:cps3), unterschieden
+danach, *worüber* sie Bedingungen sind (über $E$ / über die Besetzungsmaße / über
+die gemeinsamen Verteilungen).
+
+**(b) „Geht auch Konvergenz in Maß statt $J_1$?"** — Ja, und es kostet eine
+Seite. Zuerst neu `rem:absconvtopfree`: (C1) und (C3a) werden im Beweis von
+Thm. `absconv` **nur** über Fact `cmt` benutzt, und nur um zu wissen, dass
+endlich viele *reelle* Zufallsvariablen in Verteilung konvergieren; ersetzt man
+beide durch genau diese Konvergenz (eq:C1prime), steht Satz und Beweis wörtlich,
+und $F$ trägt dann **gar keine Topologie**. Damit ist lokalisiert, wo in §7
+überhaupt eine Topologie gebraucht wird.
+
+Neuer §7.10 `ssec:measureconv`: Fact `pseudopath` (MZ §1 + Lemma 1: Pseudopfad-
+Topologie = Konvergenz in Maß, metrisierbar separabel, **nicht** polnisch (B. V.
+Rao), Borel-$\sigma$-Algebra auf $\DE$ = die von $J_1$ = Koordinaten-$\sigma$-
+Algebra (MZ Fußnote 2), Koordinaten überall unstetig); Fact `MZtight` (MZ Thm. 4:
+gleichmäßig beschränkte bedingte Variation ⟹ Teilfolge konvergiert schwach,
+Limes wieder Quasimartingal, also càdlàg — **ohne** compact containment, ohne
+Aldous); `thm:MZconv` (= Lem. 7.34 für Konvergenz in Maß) mit vollständigem
+Beweis: Skorokhod-Darstellung auf dem separabel-metrischen Pseudopfadraum,
+$P\otimes\lambda$-f.ü.-Teilfolge, Fubini gibt (i) eine Lebesgue-volle Menge $I$
+mit f.s. Konvergenz der Auswertungen und (ii) für f.a. $\omega$ die Konvergenz
+der $\dif u$-Integrale für *jedes* $t$; $D\subset I$ abzählbar dicht; dann
+(eq:C1prime), (C2), (C3b), (C3c); Step 3 von `absconv` hebt von $D$ auf $\T$.
+MZ Thm. 5 wird dadurch nicht als Fact gebraucht — das Argument ist auf dem
+Darstellungsraum selbstenthalten.
+
+`rem:MZcost`: vier Kosten, nur das letzte ernst. Die dichte Menge ist nicht
+explizit (kein Analogon zu Fact `Dcountable`) — egal, `absconv` war von Anfang
+an für beliebiges dichtes $D$ geschrieben, und §4 ist genau die Reparatur; der
+Pfadraum ist nicht polnisch — separabel metrisch reicht für Facts `cmt` und
+`PSpolish`, die nie mehr verlangten; càdlàg-Pfade des Limes sind Hypothese (aus
+Fact `MZtight`); **nichts über Sprünge geht mit** — insbesondere ist eine Uhr mit
+Atomen genau ein MP, das Konvergenz in Maß nicht sehen kann, und
+Thm. `absconvaug` repariert das nicht, weil es über Koordinaten augmentiert.
+`rem:threetopologies`: Jakubowskis $S$-Topologie liegt dazwischen (fdd außerhalb
+einer *abzählbaren* Menge, beide Prohorov-Sätze, aber nicht metrisierbar, nur
+sequentiell) — schlecht zu formalisieren; Empfehlung: `absconv` mit (eq:C1prime)
+formalisieren und $J_1$/weak-strong/Pseudopfad als drei Arten behandeln, *eine*
+Hypothese zu erledigen. Kurtz 1991: Konvergenz in Maß = $J_1$-Konvergenz nach
+zufälliger Zeittransformation — dieselbe Bewegung wie §7.8 mit pfadabhängiger
+Uhr (Bezug zu Task 21).
+
+Quellen verifiziert: MZ84 (numdam-Scan heruntergeladen, Lemma 1 / Thm. 4 / Thm. 5
+/ Fußnote 2 wörtlich gelesen), Kurtz91 (Abstract, AoP 19, 1010–1034),
+Jak97 (Abstract, EJP 2 (1997), no. 4). Neue bibitems `MZ84`, `Kurtz91`, `Jak97`,
+Makros `\MZ`, `\Ku`.
+
+Drei neue Zeilen in der Tabelle §9.3 (Pfadraum / Konvergenzmodus /
+approximierende Operatoren). `check.py` gehärtet: läuft jetzt bis die `.aux`
+stabil ist (max. 6 Durchläufe), fängt fehlende `.aux` ab — die sporadischen
+„alles undefiniert"-Fehlalarme kamen daher.
+
+115 Seiten.
 
 ---
 
