@@ -2100,6 +2100,53 @@ Thm. `absstrongmarkov`, dessen zweite Aussage seit D39 auf abzählbarwertige
 Stoppzeiten eingeschränkt ist. Hier ist die Einschränkung leer (konstantes
 Shift-System), was jetzt dasteht.
 
+### D45 — Fibrierter Zustandsraum: ja, von Anfang an  *(2026-08-25)*
+
+Frage des Nutzers: bei der Formalisierung gibt es dependent types, der
+Zustandsraum kann also mit $t$ variieren — soll das schon so angelegt werden?
+
+**Antwort: ja.** Neu §2.3 Def. `Efibred`, Rem. `fibredaudit` (Audit),
+Rem. `fibredrecommend` (Begründung), Design-Entscheidung (i) in §9.
+
+**Der Audit ist das eigentliche Argument.** Die Trennlinie fällt *exakt* mit der
+schon in Rem. `Ebundleuse` gezogenen zusammen — was $E$ nur über $\Bdd(E_t)$ und
+$\mathcal E_t$ anfasst, ist gleichgültig; was eine Topologie auf $E$ braucht,
+nicht:
+
+* **frei:** §3.1 (abstraktes MP — erwähnt $E$ überhaupt nie), §3.2 mit $(f,g)$
+  als Schnitten, §5.1, §5.2 (Shift-Systeme werden sogar *natürlicher*: $\theta_r$
+  bildet $\prod_t E_t$ nach $\prod_t E_{r+t}$ ab, also ist $\XX^\circ_r\ne\XX^\circ$
+  erzwungen), §5.3/§5.4, §6, §7.2;
+* **braucht konstante Faser:** §4 (càdlàg vergleicht $\omega(s)$ mit $\omega(t)$)
+  und §7.3–§7.9 ($\DE$, $J_1$, Straffheit);
+* **braucht den Totalraum $\Sigma E=\coprod_t E_t$:** nur Thm. `absstrongmarkov`,
+  weil $X(\tau)$ ein *abhängiger* Wert in $E_{\tau(\omega)}$ ist und
+  $\mu_{F_0}=P\{X(\tau)\in\cdot\}$ daher auf dem Totalraum lebt.
+
+**Drei Gründe, es jetzt zu tun.**
+1. Es ist gratis, wo es zählt, und unerreichbar, wo nicht — die Entscheidung ist
+   also nicht „wieviel Allgemeinheit", sondern „in welcher der beiden ohnehin
+   getrennten Hälften", und die Antwort steht im Audit.
+2. **Mathlib ist fibriert.** `IsProjectiveLimit`, `projectiveFamilyContent`,
+   `Kernel.traj` sind alle für `α : ι → Type*` und `Measure (Π i, α i)`
+   formuliert. Ein fixes `E` hieße überall `fun _ => E` schreiben und die
+   abhängigen Aussagen von Hand nachbauen — dasselbe Argument wie bei
+   `[Preorder ι]` in §1.3.
+3. **Task 19 braucht es.** Der historische Prozess hat als Zustandsraum zur Zeit
+   $t$ die Pfade auf $\T_{\le t}$ — ein fibrierter Zustandsraum, kein konstanter.
+   Genealogiewertige Prozesse ebenso.
+
+**Nebengewinn.** Wenn $f$ ein Schnitt sein darf, ist
+$Y^{f,g}_t=f_t(\pi_t)-\int g_u(\pi_u)q(\dif u)$ automatisch das
+**Raum-Zeit-Martingalproblem** ($g$ absorbiert $\partial_t f+Af$), das
+Standardwerkzeug für zeitinhomogene Probleme. Das hätte sonst separat ergänzt
+werden müssen. Zeitabhängiges $g$ war ohnehin schon da (Setting `diffclocks`).
+
+**Was nicht getan wird:** §4 und §7.3–§7.9 in fibrierter Notation umschreiben.
+Sie brauchen eine konstante Faser, sagen das, und die Bündeltabelle hält es fest;
+einen Index mitzuschleppen, der sofort eingefroren wird, wäre Notation ohne
+Inhalt.
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),

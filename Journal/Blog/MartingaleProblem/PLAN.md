@@ -524,6 +524,19 @@ Cor. `exdualitywellposed`, Prop. `rieszmarkov`, Fact `kolmogorov` neu in §2.6.
 Drei Verallgemeinerungen gegenüber der Quelle: beliebige verschiebungsinvariante
 Uhr, nicht-linearer Index, (E1) statt Kompaktheit.
 
+## Task 20 — Fibrierter Zustandsraum — `angelegt` *(2026-08-25)*
+
+Entschieden (→ D45): der Zustandsraum wird als `E : T → Type*` angelegt, nicht
+fix. §2.3 hat jetzt Def. `Efibred`, den Audit (Rem. `fibredaudit`) und die
+Begründung (Rem. `fibredrecommend`); §9 die Design-Entscheidung (i).
+
+Offen bleibt nur die Ausführung dort, wo sie Inhalt hat:
+* Thm. `absstrongmarkov` auf den Totalraum $\Sigma E$ umstellen (bisher nur
+  vermerkt, nicht durchgeführt);
+* die zwei-Parameter-Version von §7.2 (Rem. `exdualityscope`), die mit der
+  Fibrierung zusammenfällt: $\mu_{s,t}$ von $E_{1,s}$ nach $E_{1,t}$;
+* Raum-Zeit-Martingalproblem als Beispiel ausschreiben.
+
 ## Task 19 — Historischer Prozess als Dualer — `todo`
 
 Die Methode von Task 18 erreicht die pfadabhängige Theorie aus §5.1/§5.4 nicht,
