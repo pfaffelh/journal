@@ -119,9 +119,8 @@ problems are treated wherever the statement permits it.  Every statement is
 tagged with the weakest hypotheses on the index and on the state space that it
 uses, and Section~\ref{ssec:bundletable} tabulates the result: the partially
 ordered index survives in (ii) for the Markov property but provably not for
-uniqueness, in (iii) for an atomic clock, and in the duality route to (iv)
-throughout; a merely measurable state space suffices for (ii) and (iii)
-throughout.
+uniqueness, and in (iii) for an atomic clock; a merely measurable state space
+suffices for (ii) and (iii) throughout.
 Section~\ref{sec:setting} explains, and justifies, the choice of the underlying
 setting; Section~\ref{sec:formalization} records the design decisions that are
 relevant for the Lean formalization.
@@ -204,7 +203,8 @@ that the outcome is not the one the first draft anticipated.
   modification, Proposition~\ref{prop:uniqfromprop} and
   Theorems~\ref{thm:absuniq}, \ref{thm:absstrongmarkov} for uniqueness and the
   (strong) Markov property, and Lemma~\ref{lem:chain} with
-  Theorem~\ref{thm:anyclock} for duality.  This layer is itself graded: a
+  Proposition~\ref{prop:haar} and Theorem~\ref{thm:anyclock} for duality.  This
+  layer is itself graded: a
   \emph{Markov structure} is introduced only where it is needed, namely in
   Section~\ref{ssec:markovlayer}, and Remark~\ref{rem:markovaudit} tabulates what
   lies on either side of that line.  Uniqueness, in particular, lies on the
@@ -297,14 +297,16 @@ The gain is not merely cosmetic.  Discrete time ($\T = \N_0$, $q$ counting
 measure) and processes with fixed times of discontinuity ($q$ with atoms) become
 special cases rather than analogues, and the partially ordered case survives in
 Section~\ref{sec:MP}, in the Markov half of Section~\ref{sec:uniqueness}, in the
-abstract convergence theorem and in the duality route to existence
-(Section~\ref{ssec:exduality}).  It fails in exactly two places, and for
+abstract convergence theorem and in the kernel layer of
+Section~\ref{ssec:exduality}.  It fails in exactly three places, and for
 reasons worth knowing: the uniqueness induction needs the times to form a chain
-(Remark~\ref{rem:chainonly}), and the rectification argument behind
-Theorem~\ref{thm:anyclock} needs the down-sets to be nested
-(Remark~\ref{rem:dualscope}) --- a limitation of the proof only, since for an
-atomic clock duality survives on a partially ordered index
-(Remark~\ref{rem:atomicdual}).
+(Remark~\ref{rem:chainonly}); the Kolmogorov step of
+Theorem~\ref{thm:exduality} needs finite subsets to be chains
+(Remark~\ref{rem:exdualityscope}(ii)); and Theorem~\ref{thm:anyclock} is proved
+only under (T3), through a rectification that needs the down-sets to be nested
+and the clock to be atomless (Remark~\ref{rem:rectifyfails}) --- the last a
+limitation of the proof, since for an atomic clock the verification of
+Remark~\ref{rem:atomicdual} covers a partially ordered index.
 
 \paragraph{State space: measurable, not Polish, where possible.}
 \EK{} and \CPS{} take $E$ Polish throughout.  Here $E$ is graded exactly as the
@@ -1721,7 +1723,7 @@ Lemma~\ref{lem:chain} (chain identity)
 Proposition~\ref{prop:haar}, Corollary~\ref{cor:dualdiscrete}
   & (T2a) + (T4) & (E0) & Haar, $\iota = \mathrm{p}$ \\
 Lemma~\ref{lem:rectify}, Theorem~\ref{thm:anyclock}
-  & \textbf{(T2b)} & (E0) & any, $\iota = \mathrm{p}$ \\
+  & \textbf{(T3)} & (E0) & \textbf{atomless}, $\iota = \mathrm{p}$ \\
 Remark~\ref{rem:atomicdual} (atomic duality)
   & (T0) & (E0) & atomic, any $\iota$ \\
 Lemma~\ref{lem:calculus}, Theorem~\ref{thm:duality}
@@ -1729,12 +1731,13 @@ Lemma~\ref{lem:calculus}, Theorem~\ref{thm:duality}
 Corollary~\ref{cor:uniqviadual} (uniqueness via duality)
   & (T3) & (E2) & Lebesgue \\
 \midrule
-Setting~\ref{set:dualdata}, Lemma~\ref{lem:dualsemigroup},
-  Proposition~\ref{prop:dualCK}, Theorem~\ref{thm:exduality}
-  (existence from a dual)
+Lemma~\ref{lem:dualsemigroup}, Proposition~\ref{prop:dualCK}
+  (the kernel layer)
   & (T0) + (T4) & \textbf{(E1)}, fibred & shift invariant \\
+Theorem~\ref{thm:exduality} (existence from a dual)
+  & \textbf{(T2a)} + (T4) & \textbf{(E1)}, fibred & shift invariant \\
 Proposition~\ref{prop:rieszmarkov} (checking \ref{it:D3})
-  & (T0) + (T4) & (E3), $E_1$ compact & shift invariant \\
+  & (T2a) + (T4) & (E3), $E_1$ compact & shift invariant \\
 Setting~\ref{set:jumpdata}, Theorem~\ref{thm:jumpMP} (jump processes)
   & (T3) & (E0) & Lebesgue \\
 Lemma~\ref{lem:liftmarkov} (path lift; vacuous, see
@@ -1767,13 +1770,14 @@ Lemma~\ref{lem:EKconv}, Theorem~\ref{thm:CPSconv}
 Two readings of this table are worth recording.  First, the partially ordered
 case --- and with it the multiparameter index $\T = \Rp^d$ --- survives in
 Section~\ref{sec:MP}, in the Markov half of Section~\ref{sec:uniqueness}, in the
-abstract convergence theorem and in Section~\ref{ssec:exduality}, and dies
-everywhere else; the bold index entries are where it dies for a
-\emph{mathematical} reason rather than for want of a Skorokhod space, and Remarks~\ref{rem:chainonly} and \ref{rem:dualscope} say
-which --- the second only for want of a proof, not because of a counterexample.
-Section~\ref{ssec:exduality} is the one \emph{existence} result that survives a
-partially ordered index, which is worth noting because every other route in
-Section~\ref{sec:convergence} is tied to $\Rp$.  Second, (T1$'$) --- the metric lattice of \EK, Section~2.8, which the
+abstract convergence theorem and in the \emph{kernel layer} of
+Section~\ref{ssec:exduality}, and dies everywhere else; the bold index entries
+are where it dies for a \emph{mathematical} reason rather than for want of a
+Skorokhod space, and Remarks~\ref{rem:chainonly}, \ref{rem:dualscope} and
+\ref{rem:exdualityscope}(ii) say which --- the middle one only for want of a
+proof, not because of a counterexample.  No \emph{existence} result survives a
+partial order in full: the duality route comes closest, its obstruction sitting
+in the very last step, the Kolmogorov extension over antichains.  Second, (T1$'$) --- the metric lattice of \EK, Section~2.8, which the
 first draft of this manuscript treated as the base assumption --- does not occur
 at all: every statement involving a stopping time already assumes (T2b), under
 which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
@@ -3239,6 +3243,43 @@ uniqueness theory cannot do without.
   $X(r+\cdot)$ under $Z \cdot P$, which is what \eqref{eq:restart} asserts.
 \end{remark}
 
+
+\begin{proof}
+  Let $\hat{Y}^\circ \in \XX^\circ_r$, let $s \leq t$ and let
+  $Z^\circ_s \in \ZZ^\circ_s$.  Choose $Y^\circ \in \XX^\circ$ and $\kappa$ as in
+  \eqref{eq:shiftstable}, and evaluate everything along $X$; to keep the notation
+  readable write $\tilde{V} = V(X)$ for a functional $V$ on $F$, so that
+  $\tilde{Y}^\circ_u$ is a $\mathbb{G}$-martingale by hypothesis.
+
+  Since $Z^\circ_s$ is $\Filt^\circ_s$-measurable and
+  $\pi_u \circ \theta_r = \pi_{r+u}$, the variable
+  $(Z^\circ_s \circ \theta_r)(X) = Z^\circ_s\bigl(X(r+\cdot)\bigr)$ is
+  $\sigma(X(u) : u \leq r+s)$-measurable, hence $\Gilt_{r+s}$-measurable; so is
+  $Z$, because $\Gilt_r \subset \Gilt_{r+s}$, and so is $\tilde{\kappa}$.  Hence
+  $W \coloneqq Z \cdot (Z^\circ_s \circ \theta_r)(X)$ is bounded and
+  $\Gilt_{r+s}$-measurable, and the martingale property gives
+  $E^P[(\tilde{Y}^\circ_{r+t} - \tilde{Y}^\circ_{r+s}) W] = 0$.  Therefore
+  \begin{align*}
+    E^R\bigl[ \hat{Y}^\circ_t Z^\circ_s \bigr]
+      &= E^P\bigl[ Z \, (\hat{Y}^\circ_t \circ \theta_r)(X) \,
+                   (Z^\circ_s \circ \theta_r)(X) \bigr]
+       = E^P\bigl[ (\tilde{Y}^\circ_{r+t} - \tilde{Y}^\circ_r + \tilde{\kappa}) W \bigr] \\
+      &= E^P\bigl[ (\tilde{Y}^\circ_{r+s} - \tilde{Y}^\circ_r + \tilde{\kappa}) W \bigr]
+       = E^R\bigl[ \hat{Y}^\circ_s Z^\circ_s \bigr] ,
+  \end{align*}
+  the second equality by \eqref{eq:shiftstable} and the third by the display
+  above.  As $Z^\circ_s \in \ZZ^\circ_s$ was arbitrary, part~(ii) of
+  Definition~\ref{def:canonical} yields
+  $E^R[\hat{Y}^\circ_t \mid \Filt^\circ_s] = \hat{Y}^\circ_s$; integrability of
+  $\hat{Y}^\circ_t$ under $R$ holds because $Z$ is bounded and
+  $\tilde{Y}^\circ_{r+t}, \tilde{Y}^\circ_r, \tilde\kappa \in L^1(P)$.
+\end{proof}
+
+Note where the two hypotheses act.  Shift stability is used only to rewrite
+$\hat{Y}^\circ_t \circ \theta_r$; the determining set is used only in the last
+step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
+\EK.  Everything else is the tower property.
+
 \begin{remark}[Submartingale problems: a different direction, not a wider one]
   \label{rem:inequalitystable}
   Replacing ``$Y^\circ$ is a $P$-martingale'' by ``$Y^\circ$ is a
@@ -3288,9 +3329,15 @@ uniqueness theory cannot do without.
 
 \begin{lemma}[One-sided determination; (E2)]
   \label{lem:semiring}
-  Let $\mathcal{C}$ be a semiring of subsets of $\Omega$ generating the
+  Let $\mathcal{C}$ be a semiring of subsets of $\Omega$ with
+  $\Omega \in \mathcal{C}$, generating the
   $\sigma$-field $\Gilt$, and let $\mu$ be a finite signed measure on $\Gilt$ with
   $\mu(C) \geq 0$ for every $C \in \mathcal{C}$.  Then $\mu \geq 0$.
+
+  The hypothesis $\Omega \in \mathcal{C}$ cannot be dropped: on
+  $\Omega = \{1,2\}$ the family $\{\emptyset,\{1\}\}$ is a semiring generating
+  $2^\Omega$, and $\mu = \delta_1 - 5\,\delta_2$ is nonnegative on it without
+  being nonnegative.
 
   Consequently, if $E$ satisfies (E2), then the products
   $\prod_{k \leq n} h_k(\pi_{t_k})$ with $h_k \in \Cb(E)$, $h_k \geq 0$, are
@@ -3302,7 +3349,9 @@ uniqueness theory cannot do without.
 
 \begin{proof}
   \emph{The signed-measure statement.}  Finite disjoint unions of elements of
-  $\mathcal{C}$ form an algebra $\mathcal{A}$, and $\mu \geq 0$ on $\mathcal{A}$
+  $\mathcal{C}$ form an algebra $\mathcal{A}$ --- closure under complements is
+  where $\Omega \in \mathcal{C}$ enters, via the semiring property
+  $\Omega \setminus C = \biguplus_i C_i$ --- and $\mu \geq 0$ on $\mathcal{A}$
   by additivity.  Let $\mu = \mu^+ - \mu^-$ be the Hahn--Jordan decomposition with
   negative set $N$.  Since $|\mu|$ is finite and $\mathcal{A}$ generates $\Gilt$,
   for every $\varepsilon > 0$ there is $A \in \mathcal{A}$ with
@@ -3317,9 +3366,14 @@ uniqueness theory cannot do without.
   $\one_{A_1 \times \dots \times A_n}$ and dominated convergence gives
   $\mu \geq 0$ on closed measurable rectangles.  By regularity of the finite
   measure $|\mu| \circ (\pi_{t_1},\dots,\pi_{t_n})^{-1}$ on a metric space this
-  extends to all Borel rectangles, which form a semiring generating
-  $\sigma(\pi_{t_1},\dots,\pi_{t_n})$; the first part applies, and letting the
-  finite sets of times exhaust $\T_{\leq s}$ gives $\mu \geq 0$ on $\Filt_s$.
+  extends to all Borel rectangles, which form a semiring containing the full
+  space (all $B_k = E$) and generating
+  $\sigma(\pi_{t_1},\dots,\pi_{t_n})$; the first part applies.  Finally, the
+  Borel rectangles over \emph{all} finite subsets of $\T_{\leq s}$ again form a
+  semiring containing the full space --- a product of two rectangles over
+  different time sets is a rectangle over their union --- and it generates
+  $\Filt_s$, so one more application of the first part gives $\mu \geq 0$
+  there.
 \end{proof}
 
 \begin{remark}[What is still lost]
@@ -3342,42 +3396,6 @@ uniqueness theory cannot do without.
   supplying one is exactly the work done in the reflecting-boundary literature.
   This manuscript does not attempt it; Task~22 of the plan records it.
 \end{remark}
-
-\begin{proof}
-  Let $\hat{Y}^\circ \in \XX^\circ_r$, let $s \leq t$ and let
-  $Z^\circ_s \in \ZZ^\circ_s$.  Choose $Y^\circ \in \XX^\circ$ and $\kappa$ as in
-  \eqref{eq:shiftstable}, and evaluate everything along $X$; to keep the notation
-  readable write $\tilde{V} = V(X)$ for a functional $V$ on $F$, so that
-  $\tilde{Y}^\circ_u$ is a $\mathbb{G}$-martingale by hypothesis.
-
-  Since $Z^\circ_s$ is $\Filt^\circ_s$-measurable and
-  $\pi_u \circ \theta_r = \pi_{r+u}$, the variable
-  $(Z^\circ_s \circ \theta_r)(X) = Z^\circ_s\bigl(X(r+\cdot)\bigr)$ is
-  $\sigma(X(u) : u \leq r+s)$-measurable, hence $\Gilt_{r+s}$-measurable; so is
-  $Z$, because $\Gilt_r \subset \Gilt_{r+s}$, and so is $\tilde{\kappa}$.  Hence
-  $W \coloneqq Z \cdot (Z^\circ_s \circ \theta_r)(X)$ is bounded and
-  $\Gilt_{r+s}$-measurable, and the martingale property gives
-  $E^P[(\tilde{Y}^\circ_{r+t} - \tilde{Y}^\circ_{r+s}) W] = 0$.  Therefore
-  \begin{align*}
-    E^R\bigl[ \hat{Y}^\circ_t Z^\circ_s \bigr]
-      &= E^P\bigl[ Z \, (\hat{Y}^\circ_t \circ \theta_r)(X) \,
-                   (Z^\circ_s \circ \theta_r)(X) \bigr]
-       = E^P\bigl[ (\tilde{Y}^\circ_{r+t} - \tilde{Y}^\circ_r + \tilde{\kappa}) W \bigr] \\
-      &= E^P\bigl[ (\tilde{Y}^\circ_{r+s} - \tilde{Y}^\circ_r + \tilde{\kappa}) W \bigr]
-       = E^R\bigl[ \hat{Y}^\circ_s Z^\circ_s \bigr] ,
-  \end{align*}
-  the second equality by \eqref{eq:shiftstable} and the third by the display
-  above.  As $Z^\circ_s \in \ZZ^\circ_s$ was arbitrary, part~(ii) of
-  Definition~\ref{def:canonical} yields
-  $E^R[\hat{Y}^\circ_t \mid \Filt^\circ_s] = \hat{Y}^\circ_s$; integrability of
-  $\hat{Y}^\circ_t$ under $R$ holds because $Z$ is bounded and
-  $\tilde{Y}^\circ_{r+t}, \tilde{Y}^\circ_r, \tilde\kappa \in L^1(P)$.
-\end{proof}
-
-Note where the two hypotheses act.  Shift stability is used only to rewrite
-$\hat{Y}^\circ_t \circ \theta_r$; the determining set is used only in the last
-step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
-\EK.  Everything else is the tower property.
 
 \begin{lemma}[Agreement propagates under a shift system; (T0) + (T4) + (E0)]
   \label{lem:propagation}
@@ -3553,16 +3571,82 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
 \end{remark}
 
 For the strong Markov property one restarts at a stopping time.  The only extra
-input is optional sampling, which is where path regularity finally enters.
+input is optional sampling --- which is where path regularity finally enters ---
+and it has to be handled with care, because the random times $\tau + s$ are
+unbounded and Fact~\ref{fact:optsampl} does not apply to them as it stands.  The
+following truncation lemma is the correct tool, and its integrability hypothesis
+is the honest one.  An earlier version of this manuscript asked instead for
+uniformly integrable increments \emph{on bounded intervals}.  That is a
+statement about deterministic windows $[s,t] \subset \T_{\leq T}$, and it says
+nothing about the random window $[\tau+s, \tau+t]$, which is unbounded when
+$\tau$ is; in particular it does not deliver the integrability that the
+truncation argument needs in order to pass to the limit.  What
+Lemma~\ref{lem:optsamplafter} shows is that this integrability is not merely
+necessary for the bookkeeping but \emph{sufficient} for the conclusion --- no
+uniform integrability of the martingale itself is required.
+
+\begin{lemma}[Optional sampling after a finite stopping time; (T2b) + (T4)]
+  \label{lem:optsamplafter}
+  Let $\T$ satisfy (T2b) and (T4), let $Y$ be a right continuous
+  $(\Gilt_t)$-martingale, let $\tau$ be an a.s.\ finite $(\Gilt_t)$-stopping
+  time, and let $s \leq t$ in $\T$ be such that
+  \begin{equation}
+    \label{eq:optafterint}
+    Y_{\tau+t} - Y_{\tau+s} \;\in\; L^1(P) .
+  \end{equation}
+  Then $E\bigl[ (Y_{\tau+t} - Y_{\tau+s}) W \bigr] = 0$ for every bounded
+  $\Gilt_{\tau+s}$-measurable $W$.
+\end{lemma}
+
+\begin{proof}
+  By (T2b) there is a countable cofinal increasing sequence $(T_m)$ in $\T$
+  (Step~2 of the proof of Theorem~\ref{thm:absreg}), so
+  $\one_{\{\tau \leq T_m\}} \uparrow 1$ a.s.  Fix $m$ and put
+  $\sigma_1 = (\tau \wedge T_m) + s \leq \sigma_2 = (\tau \wedge T_m) + t$.  Both
+  are $(\Gilt_u)$-stopping times: $\tau \wedge T_m$ is one by
+  Fact~\ref{fact:stoppingtimes}, and adding a constant $s$ preserves the property
+  because by (T4) the map $u \mapsto u-s$ is defined and order preserving on
+  $\{u \geq s\}$, so $\{\sigma_1 \leq u\} = \{\tau \wedge T_m \leq u-s\} \in
+  \Gilt_{u-s} \subset \Gilt_u$ for $u \geq s$, while for $u < s$ the event is
+  empty since $\sigma_1 \geq s$.  Both are bounded by $T_m + t$.  Optional sampling at \emph{bounded} stopping times --- the case
+  $\tau_2 \leq T$ of Fact~\ref{fact:optsampl}, which needs only right continuity
+  and integrability of $Y$ --- gives
+  $E[Y_{\sigma_2} \mid \Gilt_{\sigma_1}] = Y_{\sigma_1}$.  The variable
+  $W \one_{\{\tau \leq T_m\}}$ is $\Gilt_{\sigma_1}$-measurable.  Indeed, take
+  $W = \one_G$ with $G \in \Gilt_{\tau+s}$; since on $\{\tau \leq T_m\}$ the
+  times $\sigma_1$ and $\tau+s$ agree,
+  \[
+    G \cap \{\tau \leq T_m\} \cap \{\sigma_1 \leq u\}
+      \;=\; \bigl( G \cap \{\tau + s \leq u\} \bigr) \cap \{\tau \leq T_m\} ,
+  \]
+  and this lies in $\Gilt_u$ in both of the two cases the linear order allows:
+  for $u \geq T_m$ because $G \cap \{\tau+s \leq u\} \in \Gilt_u$ by definition
+  of $\Gilt_{\tau+s}$ and $\{\tau \leq T_m\} \in \Gilt_{T_m} \subset \Gilt_u$;
+  for $u < T_m$ because then $\{\tau + s \leq u\} \subset \{\tau \leq u\}
+  \subset \{\tau \leq T_m\}$ --- using $\tau \leq \tau + s$, i.e.\ $0 \leq s$ and
+  order preservation --- so the second intersecting event is redundant and the
+  set equals $G \cap \{\tau+s \leq u\} \in \Gilt_u$.  Hence
+  \[
+    E\bigl[ (Y_{\sigma_2} - Y_{\sigma_1}) W \one_{\{\tau \leq T_m\}} \bigr]
+      \;=\; 0 ,
+  \]
+  and on $\{\tau \leq T_m\}$ the integrand equals
+  $(Y_{\tau+t} - Y_{\tau+s})W$, while off it the indicator vanishes.  So
+  $E[(Y_{\tau+t} - Y_{\tau+s}) W \one_{\{\tau \leq T_m\}}] = 0$ for every $m$,
+  and dominated convergence --- the dominator is
+  $|Y_{\tau+t} - Y_{\tau+s}|\,\lVert W \rVert$, integrable by
+  \eqref{eq:optafterint} --- gives the assertion.
+\end{proof}
 
 \begin{theorem}[Abstract strong Markov property; (T2b) + (T4)]
   \label{thm:absstrongmarkov}
   In the situation of Theorem~\ref{thm:absuniq}, assume in addition that
   $F \subset \DE$, that $(\theta_r)$ extends to a measurable map
   $(\omega,r) \mapsto \theta_r\omega$, that the shift system is measurable in the
-  sense of Definition~\ref{def:shiftstable}, and that every
-  $Y^\circ \in \XX^\circ$ has right continuous paths and uniformly integrable
-  increments on bounded intervals.  Let $X$ have paths in $F$, solve the
+  sense of Definition~\ref{def:shiftstable}, that every
+  $Y^\circ \in \XX^\circ$ has right continuous paths, and that
+  \eqref{eq:optafterint} holds for $Y = Y^\circ(X)$ at the stopping time $\tau$
+  below, for every $Y^\circ \in \XX^\circ$ and $s \leq t$.  Let $X$ have paths in $F$, solve the
   martingale problem with respect to $(\Gilt_t)$, and let $\tau$ be an a.s.\
   finite $(\Gilt_t)$-stopping time.  Then
   \[
@@ -3591,11 +3675,11 @@ input is optional sampling, which is where path regularity finally enters.
   $\tau + s$ and $\tau + t$ are $(\Gilt_u)$-stopping times: by (T4) the map
   $u \mapsto u - s$ is defined on $\{u \geq s\}$ and order preserving, so
   $\{\tau + s \leq u\} = \{\tau \leq u - s\} \in \Gilt_{u-s} \subset \Gilt_u$ for
-  $u \geq s$, and the event is empty otherwise.  Since $\tilde{Y}^\circ$ is a
-  right continuous martingale with uniformly integrable increments on bounded
-  intervals, optional sampling (Fact~\ref{fact:optsampl}) gives
-  $E^P[\tilde{Y}^\circ_{\tau+t} \mid \Gilt_{\tau+s}] = \tilde{Y}^\circ_{\tau+s}$,
-  hence the identity for every bounded $\Gilt_{\tau+s}$-measurable $W$.
+  $u \geq s$, and the event is empty otherwise, since by linearity of the order
+  $u < s$ forces $\tau + s \geq s > u$.  Since $\tilde{Y}^\circ$ is a
+  right continuous martingale and \eqref{eq:optafterint} holds,
+  Lemma~\ref{lem:optsamplafter} gives the identity for every bounded
+  $\Gilt_{\tau+s}$-measurable $W$.
 
   \emph{Step 2: the first assertion.}  With $\XX^\circ_\tau$ in place of
   $\XX^\circ_r$ --- meaningful because the shift system is measurable, so that
@@ -3635,11 +3719,17 @@ input is optional sampling, which is where path regularity finally enters.
   requires right continuity of $\mathbb{G}$ and of $r \mapsto P_{x,r}$ in a
   suitable sense, and is not developed here.
 
-  \emph{Uniformly integrable increments.}  This is what Step~1 needs in order to
-  apply optional sampling at the unbounded times $\tau + s$; for the family
-  $\XX_A$ with bounded $f$ and $g$ the increments on $\T_{\leq T}$ are bounded by
-  $2\lVert f\rVert + \lVert g\rVert q(\T_{\leq T})$, so the hypothesis holds
-  there.
+  \emph{The integrability \eqref{eq:optafterint}.}  This is what Step~1 needs, and
+  it concerns the increment over the \emph{random window}
+  $\langle \tau+s, \tau+t \rangle_\iota$, not over a bounded interval.  For the
+  family $\XX_A$ with bounded $f$ and $g$ the increment is bounded by
+  $2\lVert f\rVert + \lVert g\rVert\, q(\langle \tau+s,\tau+t\rangle_\iota)$; if
+  the clock is shift invariant this equals
+  $2\lVert f\rVert + \lVert g\rVert\, q(\langle s,t\rangle_\iota)$, a
+  \emph{constant}, so \eqref{eq:optafterint} is automatic --- this is the case of
+  Theorem~\ref{thm:uniqueness}.  For a general clock it requires
+  $E\bigl[q(\langle \tau+s,\tau+t\rangle_\iota)\bigr] < \infty$ and is a genuine
+  restriction.
 \end{remark}
 
 \begin{remark}[What the abstract form buys]
@@ -4034,8 +4124,8 @@ the state space.
   redone, since Proposition~\ref{prop:uniqfromprop} is a statement about an
   arbitrary family of measures and applies to
   $\Msol_{\mathrm{loc}}(\XX^\circ)$ as it stands; and if $\Sigma$ is strongly shift covariant
-  and the $Y^{\circ,\tau_n}$ are right continuous with uniformly integrable
-  increments on bounded intervals, so does
+  and the $Y^{\circ,\tau_n}$ are right continuous and satisfy the integrability
+  \eqref{eq:optafterint} at $\tau$, so does
   Theorem~\ref{thm:absstrongmarkov}.
 \end{theorem}
 
@@ -4569,7 +4659,10 @@ results apply and which fail.
   \ref{it:absuniq_b} the equality of the finite-dimensional distributions, which
   is \ref{it:uniq_a}.  For \ref{it:uniq_b} and \ref{it:uniq_c}, $A \subset
   \Cb(E)\times\Bdd(E)$ and paths in $\DE$ make each $Y^\circ(X)$ a right
-  continuous martingale with bounded increments, so
+  continuous martingale whose increment over
+  $\langle \tau+s,\tau+t \rangle_\iota$ is bounded by
+  $2\lVert f\rVert + \lVert g\rVert q(\langle s,t\rangle_\iota)$, the clock
+  being shift invariant here; so \eqref{eq:optafterint} is automatic and
   Theorem~\ref{thm:absstrongmarkov} applies; its second assertion is
   \eqref{eq:strongmarkov2} with $T(t)f(x) = \int f(\omega(t)) P_x(\dif\omega)$.
   Its restriction to stopping times with countably many values is vacuous here:
@@ -4701,7 +4794,8 @@ from it by choosing a chain.
   chooses is the whole art of the section, and the point of
   Lemma~\ref{lem:rectify} below is that the anti-diagonal one is rarely the right
   choice: the correct staircase is the one that is anti-diagonal \emph{in clock
-  time}.
+  time} --- available whenever the clock is atomless, and, as
+  Remark~\ref{rem:rectifyfails} shows, genuinely obstructed by atoms.
 \end{remark}
 
 The duality relation is the case in which the two brackets in \eqref{eq:chain}
@@ -4751,26 +4845,40 @@ they are the ones for which the anti-diagonal staircase works.  It is tempting t
 conclude --- as an earlier version of this manuscript did --- that duality
 \emph{requires} a translation invariant clock, on the grounds that
 \eqref{eq:cancel} does not cancel otherwise.  That inference is invalid: the
-failure of one staircase to cancel says nothing about $\Phi(t,0) - \Phi(0,t)$,
-and in fact no clock is excluded.
+failure of one staircase to cancel says nothing about $\Phi(t,0) - \Phi(0,t)$.
+The two results below show that translation invariance is not necessary --- for
+an atomless clock by a reduction to Lemma~\ref{lem:calculus}, for a purely
+atomic one by the linear algebra of Remark~\ref{rem:atomicdual}.  Whether
+\emph{every} clock admits duality remains open, and
+Remark~\ref{rem:rectifyfails} explains where the two arguments stop.
 
-\begin{lemma}[Rectification of the clock; (T2b) + (E0) + clock, $\iota = \mathrm{p}$]
+\begin{lemma}[Rectification of an atomless clock; (T3) + (E0) + clock, $\iota = \mathrm{p}$]
   \label{lem:rectify}
-  Assume (T2b), let $q$ be a clock, fix $t^* \in \T$ and put
+  Assume (T3), let $q$ be an \emph{atomless} clock, fix $t^* \in \T$ and put
   \[
     Q(s) \;=\; q(\T_{<s}) \quad (s \in \T_{\leq t^*}) ,
-    \qquad L \;=\; Q(t^*) \;<\; \infty .
+    \qquad L \;=\; Q(t^*) \;<\; \infty ,
+    \qquad
+    \tau(z) \;=\; \sup\{ t \leq t^* : Q(t) \leq z \} .
   \]
   Let $\Phi,\gamma$ satisfy \eqref{eq:incrementrep} with
-  $\gamma_1 = \gamma_2 = \gamma$ on $\T_{\leq t^*}$.  Then there are functions
-  $\Psi, \psi : [0,L]^2 \to \R$ with
+  $\gamma_1 = \gamma_2 = \gamma$ on $\T_{\leq t^*}$, and let $\gamma$ be
+  measurable for the order $\sigma$-field in each variable --- automatic if
+  $\mathcal{T}$ is taken to be the order $\sigma$-field, which
+  Definition~\ref{def:clock} permits.  Then
+  \[
+    \Psi(x,y) \;\coloneqq\; \Phi\bigl(\tau(x),\tau(y)\bigr) ,
+    \qquad
+    \psi(x,y) \;\coloneqq\; \gamma\bigl(\tau(x),\tau(y)\bigr) ,
+  \]
+  satisfy, for $0 \leq x \leq x' \leq L$ and $0 \leq y \leq y' \leq L$,
   \begin{equation}
     \label{eq:rectrep}
     \Psi(x',y) - \Psi(x,y) = \int_x^{x'} \! \psi(z,y) \dif z ,
     \qquad
-    \Psi(x,y') - \Psi(x,y) = \int_y^{y'} \! \psi(x,z) \dif z
+    \Psi(x,y') - \Psi(x,y) = \int_y^{y'} \! \psi(x,z) \dif z ,
   \end{equation}
-  for $0 \leq x \leq x' \leq L$ and $0 \leq y \leq y' \leq L$, and with
+  together with
   \begin{equation}
     \label{eq:rectcompat}
     \Psi\bigl(Q(s),Q(t)\bigr) \;=\; \Phi(s,t) ,
@@ -4780,60 +4888,56 @@ and in fact no clock is excluded.
 \end{lemma}
 
 \begin{proof}
-  \emph{Step 1: $Q$ is well behaved.}  $Q$ is nondecreasing with $Q(0) = 0$ and
-  $Q(t^*) = L$, and $q([s,s')) = Q(s') - Q(s)$ for $s \leq s'$, because under
-  (T2a) $[s,s') = \T_{<s'} \setminus \T_{<s}$ and the down-sets are nested.  If
-  $Q(s) = Q(s')$ with $s \leq s'$, then $q([s,s')) = 0$, so
-  \eqref{eq:incrementrep} gives $\Phi(s,t) = \Phi(s',t)$ and
-  $\Phi(t,s) = \Phi(t,s')$ for every $t$.  Hence
-  \[
-    \Psi_0\bigl(Q(s),Q(t)\bigr) \coloneqq \Phi(s,t) ,
-    \qquad
-    \psi_0\bigl(Q(r),Q(t)\bigr) \coloneqq \gamma(r,t)
-  \]
-  are well defined on $R \times R$, $R \coloneqq Q(\T_{\leq t^*}) \subset [0,L]$
-  --- for $\psi_0$ up to a $q$-null set of $r$, which is immaterial since $\psi_0$
-  will only be integrated.
+  \emph{Step 1: $Q$ and $\tau$.}  $Q$ is nondecreasing with $Q(0) = 0$ and
+  $Q(t^*) = L$, and $q([s,s')) = Q(s') - Q(s)$ for $s \leq s'$, the down-sets
+  being nested.  Since $q$ is atomless, $Q$ is continuous, and by (T3) its domain
+  is an interval, so $Q$ maps $\T_{\leq t^*}$ \emph{onto} $[0,L]$.  Hence
+  $Q(\tau(z)) = z$ for every $z \in [0,L]$, and
+  \begin{equation}
+    \label{eq:quantilethreshold}
+    \tau(z) \geq a \iff z \geq Q(a) \qquad (a \in \T_{\leq t^*}) ,
+  \end{equation}
+  the implication ``$\Rightarrow$'' by continuity of $Q$ along a sequence
+  increasing to $\tau(z)$, the converse by definition of the supremum.  If
+  $Q(s) = Q(s')$ with $s \leq s'$ then $q([s,s')) = 0$, so \eqref{eq:incrementrep}
+  gives $\Phi(s,t) = \Phi(s',t)$ and $\Phi(t,s) = \Phi(t,s')$ for every $t$;
+  applied with $s' = \tau(Q(s)) \geq s$ this yields \eqref{eq:rectcompat}.
 
-  \emph{Step 2: filling the gaps.}  $Q$ is left continuous, because under (T2b)
-  $\T_{<s} = \bigcup_{u<s,\, u \in D} \T_{\leq u}$ and $q$ is continuous from
-  below; and $Q(a+) = q(\T_{\leq a})$, because
-  $\T_{\leq a} = \bigcap_{u>a,\, u \in D} \T_{<u}$ and $q$ restricted to
-  $\T_{\leq t^*}$ is finite, so continuity from above applies.  Hence the jump of
-  $Q$ at $a$ has size exactly $q(\{a\})$, and since $R$ is the range of a
-  monotone map, $[0,L] \setminus R$ is the countable union of the corresponding
-  open jump intervals; write $G_a = [Q(a), Q(a)+q(\{a\})]$ for the corresponding
-  closed interval and note that $R$ meets $G_a$ only in its endpoints.  Extend
-  $\Psi_0$ and $\psi_0$ by
-  \[
-    \psi(x,y) \;=\; \psi_0\bigl(\rho(x),\rho(y)\bigr) ,
-    \qquad
-    \rho(x) \;=\; \begin{cases} Q(a), & x \in G_a , \\ x, & x \in R , \end{cases}
-  \]
-  and $\Psi(x,y) = \Psi_0(\rho(x),\rho(y))
-    + (x-\rho(x))\,\psi(\rho(x),y) + (y-\rho(y))\,\psi(x,\rho(y))$, i.e.\ by
-  affine interpolation across each gap in each variable, bilinear on a
-  gap $\times$ gap rectangle.  Note that $\psi$ is a \emph{single} function of two
-  variables, as required for the balance condition: on
-  $G_a \times G_b$ it is the constant $\psi_0(Q(a),Q(b)) = \gamma(a,b)$, whichever
-  variable one arrives from.
+  \emph{Step 2: the quantile identity.}  For every bounded order-measurable $g$
+  on $\T_{\leq t^*}$ and $s \leq s'$,
+  \begin{equation}
+    \label{eq:quantile}
+    \int_{[s,s')} g \, \dif q
+      \;=\; \int_{[Q(s),\,Q(s'))} g\bigl(\tau(z)\bigr) \dif z .
+  \end{equation}
+  For $g = \one_{[a,a')}$ the left-hand side is $Q(s'\wedge a') - Q(s\vee a)$
+  (positive part), and by \eqref{eq:quantilethreshold} the integrand on the right
+  is $\one_{[Q(a),Q(a'))}$, so the right-hand side is
+  $Q(s')\wedge Q(a') - Q(s)\vee Q(a)$, the same number since $Q$ is monotone and
+  the order is linear.  The intervals $[a,a')$ form a $\pi$-system generating the
+  order $\sigma$-field, so Fact~\ref{fact:monotoneclass} extends
+  \eqref{eq:quantile} to all bounded order-measurable $g$ and then, by
+  truncation, to all $q$-integrable ones.
 
-  \emph{Step 3: \eqref{eq:rectrep}.}  For $x \leq x'$ both in $R$ the identity is
-  \eqref{eq:incrementrep} together with $q([s,s')) = Q(s')-Q(s)$; across a gap
-  $G_a$ it holds by construction, the integrand being constant there with value
-  $\gamma(a,y)$ and the increment of $\Psi$ being
-  $q(\{a\})\gamma(a,y)$, which is what \eqref{eq:incrementrep} assigns to the atom
-  $a$.  The general case follows by additivity.  \eqref{eq:rectcompat} is Step~1,
-  and the final assertion is \eqref{eq:rectcompat} at $(t^*,0)$ and $(0,t^*)$
-  together with $Q(0) = 0$.
+  \emph{Step 3: \eqref{eq:rectrep}.}  Let $x \leq x'$ in $[0,L]$ and put
+  $s = \tau(x)$, $s' = \tau(x')$, so that $Q(s) = x$ and $Q(s') = x'$ by Step~1.
+  Then
+  \[
+    \Psi(x',y) - \Psi(x,y)
+      = \Phi\bigl(s',\tau(y)\bigr) - \Phi\bigl(s,\tau(y)\bigr)
+      = \int_{[s,s')} \gamma\bigl(r,\tau(y)\bigr) q(\dif r)
+      = \int_x^{x'} \psi(z,y) \dif z ,
+  \]
+  the last step by \eqref{eq:quantile} applied to $g = \gamma(\cdot,\tau(y))$.
+  The second half of \eqref{eq:rectrep} is the mirror image.  The final assertion
+  is \eqref{eq:rectcompat} at $(t^*,0)$ and $(0,t^*)$ with $Q(0) = 0$.
 \end{proof}
 
-\begin{theorem}[Every clock admits duality; (T2b) + (E0) + clock, $\iota = \mathrm{p}$]
+\begin{theorem}[Every atomless clock admits duality; (T3) + (E0) + clock, $\iota = \mathrm{p}$]
   \label{thm:anyclock}
-  Assume (T2b), let $q$ be a clock and let $\Phi,\gamma$ satisfy
-  \eqref{eq:incrementrep} with $\gamma_1 = \gamma_2 = \gamma$.  Suppose the
-  rectified $\psi$ of Lemma~\ref{lem:rectify} satisfies the integrability
-  hypothesis \eqref{eq:calcint}.  Then
+  Assume (T3), let $q$ be an atomless clock and let $\Phi,\gamma$ be as in
+  Lemma~\ref{lem:rectify}.  Suppose the rectified $\psi$ satisfies the
+  integrability hypothesis \eqref{eq:calcint}.  Then
   \[
     \Phi(t,0) \;=\; \Phi(0,t)
     \qquad\text{for $Q$-almost every } t \in \T ,
@@ -4846,8 +4950,8 @@ and in fact no clock is excluded.
   $\Psi(x,y) = \Psi(x \wedge L, y \wedge L)$ and $\psi = 0$ outside $[0,L]^2$;
   \eqref{eq:rectrep} persists.  By \eqref{eq:rectrep} the function $\Psi$ is
   absolutely continuous in each variable separately with
-  $\nabla\Psi = (\psi,\psi)$, so Lemma~\ref{lem:calculus} applies to $f = \Psi$ and gives, for almost every
-  $\ell \in [0,L]$,
+  $\nabla\Psi = (\psi,\psi)$, so Lemma~\ref{lem:calculus} applies to $f = \Psi$
+  and gives, for almost every $\ell \in [0,L]$,
   \[
     \Psi(\ell,0) - \Psi(0,\ell)
       = \int_0^\ell \bigl( \psi(z,\ell-z) - \psi(z,\ell-z) \bigr) \dif z
@@ -4857,10 +4961,49 @@ and in fact no clock is excluded.
   the last assertion of Lemma~\ref{lem:rectify}.
 \end{proof}
 
+\begin{remark}[Why atoms break the rectification, and what is open]
+  \label{rem:rectifyfails}
+  Atomlessness is used in exactly one place --- to make $Q$ surjective, so that
+  $\tau$ is a genuine right inverse and no interpolation is needed --- and it
+  cannot be dispensed with by working harder.  An earlier version of this
+  manuscript claimed Lemma~\ref{lem:rectify} for an arbitrary clock, filling the
+  gap $[Q(a), Q(a)+q(\{a\})]$ of an atom $a$ by interpolation.  No such
+  interpolation exists in general.
+
+  \emph{The obstruction.}  Take $\T = [0,2]$, $q = \delta_1$, $\iota = \mathrm{p}$,
+  and $\Phi(s,t) = M(i(s),i(t))$ with $i(s) = \one_{\{s>1\}}$ and
+  $M(0,0) = 0$, $M(1,0) = M(0,1) = c$, $M(1,1) = d$.  Both representations
+  \eqref{eq:incrementrep} hold with the single function $\gamma$ pinned by
+  $\gamma(1,t) = M(1,i(t)) - M(0,i(t))$ and
+  $\gamma(s,1) = M(i(s),1) - M(i(s),0)$, consistently at $(1,1)$; and $d$ is
+  \emph{free}.  Here $L = 1$, $R = Q(\T) = \{0,1\}$, and the whole open interval
+  $(0,1)$ is the gap of the atom.  A rectified pair would have to satisfy
+  $\Psi(1,y) - \Psi(0,y) = \int_0^1 \psi(z,y)\dif z$ for $y$ in the gap, and any
+  extension respecting \eqref{eq:incrementrep} on the corners forces
+  $d = 2c$.  So for $d \neq 2c$ no rectification exists.
+
+  \emph{Why the difficulty is not technical.}  A rectified $\Psi$ satisfies
+  $\partial_x\Psi = \partial_y\Psi$, hence is a function of $x+y$; in particular
+  $\Psi(L,0) = \Psi(0,L)$ is built into its existence.  Constructing $\Psi$ for a
+  clock with atoms therefore \emph{presupposes} the anti-diagonal consistency of
+  $\Phi$ on $R \times R$ --- which is the conclusion of
+  Theorem~\ref{thm:anyclock}.  The rectification is a reduction only when there
+  are no gaps to bridge.
+
+  \emph{What is therefore known.}  For a clock which is Haar,
+  Proposition~\ref{prop:haar}; for one which is atomless,
+  Theorem~\ref{thm:anyclock}; for one which is purely atomic, the linear-algebra
+  computation of Remark~\ref{rem:atomicdual}, verified symbolically but not
+  proved in general.  \emph{A clock with both an atomic and a diffuse part is
+  open}, and so is the general atomic case.  What is \emph{not} in doubt is the
+  negative half: translation invariance is not necessary, since the atomless and
+  the atomic verifications both cover clocks that are not Haar.
+\end{remark}
+
 \begin{remark}[The role of Haar measure, correctly stated]
   \label{rem:haarrole}
-  Theorem~\ref{thm:anyclock} says that translation invariance of $q$ is not a
-  hypothesis of duality but a property of a particular \emph{proof}: it is what
+  Theorem~\ref{thm:anyclock} says that translation invariance of $q$ is not
+  necessary for duality; it is a property of a particular \emph{proof}, namely it is what
   makes the anti-diagonal staircase $t_k = t - s_k$ coincide with the staircase
   that is anti-diagonal in clock time,
   \[
@@ -4873,11 +5016,11 @@ and in fact no clock is excluded.
 
   Two consequences worth recording.  First, the conclusion is genuinely
   ``$Q$-almost every $t$'': on an interval where $q$ vanishes, $\Phi$ is constant
-  in both arguments and there is nothing to prove, and where $q$ has an atom the
-  conclusion holds at the atom by Step~2 of Lemma~\ref{lem:rectify}.  Second, for
-  a purely atomic clock the conclusion holds at \emph{every} $t$ and without any
-  integrability hypothesis, exactly as in
+  in both arguments and there is nothing to prove.  Second, for a purely atomic
+  clock --- the case Theorem~\ref{thm:anyclock} excludes --- the conclusion holds
+  at \emph{every} $t$ and without any integrability hypothesis, exactly as in
   Proposition~\ref{prop:haar}\ref{it:haar_disc}; see Remark~\ref{rem:atomicdual}.
+  The two results are complementary and neither covers a mixed clock.
 \end{remark}
 
 \begin{remark}[Atomic clocks, and why the conventions do not clash here]
@@ -4904,7 +5047,7 @@ and in fact no clock is excluded.
 
   Two things follow.  First, the argument uses no order structure beyond a
   preorder, which is why duality is not confined to a linearly ordered index even
-  though Theorem~\ref{thm:anyclock} is proved only there.  Second --- and this
+  though Theorem~\ref{thm:anyclock} is proved only under (T3).  Second --- and this
   corrects a claim of an earlier version --- the two conventions of
   Definition~\ref{def:clock} \emph{agree} here.  With $\iota = \mathrm{o}$ the
   $k$-th summand of \eqref{eq:cancel} on the anti-diagonal staircase becomes
@@ -4923,20 +5066,21 @@ and in fact no clock is excluded.
   It needs the \emph{balance condition} $\gamma_1 = \gamma_2$ --- in the
   probabilistic form of Theorem~\ref{thm:duality}, that the two generators act on
   the same duality function $f$ so as to produce the same $g = h$ --- and it needs
-  integrability.  It does \emph{not} need a translation invariant clock, and it
-  does not need a linearly ordered index: (T2a) enters only through the
-  rectification of Lemma~\ref{lem:rectify}, which is a device of proof, and the
-  atomic case of Remark~\ref{rem:atomicdual} dispenses with it.  In this respect
-  Section~\ref{sec:duality} is no narrower than
-  Sections~\ref{sec:MP} and \ref{sec:uniqueness}; the opposite claim, made in an
-  earlier version of this manuscript on the strength of the non-cancellation of
-  \eqref{eq:cancel} for $\T = \Rp^d$, was a fallacy --- the non-cancellation of a
-  particular staircase is not the failure of the conclusion.
+  integrability.  It does \emph{not} need a translation invariant clock: both
+  Theorem~\ref{thm:anyclock} (atomless clocks) and Remark~\ref{rem:atomicdual}
+  (atomic ones) cover clocks that are not Haar.  Nor does the conclusion need a
+  linearly ordered index, the atomic verification being indifferent to it.  The
+  opposite claim, made in an earlier version of this manuscript on the strength
+  of the non-cancellation of \eqref{eq:cancel} for $\T = \Rp^d$, was a fallacy ---
+  the non-cancellation of a particular staircase is not the failure of the
+  conclusion.
 
-  What genuinely remains open is a proof of Theorem~\ref{thm:anyclock} for a
-  non-atomic clock on a non-linearly ordered index, where neither the
-  rectification nor the atom-by-atom relations are available.  Nothing in this
-  manuscript depends on it.
+  What genuinely remains open is the \emph{mixed} case, a clock with both an
+  atomic and a diffuse part, and the general atomic case beyond the symbolic
+  verification; Remark~\ref{rem:rectifyfails} explains why the two available
+  arguments do not combine.  Nothing in this manuscript depends on it: the
+  applications in Section~\ref{sec:convergence} use Lebesgue clocks, and
+  Section~\ref{ssec:exduality} uses \eqref{eq:clockadd} only.
 \end{remark}
 
 \subsection{The continuous-time theory}
@@ -5177,7 +5321,8 @@ and in fact no clock is excluded.
   level of generality of \CPS.  What it does use, and what
   Remark~\ref{rem:dualscope} isolates, is the balance condition and
   integrability --- not, as one might guess from the shape of \eqref{eq:cancel},
-  translation invariance of the clock; see Theorem~\ref{thm:anyclock}.
+  translation invariance of the clock; see Theorem~\ref{thm:anyclock} and
+  Remark~\ref{rem:atomicdual}.
 \end{remark}
 
 The discrete counterpart, which \EK{} do not state, now costs nothing.
@@ -5380,11 +5525,16 @@ function, then the right-hand side $E^y[H(x,Y_t)]$ of the duality relation is a
 candidate for the left-hand side $E^x[H(X_t,y)]$ of a process $X$ that does not
 yet exist; if that candidate is \emph{represented by a kernel} in $x$, the
 kernels form a transition semigroup and $X$ exists.  Everything else is
-bookkeeping, and all of it survives an arbitrary clock.
+bookkeeping, and all of it survives an arbitrary \emph{shift invariant} clock ---
+including one with atoms, the obstruction of Remark~\ref{rem:rectifyfails} being
+confined to Section~\ref{ssec:antidiag}.
 
-\begin{setting}[Duality data; (T4) + shift invariant clock + (E1) on $E_1$, (E0) on $E_2$]
+\begin{setting}[Duality data; (T2a) + (T4) + shift invariant clock + (E1) on $E_1$, (E0) on $E_2$]
   \label{set:dualdata}
-  Let $\T$ satisfy (T4), let $q$ be a clock which is \emph{shift invariant},
+  Let $\T$ satisfy (T2a) and (T4) --- the linear order is used exactly once, in
+  Step~1 of Theorem~\ref{thm:exduality}, and
+  Remark~\ref{rem:exdualityscope}(ii) explains why it cannot be dropped there ---
+  let $q$ be a clock which is \emph{shift invariant},
   $q(r + \cdot) = q(\cdot)$, and fix $\iota$.  Let $(E_1,\mathcal{E}_1)$ satisfy (E1) and $(E_2,\mathcal{E}_2)$
   satisfy (E0).  Let
   \[
@@ -5507,7 +5657,7 @@ standard sufficient condition.
   for every $y$, \ref{it:D2} gives \eqref{eq:dualCK}.
 \end{proof}
 
-\begin{theorem}[Existence by duality; \DGP, Theorem 2.1; (T4) + shift invariant clock + (E1)]
+\begin{theorem}[Existence by duality; \DGP, Theorem 2.1; (T2a) + (T4) + shift invariant clock + (E1)]
   \label{thm:exduality}
   In Setting~\ref{set:dualdata}, let $\nu \in \Prob(E_1)$.  Then there is a Markov
   process $X$ on $E_1$ with initial distribution $\nu$ and transition kernels
@@ -5530,11 +5680,16 @@ standard sufficient condition.
 \begin{proof}
   \emph{Step 1: the process.}  By Proposition~\ref{prop:dualCK} the family
   $(\mu_t)$ is a measurable transition semigroup on $E_1$, measurability being
-  \ref{it:D3}.  Since $E_1$ satisfies (E1) it is standard Borel, so the Kolmogorov
-  extension theorem (Fact~\ref{fact:kolmogorov}) applies to the projective family
-  of finite-dimensional distributions built from $\nu$ and $(\mu_t)$; this is
-  \EK, Theorem~4.1.1.  Let $X$ be the resulting Markov process.  Then
-  \eqref{eq:dualityrel} is \ref{it:D3} for $\varphi = H$.
+  \ref{it:D3}.  Under (T2a) every finite subset $t_1 \leq \dots \leq t_n$ of $\T$
+  is a chain, so the finite-dimensional distributions
+  $\nu \otimes \mu_{t_1} \otimes \mu_{t_2 - t_1} \otimes \dots$ are defined for
+  \emph{all} finite subsets and form a projective family, consistency being
+  Chapman--Kolmogorov plus marginalization; \emph{this is the one step that
+  needs the linear order}, see Remark~\ref{rem:exdualityscope}(ii).  Since $E_1$
+  satisfies (E1) it is standard Borel, so the Kolmogorov extension theorem
+  (Fact~\ref{fact:kolmogorov}) applies; this is \EK, Theorem~4.1.1.  Let $X$ be
+  the resulting Markov process.  Then \eqref{eq:dualityrel} is \ref{it:D3} for
+  $\varphi = H$.
 
   \emph{Step 2: the one-dimensional identity.}  Fix $x$ and $y$ and take
   $P^y$-expectations in \ref{it:D1} between $0$ and $t$; Fubini is legitimate
@@ -5584,7 +5739,9 @@ standard sufficient condition.
   Assume in addition that $\XX^{(1)}$ admits a shift system with $\ZZ^\circ$
   determining, and that Section~\ref{sec:duality} applies to the pair
   $(\XX^{(1)}, Y)$ --- for instance under the integrability hypothesis of
-  Theorem~\ref{thm:anyclock}.  Then the martingale problem for $\XX^{(1)}$ is
+  Theorem~\ref{thm:anyclock} for an atomless clock, or the verification of
+  Remark~\ref{rem:atomicdual} for an atomic one.  Then the martingale problem
+  for $\XX^{(1)}$ is
   well posed for every $\nu \in \Prob(E_1)$, and its solution is the Markov
   process of Theorem~\ref{thm:exduality}.
 \end{corollary}
@@ -5637,11 +5794,22 @@ standard sufficient condition.
     Theorem~\ref{thm:exduality} becomes a statement about a Markov chain
     constructed from its dual, and $\iota = \mathrm{p}$ makes it the Doob
     decomposition of Remark~\ref{rem:jumpdiscrete}.
-  \item \emph{The index.}  Nothing above uses (T2a): the semigroup identity is
-    Lemma~\ref{lem:dualsemigroup}, which needs (T4), and Chapman--Kolmogorov needs
-    commutativity of $+$.  A two-parameter Markov process on $\T = \Rp^2$ with a
-    dual is therefore admissible, which is not the case for
-    Section~\ref{ssec:EKconv}.
+  \item \emph{The index --- and here the generalization has a sharp edge.}  The
+    \emph{kernel layer} uses no linear order: Lemma~\ref{lem:dualsemigroup} needs
+    (T4), and Chapman--Kolmogorov needs commutativity of $+$, so the two-parameter
+    semigroup $(\mu_t)$ exists on $\T = \Rp^2$.  But Step~1 of
+    Theorem~\ref{thm:exduality} does \emph{not} survive: to apply Kolmogorov one
+    must exhibit finite-dimensional distributions over all finite subsets of
+    $\T$, and at an antichain --- $(1,0)$ and $(0,1)$ in $\Rp^2$ --- the joint law
+    is simply not determined by one-parameter kernels; nor is some consistent
+    choice guaranteed to exist, the compatibility conditions at
+    $(1,0),(0,1),(1,1)$ being a genuine constraint that $(\mu_t)$ does not
+    resolve.  So Theorem~\ref{thm:exduality} is stated under (T2a), and what
+    survives a partial order is the semigroup layer
+    (Lemma~\ref{lem:dualsemigroup}, Proposition~\ref{prop:dualCK}), not the
+    process.  An earlier version of this manuscript claimed more; the corrected
+    claim is the exact analogue of Remark~\ref{rem:chainonly}, with the chain
+    obstruction now sitting in the construction instead of the induction.
   \item \emph{The state spaces.}  Theorem~\ref{thm:exduality} needs (E1) on $E_1$
     --- for the Kolmogorov extension in Step~1 --- and only (E0) on $E_2$.  The
     compactness of \DGP{} enters solely in
@@ -5965,18 +6133,30 @@ mechanism has become a Volterra kernel and the dual runs backwards.
   In Setting~\ref{set:hawkesdual}:
   \begin{enumerate}[label=(\alph*)]
   \item \label{it:hd_balance}
-    \emph{Balance.}  For every $\hat{x} \in \hat{E}_r$ and $f \in E_2$ with $f$
-    continuous at $r$,
+    \emph{Balance, in integrated form.}  For every $\hat{x} \in \hat{E}_r$,
+    $f \in E_2$ and $r \leq t$,
+    \begin{equation}
+      \label{eq:hawkesD1}
+      H_r(\hat{x},\Theta_{r,t}f)\,V_{r,t}(f) \;-\; H_r(\hat{x},f)
+      \;=\; \int_r^t
+        E\bigl[ \Lambda_u(\hat{N}_u)\bigl(e^{-f(u)}-1\bigr) H_u(\hat{N}_u,f)
+          \bigm| \hat{N}_r = \hat{x} \bigr] \dif u ,
+    \end{equation}
+    which is the two-parameter form of \ref{it:D1} with
+    $g_u(\hat{x}',f) = \Lambda_u(\hat{x}')(e^{-f(u)}-1)H_u(\hat{x}',f)$ ---
+    exactly $\mathcal{A}_u$ of \eqref{eq:pathgen} with
+    $\mu(u,\hat{x}',\cdot) = \delta_{\hat{x}'(u-)+1}$ applied to
+    $H_u(\cdot,f)$.  So the martingale problem \eqref{eq:dualMP} the duality
+    produces is the Hawkes martingale problem of Example~\ref{ex:hawkes}.
+    At a point $r$ at which $f$ is continuous and which is a Lebesgue point of
+    $u \mapsto \Lambda_u(\hat{x})$ --- automatic for a.e.\ $r$, and for every $r$
+    when $\phi$ is continuous and bounded --- dividing \eqref{eq:hawkesD1} by
+    $t-r$ and letting $t \downarrow r$ recovers the generator relation
     \[
       \frac{\dif}{\dif t}\Big|_{t=r^+}
         H_r(\hat{x},\Theta_{r,t}f) \, V_{r,t}(f)
-      \;=\; \Lambda_r(\hat{x}) \bigl( e^{-f(r)} - 1 \bigr) H_r(\hat{x},f) ,
+      \;=\; \Lambda_r(\hat{x}) \bigl( e^{-f(r)} - 1 \bigr) H_r(\hat{x},f) .
     \]
-    which is exactly $\mathcal{A}_r H_r(\cdot,f)(\hat{x})$ for the path-dependent
-    generator \eqref{eq:pathgen} of Setting~\ref{set:pathjump} with
-    $\Lambda = \Lambda_r$ and $\mu(r,\hat{x},\cdot) = \delta_{\hat{x}(r-)+1}$.
-    So \ref{it:D1} holds, and the martingale problem \eqref{eq:dualMP} it produces
-    is the Hawkes martingale problem of Example~\ref{ex:hawkes}.
   \item \label{it:hd_sep}
     \emph{\ref{it:D2}.}  $\operatorname{span}\{H_r(\cdot,f) : f \in E_2\}$ is
     separating on $\Prob(\hat{E}_r)$, Laplace functionals determining the law of a
@@ -5991,16 +6171,53 @@ mechanism has become a Volterra kernel and the dual runs backwards.
 \end{proposition}
 
 \begin{proof}
-  \ref{it:hd_balance}  Write $A(t) = \int_r^t \Lambda^{\hat{x}}_u w^{(t)}_f(u)\dif u$
+  \ref{it:hd_balance}  \emph{The integrated identity comes from the process, not
+  from the flow.}  By Proposition~\ref{prop:hawkesduality} the left-hand side of
+  \eqref{eq:hawkesD1} is
+  $E[H_t(\hat{N}_t,f) - H_r(\hat{N}_r,f) \mid \hat{N}_r = \hat{x}]$.  Now
+  $M_t \coloneqq e^{-\int_{[0,t]}f\dif N}$ jumps by
+  $M_{u-}(e^{-f(u)}-1)$ at each point $u$ of $N$ and is constant in between, so
+  \[
+    M_t - M_r \;=\; \int_{(r,t]} M_{u-}\bigl(e^{-f(u)}-1\bigr) \dif N_u ,
+  \]
+  an exact pathwise identity; and compensating the integral --- the same
+  bracket-by-bracket computation as in Steps~1--2 of the proof of
+  Theorem~\ref{thm:pathjumpMP}, with the bounded integrand
+  $M_{u-}(e^{-f(u)}-1)$ in place of $f(Y_{n+1})-f(Y_n)$, and with
+  $E[N_t] < \infty$ from Example~\ref{ex:hawkes} licensing the expectations ---
+  gives
+  \[
+    E\bigl[ M_t - M_r \bigm| \Filt^N_r \bigr]
+      \;=\; E\Bigl[ \int_r^t \Lambda_u(\hat{N}_u) M_{u}\bigl(e^{-f(u)}-1\bigr)
+        \dif u \Bigm| \Filt^N_r \Bigr] ,
+  \]
+  where $M_{u-}$ may be replaced by $M_u$ under the $\dif u$-integral, the paths
+  being piecewise constant with finitely many jumps.  This is
+  \eqref{eq:hawkesD1}.
+
+  \emph{The generator relation.}  Write
+  $A(t) = \int_r^t \Lambda^{\hat{x}}_u w^{(t)}_f(u)\dif u$
   with $\Lambda^{\hat{x}}_u = \mu_0 + \int_{[0,r]}\phi(u-v)\hat{x}(\dif v)$, so
-  that the left-hand side is $H_r(\hat x,f) \cdot \frac{\dif}{\dif t}e^{-A(t)}$ at
-  $t = r$.  Since $A(r) = 0$ and the integrand is evaluated on a range shrinking
-  to a point, $A'(r) = \Lambda^{\hat{x}}_r w^{(r)}_f(r)$, and
-  \eqref{eq:hawkesdual} at $s = t = r$ gives $w^{(r)}_f(r) = 1 - e^{-f(r)}$.  Now
-  $\Lambda^{\hat{x}}_r = \Lambda_r(\hat{x})$ and the claim follows.  That the
-  right-hand side is $\mathcal{A}_rH_r(\cdot,f)(\hat{x})$ is
-  \eqref{eq:pathgen}: adding one point at $r$ multiplies
-  $H_r(\hat{x},f)$ by $e^{-f(r)}$.
+  that the left-hand side of the derivative claim is
+  $H_r(\hat x,f) \cdot \frac{\dif}{\dif t}e^{-A(t)}$ at
+  $t = r$.  As $t \downarrow r$, $w^{(t)}_f(u) \to 1 - e^{-f(u)}$ uniformly on
+  $[r,t]$ --- from \eqref{eq:hawkesdual}, since
+  $\int_u^t \phi(v-u)w(v)\dif v \leq \int_0^{t-r}\phi \to 0$ --- so
+  \[
+    \frac{A(t)}{t-r} \;=\; \frac{1}{t-r}\int_r^t \Lambda^{\hat{x}}_u
+      \bigl(1 - e^{-f(u)}\bigr) \dif u + o(1)
+    \;\longrightarrow\; \Lambda^{\hat{x}}_r \bigl(1 - e^{-f(r)}\bigr) ,
+  \]
+  the convergence of the average being exactly the Lebesgue-point hypothesis on
+  $\Lambda^{\hat{x}}$ together with continuity of $f$ at $r$;
+  note that $u \mapsto \Lambda^{\hat{x}}_u$ is locally integrable but, for
+  $\phi$ merely locally integrable, not continuous, which is why the hypothesis
+  cannot be dropped.  Also
+  $\Lambda^{\hat{x}}_r = \Lambda_r(\hat{x})$, and the claim follows from
+  $\frac{\dif}{\dif t}e^{-A(t)}\vert_{t=r} = -A'(r^+)$, since $A(r) = 0$.  That
+  the integrand of \eqref{eq:hawkesD1} is $\mathcal{A}_uH_u(\cdot,f)$ is
+  \eqref{eq:pathgen}: adding one point at $u$ multiplies
+  $H_u(\hat{x}',f)$ by $e^{-f(u)}$.
 
   \ref{it:hd_sep}  Standard.
 
@@ -7432,9 +7649,11 @@ $U$ and $A = U \times C$ this is Definition~\ref{def:Pcont}.
   continuous mapping theorem.  So the price atoms exact is \emph{not} a new mode
   of convergence but a joint convergence hypothesis, \ref{it:C1aug}.  Weak-strong
   convergence is needed for a different reason: random times of discontinuity,
-  which no fixed family of coordinates captures.  Section~\ref{sec:duality},
-  where one might also have expected atoms to cost something, survives them
-  intact (Remark~\ref{rem:atomicdual}).
+  which no fixed family of coordinates captures.  In Section~\ref{sec:duality}
+  atoms do cost something, though not the conclusion: they obstruct the
+  rectification of Lemma~\ref{lem:rectify}, so that the atomic case has to be
+  treated by a separate argument (Remarks~\ref{rem:rectifyfails} and
+  \ref{rem:atomicdual}).
 \end{remark}
 
 \subsection{Hawkes processes and their Volterra limit}
@@ -7896,7 +8115,8 @@ any bespoke index theory.
   lines each once Theorem~\ref{thm:absconv} is in place.
 \item \label{it:F3}
   \emph{Targets (T0) + (E0) for Lemma~\ref{lem:chain}, (T2a) + $\iota = \mathrm{p}$
-  for Lemma~\ref{lem:rectify} and Theorem~\ref{thm:anyclock} (which needs (T2b)),
+  for Lemma~\ref{lem:rectify} and Theorem~\ref{thm:anyclock} (which need (T3) and
+  an atomless clock),
   (T3) + (E2) for the rest.}
   Lemma~\ref{lem:chain} --- an exact telescoping identity, and the cheapest item
   in this list --- then Proposition~\ref{prop:haar}, Theorem~\ref{thm:anyclock},

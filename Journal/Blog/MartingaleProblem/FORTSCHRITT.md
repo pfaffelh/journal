@@ -2501,6 +2501,86 @@ aus $E^P[Zf(\pi_s)]\ge E^Q[Zf(\pi_s)]$ folgt bei $t$ nichts.
 Und `check.py` brauchte drei pdflatex-Läufe statt zwei, weil eine `.aux` aus
 einem Fehlerlauf sonst hunderte Scheinbefunde erzeugt — bereits gefixt.
 
+### D54 — Fehlerdurchgang durchs ganze Manuskript  *(2026-08-25)*
+
+Auftrag: das Manuskript auf Fehler prüfen. Sieben Funde, der erste ist der
+schwerste.
+
+**(1) `lem:rectify` war falsch, und damit `thm:anyclock` unbewiesen.**
+Die Konstruktion füllte die Lücke $[Q(a),Q(a)+q(\{a\})]$ eines Atoms durch
+Interpolation. Das geht nicht. Gegenbeispiel, exakt nachgerechnet: $\T=[0,2]$,
+$q=\delta_1$, $\Phi(s,t)=M(i(s),i(t))$ mit $i(s)=\one_{s>1}$,
+$M(0,0)=0$, $M(1,0)=M(0,1)=c$, $M(1,1)=d$. Beide Inkrementdarstellungen gelten
+mit **einem** $\gamma$ (am Punkt $(1,1)$ konsistent geprüft), und $d$ ist
+**frei**. Die Konstruktion liefert dann
+$\Psi(1,y)-\Psi(0,y)=d/2$ statt $\int_0^1\psi(z,y)\dif z=c$ — sie stimmt nur
+für $d=2c$.
+
+Und der Defekt ist nicht technisch: ein rektifiziertes $\Psi$ erfüllt
+$\partial_x\Psi=\partial_y\Psi$, ist also Funktion von $x+y$, und enthält damit
+$\Psi(L,0)=\Psi(0,L)$ bereits. Für eine Uhr mit Atomen **setzt die Konstruktion
+die Konklusion voraus** — die Rektifikation ist nur dann eine Reduktion, wenn es
+keine Lücken zu überbrücken gibt.
+
+**Korrektur.** `lem:rectify` und `thm:anyclock` gelten jetzt für **atomlose**
+Uhren unter (T3); dort ist $Q$ stetig und surjektiv, $\tau$ ein echtes
+Rechtsinverses, und der Beweis wird kürzer statt länger (neu: die
+Quantilidentität \eqref{eq:quantile}). Neu `rem:rectifyfails` mit dem
+Gegenbeispiel und der Statusübersicht. **Stand von §6 jetzt:** Haar bewiesen
+(`prop:haar`), atomlos bewiesen (`thm:anyclock`), rein atomar symbolisch
+verifiziert aber nicht bewiesen (`rem:atomicdual`), **gemischt offen**. Die
+negative Hälfte bleibt: Translationsinvarianz ist *nicht* nötig.
+
+Nachgezogen: §1.2, §1.3, §1.4, `rem:haarrole`, `rem:atomicdual`,
+`rem:dualscope`, `rem:dualischain`, `rem:controlvars`, `cor:exdualitywellposed`,
+Bündeltabelle, §8 (F3).
+
+**(2) `thm:absstrongmarkov` benutzte optional sampling unzulässig.**
+Die Hypothese war „gleichgradig integrierbare Zuwächse auf beschränkten
+Intervallen". Das ist eine Aussage über *deterministische* Fenster und sagt
+nichts über das *zufällige* Fenster $[\tau+s,\tau+t]$, das bei unbeschränktem
+$\tau$ unbeschränkt ist; Fact `optsampl` greift dort nicht. Neu
+**`lem:optsamplafter`**: für rechtsstetiges Martingal, f.s. endliches $\tau$ und
+$Y_{\tau+t}-Y_{\tau+s}\in L^1$ gilt die Identität — Beweis durch Abschneiden bei
+einer abzählbaren kofinalen Folge, optional sampling bei *beschränkten*
+Stoppzeiten, dominierte Konvergenz. Die Integrierbarkeit \eqref{eq:optafterint}
+ist damit nicht nur nötig, sondern **hinreichend**; bei verschiebungsinvarianter
+Uhr ist sie automatisch (Thm. `uniqueness`), sonst eine echte Einschränkung.
+
+**(3) `thm:exduality` braucht (T2a).** Rem. `exdualityscope`(ii) behauptete, der
+Satz überlebe einen partiell geordneten Index. Die Kern-Schicht
+(`lem:dualsemigroup`, `prop:dualCK`) tut das, der **Satz nicht**: für Kolmogorov
+braucht man endlichdimensionale Verteilungen über *alle* endlichen Teilmengen,
+und an einer Antikette — $(1,0)$ und $(0,1)$ in $\Rp^2$ — ist die gemeinsame
+Verteilung durch Ein-Parameter-Kerne nicht bestimmt. Setting, Satz, Tabelle,
+Abstract und §1.3 nachgezogen; das ist das genaue Analogon zu Rem. `chainonly`,
+mit der Kettenobstruktion jetzt in der Konstruktion statt in der Induktion.
+
+**(4) `prop:hawkesDcheck`(a) bewies (D1) nur in Ableitungsform.**
+$\Lambda_u(\hat x)$ ist für lokal integrables $\phi$ nicht stetig, also existiert
+die Ableitung bei $t=r^+$ nicht für jedes $r$. (D1) ist jetzt in **integrierter**
+Form \eqref{eq:hawkesD1} formuliert und über die pfadweise Sprungzerlegung von
+$M_t=e^{-\int f\dif N}$ plus Kompensation bewiesen; die Ableitungsform folgt an
+Lebesgue-Punkten von $\Lambda^{\hat x}$.
+
+**(5) `lem:semiring` brauchte $\Omega\in\mathcal C$.** Ohne das ist die erzeugte
+Familie keine Algebra und der Hahn–Jordan-Schritt bricht: auf $\{1,2\}$ ist
+$\{\emptyset,\{1\}\}$ ein erzeugender Semiring und $\delta_1-5\delta_2$ darauf
+nichtnegativ, aber nicht nichtnegativ. Hypothese ergänzt, Gegenbeispiel notiert,
+und die Anwendung braucht jetzt zwei Semiring-Schritte (Rechtecke über *einer*
+endlichen Zeitmenge, dann über allen).
+
+**(6) `lem:rectify` (alt) benutzte Auswahl ohne es zu sagen** — $\psi_0$ war über
+Urbilder von $Q$ definiert. Die neue Fassung benutzt die Quantilfunktion
+$\tau(z)=\sup\{t:Q(t)\le z\}$, ist kanonisch und formalisierbar; dazu die
+Hypothese, dass $\gamma$ ordnungsmessbar ist (automatisch, wenn $\mathcal T$ die
+Ordnungs-$\sigma$-Algebra ist).
+
+**(7) Struktur:** der Beweis von `lem:restart` stand hinter drei eingeschobenen
+Blöcken (`rem:inequalitystable`, `lem:semiring`, `rem:submartlost`), die beim
+Einfügen von D53 zwischen Lemma und Beweis geraten waren. Blöcke hinter den
+Beweis verschoben.
+
 ---
 
 ## Prüfprotokoll

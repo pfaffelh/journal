@@ -662,6 +662,32 @@ Offen ist allein das Eindeutigkeitskriterium — Def. `propagation` vergleicht
 Stroock–Varadhan-Formulierung reflektierter Diffusionen als Testobjekt.
 
 
+## Task 23 — §6: der gemischte Fall — `todo`
+
+Nach D54 ist der Stand von §6:
+
+| Uhr | Status |
+|---|---|
+| Haar (Lebesgue, Zählmaß) | bewiesen, `prop:haar` |
+| atomlos, (T3) | bewiesen, `thm:anyclock` (Rektifikation) |
+| rein atomar | symbolisch verifiziert, **nicht bewiesen**, `rem:atomicdual` |
+| gemischt | **offen** |
+
+Die beiden vorhandenen Argumente kombinieren sich nicht: die Rektifikation
+scheitert an Atomen (`rem:rectifyfails`, mit Gegenbeispiel), die
+Linearalgebra der Atomrelationen hat keinen diffusen Gegenpart.
+
+**Zwei Ansätze.** (a) Den atomaren Fall wirklich beweisen — die Relationen
+$m_l\,\Delta_1F(k,l-1)=m_k\,\Delta_2F(k-1,l-1)$ sind ein lineares System, dessen
+Lösungsraum die Konklusion enthalten sollte; Induktion über die Atome scheitert
+bisher an ordnungsdichten Atommengen. (b) Approximation: eine gemischte Uhr
+durch atomlose approximieren und die Stabilität von \eqref{eq:incrementrep}
+unter dieser Approximation klären.
+
+Nichts im Manuskript hängt daran — §7 benutzt Lebesgue-Uhren, §7.2 nur
+\eqref{eq:clockadd}.
+
+
 ---
 
 # Open questions
