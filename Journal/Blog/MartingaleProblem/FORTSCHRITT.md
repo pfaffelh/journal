@@ -2727,6 +2727,41 @@ Dopplung, vorhanden seit dem ersten Commit.
 
 107 Seiten.
 
+### D59 — $\K$ war deklariert, aber nicht durchgezogen  *(2026-08-25)*
+
+Der Nutzer las Def. 4.1/4.2 und stellte fest, dass dort weiter „real-valued"
+steht, obwohl §2.1 den Skalarkörper $\K\in\{\R,\C\}$ einführt und
+Rem. `complexvalued` behauptet, *jede* Aussage sei über $\K$ zu lesen. **Zu
+Recht.** D52 hatte die Konvention deklariert und die Makros umgestellt, aber die
+zehn Stellen, die den Wertebereich ausdrücklich in Worten nennen, nie angefasst.
+
+Umgestellt auf $\K$-wertig: §1.1, Rem. `fibredaudit`, Def. `localmartingale`,
+Fact `ui`, Setting `abstract`, Setting `absreg` (4.1), Def. `regclass` (4.2),
+die Einleitung von §5.1, Def. `shiftstable`, Thm. `CPSconv`.
+
+**Fünf Stellen bleiben reell, und alle zu Recht** — der Nutzer hat den Grund
+selbst genannt: ein $\K$-wertiges Submartingal gibt es nicht.
+* Fact `submgreg` — Submartingal-Regularisierung, jetzt ausdrücklich markiert;
+* Fact `monotoneclass` — Abschluss unter *beschränkten monotonen Limiten* setzt
+  eine Ordnung voraus (und das ist zugleich der Grund, warum die Testvariablen
+  $\ZZ^\circ$ und das $W$ in Prop. `fddchar` reell bleiben);
+* Fact `relcompact2` — steht bei EK reell;
+* die zwei bewussten „real-valued, whatever $\K$ is" bei den bestimmenden
+  Mengen.
+
+**Nebenbei ein Fehler in Rem. `complexvalued` gefunden.** Punkt (i) führte
+Fact `cadlagext` unter „Ordnung" auf. Falsch: das ist eine Aussage über Limiten
+in einem metrischen Raum und braucht überhaupt keine Ordnung. Dafür fehlten
+Fact `monotoneclass` und Fact `relcompact2`. Liste korrigiert.
+
+**Lean:** auf Vorschlag des Nutzers steht `[RCLike 𝕂]` jetzt direkt bei der
+Einführung von $\K$ in §2.1, nicht erst in den Designentscheidungen in §9 —
+„die Testfunktionen und Testprozesse unten sind die `RCLike`-wertigen".
+Im Beweis von Thm. `absreg` steht jetzt ausdrücklich, wie der komplexe Fall
+behandelt wird (Real- und Imaginärteil, Nullmengen schneiden).
+
+107 Seiten.
+
 ---
 
 ## Prüfprotokoll

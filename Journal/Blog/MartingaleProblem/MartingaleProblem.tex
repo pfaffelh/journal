@@ -153,7 +153,7 @@ is a martingale for every $(f,g) \in A$.  This is the setting in which
 property, duality, and the correspondence with semigroups and generators.
 
 \paragraph{(A) The abstract setting.}
-A martingale problem is attached to a \emph{family $\XX$ of real-valued test
+A martingale problem is attached to a \emph{family $\XX$ of $\K$-valued test
 processes} on a filtered space carrying, as yet, no measure: a probability
 measure $P$ solves the martingale problem $\MP(\XX)$ if every $Y \in \XX$ is a
 $P$-martingale, and the local martingale problem if every $Y \in \XX$ is a
@@ -500,7 +500,9 @@ Let $(E,\mathcal{E})$ be a measurable space; the topological assumptions on $E$
 are made bundle by bundle in Definition~\ref{def:Ebundles}, and $\Bor(E)$ is
 written for $\mathcal{E}$ whenever $E$ carries a topology.  We write
 \begin{itemize}[nosep]
-\item $\K$ for the scalar field, either $\R$ or $\C$, fixed once and for all;
+\item $\K$ for the scalar field, either $\R$ or $\C$, fixed once and for all ---
+  in Lean this is \texttt{[RCLike \(\mathbb{K}\)]}, and the test functions and
+  test processes below are the \texttt{RCLike}-valued ones;
 \item $\Meas(E)$ for the $\K$-valued Borel measurable functions on $E$;
 \item $\Bdd(E) \subset \Meas(E)$ for the bounded ones, with
   $\lVert f\rVert = \sup_{x \in E} |f(x)|$;
@@ -990,7 +992,7 @@ which the manuscript would otherwise have to add separately.
   \textbf{Result} & \textbf{Fibred state space} \\
   \midrule
   Section~\ref{ssec:absMP} (abstract martingale problem)
-    & \textbf{free}: $\XX$ is a family of \emph{real-valued} processes and $E$ is
+    & \textbf{free}: $\XX$ is a family of \emph{$\K$-valued} processes and $E$ is
       never mentioned \\
   Section~\ref{ssec:markovMP}, Proposition~\ref{prop:fddchar}
     & free, with $(f,g)$ read as sections \eqref{eq:sectiontest}; the test
@@ -1206,7 +1208,9 @@ which the manuscript would otherwise have to add separately.
 
 \begin{fact}[Submartingale regularization; \EK, Proposition 2.2.9; \eqref{T2b}]
   \label{fact:submgreg}
-  Let $X$ be a real-valued $(\Filt_t)$-submartingale and let
+  Let $X$ be a real-valued $(\Filt_t)$-submartingale --- here, and in
+  Fact~\ref{fact:monotoneclass}, $\K = \R$ is genuinely needed, an order being
+  involved --- and let
   $D \subset \T$ be countable and dense.  Then there is $\Omega_0$ with
   $P(\Omega_0) = 1$ such that for every $\omega \in \Omega_0$ the limits
   \begin{equation}
@@ -1254,7 +1258,7 @@ which the manuscript would otherwise have to add separately.
 
 \begin{definition}[\EK, Section 2.3]
   \label{def:localmartingale}
-  A real-valued process $X$ is an \emph{$(\Filt_t)$-local martingale} if there
+  A $\K$-valued process $X$ is an \emph{$(\Filt_t)$-local martingale} if there
   exist $(\Filt_t)$-stopping times $\tau_1 \leq \tau_2 \leq \cdots$ with
   $\tau_n \to \infty$ a.s.\ such that $X^{\tau_n} = X(\cdot \wedge \tau_n)$ is an
   $(\Filt_t)$-martingale for each $n$.  The sequence $(\tau_n)$ is a
@@ -1539,7 +1543,7 @@ Throughout this subsection $(S,d)$ is a metric space.
 
 \begin{fact}[Uniform integrability; \EK, Appendix 2]
   \label{fact:ui}
-  A family $\{X_i\}$ of real-valued random variables is \emph{uniformly
+  A family $\{X_i\}$ of $\K$-valued random variables is \emph{uniformly
   integrable} if $\sup_i E[|X_i|] < \infty$ and for every $\varepsilon > 0$ there
   is $\delta > 0$ such that $P(A) < \delta$ implies
   $|E[X_i \one_A]| < \varepsilon$ for all $i$.  Equivalently,
@@ -1879,7 +1883,7 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 \begin{setting}[after \CPS, Section 3.1; \eqref{T0} + \eqref{E0}]
   \label{set:abstract}
   Let $(\Omega, \Filt, \mathbb{F} = (\Filt_t)_{t \in \T})$ be a filtered space
-  carrying a family $\XX$ of real-valued adapted processes (the \emph{test
+  carrying a family $\XX$ of $\K$-valued adapted processes (the \emph{test
   processes}), right continuous if $\T$ satisfies \eqref{T2b}.  Let $(E,\mathcal{E})$
   be a measurable space and let $F \subset E^{\T}$ be a \emph{path space}: a set
   of maps $\T \to E$ equipped with a $\sigma$-field $\mathcal{S}$ for which the
@@ -1960,11 +1964,19 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 
   \emph{The four places that need $\K = \R$.}
   \begin{enumerate}[label=(\roman*)]
-  \item \emph{Order.}  Submartingales exist only over $\R$.  This affects the
-    regularization Facts~\ref{fact:cadlagext} and \ref{fact:submgreg}, which
-    Section~\ref{sec:cadlag} uses; there one applies them to $\Re Y$ and $\Im Y$
-    and intersects the two exceptional null sets.  It also affects
+  \item \emph{Order.}  There is no such thing as a $\K$-valued submartingale, so
+    every statement whose content is an inequality stays over $\R$.  There are
+    three: Fact~\ref{fact:submgreg}, the submartingale regularization, which
+    Section~\ref{sec:cadlag} uses --- one applies it to $\Re Y$ and $\Im Y$ and
+    intersects the two exceptional null sets, and that is the only place in the
+    proof of Theorem~\ref{thm:absreg} where the scalar field is felt;
+    Fact~\ref{fact:monotoneclass}, whose closure under \emph{bounded monotone
+    limits} presupposes an order, which is also why the test variables
+    $\ZZ^\circ$ and the $W$ of Proposition~\ref{prop:fddchar} are kept real; and
     Remark~\ref{rem:inequalitystable}, where the whole point is an inequality.
+    Fact~\ref{fact:cadlagext}, by contrast, needs no order at all --- it is a
+    statement about limits in a metric space --- and Fact~\ref{fact:relcompact2}
+    is stated over $\R$ only because \EK{} state it so.
   \item \emph{Stone--Weierstrass.}  Fact~\ref{fact:stoneweierstrass} needs a
     complex algebra to be closed under conjugation.  This is used in
     Remark~\ref{rem:EKrelcompact} and Proposition~\ref{prop:rieszmarkov}.
@@ -2534,7 +2546,7 @@ step of their programme rather than a consequence of it.
   As in Setting~\ref{set:abstract}, but with no path space and no path
   regularity assumed.  Let $\T$ satisfy \eqref{T2b} with countable dense $D \subset \T$,
   let $(\Omega,\Filt,\mathbb{F},P)$ be a filtered probability space, let $E$
-  satisfy \eqref{E2}, let $\XX$ be a family of real-valued $\mathbb{F}$-adapted processes
+  satisfy \eqref{E2}, let $\XX$ be a family of $\K$-valued $\mathbb{F}$-adapted processes
   with $P \in \Msol(\XX)$, and let $X$ be an $E$-valued, $\mathbb{F}$-adapted,
   jointly measurable process.  Neither the elements of $\XX$ nor $X$ are assumed
   to be right continuous.
@@ -2543,7 +2555,7 @@ step of their programme rather than a consequence of it.
 \begin{definition}[\eqref{T2b} + \eqref{E2}]
   \label{def:regclass}
   A set $\Phi \subset \Cb(E)$ is a \emph{regularizing class} for $(X,\XX)$ if for
-  every $f \in \Phi$ there exist $Y^f \in \XX$ and an adapted real-valued process
+  every $f \in \Phi$ there exist $Y^f \in \XX$ and an adapted $\K$-valued process
   $C^f$ such that
   \begin{enumerate}[label=(R\arabic*)]
   \item \label{it:R1}
@@ -2579,7 +2591,9 @@ step of their programme rather than a consequence of it.
   Each $Y^i$ is an $(\mathbb{F},P)$-martingale, so
   Fact~\ref{fact:submgreg}, applied with the countable dense set $D$, provides for
   each $i$ a set of full measure on which the limits of $Y^i$ along $D$ from above
-  (and, for $t>0$, from below) exist at every $t$.  Intersect these over the
+  (and, for $t>0$, from below) exist at every $t$; for $\K = \C$ one applies it to
+  $\Re Y^i$ and $\Im Y^i$ and intersects the two null sets, which is the only
+  place in this proof where the scalar field is felt.  Intersect these over the
   countably many $i$; intersect further with the sets of full measure furnished by
   \ref{it:R2}, one for each $i$; and finally with the sets on which \ref{it:R1}
   holds \emph{at the times $t \in D$}, of which there are countably many.  The
@@ -2792,7 +2806,7 @@ stated otherwise.  Let $F \subset E^{\T}$ be a path space with $\sigma$-field
 $\mathcal{S} = \sigma(\pi_t : t \in \T)$,
 coordinate process $\pi = (\pi_t)_{t \in \T}$ and canonical filtration
 $\Filt^\circ_t = \sigma(\pi_u : u \leq t)$, and let $\XX^\circ$ be a family of
-$(\Filt^\circ_t)$-adapted real-valued functionals on $F$.  Write
+$(\Filt^\circ_t)$-adapted $\K$-valued functionals on $F$.  Write
 \[
   \Msol(\XX^\circ) \;=\; \bigl\{ P \in \Prob(F) \;:\;
     \text{every } Y^\circ \in \XX^\circ \text{ is a }
@@ -3229,7 +3243,7 @@ uniqueness theory cannot do without.
   \emph{shift} on $F$ if $\pi_t \circ \theta_r = \pi_{r+t}$ for all $r,t \in \T$.
 
   A \emph{shift system} for $\XX^\circ$ is a family $(\XX^\circ_r)_{r \in \T}$ of
-  families of $(\Filt^\circ_t)$-adapted real-valued processes on $F$, with
+  families of $(\Filt^\circ_t)$-adapted $\K$-valued processes on $F$, with
   $\XX^\circ_0 = \XX^\circ$, such that for every $r \in \T$ and every
   $\hat{Y}^\circ \in \XX^\circ_r$ there are $Y^\circ \in \XX^\circ$ and an
   $\Filt^\circ_r$-measurable $\kappa$ with
@@ -7025,7 +7039,7 @@ directions:
   carrying $E$-valued c\`adl\`ag adapted processes $X$ and $X^n$, and assume that
   $\mathbb{F}$ is generated by $X$.  Let $A \subset \Cb(E) \times \Cb(E)$ and let
   $\XX = \XX_A(X)$ be as in \eqref{eq:XXA}.  For each $n$, let $\XX^n$ be a set
-  of pairs $(\xi,\varphi)$ of real-valued progressively measurable processes on
+  of pairs $(\xi,\varphi)$ of $\K$-valued progressively measurable processes on
   $B^n$ such that $\sup_{s \leq T} E^{P^n}[|\xi_s| + |\varphi_s|] < \infty$ for
   all $T>0$ and such that $\xi - \int_0^{\cdot} \varphi_s \dif s$ is a martingale
   on $B^n$.

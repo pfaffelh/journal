@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.12.5)  25 AUG 2026 21:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.12.5)  25 AUG 2026 21:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -525,128 +525,128 @@ Underfull \hbox (badness 2781) in paragraph at lines 419--420
  []
 
 [7] [8]
-Underfull \hbox (badness 1102) in paragraph at lines 557--558
+Underfull \hbox (badness 1102) in paragraph at lines 559--560
 []\T1/cmr/m/n/10.95 the two-variable func-tion of Sec-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 558--559
+Underfull \hbox (badness 10000) in paragraph at lines 560--561
 []\T1/cmr/m/n/10.95 mixing pa-ram-e-ter space,
  []
 
 
-Underfull \hbox (badness 6094) in paragraph at lines 561--562
+Underfull \hbox (badness 6094) in paragraph at lines 563--564
 []\T1/cmr/m/n/10.95 the aug-ment-ing map of The-o-
  []
 
 
-Underfull \hbox (badness 2213) in paragraph at lines 563--564
+Underfull \hbox (badness 2213) in paragraph at lines 565--566
 []\T1/cmr/m/n/10.95 the path-dependent rate of Set-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 564--565
+Underfull \hbox (badness 10000) in paragraph at lines 566--567
 []\T1/cmr/m/n/10.95 the re-sol-vent pa-ram-e-ter,
  []
 
 
-Underfull \hbox (badness 4479) in paragraph at lines 565--566
+Underfull \hbox (badness 4479) in paragraph at lines 567--568
 []\T1/cmr/m/n/10.95 the rate of Set-ting [][]7.20[][]; also
  []
 
 [9] [10] [11] [12] [13]
-Underfull \hbox (badness 3386) in paragraph at lines 992--993
+Underfull \hbox (badness 3386) in paragraph at lines 994--995
 []\T1/cmr/m/n/10.95 Section [][]3.1[][] (ab-stract mar-tin-gale
  []
 
 [14] [15] [16] [17] [18] [19]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\@ifnextchar' on input line 1536.
+(hyperref)                removing `\@ifnextchar' on input line 1540.
 
 [20] [21]
-Underfull \hbox (badness 3930) in paragraph at lines 1742--1743
+Underfull \hbox (badness 3930) in paragraph at lines 1746--1747
 []\T1/cmr/m/n/10.95 Section [][]2.6[][] en-tire (Sko-rokhod,
  []
 
 
-Overfull \hbox (1.86238pt too wide) in paragraph at lines 1731--1746
+Overfull \hbox (1.86238pt too wide) in paragraph at lines 1735--1750
 [] 
  []
 
 
-Underfull \hbox (badness 1789) in paragraph at lines 1755--1757
+Underfull \hbox (badness 1789) in paragraph at lines 1759--1761
 []\T1/cmr/m/n/10.95 Definition [][]3.6[][], Propo-si-tion [][]3.9[][],
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1763--1764
+Underfull \hbox (badness 10000) in paragraph at lines 1767--1768
 []\T1/cmr/m/n/10.95 Definition [][]4.2[][], The-o-rem [][]4.3[][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1774--1775
+Underfull \hbox (badness 10000) in paragraph at lines 1778--1779
 []\T1/cmr/m/n/10.95 Definition [][]5.14[][], Lemma [][]5.17[][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1781--1782
+Underfull \hbox (badness 10000) in paragraph at lines 1785--1786
 []\T1/cmr/m/n/10.95 Lemma [][]5.22[][] (one-dimensional
  []
 
 
-Underfull \hbox (badness 3884) in paragraph at lines 1787--1791
+Underfull \hbox (badness 3884) in paragraph at lines 1791--1795
 []\T1/cmr/m/n/10.95 Definition [][]5.30[][], Lem-mas [][]5.32[][],
  []
 
 
-Underfull \hbox (badness 5893) in paragraph at lines 1796--1797
+Underfull \hbox (badness 5893) in paragraph at lines 1800--1801
 []\T1/cmr/m/n/10.95 Corollary [][]5.46[][] (its Marko-vian
  []
 
 
-Overfull \hbox (1.86238pt too wide) in paragraph at lines 1748--1800
+Overfull \hbox (1.86238pt too wide) in paragraph at lines 1752--1804
 [] 
  []
 
 [22]
-Underfull \hbox (badness 1270) in paragraph at lines 1823--1824
+Underfull \hbox (badness 1270) in paragraph at lines 1827--1828
 []\T1/cmr/m/n/10.95 Theorem [][]7.5[][] (ex-is-tence from a
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1826--1826
+Underfull \hbox (badness 10000) in paragraph at lines 1830--1830
 [][]\T1/cmr/m/n/10.95 , $\OML/cmm/m/it/10.95 E[]$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1835--1836
+Underfull \hbox (badness 10000) in paragraph at lines 1839--1840
 []\T1/cmr/m/n/10.95 Theorem [][]7.68[][] (Hawkes to
  []
 
 
-Underfull \hbox (badness 1184) in paragraph at lines 1841--1842
+Underfull \hbox (badness 1184) in paragraph at lines 1845--1846
 []\T1/cmr/m/n/10.95 Theorem [][]7.38[][] (ab-stract con-ver-
  []
 
 
-Underfull \hbox (badness 4193) in paragraph at lines 1846--1847
+Underfull \hbox (badness 4193) in paragraph at lines 1850--1851
 []\T1/cmr/m/n/10.95 any, atoms al-
  []
 
 
-Overfull \hbox (1.86238pt too wide) in paragraph at lines 1802--1853
+Overfull \hbox (1.86238pt too wide) in paragraph at lines 1806--1857
 [] 
  []
 
 [23] [24] [25] [26] [27]
-Overfull \hbox (1.873pt too wide) in paragraph at lines 2204--2209
+Overfull \hbox (1.873pt too wide) in paragraph at lines 2216--2221
 []\T1/cmr/m/it/10.95 Step 4: con-clu-sion. \T1/cmr/m/n/10.95 By Steps 1--3 and 
 the func-tional mono-tone class the-o-rem (Fact [][]2.47[][]),
  []
 
 [28] [29] [30]
-Overfull \hbox (7.7243pt too wide) in paragraph at lines 2414--2418
+Overfull \hbox (7.7243pt too wide) in paragraph at lines 2426--2430
 []\T1/cmr/m/it/10.95 Step 2: ei-ther re-la-tion trans-ports the mar-tin-gale pr
 op-erty. \T1/cmr/m/n/10.95 Sup-pose $\OML/cmm/m/it/10.95 Y$ \T1/cmr/m/n/10.95 i
 s a $\OT1/cmr/m/n/10.95 (\OMS/cmsy/m/n/10.95 G[]\OT1/cmr/m/n/10.95 )$\T1/cmr/m/
@@ -655,7 +655,7 @@ n/10.95 -martingale.
 
 [31] [32] [33] [34] [35] [36] [37] [38] [39] [40] [41] [42] [43] [44] [45]
 [46] [47] [48]
-Overfull \hbox (2.23976pt too wide) in paragraph at lines 3962--3966
+Overfull \hbox (2.23976pt too wide) in paragraph at lines 3976--3980
 []\T1/cmr/m/it/10.95 If $\OT1/cmr/m/n/10.95 ^^F$ \T1/cmr/m/it/10.95 sat-is-fies
  [][](L1)[][], then $\OMS/cmsy/m/n/10.95 M[]\OT1/cmr/m/n/10.95 (\OMS/cmsy/m/n/1
 0.95 X[]\OT1/cmr/m/n/10.95 )$ \T1/cmr/m/it/10.95 is sta-ble un-der mea-sur-able
@@ -664,12 +664,12 @@ Overfull \hbox (2.23976pt too wide) in paragraph at lines 3962--3966
  []
 
 [49] [50] [51] [52] [53] [54] [55]
-Underfull \hbox (badness 10000) in paragraph at lines 4632--4633
+Underfull \hbox (badness 10000) in paragraph at lines 4646--4647
 []\T1/cmr/m/n/10.95 Definition [][]5.11[][], Propo-si-tion [][]5.13[][]
  []
 
 [56] [57] [58] [59] [60] [61] [62] [63] [64] [65]
-Overfull \hbox (0.45256pt too wide) in paragraph at lines 5412--5418
+Overfull \hbox (0.45256pt too wide) in paragraph at lines 5426--5432
 \T1/cmr/m/n/10.95 i.e. the com-pen-sator in the pre-dictable con-ven-tion $\OT1
 /cmr/m/n/10.95 [0\OML/cmm/m/it/10.95 ; t\OT1/cmr/m/n/10.95 )$\T1/cmr/m/n/10.95 
 . So Corol-lary [][]6.14[][] is the martingale-
@@ -677,7 +677,7 @@ Overfull \hbox (0.45256pt too wide) in paragraph at lines 5412--5418
 
 [66] [67] [68] [69] [70] [71] [72] [73] [74] [75] [76] [77] [78] [79] [80]
 [81] [82] [83] [84] [85] [86]
-Overfull \hbox (1.6065pt too wide) in paragraph at lines 7087--7091
+Overfull \hbox (1.6065pt too wide) in paragraph at lines 7101--7105
 \T1/cmr/m/n/10.95 Put $\OML/cmm/m/it/10.95 Y[] \OT1/cmr/m/n/10.95 = \OML/cmm/m/
 it/10.95 ^^X[] \OMS/cmsy/m/n/10.95 ^^@ [][] \OML/cmm/m/it/10.95 '[] \OT1/cmr/m/
 n/10.95 d\OML/cmm/m/it/10.95 u$\T1/cmr/m/n/10.95 , a mar-tin-gale on $\OML/cmm/
@@ -688,170 +688,170 @@ S/cmsy/m/n/10.95 F[]$\T1/cmr/m/n/10.95 -measurable, $\OML/cmm/m/it/10.95 E[]\OT
  []
 
 [87] [88] [89] [90] [91] [92]
-Underfull \hbox (badness 1052) in paragraph at lines 7586--7587
+Underfull \hbox (badness 1052) in paragraph at lines 7600--7601
 []\T1/cmr/m/n/10.95 Fact [][]7.58[][] (Jacod--Mémin), cited un-
  []
 
 [93] [94] [95] [96] [97] [98] [99] [100]
 LaTeX Font Info:    Trying to load font information for TS1+cmtt on input line 
-8213.
+8227.
 
 (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmtt.fd
 File: ts1cmtt.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 ) [101] [102]
-Underfull \hbox (badness 1521) in paragraph at lines 8333--8335
+Underfull \hbox (badness 1521) in paragraph at lines 8347--8349
 \T1/cmr/m/n/10.95 three con-di-tions on a pair
  []
 
 
-Underfull \hbox (badness 2253) in paragraph at lines 8335--8336
+Underfull \hbox (badness 2253) in paragraph at lines 8349--8350
 []\T1/cmr/m/n/10.95 Definition [][]5.11[][], Propo-si-
  []
 
 
-Underfull \hbox (badness 2818) in paragraph at lines 8344--8345
+Underfull \hbox (badness 2818) in paragraph at lines 8358--8359
 []\T1/cmr/m/n/10.95 [[]] 4.4.10, on $\U/msb/m/n/10.95 R[]$ \T1/cmr/m/n/10.95 wi
 th
  []
 
 
-Underfull \hbox (badness 6995) in paragraph at lines 8348--8349
+Underfull \hbox (badness 6995) in paragraph at lines 8362--8363
 []\T1/cmr/m/n/10.95 [[]] 2.2.13, at bounded
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 8353--8355
+Underfull \hbox (badness 10000) in paragraph at lines 8367--8369
 []\T1/cmr/m/n/10.95 one-sided de-ter-mi-na-tion:
  []
 
 
-Underfull \hbox (badness 6268) in paragraph at lines 8355--8356
+Underfull \hbox (badness 6268) in paragraph at lines 8369--8370
 []\T1/cmr/m/n/10.95 Theorem [][]7.52[][], Propo-si-
  []
 
 
-Underfull \hbox (badness 1009) in paragraph at lines 8357--8359
+Underfull \hbox (badness 1009) in paragraph at lines 8371--8373
 []\T1/cmr/m/n/10.95 for dis-con-ti-nu-ities at \T1/cmr/m/it/10.95 de-ter-
  []
 
 
-Underfull \hbox (badness 3568) in paragraph at lines 8357--8359
+Underfull \hbox (badness 3568) in paragraph at lines 8371--8373
 \T1/cmr/m/n/10.95 path space re-places weak-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 8359--8360
+Underfull \hbox (badness 10000) in paragraph at lines 8373--8374
 []\T1/cmr/m/n/10.95 Lemma [][]7.10[][], Corol-
  []
 
 
-Underfull \hbox (badness 1742) in paragraph at lines 8361--8363
+Underfull \hbox (badness 1742) in paragraph at lines 8375--8377
 \T1/cmr/m/n/10.95 a \T1/cmr/m/it/10.95 restart ker-nel\T1/cmr/m/n/10.95 , hence
  lo-
  []
 
 
-Underfull \hbox (badness 1502) in paragraph at lines 8361--8363
+Underfull \hbox (badness 1502) in paragraph at lines 8375--8377
 \T1/cmr/m/n/10.95 cal unique-ness for a path-
  []
 
 [103]
-Underfull \hbox (badness 10000) in paragraph at lines 8392--8394
+Underfull \hbox (badness 10000) in paragraph at lines 8406--8408
 [][] \T1/cmr/m/n/10.95 from one-dimensional laws
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 8433--8434
+Underfull \hbox (badness 10000) in paragraph at lines 8447--8448
 [][]\T1/cmr/m/n/10.95 --[], Def-i-ni-
  []
 
 
-Underfull \hbox (badness 1721) in paragraph at lines 8434--8438
+Underfull \hbox (badness 1721) in paragraph at lines 8448--8452
 []\T1/cmr/m/n/10.95 the poset case re-ally
  []
 
 
-Underfull \hbox (badness 1009) in paragraph at lines 8434--8438
+Underfull \hbox (badness 1009) in paragraph at lines 8448--8452
 \T1/cmr/m/n/10.95 The-o-rem [][]7.38[][] and in
  []
 
 
-Underfull \hbox (badness 3884) in paragraph at lines 8441--8444
+Underfull \hbox (badness 3884) in paragraph at lines 8455--8458
 []\T1/cmr/m/n/10.95 discrete time (Corol-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 8452--8453
+Underfull \hbox (badness 10000) in paragraph at lines 8466--8467
 [][]\T1/cmr/m/n/10.95 --[], Def-i-ni-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 8453--8456
+Underfull \hbox (badness 10000) in paragraph at lines 8467--8470
 []\T1/cmr/m/n/10.95 martingale prob-lems
  []
 
 
-Underfull \hbox (badness 1152) in paragraph at lines 8453--8456
+Underfull \hbox (badness 1152) in paragraph at lines 8467--8470
 \T1/cmr/m/n/10.95 Sec-tions [][]3[][]--[][]6[][] with no
  []
 
 
-Underfull \hbox (badness 5077) in paragraph at lines 8456--8457
+Underfull \hbox (badness 5077) in paragraph at lines 8470--8471
 []\T1/cmr/m/n/10.95 State space, fi-
  []
 
 
-Underfull \hbox (badness 3612) in paragraph at lines 8458--8459
+Underfull \hbox (badness 3612) in paragraph at lines 8472--8473
 []$\OML/cmm/m/it/10.95 E[]$ \T1/cmr/m/n/10.95 vary-ing, Def-i-ni-
  []
 
 
-Underfull \hbox (badness 1629) in paragraph at lines 8459--8461
+Underfull \hbox (badness 1629) in paragraph at lines 8473--8475
 []\T1/cmr/m/n/10.95 forced by the his-tor-
  []
 
 
-Underfull \hbox (badness 6001) in paragraph at lines 8459--8461
+Underfull \hbox (badness 6001) in paragraph at lines 8473--8475
 \T1/cmr/m/n/10.95 i-cal pro-cess of Sec-
  []
 
 
-Underfull \hbox (badness 7777) in paragraph at lines 8459--8461
+Underfull \hbox (badness 7777) in paragraph at lines 8473--8475
 \T1/cmr/m/n/10.95 tion [][]7.2[][]; buys the
  []
 
 
-Underfull \hbox (badness 4084) in paragraph at lines 8459--8461
+Underfull \hbox (badness 4084) in paragraph at lines 8473--8475
 \T1/cmr/m/n/10.95 space-time mar-tin-gale
  []
 
 
-Underfull \hbox (badness 4859) in paragraph at lines 8464--8466
+Underfull \hbox (badness 4859) in paragraph at lines 8478--8480
 []\T1/cmr/m/n/10.95 the form the trans-
  []
 
 
-Underfull \hbox (badness 6995) in paragraph at lines 8464--8466
+Underfull \hbox (badness 6995) in paragraph at lines 8478--8480
 \T1/cmr/m/n/10.95 form lit-er-a-ture uses;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 8464--8466
+Underfull \hbox (badness 10000) in paragraph at lines 8478--8480
 \T1/cmr/m/n/10.95 The-o-rem [][]6.10[][] needs
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 8469--8471
+Underfull \hbox (badness 10000) in paragraph at lines 8483--8485
 \T1/cmr/m/n/10.95 for path-dependent
  []
 
 
-Underfull \hbox (badness 7433) in paragraph at lines 8473--8474
+Underfull \hbox (badness 7433) in paragraph at lines 8487--8488
 []\T1/cmr/m/n/10.95 any shift in-vari-ant
  []
 
 
-Overfull \hbox (1.85588pt too wide) in paragraph at lines 8426--8478
+Overfull \hbox (1.85588pt too wide) in paragraph at lines 8440--8492
 [] 
  []
 
@@ -866,7 +866,7 @@ Package rerunfilecheck Info: File `MartingaleProblem.out' has not changed.
 Here is how much of TeX's memory you used:
  12866 strings out of 474222
  193660 string characters out of 5748733
- 1954975 words of memory out of 5000000
+ 1955975 words of memory out of 5000000
  34265 multiletter control sequences out of 15000+600000
  582503 words of font info for 101 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -896,10 +896,10 @@ r/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf/fonts/
 type1/public/cm-super/sfrm1728.pfb></usr/share/texmf/fonts/type1/public/cm-supe
 r/sfti1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfti1095.pfb></usr
 /share/texmf/fonts/type1/public/cm-super/sftt1095.pfb>
-Output written on MartingaleProblem.pdf (107 pages, 1093794 bytes).
+Output written on MartingaleProblem.pdf (107 pages, 1095204 bytes).
 PDF statistics:
- 4208 PDF objects out of 4296 (max. 8388607)
- 3991 compressed objects within 40 object streams
+ 4214 PDF objects out of 4296 (max. 8388607)
+ 3997 compressed objects within 40 object streams
  661 named destinations out of 1000 (max. 500000)
  409 words of extra memory for PDF output out of 10000 (max. 10000000)
 
