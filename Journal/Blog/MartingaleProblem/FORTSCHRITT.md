@@ -2372,6 +2372,64 @@ und daraus Cor. `hawkesrestart` als Restart-Kern im Sinne von J&S III.2.37 zu
 ziehen. Beides sind Umstellungen bekannter Tatsachen. Rem. `hawkesisvolterra`
 zitiert jetzt ebenfalls ALP19.
 
+### D51 — Audit der verbleibenden Verallgemeinerungen  *(2026-08-25)*
+
+Frage des Nutzers, ob es weitere sinnvolle Verallgemeinerungen gibt — alle
+Ansätze durchgehen. Neu §1.4 „Generalizations not made, and why" mit
+Tabelle; dazu zwei Bemerkungen an Ort und Stelle.
+
+**Zwei Kandidaten sind gratis und jetzt umgesetzt.**
+
+* **Rem. `complexvalued`** — komplexwertige Testprozesse. Ein $\C$-wertiger
+  Prozess ist Martingal gdw. Real- und Imaginärteil es sind, und §3, §5, §6 sind
+  $\C$-linear im Testprozess; §4 und §7 spaltet man auf. Kostet nichts und ist
+  die Form, die die Transform-Literatur benutzt ($e^{i\langle u,X_t\rangle}$ statt
+  reeller Testfunktionen) — relevant nach D50.
+* **Rem. `inequalitystable`** — Lem. `mixture`, `disint` und `restart` werden
+  bewiesen, indem eine Identität gegen ein **nichtnegatives** Gewicht integriert
+  wird, und keiner der drei Beweise benutzt, dass es eine Identität ist. Mit
+  nichtnegativer bestimmender Menge gelten alle drei wörtlich für
+  **Submartingalprobleme** — also für die Stroock–Varadhan-Formulierung
+  reflektierter Diffusionen. Nicht übertragbar ist die Eindeutigkeitshälfte:
+  Def. `propagation` vergleicht über Gleichheit von Erwartungswerten, und eine
+  Ungleichung propagiert keine Übereinstimmung.
+
+**Ein Kandidat entfällt, weil schon da.** Quasimartingale in §4:
+Def. `regclass` verlangt von $C^f$ nur einseitige Limiten und
+$L^1$-Rechtsstetigkeit, **nicht** endliche Variation — das Manuskript ist dort
+bereits allgemeiner als die Quasimartingal-Aussage.
+
+**Der eigentliche offene Kandidat: pfadabhängige (zufällige) Uhr.** Ersetzt man
+$q$ durch einen prädiktablen wachsenden Prozess $A(\omega)$, ist das der Schritt
+zu den Semimartingal-Charakteristiken aus J&S Kap. II. Zwei Beobachtungen:
+(i) **die abstrakte Schicht enthält es bereits** — Def. `absMP` verlangt nur eine
+Familie adaptierter Pfadfunktionale, und $f(\pi_t)-\int g(\pi_u)\dif A_u$ ist
+eines; nur Def. `markovMP` fixiert ein deterministisches $q$. (ii) Eine
+*absolutstetige* zufällige Uhr bringt nichts Neues — das ist der pfadabhängige
+Integrand aus Setting `pathjump`. Neu ist allein ein **singuläres** $A$
+(Lokalzeit, zufällige Sprünge).
+
+**Und damit schließt sich ein Kreis aus D42:** eine deterministische Uhr hat ihre
+Atome an *deterministischen* Zeiten, und Thm. `absconvaug` räumt die
+Unstetigkeit durch Vergrößerung des Pfadraums weg. Eine zufällige Uhr hat sie an
+*zufälligen* Zeiten — keine feste Koordinatenfamilie fängt die ein, und genau
+dann werden Kontrollvariablen und weak-strong convergence nötig, wie
+Rem. `augvsws` vorhersagt. Das Material aus §7.8, das dieses Manuskript nicht
+braucht, ist präzise das, was die zufällige Uhr brauchen würde — ein guter Grund,
+es stehen zu lassen.
+
+**Zwei weitere Grenzen benannt.** *McKean–Vlasov*: hängt $A$ von
+$\mathcal L(X_t)$ ab, so hängt $\XX$ von $P$ ab und Lem. `mixture`/`restart`
+fallen sofort — dieselbe Nichtlinearität in $P$ wie beim lokalen MP, aber mit
+anderer Reparatur: (L1) stellt dort Linearität wieder her, hier braucht es einen
+Fixpunkt. *Kontrollvariablen*: in CPS durchgehend vorhanden, hier bewusst auf
+$U$ = Punkt gesetzt, weil sonst ein Index durch fünf Abschnitte getragen und in
+einem benutzt würde.
+
+**Verworfen:** banachwertige Testprozesse (maß- und distributionswertige Prozesse
+werden durch Paarung mit einer Testfunktion behandelt, also kein Gewinn, und §4
+braucht eine Ordnung) und signierte Lösungsmaße (Disintegration fällt).
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),

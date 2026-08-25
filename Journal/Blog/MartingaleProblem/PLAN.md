@@ -562,6 +562,30 @@ Grund, warum gerade dieses Beispiel durchgeht.
 nichtlineare Hawkes-Prozesse oder Setting `pathjump` allgemein —, um zu sehen,
 wieviel von Prop. `hawkesDcheck` strukturell ist und wieviel am Cluster hängt.
 
+## Task 21 — Pfadabhängige (zufällige) Uhr — `todo`
+
+Ersetze $q$ durch einen prädiktablen wachsenden Prozess $A(\omega)$ (→ D51, §1.4).
+Das ist der Schritt zu den Semimartingal-Charakteristiken aus J&S Kap. II.
+
+* **Kostet wenig, wo es zählt:** Def. `absMP` enthält es schon; nur
+  Def. `markovMP` und die Resultate, die über $q$ quantifizieren, ändern sich.
+* **Absolutstetiges $A$ bringt nichts** — das ist Setting `pathjump`. Neu ist
+  allein singuläres $A$ (Lokalzeit, zufällige Sprünge).
+* **Preis:** §6 fällt aus (die Kettenidentität lebt auf einem deterministischen
+  $\Phi:\T\times\T\to\R$), und in §7 wird weak-strong convergence **notwendig**,
+  weil die Atome zufällig werden — Thm. `absconvaug` greift dann nicht mehr.
+* **Zuerst zu klären:** ob Lem. `compadapted` (Fubini) und Prop. `fddchar` mit
+  prädiktablem $A$ unverändert durchgehen. Vermutlich ja.
+
+## Task 22 — Submartingalprobleme (reflektierende Ränder) — `todo`
+
+Rem. `inequalitystable` (→ D51) zeigt: Lem. `mixture`, `disint`, `restart`
+gelten wörtlich, mit $\ge$ statt $=$ und nichtnegativer bestimmender Menge.
+Offen ist allein das Eindeutigkeitskriterium — Def. `propagation` vergleicht
+über Gleichheit und propagiert keine Ungleichung. Auszuführen wäre die
+Stroock–Varadhan-Formulierung reflektierter Diffusionen als Testobjekt.
+
+
 ---
 
 # Open questions

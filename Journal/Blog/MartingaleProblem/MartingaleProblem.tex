@@ -57,6 +57,7 @@
 \newcommand{\ALP}{\cite{ALP19}}
 \newcommand{\CT}{\cite{CT20}}
 \newcommand{\DVJ}{\cite{DVJ03}}
+\newcommand{\SV}{\cite{SV79}}
 \newcommand{\XX}{\mathbb{X}}                   % family of test processes
 \newcommand{\ZZ}{\mathbb{Z}}                   % determining set
 \newcommand{\MP}{\mathrm{MP}}
@@ -369,6 +370,104 @@ under the shift; and integrability of the increments after a restart.  The point
 of isolating them is that the local martingale property is \emph{not} linear in
 $P$, so that the two workhorse lemmas of Section~\ref{ssec:absuniq} --- mixture
 stability and the restart lemma --- do not survive localization for free.
+
+\subsection{Generalizations not made, and why}
+\label{ssec:notgeneralized}
+
+Four axes have been pushed (index, clock, state space, local versus global) and
+one has been decided against on principle (locally compact state spaces).  It is
+worth going through the remaining candidates systematically, because for a
+blueprint the question ``what did you deliberately not do'' is as informative as
+the list of what was done, and because two of the answers are ``nothing, it is
+already there''.
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{0.34\textwidth}p{0.59\textwidth}@{}}
+\toprule
+\textbf{Candidate} & \textbf{Verdict} \\
+\midrule
+Complex-valued test processes
+  & \textbf{free}; see Remark~\ref{rem:complexvalued} \\
+Submartingale problems (reflecting boundaries)
+  & \textbf{half free}: the three workhorse lemmas of
+    Section~\ref{ssec:absuniq} survive verbatim, the uniqueness criterion does
+    not; see Remark~\ref{rem:inequalitystable} \\
+Quasimartingale decompositions in Section~\ref{sec:cadlag}
+  & \emph{already there, and weaker}: Definition~\ref{def:regclass} asks of
+    $C^f$ only one-sided limits and $L^1$ right continuity, not finite
+    variation \\
+Banach-valued test processes
+  & rejected: measure- and distribution-valued processes are handled by pairing
+    with a test function, so the gain is nil, and Section~\ref{sec:cadlag} needs
+    an order \\
+Path-dependent (random) clock
+  & \textbf{the real one}; see below \\
+Nonlinear dependence on $P$ (McKean--Vlasov)
+  & a genuine boundary of Section~\ref{sec:uniqueness}; see below \\
+Control variables, relaxed solutions
+  & available in \CPS{} and deliberately dropped; see below \\
+Signed or complex solution measures
+  & rejected: disintegration fails and nothing wants it \\
+\bottomrule
+\end{tabular}
+
+\medskip
+
+\paragraph{A path-dependent clock.}
+The clock of Definition~\ref{def:clock} is a \emph{deterministic} measure on
+$\T$.  Replacing it by a predictable increasing process $A(\omega)$, so that the
+compensator is $\int g(\pi_u)\dif A_u(\omega)$, is the step from a martingale
+problem to the semimartingale characteristics of \JS, Chapter~II.
+
+Two observations.  First, \emph{the abstract layer already contains it}:
+Definition~\ref{def:absMP} asks only that $\XX^\circ$ be a family of adapted
+path functionals, and $f(\pi_t)-\int_0^t g(\pi_u)\dif A_u$ is one.  It is only
+Definition~\ref{def:markovMP} that fixes a deterministic $q$, so the cost of the
+generalization is confined to Section~\ref{ssec:markovMP} and to the results
+that quantify over $q$.  Second, an \emph{absolutely continuous} random clock
+buys nothing: $\int g(\pi_u)a_u(\omega)\dif u$ is the path-dependent integrand of
+Setting~\ref{set:pathjump}, which is already treated.  What is genuinely new is a
+\emph{singular} $A$ --- a local time, or one with random jumps.
+
+And that is where the two halves of Section~\ref{ssec:weakstrong} separate.  A
+deterministic clock has its atoms at deterministic times, and
+Theorem~\ref{thm:absconvaug} then removes the discontinuity of the compensator by
+enlarging the path space with those finitely or countably many coordinates.  A
+random clock has its atoms at \emph{random} times, no fixed family of coordinates
+captures them, and the control variables and weak-strong convergence of \CPS{}
+become necessary --- exactly as Remark~\ref{rem:augvsws} predicts.  So the
+material of Section~\ref{ssec:weakstrong} that this manuscript does not need is
+precisely the material that the path-dependent clock would need, which is a good
+reason for having kept it.
+
+\paragraph{Nonlinear dependence on $P$.}
+In a McKean--Vlasov or nonlinear martingale problem the operator depends on the
+law of the solution, $A = A[\mathcal{L}(X_t)]$, so that $\XX$ depends on $P$.
+Every lemma in Section~\ref{ssec:absuniq} then fails at once, and for a reason
+the manuscript already knows: Lemma~\ref{lem:mixture} and
+Lemma~\ref{lem:restart} rest on the martingale property being an identity
+\emph{linear} in $P$.  This is the same failure that
+Section~\ref{ssec:localmp} confronts --- ``$Y$ is a local martingale'' is not
+linear in $P$ either --- and it is worth recording that the two have the same
+shape and different repairs: localization repairs it by a hypothesis \ref{it:L1}
+that restores linearity, whereas the nonlinear problem cannot be repaired that
+way and needs a fixed point instead.  Section~\ref{sec:convergence} is less
+affected: Theorem~\ref{thm:absconv} concludes membership in a \emph{fixed}
+$\Msol(\XX)$, so a nonlinear version needs the limit law to be identified before
+the theorem is applied, which is again a fixed point.  This is a different
+subject and is not attempted.
+
+\paragraph{Control variables and relaxed solutions.}
+\CPS{} carry a control space $U$ throughout, and this manuscript takes $U$ to be
+a singleton everywhere except Section~\ref{ssec:weakstrong}.  The general version
+would allow the approximating and limiting objects to be measures on
+$U \times F$, which is the setting of relaxed controls and of martingale problems
+with control.  It is a genuine generalization, it is available in the source, and
+it was dropped for a reason worth stating: with $U$ a singleton every statement
+in Sections~\ref{sec:MP}--\ref{sec:duality} is unchanged, so the control space
+would be an index carried through five sections and used in one.
+Remark~\ref{rem:augvsws} shows what it is for when it is needed.
 
 % =====================================================================
 \section{Preliminaries}
@@ -1730,6 +1829,25 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
   (Fact~\ref{fact:fdd}) and the monotone class theorem.
 \end{example}
 
+\begin{remark}[Complex-valued test processes are free]
+  \label{rem:complexvalued}
+  Definition~\ref{def:absMP} takes the elements of $\XX$ real-valued, and nothing
+  forces that.  A process with values in $\mathbb{C}$ is a martingale iff its real and
+  imaginary parts are, so $\Msol(\XX)$ is unchanged if $\XX$ is closed under
+  taking $\Re$ and $\Im$; and every statement in Sections~\ref{sec:MP},
+  \ref{sec:uniqueness} and \ref{sec:duality} is $\mathbb{C}$-linear in the test process,
+  so all of them hold verbatim for complex $\XX$.  In
+  Section~\ref{sec:cadlag} and Section~\ref{sec:convergence} one splits into real
+  and imaginary parts, the exceptional sets being intersected.
+
+  This is worth recording because it is the form the transform literature uses:
+  the affine and affine Volterra theory of \ALP{} works with
+  $e^{\mathrm{i}\langle u,X_t\rangle}$ rather than with real test functions, and
+  the duality function of Section~\ref{ssec:exduality} is a Laplace transform
+  only because the example is a point process.  Nothing has to be re-proved to
+  accommodate either.
+\end{remark}
+
 \subsection{The Markovian martingale problem}
 \label{ssec:markovMP}
 
@@ -3069,6 +3187,30 @@ uniqueness theory cannot do without.
   $\sigma(X(u) : u \leq r)$; such a $Z$ is \emph{not} a functional of the path and
   cannot be transported to $F$.  What can be transported is the \emph{law} of
   $X(r+\cdot)$ under $Z \cdot P$, which is what \eqref{eq:restart} asserts.
+\end{remark}
+
+\begin{remark}[The three lemmas are inequality-stable]
+  \label{rem:inequalitystable}
+  Lemmas~\ref{lem:mixture}, \ref{lem:disint} and \ref{lem:restart} are proved by
+  integrating an identity against a nonnegative weight, and none of the three
+  uses that the identity is an identity.  Replace ``$Y^\circ$ is a
+  $P$-martingale'' by ``$Y^\circ$ is a $P$-submartingale'' throughout, require the
+  determining set $\ZZ^\circ$ to consist of \emph{nonnegative} functionals ---
+  Example~\ref{ex:determining} supplies one, taking $h_k \geq 0$ --- and all three
+  statements hold verbatim, with $=$ replaced by $\geq$: a mixture of
+  submartingale solutions is one, so is a conditional law, and so is a restart,
+  because the weight $W = Z \cdot (Z^\circ_s \circ \theta_r)(X)$ in the proof
+  above is nonnegative.
+
+  This matters because the \emph{submartingale problem} of Stroock and Varadhan
+  --- the standard formulation of a diffusion with reflecting boundary
+  conditions, see \SV{} --- is of exactly this kind.  So the structural half of
+  Section~\ref{ssec:absuniq} is available there without a new proof.  What is
+  \emph{not} available is the uniqueness half: Definition~\ref{def:propagation}
+  compares two measures by equality of expectations, and an inequality does not
+  propagate agreement.  A submartingale problem therefore needs its own
+  uniqueness criterion, which is where the reflecting-boundary literature does
+  its work, and which is not attempted here.
 \end{remark}
 
 \begin{proof}
