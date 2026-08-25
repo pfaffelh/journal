@@ -53,6 +53,10 @@
 \newcommand{\Filt}{\mathcal{F}}
 \newcommand{\Gilt}{\mathcal{G}}
 \newcommand{\DGP}{\cite{DGP24}}
+\newcommand{\HO}{\cite{HO74}}
+\newcommand{\ALP}{\cite{ALP19}}
+\newcommand{\CT}{\cite{CT20}}
+\newcommand{\DVJ}{\cite{DVJ03}}
 \newcommand{\XX}{\mathbb{X}}                   % family of test processes
 \newcommand{\ZZ}{\mathbb{Z}}                   % determining set
 \newcommand{\MP}{\mathrm{MP}}
@@ -2824,6 +2828,12 @@ justification for Section~\ref{ssec:absuniq}.
   of \emph{processes} --- there was never a restriction there --- but it does
   supply a useful \emph{presentation}, provided one lifts the state and keeps the
   generator rather than lifting the state and deleting it.
+
+  This is not a device invented here.  \CT{} lift stochastic Volterra processes
+  to Markov processes on a space of forward curves, with a genuine generator and
+  a generalized Feller semigroup, and \ALP{} treat the same objects through their
+  transform formula; Section~\ref{ssec:exduality} meets both in
+  Remark~\ref{rem:hawkesknown}.
 
   \emph{What still does not follow is any theorem.}  Remark~\ref{rem:liftcollapse}
   applies verbatim to either version: on the lift the hypotheses of
@@ -5633,6 +5643,51 @@ memory-carrying analogue of \DGP's Example~6, where the dual solves
 $\dot{Y} = -\Psi(Y)$ for the branching mechanism $\Psi$; here the branching
 mechanism has become a Volterra kernel and the dual runs backwards.
 
+\begin{remark}[This duality is classical, and under three names]
+  \label{rem:hawkesknown}
+  Nothing in Lemma~\ref{lem:hawkesflow} or
+  Proposition~\ref{prop:hawkesduality} is new, and it is worth saying under which
+  names it is already available, because they are not obviously the same name.
+
+  \emph{As a cluster representation.}  \HO{} represent a self-exciting process as
+  a Poisson cluster process; the Laplace functional of a Poisson cluster process
+  is $\exp\{-\int\lambda(1-G_c)\}$ with $G_c$ that of a cluster, and for a
+  self-exciting cluster $G_c$ satisfies a fixed-point equation.  That is
+  \eqref{eq:hawkesdual} and the second half of \eqref{eq:hawkescond}, and it is
+  textbook point-process theory; see \DVJ, the chapter on Poisson cluster
+  processes.
+
+  \emph{As an exponential-affine transform formula.}  Substituting
+  $\chi(s) = \int_s^t \phi(u-s) w^{(t)}_f(u)\dif u$, so that
+  $w^{(t)}_f = 1 - e^{-f-\chi}$, turns \eqref{eq:hawkesdual} into
+  \begin{equation}
+    \label{eq:volterrariccati}
+    \chi(s) \;=\; \int_s^t \phi(u-s) \,
+      \bigl( 1 - e^{-f(u)-\chi(u)} \bigr) \dif u ,
+  \end{equation}
+  a backward \emph{Volterra--Riccati} equation whose nonlinearity
+  $x \mapsto 1-e^{-x}$ is the branching mechanism of Poisson offspring.  For the
+  exponential kernel $\phi = \alpha\beta e^{-\beta\cdot}$ the pair
+  $(N,\Lambda)$ is a finite-dimensional affine Markov process and
+  \eqref{eq:volterrariccati} collapses to a Riccati ODE; this is \cite{EGG10}.
+  For a general kernel it is the affine Volterra theory of \ALP, and the rough
+  Heston analogue is \cite{ER19}.
+
+  \emph{As a Markovian lift.}  \CT{} lift stochastic Volterra processes to
+  Markov processes on a space of forward curves and characterize them by a
+  generalized Feller semigroup.  That is Definition~\ref{def:pathlift} carried
+  out properly --- the lift that \emph{keeps} the generator, in the sense of
+  Remark~\ref{rem:liftform} --- and \eqref{eq:volterrariccati} is the transform
+  formula of the lifted process.
+
+  \emph{What is not classical} is only the packaging.  The verification below
+  reads the transform formula as \ref{it:D1}--\ref{it:D3} of
+  Setting~\ref{set:dualdata}, and Corollary~\ref{cor:hawkesrestart} reads it as a
+  restart kernel in the sense of \JS, Definition~III.2.37.  Both are
+  rearrangements of known facts, and neither is claimed as new mathematics; what
+  they buy is recorded in Remark~\ref{rem:hawkesscope}.
+\end{remark}
+
 \begin{proposition}[The remaining hypotheses; (T3)]
   \label{prop:hawkesDcheck}
   In Setting~\ref{set:hawkesdual}:
@@ -5749,6 +5804,12 @@ mechanism has become a Volterra kernel and the dual runs backwards.
   functionals both separate (\ref{it:D2}) and characterize
   (\ref{it:D3}); Remark~\ref{rem:histobstruction} explains that for a genealogy
   space neither is available, and nothing here helps there.
+
+  \emph{Novelty.}  None is claimed on the analytic side: see
+  Remark~\ref{rem:hawkesknown}.  The duality is the exponential-affine transform
+  formula for Hawkes processes, and what is done here is to check that it
+  satisfies \ref{it:D1}--\ref{it:D3} and to extract
+  Corollary~\ref{cor:hawkesrestart} from it.
 
   \emph{Numerics.}  Equation~\eqref{eq:hawkescond} and the cocycle
   \eqref{eq:hawkescocycle} were checked against a cluster simulation and against
@@ -7337,7 +7398,10 @@ analogy is that \eqref{eq:hawkesrate} \emph{is} a Volterra equation.
   solution of a Volterra stochastic differential equation with pure-jump noise,
   and the pair $(\Lambda,N)$ lies in the path space
   $L^p_{\mathrm{loc}}(\Rp,\R) \times D_\R[0,\infty)$ of
-  Example~\ref{ex:volterra}.  Approximants and limit below are thus elements of
+  Example~\ref{ex:volterra}.  This identification is standard: Hawkes processes
+  are the pure-jump members of the affine Volterra class of \ALP, and
+  Section~\ref{ssec:exduality} uses their transform formula
+  (Remark~\ref{rem:hawkesknown}).  Approximants and limit below are thus elements of
   one and the same solution set, for two triplets of the same shape --- one purely
   discontinuous, one continuous.
 \end{remark}
@@ -7699,10 +7763,30 @@ A.~Depperschmidt, A.~Greven and P.~Pfaffelhuber.
 \newblock \emph{Theor.\ Popul.\ Biol.} \textbf{159} (2024), 59--73.
 \newblock Preprint version: arXiv:1904.01564.
 
+\bibitem{DVJ03}
+D.~J.~Daley and D.~Vere-Jones.
+\newblock \emph{An Introduction to the Theory of Point Processes}.
+\newblock Vol.~I, 2nd edition, Springer, New York, 2003.
+
+\bibitem{EGG10}
+E.~Errais, K.~Giesecke and L.~R.~Goldberg.
+\newblock Affine point processes and portfolio credit risk.
+\newblock \emph{SIAM J.\ Financial Math.} \textbf{1} (2010), 642--665.
+
+\bibitem{ER19}
+O.~El Euch and M.~Rosenbaum.
+\newblock The characteristic function of rough Heston models.
+\newblock \emph{Math.\ Finance} \textbf{29} (2019), 3--38.
+
 \bibitem{EK86}
 S.~N.~Ethier and T.~G.~Kurtz.
 \newblock \emph{Markov Processes: Characterization and Convergence}.
 \newblock Wiley, New York, 1986.
+
+\bibitem{HO74}
+A.~G.~Hawkes and D.~Oakes.
+\newblock A cluster process representation of a self-exciting process.
+\newblock \emph{J.\ Appl.\ Probab.} \textbf{11} (1974), 493--503.
 
 \bibitem{JS03}
 J.~Jacod and A.~N.~Shiryaev.
@@ -7714,6 +7798,17 @@ T.~Jaisson and M.~Rosenbaum.
 \newblock Rough fractional diffusions as scaling limits of nearly unstable heavy
   tailed Hawkes processes.
 \newblock \emph{Ann.\ Appl.\ Probab.} \textbf{26} (2016), 2860--2882.
+
+\bibitem{ALP19}
+E.~Abi Jaber, M.~Larsson and S.~Pulido.
+\newblock Affine Volterra processes.
+\newblock \emph{Ann.\ Appl.\ Probab.} \textbf{29} (2019), no.~5.
+
+\bibitem{CT20}
+C.~Cuchiero and J.~Teichmann.
+\newblock Generalized Feller processes and Markovian lifts of stochastic
+  Volterra processes: the affine case.
+\newblock \emph{J.\ Evol.\ Equ.} \textbf{20} (2020), 1301--1348.
 
 \bibitem{Kal21}
 O.~Kallenberg.

@@ -2335,6 +2335,43 @@ $\hat g_u(\hat x)=\mathcal A_uf(\hat x)$ als pfadabhängiger Rate. Ex. `volterra
 klassische Markov-Apparat (zeitunabhängiger Operator, Halbgruppe, Feller) fehlt
 so oder so, weil die Fasern wachsen.
 
+### D50 — Literaturcheck: die Hawkes-Dualität ist klassisch  *(2026-08-25)*
+
+Frage des Nutzers, ob die Dualität aus D48 bekannt ist. **Ja, und unter drei
+Namen.** Neu Rem. `hawkesknown` in §7.2; Novitätsanspruch in Rem. `hawkesscope`
+zurückgenommen; fünf Referenzen ergänzt (via Crossref verifiziert).
+
+**(1) Clusterdarstellung.** Hawkes & Oakes, *J. Appl. Probab.* **11** (1974),
+493–503. Das Laplace-Funktional eines Poisson-Cluster-Prozesses ist
+$\exp\{-\int\lambda(1-G_c)\}$, und $G_c$ erfüllt eine Fixpunktgleichung — das ist
+genau \eqref{eq:hawkesdual}. Lehrbuchstoff, Daley–Vere-Jones Bd. I.
+
+**(2) Exponentiell-affine Transformformel.** Mit
+$\chi(s)=\int_s^t\phi(u-s)w^{(t)}_f(u)\dif u$, also $w=1-e^{-f-\chi}$, wird
+\eqref{eq:hawkesdual} zur **Volterra–Riccati-Gleichung**
+$$\chi(s)=\int_s^t\phi(u-s)\bigl(1-e^{-f(u)-\chi(u)}\bigr)\dif u,$$
+Nichtlinearität $x\mapsto1-e^{-x}$ = Verzweigungsmechanismus für
+Poisson-Nachkommen. (Symbolisch geprüft, Residuum $10^{-16}$.) Für
+$\phi=\alpha\beta e^{-\beta\cdot}$ ist $(N,\Lambda)$ endlichdimensional affin und
+das wird eine Riccati-ODE — Errais–Giesecke–Goldberg, *SIAM J. Financial Math.*
+**1** (2010), 642–665. Für allgemeinen Kern: Abi Jaber–Larsson–Pulido,
+*Ann. Appl. Probab.* **29** (2019), Nr. 5. Rough-Heston-Analogon:
+El Euch–Rosenbaum, *Math. Finance* **29** (2019), 3–38.
+
+**(3) Markovscher Lift.** Cuchiero–Teichmann, *J. Evol. Equ.* **20** (2020),
+1301–1348, heben stochastische Volterra-Prozesse zu Markov-Prozessen auf einem
+Raum von Forward-Kurven und charakterisieren sie über eine verallgemeinerte
+Feller-Halbgruppe. **Das ist Def. `pathlift` richtig ausgeführt** — der Lift, der
+den Generator *behält*, genau im Sinne von Rem. `liftform` (D49). Damit hat D45–D49
+eine Literaturverankerung, die vorher fehlte; in Rem. `liftform` zitiert.
+
+**Konsequenz fürs Manuskript.** Rem. `hawkesknown` sagt jetzt ausdrücklich, dass
+auf der analytischen Seite nichts neu ist. Nicht klassisch ist allein die
+*Verpackung*: die Transformformel als (D1)–(D3) von Setting `dualdata` zu lesen
+und daraus Cor. `hawkesrestart` als Restart-Kern im Sinne von J&S III.2.37 zu
+ziehen. Beides sind Umstellungen bekannter Tatsachen. Rem. `hawkesisvolterra`
+zitiert jetzt ebenfalls ALP19.
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),
