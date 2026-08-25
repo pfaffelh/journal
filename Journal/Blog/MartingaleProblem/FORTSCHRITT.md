@@ -1313,6 +1313,379 @@ zu prüfen.
 EK86 §4.2, (c) ist EK86 Kap. 5 bzw. SV79/Kallenberg 32. Vom Nutzer so gewollt,
 und (c) ist deshalb bewusst nur zitiert.
 
+### D30 — Feller-Prozesse: vorerst nicht  *(2026-08-24)*
+
+**Frage des Nutzers.** Sollen Feller-Prozesse getrennt behandelt werden?
+**Entscheidung: nein, vorerst nicht.** Manuskript unverändert.
+
+**Begründung.** Die Frage ist Q4 in anderer Verkleidung, denn Feller-Theorie
+*ist* Halbgruppentheorie: Definition über eine stark stetige positive
+Kontraktionshalbgruppe auf $\hat C(E)$, Existenz über Hille–Yosida,
+Pfadregularität über die Regularisierung von Resolventen-Supermartingalen. Genau
+das hat D5 gestrichen, und Rem. 2.5 dokumentiert die Grenze.
+
+Drei weitere Einwände:
+
+* **Lokale Kompaktheit.** $\hat C(E)$ gibt es nur für lokalkompaktes $E$, und
+  **D2 lehnt das ausdrücklich ab** — $E$ ist polnisch und nicht lokalkompakt,
+  die compact containment condition übernimmt die Rolle. Feller wäre ein Schritt
+  *zurück*. In der Abstufung (E0)–(E3) bräuchte es ein Bündel
+  „(E2) + lokalkompakt", das sonst nirgends vorkäme.
+* **Duplikat von §4**, in einem echt schwächeren Rahmen: Thm. 4.3 gilt für
+  allgemeines polnisches $E$ unter compact containment.
+* **Teilduplikat von §7.2**: Feller-Sprungprozesse sind ein Spezialfall von
+  Thm. 7.5; die interessanten Feller-Beispiele gehören zu §7.3.
+
+**Der eine echte Payoff ist ohnehin schon da.** Pfadregularität *ohne* compact
+containment steht als **Rem. 4.8**: für lokalkompaktes separables $E$ mit
+$\mathcal{D}(A)$ dicht in $\hat C(E)$ kann \eqref{eq:cc} entfallen, über die
+Einpunktkompaktifizierung (EK86 Cor. 4.3.7). Fünf Zeilen, ohne eine Halbgruppe
+zu definieren.
+
+**Falls Q4 später doch aufgemacht wird**, dann nicht Feller allein, sondern als
+**Paket mit EK86 Thm. 4.4.1 und Cor. 4.4.4** — dem Halbgruppen-Eindeutigkeits\-kriterium,
+das D5 mit entfernt hat. Beide hängen an derselben Maschinerie; eines ohne das
+andere zahlt den vollen Preis für die halbe Ausbeute. Umfang grob: ein neues
+Kapitel-1-Material in §2.4, ein Abschnitt in §5, einer in §7 — sechs bis acht
+Seiten und ein deutlich größeres Formalisierungsziel.
+
+Eine Bemerkung, die diese Abwägung im Manuskript festhielte, war vorgeschlagen
+und ist auf Wunsch des Nutzers **nicht** geschrieben worden; sie steht hier.
+
+### D31 — Konvergenz von Prozessen auf verschiedenen Uhren  *(2026-08-24)*
+
+**Frage des Nutzers.** Kann man Konvergenz von Prozessen haben, die auf
+verschiedenen Uhren leben? **Ja**, und die Antwort zerfällt in drei Teile. Neu
+als **§7.7 „Approximation on different clocks"**.
+
+**1. Thm. 7.4 erlaubt es bereits — das hatte ich in D24 nicht ausgesprochen.**
+Die Hypothesen (C1)–(C3) reden ausschließlich über die kanonische Version
+$Y^\circ$ des **Limes**, ausgewertet entlang $X^n$. Die approximierenden
+Martingalprobleme kommen im Satz überhaupt nicht vor — weder ihre Testprozesse
+noch ihre Uhren. Verschiedene Uhren sind also kein Problem des Satzes, sondern
+seiner *Verifikation*.
+
+**2. Thm. 7.25 (Uhrenwechsel).** Approximanten mit eigener Uhr $q^n$ und eigener
+Konvention $\iota_n$:
+$Y^n_t=\xi^n_t-\int_{\langle 0,t\rangle_{\iota_n}}\psi^n_u\,q^n(du)$ Martingal.
+Mit der **Uhrdiskrepanz**
+$$\Delta^n_{s,t}=\int_{\langle s,t\rangle_{\iota_n}}\psi^n\,dq^n-\int_{\langle s,t\rangle_{\iota}}\psi^n\,dq$$
+und (K1)–(K4) folgt (C3c). Der Beweis ist die Zerlegung
+$R^n_r=Y^\circ_r(X^n)-Y^n_r$ in vier Terme, von denen jeder einzeln gegen null
+geht; benutzt wird nur die Additivität \eqref{eq:clockadd} — die für **beide**
+Konventionen gilt, weshalb $\iota_n\ne\iota$ nichts kostet.
+
+Das ist CPS Thm. 5.4 ohne Kontrollvariablen; (K4) ist deren (5.10).
+
+**(K4) ist nicht schwache Konvergenz $q^n\Rightarrow q$** (Rem. 7.26), sondern
+Konvergenz **gepaart mit den Integranden**. Aus $q^n\Rightarrow q$ folgt sie
+nicht, solange die $\psi^n$ nicht gleichgradig stetig sind — und im
+Hauptbeispiel sind sie es gerade nicht (stückweise konstant). Deshalb steht sie
+bei CPS als Hypothese.
+
+**3. Ex. 7.27 — das Invarianzprinzip als Uhrenaussage.** Mit
+$q^n=\frac1n\sum_k\delta_{k/n}$, $\iota_n=\mathrm{p}$, $q=\lambda$ und
+$X^n_t=\Xi^n_{\lfloor nt\rfloor}$ für eine Markovkette mit Kern $P_n$: setzt man
+$\xi^n=f(X^n)$ und $\psi^n_u=n(P_nf-f)(X^n_u)$, so ist \eqref{eq:approxclock}
+**genau die Doob-Zerlegung**, weil $q^n(\{k/n\})=1/n$. Dann ist (K2) trivial,
+(K3) die klassische Generatorkonvergenz $n(P_nf-f)\to Af$, und (K4) gilt, weil
+$\psi^n$ auf jedem $[k/n,(k+1)/n)$ konstant ist: diskretes und
+Lebesgue-Integral stimmen bis auf die zwei Randintervalle überein,
+$|\Delta^n_{s,t}|\le\frac2n\sup|\psi^n|$.
+
+> **„Reskalierte Markovkette konvergiert gegen Diffusion" ist in diesem
+> Formalismus eine Aussage über Uhren.**
+
+**Rem. 7.28 — was dafür bezahlt wurde.** Drei frühere Entscheidungen sind nötig,
+um Ex. 7.27 überhaupt hinschreiben zu können, und keine wurde mit Blick darauf
+getroffen:
+
+* **Atome** (D7): ohne Uhr mit Atomen *ist* das MP der Kette kein
+  Martingalproblem; man müsste die Kette in stetige Zeit interpolieren — genau
+  das Manöver, das der Uhr-Begriff überflüssig macht.
+* **Uhren als Maße auf $\mathbb{T}$** (D9): verschiedene Uhren auf *einem*
+  $\mathbb{T}$ subsumieren verschiedene Zeitindexmengen, solange die sich
+  einbetten — $\frac1n\mathbb{N}_0\subset\mathbb{R}_+$ trägt $q^n$, ein zweiter
+  Indexraum wird nicht gebraucht.
+* **Beide Konventionen** (D28): die Kette braucht $\iota=\mathrm{p}$, der Limes
+  ist unter Lebesgue konventionsfrei. Hätte man eine fixiert, müsste man das
+  halbe Beispiel umschreiben; so unterscheiden sich die beiden um
+  $\psi^n_t q^n(\{t\})=(P_nf-f)(X^n_t)=O(1/n)$ und **waschen sich im Limes
+  heraus**. Ein nachträgliches Argument für „beide führen".
+
+**Nicht geliefert:** Straffheit. Thm. 7.25 setzt (C1) voraus; $X^n\Rightarrow X$
+auf $D_E$ nachzuweisen ist die Skorokhod-Hälfte und bleibt zitiert.
+
+### D32 — bp-Limes abgeschwächt: majorisierte Konvergenz genügt  *(2026-08-24)*
+
+**Frage des Nutzers.** Wo wird der bp-Limes gebraucht, und kann man ihn nicht
+durch geeignete Konvergenz unter dem Integral ersetzen? **Antwort: an genau einer
+Stelle, und ja.**
+
+**Der Befund.** bp taucht inhaltlich nur in Rem. 3.9(b),(c) auf (EK86
+Prop. 4.3.1). Und **Fact 2.29 wurde in keinem einzigen Beweis zitiert** — die
+beiden `\ref`s standen in der Verwendungstabelle und in der „to be built"-Liste;
+selbst Rem. 3.9 verwies im Text nicht darauf. Von den vier Aussagen des Facts
+wurde höchstens die erste gebraucht; bp-Dichtheit von $C_b$, der separable Fall
+und die Identifikation mit der schwach-\*-Topologie waren **tote
+Voraussetzungen**.
+
+**Was das Argument wirklich braucht:** majorisierte Konvergenz in \eqref{eq:fdd},
+sonst nichts. Der Testfaktor $\prod_k h_k(X(t_k))$ ist beschränkt.
+
+**Umsetzung.**
+
+* **Lem. 3.10 (Abschluss längs einer Lösung).** Konvergiert
+  $f_n(X_t)\to f(X_t)$ in $L^1(P)$ und
+  $\int_{\langle s,t\rangle_\iota}g_n(X_u)q(du)\to\int_{\langle s,t\rangle_\iota}g(X_u)q(du)$
+  in $L^1(P)$, so löst $X$ auch das MP für $A\cup\{(f,g)\}$. Beweis: Grenzübergang
+  in \eqref{eq:fdd}, zwei Zeilen.
+* **Cor. 3.11.** bp-Konvergenz impliziert das — für **jede** Lösung, jedes $P$ und
+  jede Uhr. Damit bleiben Rem. 3.9(b),(c) und EK86 Prop. 4.3.1 in voller Stärke
+  erhalten.
+* **Rem. 3.12** erklärt die Rolle des Begriffs, die im Text bisher fehlte:
+  **bp ist die stärkste $X$-unabhängige Bedingung.** Die Majoranten hängen allein
+  von der Folge ab, nicht vom Gesetz von $X$, nicht von der Uhr, nicht von der
+  Konvention — und *genau das* macht Cor. 3.11 zu einer Aussage über **Operatoren**.
+  Lem. 3.10 ist eine Aussage über eine **gegebene Lösung**: schwächer als
+  Behauptung über $A$, stärker als Werkzeug.
+
+**Eine Inkonsistenz, die dabei aufgefallen ist.** Def. 3.5 lässt
+$A\subset M(E)\times M(E)$ zu und Prop. 3.7 setzt **Integrierbarkeit** von
+$Y^{f,g}$ voraus, nicht Beschränktheit. Die bp-Abschließung lebt aber in
+$B(E)\times B(E)$ und verengte das stillschweigend — mitten in §3. Lem. 3.10
+repariert das.
+
+**Aufgeräumt.** Fact 2.29 auf die eine gebrauchte Aussage zusammengestrichen, der
+Rest als Rem. 2.30 mit der Notiz, dass er unbenutzt ist. Verwendungstabelle:
+Fact 2.29 → „Cor. 3.11 only". §9-Liste: der bp-Punkt trägt jetzt den Zusatz, dass
+er optional ist, weil die Arbeitsaussage Lem. 3.10 ist und das majorisierte
+Konvergenz ist — in Mathlib vorhanden.
+
+### D33 — Eindeutigkeit ist nicht Markovsch: §5 umsortiert  *(2026-08-25)*
+
+**Frage des Nutzers.** Gibt es Eindeutigkeit nur im Markov-Fall? **Nein**, und
+das Manuskript hat die Rollen vermengt: der Beweis von Thm. 5.9(b) lief über das
+Restart-Lemma, also über das Shift-System — **musste es aber nicht**.
+
+**Was die Induktion wirklich braucht.** Nur
+
+> **(U)** $P=Q$ auf $\mathcal{F}^\circ_s$ $\Rightarrow$ $P=Q$ auf
+> $\mathcal{F}^\circ_s\vee\sigma(\pi_t)$ für $s\le t$
+
+— „Übereinstimmung pflanzt sich eine Koordinate weiter fort". Daraus folgt die
+Eindeutigkeit direkt: aus der Induktionsvoraussetzung folgt via Dynkin
+$P=Q$ auf $\mathcal{F}^\circ_{t_n}$ (die Produkte $\prod h_k(\pi_{t_k})$ sind
+eine multiplikative Erzeugendenklasse), dann (U). **Kein $\theta_r$, kein
+Restart, keine geshiftete Familie** — und die Positivitätsannahme $f_k>0$, die
+nur zum Normieren der Dichte diente, fällt weg.
+
+**Umsetzung.**
+
+* **Def. 5.5** (propagation of agreement) und **Prop. 5.6** (Eindeutigkeit),
+  bewusst für eine **beliebige Familie $\mathcal{N}\subset\mathcal{P}(F)$**
+  formuliert, nicht für $\mathcal{M}(\mathbb{X}^\circ)$. Damit gilt sie ohne
+  Zusatzarbeit auch für $\mathcal{M}_{\mathrm{loc}}$ — §5.3 muss nichts
+  wiederholen.
+* **Lem. 5.11**: Shift-System + eindimensionale Eindeutigkeit $\Rightarrow$ (U).
+  Das ist der isolierte Restart-Schritt.
+* **Thm. 5.12** bleibt, sein Teil (b) ist jetzt Lem. 5.11 + Prop. 5.6.
+* **Rem. 5.13** mit der Tabelle: Eindeutigkeit braucht (U) — *nicht* Markovsch;
+  (U) aus eindimensionalen Verteilungen und die Markoveigenschaft brauchen das
+  Shift-System.
+
+**Warum EK Markovsch aussieht.** Weil die Hypothese **unbedingt** formuliert ist,
+über die eindimensionalen Verteilungen — und eine unbedingte Hypothese lässt sich
+zu einem späteren Zeitpunkt nur durch Neustarten anwenden. Formuliert man sie
+bedingt, wie (U), verschwindet die Markov-Struktur aus der Eindeutigkeitshälfte.
+
+**Gewinn in der Bündeltabelle: (T4) fällt weg.** Prop. 5.6 braucht nur (T2a) —
+die lineare Ordnung für die Ketten (Rem. 5.14) —, kein Monoid, keine Uhr.
+
+**§5 neu sortiert**, damit der nicht-Markovsche Kern vorn steht:
+§5.1 „Uniqueness without a Markov structure" (Mischung, Disintegration,
+Propagation, Eindeutigkeit), §5.2 „The Markov layer: shift systems"
+(Shift-System, Ex. 5.9, Restart, Lem. 5.11, Thm. 5.12, starke Markov),
+§5.3 lokale Theorie, §5.4 lokale Eindeutigkeit, **§5.5 nicht-Markovsche
+Testobjekte**, §5.6 der Markovsche Fall.
+
+### D34 — Testobjekte aus CPS  *(2026-08-25)*
+
+Auf Wunsch des Nutzers als **§5.5** eingebaut, um die Aufteilung zu prüfen statt
+sie zu behaupten.
+
+**Ex. 5.32 — Volterra-SDEs (CPS Ex. 3.13).** Pfadraum
+$L^p_{\mathrm{loc}}(\mathbb{R}_+,\mathbb{R}^d)\times D(\mathbb{R}^k)$,
+Testprozesse $f(\pi^Z_t)-\int_0^t Lf(\pi^X_s,\pi^Z_s)ds$ plus die
+Volterra-Nebenbedingung. **Kein Shift-System**, und zwar aus einem Grund: der
+Kern $K_{t-s}$ macht $\pi^X_t$ von der ganzen Vergangenheit von $\pi^Z$
+abhängig; Shiften um $r$ erzeugt einen Kern, der auch $\pi^Z$ vor $r$ sieht, und
+das kann kein $\mathbb{X}^\circ_r$ im Sinne von Def. 5.7 reproduzieren.
+
+Was überlebt: Def. 3.2/3.3, Lem. 5.2, Lem. 5.3 (der Pfadraum ist polnisch, also
+(E1)), **Prop. 5.6** — Eindeutigkeit in Verteilung *ist* (U), und Prop. 5.6 macht
+daraus die Eindeutigkeit des ganzen Gesetzes —, und Thm. 7.4 (CPS §4.2 ist genau
+ein Stabilitätssatz für VSDEs daraus). Was ausfällt: Thm. 5.12, Thm. 5.15,
+§5.4 und ganz §6.
+
+**Ex. 5.33 — Semimartingale mit pfadabhängigem Tripel (J&S Kap. III).** Hier ist
+§5.3 **vollständig** verfügbar: das lokalisierende System aus Lem. 5.21 wird aus
+den Testprozessen selbst gebaut und braucht keinen Shift — genau J&S III.2.8.
+§5.4 dagegen nicht, weil das Zusammenkleben eine Shift-Operation ist. Das ist die
+schärfste Illustration:
+
+> **Lokalisierung ist nicht Markovsch, Neustarten schon.**
+
+**Rem. 5.34** stellt die Zweiteilung des ganzen Manuskripts tabellarisch dar.
+Links steht: ganz §3, ganz §4, ganz §7, die Eindeutigkeitshälfte von §5 und der
+analytische Kern von §6. Rechts: das Shift-System und was darauf ruht — und
+**jeder** Eintrag rechts hat eine Konklusion, die selbst Markovsch ist
+(Markoveigenschaft, Reduktion auf eindimensionale Verteilungen, Pasting,
+Dualität). Nichts davon wäre durch ein besseres Argument vermeidbar gewesen.
+
+### D35 — Weak-strong convergence: warum sie bisher fehlte  *(2026-08-25)*
+
+**Frage des Nutzers.** In CPS gibt es weak-strong convergence — wieso kommt sie
+hier nicht vor?
+
+**Antwort.** Weil Thm. 7.4 als CPS **Cor. 3.17** formuliert ist, dem Fall eines
+**einpunktigen Kontrollraums**; nach CPS Rem. 2.2(i) ist weak-strong convergence
+dort schlicht schwache Konvergenz. Das war eine bewusste Vereinfachung, stand
+aber nur als Halbsatz in Rem. 7.23.
+
+**Und es ist keine Randfrage, sondern hängt an den Atomen.** CPS §4.3 gibt das
+Gegenbeispiel, und es ist genau unsere Situation: $q=\delta_1$,
+$$F_t(\omega)=\int_{[0,t)}\omega(s)\,q(ds)=\begin{cases}0,&t<1\\ \omega(1-),&t\ge1\end{cases}$$
+ist $J_1$-stetig für $t<1$ und **für jedes $t\ge1$ unstetig**
+($\omega_n=\mathbf{1}_{[1-1/n,\infty)}\to\mathbf{1}_{[1,\infty)}$, aber
+$F_t(\omega_n)=1\not\to0$). Es gibt also **keine dichte Menge $\Gamma$**, auf der
+$F_t$ stetig wäre — (C3a) fällt nicht auf einer abzählbaren Ausnahmemenge aus,
+sondern auf einer Menge vollen Maßes.
+
+Damit ist das die **zweite** Stelle, an der Atome einen Preis fordern: bei der
+Dualität war es die Wahl der Konvention (Rem. 6.3), hier ist es eine Verschärfung
+des Konvergenzbegriffs.
+
+**Eingebaut als §7.8.** Ex. 7.29 (das Gegenbeispiel), Def. 7.30 (weak-strong:
+Stetigkeit nur in der zweiten Variablen, Messbarkeit in der ersten), Def. 7.31
+($(P^n,P)$-Stetigkeit: Stetigkeit nur längs der Schnitte $A_\alpha$ und nur auf
+einer Menge asymptotisch vollen Maßes), Fact 7.32 (Jacod–Mémin), Thm. 7.33,
+Rem. 7.34 (was die Kontrollvariable tut: sie dominiert die Sprungzeiten, und auf
+den Schnitten fallen $J_1$ und lokal gleichmäßige Topologie zusammen).
+
+**Bemerkenswert am Beweis von Thm. 7.33:** es ist **nichts** zu ändern außer zwei
+Zitaten. Schritte 0, 1, 2 von Thm. 7.4 bestehen jeweils daraus, den
+Continuous-Mapping-Satz anzuwenden und dann mit gleichgradiger Integrierbarkeit
+zur Konvergenz der Erwartungswerte aufzurüsten — und Fact 7.32 leistet beides in
+einem, unter den schwächeren Hypothesen. Schritt 3 benutzt gar keine Stetigkeit.
+Die ganze Arbeit steckt in Jacod–Mémin, das nicht bewiesen wird.
+
+§7.7 und §7.8 sind damit ein Paar: die eine lockert (C3c), die andere (C3a) — die
+beiden Hypothesen von Thm. 7.4, die in der Praxis ausfallen.
+
+### D36 — Korrektur: der Neustart braucht den Shift nicht  *(2026-08-25)*
+
+**Einwand des Nutzers.** „Ich verstehe nicht, wieso Neustart zur Markov-Annahme
+führt. Wenn ich mir den ganzen Pfad merke, muss ich den Prozess doch ebenfalls
+neu starten können." **Der Einwand trifft, und meine Erklärung in D33 war
+falsch.**
+
+Der Neustart ist voraussetzungsfrei. Neu als **Lem. 5.5**:
+
+> $P\in\mathcal{M}(\mathbb{X}^\circ)$, $Z\ge0$ beschränkt und
+> $\mathcal{F}^\circ_r$-messbar mit $E^PZ=1$. Dann ist $Z\cdot P$ **ab $r$**
+> wieder eine Lösung: $E^{Z\cdot P}[Y^\circ_t\mid\mathcal{F}^\circ_s]=Y^\circ_s$
+> für $r\le s\le t$.
+
+Beweis: für $G\in\mathcal{F}^\circ_s$ ist $Z\mathbf{1}_G$ beschränkt und
+$\mathcal{F}^\circ_s$-messbar, weil $r\le s$; also
+$E^P[(Y_t-Y_s)Z\mathbf{1}_G]=0$. **Zwei Zeilen, kein Shift, keine
+Markov-Struktur** — nur die Turmeigenschaft. Und wer die bedingten Gesetze selbst
+will statt einer Umgewichtung, bekommt sie aus Lem. 5.3 (Disintegration):
+$P(\cdot\mid\mathcal{F}^\circ_r)$ existiert für standard-borelsches $F$ und
+besteht aus Lösungen ab $r$.
+
+**Was der Shift wirklich leistet, ist eine *Umindizierung*.** Eine Hypothese über
+**Anfangs**verteilungen — \eqref{eq:absonedim}, und ebenso EK86 Thm. 4.4.2 — lässt
+sich auf das neu gestartete Objekt erst anwenden, nachdem dieses in einen bei $0$
+beginnenden Prozess verwandelt wurde; und die Abbildung, die das tut, ist
+$\theta_r$, die den Pfad vor $r$ **wegwirft**. Das ist die ganze Markov-Struktur
+von §5.2:
+
+> **nicht die Fähigkeit, neu zu beginnen, sondern die Forderung, dass Neubeginnen
+> wie Beginnen aussieht.**
+
+Def. 5.7 (Propagation) ist dieselbe Idee ohne Umindizierung: verglichen wird zur
+Zeit $s$, wo die beiden Maße ohnehin übereinstimmen, also muss nichts nach $0$
+transportiert werden. Deshalb ist Prop. 5.8 Markov-frei und Lem. 5.13 nicht.
+
+Als **Rem. 5.6** dokumentiert; Rem. 5.15 und die Audit-Tabelle in Rem. 5.36
+entsprechend korrigiert (Lem. 5.5 steht jetzt **links**, in der Markov-freien
+Spalte).
+
+### D37 — Hawkes-Prozesse und ihr Volterra-Limes (Task 15)  *(2026-08-25)*
+
+Neu als **§7.9**. Zwei Teile, wie mit dem Nutzer vereinbart: Teil 1 bewiesen,
+Teil 2 bedingt auf Straffheit und mit zitiertem Skalierungsresultat.
+
+**Teil 1 — Sprungprozesse mit pfadabhängiger Rate (Setting 7.35, Thm. 7.37).**
+Statt $\lambda(x)$, $\mu(x,\cdot)$ jetzt **prädiktable** Funktionale
+$\Lambda(t,\omega)$, $\mu(t,\omega,\cdot)$, die nur von $\omega|_{[0,t)}$
+abhängen. Die Haltezeit ist dann **nicht mehr exponentiell**; sie ist die erste
+Punktzeit eines inhomogenen Poissonprozesses,
+$$\tau_{n+1}=\inf\Bigl\{t>\tau_n:\int_{\tau_n}^t\Lambda(u,\omega^{(n)})du>\varepsilon_{n+1}\Bigr\}.$$
+
+**Die Rechnung überlebt unverändert**, und das ist der Punkt. Mit
+$A_n(u)=\int_{\tau_n}^u\Lambda(v,\omega^{(n)})dv$ ist die Sprungzeitdichte
+$\Lambda_ue^{-A_n(u)}$ und die Überlebensfunktion $e^{-A_n(s)}$, also
+$$E[(f(Y_{n+1})-f(Y_n))\mathbf{1}_{\tau_{n+1}\le t}\mid\mathcal{H}_n]
+=\int_{\tau_n}^t\Lambda_ue^{-A_n(u)}(\mu_uf-f)\,du$$
+$$E\Bigl[\int_{\tau_n}^{\tau_{n+1}\wedge t}\mathcal{A}_sf\,ds\Bigm|\mathcal{H}_n\Bigr]
+=\int_{\tau_n}^t\Lambda_s(\mu_sf-f)\,e^{-A_n(s)}\,ds,$$
+und das ist dasselbe. Es ist **dieselbe Aufhebung wie in Thm. 7.5** — Rate im
+Generator gegen Überlebensfunktion der Haltezeit —, nur mit $\Lambda_ue^{-A(u)}$
+statt $\lambda e^{-\lambda a}$. Thm. 7.5 ist der Fall konstanter Rate.
+
+Verschwunden ist allein die Markov-Struktur, und mit ihr das Shift-System:
+Thm. 7.37 liefert Lösungen, auf die **Prop. 5.8 anwendbar ist und Thm. 5.12
+nicht** (Rem. 7.38). Damit hat die nicht-Markovsche Schicht endlich ein
+konstruiertes Beispiel statt nur zitierter.
+
+**Ex. 7.39 — Hawkes.** $\Lambda(t,\omega)=\mu_0+\int_{[0,t)}\phi(t-s)d\omega_s$.
+Für $\|\phi\|_1<1$ keine Explosion; für $\|\phi\|_1\ge1$ das lokale Problem,
+lokalisiert durch die Sprungzeiten. **Kein Defekt, sondern der Punkt:** der
+interessante Skalierungslimes lebt bei $\|\phi\|_1\uparrow1$, also genau dort, wo
+§5.3 gebraucht wird.
+
+**Teil 2 — der Limes. Die Beobachtung, die alles trägt (Rem. 7.40):**
+
+> **Ein Hawkes-Prozess *ist* eine Volterra-Gleichung.**
+
+Mit $Z=N$, $X=\Lambda$ lautet \eqref{eq:hawkesrate} wörtlich
+$X_t=g_0(t)+\int_{[0,t)}K_{t-s}dZ_s$ mit $g_0\equiv\mu_0$, $K=\phi$ — die
+Nebenbedingung aus Ex. 5.34 —, und $Z$ ist ein Semimartingal mit von $X$
+gesteuerten Charakteristiken, $a=0$, $\nu(x,dy)=x\delta_1(dy)$. Approximanten und
+Limes sind also Elemente **einer** Lösungsmenge, für zwei Tripel derselben
+Bauart: eines rein unstetig, eines stetig. Die Konvergenz ist damit keine
+Analogie, sondern eine Anwendung.
+
+**Thm. 7.41** formuliert sie als Anwendung von Thm. 7.4 (Identifikation) plus
+**Prop. 5.8** (Eindeutigkeit des Limes — und die *muss* nicht-Markovsch sein,
+weil ein Volterra-Prozess es nicht ist).
+
+**Rem. 7.42, Abgrenzung.** Straffheit wird vorausgesetzt, hier wie überall in §7;
+für Hawkes $\to$ rauhe Volterra ist sie die eigentliche Substanz
+(Jaisson–Rosenbaum, `JR16`, jetzt in der Bibliographie), zitiert statt bewiesen.
+Ferner: **weak-strong wird nicht gebraucht** (Sprunghöhe 1, stetiger Limes, also
+keine festen Unstetigkeitsstellen), und **die Uhr wechselt nicht**, wenn man den
+zeitstetigen Prozess reskaliert — §7.7 käme erst bei diskreten Approximanten ins
+Spiel. Und der eigentliche Befund: **kein einziges Resultat aus §5.2 wird
+benutzt.** Weder Approximanten noch Limes haben ein Shift-System, und keines wird
+gebraucht.
+
+**Nebenbei:** die Bündeltabelle in §2.9 war zu lang geworden und lief über den
+Seitenrand; sie ist jetzt in drei Blöcke geteilt.
+
 ---
 
 ## Prüfprotokoll
@@ -1703,3 +2076,50 @@ Bündeltabelle, Abstract, §1.3 und §8 (neuer Schritt F0) nachgezogen.
 
 Kompiliert, 56 Seiten, keine undefinierten oder doppelten Referenzen,
 5 Overfull-Boxen (max 7,7 pt).
+
+### 2026-08-24 — v18 (58 S.): verschiedene Uhren
+
+→ D31. Neu §7.7 mit Setting 7.24, Thm. 7.25 (Uhrenwechsel), Rem. 7.26,
+Ex. 7.27 (Invarianzprinzip) und Rem. 7.28. Bündeltabelle und Rem. 7.23
+nachgezogen.
+
+Kompiliert, 58 Seiten, keine undefinierten oder doppelten Referenzen,
+5 Overfull-Boxen (max 7,7 pt).
+
+### 2026-08-24 — v19 (59 S.): bp-Limes abgeschwächt
+
+→ D32. Neu Lem. 3.10, Cor. 3.11, Rem. 3.12 und Rem. 2.30; Fact 2.29
+zusammengestrichen; Tabelle und §9 nachgezogen.
+
+Kompiliert, 59 Seiten, keine undefinierten oder doppelten Referenzen,
+5 Overfull-Boxen (max 7,7 pt).
+
+### 2026-08-25 — v20 (63 S.): nicht-Markovsche Schicht
+
+→ D33, D34. §5 in sechs Unterabschnitte umsortiert; Def. 5.5/Prop. 5.6
+(Eindeutigkeit ohne Markov, für beliebige Maßfamilien), Lem. 5.11 (Shift ⟹ (U)),
+Rem. 5.13; neu §5.5 mit Ex. 5.32 (Volterra), Ex. 5.33 (pfadabhängige
+Semimartingale) und Rem. 5.34 (Audit-Tabelle). Abstract, §1.2, Bündeltabelle und
+§5.3 nachgezogen.
+
+Kompiliert, 63 Seiten, keine undefinierten oder doppelten Referenzen,
+5 Overfull-Boxen (max 7,7 pt).
+
+### 2026-08-25 — v21 (65 S.): weak-strong convergence, Neustart korrigiert
+
+→ D35, D36. Neu §7.8 (weak-strong convergence, mit dem Atom-Gegenbeispiel) und
+Lem. 5.5 / Rem. 5.6 (Neustart mit Gedächtnis). Rem. 5.15, Rem. 5.36 und Rem. 7.23
+nachgezogen.
+
+Kompiliert, 65 Seiten, keine undefinierten oder doppelten Referenzen,
+5 Overfull-Boxen (max 7,7 pt).
+
+### 2026-08-25 — v22 (67 S.): Hawkes und Volterra
+
+→ D37. Neu §7.9 mit Setting 7.35, Thm. 7.37 (pfadabhängige Rate, bewiesen),
+Ex. 7.39 (Hawkes), Rem. 7.40 (Hawkes = Volterra), Thm. 7.41 (Konvergenz) und
+Rem. 7.42. Bündeltabelle erweitert und dreigeteilt, §7-Einleitung nachgezogen,
+`JR16` in der Bibliographie.
+
+Kompiliert, 67 Seiten, keine undefinierten oder doppelten Referenzen,
+7 Overfull-Boxen (max 7,7 pt), keine Seitenüberläufe mehr.

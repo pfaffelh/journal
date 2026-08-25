@@ -253,7 +253,15 @@ is exactly where a formalization stalls.
    D8 at the level of the proof: Steps 0–2 need only (T0), Step 3 alone needs
    (T2b), and with $D = \mathbb{T}$ it is empty. **(F5a) is unblocked.**
 
-## Task 3 — Lean architecture — `todo`
+## Task 3 — Lean architecture — `on hold` *(2026-08-25, user)*
+
+**Deferred deliberately.** The user's judgement: the theory has to stand first,
+examples included, and since this is new ground much of it is still unclear.
+Starting the formalization now would freeze definitions that are still moving —
+Def. 5.7 (propagation), Def. 5.9 (shift system) and Def. 2.6 (clock) have each
+changed shape within the last few revisions. Resume when the theory has settled.
+
+Original content:
 
 Decide, and record in `FORTSCHRITT.md`:
 
@@ -269,14 +277,14 @@ Decide, and record in `FORTSCHRITT.md`:
   Def. 3.2's local variant;
 * naming conventions, aligned with Mathlib's `Probability/Process/`.
 
-## Task 4 — Lean skeleton — `todo`
+## Task 4 — Lean skeleton — `blocked by Task 3`
 
 All definitions and all theorem statements, with `sorry` for every proof, in the
 order §8 (F1)–(F5). The point is to make the statements type-check before any
 proof is attempted; a statement that will not type-check is a statement that was
 not fully understood.
 
-## Task 5 — (F1) + (F2): definitions and uniqueness — `todo`
+## Task 5 — (F1) + (F2): definitions and uniqueness — `blocked by Task 3`
 
 **(F1)** Def. 3.2, Def. 3.5, the filtration (2), Def. 3.10, Def. 3.15,
 Prop. 3.7. **(F2)** Lem. 5.2 (mixtures), Lem. 5.3 (disintegration, needs (E1)),
@@ -288,14 +296,14 @@ regularity and no Skorokhod space — except Thm. 5.11 (strong Markov) and all o
 natural first real proof effort; almost all the content sits in Lem. 5.8, which
 is four lines.
 
-## Task 6 — (F3): duality — `todo`
+## Task 6 — (F3): duality — `blocked by Task 3`
 
 Lem. 6.1 (chain identity, (T0)+(T4)+clock), Prop. 6.2, Cor. 6.10 (Markov chains),
 then Lem. 6.5, Thm. 6.6, Cor. 6.8, Cor. 6.14 (all (T3)). Self-contained measure
 theory. Together with Task 5 this yields a complete uniqueness theory in Lean.
 Lem. 6.1 and Cor. 6.10 need no analysis at all and can go first.
 
-## Task 7 — (F4): càdlàg modification — `todo`
+## Task 7 — (F4): càdlàg modification — `blocked by Task 3`
 
 Facts 2.17, 2.18 — **but these exist already**, in `RemyDegenne/brownian-motion`,
 and for quasimartingales at that (D27, Rem. 8.1 of the manuscript). What remains
@@ -306,12 +314,12 @@ Formalize the abstract version: Def. 4.2 is three hypotheses (R1)–(R3) on a pa
 of processes, while $\dom(A)$ would drag in the operator, its domain and the
 filtration ${}^{*}\mathcal{F}^X$, none of which the proof uses.
 
-## Task 8 — (F5): convergence — `todo`
+## Task 8 — (F5): convergence — `blocked by Task 3`
 
 Split in two by the answer to Q7; the split is the point, because 8a is small and
 8b is the largest item in the whole plan.
 
-### Task 8a — the abstract convergence theorem — `todo`
+### Task 8a — the abstract convergence theorem — `blocked by Task 3`
 
 **Thm. 7.4** of the manuscript (= CPS23 Thm. 3.14 / Cor. 3.17), proved in full in
 D24: Def. 7.3 ($P$-continuity at $X$), determining set, uniform integrability,
@@ -320,7 +328,7 @@ four steps. Needs an abstract Polish path space $F$ and **no** path regularity,
 only bundle (T0). **This can be done directly after Task 5**, before Tasks 6 and
 7, and it is the cheapest genuine theorem in the plan.
 
-### Task 8b — Skorokhod space, and the concrete instances — `todo`
+### Task 8b — Skorokhod space, and the concrete instances — `blocked by Task 3`
 
 By far the largest item, and **the only part of the plan for which no prior art
 exists** (D27): $D_E[0,\infty)$ with the $J_1$ metric, its Polishness,
@@ -366,6 +374,105 @@ theorem with real content, doable before (F1).
 Deliberately **not** attempted: a self-contained proof of (c). Rem. 7.14 costs it
 out; `brownian-motion` (D27) may supply the dependency.
 
+## Task 11 — Convergence on different clocks — `done` *(2026-08-24, v18)*
+
+Raised by the user. §7.7 of the manuscript: Thm. 7.25 lets each approximant carry
+its own clock $q^n$ and convention $\iota_n$, linked to the limit only by the
+discrepancy condition (K4) — CPS's (5.10). Ex. 7.27 works the invariance
+principle: with $q^n = \frac1n\sum_k\delta_{k/n}$ a rescaled Markov chain
+converging to a diffusion *is* a statement about clocks. See D31.
+
+Three earlier decisions turn out to be what makes this expressible: atoms (D7),
+clocks as measures on one $\mathbb{T}$ (D9), and carrying both conventions (D28,
+where the difference is $O(1/n)$ and washes out). None was made with this in view.
+
+Not supplied: tightness. (C1) is assumed.
+
+## Task 12 — Weaken the bp-limit — `done` *(2026-08-24, v19)*
+
+Raised by the user, and the diagnosis was right: bp entered at exactly one place
+(Rem. 3.9(b),(c) = EK86 Prop. 4.3.1), and Fact 2.29 was cited in no proof at all.
+What the argument uses is dominated convergence in (3), nothing more.
+
+Now Lem. 3.10 (closure along a solution, $L^1$-convergence) with Cor. 3.11 (bp
+implies it, for every solution at once) and Rem. 3.12, which states the role bp
+actually plays: it is the strongest hypothesis *independent of $X$*, which is what
+makes the closure statement one about operators. Also fixes an inconsistency —
+Def. 3.5 admits unbounded $A$ and Prop. 3.7 assumes integrability, while the
+bp-closure lives in $B \times B$. See D32.
+
+## Task 13 — Push the non-Markovian theory as far as it goes — `done` *(2026-08-25, v20)*
+
+Set by the user: go through the theorems one by one, stay non-Markovian in the
+abstract setting as long as possible, let the Markov results fall out as
+corollaries, and use CPS's non-Markovian examples as test objects.
+
+Result: the dividing line is the **shift system** (Def. 5.7), and it falls later
+than the manuscript had it. Uniqueness needs only condition (U) of Def. 5.5 and
+is now Prop. 5.6, stated for an arbitrary family of measures — hence free for
+$\mathcal{M}_{\mathrm{loc}}$ too — and it loses bundle (T4). §5 is re-sorted so
+that §5.1 is Markov-free and §5.2 introduces the shift.
+
+Test objects in §5.5: Volterra SDEs (CPS Ex. 3.13) and semimartingales with
+path-dependent characteristics (J&S III). Rem. 5.34 tabulates the split. See
+D33, D34.
+
+Sharpest formulation found: *localization is not Markovian, restarting is.*
+
+## Task 14 — Weak-strong convergence; the restart corrected — `done` *(2026-08-25, v21)*
+
+Both raised by the user. §7.8 states weak-strong convergence, $(P^n,P)$-continuity
+and Jacod–Mémin, with the atomic counterexample that makes (C3a) fail on a set of
+full measure — the second price atoms exact, after the convention clash of
+Rem. 6.3. And Lem. 5.5 corrects the account of the restart: it needs no shift at
+all; what needs the shift is the *re-indexing* to time $0$ that an unconditional
+hypothesis demands. See D35, D36.
+
+---
+
+# Remaining theory tasks
+
+Task 3 is on hold, and Tasks 4–8 depend on it, so what remains is theory.
+
+## Task 15 — Hawkes processes and their Volterra limit — `done` *(2026-08-25, v22)*
+
+Extended by the user from "a worked non-Markovian example" to the convergence of
+Hawkes processes to a Volterra equation. §7.9 of the manuscript, in two parts.
+
+**Part 1, proved.** Setting 7.35 and Thm. 7.37: jump processes with a
+*predictable* rate $\Lambda(t,\omega)$ and kernel $\mu(t,\omega,\cdot)$. The
+holding time is no longer exponential, but the cancellation of Thm. 7.5 survives
+with the jump density $\Lambda_u e^{-A(u)}$ against the survival function
+$e^{-A(s)}$. Ex. 7.39 is the Hawkes process; explosion for
+$\|\phi\|_1 \ge 1$ puts it in §5.3, which is where the interesting scaling regime
+lives anyway.
+
+**Part 2, conditional.** Rem. 7.40 observes that a Hawkes process *is* a Volterra
+SDE with pure-jump noise, so approximants and limit lie in one solution set.
+Thm. 7.41 is then Thm. 7.4 for the identification plus Prop. 5.8 for uniqueness
+of the limit. Tightness is assumed and Jaisson–Rosenbaum cited.
+
+The example uses §5.1, §5.3, §7.2 and §7.5 at once, and **no result of §5.2** —
+the first place where the non-Markovian layer is not merely applicable but
+necessary. See D37.
+
+## Task 16 — Local uniqueness with memory — `todo`
+
+D36 showed that restarting needs no shift. §5.4 (pasting, Thm. 5.29) still uses a
+kernel $P_{x,r}$ indexed by the **state**, hence forgets the past. The honest
+non-Markovian version would index it by the **stopped path**, $\alpha \mapsto Q_\alpha$
+with $Q_\alpha$ a solution from $T(\alpha)$ onwards agreeing with $\alpha$ up to
+$T$. Note this is a hypothesis, not a consequence — unlike the restart, pasting
+needs an external supply of solutions-after-$T$ — but it is the right shape, and
+it would move §5.4 out of the Markov column of Rem. 5.36.
+
+## Task 17 — Consistency sweep — `todo`
+
+The manuscript has been through twenty-one revisions, several of which changed
+definitions that earlier remarks refer to (Def. 2.6, Def. 5.7, Def. 5.9, the
+convention $\iota$). A full read for stale claims and cross-references is due
+before anything is frozen.
+
 ---
 
 # Open questions
@@ -395,7 +502,12 @@ out; `brownian-motion` (D27) may supply the dependency.
   cosmetic half: whether to *assume* shift invariance or to state the
   time-inhomogeneous version alongside. The (T4) half of Q3 also stands: the
   monoid structure is used through $\theta_r$ and cannot be avoided.
-* **(Q4)** Should the semigroup route (EK86 4.4.1 / 4.4.4) come back in later? It
+* **(Q4)** Should the semigroup route (EK86 4.4.1 / 4.4.4) come back in later?
+  **Feller processes belong to this question**, not beside it: they are defined
+  through a strongly continuous semigroup on $\hat{C}(E)$ and need local
+  compactness, which D2 rejects. Asked and deferred 2026-08-24, see D30; if
+  reopened, take Feller and 4.4.1/4.4.4 together as one package. Original
+  wording: It
   was deliberately excluded; see Rem. 2.5 of the manuscript and decision D5 in
   `FORTSCHRITT.md`.
 * **(Q5)** ~~Where do the Lean files live?~~ — **answered 2026-08-24.**

@@ -70,6 +70,7 @@
 \newcommand{\KA}{\cite{Kal21}}
 \newcommand{\JS}{\cite{JS03}}
 \newcommand{\BM}{\cite{BM25}}
+\newcommand{\JR}{\cite{JR16}}
 
 \title{Characterization and Convergence of Markov Processes\\
        via Martingale Problems\\[2ex]
@@ -98,7 +99,11 @@ Remark~4.5.2), together with the strictly more general convergence theorem of
 Criens--Pfaffelhuber--Schmidt \CPS.
 Each of (i)--(iii) is first proved in the abstract setting of \CPS, without any
 operator, and \EK's statement is then recovered as a corollary; the abstract
-versions are new, since \CPS{} prove no characterization results.  Throughout,
+versions are new, since \CPS{} prove no characterization results.  A Markov
+structure is introduced only where a result needs one: uniqueness of the
+finite-dimensional distributions does not, and is proved for an arbitrary family
+of solution measures, with the Markov property falling out afterwards from a
+shift hypothesis.  Two non-Markovian examples of \CPS{} are used as test objects.  Throughout,
 the time index is an abstract ordered set carrying a \emph{clock}, the state
 space is graded from ``measurable space'' to ``Polish'', and local martingale
 problems are treated wherever the statement permits it.  Every statement is
@@ -186,9 +191,14 @@ that the outcome is not the one the first draft anticipated.
 \item \textbf{Abstract working layer: also (A).}
   Each of the three characterization results is stated and proved in this
   setting, with no operator anywhere: Theorem~\ref{thm:absreg} for the c\`adl\`ag
-  modification, Theorems~\ref{thm:absuniq} and \ref{thm:absstrongmarkov} for
-  uniqueness and the (strong) Markov property, and Lemma~\ref{lem:chain} with
-  Proposition~\ref{prop:haar} for duality.
+  modification, Proposition~\ref{prop:uniqfromprop} and
+  Theorems~\ref{thm:absuniq}, \ref{thm:absstrongmarkov} for uniqueness and the
+  (strong) Markov property, and Lemma~\ref{lem:chain} with
+  Proposition~\ref{prop:haar} for duality.  This layer is itself graded: a
+  \emph{Markov structure} is introduced only where it is needed, namely in
+  Section~\ref{ssec:markovlayer}, and Remark~\ref{rem:markovaudit} tabulates what
+  lies on either side of that line.  Uniqueness, in particular, lies on the
+  non-Markovian side.
 
 \item \textbf{Markovian layer: (EK).}
   The martingale problem for an operator $A$ is the special case
@@ -968,12 +978,19 @@ Throughout this subsection $(S,d)$ is a metric space.
 
 \begin{fact}[\EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Proposition 3.1]
   \label{fact:bp}
-  The bp-closure of a subspace of $\Bdd(S)$ is a subspace.  $\Cb(S)$ is bp-dense
-  in $\Bdd(S)$, and if $S$ is separable there is a sequence $\{f_n\}$ of
-  nonnegative functions in $\Cb(S)$ whose linear span is bp-dense in $\Bdd(S)$.
-  Furthermore, for sequences in $\Bdd(S)$ bounded pointwise convergence coincides
-  with convergence in the weak$^*$ topology induced by $\Vsig(S)$.
+  The bp-closure of a subspace of $\Bdd(S)$ is a subspace.
 \end{fact}
+
+\begin{remark}
+  \label{rem:bpunused}
+  \EK{} prove more: $\Cb(S)$ is bp-dense in $\Bdd(S)$; if $S$ is separable there
+  is a sequence of nonnegative functions in $\Cb(S)$ whose linear span is
+  bp-dense in $\Bdd(S)$; and on bounded sequences bp-convergence coincides with
+  convergence in the weak$^*$ topology induced by $\Vsig(S)$.  None of this is
+  used below.  Fact~\ref{fact:bp} is invoked at exactly one place,
+  Corollary~\ref{cor:bpclosure}, and there only in the form stated; see
+  Remark~\ref{rem:bpscope} for why even that is optional.
+\end{remark}
 
 \begin{definition}[\EK, Section 3.4]
   \label{def:separating}
@@ -1249,7 +1266,7 @@ Fact~\ref{fact:portmanteau}, \ref{fact:cmt}
 Fact~\ref{fact:PSpolish}, \ref{fact:prohorov}
   & Remark~\ref{rem:EKrelcompact} \\
 Fact~\ref{fact:bp}
-  & Remark~\ref{rem:fddconsequences} \\
+  & Corollary~\ref{cor:bpclosure} only \\
 Fact~\ref{fact:convdet}
   & Remark~\ref{rem:ccverify} \\
 Fact~\ref{fact:stoneweierstrass}
@@ -1305,6 +1322,14 @@ Facts~\ref{fact:cadlagext}, \ref{fact:submgreg} (regularization)
   & (T2b) & (E2) & --- \\
 Section~\ref{ssec:ch3} entire (Skorokhod, weak convergence)
   & (T3) & (E3) & --- \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{0.38\textwidth}p{0.22\textwidth}p{0.13\textwidth}p{0.19\textwidth}@{}}
+\toprule
+\textbf{Result} & \textbf{Index} & \textbf{State} & \textbf{Clock} \\
 \midrule
 Setting~\ref{set:abstract}, Definitions~\ref{def:absMP}, \ref{def:canonical}
   & (T0) & (E0) & --- \\
@@ -1329,7 +1354,12 @@ Definition~\ref{def:shiftstable}, Lemma~\ref{lem:restart} (restart)
   & (T0) + (T4) & (E0) & clock \\
 Theorem~\ref{thm:absuniq}\ref{it:absuniq_a} (Markov)
   & (T0) + (T4) & (E0) & clock \\
-Theorem~\ref{thm:absuniq}\ref{it:absuniq_b} (uniqueness)
+Definition~\ref{def:propagation}, Proposition~\ref{prop:uniqfromprop}
+  (uniqueness)
+  & \textbf{(T2a)} & (E0) & --- \\
+Lemma~\ref{lem:propagation} (one-dimensional laws suffice)
+  & (T0) + (T4) & (E0) & clock \\
+Theorem~\ref{thm:absuniq}\ref{it:absuniq_b} (uniqueness, via both)
   & \textbf{(T2a)} + (T4) & (E0) & clock \\
 Theorem~\ref{thm:absstrongmarkov} (strong Markov)
   & (T2b) + (T4) & (E2) & clock \\
@@ -1343,6 +1373,15 @@ Definition~\ref{def:pasting}, Lemma~\ref{lem:pasting},
 \midrule
 Lemma~\ref{lem:chain} (chain identity)
   & (T0) + (T4) & (E0) & clock \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{0.38\textwidth}p{0.22\textwidth}p{0.13\textwidth}p{0.19\textwidth}@{}}
+\toprule
+\textbf{Result} & \textbf{Index} & \textbf{State} & \textbf{Clock} \\
+\midrule
 Proposition~\ref{prop:haar}, Corollary~\ref{cor:dualdiscrete}
   & \textbf{(T2a)} + (T4) & (E0) & \textbf{reflective},
     $\boldsymbol{\iota = \mathrm{p}}$ \\
@@ -1353,12 +1392,19 @@ Corollary~\ref{cor:uniqviadual} (uniqueness via duality)
 \midrule
 Setting~\ref{set:jumpdata}, Theorem~\ref{thm:jumpMP} (jump processes)
   & (T3) & (E0) & Lebesgue \\
+Setting~\ref{set:pathjump}, Theorem~\ref{thm:pathjumpMP},
+  Example~\ref{ex:hawkes} (path-dependent rates, Hawkes)
+  & (T3) & (E0) & Lebesgue \\
+Theorem~\ref{thm:hawkesvolterra} (Hawkes to Volterra)
+  & (T3) & (E3) & Lebesgue \\
 Proposition~\ref{prop:jumpwellposed}, Remark~\ref{rem:jumpexplosion}
   & (T3) & (E2) & Lebesgue \\
 Corollary~\ref{cor:sdewellposed} (from SDEs)
   & (T3) & $E = \R^d$ & Lebesgue \\
 Theorem~\ref{thm:absconv} (abstract convergence)
   & (T0), or (T2b) for $D \subsetneq \T$ & (E3) & --- \\
+Theorem~\ref{thm:clockchange} (clock change)
+  & (T3) & (E3) & $q^n$ and $q$ \\
 Lemma~\ref{lem:EKconv}, Theorem~\ref{thm:CPSconv}
   & (T3) & (E3) & Lebesgue \\
 \bottomrule
@@ -1637,13 +1683,88 @@ Definition~\ref{def:absMP}.
   distributions} of $X$ only.  Three consequences are used repeatedly:
   \begin{enumerate}[label=(\alph*)]
   \item any measurable modification of a solution is a solution;
-  \item a solution for $A$ is a solution for the linear span $A_S$, and for the
-    bounded pointwise closure of $A_S$;
+  \item a solution for $A$ is a solution for the linear span $A_S$, by linearity
+    of \eqref{eq:fdd} in $(f,g)$, and for a closure of $A_S$ that
+    Lemma~\ref{lem:closure} makes precise;
   \item if $A^{(1)} \subset A^{(2)}$, every solution for $A^{(2)}$ is one for
-    $A^{(1)}$.  In particular, if the bp-closures of $A^{(1)}_S$ and $A^{(2)}_S$
-    agree, the two martingale problems have the same solutions
-    (\EK, Proposition 4.3.1).
+    $A^{(1)}$.
   \end{enumerate}
+\end{remark}
+
+The closure in (b) deserves to be stated carefully, because \EK{} take it in the
+bounded pointwise sense and that is more than the argument uses.
+
+\begin{lemma}[Closure along a solution; (T0) + (E0) + clock]
+  \label{lem:closure}
+  Let $X$ solve the martingale problem for $A$ with respect to $(\Gilt_t)$, and
+  let $(f,g) \in \Meas(E) \times \Meas(E)$ be such that $Y^{f,g}$ is integrable.
+  Suppose there are $(f_n,g_n) \in A_S$ with, for all $s \leq t$ in $\T$,
+  \begin{align}
+    \label{eq:closureconv}
+    f_n(X(t)) &\longrightarrow f(X(t)) &&\text{in } L^1(P) , \\
+    \notag
+    \int_{\langle s,t \rangle_\iota} g_n(X(u)) \, q(\dif u)
+      &\longrightarrow
+      \int_{\langle s,t \rangle_\iota} g(X(u)) \, q(\dif u)
+      &&\text{in } L^1(P) .
+  \end{align}
+  Then $X$ solves the martingale problem for $A \cup \{(f,g)\}$.
+\end{lemma}
+
+\begin{proof}
+  By Proposition~\ref{prop:fddchar} and the linearity of \eqref{eq:fdd} in
+  $(f,g)$, the identity \eqref{eq:fdd} holds for every $(f_n,g_n) \in A_S$.  The
+  test factor $\prod_{k} h_k(X(t_k))$ is bounded by $\prod_k \lVert h_k \rVert$,
+  so each of the two convergences in \eqref{eq:closureconv} passes through the
+  expectation in \eqref{eq:fdd}.  Hence \eqref{eq:fdd} holds for $(f,g)$, and
+  Proposition~\ref{prop:fddchar} applies again.
+\end{proof}
+
+\begin{corollary}[Bounded pointwise convergence suffices; (T0) + (E0) + clock]
+  \label{cor:bpclosure}
+  Let $A \subset \Bdd(E) \times \Bdd(E)$ and let $(f_n,g_n) \in A_S$ with
+  $\bplim_n (f_n,g_n) = (f,g)$.  Then \eqref{eq:closureconv} holds --- for
+  \emph{every} solution $X$, every $P$ and every clock.  Consequently a solution
+  for $A$ is a solution for the bp-closure of $A_S$, and if the bp-closures of
+  $A^{(1)}_S$ and $A^{(2)}_S$ agree then the two martingale problems have the
+  same solutions (\EK, Proposition 4.3.1).
+\end{corollary}
+
+\begin{proof}
+  $|f_n(X(t))| \leq \sup_n \lVert f_n \rVert < \infty$ and
+  $f_n(X(t)) \to f(X(t))$ pointwise, so the first convergence is dominated
+  convergence under the probability measure $P$.  For the second,
+  $|g_n(X(u))| \leq \sup_n \lVert g_n \rVert$ and
+  $q(\langle s,t \rangle_\iota) \leq q(\T_{\leq t}) < \infty$ by
+  Definition~\ref{def:clock}, so
+  $\int_{\langle s,t \rangle_\iota} |g_n - g|(X(u)) \, q(\dif u) \to 0$ by
+  dominated convergence under $q \otimes P$.  Both dominating constants depend on
+  the sequence alone.
+\end{proof}
+
+\begin{remark}[What bounded pointwise convergence is, and is not, for]
+  \label{rem:bpscope}
+  Corollary~\ref{cor:bpclosure} isolates the r\^ole of the bp-topology, and it is
+  worth stating, because the notion is easy to over-read.
+
+  \emph{It is the strongest hypothesis that is independent of $X$.}  The
+  dominating constants in the proof depend on $(f_n,g_n)$ alone --- not on the law
+  of $X$, not on the clock, not on the convention.  That is exactly what makes
+  Corollary~\ref{cor:bpclosure} a statement about \emph{operators}: two operators
+  with the same bp-closure have the same solutions, with no solution mentioned.
+  Lemma~\ref{lem:closure} is instead a statement about a \emph{given} solution ---
+  weaker as an assertion about $A$, and stronger as a tool.
+
+  \emph{It costs generality that the rest of Section~\ref{sec:MP} does not spend.}
+  Definition~\ref{def:markovMP} admits $A \subset \Meas(E) \times \Meas(E)$, and
+  Proposition~\ref{prop:fddchar} assumes that $Y^{f,g}$ is integrable, not that
+  $f$ and $g$ are bounded.  The bp-closure lives in $\Bdd(E) \times \Bdd(E)$ and
+  therefore silently narrows this; Lemma~\ref{lem:closure} does not.
+
+  \emph{For the formalization} the difference is real.  Lemma~\ref{lem:closure} is
+  dominated convergence and nothing else.  The bp apparatus,
+  Definition~\ref{def:bp} and Fact~\ref{fact:bp}, is needed only for
+  Corollary~\ref{cor:bpclosure}, and there only its first assertion.
 \end{remark}
 
 \begin{definition}[\EK, Section 4.4; (T0) + (E0) + clock]
@@ -2056,7 +2177,7 @@ their setting once one adds the one ingredient a uniqueness theory needs and a
 convergence theory does not, namely a way of \emph{restarting} the martingale
 problem.
 
-\subsection{The abstract uniqueness and Markov theorem}
+\subsection{Uniqueness without a Markov structure}
 \label{ssec:absuniq}
 
 Throughout this subsection we work on the path space, as in
@@ -2155,7 +2276,108 @@ Corollary~\ref{cor:uniqviadual} --- it does not go through the Markov property.
   better route, since it needs no Markov property.
 \end{remark}
 
-The second ingredient is the one that a convergence theory does not need and a
+Restarting a solution is available at once, and --- this is worth stating
+separately, because it is easy to attribute to the Markov property what belongs
+to the tower property --- it needs no shift and no Markov structure whatever.
+
+\begin{lemma}[Restart with memory; (T0) + (E0)]
+  \label{lem:restartmemory}
+  Let $P \in \Msol(\XX^\circ)$, let $r \in \T$ and let $Z \geq 0$ be bounded and
+  $\Filt^\circ_r$-measurable with $E^P[Z] = 1$.  Then $Z \cdot P$ is again a
+  solution \emph{from $r$ onwards}: for every $Y^\circ \in \XX^\circ$ and all
+  $r \leq s \leq t$,
+  \[
+    E^{Z \cdot P}\bigl[ Y^\circ_t \bigm| \Filt^\circ_s \bigr] \;=\; Y^\circ_s .
+  \]
+\end{lemma}
+
+\begin{proof}
+  Let $G \in \Filt^\circ_s$.  Since $r \leq s$, the variable $Z \one_G$ is bounded
+  and $\Filt^\circ_s$-measurable, so the martingale property of $Y^\circ$ under
+  $P$ gives
+  $E^{Z \cdot P}[(Y^\circ_t - Y^\circ_s)\one_G] = E^P[(Y^\circ_t - Y^\circ_s) Z \one_G] = 0$.
+\end{proof}
+
+\begin{remark}[Restarting is not where the Markov structure enters]
+  \label{rem:restartnomarkov}
+  Lemma~\ref{lem:restartmemory} says that one may condition on any event of
+  positive probability observed up to $r$, or reweight by any bounded
+  $\Filt^\circ_r$-measurable density, and what remains after $r$ is again a
+  solution.  Nothing is forgotten and nothing is assumed.  If one wants the
+  conditional laws themselves rather than a reweighting,
+  Lemma~\ref{lem:disint} supplies them: for standard Borel $F$ the family
+  $P(\,\cdot \mid \Filt^\circ_r)$ exists, and it consists of solutions from $r$
+  onwards by the same two lines.
+
+  What a shift adds is therefore not the restart but a \emph{re-indexing}.  A
+  hypothesis stated about \emph{initial} distributions --- as
+  \eqref{eq:absonedim} is, and as \EK, Theorem~4.4.2 is --- can be applied to the
+  restarted object only after that object has been turned into a process starting
+  at time $0$, and the map that does this is $\theta_r$, which discards the path
+  before $r$.  That is the whole of the Markov structure in
+  Section~\ref{ssec:markovlayer}: not the ability to begin again, but the demand
+  that beginning again should look like beginning.
+
+  Definition~\ref{def:propagation} is the same idea without the re-indexing: the
+  two measures are compared at the time $s$ where they already agree, so nothing
+  has to be transported back to $0$ and no shift is needed.  This is why
+  Proposition~\ref{prop:uniqfromprop} is Markov-free while
+  Lemma~\ref{lem:propagation} is not.
+\end{remark}
+
+So far nothing beyond a preorder has been used, and nothing Markovian.  It is
+worth pushing that as far as it goes, because uniqueness of the
+finite-dimensional distributions is \emph{not} a Markovian fact.  What is
+Markovian is only the reduction of its hypothesis to the \emph{one-dimensional}
+distributions, and that reduction is the subject of the next subsection.  The
+condition the uniqueness argument actually consumes is the following.
+
+\begin{definition}[Propagation of agreement; (T0) + (E0)]
+  \label{def:propagation}
+  A set $\mathcal{N} \subset \Prob(F)$ \emph{propagates agreement} if for all
+  $P, Q \in \mathcal{N}$ and all $s \leq t$ in $\T$,
+  \begin{equation}
+    \label{eq:propagation}
+    P = Q \ \text{ on } \Filt^\circ_s
+    \qquad \Longrightarrow \qquad
+    P = Q \ \text{ on } \Filt^\circ_s \vee \sigma(\pi_t) .
+  \end{equation}
+\end{definition}
+
+\begin{proposition}[Uniqueness; (T2a) + (E0)]
+  \label{prop:uniqfromprop}
+  Let $\mathcal{N} \subset \Prob(F)$ propagate agreement.  Then $\mathcal{N}$
+  contains at most one element with a given law of $\pi_0$.  In particular, if
+  $\Msol(\XX^\circ)$ propagates agreement then $\Msol(\XX^\circ,\mu)$ has at most
+  one element for every $\mu$, and the same holds for
+  $\Msol_{\mathrm{loc}}(\XX^\circ)$.
+\end{proposition}
+
+\begin{proof}
+  Let $P, Q \in \mathcal{N}$ with $P\pi_0^{-1} = Q\pi_0^{-1}$.  We show by induction on $m$ that
+  $P = Q$ on $\Filt^\circ_{t_m}$ for every chain $t_1 \leq \dots \leq t_m$ in
+  $\T$; since $\mathcal{S} = \sigma(\pi_t : t \in \T)$ by \eqref{eq:pathsigma},
+  this gives $P = Q$.
+
+  For $m = 0$ the assertion is $P = Q$ on $\Filt^\circ_0 = \sigma(\pi_0)$, which
+  is the hypothesis on the initial laws.  Assume $P = Q$ on
+  $\Filt^\circ_{t_n}$ and let $t_{n+1} \geq t_n$.  Then \eqref{eq:propagation}
+  gives $P = Q$ on $\Filt^\circ_{t_n} \vee \sigma(\pi_{t_{n+1}})$, and since the
+  products $\prod_{k \leq n+1} h_k(\pi_{t_k})$ with $t_k \leq t_{n+1}$ form a
+  multiplicative class generating $\Filt^\circ_{t_{n+1}}$, the Dynkin argument
+  upgrades this to $P = Q$ on $\Filt^\circ_{t_{n+1}}$.
+\end{proof}
+
+
+\subsection{The Markov layer: shift systems}
+\label{ssec:markovlayer}
+
+Everything so far is free of any Markov structure.  What follows adds it, in the
+one form the arguments need, and it does two things: it makes
+\eqref{eq:propagation} checkable from the one-dimensional distributions
+(Lemma~\ref{lem:propagation}), and it produces the Markov property itself
+(Theorem~\ref{thm:absuniq}).  It is what a convergence theory
+does not need and a
 uniqueness theory cannot do without.
 
 \begin{definition}[Shift system; (T4) + (E0)]
@@ -2276,18 +2498,40 @@ $\hat{Y}^\circ_t \circ \theta_r$; the determining set is used only in the last
 step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
 \EK.  Everything else is the tower property.
 
-\begin{theorem}[Abstract uniqueness and Markov property; (T0) + (T4), and (T2a) for \ref{it:absuniq_b}]
-  \label{thm:absuniq}
-  Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$, let $\ZZ^\circ$ be
-  determining for every $\XX^\circ_r$, and suppose that for every $r \in \T$
+\begin{lemma}[Agreement propagates under a shift system; (T0) + (T4) + (E0)]
+  \label{lem:propagation}
+  Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$ with $\ZZ^\circ$
+  determining for each $\XX^\circ_r$, and suppose that for every $r \in \T$
   \begin{equation}
     \label{eq:absonedim}
     P, Q \in \Msol(\XX^\circ_r), \ P \pi_0^{-1} = Q \pi_0^{-1}
     \quad \Longrightarrow \quad
     P \pi_t^{-1} = Q \pi_t^{-1} \ \text{ for all } t \in \T .
   \end{equation}
-  Then, subject to the integrability provisos of Lemmas~\ref{lem:mixture} and
-  \ref{lem:restart}:
+  Then $\Msol(\XX^\circ)$ propagates agreement.
+\end{lemma}
+
+\begin{proof}
+  Let $P = Q$ on $\Filt^\circ_s$, let $G \in \Filt^\circ_s$ with $P(G) > 0$ and
+  put $Z = \one_G / P(G)$, which is nonnegative and $\Filt^\circ_s$-measurable
+  with the same mean $1$ under $P$ and under $Q$.  By Lemma~\ref{lem:restart},
+  $R_P = (Z \cdot P)\circ\theta_s^{-1}$ and $R_Q = (Z \cdot Q)\circ\theta_s^{-1}$
+  both lie in $\Msol(\XX^\circ_s)$ --- the \emph{same} shifted problem.  Since
+  $\pi_0 \circ \theta_s = \pi_s$, their initial laws are
+  $P\{\pi_s \in \cdot \mid G\}$ and $Q\{\pi_s \in \cdot \mid G\}$, which agree
+  because $P = Q$ on $\Filt^\circ_s$.  So \eqref{eq:absonedim} applies and gives
+  $E^{R_P}[f(\pi_u)] = E^{R_Q}[f(\pi_u)]$ for every $u$; taking $u$ with
+  $s + u = t$ this reads
+  $E^P[f(\pi_t)\one_G] = E^Q[f(\pi_t)\one_G]$.  As $G$ and $f$ were arbitrary,
+  $P = Q$ on $\Filt^\circ_s \vee \sigma(\pi_t)$.
+\end{proof}
+
+\begin{theorem}[Abstract uniqueness and Markov property; (T0) + (T4), and (T2a) for \ref{it:absuniq_b}]
+  \label{thm:absuniq}
+  Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$, let $\ZZ^\circ$ be
+  determining for every $\XX^\circ_r$, and suppose \eqref{eq:absonedim} holds for
+  every $r \in \T$.  Then, subject to the integrability provisos of
+  Lemmas~\ref{lem:mixture} and \ref{lem:restart}:
   \begin{enumerate}[label=(\alph*)]
   \item \label{it:absuniq_a}
     every solution is Markov --- in general \emph{time inhomogeneously} so: if
@@ -2333,28 +2577,58 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   where on the right we used the $\sigma(X(r))$-measurability of $Z_2$ once more.
   Since $F_0 \in \Gilt_r$ was arbitrary, the Markov property follows.
 
-  \emph{\ref{it:absuniq_b}.}
-  Let $P,Q \in \Msol(\XX^\circ,\mu)$.  We show by induction on $m$ that
-  $E^P[\prod_{k \leq m} f_k(\pi_{t_k})] = E^Q[\prod_{k\leq m} f_k(\pi_{t_k})]$
-  for $t_1 \leq \dots \leq t_m$ in $\T$ and $f_k \in \Bdd(E)$, $f_k > 0$; by
-  \eqref{eq:pathsigma} this identifies $P$ and $Q$ --- no topology and no
-  regularity are involved, only that the coordinates generate $\mathcal{S}$.  For
-  $m=1$ this is
-  \eqref{eq:absonedim}.  Assume it for $m = n$ and put
-  \[
-    Z \;=\; \frac{\prod_{k=1}^n f_k(\pi_{t_k})}
-                 {E^P\bigl[\prod_{k=1}^n f_k(\pi_{t_k})\bigr]} ,
-  \]
-  which is nonnegative, $\Filt^\circ_{t_n}$-measurable and of $P$-mean $1$; let
-  $Z'$ be its analogue under $Q$.  By Lemma~\ref{lem:restart} at $r = t_n$,
-  $R = (Z\cdot P)\circ\theta_{t_n}^{-1}$ and $R' = (Z'\cdot Q)\circ\theta_{t_n}^{-1}$
-  lie in $\Msol(\XX^\circ_{t_n})$ --- again the same shifted problem for both ---
-  and the induction hypothesis applied to the $n$
-  functions $f_1,\dots,f_{n-1}, f_n f$ gives $R \pi_0^{-1} = R' \pi_0^{-1}$.
-  Hence \eqref{eq:absonedim} yields $E^R[f(\pi_t)] = E^{R'}[f(\pi_t)]$ for all
-  $t$, which after clearing denominators is the assertion for $m = n+1$ with
-  $t_{n+1} = t_n + t$.
+  \emph{\ref{it:absuniq_b}.}  Lemma~\ref{lem:propagation} and
+  Proposition~\ref{prop:uniqfromprop}.
 \end{proof}
+
+\begin{remark}[Uniqueness is not a Markovian fact]
+  \label{rem:uniqnotmarkov}
+  The decomposition above is worth reading off, because the classical statement
+  hides it.
+  \begin{center}
+  \begin{tabular}{@{}lll@{}}
+  \toprule
+  & \textbf{needs} & \textbf{Markovian?} \\
+  \midrule
+  Uniqueness (Proposition~\ref{prop:uniqfromprop})
+    & \eqref{eq:propagation} & \textbf{no} \\
+  \eqref{eq:propagation} from one-dimensional laws (Lemma~\ref{lem:propagation})
+    & shift system & yes \\
+  Markov property (Theorem~\ref{thm:absuniq}\ref{it:absuniq_a})
+    & shift system & yes \\
+  \bottomrule
+  \end{tabular}
+  \end{center}
+
+  Two consequences.  First, Proposition~\ref{prop:uniqfromprop} uses no shift,
+  no $\theta_r$, no re-indexing and \emph{no} bundle (T4): only (T2a), for the
+  chains of Remark~\ref{rem:chainonly}.  \EK, Theorem~4.4.2 looks Markovian
+  because its hypothesis is stated \emph{unconditionally}, on the one-dimensional
+  distributions; and an unconditional hypothesis can be applied at a later time
+  only after the restarted process has been re-indexed to start at $0$, which is
+  what $\theta_r$ does and where the shift enters.  Restarting \emph{itself} is
+  free, by Lemma~\ref{lem:restartmemory}.  State the hypothesis conditionally, as
+  \eqref{eq:propagation} does, and the Markov structure disappears from the
+  uniqueness half.
+
+  Second, \eqref{eq:propagation} is available in genuinely non-Markovian
+  situations, where no shift system exists:
+  \begin{itemize}
+  \item \emph{Path-dependent equations.}  Pathwise uniqueness implies uniqueness
+    in law (Fact~\ref{fact:yamadawatanabe}), and uniqueness in law
+    \emph{is} \eqref{eq:propagation}.  The coefficients may depend on the whole
+    past.
+  \item \emph{Change of measure.}  If $\XX^\circ$ arises from a family with
+    \eqref{eq:propagation} by an absolutely continuous change of measure with a
+    path-dependent density, the property is inherited.
+  \item \emph{Semimartingale problems.}  \JS, Chapter~III prove uniqueness for
+    triplets $(B,C,\nu)$ that are predictable functionals of the path, with no
+    Markov structure in sight.
+  \end{itemize}
+  None of these is developed here; the point is only that
+  Proposition~\ref{prop:uniqfromprop} is the statement they would use, and
+  Theorem~\ref{thm:absuniq}\ref{it:absuniq_b} is not.
+\end{remark}
 
 \begin{remark}[Why \ref{it:absuniq_b} needs a linear order]
   \label{rem:chainonly}
@@ -2363,16 +2637,16 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   and the martingale property at $r+s \leq r+t$, all of which hold in a
   preordered monoid.  There is no topology and no linear order in it.
 
-  Part \ref{it:absuniq_b} is different.  The induction restarts at $t_n$, and for
-  that $\prod_{k \leq n} f_k(\pi_{t_k})$ must be $\Filt^\circ_{t_n}$-measurable,
-  i.e.\ $t_k \leq t_n$ for every $k \leq n$: the times must form a \emph{chain}.
-  On a linearly ordered $\T$ every finite set of times is a chain and nothing is
-  lost.  On a merely partially ordered $\T$ the induction proves equality of the
-  finite-dimensional distributions along chains only, and these do not determine
-  the law: on $\T = \Rp^2$ the times $(1,0)$ and $(0,1)$ are incomparable, and no
-  chain sees their joint distribution.  Replacing $t_n$ by $t_1 \vee \dots \vee
-  t_n$, which (T1) would allow, does not repair this, since the next time
-  $t_{n+1}$ need not dominate that join.
+  Part \ref{it:absuniq_b} is different, and the reason is the induction of
+  Proposition~\ref{prop:uniqfromprop}, not the shift.  That induction advances
+  along $\Filt^\circ_{t_1} \subset \Filt^\circ_{t_2} \subset \dots$, so the times
+  must form a \emph{chain}.  On a linearly ordered $\T$ every finite set of times
+  is a chain and nothing is lost.  On a merely partially ordered $\T$ one obtains
+  equality of the finite-dimensional distributions along chains only, and these
+  do not determine the law: on $\T = \Rp^2$ the times $(1,0)$ and $(0,1)$ are
+  incomparable, and no chain sees their joint distribution.  Replacing $t_n$ by
+  $t_1 \vee \dots \vee t_n$, which (T1) would allow, does not repair this, since
+  the next time $t_{n+1}$ need not dominate that join.
 
   So the slogan ``uniqueness of the one-dimensional distributions implies
   uniqueness'' is \emph{false} for a multiparameter index, and the obstruction is
@@ -2444,11 +2718,15 @@ input is optional sampling, which is where path regularity finally enters.
     \begin{align*}
       Z &= \one_{F_0} , &
       Z &= E[\one_{F_0}\mid X(r)] , \\
-      Z &= \textstyle\prod_k f_k(\pi_{t_k}) , &
+      Z &= \one_G \ \text{for } G \in \Filt^\circ_s , &
       Z &= \one_{F_0} \ \text{at a stopping time} ,
     \end{align*}
     all normalized to mean $1$.  The only property of $Z$ that is ever used is
-    that it is nonnegative and $\Filt^\circ_r$-measurable.
+    that it is nonnegative and $\Filt^\circ_r$-measurable.  The third of these is
+    Lemma~\ref{lem:propagation}; \EK{} use $Z = \prod_k f_k(\pi_{t_k})$ there,
+    which is the same lemma applied to a tilted measure instead of a conditioned
+    one, and is unnecessary once the induction is arranged as in
+    Proposition~\ref{prop:uniqfromprop}.
   \item \emph{The shift system is the real hypothesis, and it costs nothing.}
     Definition~\ref{def:shiftstable} is where the Markov property comes from, and
     it is checkable.  For $\XX_A$ it never fails: whatever the clock $q$ and
@@ -2739,7 +3017,10 @@ the state space.
     P\pi_t^{-1} = Q\pi_t^{-1} \ \text{ for all } t \in \T .
   \end{equation}
   Then Theorem~\ref{thm:absuniq} holds verbatim with $\Msol$ replaced by
-  $\Msol_{\mathrm{loc}}$ throughout; and if $\Sigma$ is strongly shift covariant
+  $\Msol_{\mathrm{loc}}$ throughout --- for the uniqueness half nothing has to be
+  redone, since Proposition~\ref{prop:uniqfromprop} is a statement about an
+  arbitrary family of measures and applies to
+  $\Msol_{\mathrm{loc}}(\XX^\circ)$ as it stands; and if $\Sigma$ is strongly shift covariant
   and the $Y^{\circ,\tau_n}$ are right continuous with uniformly integrable
   increments on bounded intervals, so does
   Theorem~\ref{thm:absstrongmarkov}.
@@ -2747,13 +3028,15 @@ the state space.
 
 \begin{proof}
   The proof of Theorem~\ref{thm:absuniq} uses exactly three things:
-  Lemma~\ref{lem:restart}, applied with the four densities of
+  Lemma~\ref{lem:restart}, applied with the densities of
   Remark~\ref{rem:absuniqgain}(i); the hypothesis \eqref{eq:absonedim}; and
   \eqref{eq:pathsigma}.  Replace the first by Lemma~\ref{lem:localrestart} and the
   second by \eqref{eq:localonedim}; the third is a statement about $F$ and is
-  untouched.  Every density used is nonnegative and $\Filt^\circ_r$-measurable
-  --- for the induction step, $Z = \prod_{k \leq n} f_k(\pi_{t_k})$ with
-  $t_k \leq t_n$ --- so Lemma~\ref{lem:localrestart} applies to each.
+  untouched.  Every density used is an indicator or a conditional expectation of
+  one, hence nonnegative and $\Filt^\circ_r$-measurable, so
+  Lemma~\ref{lem:localrestart} applies to each; and
+  Proposition~\ref{prop:uniqfromprop} is about $\Msol$ only, so it carries over
+  with $\Msol_{\mathrm{loc}}$ unchanged.
 
   For the strong Markov property, the proof of
   Theorem~\ref{thm:absstrongmarkov} consists of the stopping time version of
@@ -2995,6 +3278,118 @@ the martingale problem.
   neither is treated here.  Theorem~\ref{thm:localuniqueness} is included because
   it is the natural completion of Section~\ref{ssec:absuniq} and because, after
   Definition~\ref{def:shiftstable}, it costs one lemma.
+\end{remark}
+
+\subsection{Non-Markovian test objects}
+\label{ssec:testobjects}
+
+The point of the arrangement above is that it can be tested.  We run it against
+the two examples of \CPS{} that are not Markovian, and record for each which
+results apply and which fail.
+
+\begin{example}[Volterra equations; \CPS, Example 3.13]
+  \label{ex:volterra}
+  Let $F = L^p_{\mathrm{loc}}(\Rp,\R^d) \times D_{\R^k}[0,\infty)$ with
+  coordinate process $(\pi^X,\pi^Z)$, let $K : \Rp \to \R^{d \times k}$ be a
+  convolution kernel and $g_0 : \Rp \to \R^d$, and let
+  \[
+    L f(x,z) = \langle b(x), \nabla f(z) \rangle
+      + \tfrac{1}{2}\operatorname{tr}\bigl( a(x) \nabla^2 f(z) \bigr)
+      + \int \bigl( f(z+y) - f(z) - \langle h(y), \nabla f(z) \rangle \bigr)
+        \nu(x,\dif y) .
+  \]
+  Take for $\XX^\circ$ the processes
+  $f(\pi^Z_t) - \int_0^t Lf(\pi^X_s,\pi^Z_s)\dif s$, $f \in C^2_b(\R^k)$,
+  together with the requirement that
+  $\int_0^t \pi^X_s \dif s = \int_0^t g_0(s)\dif s + \int_0^t K_{t-s}\pi^Z_s\dif s$
+  for all $t$.  Then $\Msol_{\mathrm{loc}}(\XX^\circ)$ is the set of laws of
+  solutions of the Volterra equation.
+
+  This is not a Markov problem, and not by accident: the kernel $K_{t-s}$ makes
+  $\pi^X_t$ depend on the whole past of $\pi^Z$.  In the language of
+  Section~\ref{ssec:markovlayer}, \emph{there is no shift system}: shifting by $r$
+  turns $K_{t-s}$ into a kernel that also sees $\pi^Z$ before $r$, which no
+  member of a family $\XX^\circ_r$ of the form required by
+  Definition~\ref{def:shiftstable} can reproduce.  What survives is exactly what
+  Section~\ref{ssec:absuniq} proves:
+  \begin{itemize}
+  \item Definitions~\ref{def:absMP} and \ref{def:canonical} apply as they stand,
+    on a path space that is not $\DE$ and on which $\pi^X$ is not even right
+    continuous;
+  \item Lemma~\ref{lem:mixture} (mixtures) and Lemma~\ref{lem:disint}
+    (disintegration) apply, the latter because $F$ is Polish, hence (E1);
+  \item \textbf{Proposition~\ref{prop:uniqfromprop} applies}: whenever the
+    Volterra equation has a unique solution in law --- which under Lipschitz
+    conditions on $b,a,\nu$ it does --- that uniqueness in law \emph{is}
+    \eqref{eq:propagation}, and Proposition~\ref{prop:uniqfromprop} turns it into
+    uniqueness of the whole law without any Markov structure;
+  \item Theorem~\ref{thm:absconv} applies, and \CPS, Section~4.2 is precisely a
+    stability theorem for Volterra equations obtained from it;
+  \item Theorem~\ref{thm:absuniq} does \emph{not} apply, and the conclusion is
+    false: a Volterra process is not Markov.  Nor do
+    Theorem~\ref{thm:absstrongmarkov}, Section~\ref{ssec:localuniq} or
+    Section~\ref{sec:duality}, all of which use the shift.
+  \end{itemize}
+\end{example}
+
+\begin{example}[Semimartingales with path-dependent characteristics]
+  \label{ex:pathdepsemi}
+  Let $F = \DE$ and let $(B,C,\nu)$ be a triplet of \emph{predictable functionals
+  of the path}, as in \JS, Chapter~III.  The associated $\XX^\circ$ consists of
+  the processes of \JS, III.2.7, and $\Msol_{\mathrm{loc}}(\XX^\circ)$ is the set
+  of laws of semimartingales with these characteristics.  Again there is no shift
+  system unless the triplet happens to be shift covariant in the sense of
+  \JS, III.2.39, which for a genuinely path-dependent triplet it is not.
+
+  Here Section~\ref{ssec:localmp} is available in full --- the localizing system
+  of Lemma~\ref{lem:L1auto} is constructed from the test processes themselves and
+  needs no shift, which is exactly the argument \JS{} give in their III.2.8 ---
+  while Section~\ref{ssec:localuniq} is not, since pasting is a shift operation
+  (Remark~\ref{rem:localuniqcomment}).  This is the sharpest illustration of the
+  split: \emph{localization is not Markovian, restarting is.}
+\end{example}
+
+\begin{remark}[Where the Markov structure is used, in one place]
+  \label{rem:markovaudit}
+  Collecting the two examples with the results of
+  Sections~\ref{sec:cadlag}--\ref{sec:convergence}:
+
+  \medskip
+  \noindent
+  \begin{tabular}{@{}p{0.50\textwidth}p{0.42\textwidth}@{}}
+  \toprule
+  \textbf{Needs no Markov structure} & \textbf{Needs a shift system} \\
+  \midrule
+  Definitions~\ref{def:absMP}, \ref{def:canonical}, \ref{def:regclass}
+    & Definition~\ref{def:shiftstable} \\
+  Theorem~\ref{thm:absreg} (c\`adl\`ag modification)
+    & Lemma~\ref{lem:propagation} \\
+  Lemma~\ref{lem:mixture}, Lemma~\ref{lem:disint}
+    & Example~\ref{ex:shiftXA} \\
+  Lemma~\ref{lem:restartmemory} (\textbf{restart with memory})
+    & Theorem~\ref{thm:absuniq} (Markov property) \\
+  Definition~\ref{def:propagation}, Proposition~\ref{prop:uniqfromprop}
+    (\textbf{uniqueness}) & Lemma~\ref{lem:restart} (restart with re-indexing) \\
+  Definition~\ref{def:localizing}, Lemma~\ref{lem:L1auto},
+    Lemma~\ref{lem:localmix} & Lemma~\ref{lem:localrestart},
+    Theorem~\ref{thm:localuniq} \\
+  Lemma~\ref{lem:chain} (chain identity)
+    & Section~\ref{ssec:localuniq} (local uniqueness) \\
+  Theorem~\ref{thm:absconv}, Theorem~\ref{thm:clockchange}
+    & Proposition~\ref{prop:haar} and Section~\ref{ssec:dualcont} \\
+  \bottomrule
+  \end{tabular}
+
+  \medskip
+  \noindent
+  The left column is the whole of Sections~\ref{sec:MP} and
+  \ref{sec:convergence}, all of Section~\ref{sec:cadlag}, the uniqueness half of
+  Section~\ref{sec:uniqueness} and the analytic core of
+  Section~\ref{sec:duality}.  The right column is: the shift system and what is
+  built on it.  Every entry there produces a statement whose \emph{conclusion} is
+  Markovian --- the Markov property, the reduction to one-dimensional
+  distributions, pasting, duality --- so nothing in it could have been avoided by
+  a better argument.
 \end{remark}
 
 \subsection{The Markovian case}
@@ -3690,11 +4085,12 @@ in increasing order of cost.
 \item \emph{From a transition semigroup} (Section~\ref{ssec:exsemigroup}).
   Immediate, and correspondingly weak: it presupposes the object one usually
   wants to construct.
-\item \emph{Explicit construction} (Section~\ref{ssec:jump}).  Jump processes are
-  built by hand out of a Markov chain and exponential holding times, and the
-  martingale property is verified by a two-line computation with the exponential
-  distribution.  This is the only place in the manuscript where a solution is
-  written down.
+\item \emph{Explicit construction} (Sections~\ref{ssec:jump} and
+  \ref{ssec:hawkes}).  Jump processes are built by hand out of a Markov chain and
+  exponential holding times, and the martingale property is verified by a two-line
+  computation with the exponential distribution; the same computation survives a
+  \emph{path-dependent} rate, which gives Hawkes processes.  These are the only
+  places in the manuscript where a solution is written down.
 \item \emph{From stochastic differential equations}
   (Section~\ref{ssec:exsde}).  The most important route in practice and the most
   expensive here, since it presupposes stochastic integration; we state the chain
@@ -4339,9 +4735,518 @@ directions:
   $P$-continuous at $X$, i.e.\ hypothesis \ref{it:C3a} --- see
   Remark~\ref{rem:absconvcheck}.  \CPS{} also give a version in which the
   uniform integrability of \ref{it:C3b} is dropped (their Corollary 3.21) and one
-  with control variables and weak-strong convergence (their Theorem 3.14); the
-  latter is what their Section~5.3 needs for processes with fixed times of
-  discontinuity.
+  with control variables and weak-strong convergence (their Theorem 3.14).  The
+  part of the latter that concerns different clocks is
+  Section~\ref{ssec:diffclocks}, the part that concerns weak-strong convergence is
+  Section~\ref{ssec:weakstrong}.
+\end{remark}
+
+\subsection{Approximation on different clocks}
+\label{ssec:diffclocks}
+
+Nothing so far requires the approximating processes to run on the same clock as
+the limit, and this subsection makes that precise.  The observation to begin with
+is negative and structural: \emph{Theorem~\ref{thm:absconv} does not mention the
+approximating martingale problems at all}.  Its hypotheses \ref{it:C1}--\ref{it:C3}
+speak only of the canonical version $Y^\circ$ of the \emph{limit} test process,
+evaluated along $X^n$.  Where the approximating martingales come from, on which
+clock they are compensated, and with which convention, is not part of the theorem
+--- it is part of the verification of \ref{it:C3c}.  So different clocks are not a
+difficulty for the theorem; they are a difficulty for one of its hypotheses, and
+the following isolates it.
+
+\begin{setting}[Approximants with their own clocks; (T3) + (E3)]
+  \label{set:diffclocks}
+  In the situation of Theorem~\ref{thm:absconv}, let the limit test process be
+  \[
+    Y^\circ_t \;=\; f(\pi_t) - \int_{\langle 0,t \rangle_\iota} g(u,\pi_u) \, q(\dif u) ,
+  \]
+  and for each $n$ let $q^n$ be a clock on $\T$, $\iota_n$ a convention, and
+  $\xi^n, \psi^n$ progressively measurable processes on $B^n$ such that
+  \begin{equation}
+    \label{eq:approxclock}
+    Y^n_t \;=\; \xi^n_t - \int_{\langle 0,t \rangle_{\iota_n}} \psi^n_u \, q^n(\dif u)
+  \end{equation}
+  is a $P^n$-martingale.  Write, for $s \leq t$,
+  \begin{equation}
+    \label{eq:clockdiscrepancy}
+    \Delta^n_{s,t} \;\coloneqq\;
+      \int_{\langle s,t \rangle_{\iota_n}} \psi^n_u \, q^n(\dif u)
+      - \int_{\langle s,t \rangle_{\iota}} \psi^n_u \, q(\dif u)
+  \end{equation}
+  for the \emph{clock discrepancy} along the integrands.
+\end{setting}
+
+\begin{theorem}[Clock change; (T3) + (E3)]
+  \label{thm:clockchange}
+  Assume \ref{it:C1}, \ref{it:C2}, \ref{it:C3a} and \ref{it:C3b} of
+  Theorem~\ref{thm:absconv}, and suppose that for all $s \leq t$ in $D$ and all
+  $Z^\circ_s \in \ZZ^\circ_s$:
+  \begin{enumerate}[label=(K\arabic*)]
+  \item \label{it:K1}
+    $\displaystyle \sup_{n} \sup_{r \leq T}
+      E^{P^n}\bigl[ |\xi^n_r| + |\psi^n_r| \bigr] < \infty$ for every $T$;
+  \item \label{it:K2}
+    $\displaystyle \lim_n E^{P^n}\bigl[ (\xi^n_t - f(X^n_t)) \, Z^\circ_s(X^n) \bigr] = 0$;
+  \item \label{it:K3}
+    $\displaystyle \lim_n E^{P^n}\Bigl[
+      \int_{\langle s,t \rangle_\iota} \bigl( \psi^n_u - g(u,X^n_u) \bigr) q(\dif u)
+      \; Z^\circ_s(X^n) \Bigr] = 0$;
+  \item \label{it:K4}
+    $\displaystyle \lim_n E^{P^n}\bigl[ \Delta^n_{s,t} \, Z^\circ_s(X^n) \bigr] = 0$.
+  \end{enumerate}
+  Then \ref{it:C3c} holds, and consequently $P \in \Msol(\XX)$.
+\end{theorem}
+
+\begin{proof}
+  Fix $s \leq t$ in $D$ and $Z^\circ_s \in \ZZ^\circ_s$.  Since $Y^n$ is a
+  $P^n$-martingale and $Z^\circ_s(X^n)$ is $\Filt^n_s$-measurable,
+  $E^{P^n}[(Y^n_t - Y^n_s) Z^\circ_s(X^n)] = 0$, so
+  \begin{equation}
+    \label{eq:clockchangesplit}
+    E^{P^n}\bigl[ (Y^\circ_t(X^n) - Y^\circ_s(X^n)) Z^\circ_s(X^n) \bigr]
+      = E^{P^n}\bigl[ \bigl( R^n_t - R^n_s \bigr) Z^\circ_s(X^n) \bigr] ,
+    \qquad R^n_r \coloneqq Y^\circ_r(X^n) - Y^n_r .
+  \end{equation}
+  By \eqref{eq:approxclock} and the definition of $Y^\circ$,
+  \[
+    R^n_r = \bigl( f(X^n_r) - \xi^n_r \bigr)
+      + \int_{\langle 0,r \rangle_{\iota_n}} \psi^n_u \, q^n(\dif u)
+      - \int_{\langle 0,r \rangle_{\iota}} g(u,X^n_u) \, q(\dif u) ,
+  \]
+  Inserting $\pm \int_{\langle 0,r \rangle_\iota} \psi^n_u \, q(\dif u)$ splits the
+  last two terms into $\Delta^n_{0,r}$ and
+  \[
+    \int_{\langle 0,r \rangle_\iota} \bigl( \psi^n_u - g(u,X^n_u) \bigr) q(\dif u) .
+  \]
+  Taking the difference at $r=t$ and $r=s$, and using the additivity
+  \eqref{eq:clockadd} of both interval families,
+  \[
+    R^n_t - R^n_s = \bigl( f(X^n_t) - \xi^n_t \bigr) - \bigl( f(X^n_s) - \xi^n_s \bigr)
+      + \Delta^n_{s,t}
+      + \int_{\langle s,t \rangle_\iota} \bigl( \psi^n_u - g(u,X^n_u) \bigr) q(\dif u) .
+  \]
+  Each of the four terms has vanishing limit against $Z^\circ_s(X^n)$, by
+  \ref{it:K2} twice, \ref{it:K4} and \ref{it:K3}; \ref{it:K1} makes all the
+  expectations finite.  So the left-hand side of \eqref{eq:clockchangesplit}
+  tends to $0$, which is \ref{it:C3c}, and Theorem~\ref{thm:absconv} applies.
+\end{proof}
+
+\begin{remark}
+  \label{rem:K4isnotweak}
+  Condition \ref{it:K4} is \emph{not} weak convergence $q^n \Rightarrow q$.  It is
+  convergence of the clocks \emph{paired with the integrands}, and it does not
+  follow from $q^n \Rightarrow q$ unless the family $\{\psi^n\}$ is equicontinuous
+  in a suitable sense --- which for the piecewise constant $\psi^n$ of
+  Example~\ref{ex:invariance} it is not.  This is why \CPS, Assumption~5.3 states
+  it as a hypothesis, their condition (5.10), rather than deriving it; and
+  Theorem~\ref{thm:clockchange} is their Theorem~5.4, stripped of the control
+  variables.  Note also that \ref{it:K4} absorbs the difference between $\iota_n$
+  and $\iota$: the two conventions for one clock differ by a boundary term, and
+  \eqref{eq:clockdiscrepancy} does not care which of the two discrepancies it is
+  measuring.
+\end{remark}
+
+\begin{example}[Rescaled Markov chains; the invariance principle]
+  \label{ex:invariance}
+  Let $E = \R^d$, $F = \DE$, $q = \lambda$ for the limit, and for the $n$-th
+  approximant
+  \[
+    q^n = \frac{1}{n} \sum_{k \geq 0} \delta_{k/n} , \qquad \iota_n = \mathrm{p} .
+  \]
+  Let $(\Xi^n_k)_{k \geq 0}$ be a Markov chain with one-step kernel $P_n$ and put
+  $X^n_t = \Xi^n_{\lfloor nt \rfloor}$, a piecewise constant element of $\DE$.
+  With $\xi^n = f(X^n)$ and $\psi^n_u = n\,(P_n f - f)(X^n_u)$ we get
+  \[
+    \int_{[0,t)} \psi^n_u \, q^n(\dif u)
+      = \frac{1}{n} \sum_{k < nt} \psi^n_{k/n}
+      = \sum_{k < nt} (P_n f - f)(\Xi^n_k) ,
+  \]
+  so that \eqref{eq:approxclock} is exactly the Doob decomposition of
+  $f(\Xi^n_k)$ and is a martingale --- this is Remark~\ref{rem:jumpdiscrete}, and
+  it is where $\iota_n = \mathrm{p}$ is used.  Then \ref{it:K2} holds trivially,
+  $\xi^n - f(X^n)$ being identically zero; \ref{it:K3} is the classical
+  requirement that the rescaled generators $n(P_nf - f)$ converge to $Af$; and
+  \ref{it:K4} holds because $\psi^n$ is constant on each interval
+  $[k/n,(k+1)/n)$, so that the discrete and the Lebesgue integral agree except on
+  the two boundary intervals, giving
+  $|\Delta^n_{s,t}| \leq \tfrac{2}{n} \sup_u |\psi^n_u|$, which tends to $0$ as
+  soon as $n(P_nf-f)$ is bounded.
+
+  So ``a rescaled Markov chain converges to a diffusion'' is, in this formalism,
+  a statement about clocks: $q^n \to q$ along the integrands, with the chain's
+  clock atomic and the limit's atomless.
+\end{example}
+
+\begin{remark}[What this example costs, and what paid for it]
+  \label{rem:invariancepay}
+  Three earlier decisions are needed to write Example~\ref{ex:invariance} down at
+  all, and none of them was made with it in view.
+  \begin{enumerate}[label=(\roman*)]
+  \item \emph{Atoms} (D7 of the progress log, Theorem~\ref{thm:absreg}).  Without
+    a clock that may have atoms, the chain's martingale problem is not a
+    martingale problem; one would have to interpolate the chain into continuous
+    time, which is precisely the manoeuvre the clock makes unnecessary.
+  \item \emph{Clocks as measures on $\T$} (Definition~\ref{def:clock}).  Different
+    clocks on one $\T$ subsume different time indices, as long as the latter
+    embed: $\frac1n\N_0 \subset \Rp$ carries $q^n$, and no separate index set is
+    needed.
+  \item \emph{Both conventions} (Remark~\ref{rem:convention}).  The chain needs
+    $\iota = \mathrm{p}$, the limit does not care.  Had one convention been fixed,
+    half of Example~\ref{ex:invariance} would have to be rewritten; as it is, the
+    two differ by $\psi^n_t \, q^n(\{t\}) = (P_nf-f)(X^n_t) = O(1/n)$ and
+    \emph{wash out in the limit}.  This is a retrospective argument for carrying
+    both rather than choosing.
+  \end{enumerate}
+  What is \emph{not} supplied here is tightness: Theorem~\ref{thm:clockchange}
+  assumes \ref{it:C1}, and establishing $X^n \wto X$ on $\DE$ is the Skorokhod
+  half of the theory, cited in Remark~\ref{rem:EKrelcompact} and not proved.
+\end{remark}
+
+% =====================================================================
+\subsection{Weak-strong convergence: relaxing the continuity hypothesis}
+\label{ssec:weakstrong}
+
+Theorem~\ref{thm:absconv} has two hypotheses that can fail in practice, and this
+manuscript now has a section for each.  Section~\ref{ssec:diffclocks} relaxes
+\ref{it:C3c}, the approximation condition.  This one relaxes \ref{it:C3a}, the
+continuity condition --- and it has to, because \ref{it:C3a} fails outright in
+precisely the situation that the clock of Definition~\ref{def:clock} was widened
+to admit.
+
+\begin{example}[Why \ref{it:C3a} is not a technicality; \CPS, Section 4.3]
+  \label{ex:atomicdiscontinuity}
+  Take $\T = \Rp$, $E = \R$, $F = D_\R[0,\infty)$ and the atomic clock
+  $q = \delta_1$.  The compensator of Definition~\ref{def:markovMP} is then the
+  functional
+  \[
+    F_t(\omega) \;=\; \int_{\langle 0,t \rangle_{\mathrm{p}}} \omega(s) \, q(\dif s)
+      \;=\;
+      \begin{cases} 0, & t < 1, \\ \omega(1-), & t \geq 1 . \end{cases}
+  \]
+  For $t < 1$ the map $\omega \mapsto F_t(\omega)$ is $J_1$-continuous.  For
+  \emph{every} $t \geq 1$ it is discontinuous: take
+  $\omega_n = \one_{[1-1/n,\infty)} \to \omega = \one_{[1,\infty)}$ in $J_1$, and
+  observe $F_t(\omega_n) = 1 \not\to 0 = F_t(\omega)$.
+
+  So there is no dense $\Gamma \subset \Rp$ on which $F_t$ is continuous, and
+  hypothesis \ref{it:C3a} of Theorem~\ref{thm:absconv} fails for a set of times of
+  full measure --- not, as in Theorem~\ref{thm:CPSconv}, on a countable set that a
+  dense $\Gamma$ can avoid.  The cause is exactly the atom of $q$, and hence
+  exactly the generality that Remark~\ref{rem:convention} and
+  Section~\ref{ssec:jump} insist on.  Processes with fixed times of discontinuity
+  are not a curiosity here; they are the case this manuscript admits and \EK{} do
+  not.
+\end{example}
+
+The repair of \CPS{} is to weaken not the continuity but the \emph{space on which
+it is demanded}: a continuity that holds along random sections is enough, provided
+the sections are indexed by a variable that converges in a stronger sense than
+weakly.  This is the setting we have so far silently avoided by taking the control
+space to be a singleton.
+
+\begin{definition}[Weak-strong convergence; \CPS, Definition 2.1]
+  \label{def:weakstrong}
+  Let $(U,\mathcal{U})$ be a measurable space, let $F$ be Polish, and put
+  $S = U \times F$ with $\mathcal{S} = \mathcal{U} \otimes \Bor(F)$.  Let $C_S$ be
+  the set of bounded $\mathcal{S}$-measurable $f : S \to \R$ such that
+  $\omega \mapsto f(\alpha,\omega)$ is continuous for \emph{every} $\alpha \in U$.
+  Probability measures $P^n$ on $S$ converge to $P$ in the \emph{weak-strong}
+  sense, $P^n \to_{\mathrm{ws}} P$, if $E^{P^n}[f] \to E^P[f]$ for every
+  $f \in C_S$.
+\end{definition}
+
+Continuity is thus required in the second variable only; in the first, measurability
+suffices.  If $U$ is a singleton this is ordinary weak convergence
+(\CPS, Remark~2.2(i)), which is why nothing of it has appeared until now.
+
+\begin{definition}[$(P^n,P)$-continuity; \CPS, Definition 2.7]
+  \label{def:PnPcont}
+  An $\mathcal{S}$-measurable $g : S \to \R$ is \emph{$(P^n,P)$-continuous} if
+  there is $A \in \mathcal{S}$ with $P^n(A) \to 1$ and $P(A) = 1$ such that
+  \[
+    \bigl\{ (\alpha,\omega) \in A \;:\;
+      A_\alpha \ni \zeta \mapsto g(\alpha,\zeta) \text{ is discontinuous at } \omega \bigr\}
+  \]
+  is $P$-null, where $A_\alpha = \{\zeta : (\alpha,\zeta) \in A\}$.
+\end{definition}
+
+Two relaxations at once: continuity is asked for only along the sections
+$A_\alpha$, and only on a set of asymptotically full measure.  For a singleton
+$U$ and $A = U \times C$ this is Definition~\ref{def:Pcont}.
+
+\begin{fact}[Continuous mapping, Jacod--M\'emin; \CPS, Theorem 2.9]
+  \label{fact:jacodmemin}
+  If $P^n \to_{\mathrm{ws}} P$ and $g : S \to \R$ is $(P^n,P)$-continuous with
+  $\sup_n E^{P^n}[|g| \one_{\{|g|>a\}}] \to 0$ as $a \to \infty$, then
+  $E^{P^n}[g] \to E^P[g]$.
+\end{fact}
+
+\begin{theorem}[Abstract convergence with control variables; \CPS, Theorem 3.14]
+  \label{thm:absconvws}
+  Theorem~\ref{thm:absconv} holds with $X^n, X$ replaced by pairs
+  $(L^n,X^n), (L,X)$ taking values in $S = U \times F$, with \ref{it:C1} replaced
+  by $(L^n,X^n) \to_{\mathrm{ws}} (L,X)$ and the $P$-continuity of \ref{it:C3a}
+  replaced by $(Q^n,Q)$-continuity, where $Q^n$ and $Q$ are the laws of
+  $(L^n,X^n)$ and $(L,X)$.
+\end{theorem}
+
+\begin{proof}[Proof, or rather: what has to be changed]
+  Nothing, beyond two citations.  Steps~0, 1 and 2 of the proof of
+  Theorem~\ref{thm:absconv} each consist of applying the continuous mapping
+  theorem (Fact~\ref{fact:cmt}) to obtain weak convergence and then
+  Fact~\ref{fact:ui} to upgrade it to convergence of expectations.
+  Fact~\ref{fact:jacodmemin} performs both steps at once under the weaker
+  hypotheses, and is the only place where the difference between weak and
+  weak-strong convergence is felt.  Step~3 uses no continuity at all.  All the
+  work is therefore in Fact~\ref{fact:jacodmemin}, which we do not prove.
+\end{proof}
+
+\begin{remark}[What the control variable does]
+  \label{rem:controlvars}
+  The point of $U$ is that the exceptional set may depend on $\alpha$.  In
+  \CPS, Section~5.3 the control variables $L^n$ are c\`adl\`ag processes chosen so
+  that, with probability tending to one, \emph{the jump times of $X^n$ are
+  dominated by those of $L^n$} (their Assumption 5.1).  On the resulting sections
+  the Skorokhod $J_1$ and the local uniform topology coincide (their
+  Proposition~2.12), and the functional of
+  Example~\ref{ex:atomicdiscontinuity} --- discontinuous in $J_1$ at every
+  $t \geq 1$ --- becomes continuous.  One may then ``treat the control variables as
+  deterministic'', which is the practical content of
+  Definition~\ref{def:weakstrong}.
+
+  So the answer to why weak-strong convergence has been absent is that
+  Theorem~\ref{thm:absconv} is \CPS, Corollary~3.17, the case of a singleton
+  control space, and that in that case \ref{it:C3a} is available whenever the
+  limit has no fixed times of discontinuity.  Admitting atoms in the clock, as
+  Section~\ref{ssec:jump} and Section~\ref{ssec:diffclocks} do, is exactly what
+  makes the general case necessary.  Together with Remark~\ref{rem:conventionclash}
+  this is the second place where atoms exact a price: there a choice of
+  convention, here a strengthening of the mode of convergence.
+\end{remark}
+
+\subsection{Hawkes processes and their Volterra limit}
+\label{ssec:hawkes}
+
+This last subsection is a single example, and it is here because it is the first
+place where every strand of the manuscript is used at once: the explicit
+construction of Section~\ref{ssec:jump}, the localization of
+Section~\ref{ssec:localmp}, the \emph{non-Markovian} uniqueness of
+Section~\ref{ssec:absuniq}, and the convergence theorem of
+Section~\ref{ssec:absconv}.  Throughout, $\T = \Rp$ and $q$ is Lebesgue measure.
+
+\subsubsection*{Jump processes with a path-dependent rate}
+
+Section~\ref{ssec:jump} constructed jump processes from a rate $\lambda(x)$ and a
+kernel $\mu(x,\cdot)$ depending on the current state.  Nothing in that
+construction needs the dependence to be Markovian, and one gain is worth the
+change of notation: the holding time ceases to be exponential, and the
+computation that carried Theorem~\ref{thm:jumpMP} survives intact.
+
+\begin{setting}[Path-dependent jump data; (T3) + (E0)]
+  \label{set:pathjump}
+  Let $F$ be the set of piecewise constant right continuous paths $\T \to E$ with
+  finitely many jumps on bounded intervals, and let
+  \[
+    \Lambda : \T \times F \to [0,\infty) ,
+    \qquad
+    \mu : \T \times F \to \Prob(E)
+  \]
+  be \emph{predictable}: $\Lambda(t,\omega)$ and $\mu(t,\omega,\cdot)$ depend on
+  $\omega$ only through $\omega|_{[0,t)}$, and $t \mapsto \Lambda(t,\omega)$ is
+  locally integrable for every $\omega$.  Put
+  \begin{equation}
+    \label{eq:pathgen}
+    \mathcal{A}_t f(\omega)
+      \;=\; \Lambda(t,\omega) \int_E
+        \bigl( f(y) - f(\omega(t-)) \bigr) \, \mu(t,\omega,\dif y) ,
+    \qquad f \in \Bdd(E) ,
+  \end{equation}
+  and let $\XX^\circ$ consist of the processes
+  $f(\pi_t) - \int_0^t \mathcal{A}_s f \dif s$, $f \in \Bdd(E)$.
+\end{setting}
+
+\begin{definition}[The construction; (T3) + (E0)]
+  \label{def:pathjumpconstruction}
+  Let $\varepsilon_1,\varepsilon_2,\dots$ be i.i.d.\ exponential of parameter $1$.
+  Set $\tau_0 = 0$, let $Y_0 \sim \nu$, and given $(\tau_n, Y_n)$ let
+  $\omega^{(n)}$ be the path built so far, continued constantly at $Y_n$; put
+  \begin{equation}
+    \label{eq:pathjumptime}
+    \tau_{n+1} \;=\; \inf\Bigl\{ t > \tau_n \;:\;
+      \int_{\tau_n}^{t} \Lambda(u,\omega^{(n)}) \dif u > \varepsilon_{n+1} \Bigr\} ,
+  \end{equation}
+  and draw $Y_{n+1} \sim \mu(\tau_{n+1},\omega^{(n)},\cdot)$.  Define $X$ by
+  \eqref{eq:jumpprocess} and $\zeta = \lim_n \tau_n$ as before.
+\end{definition}
+
+Writing $A_n(u) = \int_{\tau_n}^{u}\Lambda(v,\omega^{(n)})\dif v$, the construction
+gives, conditionally on $\mathcal{H}_n = \sigma(Y_0,\dots,Y_n,\tau_1,\dots,\tau_n)$,
+the survival function $P(\tau_{n+1}>u \mid \mathcal{H}_n) = e^{-A_n(u)}$ and the
+jump-time density $\Lambda(u,\omega^{(n)})e^{-A_n(u)}$.  For $\Lambda$ constant
+this is the exponential law of Definition~\ref{def:jumpconstruction}.
+
+\begin{theorem}[Path-dependent jump processes; (T3) + (E0)]
+  \label{thm:pathjumpMP}
+  Suppose $\zeta = \infty$ almost surely.  Then $X$ of
+  Definition~\ref{def:pathjumpconstruction} solves the martingale problem for
+  $\XX^\circ$ of Setting~\ref{set:pathjump} with initial law $\nu$.  If
+  $\zeta < \infty$ with positive probability, $X$ solves the local martingale
+  problem on $[0,\zeta)$, with $(\tau_n)$ a localizing system in the sense of
+  Definition~\ref{def:localizing}.
+\end{theorem}
+
+\begin{proof}
+  The decomposition of Step~1 in the proof of Theorem~\ref{thm:jumpMP} is
+  unchanged, so it suffices to show $E[D_n \mid \mathcal{H}_n] = 0$ on
+  $\{\tau_n \leq t\}$ for
+  \[
+    D_n = \bigl( f(Y_{n+1}) - f(Y_n) \bigr)\one_{\{\tau_{n+1}\leq t\}}
+        - \int_{\tau_n \wedge t}^{\tau_{n+1}\wedge t} \mathcal{A}_s f \dif s .
+  \]
+  Write $\Lambda_u = \Lambda(u,\omega^{(n)})$ and
+  $\mu_u f = \int f \dif\mu(u,\omega^{(n)},\cdot)$, and note that on
+  $\{\tau_{n+1} > s\}$ the path agrees with $\omega^{(n)}$, so that
+  $\mathcal{A}_s f = \Lambda_s(\mu_s f - f(Y_n))$ there.  Then
+  \begin{align*}
+    E\bigl[ (f(Y_{n+1}) - f(Y_n))\one_{\{\tau_{n+1}\leq t\}} \bigm| \mathcal{H}_n \bigr]
+      &= \int_{\tau_n}^{t} \Lambda_u e^{-A_n(u)}
+         \bigl( \mu_u f - f(Y_n) \bigr) \dif u , \\
+    E\Bigl[ \int_{\tau_n}^{\tau_{n+1}\wedge t} \mathcal{A}_s f \dif s
+      \Bigm| \mathcal{H}_n \Bigr]
+      &= \int_{\tau_n}^{t} \Lambda_s \bigl( \mu_s f - f(Y_n) \bigr)
+         \, P(\tau_{n+1} > s \mid \mathcal{H}_n) \dif s ,
+  \end{align*}
+  the first because the jump time has density $\Lambda_u e^{-A_n(u)}$ and the jump
+  distribution at time $u$ is $\mu(u,\omega^{(n)},\cdot)$, the second by Fubini.
+  Since $P(\tau_{n+1}>s\mid\mathcal{H}_n) = e^{-A_n(s)}$, the two expressions
+  \emph{coincide}.  The rest of the proof of Theorem~\ref{thm:jumpMP} --- the
+  passage from $0$ to $s$, and the localization --- goes through verbatim, the
+  memorylessness of the exponential being replaced by the fact that, conditionally
+  on $\Filt^\circ_s$, the residual jump time is again given by
+  \eqref{eq:pathjumptime} with $\tau_n$ replaced by $s$.
+\end{proof}
+
+\begin{remark}
+  \label{rem:pathjumpsplit}
+  The cancellation is the same one as in Theorem~\ref{thm:jumpMP}: the rate in the
+  generator against the survival function of the holding time.  What has gone is
+  only the Markov structure --- $\Lambda$ and $\mu$ may depend on the whole past
+  --- and with it the shift system.  So Theorem~\ref{thm:pathjumpMP} produces
+  solutions to which Proposition~\ref{prop:uniqfromprop} applies and
+  Theorem~\ref{thm:absuniq} does not, which is the situation
+  Remark~\ref{rem:markovaudit} describes and which has so far been illustrated only
+  by the cited Examples~\ref{ex:volterra} and \ref{ex:pathdepsemi}.
+\end{remark}
+
+\begin{example}[Hawkes processes]
+  \label{ex:hawkes}
+  Take $E = \N_0$, $\mu(t,\omega,\cdot) = \delta_{\omega(t-)+1}$ and
+  \begin{equation}
+    \label{eq:hawkesrate}
+    \Lambda(t,\omega) \;=\; \mu_0 + \int_{[0,t)} \phi(t-s) \, \dif\omega_s ,
+    \qquad \mu_0 > 0 , \ \phi : \Rp \to [0,\infty) ,
+  \end{equation}
+  with $\phi$ locally integrable.  Then $X = N$ is a \emph{Hawkes process}, and
+  Theorem~\ref{thm:pathjumpMP} says that
+  $f(N_t) - \int_0^t \Lambda_s (f(N_s+1) - f(N_s))\dif s$ is a martingale for every
+  bounded $f$; taking $f = \mathrm{id}$ on bounded sets recovers the defining
+  property that $N - \int_0^\cdot \Lambda_s \dif s$ is a martingale.
+
+  The stability threshold is $\lVert \phi \rVert_1 = 1$: for
+  $\lVert\phi\rVert_1 < 1$ one has $\sup_{t\leq T} E[\Lambda_t] < \infty$ and
+  $\zeta = \infty$, while for $\lVert\phi\rVert_1 \geq 1$ explosion is possible and
+  Theorem~\ref{thm:pathjumpMP} delivers the \emph{local} problem, localized by the
+  jump times.  That is not a defect of the example: the scaling limit below lives
+  at $\lVert\phi\rVert_1 \uparrow 1$, so the interesting regime is exactly the one
+  in which Section~\ref{ssec:localmp} is needed.
+\end{example}
+
+\subsubsection*{The Volterra limit}
+
+The observation that makes the limit theorem an application rather than an
+analogy is that \eqref{eq:hawkesrate} \emph{is} a Volterra equation.
+
+\begin{remark}[A Hawkes process is a Volterra SDE]
+  \label{rem:hawkesisvolterra}
+  Put $Z = N$ and $X = \Lambda$.  Then \eqref{eq:hawkesrate} reads
+  \[
+    X_t \;=\; g_0(t) + \int_{[0,t)} K_{t-s} \, \dif Z_s ,
+    \qquad g_0 \equiv \mu_0 , \quad K = \phi ,
+  \]
+  which is verbatim the constraint of Example~\ref{ex:volterra}, and $Z$ is a
+  semimartingale whose characteristics are driven by $X$: $a = 0$ and
+  $\nu(x,\dif y) = x \, \delta_1(\dif y)$.  A Hawkes process is therefore a
+  solution of a Volterra stochastic differential equation with pure-jump noise,
+  and the pair $(\Lambda,N)$ lies in the path space
+  $L^p_{\mathrm{loc}}(\Rp,\R) \times D_\R[0,\infty)$ of
+  Example~\ref{ex:volterra}.  Approximants and limit below are thus elements of
+  one and the same solution set, for two triplets of the same shape --- one purely
+  discontinuous, one continuous.
+\end{remark}
+
+\begin{theorem}[Hawkes to Volterra, conditionally on tightness; (T3) + (E3)]
+  \label{thm:hawkesvolterra}
+  For each $n$ let $(\Lambda^n, N^n)$ be a Hawkes process with kernel $\phi^n$ and
+  baseline $\mu_0^n$, rescaled in time, and let $(X^n,Z^n)$ be the corresponding
+  pair of Remark~\ref{rem:hawkesisvolterra}.  Let $\XX^\circ$ be the Volterra
+  family of Example~\ref{ex:volterra} for a kernel $K$, a triplet $(b,a,\nu)$ and
+  $g_0$.  Suppose
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:hv_tight}
+    $(X^n,Z^n) \wto (X,Z)$ weakly on $L^p_{\mathrm{loc}}(\Rp,\R) \times D_\R[0,\infty)$;
+  \item \label{it:hv_gen}
+    the rescaled generators converge in the sense of \ref{it:C3c}, i.e.\ for
+    $f \in C^2_b$ and $s \leq t$ in a dense $D$,
+    $\lim_n E\bigl[ \bigl( \int_s^t (\mathcal{A}^n_u f - Lf(X^n_u,Z^n_u)) \dif u \bigr)
+      Z^\circ_s(X^n,Z^n) \bigr] = 0$;
+  \item \label{it:hv_ui}
+    $\{ f(Z^n_r) - \int_0^r Lf(X^n_u,Z^n_u)\dif u : r \in D \cap [0,t],\, n \in \N \}$
+    is uniformly integrable.
+  \end{enumerate}
+  Then $(X,Z)$ solves the Volterra martingale problem $\XX^\circ$.  If moreover
+  that problem has a unique solution in law for the given initial condition, then
+  $(X,Z)$ is determined, and the whole sequence converges to it.
+\end{theorem}
+
+\begin{proof}
+  Hypotheses \ref{it:hv_tight}--\ref{it:hv_ui} are \ref{it:C1}, \ref{it:C3c} and
+  \ref{it:C3b} of Theorem~\ref{thm:absconv}; \ref{it:C2} is
+  Example~\ref{ex:determining} on the second coordinate together with the
+  integrated form of the Volterra constraint, and \ref{it:C3a} holds because the
+  first coordinate enters only through Lebesgue integrals --- which is why
+  Example~\ref{ex:volterra} states the constraint in integrated form --- and the
+  second through evaluations at times where the limit does not jump.  The
+  approximating martingales required by \ref{it:C3c} are those of
+  Theorem~\ref{thm:pathjumpMP}.  Theorem~\ref{thm:absconv} then gives
+  $(X,Z) \in \Msol(\XX^\circ)$.  The final assertion is
+  Proposition~\ref{prop:uniqfromprop}: uniqueness in law is
+  \eqref{eq:propagation}, and it upgrades to uniqueness of the whole law with no
+  Markov structure --- which is essential, since a Volterra process has none.
+\end{proof}
+
+\begin{remark}[What is proved here and what is cited]
+  \label{rem:hawkescaveat}
+  Hypothesis \ref{it:hv_tight} is tightness, and it is not supplied --- here as
+  everywhere in this section (Remark~\ref{rem:invariancepay}).  For the Hawkes
+  scaling it is the substance of the theorem: the interesting regime is
+  $\lVert\phi^n\rVert_1 \uparrow 1$ with a heavy-tailed $\phi$, the kernel rescales
+  to $K(t) = t^{\alpha-1}/\Gamma(\alpha)$, and the limit is a rough stochastic
+  Volterra equation.  That is the content of \JR, and it is cited, not proved; the
+  present theorem is the identification step, and it is the part the abstract
+  machinery does supply.
+
+  Three remarks on scope.  First, \emph{weak-strong convergence is not needed}:
+  the jumps of $N^n$ have height one and the limit is continuous, so the limit has
+  no fixed times of discontinuity and \ref{it:C3a} holds on a dense set with
+  countable complement.  Section~\ref{ssec:weakstrong} stays out of it.  Second,
+  \emph{the clock does not change} if one rescales the continuous-time Hawkes
+  process, so Theorem~\ref{thm:absconv} suffices and
+  Section~\ref{ssec:diffclocks} is not used; it would be, if one approximated
+  instead by the discrete branching representation, whose clock is atomic.
+  Third, and this is the point of the example: \emph{no result of
+  Section~\ref{ssec:markovlayer} is used anywhere}.  Neither the approximants nor
+  the limit has a shift system, and none is wanted.
 \end{remark}
 
 % =====================================================================
@@ -4380,7 +5285,9 @@ uniform integrability (Fact~\ref{fact:ui}); monotone class theorems
   Facts~\ref{fact:convdet}, \ref{fact:stoneweierstrass}, \ref{fact:fdd},
   \ref{fact:sepcond});
 \item bounded pointwise convergence and bp-closures
-  (Definition~\ref{def:bp}, Fact~\ref{fact:bp});
+  (Definition~\ref{def:bp}, Fact~\ref{fact:bp}) --- but only for
+  Corollary~\ref{cor:bpclosure}, which is itself optional: the working statement
+  is Lemma~\ref{lem:closure}, and that is dominated convergence;
 \item the continuous mapping theorem in the form of Fact~\ref{fact:cmt} and the
   Skorokhod representation (Fact~\ref{fact:PSpolish});
 \item convergence of finite-dimensional distributions in $\DE$ and the relative
@@ -4559,6 +5466,12 @@ S.~N.~Ethier and T.~G.~Kurtz.
 J.~Jacod and A.~N.~Shiryaev.
 \newblock \emph{Limit Theorems for Stochastic Processes}.
 \newblock 2nd edition, Springer, Berlin, 2003.
+
+\bibitem{JR16}
+T.~Jaisson and M.~Rosenbaum.
+\newblock Rough fractional diffusions as scaling limits of nearly unstable heavy
+  tailed Hawkes processes.
+\newblock \emph{Ann.\ Appl.\ Probab.} \textbf{26} (2016), 2860--2882.
 
 \bibitem{Kal21}
 O.~Kallenberg.
