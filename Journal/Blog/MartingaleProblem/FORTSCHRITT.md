@@ -2679,6 +2679,54 @@ verlinkt, „(T2a), $\T$ carries the order topology" führt also direkt zu (T2a)
 
 106 Seiten, unverändert.
 
+### D58 — Notations-Clash-Durchgang; `\mathbb` bereinigt  *(2026-08-25)*
+
+Auftrag: das ganze Dokument auf Notations-Clashes prüfen. Dazu die Frage des
+Nutzers, wofür `\mathbb` eigentlich steht — $\mathbb X$ sei seltsam, weil es je
+nach Anwendung etwas anderes ist.
+
+**Die Frage war berechtigt und deckt die Wurzel auf.** `\mathbb` wurde für
+*drei* verschiedene Jobs benutzt: Zahlbereiche ($\R,\N,\Q,\C,\K$), den festen
+Index $\T$, Filtrationen ($\mathbb F,\mathbb G$) — und zwei Familien, die mit
+dem Problem variieren ($\mathbb X$ Testprozesse, $\mathbb Z$ bestimmende
+Mengen). Die letzten beiden verletzen jede vernünftige Konvention, und
+$\mathbb Z$ ist obendrein **die ganzen Zahlen**.
+
+Regel jetzt: `\mathbb` nur für das, was nicht variiert — Zahlbereiche und $\T$;
+variierende Familien kalligraphisch. Filtrationen bleiben als einzige Ausnahme
+blackboard bold, weil J&S das für $(\Filt_t)$ etabliert haben. Umgesetzt durch
+zwei Makrozeilen: $\XX\to\mathcal X$, $\ZZ\to\mathcal Z$. In §2.1 als
+Konvention ausgeschrieben.
+
+**Drei echte Clashes entfernt** (jeweils Notation der Quellen, die hier schon
+belegt ist):
+* **$q$** — EK schreiben $q=r\wedge1$ für die gestutzte Metrik in der
+  Skorokhod-Metrik; $q$ ist hier die **Uhr**. Metrik jetzt $\varrho$.
+* **$F$** — EK schreiben $F\subset\T$ dicht in ihren Regularisierungslemmata;
+  $F$ ist hier der **Pfadraum**. Jetzt $D$, konsistent mit (T2b).
+* **$\tau$** — die verallgemeinerte Inverse der Uhr in `cor:atomless` hieß
+  $\tau$, was überall sonst eine **Stoppzeit** ist. Jetzt $Q^{\leftarrow}$.
+
+**Zwei Vereinheitlichungen.** §6 benutzte *drei* Namen für dasselbe Objekt: $\Phi$
+in `lem:chain`/`cor:atomless`, $f$ in `lem:calculus`, $F$ in `thm:duality`
+(letzteres zusätzlich im Clash mit dem Pfadraum). Alle drei sind jetzt $\Phi$ mit
+$\gamma_1,\gamma_2$ als Dichten — `lem:calculus` liest sich damit wörtlich wie
+`lem:chain`. Ebenso $D$ in `fact:relcompact2` $\to\mathcal D_a$ (passend zum
+dortigen $C_a$), und der zufällige Kompensator in §1.4 $A(\omega)\to\mathsf q$,
+weil $A$ durchgehend der Operator ist.
+
+**Neun bewusste Mehrfachbelegungen** stehen jetzt als Tabelle in §2.1, mit
+Erstbedeutung und Zweitbedeutung: $\Phi$, $\Theta$, $\gamma$, $\Lambda$,
+$\lambda$, $T$, $H$, $\alpha/\beta$, $M$. Alle sind weit genug auseinander, dass
+keine einzelne Aussage beide enthält; die Tabelle ist für den Leser da, der der
+zweiten Bedeutung zuerst begegnet. Umbenannt wurde nur, wo eine Fehllesung
+möglich war.
+
+**Nebenbei:** `Symmetrically,  Symmetrically,` im Beweis von `thm:duality` —
+Dopplung, vorhanden seit dem ersten Commit.
+
+107 Seiten.
+
 ---
 
 ## Prüfprotokoll

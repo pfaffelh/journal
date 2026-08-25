@@ -60,8 +60,8 @@
 \newcommand{\SV}{\cite{SV79}}
 \newcommand{\K}{\mathbb{K}}
 \newcommand{\C}{\mathbb{C}}
-\newcommand{\XX}{\mathbb{X}}                   % family of test processes
-\newcommand{\ZZ}{\mathbb{Z}}                   % determining set
+\newcommand{\XX}{\mathcal{X}}                  % family of test processes
+\newcommand{\ZZ}{\mathcal{Z}}                  % determining set
 \newcommand{\MP}{\mathrm{MP}}
 \newcommand{\Msol}{\mathcal{M}}
 \newcommand{\one}{\mathbf{1}}
@@ -425,19 +425,21 @@ Signed or complex solution measures
 
 \paragraph{A path-dependent clock.}
 The clock of Definition~\ref{def:clock} is a \emph{deterministic} measure on
-$\T$.  Replacing it by a predictable increasing process $A(\omega)$, so that the
-compensator is $\int g(\pi_u)\dif A_u(\omega)$, is the step from a martingale
-problem to the semimartingale characteristics of \JS, Chapter~II.
+$\T$.  Replacing it by a kernel $\mathsf{q}$ from the path space to $\T$, so that
+the compensator is $\int g(\pi_u)\,\mathsf{q}(\omega,\dif u)$ --- equivalently,
+by a predictable increasing process --- is the step from a martingale problem to
+the semimartingale characteristics of \JS, Chapter~II.  We write $\mathsf{q}$ and
+not $A$, which is the operator throughout.
 
 Two observations.  First, \emph{the abstract layer already contains it}:
 Definition~\ref{def:absMP} asks only that $\XX^\circ$ be a family of adapted
-path functionals, and $f(\pi_t)-\int_0^t g(\pi_u)\dif A_u$ is one.  It is only
+path functionals, and $f(\pi_t)-\int g(\pi_u)\,\mathsf{q}(\omega,\dif u)$ is one.  It is only
 Definition~\ref{def:markovMP} that fixes a deterministic $q$, so the cost of the
 generalization is confined to Section~\ref{ssec:markovMP} and to the results
 that quantify over $q$.  Second, an \emph{absolutely continuous} random clock
 buys nothing: $\int g(\pi_u)a_u(\omega)\dif u$ is the path-dependent integrand of
 Setting~\ref{set:pathjump}, which is already treated.  What is genuinely new is a
-\emph{singular} $A$ --- a local time, or one with random jumps.
+\emph{singular} $\mathsf{q}$ --- a local time, or one with random jumps.
 
 And that is where the two halves of Section~\ref{ssec:weakstrong} separate.  A
 deterministic clock has its atoms at deterministic times, and
@@ -526,6 +528,62 @@ $\lambda - A = \{ (f, \lambda f - g) : (f,g) \in A \}$.
 
 Throughout, references of the form ``\EK, Theorem~3.9.1'' mean Chapter~3,
 Section~9, item~1 of \EK.
+
+\subsubsection*{Typography, and symbols that carry two meanings}
+
+Blackboard bold is reserved for the two things that do not vary with the problem:
+the number systems $\R, \N, \Q, \C, \K, \Rp$, and the index $\T$, which is fixed
+once for the whole manuscript.  Families that \emph{do} vary --- the test
+processes $\XX$, the determining sets $\ZZ$, the solution sets $\Msol$ --- are
+calligraphic.  Filtrations are the one exception: $\mathbb{F}$ and $\mathbb{G}$
+are blackboard bold because \JS{} made that standard for $(\Filt_t)$ and
+$(\Gilt_t)$, and departing from it would cost more than it saves.  An earlier
+version wrote $\mathbb{X}$ and $\mathbb{Z}$ for the two families, which is
+doubly unfortunate: they are not canonical objects, and $\mathbb{Z}$ is the
+integers.
+
+Some letters are nevertheless used twice, and the following are deliberate.  Each
+pair is separated by enough of the manuscript that no single statement contains
+both; the table is here so that the reader who meets the second use first is not
+misled.
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{0.10\textwidth}p{0.38\textwidth}p{0.40\textwidth}@{}}
+\toprule
+\textbf{Symbol} & \textbf{First meaning} & \textbf{Second meaning} \\
+\midrule
+$\Phi$ & regularizing class, Definition~\ref{def:regclass}
+       & the two-variable function of Section~\ref{sec:duality} \\
+$\Theta$ & mixing parameter space, Lemma~\ref{lem:mixture}
+       & the dual flow of Lemma~\ref{lem:hawkesflow} \\
+$\gamma$ & the density in \eqref{eq:incrementrep}
+       & the augmenting map of Theorem~\ref{thm:absconvaug} \\
+$\Lambda$ & the time changes of Definition~\ref{def:skorokhod}
+       & the path-dependent rate of Setting~\ref{set:pathjump} \\
+$\lambda$ & the resolvent parameter, Lemma~\ref{lem:resolvent}
+       & the rate of Setting~\ref{set:jumpdata}; also Lebesgue measure \\
+$T$ & a time horizon
+       & a strict stopping time in Section~\ref{ssec:localuniq} \\
+$H$ & a dense subset of $\Cb(E)$, Fact~\ref{fact:relcompact}
+       & the duality function of Section~\ref{ssec:exduality} \\
+$\alpha,\beta$ & paths in $F$, Definition~\ref{def:restartkernel}
+       & the Feynman--Kac potentials of Theorem~\ref{thm:duality} \\
+$M$ & the measurable functions $\Meas(E)$
+       & a separating class, Definition~\ref{def:separating} \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+Three collisions that would have been harmful were removed rather than declared,
+and are recorded here because the original notation is that of the sources:
+\EK{} write $q$ for the truncated metric $r \wedge 1$ in the Skorokhod metric,
+which is the clock here, so we write $\varrho$; \EK{} write $F$ for a dense
+subset of the index in their regularization lemmas, which is the path space
+here, so we write $D$; and the generalized inverse of the clock in
+Corollary~\ref{cor:atomless} is written $Q^{\leftarrow}$ rather than $\tau$,
+which is a stopping time everywhere else.
 
 % ---------------------------------------------------------------------
 \subsection{The time index and the clock}
@@ -1136,11 +1194,11 @@ which the manuscript would otherwise have to add separately.
 
 \begin{fact}[Regularization along a dense set; \EK, Lemma 2.2.8; \eqref{T2b}]
   \label{fact:cadlagext}
-  Let $(E,r)$ be a metric space, $F \subset \T$ dense, and
-  $x : F \to E$.  If
-  $y(t) \coloneqq \lim_{s \to t+,\, s \in F} x(s)$ exists for every $t \in \T$,
+  Let $(E,r)$ be a metric space, $D \subset \T$ dense, and
+  $x : D \to E$.  If
+  $y(t) \coloneqq \lim_{s \to t+,\, s \in D} x(s)$ exists for every $t \in \T$,
   then $y$ is right continuous; if
-  $y^-(t) \coloneqq \lim_{s \to t-,\, s \in F} x(s)$ exists for every $t > 0$,
+  $y^-(t) \coloneqq \lim_{s \to t-,\, s \in D} x(s)$ exists for every $t > 0$,
   then $y^-$ is left continuous on $\T \setminus \{0\}$; and if both exist for
   every $t>0$, then $y^-(t) = y(t-)$ for all $t > 0$.  In particular $y$ is
   c\`adl\`ag, and $y \in \DE$ when $\T$ satisfies \eqref{T3}.
@@ -1149,13 +1207,13 @@ which the manuscript would otherwise have to add separately.
 \begin{fact}[Submartingale regularization; \EK, Proposition 2.2.9; \eqref{T2b}]
   \label{fact:submgreg}
   Let $X$ be a real-valued $(\Filt_t)$-submartingale and let
-  $F \subset \T$ be countable and dense.  Then there is $\Omega_0$ with
+  $D \subset \T$ be countable and dense.  Then there is $\Omega_0$ with
   $P(\Omega_0) = 1$ such that for every $\omega \in \Omega_0$ the limits
   \begin{equation}
     \label{eq:regY}
-    Y(t,\omega) = \lim_{s \to t+,\, s \in F} X(s,\omega) \ \ (t \in \T),
+    Y(t,\omega) = \lim_{s \to t+,\, s \in D} X(s,\omega) \ \ (t \in \T),
     \qquad
-    Y^-(t,\omega) = \lim_{s \to t-,\, s \in F} X(s,\omega) \ \ (t > 0)
+    Y^-(t,\omega) = \lim_{s \to t-,\, s \in D} X(s,\omega) \ \ (t > 0)
   \end{equation}
   exist.  Moreover $\Gamma = \{t : P\{Y(t) \neq Y(t-)\} > 0\}$ is countable,
   $P\{X(t) = Y(t)\} = 1$ for $t \notin \Gamma$, and setting $\tilde{X}(t) = Y(t)$
@@ -1356,7 +1414,8 @@ Throughout this subsection $(S,d)$ is a metric space.
 \begin{definition}[\EK, Section 3.5]
   \label{def:skorokhod}
   $\DE$ is the space of right continuous $x : [0,\infty) \to E$ having left
-  limits $x(t-)$ for all $t > 0$ (with $x(0-) = x(0)$).  Let $q = r \wedge 1$,
+  limits $x(t-)$ for all $t > 0$ (with $x(0-) = x(0)$).  Let $\varrho = r \wedge 1$
+  --- \emph{not} $q$, which is the clock ---,
   let $\Lambda'$ be the set of strictly increasing continuous
   $\lambda : [0,\infty) \to [0,\infty)$ onto with $\lambda(0)=0$, and let
   $\Lambda \subset \Lambda'$ be those $\lambda$ which are Lipschitz with
@@ -1377,7 +1436,7 @@ Throughout this subsection $(S,d)$ is a metric space.
   \begin{equation}
     \label{eq:skorokhodmetricaux}
     d(x,y,\lambda,u)
-      = \sup_{t \geq 0} q\bigl( x(t \wedge u), y(\lambda(t) \wedge u) \bigr).
+      = \sup_{t \geq 0} \varrho\bigl( x(t \wedge u), y(\lambda(t) \wedge u) \bigr).
   \end{equation}
 \end{definition}
 
@@ -1456,8 +1515,8 @@ Throughout this subsection $(S,d)$ is a metric space.
     \mathcal{A}_n \;=\; \Bigl\{ (Y,Z) \in \mathcal{L}_n \times \mathcal{L}_n :
       Y(t) - \int_0^t Z(s) \dif s \text{ is an } (\Filt^n_t)\text{-martingale} \Bigr\}.
   \end{equation}
-  Let $C_a \subset \Cb(E)$ be a subalgebra and let $D$ be the collection of
-  $f \in \Cb(E)$ such that for every $\varepsilon, T > 0$ there is
+  Let $C_a \subset \Cb(E)$ be a subalgebra and let $\mathcal{D}_a$ be the
+  collection of $f \in \Cb(E)$ such that for every $\varepsilon, T > 0$ there is
   $(Y_n, Z_n) \in \mathcal{A}_n$ with
   \begin{equation}
     \label{eq:relcompact2}
@@ -1467,7 +1526,7 @@ Throughout this subsection $(S,d)$ is a metric space.
     \sup_n E\bigl[ \lVert Z_n \rVert_{p,T} \bigr] < \infty
     \text{ for some } p \in (1,\infty].
   \end{equation}
-  If $C_a$ is contained in the sup-norm closure of $D$, then
+  If $C_a$ is contained in the sup-norm closure of $\mathcal{D}_a$, then
   $\{f \circ X_n\}$ is relatively compact for each $f \in C_a$; more generally
   $\{(f_1,\dots,f_k) \circ X_n\}$ is relatively compact in
   $D_{\R^k}[0,\infty)$ for all $f_1,\dots,f_k \in C_a$.
@@ -1967,7 +2026,7 @@ Definition~\ref{def:absMP}.
 \begin{remark}[Provenance of Definition~\ref{def:absMP}]
   \label{rem:absMPprov}
   The abstract formulation is older than \CPS.  \JS, Definition~III.1.3 already
-  attaches a martingale problem to a family $\mathcal{X}$ of optional processes
+  attaches a martingale problem to a family of optional processes
   on a filtered space carrying no measure, and does so with \emph{local}
   martingales as the default rather than as a variant.  Two features of their
   formulation are worth importing.  First, the initial condition is a measure
@@ -1975,7 +2034,7 @@ Definition~\ref{def:absMP}.
   not merely an initial distribution $\mu = P\pi_0^{-1}$; everything below goes
   through with $\sigma(\pi_0)$ replaced by $\mathcal{H}$, and
   Lemma~\ref{lem:disint} in particular.  Second, \JS, Remark~III.1.6 notes
-  explicitly that the elements of $\mathcal{X}$ need be neither c\`adl\`ag nor
+  explicitly that the elements of that family need be neither c\`adl\`ag nor
   even adapted --- which is the observation that Setting~\ref{set:absreg} needs
   and that \CPS's standing assumptions exclude.
 \end{remark}
@@ -4886,8 +4945,8 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   measurable for the order $\sigma$-field in each variable --- automatic if
   $\mathcal{T}$ is taken to be that $\sigma$-field, which
   Definition~\ref{def:clock} permits.  Put $Q(s) = q(\T_{<s})$ and
-  $\tau(z) = \sup\{t : Q(t) \leq z\}$.  If
-  $\Psi = \Phi(\tau(\cdot),\tau(\cdot))$ and $\psi = \gamma(\tau(\cdot),\tau(\cdot))$
+  $Q^{\leftarrow}(z) = \sup\{t : Q(t) \leq z\}$.  If
+  $\Psi = \Phi(Q^{\leftarrow}(\cdot),Q^{\leftarrow}(\cdot))$ and $\psi = \gamma(Q^{\leftarrow}(\cdot),Q^{\leftarrow}(\cdot))$
   satisfy the integrability hypothesis \eqref{eq:calcint}, then
   \[
     \Phi(t,0) \;=\; \Phi(0,t)
@@ -4897,13 +4956,13 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 
 \begin{proof}
   Since $q$ is atomless, $Q$ is continuous; by \eqref{T3} its domain is an interval, so
-  $Q$ maps $\T_{\leq t^*}$ onto $[0,L]$, $L = Q(t^*)$, and $\tau$ is a right
-  inverse: $Q(\tau(z)) = z$.  Monotonicity of $Q$ gives
-  $\tau(z) \geq a \iff z \geq Q(a)$, whence the change-of-variables formula
+  $Q$ maps $\T_{\leq t^*}$ onto $[0,L]$, $L = Q(t^*)$, and $Q^{\leftarrow}$ is a right
+  inverse: $Q(Q^{\leftarrow}(z)) = z$.  Monotonicity of $Q$ gives
+  $Q^{\leftarrow}(z) \geq a \iff z \geq Q(a)$, whence the change-of-variables formula
   \begin{equation}
     \label{eq:quantile}
     \int_{[s,s')} g \, \dif q
-      \;=\; \int_{[Q(s),\,Q(s'))} g\bigl(\tau(z)\bigr) \dif z
+      \;=\; \int_{[Q(s),\,Q(s'))} g\bigl(Q^{\leftarrow}(z)\bigr) \dif z
   \end{equation}
   for order-measurable $g$: for $g = \one_{[a,a')}$ both sides equal
   $Q(s'\wedge a') - Q(s\vee a)$, and Fact~\ref{fact:monotoneclass} does the rest.
@@ -4911,10 +4970,10 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   Now $q([s,s')) = 0$ forces $\Phi(s,\cdot) = \Phi(s',\cdot)$ as well as
   $\Phi(\cdot,s) = \Phi(\cdot,s')$, by \eqref{eq:incrementrep}; hence
   $\Psi(Q(s),Q(t)) = \Phi(s,t)$.  And for $x \leq x'$, writing
-  $s = \tau(x)$ and $s' = \tau(x')$,
+  $s = Q^{\leftarrow}(x)$ and $s' = Q^{\leftarrow}(x')$,
   \[
     \Psi(x',y) - \Psi(x,y)
-      = \int_{[s,s')} \gamma\bigl(r,\tau(y)\bigr) q(\dif r)
+      = \int_{[s,s')} \gamma\bigl(r,Q^{\leftarrow}(y)\bigr) q(\dif r)
       = \int_x^{x'} \psi(z,y) \dif z
   \]
   by \eqref{eq:quantile}, and symmetrically in $y$.  So $\Psi$ satisfies the
@@ -5072,32 +5131,32 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 
 \begin{lemma}[\EK, Lemma 4.4.10; \eqref{T3}]
   \label{lem:calculus}
-  Let $f : [0,\infty) \times [0,\infty) \to \R$ be absolutely continuous in $s$
+  Let $\Phi : [0,\infty) \times [0,\infty) \to \R$ be absolutely continuous in $s$
   for each fixed $t$ and absolutely continuous in $t$ for each fixed $s$, and
-  set $(f_1,f_2) = \nabla f$.  Suppose that
+  set $(\gamma_1,\gamma_2) = \nabla\Phi$.  Suppose that
   \begin{equation}
     \label{eq:calcint}
-    \int_0^T \! \int_0^T |f_i(s,t)| \dif s \dif t < \infty,
+    \int_0^T \! \int_0^T |\gamma_i(s,t)| \dif s \dif t < \infty,
     \qquad i = 1,2, \quad T > 0 .
   \end{equation}
   Then for almost every $t \geq 0$,
   \begin{equation}
     \label{eq:calcconc}
-    f(t,0) - f(0,t) \;=\; \int_0^t \bigl( f_1(s,t-s) - f_2(s,t-s) \bigr) \dif s .
+    \Phi(t,0) - \Phi(0,t) \;=\; \int_0^t \bigl( \gamma_1(s,t-s) - \gamma_2(s,t-s) \bigr) \dif s .
   \end{equation}
 \end{lemma}
 
 \begin{proof}
   By \eqref{eq:calcint} and Fubini,
   \begin{align*}
-    \int_0^T \!\! \int_0^t &\bigl( f_1(t-s,s) - f_2(s,t-s) \bigr) \dif s \dif t \\
-    &= \int_0^T \!\! \int_0^t \! f_1(t-s,s) \dif s \dif t
-       - \int_0^T \!\! \int_0^t \! f_2(s,t-s) \dif s \dif t \\
-    &= \int_0^T \!\! \int_s^T \! f_1(t-s,s) \dif t \dif s
-       - \int_0^T \!\! \int_s^T \! f_2(s,t-s) \dif t \dif s \\
-    &= \int_0^T \bigl( f(T-s,s) - f(0,s) \bigr) \dif s
-       - \int_0^T \bigl( f(s,T-s) - f(s,0) \bigr) \dif s \\
-    &= \int_0^T \bigl( f(s,0) - f(0,s) \bigr) \dif s ,
+    \int_0^T \!\! \int_0^t &\bigl( \gamma_1(t-s,s) - \gamma_2(s,t-s) \bigr) \dif s \dif t \\
+    &= \int_0^T \!\! \int_0^t \! \gamma_1(t-s,s) \dif s \dif t
+       - \int_0^T \!\! \int_0^t \! \gamma_2(s,t-s) \dif s \dif t \\
+    &= \int_0^T \!\! \int_s^T \! \gamma_1(t-s,s) \dif t \dif s
+       - \int_0^T \!\! \int_s^T \! \gamma_2(s,t-s) \dif t \dif s \\
+    &= \int_0^T \bigl( \Phi(T-s,s) - \Phi(0,s) \bigr) \dif s
+       - \int_0^T \bigl( \Phi(s,T-s) - \Phi(s,0) \bigr) \dif s \\
+    &= \int_0^T \bigl( \Phi(s,0) - \Phi(0,s) \bigr) \dif s ,
   \end{align*}
   where the third equality uses absolute continuity in the first resp.\ second
   variable, and the fourth is the substitution $s \mapsto T-s$ in the first two
@@ -5153,8 +5212,8 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 \begin{proof}
   Set
   \begin{equation}
-    \label{eq:F}
-    F(s,t) = E\Bigl[ f(X(s),Y(t))
+    \label{eq:Phidual}
+    \Phi(s,t) = E\Bigl[ f(X(s),Y(t))
       \exp\Bigl\{ \int_0^s \alpha(X(u)) \dif u \Bigr\}
       \exp\Bigl\{ \int_0^t \beta(Y(u)) \dif u \Bigr\} \Bigr] .
   \end{equation}
@@ -5205,7 +5264,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   \eqref{eq:dual1}--\eqref{eq:dual2} --- we obtain
   \begin{multline}
     \label{eq:Fincrement}
-    F(s+h,t) - F(s,t) \;=\;
+    \Phi(s+h,t) - \Phi(s,t) \;=\;
       \underbrace{\int_s^{s+h} \!\! E\bigl[ f\alpha(X(r),Y(t)) e_\alpha(r) e_\beta(t) \bigr] \dif r}_{T_1} \\
       + \underbrace{\int_s^{s+h} \!\! \int_r^{s+h} \!\!
           E\bigl[ g(X(v),Y(t)) \alpha(X(r)) e_\alpha(r) e_\beta(t) \bigr] \dif v \dif r}_{T_2} \\
@@ -5236,7 +5295,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   summing \eqref{eq:Fincrement} over a partition
   $0 = s_0 < \dots < s_m = s$ gives
   \[
-    \Bigl| F(s,t) - F(0,t)
+    \Bigl| \Phi(s,t) - \Phi(0,t)
       - \int_0^s E\bigl[ (f\alpha + g)(X(r),Y(t)) e_\alpha(r) e_\beta(t) \bigr] \dif r \Bigr|
     \;\leq\; \tfrac{1}{2} e^{C_T} E[\Gamma_T] \sum_{i=1}^m (s_i - s_{i-1})^2
   \]
@@ -5245,19 +5304,19 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   $\tfrac{1}{2} e^{C_T} E[\Gamma_T] \, s \max_i (s_i - s_{i-1}) \to 0$.  This is
   \begin{equation}
     \label{eq:Fpartial1}
-    F(s,t) - F(0,t)
+    \Phi(s,t) - \Phi(0,t)
       = \int_0^s E\bigl[ \bigl( f(X(r),Y(t)) \alpha(X(r)) + g(X(r),Y(t)) \bigr)
           e_\alpha(r) e_\beta(t) \bigr] \dif r .
   \end{equation}
-  Symmetrically,  Symmetrically,
+  Symmetrically,
   \begin{equation}
     \label{eq:Fpartial2}
-    F(s,t) - F(s,0)
+    \Phi(s,t) - \Phi(s,0)
       = \int_0^t E\bigl[ \bigl( f(X(s),Y(r)) \beta(Y(r)) + h(X(s),Y(r)) \bigr)
           e_\alpha(s) e_\beta(r) \bigr] \dif r .
   \end{equation}
-  Thus $F$ satisfies the hypotheses of Lemma~\ref{lem:calculus}, with $F_1$ and
-  $F_2$ the integrands in \eqref{eq:Fpartial1} and \eqref{eq:Fpartial2}; the
+  Thus $\Phi$ satisfies the hypotheses of Lemma~\ref{lem:calculus}, with $\gamma_1$ and
+  $\gamma_2$ the integrands in \eqref{eq:Fpartial1} and \eqref{eq:Fpartial2}; the
   integrability \eqref{eq:calcint} follows from \eqref{eq:dual1} and
   \eqref{eq:dual2}.  Now \eqref{eq:calcconc} is exactly \eqref{eq:dualconc}.
 \end{proof}
@@ -5294,7 +5353,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 \begin{remark}
   \label{rem:dualischain}
   Corollary~\ref{cor:dualrel} is Proposition~\ref{prop:haar}\ref{it:haar_cont}
-  applied to $\Phi = F$ of \eqref{eq:F}, with
+  applied to the $\Phi$ of \eqref{eq:Phidual}, with
   $\gamma_1$ and $\gamma_2$ the integrands of \eqref{eq:Fpartial1} and
   \eqref{eq:Fpartial2}; the balance condition \eqref{eq:dualbalance} is exactly
   $\gamma_1 = \gamma_2$.  The whole of Theorem~\ref{thm:duality} is thus
