@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1787687033.89071 "/home/pfaffelh/Code/lean/journal/Journal/Blog/MartingaleProblem/MartingaleProblem.tex" "MartingaleProblem.pdf" "MartingaleProblem" 1787687035.35523 2
+["pdflatex"] 1787687374.6862 "/home/pfaffelh/Code/lean/journal/Journal/Blog/MartingaleProblem/MartingaleProblem.tex" "MartingaleProblem.pdf" "MartingaleProblem" 1787687375.94738 0
   "/etc/texmf/web2c/texmf.cnf" 1733395564.71626 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/pfaffelh/Code/lean/journal/Journal/Blog/MartingaleProblem/MartingaleProblem.tex" 1787687031.14044 451180 b17d23af66596a613469cb0a42bb0dd8 ""
+  "/home/pfaffelh/Code/lean/journal/Journal/Blog/MartingaleProblem/MartingaleProblem.tex" 1787687374.49455 455455 0f2910355f131cfa4a79dabc265759a0 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1000.tfm" 1136768653 3584 2d666ecf6d466d8b007246bc2f94d9da ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1095.tfm" 1136768653 3584 21b378cca2e40816b0e6d74a4dc98f04 ""
@@ -157,10 +157,10 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1733395594.88536 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1733395622 8213763 99d5f40180c65ec086d7a36e4903e0ae ""
-  "MartingaleProblem.aux" 1787687035.25503 55694 784fa84574a893b87dc8e61f2104e521 "pdflatex"
-  "MartingaleProblem.out" 1787687035.25703 11500 eadd30ae80a3cf75214576b2fb7ecd04 "pdflatex"
-  "MartingaleProblem.tex" 1787687031.14044 451180 b17d23af66596a613469cb0a42bb0dd8 ""
-  "MartingaleProblem.toc" 1787687035.25803 5657 61ad50768635956945ceb8bf8bbf72f8 "pdflatex"
+  "MartingaleProblem.aux" 1787687375.84821 55847 3cd997a13701244b809f6a3424701768 "pdflatex"
+  "MartingaleProblem.out" 1787687375.85021 11500 eadd30ae80a3cf75214576b2fb7ecd04 "pdflatex"
+  "MartingaleProblem.tex" 1787687374.49455 455455 0f2910355f131cfa4a79dabc265759a0 ""
+  "MartingaleProblem.toc" 1787687375.85168 5659 f877641458a038914e14540ebb218a4a "pdflatex"
   (generated)
   "MartingaleProblem.aux"
   "MartingaleProblem.log"

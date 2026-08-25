@@ -2614,6 +2614,81 @@ step of their programme rather than a consequence of it.
   \end{enumerate}
 \end{definition}
 
+\begin{remark}[How restrictive is \ref{it:R1}?]
+  \label{rem:R1scope}
+  It looks like a statement about a generator, and it is not one; the question is
+  worth settling before the theorem, because the answer changes what has to be
+  checked.
+
+  \emph{\ref{it:R1} is not a hypothesis.}  Given $f$ and \emph{any} choice of
+  $Y^f \in \XX$, put $C^f \coloneqq f(X) - Y^f$.  This is adapted, because $X$ and
+  $Y^f$ are, and \ref{it:R1} then holds by construction.  So the definition
+  contains exactly one existential with content --- the choice of $Y^f$ in the
+  given family $\XX$, which is a real constraint when $\XX$ is small --- and all
+  the force sits in \ref{it:R2} and \ref{it:R3}, applied to the resulting
+  remainder.  Read that way:
+  \begin{quote}
+    $\Phi$ is regularizing if and only if, for each $f \in \Phi$, \emph{some}
+    member of $\XX$ approximates $f(X)$ up to a process that is time-regular in
+    the sense of \ref{it:R2}--\ref{it:R3}.
+  \end{quote}
+
+  \emph{Why it looks Markovian.}  In the Markovian case the choice is forced.
+  With $\XX = \XX_A(X)$ and $(f,g) \in A$ the only candidate is
+  $Y^f = f(X(\cdot)) - \int_{(0,\cdot]} g(X(s))q(\dif s)$, so that
+  $C^f_t = \int_{(0,t]} g(X(s))\,q(\dif s)$ is the compensator, and \ref{it:R1}
+  becomes the familiar decomposition.  That is the shape one remembers.  But
+  nothing above mentions $A$, or $g$, or the fact that the compensator is
+  generated pointwise; those enter only in Theorem~\ref{thm:cadlag}.
+
+  \emph{How \ref{it:R2}--\ref{it:R3} are verified, always.}  By finite variation.
+  If $C^f$ has paths of finite variation on bounded intervals with
+  $E\int_{\langle 0,T\rangle}|\dif C^f| < \infty$ for every $T$, then \ref{it:R2}
+  holds because such a path is a difference of two monotone functions and
+  therefore has one-sided limits everywhere, and \ref{it:R3} holds because
+  $E|C^f(s) - C^f(t)| \leq E\int_{(t,s]}|\dif C^f| \to 0$.  Every example below is
+  of this kind.
+
+  \emph{Non-Markovian examples,} in increasing order of distance from the
+  Markovian case.
+  \begin{enumerate}[label=(\alph*)]
+  \item \emph{Time-dependent coefficient.}
+    $C^f_t = \int_{\langle 0,t\rangle_\iota} g(s,X_s)\,q(\dif s)$, as in
+    Example~\ref{ex:shiftXA}.  Still generated pointwise, but the resulting
+    Markov process is inhomogeneous.
+  \item \emph{Path-dependent rate.}  Setting~\ref{set:pathjump}:
+    $C^f_t = \int_0^t \mathcal{A}_s f \dif s$ with $\Lambda$ and $\mu$
+    \emph{predictable functionals of the whole past}.  Here
+    $|\mathcal{A}_sf| \leq 2\lVert f\rVert \Lambda_s$, so \ref{it:R3} amounts to
+    $E\bigl[\int_0^t \Lambda_s \dif s\bigr] = E[N_t] < \infty$ --- which is
+    exactly the hypothesis of Theorem~\ref{thm:pathjumpMP}\ref{it:pj_glob}.  The
+    two conditions coincide, and so do their failures: where the local theory is
+    primary (Remark~\ref{rem:pathjumpprimary}), \ref{it:R3} is what fails.  The
+    Hawkes process of Example~\ref{ex:hawkes} is the instance.
+  \item \emph{Semimartingale characteristics.}  \JS, Chapter~II: $C^f$ assembled
+    from a predictable triplet $(B,C,\nu)$ which are functionals of the path.
+    Finite variation by construction.
+  \item \emph{Control variables.}  The \CPS{} prototype
+    $C^f_t = \int_{(0,t]} g(s,L,X)\,q(\dif s)$ with a control variable $L$.  This
+    is the case that cannot be written with an operator
+    $A \subset \Cb(E)\times\Bdd(E)$ at all; see Remark~\ref{rem:absreggain}(i).
+  \end{enumerate}
+
+  \emph{What is genuinely restrictive} is therefore not \ref{it:R1} but the two
+  hypotheses that Theorem~\ref{thm:absreg} places on $\Phi$ --- separating, and
+  containing a countable subset that separates points --- together with compact
+  containment.  Those are what a user has to check, and
+  Remark~\ref{rem:cadlagseparating} explains why the two hypotheses on $\Phi$ are
+  independent of each other.
+
+  \emph{A gap that is never used.}  \ref{it:R2}--\ref{it:R3} ask for less than
+  finite variation: a deterministic continuous path of infinite variation
+  satisfies both.  No example here exploits that, exactly as with
+  quasimartingales in Section~\ref{ssec:notgeneralized}; the definition is
+  weaker than its instances because weakening it cost nothing, not because the
+  slack was needed.
+\end{remark}
+
 \begin{theorem}[Abstract c\`adl\`ag modification; \eqref{T2b} + \eqref{E2}]
   \label{thm:absreg}
   In Setting~\ref{set:absreg}, let $\Phi$ be a regularizing class for
@@ -2631,7 +2706,7 @@ step of their programme rather than a consequence of it.
   write $Y^i = Y^{f_i}$, $C^i = C^{f_i}$ for the associated data of
   Definition~\ref{def:regclass}.
 
-  \emph{Step 1: regularity along the rationals.}
+  \emph{Step 1: regularity along $D$.}
   Each $Y^i$ is an $(\mathbb{F},P)$-martingale, so Corollary~\ref{cor:regK},
   applied with the countable dense set $D$, provides for each $i$ a set of full
   measure on which the limits of $Y^i$ along $D$ from above (and, for $t>0$, from

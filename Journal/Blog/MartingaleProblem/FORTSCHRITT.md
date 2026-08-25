@@ -2803,6 +2803,57 @@ Cor. `regK` benutzt.
 
 109 Seiten.
 
+### D61 — Wie restriktiv ist (R1)? Neu Rem. `R1scope`  *(2026-08-25)*
+
+Frage des Nutzers beim Lesen von Def. 4.2: (R1) sehe fast aus wie im
+Markov-Fall — wie restriktiv ist es, und gibt es sinnvolle nicht-Markovsche
+Beispiele?
+
+**Der Kern der Antwort: (R1) ist gar keine Hypothese.** $C^f$ ist nur als
+*adaptiert* verlangt, also erfüllt $C^f:=f(X)-Y^f$ die Bedingung per
+Konstruktion — adaptiert, weil $X$ und $Y^f$ es sind. Die Definition enthält
+damit genau einen Existenzquantor mit Inhalt, nämlich die Wahl von
+$Y^f\in\XX$ (echt einschränkend nur, wenn $\XX$ klein ist), und die ganze Kraft
+sitzt in (R2)–(R3), angewandt auf den Rest. Umformuliert: *$\Phi$ ist
+regularisierend genau dann, wenn zu jedem $f$ irgendein Mitglied von $\XX$ den
+Prozess $f(X)$ bis auf einen zeitregulären Rest approximiert.*
+
+**Warum es markovsch aussieht.** Im Markov-Fall ist die Wahl erzwungen: mit
+$\XX=\XX_A(X)$ und $(f,g)\in A$ ist $Y^f$ eindeutig und
+$C^f_t=\int_{(0,t]}g(X_s)q(\dif s)$ der Kompensator. Das ist die Gestalt, die man
+im Kopf hat — aber weder $A$ noch $g$ noch die punktweise Erzeugung kommen in
+Def. 4.2 vor.
+
+**Wie (R2)–(R3) immer geprüft werden:** über endliche Variation. Dann hat der
+Pfad als Differenz zweier monotoner Funktionen überall einseitige Limiten (R2),
+und $E|C^f(s)-C^f(t)|\le E\int_{(t,s]}|\dif C^f|\to0$ gibt (R3).
+
+**Vier nicht-Markovsche Beispiele**, nach Abstand vom Markov-Fall:
+(a) zeitabhängiger Koeffizient (Ex. `shiftXA`); (b) **pfadabhängige Rate**
+(Setting `pathjump`) — dort ist $|\mathcal A_sf|\le2\lVert f\rVert\Lambda_s$, also
+läuft (R3) genau auf $E[N_t]<\infty$ hinaus, **die Hypothese von
+Thm. `pathjumpMP`(b)**; die beiden Bedingungen fallen zusammen, und wo die lokale
+Theorie primär ist (Rem. `pathjumpprimary`), ist es (R3), das scheitert. Hawkes
+ist die Instanz; (c) Semimartingal-Charakteristiken (J&S Kap. II);
+(d) Kontrollvariable (CPS), der Fall, der sich gar nicht mit einem Operator
+schreiben lässt.
+
+**Wirklich einschränkend** sind nicht (R1), sondern die zwei Hypothesen an
+$\Phi$ in Thm. 4.3 plus compact containment. Und (R2)–(R3) verlangen *weniger*
+als endliche Variation — ein deterministischer stetiger Pfad unendlicher
+Variation erfüllt beide —, aber kein Beispiel nutzt das aus; dieselbe Lage wie
+bei den Quasimartingalen in §1.4.
+
+**Nebenbei, ebenfalls vom Nutzer bemerkt:** Step 1 im Beweis von Thm. 4.3 hieß
+„regularity along the rationals" — ein Rest aus dem $\T=\Rp$-Fall. Auf abstraktem
+$\T$ ist es die abzählbar dichte Menge $D$ aus (T2b). Umbenannt; der übrige
+Beweis enthält keine weiteren $\Rp$-Reste (geprüft auf `rational`, `\Q`,
+`[0,\infty)`, `Lebesgue`). Die Erwähnung der Rationalzahlen in
+Fact `DEcompact` bleibt — die ist EKs Aussage über $\DE$ und damit korrekt
+(T3)-spezifisch.
+
+110 Seiten.
+
 ---
 
 ## Prüfprotokoll
