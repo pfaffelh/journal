@@ -537,7 +537,11 @@ Offen bleibt nur die Ausführung dort, wo sie Inhalt hat:
   Fibrierung zusammenfällt: $\mu_{s,t}$ von $E_{1,s}$ nach $E_{1,t}$;
 * Raum-Zeit-Martingalproblem als Beispiel ausschreiben.
 
-## Task 19 — Historischer Prozess als Dualer — `todo`
+## Task 19 — Historischer Prozess als Dualer — `strukturiert` *(2026-08-25)*
+
+Durchdacht (→ D47). §7.2 hat jetzt Setting `historical`, Lem. `histrestart`,
+Rem. `histbuys`, `histobstruction`, `histhawkes` — als **Programm**
+gekennzeichnet, nicht als Satz.
 
 *Vorbemerkung (D46):* Der Pfad-Lift macht **jeden** Prozess Markov, aber
 tautologisch — er schließt die Lücke zwischen $\sigma(X_s)$ und $\Filt^X_s$, und
@@ -546,12 +550,31 @@ wertlos. Für §7.2 ist er es **nicht**, weil der Inhalt dort in (D3) sitzt, ein
 Aussage über den Dualen auf unverändertem Raum. Das ist die Begründung dafür,
 dass genau dieser Task und kein anderer den Lift benutzt.
 
-Die Methode von Task 18 erreicht die pfadabhängige Theorie aus §5.1/§5.4 nicht,
-weil \eqref{eq:dualityrel} über eindimensionale Verteilungen spricht. DGP §5
-(Ausblick) schlagen vor, den **historischen** Prozess zu dualisieren, also $E_1$
-als Pfad- oder Genealogieraum zu nehmen. Das macht $E_1$ nicht mehr lokalkompakt
-und verlagert das ganze Gewicht auf (D3). Offen, ob Prop. `rieszmarkov` dann
-durch etwas anderes ersetzbar ist — das ist die eigentliche Frage.
+**Hängt an Task 20.** Die Zwei-Parameter-/fibrierte Version von §7.2 ist hier
+nicht optional, weil die Fasern $\hat E_t$ wachsen; und der Duale läuft
+rückwärts, also erscheint die $q$-Reflexion aus Rem. `haarrole`.
+
+**Bewiesen:** Lem. `histrestart` — (D3) in Zwei-Parameter-Form plus
+Dualitätsfunktionen, die nur die Vergangenheit lesen, unter der dualen Dynamik in
+Ruhe sind und separieren, erzwingen
+$\mu_{r,t}(\hat x,\cdot)\circ\rho_{r,t}^{-1}=\delta_{\hat x}$: der Kern behält die
+Vergangenheit, ist also ein **Restart-Kern**. Das schließt die Lücke, die
+Rem. `pastingassumed` benennt — §5.4 hatte kein nicht-Markovsches Beispiel, weil
+Cor. `pastingmarkov` ihn aus einem Shift-System baut.
+
+**Offen, und zwar substantiell:** (D3) selbst. Riesz–Markov
+(Prop. `rieszmarkov`) braucht $E_1$ kompakt; ein Pfadraum ist polnisch, aber
+weder kompakt noch — bei Genealogien — lokalkompakt. Ersatz ist eine
+Transformcharakterisierung (DGP Prop. 2.8 / Bsp. 6): für Punktkonfigurationen das
+Laplace-Funktional, verfügbar; für Genealogien nicht, und dort endet es derzeit.
+
+**Testobjekt, konkret:** der Hawkes-Prozess aus Ex. `hawkes`. Sein historischer
+Dualer ist die **deterministische**, rückwärts laufende nichtlineare
+Volterra-Gleichung der Hawkes–Oakes-Clusterdarstellung, \eqref{eq:hawkesdual} —
+klassisch und hier numerisch bestätigt (rel. Fehler 0,024 % bei MC-Fehler
+0,22 %). Zu prüfen: (D1) und die Zwei-Parameter-(D3). Gewinn wäre die
+Konstruktion einer Lösung eines **pfadabhängigen** Martingalproblems aus einem
+deterministischen Dualen, ohne approximierende Folge und ohne Shift-System.
 
 ---
 
