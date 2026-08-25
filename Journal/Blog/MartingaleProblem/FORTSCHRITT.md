@@ -2390,6 +2390,64 @@ einem benutzt würde.
 werden durch Paarung mit einer Testfunktion behandelt, also kein Gewinn, und §4
 braucht eine Ordnung) und signierte Lösungsmaße (Disintegration fällt).
 
+### D52 — Komplexwertige Testprozesse; und ein Fehler in der Prüfroutine  *(2026-08-25)*
+
+**Umgesetzt** (Wunsch des Nutzers, aus D51): der Skalarkörper ist jetzt
+durchgehend $\K\in\{\R,\C\}$. §2.1 führt ihn ein, Def. `martingale` und
+Def. `canonical` sind $\K$-wertig, und Rem. `complexvalued` ist von „wäre
+gratis" zu „ist durchgeführt" umgeschrieben.
+
+**Designentscheidung:** die bestimmenden Mengen $\ZZ^\circ_s$ bleiben
+**reellwertig**, welches $\K$ auch gewählt ist. Testet man
+$E[(Y_t-Y_s)Z^\circ_s]=0$ gegen reelle $Z^\circ_s$, so trennt das Real- und
+Imaginärteil des Zuwachses bereits; Komplexifizieren bringt nichts und kostet
+Buchhaltung.
+
+**Die vier Stellen, die $\K=\R$ brauchen** (vollständig aufgelistet):
+(i) Ordnung — Submartingale gibt es nur über $\R$, betrifft Fact `cadlagext`
+/`submgreg` in §4 (dort auf $\Re$ und $\Im$ anwenden) und Rem. `inequalitystable`;
+(ii) Stone–Weierstrass braucht im Komplexen Abschluss unter Konjugation
+(Rem. `EKrelcompact`, Prop. `rieszmarkov`); (iii) Positivität in
+Prop. `rieszmarkov`, also (D3) — passt zu Rem. `histobstruction`;
+(iv) §2.4 (dissipative Operatoren), reell belassen, ist ohnehin optionaler
+Kontext.
+
+**Gewinn:** Thm. `duality` braucht *keine* Änderung — seine Hypothesen
+\eqref{eq:dual1}–\eqref{eq:dual2} sind schon über Beträge formuliert, also sind
+komplexe $f,g,h,\alpha,\beta$ abgedeckt. Und das ist die Form, in der die
+affine Literatur (ALP19) Dualität überhaupt anwendet: $e^{i\langle u,X_t\rangle}$
+statt reeller Testfunktionen.
+
+**Lean** (Frage des Nutzers): ja, `RCLike`. Zwei Dinge sind dabei zu trennen —
+die **Martingaleigenschaft** braucht nichts, `MeasureTheory.Martingale` ist in
+Mathlib schon für einen beliebigen reellen Banachraum formuliert (am Quelltext
+geprüft: `[NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]`), und die
+bedingte Erwartung ist selbst `RCLike`-parametrisiert. Einen **Körper** braucht
+erst, was Testprozesse *multipliziert*: Def. `canonical`, Prop. `fddchar`, §6.
+Also `RCLike` für die Testfunktionen, Banachraum für die Martingale. In §9 als
+Designentscheidung festgehalten.
+
+---
+
+**Und ein Fund in eigener Sache.** Beim Kompilieren fiel auf, dass meine
+Prüfroutine nur auf `undefined`, `multiply defined` und `Overfull` gegrept hat —
+**nie auf `! LaTeX Error`**. Dadurch sind zwei Defekte über die ganze Sitzung
+unbemerkt geblieben:
+
+* In `def:process` fehlte das `\end{definition}`. Vorhanden **seit dem
+  allerersten Commit des Manuskripts** (`7cadc98`, vor dieser Sitzung) — geprüft
+  durch Auszählen über die Commit-Historie. Alles ab §2.2 wurde also innerhalb
+  einer `definition`-Umgebung gesetzt.
+* Drei Unicode-Zeichen (α, ι, Π) in einem `\texttt` aus D45 fielen still aus dem
+  PDF („Unicode character not set up for use with LaTeX").
+
+Beides behoben. Neu `check.py` im Verzeichnis: prüft Umgebungsbalance,
+doppelte Labels, Nicht-ASCII außerhalb von Kommentaren, **alle** `^!`-Fehler,
+undefinierte Referenzen und Zitate sowie Overfull-Boxen, und läuft pdflatex
+dreimal (zweimal genügt nach einem Fehlerlauf nicht, weil die `.aux` dann
+unbrauchbar ist). Ab jetzt ist „kompiliert sauber" gleichbedeutend mit
+`python3 check.py` ohne Befund.
+
 ---
 
 ## Prüfprotokoll

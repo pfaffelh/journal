@@ -58,6 +58,8 @@
 \newcommand{\CT}{\cite{CT20}}
 \newcommand{\DVJ}{\cite{DVJ03}}
 \newcommand{\SV}{\cite{SV79}}
+\newcommand{\K}{\mathbb{K}}
+\newcommand{\C}{\mathbb{C}}
 \newcommand{\XX}{\mathbb{X}}                   % family of test processes
 \newcommand{\ZZ}{\mathbb{Z}}                   % determining set
 \newcommand{\MP}{\mathrm{MP}}
@@ -388,7 +390,8 @@ already there''.
 \textbf{Candidate} & \textbf{Verdict} \\
 \midrule
 Complex-valued test processes
-  & \textbf{free}; see Remark~\ref{rem:complexvalued} \\
+  & \textbf{carried out}: the scalar field is $\K \in \{\R,\C\}$ throughout, and
+    Remark~\ref{rem:complexvalued} lists the four places needing $\K = \R$ \\
 Submartingale problems (reflecting boundaries)
   & \textbf{half free}: the three workhorse lemmas of
     Section~\ref{ssec:absuniq} survive verbatim, the uniqueness criterion does
@@ -489,7 +492,8 @@ Let $(E,\mathcal{E})$ be a measurable space; the topological assumptions on $E$
 are made bundle by bundle in Definition~\ref{def:Ebundles}, and $\Bor(E)$ is
 written for $\mathcal{E}$ whenever $E$ carries a topology.  We write
 \begin{itemize}[nosep]
-\item $\Meas(E)$ for the real-valued Borel measurable functions on $E$;
+\item $\K$ for the scalar field, either $\R$ or $\C$, fixed once and for all;
+\item $\Meas(E)$ for the $\K$-valued Borel measurable functions on $E$;
 \item $\Bdd(E) \subset \Meas(E)$ for the bounded ones, with
   $\lVert f\rVert = \sup_{x \in E} |f(x)|$;
 \item $C(E)$ for the continuous functions, $\Cb(E) = C(E) \cap \Bdd(E)$, and,
@@ -501,6 +505,11 @@ written for $\mathcal{E}$ whenever $E$ carries a topology.  We write
   for the continuous ones.
 \end{itemize}
 $\Lsp$ always denotes a real Banach space with norm $\lVert \cdot \rVert$.
+
+Every statement is to be read over $\K$; the places where $\K = \R$ is
+\emph{needed} are few, and Remark~\ref{rem:complexvalued} lists all of them.
+The reader who wants only the real theory may take $\K = \R$ throughout and lose
+nothing.
 
 An \emph{operator} is a subset $A \subset \Meas(E) \times \Meas(E)$; it need not
 be single-valued nor linear.  Its domain is
@@ -943,7 +952,8 @@ which the manuscript would otherwise have to add separately.
   \emph{(ii) Mathlib is fibred.}  The projective-limit API of
   Fact~\ref{fact:kolmogorov} --- \texttt{IsProjectiveLimit},
   \texttt{projectiveFamilyContent}, \texttt{Kernel.traj} --- is stated for a
-  family \texttt{α : ι → Type*} and a measure on \texttt{Measure (Π i, α i)}, not
+  family \texttt{E : $\iota$ $\to$ Type*} and a measure on
+  \texttt{Measure ($\Pi$ i, E i)}, not
   for a fixed state space.  Fixing $E_t \equiv E$ at the outset would mean
   writing \texttt{fun \_ => E} everywhere and re-deriving the dependent
   statements by hand.  This is the same argument that
@@ -1064,6 +1074,7 @@ which the manuscript would otherwise have to add separately.
   process is then progressive.  All of the above except this last paragraph
   needs only (T0), and is exactly \EK{} (8.1)--(8.6) of their Section~2.8; see
   Remark~\ref{rem:ekindex}.
+\end{definition}
 
 \begin{fact}[\EK, Propositions 2.1.2 and 2.1.4; (T2b)]
   \label{fact:stoppingtimes}
@@ -1081,13 +1092,15 @@ which the manuscript would otherwise have to add separately.
 
 \begin{definition}[\EK, Section 2.2 and (8.15); (T0)]
   \label{def:martingale}
-  A real-valued $(\Filt_t)$-adapted process $X$ with $E[|X(t)|] < \infty$ for all
-  $t$ is an \emph{$(\Filt_t)$-martingale} if $E[X(t) \mid \Filt_s] = X(s)$ a.s.\
-  for all $s \leq t$ in $\T$, and an \emph{$(\Filt_t)$-submartingale} if
-  $E[X(t) \mid \Filt_s] \geq X(s)$ a.s.  This is \EK{} (8.15) verbatim, and it is
-  the whole of what the martingale layer of this manuscript uses; it is also
+  A $\K$-valued $(\Filt_t)$-adapted process $X$ with $E[|X(t)|] < \infty$ for all
+  $t$ --- the modulus, if $\K = \C$ --- is an \emph{$(\Filt_t)$-martingale} if
+  $E[X(t) \mid \Filt_s] = X(s)$ a.s.\ for all $s \leq t$ in $\T$.  For $\K = \R$
+  it is an \emph{$(\Filt_t)$-submartingale} if $E[X(t) \mid \Filt_s] \geq X(s)$
+  a.s.  This is \EK{} (8.15) verbatim, and it is the whole of what the martingale
+  layer of this manuscript uses; it is also
   \texttt{MeasureTheory.Martingale} of Mathlib, which is stated for
-  \texttt{[Preorder \(\iota\)]}.
+  \texttt{[Preorder \(\iota\)]} and for values in an arbitrary real Banach space,
+  hence covers both choices of $\K$ without a word.
 \end{definition}
 
 \begin{fact}[Regularization along a dense set; \EK, Lemma 2.2.8; (T2b)]
@@ -1284,6 +1297,10 @@ Throughout this subsection $(S,d)$ is a metric space.
   Let $(S,d)$ be complete and separable and let $M \subset \Cb(S)$ be an algebra.
   If $M$ separates points, then $M$ is separating.  If $M$ strongly separates
   points, then $M$ is convergence determining.
+
+  For $\K = \C$ the algebra must in addition be closed under conjugation; this is
+  the one place in the manuscript where the complex case is not automatic, and it
+  is why Remark~\ref{rem:complexvalued} lists it.
 \end{fact}
 
 \begin{fact}[\EK, Proposition 3.4.6 and Proposition 3.7.1]
@@ -1802,11 +1819,12 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 \begin{definition}[\CPS, Definitions 3.3 and 3.5; (T0) + (E0)]
   \label{def:canonical}
   $\XX$ is \emph{canonical} for $X$ if for every $t \in \T$ there is a set
-  $\XX^\circ_t$ of $\Bor(F)/\Bor(\R)$-measurable maps $Y^\circ_t : F \to \R$
+  $\XX^\circ_t$ of $\Bor(F)/\Bor(\K)$-measurable maps $Y^\circ_t : F \to \K$
   such that every $Y \in \XX$ satisfies $Y_t = Y^\circ_t(X)$ for some
   $Y^\circ_t \in \XX^\circ_t$.  A family
   $\ZZ^\circ = \{\ZZ^\circ_t : t \in \T\}$ of sets of bounded measurable maps
-  $F \to \R$ is \emph{determining} for $\XX$ if for every probability measure
+  $F \to \R$ --- \emph{real-valued, whatever $\K$ is} --- is \emph{determining}
+  for $\XX$ if for every probability measure
   $P$, every $Y \in \XX$ and all $s \leq t$ with $Y_s, Y_t \in L^1(P)$,
   \[
     E^P[Y_t Z^\circ_s(X)] = E^P[Y_s Z^\circ_s(X)]
@@ -1829,23 +1847,53 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
   (Fact~\ref{fact:fdd}) and the monotone class theorem.
 \end{example}
 
-\begin{remark}[Complex-valued test processes are free]
+\begin{remark}[The complex case, carried out]
   \label{rem:complexvalued}
-  Definition~\ref{def:absMP} takes the elements of $\XX$ real-valued, and nothing
-  forces that.  A process with values in $\mathbb{C}$ is a martingale iff its real and
-  imaginary parts are, so $\Msol(\XX)$ is unchanged if $\XX$ is closed under
-  taking $\Re$ and $\Im$; and every statement in Sections~\ref{sec:MP},
-  \ref{sec:uniqueness} and \ref{sec:duality} is $\mathbb{C}$-linear in the test process,
-  so all of them hold verbatim for complex $\XX$.  In
-  Section~\ref{sec:cadlag} and Section~\ref{sec:convergence} one splits into real
-  and imaginary parts, the exceptional sets being intersected.
+  The scalar field $\K$ of Section~\ref{ssec:notation} is $\R$ or $\C$, and every
+  statement of this manuscript is to be read over $\K$.  This costs almost
+  nothing, and it is worth being precise about the ``almost''.
 
-  This is worth recording because it is the form the transform literature uses:
-  the affine and affine Volterra theory of \ALP{} works with
-  $e^{\mathrm{i}\langle u,X_t\rangle}$ rather than with real test functions, and
-  the duality function of Section~\ref{ssec:exduality} is a Laplace transform
-  only because the example is a point process.  Nothing has to be re-proved to
-  accommodate either.
+  \emph{Why it is nearly free.}  A $\K$-valued process is a martingale iff its
+  real and imaginary parts are, and every argument in Sections~\ref{sec:MP},
+  \ref{sec:uniqueness} and \ref{sec:duality} is $\K$-linear in the test process:
+  the mixture, disintegration and restart lemmas integrate a linear identity, the
+  chain identity of Lemma~\ref{lem:chain} is an exact telescoping, and the
+  convergence arguments of Section~\ref{sec:convergence} use only $|Y^\circ_r|$
+  and Vitali's theorem, which hold over $\K$.  Note in
+  Definition~\ref{def:canonical} that the determining sets $\ZZ^\circ_s$ stay
+  \emph{real-valued} whatever $\K$ is: testing $E[(Y_t - Y_s)Z^\circ_s] = 0$
+  against real $Z^\circ_s$ already separates the real and imaginary parts of the
+  increment, so nothing is gained by complexifying them and one bookkeeping
+  nuisance is avoided.
+
+  \emph{The four places that need $\K = \R$.}
+  \begin{enumerate}[label=(\roman*)]
+  \item \emph{Order.}  Submartingales exist only over $\R$.  This affects the
+    regularization Facts~\ref{fact:cadlagext} and \ref{fact:submgreg}, which
+    Section~\ref{sec:cadlag} uses; there one applies them to $\Re Y$ and $\Im Y$
+    and intersects the two exceptional null sets.  It also affects
+    Remark~\ref{rem:inequalitystable}, where the whole point is an inequality.
+  \item \emph{Stone--Weierstrass.}  Fact~\ref{fact:stoneweierstrass} needs a
+    complex algebra to be closed under conjugation.  This is used in
+    Remark~\ref{rem:EKrelcompact} and Proposition~\ref{prop:rieszmarkov}.
+  \item \emph{Positivity.}  Proposition~\ref{prop:rieszmarkov} obtains the kernels
+    of \ref{it:D3} from a \emph{positive} linear functional, which presupposes an
+    order on the values.  Section~\ref{ssec:exduality} may take $H$ complex, but
+    the route to \ref{it:D3} then has to be a transform characterization rather
+    than Riesz--Markov --- which is exactly what
+    Remark~\ref{rem:histobstruction} says anyway.
+  \item \emph{Section~\ref{ssec:ch1}.}  Dissipative operators and the
+    Hille--Yosida theory are stated over $\R$; the complex versions differ and
+    are not needed, this section being optional context.
+  \end{enumerate}
+
+  \emph{Why it is worth having.}  The transform literature works with
+  $e^{\mathrm{i}\langle u, X_t\rangle}$ rather than with real test functions, and
+  the affine and affine Volterra theory of \ALP{} is stated that way throughout.
+  Theorem~\ref{thm:duality} in particular needs no change at all: its hypotheses
+  \eqref{eq:dual1}--\eqref{eq:dual2} are already phrased with moduli, so complex
+  $f$, $g$, $h$, $\alpha$, $\beta$ are covered as they stand, and the complex form
+  is the one in which duality is usually applied.
 \end{remark}
 
 \subsection{The Markovian martingale problem}
@@ -7631,7 +7679,9 @@ of which of them Mathlib already supplies.
 \emph{Available.}  Filtrations, adapted and progressively measurable processes,
 stopping times and $\Filt_\tau$ (Definition~\ref{def:process},
 Fact~\ref{fact:stoppingtimes}); martingales and the optional stopping theorem
-(Definition~\ref{def:martingale}, Fact~\ref{fact:optsampl}); Doob's inequalities
+(Definition~\ref{def:martingale}, Fact~\ref{fact:optsampl}) --- and note that
+\texttt{MeasureTheory.Martingale} is stated for values in an arbitrary real
+Banach space, so it covers $\K = \C$ with nothing to do; Doob's inequalities
 (Fact~\ref{fact:doob}); Polish spaces; weak convergence of measures with the
 portmanteau theorem, the L\'evy--Prokhorov metric and Prohorov's theorem
 (Facts~\ref{fact:portmanteau}, \ref{fact:PSpolish}, \ref{fact:prohorov});
@@ -7866,6 +7916,25 @@ any bespoke index theory.
   $\T = \N_0$ and $\mathrm{o}$ once its grid is embedded in $\Rp$.  Everything
   except Section~\ref{sec:cadlag} is convention-agnostic, so the parameter costs a
   hypothesis in one section and nothing anywhere else.
+\item \emph{The scalar field is \texttt{RCLike}.}  Test processes take values in
+  $\K \in \{\R,\C\}$ (Remark~\ref{rem:complexvalued}), and the Mathlib class for
+  this is \texttt{RCLike} --- \texttt{[RCLike \(\mathbb{K}\)]}, with
+  \texttt{re}, \texttt{im} and the \texttt{star} operation for the conjugation
+  that Fact~\ref{fact:stoneweierstrass} needs.  Two points are worth separating.
+  The \emph{martingale} property needs nothing: Mathlib's
+  \texttt{MeasureTheory.Martingale} is already stated for an arbitrary real
+  Banach space, which is more general than \texttt{RCLike}, and Mathlib's
+  conditional expectation API is itself \texttt{RCLike}-parametrized.  What
+  \emph{does} want a field is everything that \emph{multiplies} test processes:
+  Definition~\ref{def:canonical}, where $Y^\circ_t$ is paired with $Z^\circ_s$;
+  Proposition~\ref{prop:fddchar}, with its products $\prod_k h_k$; and
+  Section~\ref{sec:duality}, where the chain identity is scalar.  So
+  \texttt{RCLike} is the right class for the \emph{test functions} and a Banach
+  space would do for the \emph{martingales}; formalize the first with
+  \texttt{RCLike} and inherit the second.  The four places needing
+  $\K = \R$ are listed in Remark~\ref{rem:complexvalued} and should carry
+  \texttt{[LinearOrder]} or a positivity hypothesis rather than fixing $\K$
+  globally.
 \item \emph{The state space is fibred.}  Take
   \texttt{E : T \textrightarrow{} Type*} with
   \texttt{[$\forall$ t, MeasurableSpace (E t)]} and the path space inside

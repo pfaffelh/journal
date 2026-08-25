@@ -14,7 +14,7 @@
 \contentsline {paragraph}{Control variables and relaxed solutions.}{8}{section*.10}%
 \contentsline {section}{\numberline {2}Preliminaries}{8}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Notation}{8}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}The time index and the clock}{8}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.2}The time index and the clock}{9}{subsection.2.2}%
 \contentsline {subsection}{\numberline {2.3}The state space}{12}{subsection.2.3}%
 \contentsline {subsection}{\numberline {2.4}From Chapter 1: operator semigroups}{14}{subsection.2.4}%
 \contentsline {subsection}{\numberline {2.5}From Chapter 2: stochastic processes and martingales}{15}{subsection.2.5}%
@@ -27,28 +27,28 @@
 \contentsline {subsection}{\numberline {3.2}The Markovian martingale problem}{25}{subsection.3.2}%
 \contentsline {section}{\numberline {4}Sample path regularity: existence of a c\`adl\`ag modification}{31}{section.4}%
 \contentsline {subsection}{\numberline {4.1}An abstract regularization theorem}{31}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}The Markovian case}{33}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.2}The Markovian case}{34}{subsection.4.2}%
 \contentsline {section}{\numberline {5}Uniqueness, the Markov property, and the strong Markov property}{34}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Uniqueness without a Markov structure}{34}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.1}Uniqueness without a Markov structure}{35}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}The Markov layer: shift systems}{39}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}The local martingale problem}{44}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Local uniqueness}{49}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.3}The local martingale problem}{45}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Local uniqueness}{50}{subsection.5.4}%
 \contentsline {subsection}{\numberline {5.5}Non-Markovian test objects}{52}{subsection.5.5}%
-\contentsline {subsection}{\numberline {5.6}The Markovian case}{53}{subsection.5.6}%
-\contentsline {section}{\numberline {6}Uniqueness via duality}{55}{section.6}%
-\contentsline {subsection}{\numberline {6.1}The anti-diagonal lemma}{55}{subsection.6.1}%
+\contentsline {subsection}{\numberline {5.6}The Markovian case}{54}{subsection.5.6}%
+\contentsline {section}{\numberline {6}Uniqueness via duality}{56}{section.6}%
+\contentsline {subsection}{\numberline {6.1}The anti-diagonal lemma}{56}{subsection.6.1}%
 \contentsline {subsection}{\numberline {6.2}The continuous-time theory}{59}{subsection.6.2}%
 \contentsline {section}{\numberline {7}Existence}{64}{section.7}%
-\contentsline {subsection}{\numberline {7.1}From a transition semigroup}{64}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}From a dual process}{64}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Jump processes}{73}{subsection.7.3}%
-\contentsline {subsection}{\numberline {7.4}From stochastic differential equations}{77}{subsection.7.4}%
-\contentsline {subsection}{\numberline {7.5}By convergence: the Ethier--Kurtz version}{78}{subsection.7.5}%
-\contentsline {subsection}{\numberline {7.6}By convergence: the abstract theorem}{79}{subsection.7.6}%
-\contentsline {subsection}{\numberline {7.7}By convergence: the general version}{81}{subsection.7.7}%
+\contentsline {subsection}{\numberline {7.1}From a transition semigroup}{65}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}From a dual process}{65}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Jump processes}{74}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}From stochastic differential equations}{78}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}By convergence: the Ethier--Kurtz version}{79}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}By convergence: the abstract theorem}{80}{subsection.7.6}%
+\contentsline {subsection}{\numberline {7.7}By convergence: the general version}{82}{subsection.7.7}%
 \contentsline {subsection}{\numberline {7.8}Approximation on different clocks}{83}{subsection.7.8}%
 \contentsline {subsection}{\numberline {7.9}Relaxing the continuity hypothesis}{86}{subsection.7.9}%
-\contentsline {subsection}{\numberline {7.10}Hawkes processes and their Volterra limit}{90}{subsection.7.10}%
+\contentsline {subsection}{\numberline {7.10}Hawkes processes and their Volterra limit}{91}{subsection.7.10}%
 \contentsline {section}{\numberline {8}Notes for the formalization}{94}{section.8}%
 \contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{94}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Design decisions}{96}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.2}Design decisions}{97}{subsection.8.2}%
