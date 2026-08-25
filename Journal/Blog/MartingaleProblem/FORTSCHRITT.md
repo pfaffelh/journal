@@ -2448,6 +2448,59 @@ dreimal (zweimal genügt nach einem Fehlerlauf nicht, weil die `.aux` dann
 unbrauchbar ist). Ab jetzt ist „kompiliert sauber" gleichbedeutend mit
 `python3 check.py` ohne Befund.
 
+### D53 — Ungleichungsstabilität: Einordnung und Begründung waren beide zu billig  *(2026-08-25)*
+
+Einwand des Nutzers zu Rem. `inequalitystable`: um die Submartingaleigenschaft
+überhaupt zu formulieren, braucht man eine Ordnung — dann ist es nicht mehr
+allgemeiner. **Der Einwand trifft, und beim Nachrechnen trifft er schärfer als
+gemeint.** Zwei getrennte Fehler.
+
+**(1) Die Einordnung war falsch.** §1.4 führte „komplexwertige Testprozesse" und
+„Submartingalprobleme" nebeneinander als zwei gratis verfügbare
+Verallgemeinerungen auf. Das ist eine Kategorienverwechslung: die eine braucht
+einen **Körper**, die andere eine **Ordnung**, und sie schließen einander aus.
+Die Tabelle bietet eine *Wahl*, keine Summe. Zeile umformuliert („transverse,
+not wider").
+
+**Was aber stimmt, und jetzt präzise dasteht:** über $\R$ ist es sehr wohl eine
+echte Verallgemeinerung, im genauen Sinn
+$$\Msol(\XX^\circ)=\Msol^{\mathrm{sub}}\bigl(\XX^\circ\cup(-\XX^\circ)\bigr),$$
+denn $Y^\circ$ und $-Y^\circ$ sind genau dann beide Submartingale, wenn
+$Y^\circ$ ein Martingal ist. Das Martingalproblem ist also das
+Submartingalproblem für eine **symmetrische** Testfamilie.
+
+**(2) Die Begründung war zu billig.** Ich hatte geschrieben, die drei Lemmata
+integrierten eine Identität gegen ein nichtnegatives Gewicht und benutzten
+nirgends, dass es eine Identität ist — man müsse nur die bestimmende Menge
+nichtnegativ wählen. Für Lem. `mixture` (das gar keine bestimmende Menge
+benutzt) und Lem. `restart` stimmt das. **Für die bestimmende Menge selbst
+stimmt es nicht:** ein endliches signiertes Maß, das auf einem erzeugenden
+$\pi$-System nichtnegativ ist, muss es nicht sein. Def. `canonical`(ii) in der
+einseitigen Form ist also eine *echt stärkere* Forderung.
+
+Sie gilt trotzdem für Ex. `determining` — aber aus einem Grund, der geliefert
+werden muss. Neu **Lem. `semiring`**: ist $\mathcal C$ ein **Semiring**, der
+$\Gilt$ erzeugt, und $\mu\ge0$ auf $\mathcal C$, so ist $\mu\ge0$. Beweis über
+endliche disjunkte Vereinigungen (Additivität) plus Hahn–Jordan: approximiert
+man die Negativmenge $N$ durch $A$ aus der erzeugten Algebra mit
+$|\mu|(A\triangle N)<\varepsilon$, so folgt $\mu^-(\Omega)<\varepsilon$.
+Anwendung: nichtnegative $h_k\in\Cb$ fallen monoton auf Indikatoren
+abgeschlossener Mengen, das gibt $\mu\ge0$ auf abgeschlossenen Rechtecken, per
+Regularität auf allen Borel-Rechtecken — und die bilden einen Semiring. Braucht
+**(E2)**.
+
+**(3) Was wirklich verloren geht** (neu Rem. `submartlost`): Lem. `disint`
+braucht den abzählbaren Test \eqref{eq:countabletest}, und eine abzählbare
+Familie, die für Lem. `semiring` reicht, gibt es nur bei zweitabzählbarem $E$ —
+(E2) liefert es, aber die Hypothese ist nicht mehr die harmlose von vorher. Und
+die Eindeutigkeit fällt ohnehin: Def. `propagation` vergleicht über Gleichheit,
+aus $E^P[Zf(\pi_s)]\ge E^Q[Zf(\pi_s)]$ folgt bei $t$ nichts.
+
+**Nebenbei zwei Werkzeugfehler.** `sed 's/\eps/\varepsilon/g'` hätte auch
+`\epsilon` zerschossen (Präfix); hier zufällig folgenlos, aber die Lehre steht.
+Und `check.py` brauchte drei pdflatex-Läufe statt zwei, weil eine `.aux` aus
+einem Fehlerlauf sonst hunderte Scheinbefunde erzeugt — bereits gefixt.
+
 ---
 
 ## Prüfprotokoll

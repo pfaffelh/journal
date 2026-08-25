@@ -393,9 +393,11 @@ Complex-valued test processes
   & \textbf{carried out}: the scalar field is $\K \in \{\R,\C\}$ throughout, and
     Remark~\ref{rem:complexvalued} lists the four places needing $\K = \R$ \\
 Submartingale problems (reflecting boundaries)
-  & \textbf{half free}: the three workhorse lemmas of
-    Section~\ref{ssec:absuniq} survive verbatim, the uniqueness criterion does
-    not; see Remark~\ref{rem:inequalitystable} \\
+  & \emph{transverse}, not wider: it forces $\K = \R$, so it excludes the row
+    above rather than adding to it.  Over $\R$ it is a genuine generalization,
+    by \eqref{eq:submartsym}; the mixture and restart lemmas transfer, the
+    determining set needs Lemma~\ref{lem:semiring}, and uniqueness fails.  See
+    Remarks~\ref{rem:inequalitystable} and \ref{rem:submartlost} \\
 Quasimartingale decompositions in Section~\ref{sec:cadlag}
   & \emph{already there, and weaker}: Definition~\ref{def:regclass} asks of
     $C^f$ only one-sided limits and $L^1$ right continuity, not finite
@@ -3237,28 +3239,108 @@ uniqueness theory cannot do without.
   $X(r+\cdot)$ under $Z \cdot P$, which is what \eqref{eq:restart} asserts.
 \end{remark}
 
-\begin{remark}[The three lemmas are inequality-stable]
+\begin{remark}[Submartingale problems: a different direction, not a wider one]
   \label{rem:inequalitystable}
-  Lemmas~\ref{lem:mixture}, \ref{lem:disint} and \ref{lem:restart} are proved by
-  integrating an identity against a nonnegative weight, and none of the three
-  uses that the identity is an identity.  Replace ``$Y^\circ$ is a
-  $P$-martingale'' by ``$Y^\circ$ is a $P$-submartingale'' throughout, require the
-  determining set $\ZZ^\circ$ to consist of \emph{nonnegative} functionals ---
-  Example~\ref{ex:determining} supplies one, taking $h_k \geq 0$ --- and all three
-  statements hold verbatim, with $=$ replaced by $\geq$: a mixture of
-  submartingale solutions is one, so is a conditional law, and so is a restart,
-  because the weight $W = Z \cdot (Z^\circ_s \circ \theta_r)(X)$ in the proof
-  above is nonnegative.
+  Replacing ``$Y^\circ$ is a $P$-martingale'' by ``$Y^\circ$ is a
+  $P$-submartingale'' throughout defines the \emph{submartingale problem}
+  $\Msol^{\mathrm{sub}}(\XX^\circ)$, which is the standard formulation of a
+  diffusion with reflecting boundary conditions (\SV).  Three things have to be
+  said about it, and the first two are easy to run together.
 
-  This matters because the \emph{submartingale problem} of Stroock and Varadhan
-  --- the standard formulation of a diffusion with reflecting boundary
-  conditions, see \SV{} --- is of exactly this kind.  So the structural half of
-  Section~\ref{ssec:absuniq} is available there without a new proof.  What is
-  \emph{not} available is the uniqueness half: Definition~\ref{def:propagation}
-  compares two measures by equality of expectations, and an inequality does not
-  propagate agreement.  A submartingale problem therefore needs its own
-  uniqueness criterion, which is where the reflecting-boundary literature does
-  its work, and which is not attempted here.
+  \emph{(i) It is not a generalization in the direction of
+  Remark~\ref{rem:complexvalued}, but transverse to it.}  Formulating
+  ``submartingale'' needs an order on the values, so it forces $\K = \R$; and
+  complexifying destroys the order.  The two directions are mutually exclusive,
+  and a table that lists both as ``free'' --- as
+  Section~\ref{ssec:notgeneralized} does --- must be read as offering a choice,
+  not a sum.
+
+  \emph{(ii) Over $\R$ it is nevertheless a genuine generalization,} and the
+  precise sense is worth recording because it is what makes the label honest:
+  \begin{equation}
+    \label{eq:submartsym}
+    \Msol(\XX^\circ) \;=\; \Msol^{\mathrm{sub}}\bigl( \XX^\circ \cup (-\XX^\circ) \bigr) ,
+  \end{equation}
+  since $Y^\circ$ and $-Y^\circ$ are both submartingales exactly when $Y^\circ$ is
+  a martingale.  The martingale problem is thus the submartingale problem for a
+  \emph{symmetric} test family, and every statement about
+  $\Msol^{\mathrm{sub}}$ specializes to one about $\Msol$ by symmetrizing.
+
+  \emph{(iii) Which of the machinery survives, and at what cost.}
+  Lemma~\ref{lem:mixture} transfers with no change at all: its proof integrates
+  $E^{P_\vartheta}[(Y^\circ_t - Y^\circ_s)\one_G] = 0$ over $\nu$, and an
+  inequality integrates just as well; note that it uses no determining set.
+  Lemma~\ref{lem:restart} likewise, the weight
+  $W = Z \cdot (Z^\circ_s \circ \theta_r)(X)$ in its proof being nonnegative
+  whenever $Z$ and $Z^\circ_s$ are.
+
+  What does \emph{not} come for free is the determining set, and this is where
+  the transfer stops being a matter of reading ``$\geq$'' for ``$=$''.
+  Definition~\ref{def:canonical}(ii) has to be replaced by its one-sided form:
+  $E^P[(Y_t - Y_s)Z^\circ_s] \geq 0$ for all \emph{nonnegative}
+  $Z^\circ_s \in \ZZ^\circ_s$ should imply $E^P[Y_t \mid \Filt_s] \geq Y_s$.  That
+  is a strictly stronger demand on $\ZZ^\circ$ than the two-sided one, because a
+  finite signed measure that is nonnegative on a $\pi$-system generating
+  $\Filt_s$ need not be nonnegative.  It does hold for the family of
+  Example~\ref{ex:determining}, but for a reason that has to be supplied:
+  Lemma~\ref{lem:semiring} below.
+\end{remark}
+
+\begin{lemma}[One-sided determination; (E2)]
+  \label{lem:semiring}
+  Let $\mathcal{C}$ be a semiring of subsets of $\Omega$ generating the
+  $\sigma$-field $\Gilt$, and let $\mu$ be a finite signed measure on $\Gilt$ with
+  $\mu(C) \geq 0$ for every $C \in \mathcal{C}$.  Then $\mu \geq 0$.
+
+  Consequently, if $E$ satisfies (E2), then the products
+  $\prod_{k \leq n} h_k(\pi_{t_k})$ with $h_k \in \Cb(E)$, $h_k \geq 0$, are
+  one-sided determining in the sense of
+  Remark~\ref{rem:inequalitystable}(iii), so that
+  Proposition~\ref{prop:fddchar} and Example~\ref{ex:determining} survive the
+  passage to submartingale problems.
+\end{lemma}
+
+\begin{proof}
+  \emph{The signed-measure statement.}  Finite disjoint unions of elements of
+  $\mathcal{C}$ form an algebra $\mathcal{A}$, and $\mu \geq 0$ on $\mathcal{A}$
+  by additivity.  Let $\mu = \mu^+ - \mu^-$ be the Hahn--Jordan decomposition with
+  negative set $N$.  Since $|\mu|$ is finite and $\mathcal{A}$ generates $\Gilt$,
+  for every $\varepsilon > 0$ there is $A \in \mathcal{A}$ with
+  $|\mu|(A \triangle N) < \varepsilon$; then
+  $\mu(A) \leq \mu(N) + \varepsilon = -\mu^-(\Omega) + \varepsilon$, and $\mu(A) \geq 0$ forces
+  $\mu^-(\Omega) < \varepsilon$.  As $\varepsilon$ was arbitrary, $\mu^- = 0$.
+
+  \emph{The application.}  Put $\mu(G) = E^P[(Y_t - Y_s)\one_G]$ for
+  $G \in \Filt_s$, a finite signed measure.  Given closed $A_1,\dots,A_n \subset E$
+  choose $h^m_k(x) = (1 - m\,d(x,A_k))^+ \in \Cb(E)$, which is legitimate under
+  (E2) and decreases to $\one_{A_k}$; then $\prod_k h^m_k$ decreases to
+  $\one_{A_1 \times \dots \times A_n}$ and dominated convergence gives
+  $\mu \geq 0$ on closed measurable rectangles.  By regularity of the finite
+  measure $|\mu| \circ (\pi_{t_1},\dots,\pi_{t_n})^{-1}$ on a metric space this
+  extends to all Borel rectangles, which form a semiring generating
+  $\sigma(\pi_{t_1},\dots,\pi_{t_n})$; the first part applies, and letting the
+  finite sets of times exhaust $\T_{\leq s}$ gives $\mu \geq 0$ on $\Filt_s$.
+\end{proof}
+
+\begin{remark}[What is still lost]
+  \label{rem:submartlost}
+  With Lemma~\ref{lem:semiring} the structural half of
+  Section~\ref{ssec:absuniq} is available for submartingale problems.  Two things
+  are not.
+
+  \emph{Disintegration.}  Lemma~\ref{lem:disint} needs the countable test
+  \eqref{eq:countabletest}, so that one null set serves all data at once.  In the
+  one-sided form the test variables must range over a family rich enough for
+  Lemma~\ref{lem:semiring}, and a countable such family exists only if $E$ is
+  second countable --- which (E2) gives, so the lemma does transfer, but the
+  hypothesis is no longer the innocuous one it was.
+
+  \emph{Uniqueness.}  Definition~\ref{def:propagation} compares two measures by
+  \emph{equality} of expectations, and an inequality propagates nothing: from
+  $E^P[Zf(\pi_s)] \geq E^Q[Zf(\pi_s)]$ one cannot conclude anything at $t$.  A
+  submartingale problem therefore needs a uniqueness criterion of its own, and
+  supplying one is exactly the work done in the reflecting-boundary literature.
+  This manuscript does not attempt it; Task~22 of the plan records it.
 \end{remark}
 
 \begin{proof}
