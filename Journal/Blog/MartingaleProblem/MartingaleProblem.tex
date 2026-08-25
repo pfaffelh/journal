@@ -123,7 +123,9 @@ uniqueness, and in (iii) for an atomic clock; a merely measurable state space
 suffices for (ii) and (iii) throughout.
 Section~\ref{sec:setting} explains, and justifies, the choice of the underlying
 setting; Section~\ref{sec:formalization} records the design decisions that are
-relevant for the Lean formalization.
+relevant for the Lean formalization; and Section~\ref{sec:added} audits what is
+here that is not in the sources, including four apparent generalizations that
+turned out to be empty.
 \end{abstract}
 
 \tableofcontents
@@ -8212,6 +8214,278 @@ any bespoke index theory.
   continuous mapping theorem and Vitali's theorem, and avoids formalizing
   Fact~\ref{fact:jacodmemin}.  See Remark~\ref{rem:augvsws}.
 \end{enumerate}
+
+% =====================================================================
+\section{What this manuscript adds to its sources}
+\label{sec:added}
+% =====================================================================
+
+This section is an audit, not an advertisement.  The criterion throughout is
+narrow: an item is listed only if the statement here is strictly stronger than,
+or absent from, \EK, \CPS, \JS, \KA{} and \DGP, and each entry says who uses it.
+That last column is the discipline that matters.  A generalization nobody
+consumes is not thereby worthless --- it may be exactly what a later application
+needs --- but it should not be mistaken for a result, and
+Section~\ref{ssec:addednothing} lists four that were.
+
+\subsection{Results that are not in the sources}
+\label{ssec:addednew}
+
+The three characterization results of \EK, Chapter~4 are proved here in a
+setting with no operator in it, and \CPS{} --- who work in that setting --- prove
+none of them.  For the c\`adl\`ag theorem the omission in \CPS{} is structural
+rather than accidental: their standing setting presupposes a Polish path space
+and right continuous test processes, which is what a regularization theorem has
+to produce.
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{0.30\textwidth}p{0.30\textwidth}p{0.33\textwidth}@{}}
+\toprule
+\textbf{Here} & \textbf{Nearest in the sources} & \textbf{What is new} \\
+\midrule
+Definition~\ref{def:regclass}, Theorem~\ref{thm:absreg}
+  & \EK{} 4.3.6, for an operator
+  & the hypothesis is isolated as three conditions on a pair of processes; the
+    compensator may be path dependent and may have atoms \\
+Definition~\ref{def:propagation}, Proposition~\ref{prop:uniqfromprop}
+  & \EK{} 4.4.2, for an operator
+  & uniqueness is proved for an arbitrary family of measures, with no shift, no
+    operator and no Markov structure \\
+Lemma~\ref{lem:restart}, Theorem~\ref{thm:absuniq}
+  & \EK{} 4.4.2
+  & four constructions in \EK{} become one lemma applied four times; the shifted
+    problem is carried as a family, so time inhomogeneity is free \\
+Lemma~\ref{lem:chain}
+  & \EK{} 4.4.10, on $\Rp$ with Lebesgue measure
+  & the analytic core of duality as an exact telescoping over an arbitrary
+    staircase, on a preorder, with no probability in it \\
+Lemma~\ref{lem:optsamplafter}
+  & \EK{} 2.2.13, at bounded times
+  & optional sampling at $\tau+s$ for an a.s.\ finite $\tau$, from
+    integrability of the increment over the \emph{random} window alone \\
+Lemma~\ref{lem:semiring}
+  & ---
+  & one-sided determination: nonnegativity on a generating semiring containing
+    $\Omega$ \\
+Theorem~\ref{thm:absconvaug}, Proposition~\ref{prop:atomaug}
+  & \CPS{} 3.14, with control variables
+  & for discontinuities at \emph{deterministic} times, enlarging the path space
+    replaces weak-strong convergence entirely \\
+Lemma~\ref{lem:histrestart}, Corollary~\ref{cor:hawkesrestart}
+  & \DGP, Section~5 (outlook)
+  & kernel representability yields a \emph{restart kernel}, hence local
+    uniqueness for a path-dependent problem with no shift system \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+Two of these have a consumer inside the manuscript and the rest are terminal.
+Lemma~\ref{lem:optsamplafter} carries Theorem~\ref{thm:absstrongmarkov};
+Lemma~\ref{lem:semiring} carries Remark~\ref{rem:inequalitystable}.
+Theorem~\ref{thm:absconvaug} is used by nothing here and is nevertheless the
+item this manuscript would most defend, because it removes a whole apparatus
+from the one place where the apparatus looked unavoidable.
+
+\subsection{The split that organizes everything: uniqueness is not Markovian}
+\label{ssec:addedsplit}
+
+If one thing here is worth carrying elsewhere it is this.  \EK, Theorem~4.4.2
+proves uniqueness \emph{and} the Markov property from one hypothesis, and reads
+as though the two were the same fact.  They are not.
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{0.46\textwidth}p{0.30\textwidth}l@{}}
+\toprule
+& \textbf{needs} & \textbf{Markovian?} \\
+\midrule
+Uniqueness (Proposition~\ref{prop:uniqfromprop})
+  & \eqref{eq:propagation} & \textbf{no} \\
+Restarting (Lemma~\ref{lem:restartmemory})
+  & the tower property & \textbf{no} \\
+\eqref{eq:propagation} from one-dimensional laws
+  (Lemma~\ref{lem:propagation})
+  & a shift system & yes \\
+Markov property (Theorem~\ref{thm:absuniq}\ref{it:absuniq_a})
+  & a shift system & yes \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+Two consequences that the classical formulation hides.  First, \emph{restarting
+a solution is free} (Lemma~\ref{lem:restartmemory}): one may condition on any
+event observed up to $r$ and what remains is again a solution.  What a shift
+buys is not the restart but the \emph{re-indexing} of the restarted object to
+start at time $0$, which an unconditional hypothesis needs and a conditional one
+does not; see Remark~\ref{rem:restartnomarkov}.  Second, the conditional form
+\eqref{eq:propagation} is available in genuinely non-Markovian situations ---
+path-dependent equations, changes of measure, semimartingale problems --- where
+no shift system exists, and Section~\ref{ssec:hawkes} exhibits one.
+
+The negative half is sharper still and is not in the sources at all:
+Remark~\ref{rem:chainonly} shows that on a partially ordered index the slogan
+``uniqueness of the one-dimensional distributions implies uniqueness'' is
+\emph{false}, and locates the obstruction in the induction rather than in the
+martingale problem.
+
+\subsection{Generalizations that cost nothing}
+\label{ssec:addedfree}
+
+These are free in the sense that no proof got longer; several are free in the
+stronger sense that no proof changed at all.  The right-hand column is the one
+to read sceptically.
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{0.20\textwidth}p{0.22\textwidth}p{0.24\textwidth}p{0.26\textwidth}@{}}
+\toprule
+\textbf{Axis} & \textbf{Sources} & \textbf{Here} & \textbf{Used by} \\
+\midrule
+Time index
+  & $\T = \Rp$
+  & (T0)--(T4), Definition~\ref{def:bundles}
+  & the poset case really survives in Section~\ref{sec:MP}, in
+    Theorem~\ref{thm:absuniq}\ref{it:absuniq_a}, in
+    Theorem~\ref{thm:absconv} and in the kernel layer of
+    Section~\ref{ssec:exduality} \\
+Compensator
+  & $\int_0^t g(X_s)\dif s$
+  & a \emph{clock}, Definition~\ref{def:clock}
+  & discrete time (Corollary~\ref{cor:dualdiscrete},
+    Remark~\ref{rem:jumpdiscrete}) and fixed times of discontinuity
+    (Section~\ref{ssec:weakstrong}) become instances, not analogues \\
+Convention $\iota$
+  & invisible, the clock being atomless
+  & both carried
+  & Section~\ref{sec:cadlag} needs $\mathrm{o}$;
+    Example~\ref{ex:invariance} needs $\mathrm{o}$ after embedding and
+    $\mathrm{p}$ before it (Remark~\ref{rem:embedflip}) \\
+State space
+  & Polish
+  & (E0)--(E3), Definition~\ref{def:Ebundles}
+  & martingale problems for $\mathcal{S}'(\R^d)$-valued processes are covered by
+    Sections~\ref{sec:MP}--\ref{sec:duality} with no new proof
+    (Remark~\ref{rem:E1why}) \\
+State space, fibred
+  & fixed $E$
+  & $E_t$ varying, Definition~\ref{def:Efibred}
+  & forced by the historical process of Section~\ref{ssec:exduality}; buys the
+    space-time martingale problem \eqref{eq:sectiontest} \\
+Scalar field
+  & $\R$
+  & $\K \in \{\R,\C\}$
+  & the form the transform literature uses; Theorem~\ref{thm:duality} needs no
+    change at all (Remark~\ref{rem:complexvalued}) \\
+Local problems
+  & a variant
+  & available from Definition~\ref{def:absMP} on
+  & primary, not optional, for path-dependent rates
+    (Remark~\ref{rem:pathjumpprimary}) \\
+Existence from a dual
+  & \DGP: $\Rp$, Lebesgue, $E_1$ compact
+  & any shift invariant clock, (E1), fibred
+  & Section~\ref{ssec:exduality}; the compactness of \DGP{} survives only in
+    Proposition~\ref{prop:rieszmarkov}, i.e.\ in \emph{checking} \ref{it:D3} \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+Three of these deserve a sentence beyond the table.
+
+\emph{The index bundles pay for themselves by what they exclude.}  Separating
+(T2a) from (T2b) makes visible that Section~\ref{sec:cadlag} needs a topology on
+$\T$ and Sections~\ref{sec:uniqueness} and \ref{sec:duality} need an algebraic
+property, which $\Rp$ happens to supply at once; and it turns up the fact that
+(T1$'$), the metric lattice that \EK, Section~2.8 builds and that the first
+draft of this manuscript took as the base assumption, is used \emph{nowhere}.
+
+\emph{The two conventions are not bookkeeping.}  Remark~\ref{rem:embedflip} is
+the sharpest evidence: the same Markov chain needs $\iota = \mathrm{p}$
+intrinsically on $\T = \N_0$ and $\iota = \mathrm{o}$ once its grid is embedded
+in $\Rp$, because with $\iota = \mathrm{p}$ an atom at $u$ is compensated
+\emph{after} $u$ while $f(X)$ jumps \emph{at} $u$.  A manuscript committed to one
+convention could not state Example~\ref{ex:invariance}.
+
+\emph{Free is not the same as empty, but it is close to it in one case.}  The
+complex scalar field changed no proof and no hypothesis; its value is entirely
+that it lets Section~\ref{sec:duality} be applied in the form the affine and
+affine Volterra literature actually uses.  Whether that counts as a
+generalization or as a change of font is a matter of taste.
+
+\subsection{Gaps and slips in the sources}
+\label{ssec:addedcorrections}
+
+\begin{itemize}
+\item \emph{\EK, Chapter~3, Problem~7} is stated as an exercise and used in the
+  last step of their Theorem~4.3.6.  Remark~\ref{rem:sepcondproof} proves it, and
+  records that the countability the argument needs comes from the state space and
+  not from the separating class.
+\item \emph{\EK, Section~2.8} is easy to misread in three ways, and
+  Remark~\ref{rem:ekindex} sets them out: the lattice is needed for $\vee$ and
+  not for $\wedge$ (their Remark~8.3 warns that $\tau \wedge a$ need not be a
+  stopping time); $\Filt_\tau$ needs no infima; and the standing lattice
+  hypothesis is declared before a series of definitions none of which uses it.
+\item \emph{\EK, (3.4)} quantifies the finite-dimensional criterion over chains
+  $t_1 \leq \dots \leq t_n \leq s$.  On a preordered index that is too weak, as
+  Remark~\ref{rem:fddnochain} shows, and the proof of
+  Proposition~\ref{prop:fddchar} needs arbitrary finite subsets of $\T_{\leq s}$ ---
+  the times produced by the Fubini step cannot be chained.
+\item \emph{Bounded pointwise closure} (\EK{} 4.3.1) is more than the argument
+  uses.  Lemma~\ref{lem:closure} is dominated convergence, applies to unbounded
+  $f,g$, and delivers the martingale property for the filtration at hand rather
+  than only for \eqref{eq:starfilt}; Remark~\ref{rem:bpscope} isolates what the
+  bp-apparatus is for.
+\item \emph{Linear Hawkes processes do not explode}, whatever
+  $\lVert\phi\rVert_1$: the Volterra resolvent exists locally for every locally
+  integrable kernel.  What $\lVert\phi\rVert_1 = 1$ separates is stability, not
+  existence (Example~\ref{ex:hawkes}).
+\end{itemize}
+
+\subsection{Generalizations that turned out to be empty}
+\label{ssec:addednothing}
+
+Four things looked like gains and are not.  They are recorded because a
+blueprint that lists only its successes is not usable as a map.
+
+\begin{enumerate}[label=(\roman*)]
+\item \emph{``Every process is Markov if the state is the path.''}  True, and
+  vacuously so: $\sigma(\hat{X}_t) = \Filt^X_t$, an identity of $\sigma$-fields
+  (Lemma~\ref{lem:liftmarkov}).  The one-dimensional distributions of the lift
+  are the finite-dimensional distributions of the process, so every hypothesis of
+  the Markov layer becomes its own conclusion.  A Markov structure is a
+  \emph{compression} statement, and the lift attains it by deleting the
+  compression; see Remark~\ref{rem:liftcollapse}.
+\item \emph{``The abstract martingale problem is a special case of the Markovian
+  one.''}  Formally yes, with $g = 0$ on the lift, and as empty as the observation
+  that every process solves the martingale problem for the family of its own
+  martingales.  The informative lift keeps the generator and lets its integrand be
+  a path functional --- which is Setting~\ref{set:pathjump}, already in the
+  manuscript under another name (Remark~\ref{rem:liftform}).
+\item \emph{``Every clock admits duality.''}  Withdrawn.  What is true is
+  Corollary~\ref{cor:atomless}, and it is a deterministic time change of the
+  Lebesgue case rather than a theorem; the atomic case is verified symbolically
+  and not proved, and the mixed case is open
+  (Remark~\ref{rem:atomsnotchange}).
+\item \emph{``Submartingale problems are a further free generalization.''}  They
+  are transverse, not wider: formulating a submartingale needs an order and
+  therefore excludes $\K = \C$.  Over $\R$ they are a genuine generalization, by
+  \eqref{eq:submartsym}, but the determining set does not transfer for free
+  (Lemma~\ref{lem:semiring}) and uniqueness fails outright
+  (Remark~\ref{rem:submartlost}).
+\end{enumerate}
+
+\noindent
+Items (i) and (ii) share a moral worth stating once: enlarging the state space
+never restricts the class of processes, so a construction that only enlarges it
+cannot prove anything.  Item (iii) has a different one, and it is about method
+rather than mathematics: it began as the repair of a genuine error --- the claim
+that duality \emph{requires} a translation invariant clock --- and the repair
+overshot, turning ``translation invariance is unnecessary'' into ``every clock
+works'' and a substitution into a theorem.
 
 % =====================================================================
 \begin{thebibliography}{9}

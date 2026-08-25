@@ -2620,6 +2620,40 @@ Haar-Behauptung), und die Reparatur ist über das Ziel hinausgeschossen: aus
 Substitution wurde ein Satz mit eigenem Lemma. Beim nächsten Mal: nach einer
 Korrektur prüfen, wer das neue Resultat *benutzt*, bevor es einen Namen bekommt.
 
+### D56 — Neuer §9: was das Manuskript über die Quellen hinaus liefert  *(2026-08-25)*
+
+Auf Wunsch hinten ergänzt, mit dem ausdrücklichen Auftrag, auch die *gratis*
+gelungenen Verallgemeinerungen aufzuführen. Fünf Unterabschnitte, durchgehend
+tabellarisch, mit einer Spalte, die die Disziplin erzwingt: **wer benutzt es**.
+
+* **9.1 Nicht in den Quellen.** Acht Einträge mit „nächstes in den Quellen" und
+  „was neu ist": `absreg`, `uniqfromprop`, `restart`/`absuniq`, `chain`,
+  `optsamplafter`, `semiring`, `absconvaug`/`atomaug`, `histrestart`/
+  `hawkesrestart`. Ausdrücklich vermerkt, dass nur zwei davon einen Konsumenten
+  im Manuskript haben und der Rest terminal ist.
+* **9.2 Die Aufspaltung.** Eindeutigkeit ist nicht Markovsch — mit der Tabelle
+  (Eindeutigkeit: nein; Neustart: nein; Ein-Punkt-Reduktion: ja; Markov: ja) und
+  der negativen Hälfte aus Rem. `chainonly`, die in keiner Quelle steht.
+* **9.3 Gratis-Verallgemeinerungen.** Acht Achsen mit Quelle/hier/Konsument.
+  Drei bekommen einen eigenen Satz: dass die Index-Bündel sich durch das
+  bezahlen, was sie *ausschließen* — (T1′) wird nirgends benutzt —; dass die
+  zwei Konventionen keine Buchhaltung sind (Rem. `embedflip`); und dass der
+  komplexe Skalarkörper zwar keinen Beweis geändert hat, aber die Form ist, in
+  der die affine Literatur §6 anwendet.
+* **9.4 Lücken und Ausrutscher in den Quellen.** EK Kap. 3 Aufgabe 7 (bewiesen),
+  EK §2.8 (drei Lesefallen), EK (3.4) (Ketten zu schwach), bp-Abschluss (mehr
+  als nötig), lineare Hawkes-Prozesse explodieren nie.
+* **9.5 Verallgemeinerungen, die leer waren.** Die vier aus D46, D49, D55 und
+  D53: der Pfad-Lift, „abstraktes MP = Markovsches mit $g=0$", „jede Uhr lässt
+  Dualität zu", und die Submartingalprobleme als vermeintlich weitere
+  Gratis-Achse. Mit der gemeinsamen Moral von (i) und (ii) — eine Konstruktion,
+  die nur den Zustandsraum vergrößert, kann nichts beweisen — und der Moral von
+  (iii), die methodisch ist: die Reparatur eines echten Fehlers ist über das
+  Ziel hinausgeschossen.
+
+Der Abschnitt ist als **Audit** deklariert, nicht als Werbung; das steht im
+ersten Satz. Abstract auf §9 verweisend nachgezogen. 106 Seiten.
+
 ---
 
 ## Prüfprotokoll

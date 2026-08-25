@@ -3,14 +3,14 @@
 \contentsline {paragraph}{(EK) The Ethier--Kurtz setting \cite {EK86}, Chapter~4.}{3}{section*.2}%
 \contentsline {paragraph}{(A) The abstract setting.}{3}{section*.3}%
 \contentsline {paragraph}{What each setting is good for.}{3}{section*.4}%
-\contentsline {subsection}{\numberline {1.2}Recommendation}{3}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.2}Recommendation}{4}{subsection.1.2}%
 \contentsline {subsection}{\numberline {1.3}Generality: time index, Polish state space, local martingale problems}{5}{subsection.1.3}%
 \contentsline {paragraph}{Abstract time index.}{5}{section*.5}%
 \contentsline {paragraph}{State space: measurable, not Polish, where possible.}{5}{section*.6}%
-\contentsline {paragraph}{Local martingale problems.}{5}{section*.7}%
+\contentsline {paragraph}{Local martingale problems.}{6}{section*.7}%
 \contentsline {subsection}{\numberline {1.4}Generalizations not made, and why}{6}{subsection.1.4}%
 \contentsline {paragraph}{A path-dependent clock.}{7}{section*.8}%
-\contentsline {paragraph}{Nonlinear dependence on $P$.}{7}{section*.9}%
+\contentsline {paragraph}{Nonlinear dependence on $P$.}{8}{section*.9}%
 \contentsline {paragraph}{Control variables and relaxed solutions.}{8}{section*.10}%
 \contentsline {section}{\numberline {2}Preliminaries}{8}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Notation}{8}{subsection.2.1}%
@@ -52,3 +52,9 @@
 \contentsline {section}{\numberline {8}Notes for the formalization}{97}{section.8}%
 \contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{97}{subsection.8.1}%
 \contentsline {subsection}{\numberline {8.2}Design decisions}{100}{subsection.8.2}%
+\contentsline {section}{\numberline {9}What this manuscript adds to its sources}{101}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Results that are not in the sources}{102}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}The split that organizes everything: uniqueness is not Markovian}{103}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Generalizations that cost nothing}{103}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Gaps and slips in the sources}{105}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}Generalizations that turned out to be empty}{105}{subsection.9.5}%
