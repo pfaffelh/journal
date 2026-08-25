@@ -537,44 +537,30 @@ Offen bleibt nur die Ausführung dort, wo sie Inhalt hat:
   Fibrierung zusammenfällt: $\mu_{s,t}$ von $E_{1,s}$ nach $E_{1,t}$;
 * Raum-Zeit-Martingalproblem als Beispiel ausschreiben.
 
-## Task 19 — Historischer Prozess als Dualer — `strukturiert` *(2026-08-25)*
+## Task 19 — Historischer Prozess als Dualer — `am Beispiel durchgeführt` *(2026-08-25)*
 
-Durchdacht (→ D47). §7.2 hat jetzt Setting `historical`, Lem. `histrestart`,
-Rem. `histbuys`, `histobstruction`, `histhawkes` — als **Programm**
-gekennzeichnet, nicht als Satz.
+Durchdacht (D47) und am Hawkes-Prozess **ausgeführt** (D48). §7.2 hat jetzt
+Setting `historical`, Lem. `histrestart`, Rem. `histbuys`/`histobstruction`,
+und die vollständige Verifikation: Setting `hawkesdual`, Lem. `hawkesflow`,
+Prop. `hawkesduality`, Prop. `hawkesDcheck`, Cor. `hawkesrestart`,
+Rem. `hawkesscope`.
 
-*Vorbemerkung (D46):* Der Pfad-Lift macht **jeden** Prozess Markov, aber
-tautologisch — er schließt die Lücke zwischen $\sigma(X_s)$ und $\Filt^X_s$, und
-damit werden alle Hypothesen zu ihren eigenen Konklusionen. Für §5 ist er also
-wertlos. Für §7.2 ist er es **nicht**, weil der Inhalt dort in (D3) sitzt, einer
-Aussage über den Dualen auf unverändertem Raum. Das ist die Begründung dafür,
-dass genau dieser Task und kein anderer den Lift benutzt.
+**Ergebnis.** (D1), (D2) und (D3) sind für den Hawkes-Prozess alle verifiziert;
+der Duale ist die deterministische, rückwärts laufende Volterra-Gleichung, die
+Flusseigenschaft ist bewiesen, (D3) ohne Zirkel über die
+Generationen-Abschneidung gezeigt. Der Gewinn ist **Cor. `hawkesrestart`**: ein
+nicht-Markovscher Restart-Kern, den §5.4 bisher nicht hatte — damit lokale
+Eindeutigkeit für das Hawkes-Problem ohne Shift-System. Auf der Existenzseite
+reproduziert die Dualität Hawkes–Oakes und spart nichts.
 
-**Hängt an Task 20.** Die Zwei-Parameter-/fibrierte Version von §7.2 ist hier
-nicht optional, weil die Fasern $\hat E_t$ wachsen; und der Duale läuft
-rückwärts, also erscheint die $q$-Reflexion aus Rem. `haarrole`.
+**Offen bleibt das allgemeine Programm**, Obstruktion benannt: für
+Genealogieräume sind weder (D2) noch (D3) über Transformationen verfügbar
+(Rem. `histobstruction`); für Punktkonfigurationen sind sie es, und das ist der
+Grund, warum gerade dieses Beispiel durchgeht.
 
-**Bewiesen:** Lem. `histrestart` — (D3) in Zwei-Parameter-Form plus
-Dualitätsfunktionen, die nur die Vergangenheit lesen, unter der dualen Dynamik in
-Ruhe sind und separieren, erzwingen
-$\mu_{r,t}(\hat x,\cdot)\circ\rho_{r,t}^{-1}=\delta_{\hat x}$: der Kern behält die
-Vergangenheit, ist also ein **Restart-Kern**. Das schließt die Lücke, die
-Rem. `pastingassumed` benennt — §5.4 hatte kein nicht-Markovsches Beispiel, weil
-Cor. `pastingmarkov` ihn aus einem Shift-System baut.
-
-**Offen, und zwar substantiell:** (D3) selbst. Riesz–Markov
-(Prop. `rieszmarkov`) braucht $E_1$ kompakt; ein Pfadraum ist polnisch, aber
-weder kompakt noch — bei Genealogien — lokalkompakt. Ersatz ist eine
-Transformcharakterisierung (DGP Prop. 2.8 / Bsp. 6): für Punktkonfigurationen das
-Laplace-Funktional, verfügbar; für Genealogien nicht, und dort endet es derzeit.
-
-**Testobjekt, konkret:** der Hawkes-Prozess aus Ex. `hawkes`. Sein historischer
-Dualer ist die **deterministische**, rückwärts laufende nichtlineare
-Volterra-Gleichung der Hawkes–Oakes-Clusterdarstellung, \eqref{eq:hawkesdual} —
-klassisch und hier numerisch bestätigt (rel. Fehler 0,024 % bei MC-Fehler
-0,22 %). Zu prüfen: (D1) und die Zwei-Parameter-(D3). Gewinn wäre die
-Konstruktion einer Lösung eines **pfadabhängigen** Martingalproblems aus einem
-deterministischen Dualen, ohne approximierende Folge und ohne Shift-System.
+**Nächster möglicher Schritt:** dieselbe Rechnung für einen zweiten Typ — etwa
+nichtlineare Hawkes-Prozesse oder Setting `pathjump` allgemein —, um zu sehen,
+wieviel von Prop. `hawkesDcheck` strukturell ist und wieviel am Cluster hängt.
 
 ---
 
