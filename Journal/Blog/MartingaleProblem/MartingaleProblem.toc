@@ -37,18 +37,18 @@
 \contentsline {subsection}{\numberline {5.6}The Markovian case}{56}{subsection.5.6}%
 \contentsline {section}{\numberline {6}Uniqueness via duality}{58}{section.6}%
 \contentsline {subsection}{\numberline {6.1}The anti-diagonal lemma}{58}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}The continuous-time theory}{62}{subsection.6.2}%
-\contentsline {section}{\numberline {7}Existence}{67}{section.7}%
+\contentsline {subsection}{\numberline {6.2}The continuous-time theory}{61}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Existence}{66}{section.7}%
 \contentsline {subsection}{\numberline {7.1}From a transition semigroup}{67}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}From a dual process}{68}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.2}From a dual process}{67}{subsection.7.2}%
 \contentsline {subsection}{\numberline {7.3}Jump processes}{77}{subsection.7.3}%
 \contentsline {subsection}{\numberline {7.4}From stochastic differential equations}{81}{subsection.7.4}%
 \contentsline {subsection}{\numberline {7.5}By convergence: the Ethier--Kurtz version}{82}{subsection.7.5}%
 \contentsline {subsection}{\numberline {7.6}By convergence: the abstract theorem}{83}{subsection.7.6}%
 \contentsline {subsection}{\numberline {7.7}By convergence: the general version}{85}{subsection.7.7}%
-\contentsline {subsection}{\numberline {7.8}Approximation on different clocks}{87}{subsection.7.8}%
-\contentsline {subsection}{\numberline {7.9}Relaxing the continuity hypothesis}{90}{subsection.7.9}%
+\contentsline {subsection}{\numberline {7.8}Approximation on different clocks}{86}{subsection.7.8}%
+\contentsline {subsection}{\numberline {7.9}Relaxing the continuity hypothesis}{89}{subsection.7.9}%
 \contentsline {subsection}{\numberline {7.10}Hawkes processes and their Volterra limit}{94}{subsection.7.10}%
-\contentsline {section}{\numberline {8}Notes for the formalization}{98}{section.8}%
-\contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{98}{subsection.8.1}%
+\contentsline {section}{\numberline {8}Notes for the formalization}{97}{section.8}%
+\contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{97}{subsection.8.1}%
 \contentsline {subsection}{\numberline {8.2}Design decisions}{100}{subsection.8.2}%

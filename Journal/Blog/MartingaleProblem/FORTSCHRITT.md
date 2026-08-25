@@ -2581,6 +2581,45 @@ Blöcken (`rem:inequalitystable`, `lem:semiring`, `rem:submartlost`), die beim
 Einfügen von D53 zwischen Lemma und Beweis geraten waren. Blöcke hinter den
 Beweis verschoben.
 
+### D55 — `thm:anyclock` war überverallgemeinert; zum Korollar zurückgestuft  *(2026-08-25)*
+
+Einwand des Nutzers nach D54: eventuell sei zu stark verallgemeinert worden.
+**Trifft zu.** Zwei Befunde beim Nachprüfen.
+
+**(1) Kein Konsument.** Alle 15 Vorkommen von `thm:anyclock` waren Querverweise
+in Prosa und Tabellen; **kein einziger Beweis** benutzte den Satz.
+Thm. `duality` und Cor. `uniqviadual` laufen auf Lebesgue, Cor. `dualdiscrete`
+auf dem Zählmaß, §7.2 nur auf \eqref{eq:clockadd}.
+
+**(2) Der Satz ist ein Variablenwechsel.** Er stand unter (T3) — also auf
+$\Rp$ —, und dort ist eine *atomlose* Uhr das Bild des Lebesgue-Maßes unter der
+stetigen wachsenden Abbildung $\tau$. Ein Martingalproblem mit atomloser Uhr ist
+also ein **deterministischer Zeitwechsel** eines Lebesgue-Problems, und der Satz
+sagt nichts weiter, als dass Dualität unter diesem Zeitwechsel invariant ist.
+Lem. `rectify` war die Substitutionsformel, aufgemacht als Lemma.
+
+**Korrektur.** `lem:rectify` und `thm:anyclock` sind zu einem einzigen
+**`cor:atomless`** („Atomless clocks, by time change") verschmolzen, Beweis eine
+halbe Seite statt zwei; die Quantilidentität \eqref{eq:quantile} steht jetzt
+dort, wo sie hingehört, nämlich als Substitution im Beweis.
+`rem:rectifyfails` heißt jetzt `rem:atomsnotchange` und sagt ausdrücklich, dass
+das Korollar *als* Variablenwechsel zu lesen ist und keinen Satznamen verdient —
+mit dem Gegenbeispiel aus D54 und der Statustabelle. §6 ist dadurch rund zwei
+Seiten kürzer.
+
+**Was bleibt.** Die drei Dinge, die wirklich Inhalt haben: die
+Treppenzug-Verallgemeinerung von `lem:chain` (die (T4) dort ganz beseitigt), die
+Korrektur des ursprünglichen Fehlers (Translationsinvarianz ist *nicht* nötig),
+und die Beobachtung, dass Atome eine strukturelle und keine technische Hürde
+sind — ein rektifiziertes $\Psi$ ist Funktion von $x+y$ und enthält die
+Konklusion bereits.
+
+**Lehre fürs Protokoll.** Der Auslöser war ein *Fehler* (die falsche
+Haar-Behauptung), und die Reparatur ist über das Ziel hinausgeschossen: aus
+„Translationsinvarianz ist nicht nötig" wurde „jede Uhr geht", und aus einer
+Substitution wurde ein Satz mit eigenem Lemma. Beim nächsten Mal: nach einer
+Korrektur prüfen, wer das neue Resultat *benutzt*, bevor es einen Namen bekommt.
+
 ---
 
 ## Prüfprotokoll

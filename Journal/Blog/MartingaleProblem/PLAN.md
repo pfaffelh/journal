@@ -669,13 +669,17 @@ Nach D54 ist der Stand von §6:
 | Uhr | Status |
 |---|---|
 | Haar (Lebesgue, Zählmaß) | bewiesen, `prop:haar` |
-| atomlos, (T3) | bewiesen, `thm:anyclock` (Rektifikation) |
+| atomlos, (T3) | bewiesen, `cor:atomless` — aber nur ein **Zeitwechsel** (D55) |
 | rein atomar | symbolisch verifiziert, **nicht bewiesen**, `rem:atomicdual` |
 | gemischt | **offen** |
 
-Die beiden vorhandenen Argumente kombinieren sich nicht: die Rektifikation
-scheitert an Atomen (`rem:rectifyfails`, mit Gegenbeispiel), die
+Die beiden vorhandenen Argumente kombinieren sich nicht: der Zeitwechsel
+scheitert an Atomen (`rem:atomsnotchange`, mit Gegenbeispiel), die
 Linearalgebra der Atomrelationen hat keinen diffusen Gegenpart.
+
+*Zur Einordnung (D55):* die Zeile „atomlos" ist billiger, als sie aussieht — unter
+(T3) ist eine atomlose Uhr das Bild von Lebesgue unter $\tau$. Echten Inhalt hat
+nur die Zeile „rein atomar", und nur sie führt über Lebesgue hinaus.
 
 **Zwei Ansätze.** (a) Den atomaren Fall wirklich beweisen — die Relationen
 $m_l\,\Delta_1F(k,l-1)=m_k\,\Delta_2F(k-1,l-1)$ sind ein lineares System, dessen
