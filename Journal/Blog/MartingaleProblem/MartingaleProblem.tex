@@ -3994,6 +3994,10 @@ results apply and which fail.
   continuous martingale with bounded increments, so
   Theorem~\ref{thm:absstrongmarkov} applies; its second assertion is
   \eqref{eq:strongmarkov2} with $T(t)f(x) = \int f(\omega(t)) P_x(\dif\omega)$.
+  Its restriction to stopping times with countably many values is vacuous here:
+  the shift system is the constant one, so all the measures $P_{x,r} = P_x$ solve
+  one and the same problem and the partition of Step~3 there is unnecessary.  See
+  Remark~\ref{rem:strongmarkovscope}.
 \end{proof}
 
 \begin{corollary}[\EK, Corollary 4.4.3; (T3)]
@@ -5466,8 +5470,10 @@ $X_t = X_0 + \int_0^t \sigma(X_s)\dif B_s + \int_0^t b(X_s)\dif s$.
 \label{ssec:EKconv}
 
 The remaining route obtains solutions as weak limits of solutions of approximating
-martingale problems.  We first state the classical result and then its
-generalization.
+martingale problems.  We state the classical result first, and then the abstract
+theorem of which it is a corollary; its proof below is a forward reference, and
+deliberately so --- the point of the arrangement is that
+Lemma~\ref{lem:EKconv} has no proof of its own.
 
 
 \begin{lemma}[\EK, Lemma 4.5.1; (T3)]
@@ -5487,48 +5493,93 @@ generalization.
 \end{lemma}
 
 \begin{proof}
-  Let $D(X) = \{u \geq 0 : P\{X(u) = X(u-)\} = 1\}$; by
-  Fact~\ref{fact:Dcountable} its complement is countable, so $D(X)$ is dense.
-  Let $0 \leq t_1 \leq \dots \leq t_k \leq t < s$ with
-  $t_i, t, s \in D(X)$, and $h_i \in \Cb(E)$.  For $u \in D(X)$ the evaluation
-  map $\omega \mapsto \omega(u)$ is continuous at $\omega$ for $P X^{-1}$-almost
-  every $\omega \in \DE$, hence the functional
+  We verify \ref{it:C1}--\ref{it:C3} of Theorem~\ref{thm:absconv}, with
+  $F = \DE$ --- Polish by (E3) and Fact~\ref{fact:DEpolish} --- and
+  $\XX = \XX_A(X)$, whose canonical version is
+  $Y^\circ_t(\omega) = f(\omega(t)) - \int_0^t g(\omega(u))\dif u$ for
+  $(f,g) \in A$.  Fix $(f,g) \in A$ and an approximating sequence $(f_n,g_n)$ as
+  in \eqref{eq:approxA}, and put
   \[
-    \omega \;\longmapsto\;
-      \Bigl( f(\omega(s)) - f(\omega(t)) - \int_t^s g(\omega(u)) \dif u \Bigr)
-      \prod_{i=1}^k h_i(\omega(t_i))
+    D \;=\; \{ u \geq 0 : P\{X(u) = X(u-)\} = 1 \} ,
   \]
-  is bounded and $P X^{-1}$-a.s.\ continuous on $\DE$.  For the integral term
-  this needs an extra word: if $\omega_m \to \omega$ in $\DE$, then
-  $\omega_m(u) \to \omega(u)$ for every $u$ outside the at most countable set of
-  discontinuities of $\omega$, so $g(\omega_m(u)) \to g(\omega(u))$ for Lebesgue
-  almost every $u$ by continuity of $g$, and bounded convergence gives
-  $\int_t^s g(\omega_m(u))\dif u \to \int_t^s g(\omega(u))\dif u$ --- for
-  \emph{every} $\omega$, so this summand is in fact continuous everywhere.  By
-  the continuous mapping theorem (Fact~\ref{fact:cmt}) and \eqref{eq:approxA} ---
-  which bounds the difference between the two integrands by
-  $2\lVert f_n - f\rVert + (s-t)\lVert g_n - g\rVert$ times
-  $\prod_i \lVert h_i \rVert$, uniformly in $\omega$ ---
-  \begin{align}
-    \label{eq:convlimit}
-    E\Bigl[ \Bigl( f(X(s)) - f(X(t)) - \int_t^s g(X(u)) \dif u \Bigr)
-      \prod_{i=1}^k h_i(X(t_i)) \Bigr] \\
-    \notag
-    = \lim_{n \to \infty}
-      E\Bigl[ \Bigl( f_n(X_n(s)) - f_n(X_n(t)) - \int_t^s g_n(X_n(u)) \dif u \Bigr)
-      \prod_{i=1}^k h_i(X_n(t_i)) \Bigr] \;=\; 0 ,
-  \end{align}
-  the last equality because $X_n$ solves the martingale problem for $A_n$, by
-  Proposition~\ref{prop:fddchar}.  For general
-  $0 \leq t_1 \leq \dots \leq t_k \leq t < s$ choose
-  $t^m_i \downarrow t_i$, $t^m \downarrow t$ and $s^m \downarrow s$ in $D(X)$ with
-  $t^m_i \leq t^m < s^m$, which is possible because $D(X)$ is dense; the
-  integrand is bounded by
-  $(2\lVert f\rVert + (s^1-t)\lVert g\rVert)\prod_i\lVert h_i\rVert$ and converges
-  pointwise by right continuity of the paths of $X$, so bounded convergence
-  extends \eqref{eq:convlimit} to all such times.  By
-  Proposition~\ref{prop:fddchar}, $X$ solves the martingale problem for $A$.
+  which has countable complement by Fact~\ref{fact:Dcountable} and is therefore
+  dense; $\T = \Rp$ has no greatest element, so the proviso in
+  Theorem~\ref{thm:absconv} on $D$ is vacuous.
+
+  \emph{\ref{it:C1} and \ref{it:C2}.}  The first is the assumed weak convergence
+  $X_n \wto X$ on $\DE$.  For the second take $\ZZ^\circ$ to be the determining
+  set of Example~\ref{ex:determining} built from $D$, i.e.\ the products
+  $Z^\circ_s = \prod_{i \leq k} h_i(\pi_{t_i})$ with $h_i \in \Cb(E)$ and
+  $t_i \in D \cap \T_{\leq s}$.
+
+  \emph{\ref{it:C3a}.}  For $t \in D$ the evaluation $\omega \mapsto \omega(t)$ is
+  $J_1$-continuous at every $\omega$ with $\omega(t) = \omega(t-)$, hence
+  $P X^{-1}$-a.s.  The integral term is continuous at \emph{every} $\omega$: if
+  $\omega_m \to \omega$ in $\DE$, then $\omega_m(u) \to \omega(u)$ for every $u$
+  outside the at most countable set of discontinuities of $\omega$, hence Lebesgue
+  almost everywhere, so $g(\omega_m(u)) \to g(\omega(u))$ by continuity of $g$ and
+  bounded convergence gives
+  $\int_0^t g(\omega_m(u))\dif u \to \int_0^t g(\omega(u))\dif u$.  So $Y^\circ_t$
+  is $P$-continuous at $X$, and so is $Y^\circ_t Z^\circ_s$, the factor
+  $Z^\circ_s$ being a product of evaluations at times in $D$.
+
+  \emph{\ref{it:C3b}.}  $f$ and $g$ are bounded, so
+  $|Y^\circ_r| \leq \lVert f\rVert + t\lVert g\rVert$ for $r \leq t$, and a
+  uniformly bounded family is uniformly integrable.
+
+  \emph{\ref{it:C3c}.}  Write
+  $Y^{\circ,n}_t(\omega) = f_n(\omega(t)) - \int_0^t g_n(\omega(u))\dif u$.  Since
+  $X_n$ solves the martingale problem for $A_n$ and $(f_n,g_n) \in A_n$,
+  Proposition~\ref{prop:fddchar} gives
+  \[
+    E^{P^n}\bigl[ \bigl( Y^{\circ,n}_t(X_n) - Y^{\circ,n}_s(X_n) \bigr)
+      Z^\circ_s(X_n) \bigr] \;=\; 0
+  \]
+  for all $s \leq t$ and $Z^\circ_s \in \ZZ^\circ_s$.  Moreover
+  \[
+    \bigl| Y^\circ_r(\omega) - Y^{\circ,n}_r(\omega) \bigr|
+      \;\leq\; \lVert f_n - f \rVert + r \lVert g_n - g \rVert
+    \qquad \text{for every } \omega \in \DE ,
+  \]
+  a bound uniform in $\omega$, so with
+  $C = \sup_i \lVert h_i\rVert^k$,
+  \[
+    \Bigl| E^{P^n}\bigl[ (Y^\circ_t(X_n) - Y^\circ_s(X_n)) Z^\circ_s(X_n) \bigr] \Bigr|
+      \;\leq\; 2C \bigl( \lVert f_n-f\rVert + t \lVert g_n-g\rVert \bigr)
+      \;\xrightarrow[n\to\infty]{}\; 0 ,
+  \]
+  which is \ref{it:C3c}.  \emph{This is the only place where
+  \eqref{eq:approxA} is used, and it is used only as a uniform bound} --- which is
+  why Theorem~\ref{thm:CPSconv} can replace it by the far weaker
+  \eqref{eq:cps2}--\eqref{eq:cps3}.
+
+  \emph{Conclusion.}  The paths of $X$ lie in $\DE$, so every $Y \in \XX$ is
+  right continuous, and $\T = \Rp$ satisfies (T2b) with $D$ dense.
+  Theorem~\ref{thm:absconv} therefore gives $P \in \Msol(\XX)$, i.e.\ $X$ solves
+  the martingale problem for $A$.
 \end{proof}
+
+\begin{remark}[Why this is a corollary and not a theorem]
+  \label{rem:EKconvcor}
+  \EK{} prove Lemma~\ref{lem:EKconv} directly, and an earlier version of this
+  manuscript reproduced that proof.  It is worth being explicit that nothing is
+  lost by not doing so, because the two arguments are the same argument:
+  \EK's ``let $D(X)$ be the continuity times, take limits there, extend by right
+  continuity'' is precisely Steps~1 and~3 of Theorem~\ref{thm:absconv}, and their
+  appeal to bounded convergence is its Steps~0 and~2 in the special case where
+  \ref{it:C3b} holds because $f$ and $g$ are bounded.  Reproducing it would
+  duplicate the abstract proof in a notation that hides which hypothesis does
+  what.
+
+  What the derivation makes visible is the division of labour that the direct
+  proof conceals.  Of the four hypotheses of Lemma~\ref{lem:EKconv}, weak
+  convergence is \ref{it:C1}; $A \subset \Cb \times \Cb$ is what buys
+  \ref{it:C3a}; boundedness of $f$ and $g$ is what buys \ref{it:C3b}; and the
+  uniform approximation \eqref{eq:approxA} is what buys \ref{it:C3c} --- one
+  hypothesis per condition, with no overlap.  Each can then be weakened
+  separately, and Theorem~\ref{thm:CPSconv} weakens the last two while
+  Section~\ref{ssec:weakstrong} weakens \ref{it:C3a}.
+\end{remark}
 
 \begin{remark}[\EK, Remark 4.5.2]
   \label{rem:EKrelcompact}
@@ -5557,8 +5608,9 @@ and none at all if that subset is all of $\T$.  It is \CPS, Theorem~3.14 and
 Corollary~3.17, and it is the cheapest genuine theorem in this manuscript; we
 give it with its proof, since it is what the formalization should target
 (step~\ref{it:F5a} of Section~\ref{sec:formalization}).  Lemma~\ref{lem:EKconv}
-is in turn a special case of Theorem~\ref{thm:CPSconv}, so all of
-Section~\ref{sec:convergence} rests on Theorem~\ref{thm:absconv}.
+is a special case of it directly, as its proof shows, and a fortiori of
+Theorem~\ref{thm:CPSconv}; so all of Section~\ref{sec:convergence} rests on
+Theorem~\ref{thm:absconv}.
 
 \begin{definition}[$P$-continuity at $X$; (T0) + (E3)]
   \label{def:Pcont}
@@ -5696,7 +5748,8 @@ Section~\ref{sec:convergence} rests on Theorem~\ref{thm:absconv}.
 
 The following theorem is \CPS, Theorem~4.1; it is the specialization of the
 abstract convergence theorem \CPS, Corollary~3.17, to the Markovian martingale
-problem, and it generalizes Lemma~\ref{lem:EKconv} in three independent
+problem, and it generalizes Lemma~\ref{lem:EKconv} --- which
+Theorem~\ref{thm:absconv} has already delivered --- in three independent
 directions:
 \begin{enumerate}[label=(\arabic*)]
 \item the approximating objects are \emph{not} required to solve a martingale

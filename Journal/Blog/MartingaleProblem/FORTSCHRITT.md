@@ -2061,6 +2061,45 @@ D40: `ex:invariance`, `jumpwellposed`, `pathjumpMP`, `atomicdiscontinuity`), ein
 falsche Bibliotheksbehauptung, eine fehlnummerierte Roadmap und eine
 Design-Entscheidung, die der eigenen Theorie widersprach.
 
+### D44 — Lem. `EKconv` hatte einen überflüssigen eigenen Beweis  *(2026-08-25)*
+
+Frage des Nutzers: ob Lem. 7.23 (\EK{} 4.5.1) nicht eine Folgerung von Thm. 7.26
+(`absconv`) sei. **Ja** — und das Manuskript behauptete es an drei Stellen (§1.2
+Schicht 3, §7.5, §8 (F8)), gab dem Lemma aber trotzdem einen vollständigen
+eigenständigen Beweis. Das widersprach der erklärten Architektur, nach der die
+klassischen Resultate „Verifikationen von Hypothesen, keine Argumente" sein
+sollen.
+
+Nachgerechnet, dass die Herleitung wirklich durchgeht — je eine Hypothese pro
+Bedingung, ohne Überlappung:
+
+| Hypothese von Lem. `EKconv` | liefert |
+|---|---|
+| $X_n\Rightarrow X$ auf $\DE$ | (C1) |
+| $A\subset\Cb\times\Cb$ | (C3a) |
+| $f,g$ beschränkt | (C3b) |
+| $\lVert f_n-f\rVert,\lVert g_n-g\rVert\to0$ | (C3c) |
+
+Der Beweis ist jetzt diese Verifikation (Vorwärtsreferenz auf §7.6, bewusst).
+Neu Rem. `EKconvcor`: EKs direktes Argument — „Stetigkeitszeiten $D(X)$, dort
+Limes, per Rechtsstetigkeit fortsetzen" — ist wörtlich Step 1 und Step 3 von
+Thm. `absconv`, ihr Konvergenzsatz-Aufruf ist dessen Steps 0 und 2 im Sonderfall
+beschränkter $f,g$. Es geht nichts verloren, und gewonnen wird die
+Arbeitsteilung: jede der vier Hypothesen kann jetzt einzeln abgeschwächt werden,
+was Thm. `CPSconv` mit den letzten beiden und §7.8 mit (C3a) auch tut.
+
+**Gegenprobe bei den anderen drei klassischen Resultaten.** Thm. `cadlag` (15
+Zeilen) und Thm. `uniqueness` (45 Zeilen) sind reine Hypothesenverifikationen,
+also in Ordnung. Thm. `duality` (110 Zeilen) ist keine Dopplung: die Rechnung
+\eqref{eq:Fincrement}, die aus den Martingalvoraussetzungen die
+Inkrementdarstellungen \eqref{eq:incrementrep} erzeugt, ist der einzige
+probabilistische Teil von §6 und steht nirgends sonst.
+
+Nebenbei: der Beweis von Thm. `uniqueness` beruft sich auf
+Thm. `absstrongmarkov`, dessen zweite Aussage seit D39 auf abzählbarwertige
+Stoppzeiten eingeschränkt ist. Hier ist die Einschränkung leer (konstantes
+Shift-System), was jetzt dasteht.
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),
