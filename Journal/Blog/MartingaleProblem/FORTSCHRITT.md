@@ -2762,6 +2762,47 @@ behandelt wird (Real- und Imaginärteil, Nullmengen schneiden).
 
 107 Seiten.
 
+### D60 — Der $\K\to\R$-Rückzug wandert in ein einziges Lemma  *(2026-08-25)*
+
+Einwand des Nutzers zu D59: es sei schade, wenn man durchgehend mit
+$\K$-wertigen Prozessen rechnet und dann doch reelle Aussagen stehen — ob man
+sich nicht auf Real- und Imaginärteil zurückziehen und die zugehörigen
+Submartingale betrachten könne. **Ja, und das ist die bessere Architektur.**
+
+**Der Unterschied.** Bisher stand in D59 „diese Aussagen bleiben reell", und der
+Beweis von Thm. `absreg` trug die Klausel „für $\K=\C$ wende man das auf
+$\Re Y$ und $\Im Y$ an". Damit war der Rückzug im *Beweis* verstreut. Jetzt:
+
+* Neu **Cor. `regK`** — Regularisierung eines $\K$-wertigen Martingals: die
+  einseitigen Limiten entlang $D$ existieren f.s. Beweis drei Zeilen: bedingte
+  Erwartung vertauscht mit $\Re$ und $\Im$, also sind beide Teile reelle
+  Martingale, also Submartingale; Fact `submgreg` zweimal, Nullmengen schneiden.
+* Thm. `absreg` zitiert jetzt Cor. `regK` und erwähnt den Skalarkörper gar nicht
+  mehr. §4 ist damit durchgehend $\K$-wertig formuliert *und* bewiesen.
+* Neu Rem. `Kretreat`: Cor. `regK` ist die **einzige** Stelle im Manuskript, an
+  der der Übergang $\K\to\R$ ausgeführt wird.
+
+**Die Unterscheidung, die dabei klar wurde.** Reell bleiben nur die
+*Voraussetzungen*, deren Inhalt eine Ungleichung ist — Fact `submgreg` und
+Fact `monotoneclass` (beschränkte monotone Limiten setzen eine Ordnung voraus).
+Das **propagiert nicht** in die Aussagen, die sie benutzen: `submgreg` wird nur
+über Cor. `regK` benutzt, und `monotoneclass` nur auf die *Testvariablen*, die
+ohnehin reell sind, weil sie einen $\K$-wertigen Zuwachs multiplizieren und
+reelle dessen beide Teile schon trennen. Rem. `complexvalued`(i) entsprechend neu
+geschrieben; Fact `relcompact2` hat jetzt den Satz für $\K=\C$ (auf $\Re f$ und
+$\Im f$ anwenden, $\R^k$-wertige Konklusion benutzen).
+
+Davon zu trennen ist Rem. `inequalitystable`: dort ist die Ungleichung der
+**Gegenstand**, nicht ein Werkzeug, und $\K=\R$ keine Rückzugsposition sondern
+die Hypothese. Steht jetzt ausdrücklich so da.
+
+**Für Lean** ist das der eigentliche Gewinn, und die Designentscheidung sagt es
+jetzt: genau *ein* Beweis zerlegt den Skalarkörper, alles darüber ist uniform
+`RCLike`. Verwendungstabelle nachgezogen — Fact `submgreg` wird nur noch von
+Cor. `regK` benutzt.
+
+109 Seiten.
+
 ---
 
 ## Prüfprotokoll

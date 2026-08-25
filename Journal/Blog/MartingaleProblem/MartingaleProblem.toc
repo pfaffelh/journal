@@ -19,42 +19,42 @@
 \contentsline {subsection}{\numberline {2.4}From Chapter 1: operator semigroups}{15}{subsection.2.4}%
 \contentsline {subsection}{\numberline {2.5}From Chapter 2: stochastic processes and martingales}{16}{subsection.2.5}%
 \contentsline {subsection}{\numberline {2.6}From Chapter 3: weak convergence and the Skorokhod space}{18}{subsection.2.6}%
-\contentsline {subsection}{\numberline {2.7}From the Appendixes of \cite {EK86}}{20}{subsection.2.7}%
-\contentsline {subsection}{\numberline {2.8}Where the prerequisites are used}{22}{subsection.2.8}%
-\contentsline {subsection}{\numberline {2.9}Which result needs which bundle}{22}{subsection.2.9}%
-\contentsline {section}{\numberline {3}Martingale problems}{25}{section.3}%
-\contentsline {subsection}{\numberline {3.1}The abstract (local) martingale problem}{25}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}The Markovian martingale problem}{26}{subsection.3.2}%
-\contentsline {section}{\numberline {4}Sample path regularity: existence of a c\`adl\`ag modification}{32}{section.4}%
-\contentsline {subsection}{\numberline {4.1}An abstract regularization theorem}{32}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}The Markovian case}{35}{subsection.4.2}%
-\contentsline {section}{\numberline {5}Uniqueness, the Markov property, and the strong Markov property}{35}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Uniqueness without a Markov structure}{36}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}The Markov layer: shift systems}{40}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}The local martingale problem}{48}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Local uniqueness}{53}{subsection.5.4}%
-\contentsline {subsection}{\numberline {5.5}Non-Markovian test objects}{55}{subsection.5.5}%
-\contentsline {subsection}{\numberline {5.6}The Markovian case}{57}{subsection.5.6}%
-\contentsline {section}{\numberline {6}Uniqueness via duality}{59}{section.6}%
-\contentsline {subsection}{\numberline {6.1}The anti-diagonal lemma}{59}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}The continuous-time theory}{63}{subsection.6.2}%
-\contentsline {section}{\numberline {7}Existence}{67}{section.7}%
-\contentsline {subsection}{\numberline {7.1}From a transition semigroup}{68}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}From a dual process}{68}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Jump processes}{78}{subsection.7.3}%
-\contentsline {subsection}{\numberline {7.4}From stochastic differential equations}{82}{subsection.7.4}%
-\contentsline {subsection}{\numberline {7.5}By convergence: the Ethier--Kurtz version}{83}{subsection.7.5}%
-\contentsline {subsection}{\numberline {7.6}By convergence: the abstract theorem}{84}{subsection.7.6}%
-\contentsline {subsection}{\numberline {7.7}By convergence: the general version}{86}{subsection.7.7}%
-\contentsline {subsection}{\numberline {7.8}Approximation on different clocks}{87}{subsection.7.8}%
-\contentsline {subsection}{\numberline {7.9}Relaxing the continuity hypothesis}{90}{subsection.7.9}%
-\contentsline {subsection}{\numberline {7.10}Hawkes processes and their Volterra limit}{95}{subsection.7.10}%
-\contentsline {section}{\numberline {8}Notes for the formalization}{98}{section.8}%
-\contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{98}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Design decisions}{101}{subsection.8.2}%
-\contentsline {section}{\numberline {9}What this manuscript adds to its sources}{102}{section.9}%
-\contentsline {subsection}{\numberline {9.1}Results that are not in the sources}{103}{subsection.9.1}%
-\contentsline {subsection}{\numberline {9.2}The split that organizes everything: uniqueness is not Markovian}{104}{subsection.9.2}%
-\contentsline {subsection}{\numberline {9.3}Generalizations that cost nothing}{104}{subsection.9.3}%
-\contentsline {subsection}{\numberline {9.4}Gaps and slips in the sources}{106}{subsection.9.4}%
-\contentsline {subsection}{\numberline {9.5}Generalizations that turned out to be empty}{106}{subsection.9.5}%
+\contentsline {subsection}{\numberline {2.7}From the Appendixes of \cite {EK86}}{21}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}Where the prerequisites are used}{23}{subsection.2.8}%
+\contentsline {subsection}{\numberline {2.9}Which result needs which bundle}{23}{subsection.2.9}%
+\contentsline {section}{\numberline {3}Martingale problems}{26}{section.3}%
+\contentsline {subsection}{\numberline {3.1}The abstract (local) martingale problem}{26}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}The Markovian martingale problem}{27}{subsection.3.2}%
+\contentsline {section}{\numberline {4}Sample path regularity: existence of a c\`adl\`ag modification}{33}{section.4}%
+\contentsline {subsection}{\numberline {4.1}An abstract regularization theorem}{33}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}The Markovian case}{36}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Uniqueness, the Markov property, and the strong Markov property}{36}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Uniqueness without a Markov structure}{37}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}The Markov layer: shift systems}{41}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}The local martingale problem}{49}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Local uniqueness}{54}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Non-Markovian test objects}{56}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}The Markovian case}{58}{subsection.5.6}%
+\contentsline {section}{\numberline {6}Uniqueness via duality}{60}{section.6}%
+\contentsline {subsection}{\numberline {6.1}The anti-diagonal lemma}{60}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}The continuous-time theory}{64}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Existence}{68}{section.7}%
+\contentsline {subsection}{\numberline {7.1}From a transition semigroup}{69}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}From a dual process}{69}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Jump processes}{79}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}From stochastic differential equations}{83}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}By convergence: the Ethier--Kurtz version}{84}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}By convergence: the abstract theorem}{85}{subsection.7.6}%
+\contentsline {subsection}{\numberline {7.7}By convergence: the general version}{87}{subsection.7.7}%
+\contentsline {subsection}{\numberline {7.8}Approximation on different clocks}{88}{subsection.7.8}%
+\contentsline {subsection}{\numberline {7.9}Relaxing the continuity hypothesis}{91}{subsection.7.9}%
+\contentsline {subsection}{\numberline {7.10}Hawkes processes and their Volterra limit}{96}{subsection.7.10}%
+\contentsline {section}{\numberline {8}Notes for the formalization}{99}{section.8}%
+\contentsline {subsection}{\numberline {8.1}What is available and what has to be built}{99}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Design decisions}{102}{subsection.8.2}%
+\contentsline {section}{\numberline {9}What this manuscript adds to its sources}{104}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Results that are not in the sources}{104}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}The split that organizes everything: uniqueness is not Markovian}{105}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Generalizations that cost nothing}{106}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Gaps and slips in the sources}{108}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}Generalizations that turned out to be empty}{108}{subsection.9.5}%

@@ -1226,6 +1226,38 @@ which the manuscript would otherwise have to add separately.
   at all $t \in \T$ and are right continuous at all $t \notin \Gamma$.
 \end{fact}
 
+\begin{corollary}[Regularization of a $\K$-valued martingale; \eqref{T2b}]
+  \label{cor:regK}
+  Let $Y$ be a $\K$-valued $(\Filt_t)$-martingale and let $D \subset \T$ be
+  countable and dense.  Then there is $\Omega_0$ with $P(\Omega_0) = 1$ such that
+  for every $\omega \in \Omega_0$ the limits
+  \[
+    \lim_{s \to t+,\, s \in D} Y(s,\omega) \ \ (t \in \T) ,
+    \qquad
+    \lim_{s \to t-,\, s \in D} Y(s,\omega) \ \ (t > 0)
+  \]
+  exist in $\K$.
+\end{corollary}
+
+\begin{proof}
+  Conditional expectation commutes with $\Re$ and $\Im$, so $\Re Y$ and $\Im Y$
+  are real $(\Filt_t)$-martingales, hence submartingales.  Apply
+  Fact~\ref{fact:submgreg} to each and intersect the two sets of full measure;
+  a limit in $\K$ exists iff the limits of both parts do.
+\end{proof}
+
+\begin{remark}[Where the scalar field is felt, and where it is not]
+  \label{rem:Kretreat}
+  Corollary~\ref{cor:regK} is the \emph{only} place in this manuscript where the
+  passage from $\K$ to $\R$ is performed.  It is worth isolating it, rather than
+  repeating ``apply this to $\Re Y$ and $\Im Y$'' in every proof that needs it:
+  a $\K$-valued submartingale does not exist, so the retreat is not a
+  convenience but the only route, and it should happen once, at the point where
+  the order is actually used.  Everything downstream --- Theorem~\ref{thm:absreg}
+  and with it the whole of Section~\ref{sec:cadlag} --- is then stated and proved
+  for $\K$-valued test processes with no further mention of the field.
+\end{remark}
+
 \begin{fact}[Optional sampling; \EK, Theorem 2.2.13, Remark 2.2.14, and Chapter 2, Problem 11; \eqref{T2b}]
   \label{fact:optsampl}
   Let $X$ be a right continuous $(\Filt_t)$-submartingale and let $\tau_1$,
@@ -1512,7 +1544,9 @@ Throughout this subsection $(S,d)$ is a metric space.
   \label{fact:relcompact2}
   Let $(E,r)$ be arbitrary and let $X_n$ have sample paths in $\DE$, adapted to
   filtrations $(\Filt^n_t)$.  Let $\mathcal{L}_n$ be the Banach space of
-  real-valued $(\Filt^n_t)$-progressive processes with
+  real-valued $(\Filt^n_t)$-progressive processes --- for $\K = \C$ one applies
+  the Fact to $\Re f$ and $\Im f$ and uses the $\R^k$-valued conclusion below ---
+  with
   $\lVert Y \rVert = \sup_{t \geq 0} E[|Y(t)|] < \infty$ and put
   \begin{equation}
     \label{eq:An}
@@ -1664,7 +1698,11 @@ Fact~\ref{fact:fullgenerator}
   & Remark~\ref{rem:fullgenerator} \\
 Fact~\ref{fact:stoppingtimes}
   & Theorem~\ref{thm:uniqueness}\ref{it:uniq_b}, Corollary~\ref{cor:dualstopped} \\
-Fact~\ref{fact:cadlagext}, \ref{fact:submgreg}
+Fact~\ref{fact:cadlagext}
+  & Theorem~\ref{thm:absreg} \\
+Fact~\ref{fact:submgreg}
+  & Corollary~\ref{cor:regK} only \\
+Corollary~\ref{cor:regK}
   & Theorem~\ref{thm:absreg} \\
 Fact~\ref{fact:optsampl}
   & Theorem~\ref{thm:absstrongmarkov} \\
@@ -1965,18 +2003,24 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
   \emph{The four places that need $\K = \R$.}
   \begin{enumerate}[label=(\roman*)]
   \item \emph{Order.}  There is no such thing as a $\K$-valued submartingale, so
-    every statement whose content is an inequality stays over $\R$.  There are
-    three: Fact~\ref{fact:submgreg}, the submartingale regularization, which
-    Section~\ref{sec:cadlag} uses --- one applies it to $\Re Y$ and $\Im Y$ and
-    intersects the two exceptional null sets, and that is the only place in the
-    proof of Theorem~\ref{thm:absreg} where the scalar field is felt;
-    Fact~\ref{fact:monotoneclass}, whose closure under \emph{bounded monotone
-    limits} presupposes an order, which is also why the test variables
-    $\ZZ^\circ$ and the $W$ of Proposition~\ref{prop:fddchar} are kept real; and
-    Remark~\ref{rem:inequalitystable}, where the whole point is an inequality.
-    Fact~\ref{fact:cadlagext}, by contrast, needs no order at all --- it is a
-    statement about limits in a metric space --- and Fact~\ref{fact:relcompact2}
-    is stated over $\R$ only because \EK{} state it so.
+    the \emph{prerequisites} whose content is an inequality stay over $\R$:
+    Fact~\ref{fact:submgreg}, and Fact~\ref{fact:monotoneclass}, whose closure
+    under \emph{bounded monotone limits} presupposes an order.  This does
+    \emph{not} propagate to the statements that use them.  The submartingale
+    regularization is used only through Corollary~\ref{cor:regK}, which is
+    $\K$-valued and performs the retreat to $\Re Y$ and $\Im Y$ once and for all
+    (Remark~\ref{rem:Kretreat}); and the monotone class theorem is used only on
+    the \emph{test variables}, which are real by design --- see
+    Definition~\ref{def:canonical} and the $W$ of
+    Proposition~\ref{prop:fddchar} --- because they multiply a $\K$-valued
+    increment, and real ones already separate its two parts.
+    Fact~\ref{fact:cadlagext}, by contrast, needs no order at all, being a
+    statement about limits in a metric space, and Fact~\ref{fact:relcompact2} is
+    stated over $\R$ only because \EK{} state it so.
+
+    The one place where an inequality is the \emph{subject} rather than a tool is
+    Remark~\ref{rem:inequalitystable}, and there $\K = \R$ is not a retreat but
+    the hypothesis.
   \item \emph{Stone--Weierstrass.}  Fact~\ref{fact:stoneweierstrass} needs a
     complex algebra to be closed under conjugation.  This is used in
     Remark~\ref{rem:EKrelcompact} and Proposition~\ref{prop:rieszmarkov}.
@@ -2588,12 +2632,10 @@ step of their programme rather than a consequence of it.
   Definition~\ref{def:regclass}.
 
   \emph{Step 1: regularity along the rationals.}
-  Each $Y^i$ is an $(\mathbb{F},P)$-martingale, so
-  Fact~\ref{fact:submgreg}, applied with the countable dense set $D$, provides for
-  each $i$ a set of full measure on which the limits of $Y^i$ along $D$ from above
-  (and, for $t>0$, from below) exist at every $t$; for $\K = \C$ one applies it to
-  $\Re Y^i$ and $\Im Y^i$ and intersects the two null sets, which is the only
-  place in this proof where the scalar field is felt.  Intersect these over the
+  Each $Y^i$ is an $(\mathbb{F},P)$-martingale, so Corollary~\ref{cor:regK},
+  applied with the countable dense set $D$, provides for each $i$ a set of full
+  measure on which the limits of $Y^i$ along $D$ from above (and, for $t>0$, from
+  below) exist at every $t$.  Intersect these over the
   countably many $i$; intersect further with the sets of full measure furnished by
   \ref{it:R2}, one for each $i$; and finally with the sets on which \ref{it:R1}
   holds \emph{at the times $t \in D$}, of which there are countably many.  The
@@ -8289,10 +8331,12 @@ any bespoke index theory.
   Section~\ref{sec:duality}, where the chain identity is scalar.  So
   \texttt{RCLike} is the right class for the \emph{test functions} and a Banach
   space would do for the \emph{martingales}; formalize the first with
-  \texttt{RCLike} and inherit the second.  The four places needing
-  $\K = \R$ are listed in Remark~\ref{rem:complexvalued} and should carry
-  \texttt{[LinearOrder]} or a positivity hypothesis rather than fixing $\K$
-  globally.
+  \texttt{RCLike} and inherit the second.  The places needing $\K = \R$ are
+  listed in Remark~\ref{rem:complexvalued}, and the design point is that they are
+  \emph{prerequisites}, not statements: the retreat to $\Re$ and $\Im$ happens in
+  exactly one lemma, Corollary~\ref{cor:regK}, so in Lean exactly one proof
+  destructs the scalar field and everything above it is uniformly
+  \texttt{RCLike}.
 \item \emph{The state space is fibred.}  Take
   \texttt{E : T \textrightarrow{} Type*} with
   \texttt{[$\forall$ t, MeasurableSpace (E t)]} and the path space inside
