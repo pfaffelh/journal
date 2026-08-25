@@ -562,20 +562,96 @@ Grund, warum gerade dieses Beispiel durchgeht.
 nichtlineare Hawkes-Prozesse oder Setting `pathjump` allgemein —, um zu sehen,
 wieviel von Prop. `hawkesDcheck` strukturell ist und wieviel am Cluster hängt.
 
-## Task 21 — Pfadabhängige (zufällige) Uhr — `todo`
+## Task 21 — Pfadabhängige (zufällige) Uhr — `geplant` *(2026-08-25)*
 
-Ersetze $q$ durch einen prädiktablen wachsenden Prozess $A(\omega)$ (→ D51, §1.4).
-Das ist der Schritt zu den Semimartingal-Charakteristiken aus J&S Kap. II.
+Ersetze die Uhr $q$ durch einen **Kern** $\mathsf q$ von $(F,\mathcal S)$ nach
+$(\T,\mathcal T)$, so dass der Kompensator
+$$C^g_t(\omega)=\int_{\langle0,t\rangle_\iota} g(u,\omega_u)\,\mathsf q(\omega,\dif u)$$
+lautet. Das ist der Schritt zu den Semimartingal-Charakteristiken aus J&S Kap. II,
+die das Manuskript durchgehend zitiert, aber nicht enthält.
 
-* **Kostet wenig, wo es zählt:** Def. `absMP` enthält es schon; nur
-  Def. `markovMP` und die Resultate, die über $q$ quantifizieren, ändern sich.
-* **Absolutstetiges $A$ bringt nichts** — das ist Setting `pathjump`. Neu ist
-  allein singuläres $A$ (Lokalzeit, zufällige Sprünge).
-* **Preis:** §6 fällt aus (die Kettenidentität lebt auf einem deterministischen
-  $\Phi:\T\times\T\to\R$), und in §7 wird weak-strong convergence **notwendig**,
-  weil die Atome zufällig werden — Thm. `absconvaug` greift dann nicht mehr.
-* **Zuerst zu klären:** ob Lem. `compadapted` (Fubini) und Prop. `fddchar` mit
-  prädiktablem $A$ unverändert durchgehen. Vermutlich ja.
+### Was wirklich neu ist
+
+Nur eine **singuläre** zufällige Uhr. Ist $\mathsf q(\omega,\dif u)=a_u(\omega)q(\dif u)$
+absolutstetig gegen ein festes $q$, so ist das der pfadabhängige Integrand aus
+Setting `pathjump` — bereits behandelt. Neu sind: Lokalzeit-Uhren, zufällige
+Atome, zufällige Zeitwechsel.
+
+**Ehrlicherweise:** *kein* Beispiel im jetzigen Manuskript braucht es.
+Ex. `volterra`, `pathdepsemi` und `hawkes` sind alle absolutstetig. Task 21
+rechtfertigt sich durch die Beispiele, die er **hinzufügt**, nicht durch
+vorhandene.
+
+### Designentscheidung, zuerst zu treffen
+
+**Als Bündel, nicht als Ersatz.** Genau wie (T0)–(T4) und (E0)–(E3):
+
+* **(Q0)** deterministische Uhr — Def. `clock`, der jetzige Zustand;
+* **(Q1)** adaptierte zufällige Uhr: $\omega\mapsto\mathsf q(\omega,B)$ ist
+  $\Filt^\circ_t$-messbar für $B\subseteq\langle0,t\rangle_\iota$;
+* **(Q2)** prädiktable zufällige Uhr — was J&S Kap. II wirklich verlangt.
+
+Grund für „Bündel statt Ersatz": §6 überlebt nicht und §5.2 braucht eine
+Zusatzhypothese (s.u.), also darf (Q0) nicht verschwinden.
+
+### Abschnittsweiser Audit
+
+| Abschnitt | Verdikt |
+|---|---|
+| §2.2 Uhr | neue Def. + Adaptiertheitslemma. Die **Additivität** \eqref{eq:clockadd} überlebt wörtlich — sie ist die einzige Eigenschaft, die der Rest benutzt |
+| §2.6 `compadapted` | überlebt; Fubini braucht nur die Kerneigenschaft. **Aber:** die Schranke $\lVert g\rVert q(\T_{\le u})$ wird zufällig, also ist die Menge $N^g_u$ auch für beschränktes $g$ nicht mehr ganz $\Omega$ |
+| §3 `fddchar` | überlebt; ${}^*\Filt^X$ wird genauso gebildet |
+| §4 càdlàg | **überlebt**, auch mit zufälligen Atomen: (R2) ist automatisch (monoton), (R3) folgt aus $\mathsf q((t,s])\downarrow0$ punktweise plus $E[\mathsf q(\T_{\le T})]<\infty$ |
+| §5.1 | **unberührt** — erwähnt die Uhr nirgends (nachgeprüft) |
+| §5.2 Markov-Schicht | braucht **Shift-Kovarianz** von $\mathsf q$; sonst ist die verschobene Uhr keine Funktion des verschobenen Pfades. Exaktes Analogon zu Q3/D21 („Shift-Invarianz von $q$ ⟺ Homogenität") |
+| §5.3, §5.4 | unberührt |
+| §6 Dualität | **fällt aus.** Man kann zwar auf $\bar q=E[\mathsf q]$ mitteln und die Dichte in $\gamma$ absorbieren — dann ist \eqref{eq:incrementrep} wieder deterministisch —, aber die **Balance-Bedingung** $\gamma_1=\gamma_2$ überlebt das Mitteln nicht. Ob es eine brauchbare Variante gibt: offen |
+| §7 `absconv`, `clockchange` | überleben |
+| §7.8 | `prop:atomaug` **fällt aus** (die Atome sind nicht mehr deterministisch), also wird **weak-strong convergence notwendig** — genau wie Rem. `augvsws` vorhersagt |
+| §7.2 Dualer | fällt aus mit §6 bzw. mit der Shift-Invarianz in Lem. `dualsemigroup` |
+
+### Die strukturelle Pointe
+
+Mit (Q0) ist $|Y^{f,g}_t|\le\lVert f\rVert+\lVert g\rVert q(\T_{\le t})$
+deterministisch beschränkt, und Thm. `uniqueness` kann sagen „alle
+Integrierbarkeitsvorbehalte sind automatisch". Mit (Q1) ist das falsch. Damit
+wird die **lokale** Theorie aus §5.3 nicht mehr optional, sondern primär — genau
+das Phänomen, das Rem. `pathjumpprimary` schon für pfadabhängige Raten beschreibt
+($E[N_t]<\infty$ war dort die Zusatzhypothese). Task 21 macht das strukturell
+statt beispielhaft.
+
+### Zwei Testobjekte
+
+1. **Sticky Brownian motion.** Kompensator gegen $\dif t+\theta^{-1}\dif\ell^0_t$
+   mit der Lokalzeit $\ell^0$ — die kanonische singuläre zufällige Uhr. Scharf
+   als Test, weil das zugehörige SDE *keine* starke Lösung hat, das
+   Martingalproblem aber wohlgestellt ist (Engelbert–Peskir, *Stochastics* **86**
+   (2014), 993–1021). Prüft §4, §5.1 und §5.3 auf einmal.
+2. **Uhr mit zufälligen Atomen.** Ein Sprungprozess, der nur an den Punkten eines
+   unabhängigen Poissonprozesses springt: $\mathsf q(\omega,\cdot)$ = dessen
+   Zählmaß. Elementar, und es ist das minimale Beispiel, an dem
+   Thm. `absconvaug` scheitert und weak-strong gebraucht wird — das
+   Zufalls-Gegenstück zu Ex. `invariance`.
+
+### Reihenfolge und Umfang
+
+1. §2.2 Def. + Lemma; §2.6 nachziehen  *(≈1,5 S.)*
+2. §3 und §4 durchgehen, Integrierbarkeit explizit  *(≈1 S.)*
+3. §5.2 Shift-Kovarianz; §5.1/§5.3/§5.4 nur Bemerkungen  *(≈1 S.)*
+4. §6 und §7.2: Ausschluss mit Begründung (der $\bar q$-Reduktionsarbeit)  *(≈0,5 S.)*
+5. §7.8: `prop:atomaug` scheitert, weak-strong wird notwendig  *(≈0,5 S.)*
+6. Bündeltabelle, §1.3/§1.4, §8/§9  *(≈0,5 S.)*
+7. Die zwei Testobjekte  *(≈2 S.)*
+
+Etwa 7 Seiten, vergleichbar mit Task 18.
+
+### Zuerst zu entscheiden
+
+* (Q1) oder gleich (Q2)? Prädiktabilität ist das, was J&S braucht, aber auf einem
+  Präorder ist „prädiktabel" nicht ohne Weiteres definiert. Vorschlag: (Q1)
+  durchführen, (Q2) unter (T2b) als Verschärfung.
+* Sticky BM ausführen oder zitieren? Vorschlag: Konstruktion zitieren, das
+  Martingalproblem und die Verifikation von (R2)/(R3) ausführen.
 
 ## Task 22 — Submartingalprobleme (reflektierende Ränder) — `todo`
 
