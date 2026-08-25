@@ -4000,6 +4000,7 @@ the Markovian case one takes the restarted process to depend on the current
 \end{proof}
 
 \begin{remark}[What memory buys, and what it does not]
+  \label{rem:pastingassumed}
   \label{rem:localuniqcomment}
   Three comments.
 
@@ -5345,6 +5346,177 @@ standard sufficient condition.
   Chapman--Kolmogorov relation, exactly as in
   Theorem~\ref{thm:absstrongmarkov}.  Nothing in the proofs resists; it is not
   carried out here only to keep the notation readable.
+\end{remark}
+
+\subsubsection*{Towards a historical duality}
+
+Remark~\ref{rem:exdualityscope} left one thing open: the duality relation
+\eqref{eq:dualityrel} speaks about one-dimensional distributions from a fixed
+initial state, and therefore does not reach the path-dependent problems of
+Section~\ref{ssec:absuniq}.  \DGP's own proposal is to dualize the
+\emph{historical} process.  This subsection sets out what that would require,
+proves the one step of it that is not conditional, and names a test object.  It
+is a programme, not a theorem, and is marked as such.
+
+\begin{setting}[The historical variant; sketch]
+  \label{set:historical}
+  Let $E$ be a state space and let $E_1$ be the \emph{fibred} state space of
+  Definition~\ref{def:Efibred} given by the path lift of
+  Definition~\ref{def:pathlift},
+  \[
+    E_{1,t} \;=\; \hat{E}_t \;=\; E^{\T_{\leq t}}
+    \quad\text{(or } D_E[0,t] \text{)} ,
+    \qquad
+    \rho_{r,t} : \hat{E}_t \to \hat{E}_r \ \text{ the restriction} .
+  \]
+  The duality function becomes a section on the total space,
+  $H : \Sigma\hat{E} \times E_2 \to \R$, and Setting~\ref{set:dualdata} becomes
+  its two-parameter form: kernels $\mu_{r,t}$ from $\hat{E}_r$ to $\hat{E}_t$,
+  operators $(P_{r,t}\varphi)(\hat{x},y)$, and the Chapman--Kolmogorov relation
+  $\mu_{r,s}\mu_{s,t} = \mu_{r,t}$ of Proposition~\ref{prop:dualCK} in its
+  two-parameter shape.
+\end{setting}
+
+Three things change, and they change in the direction the manuscript has already
+prepared for.  The state space is fibred, which is D45's reason for
+Definition~\ref{def:Efibred}.  The problem is irreducibly time-inhomogeneous ---
+the fibres grow --- so the two-parameter version sketched in
+Remark~\ref{rem:exdualityscope} is not optional here but forced.  And the dual
+typically runs \emph{backwards} from the horizon, so the reflection that appears
+is the $q$-reflection of Remark~\ref{rem:haarrole}.
+
+The step that is not conditional is the following, and it is worth isolating
+because it answers a question left open in Section~\ref{ssec:localuniq}.
+
+\begin{lemma}[Kernel representability delivers a restart kernel]
+  \label{lem:histrestart}
+  In Setting~\ref{set:historical}, let $(\mu_{r,t})$ satisfy the two-parameter
+  form of \ref{it:D3}, and suppose that for $r \leq t$ there is a subfamily
+  $E_2^{(r)} \subset E_2$ with
+  \begin{enumerate}[label=(\roman*)]
+  \item \label{it:hist_past}
+    $H_t(\hat{x}',y) = H_r(\rho_{r,t}\hat{x}',y)$ for all $\hat{x}' \in \hat{E}_t$
+    and $y \in E_2^{(r)}$ --- these duality functions read only the past up to
+    $r$;
+  \item \label{it:hist_rest}
+    $(P_{r,t}H)(\hat{x},y) = H_r(\hat{x},y)$ for $y \in E_2^{(r)}$ --- they are at
+    rest under the dual dynamics;
+  \item \label{it:hist_sep}
+    $\operatorname{span}\{H_r(\cdot,y) : y \in E_2^{(r)}\}$ is separating on
+    $\Prob(\hat{E}_r)$.
+  \end{enumerate}
+  Then
+  \[
+    \mu_{r,t}(\hat{x},\cdot) \circ \rho_{r,t}^{-1} \;=\; \delta_{\hat{x}} ,
+    \qquad \hat{x} \in \hat{E}_r ,
+  \]
+  that is, \emph{the kernel keeps the past}.  Consequently $\mu_{r,t}$ satisfies
+  \ref{it:R1k} of Definition~\ref{def:restartkernel} at the deterministic time
+  $r$; and if Theorem~\ref{thm:exduality} applies in its two-parameter form, it
+  satisfies \ref{it:R2k} as well, so it \emph{is} a restart kernel.
+\end{lemma}
+
+\begin{proof}
+  Fix $\hat{x} \in \hat{E}_r$ and $y \in E_2^{(r)}$.  By \ref{it:hist_past},
+  \ref{it:D3} and \ref{it:hist_rest}, in that order,
+  \[
+    \int_{\hat{E}_t} H_r\bigl(\rho_{r,t}\hat{x}',y\bigr) \, \mu_{r,t}(\hat{x},\dif\hat{x}')
+      \;=\; \int_{\hat{E}_t} H_t(\hat{x}',y) \, \mu_{r,t}(\hat{x},\dif\hat{x}')
+      \;=\; (P_{r,t}H)(\hat{x},y)
+      \;=\; H_r(\hat{x},y) .
+  \]
+  The left-hand side is $\int H_r(\cdot,y)$ against the image measure
+  $\mu_{r,t}(\hat{x},\cdot) \circ \rho_{r,t}^{-1} \in \Prob(\hat{E}_r)$, and the
+  right-hand side is $\int H_r(\cdot,y) \dif\delta_{\hat{x}}$.  As this holds for
+  every $y \in E_2^{(r)}$, hypothesis \ref{it:hist_sep} identifies the two
+  measures.
+\end{proof}
+
+\begin{remark}[What Lemma~\ref{lem:histrestart} would buy]
+  \label{rem:histbuys}
+  Remark~\ref{rem:pastingassumed} records that the existence of a restart kernel
+  is ``the one place in Section~\ref{sec:uniqueness} where something must be given
+  from outside'', and Section~\ref{ssec:localuniq} has no example of one that is
+  not Markovian: Corollary~\ref{cor:pastingmarkov} builds it from a shift system,
+  which is exactly what a path-dependent problem does not have.
+  Lemma~\ref{lem:histrestart} says that a historical duality would supply one ---
+  from the \emph{dual}, and with no shift anywhere.
+
+  The consequence is not small.  Theorem~\ref{thm:localuniqueness} would then
+  give local uniqueness in the sense of \JS, Definition~III.2.37 for a
+  path-dependent martingale problem constructed by duality, and
+  Proposition~\ref{prop:uniqfromprop} would give uniqueness in law; both without
+  a Markov structure, on a problem whose solution was produced by a Markovian
+  device on an enlarged space.  That is the circle
+  Sections~\ref{ssec:absuniq}, \ref{ssec:localuniq} and \ref{ssec:exduality} were
+  built to close, and it is the reason the programme is worth carrying out.
+\end{remark}
+
+\begin{remark}[The obstruction, named]
+  \label{rem:histobstruction}
+  What blocks the programme is \ref{it:D3}, and specifically the route to it.
+  Proposition~\ref{prop:rieszmarkov} obtains the kernels from positivity by
+  Riesz--Markov, and needs $E_1$ compact.  A path space $\hat{E}_t$ is Polish but
+  neither compact nor, for genealogy-valued states, locally compact, so that route
+  is unavailable --- this is precisely the difficulty \DGP{} flag in their
+  Section~5, and it is not a technicality that a better argument removes.
+
+  The substitute is a \emph{transform} characterization: instead of
+  representing a positive linear functional on $C(E_1)$ by a measure, one
+  recognizes a given function of $y$ as a Laplace transform, or a Laplace
+  functional, and reads off the law.  \DGP's Proposition~2.8 is the abstract
+  version, and their Example~6 is the concrete one, where the check is that
+  $y \mapsto Y^y_t$ is negative definite.  For a state space of point
+  configurations the corresponding statement is the classical characterization of
+  a point process by its Laplace functional, and it is available.  For a state
+  space of genealogies it is not, and that is where the programme currently
+  stops.
+\end{remark}
+
+\begin{remark}[A test object: the Hawkes process and its cluster dual]
+  \label{rem:histhawkes}
+  The manuscript already contains a path-dependent process whose historical dual
+  is classical, deterministic, and of exactly the shape
+  Setting~\ref{set:historical} asks for.
+
+  Let $N$ be the Hawkes process of Example~\ref{ex:hawkes}, with immigration rate
+  $\mu_0$ and offspring kernel $\phi$, $\lVert\phi\rVert_1 < 1$.  Take
+  \begin{gather*}
+    \hat{E}_t = \{ \text{counting paths on } [0,t] \} ,
+    \qquad
+    E_2 = \{ f : \Rp \to [0,\infty) \text{ measurable} \} , \\
+    H_t(\hat{x},f) = e^{-\int_{[0,t]} f \dif\hat{x}} .
+  \end{gather*}
+  The Hawkes--Oakes cluster representation gives, with
+  $w_f(s) = 1 - E[e^{-\int f \dif C_s}]$ for a cluster $C_s$ started at $s$,
+  \begin{align}
+    \label{eq:hawkesdual}
+    1 - w_f(s) &\;=\; e^{-f(s)}
+      \exp\Bigl\{ - \int_s^\infty \phi(u-s) \, w_f(u) \dif u \Bigr\} , \\
+    \notag
+    E\bigl[ e^{-\int f \dif N} \bigr]
+      &\;=\; \exp\Bigl\{ -\mu_0 \int_0^\infty w_f(s) \dif s \Bigr\} .
+  \end{align}
+  So the dual is the \emph{deterministic} solution of a nonlinear Volterra
+  equation, run \emph{backwards} in time --- the memory-carrying analogue of
+  \DGP's Example~6, where the dual solves $\dot{Y} = -\Psi(Y)$ and $\Psi$ is the
+  branching mechanism.  The two facts that make this a candidate rather than an
+  analogy are that Laplace functionals separate laws of point processes, which is
+  \ref{it:D2}; and that recognizing the right-hand side of \eqref{eq:hawkesdual}
+  as a Laplace functional is exactly the check that
+  Remark~\ref{rem:histobstruction} says must replace Riesz--Markov.
+
+  What would be gained is a construction of a solution of a \emph{path-dependent}
+  martingale problem --- the one in Example~\ref{ex:hawkes}, whose rate
+  $\Lambda_t = \mu_0 + \int_{[0,t)}\phi(t-s)\dif N_s$ is a functional of the whole
+  past --- out of a deterministic dual, with no approximating sequence and no
+  shift system.  It would also connect Section~\ref{ssec:exduality} to
+  Section~\ref{ssec:hawkes}, which at present share nothing but a reference.
+
+  \emph{Status.}  Equation~\eqref{eq:hawkesdual} is classical and has been checked
+  numerically against a cluster simulation; that
+  Setting~\ref{set:historical} applies to it, in particular \ref{it:D1} and the
+  two-parameter form of \ref{it:D3}, has \emph{not} been verified here.
 \end{remark}
 
 \subsection{Jump processes}

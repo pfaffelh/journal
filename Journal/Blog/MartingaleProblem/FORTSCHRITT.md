@@ -2191,6 +2191,64 @@ Tautologie.
   Nebenbei: der Lift ist nie zeithomogen, lebt also zwingend im fibrierten
   Rahmen von D45.
 
+### D47 — Task 19 durchdacht: Struktur, ein Lemma, ein Testobjekt  *(2026-08-25)*
+
+Neu am Ende von §7.2: Setting `historical`, Lem. `histrestart`,
+Rem. `histbuys`, Rem. `histobstruction`, Rem. `histhawkes`. Als **Programm**
+gekennzeichnet, nicht als Satz.
+
+**Was sich ändert** — und zwar in die Richtung, auf die das Manuskript schon
+vorbereitet ist: $E_1$ wird fibriert ($\hat E_t$, das ist D45), das Problem ist
+zwingend zeitinhomogen (die Fasern wachsen), also ist die Zwei-Parameter-Version
+aus Rem. `exdualityscope` hier nicht optional; und der Duale läuft typischerweise
+**rückwärts**, also erscheint die $q$-Reflexion aus Rem. `haarrole`.
+
+**Das eine, was sich beweisen ließ.** Lem. `histrestart`: erfüllen die Kerne
+$\mu_{r,t}$ die Zwei-Parameter-Form von (D3), und gibt es Dualitätsfunktionen,
+die (i) nur die Vergangenheit bis $r$ lesen, (ii) unter der dualen Dynamik in
+Ruhe sind und (iii) auf $\Prob(\hat E_r)$ separieren, dann gilt
+$\mu_{r,t}(\hat x,\cdot)\circ\rho_{r,t}^{-1}=\delta_{\hat x}$ — **der Kern behält
+die Vergangenheit**, ist also ein Restart-Kern im Sinne von Def. `restartkernel`.
+
+Das ist mehr als eine technische Beobachtung. Rem. `pastingassumed` hält fest,
+dass die Existenz eines Restart-Kerns „die eine Stelle in §5 ist, an der etwas
+von außen gegeben werden muss", und §5.4 hat bisher **kein** nicht-Markovsches
+Beispiel: Cor. `pastingmarkov` baut ihn aus einem Shift-System, das ein
+pfadabhängiges Problem gerade nicht hat. Eine historische Dualität lieferte
+einen — aus dem **Dualen**, ohne Shift. Damit wären Thm. `localuniqueness`
+(lokale Eindeutigkeit im Sinne von J&S III.2.37) und Prop. `uniqfromprop`
+(Eindeutigkeit in Verteilung) für ein pfadabhängiges, per Dualität konstruiertes
+Problem verfügbar.
+
+**Die Obstruktion, benannt.** Es ist (D3), genauer der *Weg* dorthin.
+Prop. `rieszmarkov` braucht $E_1$ kompakt; ein Pfadraum ist polnisch, aber weder
+kompakt noch — bei Genealogien — lokalkompakt. Ersatz ist eine
+**Transformcharakterisierung** statt Riesz–Markov: DGP Prop. 2.8 abstrakt,
+DGP Bsp. 6 konkret (negative Definitheit). Für Punktkonfigurationen ist das die
+klassische Charakterisierung über das Laplace-Funktional und verfügbar; für
+Genealogien nicht, und dort endet das Programm derzeit.
+
+**Das Testobjekt.** Der Hawkes-Prozess aus Ex. `hawkes` hat einen klassischen,
+**deterministischen** historischen Dualen: die Hawkes–Oakes-Clusterdarstellung
+gibt mit $w_f(s)=1-E[e^{-\int f\dif C_s}]$
+$$1-w_f(s)=e^{-f(s)}\exp\{-\int_s^\infty\phi(u-s)w_f(u)\dif u\},\quad
+E[e^{-\int f\dif N}]=\exp\{-\mu_0\int_0^\infty w_f\}.$$
+Also eine nichtlineare Volterra-Gleichung, **rückwärts** in der Zeit — das
+gedächtnisbehaftete Analogon zu DGP Bsp. 6 ($\dot Y=-\Psi(Y)$).
+Numerisch geprüft gegen eine Clustersimulation (200 000 Läufe, $T=3$,
+$\phi=\alpha\beta e^{-\beta t}$ mit $\alpha=0{,}6$): Formel 0,23630,
+Simulation 0,23635, relativer Fehler 0,024 % bei einem MC-Standardfehler von
+0,22 %.
+
+Gewonnen wäre: die Konstruktion einer Lösung eines **pfadabhängigen**
+Martingalproblems aus einem deterministischen Dualen, ohne approximierende Folge
+und ohne Shift-System — und eine Verbindung zwischen §7.2 und §7.9, die bisher
+nur eine Querverweis-Beziehung ist.
+
+**Nicht verifiziert:** dass Setting `historical` tatsächlich greift, insbesondere
+(D1) und die Zwei-Parameter-Form von (D3). Das steht ausdrücklich als Status im
+Manuskript.
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),
