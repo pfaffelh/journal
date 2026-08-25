@@ -2654,6 +2654,31 @@ tabellarisch, mit einer Spalte, die die Disziplin erzwingt: **wer benutzt es**.
 Der Abschnitt ist als **Audit** deklariert, nicht als Werbung; das steht im
 ersten Satz. Abstract auf §9 verweisend nachgezogen. 106 Seiten.
 
+### D57 — Bündelnamen als Gleichungstags  *(2026-08-25)*
+
+Wunsch des Nutzers: (E1), (T2b) usw. sollen Tags zugehöriger Gleichungen sein,
+damit man sie beim Hovern sieht, ohne zurückzublättern.
+
+**Ausgangslage.** Die Hypothesenfamilien (L1)–(L3), (R1)–(R3), (D1)–(D3),
+(C1)–(C3), (K1)–(K4) waren schon `\ref`s über `enumerate`-Labels, also
+verlinkt. Nur die **Bündel** waren reiner Text in einer `itemize` — genau die,
+über die sich der Nutzer beschwert. 429 Vorkommen.
+
+**Umsetzung.** Def. `bundles` und Def. `Ebundles` benutzen jetzt `align` mit
+`\tag{T2b}\label{T2b}` usw.; der Prosatext jedes Eintrags steht in einer
+`\parbox[t]{0.78\textwidth}`, damit er umbricht und das Tag an der ersten Zeile
+sitzt. Alle 429 textuellen Vorkommen sind auf `\eqref{...}` umgestellt — das
+druckt „(T2b)" mit Klammern wie vorher, ist aber ein Hyperlink zur Definition.
+
+**Geprüft:** keine Reste als reiner Text; kein `\eqref` in einem
+Section-Header (dort wäre es ein moving argument und hätte das
+Inhaltsverzeichnis zerschossen — 60 ToC-Einträge unverändert); der Fettdruck in
+der Bündeltabelle überlebt als `\textbf{\eqref{...}}`; beide Definitionen im
+PDF gegengelesen. Nebeneffekt: die Definitionen sind jetzt selbstreferenziell
+verlinkt, „(T2a), $\T$ carries the order topology" führt also direkt zu (T2a).
+
+106 Seiten, unverändert.
+
 ---
 
 ## Prüfprotokoll

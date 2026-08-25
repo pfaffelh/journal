@@ -283,7 +283,7 @@ Four deliberate strengthenings relative to \EK{} are made.
 \paragraph{Abstract time index.}
 \EK{} and \CPS{} index time by $[0,\infty)$.  Here the index is an abstract set
 $\T$, and every statement is tagged with the weakest of the bundles
-(T0)--(T4) of Definition~\ref{def:bundles} that it needs; the compensator
+\eqref{T0}--\eqref{T4} of Definition~\ref{def:bundles} that it needs; the compensator
 becomes a separate datum, a \emph{clock} in the sense of
 Definition~\ref{def:clock}.  Section~\ref{ssec:bundletable} tabulates the result.
 There are two reasons for the effort.  The first is that the classical
@@ -305,18 +305,18 @@ reasons worth knowing: the uniqueness induction needs the times to form a chain
 (Remark~\ref{rem:chainonly}); the Kolmogorov step of
 Theorem~\ref{thm:exduality} needs finite subsets to be chains
 (Remark~\ref{rem:exdualityscope}(ii)); and Corollary~\ref{cor:atomless} is a
-time change, so it lives on (T3) and needs the clock to be atomless
+time change, so it lives on \eqref{T3} and needs the clock to be atomless
 (Remark~\ref{rem:atomsnotchange}) --- a limitation of that particular device,
 since for an atomic clock the verification of Remark~\ref{rem:atomicdual} covers
 a partially ordered index.
 
 \paragraph{State space: measurable, not Polish, where possible.}
 \EK{} and \CPS{} take $E$ Polish throughout.  Here $E$ is graded exactly as the
-time index is: (E0) a measurable space, (E1) standard Borel, (E2) separable
-metrizable, (E3) Polish (Definition~\ref{def:Ebundles}).  The grading is not
+time index is: \eqref{E0} a measurable space, \eqref{E1} standard Borel, \eqref{E2} separable
+metrizable, \eqref{E3} Polish (Definition~\ref{def:Ebundles}).  The grading is not
 decoration.  Sections~\ref{sec:MP} and \ref{sec:duality} and almost all of
-Section~\ref{sec:uniqueness} run under (E0); regular conditional distributions
-and the Borel structure, and hence (E1), are needed at five places listed in
+Section~\ref{sec:uniqueness} run under \eqref{E0}; regular conditional distributions
+and the Borel structure, and hence \eqref{E1}, are needed at five places listed in
 Remark~\ref{rem:Ebundleuse}; the topology of $E$ is used only in
 Sections~\ref{sec:cadlag} and \ref{sec:convergence}.  The payoff is
 concrete: martingale problems for distribution-valued processes, where
@@ -547,63 +547,79 @@ committing to $\Rp$ at the outset would mean working against the library.
 
 \begin{definition}
   \label{def:bundles}
-  We use the following bundles of assumptions on $\T$.
-  \begin{itemize}[nosep,leftmargin=3.2em]
-  \item[\textbf{(T0)}] $\T$ is a preordered set with a least element $0$.
-  \item[\textbf{(T1)}] (T0), and $\T$ is a directed lattice: $s \wedge t$ and
-    $s \vee t$ exist.
-  \item[\textbf{(T1$'$)}] (T1) in the concrete form of \EK, Section~2.8: a metric
-    lattice whose order intervals are separable from above.
-  \item[\textbf{(T2a)}] (T0) and $\T$ is linearly ordered.
-  \item[\textbf{(T2b)}] (T2a), $\T$ carries the order topology and admits a
-    countable dense subset $D$, and every non-maximal $t \in \T$ is a limit from
-    the right: $D \cap (t,u) \neq \emptyset$ whenever $t < u$.  A maximal element
-    is allowed --- $\T = [0,T]$ satisfies (T2b) --- and is the one point at which
-    a right limit is not available.
-  \item[\textbf{(T3)}] $\T = [0,\infty)$ or $\T = [0,T]$.
-  \item[\textbf{(T4)}] (T0) and $\T$ is a cancellative ordered commutative
-    monoid: $r + \cdot$ is order preserving, and $t - s$ exists for $s \leq t$.
-  \end{itemize}
+  We use the following bundles of assumptions on $\T$.  They are displayed as
+  tagged equations so that every later occurrence of a bundle name is a link back
+  to this definition.
+  \begin{align}
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      $\T$ is a preordered set with a least element $0$.}
+      \tag{T0}\label{T0} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{T0}, and $\T$ is a directed lattice: $s \wedge t$ and $s \vee t$
+      exist.}
+      \tag{T1}\label{T1} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{T1} in the concrete form of \EK, Section~2.8: a metric lattice whose
+      order intervals are separable from above.}
+      \tag{T1$'$}\label{T1p} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{T0}, and $\T$ is linearly ordered.}
+      \tag{T2a}\label{T2a} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{T2a}, $\T$ carries the order topology and admits a countable dense
+      subset $D$, and every non-maximal $t \in \T$ is a limit from the right:
+      $D \cap (t,u) \neq \emptyset$ whenever $t < u$.  A maximal element is
+      allowed --- $\T = [0,T]$ satisfies it --- and is the one point at which a
+      right limit is not available.}
+      \tag{T2b}\label{T2b} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      $\T = [0,\infty)$ or $\T = [0,T]$.}
+      \tag{T3}\label{T3} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{T0}, and $\T$ is a cancellative ordered commutative monoid:
+      $r + \cdot$ is order preserving, and $t - s$ exists for $s \leq t$.}
+      \tag{T4}\label{T4}
+  \end{align}
 \end{definition}
 
 Three remarks on the design of Definition~\ref{def:bundles}.
 
-\emph{(T4) is independent of (T2a)--(T3).}  The monoid structure is what the
+\emph{\eqref{T4} is independent of \eqref{T2a}--\eqref{T3}.}  The monoid structure is what the
 shift $X(r+\cdot)$ needs; it presupposes no linear order.  Keeping it separate
 makes visible that Sections~\ref{sec:uniqueness} and \ref{sec:duality} rest on an
 algebraic property of $\T$ whereas Sections~\ref{sec:cadlag} and
 \ref{sec:convergence} rest on a topological one.
 
-\emph{Why (T2a) and (T2b) are separate.}  The uniqueness half of
+\emph{Why \eqref{T2a} and \eqref{T2b} are separate.}  The uniqueness half of
 Theorem~\ref{thm:absuniq} and the whole of Section~\ref{sec:duality} need the
 order to be linear but use no topology at all; only Section~\ref{sec:cadlag} and
 the concrete convergence results need the topology.  Bundling the two, as one is
 tempted to do, hides that.
 
-\emph{(T1$'$) is not used in this manuscript.}  It is listed because it is the
+\emph{\eqref{T1p} is not used in this manuscript.}  It is listed because it is the
 only place where \EK{} themselves treat a general index set, and because it is
 easy to misremember what it is for; Remark~\ref{rem:ekindex} sets that out.  But
 every statement here that involves a stopping time --- the strong Markov property
 of Theorem~\ref{thm:absstrongmarkov}, and the localized statements of
 Remarks~\ref{rem:uniquelocal}, \ref{rem:cadlaglocal} and \ref{rem:convlocal} ---
-already assumes (T2b), hence a linear order, for which the lattice structure is
-automatic.  (T1$'$) would become relevant only for a strong Markov property on a
+already assumes \eqref{T2b}, hence a linear order, for which the lattice structure is
+automatic.  \eqref{T1p} would become relevant only for a strong Markov property on a
 genuinely directed index, and Remark~\ref{rem:chainonly} shows that such a
 statement is blocked earlier, on the uniqueness side.
 
-\begin{lemma}[Shifts are order embeddings; (T0) + (T4)]
+\begin{lemma}[Shifts are order embeddings; \eqref{T0} + \eqref{T4}]
   \label{lem:shiftembed}
-  Assume (T4).  Then for every $r \in \T$ the map $r + \cdot$ is an order
-  embedding: $a \leq b \iff r + a \leq r + b$.  If moreover (T2a) holds, then
+  Assume \eqref{T4}.  Then for every $r \in \T$ the map $r + \cdot$ is an order
+  embedding: $a \leq b \iff r + a \leq r + b$.  If moreover \eqref{T2a} holds, then
   $r + (a \wedge b) = (r+a) \wedge (r+b)$.
 \end{lemma}
 
 \begin{proof}
   ``$\Rightarrow$'' is order preservation.  For ``$\Leftarrow$'' let
-  $r + a \leq r + b$ and put $c = (r+b) - (r+a)$, which exists by (T4).  Then
+  $r + a \leq r + b$ and put $c = (r+b) - (r+a)$, which exists by \eqref{T4}.  Then
   $(r+a) + c = r + b$, and cancelling $r$ gives $a + c = b$.  Since $0 \leq c$
   and $a + \cdot$ is order preserving, $a = a + 0 \leq a + c = b$.  The second
-  assertion is immediate: under (T2a) the meet is the minimum, and an injective
+  assertion is immediate: under \eqref{T2a} the meet is the minimum, and an injective
   order preserving map between linear orders carries minima to minima.
 \end{proof}
 
@@ -648,9 +664,9 @@ martingales.
   We write $\iota \in \{\mathrm{o},\mathrm{p}\}$ for the choice of convention and
   $\langle s,t \rangle_\iota$ for $(s,t]$ resp.\ $[s,t)$.
 
-  The clock is \emph{shift invariant} if $\T$ satisfies (T4) and
+  The clock is \emph{shift invariant} if $\T$ satisfies \eqref{T4} and
   $q(r + B) = q(B)$ for all $r \in \T$ and $B \in \mathcal{T}$; it is
-  \emph{reflective} if in addition $\T$ satisfies (T2a); and it is
+  \emph{reflective} if in addition $\T$ satisfies \eqref{T2a}; and it is
   \emph{atomless} if $q(\{u : t \leq u \leq t\}) = 0$ for every $t$, which is
   exactly the condition under which the two conventions coincide.
 \end{definition}
@@ -726,7 +742,7 @@ produces a measure on boxes.
   and $u \vee v$ exist, are unique, and depend \emph{continuously} on $(u,v)$.
   Separability from above of the intervals is a further hypothesis, imposed where
   it is needed (their Propositions 8.4, 8.5(c) and Theorem~8.7), not globally.
-  Our (T0) is weaker on one point: we do not assume antisymmetry, because nothing
+  Our \eqref{T0} is weaker on one point: we do not assume antisymmetry, because nothing
   below uses it and Mathlib's \texttt{Preorder} does not have it.
 
   \emph{(ii) The lattice is needed for $\vee$, not for $\wedge$.}  It is tempting
@@ -779,8 +795,8 @@ we write $\Filt^X_t = \sigma(X(s) : s \leq t)$ and, following \EK, (4.3.2),
         \sigma\Bigl( \int_{\langle 0,s \rangle_\iota} h(X(u)) \, q(\dif u)
           \;:\; s \leq t,\; h \in \Bdd(E) \Bigr).
 \end{equation}
-If $X$ is progressively measurable --- in particular if $\T$ satisfies (T2b) and
-$X$ is right continuous --- then ${}^{*}\Filt^X_t = \Filt^X_t$.  Only (T0) and a
+If $X$ is progressively measurable --- in particular if $\T$ satisfies \eqref{T2b} and
+$X$ is right continuous --- then ${}^{*}\Filt^X_t = \Filt^X_t$.  Only \eqref{T0} and a
 clock are needed for \eqref{eq:starfilt} to make sense.
 
 % ---------------------------------------------------------------------
@@ -794,22 +810,31 @@ visibly different reasons.  We therefore separate them.
 
 \begin{definition}
   \label{def:Ebundles}
-  We use the following bundles of assumptions on the state space.
-  \begin{itemize}[nosep,leftmargin=3.2em]
-  \item[\textbf{(E0)}] $(E,\mathcal{E})$ is a measurable space.
-  \item[\textbf{(E1)}] (E0), and $(E,\mathcal{E})$ is \emph{standard Borel}:
-    $\mathcal{E}$ is the Borel $\sigma$-field of some Polish topology on $E$,
-    equivalently $(E,\mathcal{E})$ is Borel isomorphic to a Borel subset of a
-    Polish space.
-  \item[\textbf{(E2)}] (E1), and $E$ carries a separable metrizable topology with
-    $\mathcal{E} = \Bor(E)$.
-  \item[\textbf{(E3)}] $E$ is Polish.
-  \end{itemize}
-  Thus (E3) $\Rightarrow$ (E2) $\Rightarrow$ (E1) $\Rightarrow$ (E0), and both
-  gaps are inhabited: a Borel non-$G_\delta$ subset of $\R$ satisfies (E2) but
-  not (E3), and the space $\mathcal{S}'(\R^d)$ of tempered distributions
-  satisfies (E1) but not (E2), being a Lusin space and hence standard Borel while
-  not metrizable.
+  We use the following bundles of assumptions on the state space, again as tagged
+  equations.
+  \begin{align}
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      $(E,\mathcal{E})$ is a measurable space.}
+      \tag{E0}\label{E0} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{E0}, and $(E,\mathcal{E})$ is \emph{standard Borel}: $\mathcal{E}$ is
+      the Borel $\sigma$-field of some Polish topology on $E$, equivalently
+      $(E,\mathcal{E})$ is Borel isomorphic to a Borel subset of a Polish space.}
+      \tag{E1}\label{E1} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{E1}, and $E$ carries a separable metrizable topology with
+      $\mathcal{E} = \Bor(E)$.}
+      \tag{E2}\label{E2} \\[0.4ex]
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      $E$ is Polish.}
+      \tag{E3}\label{E3}
+  \end{align}
+  Thus \eqref{E3} $\Rightarrow$ \eqref{E2} $\Rightarrow$ \eqref{E1}
+  $\Rightarrow$ \eqref{E0}, and both gaps are inhabited: a Borel
+  non-$G_\delta$ subset of $\R$ satisfies \eqref{E2} but not \eqref{E3}, and the
+  space $\mathcal{S}'(\R^d)$ of tempered distributions satisfies \eqref{E1} but
+  not \eqref{E2}, being a Lusin space and hence standard Borel while not
+  metrizable.
 \end{definition}
 
 \begin{remark}[What each bundle is for]
@@ -817,13 +842,13 @@ visibly different reasons.  We therefore separate them.
   The four bundles correspond to four different uses, and
   Section~\ref{ssec:bundletable} records which result makes which.
   \begin{enumerate}[label=(\roman*)]
-  \item \emph{(E0): nothing but measurability.}  Sections~\ref{sec:MP} and
+  \item \emph{\eqref{E0}: nothing but measurability.}  Sections~\ref{sec:MP} and
     \ref{sec:duality}, and the whole of Section~\ref{ssec:absuniq} apart from
     Lemma~\ref{lem:disint}, mention $E$ only through $\Bdd(E)$ and $\mathcal{E}$.
     \CPS{} already state their duality theorem for measurable $E_1$, $E_2$; the
     observation here is that uniqueness and the Markov property are of the same
     kind.
-  \item \emph{(E1): regular conditional distributions, and the Borel structure.}
+  \item \emph{\eqref{E1}: regular conditional distributions, and the Borel structure.}
     Five items need it: Lemma~\ref{lem:disint} and its local counterpart
     Lemma~\ref{lem:localmix}\ref{it:lm_b}; Fact~\ref{fact:sepcond}; the
     identification of a law on $F$ by its finite-dimensional distributions;
@@ -833,22 +858,22 @@ visibly different reasons.  We therefore separate them.
     of Fact~\ref{fact:kolmogorov}, used in Theorem~\ref{thm:exduality}.  Each is a
     statement about the Borel structure, not about the topology, and standard
     Borel is what makes all five available.
-  \item \emph{(E2): separating classes and compact sets.}
+  \item \emph{\eqref{E2}: separating classes and compact sets.}
     Section~\ref{sec:cadlag} needs a topology: the compact containment condition
     \eqref{eq:cc} refers to compact subsets of $E$, and the two hypotheses on
     $\dom(A)$ refer to $\Cb(E)$ separating points and separating measures.
-  \item \emph{(E3): weak convergence.}  Only Section~\ref{sec:convergence}, and
+  \item \emph{\eqref{E3}: weak convergence.}  Only Section~\ref{sec:convergence}, and
     there only because $\DE$ has to be Polish for Prohorov's theorem and the
     Skorokhod representation.
   \end{enumerate}
 \end{remark}
 
-\begin{remark}[The point of (E1)]
+\begin{remark}[The point of \eqref{E1}]
   \label{rem:E1why}
-  The gap between (E1) and (E2) is not academic.  Martingale problems for
+  The gap between \eqref{E1} and \eqref{E2} is not academic.  Martingale problems for
   distribution-valued processes --- the martingale problem formulation of an
   SPDE, with $E = \mathcal{S}'(\R^d)$ or $E = \mathcal{D}'(\R^d)$ --- live on a
-  state space that is standard Borel but not metrizable.  Under (E0) and (E1),
+  state space that is standard Borel but not metrizable.  Under \eqref{E0} and \eqref{E1},
   Sections~\ref{sec:MP}, \ref{sec:uniqueness} and \ref{sec:duality} apply to them
   verbatim, with no new proof.  Sections~\ref{sec:cadlag} and
   \ref{sec:convergence} do not, and the repair is a genuine piece of work rather
@@ -859,7 +884,7 @@ visibly different reasons.  We therefore separate them.
 
 \subsubsection*{A state space that varies with time}
 
-There is one further grading, orthogonal to (E0)--(E3), which costs almost
+There is one further grading, orthogonal to \eqref{E0}--\eqref{E3}, which costs almost
 nothing to admit and which the formalization will force anyway: the state space
 may depend on $t$.
 
@@ -867,8 +892,8 @@ may depend on $t$.
   \label{def:Efibred}
   A \emph{fibred state space} over $\T$ is a family $E = (E_t,\mathcal{E}_t)_{t \in \T}$
   of measurable spaces.  The path space is then $F \subseteq \prod_{t \in \T} E_t$,
-  and $\pi_t : F \to E_t$ is the coordinate.  A bundle (E0)--(E3) is read
-  \emph{fibrewise}: $E$ satisfies (E1) if every $E_t$ does, and so on.  The
+  and $\pi_t : F \to E_t$ is the coordinate.  A bundle \eqref{E0}--\eqref{E3} is read
+  \emph{fibrewise}: $E$ satisfies \eqref{E1} if every $E_t$ does, and so on.  The
   \emph{constant} case $E_t \equiv E$ is Definition~\ref{def:Ebundles}.
 
   Where a statement needs to compare fibres --- and only two do --- we write
@@ -1051,7 +1076,7 @@ which the manuscript would otherwise have to add separately.
 \label{ssec:ch2}
 % ---------------------------------------------------------------------
 
-\begin{definition}[\EK, Section 2.1; (T0), except where noted]
+\begin{definition}[\EK, Section 2.1; \eqref{T0}, except where noted]
   \label{def:process}
   Let $\T$ carry a clock (Definition~\ref{def:clock}), with $\sigma$-field
   $\mathcal{T}$.  An $E$-valued process $X$ on $(\Omega,\Filt,P)$ is
@@ -1074,17 +1099,17 @@ which the manuscript would otherwise have to add separately.
   $\Filt_\tau = \{ F \in \Filt : F \cap \{\tau \leq t\} \in \Filt_t
   \ \forall t \in \T \}$.
 
-  Under (T2b) one says in addition that $(\Filt_t)$ is \emph{right continuous} if
+  Under \eqref{T2b} one says in addition that $(\Filt_t)$ is \emph{right continuous} if
   $\Filt_t = \Filt_{t+} = \bigcap_{s>t}\Filt_s$ for all $t$, and that $X$ is
   \emph{right continuous} if its paths are; every right continuous adapted
   process is then progressive.  All of the above except this last paragraph
-  needs only (T0), and is exactly \EK{} (8.1)--(8.6) of their Section~2.8; see
+  needs only \eqref{T0}, and is exactly \EK{} (8.1)--(8.6) of their Section~2.8; see
   Remark~\ref{rem:ekindex}.
 \end{definition}
 
-\begin{fact}[\EK, Propositions 2.1.2 and 2.1.4; (T2b)]
+\begin{fact}[\EK, Propositions 2.1.2 and 2.1.4; \eqref{T2b}]
   \label{fact:stoppingtimes}
-  Assume (T2b).  If $\tau, \tau_1, \tau_2, \dots$ are $(\Filt_t)$-stopping
+  Assume \eqref{T2b}.  If $\tau, \tau_1, \tau_2, \dots$ are $(\Filt_t)$-stopping
   times and $c \in \T$, then $\tau_1 + c$, $\tau_1 \wedge c$, $\sup_n \tau_n$ and
   $\min_{k \leq n} \tau_k$ are $(\Filt_t)$-stopping times; if $(\Filt_t)$ is
   right continuous, so are $\inf_n \tau_n$, $\varliminf_n \tau_n$ and
@@ -1096,7 +1121,7 @@ which the manuscript would otherwise have to add separately.
   (Remark~\ref{rem:ekindex}(ii)).
 \end{fact}
 
-\begin{definition}[\EK, Section 2.2 and (8.15); (T0)]
+\begin{definition}[\EK, Section 2.2 and (8.15); \eqref{T0}]
   \label{def:martingale}
   A $\K$-valued $(\Filt_t)$-adapted process $X$ with $E[|X(t)|] < \infty$ for all
   $t$ --- the modulus, if $\K = \C$ --- is an \emph{$(\Filt_t)$-martingale} if
@@ -1109,7 +1134,7 @@ which the manuscript would otherwise have to add separately.
   hence covers both choices of $\K$ without a word.
 \end{definition}
 
-\begin{fact}[Regularization along a dense set; \EK, Lemma 2.2.8; (T2b)]
+\begin{fact}[Regularization along a dense set; \EK, Lemma 2.2.8; \eqref{T2b}]
   \label{fact:cadlagext}
   Let $(E,r)$ be a metric space, $F \subset \T$ dense, and
   $x : F \to E$.  If
@@ -1118,10 +1143,10 @@ which the manuscript would otherwise have to add separately.
   $y^-(t) \coloneqq \lim_{s \to t-,\, s \in F} x(s)$ exists for every $t > 0$,
   then $y^-$ is left continuous on $\T \setminus \{0\}$; and if both exist for
   every $t>0$, then $y^-(t) = y(t-)$ for all $t > 0$.  In particular $y$ is
-  c\`adl\`ag, and $y \in \DE$ when $\T$ satisfies (T3).
+  c\`adl\`ag, and $y \in \DE$ when $\T$ satisfies \eqref{T3}.
 \end{fact}
 
-\begin{fact}[Submartingale regularization; \EK, Proposition 2.2.9; (T2b)]
+\begin{fact}[Submartingale regularization; \EK, Proposition 2.2.9; \eqref{T2b}]
   \label{fact:submgreg}
   Let $X$ be a real-valued $(\Filt_t)$-submartingale and let
   $F \subset \T$ be countable and dense.  Then there is $\Omega_0$ with
@@ -1139,7 +1164,7 @@ which the manuscript would otherwise have to add separately.
   at all $t \in \T$ and are right continuous at all $t \notin \Gamma$.
 \end{fact}
 
-\begin{fact}[Optional sampling; \EK, Theorem 2.2.13, Remark 2.2.14, and Chapter 2, Problem 11; (T2b)]
+\begin{fact}[Optional sampling; \EK, Theorem 2.2.13, Remark 2.2.14, and Chapter 2, Problem 11; \eqref{T2b}]
   \label{fact:optsampl}
   Let $X$ be a right continuous $(\Filt_t)$-submartingale and let $\tau_1$,
   $\tau_2$ be $(\Filt_t)$-stopping times.  Then for each $T > 0$,
@@ -1156,7 +1181,7 @@ which the manuscript would otherwise have to add separately.
   arbitrary a.s.\ finite stopping times.
 \end{fact}
 
-\begin{fact}[Doob's inequalities; \EK, Corollary 2.2.17; (T2b)]
+\begin{fact}[Doob's inequalities; \EK, Corollary 2.2.17; \eqref{T2b}]
   \label{fact:doob}
   Let $X$ be a right continuous martingale.  Then for $x > 0$, $T > 0$ and
   $\alpha > 1$,
@@ -1190,7 +1215,7 @@ which the manuscript would otherwise have to add separately.
 \label{ssec:ch3}
 % ---------------------------------------------------------------------
 
-Everything in this subsection assumes (T3), $\T = [0,\infty)$, and is stated for
+Everything in this subsection assumes \eqref{T3}, $\T = [0,\infty)$, and is stated for
 it without further comment: the Skorokhod topology is defined through time
 changes $\lambda : [0,\infty) \to [0,\infty)$ (Definition~\ref{def:skorokhod})
 and has no counterpart on a general index.  This is the one block of
@@ -1474,13 +1499,13 @@ Throughout this subsection $(S,d)$ is a metric space.
   $\sigma(K)$-measurable function.
 \end{fact}
 
-\begin{fact}[Kolmogorov extension; \EK, Theorem 4.1.1; (T0) + (E1)]
+\begin{fact}[Kolmogorov extension; \EK, Theorem 4.1.1; \eqref{T0} + \eqref{E1}]
   \label{fact:kolmogorov}
-  Assume (E1), let $\nu \in \Prob(E)$ and let $(\mu_t)_{t \in \T}$ be a family of
+  Assume \eqref{E1}, let $\nu \in \Prob(E)$ and let $(\mu_t)_{t \in \T}$ be a family of
   probability kernels on $E$ with $\mu_0(x,\cdot) = \delta_x$, with
   $(t,x) \mapsto \mu_t(x,\Gamma)$ jointly measurable for every
   $\Gamma \in \mathcal{E}$, and with the Chapman--Kolmogorov property
-  $\mu_{s+t}(x,\cdot) = \int \mu_s(x,\dif x')\mu_t(x',\cdot)$ (for (T4)); more
+  $\mu_{s+t}(x,\cdot) = \int \mu_s(x,\dif x')\mu_t(x',\cdot)$ (for \eqref{T4}); more
   generally, let the finite-dimensional distributions built from $\nu$ and
   $(\mu_t)$ be a projective family.  Then there is a probability measure on
   $E^{\T}$ under which the coordinate process is Markov with initial distribution
@@ -1509,7 +1534,7 @@ Throughout this subsection $(S,d)$ is a metric space.
 
 \begin{fact}[Conditional determination by separating sets; \EK, Chapter 3, Problem 7]
   \label{fact:sepcond}
-  Assume (E1) and (E2), let $\Gilt \subset \Filt$ be a sub-$\sigma$-field, let $M \subset \Cb(E)$ be
+  Assume \eqref{E1} and \eqref{E2}, let $\Gilt \subset \Filt$ be a sub-$\sigma$-field, let $M \subset \Cb(E)$ be
   separating, and let $U,V$ be $E$-valued random variables with $V$
   $\Gilt$-measurable.  If $E[f(U) \mid \Gilt] = f(V)$ a.s.\ for every $f \in M$,
   then $P\{U = V\} = 1$.
@@ -1540,9 +1565,9 @@ Throughout this subsection $(S,d)$ is a metric space.
   \end{equation}
   i.e.\ $P(U \in B \mid \Gilt) = \one_B(V)$ a.s.\ for each fixed $B$.
 
-  \emph{Step 2: one null set, using (E1).}
-  By (E1) the $\sigma$-field $\mathcal{E}$ is countably generated; let
-  $\mathcal{E}_0$ be a countable algebra generating it.  Again by (E1) there is a
+  \emph{Step 2: one null set, using \eqref{E1}.}
+  By \eqref{E1} the $\sigma$-field $\mathcal{E}$ is countably generated; let
+  $\mathcal{E}_0$ be a countable algebra generating it.  Again by \eqref{E1} there is a
   regular conditional distribution $\mu(\omega,\cdot)$ of $U$ given $\Gilt$.
   Applying \eqref{eq:sepcondstep} to the countably many $B \in \mathcal{E}_0$
   yields a single set of full measure off which
@@ -1556,8 +1581,8 @@ Throughout this subsection $(S,d)$ is a metric space.
   $P\{U = V\} = E\bigl[ \mu(\cdot,\{V(\cdot)\}) \bigr]
    = E\bigl[ \delta_{V}(\{V\}) \bigr] = 1$.
 
-  Only (E2) is used, in Step~1, to make sense of ``$M \subset \Cb(E)$
-  separating''; all the measure theory is (E1).
+  Only \eqref{E2} is used, in Step~1, to make sense of ``$M \subset \Cb(E)$
+  separating''; all the measure theory is \eqref{E1}.
 \end{remark}
 
 % ---------------------------------------------------------------------
@@ -1650,13 +1675,13 @@ Remark~\ref{rem:embedflip}.
 \textbf{Result} & \textbf{Index} & \textbf{State} & \textbf{Clock} \\
 \midrule
 Definition~\ref{def:process}, Definition~\ref{def:martingale}
-  & (T0) & (E0) & clock \\
+  & \eqref{T0} & \eqref{E0} & clock \\
 Facts~\ref{fact:stoppingtimes}, \ref{fact:optsampl}, \ref{fact:doob}
-  & (T2b) & (E0) & --- \\
+  & \eqref{T2b} & \eqref{E0} & --- \\
 Facts~\ref{fact:cadlagext}, \ref{fact:submgreg} (regularization)
-  & (T2b) & (E2) & --- \\
+  & \eqref{T2b} & \eqref{E2} & --- \\
 Section~\ref{ssec:ch3} entire (Skorokhod, weak convergence)
-  & (T3) & (E3) & --- \\
+  & \eqref{T3} & \eqref{E3} & --- \\
 \bottomrule
 \end{tabular}
 
@@ -1667,50 +1692,50 @@ Section~\ref{ssec:ch3} entire (Skorokhod, weak convergence)
 \textbf{Result} & \textbf{Index} & \textbf{State} & \textbf{Clock} \\
 \midrule
 Setting~\ref{set:abstract}, Definitions~\ref{def:absMP}, \ref{def:canonical}
-  & (T0) & (E0) & --- \\
+  & \eqref{T0} & \eqref{E0} & --- \\
 Definition~\ref{def:markovMP}, Proposition~\ref{prop:fddchar},
   Definition~\ref{def:wellposed}, \eqref{eq:starfilt}
-  & (T0) & (E0), fibred & clock \\
+  & \eqref{T0} & \eqref{E0}, fibred & clock \\
 Lemma~\ref{lem:resolvent}, Proposition~\ref{prop:dissipative}
-  & (T3) & (E0) & Lebesgue \\
+  & \eqref{T3} & \eqref{E0} & Lebesgue \\
 Definition~\ref{def:cc}, Example~\ref{ex:determining}
-  & (T2b) & (E2) & --- \\
+  & \eqref{T2b} & \eqref{E2} & --- \\
 \midrule
 Definition~\ref{def:regclass}, Theorem~\ref{thm:absreg} (c\`adl\`ag)
-  & (T2b) & (E2) & $\boldsymbol{\iota = \mathrm{o}}$ \\
+  & \eqref{T2b} & \eqref{E2} & $\boldsymbol{\iota = \mathrm{o}}$ \\
 Theorem~\ref{thm:cadlag} (\EK{} 4.3.6)
-  & (T2b) & (E2) & clock, $\boldsymbol{\iota = \mathrm{o}}$ \\
+  & \eqref{T2b} & \eqref{E2} & clock, $\boldsymbol{\iota = \mathrm{o}}$ \\
 \midrule
 Lemma~\ref{lem:mixture} (mixtures)
-  & (T0) & (E0) & --- \\
+  & \eqref{T0} & \eqref{E0} & --- \\
 Lemma~\ref{lem:disint} (disintegration)
-  & (T0) & \textbf{(E1)} & --- \\
+  & \eqref{T0} & \textbf{\eqref{E1}} & --- \\
 Lemma~\ref{lem:shiftembed} ($r + \cdot$ is an order embedding)
-  & (T0) + (T4) & --- & --- \\
+  & \eqref{T0} + \eqref{T4} & --- & --- \\
 Definition~\ref{def:shiftstable}, Lemma~\ref{lem:restart} (restart)
-  & (T0) + (T4) & (E0) & clock \\
+  & \eqref{T0} + \eqref{T4} & \eqref{E0} & clock \\
 Theorem~\ref{thm:absuniq}\ref{it:absuniq_a} (Markov)
-  & (T0) + (T4) & (E0) & clock \\
+  & \eqref{T0} + \eqref{T4} & \eqref{E0} & clock \\
 Definition~\ref{def:propagation}, Proposition~\ref{prop:uniqfromprop}
   (uniqueness)
-  & \textbf{(T2a)} & (E0) & --- \\
+  & \textbf{\eqref{T2a}} & \eqref{E0} & --- \\
 Lemma~\ref{lem:propagation} (one-dimensional laws suffice)
-  & (T0) + (T4) & (E0) & clock \\
+  & \eqref{T0} + \eqref{T4} & \eqref{E0} & clock \\
 Theorem~\ref{thm:absuniq}\ref{it:absuniq_b} (uniqueness, via both)
-  & \textbf{(T2a)} + (T4) & (E0) & clock \\
+  & \textbf{\eqref{T2a}} + \eqref{T4} & \eqref{E0} & clock \\
 Theorem~\ref{thm:absstrongmarkov} (strong Markov)
-  & (T2b) + (T4) & (E2) on $\Sigma E$ & clock \\
+  & \eqref{T2b} + \eqref{T4} & \eqref{E2} on $\Sigma E$ & clock \\
 Definition~\ref{def:localizing}, Lemmas~\ref{lem:localmix},
   \ref{lem:L1auto}, \ref{lem:localrestart},
-  Theorem~\ref{thm:localuniq} (local theory; \textbf{(E1)} for
+  Theorem~\ref{thm:localuniq} (local theory; \textbf{\eqref{E1}} for
   Lemma~\ref{lem:localmix}\ref{it:lm_b})
-  & (T2b) + (T4) & (E0) & clock \\
+  & \eqref{T2b} + \eqref{T4} & \eqref{E0} & clock \\
 Definition~\ref{def:pasting}, Definition~\ref{def:restartkernel},
   Lemma~\ref{lem:pasting}, Theorem~\ref{thm:localuniqueness}
   (local uniqueness)
-  & (T2b) & (E0) & clock \\
+  & \eqref{T2b} & \eqref{E0} & clock \\
 Corollary~\ref{cor:pastingmarkov} (its Markovian case)
-  & (T2b) + (T4) & (E0) & clock \\
+  & \eqref{T2b} + \eqref{T4} & \eqref{E0} & clock \\
 \bottomrule
 \end{tabular}
 
@@ -1721,49 +1746,49 @@ Corollary~\ref{cor:pastingmarkov} (its Markovian case)
 \textbf{Result} & \textbf{Index} & \textbf{State} & \textbf{Clock} \\
 \midrule
 Lemma~\ref{lem:chain} (chain identity)
-  & (T0) & (E0) & any \\
+  & \eqref{T0} & \eqref{E0} & any \\
 Proposition~\ref{prop:haar}, Corollary~\ref{cor:dualdiscrete}
-  & (T2a) + (T4) & (E0) & Haar, $\iota = \mathrm{p}$ \\
+  & \eqref{T2a} + \eqref{T4} & \eqref{E0} & Haar, $\iota = \mathrm{p}$ \\
 Corollary~\ref{cor:atomless} (atomless clocks)
-  & \textbf{(T3)} & (E0) & \textbf{atomless}, $\iota = \mathrm{p}$ \\
+  & \textbf{\eqref{T3}} & \eqref{E0} & \textbf{atomless}, $\iota = \mathrm{p}$ \\
 Remark~\ref{rem:atomicdual} (atomic duality)
-  & (T0) & (E0) & atomic, any $\iota$ \\
+  & \eqref{T0} & \eqref{E0} & atomic, any $\iota$ \\
 Lemma~\ref{lem:calculus}, Theorem~\ref{thm:duality}
-  & (T3) & (E0) & Lebesgue \\
+  & \eqref{T3} & \eqref{E0} & Lebesgue \\
 Corollary~\ref{cor:uniqviadual} (uniqueness via duality)
-  & (T3) & (E2) & Lebesgue \\
+  & \eqref{T3} & \eqref{E2} & Lebesgue \\
 \midrule
 Lemma~\ref{lem:dualsemigroup}, Proposition~\ref{prop:dualCK}
   (the kernel layer)
-  & (T0) + (T4) & \textbf{(E1)}, fibred & shift invariant \\
+  & \eqref{T0} + \eqref{T4} & \textbf{\eqref{E1}}, fibred & shift invariant \\
 Theorem~\ref{thm:exduality} (existence from a dual)
-  & \textbf{(T2a)} + (T4) & \textbf{(E1)}, fibred & shift invariant \\
+  & \textbf{\eqref{T2a}} + \eqref{T4} & \textbf{\eqref{E1}}, fibred & shift invariant \\
 Proposition~\ref{prop:rieszmarkov} (checking \ref{it:D3})
-  & (T2a) + (T4) & (E3), $E_1$ compact & shift invariant \\
+  & \eqref{T2a} + \eqref{T4} & \eqref{E3}, $E_1$ compact & shift invariant \\
 Setting~\ref{set:jumpdata}, Theorem~\ref{thm:jumpMP} (jump processes)
-  & (T3) & (E0) & Lebesgue \\
+  & \eqref{T3} & \eqref{E0} & Lebesgue \\
 Lemma~\ref{lem:liftmarkov} (path lift; vacuous, see
   Remark~\ref{rem:liftcollapse})
-  & (T0) & (E0), fibred & --- \\
+  & \eqref{T0} & \eqref{E0}, fibred & --- \\
 Setting~\ref{set:pathjump}, Theorem~\ref{thm:pathjumpMP},
   Example~\ref{ex:hawkes} (path-dependent rates, Hawkes)
-  & (T3) & (E0) & Lebesgue \\
+  & \eqref{T3} & \eqref{E0} & Lebesgue \\
 Theorem~\ref{thm:hawkesvolterra} (Hawkes to Volterra)
-  & (T3) & (E3) & Lebesgue \\
+  & \eqref{T3} & \eqref{E3} & Lebesgue \\
 Proposition~\ref{prop:jumpwellposed}, Remark~\ref{rem:jumpexplosion}
-  & (T3) & (E2) & Lebesgue \\
+  & \eqref{T3} & \eqref{E2} & Lebesgue \\
 Corollary~\ref{cor:sdewellposed} (from SDEs)
-  & (T3) & $E = \R^d$ & Lebesgue \\
+  & \eqref{T3} & $E = \R^d$ & Lebesgue \\
 Theorem~\ref{thm:absconv} (abstract convergence)
-  & (T0), or (T2b) for $D \subsetneq \T$ & (E3) & --- \\
+  & \eqref{T0}, or \eqref{T2b} for $D \subsetneq \T$ & \eqref{E3} & --- \\
 Lemma~\ref{lem:contuse}, Theorem~\ref{thm:absconvaug} (augmented form)
-  & as Theorem~\ref{thm:absconv} & (E3) & --- \\
+  & as Theorem~\ref{thm:absconv} & \eqref{E3} & --- \\
 Proposition~\ref{prop:atomaug} (atomic clocks)
-  & (T3) & (E2) & any, atoms allowed \\
+  & \eqref{T3} & \eqref{E2} & any, atoms allowed \\
 Theorem~\ref{thm:clockchange} (clock change)
-  & (T3) & (E3) & $q^n$ and $q$ \\
+  & \eqref{T3} & \eqref{E3} & $q^n$ and $q$ \\
 Lemma~\ref{lem:EKconv}, Theorem~\ref{thm:CPSconv}
-  & (T3) & (E3) & Lebesgue \\
+  & \eqref{T3} & \eqref{E3} & Lebesgue \\
 \bottomrule
 \end{tabular}
 
@@ -1779,9 +1804,9 @@ Skorokhod space, and Remarks~\ref{rem:chainonly}, \ref{rem:dualscope} and
 \ref{rem:exdualityscope}(ii) say which --- the middle one only for want of a
 proof, not because of a counterexample.  No \emph{existence} result survives a
 partial order in full: the duality route comes closest, its obstruction sitting
-in the very last step, the Kolmogorov extension over antichains.  Second, (T1$'$) --- the metric lattice of \EK, Section~2.8, which the
+in the very last step, the Kolmogorov extension over antichains.  Second, \eqref{T1p} --- the metric lattice of \EK, Section~2.8, which the
 first draft of this manuscript treated as the base assumption --- does not occur
-at all: every statement involving a stopping time already assumes (T2b), under
+at all: every statement involving a stopping time already assumes \eqref{T2b}, under
 which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 
 % =====================================================================
@@ -1792,11 +1817,11 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 \subsection{The abstract (local) martingale problem}
 \label{ssec:absMP}
 
-\begin{setting}[after \CPS, Section 3.1; (T0) + (E0)]
+\begin{setting}[after \CPS, Section 3.1; \eqref{T0} + \eqref{E0}]
   \label{set:abstract}
   Let $(\Omega, \Filt, \mathbb{F} = (\Filt_t)_{t \in \T})$ be a filtered space
   carrying a family $\XX$ of real-valued adapted processes (the \emph{test
-  processes}), right continuous if $\T$ satisfies (T2b).  Let $(E,\mathcal{E})$
+  processes}), right continuous if $\T$ satisfies \eqref{T2b}.  Let $(E,\mathcal{E})$
   be a measurable space and let $F \subset E^{\T}$ be a \emph{path space}: a set
   of maps $\T \to E$ equipped with a $\sigma$-field $\mathcal{S}$ for which the
   coordinates $\pi_t : F \to E$ are measurable and which they generate,
@@ -1808,13 +1833,13 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
   every $\omega$ and $\omega \mapsto X(\omega)$ measurable
   $\Filt / \mathcal{S}$.
 
-  Under (E3) we take $F$ to carry a Polish topology and
+  Under \eqref{E3} we take $F$ to carry a Polish topology and
   $\mathcal{S} = \Bor(F)$; \eqref{eq:pathsigma} is then a theorem rather than an
   assumption for $F = \DE$ (Fact~\ref{fact:fdd}), and it is what makes the
   finite-dimensional distributions determine the law.
 \end{setting}
 
-\begin{definition}[\CPS, Definition 3.2; (T0) + (E0)]
+\begin{definition}[\CPS, Definition 3.2; \eqref{T0} + \eqref{E0}]
   \label{def:absMP}
   A probability measure $P$ on $(\Omega, \Filt)$ is a \emph{solution of the
   martingale problem $\MP(\XX)$} if every $Y \in \XX$ is an
@@ -1824,7 +1849,7 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
   $\Msol_{\mathrm{loc}}(\XX)$.
 \end{definition}
 
-\begin{definition}[\CPS, Definitions 3.3 and 3.5; (T0) + (E0)]
+\begin{definition}[\CPS, Definitions 3.3 and 3.5; \eqref{T0} + \eqref{E0}]
   \label{def:canonical}
   $\XX$ is \emph{canonical} for $X$ if for every $t \in \T$ there is a set
   $\XX^\circ_t$ of $\Bor(F)/\Bor(\K)$-measurable maps $Y^\circ_t : F \to \K$
@@ -1842,7 +1867,7 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
   \]
 \end{definition}
 
-\begin{example}[\CPS, Example 3.6(i); (T2b) + (E2)]
+\begin{example}[\CPS, Example 3.6(i); \eqref{T2b} + \eqref{E2}]
   \label{ex:determining}
   If $\Filt_t = \sigma(X_s : s \leq t)$, $F = \DE$ or $F = \CE$, and
   $D \subset \T$ is dense, then
@@ -1907,7 +1932,7 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 \subsection{The Markovian martingale problem}
 \label{ssec:markovMP}
 
-\begin{definition}[(T0) + (E0) + clock]
+\begin{definition}[\eqref{T0} + \eqref{E0} + clock]
   \label{def:markovMP}
   Fix a clock $q$ on $\T$ and a convention $\iota \in \{\mathrm{o},\mathrm{p}\}$
   (Definition~\ref{def:clock}).  Let $A \subset \Meas(E) \times \Meas(E)$ and let
@@ -1958,7 +1983,7 @@ Definition~\ref{def:absMP}.
 Before the characterization we record two measure-theoretic points that the
 proof uses and that are easy to pass over.  Both concern the compensator alone.
 
-\begin{lemma}[The compensator is adapted, and Fubini is available; (T0) + (E0) + clock]
+\begin{lemma}[The compensator is adapted, and Fubini is available; \eqref{T0} + \eqref{E0} + clock]
   \label{lem:compadapted}
   Let $X$ be jointly measurable, $g \in \Meas(E)$, $\iota \in \{\mathrm{o},\mathrm{p}\}$
   and $u \in \T$, and write
@@ -1993,7 +2018,7 @@ proof uses and that are easy to pass over.  Both concern the compensator alone.
   legitimate.
 \end{proof}
 
-\begin{proposition}[\EK, (3.4); (T0) + (E0) + clock, and (E2) for the variant with $\Cb(E)$]
+\begin{proposition}[\EK, (3.4); \eqref{T0} + \eqref{E0} + clock, and \eqref{E2} for the variant with $\Cb(E)$]
   \label{prop:fddchar}
   Let $X$ be jointly measurable, fix $\iota \in \{\mathrm{o},\mathrm{p}\}$, and let
   $(f,g) \in A$ be such that
@@ -2123,7 +2148,7 @@ proof uses and that are easy to pass over.  Both concern the compensator alone.
   ${}^{*}\Filt^X_s$-measurable function.  Since $s \leq t$ were arbitrary,
   $Y$ is a $({}^{*}\Filt^X_t)$-martingale.
 
-  \emph{The variant with $h_k \in \Cb(E)$, and it alone needs (E2).}  On a
+  \emph{The variant with $h_k \in \Cb(E)$, and it alone needs \eqref{E2}.}  On a
   separable metrizable $E$ the class $\Cb(E)$ generates $\Bor(E)$ --- for a closed
   $C$ the functions $x \mapsto (1 - m\,d(x,C))^+$ increase boundedly to $\one_C$ ---
   so the class \eqref{eq:multclass} built from $\Cb(E)$ has the same generated
@@ -2159,7 +2184,7 @@ proof uses and that are easy to pass over.  Both concern the compensator alone.
 The closure in (b) deserves to be stated carefully, because \EK{} take it in the
 bounded pointwise sense and that is more than the argument uses.
 
-\begin{lemma}[Closure along a solution; (T0) + (E0) + clock]
+\begin{lemma}[Closure along a solution; \eqref{T0} + \eqref{E0} + clock]
   \label{lem:closure}
   Let $X$ solve the martingale problem for $A$ with respect to $(\Gilt_t)$, and
   let $(f,g) \in \Meas(E) \times \Meas(E)$ be such that $Y^{f,g}$ is integrable.
@@ -2213,7 +2238,7 @@ bounded pointwise sense and that is more than the argument uses.
   martingale property for whichever filtration the hypothesis was stated with.
 \end{remark}
 
-\begin{corollary}[Bounded pointwise convergence suffices; (T0) + (E0) + clock]
+\begin{corollary}[Bounded pointwise convergence suffices; \eqref{T0} + \eqref{E0} + clock]
   \label{cor:bpclosure}
   Let $A \subset \Bdd(E) \times \Bdd(E)$ and let $(f_n,g_n) \in A_S$ with
   $\bplim_n (f_n,g_n) = (f,g)$.  Then \eqref{eq:closureconv} holds --- for
@@ -2266,7 +2291,7 @@ bounded pointwise sense and that is more than the argument uses.
   Corollary~\ref{cor:bpclosure}, and there only its first assertion.
 \end{remark}
 
-\begin{definition}[\EK, Section 4.4; (T0) + (E0) + clock]
+\begin{definition}[\EK, Section 4.4; \eqref{T0} + \eqref{E0} + clock]
   \label{def:wellposed}
   \emph{Uniqueness} holds for the martingale problem for $(A,\mu)$ if any two
   solutions have the same finite-dimensional distributions.  The martingale
@@ -2281,7 +2306,7 @@ bounded pointwise sense and that is more than the argument uses.
 The following two results connect Definition~\ref{def:markovMP} with the
 operator-theoretic notions of Section~\ref{ssec:ch1}.
 
-\begin{lemma}[\EK, Lemma 4.3.2; (T3)]
+\begin{lemma}[\EK, Lemma 4.3.2; \eqref{T3}]
   \label{lem:resolvent}
   Let $X$ be a measurable process, $\Gilt_t \supset {}^{*}\Filt^X_t$, and
   $f,g \in \Bdd(E)$.  Then for fixed $\lambda \in \R$ the process
@@ -2374,11 +2399,11 @@ operator-theoretic notions of Section~\ref{ssec:ch1}.
   solution of $\phi' = -\lambda\phi$, and for the Fubini rearrangement.  On
   $\T = \N_0$ with $q$ counting measure the analogue holds with $e^{-\lambda}$
   replaced by $(1+\lambda)^{-1}$ and the integrals by sums; we do not need it,
-  and record only that Lemma~\ref{lem:resolvent} is (T3) for a reason of calculus,
+  and record only that Lemma~\ref{lem:resolvent} is \eqref{T3} for a reason of calculus,
   not of probability.
 \end{remark}
 
-\begin{proposition}[\EK, Proposition 4.3.5; (T3)]
+\begin{proposition}[\EK, Proposition 4.3.5; \eqref{T3}]
   \label{prop:dissipative}
   Let $A$ be a linear subset of $\Bdd(E) \times \Bdd(E)$.  If for each
   $x \in E$ there exists a solution $X_x$ of the martingale problem for
@@ -2406,9 +2431,9 @@ operator-theoretic notions of Section~\ref{ssec:ch1}.
   converse direction.
 \end{remark}
 
-\begin{definition}[(T2b) + (E2)]
+\begin{definition}[\eqref{T2b} + \eqref{E2}]
   \label{def:cc}
-  Let $D \subset \T$ be the countable dense set of (T2b).  A process $X$
+  Let $D \subset \T$ be the countable dense set of \eqref{T2b}.  A process $X$
   satisfies the \emph{compact containment condition} if for all
   $\varepsilon > 0$ and $T \in \T$ there is a compact
   $K_{\varepsilon,T} \subset E$ with
@@ -2445,18 +2470,18 @@ produce.  Theorem~\ref{thm:absreg} is therefore the statement that carries a
 solution \emph{into} the \CPS{} setting, with $F = \DE$; it is the missing first
 step of their programme rather than a consequence of it.
 
-\begin{setting}[(T2b) + (E2) + clock, $\iota = \mathrm{o}$]
+\begin{setting}[\eqref{T2b} + \eqref{E2} + clock, $\iota = \mathrm{o}$]
   \label{set:absreg}
   As in Setting~\ref{set:abstract}, but with no path space and no path
-  regularity assumed.  Let $\T$ satisfy (T2b) with countable dense $D \subset \T$,
+  regularity assumed.  Let $\T$ satisfy \eqref{T2b} with countable dense $D \subset \T$,
   let $(\Omega,\Filt,\mathbb{F},P)$ be a filtered probability space, let $E$
-  satisfy (E2), let $\XX$ be a family of real-valued $\mathbb{F}$-adapted processes
+  satisfy \eqref{E2}, let $\XX$ be a family of real-valued $\mathbb{F}$-adapted processes
   with $P \in \Msol(\XX)$, and let $X$ be an $E$-valued, $\mathbb{F}$-adapted,
   jointly measurable process.  Neither the elements of $\XX$ nor $X$ are assumed
   to be right continuous.
 \end{setting}
 
-\begin{definition}[(T2b) + (E2)]
+\begin{definition}[\eqref{T2b} + \eqref{E2}]
   \label{def:regclass}
   A set $\Phi \subset \Cb(E)$ is a \emph{regularizing class} for $(X,\XX)$ if for
   every $f \in \Phi$ there exist $Y^f \in \XX$ and an adapted real-valued process
@@ -2474,7 +2499,7 @@ step of their programme rather than a consequence of it.
   \end{enumerate}
 \end{definition}
 
-\begin{theorem}[Abstract c\`adl\`ag modification; (T2b) + (E2)]
+\begin{theorem}[Abstract c\`adl\`ag modification; \eqref{T2b} + \eqref{E2}]
   \label{thm:absreg}
   In Setting~\ref{set:absreg}, let $\Phi$ be a regularizing class for
   $(X,\XX)$ such that
@@ -2515,7 +2540,7 @@ step of their programme rather than a consequence of it.
 
   \emph{Step 2: compactness.}
   First, $D$ is cofinal in $\T$: if $t$ is not maximal there is $u > t$, and
-  (T2b) gives a point of $D$ in $(t,u)$; if $t$ is maximal it is itself cofinal.
+  \eqref{T2b} gives a point of $D$ in $(t,u)$; if $t$ is maximal it is itself cofinal.
   So a countable cofinal set exists.
 
   Fix such a $T$ and let $A_{m,T}$ be the event in \eqref{eq:cc} for
@@ -2535,7 +2560,7 @@ step of their programme rather than a consequence of it.
 
   \emph{Step 3: existence of one-sided limits.}
   Fix $\omega \in \Omega''$ and a non-maximal $t \in \T$, and let $s_n \in D$ with
-  $s_n \downarrow t$, which exist by (T2b).  (If $t$ is maximal there is nothing
+  $s_n \downarrow t$, which exist by \eqref{T2b}.  (If $t$ is maximal there is nothing
   to prove and we set $Y(t,\omega) = X(t,\omega)$.)  By Step~2 the sequence
   $(X(s_n,\omega))_n$ lies in a relatively compact set, so it has convergent
   subsequences.  If $x$ and $x'$ are limits
@@ -2552,7 +2577,7 @@ step of their programme rather than a consequence of it.
   exists for all $t \in \T$, and similarly
   $Y^-(t,\omega) = \lim_{s \to t-,\, s \in D} X(s,\omega)$ exists for $t > 0$.
   By Fact~\ref{fact:cadlagext}, $Y(\cdot,\omega)$ is c\`adl\`ag, and lies in
-  $\DE$ when $\T$ satisfies (T3).  Set $Y(\cdot,\omega) \equiv x_0$ for
+  $\DE$ when $\T$ satisfies \eqref{T3}.  Set $Y(\cdot,\omega) \equiv x_0$ for
   $\omega \notin \Omega''$ and some fixed $x_0 \in E$.  Each $Y(t,\cdot)$ is a
   random variable: on $\Omega''$ it is the pointwise limit of the measurable maps
   $X(s_n,\cdot)$ along a fixed sequence $s_n \downarrow t$ in $D$, and a pointwise
@@ -2616,9 +2641,9 @@ step of their programme rather than a consequence of it.
 \subsection{The Markovian case}
 \label{ssec:cadlagmarkov}
 
-\begin{theorem}[\EK, Theorem 4.3.6; (T2b) + (E2) + clock, $\iota = \mathrm{o}$]
+\begin{theorem}[\EK, Theorem 4.3.6; \eqref{T2b} + \eqref{E2} + clock, $\iota = \mathrm{o}$]
   \label{thm:cadlag}
-  Assume (E2).  Let $A \subset \Cb(E) \times \Bdd(E)$ and suppose that
+  Assume \eqref{E2}.  Let $A \subset \Cb(E) \times \Bdd(E)$ and suppose that
   $\dom(A)$ is separating and contains a countable subset that separates points.
   Let $X$ be a solution of the martingale problem for $A$ satisfying the compact
   containment condition \eqref{eq:cc}.  Then $X$ has a modification with sample
@@ -2703,7 +2728,7 @@ problem.
 \label{ssec:absuniq}
 
 Throughout this subsection we work on the path space, as in
-Setting~\ref{set:abstract}; $\T$ satisfies (T0) and $E$ satisfies (E0) unless
+Setting~\ref{set:abstract}; $\T$ satisfies \eqref{T0} and $E$ satisfies \eqref{E0} unless
 stated otherwise.  Let $F \subset E^{\T}$ be a path space with $\sigma$-field
 $\mathcal{S} = \sigma(\pi_t : t \in \T)$,
 coordinate process $\pi = (\pi_t)_{t \in \T}$ and canonical filtration
@@ -2733,7 +2758,7 @@ The martingale property is an identity that is \emph{linear} in the measure.
 This trivial observation is what carries the mixing steps of the classical proof,
 and it deserves to be recorded once.
 
-\begin{lemma}[Mixture stability; (T0) + (E0)]
+\begin{lemma}[Mixture stability; \eqref{T0} + \eqref{E0}]
   \label{lem:mixture}
   Let $(\Theta,\mathcal{A},\nu)$ be a probability space and
   $\vartheta \mapsto P_\vartheta \in \Msol(\XX^\circ)$ a measurable family, and
@@ -2755,7 +2780,7 @@ degenerate to general initial distributions.  It is worth separating from
 Theorem~\ref{thm:absuniq}, because --- unlike the argument used in
 Corollary~\ref{cor:uniqviadual} --- it does not go through the Markov property.
 
-\begin{lemma}[Disintegration; (T0) + (E1)]
+\begin{lemma}[Disintegration; \eqref{T0} + \eqref{E1}]
   \label{lem:disint}
   Suppose $\XX^\circ$ admits a determining set $\ZZ^\circ$ and that membership in
   $\Msol(\XX^\circ)$ can be tested along countably many data, i.e.\ there are a
@@ -2802,7 +2827,7 @@ Restarting a solution is available at once, and --- this is worth stating
 separately, because it is easy to attribute to the Markov property what belongs
 to the tower property --- it needs no shift and no Markov structure whatever.
 
-\begin{lemma}[Restart with memory; (T0) + (E0)]
+\begin{lemma}[Restart with memory; \eqref{T0} + \eqref{E0}]
   \label{lem:restartmemory}
   Let $P \in \Msol(\XX^\circ)$, let $r \in \T$ and let $Z \geq 0$ be bounded and
   $\Filt^\circ_r$-measurable with $E^P[Z] = 1$.  Then $Z \cdot P$ is again a
@@ -2867,7 +2892,7 @@ justification for Section~\ref{ssec:absuniq}.
   $\hat{E}_t = D_E[0,t]$ instead.
 \end{definition}
 
-\begin{lemma}[Every process lifts to a Markov process; (T0) + (E0)]
+\begin{lemma}[Every process lifts to a Markov process; \eqref{T0} + \eqref{E0}]
   \label{lem:liftmarkov}
   Let $X$ be any process, with no hypothesis whatsoever.
   \begin{enumerate}[label=(\alph*)]
@@ -3026,7 +3051,7 @@ Markovian is only the reduction of its hypothesis to the \emph{one-dimensional}
 distributions, and that reduction is the subject of the next subsection.  The
 condition the uniqueness argument actually consumes is the following.
 
-\begin{definition}[Propagation of agreement; (T0) + (E0)]
+\begin{definition}[Propagation of agreement; \eqref{T0} + \eqref{E0}]
   \label{def:propagation}
   A set $\mathcal{N} \subset \Prob(F)$ \emph{propagates agreement} if for all
   $P, Q \in \mathcal{N}$, all $s \leq t$ in $\T$ and every bounded
@@ -3072,7 +3097,7 @@ condition the uniqueness argument actually consumes is the following.
   accident: the two are the same statement read from opposite ends.
 \end{remark}
 
-\begin{proposition}[Uniqueness; (T2a) + (E0)]
+\begin{proposition}[Uniqueness; \eqref{T2a} + \eqref{E0}]
   \label{prop:uniqfromprop}
   Let $\mathcal{N} \subset \Prob(F)$ propagate agreement.  Then $\mathcal{N}$
   contains at most one element with a given law of $\pi_0$.  In particular, if
@@ -3116,7 +3141,7 @@ condition the uniqueness argument actually consumes is the following.
 
   \emph{Step 2: from the finite-dimensional distributions to the law.}  By
   linearity, \eqref{eq:uniqinduction} holds for all $f_k \in \Bdd(E)$.  Under
-  (T2a) every finite subset of $\T$ is a chain, so the collection
+  \eqref{T2a} every finite subset of $\T$ is a chain, so the collection
   \[
     \mathcal{K} \;=\; \Bigl\{ \textstyle\prod_{k=1}^m f_k(\pi_{t_k}) \;:\;
       m \geq 0,\ t_k \in \T,\ f_k \in \Bdd(E) \Bigr\}
@@ -3139,7 +3164,7 @@ one form the arguments need, and it does two things: it makes
 does not need and a
 uniqueness theory cannot do without.
 
-\begin{definition}[Shift system; (T4) + (E0)]
+\begin{definition}[Shift system; \eqref{T4} + \eqref{E0}]
   \label{def:shiftstable}
   A family of measurable maps $\theta_r : F \to F$, $r \in \T$, is a
   \emph{shift} on $F$ if $\pi_t \circ \theta_r = \pi_{r+t}$ for all $r,t \in \T$.
@@ -3183,7 +3208,7 @@ uniqueness theory cannot do without.
   Remark~\ref{rem:absuniqgain}(ii) and Example~\ref{ex:shiftXA}.
 \end{remark}
 
-\begin{example}[The shifted problem for $\XX_A$; (T0) + (T4)]
+\begin{example}[The shifted problem for $\XX_A$; \eqref{T0} + \eqref{T4}]
   \label{ex:shiftXA}
   Let $q$ be a clock on $\T$, let $A \subset \Meas(\T \times E) \times \Meas(E)$
   allow a time-dependent coefficient, and put
@@ -3217,7 +3242,7 @@ uniqueness theory cannot do without.
   measurable $g$ is automatic.
 \end{example}
 
-\begin{lemma}[Restart; (T0) + (T4) + (E0)]
+\begin{lemma}[Restart; \eqref{T0} + \eqref{T4} + \eqref{E0}]
   \label{lem:restart}
   Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$ and let $\ZZ^\circ$ be a
   determining set for every $\XX^\circ_r$ (Definition~\ref{def:canonical}).  Let
@@ -3329,7 +3354,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   Lemma~\ref{lem:semiring} below.
 \end{remark}
 
-\begin{lemma}[One-sided determination; (E2)]
+\begin{lemma}[One-sided determination; \eqref{E2}]
   \label{lem:semiring}
   Let $\mathcal{C}$ be a semiring of subsets of $\Omega$ with
   $\Omega \in \mathcal{C}$, generating the
@@ -3341,7 +3366,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   $2^\Omega$, and $\mu = \delta_1 - 5\,\delta_2$ is nonnegative on it without
   being nonnegative.
 
-  Consequently, if $E$ satisfies (E2), then the products
+  Consequently, if $E$ satisfies \eqref{E2}, then the products
   $\prod_{k \leq n} h_k(\pi_{t_k})$ with $h_k \in \Cb(E)$, $h_k \geq 0$, are
   one-sided determining in the sense of
   Remark~\ref{rem:inequalitystable}(iii), so that
@@ -3364,7 +3389,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   \emph{The application.}  Put $\mu(G) = E^P[(Y_t - Y_s)\one_G]$ for
   $G \in \Filt_s$, a finite signed measure.  Given closed $A_1,\dots,A_n \subset E$
   choose $h^m_k(x) = (1 - m\,d(x,A_k))^+ \in \Cb(E)$, which is legitimate under
-  (E2) and decreases to $\one_{A_k}$; then $\prod_k h^m_k$ decreases to
+  \eqref{E2} and decreases to $\one_{A_k}$; then $\prod_k h^m_k$ decreases to
   $\one_{A_1 \times \dots \times A_n}$ and dominated convergence gives
   $\mu \geq 0$ on closed measurable rectangles.  By regularity of the finite
   measure $|\mu| \circ (\pi_{t_1},\dots,\pi_{t_n})^{-1}$ on a metric space this
@@ -3388,7 +3413,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   \eqref{eq:countabletest}, so that one null set serves all data at once.  In the
   one-sided form the test variables must range over a family rich enough for
   Lemma~\ref{lem:semiring}, and a countable such family exists only if $E$ is
-  second countable --- which (E2) gives, so the lemma does transfer, but the
+  second countable --- which \eqref{E2} gives, so the lemma does transfer, but the
   hypothesis is no longer the innocuous one it was.
 
   \emph{Uniqueness.}  Definition~\ref{def:propagation} compares two measures by
@@ -3399,7 +3424,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   This manuscript does not attempt it; Task~22 of the plan records it.
 \end{remark}
 
-\begin{lemma}[Agreement propagates under a shift system; (T0) + (T4) + (E0)]
+\begin{lemma}[Agreement propagates under a shift system; \eqref{T0} + \eqref{T4} + \eqref{E0}]
   \label{lem:propagation}
   Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$ with $\ZZ^\circ$
   determining for each $\XX^\circ_r$, and suppose that for every $r \in \T$
@@ -3433,12 +3458,12 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   for every $h \in \Bdd(E)$ by \eqref{eq:propagationhyp}, so $R_P$ and $R_Q$ have
   the same initial law.  Hence \eqref{eq:absonedim} gives
   $E^{R_P}[f(\pi_u)] = E^{R_Q}[f(\pi_u)]$ for every $u \in \T$ and
-  $f \in \Bdd(E)$.  Taking $u = t - s$, which exists by (T4), and using
+  $f \in \Bdd(E)$.  Taking $u = t - s$, which exists by \eqref{T4}, and using
   $\pi_u \circ \theta_s = \pi_{s+u} = \pi_t$, this reads
   $E^P[Z f(\pi_t)] = E^Q[Z f(\pi_t)]$.  That is \eqref{eq:propagation}.
 \end{proof}
 
-\begin{theorem}[Abstract uniqueness and Markov property; (T0) + (T4), and (T2a) for \ref{it:absuniq_b}]
+\begin{theorem}[Abstract uniqueness and Markov property; \eqref{T0} + \eqref{T4}, and \eqref{T2a} for \ref{it:absuniq_b}]
   \label{thm:absuniq}
   Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$, let $\ZZ^\circ$ be
   determining for every $\XX^\circ_r$, and suppose \eqref{eq:absonedim} holds for
@@ -3454,7 +3479,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
         \;=\; E\bigl[ f(X(r+t)) \bigm| X(r) \bigr] ;
     \]
   \item \label{it:absuniq_b}
-    if $\T$ satisfies (T2a), then $\Msol(\XX^\circ,\mu)$ contains at most one
+    if $\T$ satisfies \eqref{T2a}, then $\Msol(\XX^\circ,\mu)$ contains at most one
     element, for every $\mu \in \Prob(E)$.
   \end{enumerate}
 \end{theorem}
@@ -3515,7 +3540,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   \end{center}
 
   Two consequences.  First, Proposition~\ref{prop:uniqfromprop} uses no shift,
-  no $\theta_r$, no re-indexing and \emph{no} bundle (T4): only (T2a), for the
+  no $\theta_r$, no re-indexing and \emph{no} bundle \eqref{T4}: only \eqref{T2a}, for the
   chains of Remark~\ref{rem:chainonly}.  \EK, Theorem~4.4.2 looks Markovian
   because its hypothesis is stated \emph{unconditionally}, on the one-dimensional
   distributions; and an unconditional hypothesis can be applied at a later time
@@ -3549,7 +3574,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
 
 \begin{remark}[Why \ref{it:absuniq_b} needs a linear order]
   \label{rem:chainonly}
-  Part \ref{it:absuniq_a} uses nothing about $\T$ beyond (T0) and (T4): the
+  Part \ref{it:absuniq_a} uses nothing about $\T$ beyond \eqref{T0} and \eqref{T4}: the
   proof needs $\theta_r$, the inclusion $\Filt^\circ_r \subset \Filt^\circ_{r+s}$
   and the martingale property at $r+s \leq r+t$, all of which hold in a
   preordered monoid.  There is no topology and no linear order in it.
@@ -3562,7 +3587,7 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
   equality of the finite-dimensional distributions along chains only, and these
   do not determine the law: on $\T = \Rp^2$ the times $(1,0)$ and $(0,1)$ are
   incomparable, and no chain sees their joint distribution.  Replacing $t_n$ by
-  $t_1 \vee \dots \vee t_n$, which (T1) would allow, does not repair this, since
+  $t_1 \vee \dots \vee t_n$, which \eqref{T1} would allow, does not repair this, since
   the next time $t_{n+1}$ need not dominate that join.
 
   So the slogan ``uniqueness of the one-dimensional distributions implies
@@ -3587,9 +3612,9 @@ Lemma~\ref{lem:optsamplafter} shows is that this integrability is not merely
 necessary for the bookkeeping but \emph{sufficient} for the conclusion --- no
 uniform integrability of the martingale itself is required.
 
-\begin{lemma}[Optional sampling after a finite stopping time; (T2b) + (T4)]
+\begin{lemma}[Optional sampling after a finite stopping time; \eqref{T2b} + \eqref{T4}]
   \label{lem:optsamplafter}
-  Let $\T$ satisfy (T2b) and (T4), let $Y$ be a right continuous
+  Let $\T$ satisfy \eqref{T2b} and \eqref{T4}, let $Y$ be a right continuous
   $(\Gilt_t)$-martingale, let $\tau$ be an a.s.\ finite $(\Gilt_t)$-stopping
   time, and let $s \leq t$ in $\T$ be such that
   \begin{equation}
@@ -3601,13 +3626,13 @@ uniform integrability of the martingale itself is required.
 \end{lemma}
 
 \begin{proof}
-  By (T2b) there is a countable cofinal increasing sequence $(T_m)$ in $\T$
+  By \eqref{T2b} there is a countable cofinal increasing sequence $(T_m)$ in $\T$
   (Step~2 of the proof of Theorem~\ref{thm:absreg}), so
   $\one_{\{\tau \leq T_m\}} \uparrow 1$ a.s.  Fix $m$ and put
   $\sigma_1 = (\tau \wedge T_m) + s \leq \sigma_2 = (\tau \wedge T_m) + t$.  Both
   are $(\Gilt_u)$-stopping times: $\tau \wedge T_m$ is one by
   Fact~\ref{fact:stoppingtimes}, and adding a constant $s$ preserves the property
-  because by (T4) the map $u \mapsto u-s$ is defined and order preserving on
+  because by \eqref{T4} the map $u \mapsto u-s$ is defined and order preserving on
   $\{u \geq s\}$, so $\{\sigma_1 \leq u\} = \{\tau \wedge T_m \leq u-s\} \in
   \Gilt_{u-s} \subset \Gilt_u$ for $u \geq s$, while for $u < s$ the event is
   empty since $\sigma_1 \geq s$.  Both are bounded by $T_m + t$.  Optional sampling at \emph{bounded} stopping times --- the case
@@ -3640,7 +3665,7 @@ uniform integrability of the martingale itself is required.
   \eqref{eq:optafterint} --- gives the assertion.
 \end{proof}
 
-\begin{theorem}[Abstract strong Markov property; (T2b) + (T4)]
+\begin{theorem}[Abstract strong Markov property; \eqref{T2b} + \eqref{T4}]
   \label{thm:absstrongmarkov}
   In the situation of Theorem~\ref{thm:absuniq}, assume in addition that
   $F \subset \DE$, that $(\theta_r)$ extends to a measurable map
@@ -3674,7 +3699,7 @@ uniform integrability of the martingale itself is required.
   Lemma~\ref{lem:restart} rests on the single identity
   $E^P[(\tilde{Y}^\circ_{r+t} - \tilde{Y}^\circ_{r+s})W] = 0$ for bounded
   $\Gilt_{r+s}$-measurable $W$.  We need it with $r$ replaced by $\tau$.  Now
-  $\tau + s$ and $\tau + t$ are $(\Gilt_u)$-stopping times: by (T4) the map
+  $\tau + s$ and $\tau + t$ are $(\Gilt_u)$-stopping times: by \eqref{T4} the map
   $u \mapsto u - s$ is defined on $\{u \geq s\}$ and order preserving, so
   $\{\tau + s \leq u\} = \{\tau \leq u - s\} \in \Gilt_{u-s} \subset \Gilt_u$ for
   $u \geq s$, and the event is empty otherwise, since by linearity of the order
@@ -3797,7 +3822,7 @@ this form by \KA, Theorems~32.10 and 32.11: insist that the localization be
 performed by stopping times that are \emph{functionals of the path}, hence the
 same for every $P$, and that the family of such times be stable under the shift.
 
-\begin{definition}[Localizing system; (T2b) + (T4)]
+\begin{definition}[Localizing system; \eqref{T2b} + \eqref{T4}]
   \label{def:localizing}
   A \emph{localizing system} for $\XX^\circ$ is a family $\Sigma$ of
   \emph{strict} $(\Filt^\circ_t)$-stopping times on $F$ --- functionals of the
@@ -3866,9 +3891,9 @@ Section~\ref{ssec:absuniq} all go through, and their proofs are the earlier ones
 with $Y^\circ$ replaced by $Y^{\circ,\tau_n}$.  We give them in full, since the
 point of the exercise is that nothing is being waved through.
 
-\begin{lemma}[Local mixtures and disintegration; (T0) + (E1)]
+\begin{lemma}[Local mixtures and disintegration; \eqref{T0} + \eqref{E1}]
   \label{lem:localmix}
-  Parts \ref{it:lm_conv} and \ref{it:lm_a} need only (E0); (E1) is used in
+  Parts \ref{it:lm_conv} and \ref{it:lm_a} need only \eqref{E0}; \eqref{E1} is used in
   \ref{it:lm_b}.
   \begin{enumerate}[label=(\alph*)]
   \item \label{it:lm_conv}
@@ -3903,7 +3928,7 @@ point of the exercise is that nothing is being waved through.
   $\XX^\circ_\bullet = \{Y^{\circ,\tau_n} : Y^\circ \in \XX^\circ, n \in \N\}$, a
   family of $(\Filt^\circ_t)$-adapted processes --- stopping a process at a
   stopping time preserves adaptedness once the process is progressively
-  measurable, which under (T2b) a c\`adl\`ag adapted process is.  Now apply
+  measurable, which under \eqref{T2b} a c\`adl\`ag adapted process is.  Now apply
   Lemma~\ref{lem:mixture} respectively Lemma~\ref{lem:disint} to
   $\XX^\circ_\bullet$; neither proof uses anything about the family beyond
   adaptedness, and the countability hypothesis for \ref{it:lm_b} is inherited
@@ -3927,7 +3952,7 @@ literature where it is used it is not assumed but \emph{constructed}, and always
 by the same device --- localizing along the test process itself rather than along
 the state space.
 
-\begin{lemma}[Uniform localization for bounded jumps; (T2b)]
+\begin{lemma}[Uniform localization for bounded jumps; \eqref{T2b}]
   \label{lem:L1auto}
   Suppose every $Y^\circ \in \XX^\circ$ is c\`adl\`ag with $Y^\circ_0 = 0$ and has
   jumps bounded by a constant $c_{Y^\circ}$.  Write
@@ -3949,7 +3974,7 @@ the state space.
   gives $u > t$ with $|Y_s| \leq |Y_t| + \varepsilon \leq S_t + \varepsilon$ for
   $s \in [t,u)$, whence $S_s \leq S_t + \varepsilon$ there.  Left limits exist because
   $S$ is monotone.  For adaptedness note that, again by right continuity of $Y$
-  and the density hypothesis in (T2b),
+  and the density hypothesis in \eqref{T2b},
   \begin{equation}
     \label{eq:supcountable}
     S_t \;=\; \sup\bigl\{ |Y_s| : s \in (D \cap \T_{\leq t}) \cup \{t\} \bigr\} ,
@@ -3957,7 +3982,7 @@ the state space.
   a countable supremum of $\Filt^\circ_t$-measurable functions.  Indeed
   ``$\geq$'' is trivial, and for ``$\leq$'' let $s \leq t$; if $s = t$ there is
   nothing to prove, and if $s < t$ then $s$ is non-maximal in $\T_{\leq t}$, so
-  by (T2b) there are $s_k \in D$ with $s < s_k$, $s_k \to s$ from the right and
+  by \eqref{T2b} there are $s_k \in D$ with $s < s_k$, $s_k \to s$ from the right and
   $s_k \leq t$ (replace $s_k$ by $s_k \wedge t$, which lies in $D$ or equals
   $t$), and $|Y_{s_k}| \to |Y_s|$.
 
@@ -3971,7 +3996,7 @@ the state space.
   Conversely let $\tau_n \leq t$.  If $t$ is maximal, then $S_u \geq n$ for some
   $u \leq t$ and monotonicity gives $S_t \geq n$.  Otherwise, for every $u > t$
   there is $v < u$ with $S_v \geq n$, hence $S_u \geq n$; letting $u \downarrow t$
-  along $D$ --- possible by (T2b) --- right continuity of $S$ gives $S_t \geq n$.
+  along $D$ --- possible by \eqref{T2b} --- right continuity of $S$ gives $S_t \geq n$.
   This is where the \emph{closed} threshold $S_t \geq n$ matters:
   $\inf\{t : |Y_t| > n\}$, the choice of \JS, satisfies \eqref{eq:debutclosed}
   only with $\{ S_t > n \}$ replaced by an event that is not
@@ -4024,7 +4049,7 @@ the state space.
   refer to $E$ and presuppose that $f$ and $g$ are bounded on compacts.
 \end{remark}
 
-\begin{lemma}[Local restart; (T2b) + (T4)]
+\begin{lemma}[Local restart; \eqref{T2b} + \eqref{T4}]
   \label{lem:localrestart}
   Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$ with $\ZZ^\circ$
   determining for each $\XX^\circ_r$, and let $\Sigma$ be a localizing system.
@@ -4068,7 +4093,7 @@ the state space.
       = \tilde{Y}_{r+u}(\omega) - \tilde{Y}_r(\omega) + \tilde\kappa(\omega) ,
   \]
   and, $r + \cdot$ being an order embedding that commutes with $\wedge$
-  (Lemma~\ref{lem:shiftembed}, using (T2a), which (T2b) supplies),
+  (Lemma~\ref{lem:shiftembed}, using \eqref{T2a}, which \eqref{T2b} supplies),
   \[
     r + u = r + \bigl( t \wedge \tilde\tau_n(\omega) \bigr)
           = (r+t) \wedge \bigl( r + \tilde\tau_n(\omega) \bigr)
@@ -4231,7 +4256,7 @@ have the same one-dimensional --- hence all --- distributions.  \JS,
 Definition~III.2.37 isolate a strictly stronger property, and it is the one that
 absolute-continuity and limit arguments actually use.
 
-\begin{definition}[Local uniqueness; (T2b) + (T4)]
+\begin{definition}[Local uniqueness; \eqref{T2b} + \eqref{T4}]
   \label{def:localuniq}
   Write $\XX^{\circ,T} = \{ Y^{\circ,T} : Y^\circ \in \XX^\circ \}$ for the family
   stopped at a stopping time $T$.  \emph{Local uniqueness} holds for $\XX^\circ$
@@ -4247,7 +4272,7 @@ expect a shift system to be needed.  It is not.  What is needed are two
 properties of the path space --- one of the stopping time, one supplying
 solutions after it --- and neither mentions a shift.
 
-\begin{definition}[Strict stopping times; (T2b)]
+\begin{definition}[Strict stopping times; \eqref{T2b}]
   \label{def:pasting}
   A stopping time $T$ on $F$ is \emph{strict} if $F$ is stable under the stopping
   operator $a_T : F \to F$, $\pi_t \circ a_T = \pi_{t \wedge T}$, and
@@ -4263,7 +4288,7 @@ the Markovian case one takes the restarted process to depend on the current
 \emph{state}; the whole point of what follows is that it may depend on the whole
 \emph{stopped path}, and that nothing is lost by letting it.
 
-\begin{definition}[Restart kernel; (T2b)]
+\begin{definition}[Restart kernel; \eqref{T2b}]
   \label{def:restartkernel}
   Let $T$ be a strict stopping time.  A \emph{restart kernel at $T$} is a kernel
   $\alpha \mapsto Q_\alpha$ from $(F,\Filt^\circ_T)$ to $(F,\mathcal{S})$ such that
@@ -4282,12 +4307,12 @@ the Markovian case one takes the restarted process to depend on the current
   event in \ref{it:R1k} is measurable: $\{(\alpha,\beta) : a_T\alpha = a_T\beta\}$
   is the preimage of the diagonal of $F \times F$ under $a_T \times a_T$, and the
   diagonal is measurable because $\mathcal{S}$ is countably generated and
-  separating --- which is (E1).  Second, \ref{it:R2k} is a martingale property
+  separating --- which is \eqref{E1}.  Second, \ref{it:R2k} is a martingale property
   only \emph{from $T(\alpha)$ onwards}; nothing is asked of $Y^\circ$ before that
   time, where the path is frozen at $a_T\alpha$ anyway.
 \end{definition}
 
-\begin{lemma}[Pasting with memory; (T2b)]
+\begin{lemma}[Pasting with memory; \eqref{T2b}]
   \label{lem:pasting}
   Let $T$ be a strict stopping time, let $P \in \Msol(\XX^{\circ,T})$ and let
   $(Q_\alpha)$ be a restart kernel at $T$.  Assume the integrability condition
@@ -4487,7 +4512,7 @@ results apply and which fail.
     on a path space that is not $\DE$ and on which $\pi^X$ is not even right
     continuous;
   \item Lemma~\ref{lem:mixture} (mixtures) and Lemma~\ref{lem:disint}
-    (disintegration) apply, the latter because $F$ is Polish, hence (E1);
+    (disintegration) apply, the latter because $F$ is Polish, hence \eqref{E1};
   \item \textbf{Proposition~\ref{prop:uniqfromprop} applies}, provided the
     Volterra equation is uniquely solvable in law \emph{from any prescribed past}
     --- which under Lipschitz conditions on $b,a,\nu$ it is, by the Picard
@@ -4575,9 +4600,9 @@ results apply and which fail.
 \subsection{The Markovian case}
 \label{ssec:uniqmarkov}
 
-\begin{theorem}[\EK, Theorem 4.4.2; (T2b) + (T4) + shift invariant clock, for homogeneity]
+\begin{theorem}[\EK, Theorem 4.4.2; \eqref{T2b} + \eqref{T4} + shift invariant clock, for homogeneity]
   \label{thm:uniqueness}
-  Assume (E2) and let $A \subset \Bdd(E) \times \Bdd(E)$.  Suppose that
+  Assume \eqref{E2} and let $A \subset \Bdd(E) \times \Bdd(E)$.  Suppose that
   for each $\mu \in \Prob(E)$ any two solutions $X$, $Y$ of the martingale
   problem for $(A,\mu)$ have the same one-dimensional distributions, that is,
   for each $t \in \T$,
@@ -4673,9 +4698,9 @@ results apply and which fail.
   Remark~\ref{rem:strongmarkovscope}.
 \end{proof}
 
-\begin{corollary}[\EK, Corollary 4.4.3; (T3)]
+\begin{corollary}[\EK, Corollary 4.4.3; \eqref{T3}]
   \label{cor:DEuniqueness}
-  Assume (E3) and let $A \subset \Bdd(E) \times \Bdd(E)$.  Suppose that for
+  Assume \eqref{E3} and let $A \subset \Bdd(E) \times \Bdd(E)$.  Suppose that for
   each $\mu \in \Prob(E)$ any two solutions $X$, $Y$ of the martingale problem
   for $(A,\mu)$ with sample paths in $\DE$ (respectively $\CE$) satisfy
   \eqref{eq:onedim}.  Then for each $\mu \in \Prob(E)$ any two such solutions
@@ -4741,7 +4766,7 @@ all analysis: it is an exact telescoping, with no hypothesis beyond the two
 increment representations, and every version of the duality lemma is obtained
 from it by choosing a chain.
 
-\begin{lemma}[Chain identity; (T0) + (E0) + clock]
+\begin{lemma}[Chain identity; \eqref{T0} + \eqref{E0} + clock]
   \label{lem:chain}
   Let $\T$ be a preordered set with a least element $0$, let $q$ be a measure on
   $\T$ for which the sets $[s,s') \coloneqq \T_{<s'} \setminus \T_{<s}$ are
@@ -4789,7 +4814,7 @@ from it by choosing a chain.
 \begin{remark}[What the staircase form buys]
   \label{rem:staircase}
   The version of \eqref{eq:chain} one meets in the literature takes
-  $t_k = t - s_k$, the \emph{anti-diagonal} staircase, and therefore needs (T4)
+  $t_k = t - s_k$, the \emph{anti-diagonal} staircase, and therefore needs \eqref{T4}
   so that $t - s_k$ is defined.  Nothing in the proof requires this: the two
   coordinates may be stepped through independently, and the identity is then a
   statement about an arbitrary preorder with a clock.  Which staircase one
@@ -4816,7 +4841,7 @@ $q$-mass, at every scale.  On the anti-diagonal staircase $t_k = t - s_k$ that i
 translation invariance of $q$; but the anti-diagonal staircase is not forced, and
 it is not the right one.
 
-\begin{proposition}[Haar clocks; (T2a) + (T4), $\iota = \mathrm{p}$]
+\begin{proposition}[Haar clocks; \eqref{T2a} + \eqref{T4}, $\iota = \mathrm{p}$]
   \label{prop:haar}
   Assume \eqref{eq:incrementrep} with $\gamma_1 = \gamma_2 = \gamma$.
   \begin{enumerate}[label=(\alph*)]
@@ -4854,9 +4879,9 @@ atomic one by the linear algebra of Remark~\ref{rem:atomicdual}.  Whether
 \emph{every} clock admits duality remains open, and
 Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 
-\begin{corollary}[Atomless clocks, by time change; (T3) + (E0) + clock, $\iota = \mathrm{p}$]
+\begin{corollary}[Atomless clocks, by time change; \eqref{T3} + \eqref{E0} + clock, $\iota = \mathrm{p}$]
   \label{cor:atomless}
-  Assume (T3) and let $q$ be an \emph{atomless} clock.  Let $\Phi,\gamma$ satisfy
+  Assume \eqref{T3} and let $q$ be an \emph{atomless} clock.  Let $\Phi,\gamma$ satisfy
   \eqref{eq:incrementrep} with $\gamma_1 = \gamma_2 = \gamma$, with $\gamma$
   measurable for the order $\sigma$-field in each variable --- automatic if
   $\mathcal{T}$ is taken to be that $\sigma$-field, which
@@ -4871,7 +4896,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 \end{corollary}
 
 \begin{proof}
-  Since $q$ is atomless, $Q$ is continuous; by (T3) its domain is an interval, so
+  Since $q$ is atomless, $Q$ is continuous; by \eqref{T3} its domain is an interval, so
   $Q$ maps $\T_{\leq t^*}$ onto $[0,L]$, $L = Q(t^*)$, and $\tau$ is a right
   inverse: $Q(\tau(z)) = z$.  Monotonicity of $Q$ gives
   $\tau(z) \geq a \iff z \geq Q(a)$, whence the change-of-variables formula
@@ -4902,7 +4927,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 \begin{remark}[How much this is, and how much it is not]
   \label{rem:atomsnotchange}
   Corollary~\ref{cor:atomless} is a change of variables and should be read as
-  one.  Under (T3) an atomless clock is the image of Lebesgue measure under the
+  one.  Under \eqref{T3} an atomless clock is the image of Lebesgue measure under the
   continuous increasing map $\tau$, so a martingale problem with such a clock is
   a \emph{deterministic time change} of one with Lebesgue clock, and the
   corollary says no more than that duality is invariant under that time change.
@@ -4946,7 +4971,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   \textbf{Clock} & \textbf{Status} \\
   \midrule
   Haar (Lebesgue, counting) & proved, Proposition~\ref{prop:haar} \\
-  atomless, (T3) & proved, Corollary~\ref{cor:atomless} (a time change) \\
+  atomless, \eqref{T3} & proved, Corollary~\ref{cor:atomless} (a time change) \\
   purely atomic & verified symbolically, Remark~\ref{rem:atomicdual}; not proved \\
   mixed & open \\
   \bottomrule
@@ -5006,7 +5031,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 
   Two things follow.  First, the argument uses no order structure beyond a
   preorder, which is why duality is not confined to a linearly ordered index even
-  though Corollary~\ref{cor:atomless} lives on (T3).  Second --- and this
+  though Corollary~\ref{cor:atomless} lives on \eqref{T3}.  Second --- and this
   corrects a claim of an earlier version --- the two conventions of
   Definition~\ref{def:clock} \emph{agree} here.  With $\iota = \mathrm{o}$ the
   $k$-th summand of \eqref{eq:cancel} on the anti-diagonal staircase becomes
@@ -5045,7 +5070,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 \subsection{The continuous-time theory}
 \label{ssec:dualcont}
 
-\begin{lemma}[\EK, Lemma 4.4.10; (T3)]
+\begin{lemma}[\EK, Lemma 4.4.10; \eqref{T3}]
   \label{lem:calculus}
   Let $f : [0,\infty) \times [0,\infty) \to \R$ be absolutely continuous in $s$
   for each fixed $t$ and absolutely continuous in $t$ for each fixed $s$, and
@@ -5080,7 +5105,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   a.e.\ $T$.
 \end{proof}
 
-\begin{theorem}[\EK, Theorem 4.4.11; (T3)]
+\begin{theorem}[\EK, Theorem 4.4.11; \eqref{T3}]
   \label{thm:duality}
   Let $X$ and $Y$ be independent measurable processes with values in $E_1$ and
   $E_2$ respectively.  Let $f,g,h \in \Meas(E_1 \times E_2)$,
@@ -5243,7 +5268,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   $\alpha$ and $\beta$ by approximating them by bounded functions.
 \end{remark}
 
-\begin{corollary}[Duality relation; \EK, Corollary 4.4.13; (T3)]
+\begin{corollary}[Duality relation; \EK, Corollary 4.4.13; \eqref{T3}]
   \label{cor:dualrel}
   If, in addition to the conditions of Theorem~\ref{thm:duality},
   \begin{equation}
@@ -5286,7 +5311,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 
 The discrete counterpart, which \EK{} do not state, now costs nothing.
 
-\begin{corollary}[Duality for Markov chains; $\T = \N_0$, (E0), $\iota = \mathrm{p}$]
+\begin{corollary}[Duality for Markov chains; $\T = \N_0$, \eqref{E0}, $\iota = \mathrm{p}$]
   \label{cor:dualdiscrete}
   Let $P$ and $Q$ be transition kernels on measurable spaces $E_1$ and $E_2$, and
   let $f \in \Bdd(E_1 \times E_2)$ satisfy the duality relation
@@ -5333,7 +5358,7 @@ The discrete counterpart, which \EK{} do not state, now costs nothing.
   (Remark~\ref{rem:atomicdual}).
 \end{remark}
 
-\begin{corollary}[Stopped version; \EK, Corollary 4.4.14; (T3)]
+\begin{corollary}[Stopped version; \EK, Corollary 4.4.14; \eqref{T3}]
   \label{cor:dualstopped}
   Let $(\Filt_t)$ and $(\Gilt_t)$ be independent filtrations, let $X$ be
   $(\Filt_t)$-progressive with $(\Filt_t)$-stopping time $\tau$, and let $Y$ be
@@ -5368,9 +5393,9 @@ The discrete counterpart, which \EK{} do not state, now costs nothing.
 
 We can now close the circle with Section~\ref{sec:uniqueness}.
 
-\begin{corollary}[Uniqueness via duality; (T3)]
+\begin{corollary}[Uniqueness via duality; \eqref{T3}]
   \label{cor:uniqviadual}
-  Assume (E2), let $A \subset \Bdd(E) \times \Bdd(E)$, let $(E_2,\mathcal{E}_2)$ be
+  Assume \eqref{E2}, let $A \subset \Bdd(E) \times \Bdd(E)$, let $(E_2,\mathcal{E}_2)$ be
   a measurable space, and let $B \subset \Meas(E_2) \times \Meas(E_2)$.  Suppose
   there is $f \in \Meas(E \times E_2)$ such that:
   \begin{enumerate}[label=(\roman*)]
@@ -5455,7 +5480,7 @@ dual to a measure-valued diffusion, say.
 \subsection{From a transition semigroup}
 \label{ssec:exsemigroup}
 
-\begin{proposition}[\EK, Proposition 4.1.7; (T3) + (E0)]
+\begin{proposition}[\EK, Proposition 4.1.7; \eqref{T3} + \eqref{E0}]
   \label{prop:exsemigroup}
   Let $X$ be a Markov process with measurable transition semigroup
   $\{T(t)\}$ on $\Bdd(E)$ and full generator $\hat{A}$ in the sense of
@@ -5488,14 +5513,14 @@ bookkeeping, and all of it survives an arbitrary \emph{shift invariant} clock --
 including one with atoms, the obstruction of Remark~\ref{rem:atomsnotchange} being
 confined to Section~\ref{ssec:antidiag}.
 
-\begin{setting}[Duality data; (T2a) + (T4) + shift invariant clock + (E1) on $E_1$, (E0) on $E_2$]
+\begin{setting}[Duality data; \eqref{T2a} + \eqref{T4} + shift invariant clock + \eqref{E1} on $E_1$, \eqref{E0} on $E_2$]
   \label{set:dualdata}
-  Let $\T$ satisfy (T2a) and (T4) --- the linear order is used exactly once, in
+  Let $\T$ satisfy \eqref{T2a} and \eqref{T4} --- the linear order is used exactly once, in
   Step~1 of Theorem~\ref{thm:exduality}, and
   Remark~\ref{rem:exdualityscope}(ii) explains why it cannot be dropped there ---
   let $q$ be a clock which is \emph{shift invariant},
-  $q(r + \cdot) = q(\cdot)$, and fix $\iota$.  Let $(E_1,\mathcal{E}_1)$ satisfy (E1) and $(E_2,\mathcal{E}_2)$
-  satisfy (E0).  Let
+  $q(r + \cdot) = q(\cdot)$, and fix $\iota$.  Let $(E_1,\mathcal{E}_1)$ satisfy \eqref{E1} and $(E_2,\mathcal{E}_2)$
+  satisfy \eqref{E0}.  Let
   \[
     H, g : E_1 \times E_2 \to \R , \qquad \beta : E_2 \to \R
   \]
@@ -5548,7 +5573,7 @@ function.  \ref{it:D3} is the only substantial hypothesis, and it is the one tha
 cannot be checked by bookkeeping; Proposition~\ref{prop:rieszmarkov} gives the
 standard sufficient condition.
 
-\begin{lemma}[The semigroup identity; (T4) + shift invariant clock]
+\begin{lemma}[The semigroup identity; \eqref{T4} + shift invariant clock]
   \label{lem:dualsemigroup}
   In Setting~\ref{set:dualdata}, for $\varphi \in \{H,g\}$, $s,t \in \T$,
   \begin{equation}
@@ -5583,7 +5608,7 @@ standard sufficient condition.
   finite.
 \end{proof}
 
-\begin{proposition}[The kernels form a transition semigroup; + (E1)]
+\begin{proposition}[The kernels form a transition semigroup; + \eqref{E1}]
   \label{prop:dualCK}
   In Setting~\ref{set:dualdata}, $\mu_0(x,\cdot) = \delta_x$ and
   \begin{equation}
@@ -5616,7 +5641,7 @@ standard sufficient condition.
   for every $y$, \ref{it:D2} gives \eqref{eq:dualCK}.
 \end{proof}
 
-\begin{theorem}[Existence by duality; \DGP, Theorem 2.1; (T2a) + (T4) + shift invariant clock + (E1)]
+\begin{theorem}[Existence by duality; \DGP, Theorem 2.1; \eqref{T2a} + \eqref{T4} + shift invariant clock + \eqref{E1}]
   \label{thm:exduality}
   In Setting~\ref{set:dualdata}, let $\nu \in \Prob(E_1)$.  Then there is a Markov
   process $X$ on $E_1$ with initial distribution $\nu$ and transition kernels
@@ -5639,13 +5664,13 @@ standard sufficient condition.
 \begin{proof}
   \emph{Step 1: the process.}  By Proposition~\ref{prop:dualCK} the family
   $(\mu_t)$ is a measurable transition semigroup on $E_1$, measurability being
-  \ref{it:D3}.  Under (T2a) every finite subset $t_1 \leq \dots \leq t_n$ of $\T$
+  \ref{it:D3}.  Under \eqref{T2a} every finite subset $t_1 \leq \dots \leq t_n$ of $\T$
   is a chain, so the finite-dimensional distributions
   $\nu \otimes \mu_{t_1} \otimes \mu_{t_2 - t_1} \otimes \dots$ are defined for
   \emph{all} finite subsets and form a projective family, consistency being
   Chapman--Kolmogorov plus marginalization; \emph{this is the one step that
   needs the linear order}, see Remark~\ref{rem:exdualityscope}(ii).  Since $E_1$
-  satisfies (E1) it is standard Borel, so the Kolmogorov extension theorem
+  satisfies \eqref{E1} it is standard Borel, so the Kolmogorov extension theorem
   (Fact~\ref{fact:kolmogorov}) applies; this is \EK, Theorem~4.1.1.  Let $X$ be
   the resulting Markov process.  Then \eqref{eq:dualityrel} is \ref{it:D3} for
   $\varphi = H$.
@@ -5717,7 +5742,7 @@ standard sufficient condition.
   one.}
 \end{proof}
 
-\begin{proposition}[Riesz--Markov: a sufficient condition for \ref{it:D3}; (E3)]
+\begin{proposition}[Riesz--Markov: a sufficient condition for \ref{it:D3}; \eqref{E3}]
   \label{prop:rieszmarkov}
   Suppose $E_1$ is compact metrizable, $H \in \Cb(E_1 \times E_2)$, and
   $\mathcal{H}_1 \coloneqq \operatorname{span}\{H(\cdot,y) : y \in E_2\}$ is a
@@ -5755,7 +5780,7 @@ standard sufficient condition.
     decomposition of Remark~\ref{rem:jumpdiscrete}.
   \item \emph{The index --- and here the generalization has a sharp edge.}  The
     \emph{kernel layer} uses no linear order: Lemma~\ref{lem:dualsemigroup} needs
-    (T4), and Chapman--Kolmogorov needs commutativity of $+$, so the two-parameter
+    \eqref{T4}, and Chapman--Kolmogorov needs commutativity of $+$, so the two-parameter
     semigroup $(\mu_t)$ exists on $\T = \Rp^2$.  But Step~1 of
     Theorem~\ref{thm:exduality} does \emph{not} survive: to apply Kolmogorov one
     must exhibit finite-dimensional distributions over all finite subsets of
@@ -5763,14 +5788,14 @@ standard sufficient condition.
     is simply not determined by one-parameter kernels; nor is some consistent
     choice guaranteed to exist, the compatibility conditions at
     $(1,0),(0,1),(1,1)$ being a genuine constraint that $(\mu_t)$ does not
-    resolve.  So Theorem~\ref{thm:exduality} is stated under (T2a), and what
+    resolve.  So Theorem~\ref{thm:exduality} is stated under \eqref{T2a}, and what
     survives a partial order is the semigroup layer
     (Lemma~\ref{lem:dualsemigroup}, Proposition~\ref{prop:dualCK}), not the
     process.  An earlier version of this manuscript claimed more; the corrected
     claim is the exact analogue of Remark~\ref{rem:chainonly}, with the chain
     obstruction now sitting in the construction instead of the induction.
-  \item \emph{The state spaces.}  Theorem~\ref{thm:exduality} needs (E1) on $E_1$
-    --- for the Kolmogorov extension in Step~1 --- and only (E0) on $E_2$.  The
+  \item \emph{The state spaces.}  Theorem~\ref{thm:exduality} needs \eqref{E1} on $E_1$
+    --- for the Kolmogorov extension in Step~1 --- and only \eqref{E0} on $E_2$.  The
     compactness of \DGP{} enters solely in
     Proposition~\ref{prop:rieszmarkov}, i.e.\ in \emph{checking} \ref{it:D3}, not
     in the theorem.
@@ -5934,7 +5959,7 @@ The manuscript already contains a path-dependent process whose historical dual i
 classical, \emph{deterministic}, and of exactly the shape
 Setting~\ref{set:historical} asks for.  This subsection verifies the hypotheses.
 
-\begin{setting}[The Hawkes duality data; (T3)]
+\begin{setting}[The Hawkes duality data; \eqref{T3}]
   \label{set:hawkesdual}
   Let $N$ be the Hawkes process of Example~\ref{ex:hawkes}, with immigration rate
   $\mu_0 > 0$ and offspring kernel $\phi \in L^1_{\mathrm{loc}}(\Rp)$, $\phi \geq 0$.
@@ -5948,7 +5973,7 @@ Setting~\ref{set:historical} asks for.  This subsection verifies the hypotheses.
   \end{gather*}
 \end{setting}
 
-\begin{lemma}[The dual flow; (T3)]
+\begin{lemma}[The dual flow; \eqref{T3}]
   \label{lem:hawkesflow}
   For every $t > 0$ and $f \in E_2$ the backward equation
   \begin{equation}
@@ -6004,7 +6029,7 @@ Setting~\ref{set:historical} asks for.  This subsection verifies the hypotheses.
   $\int_r^t = \int_r^s + \int_s^t$.
 \end{proof}
 
-\begin{proposition}[The conditional duality relation; (T3)]
+\begin{proposition}[The conditional duality relation; \eqref{T3}]
   \label{prop:hawkesduality}
   Let $N$ be a Hawkes process as in Setting~\ref{set:hawkesdual} and let
   $\hat{N}$ be its path lift.  Then for $r \leq t$ and $f \in E_2$,
@@ -6087,7 +6112,7 @@ mechanism has become a Volterra kernel and the dual runs backwards.
   they buy is recorded in Remark~\ref{rem:hawkesscope}.
 \end{remark}
 
-\begin{proposition}[The remaining hypotheses; (T3)]
+\begin{proposition}[The remaining hypotheses; \eqref{T3}]
   \label{prop:hawkesDcheck}
   In Setting~\ref{set:hawkesdual}:
   \begin{enumerate}[label=(\alph*)]
@@ -6270,10 +6295,10 @@ mechanism has become a Volterra kernel and the dual runs backwards.
 
 Throughout this subsection $\T = \Rp$ with $q$ Lebesgue measure, so that the two
 conventions of Definition~\ref{def:clock} agree and $\iota$ plays no r\^ole.  The
-state space needs only (E0) for the construction and the martingale property;
-(E2) enters only when one wants to say that the paths lie in $\DE$.
+state space needs only \eqref{E0} for the construction and the martingale property;
+\eqref{E2} enters only when one wants to say that the paths lie in $\DE$.
 
-\begin{setting}[Jump data; (T3) + (E0)]
+\begin{setting}[Jump data; \eqref{T3} + \eqref{E0}]
   \label{set:jumpdata}
   Let $\lambda : E \to [0,\infty)$ be measurable (the \emph{rate}) and let $\mu$ be
   a transition kernel on $E$ (the \emph{jump distribution}).  Define
@@ -6288,7 +6313,7 @@ state space needs only (E0) for the construction and the martingale property;
   $Af$ need not be bounded.
 \end{setting}
 
-\begin{definition}[The construction; (T3) + (E0)]
+\begin{definition}[The construction; \eqref{T3} + \eqref{E0}]
   \label{def:jumpconstruction}
   Let $\nu \in \Prob(E)$.  On some probability space let $(Y_n)_{n \geq 0}$ be a
   Markov chain with initial distribution $\nu$ and transition kernel $\mu$, and
@@ -6310,12 +6335,12 @@ state space needs only (E0) for the construction and the martingale property;
 
 Three observations before the theorem.  The paths of $X$ are piecewise constant
 and right continuous by construction, hence lie in $\DE$ as soon as $E$ carries a
-topology, i.e.\ under (E2).  If $\lambda(Y_n) = 0$ then $\tau_{n+1} = \infty$ and
+topology, i.e.\ under \eqref{E2}.  If $\lambda(Y_n) = 0$ then $\tau_{n+1} = \infty$ and
 $X$ is absorbed at $Y_n$.  And each $\tau_n$ is a functional of the path --- the
 time of its $n$-th jump --- which is what will make it a legitimate localizing
 sequence in the sense of \ref{it:L1}.
 
-\begin{lemma}[No explosion for bounded rates; (T3) + (E0)]
+\begin{lemma}[No explosion for bounded rates; \eqref{T3} + \eqref{E0}]
   \label{lem:noexplosion}
   If $\bar{\lambda} < \infty$ then $\zeta = \infty$ almost surely.
 \end{lemma}
@@ -6326,7 +6351,7 @@ sequence in the sense of \ref{it:L1}.
   large numbers, the $\varepsilon_n$ being i.i.d.\ with mean $1$.
 \end{proof}
 
-\begin{theorem}[Jump processes solve their martingale problem; (T3) + (E0)]
+\begin{theorem}[Jump processes solve their martingale problem; \eqref{T3} + \eqref{E0}]
   \label{thm:jumpMP}
   Let $\bar{\lambda} < \infty$ and let $X$ be as in
   Definition~\ref{def:jumpconstruction}.  Then $X$ solves the martingale problem
@@ -6427,11 +6452,11 @@ sequence in the sense of \ref{it:L1}.
 The construction gives existence.  Uniqueness comes from
 Section~\ref{sec:uniqueness}, and the input it needs is a Gronwall estimate.
 
-\begin{proposition}[Well-posedness for bounded rates; (T3) + (E2)]
+\begin{proposition}[Well-posedness for bounded rates; \eqref{T3} + \eqref{E2}]
   \label{prop:jumpwellposed}
   Let $\bar{\lambda} < \infty$.  Then the martingale problem for $(A,\nu)$ is well
   posed for every $\nu \in \Prob(E)$, every solution is a Markov process, and if
-  $E$ satisfies (E2) it is strong Markov.
+  $E$ satisfies \eqref{E2} it is strong Markov.
 \end{proposition}
 
 \begin{proof}
@@ -6557,7 +6582,7 @@ Section~\ref{sec:uniqueness}, and the input it needs is a Gronwall estimate.
   \label{rem:jumppoint}
   Besides being the only explicit solution in the manuscript, the construction
   exercises three of its abstractions and is the reason they were made.  The state
-  space needs only (E0): $\lambda$ measurable and $\mu$ a kernel, no topology, no
+  space needs only \eqref{E0}: $\lambda$ measurable and $\mu$ a kernel, no topology, no
   metric, no Polish structure --- so jump processes on a standard Borel $E$, for
   instance on a space of measures or of distributions, are covered by
   Theorem~\ref{thm:jumpMP} as it stands.  The localizing system of
@@ -6602,7 +6627,7 @@ $X_t = X_0 + \int_0^t \sigma(X_s)\dif B_s + \int_0^t b(X_s)\dif s$.
   the local martingale problem for $A$ of \eqref{eq:sdegen}.
 \end{fact}
 
-\begin{corollary}[Well-posedness for Lipschitz coefficients; (T3), $E = \R^d$]
+\begin{corollary}[Well-posedness for Lipschitz coefficients; \eqref{T3}, $E = \R^d$]
   \label{cor:sdewellposed}
   If $\sigma$ and $b$ are Lipschitz, the local martingale problem for $A$ of
   \eqref{eq:sdegen} is well posed for every initial distribution, and its solution
@@ -6647,9 +6672,9 @@ deliberately so --- the point of the arrangement is that
 Lemma~\ref{lem:EKconv} has no proof of its own.
 
 
-\begin{lemma}[\EK, Lemma 4.5.1; (T3)]
+\begin{lemma}[\EK, Lemma 4.5.1; \eqref{T3}]
   \label{lem:EKconv}
-  Assume (E3), let $A \subset \Cb(E) \times \Cb(E)$ and
+  Assume \eqref{E3}, let $A \subset \Cb(E) \times \Cb(E)$ and
   $A_n \subset \Bdd(E) \times \Bdd(E)$ for $n \in \N$.  Suppose that for each
   $(f,g) \in A$ there exist $(f_n,g_n) \in A_n$ with
   \begin{equation}
@@ -6665,7 +6690,7 @@ Lemma~\ref{lem:EKconv} has no proof of its own.
 
 \begin{proof}
   We verify \ref{it:C1}--\ref{it:C3} of Theorem~\ref{thm:absconv}, with
-  $F = \DE$ --- Polish by (E3) and Fact~\ref{fact:DEpolish} --- and
+  $F = \DE$ --- Polish by \eqref{E3} and Fact~\ref{fact:DEpolish} --- and
   $\XX = \XX_A(X)$, whose canonical version is
   $Y^\circ_t(\omega) = f(\omega(t)) - \int_0^t g(\omega(u))\dif u$ for
   $(f,g) \in A$.  Fix $(f,g) \in A$ and an approximating sequence $(f_n,g_n)$ as
@@ -6725,7 +6750,7 @@ Lemma~\ref{lem:EKconv} has no proof of its own.
   \eqref{eq:cps2}--\eqref{eq:cps3}.
 
   \emph{Conclusion.}  The paths of $X$ lie in $\DE$, so every $Y \in \XX$ is
-  right continuous, and $\T = \Rp$ satisfies (T2b) with $D$ dense.
+  right continuous, and $\T = \Rp$ satisfies \eqref{T2b} with $D$ dense.
   Theorem~\ref{thm:absconv} therefore gives $P \in \Msol(\XX)$, i.e.\ $X$ solves
   the martingale problem for $A$.
 \end{proof}
@@ -6783,14 +6808,14 @@ is a special case of it directly, as its proof shows, and a fortiori of
 Theorem~\ref{thm:CPSconv}; so all of Section~\ref{sec:convergence} rests on
 Theorem~\ref{thm:absconv}.
 
-\begin{definition}[$P$-continuity at $X$; (T0) + (E3)]
+\begin{definition}[$P$-continuity at $X$; \eqref{T0} + \eqref{E3}]
   \label{def:Pcont}
   A Borel map $\psi : F \to \R$ is \emph{$P$-continuous at $X$} if there is
   $C \in \Bor(F)$ with $P\{X \in C\} = 1$ such that $\psi(\alpha_m) \to \psi(\alpha)$
   whenever $\alpha_m \to \alpha$ in $F$ with $\alpha \in C$.
 \end{definition}
 
-\begin{theorem}[Abstract convergence; \CPS, Theorem 3.14 and Corollary 3.17; (T0) + (E3)]
+\begin{theorem}[Abstract convergence; \CPS, Theorem 3.14 and Corollary 3.17; \eqref{T0} + \eqref{E3}]
   \label{thm:absconv}
   In Setting~\ref{set:abstract}, let $\XX$ be canonical for $X$, let
   $D \subset \T$, and for each $n$ let $B^n = (\Omega^n,\Filt^n,\mathbb{F}^n,P^n)$
@@ -6816,7 +6841,7 @@ Theorem~\ref{thm:absconv}.
   \end{enumerate}
   Then $E^P[Y_t \mid \Filt_s] = Y_s$ for all $s \leq t$ in $D$ and all
   $Y \in \XX$.  If moreover $D = \T$, then $P \in \Msol(\XX)$.  The same
-  conclusion holds for a proper $D \subsetneq \T$ provided $\T$ satisfies (T2b)
+  conclusion holds for a proper $D \subsetneq \T$ provided $\T$ satisfies \eqref{T2b}
   with $D$ its countable dense subset, $D$ contains the greatest element of $\T$
   if there is one, and every $Y \in \XX$ is right continuous.
 \end{theorem}
@@ -6872,10 +6897,10 @@ Theorem~\ref{thm:absconv}.
   $\{ Y_r : r \in D \cap \T_{\leq t} \}$ is uniformly integrable under $P$.
 
   \emph{Step 3: from $D$ to $\T$.}
-  Assume (T2b) and $Y$ right continuous, and let $s < t$ in $\T$ be arbitrary; the
+  Assume \eqref{T2b} and $Y$ right continuous, and let $s < t$ in $\T$ be arbitrary; the
   case $s = t$ is trivial.  Choose $t_m$ as follows: if $t$ is the greatest
   element of $\T$, put $t_m = t$, which lies in $D$ by hypothesis; otherwise
-  (T2b) provides $t_m \downarrow t$ in $D$ with $t_m > t$.  Since $s < t$, the same
+  \eqref{T2b} provides $t_m \downarrow t$ in $D$ with $t_m > t$.  Since $s < t$, the same
   argument gives $s_m \downarrow s$ in $D$ with $s \leq s_m < t_m$ for all large
   $m$.  Let $G \in \Filt_s$.  Then $G \in \Filt_{s_m}$ because $s \leq s_m$, so
   Step~1 gives $E^P[Y_{t_m} \one_G] = E^P[Y_{s_m} \one_G]$.  By right continuity
@@ -6894,7 +6919,7 @@ Theorem~\ref{thm:absconv}.
   Step~3, and it is needed only to pass from $D$ to its complement.  With
   $D = \T$ --- in particular for $\T = \N_0$, where every point is isolated from
   the right and no approximation is available or necessary --- Step~3 is empty and
-  the theorem holds under (T0).  This is why step~\ref{it:F5a} of
+  the theorem holds under \eqref{T0}.  This is why step~\ref{it:F5a} of
   Section~\ref{sec:formalization} can be done immediately after \ref{it:F2},
   before any of the Skorokhod theory.
 \end{remark}
@@ -6934,9 +6959,9 @@ directions:
   \eqref{eq:cps1}.
 \end{enumerate}
 
-\begin{theorem}[\CPS, Theorem 4.1; (T3)]
+\begin{theorem}[\CPS, Theorem 4.1; \eqref{T3}]
   \label{thm:CPSconv}
-  Assume (E3).  Let $B = (\Omega,\Filt,\mathbb{F},P)$ and
+  Assume \eqref{E3}.  Let $B = (\Omega,\Filt,\mathbb{F},P)$ and
   $B^n = (\Omega^n,\Filt^n,\mathbb{F}^n,P^n)$ be filtered probability spaces
   carrying $E$-valued c\`adl\`ag adapted processes $X$ and $X^n$, and assume that
   $\mathbb{F}$ is generated by $X$.  Let $A \subset \Cb(E) \times \Cb(E)$ and let
@@ -7070,7 +7095,7 @@ clock they are compensated, and with which convention, is not part of the theore
 difficulty for the theorem; they are a difficulty for one of its hypotheses, and
 the following isolates it.
 
-\begin{setting}[Approximants with their own clocks; (T3) + (E3)]
+\begin{setting}[Approximants with their own clocks; \eqref{T3} + \eqref{E3}]
   \label{set:diffclocks}
   In the situation of Theorem~\ref{thm:absconv}, let the limit test process be
   \[
@@ -7092,7 +7117,7 @@ the following isolates it.
   for the \emph{clock discrepancy} along the integrands.
 \end{setting}
 
-\begin{theorem}[Clock change; (T3) + (E3)]
+\begin{theorem}[Clock change; \eqref{T3} + \eqref{E3}]
   \label{thm:clockchange}
   Assume \ref{it:C1}, \ref{it:C2}, \ref{it:C3a} and \ref{it:C3b} of
   Theorem~\ref{thm:absconv}, and suppose that for all $s \leq t$ in $D$ and all
@@ -7353,7 +7378,7 @@ Lemma~\ref{lem:contuse} says that the continuity may be demanded on \emph{any}
 space through which the relevant functionals factor, provided the convergence
 \ref{it:C1} is available there.  So we enlarge.
 
-\begin{theorem}[Abstract convergence, augmented form; (T0) + (E3)]
+\begin{theorem}[Abstract convergence, augmented form; \eqref{T0} + \eqref{E3}]
   \label{thm:absconvaug}
   In the situation of Theorem~\ref{thm:absconv}, let $G$ be Polish, let
   $\gamma : F \to G$ be Borel, and put
@@ -7397,7 +7422,7 @@ Note that \ref{it:C1aug} implies \ref{it:C1}, by projection; the augmented
 statement is a genuine strengthening of the input and a genuine weakening of the
 work.  The point is what $G$ has to be for an atomic clock.
 
-\begin{proposition}[Atomic clocks need only the values at the atoms; (T3) + (E2)]
+\begin{proposition}[Atomic clocks need only the values at the atoms; \eqref{T3} + \eqref{E2}]
   \label{prop:atomaug}
   Let $F = \DE$, let $q = q_{\mathrm{a}} + q_{\mathrm{c}}$ with
   $q_{\mathrm{a}} = \sum_{a \in A} m_a \delta_a$ for a countable $A \subset \T$ and
@@ -7633,7 +7658,7 @@ construction needs the dependence to be Markovian, and one gain is worth the
 change of notation: the holding time ceases to be exponential, and the
 computation that carried Theorem~\ref{thm:jumpMP} survives intact.
 
-\begin{setting}[Path-dependent jump data; (T3) + (E0)]
+\begin{setting}[Path-dependent jump data; \eqref{T3} + \eqref{E0}]
   \label{set:pathjump}
   Let $F$ be the set of piecewise constant right continuous paths $\T \to E$ with
   finitely many jumps on bounded intervals, and let
@@ -7656,7 +7681,7 @@ computation that carried Theorem~\ref{thm:jumpMP} survives intact.
   $f(\pi_t) - \int_0^t \mathcal{A}_s f \dif s$, $f \in \Bdd(E)$.
 \end{setting}
 
-\begin{definition}[The construction; (T3) + (E0)]
+\begin{definition}[The construction; \eqref{T3} + \eqref{E0}]
   \label{def:pathjumpconstruction}
   Let $\varepsilon_1,\varepsilon_2,\dots$ be i.i.d.\ exponential of parameter $1$.
   Set $\tau_0 = 0$, let $Y_0 \sim \nu$, and given $(\tau_n, Y_n)$ let
@@ -7676,7 +7701,7 @@ the survival function $P(\tau_{n+1}>u \mid \mathcal{H}_n) = e^{-A_n(u)}$ and the
 jump-time density $\Lambda(u,\omega^{(n)})e^{-A_n(u)}$.  For $\Lambda$ constant
 this is the exponential law of Definition~\ref{def:jumpconstruction}.
 
-\begin{theorem}[Path-dependent jump processes; (T3) + (E0)]
+\begin{theorem}[Path-dependent jump processes; \eqref{T3} + \eqref{E0}]
   \label{thm:pathjumpMP}
   Let $X$ be as in Definition~\ref{def:pathjumpconstruction} and let
   $N_t = \#\{n \geq 1 : \tau_n \leq t\}$ be its jump counter.
@@ -7856,7 +7881,7 @@ analogy is that \eqref{eq:hawkesrate} \emph{is} a Volterra equation.
   discontinuous, one continuous.
 \end{remark}
 
-\begin{theorem}[Hawkes to Volterra, conditionally on tightness; (T3) + (E3)]
+\begin{theorem}[Hawkes to Volterra, conditionally on tightness; \eqref{T3} + \eqref{E3}]
   \label{thm:hawkesvolterra}
   For each $n$ let $(\Lambda^n, N^n)$ be a Hawkes process with kernel $\phi^n$ and
   baseline $\mu_0^n$, rescaled in time, and let $(X^n,Z^n)$ be the corresponding
@@ -8005,7 +8030,7 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
 
   Three consequences for the present plan.  First, \ref{it:F4} loses its most
   expensive prerequisite.  Second, the index there is a preorder with an order
-  topology, which agrees with the bundle (T2b) of Definition~\ref{def:bundles} ---
+  topology, which agrees with the bundle \eqref{T2b} of Definition~\ref{def:bundles} ---
   the two developments make the same choice independently.  Third, what is
   \emph{not} there is the Skorokhod space: no $J_1$ metric, no
   $\Bor(\DE) = \sigma(\pi_t)$, no compactness criterion.  So \ref{it:F5b} is
@@ -8022,10 +8047,10 @@ any bespoke index theory.
 
 \begin{enumerate}[label=\textbf{(F\arabic*)}]
 \item \label{it:F1}
-  \emph{Targets (T0) + (E0) + clock.}
+  \emph{Targets \eqref{T0} + \eqref{E0} + clock.}
   Definitions only: Definition~\ref{def:absMP}, Definition~\ref{def:markovMP},
   the filtration \eqref{eq:starfilt}, Definition~\ref{def:cc} (which needs
-  (T2b)), and Proposition~\ref{prop:fddchar}.  The clock is a
+  \eqref{T2b}), and Proposition~\ref{prop:fddchar}.  The clock is a
   \texttt{MeasureTheory.Measure} on $\T$ together with the hypothesis that every
   down-set is measurable and of finite mass; the interval algebra
   \eqref{eq:clockinterval} is then definitional.  These need nothing beyond what Mathlib has and
@@ -8033,7 +8058,7 @@ any bespoke index theory.
   every subsequent statement into a statement about finite-dimensional
   distributions.
 \item \label{it:F0}
-  \emph{Targets (T3) + (E0).}  The jump processes of Section~\ref{ssec:jump}.  Theorem~\ref{thm:jumpMP} needs a Markov chain,
+  \emph{Targets \eqref{T3} + \eqref{E0}.}  The jump processes of Section~\ref{ssec:jump}.  Theorem~\ref{thm:jumpMP} needs a Markov chain,
   i.i.d.\ exponential variables and the computation of Step~2, and nothing else;
   Proposition~\ref{prop:jumpwellposed} adds the Picard iteration
   \eqref{eq:jumpexp} for the bounded operator $A$, which in Lean is the
@@ -8044,7 +8069,7 @@ any bespoke index theory.
   here, before any of the theory, as a way of testing the definitions of
   \ref{it:F1} against something concrete.
 \item \label{it:F2}
-  \emph{Targets (T0) + (T4) + (E0); (T2a) for the uniqueness half, (E1) for
+  \emph{Targets \eqref{T0} + \eqref{T4} + \eqref{E0}; \eqref{T2a} for the uniqueness half, \eqref{E1} for
   Lemma~\ref{lem:disint}.}
   Lemma~\ref{lem:mixture}, Lemma~\ref{lem:restart} and
   Theorem~\ref{thm:absuniq}, then Theorem~\ref{thm:uniqueness} and
@@ -8062,7 +8087,7 @@ any bespoke index theory.
   Lemma~\ref{lem:restart} plus the one identity \eqref{eq:shiftedstopped}, and
   Theorem~\ref{thm:localuniq} is bookkeeping.
 \item \label{it:F5a}
-  \emph{Targets (T0) + (E3), with $D = \T$.}
+  \emph{Targets \eqref{T0} + \eqref{E3}, with $D = \T$.}
   Theorem~\ref{thm:absconv}, the abstract convergence theorem.  It needs an
   abstract Polish path space, a determining set, $P$-continuity at $X$, uniform
   integrability and Vitali's theorem --- and \emph{no} Skorokhod topology, no
@@ -8073,9 +8098,9 @@ any bespoke index theory.
   Lemma~\ref{lem:contuse} and Theorem~\ref{thm:absconvaug} with it; they are two
   lines each once Theorem~\ref{thm:absconv} is in place.
 \item \label{it:F3}
-  \emph{Targets (T0) + (E0) for Lemma~\ref{lem:chain}, (T2a) + $\iota = \mathrm{p}$
-  for Corollary~\ref{cor:atomless} (which needs (T3) and an atomless clock),
-  (T3) + (E2) for the rest.}
+  \emph{Targets \eqref{T0} + \eqref{E0} for Lemma~\ref{lem:chain}, \eqref{T2a} + $\iota = \mathrm{p}$
+  for Corollary~\ref{cor:atomless} (which needs \eqref{T3} and an atomless clock),
+  \eqref{T3} + \eqref{E2} for the rest.}
   Lemma~\ref{lem:chain} --- an exact telescoping identity, and the cheapest item
   in this list --- then Proposition~\ref{prop:haar}, Corollary~\ref{cor:atomless},
   Corollary~\ref{cor:dualdiscrete}, and finally Lemma~\ref{lem:calculus},
@@ -8085,7 +8110,7 @@ any bespoke index theory.
   be formalized directly after Lemma~\ref{lem:chain}.  Together with \ref{it:F2} this already yields
   Corollary~\ref{cor:uniqviadual}, a complete uniqueness theory.
 \item \label{it:F3b}
-  \emph{Targets (T0) + (T4) + (E1) + a shift invariant clock.}
+  \emph{Targets \eqref{T0} + \eqref{T4} + \eqref{E1} + a shift invariant clock.}
   Section~\ref{ssec:exduality}: Lemma~\ref{lem:dualsemigroup},
   Proposition~\ref{prop:dualCK} and Theorem~\ref{thm:exduality}.  Everything in
   the proofs is the Markov property, Fubini and \eqref{eq:clockadd}.  The one
@@ -8099,7 +8124,7 @@ any bespoke index theory.
   \texttt{integral\_rieszMeasure} should carry it, but the theorem is stated with
   \ref{it:D3} as a hypothesis so that it can be skipped.
 \item \label{it:F4}
-  \emph{Targets (T2b) + (E2), $\iota = \mathrm{o}$.}
+  \emph{Targets \eqref{T2b} + \eqref{E2}, $\iota = \mathrm{o}$.}
   Fact~\ref{fact:cadlagext} and Fact~\ref{fact:submgreg}, then
   Theorem~\ref{thm:absreg} and, as a one-line corollary,
   Theorem~\ref{thm:cadlag}.  This requires the notion of a c\`adl\`ag path but
@@ -8108,7 +8133,7 @@ any bespoke index theory.
   processes, whereas $\dom(A)$ drags in the operator, its domain and the
   filtration \eqref{eq:starfilt}, none of which the proof uses.
 \item \label{it:F5b}
-  \emph{Targets (T3) + (E3).}
+  \emph{Targets \eqref{T3} + \eqref{E3}.}
   The Skorokhod space and its topology, then Lemma~\ref{lem:EKconv},
   Remark~\ref{rem:EKrelcompact} and Theorem~\ref{thm:CPSconv} as instances of
   \ref{it:F5a}.  This is by far the largest item.
@@ -8159,7 +8184,7 @@ any bespoke index theory.
   should be developed independently of martingale problems; they are of general
   interest, and within Sections~\ref{sec:cadlag} and \ref{sec:uniqueness} they are
   the only place where Polishness of $E$ is really used.  (In
-  Section~\ref{sec:convergence} it is used throughout, and irreducibly: (E3)
+  Section~\ref{sec:convergence} it is used throughout, and irreducibly: \eqref{E3}
   is what makes Prohorov's theorem available.)
 \item \emph{No semigroup theory.}  The manuscript rests on Chapters~2 and~3 of
   \EK{} alone, as envisaged in the project plan; of Chapter~1 only the notions of
@@ -8346,7 +8371,7 @@ to read sceptically.
 \midrule
 Time index
   & $\T = \Rp$
-  & (T0)--(T4), Definition~\ref{def:bundles}
+  & \eqref{T0}--\eqref{T4}, Definition~\ref{def:bundles}
   & the poset case really survives in Section~\ref{sec:MP}, in
     Theorem~\ref{thm:absuniq}\ref{it:absuniq_a}, in
     Theorem~\ref{thm:absconv} and in the kernel layer of
@@ -8365,7 +8390,7 @@ Convention $\iota$
     $\mathrm{p}$ before it (Remark~\ref{rem:embedflip}) \\
 State space
   & Polish
-  & (E0)--(E3), Definition~\ref{def:Ebundles}
+  & \eqref{E0}--\eqref{E3}, Definition~\ref{def:Ebundles}
   & martingale problems for $\mathcal{S}'(\R^d)$-valued processes are covered by
     Sections~\ref{sec:MP}--\ref{sec:duality} with no new proof
     (Remark~\ref{rem:E1why}) \\
@@ -8386,7 +8411,7 @@ Local problems
     (Remark~\ref{rem:pathjumpprimary}) \\
 Existence from a dual
   & \DGP: $\Rp$, Lebesgue, $E_1$ compact
-  & any shift invariant clock, (E1), fibred
+  & any shift invariant clock, \eqref{E1}, fibred
   & Section~\ref{ssec:exduality}; the compactness of \DGP{} survives only in
     Proposition~\ref{prop:rieszmarkov}, i.e.\ in \emph{checking} \ref{it:D3} \\
 \bottomrule
@@ -8397,10 +8422,10 @@ Existence from a dual
 Three of these deserve a sentence beyond the table.
 
 \emph{The index bundles pay for themselves by what they exclude.}  Separating
-(T2a) from (T2b) makes visible that Section~\ref{sec:cadlag} needs a topology on
+\eqref{T2a} from \eqref{T2b} makes visible that Section~\ref{sec:cadlag} needs a topology on
 $\T$ and Sections~\ref{sec:uniqueness} and \ref{sec:duality} need an algebraic
 property, which $\Rp$ happens to supply at once; and it turns up the fact that
-(T1$'$), the metric lattice that \EK, Section~2.8 builds and that the first
+\eqref{T1p}, the metric lattice that \EK, Section~2.8 builds and that the first
 draft of this manuscript took as the base assumption, is used \emph{nowhere}.
 
 \emph{The two conventions are not bookkeeping.}  Remark~\ref{rem:embedflip} is
