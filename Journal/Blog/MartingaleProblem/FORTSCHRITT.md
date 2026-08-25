@@ -8,25 +8,29 @@ chronologische Verlauf. Der Plan für das weitere Vorgehen steht in `PLAN.md`.
 
 ## Stand
 
-**2026-08-24** — Manuskript v3, 22 Seiten, kompiliert ohne undefinierte Referenzen.
-
-Inhalt:
+**2026-08-25** — Manuskript v33, 98 Seiten, kompiliert ohne undefinierte oder
+doppelte Referenzen, 8 Overfull-Boxen (max. 7,7 pt).
 
 | § | Inhalt | Quelle |
 |---|---|---|
-| 1 | Wahl des Settings, Begründung, Abgrenzung Polnisch / lokale Martingale | — |
-| 2 | Preliminaries: Facts aus EK86 Kap. 1–3 und Appendizes, Verwendungstabelle | EK86 Kap. 1–3 |
-| 3 | Abstrakter (lokaler) MP; Markovscher MP für einen Operator $A$ | CPS23 §3.1, EK86 §4.3 |
-| 4 | Càdlàg-Modifikation | EK86 Thm. 4.3.6 |
-| 5 | Eindeutigkeit, Markov, starke Markov | EK86 Thm. 4.4.2, Cor. 4.4.3 |
-| 6 | Dualität, Eindeutigkeit via Dualität | EK86 Lem. 4.4.10, Thm. 4.4.11, Cor. 4.4.13/14 |
-| 7 | Existenz via Konvergenz | EK86 Lem. 4.5.1/Rem. 4.5.2, CPS23 Thm. 4.1 |
-| 8 | Notizen zur Formalisierung, Mathlib-Bestandsaufnahme | — |
+| 1 | Wahl des Settings; Allgemeinheit (Index, Uhr, Zustandsraum, lokal); **1.4 was nicht verallgemeinert wurde** | — |
+| 2 | Preliminaries; Zeitindex-Bündel (T0)–(T4), Uhr, Zustandsraum (E0)–(E3) + **fibriert**; drei Bündeltabellen | EK86 Kap. 1–3 |
+| 3 | Abstrakter (lokaler) MP; Markovscher MP für $A$ | CPS23 §3.1, EK86 §4.3 |
+| 4 | Càdlàg-Modifikation, abstrakt und Markovsch | EK86 Thm. 4.3.6 |
+| 5 | Eindeutigkeit **ohne** Markov-Struktur; Markov-Schicht (Shift-Systeme, Pfad-Lift); lokale Theorie; lokale Eindeutigkeit | EK86 Thm. 4.4.2, KA21 §32, JS03 III.2 |
+| 6 | Dualität: Kettenidentität, Rektifikation der Uhr, **jede Uhr lässt Dualität zu** | EK86 Lem. 4.4.10/Thm. 4.4.11 |
+| 7 | Existenz, **fünf** Wege: Halbgruppe, **Dualer** (DGP24, mit Hawkes als Testobjekt), Sprungprozesse, SDEs, Konvergenz | EK86, CPS23, DGP24, JR16 |
+| 8/9 | Formalisierungsnotizen, Mathlib-Bestandsaufnahme, Design-Entscheidungen | — |
 
-**Task 1 ist abgeschlossen** (v6, 34 S.). Q1, Q2, Q3, Q6, Q7 sind beantwortet;
-offen sind Q4 (Halbgruppen-Weg), Q5 (Ort der Lean-Dateien) und **Q8**, das durch
-D14 neu gestellt ist. Nächster Schritt: Task 2 (Beweislücken) oder Task 3
-(Lean-Architektur).
+**Erledigt:** Tasks 1, 2, 9–20 sowie Q1–Q3, Q5–Q8. Task 17 (Konsistenz-Durchgang
+mit Prüfung jedes Arguments) ist abgeschlossen und hat acht mathematische Fehler
+gefunden — siehe D39, D40, D43, D44, D48.
+
+**Offen:** Tasks 3–8 (Lean-Formalisierung; auf Entscheidung des Nutzers pausiert,
+„erst muss die Theorie stehen"), Task 19 (historischer Prozess allgemein — am
+Hawkes-Beispiel durchgeführt, für Genealogien offen), Task 21 (pfadabhängige
+Uhr), Task 22 (Submartingalprobleme), Q4 (Halbgruppen-/Feller-Weg, bewusst
+ruhend).
 
 ---
 
@@ -1737,50 +1741,6 @@ Markov-Hypothese — J&S weisen sie in ihrem Rahmen nach. Der Merksatz
 gestrichen: **auch das Kleben ist es nicht.** Ebenso Rem. 5.23(ii) und die
 Aufzählung in Ex. 5.34.
 
----
-
-## Prüfprotokoll
-
-Alle Aussagen sind am Scan `references/EthierKurtz1986.pdf` bzw. am PDF von
-CPS23 verifiziert, nicht aus dem Gedächtnis rekonstruiert. Seitenangaben:
-Buchseite (PDF-Seite = Buchseite + 10).
-
-| Aussage | Buchseite | Status |
-|---|---|---|
-| Thm. 4.3.6 | 178f. | wörtlich geprüft |
-| Thm. 4.4.2 (a)(b)(c) + Beweis | 184–186 | wörtlich geprüft |
-| Cor. 4.4.3, Cor. 4.4.4, Rem. 4.4.5 | 187 | wörtlich geprüft |
-| Lem. 4.4.10, Thm. 4.4.11, Rem. 4.4.12 | 192f. | wörtlich geprüft |
-| Cor. 4.4.13, Cor. 4.4.14 | 195 | wörtlich geprüft |
-| Lem. 4.5.1, Rem. 4.5.2 | 196f. | wörtlich geprüft |
-| §4.3 Def. des MP, (3.2), (3.4), Lem. 4.3.2 | 173f. | wörtlich geprüft |
-| Kap. 1: 1.1.5/1.1.6, 1.2.6, 1.2.12, 1.3.1/1.3.3, 1.4.2/1.4.3, 1.5.1, 1.6.8 | 7–33 | wörtlich geprüft |
-| Kap. 2: 2.1.2/2.1.4, 2.2.8, 2.2.9, 2.2.13, 2.2.17, §2.3 | 51–87 | wörtlich geprüft |
-| Kap. 2 §2.8: (8.1)–(8.6), (8.10), Prop. 8.1–8.6, Thm. 8.7 | 84–88 | wörtlich geprüft (D16) |
-| Kap. 6: §6.1, Thm. 6.3.4 und Umfeld | 306–325 | wörtlich geprüft (D16) |
-| Kap. 3: 3.1.7/3.1.9, 3.2.1/3.2.2, 3.3.1, 3.4.1–3.4.6, §3.5, 3.5.1/3.5.6, 3.6.2/3.6.3, 3.7.1, 3.7.7, 3.7.8, 3.9.1, 3.9.4 | 103–145 | wörtlich geprüft |
-| Appendizes 2, 3, 4 | 493–496 | geprüft (OCR) |
-| CPS23 §3.1, Def. 3.2/3.3/3.5, Bsp. 3.6, Thm. 3.14, Cor. 3.17, Thm. 3.20, Cor. 3.21, §4.1 Thm. 4.1 | S. 10–20 | wörtlich geprüft |
-
-**Korrekturen während der Prüfung:**
-
-* EK86 Lemma 1.4.2: $A_0 = \{(f,g) \in \bar{A} : g \in \overline{\mathcal{D}(A)}\}$
-  — ich hatte zunächst $\overline{\mathcal{R}(A)}$ geschrieben. Am Scan (S. 21)
-  korrigiert. *(Betrifft nur v2; der Fact ist in v3 nicht mehr enthalten, siehe D5.)*
-* EK86: die Aussagen über $X(\tau)$-Messbarkeit stehen in **Proposition 2.1.4**,
-  nicht 2.1.5. Zitat korrigiert.
-* EK86 Thm. 4.4.1 und Cor. 4.4.4 tragen Abschlussstriche
-  ($\overline{\mathcal{R}(\lambda-A')} = \overline{\mathcal{D}(A')}$), die das OCR
-  verschluckt; am Scan (S. 182, 187) verifiziert. *(Nur v2, siehe D5.)*
-
-**Nicht geprüft / bewusst als Black Box übernommen:** EK86 Kapitel 3, Problem 7
-(benutzt in Thm. 4.1, letzter Schritt). Das ist eine *Aufgabe* im Buch, kein Satz
-— siehe Task 2.3 in `PLAN.md`.
-
----
-
-## Verlauf
-
 ### D39 — Task 17: Konsistenz-Durchgang, gefundene Fehler  *(2026-08-25)*
 
 Der Durchgang „jedes Argument prüfen" hat mehr gefunden als erwartet. Die
@@ -2430,6 +2390,65 @@ einem benutzt würde.
 werden durch Paarung mit einer Testfunktion behandelt, also kein Gewinn, und §4
 braucht eine Ordnung) und signierte Lösungsmaße (Disintegration fällt).
 
+---
+
+## Prüfprotokoll
+
+Alle Aussagen sind am Scan `references/EthierKurtz1986.pdf` bzw. am PDF von
+CPS23 verifiziert, nicht aus dem Gedächtnis rekonstruiert. Seitenangaben:
+Buchseite (PDF-Seite = Buchseite + 10).
+
+| Aussage | Buchseite | Status |
+|---|---|---|
+| Thm. 4.3.6 | 178f. | wörtlich geprüft |
+| Thm. 4.4.2 (a)(b)(c) + Beweis | 184–186 | wörtlich geprüft |
+| Cor. 4.4.3, Cor. 4.4.4, Rem. 4.4.5 | 187 | wörtlich geprüft |
+| Lem. 4.4.10, Thm. 4.4.11, Rem. 4.4.12 | 192f. | wörtlich geprüft |
+| Cor. 4.4.13, Cor. 4.4.14 | 195 | wörtlich geprüft |
+| Lem. 4.5.1, Rem. 4.5.2 | 196f. | wörtlich geprüft |
+| §4.3 Def. des MP, (3.2), (3.4), Lem. 4.3.2 | 173f. | wörtlich geprüft |
+| Kap. 1: 1.1.5/1.1.6, 1.2.6, 1.2.12, 1.3.1/1.3.3, 1.4.2/1.4.3, 1.5.1, 1.6.8 | 7–33 | wörtlich geprüft |
+| Kap. 2: 2.1.2/2.1.4, 2.2.8, 2.2.9, 2.2.13, 2.2.17, §2.3 | 51–87 | wörtlich geprüft |
+| Kap. 2 §2.8: (8.1)–(8.6), (8.10), Prop. 8.1–8.6, Thm. 8.7 | 84–88 | wörtlich geprüft (D16) |
+| Kap. 6: §6.1, Thm. 6.3.4 und Umfeld | 306–325 | wörtlich geprüft (D16) |
+| Kap. 3: 3.1.7/3.1.9, 3.2.1/3.2.2, 3.3.1, 3.4.1–3.4.6, §3.5, 3.5.1/3.5.6, 3.6.2/3.6.3, 3.7.1, 3.7.7, 3.7.8, 3.9.1, 3.9.4 | 103–145 | wörtlich geprüft |
+| Appendizes 2, 3, 4 | 493–496 | geprüft (OCR) |
+| CPS23 §3.1, Def. 3.2/3.3/3.5, Bsp. 3.6, Thm. 3.14, Cor. 3.17, Thm. 3.20, Cor. 3.21, §4.1 Thm. 4.1 | S. 10–20 | wörtlich geprüft |
+
+**Korrekturen während der Prüfung:**
+
+* EK86 Lemma 1.4.2: $A_0 = \{(f,g) \in \bar{A} : g \in \overline{\mathcal{D}(A)}\}$
+  — ich hatte zunächst $\overline{\mathcal{R}(A)}$ geschrieben. Am Scan (S. 21)
+  korrigiert. *(Betrifft nur v2; der Fact ist in v3 nicht mehr enthalten, siehe D5.)*
+* EK86: die Aussagen über $X(\tau)$-Messbarkeit stehen in **Proposition 2.1.4**,
+  nicht 2.1.5. Zitat korrigiert.
+* EK86 Thm. 4.4.1 und Cor. 4.4.4 tragen Abschlussstriche
+  ($\overline{\mathcal{R}(\lambda-A')} = \overline{\mathcal{D}(A')}$), die das OCR
+  verschluckt; am Scan (S. 182, 187) verifiziert. *(Nur v2, siehe D5.)*
+
+| KA21 Kap. 32 (lokales MP, Thm. 32.7/32.10/32.11) | — | geprüft (D28, D31) |
+| JS03 Kap. II–III (Charakteristiken, III.2.8/2.35/2.37/2.39/2.40/2.43) | — | geprüft (D29, D38) |
+| DGP24 Thm. 2.1, Prop. 2.5/2.6/2.8, Bsp. 6, §5 | — | geprüft (D41, D47) |
+| Mathlib v4.33.1: `IsProjectiveLimit`, `projectiveFamilyContent`, `Kernel.traj`, `integral_rieszMeasure` | — | am Quelltext geprüft (D43) |
+
+**Numerisch geprüft** (nicht nur gelesen):
+
+| Aussage | Verfahren | Ergebnis |
+|---|---|---|
+| Dualität für atomare Uhren, beide Konventionen, bis 5 Atome und auf $\{0,1,2\}^2$ | sympy, exakt | Differenz $\equiv 0$ (D39) |
+| Hawkes-Dualität, unbedingt | Clustersimulation, 200 000 Läufe | rel. Fehler 0,024 % (MC-Fehler 0,22 %) |
+| Hawkes-Dualität, bedingt auf die Vergangenheit | Clustersimulation | rel. Fehler 0,039 % (D48) |
+| Kozykel $\Theta_{r,t}=\Theta_{r,s}\Theta_{s,t}$, $V$-Kozykel | Diskretisierung | $10^{-4}$ (Gitterfehler) |
+| Volterra–Riccati-Umformung | symbolisch | Residuum $10^{-16}$ (D50) |
+
+**Ehemals Black Box, inzwischen bewiesen:** EK86 Kapitel 3, Problem 7 (benutzt im
+letzten Schritt von Thm. `absreg`). Das ist eine *Aufgabe* im Buch, kein Satz —
+Rem. `sepcondproof` im Manuskript gibt jetzt einen Beweis.
+
+---
+
+## Verlauf
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),
@@ -2832,3 +2851,44 @@ nachgezogen.
 
 Kompiliert, 67 Seiten, keine undefinierten oder doppelten Referenzen,
 7 Overfull-Boxen (max 7,7 pt).
+
+### 2026-08-25 — v24 (85 S.): Task 17 und Task 18
+
+→ D39–D44. Konsistenz-Durchgang mit Prüfung jedes Arguments: §6-These korrigiert
+(neu Lem. `rectify`, Thm. `anyclock`), `L1auto` auf strikte Stoppzeiten,
+`localrestart` zweistufig, `absstrongmarkov` eingeschränkt, `ex:invariance`
+Konvention, `jumpwellposed` neu bewiesen, `pathjumpMP` zweiteilig,
+`atomicdiscontinuity` korrigiert. Neu §7.2 „From a dual process" (DGP24) mit
+Fact `kolmogorov`. §8/§9 und die Bündeltabellen nachgezogen; Lem. `EKconv` ist
+jetzt Korollar von Thm. `absconv`.
+
+### 2026-08-25 — v25 (84 S.): weak-strong convergence entbehrlich
+
+→ D42. Neu Lem. `contuse`, Thm. `absconvaug`, Prop. `atomaug`, Rem. `C1aug`,
+Rem. `augvsws`. §7.8 heißt jetzt „Relaxing the continuity hypothesis"; die
+weak-strong-Schicht bleibt als Literaturbezug stehen, wird aber für nichts im
+Manuskript gebraucht.
+
+### 2026-08-25 — v26 (90 S.): fibrierter Zustandsraum und Pfad-Lift
+
+→ D45, D46, D49. Def. `Efibred` mit Audit und Begründung; Def. `pathlift`,
+Lem. `liftmarkov`, Rem. `liftcollapse` („jeder Prozess ist Markov, und genau
+deshalb ist es wertlos"); Rem. `liftform` zur Frage, ob das allgemeine MP ein
+Spezialfall des Markovschen ist.
+
+### 2026-08-25 — v27 (96 S.): Task 19 am Hawkes-Prozess
+
+→ D47, D48, D50. Setting `historical`, Lem. `histrestart`; dann die vollständige
+Verifikation am Hawkes-Prozess (Setting `hawkesdual`, Lem. `hawkesflow`,
+Prop. `hawkesduality`, Prop. `hawkesDcheck`, Cor. `hawkesrestart`). Nach dem
+Literaturcheck Rem. `hawkesknown` ergänzt: die Dualität ist klassisch (Cluster,
+affine Transformformel, Markovscher Lift); fünf Referenzen aufgenommen.
+
+### 2026-08-25 — v28 (98 S.): Audit der Verallgemeinerungen
+
+→ D51. Neu §1.4 mit Tabelle; Rem. `complexvalued` und Rem. `inequalitystable`
+(Submartingalprobleme) als die beiden gratis verfügbaren Verallgemeinerungen.
+Tasks 21 und 22 notiert.
+
+Kompiliert, 98 Seiten, keine undefinierten oder doppelten Referenzen,
+8 Overfull-Boxen (max. 7,7 pt).
