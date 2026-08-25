@@ -417,7 +417,9 @@ Test objects in §5.5: Volterra SDEs (CPS Ex. 3.13) and semimartingales with
 path-dependent characteristics (J&S III). Rem. 5.34 tabulates the split. See
 D33, D34.
 
-Sharpest formulation found: *localization is not Markovian, restarting is.*
+Sharpest formulation found at the time: *localization is not Markovian,
+restarting is.* — **superseded by Task 16**, which showed that pasting is not
+Markovian either; the line falls later still.
 
 ## Task 14 — Weak-strong convergence; the restart corrected — `done` *(2026-08-25, v21)*
 
@@ -456,22 +458,80 @@ The example uses §5.1, §5.3, §7.2 and §7.5 at once, and **no result of §5.2
 the first place where the non-Markovian layer is not merely applicable but
 necessary. See D37.
 
-## Task 16 — Local uniqueness with memory — `todo`
+## Task 16 — Local uniqueness with memory — `done` *(2026-08-25, v23)*
 
-D36 showed that restarting needs no shift. §5.4 (pasting, Thm. 5.29) still uses a
-kernel $P_{x,r}$ indexed by the **state**, hence forgets the past. The honest
-non-Markovian version would index it by the **stopped path**, $\alpha \mapsto Q_\alpha$
-with $Q_\alpha$ a solution from $T(\alpha)$ onwards agreeing with $\alpha$ up to
-$T$. Note this is a hypothesis, not a consequence — unlike the restart, pasting
-needs an external supply of solutions-after-$T$ — but it is the right shape, and
-it would move §5.4 out of the Markov column of Rem. 5.36.
+§5.4 no longer uses a state-indexed kernel, concatenation or a full shift system.
+Def. 5.31 replaces all three by a **restart kernel** $\alpha \mapsto Q_\alpha$
+indexed by the stopped path, whose defining property (R2) is exactly the
+conclusion of Lem. 5.5. Lem. 5.32 and Thm. 5.33 follow, and the Markovian
+construction is now Cor. 5.34.
 
-## Task 17 — Consistency sweep — `todo`
+The proof got *shorter*: a strict stopping time satisfies $T \circ a_T = T$, so
+$T$ is $Q_\alpha$-a.s. deterministic, and optional sampling, the $(t-T)^+$ case
+analysis and the cancellation of $\kappa$ all disappear.
 
-The manuscript has been through twenty-one revisions, several of which changed
-definitions that earlier remarks refer to (Def. 2.6, Def. 5.7, Def. 5.9, the
-convention $\iota$). A full read for stale claims and cross-references is due
-before anything is frozen.
+What remains genuinely assumed is the existence of a restart kernel — pasting
+must *supply* solutions after $T$, unlike the restart of Lem. 5.5 which merely
+reweights one. That is the only place in §5 where something comes from outside.
+
+Consequence: the slogan of D34, *localization is not Markovian, restarting is*,
+is now wrong and has been removed — pasting is not Markovian either. See D38.
+
+## Task 17 — Consistency sweep — `done` *(2026-08-25)*
+
+The manuscript has been through twenty-three revisions, several of which changed
+definitions that earlier remarks refer to. A full read for stale claims and
+cross-references, with **every argument checked**, is due before anything is
+frozen.
+
+**Done so far** (§2, §3, §4, §5, §6). Findings and corrections are recorded in
+D39 of `FORTSCHRITT.md`. The serious ones:
+
+1. **§6 rewritten** — the claim "duality needs a translation invariant clock"
+   was a fallacy. New Lem. `rectify`, Thm. `anyclock` (every clock admits
+   duality), Rem. `atomicdual`; `lem:chain` generalized to staircases and freed
+   of (T4); Rem. `conventionclash` deleted.
+2. **`lem:L1auto`** used $\inf\{t:|Y_t|>n\}$, which is not a *strict* stopping
+   time; replaced by the running supremum.
+3. **`lem:localrestart`** needs $Z$ bounded, and is now two-level.
+4. **`thm:absstrongmarkov`** — mixture over a random $\tau$ was ill-formed;
+   restricted to countably-valued $\tau$.
+5. New `lem:shiftembed`; §5.4 measurability and integrability made explicit.
+
+6. **§7 durchgegangen** (→ D40). Der schwerste Fund: `ex:invariance` war in
+   stetiger Zeit kein Martingal (Konvention $\mathrm p$ statt $\mathrm o$);
+   `prop:jumpwellposed` leitete die Erstsprung-Gleichung zirkulär her;
+   `thm:pathjumpMP` brauchte $E[N_t]<\infty$; `ex:atomicdiscontinuity` rechnete
+   den Kompensator falsch aus.
+
+7. **§7.8 vereinfacht** (→ D42, auf Nachfrage): weak-strong convergence wird
+   für nichts im Manuskript gebraucht. Neu Lem. `contuse`, Thm. `absconvaug`,
+   Prop. `atomaug`, Rem. `C1aug`, Rem. `augvsws`.
+8. **§8, §9 und die Bündeltabellen** (→ D43). Die Mathlib-Bestandsaufnahme war
+   falsch (Kolmogorov-Erweiterung ist **nicht** in v4.33.1, nur das Gerüst und
+   Ionescu–Tulcea für sequentiellen Index); die (F)-Liste war fehlnummeriert und
+   ist jetzt in Arbeitsreihenfolge; Design-Entscheidung (d) empfahl die von §5.3
+   verworfene Operator-Route; eine widersprüchliche `lem:chain`-Zeile in den
+   Tabellen entfernt.
+
+**Task 17 ist damit abgeschlossen.**
+
+## Task 18 — Existence by duality (\cite{DGP24}) — `done` *(2026-08-25)*
+
+Ausgeführt als §7.2 „From a dual process", mit Beweisen — siehe D41. Setting
+`dualdata` ((D1)–(D3)), Lem. `dualsemigroup`, Prop. `dualCK`, Thm. `exduality`,
+Cor. `exdualitywellposed`, Prop. `rieszmarkov`, Fact `kolmogorov` neu in §2.6.
+Drei Verallgemeinerungen gegenüber der Quelle: beliebige verschiebungsinvariante
+Uhr, nicht-linearer Index, (E1) statt Kompaktheit.
+
+## Task 19 — Historischer Prozess als Dualer — `todo`
+
+Die Methode von Task 18 erreicht die pfadabhängige Theorie aus §5.1/§5.4 nicht,
+weil \eqref{eq:dualityrel} über eindimensionale Verteilungen spricht. DGP §5
+(Ausblick) schlagen vor, den **historischen** Prozess zu dualisieren, also $E_1$
+als Pfad- oder Genealogieraum zu nehmen. Das macht $E_1$ nicht mehr lokalkompakt
+und verlagert das ganze Gewicht auf (D3). Offen, ob Prop. `rieszmarkov` dann
+durch etwas anderes ersetzbar ist — das ist die eigentliche Frage.
 
 ---
 

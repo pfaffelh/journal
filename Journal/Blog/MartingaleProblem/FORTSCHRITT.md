@@ -1686,6 +1686,57 @@ gebraucht.
 **Nebenbei:** die Bündeltabelle in §2.9 war zu lang geworden und lief über den
 Seitenrand; sie ist jetzt in drei Blöcke geteilt.
 
+### D38 — Task 16: lokale Eindeutigkeit ohne Shift  *(2026-08-25)*
+
+D36 hatte gezeigt, dass der Neustart keinen Shift braucht. §5.4 benutzte aber
+weiter einen über den **Zustand** indizierten Kern $P_{x,r}$ plus Konkatenation
+plus volles Shift-System. Das ist jetzt aufgelöst — und der Beweis wird dabei
+**kürzer**, nicht länger.
+
+**Die Änderung.** Statt (P1)/(P2)/(P3) nur noch zwei Dinge:
+
+* **Def. 5.30** — strikte Stoppzeit, $\mathcal{F}^\circ_T=a_T^{-1}(\mathcal{S})$.
+  Neu ausdrücklich vermerkt: daraus folgt $T\circ a_T=T$, die Stoppzeit ist durch
+  den gestoppten Pfad bestimmt.
+* **Def. 5.31 (Restart-Kern)** — ein Kern $\alpha\mapsto Q_\alpha$ von
+  $(F,\mathcal{F}^\circ_T)$ nach $(F,\mathcal{S})$ mit (R1)
+  $Q_\alpha\{a_T\beta=a_T\alpha\}=1$ (die Vergangenheit wird behalten) und (R2)
+  $Y^\circ$ ist unter $Q_\alpha$ ab $T(\alpha)$ ein Martingal. **(R2) ist genau
+  die Konklusion von Lem. 5.5.**
+
+**Lem. 5.32 (Pasting mit Gedächtnis).** $Q=\int Q_\alpha P(d\alpha)$ löst das
+volle Problem und stimmt auf $\mathcal{F}^\circ_T$ mit $P$ überein. Keine
+Konkatenation — die $Q_\alpha$ leben schon auf $F$ und stimmen schon bis $T$ mit
+$\alpha$ überein.
+
+**Warum der Beweis kürzer wird.** Wegen $T\circ a_T=T$ ist $T$ unter $Q_\alpha$
+**f.s. deterministisch**, gleich $T(\alpha)$. Damit entfallen Optional Sampling,
+die Fallunterscheidung über $(t-T)^+$ und das Wegheben von $\kappa$ gegen
+$\hat Y^\circ_0$; es bleiben zwei Fälle, $r\le s$ und $r>s$, beide direkt aus
+(R2).
+
+**Thm. 5.33** unverändert in der Aussage, **Cor. 5.34** ist der Markovsche Fall:
+aus einem vollen, messbaren Shift-System, einem Kern $(P_{x,r})$ und einer
+Konkatenation baut man einen Restart-Kern. Das bisherige Lemma ist damit das
+Korollar geworden, das es sein sollte.
+
+**Was ehrlich eine Annahme bleibt (Rem. 5.35).** Die *Existenz* eines
+Restart-Kerns. Anders als der Neustart aus Lem. 5.5, der eine vorhandene Lösung
+nur umgewichtet, muss das Kleben Lösungen nach $T$ für **jede mögliche
+Vergangenheit** *liefern*; und die bedingten Verteilungen einer Lösung des vollen
+Problems helfen nicht, weil deren Konstruktion gerade das Ziel ist. Das ist die
+einzige Stelle in §5, an der etwas von außen gegeben werden muss.
+
+**Folgen für die Audit-Tabelle.** §5.4 wandert von der Markov- in die
+Markov-freie Spalte; nur Cor. 5.34 bleibt rechts. In Ex. 5.35 (pfadabhängige
+Semimartingale) war die Aussage „§5.4 ist nicht verfügbar, weil Pasting eine
+Shift-Operation ist" **falsch** und ist korrigiert: §5.4 ist verfügbar, sobald ein
+Restart-Kern vorliegt, und das ist eine Anforderung an die *Daten*, keine
+Markov-Hypothese — J&S weisen sie in ihrem Rahmen nach. Der Merksatz
+„Lokalisierung ist nicht Markovsch, Neustarten schon" ist damit überholt und
+gestrichen: **auch das Kleben ist es nicht.** Ebenso Rem. 5.23(ii) und die
+Aufzählung in Ex. 5.34.
+
 ---
 
 ## Prüfprotokoll
@@ -1729,6 +1780,286 @@ Buchseite (PDF-Seite = Buchseite + 10).
 ---
 
 ## Verlauf
+
+### D39 — Task 17: Konsistenz-Durchgang, gefundene Fehler  *(2026-08-25)*
+
+Der Durchgang „jedes Argument prüfen" hat mehr gefunden als erwartet. Die
+Befunde, nach Schwere geordnet.
+
+**(1) §6 — die zentrale These war falsch.**
+Bisher stand da: Dualität brauche eine *translationsinvariante* Uhr (Haar), und
+das sei scharf; Prop. „haar"(c) führte $q=\delta_a$ als Gegenbeispiel an, und
+Rem. „conventionclash" behauptete, in der Konvention $(0,t]$ scheitere die
+diskrete Dualität.
+
+**Beides ist falsch.** Der Fehlschluss: aus „die Blöcke in \eqref{eq:cancel}
+heben sich auf der *arithmetischen* Antidiagonalen nicht auf" folgt nicht, dass
+$\Phi(t,0)-\Phi(0,t)\ne 0$ ist. Ein einzelner Treppenzug, der nicht kollabiert,
+ist kein Gegenbeispiel.
+
+Nachgerechnet (symbolisch, sympy):
+* $q$ rein atomar auf einem linear geordneten $\T$, beliebige Massen $m_k$,
+  bis $n=5$ Atome: $\Phi(t,0)-\Phi(0,t)=0$, **exakt**, in *beiden* Konventionen.
+* Ebenso auf dem *nicht* linear geordneten Index $\{0,1,2\}^2$.
+* Grund: $\gamma$ ist **eine** Funktion zweier Variabler und wird an jedem
+  Atompaar $(a_k,a_l)$ von *beiden* Darstellungen gleichzeitig festgelegt. Bei
+  gleichen Massen sagen diese Relationen genau, dass $\Phi$ auf den
+  Antidiagonalen des Atomgitters konstant ist.
+
+**Die Korrektur.**
+* Lem. „chain" verallgemeinert auf beliebige **Treppenzüge** $(s_k,t_k)$ statt
+  Antidiagonalen. Damit fällt (T4) dort *ganz* weg — die Kettenidentität lebt auf
+  (T0).
+* Neu **Lem. „rectify"** (Rektifikation der Uhr): unter (T2b) ist jede Uhr durch
+  die Zeittransformation $Q(s)=q(\T_{<s})$ plus affine Interpolation über die
+  Atome auf das Lebesgue-Maß auf einem Intervall zurückzuführen.
+* Neu **Thm. „anyclock"**: *jede* Uhr lässt Dualität zu, für $Q$-f.a. $t$, unter
+  der Integrierbarkeit von Lem. „calculus".
+* Prop. „haar" behält (a) und (b) — beide waren korrekt — und heißt jetzt
+  ehrlich „Haar clocks": das sind die Fälle, in denen der *arithmetische*
+  Treppenzug funktioniert.
+* Rem. „haarrole", Rem. „atomicdual" und Rem. „dualscope" neu bzw. neu
+  geschrieben. Rem. „conventionclash" ist ersatzlos gestrichen; §6 ist
+  konventionsagnostisch.
+* Offen bleibt: nicht-atomare Uhr auf nicht-linearem Index. Nichts im Manuskript
+  hängt daran.
+
+**Konsequenz für den Rest:** §1.2, §1.3, §2.9 (Bündeltabelle, drei neue Zeilen),
+Rem. „dualischain" und §8 (F3) nachgezogen. Die Behauptung „Atome kosten an zwei
+Stellen etwas" ist auf **eine** reduziert (§7.8, weak-strong convergence).
+
+**(2) §5.3 — `lem:L1auto` benutzte keine Stoppzeiten.**
+$\tau_n=\inf\{t:|Y_t|>n\}$ ist eine *offene* Debützeit und damit nur
+$\mathcal{F}^\circ_{t+}$-Stoppzeit, **nicht** strikt: ein Pfad mit
+$|Y_s|\le n$ auf $\T_{\le t}$ und $|Y_s|>n$ danach hat $\tau_n=t$, stimmt aber
+auf $\T_{\le t}$ mit einem Pfad überein, der $n$ nie überschreitet. Def.
+„localizing" verlangt aber strikte Stoppzeiten.
+
+Ersetzt durch das **laufende Supremum**, $\tau_n=\inf\{t:S_t\ge n\}$ mit
+$S_t=\sup_{s\le t}|Y_s|$; dann ist $\{\tau_n\le t\}=\{S_t\ge n\}$ und $S_t$ ist
+über die abzählbar dichte Menge $D$ aus (T2b) $\mathcal{F}^\circ_t$-messbar. Der
+Beweis hat jetzt vier Schritte; neu Rem. „strictdebut" zum Unterschied
+strikt/rechtsstetig. Rem. „jsdiff"(iii) behauptete, die Zeiten seien „strikt by
+construction, weil Pfadfunktionale" — das ist genau der Fehlschluss und ist
+korrigiert.
+
+**(3) `lem:localrestart` — $Z$ muss beschränkt sein.**
+(L3) liefert eine Martingalidentität nur gegen *beschränkte* Testvariable, die
+gestoppten Zuwächse liegen in keinem $L^p$, $p>1$. Außerdem ist das Lemma jetzt
+— wie Lem. „restart" — zweistufig auf $(\Omega,\mathcal F,\mathbb G,P)$ formuliert,
+weil Thm. „absuniq"(a) mit $Z=\mathbf 1_{F_0}$, $F_0\in\mathcal G_r$, arbeitet.
+Def. „localizing" sagt jetzt, wie (L1)–(L3) auf einer Umgebungsfiltration zu
+lesen sind, und wozu Striktheit dabei gebraucht wird.
+
+**(4) `thm:absstrongmarkov` — die Mischung war nicht wohlgeformt.**
+$R_2=\int P_{x,\tau}\,\mu_{F_0}(\dif x)$ mischt bei zufälligem $\tau$ über
+*verschiedene* Probleme $\XX^\circ_r$ und löst dann keines. Die zweite Aussage
+ist jetzt auf $\tau$ mit abzählbar vielen Werten eingeschränkt, der Beweis
+partitioniert nach $\{\tau=r_j\}$. Im zeithomogenen Fall ist die Einschränkung
+leer. Dazu Schritt 1 ausgeschrieben: $\tau+s$ ist Stoppzeit (via (T4)), und
+optional sampling braucht gleichgradig integrierbare Zuwächse — neu Rem.
+„strongmarkovscope".
+
+**(5) Neu `lem:shiftembed`.** $r+\cdot$ ist unter (T4) eine Ordnungs*einbettung*
+(nicht nur ordnungserhaltend), und unter (T2a) vertauscht sie mit $\wedge$. Das
+wurde in `lem:localrestart` stillschweigend benutzt.
+
+**(6) §5.4 präzisiert.** Messbarkeit des Ereignisses in (R1) braucht (E1);
+Integrierbarkeitsvoraussetzung in Lem. „pasting" explizit; Term (I) sauber über
+\eqref{eq:pastingI} statt „hängt nur über $a_T$ ab"; in Cor. „pastingmarkov" der
+Filtrationstransport $\Filt^\circ_{r+u}=\theta_r^{-1}\Filt^\circ_u$ $Q_\alpha$-f.s.
+ausgeschrieben.
+
+### D40 — Task 17, §7: gefundene Fehler  *(2026-08-25)*
+
+**(1) `ex:invariance` war falsch — und das ist der interessanteste Fund in §7.**
+Behauptet war: die eingebettete Markovkette hat mit $\iota_n=\mathrm p$ und
+$\psi^n_u=n(P_nf-f)(X^n_u)$ die Doob-Zerlegung als Martingal. In *stetiger* Zeit
+ist das **kein Martingal**: der Kompensator $\int_{[0,t)}\psi^n\,q^n$ nimmt für
+$t\in(m/n,(m+1)/n)$ schon den Summanden $k=m$ mit, während $f(X^n)$ noch bei
+$\Xi_m$ steht — $Y^n$ fällt unmittelbar *nach* $m/n$ um $(P_nf-f)(\Xi_m)$, ohne
+dass sich die Filtration ändert. Martingal ist es nur entlang des Gitters.
+
+Reparatur: $\iota_n=\mathrm o$, Atome bei $k/n$, $k\ge1$, und **prädiktabler**
+Integrand $\psi^n_u=n(P_nf-f)(X^n_{u-})$. Dann fallen Atom und Sprung zusammen.
+Neu Rem. `embedflip`, das den Punkt isoliert. Das ist zugleich das **schärfste
+Argument dafür, beide Konventionen zu führen**: dasselbe Objekt braucht
+intrinsisch $\mathrm p$ (Rem. `jumpdiscrete`, $\T=\N_0$) und nach Einbettung in
+$\Rp$ $\mathrm o$. Rem. `invariancepay`(iii) entsprechend umgeschrieben.
+
+**(2) `prop:jumpwellposed` — Erstsprung-Gleichung nicht verfügbar.**
+Der Beweis leitete \eqref{eq:firstjump} aus Prop. `fddchar` her. Das gibt sie
+nicht her: `fddchar` charakterisiert endlichdimensionale Verteilungen, nicht
+Sprungzeiten; \eqref{eq:firstjump} setzt voraus, dass die Lösung *ist*, was zu
+zeigen wäre. Ersetzt durch die Picard-Iteration für den **beschränkten** Operator
+$A$: $E[f(X_t)]=\int e^{tA}f\,\dif\nu$, mit $\lVert A^kf\rVert\le(2\bar\lambda)^k\lVert f\rVert$
+und explizitem Restglied über dem Simplex. Neu Rem. `jumpgronwall`, die erklärt,
+warum die Erstsprung-Route zirkulär wäre.
+
+**(3) `thm:jumpMP` Step 3 war eine Skizze.** Jetzt fünf Schritte: $\lambda=0$
+separat; Dominierung $\sum|D_n|\le2\lVert f\rVert N_t+\lVert Af\rVert t$ mit
+$N_t$ stochastisch dominiert von Poisson($\bar\lambda t$); Markov-Eigenschaft der
+Konstruktion explizit; dann $E[M_t-M_s\mid\Gilt_s]=0$.
+
+**(4) `thm:pathjumpMP` brauchte $E[N_t]<\infty$.** Ohne das ist
+$\int_0^t\mathcal A_sf\,\dif s$ nicht integrierbar und „ist ein Martingal" ist
+inhaltsleer — und zwar auch dann, wenn $\zeta=\infty$ f.s. Jetzt zweiteilig: (a)
+die **lokale** Aussage gilt unbedingt, weil
+$\int_{\tau_k}^{\tau_{k+1}}\Lambda=\varepsilon_{k+1}$ (neu: \eqref{eq:compensatorexp});
+(b) global unter $E[N_t]<\infty$, per Wald. Neu Rem. `pathjumpprimary`.
+
+**(5) `ex:atomicdiscontinuity` rechnete falsch.** $\int_{[0,t)}\omega\,\dif\delta_1
+=\omega(1)\one_{\{t>1\}}$, nicht $\omega(1-)$; und die Folge
+$\one_{[1-1/n,\infty)}$ zeigt gar keine Unstetigkeit. Richtig ist
+$\one_{[1+1/n,\infty)}\to\one_{[1,\infty)}$. Zusätzlich ergänzt: der Effekt tritt
+nur ein, wenn $P\{X_1\ne X_{1-}\}>0$.
+
+**(6) Kleinere Präzisierungen.** `lem:EKconv`: Stetigkeit des Integralterms und
+die Rechtsapproximation ausgeschrieben. `thm:absconv`: $D$ muss das größte
+Element von $\T$ enthalten (sonst scheitert Step 3 bei $\T=[0,T]$);
+$(Y^\circ_sZ^\circ_s)$-Stetigkeit begründet; UI-Index in Step 3 fixiert.
+`thm:CPSconv`: die Behauptung, Step 3 benutze \eqref{eq:cps1}, war falsch —
+(C3b) kommt dort aus der Beschränktheit von $f,g$. `cor:sdewellposed`: das
+lokalisierende System benannt.
+
+### D41 — Task 18: Existenz aus einem Dualen, eingebaut  *(2026-08-25)*
+
+\cite{DGP24} (Depperschmidt–Greven–Pfaffelhuber, TPB **159** (2024), 59–73) ist
+jetzt §7.2 „From a dual process", mit Beweisen. Kopie in
+`references/DepperschmidtGreven2019.pdf`.
+
+**Aufbau.** Setting `dualdata` mit (D1) Balance in integrierter Form, (D2)
+Separation, (D3) Kernel-Darstellbarkeit — Letztere für $H$ **und** $g$, weil
+Schritt 2 des Beweises sie für beide braucht; das steht in DGP implizit über
+$P_uG^X=G^XP_u$. Dann Lem. `dualsemigroup` (Halbgruppenidentität),
+Prop. `dualCK` (Chapman–Kolmogorov), Thm. `exduality` (Existenz + Dualitäts-
+relation), Cor. `exdualitywellposed` (Wohlgestelltheit), Prop. `rieszmarkov`
+(Riesz–Markov als hinreichende Bedingung für (D3)). Neu Fact `kolmogorov`
+(EK Thm. 4.1.1) in §2.6, da bisher nicht vorhanden.
+
+**Drei Verallgemeinerungen gegenüber der Quelle**, jeweils belegt durch den
+Beweis:
+* **beliebige verschiebungsinvariante Uhr** — die Uhr geht nur über
+  \eqref{eq:clockadd} und $q(\T_{\le t})<\infty$ ein (Letzteres macht den
+  Feynman–Kac-Faktor beschränkt);
+* **kein linear geordneter Index** — (T4) plus Kommutativität genügen; §7.2 ist
+  damit das einzige Existenzresultat des Manuskripts, das $\T=\Rp^2$ überlebt;
+* **(E1) statt kompakt** — Kompaktheit steckt allein in Prop. `rieszmarkov`,
+  also im *Prüfen* von (D3), nicht im Satz.
+
+**Der Kreis schließt sich:** dieselbe Dualitätsrelation wird zweimal benutzt —
+vorwärts zur Konstruktion (Thm. `exduality`), rückwärts zur Eindeutigkeit
+(Cor. `exdualitywellposed` über §6 und Thm. `absuniq`).
+
+**Was nicht trägt:** \eqref{eq:dualityrel} ist eine Aussage über
+eindimensionale Verteilungen aus einem festen Startpunkt, setzt also genau die
+Markov-Struktur voraus, die §5.1/§5.4 vermeiden. Reparatur wäre DGP §5:
+historischer Prozess, $E_1$ = Pfad- oder Genealogieraum. Als Task notiert, nicht
+ausgeführt. Die zeitinhomogene Version (zwei-Parameter-$P_{r,t}$, Shift-System,
+$q$-Reflexion statt $t-s$) ist in Rem. `exdualityscope` skizziert.
+
+### D42 — weak-strong convergence weitgehend überflüssig  *(2026-08-25)*
+
+Frage des Nutzers: ob die Argumente, die auf weak-strong convergence aufbauen,
+mit einfacheren Mitteln gehen. **Ja, und zwar vollständig für alles, was im
+Manuskript vorkommt.**
+
+**Die Beobachtung.** Neu Lem. `contuse`: im Beweis von Thm. `absconv` werden
+(C1) und (C3a) *ausschließlich* dazu benutzt, aus einem $P$-stetigen
+$\psi:F\to\R$ die Konvergenz $\psi(X^n)\Rightarrow\psi(X)$ zu ziehen — für genau
+drei Funktionale. Weder Filtration noch bestimmende Menge noch Konklusion hängen
+davon ab. Also darf die Stetigkeit auf *irgendeinem* Raum verlangt werden, durch
+den die Funktionale faktorisieren.
+
+**Die Reparatur.** Neu Thm. `absconvaug`: mit $\hat F=F\times G$, $G$ polnisch,
+$\gamma:F\to G$ borelsch und $\hat X=(X,\gamma(X))$ ersetzt man (C1) durch
+$\hat X^n\Rightarrow\hat X$ und (C3a) durch $\hat P$-Stetigkeit auf $\hat F$.
+Beweis: zwei Zeilen, alles andere unverändert.
+
+**Der Fall der atomaren Uhr.** Neu Prop. `atomaug`: $G=E^A$ mit $A$ = Atome von
+$q$, $\gamma(\omega)=(\omega(a))_{a\in A}$. Der atomare Summand von $Y^\circ$
+wird dann **überall** stetig (gleichmäßig konvergente Reihe, da
+$\sum_a m_a\le q(\T_{\le t})<\infty$), der diffuse Summand ist es ohnehin, und
+übrig bleibt nur die klassische Ausnahmemenge der festen Unstetigkeitsstellen von
+$X$ — dieselbe wie im atomlosen Fall, unabhängig von $A$.
+
+**Warum das reicht.** Die Unstetigkeit sitzt an **deterministischen** Stellen.
+CPS brauchen mehr, weil in ihrem §5.3 die kritischen Zeiten die *zufälligen*
+Sprungzeiten der Approximanten sind; die fängt keine feste Koordinatenfamilie
+ein. Rem. `augvsws` stellt beides in einer Tabelle gegenüber; die Trennlinie ist
+deterministisch vs. zufällig.
+
+**Bilanz.** Statt Def. `weakstrong`, Def. `PnPcont` und dem unbewiesen zitierten
+Fact `jacodmemin` (Jacod–Mémin) nur noch Fact `cmt` und Fact `ui` — beide schon
+da. Die weak-strong-Schicht bleibt stehen, aber als *Literaturbezug*, nicht als
+Werkzeug. Damit ist auch die Behauptung aus D35 korrigiert, Atome erzwängen eine
+Verschärfung des Konvergenzbegriffs: sie erzwingen eine gemeinsame
+Konvergenzvoraussetzung (C1$'$), mehr nicht.
+
+§7.8 heißt jetzt „Relaxing the continuity hypothesis"; Rem. `controlvars`,
+Rem. `CPSabstract`, Rem. `hawkescaveat`, die Bündeltabelle und §8 (F5b)
+nachgezogen.
+
+### D43 — Task 17 abgeschlossen: §8, §9 und die Bündeltabellen  *(2026-08-25)*
+
+**(1) Mathlib-Bestandsaufnahme war zu optimistisch — und das ist der wichtigste
+Fund.** Fact `kolmogorov` behauptete, die Kolmogorov-Erweiterung liege in Mathlib
+als `MeasureTheory.projectiveLimit` vor. Nachgeschaut in
+`.lake/packages/mathlib` (v4.33.1): **falsch.** Vorhanden sind nur
+
+* das Prädikat `IsProjectiveLimit` samt Eindeutigkeit
+  (`MeasureTheory/Constructions/Projective.lean`),
+* der Inhalt `projectiveFamilyContent` (`ProjectiveFamilyContent.lean`),
+* `ClosedCompactCylinders.lean` (das Gerüst des klassischen Beweises),
+* Ionescu–Tulcea `Kernel.traj` (`Probability/Kernel/IonescuTulcea/Traj.lean`) —
+  ohne topologische Voraussetzung, aber nur für **sequentiellen** Index.
+
+Der Kommentar in `ProjectiveFamilyContent.lean` sagt es ausdrücklich: „both
+results are not yet in Mathlib". Damit ist Fact `kolmogorov` eine **echte
+Vorleistung**, und (F6) zerfällt: für $\T=\N_0$ sofort machbar, für $\T=\Rp$
+wartend. Nebenbei bestätigt: Riesz–Markov ist da
+(`RieszMarkovKakutani/Real.lean`, `integral_rieszMeasure`), trägt also
+Prop. `rieszmarkov`.
+
+**(2) Die (F)-Liste war fehlnummeriert.** Die Labels hießen F1, F2, F3, F4, F5a,
+F0, F3b, F5b, gedruckt wurde aber (F1)…(F8) in Reihenfolge — die Namen suggerierten
+eine Ordnung, die der Druck nicht hatte. Jetzt in der empfohlenen
+Arbeitsreihenfolge sortiert: F1 (Definitionen) → F0 (Sprungprozesse als
+konkreter Test) → F2 (Eindeutigkeit) → F5a (abstrakte Konvergenz, mit
+`contuse`/`absconvaug`) → F3 (Dualität) → F3b (Existenz aus dem Dualen) → F4
+(càdlàg) → F5b (Skorokhod). Die drei Sätze, die auf die alte Reihenfolge
+Bezug nahmen, umgeschrieben.
+
+**(3) Design-Entscheidung (d) empfahl die verworfene Route.** Sie sagte, das
+lokale MP solle über den gestoppten **Operator** $A^{(m)}$ abgeleitet werden.
+Genau das hat §5.3 verworfen (Rem. `localsummary`: im abstrakten Setting ist
+$\XX^\circ$ primitiv, $A$ nicht). Neu formuliert: Testprozesse lokalisieren,
+(L1)–(L3) als wiederverwendbare Struktur, Lem. `L1auto` als das Lemma, das (L1)
+*konstruiert*, plus Warnung vor nicht-strikten Stoppzeiten.
+
+**(4) Design-Entscheidung (e) überzog.** „die einzige Stelle, wo Polnischkeit von
+$E$ wirklich gebraucht wird" — stimmt nur für §4/§5; in §7 ist (E3) durchgehend
+und unverzichtbar (Prohorov). Umformuliert. Neu (g) beide Konventionen und
+(h) Augmentation vor weak-strong.
+
+**(5) Bündeltabellen.** Stale Zeile `lem:chain` mit „(T0)+(T4), clock" in Tabelle 2
+stand im **Widerspruch** zur Zeile derselben Lemma in Tabelle 3 („(T0), any") —
+gelöscht. Präambel-Satz „die zwei $\iota$-Einträge sind die einzigen Stellen, wo
+die Konventionen auseinandergehen" war nach D39/D40 falsch — neu gefasst
+(nur §4 *braucht* seine Konvention). Neu: Zeilen für `lem:shiftembed`,
+`contuse`/`absconvaug`, `atomaug`, und (E1)-Vermerk bei `localmix`(b).
+
+**(6) Kleinere Nachzüge.** Abstract (iv): „the fourth" bei fünf Routen, und die
+Dualitäts-Existenz fehlte. Rem. `Ebundleuse`(ii): (E1) wird an **fünf**, nicht
+drei Stellen gebraucht (dazu `restartkernel` und `kolmogorov`). §1.3: das lokale
+MP ist bei pfadabhängiger Rate *primär*, nicht nur allgemeiner; und §5.3 hat
+drei Hypothesen, nicht zwei. Rem. `absconvcheck` auf `contuse` verwiesen.
+
+**Task 17 ist damit vollständig.** Gesamtbilanz des Durchgangs: sechs echte
+mathematische Fehler (D39: §6-These, `L1auto`, `localrestart`, `absstrongmarkov`;
+D40: `ex:invariance`, `jumpwellposed`, `pathjumpMP`, `atomicdiscontinuity`), eine
+falsche Bibliotheksbehauptung, eine fehlnummerierte Roadmap und eine
+Design-Entscheidung, die der eigenen Theorie widersprach.
 
 ### 2026-08-24 — v1 (17 S.)
 
@@ -2123,3 +2454,12 @@ Rem. 7.42. Bündeltabelle erweitert und dreigeteilt, §7-Einleitung nachgezogen,
 
 Kompiliert, 67 Seiten, keine undefinierten oder doppelten Referenzen,
 7 Overfull-Boxen (max 7,7 pt), keine Seitenüberläufe mehr.
+
+### 2026-08-25 — v23 (67 S.): Task 16
+
+→ D38. §5.4 neu: Def. 5.30/5.31, Lem. 5.32, Thm. 5.33, Cor. 5.34 (Markovscher
+Fall), Rem. 5.35. Audit-Tabelle, Ex. 5.34/5.35, Rem. 5.23 und die Bündeltabelle
+nachgezogen.
+
+Kompiliert, 67 Seiten, keine undefinierten oder doppelten Referenzen,
+7 Overfull-Boxen (max 7,7 pt).
