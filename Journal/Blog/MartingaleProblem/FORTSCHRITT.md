@@ -2249,6 +2249,92 @@ nur eine Querverweis-Beziehung ist.
 (D1) und die Zwei-Parameter-Form von (D3). Das steht ausdrücklich als Status im
 Manuskript.
 
+### D48 — Task 19 durchgeführt am Hawkes-Prozess  *(2026-08-25)*
+
+Der Schritt aus D47 versucht — **und er geht durch.** Neu in §7.2:
+Setting `hawkesdual`, Lem. `hawkesflow`, Prop. `hawkesduality`,
+Prop. `hawkesDcheck`, Cor. `hawkesrestart`, Rem. `hawkesscope`.
+
+**Die bedingte Dualität.** Gegeben die Vergangenheit $\hat x$ auf $[0,r]$ ist die
+Zukunft ein Poisson-Cluster-Prozess mit Immigrationsintensität
+$\mu_0+\int_{[0,r]}\phi(u-v)\hat x(\dif v)$ — konstante Immigration plus
+Nachkommen der Vergangenheit. Poisson-Superposition gibt
+$$E[H_t(\hat N_t,f)\mid\hat N_r=\hat x]=H_r(\hat x,\Theta_{r,t}f)\,V_{r,t}(f)$$
+mit $\Theta_{r,t}f(v)=f(v)+\int_r^t\phi(u-v)w^{(t)}_f(u)\dif u$ und
+$V_{r,t}(f)=\exp\{-\mu_0\int_r^t w^{(t)}_f\}$. Das **ist**
+\eqref{eq:dualityrel} in Zwei-Parameter-Form, mit deterministischem Dualem
+(also $E^y[\cdot]$ = Auswertung), Flussdynamik $\Theta$ und
+Feynman–Kac-Faktor $V$.
+
+**Die Flusseigenschaft, bewiesen in zwei Zeilen.** Spaltet man in
+\eqref{eq:hawkesdual} das Integral bei $s$, so erfüllt $w^{(t)}_f|_{[0,s]}$
+dieselbe Gleichung mit Horizont $s$ und Datum $\Theta_{s,t}f$; Eindeutigkeit gibt
+$w^{(t)}_f=w^{(s)}_{\Theta_{s,t}f}$ auf $[0,s]$ und daraus
+$\Theta_{r,t}=\Theta_{r,s}\circ\Theta_{s,t}$ sowie den Kozykel für $V$.
+
+**(D1).** $\frac{\dif}{\dif t}|_{t=r^+}$ der rechten Seite ist
+$\Lambda_r(\hat x)(e^{-f(r)}-1)H_r(\hat x,f)$ — also genau
+$\mathcal A_rH_r(\cdot,f)(\hat x)$ für den pfadabhängigen Generator
+\eqref{eq:pathgen}. Das erzeugte Martingalproblem ist das Hawkes-Problem aus
+Ex. `hawkes`.
+
+**(D2).** Laplace-Funktionale bestimmen Punktprozessverteilungen.
+
+**(D3), und zwar ohne Zirkel.** $1-w^{(t)}_f$ ist ein Laplace-Funktional: die
+Generationen-Abschneidung $G_{n+1}(s)=e^{-f(s)}\exp\{-\int_s^t\phi(u-s)(1-G_n(u))\}$
+ist per Induktion das Laplace-Funktional des nach $n$ Generationen
+abgeschnittenen Clusters, $G_n\downarrow 1-w$, und der Grenzcluster hat f.s.
+endlich viele Punkte, weil die Volterra-Resolvente lokal existiert. **Das
+konstruiert den Cluster aus der Verzweigungsrekursion, setzt $N$ also nicht
+voraus.**
+
+**Der Gewinn ist Cor. `hawkesrestart`, nicht die Existenz.** Für $f$ mit Träger
+in $[0,r]$ ist $w^{(t)}_f\equiv0$ auf $[r,t]$, also $\Theta_{r,t}f=f$ und
+$V_{r,t}(f)=1$ — die Hypothesen von Lem. `histrestart` sind erfüllt und die Kerne
+**behalten die Vergangenheit**. Damit ist ein **nicht-Markovscher Restart-Kern**
+konstruiert, den §5.4 bisher nicht hatte (Rem. `pastingassumed`: „die eine
+Stelle, an der etwas von außen gegeben werden muss"), und Thm. `localuniqueness`
+liefert lokale Eindeutigkeit im Sinne von J&S III.2.37 für das Hawkes-Problem —
+ohne Shift-System. Auf der Existenzseite reproduziert die Dualität dagegen die
+Hawkes–Oakes-Konstruktion, spart also nichts.
+
+**Numerik.** Bedingte Dualität gegen Clustersimulation: rel. Fehler 0,039 %
+(MC-Fehler 0,22 %). Kozykel gegen Diskretisierung: $10^{-4}$.
+
+**Nebenfund: Ex. `hawkes` war falsch.** „Für $\lVert\phi\rVert_1\ge1$ ist
+Explosion möglich" — nein. Ein *linearer* Hawkes-Prozess explodiert nie: $m=\mu_0+\phi*m$
+hat für jedes $\phi\in L^1_{loc}$ eine lokale Resolvente (auf $[0,\delta]$ mit
+$\int_0^\delta\phi<1$ konvergiert die Neumann-Reihe, dann schrittweise weiter),
+also $E[N_t]<\infty$ für alle $t$. Was $\lVert\phi\rVert_1=1$ trennt, ist nicht
+Existenz sondern **Stabilität**: darunter ist die Schranke gleichmäßig in $t$,
+darüber wächst $m$ exponentiell. Verwechslung von exponentiellem Wachstum mit
+Explosion. Korrigiert.
+
+### D49 — „Ist das allgemeine MP ein Spezialfall des Markovschen?"  *(2026-08-25)*
+
+Frage des Nutzers während D48. Neu Rem. `liftform` in §5.2.
+
+**Formal ja, und leer.** Jedes $Y^\circ$ ist $\Filt^\circ_t$-adaptiert, nach
+Lem. `liftmarkov`(a) und Doob–Dynkin also $\varphi_t(\hat\pi_t)$. Auf dem Lift
+hat es damit die Gestalt \eqref{eq:sectiontest} mit $g=0$. Das ist dieselbe
+Leere, die §2.2 schon festhält: jeder Prozess löst das MP für *irgendeine*
+Testfamilie, nämlich seine eigenen Martingale. **Die Markovsche Form ist keine
+Einschränkung an den Prozess, sondern an die Präsentation** — ihr Inhalt ist,
+dass $\XX_A$ eine kleine, durch $\dom(A)$ parametrisierte Familie mit punktweise
+erzeugtem Kompensator ist, und $g=0$ wirft genau das weg.
+
+**Informativ wird es mit $g\ne0$.** Der nützliche Lift hebt den Zustand und
+**behält** den Generator, dessen Integrand dann ein Pfadfunktional ist. Das ist
+auf dem Lift wieder wörtlich Def. `markovMP` — und steht schon im Manuskript:
+**Setting `pathjump` (§7.9) ist das Markovsche Martingalproblem auf dem Lift**,
+mit $\hat f_t(\hat x)=f(\hat x(t))$ an der Spitze und
+$\hat g_u(\hat x)=\mathcal A_uf(\hat x)$ als pfadabhängiger Rate. Ex. `volterra`,
+`pathdepsemi` und `hawkes` sind alle von dieser Art.
+
+**Sätze folgen trotzdem keine** — D46 gilt für beide Versionen, und der
+klassische Markov-Apparat (zeitunabhängiger Operator, Halbgruppe, Feller) fehlt
+so oder so, weil die Fasern wachsen.
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),

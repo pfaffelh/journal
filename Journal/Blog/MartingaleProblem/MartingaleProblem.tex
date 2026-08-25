@@ -2789,6 +2789,52 @@ justification for Section~\ref{ssec:absuniq}.
   frame up.
 \end{remark}
 
+\begin{remark}[Is the abstract martingale problem a special case of the Markovian one?]
+  \label{rem:liftform}
+  Lemma~\ref{lem:liftmarkov} invites the question, and the answer separates two
+  things that are easy to run together.
+
+  \emph{Formally yes, and emptily.}  Every $Y^\circ \in \XX^\circ$ is
+  $\Filt^\circ_t$-adapted, so by \ref{it:lift_sigma} and Doob--Dynkin there are
+  measurable $\varphi_t$ on $\hat{E}_t$ with $Y^\circ_t = \varphi_t(\hat\pi_t)$.
+  Read on the lift, $Y^\circ$ therefore has the shape \eqref{eq:sectiontest} of
+  Definition~\ref{def:markovMP} with $g = 0$.  So the abstract martingale problem
+  \emph{is} a Markovian one, on the lifted state space, with vanishing
+  compensator.  This is the same emptiness that Section~\ref{ssec:timeindex}
+  records when it observes that every process solves the martingale problem for
+  \emph{some} family of test processes, namely the family of its own martingales:
+  the Markovian form is not a restriction on the process but on the
+  \emph{presentation}, and its content is that $\XX_A$ is a small family
+  parametrized by $\dom(A)$ whose compensator is generated pointwise from $g$.
+  Taking $g = 0$ discards exactly that content.
+
+  \emph{Informatively, with $g \neq 0$.}  The useful lift is not the one that
+  makes the compensator vanish but the one that keeps it and lets its integrand be
+  a \emph{path} functional.  On the lift that is again literally
+  Definition~\ref{def:markovMP}, and the manuscript already contains it:
+  Setting~\ref{set:pathjump} is the Markovian martingale problem on the lift,
+  with
+  \[
+    \hat{f}_t(\hat{x}) = f(\hat{x}(t)) \ \text{ acting on the tip} ,
+    \qquad
+    \hat{g}_u(\hat{x}) = \mathcal{A}_u f(\hat{x}) \ \text{ the path-dependent rate} ,
+  \]
+  and Examples~\ref{ex:volterra}, \ref{ex:pathdepsemi} and \ref{ex:hawkes} are all
+  of this kind.  So the honest formulation is: the lift does not enlarge the class
+  of \emph{processes} --- there was never a restriction there --- but it does
+  supply a useful \emph{presentation}, provided one lifts the state and keeps the
+  generator rather than lifting the state and deleting it.
+
+  \emph{What still does not follow is any theorem.}  Remark~\ref{rem:liftcollapse}
+  applies verbatim to either version: on the lift the hypotheses of
+  Section~\ref{ssec:markovlayer} become their own conclusions.  And the classical
+  Markov apparatus --- a time-independent operator, a transition semigroup, Feller
+  theory --- is unavailable in either version, since the fibres $\hat{E}_t$ grow
+  with $t$ and there is nothing for a semigroup to act on.  What the lift is good
+  for is recorded at the end of Remark~\ref{rem:liftcollapse} and carried out in
+  Section~\ref{ssec:exduality}.
+\end{remark}
+
 So far nothing beyond a preorder has been used, and nothing Markovian.  It is
 worth pushing that as far as it goes, because uniqueness of the
 finite-dimensional distributions is \emph{not} a Markovian fact.  What is
@@ -5473,50 +5519,241 @@ because it answers a question left open in Section~\ref{ssec:localuniq}.
   stops.
 \end{remark}
 
-\begin{remark}[A test object: the Hawkes process and its cluster dual]
-  \label{rem:histhawkes}
-  The manuscript already contains a path-dependent process whose historical dual
-  is classical, deterministic, and of exactly the shape
-  Setting~\ref{set:historical} asks for.
+\subsubsection*{Carrying it out: the Hawkes process}
 
+The manuscript already contains a path-dependent process whose historical dual is
+classical, \emph{deterministic}, and of exactly the shape
+Setting~\ref{set:historical} asks for.  This subsection verifies the hypotheses.
+
+\begin{setting}[The Hawkes duality data; (T3)]
+  \label{set:hawkesdual}
   Let $N$ be the Hawkes process of Example~\ref{ex:hawkes}, with immigration rate
-  $\mu_0$ and offspring kernel $\phi$, $\lVert\phi\rVert_1 < 1$.  Take
+  $\mu_0 > 0$ and offspring kernel $\phi \in L^1_{\mathrm{loc}}(\Rp)$, $\phi \geq 0$.
+  Put
   \begin{gather*}
-    \hat{E}_t = \{ \text{counting paths on } [0,t] \} ,
+    \hat{E}_t = \{\text{counting measures on } [0,t] \text{ with finitely many atoms}\} , \\
+    E_2 = \{ f : \Rp \to [0,\infty) \text{ bounded measurable} \} , \\
+    H_t(\hat{x},f) = \exp\Bigl\{ -\int_{[0,t]} f \dif\hat{x} \Bigr\} ,
     \qquad
-    E_2 = \{ f : \Rp \to [0,\infty) \text{ measurable} \} , \\
-    H_t(\hat{x},f) = e^{-\int_{[0,t]} f \dif\hat{x}} .
+    \Lambda_t(\hat{x}) = \mu_0 + \int_{[0,t)} \phi(t-s) \, \hat{x}(\dif s) .
   \end{gather*}
-  The Hawkes--Oakes cluster representation gives, with
-  $w_f(s) = 1 - E[e^{-\int f \dif C_s}]$ for a cluster $C_s$ started at $s$,
-  \begin{align}
+\end{setting}
+
+\begin{lemma}[The dual flow; (T3)]
+  \label{lem:hawkesflow}
+  For every $t > 0$ and $f \in E_2$ the backward equation
+  \begin{equation}
     \label{eq:hawkesdual}
-    1 - w_f(s) &\;=\; e^{-f(s)}
-      \exp\Bigl\{ - \int_s^\infty \phi(u-s) \, w_f(u) \dif u \Bigr\} , \\
-    \notag
-    E\bigl[ e^{-\int f \dif N} \bigr]
-      &\;=\; \exp\Bigl\{ -\mu_0 \int_0^\infty w_f(s) \dif s \Bigr\} .
-  \end{align}
-  So the dual is the \emph{deterministic} solution of a nonlinear Volterra
-  equation, run \emph{backwards} in time --- the memory-carrying analogue of
-  \DGP's Example~6, where the dual solves $\dot{Y} = -\Psi(Y)$ and $\Psi$ is the
-  branching mechanism.  The two facts that make this a candidate rather than an
-  analogy are that Laplace functionals separate laws of point processes, which is
-  \ref{it:D2}; and that recognizing the right-hand side of \eqref{eq:hawkesdual}
-  as a Laplace functional is exactly the check that
-  Remark~\ref{rem:histobstruction} says must replace Riesz--Markov.
+    1 - w^{(t)}_f(s) \;=\; e^{-f(s)}
+      \exp\Bigl\{ - \int_s^t \phi(u-s) \, w^{(t)}_f(u) \dif u \Bigr\} ,
+    \qquad s \in [0,t] ,
+  \end{equation}
+  has a unique solution $w^{(t)}_f : [0,t] \to [0,1]$.  Put, for $r \leq t$,
+  \[
+    \Theta_{r,t}f(v) \;=\; f(v) + \int_r^t \phi(u-v) \, w^{(t)}_f(u) \dif u
+      \quad (v \in [0,r]) ,
+    \qquad
+    V_{r,t}(f) \;=\; \exp\Bigl\{ -\mu_0 \int_r^t w^{(t)}_f \Bigr\} .
+  \]
+  Then for $r \leq s \leq t$
+  \begin{equation}
+    \label{eq:hawkesrestriction}
+    w^{(t)}_f \;=\; w^{(s)}_{\Theta_{s,t}f} \quad\text{on } [0,s] ,
+  \end{equation}
+  and consequently
+  \begin{equation}
+    \label{eq:hawkescocycle}
+    \Theta_{r,t} = \Theta_{r,s} \circ \Theta_{s,t} ,
+    \qquad
+    V_{r,t}(f) = V_{s,t}(f) \cdot V_{r,s}(\Theta_{s,t}f) .
+  \end{equation}
+\end{lemma}
 
-  What would be gained is a construction of a solution of a \emph{path-dependent}
-  martingale problem --- the one in Example~\ref{ex:hawkes}, whose rate
-  $\Lambda_t = \mu_0 + \int_{[0,t)}\phi(t-s)\dif N_s$ is a functional of the whole
-  past --- out of a deterministic dual, with no approximating sequence and no
-  shift system.  It would also connect Section~\ref{ssec:exduality} to
-  Section~\ref{ssec:hawkes}, which at present share nothing but a reference.
+\begin{proof}
+  \emph{Existence and uniqueness.}  The right-hand side of \eqref{eq:hawkesdual}
+  lies in $(0,1]$, so any solution takes values in $[0,1)$.  The map
+  $w \mapsto 1 - e^{-f}\exp\{-\phi * w\}$ is monotone and maps $[0,1]$-valued
+  functions to $[0,1]$-valued functions, so backward iteration from $w \equiv 0$
+  increases to a solution; and on an interval of length $\delta$ with
+  $\int_0^\delta \phi < 1$ it is a contraction in the supremum norm, which gives
+  uniqueness there and then, stepping backwards, on all of $[0,t]$.
 
-  \emph{Status.}  Equation~\eqref{eq:hawkesdual} is classical and has been checked
-  numerically against a cluster simulation; that
-  Setting~\ref{set:historical} applies to it, in particular \ref{it:D1} and the
-  two-parameter form of \ref{it:D3}, has \emph{not} been verified here.
+  \emph{\eqref{eq:hawkesrestriction}.}  For $s' \in [0,s]$ split the integral in
+  \eqref{eq:hawkesdual} at $s$:
+  \[
+    1 - w^{(t)}_f(s')
+      = e^{-f(s')} \exp\Bigl\{ -\int_s^t \phi(u-s') w^{(t)}_f(u)\dif u \Bigr\}
+        \cdot \exp\Bigl\{ -\int_{s'}^{s} \phi(u-s') w^{(t)}_f(u)\dif u \Bigr\} .
+  \]
+  The first two factors are $e^{-\Theta_{s,t}f(s')}$ by the definition of
+  $\Theta$.  So $w^{(t)}_f$ restricted to $[0,s]$ satisfies \eqref{eq:hawkesdual}
+  with horizon $s$ and datum $\Theta_{s,t}f$, and uniqueness gives
+  \eqref{eq:hawkesrestriction}.
+
+  \emph{\eqref{eq:hawkescocycle}.}  Both assertions are \eqref{eq:hawkesrestriction}
+  inserted into the definitions, the first after splitting
+  $\int_r^t = \int_r^s + \int_s^t$.
+\end{proof}
+
+\begin{proposition}[The conditional duality relation; (T3)]
+  \label{prop:hawkesduality}
+  Let $N$ be a Hawkes process as in Setting~\ref{set:hawkesdual} and let
+  $\hat{N}$ be its path lift.  Then for $r \leq t$ and $f \in E_2$,
+  \begin{equation}
+    \label{eq:hawkescond}
+    E\bigl[ H_t(\hat{N}_t, f) \bigm| \hat{N}_r = \hat{x} \bigr]
+      \;=\; H_r\bigl( \hat{x}, \Theta_{r,t}f \bigr) \cdot V_{r,t}(f) .
+  \end{equation}
+\end{proposition}
+
+\begin{proof}
+  By the Hawkes--Oakes cluster representation, conditionally on the past
+  $\hat{x}$ the points in $(r,t]$ form a Poisson cluster process whose immigrant
+  intensity at $u \in (r,t]$ is
+  $\mu_0 + \int_{[0,r]} \phi(u-s)\hat{x}(\dif s)$ --- the constant immigration
+  plus the offspring of the past --- each immigrant at $u$ generating an
+  independent cluster with Laplace functional $1 - w^{(t)}_f(u)$ by
+  \eqref{eq:hawkesdual}.  The Poisson superposition formula
+  $E[\prod_{u \in \Pi}h(u)] = \exp\{-\int(1-h)\}$ therefore gives
+  \[
+    E\bigl[ e^{-\int_{(r,t]} f \dif N} \bigm| \hat{N}_r = \hat{x} \bigr]
+      = \exp\Bigl\{ -\int_r^t
+          \Bigl( \mu_0 + \int_{[0,r]}\phi(u-v)\hat{x}(\dif v) \Bigr)
+          w^{(t)}_f(u) \dif u \Bigr\} ,
+  \]
+  and multiplying by the deterministic factor
+  $e^{-\int_{[0,r]}f\dif\hat{x}}$ and using Fubini to rewrite the double integral
+  as $\int_{[0,r]}(\Theta_{r,t}f - f)\dif\hat{x}$ gives \eqref{eq:hawkescond}.
+\end{proof}
+
+Equation~\eqref{eq:hawkescond} is \eqref{eq:dualityrel} in its two-parameter form,
+with a \emph{deterministic} dual --- so $E^y[\cdot]$ is evaluation --- whose
+dynamics is the flow $\Theta$ and whose Feynman--Kac factor is $V$.  It is the
+memory-carrying analogue of \DGP's Example~6, where the dual solves
+$\dot{Y} = -\Psi(Y)$ for the branching mechanism $\Psi$; here the branching
+mechanism has become a Volterra kernel and the dual runs backwards.
+
+\begin{proposition}[The remaining hypotheses; (T3)]
+  \label{prop:hawkesDcheck}
+  In Setting~\ref{set:hawkesdual}:
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:hd_balance}
+    \emph{Balance.}  For every $\hat{x} \in \hat{E}_r$ and $f \in E_2$ with $f$
+    continuous at $r$,
+    \[
+      \frac{\dif}{\dif t}\Big|_{t=r^+}
+        H_r(\hat{x},\Theta_{r,t}f) \, V_{r,t}(f)
+      \;=\; \Lambda_r(\hat{x}) \bigl( e^{-f(r)} - 1 \bigr) H_r(\hat{x},f) ,
+    \]
+    which is exactly $\mathcal{A}_r H_r(\cdot,f)(\hat{x})$ for the path-dependent
+    generator \eqref{eq:pathgen} of Setting~\ref{set:pathjump} with
+    $\Lambda = \Lambda_r$ and $\mu(r,\hat{x},\cdot) = \delta_{\hat{x}(r-)+1}$.
+    So \ref{it:D1} holds, and the martingale problem \eqref{eq:dualMP} it produces
+    is the Hawkes martingale problem of Example~\ref{ex:hawkes}.
+  \item \label{it:hd_sep}
+    \emph{\ref{it:D2}.}  $\operatorname{span}\{H_r(\cdot,f) : f \in E_2\}$ is
+    separating on $\Prob(\hat{E}_r)$, Laplace functionals determining the law of a
+    point process.
+  \item \label{it:hd_kernel}
+    \emph{\ref{it:D3}.}  $1 - w^{(t)}_f$ is the Laplace functional of a point
+    process on $[0,t]$, and consequently the right-hand side of
+    \eqref{eq:hawkescond} is the Laplace functional of a point process on $[0,t]$
+    extending $\hat{x}$.  The kernels $\mu_{r,t}(\hat{x},\cdot)$ of \ref{it:D3}
+    are its laws.
+  \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+  \ref{it:hd_balance}  Write $A(t) = \int_r^t \Lambda^{\hat{x}}_u w^{(t)}_f(u)\dif u$
+  with $\Lambda^{\hat{x}}_u = \mu_0 + \int_{[0,r]}\phi(u-v)\hat{x}(\dif v)$, so
+  that the left-hand side is $H_r(\hat x,f) \cdot \frac{\dif}{\dif t}e^{-A(t)}$ at
+  $t = r$.  Since $A(r) = 0$ and the integrand is evaluated on a range shrinking
+  to a point, $A'(r) = \Lambda^{\hat{x}}_r w^{(r)}_f(r)$, and
+  \eqref{eq:hawkesdual} at $s = t = r$ gives $w^{(r)}_f(r) = 1 - e^{-f(r)}$.  Now
+  $\Lambda^{\hat{x}}_r = \Lambda_r(\hat{x})$ and the claim follows.  That the
+  right-hand side is $\mathcal{A}_rH_r(\cdot,f)(\hat{x})$ is
+  \eqref{eq:pathgen}: adding one point at $r$ multiplies
+  $H_r(\hat{x},f)$ by $e^{-f(r)}$.
+
+  \ref{it:hd_sep}  Standard.
+
+  \ref{it:hd_kernel}  Let $G_0(s) = e^{-f(s)}$ and
+  $G_{n+1}(s) = e^{-f(s)}\exp\{-\int_s^t\phi(u-s)(1-G_n(u))\dif u\}$.  By
+  induction $G_n$ is the Laplace functional of the cluster started at $s$ and
+  truncated after $n$ generations: $G_0$ is that of the single point $\delta_s$,
+  and the recursion superposes onto it a Poisson process of intensity
+  $\phi(\cdot - s)$ of independent $n$-generation clusters, whose Laplace
+  functional is the exponential factor.  The truncated clusters increase with
+  $n$, so $G_n$ decreases, to $1 - w^{(t)}_f$ by uniqueness in
+  Lemma~\ref{lem:hawkesflow}.  The limiting cluster has finitely many points a.s.,
+  its expected size being $\sum_{n\geq 0}\lVert \phi^{*n}\rVert_{L^1[0,t]}$, which is
+  finite because the Volterra resolvent of $\phi$ exists in
+  $L^1_{\mathrm{loc}}$ for every $\phi \in L^1_{\mathrm{loc}}$.  So it is a point
+  process and $1 - w^{(t)}_f$ is its Laplace functional; the second assertion
+  follows by one more Poisson superposition, as in the proof of
+  Proposition~\ref{prop:hawkesduality}.  \emph{Note that this argument does not
+  presuppose the existence of $N$}: it constructs the cluster from the branching
+  recursion alone.
+\end{proof}
+
+\begin{corollary}[The restart kernel]
+  \label{cor:hawkesrestart}
+  Take $E_2^{(r)} = \{f \in E_2 : f = 0 \text{ on } (r,\infty)\}$.  Then
+  $w^{(t)}_f \equiv 0$ on $[r,t]$, hence $\Theta_{r,t}f = f$ and
+  $V_{r,t}(f) = 1$; hypotheses \ref{it:hist_past}--\ref{it:hist_sep} of
+  Lemma~\ref{lem:histrestart} hold, and therefore
+  \[
+    \mu_{r,t}(\hat{x},\cdot) \circ \rho_{r,t}^{-1} \;=\; \delta_{\hat{x}} :
+  \]
+  the kernels of Proposition~\ref{prop:hawkesDcheck}\ref{it:hd_kernel} form a
+  restart kernel in the sense of Definition~\ref{def:restartkernel}.
+\end{corollary}
+
+\begin{proof}
+  For $f$ vanishing on $(r,t]$, equation \eqref{eq:hawkesdual} on $[r,t]$ reads
+  $1 - w(s) = \exp\{-\int_s^t\phi(u-s)w(u)\dif u\}$, which $w \equiv 0$ solves;
+  uniqueness gives $w^{(t)}_f \equiv 0$ there, and the two displays follow.
+  Hypothesis \ref{it:hist_past} holds because $H_t(\hat{x}',f)$ then depends on
+  $\hat{x}'$ only through its restriction to $[0,r]$, \ref{it:hist_rest} is
+  $\Theta_{r,t}f = f$ together with $V_{r,t}(f) = 1$, and \ref{it:hist_sep} is
+  Proposition~\ref{prop:hawkesDcheck}\ref{it:hd_sep} applied on $\hat{E}_r$.
+\end{proof}
+
+\begin{remark}[What this settles, and what it does not]
+  \label{rem:hawkesscope}
+  \emph{Settled.}  Setting~\ref{set:historical} is not empty: there is a
+  path-dependent martingale problem --- the Hawkes problem of
+  Example~\ref{ex:hawkes}, whose rate is a functional of the whole past --- for
+  which the historical duality data exist, the dual is deterministic, and
+  \ref{it:D1}--\ref{it:D3} all hold.  The dual dynamics is a backward nonlinear
+  Volterra flow, and the two-parameter structure of
+  Remark~\ref{rem:exdualityscope} is not a convenience here but forced, the
+  fibres $\hat{E}_t$ growing with $t$.
+
+  \emph{The payoff is Corollary~\ref{cor:hawkesrestart}, not existence.}  The
+  verification of \ref{it:D3} constructs the cluster, and assembling the Hawkes
+  process from clusters is the Hawkes--Oakes construction; so on the existence
+  side the duality route reproduces a known argument rather than replacing one.
+  What is genuinely new is the restart kernel.
+  Remark~\ref{rem:pastingassumed} records that its existence is ``the one place
+  in Section~\ref{sec:uniqueness} where something must be given from outside'',
+  and Section~\ref{ssec:localuniq} had no non-Markovian instance:
+  Corollary~\ref{cor:pastingmarkov} builds one from a shift system, which a
+  path-dependent problem does not have.  Corollary~\ref{cor:hawkesrestart} is
+  such an instance, and with it Theorem~\ref{thm:localuniqueness} gives local
+  uniqueness in the sense of \JS, Definition~III.2.37 for the Hawkes martingale
+  problem, with no shift anywhere.
+
+  \emph{Not settled.}  The general programme.  What made the verification
+  possible is that the state space is one of point configurations, where Laplace
+  functionals both separate (\ref{it:D2}) and characterize
+  (\ref{it:D3}); Remark~\ref{rem:histobstruction} explains that for a genealogy
+  space neither is available, and nothing here helps there.
+
+  \emph{Numerics.}  Equation~\eqref{eq:hawkescond} and the cocycle
+  \eqref{eq:hawkescocycle} were checked against a cluster simulation and against
+  a discretization of \eqref{eq:hawkesdual}; the relative errors were $4 \cdot 10^{-4}$
+  and $10^{-4}$, against a Monte Carlo standard error of $2 \cdot 10^{-3}$.
 \end{remark}
 
 \subsection{Jump processes}
@@ -7063,16 +7300,23 @@ this is the exponential law of Definition~\ref{def:jumpconstruction}.
   bounded $f$; taking $f = \mathrm{id}$ on bounded sets recovers the defining
   property that $N - \int_0^\cdot \Lambda_s \dif s$ is a martingale.
 
-  The stability threshold is $\lVert \phi \rVert_1 = 1$: for
-  $\lVert\phi\rVert_1 < 1$ the renewal equation
-  $E[\Lambda_t] = \mu_0 + \int_0^t \phi(t-s) E[\Lambda_s]\dif s$ gives
-  $\sup_{t} E[\Lambda_t] \leq \mu_0/(1-\lVert\phi\rVert_1) < \infty$, hence
-  $E[N_t] < \infty$ and Theorem~\ref{thm:pathjumpMP}\ref{it:pj_glob} applies,
-  while for $\lVert\phi\rVert_1 \geq 1$ explosion is possible and
-  Theorem~\ref{thm:pathjumpMP} delivers the \emph{local} problem, localized by the
-  jump times.  That is not a defect of the example: the scaling limit below lives
-  at $\lVert\phi\rVert_1 \uparrow 1$, so the interesting regime is exactly the one
-  in which Section~\ref{ssec:localmp} is needed.
+  \emph{A linear Hawkes process never explodes.}  The mean intensity
+  $m(t) = E[\Lambda_t]$ satisfies the renewal equation
+  $m = \mu_0 + \phi * m$, and a Volterra kernel $\phi \in L^1_{\mathrm{loc}}$ has
+  a resolvent in $L^1_{\mathrm{loc}}$ whatever its mass: on an interval short
+  enough that $\int_0^\delta \phi < 1$ the Neumann series converges, and one steps
+  forward.  So $E[N_t] = \int_0^t m < \infty$ for \emph{every} $t$ and every
+  $\phi \geq 0$, and Theorem~\ref{thm:pathjumpMP}\ref{it:pj_glob} always applies.
+  An earlier version of this manuscript asserted the opposite for
+  $\lVert\phi\rVert_1 \geq 1$; that was a confusion of exponential growth with
+  explosion.
+
+  What $\lVert\phi\rVert_1 = 1$ separates is not existence but \emph{stability}:
+  for $\lVert\phi\rVert_1 < 1$ the bound is uniform in $t$,
+  $\sup_t E[\Lambda_t] \leq \mu_0/(1-\lVert\phi\rVert_1)$, and for
+  $\lVert\phi\rVert_1 > 1$ it is not, $m$ growing exponentially.  The scaling
+  limit below lives at $\lVert\phi\rVert_1 \uparrow 1$, where the two regimes
+  meet.
 \end{example}
 
 \subsubsection*{The Volterra limit}
