@@ -1615,6 +1615,9 @@ Proposition~\ref{prop:rieszmarkov} (checking \ref{it:D3})
   & (T0) + (T4) & (E3), $E_1$ compact & shift invariant \\
 Setting~\ref{set:jumpdata}, Theorem~\ref{thm:jumpMP} (jump processes)
   & (T3) & (E0) & Lebesgue \\
+Lemma~\ref{lem:liftmarkov} (path lift; vacuous, see
+  Remark~\ref{rem:liftcollapse})
+  & (T0) & (E0), fibred & --- \\
 Setting~\ref{set:pathjump}, Theorem~\ref{thm:pathjumpMP},
   Example~\ref{ex:hawkes} (path-dependent rates, Hawkes)
   & (T3) & (E0) & Lebesgue \\
@@ -2664,6 +2667,126 @@ to the tower property --- it needs no shift and no Markov structure whatever.
   has to be transported back to $0$ and no shift is needed.  This is why
   Proposition~\ref{prop:uniqfromprop} is Markov-free while
   Lemma~\ref{lem:propagation} is not.
+\end{remark}
+
+\subsubsection*{An objection: make the state the path, and everything is Markov}
+
+The obvious way to make a path-dependent problem Markovian is to enlarge the
+state so that it \emph{is} the past.  The construction works, and it is worth
+carrying out, because the exact form of its failure is the best available
+justification for Section~\ref{ssec:absuniq}.
+
+\begin{definition}[The path lift]
+  \label{def:pathlift}
+  Let $X$ be a process with values in $E$.  Its \emph{path lift} is the process
+  \[
+    \hat{X}_t \;\coloneqq\; X|_{\T_{\leq t}} \;\in\; \hat{E}_t \coloneqq E^{\T_{\leq t}} ,
+    \qquad t \in \T ,
+  \]
+  with $\hat{E}_t$ carrying the product $\sigma$-field.  This is a fibred state
+  space in the sense of Definition~\ref{def:Efibred}, and it is never a constant
+  one: the fibres grow with $t$.  In the c\`adl\`ag setting one takes
+  $\hat{E}_t = D_E[0,t]$ instead.
+\end{definition}
+
+\begin{lemma}[Every process lifts to a Markov process; (T0) + (E0)]
+  \label{lem:liftmarkov}
+  Let $X$ be any process, with no hypothesis whatsoever.
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:lift_sigma}
+    $\sigma(\hat{X}_t) = \Filt^X_t$ for every $t$, and consequently
+    $\Filt^{\hat{X}}_t = \Filt^X_t = \sigma(\hat{X}_t)$.
+  \item \label{it:lift_markov}
+    $\hat{X}$ is a Markov process: for $s \leq t$ and bounded measurable
+    $\varphi$ on $\hat{E}_t$,
+    \[
+      E\bigl[ \varphi(\hat{X}_t) \bigm| \Filt^{\hat{X}}_s \bigr]
+        \;=\; E\bigl[ \varphi(\hat{X}_t) \bigm| \hat{X}_s \bigr] .
+    \]
+  \item \label{it:lift_strong}
+    On the canonical space, and for a \emph{strict} stopping time $T$,
+    $\sigma(\hat{X}_T) = \Filt^{\circ}_T$, where $\hat{X}_T$ is read as a value in
+    the total space $\Sigma\hat{E} = \coprod_t \hat{E}_t$; so $\hat{X}$ is strong
+    Markov as well.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \ref{it:lift_sigma}  $\hat{X}_t$ is the family $(X_u)_{u \leq t}$, so
+  $\sigma(\hat{X}_t) = \sigma(X_u : u \leq t) = \Filt^X_t$; and for $u \leq t$ the
+  variable $\hat{X}_u$ is the restriction of $\hat{X}_t$, hence
+  $\sigma(\hat{X}_u) \subset \sigma(\hat{X}_t)$, so
+  $\Filt^{\hat{X}}_t = \bigvee_{u \leq t}\sigma(\hat{X}_u) = \sigma(\hat{X}_t)$.
+
+  \ref{it:lift_markov}  By \ref{it:lift_sigma} the two conditioning
+  $\sigma$-fields are \emph{equal}.  There is nothing to prove.
+
+  \ref{it:lift_strong}  This is Definition~\ref{def:pasting}: for a strict $T$ one
+  has $\Filt^\circ_T = a_T^{-1}(\mathcal{S})$, and $a_T\omega = \omega(\cdot \wedge T)$
+  carries the same information as $\hat{X}_T$ together with the value of $T$,
+  which is recorded by the fibre index.  This is exactly the point at which the
+  total space of Definition~\ref{def:Efibred} is needed.
+\end{proof}
+
+\begin{remark}[Why this settles nothing]
+  \label{rem:liftcollapse}
+  Lemma~\ref{lem:liftmarkov}\ref{it:lift_markov} is a tautology --- an identity of
+  $\sigma$-fields, not a property of $X$ --- and the tautology propagates to
+  everything the Markov layer proves.  Three collapses, in increasing order of
+  seriousness.
+
+  \emph{(i) The Markov property.}  Theorem~\ref{thm:absuniq}\ref{it:absuniq_a}
+  asserts of the lift only what Lemma~\ref{lem:liftmarkov} already gives for
+  nothing.
+
+  \emph{(ii) The uniqueness criterion.}  The \emph{one-dimensional}
+  distributions of $\hat{X}$ are the \emph{finite-dimensional} distributions of
+  $X$, since $\hat{X}_t$ is the whole path on $\T_{\leq t}$.  So hypothesis
+  \eqref{eq:absonedim}, read for the lift, is the \emph{conclusion} of
+  Theorem~\ref{thm:absuniq}\ref{it:absuniq_b}, and the induction over
+  $t_1 < \dots < t_n$ that carries that theorem collapses to its own conclusion.
+
+  \emph{(iii) Even the Markov-free theory collapses.}  In
+  Definition~\ref{def:propagation} the test functions $h$ range over all bounded
+  measurable functions of $\hat\pi_s$, that is over all bounded
+  $\Filt^\circ_s$-measurable variables --- which absorbs the weight $Z$.  So for
+  the lift, propagation of agreement reads
+  \[
+    P = Q \text{ on } \Filt^\circ_s
+      \quad \Longrightarrow \quad P = Q \text{ on } \Filt^\circ_t ,
+  \]
+  and at $s = 0$ that is uniqueness itself.  Proposition~\ref{prop:uniqfromprop}
+  becomes ``if the laws agree then the laws agree''.
+
+  The principle behind all three is worth stating on its own, because it is what
+  the whole of Section~\ref{sec:uniqueness} trades on.  \emph{A Markov structure
+  is a compression statement}: its content is the gap between $\sigma(X_s)$ and
+  $\Filt^X_s$, and the theorems are worth exactly as much as that gap is wide.
+  The path lift attains the Markov property by closing the gap, and closing the
+  gap is the same operation as deleting the theorems.  ``Every process is
+  Markov'' is therefore true, and true in a way that converts every hypothesis
+  into its own conclusion.
+
+  Two further observations, both of which matter elsewhere.
+
+  \emph{The triviality is filtration-relative.}  Lemma~\ref{lem:liftmarkov} makes
+  $\hat{X}$ Markov with respect to \emph{its own} filtration.  Being a solution
+  with respect to a larger $\mathbb{G}$, as in Lemma~\ref{lem:restart}, is not
+  automatic even for the lift: an ambient filtration may carry information about
+  the future.  This is one reason the restart lemma is stated on a general
+  filtered space.
+
+  \emph{The lift is not useless, only useless here.}  Where the content of a
+  theorem sits somewhere other than in the Markov property, lifting is a genuine
+  device.  In Section~\ref{ssec:exduality} the content is the kernel
+  representability \ref{it:D3}, which is a statement about the \emph{dual}
+  process on an unchanged and typically small space; taking $E_1$ to be a path or
+  genealogy space then costs nothing on the side where the difficulty is not.
+  That is exactly \DGP's outlook and the subject of
+  Remark~\ref{rem:exdualityscope}.  Note also that the lift is never
+  time-homogeneous, so it can only be treated in the fibred, inhomogeneous frame
+  of Definition~\ref{def:Efibred} --- which is a second reason for setting that
+  frame up.
 \end{remark}
 
 So far nothing beyond a preorder has been used, and nothing Markovian.  It is
@@ -5207,6 +5330,10 @@ standard sufficient condition.
   Section~5: dualize the \emph{historical} process, taking $E_1$ to be a path or
   genealogy space.  That changes $E_1$ from compact to not even locally compact
   and puts the weight back on \ref{it:D3}; it is a project, not a remark.
+  Remark~\ref{rem:liftcollapse} explains why this is the one place where lifting
+  to the path is worth doing: the content of Theorem~\ref{thm:exduality} sits in
+  \ref{it:D3}, a statement about the dual on an unchanged space, and not in a
+  Markov property that lifting would trivialize.
 
   \emph{The time-inhomogeneous version.}  Dropping shift invariance of $q$, or
   homogeneity of $Y$, replaces $(P_t)$ by a two-parameter family $(P_{r,t})$ and

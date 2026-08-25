@@ -539,6 +539,13 @@ Offen bleibt nur die Ausführung dort, wo sie Inhalt hat:
 
 ## Task 19 — Historischer Prozess als Dualer — `todo`
 
+*Vorbemerkung (D46):* Der Pfad-Lift macht **jeden** Prozess Markov, aber
+tautologisch — er schließt die Lücke zwischen $\sigma(X_s)$ und $\Filt^X_s$, und
+damit werden alle Hypothesen zu ihren eigenen Konklusionen. Für §5 ist er also
+wertlos. Für §7.2 ist er es **nicht**, weil der Inhalt dort in (D3) sitzt, einer
+Aussage über den Dualen auf unverändertem Raum. Das ist die Begründung dafür,
+dass genau dieser Task und kein anderer den Lift benutzt.
+
 Die Methode von Task 18 erreicht die pfadabhängige Theorie aus §5.1/§5.4 nicht,
 weil \eqref{eq:dualityrel} über eindimensionale Verteilungen spricht. DGP §5
 (Ausblick) schlagen vor, den **historischen** Prozess zu dualisieren, also $E_1$

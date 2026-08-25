@@ -2147,6 +2147,50 @@ Sie brauchen eine konstante Faser, sagen das, und die Bündeltabelle hält es fe
 einen Index mitzuschleppen, der sofort eingefroren wird, wäre Notation ohne
 Inhalt.
 
+### D46 — „Ist jeder Prozess Markov, wenn der Zustand der Pfad ist?"  *(2026-08-25)*
+
+Frage des Nutzers. **Antwort: ja, trivial — und die Trivialität ist die Pointe.**
+Neu §5.2: Def. `pathlift`, Lem. `liftmarkov`, Rem. `liftcollapse`.
+
+**Die Rechnung.** Mit $\hat X_t=X|_{\T_{\le t}}$ gilt
+$\sigma(\hat X_t)=\Filt^X_t$, also $\Filt^{\hat X}_t=\sigma(\hat X_t)$: die
+beiden Bedingungs-$\sigma$-Algebren in der Markov-Eigenschaft sind **gleich**.
+Es ist eine Identität von $\sigma$-Algebren, keine Eigenschaft von $X$. Für
+strikte Stoppzeiten ebenso ($\Filt^\circ_T=a_T^{-1}(\mathcal S)$, Def. `pasting`)
+— dabei braucht man den Totalraum $\Sigma\hat E$, weil der Faserindex den Wert
+von $T$ trägt. Das ist genau der Punkt aus D45.
+
+**Drei Kollapse.**
+1. Thm. `absuniq`(a) behauptet vom Lift nur, was Lem. `liftmarkov` gratis gibt.
+2. Die **eindimensionalen** Verteilungen von $\hat X$ sind die
+   **endlichdimensionalen** von $X$. Also ist Hypothese \eqref{eq:absonedim} für
+   den Lift die *Konklusion* von Thm. `absuniq`(b), und die Induktion über
+   $t_1<\dots<t_n$ fällt auf ihre eigene Konklusion zusammen.
+3. Auch §5.1 kollabiert: in Def. `propagation` durchläuft $h$ alle beschränkten
+   messbaren Funktionen von $\hat\pi_s$, also alle beschränkten
+   $\Filt^\circ_s$-messbaren Variablen — das absorbiert das Gewicht $Z$. Für den
+   Lift heißt Propagation dann „$P=Q$ auf $\Filt^\circ_s$ $\Rightarrow$ $P=Q$ auf
+   $\Filt^\circ_t$", bei $s=0$ also die Eindeutigkeit selbst.
+
+**Das Prinzip.** Eine Markov-Struktur ist eine **Kompressionsaussage**: ihr Inhalt
+ist die Lücke zwischen $\sigma(X_s)$ und $\Filt^X_s$, und die Sätze sind genau so
+viel wert, wie diese Lücke breit ist. Der Lift erreicht die Markov-Eigenschaft,
+indem er die Lücke schließt — und das ist dieselbe Operation wie das Löschen der
+Sätze. Damit ist §5.1 nachträglich gerechtfertigt: es ist nicht eine schwächere
+Theorie als „§5.2 auf den Lift angewandt", sondern dieselbe Theorie ohne die
+Tautologie.
+
+**Zwei Präzisierungen.**
+* Die Trivialität ist **filtrationsrelativ**: Markov bzgl. der *eigenen*
+  Filtration ist automatisch, Lösung bzgl. eines größeren $\mathbb G$ nicht —
+  ein Grund mehr für die zweistufige Formulierung von Lem. `restart`.
+* Der Lift ist nicht nutzlos, nur hier nutzlos. Wo der Inhalt woanders sitzt,
+  ist er ein echtes Werkzeug: in §7.2 sitzt er in (D3), einer Aussage über den
+  **Dualen** auf unverändertem, typisch kleinem Raum. Deshalb ist Task 19
+  (historischer Prozess) sinnvoll und Task „Lift für Eindeutigkeit" nicht.
+  Nebenbei: der Lift ist nie zeithomogen, lebt also zwingend im fibrierten
+  Rahmen von D45.
+
 ### 2026-08-24 — v1 (17 S.)
 
 * Quellen gesichtet: `references/EthierKurtz1986.pdf` (551 S., Scan mit OCR),
