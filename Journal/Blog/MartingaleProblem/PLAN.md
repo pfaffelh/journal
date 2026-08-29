@@ -253,30 +253,10 @@ is exactly where a formalization stalls.
    D8 at the level of the proof: Steps 0–2 need only (T0), Step 3 alone needs
    (T2b), and with $D = \mathbb{T}$ it is empty. **(F5a) is unblocked.**
 
-## Task 24 — Tau Ceti roadmaps — `done` *(2026-08-29)*
-
-The formalization is routed through [Tau Ceti](https://github.com/TauCetiProject/TauCeti),
-a Lean library downstream of Mathlib in which AI contributors implement and
-review while humans write the roadmaps. What this project supplies is therefore
-a roadmap, not Lean code.
-
-Four roadmaps in `TauCeti/`, in the layout `TauCetiRoadmap` expects:
-`WeakConvergence` and `KolmogorovExtension` (independent of each other, Mathlib
-only), `SkorokhodSpace` (on `WeakConvergence`), `MartingaleProblems` (on all
-three, twelve milestones). `SUBMISSION.md` holds the submission route and the
-licence notes; it is outside the roadmap directories because roadmaps must be
-process-free. See D63.
-
-This changes what Tasks 3–8 are for. Tau Ceti fixes the file layout, the naming
-conventions and the review process, so the architecture questions of Task 3 are
-answered by its conventions rather than by a decision here; the design choices
-that are genuinely mathematical — operator as a relation, solution with respect
-to an arbitrary filtration as the primitive, localization of the test processes,
-`RCLike` test functions, `Clock.Conv` as a parameter, the fibred state space —
-are written into the roadmaps. What remains of Tasks 4–8 is reviewing what the
-Tau Ceti contributors produce against the manuscript.
-
 ## Task 3 — Lean architecture — `superseded by Task 24` *(2026-08-29)*
+
+The formalization goes through Tau Ceti; see **Task 24** at the end of this
+file, and the roadmaps themselves in `TauCeti/`.
 
 **Deferred deliberately.** The user's judgement: the theory has to stand first,
 examples included, and since this is new ground much of it is still unclear.
@@ -714,6 +694,31 @@ unter dieser Approximation klären.
 Nichts im Manuskript hängt daran — §7 benutzt Lebesgue-Uhren, §7.2 nur
 \eqref{eq:clockadd}.
 
+
+---
+
+## Task 24 — Tau Ceti roadmaps — `done` *(2026-08-29)*
+
+The formalization is routed through [Tau Ceti](https://github.com/TauCetiProject/TauCeti),
+a Lean library downstream of Mathlib in which AI contributors implement and
+review while humans write the roadmaps. What this project supplies is therefore
+a roadmap, not Lean code.
+
+Four roadmaps in `TauCeti/`, in the layout `TauCetiRoadmap` expects:
+`WeakConvergence` and `KolmogorovExtension` (independent of each other, Mathlib
+only), `SkorokhodSpace` (on `WeakConvergence`), `MartingaleProblems` (on all
+three, twelve milestones). `SUBMISSION.md` holds the submission route and the
+licence notes; it is outside the roadmap directories because roadmaps must be
+process-free. See D63.
+
+This changes what Tasks 3–8 are for. Tau Ceti fixes the file layout, the naming
+conventions and the review process, so the architecture questions of Task 3 are
+answered by its conventions rather than by a decision here; the design choices
+that are genuinely mathematical — operator as a relation, solution with respect
+to an arbitrary filtration as the primitive, localization of the test processes,
+`RCLike` test functions, `Clock.Conv` as a parameter, the fibred state space —
+are written into the roadmaps. What remains of Tasks 4–8 is reviewing what the
+Tau Ceti contributors produce against the manuscript.
 
 ---
 

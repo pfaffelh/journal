@@ -23,6 +23,12 @@ von `check.py`).
 | 7 | Existenz, **fünf** Wege: Halbgruppe, **Dualer** (DGP24, mit Hawkes als Testobjekt), Sprungprozesse, SDEs, Konvergenz; Konvergenz in vier Stufen: EK, abstrakt, CPS, **Konvergenz in Maß** (7.10) | EK86, CPS23, DGP24, JR16, MZ84 |
 | 8/9 | Formalisierungsnotizen, Mathlib-Bestandsaufnahme, Design-Entscheidungen | — |
 
+**Die Formalisierung läuft über Tau Ceti.** Die vier Roadmaps liegen in
+`TauCeti/` — `WeakConvergence`, `KolmogorovExtension`, `SkorokhodSpace`,
+`MartingaleProblems`, je mit `README.md` (verbindlich) und `Suggested.lean`
+(Prototyp); `TauCeti/SUBMISSION.md` hat Einreichungsweg und Lizenzlage. Task 24
+in `PLAN.md`, Begründung in D63.
+
 **Erledigt:** Tasks 1, 2, 9–20 sowie Q1–Q3, Q5–Q8. Task 17 (Konsistenz-Durchgang
 mit Prüfung jedes Arguments) ist abgeschlossen und hat acht mathematische Fehler
 gefunden — siehe D39, D40, D43, D44, D48.
