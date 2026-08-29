@@ -1,2 +1,4 @@
 /.lake
 /references
+logs/
+.task23.lock
