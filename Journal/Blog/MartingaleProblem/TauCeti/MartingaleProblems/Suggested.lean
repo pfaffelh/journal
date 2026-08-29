@@ -5,6 +5,7 @@ Authors: Peter Pfaffelhuber
 -/
 import Mathlib.Probability.Martingale.Basic
 import Mathlib.Probability.Process.Stopping
+import Mathlib.Probability.Process.LocalProperty
 import Mathlib.Analysis.RCLike.Basic
 
 /-!
@@ -56,6 +57,19 @@ def IsMPSolution (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) (P : Me
 /-- The set of solutions. -/
 def mpSolutions (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) : Set (Measure Ω) :=
   {P | IsMPSolution 𝓧 F P}
+
+/-- The local problem, through Mathlib's `MeasureTheory.Locally`.  Do not
+introduce a localizing sequence by hand: `IsLocalizingSequence` and the whole
+`Locally` API are in `Mathlib/Probability/Process/LocalProperty.lean`, including
+the idempotence `locally_locally_iff`. -/
+def IsLocalMPSolution [TopologicalSpace ι] [OrderTopology ι]
+    (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) (P : Measure Ω) : Prop :=
+  ∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z F P) F Y P
+
+theorem isLocalMPSolution_of_isMPSolution [TopologicalSpace ι] [OrderTopology ι]
+    {𝓧 : Set (ι → Ω → 𝕂)} {F : Filtration ι m} {P : Measure Ω}
+    (h : IsMPSolution 𝓧 F P) : IsLocalMPSolution 𝓧 F P :=
+  fun Y hY => Locally.of_prop (h Y hY)
 
 variable {E : Type*} [MeasurableSpace E]
 

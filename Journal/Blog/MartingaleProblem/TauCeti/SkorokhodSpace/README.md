@@ -1,10 +1,28 @@
 # The Skorokhod space
 
-The space of càdlàg paths with the `J₁` topology. Mathlib has neither càdlàg
-functions nor this space; it has one-sided limits in
-`Mathlib/Topology/Order/LeftRightLim.lean` (`Function.leftLim`,
-`Function.rightLim`) and Prokhorov's theorem in
-`Mathlib/MeasureTheory/Measure/Prokhorov.lean`, and both are used here.
+The space of càdlàg paths with the `J₁` topology. The string `cadlag` does not occur in
+Mathlib, and neither does the space. What Mathlib does have, and what is **not**
+to be rebuilt:
+
+* `Mathlib/Topology/Order/LeftRightLim.lean`: `Function.leftLim` and
+  `Function.rightLim` with `tendsto_leftLim`, `tendsto_rightLim`,
+  `tendsto_leftLim_within`, `continuousWithinAt_Iio_iff_leftLim_eq`,
+  `continuousWithinAt_Ioi_iff_rightLim_eq` and
+  `continuousAt_iff_leftLim_eq_rightLim`. These are the whole one-sided-limit
+  API and every statement about left limits below is to be phrased through
+  them. It also has `Monotone.countable_not_continuousAt`, the monotone case of
+  the countability of the jump set.
+* `MeasureTheory.StieltjesFunction` in
+  `Mathlib/MeasureTheory/Measure/Stieltjes.lean`: a bundled monotone right
+  continuous function, with `right_continuous` and `rightLim_eq`. It is the
+  precedent for how a right continuity condition is bundled in Mathlib, and
+  `IsCadlag` below should read like it.
+* Prokhorov's theorem, tightness and the Lévy–Prokhorov metric in
+  `Mathlib/MeasureTheory/Measure/`, used in Milestone 8.
+* `orderTopology_of_ordConnected` in `Mathlib/Topology/Order/Basic.lean`,
+  `ProperSpace.of_isClosed`, and `Subgroup.isClosed_of_discrete` in
+  `Mathlib/Topology/Algebra/IsUniformGroup/Basic.lean`, whose additive form is
+  what the lattice instance of Milestone 1 needs.
 
 This roadmap depends on the roadmap **WeakConvergence** for separating and
 convergence determining classes (Milestone 1 there) and for the Skorokhod
@@ -83,14 +101,20 @@ For `f : ι → E` with `[Preorder ι] [TopologicalSpace ι] [TopologicalSpace E
 * Basic closure properties: constants, compositions with continuous maps, sums
   and products in a topological ring, pointwise limits that are uniform on
   compacts, and the restriction of a càdlàg function to a subinterval.
+* `IsCadlag.tendsto_leftLim` and `IsCadlag.rightLim_eq`, connecting the
+  structure to `Function.leftLim` and `Function.rightLim` so that the existing
+  API applies; every later statement about left limits uses those names, not a
+  new one.
 * `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
   càdlàg map into a pseudometric space is bounded.
-* The left limit as a function, `f⁻ x`, defined through `Function.leftLim`, with
-  `IsCadlag.tendsto_leftLim` and the identity `f⁻ x = f x` at continuity points.
+* The identity `Function.leftLim f x = f x` at continuity points, from
+  `continuousAt_iff_leftLim_eq_rightLim` together with right continuity.
 * Jump sets: `leftJumpSet f = {x | f⁻ x ≠ f x}` and, for `ε > 0`,
   `largeLeftJumpSet f ε = {x | ε ≤ dist (f⁻ x) (f x)}`. Prove that
   `largeLeftJumpSet f ε` has no accumulation point, hence meets every compact set
-  in a finite set, and that `leftJumpSet f` is countable.
+  in a finite set, and that `leftJumpSet f` is countable. The monotone case of
+  the last statement is `Monotone.countable_not_continuousAt`; the càdlàg case
+  does not follow from it and is proved by the exhaustion.
 * `IsCadlag.measurable`: a càdlàg map into a Polish space is Borel measurable,
   via approximation by the right continuous step functions of the exhaustion.
 * A càdlàg map is determined by its restriction to a dense set: if `f` and `g`

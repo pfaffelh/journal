@@ -9,15 +9,43 @@ and does not use the state space; it uses only the family of martingales. This
 roadmap develops the abstract form first and obtains the classical statements as
 instances.
 
-Mathlib supplies the probabilistic base: `MeasureTheory.Filtration`,
-`MeasureTheory.Adapted`, `MeasureTheory.ProgMeasurable`,
-`MeasureTheory.IsStoppingTime` in `Mathlib/Probability/Process/`,
-`MeasureTheory.Martingale` and `MeasureTheory.Submartingale` in
-`Mathlib/Probability/Martingale/Basic.lean` with optional stopping and Doob's
-inequalities, conditional expectation, `MeasureTheory.UniformIntegrable`, and
-Polish spaces with weak convergence and Prokhorov's theorem. Note that
-`MeasureTheory.Martingale` is stated for values in a real Banach space, so
-complex-valued martingales need no separate development.
+Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
+
+* `MeasureTheory.Filtration`, `MeasureTheory.Adapted`,
+  `MeasureTheory.StronglyAdapted`, `MeasureTheory.IsStronglyProgressive` and
+  `MeasureTheory.IsStoppingTime` in `Mathlib/Probability/Process/`. Note that
+  `ProgMeasurable` is a deprecated alias of `IsStronglyProgressive`; use the
+  new name.
+* `MeasureTheory.Martingale` and `MeasureTheory.Submartingale` in
+  `Mathlib/Probability/Martingale/Basic.lean`, with optional stopping, Doob's
+  inequalities, the upcrossing theory of
+  `Mathlib/Probability/Martingale/Upcrossing.lean` —
+  `upcrossingsBefore`, `upcrossings`, `upcrossings_lt_top_iff` and the Doob
+  estimates `Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
+  and `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part` — and the
+  convergence theorems of `Mathlib/Probability/Martingale/Convergence.lean`.
+  `MeasureTheory.Martingale` is stated for values in a real Banach space, so
+  complex-valued martingales need no separate development.
+* **Localization is already there.**
+  `Mathlib/Probability/Process/LocalProperty.lean` has
+  `MeasureTheory.IsPreLocalizingSequence`, `MeasureTheory.IsLocalizingSequence`
+  — stopping times valued in `WithTop ι`, almost surely increasing to `⊤` — and
+  the combinator `MeasureTheory.Locally p 𝓕 X P` saying that `X` has property
+  `p` locally, with `localSeq`, `stoppedProcess_localSeq`, `Locally.of_prop`,
+  `Locally.mono`, `locally_and_iff` and the idempotence `locally_locally_iff`.
+  Every local notion below is an instance of `Locally`; none of it is to be
+  redefined.
+* `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`:
+  `isProjectiveMeasureFamily_map_restrict`, `isProjectiveLimit_map`,
+  `map_eq_iff_forall_finset_map_restrict_eq`,
+  `identDistrib_iff_forall_finset_identDistrib` and `map_eq_of_forall_ae_eq`.
+  These say that a law is determined by its finite dimensional distributions and
+  that modifications share them, and Milestone 3 is to be phrased through them.
+* `Mathlib/Probability/Process/Kolmogorov.lean`: the Kolmogorov–Chentsov
+  continuous modification. It is the precedent for how a modification theorem is
+  stated in Mathlib, and Milestone 9 should read like it.
+* Conditional expectation, `MeasureTheory.UniformIntegrable`, Polish spaces,
+  weak convergence and Prokhorov's theorem.
 
 This roadmap depends on **WeakConvergence** for separating classes, the
 continuous mapping theorem and the Skorokhod representation theorem; on
@@ -74,7 +102,12 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
 
 * `IsMPSolution (𝓧 : Set (ι → Ω → 𝕂)) (𝓕 : Filtration ι m) (P : Measure Ω)`,
   defined as `∀ Y ∈ 𝓧, Martingale Y 𝓕 P`, and the local variant
-  `IsLocalMPSolution` with `∀ Y ∈ 𝓧, ∃ σ, IsLocalizingSequence σ ∧ ...`.
+  `IsLocalMPSolution`, defined as
+  `∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z 𝓕 P) 𝓕 Y P` with Mathlib's
+  `MeasureTheory.Locally`. Do not introduce a localizing sequence by hand:
+  `IsLocalizingSequence` and the `Locally` API already exist, and
+  `locally_locally_iff` is the idempotence that the local theory of Milestone 7
+  would otherwise have to prove.
 * `MPSolutions 𝓧 𝓕`, the set of solutions, with the basic API: it is closed
   under restriction of `𝓧`, and `MPSolutions (𝓧 ∪ 𝓨) = MPSolutions 𝓧 ∩ MPSolutions 𝓨`.
 * Given a state space `E` with `[MeasurableSpace E]`, a clock `q`, a convention
@@ -92,7 +125,9 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   that the compensated process is adapted to it.
 * `IsMPSolutionFor.map`: the property depends on `P` only through the law of
   `X`, so it transfers along a modification and along equality of laws on the
-  canonical space.
+  canonical space. Use `MeasureTheory.map_eq_of_forall_ae_eq` and
+  `identDistrib_iff_forall_finset_identDistrib` of `FiniteDimensionalLaws.lean`
+  rather than reproving that modifications share finite dimensional laws.
 * `IsMPSolutionFor` with an initial law: `IsMPSolutionFor A q c X 𝓖 P ∧ P.map (X 0) = μ`.
 
 ## Milestone 3: canonical families, determining sets, and the finite dimensional criterion
@@ -201,6 +236,11 @@ of the one dimensional distributions of the shifted problems.
 
 Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
 
+* The localizing systems here are a **refinement** of Mathlib's
+  `IsLocalizingSequence`, not a replacement: a system is a set of times, closed
+  under the shift, from which localizing sequences are drawn. State
+  `LocalizingSystem.isLocalizingSequence` connecting the two, so that
+  `Locally` and its API apply to everything below.
 * A **strict** stopping time is one for `𝓕`, not for the right continuous
   filtration `⨅ s > t, 𝓕 s`. The distinction is the content of this milestone:
   the debut of an open set is a stopping time only for the right continuous
@@ -276,11 +316,15 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
 Fix `[LinearOrder ι]` with the order topology and a countable dense `D ⊆ ι`, and
 `E` metrizable.
 
-* Submartingale regularization, which Mathlib does not have. For a submartingale
-  `Y` indexed by `ι`, the restriction to `D` has almost surely finite one sided
-  limits along `D` at every point, by the upcrossing inequality
-  `MeasureTheory.Submartingale.upcrossing_le` already in Mathlib. State
-  `Submartingale.exists_rightLim_along` and `Submartingale.exists_leftLim_along`.
+* Submartingale regularization, which Mathlib does not have, although the
+  ingredient does. For a submartingale `Y` indexed by `ι`, the restriction to
+  `D` has almost surely finite one sided limits along `D` at every point. The
+  input is the Doob upcrossing estimate, in Mathlib as
+  `MeasureTheory.Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
+  and `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part`, together
+  with `upcrossings_lt_top_iff`. State `Submartingale.exists_rightLim_along` and
+  `Submartingale.exists_leftLim_along`, phrased through `Function.leftLim` and
+  `Function.rightLim` as in the roadmap **SkorokhodSpace**.
 * The modification as a **construction**, not an existential: `cadlagModif Y`,
   defined from the right limits along a countable dense set, together with
   `isCadlag_cadlagModif`, `measurable_cadlagModif`, `adapted_cadlagModif` for a
