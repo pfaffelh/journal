@@ -30,7 +30,10 @@ attribution.
 * `RemyDegenne/brownian-motion` — `BrownianMotion/StochasticIntegral/Cadlag.lean`
   for Milestone 2 of `SkorokhodSpace`, and the quasimartingale càdlàg
   modification for Milestone 9 of `MartingaleProblems`. Note that the `paper`
-  branch carries only a stub of `Cadlag.lean`; the material is on `master`.
+  branch carries only a 32 line stub of `Cadlag.lean` and no
+  `Quasimartingale/` at all; the material — `Cadlag.lean` at 236 lines and
+  `Quasimartingale/CadlagModification.lean` at 1162 lines with four `sorry`s —
+  is on `upstream/master`, not on the fork's `origin/master`.
   The repository is pinned to `leanprover/lean4:v4.25.0`, so taking the code
   over means porting it, not depending on it — which is what Tau Ceti wants
   anyway, since it depends on Mathlib `master` and nothing else.

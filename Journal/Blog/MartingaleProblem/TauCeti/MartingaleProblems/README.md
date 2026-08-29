@@ -281,13 +281,23 @@ Fix `[LinearOrder ι]` with the order topology and a countable dense `D ⊆ ι`,
   limits along `D` at every point, by the upcrossing inequality
   `MeasureTheory.Submartingale.upcrossing_le` already in Mathlib. State
   `Submartingale.exists_rightLim_along` and `Submartingale.exists_leftLim_along`.
-* `Submartingale.exists_cadlag_modification_iff_rightContinuous`: a submartingale
-  has a càdlàg modification if and only if `t ↦ 𝔼[Y t]` is right continuous.
-* `Martingale.exists_cadlag_modification`: a martingale always has one.
-  The repository `RemyDegenne/brownian-motion`, Apache License 2.0, contains a
-  development of these two statements for quasimartingales in
-  `BrownianMotion/Quasimartingale/`; it may be taken over with its copyright
-  headers and author attribution preserved.
+* The modification as a **construction**, not an existential: `cadlagModif Y`,
+  defined from the right limits along a countable dense set, together with
+  `isCadlag_cadlagModif`, `measurable_cadlagModif`, `adapted_cadlagModif` for a
+  right continuous complete filtration, and `cadlagModif_ae_eq` giving the
+  modification property. A named construction with its properties is what later
+  milestones need; an existential statement loses the object.
+* `Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral`: the
+  construction is a modification of a submartingale exactly at the points where
+  `t ↦ 𝔼[Y t]` is right continuous, hence everywhere when that map is right
+  continuous.
+* `Martingale.cadlagModif_ae_eq`: for a martingale the condition is automatic.
+  The repository `RemyDegenne/brownian-motion`, Apache License 2.0, carries this
+  development for quasimartingales in
+  `BrownianMotion/StochasticIntegral/Quasimartingale/`, in the shape described
+  above and with four remaining gaps; it may be taken over with its copyright
+  headers and author attribution preserved. `IsRealQuasimartingale` and the
+  regularity sets it is built on belong to the material taken over.
 * `IsRegularizingClass Φ X 𝓧`: a set `Φ` of bounded continuous functions on `E`
   such that for every `f ∈ Φ` there are `Y ∈ 𝓧` and an adapted `𝕂`-valued `C`
   with `f (X t) = Y t + C t` almost surely for every `t`, with `C` almost surely
