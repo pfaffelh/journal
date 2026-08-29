@@ -2044,7 +2044,8 @@ localization is eventually constant.
     d_m(f,g) := \inf_{\lambda \in \Lambda,\ \gamma_m(\lambda) < \infty}
       \max\Bigl( \gamma_m(\lambda),\
         \sup_{t \in \T} r\bigl( f^{(m)}(\lambda t),\, g^{(m)}(t) \bigr) \Bigr),
-    \qquad
+  \]
+  \[
     d(f,g) := \sum_{m \geq 1} 2^{-m} \min\bigl( 1, d_m(f,g) \bigr).
   \]
   The supremum in $d_m$ is effectively over the compact set $B_m$, since
@@ -2071,7 +2072,7 @@ localization is eventually constant.
 The one point that is not routine is the identity of indiscernibles.  If
 $d(f,g) = 0$ then $d_m(f,g) = 0$ for every $m$, so by Lemma~\ref{lem:tccontrol}
 the time changes realizing the infimum converge to the identity uniformly on
-$B_m$, and $f = g$ on $B_m$ follows by the argument of \cite[Ch.~3, §12]{JS03} at
+$B_m$, and $f = g$ on $B_m$ follows by the argument of \cite[Ch.~3, \S12]{JS03} at
 the continuity points and by right continuity elsewhere.  Since the $B_m$
 exhaust $\T$, $f = g$.  No quotient is taken and no flat extension of the paths
 is needed: on a bounded index the latter is a way of compensating for a fixed
@@ -2248,16 +2249,23 @@ restores Lemma~\ref{lem:tccontrol}, at the price of a group depending on $\T$.
   on $\R$ which are flat outside $[0,1]$ --- three decisions that
   Definition~\ref{def:dcirc} does not need, the exhaustion doing their work.  It
   also records, and leaves open, the failure of measurability of the modulus, by
-  Remark~\ref{rem:modulusborel}.  Its licence does not permit
-  reuse without the author's agreement.
+  Remark~\ref{rem:modulusborel}.  Two repositories accompany \cite{Kuan26} and
+  they are licensed differently: \texttt{type-D-asymptotics}, which holds the
+  paper sources and eight Lean files, carries the Apache~2.0 licence, whereas
+  \texttt{type-D-asymptotics-lean}, which holds the six Skorokhod files
+  described here, carries none.  So this material may not be reused without the
+  author's agreement, and the natural request is that the licence of the first
+  repository be extended to the second.
 
   \emph{The new typeclass.}  Of the five hypotheses of \eqref{T3p} in the form of
   Remark~\ref{rem:T3primeis}, four are Mathlib's already ---
   \texttt{LinearOrder}, \texttt{MetricSpace}, \texttt{OrderTopology},
   \texttt{ProperSpace} --- and only additivity has to be added:
-  \begin{quote}\ttfamily\small
-    class AdditiveDist ($\alpha$ : Type*) [LinearOrder $\alpha$] [PseudoMetricSpace $\alpha$] : Prop where\\
-    \phantom{ss}dist\_add : $\forall$ \{s t u : $\alpha$\}, s $\le$ t $\to$ t $\le$ u $\to$ dist s u = dist s t + dist t u
+  \begin{quote}\ttfamily\footnotesize
+    class AdditiveDist ($\alpha$ : Type*) [LinearOrder $\alpha$]\\
+    \phantom{ss}[PseudoMetricSpace $\alpha$] : Prop where\\
+    \phantom{ss}dist\_add : $\forall$ \{s t u : $\alpha$\}, s $\le$ t $\to$ t $\le$ u $\to$\\
+    \phantom{ssssss}dist s u = dist s t + dist t u
   \end{quote}
   Its instances for $\R$ and $\mathbb{Z}$ are four lines each, and the instance for an
   arbitrary subset of an \texttt{AdditiveDist} type is definitional, so the

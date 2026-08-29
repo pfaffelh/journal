@@ -44,9 +44,23 @@ attribution.
   taken over should first be reduced to what Mathlib does not already provide.
 
 One repository is cited in the manuscript but **not** here, and deliberately:
-the `D([0,1], ℝ)` development accompanying the Kuan reference. Its licence does
-not permit reuse without the author's agreement, so no roadmap may point an
-implementer at it.
+the `D([0,1], ℝ)` development accompanying the Kuan reference. Two repositories
+accompany that paper and they are licensed differently.
+
+* `Jeffrey-Kuan/type-D-asymptotics` — Apache-2.0, `LICENSE` at the root. Holds
+  the paper sources and eight Lean files (`TypeDDecoupling.lean`,
+  `TypeDDecouplingDuality.lean`, `…LCLT.lean`, `…EW.lean`, `…Crossover.lean`,
+  `…DualPairWitness.lean`, `…Tiers34.lean`, `…TracyWidom.lean`). None of them
+  contains the Skorokhod development: no `IsCadlag`, no `cadlagModulus`.
+* `Jeffrey-Kuan/type-D-asymptotics-lean` — **no licence**. Single branch `main`,
+  no `LICENSE` file, no per-file copyright headers, README silent. This is where
+  `TypeDDecouplingSkorokhodBasic/Compact/Complete/Tight/Measurable/Aldous.lean`
+  live, and they are the only files of interest to `SkorokhodSpace`.
+
+So the Apache grant on the first repository does not reach the material worth
+reusing, and no roadmap may point an implementer at it. Extending the same
+`LICENSE` to the second repository is a one file change and is the request to
+make to the author.
 
 ## Steps
 
