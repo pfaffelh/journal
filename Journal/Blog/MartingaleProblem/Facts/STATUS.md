@@ -1,11 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** noch keiner
-- **Zustand:** eingerichtet, wartet auf den ersten Cron-Slot
-- **Notiz:** Rauchtest am 2026-08-29 bestanden — Lock, Log, STATUS, Commit, Push,
-  `claude -p`, und die Mathlib-Lesepfade über `--add-dir`
+- **Letzter Lauf (UTC):** 20260829T212301Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** fisher
-- **Laeufe bisher:** 0
+- **Laeufe bisher:** 1
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
