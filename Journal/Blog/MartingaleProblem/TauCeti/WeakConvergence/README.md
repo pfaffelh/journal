@@ -77,13 +77,18 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   separating and every member of `Γ` is the pointwise limit of a uniformly
   bounded sequence from `Γ'`, then `Γ'` is separating. Dominated convergence;
   the same for the convergence determining notion.
-* **Missing.** Products. For measurable spaces `S 1, …, S k` with `Γ i`
-  separating on `S i`, the products `fun x ↦ ∏ i, f i (x i)` with `f i ∈ Γ i`
-  are separating on `Π i, S i`; and the same statement for convergence
-  determining classes when the `S i` are Polish. `FiniteMeasurePi.lean` has the
-  product measure and the continuity of the product map, but not this. It is the
-  statement that makes finite dimensional distributions determine a law, and
-  every determining set in **MartingaleProblems** is built from it.
+* **Missing.** Products, for an **arbitrary index** `ι`, not only a finite one.
+  For measurable spaces `S i`, `i : ι`, with `Γ i` separating on `S i`, the
+  functions `fun x ↦ ∏ i ∈ J, f i (x i)` with `J : Finset ι` and `f i ∈ Γ i` are
+  separating on `Π i, S i`; and the same statement for convergence determining
+  classes when `ι` is countable and the `S i` are Polish. `FiniteMeasurePi.lean`
+  has the product measure and the continuity of the product map, but not this.
+  It is the statement that makes finite dimensional distributions determine a
+  law — for a process the index is the time set, so the finite case does not
+  suffice — and every determining set in **MartingaleProblems** is built from
+  it. The proof is the functional monotone class theorem of Milestone 5 applied
+  to those products, which form a multiplicative system generating the product
+  σ-algebra.
 * **Missing.** On a Polish space there is a countable convergence determining
   set of bounded uniformly continuous functions, and a countable separating set.
 
@@ -144,3 +149,46 @@ is what the convergence theorem of **MartingaleProblems** consumes, three times.
   integrable family is uniformly integrable; a uniformly bounded family is;
   the product of a uniformly integrable family with a uniformly bounded family
   is; and a finite union of uniformly integrable families is.
+
+## Milestone 5: the functional monotone class theorem
+
+Mathlib has Dynkin's π–λ theorem for **sets**, as the induction principle
+`induction_on_inter` in `Mathlib/MeasureTheory/PiSystem.lean`. The functional
+form — a linear space of bounded functions containing the constants and a
+multiplicative class `K`, closed under bounded monotone limits, contains every
+bounded `σ K`-measurable function — is absent; `docs/1000.yaml`
+carries the monotone class theorem as `Q242045` with no declaration. It is the
+tool the products of Milestone 1 rest on, and the determining sets of the
+roadmap **MartingaleProblems** are built with it. `Ω` here is a bare measurable
+space; no topology is involved.
+
+* `MeasureTheory.IsMulSystem K` for `K : Set (Ω → ℝ)`, defined as
+  `∀ f ∈ K, ∀ g ∈ K, f * g ∈ K`, the multiplicative counterpart of
+  `IsPiSystem`. With it `isMulSystem_indicator_of_isPiSystem`: for a π-system
+  `𝒞` the indicators `Set.indicator s 1` with `s ∈ 𝒞` form a multiplicative
+  system.
+* `MeasureTheory.generateFromFuns K`, defined as
+  `⨆ f ∈ K, MeasurableSpace.comap f (borel ℝ)` with `MeasurableSpace.comap` of
+  `Mathlib/MeasureTheory/MeasurableSpace/Basic.lean`, together with
+  `measurable_generateFromFuns_of_mem` for `f ∈ K`, monotonicity in `K`, and the
+  identity `generateFromFuns (indicators of 𝒞) = MeasurableSpace.generateFrom 𝒞`
+  that connects the functional form to `induction_on_inter`.
+* `MeasureTheory.induction_on_mulSystem`: let `K : Set (Ω → ℝ)` be a
+  multiplicative system of bounded functions and `P : (Ω → ℝ) → Prop` with
+  `P f` for every `f ∈ K`; `P (fun _ ↦ c)` for every constant `c`; `P` preserved
+  by addition and by scalar multiplication; and `P` preserved by bounded
+  monotone limits, that is `P g` whenever `f : ℕ → Ω → ℝ` is pointwise monotone,
+  satisfies `P (f n)` for every `n`, is uniformly bounded and tends to `g`
+  pointwise. Then `P f` for every bounded `generateFromFuns K`-measurable `f`.
+  State it `@[elab_as_elim]`, as `induction_on_inter` is.
+* `MeasureTheory.ext_of_forall_integral_eq_of_isMulSystem`: two finite measures
+  agreeing on `∫ f` for every `f` in a multiplicative system of bounded
+  functions, and on the total mass, agree on `generateFromFuns K`.
+* `MeasureTheory.integral_mul_eq_zero_of_isMulSystem`: for `μ` finite and `g`
+  integrable, `∫ g * f ∂μ = 0` for every `f ∈ K` implies `∫ g * f ∂μ = 0` for
+  every bounded `generateFromFuns K`-measurable `f`; and the conditional form,
+  `∫ X * f ∂μ = ∫ Y * f ∂μ` for every `f ∈ K` implies
+  `μ[X | generateFromFuns K] =ᵐ[μ] μ[Y | generateFromFuns K]`. This is the form
+  in which the martingale property is verified.
+* The `RCLike` variants of all of the above, obtained from the real ones by
+  splitting into real and imaginary part.

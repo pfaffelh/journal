@@ -720,6 +720,30 @@ to an arbitrary filtration as the primitive, localization of the test processes,
 are written into the roadmaps. What remains of Tasks 4–8 is reviewing what the
 Tau Ceti contributors produce against the manuscript.
 
+## Task 25 — Der funktionale Monotone-Klassen-Satz — `todo` *(angelegt 2026-08-29)*
+
+Erstes zu formalisierendes Ziel aus dem Fact-Inventar:
+`MeasureTheory.induction_on_mulSystem`, `WeakConvergence` Meilenstein 5. Ist
+`K` eine multiplikative Menge beschränkter Funktionen `Ω → ℝ` und gilt eine
+Eigenschaft `P` auf `K`, auf den Konstanten, unter Summe, Skalarmultiplikation
+und beschränkter monotoner Konvergenz, so gilt sie für jede beschränkte
+`generateFromFuns K`-messbare Funktion.
+
+Es ruht auf `MeasurableSpace.comap`
+(`Mathlib/MeasureTheory/MeasurableSpace/Basic.lean:82`), monotoner Konvergenz
+und `induction_on_inter` (`Mathlib/MeasureTheory/PiSystem.lean:692`) — das
+zugleich die Vorlage für Gestalt, `@[elab_as_elim]` und Beweisführung ist.
+Mathlib hat den Satz nicht: `docs/1000.yaml` führt ihn als `Q242045` ohne
+`decl`, und die Zeichenkette „monotone class" kommt weder in v4.33.1 noch auf
+master vor.
+
+Es ist der erste, weil es der einzige Punkt ohne Vorbedingung außerhalb von
+Mathlib ist und drei bereits formulierte Roadmap-Punkte darauf warten: die
+Produktaussage in `WeakConvergence` Meilenstein 1, `isDetermining_products` und
+`isMPSolutionFor_iff_forall_fdd` in `MartingaleProblems` Meilenstein 3. Im
+Manuskript tragen ihn `fact:monotoneclass` und dessen vier Verwendungsstellen
+(§2376, §2630, §5468, §8862).
+
 ---
 
 # Open questions
