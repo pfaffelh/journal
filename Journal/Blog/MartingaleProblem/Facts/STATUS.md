@@ -1,8 +1,9 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260829T201825Z
-- **Zustand:** timeout
-- **Notiz:** nach 1 min abgebrochen -- Zwischenstand ist committet
+- **Letzter Lauf (UTC):** noch keiner
+- **Zustand:** eingerichtet, wartet auf den ersten Cron-Slot
+- **Notiz:** Rauchtest am 2026-08-29 bestanden — Lock, Log, STATUS, Commit, Push,
+  `claude -p`, und die Mathlib-Lesepfade über `--add-dir`
 - **Host:** fisher
 - **Laeufe bisher:** 0
 
