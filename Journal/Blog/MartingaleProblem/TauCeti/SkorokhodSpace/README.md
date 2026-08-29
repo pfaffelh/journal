@@ -34,8 +34,18 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 
 * Instances for `ℝ`, `ℤ`, `ℕ`, and `NNReal`.
 * The instance for a subtype: any `s : Set α` with `[AdditiveDist α]` inherits
-  `AdditiveDist s`. This is definitional and is what makes intervals and
-  lattices instances without further work.
+  `AdditiveDist s`, definitionally. Two points where this does not carry as far
+  as it looks, both to be settled here rather than met later:
+  * The subtype instance does not fire through a `SetLike` hull. `AdditiveDist
+    (AddSubgroup.zmultiples h)` does not resolve, while
+    `AdditiveDist ((AddSubgroup.zmultiples h : Set ℝ))` does. Provide the
+    instance for a `SetLike` carrier, or state once which of the two forms every
+    later declaration uses.
+  * A discrete subset is not order-connected, so
+    `orderTopology_of_ordConnected` does not apply to `h • ℤ`, and
+    `OrderTopology.of_discreteTopology` asks for `PredOrder` and `SuccOrder`,
+    which the subtype does not carry. Supply `PredOrder` and `SuccOrder` for a
+    discrete `AdditiveDist` subtype, or the `OrderTopology` instance directly.
 * `AdditiveDist.orderIso_isometry_real`: a linear order with a metric inducing
   the order topology and additive along the order embeds into `ℝ` by an order
   isomorphism onto its image which is an isometry; the image is closed when
@@ -44,10 +54,14 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 * The four running instances `ℝ`, `Set.Ici (0:ℝ)`, `Set.Icc (0:ℝ) T`,
   `AddSubgroup.zmultiples (h : ℝ)` carry
   `[LinearOrder] [MetricSpace] [OrderTopology] [AdditiveDist] [ProperSpace]`.
-  `ProperSpace` for a closed subset follows from
-  `ProperSpace.of_isClosed`; `OrderTopology` for an order-connected subset
-  follows from the existing instance, and for a discrete subset such as
-  `h • ℤ` it is proved directly.
+  `ProperSpace` for a closed subset follows from `ProperSpace.of_isClosed`, and
+  for `AddSubgroup.zmultiples h` from `AddSubgroup.isClosed_of_discrete`;
+  `OrderTopology` for an order-connected subset follows from the existing
+  instance, and for a discrete subset from the two items above. As standalone
+  types `ℝ` and `ℤ` carry all five instances already.
+* `dist_eq_sub_of_le` and `monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
+  `dist s t = dist t₀ t - dist t₀ s`, and `t ↦ dist t₀ t` is monotone on
+  `Set.Ici t₀`. This is the step from which the embedding above follows.
 * `exhaustion`: fixing a base point `t₀`, the sets `B m = closedBall t₀ m` are
   compact, increasing, cover the index, and each is a linear order with a least
   and a greatest element. Define the clamp

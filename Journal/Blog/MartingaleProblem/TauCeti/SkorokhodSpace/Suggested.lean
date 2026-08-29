@@ -32,6 +32,22 @@ def exhaustion (t₀ : ι) (m : ℕ) : Set ι := Metric.closedBall t₀ m
 
 theorem isCompact_exhaustion (t₀ : ι) (m : ℕ) : IsCompact (exhaustion t₀ m) := sorry
 
+/-- The metric is the difference of the length function to a base point. -/
+theorem dist_eq_sub_of_le {t₀ s t : ι} (h₀s : t₀ ≤ s) (hst : s ≤ t) :
+    dist s t = dist t₀ t - dist t₀ s := by
+  have := AdditiveDist.dist_add (α := ι) h₀s hst
+  linarith
+
+theorem monotoneOn_dist_basepoint {t₀ : ι} :
+    MonotoneOn (fun t => dist t₀ t) (Set.Ici t₀) := sorry
+
+/-- Definitional, but it does not fire through a `SetLike` hull: the lattice
+`AddSubgroup.zmultiples h` needs its `Set` coercion, or this instance restated
+for `SetLike` carriers. -/
+instance instAdditiveDistSubtype {α : Type*} [LinearOrder α] [PseudoMetricSpace α]
+    [AdditiveDist α] (s : Set α) : AdditiveDist s where
+  dist_add {_ _ _} hab hbc := AdditiveDist.dist_add (α := α) hab hbc
+
 /-- An index satisfying the four hypotheses is order isomorphic and isometric to
 a closed subset of `ℝ`. -/
 theorem exists_orderIso_isometry_real :
