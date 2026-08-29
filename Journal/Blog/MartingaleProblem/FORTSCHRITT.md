@@ -27,8 +27,8 @@ von `check.py`).
 mit Prüfung jedes Arguments) ist abgeschlossen und hat acht mathematische Fehler
 gefunden — siehe D39, D40, D43, D44, D48.
 
-**Offen:** Tasks 3–8 (Lean-Formalisierung; auf Entscheidung des Nutzers pausiert,
-„erst muss die Theorie stehen"), Task 19 (historischer Prozess allgemein — am
+**Offen:** Tasks 3–8 (Lean-Formalisierung; durch Task 24 überholt — die
+Formalisierung läuft über Tau-Ceti-Roadmaps, siehe D63), Task 19 (historischer Prozess allgemein — am
 Hawkes-Beispiel durchgeführt, für Genealogien offen), Task 21 (pfadabhängige
 Uhr), Task 22 (Submartingalprobleme), Task 23 (§6: gemischte Uhr, echter
 Beweis des rein atomaren Falls), Q4 (Halbgruppen-/Feller-Weg, bewusst ruhend).
@@ -2927,6 +2927,77 @@ stabil ist (max. 6 Durchläufe), fängt fehlende `.aux` ab — die sporadischen
 „alles undefiniert"-Fehlalarme kamen daher.
 
 115 Seiten.
+
+### D63 — Tau-Ceti-Roadmaps vorbereitet  *(2026-08-29)*
+
+Nutzer: Lizenzfrage mit `brownian-motion` geklärt, Code nutzbar; und „alles für
+Tau Ceti vorbereiten". **Tau Ceti** ist `TauCetiProject/TauCeti`: eine
+Lean-Bibliothek downstream von Mathlib, in der **KIs implementieren und
+reviewen, Menschen die Roadmaps schreiben** (getrenntes Repo
+`TauCetiRoadmap`). Damit ist klar, was „vorbereiten" heißt: das Manuskript wird
+zur Roadmap.
+
+**Format** (aus `TauCetiRoadmap/README.md` und `TauCeti/README.md` gelesen):
+`TauCetiRoadmap/<Topic>/README.md` ist die verbindliche Spezifikation, dazu
+optional `Suggested.lean`. Harte Auflagen: **keine Lücken** (jeder Meilenstein
+ruht auf Mathlib, auf früherem Material derselben Roadmap oder auf einer
+explizit zitierten anderen Roadmap), **keine konditionale Sprache**
+(„optional", „deferred", „später", „blockiert durch"), **zeitlos** (keine
+Historie, kein Review-Prozess), **vollständige Grundtheorie** je eingeführtem
+Objekt, Mathlib-Namenskonventionen. Tau Ceti hängt **ausschließlich** von
+Mathlib master ab — fremde Repos können also nicht Dependency sein, sondern
+müssen einportiert werden. Genau dafür war die Lizenzfrage relevant.
+
+**Vier Roadmaps** in `TauCeti/`, Kette mit einer Gabel:
+`WeakConvergence` (separierende + konvergenzbestimmende Klassen, CMT mit
+f.ü.-Stetigkeit, Skorokhod-Darstellung, Vitali) und `KolmogorovExtension`
+(kompakte Systeme, innen-reguläre Inhalte, projektiver Limes) sind unabhängig;
+`SkorokhodSpace` (AdditiveDist-Typklasse, càdlàg, Zeittransformationen,
+lokalisierte Metrik, Polish, Borel = Zylinder, Modulus + Kompaktheit,
+Straffheit) baut auf der ersten auf; `MartingaleProblems` (12 Meilensteine:
+Uhr, abstraktes MP, Determinierungsmengen + fdd-Kriterium, Sprungprozesse,
+Mischung/Shift/Restart, Eindeutigkeit + Markov, Lokalisierung, Dualität,
+càdlàg-Modifikation, abstrakter Konvergenzsatz, Skorokhod-Instanzen, Existenz
+aus einem Dualen) auf allen dreien.
+
+**Übersetzungsarbeit**, die den Aufwand ausmachte: jede `\ref{}` musste zu einer
+selbsttragenden mathematischen Aussage werden (die Roadmap muss ohne das PDF
+lesbar sein), und §8 des Manuskripts ist zwar der Bauplan, verstößt aber
+durchgehend gegen die Zeitlosigkeits- und Konditionalitätsregel. Die
+Design-Entscheidungen aus §8.2 sind alle eingebaut: Operator als **Relation**,
+Lösung bzgl. beliebiger Filtration als Primitiv, compact containment als
+Prädikat mit zwei Varianten, Lokalisierung der **Testprozesse** statt des
+Operators, `RCLike` für die Testfunktionen (Martingale bleiben Banach-wertig,
+wie Mathlibs `MeasureTheory.Martingale`), beide Konventionen als Parameter
+`Clock.Conv`, fibrierter Zustandsraum genau dort, wo er gebraucht wird
+(Meilenstein 12). Der Namenskonflikt ι = Index vs. ι = Konvention wurde
+zugunsten von Mathlib (ι = Index) aufgelöst.
+
+**Mathlib-Bestand neu verifiziert** (lokal, v4.33.1): vorhanden sind
+`Filtration`, `Adapted`, `ProgMeasurable`, `IsStoppingTime`, `Martingale`,
+`Submartingale`, `UniformIntegrable`, `Function.leftLim`/`rightLim`,
+`integral_rieszMeasure`, `IsProjectiveMeasureFamily`/`IsProjectiveLimit`,
+`IsTightMeasureSet`, `levyProkhorovDist`, Portmanteau, Prokhorov,
+`FiniteMeasure.ext_of_forall_mem_subalgebra_integral_eq_of_polish`. **Nicht**
+vorhanden: Skorokhod-Darstellung, Skorokhod-Raum, càdlàg-Modifikation,
+Kolmogorov-Erweiterung für überabzählbaren Index, CMT in der
+f.ü.-Stetigkeitsform.
+
+**Prior art, jetzt nutzbar** (beide Apache-2.0, wie Tau Ceti selbst):
+`RemyDegenne/brownian-motion` (`Cadlag.lean` + Quasimartingal-Modifikation) und
+`RemyDegenne/kolmogorov_extension4` (`isProjectiveLimit_projectiveLimit`).
+Achtung, in `SUBMISSION.md` festgehalten: der lokale Checkout von
+`brownian-motion` steht auf Branch `paper`, wo `Cadlag.lean` nur ein 32-Zeilen-
+Stub mit einem `sorry` ist — das Material liegt auf `master`. Toolchains
+v4.25.0 bzw. v4.18.0-rc1, also portieren statt einbinden. Das
+`D([0,1],\R)`-Repo aus Rem. `skorokhodform` ist **nicht** zitiert: dessen Lizenz
+erlaubt keine Nachnutzung, und eine Roadmap darf einen Implementierer nicht
+darauf verweisen.
+
+`SUBMISSION.md` hält den Einreichungsweg fest (Fork, `[Intention]`-Issue +
+`claim`, ein PR je Roadmap, `Suggested.lean` vor dem PR gegen Mathlib master
+bauen) — bewusst außerhalb der Roadmap-Verzeichnisse, weil Roadmaps prozessfrei
+sein müssen.
 
 ---
 

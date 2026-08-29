@@ -81,6 +81,8 @@
 \newcommand{\Ku}{\cite{Kurtz91}}
 \newcommand{\BM}{\cite{BM25}}
 \newcommand{\JR}{\cite{JR16}}
+\DeclareMathOperator{\Lip}{Lip}
+\newcommand{\DT}{D(\T,E)}
 
 \title{Characterization and Convergence of Markov Processes\\
        via Martingale Problems\\[2ex]
@@ -563,7 +565,7 @@ $\Theta$ & mixing parameter space, Lemma~\ref{lem:mixture}
        & the dual flow of Lemma~\ref{lem:hawkesflow} \\
 $\gamma$ & the density in \eqref{eq:incrementrep}
        & the augmenting map of Theorem~\ref{thm:absconvaug} \\
-$\Lambda$ & the time changes of Definition~\ref{def:skorokhod}
+$\Lambda$ & the time changes of Definition~\ref{def:timechange}
        & the path-dependent rate of Setting~\ref{set:pathjump} \\
 $\lambda$ & the resolvent parameter, Lemma~\ref{lem:resolvent}
        & the rate of Setting~\ref{set:jumpdata}; also Lebesgue measure \\
@@ -583,7 +585,9 @@ $M$ & the measurable functions $\Meas(E)$
 Three collisions that would have been harmful were removed rather than declared,
 and are recorded here because the original notation is that of the sources:
 \EK{} write $q$ for the truncated metric $r \wedge 1$ in the Skorokhod metric,
-which is the clock here, so we write $\varrho$; \EK{} write $F$ for a dense
+which is the clock here, so the truncation is written inside
+Definition~\ref{def:dcirc} and $\varrho$ is free for the metric on the index
+$\T$, which \EK{} do not have; \EK{} write $F$ for a dense
 subset of the index in their regularization lemmas, which is the path space
 here, so we write $D$; and the generalized inverse of the clock in
 Corollary~\ref{cor:atomless} is written $Q^{\leftarrow}$ rather than $\tau$,
@@ -1311,12 +1315,13 @@ which the manuscript would otherwise have to add separately.
 \label{ssec:ch3}
 % ---------------------------------------------------------------------
 
-Everything in this subsection assumes \eqref{T3}, $\T = [0,\infty)$, and is stated for
-it without further comment: the Skorokhod topology is defined through time
-changes $\lambda : [0,\infty) \to [0,\infty)$ (Definition~\ref{def:skorokhod})
-and has no counterpart on a general index.  This is the one block of
-prerequisites that does not abstract, and
-Section~\ref{ssec:bundletable} records which results inherit the restriction.
+Everything in this subsection assumes \eqref{T3}, $\T = [0,\infty)$, and is
+stated for it without further comment.  The Skorokhod space itself is not here:
+it is the one prerequisite this manuscript builds rather than cites, and
+Section~\ref{sec:skorokhod} builds it --- under the hypothesis \eqref{T3p}, which
+is weaker than \eqref{T3} and is the weakest under which the $J_1$ topology
+exists at all (Theorem~\ref{thm:T3sharp}).  Section~\ref{ssec:bundletable}
+records which results inherit the restriction.
 
 Throughout this subsection $(S,d)$ is a metric space.
 
@@ -1441,68 +1446,9 @@ Throughout this subsection $(S,d)$ is a metric space.
   \end{equation}
   is separating on $S$; if the $(S_k,d_k)$ are complete and separable and the
   $M_k$ are convergence determining, so is $M$.  In particular the
-  finite-dimensional distributions of a process determine its law.  Moreover, for
-  $\pi_t : \DE \to E$, $\pi_t(x) = x(t)$, one has
-  $\Bor(\DE) = \sigma(\pi_t : t \geq 0) = \sigma(\pi_t : t \in D)$ for any dense
-  $D \subset [0,\infty)$, provided $E$ is separable; hence the
-  finite-dimensional distributions of a process with sample paths in $\DE$
-  determine its law on $\DE$.
-\end{fact}
-
-\begin{definition}[\EK, Section 3.5]
-  \label{def:skorokhod}
-  $\DE$ is the space of right continuous $x : [0,\infty) \to E$ having left
-  limits $x(t-)$ for all $t > 0$ (with $x(0-) = x(0)$).  Let $\varrho = r \wedge 1$
-  --- \emph{not} $q$, which is the clock ---,
-  let $\Lambda'$ be the set of strictly increasing continuous
-  $\lambda : [0,\infty) \to [0,\infty)$ onto with $\lambda(0)=0$, and let
-  $\Lambda \subset \Lambda'$ be those $\lambda$ which are Lipschitz with
-  \begin{equation}
-    \label{eq:gamma}
-    \gamma(\lambda) \;=\; \operatorname*{ess\,sup}_{t \geq 0} |\log \lambda'(t)|
-      \;=\; \sup_{s > t \geq 0}
-        \Bigl| \log \tfrac{\lambda(s)-\lambda(t)}{s-t} \Bigr| \;<\; \infty .
-  \end{equation}
-  The \emph{Skorokhod ($J_1$) metric} on $\DE$ is
-  \begin{equation}
-    \label{eq:skorokhodmetric}
-    d(x,y) \;=\; \inf_{\lambda \in \Lambda}
-      \Bigl[ \gamma(\lambda) \vee
-        \int_0^\infty e^{-u} d(x,y,\lambda,u) \dif u \Bigr],
-  \end{equation}
-  where
-  \begin{equation}
-    \label{eq:skorokhodmetricaux}
-    d(x,y,\lambda,u)
-      = \sup_{t \geq 0} \varrho\bigl( x(t \wedge u), y(\lambda(t) \wedge u) \bigr).
-  \end{equation}
-\end{definition}
-
-\begin{fact}[\EK, Lemma 3.5.1 and Theorem 3.5.6]
-  \label{fact:DEpolish}
-  Every $x \in \DE$ has at most countably many discontinuities.  If $E$ is
-  separable, then $\DE$ is separable; if $(E,r)$ is complete, then $(\DE, d)$ is
-  complete.  In particular, $\DE$ is Polish whenever $E$ is Polish.
-\end{fact}
-
-\begin{fact}[Compact sets of $\DE$; \EK, Lemma 3.6.2 and Theorem 3.6.3]
-  \label{fact:DEcompact}
-  For $x \in \DE$, $\delta > 0$ and $T > 0$ define the modulus
-  \begin{equation}
-    \label{eq:modulus}
-    w'(x,\delta,T) \;=\; \inf_{\{t_i\}} \max_i
-      \sup_{s,t \in [t_{i-1}, t_i)} r\bigl( x(s), x(t) \bigr) ,
-  \end{equation}
-  the infimum being over all partitions $0 = t_0 < t_1 < \dots < t_n$ with
-  $T \leq t_n$ and $\min_{i} (t_i - t_{i-1}) > \delta$.  Then
-  $w'(x,\delta,T) \to 0$ as $\delta \to 0$, $w'(\cdot,\delta,T)$ is Borel
-  measurable, and, for $(E,r)$ complete, the closure of $A \subset \DE$ is
-  compact if and only if
-  \begin{enumerate}[label=(\alph*), nosep]
-  \item for every rational $t \geq 0$ there is a compact $\Gamma_t \subset E$
-    with $x(t) \in \Gamma_t$ for all $x \in A$, and
-  \item $\lim_{\delta \to 0} \sup_{x \in A} w'(x,\delta,T) = 0$ for each $T>0$.
-  \end{enumerate}
+  finite-dimensional distributions of a process determine its law.  That
+  $\Bor(\DT) = \sigma(\pi_t)$, so that the law on the path space is determined as
+  well, is Theorem~\ref{thm:fdd}.
 \end{fact}
 
 \begin{fact}[\EK, Lemma 3.7.7]
@@ -1724,12 +1670,12 @@ Fact~\ref{fact:stoneweierstrass}
   & Remark~\ref{rem:EKrelcompact}, Proposition~\ref{prop:rieszmarkov} \\
 Fact~\ref{fact:kolmogorov}
   & Theorem~\ref{thm:exduality} \\
-Fact~\ref{fact:fdd}
+Theorem~\ref{thm:fdd}
   & Theorem~\ref{thm:absuniq}, Corollary~\ref{cor:DEuniqueness},
     Example~\ref{ex:determining} \\
-Fact~\ref{fact:DEpolish}
+Theorem~\ref{thm:DEpolish}
   & Setting~\ref{set:abstract}, Theorem~\ref{thm:CPSconv} \\
-Fact~\ref{fact:DEcompact}
+Theorem~\ref{thm:DEcompact}
   & Fact~\ref{fact:relcompact} \\
 Fact~\ref{fact:Dcountable}
   & Lemma~\ref{lem:EKconv}, Theorem~\ref{thm:CPSconv} \\
@@ -1913,6 +1859,419 @@ at all: every statement involving a stopping time already assumes \eqref{T2b}, u
 which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 
 % =====================================================================
+\section{The Skorokhod space}
+\label{sec:skorokhod}
+
+Every result of Sections~\ref{sec:MP}, \ref{ssec:absuniq} and \ref{sec:duality}
+is stated without a path space, and Theorem~\ref{thm:absconv} is stated with an
+abstract Polish one.  The Skorokhod space enters at exactly one place, the
+convergence theory of Section~\ref{ssec:EKconv}, and this section builds it.
+
+Two things are decided here that the literature does not decide, because it does
+not have to.  The first is the class of time indices: Billingsley and \EK{} treat
+$[0,1]$ and $[0,\infty)$, in that order and as two constructions, and neither
+asks what the construction actually needs.  The answer, Theorem~\ref{thm:T3sharp},
+is a hypothesis rather than a list, it covers the two classical cases and the
+lattices of Section~\ref{ssec:diffclocks} at once, and it is where the graduation
+of Definition~\ref{def:bundles} stops.  The second is that $[0,T]$ and
+$[0,\infty)$ are not separate: properness supplies a compact exhaustion, the
+metric is localized along it, and a bounded index is the case in which the
+localization is eventually constant.
+
+% ---------------------------------------------------------------------
+\subsection{The setting}
+\label{ssec:skorokhodsetting}
+
+\begin{definition}[The time index for $J_1$]
+  \label{def:T3prime}
+  We add one bundle to Definition~\ref{def:bundles}:
+  \begin{align}
+    &\parbox[t]{0.78\textwidth}{\raggedright
+      \eqref{T2a}, and $\T$ carries a metric $\varrho$ which induces the order
+      topology, which is \emph{additive along the order},
+      \[
+        \varrho(s,u) = \varrho(s,t) + \varrho(t,u) \qquad (s \leq t \leq u),
+      \]
+      and for which closed balls are compact.}
+      \tag{T3$'$}\label{T3p}
+  \end{align}
+  Fix once and for all a base point $t_0 \in \T$ and write
+  $B_m := \{t : \varrho(t_0,t) \leq m\}$ for $m \in \N$, so that
+  $B_1 \subset B_2 \subset \cdots$ and $\bigcup_m B_m = \T$.  Each $B_m$ is
+  compact and linearly ordered, hence has a least and a greatest element, and we
+  write
+  \[
+    \tau_m : \T \to B_m, \qquad
+    \tau_m(t) := \min\bigl(\max(t, \min B_m),\, \max B_m\bigr)
+  \]
+  for the clamp onto it.
+\end{definition}
+
+\begin{remark}[What \eqref{T3p} is]
+  \label{rem:T3primeis}
+  Additivity along the order makes $t \mapsto \varrho(t_0,t)$, signed by the order,
+  an order isomorphism and an isometry onto its image, so \eqref{T3p} says
+  precisely that $\T$ is a closed subset of $\R$ with the induced metric, up to
+  the canonical identification.  It is stated as a hypothesis and not as that
+  sentence because the development below never uses the identification, and
+  because as a hypothesis it is a typeclass: the four instances
+  \[
+    \R, \qquad \Rp, \qquad [0,T], \qquad h\,\mathbb{Z} \quad (h > 0)
+  \]
+  and every closed subset of any of them --- the closed range of a subordinator,
+  say --- satisfy it, and no one of them is the definition.  Note in particular
+  that \eqref{T3p} asks for no least element: the two-sided index $\T = \R$ and
+  the shifted index $[-1,\infty)$ are admitted, which \eqref{T0} is not.  A
+  formalization declares
+  \begin{quote}\ttfamily\small
+    variable \{$\iota$ : Type*\} [LinearOrder $\iota$] [MetricSpace $\iota$]\\
+    \phantom{variable }[OrderTopology $\iota$] [AdditiveDist $\iota$] [ProperSpace $\iota$]
+  \end{quote}
+  of which only \texttt{AdditiveDist} has to be introduced; see
+  Remark~\ref{rem:skorokhodform}.
+
+  The base point is immaterial: two base points at distance $c$ give exhaustions
+  interleaving after $\lceil c \rceil$ steps, hence uniformly equivalent metrics
+  in Definition~\ref{def:dcirc}.  Nothing below depends on the choice, and no
+  statement mentions it.
+\end{remark}
+
+\begin{definition}[Paths]
+  \label{def:skorokhod}
+  Assume \eqref{T3p} and let $(E,r)$ be Polish.  Write
+  \[
+    \DT := \{ f : \T \to E \;:\; f \text{ is c\`adl\`ag in the sense of
+      Definition~\ref{def:process}} \}.
+  \]
+  For $m \in \N$ put $f^{(m)} := f \circ \tau_m$, a path which is constant
+  outside $B_m$ and takes the same values as $f$ on it.
+\end{definition}
+
+% ---------------------------------------------------------------------
+\subsection{Time changes}
+\label{ssec:timechange}
+
+\begin{definition}[Time changes and their norm]
+  \label{def:timechange}
+  As in Section~\ref{ssec:ch3}, $\Lambda$ denotes the set of time changes, here
+  the bi-Lipschitz order isomorphisms $\lambda : \T \to \T$.  Their norm
+  \emph{norm} is
+  \begin{equation}
+    \label{eq:gamma}
+    \gamma(\lambda)
+      := \log \max\bigl( \Lip(\lambda),\ \Lip(\lambda^{-1}) \bigr)
+      \;\in\; [0,\infty],
+  \end{equation}
+  and $\gamma_m(\lambda)$ denotes the same quantity computed with the
+  Lipschitz constants of $\lambda$ and $\lambda^{-1}$ restricted to $B_m$.
+\end{definition}
+
+\begin{remark}[Why this and not Billingsley's]
+  \label{rem:logslope}
+  For $\T = [0,1]$ and $\lambda$ fixing the endpoints,
+  \[
+    \sup_{s < t} \Bigl| \log \tfrac{\lambda t - \lambda s}{t - s} \Bigr|
+      = \max\bigl( \log \Lip(\lambda),\ \log \Lip(\lambda^{-1}) \bigr)
+      = \gamma(\lambda),
+  \]
+  because for monotone $\lambda$ the supremum of the difference quotients is
+  $\Lip(\lambda)$, the substitution $u = \lambda s$, $v = \lambda t$ turns their
+  infimum into $\Lip(\lambda^{-1})^{-1}$, and $\lambda(1) - \lambda(0) = 1 - 0$
+  forces the infimum below and the supremum above $1$.  So
+  Definition~\ref{def:timechange} is Billingsley's $\gamma^\circ$
+  written without differences and quotients, and Lemma~\ref{lem:tcnorm} is what
+  the identity buys: two facts that are proved by hand in the one-dimensional
+  account become the two standard properties of Lipschitz constants.
+\end{remark}
+
+\begin{lemma}[The norm is a length function]
+  \label{lem:tcnorm}
+  For $\lambda, \mu \in \Lambda$ and every $m$,
+  \[
+    \gamma(\mathrm{id}) = 0, \qquad
+    \gamma(\lambda^{-1}) = \gamma(\lambda), \qquad
+    \gamma(\lambda \circ \mu) \leq \gamma(\lambda) + \gamma(\mu),
+  \]
+  and the same three with $\gamma_m$ throughout.
+\end{lemma}
+
+\begin{proof}
+  The first is $\log 1$, the second holds by construction, and the third is
+  $\Lip(\lambda \circ \mu) \leq \Lip(\lambda) \Lip(\mu)$ together with the same
+  bound for the inverse.  No property of $\T$ beyond being a metric space is
+  used.
+\end{proof}
+
+\begin{lemma}[The norm controls the displacement]
+  \label{lem:tccontrol}
+  Assume \eqref{T3p}.  For $\lambda \in \Lambda$ and $t \in B_m$,
+  \[
+    \varrho(\lambda t, t) \;\leq\; \bigl( e^{\gamma_m(\lambda)} - 1 \bigr)\, m'
+    \qquad\text{where } m' := \sup_{t \in B_m} \varrho(t_0, t) \leq m .
+  \]
+  In particular $\sup_{t \in B_m} \varrho(\lambda t, t) \to 0$ as
+  $\gamma_m(\lambda) \to 0$, for each fixed $m$.
+\end{lemma}
+
+\begin{proof}
+  Time changes fix $t_0$ --- an order isomorphism of $\T$ fixes any point
+  determined by the order, and if $\T$ has no such point one replaces $t_0$ by
+  its image throughout, which changes the exhaustion by a bounded amount.  With
+  $\ell(t) := \varrho(t_0,t)$, additivity gives $\varrho(s,t) = |\ell(s) - \ell(t)|$
+  for all $s,t$ on the same side of $t_0$, and
+  $\ell(\lambda t) = \varrho(\lambda t_0, \lambda t) \leq \Lip(\lambda)\, \ell(t)
+  = e^{\gamma_m(\lambda)} \ell(t)$ on $B_m$; the same bound for
+  $\lambda^{-1}$ gives the reverse inequality, and subtracting $\ell(t)$ yields
+  the claim.
+\end{proof}
+
+\begin{remark}[Where additivity is used, and only there]
+  \label{rem:additivityused}
+  Lemma~\ref{lem:tccontrol} is the only place in this section at which additivity
+  along the order enters, and Theorem~\ref{thm:T3sharp} shows it cannot be
+  dispensed with.  Everything before it holds for an arbitrary metric on $\T$,
+  and everything after it uses only the conclusion of the lemma.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{The metric}
+\label{ssec:dcirc}
+
+\begin{definition}[The localized Skorokhod metric]
+  \label{def:dcirc}
+  For $f,g \in \DT$ and $m \in \N$ set
+  \[
+    d_m(f,g) := \inf_{\lambda \in \Lambda,\ \gamma_m(\lambda) < \infty}
+      \max\Bigl( \gamma_m(\lambda),\
+        \sup_{t \in \T} r\bigl( f^{(m)}(\lambda t),\, g^{(m)}(t) \bigr) \Bigr),
+    \qquad
+    d(f,g) := \sum_{m \geq 1} 2^{-m} \min\bigl( 1, d_m(f,g) \bigr).
+  \]
+  The supremum in $d_m$ is effectively over the compact set $B_m$, since
+  $f^{(m)}$ and $g^{(m)}$ are constant outside it, and is therefore finite.
+\end{definition}
+
+\begin{remark}[The two classical cases]
+  \label{rem:dcirccases}
+  For $\T = [0,1]$ the exhaustion is eventually constant, $\tau_m = \mathrm{id}$
+  for $m \geq 1$, and $d$ is a positive multiple of Billingsley's $d^\circ$.  For
+  $\T = \Rp$ the clamp is $\tau_m(t) = t \wedge m$ and $d$ is the metric of \EK,
+  Section~3.5, with the integral over the truncation level replaced by a series;
+  in particular no truncation of the \emph{values} is used, so $E$ need not be a
+  vector space.  The unification is what the clamp buys, and the clamp exists
+  because properness makes $B_m$ compact and a compact linearly ordered space has
+  a greatest element.
+\end{remark}
+
+\begin{theorem}[$\DT$ is a metric space]
+  \label{thm:DEmetric}
+  Assume \eqref{T3p} and let $(E,r)$ be Polish.  Then $d$ is a metric on $\DT$.
+\end{theorem}
+
+The one point that is not routine is the identity of indiscernibles.  If
+$d(f,g) = 0$ then $d_m(f,g) = 0$ for every $m$, so by Lemma~\ref{lem:tccontrol}
+the time changes realizing the infimum converge to the identity uniformly on
+$B_m$, and $f = g$ on $B_m$ follows by the argument of \cite[Ch.~3, §12]{JS03} at
+the continuity points and by right continuity elsewhere.  Since the $B_m$
+exhaust $\T$, $f = g$.  No quotient is taken and no flat extension of the paths
+is needed: on a bounded index the latter is a way of compensating for a fixed
+horizon, and the exhaustion already does that work.
+
+\begin{theorem}[Polish]
+  \label{thm:DEpolish}
+  Assume \eqref{T3p} and let $(E,r)$ be Polish.  Then $(\DT, d)$ is Polish.
+\end{theorem}
+
+Separability is witnessed by the countable family of step paths whose jump times
+lie in a countable dense subset $D \subset \T$ --- available by \eqref{T2b},
+which \eqref{T3p} implies --- and whose values lie in a countable dense subset of
+$E$.  Completeness is the infinite-composition argument of Billingsley's
+Theorem~12.2, run on each $B_m$ using Lemmas~\ref{lem:tcnorm} and
+\ref{lem:tccontrol} and assembled along the exhaustion; it is the most expensive
+proof in this section, and Remark~\ref{rem:skorokhodform} records where it exists
+already.
+
+% ---------------------------------------------------------------------
+\subsection{The Borel field}
+\label{ssec:skorokhodborel}
+
+\begin{theorem}[Borel equals cylinder]
+  \label{thm:fdd}
+  Assume \eqref{T3p}, let $(E,r)$ be Polish and let $D \subset \T$ be countable and
+  dense.  Then $\pi_D : \DT \to E^D$, $f \mapsto (f(t))_{t \in D}$, is a
+  measurable embedding, and consequently
+  \[
+    \Bor(\DT) = \sigma(\pi_t : t \in \T) = \sigma(\pi_t : t \in D).
+  \]
+  A probability measure on $\DT$ is therefore determined by its
+  finite-dimensional distributions along $D$, and a map $X : \Omega \to \DT$ is
+  measurable if and only if $\pi_t \circ X$ is measurable for every $t \in D$.
+\end{theorem}
+
+The content is that $\pi_D$ is measurable, and it is not the triviality it looks
+like: $\pi_t$ is \emph{discontinuous} at every path having a jump at $t$, so
+measurability of the coordinates is a theorem and not a remark.  It is proved by
+exhibiting $\pi_t$ as a pointwise limit of $d$-continuous functionals, for which
+two routes are available; the one that does not require $E$ to carry a linear
+structure is to use $t \in D$ only and to invoke right continuity, which is what
+the statement is arranged to allow.  Injectivity of $\pi_D$ is right continuity
+again, and a measurable injection between standard Borel spaces is a measurable
+embedding.
+
+Theorem~\ref{thm:fdd} is what Proposition~\ref{prop:fddchar} consumes, and it is
+the one result of this section that the abstract theory of
+Sections~\ref{sec:MP}--\ref{sec:duality} actually uses.
+
+% ---------------------------------------------------------------------
+\subsection{Compactness}
+\label{ssec:skorokhodcompact}
+
+\begin{definition}[The c\`adl\`ag modulus]
+  \label{def:modulus}
+  For $f \in \DT$, $m \in \N$ and $\delta > 0$ let $w_m'(f,\delta)$ be the
+  infimum of those $\varepsilon \geq 0$ for which there is a finite subdivision
+  $\min B_m = t_0 < t_1 < \cdots < t_n = \max B_m$ of $B_m$ with
+  $\varrho(t_{i-1}, t_i) > \delta$ for every $i$ and
+  $r(f(s), f(t_{i-1})) \leq \varepsilon$ for all $s \in [t_{i-1}, t_i)$ and
+  every $i$.
+\end{definition}
+
+\begin{theorem}[Relative compactness]
+  \label{thm:DEcompact}
+  Assume \eqref{T3p} and let $(E,r)$ be Polish.  A set $A \subset \DT$ is relatively
+  compact if and only if for every $m$
+  \begin{enumerate}[label=(\roman*), nosep]
+  \item $\{f(t) : f \in A,\ t \in B_m\}$ is relatively compact in $E$, and
+  \item $\lim_{\delta \downarrow 0} \sup_{f \in A} w_m'(f,\delta) = 0$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{remark}[Is the modulus Borel?  An open point]
+  \label{rem:modulusborel}
+  \EK, Lemma~3.6.2 asserts, and this manuscript cited until
+  Theorem~\ref{thm:DEcompact} replaced it, that $w'(\cdot,\delta,T)$ is Borel measurable, and Billingsley
+  says the same.  The Lean formalization of \cite{Kuan26} does \emph{not} prove
+  it and records why: for a fixed subdivision the functional is a countable
+  supremum, by right continuity, hence Borel; but $w'$ is an infimum over an
+  uncountable family of subdivisions, and the reduction to subdivisions with
+  rational nodes fails, because a subdivision has to place its nodes at the
+  jumps of $f$ and those need not be rational.  The sublevel sets are then
+  projections of a jointly Borel condition along an uncountable Polish
+  parameter, i.e.\ analytic and universally measurable, and no Borel witness is
+  produced by that route.
+
+  The two statements are not formally in conflict --- a route can fail without
+  the conclusion failing, and monotonicity in $\delta$ leaves room for a limit
+  argument that the naive reduction does not see --- but the point should be
+  settled rather than inherited.  It is recorded here because it is the only
+  place in this section where a classical assertion and a machine-checked
+  development disagree about what has been proved.
+
+  Nothing below depends on the answer.  Every use made of
+  Theorem~\ref{thm:DEcompact} bounds the \emph{outer} measure of
+  $\{f : w_m'(f,\delta) \geq \varepsilon\}$ by that of a cylinder-measurable
+  superset of large increments, and outer measures are monotone and countably
+  subadditive, which is all that is used.  A formalization should take that
+  route and leave the measurability question aside.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Where the graduation stops}
+\label{ssec:T3sharp}
+
+\begin{theorem}[\eqref{T3p} is sharp]
+  \label{thm:T3sharp}
+  Let $\T$ satisfy \eqref{T2a} and carry a metric $\varrho$ inducing the order
+  topology, and let $\Lambda$ and $\gamma$ be as in
+  Definition~\ref{def:timechange}.
+  \begin{enumerate}[label=(\alph*)]
+  \item \label{it:T3a}
+    If $\varrho$ is additive along the order, then $\T$ is order isomorphic and
+    isometric to a subset of $\R$, closed if in addition closed balls are
+    compact.
+  \item \label{it:T3b}
+    Without additivity the conclusion of Lemma~\ref{lem:tccontrol} may fail, and
+    then $d$ of Definition~\ref{def:dcirc} is not a metric: there are $\T$ and
+    $f \neq g$ with $d(f,g) = 0$.
+  \end{enumerate}
+\end{theorem}
+
+For \ref{it:T3a}, additivity says exactly that $\ell(t) = \pm \varrho(t_0,t)$,
+signed by the order, is additive on order intervals, hence an order embedding
+and an isometry; properness makes the image closed.  For \ref{it:T3b} it is
+enough to leave the linear order: on a rooted tree with the tree metric ---
+additive along the order, by the computation
+$\varrho(s,u) = \ell(u) - \ell(s) = \varrho(s,t) + \varrho(t,u)$ for $s \leq t \leq u$ ---
+a root-fixing isometry exchanging two isomorphic branches has
+$\gamma(\lambda) = 0$ while $\sup_t \varrho(\lambda t, t)$ is of the order of
+the diameter, and two paths differing by that exchange are at distance zero.
+Restricting $\Lambda$ to time changes keeping each point on its own branch
+restores Lemma~\ref{lem:tccontrol}, at the price of a group depending on $\T$.
+
+\begin{remark}[The three walls around this one]
+  \label{rem:skorokhodwalls}
+  Theorem~\ref{thm:T3sharp} is one of four places where the graduation of
+  Definition~\ref{def:bundles} ends, and it is the last of them;
+  Remark~\ref{rem:graduation} tabulates all four.  Briefly: the martingale
+  property needs no more than \eqref{T0}; stopping times need $\vee$ and hence
+  \eqref{T1}, by Remark~\ref{rem:ekindex}(ii); c\`adl\`ag paths need
+  $\{s : s \leq t\}$ to be a chain, which a tree order supplies and a
+  multiparameter index does not; and $J_1$ needs \eqref{T3p}.  None of this
+  constrains Section~\ref{ssec:measureconv}, whose pseudo-paths need a measure on
+  $\T$ and a metric on $E$ and no order at all.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Notes for the formalization}
+\label{ssec:skorokhodform}
+
+\begin{remark}[What exists]
+  \label{rem:skorokhodform}
+  Mathlib has none of this section as of August 2026; the string
+  ``Skorokhod'' occurs in the library only in \texttt{docs/1000.yaml}, where the
+  representation and embedding theorems are listed as open and the space is not
+  listed at all.  Three developments downstream of it are relevant.
+
+  \emph{C\`adl\`ag paths.}  \texttt{RemyDegenne/brownian-motion} defines
+  \texttt{IsCadlag} on \texttt{[TopologicalSpace }$\iota$\texttt{] [Preorder
+  }$\iota$\texttt{]}, which is \eqref{T2b}, together with jump sets and the usual
+  closure properties.  Definition~\ref{def:skorokhod} should reuse it rather than
+  restate it.
+
+  \emph{The one-dimensional case, complete.}  The repository accompanying
+  \cite{Kuan26} constructs $D([0,1],\R)$ with Billingsley's metric, the
+  \texttt{MetricSpace}, \texttt{CompleteSpace} and \texttt{PolishSpace}
+  instances, the modulus and the compactness criterion, Aldous' tightness
+  criterion by the original two-scale argument, and the measurable embedding of
+  Theorem~\ref{thm:fdd}.  It fixes the horizon to $[0,1]$ and the state space to
+  $\R$, carries boundedness as a structure field, and encodes paths as functions
+  on $\R$ which are flat outside $[0,1]$ --- three decisions that
+  Definition~\ref{def:dcirc} does not need, the exhaustion doing their work.  It
+  also records, and leaves open, the failure of measurability of the modulus, by
+  Remark~\ref{rem:modulusborel}.  Its licence does not permit
+  reuse without the author's agreement.
+
+  \emph{The new typeclass.}  Of the five hypotheses of \eqref{T3p} in the form of
+  Remark~\ref{rem:T3primeis}, four are Mathlib's already ---
+  \texttt{LinearOrder}, \texttt{MetricSpace}, \texttt{OrderTopology},
+  \texttt{ProperSpace} --- and only additivity has to be added:
+  \begin{quote}\ttfamily\small
+    class AdditiveDist ($\alpha$ : Type*) [LinearOrder $\alpha$] [PseudoMetricSpace $\alpha$] : Prop where\\
+    \phantom{ss}dist\_add : $\forall$ \{s t u : $\alpha$\}, s $\le$ t $\to$ t $\le$ u $\to$ dist s u = dist s t + dist t u
+  \end{quote}
+  Its instances for $\R$ and $\mathbb{Z}$ are four lines each, and the instance for an
+  arbitrary subset of an \texttt{AdditiveDist} type is definitional, so the
+  intervals, the lattices and the closed range of a subordinator come for free.
+  \texttt{ProperSpace} is inherited by closed subsets through the existing
+  \texttt{ProperSpace.of\_isClosed}, and \texttt{OrderTopology} through the
+  existing instance for order-connected subsets --- but \emph{not} for a lattice
+  embedded in $\R$, which is not order connected: there the missing instance has
+  to be proved, or the lattice used as a type of its own, where it is present.
+  That gap is the concrete reason to state \eqref{T3p} as a typeclass rather than
+  to define $\T$ as a subset of $\R$.
+\end{remark}
+
+% =====================================================================
 \section{Martingale problems}
 \label{sec:MP}
 % =====================================================================
@@ -1938,7 +2297,7 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
 
   Under \eqref{E3} we take $F$ to carry a Polish topology and
   $\mathcal{S} = \Bor(F)$; \eqref{eq:pathsigma} is then a theorem rather than an
-  assumption for $F = \DE$ (Fact~\ref{fact:fdd}), and it is what makes the
+  assumption for $F = \DE$ (Theorem~\ref{thm:fdd}), and it is what makes the
   finite-dimensional distributions determine the law.
 \end{setting}
 
@@ -1980,7 +2339,7 @@ which the lattice structure is automatic.  See Remark~\ref{rem:ekindex}.
         n \in \N,\ t_1,\dots,t_n \in D \cap [0,t],\ h_i \in \Cb(E) \Bigr\}
   \]
   is determining.  This uses $\Bor(F) = \sigma(X_t : t \in \T)$
-  (Fact~\ref{fact:fdd}) and the monotone class theorem.
+  (Theorem~\ref{thm:fdd}) and the monotone class theorem.
 \end{example}
 
 \begin{remark}[The complex case, carried out]
@@ -4903,7 +5262,7 @@ results apply and which fail.
   The processes $\tilde X$, $\tilde Y$ constructed in the proof of
   Theorem~\ref{thm:uniqueness} again have sample paths in $\DE$ (resp.\ $\CE$)
   whenever $X$ and $Y$ do, so the induction goes through and $X$, $Y$ have the
-  same finite-dimensional distributions.  By Fact~\ref{fact:fdd} these determine
+  same finite-dimensional distributions.  By Theorem~\ref{thm:fdd} these determine
   the law on $\DE$ (resp.\ $\CE$).
 \end{proof}
 
@@ -6882,7 +7241,7 @@ Lemma~\ref{lem:EKconv} has no proof of its own.
 
 \begin{proof}
   We verify \ref{it:C1}--\ref{it:C3} of Theorem~\ref{thm:absconv}, with
-  $F = \DE$ --- Polish by \eqref{E3} and Fact~\ref{fact:DEpolish} --- and
+  $F = \DE$ --- Polish by \eqref{E3} and Theorem~\ref{thm:DEpolish} --- and
   $\XX = \XX_A(X)$, whose canonical version is
   $Y^\circ_t(\omega) = f(\omega(t)) - \int_0^t g(\omega(u))\dif u$ for
   $(f,g) \in A$.  Fix $(f,g) \in A$ and an approximating sequence $(f_n,g_n)$ as
@@ -8500,10 +8859,11 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
 
 \emph{To be built.}
 \begin{itemize}
-\item the Skorokhod space $\DE$ with the $J_1$ metric, and the facts that it is
+\item the Skorokhod space with the $J_1$ metric, and the facts that it is
   Polish, that its Borel field is generated by the coordinates, and the
-  characterization of its compact sets (Definition~\ref{def:skorokhod},
-  Facts~\ref{fact:DEpolish}, \ref{fact:DEcompact}, \ref{fact:fdd});
+  characterization of its compact sets.  These are no longer cited but built:
+  Section~\ref{sec:skorokhod}, and Remark~\ref{rem:skorokhodform} there is the
+  stocktaking for them;
 \item regularization of submartingales along a dense set
   (Facts~\ref{fact:cadlagext}, \ref{fact:submgreg}) --- but see
   Remark~\ref{rem:bmrepo}: this exists already, outside Mathlib;
@@ -8512,7 +8872,8 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
 \item separating and convergence determining classes and their Stone--Weierstrass
   theory (Definition~\ref{def:separating},
   Facts~\ref{fact:convdet}, \ref{fact:stoneweierstrass}, \ref{fact:fdd},
-  \ref{fact:sepcond});
+  \ref{fact:sepcond}) --- the separating half of \ref{fact:fdd} only, its path
+  space half being Theorem~\ref{thm:fdd};
 \item bounded pointwise convergence and bp-closures
   (Definition~\ref{def:bp}, Fact~\ref{fact:bp}) --- but only for
   Corollary~\ref{cor:bpclosure}, which is itself optional: the working statement
@@ -8555,8 +8916,8 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
   the two developments make the same choice independently.  Third, what is
   \emph{not} there is the Skorokhod space: no $J_1$ metric, no
   $\Bor(\DE) = \sigma(\pi_t)$, no compactness criterion.  So \ref{it:F5b} is
-  untouched, and Fact~\ref{fact:DEpolish} and Fact~\ref{fact:DEcompact} remain to
-  be built.
+  untouched there, and Theorems~\ref{thm:DEpolish} and \ref{thm:DEcompact} are
+  proved here instead.
 \end{remark}
 
 This dictates a natural order of work.  Each item names the bundle of
@@ -9052,6 +9413,134 @@ that duality \emph{requires} a translation invariant clock --- and the repair
 overshot, turning ``translation invariance is unnecessary'' into ``every clock
 works'' and a substitution into a theorem.
 
+\begin{remark}[Where the graduation stops, and why]
+  \label{rem:graduation}
+  Definition~\ref{def:bundles} graduates the hypotheses on $\T$, and
+  Section~\ref{ssec:bundletable} records which result needs which bundle.  What
+  neither says is where the graduation \emph{ends}.  It ends in four different
+  places, for four different reasons, and a reader who tries to push past any of
+  them should know in advance which wall is being hit.
+
+  \medskip
+  \noindent
+  \begin{tabular}{@{}p{0.23\textwidth}p{0.30\textwidth}p{0.41\textwidth}@{}}
+    \toprule
+    \textbf{What is being defined} & \textbf{Weakest $\T$ that carries it}
+      & \textbf{What breaks beyond it} \\
+    \midrule
+    Filtration, adaptedness, the martingale property
+      & \eqref{T0}: a preorder with a least element
+      & Nothing: there is no weaker structure in which
+        $E[X_t \mid \Filt_s] = X_s$ for $s \leq t$ can be written.  Mathlib
+        indexes \texttt{Filtration} and \texttt{Martingale} by
+        \texttt{[Preorder }$\iota$\texttt{]} for the same reason \\[0.6ex]
+    Stopping times closed under the operations of Fact~\ref{fact:stoppingtimes}
+      & \eqref{T1}: a lattice, for $\vee$
+      & $\max_{k \leq n} \tau_k$ ceases to be an element of $\T$.  It is $\vee$
+        and not $\wedge$ that is needed, for the reason set out in
+        Remark~\ref{rem:ekindex}(ii) \\[0.6ex]
+    C\`adl\`ag paths
+      & A \emph{tree order}: \eqref{T2a} relaxed to ``$\{s : s \leq t\}$ is a
+        chain for every $t$'', with a countable dense subset as in \eqref{T2b}
+      & The left limit stops being a limit.  On a merely directed index
+        $\{s : s \leq t\}$ is not linearly ordered, so ``the limit from below''
+        is a limit along a directed rather than a linearly ordered filter, and
+        its existence is a hypothesis instead of a consequence \\[0.6ex]
+    The Skorokhod $J_1$ topology
+      & \eqref{T3}, refined: $\T$ a closed subset of $\Rp$ containing $0$, with
+        the induced metric
+      & The time changes lose control of the paths; see below \\
+    \bottomrule
+  \end{tabular}
+
+  \medskip
+  Rows three and four are the ones that are not obvious, and they fail
+  differently.
+
+  \emph{Row three} is the reason \eqref{T2a} appears where it does.  A tree
+  order --- every down-set a chain --- is the exact generality in which
+  the c\`adl\`ag condition of Definition~\ref{def:process} can be \emph{stated}: left limits are taken along
+  $\{s : s \leq t\}$, and that is a chain.  This is not idle: the genealogy of a
+  branching process is such an index, and the cluster recursion of
+  Proposition~\ref{prop:hawkesduality} builds its process along one.  What a tree
+  does \emph{not} have is $\vee$, so by row two its stopping times are not closed
+  under $\max$; the branching literature replaces them by stopping lines.  The
+  consequence for this manuscript is clean, because it follows the line
+  Section~\ref{sec:formalization} already draws for other reasons: on a tree
+  index, Sections~\ref{sec:MP}, \ref{ssec:absuniq}, \ref{sec:duality} and
+  Theorem~\ref{thm:absconv} survive verbatim, and everything that invokes
+  Fact~\ref{fact:optsampl} --- Theorem~\ref{thm:absstrongmarkov} and the local
+  theory of Section~\ref{ssec:localmp} --- does not.
+
+  \emph{Row four} fails for a reason of its own, and metrizing $\T$ does not
+  repair it.  Billingsley's $\lVert \lambda \rVert^\circ$ is, for a time change
+  fixing the endpoints, exactly
+  \[
+    \lVert \lambda \rVert^\circ
+      \;=\; \sup_{s < t} \Bigl| \log \tfrac{\lambda t - \lambda s}{t - s} \Bigr|
+      \;=\; \log \max\bigl( \operatorname{Lip}(\lambda),\, \operatorname{Lip}(\lambda^{-1}) \bigr),
+  \]
+  so it is defined on any metric $\T$, and the two facts the completeness proof
+  uses --- $\lVert \lambda^{-1} \rVert^\circ = \lVert \lambda \rVert^\circ$ and
+  $\lVert \lambda \circ \mu \rVert^\circ \leq \lVert \lambda \rVert^\circ +
+  \lVert \mu \rVert^\circ$ --- become the two standard properties of Lipschitz
+  constants.  What does \emph{not} come for free is the control
+  $\sup_t \rho(\lambda t, t) \leq \psi(\lVert \lambda \rVert^\circ)$ with
+  $\psi(0) = 0$, and without it the norm no longer sees whether $\lambda$ moves
+  the paths.  That control holds when $\rho$ is additive along the order,
+  $\rho(s,u) = \rho(s,t) + \rho(t,u)$ for $s \leq t \leq u$ --- and additivity
+  makes $t \mapsto \rho(0,t)$ an order isomorphism and isometry onto a closed
+  subset of $\Rp$.  Hence the entry in the table: not an interval, but not more
+  than a closed subset either.  The class is larger than it looks --- it contains
+  $h\N_0$, so Section~\ref{ssec:diffclocks} compares objects of one family rather
+  than of two, and it contains the closed range of a subordinator, which is the
+  time set of excursion theory.  A tree is not in it: a root-fixing isometry may
+  permute two isomorphic branches, so $\lVert \lambda \rVert^\circ = 0$ while
+  $\sup_t \rho(\lambda t, t)$ is of the order of the diameter.  Restricting to
+  time changes that keep every point on its own branch restores the control, at
+  the price of making the group depend on the tree.
+
+  \emph{Manifolds.}  The natural question, given rows three and four, is whether
+  a manifold can serve as $\T$, and the answer separates the two halves of
+  c\`adl\`ag.  Existence of one-sided limits is a regularity condition;
+  \emph{choosing the right-hand one} is a choice of a side, and in dimension
+  $\geq 2$ the discontinuity set of a function that has such limits is generically
+  a hypersurface, which has two sides only if it is co-orientable.  A jump across
+  the core curve of a M\"obius band has no consistent right-hand side, and
+  the c\`adl\`ag condition of Definition~\ref{def:process} cannot be stated for it.  Where the geometry
+  cooperates the notion does exist and is classical: for $\T = [0,1]^d$ with the
+  product order one asks for limits from all $2^d$ quadrants and continuity from
+  one of them, and that space carries a Skorokhod topology and tightness criteria
+  \cite{Neu71,BW71,Str72,Whitt02}; on a domain in $\R^d$ the $BV$ and $SBV$ theory
+  supplies a $(d-1)$-rectifiable jump set with two traces across an oriented
+  normal \cite{AFP00}, which is the same notion carried by geometric measure
+  theory; and for an index ordered by inclusion there is the outer continuity
+  with inner limits of \cite{IM00}.  Each of these fixes the missing datum by
+  hand --- a coordinate frame, a co-orientation, a set algebra.  A manifold
+  supplies none of them canonically, which is the precise sense in which
+  c\`adl\`ag carries a one-dimensional structure that continuity does not.
+
+  \emph{And the ceiling that is not there.}  None of this constrains
+  Section~\ref{ssec:measureconv}.  The pseudo-path of Fact~\ref{fact:pseudopath}
+  is the image of a finite measure on $\T$ under $u \mapsto (u, w(u))$; it needs
+  a measure on $\T$ and a metric on $E$, and no order, no direction and no
+  dimension.  Its Borel field is $\sigma(\pi_u)$, which is the cylinder field and
+  presupposes nothing.  So Theorem~\ref{thm:absconv} in the reading of
+  Remark~\ref{rem:absconvtopfree}, together with
+  Section~\ref{ssec:measureconv}, has no ceiling of the kind tabulated above:
+  the clock of Definition~\ref{def:clock} is the whole of what it uses.  That is
+  the sharpest statement of what the abstraction of Section~\ref{ssec:recommendation}
+  bought --- not that the results hold under weaker hypotheses on $\T$, but that
+  the two that never used $\T$ can be seen not to.
+
+  \emph{The one index in the table that is out of reach for a different reason.}
+  A linearly ordered $\T$ with no countable dense subset --- an uncountable
+  ordinal, the long line --- satisfies row three and fails \eqref{T2b}.  There
+  c\`adl\`ag is definable and the theory is empty: on $\omega_1$ every continuous
+  real function is eventually constant.  It belongs in this subsection on its
+  own merits.
+\end{remark}
+
 % =====================================================================
 \begin{thebibliography}{9}
 
@@ -9144,6 +9633,46 @@ O.~Kallenberg.
 D.~W.~Stroock and S.~R.~S.~Varadhan.
 \newblock \emph{Multidimensional Diffusion Processes}.
 \newblock Springer, Berlin, 1979.
+
+\bibitem{AFP00}
+L.~Ambrosio, N.~Fusco and D.~Pallara.
+\newblock \emph{Functions of Bounded Variation and Free Discontinuity Problems}.
+\newblock Oxford University Press, Oxford, 2000.
+
+\bibitem{BW71}
+P.~J.~Bickel and M.~J.~Wichura.
+\newblock Convergence criteria for multiparameter stochastic processes and some
+  applications.
+\newblock \emph{Ann.\ Math.\ Statist.} \textbf{42} (1971), 1656--1670.
+
+\bibitem{IM00}
+B.~G.~Ivanoff and E.~Merzbach.
+\newblock \emph{Set-Indexed Martingales}.
+\newblock Chapman \& Hall/CRC, Boca Raton, 2000.
+
+\bibitem{Neu71}
+G.~Neuhaus.
+\newblock On weak convergence of stochastic processes with multidimensional time
+  parameter.
+\newblock \emph{Ann.\ Math.\ Statist.} \textbf{42} (1971), 1285--1295.
+
+\bibitem{Str72}
+M.~L.~Straf.
+\newblock Weak convergence of stochastic processes with several parameters.
+\newblock In \emph{Proc.\ Sixth Berkeley Symp.\ Math.\ Statist.\ Probab.},
+  Vol.~II, University of California Press, 1972, 187--221.
+
+\bibitem{Whitt02}
+W.~Whitt.
+\newblock \emph{Stochastic-Process Limits}.
+\newblock Springer, New York, 2002.
+
+\bibitem{Kuan26}
+J.~Kuan.
+\newblock Correlated and uncorrelated long-time asymptotics of type D ASEP.
+\newblock Preprint, arXiv:2607.11376, 2026.
+\newblock Lean formalization:
+  \url{https://github.com/Jeffrey-Kuan/type-D-asymptotics-lean}.
 
 \end{thebibliography}
 
