@@ -19,7 +19,9 @@ Inventar ersetzt das Gedächtnis durch eine Liste.
   nirgends tragend vorkommt, ist entweder implizit benutzt oder überflüssig, und
   beides will geklärt sein.
 * **Status** — `Mathlib` (mit Deklaration), `Roadmap` (mit Meilenstein),
-  `Lücke`, `bewusst` (zitiert, absichtlich nicht formalisiert), `?` (unbestimmt).
+  `Lücke`, `bewusst` (zitiert, absichtlich nicht formalisiert), `entbehrlich`
+  (im Manuskript zitiert, von keinem Beweis getragen, in keiner Roadmap mehr —
+  mit Begründung und Datum), `?` (unbestimmt).
 * **Beleg** — die Deklaration oder der Meilenstein. Ein Status ohne Beleg zählt
   als `?`.
 
@@ -39,7 +41,7 @@ setzt, nennt den Beleg.
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib (`FiniteMeasure.tendsto_map_of_tendsto_of_continuous`), die f.ü.-stetige Fassung fehlt |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`), die konvergenzbestimmende fehlt |
-| `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | Roadmap | MartingaleProblems M2, `bpClosure` und `Submodule.bpClosure` — dort neu angelegt; Mathlib kennt bp-Konvergenz nicht, `seqClosure` ist der Abschluss unter Limiten einer Topologie |
+| `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
 | `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:optsampl` | 2 | Optional sampling; EK, Theorem 2.2.13, Remark 2.2.14,  | Roadmap | MartingaleProblems M9, `Submartingale.stoppedValue_min_le_condExp` — dort neu angelegt; Mathlibs `Martingale.stoppedValue_min_ae_eq_condExp` ist der diskrete Fall und nur für Martingale |
 | `fact:prohorov` | 2 | Prohorov; EK, Lemma 3.2.1 and Theorem 3.2.2 | Mathlib | `MeasureTheory/Measure/Prokhorov.lean`, `isCompact_closure_of_isTightMeasureSet` und Umkehrung |
@@ -79,14 +81,18 @@ setzt, nennt den Beleg.
   der gestoppten Prozesse voraus, statt sie herzuleiten; getragen wird der Fact
   erst bei der Verifikation eines konkreten lokalisierenden Systems. Offen
   bleiben `fact:fdd` und `fact:portmanteau`.
-* **`fact:bp`** und **`fact:fullgenerator`** trägt §8 als „nur für optionalen
-  Kontext". Am 2026-08-30 entschieden: solange `cor:bpclosure` und
-  `rem:fullgenerator` im Manuskript stehen, gehören beide in die Roadmap, und
-  sie stehen jetzt dort ohne das Wort „optional" (MartingaleProblems M2 und
-  M13). Für `fact:bp` hält das Manuskript selbst fest, was der Unterschied
-  kostet: `lem:closure` ist dominierte Konvergenz und gilt für unbeschränkte
-  `f, g`, der bp-Abschluss verengt auf `Bdd(E) × Bdd(E)`. Die Roadmap nimmt
-  beide auf und nennt `lem:closure` die benutzte Fassung.
+* **`fact:fullgenerator`** trägt §8 als „nur für optionalen Kontext". Am
+  2026-08-30 entschieden: solange `rem:fullgenerator` im Manuskript steht,
+  gehört er in die Roadmap, und er steht jetzt dort ohne das Wort „optional"
+  (MartingaleProblems M13). Für **`fact:bp`** stand dasselbe, und es ist am
+  2026-08-30, zweiter Teil des Tages, zurückgenommen: der bp-Abschluss ist aus
+  MartingaleProblems M2 gestrichen. Die Begründung steht im Laufbericht
+  „Aufgabe 1"; kurz: kein Beweis des Manuskripts benutzt `cor:bpclosure`, und
+  die einzige Stelle bei \EK{}, an der der Abschluss arbeitet (Thm. 4.3.8),
+  kommt nach Prop. 4.3.9 mit einer einzelnen Folge und Fatou aus. Was das
+  Manuskript ohnehin festhält, bleibt richtig: `lem:closure` ist dominierte
+  Konvergenz und gilt für unbeschränkte `f, g`, der bp-Abschluss verengt auf
+  `Bdd(E) × Bdd(E)`.
 * **`fact:sepcond`** wird im Manuskript selbst bewiesen (`rem:sepcondproof`,
   EK Kap. 3 Aufgabe 7); zitiert wird nichts. Es ist damit kein Fact im Sinne
   der Voraussetzungsfläche, wohl aber eine zu formalisierende Aussage, und
@@ -109,6 +115,40 @@ setzt, nennt den Beleg.
   (bzw. auf einen zu einer Teilmenge von `ℕ` ordnungsisomorphen Index)
   festgelegt, und Doobs `Lᵖ`-Ungleichung fehlt für jeden Index. Am 2026-08-29
   richtiggestellt und als Meilenstein 9 nachgetragen.
+* **Eine falsche Begründung in `rem:atomicdual`, am 2026-08-30 korrigiert.** Zum
+  kleinsten Index mit unvergleichbaren Atomen, `T = {0,a,b,t*}`, stand dort, die
+  drei Relationen längs `[0,t*)`, `[a,t*)` und `[b,t*)` erzwängen
+  `m_a γ(a,t) = m_b γ(b,t) = 0`. Sie erzwingen es nicht: alle drei Intervalle
+  sind `{a,b}`, die drei Relationen sagen dasselbe. Das Argument benutzte
+  nirgends die Positivität der Massen und hätte deshalb auch ein Gegenbeispiel
+  mit `m_a + m_b = 0` decken müssen, das es gibt (`Task23/diamond.py`). Die
+  Aussage selbst bleibt richtig; die Begründung ist im Manuskript ersetzt. Das
+  ist die einzige Änderung dieses Laufs am Manuskript, und sie folgt der Regel
+  von Task 23: erst wenn etwas vollständig und verifiziert ist.
+* **Ein falsches Mathlib-Zitat in `MartingaleProblems`, am 2026-08-30
+  korrigiert.** Die Liste „Mathlib supplies" führte
+  `Mathlib/Probability/Process/Kolmogorov.lean` als „the Kolmogorov–Chentsov
+  continuous modification". Die Datei enthält nur die **Bedingung**
+  `IsKolmogorovProcess`/`IsAEKolmogorovProcess` samt API; der Satz steht nicht
+  in Mathlib, weder in v4.33.1 noch auf master — `gh api search/code` für
+  „Chentsov" findet genau zwei Dateien, diese hier (nur im Modulkommentar) und
+  `Topology/EMetricSpace/PairReduction.lean`. Der Beweis liegt in
+  `RemyDegenne/brownian-motion`, `BrownianMotion/Continuity/`, unter einer
+  Schranke an die Überdeckungszahlen. Die Roadmapzeile sagt das jetzt.
+* **`rem:skorokhodform` nennt `[Preorder ι] [TopologicalSpace ι]` „\eqref{T2b}"
+  (Stelle 2238).** Das ist es nicht: \eqref{T2b} verlangt lineare Ordnung,
+  Ordnungstopologie, abzählbare dichte Teilmenge und Rechtsapproximierbarkeit.
+  Die Hypothesen, unter denen `RemyDegenne/brownian-motion` `IsCadlag`
+  deklariert, sind echt schwächer — am Quelltext geprüft, siehe
+  `Facts/PRAEORDNUNG.md`, Teil 2. Das ist eine Frage an das Manuskript; die
+  Aussage selbst ist davon nicht betroffen.
+* **`SkorokhodSpace` Meilenstein 2 sagt weniger, als vier seiner Punkte
+  brauchen.** Der Kopf setzt `[Preorder ι] [TopologicalSpace ι]` — richtig für
+  das Prädikat —, aber die Abzählbarkeit von `leftJumpSet`, die Diskretheit von
+  `largeLeftJumpSet`, `IsCadlag.measurable` und die Bestimmtheit durch eine
+  dichte Menge brauchen \eqref{T2b}, und die Punkte sagen es nur indirekt
+  („by the exhaustion"). Die Aufschlüsselung steht in `Facts/PRAEORDNUNG.md`,
+  Teil 2; ob der Meilenstein zerlegt wird, entscheidet der Nutzer.
 * **Die Roadmaps kennen `E` nur polnisch.** `SkorokhodSpace` fixiert in
   Meilenstein 1 „`E` a Polish space", während `fact:fddconv`, `fact:cmt` und
   `fact:PSpolish` im Manuskript für separable metrische `E` gelten und
@@ -450,3 +490,234 @@ vier Roadmaps sonst etwas beisteuern müsste. Ein Satz ohne Vorbedingungen, dess
 Beweis schon geschrieben ist, ist der billigste erste Schritt, den dieses Projekt
 gerade hat — und der einzige, bei dem die Formalisierung den Papierbeweis
 tatsächlich prüfen kann, statt ihn nur nachzuzeichnen.
+
+### 2026-08-30, dritter Lauf — Task 23, der Halbordnungsfall
+
+Die Tabelle hat weiterhin kein `?`; der Lauf ging nach der stehenden Regel an
+Task 23, und zwar an dessen ersten offenen Punkt, die **unvergleichbaren
+Atome**. Ein Beweis kam nicht heraus. Zwei Dinge kamen heraus, die es wert sind,
+und das Ausführliche steht in `Task23/PROTOKOLL.md`.
+
+**Eine Reduktion, die `Φ` eliminiert.** Weil `T` ein kleinstes Element hat, ist
+`T_{<0}` leer, und \eqref{eq:incrementrep} an `s = 0` bzw. `t = 0` löst `Φ` auf:
+`Φ(s,t) = Φ(0,t) + Σ_{a<s} m_a γ(a,t)` und ebenso in der zweiten Variablen.
+Beides zusammen ist mit \eqref{eq:incrementrep} gleichwertig, und übrig bleibt
+eine Bedingung an `γ` allein. Diese zerfällt entlang `γ = (λ+κ)/2` in eine
+Bedingung an den symmetrischen und eine an den antisymmetrischen Anteil, und der
+Dualitätsdefekt `Φ(t,0) − Φ(0,t) = Σ_{a<t} m_a (γ(a,0) − γ(0,a))` hängt **nur an
+`κ`**. Der symmetrische Anteil von `γ` kommt in der Dualität nicht vor. Auf einer
+Kette erzwingt die `κ`-Bedingung sofort `κ ≡ 0` — das ist `lem:atomgrid` ohne
+`Φ`. Als `duality_defect_eq_integral` in `MartingaleProblems` Meilenstein 8
+eingetragen, vor `atomGrid_symm`, weil es unbedingt gilt und `duality_of_atomic`
+kürzer macht.
+
+**Ein Gegenbeispiel, das eine Begründung des Manuskripts widerlegt.** Auf dem
+Diamanten `T = {0,a,b,t*}` mit `m_a = 1`, `m_b = −1` erfüllen
+`γ(a,·) ≡ 1`, `γ` sonst `0`, und `Φ(t*,·) ≡ 0`, `Φ` sonst `≡ −1` beide
+Darstellungen aus \eqref{eq:incrementrep} und haben `Φ(t*,0) − Φ(0,t*) = 1`.
+Exakt gerechnet und die Relationen unabhängig nachgeprüft (`Task23/diamond.py`).
+Damit steht fest: **`lem:atomgrid` kommt mit `m_i ≠ 0` aus, der Halbordnungsfall
+nicht.** Die Positivität der Massen — also dass `q` ein Maß ist — ist dort
+tragend. Siehe die Auffälligkeit oben.
+
+**Und die Hypothese, die es stattdessen braucht, belegt statt geraten.** Über
+alle Halbordnungen mit kleinstem Element auf vier und fünf Punkten und alle
+Massenvektoren eines kleinen Gitters mit beiden Vorzeichen (18955
+Konfigurationen, 624 Ausfälle) gilt ausnahmslos: fällt die Dualität, so gibt es
+ein `s` mit `q(T_{<s}) = 0` bei nichtleerem `T_{<s}`. Für eine echte Uhr ist das
+automatisch, und über dieselben Halbordnungen mit nichtnegativen Massen (58081
+Konfigurationen) gab es keinen einzigen Ausfall. Die Vermutung lautet damit: für
+jede Uhr auf einer Halbordnung mit kleinstem Element und endlich vielen Atomen
+unter `t*` gilt `Φ(t*,0) = Φ(0,t*)`, ohne Vergleichbarkeit.
+
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean` (123 Seiten).
+
+**Offen geblieben.** Der Beweis des Halbordnungsfalls. Das Protokoll hält fest,
+wo er hakt: unter der `κ`-Bedingung allein ist der Defekt durch *gewichtete*
+Summen der Gleichungen unterhalb `t` nicht bestimmt — jede solche Kombination
+wird zur Identität —, der Gehalt sitzt in den einzelnen Gleichungen an den
+maximalen Elementen von `T_{<t}`. Unberührt: ordnungsdichte Atommengen, Stufe 3,
+und die ältere Entscheidung, ob die Roadmaps von polnischem auf
+separabel-metrisches `E` umgestellt werden.
+
+**Als Nächstes zu formalisieren: `duality_defect_eq_integral`**
+(`MartingaleProblems` Meilenstein 8). Es ruht auf nichts als
+`MeasureTheory.setIntegral` über `Set.Iio` und der Beobachtung `Iio 0 = ∅` für
+ein kleinstes Element — kein Gitter, keine Atome, keine Kette, keine
+Vergleichbarkeit, und es gilt für jede Uhr, atomar oder nicht. Es ist jetzt dran,
+weil es die einzige Aussage dieses Meilensteins ist, die *vor* der Fallunterteilung
+in atomlos und atomar steht und beide Zweige trägt: `duality_of_atomless` und
+`duality_of_atomic` beginnen beide damit, `Φ` aus `γ` aufzulösen, und beide
+Beweise werden dadurch kürzer statt nur anders. Es ist zugleich die Aussage, die
+den Beweisstand am schärfsten wiedergibt — sie sagt, dass Dualität eine Aussage
+über den antisymmetrischen Anteil von `γ` ist und über sonst nichts —, und sie
+ist noch kleiner als `atomGrid_symm`, das der Lauf vom 2026-08-30 vorgeschlagen
+hat. Reihenfolge also: `duality_defect_eq_integral`, dann `atomGrid_symm`, dann
+`duality_of_atomic`.
+
+### 2026-08-30, vierter Lauf — Aufgabe 1: der bp-Abschluss ist gestrichen
+
+Die Tabelle hatte kein `?`; der Lauf hat die vorrangige Aufgabe 1 ausgeführt.
+Ergebnis: **\EK{} Proposition 4.3.1 trägt im Manuskript nichts**, und der
+bp-Abschluss ist aus der Roadmap verschwunden.
+
+**Der Befund am Manuskript, vollständig.** `\ref{cor:bpclosure}` kommt an fünf
+Stellen vor — 1402 (`rem:bpunused`), 1666 (Bündeltabelle §2), 2755, 2761 und
+2775 (`rem:bpscope`), 9053 (§8) — und `\ref{fact:bp}` an vier, alle in
+denselben Abschnitten. Kein Beweis benutzt eines von beiden. `lem:closure`
+dagegen wird in `rem:fddconsequences`(b) (2662) benutzt und ist die tragende
+Aussage, wie das Manuskript selbst sagt.
+
+**Der Befund an \EK{}, am Scan geprüft** (`references/EthierKurtz1986.pdf`,
+Buchseiten 174 und 178–182). Proposition 4.3.1 steht auf Buchseite 174 und hat
+den Beweis „This is immediate from the discussion above"; die Diskussion ist die
+Bemerkung, dass die Menge der Paare `(f,g)`, für die (3.1) ein Martingal ist,
+bp-abgeschlossen ist. Gebraucht wird das in §4.3 an genau einer Stelle: im
+Beweis von Theorem 4.3.8 (Buchseite 180) hält (3.32) zunächst nur für
+`A ∩ (C̄(Ê) × B(Ê))` und wird auf den bp-Abschluss ausgedehnt, um `(χ_E, 0)`
+einsetzen zu können. Proposition 4.3.9 unmittelbar darunter ersetzt das durch
+eine Folge `(f_n,g_n) ⊂ A` mit `bp-lim f_n = χ_E`, `inf_n inf_x g_n > -∞` und
+`g_n → 0` punktweise; ihr Beweis ist eine Zeile: einsetzen in (3.32), `n → ∞`,
+Fatou. Proposition 4.3.10 (Buchseiten 180/181) erledigt `E = ⋂_k E_k`, indem sie
+das Argument für jedes `E_k` einzeln führt — „the analogue of (3.32)" — und
+danach die abzählbar vielen fast sicheren Ereignisse schneidet.
+
+**Was in der Roadmap jetzt steht.** `MartingaleProblems` Meilenstein 2 hat
+`BpTendsto`, `IsBpClosed`, `bpClosure`, `Submodule.bpClosure` und
+`isMPSolutionFor_bpClosure` nicht mehr. An ihrer Stelle stehen drei Punkte:
+
+* `IsMPSolutionFor.insert_of_tendsto_of_forall_norm_le` — die gleichmäßig
+  beschränkte punktweise Folge liefert die beiden `L¹`-Limiten von
+  `insert_of_tendsto` durch dominierte Konvergenz. Das ist die erste Hälfte von
+  `cor:bpclosure`, also die, die das Manuskript in `rem:bpscope` „die stärkste
+  von `X` unabhängige Hypothese" nennt. Die Schranke steht als Hypothese der
+  Aussage; ein eigenes Prädikat lohnt bei einer einzigen Verwendung nicht.
+* Ein Punkt, der festhält, dass kein Abschlussoperator gebaut wird, und warum.
+* `IsMPSolutionFor.submartingale_mpProcess_of_tendsto` — der einseitige
+  Begleiter, reellwertig: ist `g_n` nur nach unten gleichmäßig beschränkt, so
+  ist `mpProcess q c X f g` ein **Submartingal** statt eines Martingals. Der
+  Beweis ist dieselbe Rechnung mit Fatou statt dominierter Konvergenz auf der
+  `g`-Seite, und `MeasureTheory.submartingale_of_setIntegral_le`
+  (`Mathlib/Probability/Martingale/Basic.lean:281`) schließt ab — am Quelltext
+  geprüft, unter `[Preorder ι]` formuliert, also ohne Zusatzhypothese an den
+  Index benutzbar. Das ist die abstrakte Fassung des Fatou-Schritts von
+  Prop. 4.3.9 und der ganze Inhalt, den der bp-Abschluss dort hatte.
+
+Meilenstein 9 trägt die Anwendung, hinter der càdlàg-Modifikation, wo sie
+hingehört, weil sie Optional Sampling, càdlàg-Pfade und eine Metrik auf `E`
+braucht, die Meilenstein 2 alle nicht hat:
+`IsMPSolutionFor.integral_comp_stoppedLim_eq` (die Identität (3.32) von
+Thm. 4.3.8, ohne Abschluss), `IsMPSolutionFor.ae_forall_mem_of_tendsto`
+(Prop. 4.3.9) und `IsMPSolutionFor.ae_forall_mem_iInter_of_tendsto`
+(Prop. 4.3.10). **Das weicht von der Aufgabenstellung ab**, die alle drei an die
+Stelle des bp-Blocks in Meilenstein 2 setzen wollte; Meilenstein 2 fixiert nur
+`[Preorder ι]` und einen messbaren Zustandsraum, und die stehende Regel der
+minimalen Voraussetzungen verbietet, ihm dafür eine Metrik und eine Topologie
+auf dem Index aufzuladen. Der abstrakte Kern — der Fatou-Schritt — steht dort,
+wo er verlangt war.
+
+**Ein Nebenbefund, der eine Roadmap-Zeile wert war.** Mathlib hat Fatou nur für
+`ℝ≥0∞`: `MeasureTheory.lintegral_liminf_le` und `lintegral_liminf_le'`
+(`Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean:231,213`). Eine
+Bochner-Fassung für nach unten beschränkte reelle Funktionen gibt es nicht — die
+Suche nach „Fatou" über ganz Mathlib findet außerhalb dieser Datei nur einen
+Modulkommentar in `Probability/Martingale/Convergence.lean:77`. Der Meilenstein
+nennt sie deshalb als eigene, an Mathlib gerichtete Aussage.
+
+**Das Manuskript ist unverändert.** `cor:bpclosure` und `fact:bp` bleiben
+stehen; `fact:bp` steht im Inventar jetzt auf `entbehrlich (2026-08-30)`, nicht
+gelöscht. Was zu erwägen bleibt und dem Nutzer gehört: `rem:bpscope` sagt schon
+„even that is optional" — nach diesem Lauf ist es nicht mehr optional, sondern
+unbenutzt, und §8 könnte das sagen.
+
+Damit ist auch die Auffälligkeit „§4.3 von \EK{} ist nur zu einem Drittel
+ausgeschöpft" zur Hälfte erledigt: 4.3.8, 4.3.9 und 4.3.10 stehen jetzt in
+`MartingaleProblems` Meilenstein 9. Offen aus dieser Sektion bleiben Thm. 4.3.12
+(Quasi-Linksstetigkeit) und Cor. 4.3.13.
+
+#### Aufgabe 2: die Präordnung, \eqref{T3p}, `AdditiveDist`
+
+Ergebnis ist `Facts/PRAEORDNUNG.md`, neu angelegt, mit der verlangten Tabelle
+und drei Empfehlungen. Hier nur, was das Inventar angeht.
+
+**Die Ausgangsliste war zu groß, und zwar aus zwei prüfbaren Gründen.**
+\eqref{T2b} enthält \eqref{T2a} (`def:bundles`, Zeile 634), also hat jede mit
+\eqref{T2b} annotierte Aussage eine lineare Ordnung und dort ist
+`Set.Iio t \ Set.Iio s = Set.Ico s t`; und keine Aussage des Manuskripts ist mit
+\eqref{T1} annotiert — §2 sagt bei 1856 selbst, \eqref{T1p} komme „not at all"
+vor. Übrig bleiben die \eqref{T0}-Aussagen.
+
+**Und sie war zugleich zu klein.** Bei $s = 0$ fallen die Differenzform und
+Mathlibs `Set.Ico`/`Set.Ioc` auch auf einer Präordnung zusammen, weil
+`Set.Iio 0 = ∅` für ein kleinstes Element. Der Kompensator selbst ist deshalb
+von der Wahl unabhängig; die Frage entscheidet sich allein an den zehn Stellen
+mit $s \neq 0$, die in `PRAEORDNUNG.md` einzeln aufgeführt sind.
+
+**Die Antwort ist: sie trägt, an vier Stellen, und weit außerhalb von §6.**
+`prop:fddchar` (§4, mit `lem:closure` und `cor:bpclosure`), `ex:shiftXA` (§6),
+`lem:dualsemigroup` und `prop:dualCK` (§8) benutzen `eq:clockadd` bei
+allgemeinem $s$, und die Additivität ist unter `Set.Ico` auf $\Rp^2$ falsch —
+$[0,2)^2 \neq [0,1)^2 \cup [1,2)^2$. Der nicht lineare Index ist instanziiert
+und nicht bloß zugelassen: `ex:clocks`(iv) nennt ihn, `rem:fddnochain` rechnet
+auf $\Rp^2$, und 749 begründet mit ihm, warum die Uhr ein Maß sein muss.
+`lem:chain` und `prop:atomicdual` brechen im Beweis *nicht*, aber ihre Hypothese
+`eq:incrementrep` wird vom Kompensator geliefert und hängt damit doch daran.
+Empfehlung: die Differenzform behalten.
+
+**Zwei Befunde nebenbei, beide oben unter Auffälligkeiten eingetragen**: das
+falsche Kolmogorov--Chentsov-Zitat in `MartingaleProblems` (korrigiert) und die
+zu schwach angegebenen Hypothesen von `SkorokhodSpace` Meilenstein 2 (nicht
+geändert, weil die Entscheidung dem Nutzer gehört). Dazu die Stelle 2238 des
+Manuskripts, die `[Preorder ι] [TopologicalSpace ι]` mit \eqref{T2b}
+gleichsetzt.
+
+**Zu \eqref{T3p}.** Prädikat: `[Preorder ι] [TopologicalSpace ι]`, am Quelltext
+von `RemyDegenne/brownian-motion` belegt. Sprungtheorie: \eqref{T2b} genügt ihr
+ganz — gebraucht werden Linearität (für die monotone Folge im Beweis der lokalen
+Endlichkeit), eine abzählbare dichte Teilmenge (für die Treppenapproximation in
+`IsCadlag.measurable` und für die Bestimmtheit) und σ-Kompaktheit für die
+Abzählbarkeit; die Metrik auf dem **Index** kommt nirgends vor, `dist` steht in
+`largeLeftJumpSet` auf `E`. Raum mit $J_1$: \eqref{T3p}, und `thm:T3sharp`(b)
+zeigt, dass es nicht weniger geht.
+
+**Zur Gegenprobe.** Ein Stetigkeitssatz bräuchte keinerlei Ordnung auf dem
+Index — `IsKolmogorovProcess` steht unter `[PseudoEMetricSpace T]` — und ist ein
+Momentenkriterium, keine Martingalaussage; deshalb verträgt er allgemeinere
+Indexräume als die càdlàg-Modifikation, die über Doobs Upcrossing-Ungleichung
+und damit über Filtration und Ordnung läuft. Er gehört weder in
+`MartingaleProblems` (das `[Preorder ι]` und eine `Filtration` als Hypothesen
+führt, die im Beweis nicht vorkommen) noch in `SkorokhodSpace` (dessen
+Meilenstein 1 den Index auf \eqref{T3p} festlegt), sondern neben
+`Probability/Process/Kolmogorov.lean` in Mathlib.
+
+**Eine Korrektur an der Aufgabenstellung.** `\CE` kommt zehnmal vor, aber
+**nicht** in §3 (Skorokhod): die Stellen sind 50 und 518 (Notation), 2342
+(`def:canonical`), 2784–2786 (`def:wellposed`) und 5264–5274 (`thm:uniqueness`
+und ihre lokale Fassung), also §4 und §6. Der Punkt der Aufgabe bleibt richtig:
+einen Stetigkeitssatz analog zu `thm:absreg` gibt es nicht.
+
+**Offen geblieben.** Alle drei Entscheidungen — Differenzform, Zerlegung von
+`SkorokhodSpace` Meilenstein 2, `AdditiveDist` als Klasse — gehören dem Nutzer
+und sind in `PRAEORDNUNG.md` mit Kosten und Ersparnis gegeneinander gestellt,
+nicht getroffen. Nicht nachgeschlagen wurde, ob die Teilraumtopologie einer
+abgeschlossenen Teilmenge von $\R$ stets deren Ordnungstopologie ist; das ist
+die unbezifferte Position des Wegs „Teilmenge statt Typklasse".
+
+**Als Nächstes zu formalisieren: `Clock.interval_union`**
+(`MartingaleProblems` Meilenstein 1). Es ruht auf nichts als
+`Set.Iio_subset_Iio` und `Set.Iic_subset_Iic` (`Mathlib/Order/Interval/Set/`,
+beide für `[Preorder α]`) und der Disjunktheit zweier Differenzen derselben
+aufsteigenden Kette von Mengen — kein Maß, kein Zustandsraum, keine Topologie,
+kein Prozess. Es ist jetzt dran, weil dieser Lauf gezeigt hat, dass es **die**
+tragende Eigenschaft der Uhr ist: vier Aussagen des Manuskripts in drei
+verschiedenen Abschnitten ziehen `eq:clockadd` beim Namen heran, und alle vier
+brächen, wenn das Intervall `Set.Ico` wäre. Zugleich ist es die Aussage, an der
+die offene Entscheidung von `PRAEORDNUNG.md` hängt: wer die Differenzform durch
+`Set.Ico` ersetzen will, muss zuerst dieses Lemma verlieren, und ein
+formalisiertes `Clock.interval_union` samt den beiden `@[simp]`-Brücken
+`Clock.Ico_eq_setIco` und `Clock.Ioc_eq_setIoc` macht die Kosten beider Wege
+sichtbar, statt sie zu schätzen. Es ist außerdem kleiner als
+`duality_defect_eq_integral`, das der dritte Lauf vom 2026-08-30 vorgeschlagen
+hat, und dieses baut darauf: die Auflösung von `Φ` aus `γ` beginnt mit der
+Additivität. Reihenfolge damit: `Clock.interval_union`, dann
+`duality_defect_eq_integral`, dann `atomGrid_symm`.

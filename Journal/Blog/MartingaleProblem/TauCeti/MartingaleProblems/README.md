@@ -54,9 +54,19 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   `identDistrib_iff_forall_finset_identDistrib` and `map_eq_of_forall_ae_eq`.
   These say that a law is determined by its finite dimensional distributions and
   that modifications share them, and Milestone 3 is to be phrased through them.
-* `Mathlib/Probability/Process/Kolmogorov.lean`: the Kolmogorov–Chentsov
-  continuous modification. It is the precedent for how a modification theorem is
-  stated in Mathlib, and Milestone 9 should read like it.
+* `Mathlib/Probability/Process/Kolmogorov.lean`: the Kolmogorov condition
+  `IsKolmogorovProcess` and `IsAEKolmogorovProcess`, stated for an index in a
+  `PseudoEMetricSpace` with no order, together with `mk`, `ae_eq_mk`,
+  `mk_of_secondCountableTopology` and the measurability lemmas. It is the
+  precedent for how the hypothesis of a modification theorem is bundled, and the
+  `IsRegularizingClass` of Milestone 9 should read like it. The
+  Kolmogorov–Chentsov theorem itself is **not** in Mathlib: the string
+  `Chentsov` occurs in the library in exactly two places, the module comment of
+  this file and `Mathlib/Topology/EMetricSpace/PairReduction.lean`, and neither
+  is the modification statement. The proof exists in
+  `RemyDegenne/brownian-motion`, `BrownianMotion/Continuity/`, under a bounded
+  covering number hypothesis; it is a moment criterion and not a martingale
+  argument, so it belongs neither to this roadmap nor to **SkorokhodSpace**.
 * Conditional expectation, `MeasureTheory.UniformIntegrable`, Polish spaces,
   weak convergence and Prokhorov's theorem.
 
@@ -193,39 +203,55 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   The hypothesis is on `f` and `g` as they are composed with `X`, so it applies
   to unbounded `f` and `g` and does not narrow the operator to bounded
   functions.
-* Bounded pointwise convergence and the bp-closure of an operator. Mathlib has
-  the notion for neither functions nor pairs: `seqClosure` and `IsSeqClosed` of
-  `Mathlib/Topology/Defs/Sequences.lean` close under the limits of a topology,
-  and bounded pointwise limits are not the limits of a topology on `E → 𝕂`.
-  * `BpTendsto (u : ℕ → E → 𝕂) (f : E → 𝕂)`, defined as `∃ C, ∀ n x, ‖u n x‖ ≤ C`
-    together with `∀ x, Tendsto (fun n ↦ u n x) atTop (𝓝 (f x))`, with the
-    version on pairs holding in each coordinate, and `BpTendsto.add`,
-    `BpTendsto.smul` and `BpTendsto.const` for its arithmetic.
-  * `IsBpClosed M` and `bpClosure M` for `M : Set (E → 𝕂)`, the latter an
-    inductive predicate with the two constructors `mem` and `bpTendsto`,
-    together with `subset_bpClosure`, `bpClosure_mono`, `isBpClosed_bpClosure`,
-    `bpClosure_min` and the induction principle `bpClosure_induction` tagged
-    `@[elab_as_elim]`. The inductive definition is the smallest bp-closed set
-    containing `M` by construction and replaces the transfinite recursion over
-    the countable ordinals of the classical proof; `induction_on_inter` of
-    `Mathlib/MeasureTheory/PiSystem.lean` is the precedent for the shape.
-  * `bpClosure_add_mem`, `bpClosure_smul_mem` and the packaged
-    `Submodule.bpClosure`: the bp-closure of a `𝕂`-submodule of the bounded
-    functions is a submodule (Ethier–Kurtz, Appendix 3, Proposition 3.1). With
-    the inductive definition this is a double induction — for `b` in the
-    submodule, `{a | a + b ∈ bpClosure M}` is bp-closed and contains `M`; then
-    `{b | ∀ a ∈ bpClosure M, a + b ∈ bpClosure M}` is bp-closed and contains
-    `M` — and the same for the pairs, which is the form used next.
-  * `isMPSolutionFor_bpClosure`: a solution for `A` is a solution for the
-    bp-closure of `Submodule.span 𝕂 A`, and two operators whose spans have the
-    same bp-closure have the same solutions (Ethier–Kurtz, Proposition 4.3.1).
-    A bp-convergent sequence supplies the two `L¹` limits of
-    `IsMPSolutionFor.insert_of_tendsto` by dominated convergence, the second
-    against `q ⊗ P` on `Clock.interval q c s t ×ˢ Set.univ`, where
-    `Clock.measure_interval_ne_top` of Milestone 1 makes the constant bound
-    integrable. The bp-closure lives in the bounded functions, so this is the
-    narrower of the two closure statements and the previous item is the one the
-    rest of the roadmap uses.
+* `IsMPSolutionFor.insert_of_tendsto_of_forall_norm_le`, the bounded pointwise
+  corollary. Let `(f n, g n)` be a sequence in `Submodule.span 𝕂 A`, let `C : ℝ`
+  satisfy `‖f n x‖ ≤ C` and `‖g n x‖ ≤ C` for all `n` and `x`, and let
+  `f n x → f x` and `g n x → g x` for every `x`. Then
+  `IsMPSolutionFor (insert (f, g) A) q c X 𝓖 P`. The two `L¹` limits of the
+  previous item come out of dominated convergence, the second against `q ⊗ P`
+  on `Clock.interval q c s t ×ˢ Set.univ`, where `Clock.measure_interval_ne_top`
+  of Milestone 1 makes the constant bound integrable. The bound depends on the
+  sequence alone, not on `X`, on `P` or on the clock, so this is the hypothesis
+  one checks against an operator; the previous item is the one that speaks about
+  a given solution and it is the one the rest of the roadmap uses. Carry the
+  uniform bound as a hypothesis of the statement rather than as a predicate:
+  bounded pointwise convergence is not the convergence of a topology on `E → 𝕂`,
+  so `seqClosure` and `IsSeqClosed` of
+  `Mathlib/Topology/Defs/Sequences.lean` do not apply to it, and a predicate of
+  its own would have this one use.
+* No closure operator for bounded pointwise convergence is built. Such a closure
+  — the smallest set closed under bounded pointwise limits of sequences, a
+  transfinite recursion over the countable ordinals, with Ethier–Kurtz,
+  Appendix 3, Proposition 3.1 for its being a submodule and Proposition 4.3.1
+  for two operators with equal closures having equal solutions — is used at one
+  place in Ethier–Kurtz, in Theorem 4.3.8, and there only to substitute one pair
+  `(Set.indicator E 1, 0)` into an identity that holds on the operator. A single
+  sequence converging to that pair does the same work, by the previous item and
+  by the next one; that is Ethier–Kurtz, Proposition 4.3.9, and Milestone 9
+  carries the application.
+* `IsMPSolutionFor.submartingale_mpProcess_of_tendsto`, the one sided companion,
+  for real valued test pairs. Let `X` solve the martingale problem for `A` with
+  respect to `𝓖`, let `(f n, g n)` be a sequence in `Submodule.span ℝ A`, let
+  `C : ℝ` satisfy `‖f n x‖ ≤ C` and `-C ≤ g n x` for all `n` and `x` — a bound
+  on `g n` from below only — let `f n x → f x` and `g n x → g x` for every `x`,
+  and let `mpProcess q c X f g t` be integrable for every `t`. Then
+  `Submartingale (mpProcess q c X f g) 𝓖 P`. For `s ≤ t` and
+  `MeasurableSet[𝓖 s] B` the martingale identity of `(f n, g n)` reads
+  `∫ ω in B, (f n (X t ω) - f n (X s ω)) ∂P = ∫ ω in B, (∫ u in Clock.interval q c s t, g n (X u ω) ∂q) ∂P`;
+  the left side converges by dominated convergence and the right side has
+  liminf at least its counterpart for `g` by Fatou's lemma applied to
+  `g n + C ≥ 0` against `q ⊗ P` on `Clock.interval q c s t ×ˢ Set.univ`, finite
+  by `Clock.measure_interval_ne_top`. This gives
+  `∫ ω in B, mpProcess q c X f g s ω ∂P ≤ ∫ ω in B, mpProcess q c X f g t ω ∂P`,
+  and `MeasureTheory.submartingale_of_setIntegral_le`
+  (`Mathlib/Probability/Martingale/Basic.lean:281`, stated for `[Preorder ι]`)
+  concludes. Two sided bounds give a martingale, which is the previous item; a
+  lower bound gives a submartingale, and that inequality is all the applications
+  need. Mathlib's Fatou lemma is `MeasureTheory.lintegral_liminf_le`
+  (`Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean:231`) for `ℝ≥0∞`-valued
+  functions; the Bochner form for real functions bounded below is derived from
+  it by adding the constant, and is stated as a lemma of its own next to the
+  dominated convergence theorem.
 
 ## Milestone 3: canonical families, determining sets, and the finite dimensional criterion
 
@@ -404,6 +430,22 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   `Φ t 0 = Φ 0 t` for `q`-almost every `t`, by the time change
   `Q t = q (Set.Iio t)` and its right inverse. State the time change as a lemma
   in its own right.
+* `duality_defect_eq_integral`: for a clock `q` on `ι` with a least element `0`
+  and `Φ, γ` as in `chain_identity` with `γ₁ = γ₂ = γ`,
+  `Φ s t = Φ 0 t + ∫ r in Iio s, γ r t ∂q` and `Φ s t = Φ s 0 + ∫ r in Iio t, γ s r ∂q`,
+  hence
+  ```
+  Φ t 0 - Φ 0 t = ∫ r in Iio t, (γ r 0 - γ 0 r) ∂q .
+  ```
+  Both are the increment representations at `s = 0`, where `Iio 0 = ∅`; no
+  chain, no atom, no comparability. It is worth its own name because it turns
+  every duality statement into a statement about the antisymmetric part
+  `κ r s = γ r s - γ s r` of `γ` alone: the two representations are compatible
+  exactly when
+  `∫_{Iio s} (γ r t - γ r 0) ∂q = ∫_{Iio t} (γ s r - γ 0 r) ∂q` for all `s, t`,
+  and that condition splits along `γ = (λ + κ) / 2` into one condition on the
+  symmetric `λ` and one on `κ`, of which only the latter meets the defect. On a
+  chain the `κ` condition forces `κ = 0`, which is `atomGrid_symm`.
 * `atomGrid_symm`: let `M : ℕ`, let `m : ℕ → ℝ` with `m i ≠ 0` for
   `1 ≤ i` and `i ≤ M - 1`, and let `Φ : ℕ → ℕ → ℝ` satisfy
   `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` for
@@ -544,6 +586,49 @@ the discrete index theorems listed above; Milestones 6, 7 and 11 use them.
   solution of the martingale problem for `A` satisfying compact containment has
   a càdlàg modification. Formalize the abstract theorem and derive this; the
   operator, its domain and the compensator play no part in the proof.
+
+The modification has its paths in the càdlàg space over the whole state space.
+The last three items cut it down to an open subset `U ⊆ E`, which is how the
+one point compactification and a product of state spaces are handled
+(Ethier–Kurtz, Remark 4.3.11). Fix `[OrderBot ι]` and `E` a metric space.
+
+* `IsMPSolutionFor.integral_comp_stoppedLim_eq`, the identity along an
+  increasing sequence of stopping times (Ethier–Kurtz, Theorem 4.3.8, (3.31)
+  and (3.32)). Let `X` solve the martingale problem for `A` with càdlàg paths,
+  let `(f, g) ∈ A` with `f` bounded continuous and `g` bounded, let `τ m` be an
+  increasing sequence of stopping times for `𝓕`, `τ = ⨆ m, τ m`, and
+  `Y t ω = limUnder atTop (fun m ↦ X (min (τ m ω) t) ω)`. Then
+  ```
+  ∫ ω, f (Y t ω) ∂P
+    = ∫ ω, f (X ⊥ ω) ∂P
+      + ∫ ω, (∫ u in Clock.interval q c ⊥ (min (τ ω) t), g (X u ω) ∂q) ∂P .
+  ```
+  Optional sampling at the bounded stopping time `min (τ m) t`, which is the
+  first item of this milestone, gives the identity at each `m`, and `m → ∞` is
+  bounded convergence together with the continuity of `f`. The identity holds
+  for the pairs of `A` itself; it is not extended to a closure of `A`, and
+  Milestone 2 says why.
+* `IsMPSolutionFor.ae_forall_mem_of_tendsto` (Ethier–Kurtz, Proposition 4.3.9).
+  Let `U ⊆ E` be open, let `X` solve the martingale problem for `A` with càdlàg
+  paths and `P (X ⊥ ⁻¹' U) = 1`, and let `(f n, g n)` be a sequence in `A` with
+  `f n` bounded continuous, `g n` bounded, `C : ℝ` satisfying `‖f n x‖ ≤ C` and
+  `-C ≤ g n x` for all `n` and `x`, `f n x → Set.indicator U 1 x` for every `x`,
+  and `g n x → 0` for every `x`. Then `∀ᵐ ω ∂P, ∀ t, X t ω ∈ U`, and almost
+  every path has no limit point in `E \ U` on any interval `Set.Iic t`, so it is
+  càdlàg as a `U`-valued map. The stopping times are
+  `τ m = sInf {t | infEdist (X t ω) (E \ U) < 1/m}`, the previous item supplies
+  the identity at `(f n, g n)`, and `n → ∞` is dominated convergence on the left
+  and Fatou's lemma on the right, which is where the lower bound on `g n` is
+  used. The Fatou step is `IsMPSolutionFor.submartingale_mpProcess_of_tendsto`
+  of Milestone 2 read at the stopped process.
+* `IsMPSolutionFor.ae_forall_mem_iInter_of_tendsto` (Ethier–Kurtz,
+  Proposition 4.3.10): the same conclusion for `U = ⋂ k, U k` with each `U k`
+  open, from a sequence as above for each `k` separately. The previous item
+  gives `∀ᵐ ω ∂P, ∀ t, X t ω ∈ U k` for every `k`, and a countable intersection
+  of almost sure events is almost sure. No hypothesis about `U` itself is
+  needed, which is the reason to state this case separately: a sequence
+  converging to `Set.indicator (⋂ k, U k) 1` need not exist in `A` even when one
+  exists for every `U k`.
 
 ## Milestone 10: the abstract convergence theorem
 
