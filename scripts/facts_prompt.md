@@ -37,9 +37,51 @@ die Differenzform als Primitiv behalten, oder die Uhr auf `[LinearOrder ι]`
 festlegen und direkt `Set.Ico` nehmen, wobei §6 seine Halbordnungs-Zeile
 verlöre. Nenne bei jeder Möglichkeit, was sie kostet und was sie einspart.
 
+**Zweiter Teil: wie weit reicht (T3').** \eqref{T3p} ist nach `thm:T3sharp`(a)
+gleichwertig zu „abgeschlossene Teilmenge von $\R$", und die Additivität längs
+der Ordnung ist klassisch die **Menger-Zwischenrelation** (K. Menger,
+*Untersuchungen über allgemeine Metrik*, Math. Ann. 100 (1928), 75–163): das
+Ordnungsintervall stimmt mit dem metrischen Intervall
+$[a,b]=\{x: d(a,x)+d(x,b)=d(a,b)\}$ überein. Nicht zu verwechseln mit
+Menger-*Konvexität*, die $h\Z$ verletzt. Von 15 Vorkommen von \eqref{T3p}
+liegen 14 in §Skorokhod. Trenne **drei** Dinge und bestimme für jedes die
+schwächste Indexhypothese:
+
+1. das **Prädikat** càdlàg. `RemyDegenne/brownian-motion` definiert `IsCadlag`
+   unter `[Preorder ι] [TopologicalSpace ι]`; verlangt `SkorokhodSpace`
+   Meilenstein 2 irgendwo mehr, als das Prädikat braucht?
+2. die **Sprungtheorie** — Abzählbarkeit von `leftJumpSet`, Diskretheit von
+   `largeLeftJumpSet`, `IsCadlag.measurable`, Bestimmtheit durch eine dichte
+   Menge. Nenne genau, was hier mehr nötig wird: Linearität,
+   Zweitabzählbarkeit oder die Metrik.
+3. den **Raum** $D(\T,E)$ mit $J_1$. Hier greift `thm:T3sharp`(b): ohne
+   Additivität ist $d$ keine Metrik.
+
+**Die Gegenprobe: stetige Pfade.** Mathlibs `Probability/Process/Kolmogorov.lean`
+führt `IsKolmogorovProcess` über `[PseudoEMetricSpace T]` — der Index braucht
+dort keine Ordnung und erst recht keine Teilmenge von $\R$; die
+Kettenkonstruktion in `RemyDegenne/brownian-motion`, `Continuity/`, verlangt
+zusätzlich eine Schranke an Überdeckungszahlen. Das Manuskript hat dazu
+**nichts**: `\CE` kommt zehnmal vor, durchweg als abgeschlossener Teilraum in
+§Skorokhod, und einen Stetigkeitssatz analog zu `thm:absreg` gibt es nicht.
+Halte fest, was ein solcher Satz an Hypothesen bräuchte, wo er im Manuskript
+stünde, und ob er als Meilenstein in `SkorokhodSpace` oder in
+`MartingaleProblems` gehört. Belege dabei, dass Kolmogorov--Chentsov ein
+**Momentenkriterium** ist und kein Martingalargument — der Mechanismus ist ein
+anderer als bei der càdlàg-Modifikation, und das ist der Grund, warum er
+allgemeinere Indexräume verträgt.
+
+**Dritter Teil: Typklasse oder Teilmenge.** Ist (T3') dasselbe wie
+„abgeschlossene Teilmenge von $\R$", so ist `AdditiveDist` im Prinzip
+verzichtbar. Wäge das in Lean-Kosten ab, nicht in Mathematik: das Experiment des
+Nutzers in `scratch/AdditiveDistTest.lean` (im Hauptcheckout
+`~/Code/lean/journal`) hat gemessen, dass der Gitterfall $h\Z$ als Teiltyp
+weder `OrderTopology` noch die Subtyp-Instanz durch die `SetLike`-Hülle bekommt.
+Nenne für beide Wege, was sie an Instanzen kosten.
+
 **Die Entscheidung trifft der Nutzer, nicht der Lauf.** Ändere weder die Uhr
 noch die Roadmaps noch das Manuskript in dieser Sache; die Aufgabe endet mit der
-Tabelle und der Empfehlung.
+Tabelle und der Empfehlung in `Facts/PRAEORDNUNG.md`.
 
 ## Worum es geht
 
