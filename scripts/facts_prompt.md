@@ -2,13 +2,53 @@ Du arbeitest autonom und unbeaufsichtigt am **Formalisierungs-Inventar** des
 Manuskripts `Journal/Blog/MartingaleProblem/MartingaleProblem.tex`. Du bist in
 einem git-Worktree auf dem Branch `facts-inventory`. Zeitbudget: 120 Minuten.
 
-## Vorrangige Aufgabe
+## Vorrangige Aufgaben
 
-Steht hier eine Aufgabe, so hat sie Vorrang vor allem Übrigen. Ist sie erledigt,
-streicht der Lauf sie hier heraus und trägt das Ergebnis an der genannten Stelle
-ein; danach gilt wieder die Reihenfolge weiter unten.
+Stehen hier Aufgaben, so haben sie Vorrang vor allem Übrigen, in der genannten
+Reihenfolge. Ist eine erledigt, streicht der Lauf sie hier heraus und trägt das
+Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
+Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
+nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-**Trägt die Präordnung außerhalb von §6?** *(gestellt 2026-08-30)*
+### Aufgabe 2: den bp-Abschluss loswerden *(gestellt 2026-08-30, vom Nutzer bewilligt)*
+
+Anders als Aufgabe 1 ist diese **auszuführen**, nicht nur vorzubereiten — der
+Nutzer hat der Empfehlung zugestimmt.
+
+Der bp-Abschluss taucht bei \EK{} nur an einer Stelle auf: in Theorem 4.3.8
+dient er dazu, die Identität
+$E[f(Y(t))]=E[f(X(0))]+E[\int_0^{\tau\wedge t} g(X(s))\dif s]$ von $A$ auf
+den Abschluss auszudehnen, damit man $(\chi_E,0)$ einsetzen kann; die
+Indikatorfunktion ist unstetig und liegt nicht in $A$. **Proposition 4.3.9
+vermeidet ihn**: dort genügt eine einzelne Folge $(f_n,g_n)\subset A$ mit
+bp-$\lim f_n=\chi_E$, $\inf_n\inf_x g_n>-\infty$ und $g_n\to0$ punktweise,
+und der Beweis ist Einsetzen plus Fatou. Proposition 4.3.10 erledigt damit auch
+$E=\bigcap_k E_k$. Der Unterschied ist der zwischen bp-*Konvergenz* einer Folge
+(kostet nichts) und dem bp-*Abschluss* (transfinite Rekursion über die
+abzählbaren Ordinalzahlen).
+
+Zu tun:
+
+1. Prüfe, ob \EK{} Proposition 4.3.1 — gleiche bp-Abschlüsse, gleiche Lösungen
+   — im Manuskript irgendwo **trägt**. Zitiert wird sie in `cor:bpclosure`;
+   entscheidend ist, ob ein Beweis sie benutzt. Der Scan liegt unter
+   `~/Code/lean/journal/references/EthierKurtz1986.pdf` (Bildscan ohne
+   Textebene, Buchseite = PDF-Seite − 10; §4.3 endet auf Buchseite 182).
+2. **Trägt sie nicht:** streiche den bp-Block aus `MartingaleProblems`
+   Meilenstein 2 — `BpTendsto`, `bpClosure`, `Submodule.bpClosure`,
+   `isMPSolutionFor_bpClosure` — und setze an seine Stelle die Fatou-Form von
+   Prop. 4.3.9 samt der Variante 4.3.10 für abzählbare Schnitte. `lem:closure`
+   (`IsMPSolutionFor.insert_of_tendsto`) bleibt und ist die tragende Aussage.
+   Setze `fact:bp` im Inventar auf einen Status, der festhält, dass er nicht
+   mehr gebraucht wird, mit Begründung und Datum — nicht löschen.
+3. **Trägt sie doch:** nenne die Stelle, lass den Block stehen und schärfe ihn
+   auf das, was wirklich gebraucht wird (nach `fact:bp` nur, dass der
+   bp-Abschluss eines Unterraums ein Unterraum ist).
+
+Das Manuskript wird dabei nicht geändert; `cor:bpclosure` darf als bequeme
+Formulierung stehen bleiben. Halte das Ergebnis im Inventar unter „Läufe" fest.
+
+### Aufgabe 1: Trägt die Präordnung außerhalb von §6? *(gestellt 2026-08-30)*
 
 Die Uhr definiert ihr Intervall als Differenz von Abwärtsmengen,
 `Set.Iio t \ Set.Iio s`, und nicht als Mathlibs `Set.Ico s t`. Auf einer
