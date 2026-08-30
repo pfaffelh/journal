@@ -348,3 +348,90 @@ nur an Mathlib hängen: `induction_on_mulSystem` (Meilenstein 5, vom
 2026-08-29) und `IsSeparating` (Meilenstein 1). Reihenfolge: `IsSeparating`
 zuerst, denn `isDetermining_products` braucht beide, und dieses ist das
 kleinere.
+
+### 2026-08-30, zweiter Lauf — Inventar vollständig, also Task 23
+
+Die Tabelle hat kein `?` mehr; nach der stehenden Regel wechselt der Lauf zu
+**Task 23**, dem Beweis der Dualitätsidentität für eine rein atomare Uhr. Am
+Inventar wurde nichts geändert, an den Roadmaps eine Ergänzung, am Manuskript
+der Eintrag, den Task 23 vorsieht. Der ausführliche Bericht steht in
+`Task23/PROTOKOLL.md`; hier das Wesentliche.
+
+**Stufe 1 und Stufe 2 sind bewiesen.** `rem:atomicdual` ist jetzt
+`prop:atomicdual` mit Beweis, gestützt auf ein neues `lem:atomgrid`. Der Kern:
+eliminiere `γ` durch Kreuzmultiplikation der beiden Zuwachsdarstellungen an
+derselben Stelle, was
+`m_j(Φ(i+1,j)-Φ(i,j)) = m_i(Φ(i,j+1)-Φ(i,j))` liefert; diese Relation ist linear
+in `Φ` und invariant unter Transposition, also erfüllt der antisymmetrische
+Anteil `w = Φ - Φᵀ` sie ebenfalls, und eine Induktion über den **Abstand zur
+Diagonale**, die die Stufen `d` und `d-1` zugleich mitführt, gibt `w ≡ 0`.
+Gebraucht wird nur `m_i ≠ 0`: keine Positivität, keine Integrabilität, keine
+Regularität von `γ`. Die zweite Konvention `ι = o` ist nicht ein zweiter Beweis,
+sondern dieselbe Aussage nach Spiegelung des Gitters und Umkehrung der
+Massenliste.
+
+Stufe 2 kostet danach nichts: sind die Atome unter `t` endlich viele und
+paarweise vergleichbar, so ist die Kette `0, a₁, …, a_N, t` ein Gitter, und
+abzählbar viele Atome insgesamt sind kein Hindernis. Genau das ist die stehende
+Hypothese von `rem:atomicdual`.
+
+**Verifiziert, nicht nur geglaubt.** `Task23/verify.py` (neu) baut das volle
+homogene System, das \eqref{eq:incrementrep} den Unbekannten `Φ, γ` auferlegt,
+nimmt dessen Kern und prüft an einer Kernbasis die Dualitätsidentität, die
+Symmetrie von `Φ` auf dem ganzen Quadrat und die Symmetrie von `γ` im Inneren.
+Exakte rationale Arithmetik, `N = 2..8`, drei Massenvektoren, beide
+Konventionen: 42 Konfigurationen, alle drei Aussagen überall erfüllt. Das ist
+stärker als `oracle.py`, das die Reduktion auf eine freie Zeile schon
+voraussetzte. Danach meldet `python3 check.py` `clean` (123 Seiten, keine
+undefinierten Referenzen).
+
+**Ein Befund am Manuskript, und er ist eingetragen.** `rem:atomicdual` behauptete
+bisher, das Argument brauche „no order structure beyond a preorder". Bewiesen
+ist weniger: die Atome unter `t` müssen eine **Kette** bilden — unter
+\eqref{T2a} automatisch, unter \eqref{T0} nicht. Die Statustabelle von
+`rem:atomsnotchange` trennt jetzt beide Zeilen: „purely atomic, atoms a chain"
+ist `proved`, „purely atomic, atoms incomparable" bleibt „verified symbolically;
+not proved", und ordnungsdichte Atome stehen bei „open" statt stillschweigend
+unter der bewiesenen Zeile. Ordnungsdichte Atommengen sind nämlich gar nicht
+Stufe 2: sie verletzen die Hypothese „endlich viele Atome unter jedem `t`", und
+der Grund ist scharf — liegen die Atome dicht, trägt kein Intervall `[s,s')`
+genau ein Atom, die Gitterrelation hat kein Gegenstück, und es gibt kein Gitter,
+an dem entlang induziert werden könnte.
+
+**In die Roadmap eingetragen.** `MartingaleProblems` Meilenstein 8 hatte zur
+atomaren Uhr keinen Punkt — er nannte `duality_of_atomless` und
+`duality_discrete` und ließ dazwischen eine Lücke. Jetzt stehen dort
+`atomGrid_symm`, `Clock.atomChain` und `duality_of_atomic`, und
+`duality_discrete` ist als der Fall `m ≡ 1` von `duality_of_atomic` kenntlich.
+
+**Ein zweiter Befund, der den nächsten Lauf spart.** `Task23/poset.py` (neu)
+prüft den Fall unvergleichbarer Atome an `T = {0,1,2}²` mit der Produktordnung
+nach, und zwar mit *allen* Relationen aus \eqref{eq:incrementrep} — für jedes
+vergleichbare Paar, nicht nur für Einschrittintervalle. Zweierlei kommt heraus:
+die Notiz des Manuskripts stimmt, `Φ(t,0) = Φ(0,t)` gilt dort für jedes `t`;
+aber die **Symmetrie** `Φ(s,t) = Φ(t,s)` gilt nicht, sie fällt an den maximalen
+und unvergleichbaren Punkten aus, etwa bei `((1,2),(2,1))`. Die Symmetrie ist
+ein Phänomen der Kette, nicht der atomaren Uhr. Ein Beweis für den allgemeinen
+Präordnungsfall kann also nicht über sie laufen — was die naheliegendste
+Verallgemeinerung von `lem:atomgrid` ausschließt, bevor jemand sie versucht.
+Auch das steht jetzt im Manuskript.
+
+**Offen geblieben.** Der Fall unvergleichbarer Atome (der kleinste Fall geht von
+Hand und steht im Protokoll; ein allgemeines Argument fehlt, und der Weg über
+die Symmetrie ist nach dem eben Gesagten versperrt), ordnungsdichte Atommengen,
+und Stufe 3, die gemischte Uhr. Ebenso unberührt die ältere Frage aus den
+Auffälligkeiten, ob die Roadmaps von polnischem auf separabel-metrisches `E`
+umgestellt werden.
+
+**Als Nächstes zu formalisieren: `atomGrid_symm`** (`MartingaleProblems`
+Meilenstein 8). Es ruht auf nichts — Körperarithmetik über `ℝ`, `ℕ` als einziger
+Index, und eine Induktion, die zwei Stufen zugleich mitführt, also
+`Nat.le_induction` auf der starken Form der Aussage. Kein Maß, keine Uhr, keine
+Topologie, kein Import außer `Mathlib/Algebra/Order/`. Es ist jetzt dran, weil es
+das kleinste vollständig bewiesene Objekt des ganzen Manuskripts ist, weil sein
+Beweis seit heute Zeile für Zeile im Manuskript steht und symbolisch gegengeprüft
+ist, und weil `duality_of_atomic` unmittelbar darauf wartet, ohne dass eine der
+vier Roadmaps sonst etwas beisteuern müsste. Ein Satz ohne Vorbedingungen, dessen
+Beweis schon geschrieben ist, ist der billigste erste Schritt, den dieses Projekt
+gerade hat — und der einzige, bei dem die Formalisierung den Papierbeweis
+tatsächlich prüfen kann, statt ihn nur nachzuzeichnen.

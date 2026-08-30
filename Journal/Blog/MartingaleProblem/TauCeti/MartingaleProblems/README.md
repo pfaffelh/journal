@@ -377,8 +377,41 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   `Φ t 0 = Φ 0 t` for `q`-almost every `t`, by the time change
   `Q t = q (Set.Iio t)` and its right inverse. State the time change as a lemma
   in its own right.
+* `atomGrid_symm`: let `M : ℕ`, let `m : ℕ → ℝ` with `m i ≠ 0` for
+  `1 ≤ i` and `i ≤ M - 1`, and let `Φ : ℕ → ℕ → ℝ` satisfy
+  `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` for
+  `1 ≤ i, j ≤ M - 1`. Then `Φ i j = Φ j i` for `1 ≤ i, j ≤ M`. Apply the
+  hypothesis to the antisymmetric part `w i j = Φ i j - Φ j i`, which satisfies
+  it because the relation is linear in `Φ` and carried into itself by
+  transposition, and induct on the distance `d = |i - j|` from the diagonal with
+  the levels `d` and `d - 1` carried along together: at `d = 1` antisymmetry and
+  `m j ≠ 0` give `w (j+1) j = - w (j+1) j`, and the step from `d` to `d + 1`
+  reads the relation at `(j + d, j)`, where both terms on the right sit at
+  distances `d` and `d - 1`. Purely arithmetic — no measure, no clock, and `ℕ`
+  as the only index — so it belongs in `Mathlib/Algebra/Order/` rather than in
+  the probability tree, and it is the smallest self contained target of this
+  roadmap.
+* `Clock.atomChain`: for a clock `q` and a point `t` below which the atoms of `q`
+  are finitely many and pairwise comparable, the monotone enumeration
+  `u : Fin (N+2) → ι` with `u 0 = 0`, `u (N+1) = t` and `u i` the `i`-th atom,
+  together with `q (Ico (u i) (u (i+1))) = m i` and the statement that
+  `Ico (u i) (u (i+1))` carries the single atom `u i` for `1 ≤ i` and no atom for
+  `i = 0`. The optional convention gets `Ioc (u (i-1)) (u i)` carrying the single
+  atom `u i`, on the chain that stops at the largest atom.
+* `duality_of_atomic`: with `Φ, γ` as in `chain_identity` and `γ₁ = γ₂ = γ`, a
+  purely atomic clock, and `t` as in `Clock.atomChain`, one has `Φ t 0 = Φ 0 t`,
+  in both conventions and with no hypothesis beyond the existence of the
+  integrals. Read `Φ` along `Clock.atomChain`, eliminate `γ` by multiplying the
+  two increment representations at `(i,j)` by `m j` and `m i`, and apply
+  `atomGrid_symm`; the optional convention is the predictable one after the
+  reflection `i ↦ M - i` of the grid and the reversal of the mass list, under
+  which the relation of `atomGrid_symm` is invariant. The conclusion is the
+  stronger `Φ (u i) (u j) = Φ (u j) (u i)` at every pair of the chain, and hence
+  `γ` symmetric there. With `duality_of_atomless` this covers every clock that is
+  either atomless or has locally finite atoms forming a chain.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
-  `chain_identity` alone and needs none of the analysis.
+  `chain_identity` alone and needs none of the analysis, and is the case
+  `m ≡ 1` of `duality_of_atomic`.
 * `uniqueness_of_duality`: a dual process determines the one dimensional
   distributions, hence, with Milestone 6, gives uniqueness. This is the standard
   application and is the reason the milestone exists.

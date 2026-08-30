@@ -311,8 +311,8 @@ Theorem~\ref{thm:exduality} needs finite subsets to be chains
 (Remark~\ref{rem:exdualityscope}(ii)); and Corollary~\ref{cor:atomless} is a
 time change, so it lives on \eqref{T3} and needs the clock to be atomless
 (Remark~\ref{rem:atomsnotchange}) --- a limitation of that particular device,
-since for an atomic clock the verification of Remark~\ref{rem:atomicdual} covers
-a partially ordered index.
+since for an atomic clock Proposition~\ref{prop:atomicdual} covers a partially
+ordered index, needing only that the atoms below a point form a chain.
 
 \paragraph{State space: measurable, not Polish, where possible.}
 \EK{} and \CPS{} take $E$ Polish throughout.  Here $E$ is graded exactly as the
@@ -783,7 +783,7 @@ produces a measure on boxes.
   Proposition~\ref{prop:haar} is stated for $\iota = \mathrm{p}$, because with
   $\iota = \mathrm{o}$ the chain identity telescopes to
   $\gamma(t,0) - \gamma(0,t)$ instead of to $0$; but that quantity vanishes as
-  well (Remark~\ref{rem:atomicdual}), so the \emph{conclusion} of
+  well (Proposition~\ref{prop:atomicdual}), so the \emph{conclusion} of
   Section~\ref{sec:duality} is convention-agnostic, as are Sections~\ref{sec:MP}
   and \ref{sec:uniqueness} and Lemma~\ref{lem:chain} itself, all of which use
   only the additivity \eqref{eq:clockadd}.  Section~\ref{ssec:bundletable}
@@ -1713,7 +1713,7 @@ result is stated in that convention; only Section~\ref{sec:cadlag} \emph{needs}
 its one --- there an atom at $t$ must lie inside the compensator up to $t$ ---
 whereas the $\iota = \mathrm{p}$ entries of the duality table mark the convention
 in which the proof is shortest, the conclusion being convention-agnostic by
-Remark~\ref{rem:atomicdual}.  Example~\ref{ex:invariance} needs
+Proposition~\ref{prop:atomicdual}.  Example~\ref{ex:invariance} needs
 $\iota = \mathrm{o}$ for a third reason, explained in
 Remark~\ref{rem:embedflip}.
 
@@ -1800,8 +1800,8 @@ Proposition~\ref{prop:haar}, Corollary~\ref{cor:dualdiscrete}
   & \eqref{T2a} + \eqref{T4} & \eqref{E0} & Haar, $\iota = \mathrm{p}$ \\
 Corollary~\ref{cor:atomless} (atomless clocks)
   & \textbf{\eqref{T3}} & \eqref{E0} & \textbf{atomless}, $\iota = \mathrm{p}$ \\
-Remark~\ref{rem:atomicdual} (atomic duality)
-  & \eqref{T0} & \eqref{E0} & atomic, any $\iota$ \\
+Proposition~\ref{prop:atomicdual} (atomic duality)
+  & \eqref{T0} & \eqref{E0} & atomic, atoms a chain, any $\iota$ \\
 Lemma~\ref{lem:calculus}, Theorem~\ref{thm:duality}
   & \eqref{T3} & \eqref{E0} & Lebesgue \\
 Corollary~\ref{cor:uniqviadual} (uniqueness via duality)
@@ -5434,7 +5434,7 @@ conclude --- as an earlier version of this manuscript did --- that duality
 failure of one staircase to cancel says nothing about $\Phi(t,0) - \Phi(0,t)$.
 The two results below show that translation invariance is not necessary --- for
 an atomless clock by a reduction to Lemma~\ref{lem:calculus}, for a purely
-atomic one by the linear algebra of Remark~\ref{rem:atomicdual}.  Whether
+atomic one by the linear algebra of Proposition~\ref{prop:atomicdual}.  Whether
 \emph{every} clock admits duality remains open, and
 Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
 
@@ -5521,7 +5521,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   therefore has $\Psi(L,0) = \Psi(0,L)$ built in.  Producing one across a gap
   \emph{presupposes} the conclusion.  So the atomic case is not a harder instance
   of the same argument; it is a different question, and
-  Remark~\ref{rem:atomicdual} answers it by different means.
+  Proposition~\ref{prop:atomicdual} answers it by different means.
 
   \emph{Status of Section~\ref{ssec:antidiag}.}
   \begin{center}
@@ -5531,8 +5531,9 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   \midrule
   Haar (Lebesgue, counting) & proved, Proposition~\ref{prop:haar} \\
   atomless, \eqref{T3} & proved, Corollary~\ref{cor:atomless} (a time change) \\
-  purely atomic & verified symbolically, Remark~\ref{rem:atomicdual}; not proved \\
-  mixed & open \\
+  purely atomic, atoms a chain & proved, Proposition~\ref{prop:atomicdual} \\
+  purely atomic, atoms incomparable & verified symbolically; not proved \\
+  order-dense atoms, or mixed & open \\
   \bottomrule
   \end{tabular}
   \end{center}
@@ -5562,43 +5563,194 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   clock --- the case Corollary~\ref{cor:atomless} excludes --- the conclusion
   holds at \emph{every} $t$ and without any integrability hypothesis, exactly as
   in Proposition~\ref{prop:haar}\ref{it:haar_disc}; see
-  Remark~\ref{rem:atomicdual}.  The two are complementary and neither covers a
-  mixed clock.
+  Proposition~\ref{prop:atomicdual}.  The two are complementary and neither
+  covers a mixed clock.
 \end{remark}
+
+For a purely atomic clock there is a second, purely algebraic route to the
+conclusion, and it is instructive because it does not go through
+Lemma~\ref{lem:calculus} at all.  Its combinatorial core is the following
+statement about a finite grid, in which the clock has become a list of masses and
+nothing else is left of the index set.
+
+\begin{lemma}[Atom grid]
+  \label{lem:atomgrid}
+  Let $M \geq 1$, let $m_1,\dots,m_{M-1}$ be non-zero reals, and let
+  $\Phi : \{1,\dots,M\}^2 \to \R$ satisfy
+  \begin{equation}
+    \label{eq:atomgrid}
+    m_j \bigl( \Phi(i{+}1,j) - \Phi(i,j) \bigr)
+      \;=\; m_i \bigl( \Phi(i,j{+}1) - \Phi(i,j) \bigr) ,
+    \qquad 1 \leq i,j \leq M-1 .
+  \end{equation}
+  Then $\Phi(i,j) = \Phi(j,i)$ for all $i,j$.
+\end{lemma}
+
+\begin{proof}
+  Equation \eqref{eq:atomgrid} is linear in $\Phi$ and invariant under
+  transposition: written at $(j,i)$ it reads
+  $m_i(\Phi(j{+}1,i) - \Phi(j,i)) = m_j(\Phi(j,i{+}1) - \Phi(j,i))$, which is
+  \eqref{eq:atomgrid} at $(i,j)$ for the function $(i,j) \mapsto \Phi(j,i)$.  So
+  \[
+    w(i,j) \;\coloneqq\; \Phi(i,j) - \Phi(j,i)
+  \]
+  satisfies \eqref{eq:atomgrid} as well, and $w(j,i) = -w(i,j)$.  We show
+  $w \equiv 0$ by induction on the distance $d = |i-j|$ from the diagonal, the
+  induction hypothesis being used at the two levels $d$ and $d-1$ at once.
+
+  For $d = 0$, $w(i,i) = 0$ by antisymmetry.  For $d = 1$ and
+  $1 \leq j \leq M-1$, equation \eqref{eq:atomgrid} at $(j,j)$ reads
+  $m_j(w(j{+}1,j) - w(j,j)) = m_j(w(j,j{+}1) - w(j,j))$; since $m_j \neq 0$ and
+  $w(j,j) = 0$ this gives $w(j{+}1,j) = w(j,j{+}1) = -w(j{+}1,j)$, hence
+  $w(j{+}1,j) = w(j,j{+}1) = 0$.
+
+  Let $d \geq 1$ and suppose $w$ vanishes at distances $d-1$ and $d$.  Let
+  $j \geq 1$ with $j+d+1 \leq M$ and put $i = j+d$; then $i \leq M-1$ and
+  $j \leq M-d-1 \leq M-1$, so \eqref{eq:atomgrid} is available at $(i,j)$ and
+  reads
+  \[
+    m_j \bigl( w(j{+}d{+}1,\,j) - w(j{+}d,\,j) \bigr)
+      \;=\; m_{j+d} \bigl( w(j{+}d,\,j{+}1) - w(j{+}d,\,j) \bigr) .
+  \]
+  Here $w(j{+}d,j) = 0$ at distance $d$, and $(j{+}d) - (j{+}1) = d-1$, so
+  $w(j{+}d,j{+}1) = 0$ at distance $d-1$.  Hence $m_j\, w(j{+}d{+}1,j) = 0$, and
+  $m_j \neq 0$ gives $w(j{+}d{+}1,j) = 0$; antisymmetry gives
+  $w(j,j{+}d{+}1) = 0$.  Every pair at distance $d+1$ in $\{1,\dots,M\}^2$ is of
+  this form, which completes the induction.
+\end{proof}
+
+The induction sweeps the \emph{diagonals} $i - j = d$ outwards, not the
+anti-diagonals; that it needs two consecutive levels at once is why no single
+staircase in \eqref{eq:chain} exhibits the cancellation --- a staircase sees one
+anti-diagonal at a time.  Note also that positivity of the masses is nowhere
+used, only $m_i \neq 0$, and that the list stops at $m_{M-1}$: the mass of the
+last atom never enters.
+
+\begin{proposition}[Atomic clocks; \eqref{T0} + \eqref{E0} + clock, either $\iota$]
+  \label{prop:atomicdual}
+  Let $q = \sum_k m_k \delta_{a_k}$ be a purely atomic clock and let
+  $\Phi, \gamma : \T \times \T \to \R$ satisfy \eqref{eq:incrementrep} with
+  $\gamma_1 = \gamma_2 = \gamma$.  Let $t^* \in \T$ and assume that the atoms of
+  $q$ in $\T_{\leq t^*}$ are finitely many and pairwise comparable, in the sense
+  that of any two distinct such atoms $a,b$ either $a \in \T_{<b}$ or
+  $b \in \T_{<a}$.  Then
+  \[
+    \Phi(t^*,0) \;=\; \Phi(0,t^*) .
+  \]
+  This holds at \emph{every} such $t^*$, for either convention $\iota$, and under
+  no integrability hypothesis beyond the existence of the integrals in
+  \eqref{eq:incrementrep} and no regularity of $\gamma$ whatsoever.
+\end{proposition}
+
+\begin{proof}
+  Take $\iota = \mathrm{p}$ first.  Let $a_1,\dots,a_N$ be the atoms lying in
+  $\T_{<t^*}$, indexed so that $a_i \in \T_{<a_j}$ for $i < j$, which the
+  comparability hypothesis permits.  Put $u_0 = 0$, $u_i = a_i$ for
+  $1 \leq i \leq N$ and $u_{M} = t^*$ with $M = N+1$; this is an increasing
+  chain.  Since $\T_{<0} = \emptyset$, the set $[u_0,u_1)$ carries no atom, and
+  for $1 \leq i \leq N$ the set $[u_i,u_{i+1}) = \T_{<u_{i+1}} \setminus
+  \T_{<u_i}$ carries the single atom $a_i$: the atoms in $\T_{<a_{i+1}}$ are
+  exactly $a_1,\dots,a_i$ and those in $\T_{<a_i}$ exactly $a_1,\dots,a_{i-1}$,
+  and likewise with $a_{N+1}$ read as $t^*$.
+
+  Write $\widehat\Phi(i,j) = \Phi(u_i,u_j)$ and
+  $\widehat\gamma(i,j) = \gamma(u_i,u_j)$ on $\{0,\dots,M\}^2$, and set
+  $\widehat m_0 = 0$, $\widehat m_i = m_i$ for $1 \leq i \leq N$.  Because
+  $u_i = a_i$ carries the mass of the step from $u_i$ to $u_{i+1}$,
+  \eqref{eq:incrementrep} becomes
+  \[
+    \widehat\Phi(i{+}1,j) - \widehat\Phi(i,j) = \widehat m_i\, \widehat\gamma(i,j) ,
+    \qquad
+    \widehat\Phi(i,j{+}1) - \widehat\Phi(i,j) = \widehat m_j\, \widehat\gamma(i,j)
+  \]
+  for $0 \leq i,j \leq M-1$.  Multiplying the first by $\widehat m_j$ and the
+  second by $\widehat m_i$ makes both right-hand sides
+  $\widehat m_i \widehat m_j \widehat\gamma(i,j)$, so $\widehat\Phi$ satisfies
+  \eqref{eq:atomgrid} on $1 \leq i,j \leq M-1$ with the non-zero masses
+  $\widehat m_1,\dots,\widehat m_{M-1}$; note that $\widehat\gamma$ has
+  disappeared.  Lemma~\ref{lem:atomgrid} gives
+  $\widehat\Phi(i,j) = \widehat\Phi(j,i)$ on $\{1,\dots,M\}^2$.  Finally
+  $\widehat m_0 = 0$ gives $\widehat\Phi(1,j) = \widehat\Phi(0,j)$ and
+  $\widehat\Phi(i,1) = \widehat\Phi(i,0)$, whence
+  \[
+    \Phi(t^*,0) = \widehat\Phi(M,0) = \widehat\Phi(M,1) = \widehat\Phi(1,M)
+      = \widehat\Phi(0,M) = \Phi(0,t^*) .
+  \]
+
+  For $\iota = \mathrm{o}$ use the shorter chain $u_0 = 0$, $u_i = a_i$
+  ($1 \leq i \leq N$), and put $M = N$.  Now $(u_{i-1},u_i] = \T_{\leq u_i}
+  \setminus \T_{\leq u_{i-1}}$ carries the single atom $a_i$, so
+  \eqref{eq:incrementrep} reads
+  $\widehat\Phi(i,j) - \widehat\Phi(i{-}1,j) = m_i \widehat\gamma(i,j)$ and
+  symmetrically, for $1 \leq i,j \leq M$, and eliminating $\widehat\gamma$ as
+  before gives
+  \[
+    m_j \bigl( \widehat\Phi(i,j) - \widehat\Phi(i{-}1,j) \bigr)
+      = m_i \bigl( \widehat\Phi(i,j) - \widehat\Phi(i,j{-}1) \bigr) ,
+    \qquad 1 \leq i,j \leq M .
+  \]
+  Reflect the grid: $\Phi^{\sharp}(i,j) = \widehat\Phi(M{-}i,M{-}j)$ and
+  $m^{\sharp}_i = m_{M-i}$.  Substituting $(M{-}i,M{-}j)$ for $(i,j)$ turns the
+  display into $m^{\sharp}_j(\Phi^{\sharp}(i{+}1,j) - \Phi^{\sharp}(i,j)) =
+  m^{\sharp}_i(\Phi^{\sharp}(i,j{+}1) - \Phi^{\sharp}(i,j))$ for
+  $0 \leq i,j \leq M-1$, which is \eqref{eq:atomgrid} on the shifted index
+  $\{1,\dots,M{+}1\}$ with the non-zero masses
+  $m^{\sharp}_0,\dots,m^{\sharp}_{M-1} = m_M,\dots,m_1$.  Lemma~\ref{lem:atomgrid}
+  makes $\Phi^{\sharp}$, hence $\widehat\Phi$, symmetric on $\{0,\dots,M\}^2$; in
+  particular $\widehat\Phi(M,0) = \widehat\Phi(0,M)$.  Since $(a_N,t^*]$ carries
+  no atom, $\Phi(t^*,\cdot) = \Phi(a_N,\cdot)$ and $\Phi(\cdot,t^*) =
+  \Phi(\cdot,a_N)$, so this is $\Phi(t^*,0) = \Phi(0,t^*)$.  If $N = 0$ then
+  $(0,t^*]$ carries no atom and both sides equal $\Phi(0,0)$ outright.
+\end{proof}
 
 \begin{remark}[Atomic clocks, and why the conventions do not clash here]
   \label{rem:atomicdual}
-  For a purely atomic clock there is a second, purely algebraic reason for the
-  conclusion, and it is instructive because it does not go through
-  Lemma~\ref{lem:calculus} at all.
+  Four comments on Proposition~\ref{prop:atomicdual}.
 
-  Let $q = \sum_k m_k \delta_{a_k}$ with finitely many atoms in each $\T_{\leq t}$.
-  Then $\Phi(s,t)$ depends on $s$ only through $A_s = \{k : a_k \in \T_{<s}\}$,
-  and \eqref{eq:incrementrep} pins the values $\gamma(a_k,t)$ and $\gamma(s,a_l)$
-  individually:
-  \[
-    m_k \gamma(a_k,t) = \Phi(s',t) - \Phi(s,t)
-    \quad\text{whenever } A_{s'} \setminus A_s = \{k\} ,
-  \]
-  and symmetrically.  At a pair of atoms $(a_k,a_l)$ \emph{both} identities
-  describe the same number $\gamma(a_k,a_l)$, and equating them is one linear
-  relation per pair.  Solving the resulting system --- an elementary but tedious
-  computation, verified symbolically for up to five atoms and for the
-  two-dimensional index $\{0,1,2\}^2$ --- gives $\Phi(t,0) = \Phi(0,t)$ for every
-  $t$.  For equal masses the relations say precisely that $\Phi$ is constant on
-  anti-diagonals of the atom grid.
+  \emph{It proves more than duality.}  What the grid argument delivers is
+  $\Phi(s,t) = \Phi(t,s)$ at every pair of points of the chain, not merely at
+  $(t^*,0)$; equivalently, $\gamma(s,t) = \gamma(t,s)$ there, which is what
+  \eqref{eq:cancel} wants and what the anti-diagonal staircase fails to see.  For
+  equal masses \eqref{eq:atomgrid} says precisely that $\Phi$ is constant on
+  anti-diagonals of the atom grid, so the whole content sits in unequal masses.
+  The symmetry is the exact discrete counterpart of the atomless case, where
+  \eqref{eq:rectrepinline} makes $\Psi$ a function of $x+y$; but here it holds at
+  every point and without an integrability hypothesis, as
+  Remark~\ref{rem:haarrole} predicts.
 
-  Two things follow.  First, the argument uses no order structure beyond a
-  preorder, which is why duality is not confined to a linearly ordered index even
-  though Corollary~\ref{cor:atomless} lives on \eqref{T3}.  Second --- and this
-  corrects a claim of an earlier version --- the two conventions of
-  Definition~\ref{def:clock} \emph{agree} here.  With $\iota = \mathrm{o}$ the
-  $k$-th summand of \eqref{eq:cancel} on the anti-diagonal staircase becomes
-  $\gamma(k+1,t-k-1) - \gamma(k,t-k)$ and the sum telescopes to
-  $\gamma(t,0) - \gamma(0,t)$ rather than to $0$; but the relations above force
-  $\gamma(t,0) = \gamma(0,t)$, so the conclusion is the same.  Section
+  \emph{The conventions agree, and now for a reason.}  With
+  $\iota = \mathrm{o}$ the $k$-th summand of \eqref{eq:cancel} on the
+  anti-diagonal staircase becomes $\gamma(k{+}1,t{-}k{-}1) - \gamma(k,t{-}k)$ and
+  the sum telescopes to $\gamma(t,0) - \gamma(0,t)$ rather than to $0$.  The
+  proof above shows that the two conventions differ by nothing more than the
+  reflection $(i,j) \mapsto (M{-}i,M{-}j)$ of the grid together with a reversal of
+  the list of masses, under which \eqref{eq:atomgrid} is invariant; so the same
+  lemma settles both, and $\gamma(t,0) = \gamma(0,t)$ falls out.  Section
   \ref{sec:duality} is therefore convention-agnostic, and the bundle table
   records it as such.
+
+  \emph{What the comparability hypothesis is for.}  The proposition needs a chain
+  of atoms below $t^*$, not a linearly ordered $\T$: it lives on \eqref{T0}, and
+  under \eqref{T2a} the hypothesis is automatic.  This is why duality is not
+  confined to a linearly ordered index even though
+  Corollary~\ref{cor:atomless} lives on \eqref{T3}.  Atoms that are
+  \emph{incomparable} are a different matter and are not covered; for the
+  smallest instance --- $\T = \{0,a,b,t^*\}$ with $a,b$ incomparable and an atom
+  at each --- the three relations along $[0,t^*)$, $[a,t^*)$ and $[b,t^*)$ force
+  $m_a \gamma(a,t) = m_b \gamma(b,t) = 0$ and the conclusion is immediate, and
+  the two-dimensional index $\{0,1,2\}^2$ has been verified symbolically, but no
+  argument covering a general preorder is offered here.  Nor can one run through
+  the symmetry of the first comment: on $\{0,1,2\}^2$ the conclusion
+  $\Phi(t,0) = \Phi(0,t)$ holds at every $t$ while $\Phi(s,t) = \Phi(t,s)$ fails,
+  at the incomparable pair $((1,2),(2,1))$ among others.  Symmetry is a
+  phenomenon of the chain, not of the atomic clock.
+
+  \emph{What is not covered.}  Finitely many atoms below each $t$ excludes an
+  order-dense set of atoms, and with it the possibility of transferring the
+  argument: where the atoms are dense, no interval $[s,s')$ carries exactly one
+  of them, \eqref{eq:atomgrid} has no discrete analogue, and there is no grid to
+  induct along.  That is the same obstruction as in the mixed case, seen from the
+  atomic side.
 \end{remark}
 
 \begin{remark}[Scope of Section~\ref{sec:duality}]
@@ -5610,18 +5762,19 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   probabilistic form of Theorem~\ref{thm:duality}, that the two generators act on
   the same duality function $f$ so as to produce the same $g = h$ --- and it needs
   integrability.  It does \emph{not} need a translation invariant clock: both
-  Corollary~\ref{cor:atomless} (atomless clocks) and Remark~\ref{rem:atomicdual}
-  (atomic ones) cover clocks that are not Haar.  Nor does the conclusion need a
-  linearly ordered index, the atomic verification being indifferent to it.  The
+  Corollary~\ref{cor:atomless} (atomless clocks) and
+  Proposition~\ref{prop:atomicdual} (atomic ones) cover clocks that are not Haar.
+  Nor does the conclusion need a linearly ordered index: the atomic argument asks
+  only that the atoms below a point form a chain.  The
   opposite claim, made in an earlier version of this manuscript on the strength
   of the non-cancellation of \eqref{eq:cancel} for $\T = \Rp^d$, was a fallacy ---
   the non-cancellation of a particular staircase is not the failure of the
   conclusion.
 
   What genuinely remains open is the \emph{mixed} case, a clock with both an
-  atomic and a diffuse part, and the general atomic case beyond the symbolic
-  verification; Remark~\ref{rem:atomsnotchange} explains why the two available
-  arguments do not combine.  Nothing in this manuscript depends on it: the
+  atomic and a diffuse part, together with an order-dense set of atoms and a set
+  of atoms that is not a chain; Remark~\ref{rem:atomsnotchange} explains why the
+  two available arguments do not combine.  Nothing in this manuscript depends on it: the
   applications in Section~\ref{sec:convergence} use Lebesgue clocks, and
   Section~\ref{ssec:exduality} uses \eqref{eq:clockadd} only.
 \end{remark}
@@ -5865,7 +6018,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   Remark~\ref{rem:dualscope} isolates, is the balance condition and
   integrability --- not, as one might guess from the shape of \eqref{eq:cancel},
   translation invariance of the clock; see Corollary~\ref{cor:atomless} and
-  Remark~\ref{rem:atomicdual}.
+  Proposition~\ref{prop:atomicdual}.
 \end{remark}
 
 The discrete counterpart, which \EK{} do not state, now costs nothing.
@@ -6282,8 +6435,8 @@ standard sufficient condition.
   Assume in addition that $\XX^{(1)}$ admits a shift system with $\ZZ^\circ$
   determining, and that Section~\ref{sec:duality} applies to the pair
   $(\XX^{(1)}, Y)$ --- for instance under the integrability hypothesis of
-  Corollary~\ref{cor:atomless} for an atomless clock, or the verification of
-  Remark~\ref{rem:atomicdual} for an atomic one.  Then the martingale problem
+  Corollary~\ref{cor:atomless} for an atomless clock, or
+  Proposition~\ref{prop:atomicdual} for an atomic one.  Then the martingale problem
   for $\XX^{(1)}$ is
   well posed for every $\nu \in \Prob(E_1)$, and its solution is the Markov
   process of Theorem~\ref{thm:exduality}.
@@ -8307,8 +8460,8 @@ $U$ and $A = U \times C$ this is Definition~\ref{def:Pcont}.
   which no fixed family of coordinates captures.  In Section~\ref{sec:duality}
   atoms do cost something, though not the conclusion: they obstruct the
   time change of Corollary~\ref{cor:atomless}, so that the atomic case has to be
-  treated by a separate argument (Remarks~\ref{rem:atomsnotchange} and
-  \ref{rem:atomicdual}).
+  treated by a separate argument (Remark~\ref{rem:atomsnotchange} and
+  Proposition~\ref{prop:atomicdual}).
 \end{remark}
 
 \subsection{Convergence in measure}
@@ -9401,8 +9554,9 @@ blueprint that lists only its successes is not usable as a map.
   manuscript under another name (Remark~\ref{rem:liftform}).
 \item \emph{``Every clock admits duality.''}  Withdrawn.  What is true is
   Corollary~\ref{cor:atomless}, and it is a deterministic time change of the
-  Lebesgue case rather than a theorem; the atomic case is verified symbolically
-  and not proved, and the mixed case is open
+  Lebesgue case rather than a theorem; the atomic case is
+  Proposition~\ref{prop:atomicdual} and needs the atoms below a point to form a
+  finite chain, and the mixed case is open
   (Remark~\ref{rem:atomsnotchange}).
 \item \emph{``Submartingale problems are a further free generalization.''}  They
   are transverse, not wider: formulating a submartingale needs an order and
