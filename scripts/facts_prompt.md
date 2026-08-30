@@ -10,9 +10,9 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-### Aufgabe 2: den bp-Abschluss loswerden *(gestellt 2026-08-30, vom Nutzer bewilligt)*
+### Aufgabe 1: den bp-Abschluss loswerden *(gestellt 2026-08-30, vom Nutzer bewilligt)*
 
-Anders als Aufgabe 1 ist diese **auszuführen**, nicht nur vorzubereiten — der
+Anders als Aufgabe 2 ist diese **auszuführen**, nicht nur vorzubereiten — der
 Nutzer hat der Empfehlung zugestimmt.
 
 Der bp-Abschluss taucht bei \EK{} nur an einer Stelle auf: in Theorem 4.3.8
@@ -48,7 +48,7 @@ Zu tun:
 Das Manuskript wird dabei nicht geändert; `cor:bpclosure` darf als bequeme
 Formulierung stehen bleiben. Halte das Ergebnis im Inventar unter „Läufe" fest.
 
-### Aufgabe 1: Trägt die Präordnung außerhalb von §6? *(gestellt 2026-08-30)*
+### Aufgabe 2: Trägt die Präordnung außerhalb von §6? *(gestellt 2026-08-30)*
 
 Die Uhr definiert ihr Intervall als Differenz von Abwärtsmengen,
 `Set.Iio t \ Set.Iio s`, und nicht als Mathlibs `Set.Ico s t`. Auf einer
