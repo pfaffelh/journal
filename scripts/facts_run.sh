@@ -74,10 +74,11 @@ if ! git merge -q --no-edit origin/master >/dev/null 2>&1; then
     if git commit -q --no-edit >/dev/null 2>&1; then
       echo "$(date -u +%FT%TZ) PDF-Konflikt automatisch aufgeloest" >> "$RUNLOG"
     else
+      # Auch hier nicht aussteigen: ohne master weiterarbeiten ist besser als
+      # ein Slot, der nie wiederkommt.
       git merge --abort >/dev/null 2>&1
-      status "konflikt" "Merge von origin/master schlug fehl -- bitte von Hand aufloesen; dieser Slot wurde ausgelassen"
-      publish "Facts $STAMP (Merge-Konflikt mit master, ausgelassen)"
-      exit 0
+      echo "$(date -u +%FT%TZ) ACHTUNG: PDF-Konflikt liess sich nicht aufloesen; Lauf arbeitet ohne master weiter" >> "$RUNLOG"
+      MERGE_BLOCKED=1
     fi
   else
     # Echter Konflikt.  Frueher wurde hier ausgestiegen -- falsch, wenn tagelang
