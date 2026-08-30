@@ -2,6 +2,45 @@ Du arbeitest autonom und unbeaufsichtigt am **Formalisierungs-Inventar** des
 Manuskripts `Journal/Blog/MartingaleProblem/MartingaleProblem.tex`. Du bist in
 einem git-Worktree auf dem Branch `facts-inventory`. Zeitbudget: 120 Minuten.
 
+## Vorrangige Aufgabe
+
+Steht hier eine Aufgabe, so hat sie Vorrang vor allem Übrigen. Ist sie erledigt,
+streicht der Lauf sie hier heraus und trägt das Ergebnis an der genannten Stelle
+ein; danach gilt wieder die Reihenfolge weiter unten.
+
+**Trägt die Präordnung außerhalb von §6?** *(gestellt 2026-08-30)*
+
+Die Uhr definiert ihr Intervall als Differenz von Abwärtsmengen,
+`Set.Iio t \ Set.Iio s`, und nicht als Mathlibs `Set.Ico s t`. Auf einer
+linearen Ordnung fallen beide zusammen; auf einer echten Halbordnung nicht — am
+Diamanten $0 < a,b < t$ mit $a,b$ unvergleichbar ist `Set.Ico a t = {a}`, aber
+`Set.Iio t \ Set.Iio a = {a,b}`. Die Differenzform wird gewählt, weil die
+Additivität der Intervalle nur `Set.Iio_subset_Iio` braucht, also `[Preorder]`,
+während dieselbe Aussage für `Set.Ico` Vergleichbarkeit verlangt.
+
+Zu klären ist, **was diese Allgemeinheit trägt**. Gehe die Aussagen des
+Manuskripts durch, die mit \eqref{T0}, \eqref{T1} oder \eqref{T2b}
+annotiert sind und *nicht* mit \eqref{T2a}; die Bündeltabelle in §2
+(„Which result needs which bundle") ist die Ausgangsliste, aber prüfe sie, statt
+ihr zu glauben. Für jede solche Aussage:
+
+1. Kommt die Uhr überhaupt vor? Ohne Uhr stellt sich die Frage nicht.
+2. Wenn ja: benutzt der Beweis das Intervall so, dass er unter `Set.Ico`
+   bräche? Die Additivität ist der Prüfstein, nicht das Vorkommen des Symbols.
+3. Wird die Aussage irgendwo im Manuskript auf einem **wirklich nicht
+   linearen** Index instanziiert? Nenne die Stelle oder halte fest, dass es
+   keine gibt.
+
+Ergebnis ist eine Tabelle in `Facts/PRAEORDNUNG.md` (neu) mit einer Zeile je
+Aussage, und daraus eine Empfehlung, die zwei Möglichkeiten gegeneinander stellt:
+die Differenzform als Primitiv behalten, oder die Uhr auf `[LinearOrder ι]`
+festlegen und direkt `Set.Ico` nehmen, wobei §6 seine Halbordnungs-Zeile
+verlöre. Nenne bei jeder Möglichkeit, was sie kostet und was sie einspart.
+
+**Die Entscheidung trifft der Nutzer, nicht der Lauf.** Ändere weder die Uhr
+noch die Roadmaps noch das Manuskript in dieser Sache; die Aufgabe endet mit der
+Tabelle und der Empfehlung.
+
 ## Worum es geht
 
 Die 29 mit `\begin{fact}` ausgezeichneten Aussagen des Manuskripts sind seine
