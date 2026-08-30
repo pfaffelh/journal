@@ -80,16 +80,30 @@ if ! git merge -q --no-edit origin/master >/dev/null 2>&1; then
       exit 0
     fi
   else
+    # Echter Konflikt.  Frueher wurde hier ausgestiegen -- falsch, wenn tagelang
+    # niemand hinsieht: master bewegt sich dann nicht, der Konflikt loest sich
+    # nie von selbst, und JEDER Slot faellt aus.  Der Abbruch laesst einen
+    # sauberen (nur veralteten) Baum zurueck, also wird ohne master
+    # weitergearbeitet und der Konflikt laut vermerkt.
     git merge --abort >/dev/null 2>&1
-    status "konflikt" "Merge von origin/master schlug fehl -- bitte von Hand aufloesen; dieser Slot wurde ausgelassen"
-    publish "Facts $STAMP (Merge-Konflikt mit master, ausgelassen)"
-    exit 0
+    echo "$(date -u +%FT%TZ) ACHTUNG: Merge von origin/master konfliktiert; Lauf arbeitet ohne master weiter" >> "$RUNLOG"
+    MERGE_BLOCKED=1
   fi
 fi
 status "laeuft" "Lauf gestartet"
 publish "Facts STATUS: Lauf $STAMP gestartet"
 
+MERGE_BLOCKED="${MERGE_BLOCKED:-0}"
 PROMPT="$(cat "$REPO/scripts/facts_prompt.md")"
+if [ "$MERGE_BLOCKED" = 1 ]; then
+  PROMPT="$PROMPT
+
+---
+
+**ACHTUNG:** Der Merge von \`origin/master\` konfliktiert. Du arbeitest auf
+einem veralteten Stand. Fasse in diesem Lauf **nur** Dateien an, die
+unzweifelhaft zu Deiner Aufgabe gehoeren, und vermerke den Konflikt im Bericht."
+fi
 
 # Enge Werkzeug-Freigabe statt pauschalem Abschalten der Rechtepruefung.  Im
 # -p-Modus wird ein nicht freigegebenes Werkzeug verweigert, nicht nachgefragt
@@ -141,11 +155,38 @@ case "$RC" in
   *)   # Nutzungsgrenze von einem echten Fehler unterscheiden, sonst sucht man
        # den Fehler im Repo, obwohl nur das Kontingent erschoepft war.
        if grep -qiE 'rate limit|usage limit|limit reached|reached your .*limit|hit your .*limit|session limit|manage usage credits|quota|too many requests' "$RUNLOG" 2>/dev/null; then
-         status "limit" "Nutzungsgrenze erreicht (Code $RC) -- Lauf nicht gelaufen, naechster Cron-Slot versucht es erneut"
+         # Die Grenze ist modellspezifisch.  Statt den Slot zu verlieren, sofort
+         # mit dem Ausweichmodell nachsetzen -- es hat ein eigenes Kontingent.
+         echo "$(date -u +%FT%TZ) Kontingent fuer $MODEL erschoepft, zweiter Versuch mit $FALLBACK" >> "$RUNLOG"
+         timeout "${TIMEOUT_MIN}m" claude -p "$PROMPT" \
+             --model "$FALLBACK" \
+             --allowedTools "${ALLOWED[@]}" \
+             "${ADDDIRS[@]}" \
+             >> "$RUNLOG" 2>&1
+         RC2=$?
+         if [ "$RC2" = 0 ]; then
+           status "ok" "Kontingent fuer $MODEL erschoepft; mit $FALLBACK regulaer beendet"
+         else
+           status "limit" "Nutzungsgrenze erreicht (Code $RC), zweiter Versuch mit $FALLBACK endete mit $RC2"
+         fi
        else
          status "fehler" "claude endete mit Code $RC (siehe logs/run_$STAMP.log)"
        fi ;;
 esac
+
+# --- Schutznetz: das Manuskript muss uebersetzen ----------------------------
+# Unbeaufsichtigt darf kein Lauf ein kaputtes Manuskript hinterlassen.  Faellt
+# check.py durch, werden die .tex- und .pdf-Aenderungen dieses Laufs verworfen;
+# alles andere (Inventar, Roadmaps, Protokolle) bleibt erhalten, denn dort kann
+# check.py nichts kaputtmachen.
+MS="Journal/Blog/MartingaleProblem"
+if ! git diff --quiet -- "$MS/MartingaleProblem.tex" 2>/dev/null; then
+  if ! (cd "$REPO/$MS" && python3 check.py) >> "$RUNLOG" 2>&1; then
+    echo "$(date -u +%FT%TZ) ACHTUNG: check.py durchgefallen, .tex/.pdf dieses Laufs verworfen" >> "$RUNLOG"
+    git checkout -- "$MS/MartingaleProblem.tex" "$MS/MartingaleProblem.pdf" >/dev/null 2>&1
+    status "teilweise" "check.py durchgefallen -- Manuskriptaenderungen verworfen, der Rest ist behalten"
+  fi
+fi
 
 # Logs klein halten: nur die letzten 60 Laeufe behalten
 ls -1t "$LOGDIR"/run_*.log 2>/dev/null | tail -n +61 | xargs -r rm -f
