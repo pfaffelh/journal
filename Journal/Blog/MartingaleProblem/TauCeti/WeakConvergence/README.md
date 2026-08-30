@@ -91,6 +91,37 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   σ-algebra.
 * **Missing.** On a Polish space there is a countable convergence determining
   set of bounded uniformly continuous functions, and a countable separating set.
+* **Missing.** The conditional form, `IsSeparating.ae_eq_of_forall_condExp_eq`.
+  Let `E` be standard Borel, `m ≤ mΩ` a sub-σ-algebra, `Γ ⊆ E →ᵇ ℝ` separating,
+  and `U V : Ω → E` measurable with `V` `m`-measurable. If
+  `P[f ∘ U | m] =ᵐ[P] f ∘ V` for every `f ∈ Γ`, then `U =ᵐ[P] V`. This is the
+  last step of the absolute continuity theorem in **MartingaleProblems**, and it
+  is the one place where a separating class is used against a σ-algebra rather
+  than against a second measure. Two steps.
+  * Conditional equality in law: for `G` with `MeasurableSet[m] G`, the two
+    finite measures `(P.restrict G).map U` and `(P.restrict G).map V` integrate
+    every `f ∈ Γ` alike, by the defining property of `condExp` against the
+    bounded `m`-measurable indicator of `G`; so `IsSeparating` gives
+    `P (U ⁻¹' B ∩ G) = P (V ⁻¹' B ∩ G)` for every Borel `B`. No normalization
+    and no case `P G = 0`, because `IsSeparating` is stated for finite measures.
+  * `U ⁻¹' B =ᵐ[P] V ⁻¹' B` for each Borel `B`: take `G = V ⁻¹' B`, which is in
+    `m` because `V` is `m`-measurable, and then its complement. Conclude with
+    `Filter.EventuallyEq.of_forall_separating_preimage` of
+    `Mathlib/Order/Filter/CountableSeparatingOn.lean`, whose hypothesis
+    `HasCountableSeparatingOn E MeasurableSet Set.univ` is
+    `MeasurableSpace.CountablySeparated E`, supplied for a standard Borel `E` by
+    `MeasurableSpace.CountablyGenerated` and `MeasurableSpace.SeparatesPoints`
+    (`Mathlib/MeasureTheory/MeasurableSpace/CountablyGenerated.lean`, and
+    `Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean` for the instance
+    from `BorelSpace` and `SecondCountableTopology`).
+
+  The countability is thus the state space's, not `Γ`'s: no countable subfamily
+  of `Γ` is chosen, and none exists in general. The separability of `E` is used
+  only through `CountablySeparated`, and a regular conditional distribution of
+  `U` given `m` is not needed — `condDistrib` of
+  `Mathlib/Probability/Kernel/CondDistrib.lean` conditions on a map and
+  `condExpKernel` of `Mathlib/Probability/Kernel/Condexp.lean` needs `Ω` itself
+  standard Borel, and neither hypothesis holds here.
 
 ## Milestone 2: the continuous mapping theorem for almost everywhere continuous maps
 
