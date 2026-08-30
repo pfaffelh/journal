@@ -72,7 +72,8 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   proves the separating half only. The extra content is that density in the
   topology of uniform convergence on compact sets suffices, which is where
   tightness enters — `IsTightMeasureSet` and
-  `isTightMeasureSet_of_isCompact_closure` reduce the estimate to a compact set.
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` reduce the estimate to
+  a compact set.
 * **Missing.** Stability under uniformly bounded pointwise limits: if `Γ` is
   separating and every member of `Γ` is the pointwise limit of a uniformly
   bounded sequence from `Γ'`, then `Γ'` is separating. Dominated convergence;
@@ -85,10 +86,14 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   has the product measure and the continuity of the product map, but not this.
   It is the statement that makes finite dimensional distributions determine a
   law — for a process the index is the time set, so the finite case does not
-  suffice — and every determining set in **MartingaleProblems** is built from
-  it. The proof is the functional monotone class theorem of Milestone 5 applied
-  to those products, which form a multiplicative system generating the product
-  σ-algebra.
+  suffice. The determining sets of **MartingaleProblems** Milestone 3 are its
+  special case `Γ i` all bounded measurable, where the separating hypothesis is
+  vacuous, and `isDetermining_products` is proved there directly from
+  `induction_on_mulSystem`; what this point adds is that a *separating* `Γ i` —
+  the bounded continuous functions, or a countable subfamily of them — already
+  suffices at each factor. The proof is the functional monotone class theorem of
+  Milestone 5 applied to those products, which form a multiplicative system
+  generating the product σ-algebra.
 * **Missing.** On a Polish space there is a countable convergence determining
   set of bounded uniformly continuous functions, and a countable separating set.
 * **Missing.** The conditional form, `IsSeparating.ae_eq_of_forall_condExp_eq`.

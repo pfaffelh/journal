@@ -62,8 +62,8 @@ setzt, nennt den Beleg.
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
-| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval` |
-| `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean` |
+| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte trägt kein Beweis, §9 verlangt sie — Auffälligkeit vom 2026-08-31 |
+| `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
 | `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `MeasureTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib, der Martingalfall ist es nicht |
 
 ## Offene Auffälligkeiten
@@ -79,8 +79,19 @@ setzt, nennt den Beleg.
   drei zu prüfen. Für `fact:stoppedlocalmg` am 2026-08-30 geprüft: die
   Lokalisierung setzt in `def:localizing`\ref{it:L1} die Martingaleigenschaft
   der gestoppten Prozesse voraus, statt sie herzuleiten; getragen wird der Fact
-  erst bei der Verifikation eines konkreten lokalisierenden Systems. Offen
-  bleiben `fact:fdd` und `fact:portmanteau`.
+  erst bei der Verifikation eines konkreten lokalisierenden Systems.
+  **Am 2026-08-31 sind auch die letzten beiden geklärt**, und beide Antworten
+  sind zweigeteilt; die Einzelheiten stehen im Laufbericht.
+  `fact:fdd` zerfällt in die Produkthälfte \eqref{eq:prodsep} (EK 3.4.6/3.7.1)
+  und den Satz „die endlich-dimensionalen Verteilungen bestimmen das Gesetz".
+  Die zweite Hälfte ist mittelbar getragen, an den drei Stellen, die die
+  Tabelle in §2 unter `thm:fdd` führt (`thm:absuniq`, `cor:DEuniqueness`,
+  `ex:determining`); die erste trägt **kein** Beweis des Manuskripts, und
+  entbehrlich ist sie trotzdem nicht, weil §9 (Stelle 9048) sie ausdrücklich
+  verlangt („the separating half of `fact:fdd` only"). `fact:portmanteau` wird
+  von keinem Beweis benutzt; die einzige Stelle, an der es überhaupt arbeiten
+  kann, ist die Implikation (a)⇒(b) und nur, wenn man den Weg über die
+  Prohorov-Metrik nimmt.
 * **`fact:fullgenerator`** trägt §8 als „nur für optionalen Kontext". Am
   2026-08-30 entschieden: solange `rem:fullgenerator` im Manuskript steht,
   gehört er in die Roadmap, und er steht jetzt dort ohne das Wort „optional"
@@ -194,6 +205,79 @@ setzt, nennt den Beleg.
   seit dem 2026-08-30 in `MartingaleProblems` M9. Ob `rem:ccverify` ihn nennen
   soll, gehört dem Nutzer; das Inventar hält nur fest, dass die Bemerkung heute
   weniger schließt, als der Leser erwartet.
+* **Zwei Fehler in der Tabelle „Where the prerequisites are used" (§2, Stelle
+  1639ff), am 2026-08-31 gefunden.** Erstens führt Stelle 1661
+  „Fact `portmanteau`, `cmt` → Lemma `EKconv`, Theorem `CPSconv`". Für `cmt`
+  stimmt das, für `portmanteau` nicht: beide Beweise verifizieren die
+  Bedingungen \ref{it:C1}--\ref{it:C3} von `thm:absconv`, und dessen Beweis
+  benutzt in allen vier Schritten nur `fact:cmt`, `fact:ui` und (in `EKconv`
+  und `CPSconv`) `fact:Dcountable`. Weder die Prohorov-Metrik noch abgeschlossene
+  oder offene Mengen noch Stetigkeitsmengen kommen irgendwo vor. Die Zeile
+  sollte nur `fact:cmt` nennen. Zweitens fehlt `fact:fdd` in der Tabelle ganz —
+  aufgeführt ist `thm:fdd`, der Satz des Manuskripts, nicht der Fact. Beides
+  sind Fragen ans Manuskript; das Inventar ändert es nicht.
+* **`fact:portmanteau` arbeitet höchstens durch (a)⇒(b), und ob überhaupt,
+  hängt an einem undefinierten Wort.** „Relativ kompakt" kommt in
+  `fact:fddconv`(b), `fact:relcompact`, `fact:relcompact2` und
+  `rem:EKrelcompact` vor und wird im Manuskript **nirgends definiert**. Liest
+  man es als Relativkompaktheit in der Topologie der schwachen Konvergenz, so
+  wird `fact:portmanteau` an keiner Stelle des Manuskripts gebraucht; liest man
+  es metrisch — `fact:PSpolish` versieht $\Prob(S)$ mit der Prohorov-Metrik —,
+  so braucht der Schritt von der Relativkompaktheit zu einer schwach
+  konvergenten Teilfolge in `rem:EKrelcompact` genau (a)⇒(b). Die Hälften
+  (c)--(f) trägt in keiner der beiden Lesarten irgendetwas. Für die
+  Formalisierung ist die Frage ohne Kosten: Mathlibs Prokhorov
+  (`isCompact_closure_of_isTightMeasureSet`, `Measure/Prokhorov.lean:530`,
+  nicht `deprecated`, und **im Wurzelnamensraum** — nur die Rückrichtung
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` bei `:634` steht in
+  `MeasureTheory`) steht in `ProbabilityMeasure E` mit der Topologie der
+  Verteilungskonvergenz, also in der ersten Lesart, und die zweite ist mit
+  `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph`
+  (`Measure/LevyProkhorovMetric.lean:676`) ebenfalls da. Eine Definition von
+  „relativ kompakt" im Manuskript wäre trotzdem eine Verbesserung.
+* **Der Produktpunkt von `WeakConvergence` Meilenstein 1 hatte eine falsche
+  Begründung, am 2026-08-31 korrigiert.** Er schloss mit „every determining set
+  in **MartingaleProblems** is built from it". Das ist nicht so:
+  `isDetermining_products` in `MartingaleProblems` Meilenstein 3 nennt als
+  Beweisweg „`induction_on_mulSystem` der Roadmap **WeakConvergence**,
+  Meilenstein 5, angewandt auf das multiplikative System jener Produkte", und
+  das Manuskript macht es genauso — `ex:determining` sagt „this uses
+  $\Bor(F) = \sigma(X_t)$ (`thm:fdd`) and the monotone class theorem",
+  `thm:uniqueness` Schritt 2 und `prop:uniqfromprop` führen das Dynkin-Argument
+  auf dem Pfadraum aus. Der Produktpunkt wird damit heute von **keinem** Punkt
+  einer der vier Roadmaps und von keinem Beweis des Manuskripts benutzt. Er
+  bleibt stehen, weil §9 ihn verlangt; die Begründung sagt jetzt, was geprüft
+  ist: die Determining-Sets sind sein Spezialfall `Γ i` alle beschränkt
+  messbar, in dem die Separiertheit leer ist, und der Zusatz ist, dass ein
+  separierendes `Γ i` je Faktor genügt.
+* **Der Konvergenzteil rechnet nirgends still auf Atomlosigkeit; am 2026-08-31
+  durchgegangen.** Jede Aussage von §7 ist entweder uhrenfrei oder ausdrücklich
+  Lebesgue, und die eine Stelle, an der ein Atom beißt, hat einen eigenen
+  Abschnitt. Uhrenfrei sind `thm:absconv` (die Uhr kommt nur über das abstrakte
+  $\XX$ herein), `lem:contuse`, `thm:absconvaug` und `thm:absconvws`; die
+  Bündeltabelle trägt für die ersten drei „---" ein. Lebesgue sind
+  `lem:EKconv`, `thm:CPSconv` (Tabelle: „Lebesgue") und `thm:MZconv`, dessen
+  Beweis $\lambda$ in jedem Schritt benutzt. `thm:clockchange` verlangt
+  \ref{it:C3a} als Hypothese und schiebt die Uhr in \ref{it:K3}/\ref{it:K4} —
+  also genau dorthin, wo ein Atom sichtbar ist, statt es zu verstecken.
+  `rem:EKrelcompact` ruht auf `fact:relcompact`, `relcompact2`, `fddconv` und
+  `prohorov`, die sämtlich über $D_E[0,\infty)$ mit dem Lebesgue-Kompensator
+  formuliert sind (`fact:relcompact2` schreibt $Y(t) - \int_0^t Z(s)\dif s$
+  hin), und es speist `lem:EKconv`. Ein Atom stört an keiner dieser Stellen,
+  weil keine von ihnen für eine allgemeine Uhr behauptet wird. Wo es stört, ist
+  \ref{it:C3a}, und das sagt `ex:atomicdiscontinuity` mit Gegenbeispiel,
+  `thm:absconvaug`/`prop:atomaug` reparieren es („any, atoms allowed"), und
+  `rem:MZcost` nennt die Grenze der Reparatur.
+* **Drei Aussagen von §7 fehlen in der Bündeltabelle.** `thm:absconvws`,
+  `thm:MZconv` und `rem:EKrelcompact` haben dort keine Zeile, während
+  `thm:absconv`, `thm:absconvaug`, `prop:atomaug`, `thm:clockchange`,
+  `lem:EKconv` und `thm:CPSconv` eine haben. Bei `thm:MZconv` ist das mehr als
+  Buchhaltung: `rem:MZcost` hält fest, dass der Pfadraum dort separabel
+  metrisch und **nicht** polnisch ist, also gerade eine Abweichung von
+  \eqref{E3}, und Abweichungen von der schwächsten Spalte zu markieren ist der
+  erklärte Zweck der Tabelle. `rem:EKrelcompact` ist die Stelle, an der sieben
+  Facts zusammenlaufen, und die Tabelle in §2.x nennt es viermal als Abnehmer.
+  Frage ans Manuskript.
 
 ## Läufe
 
@@ -889,3 +973,178 @@ sie durch `WithTop ι` ersetzt werden muss, wie es
 Prädikat zu klären als am Satz. Gegenüber den älteren Vorschlägen bleibt
 `Clock.interval_union` der erste; `IsQuasiLeftContinuous` ist der erste Punkt
 aus Meilenstein 9, der ohne den Rest von Meilenstein 9 auskommt.
+
+### 2026-08-31 — Rückstau: `fact:fdd`, `fact:portmanteau`, und die Uhr in §7
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging
+nach der stehenden Regel in den Rückstau, von oben. Der damalige Punkt 1 ist
+eine **Manuskript**\-änderung und damit von der nicht verhandelbaren Regel 2
+dieses Auftrags ausgeschlossen — er bleibt stehen, jetzt mit einem
+Zwischenstand, der das sagt, und gehört dem Nutzer. Erledigt und in
+`BACKLOG.md` gestrichen sind die damaligen Punkte 2 (die beiden letzten Facts
+ohne tragende Fundstelle) und 5 (die Uhr im Konvergenzteil, auf Atome hin); die
+Nummerierung ist danach neu vergeben, und ein neuer Punkt steht als 4 dort.
+
+#### Rückstau 2: `fact:fdd` und `fact:portmanteau`
+
+Beide Antworten sind zweigeteilt, und beide sind zugleich ein Befund an der
+Tabelle „Where the prerequisites are used" in §2.
+
+**`fact:portmanteau`: kein Beweis, eine Implikation, und ein undefiniertes
+Wort.** Die §2-Tabelle schreibt bei 1661 „Fact `portmanteau`, `cmt` → Lemma
+`EKconv`, Theorem `CPSconv`". Beide Beweise sind nachgelesen. Sie tun dasselbe:
+sie verifizieren \ref{it:C1}--\ref{it:C3} von `thm:absconv` und überlassen
+diesem alles Weitere. `lem:EKconv` benutzt `fact:Dcountable` (für $D$),
+`ex:determining` (für \ref{it:C2}), die $J_1$-Stetigkeit der Auswertung an
+Stetigkeitsstellen (für \ref{it:C3a}), Beschränktheit (\ref{it:C3b}) und
+`prop:fddchar` mit der gleichmäßigen Schranke aus \eqref{eq:approxA}
+(\ref{it:C3c}). `thm:CPSconv` ersetzt nur die letzten beiden Zutaten durch
+\eqref{eq:cps1}--\eqref{eq:cps3}. Und `thm:absconv` selbst benutzt in Schritt 0,
+1, 2 und 3 ausschließlich `fact:cmt` und `fact:ui`; `rem:absconvtopfree` sagt
+das sogar selbst — „the proof invoked \ref{it:C1} and \ref{it:C3a} only through
+Fact `cmt`". Portmanteau kommt nicht vor, in keinem der drei Beweise. Die
+Tabellenzeile ist falsch und sollte nur `fact:cmt` nennen.
+
+Damit bleibt die Frage, ob der Fact irgendwo mittelbar trägt, und sie hängt an
+einem Wort, das das Manuskript nicht definiert. „Relativ kompakt" steht in
+`fact:fddconv`(b), `fact:relcompact`, `fact:relcompact2` und
+`rem:EKrelcompact`, und eine Definition gibt es nicht. In der Lesart „relativ
+kompakt in der Topologie der schwachen Konvergenz" wird `fact:portmanteau`
+nirgends gebraucht. In der metrischen Lesart — `fact:PSpolish` versieht
+$\Prob(S)$ mit der Prohorov-Metrik, `fact:prohorov` sagt „straff genau dann,
+wenn relativ kompakt" — braucht `rem:EKrelcompact` beim Übergang von der
+Relativkompaktheit zu einer schwach konvergenten Teilfolge die Implikation
+(a)⇒(b), und nur diese. Die Hälften (c), (d), (e) und (f) trägt in beiden
+Lesarten nichts. Für die Formalisierung ist die Entscheidung kostenlos, und
+das ist am Quelltext geprüft: `isCompact_closure_of_isTightMeasureSet`
+(`Mathlib/MeasureTheory/Measure/Prokhorov.lean:530`, nicht `deprecated`; das
+`@[deprecated]` bei 524 gehört zu einem Alias darüber, und der Name steht im
+**Wurzelnamensraum** — die Sektion `Forward` der Datei öffnet `MeasureTheory`
+nur, während die Sektion `Backward` ab 568 wirklich darin liegt, so dass die
+Umkehrung `MeasureTheory.isTightMeasureSet_of_isCompact_closure` heißt und die
+Hinrichtung nicht) ist über
+`ProbabilityMeasure E` mit der Topologie der Verteilungskonvergenz formuliert,
+also in der ersten Lesart, und die zweite steht als
+`MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph`
+(`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean:676`) daneben. Der
+Status `Mathlib` bleibt also; was sich ändert, ist die Kenntnis darüber, wieviel
+davon gebraucht wird — nämlich fast nichts.
+
+**`fact:fdd`: die zweite Hälfte trägt, die erste nicht.** Der Fact besteht aus
+\eqref{eq:prodsep} (EK 3.4.6 und 3.7.1: Produkte separierender bzw.
+konvergenzbestimmender Klassen sind es wieder) und dem Satz „in particular the
+finite-dimensional distributions of a process determine its law". Die zweite
+Hälfte ist mittelbar getragen, an genau den drei Stellen, die die §2-Tabelle
+unter `thm:fdd` führt: `thm:absuniq`, `cor:DEuniqueness` und `ex:determining`.
+Die erste Hälfte ist an keiner Stelle des Manuskripts benutzt, und das ist
+nachgesehen, nicht vermutet:
+
+* `prop:fddchar` beweist die Suffizienz mit einem funktionalen
+  Monotone-Klassen-Argument (`fact:monotoneclass`) über der multiplikativen
+  Klasse \eqref{eq:multclass} und benutzt Fubini als einzigen inhaltlichen
+  Schritt; von separierenden Klassen ist keine Rede.
+* `thm:uniqueness` Schritt 2 und `prop:uniqfromprop` schließen von den
+  endlich-dimensionalen Verteilungen auf das Gesetz mit **Dynkin**, angewandt
+  auf $\mathcal{K} = \{\prod_k f_k(\pi_{t_k}) : f_k \in \Bdd(E)\}$ und
+  \eqref{eq:pathsigma}. Mit $\Bdd(E)$ ist die Separiertheit leer.
+* `ex:determining` sagt es selbst: „this uses $\Bor(F) = \sigma(X_t)$
+  (Theorem `thm:fdd`) and the monotone class theorem".
+* `cor:DEuniqueness` beruft sich auf `thm:fdd`, nicht auf `fact:fdd`.
+* Die separierenden Klassen der Dualitätsabschnitte
+  (`lem:histrestart`\ref{it:hist_sep}, `prop:hawkesDcheck`\ref{it:hd_sep},
+  `prop:rieszmarkov`) leben auf $\Prob(\hat E_r)$ bzw. $C(E_1)$ und sind keine
+  Produkte.
+
+Und dass die §2-Tabelle `fact:fdd` **überhaupt nicht** führt, ist das
+Gegenstück dazu: die Buchhaltung hat den Fact nicht bloß unterschätzt, sondern
+ausgelassen. Entbehrlich ist er trotzdem nicht — §9 verlangt bei 9048
+ausdrücklich „the separating half of `fact:fdd` only, its path space half being
+Theorem `thm:fdd`", und bei 9239 steht, er solle unabhängig von
+Martingalproblemen entwickelt werden. Das ist dieselbe Lage wie bei
+`fact:fullgenerator` und die entgegengesetzte zu `fact:bp`: dort war der Fact
+im Manuskript zitiert *und* in §8 als optional bezeichnet, hier verlangt §9 ihn
+ohne Einschränkung.
+
+**Ein Roadmap-Fehler, der daran hing, und er ist korrigiert.** Der Produktpunkt
+von `WeakConvergence` Meilenstein 1 begründete sich mit „every determining set
+in **MartingaleProblems** is built from it". Das stimmt nicht:
+`isDetermining_products` in `MartingaleProblems` Meilenstein 3 nennt selbst
+`induction_on_mulSystem` (Meilenstein 5) als Beweisweg, und das Manuskript
+macht es an allen vier oben aufgezählten Stellen ebenso. Der Produktpunkt hat
+damit heute **keinen Abnehmer**, weder in einer der vier Roadmaps noch im
+Manuskript. Gestrichen wird er nicht — §9 verlangt ihn —, aber seine
+Begründung sagt jetzt, was geprüft ist: die Determining-Sets sind sein
+Spezialfall `Γ i` alle beschränkt messbar, und der Zusatz besteht darin, dass
+ein *separierendes* `Γ i` je Faktor genügt. Die Hypothesen des Punktes bleiben
+unangetastet; sie sind schwächer als die des Manuskripts (beliebiger Index und
+messbare Faktoren statt abzählbarem Index und separablen metrischen Faktoren)
+und das ist nach der stehenden Regel richtig so.
+
+#### Rückstau 5: die Uhr im Konvergenzteil, auf Atome hin
+
+Ebenfalls erledigt und in `BACKLOG.md` gestrichen; die Antwort ist ein
+Negativbefund, und er ist der bessere von beiden möglichen. **Keine Aussage von
+§7 rechnet still auf Atomlosigkeit.** Der Rückstau nannte zwei Kandidaten und
+beide halten stand. `rem:EKrelcompact` ruht auf `fact:relcompact`,
+`fact:relcompact2`, `fact:fddconv` und `fact:prohorov`; alle vier sind über
+$D_E[0,\infty)$ mit dem Lebesgue-Kompensator formuliert — `fact:relcompact2`
+schreibt $Y(t) - \int_0^t Z(s)\dif s$ ausdrücklich hin —, und die Bemerkung
+speist `lem:EKconv`, das die Bündeltabelle mit „Lebesgue" führt. Eine allgemeine
+Uhr wird dort nirgends behauptet, also kann ein Atom auch nichts verderben.
+Dasselbe für die übrigen Sätze des Abschnitts, einzeln nachgesehen:
+`thm:absconv`, `lem:contuse`, `thm:absconvaug` und `thm:absconvws` sind
+uhrenfrei (die Uhr kommt nur über das abstrakte $\XX$ herein und die
+Bündeltabelle trägt „---" ein); `thm:MZconv` rechnet in jedem Schritt mit
+$\lambda$; `thm:clockchange` setzt \ref{it:C3a} als Hypothese und trägt die Uhr
+in \ref{it:K3} und \ref{it:K4}, also genau dort, wo ein Atom sichtbar wird.
+
+Der Grund für den Negativbefund ist, dass das Manuskript die Frage schon gestellt
+und beantwortet hat, an der einzigen Stelle, an der ein Atom wirklich beißt:
+\ref{it:C3a}. `ex:atomicdiscontinuity` führt das Gegenbeispiel $q = \delta_1$ vor
+und zeigt, dass die schlechten Zeiten dort eine **Halbgerade** bilden und nicht
+eine abzählbare Menge, also kein $\Gamma$ hilft; `lem:contuse` sperrt ein, wo die
+Stetigkeit überhaupt gebraucht wird; `thm:absconvaug` und `prop:atomaug`
+reparieren es durch Vergrößerung des Pfadraums um die Werte an den Atomen
+(Bündeltabelle: „any, atoms allowed"); und `rem:MZcost` nennt die Grenze der
+Reparatur — die Konvergenz nach Maß sieht die Auswertung am Atom nicht, und
+keine Augmentierung ändert das. Der Punkt aus dem Rückstau, der die Analogie zur
+Quasi-Linksstetigkeit vermutete, trifft hier also nicht: dort war die
+Atomtoleranz eine unbemerkte Grenze, hier ist sie ein eigener Abschnitt.
+
+Ein Nebenbefund, der dabei anfiel und oben unter den Auffälligkeiten steht:
+`thm:absconvws`, `thm:MZconv` und `rem:EKrelcompact` haben keine Zeile in der
+Bündeltabelle, obwohl die übrigen sechs Aussagen des Abschnitts eine haben und
+`thm:MZconv` mit dem separabel-metrischen, nicht polnischen Pfadraum gerade eine
+Abweichung von \eqref{E3} trägt.
+
+**Offen geblieben.** Rückstaupunkt 1, aus dem oben genannten Grund: er ändert
+das Manuskript. Nicht angefasst wurde Task 23 (unvergleichbare Atome, jetzt
+Rückstau 2): drei Läufe haben es versucht, `Task23/PROTOKOLL.md` hält fest, wo
+es hakt, und ein vierter Anlauf in der Restzeit dieses Laufs hätte dieselbe Wand
+ohne neuen Hebel getroffen — der Lauf hat stattdessen zwei Punkte abgearbeitet,
+die eine Antwort haben. Ebenfalls nicht angefasst: die turnusmäßige Prüfung der
+Roadmapzitate gegen master, die am 2026-08-29 lief und nach der dortigen Regel
+(alle zwei Wochen) nicht fällig ist. Neu unter den Auffälligkeiten steht, dass
+„relativ kompakt" im Manuskript undefiniert bleibt.
+
+**Als Nächstes zu formalisieren: `MeasureTheory.induction_on_mulSystem`**
+(`WeakConvergence` Meilenstein 5). Der Vorschlag ist nicht neu — der Lauf vom
+2026-08-29 hat ihn schon gemacht —, aber dieser Lauf hat ihm das Argument
+gegeben, das ihm fehlte, und rückt ihn dabei vor den Produktpunkt derselben
+Roadmap. Es ruht auf `MeasurableSpace.comap`, dem Satz von der monotonen
+Konvergenz und `induction_on_inter` (`Mathlib/MeasureTheory/PiSystem.lean:692`),
+das zugleich die Vorlage für Gestalt, `@[elab_as_elim]` und Beweisführung ist —
+also auf nichts außer Mathlib. Es ist jetzt dran, weil heute gezeigt ist, dass
+es der Knoten ist, unter dem **alle** Wege des Manuskripts von den
+endlich-dimensionalen Verteilungen zum Gesetz zusammenlaufen. Vier Stellen
+führen dasselbe multiplikativ-erzeugende Argument aus: `prop:fddchar` und
+`ex:determining` in der funktionalen Gestalt, die `induction_on_mulSystem`
+wörtlich ist, `thm:uniqueness` Schritt 2 und `prop:uniqfromprop` in Dynkins
+Maßgestalt, die daraus in einer Zeile folgt. Und zwei Roadmap-Punkte nennen es
+ausdrücklich als ihren Beweisweg, `isDetermining_products`
+(`MartingaleProblems` M3) und der Produktpunkt (`WeakConvergence` M1). Der
+Produktpunkt, den dieselbe Roadmap bisher als das Fundament ausgab, hat
+dagegen keinen Abnehmer. Ein Satz ohne Vorbedingungen, an dem sechs Stellen
+hängen, geht dem voran, an dem keine hängt. Gegenüber den älteren Vorschlägen bleibt
+`Clock.interval_union` der erste der Task-23-Linie; `induction_on_mulSystem`
+ist der erste der Konvergenzlinie, vor `IsSeparating` und vor dem Produktpunkt.

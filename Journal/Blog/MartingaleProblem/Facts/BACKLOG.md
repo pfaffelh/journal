@@ -13,26 +13,34 @@ anhängen.
 
 1. **`rem:skorokhodform` Stelle 2238 korrigieren.** Dort heißt
    `[Preorder ι] [TopologicalSpace ι]` „\eqref{T2b}"; das ist falsch, (T2b)
-   verlangt mehr. Manuskriptänderung, also erst nach `check.py`.
+   verlangt mehr. Manuskriptänderung, also erst nach `check.py`. *Zwischenstand
+   2026-08-31: dieser Punkt liegt außerhalb dessen, was ein Lauf tun darf. Die
+   nicht verhandelbare Regel 2 des Auftrags — „Das Manuskript wird nicht
+   verändert" — lässt nur Task 23 als Ausnahme zu, und diese Korrektur gehört
+   nicht dazu. Der Befund steht seit dem 2026-08-30 unter den Auffälligkeiten
+   des Inventars mit dem Beleg aus `PRAEORDNUNG.md` Teil 2; ausführen muss ihn
+   der Nutzer.*
 
-2. **Die vier Facts ohne tragende Fundstelle abschließen.** `fact:fdd` und
-   `fact:portmanteau` sind noch offen; für `fact:doob` und
-   `fact:stoppedlocalmg` ist es geklärt. Implizit benutzt oder entbehrlich?
-
-3. **Task 23, unvergleichbare Atome.** Der offene Punkt aus
+2. **Task 23, unvergleichbare Atome.** Der offene Punkt aus
    `Task23/PROTOKOLL.md`: die Vermutung ist durch $58081$ Konfigurationen
    belegt, der Beweis fehlt. Ansatzpunkt steht dort unter „Wo der Beweis hakt":
    die einzelnen Gleichungen über der Antikette der maximalen Elemente von
    $\T_{<t^*}$.
 
-4. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
+3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen.
 
-5. **Die Uhr im Konvergenzteil auf Atome hin durchgehen.** Der Lauf vom
-   2026-08-30 hat gezeigt, dass die c\`adl\`ag-Modifikation Atome der Uhr
-   verträgt und die Quasi-Linksstetigkeit nicht. Zu prüfen ist, welche weiteren
-   Aussagen des Manuskripts still auf Atomlosigkeit rechnen: Kandidaten sind
-   `rem:EKrelcompact` und die Straffheitskriterien von §7, weil beide die
-   Konvergenz der Pfade an festen Zeitpunkten benutzen. Je Aussage: die Stelle
-   nennen, an der ein Atom stören würde, oder festhalten, dass keine da ist.
+4. **Den Abnehmer der konvergenzbestimmenden Produkthälfte finden oder
+   ausschließen.** Der Lauf vom 2026-08-31 hat belegt, dass der Produktpunkt von
+   `WeakConvergence` Meilenstein 1 heute von keinem Punkt der vier Roadmaps und
+   von keinem Beweis des Manuskripts benutzt wird. Der eine Kandidat, der übrig
+   bleibt, ist `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional`
+   (M8): dessen Vorlage ist \EK{} Thm. 3.7.8, und `fact:fdd` wird im Manuskript
+   unter anderem \EK{} Prop. 3.7.1 zugeschrieben, also der
+   konvergenzbestimmenden Produkthälfte. Ob 3.7.8 sie im Beweis wirklich
+   benutzt, ist am Scan zu klären; findet sie sich dort, nennt M8 sie als
+   Vorbedingung, sonst hält der Produktpunkt fest, dass sein einziger Grund §9
+   des Manuskripts ist. Achtung: `references/EthierKurtz1986.pdf` ist aus dem
+   Worktree `journal-facts` **nicht** erreichbar — frühere Läufe haben den Scan
+   gelesen, dieser konnte es nicht.
