@@ -114,6 +114,14 @@ Lebesgue measure. Fix `[Preorder ι]`.
   `Clock.Ico q a t = {a, b}`. State both lemmas so that no later proof silently
   substitutes one for the other, and note in the docstring of `Clock.Ico` that
   the name follows `Set.Ico` only up to this inclusion.
+* Mark the two equalities `Clock.Ico_eq_setIco` and `Clock.Ioc_eq_setIoc`
+  `@[simp]`, rewriting the clock form **into** Mathlib's. Under
+  `[LinearOrder ι]` the conventions become `Set.Ico s t` and `Set.Ioc s t` by
+  `not_lt` and `not_le`, so every concrete index — `ℝ≥0∞`, `Set.Ici (0:ℝ)`,
+  `Set.Icc (0:ℝ) T`, `ℕ`, `AddSubgroup.zmultiples h` — lands in Mathlib's
+  interval API automatically, with `Set.Ico_union_Ico_eq_Ico` and the rest
+  available. The difference of down-sets is the primitive of the abstract layer
+  only; it is not a parallel interval library.
 * The reason the clock takes the difference of down-sets and not `Set.Ico`:
   `Clock.interval_union` above needs `t ↦ Set.Iio t` monotone and nothing else,
   whereas the corresponding statement for `Set.Ico` needs comparability. The
