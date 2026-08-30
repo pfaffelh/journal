@@ -16,16 +16,26 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   `MeasureTheory.IsStoppingTime` in `Mathlib/Probability/Process/`. Note that
   `ProgMeasurable` is a deprecated alias of `IsStronglyProgressive`; use the
   new name.
-* `MeasureTheory.Martingale` and `MeasureTheory.Submartingale` in
-  `Mathlib/Probability/Martingale/Basic.lean`, with optional stopping, Doob's
-  inequalities, the upcrossing theory of
-  `Mathlib/Probability/Martingale/Upcrossing.lean` —
+* `MeasureTheory.Martingale`, `MeasureTheory.Supermartingale` and
+  `MeasureTheory.Submartingale` in `Mathlib/Probability/Martingale/Basic.lean`.
+  The definitions are stated for `[Preorder ι]`, so a continuous time index
+  needs no new definition, and `MeasureTheory.Martingale` is stated for values
+  in a real Banach space, so complex-valued martingales need no separate
+  development.
+* The theorems about them are for a **discrete index**, and Milestone 9 states
+  what that leaves. `Mathlib/Probability/Martingale/OptionalStopping.lean` fixes
+  `{𝒢 : Filtration ℕ m0}` and proves `Submartingale.expected_stoppedValue_mono`,
+  `submartingale_iff_expected_stoppedValue_mono` and Doob's maximal inequality
+  `MeasureTheory.maximal_ineq`. `Mathlib/Probability/Martingale/OptionalSampling.lean`
+  proves the optional sampling theorem `Martingale.stoppedValue_min_ae_eq_condExp`
+  under `[LinearOrder ι] [LocallyFiniteOrder ι] [OrderBot ι]`, an index
+  order-isomorphic to a subset of `ℕ`, and for a martingale only. The upcrossing
+  theory of `Mathlib/Probability/Martingale/Upcrossing.lean` —
   `upcrossingsBefore`, `upcrossings`, `upcrossings_lt_top_iff` and the Doob
   estimates `Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
   and `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part` — and the
-  convergence theorems of `Mathlib/Probability/Martingale/Convergence.lean`.
-  `MeasureTheory.Martingale` is stated for values in a real Banach space, so
-  complex-valued martingales need no separate development.
+  convergence theorems of `Mathlib/Probability/Martingale/Convergence.lean` fix
+  `Filtration ℕ` as well. Doob's `Lᵖ` inequality is absent for every index.
 * **Localization is already there.**
   `Mathlib/Probability/Process/LocalProperty.lean` has
   `MeasureTheory.IsPreLocalizingSequence`, `MeasureTheory.IsLocalizingSequence`
@@ -34,7 +44,10 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   `p` locally, with `localSeq`, `stoppedProcess_localSeq`, `Locally.of_prop`,
   `Locally.mono`, `locally_and_iff` and the idempotence `locally_locally_iff`.
   Every local notion below is an instance of `Locally`; none of it is to be
-  redefined.
+  redefined. What is there is the abstract combinator only: the file names
+  martingales in its module comment and nowhere else, and
+  `MeasureTheory.IsStable` is proved for no property of interest here. The
+  martingale instance is Milestone 9.
 * `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`:
   `isProjectiveMeasureFamily_map_restrict`, `isProjectiveLimit_map`,
   `map_eq_iff_forall_finset_map_restrict_eq`,
@@ -48,7 +61,8 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   weak convergence and Prokhorov's theorem.
 
 This roadmap depends on **WeakConvergence** for separating classes, the
-continuous mapping theorem and the Skorokhod representation theorem; on
+functional monotone class theorem, the continuous mapping theorem and the
+Skorokhod representation theorem; on
 **SkorokhodSpace** for the space of càdlàg paths, used in Milestone 11; and on
 **KolmogorovExtension** for the projective limit, used in Milestone 12.
 
@@ -129,6 +143,62 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   `identDistrib_iff_forall_finset_identDistrib` of `FiniteDimensionalLaws.lean`
   rather than reproving that modifications share finite dimensional laws.
 * `IsMPSolutionFor` with an initial law: `IsMPSolutionFor A q c X 𝓖 P ∧ P.map (X 0) = μ`.
+* `mpProcess q c X f g`, the compensated process
+  `fun t ω ↦ f (X t ω) - ∫ s in Clock.interval q c 0 t, g (X s ω) ∂q` of a
+  single pair, with `mpFamily A q c X = (fun p ↦ mpProcess q c X p.1 p.2) '' A`.
+  The family is what the abstract layer of Milestone 2 consumes; the single
+  process is what the two closure statements below speak about.
+* `MPSolutions.span`: a solution for `A` is a solution for `Submodule.span 𝕂 A`
+  in `(E → 𝕂) × (E → 𝕂)`, because `mpProcess q c X` is linear in `(f,g)`.
+* `IsMPSolutionFor.insert_of_tendsto`, closure along a solution. Let `X` solve
+  the martingale problem for `A` with respect to `𝓖`, let `f g : E → 𝕂` with
+  `mpProcess q c X f g t` integrable for every `t`, and let `(f n, g n)` be a
+  sequence in `Submodule.span 𝕂 A` with, for all `s ≤ t`,
+  `fun ω ↦ f n (X t ω)` tending to `fun ω ↦ f (X t ω)` in `L¹ P` and
+  `fun ω ↦ ∫ u in Clock.interval q c s t, g n (X u ω) ∂q` tending to its
+  counterpart for `g` in `L¹ P`. Then `IsMPSolutionFor (insert (f,g) A) q c X 𝓖 P`.
+  The proof is adaptedness of the new process together with the `L¹` contraction
+  `MeasureTheory.eLpNorm_condExp_le_eLpNorm` of
+  `Mathlib/MeasureTheory/Function/ConditionalExpectation/Real.lean` applied to
+  the martingale identity of each `(f n, g n)`. State it for the filtration `𝓖`
+  at hand rather than deriving it from `isMPSolutionFor_iff_forall_fdd` of
+  Milestone 3, which would give the conclusion for the natural filtration only.
+  The hypothesis is on `f` and `g` as they are composed with `X`, so it applies
+  to unbounded `f` and `g` and does not narrow the operator to bounded
+  functions.
+* Bounded pointwise convergence and the bp-closure of an operator. Mathlib has
+  the notion for neither functions nor pairs: `seqClosure` and `IsSeqClosed` of
+  `Mathlib/Topology/Defs/Sequences.lean` close under the limits of a topology,
+  and bounded pointwise limits are not the limits of a topology on `E → 𝕂`.
+  * `BpTendsto (u : ℕ → E → 𝕂) (f : E → 𝕂)`, defined as `∃ C, ∀ n x, ‖u n x‖ ≤ C`
+    together with `∀ x, Tendsto (fun n ↦ u n x) atTop (𝓝 (f x))`, with the
+    version on pairs holding in each coordinate, and `BpTendsto.add`,
+    `BpTendsto.smul` and `BpTendsto.const` for its arithmetic.
+  * `IsBpClosed M` and `bpClosure M` for `M : Set (E → 𝕂)`, the latter an
+    inductive predicate with the two constructors `mem` and `bpTendsto`,
+    together with `subset_bpClosure`, `bpClosure_mono`, `isBpClosed_bpClosure`,
+    `bpClosure_min` and the induction principle `bpClosure_induction` tagged
+    `@[elab_as_elim]`. The inductive definition is the smallest bp-closed set
+    containing `M` by construction and replaces the transfinite recursion over
+    the countable ordinals of the classical proof; `induction_on_inter` of
+    `Mathlib/MeasureTheory/PiSystem.lean` is the precedent for the shape.
+  * `bpClosure_add_mem`, `bpClosure_smul_mem` and the packaged
+    `Submodule.bpClosure`: the bp-closure of a `𝕂`-submodule of the bounded
+    functions is a submodule (Ethier–Kurtz, Appendix 3, Proposition 3.1). With
+    the inductive definition this is a double induction — for `b` in the
+    submodule, `{a | a + b ∈ bpClosure M}` is bp-closed and contains `M`; then
+    `{b | ∀ a ∈ bpClosure M, a + b ∈ bpClosure M}` is bp-closed and contains
+    `M` — and the same for the pairs, which is the form used next.
+  * `isMPSolutionFor_bpClosure`: a solution for `A` is a solution for the
+    bp-closure of `Submodule.span 𝕂 A`, and two operators whose spans have the
+    same bp-closure have the same solutions (Ethier–Kurtz, Proposition 4.3.1).
+    A bp-convergent sequence supplies the two `L¹` limits of
+    `IsMPSolutionFor.insert_of_tendsto` by dominated convergence, the second
+    against `q ⊗ P` on `Clock.interval q c s t ×ˢ Set.univ`, where
+    `Clock.measure_interval_ne_top` of Milestone 1 makes the constant bound
+    integrable. The bp-closure lives in the bounded functions, so this is the
+    narrower of the two closure statements and the previous item is the one the
+    rest of the roadmap uses.
 
 ## Milestone 3: canonical families, determining sets, and the finite dimensional criterion
 
@@ -144,7 +214,9 @@ generating its σ-algebra, and `X : Ω → F`.
 * `isDetermining_products`: for the natural filtration of `X` and any dense
   `D ⊆ ι`, the set of products `∏ i, h i (π (t i))` with `t i ∈ D`, `t i ≤ s`
   and `h i` bounded continuous is determining. This uses that the σ-algebra of
-  `F` is generated by the coordinates, together with a monotone class argument.
+  `F` is generated by the coordinates, together with the functional monotone
+  class theorem `induction_on_mulSystem` of the roadmap **WeakConvergence**,
+  Milestone 5, applied to the multiplicative system of those products.
 * `isMPSolutionFor_iff_forall_fdd`: `X` solves the martingale problem for `A` if
   and only if for all `s ≤ t`, all finite families `t 1 ≤ ... ≤ t n ≤ s` and all
   bounded measurable `h 1, ..., h n`,
@@ -311,11 +383,60 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   distributions, hence, with Milestone 6, gives uniqueness. This is the standard
   application and is the reason the milestone exists.
 
-## Milestone 9: the càdlàg modification
+## Milestone 9: continuous time martingales and the càdlàg modification
 
 Fix `[LinearOrder ι]` with the order topology and a countable dense `D ⊆ ι`, and
-`E` metrizable.
+`E` metrizable. The first three items are the continuous time replacements for
+the discrete index theorems listed above; Milestones 6, 7 and 11 use them.
 
+* Optional sampling in continuous time. For a right continuous submartingale `Y`
+  and stopping times `σ`, `τ` for `𝓕`, with `τ` bounded,
+  `Submartingale.stoppedValue_min_le_condExp`:
+  `stoppedValue Y (fun ω ↦ min (σ ω) (τ ω)) ≤ᵐ[P] P[stoppedValue Y τ | hσ.measurableSpace]`,
+  and `Martingale.stoppedValue_min_ae_eq_condExp_of_rightContinuous` with `=ᵐ`
+  in place of `≤ᵐ`. Mathlib's `Martingale.stoppedValue_min_ae_eq_condExp` is the
+  discrete case and is the input: approximate `σ` and `τ` from above by stopping
+  times with values in a finite subset of `D`, apply it there, and pass to the
+  limit by right continuity. This is where the countable dense `D` is used, and
+  it is the only hypothesis on `ι` the passage needs.
+* `Submartingale.stoppedValue_min_le_condExp_of_ae_finite`: the same conclusion
+  for an almost surely finite `τ` that is not bounded, under
+  `Integrable (stoppedValue Y τ)` and
+  `Tendsto (fun T ↦ ∫ ω in {ω | T < τ ω}, ‖Y T ω‖ ∂P) atTop (𝓝 0)`; and the
+  corollary for a right continuous martingale whose increments are bounded,
+  where both hypotheses are automatic.
+* Stability of the martingale property under stopping, in continuous time.
+  `Martingale.stoppedProcess_of_rightContinuous`: for a right continuous
+  martingale `Y` and a stopping time `τ` for `𝓕`, the stopped process
+  `stoppedProcess (fun t ↦ {ω | ⊥ < τ ω}.indicator (Y t)) τ` is a martingale;
+  and `isStable_martingale_rightContinuous`, the packaged
+  `MeasureTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ ∀ᵐ ω ∂P, ∀ t, ContinuousWithinAt (Z · ω) (Set.Ici t) t)`.
+  The conjunction is what is stable, because right continuity is preserved by
+  stopping and is the hypothesis under which the martingale half holds. Then
+  `MeasureTheory.IsStable.locally` of
+  `Mathlib/Probability/Process/LocalProperty.lean` gives at once that a stopped
+  local martingale is a local martingale, and `IsStable.locally_and_iff` splits
+  the conjunction again; so `IsLocalMPSolution` of Milestone 2 is preserved by
+  stopping without any further work, and no localizing sequence is constructed
+  by hand. Mathlib has the localization scaffolding but nothing about the
+  martingale property in it: `Submartingale.stoppedProcess` of
+  `Mathlib/Probability/Martingale/OptionalStopping.lean` is stated for
+  `Filtration ℕ` and real valued processes, and `Locally` is never instantiated
+  at a martingale. The proof is the first item applied at the bounded stopping
+  times `σ ⊓ τ`, and the same argument gives the submartingale form.
+* Doob's inequalities in continuous time. The supremum
+  `fun ω ↦ ⨆ t ∈ Set.Iic T, ‖Y t ω‖` is measurable because right continuity
+  makes it the supremum over `Set.Iic T ∩ D`; state that reduction as a lemma of
+  its own. Then `MeasureTheory.maximal_ineq_of_rightContinuous`, the continuous
+  time form of `MeasureTheory.maximal_ineq` for a non-negative right continuous
+  submartingale, and `Submartingale.eLpNorm_iSup_le`, Doob's `Lᵖ` inequality
+  `eLpNorm (fun ω ↦ ⨆ t ∈ Set.Iic T, Y t ω) p P ≤ (p / (p - 1)) * eLpNorm (Y T) p P`
+  for `1 < p < ∞` and `Y` a non-negative submartingale. Mathlib has neither, and
+  the `Lᵖ` inequality is to be proved for `Filtration ℕ` from `maximal_ineq`
+  first and then transferred by the same approximation. The form the manuscript
+  uses is the corollary for a right continuous martingale `X`, applied to the
+  non-negative submartingale `‖X ·‖`; state `Martingale.measure_iSup_norm_le` and
+  `Martingale.eLpNorm_iSup_norm_le` for it.
 * Submartingale regularization, which Mathlib does not have, although the
   ingredient does. For a submartingale `Y` indexed by `ι`, the restriction to
   `D` has almost surely finite one sided limits along `D` at every point. The
@@ -422,13 +543,30 @@ roadmap **SkorokhodSpace**.
   `sup_n sup_{s ≤ T} 𝔼[|ξ n s| + |φ n s|] < ∞` and the two asymptotic conditions
   testing `ξ n - f (X n)` and `∫ (φ n - g (X n))` against products
   `∏ h i (X n (t i))`.
+* `isTight_map_postcomp_of_exists_martingale`, the criterion the previous items
+  and the next one consume. Let `X n` have càdlàg paths and be adapted to
+  `𝓕 n`, let `𝓛 n` be the real `(𝓕 n)`-progressive processes with
+  `‖Y‖ = ⨆ t, 𝔼[|Y t|] < ∞`, and let
+  `𝓐 n = {(Y, Z) ∈ 𝓛 n × 𝓛 n | Martingale (fun t ↦ Y t - ∫ s in Clock.interval q c 0 t, Z s) (𝓕 n) (P n)}`.
+  Call `f : E →ᵇ ℝ` *approximable* when for all `ε, T > 0` there are
+  `(Y n, Z n) ∈ 𝓐 n` with
+  `⨆ n, 𝔼[⨆ t ∈ Set.Iic T ∩ D, |Y n t - f (X n t)|] < ε` and
+  `⨆ n, 𝔼[eLpNorm (Set.Iic T).indicator (Z n) p] < ∞` for some `1 < p ≤ ∞`.
+  Then for every `f` in the sup-norm closure of the approximable functions the
+  laws of `postcomp f ∘ X n` are tight in `D ι ℝ`, and the laws of
+  `(f 1, …, f k) ∘ X n` are tight in `D ι (Fin k → ℝ)`. The `𝕂`-valued case is
+  the real one applied to `Re f` and `Im f` together with the `Fin k` form.
+  This is where the continuous time Doob inequalities of Milestone 9 are used.
 * `isRelativelyCompact_of_approx`: if `E` is Polish, the domain of `A` contains
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
   is relatively compact; hence every limit point solves the martingale problem
-  for `A`, and the martingale problem has a solution with càdlàg paths.
-  Combine the Stone–Weierstrass criterion of **WeakConvergence** with the
-  tightness criterion of **SkorokhodSpace**.
+  for `A`, and the martingale problem has a solution with càdlàg paths. The
+  algebra is convergence determining by the Stone–Weierstrass criterion of
+  **WeakConvergence**, Milestone 1, and hence dense for uniform convergence on
+  compact sets; the previous item makes each `postcomp f ∘ X n` tight; and
+  `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` of Milestone 8 there
+  lifts that back to `{X n}`.
 * `tendsto_of_isRelativelyCompact_of_unique`: with uniqueness from Milestone 6
   or Milestone 8, relative compactness upgrades to convergence.
 * Convergence in measure as a second mode: the space of càdlàg paths with the
@@ -466,3 +604,55 @@ Index `[0,∞)` or `ℕ`, state spaces `E₁`, `E₂` Polish, a shift invariant 
   the state space and applies unchanged; Milestones 9 and 11 are stated for a
   constant fibre. The historical process, whose state at time `t` is the path up
   to `t`, is the instance that needs the fibred form.
+
+## Milestone 13: the full generator, and which operators are generators
+
+Mathlib has no semigroup of operators. The word `dissipative` occurs nowhere in
+it, there is no strongly continuous or measurable one parameter semigroup, and
+the Hille–Yosida theorem stands in `docs/1000.yaml` as `Q974405` without a
+`decl`. What is needed here is one proposition about the full generator and its
+converse; cores, the exponential formula and Hille–Yosida are not used and are
+not part of this milestone. Fix `[RCLike 𝕂]`, a state space `E` with
+`[MeasurableSpace E]`, and let `L` be the `𝕂`-valued bounded measurable
+functions on `E` with the sup norm.
+
+* `IsDissipative (A : Set (L × L))`, defined as
+  `∀ p ∈ A, ∀ lam : ℝ, 0 < lam → lam * ‖p.1‖ ≤ ‖lam • p.1 - p.2‖`. The relation
+  is the primitive and a single valued operator is its graph, matching the
+  convention of this roadmap. `IsDissipative.mono` and the stability under
+  `Submodule.span 𝕂`.
+* `MeasurableContractionSemigroup T`: `T : ℝ≥0 → L →L[𝕂] L` with `T 0 = 1`,
+  `T (s + t) = (T s).comp (T t)`, `‖T t‖ ≤ 1`, and `t ↦ T t f` measurable for
+  every `f`. Measurability, not strong continuity: the transition semigroup of a
+  Markov process on the bounded measurable functions is not strongly continuous,
+  and nothing below needs it to be.
+* `fullGenerator T : Set (L × L)`, the pairs `(f,g)` with
+  `T t f - f = ∫ s in Set.Ioc 0 t, T s g` for every `t : ℝ≥0`, the integral
+  being the Bochner integral of `Mathlib/MeasureTheory/Integral/Bochner/`;
+  together with `fullGenerator_isSubmodule`, that it is a `𝕂`-submodule of
+  `L × L`.
+* `fullGenerator_isDissipative` and `inv_sub_fullGenerator_eq_integral`: the
+  full generator is dissipative, and
+  `(lam • 1 - Â)⁻¹ h = ∫ t in Set.Ioi 0, Real.exp (-lam * t) • T t h` on the
+  range of `lam • 1 - Â` for `lam > 0` (Ethier–Kurtz, Proposition 1.5.1). This
+  is the whole of the semigroup theory the manuscript uses.
+* `mpSolution_resolvent_repr`: for `ι = [0,∞)` with the Lebesgue clock, if `X`
+  solves the martingale problem for `A` with respect to `𝓖` and `(f,g) ∈ A`,
+  then for `lam > 0` and `t : ι`,
+  `Real.exp (-lam * t) • f (X t) =ᵐ P[∫ s in Set.Ioi 0, Real.exp (-lam * (t + s)) • (lam • f - g) (X (t + s)) | 𝓖 t]`.
+  The proof is the optional sampling of Milestone 9 together with a Fubini
+  rearrangement, and it is the only place where the index set is `[0,∞)` and the
+  clock is Lebesgue measure — for the exponential, which solves `φ' = -lam • φ`,
+  and for the rearrangement. State it in its own right; it is the input to the
+  next item.
+* `isDissipative_of_forall_exists_mpSolution`: if `A` is a `𝕂`-submodule of
+  `L × L` and the martingale problem for `(A, Measure.dirac x)` has a solution
+  for every `x : E`, then `A` is dissipative (Ethier–Kurtz, Proposition 4.3.5).
+  Evaluate the previous item at `t = 0` and bound the integrand by
+  `‖lam • f - g‖`.
+* `isMPSolutionFor_fullGenerator`: a Markov process with measurable transition
+  semigroup `T` solves the martingale problem for `fullGenerator T`
+  (Ethier–Kurtz, Proposition 4.1.7), by the Markov property and Fubini against
+  the clock of Milestone 1. With `fullGenerator_isDissipative` this is the
+  converse of the previous item, and the two together say that the operators
+  arising from Markov processes are exactly the dissipative ones.

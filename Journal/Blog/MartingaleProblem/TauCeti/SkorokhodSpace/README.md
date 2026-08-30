@@ -233,3 +233,17 @@ convergence determining classes and the continuous mapping theorem.
 * `SkorokhodSpace.exists_countable_dense_continuity`: for a single `μ`, the set
   of `t` with `μ {f | f⁻ t = f t} = 1` has countable complement, hence contains
   a countable dense set.
+* `SkorokhodSpace.continuous_postcomp`: for continuous `h : E → E'` the induced
+  map `SkorokhodSpace.postcomp h : D ι E → D ι E'`, `f ↦ h ∘ f`, is well defined
+  and continuous; with `Measurable (postcomp h)` for `h` Borel, from Milestone 6.
+  Together with `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` this is
+  the continuous mapping theorem in the form the next item needs.
+* `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`: the reduction to
+  real-valued paths. Let `S` be a set of Borel probability measures on `D ι E`
+  satisfying compact containment — for every `ε > 0` and `m` a compact `K ⊆ E`
+  with `μ {f | ∀ t ∈ B m, f t ∈ K} ≥ 1 - ε` for every `μ ∈ S` — and let
+  `H ⊆ E →ᵇ ℝ` be dense in the topology of uniform convergence on compact sets.
+  Then `S` is tight if and only if `(· .map (postcomp h)) '' S` is tight in
+  `D ι ℝ` for every `h ∈ H`. The forward direction is the previous item; the
+  converse is Milestone 7 applied to the modulus, which compact containment plus
+  a dense `H` recovers from the real-valued moduli.

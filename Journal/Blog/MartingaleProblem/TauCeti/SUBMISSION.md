@@ -11,10 +11,10 @@ non-binding prototype):
 
 | Directory | Depends on | Content |
 |---|---|---|
-| `WeakConvergence` | Mathlib | separating and convergence determining classes; continuous mapping theorem for almost everywhere continuous maps; Skorokhod representation; Vitali |
+| `WeakConvergence` | Mathlib | separating and convergence determining classes; continuous mapping theorem for almost everywhere continuous maps; Skorokhod representation; Vitali; the functional monotone class theorem |
 | `KolmogorovExtension` | Mathlib | compact systems, inner regular contents, the projective limit for an arbitrary index |
 | `SkorokhodSpace` | Mathlib, `WeakConvergence` | càdlàg functions; the `J₁` metric; Polish; Borel equals cylinder; the modulus and compactness; tightness |
-| `MartingaleProblems` | Mathlib, all three above | the manuscript: clock, abstract martingale problem, jump processes, restart and uniqueness, duality, càdlàg modification, abstract convergence, existence from a dual |
+| `MartingaleProblems` | Mathlib, all three above | the manuscript: clock, abstract martingale problem, jump processes, restart and uniqueness, duality, continuous time martingales and the càdlàg modification, abstract convergence, existence from a dual |
 
 The dependency graph is a chain with one fork; `WeakConvergence` and
 `KolmogorovExtension` are independent of each other and can be claimed in

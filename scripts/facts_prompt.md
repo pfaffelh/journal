@@ -42,14 +42,37 @@ ist besser als zehn oberflächlich.
 5. Deckt eine Roadmap den Fact schon ab, nenne den Meilenstein in der Spalte
    Beleg — und prüfe bei der Gelegenheit, ob das dortige Zitat noch stimmt.
 
+## Stehende Regel: minimale Voraussetzungen
+
+Eine Roadmap-Aussage trägt **die schwächsten Hypothesen, unter denen sie gilt**,
+nicht die bequemsten. Reicht separabel metrisch, steht dort nicht polnisch;
+reicht messbar, steht dort keine Topologie. Der Maßstab ist das Manuskript: es
+führt in §2 die Bündel \eqref{E0}–\eqref{E3} und \eqref{T0}–\eqref{T4} genau
+dafür, und jede Aussage dort ist mit dem Bündel annotiert, das sie wirklich
+braucht. Übernimm diese Annotation, statt sie neu zu erraten.
+
+Wo eine Roadmap heute mehr verlangt als das Manuskript, ist das ein Befund und
+gehört korrigiert. Wo das Manuskript selbst mehr verlangt, als der Beweis
+braucht, gehört es unter „Offene Auffälligkeiten" — das Manuskript wird von
+diesen Läufen nicht geändert.
+
+Umgekehrt gilt: eine Abschwächung wird **belegt**, nicht vermutet. Wer
+„polnisch" durch „separabel metrisch" ersetzt, nennt die Stelle, an der die
+Vollständigkeit im Beweis nicht mehr vorkommt. Prohorovs Satz zum Beispiel
+braucht sie in der Rückrichtung; der Satz von der stetigen Abbildung nicht.
+
 ## Regeln, die nicht verhandelbar sind
 
 1. **Nichts aus dem Gedächtnis.** Jeder Mathlib-Name wird am Quelltext belegt.
 2. **Das Manuskript wird nicht verändert.** Du arbeitest an `Facts/INVENTAR.md`
    und an den Roadmaps. Fällt Dir am Manuskript etwas auf, schreibe es unter
    „Offene Auffälligkeiten" ins Inventar.
-3. **Nur dieser Branch.** Kein Wechsel auf `master`, kein Merge, kein
-   Force-Push. Der Runner committet und pusht selbst.
+3. **Nur dieser Branch.** Kein Wechsel auf `master`, kein Force-Push. Der
+   Runner committet und pusht selbst, und er zieht zu Beginn jedes Laufs
+   `origin/master` nach — Du arbeitest also immer auf aktuellem Stand.
+   **Ob der Branch nach `master` wandert, entscheidet der Nutzer, nicht der
+   Lauf.** Das ist die Stelle, an der ein Mensch die Vorschläge prüft, und sie
+   wird nicht wegautomatisiert.
 4. **Kein Vortäuschen.** Ein Fact, dessen Lage Du nicht klären konntest, bleibt
    `?` mit einer Notiz, woran es lag. Das ist ein gutes Ergebnis.
 
