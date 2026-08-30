@@ -54,6 +54,19 @@ publish() {  # committen und pushen, auch im Fehlerfall
 }
 
 git pull -q --rebase origin "$BRANCH" >/dev/null 2>&1
+
+# master nachziehen.  Ohne das arbeitet der Lauf auf einem Stand, der beliebig
+# alt werden kann, sobald der Nutzer auf master committet -- und schreibt dann
+# Roadmap-Aenderungen gegen ein Manuskript, das es so nicht mehr gibt.
+# Bei Konflikt wird NICHT gerechnet: lieber ein ausgelassener Slot als ein Lauf,
+# der auf einem halb aufgeloesten Baum arbeitet und ihn dann pusht.
+git fetch -q origin master >/dev/null 2>&1
+if ! git merge -q --no-edit origin/master >/dev/null 2>&1; then
+  git merge --abort >/dev/null 2>&1
+  status "konflikt" "Merge von origin/master schlug fehl -- bitte von Hand aufloesen; dieser Slot wurde ausgelassen"
+  publish "Facts $STAMP (Merge-Konflikt mit master, ausgelassen)"
+  exit 0
+fi
 status "laeuft" "Lauf gestartet"
 publish "Facts STATUS: Lauf $STAMP gestartet"
 
