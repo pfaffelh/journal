@@ -88,12 +88,43 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 * Independence of the base point: two base points give exhaustions each of which
   refines the other after finitely many steps.
 
-Throughout the rest of this roadmap, `ι` denotes an index with these instances
-and `E` a Polish space with metric `r`.
+From Milestone 3 on, `ι` denotes an index with these instances and `E` a Polish
+space with metric `r`. Milestone 2 is the exception and states its own, weaker
+hypotheses item by item: the càdlàg predicate and the jump theory are about
+functions, not about the space, and neither uses the metric on `ι`.
 
 ## Milestone 2: càdlàg functions
 
-For `f : ι → E` with `[Preorder ι] [TopologicalSpace ι] [TopologicalSpace E]`:
+Milestone 1 fixes the index of the **space**, and this milestone does not need
+it. The predicate and the jump theory live at two different strengths, and each
+item below names its own, so that a later reader can tell which instances a
+statement actually consumes.
+
+* **(A)** `[Preorder ι] [TopologicalSpace ι] [TopologicalSpace E]`. This is what
+  `RemyDegenne/brownian-motion` uses for `IsCadlag`, and it carries the
+  predicate together with all of its closure properties.
+* **(B)** `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]` together with
+  a countable dense `D ⊆ ι` such that every non-maximal point is a limit of
+  points of `D` from the right. This is the index bundle the manuscript calls
+  (T2b), and it is what the jump theory consumes. Two of the items below add
+  σ-compactness of `ι` on top of it, and say so.
+
+(B) and the index of Milestone 1 are **incomparable**, and this is worth
+recording once because a formalizer meets it immediately.
+`AddSubgroup.zmultiples h` carries every instance of Milestone 1 and fails the
+right approximation clause of (B), since `Set.Ioo t (t + h) = ∅`. Nothing is
+lost: on a discrete linear order `𝓝[<] x` and `𝓝[>] x` are both `⊥`, so
+`IsCadlag` holds for every function, `Function.leftLim f x = f x` by the
+definition in `Mathlib/Topology/Order/LeftRightLim.lean`, `leftJumpSet f = ∅`,
+and each of the four statements below is trivially true. The other three running
+instances `ℝ`, `Set.Ici (0:ℝ)` and `Set.Icc (0:ℝ) T` satisfy (B), with `D` the
+rational points. So the jump theory is to be proved under (B) and instantiated
+for those three; the discrete index gets its own one line instance and no
+exhaustion argument. The metric on `ι` is first used in Milestone 3, and no
+statement of this milestone uses it: `largeLeftJumpSet` measures with `dist` on
+`E`.
+
+Under (A), for `f : ι → E`:
 
 * `Function.RightContinuous f`, defined as `∀ a, ContinuousWithinAt f (Set.Ioi a) a`.
 * `IsCadlag f`, a structure with fields `right_continuous` and
@@ -106,22 +137,39 @@ For `f : ι → E` with `[Preorder ι] [TopologicalSpace ι] [TopologicalSpace E
   API applies; every later statement about left limits uses those names, not a
   new one.
 * `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
-  càdlàg map into a pseudometric space is bounded.
+  càdlàg map into a pseudometric space is bounded. The metric here is on `E`;
+  the index contributes compactness of the domain and nothing else.
 * The identity `Function.leftLim f x = f x` at continuity points, from
   `continuousAt_iff_leftLim_eq_rightLim` together with right continuity.
-* Jump sets: `leftJumpSet f = {x | f⁻ x ≠ f x}` and, for `ε > 0`,
-  `largeLeftJumpSet f ε = {x | ε ≤ dist (f⁻ x) (f x)}`. Prove that
-  `largeLeftJumpSet f ε` has no accumulation point, hence meets every compact set
-  in a finite set, and that `leftJumpSet f` is countable. The monotone case of
-  the last statement is `Monotone.countable_not_continuousAt`; the càdlàg case
-  does not follow from it and is proved by the exhaustion.
-* `IsCadlag.measurable`: a càdlàg map into a Polish space is Borel measurable,
-  via approximation by the right continuous step functions of the exhaustion.
-* A càdlàg map is determined by its restriction to a dense set: if `f` and `g`
-  are càdlàg and agree on a dense `D ⊆ ι`, they are equal. This is the statement
-  Milestone 6 turns into a measurable embedding.
 * `IsCadlag` for a continuous map, and the characterization of continuity of a
   càdlàg map as `leftJumpSet f = ∅`.
+
+Under (B), with `E` a pseudometric space:
+
+* Jump sets: `leftJumpSet f = {x | f⁻ x ≠ f x}` and, for `ε > 0`,
+  `largeLeftJumpSet f ε = {x | ε ≤ dist (f⁻ x) (f x)}`. That
+  `largeLeftJumpSet f ε` has no accumulation point, hence meets every compact
+  set in a finite set, is (B) alone: an accumulation point yields a monotone
+  sequence converging to it, which is where linearity and the order topology are
+  used, and the one sided limit at that point contradicts the jump size.
+* `leftJumpSet f` is countable. This adds **σ-compactness of `ι`** to (B), to
+  turn local finiteness into countability along a countable exhaustion; every
+  index of Milestone 1 has it, since closed balls are compact. The monotone case
+  is `Monotone.countable_not_continuousAt`, which lives in
+  `Mathlib/Topology/Order/Monotone.lean` and not in
+  `Mathlib/Topology/Order/LeftRightLim.lean`, where only the module comment
+  names it; the càdlàg case does not follow from it.
+* `IsCadlag.measurable`: a càdlàg map into a Polish space is Borel measurable,
+  via approximation by right continuous step functions along `D`. Linearity is
+  what makes the step functions definable and the countable dense `D` is what
+  indexes them; this is (B) exactly, with σ-compactness for the exhausting
+  sequence of steps.
+* A càdlàg map is determined by its restriction to a dense set: if `f` and `g`
+  are càdlàg and agree on a dense `D ⊆ ι`, they are equal. This is right
+  continuity together with the clause of (B) that every non-maximal point is
+  approximable from the right, and it is the sharpest use of that clause
+  anywhere in this roadmap. This is the statement Milestone 6 turns into a
+  measurable embedding.
 
 ## Milestone 3: time changes
 

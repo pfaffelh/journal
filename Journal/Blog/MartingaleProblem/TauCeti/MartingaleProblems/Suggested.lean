@@ -113,6 +113,18 @@ def IsRegularizingClass {E : Type*} [TopologicalSpace E] [MeasurableSpace E]
 
 theorem exists_cadlag_modification_of_isRegularizingClass : True := sorry
 
+/-- A càdlàg process reaches its left limits along every nondecreasing sequence
+of stopping times. The bound `t` keeps the stopping times bounded, which is what
+optional sampling needs. -/
+def IsQuasiLeftContinuous {E : Type*} [TopologicalSpace E]
+    (X : ι → Ω → E) (F : Filtration ι m) (P : Measure Ω) : Prop := sorry
+
+theorem isQuasiLeftContinuous_of_isRegularizingClass : True := sorry
+
+theorem isQuasiLeftContinuous_of_isMPSolutionFor : True := sorry
+
+theorem not_isQuasiLeftContinuous_of_atom : True := sorry
+
 /-! ## Milestone 10: the abstract convergence theorem
 
 Stated without any topology on the path space: the hypothesis is convergence in

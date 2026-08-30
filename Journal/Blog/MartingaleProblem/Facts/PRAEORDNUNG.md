@@ -216,9 +216,11 @@ Was jeder der vier Punkte über (1) hinaus braucht, einzeln:
   Abzählbarkeit durch eine abzählbare Ausschöpfung, also durch
   **σ-Kompaktheit** oder, gleichwertig genug, **Zweitabzählbarkeit** des Index.
   Die Metrik wird nicht gebraucht, die Ausschöpfung schon.
-  Mathlibs `Monotone.countable_not_continuousAt`
-  (`Mathlib/Topology/Order/LeftRightLim.lean`) ist der monotone Spezialfall und
-  ist, wie der Meilenstein richtig sagt, kein Ersatz.
+  Mathlibs `Monotone.countable_not_continuousAt` ist der monotone Spezialfall
+  und ist, wie der Meilenstein richtig sagt, kein Ersatz. Die Datei ist
+  `Mathlib/Topology/Order/Monotone.lean` (Zeile 164 in v4.33.1, 166 auf master),
+  **nicht** `Mathlib/Topology/Order/LeftRightLim.lean`, wie hier bis zum
+  2026-08-30 stand; dort nennt nur der Modulkommentar den Satz.
 * **`IsCadlag.measurable`.** Approximation durch rechtsstetige Treppenfunktionen
   längs einer abzählbaren dichten Menge: **Linearität** (damit Treppen
   definierbar sind) und eine **abzählbare dichte Teilmenge**. Das ist genau
@@ -233,6 +235,19 @@ Was jeder der vier Punkte über (1) hinaus braucht, einzeln:
 
 **Fazit für (2): \eqref{T2b} genügt der ganzen Sprungtheorie.** Die Metrik auf
 dem Index kommt nirgends vor. Auch `largeLeftJumpSet` misst mit `dist` auf $E$.
+
+**Nachtrag vom 2026-08-30: \eqref{T3p} folgt daraus nicht, und \eqref{T2b} auch
+nicht aus \eqref{T3p}.** Die beiden Bündel sind unvergleichbar.
+$h\Z$ erfüllt \eqref{T3p} — abgeschlossen in $\R$, additiv längs der Ordnung,
+kompakte Kugeln — und verletzt die Rechtsapproximierbarkeit von \eqref{T2b},
+denn $(t, t+h) = \emptyset$. Für die Sprungtheorie ist das folgenlos, aber nur,
+weil auf einem diskreten Index `𝓝[<] x` und `𝓝[>] x` beide `⊥` sind: dann ist
+jede Funktion càdlàg, `Function.leftLim f x = f x` nach der Definition in
+`Mathlib/Topology/Order/LeftRightLim.lean` (`leftLim` setzt `f a`, wenn
+`𝓝[<] a = ⊥`; am Quelltext geprüft), `leftJumpSet f = ∅`, und alle vier
+Aussagen sind trivial. Wer \eqref{T2b} als Hypothese der Sprungtheorie
+einträgt, muss den diskreten Fall deshalb als eigene Instanz führen und nicht
+als Spezialfall. `SkorokhodSpace` Meilenstein 2 sagt das seit dem 2026-08-30.
 
 ### (3) Der Raum $D(\T,E)$ mit $J_1$: \eqref{T3p}, und es geht nicht weniger
 

@@ -142,13 +142,22 @@ setzt, nennt den Beleg.
   deklariert, sind echt schwächer — am Quelltext geprüft, siehe
   `Facts/PRAEORDNUNG.md`, Teil 2. Das ist eine Frage an das Manuskript; die
   Aussage selbst ist davon nicht betroffen.
-* **`SkorokhodSpace` Meilenstein 2 sagt weniger, als vier seiner Punkte
-  brauchen.** Der Kopf setzt `[Preorder ι] [TopologicalSpace ι]` — richtig für
-  das Prädikat —, aber die Abzählbarkeit von `leftJumpSet`, die Diskretheit von
-  `largeLeftJumpSet`, `IsCadlag.measurable` und die Bestimmtheit durch eine
-  dichte Menge brauchen \eqref{T2b}, und die Punkte sagen es nur indirekt
-  („by the exhaustion"). Die Aufschlüsselung steht in `Facts/PRAEORDNUNG.md`,
-  Teil 2; ob der Meilenstein zerlegt wird, entscheidet der Nutzer.
+* **`SkorokhodSpace` Meilenstein 2 sagte weniger, als vier seiner Punkte
+  brauchen; am 2026-08-30, fünfter Lauf, korrigiert.** Der Kopf setzte
+  `[Preorder ι] [TopologicalSpace ι]` — richtig für das Prädikat —, aber der
+  Schlusssatz von Meilenstein 1 („Throughout the rest of this roadmap") lud
+  zugleich das volle \eqref{T3p} auf, und die Abzählbarkeit von `leftJumpSet`,
+  die Diskretheit von `largeLeftJumpSet`, `IsCadlag.measurable` und die
+  Bestimmtheit durch eine dichte Menge sagten ihre eigene Hypothese nur
+  indirekt („by the exhaustion"). Der Meilenstein führt jetzt zwei benannte
+  Stufen, **(A)** `[Preorder ι] [TopologicalSpace ι]` für das Prädikat und
+  **(B)** \eqref{T2b} für die Sprungtheorie, und jeder Punkt steht unter einer
+  von beiden; zwei Punkte nennen zusätzlich die σ-Kompaktheit, die sie wirklich
+  brauchen. Der Schlusssatz von Meilenstein 1 gilt jetzt erst ab Meilenstein 3.
+  Die Aufschlüsselung, aus der das stammt, steht in `Facts/PRAEORDNUNG.md`,
+  Teil 2. Was nicht geschehen ist und dem Nutzer gehört: den Meilenstein in
+  **zwei** Meilensteine zu zerlegen. Die Hypothesen sind jetzt richtig; die
+  Gliederung ist unverändert.
 * **Die Roadmaps kennen `E` nur polnisch.** `SkorokhodSpace` fixiert in
   Meilenstein 1 „`E` a Polish space", während `fact:fddconv`, `fact:cmt` und
   `fact:PSpolish` im Manuskript für separable metrische `E` gelten und
@@ -156,20 +165,35 @@ setzt, nennt den Beleg.
   nicht polnisch ist. Zu klären, ob die Roadmaps auf separabel-metrisch
   umgestellt werden oder das Manuskript die Einschränkung notiert.
 
-* **§4.3 von \EK{} ist nur zu einem Drittel ausgeschöpft.** Zitiert werden
-  4.3.1, 4.3.5 und 4.3.6; die Sektion enthält danach noch Thm. 4.3.8,
-  Prop. 4.3.9, Prop. 4.3.10, Thm. 4.3.12 und Cor. 4.3.13. Besonders
-  **Thm. 4.3.12** ist der natürliche Begleiter von `thm:cadlag`: unter genau
-  dessen Voraussetzungen ist jede Lösung **quasi-linksstetig**, also
-  $P\{\lim_n X(\tau_n)=X(\tau),\ \tau<\infty\}=P\{\tau<\infty\}$ für
-  aufsteigende Stoppzeiten, insbesondere $P\{X(t)=X(t-)\}=1$ für jedes $t>0$.
-  Der Beweis ist optional sampling plus die Separiertheit von $\dom(A)$. Das ist
-  eine Pfadeigenschaft, **in Termen des Martingalproblems** bewiesen — und damit
-  das, was ein Stetigkeitssatz sein müsste und nicht ist: quasi-linksstetig heißt
-  keine Sprünge zu vorhersehbaren Zeiten, der Poissonprozess erfüllt es. Echte
-  Stetigkeit verlangt eine Bedingung an $A$ (kein Sprunganteil, für $\R^d$ die
-  Lokalität nach Courrège) und steht bei \EK{} nicht in §4.3. Ob Thm. 4.3.12 in
-  der abstrakten Sprache von `thm:absreg` formuliert werden soll, ist offen.
+* **§4.3 von \EK{} ist ausgewertet, seit dem 2026-08-30, fünfter Lauf.** Zitiert
+  werden 4.3.1, 4.3.5 und 4.3.6. Thm. 4.3.8, Prop. 4.3.9 und Prop. 4.3.10 stehen
+  seit dem vierten Lauf in `MartingaleProblems` M9; Thm. 4.3.12 steht seit dem
+  fünften dort, abstrakt und mit einer Hypothese mehr (siehe unten);
+  Cor. 4.3.13 trägt nichts und steht in keiner Roadmap. Was daran offen ist, ist
+  keine Suchaufgabe mehr, sondern die Frage ans Manuskript, ob es Thm. 4.3.12
+  hinter `thm:cadlag` aufnehmen will. Für den Gegenstand selbst gilt weiterhin:
+  quasi-linksstetig heißt keine Sprünge zu vorhersehbaren Zeiten, der
+  Poissonprozess erfüllt es; echte Stetigkeit verlangt eine Bedingung an $A$
+  (kein Sprunganteil, für $\R^d$ die Lokalität nach Courrège) und steht bei
+  \EK{} nicht in §4.3.
+* **`rem:absreggain`(ii) „Atome sind harmlos" ist richtig und endet genau an der
+  Quasi-Linksstetigkeit.** Der fünfte Lauf des 2026-08-30 hat
+  belegt, dass \EK{} Thm. 4.3.12 in der Allgemeinheit des Manuskripts — Uhr ein
+  beliebiges lokal endliches Maß — **falsch** ist: ein Atom der Uhr bei $u$ ist
+  ein fester Unstetigkeitszeitpunkt, und schon auf $E=\{0,1\}$ mit
+  $q=\delta_u$ löst ein Prozess, der bei $u$ eine faire Münze wirft, ein
+  Martingalproblem und ist nicht quasi-linksstetig. Die Existenz einer
+  c\`adl\`ag-Modifikation und die Quasi-Linksstetigkeit trennen sich also genau
+  an den Atomen. Das ist kein Fehler des Manuskripts — `rem:absreggain`(ii)
+  spricht nur über `thm:absreg` —, aber es ist der schärfste Satz, den man über
+  die Reichweite der Atomtoleranz sagen kann, und er stünde gut dort.
+* **`rem:ccverify` bleibt bei $D_{E^\Delta}$ stehen.** Die Bemerkung schließt
+  mit „the modification has paths in $D_{E^\Delta}[0,\infty)$"; das ist genau,
+  was \EK{} Cor. 4.3.7 hergibt (Buchseite 179, am Scan geprüft). Der Schritt
+  zurück nach $D_E$ ist \EK{} Thm. 4.3.8 mit Prop. 4.3.9/4.3.10, und der steht
+  seit dem 2026-08-30 in `MartingaleProblems` M9. Ob `rem:ccverify` ihn nennen
+  soll, gehört dem Nutzer; das Inventar hält nur fest, dass die Bemerkung heute
+  weniger schließt, als der Leser erwartet.
 
 ## Läufe
 
@@ -721,3 +745,147 @@ sichtbar, statt sie zu schätzen. Es ist außerdem kleiner als
 hat, und dieses baut darauf: die Auflösung von `Φ` aus `γ` beginnt mit der
 Additivität. Reihenfolge damit: `Clock.interval_union`, dann
 `duality_defect_eq_integral`, dann `atomGrid_symm`.
+
+### 2026-08-30, fünfter Lauf — Rückstau 1, 2 und 3
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging
+nach der stehenden Regel in den Rückstau, von oben. Punkt 1 (Thm. 4.3.12
+abstrakt), Punkt 2 (\EK{} §4.3 zu Ende auswerten) und Punkt 3
+(`SkorokhodSpace` Meilenstein 2) sind erledigt und in `BACKLOG.md` gestrichen.
+Geprüft wurde am Scan
+(`references/EthierKurtz1986.pdf`, Buchseiten 179–182, PDF-Seiten 189–192),
+gegen `~/Code/lean/journal/.lake/packages/mathlib` (v4.33.1) und gegen master
+über `gh api`/`gh search code`.
+
+**Ja, es geht ohne Operator — und es kostet eine Hypothese mehr, als der
+Rückstau vermutet hat.** \EK{} Thm. 4.3.12 ruht auf vier Schritten, und keiner
+nennt $A$: optional sampling für $Y^f$ an den beschränkten Stoppzeiten
+$\tau_n \wedge t \leq \tau \wedge t$; das Verschwinden von
+$E[C^f(\tau\wedge t) - C^f(\tau_n\wedge t) \mid \Filt_{\tau_n}]$; Lévys
+Aufwärtssatz an der Filtration $\Filt_{\tau_n} \uparrow \bigvee_n
+\Filt_{\tau_n}$; und `fact:sepcond` als Schluss. Das ist derselbe Schluss wie in
+Schritt 4 von `thm:absreg`, und die Separiertheit von $\Phi$ ist die **einzige**
+Hypothese, die beide Sätze teilen: eine abzählbare punktetrennende Teilmenge
+kommt hier nicht vor, `eq:cc` auch nicht. In der Sprache von `def:regclass`
+heißt der zweite Schritt: $C^f$ ist **in $L^1$ linksstetig entlang Stoppzeiten**.
+Das ist nicht \ref{it:R3} — \ref{it:R3} nähert von rechts und an
+deterministischen Zeiten — und es folgt auch nicht aus \ref{it:R2}.
+
+**Und die neue Hypothese ist nicht technisch, sie ist die Atomlosigkeit.** Für
+den Kompensator $C^f(t) = \int_{(0,t]} g(X(s))\,q(\dif s)$ mit beschränktem $g$
+ist $|C^f(\tau\wedge t) - C^f(\tau_n\wedge t)| \leq \lVert g\rVert\,
+q((\tau_n\wedge t, \tau\wedge t])$, und $\bigcap_n (\tau_n, \tau] = \{\tau\}$ bei
+$\tau_n \uparrow \tau$; die Schranke geht also gegen $\lVert g\rVert\,
+q(\{\tau\})$ und nicht gegen null, sobald die Uhr bei $\tau$ ein Atom hat. Das
+ist scharf: auf $E=\{0,1\}$ mit $q=\delta_u$ wirft ein Prozess bei $u$ eine faire
+Münze, löst ein Martingalproblem und hat $X(u-) \neq X(u)$ mit
+Wahrscheinlichkeit $1/2$. \EK{} bemerken das nicht, weil bei ihnen
+$q=$ Lebesgue ist. Damit steht fest, wo `rem:absreggain`(ii) endet, und das ist
+oben als Auffälligkeit eingetragen.
+
+**Was in der Roadmap jetzt steht.** `MartingaleProblems` Meilenstein 9 hat einen
+weiteren Block, hinter dem Teilraumblock: `IsQuasiLeftContinuous` als Prädikat
+(pro $t$ formuliert, weil genau das die Stoppzeiten beschränkt hält),
+`IsQuasiLeftContinuous.ae_eq_leftLim` als die Verschärfung von \EK{} Lemma 3.7.7
+— dort abzählbares Komplement, hier keines —,
+`isQuasiLeftContinuous_of_isRegularizingClass` als die abstrakte Fassung mit dem
+oben genannten Beweisweg, `isQuasiLeftContinuous_of_isMPSolutionFor` als die
+klassische Instanz unter `∀ u, q {u} = 0`, und
+`not_isQuasiLeftContinuous_of_atom` als benanntes Gegenbeispiel statt als
+Bemerkung. `Suggested.lean` hat die passenden Stümpfe.
+
+**Am Quelltext belegt, was der Beweis aus Mathlib zieht.** Lévys Aufwärtssatz ist
+`MeasureTheory.tendsto_ae_condExp` und `MeasureTheory.tendsto_eLpNorm_condExp`
+(`Mathlib/Probability/Martingale/Convergence.lean:426,439` in v4.33.1; auf
+master dieselben Zeilen, kein `deprecated`), formuliert für
+`ℱ : Filtration ℕ m0`, `[IsFiniteMeasure μ]` und reellwertiges `g` — der
+`𝕂`-Fall sind also die zwei Komponenten. Dass $n \mapsto \Filt_{\tau_n}$ eine
+`Filtration ℕ` ist, liefern
+`MeasureTheory.IsStoppingTime.measurableSpace_mono` und
+`MeasureTheory.IsStoppingTime.measurableSpace_le`
+(`Mathlib/Probability/Process/Stopping.lean:468,481`).
+Quasi-Linksstetigkeit selbst gibt es in Mathlib nicht: `gh search code` findet
+für `quasi-left` und für `QuasiLeftContinuous` je null Treffer.
+
+**Cor. 4.3.13 trägt nichts, und das ist geprüft, nicht vermutet.** Der Satz sagt
+für abgeschlossenes $F$, dass $\inf\{t : X(t)\in F \text{ oder } X(t-)\in F\}$
+fast sicher gleich $\inf\{t : X(t)\in F\}$ ist. Das Manuskript hat die
+Konstruktion mit „oder $X(t-)$" genau einmal, in `rem:uniquelocal` bei 5282, und
+dort ist die Menge $E\setminus K_m$ **offen**, nicht abgeschlossen; Cor. 4.3.13
+greift also nicht. Die Débutfrage, die das Manuskript wirklich hat, ist eine
+andere und schon beantwortet: `rem:strictdebut` bei 4578 trennt strikte von
+rechtsstetigen Débuts, und `lem:L1auto` löst sie über das laufende Supremum.
+Cor. 4.3.13 steht deshalb in keiner Roadmap.
+
+**Und was Thm. 4.3.8–4.3.10 für das Manuskript tragen, ist jetzt benannt.**
+`rem:ccverify` schließt mit Pfaden in $D_{E^\Delta}$ — genau die Aussage von
+\EK{} Cor. 4.3.7, am Scan geprüft (Buchseite 179). Der Schritt zurück nach $D_E$
+ist Thm. 4.3.8 mit Prop. 4.3.9/4.3.10, seit dem vierten Lauf in M9. Damit ist
+die zweite Rückstaufrage beantwortet: die drei Sätze tragen den Schritt, den
+`rem:ccverify` nicht tut. Auch das steht oben als Auffälligkeit.
+
+**Rückstau 3: die Hypothesen von `SkorokhodSpace` Meilenstein 2 stehen jetzt je
+Punkt da.** Der Rückstau verlangte einen Vorschlag; die stehende Regel der
+minimalen Voraussetzungen verlangt mehr, nämlich die Korrektur, denn der
+Meilenstein verlangte über den Schlusssatz von Meilenstein 1 das volle
+\eqref{T3p} für Aussagen, denen \eqref{T2b} genügt. Beides ist getan und
+getrennt gehalten: der Meilenstein führt jetzt zwei benannte Stufen (A) und (B),
+jeder Punkt steht unter einer von beiden, die zwei Punkte mit σ-Kompaktheit
+nennen sie, und der Schlusssatz von Meilenstein 1 gilt jetzt erst ab
+Meilenstein 3. Die **Gliederung** — ob daraus zwei Meilensteine werden — ist
+nicht angetastet; das ist die Entscheidung, die der Lauf vom 2026-08-30 dem
+Nutzer zugeschrieben hat, und sie bleibt dort. Nebenbei fällt damit auch
+Meilenstein 2 aus der Auffälligkeit „Die Roadmaps kennen `E` nur polnisch"
+heraus: polnisch braucht dort allein `IsCadlag.measurable`, alles andere kommt
+mit einem topologischen oder pseudometrischen `E` aus, und das steht jetzt da.
+Die Auffälligkeit selbst bleibt, denn sie betrifft Meilenstein 1 von
+`SkorokhodSpace` und `fact:fddconv`, `fact:cmt`, `fact:PSpolish`.
+
+**Dabei ein Befund, den `PRAEORDNUNG.md` Teil 2 noch nicht hatte:
+\eqref{T2b} und \eqref{T3p} sind unvergleichbar.** $h\Z$ trägt jede Instanz von
+`SkorokhodSpace` Meilenstein 1 und verletzt die Rechtsapproximierbarkeit von
+\eqref{T2b}, denn $(t,t+h)=\emptyset$. Die Sprungtheorie leidet nicht darunter,
+aber nur aus einem Grund, der benannt gehört: auf einem diskreten linearen Index
+sind `𝓝[<] x` und `𝓝[>] x` beide `⊥`, also ist jede Funktion càdlàg, und
+`Function.leftLim f x = f x` — die Definition in
+`Mathlib/Topology/Order/LeftRightLim.lean` setzt genau das, wenn `𝓝[<] a = ⊥`
+ist, am Quelltext geprüft. Damit ist `leftJumpSet f = ∅` und alle vier Aussagen
+sind trivial. Der Meilenstein sagt das jetzt, statt den diskreten Fall
+stillschweigend unter (B) zu subsumieren, wo er nicht liegt. In
+`PRAEORDNUNG.md` steht es als Nachtrag zu Teil 2.
+
+**Und ein falsches Dateizitat, nebenbei gefunden und korrigiert.**
+`PRAEORDNUNG.md` gab `Monotone.countable_not_continuousAt` als in
+`Mathlib/Topology/Order/LeftRightLim.lean` liegend an. Dort steht der Name nur
+im Modulkommentar; die Deklaration ist
+`Mathlib/Topology/Order/Monotone.lean:164` in v4.33.1 und `:166` auf master, in
+beiden Fällen ohne `deprecated`, und auf master findet `gh search code` den
+Namen in acht Dateien, von denen `LeftRightLim.lean` die einzige ohne
+Deklaration ist. Das ist genau der Fehlertyp, den Rückstaupunkt 4 turnusmäßig
+sucht; `PRAEORDNUNG.md` und der Meilenstein sagen es jetzt richtig.
+
+**Offen geblieben.** Nichts an diesen drei Rückstaupunkten. Nicht getan wurde,
+was der Rückstau ausdrücklich dem Manuskript zuschlägt: ob Thm. 4.3.12 hinter
+`thm:cadlag` aufgenommen wird und ob `rem:absreggain`(ii) die Grenze der
+Atomtoleranz nennt, entscheidet der Nutzer; ebenso, ob `SkorokhodSpace`
+Meilenstein 2 in zwei Meilensteine zerfällt. Neu im Rückstau steht als Punkt 5
+die Frage, welche weiteren Aussagen des Manuskripts still auf Atomlosigkeit
+rechnen.
+
+**Als Nächstes zu formalisieren: `IsQuasiLeftContinuous` samt
+`IsQuasiLeftContinuous.ae_eq_leftLim`** (`MartingaleProblems` Meilenstein 9).
+Nur das Prädikat und die deterministische Lesart, nicht der Satz. Es ruht auf
+`MeasureTheory.IsStoppingTime` (`Probability/Process/Stopping.lean`),
+`Function.leftLim` und der Ordnungstopologie — kein Maßwechsel, keine bedingte
+Erwartung, kein Martingal. Es ist jetzt dran, weil es die einzige Aussage dieses
+Laufs ist, die von der schweren Vorarbeit des Meilensteins **nicht** abhängt:
+`isQuasiLeftContinuous_of_isRegularizingClass` braucht optional sampling in
+stetiger Zeit und `IsSeparating.ae_eq_of_forall_condExp_eq`, also zwei Punkte,
+die selbst noch nicht existieren, während das Prädikat und `ae_eq_leftLim` reine
+Ordnungs- und Grenzwertarbeit sind. Zugleich ist es die Stelle, an der sich
+entscheidet, ob die Formulierung „pro `t`, unter `⨆ n, τ n ω ≤ t`" trägt oder ob
+sie durch `WithTop ι` ersetzt werden muss, wie es
+`MeasureTheory.IsLocalizingSequence` tut — und diese Frage ist billiger am
+Prädikat zu klären als am Satz. Gegenüber den älteren Vorschlägen bleibt
+`Clock.interval_union` der erste; `IsQuasiLeftContinuous` ist der erste Punkt
+aus Meilenstein 9, der ohne den Rest von Meilenstein 9 auskommt.
