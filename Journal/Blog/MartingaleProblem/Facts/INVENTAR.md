@@ -126,6 +126,21 @@ setzt, nennt den Beleg.
   nicht polnisch ist. Zu klären, ob die Roadmaps auf separabel-metrisch
   umgestellt werden oder das Manuskript die Einschränkung notiert.
 
+* **§4.3 von \EK{} ist nur zu einem Drittel ausgeschöpft.** Zitiert werden
+  4.3.1, 4.3.5 und 4.3.6; die Sektion enthält danach noch Thm. 4.3.8,
+  Prop. 4.3.9, Prop. 4.3.10, Thm. 4.3.12 und Cor. 4.3.13. Besonders
+  **Thm. 4.3.12** ist der natürliche Begleiter von `thm:cadlag`: unter genau
+  dessen Voraussetzungen ist jede Lösung **quasi-linksstetig**, also
+  $P\{\lim_n X(\tau_n)=X(\tau),\ \tau<\infty\}=P\{\tau<\infty\}$ für
+  aufsteigende Stoppzeiten, insbesondere $P\{X(t)=X(t-)\}=1$ für jedes $t>0$.
+  Der Beweis ist optional sampling plus die Separiertheit von $\dom(A)$. Das ist
+  eine Pfadeigenschaft, **in Termen des Martingalproblems** bewiesen — und damit
+  das, was ein Stetigkeitssatz sein müsste und nicht ist: quasi-linksstetig heißt
+  keine Sprünge zu vorhersehbaren Zeiten, der Poissonprozess erfüllt es. Echte
+  Stetigkeit verlangt eine Bedingung an $A$ (kein Sprunganteil, für $\R^d$ die
+  Lokalität nach Courrège) und steht bei \EK{} nicht in §4.3. Ob Thm. 4.3.12 in
+  der abstrakten Sprache von `thm:absreg` formuliert werden soll, ist offen.
+
 ## Läufe
 
 ### 2026-08-29 — `fact:Dcountable`, `fact:monotoneclass`, `fact:optsampl`, `fact:doob`, `fact:fddconv`, `fact:relcompact`, `fact:relcompact2`, `fact:fdd`
