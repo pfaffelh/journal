@@ -377,6 +377,22 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   `Φ t 0 = Φ 0 t` for `q`-almost every `t`, by the time change
   `Q t = q (Set.Iio t)` and its right inverse. State the time change as a lemma
   in its own right.
+* `duality_defect_eq_integral`: for a clock `q` on `ι` with a least element `0`
+  and `Φ, γ` as in `chain_identity` with `γ₁ = γ₂ = γ`,
+  `Φ s t = Φ 0 t + ∫ r in Iio s, γ r t ∂q` and `Φ s t = Φ s 0 + ∫ r in Iio t, γ s r ∂q`,
+  hence
+  ```
+  Φ t 0 - Φ 0 t = ∫ r in Iio t, (γ r 0 - γ 0 r) ∂q .
+  ```
+  Both are the increment representations at `s = 0`, where `Iio 0 = ∅`; no
+  chain, no atom, no comparability. It is worth its own name because it turns
+  every duality statement into a statement about the antisymmetric part
+  `κ r s = γ r s - γ s r` of `γ` alone: the two representations are compatible
+  exactly when
+  `∫_{Iio s} (γ r t - γ r 0) ∂q = ∫_{Iio t} (γ s r - γ 0 r) ∂q` for all `s, t`,
+  and that condition splits along `γ = (λ + κ) / 2` into one condition on the
+  symmetric `λ` and one on `κ`, of which only the latter meets the defect. On a
+  chain the `κ` condition forces `κ = 0`, which is `atomGrid_symm`.
 * `atomGrid_symm`: let `M : ℕ`, let `m : ℕ → ℝ` with `m i ≠ 0` for
   `1 ≤ i` and `i ≤ M - 1`, and let `Φ : ℕ → ℕ → ℝ` satisfy
   `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` for

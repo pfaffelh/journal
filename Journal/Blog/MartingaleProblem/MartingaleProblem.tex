@@ -5532,7 +5532,7 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   Haar (Lebesgue, counting) & proved, Proposition~\ref{prop:haar} \\
   atomless, \eqref{T3} & proved, Corollary~\ref{cor:atomless} (a time change) \\
   purely atomic, atoms a chain & proved, Proposition~\ref{prop:atomicdual} \\
-  purely atomic, atoms incomparable & verified symbolically; not proved \\
+  purely atomic, atoms incomparable & verified exhaustively up to five points; not proved \\
   order-dense atoms, or mixed & open \\
   \bottomrule
   \end{tabular}
@@ -5734,12 +5734,25 @@ last atom never enters.
   under \eqref{T2a} the hypothesis is automatic.  This is why duality is not
   confined to a linearly ordered index even though
   Corollary~\ref{cor:atomless} lives on \eqref{T3}.  Atoms that are
-  \emph{incomparable} are a different matter and are not covered; for the
-  smallest instance --- $\T = \{0,a,b,t^*\}$ with $a,b$ incomparable and an atom
-  at each --- the three relations along $[0,t^*)$, $[a,t^*)$ and $[b,t^*)$ force
-  $m_a \gamma(a,t) = m_b \gamma(b,t) = 0$ and the conclusion is immediate, and
-  the two-dimensional index $\{0,1,2\}^2$ has been verified symbolically, but no
-  argument covering a general preorder is offered here.  Nor can one run through
+  \emph{incomparable} are a different matter and are not covered.  The
+  conclusion appears to survive them: every partial order with a least element
+  on at most five points, with non-negative masses from a small grid, has
+  $\Phi(t,0) = \Phi(0,t)$ at every $t$, and so does the two-dimensional index
+  $\{0,1,2\}^2$.  But no argument covering a general preorder is offered here,
+  and one thing is certain about any such argument: it cannot rest on
+  Lemma~\ref{lem:atomgrid}, which asks only $m_i \neq 0$, because without
+  positivity the conclusion is false.  On the smallest instance
+  $\T = \{0,a,b,t^*\}$ with $a,b$ incomparable and an atom at each, replace the
+  clock by the \emph{signed} measure with $m_a = 1$ and $m_b = -1$ --- which
+  Lemma~\ref{lem:atomgrid} would still admit --- let
+  $\gamma(a,\cdot) \equiv 1$ and $\gamma$ vanish
+  elsewhere, and let $\Phi(t^*,\cdot) \equiv 0$ and $\Phi \equiv -1$ on the rest
+  of the square: both representations \eqref{eq:incrementrep} hold, and
+  $\Phi(t^*,0) - \Phi(0,t^*) = 1$.  What goes wrong is visible in the index
+  itself: $[0,t^*) = [a,t^*) = [b,t^*) = \{a,b\}$, so the three relations along
+  them say the same thing and pin no individual $\gamma(a,t)$ --- the interval
+  $[s,s')$ of a preorder is not a singleton even when $s'$ covers $s$, which is
+  exactly the step the grid of Lemma~\ref{lem:atomgrid} rests on.  Nor can one run through
   the symmetry of the first comment: on $\{0,1,2\}^2$ the conclusion
   $\Phi(t,0) = \Phi(0,t)$ holds at every $t$ while $\Phi(s,t) = \Phi(t,s)$ fails,
   at the incomparable pair $((1,2),(2,1))$ among others.  Symmetry is a

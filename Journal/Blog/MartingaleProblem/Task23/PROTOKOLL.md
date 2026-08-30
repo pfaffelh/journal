@@ -147,11 +147,13 @@ freie Zeile bereits voraus.
   automatisch, unter \eqref{T0} nicht. Das Manuskript behauptete bisher mehr
   („uses no order structure beyond a preorder", gestützt auf die symbolische
   Prüfung von $\{0,1,2\}^2$); die Statustabelle trennt jetzt beide Zeilen. Der
-  kleinste Fall geht von Hand: $\T=\{0,a,b,t^*\}$ mit $a,b$ unvergleichbar,
-  Atome bei beiden. Die drei Relationen längs $[0,t^*)$, $[a,t^*)$ und $[b,t^*)$
-  geben $\Phi(t^*,t)-\Phi(0,t)$ dreimal, einmal als $m_a\gamma(a,t)$, einmal als
-  $m_b\gamma(b,t)$ und einmal als deren Summe; also sind beide Null und die
-  Behauptung ist trivial. Ein allgemeines Argument fehlt.
+  kleinste Fall ist $\T=\{0,a,b,t^*\}$ mit $a,b$ unvergleichbar, Atome bei
+  beiden. **Der hier zuerst notierte Grund war falsch** — er lautete, die drei
+  Relationen längs $[0,t^*)$, $[a,t^*)$ und $[b,t^*)$ gäben
+  $\Phi(t^*,t)-\Phi(0,t)$ dreimal, einmal als $m_a\gamma(a,t)$, einmal als
+  $m_b\gamma(b,t)$ und einmal als deren Summe, also seien beide Null. Die drei
+  Intervalle sind aber alle drei $\{a,b\}$; siehe den Lauf vom 2026-08-30 unten.
+  Ein allgemeines Argument fehlt.
 
   **Und der Weg über die Symmetrie ist versperrt.** `poset.py` (neu) stellt für
   $\T=\{0,1,2\}^2$ mit der Produktordnung *alle* Relationen aus
@@ -186,3 +188,124 @@ freie Zeile bereits voraus.
   daraus folgt $R=I$ nicht — und $R=I$ *ist* die Behauptung. Der Ausweg ist
   gerade, $\Phi$ nicht aus der Zeile aufzubauen, sondern $(\ast)$ auf die
   antisymmetrische Differenz anzuwenden.
+
+## Der Halbordnungsfall, 2026-08-30 (dritter Lauf): eine Reduktion, ein Gegenbeispiel
+
+Angegangen wurde der erste offene Punkt oben, die unvergleichbaren Atome. Ein
+Beweis kam nicht heraus, wohl aber zweierlei, das jeder spätere Lauf braucht:
+eine Reduktion, die $\Phi$ ganz eliminiert, und ein Gegenbeispiel, das die im
+Manuskript genannte Begründung des kleinsten Falles widerlegt und zugleich
+festlegt, welche Hypothese der Fall wirklich braucht.
+
+**Die Reduktion.** $\T$ hat ein kleinstes Element, also ist $\T_{<0}$ leer, und
+\eqref{eq:incrementrep} mit $s=0$ bzw. $t=0$ *löst $\Phi$ auf*:
+
+$$\Phi(s,t)=\Phi(0,t)+\sum_{a<s}m_a\gamma(a,t),\qquad
+  \Phi(s,t)=\Phi(s,0)+\sum_{b<t}m_b\gamma(s,b).$$
+
+Beides zusammen ist mit \eqref{eq:incrementrep} gleichwertig — für $s\le s'$ ist
+$\T_{<s}\subseteq\T_{<s'}$, und die Differenz der beiden Formeln ist genau die
+Relation über $[s,s')$. Übrig bleibt eine Bedingung an $\gamma$ allein:
+
+$$\sum_{a<s}m_a\bigl(\gamma(a,t)-\gamma(a,0)\bigr)
+  =\sum_{b<t}m_b\bigl(\gamma(s,b)-\gamma(0,b)\bigr)\quad\text{für alle }s,t,
+  \qquad(\ast\ast)$$
+
+und der zu zeigende Defekt ist
+$\Phi(t,0)-\Phi(0,t)=\sum_{a<t}m_a(\gamma(a,0)-\gamma(0,a))=:\delta(t)$.
+
+**Und $(\ast\ast)$ zerfällt.** Schreibt man $\gamma=(\lambda+\kappa)/2$ mit
+$\lambda$ symmetrisch und $\kappa$ antisymmetrisch, so ist $(\ast\ast)$
+äquivalent zum Paar
+
+$$\Psi(s,t)+\Psi(t,s)=\Psi(s,s)+\Psi(t,t),\qquad \Psi(s,t):=\sum_{a<s}m_a\kappa(a,t),
+  \qquad(\diamondsuit)$$
+
+und „$\Lambda(s,t)-\Lambda(s,0)$ symmetrisch in $(s,t)$" für
+$\Lambda(s,t):=\sum_{a<s}m_a\lambda(a,t)$. Die beiden Hälften sind entkoppelt,
+und der Defekt ist $\delta(t)=\Psi(t,0)$, hängt also **nur an $\kappa$**: der
+symmetrische Anteil von $\gamma$ kommt in der Dualität überhaupt nicht vor. Auf
+einer Kette erzwingt $(\diamondsuit)$ sofort $\kappa\equiv0$: mit $t=s+1$ geben
+$\Psi(s{+}1,s)=\Psi(s,s)$ und $\Psi(s{+}1,s{+}1)=\Psi(s,s{+}1)+m_s\kappa(s,s{+}1)$
+zusammen $\kappa(s,s{+}1)=0$, und dieselbe Rechnung an $t=s+d+1$ trägt die
+Induktion über den Abstand. Das ist `lem:atomgrid` noch einmal, ohne $\Phi$.
+
+**Das Gegenbeispiel** (`diamond.py`; exakte Arithmetik, und die Relationen am
+Ende Zeile für Zeile unabhängig von der linearen Algebra nachgerechnet, die den
+Zeugen geliefert hat). Diamant $\T=\{0,a,b,t^*\}$ mit $a,b$ unvergleichbar,
+$m_a=1$, $m_b=-1$, $m_0=0$:
+
+$$\gamma(a,\cdot)\equiv1,\ \gamma \text{ sonst } 0;\qquad
+  \Phi(t^*,\cdot)\equiv0,\ \Phi \text{ sonst }\equiv-1$$
+
+erfüllt beide Darstellungen aus \eqref{eq:incrementrep} und hat
+$\Phi(t^*,0)-\Phi(0,t^*)=1$. Also: **im Halbordnungsfall genügt $m_i\neq0$
+nicht.** `lem:atomgrid` kommt mit $m_i\neq0$ aus, der Fall unvergleichbarer
+Atome nicht — das ist der scharfe Unterschied zwischen beiden.
+
+**Was am Manuskript dadurch falsch war, und jetzt korrigiert ist.**
+`rem:atomicdual` behauptete zum kleinsten Fall, „the three relations along
+$[0,t^*)$, $[a,t^*)$ and $[b,t^*)$ force $m_a\gamma(a,t)=m_b\gamma(b,t)=0$".
+Das trifft nicht zu, und zwar aus einem Grund, der den ganzen Fall erklärt: auf
+dem Diamanten ist $[0,t^*)=[a,t^*)=[b,t^*)=\{a,b\}$, die drei Relationen sagen
+also dasselbe und binden kein einzelnes $\gamma(a,t)$. Bei $m_a=1$, $m_b=2$ gibt
+es Lösungen mit $\gamma(a,0)=-2\neq0$ (`diamond.py`, Teil 1) — die Dualität gilt
+dort trotzdem, aber aus einem anderen Grund. Das Argument benutzte nirgends die
+Positivität und hätte deshalb auch das Gegenbeispiel decken müssen. Im
+Manuskript ersetzt.
+
+Der strukturelle Grund: **das Intervall $[s,s')$ einer Halbordnung ist auch dann
+keine Einpunktmenge, wenn $s'$ das Element $s$ überdeckt.** Auf $\{0,1,2\}^2$
+ist $[(1,0),(1,1))=\{(1,0),(0,1)\}$. Genau darauf ruht das Gitter von
+`lem:atomgrid`, und genau das fällt weg.
+
+**Die Hypothese, die es stattdessen braucht** (`sharp.py`). Über alle
+Halbordnungen mit kleinstem Element auf vier und fünf Punkten und alle
+Massenvektoren aus einem kleinen Gitter mit beiden Vorzeichen — $1216+17739$
+Konfigurationen, $48+576$ Ausfälle — gilt ausnahmslos: **fällt die Dualität, so
+gibt es ein $s$ mit $q(\T_{<s})=0$ bei nichtleerem $\T_{<s}$.** Kein einziger
+Ausfall bei durchweg nicht verschwindenden Abwärtsmassen. Die Umkehrung gilt
+nicht; das Verschwinden ist notwendig und nicht hinreichend. Für eine *echte*
+Uhr ist die Bedingung automatisch: $q$ ist ein Maß, $q(\T_{<s})=0$ heißt, unter
+$s$ liegt kein Atom, und dann ist der Defekt ohnehin $0$. Entsprechend fand
+`posetsearch.py --clocks` über dieselben Halbordnungen mit **nichtnegativen**
+Massen — auch am kleinsten Punkt, also alle Massenvektoren aus dem Gitter:
+$4864+53217$ Konfigurationen — **keinen einzigen Ausfall**, und auf Ketten
+fällt die Dualität auch bei gemischten Vorzeichen nie, wie `lem:atomgrid` es
+sagt.
+
+**Vermutung, damit belegt und nicht geraten.** Für jede Uhr auf einer
+Halbordnung mit kleinstem Element, deren Atome unter $t^*$ endlich viele sind,
+gilt $\Phi(t^*,0)=\Phi(0,t^*)$; die Vergleichbarkeit ist entbehrlich, die
+Positivität der Massen nicht.
+
+**Wo der Beweis hakt.** Unter $(\diamondsuit)$ allein ist $\delta(t)$ durch
+*gewichtete* Summen der Gleichungen an Paaren unterhalb $t$ nicht bestimmt:
+multipliziert man $(\diamondsuit)$ an $(a,t)$ mit $m_a$ und summiert über
+$a<t$, so kommt mit der Antisymmetrie von $\kappa$ nur die Tautologie
+$\Theta(t,t)=\mu(t)\delta(t)$ heraus, $\mu(t)=q(\T_{<t})$. Der Gehalt sitzt in
+den **einzelnen** Gleichungen. Am Diamanten liefern die beiden an $(a,t^*)$ und
+$(b,t^*)$ getrennt $m_b\kappa(b,a)=\delta(t^*)$ und
+$-m_a\kappa(b,a)=\delta(t^*)$, deren Differenz $(m_a+m_b)\kappa(b,a)=0$ ist —
+dort steht die Positivität, und dort steht auch das $q(\T_{<t^*})$ des
+Suchbefunds. Ein allgemeines Argument müsste diese Rechnung über die maximalen
+Elemente von $\T_{<t^*}$ führen, deren Antikette die Rolle von $\{a,b\}$ spielt.
+
+**Die Skripte.** `poset2.py` prüft die Reduktion, indem es jede Konfiguration
+auf zwei Wegen rechnet — volles System in $(\Phi,\gamma)$ und reduziertes System
+$(\ast\ast)$ in $\gamma$ — und die Antworten vergleicht; sie stimmen überall
+überein. `posetsearch.py` zählt alle Halbordnungen mit kleinstem Element auf bis
+zu fünf Punkten auf und entscheidet die Dualität durch einen Rangvergleich
+(liegt das Funktional $\delta(t)$ im Zeilenraum?), exakt in Brüchen und ohne
+Kernbasis. `sharp.py` setzt darauf die Suche nach der scharfen Bedingung auf,
+`diamond.py` hält den Zeugen fest.
+
+## Sackgassen, zweiter Nachtrag
+
+* **Den Halbordnungsfall über eine Induktion „von unten" führen**, also
+  $\delta(a)=0$ für alle $a<t$ voraussetzen und $\delta(t)$ folgern, geht mit
+  gewichteten Summen nicht: unter dieser Hypothese wird jede Linearkombination
+  von $(\diamondsuit)$ über $a<t$ zur Identität $0=0$. Wer es versucht, muss die
+  Gleichungen einzeln halten.
+* **Positivität für entbehrlich halten**, weil `lem:atomgrid` sie nicht braucht.
+  Widerlegt durch das Gegenbeispiel oben.

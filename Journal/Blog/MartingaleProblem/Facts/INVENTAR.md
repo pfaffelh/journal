@@ -109,6 +109,16 @@ setzt, nennt den Beleg.
   (bzw. auf einen zu einer Teilmenge von `ℕ` ordnungsisomorphen Index)
   festgelegt, und Doobs `Lᵖ`-Ungleichung fehlt für jeden Index. Am 2026-08-29
   richtiggestellt und als Meilenstein 9 nachgetragen.
+* **Eine falsche Begründung in `rem:atomicdual`, am 2026-08-30 korrigiert.** Zum
+  kleinsten Index mit unvergleichbaren Atomen, `T = {0,a,b,t*}`, stand dort, die
+  drei Relationen längs `[0,t*)`, `[a,t*)` und `[b,t*)` erzwängen
+  `m_a γ(a,t) = m_b γ(b,t) = 0`. Sie erzwingen es nicht: alle drei Intervalle
+  sind `{a,b}`, die drei Relationen sagen dasselbe. Das Argument benutzte
+  nirgends die Positivität der Massen und hätte deshalb auch ein Gegenbeispiel
+  mit `m_a + m_b = 0` decken müssen, das es gibt (`Task23/diamond.py`). Die
+  Aussage selbst bleibt richtig; die Begründung ist im Manuskript ersetzt. Das
+  ist die einzige Änderung dieses Laufs am Manuskript, und sie folgt der Regel
+  von Task 23: erst wenn etwas vollständig und verifiziert ist.
 * **Die Roadmaps kennen `E` nur polnisch.** `SkorokhodSpace` fixiert in
   Meilenstein 1 „`E` a Polish space", während `fact:fddconv`, `fact:cmt` und
   `fact:PSpolish` im Manuskript für separable metrische `E` gelten und
@@ -435,3 +445,67 @@ vier Roadmaps sonst etwas beisteuern müsste. Ein Satz ohne Vorbedingungen, dess
 Beweis schon geschrieben ist, ist der billigste erste Schritt, den dieses Projekt
 gerade hat — und der einzige, bei dem die Formalisierung den Papierbeweis
 tatsächlich prüfen kann, statt ihn nur nachzuzeichnen.
+
+### 2026-08-30, dritter Lauf — Task 23, der Halbordnungsfall
+
+Die Tabelle hat weiterhin kein `?`; der Lauf ging nach der stehenden Regel an
+Task 23, und zwar an dessen ersten offenen Punkt, die **unvergleichbaren
+Atome**. Ein Beweis kam nicht heraus. Zwei Dinge kamen heraus, die es wert sind,
+und das Ausführliche steht in `Task23/PROTOKOLL.md`.
+
+**Eine Reduktion, die `Φ` eliminiert.** Weil `T` ein kleinstes Element hat, ist
+`T_{<0}` leer, und \eqref{eq:incrementrep} an `s = 0` bzw. `t = 0` löst `Φ` auf:
+`Φ(s,t) = Φ(0,t) + Σ_{a<s} m_a γ(a,t)` und ebenso in der zweiten Variablen.
+Beides zusammen ist mit \eqref{eq:incrementrep} gleichwertig, und übrig bleibt
+eine Bedingung an `γ` allein. Diese zerfällt entlang `γ = (λ+κ)/2` in eine
+Bedingung an den symmetrischen und eine an den antisymmetrischen Anteil, und der
+Dualitätsdefekt `Φ(t,0) − Φ(0,t) = Σ_{a<t} m_a (γ(a,0) − γ(0,a))` hängt **nur an
+`κ`**. Der symmetrische Anteil von `γ` kommt in der Dualität nicht vor. Auf einer
+Kette erzwingt die `κ`-Bedingung sofort `κ ≡ 0` — das ist `lem:atomgrid` ohne
+`Φ`. Als `duality_defect_eq_integral` in `MartingaleProblems` Meilenstein 8
+eingetragen, vor `atomGrid_symm`, weil es unbedingt gilt und `duality_of_atomic`
+kürzer macht.
+
+**Ein Gegenbeispiel, das eine Begründung des Manuskripts widerlegt.** Auf dem
+Diamanten `T = {0,a,b,t*}` mit `m_a = 1`, `m_b = −1` erfüllen
+`γ(a,·) ≡ 1`, `γ` sonst `0`, und `Φ(t*,·) ≡ 0`, `Φ` sonst `≡ −1` beide
+Darstellungen aus \eqref{eq:incrementrep} und haben `Φ(t*,0) − Φ(0,t*) = 1`.
+Exakt gerechnet und die Relationen unabhängig nachgeprüft (`Task23/diamond.py`).
+Damit steht fest: **`lem:atomgrid` kommt mit `m_i ≠ 0` aus, der Halbordnungsfall
+nicht.** Die Positivität der Massen — also dass `q` ein Maß ist — ist dort
+tragend. Siehe die Auffälligkeit oben.
+
+**Und die Hypothese, die es stattdessen braucht, belegt statt geraten.** Über
+alle Halbordnungen mit kleinstem Element auf vier und fünf Punkten und alle
+Massenvektoren eines kleinen Gitters mit beiden Vorzeichen (18955
+Konfigurationen, 624 Ausfälle) gilt ausnahmslos: fällt die Dualität, so gibt es
+ein `s` mit `q(T_{<s}) = 0` bei nichtleerem `T_{<s}`. Für eine echte Uhr ist das
+automatisch, und über dieselben Halbordnungen mit nichtnegativen Massen (58081
+Konfigurationen) gab es keinen einzigen Ausfall. Die Vermutung lautet damit: für
+jede Uhr auf einer Halbordnung mit kleinstem Element und endlich vielen Atomen
+unter `t*` gilt `Φ(t*,0) = Φ(0,t*)`, ohne Vergleichbarkeit.
+
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean` (123 Seiten).
+
+**Offen geblieben.** Der Beweis des Halbordnungsfalls. Das Protokoll hält fest,
+wo er hakt: unter der `κ`-Bedingung allein ist der Defekt durch *gewichtete*
+Summen der Gleichungen unterhalb `t` nicht bestimmt — jede solche Kombination
+wird zur Identität —, der Gehalt sitzt in den einzelnen Gleichungen an den
+maximalen Elementen von `T_{<t}`. Unberührt: ordnungsdichte Atommengen, Stufe 3,
+und die ältere Entscheidung, ob die Roadmaps von polnischem auf
+separabel-metrisches `E` umgestellt werden.
+
+**Als Nächstes zu formalisieren: `duality_defect_eq_integral`**
+(`MartingaleProblems` Meilenstein 8). Es ruht auf nichts als
+`MeasureTheory.setIntegral` über `Set.Iio` und der Beobachtung `Iio 0 = ∅` für
+ein kleinstes Element — kein Gitter, keine Atome, keine Kette, keine
+Vergleichbarkeit, und es gilt für jede Uhr, atomar oder nicht. Es ist jetzt dran,
+weil es die einzige Aussage dieses Meilensteins ist, die *vor* der Fallunterteilung
+in atomlos und atomar steht und beide Zweige trägt: `duality_of_atomless` und
+`duality_of_atomic` beginnen beide damit, `Φ` aus `γ` aufzulösen, und beide
+Beweise werden dadurch kürzer statt nur anders. Es ist zugleich die Aussage, die
+den Beweisstand am schärfsten wiedergibt — sie sagt, dass Dualität eine Aussage
+über den antisymmetrischen Anteil von `γ` ist und über sonst nichts —, und sie
+ist noch kleiner als `atomGrid_symm`, das der Lauf vom 2026-08-30 vorgeschlagen
+hat. Reihenfolge also: `duality_defect_eq_integral`, dann `atomGrid_symm`, dann
+`duality_of_atomic`.
