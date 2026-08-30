@@ -95,6 +95,20 @@ soll** — als benanntes Ziel, nicht als Richtung: eine Aussage, worauf sie ruht
 warum sie jetzt dran ist. Ist der Vorschlag reif, trage ihn direkt in die
 betreffende Roadmap oder in `PLAN.md` ein, auf diesem Branch.
 
+## Es gibt immer Arbeit
+
+Ein Lauf endet **nie** mit „nichts zu tun". Die Reihenfolge:
+
+1. die vorrangigen Aufgaben oben, falls welche dastehen;
+2. Zeilen mit Status `?` im Inventar;
+3. `Journal/Blog/MartingaleProblem/Facts/BACKLOG.md`, von oben nach unten;
+4. Task 23, siehe unten.
+
+Kommst Du bei einem Punkt nicht weiter, gehst Du zum nächsten und schreibst in
+den Bericht, woran es lag. Ist der Rückstau leer, hänge selbst einen Punkt an —
+etwas, das Dir beim Lesen als reif aufgefallen ist, mit derselben Begründung,
+die auch ein Vorschlag am Ende eines Laufs tragen muss.
+
 ## Wenn das Inventar vollständig ist
 
 Sind alle 29 Zeilen belegt, wechselst Du zu **Task 23** — dem Beweis der
