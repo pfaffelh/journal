@@ -79,10 +79,15 @@ Skorokhod representation theorem; on
   This is needed for domains on which the operator is multivalued and costs
   nothing elsewhere.
 * Compensation carries a convention parameter `c : Clock.Conv` selecting the
-  optional interval `Set.Ioc 0 t` or the predictable interval `Set.Ico 0 t`. It
-  is a parameter of the definition, not a global choice; the same Markov chain
-  needs one convention on `ℕ` and the other after its grid is embedded in
-  `[0,∞)`.
+  optional or the predictable interval. It is a parameter of the definition, not
+  a global choice; the same Markov chain needs one convention on `ℕ` and the
+  other after its grid is embedded in `[0,∞)`.
+* **The compensating interval is a difference of down-sets, not `Set.Ico`.**
+  Mathlib's `Set.Ico`, `Set.Ioc`, `Set.Iio` and `Set.Iic` are defined for
+  `[Preorder α]` (`Mathlib/Order/Interval/Set/Defs.lean`), so the weaker order is
+  no obstacle to using them — but `Set.Ico s t` and `Set.Iio t \ Set.Iio s` are
+  **different sets** on a preorder, and it is the second that the clock needs.
+  See Milestone 1.
 
 ## Milestone 1: the clock
 
@@ -100,6 +105,20 @@ Lebesgue measure. Fix `[Preorder ι]`.
   the only property used downstream and holds for both conventions because
   `t ↦ Set.Iic t` and `t ↦ Set.Iio t` are monotone.
 * `Clock.measure_interval_ne_top`, and measurability of `interval q c s t`.
+* `Clock.Set_Ico_subset` and `Clock.Ico_eq_setIco`: `Set.Ico s t ⊆ Clock.Ico q s t`
+  for `[Preorder ι]`, with equality under `[LinearOrder ι]`. The inclusion is
+  always strict where an element below `t` is incomparable to `s`, since
+  `Set.Ico s t = {x | s ≤ x ∧ x < t}` demands comparability while
+  `Set.Iio t \ Set.Iio s = {x | x < t ∧ ¬(x < s)}` does not. On the diamond
+  `{0 < a, b < t}` with `a`, `b` incomparable, `Set.Ico a t = {a}` whereas
+  `Clock.Ico q a t = {a, b}`. State both lemmas so that no later proof silently
+  substitutes one for the other, and note in the docstring of `Clock.Ico` that
+  the name follows `Set.Ico` only up to this inclusion.
+* The reason the clock takes the difference of down-sets and not `Set.Ico`:
+  `Clock.interval_union` above needs `t ↦ Set.Iio t` monotone and nothing else,
+  whereas the corresponding statement for `Set.Ico` needs comparability. The
+  additivity is what every compensator argument downstream rests on, so it is
+  the property the definition is chosen to have.
 * `Clock.IsAtomless q`, defined as `q {u | t ≤ u ∧ u ≤ t} = 0` for every `t`,
   together with `Clock.interval_eq_of_isAtomless`: the two conventions give the
   same measure of every interval exactly when the clock is atomless.
