@@ -1,10 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260830T162301Z
-- **Zustand:** konflikt
-- **Notiz:** Merge von origin/master schlug fehl -- bitte von Hand aufloesen; dieser Slot wurde ausgelassen
+- **Letzter Lauf (UTC):** 20260830T173122Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** fisher
-- **Laeufe bisher:** 5
+- **Laeufe bisher:** 6
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
