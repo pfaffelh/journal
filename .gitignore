@@ -2,3 +2,11 @@
 /references
 logs/
 .facts.lock
+
+# LaTeX-Hilfsdateien (das PDF bleibt bewusst versioniert)
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
