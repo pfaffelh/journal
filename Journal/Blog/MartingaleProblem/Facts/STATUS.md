@@ -1,8 +1,8 @@
 # Formalisierungs-Inventar — Status
 
 - **Letzter Lauf (UTC):** 20260830T175949Z
-- **Zustand:** laeuft
-- **Notiz:** Lauf gestartet
+- **Zustand:** timeout
+- **Notiz:** nach 1 min abgebrochen -- Zwischenstand ist committet
 - **Host:** fisher
 - **Laeufe bisher:** 7
 
