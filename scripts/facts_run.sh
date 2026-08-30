@@ -62,10 +62,29 @@ git pull -q --rebase origin "$BRANCH" >/dev/null 2>&1
 # der auf einem halb aufgeloesten Baum arbeitet und ihn dann pusht.
 git fetch -q origin master >/dev/null 2>&1
 if ! git merge -q --no-edit origin/master >/dev/null 2>&1; then
-  git merge --abort >/dev/null 2>&1
-  status "konflikt" "Merge von origin/master schlug fehl -- bitte von Hand aufloesen; dieser Slot wurde ausgelassen"
-  publish "Facts $STAMP (Merge-Konflikt mit master, ausgelassen)"
-  exit 0
+  # Das mitversionierte PDF ist ein Bauartefakt und kollidiert bei jedem
+  # beidseitigen Uebersetzen.  Kollidieren NUR Artefakte, wird das aufgeloest
+  # und weitergemacht; kollidiert irgendetwas anderes, bleibt es beim
+  # Auslassen -- lieber ein verlorener Slot als ein halb aufgeloester Baum.
+  CONFLICTS="$(git diff --name-only --diff-filter=U)"
+  if [ -n "$CONFLICTS" ] && ! printf '%s\n' "$CONFLICTS" | grep -qv '\.pdf$'; then
+    printf '%s\n' "$CONFLICTS" | while IFS= read -r f; do
+      git checkout --theirs -- "$f" >/dev/null 2>&1 && git add -- "$f" >/dev/null 2>&1
+    done
+    if git commit -q --no-edit >/dev/null 2>&1; then
+      echo "$(date -u +%FT%TZ) PDF-Konflikt automatisch aufgeloest" >> "$RUNLOG"
+    else
+      git merge --abort >/dev/null 2>&1
+      status "konflikt" "Merge von origin/master schlug fehl -- bitte von Hand aufloesen; dieser Slot wurde ausgelassen"
+      publish "Facts $STAMP (Merge-Konflikt mit master, ausgelassen)"
+      exit 0
+    fi
+  else
+    git merge --abort >/dev/null 2>&1
+    status "konflikt" "Merge von origin/master schlug fehl -- bitte von Hand aufloesen; dieser Slot wurde ausgelassen"
+    publish "Facts $STAMP (Merge-Konflikt mit master, ausgelassen)"
+    exit 0
+  fi
 fi
 status "laeuft" "Lauf gestartet"
 publish "Facts STATUS: Lauf $STAMP gestartet"
