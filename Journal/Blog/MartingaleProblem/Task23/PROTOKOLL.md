@@ -855,3 +855,146 @@ verschwinden, und $D$ und $N$ kommutieren im Allgemeinen nicht.
   eine endliche Kette ein größtes Element hat. Was allgemein bleibt, ist nicht
   die Spiegelung, sondern die Beobachtung, dass $\iota$ nur das Intervall
   ändert — und damit die Diagonale von $V$.
+
+## Die o-Konvention, 2026-08-31 (achter Lauf): die Aussage ist falsch
+
+Der siebte Lauf ließ die o-Fassung des Halbordnungssatzes als „verified, not
+proved" stehen und nannte als Ansatz die Frage, ob $\mathcal L=\R^F$ auch für
+das reflexive $V$ gilt. Die Antwort ist **nein**, und mit ihr fällt die Aussage
+selbst: unter $\iota=\mathrm o$ ist der Satz auf einer Halbordnung **falsch**.
+Der kleinste Zeuge steht auf vier Punkten, hat nichtnegative Massen und ist von
+Hand nachzurechnen.
+
+### Der Zeuge
+
+$\T=\{0,a,b,c\}$ mit $0\prec a\prec c$, $0\prec b\prec c$ und $a,b$
+unvergleichbar — der Diamant. Massen $m_a=1$, $m_b=4$, $m_c=2$, also
+$(0,a]=\{a\}$, $(0,b]=\{b\}$, $(0,c]=\{a,b,c\}$. Setze
+
+$$\gamma(0,c)=-1,\quad \gamma(a,c)=-2,\quad \gamma(b,c)=1,$$
+
+$$\Phi(0,c)=-2,\quad \Phi(a,c)=-4,\quad \Phi(b,c)=2,$$
+
+und $\gamma=\Phi=0$ an jedem anderen Paar. Beide Zuwachsdarstellungen von
+`eq:incrementrep` gelten an jedem vergleichbaren Paar: in der ersten ist allein
+die Spalte $t=c$ nicht $0=0$, in der zweiten allein der Summand $u=c$, und die
+fünf Intervalle geben dann je eine Identität zwischen zwei ganzen Zahlen. Aber
+
+$$\Phi(c,0)-\Phi(0,c) = 0-(-2) = 2 \ne 0.$$
+
+Dieselbe Uhr trägt unter $\iota=\mathrm p$; die Konventionen unterscheiden sich
+also nicht in der Beweisbarkeit, sondern in der Wahrheit.
+
+### Warum, und wie dünn
+
+Der Spurteil bleibt, wie der siebte Lauf schon belegt hatte, konventionsfrei;
+was Schritt 3 braucht, ist unverändert $e_{t^*}\in\mathcal L$. Neu ist die
+richtige Fassung des Kriteriums: **$\mathcal L=\R^F$ genau dann, wenn
+$\mathbb 1$ maximale Ordnung hat**, und maximale Ordnung heißt allgemein
+$\mu_{\mathbb 1}=\mu_V$ — das Minimalpolynom des Vektors ist das der Matrix. Für
+nilpotentes $V$ ist $\mu_V=x^r$ und die Bedingung ist $V^{r-1}\mathbb 1\ne0$;
+das ist genau `lem:selfadjoint`. Für reflexives $V$ ist sie nicht mehr
+automatisch.
+
+Am Diamanten steht sie explizit da. Auf den drei Atomen $a,b,c$ ist
+
+$$V=\begin{pmatrix} m_a&0&0\\ 0&m_b&0\\ m_a&m_b&m_c\end{pmatrix},$$
+
+die Eigenwerte sind $m_a,m_b,m_c$, der Linkseigenvektor zu $m_c$ ist
+$w=(m_a/(m_c-m_a),\ m_b/(m_c-m_b),\ 1)$, und
+
+$$\langle w,\mathbb 1\rangle=0
+  \iff
+  \frac{m_a}{m_c-m_a}+\frac{m_b}{m_c-m_b}+1=0
+  \iff
+  m_c^2=m_am_b .$$
+
+Die Masse der Spitze ist das **geometrische Mittel** der beiden unvergleichbaren
+Massen. Das ist eine abgeschlossene algebraische Bedingung, und sie ist echt:
+auf jeder geprüften Halbordnung fallen zufällig gezogene Massen nicht. Der Satz
+ist unter $\iota=\mathrm o$ also außerhalb einer Nullmenge richtig und auf ihr
+falsch — nicht „fast bewiesen", sondern falsch.
+
+Der kleinste ganzzahlige Fall ist $(1,4,2)$; $(1,9,3)$, $(4,9,6)$, $(2,8,4)$,
+$(1,16,4)$ und $(1,1/4,1/2)$ tun es ebenso, und $m_a=m_b$ scheidet aus, weil
+dann $m_c=m_a$ ist und die Eigenwerte zusammenfallen.
+
+### Warum sieben Läufe es nicht gesehen haben
+
+`oconvention.sweep_o` lief erschöpfend, aber auf fünf Punkten nur über Massen
+aus $\{0,1\}$, und auf vier Punkten über $\{0,1,2\}$, wo $m_c^2=m_am_b$ mit
+$m_a\ne m_b$ nicht vorkommt — der kleinste Fall braucht die 4. `criterion_o`
+prüfte das Kriterium auf drei und vier Punkten, wo $\mathbb 1$ stets maximale
+Ordnung hat; der Satz „in jedem geprüften Fall ist $\mathcal L=\R^\T$" war
+richtig und trug nichts. Die Lehre ist nicht, dass zu wenig gerechnet wurde,
+sondern dass ein Gitter, das eine algebraische Bedingung gar nicht treffen kann,
+keine Evidenz gegen sie ist.
+
+### Nachgerechnet
+
+* `omaxorder.py` (neu) fragt nach der maximalen Ordnung von $\mathbb 1$ unter
+  $\iota=\mathrm o$: auf drei (81 Fälle) und vier Punkten (1539) hat jeder sie,
+  auf fünf (53217) haben 144 sie nicht. Es prüft zwei Dinge, die überall tragen:
+  **das Kriterium** („maximale Ordnung" gegen „$\mathcal L=\R^F$",
+  81+1539+53217 Fälle, keine Abweichung in beiden Richtungen) und **die
+  Reduktion** auf $F'=\{m>0\}$ — mit $Z=\{m=0\}\ni 0$ zerfällt $V$ in die Blöcke
+  $0,A,0,B$ mit $B=P'D'$ invertierbar, und $\mathbb 1$ hat maximale Ordnung für
+  $V$ genau dann, wenn $\mathbb 1_{F'}$ sie für $B$ hat (1539+53217 Fälle, keine
+  Abweichung). Diese Reduktion ist überdies bewiesen: aus $p(B)\mathbb 1_{F'}=0$
+  und $g \mid p$ folgt $q(B)=-p(0)B^{-1}$, und die $Z$-Komponente von
+  $p(V)\mathbb 1$ ist $p(0)$ mal
+  $\mathbb 1_Z-P_{ZF'}(P')^{-1}\mathbb 1_{F'}$, deren Eintrag bei $0$ den Wert
+  $1$ hat, weil kein Punkt von $F'$ unter $0$ liegt; also $p(0)=0$.
+* `oconvention.criterion_o` ist zum ersten Mal auf **fünf** Punkten gelaufen
+  (Massen aus $\{0,1,2\}$, 266085 Stellen): „in $\mathcal L$, aber nicht
+  erzwungen" und „erzwungen, aber nicht in $\mathcal L$" sind beide null. Der
+  siebte Lauf hatte das nur auf drei und vier Punkten, wo $\mathcal L$ ohnehin
+  alles ist; jetzt ist es dort geprüft, wo $\mathcal L$ echt kleiner wird. Damit
+  ist der Ausfall der o-Aussage nicht nur belegt, sondern **erklärt**:
+  $\mathcal L$ beschreibt die erzwungenen Stellen genau, und wo $\mathbb 1$ die
+  maximale Ordnung verliert, bleibt der Defekt frei.
+* `ocounter.py` (neu) stellt den Ausfall im **vollen** homogenen System in
+  $(\Phi,\gamma)$ fest, nicht nur im auf $\gamma$ reduzierten, und beide Wege
+  sind einig. Erschöpfend: drei Punkte, Massen aus $\{0,1,2\}$ — kein Ausfall;
+  vier Punkte, Massen aus $\{0,1,2,3\}$ (4864 Fälle) — kein Ausfall; fünf
+  Punkte, Massen aus $\{0,1,2\}$ (53217 Fälle) — 144 Ausfälle.
+* `odiamond.py` (neu) prüft die Vorhersage $m_c^2=m_am_b$ am Diamanten gegen
+  zwölf Massenvektoren, beide Systeme und beide Konventionen: sie trifft genau.
+* `certificate_o.py` (neu) schreibt $\Phi$ und $\gamma$ aus und rechnet beide
+  Zuwachsdarstellungen an jedem vergleichbaren Paar nach, für den Diamanten und
+  für den Zeugen auf fünf Punkten.
+* `oshape.py` (neu) misst, wie dünn der Ausfall ist: auf der Halbordnung des
+  Fünf-Punkte-Zeugen fällt kein einziger von 40 zufälligen Massenvektoren aus
+  $\{1,\dots,97\}$, aus $\{1,2,3,4\}^4$ genau sechs; über alle Halbordnungen mit
+  kleinstem Element auf vier und fünf Punkten mit zufälligen paarweise
+  verschiedenen Massen aus $\{1,\dots,200\}$ (114+657 Fälle) fällt keiner.
+
+### Was das für die Aufgabe heißt
+
+Rückstaupunkt 1 ist erledigt, aber nicht durch einen Beweis: die Zeile
+„verified, not proved" der Statustabelle wird zu **„falsch"**, und das
+Manuskript sagt das jetzt (`rem:atomicposet`, letzter Absatz, mit dem Zeugen und
+der Bedingung $m_c^2=m_am_b$). Die Hypothese $\iota=\mathrm p$ von
+`prop:atomicposet` ist damit keine Beweisbequemlichkeit mehr, sondern eine
+Eigenschaft der Aussage. `check.py` meldet `clean`, 126 Seiten, größte
+Überlänge 7.7pt wie im Ausgangszustand.
+
+Was als **richtige** Aussage übrig bleibt und formulierbar wäre: unter
+$\iota=\mathrm o$ verschwindet der Defekt, sobald $\mathbb 1$ maximale Ordnung
+für $V$ hat. Das ist keine Uhrenhypothese, sondern eine Bedingung an die Massen,
+und der Preis für die Allgemeinheit ist, dass man ihr nicht ansieht, welche
+Uhren sie trifft.
+
+### Sackgassen, siebter Nachtrag
+
+* **Ein Gitter für Evidenz halten.** $\{0,1\}$ auf fünf Punkten und $\{0,1,2\}$
+  auf vier können $m_c^2=m_am_b$ mit $m_a\ne m_b$ nicht treffen. Wer eine
+  Vermutung an einem Gitter prüft, prüfe zuerst, ob das Gitter die
+  Ausnahmebedingung überhaupt enthalten kann. Umgekehrt hätte ein Zufallsvektor
+  hier nichts gefunden — die Ausnahme ist eine Nullmenge. Gebraucht wurde beides:
+  ein Gitter, das sie enthält, und die Frage, wonach man sucht.
+* **Nach einem Ersatz für die Nilpotenz suchen.** Der siebte Lauf fragte, „was
+  an die Stelle der maximalen Ordnung tritt". Nichts tritt an ihre Stelle: die
+  maximale Ordnung ist die richtige Bedingung, in beiden Konventionen, und die
+  Nilpotenz war nur der Grund, aus dem sie unter $\iota=\mathrm p$ geschenkt
+  ist.

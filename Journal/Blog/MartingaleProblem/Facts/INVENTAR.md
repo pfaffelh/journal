@@ -284,6 +284,24 @@ setzt, nennt den Beleg.
   \ref{it:C3a}, und das sagt `ex:atomicdiscontinuity` mit Gegenbeispiel,
   `thm:absconvaug`/`prop:atomaug` reparieren es („any, atoms allowed"), und
   `rem:MZcost` nennt die Grenze der Reparatur.
+* **Die o-Konvention auf einer Halbordnung ist nicht offen, sondern falsch; am
+  2026-08-31, achtem Lauf, belegt und im Manuskript berichtigt.** Sieben Läufe
+  hielten sie für richtig und unbewiesen; die Statuszeile von
+  `rem:atomsnotchange` sagte „verified exhaustively up to five points; not
+  proved". Beides trifft nicht zu. Der kleinste Zeuge steht auf **vier** Punkten:
+  der Diamant $0\prec a,b\prec c$ mit $m_a=1$, $m_b=4$, $m_c=2$, alle Massen
+  nichtnegativ. Er ist ausgeschrieben, nicht nur als Rangvergleich festgestellt,
+  und die Zeile lautet jetzt „*false*; counterexample in `rem:atomicposet`". Die
+  Bedingung ist scharf und heißt $m_c^2=m_am_b$ — die Masse der Spitze ist das
+  geometrische Mittel der beiden unvergleichbaren Massen —, also eine
+  abgeschlossene algebraische und, auf allem Geprüften, echte Bedingung: die
+  o-Aussage gilt außerhalb einer Nullmenge und fällt auf ihr. Warum es sieben
+  Läufe überlebt hat, ist der eigentliche Befund: der erschöpfende Sweep lief auf
+  fünf Punkten über Massen aus $\{0,1\}$ und auf vier über $\{0,1,2\}$, und
+  keines der beiden Gitter kann $m_c^2=m_am_b$ mit $m_a\ne m_b$ treffen. Ein
+  Gitter, das eine algebraische Ausnahmebedingung nicht enthalten kann, ist keine
+  Evidenz gegen sie. Die Einzelheiten stehen im `Task23/PROTOKOLL.md`, Abschnitt
+  „Die o-Konvention, 2026-08-31 (achter Lauf)".
 * **Die Statuszeile „purely atomic, atoms incomparable" war falsch; am
   2026-08-31, siebtem Lauf, im Manuskript berichtigt.** Bewiesen ist seit dem
   sechsten Lauf der **ganze** Fall: auf jeder endlichen Halbordnung mit
@@ -302,10 +320,10 @@ setzt, nennt den Beleg.
   Spiegelung aufhängt, und auf einer Halbordnung nicht. Sichtbar wird es an der
   Matrix: unter $\iota=\mathrm o$ ist $(0,s]=\T_{\le s}\setminus\T_{\le0}$, also
   $V_{s,s}=m_s\ne0$, und $V$ ist **nicht nilpotent**. `prop:atomicposet` ist
-  deshalb für $\iota=\mathrm p$ formuliert; die o-Fassung ist an allen
-  Halbordnungen auf bis zu fünf Punkten nachgerechnet und nicht bewiesen und
-  steht als einzige „verified, not proved"-Zeile der Statustabelle und als
-  Rückstaupunkt 1. Der Fehler stand auch in `MartingaleProblems` bei
+  deshalb für $\iota=\mathrm p$ formuliert; die o-Fassung galt einen Lauf lang
+  als „verified, not proved" und ist seit dem achten Lauf **widerlegt** — siehe
+  den ersten Punkt dieser Liste. Der Fehler stand auch in `MartingaleProblems`
+  bei
   `duality_of_atomic` („in both conventions … the hypotheses are unchanged") und
   ist dort korrigiert.
 * **Drei Aussagen von §7 fehlen in der Bündeltabelle.** `thm:absconvws`,
@@ -1864,3 +1882,109 @@ von $\mathbb 1$); hier ist $V=N+D$ mit $N$ nilpotent und
 $D=\operatorname{diag}(m)$, die nicht kommutieren, und Zeile wie Spalte $0$
 verschwinden. Das ist jetzt dran, weil es die letzte „verified, not proved"-Zeile
 des Manuskripts schließt und weil es dieselbe Spuralgebra wiederverwendet.
+
+### 2026-08-31, achter Lauf — Rückstau 1: die o-Konvention ist widerlegt
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Der Lauf ging an
+den ersten Punkt des Rückstaus, die o-Konvention auf einer Halbordnung, die der
+siebte Lauf als „verified, not proved" hinterlassen hatte. Sie ist erledigt, und
+zwar in der Richtung, die sieben Läufe für ausgeschlossen hielten: **die Aussage
+ist falsch.** Geändert sind `MartingaleProblem.tex`,
+`TauCeti/MartingaleProblems/README.md`, `Task23/PROTOKOLL.md`,
+`Facts/BACKLOG.md` und dieses Inventar; neu sind `Task23/omaxorder.py`,
+`Task23/ocounter.py`, `Task23/odiamond.py`, `Task23/certificate_o.py` und
+`Task23/oshape.py`.
+
+**Der Zeuge, auf vier Punkten.** Der Diamant $\T=\{0,a,b,c\}$ mit
+$0\prec a\prec c$, $0\prec b\prec c$, $a$ und $b$ unvergleichbar, und den
+nichtnegativen Massen $m_a=1$, $m_b=4$, $m_c=2$. Setzt man $\gamma(0,c)=-1$,
+$\gamma(a,c)=-2$, $\gamma(b,c)=1$ und $\Phi(0,c)=-2$, $\Phi(a,c)=-4$,
+$\Phi(b,c)=2$ und alles Übrige null, so gelten **beide** Zuwachsdarstellungen an
+jedem vergleichbaren Paar in der Lesart $\iota=\mathrm o$, und
+$\Phi(c,0)-\Phi(0,c)=2$. Dieselbe Uhr trägt unter $\iota=\mathrm p$. Die beiden
+Konventionen unterscheiden sich also nicht darin, was man beweisen kann, sondern
+darin, was gilt.
+
+**Die Bedingung ist scharf.** Auf den drei Atomen ist $V$ die Dreiecksmatrix mit
+den Eigenwerten $m_a,m_b,m_c$; der Linkseigenvektor zu $m_c$ ist
+$(m_a/(m_c-m_a),\ m_b/(m_c-m_b),\ 1)$, und er steht senkrecht auf $\mathbb 1$
+genau dann, wenn $m_c^2=m_am_b$ — die Masse der Spitze ist das geometrische
+Mittel der beiden unvergleichbaren Massen. `odiamond.py` prüft die Vorhersage
+gegen zwölf Massenvektoren, in beiden Systemen und beiden Konventionen: sie
+trifft genau. Damit ist der Ausfall eine abgeschlossene algebraische Bedingung
+und, auf allem Geprüften, eine echte: über alle Halbordnungen mit kleinstem
+Element auf vier und fünf Punkten mit zufälligen paarweise verschiedenen Massen
+(114+657 Fälle) fällt keine. Die o-Aussage gilt außerhalb einer Nullmenge und
+fällt auf ihr.
+
+**Was daran der eigentliche Befund ist.** Nicht der Zeuge, sondern warum ihn
+sieben Läufe nicht gesehen haben. `oconvention.sweep_o` lief **erschöpfend** —
+über alle Halbordnungen mit kleinstem Element auf bis zu fünf Punkten —, aber
+auf fünf Punkten nur über Massen aus $\{0,1\}$ und auf vier über $\{0,1,2\}$, und
+keines dieser Gitter kann $m_c^2=m_am_b$ mit $m_a\ne m_b$ treffen: der kleinste
+Fall braucht die 4. Ein Gitter, das eine algebraische Ausnahmebedingung gar nicht
+enthalten kann, ist keine Evidenz gegen sie, und „erschöpfend geprüft" heißt
+nichts, solange nicht dasteht, worüber. Umgekehrt hätte ein Zufallsvektor hier
+ebenfalls nichts gefunden, weil die Ausnahme eine Nullmenge ist. Gebraucht wurde
+beides.
+
+**Was stehen bleibt und geprüft ist.** Zwei Aussagen tragen weiter, und beide
+sind heute erst richtig belegt. Erstens das Kriterium in seiner allgemeinen
+Gestalt: $\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\ TV=V^{\mathsf T}T\}$ ist
+ganz $\R^F$ genau dann, wenn $\mathbb 1$ **maximale Ordnung** hat, also
+$\mu_{\mathbb 1}=\mu_V$ — das Minimalpolynom des Vektors ist das der Matrix. Für
+nilpotentes $V$ ist das $V^{r-1}\mathbb 1\ne0$ und damit `lem:selfadjoint`; das
+Kriterium ist also nicht durch die Nilpotenz bedingt, sondern nur unter
+$\iota=\mathrm p$ geschenkt. Nachgerechnet über alle Halbordnungen auf bis zu
+fünf Punkten mit Massen aus $\{0,1,2\}$, in beiden Richtungen, 81+1539+53217
+Fälle, keine Abweichung. Dazu kommt, dass $\mathcal L$ die erzwungenen Stellen
+**genau** beschreibt — auch das jetzt auf fünf Punkten geprüft, 266085 Stellen,
+beide Abweichungsrichtungen null, wo der siebte Lauf nur drei und vier hatte und
+dort $\mathcal L$ ohnehin alles ist. Der Ausfall ist damit nicht nur belegt,
+sondern erklärt: wo $\mathbb 1$ die maximale Ordnung verliert, bleibt der Defekt
+frei. Zweitens die Reduktion auf den Teil positiver Massen:
+mit $Z=\{m=0\}$, das $0$ enthält, hat $\mathbb 1$ maximale Ordnung für $V$ genau
+dann, wenn $\mathbb 1_{F'}$ sie für den invertierbaren Block $B=P'D'$ auf
+$F'=\{m>0\}$ hat. Diese Richtung ist nicht nur geprüft (1539+53217 Fälle),
+sondern bewiesen; der Beweis steht im PROTOKOLL und benutzt allein, dass kein
+Punkt von $F'$ unter $0$ liegt.
+
+**Ins Manuskript eingetragen.** Die Statuszeile „the same for
+$\iota=\mathrm o$" lautet jetzt „*false*; counterexample in `rem:atomicposet`",
+und der letzte Absatz von `rem:atomicposet`, der bisher schloss „It is the one
+row of the table that is verified rather than proved", trägt jetzt den Zeugen,
+die Bedingung $m_c^2=m_am_b$ und den Satz, dass $\iota=\mathrm p$ in
+`prop:atomicposet` eine Eigenschaft der Aussage ist und nicht eine des
+Arguments. `check.py` meldet danach `clean`: 126 Seiten, keine undefinierten
+Referenzen, größte Überlänge 7.7pt wie im Ausgangszustand. In
+`MartingaleProblems` sagt die Zeile zu `duality_of_atomic` jetzt dasselbe und
+nennt den Diamanten; sie sagte bisher nur, das Werkzeug greife nicht.
+
+**Offen geblieben.** Von Task 23 dieselben zwei Punkte wie zuvor, ordnungsdichte
+Atommengen und die gemischte Uhr; sie sind jetzt Rückstaupunkt 1. Nicht
+geschehen und mit Absicht: kein Lean übersetzt (der Worktree hat kein `.lake`).
+Nicht angefasst: die Frage, ob man die richtige o-Aussage — der Defekt
+verschwindet, sobald $\mathbb 1$ maximale Ordnung hat — ins Manuskript aufnehmen
+will. Sie ist wahr und geprüft, aber ihre Hypothese ist keine Uhrenhypothese,
+sondern eine Bedingung an die Massen, der man nicht ansieht, welche Uhren sie
+trifft; das gehört dem Nutzer.
+
+**Als Nächstes zu formalisieren:
+`Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`** — für `A.IsSymm` und
+`Bᵀ = -B` ist `(A * B).trace = 0`. Der Vorschlag steht seit dem sechsten Lauf und
+wird durch diesen **zum zweiten Mal bestätigt, jetzt aus der anderen Richtung**:
+der Zeuge trifft nicht den Spurteil, sondern allein die Konstruktion von `T`. Was
+unter $\iota=\mathrm o$ ausfällt, ist die Hypothese von
+`Matrix.exists_isSymm_mulVec_one_eq_single`; die drei Zeilen Spuralgebra gelten
+in beiden Konventionen und sind heute mit einem Gegenbeispiel gegen den anderen
+Teil noch schärfer abgegrenzt als vorher mit einem Rangvergleich für ihn. Sie
+ruhen auf `Matrix.IsSymm` (`LinearAlgebra/Matrix/Symmetric.lean:35`),
+`Matrix.trace_transpose` (`Trace.lean:73`) und `Matrix.trace_mul_comm`
+(`Trace.lean:158`); ein Prädikat für `Bᵀ = -B` allein hat Mathlib nicht
+(`Matrix.IsSkewAdjoint`, `SesquilinearForm.lean:562`, ist relativ zu einer
+Form `J`), die Bedingung wird also ausgeschrieben.
+
+Neue Roadmap-Punkte trägt dieser Lauf **keine** ein, und das ist die richtige
+Folge eines negativen Ergebnisses: eine Roadmap führt zu beweisende Aussagen,
+und die o-Fassung ist keine mehr. Was sie stattdessen bekommen hat, ist die
+Korrektur einer Zeile, die mehr behauptete, als gilt.

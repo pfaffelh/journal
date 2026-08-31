@@ -5546,7 +5546,7 @@ open, and Remark~\ref{rem:atomsnotchange} explains where the arguments stop.
   atomless, \eqref{T3} & proved, Corollary~\ref{cor:atomless} (a time change) \\
   purely atomic, atoms a chain & proved, Proposition~\ref{prop:atomicdual} (either $\iota$) \\
   purely atomic, atoms arbitrary, $m \geq 0$ & proved, Proposition~\ref{prop:atomicposet} ($\iota = \mathrm{p}$) \\
-  the same for $\iota = \mathrm{o}$ & verified exhaustively up to five points; not proved \\
+  the same for $\iota = \mathrm{o}$ & \emph{false}; counterexample in Remark~\ref{rem:atomicposet} \\
   order-dense atoms, or mixed & open \\
   \bottomrule
   \end{tabular}
@@ -6016,11 +6016,40 @@ vector, and $M^{\mathsf T}$ is the transpose of $M$.
   nilpotent, and Lemma~\ref{lem:selfadjoint}
   does not apply.  On a chain this is repaired by reflecting the grid
   (Proposition~\ref{prop:atomicdual}), and a general partial order offers no
-  reflection.  The conclusion appears to survive nonetheless: every partial order
-  with a least element on at most five points, with non-negative masses from a
-  small grid, has $\Phi(t,0) = \Phi(0,t)$ at every $t$ in the $\iota = \mathrm{o}$
-  reading as well.  It is the one row of the table in
-  Remark~\ref{rem:atomsnotchange} that is verified rather than proved.
+  reflection.  Nor does the conclusion survive: for $\iota = \mathrm{o}$ the
+  proposition is \emph{false}.  Take the diamond $\T = \{0,a,b,c\}$ with
+  $0 \prec a \prec c$, $0 \prec b \prec c$ and $a,b$ incomparable, and the
+  non-negative masses $m_a = 1$, $m_b = 4$, $m_c = 2$, so that
+  $(0,a] = \{a\}$, $(0,b] = \{b\}$ and $(0,c] = \{a,b,c\}$.  Put
+  \[
+    \gamma(0,c) = -1, \quad \gamma(a,c) = -2, \quad \gamma(b,c) = 1,
+    \qquad
+    \Phi(0,c) = -2, \quad \Phi(a,c) = -4, \quad \Phi(b,c) = 2 ,
+  \]
+  and let $\gamma$ and $\Phi$ vanish at every other pair.  Both representations
+  \eqref{eq:incrementrep} hold at every comparable pair: in the first only the
+  column $t = c$ is not $0 = 0$, in the second only the summand $u = c$, and each
+  of the five intervals then gives an identity between two integers.  But
+  \[
+    \Phi(c,0) - \Phi(0,c) \;=\; 0 - (-2) \;=\; 2 \;\neq\; 0 .
+  \]
+
+  The criterion says exactly where this comes from, and how thin it is.  Steps 1
+  and 2 never use nilpotency, so what Step 3 needs is unchanged: $\one$ of
+  maximal order for $V$, now in the general sense that the minimal polynomial of
+  the vector $\one$ equals that of the matrix $V$, of which
+  $V^{r-1}\one \neq 0$ is the nilpotent case.  For the diamond, $V$ read on the
+  three atoms $a,b,c$ has the eigenvalues $m_a, m_b, m_c$, the left eigenvector
+  belonging to $m_c$ is
+  $\bigl(m_a/(m_c-m_a),\, m_b/(m_c-m_b),\, 1\bigr)$, and it is orthogonal to
+  $\one$ precisely when $m_c^2 = m_a m_b$ --- the mass at the top is the
+  geometric mean of the two incomparable masses.  Failure is therefore a closed
+  algebraic condition on the masses, and in every partial order with a least
+  element on at most five points it is a proper one: masses drawn at random do
+  not fail.  So the $\iota = \mathrm{o}$ statement is not almost true and
+  awaiting a proof; it is true off a null set of clocks and false on it, and the
+  hypothesis $\iota = \mathrm{p}$ in Proposition~\ref{prop:atomicposet} is a
+  property of the statement, not of the argument.
 \end{remark}
 
 \begin{remark}[Scope of Section~\ref{sec:duality}]

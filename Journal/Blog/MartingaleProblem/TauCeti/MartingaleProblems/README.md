@@ -542,13 +542,16 @@ order.
   representations of `duality_defect_eq_integral` on `Clock.atomPoset`, drop the
   symmetric part of `γ`, and apply `dualityDefect_eq_zero_of_nonneg`;
   `duality_defect_eq_integral` at `s = 0` turns `Ψ t t = 0` into
-  `Φ t 0 = Φ 0 t`. The convention enters through the interval and is not
-  symmetric here: with `Ioc 0 s` in place of `Iio s` the matrix is
+  `Φ t 0 = Φ 0 t`. The predictable convention is a hypothesis of the statement,
+  not a limitation of the proof: with `Ioc 0 s` in place of `Iio s` the matrix is
   `V s a = if a ≤ s ∧ a ≠ 0 then m a else 0`, whose diagonal does not vanish, so
-  `V` is not nilpotent and `Matrix.exists_isSymm_mulVec_one_eq_single` does not
-  apply. The optional convention on a chain is the predictable one for the
-  reflected chain, and `atomGrid_symm` covers it; a general partial order offers
-  no reflection. Along a chain the
+  `V` is not nilpotent, `Matrix.exists_isSymm_mulVec_one_eq_single` does not
+  apply, and the conclusion is false. The counterexample is the diamond
+  `0 < a, b < c` with `m a = 1`, `m b = 4`, `m c = 2`, where `𝟙` is orthogonal to
+  the left eigenvector of `V` for the eigenvalue `m c`; the condition is
+  `m c ^ 2 = m a * m b`. The optional convention on a chain is the predictable
+  one for the reflected chain, and `atomGrid_symm` covers it; a general partial
+  order offers no reflection and no substitute. Along a chain the
   conclusion sharpens, by `atomGrid_symm`, to `Φ (u i) (u j) = Φ (u j) (u i)` at
   every pair and hence to `γ` symmetric there — with masses of either sign, where
   `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain
