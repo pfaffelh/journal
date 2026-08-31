@@ -38,7 +38,7 @@ setzt, nennt den Beleg.
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung `induction_on_inter` |
-| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib (`FiniteMeasure.tendsto_map_of_tendsto_of_continuous`), die f.ü.-stetige Fassung fehlt |
+| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib (`FiniteMeasure.tendsto_map_of_tendsto_of_continuous`), die f.ü.-stetige Fassung fehlt; M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`), die konvergenzbestimmende fehlt |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
@@ -50,9 +50,9 @@ setzt, nennt den Beleg.
 | `fact:submgreg` | 2 | Submartingale regularization; EK, Proposition 2.2.9; e | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
-| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) polnisch ist, ungeprüft |
+| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität |
 | `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1 |
-| `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isTight_of_tendsto_finiteDimensional` (b); die Roadmap fixiert `E` polnisch, der Fact nur separabel |
+| `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` (b); beide stehen seit dem 2026-08-31 unter Stufe (A) „separabel metrisch", wie der Fact, und (b) unter Relativkompaktheit statt Straffheit, wie EK |
 | `fact:fullgenerator` | 1 | EK, Proposition 1.5.1 | Roadmap | MartingaleProblems M13 — dort neu angelegt; Mathlib hat keine Operatorhalbgruppen, `dissipative` kommt nicht vor, Hille--Yosida steht als `Q974405` ohne `decl` in `docs/1000.yaml` |
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
 | `fact:picard` | 1 | Picard--Lindel"of for SDEs | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
@@ -62,8 +62,8 @@ setzt, nennt den Beleg.
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
-| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval` |
-| `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean` |
+| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte trägt kein Beweis, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
+| `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
 | `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `MeasureTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib, der Martingalfall ist es nicht |
 
 ## Offene Auffälligkeiten
@@ -79,8 +79,19 @@ setzt, nennt den Beleg.
   drei zu prüfen. Für `fact:stoppedlocalmg` am 2026-08-30 geprüft: die
   Lokalisierung setzt in `def:localizing`\ref{it:L1} die Martingaleigenschaft
   der gestoppten Prozesse voraus, statt sie herzuleiten; getragen wird der Fact
-  erst bei der Verifikation eines konkreten lokalisierenden Systems. Offen
-  bleiben `fact:fdd` und `fact:portmanteau`.
+  erst bei der Verifikation eines konkreten lokalisierenden Systems.
+  **Am 2026-08-31 sind auch die letzten beiden geklärt**, und beide Antworten
+  sind zweigeteilt; die Einzelheiten stehen im Laufbericht.
+  `fact:fdd` zerfällt in die Produkthälfte \eqref{eq:prodsep} (EK 3.4.6/3.7.1)
+  und den Satz „die endlich-dimensionalen Verteilungen bestimmen das Gesetz".
+  Die zweite Hälfte ist mittelbar getragen, an den drei Stellen, die die
+  Tabelle in §2 unter `thm:fdd` führt (`thm:absuniq`, `cor:DEuniqueness`,
+  `ex:determining`); die erste trägt **kein** Beweis des Manuskripts, und
+  entbehrlich ist sie trotzdem nicht, weil §9 (Stelle 9048) sie ausdrücklich
+  verlangt („the separating half of `fact:fdd` only"). `fact:portmanteau` wird
+  von keinem Beweis benutzt; die einzige Stelle, an der es überhaupt arbeiten
+  kann, ist die Implikation (a)⇒(b) und nur, wenn man den Weg über die
+  Prohorov-Metrik nimmt.
 * **`fact:fullgenerator`** trägt §8 als „nur für optionalen Kontext". Am
   2026-08-30 entschieden: solange `rem:fullgenerator` im Manuskript steht,
   gehört er in die Roadmap, und er steht jetzt dort ohne das Wort „optional"
@@ -142,34 +153,159 @@ setzt, nennt den Beleg.
   deklariert, sind echt schwächer — am Quelltext geprüft, siehe
   `Facts/PRAEORDNUNG.md`, Teil 2. Das ist eine Frage an das Manuskript; die
   Aussage selbst ist davon nicht betroffen.
-* **`SkorokhodSpace` Meilenstein 2 sagt weniger, als vier seiner Punkte
-  brauchen.** Der Kopf setzt `[Preorder ι] [TopologicalSpace ι]` — richtig für
-  das Prädikat —, aber die Abzählbarkeit von `leftJumpSet`, die Diskretheit von
-  `largeLeftJumpSet`, `IsCadlag.measurable` und die Bestimmtheit durch eine
-  dichte Menge brauchen \eqref{T2b}, und die Punkte sagen es nur indirekt
-  („by the exhaustion"). Die Aufschlüsselung steht in `Facts/PRAEORDNUNG.md`,
-  Teil 2; ob der Meilenstein zerlegt wird, entscheidet der Nutzer.
-* **Die Roadmaps kennen `E` nur polnisch.** `SkorokhodSpace` fixiert in
-  Meilenstein 1 „`E` a Polish space", während `fact:fddconv`, `fact:cmt` und
-  `fact:PSpolish` im Manuskript für separable metrische `E` gelten und
-  `rem:MZcost` ausdrücklich festhält, dass der Pfadraum der Konvergenz nach Maß
-  nicht polnisch ist. Zu klären, ob die Roadmaps auf separabel-metrisch
-  umgestellt werden oder das Manuskript die Einschränkung notiert.
+* **`SkorokhodSpace` Meilenstein 2 sagte weniger, als vier seiner Punkte
+  brauchen; am 2026-08-30, fünfter Lauf, korrigiert.** Der Kopf setzte
+  `[Preorder ι] [TopologicalSpace ι]` — richtig für das Prädikat —, aber der
+  Schlusssatz von Meilenstein 1 („Throughout the rest of this roadmap") lud
+  zugleich das volle \eqref{T3p} auf, und die Abzählbarkeit von `leftJumpSet`,
+  die Diskretheit von `largeLeftJumpSet`, `IsCadlag.measurable` und die
+  Bestimmtheit durch eine dichte Menge sagten ihre eigene Hypothese nur
+  indirekt („by the exhaustion"). Der Meilenstein führt jetzt zwei benannte
+  Stufen, **(A)** `[Preorder ι] [TopologicalSpace ι]` für das Prädikat und
+  **(B)** \eqref{T2b} für die Sprungtheorie, und jeder Punkt steht unter einer
+  von beiden; zwei Punkte nennen zusätzlich die σ-Kompaktheit, die sie wirklich
+  brauchen. Der Schlusssatz von Meilenstein 1 gilt jetzt erst ab Meilenstein 3.
+  Die Aufschlüsselung, aus der das stammt, steht in `Facts/PRAEORDNUNG.md`,
+  Teil 2. Was nicht geschehen ist und dem Nutzer gehört: den Meilenstein in
+  **zwei** Meilensteine zu zerlegen. Die Hypothesen sind jetzt richtig; die
+  Gliederung ist unverändert.
+* **Die Roadmaps kennen `E` nur polnisch — am 2026-08-31 für die drei genannten
+  Facts geklärt und belegt.** `SkorokhodSpace` fixierte in Meilenstein 1 „`E` a
+  Polish space", während `fact:fddconv`, `fact:cmt` und `fact:PSpolish` im
+  Manuskript für separable metrische `E` gelten und `rem:MZcost` ausdrücklich
+  festhält, dass der Pfadraum der Konvergenz nach Maß nicht polnisch ist. Der
+  Beleg, den die stehende Regel verlangt — die Stelle nennen, an der die
+  Vollständigkeit im Beweis nicht mehr vorkommt —, liegt seit dem 2026-08-31
+  am Scan vor: \EK{} Thm. 3.1.8 (Skorokhod-Darstellung) beginnt mit „Let
+  $(S,d)$ be **separable**", Cor. 3.1.9 (stetige Abbildung) mit „Let $(S,d)$
+  and $(S',d')$ be **separable** metric spaces", und Thm. 3.7.8 mit „Let $E$ be
+  **separable**"; die Vollständigkeit steht erst bei Lemma 3.2.1 und Thm. 3.2.2,
+  also bei Prohorov, und dort in der Rückrichtung. Mathlib sagt dasselbe:
+  `isCompact_closure_of_isTightMeasureSet` führt `[T2Space E] [BorelSpace E]`,
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` führt
+  `[CompleteSpace 𝓧] [SecondCountableTopology 𝓧]` (`Measure/Prokhorov.lean:65`
+  bzw. `:570,630`, am Quelltext geprüft). `WeakConvergence` M2 und M3 standen
+  ohnehin schon auf „separabel metrisch"; `SkorokhodSpace` Meilenstein 8 führt
+  seit dem 2026-08-31 zwei Stufen (A) separabel metrisch und (B) polnisch, nach
+  dem Muster von Meilenstein 2, und nur die zwei Punkte, die Prohorov rückwärts
+  laufen lassen, stehen unter (B). Offen bleibt allein die **Gliederungsfrage**,
+  ob Meilenstein 1 von `SkorokhodSpace` seine globale Festlegung auf polnisch
+  aufgibt; sie gehört dem Nutzer, wie die Zerlegung von Meilenstein 2.
 
-* **§4.3 von \EK{} ist nur zu einem Drittel ausgeschöpft.** Zitiert werden
-  4.3.1, 4.3.5 und 4.3.6; die Sektion enthält danach noch Thm. 4.3.8,
-  Prop. 4.3.9, Prop. 4.3.10, Thm. 4.3.12 und Cor. 4.3.13. Besonders
-  **Thm. 4.3.12** ist der natürliche Begleiter von `thm:cadlag`: unter genau
-  dessen Voraussetzungen ist jede Lösung **quasi-linksstetig**, also
-  $P\{\lim_n X(\tau_n)=X(\tau),\ \tau<\infty\}=P\{\tau<\infty\}$ für
-  aufsteigende Stoppzeiten, insbesondere $P\{X(t)=X(t-)\}=1$ für jedes $t>0$.
-  Der Beweis ist optional sampling plus die Separiertheit von $\dom(A)$. Das ist
-  eine Pfadeigenschaft, **in Termen des Martingalproblems** bewiesen — und damit
-  das, was ein Stetigkeitssatz sein müsste und nicht ist: quasi-linksstetig heißt
-  keine Sprünge zu vorhersehbaren Zeiten, der Poissonprozess erfüllt es. Echte
-  Stetigkeit verlangt eine Bedingung an $A$ (kein Sprunganteil, für $\R^d$ die
-  Lokalität nach Courrège) und steht bei \EK{} nicht in §4.3. Ob Thm. 4.3.12 in
-  der abstrakten Sprache von `thm:absreg` formuliert werden soll, ist offen.
+* **§4.3 von \EK{} ist ausgewertet, seit dem 2026-08-30, fünfter Lauf.** Zitiert
+  werden 4.3.1, 4.3.5 und 4.3.6. Thm. 4.3.8, Prop. 4.3.9 und Prop. 4.3.10 stehen
+  seit dem vierten Lauf in `MartingaleProblems` M9; Thm. 4.3.12 steht seit dem
+  fünften dort, abstrakt und mit einer Hypothese mehr (siehe unten);
+  Cor. 4.3.13 trägt nichts und steht in keiner Roadmap. Was daran offen ist, ist
+  keine Suchaufgabe mehr, sondern die Frage ans Manuskript, ob es Thm. 4.3.12
+  hinter `thm:cadlag` aufnehmen will. Für den Gegenstand selbst gilt weiterhin:
+  quasi-linksstetig heißt keine Sprünge zu vorhersehbaren Zeiten, der
+  Poissonprozess erfüllt es; echte Stetigkeit verlangt eine Bedingung an $A$
+  (kein Sprunganteil, für $\R^d$ die Lokalität nach Courrège) und steht bei
+  \EK{} nicht in §4.3.
+* **`rem:absreggain`(ii) „Atome sind harmlos" ist richtig und endet genau an der
+  Quasi-Linksstetigkeit.** Der fünfte Lauf des 2026-08-30 hat
+  belegt, dass \EK{} Thm. 4.3.12 in der Allgemeinheit des Manuskripts — Uhr ein
+  beliebiges lokal endliches Maß — **falsch** ist: ein Atom der Uhr bei $u$ ist
+  ein fester Unstetigkeitszeitpunkt, und schon auf $E=\{0,1\}$ mit
+  $q=\delta_u$ löst ein Prozess, der bei $u$ eine faire Münze wirft, ein
+  Martingalproblem und ist nicht quasi-linksstetig. Die Existenz einer
+  c\`adl\`ag-Modifikation und die Quasi-Linksstetigkeit trennen sich also genau
+  an den Atomen. Das ist kein Fehler des Manuskripts — `rem:absreggain`(ii)
+  spricht nur über `thm:absreg` —, aber es ist der schärfste Satz, den man über
+  die Reichweite der Atomtoleranz sagen kann, und er stünde gut dort.
+* **`rem:ccverify` bleibt bei $D_{E^\Delta}$ stehen.** Die Bemerkung schließt
+  mit „the modification has paths in $D_{E^\Delta}[0,\infty)$"; das ist genau,
+  was \EK{} Cor. 4.3.7 hergibt (Buchseite 179, am Scan geprüft). Der Schritt
+  zurück nach $D_E$ ist \EK{} Thm. 4.3.8 mit Prop. 4.3.9/4.3.10, und der steht
+  seit dem 2026-08-30 in `MartingaleProblems` M9. Ob `rem:ccverify` ihn nennen
+  soll, gehört dem Nutzer; das Inventar hält nur fest, dass die Bemerkung heute
+  weniger schließt, als der Leser erwartet.
+* **Zwei Fehler in der Tabelle „Where the prerequisites are used" (§2, Stelle
+  1639ff), am 2026-08-31 gefunden.** Erstens führt Stelle 1661
+  „Fact `portmanteau`, `cmt` → Lemma `EKconv`, Theorem `CPSconv`". Für `cmt`
+  stimmt das, für `portmanteau` nicht: beide Beweise verifizieren die
+  Bedingungen \ref{it:C1}--\ref{it:C3} von `thm:absconv`, und dessen Beweis
+  benutzt in allen vier Schritten nur `fact:cmt`, `fact:ui` und (in `EKconv`
+  und `CPSconv`) `fact:Dcountable`. Weder die Prohorov-Metrik noch abgeschlossene
+  oder offene Mengen noch Stetigkeitsmengen kommen irgendwo vor. Die Zeile
+  sollte nur `fact:cmt` nennen. Zweitens fehlt `fact:fdd` in der Tabelle ganz —
+  aufgeführt ist `thm:fdd`, der Satz des Manuskripts, nicht der Fact. Beides
+  sind Fragen ans Manuskript; das Inventar ändert es nicht.
+* **`fact:portmanteau` arbeitet höchstens durch (a)⇒(b), und ob überhaupt,
+  hängt an einem undefinierten Wort.** „Relativ kompakt" kommt in
+  `fact:fddconv`(b), `fact:relcompact`, `fact:relcompact2` und
+  `rem:EKrelcompact` vor und wird im Manuskript **nirgends definiert**. Liest
+  man es als Relativkompaktheit in der Topologie der schwachen Konvergenz, so
+  wird `fact:portmanteau` an keiner Stelle des Manuskripts gebraucht; liest man
+  es metrisch — `fact:PSpolish` versieht $\Prob(S)$ mit der Prohorov-Metrik —,
+  so braucht der Schritt von der Relativkompaktheit zu einer schwach
+  konvergenten Teilfolge in `rem:EKrelcompact` genau (a)⇒(b). Die Hälften
+  (c)--(f) trägt in keiner der beiden Lesarten irgendetwas. Für die
+  Formalisierung ist die Frage ohne Kosten: Mathlibs Prokhorov
+  (`isCompact_closure_of_isTightMeasureSet`, `Measure/Prokhorov.lean:530`,
+  nicht `deprecated`, und **im Wurzelnamensraum** — nur die Rückrichtung
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` bei `:634` steht in
+  `MeasureTheory`) steht in `ProbabilityMeasure E` mit der Topologie der
+  Verteilungskonvergenz, also in der ersten Lesart, und die zweite ist mit
+  `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph`
+  (`Measure/LevyProkhorovMetric.lean:676`) ebenfalls da. Eine Definition von
+  „relativ kompakt" im Manuskript wäre trotzdem eine Verbesserung.
+* **Der Produktpunkt von `WeakConvergence` Meilenstein 1 hatte eine falsche
+  Begründung, am 2026-08-31 korrigiert.** Er schloss mit „every determining set
+  in **MartingaleProblems** is built from it". Das ist nicht so:
+  `isDetermining_products` in `MartingaleProblems` Meilenstein 3 nennt als
+  Beweisweg „`induction_on_mulSystem` der Roadmap **WeakConvergence**,
+  Meilenstein 5, angewandt auf das multiplikative System jener Produkte", und
+  das Manuskript macht es genauso — `ex:determining` sagt „this uses
+  $\Bor(F) = \sigma(X_t)$ (`thm:fdd`) and the monotone class theorem",
+  `thm:uniqueness` Schritt 2 und `prop:uniqfromprop` führen das Dynkin-Argument
+  auf dem Pfadraum aus. Der Produktpunkt wird damit heute von **keinem** Punkt
+  einer der vier Roadmaps und von keinem Beweis des Manuskripts benutzt. Er
+  bleibt stehen, weil §9 ihn verlangt; die Begründung sagt jetzt, was geprüft
+  ist: die Determining-Sets sind sein Spezialfall `Γ i` alle beschränkt
+  messbar, in dem die Separiertheit leer ist, und der Zusatz ist, dass ein
+  separierendes `Γ i` je Faktor genügt.
+* **Der Konvergenzteil rechnet nirgends still auf Atomlosigkeit; am 2026-08-31
+  durchgegangen.** Jede Aussage von §7 ist entweder uhrenfrei oder ausdrücklich
+  Lebesgue, und die eine Stelle, an der ein Atom beißt, hat einen eigenen
+  Abschnitt. Uhrenfrei sind `thm:absconv` (die Uhr kommt nur über das abstrakte
+  $\XX$ herein), `lem:contuse`, `thm:absconvaug` und `thm:absconvws`; die
+  Bündeltabelle trägt für die ersten drei „---" ein. Lebesgue sind
+  `lem:EKconv`, `thm:CPSconv` (Tabelle: „Lebesgue") und `thm:MZconv`, dessen
+  Beweis $\lambda$ in jedem Schritt benutzt. `thm:clockchange` verlangt
+  \ref{it:C3a} als Hypothese und schiebt die Uhr in \ref{it:K3}/\ref{it:K4} —
+  also genau dorthin, wo ein Atom sichtbar ist, statt es zu verstecken.
+  `rem:EKrelcompact` ruht auf `fact:relcompact`, `relcompact2`, `fddconv` und
+  `prohorov`, die sämtlich über $D_E[0,\infty)$ mit dem Lebesgue-Kompensator
+  formuliert sind (`fact:relcompact2` schreibt $Y(t) - \int_0^t Z(s)\dif s$
+  hin), und es speist `lem:EKconv`. Ein Atom stört an keiner dieser Stellen,
+  weil keine von ihnen für eine allgemeine Uhr behauptet wird. Wo es stört, ist
+  \ref{it:C3a}, und das sagt `ex:atomicdiscontinuity` mit Gegenbeispiel,
+  `thm:absconvaug`/`prop:atomaug` reparieren es („any, atoms allowed"), und
+  `rem:MZcost` nennt die Grenze der Reparatur.
+* **Die Statuszeile „purely atomic, atoms incomparable" ist seit dem
+  2026-08-31, fünfter Lauf, zu schwach.** `rem:atomsnotchange` (Stelle 5535)
+  führt sie als „verified exhaustively up to five points; not proved". Bewiesen
+  ist seither: liegt unter $t$ nur eine Antikette von Atomen und ist deren
+  Gesamtmasse von null verschieden, so gilt die Dualität an $t$ — mit Massen
+  beliebigen Vorzeichens, also einschließlich des Diamanten, den
+  `rem:atomicdual` als kleinsten Fall führt und dessen Begründung dort am
+  2026-08-30 als falsch erkannt und ersetzt wurde. Der Beweis steht ausgeführt
+  in `Task23/PROTOKOLL.md`, Abschnitt „Der Halbordnungsfall, 2026-08-31
+  (fünfter Lauf)". Ihn ins Manuskript zu setzen ist erlaubt (Task-23-Regel:
+  vollständig und verifiziert), aber es ist eine Manuskriptänderung samt
+  `check.py` und gehört deshalb an den Anfang eines Laufs, nicht an sein Ende.
+* **Drei Aussagen von §7 fehlen in der Bündeltabelle.** `thm:absconvws`,
+  `thm:MZconv` und `rem:EKrelcompact` haben dort keine Zeile, während
+  `thm:absconv`, `thm:absconvaug`, `prop:atomaug`, `thm:clockchange`,
+  `lem:EKconv` und `thm:CPSconv` eine haben. Bei `thm:MZconv` ist das mehr als
+  Buchhaltung: `rem:MZcost` hält fest, dass der Pfadraum dort separabel
+  metrisch und **nicht** polnisch ist, also gerade eine Abweichung von
+  \eqref{E3}, und Abweichungen von der schwächsten Spalte zu markieren ist der
+  erklärte Zweck der Tabelle. `rem:EKrelcompact` ist die Stelle, an der sieben
+  Facts zusammenlaufen, und die Tabelle in §2.x nennt es viermal als Abnehmer.
+  Frage ans Manuskript.
 
 ## Läufe
 
@@ -721,3 +857,820 @@ sichtbar, statt sie zu schätzen. Es ist außerdem kleiner als
 hat, und dieses baut darauf: die Auflösung von `Φ` aus `γ` beginnt mit der
 Additivität. Reihenfolge damit: `Clock.interval_union`, dann
 `duality_defect_eq_integral`, dann `atomGrid_symm`.
+
+### 2026-08-30, fünfter Lauf — Rückstau 1, 2 und 3
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging
+nach der stehenden Regel in den Rückstau, von oben. Punkt 1 (Thm. 4.3.12
+abstrakt), Punkt 2 (\EK{} §4.3 zu Ende auswerten) und Punkt 3
+(`SkorokhodSpace` Meilenstein 2) sind erledigt und in `BACKLOG.md` gestrichen.
+Geprüft wurde am Scan
+(`references/EthierKurtz1986.pdf`, Buchseiten 179–182, PDF-Seiten 189–192),
+gegen `~/Code/lean/journal/.lake/packages/mathlib` (v4.33.1) und gegen master
+über `gh api`/`gh search code`.
+
+**Ja, es geht ohne Operator — und es kostet eine Hypothese mehr, als der
+Rückstau vermutet hat.** \EK{} Thm. 4.3.12 ruht auf vier Schritten, und keiner
+nennt $A$: optional sampling für $Y^f$ an den beschränkten Stoppzeiten
+$\tau_n \wedge t \leq \tau \wedge t$; das Verschwinden von
+$E[C^f(\tau\wedge t) - C^f(\tau_n\wedge t) \mid \Filt_{\tau_n}]$; Lévys
+Aufwärtssatz an der Filtration $\Filt_{\tau_n} \uparrow \bigvee_n
+\Filt_{\tau_n}$; und `fact:sepcond` als Schluss. Das ist derselbe Schluss wie in
+Schritt 4 von `thm:absreg`, und die Separiertheit von $\Phi$ ist die **einzige**
+Hypothese, die beide Sätze teilen: eine abzählbare punktetrennende Teilmenge
+kommt hier nicht vor, `eq:cc` auch nicht. In der Sprache von `def:regclass`
+heißt der zweite Schritt: $C^f$ ist **in $L^1$ linksstetig entlang Stoppzeiten**.
+Das ist nicht \ref{it:R3} — \ref{it:R3} nähert von rechts und an
+deterministischen Zeiten — und es folgt auch nicht aus \ref{it:R2}.
+
+**Und die neue Hypothese ist nicht technisch, sie ist die Atomlosigkeit.** Für
+den Kompensator $C^f(t) = \int_{(0,t]} g(X(s))\,q(\dif s)$ mit beschränktem $g$
+ist $|C^f(\tau\wedge t) - C^f(\tau_n\wedge t)| \leq \lVert g\rVert\,
+q((\tau_n\wedge t, \tau\wedge t])$, und $\bigcap_n (\tau_n, \tau] = \{\tau\}$ bei
+$\tau_n \uparrow \tau$; die Schranke geht also gegen $\lVert g\rVert\,
+q(\{\tau\})$ und nicht gegen null, sobald die Uhr bei $\tau$ ein Atom hat. Das
+ist scharf: auf $E=\{0,1\}$ mit $q=\delta_u$ wirft ein Prozess bei $u$ eine faire
+Münze, löst ein Martingalproblem und hat $X(u-) \neq X(u)$ mit
+Wahrscheinlichkeit $1/2$. \EK{} bemerken das nicht, weil bei ihnen
+$q=$ Lebesgue ist. Damit steht fest, wo `rem:absreggain`(ii) endet, und das ist
+oben als Auffälligkeit eingetragen.
+
+**Was in der Roadmap jetzt steht.** `MartingaleProblems` Meilenstein 9 hat einen
+weiteren Block, hinter dem Teilraumblock: `IsQuasiLeftContinuous` als Prädikat
+(pro $t$ formuliert, weil genau das die Stoppzeiten beschränkt hält),
+`IsQuasiLeftContinuous.ae_eq_leftLim` als die Verschärfung von \EK{} Lemma 3.7.7
+— dort abzählbares Komplement, hier keines —,
+`isQuasiLeftContinuous_of_isRegularizingClass` als die abstrakte Fassung mit dem
+oben genannten Beweisweg, `isQuasiLeftContinuous_of_isMPSolutionFor` als die
+klassische Instanz unter `∀ u, q {u} = 0`, und
+`not_isQuasiLeftContinuous_of_atom` als benanntes Gegenbeispiel statt als
+Bemerkung. `Suggested.lean` hat die passenden Stümpfe.
+
+**Am Quelltext belegt, was der Beweis aus Mathlib zieht.** Lévys Aufwärtssatz ist
+`MeasureTheory.tendsto_ae_condExp` und `MeasureTheory.tendsto_eLpNorm_condExp`
+(`Mathlib/Probability/Martingale/Convergence.lean:426,439` in v4.33.1; auf
+master dieselben Zeilen, kein `deprecated`), formuliert für
+`ℱ : Filtration ℕ m0`, `[IsFiniteMeasure μ]` und reellwertiges `g` — der
+`𝕂`-Fall sind also die zwei Komponenten. Dass $n \mapsto \Filt_{\tau_n}$ eine
+`Filtration ℕ` ist, liefern
+`MeasureTheory.IsStoppingTime.measurableSpace_mono` und
+`MeasureTheory.IsStoppingTime.measurableSpace_le`
+(`Mathlib/Probability/Process/Stopping.lean:468,481`).
+Quasi-Linksstetigkeit selbst gibt es in Mathlib nicht: `gh search code` findet
+für `quasi-left` und für `QuasiLeftContinuous` je null Treffer.
+
+**Cor. 4.3.13 trägt nichts, und das ist geprüft, nicht vermutet.** Der Satz sagt
+für abgeschlossenes $F$, dass $\inf\{t : X(t)\in F \text{ oder } X(t-)\in F\}$
+fast sicher gleich $\inf\{t : X(t)\in F\}$ ist. Das Manuskript hat die
+Konstruktion mit „oder $X(t-)$" genau einmal, in `rem:uniquelocal` bei 5282, und
+dort ist die Menge $E\setminus K_m$ **offen**, nicht abgeschlossen; Cor. 4.3.13
+greift also nicht. Die Débutfrage, die das Manuskript wirklich hat, ist eine
+andere und schon beantwortet: `rem:strictdebut` bei 4578 trennt strikte von
+rechtsstetigen Débuts, und `lem:L1auto` löst sie über das laufende Supremum.
+Cor. 4.3.13 steht deshalb in keiner Roadmap.
+
+**Und was Thm. 4.3.8–4.3.10 für das Manuskript tragen, ist jetzt benannt.**
+`rem:ccverify` schließt mit Pfaden in $D_{E^\Delta}$ — genau die Aussage von
+\EK{} Cor. 4.3.7, am Scan geprüft (Buchseite 179). Der Schritt zurück nach $D_E$
+ist Thm. 4.3.8 mit Prop. 4.3.9/4.3.10, seit dem vierten Lauf in M9. Damit ist
+die zweite Rückstaufrage beantwortet: die drei Sätze tragen den Schritt, den
+`rem:ccverify` nicht tut. Auch das steht oben als Auffälligkeit.
+
+**Rückstau 3: die Hypothesen von `SkorokhodSpace` Meilenstein 2 stehen jetzt je
+Punkt da.** Der Rückstau verlangte einen Vorschlag; die stehende Regel der
+minimalen Voraussetzungen verlangt mehr, nämlich die Korrektur, denn der
+Meilenstein verlangte über den Schlusssatz von Meilenstein 1 das volle
+\eqref{T3p} für Aussagen, denen \eqref{T2b} genügt. Beides ist getan und
+getrennt gehalten: der Meilenstein führt jetzt zwei benannte Stufen (A) und (B),
+jeder Punkt steht unter einer von beiden, die zwei Punkte mit σ-Kompaktheit
+nennen sie, und der Schlusssatz von Meilenstein 1 gilt jetzt erst ab
+Meilenstein 3. Die **Gliederung** — ob daraus zwei Meilensteine werden — ist
+nicht angetastet; das ist die Entscheidung, die der Lauf vom 2026-08-30 dem
+Nutzer zugeschrieben hat, und sie bleibt dort. Nebenbei fällt damit auch
+Meilenstein 2 aus der Auffälligkeit „Die Roadmaps kennen `E` nur polnisch"
+heraus: polnisch braucht dort allein `IsCadlag.measurable`, alles andere kommt
+mit einem topologischen oder pseudometrischen `E` aus, und das steht jetzt da.
+Die Auffälligkeit selbst bleibt, denn sie betrifft Meilenstein 1 von
+`SkorokhodSpace` und `fact:fddconv`, `fact:cmt`, `fact:PSpolish`.
+
+**Dabei ein Befund, den `PRAEORDNUNG.md` Teil 2 noch nicht hatte:
+\eqref{T2b} und \eqref{T3p} sind unvergleichbar.** $h\Z$ trägt jede Instanz von
+`SkorokhodSpace` Meilenstein 1 und verletzt die Rechtsapproximierbarkeit von
+\eqref{T2b}, denn $(t,t+h)=\emptyset$. Die Sprungtheorie leidet nicht darunter,
+aber nur aus einem Grund, der benannt gehört: auf einem diskreten linearen Index
+sind `𝓝[<] x` und `𝓝[>] x` beide `⊥`, also ist jede Funktion càdlàg, und
+`Function.leftLim f x = f x` — die Definition in
+`Mathlib/Topology/Order/LeftRightLim.lean` setzt genau das, wenn `𝓝[<] a = ⊥`
+ist, am Quelltext geprüft. Damit ist `leftJumpSet f = ∅` und alle vier Aussagen
+sind trivial. Der Meilenstein sagt das jetzt, statt den diskreten Fall
+stillschweigend unter (B) zu subsumieren, wo er nicht liegt. In
+`PRAEORDNUNG.md` steht es als Nachtrag zu Teil 2.
+
+**Und ein falsches Dateizitat, nebenbei gefunden und korrigiert.**
+`PRAEORDNUNG.md` gab `Monotone.countable_not_continuousAt` als in
+`Mathlib/Topology/Order/LeftRightLim.lean` liegend an. Dort steht der Name nur
+im Modulkommentar; die Deklaration ist
+`Mathlib/Topology/Order/Monotone.lean:164` in v4.33.1 und `:166` auf master, in
+beiden Fällen ohne `deprecated`, und auf master findet `gh search code` den
+Namen in acht Dateien, von denen `LeftRightLim.lean` die einzige ohne
+Deklaration ist. Das ist genau der Fehlertyp, den Rückstaupunkt 4 turnusmäßig
+sucht; `PRAEORDNUNG.md` und der Meilenstein sagen es jetzt richtig.
+
+**Offen geblieben.** Nichts an diesen drei Rückstaupunkten. Nicht getan wurde,
+was der Rückstau ausdrücklich dem Manuskript zuschlägt: ob Thm. 4.3.12 hinter
+`thm:cadlag` aufgenommen wird und ob `rem:absreggain`(ii) die Grenze der
+Atomtoleranz nennt, entscheidet der Nutzer; ebenso, ob `SkorokhodSpace`
+Meilenstein 2 in zwei Meilensteine zerfällt. Neu im Rückstau steht als Punkt 5
+die Frage, welche weiteren Aussagen des Manuskripts still auf Atomlosigkeit
+rechnen.
+
+**Als Nächstes zu formalisieren: `IsQuasiLeftContinuous` samt
+`IsQuasiLeftContinuous.ae_eq_leftLim`** (`MartingaleProblems` Meilenstein 9).
+Nur das Prädikat und die deterministische Lesart, nicht der Satz. Es ruht auf
+`MeasureTheory.IsStoppingTime` (`Probability/Process/Stopping.lean`),
+`Function.leftLim` und der Ordnungstopologie — kein Maßwechsel, keine bedingte
+Erwartung, kein Martingal. Es ist jetzt dran, weil es die einzige Aussage dieses
+Laufs ist, die von der schweren Vorarbeit des Meilensteins **nicht** abhängt:
+`isQuasiLeftContinuous_of_isRegularizingClass` braucht optional sampling in
+stetiger Zeit und `IsSeparating.ae_eq_of_forall_condExp_eq`, also zwei Punkte,
+die selbst noch nicht existieren, während das Prädikat und `ae_eq_leftLim` reine
+Ordnungs- und Grenzwertarbeit sind. Zugleich ist es die Stelle, an der sich
+entscheidet, ob die Formulierung „pro `t`, unter `⨆ n, τ n ω ≤ t`" trägt oder ob
+sie durch `WithTop ι` ersetzt werden muss, wie es
+`MeasureTheory.IsLocalizingSequence` tut — und diese Frage ist billiger am
+Prädikat zu klären als am Satz. Gegenüber den älteren Vorschlägen bleibt
+`Clock.interval_union` der erste; `IsQuasiLeftContinuous` ist der erste Punkt
+aus Meilenstein 9, der ohne den Rest von Meilenstein 9 auskommt.
+
+### 2026-08-31 — Rückstau: `fact:fdd`, `fact:portmanteau`, und die Uhr in §7
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging
+nach der stehenden Regel in den Rückstau, von oben. Der damalige Punkt 1 ist
+eine **Manuskript**\-änderung und damit von der nicht verhandelbaren Regel 2
+dieses Auftrags ausgeschlossen — er bleibt stehen, jetzt mit einem
+Zwischenstand, der das sagt, und gehört dem Nutzer. Erledigt und in
+`BACKLOG.md` gestrichen sind die damaligen Punkte 2 (die beiden letzten Facts
+ohne tragende Fundstelle) und 5 (die Uhr im Konvergenzteil, auf Atome hin); die
+Nummerierung ist danach neu vergeben, und ein neuer Punkt steht als 4 dort.
+
+#### Rückstau 2: `fact:fdd` und `fact:portmanteau`
+
+Beide Antworten sind zweigeteilt, und beide sind zugleich ein Befund an der
+Tabelle „Where the prerequisites are used" in §2.
+
+**`fact:portmanteau`: kein Beweis, eine Implikation, und ein undefiniertes
+Wort.** Die §2-Tabelle schreibt bei 1661 „Fact `portmanteau`, `cmt` → Lemma
+`EKconv`, Theorem `CPSconv`". Beide Beweise sind nachgelesen. Sie tun dasselbe:
+sie verifizieren \ref{it:C1}--\ref{it:C3} von `thm:absconv` und überlassen
+diesem alles Weitere. `lem:EKconv` benutzt `fact:Dcountable` (für $D$),
+`ex:determining` (für \ref{it:C2}), die $J_1$-Stetigkeit der Auswertung an
+Stetigkeitsstellen (für \ref{it:C3a}), Beschränktheit (\ref{it:C3b}) und
+`prop:fddchar` mit der gleichmäßigen Schranke aus \eqref{eq:approxA}
+(\ref{it:C3c}). `thm:CPSconv` ersetzt nur die letzten beiden Zutaten durch
+\eqref{eq:cps1}--\eqref{eq:cps3}. Und `thm:absconv` selbst benutzt in Schritt 0,
+1, 2 und 3 ausschließlich `fact:cmt` und `fact:ui`; `rem:absconvtopfree` sagt
+das sogar selbst — „the proof invoked \ref{it:C1} and \ref{it:C3a} only through
+Fact `cmt`". Portmanteau kommt nicht vor, in keinem der drei Beweise. Die
+Tabellenzeile ist falsch und sollte nur `fact:cmt` nennen.
+
+Damit bleibt die Frage, ob der Fact irgendwo mittelbar trägt, und sie hängt an
+einem Wort, das das Manuskript nicht definiert. „Relativ kompakt" steht in
+`fact:fddconv`(b), `fact:relcompact`, `fact:relcompact2` und
+`rem:EKrelcompact`, und eine Definition gibt es nicht. In der Lesart „relativ
+kompakt in der Topologie der schwachen Konvergenz" wird `fact:portmanteau`
+nirgends gebraucht. In der metrischen Lesart — `fact:PSpolish` versieht
+$\Prob(S)$ mit der Prohorov-Metrik, `fact:prohorov` sagt „straff genau dann,
+wenn relativ kompakt" — braucht `rem:EKrelcompact` beim Übergang von der
+Relativkompaktheit zu einer schwach konvergenten Teilfolge die Implikation
+(a)⇒(b), und nur diese. Die Hälften (c), (d), (e) und (f) trägt in beiden
+Lesarten nichts. Für die Formalisierung ist die Entscheidung kostenlos, und
+das ist am Quelltext geprüft: `isCompact_closure_of_isTightMeasureSet`
+(`Mathlib/MeasureTheory/Measure/Prokhorov.lean:530`, nicht `deprecated`; das
+`@[deprecated]` bei 524 gehört zu einem Alias darüber, und der Name steht im
+**Wurzelnamensraum** — die Sektion `Forward` der Datei öffnet `MeasureTheory`
+nur, während die Sektion `Backward` ab 568 wirklich darin liegt, so dass die
+Umkehrung `MeasureTheory.isTightMeasureSet_of_isCompact_closure` heißt und die
+Hinrichtung nicht) ist über
+`ProbabilityMeasure E` mit der Topologie der Verteilungskonvergenz formuliert,
+also in der ersten Lesart, und die zweite steht als
+`MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph`
+(`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean:676`) daneben. Der
+Status `Mathlib` bleibt also; was sich ändert, ist die Kenntnis darüber, wieviel
+davon gebraucht wird — nämlich fast nichts.
+
+**`fact:fdd`: die zweite Hälfte trägt, die erste nicht.** Der Fact besteht aus
+\eqref{eq:prodsep} (EK 3.4.6 und 3.7.1: Produkte separierender bzw.
+konvergenzbestimmender Klassen sind es wieder) und dem Satz „in particular the
+finite-dimensional distributions of a process determine its law". Die zweite
+Hälfte ist mittelbar getragen, an genau den drei Stellen, die die §2-Tabelle
+unter `thm:fdd` führt: `thm:absuniq`, `cor:DEuniqueness` und `ex:determining`.
+Die erste Hälfte ist an keiner Stelle des Manuskripts benutzt, und das ist
+nachgesehen, nicht vermutet:
+
+* `prop:fddchar` beweist die Suffizienz mit einem funktionalen
+  Monotone-Klassen-Argument (`fact:monotoneclass`) über der multiplikativen
+  Klasse \eqref{eq:multclass} und benutzt Fubini als einzigen inhaltlichen
+  Schritt; von separierenden Klassen ist keine Rede.
+* `thm:uniqueness` Schritt 2 und `prop:uniqfromprop` schließen von den
+  endlich-dimensionalen Verteilungen auf das Gesetz mit **Dynkin**, angewandt
+  auf $\mathcal{K} = \{\prod_k f_k(\pi_{t_k}) : f_k \in \Bdd(E)\}$ und
+  \eqref{eq:pathsigma}. Mit $\Bdd(E)$ ist die Separiertheit leer.
+* `ex:determining` sagt es selbst: „this uses $\Bor(F) = \sigma(X_t)$
+  (Theorem `thm:fdd`) and the monotone class theorem".
+* `cor:DEuniqueness` beruft sich auf `thm:fdd`, nicht auf `fact:fdd`.
+* Die separierenden Klassen der Dualitätsabschnitte
+  (`lem:histrestart`\ref{it:hist_sep}, `prop:hawkesDcheck`\ref{it:hd_sep},
+  `prop:rieszmarkov`) leben auf $\Prob(\hat E_r)$ bzw. $C(E_1)$ und sind keine
+  Produkte.
+
+Und dass die §2-Tabelle `fact:fdd` **überhaupt nicht** führt, ist das
+Gegenstück dazu: die Buchhaltung hat den Fact nicht bloß unterschätzt, sondern
+ausgelassen. Entbehrlich ist er trotzdem nicht — §9 verlangt bei 9048
+ausdrücklich „the separating half of `fact:fdd` only, its path space half being
+Theorem `thm:fdd`", und bei 9239 steht, er solle unabhängig von
+Martingalproblemen entwickelt werden. Das ist dieselbe Lage wie bei
+`fact:fullgenerator` und die entgegengesetzte zu `fact:bp`: dort war der Fact
+im Manuskript zitiert *und* in §8 als optional bezeichnet, hier verlangt §9 ihn
+ohne Einschränkung.
+
+**Ein Roadmap-Fehler, der daran hing, und er ist korrigiert.** Der Produktpunkt
+von `WeakConvergence` Meilenstein 1 begründete sich mit „every determining set
+in **MartingaleProblems** is built from it". Das stimmt nicht:
+`isDetermining_products` in `MartingaleProblems` Meilenstein 3 nennt selbst
+`induction_on_mulSystem` (Meilenstein 5) als Beweisweg, und das Manuskript
+macht es an allen vier oben aufgezählten Stellen ebenso. Der Produktpunkt hat
+damit heute **keinen Abnehmer**, weder in einer der vier Roadmaps noch im
+Manuskript. Gestrichen wird er nicht — §9 verlangt ihn —, aber seine
+Begründung sagt jetzt, was geprüft ist: die Determining-Sets sind sein
+Spezialfall `Γ i` alle beschränkt messbar, und der Zusatz besteht darin, dass
+ein *separierendes* `Γ i` je Faktor genügt. Die Hypothesen des Punktes bleiben
+unangetastet; sie sind schwächer als die des Manuskripts (beliebiger Index und
+messbare Faktoren statt abzählbarem Index und separablen metrischen Faktoren)
+und das ist nach der stehenden Regel richtig so.
+
+#### Rückstau 5: die Uhr im Konvergenzteil, auf Atome hin
+
+Ebenfalls erledigt und in `BACKLOG.md` gestrichen; die Antwort ist ein
+Negativbefund, und er ist der bessere von beiden möglichen. **Keine Aussage von
+§7 rechnet still auf Atomlosigkeit.** Der Rückstau nannte zwei Kandidaten und
+beide halten stand. `rem:EKrelcompact` ruht auf `fact:relcompact`,
+`fact:relcompact2`, `fact:fddconv` und `fact:prohorov`; alle vier sind über
+$D_E[0,\infty)$ mit dem Lebesgue-Kompensator formuliert — `fact:relcompact2`
+schreibt $Y(t) - \int_0^t Z(s)\dif s$ ausdrücklich hin —, und die Bemerkung
+speist `lem:EKconv`, das die Bündeltabelle mit „Lebesgue" führt. Eine allgemeine
+Uhr wird dort nirgends behauptet, also kann ein Atom auch nichts verderben.
+Dasselbe für die übrigen Sätze des Abschnitts, einzeln nachgesehen:
+`thm:absconv`, `lem:contuse`, `thm:absconvaug` und `thm:absconvws` sind
+uhrenfrei (die Uhr kommt nur über das abstrakte $\XX$ herein und die
+Bündeltabelle trägt „---" ein); `thm:MZconv` rechnet in jedem Schritt mit
+$\lambda$; `thm:clockchange` setzt \ref{it:C3a} als Hypothese und trägt die Uhr
+in \ref{it:K3} und \ref{it:K4}, also genau dort, wo ein Atom sichtbar wird.
+
+Der Grund für den Negativbefund ist, dass das Manuskript die Frage schon gestellt
+und beantwortet hat, an der einzigen Stelle, an der ein Atom wirklich beißt:
+\ref{it:C3a}. `ex:atomicdiscontinuity` führt das Gegenbeispiel $q = \delta_1$ vor
+und zeigt, dass die schlechten Zeiten dort eine **Halbgerade** bilden und nicht
+eine abzählbare Menge, also kein $\Gamma$ hilft; `lem:contuse` sperrt ein, wo die
+Stetigkeit überhaupt gebraucht wird; `thm:absconvaug` und `prop:atomaug`
+reparieren es durch Vergrößerung des Pfadraums um die Werte an den Atomen
+(Bündeltabelle: „any, atoms allowed"); und `rem:MZcost` nennt die Grenze der
+Reparatur — die Konvergenz nach Maß sieht die Auswertung am Atom nicht, und
+keine Augmentierung ändert das. Der Punkt aus dem Rückstau, der die Analogie zur
+Quasi-Linksstetigkeit vermutete, trifft hier also nicht: dort war die
+Atomtoleranz eine unbemerkte Grenze, hier ist sie ein eigener Abschnitt.
+
+Ein Nebenbefund, der dabei anfiel und oben unter den Auffälligkeiten steht:
+`thm:absconvws`, `thm:MZconv` und `rem:EKrelcompact` haben keine Zeile in der
+Bündeltabelle, obwohl die übrigen sechs Aussagen des Abschnitts eine haben und
+`thm:MZconv` mit dem separabel-metrischen, nicht polnischen Pfadraum gerade eine
+Abweichung von \eqref{E3} trägt.
+
+**Offen geblieben.** Rückstaupunkt 1, aus dem oben genannten Grund: er ändert
+das Manuskript. Nicht angefasst wurde Task 23 (unvergleichbare Atome, jetzt
+Rückstau 2): drei Läufe haben es versucht, `Task23/PROTOKOLL.md` hält fest, wo
+es hakt, und ein vierter Anlauf in der Restzeit dieses Laufs hätte dieselbe Wand
+ohne neuen Hebel getroffen — der Lauf hat stattdessen zwei Punkte abgearbeitet,
+die eine Antwort haben. Ebenfalls nicht angefasst: die turnusmäßige Prüfung der
+Roadmapzitate gegen master, die am 2026-08-29 lief und nach der dortigen Regel
+(alle zwei Wochen) nicht fällig ist. Neu unter den Auffälligkeiten steht, dass
+„relativ kompakt" im Manuskript undefiniert bleibt.
+
+**Als Nächstes zu formalisieren: `MeasureTheory.induction_on_mulSystem`**
+(`WeakConvergence` Meilenstein 5). Der Vorschlag ist nicht neu — der Lauf vom
+2026-08-29 hat ihn schon gemacht —, aber dieser Lauf hat ihm das Argument
+gegeben, das ihm fehlte, und rückt ihn dabei vor den Produktpunkt derselben
+Roadmap. Es ruht auf `MeasurableSpace.comap`, dem Satz von der monotonen
+Konvergenz und `induction_on_inter` (`Mathlib/MeasureTheory/PiSystem.lean:692`),
+das zugleich die Vorlage für Gestalt, `@[elab_as_elim]` und Beweisführung ist —
+also auf nichts außer Mathlib. Es ist jetzt dran, weil heute gezeigt ist, dass
+es der Knoten ist, unter dem **alle** Wege des Manuskripts von den
+endlich-dimensionalen Verteilungen zum Gesetz zusammenlaufen. Vier Stellen
+führen dasselbe multiplikativ-erzeugende Argument aus: `prop:fddchar` und
+`ex:determining` in der funktionalen Gestalt, die `induction_on_mulSystem`
+wörtlich ist, `thm:uniqueness` Schritt 2 und `prop:uniqfromprop` in Dynkins
+Maßgestalt, die daraus in einer Zeile folgt. Und zwei Roadmap-Punkte nennen es
+ausdrücklich als ihren Beweisweg, `isDetermining_products`
+(`MartingaleProblems` M3) und der Produktpunkt (`WeakConvergence` M1). Der
+Produktpunkt, den dieselbe Roadmap bisher als das Fundament ausgab, hat
+dagegen keinen Abnehmer. Ein Satz ohne Vorbedingungen, an dem sechs Stellen
+hängen, geht dem voran, an dem keine hängt. Gegenüber den älteren Vorschlägen bleibt
+`Clock.interval_union` der erste der Task-23-Linie; `induction_on_mulSystem`
+ist der erste der Konvergenzlinie, vor `IsSeparating` und vor dem Produktpunkt.
+
+### 2026-08-31, zweiter Lauf — Rückstau 4, und die Vollständigkeit von `E`
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging
+nach der stehenden Regel in den Rückstau. Punkt 1 bleibt stehen (Manuskript,
+Regel 2), Punkt 2 ist Task 23 und ohne neuen Hebel, Punkt 3 ist nach seiner
+eigenen Regel — alle zwei Wochen, zuletzt 2026-08-29 — nicht fällig. Erledigt
+und gestrichen ist **Punkt 4**, und zwar weil seine Blockade keine war.
+
+**Der \EK{}-Scan ist erreichbar.** Der Punkt schloss mit der Warnung,
+`references/EthierKurtz1986.pdf` sei aus diesem Worktree nicht zu lesen. Das
+stimmt für den Worktree, nicht für den Pfad: die Datei liegt im Hauptcheckout,
+unter `/home/pfaffelh/Code/lean/journal/references/`, und `Read` liest sie mit
+`pages`. Der Seitenversatz ist +10. Das steht jetzt im Kopf von `BACKLOG.md`,
+damit es kein Lauf mehr zweimal herausfinden muss.
+
+#### Rückstau 4: der Abnehmer ist ausgeschlossen, und zwar zweifach
+
+**Erstens am Wortlaut von \EK{} Prop. 3.7.1** (Buchseite 127, am Scan gelesen).
+Sie lautet: `π_t(x) = x(t)`, und
+`𝒮_E ⊇ 𝒮'_E ≡ σ(π_t : 0 ≤ t < ∞) = σ(π_t : t ∈ D)` für **jede** dichte
+Teilmenge `D ⊆ [0,∞)`, mit Gleichheit für separables `E`. Das ist die
+Pfadraumhälfte — `SkorokhodSpace.borel_eq_iSup_comap_eval`, Meilenstein 6 —
+und **nicht** die Produkthälfte. Die Produkthälfte ist allein Prop. 3.4.6
+(Buchseite 115): `M_k` separierend ⟹ `M` separierend; `(S_k,d_k)` vollständig
+separabel und `M_k` konvergenzbestimmend ⟹ `M` konvergenzbestimmend. Die
+Zuschreibung von `fact:fdd` an „3.4.6 und 3.7.1" verteilt sich also sauber auf
+die zwei Hälften des Facts, und die Vermutung des Rückstaus, 3.7.1 sei die
+konvergenzbestimmende Produkthälfte, trifft nicht zu.
+
+**Zweitens am Beweis von \EK{} Thm. 3.7.8(b)** (Buchseite 132). Er benutzt sie
+nicht. Der Gang ist: Teilfolge aus der Relativkompaktheit; Zeiten aus `D` an die
+Stetigkeitspunkte des Limes schieben, mit Rechtsstetigkeit; Lemma 3.7.7, damit
+diese dicht liegen; und dann wörtlich „By Proposition 7.1 and the Dynkin class
+theorem (Appendix 4)". Gemeint ist dort der **funktionale** Dynkin-Satz: die
+Eingabe des Schrittes ist (7.27), also die Gleichheit der Integrale von
+Produkten `∏ f_i(X(t_i))` mit `f_i ∈ C̄(E)`, und die Mengenfassung greift auf
+stetige Funktionen nicht. Appendix 4 führt ihn, \EK{} zitieren ihn auf
+Buchseite 111 im Beweis von Prop. 3.4.2 unter diesem Namen — „the Dynkin class
+theorem for functions (Theorem 4.3 of the Appendixes)". Damit ist der
+Schlussschritt von 3.7.8(b) genau `induction_on_mulSystem`
+(`WeakConvergence` M5), nicht die Produkthälfte.
+
+Es gibt eine Stelle bei \EK{}, an der die konvergenzbestimmende Produkthälfte
+wirklich arbeitet, und sie ist gefunden: der Schlusssatz von **Cor. 3.9.2**
+(Buchseite 144), „This, together with the fact that `H` is dense in `C̄(E)` …,
+allows one to conclude that the finite-dimensional distributions converge. The
+details are left to the reader." Das Manuskript zitiert Cor. 3.9.2 nicht — es
+zitiert aus §3.9 nur Thm. 3.9.1 (`fact:relcompact`) und Thm. 3.9.4
+(`fact:relcompact2`), und `rem:EKrelcompact` ist \EK{} Rem. 4.5.2 und geht über
+Relativkompaktheit plus Eindeutigkeit des Häufungspunkts, nicht über 3.9.2.
+Der Befund des Laufs vom 2026-08-31 steht damit: **der Produktpunkt von
+`WeakConvergence` Meilenstein 1 hat keinen Abnehmer, und sein einziger Grund
+ist §9 des Manuskripts.** Der Punkt sagt das jetzt und nennt Cor. 3.9.2 als den
+Weg, den das Manuskript gerade nicht geht.
+
+#### Die Vollständigkeit von `E`: die älteste offene Auffälligkeit, belegt
+
+Sie steht seit dem 2026-08-29 da und war nie eine Suchaufgabe ohne Werkzeug,
+sondern eine ohne Scan. Mit dem Scan ist sie eine Zeile:
+
+* \EK{} Thm. 3.1.8, Skorokhod-Darstellung (Buchseite 102): „Let $(S,d)$ be
+  **separable**." Der Beweis benutzt Lemma 1.3, disjunkte Borelmengen kleinen
+  Durchmessers und die Prohorov-Metrik; Vollständigkeit kommt nicht vor.
+* \EK{} Cor. 3.1.9, stetige Abbildung (Buchseite 103): „Let $(S,d)$ and
+  $(S',d')$ be **separable** metric spaces." Der Beweis ist Thm. 1.8 plus
+  Cor. 1.6.
+* \EK{} Thm. 3.7.8 (Buchseite 131): „Let $E$ be **separable**."
+* Die Vollständigkeit beginnt eine Seite später, bei Lemma 3.2.1 („If $(S,d)$
+  is complete and separable, then each $P$ is tight") und Thm. 3.2.2, also bei
+  Prohorov — genau dort, wo die stehende Regel dieses Auftrags sie vermutet
+  hatte, und in der Rückrichtung.
+
+Mathlib bestätigt die Trennung an derselben Naht, am Quelltext geprüft:
+`isCompact_closure_of_isTightMeasureSet` steht in der Sektion `Forward` unter
+`[MeasurableSpace E] [TopologicalSpace E] [T2Space E] [BorelSpace E]`
+(`Measure/Prokhorov.lean:65`) und sagt es im Docstring selbst („We only require
+the space to be T2"), während `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+in der Sektion `Backward` unter `[PseudoMetricSpace 𝓧] [OpensMeasurableSpace 𝓧]
+[SecondCountableTopology 𝓧]` (`:570`) **und** `[CompleteSpace 𝓧]` (`:630`)
+steht.
+
+**Was daraufhin korrigiert ist.** `SkorokhodSpace` Meilenstein 8 fixierte „`E`
+Polish" für alle sieben Punkte. Er führt jetzt, nach dem Muster von
+Meilenstein 2, zwei benannte Stufen: **(A)** `E` separabel metrisch für die
+ganze Theorie der endlich-dimensionalen Verteilungen und für Prohorov in
+Richtung Straffheit ⟹ Relativkompaktheit, **(B)** `E` polnisch für die zwei
+Punkte, die Prohorov rückwärts laufen lassen, `isTightMeasureSet_iff` und
+`isTightMeasureSet_iff_forall_postcomp` (\EK{} Thm. 3.9.1 sagt „complete and
+separable" selbst). Der Schlusssatz von Meilenstein 1 nennt Meilenstein 8 jetzt
+als zweite Ausnahme neben Meilenstein 2.
+
+**Und eine zweite Korrektur, die aus demselben Wortlaut fällt.**
+`tendsto_of_isTight_of_tendsto_finiteDimensional` verlangte **Straffheit**;
+\EK{} Thm. 3.7.8(b) und `fact:fddconv`(b) verlangen **Relativkompaktheit**, und
+das ist unter der Hinrichtung von Prohorov die schwächere Hypothese. Nach der
+stehenden Regel ist das ein Befund, und er ist ausgeführt: der Punkt heißt jetzt
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`, sagt
+seine vier Zutaten einzeln (Rechtsstetigkeit, `exists_countable_dense_continuity`,
+`borel_eq_iSup_comap_eval` in der Fassung längs einer dichten Menge,
+`induction_on_mulSystem`) und hält fest, dass die Produkthälfte nicht darunter
+ist und warum: identifiziert wird ein Gesetz auf `D ι E` und nicht auf einem
+Produktraum, und `eval t` ist dort messbar und nicht stetig — was der Beweis von
+Prop. 3.7.1 zeigt, indem er `f ∘ π_t` nur als punktweisen Limes stetiger
+Mittelungen bekommt. Die Straffheitsfassung steht als Korollar daneben, über
+`isCompact_closure_of_isTightMeasureSet`, und bleibt damit in Stufe (A).
+
+#### Ein Nebenbefund, der zu einer belegten Lücke wurde
+
+Die Zeile `fact:PSpolish` trug seit dem 2026-08-29 die Notiz „dass 𝒫(S) polnisch
+ist, ungeprüft". Geprüft, und es ist eine Lücke: Mathlib hat von
+`ProbabilityMeasure E` als metrischem Raum nur die **Metrisierbarkeit**
+(`MeasureTheory.instMetrizableSpaceProbabilityMeasure`,
+`Measure/LevyProkhorovMetric.lean:695`, unter `[PseudoMetrizableSpace X]
+[SeparableSpace X] [BorelSpace X]`). `SeparableSpace (ProbabilityMeasure`,
+`CompleteSpace (ProbabilityMeasure` und `PolishSpace (ProbabilityMeasure` haben
+in v4.33.1, im Arbeitsbranch des Nutzers und auf master (`gh search code`, nach
+einer Gegenprobe an `instMetrizableSpaceProbabilityMeasure` als Beleg, dass die
+Suche greift) **null** Treffer. Das ist die erste Hälfte von `fact:PSpolish`,
+und sie stand in keiner Roadmap. Sie steht jetzt als eigener Block am Kopf von
+`WeakConvergence` Meilenstein 3 — `separableSpace`, `completeSpace`,
+`polishSpace` —, weil sie der Untergrund der Skorokhod-Darstellung und jedes
+Teilfolgenarguments des Konvergenzteils ist, und weil sie nach der Regel der
+vollständigen Grundtheorie je Objekt ohnehin dorthin gehört. Der Meilenstein
+heißt jetzt „the space of laws, and the Skorokhod representation theorem", und
+der Kopf der Roadmap zählt fünf statt vier fehlende Dinge.
+
+**Offen geblieben.** Rückstau 1 (Manuskript, Regel 2) und Rückstau 2 (Task 23,
+unvergleichbare Atome) sind unberührt; für Task 23 gilt weiter, was der letzte
+Lauf sagte — die Wand steht im Protokoll, ein Hebel fehlt. Nicht getroffen ist
+die **Gliederungsfrage**, ob `SkorokhodSpace` Meilenstein 1 seine globale
+Festlegung „`E` a Polish space" aufgibt, nachdem jetzt zwei von acht
+Meilensteinen ihre Hypothesen selbst führen; das ist dieselbe Art Entscheidung
+wie die Zerlegung von Meilenstein 2 und gehört dem Nutzer. Ebenfalls nicht
+angefasst: die turnusmäßige Prüfung der Roadmapzitate gegen master, nach ihrer
+eigenen Regel nicht fällig.
+
+**Als Nächstes zu formalisieren:
+`MeasureTheory.ProbabilityMeasure.separableSpace`** (`WeakConvergence`
+Meilenstein 3, erster Punkt des neuen Blocks). Es ruht auf nichts als
+`TopologicalSpace.exists_dense_seq` für `E`, der endlichen Konvexkombination von
+Diracmaßen und der Metrisierbarkeit, die Mathlib in
+`instMetrizableSpaceProbabilityMeasure` schon liefert — kein Prozess, keine
+Filtration, keine Uhr, kein Pfadraum, und aus der ganzen Roadmap keine
+Vorbedingung. Es ist jetzt dran, weil es die einzige heute gefundene Lücke ist,
+die **unterhalb** aller bisherigen Vorschläge liegt: `induction_on_mulSystem`,
+`IsSeparating` und der Produktpunkt reden über Funktionenklassen auf `E`,
+dieser Punkt über den Raum, in dem alle drei ihre Aussagen später machen. Und
+er ist die Vorbedingung, die der Konvergenzteil am dichtesten braucht — jedes
+Teilfolgenargument von `rem:EKrelcompact` und jedes „relativ kompakt" der vier
+Facts `fddconv`, `relcompact`, `relcompact2`, `prohorov` lebt in
+`ProbabilityMeasure`, und ohne Separabilität ist dort nicht einmal gesichert,
+dass Kompaktheit Folgenkompaktheit ist. Gegenüber den älteren Vorschlägen
+bleibt `Clock.interval_union` der erste der Task-23-Linie;
+`ProbabilityMeasure.separableSpace` tritt in der Konvergenzlinie **vor**
+`induction_on_mulSystem`, weil dieses über `ProbabilityMeasure` quantifiziert
+und jenes es konstruiert.
+
+### 2026-08-31, dritter Lauf — Rückstau 4: `ProbabilityMeasure E` als metrischer Raum
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstaupunkt 1
+bleibt stehen (Manuskript, Regel 2), Punkt 2 ist Task 23 und ohne neuen Hebel,
+Punkt 3 ist nach seiner eigenen Regel — alle zwei Wochen, zuletzt 2026-08-29 —
+nicht fällig. Der Lauf ging an **Punkt 4**. Er ist nicht gestrichen, sondern hat
+einen Zwischenstand: der Block, den der zweite Lauf des Tages an den Kopf von
+`WeakConvergence` Meilenstein 3 gesetzt hat, war **nicht formalisierbar, wie er
+dastand**, aus zwei Gründen, und beide sind jetzt behoben. Geprüft wurde an
+`~/Code/lean/journal/.lake/packages/mathlib` (v4.33.1), am Arbeitsbranch des
+Nutzers (`091609e560a`) und gegen master über `gh api search/code`.
+
+**Erstens: eine der drei Aussagen war nicht typrichtig.** Der Block verlangte
+`MeasureTheory.ProbabilityMeasure.completeSpace`, „die Lévy--Prokhorov-Metrik auf
+`ProbabilityMeasure E` ist vollständig". Das lässt sich so nicht hinschreiben.
+`LevyProkhorov` ist eine einfeldrige **Struktur** über der Maßklasse
+(`Measure/LevyProkhorovMetric.lean:259`), und die Abstandsinstanzen sitzen auf
+ihr: `LevyProkhorov.instPseudoMetricSpaceProbabilityMeasure` (`:311`) und, unter
+`[BorelSpace E]`, `LevyProkhorov.levyProkhorovDist_metricSpace_probabilityMeasure`
+(`:336`). `ProbabilityMeasure E` selbst trägt die Topologie der
+Verteilungskonvergenz und **keine Uniformität**, also ist
+`CompleteSpace (ProbabilityMeasure E)` keine Aussage, sondern ein Typfehler. Der
+Meilenstein führt jetzt vier Punkte statt drei:
+`ProbabilityMeasure.separableSpace`, `ProbabilityMeasure.secondCountableTopology`,
+`LevyProkhorov.completeSpace_probabilityMeasure` — auf dem Synonym — und
+`ProbabilityMeasure.isCompletelyMetrizableSpace`, das über
+`LevyProkhorov.probabilityMeasureHomeomorph` (`:676`),
+`Homeomorph.isClosedEmbedding` (`Topology/Homeomorph/Defs.lean:297`) und
+`Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
+(`Topology/Metrizable/CompletelyMetrizable.lean:249`) zurückwandert. Dass
+`polishSpace` danach nichts mehr kostet, ist ebenfalls am Quelltext belegt:
+`PolishSpace` ist definiert als `SecondCountableTopology` zusammen mit
+`IsCompletelyMetrizableSpace` (`Topology/MetricSpace/Polish.lean:62`), und die
+Instanz bei `:65` baut es aus Separabilität und vollständiger Metrisierbarkeit.
+Dieselbe Naht trifft die Zweitabzählbarkeit:
+`UniformSpace.secondCountable_of_separable`
+(`Topology/UniformSpace/Cauchy.lean:932`) verlangt einen uniformen Raum mit
+abzählbar erzeugter Uniformität und greift auf `ProbabilityMeasure E` nicht; der
+Schluss läuft über das Synonym und `Homeomorph.secondCountableTopology`
+(`Topology/Homeomorph/Lemmas.lean:37`) zurück. Die Regel, die dabei herauskommt
+und im Meilenstein jetzt vorneweg steht: jede **uniforme** Aussage über den Raum
+der Gesetze wird auf `LevyProkhorov (ProbabilityMeasure E)` formuliert, jede
+**topologische** auf `ProbabilityMeasure E`.
+
+**Zweitens: der angegebene Beweisweg der Vollständigkeit war zirkulär.** Er
+lautete, eine Cauchyfolge sei straff „durch das Überdeckungsargument, das
+`MeasureTheory.isTightMeasureSet_of_isCompact_closure` für eine Menge mit
+kompaktem Abschluss führt". Dieser Satz ist die **Umkehrung**: er setzt den
+kompakten Abschluss voraus, den der nächste Schritt erst herstellen soll. Was
+der Schritt wirklich braucht, ist Ulams Satz, und den hat Mathlib:
+`MeasureTheory.isTightMeasureSet_singleton` (`Measure/Tight.lean:99`, unter
+`[IsCompletelyPseudoMetrizableSpace] [SecondCountableTopology] [BorelSpace]`, auf
+master zeichengleich und nicht `deprecated`), dazu
+`MeasureTheory.IsTightMeasureSet.union` (`Tight.lean:119`) für den endlichen
+Kopf. Der Meilenstein sagt jetzt den vollständigen Weg: `N` aus der
+Cauchybedingung, Ulam plus `union` für `μ 0, …, μ N`, deren Kompaktum durch
+endlich viele `r/2`-Bälle überdecken, und für `n > N` liefert die
+Lévy--Prokhorov-Ungleichung dieselbe Schranke, weil die `r/2`-Verdickung von
+`⋃ x ∈ F, ball x (r/2)` in `⋃ x ∈ F, ball x r` liegt.
+
+**Und daraus fällt eine eigene, an Mathlib gerichtete Aussage.** Der Beweis von
+`isTightMeasureSet_of_isCompact_closure` zerfällt sauber in zwei Teile, und
+Mathlib hat den einen nur inline. Die Zeilen 640--704 von
+`Measure/Prokhorov.lean` bauen das Kompaktum
+`⋂ m, ⋃ i ≤ k m, closure (ball (D i) (u m))`, summieren die Fehler über `m` und
+schließen mit `TotallyBounded.isCompact_of_isClosed`; die Kompaktheitshypothese
+geht dort **an genau einer Stelle** ein, nämlich im Schritt `byclaim`, der
+`exists_measure_iUnion_gt_of_isCompact_closure` (`:573`) aufruft. Herausgezogen
+ist das Übrige die Aussage: auf einem vollständigen, zweitabzählbaren
+metrischen Raum ist eine Menge von Wahrscheinlichkeitsmaßen straff, sobald sie
+**gleichmäßig totalbeschränkt im Maß** ist — zu jedem `ε > 0` und `r > 0` ein
+endliches `F` mit `μ (⋃ x ∈ F, ball x r)ᶜ ≤ ε` für alle `μ`. Sie steht jetzt als
+`MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball` im
+Meilenstein, der Mathlib-Satz wird ihr Korollar, und die Vollständigkeit oben
+ist die zweite Anwendung.
+
+**Ein dritter Punkt, der beim Nachlesen der Skorokhod-Darstellung anfiel.** Der
+Meilenstein sagte, die Konstruktion benutze „eine abzählbare Partition von `E`
+in Mengen kleinen Durchmessers, deren Ränder `μ`-null sind", ohne ein Werkzeug zu
+nennen. Mathlibs Partition
+`MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
+(`LevyProkhorovMetric.lean:540`) ist aus Bällen **eines festen Radius** gebaut
+und sagt über Ränder nichts; die Nullränder sind der eigentliche Inhalt des
+Schritts. Sie stehen jetzt als eigener Punkt
+`exists_measurable_partition_diam_le_null_frontier`, mit den drei Werkzeugen, die
+Mathlib dafür hat: `MeasureTheory.exists_null_frontier_thickening`
+(`Measure/Portmanteau.lean:401`, das über
+`MeasureTheory.Measure.countable_meas_pos_of_disjoint_iUnion`,
+`Measure/Typeclasses/SFinite.lean:305`, läuft) für die Radienwahl,
+`Metric.thickening_singleton` (`Topology/MetricSpace/Thickening.lean:157`), um
+eine Punktverdickung als Ball zu lesen, und `frontier_inter_subset`,
+`frontier_union_subset`, `frontier_compl` (`Topology/Closure.lean:537,544,528`),
+damit `disjointed` die Nullränder nicht zerstört.
+
+**Nichts davon steht auf master.** `SeparableSpace (ProbabilityMeasure`,
+`CompleteSpace (LevyProkhorov`, `IsCompletelyMetrizableSpace (ProbabilityMeasure`
+und `PolishSpace (ProbabilityMeasure` haben je null Treffer
+(`gh api search/code`, mit `instMetrizableSpaceProbabilityMeasure`,
+`isTightMeasureSet_singleton` und
+`exists_measure_iUnion_gt_of_isCompact_closure` als Gegenprobe, dass die Suche
+greift: 1, 2 und 1 Treffer). Ebenso null im Arbeitsbranch des Nutzers und in
+v4.33.1.
+
+**Ein Nebenbefund in `SkorokhodSpace` Meilenstein 8, eingetragen.** Der Punkt
+`tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` sagte, der Beweis
+benutze „eine konvergente Teilfolge und sonst nichts". Das stimmt, verschweigt
+aber, woher die Teilfolge kommt: aus einem kompakten Abschluss folgt
+Folgenkompaktheit erst über die Metrisierbarkeit von
+`ProbabilityMeasure (D ι E)`, also über `instMetrizableSpaceProbabilityMeasure`
+angewandt auf `SeparableSpace (D ι E)` aus Meilenstein 5. Der Punkt nennt das
+jetzt. Für Stufe (A) ist es unschädlich — `SeparableSpace (D ι E)` verlangt nach
+Meilenstein 5 nur eine abzählbare dichte Teilmenge von `E` —, aber es ist die
+zweite Stelle desselben Punktes, an der die Separabilität arbeitet, und sie war
+ungenannt.
+
+**Bei der Gelegenheit die Liste „What Mathlib already has" derselben Roadmap
+nachgeprüft**, weil der Lauf ohnehin in der Datei war. Alle elf genannten
+Deklarationen existieren in v4.33.1 unter dem angegebenen Namen und in der
+angegebenen Datei, keine ist `deprecated`:
+`ext_of_forall_integral_eq_of_IsFiniteMeasure` und
+`ext_of_forall_lintegral_eq_of_IsFiniteMeasure`
+(`Measure/HasOuterApproxClosed.lean:269,256`),
+`ext_of_forall_mem_subalgebra_integral_eq_of_polish` und
+`…_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:72,36`),
+`FiniteMeasure.tendsto_iff_forall_integral_tendsto`,
+`tendsto_of_forall_integral_tendsto`, `tendsto_iff_forall_integral_rclike_tendsto`,
+`tendsto_map_of_tendsto_of_continuous`, `continuous_map`
+(`Measure/FiniteMeasure.lean:726,701,748,957,972`, die
+`ProbabilityMeasure`-Fassungen bei `Measure/ProbabilityMeasure.lean:346,354,639,654`),
+`ProbabilityMeasure.tendsto_iff_tendsto_charFun`
+(`Measure/LevyConvergence.lean:215`, auf master drei Treffer, davon einer in
+`docs/1000.yaml`) und `uniformIntegrable_iff`
+(`Function/UniformIntegrable.lean:878`). Das ist keine Erledigung von
+Rückstaupunkt 3 — der verlangt alle vier Roadmaps gegen master — aber es nimmt
+ihm eine Roadmap ab.
+
+**Was nicht geschehen ist.** Kein Lean wurde übersetzt: der Worktree hat kein
+`.lake`, und Regel 3 verbietet den Wechsel in den Hauptcheckout. Die fünf neuen
+Stümpfe in `WeakConvergence/Suggested.lean` sind Prototypen wie die übrigen und
+tragen `sorry`. Rückstaupunkt 4 bleibt deshalb offen; was dieser Lauf ihm
+genommen hat, ist der Grund, aus dem er in seiner alten Fassung nicht
+ausführbar war.
+
+**Als Nächstes zu formalisieren:
+`MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`**
+(`WeakConvergence` Meilenstein 3). Es ruht auf nichts als
+`TopologicalSpace.exists_dense_seq`, `measure_iUnion_le` und
+`TotallyBounded.isCompact_of_isClosed` — kein Prozess, kein Pfadraum, keine Uhr,
+und aus der ganzen Roadmap keine Vorbedingung. Es ist jetzt dran, weil es der
+einzige Punkt dieses Projekts ist, dessen **Beweis in Mathlib schon steht**: die
+Zeilen 640--704 von `Measure/Prokhorov.lean` sind er, wörtlich, und die Arbeit
+besteht darin, den einen Aufruf von
+`exists_measure_iUnion_gt_of_isCompact_closure` durch die Hypothese zu ersetzen.
+Das ist zugleich ein Mathlib-PR, der für sich steht — der vorhandene Satz
+`isTightMeasureSet_of_isCompact_closure` wird sein Korollar, ohne dass eine Zeile
+seines Beweises verlorengeht —, und die Vorbedingung von
+`LevyProkhorov.completeSpace_probabilityMeasure`, also der Aussage, ohne die
+keines der Teilfolgenargumente des Konvergenzteils steht. Gegenüber den älteren
+Vorschlägen: `Clock.interval_union` bleibt der erste der Task-23-Linie; in der
+Konvergenzlinie tritt dieses vor `ProbabilityMeasure.separableSpace`, das der
+zweite Lauf des 2026-08-31 vorgeschlagen hat, denn jenes verlangt eine
+Konstruktion und dieses nur eine Umstellung.
+
+### 2026-08-31, vierter Lauf — Rückstau 2: die Idealreduktion des Halbordnungsfalls
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstaupunkt 1
+bleibt stehen (Manuskript, Regel 2). Der Lauf ging an **Punkt 2**, den offenen
+Fall unvergleichbarer Atome aus Task 23, den der dritte Lauf des Tages mit „ohne
+neuen Hebel" übergangen hatte. Ein Hebel hat sich gefunden; der Beweis ist
+damit nicht fertig, aber der Fall ist auf **eine einzige Aussage** eingeschränkt,
+und der Massenbereich, in dem sie zu zeigen ist, ist vermessen. Am Manuskript
+wurde nichts geändert, an den Roadmaps nichts; geändert sind
+`Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses Inventar, neu sind
+`Task23/antisym.py` und `Task23/reduction.py`. Der ausführliche Bericht steht im
+PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (vierter Lauf)"; hier das
+Wesentliche.
+
+**Die Rechnung läuft in der `κ`-Gestalt.** Der dritte Lauf des 2026-08-30 hatte
+`Φ` eliminiert und `(**)` in einen symmetrischen und einen antisymmetrischen
+Teil zerlegt, von denen nur der zweite den Defekt trägt. `antisym.py` (neu)
+stellt das System allein in `κ` auf — `n(n-1)/2` Unbekannte statt `n²` — und ist
+gegen `posetsearch.py` geeicht: Ketten fallen nie, der Diamant mit
+`m_a = 1, m_b = -1` fällt, nichtnegative Massen fallen nie (4864 + 53217 Fälle,
+exakte Bruchrechnung).
+
+**Die Idealreduktion, bewiesen.** Enthält eine Teilmenge `I ⊆ 𝕋` das kleinste
+Element und ist sie abwärtsabgeschlossen, so ist `𝕋_{<s} ⊆ I` für `s ∈ I`, also
+stimmen `Ψ` und `δ` auf `I` mit denen auf `𝕋` überein, und die Relationen an
+Paaren aus `I` sind eine Teilmenge derer auf `𝕋`. Eine Lösung auf `𝕋`
+schränkt sich also ein. Folglich: **`δ(t) = 0` ist auf `𝕋` erzwungen, sobald es
+auf `𝕋_{≤t}` erzwungen ist**, und `𝕋_{≤t}` hat kleinstes *und* größtes Element.
+Die Induktion über `|𝕋|` liefert damit `δ(s) = 0` für jedes `s`, dessen
+Hauptideal echt kleiner ist als `𝕋` — also für alles außer einem größten
+Element. Hat `𝕋` zwei maximale Elemente, ist gar nichts mehr zu zeigen.
+`reduction.py` (neu) prüft die behauptete Richtung an 3513 Paaren `(𝕋,t)` mit
+Massen beider Vorzeichen nach: null Abweichungen. Verlustfrei ist die Reduktion
+nicht — in vier dieser Fälle ist `δ(t)` auf `𝕋_{≤t}` frei und auf `𝕋` erzwungen;
+für nichtnegative Massen kostet das nichts.
+
+**Und Nullmassen fallen weg.** Ist `m_c = 0` für ein `c ≠ 0`, so ändert das
+Streichen von `c` kein `Ψ(s,t)`, lässt `0` kleinstes Element und nimmt dem
+System nur Relationen. Alle Massen außer `m_0` dürfen also als strikt positiv
+angenommen werden.
+
+**Der Restdefekt hat eine scharfe Gestalt.** Auf einer Halbordnung mit
+kleinstem Element `0` und größtem `z` ist nach dem Obigen `δ` auf
+`W = 𝕋 ∖ {z}` null, und die Relationen an `(0,a)` und `(0,z)` geben
+`Ψ(a,0) = 0` für `a ∈ W` und `Ψ(z,0) = δ(z)`. Mit `g(c) := m_c κ(c,0)` heißt
+das: `g` summiert sich über **jedes** Hauptideal `𝕋_{<a}`, `a ∈ W`, zu null, und
+`δ(z)` ist die Summe über das eine verbleibende Ideal `W`. Da die Vereinigung
+der `𝕋_{<a}` gerade `W` ohne die maximalen Elemente von `W` ist, sitzt der
+Defekt genau auf der Antikette der maximalen Elemente von `𝕋_{<z}` — dieselbe
+Stelle wie beim dritten Lauf, jetzt aber ohne `Φ`, ohne `γ` und ohne das obere
+Ende. Auch das ist nachgerechnet (243 + 608 beschränkte Halbordnungen, keine
+Abweichung).
+
+**Was den Rest schließt, und wo es gilt.** Aus `Ψ(a,z) = 0` für alle `a < z`
+folgt (R) in vier Zeilen: die mit `m_a` gewichtete Summe der Relationen an
+`(a,z)` lässt `∑ m_a Ψ(z,a) = ∑_{a,b<z} m_a m_b κ(b,a) = 0` verschwinden und
+gibt `q(𝕋_{<z}) δ(z) = 0`; bei `q(𝕋_{<z}) = 0` sind unter `m ≥ 0` alle Massen
+unter `z` null und `Ψ(z,·)` verschwindet ohnehin. Das ist genau das
+`q(𝕋_{<s})` des Suchbefunds von `sharp.py` vom 2026-08-30. Die zugehörige
+Vermutung ist **(C4)** „`Ψ(a,x) = 0`, sobald `a < x`", und ihre Reichweite ist
+jetzt vermessen: bei nichtnegativen Massen ist sie **falsch** (864 Ausfälle auf
+fünf Punkten, kleinster Zeuge `𝕋_{<1} = {0,2,3,4}` mit `m = (0,0,1,0,1)`, wo
+`Ψ(3,1)` frei bleibt), bei strikt positiven Massen und ebenso bei `m_0 = 0` und
+sonst positiven Massen **ohne einen einzigen Ausfall** (je 1539 + 7008 Fälle).
+Sie hält also genau in dem Bereich, den die Streichung der Nullmassen
+übriglässt. Als Sackgasse mit festgehalten: die stärkere Vermutung `Ψ ≡ 0` ist
+schon bei positiven Massen falsch, mit einem Gegenbeispiel von Hand auf fünf
+Punkten — `Ψ` lebt auf den unvergleichbaren Paaren, und (C4) ist die richtige
+Abschwächung.
+
+**Was nicht geschehen ist.** Kein Lean übersetzt (der Worktree hat kein
+`.lake`), keine Roadmap geändert, `check.py` nicht gelaufen, weil das Manuskript
+nicht angefasst wurde. Die Idealreduktion ist bewusst **nicht** in
+`MartingaleProblems` Meilenstein 8 eingetragen: sie ist ein Hilfssatz zu einer
+Aussage, die noch nicht bewiesen ist, und ein Meilenstein trägt keine
+Gerüste für Ungewisses. Sie steht im PROTOKOLL, bis (R) bewiesen ist.
+
+**Als Nächstes zu formalisieren: `atomGrid_symm`** (`MartingaleProblems`
+Meilenstein 8). `M : ℕ`, Massen `m i ≠ 0` für `1 ≤ i ≤ M-1`, und ein
+`Φ : ℕ → ℕ → ℝ` mit `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)`;
+Konklusion `Φ i j = Φ j i`. Es ruht auf nichts als der Linearität der Relation,
+ihrer Invarianz unter Transposition und einer Induktion über den Abstand zur
+Diagonale — kein Maß, keine Uhr, `ℕ` als einziger Index, und deshalb nach
+`Mathlib/Algebra/Order/` und nicht in den Wahrscheinlichkeitsbaum. Es ist
+**jetzt** dran, und der Grund kommt aus diesem Lauf: `duality_of_atomic` besteht
+aus dem Kettenfall und dem Halbordnungsfall, der Kettenfall ist seit dem
+2026-08-30 vollständig bewiesen und `atomGrid_symm` ist sein ganzer Inhalt,
+während der Halbordnungsfall nach dem heutigen Stand auf einer Vermutung sitzt,
+die noch keinen Beweis hat. Auf die Halbordnung zu warten hieße, den fertigen
+Teil liegen zu lassen; und `atomGrid_symm` ist von ihr nicht berührt, weil die
+Idealreduktion oben das obere Ende und nicht das Gitter betrifft. Gegenüber den
+älteren Vorschlägen: `isTightMeasureSet_of_forall_exists_finite_iUnion_ball`
+(dritter Lauf) bleibt der erste der Konvergenzlinie; in der Task-23-Linie tritt
+`atomGrid_symm` **vor** `Clock.interval_union`, denn jenes verlangt die
+Uhrendefinition samt Maßtheorie und dieses nur Arithmetik auf `ℕ`.
+
+### 2026-08-31, fünfter Lauf — Rückstau 2: die flache Spitze ist bewiesen
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da, Rückstaupunkt 1
+bleibt beim Nutzer (Manuskript, Regel 2). Der Lauf ging wieder an **Punkt 2**,
+den Fall unvergleichbarer Atome, und zwar an den Auftrag, den der vierte Lauf
+hinterlassen hatte: „(C4$^+$) beweisen oder widerlegen". Herausgekommen ist
+beides und keines von beidem — der **Hebel** ist widerlegt, ein **Stück des
+Falles** ist bewiesen. Am Manuskript wurde nichts geändert, an den Roadmaps
+nichts; geändert sind `Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses
+Inventar, neu sind `Task23/c5.py`, `Task23/flat.py` und
+`Task23/certificate.py`. Der ausführliche Bericht steht im PROTOKOLL,
+Abschnitt „Der Halbordnungsfall, 2026-08-31 (fünfter Lauf)"; hier das
+Wesentliche.
+
+**(C5) ist falsch.** Der vierte Lauf hatte (C4$^+$) — „$\Psi(a,x)=0$, sobald
+$a<x$" — als das benannt, was den Halbordnungsfall schließt. Der
+naheliegende Weg dorthin ist die termweise Fassung: in
+$\Psi(a,x)=\sum_{c<a}m_c\kappa(c,x)$ hat jeder Summand ein $c$ mit $c<a<x$,
+also genügte „$m_c\kappa(c,x)=0$, sobald es ein $b$ mit $c<b<x$ gibt" (C5).
+Diese Aussage ist **falsch**, und zwar schon bei lauter Massen $1$: auf
+$\T=\{0,3,4,2,1\}$ mit $0<3,4<2<1$ bleibt $\kappa(3,1)$ frei, obwohl
+$3<2<1$; erzwungen ist allein die Kombination
+$m_3\kappa(3,1)+m_4\kappa(4,1)$, die in $\Psi(2,1)$ steht. (C4$^+$) selbst hält
+dort und überall: $0$ Ausfälle unter $2052+10512$ Konfigurationen mit strikt
+positiven Massen und $m_0$ auch $0$ (`c5.py`, exakte Bruchrechnung). Das ist
+kein Nebenbefund, sondern eine Weichenstellung: der Beweis muss über $\Psi$
+laufen, nicht über die einzelnen $\kappa$.
+
+**Bewiesen: die flache Spitze, und schärfer als erwartet.** Liegt unter $t$ nur
+eine Antikette von Atomen — $\T_{<c}=\{0\}$ für jedes $c$ mit $0<c<t$ —, so ist
+$\delta(t)=0$ und $\Psi(a,t)=0$ für jedes $a<t$. Gebraucht wird davon **nicht**
+die Positivität der Massen, sondern allein $q(M)\neq0$ für
+$M=\T_{<t}\setminus\{0\}$: die Relationen an $(c,t)$, mit $m_c$ gewichtet und
+über $c\in M$ summiert, geben durch Antisymmetrie $q(M)R=0$ für
+$R=\sum_{c\in M}m_c\kappa(c,t)$, und die Relationen an $(0,c)$ und $(0,t)$
+erledigen den $m_0$-Anteil. Vier Schritte, kein Grenzübergang, keine Vermutung.
+Der Satz enthält den **Diamanten** als den Fall $|M|=2$ — den kleinsten Fall
+also, dessen Begründung im Manuskript der dritte Lauf des 2026-08-30 als falsch
+nachgewiesen hat und der seither ohne Beweis dasteht —, und er erklärt zugleich
+das dortige Gegenbeispiel: $m_a=1$, $m_b=-1$ ist genau $q(M)=0$. Weglassen
+lässt sich die Hypothese nicht: bei $q(M)=0$ fällt die Dualität an $60$ von
+$2625$ geprüften Stellen. Für eine echte Uhr ist sie automatisch, denn $q$ ist
+ein Maß. Nachgerechnet mit `flat.py` über alle Halbordnungen der Höhe $\le2$ auf
+bis zu **sechs** Punkten ($1053+21141+80736$ Konfigurationen) und in der
+scharfen Fassung mit Massen beider Vorzeichen ($10500+5071$ Stellen): kein
+Ausfall.
+
+**Ein Werkzeug, das der nächste Lauf erbt.** `certificate.py` rechnet mit
+symbolischen Massen die Linearkombination der Relationen aus, die ein
+verschwindendes Funktional *ist* — nicht nur, dass es verschwindet. Am
+Diamanten steht dort der Faktor $1/(m_1+m_2)$, an dem die Positivität sichtbar
+wird; bei „drei Atomen unter der Spitze" kommt genau der Beweis oben heraus.
+Aus einem gerechneten Fall ein Argument abzulesen, ist damit keine Ratearbeit
+mehr.
+
+**Offen geblieben.** (R) für ein $t$, unter dem eine Kette $0<a<b<t$ liegt.
+Warum der Beweis dort anders aussehen muss, ist jetzt benannt: Schritt 2 der
+flachen Rechnung benutzt, dass $\Psi(c,t)$ für **alle** $c\in M$ dieselbe Größe
+$m_0\kappa(0,t)$ ist; bei zwei Stockwerken ist das nicht mehr so. Nicht
+geschehen ist zweierlei, und beides mit Absicht. Kein Lean übersetzt — der
+Worktree hat kein `.lake`. Und nichts in eine Roadmap eingetragen: die flache
+Spitze ist ein Spezialfall von `duality_of_atomic`, und sobald der
+Halbordnungsfall ganz steht, wäre der Punkt Gerüst. Was dem **Nutzer** gehört,
+ist die Frage ans Manuskript: `rem:atomsnotchange` führt die Zeile „purely
+atomic, atoms incomparable" als „verified exhaustively up to five points; not
+proved", und das stimmt seit heute nicht mehr für die flache Spitze samt
+Diamant. Eine Proposition dafür ist im PROTOKOLL fertig formuliert und
+bewiesen; sie ins Manuskript zu setzen, ist ein eigener Lauf wert, weil danach
+`check.py` laufen muss.
+
+**Als Nächstes zu formalisieren: weiterhin `atomGrid_symm`**
+(`MartingaleProblems` Meilenstein 8), aus den Gründen des vierten Laufs — der
+Kettenfall ist vollständig bewiesen, `atomGrid_symm` ist sein ganzer Inhalt, und
+es ruht auf nichts als Arithmetik auf `ℕ`. Der heutige Satz ändert daran
+nichts, sondern bestätigt die Reihenfolge: er ist ein zweiter, unabhängiger
+Baustein desselben Meilensteins (`duality_of_atomic`), aber er ruht auf der
+Idealreduktion, die ihrerseits die Uhrendefinition und `Clock.interval_union`
+verlangt, und ist damit der spätere von beiden. Wer ihn dennoch zuerst will,
+formalisiere ihn in der reinen Gestalt, in der er hier bewiesen ist —
+`Finset`-Halbordnung, Massen in `ℝ`, `κ` antisymmetrisch, keine Maßtheorie —,
+denn in dieser Gestalt ruht er auf ebensowenig wie `atomGrid_symm`.

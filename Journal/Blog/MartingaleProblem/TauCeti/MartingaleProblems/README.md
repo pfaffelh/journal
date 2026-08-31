@@ -630,6 +630,96 @@ one point compactification and a product of state spaces are handled
   converging to `Set.indicator (⋂ k, U k) 1` need not exist in `A` even when one
   exists for every `U k`.
 
+A càdlàg path has left limits; it need not reach them. The last block of this
+milestone says when a solution does, which is a second path property proved in
+the language of the martingale problem and not of the state space. Keep
+`[LinearOrder ι]` with the order topology and the countable dense `D`, add
+`[OrderBot ι]` and the conditionally complete lattice structure for the suprema
+of stopping times, and let `E` be a separable metric space.
+
+* `IsQuasiLeftContinuous X 𝓕 P`: for every `τ : ℕ → Ω → ι` with each `τ n` a
+  stopping time for `𝓕` and `Monotone τ`, and every `t`,
+  ```
+  ∀ᵐ ω ∂P, ⨆ n, τ n ω ≤ t →
+    Tendsto (fun n ↦ X (τ n ω) ω) atTop (𝓝 (X (⨆ n, τ n ω) ω)) .
+  ```
+  The clause `⨆ n, τ n ω ≤ t` is what makes `τ n` and `⨆ n, τ n` bounded
+  stopping times, and it is why the statement is quantified over `t` rather than
+  over an event `{τ < ∞}`; on `ι = [0, ∞)` a countable cofinal family of `t`
+  recovers `P {lim X (τ n) = X τ, τ < ∞} = P {τ < ∞}`, which is the form of
+  Ethier–Kurtz, Theorem 4.3.12. Mathlib has no notion of this kind: the strings
+  `quasi-left` and `QuasiLeftContinuous` occur nowhere in the library.
+* `IsQuasiLeftContinuous.ae_eq_leftLim`: reading the definition at the constant
+  stopping times `τ n = s n` for `s n ↑ t` gives
+  `∀ᵐ ω ∂P, Function.leftLim (X · ω) t = X t ω` for every `t` that is not
+  minimal. This is the sharpening of Ethier–Kurtz, Lemma 3.7.7, which says only
+  that the set of `t` failing it is countable; that lemma is
+  `SkorokhodSpace.exists_countable_dense_continuity` in **SkorokhodSpace**
+  Milestone 8.
+* `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
+  Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
+  special shape. Let `Φ` be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
+  let `Φ` be separating in the sense of the roadmap **WeakConvergence**, and let
+  the compensator `C` attached to each `f ∈ Φ` be almost surely right continuous
+  and **left continuous in `L¹` along stopping times**: for every nondecreasing
+  sequence `τ` of stopping times, with `τ' = ⨆ n, τ n`, and every `t`,
+  ```
+  Tendsto (fun n ↦ ∫ ω, ‖C (min (τ' ω) t) ω - C (min (τ n ω) t) ω‖ ∂P)
+    atTop (𝓝 0) .
+  ```
+  Then `IsQuasiLeftContinuous X 𝓕 P`. The proof is four steps and each of them
+  is a named item already, here or in **WeakConvergence**. Optional sampling at
+  the bounded stopping times `min (τ n) t ≤ min τ' t`, the first item of this
+  milestone, gives
+  `Y (min (τ n) t) =ᵐ[P] P[Y (min τ' t) | (hτ n).measurableSpace]`. The
+  decomposition `f (X t) = Y t + C t` of `IsRegularizingClass` is then needed at
+  a stopping time and not only at each fixed `t`; it upgrades because both sides
+  are right continuous and it holds on the countable dense `D`, and that upgrade
+  is a lemma of `IsRegularizingClass` of its own, because the càdlàg theorem
+  uses the decomposition `t` by `t` and this theorem cannot. Substituting it,
+  ```
+  f (X (min (τ n) t)) =ᵐ[P] P[f (X (min τ' t)) | (hτ n).measurableSpace]
+      - P[C (min τ' t) - C (min (τ n) t) | (hτ n).measurableSpace] ,
+  ```
+  whose second term tends to `0` in `L¹` by the hypothesis on `C` and
+  conditional Jensen. The first term is handled by **Lévy's upward theorem**,
+  `MeasureTheory.tendsto_ae_condExp` and `MeasureTheory.tendsto_eLpNorm_condExp`
+  of `Mathlib/Probability/Martingale/Convergence.lean`, read at the filtration
+  `n ↦ (hτ n).measurableSpace`, which is a `Filtration ℕ` by
+  `MeasureTheory.IsStoppingTime.measurableSpace_mono` and
+  `MeasureTheory.IsStoppingTime.measurableSpace_le` of
+  `Mathlib/Probability/Process/Stopping.lean`. Both are stated for a real valued
+  integrand and a finite measure, so the `𝕂` valued case is the two components.
+  The left side converges to `f ∘ L` with
+  `L ω = limUnder atTop (fun n ↦ X (τ n ω) ω)`, which exists because the paths
+  are càdlàg and `τ` is monotone, and which is measurable for
+  `⨆ n, (hτ n).measurableSpace`. So
+  `f ∘ L = P[f (X (min τ' t)) | ⨆ n, (hτ n).measurableSpace]` for every
+  `f ∈ Φ`, and `IsSeparating.ae_eq_of_forall_condExp_eq` of **WeakConvergence**
+  Milestone 1 gives `L =ᵐ[P] X (min τ' t)`. That last step is the one that also
+  closes `exists_cadlag_modification_of_isRegularizingClass`, and being
+  separating is the only hypothesis on `Φ` the two theorems share: no countable
+  subset separating the points of `E` is used here, and no compact containment.
+* `isQuasiLeftContinuous_of_isMPSolutionFor`, the classical instance
+  (Ethier–Kurtz, Theorem 4.3.12). For `A ⊆ Cb(E) × Bdd(E)` with separating
+  domain and a solution `X` with càdlàg paths, `IsQuasiLeftContinuous X 𝓕 P`
+  **provided the clock has no atoms**, `∀ u, q {u} = 0`. The compensator is
+  `C t = ∫ u in Clock.interval q c ⊥ t, g (X u) ∂q`, so
+  `‖C (min τ' t) - C (min (τ n) t)‖ ≤ ‖g‖ * q (Clock.interval q c (min (τ n) t) (min τ' t))`,
+  the sets on the right decrease to the single point `min τ' t`, and continuity
+  from above of the clock on `Clock.interval q c ⊥ t`, which has finite measure,
+  finishes it.
+* `not_isQuasiLeftContinuous_of_atom`, the sharpness, as a named example and not
+  as a remark. Atomlessness is not a convenience of the proof, and it is not a
+  hypothesis of `exists_cadlag_modification_of_isRegularizingClass`, which holds
+  for every clock: an atom of `q` at `u` is a fixed time of discontinuity. On
+  `E = Bool` with `q = Measure.dirac u` there is a solution that flips a fair
+  coin at `u` and is constant on either side of it, and for `s n ↑ u` its paths
+  have `X (s n) → X (u-) ≠ X u` on an event of probability one half. The
+  existence of a càdlàg modification and quasi-left-continuity therefore
+  separate exactly at the atoms of the clock, and the example is what makes the
+  separation checkable.
+
 ## Milestone 10: the abstract convergence theorem
 
 Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces

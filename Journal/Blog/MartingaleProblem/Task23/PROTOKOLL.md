@@ -309,3 +309,254 @@ Kernbasis. `sharp.py` setzt darauf die Suche nach der scharfen Bedingung auf,
   Gleichungen einzeln halten.
 * **Positivität für entbehrlich halten**, weil `lem:atomgrid` sie nicht braucht.
   Widerlegt durch das Gegenbeispiel oben.
+
+## Der Halbordnungsfall, 2026-08-31 (vierter Lauf): die Idealreduktion
+
+Wieder angegangen wurde der erste offene Punkt, die unvergleichbaren Atome. Ein
+Beweis kam wieder nicht heraus. Herausgekommen sind eine **Reduktion, die den
+Fall auf beschränkte Halbordnungen einschränkt und dort auf einen einzigen
+Defekt**, eine schärfere Gestalt dieses Defekts, und eine Vermutung, die den
+Rest schließen würde und deren Gültigkeitsbereich vermessen ist. Alles Folgende
+steht in der $\kappa$-Gestalt des dritten Laufs — $\gamma$ zerfällt in
+symmetrischen und antisymmetrischen Anteil, der Defekt hängt nur am
+antisymmetrischen, und mit
+
+$$\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t),\qquad \delta(t)=\Psi(t,t)$$
+
+lautet die Bedingung $(\diamondsuit)$: $\Psi(s,t)+\Psi(t,s)=\Psi(s,s)+\Psi(t,t)$
+für alle $s,t$; zu zeigen ist $\delta\equiv0$.
+
+**Die Kontrolle zuerst.** `antisym.py` (neu) stellt das System allein in
+$\kappa$ auf — $\binom n2$ Unbekannte statt $n^2$ — und reproduziert die
+bekannten Antworten: auf Ketten fällt die Dualität für keinen Massenvektor aus
+$\{-2,-1,0,1,3\}$ bis $n=5$, am Diamanten mit $m_a=1$, $m_b=-1$, $m_0=0$ fällt
+sie, mit $m_a=m_b=1$ nicht, und über alle Halbordnungen mit kleinstem Element
+auf vier und fünf Punkten mit nichtnegativen Massen aus einem Gitter
+($4864+53217$ Fälle) gibt es keinen Ausfall. Die $\kappa$-Gestalt ist damit
+gegen `posetsearch.py` geeicht.
+
+**Die Idealreduktion, bewiesen.** Ist $I$ eine abwärtsabgeschlossene Teilmenge
+von $\T$, die das kleinste Element enthält, so ist für $s\in I$ auch
+$\T_{<s}\subseteq I$, also $\Psi_I(s,t)=\Psi(s,t)$ für $s,t\in I$, und die
+Relationen $(\diamondsuit)$ an Paaren aus $I$ sind eine Teilmenge derer auf
+$\T$. Eine Lösung auf $\T$ schränkt sich also zu einer Lösung auf $I$ mit
+demselben $\delta$ ein. Daraus:
+
+> $\delta(t)=0$ ist auf $\T$ erzwungen, sobald es auf $\T_{\le t}$ erzwungen
+> ist — und $\T_{\le t}$ hat kleinstes Element $0$ **und** größtes Element $t$.
+
+Die Induktion über $|\T|$ gibt damit $\delta(s)=0$ für jedes $s$, dessen
+Hauptideal $\T_{\le s}$ echt kleiner als $\T$ ist, also für jedes $s$ außer
+einem größten Element. Offen bleibt genau:
+
+> **(R)** $\T$ endlich mit kleinstem Element $0$ und größtem Element $z$,
+> $m\ge0$, $\kappa$ antisymmetrisch mit $(\diamondsuit)$. Dann ist
+> $\Psi(z,z)=0$.
+
+Hat $\T$ zwei maximale Elemente, so ist nichts mehr zu zeigen: $\T$ ohne das
+eine und $\T$ ohne das andere sind zwei echte Ideale, die $\T$ überdecken.
+`reduction.py` (neu) prüft die Richtung, die der Beweis behauptet, an $3513$
+Paaren $(\T,t)$ mit zufälligen Massen beider Vorzeichen auf vier und fünf
+Punkten: **null Abweichungen**. Verlustfrei ist die Reduktion nicht — in vier
+dieser Fälle ist $\delta(t)$ auf $\T_{\le t}$ frei und auf $\T$ erzwungen, die
+Aussage (R) ist also echt stärker als nötig. Für nichtnegative Massen, um die
+es geht, kostet das nichts, weil dort ohnehin kein Ausfall vorkommt.
+
+**Nullmassen fallen weg.** Ist $m_c=0$ für ein $c\neq0$, so ändert das Streichen
+von $c$ aus $\T$ kein einziges $\Psi(s,t)$, lässt $0$ kleinstes Element und
+nimmt dem System nur Relationen. Was auf $\T$ ohne $c$ erzwungen ist, ist es auf
+$\T$ erst recht. Man darf also **alle Massen außer $m_0$ als strikt positiv
+annehmen**.
+
+**Die scharfe Gestalt des Restdefekts.** Unter (R) ist $\delta(s)=0$ für alle
+$s$ in $W:=\T$ ohne $z$, und die Relationen an den Paaren $(0,a)$ und $(0,z)$
+geben unmittelbar $\Psi(a,0)=\delta(a)=0$ für $a\in W$ und
+$\Psi(z,0)=\delta(z)$. Setzt man $g(c):=m_c\,\kappa(c,0)$, so heißt das: $g$
+summiert sich über **jedes** Hauptideal $\T_{<a}$, $a\in W$, zu null, und der
+ganze Defekt ist die Summe über das eine verbleibende Ideal,
+
+$$\delta(z)=\sum_{c\in W}g(c),\qquad
+  \sum_{c\in\T_{<a}}g(c)=0\ \text{ für alle } a\in W.$$
+
+Die Vereinigung der $\T_{<a}$, $a\in W$, ist $W$ ohne die maximalen Elemente von
+$W$ — der Defekt sitzt also genau auf der Antikette der maximalen Elemente von
+$\T_{<z}$, und das ist dieselbe Stelle, an der schon der dritte Lauf hakte, nur
+ohne $\Phi$, ohne $\gamma$ und ohne das obere Ende. `reduction.py` prüft diese
+drei Identitäten über alle beschränkten Halbordnungen auf vier und fünf Punkten
+mit positiven Massen nach: $243+608$ Fälle, keine Abweichung.
+
+**Was den Rest schließen würde, und wo es gilt.** Gilt
+
+> **(C4)** $\Psi(a,x)=0$, sobald $a<x$
+
+am Paar $(a,z)$ für alle $a<z$, so folgt (R) in vier Zeilen: multipliziert man
+$(\diamondsuit)$ an $(a,z)$ mit $m_a$ und summiert über $a<z$, so verschwindet
+$\sum_a m_a\Psi(z,a)=\sum_{a,b<z}m_am_b\kappa(b,a)$ durch Antisymmetrie und es
+bleibt $q(\T_{<z})\,\delta(z)=\sum_{a<z}m_a\Psi(a,z)=0$; ist $q(\T_{<z})>0$, so
+ist $\delta(z)=0$, und ist $q(\T_{<z})=0$, so sind bei $m\ge0$ alle Massen unter
+$z$ null und $\Psi(z,\cdot)$ verschwindet ohnehin. Gleichwertig lautet (C4) am
+Paar $(a,z)$: **$\Psi(z,\cdot)$ ist auf $\T_{<z}$ konstant.** Genau hier steht
+das $q(\T_{<s})$ des Suchbefunds von `sharp.py`.
+
+**(C4) ist bei nichtnegativen Massen falsch, bei positiven richtig.** Der
+Rangvergleich über alle Halbordnungen mit kleinstem Element auf fünf Punkten und
+alle Massenvektoren aus $\{0,1,2\}$ findet $864$ Ausfälle von (C4) — bei
+durchweg null Ausfällen der Dualität. Der kleinste Zeuge hat
+$\T_{<1}=\{0,2,3,4\}$ mit $0<4<3<1$ und $0<2<1$ und $m=(0,0,1,0,1)$: dort bleibt
+$\Psi(3,1)=m_4\kappa(4,1)$ frei, obwohl $3<1$. Alle Ausfälle haben
+verschwindende Massen **oberhalb** von $0$ — und die sind nach dem Absatz oben
+wegzustreichen. Mit strikt positiven Massen sind es $0$ Ausfälle unter
+$1539+7008$ Fällen, und ebenso $0$ unter denselben Fällen mit $m_0=0$ und sonst
+positiven Massen. Damit:
+
+> **(C4$^+$)** Sind alle $m_a$ mit $a\neq0$ strikt positiv und ist $m_0\ge0$, so
+> ist $\Psi(a,x)=0$ für alle $a<x$.
+
+Da ist der Ansatzpunkt des nächsten Laufs: (C4$^+$) ist genau so stark, wie es
+sein muss, in genau dem Massenbereich, den die Streichung der Nullmassen
+übriglässt, und es ist eine Aussage über **ein Paar** statt über einen ganzen
+Lösungsraum.
+
+## Sackgassen, dritter Nachtrag
+
+* **$\Psi\equiv0$ zu vermuten** ist falsch, und zwar schon bei strikt positiven
+  Massen. Gegenbeispiel von Hand, fünf Punkte: $0<p<s$, $0<q<x$, sonst alles
+  unvergleichbar; mit $m_0>0$ erzwingen die Relationen $\kappa(0,\cdot)=0$ auf
+  $p,q,s,x$ und $m_p\kappa(p,x)+m_q\kappa(q,s)=0$, mehr nicht, und
+  $\Psi(s,x)=m_p\kappa(p,x)$ bleibt frei. $\delta$ verschwindet dort trotzdem.
+  $\Psi$ lebt also auf den unvergleichbaren Paaren, und nur dort — das ist
+  gerade die Aussage (C4), und sie ist die richtige Abschwächung.
+* **Gewichtete Summen über $a<t$ ein zweites Mal ansetzen** bringt nichts Neues:
+  die Gewichtung mit $m_a$ gibt $q(\T_{<t})\delta(t)=\sum_a m_a\Psi(a,t)$, jede
+  andere Gewichtung $w$ gibt dieselbe Identität mit $\sum_a w_a$ und
+  $\sum_{a>c}w_a$ an den Stellen von $q(\T_{<t})$ und $\nu_c$. Ohne (C4)
+  schließt keine davon, mit (C4) schließt schon die einfachste.
+
+## Der Halbordnungsfall, 2026-08-31 (fünfter Lauf): die flache Spitze ist bewiesen, (C5) ist falsch
+
+Der vierte Lauf hatte den Fall auf **(R)** eingeschränkt — auf einer
+Halbordnung mit kleinstem Element $0$ und größtem Element $z$ ist
+$\Psi(z,z)=0$ — und als Hebel die Vermutung (C4$^+$) benannt. Dieser Lauf hat
+den Hebel zerbrochen und stattdessen ein Stück des Falles **bewiesen**.
+
+**(C5) ist falsch, und damit jede termweise Fassung.** Die naheliegende
+Verschärfung von (C4), aus der (C4) in einer Zeile folgte — in
+$\Psi(a,x)=\sum_{c<a}m_c\kappa(c,x)$ hat jeder Summand ein $c$ mit $c<a<x$, also
+genügte
+
+> **(C5)** $m_c\,\kappa(c,x)=0$, sobald es ein $b$ mit $c<b<x$ gibt —
+
+ist bei strikt positiven Massen **falsch**. Zeuge, exakt nachgerechnet
+(`c5.py`): $\T=\{0,3,4,2,1\}$ mit $0<3$, $0<4$, $3<2$, $4<2$, $2<1$, alle Massen
+$1$ (und ebenso für $m_0=0$ und $m_0=2$). Dort ist $3<2<1$, aber
+$\kappa(3,1)$ bleibt auf dem Lösungsraum **frei**; erzwungen ist allein die
+Kombination $m_3\kappa(3,1)+m_4\kappa(4,1)$, die in $\Psi(2,1)$ auftritt. Die
+Aussage (C4$^+$) selbst hält an derselben Stelle: $0$ Ausfälle unter $2052$
+Konfigurationen auf vier und $10512$ auf fünf Punkten, Massen aus $\{1,2,3\}$
+bzw. $\{1,2\}$ und $m_0$ auch $0$. **Folgerung für jeden späteren Lauf:** der
+Beweis muss über $\Psi$ geführt werden, nicht über die einzelnen $\kappa(c,x)$;
+$\Psi$ ist auf vergleichbaren Paaren null, seine Summanden sind es nicht.
+
+**Bewiesen: die flache Spitze.** Vollständig, ohne Vermutung, und mit einer
+Hypothese, die schwächer ist als Positivität.
+
+> **Satz.** $\T$ endliche Halbordnung mit kleinstem Element $0$, Massen
+> $m_a\in\R$ beliebig, $\kappa$ antisymmetrisch mit $(\diamondsuit)$. Sei
+> $t\in\T$ derart, dass jedes $c$ mit $0<c<t$ ein Atom ist
+> ($\T_{<c}=\{0\}$) — die Elemente unter $t$ bilden also eine Antikette
+> $M:=\T_{<t}\setminus\{0\}$ —, und sei $q(M)=\sum_{c\in M}m_c\neq0$. Dann ist
+> $\delta(t)=0$ und $\Psi(a,t)=0$ für jedes $a<t$.
+
+*Beweis.* Nach der Idealreduktion des vierten Laufs darf $\T=\T_{\le t}$
+angenommen werden, $t$ also größtes Element. Ist $M=\emptyset$, so ist $t=0$
+(nichts zu zeigen) oder $t$ ein Atom, und $(\diamondsuit)$ an $(0,t)$ lautet
+$0+m_0\kappa(0,0)=0+m_0\kappa(0,t)$, gibt also $\delta(t)=m_0\kappa(0,t)=0$.
+Sei $M\neq\emptyset$. Für $c\in M$ ist $\Psi(c,s)=m_0\kappa(0,s)$ und
+$\delta(c)=m_0\kappa(0,c)$.
+
+1. $(\diamondsuit)$ an $(0,c)$, $c\in M$, gibt $\Psi(c,0)=\delta(c)$, also
+   $m_0\kappa(0,c)=0$.
+2. $(\diamondsuit)$ an $(c,t)$, $c\in M$: mit
+   $\Psi(c,t)=m_0\kappa(0,t)$,
+   $\Psi(t,c)=m_0\kappa(0,c)+\sum_{c'\in M}m_{c'}\kappa(c',c)$,
+   $\delta(c)=m_0\kappa(0,c)$ und $\delta(t)=m_0\kappa(0,t)+R$ mit
+   $R:=\sum_{c'\in M}m_{c'}\kappa(c',t)$ heben sich beide $m_0$-Terme heraus und
+   es bleibt
+   $$\sum_{c'\in M}m_{c'}\kappa(c',c) = R \qquad\text{für jedes } c\in M .$$
+3. Multiplikation mit $m_c$ und Summation über $c\in M$ lässt die linke Seite
+   $\sum_{c,c'\in M}m_cm_{c'}\kappa(c',c)$ durch Antisymmetrie verschwinden und
+   gibt $q(M) R=0$, also $R=0$.
+4. Ist $m_0=0$, so ist $\delta(t)=m_0\kappa(0,t)+R=0$ und
+   $\Psi(a,t)=m_0\kappa(0,t)=0$ für $a\in M$, $\Psi(0,t)=0$ ohnehin. Ist
+   $m_0\neq0$, so gibt Schritt 1 $\kappa(0,c)=0$ für alle $c\in M$, also
+   $\Psi(t,0)=\sum_{c\in M}m_c\kappa(c,0)=-\sum_{c\in M}m_c\kappa(0,c)=0$, und
+   $(\diamondsuit)$ an $(0,t)$ — $\Psi(t,0)=\delta(t)$ — gibt $\delta(t)=0$;
+   mit Schritt 3 folgt $m_0\kappa(0,t)=\delta(t)-R=0$, also $\kappa(0,t)=0$ und
+   $\Psi(c,t)=m_0\kappa(0,t)=0$ für jedes $c\in M$. $\square$
+
+Der Satz enthält den Diamanten als den Fall $|M|=2$ — den kleinsten offenen
+Fall, dessen Begründung im Manuskript der dritte Lauf des 2026-08-30 als falsch
+nachgewiesen hatte und der seither ohne Beweis war. Er enthält ihn mit
+beliebig vielen unvergleichbaren Atomen und, was mehr ist, mit der **scharfen**
+Hypothese: gebraucht wird nicht $m_c>0$, sondern allein $q(M)\neq0$. Das ist
+genau die Bedingung, die `sharp.py` am 2026-08-30 aus der Suche abgelesen hatte,
+und sie erklärt das Gegenbeispiel des dritten Laufs: der Diamant mit
+$m_a=1$, $m_b=-1$ hat $q(M)=0$. Fallen kann die Dualität dort tatsächlich —
+unter allen Halbordnungen mit kleinstem Element auf vier Punkten und Massen aus
+$\{-2,\dots,2\}$ fällt sie an $60$ der $2625$ Stellen mit $q(M)=0$ —, die
+Hypothese ist also nicht wegzulassen. Für eine echte Uhr ist sie automatisch:
+$q$ ist ein Maß, und $q(M)=0$ hieße, kein Element von $M$ ist ein Atom.
+
+**Nachgerechnet.** `flat.py` (neu) zählt alle Halbordnungen der Höhe $\le2$ mit
+kleinstem Element auf bis zu **sechs** Punkten auf, wo die vollständige
+Aufzählung von `posetsearch.py` nicht mehr hinreicht, und prüft Dualität und
+(C4$^+$) durch Rangvergleich: $1053+21141+80736$ Konfigurationen, kein Ausfall.
+Die scharfe Fassung — Massen beider Vorzeichen, geprüft nur an den Stellen $t$,
+an denen die Hypothese des Satzes gilt — ergibt $10500$ Stellen auf vier Punkten
+(alle Massenvektoren aus $\{-2,\dots,2\}$) und $5071$ auf fünf Punkten
+(Stichproben), ebenfalls ohne Ausfall.
+
+**Was damit vom Halbordnungsfall bleibt.** Die Idealreduktion und dieser Satz
+erledigen jedes $t$, unter dem nur Atome liegen. Offen ist (R) für ein $t$, in
+dessen Ideal eine Kette $0<a<b<t$ vorkommt — der Zeuge gegen (C5) oben ist der
+kleinste solche Fall, und er zeigt zugleich, woran der Beweis dort anders
+aussehen muss: Schritt 2 des obigen Beweises benutzt, dass $\Psi(c,t)$ für
+alle $c\in M$ **dieselbe** Größe $m_0\kappa(0,t)$ ist. Sobald $\T_{<t}$ zwei
+Stockwerke hat, ist das nicht mehr so, und die gewichtete Summe aus Schritt 3
+schließt nicht mehr.
+
+**Ein neues Werkzeug: der Zeuge statt der Antwort** (`certificate.py`). Der
+Rangvergleich sagt, *dass* ein Funktional auf dem Lösungsraum verschwindet;
+`certificate.py` rechnet mit sympy und symbolischen Massen die
+Linearkombination der Relationen aus, die es *ist*. Am Diamanten kommt für
+$\kappa(1,2)$ der Faktor $1/(m_1+m_2)$ heraus — dort sitzt die Positivität,
+sichtbar statt vermutet —, für „drei Atome unter der Spitze" die Kombination
+$\frac1{q(M)}\sum_{c\in M}m_c R_{(c,z)} + \frac1{m_0}\sum_{c}m_cR_{(0,c)} -
+R_{(0,z)}$, also genau die vier Schritte des obigen Beweises. Für die
+Fortsetzung ist das der schnellste Weg, aus einem gerechneten Fall ein Argument
+abzulesen.
+
+**Eine Umformung, die das Rechnen kürzt.** Mit
+$\mu_s:=\sum_{a<s}m_a\varepsilon_a$ ist $(\diamondsuit)$ gleichwertig zu
+$$\langle \mu_s-\mu_t, \kappa(\cdot,s)-\kappa(\cdot,t)\rangle = 0
+  \qquad\text{für alle } s,t,$$
+denn beide Seiten sind $\Psi(s,s)-\Psi(s,t)-\Psi(t,s)+\Psi(t,t)$. Gleichwertig:
+die Bilinearform $(x,y)\mapsto \sum_s (\sum_{a<s}x_a) m_s\sum_t\kappa(s,t)y_t$
+ist auf dem Hyperraum $\{\sum_i x_i=0\}$ antisymmetrisch. In dieser Gestalt ist
+sofort zu sehen, dass nur Differenzen $\mu_s-\mu_t$ eingehen — der Grund, aus
+dem alle Beweise hier mit dem kleinsten Element als Bezugspunkt arbeiten.
+
+## Sackgassen, vierter Nachtrag
+
+* **(C5)**, also jede termweise Fassung von (C4): widerlegt, siehe oben. Wer
+  $\kappa(c,x)=0$ für $c<b<x$ zeigen will, sucht etwas Falsches.
+* **Die Reduktion „ein maximales Element von $\T_{<z}$ streichen"** ist keine.
+  Das Streichen eines Elements $w$, das nicht das größte ist, ändert
+  $\Psi(z,t)$ um $m_w\kappa(w,t)$; eine Lösung auf $\T$ schränkt sich also
+  nicht ein. Nur **abwärtsabgeschlossene** Teilmengen erben $(\diamondsuit)$,
+  und das ist die Idealreduktion des vierten Laufs.
+* **„Auf $\kappa(w,\cdot)$ wirken keine Relationen aus $\T_{<z}$"** ist falsch,
+  auch wenn $w$ das größte Element von $\T_{<z}$ ist: als *zweites* Argument
+  kommt $w$ in jedem $\Psi(s,w)$ vor. Wer das übersieht, hält den Fall
+  „$\T_{<z}$ hat ein größtes Element" für offen, obwohl ihn die Kettenrechnung
+  erledigt.

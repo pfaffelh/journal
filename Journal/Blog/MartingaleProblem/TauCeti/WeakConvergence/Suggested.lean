@@ -5,7 +5,9 @@ Authors: Peter Pfaffelhuber
 -/
 import Mathlib.MeasureTheory.Measure.Portmanteau
 import Mathlib.MeasureTheory.Measure.Prokhorov
+import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
 import Mathlib.MeasureTheory.Function.UniformIntegrable
+import Mathlib.Topology.MetricSpace.Polish
 
 /-!
 # Suggested signatures for the weak convergence roadmap
@@ -13,7 +15,7 @@ import Mathlib.MeasureTheory.Function.UniformIntegrable
 Prototypes only.
 -/
 
-open Filter Topology MeasureTheory Set
+open Filter Topology MeasureTheory Set ENNReal
 
 variable {E E' : Type*} [MeasurableSpace E] [MeasurableSpace E']
 
@@ -72,7 +74,53 @@ theorem tendsto_map_of_measure_setOf_continuousAt_eq_one [TopologicalSpace E]
     (hcont : (ν : Measure E) {x | ContinuousAt h x} = 1) :
     Tendsto (fun n => (μ n).map hh.aemeasurable) atTop (𝓝 (ν.map hh.aemeasurable)) := sorry
 
-/-! ## Milestone 3: the Skorokhod representation theorem -/
+/-! ## Milestone 3: the space of laws, and the Skorokhod representation theorem
+
+Mathlib metrizes the topology of convergence in distribution
+(`instMetrizableSpaceProbabilityMeasure`) and stops there.  Note where the
+statements have to live: the distance sits on the structure
+`LevyProkhorov (ProbabilityMeasure E)`, while `ProbabilityMeasure E` carries no
+uniformity, so completeness is stated on the synonym and crosses back as
+`IsCompletelyMetrizableSpace`. -/
+
+theorem separableSpace_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    [TopologicalSpace.SeparableSpace E] :
+    TopologicalSpace.SeparableSpace (ProbabilityMeasure E) := sorry
+
+/-- The skeleton of the proof of `isTightMeasureSet_of_isCompact_closure`, which
+Mathlib inlines there: uniform total boundedness in measure already gives
+tightness.  A Cauchy sequence has no compact closure to start from, so the
+completeness below needs this form. -/
+theorem isTightMeasureSet_of_forall_exists_finite_iUnion_ball [PseudoMetricSpace E]
+    [OpensMeasurableSpace E] [SecondCountableTopology E] [CompleteSpace E]
+    {S : Set (ProbabilityMeasure E)}
+    (h : ∀ ε : ℝ≥0∞, 0 < ε → ∀ r : ℝ, 0 < r →
+      ∃ F : Finset E, ∀ μ ∈ S, (μ : Measure E) (⋃ x ∈ F, Metric.ball x r)ᶜ ≤ ε) :
+    IsTightMeasureSet {((μ : ProbabilityMeasure E) : Measure E) | μ ∈ S} := sorry
+
+/-- Tightness of a Cauchy sequence comes from `isTightMeasureSet_singleton`
+(Ulam) for the finite head and from the Lévy-Prokhorov estimate for the tail;
+`isCompact_closure_of_isTightMeasureSet` then gives a convergent subsequence. -/
+theorem completeSpace_levyProkhorov_probabilityMeasure [MetricSpace E] [BorelSpace E]
+    [TopologicalSpace.SeparableSpace E] [CompleteSpace E] :
+    CompleteSpace (LevyProkhorov (ProbabilityMeasure E)) := sorry
+
+theorem isCompletelyMetrizableSpace_probabilityMeasure [MetricSpace E] [BorelSpace E]
+    [TopologicalSpace.SeparableSpace E] [CompleteSpace E] :
+    TopologicalSpace.IsCompletelyMetrizableSpace (ProbabilityMeasure E) := sorry
+
+theorem polishSpace_probabilityMeasure [MetricSpace E] [BorelSpace E] [PolishSpace E] :
+    PolishSpace (ProbabilityMeasure E) := sorry
+
+/-- Mathlib's `SeparableSpace.exists_measurable_partition_diam_le` uses balls of
+one fixed radius and says nothing about frontiers; the Skorokhod construction
+needs the radii chosen so that the frontiers are null. -/
+theorem exists_measurable_partition_diam_le_null_frontier [PseudoMetricSpace E]
+    [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E]
+    (μ : Measure E) [IsFiniteMeasure μ] {ε : ℝ} (hε : 0 < ε) :
+    ∃ As : ℕ → Set E, (∀ n, MeasurableSet (As n)) ∧ (∀ n, Metric.diam (As n) ≤ ε) ∧
+      (∀ n, μ (frontier (As n)) = 0) ∧ (⋃ n, As n = univ) ∧
+      Pairwise (fun n m : ℕ => Disjoint (As n) (As m)) := sorry
 
 theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}
