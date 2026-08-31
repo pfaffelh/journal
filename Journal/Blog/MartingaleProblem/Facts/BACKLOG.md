@@ -18,17 +18,7 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 
 ## Offen
 
-1. **`rem:skorokhodform` Stelle 2238 korrigieren.** Dort heißt
-   `[Preorder ι] [TopologicalSpace ι]` „\eqref{T2b}"; das ist falsch, (T2b)
-   verlangt mehr. Manuskriptänderung, also erst nach `check.py`. *Zwischenstand
-   2026-08-31: dieser Punkt liegt außerhalb dessen, was ein Lauf tun darf. Die
-   nicht verhandelbare Regel 2 des Auftrags — „Das Manuskript wird nicht
-   verändert" — lässt nur Task 23 als Ausnahme zu, und diese Korrektur gehört
-   nicht dazu. Der Befund steht seit dem 2026-08-30 unter den Auffälligkeiten
-   des Inventars mit dem Beleg aus `PRAEORDNUNG.md` Teil 2; ausführen muss ihn
-   der Nutzer.*
-
-2. **Task 23, unvergleichbare Atome.** Der offene Punkt aus
+1. **Task 23, unvergleichbare Atome.** Der offene Punkt aus
    `Task23/PROTOKOLL.md`: die Vermutung ist durch $58081$ Konfigurationen
    belegt, der Beweis fehlt. Ansatzpunkt steht dort unter „Wo der Beweis hakt":
    die einzelnen Gleichungen über der Antikette der maximalen Elemente von
@@ -60,14 +50,14 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    unter dem eine Kette $0<a<b<t$ liegt; der nächste Lauf setzt dort an, mit
    `certificate.py` am Zeugen $0<\{3,4\}<2<1$.*
 
-3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
+2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
    dritter Lauf, ist die Liste „What Mathlib already has" von `WeakConvergence`
    erledigt: elf Deklarationen, alle vorhanden, keine `deprecated`. Es fehlen
    also noch die drei übrigen Roadmaps und die Zitate in den Meilensteinen.*
 
-4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
+3. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
    `WeakConvergence` Meilenstein 3 eingetragen: Mathlib hat die Metrisierbarkeit
    (`MeasureTheory.instMetrizableSpaceProbabilityMeasure`,
