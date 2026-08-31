@@ -336,6 +336,18 @@ setzt, nennt den Beleg.
   erklärte Zweck der Tabelle. `rem:EKrelcompact` ist die Stelle, an der sieben
   Facts zusammenlaufen, und die Tabelle in §2.x nennt es viermal als Abnehmer.
   Frage ans Manuskript.
+* **`cor:atomless` schließt schwächer, als sein Beweis hergibt; am 2026-09-01
+  gefunden.** Die Konklusion lautet „$\Phi(t,0)=\Phi(0,t)$ für $Q$-fast jedes
+  $t$", und das ist ein Artefakt des Umwegs über `lem:calculus` (\EK{} 4.4.10),
+  dessen Schluss selbst ein Fast-überall ist. Das seit heute im Manuskript
+  stehende `lem:rectangle` gibt auf demselben transportierten Paar
+  $\Psi=f(x+y)$ **überall**, also die Identität an jedem $t$; es ruht auf nichts
+  als `lem:calculus` und der Stetigkeit von
+  $r\mapsto\Psi(x+r,y')-\Psi(x,y'+r)$. Die Verschärfung kostet einen Satz im
+  Beweis von `cor:atomless` und ist nicht vorgenommen worden, weil dieser Lauf
+  sie nicht gebraucht hat: `prop:mixeddual` benutzt `lem:rectangle` direkt.
+  Die zweite Bemerkung in `rem:atomsnotchange` — „die Konklusion ist genuin
+  $Q$-fast jedes $t$" — wäre dann ebenfalls zu prüfen. Frage ans Manuskript.
 
 ## Läufe
 
@@ -1988,3 +2000,118 @@ Neue Roadmap-Punkte trägt dieser Lauf **keine** ein, und das ist die richtige
 Folge eines negativen Ergebnisses: eine Roadmap führt zu beweisende Aussagen,
 und die o-Fassung ist keine mehr. Was sie stattdessen bekommen hat, ist die
 Korrektur einer Zeile, die mehr behauptete, als gilt.
+
+### 2026-09-01 — Rückstau 1: die gemischte Uhr ist bewiesen
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging an
+den ersten Punkt des Rückstaus, und dort an die Hälfte, die seit dem 2026-08-29
+unberührt lag: **Stufe 3, die gemischte Uhr.** Sie ist erledigt, unter einer
+genannten Hypothese. Geändert sind `MartingaleProblem.tex`,
+`TauCeti/MartingaleProblems/README.md`, `Task23/PROTOKOLL.md`,
+`Facts/BACKLOG.md` und dieses Inventar; neu ist `Task23/mixed.py`.
+
+**Der Satz.** Für $q=\mu+\sum_{i=1}^N m_i\delta_{a_i}$ mit $\mu$ atomlos und
+endlich vielen Atomen gilt $\Phi(s,t)=\Phi(t,s)$ auf dem ganzen Quadrat,
+insbesondere $\Phi(t^*,0)=\Phi(0,t^*)$ bei **jedem** $t^*$, sobald zwischen je
+zwei aufeinanderfolgenden Atomen — und vor dem ersten — stetige Masse liegt.
+Die Masse nach dem letzten Atom darf null sein. Im Manuskript ist das
+`prop:mixeddual`, gestützt auf ein neues `lem:rectangle`; die Statuszeile
+„order-dense atoms, or mixed & open" ist in zwei Zeilen zerlegt, deren erste
+`proved` lautet.
+
+**Der Mechanismus, in einem Satz.** In Uhrzeit zerfällt der Definitionsbereich
+in Strecken $S_0,\dots,S_N$ mit Lücken dazwischen, eine je Atom; auf
+$S_i\times S_j$ ist $\Psi(x,y)=f_{ij}(x+y)$, und das Überqueren einer Lücke der
+Masse $m$ ist der Operator $g\mapsto g+mg'$, der **nur an der Masse hängt** und
+nicht daran, welche Koordinate überquert — das ist $\gamma_1=\gamma_2$ in
+Operatorform. Eine Induktion über den Abstand $d=i-j$ macht
+$w_{ij}=f_{ij}-f_{ji}$ zu null: auf dem unteren Stück des gemeinsamen
+Definitionsbereichs durch die Kreuzungsrelation, auf dem oberen, weil dort
+$w+m w'=0$ mit Anfangswert null am Nahtpunkt gilt. Der Kern von $1+m\dif/\dif u$
+ist $e^{-u/m}$, eindimensional; die stetige Masse liefert genau die Stelle, an
+der er weggeschnitten wird. Mehr tut sie nicht, und deshalb ist die Hypothese so
+schwach.
+
+**Was der Beweis nicht braucht.** Die Eckrelationen an zwei Atomen — wörtlich
+`lem:atomgrid` — kommen nicht vor. Der rein atomare und der getrennt gemischte
+Fall sind also nicht Spezialfälle voneinander, sondern zwei Enden: dort trägt
+allein die Kreuzmultiplikation, hier allein die Kreuzungsrelation.
+
+**Nachgerechnet.** `Task23/mixed.py` stellt den vollen Lösungsraum als lineares
+System auf: die $f_{ij}$ stückweise auf den Einheitsintervallen, in lokaler
+Koordinate mit der Basis $1,\tau,\tau^2,\tau^3,e^{-\tau/m}$ — die
+Exponentialfunktionen mit Absicht, denn der Kern des Kreuzungsoperators ist die
+einzige Richtung, in der ein Gegenbeispiel Platz hätte; über die Stücke hinweg
+nur Stetigkeit, denn mehr als absolute Stetigkeit ist von $f_{ij}$ nicht
+bekannt. Neun Konfigurationen, $N=1,2,3$, ungleiche Strecken und Massen: Defekt
+und Symmetriedefekt null ($\max<10^{-13}$). Dasselbe **ohne** die
+Eckrelationen — die Probe auf den Beweis. Zwei Kontrollen, und beide sind der
+Grund, dem Ergebnis zu trauen: ohne die $y$-Kreuzungen bleibt der Defekt stehen
+(der Test ist nicht leer), und bei $c\equiv0$ reproduziert das Modell
+`prop:atomicdual` (das Modell ist nicht falsch aufgestellt). Die zweite
+Kontrolle hat nebenbei gezeigt, dass die symmetrische Konfiguration $c=[1,1]$
+auch ohne die $y$-Kreuzungen defektfrei ist — wer nur sie prüft, prüft nichts.
+
+**Ein Befund über die eigene Hypothese.** Läßt man einzelne $c_j$ verschwinden
+— zwei benachbarte Atome ohne stetige Masse dazwischen —, so verschwindet der
+Defekt im Modell weiterhin (sechs Konfigurationen). $c_j>0$ ist damit, soweit
+geprüft, eine Hypothese des Beweises und nicht der Aussage. Das ist im
+Manuskript so gesagt (`rem:mixeddual`, letzter Absatz) und nicht verschwiegen.
+
+**Am Beweis hat sich unterwegs etwas verbessert.** `lem:rectangle` stand
+zunächst mit einem distributionellen Beweis da: $(\partial_x-\partial_y)\Psi=0$,
+also Funktion von $x+y$. Das Manuskript trägt jetzt den kürzeren: `lem:calculus`
+auf ein Quadrat angewandt hat rechts null, gibt $\Psi(x+r,y')=\Psi(x,y'+r)$ für
+fast alle $r$, und beide Seiten sind in $r$ stetig, also für alle. Für die
+Formalisierung ist das der Unterschied zwischen „Mathlib braucht Distributionen
+auf $\R^2$" und einer Zeile Stetigkeit.
+
+**In die Roadmap eingetragen** (`MartingaleProblems` Meilenstein 8, drei neue
+Punkte und zwei Korrekturen): `eq_comp_add_of_chain_identity` (das
+Rechteck-Lemma, zurückgeführt auf `chain_identity_of_absolutelyContinuous`),
+`Clock.stretches` (die Strecken-und-Lücken-Zerlegung in Uhrzeit) und
+`duality_of_mixed` mit dem Beweisweg in drei Schritten. Korrigiert:
+`duality_of_atomless` sagte „für $q$-fast jedes $t$" und sagt jetzt „für jedes
+$t$" mit dem Grund, und der Schlusssatz von `duality_of_atomic` zählt die
+abgedeckten Uhren jetzt vollständig auf.
+
+**`check.py` meldet `clean`**: 129 Seiten (vorher 126), 12 Überlängen, größte
+7.7pt — Zahl und Maximum wie im Ausgangszustand des Laufs.
+
+**Offen geblieben.** Von Task 23 zwei Reste, beide im Rückstau vermerkt:
+ordnungsdichte Atommengen (unverändert offen, und aus demselben scharfen Grund —
+es gibt keine Aufzählung $a_1<a_2<\dots$, entlang der induziert werden könnte)
+und zwei benachbarte Atome ohne stetige Masse. Der zweite ist der nähere: dort
+greift statt der Kreuzungsrelation die Eckrelation, beide Mechanismen sind
+einzeln bewiesen, und zu tun ist, sie in einer Induktion zu verschränken. Nicht
+geschehen und mit Absicht: kein Lean übersetzt (der Worktree hat kein `.lake`),
+und `cor:atomless` ist nicht verschärft worden — die Beobachtung steht als
+Auffälligkeit oben und gehört dem Nutzer.
+
+**Als Nächstes zu formalisieren:
+`chain_identity_of_absolutelyContinuous`** (`MartingaleProblems`
+Meilenstein 8) — für $\T=[0,\infty)$, Lebesgue-Uhr und $\Phi$ in jeder Variablen
+absolut stetig mit $\nabla\Phi=(\gamma_1,\gamma_2)$ und $\iint|\gamma_i|<\infty$
+auf Quadraten:
+$\Phi(t,0)-\Phi(0,t)=\int_0^t(\gamma_1(s,t-s)-\gamma_2(s,t-s))\dif s$ für fast
+jedes $t$. Es ruht auf nichts als Mathlib: `MeasureTheory.integral_integral_swap`
+(`MeasureTheory/Integral/Prod.lean:482`) für den Fubini-Schritt, und für den
+Schluss „aus $\int_0^T A=\int_0^T B$ für alle $T$ folgt $A=B$ fast überall"
+entweder `MeasureTheory.Integrable.ae_eq_of_forall_setIntegral_eq`
+(`MeasureTheory/Function/AEEqOfIntegral.lean:364`) oder die
+Lebesgue-Differentiation, `VitaliFamily.ae_tendsto_average`
+(`MeasureTheory/Covering/Differentiation.lean:885`, im Namensraum
+`VitaliFamily`, Zeilen 87--902; `VitaliFamily` selbst steht im Wurzelnamensraum,
+`Covering/VitaliFamily.lean:68`) mit
+`Real.tendsto_Icc_vitaliFamily_right` (`MeasureTheory/Covering/OneDim.lean:34`)
+— alle vier heute am Quelltext geprüft, Namensräume nachgesehen, keine
+`deprecated`.
+
+Es ist **jetzt** dran, weil es heute vom Träger eines Punktes zum Träger von
+vieren geworden ist. Bis gestern hing an ihm allein `duality_of_atomless`; seit
+heute hängen daran zusätzlich `eq_comp_add_of_chain_identity`, über dieses
+`duality_of_mixed`, und über die Verschärfung von „fast jedes $t$" auf „jedes
+$t$" auch die Konklusion von `duality_of_atomless` selbst. Es ist zugleich der
+einzige analytische Satz des ganzen Dualitätsmeilensteins — alles andere dort
+ist Teleskopieren, lineare Algebra oder die eine Zeile Gronwall. Wer ihn hat,
+hat den Meilenstein bis auf Kombinatorik.

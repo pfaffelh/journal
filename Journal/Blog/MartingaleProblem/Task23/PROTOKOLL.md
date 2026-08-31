@@ -998,3 +998,246 @@ Uhren sie trifft.
   maximale Ordnung ist die richtige Bedingung, in beiden Konventionen, und die
   Nilpotenz war nur der Grund, aus dem sie unter $\iota=\mathrm p$ geschenkt
   ist.
+
+## Die gemischte Uhr, 2026-09-01 (neunter Lauf): bewiesen, sobald die Atome durch stetige Masse getrennt sind
+
+Angegangen wurde Rückstaupunkt 1, zweite Hälfte: **Stufe 3, die gemischte Uhr**,
+seit dem 2026-08-29 unberührt. Sie ist erledigt, unter einer Hypothese, die
+genannt und nicht versteckt wird. Neu ist `Task23/mixed.py`.
+
+### Die Aussage
+
+> **Satz (gemischte Uhr).** Es gelte \eqref{T3}. Sei
+> $q=\mu+\sum_{i=1}^N m_i\delta_{a_i}$ auf $\T_{\le t^*}$ mit $\mu$ atomlos,
+> $0\le a_1<\dots<a_N\le t^*$ und $m_i>0$, und sei
+> $$c_0=\mu(\T_{<a_1}),\quad c_j=\mu([a_j,a_{j+1}))\ (1\le j\le N-1),\quad
+>   c_N=\mu([a_N,t^*))$$
+> die stetige Masse zwischen den Atomen. Ist $c_j>0$ für $j=0,\dots,N-1$ — $c_N$
+> darf verschwinden —, und erfüllen $\Phi,\gamma$ die Darstellung
+> \eqref{eq:incrementrep} mit $\gamma_1=\gamma_2=\gamma$ nebst der
+> Integrabilität \eqref{eq:calcint} in Uhrzeit, so gilt
+> $$\Phi(t,0)=\Phi(0,t)\qquad\text{für \emph{jedes} } t\le t^*,$$
+> und mehr: $\Phi(s,t)=\Phi(t,s)$ auf dem ganzen Quadrat.
+
+Also: **stetige Masse zwischen je zwei Atomen genügt.** Nicht gebraucht werden
+Translationsinvarianz, Regularität von $\gamma$, eine Bedingung an die Größe der
+Massen und die Eckrelationen an zwei Atomen (dazu unten). Gebraucht wird
+$m_i>0$, was für eine Uhr automatisch ist — anders als im Halbordnungsfall, wo
+die Nichtnegativität eine echte Hypothese war.
+
+### Schritt 0: der atomlose Fall, schärfer als `lem:calculus`
+
+Auf einem Rechteck, auf dem die Uhr in beiden Koordinaten Lebesgue ist, sagt
+\eqref{eq:incrementrep} mit $\gamma_1=\gamma_2$ nicht nur die Aussage von
+`lem:calculus`, sondern
+
+$$(\partial_x-\partial_y)\Psi=\gamma_1-\gamma_2=0 \quad\text{im Distributionssinn},
+\qquad\text{also}\qquad \Psi(x,y)=f(x+y).$$
+
+Die Kette dazu: $\Psi$ ist in jeder Variablen absolut stetig, also getrennt
+stetig, also gemeinsam messbar und nach \eqref{eq:calcint} lokal integrierbar;
+die schwachen Ableitungen sind $\gamma_1,\gamma_2$; eine Distribution, die von
+einer konstanten Richtungsableitung annulliert wird, ist eine Funktion der
+Querkoordinate; und aus „$\Psi(x,y)=f(x+y)$ fast überall" mit $f$ stetig und
+$\Psi$ getrennt stetig folgt Gleichheit **überall**. Das ist der Grund, warum
+der Satz oben „jedes $t$" sagt und nicht „fast jedes": das fast-überall in
+`cor:atomless` ist ein Artefakt des Umwegs über `lem:calculus` (\EK{} 4.4.10),
+nicht der Sache. Vermerkt als Auffälligkeit im Inventar.
+
+### Schritt 1: Uhrzeit, Strecken und Lücken
+
+$Q(s)=q(\T_{<s})$ bildet $\T_{\le t^*}$ auf $[0,L]$ ab bis auf die offenen
+Lücken $G_i=(Q(a_i),Q(a_i)+m_i)$, eine je Atom. Wie in `cor:atomless` ist
+$\Phi$ eine Funktion der $Q$-Werte, denn $q([s,s'))=0$ erzwingt
+$\Phi(s,\cdot)=\Phi(s',\cdot)$. Was bleibt, ist eine Kette von Strecken
+
+$$S_0=[\alpha_0,\beta_0],\ \dots,\ S_N=[\alpha_N,\beta_N],\qquad
+\alpha_0=0,\quad \beta_i=\alpha_i+c_i,\quad \alpha_i=\beta_{i-1}+m_i,$$
+
+und $\Psi$ lebt auf $\bigcup_i S_i$ zum Quadrat. Auf $S_i\times S_j$ ist die Uhr
+in beiden Koordinaten Lebesgue, Schritt 0 gibt also
+
+$$\Psi(x,y)=f_{ij}(x+y)\quad\text{auf } S_i\times S_j,\qquad
+f_{ij}\in W^{1,1}(D_{ij}),\quad D_{ij}=[\alpha_i+\alpha_j,\ \beta_i+\beta_j].$$
+
+Bemerkenswert: $D_{ij}=D_{ji}$, die beiden Funktionen leben auf **demselben**
+Intervall. Der Defekt ist $\Psi(L,0)-\Psi(0,L)=f_{N0}(\beta_N)-f_{0N}(\beta_N)$.
+
+### Schritt 2: die Kreuzungsrelation, und warum sie mehr sagt als ein Sprung
+
+Sei $x$ über die Lücke $G_i$ geführt, $y\in S_j$ fest. Wegen
+$[a_i,s')=\{a_i\}\cup(a_i,s')$ und dominierter Konvergenz für $s'\downarrow a_i$:
+
+$$\Psi(\alpha_i,y)-\Psi(\beta_{i-1},y)=m_i\,\gamma(a_i,Q^{\leftarrow}(y)).$$
+
+Der Sprung ist $m_i$ mal die **Zeile** $\gamma(a_i,\cdot)$. Und dieselbe Zeile
+ist, nach der zweiten Darstellung in \eqref{eq:incrementrep} bei festem
+$s=a_i$, die Dichte von $y\mapsto\Psi(\beta_{i-1},y)$, also
+$\gamma(a_i,Q^{\leftarrow}(y))=f_{i-1,j}'(\beta_{i-1}+y)$ für fast alle
+$y\in S_j$ — hier, und nur hier, geht $c_j>0$ ein. Mit $u=\beta_{i-1}+y$:
+
+$$f_{ij}(u+m_i)=f_{i-1,j}(u)+m_i f_{i-1,j}'(u),\qquad u\in\beta_{i-1}+S_j,
+\tag{B}$$
+
+und symmetrisch, mit $x\in S_i$ fest und $y$ über $G_j$:
+
+$$f_{ij}(u+m_j)=f_{i,j-1}(u)+m_j f_{i,j-1}'(u),\qquad u\in S_i+\beta_{j-1}.
+\tag{C}$$
+
+Das ist der ganze Gehalt der Atome. Der Kreuzungsoperator
+$T_m=e^{-mD}(1+mD)$ hängt **nur an der Masse**, nicht daran, ob gerade $x$ oder
+$y$ die Lücke überquert — genau das ist die Balance $\gamma_1=\gamma_2$ in
+Operatorform, und genau daraus kommt die Symmetrie. Auf ganzen
+Definitionsbereichen gelesen wäre der Satz die Trivialität, dass $T_{m_i}$ und
+$T_{m_j}$ kommutieren (beide sind Funktionen von $D$); die Arbeit steckt darin,
+dass (B) und (C) nur auf **Teilintervallen** gelten.
+
+### Schritt 3: die Induktion über $d=i-j$
+
+Sei $w_{ij}=f_{ij}-f_{ji}$ auf $D_{ij}$; zu zeigen ist $w_{ij}\equiv0$, denn
+$w_{N0}(\beta_N)$ ist der Defekt. Abziehen der transponierten Relation von (B)
+bzw. (C) gibt
+
+$$w_{ij}=T_{m_i}w_{i-1,j}\ \text{auf }[\alpha_i+\alpha_j,\ \alpha_i+\beta_j],
+\qquad
+w_{i,j+1}(u+m_{j+1})=w_{ij}(u)+m_{j+1}w_{ij}'(u)\ \text{auf }
+[\alpha_i+\beta_j,\ \beta_i+\beta_j].$$
+
+Die beiden Intervalle sind das **untere** und das **obere** Stück von $D_{ij}$,
+und sie stoßen im Punkt $\alpha_i+\beta_j$ aneinander. Induktion über
+$d=i-j\ge0$ (der Fall $i<j$ folgt aus $w_{ij}=-w_{ji}$):
+
+* $d=0$: $w_{ii}=0$, aus der Definition.
+* $d-1\to d$: sei $i>j$, $i-j=d\ge1$. Auf dem unteren Stück ist
+  $w_{ij}=T_{m_i}w_{i-1,j}=0$ nach Induktion ($i-1-j=d-1$; benutzt $c_j>0$,
+  $j\le N-1$). Auf dem oberen Stück ist $w_{i,j+1}=0$ nach Induktion
+  ($i-j-1=d-1$; benutzt $c_i>0$, was genau dann nötig ist, wenn das obere Stück
+  nicht leer ist), also
+  $$w_{ij}(u)+m_{j+1}w_{ij}'(u)=0,\qquad w_{ij}(\alpha_i+\beta_j)=0,$$
+  und da $w_{ij}$ absolut stetig ist, gibt der integrierende Faktor
+  $w_{ij}(u)=w_{ij}(\alpha_i+\beta_j)\,e^{-(u-\alpha_i-\beta_j)/m_{j+1}}=0$.
+
+Fertig. Der Kern von $1+m\frac{\dif}{\dif u}$ ist $e^{-u/m}$, eindimensional,
+und die Anfangsbedingung aus dem unteren Stück schneidet ihn weg: **das ist die
+ganze Rolle der stetigen Masse.** Sie liefert die Stelle, an der die
+Exponentialrichtung festgenagelt wird.
+
+### Was der Beweis nicht braucht
+
+Die **Eckrelationen**, an denen beide Koordinaten auf einem Atom stehen und
+$\gamma(a_i,a_j)$ keine Dichte, sondern ein freier Wert ist:
+
+$$\frac{f_{i-1,j}(\beta_{i-1}+\alpha_j)-f_{i-1,j-1}(\beta_{i-1}+\beta_{j-1})}{m_j}
+=\frac{f_{i,j-1}(\alpha_i+\beta_{j-1})-f_{i-1,j-1}(\beta_{i-1}+\beta_{j-1})}{m_i}.
+\tag{D}$$
+
+Das ist wörtlich die Kreuzmultiplikation $(\ast)$ des rein atomaren Falls. Sie
+gilt, sie steht im Modell, und der Beweis kommt ohne sie aus — `mixed.py` prüft
+beides getrennt. Im rein atomaren Fall ist (D) alles, was übrig bleibt, und
+`lem:atomgrid` ist der Satz darüber; in der gemischten Uhr mit getrennten Atomen
+trägt allein (B)/(C). Die beiden Fälle sind also nicht Spezialfälle
+voneinander, sondern zwei Enden.
+
+### Abzählbar viele Atome
+
+Häufen sich die Atome nur bei $t^*$ (Ordnungstyp $\omega$), so gilt der Satz
+weiter: die Induktion läuft über endliche $d$ und braucht kein letztes Gebiet,
+gibt also $\Phi(t,0)=\Phi(0,t)$ für jedes $t<t^*$; und
+$\Phi(t^*,0)-\Phi(t,0)=\int_{[t,t^*)}\gamma(r,0)\,q(\dif r)\to0$ für
+$t\uparrow t^*$ nach dominierter Konvergenz, ebenso in der zweiten Koordinate.
+**Ordnungsdichte Atommengen bleiben offen** und sind davon unberührt: dort ist
+nicht $c_j>0$ verletzt, sondern die Aufzählung der Atome als Kette
+$a_1<a_2<\dots$ existiert nicht, und mit ihr fällt die Induktion über $d$.
+
+### Nachgerechnet: `mixed.py`
+
+Das Skript setzt Schritt 0 als Modellannahme voraus — $\Psi=f_{ij}(x+y)$ auf
+$S_i\times S_j$ — und prüft alles Weitere exakt am vollen Lösungsraum. Die
+$f_{ij}$ werden stückweise auf den Einheitsintervallen ihres
+Definitionsbereichs angesetzt, jedes Stück in lokaler Koordinate mit der Basis
+$1,\tau,\tau^2,\tau^3,e^{-\tau/m}$. Zwei Entscheidungen tragen das:
+
+* **Lokale Koordinaten.** Alle $c_i,m_i$ sind ganzzahlig, alle Verschiebungen
+  also auch; (B)/(C) ist damit ein koeffizientenweiser Vergleich zweier Stücke
+  bei gleichem $\tau$, ohne Verschiebungskonstanten. Das hält die Matrix bei
+  Größen der Ordnung $1$ — die Kernbestimmung per SVD ist gut konditioniert.
+* **Die Exponentialfunktionen.** Sie sind mit Absicht in der Basis: der Kern von
+  $1+mD$ ist die einzige Richtung, in der ein Gegenbeispiel Platz hätte. Über
+  die Stücke hinweg wird nur Stetigkeit verlangt, denn mehr als absolute
+  Stetigkeit ist von $f_{ij}$ nicht bekannt.
+
+Befund, neun Konfigurationen mit $N=1,2,3$ Atomen und ungleichen Strecken und
+Massen: der Defekt verschwindet auf einer Kernbasis, $\max<10^{-13}$, und die
+volle Symmetrie $f_{ij}=f_{ji}$ ebenso. Dasselbe **ohne** die Eckrelationen (D),
+sechs Konfigurationen — das ist die Probe auf den Beweis. Zwei Kontrollen:
+
+* **Kanarienvogel.** Ohne die $y$-Kreuzungen (C) bleibt der Defekt stehen
+  ($0.65$ bzw. $0.55$ bei $c=[1,3],m=[2]$ und $c=[2,1],m=[3]$), die Symmetrie
+  fällt in allen vier Fällen. Der Test ist also nicht leer. Bei gleichen
+  Strecken ($c=[1,1]$, $c=[1,1,1]$) verschwindet der Defekt auch ohne (C) — die
+  symmetrische Konfiguration sieht zu wenig, und wer nur sie prüft, prüft
+  nichts.
+* **Probe aufs Modell.** Alle Strecken entartet ($c\equiv0$) ist die rein
+  atomare Kette; das Modell reproduziert `prop:atomicdual`, Defekt und
+  Antisymmetriedefekt null für $N=1,\dots,4$.
+
+**Entartete Strecken, ein Befund über die Hypothese.** Läßt man einzelne $c_j$
+verschwinden — zwei benachbarte Atome ohne stetige Masse dazwischen, oder ein
+Atom ganz am Anfang —, so verschwindet der Defekt im Modell weiterhin (sechs
+Konfigurationen, $\max<10^{-14}$). Die Hypothese $c_j>0$ ist also, soweit
+geprüft, eine Hypothese des **Beweises** und nicht der Aussage. Das ist keine
+Überraschung: fällt $c_j$ weg, so übernimmt an dieser Stelle (D), also der rein
+atomare Mechanismus. Ein Beweis, der beide Mechanismen verschränkt, ist die
+natürliche Fortsetzung und steht als Vorschlag im Inventar.
+
+### Sackgassen, achter Nachtrag
+
+* **Die gemischte Uhr numerisch prüfen wollen.** Eine Diskretisierung des
+  stetigen Anteils ist eine rein atomare Uhr auf einer Kette, und für die ist
+  die Dualität seit dem 2026-08-30 bewiesen. Jeder Test, der die stetige Masse
+  durch viele kleine Atome ersetzt, bestätigt also `prop:atomicdual` und sagt
+  über die gemischte Uhr nichts. Was trägt, ist der umgekehrte Weg: die stetige
+  Richtung exakt behandeln (Schritt 0) und nur die Kreuzungen als lineare
+  Relationen aufstellen.
+* **Über die Lücke interpolieren, zweiter Anlauf.** Der Sprung
+  $m_i\gamma(a_i,\cdot)$ ist genau der, den eine affine Fortsetzung mit der
+  Steigung $\gamma(a_i,\cdot)$ über die Lücke erzeugen würde — es liegt nahe,
+  $\Psi$ so auf $[0,L]^2$ fortzusetzen und `lem:calculus` anzuwenden. Das
+  scheitert an den Quadraten Lücke $\times$ Lücke, in denen die Fortsetzung
+  beide Steigungen zugleich erfüllen müßte; das ist dieselbe Sperre wie in
+  `rem:atomsnotchange`, nur an der kleinstmöglichen Stelle. Der Beweis oben
+  vermeidet sie, indem er die Lücken gar nicht betritt.
+
+### Nachtrag am selben Tag: Schritt 0 braucht keine Distributionen
+
+Der Beweis von Schritt 0 oben ist distributionell. Im Manuskript steht ein
+kürzerer, und er ist der bessere. Seien $(x,y)$ und $(x',y')$ im Rechteck mit
+$x+y=x'+y'$ und $x<x'$, und $t=x'-x=y-y'$. Auf dem Quadrat der Seitenlänge $t$
+mit der linken unteren Ecke $(x,y')$ ist `lem:calculus` anwendbar — sein Beweis
+liest sein Argument nur auf $[0,T]^2$ —, und seine rechte Seite ist null wegen
+$\gamma_1=\gamma_2$. Das gibt $\Psi(x+r,y')=\Psi(x,y'+r)$ für fast alle
+$r\le t$; beide Seiten sind in $r$ stetig, also gilt es für **alle** $r$, bei
+$r=t$ insbesondere, und das ist $\Psi(x',y')=\Psi(x,y)$.
+
+Kein Distributionsbegriff, keine schwache Ableitung, nur das Lemma, das das
+Manuskript ohnehin führt, und ein Stetigkeitsargument. Für die Formalisierung
+ist das der Unterschied zwischen „Mathlib braucht Distributionen auf $\R^2$" und
+„eine Zeile Stetigkeit"; die Roadmap führt es deshalb als
+`eq_comp_add_of_chain_identity` auf
+`chain_identity_of_absolutelyContinuous` zurück und nicht auf etwas Neues.
+
+Nebenher fällt damit auch die Einschränkung in `cor:atomless`: auf einer
+atomlosen Uhr gilt $\Phi(t,0)=\Phi(0,t)$ für **jedes** $t$, nicht nur für
+$Q$-fast jedes. Das Manuskript sagt weiterhin „fast jedes"; die Beobachtung
+steht als Auffälligkeit im Inventar, weil sie eine Aussage des Manuskripts
+ändert, die dieser Lauf nicht selbst gebraucht hat.
+
+### Nachtrag: ein Atom bei $t^*$
+
+Die Satzfassung oben schrieb $0\le a_1<\dots<a_N\le t^*$. Das ist um einen
+Grenzfall zu weit: liegt ein Atom auf $t^*$, so springt $Q$ dort nicht mehr
+unterhalb von $t^*$, und $Q(t^*)=\beta_{N-1}$ statt $\beta_N$. Unter
+$\iota=\mathrm p$ liegt ein solches Atom in keiner Menge
+$[s,s')\subseteq\T_{<t^*}$ und ist ohne Wirkung; das Manuskript verlangt
+deshalb $a_N<t^*$ und sagt in einem Halbsatz, warum das keine Einschränkung ist.
+Ein Atom bei $0$ ist durch $c_0>0$ ohnehin ausgeschlossen.

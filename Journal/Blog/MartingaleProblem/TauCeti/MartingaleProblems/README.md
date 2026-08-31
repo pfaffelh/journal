@@ -427,9 +427,48 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   Fubini, absolute continuity and dominated convergence; no path regularity and
   no Skorokhod space.
 * `duality_of_atomless`: for an atomless clock and the predictable convention,
-  `Φ t 0 = Φ 0 t` for `q`-almost every `t`, by the time change
-  `Q t = q (Set.Iio t)` and its right inverse. State the time change as a lemma
-  in its own right.
+  `Φ t 0 = Φ 0 t` for every `t`, by the time change `Q t = q (Set.Iio t)` and its
+  right inverse. State the time change as a lemma in its own right. The
+  conclusion holds at every `t` and not merely `q`-almost every `t`, by
+  `eq_comp_add_of_chain_identity` in place of
+  `chain_identity_of_absolutelyContinuous`.
+* `eq_comp_add_of_chain_identity`: for intervals `I J : Set ℝ` and
+  `Ψ : ℝ → ℝ → ℝ` absolutely continuous in each variable on `I ×ˢ J` with
+  `∇Ψ = (ψ, ψ)` for one and the same `ψ`, integrable on compact subrectangles,
+  there is a locally absolutely continuous `f : ℝ → ℝ` with `Ψ x y = f (x + y)`
+  for every `x ∈ I`, `y ∈ J`. Apply `chain_identity_of_absolutelyContinuous` to
+  `(u, v) ↦ Ψ (x + u) (y' + v)` on the square of side `x' - x`, where the right
+  hand side vanishes, and turn its `∀ᵐ r` into `∀ r` by continuity of
+  `r ↦ Ψ (x + r) y' - Ψ x (y' + r)`. The proof of
+  `chain_identity_of_absolutelyContinuous` reads its argument on `[0,T]²` only,
+  so it holds on a square.
+* `Clock.stretches`: for `q = μ + ∑ i, m i • Measure.dirac (a i)` on
+  `Set.Icc 0 t* ⊆ ℝ` with `μ` atomless, finitely many atoms
+  `0 ≤ a 1 < ... < a N ≤ t*` and `0 < m i`, the images of the diffuse stretches
+  under `Q s = q (Set.Iio s)`: `S j = Set.Icc (α j) (β j)` with `α 0 = 0`,
+  `β j = α j + c j` and `α j = β (j-1) + m j`, where `c j` is the `μ`-mass of the
+  `j`-th stretch, together with `Set.range Q = ⋃ j, S j`, `Q (a j) = β (j-1)` and
+  `Q t* = β N`. The gaps `Set.Ioo (β (j-1)) (α j)` are the atoms, one each, of
+  length `m j`.
+* `duality_of_mixed`: with `Φ, γ` as in `chain_identity` and `γ₁ = γ₂ = γ`, a
+  clock as in `Clock.stretches` with `0 < c j` for `j < N`, and the transported
+  pair satisfying the integrability of `chain_identity_of_absolutelyContinuous`,
+  one has `Φ s t = Φ t s` for all `s, t ≤ t*` in the predictable convention, and
+  in particular `Φ t* 0 = Φ 0 t*` at every such `t*`. Three steps.
+  `eq_comp_add_of_chain_identity` on `S i ×ˢ S j` gives `Ψ x y = f i j (x + y)`
+  on a domain `D i j = Set.Icc (α i + α j) (β i + β j)` that is symmetric in
+  `i, j`. Crossing the gap at `a i` gives
+  `f i j (u + m i) = f (i-1) j u + m i * deriv (f (i-1) j) u` for
+  `u ∈ β (i-1) +ᵥ S j`, because the jump of `Ψ` across the gap is
+  `m i * γ (a i) ·` while the same row is the density of `y ↦ Ψ (β (i-1)) y`;
+  `0 < c j` enters here and only here, as the hypothesis under which that row is
+  a density. Then induction on `i - j` makes `w i j = f i j - f j i` vanish: on
+  `Set.Icc (α i + α j) (α i + β j)` by that relation applied to `w`, and on
+  `Set.Icc (α i + β j) (β i + β j)` because there
+  `w i j + m (j+1) * deriv (w i j) = 0` with initial value `0` at the junction,
+  whose only absolutely continuous solution is `0`. The values `γ (a i) (a j)` at
+  two atoms are free and satisfy `atomGrid` at the corners of the grid of
+  stretches; the proof does not use them.
 * `duality_defect_eq_integral`: for a clock `q` on `ι` with a least element `0`
   and `Φ, γ` as in `chain_identity` with `γ₁ = γ₂ = γ`,
   `Φ s t = Φ 0 t + ∫ r in Iio s, γ r t ∂q` and `Φ s t = Φ s 0 + ∫ r in Iio t, γ s r ∂q`,
@@ -556,8 +595,9 @@ order.
   every pair and hence to `γ` symmetric there — with masses of either sign, where
   `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain
   phenomenon: at incomparable pairs `Φ s t = Φ t s` fails, while the defect
-  `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless` this covers every
-  clock that is either atomless or has locally finite atoms.
+  `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless` and
+  `duality_of_mixed` this covers every clock that is atomless, or has locally
+  finite atoms, or is mixed with its atoms separated by diffuse mass.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.

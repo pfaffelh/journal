@@ -18,14 +18,18 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 
 ## Offen
 
-1. **Task 23, was sonst offen bleibt.** Zwei Punkte, beide unberührt vom
-   Halbordnungssatz. **Ordnungsdichte Atommengen** fallen aus der Hypothese
-   heraus (unter einem Punkt liegen dann unendlich viele Atome); der Grund ist
-   scharf und steht im PROTOKOLL unter „Was offen bleibt". **Stufe 3, die
-   gemischte Uhr,** ist nie angegangen worden. Von beiden ist die gemischte Uhr
-   die nähere: der atomlose und der atomare Teil sind einzeln erledigt, und zu
-   klären ist, ob sich der Defekt entlang der Lebesgue-Zerlegung von $q$
-   addiert.
+1. **Task 23, was sonst offen bleibt.** **Stufe 3, die gemischte Uhr,** ist am
+   2026-09-01 erledigt, sobald die Atome durch stetige Masse getrennt sind:
+   `prop:mixeddual` samt `lem:rectangle` steht im Manuskript, der Beweis im
+   PROTOKOLL, das Orakel in `Task23/mixed.py`. Offen bleiben zwei Reste.
+   **Ordnungsdichte Atommengen** fallen aus der Hypothese heraus (unter einem
+   Punkt liegen dann unendlich viele Atome); der Grund ist scharf und steht im
+   PROTOKOLL unter „Was offen bleibt". **Zwei benachbarte Atome ohne stetige
+   Masse dazwischen** sind der zweite Rest, und der nähere: dort greift statt
+   der Kreuzungsrelation die Eckrelation, also `lem:atomgrid`, und zu tun ist,
+   die beiden Mechanismen in einer Induktion zu verschränken. `mixed.py` prüft
+   diesen Fall mit und findet keinen Defekt, die Hypothese ist also eine des
+   Beweises und nicht der Aussage.
 
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
