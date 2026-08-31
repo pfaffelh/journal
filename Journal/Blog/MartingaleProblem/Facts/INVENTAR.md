@@ -284,18 +284,21 @@ setzt, nennt den Beleg.
   \ref{it:C3a}, und das sagt `ex:atomicdiscontinuity` mit Gegenbeispiel,
   `thm:absconvaug`/`prop:atomaug` reparieren es („any, atoms allowed"), und
   `rem:MZcost` nennt die Grenze der Reparatur.
-* **Die Statuszeile „purely atomic, atoms incomparable" ist seit dem
-  2026-08-31, fünfter Lauf, zu schwach.** `rem:atomsnotchange` (Stelle 5535)
-  führt sie als „verified exhaustively up to five points; not proved". Bewiesen
-  ist seither: liegt unter $t$ nur eine Antikette von Atomen und ist deren
-  Gesamtmasse von null verschieden, so gilt die Dualität an $t$ — mit Massen
-  beliebigen Vorzeichens, also einschließlich des Diamanten, den
-  `rem:atomicdual` als kleinsten Fall führt und dessen Begründung dort am
-  2026-08-30 als falsch erkannt und ersetzt wurde. Der Beweis steht ausgeführt
-  in `Task23/PROTOKOLL.md`, Abschnitt „Der Halbordnungsfall, 2026-08-31
-  (fünfter Lauf)". Ihn ins Manuskript zu setzen ist erlaubt (Task-23-Regel:
-  vollständig und verifiziert), aber es ist eine Manuskriptänderung samt
-  `check.py` und gehört deshalb an den Anfang eines Laufs, nicht an sein Ende.
+* **Die Statuszeile „purely atomic, atoms incomparable" ist falsch, seit dem
+  2026-08-31, sechstem Lauf.** `rem:atomsnotchange` (Stelle 5535) führt sie als
+  „verified exhaustively up to five points; not proved". Bewiesen ist seit
+  heute der **ganze** Fall: auf jeder endlichen Halbordnung mit nichtnegativen
+  Massen — und die Massen einer Uhr sind nichtnegativ — verschwindet der
+  Dualitätsdefekt, ohne Bedingung an die Lage der Atome zueinander, ohne
+  kleinstes oder größtes Element und ohne Antikettenhypothese. Der Beweis steht
+  ausgeführt in `Task23/PROTOKOLL.md`, Abschnitt „Der Halbordnungsfall,
+  2026-08-31 (sechster Lauf)", und ist von `Task23/selfadjoint.py` in vier
+  Punkten nachgerechnet. Er enthält den Satz des fünften Laufs (flache Spitze)
+  für Uhren; jener bleibt daneben richtig, weil er Massen beider Vorzeichen
+  erlaubt. Ihn ins Manuskript zu setzen ist erlaubt (Task-23-Regel: vollständig
+  und verifiziert), aber es ist eine Manuskriptänderung samt `check.py` und
+  gehört deshalb an den Anfang eines Laufs, nicht an sein Ende; sie steht als
+  Punkt 1 in `Facts/BACKLOG.md`.
 * **Drei Aussagen von §7 fehlen in der Bündeltabelle.** `thm:absconvws`,
   `thm:MZconv` und `rem:EKrelcompact` haben dort keine Zeile, während
   `thm:absconv`, `thm:absconvaug`, `prop:atomaug`, `thm:clockchange`,
@@ -1674,3 +1677,97 @@ verlangt, und ist damit der spätere von beiden. Wer ihn dennoch zuerst will,
 formalisiere ihn in der reinen Gestalt, in der er hier bewiesen ist —
 `Finset`-Halbordnung, Massen in `ℝ`, `κ` antisymmetrisch, keine Maßtheorie —,
 denn in dieser Gestalt ruht er auf ebensowenig wie `atomGrid_symm`.
+
+### 2026-08-31, sechster Lauf — Rückstau 1: der Halbordnungsfall ist bewiesen
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Der Lauf ging an
+den ersten Punkt des Rückstaus, den Fall unvergleichbarer Atome aus Task 23, an
+dem die Läufe vier und fünf gearbeitet hatten. Er ist **bewiesen**, und zwar
+nicht in dem Zuschnitt, in dem er offen stand, sondern ganz: beliebige endliche
+Halbordnung, nichtnegative Massen, keine weitere Bedingung. Geändert sind
+`Task23/PROTOKOLL.md`, `TauCeti/MartingaleProblems/README.md`,
+`Facts/BACKLOG.md` und dieses Inventar; neu sind `Task23/selfadjoint.py` und
+`Task23/stress.py`. Am
+Manuskript wurde nichts geändert — die Eintragung gehört an den Anfang eines
+Laufs, weil danach `check.py` laufen muss, und steht deshalb als Rückstaupunkt 1.
+
+**Der Satz.** Ist $\T$ eine endliche Halbordnung, $m:\T\to[0,\infty)$ und
+$\kappa$ antisymmetrisch mit $(\diamondsuit)$, so ist $\delta\equiv0$. Für eine
+Uhr ist $m\ge0$ automatisch, denn $q$ ist ein Maß; der Fall ist damit
+abgeschlossen. Ein kleinstes Element wird nicht gebraucht, ein größtes nicht,
+eine Kette nicht, eine Antikette nicht, die Idealreduktion nicht.
+
+**Der Beweis wechselt die Sprache.** Fünf Läufe haben nach einer Induktion über
+die Halbordnung gesucht — von unten, von oben, über Ideale, über die Antikette
+der maximalen Elemente. Der Beweis, der trägt, induziert über gar nichts. Mit
+$V_{s,a}=[a<s]m_a$ und $K=(\kappa(a,b))$ ist $\Psi=VK$, und $(\diamondsuit)$
+heißt $VK+(VK)^{\mathsf T}=\delta\mathbb 1^{\mathsf T}+\mathbb 1\delta^{\mathsf T}$.
+Daraus zwei Zeilen: für jedes symmetrische $T$ ist
+$\operatorname{tr}(TVK)=\langle\delta,T\mathbb 1\rangle$, und ist überdies $TV$
+symmetrisch, so ist die Spur null, weil $K$ antisymmetrisch ist. Alles hängt
+also daran, ob $e_t$ im Bild
+$\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\,TV=V^{\mathsf T}T\}$ liegt — und
+$\mathcal L$ ist ganz $\R^\T$, sobald $\mathbb 1$ im $\R[x]$-Modul $(\R^\T,V)$
+maximale Ordnung hat. Genau das leistet die Nichtnegativität, in einer Zeile:
+$V$ hat nichtnegative Einträge, $V^k\mathbb 1$ ist der Zeilensummenvektor von
+$V^k$, und eine nichtnegative Matrix mit lauter Zeilensummen null ist null; also
+ist $V^k\mathbb 1=0$ genau dann, wenn $V^k=0$. Das ist die **einzige** Stelle,
+an der $m\ge0$ vorkommt, und der Diamant mit $m_a=1$, $m_b=-1$ zeigt, dass sie
+nicht wegfällt.
+
+**Verifiziert, nicht nur geglaubt.** `selfadjoint.py` (neu) prüft in exakter
+Bruchrechnung über **alle** Halbordnungen — auch ohne kleinstes Element — auf
+bis zu fünf Punkten vier Dinge: das Kriterium als **Äquivalenz** („$\delta(t)$
+erzwungen" gegen „$e_t\in\mathcal L$", auch bei gemischten Vorzeichen, wo beide
+Seiten fallen dürfen; $228\,000$ Stellen), das Lemma über die Zeilensummen
+($6\,259\,626$ Potenzen), die explizite Konstruktion von $T$ ($265\,128$
+Konstruktionen) und den Satz selbst ($89\,440$ Fälle) — kein Ausfall und keine
+Abweichung. Ende zu Ende, also im vollen System in $(\Phi,\gamma)$ statt in der
+$\kappa$-Gestalt, mit `posetsearch.clock_sweep` gegengeprüft ($1539+7008$ Fälle,
+kein Ausfall), und jenseits der Aufzählung mit `stress.py` (neu) an $120$
+zufälligen Halbordnungen auf sechs bis acht Punkten. Dass der erste Punkt eine
+Äquivalenz prüft und nicht nur die
+Hinrichtung, ist der schärfste Teil: er bestätigt, dass $\mathcal L$ die Lage
+vollständig beschreibt, und erklärt damit auch die bekannten Gegenbeispiele.
+
+**In die Roadmap eingetragen, und warum jetzt.** Der fünfte Lauf hatte bewusst
+nichts eingetragen, weil ein Meilenstein kein Gerüst für Ungewisses trägt. Jetzt
+ist es gewiss, und `MartingaleProblems` Meilenstein 8 führt fünf neue Punkte:
+die vier Matrixaussagen
+`Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`,
+`Matrix.trace_mul_eq_dotProduct_diag_of_isSymm`,
+`Matrix.mulVec_one_eq_zero_iff_of_nonneg` und
+`Matrix.exists_isSymm_mulVec_one_eq_single`, sowie
+`dualityDefect_eq_zero_of_nonneg` als deren Zusammenfassung auf einer endlichen
+Halbordnung. `Clock.atomChain` bekommt in `Clock.atomPoset` ein Gegenstück ohne
+Vergleichbarkeitshypothese, und `duality_of_atomic` **verliert seine
+Vergleichbarkeitshypothese** — das ist nach der stehenden Regel eine Korrektur,
+nicht eine Erweiterung: die Roadmap verlangte mehr, als der Satz braucht.
+`atomGrid_symm` bleibt stehen und behält seinen Rang, denn auf der Kette gilt
+die stärkere Konklusion $\Phi(s,t)=\Phi(t,s)$ und sie gilt für Massen beider
+Vorzeichen, wo `dualityDefect_eq_zero_of_nonneg` $m\ge0$ verlangt. Dass die
+starke Symmetrie ein Kettenphänomen ist und an unvergleichbaren Paaren ausfällt,
+steht jetzt ausdrücklich dort; es war seit `poset.py` (2026-08-30) bekannt, aber
+nicht in der Roadmap vermerkt.
+
+**Offen geblieben.** Von Task 23 zwei Punkte, beide unberührt: ordnungsdichte
+Atommengen und Stufe 3, die gemischte Uhr. Beide stehen jetzt als Rückstaupunkt
+2. Nicht geschehen und mit Absicht: kein Lean übersetzt (der Worktree hat kein
+`.lake`), das Manuskript nicht angefasst, `check.py` deshalb nicht gelaufen.
+
+**Als Nächstes zu formalisieren:
+`Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`** — für `A.IsSymm` und
+`Bᵀ = -B` ist `(A * B).trace = 0`. Es ruht auf `Matrix.IsSymm`
+(`LinearAlgebra/Matrix/Symmetric.lean:35`), `Matrix.trace_transpose`
+(`Trace.lean:73`) und `Matrix.trace_mul_comm` (`Trace.lean:158`), alle drei
+heute am Quelltext von v4.33.1 geprüft und nicht `deprecated`; ein Prädikat für
+`Bᵀ = -B` allein hat Mathlib nicht, `Matrix.IsSkewAdjoint`
+(`SesquilinearForm.lean:562`) ist relativ zu einer Form `J`. Es ist jetzt dran,
+weil es das kleinste Stück des heutigen Beweises ist, weil es der einzige der
+fünf neuen Punkte ist, der auf **nichts** aus diesem Projekt ruht, und weil es
+allein in Mathlib gehört: eine Aussage über Spuren, drei Zeilen lang, ohne Uhr,
+ohne Maß und ohne Halbordnung. Gegenüber den älteren Vorschlägen: `atomGrid_symm`
+bleibt der kleinste Einstieg der **Kettenlinie** und
+`isTightMeasureSet_of_forall_exists_finite_iUnion_ball` der erste der
+Konvergenzlinie; in der Task-23-Linie tritt die Spuraussage vor beide, denn sie
+hat keine Vorbedingung überhaupt.

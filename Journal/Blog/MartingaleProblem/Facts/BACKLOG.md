@@ -18,46 +18,38 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 
 ## Offen
 
-1. **Task 23, unvergleichbare Atome.** Der offene Punkt aus
-   `Task23/PROTOKOLL.md`: die Vermutung ist durch $58081$ Konfigurationen
-   belegt, der Beweis fehlt. Ansatzpunkt steht dort unter „Wo der Beweis hakt":
-   die einzelnen Gleichungen über der Antikette der maximalen Elemente von
-   $\T_{<t^*}$. *Zwischenstand 2026-08-31, vierter Lauf: der Fall ist auf eine
-   einzige Aussage eingeschränkt. Die **Idealreduktion** — jede
-   abwärtsabgeschlossene Teilmenge, die das kleinste Element enthält, erbt
-   $(\diamondsuit)$ samt $\delta$ — gibt mit der Induktion über $|\T|$ sofort
-   $\delta(s)=0$ für jedes $s$ außer einem größten Element. Zu zeigen bleibt (R):
-   auf einer Halbordnung mit kleinstem Element $0$ und größtem Element $z$ ist
-   $\Psi(z,z)=0$. Nullmassen oberhalb von $0$ darf man dabei streichen. Der
-   Defekt hat dort die Gestalt $\delta(z)=\sum_{c<z}m_c\kappa(c,0)$, einer Summe,
-   die über jedes echte Hauptideal verschwindet, und (R) folgt aus der
-   nachgerechneten Vermutung (C4$^+$) „$\Psi(a,x)=0$ für $a<x$" in vier Zeilen.
-   Alles am Quelltext von `antisym.py` und `reduction.py` geprüft; Einzelheiten
-   im PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (vierter Lauf)".
-   Der nächste Lauf beweist (C4$^+$) oder widerlegt sie.*
-   *Zwischenstand 2026-08-31, fünfter Lauf: (C4$^+$) steht weiter (jetzt
-   $12\,564$ Konfigurationen ohne Ausfall), aber der Hebel, mit dem sie bewiesen
-   werden sollte, ist **widerlegt**: die termweise Fassung (C5)
-   „$m_c\kappa(c,x)=0$, sobald $c<b<x$" ist schon bei lauter Massen $1$ falsch,
-   Zeuge $0<\{3,4\}<2<1$ mit freiem $\kappa(3,1)$ (`c5.py`). Dafür ist ein Stück
-   des Falles **bewiesen**: liegt unter $t$ nur eine Antikette von Atomen und ist
-   deren Gesamtmasse $\neq0$, so gilt $\delta(t)=0$ und (C4$^+$) an $t$ — mit
-   beliebigen Vorzeichen der Massen, also einschließlich des Diamanten, dessen
-   Begründung im Manuskript seit dem 2026-08-30 fehlt. Beweis, scharfe
-   Hypothese und die $102\,930+15\,571$ nachgerechneten Fälle stehen im
-   PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (fünfter Lauf)"; neu
-   sind `flat.py`, `c5.py` und `certificate.py`. Offen bleibt (R) für ein $t$,
-   unter dem eine Kette $0<a<b<t$ liegt; der nächste Lauf setzt dort an, mit
-   `certificate.py` am Zeugen $0<\{3,4\}<2<1$.*
+1. **Den Halbordnungssatz ins Manuskript setzen.** Am 2026-08-31, sechster Lauf,
+   ist der Fall unvergleichbarer Atome **bewiesen**: auf jeder endlichen
+   Halbordnung mit nichtnegativen Massen ist $\delta\equiv0$. Beweis, explizite
+   Konstruktion und Nachrechnung stehen im PROTOKOLL, Abschnitt „Der
+   Halbordnungsfall, 2026-08-31 (sechster Lauf)", geprüft von `selfadjoint.py`.
+   Zu tun ist damit dreierlei am Manuskript, und das ist eine Aufgabe für den
+   **Anfang** eines Laufs, weil danach `python3 check.py` laufen und `clean`
+   melden muss: (i) die Statuszeile „purely atomic, atoms incomparable" in
+   `rem:atomsnotchange` (Stelle 5535) von „verified exhaustively up to five
+   points; not proved" auf `proved` bringen; (ii) `prop:atomicdual` von der
+   Kettenhypothese befreien oder eine zweite Proposition daneben setzen — die
+   Kette behält die stärkere Konklusion $\Phi(s,t)=\Phi(t,s)$ und erlaubt Massen
+   beider Vorzeichen, die Halbordnung gibt nur den Defekt und verlangt
+   $m\ge0$; (iii) im Text von `rem:atomicdual` festhalten, dass der Diamant mit
+   $m_a=1$, $m_b=-1$ der Zeuge dafür ist, dass $m\ge0$ nicht wegfällt.
 
-2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
+2. **Task 23, was danach offen bleibt.** Zwei Punkte, beide unberührt von diesem
+   Beweis. **Ordnungsdichte Atommengen** fallen aus der Hypothese heraus (unter
+   einem Punkt liegen dann unendlich viele Atome); der Grund ist scharf und steht
+   im PROTOKOLL unter „Was offen bleibt". **Stufe 3, die gemischte Uhr,** ist
+   nie angegangen worden. Von beiden ist die gemischte Uhr die nähere: der
+   atomlose und der atomare Teil sind einzeln erledigt, und zu klären ist, ob
+   sich der Defekt entlang der Lebesgue-Zerlegung von $q$ addiert.
+
+3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
    dritter Lauf, ist die Liste „What Mathlib already has" von `WeakConvergence`
    erledigt: elf Deklarationen, alle vorhanden, keine `deprecated`. Es fehlen
    also noch die drei übrigen Roadmaps und die Zitate in den Meilensteinen.*
 
-3. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
+4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
    `WeakConvergence` Meilenstein 3 eingetragen: Mathlib hat die Metrisierbarkeit
    (`MeasureTheory.instMetrizableSpaceProbabilityMeasure`,
