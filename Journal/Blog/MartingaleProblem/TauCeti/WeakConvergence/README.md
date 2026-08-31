@@ -162,38 +162,118 @@ Let `E` be a separable metric space.
 
 Mathlib metrizes the topology of convergence in distribution — the instance is
 `MeasureTheory.instMetrizableSpaceProbabilityMeasure`
-(`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean`), for `E`
+(`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean:695`), for `E`
 pseudometrizable separable and Borel — and stops there. The two properties that
 make `ProbabilityMeasure E` a space one can run a subsequence argument in are
-absent: neither `SeparableSpace (ProbabilityMeasure E)` nor
-`CompleteSpace`/`PolishSpace` for it occurs anywhere in Mathlib. They come
-first, because the Skorokhod representation below and every relative
-compactness argument downstream live in this space.
+absent: neither `SeparableSpace (ProbabilityMeasure E)` nor complete
+metrizability of it occurs anywhere in Mathlib. They come first, because the
+Skorokhod representation below and every relative compactness argument
+downstream live in this space.
 
-* `MeasureTheory.ProbabilityMeasure.separableSpace`: `ProbabilityMeasure E` is
-  separable. The finitely supported measures with rational masses at points of
-  a countable dense subset of `E` are dense.
-* `MeasureTheory.ProbabilityMeasure.completeSpace`: for `E` complete, the
-  Lévy–Prokhorov metric on `ProbabilityMeasure E` is complete. In three steps: a
-  Cauchy sequence is tight, by the covering argument that
-  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` runs for a set with
-  compact closure; `isCompact_closure_of_isTightMeasureSet` then yields a
-  convergent subsequence; and a Cauchy sequence with a convergent subsequence
-  converges.
+Where each statement lives is fixed by Mathlib's design. `LevyProkhorov` is a
+one-field structure wrapping a measure (`LevyProkhorovMetric.lean:259`), and the
+distance instances sit on it: `LevyProkhorov.instPseudoMetricSpaceProbabilityMeasure`
+(`:311`) and, for `E` Borel, `LevyProkhorov.levyProkhorovDist_metricSpace_probabilityMeasure`
+(`:336`). `ProbabilityMeasure E` itself carries the topology of convergence in
+distribution and no uniformity, so `CompleteSpace (ProbabilityMeasure E)` is not
+a statement one can write down. Completeness is stated on the synonym, and what
+crosses back along `LevyProkhorov.probabilityMeasureHomeomorph` (`:676`) is
+`IsCompletelyMetrizableSpace`, which is what `PolishSpace` is defined from. The
+rule for the whole milestone: a **uniform** statement about the space of laws is
+made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
+`ProbabilityMeasure E`, and the homeomorphism carries the second kind across.
+
+* `MeasureTheory.ProbabilityMeasure.separableSpace`: for `E` a separable
+  pseudometric space with `[OpensMeasurableSpace E]`, `ProbabilityMeasure E` is
+  separable. The countable dense set is the finitely supported measures with
+  rational masses at points of a countable dense sequence of `E`
+  (`TopologicalSpace.exists_dense_seq`); the estimate is run in the
+  Lévy–Prokhorov pseudometric through `probabilityMeasureHomeomorph`, and the
+  partition of `E` into countably many measurable sets of diameter at most `ε`
+  that it needs is `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
+  (`LevyProkhorovMetric.lean:540`). Completeness of `E` is nowhere used.
+* `MeasureTheory.ProbabilityMeasure.secondCountableTopology`: the item above,
+  read on the synonym, where there is a uniformity to argue with —
+  `UniformSpace.secondCountable_of_separable`
+  (`Mathlib/Topology/UniformSpace/Cauchy.lean:932`) asks for a uniform space with
+  countably generated uniformity and does not apply to `ProbabilityMeasure E`
+  itself — and carried back by `Homeomorph.secondCountableTopology`
+  (`Mathlib/Topology/Homeomorph/Lemmas.lean:37`).
+* `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`: on a
+  complete second countable metric space, a set `S` of probability measures is
+  tight as soon as for every `ε > 0` and every `r > 0` there is a finite
+  `F ⊆ E` with `μ (⋃ x ∈ F, ball x r)ᶜ ≤ ε` for every `μ ∈ S` — uniform total
+  boundedness in measure. This is the skeleton of the proof of
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+  (`Mathlib/MeasureTheory/Measure/Prokhorov.lean:634`), where it is inlined:
+  the compact set `⋂ m, ⋃ i ≤ k m, closure (ball (D i) (u m))`, the summation of
+  the errors over `m`, and `TotallyBounded.isCompact_of_isClosed` are lines
+  640–704 of that file and use the compactness hypothesis only through the one
+  step `exists_measure_iUnion_gt_of_isCompact_closure` (`:573`). Factoring it out
+  costs nothing there — that theorem becomes its corollary — and it is what the
+  completeness below needs, since a Cauchy sequence has no compact closure to
+  start from.
+* `MeasureTheory.LevyProkhorov.completeSpace_probabilityMeasure`: for `E` a
+  complete separable metric space, `CompleteSpace (LevyProkhorov (ProbabilityMeasure E))`.
+  Three steps.
+  * A Cauchy sequence `μ` is tight. Fix `ε` and `r` and take `N` with
+    `dist (μ n) (μ N) < min (r/2) (ε/2)` for `n ≥ N`. Each single measure is
+    tight by Ulam's theorem, which Mathlib has as
+    `MeasureTheory.isTightMeasureSet_singleton`
+    (`Mathlib/MeasureTheory/Measure/Tight.lean:99`, under
+    `[IsCompletelyPseudoMetrizableSpace E] [SecondCountableTopology E] [BorelSpace E]`),
+    and the finite head `μ 0, …, μ N` is tight by
+    `MeasureTheory.IsTightMeasureSet.union` (`Tight.lean:119`); covering its
+    compact set by finitely many `r/2`-balls gives `F`, and for `n > N` the
+    Lévy–Prokhorov inequality applied to `B = ⋃ x ∈ F, ball x (r/2)` with
+    `B` thickened by `r/2` inside `⋃ x ∈ F, ball x r` gives the same bound.
+    The previous item then applies.
+  * `isCompact_closure_of_isTightMeasureSet` (`Measure/Prokhorov.lean:530`) turns
+    the tightness into a compact closure, and since `ProbabilityMeasure E` is
+    metrizable a compact set in it is sequentially compact, so a subsequence
+    converges.
+  * A Cauchy sequence with a convergent subsequence converges.
+* `MeasureTheory.ProbabilityMeasure.isCompletelyMetrizableSpace`: for `E` Polish
+  and Borel, transport the previous item along `probabilityMeasureHomeomorph`
+  with `Homeomorph.isClosedEmbedding`
+  (`Mathlib/Topology/Homeomorph/Defs.lean:297`) and
+  `Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
+  (`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:249`).
 * `MeasureTheory.ProbabilityMeasure.polishSpace`: for `E` Polish,
-  `ProbabilityMeasure E` is Polish, from the two above together with Mathlib's
-  metrizability instance. This is the point at which the completeness of `E` is
-  used; separability alone gives the first item and the whole of the rest of
-  this milestone.
+  `ProbabilityMeasure E` is Polish. Nothing is left to prove: `PolishSpace` is
+  `SecondCountableTopology` together with `IsCompletelyMetrizableSpace`
+  (`Mathlib/Topology/MetricSpace/Polish.lean:62`) and the instance at `:65`
+  builds it from separability and complete metrizability, so this is the first
+  and the fourth item. Here the completeness of `E` is used; separability alone
+  gives the first two items and the whole of the rest of this milestone.
 
 The representation theorem itself:
 
+* `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le_null_frontier`:
+  for a finite measure `μ` on a separable metric space `E` and `ε > 0`, a
+  countable measurable partition of `E` into sets of diameter at most `ε` all of
+  whose frontiers are `μ`-null. Mathlib's partition
+  (`LevyProkhorovMetric.lean:540`) is built from balls of one fixed radius and
+  says nothing about frontiers. The radii are chosen one per point of a countable
+  dense sequence by `MeasureTheory.exists_null_frontier_thickening`
+  (`Mathlib/MeasureTheory/Measure/Portmanteau.lean:401`, which is
+  `MeasureTheory.Measure.countable_meas_pos_of_disjoint_iUnion`,
+  `Mathlib/MeasureTheory/Measure/Typeclasses/SFinite.lean:305`, applied to the
+  spheres) together with `Metric.thickening_singleton`
+  (`Mathlib/Topology/MetricSpace/Thickening.lean:157`) to read a thickening of a
+  point as a ball; `disjointed` then keeps the frontiers null, because
+  `frontier_inter_subset`, `frontier_union_subset` and `frontier_compl`
+  (`Mathlib/Topology/Closure.lean:537,544,528`) bound the frontier of a finite
+  Boolean combination by the union of the frontiers. This is the step that
+  carries the whole Skorokhod approximation.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
-  Separability is the only hypothesis; the standard construction uses a
-  countable partition of `E` into sets of small diameter whose boundaries are
-  `μ`-null, and the unit interval with Lebesgue measure as the common space.
+  Separability is the only hypothesis; the construction uses the partition of
+  the previous item, so that `Portmanteau`'s
+  `MeasureTheory.tendsto_measure_of_null_frontier` (`Portmanteau.lean:243`)
+  applies to each piece, and the unit interval with Lebesgue measure as the
+  common space.
 * The version for a single limit along a filter with a countable basis.
 * The converse direction, almost sure convergence implies weak convergence of
   the laws, from `MeasureTheory.tendsto_of_ae_tendsto` or directly.

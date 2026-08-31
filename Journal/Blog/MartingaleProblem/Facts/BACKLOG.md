@@ -36,7 +36,10 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 
 3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
-   fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen.
+   fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
+   dritter Lauf, ist die Liste „What Mathlib already has" von `WeakConvergence`
+   erledigt: elf Deklarationen, alle vorhanden, keine `deprecated`. Es fehlen
+   also noch die drei übrigen Roadmaps und die Zitate in den Meilensteinen.*
 
 4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
@@ -48,3 +51,16 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    haben in v4.33.1, im Arbeitsbranch und auf master (`gh search code`) null
    Treffer. Das ist die erste Hälfte von `fact:PSpolish`, und sie ist der
    Untergrund jedes Teilfolgenarguments des Konvergenzteils.
+
+   *Zwischenstand 2026-08-31, dritter Lauf: der Block war so, wie er dastand,
+   nicht formalisierbar, und beide Gründe sind behoben. `CompleteSpace
+   (ProbabilityMeasure E)` ist ein Typfehler — die Metrik sitzt auf der Struktur
+   `LevyProkhorov (ProbabilityMeasure E)`, `ProbabilityMeasure E` trägt keine
+   Uniformität —, und der angegebene Beweisweg der Vollständigkeit war zirkulär,
+   weil er `isTightMeasureSet_of_isCompact_closure` für einen Schritt nannte, der
+   den kompakten Abschluss erst herstellen soll. Der Meilenstein führt jetzt vier
+   Punkte, den Weg über Ulam (`isTightMeasureSet_singleton`) und, als eigene
+   Aussage, die Herauslösung des Straffheitsskeletts aus `Measure/Prokhorov.lean`
+   (`isTightMeasureSet_of_forall_exists_finite_iUnion_ball`). Übersetzt ist
+   nichts: der Worktree hat kein `.lake`. Der Punkt bleibt deshalb offen, und der
+   erste Schritt ist jetzt benannt — siehe den Laufbericht im Inventar.*

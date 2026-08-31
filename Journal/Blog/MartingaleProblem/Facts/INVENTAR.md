@@ -50,7 +50,7 @@ setzt, nennt den Beleg.
 | `fact:submgreg` | 2 | Submartingale regularization; EK, Proposition 2.2.9; e | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
-| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3 |
+| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität |
 | `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1 |
 | `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` (b); beide stehen seit dem 2026-08-31 unter Stufe (A) „separabel metrisch", wie der Fact, und (b) unter Relativkompaktheit statt Straffheit, wie EK |
 | `fact:fullgenerator` | 1 | EK, Proposition 1.5.1 | Roadmap | MartingaleProblems M13 — dort neu angelegt; Mathlib hat keine Operatorhalbgruppen, `dissipative` kommt nicht vor, Hille--Yosida steht als `Q974405` ohne `decl` in `docs/1000.yaml` |
@@ -1321,3 +1321,166 @@ bleibt `Clock.interval_union` der erste der Task-23-Linie;
 `ProbabilityMeasure.separableSpace` tritt in der Konvergenzlinie **vor**
 `induction_on_mulSystem`, weil dieses über `ProbabilityMeasure` quantifiziert
 und jenes es konstruiert.
+
+### 2026-08-31, dritter Lauf — Rückstau 4: `ProbabilityMeasure E` als metrischer Raum
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstaupunkt 1
+bleibt stehen (Manuskript, Regel 2), Punkt 2 ist Task 23 und ohne neuen Hebel,
+Punkt 3 ist nach seiner eigenen Regel — alle zwei Wochen, zuletzt 2026-08-29 —
+nicht fällig. Der Lauf ging an **Punkt 4**. Er ist nicht gestrichen, sondern hat
+einen Zwischenstand: der Block, den der zweite Lauf des Tages an den Kopf von
+`WeakConvergence` Meilenstein 3 gesetzt hat, war **nicht formalisierbar, wie er
+dastand**, aus zwei Gründen, und beide sind jetzt behoben. Geprüft wurde an
+`~/Code/lean/journal/.lake/packages/mathlib` (v4.33.1), am Arbeitsbranch des
+Nutzers (`091609e560a`) und gegen master über `gh api search/code`.
+
+**Erstens: eine der drei Aussagen war nicht typrichtig.** Der Block verlangte
+`MeasureTheory.ProbabilityMeasure.completeSpace`, „die Lévy--Prokhorov-Metrik auf
+`ProbabilityMeasure E` ist vollständig". Das lässt sich so nicht hinschreiben.
+`LevyProkhorov` ist eine einfeldrige **Struktur** über der Maßklasse
+(`Measure/LevyProkhorovMetric.lean:259`), und die Abstandsinstanzen sitzen auf
+ihr: `LevyProkhorov.instPseudoMetricSpaceProbabilityMeasure` (`:311`) und, unter
+`[BorelSpace E]`, `LevyProkhorov.levyProkhorovDist_metricSpace_probabilityMeasure`
+(`:336`). `ProbabilityMeasure E` selbst trägt die Topologie der
+Verteilungskonvergenz und **keine Uniformität**, also ist
+`CompleteSpace (ProbabilityMeasure E)` keine Aussage, sondern ein Typfehler. Der
+Meilenstein führt jetzt vier Punkte statt drei:
+`ProbabilityMeasure.separableSpace`, `ProbabilityMeasure.secondCountableTopology`,
+`LevyProkhorov.completeSpace_probabilityMeasure` — auf dem Synonym — und
+`ProbabilityMeasure.isCompletelyMetrizableSpace`, das über
+`LevyProkhorov.probabilityMeasureHomeomorph` (`:676`),
+`Homeomorph.isClosedEmbedding` (`Topology/Homeomorph/Defs.lean:297`) und
+`Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
+(`Topology/Metrizable/CompletelyMetrizable.lean:249`) zurückwandert. Dass
+`polishSpace` danach nichts mehr kostet, ist ebenfalls am Quelltext belegt:
+`PolishSpace` ist definiert als `SecondCountableTopology` zusammen mit
+`IsCompletelyMetrizableSpace` (`Topology/MetricSpace/Polish.lean:62`), und die
+Instanz bei `:65` baut es aus Separabilität und vollständiger Metrisierbarkeit.
+Dieselbe Naht trifft die Zweitabzählbarkeit:
+`UniformSpace.secondCountable_of_separable`
+(`Topology/UniformSpace/Cauchy.lean:932`) verlangt einen uniformen Raum mit
+abzählbar erzeugter Uniformität und greift auf `ProbabilityMeasure E` nicht; der
+Schluss läuft über das Synonym und `Homeomorph.secondCountableTopology`
+(`Topology/Homeomorph/Lemmas.lean:37`) zurück. Die Regel, die dabei herauskommt
+und im Meilenstein jetzt vorneweg steht: jede **uniforme** Aussage über den Raum
+der Gesetze wird auf `LevyProkhorov (ProbabilityMeasure E)` formuliert, jede
+**topologische** auf `ProbabilityMeasure E`.
+
+**Zweitens: der angegebene Beweisweg der Vollständigkeit war zirkulär.** Er
+lautete, eine Cauchyfolge sei straff „durch das Überdeckungsargument, das
+`MeasureTheory.isTightMeasureSet_of_isCompact_closure` für eine Menge mit
+kompaktem Abschluss führt". Dieser Satz ist die **Umkehrung**: er setzt den
+kompakten Abschluss voraus, den der nächste Schritt erst herstellen soll. Was
+der Schritt wirklich braucht, ist Ulams Satz, und den hat Mathlib:
+`MeasureTheory.isTightMeasureSet_singleton` (`Measure/Tight.lean:99`, unter
+`[IsCompletelyPseudoMetrizableSpace] [SecondCountableTopology] [BorelSpace]`, auf
+master zeichengleich und nicht `deprecated`), dazu
+`MeasureTheory.IsTightMeasureSet.union` (`Tight.lean:119`) für den endlichen
+Kopf. Der Meilenstein sagt jetzt den vollständigen Weg: `N` aus der
+Cauchybedingung, Ulam plus `union` für `μ 0, …, μ N`, deren Kompaktum durch
+endlich viele `r/2`-Bälle überdecken, und für `n > N` liefert die
+Lévy--Prokhorov-Ungleichung dieselbe Schranke, weil die `r/2`-Verdickung von
+`⋃ x ∈ F, ball x (r/2)` in `⋃ x ∈ F, ball x r` liegt.
+
+**Und daraus fällt eine eigene, an Mathlib gerichtete Aussage.** Der Beweis von
+`isTightMeasureSet_of_isCompact_closure` zerfällt sauber in zwei Teile, und
+Mathlib hat den einen nur inline. Die Zeilen 640--704 von
+`Measure/Prokhorov.lean` bauen das Kompaktum
+`⋂ m, ⋃ i ≤ k m, closure (ball (D i) (u m))`, summieren die Fehler über `m` und
+schließen mit `TotallyBounded.isCompact_of_isClosed`; die Kompaktheitshypothese
+geht dort **an genau einer Stelle** ein, nämlich im Schritt `byclaim`, der
+`exists_measure_iUnion_gt_of_isCompact_closure` (`:573`) aufruft. Herausgezogen
+ist das Übrige die Aussage: auf einem vollständigen, zweitabzählbaren
+metrischen Raum ist eine Menge von Wahrscheinlichkeitsmaßen straff, sobald sie
+**gleichmäßig totalbeschränkt im Maß** ist — zu jedem `ε > 0` und `r > 0` ein
+endliches `F` mit `μ (⋃ x ∈ F, ball x r)ᶜ ≤ ε` für alle `μ`. Sie steht jetzt als
+`MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball` im
+Meilenstein, der Mathlib-Satz wird ihr Korollar, und die Vollständigkeit oben
+ist die zweite Anwendung.
+
+**Ein dritter Punkt, der beim Nachlesen der Skorokhod-Darstellung anfiel.** Der
+Meilenstein sagte, die Konstruktion benutze „eine abzählbare Partition von `E`
+in Mengen kleinen Durchmessers, deren Ränder `μ`-null sind", ohne ein Werkzeug zu
+nennen. Mathlibs Partition
+`MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
+(`LevyProkhorovMetric.lean:540`) ist aus Bällen **eines festen Radius** gebaut
+und sagt über Ränder nichts; die Nullränder sind der eigentliche Inhalt des
+Schritts. Sie stehen jetzt als eigener Punkt
+`exists_measurable_partition_diam_le_null_frontier`, mit den drei Werkzeugen, die
+Mathlib dafür hat: `MeasureTheory.exists_null_frontier_thickening`
+(`Measure/Portmanteau.lean:401`, das über
+`MeasureTheory.Measure.countable_meas_pos_of_disjoint_iUnion`,
+`Measure/Typeclasses/SFinite.lean:305`, läuft) für die Radienwahl,
+`Metric.thickening_singleton` (`Topology/MetricSpace/Thickening.lean:157`), um
+eine Punktverdickung als Ball zu lesen, und `frontier_inter_subset`,
+`frontier_union_subset`, `frontier_compl` (`Topology/Closure.lean:537,544,528`),
+damit `disjointed` die Nullränder nicht zerstört.
+
+**Nichts davon steht auf master.** `SeparableSpace (ProbabilityMeasure`,
+`CompleteSpace (LevyProkhorov`, `IsCompletelyMetrizableSpace (ProbabilityMeasure`
+und `PolishSpace (ProbabilityMeasure` haben je null Treffer
+(`gh api search/code`, mit `instMetrizableSpaceProbabilityMeasure`,
+`isTightMeasureSet_singleton` und
+`exists_measure_iUnion_gt_of_isCompact_closure` als Gegenprobe, dass die Suche
+greift: 1, 2 und 1 Treffer). Ebenso null im Arbeitsbranch des Nutzers und in
+v4.33.1.
+
+**Ein Nebenbefund in `SkorokhodSpace` Meilenstein 8, eingetragen.** Der Punkt
+`tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` sagte, der Beweis
+benutze „eine konvergente Teilfolge und sonst nichts". Das stimmt, verschweigt
+aber, woher die Teilfolge kommt: aus einem kompakten Abschluss folgt
+Folgenkompaktheit erst über die Metrisierbarkeit von
+`ProbabilityMeasure (D ι E)`, also über `instMetrizableSpaceProbabilityMeasure`
+angewandt auf `SeparableSpace (D ι E)` aus Meilenstein 5. Der Punkt nennt das
+jetzt. Für Stufe (A) ist es unschädlich — `SeparableSpace (D ι E)` verlangt nach
+Meilenstein 5 nur eine abzählbare dichte Teilmenge von `E` —, aber es ist die
+zweite Stelle desselben Punktes, an der die Separabilität arbeitet, und sie war
+ungenannt.
+
+**Bei der Gelegenheit die Liste „What Mathlib already has" derselben Roadmap
+nachgeprüft**, weil der Lauf ohnehin in der Datei war. Alle elf genannten
+Deklarationen existieren in v4.33.1 unter dem angegebenen Namen und in der
+angegebenen Datei, keine ist `deprecated`:
+`ext_of_forall_integral_eq_of_IsFiniteMeasure` und
+`ext_of_forall_lintegral_eq_of_IsFiniteMeasure`
+(`Measure/HasOuterApproxClosed.lean:269,256`),
+`ext_of_forall_mem_subalgebra_integral_eq_of_polish` und
+`…_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:72,36`),
+`FiniteMeasure.tendsto_iff_forall_integral_tendsto`,
+`tendsto_of_forall_integral_tendsto`, `tendsto_iff_forall_integral_rclike_tendsto`,
+`tendsto_map_of_tendsto_of_continuous`, `continuous_map`
+(`Measure/FiniteMeasure.lean:726,701,748,957,972`, die
+`ProbabilityMeasure`-Fassungen bei `Measure/ProbabilityMeasure.lean:346,354,639,654`),
+`ProbabilityMeasure.tendsto_iff_tendsto_charFun`
+(`Measure/LevyConvergence.lean:215`, auf master drei Treffer, davon einer in
+`docs/1000.yaml`) und `uniformIntegrable_iff`
+(`Function/UniformIntegrable.lean:878`). Das ist keine Erledigung von
+Rückstaupunkt 3 — der verlangt alle vier Roadmaps gegen master — aber es nimmt
+ihm eine Roadmap ab.
+
+**Was nicht geschehen ist.** Kein Lean wurde übersetzt: der Worktree hat kein
+`.lake`, und Regel 3 verbietet den Wechsel in den Hauptcheckout. Die fünf neuen
+Stümpfe in `WeakConvergence/Suggested.lean` sind Prototypen wie die übrigen und
+tragen `sorry`. Rückstaupunkt 4 bleibt deshalb offen; was dieser Lauf ihm
+genommen hat, ist der Grund, aus dem er in seiner alten Fassung nicht
+ausführbar war.
+
+**Als Nächstes zu formalisieren:
+`MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`**
+(`WeakConvergence` Meilenstein 3). Es ruht auf nichts als
+`TopologicalSpace.exists_dense_seq`, `measure_iUnion_le` und
+`TotallyBounded.isCompact_of_isClosed` — kein Prozess, kein Pfadraum, keine Uhr,
+und aus der ganzen Roadmap keine Vorbedingung. Es ist jetzt dran, weil es der
+einzige Punkt dieses Projekts ist, dessen **Beweis in Mathlib schon steht**: die
+Zeilen 640--704 von `Measure/Prokhorov.lean` sind er, wörtlich, und die Arbeit
+besteht darin, den einen Aufruf von
+`exists_measure_iUnion_gt_of_isCompact_closure` durch die Hypothese zu ersetzen.
+Das ist zugleich ein Mathlib-PR, der für sich steht — der vorhandene Satz
+`isTightMeasureSet_of_isCompact_closure` wird sein Korollar, ohne dass eine Zeile
+seines Beweises verlorengeht —, und die Vorbedingung von
+`LevyProkhorov.completeSpace_probabilityMeasure`, also der Aussage, ohne die
+keines der Teilfolgenargumente des Konvergenzteils steht. Gegenüber den älteren
+Vorschlägen: `Clock.interval_union` bleibt der erste der Task-23-Linie; in der
+Konvergenzlinie tritt dieses vor `ProbabilityMeasure.separableSpace`, das der
+zweite Lauf des 2026-08-31 vorgeschlagen hat, denn jenes verlangt eine
+Konstruktion und dieses nur eine Umstellung.

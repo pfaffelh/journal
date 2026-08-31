@@ -305,7 +305,13 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   dimensional distributions along every finite subset of `T` converge to those
   of `μ`. Then `μ n → μ` weakly. This is Ethier–Kurtz, Theorem 3.7.8(b), and
   the hypothesis there is relative compactness, not tightness: what the proof
-  uses is a convergent subsequence and nothing else. Its ingredients, in the
+  uses is a convergent subsequence and nothing else. That step is where
+  separability is spent a second time: a compact set yields a convergent
+  subsequence because `ProbabilityMeasure (D ι E)` is metrizable, by
+  `MeasureTheory.instMetrizableSpaceProbabilityMeasure`
+  (`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean:695`) applied to
+  `SeparableSpace (D ι E)` of Milestone 5, which itself asks only for a countable
+  dense subset of `E`. Its ingredients, in the
   order the proof needs them: right continuity of the paths, to move the times
   of a finite family from `T` to the continuity points of the limit;
   `exists_countable_dense_continuity` below, which makes those continuity
