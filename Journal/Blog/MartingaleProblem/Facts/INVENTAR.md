@@ -284,6 +284,18 @@ setzt, nennt den Beleg.
   \ref{it:C3a}, und das sagt `ex:atomicdiscontinuity` mit Gegenbeispiel,
   `thm:absconvaug`/`prop:atomaug` reparieren es („any, atoms allowed"), und
   `rem:MZcost` nennt die Grenze der Reparatur.
+* **Die Statuszeile „purely atomic, atoms incomparable" ist seit dem
+  2026-08-31, fünfter Lauf, zu schwach.** `rem:atomsnotchange` (Stelle 5535)
+  führt sie als „verified exhaustively up to five points; not proved". Bewiesen
+  ist seither: liegt unter $t$ nur eine Antikette von Atomen und ist deren
+  Gesamtmasse von null verschieden, so gilt die Dualität an $t$ — mit Massen
+  beliebigen Vorzeichens, also einschließlich des Diamanten, den
+  `rem:atomicdual` als kleinsten Fall führt und dessen Begründung dort am
+  2026-08-30 als falsch erkannt und ersetzt wurde. Der Beweis steht ausgeführt
+  in `Task23/PROTOKOLL.md`, Abschnitt „Der Halbordnungsfall, 2026-08-31
+  (fünfter Lauf)". Ihn ins Manuskript zu setzen ist erlaubt (Task-23-Regel:
+  vollständig und verifiziert), aber es ist eine Manuskriptänderung samt
+  `check.py` und gehört deshalb an den Anfang eines Laufs, nicht an sein Ende.
 * **Drei Aussagen von §7 fehlen in der Bündeltabelle.** `thm:absconvws`,
   `thm:MZconv` und `rem:EKrelcompact` haben dort keine Zeile, während
   `thm:absconv`, `thm:absconvaug`, `prop:atomaug`, `thm:clockchange`,
@@ -1580,3 +1592,85 @@ Idealreduktion oben das obere Ende und nicht das Gitter betrifft. Gegenüber den
 (dritter Lauf) bleibt der erste der Konvergenzlinie; in der Task-23-Linie tritt
 `atomGrid_symm` **vor** `Clock.interval_union`, denn jenes verlangt die
 Uhrendefinition samt Maßtheorie und dieses nur Arithmetik auf `ℕ`.
+
+### 2026-08-31, fünfter Lauf — Rückstau 2: die flache Spitze ist bewiesen
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da, Rückstaupunkt 1
+bleibt beim Nutzer (Manuskript, Regel 2). Der Lauf ging wieder an **Punkt 2**,
+den Fall unvergleichbarer Atome, und zwar an den Auftrag, den der vierte Lauf
+hinterlassen hatte: „(C4$^+$) beweisen oder widerlegen". Herausgekommen ist
+beides und keines von beidem — der **Hebel** ist widerlegt, ein **Stück des
+Falles** ist bewiesen. Am Manuskript wurde nichts geändert, an den Roadmaps
+nichts; geändert sind `Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses
+Inventar, neu sind `Task23/c5.py`, `Task23/flat.py` und
+`Task23/certificate.py`. Der ausführliche Bericht steht im PROTOKOLL,
+Abschnitt „Der Halbordnungsfall, 2026-08-31 (fünfter Lauf)"; hier das
+Wesentliche.
+
+**(C5) ist falsch.** Der vierte Lauf hatte (C4$^+$) — „$\Psi(a,x)=0$, sobald
+$a<x$" — als das benannt, was den Halbordnungsfall schließt. Der
+naheliegende Weg dorthin ist die termweise Fassung: in
+$\Psi(a,x)=\sum_{c<a}m_c\kappa(c,x)$ hat jeder Summand ein $c$ mit $c<a<x$,
+also genügte „$m_c\kappa(c,x)=0$, sobald es ein $b$ mit $c<b<x$ gibt" (C5).
+Diese Aussage ist **falsch**, und zwar schon bei lauter Massen $1$: auf
+$\T=\{0,3,4,2,1\}$ mit $0<3,4<2<1$ bleibt $\kappa(3,1)$ frei, obwohl
+$3<2<1$; erzwungen ist allein die Kombination
+$m_3\kappa(3,1)+m_4\kappa(4,1)$, die in $\Psi(2,1)$ steht. (C4$^+$) selbst hält
+dort und überall: $0$ Ausfälle unter $2052+10512$ Konfigurationen mit strikt
+positiven Massen und $m_0$ auch $0$ (`c5.py`, exakte Bruchrechnung). Das ist
+kein Nebenbefund, sondern eine Weichenstellung: der Beweis muss über $\Psi$
+laufen, nicht über die einzelnen $\kappa$.
+
+**Bewiesen: die flache Spitze, und schärfer als erwartet.** Liegt unter $t$ nur
+eine Antikette von Atomen — $\T_{<c}=\{0\}$ für jedes $c$ mit $0<c<t$ —, so ist
+$\delta(t)=0$ und $\Psi(a,t)=0$ für jedes $a<t$. Gebraucht wird davon **nicht**
+die Positivität der Massen, sondern allein $q(M)\neq0$ für
+$M=\T_{<t}\setminus\{0\}$: die Relationen an $(c,t)$, mit $m_c$ gewichtet und
+über $c\in M$ summiert, geben durch Antisymmetrie $q(M)R=0$ für
+$R=\sum_{c\in M}m_c\kappa(c,t)$, und die Relationen an $(0,c)$ und $(0,t)$
+erledigen den $m_0$-Anteil. Vier Schritte, kein Grenzübergang, keine Vermutung.
+Der Satz enthält den **Diamanten** als den Fall $|M|=2$ — den kleinsten Fall
+also, dessen Begründung im Manuskript der dritte Lauf des 2026-08-30 als falsch
+nachgewiesen hat und der seither ohne Beweis dasteht —, und er erklärt zugleich
+das dortige Gegenbeispiel: $m_a=1$, $m_b=-1$ ist genau $q(M)=0$. Weglassen
+lässt sich die Hypothese nicht: bei $q(M)=0$ fällt die Dualität an $60$ von
+$2625$ geprüften Stellen. Für eine echte Uhr ist sie automatisch, denn $q$ ist
+ein Maß. Nachgerechnet mit `flat.py` über alle Halbordnungen der Höhe $\le2$ auf
+bis zu **sechs** Punkten ($1053+21141+80736$ Konfigurationen) und in der
+scharfen Fassung mit Massen beider Vorzeichen ($10500+5071$ Stellen): kein
+Ausfall.
+
+**Ein Werkzeug, das der nächste Lauf erbt.** `certificate.py` rechnet mit
+symbolischen Massen die Linearkombination der Relationen aus, die ein
+verschwindendes Funktional *ist* — nicht nur, dass es verschwindet. Am
+Diamanten steht dort der Faktor $1/(m_1+m_2)$, an dem die Positivität sichtbar
+wird; bei „drei Atomen unter der Spitze" kommt genau der Beweis oben heraus.
+Aus einem gerechneten Fall ein Argument abzulesen, ist damit keine Ratearbeit
+mehr.
+
+**Offen geblieben.** (R) für ein $t$, unter dem eine Kette $0<a<b<t$ liegt.
+Warum der Beweis dort anders aussehen muss, ist jetzt benannt: Schritt 2 der
+flachen Rechnung benutzt, dass $\Psi(c,t)$ für **alle** $c\in M$ dieselbe Größe
+$m_0\kappa(0,t)$ ist; bei zwei Stockwerken ist das nicht mehr so. Nicht
+geschehen ist zweierlei, und beides mit Absicht. Kein Lean übersetzt — der
+Worktree hat kein `.lake`. Und nichts in eine Roadmap eingetragen: die flache
+Spitze ist ein Spezialfall von `duality_of_atomic`, und sobald der
+Halbordnungsfall ganz steht, wäre der Punkt Gerüst. Was dem **Nutzer** gehört,
+ist die Frage ans Manuskript: `rem:atomsnotchange` führt die Zeile „purely
+atomic, atoms incomparable" als „verified exhaustively up to five points; not
+proved", und das stimmt seit heute nicht mehr für die flache Spitze samt
+Diamant. Eine Proposition dafür ist im PROTOKOLL fertig formuliert und
+bewiesen; sie ins Manuskript zu setzen, ist ein eigener Lauf wert, weil danach
+`check.py` laufen muss.
+
+**Als Nächstes zu formalisieren: weiterhin `atomGrid_symm`**
+(`MartingaleProblems` Meilenstein 8), aus den Gründen des vierten Laufs — der
+Kettenfall ist vollständig bewiesen, `atomGrid_symm` ist sein ganzer Inhalt, und
+es ruht auf nichts als Arithmetik auf `ℕ`. Der heutige Satz ändert daran
+nichts, sondern bestätigt die Reihenfolge: er ist ein zweiter, unabhängiger
+Baustein desselben Meilensteins (`duality_of_atomic`), aber er ruht auf der
+Idealreduktion, die ihrerseits die Uhrendefinition und `Clock.interval_union`
+verlangt, und ist damit der spätere von beiden. Wer ihn dennoch zuerst will,
+formalisiere ihn in der reinen Gestalt, in der er hier bewiesen ist —
+`Finset`-Halbordnung, Massen in `ℝ`, `κ` antisymmetrisch, keine Maßtheorie —,
+denn in dieser Gestalt ruht er auf ebensowenig wie `atomGrid_symm`.

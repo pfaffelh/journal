@@ -431,3 +431,132 @@ Lösungsraum.
   andere Gewichtung $w$ gibt dieselbe Identität mit $\sum_a w_a$ und
   $\sum_{a>c}w_a$ an den Stellen von $q(\T_{<t})$ und $\nu_c$. Ohne (C4)
   schließt keine davon, mit (C4) schließt schon die einfachste.
+
+## Der Halbordnungsfall, 2026-08-31 (fünfter Lauf): die flache Spitze ist bewiesen, (C5) ist falsch
+
+Der vierte Lauf hatte den Fall auf **(R)** eingeschränkt — auf einer
+Halbordnung mit kleinstem Element $0$ und größtem Element $z$ ist
+$\Psi(z,z)=0$ — und als Hebel die Vermutung (C4$^+$) benannt. Dieser Lauf hat
+den Hebel zerbrochen und stattdessen ein Stück des Falles **bewiesen**.
+
+**(C5) ist falsch, und damit jede termweise Fassung.** Die naheliegende
+Verschärfung von (C4), aus der (C4) in einer Zeile folgte — in
+$\Psi(a,x)=\sum_{c<a}m_c\kappa(c,x)$ hat jeder Summand ein $c$ mit $c<a<x$, also
+genügte
+
+> **(C5)** $m_c\,\kappa(c,x)=0$, sobald es ein $b$ mit $c<b<x$ gibt —
+
+ist bei strikt positiven Massen **falsch**. Zeuge, exakt nachgerechnet
+(`c5.py`): $\T=\{0,3,4,2,1\}$ mit $0<3$, $0<4$, $3<2$, $4<2$, $2<1$, alle Massen
+$1$ (und ebenso für $m_0=0$ und $m_0=2$). Dort ist $3<2<1$, aber
+$\kappa(3,1)$ bleibt auf dem Lösungsraum **frei**; erzwungen ist allein die
+Kombination $m_3\kappa(3,1)+m_4\kappa(4,1)$, die in $\Psi(2,1)$ auftritt. Die
+Aussage (C4$^+$) selbst hält an derselben Stelle: $0$ Ausfälle unter $2052$
+Konfigurationen auf vier und $10512$ auf fünf Punkten, Massen aus $\{1,2,3\}$
+bzw. $\{1,2\}$ und $m_0$ auch $0$. **Folgerung für jeden späteren Lauf:** der
+Beweis muss über $\Psi$ geführt werden, nicht über die einzelnen $\kappa(c,x)$;
+$\Psi$ ist auf vergleichbaren Paaren null, seine Summanden sind es nicht.
+
+**Bewiesen: die flache Spitze.** Vollständig, ohne Vermutung, und mit einer
+Hypothese, die schwächer ist als Positivität.
+
+> **Satz.** $\T$ endliche Halbordnung mit kleinstem Element $0$, Massen
+> $m_a\in\R$ beliebig, $\kappa$ antisymmetrisch mit $(\diamondsuit)$. Sei
+> $t\in\T$ derart, dass jedes $c$ mit $0<c<t$ ein Atom ist
+> ($\T_{<c}=\{0\}$) — die Elemente unter $t$ bilden also eine Antikette
+> $M:=\T_{<t}\setminus\{0\}$ —, und sei $q(M)=\sum_{c\in M}m_c\neq0$. Dann ist
+> $\delta(t)=0$ und $\Psi(a,t)=0$ für jedes $a<t$.
+
+*Beweis.* Nach der Idealreduktion des vierten Laufs darf $\T=\T_{\le t}$
+angenommen werden, $t$ also größtes Element. Ist $M=\emptyset$, so ist $t=0$
+(nichts zu zeigen) oder $t$ ein Atom, und $(\diamondsuit)$ an $(0,t)$ lautet
+$0+m_0\kappa(0,0)=0+m_0\kappa(0,t)$, gibt also $\delta(t)=m_0\kappa(0,t)=0$.
+Sei $M\neq\emptyset$. Für $c\in M$ ist $\Psi(c,s)=m_0\kappa(0,s)$ und
+$\delta(c)=m_0\kappa(0,c)$.
+
+1. $(\diamondsuit)$ an $(0,c)$, $c\in M$, gibt $\Psi(c,0)=\delta(c)$, also
+   $m_0\kappa(0,c)=0$.
+2. $(\diamondsuit)$ an $(c,t)$, $c\in M$: mit
+   $\Psi(c,t)=m_0\kappa(0,t)$,
+   $\Psi(t,c)=m_0\kappa(0,c)+\sum_{c'\in M}m_{c'}\kappa(c',c)$,
+   $\delta(c)=m_0\kappa(0,c)$ und $\delta(t)=m_0\kappa(0,t)+R$ mit
+   $R:=\sum_{c'\in M}m_{c'}\kappa(c',t)$ heben sich beide $m_0$-Terme heraus und
+   es bleibt
+   $$\sum_{c'\in M}m_{c'}\kappa(c',c) = R \qquad\text{für jedes } c\in M .$$
+3. Multiplikation mit $m_c$ und Summation über $c\in M$ lässt die linke Seite
+   $\sum_{c,c'\in M}m_cm_{c'}\kappa(c',c)$ durch Antisymmetrie verschwinden und
+   gibt $q(M) R=0$, also $R=0$.
+4. Ist $m_0=0$, so ist $\delta(t)=m_0\kappa(0,t)+R=0$ und
+   $\Psi(a,t)=m_0\kappa(0,t)=0$ für $a\in M$, $\Psi(0,t)=0$ ohnehin. Ist
+   $m_0\neq0$, so gibt Schritt 1 $\kappa(0,c)=0$ für alle $c\in M$, also
+   $\Psi(t,0)=\sum_{c\in M}m_c\kappa(c,0)=-\sum_{c\in M}m_c\kappa(0,c)=0$, und
+   $(\diamondsuit)$ an $(0,t)$ — $\Psi(t,0)=\delta(t)$ — gibt $\delta(t)=0$;
+   mit Schritt 3 folgt $m_0\kappa(0,t)=\delta(t)-R=0$, also $\kappa(0,t)=0$ und
+   $\Psi(c,t)=m_0\kappa(0,t)=0$ für jedes $c\in M$. $\square$
+
+Der Satz enthält den Diamanten als den Fall $|M|=2$ — den kleinsten offenen
+Fall, dessen Begründung im Manuskript der dritte Lauf des 2026-08-30 als falsch
+nachgewiesen hatte und der seither ohne Beweis war. Er enthält ihn mit
+beliebig vielen unvergleichbaren Atomen und, was mehr ist, mit der **scharfen**
+Hypothese: gebraucht wird nicht $m_c>0$, sondern allein $q(M)\neq0$. Das ist
+genau die Bedingung, die `sharp.py` am 2026-08-30 aus der Suche abgelesen hatte,
+und sie erklärt das Gegenbeispiel des dritten Laufs: der Diamant mit
+$m_a=1$, $m_b=-1$ hat $q(M)=0$. Fallen kann die Dualität dort tatsächlich —
+unter allen Halbordnungen mit kleinstem Element auf vier Punkten und Massen aus
+$\{-2,\dots,2\}$ fällt sie an $60$ der $2625$ Stellen mit $q(M)=0$ —, die
+Hypothese ist also nicht wegzulassen. Für eine echte Uhr ist sie automatisch:
+$q$ ist ein Maß, und $q(M)=0$ hieße, kein Element von $M$ ist ein Atom.
+
+**Nachgerechnet.** `flat.py` (neu) zählt alle Halbordnungen der Höhe $\le2$ mit
+kleinstem Element auf bis zu **sechs** Punkten auf, wo die vollständige
+Aufzählung von `posetsearch.py` nicht mehr hinreicht, und prüft Dualität und
+(C4$^+$) durch Rangvergleich: $1053+21141+80736$ Konfigurationen, kein Ausfall.
+Die scharfe Fassung — Massen beider Vorzeichen, geprüft nur an den Stellen $t$,
+an denen die Hypothese des Satzes gilt — ergibt $10500$ Stellen auf vier Punkten
+(alle Massenvektoren aus $\{-2,\dots,2\}$) und $5071$ auf fünf Punkten
+(Stichproben), ebenfalls ohne Ausfall.
+
+**Was damit vom Halbordnungsfall bleibt.** Die Idealreduktion und dieser Satz
+erledigen jedes $t$, unter dem nur Atome liegen. Offen ist (R) für ein $t$, in
+dessen Ideal eine Kette $0<a<b<t$ vorkommt — der Zeuge gegen (C5) oben ist der
+kleinste solche Fall, und er zeigt zugleich, woran der Beweis dort anders
+aussehen muss: Schritt 2 des obigen Beweises benutzt, dass $\Psi(c,t)$ für
+alle $c\in M$ **dieselbe** Größe $m_0\kappa(0,t)$ ist. Sobald $\T_{<t}$ zwei
+Stockwerke hat, ist das nicht mehr so, und die gewichtete Summe aus Schritt 3
+schließt nicht mehr.
+
+**Ein neues Werkzeug: der Zeuge statt der Antwort** (`certificate.py`). Der
+Rangvergleich sagt, *dass* ein Funktional auf dem Lösungsraum verschwindet;
+`certificate.py` rechnet mit sympy und symbolischen Massen die
+Linearkombination der Relationen aus, die es *ist*. Am Diamanten kommt für
+$\kappa(1,2)$ der Faktor $1/(m_1+m_2)$ heraus — dort sitzt die Positivität,
+sichtbar statt vermutet —, für „drei Atome unter der Spitze" die Kombination
+$\frac1{q(M)}\sum_{c\in M}m_c R_{(c,z)} + \frac1{m_0}\sum_{c}m_cR_{(0,c)} -
+R_{(0,z)}$, also genau die vier Schritte des obigen Beweises. Für die
+Fortsetzung ist das der schnellste Weg, aus einem gerechneten Fall ein Argument
+abzulesen.
+
+**Eine Umformung, die das Rechnen kürzt.** Mit
+$\mu_s:=\sum_{a<s}m_a\varepsilon_a$ ist $(\diamondsuit)$ gleichwertig zu
+$$\langle \mu_s-\mu_t, \kappa(\cdot,s)-\kappa(\cdot,t)\rangle = 0
+  \qquad\text{für alle } s,t,$$
+denn beide Seiten sind $\Psi(s,s)-\Psi(s,t)-\Psi(t,s)+\Psi(t,t)$. Gleichwertig:
+die Bilinearform $(x,y)\mapsto \sum_s (\sum_{a<s}x_a) m_s\sum_t\kappa(s,t)y_t$
+ist auf dem Hyperraum $\{\sum_i x_i=0\}$ antisymmetrisch. In dieser Gestalt ist
+sofort zu sehen, dass nur Differenzen $\mu_s-\mu_t$ eingehen — der Grund, aus
+dem alle Beweise hier mit dem kleinsten Element als Bezugspunkt arbeiten.
+
+## Sackgassen, vierter Nachtrag
+
+* **(C5)**, also jede termweise Fassung von (C4): widerlegt, siehe oben. Wer
+  $\kappa(c,x)=0$ für $c<b<x$ zeigen will, sucht etwas Falsches.
+* **Die Reduktion „ein maximales Element von $\T_{<z}$ streichen"** ist keine.
+  Das Streichen eines Elements $w$, das nicht das größte ist, ändert
+  $\Psi(z,t)$ um $m_w\kappa(w,t)$; eine Lösung auf $\T$ schränkt sich also
+  nicht ein. Nur **abwärtsabgeschlossene** Teilmengen erben $(\diamondsuit)$,
+  und das ist die Idealreduktion des vierten Laufs.
+* **„Auf $\kappa(w,\cdot)$ wirken keine Relationen aus $\T_{<z}$"** ist falsch,
+  auch wenn $w$ das größte Element von $\T_{<z}$ ist: als *zweites* Argument
+  kommt $w$ in jedem $\Psi(s,w)$ vor. Wer das übersieht, hält den Fall
+  „$\T_{<z}$ hat ein größtes Element" für offen, obwohl ihn die Kettenrechnung
+  erledigt.

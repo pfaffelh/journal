@@ -45,6 +45,20 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    Alles am Quelltext von `antisym.py` und `reduction.py` geprüft; Einzelheiten
    im PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (vierter Lauf)".
    Der nächste Lauf beweist (C4$^+$) oder widerlegt sie.*
+   *Zwischenstand 2026-08-31, fünfter Lauf: (C4$^+$) steht weiter (jetzt
+   $12\,564$ Konfigurationen ohne Ausfall), aber der Hebel, mit dem sie bewiesen
+   werden sollte, ist **widerlegt**: die termweise Fassung (C5)
+   „$m_c\kappa(c,x)=0$, sobald $c<b<x$" ist schon bei lauter Massen $1$ falsch,
+   Zeuge $0<\{3,4\}<2<1$ mit freiem $\kappa(3,1)$ (`c5.py`). Dafür ist ein Stück
+   des Falles **bewiesen**: liegt unter $t$ nur eine Antikette von Atomen und ist
+   deren Gesamtmasse $\neq0$, so gilt $\delta(t)=0$ und (C4$^+$) an $t$ — mit
+   beliebigen Vorzeichen der Massen, also einschließlich des Diamanten, dessen
+   Begründung im Manuskript seit dem 2026-08-30 fehlt. Beweis, scharfe
+   Hypothese und die $102\,930+15\,571$ nachgerechneten Fälle stehen im
+   PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (fünfter Lauf)"; neu
+   sind `flat.py`, `c5.py` und `certificate.py`. Offen bleibt (R) für ein $t$,
+   unter dem eine Kette $0<a<b<t$ liegt; der nächste Lauf setzt dort an, mit
+   `certificate.py` am Zeugen $0<\{3,4\}<2<1$.*
 
 3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
