@@ -32,7 +32,19 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `Task23/PROTOKOLL.md`: die Vermutung ist durch $58081$ Konfigurationen
    belegt, der Beweis fehlt. Ansatzpunkt steht dort unter „Wo der Beweis hakt":
    die einzelnen Gleichungen über der Antikette der maximalen Elemente von
-   $\T_{<t^*}$.
+   $\T_{<t^*}$. *Zwischenstand 2026-08-31, vierter Lauf: der Fall ist auf eine
+   einzige Aussage eingeschränkt. Die **Idealreduktion** — jede
+   abwärtsabgeschlossene Teilmenge, die das kleinste Element enthält, erbt
+   $(\diamondsuit)$ samt $\delta$ — gibt mit der Induktion über $|\T|$ sofort
+   $\delta(s)=0$ für jedes $s$ außer einem größten Element. Zu zeigen bleibt (R):
+   auf einer Halbordnung mit kleinstem Element $0$ und größtem Element $z$ ist
+   $\Psi(z,z)=0$. Nullmassen oberhalb von $0$ darf man dabei streichen. Der
+   Defekt hat dort die Gestalt $\delta(z)=\sum_{c<z}m_c\kappa(c,0)$, einer Summe,
+   die über jedes echte Hauptideal verschwindet, und (R) folgt aus der
+   nachgerechneten Vermutung (C4$^+$) „$\Psi(a,x)=0$ für $a<x$" in vier Zeilen.
+   Alles am Quelltext von `antisym.py` und `reduction.py` geprüft; Einzelheiten
+   im PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (vierter Lauf)".
+   Der nächste Lauf beweist (C4$^+$) oder widerlegt sie.*
 
 3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29

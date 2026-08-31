@@ -1484,3 +1484,99 @@ Vorschlägen: `Clock.interval_union` bleibt der erste der Task-23-Linie; in der
 Konvergenzlinie tritt dieses vor `ProbabilityMeasure.separableSpace`, das der
 zweite Lauf des 2026-08-31 vorgeschlagen hat, denn jenes verlangt eine
 Konstruktion und dieses nur eine Umstellung.
+
+### 2026-08-31, vierter Lauf — Rückstau 2: die Idealreduktion des Halbordnungsfalls
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstaupunkt 1
+bleibt stehen (Manuskript, Regel 2). Der Lauf ging an **Punkt 2**, den offenen
+Fall unvergleichbarer Atome aus Task 23, den der dritte Lauf des Tages mit „ohne
+neuen Hebel" übergangen hatte. Ein Hebel hat sich gefunden; der Beweis ist
+damit nicht fertig, aber der Fall ist auf **eine einzige Aussage** eingeschränkt,
+und der Massenbereich, in dem sie zu zeigen ist, ist vermessen. Am Manuskript
+wurde nichts geändert, an den Roadmaps nichts; geändert sind
+`Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses Inventar, neu sind
+`Task23/antisym.py` und `Task23/reduction.py`. Der ausführliche Bericht steht im
+PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (vierter Lauf)"; hier das
+Wesentliche.
+
+**Die Rechnung läuft in der `κ`-Gestalt.** Der dritte Lauf des 2026-08-30 hatte
+`Φ` eliminiert und `(**)` in einen symmetrischen und einen antisymmetrischen
+Teil zerlegt, von denen nur der zweite den Defekt trägt. `antisym.py` (neu)
+stellt das System allein in `κ` auf — `n(n-1)/2` Unbekannte statt `n²` — und ist
+gegen `posetsearch.py` geeicht: Ketten fallen nie, der Diamant mit
+`m_a = 1, m_b = -1` fällt, nichtnegative Massen fallen nie (4864 + 53217 Fälle,
+exakte Bruchrechnung).
+
+**Die Idealreduktion, bewiesen.** Enthält eine Teilmenge `I ⊆ 𝕋` das kleinste
+Element und ist sie abwärtsabgeschlossen, so ist `𝕋_{<s} ⊆ I` für `s ∈ I`, also
+stimmen `Ψ` und `δ` auf `I` mit denen auf `𝕋` überein, und die Relationen an
+Paaren aus `I` sind eine Teilmenge derer auf `𝕋`. Eine Lösung auf `𝕋`
+schränkt sich also ein. Folglich: **`δ(t) = 0` ist auf `𝕋` erzwungen, sobald es
+auf `𝕋_{≤t}` erzwungen ist**, und `𝕋_{≤t}` hat kleinstes *und* größtes Element.
+Die Induktion über `|𝕋|` liefert damit `δ(s) = 0` für jedes `s`, dessen
+Hauptideal echt kleiner ist als `𝕋` — also für alles außer einem größten
+Element. Hat `𝕋` zwei maximale Elemente, ist gar nichts mehr zu zeigen.
+`reduction.py` (neu) prüft die behauptete Richtung an 3513 Paaren `(𝕋,t)` mit
+Massen beider Vorzeichen nach: null Abweichungen. Verlustfrei ist die Reduktion
+nicht — in vier dieser Fälle ist `δ(t)` auf `𝕋_{≤t}` frei und auf `𝕋` erzwungen;
+für nichtnegative Massen kostet das nichts.
+
+**Und Nullmassen fallen weg.** Ist `m_c = 0` für ein `c ≠ 0`, so ändert das
+Streichen von `c` kein `Ψ(s,t)`, lässt `0` kleinstes Element und nimmt dem
+System nur Relationen. Alle Massen außer `m_0` dürfen also als strikt positiv
+angenommen werden.
+
+**Der Restdefekt hat eine scharfe Gestalt.** Auf einer Halbordnung mit
+kleinstem Element `0` und größtem `z` ist nach dem Obigen `δ` auf
+`W = 𝕋 ∖ {z}` null, und die Relationen an `(0,a)` und `(0,z)` geben
+`Ψ(a,0) = 0` für `a ∈ W` und `Ψ(z,0) = δ(z)`. Mit `g(c) := m_c κ(c,0)` heißt
+das: `g` summiert sich über **jedes** Hauptideal `𝕋_{<a}`, `a ∈ W`, zu null, und
+`δ(z)` ist die Summe über das eine verbleibende Ideal `W`. Da die Vereinigung
+der `𝕋_{<a}` gerade `W` ohne die maximalen Elemente von `W` ist, sitzt der
+Defekt genau auf der Antikette der maximalen Elemente von `𝕋_{<z}` — dieselbe
+Stelle wie beim dritten Lauf, jetzt aber ohne `Φ`, ohne `γ` und ohne das obere
+Ende. Auch das ist nachgerechnet (243 + 608 beschränkte Halbordnungen, keine
+Abweichung).
+
+**Was den Rest schließt, und wo es gilt.** Aus `Ψ(a,z) = 0` für alle `a < z`
+folgt (R) in vier Zeilen: die mit `m_a` gewichtete Summe der Relationen an
+`(a,z)` lässt `∑ m_a Ψ(z,a) = ∑_{a,b<z} m_a m_b κ(b,a) = 0` verschwinden und
+gibt `q(𝕋_{<z}) δ(z) = 0`; bei `q(𝕋_{<z}) = 0` sind unter `m ≥ 0` alle Massen
+unter `z` null und `Ψ(z,·)` verschwindet ohnehin. Das ist genau das
+`q(𝕋_{<s})` des Suchbefunds von `sharp.py` vom 2026-08-30. Die zugehörige
+Vermutung ist **(C4)** „`Ψ(a,x) = 0`, sobald `a < x`", und ihre Reichweite ist
+jetzt vermessen: bei nichtnegativen Massen ist sie **falsch** (864 Ausfälle auf
+fünf Punkten, kleinster Zeuge `𝕋_{<1} = {0,2,3,4}` mit `m = (0,0,1,0,1)`, wo
+`Ψ(3,1)` frei bleibt), bei strikt positiven Massen und ebenso bei `m_0 = 0` und
+sonst positiven Massen **ohne einen einzigen Ausfall** (je 1539 + 7008 Fälle).
+Sie hält also genau in dem Bereich, den die Streichung der Nullmassen
+übriglässt. Als Sackgasse mit festgehalten: die stärkere Vermutung `Ψ ≡ 0` ist
+schon bei positiven Massen falsch, mit einem Gegenbeispiel von Hand auf fünf
+Punkten — `Ψ` lebt auf den unvergleichbaren Paaren, und (C4) ist die richtige
+Abschwächung.
+
+**Was nicht geschehen ist.** Kein Lean übersetzt (der Worktree hat kein
+`.lake`), keine Roadmap geändert, `check.py` nicht gelaufen, weil das Manuskript
+nicht angefasst wurde. Die Idealreduktion ist bewusst **nicht** in
+`MartingaleProblems` Meilenstein 8 eingetragen: sie ist ein Hilfssatz zu einer
+Aussage, die noch nicht bewiesen ist, und ein Meilenstein trägt keine
+Gerüste für Ungewisses. Sie steht im PROTOKOLL, bis (R) bewiesen ist.
+
+**Als Nächstes zu formalisieren: `atomGrid_symm`** (`MartingaleProblems`
+Meilenstein 8). `M : ℕ`, Massen `m i ≠ 0` für `1 ≤ i ≤ M-1`, und ein
+`Φ : ℕ → ℕ → ℝ` mit `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)`;
+Konklusion `Φ i j = Φ j i`. Es ruht auf nichts als der Linearität der Relation,
+ihrer Invarianz unter Transposition und einer Induktion über den Abstand zur
+Diagonale — kein Maß, keine Uhr, `ℕ` als einziger Index, und deshalb nach
+`Mathlib/Algebra/Order/` und nicht in den Wahrscheinlichkeitsbaum. Es ist
+**jetzt** dran, und der Grund kommt aus diesem Lauf: `duality_of_atomic` besteht
+aus dem Kettenfall und dem Halbordnungsfall, der Kettenfall ist seit dem
+2026-08-30 vollständig bewiesen und `atomGrid_symm` ist sein ganzer Inhalt,
+während der Halbordnungsfall nach dem heutigen Stand auf einer Vermutung sitzt,
+die noch keinen Beweis hat. Auf die Halbordnung zu warten hieße, den fertigen
+Teil liegen zu lassen; und `atomGrid_symm` ist von ihr nicht berührt, weil die
+Idealreduktion oben das obere Ende und nicht das Gitter betrifft. Gegenüber den
+älteren Vorschlägen: `isTightMeasureSet_of_forall_exists_finite_iUnion_ball`
+(dritter Lauf) bleibt der erste der Konvergenzlinie; in der Task-23-Linie tritt
+`atomGrid_symm` **vor** `Clock.interval_union`, denn jenes verlangt die
+Uhrendefinition samt Maßtheorie und dieses nur Arithmetik auf `ℕ`.
