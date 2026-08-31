@@ -2235,9 +2235,19 @@ restores Lemma~\ref{lem:tccontrol}, at the price of a group depending on $\T$.
 
   \emph{C\`adl\`ag paths.}  \texttt{RemyDegenne/brownian-motion} defines
   \texttt{IsCadlag} on \texttt{[TopologicalSpace }$\iota$\texttt{] [Preorder
-  }$\iota$\texttt{]}, which is \eqref{T2b}, together with jump sets and the usual
-  closure properties.  Definition~\ref{def:skorokhod} should reuse it rather than
-  restate it.
+  }$\iota$\texttt{]} --- that is \eqref{T0} together with a topology, which is
+  strictly weaker than \eqref{T2b} and than every other bundle of
+  Definition~\ref{def:bundles}: no linearity, no order topology, no countable
+  dense subset.  The predicate is that cheap, and so are the closure properties
+  supplied with it.  What is \emph{not} that cheap is the jump theory built on
+  it --- that $\{x : r(f(x-),f(x)) \geq \varepsilon\}$ has no accumulation
+  point, that the jump set is countable, that a c\`adl\`ag map is measurable and
+  is determined by its values on a dense set.  Each of those uses the exhaustion
+  and therefore \eqref{T2b}, and the gap between the two is worth keeping in
+  view: it is the reason Section~\ref{sec:skorokhod} can define its paths under
+  a weak hypothesis and still need a strong one a page later.
+  Definition~\ref{def:skorokhod} should reuse the predicate rather than restate
+  it.
 
   \emph{The one-dimensional case, complete.}  The repository accompanying
   \cite{Kuan26} constructs $D([0,1],\R)$ with Billingsley's metric, the
