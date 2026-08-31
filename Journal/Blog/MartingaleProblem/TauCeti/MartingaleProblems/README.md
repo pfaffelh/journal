@@ -537,13 +537,18 @@ order.
   nothing of how the atoms lie relative to one another.
 * `duality_of_atomic`: with `Φ, γ` as in `chain_identity` and `γ₁ = γ₂ = γ`, a
   purely atomic clock, and a `t` below which the atoms are finitely many, one has
-  `Φ t 0 = Φ 0 t`, in both conventions and with no hypothesis beyond the
+  `Φ t 0 = Φ 0 t` in the predictable convention, with no hypothesis beyond the
   existence of the integrals. Read the compatibility of the two increment
   representations of `duality_defect_eq_integral` on `Clock.atomPoset`, drop the
   symmetric part of `γ`, and apply `dualityDefect_eq_zero_of_nonneg`;
   `duality_defect_eq_integral` at `s = 0` turns `Ψ t t = 0` into
-  `Φ t 0 = Φ 0 t`. The optional convention is the predictable one for the
-  reversed order, under which the hypotheses are unchanged. Along a chain the
+  `Φ t 0 = Φ 0 t`. The convention enters through the interval and is not
+  symmetric here: with `Ioc 0 s` in place of `Iio s` the matrix is
+  `V s a = if a ≤ s ∧ a ≠ 0 then m a else 0`, whose diagonal does not vanish, so
+  `V` is not nilpotent and `Matrix.exists_isSymm_mulVec_one_eq_single` does not
+  apply. The optional convention on a chain is the predictable one for the
+  reflected chain, and `atomGrid_symm` covers it; a general partial order offers
+  no reflection. Along a chain the
   conclusion sharpens, by `atomGrid_symm`, to `Φ (u i) (u j) = Φ (u j) (u i)` at
   every pair and hence to `γ` symmetric there — with masses of either sign, where
   `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain

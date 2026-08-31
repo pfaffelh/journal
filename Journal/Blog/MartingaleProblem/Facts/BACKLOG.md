@@ -18,29 +18,40 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 
 ## Offen
 
-1. **Den Halbordnungssatz ins Manuskript setzen.** Am 2026-08-31, sechster Lauf,
-   ist der Fall unvergleichbarer Atome **bewiesen**: auf jeder endlichen
-   Halbordnung mit nichtnegativen Massen ist $\delta\equiv0$. Beweis, explizite
-   Konstruktion und Nachrechnung stehen im PROTOKOLL, Abschnitt „Der
-   Halbordnungsfall, 2026-08-31 (sechster Lauf)", geprüft von `selfadjoint.py`.
-   Zu tun ist damit dreierlei am Manuskript, und das ist eine Aufgabe für den
-   **Anfang** eines Laufs, weil danach `python3 check.py` laufen und `clean`
-   melden muss: (i) die Statuszeile „purely atomic, atoms incomparable" in
-   `rem:atomsnotchange` (Stelle 5535) von „verified exhaustively up to five
-   points; not proved" auf `proved` bringen; (ii) `prop:atomicdual` von der
-   Kettenhypothese befreien oder eine zweite Proposition daneben setzen — die
-   Kette behält die stärkere Konklusion $\Phi(s,t)=\Phi(t,s)$ und erlaubt Massen
-   beider Vorzeichen, die Halbordnung gibt nur den Defekt und verlangt
-   $m\ge0$; (iii) im Text von `rem:atomicdual` festhalten, dass der Diamant mit
-   $m_a=1$, $m_b=-1$ der Zeuge dafür ist, dass $m\ge0$ nicht wegfällt.
+1. **Die o-Konvention auf einer Halbordnung.** Am 2026-08-31, siebter Lauf, als
+   eigenständige Lücke erkannt und als einzige Zeile der Statustabelle von
+   `rem:atomsnotchange` stehengeblieben, die „verified" statt „proved" trägt.
+   `prop:atomicposet` ist für $\iota=\mathrm p$ bewiesen; unter $\iota=\mathrm o$
+   ist das Intervall $(0,s]=\T_{\le s}\setminus\T_{\le 0}$, die Matrix
+   $V_{s,a}=[a\le s,\,a\ne0]m_a$ hat eine nichtverschwindende Diagonale und ist
+   **nicht nilpotent**, `lem:selfadjoint` greift also nicht. Auf einer Kette
+   repariert das die Spiegelung des Gitters (`prop:atomicdual`); eine
+   Halbordnung bietet keine Spiegelung. `Task23/oconvention.py` (neu) prüft die
+   Aussage über alle Halbordnungen mit kleinstem Element auf bis zu fünf Punkten
+   und findet keinen Ausfall — es fehlt der Beweis, nicht die Evidenz.
 
-2. **Task 23, was danach offen bleibt.** Zwei Punkte, beide unberührt von diesem
-   Beweis. **Ordnungsdichte Atommengen** fallen aus der Hypothese heraus (unter
-   einem Punkt liegen dann unendlich viele Atome); der Grund ist scharf und steht
-   im PROTOKOLL unter „Was offen bleibt". **Stufe 3, die gemischte Uhr,** ist
-   nie angegangen worden. Von beiden ist die gemischte Uhr die nähere: der
-   atomlose und der atomare Teil sind einzeln erledigt, und zu klären ist, ob
-   sich der Defekt entlang der Lebesgue-Zerlegung von $q$ addiert.
+   **Der Ansatz steht schon fest**, denn `oconvention.criterion_o` ist gelaufen:
+   $\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\,TV=V^{\mathsf T}T\}$ beschreibt
+   die erzwungenen Stellen auch unter $\iota=\mathrm o$ **vollständig** (beide
+   Richtungen, $243+6156$ Stellen, null Abweichungen). Der Spurteil des Beweises
+   ist also konventionsfrei, und offen ist genau eine Frage über Matrizen: *sei
+   $\prec$ eine strikte Halbordnung auf endlichem $F$ mit kleinstem Element $0$,
+   sei $m:F\to[0,\infty)$ mit $m_0=0$ und
+   $V_{s,a}=[a\prec s\text{ oder }a=s\ne0]\,m_a$; ist $\mathcal L=\R^F$?* Für
+   nilpotentes $V$ ist die Antwort der Satz des sechsten Laufs (maximale Ordnung
+   von $\mathbb 1$); hier ist $V=N+D$ mit $N$ nilpotent und
+   $D=\operatorname{diag}(m)$, und zu klären ist, was an die Stelle der
+   maximalen Ordnung tritt. Einzelheiten im PROTOKOLL, Abschnitt „Der
+   Halbordnungsfall im Manuskript, 2026-08-31 (siebter Lauf)".
+
+2. **Task 23, was sonst offen bleibt.** Zwei Punkte, beide unberührt vom
+   Halbordnungssatz. **Ordnungsdichte Atommengen** fallen aus der Hypothese
+   heraus (unter einem Punkt liegen dann unendlich viele Atome); der Grund ist
+   scharf und steht im PROTOKOLL unter „Was offen bleibt". **Stufe 3, die
+   gemischte Uhr,** ist nie angegangen worden. Von beiden ist die gemischte Uhr
+   die nähere: der atomlose und der atomare Teil sind einzeln erledigt, und zu
+   klären ist, ob sich der Defekt entlang der Lebesgue-Zerlegung von $q$
+   addiert.
 
 3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29

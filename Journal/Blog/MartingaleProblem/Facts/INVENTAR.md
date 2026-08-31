@@ -284,21 +284,30 @@ setzt, nennt den Beleg.
   \ref{it:C3a}, und das sagt `ex:atomicdiscontinuity` mit Gegenbeispiel,
   `thm:absconvaug`/`prop:atomaug` reparieren es („any, atoms allowed"), und
   `rem:MZcost` nennt die Grenze der Reparatur.
-* **Die Statuszeile „purely atomic, atoms incomparable" ist falsch, seit dem
-  2026-08-31, sechstem Lauf.** `rem:atomsnotchange` (Stelle 5535) führt sie als
-  „verified exhaustively up to five points; not proved". Bewiesen ist seit
-  heute der **ganze** Fall: auf jeder endlichen Halbordnung mit nichtnegativen
-  Massen — und die Massen einer Uhr sind nichtnegativ — verschwindet der
-  Dualitätsdefekt, ohne Bedingung an die Lage der Atome zueinander, ohne
-  kleinstes oder größtes Element und ohne Antikettenhypothese. Der Beweis steht
-  ausgeführt in `Task23/PROTOKOLL.md`, Abschnitt „Der Halbordnungsfall,
-  2026-08-31 (sechster Lauf)", und ist von `Task23/selfadjoint.py` in vier
-  Punkten nachgerechnet. Er enthält den Satz des fünften Laufs (flache Spitze)
-  für Uhren; jener bleibt daneben richtig, weil er Massen beider Vorzeichen
-  erlaubt. Ihn ins Manuskript zu setzen ist erlaubt (Task-23-Regel: vollständig
-  und verifiziert), aber es ist eine Manuskriptänderung samt `check.py` und
-  gehört deshalb an den Anfang eines Laufs, nicht an sein Ende; sie steht als
-  Punkt 1 in `Facts/BACKLOG.md`.
+* **Die Statuszeile „purely atomic, atoms incomparable" war falsch; am
+  2026-08-31, siebtem Lauf, im Manuskript berichtigt.** Bewiesen ist seit dem
+  sechsten Lauf der **ganze** Fall: auf jeder endlichen Halbordnung mit
+  nichtnegativen Massen — und die Massen einer Uhr sind nichtnegativ —
+  verschwindet der Dualitätsdefekt, ohne Bedingung an die Lage der Atome
+  zueinander, ohne kleinstes oder größtes Element und ohne Antikettenhypothese.
+  Der Satz steht jetzt als `lem:selfadjoint` und `prop:atomicposet` im
+  Manuskript, die Statuszeile lautet `proved`, und `check.py` meldet `clean`.
+  Er enthält den Satz des fünften Laufs (flache Spitze) für Uhren; jener bleibt
+  daneben richtig, weil er Massen beider Vorzeichen erlaubt, und
+  `prop:atomicdual` bleibt deshalb stehen.
+* **Beim Eintragen ist eine neue Lücke aufgefallen: die Konvention
+  $\iota=\mathrm o$ auf einer Halbordnung.** Sechs Läufe lang galt „die
+  o-Konvention ist die p-Konvention für die umgekehrte Ordnung"; das stimmt auf
+  einer **Kette**, weil eine endliche Kette ein größtes Element hat, an dem die
+  Spiegelung aufhängt, und auf einer Halbordnung nicht. Sichtbar wird es an der
+  Matrix: unter $\iota=\mathrm o$ ist $(0,s]=\T_{\le s}\setminus\T_{\le0}$, also
+  $V_{s,s}=m_s\ne0$, und $V$ ist **nicht nilpotent**. `prop:atomicposet` ist
+  deshalb für $\iota=\mathrm p$ formuliert; die o-Fassung ist an allen
+  Halbordnungen auf bis zu fünf Punkten nachgerechnet und nicht bewiesen und
+  steht als einzige „verified, not proved"-Zeile der Statustabelle und als
+  Rückstaupunkt 1. Der Fehler stand auch in `MartingaleProblems` bei
+  `duality_of_atomic` („in both conventions … the hypotheses are unchanged") und
+  ist dort korrigiert.
 * **Drei Aussagen von §7 fehlen in der Bündeltabelle.** `thm:absconvws`,
   `thm:MZconv` und `rem:EKrelcompact` haben dort keine Zeile, während
   `thm:absconv`, `thm:absconvaug`, `prop:atomaug`, `thm:clockchange`,
@@ -1771,3 +1780,87 @@ bleibt der kleinste Einstieg der **Kettenlinie** und
 `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` der erste der
 Konvergenzlinie; in der Task-23-Linie tritt die Spuraussage vor beide, denn sie
 hat keine Vorbedingung überhaupt.
+
+### 2026-08-31, siebter Lauf — Rückstau 1: der Halbordnungssatz steht im Manuskript
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Der Lauf ging an
+den ersten Punkt des Rückstaus, der ausdrücklich eine Aufgabe für den **Anfang**
+eines Laufs war, weil danach `check.py` laufen muss. Er ist erledigt, und bei
+der Gelegenheit ist eine Lücke aufgefallen, die sechs Läufe übersehen hatten.
+Geändert sind `MartingaleProblem.tex`, `TauCeti/MartingaleProblems/README.md`,
+`Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses Inventar; neu ist
+`Task23/oconvention.py`.
+
+**Was ins Manuskript kam.** Vier Stücke, hinter `rem:atomicdual`:
+`lem:selfadjoint` (ist $V$ nichtnegativ und nilpotent, so gibt es zu jedem $t$
+ein symmetrisches $T$ mit $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_t$, mit dem
+Dreischritt Zeilensummen / duale Kette / explizite Formel), `prop:atomicposet`
+(rein atomare Uhr, endlich viele Atome unter $t^*$, **keine** Bedingung an ihre
+Lage zueinander, $\Phi(t^*,0)=\Phi(0,t^*)$), `rem:atomicposet` (was die beiden
+atomaren Sätze je geben, und warum der Diamant mit $m_a=1$, $m_b=-1$ zeigt, dass
+$m\ge0$ nicht wegfällt), sowie die Statuszeile, die Bündeltabelle und fünf
+Zitate der Kettenhypothese. Die beiden Propositionen sind **nicht** geschachtelt
+und stehen deshalb nebeneinander: die Kette erlaubt Massen beider Vorzeichen und
+gibt die stärkere Symmetrie $\Phi(s,t)=\Phi(t,s)$, die Halbordnung verlangt
+$m\ge0$ und gibt nur den Defekt. Für eine Uhr enthält die zweite die erste.
+Der Beweis von `prop:atomicposet` führt die Reduktion aus, die im PROTOKOLL nur
+behauptet war, einschließlich der Nachrechnung, dass $a\in\T_{<s}$ auf einer
+**Präordnung** transitiv und irreflexiv ist — darauf ruht die Nilpotenz.
+`selfadjoint.py` ist vor dem Eintrag noch einmal gelaufen (alle vier Punkte,
+kein Ausfall), danach meldet `python3 check.py` `clean`: 126 Seiten, keine
+undefinierten Referenzen, größte Überlänge 7.7pt wie im Ausgangszustand.
+
+**Der Befund: $\iota=\mathrm o$ ist nicht mitbewiesen.** Die Konvention geht an
+genau einer Stelle ein, aber an der tragenden. Unter $\iota=\mathrm p$ ist
+$[0,s)=\T_{<s}$ und $V_{s,a}=[a\prec s]m_a$ strikt dreieckig; unter
+$\iota=\mathrm o$ ist $(0,s]=\T_{\le s}\setminus\T_{\le0}$, also $V_{s,s}=m_s$,
+und $V$ ist nicht nilpotent — `lem:selfadjoint` greift nicht. Auf einer Kette
+repariert `prop:atomicdual` das durch Spiegelung des Gitters; eine Halbordnung
+hat kein größtes Element und bietet keine Spiegelung. Der Satz „die o-Konvention
+ist die p-Konvention für die umgekehrte Ordnung" ist damit für eine Halbordnung
+**falsch**. Er stand so in `MartingaleProblems` bei `duality_of_atomic` („in
+both conventions … the hypotheses are unchanged"); die Roadmapzeile sagt jetzt,
+was gilt, und nennt die Matrix, an der es scheitert. Das ist nach der stehenden
+Regel eine Korrektur: die Roadmap behauptete mehr, als bewiesen ist.
+
+**Nachgerechnet, nicht behauptet.** `oconvention.py` (neu) baut dasselbe volle
+System in $(\Phi,\gamma)$ wie `posetsearch`, nur mit $(0,s]$ statt $[0,s)$:
+alle Halbordnungen mit kleinstem Element auf bis zu fünf Punkten,
+nichtnegative Massen, $81+1539+7008$ Fälle, **kein Ausfall**. Die o-Fassung ist
+also vermutlich richtig; es fehlt der Beweis, nicht die Evidenz, und sie steht
+als einzige „verified, not proved"-Zeile der Statustabelle. Der erste Anlauf des
+Skripts hatte einen Fehler — es ließ $0$ im Intervall $(0,s]$ stehen —; die
+Zahlen oben stammen aus dem berichtigten Lauf.
+
+**Offen geblieben.** Von Task 23 dieselben zwei Punkte wie zuvor,
+ordnungsdichte Atommengen und die gemischte Uhr, plus der neue: die
+o-Konvention. Nicht geschehen und mit Absicht: kein Lean übersetzt (der Worktree
+hat kein `.lake`).
+
+**Als Nächstes zu formalisieren:
+`Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`** — für `A.IsSymm` und
+`Bᵀ = -B` ist `(A * B).trace = 0`. Der Vorschlag des sechsten Laufs bleibt
+stehen und wird durch diesen Lauf **bestätigt und wichtiger**, nicht ersetzt:
+`oconvention.criterion_o` hat gezeigt, dass
+$\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\,TV=V^{\mathsf T}T\}$ die erzwungenen
+Stellen auch unter $\iota=\mathrm o$ **vollständig** beschreibt — beide
+Abweichungsrichtungen null, über alle Halbordnungen auf drei und vier Punkten
+mit Massen aus $\{0,1,2\}$, $243+6156$ Stellen. Der Spurteil des Beweises ist
+damit konventionsfrei belegt, und diese drei Zeilen Spuralgebra tragen künftig
+**beide** Konventionen statt nur einer. Sie ruhen auf `Matrix.IsSymm`
+(`LinearAlgebra/Matrix/Symmetric.lean:35`), `Matrix.trace_transpose`
+(`Trace.lean:73`) und `Matrix.trace_mul_comm` (`Trace.lean:158`), am Quelltext
+von v4.33.1 geprüft und nicht `deprecated`; ein Prädikat für `Bᵀ = -B` allein
+hat Mathlib nicht (`Matrix.IsSkewAdjoint`, `SesquilinearForm.lean:562`, ist
+relativ zu einer Form `J`), die Bedingung wird also ausgeschrieben.
+
+Und der mathematische Vorschlag daneben, für den Rückstau: **die offene Frage
+ist keine über Uhren mehr, sondern eine über Matrizen.** Sei $\prec$ eine
+strikte Halbordnung auf endlichem $F$ mit kleinstem Element $0$, sei
+$m:F\to[0,\infty)$ mit $m_0=0$ und
+$V_{s,a}=[a\prec s\text{ oder }a=s\ne0]\,m_a$. Ist $\mathcal L=\R^F$? Für
+nilpotentes $V$ ist die Antwort der Satz des sechsten Laufs (maximale Ordnung
+von $\mathbb 1$); hier ist $V=N+D$ mit $N$ nilpotent und
+$D=\operatorname{diag}(m)$, die nicht kommutieren, und Zeile wie Spalte $0$
+verschwinden. Das ist jetzt dran, weil es die letzte „verified, not proved"-Zeile
+des Manuskripts schließt und weil es dieselbe Spuralgebra wiederverwendet.

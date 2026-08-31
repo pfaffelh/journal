@@ -764,3 +764,94 @@ der Zielsatz `duality_of_atomic` verliert seine Vergleichbarkeitshypothese.
   scharfe Hypothese $q(M)\neq0$ abgelesen. Für den allgemeinen Fall führt das in
   die Irre: dort sitzt die Positivität nicht in einem Nenner, sondern in der
   Aussage „eine nichtnegative Matrix mit lauter Zeilensummen null ist null".
+
+## Der Halbordnungsfall im Manuskript, 2026-08-31 (siebter Lauf)
+
+Der Satz des sechsten Laufs steht jetzt im Manuskript, und beim Aufschreiben ist
+eine Lücke sichtbar geworden, die keiner der sechs Läufe notiert hatte: **die
+zweite Konvention.**
+
+### Was eingetragen ist
+
+Vier Stücke, hinter `rem:atomicdual` und vor `rem:dualscope`:
+
+* `lem:selfadjoint` — die reine Matrizenaussage. Ist $V$ nichtnegativ und
+  nilpotent, so gibt es zu jedem $t$ ein symmetrisches $T$ mit
+  $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_t$. Der Beweis ist der des PROTOKOLLs in
+  drei Schritten: Zeilensummen (dort geht $m\ge0$ ein, und nur dort), die duale
+  Kette $\hat p_k$, die explizite Formel für $T$.
+* `prop:atomicposet` — die Uhr. Rein atomare Uhr, endlich viele Atome unter
+  $t^*$, **keine** Bedingung an ihre gegenseitige Lage, $\Phi(t^*,0)=\Phi(0,t^*)$.
+  Der Beweis führt die Reduktion aus, die im PROTOKOLL nur behauptet war: aus
+  \eqref{eq:incrementrep} folgt $A(s,t)-B(s,t)=A(s,0)-B(0,t)$, daraus
+  $(\diamondsuit)$ für $\Psi(s,t)=\sum_{a\prec s}m_a\kappa(a,t)$ und
+  $\Psi(t,t)=\Phi(t,0)-\Phi(0,t)$; der Rest ist die Spuridentität. Dass $\prec$
+  auf einer Präordnung transitiv und irreflexiv ist, ist eigens nachgerechnet —
+  darauf ruht die Nilpotenz.
+* `rem:atomicposet` — was die beiden atomaren Sätze je geben. Sie sind nicht
+  geschachtelt: die Kette erlaubt Massen beider Vorzeichen und liefert die
+  stärkere Symmetrie, die Halbordnung verlangt $m\ge0$ und liefert nur den
+  Defekt. Für eine Uhr enthält der zweite den ersten. Das Kriterium
+  $e_{t^*}\in\mathcal L$ erklärt dort den Diamanten.
+* Statustabelle, Bündeltabelle und die fünf Stellen, die die Kettenhypothese
+  zitierten (§1, `rem:dualscope`, §9 und zwei in §5.x).
+
+Danach meldet `python3 check.py` `clean` (126 Seiten, keine undefinierten
+Referenzen, größte Überlänge 7.7pt wie zuvor). `selfadjoint.py` ist vor dem
+Eintrag noch einmal gelaufen: alle vier Punkte, kein Ausfall.
+
+### Die Lücke, die dabei sichtbar wurde: $\iota=\mathrm o$
+
+Der Satz ist für $\iota=\mathrm p$ bewiesen und **nur** dafür. Die Konvention
+geht an genau einer Stelle ein, aber an einer tragenden: unter $\iota=\mathrm p$
+ist $[0,s)=\T_{<s}$ und $V_{s,a}=[a\prec s]m_a$ strikt dreieckig, also
+nilpotent. Unter $\iota=\mathrm o$ ist $(0,s]=\T_{\le s}\setminus\T_{\le 0}$,
+also $V_{s,a}=[a\le s,\,a\ne0]m_a$ mit $V_{s,s}=m_s$ auf der Diagonale —
+**nicht nilpotent**, und `lem:selfadjoint` greift nicht.
+
+Auf einer Kette ist das kein Problem: `prop:atomicdual` erledigt
+$\iota=\mathrm o$ durch die Spiegelung $(i,j)\mapsto(M-i,M-j)$ des Gitters. Eine
+Halbordnung bietet keine Spiegelung — es gibt kein größtes Element, an dem man
+aufhängen könnte, und die Aussage ist an $0$ verankert. Der Satz „die
+o-Konvention ist die p-Konvention für die umgekehrte Ordnung", der so in
+`TauCeti/MartingaleProblems` bei `duality_of_atomic` stand, ist damit für eine
+Halbordnung **falsch**; die Roadmapzeile ist korrigiert.
+
+**Evidenz statt Beweis.** `oconvention.py` (neu) baut dasselbe volle System in
+$(\Phi,\gamma)$ wie `posetsearch`, nur mit $(0,s]$ statt $[0,s)$, und läuft über
+alle Halbordnungen mit kleinstem Element auf bis zu fünf Punkten mit
+nichtnegativen Massen: $81+1539+7008$ Fälle, **kein Ausfall**. Die Aussage ist
+also vermutlich richtig; was fehlt, ist der Beweis. Sie steht deshalb als
+einzige Zeile „verified, not proved" in der Statustabelle von
+`rem:atomsnotchange` und als Punkt 1 des Rückstaus.
+
+**Und der Ansatz ist schon eingegrenzt.** Der Spurteil des Beweises — (C) und
+die Paarungsidentität — benutzt die Nilpotenz **nirgends**; er braucht nur $T$
+symmetrisch, $TV$ symmetrisch und $K$ antisymmetrisch, und all das ist
+konventionsfrei. Die ganze Last liegt auf der Frage, ob
+$\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\,TV=V^{\mathsf T}T\}$ auch für das
+reflexive $V$ ganz $\R^\T$ ist. `oconvention.criterion_o` prüft genau das und
+vergleicht $\mathcal L$ Stelle für Stelle mit den tatsächlich erzwungenen: über
+alle Halbordnungen auf drei und vier Punkten mit Massen aus $\{0,1,2\}$,
+$243+6156$ Stellen, sind **beide** Abweichungsrichtungen null — $\mathcal L$
+beschreibt die Lage auch unter $\iota=\mathrm o$ vollständig, und in jedem
+geprüften Fall ist $\mathcal L=\R^\T$.
+
+Damit ist die offene Frage keine Frage über Uhren mehr, sondern eine über
+Matrizen, und sie lautet: *Sei $\prec$ eine strikte Halbordnung auf endlichem
+$F$, sei $m:F\to[0,\infty)$ mit $m_0=0$, und sei
+$V_{s,a}=[a\prec s\ \text{oder}\ a=s\ne 0]\,m_a$. Ist dann
+$\mathcal L=\R^F$?* Für nilpotentes $V$ ist die Antwort der Satz des sechsten
+Laufs; hier ist $V=N+D$ mit $N$ nilpotent und $D=\operatorname{diag}(m)$, und
+zu klären ist, was an die Stelle der maximalen Ordnung von $\mathbb 1$ tritt.
+Zwei Beobachtungen, die dabei zu benutzen sind: Zeile und Spalte $0$ von $V$
+verschwinden, und $D$ und $N$ kommutieren im Allgemeinen nicht.
+
+### Sackgassen, sechster Nachtrag
+
+* **Annehmen, die Konvention sei eine Formsache.** Fünf Läufe lang war
+  „$\iota=\mathrm o$ ist $\iota=\mathrm p$ nach Spiegelung" ein Satz, den
+  niemand nachgerechnet hat, weil er auf der Kette stimmt. Er stimmt dort, weil
+  eine endliche Kette ein größtes Element hat. Was allgemein bleibt, ist nicht
+  die Spiegelung, sondern die Beobachtung, dass $\iota$ nur das Intervall
+  ändert — und damit die Diagonale von $V$.
