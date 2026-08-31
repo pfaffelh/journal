@@ -18,46 +18,49 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 
 ## Offen
 
-1. **Task 23, unvergleichbare Atome.** Der offene Punkt aus
-   `Task23/PROTOKOLL.md`: die Vermutung ist durch $58081$ Konfigurationen
-   belegt, der Beweis fehlt. Ansatzpunkt steht dort unter „Wo der Beweis hakt":
-   die einzelnen Gleichungen über der Antikette der maximalen Elemente von
-   $\T_{<t^*}$. *Zwischenstand 2026-08-31, vierter Lauf: der Fall ist auf eine
-   einzige Aussage eingeschränkt. Die **Idealreduktion** — jede
-   abwärtsabgeschlossene Teilmenge, die das kleinste Element enthält, erbt
-   $(\diamondsuit)$ samt $\delta$ — gibt mit der Induktion über $|\T|$ sofort
-   $\delta(s)=0$ für jedes $s$ außer einem größten Element. Zu zeigen bleibt (R):
-   auf einer Halbordnung mit kleinstem Element $0$ und größtem Element $z$ ist
-   $\Psi(z,z)=0$. Nullmassen oberhalb von $0$ darf man dabei streichen. Der
-   Defekt hat dort die Gestalt $\delta(z)=\sum_{c<z}m_c\kappa(c,0)$, einer Summe,
-   die über jedes echte Hauptideal verschwindet, und (R) folgt aus der
-   nachgerechneten Vermutung (C4$^+$) „$\Psi(a,x)=0$ für $a<x$" in vier Zeilen.
-   Alles am Quelltext von `antisym.py` und `reduction.py` geprüft; Einzelheiten
-   im PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (vierter Lauf)".
-   Der nächste Lauf beweist (C4$^+$) oder widerlegt sie.*
-   *Zwischenstand 2026-08-31, fünfter Lauf: (C4$^+$) steht weiter (jetzt
-   $12\,564$ Konfigurationen ohne Ausfall), aber der Hebel, mit dem sie bewiesen
-   werden sollte, ist **widerlegt**: die termweise Fassung (C5)
-   „$m_c\kappa(c,x)=0$, sobald $c<b<x$" ist schon bei lauter Massen $1$ falsch,
-   Zeuge $0<\{3,4\}<2<1$ mit freiem $\kappa(3,1)$ (`c5.py`). Dafür ist ein Stück
-   des Falles **bewiesen**: liegt unter $t$ nur eine Antikette von Atomen und ist
-   deren Gesamtmasse $\neq0$, so gilt $\delta(t)=0$ und (C4$^+$) an $t$ — mit
-   beliebigen Vorzeichen der Massen, also einschließlich des Diamanten, dessen
-   Begründung im Manuskript seit dem 2026-08-30 fehlt. Beweis, scharfe
-   Hypothese und die $102\,930+15\,571$ nachgerechneten Fälle stehen im
-   PROTOKOLL, Abschnitt „Der Halbordnungsfall, 2026-08-31 (fünfter Lauf)"; neu
-   sind `flat.py`, `c5.py` und `certificate.py`. Offen bleibt (R) für ein $t$,
-   unter dem eine Kette $0<a<b<t$ liegt; der nächste Lauf setzt dort an, mit
-   `certificate.py` am Zeugen $0<\{3,4\}<2<1$.*
+1. **Die o-Konvention auf einer Halbordnung.** Am 2026-08-31, siebter Lauf, als
+   eigenständige Lücke erkannt und als einzige Zeile der Statustabelle von
+   `rem:atomsnotchange` stehengeblieben, die „verified" statt „proved" trägt.
+   `prop:atomicposet` ist für $\iota=\mathrm p$ bewiesen; unter $\iota=\mathrm o$
+   ist das Intervall $(0,s]=\T_{\le s}\setminus\T_{\le 0}$, die Matrix
+   $V_{s,a}=[a\le s,\,a\ne0]m_a$ hat eine nichtverschwindende Diagonale und ist
+   **nicht nilpotent**, `lem:selfadjoint` greift also nicht. Auf einer Kette
+   repariert das die Spiegelung des Gitters (`prop:atomicdual`); eine
+   Halbordnung bietet keine Spiegelung. `Task23/oconvention.py` (neu) prüft die
+   Aussage über alle Halbordnungen mit kleinstem Element auf bis zu fünf Punkten
+   und findet keinen Ausfall — es fehlt der Beweis, nicht die Evidenz.
 
-2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
+   **Der Ansatz steht schon fest**, denn `oconvention.criterion_o` ist gelaufen:
+   $\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\,TV=V^{\mathsf T}T\}$ beschreibt
+   die erzwungenen Stellen auch unter $\iota=\mathrm o$ **vollständig** (beide
+   Richtungen, $243+6156$ Stellen, null Abweichungen). Der Spurteil des Beweises
+   ist also konventionsfrei, und offen ist genau eine Frage über Matrizen: *sei
+   $\prec$ eine strikte Halbordnung auf endlichem $F$ mit kleinstem Element $0$,
+   sei $m:F\to[0,\infty)$ mit $m_0=0$ und
+   $V_{s,a}=[a\prec s\text{ oder }a=s\ne0]\,m_a$; ist $\mathcal L=\R^F$?* Für
+   nilpotentes $V$ ist die Antwort der Satz des sechsten Laufs (maximale Ordnung
+   von $\mathbb 1$); hier ist $V=N+D$ mit $N$ nilpotent und
+   $D=\operatorname{diag}(m)$, und zu klären ist, was an die Stelle der
+   maximalen Ordnung tritt. Einzelheiten im PROTOKOLL, Abschnitt „Der
+   Halbordnungsfall im Manuskript, 2026-08-31 (siebter Lauf)".
+
+2. **Task 23, was sonst offen bleibt.** Zwei Punkte, beide unberührt vom
+   Halbordnungssatz. **Ordnungsdichte Atommengen** fallen aus der Hypothese
+   heraus (unter einem Punkt liegen dann unendlich viele Atome); der Grund ist
+   scharf und steht im PROTOKOLL unter „Was offen bleibt". **Stufe 3, die
+   gemischte Uhr,** ist nie angegangen worden. Von beiden ist die gemischte Uhr
+   die nähere: der atomlose und der atomare Teil sind einzeln erledigt, und zu
+   klären ist, ob sich der Defekt entlang der Lebesgue-Zerlegung von $q$
+   addiert.
+
+3. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
    dritter Lauf, ist die Liste „What Mathlib already has" von `WeakConvergence`
    erledigt: elf Deklarationen, alle vorhanden, keine `deprecated`. Es fehlen
    also noch die drei übrigen Roadmaps und die Zitate in den Meilensteinen.*
 
-3. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
+4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
    `WeakConvergence` Meilenstein 3 eingetragen: Mathlib hat die Metrisierbarkeit
    (`MeasureTheory.instMetrizableSpaceProbabilityMeasure`,

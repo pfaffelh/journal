@@ -311,8 +311,9 @@ Theorem~\ref{thm:exduality} needs finite subsets to be chains
 (Remark~\ref{rem:exdualityscope}(ii)); and Corollary~\ref{cor:atomless} is a
 time change, so it lives on \eqref{T3} and needs the clock to be atomless
 (Remark~\ref{rem:atomsnotchange}) --- a limitation of that particular device,
-since for an atomic clock Proposition~\ref{prop:atomicdual} covers a partially
-ordered index, needing only that the atoms below a point form a chain.
+since for an atomic clock Propositions~\ref{prop:atomicdual}
+and~\ref{prop:atomicposet} cover a partially ordered index, the first needing
+only that the atoms below a point form a chain, the second nothing at all.
 
 \paragraph{State space: measurable, not Polish, where possible.}
 \EK{} and \CPS{} take $E$ Polish throughout.  Here $E$ is graded exactly as the
@@ -1802,6 +1803,8 @@ Corollary~\ref{cor:atomless} (atomless clocks)
   & \textbf{\eqref{T3}} & \eqref{E0} & \textbf{atomless}, $\iota = \mathrm{p}$ \\
 Proposition~\ref{prop:atomicdual} (atomic duality)
   & \eqref{T0} & \eqref{E0} & atomic, atoms a chain, any $\iota$ \\
+Proposition~\ref{prop:atomicposet} (atomic duality, atoms arbitrary)
+  & \eqref{T0} & \eqref{E0} & atomic, $\iota = \mathrm{p}$ \\
 Lemma~\ref{lem:calculus}, Theorem~\ref{thm:duality}
   & \eqref{T3} & \eqref{E0} & Lebesgue \\
 Corollary~\ref{cor:uniqviadual} (uniqueness via duality)
@@ -5442,11 +5445,11 @@ conclude --- as an earlier version of this manuscript did --- that duality
 \emph{requires} a translation invariant clock, on the grounds that
 \eqref{eq:cancel} does not cancel otherwise.  That inference is invalid: the
 failure of one staircase to cancel says nothing about $\Phi(t,0) - \Phi(0,t)$.
-The two results below show that translation invariance is not necessary --- for
+The results below show that translation invariance is not necessary --- for
 an atomless clock by a reduction to Lemma~\ref{lem:calculus}, for a purely
-atomic one by the linear algebra of Proposition~\ref{prop:atomicdual}.  Whether
-\emph{every} clock admits duality remains open, and
-Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
+atomic one by the linear algebra of Propositions~\ref{prop:atomicdual}
+and~\ref{prop:atomicposet}.  Whether \emph{every} clock admits duality remains
+open, and Remark~\ref{rem:atomsnotchange} explains where the arguments stop.
 
 \begin{corollary}[Atomless clocks, by time change; \eqref{T3} + \eqref{E0} + clock, $\iota = \mathrm{p}$]
   \label{cor:atomless}
@@ -5541,8 +5544,9 @@ Remark~\ref{rem:atomsnotchange} explains where the two arguments stop.
   \midrule
   Haar (Lebesgue, counting) & proved, Proposition~\ref{prop:haar} \\
   atomless, \eqref{T3} & proved, Corollary~\ref{cor:atomless} (a time change) \\
-  purely atomic, atoms a chain & proved, Proposition~\ref{prop:atomicdual} \\
-  purely atomic, atoms incomparable & verified exhaustively up to five points; not proved \\
+  purely atomic, atoms a chain & proved, Proposition~\ref{prop:atomicdual} (either $\iota$) \\
+  purely atomic, atoms arbitrary, $m \geq 0$ & proved, Proposition~\ref{prop:atomicposet} ($\iota = \mathrm{p}$) \\
+  the same for $\iota = \mathrm{o}$ & verified exhaustively up to five points; not proved \\
   order-dense atoms, or mixed & open \\
   \bottomrule
   \end{tabular}
@@ -5744,14 +5748,13 @@ last atom never enters.
   under \eqref{T2a} the hypothesis is automatic.  This is why duality is not
   confined to a linearly ordered index even though
   Corollary~\ref{cor:atomless} lives on \eqref{T3}.  Atoms that are
-  \emph{incomparable} are a different matter and are not covered.  The
-  conclusion appears to survive them: every partial order with a least element
-  on at most five points, with non-negative masses from a small grid, has
-  $\Phi(t,0) = \Phi(0,t)$ at every $t$, and so does the two-dimensional index
-  $\{0,1,2\}^2$.  But no argument covering a general preorder is offered here,
-  and one thing is certain about any such argument: it cannot rest on
-  Lemma~\ref{lem:atomgrid}, which asks only $m_i \neq 0$, because without
-  positivity the conclusion is false.  On the smallest instance
+  \emph{incomparable} are a different matter, and they are settled below, by
+  Proposition~\ref{prop:atomicposet}.  One thing is certain in advance about any
+  argument that settles them: it cannot rest on Lemma~\ref{lem:atomgrid}, which
+  asks only $m_i \neq 0$, because without positivity of the masses the
+  conclusion is false --- and this is why
+  Proposition~\ref{prop:atomicposet} carries the hypothesis $m \geq 0$ that
+  Proposition~\ref{prop:atomicdual} does not need.  On the smallest instance
   $\T = \{0,a,b,t^*\}$ with $a,b$ incomparable and an atom at each, replace the
   clock by the \emph{signed} measure with $m_a = 1$ and $m_b = -1$ --- which
   Lemma~\ref{lem:atomgrid} would still admit --- let
@@ -5776,6 +5779,250 @@ last atom never enters.
   atomic side.
 \end{remark}
 
+Incomparable atoms are covered as well, by a different argument and at a price
+that is no price for a clock: the masses must be \emph{non-negative}.  They are,
+since $q$ is a measure, and Remark~\ref{rem:atomicdual} has just shown that the
+hypothesis cannot simply be dropped.  What is given up is the pointwise symmetry
+$\Phi(s,t) = \Phi(t,s)$, which is a phenomenon of the chain; what is gained is
+that nothing whatever is assumed about the mutual position of the atoms.  The
+argument replaces the induction along diagonals by a single trace identity and
+the order structure by the nilpotence of one matrix, and its combinatorial core
+is again a statement in which the clock has become a list of masses.
+
+Throughout, matrices and vectors are indexed by a finite set $F$, $\one \in \R^F$
+is the vector all of whose entries are $1$, $e_t$ is the $t$-th standard basis
+vector, and $M^{\mathsf T}$ is the transpose of $M$.
+
+\begin{lemma}[A self-adjoint matrix with prescribed row sums]
+  \label{lem:selfadjoint}
+  Let $F$ be a finite set and let $V \in \R^{F \times F}$ have non-negative
+  entries and be nilpotent.  Then for every $t \in F$ there is a symmetric
+  $T \in \R^{F \times F}$ with
+  \[
+    T V = V^{\mathsf T} T
+    \qquad \text{and} \qquad
+    T \one = e_t .
+  \]
+\end{lemma}
+
+\begin{proof}
+  Let $r \geq 1$ be minimal with $V^r = 0$.
+
+  \emph{Step 1: $V^{r-1}\one \neq 0$.}  Since $V$ has non-negative entries, so
+  has $V^k$ for every $k$, and $V^k \one$ is the vector of row sums of $V^k$.  A
+  non-negative matrix all of whose row sums vanish is the zero matrix, so
+  $V^k \one = 0$ if and only if $V^k = 0$.  By minimality $V^{r-1} \neq 0$,
+  whence $V^{r-1}\one \neq 0$.  This is the only point at which non-negativity
+  is used.
+
+  \emph{Step 2: a dual chain normalised against $\one$.}  Pick $i^*$ with
+  $(V^{r-1}\one)_{i^*} \neq 0$, put
+  $\lambda \coloneqq (V^{r-1}\one)_{i^*}^{-1} e_{i^*}$ and
+  $p_k \coloneqq (V^{r-1-k})^{\mathsf T}\lambda$ for $0 \leq k \leq r-1$.  Then
+  \[
+    V^{\mathsf T} p_k = p_{k-1} \quad (1 \leq k \leq r-1),
+    \qquad
+    V^{\mathsf T} p_0 = 0 ,
+    \qquad
+    p_0^{\mathsf T}\one = \lambda^{\mathsf T} V^{r-1} \one = 1 .
+  \]
+  The polynomial $\sum_{k<r} (p_k^{\mathsf T}\one)\,x^k$ therefore has constant
+  term $1$ and is invertible in $\R[x]/(x^r)$; let $\sum_{k<r} w_k x^k$ be its
+  inverse and set $\hat p_k \coloneqq \sum_{j \leq k} w_{k-j}\, p_j$.  These obey
+  the same two shift relations, and $\hat p_k^{\mathsf T}\one$ is the $k$-th
+  coefficient of the product of the two polynomials, that is,
+  $\hat p_0^{\mathsf T}\one = 1$ and $\hat p_k^{\mathsf T}\one = 0$ for
+  $1 \leq k \leq r-1$.
+
+  \emph{Step 3: the matrix.}  Put $\psi_k \coloneqq (V^{\mathsf T})^k e_t$ and
+  $c_j \coloneqq (V^j\one)_t$, so that
+  \[
+    \psi_k^{\mathsf T}\one = c_k ,
+    \qquad
+    \psi_k^{\mathsf T} V = \psi_{k+1}^{\mathsf T} ,
+    \qquad
+    \psi_j = 0 \text{ and } c_j = 0 \text{ for } j \geq r ,
+  \]
+  and define
+  \[
+    T \;\coloneqq\; \sum_{k=0}^{r-1}
+        \bigl( \hat p_k \psi_k^{\mathsf T} + \psi_k \hat p_k^{\mathsf T} \bigr)
+      \;-\; \sum_{k,l=0}^{r-1} c_{k+l}\, \hat p_k \hat p_l^{\mathsf T} .
+  \]
+  It is symmetric: the first sum by construction, the second because $c_{k+l}$
+  is symmetric in $(k,l)$.  Multiplying by $\one$ and using Step 2,
+  \[
+    T\one \;=\; \sum_{k=0}^{r-1} c_k \hat p_k \;+\; \psi_0
+      \;-\; \sum_{k=0}^{r-1} c_{k} \hat p_k \;=\; \psi_0 \;=\; e_t .
+  \]
+  For the intertwining relation apply the shifts.  In $TV$ the first two sums
+  become
+  \[
+    \sum_{k=0}^{r-2} \hat p_k \psi_{k+1}^{\mathsf T}
+    \qquad \text{and} \qquad
+    \sum_{k=0}^{r-2} \psi_{k+1} \hat p_{k}^{\mathsf T} ,
+  \]
+  the terms with $k = r-1$ dropping out because $\psi_r = 0$; and in
+  $V^{\mathsf T} T$ the same
+  two sums appear, the shift now falling on the other factor.  In the third sum
+  the factor $V$ meets $\hat p_l$ in $TV$ and $\hat p_k$ in $V^{\mathsf T}T$,
+  while in both cases the other index runs over the full range; since $c_j = 0$
+  for $j \geq r$, the boundary terms may be added back at no cost, and both
+  expressions equal
+  $\sum_{k,l=0}^{r-1} c_{k+l+1}\, \hat p_k \hat p_l^{\mathsf T}$.  Hence
+  $TV = V^{\mathsf T}T$.
+\end{proof}
+
+\begin{proposition}[Atomic clocks, atoms arbitrary; \eqref{T0} + \eqref{E0} + clock, $\iota = \mathrm{p}$]
+  \label{prop:atomicposet}
+  Let $q = \sum_k m_k \delta_{a_k}$ be a purely atomic clock and let
+  $\Phi, \gamma : \T \times \T \to \R$ satisfy \eqref{eq:incrementrep} with
+  $\gamma_1 = \gamma_2 = \gamma$.  Let $t^* \in \T$ and assume that the atoms of
+  $q$ in $\T_{<t^*}$ are finitely many.  Then
+  \[
+    \Phi(t^*,0) \;=\; \Phi(0,t^*) .
+  \]
+  No hypothesis is made on the mutual position of the atoms, and none beyond the
+  existence of the integrals in \eqref{eq:incrementrep} and the non-negativity of
+  $q$.
+\end{proposition}
+
+\begin{proof}
+  Write $\kappa(u,v) \coloneqq \gamma(u,v) - \gamma(v,u)$, so $\kappa$ is
+  antisymmetric, and for $s,t \in \T$ put
+  \[
+    A(s,t) \coloneqq \!\!\sum_{a \in \T_{<s}}\!\! m_a \gamma(a,t) ,
+    \qquad
+    B(s,t) \coloneqq \!\!\sum_{b \in \T_{<t}}\!\! m_b \gamma(s,b) ,
+    \qquad
+    \Psi(s,t) \coloneqq \!\!\sum_{a \in \T_{<s}}\!\! m_a \kappa(a,t) ,
+  \]
+  the sums running over the atoms in the indicated set.  Since $\T_{<0}
+  = \emptyset$ we have $[0,s) = \T_{<s}$, so \eqref{eq:incrementrep} applied to
+  $0 \leq s$ and to $0 \leq t$ reads
+  \begin{equation}
+    \label{eq:posetbase}
+    \Phi(s,t) - \Phi(0,t) = A(s,t) ,
+    \qquad
+    \Phi(s,t) - \Phi(s,0) = B(s,t) .
+  \end{equation}
+
+  \emph{Step 1: the two relations.}  Subtracting the two halves of
+  \eqref{eq:posetbase} gives $A(s,t) - B(s,t) = \Phi(s,0) - \Phi(0,t)$, and
+  reading \eqref{eq:posetbase} at $(s,0)$ and at $(0,t)$ gives
+  $\Phi(s,0) - \Phi(0,0) = A(s,0)$ and $\Phi(0,t) - \Phi(0,0) = B(0,t)$.  Hence
+  \begin{equation}
+    \label{eq:posetkey}
+    A(s,t) - B(s,t) \;=\; A(s,0) - B(0,t) ,
+    \qquad s,t \in \T .
+  \end{equation}
+  Since $\Psi(s,t) = A(s,t) - B(t,s)$, equation \eqref{eq:posetkey} yields at
+  once
+  \begin{equation}
+    \label{eq:posetdiamond}
+    \Psi(s,t) + \Psi(t,s) \;=\; \Psi(s,s) + \Psi(t,t) ,
+    \qquad s,t \in \T ,
+  \end{equation}
+  both sides being $[A(s,0) - B(0,t)] + [A(t,0) - B(0,s)]$ and
+  $[A(s,0) - B(0,s)] + [A(t,0) - B(0,t)]$ respectively, which agree.  Taking
+  $t = s$ in \eqref{eq:posetkey} identifies the diagonal:
+  \begin{equation}
+    \label{eq:posetdefect}
+    \Psi(t,t) \;=\; A(t,0) - B(0,t) \;=\; \Phi(t,0) - \Phi(0,t) .
+  \end{equation}
+  So the claim is $\Psi(t^*,t^*) = 0$.
+
+  \emph{Step 2: a finite index.}  Recall that $a \in \T_{<s}$ means $a \leq s$
+  and $s \not\leq a$; write $a \prec s$ for this.  The relation $\prec$ is
+  irreflexive, and it is transitive: if $a \prec b \prec c$ then $a \leq c$, and
+  $c \leq a$ would give $c \leq b$, contradicting $b \prec c$.  Let
+  \[
+    F \;\coloneqq\; \{0, t^*\} \cup \{ a : a \text{ an atom of } q,\ a \prec t^* \} ,
+  \]
+  a finite set by hypothesis, and put $m_a \coloneqq 0$ for those $a \in F$ that
+  are not atoms.  If $s \in F$ then every atom $a \prec s$ lies in $F$: for
+  $s = 0$ there is none, for $s = t^*$ this is the definition, and for an atom
+  $s \prec t^*$ transitivity gives $a \prec t^*$.  Consequently, for $s,t \in F$,
+  \[
+    \Psi(s,t) \;=\; \sum_{a \in F,\ a \prec s} m_a \kappa(a,t) ,
+  \]
+  a finite sum over $F$ alone.
+
+  \emph{Step 3: the trace identity.}  Index matrices by $F$ and set
+  $V_{s,a} \coloneqq m_a$ if $a \prec s$ and $V_{s,a} \coloneqq 0$ otherwise, and
+  $K_{a,b} \coloneqq \kappa(a,b)$, so that $K^{\mathsf T} = -K$ and, by Step 2,
+  $\Psi = VK$ as a matrix on $F \times F$.  Let $\delta \in \R^F$ be its
+  diagonal, $\delta_t = \Psi(t,t)$.  Entry by entry, \eqref{eq:posetdiamond} says
+  \begin{equation}
+    \label{eq:posetmatrix}
+    VK + (VK)^{\mathsf T} \;=\; \delta\one^{\mathsf T} + \one\delta^{\mathsf T} .
+  \end{equation}
+  The entries of $V$ are non-negative because $q$ is a measure, and $V$ is
+  nilpotent: $V_{s,a} \neq 0$ forces $a \prec s$, so $V$ is strictly triangular
+  in any linear extension of $\prec$ and $V^{|F|} = 0$.  Let $T$ be the matrix
+  furnished by Lemma~\ref{lem:selfadjoint} for $t^*$.
+
+  Since $T$ is symmetric,
+  $\operatorname{tr}\bigl(T(VK)^{\mathsf T}\bigr)
+   = \operatorname{tr}\bigl((T(VK)^{\mathsf T})^{\mathsf T}\bigr)
+   = \operatorname{tr}(VKT) = \operatorname{tr}(TVK)$, so multiplying
+  \eqref{eq:posetmatrix} by $T$ and taking traces gives
+  \[
+    2\operatorname{tr}(TVK)
+      \;=\; \one^{\mathsf T}T\delta + \delta^{\mathsf T}T\one
+      \;=\; 2\,\delta^{\mathsf T} T \one
+      \;=\; 2\,\delta_{t^*} .
+  \]
+  On the other hand $TV$ is symmetric and $K$ is antisymmetric, so
+  $\operatorname{tr}(TVK) = \operatorname{tr}\bigl((TVK)^{\mathsf T}\bigr)
+   = \operatorname{tr}(K^{\mathsf T}(TV)^{\mathsf T})
+   = -\operatorname{tr}(KTV) = -\operatorname{tr}(TVK)$, hence
+  $\operatorname{tr}(TVK) = 0$.  Therefore $\delta_{t^*} = 0$, which by
+  \eqref{eq:posetdefect} is the assertion.
+\end{proof}
+
+\begin{remark}[What the two atomic arguments each give]
+  \label{rem:atomicposet}
+  The two propositions are not nested, and it is worth saying how they differ.
+  Proposition~\ref{prop:atomicdual} needs the atoms below $t^*$ to form a chain
+  but allows masses of \emph{either sign} and delivers the stronger conclusion
+  $\Phi(s,t) = \Phi(t,s)$ at every pair of grid points; it also covers both
+  conventions $\iota$.  Proposition~\ref{prop:atomicposet} drops every condition
+  on the atoms but needs $m \geq 0$, and delivers only
+  $\Phi(t^*,0) = \Phi(0,t^*)$ --- as it must, since on the index $\{0,1,2\}^2$
+  the symmetry $\Phi(s,t) = \Phi(t,s)$ genuinely fails
+  (Remark~\ref{rem:atomicdual}).  For a clock the second contains the first,
+  because $q$ is a measure; away from clocks, for signed $q$, only the first
+  survives, and the diamond of Remark~\ref{rem:atomicdual} with $m_a = 1$,
+  $m_b = -1$ is the witness.
+
+  The criterion behind the proof explains that witness exactly.  What
+  Step 3 needs is that $e_{t^*}$ lie in
+  $\mathcal{L} = \{T\one : T = T^{\mathsf T},\ TV = V^{\mathsf T}T\}$, and
+  $\mathcal{L}$ is all of $\R^F$ as soon as $\one$ has maximal order for $V$,
+  that is $V^{r-1}\one \neq 0$ where $r$ is the nilpotency index.
+  Lemma~\ref{lem:selfadjoint} obtains this from $m \geq 0$ in one line.  In the
+  diamond with $m_a = 1$, $m_b = -1$ one has $r = 2$ and $V\one = 0$, so $\one$
+  does not have maximal order, $\mathcal{L}$ is a proper subspace, and the defect
+  is free.
+
+  What is still not covered is what was not covered before: an order-dense set of
+  atoms, where $F$ is infinite and the nilpotency index is unbounded, and the
+  mixed clock, where neither argument applies.  Nor is the convention
+  $\iota = \mathrm{o}$ covered here.  The reason is visible in Step 3: with
+  $\iota = \mathrm{o}$ the relevant interval is $(0,s] = \T_{\leq s} \setminus
+  \T_{\leq 0}$, so that $V_{s,a} = m_a$ already when $a \leq s$ and
+  $a \not\leq 0$; then $V_{s,s} = m_s$, the diagonal does not vanish, $V$ is not
+  nilpotent, and Lemma~\ref{lem:selfadjoint}
+  does not apply.  On a chain this is repaired by reflecting the grid
+  (Proposition~\ref{prop:atomicdual}), and a general partial order offers no
+  reflection.  The conclusion appears to survive nonetheless: every partial order
+  with a least element on at most five points, with non-negative masses from a
+  small grid, has $\Phi(t,0) = \Phi(0,t)$ at every $t$ in the $\iota = \mathrm{o}$
+  reading as well.  It is the one row of the table in
+  Remark~\ref{rem:atomsnotchange} that is verified rather than proved.
+\end{remark}
+
 \begin{remark}[Scope of Section~\ref{sec:duality}]
   \label{rem:dualscope}
   It is worth saying plainly what Section~\ref{sec:duality} needs, since the
@@ -5786,18 +6033,20 @@ last atom never enters.
   the same duality function $f$ so as to produce the same $g = h$ --- and it needs
   integrability.  It does \emph{not} need a translation invariant clock: both
   Corollary~\ref{cor:atomless} (atomless clocks) and
-  Proposition~\ref{prop:atomicdual} (atomic ones) cover clocks that are not Haar.
-  Nor does the conclusion need a linearly ordered index: the atomic argument asks
-  only that the atoms below a point form a chain.  The
+  Propositions~\ref{prop:atomicdual} and~\ref{prop:atomicposet} (atomic ones)
+  cover clocks that are not Haar.
+  Nor does the conclusion need a linearly ordered index: for a clock, whose
+  masses are non-negative, the atomic argument asks nothing at all about the
+  order.  The
   opposite claim, made in an earlier version of this manuscript on the strength
   of the non-cancellation of \eqref{eq:cancel} for $\T = \Rp^d$, was a fallacy ---
   the non-cancellation of a particular staircase is not the failure of the
   conclusion.
 
   What genuinely remains open is the \emph{mixed} case, a clock with both an
-  atomic and a diffuse part, together with an order-dense set of atoms and a set
-  of atoms that is not a chain; Remark~\ref{rem:atomsnotchange} explains why the
-  two available arguments do not combine.  Nothing in this manuscript depends on it: the
+  atomic and a diffuse part, together with an order-dense set of atoms;
+  Remark~\ref{rem:atomsnotchange} explains why the
+  available arguments do not combine.  Nothing in this manuscript depends on it: the
   applications in Section~\ref{sec:convergence} use Lebesgue clocks, and
   Section~\ref{ssec:exduality} uses \eqref{eq:clockadd} only.
 \end{remark}
@@ -9578,8 +9827,8 @@ blueprint that lists only its successes is not usable as a map.
 \item \emph{``Every clock admits duality.''}  Withdrawn.  What is true is
   Corollary~\ref{cor:atomless}, and it is a deterministic time change of the
   Lebesgue case rather than a theorem; the atomic case is
-  Proposition~\ref{prop:atomicdual} and needs the atoms below a point to form a
-  finite chain, and the mixed case is open
+  Propositions~\ref{prop:atomicdual} and~\ref{prop:atomicposet} and needs the
+  atoms below a point to be finite in number, and the mixed case is open
   (Remark~\ref{rem:atomsnotchange}).
 \item \emph{``Submartingale problems are a further free generalization.''}  They
   are transverse, not wider: formulating a submartingale needs an order and

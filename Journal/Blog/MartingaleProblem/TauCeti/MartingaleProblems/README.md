@@ -445,7 +445,9 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   `∫_{Iio s} (γ r t - γ r 0) ∂q = ∫_{Iio t} (γ s r - γ 0 r) ∂q` for all `s, t`,
   and that condition splits along `γ = (λ + κ) / 2` into one condition on the
   symmetric `λ` and one on `κ`, of which only the latter meets the defect. On a
-  chain the `κ` condition forces `κ = 0`, which is `atomGrid_symm`.
+  chain the `κ` condition forces `κ = 0`, which is `atomGrid_symm`; on a finite
+  partial order with nonnegative masses it forces the defect to vanish, which is
+  `dualityDefect_eq_zero_of_nonneg`.
 * `atomGrid_symm`: let `M : ℕ`, let `m : ℕ → ℝ` with `m i ≠ 0` for
   `1 ≤ i` and `i ≤ M - 1`, and let `Φ : ℕ → ℕ → ℝ` satisfy
   `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` for
@@ -458,8 +460,67 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   reads the relation at `(j + d, j)`, where both terms on the right sit at
   distances `d` and `d - 1`. Purely arithmetic — no measure, no clock, and `ℕ`
   as the only index — so it belongs in `Mathlib/Algebra/Order/` rather than in
-  the probability tree, and it is the smallest self contained target of this
-  roadmap.
+  the probability tree. It is what gives the chain the stronger conclusion
+  `Φ s t = Φ t s`, which the partial order does not have.
+
+The next four items carry the partial order case. They are matrix algebra over
+`ℝ` and know neither clock nor measure nor order, and belong in
+`Mathlib/LinearAlgebra/Matrix/`; the fifth assembles them on a finite partial
+order.
+
+* `Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`: for
+  `A B : Matrix n n ℝ` with `A.IsSymm` and `Bᵀ = -B`, `(A * B).trace = 0`.
+  Mathlib supplies `Matrix.IsSymm` (`LinearAlgebra/Matrix/Symmetric.lean:35`),
+  `Matrix.trace_transpose` (`LinearAlgebra/Matrix/Trace.lean:73`) and
+  `Matrix.trace_mul_comm` (`Trace.lean:158`); it has no predicate for `Bᵀ = -B`
+  by itself — `Matrix.IsSkewAdjoint`
+  (`LinearAlgebra/Matrix/SesquilinearForm.lean:562`) is relative to a form `J` —
+  so the hypothesis is written out. This is the smallest self contained target
+  of this roadmap.
+* `Matrix.trace_mul_eq_dotProduct_diag_of_isSymm`: let `V K : Matrix n n ℝ` with
+  `Kᵀ = -K`, put `δ i = (V * K) i i`, and assume
+  `(V * K) i j + (V * K) j i = δ i + δ j` for all `i j`. Then for every `T` with
+  `T.IsSymm`, `(T * (V * K)).trace = δ ⬝ᵥ (T *ᵥ 1)`. Transpose under the trace
+  and shift cyclically to get `(T * (V * K)).trace = (T * (V * K)ᵀ).trace`, then
+  substitute the hypothesis. Together with the previous item: if `(T * V).IsSymm`
+  as well, then `δ ⬝ᵥ (T *ᵥ 1) = 0`. That is the whole use made of the
+  compatibility condition.
+* `Matrix.mulVec_one_eq_zero_iff_of_nonneg`: for `A : Matrix n n ℝ` with
+  `0 ≤ A i j` for all `i j`, `A *ᵥ 1 = 0 ↔ A = 0` — the row sums of a
+  nonnegative matrix vanish exactly when the matrix does. Applied to the powers
+  of a nonnegative `V` it gives `V ^ k *ᵥ 1 = 0 ↔ V ^ k = 0`, hence
+  `V ^ (r-1) *ᵥ 1 ≠ 0` for the nilpotency index `r`, which is the hypothesis of
+  the next item. This is the only place in the partial order case where
+  nonnegativity of the masses is used.
+* `Matrix.exists_isSymm_mulVec_one_eq_single`: let `V : Matrix n n ℝ` with
+  `V ^ r = 0` and `V ^ (r - 1) *ᵥ 1 ≠ 0`. Then for every `t` there is a `T` with
+  `T.IsSymm`, `(T * V).IsSymm` and `T *ᵥ 1 = Pi.single t 1`. Explicitly: pick
+  `i` with `(V ^ (r-1) *ᵥ 1) i ≠ 0`, set `p k = (V ^ (r-1-k))ᵀ *ᵥ (c • Pi.single i 1)`
+  with `c = ((V ^ (r-1) *ᵥ 1) i)⁻¹`, so that `Vᵀ *ᵥ p k = p (k-1)` and
+  `p 0 ⬝ᵥ 1 = 1`; normalise to `p̂ k = ∑ j ≤ k, w (k-j) • p j`, where `w` inverts
+  `∑ k, (p k ⬝ᵥ 1) • X ^ k` in `ℝ[X] ⧸ X ^ r`, so that `p̂ k ⬝ᵥ 1 = if k = 0 then 1 else 0`;
+  and with `ψ k = (Vᵀ) ^ k *ᵥ Pi.single t 1` and `c j = (V ^ j *ᵥ 1) t` put, with
+  `Matrix.vecMulVec` (`Data/Matrix/Mul.lean:616`) for the outer product,
+  ```
+  T = ∑ k, (vecMulVec (p̂ k) (ψ k) + vecMulVec (ψ k) (p̂ k))
+        - ∑ k, ∑ l, c (k + l) • vecMulVec (p̂ k) (p̂ l) .
+  ```
+  Symmetry is by construction, `T *ᵥ 1 = Pi.single t 1` because the two `c k`
+  sums cancel, and `T * V = Vᵀ * T` because `ψ kᵀ * V = ψ (k+1)ᵀ` and
+  `p̂ lᵀ * V = p̂ (l-1)ᵀ` carry the first two sums into one another while the
+  third depends on `k + l` only. In the third sum `V` meets the second factor on
+  one side and the first on the other, and the free index runs over the full
+  range on both; the boundary terms cancel because `c j = 0` for `j ≥ r`.
+* `dualityDefect_eq_zero_of_nonneg`: let `α` be a finite partial order,
+  `m : α → ℝ` with `0 ≤ m`, and `κ : α → α → ℝ` with `κ a b = - κ b a`. Put
+  `Ψ s t = ∑ a ∈ Finset.Iio s, m a * κ a t`. If
+  `Ψ s t + Ψ t s = Ψ s s + Ψ t t` for all `s, t`, then `Ψ t t = 0` for every `t`.
+  Read `Ψ` as the matrix product `V * K` with `V s a = if a < s then m a else 0`;
+  `V` is nilpotent because `V s a ≠ 0` forces `a < s`, its entries are
+  nonnegative, and the four items above close the argument. No least element, no
+  greatest element, no chain and no antichain condition; the masses may vanish.
+  Nonnegativity is not removable — with `m = (0, 1, -1, 0)` on
+  `0 < a, 0 < b, a < z, b < z` the defect at `z` is free.
 * `Clock.atomChain`: for a clock `q` and a point `t` below which the atoms of `q`
   are finitely many and pairwise comparable, the monotone enumeration
   `u : Fin (N+2) → ι` with `u 0 = 0`, `u (N+1) = t` and `u i` the `i`-th atom,
@@ -467,17 +528,33 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   `Ico (u i) (u (i+1))` carries the single atom `u i` for `1 ≤ i` and no atom for
   `i = 0`. The optional convention gets `Ioc (u (i-1)) (u i)` carrying the single
   atom `u i`, on the chain that stops at the largest atom.
+* `Clock.atomPoset`: for a clock `q` on `ι` with a least element `0` and a point
+  `t` below which the atoms of `q` are finitely many, the finite partial order
+  `{0} ∪ {a | a < t ∧ q {a} ≠ 0}` induced from `ι`, with masses
+  `m a = (q {a}).toReal`, together with `0 ≤ m` and
+  `q (Iio s) = ∑ a ∈ Finset.Iio s, m a` for `s ≤ t` when `q` is purely atomic.
+  This is the object `dualityDefect_eq_zero_of_nonneg` runs on, and it asks
+  nothing of how the atoms lie relative to one another.
 * `duality_of_atomic`: with `Φ, γ` as in `chain_identity` and `γ₁ = γ₂ = γ`, a
-  purely atomic clock, and `t` as in `Clock.atomChain`, one has `Φ t 0 = Φ 0 t`,
-  in both conventions and with no hypothesis beyond the existence of the
-  integrals. Read `Φ` along `Clock.atomChain`, eliminate `γ` by multiplying the
-  two increment representations at `(i,j)` by `m j` and `m i`, and apply
-  `atomGrid_symm`; the optional convention is the predictable one after the
-  reflection `i ↦ M - i` of the grid and the reversal of the mass list, under
-  which the relation of `atomGrid_symm` is invariant. The conclusion is the
-  stronger `Φ (u i) (u j) = Φ (u j) (u i)` at every pair of the chain, and hence
-  `γ` symmetric there. With `duality_of_atomless` this covers every clock that is
-  either atomless or has locally finite atoms forming a chain.
+  purely atomic clock, and a `t` below which the atoms are finitely many, one has
+  `Φ t 0 = Φ 0 t` in the predictable convention, with no hypothesis beyond the
+  existence of the integrals. Read the compatibility of the two increment
+  representations of `duality_defect_eq_integral` on `Clock.atomPoset`, drop the
+  symmetric part of `γ`, and apply `dualityDefect_eq_zero_of_nonneg`;
+  `duality_defect_eq_integral` at `s = 0` turns `Ψ t t = 0` into
+  `Φ t 0 = Φ 0 t`. The convention enters through the interval and is not
+  symmetric here: with `Ioc 0 s` in place of `Iio s` the matrix is
+  `V s a = if a ≤ s ∧ a ≠ 0 then m a else 0`, whose diagonal does not vanish, so
+  `V` is not nilpotent and `Matrix.exists_isSymm_mulVec_one_eq_single` does not
+  apply. The optional convention on a chain is the predictable one for the
+  reflected chain, and `atomGrid_symm` covers it; a general partial order offers
+  no reflection. Along a chain the
+  conclusion sharpens, by `atomGrid_symm`, to `Φ (u i) (u j) = Φ (u j) (u i)` at
+  every pair and hence to `γ` symmetric there — with masses of either sign, where
+  `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain
+  phenomenon: at incomparable pairs `Φ s t = Φ t s` fails, while the defect
+  `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless` this covers every
+  clock that is either atomless or has locally finite atoms.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.

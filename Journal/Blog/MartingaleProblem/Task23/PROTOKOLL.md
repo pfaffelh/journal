@@ -142,6 +142,12 @@ freie Zeile bereits voraus.
 
 ## Was offen bleibt
 
+> **Überholt, 2026-08-31 (sechster Lauf).** Der erste Punkt dieser Liste — Atome,
+> die keine Kette bilden — ist bewiesen, für jede endliche Halbordnung und
+> nichtnegative Massen. Siehe den Abschnitt „Der Halbordnungsfall, 2026-08-31
+> (sechster Lauf)" ganz unten. Die Liste bleibt stehen, weil sie den Weg dorthin
+> festhält, und weil ihre beiden anderen Punkte offen sind.
+
 * **Atome, die keine Kette bilden.** `prop:atomicdual` verlangt, dass die Atome
   unter $t^*$ paarweise vergleichbar sind; unter \eqref{T2a} ist das
   automatisch, unter \eqref{T0} nicht. Das Manuskript behauptete bisher mehr
@@ -560,3 +566,292 @@ dem alle Beweise hier mit dem kleinsten Element als Bezugspunkt arbeiten.
   kommt $w$ in jedem $\Psi(s,w)$ vor. Wer das übersieht, hält den Fall
   „$\T_{<z}$ hat ein größtes Element" für offen, obwohl ihn die Kettenrechnung
   erledigt.
+
+## Der Halbordnungsfall, 2026-08-31 (sechster Lauf): der Fall ist geschlossen
+
+Der offene Punkt aus fünf Läufen — die Dualität für eine rein atomare Uhr mit
+**unvergleichbaren** Atomen — ist bewiesen, und zwar in einer Allgemeinheit, die
+die bisherigen Teilergebnisse enthält: beliebige endliche Halbordnung, kein
+kleinstes Element nötig, kein größtes, keine Antikettenbedingung, keine
+Idealreduktion. Gebraucht wird allein, dass die Massen **nichtnegativ** sind —
+und das sind sie, weil $q$ ein Maß ist.
+
+> **Satz.** Sei $\T$ eine endliche Halbordnung, $m:\T\to[0,\infty)$, und sei
+> $\kappa:\T\times\T\to\R$ antisymmetrisch mit $(\diamondsuit)$, also
+> $\Psi(s,t)+\Psi(t,s)=\Psi(s,s)+\Psi(t,t)$ für alle $s,t$, wobei
+> $\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$. Dann ist $\delta:=\operatorname{diag}\Psi
+> \equiv 0$.
+
+Der Beweis wechselt die Sprache: statt einzelner Relationen an einzelnen Paaren
+eine Matrizenidentität, statt einer Induktion über die Halbordnung ein
+Abzählargument über den Nilpotenzindex.
+
+### Die Matrixgestalt
+
+Setze, mit $\T$ als Indexmenge, $V_{s,a}:=[a<s]\,m_a$ und $K_{a,b}:=\kappa(a,b)$,
+also $K^{\mathsf T}=-K$. Dann ist $\Psi=VK$ als Matrix und $\delta$ ihre
+Diagonale, und $(\diamondsuit)$ lautet Eintrag für Eintrag
+
+$$VK+(VK)^{\mathsf T}=\delta\mathbb 1^{\mathsf T}+\mathbb 1\delta^{\mathsf T}.
+  \tag{S}$$
+
+### Die Paarungsidentität, zwei Zeilen
+
+Für **jede** symmetrische Matrix $T$ ist $\operatorname{tr}(TVK)
+=\operatorname{tr}\bigl(T(VK)^{\mathsf T}\bigr)$ — man transponiert unter der
+Spur und schiebt zyklisch —, also nach (S)
+
+$$2\operatorname{tr}(TVK)
+ =\operatorname{tr}\bigl(T[VK+(VK)^{\mathsf T}]\bigr)
+ =\mathbb 1^{\mathsf T}T\delta+\delta^{\mathsf T}T\mathbb 1
+ =2\,\langle\delta,\;T\mathbb 1\rangle .$$
+
+Ist überdies $TV$ **symmetrisch**, so ist $\operatorname{tr}(TVK)=0$: die Spur
+eines Produkts aus einer symmetrischen und einer antisymmetrischen Matrix
+verschwindet. Zusammen:
+
+> **(C)** Ist $T$ symmetrisch und $TV$ symmetrisch, so ist
+> $\langle\delta,T\mathbb 1\rangle=0$.
+
+Damit hängt alles an der Frage, welche Vektoren als $T\mathbb 1$ vorkommen. Setze
+
+$$\mathcal L:=\{\,T\mathbb 1\;:\;T=T^{\mathsf T},\ TV=V^{\mathsf T}T\,\}.$$
+
+Ist $e_t\in\mathcal L$, so ist $\delta(t)=0$. Die Umkehrung gilt ebenfalls und
+ist am Rechner bestätigt (siehe unten): $\mathcal L$ ist **genau** der Raum der
+erzwungenen Stellen. Der Grund ist, dass die $\binom n2$ Relationsmatrizen
+$X_{st}=(e_s-e_t)(e_s-e_t)^{\mathsf T}$ eine Basis von
+$\{S=S^{\mathsf T}: S\mathbb 1=0\}$ bilden und $\delta(t)$ genau dann im Spann
+der Relationen liegt, wenn $E_{tt}-S$ für ein solches $S$ die Bedingung
+„$(E_{tt}-S)V$ symmetrisch" erfüllt.
+
+### Wo die Nichtnegativität eingeht, und nur dort
+
+$V$ ist nilpotent: $V_{s,a}\neq0$ verlangt $a<s$, also ist $V$ in jeder linearen
+Erweiterung strikt dreieckig. Sei $r$ der Nilpotenzindex, $V^r=0\neq V^{r-1}$.
+
+> **Lemma.** Ist $m\ge0$, so ist $V^k\mathbb 1=0$ genau dann, wenn $V^k=0$.
+
+*Beweis.* $V$ hat nichtnegative Einträge, also auch $V^k$, und $V^k\mathbb 1$ ist
+der Vektor der Zeilensummen von $V^k$. Eine nichtnegative Matrix mit lauter
+Zeilensummen $0$ ist die Nullmatrix. $\square$
+
+Das ist die ganze Rolle der Positivität — eine Zeile. Insbesondere ist
+$V^{r-1}\mathbb 1\neq0$: der Vektor $\mathbb 1$ hat im $\R[x]$-Modul
+$(\R^\T,\,x\cdot{}=V)$ **maximale Ordnung**.
+
+### Die Konstruktion von $T$, explizit
+
+> **Satz.** Ist $V$ nilpotent vom Index $r$ und $V^{r-1}\mathbb 1\neq0$, so ist
+> $\mathcal L=\R^\T$.
+
+Begrifflich: ein Element maximaler Ordnung erzeugt einen direkten Summanden, und
+auf $\R[x]/(x^{n_1})\oplus\dots$ ist eine invariante symmetrische Form durch
+Funktionale $\ell_{ij}$ auf $\R[x]/(x^{\min(n_i,n_j)})$ gegeben; steht
+$\mathbb 1$ im größten Summanden, so ist $\min(n_1,n_j)=n_j$, und
+$B(\mathbb 1,\cdot)$ ist auf jedem Summanden frei. Für die Formalisierung ist die
+Modulzerlegung aber unnötig, denn die Konstruktion lässt sich hinschreiben.
+
+Wähle $i^*$ mit $(V^{r-1}\mathbb 1)_{i^*}\neq0$ und setze
+$\lambda:=(V^{r-1}\mathbb 1)_{i^*}^{-1}e_{i^*}$ sowie
+$p_k:=(V^{r-1-k})^{\mathsf T}\lambda$ für $0\le k\le r-1$. Dann ist
+
+$$V^{\mathsf T}p_k=p_{k-1}\ (k\ge1),\qquad V^{\mathsf T}p_0=0,\qquad
+  p_0^{\mathsf T}\mathbb 1=1 .$$
+
+Sei $(w_k)_{k<r}$ das Inverse von $\sum_k(p_k^{\mathsf T}\mathbb 1)x^k$ in
+$\R[x]/(x^r)$ — es existiert, weil der konstante Term $1$ ist — und
+$\hat p_k:=\sum_{j\le k}w_{k-j}p_j$. Diese erfüllen dieselbe Shiftrelation und
+zusätzlich $\hat p_k^{\mathsf T}\mathbb 1=[k=0]$. Setze schließlich
+$\psi_k:=(V^{\mathsf T})^k e_t$ und $c_j:=(V^j\mathbb 1)_t$ (mit $c_j=0$ für
+$j\ge r$) und
+
+$$T:=\sum_{k=0}^{r-1}\bigl(\hat p_k\psi_k^{\mathsf T}
+   +\psi_k\hat p_k^{\mathsf T}\bigr)
+   -\sum_{k,l=0}^{r-1}c_{k+l}\,\hat p_k\hat p_l^{\mathsf T}.$$
+
+Dann ist $T$ symmetrisch nach Bauart; $T\mathbb 1=\sum_k c_k\hat p_k+\psi_0
+-\sum_k c_k\hat p_k=e_t$; und $TV=V^{\mathsf T}T$, weil in beiden Produkten
+dieselben drei Summen stehen — die Shifts
+$\psi_k^{\mathsf T}V=\psi_{k+1}^{\mathsf T}$ und
+$\hat p_l^{\mathsf T}V=\hat p_{l-1}^{\mathsf T}$ führen den ersten und den
+zweiten Term ineinander über, und der dritte ist invariant, weil $c_{k+l}$ nur
+von $k+l$ abhängt. **An dieser Stelle irrt man sich leicht:** im dritten Term von
+$TV$ trifft das $V$ den *zweiten* Faktor $\hat p_l$, in $V^{\mathsf T}T$ den
+*ersten*, und beide Male läuft der andere Index über den vollen Bereich; die
+Randterme fallen weg, weil $c_j=0$ für $j\ge r$ ist. Wer nur einen der beiden
+Indizes einschränkt, findet einen Defekt, den es nicht gibt.
+
+### Was der Satz mit den früheren Ergebnissen macht
+
+* **Die flache Spitze** (fünfter Lauf) ist der Spezialfall „$\T_{<t}$ ist
+  $\{0\}$ plus eine Antikette". Ihre Hypothese $q(M)\neq0$ ist eine *andere*
+  Abschwächung als $m\ge0$ und bleibt eigenständig richtig: sie erlaubt
+  gemischte Vorzeichen. Für eine Uhr ist $m\ge0$ die einschlägige.
+* **Die Idealreduktion** (vierter Lauf) wird nicht mehr gebraucht. Sie bleibt
+  richtig und ist die Aussage, mit der man den Satz auf $\T_{\le t}$
+  einschränkt, wenn man will; der Beweis oben braucht sie nicht.
+* **Der Kettenfall** (`lem:atomgrid`, 2026-08-30) ist nicht subsumiert: er gilt
+  für beliebige Massen $m_i\neq0$, also auch mit Vorzeichenwechsel, wo der
+  heutige Satz nichts sagt. Für Uhren subsumiert der heutige Satz ihn.
+* **(C4$^+$)** ist als Hebel gegenstandslos. Bewiesen ist sie nicht; gebraucht
+  wird sie nicht mehr.
+* **Der Diamant** mit $m_a=1$, $m_b=-1$, $m_0=0$ bleibt der Zeuge dafür, dass
+  $m\ge0$ nicht wegzulassen ist, und das Kriterium erklärt ihn jetzt: dort ist
+  $r=2$ und $V^{r-1}\mathbb 1=V\mathbb 1=0$, $\mathbb 1$ hat also **nicht**
+  maximale Ordnung, und $\mathcal L$ ist echt kleiner als $\R^\T$.
+
+### Nachgerechnet
+
+`selfadjoint.py` (neu) prüft in exakter Bruchrechnung vier Dinge, jeweils über
+**alle** Halbordnungen — auch ohne kleinstes Element — auf bis zu fünf Punkten:
+
+1. **Das Kriterium als Äquivalenz.** „$\delta(t)$ ist erzwungen" (Rangvergleich
+   wie in `antisym.py`) gegen „$e_t\in\mathcal L$", auch bei gemischten
+   Vorzeichen, wo beide Seiten fallen dürfen: alle Halbordnungen auf bis zu vier
+   Punkten, alle Massenvektoren aus $\{-1,0,1,2\}$, $228\,000$ Stellen,
+   **null Abweichungen**. Das ist der schärfste der vier Punkte, denn er prüft
+   nicht die Hinrichtung des Beweises, sondern die Behauptung, dass
+   $\mathcal L$ die Lage vollständig beschreibt.
+2. **Das Lemma** $V^k\mathbb 1=0\Leftrightarrow V^k=0$ für $m\ge0$:
+   $6\,259\,626$ Potenzen, kein Ausfall.
+3. **Die explizite Formel**: $T$ symmetrisch, $T\mathbb 1=e_t$,
+   $TV=V^{\mathsf T}T$ — $265\,128$ Konstruktionen, kein Ausfall.
+4. **Der Satz** über `antisym.duality_fails_at`: $89\,440$ Fälle, kein Ausfall.
+
+Ende zu Ende, also im vollen System in $(\Phi,\gamma)$ statt in der
+$\kappa$-Gestalt, mit `posetsearch.clock_sweep` gegengeprüft: $1539$ Fälle auf
+vier Punkten (Massen aus $\{0,1,2\}$) und $7008$ auf fünf (Massen aus
+$\{0,1\}$), kein Ausfall.
+
+Jenseits der vollständigen Aufzählung — sie reicht nur bis fünf Punkte, und ein
+Fehler in der Konstruktion von $T$ könnte an der Länge $r$ der Potenzkette
+hängen — prüft `stress.py` (neu) $120$ zufällige Halbordnungen auf sechs, sieben
+und acht Punkten mit Massen aus $\{0,1,2,5,7\}$: kein Dualitätsausfall und kein
+Formelausfall.
+
+### Was zu formalisieren ist
+
+Der Beweis zerfällt in vier Aussagen, von denen drei reine Matrizenalgebra sind
+und weder Uhr noch Maß noch Halbordnung kennen:
+
+* `Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`: für `A.IsSymm` und
+  `Bᵀ = -B` ist `(A * B).trace = 0`. Mathlib hat `Matrix.IsSymm`
+  (`LinearAlgebra/Matrix/Symmetric.lean:35`) und `Matrix.trace_mul_comm`
+  (`LinearAlgebra/Matrix/Trace.lean:158`); ein Prädikat für
+  „schiefsymmetrisch" im schlichten Sinn `Bᵀ = -B` gibt es **nicht** —
+  `Matrix.IsSkewAdjoint` (`LinearAlgebra/Matrix/SesquilinearForm.lean:562`) ist
+  relativ zu einer Form `J`. Die Bedingung wird also ausgeschrieben.
+* `trace_mul_eq_dotProduct_diag_of_isSymm`: die Paarungsidentität
+  `(T * V * K).trace = δ ⬝ᵥ (T *ᵥ 1)` unter (S), für `T.IsSymm`.
+* `exists_isSymm_mulVec_one_eq_single`: die Konstruktion oben, aus `V ^ r = 0`
+  und `V ^ (r-1) *ᵥ 1 ≠ 0`.
+* `mulVec_one_eq_zero_iff_of_nonneg`: das Lemma, und der einzige Punkt, an dem
+  `0 ≤ m` vorkommt.
+
+Erst danach kommt die Uhr. `atomGrid_symm` bleibt der kleinste Einstieg, aber
+der Zielsatz `duality_of_atomic` verliert seine Vergleichbarkeitshypothese.
+
+## Sackgassen, fünfter Nachtrag
+
+* **Nach einer Induktion über die Halbordnung suchen.** Fünf Läufe haben es
+  versucht — von unten, von oben, über Ideale, über die Antikette der maximalen
+  Elemente. Der Beweis, der trägt, induziert über gar nichts: er ersetzt die
+  Relationen durch eine Spur und die Halbordnung durch den Nilpotenzindex von
+  $V$. Wer den Fall weiter aufteilt, arbeitet gegen die Struktur.
+* **Die Positivität dort suchen, wo sie sichtbar ist.** `certificate.py` zeigt
+  am Diamanten den Faktor $1/(m_1+m_2)$, und der fünfte Lauf hat daraus die
+  scharfe Hypothese $q(M)\neq0$ abgelesen. Für den allgemeinen Fall führt das in
+  die Irre: dort sitzt die Positivität nicht in einem Nenner, sondern in der
+  Aussage „eine nichtnegative Matrix mit lauter Zeilensummen null ist null".
+
+## Der Halbordnungsfall im Manuskript, 2026-08-31 (siebter Lauf)
+
+Der Satz des sechsten Laufs steht jetzt im Manuskript, und beim Aufschreiben ist
+eine Lücke sichtbar geworden, die keiner der sechs Läufe notiert hatte: **die
+zweite Konvention.**
+
+### Was eingetragen ist
+
+Vier Stücke, hinter `rem:atomicdual` und vor `rem:dualscope`:
+
+* `lem:selfadjoint` — die reine Matrizenaussage. Ist $V$ nichtnegativ und
+  nilpotent, so gibt es zu jedem $t$ ein symmetrisches $T$ mit
+  $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_t$. Der Beweis ist der des PROTOKOLLs in
+  drei Schritten: Zeilensummen (dort geht $m\ge0$ ein, und nur dort), die duale
+  Kette $\hat p_k$, die explizite Formel für $T$.
+* `prop:atomicposet` — die Uhr. Rein atomare Uhr, endlich viele Atome unter
+  $t^*$, **keine** Bedingung an ihre gegenseitige Lage, $\Phi(t^*,0)=\Phi(0,t^*)$.
+  Der Beweis führt die Reduktion aus, die im PROTOKOLL nur behauptet war: aus
+  \eqref{eq:incrementrep} folgt $A(s,t)-B(s,t)=A(s,0)-B(0,t)$, daraus
+  $(\diamondsuit)$ für $\Psi(s,t)=\sum_{a\prec s}m_a\kappa(a,t)$ und
+  $\Psi(t,t)=\Phi(t,0)-\Phi(0,t)$; der Rest ist die Spuridentität. Dass $\prec$
+  auf einer Präordnung transitiv und irreflexiv ist, ist eigens nachgerechnet —
+  darauf ruht die Nilpotenz.
+* `rem:atomicposet` — was die beiden atomaren Sätze je geben. Sie sind nicht
+  geschachtelt: die Kette erlaubt Massen beider Vorzeichen und liefert die
+  stärkere Symmetrie, die Halbordnung verlangt $m\ge0$ und liefert nur den
+  Defekt. Für eine Uhr enthält der zweite den ersten. Das Kriterium
+  $e_{t^*}\in\mathcal L$ erklärt dort den Diamanten.
+* Statustabelle, Bündeltabelle und die fünf Stellen, die die Kettenhypothese
+  zitierten (§1, `rem:dualscope`, §9 und zwei in §5.x).
+
+Danach meldet `python3 check.py` `clean` (126 Seiten, keine undefinierten
+Referenzen, größte Überlänge 7.7pt wie zuvor). `selfadjoint.py` ist vor dem
+Eintrag noch einmal gelaufen: alle vier Punkte, kein Ausfall.
+
+### Die Lücke, die dabei sichtbar wurde: $\iota=\mathrm o$
+
+Der Satz ist für $\iota=\mathrm p$ bewiesen und **nur** dafür. Die Konvention
+geht an genau einer Stelle ein, aber an einer tragenden: unter $\iota=\mathrm p$
+ist $[0,s)=\T_{<s}$ und $V_{s,a}=[a\prec s]m_a$ strikt dreieckig, also
+nilpotent. Unter $\iota=\mathrm o$ ist $(0,s]=\T_{\le s}\setminus\T_{\le 0}$,
+also $V_{s,a}=[a\le s,\,a\ne0]m_a$ mit $V_{s,s}=m_s$ auf der Diagonale —
+**nicht nilpotent**, und `lem:selfadjoint` greift nicht.
+
+Auf einer Kette ist das kein Problem: `prop:atomicdual` erledigt
+$\iota=\mathrm o$ durch die Spiegelung $(i,j)\mapsto(M-i,M-j)$ des Gitters. Eine
+Halbordnung bietet keine Spiegelung — es gibt kein größtes Element, an dem man
+aufhängen könnte, und die Aussage ist an $0$ verankert. Der Satz „die
+o-Konvention ist die p-Konvention für die umgekehrte Ordnung", der so in
+`TauCeti/MartingaleProblems` bei `duality_of_atomic` stand, ist damit für eine
+Halbordnung **falsch**; die Roadmapzeile ist korrigiert.
+
+**Evidenz statt Beweis.** `oconvention.py` (neu) baut dasselbe volle System in
+$(\Phi,\gamma)$ wie `posetsearch`, nur mit $(0,s]$ statt $[0,s)$, und läuft über
+alle Halbordnungen mit kleinstem Element auf bis zu fünf Punkten mit
+nichtnegativen Massen: $81+1539+7008$ Fälle, **kein Ausfall**. Die Aussage ist
+also vermutlich richtig; was fehlt, ist der Beweis. Sie steht deshalb als
+einzige Zeile „verified, not proved" in der Statustabelle von
+`rem:atomsnotchange` und als Punkt 1 des Rückstaus.
+
+**Und der Ansatz ist schon eingegrenzt.** Der Spurteil des Beweises — (C) und
+die Paarungsidentität — benutzt die Nilpotenz **nirgends**; er braucht nur $T$
+symmetrisch, $TV$ symmetrisch und $K$ antisymmetrisch, und all das ist
+konventionsfrei. Die ganze Last liegt auf der Frage, ob
+$\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\,TV=V^{\mathsf T}T\}$ auch für das
+reflexive $V$ ganz $\R^\T$ ist. `oconvention.criterion_o` prüft genau das und
+vergleicht $\mathcal L$ Stelle für Stelle mit den tatsächlich erzwungenen: über
+alle Halbordnungen auf drei und vier Punkten mit Massen aus $\{0,1,2\}$,
+$243+6156$ Stellen, sind **beide** Abweichungsrichtungen null — $\mathcal L$
+beschreibt die Lage auch unter $\iota=\mathrm o$ vollständig, und in jedem
+geprüften Fall ist $\mathcal L=\R^\T$.
+
+Damit ist die offene Frage keine Frage über Uhren mehr, sondern eine über
+Matrizen, und sie lautet: *Sei $\prec$ eine strikte Halbordnung auf endlichem
+$F$, sei $m:F\to[0,\infty)$ mit $m_0=0$, und sei
+$V_{s,a}=[a\prec s\ \text{oder}\ a=s\ne 0]\,m_a$. Ist dann
+$\mathcal L=\R^F$?* Für nilpotentes $V$ ist die Antwort der Satz des sechsten
+Laufs; hier ist $V=N+D$ mit $N$ nilpotent und $D=\operatorname{diag}(m)$, und
+zu klären ist, was an die Stelle der maximalen Ordnung von $\mathbb 1$ tritt.
+Zwei Beobachtungen, die dabei zu benutzen sind: Zeile und Spalte $0$ von $V$
+verschwinden, und $D$ und $N$ kommutieren im Allgemeinen nicht.
+
+### Sackgassen, sechster Nachtrag
+
+* **Annehmen, die Konvention sei eine Formsache.** Fünf Läufe lang war
+  „$\iota=\mathrm o$ ist $\iota=\mathrm p$ nach Spiegelung" ein Satz, den
+  niemand nachgerechnet hat, weil er auf der Kette stimmt. Er stimmt dort, weil
+  eine endliche Kette ein größtes Element hat. Was allgemein bleibt, ist nicht
+  die Spiegelung, sondern die Beobachtung, dass $\iota$ nur das Intervall
+  ändert — und damit die Diagonale von $V$.
