@@ -9,6 +9,13 @@ Wer einen Punkt für erledigt hält, ohne ihn erledigt zu haben, schadet mehr al
 ein Lauf, der nichts tut. Im Zweifel: Punkt stehen lassen, Zwischenstand
 anhängen.
 
+**Der \EK{}-Scan ist erreichbar**, entgegen einer Notiz vom 2026-08-31. Er liegt
+nicht im Worktree, sondern unter
+`/home/pfaffelh/Code/lean/journal/references/EthierKurtz1986.pdf`, und das
+`Read`-Werkzeug liest ihn mit `pages`. Der Seitenversatz ist **+10**:
+Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
+102--104, 111--116, 126--133 und 142--145.
+
 ## Offen
 
 1. **`rem:skorokhodform` Stelle 2238 korrigieren.** Dort heißt
@@ -31,16 +38,13 @@ anhängen.
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen.
 
-4. **Den Abnehmer der konvergenzbestimmenden Produkthälfte finden oder
-   ausschließen.** Der Lauf vom 2026-08-31 hat belegt, dass der Produktpunkt von
-   `WeakConvergence` Meilenstein 1 heute von keinem Punkt der vier Roadmaps und
-   von keinem Beweis des Manuskripts benutzt wird. Der eine Kandidat, der übrig
-   bleibt, ist `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional`
-   (M8): dessen Vorlage ist \EK{} Thm. 3.7.8, und `fact:fdd` wird im Manuskript
-   unter anderem \EK{} Prop. 3.7.1 zugeschrieben, also der
-   konvergenzbestimmenden Produkthälfte. Ob 3.7.8 sie im Beweis wirklich
-   benutzt, ist am Scan zu klären; findet sie sich dort, nennt M8 sie als
-   Vorbedingung, sonst hält der Produktpunkt fest, dass sein einziger Grund §9
-   des Manuskripts ist. Achtung: `references/EthierKurtz1986.pdf` ist aus dem
-   Worktree `journal-facts` **nicht** erreichbar — frühere Läufe haben den Scan
-   gelesen, dieser konnte es nicht.
+4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
+   formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
+   `WeakConvergence` Meilenstein 3 eingetragen: Mathlib hat die Metrisierbarkeit
+   (`MeasureTheory.instMetrizableSpaceProbabilityMeasure`,
+   `Measure/LevyProkhorovMetric.lean:695`) und weder die Separabilität noch die
+   Vollständigkeit — `SeparableSpace (ProbabilityMeasure`,
+   `PolishSpace (ProbabilityMeasure` und `CompleteSpace (ProbabilityMeasure`
+   haben in v4.33.1, im Arbeitsbranch und auf master (`gh search code`) null
+   Treffer. Das ist die erste Hälfte von `fact:PSpolish`, und sie ist der
+   Untergrund jedes Teilfolgenarguments des Konvergenzteils.

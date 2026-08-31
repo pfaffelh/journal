@@ -89,9 +89,11 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   refines the other after finitely many steps.
 
 From Milestone 3 on, `ι` denotes an index with these instances and `E` a Polish
-space with metric `r`. Milestone 2 is the exception and states its own, weaker
-hypotheses item by item: the càdlàg predicate and the jump theory are about
-functions, not about the space, and neither uses the metric on `ι`.
+space with metric `r`. Milestones 2 and 8 are the exceptions and state their
+own, weaker hypotheses item by item. In Milestone 2 the càdlàg predicate and
+the jump theory are about functions, not about the space, and neither uses the
+metric on `ι`. In Milestone 8 the completeness of `E` is used by the two points
+that run Prokhorov backwards and by nothing else.
 
 ## Milestone 2: càdlàg functions
 
@@ -260,33 +262,74 @@ Under (B), with `E` a pseudometric space:
 ## Milestone 8: tightness and convergence of finite dimensional distributions
 
 Here `μ n` and `μ` are Borel probability measures on `D ι E`, with `ι` the
-index of Milestone 1 and `E` Polish; the roadmap **WeakConvergence** supplies
-convergence determining classes and the continuous mapping theorem.
+index of Milestone 1; the roadmap **WeakConvergence** supplies separating
+classes, the Skorokhod representation theorem and the continuous mapping
+theorem, and its Milestone 5 supplies the functional monotone class theorem.
+Like Milestone 2, this milestone states its hypotheses on `E` item by item, in
+two stages.
 
-* `SkorokhodSpace.isTightMeasureSet_iff`: a set of laws is tight if and only if
-  for every `ε > 0` and `m` there are a compact `K ⊆ E` and a function
-  `δ ↦ η δ` tending to `0` with
+**(A)** `E` a separable metric space. Convergence of laws and the whole theory
+of finite dimensional distributions live here. Prokhorov in the direction from
+tightness to relative compactness belongs here as well:
+`isCompact_closure_of_isTightMeasureSet`
+(`Mathlib/MeasureTheory/Measure/Prokhorov.lean`, root namespace) asks for
+`[T2Space E]` and `[BorelSpace E]` and nothing further.
+
+**(B)** `E` Polish. Two points, and only two: the characterization of tightness
+by the modulus and the reduction to real-valued paths. Both pass through
+Prokhorov in the other direction, from compactness to tightness, and
+`MeasureTheory.isTightMeasureSet_of_isCompact_closure` in the same file carries
+`[CompleteSpace 𝓧]` and `[SecondCountableTopology 𝓧]` for it. Ethier–Kurtz
+state the second, as Theorem 3.9.1, for a complete separable `E` as well.
+
+* `SkorokhodSpace.isTightMeasureSet_iff` — stage (B). A set of laws is tight if
+  and only if for every `ε > 0` and `m` there are a compact `K ⊆ E` and a
+  function `δ ↦ η δ` tending to `0` with
   `μ {f | ∀ t ∈ B m, f t ∈ K} ≥ 1 - ε` and
   `μ {f | modulus m f δ ≥ η δ} ≤ ε`, uniformly over the set. Combine
   Milestone 7 with `MeasureTheory.isTightMeasureSet_of_isCompact_closure` and
-  its converse.
-* `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto`: if `μ n → μ` weakly
-  then, for every finite family `t 1, ..., t k` of points at which the limit has
-  no fixed discontinuity — that is `μ {f | f⁻ (t i) = f (t i)} = 1` — the
-  finite dimensional distributions converge. The set of `t` failing this is
-  countable.
-* `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional`: a tight
-  family whose finite dimensional distributions along a dense set converge
-  converges weakly. Prokhorov plus Milestone 6.
-* `SkorokhodSpace.exists_countable_dense_continuity`: for a single `μ`, the set
-  of `t` with `μ {f | f⁻ t = f t} = 1` has countable complement, hence contains
-  a countable dense set.
-* `SkorokhodSpace.continuous_postcomp`: for continuous `h : E → E'` the induced
+  its converse `isCompact_closure_of_isTightMeasureSet`; the completeness of
+  `E` is what the first of the two asks for.
+* `SkorokhodSpace.tendsto_finiteDimensional_of_tendsto` — stage (A). If
+  `μ n → μ` weakly then, for every finite family `t 1, ..., t k` of points at
+  which the limit has no fixed discontinuity — that is
+  `μ {f | f⁻ (t i) = f (t i)} = 1` — the finite dimensional distributions
+  converge. The set of `t` failing this is countable. The proof runs through
+  the Skorokhod representation theorem (**WeakConvergence** Milestone 3) and
+  the continuous mapping theorem (Milestone 2 there), which is why separability
+  suffices: Ethier–Kurtz state both, as Theorem 3.1.8 and Corollary 3.1.9, for
+  a separable metric space and use the completeness in neither proof.
+* `SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` —
+  stage (A). Let `S : Set (ProbabilityMeasure (D ι E))` have compact closure,
+  let every `μ n` lie in `S`, and let `T ⊆ ι` be dense and such that the finite
+  dimensional distributions along every finite subset of `T` converge to those
+  of `μ`. Then `μ n → μ` weakly. This is Ethier–Kurtz, Theorem 3.7.8(b), and
+  the hypothesis there is relative compactness, not tightness: what the proof
+  uses is a convergent subsequence and nothing else. Its ingredients, in the
+  order the proof needs them: right continuity of the paths, to move the times
+  of a finite family from `T` to the continuity points of the limit;
+  `exists_countable_dense_continuity` below, which makes those continuity
+  points dense; `borel_eq_iSup_comap_eval` of Milestone 6 in its form along a
+  dense set; and `induction_on_mulSystem` (**WeakConvergence** Milestone 5) to
+  pass from the integrals of the products `∏ i, f i (g (t i))`, with each `f i`
+  bounded continuous, to the equality of the two laws. Products of a separating
+  class, one per factor, do not enter: the law is identified on `D ι E` and not
+  on a product space, and `eval t` is measurable rather than continuous there —
+  the proof of Ethier–Kurtz, Proposition 3.7.1 obtains `f ∘ eval t` as a
+  pointwise limit of continuous averages, which is exactly the gap.
+* `SkorokhodSpace.tendsto_of_isTight_of_tendsto_finiteDimensional` — stage (A).
+  The same conclusion for a tight family, from the previous item and
+  `isCompact_closure_of_isTightMeasureSet`.
+* `SkorokhodSpace.exists_countable_dense_continuity` — stage (A). For a single
+  `μ`, the set of `t` with `μ {f | f⁻ t = f t} = 1` has countable complement,
+  hence contains a countable dense set.
+* `SkorokhodSpace.continuous_postcomp` — stage (A). For continuous `h : E → E'` the induced
   map `SkorokhodSpace.postcomp h : D ι E → D ι E'`, `f ↦ h ∘ f`, is well defined
   and continuous; with `Measurable (postcomp h)` for `h` Borel, from Milestone 6.
   Together with `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` this is
   the continuous mapping theorem in the form the next item needs.
-* `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp`: the reduction to
+* `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` — stage (B). The
+  reduction to
   real-valued paths. Let `S` be a set of Borel probability measures on `D ι E`
   satisfying compact containment — for every `ε > 0` and `m` a compact `K ⊆ E`
   with `μ {f | ∀ t ∈ B m, f t ∈ K} ≥ 1 - ε` for every `μ ∈ S` — and let

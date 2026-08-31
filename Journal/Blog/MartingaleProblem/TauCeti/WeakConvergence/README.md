@@ -1,12 +1,13 @@
 # Weak convergence: separating classes, the continuous mapping theorem, and Skorokhod representation
 
 Weak convergence of measures on a metric space is well developed in Mathlib,
-and the next section says how far. Four things are wanted beyond it, each used
+and the next section says how far. Five things are wanted beyond it, each used
 pervasively downstream: the two classes of functions that determine a measure or
 its convergence, as predicates and with the instances Mathlib does not prove;
 the continuous mapping theorem for maps continuous only almost everywhere; the
-Skorokhod representation theorem; and the link between uniform integrability and
-convergence in distribution.
+separability and the completeness of the space of laws itself, of which Mathlib
+has only the metrizability; the Skorokhod representation theorem; and the link
+between uniform integrability and convergence in distribution.
 
 Throughout, `E` is a metric space, `Ω` a measurable space, and measures are
 Borel probability measures. Weak convergence is
@@ -93,7 +94,15 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   the bounded continuous functions, or a countable subfamily of them — already
   suffices at each factor. The proof is the functional monotone class theorem of
   Milestone 5 applied to those products, which form a multiplicative system
-  generating the product σ-algebra.
+  generating the product σ-algebra. The convergence determining half is the
+  weaker of the two in reach: the one place in Ethier–Kurtz where it does the
+  work is the last step of Corollary 3.9.2, which passes from the convergence of
+  `(g 1, ..., g k) ∘ X n` for finite families out of a dense subalgebra to the
+  convergence of the finite dimensional distributions. The route through
+  Theorem 3.9.1 and Theorem 3.9.4, which is the one **SkorokhodSpace**
+  Milestone 8 and **MartingaleProblems** Milestone 11 take, reaches the same
+  conclusion by relative compactness and identification of the limit, and does
+  not pass through it.
 * **Missing.** On a Polish space there is a countable convergence determining
   set of bounded uniformly continuous functions, and a countable separating set.
 * **Missing.** The conditional form, `IsSeparating.ae_eq_of_forall_condExp_eq`.
@@ -147,9 +156,37 @@ limit; the set of continuity points is Borel, so the hypothesis is meaningful.
 * The Slutsky form: `X n → X` in distribution and `dist (X n) (Y n) → 0` in
   probability imply `Y n → X` in distribution.
 
-## Milestone 3: the Skorokhod representation theorem
+## Milestone 3: the space of laws, and the Skorokhod representation theorem
 
 Let `E` be a separable metric space.
+
+Mathlib metrizes the topology of convergence in distribution — the instance is
+`MeasureTheory.instMetrizableSpaceProbabilityMeasure`
+(`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean`), for `E`
+pseudometrizable separable and Borel — and stops there. The two properties that
+make `ProbabilityMeasure E` a space one can run a subsequence argument in are
+absent: neither `SeparableSpace (ProbabilityMeasure E)` nor
+`CompleteSpace`/`PolishSpace` for it occurs anywhere in Mathlib. They come
+first, because the Skorokhod representation below and every relative
+compactness argument downstream live in this space.
+
+* `MeasureTheory.ProbabilityMeasure.separableSpace`: `ProbabilityMeasure E` is
+  separable. The finitely supported measures with rational masses at points of
+  a countable dense subset of `E` are dense.
+* `MeasureTheory.ProbabilityMeasure.completeSpace`: for `E` complete, the
+  Lévy–Prokhorov metric on `ProbabilityMeasure E` is complete. In three steps: a
+  Cauchy sequence is tight, by the covering argument that
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` runs for a set with
+  compact closure; `isCompact_closure_of_isTightMeasureSet` then yields a
+  convergent subsequence; and a Cauchy sequence with a convergent subsequence
+  converges.
+* `MeasureTheory.ProbabilityMeasure.polishSpace`: for `E` Polish,
+  `ProbabilityMeasure E` is Polish, from the two above together with Mathlib's
+  metrizability instance. This is the point at which the completeness of `E` is
+  used; separability alone gives the first item and the whole of the rest of
+  this milestone.
+
+The representation theorem itself:
 
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random

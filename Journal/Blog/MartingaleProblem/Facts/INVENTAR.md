@@ -38,7 +38,7 @@ setzt, nennt den Beleg.
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung `induction_on_inter` |
-| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib (`FiniteMeasure.tendsto_map_of_tendsto_of_continuous`), die f.ü.-stetige Fassung fehlt |
+| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib (`FiniteMeasure.tendsto_map_of_tendsto_of_continuous`), die f.ü.-stetige Fassung fehlt; M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`), die konvergenzbestimmende fehlt |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
@@ -50,9 +50,9 @@ setzt, nennt den Beleg.
 | `fact:submgreg` | 2 | Submartingale regularization; EK, Proposition 2.2.9; e | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
-| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) polnisch ist, ungeprüft |
+| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3 |
 | `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1 |
-| `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isTight_of_tendsto_finiteDimensional` (b); die Roadmap fixiert `E` polnisch, der Fact nur separabel |
+| `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` (b); beide stehen seit dem 2026-08-31 unter Stufe (A) „separabel metrisch", wie der Fact, und (b) unter Relativkompaktheit statt Straffheit, wie EK |
 | `fact:fullgenerator` | 1 | EK, Proposition 1.5.1 | Roadmap | MartingaleProblems M13 — dort neu angelegt; Mathlib hat keine Operatorhalbgruppen, `dissipative` kommt nicht vor, Hille--Yosida steht als `Q974405` ohne `decl` in `docs/1000.yaml` |
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
 | `fact:picard` | 1 | Picard--Lindel"of for SDEs | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
@@ -62,7 +62,7 @@ setzt, nennt den Beleg.
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
-| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte trägt kein Beweis, §9 verlangt sie — Auffälligkeit vom 2026-08-31 |
+| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte trägt kein Beweis, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
 | `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
 | `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `MeasureTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib, der Martingalfall ist es nicht |
 
@@ -169,12 +169,28 @@ setzt, nennt den Beleg.
   Teil 2. Was nicht geschehen ist und dem Nutzer gehört: den Meilenstein in
   **zwei** Meilensteine zu zerlegen. Die Hypothesen sind jetzt richtig; die
   Gliederung ist unverändert.
-* **Die Roadmaps kennen `E` nur polnisch.** `SkorokhodSpace` fixiert in
-  Meilenstein 1 „`E` a Polish space", während `fact:fddconv`, `fact:cmt` und
-  `fact:PSpolish` im Manuskript für separable metrische `E` gelten und
-  `rem:MZcost` ausdrücklich festhält, dass der Pfadraum der Konvergenz nach Maß
-  nicht polnisch ist. Zu klären, ob die Roadmaps auf separabel-metrisch
-  umgestellt werden oder das Manuskript die Einschränkung notiert.
+* **Die Roadmaps kennen `E` nur polnisch — am 2026-08-31 für die drei genannten
+  Facts geklärt und belegt.** `SkorokhodSpace` fixierte in Meilenstein 1 „`E` a
+  Polish space", während `fact:fddconv`, `fact:cmt` und `fact:PSpolish` im
+  Manuskript für separable metrische `E` gelten und `rem:MZcost` ausdrücklich
+  festhält, dass der Pfadraum der Konvergenz nach Maß nicht polnisch ist. Der
+  Beleg, den die stehende Regel verlangt — die Stelle nennen, an der die
+  Vollständigkeit im Beweis nicht mehr vorkommt —, liegt seit dem 2026-08-31
+  am Scan vor: \EK{} Thm. 3.1.8 (Skorokhod-Darstellung) beginnt mit „Let
+  $(S,d)$ be **separable**", Cor. 3.1.9 (stetige Abbildung) mit „Let $(S,d)$
+  and $(S',d')$ be **separable** metric spaces", und Thm. 3.7.8 mit „Let $E$ be
+  **separable**"; die Vollständigkeit steht erst bei Lemma 3.2.1 und Thm. 3.2.2,
+  also bei Prohorov, und dort in der Rückrichtung. Mathlib sagt dasselbe:
+  `isCompact_closure_of_isTightMeasureSet` führt `[T2Space E] [BorelSpace E]`,
+  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` führt
+  `[CompleteSpace 𝓧] [SecondCountableTopology 𝓧]` (`Measure/Prokhorov.lean:65`
+  bzw. `:570,630`, am Quelltext geprüft). `WeakConvergence` M2 und M3 standen
+  ohnehin schon auf „separabel metrisch"; `SkorokhodSpace` Meilenstein 8 führt
+  seit dem 2026-08-31 zwei Stufen (A) separabel metrisch und (B) polnisch, nach
+  dem Muster von Meilenstein 2, und nur die zwei Punkte, die Prohorov rückwärts
+  laufen lassen, stehen unter (B). Offen bleibt allein die **Gliederungsfrage**,
+  ob Meilenstein 1 von `SkorokhodSpace` seine globale Festlegung auf polnisch
+  aufgibt; sie gehört dem Nutzer, wie die Zerlegung von Meilenstein 2.
 
 * **§4.3 von \EK{} ist ausgewertet, seit dem 2026-08-30, fünfter Lauf.** Zitiert
   werden 4.3.1, 4.3.5 und 4.3.6. Thm. 4.3.8, Prop. 4.3.9 und Prop. 4.3.10 stehen
@@ -1148,3 +1164,160 @@ dagegen keinen Abnehmer. Ein Satz ohne Vorbedingungen, an dem sechs Stellen
 hängen, geht dem voran, an dem keine hängt. Gegenüber den älteren Vorschlägen bleibt
 `Clock.interval_union` der erste der Task-23-Linie; `induction_on_mulSystem`
 ist der erste der Konvergenzlinie, vor `IsSeparating` und vor dem Produktpunkt.
+
+### 2026-08-31, zweiter Lauf — Rückstau 4, und die Vollständigkeit von `E`
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging
+nach der stehenden Regel in den Rückstau. Punkt 1 bleibt stehen (Manuskript,
+Regel 2), Punkt 2 ist Task 23 und ohne neuen Hebel, Punkt 3 ist nach seiner
+eigenen Regel — alle zwei Wochen, zuletzt 2026-08-29 — nicht fällig. Erledigt
+und gestrichen ist **Punkt 4**, und zwar weil seine Blockade keine war.
+
+**Der \EK{}-Scan ist erreichbar.** Der Punkt schloss mit der Warnung,
+`references/EthierKurtz1986.pdf` sei aus diesem Worktree nicht zu lesen. Das
+stimmt für den Worktree, nicht für den Pfad: die Datei liegt im Hauptcheckout,
+unter `/home/pfaffelh/Code/lean/journal/references/`, und `Read` liest sie mit
+`pages`. Der Seitenversatz ist +10. Das steht jetzt im Kopf von `BACKLOG.md`,
+damit es kein Lauf mehr zweimal herausfinden muss.
+
+#### Rückstau 4: der Abnehmer ist ausgeschlossen, und zwar zweifach
+
+**Erstens am Wortlaut von \EK{} Prop. 3.7.1** (Buchseite 127, am Scan gelesen).
+Sie lautet: `π_t(x) = x(t)`, und
+`𝒮_E ⊇ 𝒮'_E ≡ σ(π_t : 0 ≤ t < ∞) = σ(π_t : t ∈ D)` für **jede** dichte
+Teilmenge `D ⊆ [0,∞)`, mit Gleichheit für separables `E`. Das ist die
+Pfadraumhälfte — `SkorokhodSpace.borel_eq_iSup_comap_eval`, Meilenstein 6 —
+und **nicht** die Produkthälfte. Die Produkthälfte ist allein Prop. 3.4.6
+(Buchseite 115): `M_k` separierend ⟹ `M` separierend; `(S_k,d_k)` vollständig
+separabel und `M_k` konvergenzbestimmend ⟹ `M` konvergenzbestimmend. Die
+Zuschreibung von `fact:fdd` an „3.4.6 und 3.7.1" verteilt sich also sauber auf
+die zwei Hälften des Facts, und die Vermutung des Rückstaus, 3.7.1 sei die
+konvergenzbestimmende Produkthälfte, trifft nicht zu.
+
+**Zweitens am Beweis von \EK{} Thm. 3.7.8(b)** (Buchseite 132). Er benutzt sie
+nicht. Der Gang ist: Teilfolge aus der Relativkompaktheit; Zeiten aus `D` an die
+Stetigkeitspunkte des Limes schieben, mit Rechtsstetigkeit; Lemma 3.7.7, damit
+diese dicht liegen; und dann wörtlich „By Proposition 7.1 and the Dynkin class
+theorem (Appendix 4)". Gemeint ist dort der **funktionale** Dynkin-Satz: die
+Eingabe des Schrittes ist (7.27), also die Gleichheit der Integrale von
+Produkten `∏ f_i(X(t_i))` mit `f_i ∈ C̄(E)`, und die Mengenfassung greift auf
+stetige Funktionen nicht. Appendix 4 führt ihn, \EK{} zitieren ihn auf
+Buchseite 111 im Beweis von Prop. 3.4.2 unter diesem Namen — „the Dynkin class
+theorem for functions (Theorem 4.3 of the Appendixes)". Damit ist der
+Schlussschritt von 3.7.8(b) genau `induction_on_mulSystem`
+(`WeakConvergence` M5), nicht die Produkthälfte.
+
+Es gibt eine Stelle bei \EK{}, an der die konvergenzbestimmende Produkthälfte
+wirklich arbeitet, und sie ist gefunden: der Schlusssatz von **Cor. 3.9.2**
+(Buchseite 144), „This, together with the fact that `H` is dense in `C̄(E)` …,
+allows one to conclude that the finite-dimensional distributions converge. The
+details are left to the reader." Das Manuskript zitiert Cor. 3.9.2 nicht — es
+zitiert aus §3.9 nur Thm. 3.9.1 (`fact:relcompact`) und Thm. 3.9.4
+(`fact:relcompact2`), und `rem:EKrelcompact` ist \EK{} Rem. 4.5.2 und geht über
+Relativkompaktheit plus Eindeutigkeit des Häufungspunkts, nicht über 3.9.2.
+Der Befund des Laufs vom 2026-08-31 steht damit: **der Produktpunkt von
+`WeakConvergence` Meilenstein 1 hat keinen Abnehmer, und sein einziger Grund
+ist §9 des Manuskripts.** Der Punkt sagt das jetzt und nennt Cor. 3.9.2 als den
+Weg, den das Manuskript gerade nicht geht.
+
+#### Die Vollständigkeit von `E`: die älteste offene Auffälligkeit, belegt
+
+Sie steht seit dem 2026-08-29 da und war nie eine Suchaufgabe ohne Werkzeug,
+sondern eine ohne Scan. Mit dem Scan ist sie eine Zeile:
+
+* \EK{} Thm. 3.1.8, Skorokhod-Darstellung (Buchseite 102): „Let $(S,d)$ be
+  **separable**." Der Beweis benutzt Lemma 1.3, disjunkte Borelmengen kleinen
+  Durchmessers und die Prohorov-Metrik; Vollständigkeit kommt nicht vor.
+* \EK{} Cor. 3.1.9, stetige Abbildung (Buchseite 103): „Let $(S,d)$ and
+  $(S',d')$ be **separable** metric spaces." Der Beweis ist Thm. 1.8 plus
+  Cor. 1.6.
+* \EK{} Thm. 3.7.8 (Buchseite 131): „Let $E$ be **separable**."
+* Die Vollständigkeit beginnt eine Seite später, bei Lemma 3.2.1 („If $(S,d)$
+  is complete and separable, then each $P$ is tight") und Thm. 3.2.2, also bei
+  Prohorov — genau dort, wo die stehende Regel dieses Auftrags sie vermutet
+  hatte, und in der Rückrichtung.
+
+Mathlib bestätigt die Trennung an derselben Naht, am Quelltext geprüft:
+`isCompact_closure_of_isTightMeasureSet` steht in der Sektion `Forward` unter
+`[MeasurableSpace E] [TopologicalSpace E] [T2Space E] [BorelSpace E]`
+(`Measure/Prokhorov.lean:65`) und sagt es im Docstring selbst („We only require
+the space to be T2"), während `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+in der Sektion `Backward` unter `[PseudoMetricSpace 𝓧] [OpensMeasurableSpace 𝓧]
+[SecondCountableTopology 𝓧]` (`:570`) **und** `[CompleteSpace 𝓧]` (`:630`)
+steht.
+
+**Was daraufhin korrigiert ist.** `SkorokhodSpace` Meilenstein 8 fixierte „`E`
+Polish" für alle sieben Punkte. Er führt jetzt, nach dem Muster von
+Meilenstein 2, zwei benannte Stufen: **(A)** `E` separabel metrisch für die
+ganze Theorie der endlich-dimensionalen Verteilungen und für Prohorov in
+Richtung Straffheit ⟹ Relativkompaktheit, **(B)** `E` polnisch für die zwei
+Punkte, die Prohorov rückwärts laufen lassen, `isTightMeasureSet_iff` und
+`isTightMeasureSet_iff_forall_postcomp` (\EK{} Thm. 3.9.1 sagt „complete and
+separable" selbst). Der Schlusssatz von Meilenstein 1 nennt Meilenstein 8 jetzt
+als zweite Ausnahme neben Meilenstein 2.
+
+**Und eine zweite Korrektur, die aus demselben Wortlaut fällt.**
+`tendsto_of_isTight_of_tendsto_finiteDimensional` verlangte **Straffheit**;
+\EK{} Thm. 3.7.8(b) und `fact:fddconv`(b) verlangen **Relativkompaktheit**, und
+das ist unter der Hinrichtung von Prohorov die schwächere Hypothese. Nach der
+stehenden Regel ist das ein Befund, und er ist ausgeführt: der Punkt heißt jetzt
+`SkorokhodSpace.tendsto_of_isCompact_closure_of_tendsto_finiteDimensional`, sagt
+seine vier Zutaten einzeln (Rechtsstetigkeit, `exists_countable_dense_continuity`,
+`borel_eq_iSup_comap_eval` in der Fassung längs einer dichten Menge,
+`induction_on_mulSystem`) und hält fest, dass die Produkthälfte nicht darunter
+ist und warum: identifiziert wird ein Gesetz auf `D ι E` und nicht auf einem
+Produktraum, und `eval t` ist dort messbar und nicht stetig — was der Beweis von
+Prop. 3.7.1 zeigt, indem er `f ∘ π_t` nur als punktweisen Limes stetiger
+Mittelungen bekommt. Die Straffheitsfassung steht als Korollar daneben, über
+`isCompact_closure_of_isTightMeasureSet`, und bleibt damit in Stufe (A).
+
+#### Ein Nebenbefund, der zu einer belegten Lücke wurde
+
+Die Zeile `fact:PSpolish` trug seit dem 2026-08-29 die Notiz „dass 𝒫(S) polnisch
+ist, ungeprüft". Geprüft, und es ist eine Lücke: Mathlib hat von
+`ProbabilityMeasure E` als metrischem Raum nur die **Metrisierbarkeit**
+(`MeasureTheory.instMetrizableSpaceProbabilityMeasure`,
+`Measure/LevyProkhorovMetric.lean:695`, unter `[PseudoMetrizableSpace X]
+[SeparableSpace X] [BorelSpace X]`). `SeparableSpace (ProbabilityMeasure`,
+`CompleteSpace (ProbabilityMeasure` und `PolishSpace (ProbabilityMeasure` haben
+in v4.33.1, im Arbeitsbranch des Nutzers und auf master (`gh search code`, nach
+einer Gegenprobe an `instMetrizableSpaceProbabilityMeasure` als Beleg, dass die
+Suche greift) **null** Treffer. Das ist die erste Hälfte von `fact:PSpolish`,
+und sie stand in keiner Roadmap. Sie steht jetzt als eigener Block am Kopf von
+`WeakConvergence` Meilenstein 3 — `separableSpace`, `completeSpace`,
+`polishSpace` —, weil sie der Untergrund der Skorokhod-Darstellung und jedes
+Teilfolgenarguments des Konvergenzteils ist, und weil sie nach der Regel der
+vollständigen Grundtheorie je Objekt ohnehin dorthin gehört. Der Meilenstein
+heißt jetzt „the space of laws, and the Skorokhod representation theorem", und
+der Kopf der Roadmap zählt fünf statt vier fehlende Dinge.
+
+**Offen geblieben.** Rückstau 1 (Manuskript, Regel 2) und Rückstau 2 (Task 23,
+unvergleichbare Atome) sind unberührt; für Task 23 gilt weiter, was der letzte
+Lauf sagte — die Wand steht im Protokoll, ein Hebel fehlt. Nicht getroffen ist
+die **Gliederungsfrage**, ob `SkorokhodSpace` Meilenstein 1 seine globale
+Festlegung „`E` a Polish space" aufgibt, nachdem jetzt zwei von acht
+Meilensteinen ihre Hypothesen selbst führen; das ist dieselbe Art Entscheidung
+wie die Zerlegung von Meilenstein 2 und gehört dem Nutzer. Ebenfalls nicht
+angefasst: die turnusmäßige Prüfung der Roadmapzitate gegen master, nach ihrer
+eigenen Regel nicht fällig.
+
+**Als Nächstes zu formalisieren:
+`MeasureTheory.ProbabilityMeasure.separableSpace`** (`WeakConvergence`
+Meilenstein 3, erster Punkt des neuen Blocks). Es ruht auf nichts als
+`TopologicalSpace.exists_dense_seq` für `E`, der endlichen Konvexkombination von
+Diracmaßen und der Metrisierbarkeit, die Mathlib in
+`instMetrizableSpaceProbabilityMeasure` schon liefert — kein Prozess, keine
+Filtration, keine Uhr, kein Pfadraum, und aus der ganzen Roadmap keine
+Vorbedingung. Es ist jetzt dran, weil es die einzige heute gefundene Lücke ist,
+die **unterhalb** aller bisherigen Vorschläge liegt: `induction_on_mulSystem`,
+`IsSeparating` und der Produktpunkt reden über Funktionenklassen auf `E`,
+dieser Punkt über den Raum, in dem alle drei ihre Aussagen später machen. Und
+er ist die Vorbedingung, die der Konvergenzteil am dichtesten braucht — jedes
+Teilfolgenargument von `rem:EKrelcompact` und jedes „relativ kompakt" der vier
+Facts `fddconv`, `relcompact`, `relcompact2`, `prohorov` lebt in
+`ProbabilityMeasure`, und ohne Separabilität ist dort nicht einmal gesichert,
+dass Kompaktheit Folgenkompaktheit ist. Gegenüber den älteren Vorschlägen
+bleibt `Clock.interval_union` der erste der Task-23-Linie;
+`ProbabilityMeasure.separableSpace` tritt in der Konvergenzlinie **vor**
+`induction_on_mulSystem`, weil dieses über `ProbabilityMeasure` quantifiziert
+und jenes es konstruiert.
