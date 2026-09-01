@@ -72,6 +72,25 @@ Bibliographieeinträgen fällig wird, schreibe ihren Text als Vorschlag dorthin,
 statt das Manuskript zu ändern — diese Einordnung will der Nutzer sehen, bevor
 sie steht.
 
+**Zwischenstand 2026-09-02 (fünfzehnter Task-23-Lauf).** ~~Teil (a) ist
+erledigt~~: `Facts/SETINDEXED.md` beantwortet alle vier Fragen am Text
+(Herbin–Merzbach über ar5iv, Pedersen–Sato direkt am PDF) und enthält den
+Vorschlag für die Manuskriptbemerkung samt Bibliographie. Kernbefunde:
+Dualität/bivariate Darstellungen kommen dort **nicht** vor (Negativbefund,
+Frage 2); die Flow-Projektion ist der Zeitwechsel von `cor:atomless` und
+endet per Axiom vor den Atomen (Frage 3); Pedersen–Sato ist die
+\eqref{T0}+\eqref{T4}-nächste Theorie, mit Negativsätzen der Sorte
+`rem:chainonly` (Frage 4). Teil (b) ist begonnen: `Task23/summable_lp.py`
+misst auf fünf geschachtelten summierbaren Uhren (auch langsame Schwänze
+$\varepsilon_J\sim1/J$, $1/\log J$) den Kollaps
+$v_J\approx c\sqrt{M\varepsilon_J}$ mit je Uhr stabilem $c\le1.08$ — die für
+freie Systeme widerlegte Energieform kehrt auf echten Trunkierungen zurück;
+uniform über Uhren ist sie weiterhin falsch (geformter Zwei-Atom-Zeuge: 3,
+Präfix: $\sim k$). Offen für den nächsten Lauf: der Interferenztest
+(hierarchisch geschachtelte Motoren mit summierbaren $\lambda_i$) und die
+Stufenpaar-Rekursion; beides steht präzise in `Task23/PROTOKOLL.md`,
+fünfzehnter Lauf, „Was als Nächstes zu rechnen bzw. zu beweisen ist".
+
 ## Worum es geht
 
 Die 29 mit `\begin{fact}` ausgezeichneten Aussagen des Manuskripts sind seine

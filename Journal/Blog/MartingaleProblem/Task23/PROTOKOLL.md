@@ -2006,3 +2006,117 @@ Blocklisten disjunkt sind.
   endet. Wer den diskreten Fall fortsetzt, beginne bei den Schwanzrelationen
   über einem einzelnen Häufungspunkt zwischen zwei Blöcken, nicht bei einer
   feineren Induktion.
+
+## Die Summierbarkeit als tragende Struktur, 2026-09-02 (fünfzehnter Lauf): auf echten Trunkierungen kehrt das Energiegesetz zurück
+
+Teil (b) der Aufgabe vom 2026-09-01: die Frage der Läufe 11–13 neu stellen,
+über der Klasse der **summierbaren** Massen statt über beliebigen endlichen
+Massenvektoren mit freiem Slack. Neu ist `Task23/summable_lp.py`.
+
+### Die Neuformulierung (S)
+
+Eine Uhr hat $q(\T_{\le t})<\infty$; eine rein atomare Uhr auf einer Kette ist
+ein **fest gewähltes summierbares Profil**, und eine Trunkierung ist
+**geschachtelt** — Stufe $J{+}1$ fügt Atome hinzu, ändert keine Masse. Das
+Residuum der Stufe $J$ am Paar $(s,t)$ ist dann nicht frei, sondern
+
+$$R_J(s,t)=\sum_{a\text{ fehlt},\,a<s}m_a\,h(a,t)+\sum_{b\text{ fehlt},\,b<t}m_b\,h(b,s),
+\qquad |R_J(s,t)|\le B\,(\varepsilon(s)+\varepsilon(t)),$$
+
+mit $\varepsilon(g)$ = fehlende Masse unterhalb $g$ (monoton in $g$,
+$\varepsilon(\text{top})=\varepsilon_J\to0$). **Frage (S):** gilt $v_J\to0$
+für jede summierbare Uhr längs jeder Ausschöpfung? Das ist die
+Finite-Variation-Analogie des Lévy-Bildes: $\sum_{a_k\le t}m_k<\infty$ ist
+$\int(1\wedge|x|)\,\nu(\dif x)<\infty$, und Kompensation gibt es nicht.
+
+Der Parameter, den die Summierbarkeit **nicht** kontrolliert, ist die
+Schwanzgeschwindigkeit: $m_{(k)}\sim1/(k\log^2k)$ gibt
+$\varepsilon_n\sim1/\log n$, und die profilfreie lineare Schranke
+$v\le(n+\tfrac12)\eta$ des zwölften Laufs wird nutzlos. Getestet wurden
+deshalb geschachtelte dyadische Uhren mit Levelgesamtmassen $c_j$ geometrisch
+(Kontrolle), $1/j^2$ ($\varepsilon_J\sim1/J$) und $1/(j\log^2 j)$
+($\varepsilon_J\sim1/\log J$), jeweils flach und mit Positionsfaktor $x^4$
+(der realisierbare Rest des Verstärkungsmotors). Konservativ zugunsten des
+Gegenspielers: $\varepsilon$ am Schnitt zählt die ganze Lücke, der
+analytische Schwanz jenseits Level 20 wird jedem Gitterpunkt zugeschlagen.
+
+### Die Messung: $v_J\approx c\cdot\sqrt{M\,\varepsilon_J}$, mit stabilem $c$
+
+| Uhr | $v_6$ | $v_J/\sqrt{M\varepsilon_J}$ über $J=2..6$ |
+|---|---|---|
+| geometrisch flach | $0.106$ | $1.00,\,0.91,\,0.92,\,0.88,\,0.86$ |
+| $1/j^2$ flach | $0.431$ | $0.98,\,0.91,\,0.89,\,0.89,\,0.90$ |
+| $1/j^2\cdot x^4$ | $0.262$ | $0.61,\,0.54,\,0.54,\,0.55,\,0.55$ |
+| $1/(j\log^2j)$ flach | $1.197$ | $1.08,\,1.02,\,1.00,\,0.99,\,0.98$ |
+| $1/(j\log^2j)\cdot x^4$ | $0.859$ | $0.77,\,0.71,\,0.70,\,0.71,\,0.71$ |
+
+$v_J$ fällt auf **allen** fünf Uhren monoton, auch auf den langsamen
+Schwänzen — dort langsam, wie $\varepsilon_J$ selbst es diktiert —, und
+$v_J/\sqrt{M\varepsilon_J}$ ist je Uhr über die Stufen hinweg nahezu
+konstant. Die Energieform $v^2\lesssim BM\varepsilon$, die der dreizehnte
+Lauf für frei-relaxierte Systeme in jeder Konstante widerlegt hat, kehrt auf
+echten Trunkierungen als empirisches Gesetz zurück, mit $c^2\le1.17$ auf
+allem Getesteten. Kontrolle: $\varepsilon\equiv0$ gibt $v=0$.
+
+### Aber: keine uniforme Konstante über die Uhren
+
+Die geformten Fassungen der Zeugen des dreizehnten Laufs bleiben Zeugen
+gegen jede **uhrenfreie** Konstante. Wolke der Masse $\delta$ strikt unter
+dem leichten Atom (also $\varepsilon(g)=\delta$ für alle $g$ über der
+Wolke): der Zwei-Atom-Zeuge gibt $v^2/(M\varepsilon)\to3$
+($\mu=10^{-3}$: $2.995$), das leichte Präfix $[\mu]^k+[1]$ gibt
+$v\approx k\mu B$ und $v^2/(M\varepsilon)\approx0.77k$ (gemessen $1.98$,
+$3.82$, $7.09$, $12.36$ für $k=2,4,8,16$; `summable_lp.py`-Nachlauf).
+Jeder dieser Zeugen ist aber eine **einzelne Stufe**, keine Ausschöpfung:
+sein Budget $\delta\approx k\mu^2$ ist an die festen Präfixmassen gebunden,
+und sobald $\varepsilon_J<k\mu^2$, stirbt der Motor.
+
+### Die Massenbilanz, heuristisch
+
+Warum die Summierbarkeit anhaltenden Gewinn ausschließen sollte, in einer
+Rechnung: der einzige gemessene Mechanismus trägt Gewinn
+$v\approx\lambda B$ mit $\lambda$ = Masse eines leichten Präfixes unter
+einem schweren Atom. Soll $\liminf_Jv_J\ge c>0$ längs einer Ausschöpfung
+gelten, braucht es zu unendlich vielen Stufen frische Motoren auf feineren
+Skalen, deren Präfixmassen $\lambda_i\ge c/B$ erfüllen — die Gesamtmasse
+wäre unendlich. Das ist Punkt 3 des dreizehnten Laufs, jetzt quantitativ:
+die Instanzen, auf denen die Relaxation unbeschränkt verstärkt, sind genau
+die, die keine Uhr sind. **Lücke der Heuristik:** dass Motoren
+verschiedener Skalen keine Präfixmasse teilen können (Interferenz), ist
+unbewiesen; und ob es andere Mechanismen als den Präfixmotor gibt, weiß nur
+das LP.
+
+### Was (S) geben würde, und was nicht
+
+Bewiesen würde: für jede rein atomare Uhr auf einer Kette — Summierbarkeit
+ist bei einer Uhr keine Zusatzannahme — mit $|\kappa|\le B$ verschwindet der
+Dualitätsdefekt, denn $|\Delta|\le v_J+\text{Schwanzsummen}\to0$ (die
+Schwanzsummen wie im vierzehnten Lauf aus der absoluten Existenz der
+Integrale). **Nicht** enthalten ist die $B$-Freiheit: die Reduktion braucht
+$|h|\le B$ a priori, und die Frage des zwölften Laufs, ob die
+$B$-Hypothese für die in sich dichte Atommenge fällt wie im
+intervallendlichen Fall, bleibt offen und wird von (S) nicht berührt.
+
+### Was als Nächstes zu rechnen bzw. zu beweisen ist
+
+1. **Interferenztest:** eine Uhr mit hierarchisch geschachtelten Motoren
+   ($\lambda_i$ summierbar, Wolke von Skala $i$ = Präfix von Skala $i{+}1$),
+   gemessen längs der natürlichen Ausschöpfung — teilen sich Skalen die
+   Masse, oder gilt $v_{J_i}\approx\lambda_iB$? Das ist der adversariale
+   Rest der Massenbilanz-Heuristik.
+2. **Beweisziel, benannt:** $v_J\le B\,\varepsilon_{J'}+\text{(Beitrag der
+   zwischen $J'$ und $J$ eingetretenen Atome)}$ — eine Rekursion über
+   Stufenpaare statt einer Schranke je Stufe; die Stabilität von $c$ über
+   $J$ in allen fünf Messreihen sagt, dass die Stufen sich wie eine
+   Kontraktion verhalten, nicht wie eine Kaskade.
+
+### Teil (a) derselben Aufgabe
+
+Die Einordnung der mengen-indizierten Lévy-Literatur steht in
+`Facts/SETINDEXED.md` (Herbin–Merzbach am ar5iv-Text, Pedersen–Sato direkt
+am PDF): Dualität, bivariate Zuwachsdarstellungen und Martingalprobleme
+kommen dort **nicht** vor — Negativbefund —, die Flow-Projektion ist genau
+der Zeitwechsel von `cor:atomless` und endet per Axiom (stochastische
+Stetigkeit) vor den Atomen; für Task 23 gibt sie nichts her, was
+`cor:atomless` nicht schon ist. Der Bedarf an *simple* statt *elementary*
+flows ist wörtlich die Geometrie von `rem:fddnochain`, jetzt am Text belegt.

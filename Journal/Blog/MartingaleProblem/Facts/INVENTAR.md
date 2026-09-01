@@ -3144,3 +3144,73 @@ der Induktion bringt und den offenen Kern von Task 23 auf zwei benannte
 Restfälle verengt. Der Lauf, der sie einträgt, passt auch
 `rem:atomicdual` („What is not covered") und die Statustabelle von
 `rem:atomsnotchange` an und lässt `check.py` laufen.
+
+### 2026-09-02, erster Lauf — vorrangige Aufgabe: Teil (a) erledigt, Teil (b) begonnen
+
+Der Lauf ging ganz an die am 2026-09-01 gestellte vorrangige Aufgabe
+(mengen-indizierte Lévy-Literatur, Summierbarkeit); die Tabelle hat kein `?`
+und blieb unberührt.
+
+**Teil (a) ist erledigt: `Facts/SETINDEXED.md`.** Alle vier Fragen sind am
+Text beantwortet — Herbin–Merzbach (SPA **123** (2013), arXiv:1108.0873) über
+die ar5iv-Fassung in fünf gezielten Auszügen, Pedersen–Sato (J. Math. Soc.
+Japan **56** (2004)) direkt am PDF; Bass–Pyke und Adler–Feigin nur
+bibliographisch. Die Kurzfassung: (1) ihre fünf Axiome an $\mathcal A$
+verteilen sich auf \eqref{T1} ($\cap$-Abschluss), \eqref{T2b}/\eqref{T1p}
+(separability from above — die auffälligste Entsprechung, gemeinsamer Vorfahr
+\EK{} §2.8) und drei rein topologische ohne Gegenstück; unsere
+Voraussetzungsfläche ist echt kleiner, wofür wir ihre Existenz-, Markov- und
+Pfadtheorie nicht bekommen. Ihre $m$-Stationarität braucht keinerlei Algebra
+auf dem Index (Gleichheit von $m$-Massen statt Verschiebung) — unsere
+Verschiebungsinvarianz braucht \eqref{T4}; dafür trägt unsere Uhr auch
+nicht-stationäre Kompensatoren. (2) **Negativbefund, und das ist die
+Hauptantwort:** Dualität, bivariate Zuwachsdarstellungen mit gemeinsamer
+Dichte, Martingalprobleme, Generatoren — nichts davon kommt vor; das
+nächstliegende Objekt ist das Übergangssystem $Q_{U,V}$ mit
+$m$-Homogenität über $m(V\setminus U)$, ein Kern, keine Darstellung.
+\eqref{eq:incrementrep} und §\ref{ssec:antidiag} haben dort kein Vorbild.
+(3) Die Flow-Projektion ist der Zeitwechsel von `cor:atomless`
+($\theta(t)=m[f(t)]$ ist $Q$), setzt Invertierbarkeit von $\theta$ voraus und
+ihre Prozessklasse schließt Atome von $m$ über die stochastische Stetigkeit
+aus (unsere Folgerung, als solche markiert) — für den ordnungsdichten Fall
+von Task 23 gibt sie nichts her, was `cor:atomless` nicht ist. Der Bedarf an
+*simple* statt *elementary* flows — ihr eigener Kommentar: „the embedding in
+$\mathcal A(u)$ is the key point" — ist wörtlich `rem:fddnochain`. (4) Am
+nächsten an einer Präordnung: Pedersen–Sato, Kegelordnung
+$s\le_Kt\iff t-s\in K$ — exakt \eqref{T0}+\eqref{T4} —, mit Negativsätzen
+der Sorte `rem:chainonly` (keine $S_d^+$-Brownsche Bewegung, Eindeutigkeit
+fällt); daneben Rajput–Rosiński (δ-Ring, keine Ordnung) als Anschlusspunkt
+für eine etwaige Existenztheorie. Der **Vorschlag für die
+Manuskriptbemerkung** samt fünf Bibliographieeinträgen steht am Ende von
+`SETINDEXED.md`; das Manuskript ist nicht angefasst.
+
+**Teil (b) ist begonnen: `Task23/summable_lp.py`, Protokollabschnitt
+fünfzehnter Lauf.** Die Frage der Läufe 11–13 ist neu gestellt als Frage (S)
+über geschachtelten Trunkierungen einer festen summierbaren Uhr, mit dem
+echten Residuum $|R_J(s,t)|\le B(\varepsilon(s)+\varepsilon(t))$ aus der
+fehlenden Masse unterhalb jedes Gitterpunkts. Gemessen auf fünf Uhren,
+darunter erstmals **langsame Schwänze** ($\varepsilon_J\sim1/J$ und
+$\sim1/\log J$, wo die profilfreie lineare Schranke des zwölften Laufs
+nutzlos ist): $v_J$ kollabiert überall, empirisch als
+$v_J\approx c\sqrt{M\varepsilon_J}$ mit je Uhr stabilem $c\le1.08$ — die für
+freie Systeme in jeder Konstante widerlegte Energieform kehrt auf echten
+Trunkierungen als Gesetz zurück. Uniform über Uhren bleibt sie falsch
+(geformter Zwei-Atom-Zeuge: $\to3$; leichtes Präfix: $\sim0.77k$), aber
+jeder Zeuge ist eine einzelne Stufe, und die Massenbilanz sagt, warum
+anhaltender Gewinn Summierbarkeit widerspricht (Lücke: Interferenz der
+Skalen, benannt). Offen und im Protokoll präzisiert: der Interferenztest und
+die Stufenpaar-Rekursion; die $B$-Hypothese für die dichte Menge bleibt
+unberührt. Die Aufgabe steht mit Zwischenstand in `scripts/facts_prompt.md`.
+
+**Was als Nächstes formalisiert werden soll: `atomGrid_symm`, in Lean.** Die
+Aussage steht wörtlich in `MartingaleProblems` Meilenstein 8: endliches
+Gitter, Massen $m_i\ne0$, Kreuzrelation \eqref{eq:atomgrid}, Konklusion
+$\Phi(i,j)=\Phi(j,i)$. Sie ruht auf nichts als Induktion über zwei Diagonalen
+(`lem:atomgrid`, Beweis vollständig im Manuskript) und ist jetzt dran, weil
+seit dem vierzehnten Lauf die gesamte atomare Dualitätsschicht — 
+`duality_of_atomic`, `duality_of_atomic_intervalFinite`, über
+`atomGrid_symm_int` — auf ihr steht: sie ist der erste Lean-taugliche
+Baustein von Task 23, hat keinerlei Maßtheorie im Beweis und macht die
+$\mathbb Z$-Fassung zu einer Übertragung statt einer Neuentwicklung. Daneben
+bleibt der Manuskriptvorschlag des Vortagslaufs (Hebung von
+`prop:atomicdual` auf intervallendlich) stehen und wartet auf den Nutzer.
