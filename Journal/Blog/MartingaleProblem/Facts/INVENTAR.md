@@ -2261,3 +2261,108 @@ Lebesgue-Differentiation, `IsSeparating` braucht die `ext_of_…`-Sätze,
 `induction_on_mulSystem` braucht `induction_on_inter`. `atomGrid_symm` braucht
 nichts. Reihenfolge, wenn beide anstehen: `atomGrid_symm` zuerst, denn es ist
 das kleinere und schließt einen ganzen Zweig von Meilenstein 8 ab.
+
+### 2026-09-01, dritter Lauf — Rückstau 1: die Ausschöpfung der ordnungsdichten Atommenge ist quantifiziert
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging an
+den ersten Punkt des Rückstaus und dort an das, was von Task 23 allein übrig ist:
+die **ordnungsdichte Atommenge**. Der Rückstau nannte dafür einen Anfang — ob es
+eine Ausschöpfung durch endliche Teilmengen gibt, längs deren der Defekt stetig
+ist. Der Lauf hat diese Frage nicht mit ja oder nein beantwortet, sondern sie
+rechenbar gemacht und die Rechnung ausgeführt. Neu ist `Task23/dense.py`;
+geändert sind `Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses Inventar.
+**Bewiesen ist nichts, und der Punkt bleibt offen.** Am Manuskript ist nichts
+geändert, an den Roadmaps auch nicht — die vier Matrizenlemmata des sechsten
+Laufs stehen bereits in `MartingaleProblems` M8, und die Schlusszeile von
+`duality_of_atomic` nennt die ordnungsdichte Menge schon als den Fall, den keiner
+der drei Sätze erreicht. Beides ist nachgesehen und bleibt richtig.
+
+**Der Hebel: der Beweis des sechsten Laufs, störungsweise gelesen.** Er brauchte
+keine neue Idee, nur eine Buchführung über den Fehler. Gilt (S) nur bis auf einen
+symmetrischen Rest $E$, so bleibt die zweite Hälfte der Paarung unberührt und die
+erste bekommt einen Zusatzterm:
+$\langle\delta,T\mathbb 1\rangle=-\frac12\operatorname{tr}(TE)$. Das ist eine
+**Identität**, keine Abschätzung, und `dense.py check` bestätigt sie an
+zufälligen $K$ mit künstlich gestörtem (S) in allen Fällen exakt. Damit hängt die
+ganze Ausschöpfung an einer einzigen berechenbaren Zahl,
+
+$$C(V,t)=\|T\|_F,\qquad T=T^{\mathsf T},\ TV=V^{\mathsf T}T,\ T\mathbb 1=e_t:$$
+
+schneidet man das volle System auf ein endliches $F$ zurück, so ist
+$|\delta(t)|\le\|\kappa\|_\infty\varepsilon_F(1+2|F|C_F)$ mit
+$\varepsilon_F=q(A\setminus F)$, und der Defekt verschwindet, sobald
+$|F|C_F\varepsilon_F\to0$ für **irgendeine** Folge endlicher $F$ gilt. Das
+Gleichungssystem für $T$ ist quadratisch, sein Kern durchweg eindimensional, die
+Minimalnorm-Lösung also die richtige Messgröße.
+
+**Gerechnet wird exakt, und das war nötig.** Die Gleitkommarechnung bricht
+zusammen, sobald $C$ groß wird: für $n=8$, $\rho=4$ meldet `lstsq` Kerndimension
+2 und ein *kleineres* $C$ als für $\rho=3$ — die `rcond`-Abschneidung, kein
+Messwert. Alle berichteten Zahlen stammen deshalb aus `defect_bound_exact`, Gauß
+über $\mathbb Q$ mit Minimierung der Frobeniusnorm über den Kern in der richtigen,
+außerdiagonal doppelt zählenden Form.
+
+**Der Befund, und er ist schärfer als erhofft.** $C$ ist skaleninvariant — mit
+$V$ löst auch $cV$ die Bedingung $TV=V^{\mathsf T}T$ —, hängt also nur an der
+*Gestalt* des Massenvektors, nicht an der Gesamtmasse. Und dann:
+
+* gleiche Massen: $C=\sqrt{2n-1}$, geprüft bis $n=40$;
+* geometrisch **fallende** Massen: $C\approx1.6$, gleichmäßig beschränkt in $n$
+  und $\rho$;
+* geometrisch **steigende** Massen: $C\sim\rho^{n^2/2}$, also überexponentiell —
+  bei gleicher Länge und gleichem Massenverhältnis zehn Größenordnungen mehr als
+  im fallenden Fall.
+
+Das erklärende Gesetz: eine einzige kleine Masse $\varepsilon$ an der Stelle $k$
+einer Kette aus $n$ Atomen kostet $C\sim\varepsilon^{-\max(n-2k,0)}$. Der
+Exponent ist **exakt** $\max(n-2k,0)$, abgelesen über zwei Dekaden und bestätigt
+für $n=4,6,8,10$ an jeder Stelle $k$ — vierzig Werte, keine Abweichung. Kleine
+Massen in der oberen Hälfte der Kette sind gratis, kleine Massen in der unteren
+ruinieren die Schranke. Nicht die Größe des Massenverhältnisses entscheidet,
+sondern seine **Richtung**.
+
+**Was daraus folgt.** Die Ausschöpfung scheitert, aber an einer anderen Stelle als
+der Rückstau vermutete: nicht an der fehlenden Aufzählung $a_1<a_2<\dots$ und
+nicht an der Endlichkeit einer Induktion, sondern an der Richtung des
+Massenprofils — und quantitativ. Eine ordnungsdichte Menge erzwingt das teure
+Profil, weil unter jedem Punkt unendlich viele Atome liegen. **Was der Befund
+nicht sagt:** $C$ misst die beste Konstante *dieser Beweisgestalt*, nicht die
+Wahrheit der Aussage. In $|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ steckt eine
+Cauchy--Schwarz-Ungleichung, die die Struktur von $E$ als Schwanzbeitrag
+wegwirft. Widerlegt ist die grobe Ausschöpfung, nicht die Dualität für
+ordnungsdichte Atommengen; ein Gegenbeispiel ist nicht gesucht und nicht
+gefunden. Drei Wege stehen jetzt als Sackgassen im PROTOKOLL (zehnter Nachtrag):
+die exakte Einschränkung auf endliches $F$, das Zusammenfassen der Massen zu
+Blöcken, und die Hoffnung auf ein Wachstum von $C$ in $|F|$ allein.
+
+**Offen geblieben.** Die ordnungsdichte Atommenge selbst, jetzt mit einer
+benannten nächsten Frage statt einer Richtung: ob die Cauchy--Schwarz-Ungleichung
+durch eine Paarung ersetzt werden kann, die $E$ als Schwanzbeitrag benutzt. Von
+Rückstau 2 unverändert die Roadmaps `SkorokhodSpace` und `KolmogorovExtension`
+und die Zitate in den Meilensteinen aller vier; dieser Lauf hat daran nicht
+gearbeitet, weil Rückstau 1 die Zeit gebraucht hat. Nicht geschehen und mit
+Absicht: kein Lean übersetzt (der Worktree hat kein `.lake`), und `cor:atomless`
+ist weiterhin nicht verschärft — die Auffälligkeit vom 2026-09-01 steht
+unverändert oben und gehört dem Nutzer. `check.py` ist nicht gelaufen, weil am
+Manuskript nichts geändert wurde.
+
+**Als Nächstes zu formalisieren: `atomGrid_symm`** (`MartingaleProblems`
+Meilenstein 8), unverändert gegenüber dem Vorschlag des letzten Laufs und aus
+demselben Grund — es ruht auf nichts, `ℕ` als einziger Index, Körperarithmetik
+als einziges Werkzeug, und es trägt seit dem zehnten Lauf zwei Sätze statt einem.
+Dieser Lauf hat daran nichts geändert und nichts gefunden, was die Reihenfolge
+umwirft.
+
+Der heutige Befund benennt aber den **zweiten**: `Matrix.exists_isSymm_mulVec_one_eq_single`
+(ebenfalls M8, dort schon eingetragen) — aus `V ^ r = 0` und
+`V ^ (r-1) *ᵥ 1 ≠ 0` die explizite Konstruktion von `T` mit `T.IsSymm`,
+`T * V = Vᵀ * T` und `T *ᵥ 1 = Pi.single t 1`. Es ist jetzt reif, weil es heute
+vom Beweisschritt zum **Messgerät** geworden ist: $C(V,t)$ ist per definitionem
+die Norm des von ihm gelieferten $T$, und jede weitere Aussage über den offenen
+Fall — auch eine feinere Paarung — wird an diesem Objekt formuliert. Es ist
+zugleich das einzige der vier Matrizenlemmata aus M8, das kein Zweizeiler ist;
+die drei übrigen (`trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`,
+`trace_mul_eq_dotProduct_diag_of_isSymm`, `mulVec_one_eq_zero_iff_of_nonneg`)
+fallen danach als Beiwerk. Reihenfolge, wenn beide anstehen: `atomGrid_symm`
+zuerst, denn es ist das kleinere und schließt einen Zweig ab; dann die
+Konstruktion von `T`, die den Zweig für den offenen Fall öffnet.

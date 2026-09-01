@@ -1366,3 +1366,158 @@ das ist der Grund, ihn nicht als Beleg fuer die Notwendigkeit von (D) zu lesen.
   laesst sich nicht stoeren, ohne das gegebene $\Phi$ mitzustoeren. Ein
   Kompaktheitsargument muesste ueber Paare $(\Phi,\gamma)$ laufen und braeuchte
   eine Schranke, die niemand hat. Der Fall ist algebraisch, nicht analytisch.
+
+## Die ordnungsdichte Atommenge, 2026-09-01 (elfter Lauf): die Ausschöpfung ist quantifiziert, und sie scheitert an der Richtung des Massenprofils
+
+Der Rückstau nannte für diesen Punkt einen Anfang: „ob eine ordnungsdichte
+Atommenge mit lokal endlicher Gesamtmasse eine Ausschöpfung durch endliche
+Teilmengen zulässt, längs deren der Defekt stetig ist". Der Lauf hat diese Frage
+nicht mit ja oder nein beantwortet, sondern sie **rechenbar gemacht** und die
+Rechnung ausgeführt. Das Ergebnis ist eine scharfe Bedingung, unter der die
+Ausschöpfung trägt, und ein exakter Grund, warum sie im allgemeinen nicht trägt.
+Neu ist `dense.py`; bewiesen ist nichts, und der Punkt bleibt offen.
+
+### Der Beweis des sechsten Laufs, störungsweise gelesen
+
+Es braucht keine neue Idee, nur eine Buchführung über den Fehler. Die
+Paarungsidentität lautete: für $T$ symmetrisch mit $TV$ symmetrisch ist
+$\langle\delta,T\mathbb 1\rangle=0$, weil $\operatorname{tr}(TVK)$ einerseits
+gegen den symmetrischen Anteil von $VK$ paart, andererseits als Spur eines
+Produkts aus Symmetrischem und Antisymmetrischem verschwindet. Hält (S) nur bis
+auf einen symmetrischen Rest $E$, also
+
+$$\operatorname{sym}(VK)=\tfrac12(\delta\mathbb 1^{\mathsf T}
+  +\mathbb 1\delta^{\mathsf T})+\tfrac12E,$$
+
+so bleibt die zweite Hälfte unberührt und die erste bekommt einen Zusatzterm:
+
+$$\langle\delta,T\mathbb 1\rangle=-\tfrac12\operatorname{tr}(TE),
+  \qquad\text{also}\qquad
+  |\delta(t)|\le\tfrac12\|T\|_F\|E\|_F \tag{P}$$
+
+für $T\mathbb 1=e_t$. Das ist eine **Identität**, keine Abschätzung; `dense.py
+check` prüft sie an zufälligen $K$ und gestörtem (S) und findet sie in allen
+Fällen exakt erfüllt.
+
+### Was (P) für eine Ausschöpfung leistet
+
+Sei $A$ die Atommenge, $q(A)=M<\infty$, $F\subseteq A$ endlich,
+$\varepsilon_F:=q(A\setminus F)$. Schneidet man das volle System auf $F$ zurück,
+so ist der Fehler in (S) genau der Beitrag der weggelassenen Atome, eintragsweise
+höchstens $4\|\kappa\|_\infty\varepsilon_F$, und ebenso
+$|\delta(t)-\delta_F(t)|\le\|\kappa\|_\infty\varepsilon_F$. Mit (P):
+
+$$|\delta(t)|\le\|\kappa\|_\infty\varepsilon_F
+  \bigl(1+2|F|\|T_F\|_F\bigr).$$
+
+Der Defekt des vollen Systems verschwindet also, sobald **irgendeine** Folge
+endlicher $F$ mit $|F|\|T_F\|_F\varepsilon_F\to0$ existiert. Damit hängt
+alles an einer einzigen Zahl,
+
+$$C(V,t):=\|T\|_F,\qquad T=T^{\mathsf T},\ TV=V^{\mathsf T}T,\ T\mathbb 1=e_t,$$
+
+und die ist berechenbar: das System ist quadratisch — $N(N{+}1)/2$ Unbekannte
+gegen $N(N{-}1)/2+N$ Gleichungen —, sein Kern ist durchweg eindimensional, und
+die Minimalnorm-Lösung ist die richtige Messgröße, weil jede Lösung eine
+Schranke liefert und die kleinste die beste.
+
+Zwei Voraussetzungen sind dabei offen angemeldet und nicht unter den Tisch
+gefallen: $\kappa$ muss **beschränkt** sein, was das Manuskript nirgends
+hergibt, und $\varepsilon_F$ fällt nur so schnell, wie die Massen von $A$
+summierbar sind. Beides ist beim Zurückschneiden zu bezahlen.
+
+### $C$ ist skaleninvariant, hängt also nur an der Gestalt des Massenprofils
+
+Mit $V$ löst auch $cV$ die Bedingung $TV=V^{\mathsf T}T$, und $T\mathbb 1=e_t$
+kennt $V$ nicht. $C$ hängt deshalb **nicht** von der Gesamtmasse ab, sondern nur
+von den Verhältnissen der Massen zueinander. Das ist der Grund, warum die
+Messung überhaupt etwas über eine unendliche Atommenge sagen kann.
+
+### Gemessen, exakt in Brüchen
+
+Die Gleitkommarechnung bricht zusammen, sobald $C$ groß wird — für $n=8$,
+$\rho=4$ meldet `lstsq` Kerndimension 2 und ein *kleineres* $C$ als für
+$\rho=3$, was die `rcond`-Abschneidung ist und kein Messwert. Alles Folgende ist
+deshalb in exakter Bruchrechnung gerechnet (`defect_bound_exact`), mit
+Minimierung der Frobeniusnorm über den Kern in der richtigen, außerdiagonal
+doppelt zählenden Form.
+
+* **Gleiche Massen.** $C=\sqrt{2n-1}$ für eine Kette aus $n$ Atomen, auf allen
+  geprüften Längen bis $n=40$. Wurzelwachstum, also für jede Ausschöpfung
+  bezahlbar.
+* **Geometrisch steigende Massen $m_k=\rho^k$.** $C$ wächst **überexponentiell**:
+  für $\rho=2$ ist $C\approx 15.6;\ 126;\ 2028;\ 6.5\cdot10^4$ bei
+  $n=4,5,6,7$, die Quotienten also $8,16,32$ — das heißt $C\sim\rho^{n^2/2}$.
+  Zum Vergleich beträgt das bloße Massenverhältnis nur $\rho^{n-1}$; $C$ ist
+  also weit mehr als die Kondition des Massenvektors.
+* **Geometrisch fallende Massen $m_k=\rho^{-k}$.** $C\approx 1.55$ bis $1.63$,
+  **gleichmäßig beschränkt** in $n$ und in $\rho$ (geprüft $n=4,6,8$,
+  $\rho=2,3$). Dasselbe Massenverhältnis, dieselbe Länge — und der Unterschied
+  zum steigenden Fall beträgt zehn Größenordnungen.
+* **Die dyadische ordnungsdichte Menge.** Atome $k/2^j$ mit Masse $4^{-j}$,
+  ausgeschöpft nach Level: $C$ vervierfacht sich je Level, also $C\sim|F|^2$,
+  während $\varepsilon_n=2^{-n-1}$ nur halbiert. Das Produkt
+  $|F|C\varepsilon$ divergiert wie $4^n$.
+
+### Das Gesetz, das alles erklärt
+
+Eine einzige kleine Masse $\varepsilon$ an der Stelle $k$ einer Kette aus $n$
+Atomen (alle übrigen Massen $1$, $t$ die Spitze) kostet
+
+$$C\sim\varepsilon^{-(n-2k)}\quad\text{für }2k<n,
+  \qquad C=O(1)\quad\text{für }2k\ge n.$$
+
+Der Exponent ist exakt $\max(n-2k,0)$, abgelesen über zwei Dekaden und bestätigt
+für $n=4,6,8,10$ an **jeder** Stelle $k$ — vierzig Werte, keine Abweichung.
+
+Das ist der schärfste Satz des Laufs, und er ist unerwartet: kleine Massen in der
+**oberen Hälfte** der Kette sind gratis, kleine Massen in der unteren ruinieren
+die Schranke, und zwar umso mehr, je weiter unten sie sitzen. Nicht die Größe
+des Massenverhältnisses entscheidet, sondern seine **Richtung**. Damit erklären
+sich beide geometrischen Fälle und der dyadische in einem: steigende Massen
+heißen kleine Massen unten.
+
+### Was das für den offenen Punkt heißt
+
+Die Ausschöpfung ist damit kein blinder Weg mehr, sondern einer mit einer
+benannten Bedingung. Sie trägt, sobald sich die Atome so ausschöpfen lassen, dass
+in jedem $F$ die kleinen Massen oben liegen — dann ist $C$ beschränkt und
+$|F|\varepsilon_F\to0$ genügt. Sie trägt **nicht** für eine beliebige
+ordnungsdichte Menge, denn dort ist die Lage der Massen gegeben und nicht
+wählbar: liegt ein großes Atom hoch und liegen beliebig kleine Atome darunter —
+und das erzwingt die Ordnungsdichte, sobald unterhalb eines Punktes unendlich
+viele Atome liegen —, so ist die teure Konfiguration unvermeidlich.
+
+Damit ist der Grund, an dem die Ausschöpfung scheitert, ein **anderer** als der,
+den der Rückstau vermutete. Er liegt nicht an der fehlenden Aufzählung
+$a_1<a_2<\dots$ und nicht an der Endlichkeit einer Induktion, sondern an der
+Richtung des Massenprofils, und er ist quantitativ: $\varepsilon^{-(n-2k)}$.
+
+**Was der Befund nicht sagt, und das ist wichtig.** $C$ misst die beste Konstante
+*dieser Beweisgestalt*, nicht die Wahrheit der Aussage. In
+$|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ steckt eine Cauchy--Schwarz-Ungleichung,
+die die Struktur von $E$ wegwirft: $E$ ist nicht beliebig, sondern der
+Schwanzbeitrag der weggelassenen Atome. Eine feinere Paarung — $E$ gegen $T$ in
+der richtigen Gewichtung statt in der Frobeniusnorm — ist durch nichts
+ausgeschlossen. Widerlegt ist die **grobe** Ausschöpfung, nicht die Dualität für
+ordnungsdichte Atommengen; ein Gegenbeispiel ist nicht gefunden und wurde nicht
+gesucht.
+
+### Sackgassen, zehnter Nachtrag
+
+* **Das volle System auf eine endliche Teilmenge $F$ der Atome einschränken und
+  den endlichen Satz anwenden.** Geht nicht exakt, und der Grund ist eine Zeile:
+  die Relation $\Phi(s',t)-\Phi(s,t)=\sum_{a\in[s,s')}m_a\gamma(a,t)$ summiert
+  über **alle** Atome der Lücke, nicht über die von $F$. Das eingeschränkte
+  System erfüllt (S) also nur bis auf den Schwanz, und mehr als (P) ist daraus
+  nicht zu holen.
+* **Die Massen zu Blöcken zusammenfassen (Lumping).** Über eine Lücke ist der
+  Zuwachs $M_j\bar\gamma_j(t)$ mit einem gewichteten Mittel $\bar\gamma_j$ —
+  aber in der zweiten Koordinate steht $\gamma(s,r)$ mit demselben $\gamma$, und
+  ein Mittel in der ersten Koordinate ist keines in der zweiten. Das gelumpte
+  System schließt nicht; es ist kein System der gesuchten Gestalt.
+* **Auf ein Wachstum von $C$ in $|F|$ allein hoffen.** $C$ ist keine Funktion der
+  Länge. Bei gleichen Massen $\sqrt{2n-1}$, bei steigenden $\rho^{n^2/2}$, bei
+  fallenden beschränkt — dieselbe Länge, drei Regime. Wer nur gleiche Massen
+  prüft, sieht das gutartigste und schließt falsch; das ist derselbe Fehler wie
+  der symmetrische Kanarienvogel des neunten Laufs ($c=[1,1]$ sieht zu wenig).

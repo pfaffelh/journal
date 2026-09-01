@@ -31,10 +31,32 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    induziert werden könnte, und unter einem Punkt liegen dann unendlich viele
    Atome. Beide bisherigen Wege — die Induktion über $d=i-j$ und die
    Nilpotenz der Matrix $V$ in `prop:atomicposet` — brauchen Endlichkeit an
-   einer benannten Stelle, und keine Abschwächung davon ist bisher versucht
-   worden. Wer den Punkt aufnimmt, fängt bei der Frage an, ob eine
-   ordnungsdichte Atommenge mit lokal endlicher Gesamtmasse eine Ausschöpfung
-   durch endliche Teilmengen zulässt, längs deren der Defekt stetig ist.
+   einer benannten Stelle.
+
+   *Zwischenstand 2026-09-01, elfter Lauf: die Ausschöpfung ist durchgerechnet
+   und scheitert, aber an einer anderen Stelle als vermutet.* Der Beweis des
+   sechsten Laufs ist störungsweise gelesen worden und liefert die **Identität**
+   $\langle\delta,T\mathbb 1\rangle=-\frac12\operatorname{tr}(TE)$, wenn (S) nur
+   bis auf einen Rest $E$ gilt. Damit hängt die ganze Ausschöpfung an einer
+   berechenbaren Zahl, $C(V,t)=\|T\|_F$ für $T=T^{\mathsf T}$,
+   $TV=V^{\mathsf T}T$, $T\mathbb 1=e_t$: der Defekt verschwindet, sobald
+   $|F|C_F\varepsilon_F\to0$ für eine Folge endlicher $F$ gilt. `Task23/dense.py`
+   misst $C$ exakt in Brüchen. Befund, und er ist scharf: $C$ ist
+   skaleninvariant, hängt also nur an der *Gestalt* des Massenvektors, und eine
+   kleine Masse $\varepsilon$ an Stelle $k$ einer Kette aus $n$ Atomen kostet
+   $C\sim\varepsilon^{-\max(n-2k,0)}$ — geprüft für $n=4,6,8,10$ an jeder
+   Stelle, ohne Abweichung. Kleine Massen **oben** sind gratis, kleine Massen
+   **unten** ruinieren die Schranke. Fallende Massenprofile geben $C\approx1.6$
+   gleichmäßig, steigende $C\sim\rho^{n^2/2}$. Eine ordnungsdichte Menge erzwingt
+   das teure Profil, weil unter jedem Punkt unendlich viele Atome liegen.
+   Wer den Punkt aufnimmt, fängt deshalb **nicht** mehr bei der Ausschöpfung an,
+   sondern bei der Frage, ob die Cauchy--Schwarz-Ungleichung in
+   $|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ durch eine Paarung ersetzt werden
+   kann, die die Struktur von $E$ als Schwanzbeitrag benutzt statt sie
+   wegzuwerfen. Widerlegt ist die grobe Ausschöpfung, nicht die Aussage; ein
+   Gegenbeispiel ist nicht gesucht und nicht gefunden. Einzelheiten im
+   `Task23/PROTOKOLL.md`, Abschnitt „Die ordnungsdichte Atommenge, 2026-09-01
+   (elfter Lauf)", Sackgassen im zehnten Nachtrag.
 
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
