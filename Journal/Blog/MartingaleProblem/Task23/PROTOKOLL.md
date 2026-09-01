@@ -855,3 +855,669 @@ verschwinden, und $D$ und $N$ kommutieren im Allgemeinen nicht.
   eine endliche Kette ein größtes Element hat. Was allgemein bleibt, ist nicht
   die Spiegelung, sondern die Beobachtung, dass $\iota$ nur das Intervall
   ändert — und damit die Diagonale von $V$.
+
+## Die o-Konvention, 2026-08-31 (achter Lauf): die Aussage ist falsch
+
+Der siebte Lauf ließ die o-Fassung des Halbordnungssatzes als „verified, not
+proved" stehen und nannte als Ansatz die Frage, ob $\mathcal L=\R^F$ auch für
+das reflexive $V$ gilt. Die Antwort ist **nein**, und mit ihr fällt die Aussage
+selbst: unter $\iota=\mathrm o$ ist der Satz auf einer Halbordnung **falsch**.
+Der kleinste Zeuge steht auf vier Punkten, hat nichtnegative Massen und ist von
+Hand nachzurechnen.
+
+### Der Zeuge
+
+$\T=\{0,a,b,c\}$ mit $0\prec a\prec c$, $0\prec b\prec c$ und $a,b$
+unvergleichbar — der Diamant. Massen $m_a=1$, $m_b=4$, $m_c=2$, also
+$(0,a]=\{a\}$, $(0,b]=\{b\}$, $(0,c]=\{a,b,c\}$. Setze
+
+$$\gamma(0,c)=-1,\quad \gamma(a,c)=-2,\quad \gamma(b,c)=1,$$
+
+$$\Phi(0,c)=-2,\quad \Phi(a,c)=-4,\quad \Phi(b,c)=2,$$
+
+und $\gamma=\Phi=0$ an jedem anderen Paar. Beide Zuwachsdarstellungen von
+`eq:incrementrep` gelten an jedem vergleichbaren Paar: in der ersten ist allein
+die Spalte $t=c$ nicht $0=0$, in der zweiten allein der Summand $u=c$, und die
+fünf Intervalle geben dann je eine Identität zwischen zwei ganzen Zahlen. Aber
+
+$$\Phi(c,0)-\Phi(0,c) = 0-(-2) = 2 \ne 0.$$
+
+Dieselbe Uhr trägt unter $\iota=\mathrm p$; die Konventionen unterscheiden sich
+also nicht in der Beweisbarkeit, sondern in der Wahrheit.
+
+### Warum, und wie dünn
+
+Der Spurteil bleibt, wie der siebte Lauf schon belegt hatte, konventionsfrei;
+was Schritt 3 braucht, ist unverändert $e_{t^*}\in\mathcal L$. Neu ist die
+richtige Fassung des Kriteriums: **$\mathcal L=\R^F$ genau dann, wenn
+$\mathbb 1$ maximale Ordnung hat**, und maximale Ordnung heißt allgemein
+$\mu_{\mathbb 1}=\mu_V$ — das Minimalpolynom des Vektors ist das der Matrix. Für
+nilpotentes $V$ ist $\mu_V=x^r$ und die Bedingung ist $V^{r-1}\mathbb 1\ne0$;
+das ist genau `lem:selfadjoint`. Für reflexives $V$ ist sie nicht mehr
+automatisch.
+
+Am Diamanten steht sie explizit da. Auf den drei Atomen $a,b,c$ ist
+
+$$V=\begin{pmatrix} m_a&0&0\\ 0&m_b&0\\ m_a&m_b&m_c\end{pmatrix},$$
+
+die Eigenwerte sind $m_a,m_b,m_c$, der Linkseigenvektor zu $m_c$ ist
+$w=(m_a/(m_c-m_a),\ m_b/(m_c-m_b),\ 1)$, und
+
+$$\langle w,\mathbb 1\rangle=0
+  \iff
+  \frac{m_a}{m_c-m_a}+\frac{m_b}{m_c-m_b}+1=0
+  \iff
+  m_c^2=m_am_b .$$
+
+Die Masse der Spitze ist das **geometrische Mittel** der beiden unvergleichbaren
+Massen. Das ist eine abgeschlossene algebraische Bedingung, und sie ist echt:
+auf jeder geprüften Halbordnung fallen zufällig gezogene Massen nicht. Der Satz
+ist unter $\iota=\mathrm o$ also außerhalb einer Nullmenge richtig und auf ihr
+falsch — nicht „fast bewiesen", sondern falsch.
+
+Der kleinste ganzzahlige Fall ist $(1,4,2)$; $(1,9,3)$, $(4,9,6)$, $(2,8,4)$,
+$(1,16,4)$ und $(1,1/4,1/2)$ tun es ebenso, und $m_a=m_b$ scheidet aus, weil
+dann $m_c=m_a$ ist und die Eigenwerte zusammenfallen.
+
+### Warum sieben Läufe es nicht gesehen haben
+
+`oconvention.sweep_o` lief erschöpfend, aber auf fünf Punkten nur über Massen
+aus $\{0,1\}$, und auf vier Punkten über $\{0,1,2\}$, wo $m_c^2=m_am_b$ mit
+$m_a\ne m_b$ nicht vorkommt — der kleinste Fall braucht die 4. `criterion_o`
+prüfte das Kriterium auf drei und vier Punkten, wo $\mathbb 1$ stets maximale
+Ordnung hat; der Satz „in jedem geprüften Fall ist $\mathcal L=\R^\T$" war
+richtig und trug nichts. Die Lehre ist nicht, dass zu wenig gerechnet wurde,
+sondern dass ein Gitter, das eine algebraische Bedingung gar nicht treffen kann,
+keine Evidenz gegen sie ist.
+
+### Nachgerechnet
+
+* `omaxorder.py` (neu) fragt nach der maximalen Ordnung von $\mathbb 1$ unter
+  $\iota=\mathrm o$: auf drei (81 Fälle) und vier Punkten (1539) hat jeder sie,
+  auf fünf (53217) haben 144 sie nicht. Es prüft zwei Dinge, die überall tragen:
+  **das Kriterium** („maximale Ordnung" gegen „$\mathcal L=\R^F$",
+  81+1539+53217 Fälle, keine Abweichung in beiden Richtungen) und **die
+  Reduktion** auf $F'=\{m>0\}$ — mit $Z=\{m=0\}\ni 0$ zerfällt $V$ in die Blöcke
+  $0,A,0,B$ mit $B=P'D'$ invertierbar, und $\mathbb 1$ hat maximale Ordnung für
+  $V$ genau dann, wenn $\mathbb 1_{F'}$ sie für $B$ hat (1539+53217 Fälle, keine
+  Abweichung). Diese Reduktion ist überdies bewiesen: aus $p(B)\mathbb 1_{F'}=0$
+  und $g \mid p$ folgt $q(B)=-p(0)B^{-1}$, und die $Z$-Komponente von
+  $p(V)\mathbb 1$ ist $p(0)$ mal
+  $\mathbb 1_Z-P_{ZF'}(P')^{-1}\mathbb 1_{F'}$, deren Eintrag bei $0$ den Wert
+  $1$ hat, weil kein Punkt von $F'$ unter $0$ liegt; also $p(0)=0$.
+* `oconvention.criterion_o` ist zum ersten Mal auf **fünf** Punkten gelaufen
+  (Massen aus $\{0,1,2\}$, 266085 Stellen): „in $\mathcal L$, aber nicht
+  erzwungen" und „erzwungen, aber nicht in $\mathcal L$" sind beide null. Der
+  siebte Lauf hatte das nur auf drei und vier Punkten, wo $\mathcal L$ ohnehin
+  alles ist; jetzt ist es dort geprüft, wo $\mathcal L$ echt kleiner wird. Damit
+  ist der Ausfall der o-Aussage nicht nur belegt, sondern **erklärt**:
+  $\mathcal L$ beschreibt die erzwungenen Stellen genau, und wo $\mathbb 1$ die
+  maximale Ordnung verliert, bleibt der Defekt frei.
+* `ocounter.py` (neu) stellt den Ausfall im **vollen** homogenen System in
+  $(\Phi,\gamma)$ fest, nicht nur im auf $\gamma$ reduzierten, und beide Wege
+  sind einig. Erschöpfend: drei Punkte, Massen aus $\{0,1,2\}$ — kein Ausfall;
+  vier Punkte, Massen aus $\{0,1,2,3\}$ (4864 Fälle) — kein Ausfall; fünf
+  Punkte, Massen aus $\{0,1,2\}$ (53217 Fälle) — 144 Ausfälle.
+* `odiamond.py` (neu) prüft die Vorhersage $m_c^2=m_am_b$ am Diamanten gegen
+  zwölf Massenvektoren, beide Systeme und beide Konventionen: sie trifft genau.
+* `certificate_o.py` (neu) schreibt $\Phi$ und $\gamma$ aus und rechnet beide
+  Zuwachsdarstellungen an jedem vergleichbaren Paar nach, für den Diamanten und
+  für den Zeugen auf fünf Punkten.
+* `oshape.py` (neu) misst, wie dünn der Ausfall ist: auf der Halbordnung des
+  Fünf-Punkte-Zeugen fällt kein einziger von 40 zufälligen Massenvektoren aus
+  $\{1,\dots,97\}$, aus $\{1,2,3,4\}^4$ genau sechs; über alle Halbordnungen mit
+  kleinstem Element auf vier und fünf Punkten mit zufälligen paarweise
+  verschiedenen Massen aus $\{1,\dots,200\}$ (114+657 Fälle) fällt keiner.
+
+### Was das für die Aufgabe heißt
+
+Rückstaupunkt 1 ist erledigt, aber nicht durch einen Beweis: die Zeile
+„verified, not proved" der Statustabelle wird zu **„falsch"**, und das
+Manuskript sagt das jetzt (`rem:atomicposet`, letzter Absatz, mit dem Zeugen und
+der Bedingung $m_c^2=m_am_b$). Die Hypothese $\iota=\mathrm p$ von
+`prop:atomicposet` ist damit keine Beweisbequemlichkeit mehr, sondern eine
+Eigenschaft der Aussage. `check.py` meldet `clean`, 126 Seiten, größte
+Überlänge 7.7pt wie im Ausgangszustand.
+
+Was als **richtige** Aussage übrig bleibt und formulierbar wäre: unter
+$\iota=\mathrm o$ verschwindet der Defekt, sobald $\mathbb 1$ maximale Ordnung
+für $V$ hat. Das ist keine Uhrenhypothese, sondern eine Bedingung an die Massen,
+und der Preis für die Allgemeinheit ist, dass man ihr nicht ansieht, welche
+Uhren sie trifft.
+
+### Sackgassen, siebter Nachtrag
+
+* **Ein Gitter für Evidenz halten.** $\{0,1\}$ auf fünf Punkten und $\{0,1,2\}$
+  auf vier können $m_c^2=m_am_b$ mit $m_a\ne m_b$ nicht treffen. Wer eine
+  Vermutung an einem Gitter prüft, prüfe zuerst, ob das Gitter die
+  Ausnahmebedingung überhaupt enthalten kann. Umgekehrt hätte ein Zufallsvektor
+  hier nichts gefunden — die Ausnahme ist eine Nullmenge. Gebraucht wurde beides:
+  ein Gitter, das sie enthält, und die Frage, wonach man sucht.
+* **Nach einem Ersatz für die Nilpotenz suchen.** Der siebte Lauf fragte, „was
+  an die Stelle der maximalen Ordnung tritt". Nichts tritt an ihre Stelle: die
+  maximale Ordnung ist die richtige Bedingung, in beiden Konventionen, und die
+  Nilpotenz war nur der Grund, aus dem sie unter $\iota=\mathrm p$ geschenkt
+  ist.
+
+## Die gemischte Uhr, 2026-09-01 (neunter Lauf): bewiesen, sobald die Atome durch stetige Masse getrennt sind
+
+Angegangen wurde Rückstaupunkt 1, zweite Hälfte: **Stufe 3, die gemischte Uhr**,
+seit dem 2026-08-29 unberührt. Sie ist erledigt, unter einer Hypothese, die
+genannt und nicht versteckt wird. Neu ist `Task23/mixed.py`.
+
+### Die Aussage
+
+> **Satz (gemischte Uhr).** Es gelte \eqref{T3}. Sei
+> $q=\mu+\sum_{i=1}^N m_i\delta_{a_i}$ auf $\T_{\le t^*}$ mit $\mu$ atomlos,
+> $0\le a_1<\dots<a_N\le t^*$ und $m_i>0$, und sei
+> $$c_0=\mu(\T_{<a_1}),\quad c_j=\mu([a_j,a_{j+1}))\ (1\le j\le N-1),\quad
+>   c_N=\mu([a_N,t^*))$$
+> die stetige Masse zwischen den Atomen. Ist $c_j>0$ für $j=0,\dots,N-1$ — $c_N$
+> darf verschwinden —, und erfüllen $\Phi,\gamma$ die Darstellung
+> \eqref{eq:incrementrep} mit $\gamma_1=\gamma_2=\gamma$ nebst der
+> Integrabilität \eqref{eq:calcint} in Uhrzeit, so gilt
+> $$\Phi(t,0)=\Phi(0,t)\qquad\text{für \emph{jedes} } t\le t^*,$$
+> und mehr: $\Phi(s,t)=\Phi(t,s)$ auf dem ganzen Quadrat.
+
+Also: **stetige Masse zwischen je zwei Atomen genügt.** Nicht gebraucht werden
+Translationsinvarianz, Regularität von $\gamma$, eine Bedingung an die Größe der
+Massen und die Eckrelationen an zwei Atomen (dazu unten). Gebraucht wird
+$m_i>0$, was für eine Uhr automatisch ist — anders als im Halbordnungsfall, wo
+die Nichtnegativität eine echte Hypothese war.
+
+### Schritt 0: der atomlose Fall, schärfer als `lem:calculus`
+
+Auf einem Rechteck, auf dem die Uhr in beiden Koordinaten Lebesgue ist, sagt
+\eqref{eq:incrementrep} mit $\gamma_1=\gamma_2$ nicht nur die Aussage von
+`lem:calculus`, sondern
+
+$$(\partial_x-\partial_y)\Psi=\gamma_1-\gamma_2=0 \quad\text{im Distributionssinn},
+\qquad\text{also}\qquad \Psi(x,y)=f(x+y).$$
+
+Die Kette dazu: $\Psi$ ist in jeder Variablen absolut stetig, also getrennt
+stetig, also gemeinsam messbar und nach \eqref{eq:calcint} lokal integrierbar;
+die schwachen Ableitungen sind $\gamma_1,\gamma_2$; eine Distribution, die von
+einer konstanten Richtungsableitung annulliert wird, ist eine Funktion der
+Querkoordinate; und aus „$\Psi(x,y)=f(x+y)$ fast überall" mit $f$ stetig und
+$\Psi$ getrennt stetig folgt Gleichheit **überall**. Das ist der Grund, warum
+der Satz oben „jedes $t$" sagt und nicht „fast jedes": das fast-überall in
+`cor:atomless` ist ein Artefakt des Umwegs über `lem:calculus` (\EK{} 4.4.10),
+nicht der Sache. Vermerkt als Auffälligkeit im Inventar.
+
+### Schritt 1: Uhrzeit, Strecken und Lücken
+
+$Q(s)=q(\T_{<s})$ bildet $\T_{\le t^*}$ auf $[0,L]$ ab bis auf die offenen
+Lücken $G_i=(Q(a_i),Q(a_i)+m_i)$, eine je Atom. Wie in `cor:atomless` ist
+$\Phi$ eine Funktion der $Q$-Werte, denn $q([s,s'))=0$ erzwingt
+$\Phi(s,\cdot)=\Phi(s',\cdot)$. Was bleibt, ist eine Kette von Strecken
+
+$$S_0=[\alpha_0,\beta_0],\ \dots,\ S_N=[\alpha_N,\beta_N],\qquad
+\alpha_0=0,\quad \beta_i=\alpha_i+c_i,\quad \alpha_i=\beta_{i-1}+m_i,$$
+
+und $\Psi$ lebt auf $\bigcup_i S_i$ zum Quadrat. Auf $S_i\times S_j$ ist die Uhr
+in beiden Koordinaten Lebesgue, Schritt 0 gibt also
+
+$$\Psi(x,y)=f_{ij}(x+y)\quad\text{auf } S_i\times S_j,\qquad
+f_{ij}\in W^{1,1}(D_{ij}),\quad D_{ij}=[\alpha_i+\alpha_j,\ \beta_i+\beta_j].$$
+
+Bemerkenswert: $D_{ij}=D_{ji}$, die beiden Funktionen leben auf **demselben**
+Intervall. Der Defekt ist $\Psi(L,0)-\Psi(0,L)=f_{N0}(\beta_N)-f_{0N}(\beta_N)$.
+
+### Schritt 2: die Kreuzungsrelation, und warum sie mehr sagt als ein Sprung
+
+Sei $x$ über die Lücke $G_i$ geführt, $y\in S_j$ fest. Wegen
+$[a_i,s')=\{a_i\}\cup(a_i,s')$ und dominierter Konvergenz für $s'\downarrow a_i$:
+
+$$\Psi(\alpha_i,y)-\Psi(\beta_{i-1},y)=m_i\,\gamma(a_i,Q^{\leftarrow}(y)).$$
+
+Der Sprung ist $m_i$ mal die **Zeile** $\gamma(a_i,\cdot)$. Und dieselbe Zeile
+ist, nach der zweiten Darstellung in \eqref{eq:incrementrep} bei festem
+$s=a_i$, die Dichte von $y\mapsto\Psi(\beta_{i-1},y)$, also
+$\gamma(a_i,Q^{\leftarrow}(y))=f_{i-1,j}'(\beta_{i-1}+y)$ für fast alle
+$y\in S_j$ — hier, und nur hier, geht $c_j>0$ ein. Mit $u=\beta_{i-1}+y$:
+
+$$f_{ij}(u+m_i)=f_{i-1,j}(u)+m_i f_{i-1,j}'(u),\qquad u\in\beta_{i-1}+S_j,
+\tag{B}$$
+
+und symmetrisch, mit $x\in S_i$ fest und $y$ über $G_j$:
+
+$$f_{ij}(u+m_j)=f_{i,j-1}(u)+m_j f_{i,j-1}'(u),\qquad u\in S_i+\beta_{j-1}.
+\tag{C}$$
+
+Das ist der ganze Gehalt der Atome. Der Kreuzungsoperator
+$T_m=e^{-mD}(1+mD)$ hängt **nur an der Masse**, nicht daran, ob gerade $x$ oder
+$y$ die Lücke überquert — genau das ist die Balance $\gamma_1=\gamma_2$ in
+Operatorform, und genau daraus kommt die Symmetrie. Auf ganzen
+Definitionsbereichen gelesen wäre der Satz die Trivialität, dass $T_{m_i}$ und
+$T_{m_j}$ kommutieren (beide sind Funktionen von $D$); die Arbeit steckt darin,
+dass (B) und (C) nur auf **Teilintervallen** gelten.
+
+### Schritt 3: die Induktion über $d=i-j$
+
+Sei $w_{ij}=f_{ij}-f_{ji}$ auf $D_{ij}$; zu zeigen ist $w_{ij}\equiv0$, denn
+$w_{N0}(\beta_N)$ ist der Defekt. Abziehen der transponierten Relation von (B)
+bzw. (C) gibt
+
+$$w_{ij}=T_{m_i}w_{i-1,j}\ \text{auf }[\alpha_i+\alpha_j,\ \alpha_i+\beta_j],
+\qquad
+w_{i,j+1}(u+m_{j+1})=w_{ij}(u)+m_{j+1}w_{ij}'(u)\ \text{auf }
+[\alpha_i+\beta_j,\ \beta_i+\beta_j].$$
+
+Die beiden Intervalle sind das **untere** und das **obere** Stück von $D_{ij}$,
+und sie stoßen im Punkt $\alpha_i+\beta_j$ aneinander. Induktion über
+$d=i-j\ge0$ (der Fall $i<j$ folgt aus $w_{ij}=-w_{ji}$):
+
+* $d=0$: $w_{ii}=0$, aus der Definition.
+* $d-1\to d$: sei $i>j$, $i-j=d\ge1$. Auf dem unteren Stück ist
+  $w_{ij}=T_{m_i}w_{i-1,j}=0$ nach Induktion ($i-1-j=d-1$; benutzt $c_j>0$,
+  $j\le N-1$). Auf dem oberen Stück ist $w_{i,j+1}=0$ nach Induktion
+  ($i-j-1=d-1$; benutzt $c_i>0$, was genau dann nötig ist, wenn das obere Stück
+  nicht leer ist), also
+  $$w_{ij}(u)+m_{j+1}w_{ij}'(u)=0,\qquad w_{ij}(\alpha_i+\beta_j)=0,$$
+  und da $w_{ij}$ absolut stetig ist, gibt der integrierende Faktor
+  $w_{ij}(u)=w_{ij}(\alpha_i+\beta_j)\,e^{-(u-\alpha_i-\beta_j)/m_{j+1}}=0$.
+
+Fertig. Der Kern von $1+m\frac{\dif}{\dif u}$ ist $e^{-u/m}$, eindimensional,
+und die Anfangsbedingung aus dem unteren Stück schneidet ihn weg: **das ist die
+ganze Rolle der stetigen Masse.** Sie liefert die Stelle, an der die
+Exponentialrichtung festgenagelt wird.
+
+### Was der Beweis nicht braucht
+
+Die **Eckrelationen**, an denen beide Koordinaten auf einem Atom stehen und
+$\gamma(a_i,a_j)$ keine Dichte, sondern ein freier Wert ist:
+
+$$\frac{f_{i-1,j}(\beta_{i-1}+\alpha_j)-f_{i-1,j-1}(\beta_{i-1}+\beta_{j-1})}{m_j}
+=\frac{f_{i,j-1}(\alpha_i+\beta_{j-1})-f_{i-1,j-1}(\beta_{i-1}+\beta_{j-1})}{m_i}.
+\tag{D}$$
+
+Das ist wörtlich die Kreuzmultiplikation $(\ast)$ des rein atomaren Falls. Sie
+gilt, sie steht im Modell, und der Beweis kommt ohne sie aus — `mixed.py` prüft
+beides getrennt. Im rein atomaren Fall ist (D) alles, was übrig bleibt, und
+`lem:atomgrid` ist der Satz darüber; in der gemischten Uhr mit getrennten Atomen
+trägt allein (B)/(C). Die beiden Fälle sind also nicht Spezialfälle
+voneinander, sondern zwei Enden.
+
+### Abzählbar viele Atome
+
+Häufen sich die Atome nur bei $t^*$ (Ordnungstyp $\omega$), so gilt der Satz
+weiter: die Induktion läuft über endliche $d$ und braucht kein letztes Gebiet,
+gibt also $\Phi(t,0)=\Phi(0,t)$ für jedes $t<t^*$; und
+$\Phi(t^*,0)-\Phi(t,0)=\int_{[t,t^*)}\gamma(r,0)\,q(\dif r)\to0$ für
+$t\uparrow t^*$ nach dominierter Konvergenz, ebenso in der zweiten Koordinate.
+**Ordnungsdichte Atommengen bleiben offen** und sind davon unberührt: dort ist
+nicht $c_j>0$ verletzt, sondern die Aufzählung der Atome als Kette
+$a_1<a_2<\dots$ existiert nicht, und mit ihr fällt die Induktion über $d$.
+
+### Nachgerechnet: `mixed.py`
+
+Das Skript setzt Schritt 0 als Modellannahme voraus — $\Psi=f_{ij}(x+y)$ auf
+$S_i\times S_j$ — und prüft alles Weitere exakt am vollen Lösungsraum. Die
+$f_{ij}$ werden stückweise auf den Einheitsintervallen ihres
+Definitionsbereichs angesetzt, jedes Stück in lokaler Koordinate mit der Basis
+$1,\tau,\tau^2,\tau^3,e^{-\tau/m}$. Zwei Entscheidungen tragen das:
+
+* **Lokale Koordinaten.** Alle $c_i,m_i$ sind ganzzahlig, alle Verschiebungen
+  also auch; (B)/(C) ist damit ein koeffizientenweiser Vergleich zweier Stücke
+  bei gleichem $\tau$, ohne Verschiebungskonstanten. Das hält die Matrix bei
+  Größen der Ordnung $1$ — die Kernbestimmung per SVD ist gut konditioniert.
+* **Die Exponentialfunktionen.** Sie sind mit Absicht in der Basis: der Kern von
+  $1+mD$ ist die einzige Richtung, in der ein Gegenbeispiel Platz hätte. Über
+  die Stücke hinweg wird nur Stetigkeit verlangt, denn mehr als absolute
+  Stetigkeit ist von $f_{ij}$ nicht bekannt.
+
+Befund, neun Konfigurationen mit $N=1,2,3$ Atomen und ungleichen Strecken und
+Massen: der Defekt verschwindet auf einer Kernbasis, $\max<10^{-13}$, und die
+volle Symmetrie $f_{ij}=f_{ji}$ ebenso. Dasselbe **ohne** die Eckrelationen (D),
+sechs Konfigurationen — das ist die Probe auf den Beweis. Zwei Kontrollen:
+
+* **Kanarienvogel.** Ohne die $y$-Kreuzungen (C) bleibt der Defekt stehen
+  ($0.65$ bzw. $0.55$ bei $c=[1,3],m=[2]$ und $c=[2,1],m=[3]$), die Symmetrie
+  fällt in allen vier Fällen. Der Test ist also nicht leer. Bei gleichen
+  Strecken ($c=[1,1]$, $c=[1,1,1]$) verschwindet der Defekt auch ohne (C) — die
+  symmetrische Konfiguration sieht zu wenig, und wer nur sie prüft, prüft
+  nichts.
+* **Probe aufs Modell.** Alle Strecken entartet ($c\equiv0$) ist die rein
+  atomare Kette; das Modell reproduziert `prop:atomicdual`, Defekt und
+  Antisymmetriedefekt null für $N=1,\dots,4$.
+
+**Entartete Strecken, ein Befund über die Hypothese.** Läßt man einzelne $c_j$
+verschwinden — zwei benachbarte Atome ohne stetige Masse dazwischen, oder ein
+Atom ganz am Anfang —, so verschwindet der Defekt im Modell weiterhin (sechs
+Konfigurationen, $\max<10^{-14}$). Die Hypothese $c_j>0$ ist also, soweit
+geprüft, eine Hypothese des **Beweises** und nicht der Aussage. Das ist keine
+Überraschung: fällt $c_j$ weg, so übernimmt an dieser Stelle (D), also der rein
+atomare Mechanismus. Ein Beweis, der beide Mechanismen verschränkt, ist die
+natürliche Fortsetzung und steht als Vorschlag im Inventar.
+
+### Sackgassen, achter Nachtrag
+
+* **Die gemischte Uhr numerisch prüfen wollen.** Eine Diskretisierung des
+  stetigen Anteils ist eine rein atomare Uhr auf einer Kette, und für die ist
+  die Dualität seit dem 2026-08-30 bewiesen. Jeder Test, der die stetige Masse
+  durch viele kleine Atome ersetzt, bestätigt also `prop:atomicdual` und sagt
+  über die gemischte Uhr nichts. Was trägt, ist der umgekehrte Weg: die stetige
+  Richtung exakt behandeln (Schritt 0) und nur die Kreuzungen als lineare
+  Relationen aufstellen.
+* **Über die Lücke interpolieren, zweiter Anlauf.** Der Sprung
+  $m_i\gamma(a_i,\cdot)$ ist genau der, den eine affine Fortsetzung mit der
+  Steigung $\gamma(a_i,\cdot)$ über die Lücke erzeugen würde — es liegt nahe,
+  $\Psi$ so auf $[0,L]^2$ fortzusetzen und `lem:calculus` anzuwenden. Das
+  scheitert an den Quadraten Lücke $\times$ Lücke, in denen die Fortsetzung
+  beide Steigungen zugleich erfüllen müßte; das ist dieselbe Sperre wie in
+  `rem:atomsnotchange`, nur an der kleinstmöglichen Stelle. Der Beweis oben
+  vermeidet sie, indem er die Lücken gar nicht betritt.
+
+### Nachtrag am selben Tag: Schritt 0 braucht keine Distributionen
+
+Der Beweis von Schritt 0 oben ist distributionell. Im Manuskript steht ein
+kürzerer, und er ist der bessere. Seien $(x,y)$ und $(x',y')$ im Rechteck mit
+$x+y=x'+y'$ und $x<x'$, und $t=x'-x=y-y'$. Auf dem Quadrat der Seitenlänge $t$
+mit der linken unteren Ecke $(x,y')$ ist `lem:calculus` anwendbar — sein Beweis
+liest sein Argument nur auf $[0,T]^2$ —, und seine rechte Seite ist null wegen
+$\gamma_1=\gamma_2$. Das gibt $\Psi(x+r,y')=\Psi(x,y'+r)$ für fast alle
+$r\le t$; beide Seiten sind in $r$ stetig, also gilt es für **alle** $r$, bei
+$r=t$ insbesondere, und das ist $\Psi(x',y')=\Psi(x,y)$.
+
+Kein Distributionsbegriff, keine schwache Ableitung, nur das Lemma, das das
+Manuskript ohnehin führt, und ein Stetigkeitsargument. Für die Formalisierung
+ist das der Unterschied zwischen „Mathlib braucht Distributionen auf $\R^2$" und
+„eine Zeile Stetigkeit"; die Roadmap führt es deshalb als
+`eq_comp_add_of_chain_identity` auf
+`chain_identity_of_absolutelyContinuous` zurück und nicht auf etwas Neues.
+
+Nebenher fällt damit auch die Einschränkung in `cor:atomless`: auf einer
+atomlosen Uhr gilt $\Phi(t,0)=\Phi(0,t)$ für **jedes** $t$, nicht nur für
+$Q$-fast jedes. Das Manuskript sagt weiterhin „fast jedes"; die Beobachtung
+steht als Auffälligkeit im Inventar, weil sie eine Aussage des Manuskripts
+ändert, die dieser Lauf nicht selbst gebraucht hat.
+
+### Nachtrag: ein Atom bei $t^*$
+
+Die Satzfassung oben schrieb $0\le a_1<\dots<a_N\le t^*$. Das ist um einen
+Grenzfall zu weit: liegt ein Atom auf $t^*$, so springt $Q$ dort nicht mehr
+unterhalb von $t^*$, und $Q(t^*)=\beta_{N-1}$ statt $\beta_N$. Unter
+$\iota=\mathrm p$ liegt ein solches Atom in keiner Menge
+$[s,s')\subseteq\T_{<t^*}$ und ist ohne Wirkung; das Manuskript verlangt
+deshalb $a_N<t^*$ und sagt in einem Halbsatz, warum das keine Einschränkung ist.
+Ein Atom bei $0$ ist durch $c_0>0$ ohnehin ausgeschlossen. *(Der zehnte Lauf hat
+$c_0>0$ gestrichen; ein Atom bei $0$ ist seitdem gedeckt. Die Bedingung
+$a_N<t^*$ bleibt.)*
+
+## Die gemischte Uhr ohne Hypothese, 2026-09-01 (zehnter Lauf): $c_j>0$ faellt
+
+Angegangen wurde der Rest, den der neunte Lauf ausdruecklich stehen liess: **zwei
+benachbarte Atome ohne stetige Masse dazwischen**, also der Zusammenbruch von
+$c_j>0$. Er ist erledigt, und zwar nicht durch eine Zusatzbedingung, sondern
+durch Streichen der Hypothese: `prop:mixeddual` gilt fuer **jede** Uhr mit
+endlich vielen Atomen, ohne jede Bedingung an die stetige Masse zwischen ihnen.
+Damit deckt der Satz zugleich ein Atom bei $0$ ab, das $c_0>0$ vorher ausschloss.
+
+### Der Angelpunkt: eine entartete Spalte traegt einen Eckwert
+
+Der neunte Lauf las $c_j>0$ als die Bedingung, unter der die Zeile
+$\gamma(a_i,\cdot)$ auf $S_j$ eine **Dichte** ist. Das ist richtig, aber es
+uebersieht, was an ihre Stelle tritt. Ist $c_j=0$, so ist $S_j=\{\alpha_j\}$ ein
+Punkt, und alle Zeiten $s$ mit $Q(s)=\alpha_j$ — das sind $(a_j,a_{j+1}]$, fuer
+$j=0$ die Menge $[0,a_1]$ — liefern dasselbe $\Phi(\cdot,s)$. Die linke Seite von
+$\Psi(\alpha_i,\alpha_j)-\Psi(\beta_{i-1},\alpha_j)=m_i\gamma(a_i,s)$ haengt also
+nicht davon ab, welches $s$ genommen wird, und wegen $m_i>0$ ist
+$\gamma(a_i,\cdot)$ auf dieser Menge **konstant**. Sie enthaelt $a_{j+1}$, denn
+$Q(a_{j+1})=\beta_j=\alpha_j$. Der Sprung ueber eine entartete Spalte ist damit
+$m_i\gamma(a_i,a_{j+1})$ — ein **Eckwert**, kein freier Wert:
+
+$$f_{ij}(\alpha_i+\alpha_j)-f_{i-1,j}(\beta_{i-1}+\alpha_j)=m_i\gamma(a_i,a_{j+1}),
+\tag{E}$$
+
+und derselbe Eckwert wird laengs der anderen Koordinate erreicht, ohne jede
+Bedingung an $c_j$:
+
+$$f_{i-1,j+1}(\beta_{i-1}+\alpha_{j+1})-f_{i-1,j}(\beta_{i-1}+\beta_j)
+=m_{j+1}\gamma(a_i,a_{j+1}).
+\tag{F}$$
+
+Die Elimination von $\gamma(a_i,a_{j+1})$ zwischen (E) und (F) ist woertlich die
+Kreuzmultiplikation $(\ast)$ des rein atomaren Falls.
+
+### Die Induktion, jetzt mit zwei Faellen
+
+Mit $w_{ij}=f_{ij}-f_{ji}$ und dem antisymmetrischen Eckdefekt
+$\delta_{kl}=\gamma(a_k,a_l)-\gamma(a_l,a_k)$ geben (E) und (F) minus ihre
+Transponierten
+
+$$w_{ij}(\alpha_i+\alpha_j)=w_{i-1,j}(\beta_{i-1}+\alpha_j)+m_i\delta_{i,j+1}
+\quad (c_j=0),$$
+$$m_{j+1}\delta_{i,j+1}=w_{i-1,j+1}(\beta_{i-1}+\alpha_{j+1})-w_{i-1,j}(\beta_{i-1}+\beta_j).$$
+
+Die Induktion ueber $d=i-j$ laeuft dann wie im neunten Lauf, mit einer
+Fallunterscheidung auf dem **unteren** Stueck:
+
+* $c_j>0$: das Stueck ist ein Intervall, $w_{ij}=T_{m_i}w_{i-1,j}=0$ nach
+  Induktion ($d-1$).
+* $c_j=0$: das Stueck ist der Punkt $\alpha_i+\alpha_j$, und die erste Relation
+  gibt $w_{ij}$ dort aus $w_{i-1,j}$ ($d-1$) und $\delta_{i,j+1}$. Letzteres ist
+  null: fuer $d=1$ ist $i=j+1$ und $\delta_{kk}=0$; fuer $d\ge2$ nach der zweiten
+  Relation, deren beide Glieder auf den Stufen $d-2$ und $d-1$ verschwinden.
+
+Das obere Stueck ist unveraendert (nichtleer nur bei $c_i>0$, Gronwall mit dem
+Anfangswert vom unteren). Fertig. Was die Induktion sich dabei leistet, ist genau
+das, was `lem:atomgrid` sich leistet: sie benutzt ihre Hypothese auf **zwei**
+Stufen zugleich, $d-1$ und $d-2$, und der Eckdefekt sitzt auf $d-2$.
+
+### Was das ueber die Struktur sagt
+
+Der neunte Lauf schrieb, der rein atomare und der gemischte Fall seien „nicht
+Spezialfaelle voneinander, sondern zwei Enden". Das ist zurueckzunehmen. Sie sind
+die **zwei Faelle einer Induktion**: auf einer Strecke traegt die
+Kreuzungsrelation, an einer Nachbarschaft die Eckrelation, und beide liefern
+demselben Gronwall-Schritt dasselbe Objekt, naemlich einen Anfangswert. Die
+Probe: setzt man alle $c_i$ auf null, so ist nur noch der zweite Fall im Spiel,
+und die Induktion oben ist Zeile fuer Zeile der Beweis von `lem:atomgrid`. Der
+Halbordnungssatz `prop:atomicposet` ist davon unberuehrt — er sagt mehr, naemlich
+etwas ueber Halbordnungen, wo es keine Aufzaehlung gibt.
+
+Die Rolle der stetigen Masse ist damit genauer benannt als bisher: sie ist nicht
+noetig, sie ist nur **bequem**. Was noetig ist, ist ein Punkt, an dem der Kern
+$e^{-u/m}$ von $1+mD$ festgenagelt wird; eine Strecke liefert ihn, eine
+Nachbarschaft zweier Atome liefert ihn auch, und die Uhr hat immer eines von
+beidem.
+
+### Nachgerechnet: `mixed.py`, um (E) erweitert
+
+Dem Modell des neunten Laufs fehlte (E). Das war kein Fehler in seinen Befunden —
+eine fehlende wahre Relation **vergroessert** den Loesungsraum, ein
+verschwindender Defekt darauf ist die staerkere Aussage —, aber es machte den
+Beweis nicht nachpruefbar. (E) und die transponierte Fassung stehen jetzt als
+eigene Relationenfamilie im Skript, mit Schalter `degjump`.
+
+Befund, **zehn** entartete Konfigurationen (neu darunter: ein Atom bei $0$ mit
+mehreren Atomen, abwechselnd entartete Spalten, eine entartete Spalte am Ende,
+und ein Fall mit $N=4$): Defekt und volle Symmetrie null, $\max<10^{-13}$. Die
+drei Kontrollen sind der eigentliche Gehalt des Laufs:
+
+* **ohne (D)**, also ohne die Eckrelationen an zwei Atomen, aber mit (E): null.
+* **ohne (E)**, aber mit (D): null.
+* **ohne beide**: der Symmetriedefekt bleibt in allen sechs geprueften
+  Konfigurationen stehen (bis $1.0$), der Endpunktdefekt in den beiden mit
+  entarteter erster Strecke ($0.37$).
+
+Das ist die scharfe Aussage: (D) und (E) sind **zwei Wege ueber dieselbe
+entartete Spalte**, jeder fuer sich genuegt, und ohne beide faellt die Symmetrie.
+Der Beweis oben nimmt (E) und bindet den darin auftretenden Eckwert mit (F);
+zusammen ist das (D). Vor der Erweiterung war das Skript auf (D) allein
+angewiesen, und der Kanarienvogel „ohne die Ecken" schlug deshalb an — genau
+dieser Befund des neunten Laufs ist mit (E) im Modell hinfaellig geworden, und
+das ist der Grund, ihn nicht als Beleg fuer die Notwendigkeit von (D) zu lesen.
+
+### Sackgassen, neunter Nachtrag
+
+* **Eine entartete Spalte durch Einfuegen stetiger Masse aufblasen.** Naheliegend
+  ist, in $\T$ zwischen $a_j$ und $a_{j+1}$ ein Intervall $I$ einzuschieben, $q$
+  dort Lebesgue zu setzen und $\Phi$ konstant fortzusetzen, um den Satz mit
+  $c_j>0$ anzuwenden. Das ist unmoeglich, und der Grund ist die Balance selbst:
+  aus der ersten Darstellung folgt $\tilde\gamma(r,t)=0$ fuer $r\in I$, aus der
+  zweiten $\tilde\gamma(s,r)=\gamma(s_0,r)$ fuer $s\in I$, und beide reden ueber
+  $\tilde\gamma$ mit erstem Argument in $I$. Das erzwingt $\gamma(s_0,\cdot)=0$.
+  Eine eingefuegte Strecke ist eben nicht dasselbe wie ein Punkt: sie zwingt
+  $f_{ij}$ auf $D_{ij}$ konstant zu sein. Die Erweiterung ist keine treue
+  Einbettung, und der direkte Weg ueber (E) ist kuerzer als jede Reparatur.
+* **Den entarteten Fall als Grenzwert von $c_j$ gegen null nehmen.** Der
+  Definitionsbereich von $\Phi$ ist die Zeitmenge, nicht die Uhrzeit; die Uhr
+  laesst sich nicht stoeren, ohne das gegebene $\Phi$ mitzustoeren. Ein
+  Kompaktheitsargument muesste ueber Paare $(\Phi,\gamma)$ laufen und braeuchte
+  eine Schranke, die niemand hat. Der Fall ist algebraisch, nicht analytisch.
+
+## Die ordnungsdichte Atommenge, 2026-09-01 (elfter Lauf): die Ausschöpfung ist quantifiziert, und sie scheitert an der Richtung des Massenprofils
+
+Der Rückstau nannte für diesen Punkt einen Anfang: „ob eine ordnungsdichte
+Atommenge mit lokal endlicher Gesamtmasse eine Ausschöpfung durch endliche
+Teilmengen zulässt, längs deren der Defekt stetig ist". Der Lauf hat diese Frage
+nicht mit ja oder nein beantwortet, sondern sie **rechenbar gemacht** und die
+Rechnung ausgeführt. Das Ergebnis ist eine scharfe Bedingung, unter der die
+Ausschöpfung trägt, und ein exakter Grund, warum sie im allgemeinen nicht trägt.
+Neu ist `dense.py`; bewiesen ist nichts, und der Punkt bleibt offen.
+
+### Der Beweis des sechsten Laufs, störungsweise gelesen
+
+Es braucht keine neue Idee, nur eine Buchführung über den Fehler. Die
+Paarungsidentität lautete: für $T$ symmetrisch mit $TV$ symmetrisch ist
+$\langle\delta,T\mathbb 1\rangle=0$, weil $\operatorname{tr}(TVK)$ einerseits
+gegen den symmetrischen Anteil von $VK$ paart, andererseits als Spur eines
+Produkts aus Symmetrischem und Antisymmetrischem verschwindet. Hält (S) nur bis
+auf einen symmetrischen Rest $E$, also
+
+$$\operatorname{sym}(VK)=\tfrac12(\delta\mathbb 1^{\mathsf T}
+  +\mathbb 1\delta^{\mathsf T})+\tfrac12E,$$
+
+so bleibt die zweite Hälfte unberührt und die erste bekommt einen Zusatzterm:
+
+$$\langle\delta,T\mathbb 1\rangle=-\tfrac12\operatorname{tr}(TE),
+  \qquad\text{also}\qquad
+  |\delta(t)|\le\tfrac12\|T\|_F\|E\|_F \tag{P}$$
+
+für $T\mathbb 1=e_t$. Das ist eine **Identität**, keine Abschätzung; `dense.py
+check` prüft sie an zufälligen $K$ und gestörtem (S) und findet sie in allen
+Fällen exakt erfüllt.
+
+### Was (P) für eine Ausschöpfung leistet
+
+Sei $A$ die Atommenge, $q(A)=M<\infty$, $F\subseteq A$ endlich,
+$\varepsilon_F:=q(A\setminus F)$. Schneidet man das volle System auf $F$ zurück,
+so ist der Fehler in (S) genau der Beitrag der weggelassenen Atome, eintragsweise
+höchstens $4\|\kappa\|_\infty\varepsilon_F$, und ebenso
+$|\delta(t)-\delta_F(t)|\le\|\kappa\|_\infty\varepsilon_F$. Mit (P):
+
+$$|\delta(t)|\le\|\kappa\|_\infty\varepsilon_F
+  \bigl(1+2|F|\|T_F\|_F\bigr).$$
+
+Der Defekt des vollen Systems verschwindet also, sobald **irgendeine** Folge
+endlicher $F$ mit $|F|\|T_F\|_F\varepsilon_F\to0$ existiert. Damit hängt
+alles an einer einzigen Zahl,
+
+$$C(V,t):=\|T\|_F,\qquad T=T^{\mathsf T},\ TV=V^{\mathsf T}T,\ T\mathbb 1=e_t,$$
+
+und die ist berechenbar: das System ist quadratisch — $N(N{+}1)/2$ Unbekannte
+gegen $N(N{-}1)/2+N$ Gleichungen —, sein Kern ist durchweg eindimensional, und
+die Minimalnorm-Lösung ist die richtige Messgröße, weil jede Lösung eine
+Schranke liefert und die kleinste die beste.
+
+Zwei Voraussetzungen sind dabei offen angemeldet und nicht unter den Tisch
+gefallen: $\kappa$ muss **beschränkt** sein, was das Manuskript nirgends
+hergibt, und $\varepsilon_F$ fällt nur so schnell, wie die Massen von $A$
+summierbar sind. Beides ist beim Zurückschneiden zu bezahlen.
+
+### $C$ ist skaleninvariant, hängt also nur an der Gestalt des Massenprofils
+
+Mit $V$ löst auch $cV$ die Bedingung $TV=V^{\mathsf T}T$, und $T\mathbb 1=e_t$
+kennt $V$ nicht. $C$ hängt deshalb **nicht** von der Gesamtmasse ab, sondern nur
+von den Verhältnissen der Massen zueinander. Das ist der Grund, warum die
+Messung überhaupt etwas über eine unendliche Atommenge sagen kann.
+
+### Gemessen, exakt in Brüchen
+
+Die Gleitkommarechnung bricht zusammen, sobald $C$ groß wird — für $n=8$,
+$\rho=4$ meldet `lstsq` Kerndimension 2 und ein *kleineres* $C$ als für
+$\rho=3$, was die `rcond`-Abschneidung ist und kein Messwert. Alles Folgende ist
+deshalb in exakter Bruchrechnung gerechnet (`defect_bound_exact`), mit
+Minimierung der Frobeniusnorm über den Kern in der richtigen, außerdiagonal
+doppelt zählenden Form.
+
+* **Gleiche Massen.** $C=\sqrt{2n-1}$ für eine Kette aus $n$ Atomen, auf allen
+  geprüften Längen bis $n=40$. Wurzelwachstum, also für jede Ausschöpfung
+  bezahlbar.
+* **Geometrisch steigende Massen $m_k=\rho^k$.** $C$ wächst **überexponentiell**:
+  für $\rho=2$ ist $C\approx 15.6;\ 126;\ 2028;\ 6.5\cdot10^4$ bei
+  $n=4,5,6,7$, die Quotienten also $8,16,32$ — das heißt $C\sim\rho^{n^2/2}$.
+  Zum Vergleich beträgt das bloße Massenverhältnis nur $\rho^{n-1}$; $C$ ist
+  also weit mehr als die Kondition des Massenvektors.
+* **Geometrisch fallende Massen $m_k=\rho^{-k}$.** $C\approx 1.55$ bis $1.63$,
+  **gleichmäßig beschränkt** in $n$ und in $\rho$ (geprüft $n=4,6,8$,
+  $\rho=2,3$). Dasselbe Massenverhältnis, dieselbe Länge — und der Unterschied
+  zum steigenden Fall beträgt zehn Größenordnungen.
+* **Die dyadische ordnungsdichte Menge.** Atome $k/2^j$ mit Masse $4^{-j}$,
+  ausgeschöpft nach Level: $C$ vervierfacht sich je Level, also $C\sim|F|^2$,
+  während $\varepsilon_n=2^{-n-1}$ nur halbiert. Das Produkt
+  $|F|C\varepsilon$ divergiert wie $4^n$.
+
+### Das Gesetz, das alles erklärt
+
+Eine einzige kleine Masse $\varepsilon$ an der Stelle $k$ einer Kette aus $n$
+Atomen (alle übrigen Massen $1$, $t$ die Spitze) kostet
+
+$$C\sim\varepsilon^{-(n-2k)}\quad\text{für }2k<n,
+  \qquad C=O(1)\quad\text{für }2k\ge n.$$
+
+Der Exponent ist exakt $\max(n-2k,0)$, abgelesen über zwei Dekaden und bestätigt
+für $n=4,6,8,10$ an **jeder** Stelle $k$ — vierzig Werte, keine Abweichung.
+
+Das ist der schärfste Satz des Laufs, und er ist unerwartet: kleine Massen in der
+**oberen Hälfte** der Kette sind gratis, kleine Massen in der unteren ruinieren
+die Schranke, und zwar umso mehr, je weiter unten sie sitzen. Nicht die Größe
+des Massenverhältnisses entscheidet, sondern seine **Richtung**. Damit erklären
+sich beide geometrischen Fälle und der dyadische in einem: steigende Massen
+heißen kleine Massen unten.
+
+### Was das für den offenen Punkt heißt
+
+Die Ausschöpfung ist damit kein blinder Weg mehr, sondern einer mit einer
+benannten Bedingung. Sie trägt, sobald sich die Atome so ausschöpfen lassen, dass
+in jedem $F$ die kleinen Massen oben liegen — dann ist $C$ beschränkt und
+$|F|\varepsilon_F\to0$ genügt. Sie trägt **nicht** für eine beliebige
+ordnungsdichte Menge, denn dort ist die Lage der Massen gegeben und nicht
+wählbar: liegt ein großes Atom hoch und liegen beliebig kleine Atome darunter —
+und das erzwingt die Ordnungsdichte, sobald unterhalb eines Punktes unendlich
+viele Atome liegen —, so ist die teure Konfiguration unvermeidlich.
+
+Damit ist der Grund, an dem die Ausschöpfung scheitert, ein **anderer** als der,
+den der Rückstau vermutete. Er liegt nicht an der fehlenden Aufzählung
+$a_1<a_2<\dots$ und nicht an der Endlichkeit einer Induktion, sondern an der
+Richtung des Massenprofils, und er ist quantitativ: $\varepsilon^{-(n-2k)}$.
+
+**Was der Befund nicht sagt, und das ist wichtig.** $C$ misst die beste Konstante
+*dieser Beweisgestalt*, nicht die Wahrheit der Aussage. In
+$|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ steckt eine Cauchy--Schwarz-Ungleichung,
+die die Struktur von $E$ wegwirft: $E$ ist nicht beliebig, sondern der
+Schwanzbeitrag der weggelassenen Atome. Eine feinere Paarung — $E$ gegen $T$ in
+der richtigen Gewichtung statt in der Frobeniusnorm — ist durch nichts
+ausgeschlossen. Widerlegt ist die **grobe** Ausschöpfung, nicht die Dualität für
+ordnungsdichte Atommengen; ein Gegenbeispiel ist nicht gefunden und wurde nicht
+gesucht.
+
+### Sackgassen, zehnter Nachtrag
+
+* **Das volle System auf eine endliche Teilmenge $F$ der Atome einschränken und
+  den endlichen Satz anwenden.** Geht nicht exakt, und der Grund ist eine Zeile:
+  die Relation $\Phi(s',t)-\Phi(s,t)=\sum_{a\in[s,s')}m_a\gamma(a,t)$ summiert
+  über **alle** Atome der Lücke, nicht über die von $F$. Das eingeschränkte
+  System erfüllt (S) also nur bis auf den Schwanz, und mehr als (P) ist daraus
+  nicht zu holen.
+* **Die Massen zu Blöcken zusammenfassen (Lumping).** Über eine Lücke ist der
+  Zuwachs $M_j\bar\gamma_j(t)$ mit einem gewichteten Mittel $\bar\gamma_j$ —
+  aber in der zweiten Koordinate steht $\gamma(s,r)$ mit demselben $\gamma$, und
+  ein Mittel in der ersten Koordinate ist keines in der zweiten. Das gelumpte
+  System schließt nicht; es ist kein System der gesuchten Gestalt.
+* **Auf ein Wachstum von $C$ in $|F|$ allein hoffen.** $C$ ist keine Funktion der
+  Länge. Bei gleichen Massen $\sqrt{2n-1}$, bei steigenden $\rho^{n^2/2}$, bei
+  fallenden beschränkt — dieselbe Länge, drei Regime. Wer nur gleiche Massen
+  prüft, sieht das gutartigste und schließt falsch; das ist derselbe Fehler wie
+  der symmetrische Kanarienvogel des neunten Laufs ($c=[1,1]$ sieht zu wenig).

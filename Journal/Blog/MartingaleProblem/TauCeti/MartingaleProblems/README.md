@@ -38,23 +38,29 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   `Filtration ℕ` as well. Doob's `Lᵖ` inequality is absent for every index.
 * **Localization is already there.**
   `Mathlib/Probability/Process/LocalProperty.lean` has
-  `MeasureTheory.IsPreLocalizingSequence`, `MeasureTheory.IsLocalizingSequence`
+  `ProbabilityTheory.IsPreLocalizingSequence`,
+  `ProbabilityTheory.IsLocalizingSequence`
   — stopping times valued in `WithTop ι`, almost surely increasing to `⊤` — and
-  the combinator `MeasureTheory.Locally p 𝓕 X P` saying that `X` has property
-  `p` locally, with `localSeq`, `stoppedProcess_localSeq`, `Locally.of_prop`,
-  `Locally.mono`, `locally_and_iff` and the idempotence `locally_locally_iff`.
+  the combinator `ProbabilityTheory.Locally p 𝓕 X P` saying that `X` has
+  property `p` locally, with `Locally.localSeq`, `Locally.stoppedProcess_localSeq`,
+  `Locally.of_prop`, `Locally.mono`, `IsStable.locally_and_iff` and the
+  idempotence `IsStable.locally_locally_iff`, the last under
+  `[IsRightContinuous 𝓕]`. The namespace is `ProbabilityTheory`, not
+  `MeasureTheory`, unlike the rest of `Mathlib/Probability/Process/`.
   Every local notion below is an instance of `Locally`; none of it is to be
   redefined. What is there is the abstract combinator only: the file names
   martingales in its module comment and nowhere else, and
-  `MeasureTheory.IsStable` is proved for no property of interest here. The
-  martingale instance is Milestone 9.
-* `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`:
-  `isProjectiveMeasureFamily_map_restrict`, `isProjectiveLimit_map`,
-  `map_eq_iff_forall_finset_map_restrict_eq`,
+  `ProbabilityTheory.IsStable` is proved for no property of interest here —
+  `IsStable.and` is the only closure lemma, and the identifier occurs in no
+  other probability file. The martingale instance is Milestone 9.
+* `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`, namespace
+  `ProbabilityTheory`: `isProjectiveMeasureFamily_map_restrict`,
+  `isProjectiveLimit_map`, `map_eq_iff_forall_finset_map_restrict_eq`,
   `identDistrib_iff_forall_finset_identDistrib` and `map_eq_of_forall_ae_eq`.
   These say that a law is determined by its finite dimensional distributions and
   that modifications share them, and Milestone 3 is to be phrased through them.
-* `Mathlib/Probability/Process/Kolmogorov.lean`: the Kolmogorov condition
+* `Mathlib/Probability/Process/Kolmogorov.lean`, namespace `ProbabilityTheory`:
+  the Kolmogorov condition
   `IsKolmogorovProcess` and `IsAEKolmogorovProcess`, stated for an index in a
   `PseudoEMetricSpace` with no order, together with `mk`, `ae_eq_mk`,
   `mk_of_secondCountableTopology` and the measurability lemmas. It is the
@@ -155,10 +161,10 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   defined as `∀ Y ∈ 𝓧, Martingale Y 𝓕 P`, and the local variant
   `IsLocalMPSolution`, defined as
   `∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z 𝓕 P) 𝓕 Y P` with Mathlib's
-  `MeasureTheory.Locally`. Do not introduce a localizing sequence by hand:
+  `ProbabilityTheory.Locally`. Do not introduce a localizing sequence by hand:
   `IsLocalizingSequence` and the `Locally` API already exist, and
-  `locally_locally_iff` is the idempotence that the local theory of Milestone 7
-  would otherwise have to prove.
+  `IsStable.locally_locally_iff` is the idempotence that the local theory of
+  Milestone 7 would otherwise have to prove.
 * `MPSolutions 𝓧 𝓕`, the set of solutions, with the basic API: it is closed
   under restriction of `𝓧`, and `MPSolutions (𝓧 ∪ 𝓨) = MPSolutions 𝓧 ∩ MPSolutions 𝓨`.
 * Given a state space `E` with `[MeasurableSpace E]`, a clock `q`, a convention
@@ -176,9 +182,11 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   that the compensated process is adapted to it.
 * `IsMPSolutionFor.map`: the property depends on `P` only through the law of
   `X`, so it transfers along a modification and along equality of laws on the
-  canonical space. Use `MeasureTheory.map_eq_of_forall_ae_eq` and
-  `identDistrib_iff_forall_finset_identDistrib` of `FiniteDimensionalLaws.lean`
-  rather than reproving that modifications share finite dimensional laws.
+  canonical space. Use `ProbabilityTheory.map_eq_of_forall_ae_eq` (`:99`) and
+  `ProbabilityTheory.identDistrib_iff_forall_finset_identDistrib` (`:77`) of
+  `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`, whose namespace is
+  `ProbabilityTheory` and not `MeasureTheory`, rather than reproving that
+  modifications share finite dimensional laws.
 * `IsMPSolutionFor` with an initial law: `IsMPSolutionFor A q c X 𝓖 P ∧ P.map (X 0) = μ`.
 * `mpProcess q c X f g`, the compensated process
   `fun t ω ↦ f (X t ω) - ∫ s in Clock.interval q c 0 t, g (X s ω) ∂q` of a
@@ -244,11 +252,13 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   by `Clock.measure_interval_ne_top`. This gives
   `∫ ω in B, mpProcess q c X f g s ω ∂P ≤ ∫ ω in B, mpProcess q c X f g t ω ∂P`,
   and `MeasureTheory.submartingale_of_setIntegral_le`
-  (`Mathlib/Probability/Martingale/Basic.lean:281`, stated for `[Preorder ι]`)
-  concludes. Two sided bounds give a martingale, which is the previous item; a
+  (`Mathlib/Probability/Martingale/Basic.lean:281`, stated for `[Preorder ι]`
+  from the variable block at `:48`, and asking besides
+  `[SigmaFiniteFiltration μ ℱ]`, `StronglyAdapted ℱ f` and integrability of
+  every `f i`) concludes. Two sided bounds give a martingale, which is the previous item; a
   lower bound gives a submartingale, and that inequality is all the applications
   need. Mathlib's Fatou lemma is `MeasureTheory.lintegral_liminf_le`
-  (`Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean:231`) for `ℝ≥0∞`-valued
+  (`Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean:233`) for `ℝ≥0∞`-valued
   functions; the Bochner form for real functions bounded below is derived from
   it by adding the constant, and is stated as a lemma of its own next to the
   dominated convergence theorem.
@@ -427,9 +437,62 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   Fubini, absolute continuity and dominated convergence; no path regularity and
   no Skorokhod space.
 * `duality_of_atomless`: for an atomless clock and the predictable convention,
-  `Φ t 0 = Φ 0 t` for `q`-almost every `t`, by the time change
-  `Q t = q (Set.Iio t)` and its right inverse. State the time change as a lemma
-  in its own right.
+  `Φ t 0 = Φ 0 t` for every `t`, by the time change `Q t = q (Set.Iio t)` and its
+  right inverse. State the time change as a lemma in its own right. The
+  conclusion holds at every `t` and not merely `q`-almost every `t`, by
+  `eq_comp_add_of_chain_identity` in place of
+  `chain_identity_of_absolutelyContinuous`.
+* `eq_comp_add_of_chain_identity`: for intervals `I J : Set ℝ` and
+  `Ψ : ℝ → ℝ → ℝ` absolutely continuous in each variable on `I ×ˢ J` with
+  `∇Ψ = (ψ, ψ)` for one and the same `ψ`, integrable on compact subrectangles,
+  there is a locally absolutely continuous `f : ℝ → ℝ` with `Ψ x y = f (x + y)`
+  for every `x ∈ I`, `y ∈ J`. Apply `chain_identity_of_absolutelyContinuous` to
+  `(u, v) ↦ Ψ (x + u) (y' + v)` on the square of side `x' - x`, where the right
+  hand side vanishes, and turn its `∀ᵐ r` into `∀ r` by continuity of
+  `r ↦ Ψ (x + r) y' - Ψ x (y' + r)`. The proof of
+  `chain_identity_of_absolutelyContinuous` reads its argument on `[0,T]²` only,
+  so it holds on a square.
+* `Clock.stretches`: for `q = μ + ∑ i, m i • Measure.dirac (a i)` on
+  `Set.Icc 0 t* ⊆ ℝ` with `μ` atomless, finitely many atoms
+  `0 ≤ a 1 < ... < a N < t*` and `0 < m i` — an atom at `t*` itself lies in no
+  `Set.Ico s s' ⊆ Set.Iio t*` and is discarded — the images of the diffuse
+  stretches
+  under `Q s = q (Set.Iio s)`: `S j = Set.Icc (α j) (β j)` with `α 0 = 0`,
+  `β j = α j + c j` and `α j = β (j-1) + m j`, where `c j` is the `μ`-mass of the
+  `j`-th stretch, together with `Set.range Q = ⋃ j, S j`, `Q (a j) = β (j-1)` and
+  `Q t* = β N`. The gaps `Set.Ioo (β (j-1)) (α j)` are the atoms, one each, of
+  length `m j`.
+* `duality_of_mixed`: with `Φ, γ` as in `chain_identity` and `γ₁ = γ₂ = γ`, a
+  clock as in `Clock.stretches` and the transported pair satisfying the
+  integrability of `chain_identity_of_absolutelyContinuous`, one has
+  `Φ s t = Φ t s` for all `s, t ≤ t*` in the predictable convention, and in
+  particular `Φ t* 0 = Φ 0 t*` at every such `t*`. No lower bound on any `c j`.
+  Three steps. `eq_comp_add_of_chain_identity` on `S i ×ˢ S j` gives
+  `Ψ x y = f i j (x + y)` on a domain `D i j = Set.Icc (α i + α j) (β i + β j)`
+  that is symmetric in `i, j`. Crossing the gap at `a i` gives
+  `f i j (u + m i) = f (i-1) j u + m i * deriv (f (i-1) j) u` for
+  `u ∈ β (i-1) +ᵥ S j`, because the jump of `Ψ` across the gap is
+  `m i * γ (a i) ·` while the same row is the density of `y ↦ Ψ (β (i-1)) y`;
+  that row is a density exactly when `0 < c j`. Where `c j = 0` the stretch
+  `S j` is a point, the relation degenerates to
+  `f i j (α i + α j) - f (i-1) j (β (i-1) + α j) = m i * γ (a i) (a (j+1))`, and
+  the value on the right is a corner value, because `γ (a i) ·` is constant on
+  `Q ⁻¹' {α j}` and `a (j+1)` lies in that set. The same corner value is reached
+  along the other coordinate:
+  `f (i-1) (j+1) (β (i-1) + α (j+1)) - f (i-1) j (β (i-1) + β j)
+   = m (j+1) * γ (a i) (a (j+1))`, for every `i` and `j < N`. Then induction on
+  `i - j` makes `w i j = f i j - f j i` vanish: on
+  `Set.Icc (α i + α j) (α i + β j)` by the crossing relation applied to `w` if
+  `0 < c j`, and if `c j = 0` at the single point of that interval by the two
+  degenerate relations applied to `w`, which give
+  `w i j (α i + α j) = w (i-1) j (β (i-1) + α j) + m i * δ i (j+1)` for the
+  antisymmetric corner defect `δ k l = γ (a k) (a l) - γ (a l) (a k)`, together
+  with `m (j+1) * δ i (j+1) = w (i-1) (j+1) _ - w (i-1) j _`; both vanish by the
+  hypothesis at `i - j - 1` and `i - j - 2`, and `δ k k = 0` settles
+  `i - j = 1`. On `Set.Icc (α i + β j) (β i + β j)` — non-empty only if
+  `0 < c i` — because there `w i j + m (j+1) * deriv (w i j) = 0` with initial
+  value `0` at the junction, whose only absolutely continuous solution is `0`.
+  Like `atomGrid`, the induction uses its hypothesis at two levels at once.
 * `duality_defect_eq_integral`: for a clock `q` on `ι` with a least element `0`
   and `Φ, γ` as in `chain_identity` with `γ₁ = γ₂ = γ`,
   `Φ s t = Φ 0 t + ∫ r in Iio s, γ r t ∂q` and `Φ s t = Φ s 0 + ∫ r in Iio t, γ s r ∂q`,
@@ -461,7 +524,10 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   distances `d` and `d - 1`. Purely arithmetic — no measure, no clock, and `ℕ`
   as the only index — so it belongs in `Mathlib/Algebra/Order/` rather than in
   the probability tree. It is what gives the chain the stronger conclusion
-  `Φ s t = Φ t s`, which the partial order does not have.
+  `Φ s t = Φ t s`, which the partial order does not have. Its two-level
+  induction is also the shape of the one in `duality_of_mixed`, and the
+  cross-multiplication it runs on is what carries that proof across a stretch
+  of zero diffuse mass.
 
 The next four items carry the partial order case. They are matrix algebra over
 `ℝ` and know neither clock nor measure nor order, and belong in
@@ -474,7 +540,7 @@ order.
   `Matrix.trace_transpose` (`LinearAlgebra/Matrix/Trace.lean:73`) and
   `Matrix.trace_mul_comm` (`Trace.lean:158`); it has no predicate for `Bᵀ = -B`
   by itself — `Matrix.IsSkewAdjoint`
-  (`LinearAlgebra/Matrix/SesquilinearForm.lean:562`) is relative to a form `J` —
+  (`LinearAlgebra/Matrix/SesquilinearForm.lean:560`) is relative to a form `J` —
   so the hypothesis is written out. This is the smallest self contained target
   of this roadmap.
 * `Matrix.trace_mul_eq_dotProduct_diag_of_isSymm`: let `V K : Matrix n n ℝ` with
@@ -542,19 +608,25 @@ order.
   representations of `duality_defect_eq_integral` on `Clock.atomPoset`, drop the
   symmetric part of `γ`, and apply `dualityDefect_eq_zero_of_nonneg`;
   `duality_defect_eq_integral` at `s = 0` turns `Ψ t t = 0` into
-  `Φ t 0 = Φ 0 t`. The convention enters through the interval and is not
-  symmetric here: with `Ioc 0 s` in place of `Iio s` the matrix is
+  `Φ t 0 = Φ 0 t`. The predictable convention is a hypothesis of the statement,
+  not a limitation of the proof: with `Ioc 0 s` in place of `Iio s` the matrix is
   `V s a = if a ≤ s ∧ a ≠ 0 then m a else 0`, whose diagonal does not vanish, so
-  `V` is not nilpotent and `Matrix.exists_isSymm_mulVec_one_eq_single` does not
-  apply. The optional convention on a chain is the predictable one for the
-  reflected chain, and `atomGrid_symm` covers it; a general partial order offers
-  no reflection. Along a chain the
+  `V` is not nilpotent, `Matrix.exists_isSymm_mulVec_one_eq_single` does not
+  apply, and the conclusion is false. The counterexample is the diamond
+  `0 < a, b < c` with `m a = 1`, `m b = 4`, `m c = 2`, where `𝟙` is orthogonal to
+  the left eigenvector of `V` for the eigenvalue `m c`; the condition is
+  `m c ^ 2 = m a * m b`. The optional convention on a chain is the predictable
+  one for the reflected chain, and `atomGrid_symm` covers it; a general partial
+  order offers no reflection and no substitute. Along a chain the
   conclusion sharpens, by `atomGrid_symm`, to `Φ (u i) (u j) = Φ (u j) (u i)` at
   every pair and hence to `γ` symmetric there — with masses of either sign, where
   `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain
   phenomenon: at incomparable pairs `Φ s t = Φ t s` fails, while the defect
-  `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless` this covers every
-  clock that is either atomless or has locally finite atoms.
+  `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless` and
+  `duality_of_mixed` this covers every clock that is atomless, or has locally
+  finite atoms, or is mixed with finitely many atoms below the point in
+  question; an order-dense set of atoms is the one case none of the three
+  reaches.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.
@@ -589,10 +661,10 @@ the discrete index theorems listed above; Milestones 6, 7 and 11 use them.
   martingale `Y` and a stopping time `τ` for `𝓕`, the stopped process
   `stoppedProcess (fun t ↦ {ω | ⊥ < τ ω}.indicator (Y t)) τ` is a martingale;
   and `isStable_martingale_rightContinuous`, the packaged
-  `MeasureTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ ∀ᵐ ω ∂P, ∀ t, ContinuousWithinAt (Z · ω) (Set.Ici t) t)`.
+  `ProbabilityTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ ∀ᵐ ω ∂P, ∀ t, ContinuousWithinAt (Z · ω) (Set.Ici t) t)`.
   The conjunction is what is stable, because right continuity is preserved by
   stopping and is the hypothesis under which the martingale half holds. Then
-  `MeasureTheory.IsStable.locally` of
+  `ProbabilityTheory.IsStable.locally` of
   `Mathlib/Probability/Process/LocalProperty.lean` gives at once that a stopped
   local martingale is a local martingale, and `IsStable.locally_and_iff` splits
   the conjunction again; so `IsLocalMPSolution` of Milestone 2 is preserved by
@@ -908,8 +980,11 @@ Index `[0,∞)` or `ℕ`, state spaces `E₁`, `E₂` Polish, a shift invariant 
   coordinate process solves the martingale problem. Together with Milestone 8
   this gives existence and uniqueness from one dual process.
 * The representability condition, that a positive linear functional is given by
-  a kernel, from `integral_rieszMeasure` in
-  `Mathlib/MeasureTheory/Integral/RieszMarkovKakutani/`.
+  a kernel, from `RealRMK.integral_rieszMeasure`
+  (`Mathlib/MeasureTheory/Integral/RieszMarkovKakutani/Real.lean:345`, for
+  `f : C_c(X, ℝ)`), with `NNRealRMK.integral_rieszMeasure` and
+  `NNRealRMK.lintegral_rieszMeasure` (`NNReal.lean:47,56`) as the non-negative
+  forms.
 * The fibred state space: state Milestone 12 for `E : ι → Type*` with
   `[∀ t, MeasurableSpace (E t)]` and paths in `Π t, E t`, the test pairs becoming
   sections. The abstract layer of Milestones 2, 3, 5, 6, 8 and 10 never mentions

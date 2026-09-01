@@ -5,18 +5,41 @@ Mathlib, and neither does the space. What Mathlib does have, and what is **not**
 to be rebuilt:
 
 * `Mathlib/Topology/Order/LeftRightLim.lean`: `Function.leftLim` and
-  `Function.rightLim` with `tendsto_leftLim`, `tendsto_rightLim`,
-  `tendsto_leftLim_within`, `continuousWithinAt_Iio_iff_leftLim_eq`,
+  `Function.rightLim`, defined for `f : α → β` with `[LinearOrder α]` and
+  `[TopologicalSpace β]`, together with the part of the one-sided-limit API that
+  holds for an arbitrary `f`. That part is what every statement about left
+  limits below is to be phrased through, and it is exactly:
+  `tendsto_leftLim_of_tendsto` and `tendsto_rightLim_of_tendsto`, whose
+  hypothesis is `∃ y, Tendsto f (𝓝[<] a) (𝓝 y)` and hence literally the
+  `left_limit` field of `IsCadlag`; `ContinuousWithinAt.leftLim_eq` and
+  `ContinuousWithinAt.rightLim_eq`, which give `leftLim f a = f a` from
+  one-sided continuity; `leftLim_eq_of_tendsto`, `rightLim_eq_of_tendsto`,
+  `leftLim_eq_of_eq_bot`, `leftLim_eq_of_not_tendsto`, `leftLim_eq_of_isBot`,
+  `rightLim_eq_of_isTop`; and `mapClusterPt_leftLim`, `mapClusterPt_rightLim`.
+  Each of these asks `[LinearOrder α] [TopologicalSpace α] [OrderTopology α]`,
+  and the four `_eq_` ones additionally `[T2Space β]`.
+
+  The names `tendsto_leftLim`, `tendsto_rightLim`, `tendsto_leftLim_within`,
+  `continuousWithinAt_Iio_iff_leftLim_eq`,
   `continuousWithinAt_Ioi_iff_rightLim_eq` and
-  `continuousAt_iff_leftLim_eq_rightLim`. These are the whole one-sided-limit
-  API and every statement about left limits below is to be phrased through
-  them. It also has `Monotone.countable_not_continuousAt`, the monotone case of
-  the countability of the jump set.
+  `continuousAt_iff_leftLim_eq_rightLim` are in the namespaces `Monotone` and
+  `Antitone` of that file, carry a monotonicity hypothesis on `f` by `include`,
+  and ask `[ConditionallyCompleteLinearOrder β] [OrderTopology β]` of the
+  codomain. A càdlàg path into a metric space satisfies none of that, so none of
+  them applies here, and this roadmap uses none of them.
+* `Monotone.countable_not_continuousAt`, the monotone case of the countability
+  of the jump set, in `Mathlib/Topology/Order/Monotone.lean`, together with
+  `MonotoneOn.countable_not_continuousWithinAt_Ioi`,
+  `MonotoneOn.countable_not_continuousWithinAt_Iio` and
+  `MonotoneOn.countable_not_continuousWithinAt`.
 * `MeasureTheory.StieltjesFunction` in
   `Mathlib/MeasureTheory/Measure/Stieltjes.lean`: a bundled monotone right
   continuous function, with `right_continuous` and `rightLim_eq`. It is the
   precedent for how a right continuity condition is bundled in Mathlib, and
-  `IsCadlag` below should read like it.
+  `IsCadlag` below should read like it. Its field states right continuity as
+  `ContinuousWithinAt f (Ici x) x`; `Function.RightContinuous` below uses `Ioi`,
+  and `continuousWithinAt_Ioi_iff_Ici` is the bridge, the same one the proof of
+  `StieltjesFunction.rightLim_eq` takes.
 * Prokhorov's theorem, tightness and the Lévy–Prokhorov metric in
   `Mathlib/MeasureTheory/Measure/`, used in Milestone 8.
 * `orderTopology_of_ordConnected` in `Mathlib/Topology/Order/Basic.lean`,
@@ -63,7 +86,11 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
     `orderTopology_of_ordConnected` does not apply to `h • ℤ`, and
     `OrderTopology.of_discreteTopology` asks for `PredOrder` and `SuccOrder`,
     which the subtype does not carry. Supply `PredOrder` and `SuccOrder` for a
-    discrete `AdditiveDist` subtype, or the `OrderTopology` instance directly.
+    discrete `AdditiveDist` subtype, or `LocallyFiniteOrder`, which feeds the
+    second instance of the same file,
+    `OrderTopology.of_linearLocallyFinite [LinearOrder α] [LocallyFiniteOrder α]
+    [DiscreteTopology α]`, or the `OrderTopology` instance directly. Both
+    instances are in `Mathlib/Topology/Instances/Discrete.lean`.
 * `AdditiveDist.orderIso_isometry_real`: a linear order with a metric inducing
   the order topology and additive along the order embeds into `ℝ` by an order
   isomorphism onto its image which is an isometry; the image is closed when
@@ -98,13 +125,19 @@ that run Prokhorov backwards and by nothing else.
 ## Milestone 2: càdlàg functions
 
 Milestone 1 fixes the index of the **space**, and this milestone does not need
-it. The predicate and the jump theory live at two different strengths, and each
-item below names its own, so that a later reader can tell which instances a
-statement actually consumes.
+it. The predicate, its connection to `Function.leftLim`, and the jump theory
+live at three different strengths, and each item below names its own, so that a
+later reader can tell which instances a statement actually consumes.
 
 * **(A)** `[Preorder ι] [TopologicalSpace ι] [TopologicalSpace E]`. This is what
   `RemyDegenne/brownian-motion` uses for `IsCadlag`, and it carries the
-  predicate together with all of its closure properties.
+  predicate together with all of its closure properties. It does **not** carry
+  `Function.leftLim`, which is defined only for a `LinearOrder`.
+* **(A′)** `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]`. This is the
+  weakest bundle under which `Function.leftLim` and `Function.rightLim` exist and
+  the root-namespace lemmas of `Mathlib/Topology/Order/LeftRightLim.lean` apply.
+  It is what connects the structure `IsCadlag` to those two functions, and it
+  needs no dense subset of `ι`.
 * **(B)** `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]` together with
   a countable dense `D ⊆ ι` such that every non-maximal point is a limit of
   points of `D` from the right. This is the index bundle the manuscript calls
@@ -134,17 +167,24 @@ Under (A), for `f : ι → E`:
 * Basic closure properties: constants, compositions with continuous maps, sums
   and products in a topological ring, pointwise limits that are uniform on
   compacts, and the restriction of a càdlàg function to a subinterval.
-* `IsCadlag.tendsto_leftLim` and `IsCadlag.rightLim_eq`, connecting the
-  structure to `Function.leftLim` and `Function.rightLim` so that the existing
-  API applies; every later statement about left limits uses those names, not a
-  new one.
 * `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
   càdlàg map into a pseudometric space is bounded. The metric here is on `E`;
   the index contributes compactness of the domain and nothing else.
+* `IsCadlag` for a continuous map.
+
+Under (A′):
+
+* `IsCadlag.tendsto_leftLim`, `Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x))`,
+  which is `tendsto_leftLim_of_tendsto` applied to the `left_limit` field, and
+  `IsCadlag.rightLim_eq`, `Function.rightLim f x = f x`, which is
+  `ContinuousWithinAt.rightLim_eq` applied to the `right_continuous` field
+  through `continuousWithinAt_Ioi_iff_Ici`; the second adds `[T2Space E]`. These
+  connect the structure to `Function.leftLim` and `Function.rightLim` so that
+  the existing API applies; every later statement about left limits uses those
+  names, not a new one.
 * The identity `Function.leftLim f x = f x` at continuity points, from
-  `continuousAt_iff_leftLim_eq_rightLim` together with right continuity.
-* `IsCadlag` for a continuous map, and the characterization of continuity of a
-  càdlàg map as `leftJumpSet f = ∅`.
+  `ContinuousWithinAt.leftLim_eq` applied to the restriction of continuity at
+  `x` to `Iic x`, with `[T2Space E]`.
 
 Under (B), with `E` a pseudometric space:
 
@@ -153,7 +193,12 @@ Under (B), with `E` a pseudometric space:
   `largeLeftJumpSet f ε` has no accumulation point, hence meets every compact
   set in a finite set, is (B) alone: an accumulation point yields a monotone
   sequence converging to it, which is where linearity and the order topology are
-  used, and the one sided limit at that point contradicts the jump size.
+  used, and the one sided limit at that point contradicts the jump size. With
+  them, the characterization of continuity of a càdlàg map as
+  `leftJumpSet f = ∅`, from the identity of (A′) at continuity points in the one
+  direction and, in the other, from `IsCadlag.tendsto_leftLim` rewritten along
+  `f⁻ x = f x` to give continuity within `Iio x`, which together with the
+  `right_continuous` field gives continuity at `x`.
 * `leftJumpSet f` is countable. This adds **σ-compactness of `ι`** to (B), to
   turn local finiteness into countability along a countable exhaustion; every
   index of Milestone 1 has it, since closed balls are compact. The monotone case
@@ -177,8 +222,19 @@ Under (B), with `E` a pseudometric space:
 
 * `TimeChange ι`, the type of bi-Lipschitz order isomorphisms `λ : ι ≃o ι`.
   Give it a group structure.
-* `TimeChange.norm λ = log (max (LipschitzWith.const λ) (LipschitzWith.const λ⁻¹))`,
-  with `TimeChange.normOn m λ` the same computed on `B m`.
+* `TimeChange.lipConst λ = sInf {K : ℝ≥0 | LipschitzWith K λ}`, the least
+  Lipschitz constant, and `TimeChange.norm λ = log (max (lipConst λ) (lipConst λ⁻¹))`,
+  with `TimeChange.lipConstOn m λ` and `TimeChange.normOn m λ` the same computed
+  on `B m` through `LipschitzOnWith`. Mathlib carries no least Lipschitz
+  constant: `LipschitzWith (K : ℝ≥0) (f : α → β)` in
+  `Mathlib/Topology/EMetricSpace/Lipschitz.lean` is a `Prop`, and
+  `LipschitzWith.const` there is the theorem that a constant map is `0`-Lipschitz,
+  not a constant attached to a map. `lipConst` is therefore part of this
+  milestone, together with `LipschitzWith (lipConst λ) λ`: the infimum is
+  attained because `ι` is a metric space, so `edist s t ≠ ∞`, and the inequality
+  `edist (λ s) (λ t) ≤ K * edist s t` passes to the infimum over `K` in
+  `ℝ≥0∞`. With it `lipConst_one`, `lipConst_le_iff` and the submultiplicativity
+  `lipConst (λ * μ) ≤ lipConst λ * lipConst μ` from `LipschitzWith.comp`.
 * `TimeChange.norm_one`, `TimeChange.norm_inv` (`norm λ⁻¹ = norm λ`) and
   `TimeChange.norm_mul_le` (`norm (λ * μ) ≤ norm λ + norm μ`): the norm is a
   length function. Both facts are the corresponding statements for Lipschitz

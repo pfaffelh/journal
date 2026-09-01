@@ -11,7 +11,9 @@ between uniform integrability and convergence in distribution.
 
 Throughout, `E` is a metric space, `Ω` a measurable space, and measures are
 Borel probability measures. Weak convergence is
-`Filter.Tendsto μ l (𝓝 μ₀)` in `MeasureTheory.ProbabilityMeasure E`.
+`Filter.Tendsto μ l (𝓝 μ₀)` in `MeasureTheory.ProbabilityMeasure E`, and for
+random variables it is Mathlib's structure `MeasureTheory.TendstoInDistribution`
+of the next section, which allows a different probability space for each index.
 
 ## What Mathlib already has
 
@@ -40,6 +42,29 @@ Most of the elementary theory is present and is **not** to be rebuilt. In
   `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` and
   `FiniteMeasure.continuous_map`: the continuous mapping theorem for maps that
   are continuous everywhere.
+* The whole of `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean`,
+  which is the random variable side of all of this and is used throughout below.
+  `MeasureTheory.TendstoInDistribution X l Z μ μ'` (`:64`) is a structure with
+  the three fields `forall_aemeasurable`, `aemeasurable_limit` and `tendsto`,
+  and — this is what makes it the right predicate here — its random variables
+  `X i : Ω i → E` live on a **family** of probability spaces `(Ω i, μ i)`, one
+  per index, with the limit `Z : Ω' → E` on a further space of its own. With it
+  come `tendstoInDistribution_iff_forall_integral_rclike_tendsto` (`:72`),
+  `tendstoInDistribution_const` (`:88`),
+  `tendstoInDistribution_of_identDistrib` (`:94`),
+  `tendstoInDistribution_unique` (`:125`),
+  `TendstoInDistribution.continuous_comp` (`:136`, the continuous mapping
+  theorem in random variable form), `tendstoInDistribution_of_ae_tendsto`
+  (`:152`, almost sure convergence implies convergence in distribution),
+  `TendstoInMeasure.tendstoInDistribution` (`:175`),
+  `tendstoInDistribution_of_tendstoInMeasure_sub` (`:192`),
+  `TendstoInMeasure.tendstoInDistribution_of_aemeasurable` (`:304`),
+  `TendstoInDistribution.prodMk_of_tendstoInMeasure_const` (`:313`, Slutsky),
+  `TendstoInDistribution.continuous_comp_prodMk_of_tendstoInMeasure_const`
+  (`:333`) and `TendstoInDistribution.add_of_tendstoInMeasure_const` (`:345`).
+  The last five carry `[SeminormedAddCommGroup E] [SecondCountableTopology E]
+  [BorelSpace E]`, the earlier ones `[TopologicalSpace E]` with
+  `[OpensMeasurableSpace E]`.
 * Portmanteau, the Lévy–Prokhorov metric, `IsTightMeasureSet` and Prokhorov's
   theorem; and in `Mathlib/MeasureTheory/Function/UniformIntegrable.lean` the
   `UniformIntegrable` and `UnifIntegrable` theory with `uniformIntegrable_iff`
@@ -139,22 +164,42 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
 
 ## Milestone 2: the continuous mapping theorem for almost everywhere continuous maps
 
-Mathlib has the theorem for continuous `f`. What the convergence theory needs is
-the version where `f` is merely Borel and continuous off a null set of the
-limit; the set of continuity points is Borel, so the hypothesis is meaningful.
+Mathlib has the theorem for continuous `f`, in both forms: for measures as
+`ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`, and for random
+variables as `MeasureTheory.TendstoInDistribution.continuous_comp`
+(`Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean:136`). What the
+convergence theory needs beyond that is the single step from `Continuous h` to
+continuity off a null set of the limit. The measurability hypothesis is then
+carried by Mathlib as well: the set of continuity points is a `MeasurableSet` by
+`measurableSet_of_continuousAt`
+(`Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:252`, root
+namespace, for `[OpensMeasurableSpace α]` and a target `[PseudoEMetricSpace β]`),
+which is `IsGδ.setOfPred_continuousAt`
+(`Mathlib/Topology/GDelta/MetrizableSpace.lean:51`) followed by
+`IsGδ.measurableSet` (`BorelSpace/Basic.lean:248`).
 
 * `MeasureTheory.ProbabilityMeasure.tendsto_map_of_measure_setOf_continuousAt_eq_one`:
   for `E`, `E'` separable metric, `h : E → E'` Borel, `μ n → μ` weakly and
   `μ {x | ContinuousAt h x} = 1`, one has `(μ n).map h → μ.map h` weakly.
   Recover `tendsto_map_of_tendsto_of_continuous` as the case where the set is
   everything.
-* `measurableSet_setOf_continuousAt`, if Mathlib does not already have the
-  continuity set as a `MeasurableSet`; it is a countable intersection of open
-  sets.
-* The random variable form, for `E`-valued random variables `X n`, `X` with
-  `X n → X` in distribution and `ℙ {ω | ContinuousAt h (X ω)} = 1`.
-* The Slutsky form: `X n → X` in distribution and `dist (X n) (Y n) → 0` in
-  probability imply `Y n → X` in distribution.
+* `MeasureTheory.TendstoInDistribution.continuousAt_comp`: the same statement on
+  Mathlib's structure, for `X i : Ω i → E` with `TendstoInDistribution X l Z μ μ'`
+  and `μ' {ω | ContinuousAt h (Z ω)} = 1`, concluding
+  `TendstoInDistribution (fun i ↦ h ∘ X i) l (h ∘ Z) μ μ'`. It is the previous
+  item read through the three fields of the structure, and it generalises
+  `TendstoInDistribution.continuous_comp` in the way that one does
+  `tendsto_map_of_tendsto_of_continuous`.
+
+The Slutsky statements belong to this circle and are Mathlib's, so they are not
+part of this milestone. `X n → Z` in distribution together with `Y n - X n → 0`
+in probability gives `Y n → Z` in distribution as
+`MeasureTheory.tendstoInDistribution_of_tendstoInMeasure_sub`
+(`ConvergenceInDistribution.lean:192`); the pair form is
+`TendstoInDistribution.prodMk_of_tendstoInMeasure_const` (`:313`), its
+continuous image `TendstoInDistribution.continuous_comp_prodMk_of_tendstoInMeasure_const`
+(`:333`), and the sum `TendstoInDistribution.add_of_tendstoInMeasure_const`
+(`:345`).
 
 ## Milestone 3: the space of laws, and the Skorokhod representation theorem
 
@@ -195,10 +240,10 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
 * `MeasureTheory.ProbabilityMeasure.secondCountableTopology`: the item above,
   read on the synonym, where there is a uniformity to argue with —
   `UniformSpace.secondCountable_of_separable`
-  (`Mathlib/Topology/UniformSpace/Cauchy.lean:932`) asks for a uniform space with
+  (`Mathlib/Topology/UniformSpace/Cauchy.lean:931`) asks for a uniform space with
   countably generated uniformity and does not apply to `ProbabilityMeasure E`
   itself — and carried back by `Homeomorph.secondCountableTopology`
-  (`Mathlib/Topology/Homeomorph/Lemmas.lean:37`).
+  (`Mathlib/Topology/Homeomorph/Lemmas.lean:36`).
 * `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`: on a
   complete second countable metric space, a set `S` of probability measures is
   tight as soon as for every `ε > 0` and every `r > 0` there is a finite
@@ -236,7 +281,7 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
 * `MeasureTheory.ProbabilityMeasure.isCompletelyMetrizableSpace`: for `E` Polish
   and Borel, transport the previous item along `probabilityMeasureHomeomorph`
   with `Homeomorph.isClosedEmbedding`
-  (`Mathlib/Topology/Homeomorph/Defs.lean:297`) and
+  (`Mathlib/Topology/Homeomorph/Defs.lean:296`) and
   `Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:249`).
 * `MeasureTheory.ProbabilityMeasure.polishSpace`: for `E` Polish,
@@ -260,7 +305,7 @@ The representation theorem itself:
   `MeasureTheory.Measure.countable_meas_pos_of_disjoint_iUnion`,
   `Mathlib/MeasureTheory/Measure/Typeclasses/SFinite.lean:305`, applied to the
   spheres) together with `Metric.thickening_singleton`
-  (`Mathlib/Topology/MetricSpace/Thickening.lean:157`) to read a thickening of a
+  (`Mathlib/Topology/MetricSpace/Thickening.lean:149`) to read a thickening of a
   point as a ball; `disjointed` then keeps the frontiers null, because
   `frontier_inter_subset`, `frontier_union_subset` and `frontier_compl`
   (`Mathlib/Topology/Closure.lean:537,544,528`) bound the frontier of a finite
@@ -275,22 +320,35 @@ The representation theorem itself:
   applies to each piece, and the unit interval with Lebesgue measure as the
   common space.
 * The version for a single limit along a filter with a countable basis.
-* The converse direction, almost sure convergence implies weak convergence of
-  the laws, from `MeasureTheory.tendsto_of_ae_tendsto` or directly.
+
+The converse direction is Mathlib's and is not to be rebuilt: almost sure
+convergence implies convergence in distribution is
+`MeasureTheory.tendstoInDistribution_of_ae_tendsto`
+(`Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean:152`), for a
+filter `l` with `[l.IsCountablyGenerated]` and `E` with
+`[OpensMeasurableSpace E]`, so already along a filter and not only along `ℕ`.
+Together with the items above it, it says that convergence in distribution is
+exactly what an almost surely convergent realisation witnesses.
 
 ## Milestone 4: uniform integrability against convergence in distribution
 
-Mathlib's uniform integrability theory is about a single measure: it gives
-`uniformIntegrable_iff` and the Vitali convergence theorems for convergence in
-measure. Absent is the link to convergence in distribution, where the random
-variables live on different spaces and only their laws are comparable. That link
-is what the convergence theorem of **MartingaleProblems** consumes, three times.
+Mathlib's uniform integrability theory is about a single measure: `MemLp`,
+`UnifIntegrable` and `UniformIntegrable` are all stated for one `μ` and one
+index family of functions on its space, and the Vitali convergence theorems
+conclude from convergence in measure. Convergence in distribution is on the
+other side of that: it is a statement about laws, and its random variables live
+on a family of spaces, one per index — which is exactly the shape of
+`MeasureTheory.TendstoInDistribution`. The link between the two notions is what
+is absent, and it is what the convergence theorem of **MartingaleProblems**
+consumes, three times. Every statement of this milestone takes
+`TendstoInDistribution X l Z μ μ'` as its hypothesis, so that the differing
+spaces are Mathlib's and not this roadmap's.
 
-* `tendsto_integral_of_tendsto_of_uniformIntegrable`: if the real random
-  variables `X n` converge in distribution to `X` and `{X n}` is uniformly
-  integrable, then `X` is integrable and `𝔼[X n] → 𝔼[X]`. Prove it through the
-  Skorokhod representation of Milestone 3, which puts everything on one space
-  and reduces the statement to Mathlib's Vitali theorem.
+* `tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable`: for real
+  random variables with `TendstoInDistribution X l Z μ μ'` and `X` uniformly
+  integrable, `Z` is integrable and `∫ ω, X i ω ∂(μ i) → ∫ ω, Z ω ∂μ'`. Prove it
+  through the Skorokhod representation of Milestone 3, which puts everything on
+  one space and reduces the statement to Mathlib's Vitali theorem.
 * The truncation characterization for a family of real random variables on
   varying spaces: uniform integrability is equivalent to
   `lim_{N→∞} sup_n 𝔼[|X n| - min |X n| N] = 0`. State it in that form, since it

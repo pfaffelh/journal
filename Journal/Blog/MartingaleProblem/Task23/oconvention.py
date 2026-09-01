@@ -10,6 +10,12 @@ Systemkonstruktion wie `posetsearch`, nur mit dem anderen Intervall, und
 vergleicht ausserdem den Raum L = {T e : T = T^T, TV = V^T T} mit den
 tatsaechlich erzwungenen Stellen.
 
+Befund (2026-08-31, achter Lauf): sie gilt **nicht**.  `sweep_o` faellt auf fuenf
+Punkten, sobald das Massengitter die Bedingung m_c^2 = m_a m_b treffen kann; der
+kleinste Zeuge steht auf vier Punkten und heisst `odiamond`.  `criterion_o`
+dagegen traegt auch dort, wo L echt kleiner ist als R^T, und erklaert den
+Ausfall: L beschreibt die erzwungenen Stellen genau.
+
 Aufruf:  python3 oconvention.py
 """
 
@@ -94,9 +100,17 @@ def criterion_o(n, grid):
 
 
 if __name__ == '__main__':
+    # Der Sweep lief hier bis zum 2026-08-31 auf fuenf Punkten nur ueber Massen
+    # aus {0,1} und meldete "kein Ausfall".  Das war die Luecke: {0,1} und
+    # {0,1,2} koennen die Ausnahmebedingung m_c^2 = m_a m_b mit m_a != m_b gar
+    # nicht treffen.  Mit {0,1,2} auf fuenf Punkten fallen 144 Faelle -- siehe
+    # `ocounter.py` und `odiamond.py`.  Ausfaelle sind hier also erwartet.
+    for n, grid in ((3, (0, 1, 2)), (4, (0, 1, 2)), (5, (0, 1, 2))):
+        sweep_o(n, grid)
+    # Das Kriterium dagegen traegt ueberall, auch auf fuenf Punkten, wo L echt
+    # kleiner wird als R^T; hier darf nichts abweichen.
     ok = True
-    for n, grid in ((3, (0, 1, 2)), (4, (0, 1, 2)), (5, (0, 1))):
-        ok &= sweep_o(n, grid)
-    for n, grid in ((3, (0, 1, 2)), (4, (0, 1, 2))):
+    for n, grid in ((3, (0, 1, 2)), (4, (0, 1, 2)), (5, (0, 1, 2))):
         ok &= criterion_o(n, grid)
-    print('o-Konvention:', 'kein Ausfall' if ok else 'AUSFALL')
+    print('Kriterium:', 'kein Ausfall' if ok else 'AUSFALL')
+    raise SystemExit(0 if ok else 1)

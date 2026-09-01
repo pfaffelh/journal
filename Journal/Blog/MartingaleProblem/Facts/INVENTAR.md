@@ -38,7 +38,7 @@ setzt, nennt den Beleg.
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung `induction_on_inter` |
-| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib (`FiniteMeasure.tendsto_map_of_tendsto_of_continuous`), die f.ü.-stetige Fassung fehlt; M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
+| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`), die konvergenzbestimmende fehlt |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
@@ -64,10 +64,99 @@ setzt, nennt den Beleg.
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
 | `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte trägt kein Beweis, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
 | `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
-| `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `MeasureTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib, der Martingalfall ist es nicht |
+| `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `ProbabilityTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib (`Probability/Process/LocalProperty.lean:93,142,153`, Namensraum am 2026-09-01 berichtigt), der Martingalfall ist es nicht |
 
 ## Offene Auffälligkeiten
 
+* **Der Lokalisierungsapparat steht in `ProbabilityTheory`, nicht in
+  `MeasureTheory`; am 2026-09-01, zweiter Lauf, berichtigt.** `MartingaleProblems`
+  führte `MeasureTheory.IsPreLocalizingSequence`,
+  `MeasureTheory.IsLocalizingSequence`, `MeasureTheory.Locally` und
+  `MeasureTheory.IsStable`, und dieses Inventar schrieb es nach. Falsch, und
+  zwar in v4.33.1 **wie** auf master: `Mathlib/Probability/Process/LocalProperty.lean`
+  eröffnet in Zeile 50 `namespace ProbabilityTheory` und schließt in Zeile 345,
+  während der Rest von `Mathlib/Probability/Process/` — `Stopping.lean`,
+  `Adapted.lean`, `Filtration.lean` — in `MeasureTheory` liegt. Die Datei ist
+  also die Ausnahme, und genau deshalb hat es sich gehalten. Mitgefunden: die
+  Namen `locally_and_iff` und `locally_locally_iff` sind `IsStable.`-Namen, nicht
+  freie (`:161`, `:306`), und das zweite verlangt `[IsRightContinuous 𝓕]`.
+  `Locally.of_prop`, `Locally.mono`, `Locally.localSeq` und
+  `Locally.stoppedProcess_localSeq` stimmen. Berichtigt sind die Roadmap an drei
+  Stellen, `Suggested.lean` und die Tabellenzeile zu `fact:stoppedlocalmg`.
+  `FiniteDimensionalLaws.lean` und `Kolmogorov.lean` liegen ebenfalls in
+  `ProbabilityTheory`; dort stand kein falscher Namensraum, nur gar keiner, und
+  die Roadmap nennt ihn jetzt.
+* **Derselbe Namensraumfehler noch zweimal, in `KolmogorovExtension`; am
+  2026-09-01, vierter Lauf, berichtigt.** Der Befund vom zweiten Lauf des Tages
+  war nicht auf `MartingaleProblems` beschränkt. `KolmogorovExtension` führte
+  `MeasureTheory.isProjectiveLimit_infinitePi` — die Deklaration steht in
+  `Mathlib/Probability/ProductMeasure.lean:363` innerhalb von `namespace Measure`
+  (Zeile 346) innerhalb von `namespace MeasureTheory` (Zeile 56), heißt also
+  `MeasureTheory.Measure.isProjectiveLimit_infinitePi` — und
+  `MeasureTheory.isProjectiveLimit_map`, das in Wahrheit
+  `ProbabilityTheory.isProjectiveLimit_map` heißt
+  (`Probability/Process/FiniteDimensionalLaws.lean:53`, `namespace
+  ProbabilityTheory` ab Zeile 38). Der zweite ist wörtlich derselbe Fall wie am
+  zweiten Lauf: `Mathlib/Probability/Process/` liegt in `MeasureTheory`, und
+  `FiniteDimensionalLaws.lean` ist neben `LocalProperty.lean` die zweite
+  Ausnahme. Beide Zitate sind berichtigt.
+* **`KolmogorovExtension` Meilenstein 2 verlangte einen Satz, den Mathlib
+  hat; am 2026-09-01, vierter Lauf, gestrichen.** Der letzte Punkt lautete
+  „`MeasureTheory.IsProjectiveLimit.unique`: zwei projektive Limiten derselben
+  Familie stimmen überein, aus `generateFrom_measurableCylinders` und
+  `MeasureTheory.ext_of_generate_finite`". Das ist nicht zu bauen: die
+  Deklaration steht unter genau diesem Namen in
+  `Mathlib/MeasureTheory/Constructions/Projective.lean:150`, und ihr Beweis ist
+  Zeile für Zeile der angegebene Weg. Mitgefunden und ebenfalls schon da:
+  `IsProjectiveLimit.isFiniteMeasure` (`:133`),
+  `IsProjectiveLimit.isProbabilityMeasure` (`:139`),
+  `measure_cylinder` (`:123`), `measure_univ_eq` (`:129`) und
+  `measure_univ_unique` (`:145`) — womit auch der vorletzte Punkt von
+  Meilenstein 2 auf eine Zeile schrumpft. Die Kopfliste nennt die
+  Uniquenessschicht jetzt, der Meilenstein verlangt sie nicht mehr.
+* **`WeakConvergence` verlangte vier Punkte, die Mathlib seit v4.33.1 hat, und
+  kannte die Datei nicht, die sie enthält; am 2026-09-01, fünfter Lauf,
+  berichtigt.** `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean`
+  (Rémy Degenne) führt `MeasureTheory.TendstoInDistribution` als **Struktur**
+  mit den Feldern `forall_aemeasurable`, `aemeasurable_limit` und `tendsto`, und
+  ihre Zufallsvariablen `X i : Ω i → E` leben auf einer **Familie** von
+  Wahrscheinlichkeitsräumen, eine je Index. Genau das hatte Meilenstein 4 als
+  fehlend geführt („where the random variables live on different spaces and only
+  their laws are comparable"). Vier Punkte fallen damit weg oder ändern ihre
+  Gestalt: der Satz von der stetigen Abbildung in Zufallsvariablenform ist
+  `TendstoInDistribution.continuous_comp` (`:136`), die Slutsky-Fassung
+  „`X n → Z` in Verteilung und `dist (X n) (Y n) → 0` nach Maß" ist
+  `tendstoInDistribution_of_tendstoInMeasure_sub` (`:192`), die eigentlichen
+  Slutsky-Sätze sind `TendstoInDistribution.prodMk_of_tendstoInMeasure_const`
+  (`:313`), `…continuous_comp_prodMk_of_tendstoInMeasure_const` (`:333`) und
+  `…add_of_tendstoInMeasure_const` (`:345`), und die Rückrichtung der
+  Skorokhod-Darstellung ist `tendstoInDistribution_of_ae_tendsto` (`:152`) —
+  bereits für einen Filter mit `[l.IsCountablyGenerated]`, nicht nur für `ℕ`.
+  Der Name, den Meilenstein 3 dafür nannte, `MeasureTheory.tendsto_of_ae_tendsto`,
+  **existiert nicht**. Die Datei steht in v4.33.1 genauso da wie auf master; das
+  ist kein Nachziehen hinter master, sondern eine nie gestellte Suche. Was von
+  Meilenstein 2 bleibt, ist der eine Schritt von `Continuous h` zur Stetigkeit
+  außerhalb einer Nullmenge, und Meilenstein 4 nimmt `TendstoInDistribution`
+  jetzt als Hypothese, statt die verschiedenen Räume selbst zu erfinden.
+* **Und ein fünfter Punkt derselben Art:** Meilenstein 2 verlangte
+  `measurableSet_setOf_continuousAt` „if Mathlib does not already have" es. Es
+  hat es: `measurableSet_of_continuousAt`, **Wurzelnamensraum**,
+  `Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:252`, unter
+  `[OpensMeasurableSpace α]` und `[PseudoEMetricSpace β]`, bewiesen aus
+  `IsGδ.setOfPred_continuousAt` (`Topology/GDelta/MetrizableSpace.lean:51`) und
+  `IsGδ.measurableSet` (`BorelSpace/Basic.lean:248`). Der konditionale Nebensatz
+  war zugleich ein Formverstoß gegen die Regeln von Tau Ceti; er ist weg.
+* **Der Namensraumfehler von `FiniteDimensionalLaws.lean` ein drittes Mal, in
+  `MartingaleProblems`; am 2026-09-01, fünfter Lauf, berichtigt.** Meilenstein 2
+  nannte für `IsMPSolutionFor.map` den Namen
+  `MeasureTheory.map_eq_of_forall_ae_eq`. Die Deklaration steht in
+  `Mathlib/Probability/Process/FiniteDimensionalLaws.lean:99`, und diese Datei
+  eröffnet in Zeile 38 `namespace ProbabilityTheory` und schließt ihn in Zeile
+  106; sie heißt also `ProbabilityTheory.map_eq_of_forall_ae_eq`. Dieselbe Datei
+  und derselbe Fehler wie bei `ProbabilityTheory.isProjectiveLimit_map` im
+  vierten Lauf und wie bei `Locally` im zweiten. Mitgeprüft und richtig:
+  `identDistrib_iff_forall_finset_identDistrib` (`:77`), jetzt ebenfalls mit
+  Namensraum genannt.
 * **Vier Facts ohne tragende Fundstelle** — `fact:doob`, `fact:fdd`,
   `fact:portmanteau`, `fact:stoppedlocalmg` werden nur in den
   Buchhaltungsabschnitten zitiert. Zu klären: implizit benutzt (dann die Stelle
@@ -92,6 +181,59 @@ setzt, nennt den Beleg.
   von keinem Beweis benutzt; die einzige Stelle, an der es überhaupt arbeiten
   kann, ist die Implikation (a)⇒(b) und nur, wenn man den Weg über die
   Prohorov-Metrik nimmt.
+* **Die Kopfliste von `SkorokhodSpace` nannte als „die ganze
+  Einseitiglimes-API" sechs Sätze über monotone Funktionen; am 2026-09-01,
+  vierter Lauf, berichtigt.** `tendsto_leftLim`, `tendsto_rightLim`,
+  `tendsto_leftLim_within`, `continuousWithinAt_Iio_iff_leftLim_eq`,
+  `continuousWithinAt_Ioi_iff_rightLim_eq` und
+  `continuousAt_iff_leftLim_eq_rightLim` stehen sämtlich in `namespace Monotone`
+  von `Mathlib/Topology/Order/LeftRightLim.lean` (Zeilen 268--386, mit
+  `include hf` für `hf : Monotone f`) und noch einmal in `namespace Antitone`
+  (388--451). Sie verlangen außerdem `[ConditionallyCompleteLinearOrder β]
+  [OrderTopology β]` vom **Zielraum**. Ein càdlàg-Pfad in einen metrischen Raum
+  erfüllt nichts davon; kein einziger der sechs Namen ist für diese Roadmap
+  benutzbar. Was im Wurzelnamensraum steht und für beliebiges `f` gilt, ist
+  `tendsto_leftLim_of_tendsto`/`tendsto_rightLim_of_tendsto` (`:121`,`:130`),
+  `ContinuousWithinAt.leftLim_eq`/`.rightLim_eq` (`:110`,`:117`),
+  `leftLim_eq_of_tendsto`/`rightLim_eq_of_tendsto` (`:65`,`:73`),
+  `leftLim_eq_of_eq_bot`, `leftLim_eq_of_not_tendsto`, `leftLim_eq_of_isBot`,
+  `rightLim_eq_of_isTop` und `mapClusterPt_leftLim`/`_rightLim`. Der Glücksfall:
+  die Hypothese von `tendsto_leftLim_of_tendsto` ist wörtlich
+  `∃ y, Tendsto f (𝓝[<] a) (𝓝 y)`, also genau das Feld `left_limit` von
+  `IsCadlag`. Die Kopfliste sagt das jetzt und nennt beide Hälften getrennt.
+
+  **Daran hängt eine Hypothesenkorrektur.** `Function.leftLim` ist nur für
+  `[LinearOrder α]` definiert (Variablenblock `:44`, Definition `:50`). Die zwei
+  Punkte von Meilenstein 2, die die Struktur an `Function.leftLim` anschließen,
+  standen unter Stufe **(A)** `[Preorder ι]` und sind dort nicht formulierbar.
+  Der Meilenstein führt jetzt eine dritte benannte Stufe **(A′)**
+  `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]` — das schwächste
+  Bündel, unter dem `Function.leftLim` existiert, und echt schwächer als (B),
+  weil es keine dichte Teilmenge verlangt. Das ist keine Verschärfung, sondern
+  die Korrektur einer zu schwachen Angabe.
+* **Zwei kleinere Fehler derselben Kopfliste, am 2026-09-01 berichtigt.** Sie
+  schrieb `Monotone.countable_not_continuousAt` der Datei `LeftRightLim.lean` zu;
+  dort steht der Name nur im Modulkommentar (`:25`), die Deklaration liegt in
+  `Mathlib/Topology/Order/Monotone.lean:166`. Meilenstein 2 sagte es schon
+  richtig — die Roadmap widersprach sich selbst. Und `StieltjesFunction`, das die
+  Kopfliste als Vorbild für `IsCadlag` nennt, formuliert Rechtsstetigkeit als
+  `ContinuousWithinAt f (Ici x) x` (`Measure/Stieltjes.lean:118,140`), während
+  `Function.RightContinuous` der Roadmap `Ioi` nimmt; die Brücke ist
+  `continuousWithinAt_Ioi_iff_Ici`, dieselbe, die `StieltjesFunction.rightLim_eq`
+  (`:143`) selbst geht. Beides steht jetzt da.
+* **Die zentrale Definition von `SkorokhodSpace` Meilenstein 3 war ein
+  Typfehler; am 2026-09-01 berichtigt.** Dort stand
+  `TimeChange.norm λ = log (max (LipschitzWith.const λ) (LipschitzWith.const λ⁻¹))`.
+  `LipschitzWith.const` ist der Satz „eine konstante Abbildung ist
+  `0`-lipschitz" (`Topology/EMetricSpace/Lipschitz.lean:194`,
+  `protected theorem const (b : β) : LipschitzWith 0 fun _ : α => b`), also ein
+  Beweis und keine Zahl. Mathlib kennt **keine kleinste Lipschitzkonstante**:
+  `LipschitzWith (K : ℝ≥0) (f : α → β)` ist eine Prop (`:60`), ebenso
+  `LipschitzOnWith` (`:64`), und ein gebündeltes Optimum gibt es nirgends. Damit
+  war die Metrik des Skorokhod-Raums — Meilensteine 3 bis 5 hängen an ihr — nicht
+  aufschreibbar. Der Meilenstein führt jetzt `TimeChange.lipConst` als eigenen
+  Punkt, samt Erreichtheit des Infimums und Submultiplikativität über
+  `LipschitzWith.comp` (`:225`), und `norm` ist darauf gebaut.
 * **`fact:fullgenerator`** trägt §8 als „nur für optionalen Kontext". Am
   2026-08-30 entschieden: solange `rem:fullgenerator` im Manuskript steht,
   gehört er in die Roadmap, und er steht jetzt dort ohne das Wort „optional"
@@ -284,6 +426,24 @@ setzt, nennt den Beleg.
   \ref{it:C3a}, und das sagt `ex:atomicdiscontinuity` mit Gegenbeispiel,
   `thm:absconvaug`/`prop:atomaug` reparieren es („any, atoms allowed"), und
   `rem:MZcost` nennt die Grenze der Reparatur.
+* **Die o-Konvention auf einer Halbordnung ist nicht offen, sondern falsch; am
+  2026-08-31, achtem Lauf, belegt und im Manuskript berichtigt.** Sieben Läufe
+  hielten sie für richtig und unbewiesen; die Statuszeile von
+  `rem:atomsnotchange` sagte „verified exhaustively up to five points; not
+  proved". Beides trifft nicht zu. Der kleinste Zeuge steht auf **vier** Punkten:
+  der Diamant $0\prec a,b\prec c$ mit $m_a=1$, $m_b=4$, $m_c=2$, alle Massen
+  nichtnegativ. Er ist ausgeschrieben, nicht nur als Rangvergleich festgestellt,
+  und die Zeile lautet jetzt „*false*; counterexample in `rem:atomicposet`". Die
+  Bedingung ist scharf und heißt $m_c^2=m_am_b$ — die Masse der Spitze ist das
+  geometrische Mittel der beiden unvergleichbaren Massen —, also eine
+  abgeschlossene algebraische und, auf allem Geprüften, echte Bedingung: die
+  o-Aussage gilt außerhalb einer Nullmenge und fällt auf ihr. Warum es sieben
+  Läufe überlebt hat, ist der eigentliche Befund: der erschöpfende Sweep lief auf
+  fünf Punkten über Massen aus $\{0,1\}$ und auf vier über $\{0,1,2\}$, und
+  keines der beiden Gitter kann $m_c^2=m_am_b$ mit $m_a\ne m_b$ treffen. Ein
+  Gitter, das eine algebraische Ausnahmebedingung nicht enthalten kann, ist keine
+  Evidenz gegen sie. Die Einzelheiten stehen im `Task23/PROTOKOLL.md`, Abschnitt
+  „Die o-Konvention, 2026-08-31 (achter Lauf)".
 * **Die Statuszeile „purely atomic, atoms incomparable" war falsch; am
   2026-08-31, siebtem Lauf, im Manuskript berichtigt.** Bewiesen ist seit dem
   sechsten Lauf der **ganze** Fall: auf jeder endlichen Halbordnung mit
@@ -302,10 +462,10 @@ setzt, nennt den Beleg.
   Spiegelung aufhängt, und auf einer Halbordnung nicht. Sichtbar wird es an der
   Matrix: unter $\iota=\mathrm o$ ist $(0,s]=\T_{\le s}\setminus\T_{\le0}$, also
   $V_{s,s}=m_s\ne0$, und $V$ ist **nicht nilpotent**. `prop:atomicposet` ist
-  deshalb für $\iota=\mathrm p$ formuliert; die o-Fassung ist an allen
-  Halbordnungen auf bis zu fünf Punkten nachgerechnet und nicht bewiesen und
-  steht als einzige „verified, not proved"-Zeile der Statustabelle und als
-  Rückstaupunkt 1. Der Fehler stand auch in `MartingaleProblems` bei
+  deshalb für $\iota=\mathrm p$ formuliert; die o-Fassung galt einen Lauf lang
+  als „verified, not proved" und ist seit dem achten Lauf **widerlegt** — siehe
+  den ersten Punkt dieser Liste. Der Fehler stand auch in `MartingaleProblems`
+  bei
   `duality_of_atomic` („in both conventions … the hypotheses are unchanged") und
   ist dort korrigiert.
 * **Drei Aussagen von §7 fehlen in der Bündeltabelle.** `thm:absconvws`,
@@ -318,6 +478,18 @@ setzt, nennt den Beleg.
   erklärte Zweck der Tabelle. `rem:EKrelcompact` ist die Stelle, an der sieben
   Facts zusammenlaufen, und die Tabelle in §2.x nennt es viermal als Abnehmer.
   Frage ans Manuskript.
+* **`cor:atomless` schließt schwächer, als sein Beweis hergibt; am 2026-09-01
+  gefunden.** Die Konklusion lautet „$\Phi(t,0)=\Phi(0,t)$ für $Q$-fast jedes
+  $t$", und das ist ein Artefakt des Umwegs über `lem:calculus` (\EK{} 4.4.10),
+  dessen Schluss selbst ein Fast-überall ist. Das seit heute im Manuskript
+  stehende `lem:rectangle` gibt auf demselben transportierten Paar
+  $\Psi=f(x+y)$ **überall**, also die Identität an jedem $t$; es ruht auf nichts
+  als `lem:calculus` und der Stetigkeit von
+  $r\mapsto\Psi(x+r,y')-\Psi(x,y'+r)$. Die Verschärfung kostet einen Satz im
+  Beweis von `cor:atomless` und ist nicht vorgenommen worden, weil dieser Lauf
+  sie nicht gebraucht hat: `prop:mixeddual` benutzt `lem:rectangle` direkt.
+  Die zweite Bemerkung in `rem:atomsnotchange` — „die Konklusion ist genuin
+  $Q$-fast jedes $t$" — wäre dann ebenfalls zu prüfen. Frage ans Manuskript.
 
 ## Läufe
 
@@ -1864,3 +2036,781 @@ von $\mathbb 1$); hier ist $V=N+D$ mit $N$ nilpotent und
 $D=\operatorname{diag}(m)$, die nicht kommutieren, und Zeile wie Spalte $0$
 verschwinden. Das ist jetzt dran, weil es die letzte „verified, not proved"-Zeile
 des Manuskripts schließt und weil es dieselbe Spuralgebra wiederverwendet.
+
+### 2026-08-31, achter Lauf — Rückstau 1: die o-Konvention ist widerlegt
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Der Lauf ging an
+den ersten Punkt des Rückstaus, die o-Konvention auf einer Halbordnung, die der
+siebte Lauf als „verified, not proved" hinterlassen hatte. Sie ist erledigt, und
+zwar in der Richtung, die sieben Läufe für ausgeschlossen hielten: **die Aussage
+ist falsch.** Geändert sind `MartingaleProblem.tex`,
+`TauCeti/MartingaleProblems/README.md`, `Task23/PROTOKOLL.md`,
+`Facts/BACKLOG.md` und dieses Inventar; neu sind `Task23/omaxorder.py`,
+`Task23/ocounter.py`, `Task23/odiamond.py`, `Task23/certificate_o.py` und
+`Task23/oshape.py`.
+
+**Der Zeuge, auf vier Punkten.** Der Diamant $\T=\{0,a,b,c\}$ mit
+$0\prec a\prec c$, $0\prec b\prec c$, $a$ und $b$ unvergleichbar, und den
+nichtnegativen Massen $m_a=1$, $m_b=4$, $m_c=2$. Setzt man $\gamma(0,c)=-1$,
+$\gamma(a,c)=-2$, $\gamma(b,c)=1$ und $\Phi(0,c)=-2$, $\Phi(a,c)=-4$,
+$\Phi(b,c)=2$ und alles Übrige null, so gelten **beide** Zuwachsdarstellungen an
+jedem vergleichbaren Paar in der Lesart $\iota=\mathrm o$, und
+$\Phi(c,0)-\Phi(0,c)=2$. Dieselbe Uhr trägt unter $\iota=\mathrm p$. Die beiden
+Konventionen unterscheiden sich also nicht darin, was man beweisen kann, sondern
+darin, was gilt.
+
+**Die Bedingung ist scharf.** Auf den drei Atomen ist $V$ die Dreiecksmatrix mit
+den Eigenwerten $m_a,m_b,m_c$; der Linkseigenvektor zu $m_c$ ist
+$(m_a/(m_c-m_a),\ m_b/(m_c-m_b),\ 1)$, und er steht senkrecht auf $\mathbb 1$
+genau dann, wenn $m_c^2=m_am_b$ — die Masse der Spitze ist das geometrische
+Mittel der beiden unvergleichbaren Massen. `odiamond.py` prüft die Vorhersage
+gegen zwölf Massenvektoren, in beiden Systemen und beiden Konventionen: sie
+trifft genau. Damit ist der Ausfall eine abgeschlossene algebraische Bedingung
+und, auf allem Geprüften, eine echte: über alle Halbordnungen mit kleinstem
+Element auf vier und fünf Punkten mit zufälligen paarweise verschiedenen Massen
+(114+657 Fälle) fällt keine. Die o-Aussage gilt außerhalb einer Nullmenge und
+fällt auf ihr.
+
+**Was daran der eigentliche Befund ist.** Nicht der Zeuge, sondern warum ihn
+sieben Läufe nicht gesehen haben. `oconvention.sweep_o` lief **erschöpfend** —
+über alle Halbordnungen mit kleinstem Element auf bis zu fünf Punkten —, aber
+auf fünf Punkten nur über Massen aus $\{0,1\}$ und auf vier über $\{0,1,2\}$, und
+keines dieser Gitter kann $m_c^2=m_am_b$ mit $m_a\ne m_b$ treffen: der kleinste
+Fall braucht die 4. Ein Gitter, das eine algebraische Ausnahmebedingung gar nicht
+enthalten kann, ist keine Evidenz gegen sie, und „erschöpfend geprüft" heißt
+nichts, solange nicht dasteht, worüber. Umgekehrt hätte ein Zufallsvektor hier
+ebenfalls nichts gefunden, weil die Ausnahme eine Nullmenge ist. Gebraucht wurde
+beides.
+
+**Was stehen bleibt und geprüft ist.** Zwei Aussagen tragen weiter, und beide
+sind heute erst richtig belegt. Erstens das Kriterium in seiner allgemeinen
+Gestalt: $\mathcal L=\{T\mathbb 1: T=T^{\mathsf T},\ TV=V^{\mathsf T}T\}$ ist
+ganz $\R^F$ genau dann, wenn $\mathbb 1$ **maximale Ordnung** hat, also
+$\mu_{\mathbb 1}=\mu_V$ — das Minimalpolynom des Vektors ist das der Matrix. Für
+nilpotentes $V$ ist das $V^{r-1}\mathbb 1\ne0$ und damit `lem:selfadjoint`; das
+Kriterium ist also nicht durch die Nilpotenz bedingt, sondern nur unter
+$\iota=\mathrm p$ geschenkt. Nachgerechnet über alle Halbordnungen auf bis zu
+fünf Punkten mit Massen aus $\{0,1,2\}$, in beiden Richtungen, 81+1539+53217
+Fälle, keine Abweichung. Dazu kommt, dass $\mathcal L$ die erzwungenen Stellen
+**genau** beschreibt — auch das jetzt auf fünf Punkten geprüft, 266085 Stellen,
+beide Abweichungsrichtungen null, wo der siebte Lauf nur drei und vier hatte und
+dort $\mathcal L$ ohnehin alles ist. Der Ausfall ist damit nicht nur belegt,
+sondern erklärt: wo $\mathbb 1$ die maximale Ordnung verliert, bleibt der Defekt
+frei. Zweitens die Reduktion auf den Teil positiver Massen:
+mit $Z=\{m=0\}$, das $0$ enthält, hat $\mathbb 1$ maximale Ordnung für $V$ genau
+dann, wenn $\mathbb 1_{F'}$ sie für den invertierbaren Block $B=P'D'$ auf
+$F'=\{m>0\}$ hat. Diese Richtung ist nicht nur geprüft (1539+53217 Fälle),
+sondern bewiesen; der Beweis steht im PROTOKOLL und benutzt allein, dass kein
+Punkt von $F'$ unter $0$ liegt.
+
+**Ins Manuskript eingetragen.** Die Statuszeile „the same for
+$\iota=\mathrm o$" lautet jetzt „*false*; counterexample in `rem:atomicposet`",
+und der letzte Absatz von `rem:atomicposet`, der bisher schloss „It is the one
+row of the table that is verified rather than proved", trägt jetzt den Zeugen,
+die Bedingung $m_c^2=m_am_b$ und den Satz, dass $\iota=\mathrm p$ in
+`prop:atomicposet` eine Eigenschaft der Aussage ist und nicht eine des
+Arguments. `check.py` meldet danach `clean`: 126 Seiten, keine undefinierten
+Referenzen, größte Überlänge 7.7pt wie im Ausgangszustand. In
+`MartingaleProblems` sagt die Zeile zu `duality_of_atomic` jetzt dasselbe und
+nennt den Diamanten; sie sagte bisher nur, das Werkzeug greife nicht.
+
+**Offen geblieben.** Von Task 23 dieselben zwei Punkte wie zuvor, ordnungsdichte
+Atommengen und die gemischte Uhr; sie sind jetzt Rückstaupunkt 1. Nicht
+geschehen und mit Absicht: kein Lean übersetzt (der Worktree hat kein `.lake`).
+Nicht angefasst: die Frage, ob man die richtige o-Aussage — der Defekt
+verschwindet, sobald $\mathbb 1$ maximale Ordnung hat — ins Manuskript aufnehmen
+will. Sie ist wahr und geprüft, aber ihre Hypothese ist keine Uhrenhypothese,
+sondern eine Bedingung an die Massen, der man nicht ansieht, welche Uhren sie
+trifft; das gehört dem Nutzer.
+
+**Als Nächstes zu formalisieren:
+`Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`** — für `A.IsSymm` und
+`Bᵀ = -B` ist `(A * B).trace = 0`. Der Vorschlag steht seit dem sechsten Lauf und
+wird durch diesen **zum zweiten Mal bestätigt, jetzt aus der anderen Richtung**:
+der Zeuge trifft nicht den Spurteil, sondern allein die Konstruktion von `T`. Was
+unter $\iota=\mathrm o$ ausfällt, ist die Hypothese von
+`Matrix.exists_isSymm_mulVec_one_eq_single`; die drei Zeilen Spuralgebra gelten
+in beiden Konventionen und sind heute mit einem Gegenbeispiel gegen den anderen
+Teil noch schärfer abgegrenzt als vorher mit einem Rangvergleich für ihn. Sie
+ruhen auf `Matrix.IsSymm` (`LinearAlgebra/Matrix/Symmetric.lean:35`),
+`Matrix.trace_transpose` (`Trace.lean:73`) und `Matrix.trace_mul_comm`
+(`Trace.lean:158`); ein Prädikat für `Bᵀ = -B` allein hat Mathlib nicht
+(`Matrix.IsSkewAdjoint`, `SesquilinearForm.lean:562`, ist relativ zu einer
+Form `J`), die Bedingung wird also ausgeschrieben.
+
+Neue Roadmap-Punkte trägt dieser Lauf **keine** ein, und das ist die richtige
+Folge eines negativen Ergebnisses: eine Roadmap führt zu beweisende Aussagen,
+und die o-Fassung ist keine mehr. Was sie stattdessen bekommen hat, ist die
+Korrektur einer Zeile, die mehr behauptete, als gilt.
+
+### 2026-09-01 — Rückstau 1: die gemischte Uhr ist bewiesen
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging an
+den ersten Punkt des Rückstaus, und dort an die Hälfte, die seit dem 2026-08-29
+unberührt lag: **Stufe 3, die gemischte Uhr.** Sie ist erledigt, unter einer
+genannten Hypothese. Geändert sind `MartingaleProblem.tex`,
+`TauCeti/MartingaleProblems/README.md`, `Task23/PROTOKOLL.md`,
+`Facts/BACKLOG.md` und dieses Inventar; neu ist `Task23/mixed.py`.
+
+**Der Satz.** Für $q=\mu+\sum_{i=1}^N m_i\delta_{a_i}$ mit $\mu$ atomlos und
+endlich vielen Atomen gilt $\Phi(s,t)=\Phi(t,s)$ auf dem ganzen Quadrat,
+insbesondere $\Phi(t^*,0)=\Phi(0,t^*)$ bei **jedem** $t^*$, sobald zwischen je
+zwei aufeinanderfolgenden Atomen — und vor dem ersten — stetige Masse liegt.
+Die Masse nach dem letzten Atom darf null sein. Im Manuskript ist das
+`prop:mixeddual`, gestützt auf ein neues `lem:rectangle`; die Statuszeile
+„order-dense atoms, or mixed & open" ist in zwei Zeilen zerlegt, deren erste
+`proved` lautet.
+
+**Der Mechanismus, in einem Satz.** In Uhrzeit zerfällt der Definitionsbereich
+in Strecken $S_0,\dots,S_N$ mit Lücken dazwischen, eine je Atom; auf
+$S_i\times S_j$ ist $\Psi(x,y)=f_{ij}(x+y)$, und das Überqueren einer Lücke der
+Masse $m$ ist der Operator $g\mapsto g+mg'$, der **nur an der Masse hängt** und
+nicht daran, welche Koordinate überquert — das ist $\gamma_1=\gamma_2$ in
+Operatorform. Eine Induktion über den Abstand $d=i-j$ macht
+$w_{ij}=f_{ij}-f_{ji}$ zu null: auf dem unteren Stück des gemeinsamen
+Definitionsbereichs durch die Kreuzungsrelation, auf dem oberen, weil dort
+$w+m w'=0$ mit Anfangswert null am Nahtpunkt gilt. Der Kern von $1+m\dif/\dif u$
+ist $e^{-u/m}$, eindimensional; die stetige Masse liefert genau die Stelle, an
+der er weggeschnitten wird. Mehr tut sie nicht, und deshalb ist die Hypothese so
+schwach.
+
+**Was der Beweis nicht braucht.** Die Eckrelationen an zwei Atomen — wörtlich
+`lem:atomgrid` — kommen nicht vor. Der rein atomare und der getrennt gemischte
+Fall sind also nicht Spezialfälle voneinander, sondern zwei Enden: dort trägt
+allein die Kreuzmultiplikation, hier allein die Kreuzungsrelation.
+
+**Nachgerechnet.** `Task23/mixed.py` stellt den vollen Lösungsraum als lineares
+System auf: die $f_{ij}$ stückweise auf den Einheitsintervallen, in lokaler
+Koordinate mit der Basis $1,\tau,\tau^2,\tau^3,e^{-\tau/m}$ — die
+Exponentialfunktionen mit Absicht, denn der Kern des Kreuzungsoperators ist die
+einzige Richtung, in der ein Gegenbeispiel Platz hätte; über die Stücke hinweg
+nur Stetigkeit, denn mehr als absolute Stetigkeit ist von $f_{ij}$ nicht
+bekannt. Neun Konfigurationen, $N=1,2,3$, ungleiche Strecken und Massen: Defekt
+und Symmetriedefekt null ($\max<10^{-13}$). Dasselbe **ohne** die
+Eckrelationen — die Probe auf den Beweis. Zwei Kontrollen, und beide sind der
+Grund, dem Ergebnis zu trauen: ohne die $y$-Kreuzungen bleibt der Defekt stehen
+(der Test ist nicht leer), und bei $c\equiv0$ reproduziert das Modell
+`prop:atomicdual` (das Modell ist nicht falsch aufgestellt). Die zweite
+Kontrolle hat nebenbei gezeigt, dass die symmetrische Konfiguration $c=[1,1]$
+auch ohne die $y$-Kreuzungen defektfrei ist — wer nur sie prüft, prüft nichts.
+
+**Ein Befund über die eigene Hypothese.** Läßt man einzelne $c_j$ verschwinden
+— zwei benachbarte Atome ohne stetige Masse dazwischen —, so verschwindet der
+Defekt im Modell weiterhin (sechs Konfigurationen). $c_j>0$ ist damit, soweit
+geprüft, eine Hypothese des Beweises und nicht der Aussage. Das ist im
+Manuskript so gesagt (`rem:mixeddual`, letzter Absatz) und nicht verschwiegen.
+
+**Am Beweis hat sich unterwegs etwas verbessert.** `lem:rectangle` stand
+zunächst mit einem distributionellen Beweis da: $(\partial_x-\partial_y)\Psi=0$,
+also Funktion von $x+y$. Das Manuskript trägt jetzt den kürzeren: `lem:calculus`
+auf ein Quadrat angewandt hat rechts null, gibt $\Psi(x+r,y')=\Psi(x,y'+r)$ für
+fast alle $r$, und beide Seiten sind in $r$ stetig, also für alle. Für die
+Formalisierung ist das der Unterschied zwischen „Mathlib braucht Distributionen
+auf $\R^2$" und einer Zeile Stetigkeit.
+
+**In die Roadmap eingetragen** (`MartingaleProblems` Meilenstein 8, drei neue
+Punkte und zwei Korrekturen): `eq_comp_add_of_chain_identity` (das
+Rechteck-Lemma, zurückgeführt auf `chain_identity_of_absolutelyContinuous`),
+`Clock.stretches` (die Strecken-und-Lücken-Zerlegung in Uhrzeit) und
+`duality_of_mixed` mit dem Beweisweg in drei Schritten. Korrigiert:
+`duality_of_atomless` sagte „für $q$-fast jedes $t$" und sagt jetzt „für jedes
+$t$" mit dem Grund, und der Schlusssatz von `duality_of_atomic` zählt die
+abgedeckten Uhren jetzt vollständig auf.
+
+**`check.py` meldet `clean`**: 129 Seiten (vorher 126), 12 Überlängen, größte
+7.7pt — Zahl und Maximum wie im Ausgangszustand des Laufs.
+
+**Offen geblieben.** Von Task 23 zwei Reste, beide im Rückstau vermerkt:
+ordnungsdichte Atommengen (unverändert offen, und aus demselben scharfen Grund —
+es gibt keine Aufzählung $a_1<a_2<\dots$, entlang der induziert werden könnte)
+und zwei benachbarte Atome ohne stetige Masse. Der zweite ist der nähere: dort
+greift statt der Kreuzungsrelation die Eckrelation, beide Mechanismen sind
+einzeln bewiesen, und zu tun ist, sie in einer Induktion zu verschränken. Nicht
+geschehen und mit Absicht: kein Lean übersetzt (der Worktree hat kein `.lake`),
+und `cor:atomless` ist nicht verschärft worden — die Beobachtung steht als
+Auffälligkeit oben und gehört dem Nutzer.
+
+**Als Nächstes zu formalisieren:
+`chain_identity_of_absolutelyContinuous`** (`MartingaleProblems`
+Meilenstein 8) — für $\T=[0,\infty)$, Lebesgue-Uhr und $\Phi$ in jeder Variablen
+absolut stetig mit $\nabla\Phi=(\gamma_1,\gamma_2)$ und $\iint|\gamma_i|<\infty$
+auf Quadraten:
+$\Phi(t,0)-\Phi(0,t)=\int_0^t(\gamma_1(s,t-s)-\gamma_2(s,t-s))\dif s$ für fast
+jedes $t$. Es ruht auf nichts als Mathlib: `MeasureTheory.integral_integral_swap`
+(`MeasureTheory/Integral/Prod.lean:482`) für den Fubini-Schritt, und für den
+Schluss „aus $\int_0^T A=\int_0^T B$ für alle $T$ folgt $A=B$ fast überall"
+entweder `MeasureTheory.Integrable.ae_eq_of_forall_setIntegral_eq`
+(`MeasureTheory/Function/AEEqOfIntegral.lean:364`) oder die
+Lebesgue-Differentiation, `VitaliFamily.ae_tendsto_average`
+(`MeasureTheory/Covering/Differentiation.lean:885`, im Namensraum
+`VitaliFamily`, Zeilen 87--902; `VitaliFamily` selbst steht im Wurzelnamensraum,
+`Covering/VitaliFamily.lean:68`) mit
+`Real.tendsto_Icc_vitaliFamily_right` (`MeasureTheory/Covering/OneDim.lean:34`)
+— alle vier heute am Quelltext geprüft, Namensräume nachgesehen, keine
+`deprecated`.
+
+Es ist **jetzt** dran, weil es heute vom Träger eines Punktes zum Träger von
+vieren geworden ist. Bis gestern hing an ihm allein `duality_of_atomless`; seit
+heute hängen daran zusätzlich `eq_comp_add_of_chain_identity`, über dieses
+`duality_of_mixed`, und über die Verschärfung von „fast jedes $t$" auf „jedes
+$t$" auch die Konklusion von `duality_of_atomless` selbst. Es ist zugleich der
+einzige analytische Satz des ganzen Dualitätsmeilensteins — alles andere dort
+ist Teleskopieren, lineare Algebra oder die eine Zeile Gronwall. Wer ihn hat,
+hat den Meilenstein bis auf Kombinatorik.
+
+### 2026-09-01, zweiter Lauf — Rückstau 1: die Hypothese der gemischten Uhr fällt; dann Rückstau 2
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging an
+den ersten Punkt des Rückstaus, und dort an den Rest, den der Lauf davor
+ausdrücklich stehen gelassen hatte: **zwei benachbarte Atome ohne stetige Masse
+dazwischen.** Er ist erledigt, und nicht durch eine Zusatzbedingung, sondern
+durch Streichen der Hypothese. Danach blieb Zeit für ein Stück von Rückstau 2,
+und dort fiel ein systematischer Namensfehler auf. Geändert sind
+`MartingaleProblem.tex`, `TauCeti/MartingaleProblems/README.md`,
+`TauCeti/MartingaleProblems/Suggested.lean`, `Task23/mixed.py`,
+`Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses Inventar.
+
+**Der Satz.** `prop:mixeddual` gilt jetzt für **jede** Uhr
+$q=\mu+\sum_{i=1}^N m_i\delta_{a_i}$ mit $\mu$ atomlos und endlich vielen Atomen
+unterhalb $t^*$ — ohne jede Bedingung an die stetige Masse zwischen ihnen. Die
+Bedingung \eqref{eq:separated} ist aus dem Manuskript verschwunden, und mit ihr
+die Ausnahme für ein Atom bei $0$, die sie nebenbei erzwungen hatte. Offen
+bleibt von Task 23 allein die ordnungsdichte Atommenge.
+
+**Der Angelpunkt, in einem Satz.** Der Lauf davor las $c_j>0$ als die Bedingung,
+unter der die Zeile $\gamma(a_i,\cdot)$ auf der Strecke $S_j$ eine *Dichte* ist —
+richtig, aber es übersieht, was an ihre Stelle tritt. Ist $c_j=0$, so ist
+$S_j$ ein Punkt, alle Zeiten mit diesem $Q$-Wert liefern dasselbe
+$\Phi(\cdot,s)$, also ist $\gamma(a_i,\cdot)$ auf ihnen konstant, und $a_{j+1}$
+ist eine von ihnen. Der Sprung über eine entartete Spalte ist damit
+$m_i\gamma(a_i,a_{j+1})$, ein **Eckwert**, und den erreicht die andere
+Koordinate auch. Die Elimination dazwischen ist wörtlich die
+Kreuzmultiplikation des rein atomaren Falls. Der Beweis behält seine Induktion
+über $d=i-j$ und bekommt auf dem unteren Stück eine Fallunterscheidung: Strecke
+oder Nachbarschaft, Kreuzungsrelation oder Eckrelation, und beide übergeben
+demselben Gronwall-Schritt denselben Anfangswert.
+
+**Eine Aussage des letzten Laufs ist zurückgenommen.** `rem:mixeddual` sagte, der
+rein atomare und der gemischte Fall seien „nicht Spezialfälle voneinander,
+sondern zwei Enden". Sie sind die zwei Fälle **einer** Induktion. Die Probe:
+setzt man alle Strecken auf null, so bleibt nur der zweite Fall, und die
+Induktion ist Zeile für Zeile der Beweis von `lem:atomgrid`. Was die Induktion
+sich dafür leistet, leistet sich `lem:atomgrid` auch — sie benutzt ihre
+Hypothese auf zwei Stufen zugleich, $d-1$ und $d-2$, und der Eckdefekt sitzt auf
+$d-2$. Damit ist auch die Rolle der stetigen Masse genauer benannt: sie ist
+nicht nötig, sie ist bequem. Nötig ist ein Punkt, an dem der eindimensionale
+Kern $e^{-u/m}$ festgenagelt wird, und den hat jede Uhr — als Strecke oder als
+Nachbarschaft.
+
+**Nachgerechnet, und dabei ein Mangel des Orakels behoben.** `mixed.py` fehlte
+die Relation über eine entartete Spalte ganz. Das entwertet seine früheren
+Befunde nicht — eine fehlende wahre Relation *vergrößert* den Lösungsraum, ein
+verschwindender Defekt darauf ist die stärkere Aussage —, aber es machte den
+neuen Beweis nicht nachprüfbar. Sie steht jetzt als eigene Familie im Skript,
+mit Schalter, dazu vier neue entartete Konfigurationen (Atom bei $0$ mit
+mehreren Atomen, abwechselnd entartete Spalten, entartete Spalte am Ende,
+$N=4$). Zehn Konfigurationen: Defekt und volle Symmetrie null, $\max<10^{-13}$.
+Die drei Kontrollen sind der eigentliche Gehalt: ohne die Eckrelationen, aber
+mit der neuen — null; ohne die neue, aber mit den Ecken — null; **ohne beide**
+bleibt der Symmetriedefekt in allen sechs geprüften Konfigurationen stehen. Die
+beiden sind also zwei Wege über dieselbe Spalte, jeder für sich genügt, und
+keiner ist entbehrlich, wenn der andere fehlt. Nebenbei ist damit ein
+Kanarienvogel des letzten Laufs entwertet: „ohne die Ecken bleibt der Defekt
+stehen" galt nur, solange das Modell die neue Relation nicht kannte. Das steht
+im PROTOKOLL, statt stillschweigend ersetzt zu werden.
+
+**In die Roadmap eingetragen** (`MartingaleProblems` Meilenstein 8):
+`duality_of_mixed` ohne die Hypothese `0 < c j`, mit den beiden entarteten
+Relationen und der Fallunterscheidung ausgeschrieben; die Schlusszeile von
+`duality_of_atomic`, die die abgedeckten Uhren aufzählt, nennt jetzt die
+ordnungsdichte Atommenge als den einen Fall, den keiner der drei Sätze erreicht;
+`atomGrid_symm` sagt, dass seine Induktionsgestalt auch die von
+`duality_of_mixed` ist. Und ein Fehler nebenbei: `Clock.stretches` schrieb
+`0 ≤ a 1 < ... < a N ≤ t*`, das Manuskript verlangt `a N < t*`, weil ein Atom
+auf $t^*$ in keiner Menge `[s,s') ⊆ 𝕋_{<t*}` liegt. Korrigiert.
+
+**`check.py` meldet `clean`**: 129 Seiten, 12 Überlängen, größte 7.7pt — Zahl und
+Maximum wie im Ausgangszustand des Laufs.
+
+**Danach Rückstau 2, ein Stück weit: die Liste „Mathlib supplies" von
+`MartingaleProblems`.** 38 Namen aus elf Dateien, gegen **master** geprüft, die
+Quellen über `gh api` geholt und im Text nachgesehen, nicht im Gedächtnis. Alle
+vorhanden. Ein Fehler, und der lohnt die Übung: vier Namen — die ganze
+Lokalisierungsschicht — standen in `MeasureTheory` statt in `ProbabilityTheory`.
+`LocalProperty.lean` ist die einzige Datei in `Mathlib/Probability/Process/`, die
+nicht in `MeasureTheory` liegt, und genau deshalb hat sich der falsche Präfix
+gehalten; dieses Inventar hat ihn am 2026-08-30 mitgeschrieben. Berichtigt sind
+die Roadmap an drei Stellen, `TauCeti/MartingaleProblems/Suggested.lean` und die
+Tabellenzeile zu `fact:stoppedlocalmg`; die Einzelheiten stehen oben unter den
+Auffälligkeiten. Drei Behauptungen der Liste sind nachgeprüft und **bleiben
+richtig**: `ProgMeasurable` ist weiterhin ein `deprecated`-Alias von
+`IsStronglyProgressive` (`Process/Adapted.lean:381`, seit 2026-04-24), Doobs
+`Lᵖ`-Ungleichung fehlt weiterhin für jeden Index — der Modulkommentar
+`OptionalStopping.lean:143` sagt selbst, sie komme „in an upcoming PR" —, und
+`IsStable` ist für keine hier interessierende Eigenschaft bewiesen; die Datei
+führt nur `IsStable.and`, und `gh search code` findet den Bezeichner in genau
+einer Wahrscheinlichkeitsdatei, alle übrigen Treffer sind
+`MorphismProperty.IsStableUnder…` aus Algebra und Kategorientheorie.
+
+**Offen geblieben.** Von Task 23 die ordnungsdichte Atommenge, aus dem
+unveränderten scharfen Grund. Von Rückstau 2 die Roadmaps `SkorokhodSpace` und
+`KolmogorovExtension` und die Zitate in den Meilensteinen aller vier; geprüft ist
+bisher nur, was in den Kopflisten steht. Der Rückstau nennt jetzt, wo ein Anlauf anfinge:
+bei der Frage, ob eine ordnungsdichte Atommenge mit lokal endlicher Gesamtmasse
+eine Ausschöpfung durch endliche Teilmengen zulässt, längs deren der Defekt
+stetig ist. Nicht geschehen und mit Absicht: kein Lean übersetzt (der Worktree
+hat kein `.lake`), und `cor:atomless` ist weiterhin nicht verschärft — die
+Auffälligkeit vom Vormittag steht unverändert oben und gehört dem Nutzer.
+
+**Als Nächstes zu formalisieren: `atomGrid_symm`** (`MartingaleProblems`
+Meilenstein 8). Für `M : ℕ`, `m : ℕ → ℝ` mit `m i ≠ 0` und
+`Φ : ℕ → ℕ → ℝ` mit `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` auf
+`1 ≤ i, j ≤ M-1` folgt `Φ i j = Φ j i`. Es ruht auf **nichts** — kein Maß, keine
+Uhr, keine Topologie, `ℕ` als einziger Index, Körperarithmetik als einziges
+Werkzeug; die Roadmap verortet es deshalb in `Mathlib/Algebra/Order/` und nicht
+im Wahrscheinlichkeitsbaum. Der Beweis ist die Induktion über `d = |i - j|` mit
+zwei mitgeführten Stufen, und die einzige Lean-Frage daran ist, wie man diese
+Zweistufigkeit formuliert: als starke Induktion über `d` mit der
+Induktionsaussage „`w` verschwindet auf allen Abständen `< d`" — genau die
+Gestalt, in der sie auch im Beweis der gemischten Uhr gebraucht wird.
+
+Es ist **jetzt** dran, weil es heute vom Träger eines Satzes zum Träger von
+zweien geworden ist. Bis gestern hing daran allein `duality_of_atomic`; seit
+heute hängt daran auch der entartete Fall von `duality_of_mixed`, und zwar nicht
+als Analogie, sondern als dieselbe Aussage an den Ecken des Streckengitters.
+Es ist zugleich das einzige benannte Ziel der vier Roadmaps, das gar keine
+Mathlib-Vorbedingung hat: `chain_identity_of_absolutelyContinuous` (der Vorschlag
+vom Vormittag, unverändert gültig) braucht Fubini und die
+Lebesgue-Differentiation, `IsSeparating` braucht die `ext_of_…`-Sätze,
+`induction_on_mulSystem` braucht `induction_on_inter`. `atomGrid_symm` braucht
+nichts. Reihenfolge, wenn beide anstehen: `atomGrid_symm` zuerst, denn es ist
+das kleinere und schließt einen ganzen Zweig von Meilenstein 8 ab.
+
+### 2026-09-01, dritter Lauf — Rückstau 1: die Ausschöpfung der ordnungsdichten Atommenge ist quantifiziert
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging an
+den ersten Punkt des Rückstaus und dort an das, was von Task 23 allein übrig ist:
+die **ordnungsdichte Atommenge**. Der Rückstau nannte dafür einen Anfang — ob es
+eine Ausschöpfung durch endliche Teilmengen gibt, längs deren der Defekt stetig
+ist. Der Lauf hat diese Frage nicht mit ja oder nein beantwortet, sondern sie
+rechenbar gemacht und die Rechnung ausgeführt. Neu ist `Task23/dense.py`;
+geändert sind `Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses Inventar.
+**Bewiesen ist nichts, und der Punkt bleibt offen.** Am Manuskript ist nichts
+geändert, an den Roadmaps auch nicht — die vier Matrizenlemmata des sechsten
+Laufs stehen bereits in `MartingaleProblems` M8, und die Schlusszeile von
+`duality_of_atomic` nennt die ordnungsdichte Menge schon als den Fall, den keiner
+der drei Sätze erreicht. Beides ist nachgesehen und bleibt richtig.
+
+**Der Hebel: der Beweis des sechsten Laufs, störungsweise gelesen.** Er brauchte
+keine neue Idee, nur eine Buchführung über den Fehler. Gilt (S) nur bis auf einen
+symmetrischen Rest $E$, so bleibt die zweite Hälfte der Paarung unberührt und die
+erste bekommt einen Zusatzterm:
+$\langle\delta,T\mathbb 1\rangle=-\frac12\operatorname{tr}(TE)$. Das ist eine
+**Identität**, keine Abschätzung, und `dense.py check` bestätigt sie an
+zufälligen $K$ mit künstlich gestörtem (S) in allen Fällen exakt. Damit hängt die
+ganze Ausschöpfung an einer einzigen berechenbaren Zahl,
+
+$$C(V,t)=\|T\|_F,\qquad T=T^{\mathsf T},\ TV=V^{\mathsf T}T,\ T\mathbb 1=e_t:$$
+
+schneidet man das volle System auf ein endliches $F$ zurück, so ist
+$|\delta(t)|\le\|\kappa\|_\infty\varepsilon_F(1+2|F|C_F)$ mit
+$\varepsilon_F=q(A\setminus F)$, und der Defekt verschwindet, sobald
+$|F|C_F\varepsilon_F\to0$ für **irgendeine** Folge endlicher $F$ gilt. Das
+Gleichungssystem für $T$ ist quadratisch, sein Kern durchweg eindimensional, die
+Minimalnorm-Lösung also die richtige Messgröße.
+
+**Gerechnet wird exakt, und das war nötig.** Die Gleitkommarechnung bricht
+zusammen, sobald $C$ groß wird: für $n=8$, $\rho=4$ meldet `lstsq` Kerndimension
+2 und ein *kleineres* $C$ als für $\rho=3$ — die `rcond`-Abschneidung, kein
+Messwert. Alle berichteten Zahlen stammen deshalb aus `defect_bound_exact`, Gauß
+über $\mathbb Q$ mit Minimierung der Frobeniusnorm über den Kern in der richtigen,
+außerdiagonal doppelt zählenden Form.
+
+**Der Befund, und er ist schärfer als erhofft.** $C$ ist skaleninvariant — mit
+$V$ löst auch $cV$ die Bedingung $TV=V^{\mathsf T}T$ —, hängt also nur an der
+*Gestalt* des Massenvektors, nicht an der Gesamtmasse. Und dann:
+
+* gleiche Massen: $C=\sqrt{2n-1}$, geprüft bis $n=40$;
+* geometrisch **fallende** Massen: $C\approx1.6$, gleichmäßig beschränkt in $n$
+  und $\rho$;
+* geometrisch **steigende** Massen: $C\sim\rho^{n^2/2}$, also überexponentiell —
+  bei gleicher Länge und gleichem Massenverhältnis zehn Größenordnungen mehr als
+  im fallenden Fall.
+
+Das erklärende Gesetz: eine einzige kleine Masse $\varepsilon$ an der Stelle $k$
+einer Kette aus $n$ Atomen kostet $C\sim\varepsilon^{-\max(n-2k,0)}$. Der
+Exponent ist **exakt** $\max(n-2k,0)$, abgelesen über zwei Dekaden und bestätigt
+für $n=4,6,8,10$ an jeder Stelle $k$ — vierzig Werte, keine Abweichung. Kleine
+Massen in der oberen Hälfte der Kette sind gratis, kleine Massen in der unteren
+ruinieren die Schranke. Nicht die Größe des Massenverhältnisses entscheidet,
+sondern seine **Richtung**.
+
+**Was daraus folgt.** Die Ausschöpfung scheitert, aber an einer anderen Stelle als
+der Rückstau vermutete: nicht an der fehlenden Aufzählung $a_1<a_2<\dots$ und
+nicht an der Endlichkeit einer Induktion, sondern an der Richtung des
+Massenprofils — und quantitativ. Eine ordnungsdichte Menge erzwingt das teure
+Profil, weil unter jedem Punkt unendlich viele Atome liegen. **Was der Befund
+nicht sagt:** $C$ misst die beste Konstante *dieser Beweisgestalt*, nicht die
+Wahrheit der Aussage. In $|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ steckt eine
+Cauchy--Schwarz-Ungleichung, die die Struktur von $E$ als Schwanzbeitrag
+wegwirft. Widerlegt ist die grobe Ausschöpfung, nicht die Dualität für
+ordnungsdichte Atommengen; ein Gegenbeispiel ist nicht gesucht und nicht
+gefunden. Drei Wege stehen jetzt als Sackgassen im PROTOKOLL (zehnter Nachtrag):
+die exakte Einschränkung auf endliches $F$, das Zusammenfassen der Massen zu
+Blöcken, und die Hoffnung auf ein Wachstum von $C$ in $|F|$ allein.
+
+**Offen geblieben.** Die ordnungsdichte Atommenge selbst, jetzt mit einer
+benannten nächsten Frage statt einer Richtung: ob die Cauchy--Schwarz-Ungleichung
+durch eine Paarung ersetzt werden kann, die $E$ als Schwanzbeitrag benutzt. Von
+Rückstau 2 unverändert die Roadmaps `SkorokhodSpace` und `KolmogorovExtension`
+und die Zitate in den Meilensteinen aller vier; dieser Lauf hat daran nicht
+gearbeitet, weil Rückstau 1 die Zeit gebraucht hat. Nicht geschehen und mit
+Absicht: kein Lean übersetzt (der Worktree hat kein `.lake`), und `cor:atomless`
+ist weiterhin nicht verschärft — die Auffälligkeit vom 2026-09-01 steht
+unverändert oben und gehört dem Nutzer. `check.py` ist nicht gelaufen, weil am
+Manuskript nichts geändert wurde.
+
+**Als Nächstes zu formalisieren: `atomGrid_symm`** (`MartingaleProblems`
+Meilenstein 8), unverändert gegenüber dem Vorschlag des letzten Laufs und aus
+demselben Grund — es ruht auf nichts, `ℕ` als einziger Index, Körperarithmetik
+als einziges Werkzeug, und es trägt seit dem zehnten Lauf zwei Sätze statt einem.
+Dieser Lauf hat daran nichts geändert und nichts gefunden, was die Reihenfolge
+umwirft.
+
+Der heutige Befund benennt aber den **zweiten**: `Matrix.exists_isSymm_mulVec_one_eq_single`
+(ebenfalls M8, dort schon eingetragen) — aus `V ^ r = 0` und
+`V ^ (r-1) *ᵥ 1 ≠ 0` die explizite Konstruktion von `T` mit `T.IsSymm`,
+`T * V = Vᵀ * T` und `T *ᵥ 1 = Pi.single t 1`. Es ist jetzt reif, weil es heute
+vom Beweisschritt zum **Messgerät** geworden ist: $C(V,t)$ ist per definitionem
+die Norm des von ihm gelieferten $T$, und jede weitere Aussage über den offenen
+Fall — auch eine feinere Paarung — wird an diesem Objekt formuliert. Es ist
+zugleich das einzige der vier Matrizenlemmata aus M8, das kein Zweizeiler ist;
+die drei übrigen (`trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`,
+`trace_mul_eq_dotProduct_diag_of_isSymm`, `mulVec_one_eq_zero_iff_of_nonneg`)
+fallen danach als Beiwerk. Reihenfolge, wenn beide anstehen: `atomGrid_symm`
+zuerst, denn es ist das kleinere und schließt einen Zweig ab; dann die
+Konstruktion von `T`, die den Zweig für den offenen Fall öffnet.
+
+### 2026-09-01, vierter Lauf — Rückstau 2: `KolmogorovExtension` und `SkorokhodSpace` gegen master
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstau 1 hat der
+Lauf davor bis an eine benannte Forschungsfrage geführt — ob die
+Cauchy--Schwarz-Ungleichung in $|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ durch
+eine Paarung ersetzbar ist, die $E$ als Schwanzbeitrag benutzt —, und daran hat
+dieser Lauf nicht gearbeitet; der Grund steht unten. Er ging an **Rückstau 2**
+und dort an dessen ausdrücklich offenen Rest: die beiden Roadmaps, die noch nie
+gegen master geprüft waren. Beide sind jetzt **vollständig** durch, Kopfliste
+**und** Meilensteine — bei `SkorokhodSpace` zitieren nur die Meilensteine 1, 2, 3
+und 8 überhaupt Mathlib, die Meilensteine 4 bis 7 führen ausschließlich neue
+Namen. Geändert sind `TauCeti/KolmogorovExtension/README.md`,
+`TauCeti/SkorokhodSpace/README.md`, `Facts/BACKLOG.md` und dieses Inventar. Am
+Manuskript ist nichts geändert.
+
+Geprüft wurde gegen master vom heutigen Tag (`df0e53b7`, `gh api`), Datei für
+Datei am Quelltext, mit Namensraum, Zeilennummer und Variablenblock. Das lokale
+`origin/master` in `~/Code/lean/mathlib4` steht auf dem 2026-03-23 und ist als
+Stellvertreter untauglich; das ist beim Nachfetchen aufgefallen und für den
+nächsten Lauf notiert.
+
+**Vier Fehler in `KolmogorovExtension`.** Zwei Namensräume — dieselbe Familie wie
+am zweiten Lauf des Tages, und deshalb der eigentliche Ertrag der Übung:
+`MeasureTheory.isProjectiveLimit_infinitePi` heißt
+`MeasureTheory.Measure.isProjectiveLimit_infinitePi`, und
+`MeasureTheory.isProjectiveLimit_map` heißt
+`ProbabilityTheory.isProjectiveLimit_map`. Ein Meilensteinpunkt, den Mathlib
+längst hat: `MeasureTheory.IsProjectiveLimit.unique` steht unter genau diesem
+Namen in `Constructions/Projective.lean:150`, mit dem Beweis, den die Roadmap als
+zu gehenden Weg beschrieb; mit ihm `isFiniteMeasure`, `isProbabilityMeasure`,
+`measure_cylinder`, `measure_univ_eq` und `measure_univ_unique`, die den
+vorletzten Punkt auf eine Zeile bringen. Und eine zu schwach angegebene
+Hypothese: `innerRegular_isCompact_isClosed_measurableSet_of_finite`
+(`RegularityCompacts.lean:203`) verlangt neben
+`IsCompletelyPseudoMetrizableSpace` auch `SecondCountableTopology` und
+`BorelSpace`; die Kopfliste ließ die letzten beiden weg und behauptete damit mehr
+Mathlib, als es gibt. Die Einzelheiten stehen oben unter den Auffälligkeiten.
+
+**Ein Fund in die andere Richtung, ebenfalls eingetragen.** master hat seit
+kurzem `isCompactSystem_isCompact_isClosed` (`Topology/Compactness/CompactSystem.lean:163`),
+„die abgeschlossenen kompakten Mengen sind ein kompaktes System", dazu
+`isCompactSystem_isCompact` für `T2Space`,
+`isCompactSystem_insert_univ_isCompact_isClosed`,
+`IsCompactSystem.of_nonempty_iInter`, `IsCompactSystem.iff_nonempty_iInter`,
+`isCompactSystem_insert_empty_iff` und `isCompactSystem_iff_of_directed`. Das ist
+genau die Vorbedingung des dritten Punktes von Meilenstein 1, und der Punkt
+sagt jetzt, dass ihm nur noch der Übergang zu den Zylindern darüber bleibt. Was
+sonst geprüft und **richtig** ist: alle zwölf `projectiveFamilyContent_*`-Namen
+(die `deprecated`-Aliase seit 2026-06-03 heißen `_diff` und `_diff_of_subset`,
+die Roadmap nennt die aktuellen `_sdiff` und `_sdiff_of_subset`), die drei
+`isSet*_measurableCylinders`, `AddContent.IsSigmaSubadditive` (`:149`),
+`AddContent.measure` (`OfAddContent.lean:163`) und `measure_eq` (`:172`),
+`generateFrom_measurableCylinders` (`Cylinders.lean:362`) — samt der Richtung:
+`AddContent.measure` verlangt `hC_gen : mα ≤ generateFrom C`, und
+`generateFrom_measurableCylinders.symm.le` liefert genau das, die Roadmap
+typisiert also —, `ext_of_generate_finite`, `ProbabilityTheory.Kernel.traj`
+(`Traj.lean:518`) und `IsProjectiveMeasureFamily`.
+
+**Drei Fehler in `SkorokhodSpace`, und der erste ist der schwerste.** Die
+Kopfliste nannte sechs Sätze als „die ganze Einseitiglimes-API"; alle sechs
+stehen in `namespace Monotone` und verlangen Monotonie von `f` sowie
+`[ConditionallyCompleteLinearOrder β] [OrderTopology β]` vom Zielraum. Für einen
+càdlàg-Pfad ist keiner benutzbar. Das ist derselbe Fehlertyp wie `Locally` gegen
+„local martingale" am 2026-08-29 — nach dem Begriff gesucht, den Namen gefunden,
+den Namensraum nicht angesehen. Berichtigt, mit der Liste dessen, was im
+Wurzelnamensraum wirklich steht; und dabei kam der Glücksfall heraus, dass die
+Hypothese von `tendsto_leftLim_of_tendsto` wörtlich das Feld `left_limit` von
+`IsCadlag` ist. Daran hängt eine Hypothesenkorrektur: `Function.leftLim` gibt es
+nur für `[LinearOrder α]`, die zwei Punkte, die die Struktur daran anschließen,
+standen unter `[Preorder ι]`, und Meilenstein 2 führt jetzt eine dritte Stufe
+**(A′)**. Zweitens der Selbstwiderspruch um `Monotone.countable_not_continuousAt`
+— Kopfliste falsch, Meilenstein 2 richtig. Drittens, und das trifft die Substanz:
+`TimeChange.norm` war über `LipschitzWith.const` definiert, das der Satz „eine
+Konstante ist `0`-lipschitz" ist und keine Zahl, und Mathlib kennt keine
+kleinste Lipschitzkonstante. Die Metrik des Skorokhod-Raums war damit nicht
+aufschreibbar; Meilenstein 3 führt jetzt `TimeChange.lipConst` als eigenen Punkt.
+Alle drei stehen ausgeschrieben oben unter den Auffälligkeiten.
+
+Zwei Gegenproben, die den ersten und den dritten Befund stützen und beide aus
+`TauCeti/SkorokhodSpace/Suggested.lean` stammen — der Datei ist nichts zu
+korrigieren, sie war schon richtig, wo die README falsch war. Sie führt `ι`
+durchweg unter `[LinearOrder ι]` und nicht unter `[Preorder ι]` und schreibt
+`leftJumpSet` mit `Function.leftLim` genau dort hin; und `TimeChange` hat die
+Felder `lipschitz : ∃ C, LipschitzWith C toOrderIso` und `lipschitz_symm`, also
+die Existenz einer Konstanten und nicht eine ausgezeichnete. Wer die Skizze
+ansah, konnte den Fehler der README nicht machen — er stand allein in der Prosa.
+
+**Was an `SkorokhodSpace` geprüft und richtig ist**, und zwei davon lohnen die
+Erwähnung, weil sie eine offene Frage des Inventars schließen: die Zusage von
+Meilenstein 8, `isCompact_closure_of_isTightMeasureSet` verlange „`[T2Space E]`
+und `[BorelSpace E]` und nichts weiter", stimmt buchstäblich — der
+Variablenblock `Prokhorov.lean:65` führt genau
+`[MeasurableSpace E] [TopologicalSpace E] [T2Space E] [BorelSpace E]`, und der
+Satz steht bei `:530` im Wurzelnamensraum, weil `namespace MeasureTheory` erst
+bei `:568` im Abschnitt `Backward` beginnt. Und die Gegenrichtung
+`MeasureTheory.isTightMeasureSet_of_isCompact_closure` (`:634`) trägt wirklich
+`[CompleteSpace 𝓧]`, gesetzt durch ein eigenes `variable` bei `:630`, neben
+`[PseudoMetricSpace 𝓧] [OpensMeasurableSpace 𝓧] [SecondCountableTopology 𝓧]`;
+ihr Dokumentationskommentar sagt es selbst. Die Zweiteilung von Meilenstein 8 in
+(A) separabel metrisch und (B) polnisch ruht damit auf Nachgesehenem und nicht
+auf einer Erinnerung. Weiter richtig: `orderTopology_of_ordConnected` als
+Instanz (`Topology/Order/Basic.lean:344`), `ProperSpace.of_isClosed`
+(`Topology/MetricSpace/ProperSpace.lean`), `Subgroup.isClosed_of_discrete`
+(`IsUniformGroup/Basic.lean:279`, mit `@[to_additive]`, die additive Form gibt es
+also wie behauptet), `OrderTopology.of_discreteTopology` (`Instances/Discrete.lean:59`,
+mit `PredOrder` und `SuccOrder`, wie die Roadmap sagt), `AddSubgroup.zmultiples`,
+`StieltjesFunction` mit `right_continuous` (`:140`) und `rightLim_eq` (`:143`),
+`MeasureTheory.instMetrizableSpaceProbabilityMeasure` (`LevyProkhorovMetric.lean:695`,
+Zeile auf den Punkt) und
+`ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`
+(`ProbabilityMeasure.lean:639`). Ein zweiter Fund in die freundliche Richtung:
+neben `OrderTopology.of_discreteTopology` steht bei `:63`
+`OrderTopology.of_linearLocallyFinite` mit `[LocallyFiniteOrder α]` statt
+`PredOrder`/`SuccOrder` — ein dritter und bequemerer Weg für den diskreten Index
+`h • ℤ`, den Meilenstein 1 jetzt nennt.
+
+**Offen geblieben.** Von Rückstau 2 die Zitate in den Meilensteinen von
+`WeakConvergence` und `MartingaleProblems`; deren Kopflisten sind seit dem
+2026-08-31 beziehungsweise heute früh geprüft, die Meilensteine nicht. Nach dem
+Ertrag von heute — vier Fehler in einer Roadmap von 101 Zeilen, drei in einer von
+346 — ist das der nächste Griff im Rückstau und nicht mehr Routine. Von Rückstau 1
+unverändert die ordnungsdichte Atommenge; dieser Lauf hat sie nicht angefasst,
+weil die Frage, an der sie steht, eine Beweisidee verlangt und nicht eine Suche,
+und weil zwei Roadmaps ungeprüft dastanden, deren Prüfung erfahrungsgemäß
+Fehler findet. Sie hat sieben gefunden. Nicht geschehen und mit Absicht: kein
+Lean übersetzt (der Worktree hat kein `.lake`), `check.py` nicht gelaufen (am
+Manuskript ist nichts geändert), und `cor:atomless` ist weiterhin nicht
+verschärft — die Auffälligkeit vom 2026-09-01 steht unverändert oben und gehört
+dem Nutzer.
+
+**Als Nächstes zu formalisieren: `Function.RightContinuous` und `IsCadlag` samt
+`IsCadlag.tendsto_leftLim` und `IsCadlag.rightLim_eq`** (`SkorokhodSpace`
+Meilenstein 2, Stufen (A) und (A′)). Das Prädikat ist
+`∀ a, ContinuousWithinAt f (Set.Ioi a) a`, die Struktur hat die zwei Felder
+`right_continuous` und `left_limit : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)`, und
+der Anschluss an Mathlib besteht aus genau drei Namen, die heute am Quelltext
+geprüft sind: `tendsto_leftLim_of_tendsto`
+(`Topology/Order/LeftRightLim.lean:121`), dessen Hypothese wörtlich das Feld
+`left_limit` ist, `ContinuousWithinAt.rightLim_eq` (`:117`) und
+`continuousWithinAt_Ioi_iff_Ici`, das aus `Ioi` das `Ici` macht, welches der
+zweite verlangt — derselbe Schritt, den `StieltjesFunction.rightLim_eq` (`:143`)
+geht. Mehr braucht es nicht: keine Metrik, kein Maß, keine Sprungtheorie, kein
+dichtes `D`.
+
+Es ist **jetzt** dran, weil heute der Grund weggefallen ist, es aufzuschieben,
+und weil zugleich sichtbar geworden ist, worauf es trägt. Weggefallen ist die
+Unklarheit über die Anschlussstelle: bis heute nannte die Roadmap dafür sechs
+Sätze über monotone Funktionen, und wer sie aufgeschlagen hätte, wäre auf
+`include hf : Monotone f` gestoßen und hätte neu suchen müssen. Getragen wird es
+von der ganzen Roadmap — Meilenstein 4 definiert den Raum als die Struktur über
+diesem Prädikat, und über Meilenstein 8 hängen vier Facts daran
+(`fact:Dcountable`, `fact:fddconv`, `fact:relcompact`, `fact:fdd`), mehr als an
+jedem anderen einzelnen Punkt der vier Roadmaps. Und es ist billig: das Prädikat
+samt Abschlusseigenschaften liegt als Apache-2.0-Vorlage in
+`RemyDegenne/brownian-motion`, `BrownianMotion/StochasticIntegral/Cadlag.lean`,
+zu übernehmen mit Kopfzeile und Autorennennung. Reihenfolge, wenn mehrere
+anstehen: `atomGrid_symm` bleibt der erste, denn es ruht auf nichts und schließt
+einen Zweig von `MartingaleProblems` M8 ab; `IsCadlag` ist der erste Punkt der
+Roadmap, die von allen vieren die meisten Facts trägt, und der einzige, dessen
+Mathlib-Anschluss heute vollständig nachgeschlagen ist.
+
+### 2026-09-01, fünfter Lauf — Rückstau 2: die Meilensteine von `WeakConvergence`, und ein Anfang bei `MartingaleProblems`
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstau 1 steht
+seit dem dritten Lauf des Tages an einer Beweisidee und nicht an einer Suche —
+ob die Cauchy--Schwarz-Ungleichung in
+$|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ durch eine Paarung ersetzbar ist, die
+$E$ als Schwanzbeitrag benutzt —; daran hat auch dieser Lauf nicht gearbeitet,
+und der Grund ist derselbe wie beim vierten: der ausdrücklich offene Rest von
+Rückstau 2 stand da, und seine Trefferquote ist hoch. Sie war es wieder.
+Geändert sind `TauCeti/WeakConvergence/README.md`,
+`TauCeti/MartingaleProblems/README.md`, `Facts/BACKLOG.md` und dieses Inventar.
+Am Manuskript ist nichts geändert.
+
+**Zuerst das Werkzeug, denn es hat den Lauf getragen.** Das lokale
+`origin/master` in `~/Code/lean/mathlib4` zeigt auf den Fork des Nutzers und
+steht auf dem 2026-03-23; der vierte Lauf hat es deshalb für untauglich erklärt
+und alles über `gh api` geholt. Es gibt aber ein zweites Remote, `upstream`, das
+auf `leanprover-community/mathlib4` zeigt. Ein `git -C ~/Code/lean/mathlib4
+fetch --no-tags upstream master` bringt `upstream/master` auf den Tagesstand,
+und danach beantwortet `git grep -n <muster> upstream/master -- Mathlib` in einem
+Aufruf Fragen, für die `gh search code` ein Dutzend braucht — mit Zeilennummern,
+Namensraumgrenzen und Variablenblöcken am Quelltext. Der Lauf hat so auf
+`981fa8f5` (master vom heutigen 08:37 UTC) geprüft. Das ist der Weg für alle
+weiteren Durchgänge dieses Rückstaupunktes.
+
+**Der Hauptbefund, und er ist größer als ein falsches Zitat.**
+`Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean` war
+`WeakConvergence` unbekannt — die Kopfliste nannte die Datei nicht, und vier
+Punkte der Meilensteine 2 und 3 verlangten, was in ihr steht. Sie führt
+`MeasureTheory.TendstoInDistribution` als Struktur, deren Zufallsvariablen
+`X i : Ω i → E` auf einer Familie von Räumen leben, eine je Index; Meilenstein 4
+hatte genau diese Gestalt als das geführt, was fehlt. Weggefallen sind die
+Slutsky-Fassung, die drei eigentlichen Slutsky-Sätze und die Rückrichtung der
+Skorokhod-Darstellung; von Meilenstein 2 bleibt der eine Schritt von
+`Continuous h` zur f.ü.-Stetigkeit, und der Punkt in Zufallsvariablenform steht
+jetzt auf Mathlibs Struktur statt auf einer eigenen. Der Name
+`MeasureTheory.tendsto_of_ae_tendsto`, den Meilenstein 3 nannte, existiert
+nicht; gemeint war `tendstoInDistribution_of_ae_tendsto` (`:152`). Dazu der
+fünfte Punkt: `measurableSet_setOf_continuousAt` gibt es als
+`measurableSet_of_continuousAt` im Wurzelnamensraum
+(`Constructions/BorelSpace/Basic.lean:252`). Beide Auffälligkeiten stehen oben
+ausgeschrieben.
+
+**Das Lehrstück daran.** Die Datei steht in v4.33.1 wortgleich da, mit denselben
+dreizehn Deklarationen und nur anderen Zeilennummern (`:64`, `:121`, `:137`,
+`:177`, `:301` statt `:64`, `:136`, `:152`, `:192`, `:313`). Es ist also kein
+Nachziehen hinter master, sondern eine nie gestellte Suche — und zwar dieselbe
+Sorte wie am 2026-08-29: nach dem Wort des Manuskripts gesucht („weak
+convergence", „Skorokhod representation") statt nach dem Begriff, unter dem
+Mathlib ihn führt („convergence in distribution"). Wer den Rückstaupunkt
+fortsetzt, suche zu jedem Meilensteinpunkt zuerst nach dem **Verzeichnis**, in
+dem er läge, und lese dessen Dateinamen, bevor er nach Deklarationen sucht.
+
+**Was in `WeakConvergence` geprüft und richtig ist.** Alle sechs Zitate aus
+`LevyProkhorovMetric.lean` stimmen auf die Zeile und den Namensraum
+(`LevyProkhorov` `:259`, `LevyProkhorov.instPseudoMetricSpaceProbabilityMeasure`
+`:311`, `LevyProkhorov.levyProkhorovDist_metricSpace_probabilityMeasure` `:336`,
+`SeparableSpace.exists_measurable_partition_diam_le` `:540`,
+`LevyProkhorov.probabilityMeasureHomeomorph` `:676`,
+`instMetrizableSpaceProbabilityMeasure` `:695`, sämtlich in `namespace
+MeasureTheory` ab `:41`), ebenso `isCompact_closure_of_isTightMeasureSet`
+(`:530`), `exists_measure_iUnion_gt_of_isCompact_closure` (`:573`) und
+`isTightMeasureSet_of_isCompact_closure` (`:634`) aus `Prokhorov.lean`,
+`isTightMeasureSet_singleton` (`:99`) und `IsTightMeasureSet.union` (`:119`,
+`protected lemma`) aus `Tight.lean`, `tendsto_measure_of_null_frontier` (`:243`)
+und `exists_null_frontier_thickening` (`:401`) aus `Portmanteau.lean`,
+`Measure.countable_meas_pos_of_disjoint_iUnion` (`SFinite.lean:305`),
+`frontier_compl`/`frontier_inter_subset`/`frontier_union_subset`
+(`Closure.lean:528,537,544`),
+`Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
+(`CompletelyMetrizable.lean:249`, mit `_root_.`), `PolishSpace`
+(`Polish.lean:62`) samt der Instanz aus Separabilität und vollständiger
+Metrisierbarkeit (`:65`), `TotallyBounded.isCompact_of_isClosed`
+(`Cauchy.lean:755`), `Filter.EventuallyEq.of_forall_separating_preimage`
+(`CountableSeparatingOn.lean:257`), die Instanzkette
+`BorelSpace.countablyGenerated` (`BorelSpace/Basic.lean:209`) →
+`CountablySeparated` (`CountablyGenerated.lean:383`), `condDistrib`
+(`CondDistrib.lean:64`, `namespace ProbabilityTheory`), `condExpKernel`
+(`Condexp.lean:71`, und es verlangt wirklich `[StandardBorelSpace Ω]`, gesetzt
+bei `:62`), `uniformIntegrable_iff` (`UniformIntegrable.lean:868`),
+`induction_on_inter` (`PiSystem.lean:713`) und `MeasurableSpace.comap`
+(`MeasurableSpace/Basic.lean:84`).
+
+**Vier Zeilennummern stammten aus v4.33.1 und sind auf master nachgeführt:**
+`Metric.thickening_singleton` `:157`→`:149`,
+`UniformSpace.secondCountable_of_separable` `:932`→`:931`,
+`Homeomorph.secondCountableTopology` `:37`→`:36`,
+`Homeomorph.isClosedEmbedding` `:297`→`:296`. Der Beleg dafür, dass es sich um
+v4.33.1-Zahlen handelt und nicht um Fehler: in der lokalen v4.33.1-Quelle stehen
+die Deklarationen auf genau diesen vier Zeilen. Alle übrigen Zeilenangaben der
+Roadmap treffen master, sie ist also im Grundsatz master-genau; diese vier sind
+die Ausnahme.
+
+**`MartingaleProblems`, angefangen.** Die Meilensteine dieser Roadmap sind mit
+1038 Zeilen der größte Rest des Rückstaupunktes; dieser Lauf hat die
+Fundstellen mit ausgeschriebenem Mathlib-Pfad abgearbeitet, nicht die bloßen
+Namen. Ein Fehler, und wieder der Namensraum von `FiniteDimensionalLaws.lean`
+(oben ausgeschrieben). Zwei Zeilennummern nachgeführt:
+`Matrix.IsSkewAdjoint` (`SesquilinearForm.lean:562`→`:560`) und
+`lintegral_liminf_le` (`Add.lean:231`→`:233`). Eine Hypothese ergänzt:
+`MeasureTheory.submartingale_of_setIntegral_le` (`Martingale/Basic.lean:281`)
+steht wie behauptet unter `[Preorder ι]` (Variablenblock `:48`), verlangt aber
+außerdem `[SigmaFiniteFiltration μ ℱ]`, `StronglyAdapted ℱ f` und
+Integrierbarkeit jedes `f i`, was die Roadmap verschwieg — derselbe Fehlertyp
+wie `innerRegular_isCompact_isClosed_measurableSet_of_finite` im vierten Lauf.
+Und ein Zitat präzisiert: `integral_rieszMeasure` von Meilenstein 12 stand nur
+mit Verzeichnis da und heißt `RealRMK.integral_rieszMeasure`
+(`RieszMarkovKakutani/Real.lean:345`, `namespace RealRMK` ab `:52`), mit
+`NNRealRMK.integral_rieszMeasure` und `NNRealRMK.lintegral_rieszMeasure`
+(`NNReal.lean:47,56`) daneben. Geprüft und **richtig**:
+`Matrix.IsSymm` (`Symmetric.lean:35`), `Matrix.trace_transpose` (`Trace.lean:73`),
+`Matrix.trace_mul_comm` (`Trace.lean:158`), `IsStable.locally`
+(`LocalProperty.lean:153`), `IsStable.locally_and_iff` (`:161`),
+`IsStable.locally_locally_iff` (`:306`, mit `[IsRightContinuous 𝓕]`),
+`Submartingale.stoppedProcess` (`OptionalStopping.lean:95`), `maximal_ineq`
+(`:144`), `MeasureTheory.tendsto_ae_condExp` (`Convergence.lean:426`) und
+`tendsto_eLpNorm_condExp` (`:439`) samt ihren `Integrable.`-Fassungen (`:360`,
+`:414`), `IsStoppingTime.measurableSpace_mono` (`Stopping.lean:464`) und
+`measurableSpace_le` (`:477`), `seqClosure`/`IsSeqClosed`
+(`Topology/Defs/Sequences.lean:55,61`), `Set.Ico_union_Ico_eq_Ico`
+(`Order/Interval/Set/LinearOrder.lean:298`) und die Definition der Intervalle
+in `namespace Set` von `Order/Interval/Set/Defs.lean` (`:31`--`:94`).
+
+**Offen geblieben.** Von Rückstau 2 die Meilensteine von `MartingaleProblems`,
+soweit sie Mathlib **ohne** Pfadangabe zitieren — das sind die meisten
+Nennungen, und der heutige Ertrag sagt, dass sie es lohnen. Ganz ungeprüft sind
+außerdem die Meilensteine von `WeakConvergence` auf Punkte hin, die Mathlib
+inzwischen unter einem dritten Namen führt: dieser Lauf hat die Datei
+`ConvergenceInDistribution.lean` gefunden, weil er einem falschen Namen
+nachging, nicht weil er systematisch gesucht hätte. Von Rückstau 1 unverändert
+die ordnungsdichte Atommenge. Nicht geschehen und mit Absicht: kein Lean
+übersetzt (der Worktree hat kein `.lake`), `check.py` nicht gelaufen (am
+Manuskript ist nichts geändert), und `cor:atomless` ist weiterhin nicht
+verschärft — die Auffälligkeit vom 2026-09-01 steht unverändert oben und gehört
+dem Nutzer.
+
+**Als Nächstes zu formalisieren:
+`MeasureTheory.ProbabilityMeasure.tendsto_map_of_measure_setOf_continuousAt_eq_one`**
+(`WeakConvergence` Meilenstein 2, erster Punkt): für separabel metrische `E`,
+`E'`, ein Borel-messbares `h : E → E'`, `μ n → μ` schwach und
+`μ {x | ContinuousAt h x} = 1` gilt `(μ n).map h → μ.map h` schwach. Es ruht auf
+zwei Dingen, und beide sind seit heute am Quelltext belegt: Mathlibs
+Portmanteau, namentlich `MeasureTheory.tendsto_measure_of_null_frontier`
+(`Measure/Portmanteau.lean:243`), und die Messbarkeit der Stetigkeitsmenge,
+`measurableSet_of_continuousAt`
+(`MeasureTheory/Constructions/BorelSpace/Basic.lean:252`). Der stetige Fall,
+den es verallgemeinert, ist `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`
+(`Measure/ProbabilityMeasure.lean:639`), und die Zufallsvariablenfassung fällt
+danach als Korollar durch die drei Felder von `TendstoInDistribution`.
+
+Es ist **jetzt** dran, weil heute alles um es herum weggefallen ist. Bis heute
+führte Meilenstein 2 vier Punkte, von denen drei ungeprüft waren; nach diesem
+Lauf sind zwei Mathlib, einer ist sein Korollar, und dieser eine ist der ganze
+Rest. Getragen wird er von `fact:cmt` mit **tragend 3** — nach `fact:Dcountable`
+und `fact:monotoneclass` der am stärksten belastete Fact der Tabelle, und der
+einzige der drei, dessen Lücke heute auf eine einzige Aussage zusammengeschmolzen
+ist. Reihenfolge, wenn mehrere anstehen: `atomGrid_symm` bleibt der erste, denn
+es ruht auf nichts; danach dieser hier vor `IsCadlag`, weil sein
+Mathlib-Anschluss aus zwei heute nachgeschlagenen Namen besteht statt aus einer
+zu übernehmenden Fremddatei, und weil er `WeakConvergence` — die einzige der
+vier Roadmaps ohne Abhängigkeit von den anderen dreien — um einen ganzen
+Meilenstein verkürzt.
