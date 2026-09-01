@@ -34,9 +34,26 @@ ist besser als zehn oberflächlich.
 2. Stelle fest, ob Mathlib sie hat. Der Worktree hat kein `.lake`; die
    Mathlib-Quellen sind über `--add-dir` erreichbar, unter
    `~/Code/lean/journal/.lake/packages/mathlib/Mathlib` (v4.33.1) und
-   `~/Code/lean/mathlib4/Mathlib` (Arbeitsbranch des Nutzers). Für Aussagen
-   über **master** — worauf Tau Ceti aufsetzt — nimm `gh api` oder
-   `gh search code`, wie es der Durchgang am 2026-08-29 getan hat. Suche
+   `~/Code/lean/mathlib4` — dort aber **nicht der Arbeitsbaum**. Die
+   Rangfolge der Quellen, und sie ist wichtig:
+
+   * **`git show upstream/master:Mathlib/...`** in `~/Code/lean/mathlib4`.
+     `upstream` zeigt auf `leanprover-community/mathlib4` und ist aktuell.
+     Das ist die maßgebliche Quelle für Aussagen über master, worauf Tau Ceti
+     aufsetzt. `git grep <Begriff> upstream/master -- Mathlib/` sucht darin,
+     ohne etwas auszuchecken.
+   * `~/Code/lean/journal/.lake/packages/mathlib/Mathlib` — Release v4.33.1,
+     ein brauchbarer Stellvertreter und bequem zu durchsuchen, aber ein
+     Release und nicht master.
+   * **Nicht benutzen: der Arbeitsbaum von `~/Code/lean/mathlib4`.** Er steht
+     auf dem PR-Branch des Nutzers, ist vom März 2026 und über fünftausend
+     Commits hinter master — älter als der `.lake`-Release. `origin` dort ist
+     der Fork des Nutzers und ebenfalls veraltet; `origin/master` ist **nicht**
+     master.
+
+   `gh api`/`gh search code` bleibt zulässig, ist aber langsamer als
+   `git show upstream/master:` und nur nötig, wenn `upstream` nicht frisch
+   geholt ist (`git fetch upstream master`). Suche
    **nach dem Begriff, nicht nach dem Dateinamen**: Mathlib nennt Dinge oft anders, als das Manuskript sie nennt.
    Am 2026-08-29 kostete genau das drei Fehler — `Locally` statt „local
    martingale", `IsStronglyProgressive` statt `ProgMeasurable`,
