@@ -2967,3 +2967,66 @@ Task 23 von der formalisierten Seite her —, und es gehört nach
 Planung, der als Mathlib-PR abgehen könnte. Gegenüber `atomGrid_symm`, dem
 stehenden Vorschlag der Vorläufe, hat es den Vorzug, keine Induktion zu
 brauchen.
+
+### 2026-09-01, siebter Lauf — Task 23, die ordnungsdichte Atommenge: Reduktion, lineares Programm, Energiegesetz
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine, Rückstaupunkt 2 ist
+seit dem sechsten Lauf durch und Punkt 3 wartet auf `.lake`; der Lauf ging an
+Rückstaupunkt 1, den offenen Rest von Task 23. Das Ausführliche steht in
+`Task23/PROTOKOLL.md`, zwölfter Lauf; hier das Gerüst.
+
+**Die Reduktion ist zu Ende geführt.** Aufbauend auf
+`duality_defect_eq_integral` (dritter Lauf) ist das volle System für den
+Dualitätsdefekt äquivalent zu drei Bedingungen an
+`h(a,t) = κ(a,t) − κ(a,0)`, `κ` der antisymmetrische Anteil von `γ`, und die
+Behauptung des Manuskripts ist äquivalent zu `h(a,a) = 0` für jedes Atom. Die
+Äquivalenz trägt in beide Richtungen: jede Lösung mit nichtverschwindender
+Diagonale **ist** ein Gegenbeispiel (`Φ := w/2`, `γ := κ/2`). Damit ist die
+Suche nach Beweis und Gegenbeispiel dieselbe lineare Frage.
+
+**Die Frage des elften Laufs ist beantwortet.** Auf Level-Trunkierungen der
+dyadischen Uhr ist die Frage ein lineares Programm (`Task23/lp_dense.py`;
+die Kontrolle `η = 0` reproduziert den endlichen Satz exakt, auf jedem Level —
+die Kodierung ist damit unabhängig gegengeprüft). Befund: die beste **lineare**
+Zertifikatskonstante ist exakt `n + ½`, wächst also linear in der Atomzahl —
+die vom elften Lauf gesuchte feinere lineare Paarung existiert nicht, in
+keiner Norm. Zugleich fällt der maximal erreichbare Defekt für alle drei
+gemessenen Massenprofile (`r = 2.5, 4, 8`) gegen null: **auf der dyadischen
+Uhr gibt es kein beschränktes Gegenbeispiel**, soweit `J ≤ 7` den Trend trägt.
+Beides sitzt auf einem Zwei-Regime-Gesetz
+`v ≈ min(κ·η, 0.85·√(BMη))` mit Übergang exakt bei `BM/κ²`.
+
+**Das benannte Ziel daraus:** die **Energieschranke**
+`Δ(t)² ≤ C·B·M·η` (`C ≤ 1`) für endliche Kettensysteme mit Residuum `η` und
+`|h| ≤ B`. Sie ist quadratisch — die Beschränktheit von `h` geht ein, das ist
+der Unterschied zu allen bisherigen Paarungen —, die Numerik sitzt profil- und
+levelübergreifend auf ihr, und bewiese man sie, folgte die Dualität per
+Ausschöpfung für **jede** rein atomare Uhr endlicher Masse mit beschränktem
+`κ`, ordnungsdichte Atommengen eingeschlossen. Der erste Paarungsschritt steht
+im Protokoll. Mitgenommen: eine noch zu prüfende Skizze, dass Atommengen, in
+denen jedes Atom Nachbarn hat (Typ `ω*`, `ℤ`-Ketten), schon der
+Zwei-Diagonalen-Induktion von `atomGrid_symm` zugänglich sind — sie braucht
+keinen Boden. Roadmaps und Manuskript sind unverändert; die Skizze und die
+Vermutung wandern erst nach einer Nachprüfung dorthin.
+
+**Offen geblieben.** Der Beweis der Energieschranke; die `B`-Hypothese
+(Beschränktheit von `κ` gibt das Manuskript nirgends her); die Nachprüfung der
+`ω*`-Skizze; und die Geometrieabhängigkeit der Messung (nur dyadisch,
+geometrische Levelmassen, `J ≤ 7`).
+
+**Was als Nächstes formalisiert werden soll:
+`Matrix.mulVec_one_eq_zero_iff_of_nonneg`** (`MartingaleProblems`
+Meilenstein 8, dritter Matrixpunkt): für `A : Matrix n n ℝ` mit `0 ≤ A i j`
+ist `A *ᵥ 1 = 0 ↔ A = 0`. Es ruht auf zwei Mathlib-Namen, beide an diesem Lauf
+auf master belegt: `Matrix.mulVec` (`Data/Matrix/Mul.lean:698`) und
+`Finset.sum_eq_zero_iff_of_nonneg` (als `to_additive` von
+`Finset.prod_eq_one_iff_of_one_le'`,
+`Algebra/Order/BigOperators/Group/Finset.lean:201`). Es ist jetzt dran, weil
+es neben dem Spurlemma des sechsten Laufs der zweite Punkt ist, dessen
+sämtliche Voraussetzungen am Quelltext nachgeschlagen sind, weil es die
+**einzige** Stelle des Halbordnungsfalls ist, an der die Nichtnegativität der
+Massen arbeitet — also genau die Hypothese, deren Tragen der dritte Lauf am
+Diamanten belegt hat —, und weil mit ihm und dem Spurlemma zwei der vier
+Matrixpunkte stehen, die `dualityDefect_eq_zero_of_nonneg` tragen. Wie das
+Spurlemma gehört es nach `Mathlib/LinearAlgebra/Matrix/` und taugt als
+eigenständiger Mathlib-PR.

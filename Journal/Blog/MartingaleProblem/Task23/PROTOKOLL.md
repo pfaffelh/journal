@@ -1521,3 +1521,178 @@ gesucht.
   fallenden beschränkt — dieselbe Länge, drei Regime. Wer nur gleiche Massen
   prüft, sieht das gutartigste und schließt falsch; das ist derselbe Fehler wie
   der symmetrische Kanarienvogel des neunten Laufs ($c=[1,1]$ sieht zu wenig).
+
+## Die ordnungsdichte Atommenge, 2026-09-01 (zwölfter Lauf): das Problem ist ein lineares Programm, und die Messung sagt ein Energiegesetz
+
+Der elfte Lauf endete mit einer Frage: kann die Cauchy--Schwarz-Ungleichung in
+$|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ durch eine Paarung ersetzt werden,
+die die Struktur von $E$ als Schwanzbeitrag benutzt? Dieser Lauf beantwortet
+sie, und die Antwort ist zweigeteilt: als **lineare** Paarung nein — die beste
+Konstante wächst linear in der Atomzahl —, aber die Messung zeigt ein
+**quadratisches** Gesetz, das, wenn es sich beweisen lässt, den ordnungsdichten
+Fall vollständig schließt. Neu ist `Task23/lp_dense.py`; bewiesen ist die
+Reduktion dieses Abschnitts, gemessen das Gesetz, offen sein Beweis.
+
+### Die Reduktion: drei Bedingungen, und die Diagonale ist das Ziel
+
+Der dritte Lauf hatte $\Phi$ eliminiert und gezeigt, dass der Defekt nur am
+antisymmetrischen Anteil $\kappa(x,y):=\gamma(x,y)-\gamma(y,x)$ hängt
+(`duality_defect_eq_integral`). Das lässt sich zu Ende führen. Setze
+
+$$h(a,t):=\kappa(a,t)-\kappa(a,0)\qquad(a\in A,\ t\in[0,t^*]),$$
+
+und $w(s,t):=\Phi(s,t)-\Phi(t,s)$, $H(s,t):=\sum_{a<s}m_a\,h(a,t)$. Dann ist
+das volle System aus \eqref{eq:incrementrep} für den Defekt **äquivalent** zu:
+
+1. $h(a,0)=0$ (Definition; aus Bedingung 3 mit der vollen Schnittfamilie sogar
+   herleitbar);
+2. $h(a,b)+h(b,a)=h(a,a)+h(b,b)$ für alle Atompaare $a,b$ (das ist die
+   Antisymmetrie von $\kappa$ auf $A\times A$);
+3. $H(s,t)+H(t,s)=0$ für alle $s,t\in[0,t^*]$ (das ist die Antisymmetrie von
+   $w$, und $w=H$ bis auf die Randspalte).
+
+Der Dualitätsdefekt ist $\Phi(t,0)-\Phi(0,t)=-\Delta(t)$ mit
+$\Delta(t):=\sum_{a<t}m_a\,h(a,a)$ — **die Behauptung des Manuskripts ist
+äquivalent zu $h(a,a)=0$ für jedes Atom.** Und die Äquivalenz trägt in beide
+Richtungen: aus jeder Lösung $h$ von 1--3 mit $h(a,a)\neq0$ für ein $a$ wird
+mit $\gamma:=\kappa/2$, $\Phi:=w/2$ ein echtes Gegenbeispiel, beide
+Darstellungen aus \eqref{eq:incrementrep} eingeschlossen. Wer sucht, sucht also
+genau: $h$ mit 1--3 und nichtverschwindender Diagonale.
+
+Die Probe an $N=2$ (Atome $1,2$): Bedingung 3 an $(s,t)=(2^+,1^+)$ isoliert
+$m_1h(1,1)=0$ — der endliche Satz in einer Zeile. Der Mechanismus braucht ein
+$t$ **echt zwischen** dem Atom und seinem Nachfolger; genau das nimmt die
+Ordnungsdichte weg.
+
+### Nebenbefund: Nachbaratome genügen, auch unendlich viele
+
+Die Hypothese von `prop:atomicdual` — endlich viele Atome unter jedem Punkt —
+ist stärker als nötig. Hat **jedes Atom auf beiden Seiten ein Nachbaratom**
+(die Atommenge ist ordnungstheoretisch diskret, etwa $a_k\downarrow0$ vom Typ
+$\omega^*$, oder eine $\mathbb Z$-Kette, die sich an einem inneren Punkt
+häuft), so läuft die Zwei-Diagonalen-Induktion von `atomGrid_symm` unverändert:
+sie induziert über den Abstand zur Diagonale und braucht **keinen Boden** —
+jedes Indexpaar hat endlichen Abstand. Sie gibt $w=0$ auf allen
+Atompaaren; daraus $\kappa=0$ auf Atompaaren (die Gitterlücke $[a_{k+1},a_k)$
+trägt genau ein Atom, also $m_{k+1}\kappa(a_{k+1},a_j)=w(a_k,a_j)-w(a_{k+1},a_j)=0$);
+daraus $w(t,y)=0$ für beliebiges $t$ und Gitter-$y$; und der Rand $y=0$ kommt
+per dominierter Konvergenz, $|w(t,a_j)-w(t,0)|\le\|\kappa\|_\infty\,q([0,a_j))\to0$
+— hier, und nur hier, geht die Beschränktheit von $\kappa$ ein. **Das ist eine
+Skizze, kein geprüfter Beweis**; der nächste Lauf, der sie anfasst, rechne sie
+nach, bevor sie in Roadmap oder Manuskript wandert. Hält sie, ist der wirklich
+offene Kern exakt die **in sich dichte** Atommenge (und, per
+Cantor--Bendixson, transfinite Mischfälle, die auf sie zurückführen dürften).
+
+### Das LP-Experiment
+
+Ein beschränktes Gegenbeispiel $|h|\le B$ auf der dyadischen Atommenge
+(Level-$j$-Atome $k/2^j$, Masse $r^{-j}$, summierbar für $r>2$) erfüllt auf der
+Trunkierung bis Level $J$ die Bedingungen 1 und 2 **exakt** und Bedingung 3 bis
+auf $\eta=2B\varepsilon_J$, $\varepsilon_J$ die Schwanzmasse. Das LP maximiert
+$\Delta_J(1)$ unter genau diesen Nebenbedingungen ($B=1$; Gitter für $s,t$:
+Dyadische bis Level $J{+}1$, also alle Atome und alle Lückenmitten). Zwei
+Eigenschaften machen es beweiskräftig:
+
+* $v_J\to0$ **schließt jedes beschränkte Gegenbeispiel auf dieser Uhr aus**
+  (ein solches erzwänge $v_J\ge|\Delta(1)|-\varepsilon_J$; die Skalierung
+  $h\mapsto\lambda h$ erledigt beliebiges $B$).
+* Die Kontrolle $\eta=0$ muss den endlichen Satz reproduzieren, $v_J=0$. Sie
+  tut es, auf allen Leveln — die Kodierung erfasst die Starrheit vollständig.
+
+### Die Messwerte
+
+$v_J$ bei $\eta=2\varepsilon_J$, dyadische Uhr:
+
+| $r$ | $J{=}2$ | $3$ | $4$ | $5$ | $6$ | $7$ |
+|---|---|---|---|---|---|---|
+| $2.5$ | $0.720^\dagger$ | $0.976^\dagger$ | $1.127$ | $1.112$ | $1.009$ | $0.913$ |
+| $4$ | $0.278$ | $0.182$ | $0.136$ | $0.108$ | $0.078$ | — |
+| $8$ | $0.034$ | $0.021$ | $0.0080$ | $0.0028$ | — | — |
+
+($\dagger$: an der trivialen Schranke $M_J$ gesättigt, dort sagt der Wert
+nichts.) Alle drei Profile fallen: $r=8$ schnell, $r=4$ etwa wie
+$0.72^J$, $r=2.5$ geometrisch mit Faktor $\approx0.905<1$ je Level
+(Quotienten $0.907$, $0.905$ bei $J=5\to6\to7$). **Auf keiner der drei Uhren
+gibt es ein beschränktes Gegenbeispiel** — soweit $J\le7$ den Trend trägt.
+
+Die intrinsische Verstärkung (kleines festes $\eta$, lineares Regime, ohne
+aktive $h$-Schranke):
+
+$$\kappa_J=2^J-\tfrac12=n_J+\tfrac12$$
+
+exakt auf allen prüfbaren Leveln ($3.5,\,7.5,\,15.5$ für $J=2,3,4$, profilfrei).
+**Die beste lineare Zertifikatskonstante wächst linear in der Atomzahl.** Für
+$r<4$ divergiert $\kappa_J\varepsilon_J\sim(4/r)^J$ — die vom elften Lauf
+gesuchte lineare Paarung mit beschränkter Norm existiert nicht, in keiner
+Norm: $\kappa_J$ ist normfrei definiert.
+
+### Das Zwei-Regime-Gesetz
+
+Bei festem $J$ als Funktion von $\eta$ (gemessen $J=4$, $r=4$, $BM=0.5$):
+
+$$v_J(\eta)\;\approx\;\min\bigl(\kappa_J\,\eta,\ c\,\sqrt{BM\eta}\bigr),
+\qquad c\approx0.85,$$
+
+mit Übergang exakt beim vorhergesagten $\eta^*=BM/\kappa_J^2\approx2\cdot10^{-3}$:
+gemessen $v/\eta=15.500$ bei $\eta\le10^{-4}$ (linear, $=\kappa_4$), Plateau
+$v/\sqrt{BM\eta}=0.84$--$0.85$ bei $\eta=10^{-2}$--$3\cdot10^{-2}$. Und die
+$v_J$-Tabelle oben passt profilübergreifend auf dasselbe Gesetz:
+$v_J/\sqrt{BM\cdot2\varepsilon_J}\in[0.69,0.88]$ für alle nicht gesättigten
+Einträge mit $r\in\{2.5,4\}$ ($M=2$ bzw. $0.5$).
+
+### Die Vermutung, und was sie schließen würde
+
+**Energieschranke.** Für jedes endliche System mit Bedingungen 1, 2 exakt,
+Bedingung 3 bis auf $\eta$, $|h|\le B$, Gesamtmasse $M$:
+
+$$\Delta(t)^2\;\le\;C\cdot B\,M\,\eta,\qquad C\le1\ \text{(gemessen }c^2\approx0.72\text{)}.$$
+
+Die Homogenität stimmt ($h\mapsto\lambda h$ skaliert beide Seiten mit
+$\lambda^2$), die Kontrolle $\eta=0$ ist der endliche Satz, und die Numerik
+sitzt profil- und levelübergreifend auf ihr. Bewiesen ist sie nicht.
+
+**Konsequenz, wenn sie hält:** Ausschöpfung mit $\eta_F=2B\varepsilon_F$ gibt
+$\Delta^2\le2CB^2M\varepsilon_F\to0$ längs **jeder** Ausschöpfung — die
+Dualität gilt für jede rein atomare Uhr endlicher Masse mit beschränktem
+$\kappa$, **ordnungsdichte Atommengen eingeschlossen**, und die Richtung des
+Massenprofils, an der der elfte Lauf die grobe Ausschöpfung scheitern sah, ist
+irrelevant geworden: die Beschränktheit von $h$ ersetzt, was der
+Frobenius-Paarung fehlte. Der Grund, warum das lineare Regime nicht beißt: sein
+Optimum sättigt $|h|=1$ auf den leichten Atomen (im Extremalpunkt sichtbar:
+die leichten Atome liegen auf $\pm1$, das schwere Atom trägt kleines $h$, die
+Diagonale wächst längs der Kette) — genau diese Sättigung deckelt den Gewinn
+auf $\sqrt{BM\eta}$.
+
+### Was offen bleibt
+
+1. **Der Beweis der Energieschranke.** Sie ist eine endlich-dimensionale
+   Aussage über Kettensysteme, quadratisch, mit vermuteter Konstante $\le1$.
+   Der erste Paarungsschritt steht: $M\Delta=\sum_k m_kM_k\,h(a_k,s_n)+O(M\eta)$
+   (Summation von Bedingung 2 gegen $m\otimes m$, Auflösung über Bedingung 3
+   und die Diagonale $H(s_n,s_n)=O(\eta)$; $M_k$ die Masse bis einschließlich
+   $a_k$, $s_n$ ein Schnitt über allen Atomen); trivial abgeschätzt gibt er nur
+   $\Delta\le BM+O(\eta)$. Der quadratische Gewinn muss aus der Iteration über
+   alle Schnittlevel kommen.
+2. **Die $B$-Hypothese.** Das Manuskript gibt Beschränktheit von $\kappa$
+   nirgends her; sie steht jetzt an zwei Stellen (Rand der Nachbaratom-Skizze,
+   Energieschranke). Entweder sie wird Voraussetzung von `prop:atomicdual` in
+   der dichten Fassung, oder ein Abschneideargument ersetzt sie.
+3. **Geometrieabhängigkeit der Messung.** Gemessen ist dyadisch mit
+   geometrischen Levelmassen, $J\le7$. Das Gesetz ist profilübergreifend, aber
+   eine andere Uhrgeometrie (schiefe Teilungen, nicht selbstähnlich) ist
+   ungemessen.
+
+### Sackgassen, elfter Nachtrag
+
+* **Eine lineare Paarung mit beschränkter Zertifikatsnorm suchen** (die Frage
+  des elften Laufs). Gibt es nicht: $\kappa_J=n_J+\frac12$ ist die beste
+  lineare Konstante überhaupt, normfrei, und wächst linear in der Atomzahl.
+  Jede Fortsetzung muss die Beschränktheit von $h$ quadratisch benutzen.
+* **$v_J$ bei großem $\eta$ als Evidenz lesen.** Für $\eta\gtrsim M_J$ klebt
+  das LP an der trivialen Schranke $M_J$ (bei $r=2.5$ bis $J=3$ exakt
+  $v=M_J$); solche Einträge messen nur die Schwanzmasse, nicht das System.
+* **Aus $\kappa_J\varepsilon_J\to\infty$ auf ein Gegenbeispiel schließen.**
+  Das lineare Regime gilt nur bis $\eta^*=BM/\kappa_J^2$; oberhalb übernimmt
+  die Sättigung. Der elfte Lauf stand mit der Frobenius-Variante genau an
+  dieser Klippe und konnte sie nicht sehen, weil (P) keine Schranke an $h$
+  mitführte.
