@@ -2967,3 +2967,125 @@ Task 23 von der formalisierten Seite her —, und es gehört nach
 Planung, der als Mathlib-PR abgehen könnte. Gegenüber `atomGrid_symm`, dem
 stehenden Vorschlag der Vorläufe, hat es den Vorzug, keine Induktion zu
 brauchen.
+
+### 2026-09-01, siebter Lauf — Task 23, die ordnungsdichte Atommenge: Reduktion, lineares Programm, Energiegesetz
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine, Rückstaupunkt 2 ist
+seit dem sechsten Lauf durch und Punkt 3 wartet auf `.lake`; der Lauf ging an
+Rückstaupunkt 1, den offenen Rest von Task 23. Das Ausführliche steht in
+`Task23/PROTOKOLL.md`, zwölfter Lauf; hier das Gerüst.
+
+**Die Reduktion ist zu Ende geführt.** Aufbauend auf
+`duality_defect_eq_integral` (dritter Lauf) ist das volle System für den
+Dualitätsdefekt äquivalent zu drei Bedingungen an
+`h(a,t) = κ(a,t) − κ(a,0)`, `κ` der antisymmetrische Anteil von `γ`, und die
+Behauptung des Manuskripts ist äquivalent zu `h(a,a) = 0` für jedes Atom. Die
+Äquivalenz trägt in beide Richtungen: jede Lösung mit nichtverschwindender
+Diagonale **ist** ein Gegenbeispiel (`Φ := w/2`, `γ := κ/2`). Damit ist die
+Suche nach Beweis und Gegenbeispiel dieselbe lineare Frage.
+
+**Die Frage des elften Laufs ist beantwortet.** Auf Level-Trunkierungen der
+dyadischen Uhr ist die Frage ein lineares Programm (`Task23/lp_dense.py`;
+die Kontrolle `η = 0` reproduziert den endlichen Satz exakt, auf jedem Level —
+die Kodierung ist damit unabhängig gegengeprüft). Befund: die beste **lineare**
+Zertifikatskonstante ist exakt `n + ½`, wächst also linear in der Atomzahl —
+die vom elften Lauf gesuchte feinere lineare Paarung existiert nicht, in
+keiner Norm. Zugleich fällt der maximal erreichbare Defekt für alle drei
+gemessenen Massenprofile (`r = 2.5, 4, 8`) gegen null: **auf der dyadischen
+Uhr gibt es kein beschränktes Gegenbeispiel**, soweit `J ≤ 7` den Trend trägt.
+Beides sitzt auf einem Zwei-Regime-Gesetz
+`v ≈ min(κ·η, 0.85·√(BMη))` mit Übergang exakt bei `BM/κ²`.
+
+**Das benannte Ziel daraus:** die **Energieschranke**
+`Δ(t)² ≤ C·B·M·η` (`C ≤ 1`) für endliche Kettensysteme mit Residuum `η` und
+`|h| ≤ B`. Sie ist quadratisch — die Beschränktheit von `h` geht ein, das ist
+der Unterschied zu allen bisherigen Paarungen —, die Numerik sitzt profil- und
+levelübergreifend auf ihr, und bewiese man sie, folgte die Dualität per
+Ausschöpfung für **jede** rein atomare Uhr endlicher Masse mit beschränktem
+`κ`, ordnungsdichte Atommengen eingeschlossen. Der erste Paarungsschritt steht
+im Protokoll. Mitgenommen: eine noch zu prüfende Skizze, dass Atommengen, in
+denen jedes Atom Nachbarn hat (Typ `ω*`, `ℤ`-Ketten), schon der
+Zwei-Diagonalen-Induktion von `atomGrid_symm` zugänglich sind — sie braucht
+keinen Boden. Roadmaps und Manuskript sind unverändert; die Skizze und die
+Vermutung wandern erst nach einer Nachprüfung dorthin.
+
+**Offen geblieben.** Der Beweis der Energieschranke; die `B`-Hypothese
+(Beschränktheit von `κ` gibt das Manuskript nirgends her); die Nachprüfung der
+`ω*`-Skizze; und die Geometrieabhängigkeit der Messung (nur dyadisch,
+geometrische Levelmassen, `J ≤ 7`).
+
+**Was als Nächstes formalisiert werden soll:
+`Matrix.mulVec_one_eq_zero_iff_of_nonneg`** (`MartingaleProblems`
+Meilenstein 8, dritter Matrixpunkt): für `A : Matrix n n ℝ` mit `0 ≤ A i j`
+ist `A *ᵥ 1 = 0 ↔ A = 0`. Es ruht auf zwei Mathlib-Namen, beide an diesem Lauf
+auf master belegt: `Matrix.mulVec` (`Data/Matrix/Mul.lean:698`) und
+`Finset.sum_eq_zero_iff_of_nonneg` (als `to_additive` von
+`Finset.prod_eq_one_iff_of_one_le'`,
+`Algebra/Order/BigOperators/Group/Finset.lean:201`). Es ist jetzt dran, weil
+es neben dem Spurlemma des sechsten Laufs der zweite Punkt ist, dessen
+sämtliche Voraussetzungen am Quelltext nachgeschlagen sind, weil es die
+**einzige** Stelle des Halbordnungsfalls ist, an der die Nichtnegativität der
+Massen arbeitet — also genau die Hypothese, deren Tragen der dritte Lauf am
+Diamanten belegt hat —, und weil mit ihm und dem Spurlemma zwei der vier
+Matrixpunkte stehen, die `dualityDefect_eq_zero_of_nonneg` tragen. Wie das
+Spurlemma gehört es nach `Mathlib/LinearAlgebra/Matrix/` und taugt als
+eigenständiger Mathlib-PR.
+
+### 2026-09-01, achter Lauf — Task 23: die Energieschranke ist falsch, in jeder Konstante
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine, Rückstaupunkt 2 ist
+durch, Punkt 3 wartet auf `.lake`; der Lauf ging an Rückstaupunkt 1, das
+benannte Ziel des zwölften Task-23-Laufs: die Energieschranke
+$\Delta(t)^2\le C\,B\,M\,\eta$ ($C\le1$) für endliche Kettensysteme. Das
+Ausführliche steht in `Task23/PROTOKOLL.md`, dreizehnter Lauf; hier das Gerüst.
+
+**Die Schranke ist widerlegt, nicht bewiesen.** Der zwölfte Lauf hatte als
+offen markiert, dass nur dyadisch mit geometrischen Levelmassen gemessen war;
+genau dort saß der Fehler. Drei Stufen, alle in exakter Bruchrechnung
+verifiziert (`Task23/energy_counterexample.py`, neu; das LP mit freiem
+Massenvektor in `Task23/energy_lp.py`, neu, auf den dyadischen Instanzen
+bitgleich mit `lp_dense.py`):
+
+* **$C\le1$ fällt bei $n=2$, analytisch.** Massen $(\mu,1)$, $\eta=2\mu^2/3$:
+  eine explizite Belegung gibt $\Delta=\mu-\mu^2/3$ und
+  $\Delta^2/(BM\eta)\to3/2$. Exakt nachgerechnet: $\mu=1/10$ gibt $841/660$.
+* **Keine Konstante überlebt.** Leichtes Präfix $[\mu]^k+[1]$: Verhältnis
+  $\approx1.85k$; aufsteigend geometrisch $m_k\propto2^k$: zertifizierte
+  Instanzen mit Verhältnis $1513$, $4399$, $5929$, $27589$.
+* **Auch masse-lokale Residuenbudgets retten nichts** (aufsteigende Ketten:
+  $8273$ bei $n=8$).
+
+Der Mechanismus verkehrt die Lesart des zwölften Laufs: die Sättigung
+$|h|=B$ auf den leichten Atomen deckelt den Defekt nicht, sie **trägt** ihn —
+ein leichtes Atom unter einem schweren transportiert per Bedingung 3 die
+Diagonale $m_2d_2\approx\mu B$ zum Preis $\eta\sim\mu^2B$.
+
+**Was das für Task 23 heißt.** Kein Gegenbeispiel zur Dualität (die Instanzen
+haben $\eta>0$; die Rückrichtung der Reduktion gilt nur exakt), aber der
+Ausschöpfungsweg über eine profilfreie Schranke ist nach Frobenius (elfter
+Lauf) und linear (zwölfter) nun auch quadratisch zu, und damit im Ganzen: die
+Relaxation „endliches System plus Slack" ist echt schwächer als „Trunkierung
+eines exakten Systems". Festgehalten ist auch, warum die schlimmsten Muster
+als Uhren nicht vorkommen: eine ordnungsdichte Uhr mit durchweg aufsteigenden
+Massen hätte unendliche Masse. Und die Gegenprobe stützt das: realisierbare
+steigende Profile auf der dyadischen Ordnung ($m(k/2^j)=(k/2^j)^p r^{-j}$,
+echtes Trunkierungsresiduum $\eta_J=2B\varepsilon_J$) kollabieren weiterhin,
+$v_J/M_J$ fällt auf $0.16$ bzw. $0.51$ bei $J=6$, und $v_J^2/(M_J\eta_J)$
+bleibt dort überall unter $0.82$ (`Task23/dyadic_adversarial.py`, neu) — die
+Verstärkung lebt genau in dem Slack, den keine Trunkierung erzeugt.
+
+**Offen geblieben.** Die $\omega^*$-Skizze (unverändert); und die Frage,
+welche Gestalt-Eigenschaft des Trunkierungsresiduums die Verstärkung
+ausschließt — sie ist jetzt die eigentliche Frage des ordnungsdichten Falls.
+
+**Was als Nächstes formalisiert werden soll:
+`Matrix.mulVec_one_eq_zero_iff_of_nonneg`**, unverändert der Vorschlag des
+siebten Laufs, und heute dringlicher: mit dem Ausschöpfungsweg ist der
+**bewiesene** Halbordnungsfall (`prop:atomicposet`,
+`dualityDefect_eq_zero_of_nonneg` in `MartingaleProblems` M8) der stabile
+Kern von Task 23, und dieses Lemma ist sein einziger Punkt, an dem die
+Nichtnegativität der Massen arbeitet. Die Voraussetzungen sind unverändert
+belegt; `Matrix.IsSymm` (`LinearAlgebra/Matrix/Symmetric.lean:35`),
+`Matrix.mulVec` (`Data/Matrix/Mul.lean:698`) und `Matrix.trace_mul_comm`
+(`LinearAlgebra/Matrix/Trace.lean:158`) sind an diesem Lauf erneut auf
+upstream/master geprüft.

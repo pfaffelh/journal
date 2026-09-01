@@ -167,8 +167,12 @@ case "$RC" in
          RC2=$?
          if [ "$RC2" = 0 ]; then
            status "ok" "Kontingent fuer $MODEL erschoepft; mit $FALLBACK regulaer beendet"
+         elif ! git diff --quiet HEAD 2>/dev/null || [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+           # Die Grenze kann MITTEN in einem Lauf zuschlagen.  Dann ist Arbeit da,
+           # und "limit" allein liest sich, als sei nichts geschehen.
+           status "limit-teilarbeit" "Nutzungsgrenze mitten im Lauf (Code $RC, Ausweich $RC2) -- die bis dahin geleistete Arbeit ist committet"
          else
-           status "limit" "Nutzungsgrenze erreicht (Code $RC), zweiter Versuch mit $FALLBACK endete mit $RC2"
+           status "limit" "Nutzungsgrenze erreicht (Code $RC), zweiter Versuch mit $FALLBACK endete mit $RC2 -- nichts geleistet"
          fi
        else
          status "fehler" "claude endete mit Code $RC (siehe logs/run_$STAMP.log)"

@@ -58,6 +58,46 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `Task23/PROTOKOLL.md`, Abschnitt „Die ordnungsdichte Atommenge, 2026-09-01
    (elfter Lauf)", Sackgassen im zehnten Nachtrag.
 
+   *Zwischenstand 2026-09-01, zwölfter Lauf: die Frage nach der feineren
+   Paarung ist beantwortet — linear gibt es sie nicht, quadratisch sitzt die
+   Numerik exakt auf ihr.* Das Problem ist auf drei Bedingungen an den
+   verschobenen antisymmetrischen Anteil $h(a,t)=\kappa(a,t)-\kappa(a,0)$
+   reduziert, die Behauptung ist äquivalent zu $h(a,a)=0$ je Atom, und die
+   Reduktion trägt in beide Richtungen — wer ein Gegenbeispiel sucht, sucht
+   eine Lösung mit nichtverschwindender Diagonale. Auf Level-Trunkierungen der
+   dyadischen Uhr ist das ein LP (`Task23/lp_dense.py`; Kontrolle $\eta=0$
+   reproduziert den endlichen Satz exakt). Befund: der maximale Defekt fällt
+   für alle drei gemessenen Massenprofile gegen $0$ — **kein beschränktes
+   Gegenbeispiel auf der dyadischen Uhr** —, die beste lineare
+   Zertifikatskonstante ist exakt $n+\frac12$ (linear in der Atomzahl, darum
+   scheiterte der elfte Lauf), und alles sitzt auf dem Zwei-Regime-Gesetz
+   $v\approx\min(\kappa\eta,\,0.85\sqrt{BM\eta})$ mit Übergang bei
+   $BM/\kappa^2$. Wer den Punkt aufnimmt, beweist die **Energieschranke**
+   $\Delta(t)^2\le C\,B\,M\,\eta$ ($C\le1$) für endliche Kettensysteme mit
+   Residuum $\eta$ und $|h|\le B$ — sie schließt per Ausschöpfung jede rein
+   atomare Uhr endlicher Masse mit beschränktem $\kappa$, ordnungsdicht
+   eingeschlossen. Der erste Paarungsschritt und die Sackgassen stehen im
+   PROTOKOLL, zwölfter Lauf; dort auch die noch zu prüfende Skizze, dass
+   Nachbaratome ohne Bodenatom (Typ $\omega^*$, $\mathbb Z$-Ketten) schon der
+   bisherigen Induktion zugänglich sind.
+
+   *Zwischenstand 2026-09-01, dreizehnter Lauf: die Energieschranke ist
+   **falsch**, in jeder Konstante.* Der kleinste Zeuge hat zwei Atome
+   (Massen $(\mu,1)$, $\eta=2\mu^2/3$, Verhältnis $\to 3/2$, analytisch und in
+   exakter Bruchrechnung), und entlang aufsteigend-geometrischer Ketten ist
+   $\Delta^2/(BM\eta)$ unbeschränkt — zertifizierte Instanzen bis $27588$
+   (`Task23/energy_counterexample.py`). Auch masse-lokale Residuenbudgets
+   retten nichts. Damit ist der Ausschöpfungsweg über eine profilfreie
+   Schranke dreifach zu (Frobenius, linear, quadratisch) und im Ganzen zu:
+   die Relaxation „endliches System plus Slack" ist echt schwächer als
+   „Trunkierung eines exakten Systems". Wer den Punkt aufnimmt, hat zwei
+   Wege: die $\omega^*$-Skizze des zwölften Laufs nachrechnen (unverändert
+   offen), oder die **Gestalt** des Trunkierungsresiduums benutzen — es ist
+   selbst $\sum_{\text{fehlend}}m_ah(a,\cdot)$ mit global gebundenem $h$,
+   und ordnungsdichte Uhren mit durchweg aufsteigenden Massen existieren
+   nicht (Summierbarkeit). Einzelheiten in `Task23/PROTOKOLL.md`,
+   dreizehnter Lauf.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
