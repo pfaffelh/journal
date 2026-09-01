@@ -3089,3 +3089,58 @@ belegt; `Matrix.IsSymm` (`LinearAlgebra/Matrix/Symmetric.lean:35`),
 `Matrix.mulVec` (`Data/Matrix/Mul.lean:698`) und `Matrix.trace_mul_comm`
 (`LinearAlgebra/Matrix/Trace.lean:158`) sind an diesem Lauf erneut auf
 upstream/master geprüft.
+
+### 2026-09-01, neunter Lauf — Task 23: der intervallendliche Kettenfall ist bewiesen
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine; der Lauf ging an
+Rückstaupunkt 1 und dort an den ersten der zwei Wege, die der dreizehnte
+Task-23-Lauf hinterließ: **die $\omega^*$-Skizze des zwölften Laufs
+nachrechnen**. Sie ist nachgerechnet und Satz; das Ausführliche steht in
+`Task23/PROTOKOLL.md`, vierzehnter Lauf, hier das Gerüst.
+
+**Bewiesen:** für jede rein atomare Uhr, deren Atome unter $t^*$ paarweise
+vergleichbar und **intervallendlich** sind — je zwei Atome schließen nur
+endlich viele ein —, gilt $\Phi(t^*,0)=\Phi(0,t^*)$, in beiden Konventionen,
+ohne Hypothese über die Existenz der Integrale in \eqref{eq:incrementrep}
+hinaus, und schärfer die volle Symmetrie von $\Phi$. Das enthält
+`prop:atomicdual` und erfasst neu die Ordnungstypen $\omega$, $\omega^*$ und
+$\zeta$ — Atome, die sich bei $0$, an inneren Punkten oder bei $t^*$ häufen.
+Der Beweis: die Zwei-Diagonalen-Induktion von `lem:atomgrid` braucht weder
+Boden noch Deckel (nur endliche Abstände aller Indexpaare — genau die
+Intervallendlichkeit), und die Ränder kommen als Schwänze der absolut
+konvergenten Atomsummen, die die Existenz der Integrale ohnehin ist.
+
+**Drei Befunde neben dem Satz.** Erstens ist die wörtliche Hypothese der
+Skizze — „jedes Atom hat beidseits ein Nachbaratom" — echt schwächer als das,
+was ihre eigene Induktion braucht; zwei $\zeta$-Ketten übereinander trennen
+beide Bedingungen, und dort endet die lokale Algebra nachweislich
+(`Task23/neighbor.py`, Test X: blockintern erzwungen, Kreuzpaare frei).
+Zweitens war die **$B$-Hypothese nie nötig**: der offene Punkt 2 des zwölften
+Laufs (Beschränktheit von $\kappa$) fällt für den Kettenfall, weil dominierte
+Konvergenz mit der vorausgesetzten Integralexistenz die Randlimiten trägt.
+Drittens, mechanisch gegengeprüft: die Randfreiheit der Induktion an
+endlichen Ketten ohne jede Randrelation, $M=2..7$, drei Massenvektoren, beide
+Konventionen, exakt rational und symbolisch (`neighbor.py`, Test R, rc=0).
+
+**Eingetragen:** `atomGrid_symm_int` und `duality_of_atomic_intervalFinite`
+in `MartingaleProblems` Meilenstein 8, samt korrigierter Reichweitenangabe
+von `duality_of_atomic`; Zwischenstand an Rückstaupunkt 1; Protokollabschnitt
+mit Beweis und Sackgassennachtrag. Das Manuskript ist nicht angefasst.
+
+**Offen geblieben.** Die diskrete, nicht intervallendliche Kette (kleinste
+Instanz: zwei $\zeta$-Ketten) und die in sich dichte Atommenge; beide hängen
+am Überqueren eines Häufungspunkts, und der Sackgassennachtrag sagt, wo dort
+anzusetzen ist (Schwanzrelationen, nicht feinere Induktion).
+
+**Was als Nächstes formalisiert werden soll: `prop:atomicdual` im Manuskript
+auf den intervallendlichen Fall heben.** Die Aussage: Atome unter $t^*$
+paarweise vergleichbar und intervallendlich, Konklusion und
+Beweislosigkeit an Regularität wie bisher. Sie ruht auf `lem:atomgrid` in der
+$\mathbb Z$-Fassung (`atomGrid_symm_int`, Beweis wörtlich derselbe) und zwei
+Schwanzlimiten aus der Integralexistenz; Beweis vollständig und verifiziert
+im PROTOKOLL, vierzehnter Lauf. Sie ist jetzt dran, weil sie die Statuszeile
+„purely atomic, atoms a chain" von „lokal endlich" auf die wahre Reichweite
+der Induktion bringt und den offenen Kern von Task 23 auf zwei benannte
+Restfälle verengt. Der Lauf, der sie einträgt, passt auch
+`rem:atomicdual` („What is not covered") und die Statustabelle von
+`rem:atomsnotchange` an und lässt `check.py` laufen.

@@ -548,6 +548,17 @@ this milestone speaks about `Locally`, which is declared under it.
   induction is also the shape of the one in `duality_of_mixed`, and the
   cross-multiplication it runs on is what carries that proof across a stretch
   of zero diffuse mass.
+* `atomGrid_symm_int`: let `m : ℤ → ℝ` with `m i ≠ 0` for all `i`, and let
+  `Φ : ℤ → ℤ → ℝ` satisfy
+  `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` for all `i j`. Then
+  `Φ i j = Φ j i` for all `i j`. The proof is that of `atomGrid_symm` word for
+  word — the base case reads the relation on the diagonal, the step at
+  `(j + d, j)`, and neither names a least or greatest index; the bounds
+  `1 ≤ i, j ≤ M - 1` of the finite lemma mark where its relations stop, not
+  where the induction starts. The induction on the distance `d` is well
+  founded because every pair of integers is at finite distance, and that is
+  the single point where the index being `ℤ` enters. Same home as
+  `atomGrid_symm`, next to it.
 
 The next four items carry the partial order case. They are matrix algebra over
 `ℝ` and know neither clock nor measure nor order, and belong in
@@ -642,11 +653,37 @@ order.
   every pair and hence to `γ` symmetric there — with masses of either sign, where
   `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain
   phenomenon: at incomparable pairs `Φ s t = Φ t s` fails, while the defect
-  `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless` and
-  `duality_of_mixed` this covers every clock that is atomless, or has locally
-  finite atoms, or is mixed with finitely many atoms below the point in
-  question; an order-dense set of atoms is the one case none of the three
-  reaches.
+  `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless`,
+  `duality_of_mixed` and `duality_of_atomic_intervalFinite` this covers every
+  clock that is atomless, or has finitely many atoms below the point in
+  question, or is mixed with finitely many atoms there, or whose atoms below
+  the point form an interval-finite chain; what none of the four reaches is a
+  chain of atoms that is not interval-finite — an atom set dense in itself
+  included — and, beyond chains, infinitely many incomparable atoms.
+* `duality_of_atomic_intervalFinite`: with `Φ, γ` as in `chain_identity` and
+  `γ₁ = γ₂ = γ`, a purely atomic clock, and a `t` below which the atoms are
+  pairwise comparable and **interval-finite** — any two of them enclose only
+  finitely many others — one has `Φ t 0 = Φ 0 t`, in either convention, with
+  no hypothesis beyond the existence of the integrals. Interval-finiteness
+  makes the atoms below `t` order isomorphic to an interval of `ℤ`; each
+  interval between consecutive atoms carries a single atom, so the increment
+  representation collapses to one-step relations, and `atomGrid_symm_int`
+  applied to the antisymmetric part gives `Φ (u i) (u j) = Φ (u j) (u i)` at
+  every pair of atoms. The two boundaries are reached by tails: for a purely
+  atomic clock the existence of the integrals in the increment representation
+  is the absolute convergence of the atom sums, so the `q`-integrals over
+  `Iio (u k)` and over `Ico (u k) t` vanish along the enumeration, in both
+  coordinates, and no bound on `γ` or on its antisymmetric part enters. The
+  conclusion sharpens as on finite chains to symmetry of `Φ` at every pair
+  below `t`. This subsumes the chain case of `duality_of_atomic` and covers
+  atoms accumulating at `0`, at interior points, and at `t` itself, of order
+  types `ω`, `ω*` and `ζ`. Interval-finiteness is the exact reach of the
+  induction, and strictly stronger than every atom having a neighbouring atom
+  on both sides: two chains of type `ζ` stacked one above the other have
+  neighbours at every atom while pairs from different chains enclose
+  infinitely many atoms, the one-step relations alone leave the cross pairs
+  free, and any argument there must use the increment representation across
+  the accumulation point between the chains.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.
