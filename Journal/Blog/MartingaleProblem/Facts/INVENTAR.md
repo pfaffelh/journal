@@ -157,6 +157,61 @@ setzt, nennt den Beleg.
   vierten Lauf und wie bei `Locally` im zweiten. Mitgeprüft und richtig:
   `identDistrib_iff_forall_finset_identDistrib` (`:77`), jetzt ebenfalls mit
   Namensraum genannt.
+* **`MartingaleProblems` Meilenstein 2 verlangte weniger, als Mathlibs
+  `Locally` braucht; am 2026-09-01, sechster Lauf, berichtigt.** Der Meilenstein
+  eröffnete mit „Fix `[Preorder ι]`" und definierte darunter
+  `IsLocalMPSolution` als `∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z 𝓕 P) 𝓕 Y P`.
+  Das ist unter `[Preorder ι]` nicht hinschreibbar.
+  `ProbabilityTheory.Locally` steht in
+  `Mathlib/Probability/Process/LocalProperty.lean` **innerhalb** von
+  `section LinearOrder`, unter `variable [LinearOrder ι]` (`:77`) und
+  `variable [OrderBot ι]` (`:88`), und führt eigene Binder
+  `[TopologicalSpace ι] [OrderTopology ι] [Zero E]` (`:93`). Das Bodenelement
+  ist keine Zierde: die Definition stoppt den Prozess durch
+  `fun i ↦ {ω | ⊥ < τ n ω}.indicator (X i)`, nennt also `⊥`, und `[Zero E]` ist,
+  was dieser Indikator verlangt. Dasselbe gilt für `ProbabilityTheory.IsStable`
+  (`:142`, gleicher Variablenblock). Der Meilenstein führt jetzt zwei benannte
+  Stufen, **(A)** `[Preorder ι]` für das globale Problem und **(L)** zusätzlich
+  `[LinearOrder ι] [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι]` für das
+  lokale, nach dem Muster von `SkorokhodSpace` Meilenstein 2. Meilenstein 7, der
+  ausschließlich über `Locally` spricht, stand mit demselben zu schwachen
+  `[Preorder ι]` da und erbt die Stufe (L) jetzt ausdrücklich. Mitgeprüft und
+  richtig: die Argumentreihenfolgen `Locally p 𝓕 X P` (`:93`) und
+  `IsStable 𝓕 p` (`:142`), die die Roadmap an beiden Stellen so schreibt.
+  `Suggested.lean` hatte denselben Fehler und hatte ihn halb gesehen — es setzte
+  `[TopologicalSpace ι] [OrderTopology ι]` und ließ Linearität und Boden aus;
+  dort ist `ι` jetzt in einem eigenen `section Local` neu gebunden, statt einen
+  weiteren Instanzbinder neben das dateiweite `[Preorder ι]` zu stellen.
+  **Übersetzt ist nichts** — der Worktree hat kein `.lake`.
+* **Milestone 9 nannte `⊥` ohne `[OrderBot ι]`, und `IsQuasiLeftContinuous` war
+  ein Typfehler; am 2026-09-01, sechster Lauf, berichtigt.** Zweierlei, beides
+  aus derselben Wurzel — Mathlibs Stoppzeiten sind `WithTop ι`-wertig.
+  Erstens schrieb das Stabilitätsstück
+  `stoppedProcess (fun t ↦ {ω | ⊥ < τ ω}.indicator (Y t)) τ` unter einer
+  Präambel, die nur `[LinearOrder ι]`, Ordnungstopologie und ein abzählbar
+  dichtes `D` festlegt; `[OrderBot ι]` kam erst dreißig Zeilen später für den
+  Block über offene Teilmengen. Die Formel ist wörtlich die von Mathlibs
+  `IsStable` (`LocalProperty.lean:142`), und Mathlib führt sie unter
+  `variable [OrderBot ι]` (`:88`) — die Hypothese steht jetzt an der Präambel und
+  am Punkt. Zweitens definierte der letzte Block
+  `IsQuasiLeftContinuous` „für jedes `τ : ℕ → Ω → ι`, mit jedem `τ n` eine
+  Stoppzeit für `𝓕`". Das geht nicht:
+  `IsStoppingTime [Preorder ι] (f : Filtration ι m) (τ : Ω → WithTop ι)`
+  (`Probability/Process/Stopping.lean:76` auf master, `:75` in v4.33.1 — **keine
+  Versionsdrift**, der Typ steht in beiden so da). Der Punkt widersprach
+  überdies seiner eigenen Begründung, die vom Ereignis `{τ < ∞}` spricht und
+  damit voraussetzt, was der Typ verbietet. Berichtigt auf
+  `τ : ℕ → Ω → WithTop ι` mit `MeasureTheory.stoppedValue` (`:797`,
+  `fun ω ↦ u (τ ω).untopA ω`) für das Ablesen; `WithTop.untopA` ist das
+  Ordnungsduale von `WithBot.unbotA` (`Order/WithBot.lean:270`,
+  `noncomputable abbrev` unter `[Nonempty α]`), und `[OrderBot ι]` liefert dieses
+  `Nonempty` bereits, so dass keine Hypothese hinzukommt. Das Supremum lebt in
+  `WithTop ι` über die Instanz `SupSet (WithTop α)` für `[SupSet α]`
+  (`Order/ConditionallyCompleteLattice/Basic.lean:52`) — die vom Block ohnehin
+  geforderte bedingt vollständige Verbandsstruktur genügt. Die späteren Punkte
+  desselben Blocks kürzen `stoppedValue X (fun ω ↦ min (τ n ω) t) ω` zu
+  `X (min (τ n ω) t) ω`; die Blockpräambel sagt das jetzt einmal, statt jede
+  Formel umzuschreiben.
 * **Vier Facts ohne tragende Fundstelle** — `fact:doob`, `fact:fdd`,
   `fact:portmanteau`, `fact:stoppedlocalmg` werden nur in den
   Buchhaltungsabschnitten zitiert. Zu klären: implizit benutzt (dann die Stelle
@@ -2814,3 +2869,101 @@ Mathlib-Anschluss aus zwei heute nachgeschlagenen Namen besteht statt aus einer
 zu übernehmenden Fremddatei, und weil er `WeakConvergence` — die einzige der
 vier Roadmaps ohne Abhängigkeit von den anderen dreien — um einen ganzen
 Meilenstein verkürzt.
+
+### 2026-09-01, sechster Lauf — Rückstau 2: die Meilensteine von `MartingaleProblems`
+
+Das Inventar ist geschlossen — keine Zeile steht auf `?` —, also Rückstau. Punkt 1
+ist Task 23, ordnungsdichte Atommenge; der elfte Lauf hat ihn mit einer scharfen
+Diagnose liegen lassen (die grobe Ausschöpfung ist widerlegt, die Konstante
+`C(V,t)` wächst wie `ε^{-(n-2k)}` bei kleinen Massen unten), und der benannte
+nächste Schritt dort ist eine neue Paarung anstelle von Cauchy--Schwarz — eine
+Beweisidee, kein Nachschlagen. Punkt 2 hatte dagegen eine benannte Restmenge aus
+dem fünften Lauf: die Mathlib-Nennungen der Meilensteine von
+`MartingaleProblems` **ohne** ausgeschriebenen Pfad. Die sind dieser Lauf.
+
+Geprüft gegen `upstream/master`, frisch geholt: `e076e1ca8f3`, gegenüber
+`981fa8f5` des fünften Laufs. Rund dreißig Nennungen aus den Meilensteinen 1, 2,
+8, 9, 12 und 13. **Drei Befunde, alle in der Lokalisierungs- und
+Stoppzeitschicht, und alle aus einer Wurzel** — die Roadmap las Mathlibs
+Stoppzeitapparat schwächer, als er ist.
+
+* **Meilenstein 2 stand auf `[Preorder ι]` und benutzte `Locally`.** Das ist
+  nicht hinschreibbar: `ProbabilityTheory.Locally` steht in
+  `LocalProperty.lean` innerhalb von `section LinearOrder`, unter
+  `variable [LinearOrder ι]` (`:77`) und `variable [OrderBot ι]` (`:88`), mit
+  den Bindern `[TopologicalSpace ι] [OrderTopology ι] [Zero E]` (`:93`). Der
+  Meilenstein führt jetzt die Stufen (A) und (L), und Meilenstein 7, der nur
+  über `Locally` spricht, erbt (L). Einzelheiten bei den Auffälligkeiten.
+* **Meilenstein 9 nannte `⊥` ohne `[OrderBot ι]`.** Die Formel des
+  Stabilitätspunktes ist wörtlich die von `IsStable` (`:142`), und Mathlib führt
+  sie unter `[OrderBot ι]`.
+* **`IsQuasiLeftContinuous` typisierte die Stoppzeiten als `Ω → ι`.** Mathlibs
+  `IsStoppingTime` ist `Ω → WithTop ι` (`Stopping.lean:76`), und zwar in
+  v4.33.1 (`:75`) genauso — keine Versionsdrift, sondern wieder eine nie
+  gestellte Suche, diesmal nicht nach einem Namen, sondern nach einer
+  **Signatur**. Der Punkt widersprach dabei seiner eigenen Begründung, die vom
+  Ereignis `{τ < ∞}` spricht.
+
+Berichtigt sind der Kopf von Meilenstein 2, der Stabilitätspunkt und die
+Präambel von Meilenstein 9, die Definition von `IsQuasiLeftContinuous` samt der
+Präambel ihres Blocks, und `Suggested.lean`, das denselben Fehler halb gesehen
+hatte — es setzte Topologie und Ordnungstopologie und ließ Linearität und Boden
+aus. Dort ist `ι` jetzt in einem eigenen `section Local` neu gebunden, damit
+keine Deklaration `[Preorder ι]` und `[LinearOrder ι]` zugleich trägt.
+**Übersetzt ist nichts; der Worktree hat kein `.lake`.**
+
+**Geprüft und richtig**, damit es nicht noch einmal geprüft wird: die
+Argumentreihenfolgen `Locally p 𝓕 X P` und `IsStable 𝓕 p`; `IsStable.locally`
+(`:153`), `IsStable.locally_and_iff` (`:161`), `locally_locally_iff` (`:306`,
+mit `[IsRightContinuous 𝓕]`); `Matrix.IsSymm` (`Symmetric.lean:35`),
+`Matrix.trace_transpose` (`Trace.lean:73`), `Matrix.trace_mul_comm` (`:158`),
+`Matrix.vecMulVec` (`Data/Matrix/Mul.lean:616`) und — entgegen dem ersten
+Anschein einer Suche, die `protected def Matrix.IsSkewAdjoint` nicht traf —
+`Matrix.IsSkewAdjoint` an genau der zitierten Stelle
+(`LinearAlgebra/Matrix/SesquilinearForm.lean:560`); `submartingale_of_setIntegral_le`
+(`Martingale/Basic.lean:281`), `lintegral_liminf_le` (`Lebesgue/Add.lean:233`),
+`eLpNorm_condExp_le_eLpNorm` (`ConditionalExpectation/Real.lean:288`);
+`seqClosure` und `IsSeqClosed` (`Topology/Defs/Sequences.lean:55,61`);
+`Submartingale.expected_stoppedValue_mono` (`OptionalStopping.lean:43`),
+`Submartingale.stoppedProcess` (`:95`, `Filtration ℕ` und reellwertig, wie die
+Roadmap sagt), `maximal_ineq` (`:144`),
+`Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
+(`Upcrossing.lean:689`), `…mul_lintegral_upcrossings_le_lintegral_pos_part`
+(`:799`), `upcrossings_lt_top_iff` (`:781`);
+`IsStoppingTime.measurableSpace_mono` (`Stopping.lean:464`) und
+`…measurableSpace_le` (`:477`); `Function.leftLim`/`rightLim`
+(`LeftRightLim.lean:50,60`); `Set.Ico_union_Ico_eq_Ico`
+(`Order/Interval/Set/LinearOrder.lean:298`); `RealRMK.integral_rieszMeasure`
+(`RieszMarkovKakutani/Real.lean:345`) und die beiden `NNRealRMK`-Formen
+(`NNReal.lean:47,56`) — alle drei genau an den zitierten Zeilen.
+
+Und eine Hypothesenbehauptung der Roadmap, die stimmt: Lévys Aufwärtssatz,
+`tendsto_ae_condExp` (`Convergence.lean:426`) und `tendsto_eLpNorm_condExp`
+(`:439`), steht in `section L1Convergence`, dessen Variablenblock (`:243`)
+`[IsFiniteMeasure μ] {g : Ω → ℝ}` lautet — „stated for a real valued integrand
+and a finite measure", wie Meilenstein 9 es sagt.
+
+**Offen geblieben.** Meilenstein 9 ist der längste der Roadmap, und geprüft sind
+seine Mathlib-Nennungen, nicht seine Beweiswege. Nicht angefasst sind die
+Meilensteine 4, 5, 6, 7, 10 und 11, die kaum Mathlib zitieren; ihre wenigen
+Nennungen (`Kernel`, `NormedSpace`, `BoundedContinuousFunction`) sind Typen und
+keine Sätze. Damit ist Rückstaupunkt 2 für alle vier Roadmaps durch, und die
+Rundenzählung fängt von vorn an — sinnvoll in etwa zwei Wochen.
+
+**Was als Nächstes formalisiert werden soll: `Matrix.trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`**
+(`MartingaleProblems` Meilenstein 8): für `A B : Matrix n n ℝ` mit `A.IsSymm` und
+`Bᵀ = -B` ist `(A * B).trace = 0`. Es ruht auf nichts als drei Mathlib-Namen, die
+dieser Lauf an ihren zitierten Zeilen belegt hat — `Matrix.IsSymm`
+(`Symmetric.lean:35`), `Matrix.trace_transpose` (`Trace.lean:73`) und
+`Matrix.trace_mul_comm` (`Trace.lean:158`) —, und der Beweis ist drei Zeilen:
+`(A*B).trace = (A*B)ᵀ.trace = (Bᵀ*Aᵀ).trace = ((-B)*A).trace = -(A*B).trace`.
+Es ist **jetzt** dran, weil es das einzige Ziel der vier Roadmaps ist, dessen
+sämtliche Voraussetzungen heute am Quelltext nachgeschlagen sind und dessen
+Aussage weder Maß noch Uhr noch Ordnung kennt; die Roadmap nennt es selbst „the
+smallest self contained target of this roadmap". Es ist der erste der vier
+Matrixpunkte, die den Halbordnungsfall von `duality_of_atomic` tragen — also
+Task 23 von der formalisierten Seite her —, und es gehört nach
+`Mathlib/LinearAlgebra/Matrix/`, ist damit auch der erste Punkt der ganzen
+Planung, der als Mathlib-PR abgehen könnte. Gegenüber `atomGrid_symm`, dem
+stehenden Vorschlag der Vorläufe, hat es den Vorzug, keine Induktion zu
+brauchen.

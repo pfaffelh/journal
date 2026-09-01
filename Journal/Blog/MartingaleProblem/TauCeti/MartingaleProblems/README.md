@@ -155,13 +155,30 @@ Lebesgue measure. Fix `[Preorder ι]`.
 
 ## Milestone 2: the abstract martingale problem
 
-Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 𝕂]`.
+Two named stages of hypotheses. The first two items below carry the marks
+**(A)** and **(L)**; every other item of this milestone is (A), because
+`Locally` occurs in exactly one of them.
+**(A)** `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and
+`[RCLike 𝕂]`; this carries the global problem, and it is all of it.
+**(L)** additionally `[LinearOrder ι]`, `[OrderBot ι]`, `[TopologicalSpace ι]`
+and `[OrderTopology ι]`; this carries the local problem, because it is what
+Mathlib's `ProbabilityTheory.Locally` is stated under.
+Stage (L) is read off the source and not chosen: `Locally` sits in
+`Mathlib/Probability/Process/LocalProperty.lean` inside `section LinearOrder`,
+under `variable [LinearOrder ι]` (`:77`) and `variable [OrderBot ι]` (`:88`),
+with its own binders `[TopologicalSpace ι] [OrderTopology ι] [Zero E]` (`:93`).
+The bottom element is not decoration: the definition stops the process by
+`fun i ↦ {ω | ⊥ < τ n ω}.indicator (X i)`, so it names `⊥`, and `[Zero E]` is
+what that indicator needs — `𝕂` supplies it. The stage that carries the whole
+localization apparatus is therefore strictly stronger than (A), and Milestone 7
+inherits it.
 
-* `IsMPSolution (𝓧 : Set (ι → Ω → 𝕂)) (𝓕 : Filtration ι m) (P : Measure Ω)`,
-  defined as `∀ Y ∈ 𝓧, Martingale Y 𝓕 P`, and the local variant
-  `IsLocalMPSolution`, defined as
+* (A) `IsMPSolution (𝓧 : Set (ι → Ω → 𝕂)) (𝓕 : Filtration ι m) (P : Measure Ω)`,
+  defined as `∀ Y ∈ 𝓧, Martingale Y 𝓕 P`.
+* (L) the local variant `IsLocalMPSolution`, defined as
   `∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z 𝓕 P) 𝓕 Y P` with Mathlib's
-  `ProbabilityTheory.Locally`. Do not introduce a localizing sequence by hand:
+  `ProbabilityTheory.Locally`, whose argument order is `Locally p 𝓕 X P`. Do not
+  introduce a localizing sequence by hand:
   `IsLocalizingSequence` and the `Locally` API already exist, and
   `IsStable.locally_locally_iff` is the idempotence that the local theory of
   Milestone 7 would otherwise have to prove.
@@ -369,7 +386,10 @@ of the one dimensional distributions of the shifted problems.
 
 ## Milestone 7: localization
 
-Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
+Stage (L) of Milestone 2 — `[LinearOrder ι]`, `[OrderBot ι]`,
+`[TopologicalSpace ι]`, `[OrderTopology ι]` — with a countable dense subset and
+`[AddCommMonoid ι]`. The stage is inherited and not chosen: every statement of
+this milestone speaks about `Locally`, which is declared under it.
 
 * The localizing systems here are a **refinement** of Mathlib's
   `IsLocalizingSequence`, not a replacement: a system is a set of times, closed
@@ -637,8 +657,16 @@ order.
 ## Milestone 9: continuous time martingales and the càdlàg modification
 
 Fix `[LinearOrder ι]` with the order topology and a countable dense `D ⊆ ι`, and
-`E` metrizable. The first three items are the continuous time replacements for
-the discrete index theorems listed above; Milestones 6, 7 and 11 use them.
+`E` metrizable. The stability item below and everything from
+`IsMPSolutionFor.integral_comp_stoppedLim_eq` on add `[OrderBot ι]`, and each
+says so. The bottom element enters through Mathlib's stopping time API and not
+through a choice made here: a stopping time is `WithTop ι`-valued, and the
+stopped process that `ProbabilityTheory.IsStable` quantifies over is
+`stoppedProcess (fun i ↦ {ω | ⊥ < τ ω}.indicator (X i)) τ`
+(`Mathlib/Probability/Process/LocalProperty.lean:142`, under `variable
+[OrderBot ι]` at `:88`). The first three items are the continuous
+time replacements for the discrete index theorems listed above; Milestones 6, 7
+and 11 use them.
 
 * Optional sampling in continuous time. For a right continuous submartingale `Y`
   and stopping times `σ`, `τ` for `𝓕`, with `τ` bounded,
@@ -656,7 +684,8 @@ the discrete index theorems listed above; Milestones 6, 7 and 11 use them.
   `Tendsto (fun T ↦ ∫ ω in {ω | T < τ ω}, ‖Y T ω‖ ∂P) atTop (𝓝 0)`; and the
   corollary for a right continuous martingale whose increments are bounded,
   where both hypotheses are automatic.
-* Stability of the martingale property under stopping, in continuous time.
+* Stability of the martingale property under stopping, in continuous time, with
+  `[OrderBot ι]`.
   `Martingale.stoppedProcess_of_rightContinuous`: for a right continuous
   martingale `Y` and a stopping time `τ` for `𝓕`, the stopped process
   `stoppedProcess (fun t ↦ {ω | ⊥ < τ ω}.indicator (Y t)) τ` is a martingale;
@@ -784,14 +813,30 @@ milestone says when a solution does, which is a second path property proved in
 the language of the martingale problem and not of the state space. Keep
 `[LinearOrder ι]` with the order topology and the countable dense `D`, add
 `[OrderBot ι]` and the conditionally complete lattice structure for the suprema
-of stopping times, and let `E` be a separable metric space.
+of stopping times, and let `E` be a separable metric space. Throughout this
+block a stopping time is `WithTop ι`-valued, the supremum of a sequence of them
+is taken in `WithTop ι`, and a process is read at one through
+`MeasureTheory.stoppedValue`; the first item spells this out and the later ones
+write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) ω`.
 
-* `IsQuasiLeftContinuous X 𝓕 P`: for every `τ : ℕ → Ω → ι` with each `τ n` a
-  stopping time for `𝓕` and `Monotone τ`, and every `t`,
+* `IsQuasiLeftContinuous X 𝓕 P`: for every `τ : ℕ → Ω → WithTop ι` with each
+  `τ n` a stopping time for `𝓕` and `Monotone τ`, and every `t`,
   ```
-  ∀ᵐ ω ∂P, ⨆ n, τ n ω ≤ t →
-    Tendsto (fun n ↦ X (τ n ω) ω) atTop (𝓝 (X (⨆ n, τ n ω) ω)) .
+  ∀ᵐ ω ∂P, ⨆ n, τ n ω ≤ (t : WithTop ι) →
+    Tendsto (fun n ↦ stoppedValue X (τ n) ω) atTop
+      (𝓝 (stoppedValue X (⨆ n, τ n) ω)) .
   ```
+  The times are `WithTop ι`-valued because that is what a stopping time is in
+  Mathlib: `IsStoppingTime [Preorder ι] (f : Filtration ι m) (τ : Ω → WithTop ι)`
+  (`Mathlib/Probability/Process/Stopping.lean:76`). Reading the process at such a
+  time is `MeasureTheory.stoppedValue` (`:797`), which is
+  `fun ω ↦ u (τ ω).untopA ω`, with `WithTop.untopA` the order dual of
+  `WithBot.unbotA` — a `noncomputable abbrev` under `[Nonempty α]`,
+  `Mathlib/Order/WithBot.lean:270` — so `[OrderBot ι]` already supplies what it
+  asks and no hypothesis is added for it. The supremum `⨆ n, τ n ω` is taken in
+  `WithTop ι` through the instance `SupSet (WithTop α)` for `[SupSet α]`
+  (`Mathlib/Order/ConditionallyCompleteLattice/Basic.lean:52`), so the
+  conditionally complete lattice structure on `ι` fixed above is all it needs.
   The clause `⨆ n, τ n ω ≤ t` is what makes `τ n` and `⨆ n, τ n` bounded
   stopping times, and it is why the statement is quantified over `t` rather than
   over an event `{τ < ∞}`; on `ι = [0, ∞)` a countable cofinal family of `t`
@@ -833,12 +878,15 @@ of stopping times, and let `E` be a separable metric space.
   whose second term tends to `0` in `L¹` by the hypothesis on `C` and
   conditional Jensen. The first term is handled by **Lévy's upward theorem**,
   `MeasureTheory.tendsto_ae_condExp` and `MeasureTheory.tendsto_eLpNorm_condExp`
-  of `Mathlib/Probability/Martingale/Convergence.lean`, read at the filtration
+  of `Mathlib/Probability/Martingale/Convergence.lean` (`:426`, `:439`), read at the filtration
   `n ↦ (hτ n).measurableSpace`, which is a `Filtration ℕ` by
   `MeasureTheory.IsStoppingTime.measurableSpace_mono` and
   `MeasureTheory.IsStoppingTime.measurableSpace_le` of
-  `Mathlib/Probability/Process/Stopping.lean`. Both are stated for a real valued
-  integrand and a finite measure, so the `𝕂` valued case is the two components.
+  `Mathlib/Probability/Process/Stopping.lean` (`:464`, `:477`). Both Lévy
+  statements are stated for a real valued
+  integrand and a finite measure — they sit in `section L1Convergence`, whose
+  variable block at `Convergence.lean:243` is `[IsFiniteMeasure μ] {g : Ω → ℝ}` —
+  so the `𝕂` valued case is the two components.
   The left side converges to `f ∘ L` with
   `L ω = limUnder atTop (fun n ↦ X (τ n ω) ω)`, which exists because the paths
   are càdlàg and `τ` is monotone, and which is measurable for
