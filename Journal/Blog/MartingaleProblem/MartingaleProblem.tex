@@ -1806,7 +1806,7 @@ Proposition~\ref{prop:atomicdual} (atomic duality)
 Proposition~\ref{prop:atomicposet} (atomic duality, atoms arbitrary)
   & \eqref{T0} & \eqref{E0} & atomic, $\iota = \mathrm{p}$ \\
 Proposition~\ref{prop:mixeddual} (mixed clocks)
-  & \eqref{T3} & \eqref{E0} & mixed, atoms separated, $\iota = \mathrm{p}$ \\
+  & \eqref{T3} & \eqref{E0} & mixed, finitely many atoms, $\iota = \mathrm{p}$ \\
 Lemma~\ref{lem:calculus}, Theorem~\ref{thm:duality}
   & \eqref{T3} & \eqref{E0} & Lebesgue \\
 Corollary~\ref{cor:uniqviadual} (uniqueness via duality)
@@ -5450,8 +5450,8 @@ failure of one staircase to cancel says nothing about $\Phi(t,0) - \Phi(0,t)$.
 The results below show that translation invariance is not necessary --- for
 an atomless clock by a reduction to Lemma~\ref{lem:calculus}, for a purely
 atomic one by the linear algebra of Propositions~\ref{prop:atomicdual}
-and~\ref{prop:atomicposet}, and for a mixed clock whose atoms are separated by
-diffuse mass by Proposition~\ref{prop:mixeddual}.  Whether \emph{every} clock
+and~\ref{prop:atomicposet}, and for a mixed clock with finitely many atoms by
+Proposition~\ref{prop:mixeddual}.  Whether \emph{every} clock
 admits duality remains open, and Remark~\ref{rem:atomsnotchange} explains where
 the arguments stop.
 
@@ -5551,12 +5551,13 @@ the arguments stop.
   purely atomic, atoms a chain & proved, Proposition~\ref{prop:atomicdual} (either $\iota$) \\
   purely atomic, atoms arbitrary, $m \geq 0$ & proved, Proposition~\ref{prop:atomicposet} ($\iota = \mathrm{p}$) \\
   the same for $\iota = \mathrm{o}$ & \emph{false}; counterexample in Remark~\ref{rem:atomicposet} \\
-  mixed, atoms separated by diffuse mass & proved, Proposition~\ref{prop:mixeddual} ($\iota = \mathrm{p}$) \\
-  order-dense atoms; mixed with adjacent atoms & open \\
+  mixed, finitely many atoms & proved, Proposition~\ref{prop:mixeddual} ($\iota = \mathrm{p}$) \\
+  the same, atoms accumulating only at $t^*$ & proved, Remark~\ref{rem:mixeddual} \\
+  order-dense atoms & open \\
   \bottomrule
   \end{tabular}
   \end{center}
-  Nothing in this manuscript depends on the last three rows:
+  Nothing in this manuscript depends on the last four rows:
   Theorem~\ref{thm:duality} and Corollary~\ref{cor:uniqviadual} use Lebesgue
   measure, Corollary~\ref{cor:dualdiscrete} counting measure, and
   Section~\ref{ssec:exduality} uses only the additivity \eqref{eq:clockadd}.
@@ -5583,8 +5584,8 @@ the arguments stop.
   holds at \emph{every} $t$ and without any integrability hypothesis, exactly as
   in Proposition~\ref{prop:haar}\ref{it:haar_disc}; see
   Proposition~\ref{prop:atomicdual}.  The two are complementary, and a mixed
-  clock is covered by Proposition~\ref{prop:mixeddual} as soon as its atoms are
-  separated by diffuse mass.
+  clock with finitely many atoms is covered by
+  Proposition~\ref{prop:mixeddual}, which interleaves them.
 \end{remark}
 
 For a purely atomic clock there is a second, purely algebraic route to the
@@ -6014,7 +6015,9 @@ vector, and $M^{\mathsf T}$ is the transpose of $M$.
 
   What is still not covered is what was not covered before: an order-dense set of
   atoms, where $F$ is infinite and the nilpotency index is unbounded, and the
-  mixed clock, where neither argument applies.  Nor is the convention
+  mixed clock, where neither argument applies --- for the latter on a real
+  interval, Proposition~\ref{prop:mixeddual} is a third route.  Nor is the
+  convention
   $\iota = \mathrm{o}$ covered here.  The reason is visible in Step 3: with
   $\iota = \mathrm{o}$ the relevant interval is $(0,s] = \T_{\leq s} \setminus
   \T_{\leq 0}$, so that $V_{s,a} = m_a$ already when $a \leq s$ and
@@ -6062,8 +6065,11 @@ Corollary~\ref{cor:atomless} and Proposition~\ref{prop:atomicdual} settle the tw
 pure cases, and each argument is blind to the other: the time change needs $Q$
 to be continuous, the grid needs every step of the chain to carry exactly one
 atom.  A mixed clock has both parts, and it is not obvious that anything
-survives.  Something does, and the hypothesis under which it does is that the
-atoms are \emph{separated}: between two consecutive atoms there is diffuse mass.
+survives.  Everything does, for finitely many atoms, and nothing beyond
+finiteness is assumed: the two mechanisms interleave along one and the same
+induction, the crossing relation carrying a stretch of diffuse mass and the
+corner relation carrying a place where two atoms sit next to each other with
+none.
 The proof is in two pieces.  The first says what an atomless rectangle gives,
 in a form sharper than Lemma~\ref{lem:calculus} although read off from it:
 not an identity on one anti-diagonal, and not for almost every one, but the
@@ -6113,13 +6119,8 @@ shape of $\Psi$ itself.
     c_j = \mu\bigl([a_j,a_{j+1})\bigr) \ \ (1 \leq j \leq N-1), \qquad
     c_N = \mu\bigl([a_N,t^*)\bigr)
   \]
-  for the diffuse mass between consecutive atoms, and assume
-  \begin{equation}
-    \label{eq:separated}
-    c_j > 0 \qquad \text{for } 0 \leq j \leq N-1
-  \end{equation}
-  --- the atoms are separated by diffuse mass, and so is the first atom from
-  $0$; $c_N$ may vanish.  Let $\Phi,\gamma$ satisfy \eqref{eq:incrementrep} with
+  for the diffuse mass between consecutive atoms; no $c_j$ is assumed to be
+  positive.  Let $\Phi,\gamma$ satisfy \eqref{eq:incrementrep} with
   $\gamma_1 = \gamma_2 = \gamma$, with $\gamma$ measurable for the order
   $\sigma$-field in each variable, and assume that the pair transported to clock
   time as in Corollary~\ref{cor:atomless} satisfies \eqref{eq:calcint}.  Then
@@ -6164,9 +6165,9 @@ shape of $\Psi$ itself.
   $\Psi(\alpha_i,y) - \Psi(\beta_{i-1},y) = m_i \gamma(a_i,Q^{\leftarrow}(y))$.
   The same row $\gamma(a_i,\cdot)$ is, by the second representation at
   $s = a_i$, the density of $y \mapsto \Psi(\beta_{i-1},y)$ on the stretch $S_j$,
-  that is $f_{i-1,j}'(\beta_{i-1}+y)$ for almost every $y \in S_j$ --- and this
-  is the one place where \eqref{eq:separated} is used, for it is empty if
-  $c_j = 0$.  Writing $u = \beta_{i-1} + y$ and using
+  that is $f_{i-1,j}'(\beta_{i-1}+y)$ for almost every $y \in S_j$ --- an
+  identification available exactly when $c_j > 0$, for it is empty on a
+  degenerate stretch.  Writing $u = \beta_{i-1} + y$ and using
   $\alpha_i = \beta_{i-1} + m_i$,
   \begin{equation}
     \label{eq:mixcross}
@@ -6179,6 +6180,33 @@ shape of $\Psi$ itself.
   coordinate crosses; that is the balance condition $\gamma_1 = \gamma_2$ in
   operator form.
 
+  \emph{Step 2b: crossing a degenerate stretch.}  Let $c_j = 0$ with
+  $j \leq N-1$, so that $S_j = \{\alpha_j\} = \{\beta_j\}$ is a single point and
+  the density in Step 2 says nothing.  It is replaced by a \emph{corner} value.
+  All $s$ with $Q(s) = \alpha_j$ --- these are the $s \in (a_j,a_{j+1}]$, and the
+  $s \in [0,a_1]$ when $j = 0$ --- give the same $\Phi(\cdot,s)$, so the
+  left-hand side of $\Psi(\alpha_i,\alpha_j) - \Psi(\beta_{i-1},\alpha_j) = m_i
+  \gamma(a_i,s)$ does not depend on which of them is taken; as $m_i > 0$, the row
+  $\gamma(a_i,\cdot)$ is constant there, and $a_{j+1}$ is one of them, because
+  $Q(a_{j+1}) = \beta_j = \alpha_j$.  Hence
+  \begin{equation}
+    \label{eq:mixdeg}
+    f_{ij}(\alpha_i + \alpha_j) - f_{i-1,j}(\beta_{i-1} + \alpha_j)
+      \;=\; m_i\, \gamma(a_i,a_{j+1}) ,
+  \end{equation}
+  which is all that crossing the gap at $a_i$ over a degenerate $S_j$ says.  The
+  same corner value is reached along the other coordinate: crossing the gap at
+  $a_{j+1}$ in the second argument with the first held at $a_i$ gives, for any
+  $j \leq N-1$ and any $i \geq 1$ whether or not $c_j$ vanishes,
+  \begin{equation}
+    \label{eq:mixcorner}
+    f_{i-1,j+1}(\beta_{i-1} + \alpha_{j+1}) - f_{i-1,j}(\beta_{i-1} + \beta_j)
+      \;=\; m_{j+1}\, \gamma(a_i,a_{j+1}) .
+  \end{equation}
+  Eliminating $\gamma(a_i,a_{j+1})$ between \eqref{eq:mixdeg} and
+  \eqref{eq:mixcorner} is the cross-multiplication \eqref{eq:atomgrid} of the
+  purely atomic case.
+
   \emph{Step 3: the induction.}  Put $w_{ij} = f_{ij} - f_{ji}$ on $D_{ij}$;
   it is absolutely continuous and $w_{ij} = -w_{ji}$.  Subtracting the
   transposed relation from \eqref{eq:mixcross} and from its partner gives
@@ -6186,17 +6214,42 @@ shape of $\Psi$ itself.
     w_{ij}(u+m_i) &= w_{i-1,j}(u) + m_i w_{i-1,j}'(u) ,
       && u \in \beta_{i-1} + S_j , \\
     w_{i,j+1}(u+m_{j+1}) &= w_{ij}(u) + m_{j+1} w_{ij}'(u) ,
-      && u \in S_i + \beta_j .
+      && u \in S_i + \beta_j ,
   \end{align*}
-  The first pins $w_{ij}$ on $[\alpha_i+\alpha_j,\ \alpha_i+\beta_j]$, the lower
-  part of $D_{ij}$; the second is a relation on
-  $[\alpha_i+\beta_j,\ \beta_i+\beta_j]$, the upper part.  The two parts meet at
-  $\alpha_i + \beta_j$.  We show $w_{ij} \equiv 0$ by induction on
-  $d = i - j \geq 0$, the case $i < j$ following by antisymmetry.  For $d = 0$
-  this is $w_{ii} = 0$.  Let $d \geq 1$ and $i - j = d$.  On the lower part,
-  $w_{i-1,j}\equiv 0$ by the inductive hypothesis, so the first relation gives
-  $w_{ij} = 0$ there.  On the upper part, $w_{i,j+1} \equiv 0$ by the inductive
-  hypothesis, so the second relation reads
+  the \emph{lower} and the \emph{upper} crossing relation, valid for $c_j > 0$
+  and for $c_i > 0$ respectively.  Subtracting the transposed relations from
+  \eqref{eq:mixdeg} and \eqref{eq:mixcorner} gives, in terms of the
+  antisymmetric corner defect
+  $\delta_{kl} = \gamma(a_k,a_l) - \gamma(a_l,a_k)$,
+  \begin{align*}
+    w_{ij}(\alpha_i + \alpha_j)
+      &= w_{i-1,j}(\beta_{i-1} + \alpha_j) + m_i\, \delta_{i,j+1}
+      && \text{if } c_j = 0 , \\
+    m_{j+1}\, \delta_{i,j+1}
+      &= w_{i-1,j+1}(\beta_{i-1}+\alpha_{j+1}) - w_{i-1,j}(\beta_{i-1}+\beta_j)
+      && \text{always,}
+  \end{align*}
+  the \emph{degenerate} and the \emph{corner} relation.  The lower crossing
+  relation pins $w_{ij}$ on $[\alpha_i+\alpha_j,\ \alpha_i+\beta_j]$, the lower
+  part of $D_{ij}$, the upper one relates it on
+  $[\alpha_i+\beta_j,\ \beta_i+\beta_j]$, the upper part; the two parts meet at
+  $\alpha_i + \beta_j$, and the lower part degenerates to that point precisely
+  when $c_j = 0$, the upper part when $c_i = 0$.  We show
+  $w_{ij} \equiv 0$ by induction on $d = i - j \geq 0$, the case $i < j$
+  following by antisymmetry.  For $d = 0$ this is $w_{ii} = 0$.  Let $d \geq 1$
+  and $i - j = d$; then $i \geq 1$ and $j \leq N-1$.
+
+  On the lower part, if $c_j > 0$, then $w_{i-1,j} \equiv 0$ by the inductive
+  hypothesis at distance $d-1$, and the lower crossing relation gives
+  $w_{ij} = 0$ there.  If $c_j = 0$, the lower part is the single point
+  $\alpha_i + \alpha_j = \alpha_i + \beta_j$ and the degenerate relation applies;
+  its first term vanishes at distance $d-1$, and $\delta_{i,j+1} = 0$ --- for
+  $d = 1$ because $i = j+1$ and $\delta_{kk} = 0$, and for $d \geq 2$ by the
+  corner relation, whose two terms vanish at distances $d-2$ and $d-1$.  Either
+  way $w_{ij}(\alpha_i+\beta_j) = 0$.
+
+  On the upper part, which is non-empty only if $c_i > 0$, the upper crossing
+  relation is available and $w_{i,j+1} \equiv 0$ at distance $d-1$, so it reads
   \[
     w_{ij}(u) + m_{j+1}\, w_{ij}'(u) = 0 , \qquad
     w_{ij}(\alpha_i + \beta_j) = 0 ,
@@ -6204,46 +6257,50 @@ shape of $\Psi$ itself.
   the initial value coming from the lower part; the integrating factor
   $e^{u/m_{j+1}}$ turns this into
   $w_{ij}(u) = w_{ij}(\alpha_i+\beta_j)\, e^{-(u - \alpha_i - \beta_j)/m_{j+1}} = 0$.
-  Here $i \geq 1$ and $j \leq N-1$, so both applications of Step 2 are covered by
-  \eqref{eq:separated}; and the upper part is non-empty only if $c_i > 0$.
+  Like the induction of Lemma~\ref{lem:atomgrid}, this one uses its hypothesis at
+  two levels at once, $d-1$ and $d-2$.
 
   Thus $\Psi(x,y) = \Psi(y,x)$ for all $x,y$ in the range of $Q$, which is the
   assertion.  For $s = t^*$, $t = 0$ it reads $\Phi(t^*,0) = \Phi(0,t^*)$.
 \end{proof}
 
-\begin{remark}[What separates the atoms, and what is still open]
+\begin{remark}[How the two mechanisms interleave, and what is still open]
   \label{rem:mixeddual}
   Three comments.
 
-  \emph{Where the diffuse mass is spent.}  The kernel of $g \mapsto g + m g'$ is
+  \emph{What has to be pinned.}  The kernel of $g \mapsto g + m g'$ is
   one-dimensional, spanned by $e^{-u/m}$, and that single direction is the only
-  room a counterexample would have.  The lower part of $D_{ij}$ supplies the
-  initial condition that kills it.  So the role of \eqref{eq:separated} is not
-  to make the atoms small or regular but to provide a place at which the
-  exponential is pinned; this is the exact analogue of the role played, in
-  Lemma~\ref{lem:atomgrid}, by carrying two consecutive stages of the induction
-  at once.
+  room a counterexample would have.  The whole proof consists in producing, for
+  each $D_{ij}$, one point at which that exponential is nailed down; the upper
+  part of $D_{ij}$ then costs a line of Gronwall.  A stretch of diffuse mass
+  supplies such a point by \eqref{eq:mixcross}, and this is the only thing
+  diffuse mass is used for: not to make the atoms small, or regular, or few.
 
-  \emph{The corner relations are not used.}  Where both coordinates sit on an
-  atom, $\gamma(a_i,a_j)$ is a free value rather than a density, and eliminating
-  it as in the proof of Proposition~\ref{prop:atomicdual} yields the
-  cross-multiplication \eqref{eq:atomgrid} at the corners of the grid of
-  stretches.  These relations hold, and the proof above never invokes them.  The
-  purely atomic case and the separated mixed case are therefore not special
-  cases of one another but two ends: there \eqref{eq:atomgrid} carries
-  everything, here \eqref{eq:mixcross} does.
+  \emph{Where there is no diffuse mass, the corners supply the point.}  If
+  $c_j = 0$, the two atoms $a_j, a_{j+1}$ sit next to each other and the lower
+  part of $D_{ij}$ shrinks to a point, so there is nothing to pin the
+  exponential along.  But then the crossing relation degenerates as well, into
+  \eqref{eq:mixdeg}, and its right-hand side is the corner value
+  $\gamma(a_i,a_{j+1})$, which \eqref{eq:mixcorner} reaches along the other
+  coordinate too.  That is the cross-multiplication of the purely atomic case,
+  and it closes the point that the missing stretch left open.  So the two
+  mechanisms are not two ends after all, but the two cases of one induction: on
+  a stretch \eqref{eq:mixcross} carries, at an adjacency \eqref{eq:atomgrid}
+  does, and both hand the same object --- one initial value --- to the same
+  Gronwall step.  What makes this work is that the induction can afford it: like
+  the one in Lemma~\ref{lem:atomgrid}, it uses its hypothesis at the two levels
+  $d-1$ and $d-2$ at once, and the corner defect $\delta_{i,j+1}$ is exactly
+  what lives at level $d-2$.
 
-  \emph{What remains open.}  Two things, and \eqref{eq:separated} is not quite
-  one of them.  Atoms accumulating only at $t^*$ are covered: the induction runs
-  over finite $d$ and needs no last stretch, so
+  \emph{What remains open.}  One thing, and it is not the geometry of the atoms
+  but their cardinality.  Atoms accumulating only at $t^*$ are covered: the
+  induction runs over finite $d$ and needs no last stretch, so
   $\Phi(t,0) = \Phi(0,t)$ for every $t < t^*$, and
   $\Phi(t^*,0) - \Phi(t,0) = \int_{[t,t^*)} \gamma(r,0) q(\dif r) \to 0$.  An
   \emph{order-dense} set of atoms is genuinely open, and for the reason
   Remark~\ref{rem:atomsnotchange} gives: there is no enumeration
-  $a_1 < a_2 < \dots$ to induct along.  Two adjacent atoms with no diffuse mass
-  between them --- the failure of \eqref{eq:separated} --- are open only in the
-  sense that the two mechanisms have not been interleaved; at such a place the
-  corner relations take over, and no counterexample is known.
+  $a_1 < a_2 < \dots$ to induct along, and below a point of the index set there
+  then lie infinitely many atoms.
 \end{remark}
 
 \begin{remark}[Scope of Section~\ref{sec:duality}]
@@ -6268,9 +6325,8 @@ shape of $\Psi$ itself.
 
   What genuinely remains open is an \emph{order-dense} set of atoms, for which
   no enumeration exists to induct along; the mixed case itself is settled by
-  Proposition~\ref{prop:mixeddual} whenever consecutive atoms are separated by
-  diffuse mass, and only two adjacent atoms carrying no diffuse mass between
-  them are left over, for the reason Remark~\ref{rem:mixeddual} gives.  Nothing
+  Proposition~\ref{prop:mixeddual} for finitely many atoms, and by
+  Remark~\ref{rem:mixeddual} for atoms accumulating only at $t^*$.  Nothing
   in this manuscript depends on it: the
   applications in Section~\ref{sec:convergence} use Lebesgue clocks, and
   Section~\ref{ssec:exduality} uses \eqref{eq:clockadd} only.

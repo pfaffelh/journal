@@ -18,25 +18,41 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 
 ## Offen
 
-1. **Task 23, was sonst offen bleibt.** **Stufe 3, die gemischte Uhr,** ist am
-   2026-09-01 erledigt, sobald die Atome durch stetige Masse getrennt sind:
-   `prop:mixeddual` samt `lem:rectangle` steht im Manuskript, der Beweis im
-   PROTOKOLL, das Orakel in `Task23/mixed.py`. Offen bleiben zwei Reste.
-   **Ordnungsdichte Atommengen** fallen aus der Hypothese heraus (unter einem
-   Punkt liegen dann unendlich viele Atome); der Grund ist scharf und steht im
-   PROTOKOLL unter „Was offen bleibt". **Zwei benachbarte Atome ohne stetige
-   Masse dazwischen** sind der zweite Rest, und der nähere: dort greift statt
-   der Kreuzungsrelation die Eckrelation, also `lem:atomgrid`, und zu tun ist,
-   die beiden Mechanismen in einer Induktion zu verschränken. `mixed.py` prüft
-   diesen Fall mit und findet keinen Defekt, die Hypothese ist also eine des
-   Beweises und nicht der Aussage.
+1. **Task 23, was sonst offen bleibt.** **Stufe 3, die gemischte Uhr,** ist
+   erledigt, und seit dem zehnten Lauf des 2026-09-01 ohne jede Bedingung an die
+   stetige Masse: `prop:mixeddual` samt `lem:rectangle` steht im Manuskript, der
+   Beweis im PROTOKOLL, das Orakel in `Task23/mixed.py`. Der zweite Rest — zwei
+   benachbarte Atome ohne stetige Masse dazwischen — ist damit gestrichen; die
+   beiden Mechanismen sind verschränkt, und zwar als die zwei Fälle **einer**
+   Induktion, nicht als zwei Beweise nebeneinander.
+
+   Offen bleibt allein die **ordnungsdichte Atommenge**. Der Grund ist scharf
+   und unverändert: es gibt keine Aufzählung $a_1<a_2<\dots$, entlang der
+   induziert werden könnte, und unter einem Punkt liegen dann unendlich viele
+   Atome. Beide bisherigen Wege — die Induktion über $d=i-j$ und die
+   Nilpotenz der Matrix $V$ in `prop:atomicposet` — brauchen Endlichkeit an
+   einer benannten Stelle, und keine Abschwächung davon ist bisher versucht
+   worden. Wer den Punkt aufnimmt, fängt bei der Frage an, ob eine
+   ordnungsdichte Atommenge mit lokal endlicher Gesamtmasse eine Ausschöpfung
+   durch endliche Teilmengen zulässt, längs deren der Defekt stetig ist.
 
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
    dritter Lauf, ist die Liste „What Mathlib already has" von `WeakConvergence`
-   erledigt: elf Deklarationen, alle vorhanden, keine `deprecated`. Es fehlen
-   also noch die drei übrigen Roadmaps und die Zitate in den Meilensteinen.*
+   erledigt: elf Deklarationen, alle vorhanden, keine `deprecated`. Am
+   2026-09-01, zweiter Lauf, die Liste „Mathlib supplies" von
+   `MartingaleProblems`: 38 Namen aus elf Dateien, gegen master geprüft, alle
+   vorhanden. Ein Fehler, und ein systematischer — vier Namen standen in
+   `MeasureTheory` statt in `ProbabilityTheory`, siehe die Auffälligkeit im
+   Inventar. Mitgeprüft und weiterhin richtig: `ProgMeasurable` ist ein
+   `@[deprecated (since := "2026-04-24")]`-Alias von `IsStronglyProgressive`
+   (`Process/Adapted.lean:381`), Doobs `Lᵖ`-Ungleichung fehlt weiterhin für jeden
+   Index (`OptionalStopping.lean:143` sagt es selbst), und `IsStable` ist für
+   keine hier interessierende Eigenschaft bewiesen (`gh search code`: der
+   Bezeichner kommt in genau einer Wahrscheinlichkeitsdatei vor). Es fehlen noch
+   `SkorokhodSpace` und `KolmogorovExtension` sowie die Zitate in den
+   Meilensteinen aller vier.*
 
 3. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von

@@ -38,23 +38,29 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   `Filtration ℕ` as well. Doob's `Lᵖ` inequality is absent for every index.
 * **Localization is already there.**
   `Mathlib/Probability/Process/LocalProperty.lean` has
-  `MeasureTheory.IsPreLocalizingSequence`, `MeasureTheory.IsLocalizingSequence`
+  `ProbabilityTheory.IsPreLocalizingSequence`,
+  `ProbabilityTheory.IsLocalizingSequence`
   — stopping times valued in `WithTop ι`, almost surely increasing to `⊤` — and
-  the combinator `MeasureTheory.Locally p 𝓕 X P` saying that `X` has property
-  `p` locally, with `localSeq`, `stoppedProcess_localSeq`, `Locally.of_prop`,
-  `Locally.mono`, `locally_and_iff` and the idempotence `locally_locally_iff`.
+  the combinator `ProbabilityTheory.Locally p 𝓕 X P` saying that `X` has
+  property `p` locally, with `Locally.localSeq`, `Locally.stoppedProcess_localSeq`,
+  `Locally.of_prop`, `Locally.mono`, `IsStable.locally_and_iff` and the
+  idempotence `IsStable.locally_locally_iff`, the last under
+  `[IsRightContinuous 𝓕]`. The namespace is `ProbabilityTheory`, not
+  `MeasureTheory`, unlike the rest of `Mathlib/Probability/Process/`.
   Every local notion below is an instance of `Locally`; none of it is to be
   redefined. What is there is the abstract combinator only: the file names
   martingales in its module comment and nowhere else, and
-  `MeasureTheory.IsStable` is proved for no property of interest here. The
-  martingale instance is Milestone 9.
-* `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`:
-  `isProjectiveMeasureFamily_map_restrict`, `isProjectiveLimit_map`,
-  `map_eq_iff_forall_finset_map_restrict_eq`,
+  `ProbabilityTheory.IsStable` is proved for no property of interest here —
+  `IsStable.and` is the only closure lemma, and the identifier occurs in no
+  other probability file. The martingale instance is Milestone 9.
+* `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`, namespace
+  `ProbabilityTheory`: `isProjectiveMeasureFamily_map_restrict`,
+  `isProjectiveLimit_map`, `map_eq_iff_forall_finset_map_restrict_eq`,
   `identDistrib_iff_forall_finset_identDistrib` and `map_eq_of_forall_ae_eq`.
   These say that a law is determined by its finite dimensional distributions and
   that modifications share them, and Milestone 3 is to be phrased through them.
-* `Mathlib/Probability/Process/Kolmogorov.lean`: the Kolmogorov condition
+* `Mathlib/Probability/Process/Kolmogorov.lean`, namespace `ProbabilityTheory`:
+  the Kolmogorov condition
   `IsKolmogorovProcess` and `IsAEKolmogorovProcess`, stated for an index in a
   `PseudoEMetricSpace` with no order, together with `mk`, `ae_eq_mk`,
   `mk_of_secondCountableTopology` and the measurability lemmas. It is the
@@ -155,10 +161,10 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   defined as `∀ Y ∈ 𝓧, Martingale Y 𝓕 P`, and the local variant
   `IsLocalMPSolution`, defined as
   `∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z 𝓕 P) 𝓕 Y P` with Mathlib's
-  `MeasureTheory.Locally`. Do not introduce a localizing sequence by hand:
+  `ProbabilityTheory.Locally`. Do not introduce a localizing sequence by hand:
   `IsLocalizingSequence` and the `Locally` API already exist, and
-  `locally_locally_iff` is the idempotence that the local theory of Milestone 7
-  would otherwise have to prove.
+  `IsStable.locally_locally_iff` is the idempotence that the local theory of
+  Milestone 7 would otherwise have to prove.
 * `MPSolutions 𝓧 𝓕`, the set of solutions, with the basic API: it is closed
   under restriction of `𝓧`, and `MPSolutions (𝓧 ∪ 𝓨) = MPSolutions 𝓧 ∩ MPSolutions 𝓨`.
 * Given a state space `E` with `[MeasurableSpace E]`, a clock `q`, a convention
@@ -444,31 +450,45 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   so it holds on a square.
 * `Clock.stretches`: for `q = μ + ∑ i, m i • Measure.dirac (a i)` on
   `Set.Icc 0 t* ⊆ ℝ` with `μ` atomless, finitely many atoms
-  `0 ≤ a 1 < ... < a N ≤ t*` and `0 < m i`, the images of the diffuse stretches
+  `0 ≤ a 1 < ... < a N < t*` and `0 < m i` — an atom at `t*` itself lies in no
+  `Set.Ico s s' ⊆ Set.Iio t*` and is discarded — the images of the diffuse
+  stretches
   under `Q s = q (Set.Iio s)`: `S j = Set.Icc (α j) (β j)` with `α 0 = 0`,
   `β j = α j + c j` and `α j = β (j-1) + m j`, where `c j` is the `μ`-mass of the
   `j`-th stretch, together with `Set.range Q = ⋃ j, S j`, `Q (a j) = β (j-1)` and
   `Q t* = β N`. The gaps `Set.Ioo (β (j-1)) (α j)` are the atoms, one each, of
   length `m j`.
 * `duality_of_mixed`: with `Φ, γ` as in `chain_identity` and `γ₁ = γ₂ = γ`, a
-  clock as in `Clock.stretches` with `0 < c j` for `j < N`, and the transported
-  pair satisfying the integrability of `chain_identity_of_absolutelyContinuous`,
-  one has `Φ s t = Φ t s` for all `s, t ≤ t*` in the predictable convention, and
-  in particular `Φ t* 0 = Φ 0 t*` at every such `t*`. Three steps.
-  `eq_comp_add_of_chain_identity` on `S i ×ˢ S j` gives `Ψ x y = f i j (x + y)`
-  on a domain `D i j = Set.Icc (α i + α j) (β i + β j)` that is symmetric in
-  `i, j`. Crossing the gap at `a i` gives
+  clock as in `Clock.stretches` and the transported pair satisfying the
+  integrability of `chain_identity_of_absolutelyContinuous`, one has
+  `Φ s t = Φ t s` for all `s, t ≤ t*` in the predictable convention, and in
+  particular `Φ t* 0 = Φ 0 t*` at every such `t*`. No lower bound on any `c j`.
+  Three steps. `eq_comp_add_of_chain_identity` on `S i ×ˢ S j` gives
+  `Ψ x y = f i j (x + y)` on a domain `D i j = Set.Icc (α i + α j) (β i + β j)`
+  that is symmetric in `i, j`. Crossing the gap at `a i` gives
   `f i j (u + m i) = f (i-1) j u + m i * deriv (f (i-1) j) u` for
   `u ∈ β (i-1) +ᵥ S j`, because the jump of `Ψ` across the gap is
   `m i * γ (a i) ·` while the same row is the density of `y ↦ Ψ (β (i-1)) y`;
-  `0 < c j` enters here and only here, as the hypothesis under which that row is
-  a density. Then induction on `i - j` makes `w i j = f i j - f j i` vanish: on
-  `Set.Icc (α i + α j) (α i + β j)` by that relation applied to `w`, and on
-  `Set.Icc (α i + β j) (β i + β j)` because there
-  `w i j + m (j+1) * deriv (w i j) = 0` with initial value `0` at the junction,
-  whose only absolutely continuous solution is `0`. The values `γ (a i) (a j)` at
-  two atoms are free and satisfy `atomGrid` at the corners of the grid of
-  stretches; the proof does not use them.
+  that row is a density exactly when `0 < c j`. Where `c j = 0` the stretch
+  `S j` is a point, the relation degenerates to
+  `f i j (α i + α j) - f (i-1) j (β (i-1) + α j) = m i * γ (a i) (a (j+1))`, and
+  the value on the right is a corner value, because `γ (a i) ·` is constant on
+  `Q ⁻¹' {α j}` and `a (j+1)` lies in that set. The same corner value is reached
+  along the other coordinate:
+  `f (i-1) (j+1) (β (i-1) + α (j+1)) - f (i-1) j (β (i-1) + β j)
+   = m (j+1) * γ (a i) (a (j+1))`, for every `i` and `j < N`. Then induction on
+  `i - j` makes `w i j = f i j - f j i` vanish: on
+  `Set.Icc (α i + α j) (α i + β j)` by the crossing relation applied to `w` if
+  `0 < c j`, and if `c j = 0` at the single point of that interval by the two
+  degenerate relations applied to `w`, which give
+  `w i j (α i + α j) = w (i-1) j (β (i-1) + α j) + m i * δ i (j+1)` for the
+  antisymmetric corner defect `δ k l = γ (a k) (a l) - γ (a l) (a k)`, together
+  with `m (j+1) * δ i (j+1) = w (i-1) (j+1) _ - w (i-1) j _`; both vanish by the
+  hypothesis at `i - j - 1` and `i - j - 2`, and `δ k k = 0` settles
+  `i - j = 1`. On `Set.Icc (α i + β j) (β i + β j)` — non-empty only if
+  `0 < c i` — because there `w i j + m (j+1) * deriv (w i j) = 0` with initial
+  value `0` at the junction, whose only absolutely continuous solution is `0`.
+  Like `atomGrid`, the induction uses its hypothesis at two levels at once.
 * `duality_defect_eq_integral`: for a clock `q` on `ι` with a least element `0`
   and `Φ, γ` as in `chain_identity` with `γ₁ = γ₂ = γ`,
   `Φ s t = Φ 0 t + ∫ r in Iio s, γ r t ∂q` and `Φ s t = Φ s 0 + ∫ r in Iio t, γ s r ∂q`,
@@ -500,7 +520,10 @@ Fix `[Preorder ι]` with a countable dense subset and `[AddCommMonoid ι]`.
   distances `d` and `d - 1`. Purely arithmetic — no measure, no clock, and `ℕ`
   as the only index — so it belongs in `Mathlib/Algebra/Order/` rather than in
   the probability tree. It is what gives the chain the stronger conclusion
-  `Φ s t = Φ t s`, which the partial order does not have.
+  `Φ s t = Φ t s`, which the partial order does not have. Its two-level
+  induction is also the shape of the one in `duality_of_mixed`, and the
+  cross-multiplication it runs on is what carries that proof across a stretch
+  of zero diffuse mass.
 
 The next four items carry the partial order case. They are matrix algebra over
 `ℝ` and know neither clock nor measure nor order, and belong in
@@ -597,7 +620,9 @@ order.
   phenomenon: at incomparable pairs `Φ s t = Φ t s` fails, while the defect
   `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless` and
   `duality_of_mixed` this covers every clock that is atomless, or has locally
-  finite atoms, or is mixed with its atoms separated by diffuse mass.
+  finite atoms, or is mixed with finitely many atoms below the point in
+  question; an order-dense set of atoms is the one case none of the three
+  reaches.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.
@@ -632,10 +657,10 @@ the discrete index theorems listed above; Milestones 6, 7 and 11 use them.
   martingale `Y` and a stopping time `τ` for `𝓕`, the stopped process
   `stoppedProcess (fun t ↦ {ω | ⊥ < τ ω}.indicator (Y t)) τ` is a martingale;
   and `isStable_martingale_rightContinuous`, the packaged
-  `MeasureTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ ∀ᵐ ω ∂P, ∀ t, ContinuousWithinAt (Z · ω) (Set.Ici t) t)`.
+  `ProbabilityTheory.IsStable 𝓕 (fun Z ↦ Martingale Z 𝓕 P ∧ ∀ᵐ ω ∂P, ∀ t, ContinuousWithinAt (Z · ω) (Set.Ici t) t)`.
   The conjunction is what is stable, because right continuity is preserved by
   stopping and is the hypothesis under which the martingale half holds. Then
-  `MeasureTheory.IsStable.locally` of
+  `ProbabilityTheory.IsStable.locally` of
   `Mathlib/Probability/Process/LocalProperty.lean` gives at once that a stopped
   local martingale is a local martingale, and `IsStable.locally_and_iff` splits
   the conjunction again; so `IsLocalMPSolution` of Milestone 2 is preserved by

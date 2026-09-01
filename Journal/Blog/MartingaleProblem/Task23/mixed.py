@@ -28,10 +28,26 @@ Eckrelationen an zwei Atomen, an denen gamma(a_i,a_j) keine Dichte ist:
     (f_{i-1,j}(beta_{i-1}+alpha_j) - f_{i-1,j-1}(beta_{i-1}+beta_{j-1})) / m_j
   = (f_{i,j-1}(alpha_i+beta_{j-1}) - f_{i-1,j-1}(beta_{i-1}+beta_{j-1})) / m_i. (D)
 
+Entartet eine Strecke, c_j = 0, so ist (B) ueber diese Spalte leer -- der Sprung
+m_i gamma(a_i, .) trifft dort keine Dichte, sondern einen einzelnen Punkt.  Der
+Wert ist trotzdem nicht frei: alle Zeiten in tau^{-1}(alpha_j) = (a_j, a_{j+1}]
+haben denselben Q-Wert, gamma(a_i, .) ist auf ihnen konstant, und a_{j+1} liegt
+darunter.  Also ist der Sprung ueber eine entartete Spalte *dieselbe* Groesse
+gamma(a_i, a_{j+1}), die auch in der Eckrelation steht:
+
+    (f_ij(alpha_i+alpha_j) - f_{i-1,j}(beta_{i-1}+alpha_j)) / m_i
+  = (f_{i-1,j+1}(beta_{i-1}+alpha_{j+1}) - f_{i-1,j}(beta_{i-1}+alpha_j))
+    / m_{j+1},                                          (E)   falls c_j = 0,
+
+und transponiert fuer c_i = 0.  (E) ist die Relation, die dem Modell bis zum
+2026-09-01 gefehlt hat; sie ist wahr, sie ist der Angelpunkt des Beweises fuer
+entartete Strecken, und sie *verkleinert* den Loesungsraum -- die frueheren
+Befunde ohne sie bleiben also gueltig.
+
 Der Defekt ist Psi(L,0) - Psi(0,L) = f_N0(beta_N) - f_0N(beta_N).
 
-Das Skript stellt (B), (C), (D) und die Stetigkeit der f_ij als lineares System
-auf, nimmt dessen Kern und prueft, ob der Defekt darauf verschwindet.
+Das Skript stellt (B), (C), (D), (E) und die Stetigkeit der f_ij als lineares
+System auf, nimmt dessen Kern und prueft, ob der Defekt darauf verschwindet.
 
 Ansatz.  Alle c_i, m_i sind ganzzahlig; die f_ij werden stueckweise auf den
 Einheitsintervallen ihres Definitionsbereichs angesetzt, jedes Stueck in
@@ -109,7 +125,7 @@ class Model:
         r[self.col(i, j, k):self.col(i, j, k) + self.B] = self.ev(tau)
         return r
 
-    def constraints(self, corners=True, ycross=True):
+    def constraints(self, corners=True, ycross=True, degjump=True):
         rows = []
         I = np.eye(self.B)
         # Stetigkeit innerhalb eines Gebiets
@@ -154,6 +170,28 @@ class Model:
                     left = (self.value_row(i - 1, j, self.beta[i - 1] + self.alpha[j]) - base) / mj
                     right = (self.value_row(i, j - 1, self.alpha[i] + self.beta[j - 1]) - base) / mi
                     rows.append(left - right)
+        # (E): der Sprung ueber eine entartete Spalte ist ein Eckwert
+        if degjump:
+            for i in range(1, self.N + 1):
+                for j in range(self.N):                 # j+1 <= N
+                    if self.cs[j] != 0:
+                        continue
+                    mi, mj1 = self.ms[i - 1], self.ms[j]
+                    base = self.value_row(i - 1, j, self.beta[i - 1] + self.alpha[j])
+                    left = (self.value_row(i, j, self.alpha[i] + self.alpha[j]) - base) / mi
+                    right = (self.value_row(i - 1, j + 1,
+                                            self.beta[i - 1] + self.alpha[j + 1]) - base) / mj1
+                    rows.append(left - right)
+            for j in range(1, self.N + 1):              # transponiert
+                for i in range(self.N):                 # i+1 <= N
+                    if self.cs[i] != 0:
+                        continue
+                    mj, mi1 = self.ms[j - 1], self.ms[i]
+                    base = self.value_row(i, j - 1, self.alpha[i] + self.beta[j - 1])
+                    left = (self.value_row(i, j, self.alpha[i] + self.alpha[j]) - base) / mj
+                    right = (self.value_row(i + 1, j - 1,
+                                            self.alpha[i + 1] + self.beta[j - 1]) - base) / mi1
+                    rows.append(left - right)
         return np.array(rows)
 
     def defect_row(self):
@@ -179,15 +217,16 @@ def nullspace(A, tol=1e-9):
     return Vt[sm <= tol * max(1.0, s[0])].T, s
 
 
-def report(cs, ms, corners=True, ycross=True):
+def report(cs, ms, corners=True, ycross=True, degjump=True):
     M = Model(cs, ms)
-    A = M.constraints(corners=corners, ycross=ycross)
+    A = M.constraints(corners=corners, ycross=ycross, degjump=degjump)
     ker, s = nullspace(A)
     d = M.defect_row() @ ker
     sym = M.symmetry_rows() @ ker if ker.shape[1] else np.zeros((0, 0))
-    tag = "" if (corners and ycross) else \
+    tag = "" if (corners and ycross and degjump) else \
         "  [ohne %s]" % (", ".join(([] if corners else ["Ecken"])
-                                   + ([] if ycross else ["y-Kreuzungen"])))
+                                   + ([] if ycross else ["y-Kreuzungen"])
+                                   + ([] if degjump else ["(E)"])))
     print("  c=%s m=%s: %d Unbekannte, %d Gleichungen, dim ker = %d%s"
           % (cs, ms, M.n, A.shape[0], ker.shape[1], tag))
     print("      max |Defekt| auf einer Kernbasis: %.3e" % (np.max(np.abs(d)) if d.size else 0.0))
@@ -208,11 +247,11 @@ CONFIGS = [
     ([1, 1, 1, 0], [1, 2, 3]),     # letzte Strecke darf entarten
 ]
 
-# Der Beweis verlangt c_0,...,c_{N-1} > 0.  Faellt eine dieser Strecken weg, so
-# stehen an ihr zwei Atome ohne stetige Masse dazwischen (bzw. ein Atom ganz am
-# Anfang), die Kreuzungsrelation ueber diese Spalte ist leer, und uebrig bleibt
-# allein die Eckrelation (D).  Ob die Aussage dann noch gilt, ist eine Frage an
-# das Modell, keine an den Beweis.
+# Entartete Strecken: zwei Atome ohne stetige Masse dazwischen, bzw. ein Atom
+# ganz am Anfang.  Die Kreuzungsrelation ueber diese Spalte ist leer; an ihre
+# Stelle tritt (E), und den Wert, den (E) einfuehrt, bindet (D).  Seit dem
+# 2026-09-01 deckt der Beweis diesen Fall mit ab, die Hypothese c_j > 0 ist
+# gefallen.
 DEGENERATE = [
     ([0, 1], [1]),
     ([0, 1, 1], [1, 2]),
@@ -220,6 +259,10 @@ DEGENERATE = [
     ([1, 0, 1], [2, 1]),
     ([2, 0, 1], [1, 3]),
     ([1, 0, 0, 1], [1, 2, 3]),
+    ([0, 0, 1], [1, 2]),
+    ([0, 1, 0, 1], [1, 2, 3]),
+    ([2, 0, 1, 0], [1, 3, 2]),
+    ([1, 0, 2, 0, 1], [1, 2, 3, 1]),
 ]
 
 # Alle Strecken entartet: das ist die rein atomare Kette, und das Modell muss
@@ -242,9 +285,19 @@ if __name__ == '__main__':
     print("\nKanarienvogel: ohne die y-Kreuzungen (C) muss der Defekt stehen bleiben")
     for cs, ms in CONFIGS[:4]:
         report(cs, ms, ycross=False)
-    print("\nEntartete Strecken --- ausserhalb der Beweishypothese")
+    print("\nEntartete Strecken --- seit dem 2026-09-01 vom Beweis gedeckt")
     for cs, ms in DEGENERATE:
         report(cs, ms)
+    print("\nEntartete Spalten: (D) und (E) sind zwei Wege ueber dieselbe Spalte,")
+    print("jeder fuer sich genuegt --- ohne (D):")
+    for cs, ms in DEGENERATE[:6]:
+        report(cs, ms, corners=False)
+    print("\n... ohne (E):")
+    for cs, ms in DEGENERATE[:6]:
+        report(cs, ms, degjump=False)
+    print("\nKanarienvogel: ohne beide steht der Symmetriedefekt")
+    for cs, ms in DEGENERATE[:6]:
+        report(cs, ms, degjump=False, corners=False)
     print("\nProbe aufs Modell: alle Strecken entartet ist prop:atomicdual")
     for cs, ms in ATOMIC:
         report(cs, ms)

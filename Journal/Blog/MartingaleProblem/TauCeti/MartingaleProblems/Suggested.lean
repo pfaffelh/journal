@@ -58,10 +58,10 @@ def IsMPSolution (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) (P : Me
 def mpSolutions (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) : Set (Measure Ω) :=
   {P | IsMPSolution 𝓧 F P}
 
-/-- The local problem, through Mathlib's `MeasureTheory.Locally`.  Do not
+/-- The local problem, through Mathlib's `ProbabilityTheory.Locally`.  Do not
 introduce a localizing sequence by hand: `IsLocalizingSequence` and the whole
 `Locally` API are in `Mathlib/Probability/Process/LocalProperty.lean`, including
-the idempotence `locally_locally_iff`. -/
+the idempotence `IsStable.locally_locally_iff`. -/
 def IsLocalMPSolution [TopologicalSpace ι] [OrderTopology ι]
     (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) (P : Measure Ω) : Prop :=
   ∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z F P) F Y P

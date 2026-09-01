@@ -64,10 +64,28 @@ setzt, nennt den Beleg.
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
 | `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte trägt kein Beweis, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
 | `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
-| `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `MeasureTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib, der Martingalfall ist es nicht |
+| `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `ProbabilityTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib (`Probability/Process/LocalProperty.lean:93,142,153`, Namensraum am 2026-09-01 berichtigt), der Martingalfall ist es nicht |
 
 ## Offene Auffälligkeiten
 
+* **Der Lokalisierungsapparat steht in `ProbabilityTheory`, nicht in
+  `MeasureTheory`; am 2026-09-01, zweiter Lauf, berichtigt.** `MartingaleProblems`
+  führte `MeasureTheory.IsPreLocalizingSequence`,
+  `MeasureTheory.IsLocalizingSequence`, `MeasureTheory.Locally` und
+  `MeasureTheory.IsStable`, und dieses Inventar schrieb es nach. Falsch, und
+  zwar in v4.33.1 **wie** auf master: `Mathlib/Probability/Process/LocalProperty.lean`
+  eröffnet in Zeile 50 `namespace ProbabilityTheory` und schließt in Zeile 345,
+  während der Rest von `Mathlib/Probability/Process/` — `Stopping.lean`,
+  `Adapted.lean`, `Filtration.lean` — in `MeasureTheory` liegt. Die Datei ist
+  also die Ausnahme, und genau deshalb hat es sich gehalten. Mitgefunden: die
+  Namen `locally_and_iff` und `locally_locally_iff` sind `IsStable.`-Namen, nicht
+  freie (`:161`, `:306`), und das zweite verlangt `[IsRightContinuous 𝓕]`.
+  `Locally.of_prop`, `Locally.mono`, `Locally.localSeq` und
+  `Locally.stoppedProcess_localSeq` stimmen. Berichtigt sind die Roadmap an drei
+  Stellen, `Suggested.lean` und die Tabellenzeile zu `fact:stoppedlocalmg`.
+  `FiniteDimensionalLaws.lean` und `Kolmogorov.lean` liegen ebenfalls in
+  `ProbabilityTheory`; dort stand kein falscher Namensraum, nur gar keiner, und
+  die Roadmap nennt ihn jetzt.
 * **Vier Facts ohne tragende Fundstelle** — `fact:doob`, `fact:fdd`,
   `fact:portmanteau`, `fact:stoppedlocalmg` werden nur in den
   Buchhaltungsabschnitten zitiert. Zu klären: implizit benutzt (dann die Stelle
@@ -2115,3 +2133,131 @@ $t$" auch die Konklusion von `duality_of_atomless` selbst. Es ist zugleich der
 einzige analytische Satz des ganzen Dualitätsmeilensteins — alles andere dort
 ist Teleskopieren, lineare Algebra oder die eine Zeile Gronwall. Wer ihn hat,
 hat den Meilenstein bis auf Kombinatorik.
+
+### 2026-09-01, zweiter Lauf — Rückstau 1: die Hypothese der gemischten Uhr fällt; dann Rückstau 2
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da; der Lauf ging an
+den ersten Punkt des Rückstaus, und dort an den Rest, den der Lauf davor
+ausdrücklich stehen gelassen hatte: **zwei benachbarte Atome ohne stetige Masse
+dazwischen.** Er ist erledigt, und nicht durch eine Zusatzbedingung, sondern
+durch Streichen der Hypothese. Danach blieb Zeit für ein Stück von Rückstau 2,
+und dort fiel ein systematischer Namensfehler auf. Geändert sind
+`MartingaleProblem.tex`, `TauCeti/MartingaleProblems/README.md`,
+`TauCeti/MartingaleProblems/Suggested.lean`, `Task23/mixed.py`,
+`Task23/PROTOKOLL.md`, `Facts/BACKLOG.md` und dieses Inventar.
+
+**Der Satz.** `prop:mixeddual` gilt jetzt für **jede** Uhr
+$q=\mu+\sum_{i=1}^N m_i\delta_{a_i}$ mit $\mu$ atomlos und endlich vielen Atomen
+unterhalb $t^*$ — ohne jede Bedingung an die stetige Masse zwischen ihnen. Die
+Bedingung \eqref{eq:separated} ist aus dem Manuskript verschwunden, und mit ihr
+die Ausnahme für ein Atom bei $0$, die sie nebenbei erzwungen hatte. Offen
+bleibt von Task 23 allein die ordnungsdichte Atommenge.
+
+**Der Angelpunkt, in einem Satz.** Der Lauf davor las $c_j>0$ als die Bedingung,
+unter der die Zeile $\gamma(a_i,\cdot)$ auf der Strecke $S_j$ eine *Dichte* ist —
+richtig, aber es übersieht, was an ihre Stelle tritt. Ist $c_j=0$, so ist
+$S_j$ ein Punkt, alle Zeiten mit diesem $Q$-Wert liefern dasselbe
+$\Phi(\cdot,s)$, also ist $\gamma(a_i,\cdot)$ auf ihnen konstant, und $a_{j+1}$
+ist eine von ihnen. Der Sprung über eine entartete Spalte ist damit
+$m_i\gamma(a_i,a_{j+1})$, ein **Eckwert**, und den erreicht die andere
+Koordinate auch. Die Elimination dazwischen ist wörtlich die
+Kreuzmultiplikation des rein atomaren Falls. Der Beweis behält seine Induktion
+über $d=i-j$ und bekommt auf dem unteren Stück eine Fallunterscheidung: Strecke
+oder Nachbarschaft, Kreuzungsrelation oder Eckrelation, und beide übergeben
+demselben Gronwall-Schritt denselben Anfangswert.
+
+**Eine Aussage des letzten Laufs ist zurückgenommen.** `rem:mixeddual` sagte, der
+rein atomare und der gemischte Fall seien „nicht Spezialfälle voneinander,
+sondern zwei Enden". Sie sind die zwei Fälle **einer** Induktion. Die Probe:
+setzt man alle Strecken auf null, so bleibt nur der zweite Fall, und die
+Induktion ist Zeile für Zeile der Beweis von `lem:atomgrid`. Was die Induktion
+sich dafür leistet, leistet sich `lem:atomgrid` auch — sie benutzt ihre
+Hypothese auf zwei Stufen zugleich, $d-1$ und $d-2$, und der Eckdefekt sitzt auf
+$d-2$. Damit ist auch die Rolle der stetigen Masse genauer benannt: sie ist
+nicht nötig, sie ist bequem. Nötig ist ein Punkt, an dem der eindimensionale
+Kern $e^{-u/m}$ festgenagelt wird, und den hat jede Uhr — als Strecke oder als
+Nachbarschaft.
+
+**Nachgerechnet, und dabei ein Mangel des Orakels behoben.** `mixed.py` fehlte
+die Relation über eine entartete Spalte ganz. Das entwertet seine früheren
+Befunde nicht — eine fehlende wahre Relation *vergrößert* den Lösungsraum, ein
+verschwindender Defekt darauf ist die stärkere Aussage —, aber es machte den
+neuen Beweis nicht nachprüfbar. Sie steht jetzt als eigene Familie im Skript,
+mit Schalter, dazu vier neue entartete Konfigurationen (Atom bei $0$ mit
+mehreren Atomen, abwechselnd entartete Spalten, entartete Spalte am Ende,
+$N=4$). Zehn Konfigurationen: Defekt und volle Symmetrie null, $\max<10^{-13}$.
+Die drei Kontrollen sind der eigentliche Gehalt: ohne die Eckrelationen, aber
+mit der neuen — null; ohne die neue, aber mit den Ecken — null; **ohne beide**
+bleibt der Symmetriedefekt in allen sechs geprüften Konfigurationen stehen. Die
+beiden sind also zwei Wege über dieselbe Spalte, jeder für sich genügt, und
+keiner ist entbehrlich, wenn der andere fehlt. Nebenbei ist damit ein
+Kanarienvogel des letzten Laufs entwertet: „ohne die Ecken bleibt der Defekt
+stehen" galt nur, solange das Modell die neue Relation nicht kannte. Das steht
+im PROTOKOLL, statt stillschweigend ersetzt zu werden.
+
+**In die Roadmap eingetragen** (`MartingaleProblems` Meilenstein 8):
+`duality_of_mixed` ohne die Hypothese `0 < c j`, mit den beiden entarteten
+Relationen und der Fallunterscheidung ausgeschrieben; die Schlusszeile von
+`duality_of_atomic`, die die abgedeckten Uhren aufzählt, nennt jetzt die
+ordnungsdichte Atommenge als den einen Fall, den keiner der drei Sätze erreicht;
+`atomGrid_symm` sagt, dass seine Induktionsgestalt auch die von
+`duality_of_mixed` ist. Und ein Fehler nebenbei: `Clock.stretches` schrieb
+`0 ≤ a 1 < ... < a N ≤ t*`, das Manuskript verlangt `a N < t*`, weil ein Atom
+auf $t^*$ in keiner Menge `[s,s') ⊆ 𝕋_{<t*}` liegt. Korrigiert.
+
+**`check.py` meldet `clean`**: 129 Seiten, 12 Überlängen, größte 7.7pt — Zahl und
+Maximum wie im Ausgangszustand des Laufs.
+
+**Danach Rückstau 2, ein Stück weit: die Liste „Mathlib supplies" von
+`MartingaleProblems`.** 38 Namen aus elf Dateien, gegen **master** geprüft, die
+Quellen über `gh api` geholt und im Text nachgesehen, nicht im Gedächtnis. Alle
+vorhanden. Ein Fehler, und der lohnt die Übung: vier Namen — die ganze
+Lokalisierungsschicht — standen in `MeasureTheory` statt in `ProbabilityTheory`.
+`LocalProperty.lean` ist die einzige Datei in `Mathlib/Probability/Process/`, die
+nicht in `MeasureTheory` liegt, und genau deshalb hat sich der falsche Präfix
+gehalten; dieses Inventar hat ihn am 2026-08-30 mitgeschrieben. Berichtigt sind
+die Roadmap an drei Stellen, `TauCeti/MartingaleProblems/Suggested.lean` und die
+Tabellenzeile zu `fact:stoppedlocalmg`; die Einzelheiten stehen oben unter den
+Auffälligkeiten. Drei Behauptungen der Liste sind nachgeprüft und **bleiben
+richtig**: `ProgMeasurable` ist weiterhin ein `deprecated`-Alias von
+`IsStronglyProgressive` (`Process/Adapted.lean:381`, seit 2026-04-24), Doobs
+`Lᵖ`-Ungleichung fehlt weiterhin für jeden Index — der Modulkommentar
+`OptionalStopping.lean:143` sagt selbst, sie komme „in an upcoming PR" —, und
+`IsStable` ist für keine hier interessierende Eigenschaft bewiesen; die Datei
+führt nur `IsStable.and`, und `gh search code` findet den Bezeichner in genau
+einer Wahrscheinlichkeitsdatei, alle übrigen Treffer sind
+`MorphismProperty.IsStableUnder…` aus Algebra und Kategorientheorie.
+
+**Offen geblieben.** Von Task 23 die ordnungsdichte Atommenge, aus dem
+unveränderten scharfen Grund. Von Rückstau 2 die Roadmaps `SkorokhodSpace` und
+`KolmogorovExtension` und die Zitate in den Meilensteinen aller vier; geprüft ist
+bisher nur, was in den Kopflisten steht. Der Rückstau nennt jetzt, wo ein Anlauf anfinge:
+bei der Frage, ob eine ordnungsdichte Atommenge mit lokal endlicher Gesamtmasse
+eine Ausschöpfung durch endliche Teilmengen zulässt, längs deren der Defekt
+stetig ist. Nicht geschehen und mit Absicht: kein Lean übersetzt (der Worktree
+hat kein `.lake`), und `cor:atomless` ist weiterhin nicht verschärft — die
+Auffälligkeit vom Vormittag steht unverändert oben und gehört dem Nutzer.
+
+**Als Nächstes zu formalisieren: `atomGrid_symm`** (`MartingaleProblems`
+Meilenstein 8). Für `M : ℕ`, `m : ℕ → ℝ` mit `m i ≠ 0` und
+`Φ : ℕ → ℕ → ℝ` mit `m j * (Φ (i+1) j - Φ i j) = m i * (Φ i (j+1) - Φ i j)` auf
+`1 ≤ i, j ≤ M-1` folgt `Φ i j = Φ j i`. Es ruht auf **nichts** — kein Maß, keine
+Uhr, keine Topologie, `ℕ` als einziger Index, Körperarithmetik als einziges
+Werkzeug; die Roadmap verortet es deshalb in `Mathlib/Algebra/Order/` und nicht
+im Wahrscheinlichkeitsbaum. Der Beweis ist die Induktion über `d = |i - j|` mit
+zwei mitgeführten Stufen, und die einzige Lean-Frage daran ist, wie man diese
+Zweistufigkeit formuliert: als starke Induktion über `d` mit der
+Induktionsaussage „`w` verschwindet auf allen Abständen `< d`" — genau die
+Gestalt, in der sie auch im Beweis der gemischten Uhr gebraucht wird.
+
+Es ist **jetzt** dran, weil es heute vom Träger eines Satzes zum Träger von
+zweien geworden ist. Bis gestern hing daran allein `duality_of_atomic`; seit
+heute hängt daran auch der entartete Fall von `duality_of_mixed`, und zwar nicht
+als Analogie, sondern als dieselbe Aussage an den Ecken des Streckengitters.
+Es ist zugleich das einzige benannte Ziel der vier Roadmaps, das gar keine
+Mathlib-Vorbedingung hat: `chain_identity_of_absolutelyContinuous` (der Vorschlag
+vom Vormittag, unverändert gültig) braucht Fubini und die
+Lebesgue-Differentiation, `IsSeparating` braucht die `ext_of_…`-Sätze,
+`induction_on_mulSystem` braucht `induction_on_inter`. `atomGrid_symm` braucht
+nichts. Reihenfolge, wenn beide anstehen: `atomGrid_symm` zuerst, denn es ist
+das kleinere und schließt einen ganzen Zweig von Meilenstein 8 ab.

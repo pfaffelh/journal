@@ -1240,4 +1240,129 @@ unterhalb von $t^*$, und $Q(t^*)=\beta_{N-1}$ statt $\beta_N$. Unter
 $\iota=\mathrm p$ liegt ein solches Atom in keiner Menge
 $[s,s')\subseteq\T_{<t^*}$ und ist ohne Wirkung; das Manuskript verlangt
 deshalb $a_N<t^*$ und sagt in einem Halbsatz, warum das keine Einschränkung ist.
-Ein Atom bei $0$ ist durch $c_0>0$ ohnehin ausgeschlossen.
+Ein Atom bei $0$ ist durch $c_0>0$ ohnehin ausgeschlossen. *(Der zehnte Lauf hat
+$c_0>0$ gestrichen; ein Atom bei $0$ ist seitdem gedeckt. Die Bedingung
+$a_N<t^*$ bleibt.)*
+
+## Die gemischte Uhr ohne Hypothese, 2026-09-01 (zehnter Lauf): $c_j>0$ faellt
+
+Angegangen wurde der Rest, den der neunte Lauf ausdruecklich stehen liess: **zwei
+benachbarte Atome ohne stetige Masse dazwischen**, also der Zusammenbruch von
+$c_j>0$. Er ist erledigt, und zwar nicht durch eine Zusatzbedingung, sondern
+durch Streichen der Hypothese: `prop:mixeddual` gilt fuer **jede** Uhr mit
+endlich vielen Atomen, ohne jede Bedingung an die stetige Masse zwischen ihnen.
+Damit deckt der Satz zugleich ein Atom bei $0$ ab, das $c_0>0$ vorher ausschloss.
+
+### Der Angelpunkt: eine entartete Spalte traegt einen Eckwert
+
+Der neunte Lauf las $c_j>0$ als die Bedingung, unter der die Zeile
+$\gamma(a_i,\cdot)$ auf $S_j$ eine **Dichte** ist. Das ist richtig, aber es
+uebersieht, was an ihre Stelle tritt. Ist $c_j=0$, so ist $S_j=\{\alpha_j\}$ ein
+Punkt, und alle Zeiten $s$ mit $Q(s)=\alpha_j$ — das sind $(a_j,a_{j+1}]$, fuer
+$j=0$ die Menge $[0,a_1]$ — liefern dasselbe $\Phi(\cdot,s)$. Die linke Seite von
+$\Psi(\alpha_i,\alpha_j)-\Psi(\beta_{i-1},\alpha_j)=m_i\gamma(a_i,s)$ haengt also
+nicht davon ab, welches $s$ genommen wird, und wegen $m_i>0$ ist
+$\gamma(a_i,\cdot)$ auf dieser Menge **konstant**. Sie enthaelt $a_{j+1}$, denn
+$Q(a_{j+1})=\beta_j=\alpha_j$. Der Sprung ueber eine entartete Spalte ist damit
+$m_i\gamma(a_i,a_{j+1})$ — ein **Eckwert**, kein freier Wert:
+
+$$f_{ij}(\alpha_i+\alpha_j)-f_{i-1,j}(\beta_{i-1}+\alpha_j)=m_i\gamma(a_i,a_{j+1}),
+\tag{E}$$
+
+und derselbe Eckwert wird laengs der anderen Koordinate erreicht, ohne jede
+Bedingung an $c_j$:
+
+$$f_{i-1,j+1}(\beta_{i-1}+\alpha_{j+1})-f_{i-1,j}(\beta_{i-1}+\beta_j)
+=m_{j+1}\gamma(a_i,a_{j+1}).
+\tag{F}$$
+
+Die Elimination von $\gamma(a_i,a_{j+1})$ zwischen (E) und (F) ist woertlich die
+Kreuzmultiplikation $(\ast)$ des rein atomaren Falls.
+
+### Die Induktion, jetzt mit zwei Faellen
+
+Mit $w_{ij}=f_{ij}-f_{ji}$ und dem antisymmetrischen Eckdefekt
+$\delta_{kl}=\gamma(a_k,a_l)-\gamma(a_l,a_k)$ geben (E) und (F) minus ihre
+Transponierten
+
+$$w_{ij}(\alpha_i+\alpha_j)=w_{i-1,j}(\beta_{i-1}+\alpha_j)+m_i\delta_{i,j+1}
+\quad (c_j=0),$$
+$$m_{j+1}\delta_{i,j+1}=w_{i-1,j+1}(\beta_{i-1}+\alpha_{j+1})-w_{i-1,j}(\beta_{i-1}+\beta_j).$$
+
+Die Induktion ueber $d=i-j$ laeuft dann wie im neunten Lauf, mit einer
+Fallunterscheidung auf dem **unteren** Stueck:
+
+* $c_j>0$: das Stueck ist ein Intervall, $w_{ij}=T_{m_i}w_{i-1,j}=0$ nach
+  Induktion ($d-1$).
+* $c_j=0$: das Stueck ist der Punkt $\alpha_i+\alpha_j$, und die erste Relation
+  gibt $w_{ij}$ dort aus $w_{i-1,j}$ ($d-1$) und $\delta_{i,j+1}$. Letzteres ist
+  null: fuer $d=1$ ist $i=j+1$ und $\delta_{kk}=0$; fuer $d\ge2$ nach der zweiten
+  Relation, deren beide Glieder auf den Stufen $d-2$ und $d-1$ verschwinden.
+
+Das obere Stueck ist unveraendert (nichtleer nur bei $c_i>0$, Gronwall mit dem
+Anfangswert vom unteren). Fertig. Was die Induktion sich dabei leistet, ist genau
+das, was `lem:atomgrid` sich leistet: sie benutzt ihre Hypothese auf **zwei**
+Stufen zugleich, $d-1$ und $d-2$, und der Eckdefekt sitzt auf $d-2$.
+
+### Was das ueber die Struktur sagt
+
+Der neunte Lauf schrieb, der rein atomare und der gemischte Fall seien „nicht
+Spezialfaelle voneinander, sondern zwei Enden". Das ist zurueckzunehmen. Sie sind
+die **zwei Faelle einer Induktion**: auf einer Strecke traegt die
+Kreuzungsrelation, an einer Nachbarschaft die Eckrelation, und beide liefern
+demselben Gronwall-Schritt dasselbe Objekt, naemlich einen Anfangswert. Die
+Probe: setzt man alle $c_i$ auf null, so ist nur noch der zweite Fall im Spiel,
+und die Induktion oben ist Zeile fuer Zeile der Beweis von `lem:atomgrid`. Der
+Halbordnungssatz `prop:atomicposet` ist davon unberuehrt — er sagt mehr, naemlich
+etwas ueber Halbordnungen, wo es keine Aufzaehlung gibt.
+
+Die Rolle der stetigen Masse ist damit genauer benannt als bisher: sie ist nicht
+noetig, sie ist nur **bequem**. Was noetig ist, ist ein Punkt, an dem der Kern
+$e^{-u/m}$ von $1+mD$ festgenagelt wird; eine Strecke liefert ihn, eine
+Nachbarschaft zweier Atome liefert ihn auch, und die Uhr hat immer eines von
+beidem.
+
+### Nachgerechnet: `mixed.py`, um (E) erweitert
+
+Dem Modell des neunten Laufs fehlte (E). Das war kein Fehler in seinen Befunden —
+eine fehlende wahre Relation **vergroessert** den Loesungsraum, ein
+verschwindender Defekt darauf ist die staerkere Aussage —, aber es machte den
+Beweis nicht nachpruefbar. (E) und die transponierte Fassung stehen jetzt als
+eigene Relationenfamilie im Skript, mit Schalter `degjump`.
+
+Befund, **zehn** entartete Konfigurationen (neu darunter: ein Atom bei $0$ mit
+mehreren Atomen, abwechselnd entartete Spalten, eine entartete Spalte am Ende,
+und ein Fall mit $N=4$): Defekt und volle Symmetrie null, $\max<10^{-13}$. Die
+drei Kontrollen sind der eigentliche Gehalt des Laufs:
+
+* **ohne (D)**, also ohne die Eckrelationen an zwei Atomen, aber mit (E): null.
+* **ohne (E)**, aber mit (D): null.
+* **ohne beide**: der Symmetriedefekt bleibt in allen sechs geprueften
+  Konfigurationen stehen (bis $1.0$), der Endpunktdefekt in den beiden mit
+  entarteter erster Strecke ($0.37$).
+
+Das ist die scharfe Aussage: (D) und (E) sind **zwei Wege ueber dieselbe
+entartete Spalte**, jeder fuer sich genuegt, und ohne beide faellt die Symmetrie.
+Der Beweis oben nimmt (E) und bindet den darin auftretenden Eckwert mit (F);
+zusammen ist das (D). Vor der Erweiterung war das Skript auf (D) allein
+angewiesen, und der Kanarienvogel „ohne die Ecken" schlug deshalb an — genau
+dieser Befund des neunten Laufs ist mit (E) im Modell hinfaellig geworden, und
+das ist der Grund, ihn nicht als Beleg fuer die Notwendigkeit von (D) zu lesen.
+
+### Sackgassen, neunter Nachtrag
+
+* **Eine entartete Spalte durch Einfuegen stetiger Masse aufblasen.** Naheliegend
+  ist, in $\T$ zwischen $a_j$ und $a_{j+1}$ ein Intervall $I$ einzuschieben, $q$
+  dort Lebesgue zu setzen und $\Phi$ konstant fortzusetzen, um den Satz mit
+  $c_j>0$ anzuwenden. Das ist unmoeglich, und der Grund ist die Balance selbst:
+  aus der ersten Darstellung folgt $\tilde\gamma(r,t)=0$ fuer $r\in I$, aus der
+  zweiten $\tilde\gamma(s,r)=\gamma(s_0,r)$ fuer $s\in I$, und beide reden ueber
+  $\tilde\gamma$ mit erstem Argument in $I$. Das erzwingt $\gamma(s_0,\cdot)=0$.
+  Eine eingefuegte Strecke ist eben nicht dasselbe wie ein Punkt: sie zwingt
+  $f_{ij}$ auf $D_{ij}$ konstant zu sein. Die Erweiterung ist keine treue
+  Einbettung, und der direkte Weg ueber (E) ist kuerzer als jede Reparatur.
+* **Den entarteten Fall als Grenzwert von $c_j$ gegen null nehmen.** Der
+  Definitionsbereich von $\Phi$ ist die Zeitmenge, nicht die Uhrzeit; die Uhr
+  laesst sich nicht stoeren, ohne das gegebene $\Phi$ mitzustoeren. Ein
+  Kompaktheitsargument muesste ueber Paare $(\Phi,\gamma)$ laufen und braeuchte
+  eine Schranke, die niemand hat. Der Fall ist algebraisch, nicht analytisch.
