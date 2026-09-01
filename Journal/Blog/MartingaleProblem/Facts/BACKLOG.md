@@ -98,6 +98,27 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    nicht (Summierbarkeit). Einzelheiten in `Task23/PROTOKOLL.md`,
    dreizehnter Lauf.
 
+   *Zwischenstand 2026-09-01, vierzehnter Lauf: die $\omega^*$-Skizze ist
+   nachgerechnet und **Satz**.* Für jede rein atomare Uhr, deren Atome unter
+   $t^*$ eine **intervallendliche** Kette bilden — je zwei Atome schließen nur
+   endlich viele ein; das erfasst $\omega$, $\omega^*$ und $\mathbb Z$-Ketten
+   und enthält `prop:atomicdual` —, gilt die Dualität in beiden Konventionen,
+   ohne Schranke an $\kappa$: die Zwei-Diagonalen-Induktion braucht weder
+   Boden noch Deckel (`Task23/neighbor.py`, Test R), und die Ränder kommen als
+   Schwänze der absolut konvergenten Atomsummen, die \eqref{eq:incrementrep}
+   ohnehin voraussetzt — die $B$-Hypothese des zwölften Laufs ist damit für
+   den Kettenfall vom Tisch. Zwei Korrekturen an der Skizze: ihre wörtliche
+   Hypothese „beidseits ein Nachbaratom" ist echt schwächer als die
+   Intervallendlichkeit (zwei $\zeta$-Ketten übereinander trennen beide, und
+   Test X zeigt, dass die lokalen Relationen die Kreuzpaare dort nicht
+   erzwingen), und ihre Schritte über $\kappa$ sind nur für die volle
+   Symmetrie nötig. Beweis und Befunde in `Task23/PROTOKOLL.md`, vierzehnter
+   Lauf; Roadmap-Einträge `atomGrid_symm_int` und
+   `duality_of_atomic_intervalFinite` in `MartingaleProblems` Meilenstein 8.
+   Offen am ordnungsdichten Kern: unverändert die in sich dichte Atommenge
+   und neu benannt die diskrete, nicht intervallendliche Kette; beide hängen
+   am Überqueren eines Häufungspunkts.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

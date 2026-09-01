@@ -1847,3 +1847,162 @@ per Konstruktion, $B_{\text{used}}$, $\Delta$ und das Verhältnis exakt.
   unbeschränkt. Wenn Lokalität hilft, dann nicht als Gewichtung der rhs allein,
   sondern zusammen mit der Realisierbarkeit des Slacks als Schwanz eines
   globalen $h$.
+
+## Der intervallendliche Kettenfall, 2026-09-01 (vierzehnter Lauf): die Nachbaratom-Skizze ist nachgerechnet — bewiesen, mit korrigierter Hypothese und ohne die $B$-Hypothese
+
+Der zwölfte Lauf hinterließ die Skizze „Nachbaratome genügen, auch unendlich
+viele" mit dem Auftrag, sie nachzurechnen, bevor sie in Roadmap oder Manuskript
+wandert. Dieser Lauf hat sie nachgerechnet. **Sie hält**, aber an zwei Stellen
+anders, als sie dastand: die richtige Hypothese ist nicht „jedes Atom hat
+beidseits ein Nachbaratom", sondern **Intervallendlichkeit** — zwischen je zwei
+Atomen liegen nur endlich viele Atome —, und die Beschränktheit von $\kappa$,
+die die Skizze am Rand brauchte, wird nirgends gebraucht. Die offene Frage 2
+des zwölften Laufs (die $B$-Hypothese) fällt damit für den Kettenfall weg.
+Neu ist `Task23/neighbor.py` (exakt rational, rc=0); die Roadmap
+`MartingaleProblems` führt das Ergebnis in Meilenstein 8 als
+`atomGrid_symm_int` und `duality_of_atomic_intervalFinite`.
+
+### Der Satz
+
+Sei $q$ rein atomar, $t^*\in\T$, die Atome von $q$ in $\T_{<t^*}$ paarweise
+vergleichbar, und **je zwei von ihnen schließen nur endlich viele Atome ein**.
+Dann gilt $\Phi(t^*,0)=\Phi(0,t^*)$, in beiden Konventionen, ohne Hypothese
+über die Existenz der Integrale in \eqref{eq:incrementrep} hinaus — und wie im
+endlichen Fall schärfer $\Phi(s,t)=\Phi(t,s)$ für alle $s,t\in\T_{\le t^*}$.
+
+Das enthält `prop:atomicdual` (endlich viele Atome sind intervallendlich) und
+erfasst neu: Atome, die sich bei $0$ häufen (Typ $\omega^*$), die sich von
+unten an einem Punkt $\le t^*$ häufen (Typ $\omega$ — auch das war bisher
+**nicht** abgedeckt, denn unter $t^*$ liegen dann unendlich viele Atome), und
+$\mathbb Z$-Ketten mit beiden Enden (Typ $\zeta$).
+
+### Der Beweis
+
+**Aufstellung.** Intervallendlichkeit und Vergleichbarkeit machen die Atome in
+$\T_{<t^*}$ ordnungsisomorph zu einem Intervall $I\subseteq\mathbb Z$: fixiere
+ein Atom $u_0$ und indiziere jedes andere durch die (endliche!) gezählte Zahl
+der Atome zwischen ihm und $u_0$, mit Vorzeichen. Hat $I$ ein Maximum $K$, so
+ergänze $u_{K+1}:=t^*$; hat $I$ ein Minimum $k_0$, so ergänze
+$u_{k_0-1}:=0$ mit $m_{k_0-1}:=0$. Für aufeinanderfolgende Gitterpunkte trägt
+$[u_k,u_{k+1})=\T_{<u_{k+1}}\setminus\T_{<u_k}$ genau das Atom $u_k$ (ein
+Atom dazwischen widerspräche der Nachbarschaft im Index; hier geht die
+Vergleichbarkeit ein), bzw. kein Atom im ergänzten Bodenschritt. Also gelten
+die Einschrittrelationen
+$$\Phi(u_{k+1},y)-\Phi(u_k,y)=m_k\gamma(u_k,y),\qquad
+  \Phi(y,u_{k+1})-\Phi(y,u_k)=m_k\gamma(y,u_k)$$
+für **jedes** $y\in\T$, und Kreuzmultiplikation an $(u_i,u_j)$ eliminiert
+$\gamma$ zu $(\ast)$, für alle $i,j$ im Gitter mit Nachfolger — beim
+ergänzten Boden gilt $(\ast)$ mit $m_{k_0-1}=0$ von selbst, genau wie im
+endlichen Beweis.
+
+**Die Induktion braucht weder Boden noch Deckel.** Auf
+$w(i,j)=\widehat\Phi(i,j)-\widehat\Phi(j,i)$ läuft die
+Zwei-Diagonalen-Induktion von `lem:atomgrid` wörtlich: die Basis $d=1$ liest
+$(\ast)$ auf der Diagonale $(j,j)$, der Schritt $d\to d+1$ an $(j+d,j)$, und
+keine der beiden Stellen nennt ein kleinstes oder größtes Element — die
+Schranken $1\le i,j\le M-1$ des endlichen Lemmas markieren, wo die Relationen
+enden, nicht wo die Induktion beginnt. Wohlfundiert ist die Induktion über
+$d$, weil **jedes Indexpaar endlichen Abstand hat** — das ist die
+Intervallendlichkeit, und nur hier geht sie in die Algebra ein. Ergebnis:
+$w\equiv0$ auf dem ganzen Gitter, ergänzte Punkte eingeschlossen.
+
+**Die Ränder kommen per Schwanzsumme, ohne Schranke an $\kappa$.** Ist ein
+Ende von $I$ unendlich, so liegt $t^*$ bzw. $0$ nicht im Gitter. Die Existenz
+der Integrale in \eqref{eq:incrementrep} ist für das rein atomare $q$ die
+**absolute** Konvergenz der Atomsummen, also
+$\sum_{a}m_a|\gamma(a,y)|<\infty$ über die Atome unter $t^*$, für jedes
+benutzte $y$. Für $k\to+\infty$ ist
+$\Phi(t^*,y)-\Phi(u_k,y)=\sum_{j\ge k}m_j\gamma(u_j,y)$ ein Schwanz dieser
+Summe und geht gegen $0$ (kein Atom liegt über allen $u_k$ — sonst hätte es
+unendlichen Indexabstand zu $u_0$); für $k\to-\infty$ ebenso
+$\Phi(u_k,y)-\Phi(0,y)=\sum_{j<k}m_j\gamma(u_j,y)\to0$. Beides gilt in beiden
+Koordinaten. Damit:
+$$w(t^*,0)\;=\;\lim_{l\to-\infty}\;\lim_{i\to+\infty}\;w(u_i,u_l)\;=\;0,$$
+wobei je nach Endlage der Limes durch den Gitterwert ersetzt wird.
+Die Schärfung auf beliebige Paare $(s,t)$: liegt unter $s$ ein größtes Atom
+$u_k$, so ist $\Phi(s,\cdot)=\Phi(u_{k+1},\cdot)$ (das Intervall
+$[u_k,s)$ trägt genau $u_k$); liegt keines, so ist $\Phi(s,\cdot)$ der
+Schwanzlimes der $\Phi(u_k,\cdot)$ — in beiden Fällen erbt $(s,t)$ das
+Verschwinden von $w$ vom Gitter.
+
+**Die o-Konvention** ist dieselbe Rechnung nach der Spiegelung $i\mapsto-i$:
+$(u_{k-1},u_k]$ trägt genau $u_k$, die Dichte sitzt am oberen Endpunkt, und
+die Spiegelung von Punkten und Massenliste macht daraus wörtlich das p-System
+der gespiegelten Kette; ein ergänzter Deckel $(u_K,t^*]$ trägt kein Atom und
+wird zum masselosen Schritt. Induktion und Schwanzsummen laufen unverändert.
+
+**Wo welche Hypothese eingeht.** $m_k\neq0$ ist die Definition eines Atoms;
+die Vergleichbarkeit macht die Einschrittintervalle einelementig; die
+Intervallendlichkeit macht die Induktion wohlfundiert und die Schwanzmengen
+leer; die absolute Existenz der Integrale trägt genau die zwei Randlimiten.
+Eine Schranke an $\gamma$ oder $\kappa$ kommt nicht vor.
+
+### Was an der Skizze zu korrigieren war
+
+1. **„Beidseits ein Nachbaratom" ist zu schwach formuliert.** Die Skizze
+   begründete die Induktion mit „jedes Indexpaar hat endlichen Abstand" — das
+   ist die Intervallendlichkeit, nicht die Nachbareigenschaft. Beide fallen
+   auseinander: **zwei übereinandergestapelte $\zeta$-Ketten** (jede häuft
+   sich an beiden eigenen Enden) haben an jedem Atom beidseits Nachbarn, aber
+   Paare aus verschiedenen Ketten schließen unendlich viele Atome ein. Die
+   Beispiele der Skizze ($\omega^*$, eine $\zeta$-Kette) sind
+   intervallendlich; ihre wörtliche Hypothese ist es nicht.
+2. **Die $B$-Hypothese war nie nötig.** Die Skizze schloss den Rand mit
+   $|w(t,a_j)-w(t,0)|\le\|\kappa\|_\infty\,q([0,a_j))$; dominierte Konvergenz
+   mit der ohnehin vorausgesetzten (absoluten) Existenz der Integrale liefert
+   dasselbe ohne jede Schranke. Der offene Punkt 2 des zwölften Laufs ist
+   damit für den Kettenfall erledigt; für die in sich dichte Atommenge bleibt
+   die Frage stehen.
+3. **Die Schritte 2 und 3 der Skizze ($\kappa=0$ auf Atompaaren, beliebiges
+   $t$) sind nur für die volle Symmetrie nötig**, nicht für die Dualität an
+   $(t^*,0)$: dort genügen Induktion und zwei Schwanzlimiten.
+
+### Nachgerechnet, mechanisch
+
+`Task23/neighbor.py`, exakt rational (rc=0). **(R) Randfreiheit:** eine
+endliche Kette von Gitterpunkten nur mit ihren Einschrittrelationen — kein
+Punkt $0$, kein $t^*$, keine Relation aus der Kette hinaus — erzwingt im Kern
+die volle Symmetrie von $\Phi$; geprüft für $M=2..7$, drei Massenvektoren,
+beide Konventionen, und symbolisch (p bis $M=4$, o bis $M=3$; das o-System
+ist wortgleich das gespiegelte p-System, sympys symbolischer Nullraum braucht
+in der o-Orientierung bei $M=4$ Stunden). Das ist die Gestalt, in der die
+Induktion im unendlichen Fall läuft: jedes Fenster $[u_j,u_i]$ des Gitters
+ist eine solche randlose Kette, und die Herleitung von $w(i,j)=0$ benutzt nur
+Relationen im Fenster.
+**(X) Kreuzblock:** zwei solche Ketten ohne verbindende Einschrittrelation —
+das endliche Abbild zweier Blöcke mit Häufung dazwischen — erzwingen die
+Symmetrie blockintern, auf den Kreuzpaaren **nicht** (Kerndimension 24 bzw.
+28, alle Kreuzpaare frei). Die lokalen Relationen allein schließen den
+diskret-in-sich-Fall also nicht; was ihn schlösse, müsste die
+Schwanzrelationen über die Häufungspunkte hinweg benutzen. Das ist **kein**
+Gegenbeispiel — das endliche Abbild lässt Relationen weg, die das unendliche
+System hat; die Falle, eine Relaxation für das System zu halten, ist die des
+dreizehnten Laufs.
+
+Beim Schreiben des Skripts fand sich ein Bug (der Blockaufbau zählte Blöcke
+statt Punkte, `start = len(pts)` statt `len(zug)`), der Block 2 mit Block 1
+überlappen ließ und blockinterne Asymmetrie vortäuschte; nach dem Fix stimmen
+Theorie und Kern überein. Wer das Skript erweitert, prüfe zuerst, dass die
+Blocklisten disjunkt sind.
+
+### Was jetzt offen ist, genau
+
+* **Diskret in sich, aber nicht intervallendlich** (kleinste Instanz: zwei
+  $\zeta$-Ketten). Die Induktion erreicht Kreuzpaare nicht, (X) zeigt, dass
+  sie lokal auch nicht erzwungen sind; die Schwanzrelationen über den
+  Häufungspunkt sind das einzige verbleibende Werkzeug.
+* **Die in sich dichte Atommenge**, unverändert (elfter bis dreizehnter Lauf:
+  profilfreie Schranken sind dreifach zu; die $\omega^*$-Skizze dieses Laufs
+  war der andere benannte Weg und ist jetzt Satz, schließt die dichte Menge
+  aber nicht).
+* Per Cantor--Bendixson ist der intervallendliche Fall der Baustein; was
+  fehlt, ist genau das Überqueren von Häufungspunkten.
+
+### Sackgassen, dreizehnter Nachtrag
+
+* **Die Nachbareigenschaft als Hypothese des Induktionswegs.** Sie gibt die
+  Blöcke, aber nicht die endlichen Abstände; zwei $\zeta$-Ketten trennen sie
+  von der Intervallendlichkeit, und (X) zeigt, dass die lokale Algebra dort
+  endet. Wer den diskreten Fall fortsetzt, beginne bei den Schwanzrelationen
+  über einem einzelnen Häufungspunkt zwischen zwei Blöcken, nicht bei einer
+  feineren Induktion.
