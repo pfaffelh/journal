@@ -86,6 +86,34 @@ setzt, nennt den Beleg.
   `FiniteDimensionalLaws.lean` und `Kolmogorov.lean` liegen ebenfalls in
   `ProbabilityTheory`; dort stand kein falscher Namensraum, nur gar keiner, und
   die Roadmap nennt ihn jetzt.
+* **Derselbe Namensraumfehler noch zweimal, in `KolmogorovExtension`; am
+  2026-09-01, vierter Lauf, berichtigt.** Der Befund vom zweiten Lauf des Tages
+  war nicht auf `MartingaleProblems` beschränkt. `KolmogorovExtension` führte
+  `MeasureTheory.isProjectiveLimit_infinitePi` — die Deklaration steht in
+  `Mathlib/Probability/ProductMeasure.lean:363` innerhalb von `namespace Measure`
+  (Zeile 346) innerhalb von `namespace MeasureTheory` (Zeile 56), heißt also
+  `MeasureTheory.Measure.isProjectiveLimit_infinitePi` — und
+  `MeasureTheory.isProjectiveLimit_map`, das in Wahrheit
+  `ProbabilityTheory.isProjectiveLimit_map` heißt
+  (`Probability/Process/FiniteDimensionalLaws.lean:53`, `namespace
+  ProbabilityTheory` ab Zeile 38). Der zweite ist wörtlich derselbe Fall wie am
+  zweiten Lauf: `Mathlib/Probability/Process/` liegt in `MeasureTheory`, und
+  `FiniteDimensionalLaws.lean` ist neben `LocalProperty.lean` die zweite
+  Ausnahme. Beide Zitate sind berichtigt.
+* **`KolmogorovExtension` Meilenstein 2 verlangte einen Satz, den Mathlib
+  hat; am 2026-09-01, vierter Lauf, gestrichen.** Der letzte Punkt lautete
+  „`MeasureTheory.IsProjectiveLimit.unique`: zwei projektive Limiten derselben
+  Familie stimmen überein, aus `generateFrom_measurableCylinders` und
+  `MeasureTheory.ext_of_generate_finite`". Das ist nicht zu bauen: die
+  Deklaration steht unter genau diesem Namen in
+  `Mathlib/MeasureTheory/Constructions/Projective.lean:150`, und ihr Beweis ist
+  Zeile für Zeile der angegebene Weg. Mitgefunden und ebenfalls schon da:
+  `IsProjectiveLimit.isFiniteMeasure` (`:133`),
+  `IsProjectiveLimit.isProbabilityMeasure` (`:139`),
+  `measure_cylinder` (`:123`), `measure_univ_eq` (`:129`) und
+  `measure_univ_unique` (`:145`) — womit auch der vorletzte Punkt von
+  Meilenstein 2 auf eine Zeile schrumpft. Die Kopfliste nennt die
+  Uniquenessschicht jetzt, der Meilenstein verlangt sie nicht mehr.
 * **Vier Facts ohne tragende Fundstelle** — `fact:doob`, `fact:fdd`,
   `fact:portmanteau`, `fact:stoppedlocalmg` werden nur in den
   Buchhaltungsabschnitten zitiert. Zu klären: implizit benutzt (dann die Stelle
@@ -110,6 +138,59 @@ setzt, nennt den Beleg.
   von keinem Beweis benutzt; die einzige Stelle, an der es überhaupt arbeiten
   kann, ist die Implikation (a)⇒(b) und nur, wenn man den Weg über die
   Prohorov-Metrik nimmt.
+* **Die Kopfliste von `SkorokhodSpace` nannte als „die ganze
+  Einseitiglimes-API" sechs Sätze über monotone Funktionen; am 2026-09-01,
+  vierter Lauf, berichtigt.** `tendsto_leftLim`, `tendsto_rightLim`,
+  `tendsto_leftLim_within`, `continuousWithinAt_Iio_iff_leftLim_eq`,
+  `continuousWithinAt_Ioi_iff_rightLim_eq` und
+  `continuousAt_iff_leftLim_eq_rightLim` stehen sämtlich in `namespace Monotone`
+  von `Mathlib/Topology/Order/LeftRightLim.lean` (Zeilen 268--386, mit
+  `include hf` für `hf : Monotone f`) und noch einmal in `namespace Antitone`
+  (388--451). Sie verlangen außerdem `[ConditionallyCompleteLinearOrder β]
+  [OrderTopology β]` vom **Zielraum**. Ein càdlàg-Pfad in einen metrischen Raum
+  erfüllt nichts davon; kein einziger der sechs Namen ist für diese Roadmap
+  benutzbar. Was im Wurzelnamensraum steht und für beliebiges `f` gilt, ist
+  `tendsto_leftLim_of_tendsto`/`tendsto_rightLim_of_tendsto` (`:121`,`:130`),
+  `ContinuousWithinAt.leftLim_eq`/`.rightLim_eq` (`:110`,`:117`),
+  `leftLim_eq_of_tendsto`/`rightLim_eq_of_tendsto` (`:65`,`:73`),
+  `leftLim_eq_of_eq_bot`, `leftLim_eq_of_not_tendsto`, `leftLim_eq_of_isBot`,
+  `rightLim_eq_of_isTop` und `mapClusterPt_leftLim`/`_rightLim`. Der Glücksfall:
+  die Hypothese von `tendsto_leftLim_of_tendsto` ist wörtlich
+  `∃ y, Tendsto f (𝓝[<] a) (𝓝 y)`, also genau das Feld `left_limit` von
+  `IsCadlag`. Die Kopfliste sagt das jetzt und nennt beide Hälften getrennt.
+
+  **Daran hängt eine Hypothesenkorrektur.** `Function.leftLim` ist nur für
+  `[LinearOrder α]` definiert (Variablenblock `:44`, Definition `:50`). Die zwei
+  Punkte von Meilenstein 2, die die Struktur an `Function.leftLim` anschließen,
+  standen unter Stufe **(A)** `[Preorder ι]` und sind dort nicht formulierbar.
+  Der Meilenstein führt jetzt eine dritte benannte Stufe **(A′)**
+  `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]` — das schwächste
+  Bündel, unter dem `Function.leftLim` existiert, und echt schwächer als (B),
+  weil es keine dichte Teilmenge verlangt. Das ist keine Verschärfung, sondern
+  die Korrektur einer zu schwachen Angabe.
+* **Zwei kleinere Fehler derselben Kopfliste, am 2026-09-01 berichtigt.** Sie
+  schrieb `Monotone.countable_not_continuousAt` der Datei `LeftRightLim.lean` zu;
+  dort steht der Name nur im Modulkommentar (`:25`), die Deklaration liegt in
+  `Mathlib/Topology/Order/Monotone.lean:166`. Meilenstein 2 sagte es schon
+  richtig — die Roadmap widersprach sich selbst. Und `StieltjesFunction`, das die
+  Kopfliste als Vorbild für `IsCadlag` nennt, formuliert Rechtsstetigkeit als
+  `ContinuousWithinAt f (Ici x) x` (`Measure/Stieltjes.lean:118,140`), während
+  `Function.RightContinuous` der Roadmap `Ioi` nimmt; die Brücke ist
+  `continuousWithinAt_Ioi_iff_Ici`, dieselbe, die `StieltjesFunction.rightLim_eq`
+  (`:143`) selbst geht. Beides steht jetzt da.
+* **Die zentrale Definition von `SkorokhodSpace` Meilenstein 3 war ein
+  Typfehler; am 2026-09-01 berichtigt.** Dort stand
+  `TimeChange.norm λ = log (max (LipschitzWith.const λ) (LipschitzWith.const λ⁻¹))`.
+  `LipschitzWith.const` ist der Satz „eine konstante Abbildung ist
+  `0`-lipschitz" (`Topology/EMetricSpace/Lipschitz.lean:194`,
+  `protected theorem const (b : β) : LipschitzWith 0 fun _ : α => b`), also ein
+  Beweis und keine Zahl. Mathlib kennt **keine kleinste Lipschitzkonstante**:
+  `LipschitzWith (K : ℝ≥0) (f : α → β)` ist eine Prop (`:60`), ebenso
+  `LipschitzOnWith` (`:64`), und ein gebündeltes Optimum gibt es nirgends. Damit
+  war die Metrik des Skorokhod-Raums — Meilensteine 3 bis 5 hängen an ihr — nicht
+  aufschreibbar. Der Meilenstein führt jetzt `TimeChange.lipConst` als eigenen
+  Punkt, samt Erreichtheit des Infimums und Submultiplikativität über
+  `LipschitzWith.comp` (`:225`), und `norm` ist darauf gebaut.
 * **`fact:fullgenerator`** trägt §8 als „nur für optionalen Kontext". Am
   2026-08-30 entschieden: solange `rem:fullgenerator` im Manuskript steht,
   gehört er in die Roadmap, und er steht jetzt dort ohne das Wort „optional"
@@ -2366,3 +2447,164 @@ die drei übrigen (`trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`,
 fallen danach als Beiwerk. Reihenfolge, wenn beide anstehen: `atomGrid_symm`
 zuerst, denn es ist das kleinere und schließt einen Zweig ab; dann die
 Konstruktion von `T`, die den Zweig für den offenen Fall öffnet.
+
+### 2026-09-01, vierter Lauf — Rückstau 2: `KolmogorovExtension` und `SkorokhodSpace` gegen master
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstau 1 hat der
+Lauf davor bis an eine benannte Forschungsfrage geführt — ob die
+Cauchy--Schwarz-Ungleichung in $|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ durch
+eine Paarung ersetzbar ist, die $E$ als Schwanzbeitrag benutzt —, und daran hat
+dieser Lauf nicht gearbeitet; der Grund steht unten. Er ging an **Rückstau 2**
+und dort an dessen ausdrücklich offenen Rest: die beiden Roadmaps, die noch nie
+gegen master geprüft waren. Beide sind jetzt **vollständig** durch, Kopfliste
+**und** Meilensteine — bei `SkorokhodSpace` zitieren nur die Meilensteine 1, 2, 3
+und 8 überhaupt Mathlib, die Meilensteine 4 bis 7 führen ausschließlich neue
+Namen. Geändert sind `TauCeti/KolmogorovExtension/README.md`,
+`TauCeti/SkorokhodSpace/README.md`, `Facts/BACKLOG.md` und dieses Inventar. Am
+Manuskript ist nichts geändert.
+
+Geprüft wurde gegen master vom heutigen Tag (`df0e53b7`, `gh api`), Datei für
+Datei am Quelltext, mit Namensraum, Zeilennummer und Variablenblock. Das lokale
+`origin/master` in `~/Code/lean/mathlib4` steht auf dem 2026-03-23 und ist als
+Stellvertreter untauglich; das ist beim Nachfetchen aufgefallen und für den
+nächsten Lauf notiert.
+
+**Vier Fehler in `KolmogorovExtension`.** Zwei Namensräume — dieselbe Familie wie
+am zweiten Lauf des Tages, und deshalb der eigentliche Ertrag der Übung:
+`MeasureTheory.isProjectiveLimit_infinitePi` heißt
+`MeasureTheory.Measure.isProjectiveLimit_infinitePi`, und
+`MeasureTheory.isProjectiveLimit_map` heißt
+`ProbabilityTheory.isProjectiveLimit_map`. Ein Meilensteinpunkt, den Mathlib
+längst hat: `MeasureTheory.IsProjectiveLimit.unique` steht unter genau diesem
+Namen in `Constructions/Projective.lean:150`, mit dem Beweis, den die Roadmap als
+zu gehenden Weg beschrieb; mit ihm `isFiniteMeasure`, `isProbabilityMeasure`,
+`measure_cylinder`, `measure_univ_eq` und `measure_univ_unique`, die den
+vorletzten Punkt auf eine Zeile bringen. Und eine zu schwach angegebene
+Hypothese: `innerRegular_isCompact_isClosed_measurableSet_of_finite`
+(`RegularityCompacts.lean:203`) verlangt neben
+`IsCompletelyPseudoMetrizableSpace` auch `SecondCountableTopology` und
+`BorelSpace`; die Kopfliste ließ die letzten beiden weg und behauptete damit mehr
+Mathlib, als es gibt. Die Einzelheiten stehen oben unter den Auffälligkeiten.
+
+**Ein Fund in die andere Richtung, ebenfalls eingetragen.** master hat seit
+kurzem `isCompactSystem_isCompact_isClosed` (`Topology/Compactness/CompactSystem.lean:163`),
+„die abgeschlossenen kompakten Mengen sind ein kompaktes System", dazu
+`isCompactSystem_isCompact` für `T2Space`,
+`isCompactSystem_insert_univ_isCompact_isClosed`,
+`IsCompactSystem.of_nonempty_iInter`, `IsCompactSystem.iff_nonempty_iInter`,
+`isCompactSystem_insert_empty_iff` und `isCompactSystem_iff_of_directed`. Das ist
+genau die Vorbedingung des dritten Punktes von Meilenstein 1, und der Punkt
+sagt jetzt, dass ihm nur noch der Übergang zu den Zylindern darüber bleibt. Was
+sonst geprüft und **richtig** ist: alle zwölf `projectiveFamilyContent_*`-Namen
+(die `deprecated`-Aliase seit 2026-06-03 heißen `_diff` und `_diff_of_subset`,
+die Roadmap nennt die aktuellen `_sdiff` und `_sdiff_of_subset`), die drei
+`isSet*_measurableCylinders`, `AddContent.IsSigmaSubadditive` (`:149`),
+`AddContent.measure` (`OfAddContent.lean:163`) und `measure_eq` (`:172`),
+`generateFrom_measurableCylinders` (`Cylinders.lean:362`) — samt der Richtung:
+`AddContent.measure` verlangt `hC_gen : mα ≤ generateFrom C`, und
+`generateFrom_measurableCylinders.symm.le` liefert genau das, die Roadmap
+typisiert also —, `ext_of_generate_finite`, `ProbabilityTheory.Kernel.traj`
+(`Traj.lean:518`) und `IsProjectiveMeasureFamily`.
+
+**Drei Fehler in `SkorokhodSpace`, und der erste ist der schwerste.** Die
+Kopfliste nannte sechs Sätze als „die ganze Einseitiglimes-API"; alle sechs
+stehen in `namespace Monotone` und verlangen Monotonie von `f` sowie
+`[ConditionallyCompleteLinearOrder β] [OrderTopology β]` vom Zielraum. Für einen
+càdlàg-Pfad ist keiner benutzbar. Das ist derselbe Fehlertyp wie `Locally` gegen
+„local martingale" am 2026-08-29 — nach dem Begriff gesucht, den Namen gefunden,
+den Namensraum nicht angesehen. Berichtigt, mit der Liste dessen, was im
+Wurzelnamensraum wirklich steht; und dabei kam der Glücksfall heraus, dass die
+Hypothese von `tendsto_leftLim_of_tendsto` wörtlich das Feld `left_limit` von
+`IsCadlag` ist. Daran hängt eine Hypothesenkorrektur: `Function.leftLim` gibt es
+nur für `[LinearOrder α]`, die zwei Punkte, die die Struktur daran anschließen,
+standen unter `[Preorder ι]`, und Meilenstein 2 führt jetzt eine dritte Stufe
+**(A′)**. Zweitens der Selbstwiderspruch um `Monotone.countable_not_continuousAt`
+— Kopfliste falsch, Meilenstein 2 richtig. Drittens, und das trifft die Substanz:
+`TimeChange.norm` war über `LipschitzWith.const` definiert, das der Satz „eine
+Konstante ist `0`-lipschitz" ist und keine Zahl, und Mathlib kennt keine
+kleinste Lipschitzkonstante. Die Metrik des Skorokhod-Raums war damit nicht
+aufschreibbar; Meilenstein 3 führt jetzt `TimeChange.lipConst` als eigenen Punkt.
+Alle drei stehen ausgeschrieben oben unter den Auffälligkeiten.
+
+Zwei Gegenproben, die den ersten und den dritten Befund stützen und beide aus
+`TauCeti/SkorokhodSpace/Suggested.lean` stammen — der Datei ist nichts zu
+korrigieren, sie war schon richtig, wo die README falsch war. Sie führt `ι`
+durchweg unter `[LinearOrder ι]` und nicht unter `[Preorder ι]` und schreibt
+`leftJumpSet` mit `Function.leftLim` genau dort hin; und `TimeChange` hat die
+Felder `lipschitz : ∃ C, LipschitzWith C toOrderIso` und `lipschitz_symm`, also
+die Existenz einer Konstanten und nicht eine ausgezeichnete. Wer die Skizze
+ansah, konnte den Fehler der README nicht machen — er stand allein in der Prosa.
+
+**Was an `SkorokhodSpace` geprüft und richtig ist**, und zwei davon lohnen die
+Erwähnung, weil sie eine offene Frage des Inventars schließen: die Zusage von
+Meilenstein 8, `isCompact_closure_of_isTightMeasureSet` verlange „`[T2Space E]`
+und `[BorelSpace E]` und nichts weiter", stimmt buchstäblich — der
+Variablenblock `Prokhorov.lean:65` führt genau
+`[MeasurableSpace E] [TopologicalSpace E] [T2Space E] [BorelSpace E]`, und der
+Satz steht bei `:530` im Wurzelnamensraum, weil `namespace MeasureTheory` erst
+bei `:568` im Abschnitt `Backward` beginnt. Und die Gegenrichtung
+`MeasureTheory.isTightMeasureSet_of_isCompact_closure` (`:634`) trägt wirklich
+`[CompleteSpace 𝓧]`, gesetzt durch ein eigenes `variable` bei `:630`, neben
+`[PseudoMetricSpace 𝓧] [OpensMeasurableSpace 𝓧] [SecondCountableTopology 𝓧]`;
+ihr Dokumentationskommentar sagt es selbst. Die Zweiteilung von Meilenstein 8 in
+(A) separabel metrisch und (B) polnisch ruht damit auf Nachgesehenem und nicht
+auf einer Erinnerung. Weiter richtig: `orderTopology_of_ordConnected` als
+Instanz (`Topology/Order/Basic.lean:344`), `ProperSpace.of_isClosed`
+(`Topology/MetricSpace/ProperSpace.lean`), `Subgroup.isClosed_of_discrete`
+(`IsUniformGroup/Basic.lean:279`, mit `@[to_additive]`, die additive Form gibt es
+also wie behauptet), `OrderTopology.of_discreteTopology` (`Instances/Discrete.lean:59`,
+mit `PredOrder` und `SuccOrder`, wie die Roadmap sagt), `AddSubgroup.zmultiples`,
+`StieltjesFunction` mit `right_continuous` (`:140`) und `rightLim_eq` (`:143`),
+`MeasureTheory.instMetrizableSpaceProbabilityMeasure` (`LevyProkhorovMetric.lean:695`,
+Zeile auf den Punkt) und
+`ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`
+(`ProbabilityMeasure.lean:639`). Ein zweiter Fund in die freundliche Richtung:
+neben `OrderTopology.of_discreteTopology` steht bei `:63`
+`OrderTopology.of_linearLocallyFinite` mit `[LocallyFiniteOrder α]` statt
+`PredOrder`/`SuccOrder` — ein dritter und bequemerer Weg für den diskreten Index
+`h • ℤ`, den Meilenstein 1 jetzt nennt.
+
+**Offen geblieben.** Von Rückstau 2 die Zitate in den Meilensteinen von
+`WeakConvergence` und `MartingaleProblems`; deren Kopflisten sind seit dem
+2026-08-31 beziehungsweise heute früh geprüft, die Meilensteine nicht. Nach dem
+Ertrag von heute — vier Fehler in einer Roadmap von 101 Zeilen, drei in einer von
+346 — ist das der nächste Griff im Rückstau und nicht mehr Routine. Von Rückstau 1
+unverändert die ordnungsdichte Atommenge; dieser Lauf hat sie nicht angefasst,
+weil die Frage, an der sie steht, eine Beweisidee verlangt und nicht eine Suche,
+und weil zwei Roadmaps ungeprüft dastanden, deren Prüfung erfahrungsgemäß
+Fehler findet. Sie hat sieben gefunden. Nicht geschehen und mit Absicht: kein
+Lean übersetzt (der Worktree hat kein `.lake`), `check.py` nicht gelaufen (am
+Manuskript ist nichts geändert), und `cor:atomless` ist weiterhin nicht
+verschärft — die Auffälligkeit vom 2026-09-01 steht unverändert oben und gehört
+dem Nutzer.
+
+**Als Nächstes zu formalisieren: `Function.RightContinuous` und `IsCadlag` samt
+`IsCadlag.tendsto_leftLim` und `IsCadlag.rightLim_eq`** (`SkorokhodSpace`
+Meilenstein 2, Stufen (A) und (A′)). Das Prädikat ist
+`∀ a, ContinuousWithinAt f (Set.Ioi a) a`, die Struktur hat die zwei Felder
+`right_continuous` und `left_limit : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)`, und
+der Anschluss an Mathlib besteht aus genau drei Namen, die heute am Quelltext
+geprüft sind: `tendsto_leftLim_of_tendsto`
+(`Topology/Order/LeftRightLim.lean:121`), dessen Hypothese wörtlich das Feld
+`left_limit` ist, `ContinuousWithinAt.rightLim_eq` (`:117`) und
+`continuousWithinAt_Ioi_iff_Ici`, das aus `Ioi` das `Ici` macht, welches der
+zweite verlangt — derselbe Schritt, den `StieltjesFunction.rightLim_eq` (`:143`)
+geht. Mehr braucht es nicht: keine Metrik, kein Maß, keine Sprungtheorie, kein
+dichtes `D`.
+
+Es ist **jetzt** dran, weil heute der Grund weggefallen ist, es aufzuschieben,
+und weil zugleich sichtbar geworden ist, worauf es trägt. Weggefallen ist die
+Unklarheit über die Anschlussstelle: bis heute nannte die Roadmap dafür sechs
+Sätze über monotone Funktionen, und wer sie aufgeschlagen hätte, wäre auf
+`include hf : Monotone f` gestoßen und hätte neu suchen müssen. Getragen wird es
+von der ganzen Roadmap — Meilenstein 4 definiert den Raum als die Struktur über
+diesem Prädikat, und über Meilenstein 8 hängen vier Facts daran
+(`fact:Dcountable`, `fact:fddconv`, `fact:relcompact`, `fact:fdd`), mehr als an
+jedem anderen einzelnen Punkt der vier Roadmaps. Und es ist billig: das Prädikat
+samt Abschlusseigenschaften liegt als Apache-2.0-Vorlage in
+`RemyDegenne/brownian-motion`, `BrownianMotion/StochasticIntegral/Cadlag.lean`,
+zu übernehmen mit Kopfzeile und Autorennennung. Reihenfolge, wenn mehrere
+anstehen: `atomGrid_symm` bleibt der erste, denn es ruht auf nichts und schließt
+einen Zweig von `MartingaleProblems` M8 ab; `IsCadlag` ist der erste Punkt der
+Roadmap, die von allen vieren die meisten Facts trägt, und der einzige, dessen
+Mathlib-Anschluss heute vollständig nachgeschlagen ist.

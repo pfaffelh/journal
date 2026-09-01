@@ -11,7 +11,12 @@ Nearly all the scaffolding, and it is **not** to be rebuilt.
 
 * `MeasureTheory.IsProjectiveMeasureFamily` and
   `MeasureTheory.IsProjectiveLimit` in
-  `Mathlib/MeasureTheory/Constructions/Projective.lean`.
+  `Mathlib/MeasureTheory/Constructions/Projective.lean`, together with the whole
+  uniqueness layer: `MeasureTheory.IsProjectiveLimit.measure_cylinder`,
+  `measure_univ_eq`, `isFiniteMeasure`, `isProbabilityMeasure`,
+  `measure_univ_unique` and `MeasureTheory.IsProjectiveLimit.unique`, which is
+  the statement that two projective limits of the same family of finite measures
+  agree.
 * The cylinder sets in `Mathlib/MeasureTheory/Constructions/Cylinders.lean`,
   with `measurableCylinders` and `generateFrom_measurableCylinders`.
 * `Mathlib/MeasureTheory/Constructions/ProjectiveFamilyContent.lean`: the whole
@@ -26,18 +31,29 @@ Nearly all the scaffolding, and it is **not** to be rebuilt.
   `MeasureTheory.AddContent.measure`, which turns a σ-subadditive content on a
   set semiring into a measure, together with `AddContent.measure_eq`.
 * `Mathlib/Topology/Compactness/CompactSystem.lean`:
-  `IsCompactSystem` with `IsCompactSystem.nonempty_iInter`, `mono`,
-  `insert_empty`, `insert_univ` and `isCompactSystem_insert_univ_iff`.
+  `IsCompactSystem` with `IsCompactSystem.nonempty_iInter`,
+  `IsCompactSystem.of_nonempty_iInter`, `IsCompactSystem.iff_nonempty_iInter`,
+  `mono`, `insert_empty`, `insert_univ`, `isCompactSystem_insert_empty_iff`,
+  `isCompactSystem_insert_univ_iff` and `isCompactSystem_iff_of_directed`. It
+  also supplies the compact system that Milestone 1 needs in each coordinate
+  block: `isCompactSystem_isCompact_isClosed`, the closed compact sets of a
+  topological space, with `isCompactSystem_isCompact` for a `T2Space` and
+  `isCompactSystem_insert_univ_isCompact_isClosed`.
 * `MeasureTheory.innerRegular_isCompact_isClosed_measurableSet_of_finite` and
   `MeasureTheory.innerRegularWRT_isCompact_isClosed` in
   `Mathlib/MeasureTheory/Measure/RegularityCompacts.lean`: a finite measure on a
-  completely pseudometrizable space is inner regular with respect to the compact
-  closed sets.
+  second countable completely pseudometrizable space is inner regular with
+  respect to the compact closed sets. Both carry
+  `[SecondCountableTopology α] [IsCompletelyPseudoMetrizableSpace α]`, the first
+  `[BorelSpace α]` and the second `[OpensMeasurableSpace α]`; a Polish `α i`
+  supplies all four.
 * The two special cases of the theorem: the sequential Ionescu–Tulcea
   construction `ProbabilityTheory.Kernel.traj` in
   `Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean`, and the product measure
-  for an arbitrary index, `MeasureTheory.isProjectiveLimit_infinitePi` in
-  `Mathlib/Probability/ProductMeasure.lean`.
+  for an arbitrary index, `MeasureTheory.Measure.isProjectiveLimit_infinitePi`
+  in `Mathlib/Probability/ProductMeasure.lean` — in the namespace
+  `MeasureTheory.Measure`, with `MeasureTheory.Measure.isProjectiveLimit_infinitePiNat`
+  for the index `ℕ`.
 
 What is missing is the bridge between the compact system and the content, and
 the theorem itself. That is one milestone of real work and one of assembly.
@@ -68,7 +84,9 @@ as the Apache licence requires.
   `projectiveFamilyContent` is approximated from inside by them. This is
   `innerRegular_isCompact_isClosed_measurableSet_of_finite` applied in each
   finite coordinate block, together with the fact that a product of compact sets
-  is compact.
+  is compact. That the closed compact sets are a compact system to begin with is
+  `isCompactSystem_isCompact_isClosed`, and the passage to the cylinders over
+  them is what this item adds.
 
 ## Milestone 2: the theorem
 
@@ -81,21 +99,25 @@ as the Apache licence requires.
 * `MeasureTheory.isProjectiveLimit_projectiveLimit`: the Kolmogorov extension
   theorem. Its marginals are the `P J`.
 * `IsProbabilityMeasure (projectiveLimit P hP)` when every `P J` is a probability
-  measure, and `IsFiniteMeasure` in general.
-* `MeasureTheory.IsProjectiveLimit.unique`: two projective limits of the same
-  family agree, from `generateFrom_measurableCylinders` and the π-system
-  uniqueness lemma `MeasureTheory.ext_of_generate_finite`.
+  measure, and `IsFiniteMeasure` in general. Both are
+  `MeasureTheory.isProjectiveLimit_projectiveLimit` fed to
+  `MeasureTheory.IsProjectiveLimit.isProbabilityMeasure` and
+  `MeasureTheory.IsProjectiveLimit.isFiniteMeasure`, and are stated as instances.
+  Uniqueness of the limit needs nothing from this milestone: it is
+  `MeasureTheory.IsProjectiveLimit.unique` of the head list, applied to
+  `isProjectiveLimit_projectiveLimit`.
 
 ## Milestone 3: the standard applications
 
 * `exists_process_of_isProjectiveMeasureFamily`: for Polish `α i` and a
   projective family, the coordinate process on `Π i, α i` under
   `projectiveLimit` has the prescribed finite dimensional distributions. State
-  it through `MeasureTheory.isProjectiveLimit_map` of
-  `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`, so that it composes
-  with the existing process API.
-* `MeasureTheory.isProjectiveLimit_infinitePi` recovered as the special case of
-  independent coordinates.
+  it through `ProbabilityTheory.isProjectiveLimit_map` of
+  `Mathlib/Probability/Process/FiniteDimensionalLaws.lean` — that file is in the
+  namespace `ProbabilityTheory`, unlike the rest of the projective-limit
+  material — so that it composes with the existing process API.
+* `MeasureTheory.Measure.isProjectiveLimit_infinitePi` recovered as the special
+  case of independent coordinates.
 * The extension of a consistent family of transition kernels along an arbitrary
   totally ordered index, generalizing the sequential
   `ProbabilityTheory.Kernel.traj`.

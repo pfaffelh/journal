@@ -72,9 +72,32 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    (`Process/Adapted.lean:381`), Doobs `Lᵖ`-Ungleichung fehlt weiterhin für jeden
    Index (`OptionalStopping.lean:143` sagt es selbst), und `IsStable` ist für
    keine hier interessierende Eigenschaft bewiesen (`gh search code`: der
-   Bezeichner kommt in genau einer Wahrscheinlichkeitsdatei vor). Es fehlen noch
-   `SkorokhodSpace` und `KolmogorovExtension` sowie die Zitate in den
-   Meilensteinen aller vier.*
+   Bezeichner kommt in genau einer Wahrscheinlichkeitsdatei vor).*
+
+   *Am 2026-09-01, vierter Lauf, sind `KolmogorovExtension` und `SkorokhodSpace`
+   erledigt, und zwar vollständig — Kopfliste **und** Meilensteine; bei
+   `SkorokhodSpace` zitieren nur die Meilensteine 1, 2, 3 und 8 überhaupt
+   Mathlib. Sieben Fehler, alle berichtigt: zwei Namensräume in
+   `KolmogorovExtension` (`MeasureTheory.Measure.isProjectiveLimit_infinitePi`,
+   `ProbabilityTheory.isProjectiveLimit_map`), ein Meilensteinpunkt, den Mathlib
+   längst hat (`MeasureTheory.IsProjectiveLimit.unique`,
+   `Constructions/Projective.lean:150`), eine zu schwach angegebene Hypothese
+   (`innerRegular_isCompact_isClosed_measurableSet_of_finite` braucht neben
+   `IsCompletelyPseudoMetrizableSpace` auch `SecondCountableTopology` und
+   `BorelSpace`), und in `SkorokhodSpace` die sechs `Monotone.`-Sätze, die die
+   Kopfliste als „die ganze Einseitiglimes-API" führte, der Selbstwiderspruch um
+   `Monotone.countable_not_continuousAt` und der Typfehler `LipschitzWith.const`
+   in der Definition von `TimeChange.norm`. Zwei Funde in die andere Richtung
+   sind mit eingetragen: `isCompactSystem_isCompact_isClosed`
+   (`Topology/Compactness/CompactSystem.lean:163`) und
+   `OrderTopology.of_linearLocallyFinite` (`Instances/Discrete.lean:63`).
+   Einzelheiten im Inventar unter „Läufe" und bei den Auffälligkeiten.*
+
+   *Es fehlen noch die Zitate in den Meilensteinen von `WeakConvergence` und
+   `MartingaleProblems`; von beiden sind bisher nur die Kopflisten geprüft. Wer
+   das aufnimmt, prüfe gegen master über `gh api`: das lokale `origin/master` in
+   `~/Code/lean/mathlib4` stand am 2026-09-01 auf dem 2026-03-23 und ist als
+   Stellvertreter untauglich.*
 
 3. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von
