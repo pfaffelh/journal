@@ -12,6 +12,66 @@ nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
 Zurzeit stehen hier keine Aufgaben.
 
+### Aufgabe: die mengen-indizierte Literatur, und die Summierbarkeit *(gestellt 2026-09-01)*
+
+Zwei Hälften, die zusammengehören. Beide gehen auf eine Beobachtung des Nutzers
+zurück: eine Uhr sieht aus wie ein Lévy-Maß, und Atome sind Sprünge zu festen
+Zeiten.
+
+**(a) Die Literatur einordnen.** Es gibt eine ausgebaute Theorie
+**mengen-indizierter Lévy-Prozesse**: E. Herbin, E. Merzbach, *The set-indexed
+Lévy process: Stationarity, Markov and sample paths properties*, Stochastic
+Processes Appl. **123** (2013), arXiv:1108.0873; Vorläufer Bass--Pyke und
+Adler--Feigin für $\R^N$, dazu Ivanoff--Merzbach für mengen-indizierte
+Martingale. Der Index ist dort eine Klasse $\mathcal A$ kompakter
+zusammenhängender Mengen, unter Durchschnitten abgeschlossen — ein unterer
+Halbverband —, und die Zuwächse laufen über
+$\mathcal C_0=\{U\setminus V\}$ bzw. $\mathcal C=\{U_0\setminus\bigcup_i U_i\}$.
+
+Das ist auffällig nah an unserem Aufbau: unser Intervall
+$[s,t)=\T_{<t}\setminus\T_{<s}$ ist ein Element von $\mathcal C_0$ mit
+$\mathcal A$ = die Abwärtsmengen; ihre Stationarität über das Maß $m$ ist
+unsere Uhr; ihre Reduktion auf einen Parameter über *flows* ist strukturell
+`cor:atomless`, und dass dafür *simple* flows nötig sind, entspricht
+`rem:fddnochain`.
+
+Zu klären, am Text und nicht aus dem Gedächtnis:
+
+1. Wie genau verhält sich ihre Axiomatik zu \eqref{T0}--\eqref{T4}? Welche
+   ihrer fünf Axiome an $\mathcal A$ haben bei uns eine Entsprechung, welche
+   nicht, und was verlieren oder gewinnen wir dadurch?
+2. Steht dort etwas zu **Dualität** oder zu bivariaten Zuwachsdarstellungen mit
+   gemeinsamer Dichte? Das ist die eigentliche Frage. Wenn nein, sag das
+   deutlich — ein Negativbefund ist hier wertvoll.
+3. Gibt die **Flow-Projektion** für den ordnungsdichten Fall etwas her? Sie ist
+   die Art Reduktion, die Task 23 seit vier Läufen sucht.
+4. Gibt es weitere Literatur zu Lévy-Prozessen über allgemeinen Indexmengen, die
+   näher an einer Präordnung liegt als an einer Mengenklasse?
+
+**(b) Die Summierbarkeit als tragende Struktur.** `def:clock` verlangt
+$q(\T_{\le t})<\infty$, für eine atomare Uhr also $\sum_{a_k\le t}m_k<\infty$
+bei $m_k\ge0$ — das ist die Bedingung $\int(1\wedge|x|)\,\nu(\dif x)<\infty$ des
+Lévy-Bildes, der Fall **endlicher Variation**. Kompensation gibt es hier nicht,
+weil ein Maß nicht kompensiert werden kann.
+
+Die bisherigen vier Anläufe an den ordnungsdichten Fall haben Aussagen über
+**beliebige endliche Massenvektoren mit Slack** gesucht und sind alle
+gescheitert — Frobenius, linear, quadratisch —, und der dreizehnte Task-23-Lauf
+hält selbst fest, dass „die schlimmsten Muster als Uhren nicht realisierbar
+sind: eine ordnungsdichte Uhr mit durchweg wachsenden Massen hätte unendliche
+Masse". Die Vermutung ist also, dass die Relaxation genau die Instanzen zulässt,
+die keine Uhr sind. Stelle die Frage neu über der Klasse der **summierbaren**
+Massen und prüfe, ob die Summierbarkeit dieselbe ausschließende Rolle spielt wie
+die endliche Variation im Lévy-Fall.
+
+**Zum Vorgehen.** Teil (a) ist Nachschlagen und Einordnen, Teil (b) ist Rechnen;
+sie dürfen auf mehrere Läufe verteilt werden, dann bleibt die Aufgabe mit
+Zwischenstand stehen. Das Ergebnis von (a) gehört als eigene Datei
+`Facts/SETINDEXED.md`, und **falls** eine Manuskriptbemerkung samt
+Bibliographieeinträgen fällig wird, schreibe ihren Text als Vorschlag dorthin,
+statt das Manuskript zu ändern — diese Einordnung will der Nutzer sehen, bevor
+sie steht.
+
 ## Worum es geht
 
 Die 29 mit `\begin{fact}` ausgezeichneten Aussagen des Manuskripts sind seine
