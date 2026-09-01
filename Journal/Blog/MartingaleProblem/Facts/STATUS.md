@@ -1,10 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260901T143326Z
-- **Zustand:** limit
-- **Notiz:** Nutzungsgrenze erreicht (Code 1), zweiter Versuch mit claude-opus-5 endete mit 1
+- **Letzter Lauf (UTC):** 20260901T162301Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** fisher
-- **Laeufe bisher:** 23
+- **Laeufe bisher:** 24
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
