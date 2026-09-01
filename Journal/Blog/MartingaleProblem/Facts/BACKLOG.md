@@ -113,6 +113,26 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `gh api` ein Dutzend braucht, und liefert Zeilennummern, Namensraumgrenzen
    und Variablenblöcke mit. So ist dieser Lauf gegen `981fa8f5` geprüft.*
 
+   *Am 2026-09-01, sechster Lauf, ist die Restmenge erledigt — die
+   Meilensteinnennungen von `MartingaleProblems` **ohne** Pfad, rund dreißig aus
+   den Meilensteinen 1, 2, 8, 9, 12 und 13, geprüft gegen `e076e1ca8f3`. Damit
+   ist dieser Punkt für alle vier Roadmaps einmal durchgelaufen; die nächste
+   Runde ist in etwa zwei Wochen fällig und fängt wieder bei
+   `KolmogorovExtension` an. Drei Befunde, alle in der Lokalisierungs- und
+   Stoppzeitschicht: Meilenstein 2 stand auf `[Preorder ι]` und benutzte
+   `ProbabilityTheory.Locally`, das `[LinearOrder ι] [OrderBot ι]
+   [TopologicalSpace ι] [OrderTopology ι] [Zero E]` verlangt; Meilenstein 9
+   nannte `⊥` ohne `[OrderBot ι]`; und `IsQuasiLeftContinuous` typisierte
+   Stoppzeiten als `Ω → ι`, während Mathlibs `IsStoppingTime` `Ω → WithTop ι`
+   ist. Alle drei berichtigt, `Suggested.lean` mit. Einzelheiten im Inventar.*
+
+   *Die Lehre dieses Laufs, neben der des fünften: die drei Fehler waren keine
+   Versionsdrift — jede der Deklarationen steht in v4.33.1 wortgleich da. Was
+   ungeprüft blieb, war nicht der **Name**, sondern die **Signatur**: der
+   Variablenblock, in dem eine Deklaration steht, und der Typ ihrer Argumente.
+   Wer den Punkt fortsetzt, lese zu jedem zitierten Namen die `variable`-Zeilen
+   des umgebenden `section` mit, nicht nur die Zeile der Deklaration.*
+
    *Die Lehre aus dem Hauptbefund, für den nächsten Durchgang: die Datei stand
    in v4.33.1 wortgleich da. Der Fehler war keine Versionsdrift, sondern eine
    nie gestellte Suche — nach dem Wort des Manuskripts („weak convergence")

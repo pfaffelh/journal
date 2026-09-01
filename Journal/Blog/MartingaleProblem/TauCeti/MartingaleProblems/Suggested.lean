@@ -58,18 +58,34 @@ def IsMPSolution (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) (P : Me
 def mpSolutions (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) : Set (Measure Ω) :=
   {P | IsMPSolution 𝓧 F P}
 
+section Local
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [TopologicalSpace ι]
+  [OrderTopology ι]
+
 /-- The local problem, through Mathlib's `ProbabilityTheory.Locally`.  Do not
 introduce a localizing sequence by hand: `IsLocalizingSequence` and the whole
 `Locally` API are in `Mathlib/Probability/Process/LocalProperty.lean`, including
-the idempotence `IsStable.locally_locally_iff`. -/
-def IsLocalMPSolution [TopologicalSpace ι] [OrderTopology ι]
-    (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m) (P : Measure Ω) : Prop :=
+the idempotence `IsStable.locally_locally_iff`.
+
+This is stage (L) of Milestone 2.  `Locally` is declared in `section LinearOrder`
+under `variable [LinearOrder ι]` (`LocalProperty.lean:77`) and
+`variable [OrderBot ι]` (`:88`), with its own binders
+`[TopologicalSpace ι] [OrderTopology ι] [Zero E]` (`:93`); the file-level
+`[Preorder ι]` above is not enough for it, and `⊥` occurs in the definition
+itself.  The index is rebound in this section rather than given an extra
+instance binder, so that no declaration carries both `[Preorder ι]` and
+`[LinearOrder ι]`. -/
+def IsLocalMPSolution (𝓧 : Set (ι → Ω → 𝕂)) (F : Filtration ι m)
+    (P : Measure Ω) : Prop :=
   ∀ Y ∈ 𝓧, Locally (fun Z ↦ Martingale Z F P) F Y P
 
-theorem isLocalMPSolution_of_isMPSolution [TopologicalSpace ι] [OrderTopology ι]
+theorem isLocalMPSolution_of_isMPSolution
     {𝓧 : Set (ι → Ω → 𝕂)} {F : Filtration ι m} {P : Measure Ω}
     (h : IsMPSolution 𝓧 F P) : IsLocalMPSolution 𝓧 F P :=
   fun Y hY => Locally.of_prop (h Y hY)
+
+end Local
 
 variable {E : Type*} [MeasurableSpace E]
 
