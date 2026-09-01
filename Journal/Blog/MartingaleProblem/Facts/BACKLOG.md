@@ -81,6 +81,23 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    Nachbaratome ohne Bodenatom (Typ $\omega^*$, $\mathbb Z$-Ketten) schon der
    bisherigen Induktion zugänglich sind.
 
+   *Zwischenstand 2026-09-01, dreizehnter Lauf: die Energieschranke ist
+   **falsch**, in jeder Konstante.* Der kleinste Zeuge hat zwei Atome
+   (Massen $(\mu,1)$, $\eta=2\mu^2/3$, Verhältnis $\to 3/2$, analytisch und in
+   exakter Bruchrechnung), und entlang aufsteigend-geometrischer Ketten ist
+   $\Delta^2/(BM\eta)$ unbeschränkt — zertifizierte Instanzen bis $27588$
+   (`Task23/energy_counterexample.py`). Auch masse-lokale Residuenbudgets
+   retten nichts. Damit ist der Ausschöpfungsweg über eine profilfreie
+   Schranke dreifach zu (Frobenius, linear, quadratisch) und im Ganzen zu:
+   die Relaxation „endliches System plus Slack" ist echt schwächer als
+   „Trunkierung eines exakten Systems". Wer den Punkt aufnimmt, hat zwei
+   Wege: die $\omega^*$-Skizze des zwölften Laufs nachrechnen (unverändert
+   offen), oder die **Gestalt** des Trunkierungsresiduums benutzen — es ist
+   selbst $\sum_{\text{fehlend}}m_ah(a,\cdot)$ mit global gebundenem $h$,
+   und ordnungsdichte Uhren mit durchweg aufsteigenden Massen existieren
+   nicht (Summierbarkeit). Einzelheiten in `Task23/PROTOKOLL.md`,
+   dreizehnter Lauf.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

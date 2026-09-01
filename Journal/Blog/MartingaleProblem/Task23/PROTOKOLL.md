@@ -1696,3 +1696,154 @@ auf $\sqrt{BM\eta}$.
   die Sättigung. Der elfte Lauf stand mit der Frobenius-Variante genau an
   dieser Klippe und konnte sie nicht sehen, weil (P) keine Schranke an $h$
   mitführte.
+
+## Die Energieschranke, 2026-09-01 (dreizehnter Lauf): sie ist falsch, in jeder Konstante
+
+Der zwölfte Lauf hinterließ als benanntes Ziel den Beweis der Energieschranke
+$\Delta(t)^2\le C\,B\,M\,\eta$ ($C\le1$) für endliche Kettensysteme mit den
+Bedingungen 1, 2 exakt, Bedingung 3 bis auf $\eta$ und $|h|\le B$ — und
+vermerkte als offen, dass nur dyadisch mit geometrischen Levelmassen gemessen
+war. Dieser Lauf hat zuerst gemessen, dann bewiesen: **die Schranke ist
+falsch.** Nicht die Konstante ist zu klein — die Form ist es. Neu sind
+`energy_lp.py` (das LP des zwölften Laufs mit freiem Massenvektor; auf den
+dyadischen Instanzen bitgleich mit `lp_dense.py` gegengeprüft),
+`energy_counterexample.py` (exakte Verifikation in Bruchrechnung) und
+`dyadic_adversarial.py`.
+
+Beide Skalierungen — $h\mapsto\lambda h$ mit $(\eta,B)\mapsto(\lambda\eta,
+\lambda B)$ und $m\mapsto cm$ mit $\eta\mapsto c\eta$ — lassen
+$\Delta^2/(BM\eta)$ fest; o.B.d.A. also $B=M=1$.
+
+### Der Zwei-Atom-Zeuge, analytisch
+
+Massen $(\mu,1)$, $\eta=2\mu^2/3$, $B=1$, und die Belegung
+
+$$d_1=-\tfrac{2\mu}3,\quad x_{12}=\tfrac\mu3,\quad d_2=\mu+\tfrac{\mu^2}3,\quad
+  x_{21}=\tfrac{\mu^2}3,\quad h(a_1,s_2)=-1,\quad
+  h(a_2,s_1)=h(a_2,s_2)=\mu,$$
+
+alle übrigen Werte $0$ ($x_{ij}=h(a_i,a_j)$, $s_p$ der Schnitt über Atom $p$).
+Bedingungen 1 und 2 gelten exakt, jedes Residuum von Bedingung 3 ist
+$\le2\mu^2/3$ (die Schnitte $(s_1,a_1)$, $(a_2,a_2)$ und $(s_2,a_2)$ sind
+saturiert), und
+
+$$\Delta=\mu-\tfrac{\mu^2}3,\qquad
+  \frac{\Delta^2}{B\,M\,\eta}
+  =\frac{(1-\mu/3)^2}{1+\mu}\cdot\frac32\;\xrightarrow{\mu\to0}\;\frac32.$$
+
+In exakter Bruchrechnung nachgerechnet (`energy_counterexample.py`, Teil 1):
+$\mu=1/10$ gibt exakt $841/660\approx1.274$, $\mu=1/1000$ gibt
+$8994001/6006000\approx1.4975$. Schon $C\le1$ ist damit falsch, und zwar bei
+$n=2$.
+
+Der Mechanismus verkehrt die Deutung des zwölften Laufs ins Gegenteil: die
+Bedingung $(s_2,a_2)$ lautet $m_2d_2=-\mu x_{12}-\mu\,h(a_1,s_2)+O(\eta)$, und
+das leichte Atom saturiert $h(a_1,s_2)=-B$ und **trägt** damit die Diagonale
+des schweren, $m_2d_2\approx\mu B$ — bei einem Residuenbedarf von nur
+$\eta\sim\mu^2B$, denn die Bedingungen, die $d_1$ und $x_{12}$ klein zwingen,
+tragen alle den Vorfaktor $\mu$. Die Sättigung, die nach der Lesart des
+zwölften Laufs den Gewinn auf $\sqrt{BM\eta}$ deckeln sollte, ist der Motor,
+der die Schranke schlägt.
+
+### Keine Konstante rettet die Form
+
+Zwei Familien, beide in exakter Bruchrechnung zertifiziert (LP-Lösung auf
+rationale Zahlen gerundet, Bedingungen 1 und 2 per Konstruktion exakt erzwungen,
+$\eta_{\text{used}}:=\max$ Residuum von Bedingung 3 und $B_{\text{used}}:=
+\max|h|$ exakt bestimmt; jede Instanz ist ein echtes Gegenbeispiel gegen jede
+Konstante, die sie schlägt):
+
+* **Leichtes Präfix** $[\mu]^k+[1]$: das Verhältnis wächst etwa wie $1.85\,k$
+  (zertifiziert $k=8$, $\mu=0.01$: Verhältnis $14.79$). Der Zwei-Atom-Motor
+  läuft $k$-fach: $k$ leichte Atome saturieren, $d_{\text{schwer}}\approx
+  k\mu B$, Residuenbedarf $\eta\sim k\mu^2B$.
+* **Aufsteigend geometrisch** $m_k\propto\rho^k$: das Verhältnis explodiert.
+  Zertifiziert für $\rho=2$: $1513.5$ ($n=6$), $4398.5$ ($n=8$), $5929.0$
+  ($n=10$) und $27588.8$ ($n=8$ bei $\eta=10^{-9}$); das LP selbst erreicht
+  dort $1.28\cdot10^5$, die Rundung kostet einen Faktor. Das optimale $\eta^*$
+  kollabiert dabei ($10^{-7}$ und kleiner) — konsistent mit dem elften Lauf,
+  dessen Frobenius-Konstante auf steigenden Profilen wie $\rho^{n^2/2}$ wuchs:
+  das lineare Regime endet erst bei absurd kleinem $\eta$, und die
+  Sättigungsschwelle liegt weit über $\sqrt{BM\eta}$.
+
+Warum die Messung des zwölften Laufs das nicht sah: die dyadische Uhr mit
+levelweise geometrisch **fallenden** Massen verschränkt leicht und schwer so,
+dass unter keinem schweren Atom viel leichte Masse liegt. Das
+Zwei-Regime-Gesetz $v\approx\min(\kappa\eta,\,0.85\sqrt{BM\eta})$ ist eine
+Eigenschaft dieser Geometrie, kein Satz über Kettensysteme.
+
+### Auch lokale Residuen retten sie nicht
+
+In einer echten Trunkierung eines exakten Systems ist das Residuum an $(s,t)$
+nicht uniform $\eta$, sondern $\le2B\cdot$(fehlende Masse unterhalb
+$\max(s,t)$) — lokal. Die LP-Variante mit $\mathrm{rhs}(s,t)=\eta_0\cdot
+M(\le\max(s,t))/M$ drückt den Zwei-Atom-Zeugen unter $1$ (gemessen $0.44$–$0.6$),
+aber die aufsteigenden Ketten bleiben unbeschränkt: $14.5$, $131$, $8273$ für
+$n=5,6,8$ bei $\rho=2$. Die Lokalität allein ist es also nicht.
+
+### Was das bedeutet, genau
+
+1. **Kein Gegenbeispiel zur Dualität.** Alle Instanzen haben $\eta>0$; die
+   Rückrichtung der Reduktion (Lösung $\Rightarrow$ Gegenbeispiel) gilt nur
+   für das exakte System. Widerlegt ist das Werkzeug, nicht die Aussage.
+2. **Der Ausschöpfungsweg über eine profilfreie Schranke ist dreifach zu und
+   damit ganz zu.** Frobenius (elfter Lauf: Konstante hängt am Profil),
+   linear (zwölfter Lauf: beste Konstante $n+\frac12$), quadratisch (dieser
+   Lauf: falsch). Der Grund ist jedes Mal derselbe, jetzt benannt: die
+   Relaxation „endliches System plus Slack $\eta$" ist **echt schwächer** als
+   „Trunkierung eines exakten Systems". Sie lässt Slack-Belegungen zu, die
+   keine Trunkierung erzeugt, und auf diesen ist die Verstärkung unbeschränkt.
+3. **Die schlimmsten Muster sind als Uhren nicht realisierbar.** Eine
+   ordnungsdichte Uhr mit durchweg nach oben wachsenden Massen gibt es nicht:
+   wächst $m$ mit der Position und liegen in $(x_0,1)$ unendlich viele Atome,
+   so haben alle Masse $\ge m(x_0)>0$ — die Gesamtmasse wäre unendlich.
+   Aufsteigende Teilstrukturen existieren, aber mit überwiegend präsenter
+   Masse darunter. Das ist der Hebel, den eine Fortsetzung benutzen muss:
+   nicht die Größe des Residuums, sondern seine **Gestalt** — es ist selbst
+   von der Form $\sum_{\text{fehlend}}m_ah(a,\cdot)$ mit $h$, das die
+   Bedingungen global erfüllt.
+
+### Realisierbare steigende Profile: dort kollabiert $v_J$ weiterhin
+
+Die Verstärkung braucht leichte Masse unter schwerer. Auf der dyadischen
+Ordnung ist das realisierbar als $m(k/2^j)=(k/2^j)^p\,r^{-j}$ (nach rechts
+wachsend, summierbar für $r>2$); `dyadic_adversarial.py` misst diese Profile
+mit dem **echten** Trunkierungsresiduum $\eta_J=2B\varepsilon_J$:
+
+| Profil | $J{=}2$ | $3$ | $4$ | $5$ | $6$ |
+|---|---|---|---|---|---|
+| $x^4\cdot4^{-j}$: $v_J/M_J$ | $1.00$ | $0.62$ | $0.40$ | $0.28$ | $0.16$ |
+| $x^8\cdot3^{-j}$: $v_J/M_J$ | $1.00$ | $1.00$ | $0.95$ | $0.68$ | $0.51$ |
+| Kontrolle $4^{-j}$: $v_J/M_J$ | $0.74$ | $0.42$ | $0.29$ | $0.22$ | $0.16$ |
+
+Beide steigenden Profile fallen ($x^8\cdot3^{-j}$ nach einem Plateau bis
+$J=4$), und bemerkenswert: $v_J^2/(M_J\eta_J)$ bleibt auf **allen** diesen
+realisierbaren Instanzen unter $0.82$. Die Energieschranke ist also falsch als
+Satz über $\eta$-relaxierte Systeme und sieht auf echten Trunkierungen der
+getesteten Uhren dennoch erfüllt aus — das quantifiziert, wie viel die
+Relaxation verschenkt, und stützt Punkt 3 unten.
+
+### Nachgerechnet
+
+`energy_lp.py` reproduziert `lp_dense.py` auf vier dyadischen Instanzen
+bitgleich (Differenz $0$ bzw. $3\cdot10^{-18}$); die Kontrolle $\eta=0$ gibt
+$v=0$ auf allen getesteten Massenvektoren. `energy_counterexample.py` prüft
+den Zwei-Atom-Zeugen und die zertifizierten Instanzen vollständig in
+`fractions.Fraction`: alle Gitterpaare von Bedingung 3, Bedingungen 1 und 2
+per Konstruktion, $B_{\text{used}}$, $\Delta$ und das Verhältnis exakt.
+
+### Sackgassen, zwölfter Nachtrag
+
+* **Die Energieschranke $\Delta^2\le C\,B\,M\,\eta$ beweisen wollen.** Sie ist
+  falsch; der kleinste Zeuge hat zwei Atome und schlägt $C=1$ um den Faktor
+  $3/2-o(1)$, und entlang aufsteigend-geometrischer Ketten ist das Verhältnis
+  unbeschränkt (zertifiziert bis $27588$). Jede Fortsetzung, die eine Schranke
+  der Form $f(B,M,\eta)$ **gleichmäßig über die Massenprofile** sucht, geht
+  dieselbe Sackgasse: schon die Zwei-Atom-Familie erzwingt
+  $f(B,M,\eta)\gtrsim\sqrt{3BM\eta/2}$, und das leichte Präfix hebt mit
+  wachsendem $k$ jede solche Kandidatin aus.
+* **Lokale Residuenbudgets als Reparatur.** Masse-proportionale Budgets
+  drücken den Zwei-Atom-Zeugen, lassen die aufsteigenden Ketten aber
+  unbeschränkt. Wenn Lokalität hilft, dann nicht als Gewichtung der rhs allein,
+  sondern zusammen mit der Realisierbarkeit des Slacks als Schwanz eines
+  globalen $h$.
