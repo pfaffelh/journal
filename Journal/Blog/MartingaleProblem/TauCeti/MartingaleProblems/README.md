@@ -182,9 +182,11 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   that the compensated process is adapted to it.
 * `IsMPSolutionFor.map`: the property depends on `P` only through the law of
   `X`, so it transfers along a modification and along equality of laws on the
-  canonical space. Use `MeasureTheory.map_eq_of_forall_ae_eq` and
-  `identDistrib_iff_forall_finset_identDistrib` of `FiniteDimensionalLaws.lean`
-  rather than reproving that modifications share finite dimensional laws.
+  canonical space. Use `ProbabilityTheory.map_eq_of_forall_ae_eq` (`:99`) and
+  `ProbabilityTheory.identDistrib_iff_forall_finset_identDistrib` (`:77`) of
+  `Mathlib/Probability/Process/FiniteDimensionalLaws.lean`, whose namespace is
+  `ProbabilityTheory` and not `MeasureTheory`, rather than reproving that
+  modifications share finite dimensional laws.
 * `IsMPSolutionFor` with an initial law: `IsMPSolutionFor A q c X 𝓖 P ∧ P.map (X 0) = μ`.
 * `mpProcess q c X f g`, the compensated process
   `fun t ω ↦ f (X t ω) - ∫ s in Clock.interval q c 0 t, g (X s ω) ∂q` of a
@@ -250,11 +252,13 @@ Fix `[Preorder ι]`, a measurable space `Ω`, a filtration `𝓕`, and `[RCLike 
   by `Clock.measure_interval_ne_top`. This gives
   `∫ ω in B, mpProcess q c X f g s ω ∂P ≤ ∫ ω in B, mpProcess q c X f g t ω ∂P`,
   and `MeasureTheory.submartingale_of_setIntegral_le`
-  (`Mathlib/Probability/Martingale/Basic.lean:281`, stated for `[Preorder ι]`)
-  concludes. Two sided bounds give a martingale, which is the previous item; a
+  (`Mathlib/Probability/Martingale/Basic.lean:281`, stated for `[Preorder ι]`
+  from the variable block at `:48`, and asking besides
+  `[SigmaFiniteFiltration μ ℱ]`, `StronglyAdapted ℱ f` and integrability of
+  every `f i`) concludes. Two sided bounds give a martingale, which is the previous item; a
   lower bound gives a submartingale, and that inequality is all the applications
   need. Mathlib's Fatou lemma is `MeasureTheory.lintegral_liminf_le`
-  (`Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean:231`) for `ℝ≥0∞`-valued
+  (`Mathlib/MeasureTheory/Integral/Lebesgue/Add.lean:233`) for `ℝ≥0∞`-valued
   functions; the Bochner form for real functions bounded below is derived from
   it by adding the constant, and is stated as a lemma of its own next to the
   dominated convergence theorem.
@@ -536,7 +540,7 @@ order.
   `Matrix.trace_transpose` (`LinearAlgebra/Matrix/Trace.lean:73`) and
   `Matrix.trace_mul_comm` (`Trace.lean:158`); it has no predicate for `Bᵀ = -B`
   by itself — `Matrix.IsSkewAdjoint`
-  (`LinearAlgebra/Matrix/SesquilinearForm.lean:562`) is relative to a form `J` —
+  (`LinearAlgebra/Matrix/SesquilinearForm.lean:560`) is relative to a form `J` —
   so the hypothesis is written out. This is the smallest self contained target
   of this roadmap.
 * `Matrix.trace_mul_eq_dotProduct_diag_of_isSymm`: let `V K : Matrix n n ℝ` with
@@ -976,8 +980,11 @@ Index `[0,∞)` or `ℕ`, state spaces `E₁`, `E₂` Polish, a shift invariant 
   coordinate process solves the martingale problem. Together with Milestone 8
   this gives existence and uniqueness from one dual process.
 * The representability condition, that a positive linear functional is given by
-  a kernel, from `integral_rieszMeasure` in
-  `Mathlib/MeasureTheory/Integral/RieszMarkovKakutani/`.
+  a kernel, from `RealRMK.integral_rieszMeasure`
+  (`Mathlib/MeasureTheory/Integral/RieszMarkovKakutani/Real.lean:345`, for
+  `f : C_c(X, ℝ)`), with `NNRealRMK.integral_rieszMeasure` and
+  `NNRealRMK.lintegral_rieszMeasure` (`NNReal.lean:47,56`) as the non-negative
+  forms.
 * The fibred state space: state Milestone 12 for `E : ι → Type*` with
   `[∀ t, MeasurableSpace (E t)]` and paths in `Π t, E t`, the test pairs becoming
   sections. The abstract layer of Milestones 2, 3, 5, 6, 8 and 10 never mentions

@@ -93,11 +93,33 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `OrderTopology.of_linearLocallyFinite` (`Instances/Discrete.lean:63`).
    Einzelheiten im Inventar unter „Läufe" und bei den Auffälligkeiten.*
 
-   *Es fehlen noch die Zitate in den Meilensteinen von `WeakConvergence` und
-   `MartingaleProblems`; von beiden sind bisher nur die Kopflisten geprüft. Wer
-   das aufnimmt, prüfe gegen master über `gh api`: das lokale `origin/master` in
-   `~/Code/lean/mathlib4` stand am 2026-09-01 auf dem 2026-03-23 und ist als
-   Stellvertreter untauglich.*
+   *Am 2026-09-01, fünfter Lauf, sind die Meilensteine von `WeakConvergence`
+   erledigt — fünf Befunde, darunter der größte des ganzen Rückstaupunktes:
+   `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean` mit
+   `MeasureTheory.TendstoInDistribution` war der Roadmap unbekannt, und vier
+   Punkte der Meilensteine 2 und 3 verlangten, was darin steht. Dazu
+   `measurableSet_of_continuousAt`, das Meilenstein 2 unter einem erfundenen
+   Namen suchte, und vier Zeilennummern aus v4.33.1. Von `MartingaleProblems`
+   sind die Meilensteinstellen mit ausgeschriebenem Mathlib-Pfad erledigt (ein
+   Namensraumfehler, zwei Zeilennummern, eine verschwiegene Hypothese, ein
+   präzisiertes Zitat); es fehlen die Nennungen **ohne** Pfad, und das sind die
+   meisten. Einzelheiten im Inventar unter „Läufe".*
+
+   *Werkzeug, und es spart den halben Aufwand: `~/Code/lean/mathlib4` hat neben
+   `origin` (Fork des Nutzers, master vom 2026-03-23, untauglich) das Remote
+   `upstream` auf `leanprover-community/mathlib4`. Nach
+   `git -C ~/Code/lean/mathlib4 fetch --no-tags upstream master` beantwortet
+   `git grep -n <muster> upstream/master -- Mathlib` in einem Aufruf, wofür
+   `gh api` ein Dutzend braucht, und liefert Zeilennummern, Namensraumgrenzen
+   und Variablenblöcke mit. So ist dieser Lauf gegen `981fa8f5` geprüft.*
+
+   *Die Lehre aus dem Hauptbefund, für den nächsten Durchgang: die Datei stand
+   in v4.33.1 wortgleich da. Der Fehler war keine Versionsdrift, sondern eine
+   nie gestellte Suche — nach dem Wort des Manuskripts („weak convergence")
+   statt nach Mathlibs Begriff („convergence in distribution"). Wer den Punkt
+   fortsetzt, sehe zu jedem Meilensteinpunkt zuerst das **Verzeichnis** durch,
+   in dem er läge, und lese dessen Dateinamen, bevor er nach Deklarationen
+   sucht.*
 
 3. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von

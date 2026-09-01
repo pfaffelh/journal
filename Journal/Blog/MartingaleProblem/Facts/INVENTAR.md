@@ -38,7 +38,7 @@ setzt, nennt den Beleg.
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung `induction_on_inter` |
-| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib (`FiniteMeasure.tendsto_map_of_tendsto_of_continuous`), die f.ü.-stetige Fassung fehlt; M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
+| `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`), die konvergenzbestimmende fehlt |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
@@ -114,6 +114,49 @@ setzt, nennt den Beleg.
   `measure_univ_unique` (`:145`) — womit auch der vorletzte Punkt von
   Meilenstein 2 auf eine Zeile schrumpft. Die Kopfliste nennt die
   Uniquenessschicht jetzt, der Meilenstein verlangt sie nicht mehr.
+* **`WeakConvergence` verlangte vier Punkte, die Mathlib seit v4.33.1 hat, und
+  kannte die Datei nicht, die sie enthält; am 2026-09-01, fünfter Lauf,
+  berichtigt.** `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean`
+  (Rémy Degenne) führt `MeasureTheory.TendstoInDistribution` als **Struktur**
+  mit den Feldern `forall_aemeasurable`, `aemeasurable_limit` und `tendsto`, und
+  ihre Zufallsvariablen `X i : Ω i → E` leben auf einer **Familie** von
+  Wahrscheinlichkeitsräumen, eine je Index. Genau das hatte Meilenstein 4 als
+  fehlend geführt („where the random variables live on different spaces and only
+  their laws are comparable"). Vier Punkte fallen damit weg oder ändern ihre
+  Gestalt: der Satz von der stetigen Abbildung in Zufallsvariablenform ist
+  `TendstoInDistribution.continuous_comp` (`:136`), die Slutsky-Fassung
+  „`X n → Z` in Verteilung und `dist (X n) (Y n) → 0` nach Maß" ist
+  `tendstoInDistribution_of_tendstoInMeasure_sub` (`:192`), die eigentlichen
+  Slutsky-Sätze sind `TendstoInDistribution.prodMk_of_tendstoInMeasure_const`
+  (`:313`), `…continuous_comp_prodMk_of_tendstoInMeasure_const` (`:333`) und
+  `…add_of_tendstoInMeasure_const` (`:345`), und die Rückrichtung der
+  Skorokhod-Darstellung ist `tendstoInDistribution_of_ae_tendsto` (`:152`) —
+  bereits für einen Filter mit `[l.IsCountablyGenerated]`, nicht nur für `ℕ`.
+  Der Name, den Meilenstein 3 dafür nannte, `MeasureTheory.tendsto_of_ae_tendsto`,
+  **existiert nicht**. Die Datei steht in v4.33.1 genauso da wie auf master; das
+  ist kein Nachziehen hinter master, sondern eine nie gestellte Suche. Was von
+  Meilenstein 2 bleibt, ist der eine Schritt von `Continuous h` zur Stetigkeit
+  außerhalb einer Nullmenge, und Meilenstein 4 nimmt `TendstoInDistribution`
+  jetzt als Hypothese, statt die verschiedenen Räume selbst zu erfinden.
+* **Und ein fünfter Punkt derselben Art:** Meilenstein 2 verlangte
+  `measurableSet_setOf_continuousAt` „if Mathlib does not already have" es. Es
+  hat es: `measurableSet_of_continuousAt`, **Wurzelnamensraum**,
+  `Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:252`, unter
+  `[OpensMeasurableSpace α]` und `[PseudoEMetricSpace β]`, bewiesen aus
+  `IsGδ.setOfPred_continuousAt` (`Topology/GDelta/MetrizableSpace.lean:51`) und
+  `IsGδ.measurableSet` (`BorelSpace/Basic.lean:248`). Der konditionale Nebensatz
+  war zugleich ein Formverstoß gegen die Regeln von Tau Ceti; er ist weg.
+* **Der Namensraumfehler von `FiniteDimensionalLaws.lean` ein drittes Mal, in
+  `MartingaleProblems`; am 2026-09-01, fünfter Lauf, berichtigt.** Meilenstein 2
+  nannte für `IsMPSolutionFor.map` den Namen
+  `MeasureTheory.map_eq_of_forall_ae_eq`. Die Deklaration steht in
+  `Mathlib/Probability/Process/FiniteDimensionalLaws.lean:99`, und diese Datei
+  eröffnet in Zeile 38 `namespace ProbabilityTheory` und schließt ihn in Zeile
+  106; sie heißt also `ProbabilityTheory.map_eq_of_forall_ae_eq`. Dieselbe Datei
+  und derselbe Fehler wie bei `ProbabilityTheory.isProjectiveLimit_map` im
+  vierten Lauf und wie bei `Locally` im zweiten. Mitgeprüft und richtig:
+  `identDistrib_iff_forall_finset_identDistrib` (`:77`), jetzt ebenfalls mit
+  Namensraum genannt.
 * **Vier Facts ohne tragende Fundstelle** — `fact:doob`, `fact:fdd`,
   `fact:portmanteau`, `fact:stoppedlocalmg` werden nur in den
   Buchhaltungsabschnitten zitiert. Zu klären: implizit benutzt (dann die Stelle
@@ -2608,3 +2651,166 @@ anstehen: `atomGrid_symm` bleibt der erste, denn es ruht auf nichts und schließ
 einen Zweig von `MartingaleProblems` M8 ab; `IsCadlag` ist der erste Punkt der
 Roadmap, die von allen vieren die meisten Facts trägt, und der einzige, dessen
 Mathlib-Anschluss heute vollständig nachgeschlagen ist.
+
+### 2026-09-01, fünfter Lauf — Rückstau 2: die Meilensteine von `WeakConvergence`, und ein Anfang bei `MartingaleProblems`
+
+Die Tabelle hat kein `?`, vorrangige Aufgaben stehen keine da. Rückstau 1 steht
+seit dem dritten Lauf des Tages an einer Beweisidee und nicht an einer Suche —
+ob die Cauchy--Schwarz-Ungleichung in
+$|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$ durch eine Paarung ersetzbar ist, die
+$E$ als Schwanzbeitrag benutzt —; daran hat auch dieser Lauf nicht gearbeitet,
+und der Grund ist derselbe wie beim vierten: der ausdrücklich offene Rest von
+Rückstau 2 stand da, und seine Trefferquote ist hoch. Sie war es wieder.
+Geändert sind `TauCeti/WeakConvergence/README.md`,
+`TauCeti/MartingaleProblems/README.md`, `Facts/BACKLOG.md` und dieses Inventar.
+Am Manuskript ist nichts geändert.
+
+**Zuerst das Werkzeug, denn es hat den Lauf getragen.** Das lokale
+`origin/master` in `~/Code/lean/mathlib4` zeigt auf den Fork des Nutzers und
+steht auf dem 2026-03-23; der vierte Lauf hat es deshalb für untauglich erklärt
+und alles über `gh api` geholt. Es gibt aber ein zweites Remote, `upstream`, das
+auf `leanprover-community/mathlib4` zeigt. Ein `git -C ~/Code/lean/mathlib4
+fetch --no-tags upstream master` bringt `upstream/master` auf den Tagesstand,
+und danach beantwortet `git grep -n <muster> upstream/master -- Mathlib` in einem
+Aufruf Fragen, für die `gh search code` ein Dutzend braucht — mit Zeilennummern,
+Namensraumgrenzen und Variablenblöcken am Quelltext. Der Lauf hat so auf
+`981fa8f5` (master vom heutigen 08:37 UTC) geprüft. Das ist der Weg für alle
+weiteren Durchgänge dieses Rückstaupunktes.
+
+**Der Hauptbefund, und er ist größer als ein falsches Zitat.**
+`Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean` war
+`WeakConvergence` unbekannt — die Kopfliste nannte die Datei nicht, und vier
+Punkte der Meilensteine 2 und 3 verlangten, was in ihr steht. Sie führt
+`MeasureTheory.TendstoInDistribution` als Struktur, deren Zufallsvariablen
+`X i : Ω i → E` auf einer Familie von Räumen leben, eine je Index; Meilenstein 4
+hatte genau diese Gestalt als das geführt, was fehlt. Weggefallen sind die
+Slutsky-Fassung, die drei eigentlichen Slutsky-Sätze und die Rückrichtung der
+Skorokhod-Darstellung; von Meilenstein 2 bleibt der eine Schritt von
+`Continuous h` zur f.ü.-Stetigkeit, und der Punkt in Zufallsvariablenform steht
+jetzt auf Mathlibs Struktur statt auf einer eigenen. Der Name
+`MeasureTheory.tendsto_of_ae_tendsto`, den Meilenstein 3 nannte, existiert
+nicht; gemeint war `tendstoInDistribution_of_ae_tendsto` (`:152`). Dazu der
+fünfte Punkt: `measurableSet_setOf_continuousAt` gibt es als
+`measurableSet_of_continuousAt` im Wurzelnamensraum
+(`Constructions/BorelSpace/Basic.lean:252`). Beide Auffälligkeiten stehen oben
+ausgeschrieben.
+
+**Das Lehrstück daran.** Die Datei steht in v4.33.1 wortgleich da, mit denselben
+dreizehn Deklarationen und nur anderen Zeilennummern (`:64`, `:121`, `:137`,
+`:177`, `:301` statt `:64`, `:136`, `:152`, `:192`, `:313`). Es ist also kein
+Nachziehen hinter master, sondern eine nie gestellte Suche — und zwar dieselbe
+Sorte wie am 2026-08-29: nach dem Wort des Manuskripts gesucht („weak
+convergence", „Skorokhod representation") statt nach dem Begriff, unter dem
+Mathlib ihn führt („convergence in distribution"). Wer den Rückstaupunkt
+fortsetzt, suche zu jedem Meilensteinpunkt zuerst nach dem **Verzeichnis**, in
+dem er läge, und lese dessen Dateinamen, bevor er nach Deklarationen sucht.
+
+**Was in `WeakConvergence` geprüft und richtig ist.** Alle sechs Zitate aus
+`LevyProkhorovMetric.lean` stimmen auf die Zeile und den Namensraum
+(`LevyProkhorov` `:259`, `LevyProkhorov.instPseudoMetricSpaceProbabilityMeasure`
+`:311`, `LevyProkhorov.levyProkhorovDist_metricSpace_probabilityMeasure` `:336`,
+`SeparableSpace.exists_measurable_partition_diam_le` `:540`,
+`LevyProkhorov.probabilityMeasureHomeomorph` `:676`,
+`instMetrizableSpaceProbabilityMeasure` `:695`, sämtlich in `namespace
+MeasureTheory` ab `:41`), ebenso `isCompact_closure_of_isTightMeasureSet`
+(`:530`), `exists_measure_iUnion_gt_of_isCompact_closure` (`:573`) und
+`isTightMeasureSet_of_isCompact_closure` (`:634`) aus `Prokhorov.lean`,
+`isTightMeasureSet_singleton` (`:99`) und `IsTightMeasureSet.union` (`:119`,
+`protected lemma`) aus `Tight.lean`, `tendsto_measure_of_null_frontier` (`:243`)
+und `exists_null_frontier_thickening` (`:401`) aus `Portmanteau.lean`,
+`Measure.countable_meas_pos_of_disjoint_iUnion` (`SFinite.lean:305`),
+`frontier_compl`/`frontier_inter_subset`/`frontier_union_subset`
+(`Closure.lean:528,537,544`),
+`Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
+(`CompletelyMetrizable.lean:249`, mit `_root_.`), `PolishSpace`
+(`Polish.lean:62`) samt der Instanz aus Separabilität und vollständiger
+Metrisierbarkeit (`:65`), `TotallyBounded.isCompact_of_isClosed`
+(`Cauchy.lean:755`), `Filter.EventuallyEq.of_forall_separating_preimage`
+(`CountableSeparatingOn.lean:257`), die Instanzkette
+`BorelSpace.countablyGenerated` (`BorelSpace/Basic.lean:209`) →
+`CountablySeparated` (`CountablyGenerated.lean:383`), `condDistrib`
+(`CondDistrib.lean:64`, `namespace ProbabilityTheory`), `condExpKernel`
+(`Condexp.lean:71`, und es verlangt wirklich `[StandardBorelSpace Ω]`, gesetzt
+bei `:62`), `uniformIntegrable_iff` (`UniformIntegrable.lean:868`),
+`induction_on_inter` (`PiSystem.lean:713`) und `MeasurableSpace.comap`
+(`MeasurableSpace/Basic.lean:84`).
+
+**Vier Zeilennummern stammten aus v4.33.1 und sind auf master nachgeführt:**
+`Metric.thickening_singleton` `:157`→`:149`,
+`UniformSpace.secondCountable_of_separable` `:932`→`:931`,
+`Homeomorph.secondCountableTopology` `:37`→`:36`,
+`Homeomorph.isClosedEmbedding` `:297`→`:296`. Der Beleg dafür, dass es sich um
+v4.33.1-Zahlen handelt und nicht um Fehler: in der lokalen v4.33.1-Quelle stehen
+die Deklarationen auf genau diesen vier Zeilen. Alle übrigen Zeilenangaben der
+Roadmap treffen master, sie ist also im Grundsatz master-genau; diese vier sind
+die Ausnahme.
+
+**`MartingaleProblems`, angefangen.** Die Meilensteine dieser Roadmap sind mit
+1038 Zeilen der größte Rest des Rückstaupunktes; dieser Lauf hat die
+Fundstellen mit ausgeschriebenem Mathlib-Pfad abgearbeitet, nicht die bloßen
+Namen. Ein Fehler, und wieder der Namensraum von `FiniteDimensionalLaws.lean`
+(oben ausgeschrieben). Zwei Zeilennummern nachgeführt:
+`Matrix.IsSkewAdjoint` (`SesquilinearForm.lean:562`→`:560`) und
+`lintegral_liminf_le` (`Add.lean:231`→`:233`). Eine Hypothese ergänzt:
+`MeasureTheory.submartingale_of_setIntegral_le` (`Martingale/Basic.lean:281`)
+steht wie behauptet unter `[Preorder ι]` (Variablenblock `:48`), verlangt aber
+außerdem `[SigmaFiniteFiltration μ ℱ]`, `StronglyAdapted ℱ f` und
+Integrierbarkeit jedes `f i`, was die Roadmap verschwieg — derselbe Fehlertyp
+wie `innerRegular_isCompact_isClosed_measurableSet_of_finite` im vierten Lauf.
+Und ein Zitat präzisiert: `integral_rieszMeasure` von Meilenstein 12 stand nur
+mit Verzeichnis da und heißt `RealRMK.integral_rieszMeasure`
+(`RieszMarkovKakutani/Real.lean:345`, `namespace RealRMK` ab `:52`), mit
+`NNRealRMK.integral_rieszMeasure` und `NNRealRMK.lintegral_rieszMeasure`
+(`NNReal.lean:47,56`) daneben. Geprüft und **richtig**:
+`Matrix.IsSymm` (`Symmetric.lean:35`), `Matrix.trace_transpose` (`Trace.lean:73`),
+`Matrix.trace_mul_comm` (`Trace.lean:158`), `IsStable.locally`
+(`LocalProperty.lean:153`), `IsStable.locally_and_iff` (`:161`),
+`IsStable.locally_locally_iff` (`:306`, mit `[IsRightContinuous 𝓕]`),
+`Submartingale.stoppedProcess` (`OptionalStopping.lean:95`), `maximal_ineq`
+(`:144`), `MeasureTheory.tendsto_ae_condExp` (`Convergence.lean:426`) und
+`tendsto_eLpNorm_condExp` (`:439`) samt ihren `Integrable.`-Fassungen (`:360`,
+`:414`), `IsStoppingTime.measurableSpace_mono` (`Stopping.lean:464`) und
+`measurableSpace_le` (`:477`), `seqClosure`/`IsSeqClosed`
+(`Topology/Defs/Sequences.lean:55,61`), `Set.Ico_union_Ico_eq_Ico`
+(`Order/Interval/Set/LinearOrder.lean:298`) und die Definition der Intervalle
+in `namespace Set` von `Order/Interval/Set/Defs.lean` (`:31`--`:94`).
+
+**Offen geblieben.** Von Rückstau 2 die Meilensteine von `MartingaleProblems`,
+soweit sie Mathlib **ohne** Pfadangabe zitieren — das sind die meisten
+Nennungen, und der heutige Ertrag sagt, dass sie es lohnen. Ganz ungeprüft sind
+außerdem die Meilensteine von `WeakConvergence` auf Punkte hin, die Mathlib
+inzwischen unter einem dritten Namen führt: dieser Lauf hat die Datei
+`ConvergenceInDistribution.lean` gefunden, weil er einem falschen Namen
+nachging, nicht weil er systematisch gesucht hätte. Von Rückstau 1 unverändert
+die ordnungsdichte Atommenge. Nicht geschehen und mit Absicht: kein Lean
+übersetzt (der Worktree hat kein `.lake`), `check.py` nicht gelaufen (am
+Manuskript ist nichts geändert), und `cor:atomless` ist weiterhin nicht
+verschärft — die Auffälligkeit vom 2026-09-01 steht unverändert oben und gehört
+dem Nutzer.
+
+**Als Nächstes zu formalisieren:
+`MeasureTheory.ProbabilityMeasure.tendsto_map_of_measure_setOf_continuousAt_eq_one`**
+(`WeakConvergence` Meilenstein 2, erster Punkt): für separabel metrische `E`,
+`E'`, ein Borel-messbares `h : E → E'`, `μ n → μ` schwach und
+`μ {x | ContinuousAt h x} = 1` gilt `(μ n).map h → μ.map h` schwach. Es ruht auf
+zwei Dingen, und beide sind seit heute am Quelltext belegt: Mathlibs
+Portmanteau, namentlich `MeasureTheory.tendsto_measure_of_null_frontier`
+(`Measure/Portmanteau.lean:243`), und die Messbarkeit der Stetigkeitsmenge,
+`measurableSet_of_continuousAt`
+(`MeasureTheory/Constructions/BorelSpace/Basic.lean:252`). Der stetige Fall,
+den es verallgemeinert, ist `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`
+(`Measure/ProbabilityMeasure.lean:639`), und die Zufallsvariablenfassung fällt
+danach als Korollar durch die drei Felder von `TendstoInDistribution`.
+
+Es ist **jetzt** dran, weil heute alles um es herum weggefallen ist. Bis heute
+führte Meilenstein 2 vier Punkte, von denen drei ungeprüft waren; nach diesem
+Lauf sind zwei Mathlib, einer ist sein Korollar, und dieser eine ist der ganze
+Rest. Getragen wird er von `fact:cmt` mit **tragend 3** — nach `fact:Dcountable`
+und `fact:monotoneclass` der am stärksten belastete Fact der Tabelle, und der
+einzige der drei, dessen Lücke heute auf eine einzige Aussage zusammengeschmolzen
+ist. Reihenfolge, wenn mehrere anstehen: `atomGrid_symm` bleibt der erste, denn
+es ruht auf nichts; danach dieser hier vor `IsCadlag`, weil sein
+Mathlib-Anschluss aus zwei heute nachgeschlagenen Namen besteht statt aus einer
+zu übernehmenden Fremddatei, und weil er `WeakConvergence` — die einzige der
+vier Roadmaps ohne Abhängigkeit von den anderen dreien — um einen ganzen
+Meilenstein verkürzt.
