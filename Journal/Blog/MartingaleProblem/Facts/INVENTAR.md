@@ -3369,3 +3369,67 @@ verstärkt die Begründung: auch die Viertelgitteranalyse ruht mit Lemma 1
 und Theorem 4 auf exakter Gitteralgebra derselben Bauart, und jede
 maschinengeprüfte Fassung der Zwei-Diagonalen-Induktion ist
 wiederverwendbar, sobald (V) entschieden ist.
+
+### 2026-09-02, fünfter Lauf des Tages — Task 23, neunzehnter Lauf: Weg (β) ist zu, durch Beweis
+
+Kein Fact bearbeitet: Tabelle vollständig belegt, keine vorrangigen
+Aufgaben, Rückstaupunkt 2 erst in etwa zwei Wochen fällig, Punkt 3 ohne
+`.lake` nicht übersetzbar — also Rückstaupunkt 1, die Viertelgitterfrage
+(V), an den zwei Wegen des achtzehnten Laufs. (Der Lauf 16:23 UTC dazwischen
+wurde von der Nutzungsgrenze abgeschnitten und hat nur `STATUS.md` berührt.)
+
+Ergebnis in einer Zeile: **die „Vollständigkeitsfrage", die der achtzehnte
+Lauf als offenen Kern von Weg (β) benannt hat, ist keine — in der
+zulässigen Klasse folgt die Annihilation der ganzen Modenfamilie doch aus
+den Momenten, und die Spektralschiene stellt nur die Null dar.** Der
+Mechanismus ist eine Zeile: die Geschlecht-0-Produkte $\beta^c_i$,
+$\lambda^c_j$ haben nichtnegative Taylorkoeffizienten, und die
+Zulässigkeitsschranke $e^{\Phi_\mu+\Phi_\nu}$ von Proposition 5 ist genau
+ihre Koeffizienten-Majorante — also paart die Taylorreihe jeder Mode gegen
+jedes zulässige $\sigma$ absolut, und Fubini rechnet jede Paarung aus den
+Momenten aus. Einzelheiten:
+
+* **Theorem 6** (Protokoll, neunzehnter Lauf): für zulässiges reelles
+  $\sigma$ — es genügt $\int e^{\Phi_\mu+\Phi_\nu}\,d|\sigma|<\infty$, die
+  Polynomgewichte von Proposition 5 sind entbehrlich — sind äquivalent:
+  Nullmomente ⟺ Annihilation aller $\lambda_j$ ⟺ aller $\beta_i$ ⟺ jeder
+  ganzen Funktion mit zulässiger Koeffizienten-Majorante. Der Beweis ist
+  der Momentenschritt des achtzehnten Laufs plus seine Rückrichtung
+  (Fubini über die nichtnegativen Koeffizienten).
+* **Korollar:** jeder zulässige reelle Spektralkandidat, der (Q) löst, ist
+  identisch null — der Exponentialspielraum von Proposition 5.2 war für
+  diese Konklusion entbehrlich. Die drei (β)-Bedingungen sind äquivalent
+  zu den Nullmomenten, von jedem Stieltjes-Maß erfüllt und stellen nur
+  $x\equiv0$ dar; **Weg (β) ist für jede summierbare Massenfolge leer**,
+  und die Denjoy–Carleman-Spekulation des achtzehnten Laufs
+  (Massenzählfunktion) ist zurückgenommen.
+* **Mechanisch verifiziert:** `Task23/spectral_closed.py` (mpmath,
+  50 Stellen, Gauß–Legendre je Halbperiode, rc=0). Geometrische Massen,
+  Stieltjes-Maß $e^{-t^2/(2s^2)}\sin(2\pi t/s^2)\,dt$ unter $c=e^t$: alle
+  Momente, alle $\lambda_j$, $\beta_i$, das $13\times13$-Gitter
+  $\int\beta_i\lambda_j\,d\sigma$ und die übrigen (β)-Bedingungen
+  verschwinden relativ auf $<10^{-47}$ bei $\|\sigma\|_{TV}=0.94$; die
+  Kontrollfunktion $e^{-3c}$ außerhalb der Klasse paart auf
+  $5\cdot10^{-13}$ — 37 Größenordnungen Trennung. Es ist die Majorante,
+  die tötet, nicht die Kleinheit von $\sigma$.
+* Offen blieb: (V) selbst, jetzt ohne Gegenbeispielweg in der
+  Spektralklasse. Was bleibt, ist Weg (α), und der ist leichter geworden:
+  es genügt, jeder westabfallenden Lösung irgendeine zulässige reelle
+  Spektraldarstellung zu verschaffen (quasipolynomialer Abfall reicht),
+  oder ein Carleman-Argument direkt an der Evolution. Ehrliche Grenze wie
+  bei Proposition 5: bedingt konvergente Darstellungen und komplexe
+  Träger bleiben außerhalb des Satzes.
+
+Das Manuskript und die Roadmaps sind unverändert (die Viertelgitterfrage
+ist Task-23-intern); Rückstaupunkt 1 hat einen neuen Zwischenstand.
+
+**Was als Nächstes formalisiert werden soll: unverändert `atomGrid_symm`,
+in Lean** (`MartingaleProblems` Meilenstein 8: endliches Gitter,
+$m_i\ne0$, Kreuzrelation $(\ast)$, Konklusion $\Phi(i,j)=\Phi(j,i)$; ruht
+allein auf der Zwei-Diagonalen-Induktion `lem:atomgrid` — zum fünften Mal
+benannt). Dieser Lauf ändert an der Begründung nichts und verstärkt sie:
+die analytische Schiene von Task 23 verengt sich Lauf um Lauf auf exakte
+Gitteralgebra — Theorem 6 ist reine Reihenrechnung, und was von (V) offen
+ist, hängt an derselben Kreuzrelation, deren endliche Fassung
+`atomGrid_symm` ist. Maschinengeprüfte Algebra ist der nächste echte
+Zugewinn, nicht weitere Messung.

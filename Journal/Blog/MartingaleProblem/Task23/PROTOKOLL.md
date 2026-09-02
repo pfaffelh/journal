@@ -2658,3 +2658,162 @@ hängen könnte (Denjoy–Carleman). Die zwei benannten Wege:
   um den Defekt aus Probe (e) falsch; die Starrheit des Kontinuums
   beweist nichts, sie erklärt nur, warum (V) plausibel ist. Die
   Dispersion ist der Gegenstand, nicht ein Störterm.
+
+## Der Weg (β) ist zu, 2026-09-02 (neunzehnter Lauf): in der zulässigen Klasse entscheiden die Momente alles, die Vollständigkeitsfrage löst sich auf, und die Spektralschiene stellt nur die Null dar
+
+Der Lauf gehört der Frage (V), an den zwei Wegen des achtzehnten Laufs.
+Ergebnis in einer Zeile: **die „Vollständigkeitsfrage für ein
+Geschlecht-0-Produktsystem", die der achtzehnte Lauf als offenen Kern von
+Weg (β) benannt hat, ist keine Frage — in der zulässigen Klasse folgt die
+Annihilation der ganzen Modenfamilie doch aus den Momenten**, und zwar aus
+einem Ein-Zeilen-Mechanismus, den der achtzehnte Lauf übersehen hat: die
+Geschlecht-0-Produkte haben **nichtnegative Taylorkoeffizienten**, und ihre
+Koeffizienten-Majorante ist genau die Zulässigkeitsschranke. Damit ist
+Weg (β) vollständig geschlossen: kein zulässiges reelles Spektralmaß kann
+ein Gegenbeispiel zu (V) tragen, für keine summierbare Massenfolge,
+lakunär oder nicht.
+
+### Theorem 6: die Momente entscheiden die zulässige Paarung
+
+Massen wie in (Q). **Zulässig** heiße ein reelles signiertes Borelmaß
+$\sigma$ auf $\mathbb R$ mit
+$\|\sigma\|_\Phi:=\int e^{\Phi_\mu(|c|)+\Phi_\nu(|c|)}\,d|\sigma|(c)<\infty$
+— das ist *schwächer* als die Zulässigkeit von Proposition 5: die
+Polynomgewichte $(1+|c|)^k$ sind entbehrlich, denn das Herausgreifen von
+$k$ Faktoren $1+|c|\mu_{i_l}\ge|c|\mu_{i_l}$ gibt punktweise
+$|c|^k\le C_k\,e^{\Phi_\mu(|c|)}$ mit $C_k=(\mu_{i_1}\cdots\mu_{i_k})^{-1}$.
+Sei $\mathcal E$ die Klasse der ganzen Funktionen $E=\sum_kE_kc^k$ mit
+$\sum_k|E_k|r^k\le C_E\,e^{\Phi_\mu(r)+\Phi_\nu(r)}$ für alle $r\ge0$.
+Dann liegen $\beta_i$, $\lambda_j$, $\beta_i\lambda_j$, $\beta_i\Lambda$
+und $(\lambda_j-\beta_i\Lambda)/c$ sämtlich in $\mathcal E$, und für
+zulässiges $\sigma$ sind äquivalent:
+
+1. $\int c^k\,d\sigma=0$ für alle $k\ge0$;
+2. $\int E\,d\sigma=0$ für jedes $E\in\mathcal E$;
+3. $\int\lambda^c_j\,d\sigma=0$ für alle $j\in\mathbb Z$;
+4. $\int\beta^c_i\,d\sigma=0$ für alle $i\in\mathbb Z$.
+
+*Beweis.* Mitgliedschaft: die Produkte haben nichtnegative Koeffizienten,
+ihre Majorante ist der Wert auf der positiven Achse,
+$\beta^r_i\lambda^r_j\le e^{\Phi_\mu(r)+\Phi_\nu(r)}$; für den Quotienten
+$(\lambda_j-\beta_i\Lambda)/c$ (ganz, da der Zähler bei $0$ verschwindet)
+schätze für $r\ge1$ mit $\sum_k|a_{k+1}-b_{k+1}|r^k\le
+r^{-1}\sum(a_{k+1}+b_{k+1})r^{k+1}\le2e^{\Phi_\mu(r)+\Phi_\nu(r)}$ und für
+$r\le1$ durch den Wert bei $1$. (1)⟹(2): wegen
+$\int\sum_k|E_kc^k|\,d|\sigma|\le C_E\|\sigma\|_\Phi<\infty$ vertauscht
+Fubini, $\int E\,d\sigma=\sum_kE_k\int c^k\,d\sigma=0$. (2)⟹(3),(4):
+Mitgliedschaft. (3)⟹(1): $I_k(j):=\int c^k\lambda^c_j\,d\sigma$ ist
+endlich ($|c|^k\lambda^{|c|}_j\le C_ke^{\Phi_\mu+\Phi_\nu}$), und die
+punktweise Identität $\lambda^c_{j+1}=(1+c\nu_j)\lambda^c_j$ gibt
+$I_k(j{+}1)=I_k(j)+\nu_jI_{k+1}(j)$; Induktion über $k$ (Basis (3), alle
+$j$ zugleich) gibt $I_k\equiv0$ für alle $k$, und $j\to-\infty$ mit
+$\lambda^c_j\to1$ punktweise und derselben Dominante gibt
+$\int c^k\,d\sigma=\lim_jI_k(j)=0$. (4)⟹(1): wörtlich dasselbe auf der
+$\beta$-Seite mit $i\to-\infty$. ∎
+
+Das ist der Momentenschritt des achtzehnten Laufs, ergänzt um seine
+Rückrichtung — und die Rückrichtung ist der ganze Punkt.
+
+### Korollar 7: die Spektralschiene stellt nur die Null dar
+
+**(a)** Ist $\sigma$ zulässig mit lauter Nullmomenten, so ist der
+Spektralkandidat $x_{ij}:=\int\beta^c_i\lambda^c_j\,d\sigma$ **identisch
+null** — Fall (2) mit $E=\beta_i\lambda_j$. **(b)** Löst ein
+Spektralkandidat das System (Q), so gilt insbesondere der Westabfall
+$x_{ij}\to0$ für $i\to-\infty$ (denn
+$x_{ij}=(F(i,j{+}1)-F(i,j))/\nu_j$ und $F$ ist westabfallend), mit
+dominierter Konvergenz ($\beta^c_i\to1$, Dominante
+$e^{\Phi_\mu+\Phi_\nu}$) also $\int\lambda^c_j\,d\sigma=0$ für alle $j$ —
+Bedingung (3) —, also $x\equiv0$. Der **Exponentialspielraum von
+Proposition 5.2 ist für die Konklusion, auf die es ankommt, entbehrlich**:
+$\sigma$ selbst muss nicht verschwinden — die Stieltjes-Maße überleben —,
+aber alles, was ein zulässiges $\sigma$ darstellen kann, ist die Null.
+
+### Korollar 8: Weg (β) ist leer, und die Denjoy–Carleman-Spekulation ist zurückgenommen
+
+Die drei Bedingungen des Weges (β) — $\int\lambda^c_j\,d\sigma=0$,
+$\int\beta^c_i\Lambda^c\,d\sigma=0$, $\int(\lambda^c_j-
+\beta^c_i\Lambda^c)/c\,d\sigma=0$ — sind für zulässiges $\sigma$ nach
+Theorem 6 sämtlich **äquivalent zu den Nullmomenten** (jede der
+Funktionen liegt in $\mathcal E$; umgekehrt gibt (3) die Momente). Maße,
+die sie erfüllen, existieren also in Hülle und Fülle — jedes
+Stieltjes-Maß —, und jedes von ihnen stellt $x\equiv0$ dar. Zwei Sätze des
+achtzehnten Laufs sind damit falsch bzw. gegenstandslos: *„ob eines die
+ganze $\{\lambda_j\}$-Familie annihiliert — das folgt aus den Momenten
+dann nicht mehr"* — es folgt doch, per Fubini über die nichtnegativen
+Koeffizienten; und die Vermutung, hier liege „die erste echt
+massenabhängige Stelle von Task 23 (Denjoy–Carleman)" — in der
+Spektralklasse geht keinerlei Massenasymptotik ein, die Zählfunktion der
+Massen tritt nie auf. Theorem 4 (endliche Superpositionen) ist als
+Spezialfall enthalten: endlich getragenes $\sigma$ ist zulässig, seine
+Nullmomente erzwingen per Vandermonde $\sigma=0$.
+
+**Warum der achtzehnte Lauf das übersehen hat.** Er hat die Frage als
+Vollständigkeitsfrage in einem gewichteten $L^1$ gelesen: dort sind
+Polynome bei quasipolynomialem Gewicht nicht dicht (Stieltjes,
+Momenten-Indeterminiertheit), also schien Momentenannihilation schwächer
+als Familienannihilation. Aber die Moden sind keine beliebigen Elemente
+des gewichteten Raums: sie sind ganze Funktionen, deren Taylorreihe gegen
+jedes zulässige $\sigma$ **absolut paart**, weil die
+Zulässigkeitsschranke als scharfe gemeinsame Majorante der Moden
+*definiert* wurde. Was ein Stieltjes-Maß nicht annihiliert, liegt
+außerhalb von $\mathcal E$ — etwa $e^{ac}$ mit Majorante $e^{ar}$, weit
+über $e^{O((\log r)^2)}$ — und genau dort lebt die Indeterminiertheit.
+Zwischen „$\sigma$ paart mit den Moden" und „die Paarung wird von den
+Momenten berechnet" ist kein Platz.
+
+### Mechanisch verifiziert
+
+`Task23/spectral_closed.py` (mpmath, 50 Stellen; Gauß–Legendre 16 je
+Halbperiode; rc=0): geometrische Massen $\mu_i=\tfrac12 8^{-|i|}$,
+$\nu_j=\tfrac13 8^{-|j|}$, Stieltjes-Maß
+$d\sigma=e^{-t^2/(2s^2)}\sin(2\pi t/s^2)\,dt$ unter $c=e^t$, $s^2=7/20$
+(zulässig: $\Phi_\mu+\Phi_\nu\approx0.96(\log r)^2<\tfrac1{2s^2}(\log
+r)^2\approx1.43(\log r)^2$; $\int e^{\Phi_\mu+\Phi_\nu}d|\sigma|=3.247$).
+Alle Momente $k=0..10$, alle $\lambda_j$, alle $\beta_i$, das ganze
+$13\times13$-Gitter $\int\beta_i\lambda_j\,d\sigma$ und die zwei übrigen
+(β)-Bedingungen verschwinden relativ auf $<10^{-47}$ — bei
+$\|\sigma\|_{TV}=0.943$. Die Trennschärfe der Klasse ist drastisch
+sichtbar: die Kontrollfunktion $e^{-3c}$, außerhalb von $\mathcal E$,
+paart auf $5.1\cdot10^{-13}$ — **37 Größenordnungen** über den
+$\mathcal E$-Paarungen. Es ist die Koeffizienten-Majorante, die tötet,
+nicht die Kleinheit von $\sigma$. Der Momentenschritt aus dem Beweis von
+(3)⟹(1) ist auf den berechneten Integralen exakt (Probe (h)).
+
+### Was das für (V) und Weg (α) heißt
+
+* **Ein Gegenbeispiel zu (V), falls es existiert, ist nicht spektral**:
+  es hat keine Darstellung $\int\beta^c_i\lambda^c_j\,d\sigma$ mit
+  reellem $\sigma$, dessen Paarung absolut konvergiert — für keine
+  Abfallrate. Mechanismus (i) des achtzehnten Laufs verschärft sich: auch
+  die Auslöschung im **Kontinuum** von Moden ist unmöglich, nicht nur die
+  endliche und die exponentiell abfallende.
+* **Weg (α) wird leichter, nicht schwerer.** Sein Darstellungs-Unterweg
+  verlangte „eine Spektraldarstellung mit exponentiell abfallendem
+  $\sigma$ (dann schließt Proposition 5)". Nach Korollar 7 genügt
+  **jedes zulässige** $\sigma$ — quasipolynomialer Abfall reicht. Wer
+  jeder westabfallenden Lösung irgendeine zulässige reelle
+  Spektraldarstellung verschafft, hat (V) bewiesen.
+* **Ehrliche Grenze, unverändert die von Proposition 5:** Darstellungen,
+  deren Integrale nur bedingt konvergieren, und komplexe Träger (modulo
+  Cauchy-Annihilatoren) bleiben außerhalb des Satzes. Der Satz schließt
+  die zulässige reelle Klasse, nicht jede denkbare Integraldarstellung.
+* Offen ist damit **(V) selbst, jetzt ohne Gegenbeispielweg in der
+  Spektralklasse**: was bleibt, ist Weg (α) — Carleman direkt an der
+  Evolution, oder der Darstellungssatz für westabfallende Lösungen.
+
+### Sackgassen, siebzehnter Nachtrag
+
+* **Gegenbeispielsuche bei lakunären Massen über Spektralmaße.** Der
+  Suchraum des achtzehnten Laufs („zuerst bei stark lakunären Massen, wo
+  die Produktsysteme am dünnsten sind") ist leer: die Dünne der
+  Produktsysteme ist irrelevant, weil die Paarung ohnehin von den
+  Momenten berechnet wird. Wer nach Gegenbeispielen sucht, muss die
+  Spektralgestalt ganz verlassen.
+* **Den quasipolynomialen Abfallspielraum als Freiraum lesen.** Der
+  Spielraum zwischen $e^{\varepsilon|c|}$ (Proposition 5.2) und
+  $e^{\Phi_\mu+\Phi_\nu}$ (Zulässigkeit) sah aus wie Raum für
+  Gegenbeispiele; tatsächlich ändert er nur, *welche* $\sigma\neq0$
+  überleben, nicht, *was* sie darstellen (die Null). Die richtige
+  Invariante war nie der Abfall von $\sigma$, sondern die Majorante der
+  Gegenfunktionen.
