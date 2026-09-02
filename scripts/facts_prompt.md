@@ -12,7 +12,7 @@ nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
 Zurzeit stehen hier keine Aufgaben.
 
-### Aufgabe: die mengen-indizierte Literatur, und die Summierbarkeit *(gestellt 2026-09-01)*
+### ~~Aufgabe: die mengen-indizierte Literatur, und die Summierbarkeit~~ *(gestellt 2026-09-01, erledigt 2026-09-02, siebzehnter Task-23-Lauf)*
 
 Zwei Hälften, die zusammengehören. Beide gehen auf eine Beobachtung des Nutzers
 zurück: eine Uhr sieht aus wie ein Lévy-Maß, und Atome sind Sprünge zu festen
@@ -71,6 +71,72 @@ Zwischenstand stehen. Das Ergebnis von (a) gehört als eigene Datei
 Bibliographieeinträgen fällig wird, schreibe ihren Text als Vorschlag dorthin,
 statt das Manuskript zu ändern — diese Einordnung will der Nutzer sehen, bevor
 sie steht.
+
+**Zwischenstand 2026-09-02 (fünfzehnter Task-23-Lauf).** ~~Teil (a) ist
+erledigt~~: `Facts/SETINDEXED.md` beantwortet alle vier Fragen am Text
+(Herbin–Merzbach über ar5iv, Pedersen–Sato direkt am PDF) und enthält den
+Vorschlag für die Manuskriptbemerkung samt Bibliographie. Kernbefunde:
+Dualität/bivariate Darstellungen kommen dort **nicht** vor (Negativbefund,
+Frage 2); die Flow-Projektion ist der Zeitwechsel von `cor:atomless` und
+endet per Axiom vor den Atomen (Frage 3); Pedersen–Sato ist die
+\eqref{T0}+\eqref{T4}-nächste Theorie, mit Negativsätzen der Sorte
+`rem:chainonly` (Frage 4). Teil (b) ist begonnen: `Task23/summable_lp.py`
+misst auf fünf geschachtelten summierbaren Uhren (auch langsame Schwänze
+$\varepsilon_J\sim1/J$, $1/\log J$) den Kollaps
+$v_J\approx c\sqrt{M\varepsilon_J}$ mit je Uhr stabilem $c\le1.08$ — die für
+freie Systeme widerlegte Energieform kehrt auf echten Trunkierungen zurück;
+uniform über Uhren ist sie weiterhin falsch (geformter Zwei-Atom-Zeuge: 3,
+Präfix: $\sim k$). Offen für den nächsten Lauf: der Interferenztest
+(hierarchisch geschachtelte Motoren mit summierbaren $\lambda_i$) und die
+Stufenpaar-Rekursion; beides steht präzise in `Task23/PROTOKOLL.md`,
+fünfzehnter Lauf, „Was als Nächstes zu rechnen bzw. zu beweisen ist".
+
+**Zwischenstand 2026-09-02 (sechzehnter Task-23-Lauf).** Teil (b) ist
+beantwortet, und zwar negativ: **die Frage (S) ist falsch.** Die
+hierarchische Motor-Uhr (`Task23/interference.py`: Block $i$ = schweres Atom
+$\lambda_i$ über einem $k$-Präfix der Masse $\lambda_i$, $\lambda_{i+1}=
+\lambda_i/4$, summierbar, intervallendlich, Typ $\omega^*$) hält $v_J$ von
+$0$ weg — exakt zertifiziert (`interference_certificate.py`: $v_8\ge0.144$
+bei $E_8=1.6\cdot10^{-5}$). Die Skalen **teilen** sich die fehlende Masse
+(Antwort auf den Interferenztest); die Massenbilanz-Heuristik und die
+Kontraktions-Deutung sind Sackgassen (vierzehnter Nachtrag). Auch die
+separable Residuengestalt (`interference_separable.py`, Punkt 3 des
+dreizehnten Laufs erstmals als LP) kollabiert nicht: $v_i^{\rm sep}=
+\tfrac1{24}+E_i\downarrow\tfrac1{24}$, exakt auf den Stufen 3–10. Da die Uhr
+intervallendlich ist, **gilt** auf ihr die Dualität (Satz des vierzehnten
+Laufs) — die LP-Relaxation ist also als Beweisvehikel für aufsteigende
+Strukturen bewiesen zu schwach, und ein Kompaktheitsargument aus den
+Messwerten kollidiert scheinbar mit dem Satz. Die Adjudikation dieser
+Kollision (erzwingt das unendliche $h$-System 1–3 auf $\omega^*$ die
+Diagonale? Hauptverdächtiger: die Äquivalenz des zwölften Laufs ankert am
+Bodenatom, das $\omega^*$ nicht hat) ist die präzise Aufgabe des nächsten
+Laufs; sie steht in `Task23/PROTOKOLL.md`, sechzehnter Lauf, „Was als
+Nächstes zu klären ist".
+
+**Abschluss 2026-09-02 (siebzehnter Task-23-Lauf).** Die Adjudikation ist
+entschieden, durch Beweis: **das exakte $h$-System 1–3 ist auf jeder
+intervallendlichen Kette starr** — $\widehat w(s,t):=H(s,t)+\Delta(t)-\Delta(s)$
+erfüllt exakt die Relation $(\ast)$ des vierzehnten Laufs (das $h$- und das
+$\Phi$-System sind im antisymmetrischen Sektor isomorph), die
+Zwei-Diagonalen-Induktion und zwei Schwanzlimiten geben $\Delta\equiv0$;
+Bedingung 3 ersetzt das Bodenatom, der Verdacht gegen die Äquivalenz des
+zwölften Laufs war unbegründet (ihre Rückrichtung braucht allerdings
+$\kappa(a,0)=-h(a,a)$ statt $0$). Der Fehler lag im Kompaktheitsargument,
+und zwar allein in der extrapolierten Prämisse $\lim v_i=\tfrac1{24}$:
+tatsächlich gilt $v_i\le 2B\,M_{<u_l}+(K_l+2B)E_i$ mit stufenunabhängigem
+$K_l$ (Fensterschranke), also $v_i\to0$ — nur sind die $K_l$ Produkte von
+Massenverhältnissen ($\ge10^4$ schon auf Stufe 9, roh $\lesssim10^{48}$),
+das Plateau ist praeasymptotisch und hält numerisch bis Stufe 14
+(`Task23/adjudicate.py`, mit mechanischer Verifikation der Beweisalgebra am
+Optimum, Proben (a) und (d)). **„(S) ist falsch" ist damit zurückgenommen**:
+für intervallendliche Uhren mit stabilisierenden Fenstern ist (S) wahr, die
+Summierbarkeit trägt genau die Schwanzlimiten — das ist die im
+Aufgabenteil (b) vermutete ausschließende Rolle der endlichen Variation.
+Offen bleibt (S) nur noch für ordnungsdichte Atommengen, zusammen mit dem
+ordnungsdichten Kern selbst; einziger benannter Weg: die Schwanzrelationen
+über Häufungspunkte (vierzehnter Lauf), jetzt mit dem
+$\widehat w$-Isomorphismus als Werkzeug. Alles in `Task23/PROTOKOLL.md`,
+siebzehnter Lauf.
 
 ## Worum es geht
 

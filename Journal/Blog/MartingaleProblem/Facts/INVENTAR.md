@@ -3144,3 +3144,228 @@ der Induktion bringt und den offenen Kern von Task 23 auf zwei benannte
 Restfälle verengt. Der Lauf, der sie einträgt, passt auch
 `rem:atomicdual` („What is not covered") und die Statustabelle von
 `rem:atomsnotchange` an und lässt `check.py` laufen.
+
+### 2026-09-02, erster Lauf — vorrangige Aufgabe: Teil (a) erledigt, Teil (b) begonnen
+
+Der Lauf ging ganz an die am 2026-09-01 gestellte vorrangige Aufgabe
+(mengen-indizierte Lévy-Literatur, Summierbarkeit); die Tabelle hat kein `?`
+und blieb unberührt.
+
+**Teil (a) ist erledigt: `Facts/SETINDEXED.md`.** Alle vier Fragen sind am
+Text beantwortet — Herbin–Merzbach (SPA **123** (2013), arXiv:1108.0873) über
+die ar5iv-Fassung in fünf gezielten Auszügen, Pedersen–Sato (J. Math. Soc.
+Japan **56** (2004)) direkt am PDF; Bass–Pyke und Adler–Feigin nur
+bibliographisch. Die Kurzfassung: (1) ihre fünf Axiome an $\mathcal A$
+verteilen sich auf \eqref{T1} ($\cap$-Abschluss), \eqref{T2b}/\eqref{T1p}
+(separability from above — die auffälligste Entsprechung, gemeinsamer Vorfahr
+\EK{} §2.8) und drei rein topologische ohne Gegenstück; unsere
+Voraussetzungsfläche ist echt kleiner, wofür wir ihre Existenz-, Markov- und
+Pfadtheorie nicht bekommen. Ihre $m$-Stationarität braucht keinerlei Algebra
+auf dem Index (Gleichheit von $m$-Massen statt Verschiebung) — unsere
+Verschiebungsinvarianz braucht \eqref{T4}; dafür trägt unsere Uhr auch
+nicht-stationäre Kompensatoren. (2) **Negativbefund, und das ist die
+Hauptantwort:** Dualität, bivariate Zuwachsdarstellungen mit gemeinsamer
+Dichte, Martingalprobleme, Generatoren — nichts davon kommt vor; das
+nächstliegende Objekt ist das Übergangssystem $Q_{U,V}$ mit
+$m$-Homogenität über $m(V\setminus U)$, ein Kern, keine Darstellung.
+\eqref{eq:incrementrep} und §\ref{ssec:antidiag} haben dort kein Vorbild.
+(3) Die Flow-Projektion ist der Zeitwechsel von `cor:atomless`
+($\theta(t)=m[f(t)]$ ist $Q$), setzt Invertierbarkeit von $\theta$ voraus und
+ihre Prozessklasse schließt Atome von $m$ über die stochastische Stetigkeit
+aus (unsere Folgerung, als solche markiert) — für den ordnungsdichten Fall
+von Task 23 gibt sie nichts her, was `cor:atomless` nicht ist. Der Bedarf an
+*simple* statt *elementary* flows — ihr eigener Kommentar: „the embedding in
+$\mathcal A(u)$ is the key point" — ist wörtlich `rem:fddnochain`. (4) Am
+nächsten an einer Präordnung: Pedersen–Sato, Kegelordnung
+$s\le_Kt\iff t-s\in K$ — exakt \eqref{T0}+\eqref{T4} —, mit Negativsätzen
+der Sorte `rem:chainonly` (keine $S_d^+$-Brownsche Bewegung, Eindeutigkeit
+fällt); daneben Rajput–Rosiński (δ-Ring, keine Ordnung) als Anschlusspunkt
+für eine etwaige Existenztheorie. Der **Vorschlag für die
+Manuskriptbemerkung** samt fünf Bibliographieeinträgen steht am Ende von
+`SETINDEXED.md`; das Manuskript ist nicht angefasst.
+
+**Teil (b) ist begonnen: `Task23/summable_lp.py`, Protokollabschnitt
+fünfzehnter Lauf.** Die Frage der Läufe 11–13 ist neu gestellt als Frage (S)
+über geschachtelten Trunkierungen einer festen summierbaren Uhr, mit dem
+echten Residuum $|R_J(s,t)|\le B(\varepsilon(s)+\varepsilon(t))$ aus der
+fehlenden Masse unterhalb jedes Gitterpunkts. Gemessen auf fünf Uhren,
+darunter erstmals **langsame Schwänze** ($\varepsilon_J\sim1/J$ und
+$\sim1/\log J$, wo die profilfreie lineare Schranke des zwölften Laufs
+nutzlos ist): $v_J$ kollabiert überall, empirisch als
+$v_J\approx c\sqrt{M\varepsilon_J}$ mit je Uhr stabilem $c\le1.08$ — die für
+freie Systeme in jeder Konstante widerlegte Energieform kehrt auf echten
+Trunkierungen als Gesetz zurück. Uniform über Uhren bleibt sie falsch
+(geformter Zwei-Atom-Zeuge: $\to3$; leichtes Präfix: $\sim0.77k$), aber
+jeder Zeuge ist eine einzelne Stufe, und die Massenbilanz sagt, warum
+anhaltender Gewinn Summierbarkeit widerspricht (Lücke: Interferenz der
+Skalen, benannt). Offen und im Protokoll präzisiert: der Interferenztest und
+die Stufenpaar-Rekursion; die $B$-Hypothese für die dichte Menge bleibt
+unberührt. Die Aufgabe steht mit Zwischenstand in `scripts/facts_prompt.md`.
+
+**Was als Nächstes formalisiert werden soll: `atomGrid_symm`, in Lean.** Die
+Aussage steht wörtlich in `MartingaleProblems` Meilenstein 8: endliches
+Gitter, Massen $m_i\ne0$, Kreuzrelation \eqref{eq:atomgrid}, Konklusion
+$\Phi(i,j)=\Phi(j,i)$. Sie ruht auf nichts als Induktion über zwei Diagonalen
+(`lem:atomgrid`, Beweis vollständig im Manuskript) und ist jetzt dran, weil
+seit dem vierzehnten Lauf die gesamte atomare Dualitätsschicht — 
+`duality_of_atomic`, `duality_of_atomic_intervalFinite`, über
+`atomGrid_symm_int` — auf ihr steht: sie ist der erste Lean-taugliche
+Baustein von Task 23, hat keinerlei Maßtheorie im Beweis und macht die
+$\mathbb Z$-Fassung zu einer Übertragung statt einer Neuentwicklung. Daneben
+bleibt der Manuskriptvorschlag des Vortagslaufs (Hebung von
+`prop:atomicdual` auf intervallendlich) stehen und wartet auf den Nutzer.
+
+### 2026-09-02, zweiter Lauf des Tages — vorrangige Aufgabe, Teil (b): der Interferenztest, und (S) ist falsch
+
+Kein Fact bearbeitet; der ganze Lauf gehört der vorrangigen Aufgabe
+(Summierbarkeit, Teil b), wie vom Auftrag verlangt. Ergebnis in einer Zeile:
+**die Frage (S) des fünfzehnten Laufs ist widerlegt, mit exaktem
+Zertifikat**, und der Befund reicht tiefer, als die Frage gestellt war.
+
+* **Der Interferenztest ist gebaut und beantwortet** (`Task23/interference.py`,
+  `interference_certificate.py`, `interference_separable.py`;
+  Protokollabschnitt sechzehnter Lauf). Die hierarchische Motor-Uhr — Block
+  $i$ = schweres Atom $\lambda_i$ über einem Vier-Präfix der Masse
+  $\lambda_i$, $\lambda_{i+1}=\lambda_i/4$, Gesamtmasse $16/15$, Typ
+  $\omega^*$, intervallendlich — hält $v_J$ von $0$ weg: zertifiziert
+  $v_8\ge0.144$ bei $E_8=1.6\cdot10^{-5}$ (Bruchrechnung, Nenner $10^9$).
+  Die Skalen **teilen** sich die fehlende Masse; die
+  Massenbilanz-Heuristik und die Kontraktions-Deutung des fünfzehnten Laufs
+  sind als Sackgassen protokolliert.
+* **Die Gestalt des Residuums (Punkt 3 des dreizehnten Laufs) ist erstmals
+  ins LP eingebaut** — separables $\varphi(s)+\varphi(t)$, $|\varphi|\le BE$ —
+  und rettet den Kollaps nicht: $v_i^{\rm sep}=\tfrac1{24}+E_i\downarrow
+  \tfrac1{24}$, exakt auf den Stufen 3–10, Gewinn stabil in Block 1.
+* **Die Kollision, und sie ist der eigentliche Ertrag:** die Uhr ist
+  intervallendlich, die Dualität gilt auf ihr also nach dem Satz des
+  vierzehnten Laufs — die LP-Relaxation ist damit als Beweisvehikel für
+  aufsteigende Strukturen **bewiesen zu schwach**, ein Kollaps-Argument
+  à la (S) kann für den ordnungsdichten Fall nicht der Weg sein. Zugleich
+  scheint ein Kompaktheitsargument aus den Messwerten ein exaktes $h^*$ mit
+  $\Delta^*=\tfrac1{24}$ zu liefern; die drei Verdächtigen (Äquivalenz des
+  zwölften Laufs im Unendlichen — sie ankert am Bodenatom, das $\omega^*$
+  nicht hat —, das Kompaktheitsargument selbst, der Zusammenbau des
+  vierzehnten Laufs) stehen gereiht im Protokoll. Die Adjudikation ist die
+  benannte Aufgabe des nächsten Laufs.
+* Offen blieb: nichts von der gestellten Aufgabe; die Stufenpaar-Rekursion
+  hat sich durch das Ergebnis erledigt (keine Kontraktion vorhanden).
+
+**Was als Nächstes formalisiert werden soll: `atomGrid_symm`, in Lean —
+unverändert, aber mit neuer Dringlichkeit.** Aussage wie im Bericht des
+Vortagslaufs (`MartingaleProblems` Meilenstein 8: endliches Gitter,
+$m_i\ne0$, Kreuzrelation, Konklusion $\Phi(i,j)=\Phi(j,i)$; ruht allein auf
+der Zwei-Diagonalen-Induktion `lem:atomgrid`). Jetzt dran, weil sie mit
+`atomGrid_symm_int` der mechanische Schiedsrichter für Verdächtigen 3 der
+Kollision ist: eine Lean-geprüfte Fensterstarrheit samt
+$\mathbb Z$-Übertragung macht den intervallendlichen Satz maschinenfest, und
+dann liegt die Lücke beweisbar bei der Äquivalenz oder beim
+Kompaktheitsargument.
+
+### 2026-09-02, dritter Lauf des Tages — vorrangige Aufgabe abgeschlossen: die Adjudikation, und „(S) ist falsch" ist zurückgenommen
+
+Kein Fact bearbeitet; der Lauf gehört der Adjudikation der Kollision, der
+benannten Aufgabe des Vortagslaufs. Sie ist entschieden, durch Beweis, und
+die vorrangige Aufgabe ist damit ganz erledigt (im Runner-Prompt gestrichen,
+Abschluss dort eingetragen). Ergebnis in einer Zeile: **das exakte
+$h$-System 1–3 ist auf jeder intervallendlichen Kette starr; der Fehler lag
+im Kompaktheitsargument, in dessen extrapolierter Prämisse
+$\lim v_i=\tfrac1{24}$; tatsächlich gilt $v_i\to0$, nur praeasymptotisch
+unsichtbar.** Einzelheiten:
+
+* **Der Beweis** (Protokoll, siebzehnter Lauf): $\widehat w(s,t):=
+  H(s,t)+\Delta(t)-\Delta(s)$ erfüllt exakt die Kreuzrelation $(\ast)$ des
+  vierzehnten Laufs — Erstschritt definitorisch, Zweitschritt aus Bedingung
+  3 zweimal, Antisymmetrie von $\kappa(a,t):=h(a,t)-h(a,a)$ aus Bedingung 2.
+  $h$- und $\Phi$-System sind im antisymmetrischen Sektor **isomorph**;
+  Induktion und Schwanzlimiten des vierzehnten Laufs geben $\Delta\equiv0$.
+  Der Bodenatom-Verdacht gegen die Äquivalenz des zwölften Laufs war
+  unbegründet; ihre Rückrichtung braucht $\kappa(a,0)=-h(a,a)$ statt $0$
+  (im endlichen Fall unsichtbar).
+* **Die Fensterschranke** macht den Kollaps quantitativ:
+  $v_i\le2B\,M_{<u_l}+(K_l+2B)E_i$ mit stufenunabhängigem $K_l$; die
+  Summierbarkeit liefert $M_{<u_l}\to0$ — genau die im Aufgabenteil (b)
+  vermutete Rolle der endlichen Variation. Die $K_l$ sind Produkte von
+  Massenverhältnissen ($\ge10^4$ ab Stufe 9, roh $\lesssim10^{48}$); das
+  erklärt das exakte Plateau $\tfrac1{24}+E_i$ vollständig.
+* **Mechanisch verifiziert** (`Task23/adjudicate.py`): die Beweisalgebra am
+  LP-Optimum — $(\ast)$-Defekt exakt $-m_i(\varphi(u_{j+1})-\varphi(u_j))$
+  bis $10^{-10}$, erzwungene Identität $h(u_j,u_{j+1})=h(u_j,u_j)$ bis
+  $10^{-8}$ —, die Sättigung der Randterme, und die Stufen 10–14 (Plateau
+  hält, wie vom Beweis erlaubt). Nebenbefund: HiGHS' Presolve meldet auf der
+  reformulierten Fassung fälschlich „Unknown"; `presolve=False` behebt es.
+* **Zurückgenommen:** der Kernbefund des Vortagslaufs „(S) ist falsch". Die
+  Motor-Uhr ist kein Gegenbeispiel — ihre endlichen Zertifikate bleiben
+  richtig und sagen über den Limes nichts. Für intervallendliche Uhren mit
+  stabilisierenden Fenstern ist (S) wahr; offen bleibt (S) genau für
+  ordnungsdichte Atommengen, wie der ordnungsdichte Kern selbst.
+* Offen blieb: nichts von der gestellten Aufgabe. Das Manuskript ist
+  unverändert (der Satz betrifft nur die Task-23-interne Reduktion; der
+  manuskriptseitige intervallendliche Satz steht seit dem vierzehnten Lauf).
+
+**Was als Nächstes formalisiert werden soll: `atomGrid_symm`, in Lean —
+zum dritten Mal benannt, und jetzt ohne Konkurrenz.** Aussage unverändert
+(`MartingaleProblems` Meilenstein 8: endliches Gitter, $m_i\ne0$,
+Kreuzrelation $(\ast)$, Konklusion $\Phi(i,j)=\Phi(j,i)$; ruht allein auf
+der Zwei-Diagonalen-Induktion `lem:atomgrid`). Jetzt dran, weil der
+siebzehnte Lauf gezeigt hat, dass **drei** Resultate wörtlich auf dieser
+einen Induktion ruhen — der intervallendliche Satz, die Starrheit des
+$h$-Systems und die Fensterschranke —, und die LP-Schiene als
+Evidenzquelle ausgeschöpft ist: was Task 23 noch weiterbringt, ist
+maschinengeprüfte Algebra, nicht Messung.
+
+### 2026-09-02, vierter Lauf des Tages — Rückstau 1 / Task 23, achtzehnter Lauf: die Viertelgitterfrage der zwei $\zeta$-Ketten
+
+Kein Fact bearbeitet: die Tabelle ist vollständig belegt, die vorrangige
+Aufgabe erledigt, Rückstaupunkt 2 erst in etwa zwei Wochen wieder fällig,
+Punkt 3 ohne `.lake` nicht übersetzbar — also Rückstaupunkt 1, der
+ordnungsdichte Kern von Task 23, an seiner kleinsten Instanz, der
+Viertelgitterfrage der zwei $\zeta$-Ketten (siebzehnter Lauf).
+
+Zur Laufgeschichte, weil sie sonst nirgends stünde: die zwei Läufe zwischen
+dem dritten Lauf des Tages und diesem (07:23 und 10:23 UTC) wurden von der
+Nutzungsgrenze abgeschnitten (`STATUS.md`: „limit-teilarbeit" bzw. keine
+inhaltliche Arbeit). Übrig blieb `Task23/zeta_cross.py` mit Proben (a)–(e)
+und Verweisen auf nie geschriebene Sätze. Dieser Lauf hat die Beweise
+selbst geführt, das Skript um Probe (f) ergänzt (läuft, alle Proben exakt)
+und den Protokolleintrag „achtzehnter Lauf" geschrieben. Befunde, je mit
+Beweis im Protokoll:
+
+* **Normalform:** das Viertelgittersystem (Q) ist eine kommutierende
+  Evolution $F(\cdot,j{+}1)=(I+\nu_jL)F(\cdot,j)$ mit **einem** festen
+  Operator $(Lg)_i=(g_{i+1}-g_i)/\mu_i$; die Nordevolution ist die
+  Operatorfassung des Geschlecht-0-Produkts
+  $\Pi_j(c)=\prod_{j'\ge j}(1+c\nu_{j'})$, die Summierbarkeit die endliche
+  Horizontzeit. Die Frage (V) ist damit eine Quasianalytizitätsfrage:
+  Injektivität von $\Pi_j(L)$ auf westabfallenden Zeilen.
+* **Bewiesen:** (Q) ⟺ $(\ast)$ + Westlimes des Flusses $=0$ + Nordabfall
+  (Lemma 1, Hakenkonstanz); ohne Summierbarkeit ist (V) **falsch**
+  (Proposition 2, Buckel $g(i+j)$ bei Massen $\equiv1$); jeder
+  Einzelschritt $I+\nu_jL$ ist injektiv (Proposition 3); **keine endliche
+  Superposition separabler Moden** löst (Q) (Theorem 4, Momentenschritt
+  plus Vandermonde — der Nordabfall wird dafür nicht einmal gebraucht);
+  reelle Spektralmaße haben lauter verschwindende Momente und sterben bei
+  exponentiellem Abfallspielraum (Proposition 5).
+* **Sackgasse mit Beleg:** die exakte Energieidentität (Probe (f)) trägt
+  den indefiniten Faktor $\mu_i\nu_j(\nu_j-\mu_i)$ — denselben wie der
+  Dispersionsdefekt des charakteristischen Ansatzes (Probe (e)); separable
+  Gewichte reparieren das Vorzeichen nicht.
+* **Offen bleibt (V) selbst**, jetzt scharf lokalisiert: für geometrische
+  Massen wachsen die Modenprodukte nur wie $e^{O((\log r)^2)}$, zulässige
+  Spektralmaße dürfen also quasipolynomial abfallen, und dort existieren
+  Maße mit lauter Nullmomenten — ob eines die ganze
+  $\{\lambda_j\}$-Familie annihiliert, ist eine Vollständigkeitsfrage, in
+  die die Massen über ihre Zählfunktion eingehen. Wege (α)
+  Spektraldarstellung/Carleman und (β) Gegenbeispiel bei lakunären Massen
+  stehen im Protokoll.
+
+Offen blieb sonst: nichts Neues; das Manuskript ist unverändert, die
+Roadmaps auch (die Viertelgitterfrage ist Task-23-intern, bis sie
+entschieden ist). Der Rückstaupunkt 1 hat einen neuen Zwischenstand.
+
+**Was als Nächstes formalisiert werden soll: unverändert `atomGrid_symm`,
+in Lean** (`MartingaleProblems` Meilenstein 8; Aussage und Begründung wie
+im dritten Lauf des Tages — jetzt zum vierten Mal benannt). Dieser Lauf
+verstärkt die Begründung: auch die Viertelgitteranalyse ruht mit Lemma 1
+und Theorem 4 auf exakter Gitteralgebra derselben Bauart, und jede
+maschinengeprüfte Fassung der Zwei-Diagonalen-Induktion ist
+wiederverwendbar, sobald (V) entschieden ist.

@@ -2006,3 +2006,655 @@ Blocklisten disjunkt sind.
   endet. Wer den diskreten Fall fortsetzt, beginne bei den Schwanzrelationen
   über einem einzelnen Häufungspunkt zwischen zwei Blöcken, nicht bei einer
   feineren Induktion.
+
+## Die Summierbarkeit als tragende Struktur, 2026-09-02 (fünfzehnter Lauf): auf echten Trunkierungen kehrt das Energiegesetz zurück
+
+Teil (b) der Aufgabe vom 2026-09-01: die Frage der Läufe 11–13 neu stellen,
+über der Klasse der **summierbaren** Massen statt über beliebigen endlichen
+Massenvektoren mit freiem Slack. Neu ist `Task23/summable_lp.py`.
+
+### Die Neuformulierung (S)
+
+Eine Uhr hat $q(\T_{\le t})<\infty$; eine rein atomare Uhr auf einer Kette ist
+ein **fest gewähltes summierbares Profil**, und eine Trunkierung ist
+**geschachtelt** — Stufe $J{+}1$ fügt Atome hinzu, ändert keine Masse. Das
+Residuum der Stufe $J$ am Paar $(s,t)$ ist dann nicht frei, sondern
+
+$$R_J(s,t)=\sum_{a\text{ fehlt},\,a<s}m_a\,h(a,t)+\sum_{b\text{ fehlt},\,b<t}m_b\,h(b,s),
+\qquad |R_J(s,t)|\le B\,(\varepsilon(s)+\varepsilon(t)),$$
+
+mit $\varepsilon(g)$ = fehlende Masse unterhalb $g$ (monoton in $g$,
+$\varepsilon(\text{top})=\varepsilon_J\to0$). **Frage (S):** gilt $v_J\to0$
+für jede summierbare Uhr längs jeder Ausschöpfung? Das ist die
+Finite-Variation-Analogie des Lévy-Bildes: $\sum_{a_k\le t}m_k<\infty$ ist
+$\int(1\wedge|x|)\,\nu(\dif x)<\infty$, und Kompensation gibt es nicht.
+
+Der Parameter, den die Summierbarkeit **nicht** kontrolliert, ist die
+Schwanzgeschwindigkeit: $m_{(k)}\sim1/(k\log^2k)$ gibt
+$\varepsilon_n\sim1/\log n$, und die profilfreie lineare Schranke
+$v\le(n+\tfrac12)\eta$ des zwölften Laufs wird nutzlos. Getestet wurden
+deshalb geschachtelte dyadische Uhren mit Levelgesamtmassen $c_j$ geometrisch
+(Kontrolle), $1/j^2$ ($\varepsilon_J\sim1/J$) und $1/(j\log^2 j)$
+($\varepsilon_J\sim1/\log J$), jeweils flach und mit Positionsfaktor $x^4$
+(der realisierbare Rest des Verstärkungsmotors). Konservativ zugunsten des
+Gegenspielers: $\varepsilon$ am Schnitt zählt die ganze Lücke, der
+analytische Schwanz jenseits Level 20 wird jedem Gitterpunkt zugeschlagen.
+
+### Die Messung: $v_J\approx c\cdot\sqrt{M\,\varepsilon_J}$, mit stabilem $c$
+
+| Uhr | $v_6$ | $v_J/\sqrt{M\varepsilon_J}$ über $J=2..6$ |
+|---|---|---|
+| geometrisch flach | $0.106$ | $1.00,\,0.91,\,0.92,\,0.88,\,0.86$ |
+| $1/j^2$ flach | $0.431$ | $0.98,\,0.91,\,0.89,\,0.89,\,0.90$ |
+| $1/j^2\cdot x^4$ | $0.262$ | $0.61,\,0.54,\,0.54,\,0.55,\,0.55$ |
+| $1/(j\log^2j)$ flach | $1.197$ | $1.08,\,1.02,\,1.00,\,0.99,\,0.98$ |
+| $1/(j\log^2j)\cdot x^4$ | $0.859$ | $0.77,\,0.71,\,0.70,\,0.71,\,0.71$ |
+
+$v_J$ fällt auf **allen** fünf Uhren monoton, auch auf den langsamen
+Schwänzen — dort langsam, wie $\varepsilon_J$ selbst es diktiert —, und
+$v_J/\sqrt{M\varepsilon_J}$ ist je Uhr über die Stufen hinweg nahezu
+konstant. Die Energieform $v^2\lesssim BM\varepsilon$, die der dreizehnte
+Lauf für frei-relaxierte Systeme in jeder Konstante widerlegt hat, kehrt auf
+echten Trunkierungen als empirisches Gesetz zurück, mit $c^2\le1.17$ auf
+allem Getesteten. Kontrolle: $\varepsilon\equiv0$ gibt $v=0$.
+
+### Aber: keine uniforme Konstante über die Uhren
+
+Die geformten Fassungen der Zeugen des dreizehnten Laufs bleiben Zeugen
+gegen jede **uhrenfreie** Konstante. Wolke der Masse $\delta$ strikt unter
+dem leichten Atom (also $\varepsilon(g)=\delta$ für alle $g$ über der
+Wolke): der Zwei-Atom-Zeuge gibt $v^2/(M\varepsilon)\to3$
+($\mu=10^{-3}$: $2.995$), das leichte Präfix $[\mu]^k+[1]$ gibt
+$v\approx k\mu B$ und $v^2/(M\varepsilon)\approx0.77k$ (gemessen $1.98$,
+$3.82$, $7.09$, $12.36$ für $k=2,4,8,16$; `summable_lp.py`-Nachlauf).
+Jeder dieser Zeugen ist aber eine **einzelne Stufe**, keine Ausschöpfung:
+sein Budget $\delta\approx k\mu^2$ ist an die festen Präfixmassen gebunden,
+und sobald $\varepsilon_J<k\mu^2$, stirbt der Motor.
+
+### Die Massenbilanz, heuristisch
+
+Warum die Summierbarkeit anhaltenden Gewinn ausschließen sollte, in einer
+Rechnung: der einzige gemessene Mechanismus trägt Gewinn
+$v\approx\lambda B$ mit $\lambda$ = Masse eines leichten Präfixes unter
+einem schweren Atom. Soll $\liminf_Jv_J\ge c>0$ längs einer Ausschöpfung
+gelten, braucht es zu unendlich vielen Stufen frische Motoren auf feineren
+Skalen, deren Präfixmassen $\lambda_i\ge c/B$ erfüllen — die Gesamtmasse
+wäre unendlich. Das ist Punkt 3 des dreizehnten Laufs, jetzt quantitativ:
+die Instanzen, auf denen die Relaxation unbeschränkt verstärkt, sind genau
+die, die keine Uhr sind. **Lücke der Heuristik:** dass Motoren
+verschiedener Skalen keine Präfixmasse teilen können (Interferenz), ist
+unbewiesen; und ob es andere Mechanismen als den Präfixmotor gibt, weiß nur
+das LP.
+
+### Was (S) geben würde, und was nicht
+
+Bewiesen würde: für jede rein atomare Uhr auf einer Kette — Summierbarkeit
+ist bei einer Uhr keine Zusatzannahme — mit $|\kappa|\le B$ verschwindet der
+Dualitätsdefekt, denn $|\Delta|\le v_J+\text{Schwanzsummen}\to0$ (die
+Schwanzsummen wie im vierzehnten Lauf aus der absoluten Existenz der
+Integrale). **Nicht** enthalten ist die $B$-Freiheit: die Reduktion braucht
+$|h|\le B$ a priori, und die Frage des zwölften Laufs, ob die
+$B$-Hypothese für die in sich dichte Atommenge fällt wie im
+intervallendlichen Fall, bleibt offen und wird von (S) nicht berührt.
+
+### Was als Nächstes zu rechnen bzw. zu beweisen ist
+
+1. **Interferenztest:** eine Uhr mit hierarchisch geschachtelten Motoren
+   ($\lambda_i$ summierbar, Wolke von Skala $i$ = Präfix von Skala $i{+}1$),
+   gemessen längs der natürlichen Ausschöpfung — teilen sich Skalen die
+   Masse, oder gilt $v_{J_i}\approx\lambda_iB$? Das ist der adversariale
+   Rest der Massenbilanz-Heuristik.
+2. **Beweisziel, benannt:** $v_J\le B\,\varepsilon_{J'}+\text{(Beitrag der
+   zwischen $J'$ und $J$ eingetretenen Atome)}$ — eine Rekursion über
+   Stufenpaare statt einer Schranke je Stufe; die Stabilität von $c$ über
+   $J$ in allen fünf Messreihen sagt, dass die Stufen sich wie eine
+   Kontraktion verhalten, nicht wie eine Kaskade.
+
+### Teil (a) derselben Aufgabe
+
+Die Einordnung der mengen-indizierten Lévy-Literatur steht in
+`Facts/SETINDEXED.md` (Herbin–Merzbach am ar5iv-Text, Pedersen–Sato direkt
+am PDF): Dualität, bivariate Zuwachsdarstellungen und Martingalprobleme
+kommen dort **nicht** vor — Negativbefund —, die Flow-Projektion ist genau
+der Zeitwechsel von `cor:atomless` und endet per Axiom (stochastische
+Stetigkeit) vor den Atomen; für Task 23 gibt sie nichts her, was
+`cor:atomless` nicht schon ist. Der Bedarf an *simple* statt *elementary*
+flows ist wörtlich die Geometrie von `rem:fddnochain`, jetzt am Text belegt.
+
+## Der Interferenztest, 2026-09-02 (sechzehnter Lauf): die Skalen teilen sich die Masse, (S) ist falsch, und die Relaxation kollidiert mit dem intervallendlichen Satz
+
+Punkt 1 der Liste des fünfzehnten Laufs, ausgeführt; Punkt 2 (die
+Stufenpaar-Rekursion) ist durch das Ergebnis erledigt, bevor er begonnen
+wurde: die Stufen verhalten sich nicht wie eine Kontraktion — die Quotienten
+$v_{i}/v_{i-1}$ steigen gegen $1$. Neu sind `Task23/interference.py`,
+`interference_certificate.py` (exakte Bruchrechnung) und
+`interference_separable.py`.
+
+### Die hierarchische Motor-Uhr
+
+Block $i$ = schweres Atom der Masse $M_i=\lambda_i$ über einem Präfix aus
+$k=4$ leichten Atomen der Gesamtmasse $\lambda_i$, Blöcke absteigend
+geschachtelt in $(2^{-i},2^{-i+1}]$, $\lambda_{i+1}=\lambda_i/k$,
+$\lambda_1=2/5$. Gesamtmasse $16/15$, Atomtyp $\omega^*$ (Häufung bei $0$),
+**intervallendlich** — eine echte summierbare Uhr, vom Satz des vierzehnten
+Laufs abgedeckt. Die Wolke der Skala $i$ (Stufe $i$ der natürlichen
+Ausschöpfung lässt die Blöcke $>i$ weg) ist genau der Präfix der Skala
+$i{+}1$ samt allem Tieferen, $E_i=\tfrac{8}{3}\lambda_{i+1}=\tfrac{16}{15}4^{-i}$,
+und deckt den Budgetbedarf des Motors $i$ ($\tfrac23\lambda_{i+1}$) vierfach.
+
+### Messung 1: die Interferenz ist real, und sie ist mehr als additiv
+
+LP des fünfzehnten Laufs (Residuum $\le B(\varepsilon(s)+\varepsilon(t))$;
+hier ist $\varepsilon\equiv E_i$, weil alle fehlende Masse unter allen
+präsenten Atomen liegt):
+
+| Stufe | $2$ | $4$ | $6$ | $8$ | $10$ |
+|---|---|---|---|---|---|
+| $v_i$ | $0.414$ | $0.277$ | $0.176$ | $0.144$ | $0.109$ |
+| $v_i/(\lambda_iB)$ | $4.1$ | $44$ | $452$ | $6.8\cdot10^3$ | $1.1\cdot10^5$ |
+| $v_i/\text{additiv}$ | $0.83$ | $3.4$ | $22$ | — | — |
+| $v_i/\sqrt{ME_i}$ | $1.6$ | $4.2$ | $10.6$ | — | — |
+
+„additiv" ist die Einzelmotor-Buchhaltung
+$\sum_j\min(1,E_i/\text{Budget}_j)\lambda_jB$ der Massenbilanz-Heuristik.
+$\varepsilon$ fällt über fünf Größenordnungen, $v$ nur um Faktor sechs.
+**Exakt zertifiziert** (`interference_certificate.py`, Rundung auf
+Nenner $10^9$, Bedingungen 1 und 2 per Konstruktion, alle Gitterpaare von
+Bedingung 3 in `Fraction`, dann Skalierung mit $\max(B_{\rm used},
+\text{maxratio})$): $v_4\ge0.2767$, $v_6\ge0.1765$, $v_8\ge0.1440$.
+Kontrolle $E=0$ gibt $v=0$.
+
+**Damit ist die Frage (S) des fünfzehnten Laufs falsch**: es gibt eine
+summierbare Uhr und eine Ausschöpfung, längs derer $v_J$ nicht gegen $0$
+geht. Und die Lücke der Massenbilanz-Heuristik ist keine Lücke, sondern ihr
+Fehler: die Relaxation verbraucht kein Budget — dieselbe fehlende Masse
+steht allen Skalen zugleich zur Verfügung, die Konversionsrate
+Budget$\to$Gewinn ist skalenfrei ($\approx\tfrac32kB$ je Motor), und die
+gemessene Verstärkung liegt noch einmal um wachsende Faktoren über der
+additiven Buchhaltung — die aufsteigende Kaskade des dreizehnten Laufs
+(Blockmassen wachsen nach oben um Faktor $4$) läuft hier auf einer
+realisierbaren Uhr.
+
+### Messung 2: die Gestalt des Residuums, erstmals eingebaut — sie rettet den Kollaps nicht
+
+Auf dieser Uhr ist jedes realisierbare Residuum separabel,
+$R(s,t)=\varphi(s)+\varphi(t)$ mit $\varphi(g)=\sum_{\text{fehlend}}m_ah(a,g)$,
+$|\varphi|\le BE$ — Punkt 3 des dreizehnten Laufs als LP: neue Variablen
+$\varphi(g)$, Gleichheitszeilen, Schranke $BE$ (`interference_separable.py`).
+Das ist echt enger als $|R|\le2BE$. Ergebnis, auf den Stufen $3$–$10$ **auf
+alle gemessenen Stellen exakt**:
+
+$$v_i^{\rm sep}\;=\;\tfrac1{24}+E_i\;\downarrow\;\tfrac1{24}\;>\;0,$$
+
+(Stufe 10 verlangt die Reskalierung $\varphi=E\psi$, sonst bricht HiGHS ein;
+reskaliert stimmt auch sie.) Der Gewinn sitzt stabil in **Block 1**: seine
+Diagonalsumme ist auf jeder Stufe $\ge4$ exakt $1/24$, die Werte
+konvergieren punktweise (schweres Atom: $h(a,a)\to\tfrac19$), nichts
+wandert ins Feine — die tiefen Blöcke können die Diagonale auch nicht
+tragen, ihre Gesamtmasse ist $E_J\ll\tfrac1{24}$.
+
+### Die Kollision, präzise
+
+Die Uhr ist intervallendlich; der Satz des vierzehnten Laufs gibt für sie
+$\Phi(s,t)=\Phi(t,s)$, die Dualität **gilt**. Zugleich liefert das folgende
+Kompaktheitsargument aus den Messwerten scheinbar ein exaktes Gegenobjekt:
+optimale $h^{(i)}$ der separablen LPs sind gleichmäßig durch $B$ beschränkt;
+eine Diagonalfolge gibt punktweise Konvergenz auf allen (Atom,
+Gitterpunkt)-Paaren; für jedes feste Paar $(s,t)$ ist das Residuum
+$\le2BE_i\to0$, die Schwänze der Summen sind durch $2BE_J$ gleichmäßig
+kontrolliert, also erfüllt der Limes $h^*$ die Bedingungen 1–3 des
+**unendlichen** Systems exakt, mit $|h^*|\le B$ und
+$\Delta^*=\sum_am_ah^*(a,a)=\tfrac1{24}\neq0$. Nach der Äquivalenz des
+zwölften Laufs („aus jeder Lösung von 1–3 mit $h(a,a)\neq0$ wird ein echtes
+Gegenbeispiel") widerspräche das dem Satz. Einer von dreien hat eine Lücke:
+
+1. **Die Äquivalenz des zwölften Laufs im Unendlichen** — der
+   Hauptverdächtige. Die endliche Isolation der Diagonale ankert am
+   **Bodenatom**: die Zeile an $(a_1,a_2)$ lautet $m_1h(1,1)=0$, weil unter
+   dem untersten Atom nichts liegt. Auf $\omega^*$ gibt es kein unterstes
+   Atom; jede Summe $\sum_{a<s}$ ist unendlich, und die Isolation
+   teleskopiert ohne Anker nach unten. Es ist also offen — und jetzt die
+   entscheidende Frage —, ob das unendliche $h$-System 1–3 auf $\omega^*$
+   die Diagonale überhaupt erzwingt, oder ob es dort **echt schwächer** ist
+   als das $\Phi/\gamma$-System des Manuskripts (dessen Starrheit der
+   vierzehnte Lauf beweist). Gemessen passt dazu: am Stufe-8-Optimum ist
+   $\max|H|$ auf Atompaaren $\approx372\,E_8$ — die Starrheitskonstante der
+   endlichen Stufen explodiert wie $4^i$, das endliche System bleibt starr
+   ($E=0$-Kontrolle), aber die Konstante ist im Limes wertlos.
+2. **Das Kompaktheitsargument** — der Grenzübergang ist oben skizziert und
+   sieht dicht aus, ist aber zwanzig Minuten alt und ungeprüft.
+3. **Der Zusammenbau des vierzehnten Laufs** — mechanisch geprüft ist dort
+   nur die Fensterstarrheit (R); die Schwanzlimiten sind Menschenarbeit.
+
+Was daraus **unabhängig von der Auflösung** schon folgt: der LP-Weg — auch
+mit separabler Residuengestalt — ist als Beweisvehikel für Uhren mit
+hierarchisch aufsteigender Struktur zu schwach: auf einer Uhr, für die die
+Dualität bewiesen ist, bleibt $v_J$ von $0$ weg. Für den ordnungsdichten
+Fall heißt das: ein Kollaps-Argument à la (S) kann nicht der Weg sein; was
+die Relaxation noch verschenkt, ist die **rekursive** Realisierbarkeit —
+$\varphi$ muss selbst aus einem $h$ der fehlenden Atome kommen, das die
+tiefen Bedingungen erfüllt, nicht nur $|\varphi|\le BE$.
+
+### Was als Nächstes zu klären ist, in dieser Reihenfolge
+
+1. **Die Adjudikation der Kollision**, am kleinen Modell: erzwingt das
+   exakte $h$-System 1–3 auf der $\omega^*$-Kette $h(a,a)=0$? Entweder ein
+   Beweis (dann liegt der Fehler im Kompaktheitsargument, und wo genau) oder
+   eine explizite exakte Lösung mit $\Delta\neq0$ (dann ist die Äquivalenz
+   des zwölften Laufs im Unendlichen falsch, die Reduktion auf $h$ ist für
+   nicht bodenständige Atommengen nachzubessern, und alle
+   $v_J$-Interpretationen der Läufe 12–16 sind entsprechend zu lesen). Die
+   gemessene Blockstruktur (Block 1: $h(a,a)\approx[0,0,0.006,-0.03,\tfrac19]$,
+   selbstähnliche Fortsetzung) ist der Kandidat für die Konstruktion.
+2. Erst danach lohnt die rekursive Realisierbarkeit als LP.
+
+### Sackgassen, vierzehnter Nachtrag
+
+* **Die Stufenpaar-Rekursion / Kontraktions-Deutung des fünfzehnten
+  Laufs.** Die Stabilität von $c$ in den fünf Messreihen war keine
+  Kontraktion, sondern Artefakt der dort getesteten Uhren: auf der
+  hierarchischen Motor-Uhr steigen die Quotienten $v_i/v_{i-1}$ gegen $1$.
+  Wer $v_J\to0$ uhrenfrei beweisen will, beweist etwas Falsches — (S) hat
+  ein zertifiziertes Gegenbeispiel.
+* **Die Massenbilanz-Heuristik.** Ihr fehlendes Lemma (Motoren teilen keine
+  Masse) ist falsch im einzig relevanten Sinn: die Relaxation kennt kein
+  Budget, das verbraucht würde. Jede Fortsetzung, die Gewinn gegen
+  verbrauchte Masse aufrechnet, braucht zuerst eine Bedingung, die das
+  Teilen verbietet — die Separabilität allein tut es nicht.
+
+## Die Adjudikation, 2026-09-02 (siebzehnter Lauf): das $h$-System ist auf $\omega^*$ starr, der Fehler lag im Kompaktheitsargument, und „(S) ist falsch" ist zurückgenommen
+
+Punkt 1 der Liste des sechzehnten Laufs, entschieden — durch **Beweis**, nicht
+durch eine Lösung: das exakte $h$-System 1–3 erzwingt auf jeder
+intervallendlichen Kette $h(a,a)=0$. Der Bodenatom-Verdacht gegen die
+Äquivalenz des zwölften Laufs war unbegründet; die Lücke lag im
+Kompaktheitsargument, und zwar nicht in seiner Logik, sondern in seiner
+gemessenen Prämisse. Neu ist `Task23/adjudicate.py`.
+
+### Der Beweis, selbständig und kurz
+
+Sei $q$ rein atomar, die Atome unter $t^*$ paarweise vergleichbar und
+intervallendlich (Gitter $u_k$ wie im vierzehnten Lauf, ergänzter Deckel
+$t^*$), $h$ eine Lösung von 1–3, alle Reihen $H(s,t)=\sum_{a<s}m_ah(a,t)$ und
+$\Delta(t)=\sum_{a<t}m_ah(a,a)$ absolut konvergent (bei $|h|\le B$ und
+summierbarer Masse automatisch). Setze
+$$\kappa(a,t):=h(a,t)-h(a,a),\qquad
+  \widehat w(s,t):=H(s,t)+\Delta(t)-\Delta(s).$$
+Dann gilt, in drei Zeilen Algebra:
+
+1. **Erstschritt** (definitorisch, die Schnittdifferenz ist $\{u_k\}$):
+   $\widehat w(u_{k+1},t)-\widehat w(u_k,t)=m_k\kappa(u_k,t)$.
+2. **Zweitschritt** (Bedingung 3 an $(s,u_{k+1})$ und $(s,u_k)$, dann 1.):
+   $\widehat w(s,u_{k+1})-\widehat w(s,u_k)=-m_k\kappa(u_k,s)$.
+3. **Antisymmetrie von $\kappa$ auf Atompaaren** ist wörtlich Bedingung 2;
+   Antisymmetrie von $\widehat w$ ist wörtlich Bedingung 3.
+
+Kreuzmultiplikation von 1. und 2. gibt für $\widehat w$ **exakt die Relation
+$(\ast)$ des vierzehnten Laufs** — das $h$-System und das $\Phi$-System sind
+im antisymmetrischen Sektor isomorph. Die Zwei-Diagonalen-Induktion läuft
+also wörtlich (wohlfundiert durch die Intervallendlichkeit, ohne Boden und
+Deckel) und gibt $\widehat w\equiv0$ auf dem ganzen Gitter. Die
+Schwanzlimiten: für jedes Gitter-$t$ und $l\to-\infty$ ist
+$0=\widehat w(t,u_l)=H(t,u_l)+\Delta(u_l)-\Delta(t)$, darin
+$H(t,u_l)=-H(u_l,t)\to0$ — **Bedingung 3 verwandelt den
+Zweitkoordinatenlimes in einen Schnittschwanz**, und genau hier, und nur
+hier, geht die Summierbarkeit ein — und $\Delta(u_l)\to0$. Also
+$\Delta(t)=0$ für jedes $t$, also $m_kh(u_k,u_k)=\Delta(u_{k+1})-\Delta(u_k)=0$. $\square$
+
+Der Verdacht des sechzehnten Laufs — „die endliche Isolation der Diagonale
+ankert am Bodenatom" — trifft die endliche Beweisführung, aber nicht das
+System: den Anker ersetzt der Schwanzlimes.
+
+### Die Äquivalenz des zwölften Laufs überträgt sich, mit korrigierter Konstante
+
+Die Rückrichtung (aus $h$ mit 1–3 ein echtes Paar $(\Phi,\gamma)$) braucht
+$\kappa(a,0):=-h(a,a)$, **nicht** $\kappa(a,0):=0$: nur damit ist
+$\kappa(a,b)=h(a,b)-h(a,a)$ auf Atompaaren antisymmetrisch (Bedingung 2),
+solange die Diagonale nicht schon verschwindet — im endlichen Fall ist der
+Unterschied unsichtbar, weil sie dort verschwindet. Mit
+$$\gamma:=\kappa/2,\qquad
+  \Phi(s,t):=\tfrac12\textstyle\sum_{a<s}m_a\kappa(a,t)+\tfrac12\Delta(t)$$
+gelten beide Einschrittrelationen aus \eqref{eq:incrementrep} für **jedes**
+$y$, mit absolut konvergenten Summen, und der Dualitätsdefekt ist
+$\Phi(t^*,0)-\Phi(0,t^*)=-\Delta(t^*)$. Der Satz des vierzehnten Laufs gibt
+denselben Schluss also auch über diesen Umweg; beide Wege sind
+gegeneinander konsistent.
+
+### Wo das Kompaktheitsargument bricht
+
+Nirgends in seiner Logik. Diagonalfolge, dominierte Konvergenz und der
+Grenzübergang der Nebenbedingungen sind in Ordnung: ein Häufungswert der
+$v_i$ **ist** die Diagonalsumme einer exakten beschränkten Lösung von 1–3.
+Gebrochen ist die Prämisse $\lim v_i=\tfrac1{24}$ — sie war Extrapolation
+aus den Stufen $\le10$. Mit dem Satz oben folgt zwingend $v_i\to0$;
+quantitativ, mit Residuen $\varphi$ (die separable Gestalt):
+
+* Der $(\ast)$-Defekt von $\widehat w$ ist **exakt**
+  $-m_i\bigl(\varphi(u_{j+1})-\varphi(u_j)\bigr)$ — am LP-Optimum mechanisch
+  bestätigt (`adjudicate.py`, Probe (d): $\le10^{-10}$ auf allen geprüften
+  Paaren, Stufen 4–9); ebenso die exakt erzwungene Identität
+  $h(u_j,u_{j+1})=h(u_j,u_j)$ (Probe (a), $\le10^{-8}$ — drei Zeilen von
+  Bedingung 3, $\varphi$ kürzt sich).
+* **Fensterschranke.** Läuft die Induktion nur im festen Fenster oberhalb
+  eines Atoms $u_l$, so sind alle Koeffizienten Massenverhältnisse des
+  Fensters — stufenunabhängig —, alle Fehlerterme $O(E_i)$, und die zwei
+  Randterme kosten je $B\cdot M_{<u_l}$:
+  $$v_i\;\le\;2B\,M_{<u_l}\;+\;(K_l+2B)\,E_i,\qquad
+    K_l\ \text{stufenunabhängig}.$$
+  Mit $M_{<u_l}\to0$ (Summierbarkeit) und $l=l(i)$ langsam wachsend folgt
+  $v_i\to0$.
+
+### Warum die Messung das nicht sieht
+
+$K_l$ ist endlich, aber gewaltig: die Rekursionskoeffizienten sind
+Massenverhältnisse bis $4^4$ je Blockübergang (rohe Schranke für die Blöcke
+1–4: $\sim10^{48}$). Gemessen (`adjudicate.py`, Probe (b)) sättigt das
+Optimum den Randterm exakt — $H(t^*,u_l)=B\,M_{<u_l}$ auf allen
+Blockböden, $\Delta(u_l)\approx0$ — und $\widehat w(t^*,u_l)$ stagniert bei
+$M_{<u_l}-\tfrac1{24}$; schon auf Stufe 9 heißt das $K_l\ge10^4$, und die
+Stagnation kann das Plateau über Dutzende Stufen tragen. Die Stufen 10–14
+(Reformulierung ohne $\varphi$-Variablen: Bedingung
+$H(s,t)+H(t,s)=H(s,s)+H(t,t)$ exakt plus $|H(t,t)|\le BE$; HiGHS braucht
+dafür `presolve=False`, sein Presolve meldet sonst fälschlich „Unknown";
+die Ausreißer der Stufen 7 und 12 sind Solver-Unterschätzungen) bleiben bei
+$\tfrac1{24}\pm2\cdot10^{-6}$. Das ist **kein** Gegenbefund: der Kollaps ist
+bewiesen und liegt jenseits der numerisch erreichbaren Stufen.
+
+### Was am sechzehnten Lauf zu korrigieren ist
+
+* **„(S) ist falsch" ist zurückgenommen.** Die Motor-Uhr ist kein
+  Gegenbeispiel: ihr $v_J$ geht gegen $0$, bewiesen. Die exakten Zertifikate
+  ($v_8\ge0.144$ usw.) bleiben richtig als Aussagen über einzelne Stufen und
+  sagen über den Limes nichts. Für intervallendliche Uhren, deren
+  Ausschöpfung jedes Fenster irgendwann stabilisiert (alle bisher gebauten),
+  ist (S) **wahr**. Für ordnungsdichte Atommengen bleibt (S) offen — dort
+  stabilisiert kein Fenster, und das Argument dieses Laufs greift nicht.
+* Richtig bleibt: die LP-Relaxation taugt nicht als Beweisvehikel — jetzt
+  mit umgekehrtem Vorzeichen: nicht weil ihr Limes $\neq0$ wäre, sondern
+  weil ihre endlichen Werte über den Limes nichts aussagen, sobald die
+  Uhr aufsteigende Massenstruktur hat.
+
+### Was der ordnungsdichte Kern davon hat
+
+Der Isomorphismus $\widehat w\leftrightarrow\Phi$ ist das bleibende
+Werkzeug: **jede** Aussage über das $\Phi$-System überträgt sich wörtlich in
+das $h$-System und umgekehrt; wer den ordnungsdichten Fall angreift, kann
+frei zwischen beiden wechseln und muss keine LP-Evidenz mehr konsultieren.
+Der einzige offene Weg ist der schon im vierzehnten Lauf benannte: die
+Schwanzrelationen über Häufungspunkte hinweg (kleinste Instanz: zwei
+$\zeta$-Ketten), jetzt ohne die falsche Hoffnung, ein Kollapsargument über
+LP-Werte könne ihn ersetzen.
+
+### Die zwei $\zeta$-Ketten, reduziert: $(\ast)$ auf dem Viertelgitter mit Eckenabfall
+
+Als Anzahlung auf diesen Weg ist die kleinste Instanz auf ihre algebraische
+Normalform gebracht. Kette $A$ (Atome $a_j$, $j\in\mathbb Z$, aufsteigend,
+Häufung von unten am Punkt $p$) unter Kette $B$ (Atome $b_i$, $i\in\mathbb Z$,
+Häufung von oben an $p$), Massen $m^A_j,m^B_i>0$, summierbar. Dann:
+
+1. **Blockintern** ist alles erledigt: innerhalb von $A$ und $B$ ist die
+   Kette intervallendlich, der Satz des vierzehnten Laufs gibt $w\equiv0$ auf
+   $A{\times}A$ und $B{\times}B$, und die Einschrittdifferenzen darin geben
+   $\kappa\equiv0$ auf allen blockinternen Paaren. $\kappa$ lebt nur noch auf
+   Kreuzpaaren, $x_{ij}:=\kappa(b_i,a_j)$.
+2. **$\Phi$ ist an $p$ beidseitig stetig, in beiden Koordinaten**: die
+   Differenz $\Phi(b_l,y)-\Phi(a_k,y)$ ist die Atomsumme über $[a_k,b_l)$,
+   ein Schwanz der absolut konvergenten Reihe, und geht für $k,l\to\infty$
+   gegen $0$; ebenso in der zweiten Koordinate. Daraus verschwinden die
+   Kreuzwerte in Richtung $p$:
+   $\lim_{i\to-\infty}w(b_i,a_j)=w(p,a_j)=\lim_k w(a_k,a_j)=0$ und
+   $\lim_{j\to+\infty}w(b_i,a_j)=\lim_l w(b_i,b_l)=0$.
+3. **Die Schwanzdarstellungen** (Einschritt plus 2.):
+   $F(i,j):=w(b_i,a_j)=\sum_{i'<i}m^B_{i'}x_{i'j}=-\sum_{j'\ge j}m^A_{j'}\,
+   \kappa(a_{j'},b_i)$, also
+   $$F(i{+}1,j)-F(i,j)=m^B_i\,x_{ij},\qquad
+     F(i,j{+}1)-F(i,j)=m^A_j\,x_{ij},$$
+   und Kreuzelimination von $x$ gibt **wörtlich $(\ast)$** auf
+   $\mathbb Z\times\mathbb Z$.
+
+Die offene Frage ist damit exakt: *erzwingt $(\ast)$ auf dem vollen Gitter
+zusammen mit dem Abfall $F(i,j)\to0$ für $i\to-\infty$ (jedes feste $j$) und
+für $j\to+\infty$ (jedes feste $i$) — Abfall an den zwei an der Ecke
+$(p,p)$ zusammenstoßenden Rändern, die anderen beiden Ränder sind frei —
+schon $F\equiv0$?* Zwei Kandidatenfamilien sterben sofort: separables
+$x_{ij}=\beta_i\lambda_j$ führt auf $\sum_{i'<i}m^B\beta_{i'}=c\,\beta_i$,
+dessen Produktformel einen von $0$ weg konvergenten Limes $\beta_{-\infty}$
+hat, während der leere Schwanz $\beta_{-\infty}=0$ verlangt; eine einzelne
+besetzte Zeile $x_{i_0,\cdot}$ muss konstant sein und stirbt am
+$j$-Abfall. Das ist kein Beweis, aber es zeigt: die Schwänze wirken genau
+dort, wo Test X des vierzehnten Laufs die lokale Algebra enden sah. Wer den
+Punkt aufnimmt, beginnt bei dieser Viertelgitterfrage — sie ist frei von
+Uhren, Trunkierungen und LPs.
+
+### Sackgassen, fünfzehnter Nachtrag
+
+* **Limiten von LP-Werten messen und extrapolieren.** Das Plateau
+  $\tfrac1{24}+E_i$ hielt exakt über sieben Stufen und ist trotzdem
+  praeasymptotisch; die Konstanten, die es tragen, wachsen wie Produkte von
+  Massenverhältnissen und sind jeder Messung voraus. Wer aus LP-Werten auf
+  den Limes schließen will, braucht die Fensterschranke — und die beweist
+  dann schon den Kollaps, ohne Messung.
+* **Endliche Zertifikate als Aussagen über das unendliche System lesen.**
+  Zum zweiten Mal dieselbe Falle wie im dreizehnten Lauf (Relaxation fürs
+  System gehalten), diesmal in der Zeitrichtung: Stufenwerte fürs
+  Limesverhalten gehalten.
+
+## Die Viertelgitterfrage, 2026-09-02 (achtzehnter Lauf): Normalform als kommutierende Evolution, endliche Superpositionen und exponentiell abfallende Spektralmaße sterben, ohne Summierbarkeit ist die Aussage falsch
+
+Vorab zur Laufgeschichte: die zwei Läufe zwischen dem siebzehnten und diesem
+wurden von der Nutzungsgrenze abgeschnitten. Übrig blieb `Task23/zeta_cross.py`
+mit Verweisen auf ein „Lemma 1", eine „Proposition 2", ein „Theorem 4" und
+einen „Mechanismus (ii)", zu denen kein Protokolltext existierte. Dieser Lauf
+hat die Aussagen aus dem Skript rekonstruiert, **selbst bewiesen** — nichts
+davon ist aus dem Skript „übernommen" —, das Skript um die Probe (f) ergänzt
+(rc=0) und schreibt hier den Text, der fehlte. Die Nummerierung folgt dem
+Skript, damit die Verweise stimmen.
+
+### Aufstellung: das System (Q)
+
+Die Reduktion des siebzehnten Laufs, in einer Zeile. Massen
+$\mu_i:=m^B_i>0$, $\nu_j:=m^A_j>0$ ($i,j\in\mathbb Z$), beide **summierbar**
+($S:=\sum_i\mu_i<\infty$, $T:=\sum_j\nu_j<\infty$ — das ist `def:clock` für
+die zwei $\zeta$-Ketten). Gesucht ist $x:\mathbb Z^2\to\mathbb R$ mit
+zeilen- und spaltenweise absolut konvergenten Summen und
+
+$$\sum_{i'<i}\mu_{i'}x_{i'j}\;=\;-\sum_{j'\ge j}\nu_{j'}x_{ij'}
+\qquad\text{für alle }(i,j)\in\mathbb Z^2. \tag{Q}$$
+
+Die gemeinsame Größe heißt $F(i,j)$; sie erfüllt dann automatisch beide
+Einschrittrelationen $F(i{+}1,j)-F(i,j)=\mu_ix_{ij}$,
+$F(i,j{+}1)-F(i,j)=\nu_jx_{ij}$, die Kreuzrelation $(\ast)$, den Westabfall
+($F(i,j)\to0$ für $i\to-\infty$) und den Nordabfall ($F(i,j)\to0$ für
+$j\to+\infty$), und auch $x_{ij}\to0$ in beiden Abfallrichtungen. **Die
+Frage (V):** erzwingt (Q) schon $x\equiv0$? Ja ⟹ die Dualität gilt für die
+zwei gestapelten $\zeta$-Ketten, und per Cantor–Bendixson öffnet sich der
+diskrete, nicht intervallendliche Fall.
+
+### Lemma 1 (der Haken): (Q) ist äquivalent zu $(\ast)$ plus Abfall
+
+**(a) Flussebene.** Erfüllt $F$ beide Einschrittrelationen, so erfüllt $x$
+selbst $(\ast)$ (Probe (a)). Erfüllt umgekehrt $x$ die Relation $(\ast)$ und
+sind die Zeilensummen absolut konvergent, so erfüllt
+$F^W(i,j):=\sum_{i'<i}\mu_{i'}x_{i'j}$ die $i$-Schritte immer und die
+$j$-Schritte genau dann, wenn $\lim_{i\to-\infty}x_{ij}=0$ für jedes $j$:
+Summation von $\mu_{i'}(x_{i',j+1}-x_{i'j})=\nu_j(x_{i'+1,j}-x_{i'j})$ über
+$i'<i$ teleskopiert rechts zu $\nu_j(x_{ij}-x_{-\infty,j})$. **Der
+Westlimes des Flusses ist die eigentliche Randbedingung**; genau an ihr
+starb der separable Ansatz des siebzehnten Laufs.
+
+**(b) Hakenkonstanz.** Gelten zusätzlich die spaltenweise absolute
+Konvergenz und der Nordabfall von $F$, so ist der Haken
+$D(i,j):=F(i,j)+\sum_{j'\ge j}\nu_{j'}x_{ij'}$ konstant: in $j$
+definitorisch, in $i$ weil $(\ast)$ die Spaltensumme zu
+$\mu_i(x_{i,\infty}-x_{ij})$ teleskopiert und $x_{i,\infty}=0$ aus dem
+Nordabfall folgt (endlicher Kern: Probe (b),
+$H(i{+}1,j)-H(i,j)=\mu_ix_{i,j_1+1}$). Entlang $j\to+\infty$ gehen beide
+Summanden gegen $0$, also $D\equiv0$ — das **ist** (Q). Die Rückrichtung
+(aus (Q) beide Schritte und beide Abfälle) ist die Dreieckszerlegung der
+absolut konvergenten Schwänze.
+
+### Die Normalform: eine kommutierende Evolution mit einem einzigen Operator
+
+$(\ast)$ für $F$ ist äquivalent zu
+$$F(\cdot,j{+}1)=(I+\nu_jL)\,F(\cdot,j),\qquad
+(Lg)_i:=\frac{g_{i+1}-g_i}{\mu_i}.$$
+**Alle Zeilenschritte sind $I+\nu_jL$ mit demselben $L$** — sie kommutieren,
+die Evolution von Zeile $j$ nach Norden ist die Operatorfassung des
+Produkts $\Pi_j(c)=\prod_{j'\ge j}(1+c\nu_{j'})$, einer ganzen Funktion vom
+Geschlecht 0 mit Nullstellen genau bei $-1/\nu_{j'}$, und die
+Summierbarkeit von $\nu$ ist die **endliche Horizontzeit** $T$. Die
+Eigenvektoren von $L$ sind die separablen Moden
+$\beta^c_i=\prod_{i'<i}(1+c\mu_{i'})$ (Eigenwert $c$, Probe (d)); ihre
+$j$-Seite sind die Multiplikatoren $\lambda^c_j=\prod_{j'<j}(1+c\nu_{j'})$.
+Wegen $\beta^c_{-\infty}=1\neq0$ hat $L$ auf dem Raum der westabfallenden
+Zeilen **keine Eigenwerte**. Alle „$L$-Ableitungen" $L^kF$ sind ebenfalls
+Lösungen und ebenfalls nordflach ($L^kF(i,j)\to0$ für $j\to\infty$, als
+endliche Kombination) — die Frage (V) hat die Gestalt einer
+**Quasianalytizitätsfrage**: ist die Evolutionsklasse starr gegen
+Flachheit am Nordrand, d.h. ist $\Pi_j(L)$ auf dem Westraum injektiv?
+
+Nebenbefund, der die Fensterschranke des siebzehnten Laufs einordnet:
+$(I+\nu L)^{-1}$ existiert auf dem Westraum als Vorwärtsrekursion
+$g_{i+1}=(1-\mu_i/\nu)g_i+(\mu_i/\nu)f_i$; sie ist Kontraktion, wo
+$\mu_i\le\nu$, und bläht sonst mit Faktoren $\mu_i/\nu$ auf — die
+$K_l$-Produkte von Massenverhältnissen sind genau die Norm dieser Inversen.
+
+### Proposition 2: ohne Summierbarkeit ist (V) falsch
+
+$\mu\equiv\nu\equiv1$, $g$ ein kompakter Buckel, $F(i,j):=g(i+j)$: erfüllt
+$(\ast)$, beide Tail-Darstellungen, beide Abfälle, und ist nicht $0$
+(Probe (c); die Darstellungen teleskopieren exakt, weil $g$ links wie
+rechts schließlich $0$ ist). Die Summierbarkeit ist also keine
+Bequemlichkeit, sondern die Aussage: sie macht die Massenkoordinaten
+$B_i=\sum_{i'<i}\mu_{i'}\in(0,S)$, $A_j\in(0,T)$ endlich, und im
+Kontinuumsbild $F=G(B+A)$ (Transportgleichung $\partial_BF=\partial_AF$)
+decken die zwei abfallenden Ränder den **ganzen** Charakteristikenbereich:
+der Westrand tötet $G$ auf $(0,T)$, der Nordrand auf $(T,T+S)$, und sie
+stoßen an der Ecke $(p,p)$ zusammen. Das ist die geometrische Erklärung,
+warum (V) plausibel ist und warum sie an der Ecke hängt.
+
+### Proposition 3: jeder Einzelschritt ist injektiv
+
+$\ker(I+\nu_jL)$ ist eindimensional, aufgespannt von $\beta^{-1/\nu_j}$
+(bzw. dessen Abschneidung, wenn ein Faktor $1-\mu_{i_0}/\nu_j$
+verschwindet: links davon $\beta$-förmig, rechts $0$). In jedem Fall ist
+der Westlimes des Kernelements $\neq0$ — auf dem Westraum ist
+$I+\nu_jL$ injektiv. Kein einzelner Schritt kann eine Lösung töten; wenn
+(V) falsch ist, stirbt die Lösung erst **im Limes** der unendlich vielen
+Schritte.
+
+### Theorem 4: keine endliche Superposition separabler Moden löst (Q)
+
+Sei $x=\sum_{r=1}^Rw_r\beta^{c_r}\lambda^{c_r}$ mit paarweise
+verschiedenen $c_r\in\mathbb C$ (auch $c=0$, die konstante Mode, ist
+zugelassen). Die Westbedingung aus Lemma 1(a) lautet
+$\sum_rw_r\lambda^{c_r}_j=0$ für **alle** $j$. Der **Momentenschritt**
+(Probe (d)): Anwenden von $(\Delta_jg)/\nu_j$ überführt sie wegen
+$(\lambda^c_{j+1}-\lambda^c_j)/\nu_j=c\,\lambda^c_j$ in
+$\sum_rw_rc_r^k\lambda^{c_r}_j=0$ für alle $j,k$. Jede Mode hat nur
+endlich viele Nullstellenindizes ($1+c_r\nu_{j'}=0$ nur endlich oft, da
+$\nu\to0$); wähle $j^*$ unterhalb aller, dann ist
+$\lambda^{c_r}_{j^*}\neq0$ für alle $r$, und die Vandermonde-Matrix der
+$c_r$ gibt $w=0$. (Ableitungsmoden $\partial_c^s[\beta^c\lambda^c]$
+laufen wörtlich über die konfluente Vandermonde-Matrix.) Probe (d) zeigt
+zugleich die **Schärfe**: auf einem $j$-Fenster der Länge $R-1$ gibt es
+einen nichttrivialen Kern — erst das unendliche Fenster tötet. Der
+Nordabfall wird nicht einmal gebraucht.
+
+### Proposition 5: reelle Spektralmaße haben verschwindende Momente und sterben bei exponentiellem Abfall
+
+Sei $x_{ij}=\int\beta^c_i\lambda^c_j\,d\sigma(c)$ mit einem signierten
+Maß $\sigma$ auf $\mathbb R$, zulässig in dem Sinn, dass
+$\int(1+|c|)^ke^{\Phi_\mu(|c|)+\Phi_\nu(|c|)}\,d|\sigma|<\infty$ für alle
+$k$, wobei $\Phi_\mu(r):=\sum_i\log(1+r\mu_i)$ (und analog $\Phi_\nu$)
+die **scharfe** gemeinsame Wachstumsschranke aller Moden ist:
+$|\beta^c_i\lambda^c_j|\le e^{\Phi_\mu(|c|)+\Phi_\nu(|c|)}$ gleichmäßig
+in $(i,j)$. Löst $x$ das System (Q), so gilt:
+
+1. **Alle Polynommomente von $\sigma$ verschwinden.** Die Westbedingung
+   gibt $\int\lambda^c_j\,d\sigma=0$ für alle $j$ (dominiert,
+   $\beta^c_i\to1$); der Momentenschritt gibt
+   $\int c^k\lambda^c_j\,d\sigma=0$ für alle $j,k$; und $j\to-\infty$
+   mit der $j$-gleichmäßigen Dominante $|c|^ke^{\Phi_\nu(|c|)}$ liefert
+   $\int c^k\,d\sigma=0$.
+2. **Hat $\sigma$ exponentiellen Abfallspielraum**
+   ($\int e^{\varepsilon|c|}\,d|\sigma|<\infty$ für ein
+   $\varepsilon>0$), **so ist $\sigma=0$**: die Fourier–Laplace-
+   Transformierte ist in einem Streifen analytisch, und alle
+   Ableitungen in $0$ verschwinden.
+
+Zwei Vorsichten, beide wesentlich. Erstens ist die Spektralgestalt eine
+**Einschränkung**: dass jede westabfallende Lösung eine solche
+Darstellung hat, ist nicht bewiesen; Proposition 5 begrenzt
+Gegenbeispielkonstruktionen, sie beweist (V) nicht. Zweitens sind
+komplexe Träger hier bewusst ausgeschlossen: über $\mathbb C$ ist die
+Parametrisierung nur modulo der Annihilatoren ganzer Funktionen
+definiert (ein Kreisintegral $\oint\beta^c\lambda^c\,dc$ ist $0$ nach
+Cauchy und parametrisiert gar nichts).
+
+### Die Mechanismen, warum es schwer ist
+
+* **(i) Der Westlimes der Moden.** $\beta^c_{-\infty}=1$: jede einzelne
+  Mode verletzt die Randbedingung; nur Auslöschung im Kontinuum von
+  Moden könnte eine Lösung tragen. Endlich (Theorem 4) und exponentiell
+  abfallend (Proposition 5) ist die Auslöschung unmöglich.
+* **(ii) Die Dispersion.** Der charakteristische Ansatz $F=G(B_i+A_j)$
+  hat für nichtaffines $G$ einen exakten $(\ast)$-Defekt mit dem Faktor
+  $\mu_i\nu_j(\mu_i-\nu_j)$ (Probe (e): für $G(u)=u^2$ exakt dieser
+  Faktor), und **derselbe antisymmetrische Faktor** sitzt in der exakten
+  Energieidentität (Probe (f)): auf Lösungen von (Q) ist
+  $$0=\tfrac12\sum_j\nu_jR_j^2+\tfrac12\sum_i\mu_iC_i^2
+    +\tfrac12\sum_{ij}\mu_i\nu_j(\nu_j-\mu_i)\,x_{ij}^2,$$
+  und der letzte Summand ist indefinit — die Paarung beweist nichts,
+  solange kein Multiplikator das Vorzeichen repariert; separable
+  Gewichte $\alpha_i\beta_j$ faktorisieren durch und ändern nichts
+  (nachgerechnet, siehe Sackgassen). Das Kontinuum hat keinen solchen
+  Term; die ganze Schwierigkeit von (V) ist diese Dispersion.
+
+### Was jetzt offen ist, exakt
+
+(V) selbst. Bewiesen ist: keine endliche Modensuperposition, kein
+reelles Spektralmaß mit exponentiellem Abfall, kein endlich getragenes
+$x$, kein Tod in endlich vielen Schritten — und ohne Summierbarkeit wäre
+(V) falsch. Der verbleibende Raum ist scharf benannt: für **geometrisch
+fallende Massen** ist $\Phi_\mu(r)+\Phi_\nu(r)=O((\log r)^2)$, die
+Zulässigkeit verlangt von $\sigma$ also nur quasipolynomialen Abfall,
+und Maße mit lauter verschwindenden Momenten und Abfall etwa
+$e^{-\sqrt r}$ **existieren** (Stieltjes). Ob eines davon zusätzlich die
+ganze Familie $\{\lambda_j\}_{j\in\mathbb Z}$ annihilieren kann — das
+folgt aus den Momenten dann **nicht** mehr —, ist eine
+Vollständigkeitsfrage für ein Geschlecht-0-Produktsystem in gewichtetem
+$L^1(\mathbb R)$, in die die Massen über ihre Zählfunktion eingehen: die
+erste Frage von Task 23, die echt an den **Asymptotiken** der Massen
+hängen könnte (Denjoy–Carleman). Die zwei benannten Wege:
+
+* **(α) Spektraldarstellung oder direkte Injektivität.** Zeige, dass
+  $\Pi_j(L)$ auf dem Westraum injektiv ist — etwa indem man jeder
+  westabfallenden Lösung eine Spektraldarstellung mit exponentiell
+  abfallendem $\sigma$ verschafft (dann schließt Proposition 5), oder
+  durch ein Carleman-Argument direkt an der Evolution.
+* **(β) Das Gegenbeispiel.** Ein $\sigma$ mit quasipolynomialem
+  Abfall, $\int\lambda^c_j\,d\sigma=0$ für alle $j$,
+  $\int\beta^c_i\Lambda^c\,d\sigma=0$ für alle $i$
+  ($\Lambda^c:=\lambda^c_{+\infty}$) und angepasster Konstante
+  $\int(\lambda^c_j-\beta^c_i\Lambda^c)/c\,d\sigma=0$. Wer hier suchen
+  will, suche zuerst bei stark lakunären Massen, wo die
+  Produktsysteme am dünnsten sind.
+
+### Sackgassen, sechzehnter Nachtrag
+
+* **Die Energiepaarung mit separablen Gewichten.** In
+  $\langle(P+N)x,\alpha_i\beta_jx\rangle$ faktorisieren die Gewichte aus
+  dem indefiniten Diagonalterm heraus; die zusätzlichen positiven
+  $F^2$-Terme (Abel) sind gegen ihn nicht abschätzbar, weil
+  $\mu_i^2x_{ij}^2\le2F(i{+}1,j)^2+2F(i,j)^2$ einen Faktor $2$ kostet,
+  den kein monotones Gewicht wieder hereinholt. Wer die Paarung
+  fortsetzt, braucht einen **nichtdiagonalen** Multiplikator
+  (Friedrichs), nicht bessere Gewichte.
+* **Kompakt getragene Spektralmaße oder komplexe Konturen.** Kompakt
+  reell: Momente töten sofort. Komplexe Konturen: parametrisieren
+  modulo Cauchy nichts. Beides keine Quelle von Gegenbeispielen.
+* **Aus dem Kontinuumsbild extrapolieren.** $F=G(B+A)$ ist im Diskreten
+  um den Defekt aus Probe (e) falsch; die Starrheit des Kontinuums
+  beweist nichts, sie erklärt nur, warum (V) plausibel ist. Die
+  Dispersion ist der Gegenstand, nicht ein Störterm.
