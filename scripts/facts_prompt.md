@@ -91,6 +91,28 @@ Präfix: $\sim k$). Offen für den nächsten Lauf: der Interferenztest
 Stufenpaar-Rekursion; beides steht präzise in `Task23/PROTOKOLL.md`,
 fünfzehnter Lauf, „Was als Nächstes zu rechnen bzw. zu beweisen ist".
 
+**Zwischenstand 2026-09-02 (sechzehnter Task-23-Lauf).** Teil (b) ist
+beantwortet, und zwar negativ: **die Frage (S) ist falsch.** Die
+hierarchische Motor-Uhr (`Task23/interference.py`: Block $i$ = schweres Atom
+$\lambda_i$ über einem $k$-Präfix der Masse $\lambda_i$, $\lambda_{i+1}=
+\lambda_i/4$, summierbar, intervallendlich, Typ $\omega^*$) hält $v_J$ von
+$0$ weg — exakt zertifiziert (`interference_certificate.py`: $v_8\ge0.144$
+bei $E_8=1.6\cdot10^{-5}$). Die Skalen **teilen** sich die fehlende Masse
+(Antwort auf den Interferenztest); die Massenbilanz-Heuristik und die
+Kontraktions-Deutung sind Sackgassen (vierzehnter Nachtrag). Auch die
+separable Residuengestalt (`interference_separable.py`, Punkt 3 des
+dreizehnten Laufs erstmals als LP) kollabiert nicht: $v_i^{\rm sep}=
+\tfrac1{24}+E_i\downarrow\tfrac1{24}$, exakt auf den Stufen 3–10. Da die Uhr
+intervallendlich ist, **gilt** auf ihr die Dualität (Satz des vierzehnten
+Laufs) — die LP-Relaxation ist also als Beweisvehikel für aufsteigende
+Strukturen bewiesen zu schwach, und ein Kompaktheitsargument aus den
+Messwerten kollidiert scheinbar mit dem Satz. Die Adjudikation dieser
+Kollision (erzwingt das unendliche $h$-System 1–3 auf $\omega^*$ die
+Diagonale? Hauptverdächtiger: die Äquivalenz des zwölften Laufs ankert am
+Bodenatom, das $\omega^*$ nicht hat) ist die präzise Aufgabe des nächsten
+Laufs; sie steht in `Task23/PROTOKOLL.md`, sechzehnter Lauf, „Was als
+Nächstes zu klären ist".
+
 ## Worum es geht
 
 Die 29 mit `\begin{fact}` ausgezeichneten Aussagen des Manuskripts sind seine

@@ -3214,3 +3214,49 @@ Baustein von Task 23, hat keinerlei Maßtheorie im Beweis und macht die
 $\mathbb Z$-Fassung zu einer Übertragung statt einer Neuentwicklung. Daneben
 bleibt der Manuskriptvorschlag des Vortagslaufs (Hebung von
 `prop:atomicdual` auf intervallendlich) stehen und wartet auf den Nutzer.
+
+### 2026-09-02, zweiter Lauf des Tages — vorrangige Aufgabe, Teil (b): der Interferenztest, und (S) ist falsch
+
+Kein Fact bearbeitet; der ganze Lauf gehört der vorrangigen Aufgabe
+(Summierbarkeit, Teil b), wie vom Auftrag verlangt. Ergebnis in einer Zeile:
+**die Frage (S) des fünfzehnten Laufs ist widerlegt, mit exaktem
+Zertifikat**, und der Befund reicht tiefer, als die Frage gestellt war.
+
+* **Der Interferenztest ist gebaut und beantwortet** (`Task23/interference.py`,
+  `interference_certificate.py`, `interference_separable.py`;
+  Protokollabschnitt sechzehnter Lauf). Die hierarchische Motor-Uhr — Block
+  $i$ = schweres Atom $\lambda_i$ über einem Vier-Präfix der Masse
+  $\lambda_i$, $\lambda_{i+1}=\lambda_i/4$, Gesamtmasse $16/15$, Typ
+  $\omega^*$, intervallendlich — hält $v_J$ von $0$ weg: zertifiziert
+  $v_8\ge0.144$ bei $E_8=1.6\cdot10^{-5}$ (Bruchrechnung, Nenner $10^9$).
+  Die Skalen **teilen** sich die fehlende Masse; die
+  Massenbilanz-Heuristik und die Kontraktions-Deutung des fünfzehnten Laufs
+  sind als Sackgassen protokolliert.
+* **Die Gestalt des Residuums (Punkt 3 des dreizehnten Laufs) ist erstmals
+  ins LP eingebaut** — separables $\varphi(s)+\varphi(t)$, $|\varphi|\le BE$ —
+  und rettet den Kollaps nicht: $v_i^{\rm sep}=\tfrac1{24}+E_i\downarrow
+  \tfrac1{24}$, exakt auf den Stufen 3–10, Gewinn stabil in Block 1.
+* **Die Kollision, und sie ist der eigentliche Ertrag:** die Uhr ist
+  intervallendlich, die Dualität gilt auf ihr also nach dem Satz des
+  vierzehnten Laufs — die LP-Relaxation ist damit als Beweisvehikel für
+  aufsteigende Strukturen **bewiesen zu schwach**, ein Kollaps-Argument
+  à la (S) kann für den ordnungsdichten Fall nicht der Weg sein. Zugleich
+  scheint ein Kompaktheitsargument aus den Messwerten ein exaktes $h^*$ mit
+  $\Delta^*=\tfrac1{24}$ zu liefern; die drei Verdächtigen (Äquivalenz des
+  zwölften Laufs im Unendlichen — sie ankert am Bodenatom, das $\omega^*$
+  nicht hat —, das Kompaktheitsargument selbst, der Zusammenbau des
+  vierzehnten Laufs) stehen gereiht im Protokoll. Die Adjudikation ist die
+  benannte Aufgabe des nächsten Laufs.
+* Offen blieb: nichts von der gestellten Aufgabe; die Stufenpaar-Rekursion
+  hat sich durch das Ergebnis erledigt (keine Kontraktion vorhanden).
+
+**Was als Nächstes formalisiert werden soll: `atomGrid_symm`, in Lean —
+unverändert, aber mit neuer Dringlichkeit.** Aussage wie im Bericht des
+Vortagslaufs (`MartingaleProblems` Meilenstein 8: endliches Gitter,
+$m_i\ne0$, Kreuzrelation, Konklusion $\Phi(i,j)=\Phi(j,i)$; ruht allein auf
+der Zwei-Diagonalen-Induktion `lem:atomgrid`). Jetzt dran, weil sie mit
+`atomGrid_symm_int` der mechanische Schiedsrichter für Verdächtigen 3 der
+Kollision ist: eine Lean-geprüfte Fensterstarrheit samt
+$\mathbb Z$-Übertragung macht den intervallendlichen Satz maschinenfest, und
+dann liegt die Lücke beweisbar bei der Äquivalenz oder beim
+Kompaktheitsargument.

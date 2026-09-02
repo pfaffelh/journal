@@ -2120,3 +2120,144 @@ der Zeitwechsel von `cor:atomless` und endet per Axiom (stochastische
 Stetigkeit) vor den Atomen; für Task 23 gibt sie nichts her, was
 `cor:atomless` nicht schon ist. Der Bedarf an *simple* statt *elementary*
 flows ist wörtlich die Geometrie von `rem:fddnochain`, jetzt am Text belegt.
+
+## Der Interferenztest, 2026-09-02 (sechzehnter Lauf): die Skalen teilen sich die Masse, (S) ist falsch, und die Relaxation kollidiert mit dem intervallendlichen Satz
+
+Punkt 1 der Liste des fünfzehnten Laufs, ausgeführt; Punkt 2 (die
+Stufenpaar-Rekursion) ist durch das Ergebnis erledigt, bevor er begonnen
+wurde: die Stufen verhalten sich nicht wie eine Kontraktion — die Quotienten
+$v_{i}/v_{i-1}$ steigen gegen $1$. Neu sind `Task23/interference.py`,
+`interference_certificate.py` (exakte Bruchrechnung) und
+`interference_separable.py`.
+
+### Die hierarchische Motor-Uhr
+
+Block $i$ = schweres Atom der Masse $M_i=\lambda_i$ über einem Präfix aus
+$k=4$ leichten Atomen der Gesamtmasse $\lambda_i$, Blöcke absteigend
+geschachtelt in $(2^{-i},2^{-i+1}]$, $\lambda_{i+1}=\lambda_i/k$,
+$\lambda_1=2/5$. Gesamtmasse $16/15$, Atomtyp $\omega^*$ (Häufung bei $0$),
+**intervallendlich** — eine echte summierbare Uhr, vom Satz des vierzehnten
+Laufs abgedeckt. Die Wolke der Skala $i$ (Stufe $i$ der natürlichen
+Ausschöpfung lässt die Blöcke $>i$ weg) ist genau der Präfix der Skala
+$i{+}1$ samt allem Tieferen, $E_i=\tfrac{8}{3}\lambda_{i+1}=\tfrac{16}{15}4^{-i}$,
+und deckt den Budgetbedarf des Motors $i$ ($\tfrac23\lambda_{i+1}$) vierfach.
+
+### Messung 1: die Interferenz ist real, und sie ist mehr als additiv
+
+LP des fünfzehnten Laufs (Residuum $\le B(\varepsilon(s)+\varepsilon(t))$;
+hier ist $\varepsilon\equiv E_i$, weil alle fehlende Masse unter allen
+präsenten Atomen liegt):
+
+| Stufe | $2$ | $4$ | $6$ | $8$ | $10$ |
+|---|---|---|---|---|---|
+| $v_i$ | $0.414$ | $0.277$ | $0.176$ | $0.144$ | $0.109$ |
+| $v_i/(\lambda_iB)$ | $4.1$ | $44$ | $452$ | $6.8\cdot10^3$ | $1.1\cdot10^5$ |
+| $v_i/\text{additiv}$ | $0.83$ | $3.4$ | $22$ | — | — |
+| $v_i/\sqrt{ME_i}$ | $1.6$ | $4.2$ | $10.6$ | — | — |
+
+„additiv" ist die Einzelmotor-Buchhaltung
+$\sum_j\min(1,E_i/\text{Budget}_j)\lambda_jB$ der Massenbilanz-Heuristik.
+$\varepsilon$ fällt über fünf Größenordnungen, $v$ nur um Faktor sechs.
+**Exakt zertifiziert** (`interference_certificate.py`, Rundung auf
+Nenner $10^9$, Bedingungen 1 und 2 per Konstruktion, alle Gitterpaare von
+Bedingung 3 in `Fraction`, dann Skalierung mit $\max(B_{\rm used},
+\text{maxratio})$): $v_4\ge0.2767$, $v_6\ge0.1765$, $v_8\ge0.1440$.
+Kontrolle $E=0$ gibt $v=0$.
+
+**Damit ist die Frage (S) des fünfzehnten Laufs falsch**: es gibt eine
+summierbare Uhr und eine Ausschöpfung, längs derer $v_J$ nicht gegen $0$
+geht. Und die Lücke der Massenbilanz-Heuristik ist keine Lücke, sondern ihr
+Fehler: die Relaxation verbraucht kein Budget — dieselbe fehlende Masse
+steht allen Skalen zugleich zur Verfügung, die Konversionsrate
+Budget$\to$Gewinn ist skalenfrei ($\approx\tfrac32kB$ je Motor), und die
+gemessene Verstärkung liegt noch einmal um wachsende Faktoren über der
+additiven Buchhaltung — die aufsteigende Kaskade des dreizehnten Laufs
+(Blockmassen wachsen nach oben um Faktor $4$) läuft hier auf einer
+realisierbaren Uhr.
+
+### Messung 2: die Gestalt des Residuums, erstmals eingebaut — sie rettet den Kollaps nicht
+
+Auf dieser Uhr ist jedes realisierbare Residuum separabel,
+$R(s,t)=\varphi(s)+\varphi(t)$ mit $\varphi(g)=\sum_{\text{fehlend}}m_ah(a,g)$,
+$|\varphi|\le BE$ — Punkt 3 des dreizehnten Laufs als LP: neue Variablen
+$\varphi(g)$, Gleichheitszeilen, Schranke $BE$ (`interference_separable.py`).
+Das ist echt enger als $|R|\le2BE$. Ergebnis, auf den Stufen $3$–$10$ **auf
+alle gemessenen Stellen exakt**:
+
+$$v_i^{\rm sep}\;=\;\tfrac1{24}+E_i\;\downarrow\;\tfrac1{24}\;>\;0,$$
+
+(Stufe 10 verlangt die Reskalierung $\varphi=E\psi$, sonst bricht HiGHS ein;
+reskaliert stimmt auch sie.) Der Gewinn sitzt stabil in **Block 1**: seine
+Diagonalsumme ist auf jeder Stufe $\ge4$ exakt $1/24$, die Werte
+konvergieren punktweise (schweres Atom: $h(a,a)\to\tfrac19$), nichts
+wandert ins Feine — die tiefen Blöcke können die Diagonale auch nicht
+tragen, ihre Gesamtmasse ist $E_J\ll\tfrac1{24}$.
+
+### Die Kollision, präzise
+
+Die Uhr ist intervallendlich; der Satz des vierzehnten Laufs gibt für sie
+$\Phi(s,t)=\Phi(t,s)$, die Dualität **gilt**. Zugleich liefert das folgende
+Kompaktheitsargument aus den Messwerten scheinbar ein exaktes Gegenobjekt:
+optimale $h^{(i)}$ der separablen LPs sind gleichmäßig durch $B$ beschränkt;
+eine Diagonalfolge gibt punktweise Konvergenz auf allen (Atom,
+Gitterpunkt)-Paaren; für jedes feste Paar $(s,t)$ ist das Residuum
+$\le2BE_i\to0$, die Schwänze der Summen sind durch $2BE_J$ gleichmäßig
+kontrolliert, also erfüllt der Limes $h^*$ die Bedingungen 1–3 des
+**unendlichen** Systems exakt, mit $|h^*|\le B$ und
+$\Delta^*=\sum_am_ah^*(a,a)=\tfrac1{24}\neq0$. Nach der Äquivalenz des
+zwölften Laufs („aus jeder Lösung von 1–3 mit $h(a,a)\neq0$ wird ein echtes
+Gegenbeispiel") widerspräche das dem Satz. Einer von dreien hat eine Lücke:
+
+1. **Die Äquivalenz des zwölften Laufs im Unendlichen** — der
+   Hauptverdächtige. Die endliche Isolation der Diagonale ankert am
+   **Bodenatom**: die Zeile an $(a_1,a_2)$ lautet $m_1h(1,1)=0$, weil unter
+   dem untersten Atom nichts liegt. Auf $\omega^*$ gibt es kein unterstes
+   Atom; jede Summe $\sum_{a<s}$ ist unendlich, und die Isolation
+   teleskopiert ohne Anker nach unten. Es ist also offen — und jetzt die
+   entscheidende Frage —, ob das unendliche $h$-System 1–3 auf $\omega^*$
+   die Diagonale überhaupt erzwingt, oder ob es dort **echt schwächer** ist
+   als das $\Phi/\gamma$-System des Manuskripts (dessen Starrheit der
+   vierzehnte Lauf beweist). Gemessen passt dazu: am Stufe-8-Optimum ist
+   $\max|H|$ auf Atompaaren $\approx372\,E_8$ — die Starrheitskonstante der
+   endlichen Stufen explodiert wie $4^i$, das endliche System bleibt starr
+   ($E=0$-Kontrolle), aber die Konstante ist im Limes wertlos.
+2. **Das Kompaktheitsargument** — der Grenzübergang ist oben skizziert und
+   sieht dicht aus, ist aber zwanzig Minuten alt und ungeprüft.
+3. **Der Zusammenbau des vierzehnten Laufs** — mechanisch geprüft ist dort
+   nur die Fensterstarrheit (R); die Schwanzlimiten sind Menschenarbeit.
+
+Was daraus **unabhängig von der Auflösung** schon folgt: der LP-Weg — auch
+mit separabler Residuengestalt — ist als Beweisvehikel für Uhren mit
+hierarchisch aufsteigender Struktur zu schwach: auf einer Uhr, für die die
+Dualität bewiesen ist, bleibt $v_J$ von $0$ weg. Für den ordnungsdichten
+Fall heißt das: ein Kollaps-Argument à la (S) kann nicht der Weg sein; was
+die Relaxation noch verschenkt, ist die **rekursive** Realisierbarkeit —
+$\varphi$ muss selbst aus einem $h$ der fehlenden Atome kommen, das die
+tiefen Bedingungen erfüllt, nicht nur $|\varphi|\le BE$.
+
+### Was als Nächstes zu klären ist, in dieser Reihenfolge
+
+1. **Die Adjudikation der Kollision**, am kleinen Modell: erzwingt das
+   exakte $h$-System 1–3 auf der $\omega^*$-Kette $h(a,a)=0$? Entweder ein
+   Beweis (dann liegt der Fehler im Kompaktheitsargument, und wo genau) oder
+   eine explizite exakte Lösung mit $\Delta\neq0$ (dann ist die Äquivalenz
+   des zwölften Laufs im Unendlichen falsch, die Reduktion auf $h$ ist für
+   nicht bodenständige Atommengen nachzubessern, und alle
+   $v_J$-Interpretationen der Läufe 12–16 sind entsprechend zu lesen). Die
+   gemessene Blockstruktur (Block 1: $h(a,a)\approx[0,0,0.006,-0.03,\tfrac19]$,
+   selbstähnliche Fortsetzung) ist der Kandidat für die Konstruktion.
+2. Erst danach lohnt die rekursive Realisierbarkeit als LP.
+
+### Sackgassen, vierzehnter Nachtrag
+
+* **Die Stufenpaar-Rekursion / Kontraktions-Deutung des fünfzehnten
+  Laufs.** Die Stabilität von $c$ in den fünf Messreihen war keine
+  Kontraktion, sondern Artefakt der dort getesteten Uhren: auf der
+  hierarchischen Motor-Uhr steigen die Quotienten $v_i/v_{i-1}$ gegen $1$.
+  Wer $v_J\to0$ uhrenfrei beweisen will, beweist etwas Falsches — (S) hat
+  ein zertifiziertes Gegenbeispiel.
+* **Die Massenbilanz-Heuristik.** Ihr fehlendes Lemma (Motoren teilen keine
+  Masse) ist falsch im einzig relevanten Sinn: die Relaxation kennt kein
+  Budget, das verbraucht würde. Jede Fortsetzung, die Gewinn gegen
+  verbrauchte Masse aufrechnet, braucht zuerst eine Bedingung, die das
+  Teilen verbietet — die Separabilität allein tut es nicht.
