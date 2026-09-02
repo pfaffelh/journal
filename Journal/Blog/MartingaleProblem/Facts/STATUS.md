@@ -1,8 +1,8 @@
 # Formalisierungs-Inventar — Status
 
 - **Letzter Lauf (UTC):** 20260902T042301Z
-- **Zustand:** laeuft
-- **Notiz:** Lauf gestartet
+- **Zustand:** limit-teilarbeit
+- **Notiz:** Nutzungsgrenze mitten im Lauf (Code 1, Ausweich 1) -- die bis dahin geleistete Arbeit ist committet
 - **Host:** fisher
 - **Laeufe bisher:** 28
 

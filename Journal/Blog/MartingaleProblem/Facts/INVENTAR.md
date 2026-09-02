@@ -3260,3 +3260,55 @@ Kollision ist: eine Lean-geprüfte Fensterstarrheit samt
 $\mathbb Z$-Übertragung macht den intervallendlichen Satz maschinenfest, und
 dann liegt die Lücke beweisbar bei der Äquivalenz oder beim
 Kompaktheitsargument.
+
+### 2026-09-02, dritter Lauf des Tages — vorrangige Aufgabe abgeschlossen: die Adjudikation, und „(S) ist falsch" ist zurückgenommen
+
+Kein Fact bearbeitet; der Lauf gehört der Adjudikation der Kollision, der
+benannten Aufgabe des Vortagslaufs. Sie ist entschieden, durch Beweis, und
+die vorrangige Aufgabe ist damit ganz erledigt (im Runner-Prompt gestrichen,
+Abschluss dort eingetragen). Ergebnis in einer Zeile: **das exakte
+$h$-System 1–3 ist auf jeder intervallendlichen Kette starr; der Fehler lag
+im Kompaktheitsargument, in dessen extrapolierter Prämisse
+$\lim v_i=\tfrac1{24}$; tatsächlich gilt $v_i\to0$, nur praeasymptotisch
+unsichtbar.** Einzelheiten:
+
+* **Der Beweis** (Protokoll, siebzehnter Lauf): $\widehat w(s,t):=
+  H(s,t)+\Delta(t)-\Delta(s)$ erfüllt exakt die Kreuzrelation $(\ast)$ des
+  vierzehnten Laufs — Erstschritt definitorisch, Zweitschritt aus Bedingung
+  3 zweimal, Antisymmetrie von $\kappa(a,t):=h(a,t)-h(a,a)$ aus Bedingung 2.
+  $h$- und $\Phi$-System sind im antisymmetrischen Sektor **isomorph**;
+  Induktion und Schwanzlimiten des vierzehnten Laufs geben $\Delta\equiv0$.
+  Der Bodenatom-Verdacht gegen die Äquivalenz des zwölften Laufs war
+  unbegründet; ihre Rückrichtung braucht $\kappa(a,0)=-h(a,a)$ statt $0$
+  (im endlichen Fall unsichtbar).
+* **Die Fensterschranke** macht den Kollaps quantitativ:
+  $v_i\le2B\,M_{<u_l}+(K_l+2B)E_i$ mit stufenunabhängigem $K_l$; die
+  Summierbarkeit liefert $M_{<u_l}\to0$ — genau die im Aufgabenteil (b)
+  vermutete Rolle der endlichen Variation. Die $K_l$ sind Produkte von
+  Massenverhältnissen ($\ge10^4$ ab Stufe 9, roh $\lesssim10^{48}$); das
+  erklärt das exakte Plateau $\tfrac1{24}+E_i$ vollständig.
+* **Mechanisch verifiziert** (`Task23/adjudicate.py`): die Beweisalgebra am
+  LP-Optimum — $(\ast)$-Defekt exakt $-m_i(\varphi(u_{j+1})-\varphi(u_j))$
+  bis $10^{-10}$, erzwungene Identität $h(u_j,u_{j+1})=h(u_j,u_j)$ bis
+  $10^{-8}$ —, die Sättigung der Randterme, und die Stufen 10–14 (Plateau
+  hält, wie vom Beweis erlaubt). Nebenbefund: HiGHS' Presolve meldet auf der
+  reformulierten Fassung fälschlich „Unknown"; `presolve=False` behebt es.
+* **Zurückgenommen:** der Kernbefund des Vortagslaufs „(S) ist falsch". Die
+  Motor-Uhr ist kein Gegenbeispiel — ihre endlichen Zertifikate bleiben
+  richtig und sagen über den Limes nichts. Für intervallendliche Uhren mit
+  stabilisierenden Fenstern ist (S) wahr; offen bleibt (S) genau für
+  ordnungsdichte Atommengen, wie der ordnungsdichte Kern selbst.
+* Offen blieb: nichts von der gestellten Aufgabe. Das Manuskript ist
+  unverändert (der Satz betrifft nur die Task-23-interne Reduktion; der
+  manuskriptseitige intervallendliche Satz steht seit dem vierzehnten Lauf).
+
+**Was als Nächstes formalisiert werden soll: `atomGrid_symm`, in Lean —
+zum dritten Mal benannt, und jetzt ohne Konkurrenz.** Aussage unverändert
+(`MartingaleProblems` Meilenstein 8: endliches Gitter, $m_i\ne0$,
+Kreuzrelation $(\ast)$, Konklusion $\Phi(i,j)=\Phi(j,i)$; ruht allein auf
+der Zwei-Diagonalen-Induktion `lem:atomgrid`). Jetzt dran, weil der
+siebzehnte Lauf gezeigt hat, dass **drei** Resultate wörtlich auf dieser
+einen Induktion ruhen — der intervallendliche Satz, die Starrheit des
+$h$-Systems und die Fensterschranke —, und die LP-Schiene als
+Evidenzquelle ausgeschöpft ist: was Task 23 noch weiterbringt, ist
+maschinengeprüfte Algebra, nicht Messung.

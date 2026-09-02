@@ -12,7 +12,7 @@ nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
 Zurzeit stehen hier keine Aufgaben.
 
-### Aufgabe: die mengen-indizierte Literatur, und die Summierbarkeit *(gestellt 2026-09-01)*
+### ~~Aufgabe: die mengen-indizierte Literatur, und die Summierbarkeit~~ *(gestellt 2026-09-01, erledigt 2026-09-02, siebzehnter Task-23-Lauf)*
 
 Zwei Hälften, die zusammengehören. Beide gehen auf eine Beobachtung des Nutzers
 zurück: eine Uhr sieht aus wie ein Lévy-Maß, und Atome sind Sprünge zu festen
@@ -112,6 +112,31 @@ Diagonale? Hauptverdächtiger: die Äquivalenz des zwölften Laufs ankert am
 Bodenatom, das $\omega^*$ nicht hat) ist die präzise Aufgabe des nächsten
 Laufs; sie steht in `Task23/PROTOKOLL.md`, sechzehnter Lauf, „Was als
 Nächstes zu klären ist".
+
+**Abschluss 2026-09-02 (siebzehnter Task-23-Lauf).** Die Adjudikation ist
+entschieden, durch Beweis: **das exakte $h$-System 1–3 ist auf jeder
+intervallendlichen Kette starr** — $\widehat w(s,t):=H(s,t)+\Delta(t)-\Delta(s)$
+erfüllt exakt die Relation $(\ast)$ des vierzehnten Laufs (das $h$- und das
+$\Phi$-System sind im antisymmetrischen Sektor isomorph), die
+Zwei-Diagonalen-Induktion und zwei Schwanzlimiten geben $\Delta\equiv0$;
+Bedingung 3 ersetzt das Bodenatom, der Verdacht gegen die Äquivalenz des
+zwölften Laufs war unbegründet (ihre Rückrichtung braucht allerdings
+$\kappa(a,0)=-h(a,a)$ statt $0$). Der Fehler lag im Kompaktheitsargument,
+und zwar allein in der extrapolierten Prämisse $\lim v_i=\tfrac1{24}$:
+tatsächlich gilt $v_i\le 2B\,M_{<u_l}+(K_l+2B)E_i$ mit stufenunabhängigem
+$K_l$ (Fensterschranke), also $v_i\to0$ — nur sind die $K_l$ Produkte von
+Massenverhältnissen ($\ge10^4$ schon auf Stufe 9, roh $\lesssim10^{48}$),
+das Plateau ist praeasymptotisch und hält numerisch bis Stufe 14
+(`Task23/adjudicate.py`, mit mechanischer Verifikation der Beweisalgebra am
+Optimum, Proben (a) und (d)). **„(S) ist falsch" ist damit zurückgenommen**:
+für intervallendliche Uhren mit stabilisierenden Fenstern ist (S) wahr, die
+Summierbarkeit trägt genau die Schwanzlimiten — das ist die im
+Aufgabenteil (b) vermutete ausschließende Rolle der endlichen Variation.
+Offen bleibt (S) nur noch für ordnungsdichte Atommengen, zusammen mit dem
+ordnungsdichten Kern selbst; einziger benannter Weg: die Schwanzrelationen
+über Häufungspunkte (vierzehnter Lauf), jetzt mit dem
+$\widehat w$-Isomorphismus als Werkzeug. Alles in `Task23/PROTOKOLL.md`,
+siebzehnter Lauf.
 
 ## Worum es geht
 

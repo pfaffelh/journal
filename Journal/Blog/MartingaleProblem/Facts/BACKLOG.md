@@ -119,6 +119,25 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    und neu benannt die diskrete, nicht intervallendliche Kette; beide hängen
    am Überqueren eines Häufungspunkts.
 
+   *Zwischenstand 2026-09-02, fünfzehnter bis siebzehnter Lauf: die
+   LP-Schiene ist ausgeschöpft, und zwar beweisbar.* Der fünfzehnte Lauf
+   maß auf geschachtelten summierbaren Uhren den Kollaps
+   $v_J\approx c\sqrt{M\varepsilon_J}$, der sechzehnte baute die
+   hierarchische Motor-Uhr, auf der $v_J$ bis Stufe 14 bei $\tfrac1{24}$
+   klebt, und erklärte deshalb „(S) ist falsch"; der siebzehnte hat das
+   **zurückgenommen und die Kollision entschieden**: das exakte $h$-System
+   1–3 ist auf jeder intervallendlichen Kette starr —
+   $\widehat w(s,t):=H(s,t)+\Delta(t)-\Delta(s)$ erfüllt exakt die
+   Kreuzrelation $(\ast)$, $h$- und $\Phi$-System sind im antisymmetrischen
+   Sektor **isomorph** —, also gilt dort $v_J\to0$ (Fensterschranke
+   $v_i\le2B\,M_{<u_l}+(K_l+2B)E_i$), nur mit Konstanten $K_l$, die als
+   Produkte von Massenverhältnissen jede Messung überdauern. Endliche
+   LP-Werte sagen über den Limes nichts; wer den ordnungsdichten Kern
+   aufnimmt, arbeite mit dem $\widehat w$-Isomorphismus an den
+   Schwanzrelationen über Häufungspunkte (kleinste Instanz: zwei
+   $\zeta$-Ketten) und lasse die LPs liegen. `Task23/PROTOKOLL.md`,
+   fünfzehnter bis siebzehnter Lauf.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

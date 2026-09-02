@@ -2261,3 +2261,180 @@ tiefen Bedingungen erfüllt, nicht nur $|\varphi|\le BE$.
   Budget, das verbraucht würde. Jede Fortsetzung, die Gewinn gegen
   verbrauchte Masse aufrechnet, braucht zuerst eine Bedingung, die das
   Teilen verbietet — die Separabilität allein tut es nicht.
+
+## Die Adjudikation, 2026-09-02 (siebzehnter Lauf): das $h$-System ist auf $\omega^*$ starr, der Fehler lag im Kompaktheitsargument, und „(S) ist falsch" ist zurückgenommen
+
+Punkt 1 der Liste des sechzehnten Laufs, entschieden — durch **Beweis**, nicht
+durch eine Lösung: das exakte $h$-System 1–3 erzwingt auf jeder
+intervallendlichen Kette $h(a,a)=0$. Der Bodenatom-Verdacht gegen die
+Äquivalenz des zwölften Laufs war unbegründet; die Lücke lag im
+Kompaktheitsargument, und zwar nicht in seiner Logik, sondern in seiner
+gemessenen Prämisse. Neu ist `Task23/adjudicate.py`.
+
+### Der Beweis, selbständig und kurz
+
+Sei $q$ rein atomar, die Atome unter $t^*$ paarweise vergleichbar und
+intervallendlich (Gitter $u_k$ wie im vierzehnten Lauf, ergänzter Deckel
+$t^*$), $h$ eine Lösung von 1–3, alle Reihen $H(s,t)=\sum_{a<s}m_ah(a,t)$ und
+$\Delta(t)=\sum_{a<t}m_ah(a,a)$ absolut konvergent (bei $|h|\le B$ und
+summierbarer Masse automatisch). Setze
+$$\kappa(a,t):=h(a,t)-h(a,a),\qquad
+  \widehat w(s,t):=H(s,t)+\Delta(t)-\Delta(s).$$
+Dann gilt, in drei Zeilen Algebra:
+
+1. **Erstschritt** (definitorisch, die Schnittdifferenz ist $\{u_k\}$):
+   $\widehat w(u_{k+1},t)-\widehat w(u_k,t)=m_k\kappa(u_k,t)$.
+2. **Zweitschritt** (Bedingung 3 an $(s,u_{k+1})$ und $(s,u_k)$, dann 1.):
+   $\widehat w(s,u_{k+1})-\widehat w(s,u_k)=-m_k\kappa(u_k,s)$.
+3. **Antisymmetrie von $\kappa$ auf Atompaaren** ist wörtlich Bedingung 2;
+   Antisymmetrie von $\widehat w$ ist wörtlich Bedingung 3.
+
+Kreuzmultiplikation von 1. und 2. gibt für $\widehat w$ **exakt die Relation
+$(\ast)$ des vierzehnten Laufs** — das $h$-System und das $\Phi$-System sind
+im antisymmetrischen Sektor isomorph. Die Zwei-Diagonalen-Induktion läuft
+also wörtlich (wohlfundiert durch die Intervallendlichkeit, ohne Boden und
+Deckel) und gibt $\widehat w\equiv0$ auf dem ganzen Gitter. Die
+Schwanzlimiten: für jedes Gitter-$t$ und $l\to-\infty$ ist
+$0=\widehat w(t,u_l)=H(t,u_l)+\Delta(u_l)-\Delta(t)$, darin
+$H(t,u_l)=-H(u_l,t)\to0$ — **Bedingung 3 verwandelt den
+Zweitkoordinatenlimes in einen Schnittschwanz**, und genau hier, und nur
+hier, geht die Summierbarkeit ein — und $\Delta(u_l)\to0$. Also
+$\Delta(t)=0$ für jedes $t$, also $m_kh(u_k,u_k)=\Delta(u_{k+1})-\Delta(u_k)=0$. $\square$
+
+Der Verdacht des sechzehnten Laufs — „die endliche Isolation der Diagonale
+ankert am Bodenatom" — trifft die endliche Beweisführung, aber nicht das
+System: den Anker ersetzt der Schwanzlimes.
+
+### Die Äquivalenz des zwölften Laufs überträgt sich, mit korrigierter Konstante
+
+Die Rückrichtung (aus $h$ mit 1–3 ein echtes Paar $(\Phi,\gamma)$) braucht
+$\kappa(a,0):=-h(a,a)$, **nicht** $\kappa(a,0):=0$: nur damit ist
+$\kappa(a,b)=h(a,b)-h(a,a)$ auf Atompaaren antisymmetrisch (Bedingung 2),
+solange die Diagonale nicht schon verschwindet — im endlichen Fall ist der
+Unterschied unsichtbar, weil sie dort verschwindet. Mit
+$$\gamma:=\kappa/2,\qquad
+  \Phi(s,t):=\tfrac12\textstyle\sum_{a<s}m_a\kappa(a,t)+\tfrac12\Delta(t)$$
+gelten beide Einschrittrelationen aus \eqref{eq:incrementrep} für **jedes**
+$y$, mit absolut konvergenten Summen, und der Dualitätsdefekt ist
+$\Phi(t^*,0)-\Phi(0,t^*)=-\Delta(t^*)$. Der Satz des vierzehnten Laufs gibt
+denselben Schluss also auch über diesen Umweg; beide Wege sind
+gegeneinander konsistent.
+
+### Wo das Kompaktheitsargument bricht
+
+Nirgends in seiner Logik. Diagonalfolge, dominierte Konvergenz und der
+Grenzübergang der Nebenbedingungen sind in Ordnung: ein Häufungswert der
+$v_i$ **ist** die Diagonalsumme einer exakten beschränkten Lösung von 1–3.
+Gebrochen ist die Prämisse $\lim v_i=\tfrac1{24}$ — sie war Extrapolation
+aus den Stufen $\le10$. Mit dem Satz oben folgt zwingend $v_i\to0$;
+quantitativ, mit Residuen $\varphi$ (die separable Gestalt):
+
+* Der $(\ast)$-Defekt von $\widehat w$ ist **exakt**
+  $-m_i\bigl(\varphi(u_{j+1})-\varphi(u_j)\bigr)$ — am LP-Optimum mechanisch
+  bestätigt (`adjudicate.py`, Probe (d): $\le10^{-10}$ auf allen geprüften
+  Paaren, Stufen 4–9); ebenso die exakt erzwungene Identität
+  $h(u_j,u_{j+1})=h(u_j,u_j)$ (Probe (a), $\le10^{-8}$ — drei Zeilen von
+  Bedingung 3, $\varphi$ kürzt sich).
+* **Fensterschranke.** Läuft die Induktion nur im festen Fenster oberhalb
+  eines Atoms $u_l$, so sind alle Koeffizienten Massenverhältnisse des
+  Fensters — stufenunabhängig —, alle Fehlerterme $O(E_i)$, und die zwei
+  Randterme kosten je $B\cdot M_{<u_l}$:
+  $$v_i\;\le\;2B\,M_{<u_l}\;+\;(K_l+2B)\,E_i,\qquad
+    K_l\ \text{stufenunabhängig}.$$
+  Mit $M_{<u_l}\to0$ (Summierbarkeit) und $l=l(i)$ langsam wachsend folgt
+  $v_i\to0$.
+
+### Warum die Messung das nicht sieht
+
+$K_l$ ist endlich, aber gewaltig: die Rekursionskoeffizienten sind
+Massenverhältnisse bis $4^4$ je Blockübergang (rohe Schranke für die Blöcke
+1–4: $\sim10^{48}$). Gemessen (`adjudicate.py`, Probe (b)) sättigt das
+Optimum den Randterm exakt — $H(t^*,u_l)=B\,M_{<u_l}$ auf allen
+Blockböden, $\Delta(u_l)\approx0$ — und $\widehat w(t^*,u_l)$ stagniert bei
+$M_{<u_l}-\tfrac1{24}$; schon auf Stufe 9 heißt das $K_l\ge10^4$, und die
+Stagnation kann das Plateau über Dutzende Stufen tragen. Die Stufen 10–14
+(Reformulierung ohne $\varphi$-Variablen: Bedingung
+$H(s,t)+H(t,s)=H(s,s)+H(t,t)$ exakt plus $|H(t,t)|\le BE$; HiGHS braucht
+dafür `presolve=False`, sein Presolve meldet sonst fälschlich „Unknown";
+die Ausreißer der Stufen 7 und 12 sind Solver-Unterschätzungen) bleiben bei
+$\tfrac1{24}\pm2\cdot10^{-6}$. Das ist **kein** Gegenbefund: der Kollaps ist
+bewiesen und liegt jenseits der numerisch erreichbaren Stufen.
+
+### Was am sechzehnten Lauf zu korrigieren ist
+
+* **„(S) ist falsch" ist zurückgenommen.** Die Motor-Uhr ist kein
+  Gegenbeispiel: ihr $v_J$ geht gegen $0$, bewiesen. Die exakten Zertifikate
+  ($v_8\ge0.144$ usw.) bleiben richtig als Aussagen über einzelne Stufen und
+  sagen über den Limes nichts. Für intervallendliche Uhren, deren
+  Ausschöpfung jedes Fenster irgendwann stabilisiert (alle bisher gebauten),
+  ist (S) **wahr**. Für ordnungsdichte Atommengen bleibt (S) offen — dort
+  stabilisiert kein Fenster, und das Argument dieses Laufs greift nicht.
+* Richtig bleibt: die LP-Relaxation taugt nicht als Beweisvehikel — jetzt
+  mit umgekehrtem Vorzeichen: nicht weil ihr Limes $\neq0$ wäre, sondern
+  weil ihre endlichen Werte über den Limes nichts aussagen, sobald die
+  Uhr aufsteigende Massenstruktur hat.
+
+### Was der ordnungsdichte Kern davon hat
+
+Der Isomorphismus $\widehat w\leftrightarrow\Phi$ ist das bleibende
+Werkzeug: **jede** Aussage über das $\Phi$-System überträgt sich wörtlich in
+das $h$-System und umgekehrt; wer den ordnungsdichten Fall angreift, kann
+frei zwischen beiden wechseln und muss keine LP-Evidenz mehr konsultieren.
+Der einzige offene Weg ist der schon im vierzehnten Lauf benannte: die
+Schwanzrelationen über Häufungspunkte hinweg (kleinste Instanz: zwei
+$\zeta$-Ketten), jetzt ohne die falsche Hoffnung, ein Kollapsargument über
+LP-Werte könne ihn ersetzen.
+
+### Die zwei $\zeta$-Ketten, reduziert: $(\ast)$ auf dem Viertelgitter mit Eckenabfall
+
+Als Anzahlung auf diesen Weg ist die kleinste Instanz auf ihre algebraische
+Normalform gebracht. Kette $A$ (Atome $a_j$, $j\in\mathbb Z$, aufsteigend,
+Häufung von unten am Punkt $p$) unter Kette $B$ (Atome $b_i$, $i\in\mathbb Z$,
+Häufung von oben an $p$), Massen $m^A_j,m^B_i>0$, summierbar. Dann:
+
+1. **Blockintern** ist alles erledigt: innerhalb von $A$ und $B$ ist die
+   Kette intervallendlich, der Satz des vierzehnten Laufs gibt $w\equiv0$ auf
+   $A{\times}A$ und $B{\times}B$, und die Einschrittdifferenzen darin geben
+   $\kappa\equiv0$ auf allen blockinternen Paaren. $\kappa$ lebt nur noch auf
+   Kreuzpaaren, $x_{ij}:=\kappa(b_i,a_j)$.
+2. **$\Phi$ ist an $p$ beidseitig stetig, in beiden Koordinaten**: die
+   Differenz $\Phi(b_l,y)-\Phi(a_k,y)$ ist die Atomsumme über $[a_k,b_l)$,
+   ein Schwanz der absolut konvergenten Reihe, und geht für $k,l\to\infty$
+   gegen $0$; ebenso in der zweiten Koordinate. Daraus verschwinden die
+   Kreuzwerte in Richtung $p$:
+   $\lim_{i\to-\infty}w(b_i,a_j)=w(p,a_j)=\lim_k w(a_k,a_j)=0$ und
+   $\lim_{j\to+\infty}w(b_i,a_j)=\lim_l w(b_i,b_l)=0$.
+3. **Die Schwanzdarstellungen** (Einschritt plus 2.):
+   $F(i,j):=w(b_i,a_j)=\sum_{i'<i}m^B_{i'}x_{i'j}=-\sum_{j'\ge j}m^A_{j'}\,
+   \kappa(a_{j'},b_i)$, also
+   $$F(i{+}1,j)-F(i,j)=m^B_i\,x_{ij},\qquad
+     F(i,j{+}1)-F(i,j)=m^A_j\,x_{ij},$$
+   und Kreuzelimination von $x$ gibt **wörtlich $(\ast)$** auf
+   $\mathbb Z\times\mathbb Z$.
+
+Die offene Frage ist damit exakt: *erzwingt $(\ast)$ auf dem vollen Gitter
+zusammen mit dem Abfall $F(i,j)\to0$ für $i\to-\infty$ (jedes feste $j$) und
+für $j\to+\infty$ (jedes feste $i$) — Abfall an den zwei an der Ecke
+$(p,p)$ zusammenstoßenden Rändern, die anderen beiden Ränder sind frei —
+schon $F\equiv0$?* Zwei Kandidatenfamilien sterben sofort: separables
+$x_{ij}=\beta_i\lambda_j$ führt auf $\sum_{i'<i}m^B\beta_{i'}=c\,\beta_i$,
+dessen Produktformel einen von $0$ weg konvergenten Limes $\beta_{-\infty}$
+hat, während der leere Schwanz $\beta_{-\infty}=0$ verlangt; eine einzelne
+besetzte Zeile $x_{i_0,\cdot}$ muss konstant sein und stirbt am
+$j$-Abfall. Das ist kein Beweis, aber es zeigt: die Schwänze wirken genau
+dort, wo Test X des vierzehnten Laufs die lokale Algebra enden sah. Wer den
+Punkt aufnimmt, beginnt bei dieser Viertelgitterfrage — sie ist frei von
+Uhren, Trunkierungen und LPs.
+
+### Sackgassen, fünfzehnter Nachtrag
+
+* **Limiten von LP-Werten messen und extrapolieren.** Das Plateau
+  $\tfrac1{24}+E_i$ hielt exakt über sieben Stufen und ist trotzdem
+  praeasymptotisch; die Konstanten, die es tragen, wachsen wie Produkte von
+  Massenverhältnissen und sind jeder Messung voraus. Wer aus LP-Werten auf
+  den Limes schließen will, braucht die Fensterschranke — und die beweist
+  dann schon den Kollaps, ohne Messung.
+* **Endliche Zertifikate als Aussagen über das unendliche System lesen.**
+  Zum zweiten Mal dieselbe Falle wie im dreizehnten Lauf (Relaxation fürs
+  System gehalten), diesmal in der Zeitrichtung: Stufenwerte fürs
+  Limesverhalten gehalten.
