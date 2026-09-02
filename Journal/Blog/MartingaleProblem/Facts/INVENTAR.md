@@ -3312,3 +3312,60 @@ einen Induktion ruhen — der intervallendliche Satz, die Starrheit des
 $h$-Systems und die Fensterschranke —, und die LP-Schiene als
 Evidenzquelle ausgeschöpft ist: was Task 23 noch weiterbringt, ist
 maschinengeprüfte Algebra, nicht Messung.
+
+### 2026-09-02, vierter Lauf des Tages — Rückstau 1 / Task 23, achtzehnter Lauf: die Viertelgitterfrage der zwei $\zeta$-Ketten
+
+Kein Fact bearbeitet: die Tabelle ist vollständig belegt, die vorrangige
+Aufgabe erledigt, Rückstaupunkt 2 erst in etwa zwei Wochen wieder fällig,
+Punkt 3 ohne `.lake` nicht übersetzbar — also Rückstaupunkt 1, der
+ordnungsdichte Kern von Task 23, an seiner kleinsten Instanz, der
+Viertelgitterfrage der zwei $\zeta$-Ketten (siebzehnter Lauf).
+
+Zur Laufgeschichte, weil sie sonst nirgends stünde: die zwei Läufe zwischen
+dem dritten Lauf des Tages und diesem (07:23 und 10:23 UTC) wurden von der
+Nutzungsgrenze abgeschnitten (`STATUS.md`: „limit-teilarbeit" bzw. keine
+inhaltliche Arbeit). Übrig blieb `Task23/zeta_cross.py` mit Proben (a)–(e)
+und Verweisen auf nie geschriebene Sätze. Dieser Lauf hat die Beweise
+selbst geführt, das Skript um Probe (f) ergänzt (läuft, alle Proben exakt)
+und den Protokolleintrag „achtzehnter Lauf" geschrieben. Befunde, je mit
+Beweis im Protokoll:
+
+* **Normalform:** das Viertelgittersystem (Q) ist eine kommutierende
+  Evolution $F(\cdot,j{+}1)=(I+\nu_jL)F(\cdot,j)$ mit **einem** festen
+  Operator $(Lg)_i=(g_{i+1}-g_i)/\mu_i$; die Nordevolution ist die
+  Operatorfassung des Geschlecht-0-Produkts
+  $\Pi_j(c)=\prod_{j'\ge j}(1+c\nu_{j'})$, die Summierbarkeit die endliche
+  Horizontzeit. Die Frage (V) ist damit eine Quasianalytizitätsfrage:
+  Injektivität von $\Pi_j(L)$ auf westabfallenden Zeilen.
+* **Bewiesen:** (Q) ⟺ $(\ast)$ + Westlimes des Flusses $=0$ + Nordabfall
+  (Lemma 1, Hakenkonstanz); ohne Summierbarkeit ist (V) **falsch**
+  (Proposition 2, Buckel $g(i+j)$ bei Massen $\equiv1$); jeder
+  Einzelschritt $I+\nu_jL$ ist injektiv (Proposition 3); **keine endliche
+  Superposition separabler Moden** löst (Q) (Theorem 4, Momentenschritt
+  plus Vandermonde — der Nordabfall wird dafür nicht einmal gebraucht);
+  reelle Spektralmaße haben lauter verschwindende Momente und sterben bei
+  exponentiellem Abfallspielraum (Proposition 5).
+* **Sackgasse mit Beleg:** die exakte Energieidentität (Probe (f)) trägt
+  den indefiniten Faktor $\mu_i\nu_j(\nu_j-\mu_i)$ — denselben wie der
+  Dispersionsdefekt des charakteristischen Ansatzes (Probe (e)); separable
+  Gewichte reparieren das Vorzeichen nicht.
+* **Offen bleibt (V) selbst**, jetzt scharf lokalisiert: für geometrische
+  Massen wachsen die Modenprodukte nur wie $e^{O((\log r)^2)}$, zulässige
+  Spektralmaße dürfen also quasipolynomial abfallen, und dort existieren
+  Maße mit lauter Nullmomenten — ob eines die ganze
+  $\{\lambda_j\}$-Familie annihiliert, ist eine Vollständigkeitsfrage, in
+  die die Massen über ihre Zählfunktion eingehen. Wege (α)
+  Spektraldarstellung/Carleman und (β) Gegenbeispiel bei lakunären Massen
+  stehen im Protokoll.
+
+Offen blieb sonst: nichts Neues; das Manuskript ist unverändert, die
+Roadmaps auch (die Viertelgitterfrage ist Task-23-intern, bis sie
+entschieden ist). Der Rückstaupunkt 1 hat einen neuen Zwischenstand.
+
+**Was als Nächstes formalisiert werden soll: unverändert `atomGrid_symm`,
+in Lean** (`MartingaleProblems` Meilenstein 8; Aussage und Begründung wie
+im dritten Lauf des Tages — jetzt zum vierten Mal benannt). Dieser Lauf
+verstärkt die Begründung: auch die Viertelgitteranalyse ruht mit Lemma 1
+und Theorem 4 auf exakter Gitteralgebra derselben Bauart, und jede
+maschinengeprüfte Fassung der Zwei-Diagonalen-Induktion ist
+wiederverwendbar, sobald (V) entschieden ist.

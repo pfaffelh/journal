@@ -138,6 +138,32 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    $\zeta$-Ketten) und lasse die LPs liegen. `Task23/PROTOKOLL.md`,
    fünfzehnter bis siebzehnter Lauf.
 
+   *Zwischenstand 2026-09-02, achtzehnter Lauf: die Viertelgitterfrage (V)
+   der zwei $\zeta$-Ketten ist strukturiert, teilbeantwortet und scharf
+   lokalisiert.* Normalform: eine kommutierende Evolution
+   $F(\cdot,j{+}1)=(I+\nu_jL)F(\cdot,j)$ mit einem einzigen Operator $L$;
+   (V) ist die Injektivität des Geschlecht-0-Produkts $\Pi_j(L)$ auf
+   westabfallenden Zeilen — eine Quasianalytizitätsfrage. Bewiesen: ohne
+   Summierbarkeit ist (V) **falsch** (Buckel bei Massen $\equiv1$); mit
+   Summierbarkeit sterben endliche Modensuperpositionen (Momentenschritt
+   plus Vandermonde), endlich getragene $x$, jeder einzelne Schritt
+   (injektiv), und jedes reelle Spektralmaß mit exponentiellem
+   Abfallspielraum (Streifenanalytizität). Sackgasse mit Beleg: die exakte
+   Energieidentität ist indefinit, mit demselben Faktor
+   $\mu_i\nu_j(\nu_j-\mu_i)$ wie der Dispersionsdefekt des
+   charakteristischen Ansatzes. Offen ist genau der quasipolynomiale
+   Bereich: zulässige Spektralmaße müssen nur $e^{\Phi_\mu+\Phi_\nu}$
+   integrieren ($O((\log r)^2)$ bei geometrischen Massen), dort existieren
+   Maße mit lauter Nullmomenten, und ob eines die ganze
+   $\{\lambda_j\}$-Familie annihiliert, ist eine Vollständigkeitsfrage, in
+   die die Massen über ihre Zählfunktion eingehen — möglicherweise die
+   erste echt massenabhängige Stelle von Task 23. Wer den Punkt aufnimmt:
+   Weg (α) Spektraldarstellung westabfallender Lösungen bzw.
+   Carleman-Argument an der Evolution, Weg (β) Gegenbeispielsuche bei stark
+   lakunären Massen; beides präzise in `Task23/PROTOKOLL.md`, achtzehnter
+   Lauf, mit `Task23/zeta_cross.py` (Proben (a)–(f), exakt, rc=0) als
+   mechanischer Verifikation der Beweisalgebra.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

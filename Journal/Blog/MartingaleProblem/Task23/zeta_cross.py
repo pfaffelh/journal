@@ -26,6 +26,13 @@ Proben:
   (e) der Defekt des charakteristischen Ansatzes F⁰ = G(B_i + A_j):
       für affines G ist der (∗)-Defekt exakt 0, für G(u) = u² exakt
       m^A_j m^B_i (m^B_i − m^A_j).  [Mechanismus (ii), Defektformel]
+  (f) die Energieidentität in Bilanzform: für endlich getragenes x gilt exakt
+      Σ m^B_i m^A_j x_{ij}((Px)_{ij} + (Nx)_{ij})
+        = ½ Σ_j m^A_j R_j² + ½ Σ_i m^B_i C_i²
+          + ½ Σ_{ij} m^B_i m^A_j (m^A_j − m^B_i) x_{ij}².
+      Der letzte Summand trägt denselben antisymmetrischen Faktor wie der
+      Defekt in (e); auf Lösungen von (Q) ist die linke Seite 0.
+      [Sackgasse: die Paarung ist indefinit, siehe PROTOKOLL, achtzehnter Lauf]
 
 rc=0 genau dann, wenn alle Proben exakt aufgehen.
 """
@@ -214,6 +221,31 @@ report("affines G: Defekt exakt 0", ok_aff)
 ok_quad = all(e == mA2[j] * mB2[i] * (mB2[i] - mA2[j])
               for i, j, e in defect(lambda u: u * u))
 report("G(u) = u²: Defekt exakt m^A_j m^B_i (m^B_i − m^A_j)", ok_quad)
+
+print("(f) Energieidentität (Bilanzform von Mechanismus (ii))")
+# Reine endliche Algebra, kein (Q): mit
+#   (Px)_{ij} = Σ_{i'<i} m^B_{i'} x_{i'j},  (Nx)_{ij} = Σ_{j'≥j} m^A_{j'} x_{ij'},
+#   R_j = Σ_i m^B_i x_{ij},  C_i = Σ_j m^A_j x_{ij}
+# ist die Identität der Probenbeschreibung exakt; auf Lösungen von (Q) ist die
+# linke Seite 0, und der letzte Summand ist indefinit.
+NI, NJ = 7, 6
+mB3 = {i: rand_fr() for i in range(NI)}
+mA3 = {j: rand_fr() for j in range(NJ)}
+X = {(i, j): rand_fr(-9, 9) for i in range(NI) for j in range(NJ)}
+lhs = Fr(0)
+for i in range(NI):
+    for j in range(NJ):
+        Px = sum(mB3[i2] * X[(i2, j)] for i2 in range(i))
+        Nx = sum(mA3[j2] * X[(i, j2)] for j2 in range(j, NJ))
+        lhs += mB3[i] * mA3[j] * X[(i, j)] * (Px + Nx)
+R = {j: sum(mB3[i] * X[(i, j)] for i in range(NI)) for j in range(NJ)}
+C = {i: sum(mA3[j] * X[(i, j)] for j in range(NJ)) for i in range(NI)}
+rhs = (sum(mA3[j] * R[j] ** 2 for j in range(NJ))
+       + sum(mB3[i] * C[i] ** 2 for i in range(NI))
+       + sum(mB3[i] * mA3[j] * (mA3[j] - mB3[i]) * X[(i, j)] ** 2
+             for i in range(NI) for j in range(NJ))) / 2
+report("Σ m^B m^A x (Px+Nx) = ½Σ m^A R² + ½Σ m^B C² + ½Σ m^B m^A (m^A−m^B) x²",
+       lhs == rhs)
 
 print()
 print("alle Proben exakt bestanden" if ok_all else "MINDESTENS EINE PROBE GESCHEITERT")

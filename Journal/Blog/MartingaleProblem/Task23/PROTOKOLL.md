@@ -2438,3 +2438,223 @@ Uhren, Trunkierungen und LPs.
   Zum zweiten Mal dieselbe Falle wie im dreizehnten Lauf (Relaxation fürs
   System gehalten), diesmal in der Zeitrichtung: Stufenwerte fürs
   Limesverhalten gehalten.
+
+## Die Viertelgitterfrage, 2026-09-02 (achtzehnter Lauf): Normalform als kommutierende Evolution, endliche Superpositionen und exponentiell abfallende Spektralmaße sterben, ohne Summierbarkeit ist die Aussage falsch
+
+Vorab zur Laufgeschichte: die zwei Läufe zwischen dem siebzehnten und diesem
+wurden von der Nutzungsgrenze abgeschnitten. Übrig blieb `Task23/zeta_cross.py`
+mit Verweisen auf ein „Lemma 1", eine „Proposition 2", ein „Theorem 4" und
+einen „Mechanismus (ii)", zu denen kein Protokolltext existierte. Dieser Lauf
+hat die Aussagen aus dem Skript rekonstruiert, **selbst bewiesen** — nichts
+davon ist aus dem Skript „übernommen" —, das Skript um die Probe (f) ergänzt
+(rc=0) und schreibt hier den Text, der fehlte. Die Nummerierung folgt dem
+Skript, damit die Verweise stimmen.
+
+### Aufstellung: das System (Q)
+
+Die Reduktion des siebzehnten Laufs, in einer Zeile. Massen
+$\mu_i:=m^B_i>0$, $\nu_j:=m^A_j>0$ ($i,j\in\mathbb Z$), beide **summierbar**
+($S:=\sum_i\mu_i<\infty$, $T:=\sum_j\nu_j<\infty$ — das ist `def:clock` für
+die zwei $\zeta$-Ketten). Gesucht ist $x:\mathbb Z^2\to\mathbb R$ mit
+zeilen- und spaltenweise absolut konvergenten Summen und
+
+$$\sum_{i'<i}\mu_{i'}x_{i'j}\;=\;-\sum_{j'\ge j}\nu_{j'}x_{ij'}
+\qquad\text{für alle }(i,j)\in\mathbb Z^2. \tag{Q}$$
+
+Die gemeinsame Größe heißt $F(i,j)$; sie erfüllt dann automatisch beide
+Einschrittrelationen $F(i{+}1,j)-F(i,j)=\mu_ix_{ij}$,
+$F(i,j{+}1)-F(i,j)=\nu_jx_{ij}$, die Kreuzrelation $(\ast)$, den Westabfall
+($F(i,j)\to0$ für $i\to-\infty$) und den Nordabfall ($F(i,j)\to0$ für
+$j\to+\infty$), und auch $x_{ij}\to0$ in beiden Abfallrichtungen. **Die
+Frage (V):** erzwingt (Q) schon $x\equiv0$? Ja ⟹ die Dualität gilt für die
+zwei gestapelten $\zeta$-Ketten, und per Cantor–Bendixson öffnet sich der
+diskrete, nicht intervallendliche Fall.
+
+### Lemma 1 (der Haken): (Q) ist äquivalent zu $(\ast)$ plus Abfall
+
+**(a) Flussebene.** Erfüllt $F$ beide Einschrittrelationen, so erfüllt $x$
+selbst $(\ast)$ (Probe (a)). Erfüllt umgekehrt $x$ die Relation $(\ast)$ und
+sind die Zeilensummen absolut konvergent, so erfüllt
+$F^W(i,j):=\sum_{i'<i}\mu_{i'}x_{i'j}$ die $i$-Schritte immer und die
+$j$-Schritte genau dann, wenn $\lim_{i\to-\infty}x_{ij}=0$ für jedes $j$:
+Summation von $\mu_{i'}(x_{i',j+1}-x_{i'j})=\nu_j(x_{i'+1,j}-x_{i'j})$ über
+$i'<i$ teleskopiert rechts zu $\nu_j(x_{ij}-x_{-\infty,j})$. **Der
+Westlimes des Flusses ist die eigentliche Randbedingung**; genau an ihr
+starb der separable Ansatz des siebzehnten Laufs.
+
+**(b) Hakenkonstanz.** Gelten zusätzlich die spaltenweise absolute
+Konvergenz und der Nordabfall von $F$, so ist der Haken
+$D(i,j):=F(i,j)+\sum_{j'\ge j}\nu_{j'}x_{ij'}$ konstant: in $j$
+definitorisch, in $i$ weil $(\ast)$ die Spaltensumme zu
+$\mu_i(x_{i,\infty}-x_{ij})$ teleskopiert und $x_{i,\infty}=0$ aus dem
+Nordabfall folgt (endlicher Kern: Probe (b),
+$H(i{+}1,j)-H(i,j)=\mu_ix_{i,j_1+1}$). Entlang $j\to+\infty$ gehen beide
+Summanden gegen $0$, also $D\equiv0$ — das **ist** (Q). Die Rückrichtung
+(aus (Q) beide Schritte und beide Abfälle) ist die Dreieckszerlegung der
+absolut konvergenten Schwänze.
+
+### Die Normalform: eine kommutierende Evolution mit einem einzigen Operator
+
+$(\ast)$ für $F$ ist äquivalent zu
+$$F(\cdot,j{+}1)=(I+\nu_jL)\,F(\cdot,j),\qquad
+(Lg)_i:=\frac{g_{i+1}-g_i}{\mu_i}.$$
+**Alle Zeilenschritte sind $I+\nu_jL$ mit demselben $L$** — sie kommutieren,
+die Evolution von Zeile $j$ nach Norden ist die Operatorfassung des
+Produkts $\Pi_j(c)=\prod_{j'\ge j}(1+c\nu_{j'})$, einer ganzen Funktion vom
+Geschlecht 0 mit Nullstellen genau bei $-1/\nu_{j'}$, und die
+Summierbarkeit von $\nu$ ist die **endliche Horizontzeit** $T$. Die
+Eigenvektoren von $L$ sind die separablen Moden
+$\beta^c_i=\prod_{i'<i}(1+c\mu_{i'})$ (Eigenwert $c$, Probe (d)); ihre
+$j$-Seite sind die Multiplikatoren $\lambda^c_j=\prod_{j'<j}(1+c\nu_{j'})$.
+Wegen $\beta^c_{-\infty}=1\neq0$ hat $L$ auf dem Raum der westabfallenden
+Zeilen **keine Eigenwerte**. Alle „$L$-Ableitungen" $L^kF$ sind ebenfalls
+Lösungen und ebenfalls nordflach ($L^kF(i,j)\to0$ für $j\to\infty$, als
+endliche Kombination) — die Frage (V) hat die Gestalt einer
+**Quasianalytizitätsfrage**: ist die Evolutionsklasse starr gegen
+Flachheit am Nordrand, d.h. ist $\Pi_j(L)$ auf dem Westraum injektiv?
+
+Nebenbefund, der die Fensterschranke des siebzehnten Laufs einordnet:
+$(I+\nu L)^{-1}$ existiert auf dem Westraum als Vorwärtsrekursion
+$g_{i+1}=(1-\mu_i/\nu)g_i+(\mu_i/\nu)f_i$; sie ist Kontraktion, wo
+$\mu_i\le\nu$, und bläht sonst mit Faktoren $\mu_i/\nu$ auf — die
+$K_l$-Produkte von Massenverhältnissen sind genau die Norm dieser Inversen.
+
+### Proposition 2: ohne Summierbarkeit ist (V) falsch
+
+$\mu\equiv\nu\equiv1$, $g$ ein kompakter Buckel, $F(i,j):=g(i+j)$: erfüllt
+$(\ast)$, beide Tail-Darstellungen, beide Abfälle, und ist nicht $0$
+(Probe (c); die Darstellungen teleskopieren exakt, weil $g$ links wie
+rechts schließlich $0$ ist). Die Summierbarkeit ist also keine
+Bequemlichkeit, sondern die Aussage: sie macht die Massenkoordinaten
+$B_i=\sum_{i'<i}\mu_{i'}\in(0,S)$, $A_j\in(0,T)$ endlich, und im
+Kontinuumsbild $F=G(B+A)$ (Transportgleichung $\partial_BF=\partial_AF$)
+decken die zwei abfallenden Ränder den **ganzen** Charakteristikenbereich:
+der Westrand tötet $G$ auf $(0,T)$, der Nordrand auf $(T,T+S)$, und sie
+stoßen an der Ecke $(p,p)$ zusammen. Das ist die geometrische Erklärung,
+warum (V) plausibel ist und warum sie an der Ecke hängt.
+
+### Proposition 3: jeder Einzelschritt ist injektiv
+
+$\ker(I+\nu_jL)$ ist eindimensional, aufgespannt von $\beta^{-1/\nu_j}$
+(bzw. dessen Abschneidung, wenn ein Faktor $1-\mu_{i_0}/\nu_j$
+verschwindet: links davon $\beta$-förmig, rechts $0$). In jedem Fall ist
+der Westlimes des Kernelements $\neq0$ — auf dem Westraum ist
+$I+\nu_jL$ injektiv. Kein einzelner Schritt kann eine Lösung töten; wenn
+(V) falsch ist, stirbt die Lösung erst **im Limes** der unendlich vielen
+Schritte.
+
+### Theorem 4: keine endliche Superposition separabler Moden löst (Q)
+
+Sei $x=\sum_{r=1}^Rw_r\beta^{c_r}\lambda^{c_r}$ mit paarweise
+verschiedenen $c_r\in\mathbb C$ (auch $c=0$, die konstante Mode, ist
+zugelassen). Die Westbedingung aus Lemma 1(a) lautet
+$\sum_rw_r\lambda^{c_r}_j=0$ für **alle** $j$. Der **Momentenschritt**
+(Probe (d)): Anwenden von $(\Delta_jg)/\nu_j$ überführt sie wegen
+$(\lambda^c_{j+1}-\lambda^c_j)/\nu_j=c\,\lambda^c_j$ in
+$\sum_rw_rc_r^k\lambda^{c_r}_j=0$ für alle $j,k$. Jede Mode hat nur
+endlich viele Nullstellenindizes ($1+c_r\nu_{j'}=0$ nur endlich oft, da
+$\nu\to0$); wähle $j^*$ unterhalb aller, dann ist
+$\lambda^{c_r}_{j^*}\neq0$ für alle $r$, und die Vandermonde-Matrix der
+$c_r$ gibt $w=0$. (Ableitungsmoden $\partial_c^s[\beta^c\lambda^c]$
+laufen wörtlich über die konfluente Vandermonde-Matrix.) Probe (d) zeigt
+zugleich die **Schärfe**: auf einem $j$-Fenster der Länge $R-1$ gibt es
+einen nichttrivialen Kern — erst das unendliche Fenster tötet. Der
+Nordabfall wird nicht einmal gebraucht.
+
+### Proposition 5: reelle Spektralmaße haben verschwindende Momente und sterben bei exponentiellem Abfall
+
+Sei $x_{ij}=\int\beta^c_i\lambda^c_j\,d\sigma(c)$ mit einem signierten
+Maß $\sigma$ auf $\mathbb R$, zulässig in dem Sinn, dass
+$\int(1+|c|)^ke^{\Phi_\mu(|c|)+\Phi_\nu(|c|)}\,d|\sigma|<\infty$ für alle
+$k$, wobei $\Phi_\mu(r):=\sum_i\log(1+r\mu_i)$ (und analog $\Phi_\nu$)
+die **scharfe** gemeinsame Wachstumsschranke aller Moden ist:
+$|\beta^c_i\lambda^c_j|\le e^{\Phi_\mu(|c|)+\Phi_\nu(|c|)}$ gleichmäßig
+in $(i,j)$. Löst $x$ das System (Q), so gilt:
+
+1. **Alle Polynommomente von $\sigma$ verschwinden.** Die Westbedingung
+   gibt $\int\lambda^c_j\,d\sigma=0$ für alle $j$ (dominiert,
+   $\beta^c_i\to1$); der Momentenschritt gibt
+   $\int c^k\lambda^c_j\,d\sigma=0$ für alle $j,k$; und $j\to-\infty$
+   mit der $j$-gleichmäßigen Dominante $|c|^ke^{\Phi_\nu(|c|)}$ liefert
+   $\int c^k\,d\sigma=0$.
+2. **Hat $\sigma$ exponentiellen Abfallspielraum**
+   ($\int e^{\varepsilon|c|}\,d|\sigma|<\infty$ für ein
+   $\varepsilon>0$), **so ist $\sigma=0$**: die Fourier–Laplace-
+   Transformierte ist in einem Streifen analytisch, und alle
+   Ableitungen in $0$ verschwinden.
+
+Zwei Vorsichten, beide wesentlich. Erstens ist die Spektralgestalt eine
+**Einschränkung**: dass jede westabfallende Lösung eine solche
+Darstellung hat, ist nicht bewiesen; Proposition 5 begrenzt
+Gegenbeispielkonstruktionen, sie beweist (V) nicht. Zweitens sind
+komplexe Träger hier bewusst ausgeschlossen: über $\mathbb C$ ist die
+Parametrisierung nur modulo der Annihilatoren ganzer Funktionen
+definiert (ein Kreisintegral $\oint\beta^c\lambda^c\,dc$ ist $0$ nach
+Cauchy und parametrisiert gar nichts).
+
+### Die Mechanismen, warum es schwer ist
+
+* **(i) Der Westlimes der Moden.** $\beta^c_{-\infty}=1$: jede einzelne
+  Mode verletzt die Randbedingung; nur Auslöschung im Kontinuum von
+  Moden könnte eine Lösung tragen. Endlich (Theorem 4) und exponentiell
+  abfallend (Proposition 5) ist die Auslöschung unmöglich.
+* **(ii) Die Dispersion.** Der charakteristische Ansatz $F=G(B_i+A_j)$
+  hat für nichtaffines $G$ einen exakten $(\ast)$-Defekt mit dem Faktor
+  $\mu_i\nu_j(\mu_i-\nu_j)$ (Probe (e): für $G(u)=u^2$ exakt dieser
+  Faktor), und **derselbe antisymmetrische Faktor** sitzt in der exakten
+  Energieidentität (Probe (f)): auf Lösungen von (Q) ist
+  $$0=\tfrac12\sum_j\nu_jR_j^2+\tfrac12\sum_i\mu_iC_i^2
+    +\tfrac12\sum_{ij}\mu_i\nu_j(\nu_j-\mu_i)\,x_{ij}^2,$$
+  und der letzte Summand ist indefinit — die Paarung beweist nichts,
+  solange kein Multiplikator das Vorzeichen repariert; separable
+  Gewichte $\alpha_i\beta_j$ faktorisieren durch und ändern nichts
+  (nachgerechnet, siehe Sackgassen). Das Kontinuum hat keinen solchen
+  Term; die ganze Schwierigkeit von (V) ist diese Dispersion.
+
+### Was jetzt offen ist, exakt
+
+(V) selbst. Bewiesen ist: keine endliche Modensuperposition, kein
+reelles Spektralmaß mit exponentiellem Abfall, kein endlich getragenes
+$x$, kein Tod in endlich vielen Schritten — und ohne Summierbarkeit wäre
+(V) falsch. Der verbleibende Raum ist scharf benannt: für **geometrisch
+fallende Massen** ist $\Phi_\mu(r)+\Phi_\nu(r)=O((\log r)^2)$, die
+Zulässigkeit verlangt von $\sigma$ also nur quasipolynomialen Abfall,
+und Maße mit lauter verschwindenden Momenten und Abfall etwa
+$e^{-\sqrt r}$ **existieren** (Stieltjes). Ob eines davon zusätzlich die
+ganze Familie $\{\lambda_j\}_{j\in\mathbb Z}$ annihilieren kann — das
+folgt aus den Momenten dann **nicht** mehr —, ist eine
+Vollständigkeitsfrage für ein Geschlecht-0-Produktsystem in gewichtetem
+$L^1(\mathbb R)$, in die die Massen über ihre Zählfunktion eingehen: die
+erste Frage von Task 23, die echt an den **Asymptotiken** der Massen
+hängen könnte (Denjoy–Carleman). Die zwei benannten Wege:
+
+* **(α) Spektraldarstellung oder direkte Injektivität.** Zeige, dass
+  $\Pi_j(L)$ auf dem Westraum injektiv ist — etwa indem man jeder
+  westabfallenden Lösung eine Spektraldarstellung mit exponentiell
+  abfallendem $\sigma$ verschafft (dann schließt Proposition 5), oder
+  durch ein Carleman-Argument direkt an der Evolution.
+* **(β) Das Gegenbeispiel.** Ein $\sigma$ mit quasipolynomialem
+  Abfall, $\int\lambda^c_j\,d\sigma=0$ für alle $j$,
+  $\int\beta^c_i\Lambda^c\,d\sigma=0$ für alle $i$
+  ($\Lambda^c:=\lambda^c_{+\infty}$) und angepasster Konstante
+  $\int(\lambda^c_j-\beta^c_i\Lambda^c)/c\,d\sigma=0$. Wer hier suchen
+  will, suche zuerst bei stark lakunären Massen, wo die
+  Produktsysteme am dünnsten sind.
+
+### Sackgassen, sechzehnter Nachtrag
+
+* **Die Energiepaarung mit separablen Gewichten.** In
+  $\langle(P+N)x,\alpha_i\beta_jx\rangle$ faktorisieren die Gewichte aus
+  dem indefiniten Diagonalterm heraus; die zusätzlichen positiven
+  $F^2$-Terme (Abel) sind gegen ihn nicht abschätzbar, weil
+  $\mu_i^2x_{ij}^2\le2F(i{+}1,j)^2+2F(i,j)^2$ einen Faktor $2$ kostet,
+  den kein monotones Gewicht wieder hereinholt. Wer die Paarung
+  fortsetzt, braucht einen **nichtdiagonalen** Multiplikator
+  (Friedrichs), nicht bessere Gewichte.
+* **Kompakt getragene Spektralmaße oder komplexe Konturen.** Kompakt
+  reell: Momente töten sofort. Komplexe Konturen: parametrisieren
+  modulo Cauchy nichts. Beides keine Quelle von Gegenbeispielen.
+* **Aus dem Kontinuumsbild extrapolieren.** $F=G(B+A)$ ist im Diskreten
+  um den Defekt aus Probe (e) falsch; die Starrheit des Kontinuums
+  beweist nichts, sie erklärt nur, warum (V) plausibel ist. Die
+  Dispersion ist der Gegenstand, nicht ein Störterm.
