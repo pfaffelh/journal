@@ -2,7 +2,11 @@
 """Weg (α) der Viertelgitterfrage (zwanzigster Lauf): mechanische Verifikation
 der Beweisalgebra des Transformationsbeweises, exakt in Brüchen. Keine LPs,
 keine Messung — jede Probe ist eine endliche algebraische Identität, die im
-Beweis des zwanzigsten Laufs wörtlich vorkommt.
+Beweis des zwanzigsten Laufs (PROTOKOLL: Theorem 9, Theorem 10, Korollar 11)
+wörtlich vorkommt. Der unendliche Schluss von Theorem 10 braucht die dort
+formulierte Quadrantensummierbarkeit (H): Σ_{j≥j0} ν_j Σ_i μ_i |x_{ij}| < ∞ —
+erfüllt insbesondere von jedem beschränkten x; Theorem 9 (Injektivität der
+W-Transformation auf ℓ¹) ist unbedingt.
 
 System und Konventionen wie in zeta_cross.py: Massen μ_i := m^B_i,
 ν_j := m^A_j, Fluss x_{ij}, F(i,j) = Σ_{i'<i} μ_{i'} x_{i'j}. Die duale
@@ -191,8 +195,6 @@ for _ in range(4):
     c = rand_fr()
     for I0 in range(nI):
         Gc = sum(a[I] * W(I, c) for I in range(nI))
-        P = sum(a[I] * Pi_prod for I, Pi_prod in
-                ((I, prod := Fr(1)) for I in []))  # placeholder, built below
         P = Fr(0)
         for I in range(I0 + 1):
             prod = Fr(1)

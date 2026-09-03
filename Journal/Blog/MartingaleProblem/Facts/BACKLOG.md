@@ -188,6 +188,30 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    (quasipolynomialer Abfall reicht), oder Carleman direkt an der
    Evolution. `Task23/PROTOKOLL.md`, neunzehnter Lauf.
 
+   *Zwischenstand 2026-09-03, zwanzigster Lauf: Weg (α) trägt — (V) ist
+   bewiesen für quadrantensummierbare Lösungen, insbesondere für alle
+   beschränkten.* Der Transformationsbeweis: $G_j(c)=\sum_i\mu_iF(i,j)
+   W^c_i$ mit den Geschlecht-0-Schwänzen $W^c_i=\prod_{i'>i}(1+c\mu_{i'})$
+   ist ganz vom Typ 0, erfüllt exakt die Nordrekursion
+   $G_{j+1}=(1+c\nu_j)G_j+\nu_jR_j$, ist rechts beschränkt und fällt
+   reell — Phragmén–Lindelöf (Titchmarsh §5.62) plus Liouville geben
+   $G_j\equiv0$, und die **unbedingte** Injektivität der W-Transformation
+   auf $\ell^1$ (Theorem 9: Fußpunktzerlegung, noch einmal PL) holt
+   $x\equiv0$ zurück. Die Hypothese (H)
+   $\sum_{j\ge j_0}\nu_j\sum_i\mu_i|x_{ij}|<\infty$ steht genau am
+   Nordlimes und an der Reihe der Identität I; beschränktes $x$ erfüllt
+   sie. **Damit sind die zwei $\zeta$-Ketten in der Klasse $|h|\le B$
+   geschlossen** — der Klasse aller LPs und Messungen des zwölften bis
+   siebzehnten Laufs; die Identität I ist das erste Argument von Task 23,
+   das einen Häufungspunkt überquert. Offen: (V) in der nackten Klasse
+   (nur zeilen-/spaltenweise absolute Konvergenz) — beide Seiten der
+   Transformationsmethode brauchen dieselbe gemeinsame Summe, (H) ist
+   ihre Grenze; benannte Angriffe: Bootstrap ((H) aus (Q) selbst) oder
+   eine Paarung ohne gemeinsame Summe. Und jenseits der zwei Ketten der
+   Cantor–Bendixson-Weg. `Task23/PROTOKOLL.md`, zwanzigster Lauf;
+   `Task23/quarter_transform.py` (exakt, rc=0; der abgeschnittene Lauf
+   08:23 hatte es mit Syntaxfehler hinterlassen).
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

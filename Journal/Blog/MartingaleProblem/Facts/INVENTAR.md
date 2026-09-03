@@ -3433,3 +3433,69 @@ Gitteralgebra — Theorem 6 ist reine Reihenrechnung, und was von (V) offen
 ist, hängt an derselben Kreuzrelation, deren endliche Fassung
 `atomGrid_symm` ist. Maschinengeprüfte Algebra ist der nächste echte
 Zugewinn, nicht weitere Messung.
+
+### 2026-09-03 — Task 23, zwanzigster Lauf: Weg (α) trägt, (V) ist für quadrantensummierbare Lösungen bewiesen, die zwei $\zeta$-Ketten sind in der beschränkten Klasse geschlossen
+
+Kein Fact bearbeitet: Tabelle vollständig belegt, keine vorrangigen
+Aufgaben, Rückstaupunkt 2 erst in etwa zwei Wochen fällig, Punkt 3 ohne
+`.lake` nicht übersetzbar — also Rückstaupunkt 1, die Viertelgitterfrage
+(V), am einzig verbliebenen Weg (α).
+
+Zur Laufgeschichte, zum dritten Mal dasselbe Muster: die zwei Läufe 02:23
+und 08:23 UTC wurden von der Nutzungsgrenze abgeschnitten (rc=1); der
+zweite hinterließ `Task23/quarter_transform.py`, ein Prüfskript, das auf
+einen nie geschriebenen „Beweis des zwanzigsten Laufs" verweist und wegen
+eines Syntaxfehlers in einer toten Platzhalterzeile nicht einmal lief.
+Dieser Lauf hat den Fehler behoben, die Beweise selbständig geführt und
+den Protokolleintrag geschrieben, den das Skript voraussetzt. Befunde, je
+mit Beweis in `Task23/PROTOKOLL.md`, zwanzigster Lauf:
+
+* **Theorem 9, unbedingt:** die W-Transformation
+  $a\mapsto\sum_ia_iW^c_i$ mit den Geschlecht-0-Schwänzen
+  $W^c_i=\prod_{i'>i}(1+c\mu_{i'})$ ist auf $\ell^1(\mathbb Z)$ injektiv
+  (Fußpunktzerlegung, Phragmén–Lindelöf für Typ 0, Liouville,
+  Konstantenterm-Extraktion).
+* **Theorem 10:** (V) gilt unter der Quadrantensummierbarkeit (H)
+  $\sum_{j\ge j_0}\nu_j\sum_i\mu_i|x_{ij}|<\infty$ — die Transformierte
+  $G_j(c)=\sum_i\mu_iF(i,j)W^c_i$ ist ganz vom Typ 0, erfüllt exakt die
+  Nordrekursion, ist rechts beschränkt, fällt reell, ist also identisch
+  null; Theorem 9 holt $x\equiv0$ zurück. (H) steht genau am Nordlimes
+  und an der Reihe der Identität I; das liegengebliebene Skript sprach
+  sie nirgends aus — sie zu finden und auszusprechen war die eigentliche
+  Prüfarbeit dieses Laufs.
+* **Korollar 11:** jede beschränkte Lösung von (Q) verschwindet, und über
+  die Reduktion des siebzehnten Laufs ist die Dualität für zwei
+  gestapelte $\zeta$-Ketten in der Klasse $|h|\le B$ **geschlossen** —
+  der Klasse, in der sämtliche LPs, Zertifikate und Messungen des
+  zwölften bis siebzehnten Laufs liefen. Die Identität I ist das erste
+  Argument von Task 23, das einen Häufungspunkt überquert.
+* **Sackgasse mit Beleg:** die gespiegelte $\nu$-seitige Transformation
+  braucht dieselbe gemeinsame Summe wie die $\mu$-seitige — (H) ist die
+  Grenze der Methode, nicht der Seitenwahl.
+
+`Task23/quarter_transform.py` läuft exakt (rc=0, Proben (A)–(E)); der
+Docstring nennt jetzt (H) und die Satznummern. Offen bleibt (V) in der
+nackten Klasse (nur zeilen-/spaltenweise absolute Konvergenz; benannte
+Angriffe: Bootstrap oder eine Paarung ohne gemeinsame Summe) und der
+Cantor–Bendixson-Weg jenseits der zwei Ketten. Das Manuskript ist
+unverändert. Die Roadmaps auch, und das ist eine begründete Entscheidung:
+ein Eintrag der (H)-Fassung neben `duality_of_atomic_intervalFinite`
+stünde schief, solange die Manuskriptklasse nur absolute Konvergenz
+liefert; er ist zurückgestellt, bis (V) in der nackten Klasse entschieden
+ist, und der Nutzer kann das umstoßen (Protokoll, „Was offen bleibt").
+
+**Was als Nächstes formalisiert werden soll: unverändert `atomGrid_symm`,
+in Lean** (`MartingaleProblems` Meilenstein 8: endliches Gitter,
+$m_i\ne0$, Kreuzrelation $(\ast)$, Konklusion $\Phi(i,j)=\Phi(j,i)$; ruht
+allein auf der Zwei-Diagonalen-Induktion `lem:atomgrid` — zum sechsten
+Mal benannt). Die Begründung wird wieder stärker: der erste Beweis, der
+einen Häufungspunkt überquert, ruht mit den Proben (A)–(C) auf exakt der
+Gitteralgebra, deren endliche Fassung `atomGrid_symm` ist, und sein
+klassischer Rest (Phragmén–Lindelöf, Liouville) liegt in Mathlib bereits
+vor — am Quelltext geprüft (upstream/master):
+`PhragmenLindelof.horizontal_strip`
+(`Mathlib/Analysis/Complex/PhragmenLindelof.lean:113`; die
+Halbebenen-Fassung für Typ 0 selbst steht dort nicht, die Datei führt
+Streifen und Quadranten) und `Differentiable.exists_eq_const_of_bounded`
+(`Mathlib/Analysis/Complex/Liouville.lean:128`). Das ist Anschluss für
+den späteren Ausbau, kein neues Nahziel.

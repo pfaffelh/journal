@@ -2817,3 +2817,180 @@ nicht die Kleinheit von $\sigma$. Der Momentenschritt aus dem Beweis von
   überleben, nicht, *was* sie darstellen (die Null). Die richtige
   Invariante war nie der Abfall von $\sigma$, sondern die Majorante der
   Gegenfunktionen.
+
+## Weg (α), 2026-09-03 (zwanzigster Lauf): der Transformationsbeweis trägt — (V) ist bewiesen für quadrantensummierbare Lösungen, insbesondere für alle beschränkten, und die zwei $\zeta$-Ketten sind in der Klasse aller bisherigen Messläufe geschlossen
+
+Vorab zur Laufgeschichte, zum dritten Mal dasselbe Muster: der Lauf 08:23 UTC
+wurde von der Nutzungsgrenze abgeschnitten und hinterließ
+`Task23/quarter_transform.py` — ein Prüfskript, das auf einen „Beweis des
+zwanzigsten Laufs" verweist, den es nicht gab, und das nicht einmal lief
+(Syntaxfehler in einer toten Platzhalterzeile; behoben). Dieser Lauf hat den
+Beweis, auf den das Skript zeigt, **selbständig geführt** — nichts ist aus dem
+Skript „übernommen" —, und dabei eine Hypothese gefunden, die das Skript
+nirgends ausspricht und ohne die der Schluss nicht geht: die
+Quadrantensummierbarkeit (H). Alle Proben des Skripts laufen exakt (rc=0);
+sie verifizieren die endliche Beweisalgebra, wie der Docstring es ankündigt,
+und der klassische Rest ist genau der dort benannte (Phragmén–Lindelöf für
+Typ 0, Liouville).
+
+### Die Hypothese (H), und wer sie erfüllt
+
+System (Q) wie im achtzehnten Lauf; $\rho_j:=\sum_i\mu_i|x_{ij}|$ die
+gewichtete Zeilennorm (nach Zeilenvoraussetzung endlich),
+$R_j:=\sum_i\mu_ix_{ij}$ die volle Zeilensumme.
+
+$$\textbf{(H)}\qquad \sum_{j\ge j_0}\nu_j\,\rho_j<\infty
+\quad\text{für ein }j_0\in\mathbb Z.$$
+
+„Für ein" ist „für jedes": beim Absenken von $j_0$ kommen endlich viele
+endliche Terme hinzu. Nach Tonelli ist (H) dasselbe wie
+$\sum_i\mu_i\kappa^{(j_0)}_i<\infty$ mit
+$\kappa^{(j_0)}_i:=\sum_{j\ge j_0}\nu_j|x_{ij}|$ — die $\mu\nu$-gewichtete
+Summierbarkeit von $|x|$ auf dem Nordquadranten; die gemeinsame Größe heiße
+$\Sigma_{j_0}$. Hinreichend ist $\sup_{j\ge j_0}\rho_j<\infty$ (dann
+$\Sigma_{j_0}\le T\sup\rho$), und dafür wiederum jedes **beschränkte** $x$
+(dann $\rho_j\le BS$). Die Klasse (H) enthält also insbesondere die Klasse
+$|h|\le B$, in der sämtliche LP- und Messläufe (zwölfter bis siebzehnter
+Lauf) gearbeitet haben. Die nackte Voraussetzung von (Q) — nur zeilen- und
+spaltenweise absolute Konvergenz — gibt (H) nicht her; genau dort bleibt (V)
+offen, siehe unten.
+
+### Theorem 9: die W-Transformation ist auf $\ell^1$ injektiv
+
+Sei $\mu_i>0$ summierbar, $W^c_i:=\prod_{i'>i}(1+c\mu_{i'})$ (konvergent,
+ganz in $c$, $|W^c_i|\le e^{\Phi_\mu(|c|)}$). Ist $a\in\ell^1(\mathbb Z)$ und
+$\sum_ia_iW^c_i=0$ für alle $c$ mit $\Re c\ge0$, so ist $a=0$. **Keine
+Hypothese (H); das ist ein unbedingter Satz über Geschlecht-0-Schwänze.**
+
+*Beweis.* Fixiere $I_0$. Für $I\le I_0$ ist
+$W^c_I=W^c_{I_0}\prod_{I<i'\le I_0}(1+c\mu_{i'})$, für $I>I_0$ ist
+$W^c_I=W^c_{I_0}\big/\prod_{I_0<i'\le I}(1+c\mu_{i'})$ (Probe (D2), exakt).
+Da $\sum_I|a_I||W^c_I|\le\|a\|_1e^{\Phi_\mu}$ absolut konvergiert, darf man
+umgruppieren: auf $\Re c\ge0$, wo $W^c_{I_0}$ nullstellenfrei ist (alle
+Nullstellen liegen bei $-1/\mu_{i'}<0$), gilt
+$0=\sum_Ia_IW^c_I\big/W^c_{I_0}=P_{I_0}(c)+N_{I_0}(c)$ mit
+$$P_{I_0}(c)=\sum_{I\le I_0}a_I\prod_{I<i'\le I_0}(1+c\mu_{i'}),\qquad
+  N_{I_0}(c)=\sum_{I>I_0}\frac{a_I}{\prod_{I_0<i'\le I}(1+c\mu_{i'})}.$$
+$P_{I_0}$ ist ganz mit $|P_{I_0}(c)|\le\|a\|_1e^{\Phi_\mu(|c|)}$, also vom
+Exponentialtyp $0$, denn $\Phi_\mu(r)=o(r)$: jeder Summand
+$\log(1+r\mu_i)/r$ ist durch $\mu_i$ dominiert und fällt gegen $0$
+(dominierte Konvergenz — der im Skript angekündigte Typ-0-Nachweis).
+$N_{I_0}$ ist auf $\Re c\ge0$ absolut und gleichmäßig konvergent (jeder
+Nennerfaktor hat Betrag $\ge1$), dort also beschränkt durch $\|a\|_1$. Aus
+$P_{I_0}=-N_{I_0}$ auf $\Re c\ge0$ folgt: $P_{I_0}$ ist auf der imaginären
+Achse durch $\|a\|_1$ beschränkt, und eine ganze Funktion vom Typ $0$, die
+auf einer Geraden beschränkt ist, ist überall beschränkt
+(Phragmén–Lindelöf; Titchmarsh §5.62, Boas Kap. 6, Thm. 6.2.4 mit
+$\tau=0$, gedreht), nach Liouville also konstant. Die Konstante ist $0$:
+für reelles $c\to+\infty$ geht jeder Term von $N_{I_0}$ gegen $0$ (der
+Faktor $1+c\mu_{I_0+1}$ divergiert), dominiert durch $|a_I|$, also
+$P_{I_0}(c)=-N_{I_0}(c)\to0$. Damit ist $P_{I_0}\equiv0$, insbesondere
+$P_{I_0}(0)=\sum_{I\le I_0}a_I=0$ — für **jedes** $I_0$, und Differenzen
+benachbarter $I_0$ geben $a\equiv0$. $\square$
+
+Die Probe (D1) (Dreiecksgestalt der Koeffizientenmatrix, Determinante
+$\ne0$) ist das endliche Gegenstück; der unendliche Schluss läuft über die
+Fußpunktzerlegung (D2), nicht über die Matrix.
+
+### Theorem 10: (V) gilt unter (H)
+
+Sei $x$ eine Lösung von (Q) (zeilen- und spaltenweise absolut konvergent)
+mit (H). Dann ist $x\equiv0$.
+
+*Beweis.* **1. Die Transformierte.** $G_j(c):=\sum_i\mu_iF(i,j)W^c_i$;
+wegen $\sum_i\mu_i|F(i,j)|\le S\rho_j$ ist $G_j$ ganz mit
+$|G_j(c)|\le S\rho_j\,e^{\Phi_\mu(|c|)}$ — Typ $0$, wie oben. **2. Abel
+(Probe (A), Grenzfassung).** Für jedes $c\in\mathbb C$:
+$$\sum_i\mu_ix_{ij}W^c_i \;=\; R_j+c\,G_j(c). \tag{A$\infty$}$$
+Die endliche Identität ist exakte Algebra; im Limes $i_B\to+\infty$ geht
+$F(i_B{+}1,j)\to R_j$ und $W_{i_B}\to1$, im Limes $i_A\to-\infty$ geht
+$F(i_A,j)\to0$ (Westschwanz) gegen den beschränkten Faktor
+$W_{i_A-1}\to\prod_{i'\in\mathbb Z}(1+c\mu_{i'})$. **3. Nordrekursion
+(Probe (B), auf Lösungen $D\equiv0$).** Termweise Differenz und (A$\infty$):
+$$G_{j+1}=(1+c\nu_j)\,G_j+\nu_jR_j \qquad\text{für alle }c. \tag{B$\infty$}$$
+**4. Nordlimes — hier, und nur hier, steht (H).** Für festes $c$ und
+$j\to+\infty$ ist $\mu_i|F(i,j)|\le\mu_i\kappa^{(j_0)}_i$ eine
+$j$-gleichmäßige Dominante mit Summe $\Sigma_{j_0}$, und $F(i,j)\to0$
+punktweise (Nordschwanz), also $G_j(c)\to0$. **5. Beschränktheit rechts.**
+Für $\Re c\ge0$ ist $|1+c\nu_j|\ge1$, aus (B$\infty$) also
+$|G_j|\le|G_{j+1}|+\nu_j|R_j|$, iteriert und mit Schritt 4:
+$|G_{j_0}(c)|\le\sum_{J\ge j_0}\nu_J|R_J|\le\Sigma_{j_0}$ auf der ganzen
+abgeschlossenen rechten Halbebene ($|R_J|\le\rho_J$, Reihe endlich nach
+(H)). **6. Der reelle Limes.** Auflösen von (B$\infty$) nach unten (Probe
+(C)) gibt auf $\Re c\ge0$ die Identität I
+$$G_{j_0}(c)=-\sum_{J\ge j_0}\frac{\nu_JR_J}{\Pi_{j_0,J}(c)},\qquad
+  \Pi_{j_0,J}(c)=\prod_{j'=j_0}^{J}(1+c\nu_{j'}),$$
+(der Randterm $G_{j_B}/\Pi_{j_0,j_B-1}$ fällt nach Schritt 4 weg, die Reihe
+ist durch $\Sigma_{j_0}$ dominiert), und für reelles $c\to+\infty$ geht
+jeder Term gegen $0$ (der Faktor $1+c\nu_{j_0}$ divergiert), also
+$G_{j_0}(c)\to0$. **7. Phragmén–Lindelöf und Liouville**, wörtlich wie in
+Theorem 9: $G_{j_0}$ ist ganz vom Typ $0$ und auf der imaginären Achse durch
+$\Sigma_{j_0}$ beschränkt, also überall beschränkt, also konstant, und die
+Konstante ist der reelle Limes $0$. Damit $G_j\equiv0$ für jedes $j$.
+**8. Rückweg.** (B$\infty$) mit $G\equiv0$ gibt $\nu_jR_j=0$, also
+$R_j=0$; (A$\infty$) gibt $\sum_i(\mu_ix_{ij})W^c_i=0$ für alle $c$, und
+die Zeilenfolge $a_i=\mu_ix_{ij}$ liegt in $\ell^1$ ($\|a\|_1=\rho_j$);
+Theorem 9 gibt $a\equiv0$, und $\mu_i>0$ gibt $x_{ij}=0$ — für jede Zeile
+$j$. $\square$
+
+Konsistenzproben: ohne Summierbarkeit existiert schon $W^c_i$ nicht — der
+Buckel von Proposition 2 wird nicht etwa übersehen, sondern die Transformation
+verweigert sich ihm. Theorem 4 (endliche Superpositionen) und Korollar 7
+(Spektralkandidaten) sind keine Spezialfälle — sie brauchen (H) nicht — und
+bleiben als unbedingte Aussagen daneben stehen.
+
+### Korollar 11: die zwei $\zeta$-Ketten in der beschränkten Klasse
+
+**(a)** Jede beschränkte Lösung von (Q) verschwindet; allgemeiner jede mit
+$\sup_{j\ge j_0}\rho_j<\infty$. **(b)** Über die Reduktion des siebzehnten
+Laufs (blockintern erledigt der Satz des vierzehnten Laufs alles, $\kappa$
+lebt nur noch auf Kreuzpaaren $x_{ij}=\kappa(b_i,a_j)$, und die
+Schwanzdarstellungen sind wörtlich (Q)): für eine rein atomare Uhr, deren
+Atome unter $t^*$ zwei übereinander gestapelte $\zeta$-Ketten bilden, gilt
+die Dualität für jede Lösung des $h$-Systems, deren Kreuzwerte (H)
+erfüllen — insbesondere für **beschränktes** $\kappa$, also in genau der
+Klasse $|h|\le B$, in der alle bisherigen LPs, Zertifikate und Messungen
+liefen. Die kleinste Instanz jenseits der Intervallendlichkeit ist damit in
+dieser Klasse **geschlossen**; der Häufungspunkt zwischen den Ketten wird
+von der Identität I überquert, nicht von einer Induktion.
+
+### Was offen bleibt, exakt
+
+* **(V) in der nackten Klasse.** Nur zeilen- und spaltenweise absolute
+  Konvergenz, ohne (H). Beide Seiten der Methode brauchen dieselbe
+  gemeinsame Größe: die $\mu$-seitige Transformation braucht
+  $\Sigma_{j_0}$ für Nordlimes und Reihe I, und die gespiegelte
+  $\nu$-seitige ($U_i(c)=\sum_j\nu_jF(i,j)\prod_{j'\ge j+1}(1+c\nu_{j'})$,
+  Rekursion $U_{i+1}=(1+c\mu_i)U_i+\mu_iC_i\Pi_{-\infty}$ mit den vollen
+  Spaltensummen $C_i$) braucht $\sum_i\mu_i|C_i|$ und für ihren Ostlimes
+  $\sum_j\nu_j\rho_j$ — dieselbe Größe. (H) ist also keine Bequemlichkeit
+  der Seitenwahl, sondern die Grenze der Transformationsmethode. Zwei
+  benannte Angriffe: zeigen, dass Lösungen von (Q) (H) **automatisch**
+  erfüllen (ein Bootstrap aus den Schwanzdarstellungen; offen), oder eine
+  Paarung, die ohne die gemeinsame Summe auskommt.
+* **Jenseits der zwei Ketten.** Der Cantor–Bendixson-Weg vom siebzehnten
+  Lauf (diskrete, nicht intervallendliche Ketten mit mehr als einem
+  Häufungspunkt; in sich dichte Atommengen) ist unberührt; die Werkzeuge —
+  $\widehat w$-Isomorphismus, Theorem 9, die Identität I — stehen jetzt
+  bereit, und die Identität I ist das erste Argument von Task 23, das
+  einen Häufungspunkt überquert.
+* **Die Roadmap.** `duality_of_atomic_intervalFinite` in
+  `MartingaleProblems` Meilenstein 8 endet mit den gestapelten
+  $\zeta$-Ketten als benannter Grenze. Ein Eintrag der (H)-Fassung wäre
+  möglich, ist aber zurückgestellt, bis (V) in der nackten Klasse
+  entschieden ist — die Manuskriptklasse verlangt nur absolute Konvergenz,
+  und ein Roadmap-Punkt mit einer Hypothese, die das Manuskript nicht
+  liefert, stünde schief. Das ist eine Entscheidung dieses Laufs und kann
+  vom Nutzer umgestoßen werden.
+
+### Sackgassen, achtzehnter Nachtrag
+
+* **Die Spiegel-Transformation als Ausweg aus (H).** Nachgerechnet, siehe
+  oben: sie tauscht nur, welche der beiden Tonelli-Lesarten von
+  $\Sigma_{j_0}$ gebraucht wird. Wer (H) loswerden will, braucht eine neue
+  Idee, keine neue Seite.
+* **Die endliche Matrix (D1) statt der Fußpunktzerlegung (D2) im
+  Unendlichen.** Die Dreiecksmatrix der elementarsymmetrischen Funktionen
+  hat im Unendlichen keine Antidiagonale; die Zerlegung (D2) mit
+  Phragmén–Lindelöf ersetzt sie vollständig. (D1) bleibt als endliche
+  Konsistenzprobe wertvoll und als Beweisweg im Unendlichen unbrauchbar.
