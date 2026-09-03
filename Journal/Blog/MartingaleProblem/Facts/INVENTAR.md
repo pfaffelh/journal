@@ -3499,3 +3499,127 @@ Halbebenen-Fassung für Typ 0 selbst steht dort nicht, die Datei führt
 Streifen und Quadranten) und `Differentiable.exists_eq_const_of_bounded`
 (`Mathlib/Analysis/Complex/Liouville.lean:128`). Das ist Anschluss für
 den späteren Ausbau, kein neues Nahziel.
+
+### 2026-09-03 — Task 23, einundzwanzigster Lauf: (H) war nie die Grenze, und die Manuskriptklasse liefert die Hypothese
+
+Das Inventar ist geschlossen (keine Zeile mit `?`), der Rückstau führt als
+ersten Punkt Task 23; dieser Lauf hat dort weitergearbeitet und **nichts** am
+Inventar, an den Facts oder am Manuskript geändert.
+
+**Befund.** Der zwanzigste Lauf schloss, (H) — die
+$\mu\otimes\nu$-Integrierbarkeit von $|x|$ auf dem Nordquadranten — sei „die
+Grenze der Transformationsmethode". Das ist zurückgenommen. Der Beweis von
+Theorem 10 benutzt (H) an genau drei Stellen und dort nur durch zwei
+Folgerungen: eine in $j$ gleichmäßige summierbare Majorante für den
+Nordlimes, und $\sum_{j\ge j_0}\nu_j|R_j|<\infty$ für die Beschränktheit
+rechts. Abgezogen ist das die Bedingung **(U)** = *Straffheit nach Norden*
+plus *Nordsummierbarkeit der Zeilensummen*, und **Theorem 12** (Protokoll,
+einundzwanzigster Lauf) schließt daraus $x\equiv0$ — mit Theorem 9
+unverändert, der Fortsetzung nach Süden als eigenem hypothesenfreien
+Schritt, und ohne die Identität I, die ein Koeffizientenvergleich in
+(B$\infty$) ersetzt.
+
+**Warum das mehr ist als eine Umformulierung.** (U) hat zwei
+unvergleichbare hinreichende Kriterien. Das eine ist (H), womit Theorem 10
+Korollar wird. Das andere ist $\sup_{i,\,j\ge j_0}|F(i,j)|<\infty$, und $F$
+ist der **Dualitätsdefekt** $\Phi(s,t)-\Phi(t,s)$: gefordert ist damit die
+Beschränktheit des **Wertes** $\Phi$, nicht der **Dichte** $\gamma$, in der
+alle LPs und Messungen des zwölften bis siebzehnten Laufs gearbeitet haben.
+Und genau diese Hypothesengestalt trägt das Manuskript an der einzigen
+Stelle, an der es ein solches $\Phi$ probabilistisch herstellt: die
+Dominanten \eqref{eq:dual1} und \eqref{eq:dual2} von `thm:duality` (\EK{}
+4.4.11) geben $|\Phi(s,t)|\le e^{C_T}E[\Gamma_T]$ für $s,t\le T$, am
+Manuskript nachgelesen (Stellen 6374ff). Ehrlich dazu gehört: `prop:atomicdual`
+und `prop:mixeddual` sind abstrakt formuliert und fordern keine
+Beschränktheit — Korollar 14 nennt sie deshalb als Hypothese.
+
+**Und der Satz iteriert** (Korollar 16). Die zwei gestapelten $\zeta$-Ketten
+waren nur die kleinste Anwendung. Ist die Atommenge unter $t^*$ eine
+**diskrete** Kette — jedes Atom hat unter den Atomen Nachbarn beiderseits —,
+so zerfällt sie in Blöcke (Klassen der Relation „nur endlich viele Atome
+dazwischen"), sämtlich vom Ordnungstyp $\zeta$; ist die Blockordnung
+intervallendlich, so gilt die Dualität bei beschränktem $\Phi$. Die Induktion
+läuft über den Blockabstand: die zwei Abfälle, die Theorem 12 verlangt, stehen
+an den einander zugewandten Rändern zweier Blöcke, und ihre Werte sind die
+Werte an den Rändern der dazwischenliegenden Blöcke, also $0$ nach
+Induktionsvoraussetzung. Damit sind Atommengen mit **abzählbar unendlich
+vielen Häufungspunkten** erfaßt ($\zeta$ von $\zeta$-Ketten), nicht mehr nur
+mit einem.
+
+**Gestalt jedes Gegenbeispiels** (Proposition 15, aus den beiden Kriterien):
+unbeschränkter Defekt auf *jedem* Nordquadranten, $\sup_j\rho_j=\infty$, und
+$|x|$ zeilen- und spaltenweise integrierbar, aber auf keinem Nordquadranten
+$\mu\otimes\nu$-integrierbar. Dazu die Umformulierung
+$\rho_j=\operatorname{Var}_iF(\cdot,j)$, $\sigma_i=\operatorname{Var}_jF(i,\cdot)$
+— die nackte Voraussetzung von (Q) ist beschränkte Variation jeder Zeile und
+jeder Spalte des Flusses.
+
+**Geschrieben.** `Task23/PROTOKOLL.md`, Abschnitt „Die nackte Klasse,
+2026-09-03 (einundzwanzigster Lauf)", mit Theorem 12, den Korollaren 13, 14
+und 16, Proposition 15 und dem neunzehnten Sackgassen-Nachtrag.
+`Task23/naked_class.py` verifiziert die endliche Beweisalgebra exakt
+(Proben (A) Abel mit Randtermen, (B) beide Einschrittrelationen und die
+Nordrekursion, (C) der Koeffizientenvergleich, (D) die Fortsetzung nach
+Süden samt Produktschranke, (E) Variationen, Tonelli und die Wertschranke
+auf einem echten Flussfeld, (F) Typ 0 und $|1+c\mu|\ge1$); rc=0. Der
+Rückstau trägt den Zwischenstand.
+
+**Roadmap, und die zurückgestellte Entscheidung des zwanzigsten Laufs ist
+damit fällig geworden.** Jener hatte einen Eintrag zurückgestellt, weil die
+(H)-Fassung eine Hypothese verlangt, die die Manuskriptklasse nicht liefert.
+Für Korollar 14 gilt der Einwand nicht, und `MartingaleProblems`
+Meilenstein 8 trägt jetzt sieben neue Punkte: `tailProduct` (die
+Geschlecht-0-Schwänze samt Typ-0-Aussage),
+`norm_le_of_bddOn_imAxis_of_subexponential` (Phragmén–Lindelöf plus
+Liouville, mit dem $\varepsilon$-Kunstgriff, der Mathlibs
+Halbebenen-Fassung die fehlende Strahlschranke verschafft),
+`tailProduct_pairing_eq_zero` (Theorem 9), `crossGrid_eq_zero_of_bddFlux`
+(Theorem 12), `duality_of_atomic_twoChains_of_bounded` (Korollar 14),
+`Clock.atomBlocks` und `duality_of_atomic_blockStack_of_bounded`
+(Korollar 16).
+Die Abdeckungsliste bei `duality_of_atomic` und der Schlusssatz von
+`duality_of_atomic_intervalFinite` sind nachgezogen. Alle vier zitierten
+Mathlib-Deklarationen sind gegen `upstream/master` geprüft und nicht
+`deprecated`: `PhragmenLindelof.right_half_plane_of_bounded_on_real`
+(`Mathlib/Analysis/Complex/PhragmenLindelof.lean:717`, `namespace
+PhragmenLindelof` ab `:54`), `Differentiable.exists_eq_const_of_bounded`
+(`Mathlib/Analysis/Complex/Liouville.lean:128`, `namespace Differentiable`
+ab `:109`), `tendsto_tsum_of_dominated_convergence` (Tannery,
+`Mathlib/Analysis/Normed/Group/Tannery.lean:45`, Wurzelnamensraum),
+`multipliable_one_add_of_summable`
+(`Mathlib/Analysis/SpecialFunctions/Log/Summable.lean:171`) und
+`Real.log_le_sub_one_of_pos`
+(`Mathlib/Analysis/SpecialFunctions/Log/Basic.lean:307`).
+
+**Berichtigt am eigenen Bestand.** Der Laufbericht vom 2026-09-03 (zwanzigster
+Lauf) hielt fest, „die Halbebenen-Fassung für Typ 0 selbst steht dort nicht,
+die Datei führt Streifen und Quadranten". Die Datei führt auch Halbebenen:
+`PhragmenLindelof.right_half_plane_of_bounded_on_real` (`:717`) und
+`…right_half_plane_of_tendsto_zero_on_real` (`:646`). Sie verlangen neben der
+Schranke auf der imaginären Achse eine Schranke auf dem reellen Strahl, den
+die Typ-0-Fassung nicht braucht; der $\varepsilon$-Kunstgriff liefert sie,
+und deshalb ist der neue Roadmap-Punkt aus Mathlib heraus baubar statt
+klassisch zu zitieren.
+
+**Das Manuskript ist unverändert, und der Vorschlag an den Nutzer wächst.**
+Die Statustabelle in §6 führt „purely atomic, atoms a chain — proved,
+`prop:atomicdual`" (das ist der Fall endlich vieler Atome unter $t^*$) und
+„order-dense atoms — open"; für unendliche Ketten hat sie keine Zeile. Seit
+dem neunten Lauf steht der Vorschlag, `prop:atomicdual` auf den
+intervallendlichen Fall zu heben. Dazu kommt jetzt eine zweite Zeile:
+*diskrete Kette mit intervallendlicher Blockordnung, $\Phi$ beschränkt —
+bewiesen* (Korollar 16). Beide Beweise sind vollständig und im PROTOKOLL
+nachlesbar; ob und in welcher Gestalt sie ins Manuskript wandern, gehört dem
+Nutzer, zumal die zweite eine Hypothese hinzufügt, die `prop:atomicdual`
+heute ausdrücklich nicht stellt.
+
+**Was als Nächstes formalisiert werden soll: unverändert `atomGrid_symm`, in
+Lean** (`MartingaleProblems` Meilenstein 8) — zum siebten Mal, und die
+Begründung ist mit diesem Lauf nicht schwächer geworden, sondern präziser:
+`crossGrid_eq_zero_of_bddFlux` ruht auf denselben Einschrittrelationen, die
+`atomGrid_symm` endlich macht, und sein klassischer Rest ist jetzt vollständig
+an Mathlib-Deklarationen angeschlossen. Wer eine zweite Front will, nehme
+`norm_le_of_bddOn_imAxis_of_subexponential`: es ist von der
+Wahrscheinlichkeitstheorie unabhängig, hängt allein an den zwei oben
+belegten Mathlib-Sätzen, und ist die einzige Analysis, die Theorem 9 und
+Theorem 12 gemeinsam brauchen.

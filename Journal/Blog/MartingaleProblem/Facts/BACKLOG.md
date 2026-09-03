@@ -212,6 +212,46 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `Task23/quarter_transform.py` (exakt, rc=0; der abgeschnittene Lauf
    08:23 hatte es mit Syntaxfehler hinterlassen).
 
+   *Zwischenstand 2026-09-03, einundzwanzigster Lauf: „(H) ist die Grenze
+   der Methode" ist zurückgenommen — (V) gilt, sobald der Fluss nach Norden
+   beschränkt ist, und das ist die Manuskriptklasse.* Der Beweis von
+   Theorem 10 benutzt (H) an genau drei Stellen und dort nur durch zwei
+   Folgerungen; abgezogen ergibt das **(U)** = Straffheit nach Norden
+   ($\sup_{j\ge j_0}\sum_{|i|>N}\mu_i|F(i,j)|\to0$) plus
+   $\sum_{j\ge j_0}\nu_j|R_j|<\infty$, und **Theorem 12** schließt daraus
+   $x\equiv0$. (U) hat zwei unvergleichbare hinreichende Kriterien: (H) —
+   Theorem 10 ist damit Korollar — und
+   $\sup_{i,\,j\ge j_0}|F(i,j)|<\infty$, die Beschränktheit des
+   **Dualitätsdefekts** $\Phi(s,t)-\Phi(t,s)$. Das zweite ist die
+   Hypothesengestalt, die `thm:duality` (\EK{} 4.4.11) in
+   \eqref{eq:dual1}+\eqref{eq:dual2} ohnehin trägt: die Dominante $\Gamma_T$
+   gibt $|\Phi|\le e^{C_T}E[\Gamma_T]$ auf $[0,T]^2$. Mitgefallen: die
+   Identität I des zwanzigsten Laufs ist entbehrlich (Koeffizientenvergleich
+   in (B$\infty$)), und die Fortsetzung nach Süden ist ein eigener,
+   hypothesenfreier Schritt. Jedes Gegenbeispiel hat jetzt eine scharfe
+   Gestalt (Proposition 15): unbeschränkter Defekt auf **jedem**
+   Nordquadranten, $\sup_j\rho_j=\infty$, und $|x|$ zeilen- und
+   spaltenweise integrierbar, aber auf keinem Nordquadranten
+   $\mu\otimes\nu$-integrierbar. **Und Theorem 12 iteriert** (Korollar 16):
+   ist die Atomkette diskret — jedes Atom hat Nachbarn — und ist die Ordnung
+   ihrer Blöcke (Klassen der Relation „nur endlich viele Atome dazwischen",
+   sämtlich vom Typ $\zeta$) intervallendlich, so gilt die Dualität bei
+   beschränktem $\Phi$; die Induktion läuft über den Blockabstand, die zwei
+   Abfälle stehen an den einander zugewandten Rändern und kommen aus der
+   Induktionsvoraussetzung. Damit sind abzählbar viele Häufungspunkte
+   erfaßt, nicht nur einer. Offen bleibt (V) bei unbeschränktem Defekt —
+   der Bootstrap richtet sich jetzt auf die **Straffheit** statt auf die
+   Summierbarkeit —, die nicht intervallendliche Blockordnung (dieselbe
+   Frage eine Cantor–Bendixson-Stufe höher) und die nichtdiskrete, in sich
+   dichte Atommenge, wo es keine Einschrittrelationen gibt.
+   `Task23/PROTOKOLL.md`, einundzwanzigster Lauf;
+   `Task23/naked_class.py` (Proben (A)–(F), exakt, rc=0); Roadmapeinträge
+   `tailProduct`, `norm_le_of_bddOn_imAxis_of_subexponential`,
+   `tailProduct_pairing_eq_zero`, `crossGrid_eq_zero_of_bddFlux`,
+   `duality_of_atomic_twoChains_of_bounded`, `Clock.atomBlocks` und
+   `duality_of_atomic_blockStack_of_bounded` in `MartingaleProblems`
+   Meilenstein 8.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

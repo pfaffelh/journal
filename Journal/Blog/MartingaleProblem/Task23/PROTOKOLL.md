@@ -2994,3 +2994,337 @@ von der Identität I überquert, nicht von einer Induktion.
   hat im Unendlichen keine Antidiagonale; die Zerlegung (D2) mit
   Phragmén–Lindelöf ersetzt sie vollständig. (D1) bleibt als endliche
   Konsistenzprobe wertvoll und als Beweisweg im Unendlichen unbrauchbar.
+
+## Die nackte Klasse, 2026-09-03 (einundzwanzigster Lauf): (H) war nie die Grenze der Methode — (V) gilt, sobald der Fluss nach Norden beschränkt ist, und das ist die Hypothesengestalt, die das Manuskript an der einzigen Stelle, an der es $\Phi$ herstellt, ohnehin trägt
+
+Der zwanzigste Lauf schloss mit „(H) ist keine Bequemlichkeit der Seitenwahl,
+sondern die Grenze der Transformationsmethode" und nannte als Angriffe den
+Bootstrap und „eine Paarung ohne die gemeinsame Summe". Beides ist zu kurz
+gegriffen. Dieser Lauf hat den Beweis von Theorem 10 Schritt für Schritt
+danach abgeklopft, **wofür** (H) dort steht, und findet: (H) trägt drei
+Schritte, und zwar in einer Gestalt, die von der gemeinsamen Summe
+$\Sigma_{j_0}$ gar nicht abhängt. Die abgezogene Bedingung — sie heiße (U) —
+hat **zwei** unvergleichbare hinreichende Kriterien, (H) und die
+Beschränktheit des Flusses; das zweite hat mit dem
+$\mu\otimes\nu$-Integrierbarkeitsproblem nichts zu tun und ist in der
+Manuskriptklasse erfüllt.
+
+### Wofür (H) im Beweis von Theorem 10 steht
+
+Aufstellung wie im achtzehnten Lauf: $\mu_i,\nu_j>0$ summierbar
+($S=\sum_i\mu_i$, $T=\sum_j\nu_j$), $x:\mathbb Z^2\to\mathbb R$ mit
+$\rho_j=\sum_i\mu_i|x_{ij}|<\infty$ (Zeilen), $\sigma_i=\sum_j\nu_j|x_{ij}|
+<\infty$ (Spalten) und (Q); $F(i,j)$ der gemeinsame Wert,
+$R_j=\sum_i\mu_ix_{ij}=\lim_{i\to+\infty}F(i,j)$,
+$W^c_i=\prod_{i'>i}(1+c\mu_{i'})$, $G_j(c)=\sum_i\mu_iF(i,j)W^c_i$.
+
+Die acht Schritte von Theorem 10 benutzen (H) an genau drei Stellen, und
+jedesmal nur durch eine ihrer Folgerungen:
+
+* **Schritt 4** (Nordlimes $G_j(c)\to0$) braucht eine in $j\ge j_0$
+  gleichmäßige summierbare Majorante für $\mu_i|F(i,j)|$ — (H) liefert
+  $\mu_i\kappa^{(j_0)}_i$. Gebraucht wird davon nur die **gleichmäßige
+  Summierbarkeit** der Familie, nicht die Majorante.
+* **Schritte 5 und 6** (Beschränktheit rechts, Reihe der Identität I)
+  brauchen $\sum_{J\ge j_0}\nu_J|R_J|<\infty$ — (H) liefert es über
+  $|R_J|\le\rho_J$. Gebraucht wird die Reihe, nicht $\rho$.
+
+Damit ist die Bedingung abgezogen:
+
+> **(U).** Für ein $j_0\in\mathbb Z$ gilt
+> **(i)** *Straffheit nach Norden*:
+> $\displaystyle\lim_{N\to\infty}\ \sup_{j\ge j_0}\ \sum_{|i|>N}\mu_i|F(i,j)|=0$,
+> **(ii)** *Nordsummierbarkeit der Zeilensummen*:
+> $\displaystyle\sum_{j\ge j_0}\nu_j|R_j|<\infty$.
+
+(U)(i) ist wörtlich eine Straffheitsbedingung: die Flussmasse darf beim
+Marsch nach Norden nicht nach Osten oder Westen entweichen. Die zwei freien
+Ränder des Viertelgitters — Ost und Süd — sind genau die, an denen sie
+entweichen könnte, und (U) verbietet das nur nach Osten und Westen, nicht
+nach Süden.
+
+### Theorem 12: (V) gilt unter (U)
+
+*Sei $x$ eine Lösung von (Q) mit (U). Dann ist $x\equiv0$.*
+
+*Beweis.* Alles für $j\ge j_0$; die Fortsetzung nach Süden ist Schritt 7.
+
+**1. $G_j$ ist ganz vom Typ $0$.** Nach (U)(i) ist
+$A:=\sup_{j\ge j_0}\sum_i\mu_i|F(i,j)|<\infty$ (endlich viele Terme plus ein
+gleichmäßig kleiner Schwanz), und $|W^c_i|\le e^{\Phi_\mu(|c|)}$ mit
+$\Phi_\mu(r)=\sum_i\log(1+r\mu_i)$. Also konvergiert $G_j$ auf Kompakta
+gleichmäßig, ist ganz, und $|G_j(c)|\le A\,e^{\Phi_\mu(|c|)}$;
+$\Phi_\mu(r)=o(r)$, weil $\log(1+r\mu_i)/r\le\mu_i$ punktweise gegen $0$
+fällt (dominierte Konvergenz). Auf $\Re c\ge0$ ist überdies
+$1\le|W^c_i|\le e^{\Phi_\mu(|c|)}$, jeder Faktor $|1+c\mu|\ge1$.
+
+**2. Abel (A$\infty$).** $\sum_i\mu_ix_{ij}W^c_i=R_j+c\,G_j(c)$ für alle
+$c\in\mathbb C$. Endlich ist das
+$\sum_{i=i_A}^{i_B}(F(i{+}1,j)-F(i,j))W^c_i
+ =F(i_B{+}1,j)W^c_{i_B}-F(i_A,j)W^c_{i_A}
+  +c\sum_{i=i_A+1}^{i_B}\mu_iF(i,j)W^c_i$
+(Probe (A), exakt), und im Limes geht $F(i_B{+}1,j)\to R_j$, $W^c_{i_B}\to1$,
+$F(i_A,j)\to0$ (Westabfall) gegen den beschränkten Faktor $W^c_{i_A}$.
+
+**3. Nordrekursion (B$\infty$).** Termweise Differenz und (A$\infty$):
+$G_{j+1}=(1+c\nu_j)G_j+\nu_jR_j$ für alle $c$.
+
+**4. Nordlimes.** Fixiere $c$ mit $\Re c\ge0$. $F(i,j)\to0$ punktweise für
+$j\to+\infty$ (Nordschwanz), und die Familie $\mu_iF(i,j)W^c_i$ ist nach
+(U)(i) und $|W^c_i|\le e^{\Phi_\mu}$ gleichmäßig summierbar; also
+$G_j(c)\to0$. **Hier steht (U)(i), und nur hier.**
+
+**5. Beschränktheit auf $\Re c\ge0$.** Aus (B$\infty$) und $|1+c\nu_j|\ge1$
+folgt $|G_j|\le|G_{j+1}|+\nu_j|R_j|$; iteriert von $j_0$ bis $j_B$ und mit
+Schritt 4 für $j_B\to\infty$:
+$|G_{j_0}(c)|\le\sum_{J\ge j_0}\nu_J|R_J|<\infty$ nach (U)(ii), und dasselbe
+mit jedem $j\ge j_0$ an der Stelle von $j_0$.
+
+**6. Phragmén–Lindelöf, Liouville, und der Koeffizientenvergleich.** Jedes
+$G_j$, $j\ge j_0$, ist ganz vom Typ $0$ und auf der imaginären Achse
+beschränkt, also überall beschränkt (Titchmarsh §5.62; Boas Thm. 6.2.4 mit
+$\tau=0$, gedreht) und nach Liouville konstant, $G_j\equiv K_j$. Setze das in
+(B$\infty$) ein: $K_{j+1}=K_j+c\,\nu_jK_j+\nu_jR_j$ **für alle $c$**, also
+$\nu_jK_j=0$, also $K_j=0$, und damit $K_{j+1}=\nu_jR_j=0$, also $R_j=0$ —
+für jedes $j\ge j_0$. Nun gibt (A$\infty$) $\sum_i(\mu_ix_{ij})W^c_i=0$ für
+alle $c$, die Folge $a_i=\mu_ix_{ij}$ liegt in $\ell^1$ ($\|a\|_1=\rho_j$),
+und **Theorem 9** (unverändert, ohne jede Zusatzhypothese) gibt $a\equiv0$,
+also $x_{ij}=0$ für alle $i$ und alle $j\ge j_0$.
+
+**7. Fortsetzung nach Süden, hypothesenfrei.** Verschwinden alle Zeilen
+$j'>j$, so ist $F(i,j)=-\sum_{j'\ge j}\nu_{j'}x_{ij'}=-\nu_jx_{ij}$, und mit
+$P_i:=F(i,j)$ lautet die West-Darstellung $P_{i+1}-P_i=\mu_ix_{ij}
+=-(\mu_i/\nu_j)P_i$, also $P_{i+1}=(1-\mu_i/\nu_j)P_i$ und
+$P_i=P_{i_A}\prod_{i_A\le i'<i}(1-\mu_{i'}/\nu_j)$. Das Produkt konvergiert
+für $i_A\to-\infty$ absolut (Summierbarkeit von $\mu$) gegen eine endliche
+Zahl, und $P_{i_A}\to0$ (Westabfall); also $P\equiv0$ und $x_{\cdot j}=0$.
+Induktion nach unten gibt $x\equiv0$ auf ganz $\mathbb Z^2$. $\square$
+
+Zwei Nebenbefunde, die auch Theorem 10 betreffen. Erstens ist **die
+Identität I entbehrlich**: Schritt 6 ersetzt den reellen Limes durch einen
+Koeffizientenvergleich in (B$\infty$), der zugleich $K_j=0$ und $R_j=0$
+liefert. Der zwanzigste Lauf hat sie als „das erste Argument von Task 23, das
+einen Häufungspunkt überquert" gefeiert; das Überqueren steckt in Wahrheit im
+**Nordlimes** von Schritt 4, und der ist in beiden Beweisen dieselbe Stelle.
+Zweitens braucht Theorem 10 die Fortsetzung nach Süden (Schritt 7) genauso —
+sie fehlte dort, weil (H) für ein beliebiges $j_0$ formuliert war und man
+$j_0\to-\infty$ schicken konnte; unter (U) ist sie ein eigener Schritt, und
+sie kostet nichts.
+
+### Korollar 13: zwei unvergleichbare hinreichende Kriterien
+
+**(a) (H) $\Rightarrow$ (U).** $|F(i,j)|\le\kappa^{(j_0)}_i$ für $j\ge j_0$
+gibt die $j$-gleichmäßige Majorante $\mu_i\kappa^{(j_0)}_i$ mit endlicher
+Summe $\Sigma_{j_0}$, also (U)(i); $|R_j|\le\rho_j$ gibt (U)(ii). Theorem 10
+ist damit Korollar von Theorem 12.
+
+**(b) Beschränkter Fluss $\Rightarrow$ (U).** Ist
+$B_F:=\sup_{i\in\mathbb Z,\,j\ge j_0}|F(i,j)|<\infty$, so ist
+$\sum_{|i|>N}\mu_i|F(i,j)|\le B_F\sum_{|i|>N}\mu_i\to0$ **gleichmäßig in
+$j$** — hier, und nur hier, geht ein, dass die Uhr endliche Masse hat —,
+also (U)(i); und $|R_j|\le B_F$ mit $\sum_{j\ge j_0}\nu_j\le T$ gibt (U)(ii).
+
+**(c) Unvergleichbar, und wie diese Aussage zu lesen ist.** Weil jede der
+beiden Bedingungen $x\equiv0$ erzwingt, kann es **keine** nichtverschwindende
+Lösung geben, die die eine erfüllt und die andere nicht — die
+Unvergleichbarkeit ist eine Aussage über die *Hypothesenklassen*, also
+darüber, welche Paare $(\Phi,\gamma)$ man überhaupt einspeisen darf, nicht
+über Zeugen. In dieser Lesart ist sie unmittelbar: (H) ist
+$\sum_{j\ge j_0}\nu_j\rho_j<\infty$ und läßt $\rho_j\to\infty$ zu, sobald
+$\nu_j$ schnell genug fällt; wegen $\sup_i|F(i,j)|\le\rho_j$ (Westabfall,
+Probe (E)) ist das genau der Spielraum, in dem (b) fällt. Umgekehrt bindet
+(b) nur den Wert und läßt die Zeilenvariationen $\rho_j$ frei, die (H)
+gewichtet summierbar verlangt. Keine der beiden Bedingungen impliziert also
+die andere; **(H) war nie die Grenze der Methode, sondern eines von zwei
+Kriterien für dieselbe Bedingung (U).**
+
+**(d) Beschränktes $x$ $\Rightarrow$ (b)**, denn $|F(i,j)|\le BS$. Korollar
+11 des zwanzigsten Laufs ist damit doppelt abgedeckt.
+
+### Korollar 14: die Manuskriptklasse liefert (b)
+
+$F$ ist der **Dualitätsdefekt**: über die Reduktion des siebzehnten Laufs ist
+$F(i,j)=\widehat w(b_i,a_j)$ und $\widehat w(s,t)=\Phi(s,t)-\Phi(t,s)$ — in
+der Rückrichtung des zwölften Laufs ist $\Phi=\tfrac12\widehat w$, also
+$\Phi(s,t)-\Phi(t,s)=\widehat w(s,t)$ nach dessen Antisymmetrie. Beschränktheit
+des Flusses ist also die Beschränktheit des Defekts, und sie folgt aus der
+Beschränktheit von $\Phi$ auf $\T_{\le t^*}\times\T_{\le t^*}$.
+
+Genau das trägt das Manuskript an der einzigen Stelle, an der es ein solches
+$\Phi$ probabilistisch **herstellt**: `thm:duality` (\EK{} 4.4.11) setzt in
+\eqref{eq:dual1} eine integrierbare Dominante $\Gamma_T$ mit
+$\sup_{r,s,t\le T}(|\alpha(X(r))|+1)|f(X(s),Y(t))|\le\Gamma_T$ und in
+\eqref{eq:dual2} $\int_0^T|\alpha(X(u))|\dif u+\int_0^T|\beta(Y(u))|\dif u
+\le C_T$ voraus; für
+$\Phi(s,t)=E[f(X(s),Y(t))\exp\{\int_0^s\alpha(X(u))\dif u+\int_0^t\beta(Y(u))
+\dif u\}]$ geben die beiden zusammen unmittelbar
+$|\Phi(s,t)|\le e^{C_T}E[\Gamma_T]$ für alle $s,t\le T$. Die
+Beschränktheit des Flusses ist also **keine Zusatzanalysis von der Art (H)**,
+sondern die Hypothesengestalt, die dort ohnehin steht.
+
+Ehrliche Einschränkung, und sie gehört dazu: `prop:atomicdual` und
+`prop:mixeddual` sind abstrakt formuliert — $\Phi,\gamma:\T\times\T\to\R$ mit
+\eqref{eq:incrementrep}, „no integrability hypothesis beyond the existence of
+the integrals" —, und Theorem 12 ist unter dieser Formulierung **nicht**
+hypothesenfrei. Der Satz für die zwei gestapelten $\zeta$-Ketten lautet
+deshalb:
+
+> **Korollar 14.** Ist $q$ rein atomar, bilden die Atome unter $t^*$ zwei
+> übereinander gestapelte $\zeta$-Ketten, erfüllen $\Phi,\gamma$
+> \eqref{eq:incrementrep} mit $\gamma_1=\gamma_2$, und ist $\Phi$ auf
+> $\T_{\le t^*}\times\T_{\le t^*}$ beschränkt, so ist
+> $\Phi(t^*,0)=\Phi(0,t^*)$.
+
+Die Klasse $|h|\le B$, in der alle LPs, Zertifikate und Messungen des
+zwölften bis siebzehnten Laufs liefen, ist echt kleiner: sie beschränkt die
+**Dichte** $\gamma=\kappa/2$, Korollar 14 nur den **Wert** $\Phi$.
+
+### Korollar 16: der Blockstapel — Theorem 12 iteriert über beliebig viele Häufungspunkte
+
+Die zwei gestapelten $\zeta$-Ketten sind nicht die Reichweite von Theorem 12,
+sondern nur seine kleinste Anwendung. Sei die Atommenge unter $t^*$ eine Kette,
+und sei sie **diskret**: jedes Atom hat unter den Atomen einen unmittelbaren
+Vorgänger und Nachfolger. Dann ist
+$$a\sim b\ :\Longleftrightarrow\ \text{zwischen }a\text{ und }b\text{ liegen nur endlich viele Atome}$$
+eine Äquivalenz, ihre Klassen — die **Blöcke** — sind konvex und
+intervallendlich, also nach der Diskretheit vom Ordnungstyp $\zeta$, und die
+Blöcke tragen die Quotientenordnung. Zusatzhypothese: **die Quotientenordnung
+ist selbst intervallendlich**, je zwei Blöcke schließen also nur endlich viele
+Blöcke ein; der *Blockabstand* $d(P,Q)$ ist dann endlich. Für zwei Blöcke ist
+das der Fall des siebzehnten Laufs.
+
+> **Korollar 16.** Ist $q$ rein atomar, ist die Atommenge unter $t^*$ eine
+> diskrete Kette mit intervallendlicher Blockordnung, erfüllen $\Phi,\gamma$
+> \eqref{eq:incrementrep} mit $\gamma_1=\gamma_2$, und ist $\Phi$ auf
+> $\T_{\le t^*}\times\T_{\le t^*}$ beschränkt, so ist $\Phi(t^*,0)=\Phi(0,t^*)$.
+
+*Beweis, Induktion über den Blockabstand.* Sei $w(s,t)=\Phi(s,t)-\Phi(t,s)$.
+
+**$d=0$** (blockintern): der Satz des vierzehnten Laufs, jeder Block ist
+intervallendlich; $w\equiv0$ auf $P\times P$ und $\kappa\equiv0$ auf den
+blockinternen Atompaaren.
+
+**Der Induktionsschritt.** Seien $P<Q$ Blöcke mit $d(P,Q)=d\ge1$, $P$ unten.
+Numeriere $P=\{a_j\}_{j\in\mathbb Z}$ und $Q=\{b_i\}_{i\in\mathbb Z}$
+aufsteigend und setze $F(i,j)=w(b_i,a_j)$, $x_{ij}=\kappa(b_i,a_j)$,
+$\nu_j=m^P_j$, $\mu_i=m^Q_i$ — beide positiv und summierbar, weil sie
+Teilsummen der Uhrenmasse sind. Weil die Atomkette diskret ist, trägt
+$[b_i,b_{i+1})$ genau das eine Atom $b_i$ und $[a_j,a_{j+1})$ genau das eine
+Atom $a_j$; \eqref{eq:incrementrep} gibt daher
+$$F(i{+}1,j)-F(i,j)=\mu_i\,x_{ij},\qquad
+  F(i,j{+}1)-F(i,j)=\nu_j\,x_{ij}$$
+(die zweite mit der Antisymmetrie von $\kappa$), also die Flussgestalt von (Q).
+
+Die **zwei Abfälle stehen an den einander zugewandten Rändern**. Nach unten
+von $Q$: $\lim_{i\to-\infty}F(i,j)$. Sei $R$ der größte Block in $[P,Q)$ — er
+existiert, weil diese Menge $P$ enthält und nach der Intervallendlichkeit der
+Blockordnung endlich ist; für $d=1$ ist $R=P$, und dann ist der folgende Limes
+ein blockinterner —, so
+ist $w(b_i,a_j)-w(r_l,a_j)$ in beiden Koordinaten eine Atomsumme über
+$[r_l,b_i)$, ein Schwanz der nach \eqref{eq:incrementrep} absolut
+konvergenten Reihe, und geht für $i\to-\infty$, $l\to+\infty$ gegen $0$; also
+$\lim_{i\to-\infty}F(i,j)=\lim_{l\to+\infty}w(r_l,a_j)$, und das ist $0$, weil
+$d(R,P)=d-1<d$. Nach oben von $P$ ebenso mit dem kleinsten Block in $(P,Q]$,
+der für $d=1$ gerade $Q$ ist: $\lim_{j\to+\infty}F(i,j)=0$. Damit ist (Q)
+erfüllt.
+
+$\Phi$ ist beschränkt, also ist $|F|\le2\sup|\Phi|$ beschränkt, also gilt
+Korollar 13(b), also (U), also nach **Theorem 12** $x\equiv0$ und $F\equiv0$
+auf $Q\times P$. Das schließt den Schritt.
+
+**Der Abschluss.** $w$ verschwindet damit an jedem Paar von Atomen unter
+$t^*$. Die Randwerte $w(t^*,0)$ und $w(t^*,a)$ kommen als Schwänze derselben
+absolut konvergenten Atomsummen, wie im Beweis von
+`duality_of_atomic_intervalFinite`, und geben $\Phi(t^*,0)=\Phi(0,t^*)$.
+$\square$
+
+Drei Bemerkungen dazu, und die dritte ist eine Grenze.
+
+1. Die Beschränktheit von $\Phi$ geht **nur** über Korollar 13(b) ein, an
+   jedem Induktionsschritt gleich; eine blockweise Schranke genügte.
+2. Der Fall $d=1$ mit zwei Blöcken ist Korollar 14. Neu ist $d\ge2$, und
+   neu ist, dass die Blockordnung unendlich sein darf: $\omega$, $\omega^*$
+   und $\zeta$ von $\zeta$-Ketten sind erfaßt, also Atommengen mit abzählbar
+   unendlich vielen Häufungspunkten.
+3. **Was nicht erfaßt ist.** Erstens Blockordnungen, die nicht
+   intervallendlich sind — dort ist der Blockabstand unendlich und die
+   Induktion hat keinen Anfang; das ist der Cantor–Bendixson-Weg eine Stufe
+   höher, und er wiederholt die Ausgangsfrage auf dem Quotienten. Zweitens
+   nichtdiskrete Atomketten, insbesondere in sich dichte: dort gibt es keine
+   Nachbaratome, die Einschrittrelationen existieren nicht, und Theorem 12
+   ist nicht anwendbar. Der ordnungsdichte Kern bleibt also offen, und zwar
+   an derselben Stelle wie seit dem elften Lauf — an der Einschrittrelation,
+   nicht mehr an der Analysis.
+
+### Proposition 15: die Gestalt jedes Gegenbeispiels
+
+Zwei Umformulierungen, die der Buchhaltung guttun. Aus
+$F(i{+}1,j)-F(i,j)=\mu_ix_{ij}$ und $F(i,j{+}1)-F(i,j)=\nu_jx_{ij}$ folgt
+$$\rho_j=\operatorname{Var}_i F(\cdot,j),\qquad
+  \sigma_i=\operatorname{Var}_j F(i,\cdot):$$
+die nackte Voraussetzung von (Q) ist genau, dass **jede Zeile und jede Spalte
+des Flusses von beschränkter Variation ist**, (H) ist die
+$\nu$-gewichtete Summierbarkeit der Zeilenvariationen nach Norden, und (U)(i)
+ist Straffheit statt Summierbarkeit. Damit hat jede nichtverschwindende
+Lösung von (Q) zwingend, für **jedes** $j_0$:
+
+1. $\sup_{i,\,j\ge j_0}|F(i,j)|=\infty$ (Korollar 13(b));
+2. $\sum_{j\ge j_0}\nu_j\rho_j=\infty$ und $\sum_i\mu_i\sigma_i=\infty$
+   (Korollar 13(a); die zweite Summe dominiert die erste nach Tonelli), also
+   insbesondere $\sup_j\rho_j=\infty$, weil $\sum_j\nu_j<\infty$;
+3. $\rho_j<\infty$ für jedes einzelne $j$ und $\sigma_i<\infty$ für jedes
+   einzelne $i$ — ein Fubini-Hindernis: $|x|$ ist zeilen- und spaltenweise
+   $\mu$- bzw. $\nu$-integrierbar und auf keinem Nordquadranten
+   $\mu\otimes\nu$-integrierbar;
+4. entweder entweicht die Flussmasse beim Marsch nach Norden nach Osten oder
+   Westen — (U)(i) fällt —, oder $\sum_{j\ge j_0}\nu_j|R_j|=\infty$.
+
+Punkt 1 ist der brauchbarste: ein Gegenbeispiel muss einen **unbeschränkten
+Dualitätsdefekt** haben, und zwar auf jedem Nordquadranten. Wer nach einem
+sucht, sucht nicht mehr eine Lösung mit unsummierbarer Doppelreihe, sondern
+eine mit unbeschränktem $\Phi$.
+
+### Was jetzt offen ist, exakt
+
+* **(V) bei unbeschränktem Defekt.** Die Straffheit (U)(i) aus (Q) allein zu
+  gewinnen, ist unverändert offen; der Bootstrap-Angriff des zwanzigsten
+  Laufs richtet sich jetzt auf (U)(i) statt auf (H) und ist damit schwächer
+  geworden — Straffheit ist weniger als Summierbarkeit. Der Ansatzpunkt ist
+  die Evolutionsgestalt: $\rho_{j+1}\le\rho_j+2\sum_i(\nu_j-\mu_i)^+|x_{ij}|$
+  (aus $\mu_ix_{i,j+1}=(\mu_i-\nu_j)x_{ij}+\nu_jx_{i+1,j}$, einer
+  Konvexkombination genau dort, wo $\nu_j\le\mu_i$) — die Zeilenvariation
+  kann nur dort wachsen, wo die $\nu$-Masse die $\mu$-Masse übersteigt, und
+  das sind wegen der Summierbarkeit beider Seiten die Ränder
+  $i\to\pm\infty$. Das ist dieselbe Stelle, an der (U)(i) entweichen ließe.
+* **Jenseits der zwei Ketten** ist bei beschränktem $\Phi$ erledigt, soweit
+  die Atomkette diskret ist und die Blockordnung intervallendlich
+  (Korollar 16). Offen bleiben dort genau zwei Dinge, und beide sind
+  benannt: eine Blockordnung, die nicht intervallendlich ist — die
+  Ausgangsfrage eine Cantor–Bendixson-Stufe höher, auf dem Quotienten —, und
+  die nichtdiskrete, insbesondere in sich dichte Atomkette, wo es keine
+  Einschrittrelationen gibt und Theorem 12 nicht ansetzt. Der ordnungsdichte
+  Kern hängt damit nicht mehr an der Analysis, sondern an der Algebra der
+  Einschrittrelation.
+* **Die Roadmap.** Der zwanzigste Lauf hat einen Eintrag der (H)-Fassung
+  zurückgestellt, weil „die Manuskriptklasse nur absolute Konvergenz
+  verlangt". Für Korollar 14 gilt der Einwand nicht mehr: seine Hypothese ist
+  die Beschränktheit von $\Phi$, und die steht in `thm:duality` als
+  \eqref{eq:dual1}+\eqref{eq:dual2} ohnehin da. Der Eintrag ist mit diesem
+  Lauf gemacht (`MartingaleProblems` Meilenstein 8,
+  `duality_of_atomic_twoChains_of_bounded`).
+
+### Sackgassen, neunzehnter Nachtrag
+
+* **Die Spiegel-Transformation, zum zweiten Mal.** Der achtzehnte Nachtrag
+  hielt fest, dass sie nur die Tonelli-Lesart von $\Sigma_{j_0}$ tauscht. Das
+  bleibt richtig und ist jetzt gegenstandslos: nicht die Seite war das
+  Problem, sondern dass $\Sigma_{j_0}$ überhaupt für einen **Limes** benutzt
+  wurde, wo Straffheit genügt.
+* **„(H) ist die Grenze der Methode".** Der Schluss des zwanzigsten Laufs,
+  und er war voreilig: er las aus „beide Seiten brauchen dieselbe Summe" ein
+  Methodenhindernis, statt zu prüfen, wofür die Summe gebraucht wird. Die
+  Lehre ist dieselbe wie im siebzehnten Lauf beim Kompaktheitsargument —
+  eine Prämisse, die aus der Rechnung stammt statt aus dem Beweisbedarf.
+* **Der reelle Limes als Weg zur Konstanten $0$.** Er funktioniert (Identität
+  I), ist aber überflüssig: der Koeffizientenvergleich in (B$\infty$) gibt
+  $K_j=0$ und $R_j=0$ in einer Zeile und braucht die Reihe nicht.

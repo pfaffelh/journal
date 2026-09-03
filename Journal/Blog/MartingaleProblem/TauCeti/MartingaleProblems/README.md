@@ -654,12 +654,16 @@ order.
   `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain
   phenomenon: at incomparable pairs `Φ s t = Φ t s` fails, while the defect
   `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless`,
-  `duality_of_mixed` and `duality_of_atomic_intervalFinite` this covers every
-  clock that is atomless, or has finitely many atoms below the point in
-  question, or is mixed with finitely many atoms there, or whose atoms below
-  the point form an interval-finite chain; what none of the four reaches is a
-  chain of atoms that is not interval-finite — an atom set dense in itself
-  included — and, beyond chains, infinitely many incomparable atoms.
+  `duality_of_mixed`, `duality_of_atomic_intervalFinite`,
+  `duality_of_atomic_twoChains_of_bounded` and
+  `duality_of_atomic_blockStack_of_bounded` this covers every clock that is
+  atomless, or has finitely many atoms below the point in question, or is mixed
+  with finitely many atoms there, or whose atoms below the point form an
+  interval-finite chain, or a discrete chain with interval-finite block
+  quotient and `Φ` bounded; what none of the six reaches is a chain of atoms
+  with a block quotient that is not interval-finite, a chain in which some atom
+  has no neighbour — an atom set dense in itself included — and, beyond chains,
+  infinitely many incomparable atoms.
 * `duality_of_atomic_intervalFinite`: with `Φ, γ` as in `chain_identity` and
   `γ₁ = γ₂ = γ`, a purely atomic clock, and a `t` below which the atoms are
   pairwise comparable and **interval-finite** — any two of them enclose only
@@ -683,7 +687,119 @@ order.
   neighbours at every atom while pairs from different chains enclose
   infinitely many atoms, the one-step relations alone leave the cross pairs
   free, and any argument there must use the increment representation across
-  the accumulation point between the chains.
+  the accumulation point between the chains, which is what
+  `duality_of_atomic_twoChains_of_bounded` does.
+* `tailProduct`: for `μ : ℤ → ℝ` with `0 < μ i` and `Summable μ`, the function
+  `tailProduct μ i c = ∏' i' : {i' // i < i'}, (1 + c * μ i')` from `ℂ` to `ℂ`,
+  together with `Differentiable ℂ (tailProduct μ i)`, the recursion
+  `tailProduct μ (i-1) c = (1 + c * μ i) * tailProduct μ i c`, the bound
+  `‖tailProduct μ i c‖ ≤ Real.exp (∑' i, Real.log (1 + ‖c‖ * μ i))`, the lower
+  bound `1 ≤ ‖tailProduct μ i c‖` for `0 ≤ c.re` from `1 ≤ ‖1 + c * μ‖` there,
+  `Tendsto (fun i ↦ tailProduct μ i c) atTop (𝓝 1)`, and boundedness of
+  `fun i ↦ tailProduct μ i c` on `Iic i₀`. The exponent is of type zero:
+  `Tendsto (fun r : ℝ ↦ (∑' i, Real.log (1 + r * μ i)) / r) atTop (𝓝 0)`, from
+  `Real.log_le_sub_one_of_pos`
+  (`Mathlib/Analysis/SpecialFunctions/Log/Basic.lean:307`) giving the summable
+  dominant `μ i` for each quotient and `tendsto_tsum_of_dominated_convergence`
+  (Tannery, `Mathlib/Analysis/Normed/Group/Tannery.lean:45`). The product
+  converges by `multipliable_one_add_of_summable`
+  (`Mathlib/Analysis/SpecialFunctions/Log/Summable.lean:171`). Summability of
+  `μ` is what makes the product converge and the exponent sublinear, and it is
+  the finite mass of the clock.
+* `norm_le_of_bddOn_imAxis_of_subexponential`: for `f : ℂ → ℂ` with
+  `Differentiable ℂ f`, `∀ ε > 0, ∃ A, ∀ z, ‖f z‖ ≤ A * Real.exp (ε * ‖z‖)` and
+  `∀ y : ℝ, ‖f (y * I)‖ ≤ C`, one has `‖f z‖ ≤ C` for every `z`, hence `f` is
+  constant by `Differentiable.exists_eq_const_of_bounded`
+  (`Mathlib/Analysis/Complex/Liouville.lean:128`). Apply
+  `PhragmenLindelof.right_half_plane_of_bounded_on_real`
+  (`Mathlib/Analysis/Complex/PhragmenLindelof.lean:717`) to
+  `fun z ↦ f z * Complex.exp (-ε * z)` and to `fun z ↦ f (-z) * Complex.exp (-ε * z)`:
+  the growth hypothesis holds with `c = 1`, the imaginary axis bound is `C`
+  because the exponential has modulus one there, and the bound along the
+  positive real ray is `A * exp ((ε' - ε) * x) → 0` for `ε' < ε`, which is where
+  the sublinear exponent is used; let `ε` tend to `0`. Mathlib's version asks
+  for a bound on the real ray in addition to the one on the axis, and the
+  auxiliary exponential is what supplies it.
+* `tailProduct_pairing_eq_zero`: for `μ` as in `tailProduct` and
+  `a : ℤ → ℝ` with `Summable fun i ↦ |a i|`, if
+  `∑' i, a i * tailProduct μ i c = 0` for every `c` with `0 ≤ c.re`, then
+  `a = 0`. Split the sum at a foot point `i₀` using the recursion: below `i₀`
+  the quotient `tailProduct μ i c / tailProduct μ i₀ c` is the polynomial
+  `∏ i' ∈ Ioc i i₀, (1 + c * μ i')`, above it the reciprocal of such a product,
+  whose modulus is at most one on `0 ≤ c.re`. The polynomial part is entire and
+  subexponential, the reciprocal part is bounded by `∑' i, |a i|`, so
+  `norm_le_of_bddOn_imAxis_of_subexponential` makes the polynomial part
+  constant; along real `c → ∞` the reciprocal part tends to `0`, so the
+  constant is `0`, and evaluating at `c = 0` gives `∑ i ≤ i₀, a i = 0` for every
+  `i₀`. Differences of consecutive `i₀` give `a = 0`. No hypothesis beyond
+  `ℓ¹`.
+* `crossGrid_eq_zero_of_bddFlux`: let `μ ν : ℤ → ℝ` be positive and summable and
+  let `x : ℤ → ℤ → ℝ` have `Summable fun i ↦ μ i * |x i j|` for every `j` and
+  `Summable fun j ↦ ν j * |x i j|` for every `i`, and satisfy
+  `∑' i' < i, μ i' * x i' j = - ∑' j' ≥ j, ν j' * x i j'` for all `i, j`. Write
+  `F i j` for the common value and `R j = ∑' i, μ i * x i j`. If
+  `∃ j₀, BddAbove (Set.range fun p : ℤ × {j // j₀ ≤ j} ↦ |F p.1 p.2|)`, then
+  `x = 0`. Put `G j c = ∑' i, μ i * F i j * tailProduct μ i c`; Abel summation
+  with the recursion of `tailProduct` gives
+  `∑' i, μ i * x i j * tailProduct μ i c = R j + c * G j c`, termwise
+  differencing in `j` gives `G (j+1) = (1 + c * ν j) * G j + ν j * R j`, the
+  bound on `F` and summability of `μ` give a `j`-uniform summable dominant, so
+  `G j c → 0` as `j → ∞` by dominated convergence, and iterating the recursion
+  bounds `‖G j c‖` by `∑' j ≥ j₀, ν j * |R j|`, finite because `‖R j‖` is
+  bounded and `ν` is summable. Then
+  `norm_le_of_bddOn_imAxis_of_subexponential` makes each `G j` constant, and
+  comparing the coefficient of `c` in the recursion gives `G j = 0` and
+  `R j = 0`; `tailProduct_pairing_eq_zero` applied to `fun i ↦ μ i * x i j`
+  gives `x · j = 0` for `j ≥ j₀`. Rows below `j₀` follow one at a time: if all
+  rows above `j` vanish then `F i j = - ν j * x i j`, so
+  `F (i+1) j = (1 - μ i / ν j) * F i j`, the products converge absolutely by
+  summability of `μ`, and `F i j → 0` as `i → -∞` forces `F · j = 0`.
+* `duality_of_atomic_twoChains_of_bounded`: with `Φ, γ` as in `chain_identity`
+  and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which the atoms are
+  pairwise comparable and form two interval-finite chains stacked one above the
+  other — every atom of the lower chain below every atom of the upper one — and
+  `Φ` bounded on `Iic t ×ˢ Iic t`, one has `Φ t 0 = Φ 0 t`, in either
+  convention. Inside each chain `duality_of_atomic_intervalFinite` gives
+  symmetry, so the antisymmetric part `w s t = Φ s t - Φ t s` vanishes there and
+  `γ` survives only on cross pairs `x i j = γ (b i) (a j)`; continuity of `Φ` at
+  the accumulation point in both coordinates, which is the vanishing of the
+  atom-sum tails, turns the increment representation into the hypothesis of
+  `crossGrid_eq_zero_of_bddFlux` with `F i j = w (b i) (a j)`, and boundedness
+  of `Φ` is boundedness of `F`. This is the first item that crosses an
+  accumulation point of atoms, and it does so by the north limit of `G`, not by
+  an induction. Boundedness of `Φ` is a bound on the value and not on `γ`; the
+  probabilistic source of such a `Φ` supplies it, since the domination
+  hypotheses of `duality` bound `𝔼[f (X s, Y t) * exp (∫_0^s α + ∫_0^t β)]` by
+  `exp (C T) * 𝔼[Γ T]` for `s, t ≤ T`.
+* `Clock.atomBlocks`: for a clock `q` and a `t` below which the atoms form a
+  chain in which every atom has an immediate predecessor and an immediate
+  successor among the atoms, the quotient of the atoms by "only finitely many
+  atoms lie in between", together with the statements that each class is convex
+  and order isomorphic to `ℤ`, that consecutive atoms of the whole chain are
+  consecutive in their class, and that the quotient carries a linear order. The
+  classes are the objects `duality_of_atomic_intervalFinite` settles, and the
+  quotient is what the next item runs its induction on.
+* `duality_of_atomic_blockStack_of_bounded`: with `Φ, γ` as in `chain_identity`
+  and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which the atoms form a
+  chain as in `Clock.atomBlocks` whose quotient is interval-finite, and `Φ`
+  bounded on `Iic t ×ˢ Iic t`, one has `Φ t 0 = Φ 0 t`, in either convention.
+  Induct on the distance `d P Q` of two blocks in the quotient, which is finite
+  by interval-finiteness. At `d = 0` this is `duality_of_atomic_intervalFinite`.
+  At `d ≥ 1`, with `P` below `Q`, the discreteness of the atom chain makes
+  `Ico (b i) (b (i+1))` and `Ico (a j) (a (j+1))` carry a single atom each, so
+  `F i j = Φ (b i) (a j) - Φ (a j) (b i)` satisfies the two increment relations
+  of `crossGrid_eq_zero_of_bddFlux` with `x i j = γ (b i) (a j) - γ (a j) (b i)`;
+  the limits at the two facing edges are the values at the largest block of
+  `Ico P Q` and the smallest block of `Ioc P Q`, reached as tails of the
+  absolutely convergent atom sums, and vanish by the inductive hypothesis at
+  distance `d - 1`. Boundedness of `Φ` bounds `F`, so
+  `crossGrid_eq_zero_of_bddFlux` gives `F = 0`. Blocks of order type `ℤ` and a
+  quotient of order type `ℤ` are both allowed, so this covers atom sets with
+  countably many accumulation points; `duality_of_atomic_twoChains_of_bounded`
+  is the case of two blocks. What it does not cover is a quotient that is not
+  interval-finite — the same question one Cantor–Bendixson step higher — and an
+  atom chain in which some atom has no neighbour, an atom set dense in itself
+  included, where the increment representation gives no one-step relations.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.
