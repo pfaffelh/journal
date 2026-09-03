@@ -2658,3 +2658,339 @@ hängen könnte (Denjoy–Carleman). Die zwei benannten Wege:
   um den Defekt aus Probe (e) falsch; die Starrheit des Kontinuums
   beweist nichts, sie erklärt nur, warum (V) plausibel ist. Die
   Dispersion ist der Gegenstand, nicht ein Störterm.
+
+## Der Weg (β) ist zu, 2026-09-02 (neunzehnter Lauf): in der zulässigen Klasse entscheiden die Momente alles, die Vollständigkeitsfrage löst sich auf, und die Spektralschiene stellt nur die Null dar
+
+Der Lauf gehört der Frage (V), an den zwei Wegen des achtzehnten Laufs.
+Ergebnis in einer Zeile: **die „Vollständigkeitsfrage für ein
+Geschlecht-0-Produktsystem", die der achtzehnte Lauf als offenen Kern von
+Weg (β) benannt hat, ist keine Frage — in der zulässigen Klasse folgt die
+Annihilation der ganzen Modenfamilie doch aus den Momenten**, und zwar aus
+einem Ein-Zeilen-Mechanismus, den der achtzehnte Lauf übersehen hat: die
+Geschlecht-0-Produkte haben **nichtnegative Taylorkoeffizienten**, und ihre
+Koeffizienten-Majorante ist genau die Zulässigkeitsschranke. Damit ist
+Weg (β) vollständig geschlossen: kein zulässiges reelles Spektralmaß kann
+ein Gegenbeispiel zu (V) tragen, für keine summierbare Massenfolge,
+lakunär oder nicht.
+
+### Theorem 6: die Momente entscheiden die zulässige Paarung
+
+Massen wie in (Q). **Zulässig** heiße ein reelles signiertes Borelmaß
+$\sigma$ auf $\mathbb R$ mit
+$\|\sigma\|_\Phi:=\int e^{\Phi_\mu(|c|)+\Phi_\nu(|c|)}\,d|\sigma|(c)<\infty$
+— das ist *schwächer* als die Zulässigkeit von Proposition 5: die
+Polynomgewichte $(1+|c|)^k$ sind entbehrlich, denn das Herausgreifen von
+$k$ Faktoren $1+|c|\mu_{i_l}\ge|c|\mu_{i_l}$ gibt punktweise
+$|c|^k\le C_k\,e^{\Phi_\mu(|c|)}$ mit $C_k=(\mu_{i_1}\cdots\mu_{i_k})^{-1}$.
+Sei $\mathcal E$ die Klasse der ganzen Funktionen $E=\sum_kE_kc^k$ mit
+$\sum_k|E_k|r^k\le C_E\,e^{\Phi_\mu(r)+\Phi_\nu(r)}$ für alle $r\ge0$.
+Dann liegen $\beta_i$, $\lambda_j$, $\beta_i\lambda_j$, $\beta_i\Lambda$
+und $(\lambda_j-\beta_i\Lambda)/c$ sämtlich in $\mathcal E$, und für
+zulässiges $\sigma$ sind äquivalent:
+
+1. $\int c^k\,d\sigma=0$ für alle $k\ge0$;
+2. $\int E\,d\sigma=0$ für jedes $E\in\mathcal E$;
+3. $\int\lambda^c_j\,d\sigma=0$ für alle $j\in\mathbb Z$;
+4. $\int\beta^c_i\,d\sigma=0$ für alle $i\in\mathbb Z$.
+
+*Beweis.* Mitgliedschaft: die Produkte haben nichtnegative Koeffizienten,
+ihre Majorante ist der Wert auf der positiven Achse,
+$\beta^r_i\lambda^r_j\le e^{\Phi_\mu(r)+\Phi_\nu(r)}$; für den Quotienten
+$(\lambda_j-\beta_i\Lambda)/c$ (ganz, da der Zähler bei $0$ verschwindet)
+schätze für $r\ge1$ mit $\sum_k|a_{k+1}-b_{k+1}|r^k\le
+r^{-1}\sum(a_{k+1}+b_{k+1})r^{k+1}\le2e^{\Phi_\mu(r)+\Phi_\nu(r)}$ und für
+$r\le1$ durch den Wert bei $1$. (1)⟹(2): wegen
+$\int\sum_k|E_kc^k|\,d|\sigma|\le C_E\|\sigma\|_\Phi<\infty$ vertauscht
+Fubini, $\int E\,d\sigma=\sum_kE_k\int c^k\,d\sigma=0$. (2)⟹(3),(4):
+Mitgliedschaft. (3)⟹(1): $I_k(j):=\int c^k\lambda^c_j\,d\sigma$ ist
+endlich ($|c|^k\lambda^{|c|}_j\le C_ke^{\Phi_\mu+\Phi_\nu}$), und die
+punktweise Identität $\lambda^c_{j+1}=(1+c\nu_j)\lambda^c_j$ gibt
+$I_k(j{+}1)=I_k(j)+\nu_jI_{k+1}(j)$; Induktion über $k$ (Basis (3), alle
+$j$ zugleich) gibt $I_k\equiv0$ für alle $k$, und $j\to-\infty$ mit
+$\lambda^c_j\to1$ punktweise und derselben Dominante gibt
+$\int c^k\,d\sigma=\lim_jI_k(j)=0$. (4)⟹(1): wörtlich dasselbe auf der
+$\beta$-Seite mit $i\to-\infty$. ∎
+
+Das ist der Momentenschritt des achtzehnten Laufs, ergänzt um seine
+Rückrichtung — und die Rückrichtung ist der ganze Punkt.
+
+### Korollar 7: die Spektralschiene stellt nur die Null dar
+
+**(a)** Ist $\sigma$ zulässig mit lauter Nullmomenten, so ist der
+Spektralkandidat $x_{ij}:=\int\beta^c_i\lambda^c_j\,d\sigma$ **identisch
+null** — Fall (2) mit $E=\beta_i\lambda_j$. **(b)** Löst ein
+Spektralkandidat das System (Q), so gilt insbesondere der Westabfall
+$x_{ij}\to0$ für $i\to-\infty$ (denn
+$x_{ij}=(F(i,j{+}1)-F(i,j))/\nu_j$ und $F$ ist westabfallend), mit
+dominierter Konvergenz ($\beta^c_i\to1$, Dominante
+$e^{\Phi_\mu+\Phi_\nu}$) also $\int\lambda^c_j\,d\sigma=0$ für alle $j$ —
+Bedingung (3) —, also $x\equiv0$. Der **Exponentialspielraum von
+Proposition 5.2 ist für die Konklusion, auf die es ankommt, entbehrlich**:
+$\sigma$ selbst muss nicht verschwinden — die Stieltjes-Maße überleben —,
+aber alles, was ein zulässiges $\sigma$ darstellen kann, ist die Null.
+
+### Korollar 8: Weg (β) ist leer, und die Denjoy–Carleman-Spekulation ist zurückgenommen
+
+Die drei Bedingungen des Weges (β) — $\int\lambda^c_j\,d\sigma=0$,
+$\int\beta^c_i\Lambda^c\,d\sigma=0$, $\int(\lambda^c_j-
+\beta^c_i\Lambda^c)/c\,d\sigma=0$ — sind für zulässiges $\sigma$ nach
+Theorem 6 sämtlich **äquivalent zu den Nullmomenten** (jede der
+Funktionen liegt in $\mathcal E$; umgekehrt gibt (3) die Momente). Maße,
+die sie erfüllen, existieren also in Hülle und Fülle — jedes
+Stieltjes-Maß —, und jedes von ihnen stellt $x\equiv0$ dar. Zwei Sätze des
+achtzehnten Laufs sind damit falsch bzw. gegenstandslos: *„ob eines die
+ganze $\{\lambda_j\}$-Familie annihiliert — das folgt aus den Momenten
+dann nicht mehr"* — es folgt doch, per Fubini über die nichtnegativen
+Koeffizienten; und die Vermutung, hier liege „die erste echt
+massenabhängige Stelle von Task 23 (Denjoy–Carleman)" — in der
+Spektralklasse geht keinerlei Massenasymptotik ein, die Zählfunktion der
+Massen tritt nie auf. Theorem 4 (endliche Superpositionen) ist als
+Spezialfall enthalten: endlich getragenes $\sigma$ ist zulässig, seine
+Nullmomente erzwingen per Vandermonde $\sigma=0$.
+
+**Warum der achtzehnte Lauf das übersehen hat.** Er hat die Frage als
+Vollständigkeitsfrage in einem gewichteten $L^1$ gelesen: dort sind
+Polynome bei quasipolynomialem Gewicht nicht dicht (Stieltjes,
+Momenten-Indeterminiertheit), also schien Momentenannihilation schwächer
+als Familienannihilation. Aber die Moden sind keine beliebigen Elemente
+des gewichteten Raums: sie sind ganze Funktionen, deren Taylorreihe gegen
+jedes zulässige $\sigma$ **absolut paart**, weil die
+Zulässigkeitsschranke als scharfe gemeinsame Majorante der Moden
+*definiert* wurde. Was ein Stieltjes-Maß nicht annihiliert, liegt
+außerhalb von $\mathcal E$ — etwa $e^{ac}$ mit Majorante $e^{ar}$, weit
+über $e^{O((\log r)^2)}$ — und genau dort lebt die Indeterminiertheit.
+Zwischen „$\sigma$ paart mit den Moden" und „die Paarung wird von den
+Momenten berechnet" ist kein Platz.
+
+### Mechanisch verifiziert
+
+`Task23/spectral_closed.py` (mpmath, 50 Stellen; Gauß–Legendre 16 je
+Halbperiode; rc=0): geometrische Massen $\mu_i=\tfrac12 8^{-|i|}$,
+$\nu_j=\tfrac13 8^{-|j|}$, Stieltjes-Maß
+$d\sigma=e^{-t^2/(2s^2)}\sin(2\pi t/s^2)\,dt$ unter $c=e^t$, $s^2=7/20$
+(zulässig: $\Phi_\mu+\Phi_\nu\approx0.96(\log r)^2<\tfrac1{2s^2}(\log
+r)^2\approx1.43(\log r)^2$; $\int e^{\Phi_\mu+\Phi_\nu}d|\sigma|=3.247$).
+Alle Momente $k=0..10$, alle $\lambda_j$, alle $\beta_i$, das ganze
+$13\times13$-Gitter $\int\beta_i\lambda_j\,d\sigma$ und die zwei übrigen
+(β)-Bedingungen verschwinden relativ auf $<10^{-47}$ — bei
+$\|\sigma\|_{TV}=0.943$. Die Trennschärfe der Klasse ist drastisch
+sichtbar: die Kontrollfunktion $e^{-3c}$, außerhalb von $\mathcal E$,
+paart auf $5.1\cdot10^{-13}$ — **37 Größenordnungen** über den
+$\mathcal E$-Paarungen. Es ist die Koeffizienten-Majorante, die tötet,
+nicht die Kleinheit von $\sigma$. Der Momentenschritt aus dem Beweis von
+(3)⟹(1) ist auf den berechneten Integralen exakt (Probe (h)).
+
+### Was das für (V) und Weg (α) heißt
+
+* **Ein Gegenbeispiel zu (V), falls es existiert, ist nicht spektral**:
+  es hat keine Darstellung $\int\beta^c_i\lambda^c_j\,d\sigma$ mit
+  reellem $\sigma$, dessen Paarung absolut konvergiert — für keine
+  Abfallrate. Mechanismus (i) des achtzehnten Laufs verschärft sich: auch
+  die Auslöschung im **Kontinuum** von Moden ist unmöglich, nicht nur die
+  endliche und die exponentiell abfallende.
+* **Weg (α) wird leichter, nicht schwerer.** Sein Darstellungs-Unterweg
+  verlangte „eine Spektraldarstellung mit exponentiell abfallendem
+  $\sigma$ (dann schließt Proposition 5)". Nach Korollar 7 genügt
+  **jedes zulässige** $\sigma$ — quasipolynomialer Abfall reicht. Wer
+  jeder westabfallenden Lösung irgendeine zulässige reelle
+  Spektraldarstellung verschafft, hat (V) bewiesen.
+* **Ehrliche Grenze, unverändert die von Proposition 5:** Darstellungen,
+  deren Integrale nur bedingt konvergieren, und komplexe Träger (modulo
+  Cauchy-Annihilatoren) bleiben außerhalb des Satzes. Der Satz schließt
+  die zulässige reelle Klasse, nicht jede denkbare Integraldarstellung.
+* Offen ist damit **(V) selbst, jetzt ohne Gegenbeispielweg in der
+  Spektralklasse**: was bleibt, ist Weg (α) — Carleman direkt an der
+  Evolution, oder der Darstellungssatz für westabfallende Lösungen.
+
+### Sackgassen, siebzehnter Nachtrag
+
+* **Gegenbeispielsuche bei lakunären Massen über Spektralmaße.** Der
+  Suchraum des achtzehnten Laufs („zuerst bei stark lakunären Massen, wo
+  die Produktsysteme am dünnsten sind") ist leer: die Dünne der
+  Produktsysteme ist irrelevant, weil die Paarung ohnehin von den
+  Momenten berechnet wird. Wer nach Gegenbeispielen sucht, muss die
+  Spektralgestalt ganz verlassen.
+* **Den quasipolynomialen Abfallspielraum als Freiraum lesen.** Der
+  Spielraum zwischen $e^{\varepsilon|c|}$ (Proposition 5.2) und
+  $e^{\Phi_\mu+\Phi_\nu}$ (Zulässigkeit) sah aus wie Raum für
+  Gegenbeispiele; tatsächlich ändert er nur, *welche* $\sigma\neq0$
+  überleben, nicht, *was* sie darstellen (die Null). Die richtige
+  Invariante war nie der Abfall von $\sigma$, sondern die Majorante der
+  Gegenfunktionen.
+
+## Weg (α), 2026-09-03 (zwanzigster Lauf): der Transformationsbeweis trägt — (V) ist bewiesen für quadrantensummierbare Lösungen, insbesondere für alle beschränkten, und die zwei $\zeta$-Ketten sind in der Klasse aller bisherigen Messläufe geschlossen
+
+Vorab zur Laufgeschichte, zum dritten Mal dasselbe Muster: der Lauf 08:23 UTC
+wurde von der Nutzungsgrenze abgeschnitten und hinterließ
+`Task23/quarter_transform.py` — ein Prüfskript, das auf einen „Beweis des
+zwanzigsten Laufs" verweist, den es nicht gab, und das nicht einmal lief
+(Syntaxfehler in einer toten Platzhalterzeile; behoben). Dieser Lauf hat den
+Beweis, auf den das Skript zeigt, **selbständig geführt** — nichts ist aus dem
+Skript „übernommen" —, und dabei eine Hypothese gefunden, die das Skript
+nirgends ausspricht und ohne die der Schluss nicht geht: die
+Quadrantensummierbarkeit (H). Alle Proben des Skripts laufen exakt (rc=0);
+sie verifizieren die endliche Beweisalgebra, wie der Docstring es ankündigt,
+und der klassische Rest ist genau der dort benannte (Phragmén–Lindelöf für
+Typ 0, Liouville).
+
+### Die Hypothese (H), und wer sie erfüllt
+
+System (Q) wie im achtzehnten Lauf; $\rho_j:=\sum_i\mu_i|x_{ij}|$ die
+gewichtete Zeilennorm (nach Zeilenvoraussetzung endlich),
+$R_j:=\sum_i\mu_ix_{ij}$ die volle Zeilensumme.
+
+$$\textbf{(H)}\qquad \sum_{j\ge j_0}\nu_j\,\rho_j<\infty
+\quad\text{für ein }j_0\in\mathbb Z.$$
+
+„Für ein" ist „für jedes": beim Absenken von $j_0$ kommen endlich viele
+endliche Terme hinzu. Nach Tonelli ist (H) dasselbe wie
+$\sum_i\mu_i\kappa^{(j_0)}_i<\infty$ mit
+$\kappa^{(j_0)}_i:=\sum_{j\ge j_0}\nu_j|x_{ij}|$ — die $\mu\nu$-gewichtete
+Summierbarkeit von $|x|$ auf dem Nordquadranten; die gemeinsame Größe heiße
+$\Sigma_{j_0}$. Hinreichend ist $\sup_{j\ge j_0}\rho_j<\infty$ (dann
+$\Sigma_{j_0}\le T\sup\rho$), und dafür wiederum jedes **beschränkte** $x$
+(dann $\rho_j\le BS$). Die Klasse (H) enthält also insbesondere die Klasse
+$|h|\le B$, in der sämtliche LP- und Messläufe (zwölfter bis siebzehnter
+Lauf) gearbeitet haben. Die nackte Voraussetzung von (Q) — nur zeilen- und
+spaltenweise absolute Konvergenz — gibt (H) nicht her; genau dort bleibt (V)
+offen, siehe unten.
+
+### Theorem 9: die W-Transformation ist auf $\ell^1$ injektiv
+
+Sei $\mu_i>0$ summierbar, $W^c_i:=\prod_{i'>i}(1+c\mu_{i'})$ (konvergent,
+ganz in $c$, $|W^c_i|\le e^{\Phi_\mu(|c|)}$). Ist $a\in\ell^1(\mathbb Z)$ und
+$\sum_ia_iW^c_i=0$ für alle $c$ mit $\Re c\ge0$, so ist $a=0$. **Keine
+Hypothese (H); das ist ein unbedingter Satz über Geschlecht-0-Schwänze.**
+
+*Beweis.* Fixiere $I_0$. Für $I\le I_0$ ist
+$W^c_I=W^c_{I_0}\prod_{I<i'\le I_0}(1+c\mu_{i'})$, für $I>I_0$ ist
+$W^c_I=W^c_{I_0}\big/\prod_{I_0<i'\le I}(1+c\mu_{i'})$ (Probe (D2), exakt).
+Da $\sum_I|a_I||W^c_I|\le\|a\|_1e^{\Phi_\mu}$ absolut konvergiert, darf man
+umgruppieren: auf $\Re c\ge0$, wo $W^c_{I_0}$ nullstellenfrei ist (alle
+Nullstellen liegen bei $-1/\mu_{i'}<0$), gilt
+$0=\sum_Ia_IW^c_I\big/W^c_{I_0}=P_{I_0}(c)+N_{I_0}(c)$ mit
+$$P_{I_0}(c)=\sum_{I\le I_0}a_I\prod_{I<i'\le I_0}(1+c\mu_{i'}),\qquad
+  N_{I_0}(c)=\sum_{I>I_0}\frac{a_I}{\prod_{I_0<i'\le I}(1+c\mu_{i'})}.$$
+$P_{I_0}$ ist ganz mit $|P_{I_0}(c)|\le\|a\|_1e^{\Phi_\mu(|c|)}$, also vom
+Exponentialtyp $0$, denn $\Phi_\mu(r)=o(r)$: jeder Summand
+$\log(1+r\mu_i)/r$ ist durch $\mu_i$ dominiert und fällt gegen $0$
+(dominierte Konvergenz — der im Skript angekündigte Typ-0-Nachweis).
+$N_{I_0}$ ist auf $\Re c\ge0$ absolut und gleichmäßig konvergent (jeder
+Nennerfaktor hat Betrag $\ge1$), dort also beschränkt durch $\|a\|_1$. Aus
+$P_{I_0}=-N_{I_0}$ auf $\Re c\ge0$ folgt: $P_{I_0}$ ist auf der imaginären
+Achse durch $\|a\|_1$ beschränkt, und eine ganze Funktion vom Typ $0$, die
+auf einer Geraden beschränkt ist, ist überall beschränkt
+(Phragmén–Lindelöf; Titchmarsh §5.62, Boas Kap. 6, Thm. 6.2.4 mit
+$\tau=0$, gedreht), nach Liouville also konstant. Die Konstante ist $0$:
+für reelles $c\to+\infty$ geht jeder Term von $N_{I_0}$ gegen $0$ (der
+Faktor $1+c\mu_{I_0+1}$ divergiert), dominiert durch $|a_I|$, also
+$P_{I_0}(c)=-N_{I_0}(c)\to0$. Damit ist $P_{I_0}\equiv0$, insbesondere
+$P_{I_0}(0)=\sum_{I\le I_0}a_I=0$ — für **jedes** $I_0$, und Differenzen
+benachbarter $I_0$ geben $a\equiv0$. $\square$
+
+Die Probe (D1) (Dreiecksgestalt der Koeffizientenmatrix, Determinante
+$\ne0$) ist das endliche Gegenstück; der unendliche Schluss läuft über die
+Fußpunktzerlegung (D2), nicht über die Matrix.
+
+### Theorem 10: (V) gilt unter (H)
+
+Sei $x$ eine Lösung von (Q) (zeilen- und spaltenweise absolut konvergent)
+mit (H). Dann ist $x\equiv0$.
+
+*Beweis.* **1. Die Transformierte.** $G_j(c):=\sum_i\mu_iF(i,j)W^c_i$;
+wegen $\sum_i\mu_i|F(i,j)|\le S\rho_j$ ist $G_j$ ganz mit
+$|G_j(c)|\le S\rho_j\,e^{\Phi_\mu(|c|)}$ — Typ $0$, wie oben. **2. Abel
+(Probe (A), Grenzfassung).** Für jedes $c\in\mathbb C$:
+$$\sum_i\mu_ix_{ij}W^c_i \;=\; R_j+c\,G_j(c). \tag{A$\infty$}$$
+Die endliche Identität ist exakte Algebra; im Limes $i_B\to+\infty$ geht
+$F(i_B{+}1,j)\to R_j$ und $W_{i_B}\to1$, im Limes $i_A\to-\infty$ geht
+$F(i_A,j)\to0$ (Westschwanz) gegen den beschränkten Faktor
+$W_{i_A-1}\to\prod_{i'\in\mathbb Z}(1+c\mu_{i'})$. **3. Nordrekursion
+(Probe (B), auf Lösungen $D\equiv0$).** Termweise Differenz und (A$\infty$):
+$$G_{j+1}=(1+c\nu_j)\,G_j+\nu_jR_j \qquad\text{für alle }c. \tag{B$\infty$}$$
+**4. Nordlimes — hier, und nur hier, steht (H).** Für festes $c$ und
+$j\to+\infty$ ist $\mu_i|F(i,j)|\le\mu_i\kappa^{(j_0)}_i$ eine
+$j$-gleichmäßige Dominante mit Summe $\Sigma_{j_0}$, und $F(i,j)\to0$
+punktweise (Nordschwanz), also $G_j(c)\to0$. **5. Beschränktheit rechts.**
+Für $\Re c\ge0$ ist $|1+c\nu_j|\ge1$, aus (B$\infty$) also
+$|G_j|\le|G_{j+1}|+\nu_j|R_j|$, iteriert und mit Schritt 4:
+$|G_{j_0}(c)|\le\sum_{J\ge j_0}\nu_J|R_J|\le\Sigma_{j_0}$ auf der ganzen
+abgeschlossenen rechten Halbebene ($|R_J|\le\rho_J$, Reihe endlich nach
+(H)). **6. Der reelle Limes.** Auflösen von (B$\infty$) nach unten (Probe
+(C)) gibt auf $\Re c\ge0$ die Identität I
+$$G_{j_0}(c)=-\sum_{J\ge j_0}\frac{\nu_JR_J}{\Pi_{j_0,J}(c)},\qquad
+  \Pi_{j_0,J}(c)=\prod_{j'=j_0}^{J}(1+c\nu_{j'}),$$
+(der Randterm $G_{j_B}/\Pi_{j_0,j_B-1}$ fällt nach Schritt 4 weg, die Reihe
+ist durch $\Sigma_{j_0}$ dominiert), und für reelles $c\to+\infty$ geht
+jeder Term gegen $0$ (der Faktor $1+c\nu_{j_0}$ divergiert), also
+$G_{j_0}(c)\to0$. **7. Phragmén–Lindelöf und Liouville**, wörtlich wie in
+Theorem 9: $G_{j_0}$ ist ganz vom Typ $0$ und auf der imaginären Achse durch
+$\Sigma_{j_0}$ beschränkt, also überall beschränkt, also konstant, und die
+Konstante ist der reelle Limes $0$. Damit $G_j\equiv0$ für jedes $j$.
+**8. Rückweg.** (B$\infty$) mit $G\equiv0$ gibt $\nu_jR_j=0$, also
+$R_j=0$; (A$\infty$) gibt $\sum_i(\mu_ix_{ij})W^c_i=0$ für alle $c$, und
+die Zeilenfolge $a_i=\mu_ix_{ij}$ liegt in $\ell^1$ ($\|a\|_1=\rho_j$);
+Theorem 9 gibt $a\equiv0$, und $\mu_i>0$ gibt $x_{ij}=0$ — für jede Zeile
+$j$. $\square$
+
+Konsistenzproben: ohne Summierbarkeit existiert schon $W^c_i$ nicht — der
+Buckel von Proposition 2 wird nicht etwa übersehen, sondern die Transformation
+verweigert sich ihm. Theorem 4 (endliche Superpositionen) und Korollar 7
+(Spektralkandidaten) sind keine Spezialfälle — sie brauchen (H) nicht — und
+bleiben als unbedingte Aussagen daneben stehen.
+
+### Korollar 11: die zwei $\zeta$-Ketten in der beschränkten Klasse
+
+**(a)** Jede beschränkte Lösung von (Q) verschwindet; allgemeiner jede mit
+$\sup_{j\ge j_0}\rho_j<\infty$. **(b)** Über die Reduktion des siebzehnten
+Laufs (blockintern erledigt der Satz des vierzehnten Laufs alles, $\kappa$
+lebt nur noch auf Kreuzpaaren $x_{ij}=\kappa(b_i,a_j)$, und die
+Schwanzdarstellungen sind wörtlich (Q)): für eine rein atomare Uhr, deren
+Atome unter $t^*$ zwei übereinander gestapelte $\zeta$-Ketten bilden, gilt
+die Dualität für jede Lösung des $h$-Systems, deren Kreuzwerte (H)
+erfüllen — insbesondere für **beschränktes** $\kappa$, also in genau der
+Klasse $|h|\le B$, in der alle bisherigen LPs, Zertifikate und Messungen
+liefen. Die kleinste Instanz jenseits der Intervallendlichkeit ist damit in
+dieser Klasse **geschlossen**; der Häufungspunkt zwischen den Ketten wird
+von der Identität I überquert, nicht von einer Induktion.
+
+### Was offen bleibt, exakt
+
+* **(V) in der nackten Klasse.** Nur zeilen- und spaltenweise absolute
+  Konvergenz, ohne (H). Beide Seiten der Methode brauchen dieselbe
+  gemeinsame Größe: die $\mu$-seitige Transformation braucht
+  $\Sigma_{j_0}$ für Nordlimes und Reihe I, und die gespiegelte
+  $\nu$-seitige ($U_i(c)=\sum_j\nu_jF(i,j)\prod_{j'\ge j+1}(1+c\nu_{j'})$,
+  Rekursion $U_{i+1}=(1+c\mu_i)U_i+\mu_iC_i\Pi_{-\infty}$ mit den vollen
+  Spaltensummen $C_i$) braucht $\sum_i\mu_i|C_i|$ und für ihren Ostlimes
+  $\sum_j\nu_j\rho_j$ — dieselbe Größe. (H) ist also keine Bequemlichkeit
+  der Seitenwahl, sondern die Grenze der Transformationsmethode. Zwei
+  benannte Angriffe: zeigen, dass Lösungen von (Q) (H) **automatisch**
+  erfüllen (ein Bootstrap aus den Schwanzdarstellungen; offen), oder eine
+  Paarung, die ohne die gemeinsame Summe auskommt.
+* **Jenseits der zwei Ketten.** Der Cantor–Bendixson-Weg vom siebzehnten
+  Lauf (diskrete, nicht intervallendliche Ketten mit mehr als einem
+  Häufungspunkt; in sich dichte Atommengen) ist unberührt; die Werkzeuge —
+  $\widehat w$-Isomorphismus, Theorem 9, die Identität I — stehen jetzt
+  bereit, und die Identität I ist das erste Argument von Task 23, das
+  einen Häufungspunkt überquert.
+* **Die Roadmap.** `duality_of_atomic_intervalFinite` in
+  `MartingaleProblems` Meilenstein 8 endet mit den gestapelten
+  $\zeta$-Ketten als benannter Grenze. Ein Eintrag der (H)-Fassung wäre
+  möglich, ist aber zurückgestellt, bis (V) in der nackten Klasse
+  entschieden ist — die Manuskriptklasse verlangt nur absolute Konvergenz,
+  und ein Roadmap-Punkt mit einer Hypothese, die das Manuskript nicht
+  liefert, stünde schief. Das ist eine Entscheidung dieses Laufs und kann
+  vom Nutzer umgestoßen werden.
+
+### Sackgassen, achtzehnter Nachtrag
+
+* **Die Spiegel-Transformation als Ausweg aus (H).** Nachgerechnet, siehe
+  oben: sie tauscht nur, welche der beiden Tonelli-Lesarten von
+  $\Sigma_{j_0}$ gebraucht wird. Wer (H) loswerden will, braucht eine neue
+  Idee, keine neue Seite.
+* **Die endliche Matrix (D1) statt der Fußpunktzerlegung (D2) im
+  Unendlichen.** Die Dreiecksmatrix der elementarsymmetrischen Funktionen
+  hat im Unendlichen keine Antidiagonale; die Zerlegung (D2) mit
+  Phragmén–Lindelöf ersetzt sie vollständig. (D1) bleibt als endliche
+  Konsistenzprobe wertvoll und als Beweisweg im Unendlichen unbrauchbar.

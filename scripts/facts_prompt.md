@@ -214,6 +214,26 @@ Umgekehrt gilt: eine Abschwächung wird **belegt**, nicht vermutet. Wer
 Vollständigkeit im Beweis nicht mehr vorkommt. Prohorovs Satz zum Beispiel
 braucht sie in der Rückrichtung; der Satz von der stetigen Abbildung nicht.
 
+## Wie geschrieben wird, damit ein Abbruch nichts kaputt macht
+
+Ein Lauf kann jederzeit abgeschnitten werden — von der Nutzungsgrenze, vom
+Zeitlimit. Zwei Vorkehrungen, beide aus echten Ausfällen gelernt:
+
+1. **Schreibe in Dateien, nicht in lange Antworten.** Am 2026-09-03 starb ein
+   Lauf an `Claude's response exceeded the 64000 output token maximum` und
+   hinterließ nichts. Halte einzelne Antworten kurz und lege Ergebnisse
+   fortlaufend in `Task23/PROTOKOLL.md`, `Facts/INVENTAR.md` oder eigenen
+   Dateien ab, sobald sie feststehen. Eine Abschlusszusammenfassung am Ende ist
+   ein Absatz, kein Bericht — der Bericht steht in den Dateien.
+
+2. **Hinterlasse nichts, was auf Ungeschriebenes verweist.** Derselbe Ausfall
+   hinterließ ein Prüfskript, das sich auf einen „Beweis des zwanzigsten Laufs"
+   berief, den es nicht gab, und das wegen einer toten Platzhalterzeile nicht
+   einmal startete. Die Reihenfolge ist daher: erst der Protokolleintrag mit
+   dem Ergebnis, dann das Skript, das darauf zeigt. Ein Skript muss allein
+   lauffähig sein; ein Zwischenstand, der abbricht, soll lieber weniger
+   dastehen lassen als etwas Widersprüchliches.
+
 ## Regeln, die nicht verhandelbar sind
 
 1. **Nichts aus dem Gedächtnis.** Jeder Mathlib-Name wird am Quelltext belegt.
