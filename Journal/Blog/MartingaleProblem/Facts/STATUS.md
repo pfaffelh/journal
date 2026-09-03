@@ -1,10 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260903T082301Z
-- **Zustand:** limit-teilarbeit
-- **Notiz:** Nutzungsgrenze mitten im Lauf (Code 1, Ausweich 1) -- die bis dahin geleistete Arbeit ist committet
+- **Letzter Lauf (UTC):** 20260903T142301Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** fisher
-- **Laeufe bisher:** 35
+- **Laeufe bisher:** 36
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
