@@ -3328,3 +3328,260 @@ eine mit unbeschränktem $\Phi$.
 * **Der reelle Limes als Weg zur Konstanten $0$.** Er funktioniert (Identität
   I), ist aber überflüssig: der Koeffizientenvergleich in (B$\infty$) gibt
   $K_j=0$ und $R_j=0$ in einer Zeile und braucht die Reihe nicht.
+
+## Die Stieltjes-Transformation, 2026-09-04 (zweiundzwanzigster Lauf): die Einschrittrelation war nie nötig — der ordnungsdichte Kern fällt, für jede Atomkette, bei $m\otimes m$-integrierbarer Dichte
+
+Der einundzwanzigste Lauf schloß mit „der ordnungsdichte Kern hängt damit
+nicht mehr an der Analysis, sondern an der Algebra der Einschrittrelation":
+Theorem 12 setzt an Nachbaratomen an, und eine in sich dichte Atommenge hat
+keine. Dieser Lauf nimmt die Diagnose ernst und **entfernt die
+Einschrittrelation aus der Methode**. Sie war eine Bequemlichkeit der
+$\mathbb Z$-Indizierung, nicht ihr Träger: die Abelsche Summation, an der
+alles hängt, ist in Wahrheit eine **Stieltjes-Produktregel**, und die gilt auf
+jeder abzählbaren Kette. Damit ist der seit dem elften Lauf offene Kern
+geschlossen — unter einer Integrierbarkeitshypothese an die Dichte, die
+schwächer ist als die Klasse $|h|\le B$, in der alle LPs und Messungen des
+zwölften bis siebzehnten Laufs gearbeitet haben.
+
+Neu ist `Task23/dense_chain.py` (Proben (A)–(G), exakt in `Fraction`, rc=0).
+
+### Die Aufstellung, und wie wenig sie verlangt
+
+Das System ist wörtlich das des zwölften Laufs. $A\subset[0,t^*)$ sei die
+Atommenge, eine **beliebige abzählbare Kette** — keine Diskretheit, keine
+Intervallendlichkeit, in sich dicht erlaubt —, $m_a>0$ mit
+$M=\sum_am_a<\infty$, und $h:A\times T\to\R$ mit
+
+* **(C1)** $h(a,0)=0$;
+* **(C2)** $h(a,b)+h(b,a)=h(a,a)+h(b,b)$ für alle $a,b\in A$;
+* **(C3)** $H(s,t)+H(t,s)=0$, wobei $H(s,t):=\sum_{a<s}m_ah(a,t)$.
+
+Behauptung: $h(a,a)=0$ für jedes Atom. Dazu die abgeleiteten Größen
+$$\Delta(t):=\sum_{a<t}m_ah(a,a),\quad
+  \kappa(a,t):=h(a,t)-h(a,a),\quad
+  \widehat w(s,t):=H(s,t)+\Delta(t)-\Delta(s),$$
+mit den drei Eigenschaften des siebzehnten Laufs: $\widehat w$ hat in der
+ersten Koordinate die Zuwachsdarstellung
+$\widehat w(s',t)-\widehat w(s,t)=\sum_{a\in[s,s')}m_a\kappa(a,t)$
+(definitorisch), $\kappa$ ist auf $A\times A$ antisymmetrisch (das ist (C2)),
+$\widehat w$ ist antisymmetrisch (das ist (C3)). Die Randfunktionen sind
+$$\widehat w(0,t)=\Delta(t),\qquad
+  \widehat w(s,0)=-\Delta(s),\qquad
+  \psi(t):=\widehat w(t^*,t).$$
+
+**Der Beweis benutzt (C3) nur an Punktepaaren aus $A\cup\{0,t^*\}$.** Das ist
+die eigentliche Neuigkeit gegenüber allen bisherigen Anläufen: der endliche
+Satz und die Zwei-Diagonalen-Induktion brauchen einen Punkt **echt zwischen**
+einem Atom und seinem Nachfolger (zwölfter Lauf, Probe an $N=2$), und genau
+den nimmt die Ordnungsdichte weg. Hier wird kein Lückenpunkt angefaßt. Probe
+(E) prüft das an der Wurzel: auf endlichen Ketten $n=1,\dots,7$ erzwingt
+schon die lückenfreie Teilmenge — (C1), (C2), (C3) nur auf
+$(A\cup\{t^*\})^2$ — die Diagonale $h(a,a)=0$; Kontrolle (E'): läßt man (C2)
+weg, ist sie frei.
+
+### Lemma 17.1 (Stieltjes-Produktregel auf einer beliebigen Kette)
+
+*Seien $f,V:T\to\C$ beschränkt mit Zuwachsdarstellungen
+$f(s')-f(s)=\sum_{a\in[s,s')}j^f_a$ und $V(s')-V(s)=\sum_{a\in[s,s')}j^V_a$
+für alle $s\le s'$, mit $\sum_a|j^f_a|<\infty$ und $\sum_a|j^V_a|<\infty$.
+Dann hat $fV$ die Zuwachsdarstellung mit den Sprüngen
+$f(a{+})V(a{+})-f(a)V(a)$, wobei $f(a{+}):=f(a)+j^f_a$.*
+
+*Beweis.* Mit $J_f=\sum_{a\in S}j^f_a$, $S=[s,s')\cap A$, und
+$f(a)=f(s)+\sum_{a'\in S,a'<a}j^f_{a'}$ ist die Summe der Sprünge gleich
+$f(s)J_V+V(s)J_f+\big[\sum_{a'<a}+\sum_{a'>a}+\sum_{a'=a}\big]j^f_{a'}j^V_a
+ =f(s)J_V+V(s)J_f+J_fJ_V=f(s')V(s')-f(s)V(s)$; alle Umordnungen sind absolut
+konvergent. $\square$
+
+Kein Wort über Nachbarn, kein Wort über den Ordnungstyp. **Hier stirbt die
+Einschrittrelation.**
+
+### Die Gewichte, und Lemma 17.2 (Abel–Stieltjes)
+
+$$W^c(a):=\prod_{a'>a}(1+cm_{a'}),\qquad V(s):=\prod_{a\ge s}(1+cm_a),\qquad
+  V_0(c):=V(0)=\prod_{a\in A}(1+cm_a).$$
+Alle Produkte konvergieren absolut ($\sum m_a<\infty$), sind ganz in $c$ und
+erfüllen $|W^c(a)|\le e^{\Phi(|c|)}$ mit $\Phi(r)=\sum_a\log(1+rm_a)=o(r)$.
+Die Teleskopidentität $\prod_{a\in S}(1+z_a)-1=\sum_{a\in S}z_a
+\prod_{a'\in S,a'>a}(1+z_{a'})$ gibt $V$ die Zuwachsdarstellung mit den
+Sprüngen $j^V_a=-c\,m_aW^c(a)$ und $V(a{+})=W^c(a)$.
+
+> **Lemma 17.2.** Für jedes $t\in T$ und jedes $c\in\C$ gilt
+> $$K(t;c)-c\,G(t;c)\;=\;\psi(t)-\Delta(t)\,V_0(c),$$
+> mit $K(t;c):=\sum_am_a\kappa(a,t)W^c(a)$ und
+> $G(t;c):=\sum_am_a\widehat w(a,t)W^c(a)$.
+
+*Beweis.* Lemma 17.1 auf $f=\widehat w(\cdot,t)$ und $V$; der Sprung von $fV$
+bei $a$ ist $m_a\kappa(a,t)W^c(a)-c\,m_a\widehat w(a,t)W^c(a)$, und die
+Zuwachsdarstellung über $[0,t^*]$ liest sich
+$(fV)(t^*)-(fV)(0)=\psi(t)\cdot1-\Delta(t)\cdot V_0$. $\square$
+
+Probe (A) prüft Lemma 17.2 **ohne jede Hypothese an $h$** auf zufälligen
+Ketten und sieben Werten von $c$ — es ist eine Identität der Definitionen.
+
+### Die drei Identitäten
+
+Setze $P(c):=\sum_am_a\psi(a)W^c(a)$, $Q(c):=\sum_am_a\Delta(a)W^c(a)$,
+$R(c):=\sum_am_ah(a,a)W^c(a)$ und $S(c):=\sum_am_ah(a,t^*)W^c(a)$.
+
+**(2) $P=V_0Q$.** Summiere Lemma 17.2 bei $t=b\in A$ gegen $m_bW^c(b)$:
+$$\sum_{a,b}m_am_b\kappa(a,b)W^c(a)W^c(b)
+ -c\sum_{a,b}m_am_b\widehat w(a,b)W^c(a)W^c(b)=P(c)-V_0(c)Q(c).$$
+Beide Doppelsummen verschwinden, weil $\kappa$ und $\widehat w$ auf $A\times A$
+antisymmetrisch und die Gewichte symmetrisch sind. Also $P(c)=V_0(c)Q(c)$.
+*Benutzt: (C2) und (C3) auf $A\times A$; Probe (B), nichttriviale Diagonale in
+allen vier Fällen.*
+
+**(4) $R(c)=\Delta(t^*)+c\,Q(c)$.** Lemma 17.2 bei $t=0$: dort ist
+$\kappa(a,0)=-h(a,a)$, $\widehat w(a,0)=-\Delta(a)$, $\psi(0)=-\Delta(t^*)$
+und $\Delta(0)=0$. *Benutzt: (C1); Probe (C).*
+
+**(5) $S(c)-R(c)+c\,P(c)=-\Delta(t^*)V_0(c)$.** Lemma 17.2 bei $t=t^*$: dort
+ist $\kappa(a,t^*)=h(a,t^*)-h(a,a)$, $G(t^*;c)=-P(c)$ und $\psi(t^*)=0$.
+*Benutzt: (C1) und (C3) an $A\times\{t^*\}$ samt $(t^*,t^*)$; Probe (D),
+nichttriviale Diagonale in allen vier Fällen.*
+
+**(7)** Aus (5) mit $cP=cV_0Q=V_0(R-\Delta(t^*))$ folgt in einer Zeile
+$$S(c)=R(c)\,\bigl(1-V_0(c)\bigr)$$
+— Probe (D'). Bei $c=0$ ist das $H(t^*,t^*)=0$, also (C3) auf der Diagonale.
+
+### Theorem 17: die Diagonale verschwindet, auf jeder Kette
+
+> **Theorem 17.** $A$ sei eine abzählbare Kette in $[0,t^*)$ mit Massen
+> $m_a>0$, $M=\sum m_a<\infty$; $h$ erfülle (C1), (C2) und (C3), alle Reihen
+> $H(s,t)$ und $\Delta(t)$ seien absolut konvergent, und es gelte
+> $$\textbf{(F)}\qquad \sum_{a,b\in A}m_am_b|h(a,b)|<\infty.$$
+> Dann ist $h(a,a)=0$ für jedes $a\in A$.
+
+*Beweis.* **1. $R$ ist auf der imaginären Achse beschränkt.** Auf
+$\Re c\ge0$ ist $|1+cm|\ge1$ für jedes $m>0$, also
+$|W^c(a)|\le\prod_{a'}|1+cm_{a'}|=|V_0(c)|$ und damit
+$|S(c)|\le\rho^*|V_0(c)|$ mit $\rho^*:=\sum_am_a|h(a,t^*)|<\infty$. Ferner ist
+$|1+cm|^2=1+2m\Re c+m^2|c|^2\ge1+m^2|c|^2$, also
+$|V_0(c)|\ge\widetilde V(|c|):=\prod_a(1+m_a^2|c|^2)^{1/2}$, und
+$\widetilde V(r)\to\infty$ (ein einziges Atom genügt). Wähle $r_0$ mit
+$\widetilde V(r_0)\ge2$. Für $\Re c\ge0$, $|c|\ge r_0$ gibt (7)
+$$|R(c)|=\frac{|S(c)|}{|1-V_0(c)|}\le\frac{\rho^*|V_0(c)|}{|V_0(c)|-1}\le2\rho^*,$$
+und auf dem Kompaktum $\{\Re c\ge0,\ |c|\le r_0\}$ ist
+$|R|\le D\,e^{\Phi(r_0)}$ mit $D:=\sum_am_a|h(a,a)|<\infty$. Probe (G) prüft
+die beiden Ungleichungen numerisch.
+
+**2. $R$ ist konstant.** $R$ ist ganz vom Exponentialtyp $0$
+($|R(c)|\le D\,e^{\Phi(|c|)}$, $\Phi(r)=o(r)$) und nach 1. auf der imaginären
+Achse beschränkt; eine ganze Funktion vom Typ $0$, die auf einer Geraden
+beschränkt ist, ist überall beschränkt (Phragmén–Lindelöf, Titchmarsh §5.62 /
+Boas Thm. 6.2.4 mit $\tau=0$ — dieselbe Schranke, auf der schon die
+Theoreme 9, 10 und 12 ruhen), nach Liouville also konstant,
+$R\equiv R(0)=\Delta(t^*)$.
+
+**3. $Q\equiv0$.** (4) gibt $c\,Q(c)=R(c)-\Delta(t^*)=0$ für alle $c$.
+
+**4. $\Delta$ verschwindet auf den Atomen.** Theorem 9 gilt wörtlich auf
+jeder abzählbaren Kette: für einen Fußpunkt $s_0\in T$ ist
+$W^c(a)=V(s_0)\prod_{a<a'<s_0}(1+cm_{a'})$ falls $a<s_0$ und
+$W^c(a)=V(s_0)\big/\prod_{s_0\le a'\le a}(1+cm_{a'})$ sonst (Probe (F)); die
+Zerlegung $0=\sum_a\alpha_aW^c(a)/V(s_0)=P_{s_0}(c)+N_{s_0}(c)$ liefert
+$P_{s_0}$ ganz vom Typ $0$ und auf $\Re c\ge0$ durch $\|\alpha\|_1$
+beschränkt, also konstant; für reelles $c\to+\infty$ geht jeder Term von
+$N_{s_0}$ gegen $0$, also $P_{s_0}\equiv0$ und insbesondere
+$P_{s_0}(0)=\sum_{a<s_0}\alpha_a=0$ **für jedes $s_0\in T$**. Angewandt auf
+$\alpha_a=m_a\Delta(a)\in\ell^1$ (denn $|\Delta|\le D$): $\Delta(a)=0$ für
+jedes $a\in A$.
+
+**5. $h(a,a)=0$ für jedes nichtmaximale Atom.** Zu $a\in A$ mit Atomen
+darüber wähle $t_n\in A$ fallend mit $\bigcap_n(a,t_n)\cap A=\emptyset$ — das
+geht, weil $A$ abzählbar ist: zu einer Aufzählung $\{b_k\}$ von
+$A\cap(a,t_1)$ setze $t_{k+1}:=\min(t_k,b_k)$. Dann ist
+$0=\Delta(t_n)-\Delta(a)=m_ah(a,a)+\sum_{b\in(a,t_n)}m_bh(b,b)$, und der
+zweite Term geht gegen $0$ (dominierte Konvergenz, $\sum_bm_b|h(b,b)|=D$).
+
+**6. Das maximale Atom.** Hat $A$ kein Maximum, ist mit 5. alles gezeigt und
+$\Delta\equiv0$. Andernfalls sei $a_{\max}$ das größte Atom und
+$\lambda:=h(a_{\max},a_{\max})$; nach 5. ist $\Delta(t)=m_{a_{\max}}\lambda$
+für $t>a_{\max}$, insbesondere $\Delta(t^*)=m_{a_{\max}}\lambda$. Aus (2) und
+$Q\equiv0$ folgt $P\equiv0$, mit Schritt 4 also $\psi(a)=0$, mit
+$\Delta(a)=0$ also $H(t^*,a)=\Delta(t^*)$ und mit (C3) an $(t^*,a)$
+$$H(a,t^*)=-\Delta(t^*)\qquad\text{für jedes }a\in A.$$
+Hat $A$ ein Minimum $a_0$, so ist $H(a_0,t^*)=0$ (leere Summe); hat es
+keines, so wähle $a_n\in A$ streng fallend und kofinal nach unten, dann ist
+$\bigcap_n[0,a_n)\cap A=\emptyset$ und $H(a_n,t^*)\to0$ (dominierte
+Konvergenz, Majorante $\sum_am_a|h(a,t^*)|=\rho^*$). Beidemal
+$\Delta(t^*)=0$, also $\lambda=0$. $\square$
+
+### Was die Hypothese (F) ist, und was sie nicht ist
+
+(F) ist die $m\otimes m$-Integrierbarkeit der Dichte **auf Atompaaren**, und
+sie geht an genau zwei Stellen ein: die Doppelsumme in (2) muß nach Fubini
+umgeordnet werden dürfen, und $P$ muß existieren
+($\sum_am_a|\psi(a)|<\infty$). Alles Übrige — Lemma 17.2, (4), (5), (7) und
+die Schritte 1 bis 6 — braucht nur die absolute Konvergenz, die das System
+ohnehin voraussetzt.
+
+* (F) folgt aus $|h|\le B$ **auf $A\times A$** (dann $\le2BM^2$). Das ist echt
+  schwächer als die Klasse $|h|\le B$ auf $A\times T$, in der der zwölfte bis
+  siebzehnte Lauf gemessen haben, und heißt über $\gamma=\kappa/2$ die
+  Beschränktheit der **Dichte** auf Atompaaren.
+* (F) ist **unvergleichbar** mit der Hypothese von Korollar 14 (Beschränktheit
+  des **Wertes** $\Phi$). Korollar 14 deckt unbeschränkte Dichten auf zwei
+  gestapelten $\zeta$-Ketten, Theorem 17 deckt beliebige Ketten bei
+  integrierbarer Dichte. Keins subsumiert das andere; zusammen decken sie
+  alles, was Task 23 bisher an Instanzen gesehen hat.
+* Ehrlich dazu: `prop:atomicdual` und `prop:mixeddual` sind abstrakt
+  formuliert („no integrability hypothesis beyond the existence of the
+  integrals"), und (F) ist eine echte Zusatzhypothese. Der Satz fürs
+  Manuskript lautet deshalb:
+
+> **Korollar 18.** Ist $q$ rein atomar, bilden die Atome unter $t^*$ eine
+> Kette, erfüllen $\Phi,\gamma$ \eqref{eq:incrementrep} mit
+> $\gamma_1=\gamma_2$, und ist $\gamma$ auf $A\times A$
+> $m\otimes m$-integrierbar, so ist $\Phi(t^*,0)=\Phi(0,t^*)$ — **ohne jede
+> Voraussetzung an den Ordnungstyp der Atommenge.**
+
+### Was das für den offenen Kern heißt
+
+Der ordnungsdichte Fall, seit dem elften Lauf der benannte Rest von Task 23,
+ist damit **in der Klasse (F) geschlossen**, und zwar zusammen mit allem, was
+die Cantor–Bendixson-Leiter darüber noch hätte kosten können: Theorem 17
+kennt keine Blöcke, keinen Blockabstand und keine Induktion. Die
+Zusatzhypothese von Korollar 16 — intervallendliche Blockordnung — entfällt,
+die Diskretheit entfällt, und die kleinste Instanz der zwei $\zeta$-Ketten
+ist ein Sonderfall.
+
+Offen bleibt danach genau zweierlei, und beides ist benannt:
+
+* **Die nackte Klasse.** Weder (F) noch die Beschränktheit von $\Phi$, nur die
+  absolute Konvergenz der Reihen von \eqref{eq:incrementrep}. Das ist
+  dieselbe Lücke, die der einundzwanzigste Lauf als „(V) bei unbeschränktem
+  Defekt" führt, jetzt für beliebige Ketten statt nur für zwei
+  $\zeta$-Ketten. Proposition 15 gilt unverändert und sagt, wie ein
+  Gegenbeispiel aussehen müßte; neu hinzu kommt aus Theorem 17, daß es
+  $\sum_{a,b}m_am_b|\kappa(a,b)|=\infty$ haben muß.
+* **Die Halbordnung.** Theorem 17 benutzt die lineare Ordnung an jeder
+  Stelle — Intervalle $[s,s')$, Produkte über $a'>a$, die Teleskopidentität.
+  Für unvergleichbare Atome ist `prop:atomicposet` (sechster Lauf) der Satz,
+  und der ist endlich. Eine unendliche Halbordnung mit summierbaren Massen
+  ist von keinem der beiden Sätze erfaßt.
+
+### Sackgassen, zwanzigster Nachtrag
+
+* **„Der ordnungsdichte Kern hängt an der Algebra der Einschrittrelation".**
+  Der Schluß des einundzwanzigsten Laufs, und er war so voreilig wie „(H) ist
+  die Grenze der Methode" im zwanzigsten. Er las aus „Theorem 12 setzt an
+  Nachbaratomen an" ein Hindernis, statt zu prüfen, **wofür** die Nachbarn
+  dort stehen: für die Abelsche Summation, und die ist eine
+  Stieltjes-Produktregel, die keine Nachbarn kennt. Zum dritten Mal dieselbe
+  Lehre — eine Prämisse, die aus der Rechnung stammt statt aus dem
+  Beweisbedarf (siebzehnter Lauf: Kompaktheit; zwanzigster Lauf: (H)).
+* **Die Suche nach einem Punkt zwischen Atom und Nachfolger.** Zehn Läufe
+  lang galt die Bemerkung des zwölften Laufs, der Mechanismus brauche ein $t$
+  echt zwischen dem Atom und seinem Nachfolger, als die Stelle, an der die
+  Ordnungsdichte beißt. Sie beschreibt eine bestimmte einzeilige Herleitung,
+  nicht das System: Probe (E) zeigt, daß schon die lückenfreie Teilmenge der
+  Bedingungen die Diagonale erzwingt, auf jeder endlichen Kette bis $n=7$.
+* **Der Zweikoordinaten-Transform als Quelle neuer Information.** Die
+  Doppeltransformation $D(c,d)$, $E(c,d)$ des Antisymmetrieschritts sieht nach
+  einem reichen System aus; ihr ganzer Ertrag steckt in der Diagonale $d=c$,
+  wo beide Doppelsummen aus Antisymmetrie verschwinden. Die Nebendiagonale
+  gibt nur die Teilerdifferenz
+  $E(c,d)=-[V_0(c)-V_0(d)][Q(c)-Q(d)]/(c-d)$ zurück, also nichts über (2)
+  hinaus.

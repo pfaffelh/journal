@@ -252,6 +252,45 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `duality_of_atomic_blockStack_of_bounded` in `MartingaleProblems`
    Meilenstein 8.
 
+   *Zwischenstand 2026-09-04, zweiundzwanzigster Lauf: der ordnungsdichte
+   Kern ist gefallen — die Einschrittrelation war nie nötig.* Der
+   einundzwanzigste Lauf hatte den Rest als „die Algebra der
+   Einschrittrelation" diagnostiziert; das war, wie „(H) ist die Grenze der
+   Methode" davor, eine Prämisse aus der Rechnung statt aus dem Beweisbedarf.
+   Die Abelsche Summation von Theorem 12 ist in Wahrheit eine
+   **Stieltjes-Produktregel** (Lemma 17.1: haben $f$ und $V$
+   Zuwachsdarstellungen mit $\ell^1$-Sprüngen, so hat es $fV$ mit den
+   Produktsprüngen), und die kennt keine Nachbarn — sie gilt auf **jeder**
+   abzählbaren Kette. Damit läuft die ganze Transformationsmethode auf einer
+   beliebigen Atomkette: die Gewichte $W^c(a)=\prod_{a'>a}(1+cm_{a'})$, die
+   Identität $K(t;c)-cG(t;c)=\psi(t)-\Delta(t)V_0(c)$, und aus ihr an
+   $t=b\in A$, $t=0$ und $t=t^*$ die drei Gleichungen $P=V_0Q$,
+   $R=\Delta(t^*)+cQ$ und $S=R(1-V_0)$. Die letzte macht $R$ auf $\Re c\ge0$
+   beschränkt (denn $|V_0(c)|\ge\prod(1+m_a^2|c|^2)^{1/2}\to\infty$), also
+   nach Phragmén–Lindelöf und Liouville konstant, also $Q\equiv0$, also
+   $\Delta\equiv0$ auf den Atomen: **Theorem 17**, $h(a,a)=0$ für jedes Atom
+   einer beliebigen Kette, ordnungsdicht eingeschlossen. Einzige
+   Zusatzhypothese ist **(F)** $\sum_{a,b}m_am_b|h(a,b)|<\infty$ — die
+   $m\otimes m$-Integrierbarkeit der Dichte auf Atompaaren, hinreichend dafür
+   $|\gamma|$ beschränkt auf $A\times A$; sie steht an genau zwei Stellen
+   (Fubini in $P=V_0Q$, Existenz von $P$). Mitgefallen: der Blockstapel des
+   einundzwanzigsten Laufs braucht in dieser Klasse weder Diskretheit noch
+   intervallendliche Blockordnung, und die Bemerkung des zwölften Laufs, der
+   Mechanismus brauche einen Punkt echt zwischen Atom und Nachfolger, ist
+   widerlegt (Probe (E): die lückenfreie Bedingungsmenge erzwingt die
+   Diagonale bis $n=7$). Offen bleiben nur noch zwei benannte Dinge: die
+   **nackte Klasse** (weder (F) noch $\Phi$ beschränkt — dieselbe Lücke wie
+   „(V) bei unbeschränktem Defekt", jetzt für beliebige Ketten; jedes
+   Gegenbeispiel hat nach Proposition 15 unbeschränkten Defekt *und*
+   $\sum_{a,b}m_am_b|\kappa(a,b)|=\infty$) und die **unendliche
+   Halbordnung**, die von keinem der Sätze erfaßt ist.
+   `Task23/PROTOKOLL.md`, zweiundzwanzigster Lauf; `Task23/dense_chain.py`
+   (Proben (A)–(G), exakt, rc=0); Roadmapeinträge `HasAtomIncrements`,
+   `HasAtomIncrements.mul`, `chainTailProduct`,
+   `chainTailProduct_pairing_eq_zero`, `atomDiag_eq_zero_of_integrable` und
+   `duality_of_atomic_chain_of_integrable` in `MartingaleProblems`
+   Meilenstein 8.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

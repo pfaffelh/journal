@@ -3623,3 +3623,112 @@ an Mathlib-Deklarationen angeschlossen. Wer eine zweite Front will, nehme
 Wahrscheinlichkeitstheorie unabhängig, hängt allein an den zwei oben
 belegten Mathlib-Sätzen, und ist die einzige Analysis, die Theorem 9 und
 Theorem 12 gemeinsam brauchen.
+
+### 2026-09-04 — Task 23, zweiundzwanzigster Lauf: die Einschrittrelation war nie nötig, und der ordnungsdichte Kern fällt
+
+Das Inventar ist geschlossen (keine Zeile mit `?`), der Rückstau führt als
+ersten Punkt Task 23; dieser Lauf hat dort weitergearbeitet und **nichts** am
+Inventar, an den Facts oder am Manuskript geändert. `check.py` meldet
+unverändert `clean` (129 Seiten).
+
+**Befund.** Der einundzwanzigste Lauf schloß, der ordnungsdichte Kern hänge
+„nicht mehr an der Analysis, sondern an der Algebra der Einschrittrelation":
+Theorem 12 setzt an Nachbaratomen an, eine in sich dichte Atommenge hat
+keine. Das ist zurückgenommen, und zwar durch Beweis. Wofür die Nachbarn
+dort stehen, ist die Abelsche Summation, und die ist in Wahrheit eine
+**Stieltjes-Produktregel** (Lemma 17.1): haben $f$ und $V$
+Zuwachsdarstellungen über einer abzählbaren Menge mit $\ell^1$-Sprüngen, so
+hat es $fV$ mit den Produktsprüngen — bewiesen durch Aufspalten einer
+Doppelsumme in $a'<a$, $a'>a$, $a'=a$, ohne ein Wort über Nachfolger oder
+Ordnungstyp.
+
+Damit läuft die ganze Transformationsmethode auf einer **beliebigen**
+abzählbaren Atomkette. Mit $W^c(a)=\prod_{a'>a}(1+cm_{a'})$ gibt Lemma 17.1
+die Identität $K(t;c)-cG(t;c)=\psi(t)-\Delta(t)V_0(c)$ (Probe (A):
+hypothesenfrei), und aus ihr an $t=b\in A$, $t=0$ und $t=t^*$ drei
+Gleichungen: $P=V_0Q$ (aus der Antisymmetrie von $\kappa$ und $\widehat w$,
+die die beiden Doppelsummen tötet), $R=\Delta(t^*)+cQ$ und
+$S=R\,(1-V_0)$. Die letzte macht $R$ auf $\Re c\ge0$ beschränkt, weil
+$|V_0(c)|\ge\prod_a(1+m_a^2|c|^2)^{1/2}\to\infty$; $R$ ist ganz vom Typ $0$,
+also nach Phragmén–Lindelöf und Liouville konstant, also $Q\equiv0$, also
+— mit Theorem 9, das auf der Kette wörtlich gilt — $\Delta\equiv0$ auf den
+Atomen und $h(a,a)=0$. Das ist **Theorem 17**: der ordnungsdichte Fall,
+seit dem elften Lauf der benannte Rest von Task 23, ist geschlossen, und mit
+ihm die ganze Cantor–Bendixson-Leiter — Theorem 17 kennt keine Blöcke,
+keinen Blockabstand und keine Induktion.
+
+**Der Preis, und er ist benannt.** Einzige Zusatzhypothese ist **(F)**
+$\sum_{a,b}m_am_b|h(a,b)|<\infty$, die $m\otimes m$-Integrierbarkeit der
+Dichte auf Atompaaren; hinreichend dafür ist $|\gamma|$ beschränkt auf
+$A\times A$. Sie geht an genau zwei Stellen ein (Fubini in $P=V_0Q$, Existenz
+von $P$) und ist **unvergleichbar** mit der Hypothese von Korollar 14, die
+den *Wert* $\Phi$ beschränkt statt der *Dichte*. `prop:atomicdual` und
+`prop:mixeddual` fordern gar keine Integrierbarkeit; Korollar 18 nennt (F)
+deshalb ausdrücklich.
+
+**Zwei Korrekturen am eigenen Bestand.** Erstens die Bemerkung des zwölften
+Laufs, der Mechanismus brauche ein $t$ **echt zwischen** einem Atom und
+seinem Nachfolger, und genau das nehme die Ordnungsdichte weg: sie beschreibt
+eine einzeilige Herleitung, nicht das System. Probe (E) zeigt, daß schon die
+lückenfreie Teilmenge der Bedingungen — (C1), (C2), (C3) nur auf
+$(A\cup\{t^*\})^2$ — die Diagonale erzwingt, auf endlichen Ketten bis $n=7$;
+Kontrolle (E'): ohne (C2) ist sie frei. Zweitens verlangt der Blockstapel des
+einundzwanzigsten Laufs in der Klasse (F) weder Diskretheit noch
+intervallendliche Blockordnung.
+
+**Geschrieben.** `Task23/PROTOKOLL.md`, Abschnitt „Die
+Stieltjes-Transformation, 2026-09-04 (zweiundzwanzigster Lauf)", mit den
+Lemmata 17.1 und 17.2, den drei Identitäten, Theorem 17, Korollar 18 und dem
+zwanzigsten Sackgassen-Nachtrag. `Task23/dense_chain.py` verifiziert die
+Beweisalgebra exakt in `Fraction` und **je unter genau den Hypothesen, die
+der Beweis für sie beansprucht** — sonst wäre die Probe entwertet, weil die
+volle Hypothesenmenge auf einer endlichen Kette die Diagonale ohnehin tötet:
+(A) Abel–Stieltjes hypothesenfrei, (B) $P=V_0Q$ aus (C2) und der
+Antisymmetrie auf $A\times A$, (C) $R=\Delta(t^*)+cQ$ aus (C1), (D)
+$S-R+cP=-\Delta(t^*)V_0$ aus (C1) und der Antisymmetrie am Deckel — bei (B),
+(C) und (D) mit nichtverschwindender Diagonale in allen Fällen, also nicht
+degeneriert —, (D') die Zusammensetzung, (E)/(E') die Rangprobe, (F) die
+Fußpunktzerlegung von Theorem 9 auf der Kette, (G) die zwei Ungleichungen des
+Wachstumsschritts; rc=0. Der Rückstau trägt den Zwischenstand.
+
+**Roadmap.** `MartingaleProblems` Meilenstein 8 trägt sechs neue Punkte:
+`HasAtomIncrements` (die Zuwachsdarstellung als Prädikat, samt der
+Sprungrückgewinnung über eine fallende Atomfolge, die die Abzählbarkeit
+liefert), `HasAtomIncrements.mul` (Lemma 17.1), `chainTailProduct` (die
+Geschlecht-0-Schwänze über einer Kette statt über `ℤ`, samt der unteren
+Schranke $\prod(1+m^2\|c\|^2)^{1/2}$ auf `0 ≤ c.re`),
+`chainTailProduct_pairing_eq_zero` (Theorem 9 mit Fußpunkt in `T` statt in
+`ℤ`), `atomDiag_eq_zero_of_integrable` (Theorem 17) und
+`duality_of_atomic_chain_of_integrable` (Korollar 18). Die Abdeckungsliste bei
+`duality_of_atomic` nennt jetzt sieben Sätze und sagt, was der siebte
+gegenüber den anderen tauscht — nichts am Ordnungstyp, alles an der Dichte;
+der Schlußsatz von `duality_of_atomic_blockStack_of_bounded` ist nachgezogen.
+Neue Mathlib-Zitate kommen nicht hinzu: die vier Deklarationen, auf denen die
+neuen Punkte ruhen (`PhragmenLindelof.right_half_plane_of_bounded_on_real`,
+`Differentiable.exists_eq_const_of_bounded`,
+`tendsto_tsum_of_dominated_convergence`, `multipliable_one_add_of_summable`),
+sind dieselben wie beim einundzwanzigsten Lauf und dort gegen
+`upstream/master` geprüft.
+
+**Das Manuskript ist unverändert, und der Vorschlag an den Nutzer wächst um
+eine dritte Zeile.** Die Statustabelle in §6 führt „purely atomic, atoms a
+chain — proved, `prop:atomicdual`" (endlich viele Atome) und „order-dense
+atoms — open". Vorgeschlagen sind seither: *intervallendliche Kette —
+bewiesen* (neunter Lauf), *diskrete Kette mit intervallendlicher
+Blockordnung, $\Phi$ beschränkt — bewiesen* (einundzwanzigster Lauf), und
+jetzt *beliebige Kette, $\gamma$ auf Atompaaren $m\otimes m$-integrierbar —
+bewiesen* (Korollar 18). Die dritte macht die Zeile „order-dense — open"
+falsch, sobald sie steht; ob und in welcher Gestalt sie ins Manuskript wandert
+— und ob die vorhandene Zeile in „open only without integrability" geändert
+wird —, gehört dem Nutzer.
+
+**Was als Nächstes formalisiert werden soll: `HasAtomIncrements.mul`**
+(`MartingaleProblems` Meilenstein 8). Es ruht auf nichts als absolut
+konvergenten Reihen über einer abzählbaren Menge — kein Maß, keine
+Wahrscheinlichkeitstheorie, keine Funktionentheorie —, und es ist jetzt der
+Träger von allem, was Task 23 auf unendlichen Atommengen kann: Theorem 9,
+Theorem 12 und Theorem 17 gehen sämtlich durch es hindurch. Es ist jetzt
+dran, weil es die einzige Aussage der ganzen Kette ist, deren Beweis eine
+reine Umordnung ist und deren Formalisierung deshalb keine Vorarbeit
+braucht. Wer eine zweite Front will, nehme unverändert `atomGrid_symm`; die
+Begründung des einundzwanzigsten Laufs steht.
