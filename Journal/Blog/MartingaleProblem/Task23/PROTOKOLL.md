@@ -4072,3 +4072,304 @@ lebt auf einer Antikette, also auf einer schwachen Ordnung; Theorem 21 verlangt
   eines der *Daten*: die Stufenmittelung mittelt $\kappa$, nicht $T$, und
   braucht Proposition 19.3 dann gar nicht mehr. Wer eine Invarianz an einer
   Hilfsgröße mißt, suche sie zuerst an der Aufgabe.
+
+## Das unendliche Zertifikat, 2026-09-04 (fünfundzwanzigster Lauf): die Ausschöpfung war nie nötig — bei endlicher Höhe fällt die Halbordnung unter (F), auch mit nicht transitiver Unvergleichbarkeit
+
+Der vierundzwanzigste Lauf hat die **Ausschöpfung** als Methode erledigt (vierte
+Norm, vierter Ausfall) und die unendliche Halbordnung genau bis zur
+Transitivität der Unvergleichbarkeit geschlossen (Theorem 21). Offen blieb „die
+Halbordnung mit nicht transitiver Unvergleichbarkeit, kleinste Gestalt ein
+unendliches N".
+
+Dieser Lauf schließt sie für **endliche Höhe**, und zwar ohne jede Ausschöpfung.
+Der Umweg von elf Läufen war nicht die falsche Norm, sondern der Grenzübergang:
+man baut Zertifikate auf endlichen Ausschnitten und hofft auf gleichmäßige
+Schranken. Man kann das Zertifikat **direkt auf der unendlichen Halbordnung**
+hinschreiben. Dann gibt es keine Folge, keinen Limes und nichts zu messen — die
+Beschränktheit ist dem Objekt eingebaut.
+
+### Der Rahmen, festgeschrieben
+
+$\T$ abzählbare Halbordnung, $m:\T\to[0,\infty)$ mit $M=\sum_am_a<\infty$,
+$\kappa$ antisymmetrisch, $\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$ (je Paar absolut
+konvergent), $(\diamondsuit)$ an **allen** Paaren, $\delta=\operatorname{diag}\Psi$.
+Wie stets $V_{s,a}=[a<s]m_a$ und $K_{a,b}=\kappa(a,b)$, also $\Psi=VK$ und
+
+$$VK+(VK)^{\mathsf T}=\delta\mathbb 1^{\mathsf T}+\mathbb 1\delta^{\mathsf T}.
+  \tag{S}$$
+
+Zeilenmassen $\rho_s:=\sum_bm_b|\kappa(b,s)|$; die Hypothese
+
+$$(\mathrm F)\qquad \sum_{a,b}m_am_b|\kappa(a,b)|<\infty
+  \quad\Longleftrightarrow\quad \sum_sm_s\rho_s<\infty .$$
+
+> **Definition (unendliches Zertifikat).** Sei $Z\subset\T$ endlich und
+> $w_s:=m_s+[s\in Z]$, also $W:=\sum_sw_s=M+|Z|<\infty$. Ein *unendliches
+> Zertifikat an der Stelle $t$ in der Gewichtsklasse $Z$* ist ein
+> $T:\T\times\T\to\R$ mit
+>
+> 1. $T=T^{\mathsf T}$ und $|T_{su}|\le C\,w_sw_u$ für ein $C<\infty$;
+> 2. $m_u\sum_{a>u}T_{sa}=m_s\sum_{a>s}T_{au}$ für alle $s,u$
+>    (das ist $TV=V^{\mathsf T}T$, beide Seiten absolut konvergent);
+> 3. $\sum_aT_{sa}=[s=t]$.
+
+Das ist wörtlich die endliche Bedingung „$T$ symmetrisch, $TV$ symmetrisch,
+$T\mathbb 1=e_t$" des sechsten Laufs, plus die eine Schranke, die die
+Umordnungen trägt.
+
+### Theorem 22: das unendliche Zertifikat schließt
+
+> **Theorem 22.** Gilt (F) und ist $\rho_z<\infty$ für jedes $z\in Z$, so folgt
+> aus der Existenz eines unendlichen Zertifikats an der Stelle $t$, daß
+> $\delta(t)=0$.
+
+*Beweis.* Setze $\Sigma:=\sum_{s,b}w_sm_b|\kappa(b,s)|
+=\sum_sm_s\rho_s+\sum_{z\in Z}\rho_z<\infty$ nach (F) und der Hypothese an $Z$.
+Vier Abschätzungen, und sie sind der ganze Unterschied zum Endlichen:
+
+* $\sum_{s,a,b}|T_{sa}|\,[b<a]\,m_b\,|\kappa(b,s)|
+  \le C\sum_{s,a,b}w_sw_am_b|\kappa(b,s)|=CW\Sigma<\infty$; die Dreifachsumme
+  konvergiert absolut, also existieren $\operatorname{tr}\bigl(T(VK)\bigr)$ und
+  $\operatorname{tr}\bigl((TV)K\bigr)$ und sind nach Fubini gleich;
+* $\sum_{s,u}|T_{su}|\,|\Psi(u,s)|\le C\sum_{s,u}w_sw_u\rho_s=CW\Sigma$;
+* $|(TV)_{sb}|=\bigl|m_b\sum_{a>b}T_{sa}\bigr|\le C\,W\,w_s\,m_b$, also
+  $\sum_{s,b}|(TV)_{sb}\,\kappa(b,s)|\le CW\Sigma$;
+* $\sum_{s}w_s|\delta(s)|\le\sum_sw_s\rho_s=\Sigma$ und $\sum_uw_u<\infty$.
+
+Damit gehen die zwei Zeilen des sechsten Laufs durch. Erstens ist für
+symmetrisches $T$ die Summe $\sum_{s,u}T_{su}\Psi(u,s)=\sum_{s,u}T_{su}\Psi(s,u)$
+(Umbenennen in einer absolut konvergenten Doppelsumme), also nach (S)
+
+$$2\operatorname{tr}(T\Psi)=\sum_{s,u}T_{su}\bigl[\Psi(s,u)+\Psi(u,s)\bigr]
+ =\sum_{s,u}T_{su}\bigl[\delta(s)+\delta(u)\bigr]
+ =2\sum_s\delta(s)\Bigl(\sum_{u}T_{su}\Bigr)=2\,\delta(t).$$
+
+Zweitens ist $S:=TV$ symmetrisch, also
+$\operatorname{tr}(SK)=\sum_{s,b}S_{sb}\kappa(b,s)
+=-\sum_{s,b}S_{bs}\kappa(s,b)=-\operatorname{tr}(SK)$ — wieder ein Umbenennen in
+einer absolut konvergenten Doppelsumme —, also $\operatorname{tr}(SK)=0$. Mit
+$\operatorname{tr}(T\Psi)=\operatorname{tr}(SK)$ folgt $\delta(t)=0$. $\square$
+
+**Wo (F) sitzt, und nur dort.** In den vier Abschätzungen, und dort nur als
+Erlaubnis, zwei Doppelsummen umzubenennen. Theorem 22 ist kein Grenzübergang,
+sondern derselbe Zweizeiler wie im Endlichen, mit Fubini als einziger Zutat.
+
+### Theorem 23: bei endlicher Höhe gibt es das Zertifikat immer
+
+$(V^k)_{s,a}=\sum m_{c_0}\cdots m_{c_{k-1}}$, summiert über alle Ketten
+$a=c_0<c_1<\dots<c_k=s$; alle Einträge sind $\ge0$, alle Zeilensummen $\le M^k$.
+Also ist $V^r=0$ genau dann, wenn es **keine** Kette aus $r+1$ Punkten gibt,
+deren erste $r$ positive Masse tragen: die Endlichkeitsbedingung ist eine an die
+**Höhe**, nicht an die Mächtigkeit.
+
+> **Theorem 23.** Sei $\T$ abzählbar, $m\ge0$, $M<\infty$, und sei $V^r=0$ für
+> ein $r\in\N$. Dann gibt es zu jedem $t\in\T$ ein unendliches Zertifikat an der
+> Stelle $t$, in der Gewichtsklasse $Z=\{t,i^*\}$ mit einem $i^*$, das nur von
+> $(\T,m)$ abhängt. Gilt überdies (F) und $\rho_t,\rho_{i^*}<\infty$, so ist
+> $\delta(t)=0$.
+
+*Beweis.* $V^{r-1}\neq0$ hat nichtnegative Einträge, und eine nichtnegative
+Matrix mit lauter Zeilensummen $0$ ist die Nullmatrix — das Lemma des sechsten
+Laufs, wörtlich, und es gilt für abzählbare Indexmengen, weil die Zeilensummen
+konvergieren. Also ist $u:=V^{r-1}\mathbb 1\neq0$; wähle $i^*$ mit
+$u_{i^*}\neq0$ und setze $\lambda:=u_{i^*}^{-1}e_{i^*}$,
+$p_k:=(V^{\mathsf T})^{\,r-1-k}\lambda$, $\psi_k:=(V^{\mathsf T})^ke_t$,
+$c_k:=(V^k\mathbb 1)_t$, $\hat p_k:=\sum_{j\le k}w_{k-j}p_j$ mit
+$(w_k)_{k<r}=\bigl(\sum_k(p_k^{\mathsf T}\mathbb 1)x^k\bigr)^{-1}$ in
+$\R[x]/(x^r)$, und
+
+$$T:=\sum_{k=0}^{r-1}\bigl(\hat p_k\psi_k^{\mathsf T}
+   +\psi_k\hat p_k^{\mathsf T}\bigr)
+   -\sum_{k,l=0}^{r-1}c_{k+l}\,\hat p_k\hat p_l^{\mathsf T}$$
+
+— die Formel des sechsten Laufs, Zeichen für Zeichen. Neu ist allein die
+Buchhaltung, und sie ist einzeilig: $(V^{\mathsf T}x)_c=m_c\sum_{s>c}x_s$, also
+
+$$\|V^{\mathsf T}x\|_1\le M\|x\|_1,\qquad
+  |(V^{\mathsf T}x)_c|\le m_c\|x\|_1 .$$
+
+Daraus $\|p_k\|_1\le M^{\,r-1-k}$ und $|p_k(c)|\le m_cM^{\,r-2-k}$ für
+$k\le r-2$, während $p_{r-1}=\lambda$ auf $i^*$ sitzt; ebenso
+$\|\psi_k\|_1\le M^k$ und $|\psi_k(c)|\le m_cM^{k-1}$ für $k\ge1$, während
+$\psi_0=e_t$ auf $t$ sitzt. Mit $w_s=m_s+[s\in\{t,i^*\}]$ ist damit jeder der
+endlich vielen Rang-1-Summanden von $T$ durch ein Vielfaches von $w_sw_u$
+beschränkt, also auch $T$: das ist Bedingung 1. Alle in der Rechnung des
+sechsten Laufs vorkommenden Produkte — $\psi_k^{\mathsf T}V=\psi_{k+1}^{\mathsf T}$,
+$\hat p_l^{\mathsf T}V=\hat p_{l-1}^{\mathsf T}$,
+$\psi_k^{\mathsf T}\mathbb 1=c_k$, $\hat p_k^{\mathsf T}\mathbb 1=[k=0]$ — sind
+absolut konvergent, weil alle beteiligten Vektoren in $\ell^1$ liegen und
+$V^{\mathsf T}$ auf $\ell^1$ operiert; die Identitäten $T=T^{\mathsf T}$,
+$T\mathbb 1=e_t$ und $TV=V^{\mathsf T}T$ sind deshalb wörtlich die des sechsten
+Laufs (Bedingungen 2 und 3). Theorem 22 schließt. $\square$
+
+> **Korollar 23.2.** Auf jeder abzählbaren Halbordnung **endlicher Höhe** gilt
+> die Dualität unter (F) — bei beliebiger, insbesondere **nicht transitiver**
+> Unvergleichbarkeit und bei beliebig, auch unendlich breiten Ebenen.
+
+Das ist die Antwort auf die Frage des vierundzwanzigsten Laufs. Das unendliche
+„N", die Krone $a_i<b_j\iff i\neq j$, die Leiter $a_i<b_j\iff i<j$ — alles Höhe
+$3$ oder $4$, alles erfaßt. Enthalten sind ferner die unendliche Antikette
+($r=2$; Theorem 23 gibt Proposition 19.1 zurück) und **jede endliche**
+Halbordnung, denn dort ist (F) leer, also ist `prop:atomicposet` der Spezialfall
+$|\T|<\infty$. Nicht enthalten ist keine der beiden anderen bewiesenen
+Aussagen: Ketten (Theorem 17) und Stufenstapel über unendlichen Ketten
+(Theorem 21) haben unendliche Höhe.
+
+### Proposition 23.1: wo das Zertifikat nicht existiert, und warum das die Methoden trennt
+
+Die Höhenhypothese ist nicht kosmetisch. Ohne sie existiert das Zertifikat
+nicht mehr, und zwar aus einem Grund, den man in zwei Zeilen sieht.
+
+> **Proposition 23.1.** Sei $\T=\{0\}\cup A\cup\{t^*\}$ mit $A$ einer Kette,
+> $0<a<t^*$ für alle $a\in A$, $m_0=m_{t^*}=0$ und $m_a>0$ auf $A$. Hat $A$
+> **weder ein kleinstes noch ein größtes Element**, so gibt es kein unendliches
+> Zertifikat an der Stelle $t^*$, in keiner Gewichtsklasse.
+
+*Beweis.* Bedingung 2 an $(s,u)=(t^*,a)$ mit $a\in A$ gibt
+$m_a\sum_{x>a}T_{t^*x}=m_{t^*}\sum_{x>t^*}T_{xa}=0$, also $\theta(\{x>a\})=0$
+für $\theta:=T_{t^*\cdot}$; dieselbe Rechnung an $(0,a)$ gibt
+$\eta(\{x>a\})=0$ für $\eta:=T_{0\cdot}$. Beide Familien sind absolut
+summierbar ($|\theta(x)|\le Cw_{t^*}w_x$ und $\sum_xw_x<\infty$). Aus
+$\theta(\{x>a\})=0$ für alle $a\in A$ folgt $\theta((a,a'])=0$ für $a<a'$ in
+$A$; hat $a'$ einen unmittelbaren Vorgänger in $A$, so ist $\theta(a')=0$,
+sonst gibt es $a_n\uparrow a'$ mit $a_n<a'$ und $\theta(a')
+=\lim_n\theta((a_n,a'])=0$ (dominierte Konvergenz). Da $A$ kein kleinstes
+Element hat, ist jedes $a'\in A$ von einer der beiden Sorten, also
+$\theta\equiv0$ auf $A$; da $A$ kein größtes Element hat, ist
+$\bigcap_{a\in A}\{x>a\}=\{t^*\}$ und ebenso $\theta(t^*)=0$. Wortgleich
+$\eta\equiv0$ auf $A\cup\{t^*\}$, insbesondere $T_{0t^*}=0$. Mit Bedingung 3
+an $s=t^*$ ist dann $1=\sum_x\theta(x)=\theta(0)=T_{t^*0}=T_{0t^*}=0$ —
+Widerspruch. $\square$
+
+Bei einer Kette vom Typ $\omega$ ($a_1<a_2<\dots<t^*$) greift das nicht: dort
+hat $A$ ein kleinstes Element, $\theta$ darf auf $a_1$ sitzen, und
+$T_{t^*a_1}=1$ ist in der Gewichtsklasse erlaubt. Die Sperre ist also genau die
+**Ordnungsdichte von unten**, und sie sitzt an derselben Stelle, an der der
+vierundzwanzigste Lauf $\|T\|_m\sim1/m_{\min}^2$ hat explodieren sehen: das
+Zertifikat will sein Gewicht auf dem kleinsten Atom tragen, und ein kleinstes
+Atom gibt es nicht. Probe (E) zeigt das in Reinform — auf jeder endlichen
+Trunkierung der dyadischen Uhr ist die Zeile $T_{t^*\cdot}$ **exakt**
+$e_{a_1}$, und die dafür nötige Konstante $1/m_{a_1}$ wächst über alle Grenzen.
+
+**Das trennt die beiden Methoden sauber.** Theorem 17 (Stieltjes-Transformation,
+zweiundzwanzigster Lauf) erledigt jede Kette, sieht aber keine
+Unvergleichbarkeit; Theorem 23 erledigt jede Höhe-$r$-Halbordnung, sieht aber
+keine unendliche Kette. Ihre blinden Flecken sind disjunkt, und **keine** der
+beiden ist ein Spezialfall der anderen.
+
+### Der Antikettenzeuge ist konsistent, und er zeigt genau die eine Umordnung
+
+Auf der Antikette des dreiundzwanzigsten Laufs ($\T=\{0\}\cup A\cup\{t^*\}$,
+$A$ unendliche Antikette, $\delta(t^*)=1/M\neq0$) ist $r=2$, das Zertifikat
+existiert (Theorem 20) und ist beschränkt, und (F) fällt aus. Theorem 22 muß
+also an genau einer der vier Abschätzungen scheitern — und man sieht, an
+welcher. Mit $T_{a_jt^*}=m_j/M$ und $T_{a_ia_j}=-m_im_j/M^2$ ist $TV$
+symmetrisch ($(TV)_{a_j,a_i}=m_im_j/M$), und
+
+$$\sum_j\Bigl(\sum_i(TV)_{a_ja_i}\kappa(a_i,a_j)\Bigr)=+\frac1M,\qquad
+  \sum_i\Bigl(\sum_j(TV)_{a_ja_i}\kappa(a_i,a_j)\Bigr)=-\frac1M,$$
+
+weil $\sum_im_i\kappa(a_i,a_j)=v_j=1/M$ für **jedes** $j$ (Theorem 19). Der
+Ausfall ist also weder der Bau des Zertifikats noch (S), sondern **die eine
+Umbenennung $\operatorname{tr}(SK)=-\operatorname{tr}(SK)$**, und die Differenz
+der beiden Summationsreihenfolgen ist exakt $2\delta(t^*)$. Schärfer kann man
+nicht sehen, was (F) kauft.
+
+### Gemessen
+
+`Task23/finite_height.py`, exakt in `Fraction`, Proben (A)–(E), rc=0.
+
+* **(A) Die Konstruktion auf Halbordnungen endlicher Höhe.** 30 zufällige
+  gestufte Halbordnungen ($L=2,3$ Ebenen, Breite $2..6$, zufällige
+  Aufwärtskanten, transitiv abgeschlossen, Massen $2^{-k}$), **sämtlich** mit
+  nicht transitiver Unvergleichbarkeit, also sämtlich außerhalb von Theorem 21:
+  $T$ symmetrisch, $T\mathbb 1=e_{t^*}$, $TV=V^{\mathsf T}T$ ausnahmslos,
+  $r\in\{3,4\}$ wie die Höhe es verlangt, und $T$ trägt in keinem Fall
+  außerhalb der Gewichte — $i^*$ liegt stets auf einem Punkt positiven
+  Gewichts.
+* **(B) Die Schranke bleibt beschränkt, wenn die Breite wächst.** Auf der
+  N-Leiter ($a_i<b_j\iff i<j$, Massen $\alpha^i,\beta^j$) und auf der Krone
+  ($a_i<b_j\iff i\neq j$) bleibt $r=3$ und
+  $C=\max_{s,u}|T_{su}|/(w_sw_u)$ konvergiert; die Zuwächse fallen, der letzte
+  gemessene beträgt $0{,}27\%$ bzw. $0{,}07\%$ bzw. $0{,}14\%$ von $C$ (Werte
+  $44{,}33$, $71{,}03$, $11{,}26$ bei Breite $12$). Kontrolle: auf der Kette
+  wächst $r$ mit der Länge mit — dort greift Theorem 23 nicht, und dort greift
+  Theorem 17.
+* **(C) Das Zertifikat auf der *unendlichen* Leiter, exakt und ohne
+  Grenzübergang.** Die Vektoren $p_k,\hat p_k,\psi_k$ werden auf
+  $\{0\}\cup\{a_i\}_{i\ge1}\cup\{b_j\}_{j\ge1}\cup\{t^*\}$ als geschlossene
+  geometrische Reihen geführt (Darstellung: Wert an $0$, Koeffizienten
+  $\sum c\,x^i$ auf den $a_i$, ebenso auf den $b_j$, Wert an $t^*$; die Klasse
+  ist unter $V$, $V^{\mathsf T}$ und Produkten abgeschlossen, alle Reihen
+  werden in geschlossener Form summiert). Befund für $\alpha=\tfrac12$,
+  $\beta=\tfrac13$: $r=3$, $(V^2\mathbb 1)_{t^*}=\tfrac1{10}$, $i^*=t^*$;
+  $T$ ist symmetrisch, erfüllt $T\mathbb 1=e_{t^*}$ mit in geschlossener Form
+  summierten Zeilensummen und $TV=V^{\mathsf T}T$ an allen Paaren der ersten
+  $18$ Punkte, und $\sup|T_{su}|/(w_sw_u)=19{,}7\overline{2}$ (unnormiert,
+  $M=\tfrac32$; auf $M=1$ normiert $44{,}375$) wird auch tief drinnen
+  ($i,j\le25$) nicht überboten. Die endlichen Zertifikate der Breiten
+  $8,12,16,20$ steigen monoton dagegen: $43{,}78$, $44{,}334$, $44{,}3724$,
+  $44{,}37484$, Abstand $6\cdot10^{-1}\to1{,}6\cdot10^{-4}$. Zwei unabhängige
+  Implementierungen, ein Wert.
+* **(D) Der Antikettenzeuge.** $v_j=1/M$ für $j=1..24$ mit exakten Schwänzen
+  nachgerechnet; die beiden Summationsreihenfolgen von
+  $\operatorname{tr}((TV)K)$ ergeben bei außen abgeschnittener, innen
+  vollständiger Summation exakt $\pm(1-\sigma_{N+1}/M)/M$, also im Limes
+  $+1/M$ und $-1/M$; für drei Massenfolgen ($2^{-i}$, $1/(i(i+1))$, $3^{-i}$)
+  und $N=10,40,80$.
+* **(E) Proposition 23.1 an der dyadischen Uhr.** Auf den Trunkierungen der
+  Level $1..6$ ist die Zeile $T_{t^*\cdot}$ **exakt** $e_{a_1}$ — Eintrag $1$
+  auf dem ordnungskleinsten Atom, Rest der Zeile identisch null —, und die
+  nötige Konstante $1/m_{a_1}$ läuft $1,\,10,\,84,\,680,\,5456,\,43680$. Der
+  Beweis von Proposition 23.1 in der Messung.
+
+### Was jetzt offen ist, exakt
+
+* **Die Halbordnung unendlicher Höhe mit nicht transitiver Unvergleichbarkeit.**
+  Die kleinste Gestalt: zwei $\omega$-Ketten $a_1<a_2<\dots$ und
+  $b_1<b_2<\dots$ mit Querrelationen, die keinen Stufenstapel bilden, etwa
+  $a_i<b_j\iff i<j$. Theorem 17 sieht die Unvergleichbarkeit nicht, Theorem 21
+  die Nichttransitivität nicht, Theorem 23 die unendliche Höhe nicht.
+* **Der benannte Weg dorthin, und er ist konkret: das Momentenproblem.** Für
+  $r=\infty$ bricht an genau einer Stelle etwas — $\lambda$ kommt aus
+  $V^{r-1}$, das es nicht gibt. Alles andere überlebt, denn das Problem ist in
+  $m$ **homogen** ($m\mapsto cm$ gibt $\Psi\mapsto c\Psi$,
+  $\delta\mapsto c\delta$, $(\diamondsuit)$ und (F) bleiben stehen), man darf
+  also $M<1$ annehmen, und dann konvergiert $\sum_kV^k$ als Operator auf
+  $\ell^1$. Ist $\mathbb 1$ zyklisch, so ist ein $T$ mit $TV=V^{\mathsf T}T$
+  und $T\mathbb 1=e_t$ dasselbe wie eine Hankelform
+  $B(V^k\mathbb 1,V^l\mathbb 1)=c_{k+l}$ mit $c_k=(V^k\mathbb 1)_t$ und
+  $0\le c_k\le M^k$; zu zeigen ist ihre Beschränktheit in der Gewichtsnorm,
+  hinreichend dafür, daß $(c_k)$ eine Momentenfolge auf $[0,M]$ ist. Das ist
+  zugleich die Brücke zu Theorem 17, dessen
+  $W^c(a)=\prod_{a'>a}(1+cm_{a'})$ nichts anderes als eine Resolvente von $V$
+  ist — und Proposition 23.1 sagt voraus, wo diese Brücke reißen muß.
+* **Die nackte Klasse auf Ketten**, unverändert offen (zweiundzwanzigster Lauf).
+* **Ein Gegenbeispiel mit durchweg positiven Abwärtsmassen**, unverändert offen
+  (dreiundzwanzigster Lauf, Proposition 19.2).
+
+### Sackgassen, dreiundzwanzigster Nachtrag
+
+* **Die Ausschöpfung für den einzigen Zugang zum Zertifikatsargument halten.**
+  Der elfte bis vierundzwanzigste Lauf haben Zertifikate auf endlichen
+  Ausschnitten gebaut und nach gleichmäßigen Schranken gesucht; vier Normen,
+  vier Ausfälle. Unter der Höhenhypothese läßt sich das Zertifikat **direkt auf
+  dem unendlichen Objekt** hinschreiben, und dann ist keine Gleichmäßigkeit zu
+  zeigen, weil es keine Folge gibt. Zum fünften Mal dieselbe Lehre wie beim
+  Kompaktheitsargument (siebzehnter Lauf), bei (H) (zwanzigster), bei der
+  Einschrittrelation (zweiundzwanzigster) und bei der Endlichkeit
+  (dreiundzwanzigster): eine Prämisse, die aus der Rechnung stammt statt aus
+  dem Beweisbedarf — hier „endliches System plus Grenzübergang".
+* **$\|T\|_m$ auf Ketten für ein Urteil über Halbordnungen halten.** Der
+  vierundzwanzigste Lauf hat die Ausschöpfung an der ordnungsdichten **Kette**
+  scheitern sehen und daraus „die Methode ist erledigt" gelesen. Richtig ist
+  der schwächere Satz: auf Ketten ohne kleinstes Atom gibt es kein Zertifikat
+  (Proposition 23.1) — und Ketten sind genau der Fall, in dem eine andere
+  Methode längst schließt. Wer eine Methode an der Instanz mißt, auf der eine
+  zweite ohnehin trägt, mißt am falschen Ort.
+* **Das unendliche Zertifikat für ein Grenzobjekt der endlichen halten.** Es ist
+  keines. Auf der Leiter stimmen die beiden Wege überein (Proben (B) und (C),
+  Faktor $M^2$), aber der Beweis von Theorem 23 benutzt die endlichen
+  Ausschnitte nirgends — und auf der ordnungsdichten Kette **existiert** der
+  Limes der endlichen Zertifikate nicht, obwohl jedes einzelne existiert
+  (Probe (E)).
