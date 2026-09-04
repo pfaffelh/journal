@@ -3966,3 +3966,84 @@ Gerüst in Mathlib schon liegt: `Antisymmetrization`
 `toAntisymmetrization_lt_toAntisymmetrization_iff` (`:322`) sind genau die
 Stufenkette — am 2026-09-04 gegen `upstream/master` geprüft —, so daß nur der
 Transport der Uhr und des Kerns neu ist.
+
+
+### Lauf vom 2026-09-04 (fünfundzwanzigster Task-23-Lauf): das unendliche Zertifikat
+
+Das Inventar ist geschlossen, der Rückstau steht auf Punkt 1 (Task 23). Der
+vierundzwanzigste Lauf hatte genau eine Frage hinterlassen — die Halbordnung
+mit **nicht transitiver** Unvergleichbarkeit unter (F), kleinste Gestalt ein
+unendliches „N" — und dazu den Befund, die Ausschöpfung sei als Methode
+erledigt. Beides ist bearbeitet, und der zweite Befund war zu weit gefaßt.
+
+**Bearbeitet.** Task 23, der Halbordnungsfall.
+
+**Der Befund, in drei Sätzen.** Der Umweg von elf Läufen war nicht die falsche
+Norm, sondern der Grenzübergang: man baut Zertifikate auf endlichen
+Ausschnitten und hofft auf gleichmäßige Schranken. Schreibt man das Zertifikat
+**direkt auf der unendlichen Halbordnung** hin — symmetrisches $T$ mit
+$|T_{su}|\le Cw_sw_u$ bei $w=m+\mathbb 1_Z$ und endlichem $Z$, dazu
+$TV=V^{\mathsf T}T$ und $T\mathbb 1=e_t$ —, so konvergieren unter (F) alle vier
+auftretenden Reihen absolut, und der Zweizeiler des sechsten Laufs geht wörtlich
+durch (**Theorem 22**); und die Formel des sechsten Laufs liefert ein solches
+$T$, sobald $V^r=0$ ist, also sobald die Ketten aus Atomen positiver Masse
+beschränkte Länge haben (**Theorem 23**, mit
+$\|V^{\mathsf T}x\|_1\le M\|x\|_1$ und $|(V^{\mathsf T}x)_c|\le m_c\|x\|_1$ als
+ganzer Zusatzarbeit). Also gilt die Dualität unter (F) auf **jeder abzählbaren
+Halbordnung endlicher Höhe**, bei beliebiger Unvergleichbarkeit und beliebig,
+auch unendlich breiten Ebenen (Korollar 23.2) — das unendliche „N", die Krone
+$a_i<b_j\iff i\neq j$, die Leiter $a_i<b_j\iff i<j$, und die unendliche
+Antikette als Fall $r=2$.
+
+**Die Grenze, und sie trennt die Methoden.** Auf einer Kette, deren Atommenge
+weder ein kleinstes noch ein größtes Element hat, existiert **kein** solches
+$T$ (**Proposition 23.1**, zwei Zeilen: das Zertifikat müßte sein ganzes
+Gewicht auf dem kleinsten Atom tragen). Dort trägt Theorem 17. Die beiden
+Methoden — Stieltjes-Transformation für Ketten, Zertifikat für endliche Höhe —
+haben also **disjunkte blinde Flecken**, und keine ist ein Spezialfall der
+anderen. Damit ist auch der Satz des vierundzwanzigsten Laufs, „die
+Ausschöpfung ist als Methode erledigt", auf sein richtiges Maß gebracht: er
+gilt für Ketten, und Ketten sind der eine Fall, in dem eine zweite Methode
+ohnehin schließt.
+
+**Verifiziert.** `Task23/finite_height.py` (Proben (A)–(E), exakt in
+`Fraction`, rc=0): die Konstruktion auf 30 zufälligen Halbordnungen endlicher
+Höhe, sämtlich mit nicht transitiver Unvergleichbarkeit; die Beschränktheit von
+$C=\max|T_{su}|/(w_sw_u)$ bei wachsender Breite; das Zertifikat auf der
+**unendlichen** Leiter, exakt und ohne Grenzübergang, mit in geschlossener Form
+summierten Zeilen (zwei unabhängige Implementierungen, ein Wert $44{,}375$);
+der Antikettenzeuge, dessen $\operatorname{tr}((TV)K)$ je nach
+Summationsreihenfolge $+1/M$ oder $-1/M$ ist; und Proposition 23.1 an der
+dyadischen Uhr, wo die Zeile $T_{t^*\cdot}$ exakt $e_{a_1}$ ist und die nötige
+Konstante $1/m_{a_1}$ über alle Grenzen wächst. Einzelheiten in
+`Task23/PROTOKOLL.md`, fünfundzwanzigster Lauf.
+
+**Offen geblieben.** Die Halbordnung **unendlicher** Höhe mit nicht transitiver
+Unvergleichbarkeit (kleinste Gestalt: zwei $\omega$-Ketten mit
+$a_i<b_j\iff i<j$), die nackte Klasse auf Ketten und das Gegenbeispiel mit
+durchweg positiven Abwärtsmassen. Der Weg zum ersten ist benannt und konkret:
+das Problem ist in $m$ homogen, also darf $M<1$ angenommen werden,
+$\sum_kV^k$ konvergiert auf $\ell^1$, und ein Zertifikat ist bei zyklischem
+$\mathbb 1$ dasselbe wie eine Hankelform $B(V^k\mathbb 1,V^l\mathbb 1)=c_{k+l}$
+mit $c_k=(V^k\mathbb 1)_t\in[0,M^k]$; zu zeigen ist ihre Beschränktheit in der
+Gewichtsnorm.
+
+**Vorschlag, was als Nächstes formalisiert wird, als benanntes Ziel.**
+`duality_of_atomic_finiteHeight_of_integrable` samt seinen drei Vorstufen
+`Clock.IsAtomCertificate`, `atomDiag_eq_zero_of_isAtomCertificate` und
+`exists_isAtomCertificate_of_finiteHeight` — die Dualität für eine rein atomare
+Uhr, deren Atome unter $t^*$ **beschränkte Kettenlänge** haben, unter
+$m\otimes m$-Integrierbarkeit von $\gamma$ auf Atompaaren. Sie ruht auf
+\eqref{eq:incrementrep}, auf den vier Matrizenaussagen des sechsten Laufs
+(`trace_mul_eq_zero_of_isSymm_of_transpose_eq_neg`,
+`trace_mul_eq_dotProduct_diag_of_isSymm`,
+`exists_isSymm_mulVec_one_eq_single`, `mulVec_one_eq_zero_iff_of_nonneg`) und
+auf zwei Anwendungen von `Summable.tsum_comm`. Sie ist jetzt dran und nicht
+mehr `duality_of_atomic_weakOrder_of_integrable`, aus zwei Gründen: sie ist die
+**erste** Aussage der Roadmap, die Halbordnungen erreicht, die keine schwachen
+Ordnungen sind, und sie braucht von der Ordnungstheorie **nichts** — keine
+`Antisymmetrization`, keine Stufenkette, keinen Transport der Uhr —, sondern
+nur die vier Matrizenaussagen, die ohnehin für `duality_of_atomic` zu
+formalisieren sind, plus die eine $\ell^1$-Abschätzung
+$|(V^{\mathsf T}x)_c|\le m_c\|x\|_1$. Der Weg von `duality_of_atomic` dorthin
+ist damit der kürzeste im ganzen Meilenstein 8.

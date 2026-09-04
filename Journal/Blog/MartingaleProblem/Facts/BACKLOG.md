@@ -355,6 +355,42 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `atomLayerKernel_rel` und `duality_of_atomic_weakOrder_of_integrable` in
    `MartingaleProblems` Meilenstein 8.
 
+   *Zwischenstand 2026-09-04, fünfundzwanzigster Lauf: die Halbordnung mit
+   nicht transitiver Unvergleichbarkeit fällt bei **endlicher Höhe**, und die
+   Ausschöpfung war nie der Weg dorthin.* Statt Zertifikate auf endlichen
+   Ausschnitten zu bauen und auf gleichmäßige Schranken zu hoffen, schreibt
+   man das Zertifikat **direkt auf der unendlichen Halbordnung** hin: ein
+   symmetrisches $T$ mit $|T_{su}|\le Cw_sw_u$ ($w=m+\mathbb 1_Z$, $Z$
+   endlich), $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_t$ schließt unter (F),
+   weil die vier auftretenden Reihen absolut konvergieren und der Zweizeiler
+   des sechsten Laufs dann wörtlich durchgeht (**Theorem 22**). Und die Formel
+   des sechsten Laufs liefert ein solches $T$, sobald $V^r=0$ ist, also sobald
+   die Ketten aus Atomen positiver Masse beschränkte Länge haben — die
+   Schranke ist eine Zeile, $\|V^{\mathsf T}x\|_1\le M\|x\|_1$ und
+   $|(V^{\mathsf T}x)_c|\le m_c\|x\|_1$ (**Theorem 23**). Damit gilt die
+   Dualität unter (F) auf **jeder abzählbaren Halbordnung endlicher Höhe**,
+   bei beliebiger, insbesondere nicht transitiver Unvergleichbarkeit und
+   beliebig breiten Ebenen (Korollar 23.2): das unendliche „N", die Krone, die
+   Leiter, und die Antikette als Fall $r=2$. Die Grenze ist scharf und benannt:
+   auf einer Kette ohne kleinstes und ohne größtes Element existiert **kein**
+   solches $T$ (**Proposition 23.1**) — dort trägt Theorem 17, und die beiden
+   Methoden haben disjunkte blinde Flecken. Wer den Punkt aufnimmt, hat die
+   Halbordnung **unendlicher** Höhe mit nicht transitiver Unvergleichbarkeit
+   (kleinste Gestalt: zwei $\omega$-Ketten mit $a_i<b_j\iff i<j$), und der
+   Weg steht da: das Problem ist in $m$ homogen, also darf man $M<1$ annehmen,
+   $\sum_kV^k$ konvergiert auf $\ell^1$, und ein Zertifikat ist bei
+   zyklischem $\mathbb 1$ dasselbe wie eine **Hankelform**
+   $B(V^k\mathbb 1,V^l\mathbb 1)=c_{k+l}$ mit $c_k=(V^k\mathbb 1)_t$,
+   $0\le c_k\le M^k$ — zu zeigen ist ihre Beschränktheit, hinreichend dafür
+   ist, daß $(c_k)$ eine Momentenfolge auf $[0,M]$ ist. `Task23/PROTOKOLL.md`,
+   fünfundzwanzigster Lauf; `Task23/finite_height.py` (Proben (A)–(E), exakt,
+   rc=0); Roadmapeinträge `Clock.IsAtomCertificate`,
+   `atomDiag_eq_zero_of_isAtomCertificate`,
+   `exists_isAtomCertificate_of_finiteHeight`,
+   `duality_of_atomic_finiteHeight_of_integrable` und
+   `not_exists_isAtomCertificate_of_denseChain` in `MartingaleProblems`
+   Meilenstein 8.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

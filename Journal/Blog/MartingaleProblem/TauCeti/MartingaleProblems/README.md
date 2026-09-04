@@ -656,20 +656,23 @@ order.
   `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless`,
   `duality_of_mixed`, `duality_of_atomic_intervalFinite`,
   `duality_of_atomic_twoChains_of_bounded`,
-  `duality_of_atomic_blockStack_of_bounded` and
-  `duality_of_atomic_weakOrder_of_integrable` this covers every clock that is
+  `duality_of_atomic_blockStack_of_bounded`,
+  `duality_of_atomic_weakOrder_of_integrable` and
+  `duality_of_atomic_finiteHeight_of_integrable` this covers every clock that is
   atomless, or has finitely many atoms below the point in question, or is mixed
   with finitely many atoms there, or whose atoms below the point form an
   interval-finite chain, or a discrete chain with interval-finite block
   quotient and `Φ` bounded, or a totally preordered set of atoms — a chain, an
   antichain, or any stack of antichains — with `γ` integrable for `m ⊗ m` on
-  atom pairs. The last of the seven asks nothing of the order type and
-  everything of the density; the two before it ask nothing of the density and
-  something of the order type or of the value `Φ`. What none of the seven
-  reaches is a set of atoms whose incomparability is not transitive, or a chain
-  carrying a `γ` that is neither `m ⊗ m`-integrable nor attached to a bounded
-  `Φ`. Where incomparability is transitive the finiteness is not a convenience
-  of the matrix proof but a hypothesis of the statement:
+  atom pairs, or an arbitrary poset of bounded chain length with the same
+  integrability. The last two of the eight ask nothing of the order type and
+  everything of the density; the ones before them ask nothing of the density
+  and something of the order type or of the value `Φ`. What none of the eight
+  reaches is a set of atoms of unbounded chain length whose incomparability is
+  not transitive, or a chain carrying a `γ` that is neither `m ⊗ m`-integrable
+  nor attached to a bounded `Φ`. Where incomparability is transitive the
+  finiteness is not a convenience of the matrix proof but a hypothesis of the
+  statement:
   `exists_atomic_antichain_duality_ne` produces infinitely many incomparable
   atoms of positive summable mass on which the conclusion fails, and
   `duality_of_atomic_weakOrder_of_integrable` is what survives there.
@@ -983,6 +986,70 @@ order.
   on atom pairs is the readable sufficient condition for the integrability,
   and it is a hypothesis on the density and not on the value, so this item and
   `duality_of_atomic_twoChains_of_bounded` are incomparable.
+* `Clock.IsAtomCertificate`: for a purely atomic clock `q` with atom masses
+  `m : T → ℝ≥0` of finite total mass `M`, a finite `Z : Finset T`, weights
+  `w s = m s + (if s ∈ Z then 1 else 0)` and a point `t`, the predicate on
+  `T : T → T → ℝ` given by: `T` is symmetric, `∃ C, ∀ s u, |T s u| ≤ C * w s * w u`,
+  `m u * ∑' a, (if u < a then T s a else 0) = m s * ∑' a, (if s < a then T a u else 0)`
+  for all `s, u`, and `∑' a, T s a = if s = t then 1 else 0`. It is the
+  transcription of "`T` symmetric, `T * V` symmetric, `T *ᵥ 1 = single t 1`"
+  from `atomPoset_certificate` to a countable atom set, with the one bound that
+  licenses the rearrangements.
+* `atomDiag_eq_zero_of_isAtomCertificate`: let `κ : T → T → ℝ` be antisymmetric
+  with `∑' (a, b), m a * m b * |κ a b| < ∞` and `∑' b, m b * |κ b z| < ∞` for
+  every `z ∈ Z`, put `Ψ s u = ∑' a < s, m a * κ a u`, and assume
+  `Ψ s u + Ψ u s = Ψ s s + Ψ u u` at every pair. If `Clock.IsAtomCertificate`
+  holds at `t`, then `Ψ t t = 0`. The proof is `atomPoset_certificate`'s two
+  lines with `Summable.tsum_comm` in front of each: the triple sum
+  `∑' (s, a, b), |T s a| * (if b < a then m b else 0) * |κ b s|` is bounded by
+  `C * (M + Z.card) * (∑' s, m s * ρ s + ∑' z ∈ Z, ρ z)` with
+  `ρ s = ∑' b, m b * |κ b s|`, so `trace (T * (V * K)) = trace ((T * V) * K)`;
+  the first equals `Ψ t t` by the relation and `∑' u, T s u = if s = t then 1 else 0`,
+  the second vanishes because `T * V` is symmetric and `K` antisymmetric.
+  Integrability enters only as the licence for two relabellings, and
+  `exists_atomic_antichain_duality_ne` is the witness that it cannot be
+  dropped: there the certificate exists and is bounded, and the two orders of
+  summation of `trace ((T * V) * K)` differ by twice the duality defect.
+* `exists_isAtomCertificate_of_finiteHeight`: if there is an `r` such that no
+  chain `c 0 < c 1 < ⋯ < c r` of atoms has `m (c i) ≠ 0` for `i < r` — the
+  entries of the `r`-th power of `V s a = if a < s then m a else 0` are the
+  sums of `m (c 0) * ⋯ * m (c (r-1))` over chains, all nonnegative, with row
+  sums at most `M ^ r` — then for every `t` there are a `Z` of at most two
+  points and a `T` with `Clock.IsAtomCertificate`. Take
+  `u = V ^ (r-1) *ᵥ 1`, nonzero because a nonnegative matrix with vanishing
+  row sums is zero (`mulVec_one_eq_zero_iff_of_nonneg`, unchanged for a
+  countable index because the row sums converge), pick `i✶` with `u i✶ ≠ 0`
+  and build `T` by the formula of `exists_isSymm_mulVec_one_eq_single`. The
+  bound is the only new step and is one line: `(Vᵀ *ᵥ x) c = m c * ∑' s > c, x s`
+  gives `‖Vᵀ *ᵥ x‖₁ ≤ M * ‖x‖₁` and `|(Vᵀ *ᵥ x) c| ≤ m c * ‖x‖₁`, so every
+  vector entering the formula is `ℓ¹` and dominated by `w` except for the two
+  seeds `single t 1` and `single i✶ (u i✶)⁻¹`, which is what `Z = {t, i✶}` is
+  for.
+* `duality_of_atomic_finiteHeight_of_integrable`: with `Φ, γ` as in
+  `chain_identity` and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` such that
+  the atoms below `t` have **bounded chain length**, and `γ` integrable for
+  `m ⊗ m` on pairs of atoms below `t`, one has `Φ t 0 = Φ 0 t`. Compose the
+  previous two items on `κ = γ - γ.swap`. Nothing is asked of the
+  incomparability: it need not be transitive, so this is the first item that
+  reaches posets which are not weak orders, and the layers may be infinite.
+  It contains `duality_of_atomic_antichain_of_integrable` as the case `r = 2`
+  and `duality_of_atomic` as the case of a finite atom set, where the
+  integrability is vacuous. It is incomparable with
+  `duality_of_atomic_chain_of_integrable` and with
+  `duality_of_atomic_weakOrder_of_integrable`, both of which live on atom sets
+  of unbounded chain length.
+* `not_exists_isAtomCertificate_of_denseChain`: on `T = {0} ∪ A ∪ {t}` with `A`
+  a chain having neither a least nor a greatest element, `m 0 = m t = 0` and
+  `m` strictly positive on `A`, there is no `T` with `Clock.IsAtomCertificate`
+  at `t`, for any `Z`. The relation at `(t, a)` gives `θ (Ioi a) = 0` for
+  `θ = T t ·` and the relation at `(0, a)` gives the same for `η = T 0 ·`,
+  both `ℓ¹` by the bound; absence of a least element makes `θ` and `η` vanish
+  on `A` — at an `a` with an immediate predecessor by differencing, elsewhere
+  by dominated convergence along `aₙ ↑ a` — and absence of a greatest element
+  makes them vanish at `t`, so `1 = ∑' x, θ x = θ 0 = T t 0 = T 0 t = 0`. The
+  certificate method therefore stops exactly where
+  `duality_of_atomic_chain_of_integrable` takes over, and the two are
+  genuinely different tools: neither hypothesis implies the other.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.
