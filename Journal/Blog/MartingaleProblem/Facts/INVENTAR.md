@@ -3866,3 +3866,103 @@ festlegt, in der die allgemeine unendliche Halbordnung anzugehen ist. Sie
 steht seit diesem Lauf in `MartingaleProblems` Meilenstein 8, zusammen mit
 `exists_atomic_antichain_duality_ne`, dem Gegenbeispiel als eigener
 Formalisierungsaufgabe.
+
+### 2026-09-04 (zweiter Teil) — Task 23, vierundzwanzigster Lauf: die Ausschöpfung ist gemessen und erledigt, und die Halbordnung fällt unter (F), sobald ihre Unvergleichbarkeit transitiv ist
+
+Das Inventar ist geschlossen und die vorrangigen Aufgaben sind leer; gearbeitet
+wurde am ersten Punkt des Rückstaus, also an Task 23, und zwar an genau der
+Rechnung, die der dreiundzwanzigste Lauf aufgegeben hatte.
+
+**Die Messung.** $\|T\|_m=\max_{s,t}|T_{st}|/(w_sw_t)$ — Gewichte $w_a=m_a$ an
+den Atomen und $w=1$ an den beiden massefreien Punkten $0$ und $t^*$, alles auf
+$M=1$ normiert, weil $\|T\|_m$ anders als $\|T\|_F$ **nicht** skaleninvariant
+ist — für das explizite Zertifikat des sechsten Laufs, exakt in `Fraction`,
+in `Task23/certificate_m.py`; die Konstruktion selbst ist an $70\,956$ Fällen
+(alle Halbordnungen auf vier Punkten, Massen aus $\{0,1,2\}$, jedes $t$)
+nachgeprüft. Drei Befunde:
+
+* **Die Antikette schafft es, gleichmäßig.** $\|T\|_m=1$ für jedes $|A|$ und
+  beide gemessenen Massenprofile, und die Formel ist geschlossen:
+  $T=\frac1M(e_{t^*}\mu^{\mathsf T}+\mu e_{t^*}^{\mathsf T})
+  -\frac1{M^2}\mu\mu^{\mathsf T}$ mit $\mu=m|_A$ (Theorem 20, bewiesen). Damit
+  schließt Proposition 19.3 die abzählbare Antikette unter (F) — dieselbe
+  Aussage wie Proposition 19.1, aber ohne Fubini und über die Ausschöpfung.
+* **Die ordnungsdichte Uhr schafft es nicht, und der Ausfall trifft die
+  Methode.** Auf der dyadischen Uhr (Atome $k/2^j$, Masse $4^{-j}$) ist
+  $\|T\|_m$ exakt $\bigl(2^{n-1}(2^n-1)\bigr)^2=1/m_{\min}^2$, also
+  $\varepsilon_{F_n}\|T\|_m\sim8^n\to\infty$. Diese Uhr ist eine **Kette**, und
+  auf Ketten gibt Theorem 17 des zweiundzwanzigsten Laufs die Konklusion unter
+  (F) längst — Proposition 19.3 scheitert also an einer Instanz, deren
+  Wahrheit feststeht. Die Ausschöpfung ist damit als Beweisvehikel erledigt,
+  in der vierten Norm nach Frobenius, linear und quadratisch. Der Grund ist
+  struktureller Art: eine auf ganz $A$ fallende Massenfunktion auf einer
+  ordnungsdichten Menge ist nicht summierbar, steigende Profile sind
+  unvermeidlich, und sie sind es, die $\|T\|_m$ sprengen.
+* **Die „freie Wahl innerhalb von $\mathcal L$" ist ausgenutzt und wertlos.**
+  37 lineare Programme (Minimum von $\|\cdot\|_m$ über *alle* Zertifikate)
+  geben durchweg genau den Wert des expliziten Zertifikats, Verhältnis $1.00$,
+  auch dort, wo der Lösungsraum groß ist ($\dim\{T=T^{\mathsf T},
+  TV=V^{\mathsf T}T, T\mathbb 1=0\}$ ist $1$ auf Ketten und wächst quadratisch
+  auf Antiketten).
+
+**Der Ertrag steht daneben.** Auf gestuften Halbordnungen hängt $\|T\|_m$ nur
+von der Folge der Stufenmassen ab — nicht von der Breite der Stufen und nicht
+von der Verteilung innerhalb einer Stufe, exakt gleiche Brüche für Breite
+$1,2,3$ und für die Aufteilungen $(\tfrac12,\tfrac12)$,
+$(\tfrac9{10},\tfrac1{10})$, $(\tfrac{99}{100},\tfrac1{100})$, während
+$\|T\|_F$ sich ändert. Das ist eine Hebung von Zertifikaten (Lemma 21.1) —
+und dahinter steckt eine Mittelung der **Daten**, die Proposition 19.3 gar
+nicht mehr braucht:
+
+> **Theorem 21 (Stufenmittelung).** Sei $\T$ eine abzählbare schwache Ordnung
+> (totale Präordnung; äquivalent: die Unvergleichbarkeit ist transitiv;
+> äquivalent: $\T$ ist ein Stapel von Antiketten), $m\ge0$ summierbar,
+> $\kappa$ antisymmetrisch mit $(\diamondsuit)$ an jedem **vergleichbaren**
+> Paar und $\sum_{a,b}m_am_b|\kappa(a,b)|<\infty$. Dann erfüllt der
+> stufengemittelte Kern $\widetilde\kappa$ auf der Stufenkette $(\diamondsuit)$
+> und (F), es ist $\widetilde\delta(j)=\mathbb E_{\pi_j}[\delta]$, und mit
+> Theorem 17 folgt $\delta(t^*)=0$, sobald $t^*$ allein in seiner Stufe steht.
+
+Das enthält Theorem 17 (lauter einelementige Stufen) und Proposition 19.1
+(eine einzige Stufe) als die beiden Extremfälle, erlaubt abzählbar unendliche
+Stufen und beliebige Massenverteilung darin, und es ist bewiesen, nicht
+gemessen. Die Grenze ist scharf benannt: beim „N" ($0<a,b$, $a<c$, $b$
+unvergleichbar zu $c$ und zu $a$) hängt $\T_{<s}$ nicht mehr nur von der Stufe
+ab, und die Mittelung hat keinen Gegenstand. Konsistenz mit Theorem 19: das
+Gegenbeispiel des dreiundzwanzigsten Laufs lebt auf einer Antikette, also auf
+einer schwachen Ordnung, und verletzt genau (F).
+
+Alles im `Task23/PROTOKOLL.md`, vierundzwanzigster Lauf; Rechnungen in
+`Task23/certificate_m.py` (Läufe `verify`, `chains`, `dyadic`, `antichain`,
+`posets`, `graded`, `graded2`, `scrambled`, `free`, `lp`) und
+`Task23/weakorder.py` (Proben (A)–(E), exakt, rc=0). Neu in
+`MartingaleProblems` Meilenstein 8: `Clock.atomLayers`,
+`Clock.atomLayerKernel`, `atomLayerKernel_increment_eq`, `atomLayerKernel_rel`
+und `duality_of_atomic_weakOrder_of_integrable`; die Aufzählung im Punkt
+`duality_of_atomic` nennt jetzt den schwach geordneten Fall statt des reinen
+Kettenfalls, weil jener diesen enthält.
+
+**Was offen blieb.** Die Halbordnung mit **nicht** transitiver
+Unvergleichbarkeit — das ist der ganze Rest der Halbordnungsfrage, kleinste
+Gestalt ein unendliches „N"-Muster. Dazu unverändert die nackte Klasse auf
+Ketten und die Frage nach einem Gegenbeispiel mit durchweg positiven
+Abwärtsmassen. Nicht angefaßt wurde das Manuskript.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`duality_of_atomic_weakOrder_of_integrable` samt seiner drei Vorstufen
+`Clock.atomLayers`, `Clock.atomLayerKernel` und `atomLayerKernel_rel` — die
+Dualität für eine rein atomare Uhr, deren Atome unter $t^*$ **total
+präordnet** sind, unter $m\otimes m$-Integrierbarkeit von $\gamma$ auf
+Atompaaren. Sie ruht auf \eqref{eq:incrementrep}, auf
+`duality_of_atomic_chain_of_integrable` und auf zwei Anwendungen von
+`Summable.tsum_comm`; ihr Beweis steht als Theorem 21 fertig da. Sie ist jetzt
+dran und nicht mehr `duality_of_atomic_antichain_of_integrable`, weil sie
+dieses **und** den Kettenfall unter derselben Hypothese enthält und weil ihr
+Gerüst in Mathlib schon liegt: `Antisymmetrization`
+(`Order/Antisymmetrization.lean:125`), `toAntisymmetrization` (`:131`),
+`instPartialOrderAntisymmetrization` (`:263`), die `LinearOrder`-Instanz unter
+`[@Std.Total α (· ≤ ·)]` (`:308`) und die Transportlemmata
+`toAntisymmetrization_le_toAntisymmetrization_iff` (`:317`) und
+`toAntisymmetrization_lt_toAntisymmetrization_iff` (`:322`) sind genau die
+Stufenkette — am 2026-09-04 gegen `upstream/master` geprüft —, so daß nur der
+Transport der Uhr und des Kerns neu ist.

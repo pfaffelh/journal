@@ -3839,3 +3839,236 @@ nie ausgenutzt worden.
 * **Die Antikette für den harmlosen Fall halten.** Sie ist im Endlichen die
   „flache Spitze" mit einem Zweizeilenbeweis (fünfter Lauf), und genau dieser
   Zweizeilenbeweis ist Fubini — er fällt im Unendlichen als erstes.
+
+## Die Stufenmittelung, 2026-09-04 (vierundzwanzigster Lauf): Proposition 19.3 ist gemessen — sie schließt die Antikette und scheitert am ordnungsdichten Kern; und die Halbordnung fällt unter (F), sobald ihre Unvergleichbarkeit transitiv ist
+
+Der dreiundzwanzigste Lauf hat genau eine Rechnung aufgegeben: $\|T\|_m$ für
+das explizite Zertifikat des sechsten Laufs, auf den Familien von
+`Task23/dense.py`. Sie ist gemacht (`Task23/certificate_m.py`, exakt in
+`Fraction`, die Konstruktion an $70\,956$ Fällen nachgeprüft), und sie ist
+dreifach ausgefallen:
+
+* **positiv** auf der Antikette — $\|T\|_m$ ist dort *gleichmäßig* $1$, mit
+  geschlossener Formel (Theorem 20), und Proposition 19.3 gibt daraus
+  Proposition 19.1 ohne Fubini;
+* **negativ** auf der ordnungsdichten Uhr — $\|T\|_m$ explodiert wie
+  $1/m_{\min}^2$, und zwar auf einer **Kette**, wo die Behauptung seit dem
+  zweiundzwanzigsten Lauf ein Satz ist; getroffen ist also die Methode, nicht
+  die Aussage, und zwar zum vierten Mal (Frobenius, linear, quadratisch,
+  jetzt massegewichtet);
+* **entschieden** in der Nebenfrage: das explizite Zertifikat ist unter allen
+  Zertifikaten $\|\cdot\|_m$-**optimal** (37 lineare Programme, Verhältnis
+  $1.00$ durchweg). Die „freie Wahl innerhalb von $\mathcal L$, die noch nie
+  ausgenutzt wurde", ist damit ausgenutzt und wertlos.
+
+Der eigentliche Ertrag des Laufs steht aber nicht in der Messung, sondern in
+dem, was sie sichtbar gemacht hat: eine **Breiteninvarianz**, die sich als
+Mittelungssatz entpuppt und die unendliche Halbordnung unter (F) für eine
+große Klasse schließt — Theorem 21, `Task23/weakorder.py` (Proben (A)–(E),
+exakt, rc=0).
+
+### Die Messung, und was sie genau misst
+
+Gewichte $w_a=m_a$ für Atome und $w_s=1$ für die beiden massefreien Punkte
+$0$ und $t^*$ (die weitere Klasse der zweiten Randbemerkung des
+dreiundzwanzigsten Laufs), $\|T\|_m=\max_{s,t}|T_{st}|/(w_sw_t)$, durchweg
+auf $M=1$ normiert — anders als $\|T\|_F$ ist $\|T\|_m$ **nicht**
+skaleninvariant, und die Schranke von Proposition 19.3 lautet
+$4M\|T\|_m\varepsilon_F$.
+
+| Familie (Kette, $M=1$) | $\|T\|_m$ | $\|T\|_F$ |
+|---|---|---|
+| gleiche Massen $1/n$ | $n^2$ (exakt, $n\le12$) | $\sim\sqrt n$ |
+| fallend $m_k=2^{-k}$ | $4.5,\,6.125,\,7.03,\dots\to8$ | $\to1.55$ |
+| fallend $m_k=3^{-k}$ | $\to 6.75$ | $\to1.59$ |
+| steigend $m_k=2^k$ | $9,\,147,\,4725,\dots,1.07\cdot10^{19}$ | $7.0\cdot10^{13}$ |
+| dyadisch, Level $\le n$ | $\bigl(2^{n-1}(2^n-1)\bigr)^2$ | $1,\dots,7.9$ |
+
+Die letzte Zeile ist der Befund. $\bigl(2^{n-1}(2^n-1)\bigr)^2$ ist **exakt**
+$1/m_{\min}^2$ nach der Normierung, und mit $\varepsilon_{F_n}=2^{-n}$ ist
+$\varepsilon_{F_n}\|T\|_m\sim8^n\to\infty$. Das Bild dahinter ist einfach:
+die Einträge von $T$ sind dort von der Größenordnung $1$, wo das Gewicht
+$m_sm_t$ verlangt. Für tiefe Ausschöpfungen ist der Grenzwert bei fallenden
+Profilen gemessen — $2^{-j}\to8.0000$ (ab $k=20$ stabil), $1/j^2\to10.62$ bei
+$k=64$, $1/(j(j+1))\to11.63$ bei $k=64$, beide mit Zuwächsen $\asymp k^{-2}$,
+also konvergent.
+
+**Steigende Profile sind der Feind, und eine summierbare ordnungsdichte Uhr
+kann ihnen nicht ausweichen.** Eine auf ganz $A$ fallende Massenfunktion auf
+einer ordnungsdichten Menge ist nicht summierbar — unter jedem Punkt liegen
+unendlich viele Atome, deren Massen dann von unten durch die Masse jenes
+Punktes beschränkt wären. Die verwürfelte ordnungsdichte Uhr (Massen $2^{-k}$
+in fester Aufzählung der dyadischen Brüche, `certificate_m.py scrambled`)
+zeigt dasselbe unregelmäßig: $\|T\|_m$ springt auf $5\cdot10^{12}$ und fällt
+danach *nicht monoton*, $\varepsilon_F\|T\|_m$ bleibt bei $10^8$.
+
+### Warum das die Methode trifft und nicht die Aussage
+
+Die dyadische Uhr ist eine **Kette**. Theorem 17 des zweiundzwanzigsten Laufs
+gibt dort die Dualität unter (F), ohne jede Ausschöpfung. Proposition 19.3
+scheitert also an einer Instanz, deren Konklusion bewiesen ist — das ist die
+schärfste Form eines Methodenversagens und schließt die Ausschöpfung als
+Beweisvehikel für den ordnungsdichten Fall aus. Der elfte bis dreizehnte Lauf
+haben dasselbe dreimal in anderen Normen gesehen; der Unterschied ist, daß es
+diesmal an einer Stelle sichtbar wird, an der die Wahrheit feststeht.
+
+### Theorem 20: die Antikette, mit geschlossenem Zertifikat
+
+Sei $\T=\{0\}\cup A\cup\{t^*\}$ mit $A$ endlich und paarweise unvergleichbar,
+$m_0=m_{t^*}=0$, $\mu:=m|_A$ als Vektor, $M=\mathbb 1^{\mathsf T}\mu>0$.
+
+> **Theorem 20.** $V=e_{t^*}\mu^{\mathsf T}$, und
+> $$T=\frac1M\bigl(e_{t^*}\mu^{\mathsf T}+\mu e_{t^*}^{\mathsf T}\bigr)
+>    -\frac1{M^2}\mu\mu^{\mathsf T}$$
+> ist symmetrisch mit $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_{t^*}$, und
+> $\|T\|_m=\max(1/M,1/M^2)$, auf $M=1$ normiert also $=1$, **unabhängig von
+> $|A|$**. Für $M=1$ ist das das Minimum.
+
+*Beweis.* Nur die Zeile $t^*$ von $V$ ist von null verschieden, weil
+$\T_{<a}=\{0\}$ und $m_0=0$; also $V=e_{t^*}\mu^{\mathsf T}$ und $V^2=0$, weil
+$\mu_{t^*}=0$. Damit ist $TV=(Te_{t^*})\mu^{\mathsf T}$ und
+$V^{\mathsf T}T=\mu(Te_{t^*})^{\mathsf T}$: die Bedingung ist genau, daß
+$Te_{t^*}$ zu $\mu$ parallel ist. Für das angegebene $T$ ist
+$Te_{t^*}=\mu/M$, und $T\mathbb 1=e_{t^*}+\mu/M-\mu/M=e_{t^*}$. Die Norm liest
+sich ab: $|T_{t^*a}|/(1\cdot m_a)=1/M$ und $|T_{ab}|/(m_am_b)=1/M^2$.
+Minimalität für $M=1$: aus $\sum_aT_{t^*a}=1$ und $|T_{t^*a}|\le Cm_a$ folgt
+$C\ge1/M$. $\square$
+
+Mit Proposition 19.3 folgt: **auf der abzählbaren Antikette gilt die Dualität
+unter (F)** — das ist Proposition 19.1, jetzt ohne Fubini und über die
+Ausschöpfung, und die erste unendliche Halbordnung, die die Ausschöpfung
+überhaupt schafft. Probe (C).
+
+### Die Breiteninvarianz — und was sie wirklich ist
+
+Auf gestuften Halbordnungen (ein Stapel endlicher Antiketten) mißt
+`certificate_m.py graded` etwas Auffälliges: $\|T\|_m$ hängt **nur von der
+Folge der Stufenmassen** ab, nicht von der Breite der Stufen und nicht davon,
+wie die Stufenmasse innerhalb der Stufe verteilt ist. Exakt gleiche Brüche
+für Breite $1,2,3$ und für die Aufteilungen $(\tfrac12,\tfrac12)$,
+$(\tfrac9{10},\tfrac1{10})$, $(\tfrac{99}{100},\tfrac1{100})$; $\|T\|_F$
+dagegen ändert sich. Das ist kein Zufall, sondern eine Hebung:
+
+> **Lemma 21.1 (Hebung).** Sei $\T$ ein Stapel von Antiketten
+> $L_0<L_1<\dots<L_{k+1}$ (jedes Paar aus verschiedenen Stufen vergleichbar,
+> jedes Paar aus derselben unvergleichbar), $\lambda_j=m(L_j)$,
+> $\pi_j=m|_{L_j}/\lambda_j$ (für massefreie einelementige Stufen
+> $\pi_j=e_{\text{Punkt}}$), und sei $\widetilde T$ ein Zertifikat der
+> Stufenkette mit Massen $\lambda$. Dann ist
+> $T:=\sum_{j,l}\widetilde T_{jl}\,\pi_j\pi_l^{\mathsf T}$ ein Zertifikat von
+> $\T$, und $\|T\|_m=\|\widetilde T\|_m$.
+
+*Beweis.* $T$ ist symmetrisch; $\pi_l^{\mathsf T}\mathbb 1=1$ gibt
+$T\mathbb 1=\sum_j(\widetilde T\mathbb 1)_j\pi_j=\pi_{k+1}=e_{t^*}$. Mit
+$V=\sum_p\lambda_p\chi_{>p}\pi_p^{\mathsf T}$ ($\chi_{>p}$ der Indikator der
+Stufen oberhalb $p$) und $\pi_l^{\mathsf T}\chi_{>p}=[l>p]$ ist
+$TV=\sum_{j,p}\bigl(\widetilde T\widetilde V\bigr)_{jp}\pi_j\pi_p^{\mathsf T}$,
+und $\widetilde T\widetilde V$ ist symmetrisch, also auch $TV$, also
+$TV=(TV)^{\mathsf T}=V^{\mathsf T}T$. Die Norm: für Atome ist
+$T_{st}=\frac{m_sm_t}{\lambda_{j(s)}\lambda_{j(t)}}\widetilde T_{j(s)j(t)}$,
+also $|T_{st}|/(m_sm_t)=|\widetilde T_{jl}|/(\lambda_j\lambda_l)$; für die
+Randpunkte dasselbe mit Gewicht $1$. $\square$
+
+Probe (B). Damit ist die gestufte Halbordnung genau so weit geschlossen wie
+ihre Stufenkette — aber das ist nur die halbe Einsicht.
+
+### Theorem 21: die Stufenmittelung, ohne Zertifikat
+
+Die Hebung mittelt Zertifikate. Man kann stattdessen **die Daten** mitteln,
+und dann braucht man Proposition 19.3 gar nicht mehr, sondern nur Theorem 17.
+Der Beobachtungspunkt: eine Halbordnung ist genau dann ein Stapel von
+Antiketten, wenn die **Unvergleichbarkeit transitiv** ist, also genau dann,
+wenn sie eine *schwache Ordnung* (totale Präordnung) ist; und dann hängt
+$\T_{<s}$ nur von der Stufe von $s$ ab.
+
+Sei $\T$ eine abzählbare schwache Ordnung mit Stufen $(L_j)_{j\in J}$, $J$ eine
+Kette, $m\ge0$ mit $M=\sum_am_a<\infty$, $\lambda_j=m(L_j)$, und es habe jede
+Stufe mit $\lambda_j=0$ nur einen Punkt. Sei $\kappa$ antisymmetrisch,
+$\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$, $\delta=\operatorname{diag}\Psi$, und es
+gelte $(\diamondsuit)$ an jedem **vergleichbaren** Paar. Setze
+$$\widetilde\kappa(j,l):=\sum_{a\in L_j}\sum_{b\in L_l}
+   \pi_j(a)\pi_l(b)\,\kappa(a,b).$$
+
+> **Theorem 21.** Gilt (F), also $\sum_{a,b}m_am_b|\kappa(a,b)|<\infty$, so
+> ist $\widetilde\kappa$ antisymmetrisch, erfüllt $(\diamondsuit)$ auf der
+> Stufenkette mit Massen $\lambda$, erfüllt dort ebenfalls (F), und es ist
+> $\widetilde\delta(j)=\mathbb E_{\pi_j}[\delta]$ für jedes $j$. Mit
+> Theorem 17 folgt $\delta(t^*)=0$, sobald $t^*$ allein in seiner Stufe steht.
+
+*Beweis.* Antisymmetrie ist klar; alle Summen konvergieren absolut, weil
+$\sum_{a,b}\pi_j(a)\pi_l(b)|\kappa(a,b)|\le
+(\lambda_j\lambda_l)^{-1}\sum_{a,b}m_am_b|\kappa|<\infty$, und dieselbe
+Abschätzung gibt $\sum_{j,l}\lambda_j\lambda_l|\widetilde\kappa(j,l)|
+\le\sum_{a,b}m_am_b|\kappa(a,b)|$, also (F) auf der Stufenkette.
+
+Weil $\T_{<s}$ nur von der Stufe abhängt, ist $\Psi(s,t)=:\Psi(j(s),t)$, und
+$$\widetilde\Psi(j,l):=\sum_{p<j}\lambda_p\widetilde\kappa(p,l)
+ =\sum_{b\in L_l}\pi_l(b)\sum_{p<j}\sum_{a\in L_p}m_a\kappa(a,b)
+ =\mathbb E_{\pi_l}\bigl[\Psi(j,\cdot)\bigr];$$
+das gemittelte System ist also das System der gemittelten Daten (Probe (2)).
+Insbesondere ist $\widetilde\Psi(j,j)=\mathbb E_{\pi_j(b)}[\Psi(j,b)]
+=\mathbb E_{\pi_j(b)}[\Psi(b,b)]=\mathbb E_{\pi_j}[\delta]$, weil $b\in L_j$
+und $\Psi(j,\cdot)=\Psi(b,\cdot)$ — das ist die Aussage über $\widetilde\delta$
+(Probe (4)). Für $j\neq l$ sind alle Paare $(s,t)\in L_j\times L_l$
+vergleichbar; Mittelung von $\Psi(s,t)+\Psi(t,s)=\Psi(s,s)+\Psi(t,t)$ gegen
+$\pi_j\otimes\pi_l$ gibt links $\widetilde\Psi(j,l)+\widetilde\Psi(l,j)$ und
+rechts $\mathbb E_{\pi_j}[\delta]+\mathbb E_{\pi_l}[\delta]
+=\widetilde\Psi(j,j)+\widetilde\Psi(l,l)$, also $(\diamondsuit)$ auf der
+Stufenkette; für $j=l$ ist es trivial (Probe (3)). Steht $t^*$ allein in
+seiner Stufe, so ist $\widetilde\delta(\text{oberste Stufe})=\delta(t^*)$, und
+Theorem 17 gibt $\widetilde\delta\equiv0$. $\square$
+
+**Was das umfaßt.** Ketten (lauter einelementige Stufen, dann ist Theorem 21
+Theorem 17), Antiketten (eine einzige Stufe, dann ist es Proposition 19.1),
+und alles dazwischen: ordnungsdichte Stufenketten mit beliebig breiten,
+insbesondere unendlichen, Stufen. Die Stufen dürfen abzählbar unendlich sein,
+denn (F) trägt die Mittelung; und die Massen dürfen innerhalb einer Stufe
+beliebig verteilt sein. Es ist die gemeinsame Verschärfung der beiden bisher
+bewiesenen Fälle, und es ist ein Satz und keine Messung.
+
+**Wo die Grenze liegt, exakt.** Bei der Transitivität der Unvergleichbarkeit.
+Das kleinste Gegenstück ist das „N": $0<a,b$, $a<c$, $b$ unvergleichbar zu
+$c$, $a$ unvergleichbar zu $b$. Dort ist $\Psi(b,\cdot)\neq\Psi(c,\cdot)$,
+obwohl $b$ und $c$ unvergleichbar sind — es gibt keine Stufen, und die
+Mittelung hat keinen Gegenstand (Probe (D)). Das ist keine Schwäche des
+Beweises, sondern die Stelle, an der die Halbordnung wirklich anfängt.
+
+**Konsistenz mit Theorem 19.** Das Gegenbeispiel des dreiundzwanzigsten Laufs
+lebt auf einer Antikette, also auf einer schwachen Ordnung; Theorem 21 verlangt
+(F), und Probe (E) rechnet nach, daß genau (F) dort ausfällt.
+
+### Was jetzt offen ist, exakt
+
+* **Die Halbordnung mit nicht transitiver Unvergleichbarkeit, unter (F).** Das
+  ist der ganze Rest der Halbordnungsfrage. Die kleinste offene Gestalt ist
+  ein unendliches „N"-Muster; die Fubini-Identität des dreiundzwanzigsten
+  Laufs
+  ($\sum_{a,t}m_am_t[(\nu_a-\nu_t)-M([a<t]-[t<a])]\kappa(a,t)=0$) bleibt die
+  einzige skalare Relation, die man umsonst hat, und sie schließt allein
+  nicht. Die Ausschöpfung ist als Weg dorthin **erledigt** (siehe oben);
+  benannter Ersatz: eine Mittelung über die Klassen einer *gröberen*
+  Äquivalenz als der Unvergleichbarkeit, die $\T_{<s}$ nur bis auf einen in
+  (F) kontrollierten Fehler stufenkonstant macht.
+* **Die nackte Klasse auf Ketten**, unverändert offen (zweiundzwanzigster
+  Lauf).
+* **Ein Gegenbeispiel mit durchweg positiven Abwärtsmassen**, unverändert
+  offen (dreiundzwanzigster Lauf, Proposition 19.2).
+
+### Sackgassen, zweiundzwanzigster Nachtrag
+
+* **Die Ausschöpfung, in jeder Norm.** Vier Anläufe, vier Normen: Frobenius
+  (elfter Lauf), die beste lineare Zertifikatskonstante (zwölfter), die
+  Energieform (dreizehnter), die massegewichtete Supremumsnorm (dieser). Der
+  vierte ist der aussagekräftigste, weil er an einer Instanz scheitert, deren
+  Konklusion bewiesen ist. Wer wieder ausschöpfen will, braucht zuerst ein
+  Argument, warum seine Norm auf der dyadischen Kette beschränkt bleiben soll.
+* **Die „freie Wahl innerhalb von $\mathcal L$" für einen Vorrat halten.** Der
+  Spielraum ist meßbar — $\dim\{T=T^{\mathsf T},\,TV=V^{\mathsf T}T,\,
+  T\mathbb 1=0\}$ ist $1$ auf Ketten und wächst quadratisch auf Antiketten
+  (`certificate_m.py free`) —, und er ändert das Minimum von $\|\cdot\|_m$ in
+  keinem einzigen der 37 gemessenen Fälle. Ein großer Lösungsraum ist kein
+  großer Spielraum.
+* **Die Breiteninvarianz für ein Phänomen der Zertifikate halten.** Sie ist
+  eines der *Daten*: die Stufenmittelung mittelt $\kappa$, nicht $T$, und
+  braucht Proposition 19.3 dann gar nicht mehr. Wer eine Invarianz an einer
+  Hilfsgröße mißt, suche sie zuerst an der Aufgabe.

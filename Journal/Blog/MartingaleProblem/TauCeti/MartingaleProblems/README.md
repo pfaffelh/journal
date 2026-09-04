@@ -657,20 +657,22 @@ order.
   `duality_of_mixed`, `duality_of_atomic_intervalFinite`,
   `duality_of_atomic_twoChains_of_bounded`,
   `duality_of_atomic_blockStack_of_bounded` and
-  `duality_of_atomic_chain_of_integrable` this covers every clock that is
+  `duality_of_atomic_weakOrder_of_integrable` this covers every clock that is
   atomless, or has finitely many atoms below the point in question, or is mixed
   with finitely many atoms there, or whose atoms below the point form an
   interval-finite chain, or a discrete chain with interval-finite block
-  quotient and `Φ` bounded, or an arbitrary chain with `γ` integrable for
-  `m ⊗ m` on atom pairs. The last of the seven asks nothing of the order type
-  and everything of the density; the two before it ask nothing of the density
-  and something of the order type or of the value `Φ`. What none of the seven
-  reaches is a chain of atoms carrying a `γ` that is neither
-  `m ⊗ m`-integrable nor attached to a bounded `Φ`. Beyond chains the
-  finiteness is not a convenience of the matrix proof but a hypothesis of the
-  statement: `exists_atomic_antichain_duality_ne` produces infinitely many
-  incomparable atoms of positive summable mass on which the conclusion fails,
-  and `duality_of_atomic_antichain_of_integrable` is what survives there.
+  quotient and `Φ` bounded, or a totally preordered set of atoms — a chain, an
+  antichain, or any stack of antichains — with `γ` integrable for `m ⊗ m` on
+  atom pairs. The last of the seven asks nothing of the order type and
+  everything of the density; the two before it ask nothing of the density and
+  something of the order type or of the value `Φ`. What none of the seven
+  reaches is a set of atoms whose incomparability is not transitive, or a chain
+  carrying a `γ` that is neither `m ⊗ m`-integrable nor attached to a bounded
+  `Φ`. Where incomparability is transitive the finiteness is not a convenience
+  of the matrix proof but a hypothesis of the statement:
+  `exists_atomic_antichain_duality_ne` produces infinitely many incomparable
+  atoms of positive summable mass on which the conclusion fails, and
+  `duality_of_atomic_weakOrder_of_integrable` is what survives there.
 * `duality_of_atomic_antichain_of_integrable`: with `Φ, γ` as in
   `chain_identity` and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which
   the atoms are pairwise **incomparable**, and `γ` integrable for `m ⊗ m` on
@@ -683,7 +685,61 @@ order.
   `(Φ t 0 - Φ 0 t) * q (Iio t)`. Integrability is exactly what licenses the
   interchange, and it is the same hypothesis as in
   `duality_of_atomic_chain_of_integrable`, so the two together are the
-  integrable case of an antichain and of a chain.
+  integrable case of an antichain and of a chain. Both are the special cases
+  of `duality_of_atomic_weakOrder_of_integrable` in which the layer chain has
+  one layer, respectively one point per layer.
+* `Clock.atomLayers`: for a preordered `T`, a purely atomic clock `q` and a `t`
+  such that the atoms below `t` are **totally preordered** — `a ≤ b ∨ b ≤ a`
+  for any two of them, equivalently their incomparability is transitive — the
+  layer chain `Antisymmetrization` of those atoms, a linear order, together
+  with the layer masses `λ p = ∑' a ∈ p, m a`, the conditional laws
+  `π p a = m a / λ p` on each layer of positive mass, and the two facts that
+  carry everything else: `Iio s = ⋃ p < ⟦s⟧, p` for every atom `s`, so
+  `q (Iio s)` and more generally `∑' a < s, m a * f a` depend on `s` only
+  through `⟦s⟧`, and `q (Iio t) = ∑' p, λ p`. The order side is Mathlib:
+  `Antisymmetrization α r` is the quotient by `AntisymmRel`
+  (`Order/Antisymmetrization.lean:125`), `toAntisymmetrization` is the
+  projection (`:131`), `instPartialOrderAntisymmetrization` (`:263`) makes it
+  a partial order for any `Preorder`, and it is a `LinearOrder` under
+  `[@Std.Total α (· ≤ ·)]` together with `[DecidableLE α] [DecidableLT α]`
+  (`:308`), which classical choice supplies. The two transport lemmas are
+  there as well: `toAntisymmetrization_le_toAntisymmetrization_iff` (`:317`)
+  and `toAntisymmetrization_lt_toAntisymmetrization_iff` (`:322`), the second
+  being what turns `Iio s` into a union of layers. What is new is the
+  transport of the clock.
+* `Clock.atomLayerKernel`: for `κ : T → T → ℝ` antisymmetric with
+  `∑' (a, b), m a * m b * |κ a b| < ∞` on atoms below `t`, the averaged kernel
+  `κ̃ p l = ∑' (a, b), π p a * π l b * κ a b` on `Clock.atomLayers`. It is
+  antisymmetric, every defining sum converges absolutely, and
+  `∑' (p, l), λ p * λ l * |κ̃ p l| ≤ ∑' (a, b), m a * m b * |κ a b|`, so the
+  integrability hypothesis descends to the layer chain.
+* `atomLayerKernel_increment_eq`: the averaged system is the system of the
+  averaged data. With `Ψ s t = ∑' a < s, m a * κ a t` and
+  `Ψ̃ p l = ∑' o < p, λ o * κ̃ o l` one has `Ψ̃ p l = ∑' b ∈ l, π l b * Ψ a b`
+  for any `a ∈ p`, and in particular `Ψ̃ p p = ∑' a ∈ p, π p a * Ψ a a`: the
+  diagonal of the averaged system is the layer average of the diagonal. Both
+  are `Summable.tsum_comm` on `Clock.atomLayers`, using that `Ψ a b` depends
+  on `a` only through `⟦a⟧`.
+* `atomLayerKernel_rel`: if `Ψ s t + Ψ t s = Ψ s s + Ψ t t` at every
+  **comparable** pair of atoms below `t`, then `Ψ̃ p l + Ψ̃ l p = Ψ̃ p p + Ψ̃ l l`
+  at every pair of layers. For `p ≠ l` every pair from `p × l` is comparable,
+  and the claim is the average of the relation against `π p ⊗ π l` together
+  with `atomLayerKernel_increment_eq`; for `p = l` it is trivial.
+* `duality_of_atomic_weakOrder_of_integrable`: with `Φ, γ` as in
+  `chain_identity` and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which
+  the atoms are totally preordered and the point `t` itself alone in its layer,
+  and `γ` integrable for `m ⊗ m` on pairs of atoms below `t`, one has
+  `Φ t 0 = Φ 0 t`. Read the compatibility of the two increment representations
+  on `κ = γ - γ.swap`, push the whole system to `Clock.atomLayers` by
+  `Clock.atomLayerKernel`, and apply `duality_of_atomic_chain_of_integrable`
+  there: `atomLayerKernel_rel` supplies its hypothesis,
+  `Clock.atomLayerKernel` its integrability, and
+  `atomLayerKernel_increment_eq` returns the conclusion at the top layer,
+  which is `Φ t 0 - Φ 0 t` because `t` is alone there. Transitivity of
+  incomparability is what the proof uses and all it uses: it is exactly the
+  statement that `Iio s` depends on `s` only through its layer. The smallest
+  order in which it fails is `0 < a, b` with `a < c`, `b` incomparable to `c`
+  and to `a`, where `Iio b ≠ Iio c` although `b` and `c` are incomparable.
 * `exists_atomic_antichain_duality_ne`: there are a preordered `T` with a least
   element, a purely atomic clock `q` of finite total mass whose atoms below `t`
   are pairwise incomparable and carry strictly positive masses, and

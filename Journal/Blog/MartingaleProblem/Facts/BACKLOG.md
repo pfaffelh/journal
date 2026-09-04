@@ -324,6 +324,37 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `exists_atomic_antichain_duality_ne` in `MartingaleProblems`
    Meilenstein 8.
 
+   *Zwischenstand 2026-09-04, vierundzwanzigster Lauf: die Ausschöpfung ist
+   gemessen und erledigt; dafür fällt die Halbordnung unter (F), sobald ihre
+   Unvergleichbarkeit transitiv ist.* Die vom dreiundzwanzigsten Lauf
+   aufgegebene Rechnung — $\|T\|_m$ für das explizite Zertifikat des sechsten
+   Laufs — steht in `Task23/certificate_m.py` (exakt, Konstruktion an
+   $70\,956$ Fällen geprüft). Befund dreifach: auf der Antikette ist
+   $\|T\|_m$ **gleichmäßig $1$** mit geschlossener Formel (Theorem 20), also
+   schließt Proposition 19.3 dort und liefert Proposition 19.1 ohne Fubini;
+   auf der dyadischen ordnungsdichten Uhr ist $\|T\|_m=1/m_{\min}^2$ exakt und
+   $\varepsilon_F\|T\|_m\sim8^n\to\infty$ — und das auf einer **Kette**, wo
+   Theorem 17 die Konklusion längst gibt, die Ausschöpfung ist damit als
+   Methode erledigt (vierte Norm nach Frobenius, linear, quadratisch); und die
+   „freie Wahl innerhalb von $\mathcal L$" ist ausgenutzt und wertlos — 37
+   lineare Programme geben als Minimum von $\|\cdot\|_m$ durchweg genau den
+   Wert des expliziten Zertifikats. Der Ertrag steht daneben: die gemessene
+   **Breiteninvarianz** gestufter Halbordnungen ist eine Mittelung der Daten,
+   nicht der Zertifikate, und gibt **Theorem 21** — auf jeder abzählbaren
+   *schwachen Ordnung* (totale Präordnung, äquivalent: transitive
+   Unvergleichbarkeit, äquivalent: Stapel von Antiketten) gilt die Dualität
+   unter (F), mit Theorem 17 auf der Stufenkette. Das enthält Theorem 17 und
+   Proposition 19.1 als die beiden Extremfälle und erlaubt unendlich breite
+   Stufen. Offen bleibt jetzt die Halbordnung mit **nicht** transitiver
+   Unvergleichbarkeit (kleinste Gestalt: ein unendliches „N"), dazu
+   unverändert die nackte Klasse auf Ketten und das Gegenbeispiel mit
+   durchweg positiven Abwärtsmassen. `Task23/PROTOKOLL.md`,
+   vierundzwanzigster Lauf; `Task23/weakorder.py` (Proben (A)–(E), exakt,
+   rc=0) und `Task23/certificate_m.py`; Roadmapeinträge `Clock.atomLayers`,
+   `Clock.atomLayerKernel`, `atomLayerKernel_increment_eq`,
+   `atomLayerKernel_rel` und `duality_of_atomic_weakOrder_of_integrable` in
+   `MartingaleProblems` Meilenstein 8.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
