@@ -5549,11 +5549,14 @@ the arguments stop.
   Haar (Lebesgue, counting) & proved, Proposition~\ref{prop:haar} \\
   atomless, \eqref{T3} & proved, Corollary~\ref{cor:atomless} (a time change) \\
   purely atomic, atoms a chain & proved, Proposition~\ref{prop:atomicdual} (either $\iota$) \\
-  purely atomic, atoms arbitrary, $m \geq 0$ & proved, Proposition~\ref{prop:atomicposet} ($\iota = \mathrm{p}$) \\
+  purely atomic, \emph{finite} index, $m \geq 0$ & proved, Proposition~\ref{prop:atomicposet} ($\iota = \mathrm{p}$) \\
   the same for $\iota = \mathrm{o}$ & \emph{false}; counterexample in Remark~\ref{rem:atomicposet} \\
   mixed, finitely many atoms & proved, Proposition~\ref{prop:mixeddual} ($\iota = \mathrm{p}$) \\
   the same, atoms accumulating only at $t^*$ & proved, Remark~\ref{rem:mixeddual} \\
-  order-dense atoms & open \\
+  countable chain, any order type, with \eqref{eq:Fcond} & proved, Theorem~\ref{thm:densechain} \\
+  countable, finite height, with \eqref{eq:Fcond} & proved, Theorem~\ref{thm:finiteheight} \\
+  countable, without \eqref{eq:Fcond} & \emph{false}; Example~\ref{ex:antichain} \\
+  countable, infinite height, not a chain & open \\
   \bottomrule
   \end{tabular}
   \end{center}
@@ -6297,10 +6300,215 @@ shape of $\Psi$ itself.
   induction runs over finite $d$ and needs no last stretch, so
   $\Phi(t,0) = \Phi(0,t)$ for every $t < t^*$, and
   $\Phi(t^*,0) - \Phi(t,0) = \int_{[t,t^*)} \gamma(r,0) q(\dif r) \to 0$.  An
-  \emph{order-dense} set of atoms is genuinely open, and for the reason
+  \emph{order-dense} set of atoms resisted for exactly the reason
   Remark~\ref{rem:atomsnotchange} gives: there is no enumeration
   $a_1 < a_2 < \dots$ to induct along, and below a point of the index set there
-  then lie infinitely many atoms.
+  then lie infinitely many atoms.  Theorem~\ref{thm:densechain} settles it
+  nonetheless, by replacing the induction with a transform; what the enumeration
+  was needed for is an Abel summation, and that is a product rule which knows
+  nothing of successors.
+\end{remark}
+
+\begin{remark}[The summability hypothesis]
+  \label{rem:Fcond}
+  Everything beyond finitely many atoms turns on one hypothesis.  Write
+  $V_{s,a} = \one_{\{a < s\}} m_a$ and $K_{a,b} = \kappa(a,b)$ for the
+  antisymmetric part of $\gamma$, so that $\Psi = VK$ with
+  $\Psi(s,t) = \sum_{a<s} m_a \kappa(a,t)$ and $\delta = \operatorname{diag}\Psi$,
+  and put $\rho_s = \sum_b m_b |\kappa(b,s)|$ for the row masses.  The hypothesis is
+  \begin{equation}
+    \label{eq:Fcond}
+    \sum_{a,b} m_a m_b \, |\kappa(a,b)| \;<\; \infty
+    \qquad\Longleftrightarrow\qquad
+    \sum_s m_s \rho_s \;<\; \infty .
+    \tag{F}
+  \end{equation}
+  On a finite index \eqref{eq:Fcond} is vacuous, so everything below contains
+  Proposition~\ref{prop:atomicposet} as the case $\lvert \T \rvert < \infty$.
+  It is not vacuous in general, and Example~\ref{ex:antichain} shows that
+  without it the conclusion is false --- summability of the masses alone,
+  which Definition~\ref{def:clock} already grants, does \emph{not} suffice.
+\end{remark}
+
+\begin{theorem}[Countable chains of atoms; \eqref{T0} + \eqref{E0} + clock]
+  \label{thm:densechain}
+  Let the atoms below $t^*$ form a countable chain $A$ with masses $m_a > 0$ and
+  $M = \sum_a m_a < \infty$, let all the series defining $\Psi$ and $\delta$
+  converge absolutely, and assume \eqref{eq:Fcond}.  Then $\delta \equiv 0$, and
+  in particular $\Phi(t^*,0) = \Phi(0,t^*)$.  No hypothesis is made on the order
+  type of $A$: it may be order-dense, and it need have neither a least nor a
+  greatest element.
+\end{theorem}
+
+\begin{proof}
+  The mechanism is a product rule.  If $f$ and $V$ both have increment
+  representations over a countable set with $\ell^1$ jumps, then so does $fV$,
+  with the product jumps; the proof splits the double sum according to
+  $a' < a$, $a' > a$ and $a' = a$ and says nothing about successors or order
+  type.  This replaces the Abel summation used for
+  Proposition~\ref{prop:atomicdual}, and it is the only place where the
+  neighbours of an atom were ever needed --- which is why the argument now runs
+  on an arbitrary countable chain.
+
+  With $W^c(a) = \prod_{a' > a} (1 + c\,m_{a'})$ the product rule gives the
+  identity $K(t;c) - c\,G(t;c) = \psi(t) - \Delta(t) V_0(c)$, and evaluating it
+  at $t = b \in A$, at $t = 0$ and at $t = t^*$ yields three equations, of which
+  the first is $P = V_0 Q$ --- the antisymmetry of $\kappa$ kills both double
+  sums --- and the last makes the transform $R$ bounded on $\Re c \geq 0$,
+  because $\lvert V_0(c)\rvert \geq \prod_a (1 + m_a^2 \lvert c\rvert^2)^{1/2}
+  \to \infty$.  Now $R$ is entire of exponential type $0$ and bounded on a
+  half-plane, hence constant by Phragmén--Lindelöf and Liouville, and extracting
+  the constant term gives $\delta \equiv 0$.  Absolute convergence of every
+  rearrangement performed here is exactly \eqref{eq:Fcond}.
+\end{proof}
+
+\begin{definition}[Infinite certificate]
+  \label{def:certificate}
+  Let $Z \subset \T$ be finite and $w_s = m_s + \one_{\{s \in Z\}}$, so that
+  $W = \sum_s w_s = M + \lvert Z\rvert < \infty$.  An \emph{infinite certificate
+  at $t$ in the weight class $Z$} is a $T : \T \times \T \to \R$ with
+  \begin{enumerate}[label=(\roman*)]
+  \item $T = T^{\mathsf T}$ and $\lvert T_{su}\rvert \leq C\,w_s w_u$ for some
+    $C < \infty$;
+  \item $m_u \sum_{a > u} T_{sa} = m_s \sum_{a > s} T_{au}$ for all $s,u$, both
+    sides absolutely convergent --- that is, $TV = V^{\mathsf T} T$;
+  \item $\sum_a T_{sa} = \one_{\{s = t\}}$.
+  \end{enumerate}
+  This is the finite condition of Lemma~\ref{lem:selfadjoint} verbatim, together
+  with the one bound that carries the rearrangements.
+\end{definition}
+
+\begin{theorem}[The certificate closes; \eqref{T0} + \eqref{E0} + clock]
+  \label{thm:certificate}
+  Assume \eqref{eq:Fcond} and $\rho_z < \infty$ for every $z \in Z$.  If an
+  infinite certificate at $t$ exists, then $\delta(t) = 0$.
+\end{theorem}
+
+\begin{proof}
+  Put $\Sigma = \sum_{s,b} w_s m_b \lvert\kappa(b,s)\rvert
+  = \sum_s m_s \rho_s + \sum_{z \in Z} \rho_z < \infty$.  Four estimates make
+  every sum below absolutely convergent: the triple sum
+  $\sum_{s,a,b} \lvert T_{sa}\rvert \one_{\{b<a\}} m_b \lvert\kappa(b,s)\rvert
+  \leq C W \Sigma$; $\sum_{s,u} \lvert T_{su}\rvert\,\lvert\Psi(u,s)\rvert
+  \leq C W \Sigma$; $\lvert (TV)_{sb}\rvert \leq C W w_s m_b$, whence
+  $\sum_{s,b} \lvert (TV)_{sb}\,\kappa(b,s)\rvert \leq C W \Sigma$; and
+  $\sum_s w_s \lvert\delta(s)\rvert \leq \Sigma$.
+
+  Then the two lines of Lemma~\ref{lem:selfadjoint} go through unchanged.  For
+  symmetric $T$, renaming in an absolutely convergent double sum and using
+  \eqref{eq:incrementrep} in the form
+  $\Psi(s,u) + \Psi(u,s) = \delta(s) + \delta(u)$,
+  \[
+    2\operatorname{tr}(T\Psi)
+      = \sum_{s,u} T_{su}\bigl[\delta(s) + \delta(u)\bigr]
+      = 2 \sum_s \delta(s) \sum_u T_{su}
+      = 2\,\delta(t) .
+  \]
+  And $S = TV$ is symmetric while $K$ is antisymmetric, so
+  $\operatorname{tr}(SK) = -\operatorname{tr}(SK) = 0$, again by renaming.  Since
+  Fubini gives $\operatorname{tr}(T\Psi) = \operatorname{tr}(SK)$, the claim
+  follows.  Note what this is not: it is not a limit of finite certificates but
+  the same two lines, with Fubini as the only new ingredient, and
+  \eqref{eq:Fcond} enters only as the permission to rename.
+\end{proof}
+
+\begin{theorem}[Finite height; \eqref{T0} + \eqref{E0} + clock]
+  \label{thm:finiteheight}
+  Let $\T$ be countable with $m \geq 0$ and $M < \infty$, and suppose
+  $V^r = 0$ for some $r \in \N$ --- equivalently, that there is no chain of
+  $r+1$ points whose first $r$ carry positive mass, a condition on the
+  \emph{height} of $\T$ and not on its cardinality.  Then an infinite
+  certificate exists at every $t$, in a weight class $Z = \{t, i^*\}$ with $i^*$
+  depending only on $(\T,m)$.  Consequently, under \eqref{eq:Fcond} and with
+  $\rho_t, \rho_{i^*} < \infty$, the duality holds on every countable index of
+  finite height --- with arbitrary, in particular non-transitive,
+  incomparability, and with levels of arbitrary, even infinite, width.
+\end{theorem}
+
+\begin{proof}
+  The entries of $V^k$ are sums of products $m_{c_0}\cdots m_{c_{k-1}}$ over
+  chains $a = c_0 < \dots < c_k = s$, hence nonnegative with row sums at most
+  $M^k$.  So $V^{r-1} \neq 0$ has nonnegative entries, and a nonnegative matrix
+  all of whose row sums vanish is the zero matrix --- the lemma behind
+  Lemma~\ref{lem:selfadjoint}, valid for a countable index because the row sums
+  converge.  Hence $u = V^{r-1}\one \neq 0$; choose $i^*$ with $u_{i^*} \neq 0$
+  and build $T$ by the formula of Lemma~\ref{lem:selfadjoint}, sign for sign.
+  The only new work is the bound of Definition~\ref{def:certificate}(i), which
+  follows from $\lVert V^{\mathsf T}x\rVert_1 \leq M \lVert x\rVert_1$ and
+  $\lvert (V^{\mathsf T}x)_c\rvert \leq m_c \lVert x\rVert_1$.  Then apply
+  Theorem~\ref{thm:certificate}.
+\end{proof}
+
+\begin{example}[Without \eqref{eq:Fcond} the duality fails; \eqref{T0} + \eqref{E0} + clock]
+  \label{ex:antichain}
+  Let $\T = \{0\} \cup \{a_1, a_2, \dots\} \cup \{t^*\}$ with the $a_i$ pairwise
+  incomparable, $q(\{0\}) = q(\{t^*\}) = 0$, masses $m_i > 0$ with
+  $M = \sum_i m_i < \infty$, tails $\sigma_i = \sum_{j \geq i} m_j$, and
+  \[
+    \kappa(a_i,a_j) = \operatorname{sgn}(i-j)\, f\bigl(\min(i,j)\bigr),
+    \qquad f(i) = \frac{1}{\sigma_i \sigma_{i+1}} ,
+  \]
+  together with $\kappa(a_j,0) = \kappa(a_j,t^*) = M^{-2}$ and
+  $\gamma = \kappa/2$.  Since $m_j f(j) = \sigma_{j+1}^{-1} - \sigma_j^{-1}$
+  telescopes,
+  \[
+    \sum_j m_j \kappa(a_j,a_i)
+      = -\Bigl(\frac{1}{\sigma_i} - \frac1M\Bigr) + \frac{1}{\sigma_i}
+      = \frac1M
+    \qquad\text{for every } i,
+  \]
+  a constant different from $0$, while every row converges absolutely,
+  $\sum_j m_j \lvert\kappa(a_j,a_i)\rvert = 2/\sigma_i - 1/M$.  The
+  corresponding $\Phi$ satisfies both representations \eqref{eq:incrementrep} at
+  every comparable pair and has $\Phi(t^*,0) - \Phi(0,t^*) = 1/M \neq 0$.
+
+  The masses here are nonnegative and summable, as
+  Definition~\ref{def:clock} requires, so this is a genuine clock; what fails is
+  \eqref{eq:Fcond}, since $\sum_i m_i (2/\sigma_i - 1/M)$ diverges.  Two things
+  follow.  Proposition~\ref{prop:atomicposet} does not extend from finite to
+  countable index sets, and \eqref{eq:Fcond} in
+  Theorems~\ref{thm:densechain} and~\ref{thm:finiteheight} is not an artefact of
+  the proofs.
+\end{example}
+
+\begin{proposition}[Where no certificate exists; \eqref{T0} + \eqref{E0} + clock]
+  \label{prop:nocertificate}
+  Let $\T = \{0\} \cup A \cup \{t^*\}$ with $A$ a chain, $0 < a < t^*$ for all
+  $a \in A$, $m_0 = m_{t^*} = 0$ and $m_a > 0$ on $A$.  If $A$ has neither a
+  least nor a greatest element, there is no infinite certificate at $t^*$, in
+  any weight class.
+\end{proposition}
+
+\begin{proof}
+  Condition~\ref{def:certificate}(ii) at $(t^*,a)$ gives
+  $m_a \sum_{x>a} T_{t^*x} = m_{t^*}\sum_{x>t^*} T_{xa} = 0$, so
+  $\theta(\{x>a\}) = 0$ for $\theta = T_{t^*\cdot}$, and the same at $(0,a)$
+  gives $\eta(\{x>a\}) = 0$ for $\eta = T_{0\cdot}$; both families are
+  absolutely summable by \ref{def:certificate}(i).  From
+  $\theta(\{x>a\}) = 0$ for all $a$ one gets $\theta((a,a']) = 0$ for $a < a'$;
+  if $a'$ has an immediate predecessor in $A$ then $\theta(a') = 0$, and
+  otherwise $a_n \uparrow a'$ with $a_n < a'$ gives
+  $\theta(a') = \lim_n \theta((a_n,a']) = 0$ by dominated convergence.  As $A$
+  has no least element every $a'$ is of one of the two kinds, so
+  $\theta \equiv 0$ on $A$; as $A$ has no greatest element
+  $\bigcap_{a \in A}\{x > a\} = \{t^*\}$ and $\theta(t^*) = 0$ as well.  The
+  same words give $\eta \equiv 0$, in particular $T_{0t^*} = 0$, which
+  contradicts \ref{def:certificate}(iii).
+\end{proof}
+
+\begin{remark}[Two methods, disjoint blind spots]
+  \label{rem:twomethods}
+  Theorem~\ref{thm:densechain} and Theorem~\ref{thm:finiteheight} are not
+  comparable, and Proposition~\ref{prop:nocertificate} is why.  A chain whose
+  atoms have neither a least nor a greatest element has infinite height and
+  admits no certificate, so only the transform argument reaches it; an index of
+  finite height with infinitely wide levels --- the infinite \textsf{N}, the
+  crown $a_i < b_j \iff i \neq j$, the ladder $a_i < b_j \iff i < j$ --- is not a
+  chain, so only the certificate reaches it.  Neither is a special case of the
+  other, and the exhaustion route that eleven attempts pursued is closed for a
+  reason that is now visible: it built certificates on finite sections and hoped
+  for uniform bounds, where the certificate can simply be written down on the
+  infinite index at once.
 \end{remark}
 
 \begin{remark}[Scope of Section~\ref{sec:duality}]
