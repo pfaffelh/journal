@@ -2994,3 +2994,1081 @@ von der Identität I überquert, nicht von einer Induktion.
   hat im Unendlichen keine Antidiagonale; die Zerlegung (D2) mit
   Phragmén–Lindelöf ersetzt sie vollständig. (D1) bleibt als endliche
   Konsistenzprobe wertvoll und als Beweisweg im Unendlichen unbrauchbar.
+
+## Die nackte Klasse, 2026-09-03 (einundzwanzigster Lauf): (H) war nie die Grenze der Methode — (V) gilt, sobald der Fluss nach Norden beschränkt ist, und das ist die Hypothesengestalt, die das Manuskript an der einzigen Stelle, an der es $\Phi$ herstellt, ohnehin trägt
+
+Der zwanzigste Lauf schloss mit „(H) ist keine Bequemlichkeit der Seitenwahl,
+sondern die Grenze der Transformationsmethode" und nannte als Angriffe den
+Bootstrap und „eine Paarung ohne die gemeinsame Summe". Beides ist zu kurz
+gegriffen. Dieser Lauf hat den Beweis von Theorem 10 Schritt für Schritt
+danach abgeklopft, **wofür** (H) dort steht, und findet: (H) trägt drei
+Schritte, und zwar in einer Gestalt, die von der gemeinsamen Summe
+$\Sigma_{j_0}$ gar nicht abhängt. Die abgezogene Bedingung — sie heiße (U) —
+hat **zwei** unvergleichbare hinreichende Kriterien, (H) und die
+Beschränktheit des Flusses; das zweite hat mit dem
+$\mu\otimes\nu$-Integrierbarkeitsproblem nichts zu tun und ist in der
+Manuskriptklasse erfüllt.
+
+### Wofür (H) im Beweis von Theorem 10 steht
+
+Aufstellung wie im achtzehnten Lauf: $\mu_i,\nu_j>0$ summierbar
+($S=\sum_i\mu_i$, $T=\sum_j\nu_j$), $x:\mathbb Z^2\to\mathbb R$ mit
+$\rho_j=\sum_i\mu_i|x_{ij}|<\infty$ (Zeilen), $\sigma_i=\sum_j\nu_j|x_{ij}|
+<\infty$ (Spalten) und (Q); $F(i,j)$ der gemeinsame Wert,
+$R_j=\sum_i\mu_ix_{ij}=\lim_{i\to+\infty}F(i,j)$,
+$W^c_i=\prod_{i'>i}(1+c\mu_{i'})$, $G_j(c)=\sum_i\mu_iF(i,j)W^c_i$.
+
+Die acht Schritte von Theorem 10 benutzen (H) an genau drei Stellen, und
+jedesmal nur durch eine ihrer Folgerungen:
+
+* **Schritt 4** (Nordlimes $G_j(c)\to0$) braucht eine in $j\ge j_0$
+  gleichmäßige summierbare Majorante für $\mu_i|F(i,j)|$ — (H) liefert
+  $\mu_i\kappa^{(j_0)}_i$. Gebraucht wird davon nur die **gleichmäßige
+  Summierbarkeit** der Familie, nicht die Majorante.
+* **Schritte 5 und 6** (Beschränktheit rechts, Reihe der Identität I)
+  brauchen $\sum_{J\ge j_0}\nu_J|R_J|<\infty$ — (H) liefert es über
+  $|R_J|\le\rho_J$. Gebraucht wird die Reihe, nicht $\rho$.
+
+Damit ist die Bedingung abgezogen:
+
+> **(U).** Für ein $j_0\in\mathbb Z$ gilt
+> **(i)** *Straffheit nach Norden*:
+> $\displaystyle\lim_{N\to\infty}\ \sup_{j\ge j_0}\ \sum_{|i|>N}\mu_i|F(i,j)|=0$,
+> **(ii)** *Nordsummierbarkeit der Zeilensummen*:
+> $\displaystyle\sum_{j\ge j_0}\nu_j|R_j|<\infty$.
+
+(U)(i) ist wörtlich eine Straffheitsbedingung: die Flussmasse darf beim
+Marsch nach Norden nicht nach Osten oder Westen entweichen. Die zwei freien
+Ränder des Viertelgitters — Ost und Süd — sind genau die, an denen sie
+entweichen könnte, und (U) verbietet das nur nach Osten und Westen, nicht
+nach Süden.
+
+### Theorem 12: (V) gilt unter (U)
+
+*Sei $x$ eine Lösung von (Q) mit (U). Dann ist $x\equiv0$.*
+
+*Beweis.* Alles für $j\ge j_0$; die Fortsetzung nach Süden ist Schritt 7.
+
+**1. $G_j$ ist ganz vom Typ $0$.** Nach (U)(i) ist
+$A:=\sup_{j\ge j_0}\sum_i\mu_i|F(i,j)|<\infty$ (endlich viele Terme plus ein
+gleichmäßig kleiner Schwanz), und $|W^c_i|\le e^{\Phi_\mu(|c|)}$ mit
+$\Phi_\mu(r)=\sum_i\log(1+r\mu_i)$. Also konvergiert $G_j$ auf Kompakta
+gleichmäßig, ist ganz, und $|G_j(c)|\le A\,e^{\Phi_\mu(|c|)}$;
+$\Phi_\mu(r)=o(r)$, weil $\log(1+r\mu_i)/r\le\mu_i$ punktweise gegen $0$
+fällt (dominierte Konvergenz). Auf $\Re c\ge0$ ist überdies
+$1\le|W^c_i|\le e^{\Phi_\mu(|c|)}$, jeder Faktor $|1+c\mu|\ge1$.
+
+**2. Abel (A$\infty$).** $\sum_i\mu_ix_{ij}W^c_i=R_j+c\,G_j(c)$ für alle
+$c\in\mathbb C$. Endlich ist das
+$\sum_{i=i_A}^{i_B}(F(i{+}1,j)-F(i,j))W^c_i
+ =F(i_B{+}1,j)W^c_{i_B}-F(i_A,j)W^c_{i_A}
+  +c\sum_{i=i_A+1}^{i_B}\mu_iF(i,j)W^c_i$
+(Probe (A), exakt), und im Limes geht $F(i_B{+}1,j)\to R_j$, $W^c_{i_B}\to1$,
+$F(i_A,j)\to0$ (Westabfall) gegen den beschränkten Faktor $W^c_{i_A}$.
+
+**3. Nordrekursion (B$\infty$).** Termweise Differenz und (A$\infty$):
+$G_{j+1}=(1+c\nu_j)G_j+\nu_jR_j$ für alle $c$.
+
+**4. Nordlimes.** Fixiere $c$ mit $\Re c\ge0$. $F(i,j)\to0$ punktweise für
+$j\to+\infty$ (Nordschwanz), und die Familie $\mu_iF(i,j)W^c_i$ ist nach
+(U)(i) und $|W^c_i|\le e^{\Phi_\mu}$ gleichmäßig summierbar; also
+$G_j(c)\to0$. **Hier steht (U)(i), und nur hier.**
+
+**5. Beschränktheit auf $\Re c\ge0$.** Aus (B$\infty$) und $|1+c\nu_j|\ge1$
+folgt $|G_j|\le|G_{j+1}|+\nu_j|R_j|$; iteriert von $j_0$ bis $j_B$ und mit
+Schritt 4 für $j_B\to\infty$:
+$|G_{j_0}(c)|\le\sum_{J\ge j_0}\nu_J|R_J|<\infty$ nach (U)(ii), und dasselbe
+mit jedem $j\ge j_0$ an der Stelle von $j_0$.
+
+**6. Phragmén–Lindelöf, Liouville, und der Koeffizientenvergleich.** Jedes
+$G_j$, $j\ge j_0$, ist ganz vom Typ $0$ und auf der imaginären Achse
+beschränkt, also überall beschränkt (Titchmarsh §5.62; Boas Thm. 6.2.4 mit
+$\tau=0$, gedreht) und nach Liouville konstant, $G_j\equiv K_j$. Setze das in
+(B$\infty$) ein: $K_{j+1}=K_j+c\,\nu_jK_j+\nu_jR_j$ **für alle $c$**, also
+$\nu_jK_j=0$, also $K_j=0$, und damit $K_{j+1}=\nu_jR_j=0$, also $R_j=0$ —
+für jedes $j\ge j_0$. Nun gibt (A$\infty$) $\sum_i(\mu_ix_{ij})W^c_i=0$ für
+alle $c$, die Folge $a_i=\mu_ix_{ij}$ liegt in $\ell^1$ ($\|a\|_1=\rho_j$),
+und **Theorem 9** (unverändert, ohne jede Zusatzhypothese) gibt $a\equiv0$,
+also $x_{ij}=0$ für alle $i$ und alle $j\ge j_0$.
+
+**7. Fortsetzung nach Süden, hypothesenfrei.** Verschwinden alle Zeilen
+$j'>j$, so ist $F(i,j)=-\sum_{j'\ge j}\nu_{j'}x_{ij'}=-\nu_jx_{ij}$, und mit
+$P_i:=F(i,j)$ lautet die West-Darstellung $P_{i+1}-P_i=\mu_ix_{ij}
+=-(\mu_i/\nu_j)P_i$, also $P_{i+1}=(1-\mu_i/\nu_j)P_i$ und
+$P_i=P_{i_A}\prod_{i_A\le i'<i}(1-\mu_{i'}/\nu_j)$. Das Produkt konvergiert
+für $i_A\to-\infty$ absolut (Summierbarkeit von $\mu$) gegen eine endliche
+Zahl, und $P_{i_A}\to0$ (Westabfall); also $P\equiv0$ und $x_{\cdot j}=0$.
+Induktion nach unten gibt $x\equiv0$ auf ganz $\mathbb Z^2$. $\square$
+
+Zwei Nebenbefunde, die auch Theorem 10 betreffen. Erstens ist **die
+Identität I entbehrlich**: Schritt 6 ersetzt den reellen Limes durch einen
+Koeffizientenvergleich in (B$\infty$), der zugleich $K_j=0$ und $R_j=0$
+liefert. Der zwanzigste Lauf hat sie als „das erste Argument von Task 23, das
+einen Häufungspunkt überquert" gefeiert; das Überqueren steckt in Wahrheit im
+**Nordlimes** von Schritt 4, und der ist in beiden Beweisen dieselbe Stelle.
+Zweitens braucht Theorem 10 die Fortsetzung nach Süden (Schritt 7) genauso —
+sie fehlte dort, weil (H) für ein beliebiges $j_0$ formuliert war und man
+$j_0\to-\infty$ schicken konnte; unter (U) ist sie ein eigener Schritt, und
+sie kostet nichts.
+
+### Korollar 13: zwei unvergleichbare hinreichende Kriterien
+
+**(a) (H) $\Rightarrow$ (U).** $|F(i,j)|\le\kappa^{(j_0)}_i$ für $j\ge j_0$
+gibt die $j$-gleichmäßige Majorante $\mu_i\kappa^{(j_0)}_i$ mit endlicher
+Summe $\Sigma_{j_0}$, also (U)(i); $|R_j|\le\rho_j$ gibt (U)(ii). Theorem 10
+ist damit Korollar von Theorem 12.
+
+**(b) Beschränkter Fluss $\Rightarrow$ (U).** Ist
+$B_F:=\sup_{i\in\mathbb Z,\,j\ge j_0}|F(i,j)|<\infty$, so ist
+$\sum_{|i|>N}\mu_i|F(i,j)|\le B_F\sum_{|i|>N}\mu_i\to0$ **gleichmäßig in
+$j$** — hier, und nur hier, geht ein, dass die Uhr endliche Masse hat —,
+also (U)(i); und $|R_j|\le B_F$ mit $\sum_{j\ge j_0}\nu_j\le T$ gibt (U)(ii).
+
+**(c) Unvergleichbar, und wie diese Aussage zu lesen ist.** Weil jede der
+beiden Bedingungen $x\equiv0$ erzwingt, kann es **keine** nichtverschwindende
+Lösung geben, die die eine erfüllt und die andere nicht — die
+Unvergleichbarkeit ist eine Aussage über die *Hypothesenklassen*, also
+darüber, welche Paare $(\Phi,\gamma)$ man überhaupt einspeisen darf, nicht
+über Zeugen. In dieser Lesart ist sie unmittelbar: (H) ist
+$\sum_{j\ge j_0}\nu_j\rho_j<\infty$ und läßt $\rho_j\to\infty$ zu, sobald
+$\nu_j$ schnell genug fällt; wegen $\sup_i|F(i,j)|\le\rho_j$ (Westabfall,
+Probe (E)) ist das genau der Spielraum, in dem (b) fällt. Umgekehrt bindet
+(b) nur den Wert und läßt die Zeilenvariationen $\rho_j$ frei, die (H)
+gewichtet summierbar verlangt. Keine der beiden Bedingungen impliziert also
+die andere; **(H) war nie die Grenze der Methode, sondern eines von zwei
+Kriterien für dieselbe Bedingung (U).**
+
+**(d) Beschränktes $x$ $\Rightarrow$ (b)**, denn $|F(i,j)|\le BS$. Korollar
+11 des zwanzigsten Laufs ist damit doppelt abgedeckt.
+
+### Korollar 14: die Manuskriptklasse liefert (b)
+
+$F$ ist der **Dualitätsdefekt**: über die Reduktion des siebzehnten Laufs ist
+$F(i,j)=\widehat w(b_i,a_j)$ und $\widehat w(s,t)=\Phi(s,t)-\Phi(t,s)$ — in
+der Rückrichtung des zwölften Laufs ist $\Phi=\tfrac12\widehat w$, also
+$\Phi(s,t)-\Phi(t,s)=\widehat w(s,t)$ nach dessen Antisymmetrie. Beschränktheit
+des Flusses ist also die Beschränktheit des Defekts, und sie folgt aus der
+Beschränktheit von $\Phi$ auf $\T_{\le t^*}\times\T_{\le t^*}$.
+
+Genau das trägt das Manuskript an der einzigen Stelle, an der es ein solches
+$\Phi$ probabilistisch **herstellt**: `thm:duality` (\EK{} 4.4.11) setzt in
+\eqref{eq:dual1} eine integrierbare Dominante $\Gamma_T$ mit
+$\sup_{r,s,t\le T}(|\alpha(X(r))|+1)|f(X(s),Y(t))|\le\Gamma_T$ und in
+\eqref{eq:dual2} $\int_0^T|\alpha(X(u))|\dif u+\int_0^T|\beta(Y(u))|\dif u
+\le C_T$ voraus; für
+$\Phi(s,t)=E[f(X(s),Y(t))\exp\{\int_0^s\alpha(X(u))\dif u+\int_0^t\beta(Y(u))
+\dif u\}]$ geben die beiden zusammen unmittelbar
+$|\Phi(s,t)|\le e^{C_T}E[\Gamma_T]$ für alle $s,t\le T$. Die
+Beschränktheit des Flusses ist also **keine Zusatzanalysis von der Art (H)**,
+sondern die Hypothesengestalt, die dort ohnehin steht.
+
+Ehrliche Einschränkung, und sie gehört dazu: `prop:atomicdual` und
+`prop:mixeddual` sind abstrakt formuliert — $\Phi,\gamma:\T\times\T\to\R$ mit
+\eqref{eq:incrementrep}, „no integrability hypothesis beyond the existence of
+the integrals" —, und Theorem 12 ist unter dieser Formulierung **nicht**
+hypothesenfrei. Der Satz für die zwei gestapelten $\zeta$-Ketten lautet
+deshalb:
+
+> **Korollar 14.** Ist $q$ rein atomar, bilden die Atome unter $t^*$ zwei
+> übereinander gestapelte $\zeta$-Ketten, erfüllen $\Phi,\gamma$
+> \eqref{eq:incrementrep} mit $\gamma_1=\gamma_2$, und ist $\Phi$ auf
+> $\T_{\le t^*}\times\T_{\le t^*}$ beschränkt, so ist
+> $\Phi(t^*,0)=\Phi(0,t^*)$.
+
+Die Klasse $|h|\le B$, in der alle LPs, Zertifikate und Messungen des
+zwölften bis siebzehnten Laufs liefen, ist echt kleiner: sie beschränkt die
+**Dichte** $\gamma=\kappa/2$, Korollar 14 nur den **Wert** $\Phi$.
+
+### Korollar 16: der Blockstapel — Theorem 12 iteriert über beliebig viele Häufungspunkte
+
+Die zwei gestapelten $\zeta$-Ketten sind nicht die Reichweite von Theorem 12,
+sondern nur seine kleinste Anwendung. Sei die Atommenge unter $t^*$ eine Kette,
+und sei sie **diskret**: jedes Atom hat unter den Atomen einen unmittelbaren
+Vorgänger und Nachfolger. Dann ist
+$$a\sim b\ :\Longleftrightarrow\ \text{zwischen }a\text{ und }b\text{ liegen nur endlich viele Atome}$$
+eine Äquivalenz, ihre Klassen — die **Blöcke** — sind konvex und
+intervallendlich, also nach der Diskretheit vom Ordnungstyp $\zeta$, und die
+Blöcke tragen die Quotientenordnung. Zusatzhypothese: **die Quotientenordnung
+ist selbst intervallendlich**, je zwei Blöcke schließen also nur endlich viele
+Blöcke ein; der *Blockabstand* $d(P,Q)$ ist dann endlich. Für zwei Blöcke ist
+das der Fall des siebzehnten Laufs.
+
+> **Korollar 16.** Ist $q$ rein atomar, ist die Atommenge unter $t^*$ eine
+> diskrete Kette mit intervallendlicher Blockordnung, erfüllen $\Phi,\gamma$
+> \eqref{eq:incrementrep} mit $\gamma_1=\gamma_2$, und ist $\Phi$ auf
+> $\T_{\le t^*}\times\T_{\le t^*}$ beschränkt, so ist $\Phi(t^*,0)=\Phi(0,t^*)$.
+
+*Beweis, Induktion über den Blockabstand.* Sei $w(s,t)=\Phi(s,t)-\Phi(t,s)$.
+
+**$d=0$** (blockintern): der Satz des vierzehnten Laufs, jeder Block ist
+intervallendlich; $w\equiv0$ auf $P\times P$ und $\kappa\equiv0$ auf den
+blockinternen Atompaaren.
+
+**Der Induktionsschritt.** Seien $P<Q$ Blöcke mit $d(P,Q)=d\ge1$, $P$ unten.
+Numeriere $P=\{a_j\}_{j\in\mathbb Z}$ und $Q=\{b_i\}_{i\in\mathbb Z}$
+aufsteigend und setze $F(i,j)=w(b_i,a_j)$, $x_{ij}=\kappa(b_i,a_j)$,
+$\nu_j=m^P_j$, $\mu_i=m^Q_i$ — beide positiv und summierbar, weil sie
+Teilsummen der Uhrenmasse sind. Weil die Atomkette diskret ist, trägt
+$[b_i,b_{i+1})$ genau das eine Atom $b_i$ und $[a_j,a_{j+1})$ genau das eine
+Atom $a_j$; \eqref{eq:incrementrep} gibt daher
+$$F(i{+}1,j)-F(i,j)=\mu_i\,x_{ij},\qquad
+  F(i,j{+}1)-F(i,j)=\nu_j\,x_{ij}$$
+(die zweite mit der Antisymmetrie von $\kappa$), also die Flussgestalt von (Q).
+
+Die **zwei Abfälle stehen an den einander zugewandten Rändern**. Nach unten
+von $Q$: $\lim_{i\to-\infty}F(i,j)$. Sei $R$ der größte Block in $[P,Q)$ — er
+existiert, weil diese Menge $P$ enthält und nach der Intervallendlichkeit der
+Blockordnung endlich ist; für $d=1$ ist $R=P$, und dann ist der folgende Limes
+ein blockinterner —, so
+ist $w(b_i,a_j)-w(r_l,a_j)$ in beiden Koordinaten eine Atomsumme über
+$[r_l,b_i)$, ein Schwanz der nach \eqref{eq:incrementrep} absolut
+konvergenten Reihe, und geht für $i\to-\infty$, $l\to+\infty$ gegen $0$; also
+$\lim_{i\to-\infty}F(i,j)=\lim_{l\to+\infty}w(r_l,a_j)$, und das ist $0$, weil
+$d(R,P)=d-1<d$. Nach oben von $P$ ebenso mit dem kleinsten Block in $(P,Q]$,
+der für $d=1$ gerade $Q$ ist: $\lim_{j\to+\infty}F(i,j)=0$. Damit ist (Q)
+erfüllt.
+
+$\Phi$ ist beschränkt, also ist $|F|\le2\sup|\Phi|$ beschränkt, also gilt
+Korollar 13(b), also (U), also nach **Theorem 12** $x\equiv0$ und $F\equiv0$
+auf $Q\times P$. Das schließt den Schritt.
+
+**Der Abschluss.** $w$ verschwindet damit an jedem Paar von Atomen unter
+$t^*$. Die Randwerte $w(t^*,0)$ und $w(t^*,a)$ kommen als Schwänze derselben
+absolut konvergenten Atomsummen, wie im Beweis von
+`duality_of_atomic_intervalFinite`, und geben $\Phi(t^*,0)=\Phi(0,t^*)$.
+$\square$
+
+Drei Bemerkungen dazu, und die dritte ist eine Grenze.
+
+1. Die Beschränktheit von $\Phi$ geht **nur** über Korollar 13(b) ein, an
+   jedem Induktionsschritt gleich; eine blockweise Schranke genügte.
+2. Der Fall $d=1$ mit zwei Blöcken ist Korollar 14. Neu ist $d\ge2$, und
+   neu ist, dass die Blockordnung unendlich sein darf: $\omega$, $\omega^*$
+   und $\zeta$ von $\zeta$-Ketten sind erfaßt, also Atommengen mit abzählbar
+   unendlich vielen Häufungspunkten.
+3. **Was nicht erfaßt ist.** Erstens Blockordnungen, die nicht
+   intervallendlich sind — dort ist der Blockabstand unendlich und die
+   Induktion hat keinen Anfang; das ist der Cantor–Bendixson-Weg eine Stufe
+   höher, und er wiederholt die Ausgangsfrage auf dem Quotienten. Zweitens
+   nichtdiskrete Atomketten, insbesondere in sich dichte: dort gibt es keine
+   Nachbaratome, die Einschrittrelationen existieren nicht, und Theorem 12
+   ist nicht anwendbar. Der ordnungsdichte Kern bleibt also offen, und zwar
+   an derselben Stelle wie seit dem elften Lauf — an der Einschrittrelation,
+   nicht mehr an der Analysis.
+
+### Proposition 15: die Gestalt jedes Gegenbeispiels
+
+Zwei Umformulierungen, die der Buchhaltung guttun. Aus
+$F(i{+}1,j)-F(i,j)=\mu_ix_{ij}$ und $F(i,j{+}1)-F(i,j)=\nu_jx_{ij}$ folgt
+$$\rho_j=\operatorname{Var}_i F(\cdot,j),\qquad
+  \sigma_i=\operatorname{Var}_j F(i,\cdot):$$
+die nackte Voraussetzung von (Q) ist genau, dass **jede Zeile und jede Spalte
+des Flusses von beschränkter Variation ist**, (H) ist die
+$\nu$-gewichtete Summierbarkeit der Zeilenvariationen nach Norden, und (U)(i)
+ist Straffheit statt Summierbarkeit. Damit hat jede nichtverschwindende
+Lösung von (Q) zwingend, für **jedes** $j_0$:
+
+1. $\sup_{i,\,j\ge j_0}|F(i,j)|=\infty$ (Korollar 13(b));
+2. $\sum_{j\ge j_0}\nu_j\rho_j=\infty$ und $\sum_i\mu_i\sigma_i=\infty$
+   (Korollar 13(a); die zweite Summe dominiert die erste nach Tonelli), also
+   insbesondere $\sup_j\rho_j=\infty$, weil $\sum_j\nu_j<\infty$;
+3. $\rho_j<\infty$ für jedes einzelne $j$ und $\sigma_i<\infty$ für jedes
+   einzelne $i$ — ein Fubini-Hindernis: $|x|$ ist zeilen- und spaltenweise
+   $\mu$- bzw. $\nu$-integrierbar und auf keinem Nordquadranten
+   $\mu\otimes\nu$-integrierbar;
+4. entweder entweicht die Flussmasse beim Marsch nach Norden nach Osten oder
+   Westen — (U)(i) fällt —, oder $\sum_{j\ge j_0}\nu_j|R_j|=\infty$.
+
+Punkt 1 ist der brauchbarste: ein Gegenbeispiel muss einen **unbeschränkten
+Dualitätsdefekt** haben, und zwar auf jedem Nordquadranten. Wer nach einem
+sucht, sucht nicht mehr eine Lösung mit unsummierbarer Doppelreihe, sondern
+eine mit unbeschränktem $\Phi$.
+
+### Was jetzt offen ist, exakt
+
+* **(V) bei unbeschränktem Defekt.** Die Straffheit (U)(i) aus (Q) allein zu
+  gewinnen, ist unverändert offen; der Bootstrap-Angriff des zwanzigsten
+  Laufs richtet sich jetzt auf (U)(i) statt auf (H) und ist damit schwächer
+  geworden — Straffheit ist weniger als Summierbarkeit. Der Ansatzpunkt ist
+  die Evolutionsgestalt: $\rho_{j+1}\le\rho_j+2\sum_i(\nu_j-\mu_i)^+|x_{ij}|$
+  (aus $\mu_ix_{i,j+1}=(\mu_i-\nu_j)x_{ij}+\nu_jx_{i+1,j}$, einer
+  Konvexkombination genau dort, wo $\nu_j\le\mu_i$) — die Zeilenvariation
+  kann nur dort wachsen, wo die $\nu$-Masse die $\mu$-Masse übersteigt, und
+  das sind wegen der Summierbarkeit beider Seiten die Ränder
+  $i\to\pm\infty$. Das ist dieselbe Stelle, an der (U)(i) entweichen ließe.
+* **Jenseits der zwei Ketten** ist bei beschränktem $\Phi$ erledigt, soweit
+  die Atomkette diskret ist und die Blockordnung intervallendlich
+  (Korollar 16). Offen bleiben dort genau zwei Dinge, und beide sind
+  benannt: eine Blockordnung, die nicht intervallendlich ist — die
+  Ausgangsfrage eine Cantor–Bendixson-Stufe höher, auf dem Quotienten —, und
+  die nichtdiskrete, insbesondere in sich dichte Atomkette, wo es keine
+  Einschrittrelationen gibt und Theorem 12 nicht ansetzt. Der ordnungsdichte
+  Kern hängt damit nicht mehr an der Analysis, sondern an der Algebra der
+  Einschrittrelation.
+* **Die Roadmap.** Der zwanzigste Lauf hat einen Eintrag der (H)-Fassung
+  zurückgestellt, weil „die Manuskriptklasse nur absolute Konvergenz
+  verlangt". Für Korollar 14 gilt der Einwand nicht mehr: seine Hypothese ist
+  die Beschränktheit von $\Phi$, und die steht in `thm:duality` als
+  \eqref{eq:dual1}+\eqref{eq:dual2} ohnehin da. Der Eintrag ist mit diesem
+  Lauf gemacht (`MartingaleProblems` Meilenstein 8,
+  `duality_of_atomic_twoChains_of_bounded`).
+
+### Sackgassen, neunzehnter Nachtrag
+
+* **Die Spiegel-Transformation, zum zweiten Mal.** Der achtzehnte Nachtrag
+  hielt fest, dass sie nur die Tonelli-Lesart von $\Sigma_{j_0}$ tauscht. Das
+  bleibt richtig und ist jetzt gegenstandslos: nicht die Seite war das
+  Problem, sondern dass $\Sigma_{j_0}$ überhaupt für einen **Limes** benutzt
+  wurde, wo Straffheit genügt.
+* **„(H) ist die Grenze der Methode".** Der Schluss des zwanzigsten Laufs,
+  und er war voreilig: er las aus „beide Seiten brauchen dieselbe Summe" ein
+  Methodenhindernis, statt zu prüfen, wofür die Summe gebraucht wird. Die
+  Lehre ist dieselbe wie im siebzehnten Lauf beim Kompaktheitsargument —
+  eine Prämisse, die aus der Rechnung stammt statt aus dem Beweisbedarf.
+* **Der reelle Limes als Weg zur Konstanten $0$.** Er funktioniert (Identität
+  I), ist aber überflüssig: der Koeffizientenvergleich in (B$\infty$) gibt
+  $K_j=0$ und $R_j=0$ in einer Zeile und braucht die Reihe nicht.
+
+## Die Stieltjes-Transformation, 2026-09-04 (zweiundzwanzigster Lauf): die Einschrittrelation war nie nötig — der ordnungsdichte Kern fällt, für jede Atomkette, bei $m\otimes m$-integrierbarer Dichte
+
+Der einundzwanzigste Lauf schloß mit „der ordnungsdichte Kern hängt damit
+nicht mehr an der Analysis, sondern an der Algebra der Einschrittrelation":
+Theorem 12 setzt an Nachbaratomen an, und eine in sich dichte Atommenge hat
+keine. Dieser Lauf nimmt die Diagnose ernst und **entfernt die
+Einschrittrelation aus der Methode**. Sie war eine Bequemlichkeit der
+$\mathbb Z$-Indizierung, nicht ihr Träger: die Abelsche Summation, an der
+alles hängt, ist in Wahrheit eine **Stieltjes-Produktregel**, und die gilt auf
+jeder abzählbaren Kette. Damit ist der seit dem elften Lauf offene Kern
+geschlossen — unter einer Integrierbarkeitshypothese an die Dichte, die
+schwächer ist als die Klasse $|h|\le B$, in der alle LPs und Messungen des
+zwölften bis siebzehnten Laufs gearbeitet haben.
+
+Neu ist `Task23/dense_chain.py` (Proben (A)–(G), exakt in `Fraction`, rc=0).
+
+### Die Aufstellung, und wie wenig sie verlangt
+
+Das System ist wörtlich das des zwölften Laufs. $A\subset[0,t^*)$ sei die
+Atommenge, eine **beliebige abzählbare Kette** — keine Diskretheit, keine
+Intervallendlichkeit, in sich dicht erlaubt —, $m_a>0$ mit
+$M=\sum_am_a<\infty$, und $h:A\times T\to\R$ mit
+
+* **(C1)** $h(a,0)=0$;
+* **(C2)** $h(a,b)+h(b,a)=h(a,a)+h(b,b)$ für alle $a,b\in A$;
+* **(C3)** $H(s,t)+H(t,s)=0$, wobei $H(s,t):=\sum_{a<s}m_ah(a,t)$.
+
+Behauptung: $h(a,a)=0$ für jedes Atom. Dazu die abgeleiteten Größen
+$$\Delta(t):=\sum_{a<t}m_ah(a,a),\quad
+  \kappa(a,t):=h(a,t)-h(a,a),\quad
+  \widehat w(s,t):=H(s,t)+\Delta(t)-\Delta(s),$$
+mit den drei Eigenschaften des siebzehnten Laufs: $\widehat w$ hat in der
+ersten Koordinate die Zuwachsdarstellung
+$\widehat w(s',t)-\widehat w(s,t)=\sum_{a\in[s,s')}m_a\kappa(a,t)$
+(definitorisch), $\kappa$ ist auf $A\times A$ antisymmetrisch (das ist (C2)),
+$\widehat w$ ist antisymmetrisch (das ist (C3)). Die Randfunktionen sind
+$$\widehat w(0,t)=\Delta(t),\qquad
+  \widehat w(s,0)=-\Delta(s),\qquad
+  \psi(t):=\widehat w(t^*,t).$$
+
+**Der Beweis benutzt (C3) nur an Punktepaaren aus $A\cup\{0,t^*\}$.** Das ist
+die eigentliche Neuigkeit gegenüber allen bisherigen Anläufen: der endliche
+Satz und die Zwei-Diagonalen-Induktion brauchen einen Punkt **echt zwischen**
+einem Atom und seinem Nachfolger (zwölfter Lauf, Probe an $N=2$), und genau
+den nimmt die Ordnungsdichte weg. Hier wird kein Lückenpunkt angefaßt. Probe
+(E) prüft das an der Wurzel: auf endlichen Ketten $n=1,\dots,7$ erzwingt
+schon die lückenfreie Teilmenge — (C1), (C2), (C3) nur auf
+$(A\cup\{t^*\})^2$ — die Diagonale $h(a,a)=0$; Kontrolle (E'): läßt man (C2)
+weg, ist sie frei.
+
+### Lemma 17.1 (Stieltjes-Produktregel auf einer beliebigen Kette)
+
+*Seien $f,V:T\to\C$ beschränkt mit Zuwachsdarstellungen
+$f(s')-f(s)=\sum_{a\in[s,s')}j^f_a$ und $V(s')-V(s)=\sum_{a\in[s,s')}j^V_a$
+für alle $s\le s'$, mit $\sum_a|j^f_a|<\infty$ und $\sum_a|j^V_a|<\infty$.
+Dann hat $fV$ die Zuwachsdarstellung mit den Sprüngen
+$f(a{+})V(a{+})-f(a)V(a)$, wobei $f(a{+}):=f(a)+j^f_a$.*
+
+*Beweis.* Mit $J_f=\sum_{a\in S}j^f_a$, $S=[s,s')\cap A$, und
+$f(a)=f(s)+\sum_{a'\in S,a'<a}j^f_{a'}$ ist die Summe der Sprünge gleich
+$f(s)J_V+V(s)J_f+\big[\sum_{a'<a}+\sum_{a'>a}+\sum_{a'=a}\big]j^f_{a'}j^V_a
+ =f(s)J_V+V(s)J_f+J_fJ_V=f(s')V(s')-f(s)V(s)$; alle Umordnungen sind absolut
+konvergent. $\square$
+
+Kein Wort über Nachbarn, kein Wort über den Ordnungstyp. **Hier stirbt die
+Einschrittrelation.**
+
+### Die Gewichte, und Lemma 17.2 (Abel–Stieltjes)
+
+$$W^c(a):=\prod_{a'>a}(1+cm_{a'}),\qquad V(s):=\prod_{a\ge s}(1+cm_a),\qquad
+  V_0(c):=V(0)=\prod_{a\in A}(1+cm_a).$$
+Alle Produkte konvergieren absolut ($\sum m_a<\infty$), sind ganz in $c$ und
+erfüllen $|W^c(a)|\le e^{\Phi(|c|)}$ mit $\Phi(r)=\sum_a\log(1+rm_a)=o(r)$.
+Die Teleskopidentität $\prod_{a\in S}(1+z_a)-1=\sum_{a\in S}z_a
+\prod_{a'\in S,a'>a}(1+z_{a'})$ gibt $V$ die Zuwachsdarstellung mit den
+Sprüngen $j^V_a=-c\,m_aW^c(a)$ und $V(a{+})=W^c(a)$.
+
+> **Lemma 17.2.** Für jedes $t\in T$ und jedes $c\in\C$ gilt
+> $$K(t;c)-c\,G(t;c)\;=\;\psi(t)-\Delta(t)\,V_0(c),$$
+> mit $K(t;c):=\sum_am_a\kappa(a,t)W^c(a)$ und
+> $G(t;c):=\sum_am_a\widehat w(a,t)W^c(a)$.
+
+*Beweis.* Lemma 17.1 auf $f=\widehat w(\cdot,t)$ und $V$; der Sprung von $fV$
+bei $a$ ist $m_a\kappa(a,t)W^c(a)-c\,m_a\widehat w(a,t)W^c(a)$, und die
+Zuwachsdarstellung über $[0,t^*]$ liest sich
+$(fV)(t^*)-(fV)(0)=\psi(t)\cdot1-\Delta(t)\cdot V_0$. $\square$
+
+Probe (A) prüft Lemma 17.2 **ohne jede Hypothese an $h$** auf zufälligen
+Ketten und sieben Werten von $c$ — es ist eine Identität der Definitionen.
+
+### Die drei Identitäten
+
+Setze $P(c):=\sum_am_a\psi(a)W^c(a)$, $Q(c):=\sum_am_a\Delta(a)W^c(a)$,
+$R(c):=\sum_am_ah(a,a)W^c(a)$ und $S(c):=\sum_am_ah(a,t^*)W^c(a)$.
+
+**(2) $P=V_0Q$.** Summiere Lemma 17.2 bei $t=b\in A$ gegen $m_bW^c(b)$:
+$$\sum_{a,b}m_am_b\kappa(a,b)W^c(a)W^c(b)
+ -c\sum_{a,b}m_am_b\widehat w(a,b)W^c(a)W^c(b)=P(c)-V_0(c)Q(c).$$
+Beide Doppelsummen verschwinden, weil $\kappa$ und $\widehat w$ auf $A\times A$
+antisymmetrisch und die Gewichte symmetrisch sind. Also $P(c)=V_0(c)Q(c)$.
+*Benutzt: (C2) und (C3) auf $A\times A$; Probe (B), nichttriviale Diagonale in
+allen vier Fällen.*
+
+**(4) $R(c)=\Delta(t^*)+c\,Q(c)$.** Lemma 17.2 bei $t=0$: dort ist
+$\kappa(a,0)=-h(a,a)$, $\widehat w(a,0)=-\Delta(a)$, $\psi(0)=-\Delta(t^*)$
+und $\Delta(0)=0$. *Benutzt: (C1); Probe (C).*
+
+**(5) $S(c)-R(c)+c\,P(c)=-\Delta(t^*)V_0(c)$.** Lemma 17.2 bei $t=t^*$: dort
+ist $\kappa(a,t^*)=h(a,t^*)-h(a,a)$, $G(t^*;c)=-P(c)$ und $\psi(t^*)=0$.
+*Benutzt: (C1) und (C3) an $A\times\{t^*\}$ samt $(t^*,t^*)$; Probe (D),
+nichttriviale Diagonale in allen vier Fällen.*
+
+**(7)** Aus (5) mit $cP=cV_0Q=V_0(R-\Delta(t^*))$ folgt in einer Zeile
+$$S(c)=R(c)\,\bigl(1-V_0(c)\bigr)$$
+— Probe (D'). Bei $c=0$ ist das $H(t^*,t^*)=0$, also (C3) auf der Diagonale.
+
+### Theorem 17: die Diagonale verschwindet, auf jeder Kette
+
+> **Theorem 17.** $A$ sei eine abzählbare Kette in $[0,t^*)$ mit Massen
+> $m_a>0$, $M=\sum m_a<\infty$; $h$ erfülle (C1), (C2) und (C3), alle Reihen
+> $H(s,t)$ und $\Delta(t)$ seien absolut konvergent, und es gelte
+> $$\textbf{(F)}\qquad \sum_{a,b\in A}m_am_b|h(a,b)|<\infty.$$
+> Dann ist $h(a,a)=0$ für jedes $a\in A$.
+
+*Beweis.* **1. $R$ ist auf der imaginären Achse beschränkt.** Auf
+$\Re c\ge0$ ist $|1+cm|\ge1$ für jedes $m>0$, also
+$|W^c(a)|\le\prod_{a'}|1+cm_{a'}|=|V_0(c)|$ und damit
+$|S(c)|\le\rho^*|V_0(c)|$ mit $\rho^*:=\sum_am_a|h(a,t^*)|<\infty$. Ferner ist
+$|1+cm|^2=1+2m\Re c+m^2|c|^2\ge1+m^2|c|^2$, also
+$|V_0(c)|\ge\widetilde V(|c|):=\prod_a(1+m_a^2|c|^2)^{1/2}$, und
+$\widetilde V(r)\to\infty$ (ein einziges Atom genügt). Wähle $r_0$ mit
+$\widetilde V(r_0)\ge2$. Für $\Re c\ge0$, $|c|\ge r_0$ gibt (7)
+$$|R(c)|=\frac{|S(c)|}{|1-V_0(c)|}\le\frac{\rho^*|V_0(c)|}{|V_0(c)|-1}\le2\rho^*,$$
+und auf dem Kompaktum $\{\Re c\ge0,\ |c|\le r_0\}$ ist
+$|R|\le D\,e^{\Phi(r_0)}$ mit $D:=\sum_am_a|h(a,a)|<\infty$. Probe (G) prüft
+die beiden Ungleichungen numerisch.
+
+**2. $R$ ist konstant.** $R$ ist ganz vom Exponentialtyp $0$
+($|R(c)|\le D\,e^{\Phi(|c|)}$, $\Phi(r)=o(r)$) und nach 1. auf der imaginären
+Achse beschränkt; eine ganze Funktion vom Typ $0$, die auf einer Geraden
+beschränkt ist, ist überall beschränkt (Phragmén–Lindelöf, Titchmarsh §5.62 /
+Boas Thm. 6.2.4 mit $\tau=0$ — dieselbe Schranke, auf der schon die
+Theoreme 9, 10 und 12 ruhen), nach Liouville also konstant,
+$R\equiv R(0)=\Delta(t^*)$.
+
+**3. $Q\equiv0$.** (4) gibt $c\,Q(c)=R(c)-\Delta(t^*)=0$ für alle $c$.
+
+**4. $\Delta$ verschwindet auf den Atomen.** Theorem 9 gilt wörtlich auf
+jeder abzählbaren Kette: für einen Fußpunkt $s_0\in T$ ist
+$W^c(a)=V(s_0)\prod_{a<a'<s_0}(1+cm_{a'})$ falls $a<s_0$ und
+$W^c(a)=V(s_0)\big/\prod_{s_0\le a'\le a}(1+cm_{a'})$ sonst (Probe (F)); die
+Zerlegung $0=\sum_a\alpha_aW^c(a)/V(s_0)=P_{s_0}(c)+N_{s_0}(c)$ liefert
+$P_{s_0}$ ganz vom Typ $0$ und auf $\Re c\ge0$ durch $\|\alpha\|_1$
+beschränkt, also konstant; für reelles $c\to+\infty$ geht jeder Term von
+$N_{s_0}$ gegen $0$, also $P_{s_0}\equiv0$ und insbesondere
+$P_{s_0}(0)=\sum_{a<s_0}\alpha_a=0$ **für jedes $s_0\in T$**. Angewandt auf
+$\alpha_a=m_a\Delta(a)\in\ell^1$ (denn $|\Delta|\le D$): $\Delta(a)=0$ für
+jedes $a\in A$.
+
+**5. $h(a,a)=0$ für jedes nichtmaximale Atom.** Zu $a\in A$ mit Atomen
+darüber wähle $t_n\in A$ fallend mit $\bigcap_n(a,t_n)\cap A=\emptyset$ — das
+geht, weil $A$ abzählbar ist: zu einer Aufzählung $\{b_k\}$ von
+$A\cap(a,t_1)$ setze $t_{k+1}:=\min(t_k,b_k)$. Dann ist
+$0=\Delta(t_n)-\Delta(a)=m_ah(a,a)+\sum_{b\in(a,t_n)}m_bh(b,b)$, und der
+zweite Term geht gegen $0$ (dominierte Konvergenz, $\sum_bm_b|h(b,b)|=D$).
+
+**6. Das maximale Atom.** Hat $A$ kein Maximum, ist mit 5. alles gezeigt und
+$\Delta\equiv0$. Andernfalls sei $a_{\max}$ das größte Atom und
+$\lambda:=h(a_{\max},a_{\max})$; nach 5. ist $\Delta(t)=m_{a_{\max}}\lambda$
+für $t>a_{\max}$, insbesondere $\Delta(t^*)=m_{a_{\max}}\lambda$. Aus (2) und
+$Q\equiv0$ folgt $P\equiv0$, mit Schritt 4 also $\psi(a)=0$, mit
+$\Delta(a)=0$ also $H(t^*,a)=\Delta(t^*)$ und mit (C3) an $(t^*,a)$
+$$H(a,t^*)=-\Delta(t^*)\qquad\text{für jedes }a\in A.$$
+Hat $A$ ein Minimum $a_0$, so ist $H(a_0,t^*)=0$ (leere Summe); hat es
+keines, so wähle $a_n\in A$ streng fallend und kofinal nach unten, dann ist
+$\bigcap_n[0,a_n)\cap A=\emptyset$ und $H(a_n,t^*)\to0$ (dominierte
+Konvergenz, Majorante $\sum_am_a|h(a,t^*)|=\rho^*$). Beidemal
+$\Delta(t^*)=0$, also $\lambda=0$. $\square$
+
+### Was die Hypothese (F) ist, und was sie nicht ist
+
+(F) ist die $m\otimes m$-Integrierbarkeit der Dichte **auf Atompaaren**, und
+sie geht an genau zwei Stellen ein: die Doppelsumme in (2) muß nach Fubini
+umgeordnet werden dürfen, und $P$ muß existieren
+($\sum_am_a|\psi(a)|<\infty$). Alles Übrige — Lemma 17.2, (4), (5), (7) und
+die Schritte 1 bis 6 — braucht nur die absolute Konvergenz, die das System
+ohnehin voraussetzt.
+
+* (F) folgt aus $|h|\le B$ **auf $A\times A$** (dann $\le2BM^2$). Das ist echt
+  schwächer als die Klasse $|h|\le B$ auf $A\times T$, in der der zwölfte bis
+  siebzehnte Lauf gemessen haben, und heißt über $\gamma=\kappa/2$ die
+  Beschränktheit der **Dichte** auf Atompaaren.
+* (F) ist **unvergleichbar** mit der Hypothese von Korollar 14 (Beschränktheit
+  des **Wertes** $\Phi$). Korollar 14 deckt unbeschränkte Dichten auf zwei
+  gestapelten $\zeta$-Ketten, Theorem 17 deckt beliebige Ketten bei
+  integrierbarer Dichte. Keins subsumiert das andere; zusammen decken sie
+  alles, was Task 23 bisher an Instanzen gesehen hat.
+* Ehrlich dazu: `prop:atomicdual` und `prop:mixeddual` sind abstrakt
+  formuliert („no integrability hypothesis beyond the existence of the
+  integrals"), und (F) ist eine echte Zusatzhypothese. Der Satz fürs
+  Manuskript lautet deshalb:
+
+> **Korollar 18.** Ist $q$ rein atomar, bilden die Atome unter $t^*$ eine
+> Kette, erfüllen $\Phi,\gamma$ \eqref{eq:incrementrep} mit
+> $\gamma_1=\gamma_2$, und ist $\gamma$ auf $A\times A$
+> $m\otimes m$-integrierbar, so ist $\Phi(t^*,0)=\Phi(0,t^*)$ — **ohne jede
+> Voraussetzung an den Ordnungstyp der Atommenge.**
+
+### Was das für den offenen Kern heißt
+
+Der ordnungsdichte Fall, seit dem elften Lauf der benannte Rest von Task 23,
+ist damit **in der Klasse (F) geschlossen**, und zwar zusammen mit allem, was
+die Cantor–Bendixson-Leiter darüber noch hätte kosten können: Theorem 17
+kennt keine Blöcke, keinen Blockabstand und keine Induktion. Die
+Zusatzhypothese von Korollar 16 — intervallendliche Blockordnung — entfällt,
+die Diskretheit entfällt, und die kleinste Instanz der zwei $\zeta$-Ketten
+ist ein Sonderfall.
+
+Offen bleibt danach genau zweierlei, und beides ist benannt:
+
+* **Die nackte Klasse.** Weder (F) noch die Beschränktheit von $\Phi$, nur die
+  absolute Konvergenz der Reihen von \eqref{eq:incrementrep}. Das ist
+  dieselbe Lücke, die der einundzwanzigste Lauf als „(V) bei unbeschränktem
+  Defekt" führt, jetzt für beliebige Ketten statt nur für zwei
+  $\zeta$-Ketten. Proposition 15 gilt unverändert und sagt, wie ein
+  Gegenbeispiel aussehen müßte; neu hinzu kommt aus Theorem 17, daß es
+  $\sum_{a,b}m_am_b|\kappa(a,b)|=\infty$ haben muß.
+* **Die Halbordnung.** Theorem 17 benutzt die lineare Ordnung an jeder
+  Stelle — Intervalle $[s,s')$, Produkte über $a'>a$, die Teleskopidentität.
+  Für unvergleichbare Atome ist `prop:atomicposet` (sechster Lauf) der Satz,
+  und der ist endlich. Eine unendliche Halbordnung mit summierbaren Massen
+  ist von keinem der beiden Sätze erfaßt.
+
+### Sackgassen, zwanzigster Nachtrag
+
+* **„Der ordnungsdichte Kern hängt an der Algebra der Einschrittrelation".**
+  Der Schluß des einundzwanzigsten Laufs, und er war so voreilig wie „(H) ist
+  die Grenze der Methode" im zwanzigsten. Er las aus „Theorem 12 setzt an
+  Nachbaratomen an" ein Hindernis, statt zu prüfen, **wofür** die Nachbarn
+  dort stehen: für die Abelsche Summation, und die ist eine
+  Stieltjes-Produktregel, die keine Nachbarn kennt. Zum dritten Mal dieselbe
+  Lehre — eine Prämisse, die aus der Rechnung stammt statt aus dem
+  Beweisbedarf (siebzehnter Lauf: Kompaktheit; zwanzigster Lauf: (H)).
+* **Die Suche nach einem Punkt zwischen Atom und Nachfolger.** Zehn Läufe
+  lang galt die Bemerkung des zwölften Laufs, der Mechanismus brauche ein $t$
+  echt zwischen dem Atom und seinem Nachfolger, als die Stelle, an der die
+  Ordnungsdichte beißt. Sie beschreibt eine bestimmte einzeilige Herleitung,
+  nicht das System: Probe (E) zeigt, daß schon die lückenfreie Teilmenge der
+  Bedingungen die Diagonale erzwingt, auf jeder endlichen Kette bis $n=7$.
+* **Der Zweikoordinaten-Transform als Quelle neuer Information.** Die
+  Doppeltransformation $D(c,d)$, $E(c,d)$ des Antisymmetrieschritts sieht nach
+  einem reichen System aus; ihr ganzer Ertrag steckt in der Diagonale $d=c$,
+  wo beide Doppelsummen aus Antisymmetrie verschwinden. Die Nebendiagonale
+  gibt nur die Teilerdifferenz
+  $E(c,d)=-[V_0(c)-V_0(d)][Q(c)-Q(d)]/(c-d)$ zurück, also nichts über (2)
+  hinaus.
+
+## Die unendliche Halbordnung, 2026-09-04 (dreiundzwanzigster Lauf): sie ist falsch — auf der abzählbaren Antikette bricht die Dualität, bei lauter positiven Massen
+
+Der zweiundzwanzigste Lauf schloß den ordnungsdichten Kern und ließ genau zwei
+benannte Dinge offen: die **nackte Klasse** auf Ketten und die **unendliche
+Halbordnung**. Das zweite ist entschieden, und zwar **negativ**. Auf der
+einfachsten unendlichen Halbordnung überhaupt — einer abzählbaren Antikette
+zwischen $0$ und $t^*$ — gibt es eine rein atomare Uhr endlicher Masse mit
+lauter positiven Atommassen und ein Paar $\Phi,\gamma$, das
+\eqref{eq:incrementrep} mit $\gamma_1=\gamma_2=\gamma$ an **jedem**
+vergleichbaren Paar erfüllt und $\Phi(t^*,0)-\Phi(0,t^*)=1/M\neq0$ hat.
+
+Die Endlichkeitshypothese von `prop:atomicposet` ist damit keine Bequemlichkeit
+des Matrizenbeweises, sondern unentbehrlich, und die Hypothese (F) von
+Theorem 17 ist im Halbordnungsfall nicht wegzulassen. Alles in
+`Task23/poset_infinite.py` (Proben (A)–(H), exakt in `Fraction`, rc=0).
+
+### Das Gegenbeispiel
+
+$\T=\{0\}\cup A\cup\{t^*\}$ mit $A=\{a_1,a_2,\dots\}$ **paarweise
+unvergleichbar**, $0<a_i<t^*$; $q(\{0\})=0$, $m_i:=q(\{a_i\})>0$ mit
+$M:=\sum_im_i<\infty$, $\sigma_i:=\sum_{j\ge i}m_j$. Die Abwärtsmengen sind
+$\T_{<0}=\emptyset$, $\T_{<a_i}=\{0\}$, $\T_{<t^*}=\{0\}\cup A$. Setze
+
+$$f(i):=\frac1{\sigma_i\sigma_{i+1}},\qquad
+  \kappa(a_i,a_j):=\operatorname{sgn}(i-j)\,f(\min(i,j)),\qquad
+  \kappa(a_j,0)=\kappa(a_j,t^*):=\frac1{M^2},$$
+
+$\kappa(0,t^*):=0$, $\kappa$ sonst durch Antisymmetrie, und $\gamma:=\kappa/2$
+(der symmetrische Anteil von $\gamma$ kommt im Defekt nach dem dritten Lauf
+ohnehin nicht vor). Dann ist $\Phi(s,t):=-\tfrac12\Psi(t,0)+\tfrac12\Psi(s,t)$
+mit $\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$ die zugehörige Lösung.
+
+> **Theorem 19.** Für jede summierbare Massenfolge $m_i>0$ gilt
+> $$v_i:=\sum_j m_j\kappa(a_j,a_i)=\frac1M\qquad\text{für jedes }i,$$
+> jede Zeile konvergiert absolut ($r_i:=\sum_jm_j|\kappa(a_j,a_i)|
+> =2/\sigma_i-1/M<\infty$), und $\Phi,\gamma$ erfüllen \eqref{eq:incrementrep}
+> mit $\Phi(t^*,0)-\Phi(0,t^*)=1/M\neq0$.
+
+*Beweis.* Für $j<i$ ist $\kappa(a_j,a_i)=-f(j)$, für $j>i$ ist
+$\kappa(a_j,a_i)=+f(i)$. Also
+
+$$v_i=-\sum_{j<i}m_jf(j)+f(i)\sigma_{i+1}
+     =-\sum_{j<i}\Bigl(\frac1{\sigma_{j+1}}-\frac1{\sigma_j}\Bigr)
+      +\frac{\sigma_{i+1}}{\sigma_i\sigma_{i+1}}
+     =-\Bigl(\frac1{\sigma_i}-\frac1M\Bigr)+\frac1{\sigma_i}=\frac1M,$$
+
+weil $m_jf(j)=(\sigma_j-\sigma_{j+1})/(\sigma_j\sigma_{j+1})
+=1/\sigma_{j+1}-1/\sigma_j$ **teleskopiert**. Dieselbe Rechnung mit
+Absolutbeträgen gibt $r_i=(1/\sigma_i-1/M)+1/\sigma_i<\infty$. Die Relationen
+$(\diamondsuit)$ sind damit sämtlich erfüllt: an $(0,a_i)$ und $(a_i,a_j)$
+stehen wegen $q(\T_{<a_i})=0$ auf beiden Seiten Nullen; an $(a_i,t^*)$ steht
+$0+\Psi(t^*,a_i)=0+\delta(t^*)$, also $v_i=\delta(t^*)$, und
+$\delta(t^*)=\sum_jm_j\kappa(a_j,t^*)=M\cdot M^{-2}=1/M$; an $(0,t^*)$ steht
+$\Psi(t^*,0)=\sum_jm_j\kappa(a_j,0)=1/M=\delta(t^*)$. $\square$
+
+Probe (B) rechnet $v_i=1/M$ auf zwei Wegen nach — geschlossene Form gegen
+Partialsumme plus **exakten** Schwanz, für mehrere Abschneidestellen —, Probe
+(D) prüft $(\diamondsuit)$ an allen Paaren, Probe (E) beide Darstellungen von
+\eqref{eq:incrementrep} an **jedem** vergleichbaren Paar und den Defekt; alles
+für drei Massenfolgen ($2^{-i}$, $1/(i(i+1))$, $3^{-i}$).
+
+### Wo (F) ausfällt, und nur dort
+
+$$\sum_{i,j}m_im_j|\kappa(a_i,a_j)|=\sum_im_ir_i
+ \ \ge\ \sum_i\frac{m_i}{\sigma_i}=\infty,$$
+
+denn $\sum_im_i/\sigma_i$ divergiert für jede Folge mit $\sigma_i\downarrow0$
+(Probe (C) mißt es bis $N=5000$). Das ist die einzige Hypothese, die
+verletzt wird — und sie ist **scharf**:
+
+> **Proposition 19.1.** Ist $A$ eine Antikette und
+> $\sum_{i,j}m_im_j|\kappa(a_i,a_j)|<\infty$, so ist $\delta=0$.
+
+*Beweis.* $(\diamondsuit)$ an $(a_i,t^*)$ gibt $v_i=\delta$ für jedes $i$;
+Multiplikation mit $m_i$ und Summation über $i$ gibt links
+$\sum_{i,j}m_im_j\kappa(a_j,a_i)=0$ (Fubini und Antisymmetrie), rechts
+$\delta M$. Also $\delta=0$. $\square$
+
+Probe (G) prüft die Fubini-Identität $\sum_im_iv_i=0$ auf endlichen Antiketten
+mit zufälligen antisymmetrischen $\kappa$ nach; sie ist der ganze Inhalt des
+endlichen Antikettenfalls („flache Spitze", fünfter Lauf) und der Grund, warum
+`prop:atomicposet` im Endlichen keine Integrierbarkeit braucht.
+
+### Was das Gegenbeispiel braucht — und was es nicht braucht
+
+Es braucht **nicht**: unbeschränktes $\Phi$. $\Phi$ nimmt genau drei Werte an
+(Probe (E)), der Dualitätsdefekt ist beschränkt. Damit ist die
+Hypothesengestalt von Korollar 14 — Beschränktheit des **Wertes** $\Phi$, die
+das Manuskript an der Stelle, an der es $\Phi$ herstellt, ohnehin trägt — auf
+Halbordnungen **wertlos**; sie ist ein Kettenphänomen. Unbeschränkt ist allein
+die **Dichte** $\gamma$, und zwar auf der Nebendiagonale:
+$|\gamma(a_{i+1},a_i)|=f(i)/2\to\infty$.
+
+Es braucht **nicht**: daß der Defekt am obersten Punkt sitzt. Variante II
+schiebt zwischen $A$ und $t^*$ einen Punkt $c$ positiver Masse; dann ist
+$\delta(c)=1/M\neq0$ bei $q(\T_{<c})=M>0$. Der Defekt sitzt also an einem
+Punkt mit **positiver** Abwärtsmasse (Probe (D)/(E), Variante II).
+
+Es braucht $q(\{0\})=0$, also den Normalfall einer Uhr ohne Masse am kleinsten
+Punkt:
+
+> **Proposition 19.2.** Ist $\T=\{0\}\cup A\cup\{t^*\}$ mit $A$ Antikette und
+> $q(\{0\})>0$, so ist $\delta(t^*)=0$.
+
+*Beweis.* $(\diamondsuit)$ an $(0,a_i)$ liest sich $\Psi(a_i,0)=\delta(a_i)$,
+also $m_0\kappa(0,0)=m_0\kappa(0,a_i)$ und damit $\kappa(0,a_i)=0$;
+$(\diamondsuit)$ an $(0,t^*)$ liest sich $\Psi(t^*,0)=\delta(t^*)$, also
+$\delta(t^*)=m_0\kappa(0,0)+\sum_jm_j\kappa(a_j,0)
+=-\sum_jm_j\kappa(0,a_j)=0$. $\square$
+
+Probe (H) hält fest, daß das Gegenbeispiel unter $q(\{0\})>0$ genau an den
+Paaren $(0,a_i)$ zerbricht und an keinem anderen. Das ist **wörtlich die
+Bedingung**, die `sharp.py` im dritten Lauf im endlichen Fall als notwendig für
+jeden Ausfall gefunden hat: es gibt ein $s$ mit $\T_{<s}\neq\emptyset$ und
+$q(\T_{<s})=0$. Im Endlichen brauchte ein Ausfall darüber hinaus gemischte
+Vorzeichen; hier kauft die **Unendlichkeit**, was dort die negativen Massen
+kauften. Der dritte Lauf hatte notiert, für eine echte Uhr sei die Bedingung
+harmlos, „denn dann liegt unter $s$ kein Atom, und der Defekt ist ohnehin $0$" —
+das stimmt für $\delta(s)$ und eben nicht für die Punkte **über** $s$.
+
+### Warum die Ausschöpfung scheitern mußte
+
+Die Trunkierung auf die ersten $N$ Atome gibt
+$v_i^{(N)}=1/M-f(i)\sigma_{N+1}$: punktweise in $i$ geht der Rest gegen $1/M$,
+an der Spitze $i=N$ aber ist der Fehler $f(N)\sigma_{N+1}=1/\sigma_N\to\infty$
+(Probe (G)). Der Trunkierungsrest verschwindet **punktweise und nicht
+gleichmäßig**, und er wächst genau dort, wo die Zertifikatsnorm des elften
+Laufs explodiert. Der elfte bis dreizehnte Lauf haben die Ausschöpfung dreimal
+zerbrechen sehen (Frobenius, linear, quadratisch) und jedesmal nach einer
+feineren Paarung gesucht; auf der Antikette gibt es keine, weil es das Ergebnis
+nicht gibt.
+
+### Was jetzt offen ist, exakt
+
+* **Die unendliche Halbordnung unter (F).** Neu und präzise: gilt die Dualität
+  auf einer beliebigen abzählbaren Halbordnung mit summierbaren positiven
+  Massen, wenn $\sum_{a,b}m_am_b|\kappa(a,b)|<\infty$? Für die Antikette ja
+  (Proposition 19.1), für jede Kette ja (Theorem 17), für endliche
+  Halbordnungen ja ohne (F) (`prop:atomicposet`). Der Weg ist benannt: die
+  Fubini-Identität gibt auf einer allgemeinen Halbordnung nur die eine skalare
+  Relation
+  $\sum_{a,t}m_am_t\bigl[(\nu_a-\nu_t)-M([a<t]-[t<a])\bigr]\kappa(a,t)=0$ mit
+  $\nu_a=\sum_{s>a}m_s$, und die schließt allein nicht. Der Weg, der offen
+  steht, ist die Ausschöpfung — unter (F) trägt sie wieder, aber mit der
+  massegewichteten Supremumsnorm $\|T\|_m=\sup_{s,t}|T_{st}|/(m_sm_t)$ statt
+  der Frobeniusnorm des elften Laufs; siehe den Nachtrag desselben Laufs,
+  Proposition 19.3.
+* **Die nackte Klasse auf Ketten**, unverändert offen (zweiundzwanzigster
+  Lauf). Theorem 19 sagt darüber **nichts**: sein $\kappa$ lebt von der
+  Unvergleichbarkeit, und auf einer Kette vom Typ $\omega$ schließt schon der
+  vierzehnte Lauf ohne jede Integrierbarkeit.
+* **Ein Gegenbeispiel mit durchweg positiven Abwärtsmassen**, also mit
+  $q(\T_{<s})>0$ für jedes $s$ mit $\T_{<s}\neq\emptyset$. Proposition 19.2
+  verbietet es für die Antikette; ob eine tiefere Halbordnung es zuläßt, ist
+  offen und entscheidet, ob die Bedingung von `sharp.py` auch im Unendlichen
+  notwendig ist.
+
+### Nachtrag desselben Laufs: unter (F) ist die Ausschöpfung wieder offen — sie hängt an einer *anderen* Norm
+
+Der elfte Lauf hat die Ausschöpfung an der Zertifikatsnorm $\|T\|_F$
+zerbrechen sehen und der dreizehnte sie im Ganzen aufgegeben. Beide haben in
+der **freien** Klasse gerechnet, ohne (F). Unter (F) steht die Rechnung
+anders da, und zwar so:
+
+Sei $F\subset\T$ endlich, $V^F_{s,a}=[a<s]m_a$ und $K^F$ die Einschränkung von
+$\kappa$ auf $F$. Dann ist
+$(V^FK^F)_{st}=\Psi(s,t)-e(s,t)$ mit
+$e(s,t):=\sum_{a\notin F,\,a<s}m_a\kappa(a,t)$, und weil $(\diamondsuit)$ für
+$\Psi$ **exakt** gilt, ist der Rest von (S) auf $F$
+
+$$E_{st}=-e(s,t)-e(t,s)+e(s,s)+e(t,t).$$
+
+Die Identität des elften Laufs gibt für jedes symmetrische $T$ mit $TV^F$
+symmetrisch und $T\mathbb 1=e_{t^*}$
+
+$$\delta_F(t^*)=-\tfrac12\operatorname{tr}(TE),\qquad
+  \delta(t^*)=\delta_F(t^*)+e(t^*,t^*).$$
+
+Der zweite Summand geht gegen $0$, weil $\sum_am_a|\kappa(a,t^*)|<\infty$ die
+Existenz der Integrale in \eqref{eq:incrementrep} ohnehin verlangt. Für den
+ersten gilt: ist
+
+$$\|T\|_{m}:=\sup_{s,t}\frac{|T_{st}|}{m_sm_t}\ \le\ C,$$
+
+so ist $|\operatorname{tr}(TE)|\le\sum_{s,t}|T_{st}||E_{st}|
+\le C\sum_{s,t}m_sm_t|E_{st}|\le 4CM\varepsilon_F$ mit
+
+$$\varepsilon_F:=\sum_{a\notin F}m_a\rho_a,\qquad
+  \rho_a:=\sum_t m_t|\kappa(a,t)|,$$
+
+denn jeder der vier Terme von $E$ ist von der Gestalt
+$\sum_{s,t}m_sm_t|e(\cdot,\cdot)|\le M\varepsilon_F$. Und **(F) ist genau
+$\sum_am_a\rho_a<\infty$**, also $\varepsilon_F\to0$ längs jeder Ausschöpfung.
+
+> **Proposition 19.3.** Gilt (F) und gibt es eine Ausschöpfung $F_n\uparrow\T$
+> und Zertifikate $T_n$ auf $F_n$ — symmetrisch, $T_nV^{F_n}$ symmetrisch,
+> $T_n\mathbb 1=e_{t^*}$ — mit $\sup_n\|T_n\|_m<\infty$, so ist
+> $\delta(t^*)=0$.
+
+Das ist keine Wiederholung des elften Laufs, sondern seine Korrektur an der
+entscheidenden Stelle: dort stand $|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$
+und damit die **Frobeniusnorm**, hier steht die **massegewichtete
+Supremumsnorm** $\|T\|_m$. Die beiden sind unvergleichbar, und der elfte Lauf
+hat die falsche gemessen: sein Befund
+$C\sim\varepsilon^{-\max(n-2k,0)}$ betrifft $\|T\|_F$ und sagt über $\|T\|_m$
+nichts. Die Cauchy–Schwarz-Ungleichung, deren Ersatz der elfte Lauf gesucht
+hat, ist hier durch die Hölder-Paarung $\ell^\infty(m\otimes m)$ gegen
+$\ell^1(m\otimes m)$ ersetzt, und die Struktur von $E$ als Schwanzbeitrag —
+das, was der elfte Lauf „nicht wegwerfen" wollte — steckt jetzt in
+$\varepsilon_F$.
+
+Zwei Randbemerkungen, damit der nächste Lauf nicht in dieselben Fallen läuft.
+Erstens: $T\mathbb 1=e_{t^*}$ mit $\|T\|_m<\infty$ verlangt $m_{t^*}>0$, ist
+also nur für Atome hinschreibbar. Für ein $t^*$ ohne Masse — im Gegenbeispiel
+oben ist $t^*$ kein Atom — nimmt man die weitere Klasse
+$|T_{st}|\le C(m_s+[s=t^*])(m_t+[t=t^*])$; die Abschätzung geht durch, weil in
+der Zeile $t^*$ nur $\sum_tm_t|e(t,t^*)|\le M\sum_{a\notin F}m_a|\kappa(a,t^*)|$
+gebraucht wird, und das ist der Schwanz einer absolut konvergenten Reihe.
+Zweitens: die Antikette zeigt, daß ohne (F) kein solches $T$ existieren kann —
+Proposition 19.3 ist also nicht durch ein Zertifikat zu erfüllen, das (F)
+nicht benutzt.
+
+**Was der nächste Lauf zuerst rechnet.** $\|T\|_m$ für das explizite Zertifikat
+des sechsten Laufs, auf denselben Familien, auf denen `Task23/dense.py`
+$\|T\|_F$ gemessen hat, und auf Halbordnungen mit fallenden Massenprofilen
+(die einzigen, die eine summierbare Uhr zuläßt). Bleibt $\|T\|_m$ beschränkt,
+wo $\|T\|_F$ explodiert, so ist die unendliche Halbordnung unter (F) über
+Proposition 19.3 geschlossen; explodiert auch $\|T\|_m$, so sagt die Gestalt
+der Explosion, welche Zertifikate stattdessen zu bauen sind — das Zertifikat
+ist nicht eindeutig, und die freie Wahl innerhalb von $\mathcal L$ ist noch
+nie ausgenutzt worden.
+
+### Sackgassen, einundzwanzigster Nachtrag
+
+* **Die unendliche Halbordnung für wahr halten, weil der endliche Fall keine
+  Bedingung an die Lage der Atome braucht.** Zweiundzwanzig Läufe lang stand
+  sie als „von keinem der beiden Sätze erfaßt" da, mit dem stillen Beiklang,
+  sie sei nur noch nicht bewiesen. Das Warnzeichen lag seit dem elften Lauf
+  offen: der endliche Beweis läuft über ein Zertifikat, dessen Norm mit der
+  Atomzahl explodiert, und ein Beweis, der nicht ausschöpfbar ist, sagt über
+  den Limes nichts — in beide Richtungen. Zum vierten Mal dieselbe Lehre wie
+  beim Kompaktheitsargument (siebzehnter Lauf), bei (H) (zwanzigster) und bei
+  der Einschrittrelation (zweiundzwanzigster): eine Prämisse, die aus der
+  Rechnung stammt statt aus dem Beweisbedarf. Diesmal mit umgekehrtem
+  Vorzeichen — nicht der Beweis war zu schwach, sondern die Behauptung falsch.
+* **Beschränktheit von $\Phi$ als Ersatzhypothese für Halbordnungen.** Sie
+  trägt auf zwei $\zeta$-Ketten (Korollar 14) und auf Blockstapeln (Korollar
+  16) und ist auf der Antikette **wirkungslos**: das Gegenbeispiel hat
+  dreiwertiges $\Phi$. Wer die Halbordnung angeht, nehme (F) und nicht die
+  Beschränktheit.
+* **Die Antikette für den harmlosen Fall halten.** Sie ist im Endlichen die
+  „flache Spitze" mit einem Zweizeilenbeweis (fünfter Lauf), und genau dieser
+  Zweizeilenbeweis ist Fubini — er fällt im Unendlichen als erstes.
+
+## Die Stufenmittelung, 2026-09-04 (vierundzwanzigster Lauf): Proposition 19.3 ist gemessen — sie schließt die Antikette und scheitert am ordnungsdichten Kern; und die Halbordnung fällt unter (F), sobald ihre Unvergleichbarkeit transitiv ist
+
+Der dreiundzwanzigste Lauf hat genau eine Rechnung aufgegeben: $\|T\|_m$ für
+das explizite Zertifikat des sechsten Laufs, auf den Familien von
+`Task23/dense.py`. Sie ist gemacht (`Task23/certificate_m.py`, exakt in
+`Fraction`, die Konstruktion an $70\,956$ Fällen nachgeprüft), und sie ist
+dreifach ausgefallen:
+
+* **positiv** auf der Antikette — $\|T\|_m$ ist dort *gleichmäßig* $1$, mit
+  geschlossener Formel (Theorem 20), und Proposition 19.3 gibt daraus
+  Proposition 19.1 ohne Fubini;
+* **negativ** auf der ordnungsdichten Uhr — $\|T\|_m$ explodiert wie
+  $1/m_{\min}^2$, und zwar auf einer **Kette**, wo die Behauptung seit dem
+  zweiundzwanzigsten Lauf ein Satz ist; getroffen ist also die Methode, nicht
+  die Aussage, und zwar zum vierten Mal (Frobenius, linear, quadratisch,
+  jetzt massegewichtet);
+* **entschieden** in der Nebenfrage: das explizite Zertifikat ist unter allen
+  Zertifikaten $\|\cdot\|_m$-**optimal** (37 lineare Programme, Verhältnis
+  $1.00$ durchweg). Die „freie Wahl innerhalb von $\mathcal L$, die noch nie
+  ausgenutzt wurde", ist damit ausgenutzt und wertlos.
+
+Der eigentliche Ertrag des Laufs steht aber nicht in der Messung, sondern in
+dem, was sie sichtbar gemacht hat: eine **Breiteninvarianz**, die sich als
+Mittelungssatz entpuppt und die unendliche Halbordnung unter (F) für eine
+große Klasse schließt — Theorem 21, `Task23/weakorder.py` (Proben (A)–(E),
+exakt, rc=0).
+
+### Die Messung, und was sie genau misst
+
+Gewichte $w_a=m_a$ für Atome und $w_s=1$ für die beiden massefreien Punkte
+$0$ und $t^*$ (die weitere Klasse der zweiten Randbemerkung des
+dreiundzwanzigsten Laufs), $\|T\|_m=\max_{s,t}|T_{st}|/(w_sw_t)$, durchweg
+auf $M=1$ normiert — anders als $\|T\|_F$ ist $\|T\|_m$ **nicht**
+skaleninvariant, und die Schranke von Proposition 19.3 lautet
+$4M\|T\|_m\varepsilon_F$.
+
+| Familie (Kette, $M=1$) | $\|T\|_m$ | $\|T\|_F$ |
+|---|---|---|
+| gleiche Massen $1/n$ | $n^2$ (exakt, $n\le12$) | $\sim\sqrt n$ |
+| fallend $m_k=2^{-k}$ | $4.5,\,6.125,\,7.03,\dots\to8$ | $\to1.55$ |
+| fallend $m_k=3^{-k}$ | $\to 6.75$ | $\to1.59$ |
+| steigend $m_k=2^k$ | $9,\,147,\,4725,\dots,1.07\cdot10^{19}$ | $7.0\cdot10^{13}$ |
+| dyadisch, Level $\le n$ | $\bigl(2^{n-1}(2^n-1)\bigr)^2$ | $1,\dots,7.9$ |
+
+Die letzte Zeile ist der Befund. $\bigl(2^{n-1}(2^n-1)\bigr)^2$ ist **exakt**
+$1/m_{\min}^2$ nach der Normierung, und mit $\varepsilon_{F_n}=2^{-n}$ ist
+$\varepsilon_{F_n}\|T\|_m\sim8^n\to\infty$. Das Bild dahinter ist einfach:
+die Einträge von $T$ sind dort von der Größenordnung $1$, wo das Gewicht
+$m_sm_t$ verlangt. Für tiefe Ausschöpfungen ist der Grenzwert bei fallenden
+Profilen gemessen — $2^{-j}\to8.0000$ (ab $k=20$ stabil), $1/j^2\to10.62$ bei
+$k=64$, $1/(j(j+1))\to11.63$ bei $k=64$, beide mit Zuwächsen $\asymp k^{-2}$,
+also konvergent.
+
+**Steigende Profile sind der Feind, und eine summierbare ordnungsdichte Uhr
+kann ihnen nicht ausweichen.** Eine auf ganz $A$ fallende Massenfunktion auf
+einer ordnungsdichten Menge ist nicht summierbar — unter jedem Punkt liegen
+unendlich viele Atome, deren Massen dann von unten durch die Masse jenes
+Punktes beschränkt wären. Die verwürfelte ordnungsdichte Uhr (Massen $2^{-k}$
+in fester Aufzählung der dyadischen Brüche, `certificate_m.py scrambled`)
+zeigt dasselbe unregelmäßig: $\|T\|_m$ springt auf $5\cdot10^{12}$ und fällt
+danach *nicht monoton*, $\varepsilon_F\|T\|_m$ bleibt bei $10^8$.
+
+### Warum das die Methode trifft und nicht die Aussage
+
+Die dyadische Uhr ist eine **Kette**. Theorem 17 des zweiundzwanzigsten Laufs
+gibt dort die Dualität unter (F), ohne jede Ausschöpfung. Proposition 19.3
+scheitert also an einer Instanz, deren Konklusion bewiesen ist — das ist die
+schärfste Form eines Methodenversagens und schließt die Ausschöpfung als
+Beweisvehikel für den ordnungsdichten Fall aus. Der elfte bis dreizehnte Lauf
+haben dasselbe dreimal in anderen Normen gesehen; der Unterschied ist, daß es
+diesmal an einer Stelle sichtbar wird, an der die Wahrheit feststeht.
+
+### Theorem 20: die Antikette, mit geschlossenem Zertifikat
+
+Sei $\T=\{0\}\cup A\cup\{t^*\}$ mit $A$ endlich und paarweise unvergleichbar,
+$m_0=m_{t^*}=0$, $\mu:=m|_A$ als Vektor, $M=\mathbb 1^{\mathsf T}\mu>0$.
+
+> **Theorem 20.** $V=e_{t^*}\mu^{\mathsf T}$, und
+> $$T=\frac1M\bigl(e_{t^*}\mu^{\mathsf T}+\mu e_{t^*}^{\mathsf T}\bigr)
+>    -\frac1{M^2}\mu\mu^{\mathsf T}$$
+> ist symmetrisch mit $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_{t^*}$, und
+> $\|T\|_m=\max(1/M,1/M^2)$, auf $M=1$ normiert also $=1$, **unabhängig von
+> $|A|$**. Für $M=1$ ist das das Minimum.
+
+*Beweis.* Nur die Zeile $t^*$ von $V$ ist von null verschieden, weil
+$\T_{<a}=\{0\}$ und $m_0=0$; also $V=e_{t^*}\mu^{\mathsf T}$ und $V^2=0$, weil
+$\mu_{t^*}=0$. Damit ist $TV=(Te_{t^*})\mu^{\mathsf T}$ und
+$V^{\mathsf T}T=\mu(Te_{t^*})^{\mathsf T}$: die Bedingung ist genau, daß
+$Te_{t^*}$ zu $\mu$ parallel ist. Für das angegebene $T$ ist
+$Te_{t^*}=\mu/M$, und $T\mathbb 1=e_{t^*}+\mu/M-\mu/M=e_{t^*}$. Die Norm liest
+sich ab: $|T_{t^*a}|/(1\cdot m_a)=1/M$ und $|T_{ab}|/(m_am_b)=1/M^2$.
+Minimalität für $M=1$: aus $\sum_aT_{t^*a}=1$ und $|T_{t^*a}|\le Cm_a$ folgt
+$C\ge1/M$. $\square$
+
+Mit Proposition 19.3 folgt: **auf der abzählbaren Antikette gilt die Dualität
+unter (F)** — das ist Proposition 19.1, jetzt ohne Fubini und über die
+Ausschöpfung, und die erste unendliche Halbordnung, die die Ausschöpfung
+überhaupt schafft. Probe (C).
+
+### Die Breiteninvarianz — und was sie wirklich ist
+
+Auf gestuften Halbordnungen (ein Stapel endlicher Antiketten) mißt
+`certificate_m.py graded` etwas Auffälliges: $\|T\|_m$ hängt **nur von der
+Folge der Stufenmassen** ab, nicht von der Breite der Stufen und nicht davon,
+wie die Stufenmasse innerhalb der Stufe verteilt ist. Exakt gleiche Brüche
+für Breite $1,2,3$ und für die Aufteilungen $(\tfrac12,\tfrac12)$,
+$(\tfrac9{10},\tfrac1{10})$, $(\tfrac{99}{100},\tfrac1{100})$; $\|T\|_F$
+dagegen ändert sich. Das ist kein Zufall, sondern eine Hebung:
+
+> **Lemma 21.1 (Hebung).** Sei $\T$ ein Stapel von Antiketten
+> $L_0<L_1<\dots<L_{k+1}$ (jedes Paar aus verschiedenen Stufen vergleichbar,
+> jedes Paar aus derselben unvergleichbar), $\lambda_j=m(L_j)$,
+> $\pi_j=m|_{L_j}/\lambda_j$ (für massefreie einelementige Stufen
+> $\pi_j=e_{\text{Punkt}}$), und sei $\widetilde T$ ein Zertifikat der
+> Stufenkette mit Massen $\lambda$. Dann ist
+> $T:=\sum_{j,l}\widetilde T_{jl}\,\pi_j\pi_l^{\mathsf T}$ ein Zertifikat von
+> $\T$, und $\|T\|_m=\|\widetilde T\|_m$.
+
+*Beweis.* $T$ ist symmetrisch; $\pi_l^{\mathsf T}\mathbb 1=1$ gibt
+$T\mathbb 1=\sum_j(\widetilde T\mathbb 1)_j\pi_j=\pi_{k+1}=e_{t^*}$. Mit
+$V=\sum_p\lambda_p\chi_{>p}\pi_p^{\mathsf T}$ ($\chi_{>p}$ der Indikator der
+Stufen oberhalb $p$) und $\pi_l^{\mathsf T}\chi_{>p}=[l>p]$ ist
+$TV=\sum_{j,p}\bigl(\widetilde T\widetilde V\bigr)_{jp}\pi_j\pi_p^{\mathsf T}$,
+und $\widetilde T\widetilde V$ ist symmetrisch, also auch $TV$, also
+$TV=(TV)^{\mathsf T}=V^{\mathsf T}T$. Die Norm: für Atome ist
+$T_{st}=\frac{m_sm_t}{\lambda_{j(s)}\lambda_{j(t)}}\widetilde T_{j(s)j(t)}$,
+also $|T_{st}|/(m_sm_t)=|\widetilde T_{jl}|/(\lambda_j\lambda_l)$; für die
+Randpunkte dasselbe mit Gewicht $1$. $\square$
+
+Probe (B). Damit ist die gestufte Halbordnung genau so weit geschlossen wie
+ihre Stufenkette — aber das ist nur die halbe Einsicht.
+
+### Theorem 21: die Stufenmittelung, ohne Zertifikat
+
+Die Hebung mittelt Zertifikate. Man kann stattdessen **die Daten** mitteln,
+und dann braucht man Proposition 19.3 gar nicht mehr, sondern nur Theorem 17.
+Der Beobachtungspunkt: eine Halbordnung ist genau dann ein Stapel von
+Antiketten, wenn die **Unvergleichbarkeit transitiv** ist, also genau dann,
+wenn sie eine *schwache Ordnung* (totale Präordnung) ist; und dann hängt
+$\T_{<s}$ nur von der Stufe von $s$ ab.
+
+Sei $\T$ eine abzählbare schwache Ordnung mit Stufen $(L_j)_{j\in J}$, $J$ eine
+Kette, $m\ge0$ mit $M=\sum_am_a<\infty$, $\lambda_j=m(L_j)$, und es habe jede
+Stufe mit $\lambda_j=0$ nur einen Punkt. Sei $\kappa$ antisymmetrisch,
+$\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$, $\delta=\operatorname{diag}\Psi$, und es
+gelte $(\diamondsuit)$ an jedem **vergleichbaren** Paar. Setze
+$$\widetilde\kappa(j,l):=\sum_{a\in L_j}\sum_{b\in L_l}
+   \pi_j(a)\pi_l(b)\,\kappa(a,b).$$
+
+> **Theorem 21.** Gilt (F), also $\sum_{a,b}m_am_b|\kappa(a,b)|<\infty$, so
+> ist $\widetilde\kappa$ antisymmetrisch, erfüllt $(\diamondsuit)$ auf der
+> Stufenkette mit Massen $\lambda$, erfüllt dort ebenfalls (F), und es ist
+> $\widetilde\delta(j)=\mathbb E_{\pi_j}[\delta]$ für jedes $j$. Mit
+> Theorem 17 folgt $\delta(t^*)=0$, sobald $t^*$ allein in seiner Stufe steht.
+
+*Beweis.* Antisymmetrie ist klar; alle Summen konvergieren absolut, weil
+$\sum_{a,b}\pi_j(a)\pi_l(b)|\kappa(a,b)|\le
+(\lambda_j\lambda_l)^{-1}\sum_{a,b}m_am_b|\kappa|<\infty$, und dieselbe
+Abschätzung gibt $\sum_{j,l}\lambda_j\lambda_l|\widetilde\kappa(j,l)|
+\le\sum_{a,b}m_am_b|\kappa(a,b)|$, also (F) auf der Stufenkette.
+
+Weil $\T_{<s}$ nur von der Stufe abhängt, ist $\Psi(s,t)=:\Psi(j(s),t)$, und
+$$\widetilde\Psi(j,l):=\sum_{p<j}\lambda_p\widetilde\kappa(p,l)
+ =\sum_{b\in L_l}\pi_l(b)\sum_{p<j}\sum_{a\in L_p}m_a\kappa(a,b)
+ =\mathbb E_{\pi_l}\bigl[\Psi(j,\cdot)\bigr];$$
+das gemittelte System ist also das System der gemittelten Daten (Probe (2)).
+Insbesondere ist $\widetilde\Psi(j,j)=\mathbb E_{\pi_j(b)}[\Psi(j,b)]
+=\mathbb E_{\pi_j(b)}[\Psi(b,b)]=\mathbb E_{\pi_j}[\delta]$, weil $b\in L_j$
+und $\Psi(j,\cdot)=\Psi(b,\cdot)$ — das ist die Aussage über $\widetilde\delta$
+(Probe (4)). Für $j\neq l$ sind alle Paare $(s,t)\in L_j\times L_l$
+vergleichbar; Mittelung von $\Psi(s,t)+\Psi(t,s)=\Psi(s,s)+\Psi(t,t)$ gegen
+$\pi_j\otimes\pi_l$ gibt links $\widetilde\Psi(j,l)+\widetilde\Psi(l,j)$ und
+rechts $\mathbb E_{\pi_j}[\delta]+\mathbb E_{\pi_l}[\delta]
+=\widetilde\Psi(j,j)+\widetilde\Psi(l,l)$, also $(\diamondsuit)$ auf der
+Stufenkette; für $j=l$ ist es trivial (Probe (3)). Steht $t^*$ allein in
+seiner Stufe, so ist $\widetilde\delta(\text{oberste Stufe})=\delta(t^*)$, und
+Theorem 17 gibt $\widetilde\delta\equiv0$. $\square$
+
+**Was das umfaßt.** Ketten (lauter einelementige Stufen, dann ist Theorem 21
+Theorem 17), Antiketten (eine einzige Stufe, dann ist es Proposition 19.1),
+und alles dazwischen: ordnungsdichte Stufenketten mit beliebig breiten,
+insbesondere unendlichen, Stufen. Die Stufen dürfen abzählbar unendlich sein,
+denn (F) trägt die Mittelung; und die Massen dürfen innerhalb einer Stufe
+beliebig verteilt sein. Es ist die gemeinsame Verschärfung der beiden bisher
+bewiesenen Fälle, und es ist ein Satz und keine Messung.
+
+**Wo die Grenze liegt, exakt.** Bei der Transitivität der Unvergleichbarkeit.
+Das kleinste Gegenstück ist das „N": $0<a,b$, $a<c$, $b$ unvergleichbar zu
+$c$, $a$ unvergleichbar zu $b$. Dort ist $\Psi(b,\cdot)\neq\Psi(c,\cdot)$,
+obwohl $b$ und $c$ unvergleichbar sind — es gibt keine Stufen, und die
+Mittelung hat keinen Gegenstand (Probe (D)). Das ist keine Schwäche des
+Beweises, sondern die Stelle, an der die Halbordnung wirklich anfängt.
+
+**Konsistenz mit Theorem 19.** Das Gegenbeispiel des dreiundzwanzigsten Laufs
+lebt auf einer Antikette, also auf einer schwachen Ordnung; Theorem 21 verlangt
+(F), und Probe (E) rechnet nach, daß genau (F) dort ausfällt.
+
+### Was jetzt offen ist, exakt
+
+* **Die Halbordnung mit nicht transitiver Unvergleichbarkeit, unter (F).** Das
+  ist der ganze Rest der Halbordnungsfrage. Die kleinste offene Gestalt ist
+  ein unendliches „N"-Muster; die Fubini-Identität des dreiundzwanzigsten
+  Laufs
+  ($\sum_{a,t}m_am_t[(\nu_a-\nu_t)-M([a<t]-[t<a])]\kappa(a,t)=0$) bleibt die
+  einzige skalare Relation, die man umsonst hat, und sie schließt allein
+  nicht. Die Ausschöpfung ist als Weg dorthin **erledigt** (siehe oben);
+  benannter Ersatz: eine Mittelung über die Klassen einer *gröberen*
+  Äquivalenz als der Unvergleichbarkeit, die $\T_{<s}$ nur bis auf einen in
+  (F) kontrollierten Fehler stufenkonstant macht.
+* **Die nackte Klasse auf Ketten**, unverändert offen (zweiundzwanzigster
+  Lauf).
+* **Ein Gegenbeispiel mit durchweg positiven Abwärtsmassen**, unverändert
+  offen (dreiundzwanzigster Lauf, Proposition 19.2).
+
+### Sackgassen, zweiundzwanzigster Nachtrag
+
+* **Die Ausschöpfung, in jeder Norm.** Vier Anläufe, vier Normen: Frobenius
+  (elfter Lauf), die beste lineare Zertifikatskonstante (zwölfter), die
+  Energieform (dreizehnter), die massegewichtete Supremumsnorm (dieser). Der
+  vierte ist der aussagekräftigste, weil er an einer Instanz scheitert, deren
+  Konklusion bewiesen ist. Wer wieder ausschöpfen will, braucht zuerst ein
+  Argument, warum seine Norm auf der dyadischen Kette beschränkt bleiben soll.
+* **Die „freie Wahl innerhalb von $\mathcal L$" für einen Vorrat halten.** Der
+  Spielraum ist meßbar — $\dim\{T=T^{\mathsf T},\,TV=V^{\mathsf T}T,\,
+  T\mathbb 1=0\}$ ist $1$ auf Ketten und wächst quadratisch auf Antiketten
+  (`certificate_m.py free`) —, und er ändert das Minimum von $\|\cdot\|_m$ in
+  keinem einzigen der 37 gemessenen Fälle. Ein großer Lösungsraum ist kein
+  großer Spielraum.
+* **Die Breiteninvarianz für ein Phänomen der Zertifikate halten.** Sie ist
+  eines der *Daten*: die Stufenmittelung mittelt $\kappa$, nicht $T$, und
+  braucht Proposition 19.3 dann gar nicht mehr. Wer eine Invarianz an einer
+  Hilfsgröße mißt, suche sie zuerst an der Aufgabe.

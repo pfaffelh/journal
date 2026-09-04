@@ -212,6 +212,149 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `Task23/quarter_transform.py` (exakt, rc=0; der abgeschnittene Lauf
    08:23 hatte es mit Syntaxfehler hinterlassen).
 
+   *Zwischenstand 2026-09-03, einundzwanzigster Lauf: „(H) ist die Grenze
+   der Methode" ist zurückgenommen — (V) gilt, sobald der Fluss nach Norden
+   beschränkt ist, und das ist die Manuskriptklasse.* Der Beweis von
+   Theorem 10 benutzt (H) an genau drei Stellen und dort nur durch zwei
+   Folgerungen; abgezogen ergibt das **(U)** = Straffheit nach Norden
+   ($\sup_{j\ge j_0}\sum_{|i|>N}\mu_i|F(i,j)|\to0$) plus
+   $\sum_{j\ge j_0}\nu_j|R_j|<\infty$, und **Theorem 12** schließt daraus
+   $x\equiv0$. (U) hat zwei unvergleichbare hinreichende Kriterien: (H) —
+   Theorem 10 ist damit Korollar — und
+   $\sup_{i,\,j\ge j_0}|F(i,j)|<\infty$, die Beschränktheit des
+   **Dualitätsdefekts** $\Phi(s,t)-\Phi(t,s)$. Das zweite ist die
+   Hypothesengestalt, die `thm:duality` (\EK{} 4.4.11) in
+   \eqref{eq:dual1}+\eqref{eq:dual2} ohnehin trägt: die Dominante $\Gamma_T$
+   gibt $|\Phi|\le e^{C_T}E[\Gamma_T]$ auf $[0,T]^2$. Mitgefallen: die
+   Identität I des zwanzigsten Laufs ist entbehrlich (Koeffizientenvergleich
+   in (B$\infty$)), und die Fortsetzung nach Süden ist ein eigener,
+   hypothesenfreier Schritt. Jedes Gegenbeispiel hat jetzt eine scharfe
+   Gestalt (Proposition 15): unbeschränkter Defekt auf **jedem**
+   Nordquadranten, $\sup_j\rho_j=\infty$, und $|x|$ zeilen- und
+   spaltenweise integrierbar, aber auf keinem Nordquadranten
+   $\mu\otimes\nu$-integrierbar. **Und Theorem 12 iteriert** (Korollar 16):
+   ist die Atomkette diskret — jedes Atom hat Nachbarn — und ist die Ordnung
+   ihrer Blöcke (Klassen der Relation „nur endlich viele Atome dazwischen",
+   sämtlich vom Typ $\zeta$) intervallendlich, so gilt die Dualität bei
+   beschränktem $\Phi$; die Induktion läuft über den Blockabstand, die zwei
+   Abfälle stehen an den einander zugewandten Rändern und kommen aus der
+   Induktionsvoraussetzung. Damit sind abzählbar viele Häufungspunkte
+   erfaßt, nicht nur einer. Offen bleibt (V) bei unbeschränktem Defekt —
+   der Bootstrap richtet sich jetzt auf die **Straffheit** statt auf die
+   Summierbarkeit —, die nicht intervallendliche Blockordnung (dieselbe
+   Frage eine Cantor–Bendixson-Stufe höher) und die nichtdiskrete, in sich
+   dichte Atommenge, wo es keine Einschrittrelationen gibt.
+   `Task23/PROTOKOLL.md`, einundzwanzigster Lauf;
+   `Task23/naked_class.py` (Proben (A)–(F), exakt, rc=0); Roadmapeinträge
+   `tailProduct`, `norm_le_of_bddOn_imAxis_of_subexponential`,
+   `tailProduct_pairing_eq_zero`, `crossGrid_eq_zero_of_bddFlux`,
+   `duality_of_atomic_twoChains_of_bounded`, `Clock.atomBlocks` und
+   `duality_of_atomic_blockStack_of_bounded` in `MartingaleProblems`
+   Meilenstein 8.
+
+   *Zwischenstand 2026-09-04, zweiundzwanzigster Lauf: der ordnungsdichte
+   Kern ist gefallen — die Einschrittrelation war nie nötig.* Der
+   einundzwanzigste Lauf hatte den Rest als „die Algebra der
+   Einschrittrelation" diagnostiziert; das war, wie „(H) ist die Grenze der
+   Methode" davor, eine Prämisse aus der Rechnung statt aus dem Beweisbedarf.
+   Die Abelsche Summation von Theorem 12 ist in Wahrheit eine
+   **Stieltjes-Produktregel** (Lemma 17.1: haben $f$ und $V$
+   Zuwachsdarstellungen mit $\ell^1$-Sprüngen, so hat es $fV$ mit den
+   Produktsprüngen), und die kennt keine Nachbarn — sie gilt auf **jeder**
+   abzählbaren Kette. Damit läuft die ganze Transformationsmethode auf einer
+   beliebigen Atomkette: die Gewichte $W^c(a)=\prod_{a'>a}(1+cm_{a'})$, die
+   Identität $K(t;c)-cG(t;c)=\psi(t)-\Delta(t)V_0(c)$, und aus ihr an
+   $t=b\in A$, $t=0$ und $t=t^*$ die drei Gleichungen $P=V_0Q$,
+   $R=\Delta(t^*)+cQ$ und $S=R(1-V_0)$. Die letzte macht $R$ auf $\Re c\ge0$
+   beschränkt (denn $|V_0(c)|\ge\prod(1+m_a^2|c|^2)^{1/2}\to\infty$), also
+   nach Phragmén–Lindelöf und Liouville konstant, also $Q\equiv0$, also
+   $\Delta\equiv0$ auf den Atomen: **Theorem 17**, $h(a,a)=0$ für jedes Atom
+   einer beliebigen Kette, ordnungsdicht eingeschlossen. Einzige
+   Zusatzhypothese ist **(F)** $\sum_{a,b}m_am_b|h(a,b)|<\infty$ — die
+   $m\otimes m$-Integrierbarkeit der Dichte auf Atompaaren, hinreichend dafür
+   $|\gamma|$ beschränkt auf $A\times A$; sie steht an genau zwei Stellen
+   (Fubini in $P=V_0Q$, Existenz von $P$). Mitgefallen: der Blockstapel des
+   einundzwanzigsten Laufs braucht in dieser Klasse weder Diskretheit noch
+   intervallendliche Blockordnung, und die Bemerkung des zwölften Laufs, der
+   Mechanismus brauche einen Punkt echt zwischen Atom und Nachfolger, ist
+   widerlegt (Probe (E): die lückenfreie Bedingungsmenge erzwingt die
+   Diagonale bis $n=7$). Offen bleiben nur noch zwei benannte Dinge: die
+   **nackte Klasse** (weder (F) noch $\Phi$ beschränkt — dieselbe Lücke wie
+   „(V) bei unbeschränktem Defekt", jetzt für beliebige Ketten; jedes
+   Gegenbeispiel hat nach Proposition 15 unbeschränkten Defekt *und*
+   $\sum_{a,b}m_am_b|\kappa(a,b)|=\infty$) und die **unendliche
+   Halbordnung**, die von keinem der Sätze erfaßt ist.
+   `Task23/PROTOKOLL.md`, zweiundzwanzigster Lauf; `Task23/dense_chain.py`
+   (Proben (A)–(G), exakt, rc=0); Roadmapeinträge `HasAtomIncrements`,
+   `HasAtomIncrements.mul`, `chainTailProduct`,
+   `chainTailProduct_pairing_eq_zero`, `atomDiag_eq_zero_of_integrable` und
+   `duality_of_atomic_chain_of_integrable` in `MartingaleProblems`
+   Meilenstein 8.
+
+   *Zwischenstand 2026-09-04, dreiundzwanzigster Lauf: die zweite der beiden
+   Restfragen ist entschieden — die unendliche Halbordnung ist **falsch**.*
+   Auf der abzählbaren Antikette $\T=\{0\}\cup A\cup\{t^*\}$ mit positiven
+   summierbaren Massen $m_i$, Schwänzen $\sigma_i$ und
+   $\kappa(a_i,a_j)=\operatorname{sgn}(i-j)/(\sigma_n\sigma_{n+1})$,
+   $n=\min(i,j)$, teleskopiert $m_jf(j)=1/\sigma_{j+1}-1/\sigma_j$ die
+   Zeilensummen zu $\sum_jm_j\kappa(a_j,a_i)=1/M$ — konstant und von Null
+   verschieden, jede Zeile absolut konvergent ($r_i=2/\sigma_i-1/M$). Das löst
+   alle Relationen und gibt $\Phi(t^*,0)-\Phi(0,t^*)=1/M$ (Theorem 19).
+   Die Endlichkeit in `prop:atomicposet` ist damit unentbehrlich, und (F) ist
+   im Halbordnungsfall scharf: unter Integrierbarkeit schließt auf der
+   Antikette schon Fubini (Proposition 19.1). Zwei Befunde, die die
+   Hypothesenwahl künftiger Läufe festlegen: das Gegenbeispiel hat
+   **beschränktes $\Phi$** (drei Werte) — Korollar 14 ist ein Kettenphänomen
+   und außerhalb von Ketten wertlos —, und es braucht $q(\{0\})=0$
+   (Proposition 19.2), also genau die Bedingung, die `sharp.py` im dritten
+   Lauf im Endlichen als notwendig gefunden hat; die Unendlichkeit kauft hier,
+   was dort die negativen Massen kauften. Offen bleiben jetzt drei benannte
+   Dinge: die Halbordnung **unter (F)**, die nackte Klasse auf Ketten
+   (unverändert), und ob ein Gegenbeispiel mit durchweg positiven
+   Abwärtsmassen existiert. Für das erste steht der Weg schon da: unter (F)
+   trägt die Ausschöpfung wieder, aber mit der massegewichteten Supremumsnorm
+   $\|T\|_m=\sup_{s,t}|T_{st}|/(m_sm_t)$ statt der Frobeniusnorm, an der der
+   elfte Lauf gescheitert ist — $|\operatorname{tr}(TE)|\le4M\|T\|_m
+   \varepsilon_F$ mit $\varepsilon_F=\sum_{a\notin F}m_a\sum_tm_t|\kappa(a,t)|
+   \to0$, und das ist (F) (Proposition 19.3). Wer den Punkt aufnimmt, mißt
+   zuerst $\|T\|_m$ für das explizite Zertifikat des sechsten Laufs auf den
+   Familien von `Task23/dense.py`. `Task23/PROTOKOLL.md`, dreiundzwanzigster Lauf;
+   `Task23/poset_infinite.py` (Proben (A)–(H), exakt, rc=0); Roadmapeinträge
+   `duality_of_atomic_antichain_of_integrable` und
+   `exists_atomic_antichain_duality_ne` in `MartingaleProblems`
+   Meilenstein 8.
+
+   *Zwischenstand 2026-09-04, vierundzwanzigster Lauf: die Ausschöpfung ist
+   gemessen und erledigt; dafür fällt die Halbordnung unter (F), sobald ihre
+   Unvergleichbarkeit transitiv ist.* Die vom dreiundzwanzigsten Lauf
+   aufgegebene Rechnung — $\|T\|_m$ für das explizite Zertifikat des sechsten
+   Laufs — steht in `Task23/certificate_m.py` (exakt, Konstruktion an
+   $70\,956$ Fällen geprüft). Befund dreifach: auf der Antikette ist
+   $\|T\|_m$ **gleichmäßig $1$** mit geschlossener Formel (Theorem 20), also
+   schließt Proposition 19.3 dort und liefert Proposition 19.1 ohne Fubini;
+   auf der dyadischen ordnungsdichten Uhr ist $\|T\|_m=1/m_{\min}^2$ exakt und
+   $\varepsilon_F\|T\|_m\sim8^n\to\infty$ — und das auf einer **Kette**, wo
+   Theorem 17 die Konklusion längst gibt, die Ausschöpfung ist damit als
+   Methode erledigt (vierte Norm nach Frobenius, linear, quadratisch); und die
+   „freie Wahl innerhalb von $\mathcal L$" ist ausgenutzt und wertlos — 37
+   lineare Programme geben als Minimum von $\|\cdot\|_m$ durchweg genau den
+   Wert des expliziten Zertifikats. Der Ertrag steht daneben: die gemessene
+   **Breiteninvarianz** gestufter Halbordnungen ist eine Mittelung der Daten,
+   nicht der Zertifikate, und gibt **Theorem 21** — auf jeder abzählbaren
+   *schwachen Ordnung* (totale Präordnung, äquivalent: transitive
+   Unvergleichbarkeit, äquivalent: Stapel von Antiketten) gilt die Dualität
+   unter (F), mit Theorem 17 auf der Stufenkette. Das enthält Theorem 17 und
+   Proposition 19.1 als die beiden Extremfälle und erlaubt unendlich breite
+   Stufen. Offen bleibt jetzt die Halbordnung mit **nicht** transitiver
+   Unvergleichbarkeit (kleinste Gestalt: ein unendliches „N"), dazu
+   unverändert die nackte Klasse auf Ketten und das Gegenbeispiel mit
+   durchweg positiven Abwärtsmassen. `Task23/PROTOKOLL.md`,
+   vierundzwanzigster Lauf; `Task23/weakorder.py` (Proben (A)–(E), exakt,
+   rc=0) und `Task23/certificate_m.py`; Roadmapeinträge `Clock.atomLayers`,
+   `Clock.atomLayerKernel`, `atomLayerKernel_increment_eq`,
+   `atomLayerKernel_rel` und `duality_of_atomic_weakOrder_of_integrable` in
+   `MartingaleProblems` Meilenstein 8.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

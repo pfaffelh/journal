@@ -654,12 +654,112 @@ order.
   `dualityDefect_eq_zero_of_nonneg` needs `0 ≤ m`. That sharpening is a chain
   phenomenon: at incomparable pairs `Φ s t = Φ t s` fails, while the defect
   `Φ t 0 - Φ 0 t` still vanishes. With `duality_of_atomless`,
-  `duality_of_mixed` and `duality_of_atomic_intervalFinite` this covers every
-  clock that is atomless, or has finitely many atoms below the point in
-  question, or is mixed with finitely many atoms there, or whose atoms below
-  the point form an interval-finite chain; what none of the four reaches is a
-  chain of atoms that is not interval-finite — an atom set dense in itself
-  included — and, beyond chains, infinitely many incomparable atoms.
+  `duality_of_mixed`, `duality_of_atomic_intervalFinite`,
+  `duality_of_atomic_twoChains_of_bounded`,
+  `duality_of_atomic_blockStack_of_bounded` and
+  `duality_of_atomic_weakOrder_of_integrable` this covers every clock that is
+  atomless, or has finitely many atoms below the point in question, or is mixed
+  with finitely many atoms there, or whose atoms below the point form an
+  interval-finite chain, or a discrete chain with interval-finite block
+  quotient and `Φ` bounded, or a totally preordered set of atoms — a chain, an
+  antichain, or any stack of antichains — with `γ` integrable for `m ⊗ m` on
+  atom pairs. The last of the seven asks nothing of the order type and
+  everything of the density; the two before it ask nothing of the density and
+  something of the order type or of the value `Φ`. What none of the seven
+  reaches is a set of atoms whose incomparability is not transitive, or a chain
+  carrying a `γ` that is neither `m ⊗ m`-integrable nor attached to a bounded
+  `Φ`. Where incomparability is transitive the finiteness is not a convenience
+  of the matrix proof but a hypothesis of the statement:
+  `exists_atomic_antichain_duality_ne` produces infinitely many incomparable
+  atoms of positive summable mass on which the conclusion fails, and
+  `duality_of_atomic_weakOrder_of_integrable` is what survives there.
+* `duality_of_atomic_antichain_of_integrable`: with `Φ, γ` as in
+  `chain_identity` and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which
+  the atoms are pairwise **incomparable**, and `γ` integrable for `m ⊗ m` on
+  pairs of atoms below `t`, one has `Φ t 0 = Φ 0 t`. Read the compatibility of
+  the two increment representations on the antisymmetric part `κ = γ - γ.swap`:
+  the relation at a pair `(a, t)` with `a` an atom gives
+  `∑' b, m b * κ b a = Φ t 0 - Φ 0 t` for every atom `a`, and summing that
+  against `m a` turns the left side into `∑' (a, b), m a * m b * κ b a`, which
+  vanishes by antisymmetry and `Summable.tsum_comm`, and the right side into
+  `(Φ t 0 - Φ 0 t) * q (Iio t)`. Integrability is exactly what licenses the
+  interchange, and it is the same hypothesis as in
+  `duality_of_atomic_chain_of_integrable`, so the two together are the
+  integrable case of an antichain and of a chain. Both are the special cases
+  of `duality_of_atomic_weakOrder_of_integrable` in which the layer chain has
+  one layer, respectively one point per layer.
+* `Clock.atomLayers`: for a preordered `T`, a purely atomic clock `q` and a `t`
+  such that the atoms below `t` are **totally preordered** — `a ≤ b ∨ b ≤ a`
+  for any two of them, equivalently their incomparability is transitive — the
+  layer chain `Antisymmetrization` of those atoms, a linear order, together
+  with the layer masses `λ p = ∑' a ∈ p, m a`, the conditional laws
+  `π p a = m a / λ p` on each layer of positive mass, and the two facts that
+  carry everything else: `Iio s = ⋃ p < ⟦s⟧, p` for every atom `s`, so
+  `q (Iio s)` and more generally `∑' a < s, m a * f a` depend on `s` only
+  through `⟦s⟧`, and `q (Iio t) = ∑' p, λ p`. The order side is Mathlib:
+  `Antisymmetrization α r` is the quotient by `AntisymmRel`
+  (`Order/Antisymmetrization.lean:125`), `toAntisymmetrization` is the
+  projection (`:131`), `instPartialOrderAntisymmetrization` (`:263`) makes it
+  a partial order for any `Preorder`, and it is a `LinearOrder` under
+  `[@Std.Total α (· ≤ ·)]` together with `[DecidableLE α] [DecidableLT α]`
+  (`:308`), which classical choice supplies. The two transport lemmas are
+  there as well: `toAntisymmetrization_le_toAntisymmetrization_iff` (`:317`)
+  and `toAntisymmetrization_lt_toAntisymmetrization_iff` (`:322`), the second
+  being what turns `Iio s` into a union of layers. What is new is the
+  transport of the clock.
+* `Clock.atomLayerKernel`: for `κ : T → T → ℝ` antisymmetric with
+  `∑' (a, b), m a * m b * |κ a b| < ∞` on atoms below `t`, the averaged kernel
+  `κ̃ p l = ∑' (a, b), π p a * π l b * κ a b` on `Clock.atomLayers`. It is
+  antisymmetric, every defining sum converges absolutely, and
+  `∑' (p, l), λ p * λ l * |κ̃ p l| ≤ ∑' (a, b), m a * m b * |κ a b|`, so the
+  integrability hypothesis descends to the layer chain.
+* `atomLayerKernel_increment_eq`: the averaged system is the system of the
+  averaged data. With `Ψ s t = ∑' a < s, m a * κ a t` and
+  `Ψ̃ p l = ∑' o < p, λ o * κ̃ o l` one has `Ψ̃ p l = ∑' b ∈ l, π l b * Ψ a b`
+  for any `a ∈ p`, and in particular `Ψ̃ p p = ∑' a ∈ p, π p a * Ψ a a`: the
+  diagonal of the averaged system is the layer average of the diagonal. Both
+  are `Summable.tsum_comm` on `Clock.atomLayers`, using that `Ψ a b` depends
+  on `a` only through `⟦a⟧`.
+* `atomLayerKernel_rel`: if `Ψ s t + Ψ t s = Ψ s s + Ψ t t` at every
+  **comparable** pair of atoms below `t`, then `Ψ̃ p l + Ψ̃ l p = Ψ̃ p p + Ψ̃ l l`
+  at every pair of layers. For `p ≠ l` every pair from `p × l` is comparable,
+  and the claim is the average of the relation against `π p ⊗ π l` together
+  with `atomLayerKernel_increment_eq`; for `p = l` it is trivial.
+* `duality_of_atomic_weakOrder_of_integrable`: with `Φ, γ` as in
+  `chain_identity` and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which
+  the atoms are totally preordered and the point `t` itself alone in its layer,
+  and `γ` integrable for `m ⊗ m` on pairs of atoms below `t`, one has
+  `Φ t 0 = Φ 0 t`. Read the compatibility of the two increment representations
+  on `κ = γ - γ.swap`, push the whole system to `Clock.atomLayers` by
+  `Clock.atomLayerKernel`, and apply `duality_of_atomic_chain_of_integrable`
+  there: `atomLayerKernel_rel` supplies its hypothesis,
+  `Clock.atomLayerKernel` its integrability, and
+  `atomLayerKernel_increment_eq` returns the conclusion at the top layer,
+  which is `Φ t 0 - Φ 0 t` because `t` is alone there. Transitivity of
+  incomparability is what the proof uses and all it uses: it is exactly the
+  statement that `Iio s` depends on `s` only through its layer. The smallest
+  order in which it fails is `0 < a, b` with `a < c`, `b` incomparable to `c`
+  and to `a`, where `Iio b ≠ Iio c` although `b` and `c` are incomparable.
+* `exists_atomic_antichain_duality_ne`: there are a preordered `T` with a least
+  element, a purely atomic clock `q` of finite total mass whose atoms below `t`
+  are pairwise incomparable and carry strictly positive masses, and
+  `Φ, γ : T → T → ℝ` satisfying both increment representations of
+  `chain_identity` with `γ₁ = γ₂ = γ` at every comparable pair, all integrals
+  existing, such that `Φ t 0 ≠ Φ 0 t`. Take `T = {0} ∪ A ∪ {t}` with
+  `A = {a i | i : ℕ}` an antichain, `q {0} = 0`, `m i > 0` summable with total
+  mass `M` and tails `σ i`, and
+  `κ (a i) (a j) = (if j < i then 1 else if i < j then -1 else 0) * (σ (i ⊓ j) * σ (i ⊓ j + 1))⁻¹`,
+  `κ (a j) 0 = κ (a j) t = M⁻¹ ^ 2`, `γ = κ / 2`. The identity
+  `m j * (σ j * σ (j+1))⁻¹ = (σ (j+1))⁻¹ - (σ j)⁻¹` telescopes the row sums to
+  `∑' j, m j * κ (a j) (a i) = M⁻¹` for every `i`, which is the relation at
+  `(a i, t)`; the relations at `(0, a i)` and at pairs from `A` are trivial
+  because `q (Iio (a i)) = 0`. Every row converges absolutely, with
+  `∑' j, m j * |κ (a j) (a i)| = 2 * (σ i)⁻¹ - M⁻¹`, so the integrals of the
+  increment representation exist, while `∑' (i, j), m i * m j * |κ (a i) (a j)|`
+  diverges. `Φ` takes three values, so boundedness of `Φ` is not a substitute
+  for the integrability of `γ` outside chains. This is the sharpness statement
+  for the finiteness hypothesis of `duality_of_atomic` and for the
+  integrability hypothesis of `duality_of_atomic_antichain_of_integrable`.
 * `duality_of_atomic_intervalFinite`: with `Φ, γ` as in `chain_identity` and
   `γ₁ = γ₂ = γ`, a purely atomic clock, and a `t` below which the atoms are
   pairwise comparable and **interval-finite** — any two of them enclose only
@@ -683,7 +783,206 @@ order.
   neighbours at every atom while pairs from different chains enclose
   infinitely many atoms, the one-step relations alone leave the cross pairs
   free, and any argument there must use the increment representation across
-  the accumulation point between the chains.
+  the accumulation point between the chains, which is what
+  `duality_of_atomic_twoChains_of_bounded` does.
+* `tailProduct`: for `μ : ℤ → ℝ` with `0 < μ i` and `Summable μ`, the function
+  `tailProduct μ i c = ∏' i' : {i' // i < i'}, (1 + c * μ i')` from `ℂ` to `ℂ`,
+  together with `Differentiable ℂ (tailProduct μ i)`, the recursion
+  `tailProduct μ (i-1) c = (1 + c * μ i) * tailProduct μ i c`, the bound
+  `‖tailProduct μ i c‖ ≤ Real.exp (∑' i, Real.log (1 + ‖c‖ * μ i))`, the lower
+  bound `1 ≤ ‖tailProduct μ i c‖` for `0 ≤ c.re` from `1 ≤ ‖1 + c * μ‖` there,
+  `Tendsto (fun i ↦ tailProduct μ i c) atTop (𝓝 1)`, and boundedness of
+  `fun i ↦ tailProduct μ i c` on `Iic i₀`. The exponent is of type zero:
+  `Tendsto (fun r : ℝ ↦ (∑' i, Real.log (1 + r * μ i)) / r) atTop (𝓝 0)`, from
+  `Real.log_le_sub_one_of_pos`
+  (`Mathlib/Analysis/SpecialFunctions/Log/Basic.lean:307`) giving the summable
+  dominant `μ i` for each quotient and `tendsto_tsum_of_dominated_convergence`
+  (Tannery, `Mathlib/Analysis/Normed/Group/Tannery.lean:45`). The product
+  converges by `multipliable_one_add_of_summable`
+  (`Mathlib/Analysis/SpecialFunctions/Log/Summable.lean:171`). Summability of
+  `μ` is what makes the product converge and the exponent sublinear, and it is
+  the finite mass of the clock.
+* `norm_le_of_bddOn_imAxis_of_subexponential`: for `f : ℂ → ℂ` with
+  `Differentiable ℂ f`, `∀ ε > 0, ∃ A, ∀ z, ‖f z‖ ≤ A * Real.exp (ε * ‖z‖)` and
+  `∀ y : ℝ, ‖f (y * I)‖ ≤ C`, one has `‖f z‖ ≤ C` for every `z`, hence `f` is
+  constant by `Differentiable.exists_eq_const_of_bounded`
+  (`Mathlib/Analysis/Complex/Liouville.lean:128`). Apply
+  `PhragmenLindelof.right_half_plane_of_bounded_on_real`
+  (`Mathlib/Analysis/Complex/PhragmenLindelof.lean:717`) to
+  `fun z ↦ f z * Complex.exp (-ε * z)` and to `fun z ↦ f (-z) * Complex.exp (-ε * z)`:
+  the growth hypothesis holds with `c = 1`, the imaginary axis bound is `C`
+  because the exponential has modulus one there, and the bound along the
+  positive real ray is `A * exp ((ε' - ε) * x) → 0` for `ε' < ε`, which is where
+  the sublinear exponent is used; let `ε` tend to `0`. Mathlib's version asks
+  for a bound on the real ray in addition to the one on the axis, and the
+  auxiliary exponential is what supplies it.
+* `tailProduct_pairing_eq_zero`: for `μ` as in `tailProduct` and
+  `a : ℤ → ℝ` with `Summable fun i ↦ |a i|`, if
+  `∑' i, a i * tailProduct μ i c = 0` for every `c` with `0 ≤ c.re`, then
+  `a = 0`. Split the sum at a foot point `i₀` using the recursion: below `i₀`
+  the quotient `tailProduct μ i c / tailProduct μ i₀ c` is the polynomial
+  `∏ i' ∈ Ioc i i₀, (1 + c * μ i')`, above it the reciprocal of such a product,
+  whose modulus is at most one on `0 ≤ c.re`. The polynomial part is entire and
+  subexponential, the reciprocal part is bounded by `∑' i, |a i|`, so
+  `norm_le_of_bddOn_imAxis_of_subexponential` makes the polynomial part
+  constant; along real `c → ∞` the reciprocal part tends to `0`, so the
+  constant is `0`, and evaluating at `c = 0` gives `∑ i ≤ i₀, a i = 0` for every
+  `i₀`. Differences of consecutive `i₀` give `a = 0`. No hypothesis beyond
+  `ℓ¹`.
+* `crossGrid_eq_zero_of_bddFlux`: let `μ ν : ℤ → ℝ` be positive and summable and
+  let `x : ℤ → ℤ → ℝ` have `Summable fun i ↦ μ i * |x i j|` for every `j` and
+  `Summable fun j ↦ ν j * |x i j|` for every `i`, and satisfy
+  `∑' i' < i, μ i' * x i' j = - ∑' j' ≥ j, ν j' * x i j'` for all `i, j`. Write
+  `F i j` for the common value and `R j = ∑' i, μ i * x i j`. If
+  `∃ j₀, BddAbove (Set.range fun p : ℤ × {j // j₀ ≤ j} ↦ |F p.1 p.2|)`, then
+  `x = 0`. Put `G j c = ∑' i, μ i * F i j * tailProduct μ i c`; Abel summation
+  with the recursion of `tailProduct` gives
+  `∑' i, μ i * x i j * tailProduct μ i c = R j + c * G j c`, termwise
+  differencing in `j` gives `G (j+1) = (1 + c * ν j) * G j + ν j * R j`, the
+  bound on `F` and summability of `μ` give a `j`-uniform summable dominant, so
+  `G j c → 0` as `j → ∞` by dominated convergence, and iterating the recursion
+  bounds `‖G j c‖` by `∑' j ≥ j₀, ν j * |R j|`, finite because `‖R j‖` is
+  bounded and `ν` is summable. Then
+  `norm_le_of_bddOn_imAxis_of_subexponential` makes each `G j` constant, and
+  comparing the coefficient of `c` in the recursion gives `G j = 0` and
+  `R j = 0`; `tailProduct_pairing_eq_zero` applied to `fun i ↦ μ i * x i j`
+  gives `x · j = 0` for `j ≥ j₀`. Rows below `j₀` follow one at a time: if all
+  rows above `j` vanish then `F i j = - ν j * x i j`, so
+  `F (i+1) j = (1 - μ i / ν j) * F i j`, the products converge absolutely by
+  summability of `μ`, and `F i j → 0` as `i → -∞` forces `F · j = 0`.
+* `duality_of_atomic_twoChains_of_bounded`: with `Φ, γ` as in `chain_identity`
+  and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which the atoms are
+  pairwise comparable and form two interval-finite chains stacked one above the
+  other — every atom of the lower chain below every atom of the upper one — and
+  `Φ` bounded on `Iic t ×ˢ Iic t`, one has `Φ t 0 = Φ 0 t`, in either
+  convention. Inside each chain `duality_of_atomic_intervalFinite` gives
+  symmetry, so the antisymmetric part `w s t = Φ s t - Φ t s` vanishes there and
+  `γ` survives only on cross pairs `x i j = γ (b i) (a j)`; continuity of `Φ` at
+  the accumulation point in both coordinates, which is the vanishing of the
+  atom-sum tails, turns the increment representation into the hypothesis of
+  `crossGrid_eq_zero_of_bddFlux` with `F i j = w (b i) (a j)`, and boundedness
+  of `Φ` is boundedness of `F`. This is the first item that crosses an
+  accumulation point of atoms, and it does so by the north limit of `G`, not by
+  an induction. Boundedness of `Φ` is a bound on the value and not on `γ`; the
+  probabilistic source of such a `Φ` supplies it, since the domination
+  hypotheses of `duality` bound `𝔼[f (X s, Y t) * exp (∫_0^s α + ∫_0^t β)]` by
+  `exp (C T) * 𝔼[Γ T]` for `s, t ≤ T`.
+* `Clock.atomBlocks`: for a clock `q` and a `t` below which the atoms form a
+  chain in which every atom has an immediate predecessor and an immediate
+  successor among the atoms, the quotient of the atoms by "only finitely many
+  atoms lie in between", together with the statements that each class is convex
+  and order isomorphic to `ℤ`, that consecutive atoms of the whole chain are
+  consecutive in their class, and that the quotient carries a linear order. The
+  classes are the objects `duality_of_atomic_intervalFinite` settles, and the
+  quotient is what the next item runs its induction on.
+* `duality_of_atomic_blockStack_of_bounded`: with `Φ, γ` as in `chain_identity`
+  and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which the atoms form a
+  chain as in `Clock.atomBlocks` whose quotient is interval-finite, and `Φ`
+  bounded on `Iic t ×ˢ Iic t`, one has `Φ t 0 = Φ 0 t`, in either convention.
+  Induct on the distance `d P Q` of two blocks in the quotient, which is finite
+  by interval-finiteness. At `d = 0` this is `duality_of_atomic_intervalFinite`.
+  At `d ≥ 1`, with `P` below `Q`, the discreteness of the atom chain makes
+  `Ico (b i) (b (i+1))` and `Ico (a j) (a (j+1))` carry a single atom each, so
+  `F i j = Φ (b i) (a j) - Φ (a j) (b i)` satisfies the two increment relations
+  of `crossGrid_eq_zero_of_bddFlux` with `x i j = γ (b i) (a j) - γ (a j) (b i)`;
+  the limits at the two facing edges are the values at the largest block of
+  `Ico P Q` and the smallest block of `Ioc P Q`, reached as tails of the
+  absolutely convergent atom sums, and vanish by the inductive hypothesis at
+  distance `d - 1`. Boundedness of `Φ` bounds `F`, so
+  `crossGrid_eq_zero_of_bddFlux` gives `F = 0`. Blocks of order type `ℤ` and a
+  quotient of order type `ℤ` are both allowed, so this covers atom sets with
+  countably many accumulation points; `duality_of_atomic_twoChains_of_bounded`
+  is the case of two blocks. Its reach is the one-step relations, hence chains
+  in which every atom has neighbours; chains without neighbours are the subject
+  of `duality_of_atomic_chain_of_integrable`, which replaces the one-step
+  relations by a Stieltjes product rule and asks integrability of `γ` instead.
+* `HasAtomIncrements`: for a linear order `T`, a countable `A : Set T` and
+  `j : A → ℂ` with `Summable fun a ↦ ‖j a‖`, the predicate
+  `∀ s t, s ≤ t → f t - f s = ∑' a : {a : A // (a : T) ∈ Set.Ico s t}, j a` on
+  `f : T → ℂ`, together with: the difference of two functions with the same
+  increments is constant, `f` is bounded when `A` is bounded in mass and `f` is
+  bounded at one point, the jump `j a = f a⁺ - f a` is recovered as
+  `Tendsto (fun n ↦ f (t n) - f a) atTop (𝓝 (j a))` along any sequence
+  `t n ∈ A` decreasing with `⋂ n, Set.Ioo a (t n) ∩ A = ∅`, and the existence
+  of such a sequence for every non-maximal `a` from countability of `A`. This
+  is the increment representation of the manuscript read as a predicate, and it
+  is all that survives of an atomic clock when the atoms have no neighbours.
+* `HasAtomIncrements.mul`: if `f` has increments `j` and `g` has increments
+  `k`, both bounded, then `f * g` has increments
+  `fun a ↦ f a * k a + g a * j a + j a * k a`. Expand the jumps of `f * g` over
+  `Ico s t`, write `f a = f s + ∑ a' < a, j a'` and likewise for `g`, and split
+  the resulting double sum into the parts `a' < a`, `a' > a` and `a' = a`; all
+  rearrangements are absolutely convergent. This is Abel summation with no
+  successor function, and it is what carries the transformation method from
+  `ℤ`-indexed chains to arbitrary countable ones.
+* `chainTailProduct`: for a countable `A` in a linear order and `m : A → ℝ`
+  with `0 < m a` and `Summable m`, the function
+  `chainTailProduct m a c = ∏' a' : {a' // a < a'}, (1 + c * m a')` from `ℂ` to
+  `ℂ`, and `chainProduct m s c = ∏' a' : {a' // s ≤ a'}, (1 + c * m a')`,
+  together with `Differentiable ℂ (chainTailProduct m a)`, the identity
+  `chainProduct m s c = (1 + c * m a) * chainTailProduct m a c` when `a` is the
+  least element of `A ∩ Ici s`, the bound
+  `‖chainTailProduct m a c‖ ≤ Real.exp (∑' a, Real.log (1 + ‖c‖ * m a))` with
+  the type-zero statement for that exponent, the bounds
+  `1 ≤ ‖chainTailProduct m a c‖` and
+  `‖chainTailProduct m a c‖ ≤ ‖chainProduct m ⊥ c‖` for `0 ≤ c.re`, the lower
+  bound `∏' a, (1 + m a ^ 2 * ‖c‖ ^ 2) ^ (1/2 : ℝ) ≤ ‖chainProduct m ⊥ c‖` for
+  `0 ≤ c.re` from `1 + m ^ 2 * ‖c‖ ^ 2 ≤ ‖1 + c * m‖ ^ 2`, and
+  `HasAtomIncrements (fun s ↦ chainProduct m s c) (fun a ↦ - c * m a * chainTailProduct m a c)`
+  from the telescoping identity
+  `∏ a ∈ S, (1 + z a) - 1 = ∑ a ∈ S, z a * ∏ a' ∈ S, a < a', (1 + z a')`. The
+  convergence and the sublinear exponent are the same facts as in
+  `tailProduct`, of which this is the version for an arbitrary index chain.
+* `chainTailProduct_pairing_eq_zero`: for `m` as in `chainTailProduct` and
+  `α : A → ℝ` with `Summable fun a ↦ |α a|`, if
+  `∑' a, α a * chainTailProduct m a c = 0` for every `c` with `0 ≤ c.re`, then
+  `α = 0`. Split the sum at a foot point `s₀ : T`: below `s₀` the quotient by
+  `chainProduct m s₀ c` is the entire subexponential product over
+  `A ∩ Ioo a s₀`, above it the reciprocal of the product over `A ∩ Icc s₀ a`,
+  of modulus at most one on `0 ≤ c.re`. The first part is constant by
+  `norm_le_of_bddOn_imAxis_of_subexponential`, and along real `c → ∞` the
+  second tends to `0`, so the constant is `0`; evaluating at `c = 0` gives
+  `∑' a < s₀, α a = 0` for every `s₀`, and the jump statement of
+  `HasAtomIncrements` gives `α = 0`. This is `tailProduct_pairing_eq_zero`
+  with the foot-point decomposition read on a chain rather than on `ℤ`.
+* `atomDiag_eq_zero_of_integrable`: let `A` be countable in a linear order with
+  a least element `0` and a greatest element `t`, let `m : A → ℝ` be positive
+  and summable, and let `h : A → T → ℝ` satisfy `h a 0 = 0`,
+  `h a b + h b a = h a a + h b b` for `a b : A`, and `H s u + H u s = 0` for all
+  `s u : T`, where `H s u = ∑' a < s, m a * h a u` and every such series
+  converges absolutely, together with `Summable fun p : A × A ↦ m p.1 * m p.2 * |h p.1 p.2|`.
+  Then `h a a = 0` for every `a : A`. Put `Δ u = ∑' a < u, m a * h a a`,
+  `κ a u = h a u - h a a`, `w s u = H s u + Δ u - Δ s`, so that `w` has
+  increments `fun a ↦ m a * κ a u` in its first argument, `κ` is antisymmetric
+  on `A × A` and `w` is antisymmetric. `HasAtomIncrements.mul` applied to
+  `w · u` and `chainProduct m · c` gives
+  `∑' a, m a * κ a u * chainTailProduct m a c - c * ∑' a, m a * w a u * chainTailProduct m a c = w t u - Δ u * chainProduct m ⊥ c`.
+  Summing that identity at `u = b : A` against `m b * chainTailProduct m b c`
+  kills both double sums by antisymmetry and gives `P = chainProduct m ⊥ · * Q`
+  for `P c = ∑' a, m a * w t a * chainTailProduct m a c` and
+  `Q c = ∑' a, m a * Δ a * chainTailProduct m a c`; the identity at `u = 0`
+  gives `R = Δ t + c * Q` for `R c = ∑' a, m a * h a a * chainTailProduct m a c`,
+  and at `u = t` it gives `S = R * (1 - chainProduct m ⊥ ·)` for
+  `S c = ∑' a, m a * h a t * chainTailProduct m a c`. The lower bound on
+  `‖chainProduct m ⊥ c‖` makes `R` bounded on `0 ≤ c.re`, so
+  `norm_le_of_bddOn_imAxis_of_subexponential` makes `R` constant, whence
+  `Q = 0`, whence `Δ a = 0` for every atom by
+  `chainTailProduct_pairing_eq_zero`, whence `h a a = 0` at every non-maximal
+  atom by the jump statement of `HasAtomIncrements`; at a maximal atom,
+  `P = 0` and antisymmetry give `H a t = - Δ t` for every atom, and the tail of
+  the absolutely convergent series at the bottom of `A` gives `Δ t = 0`.
+* `duality_of_atomic_chain_of_integrable`: with `Φ, γ` as in `chain_identity`
+  and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which the atoms are
+  pairwise comparable, and `γ` integrable for `m ⊗ m` on pairs of atoms below
+  `t`, one has `Φ t 0 = Φ 0 t`, in either convention. The two increment
+  representations of `duality_defect_eq_integral`, read on the antisymmetric
+  part, are the hypotheses of `atomDiag_eq_zero_of_integrable` with
+  `h a u = κ a u - κ a 0` and `κ = γ - γ.swap`, and the duality defect is
+  `- Δ t`. No hypothesis on the order type of the atom set enters: it may be
+  dense in itself, and its Cantor–Bendixson rank is unrestricted. Bounded `γ`
+  on atom pairs is the readable sufficient condition for the integrability,
+  and it is a hypothesis on the density and not on the value, so this item and
+  `duality_of_atomic_twoChains_of_bounded` are incomparable.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.

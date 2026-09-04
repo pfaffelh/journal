@@ -546,6 +546,44 @@ setzt, nennt den Beleg.
   Die zweite Bemerkung in `rem:atomsnotchange` — „die Konklusion ist genuin
   $Q$-fast jedes $t$" — wäre dann ebenfalls zu prüfen. Frage ans Manuskript.
 
+* **Die Endlichkeit in `prop:atomicposet` ist unentbehrlich, und der
+  Schlußsatz der Proposition sagt es nicht; am 2026-09-04, zweiter Lauf,
+  belegt.** Die Proposition schließt mit „No hypothesis is made on the mutual
+  position of the atoms, and none beyond the existence of the integrals in
+  \eqref{eq:incrementrep} and the non-negativity of $q$." Das ist richtig, legt
+  aber nahe, die Hypothese „die Atome in $\T_{<t^*}$ sind endlich viele" sei
+  eine Bequemlichkeit des Matrizenbeweises. Sie ist es nicht: auf einer
+  abzählbaren **Antikette** mit positiven summierbaren Massen gibt es
+  $\Phi,\gamma$, die \eqref{eq:incrementrep} an jedem vergleichbaren Paar
+  erfüllen und $\Phi(t^*,0)\neq\Phi(0,t^*)$ haben (Theorem 19,
+  `Task23/PROTOKOLL.md`, dreiundzwanzigster Lauf; exakt nachgerechnet in
+  `Task23/poset_infinite.py`). Das Manuskript ist davon **nicht** betroffen —
+  die Hypothese steht da —, aber eine Bemerkung wäre die schärfste Aussage, die
+  sich über die Reichweite von `prop:atomicposet` machen läßt, und sie stünde
+  neben `rem:atomicposet`. Vorschlag, zur Entscheidung des Nutzers:
+
+  > *Remark (the finiteness is sharp).* For infinitely many atoms the
+  > conclusion of `prop:atomicposet` fails. Let $\T=\{0\}\cup A\cup\{t^*\}$
+  > with $A=\{a_1,a_2,\dots\}$ pairwise incomparable and $0<a_i<t^*$, let
+  > $q(\{0\})=0$ and $m_i=q(\{a_i\})>0$ with $M=\sum_im_i<\infty$ and tails
+  > $\sigma_i=\sum_{j\ge i}m_j$, and put
+  > $\gamma(a_i,a_j)=\tfrac12\operatorname{sgn}(i-j)
+  > (\sigma_n\sigma_{n+1})^{-1}$ with $n=\min(i,j)$ and
+  > $\gamma(a_j,0)=\gamma(a_j,t^*)=\tfrac12M^{-2}$, extended antisymmetrically.
+  > Every integral in \eqref{eq:incrementrep} exists, both representations hold
+  > at every comparable pair, and $\Phi(t^*,0)-\Phi(0,t^*)=1/M$. What fails is
+  > the integrability of $\gamma$ for $q\otimes q$ on $A\times A$; under that
+  > hypothesis the conclusion holds on any antichain, by Fubini and the
+  > antisymmetry of $\kappa$.
+
+  Zweierlei ist daran auch für die Roadmaps von Belang, und beides steht seit
+  diesem Lauf in `MartingaleProblems` Meilenstein 8: das Gegenbeispiel hat
+  **beschränktes $\Phi$**, die Hypothesengestalt von
+  `duality_of_atomic_twoChains_of_bounded` ist außerhalb von Ketten also
+  wertlos; und es braucht $q(\{0\})=0$, also genau die Bedingung „es gibt ein
+  $s$ mit $\T_{<s}\neq\emptyset$ und $q(\T_{<s})=0$", die `sharp.py` im
+  endlichen Fall als notwendig gefunden hatte.
+
 ## Läufe
 
 ### 2026-08-29 — `fact:Dcountable`, `fact:monotoneclass`, `fact:optsampl`, `fact:doob`, `fact:fddconv`, `fact:relcompact`, `fact:relcompact2`, `fact:fdd`
@@ -3499,3 +3537,432 @@ Halbebenen-Fassung für Typ 0 selbst steht dort nicht, die Datei führt
 Streifen und Quadranten) und `Differentiable.exists_eq_const_of_bounded`
 (`Mathlib/Analysis/Complex/Liouville.lean:128`). Das ist Anschluss für
 den späteren Ausbau, kein neues Nahziel.
+
+### 2026-09-03 — Task 23, einundzwanzigster Lauf: (H) war nie die Grenze, und die Manuskriptklasse liefert die Hypothese
+
+Das Inventar ist geschlossen (keine Zeile mit `?`), der Rückstau führt als
+ersten Punkt Task 23; dieser Lauf hat dort weitergearbeitet und **nichts** am
+Inventar, an den Facts oder am Manuskript geändert.
+
+**Befund.** Der zwanzigste Lauf schloss, (H) — die
+$\mu\otimes\nu$-Integrierbarkeit von $|x|$ auf dem Nordquadranten — sei „die
+Grenze der Transformationsmethode". Das ist zurückgenommen. Der Beweis von
+Theorem 10 benutzt (H) an genau drei Stellen und dort nur durch zwei
+Folgerungen: eine in $j$ gleichmäßige summierbare Majorante für den
+Nordlimes, und $\sum_{j\ge j_0}\nu_j|R_j|<\infty$ für die Beschränktheit
+rechts. Abgezogen ist das die Bedingung **(U)** = *Straffheit nach Norden*
+plus *Nordsummierbarkeit der Zeilensummen*, und **Theorem 12** (Protokoll,
+einundzwanzigster Lauf) schließt daraus $x\equiv0$ — mit Theorem 9
+unverändert, der Fortsetzung nach Süden als eigenem hypothesenfreien
+Schritt, und ohne die Identität I, die ein Koeffizientenvergleich in
+(B$\infty$) ersetzt.
+
+**Warum das mehr ist als eine Umformulierung.** (U) hat zwei
+unvergleichbare hinreichende Kriterien. Das eine ist (H), womit Theorem 10
+Korollar wird. Das andere ist $\sup_{i,\,j\ge j_0}|F(i,j)|<\infty$, und $F$
+ist der **Dualitätsdefekt** $\Phi(s,t)-\Phi(t,s)$: gefordert ist damit die
+Beschränktheit des **Wertes** $\Phi$, nicht der **Dichte** $\gamma$, in der
+alle LPs und Messungen des zwölften bis siebzehnten Laufs gearbeitet haben.
+Und genau diese Hypothesengestalt trägt das Manuskript an der einzigen
+Stelle, an der es ein solches $\Phi$ probabilistisch herstellt: die
+Dominanten \eqref{eq:dual1} und \eqref{eq:dual2} von `thm:duality` (\EK{}
+4.4.11) geben $|\Phi(s,t)|\le e^{C_T}E[\Gamma_T]$ für $s,t\le T$, am
+Manuskript nachgelesen (Stellen 6374ff). Ehrlich dazu gehört: `prop:atomicdual`
+und `prop:mixeddual` sind abstrakt formuliert und fordern keine
+Beschränktheit — Korollar 14 nennt sie deshalb als Hypothese.
+
+**Und der Satz iteriert** (Korollar 16). Die zwei gestapelten $\zeta$-Ketten
+waren nur die kleinste Anwendung. Ist die Atommenge unter $t^*$ eine
+**diskrete** Kette — jedes Atom hat unter den Atomen Nachbarn beiderseits —,
+so zerfällt sie in Blöcke (Klassen der Relation „nur endlich viele Atome
+dazwischen"), sämtlich vom Ordnungstyp $\zeta$; ist die Blockordnung
+intervallendlich, so gilt die Dualität bei beschränktem $\Phi$. Die Induktion
+läuft über den Blockabstand: die zwei Abfälle, die Theorem 12 verlangt, stehen
+an den einander zugewandten Rändern zweier Blöcke, und ihre Werte sind die
+Werte an den Rändern der dazwischenliegenden Blöcke, also $0$ nach
+Induktionsvoraussetzung. Damit sind Atommengen mit **abzählbar unendlich
+vielen Häufungspunkten** erfaßt ($\zeta$ von $\zeta$-Ketten), nicht mehr nur
+mit einem.
+
+**Gestalt jedes Gegenbeispiels** (Proposition 15, aus den beiden Kriterien):
+unbeschränkter Defekt auf *jedem* Nordquadranten, $\sup_j\rho_j=\infty$, und
+$|x|$ zeilen- und spaltenweise integrierbar, aber auf keinem Nordquadranten
+$\mu\otimes\nu$-integrierbar. Dazu die Umformulierung
+$\rho_j=\operatorname{Var}_iF(\cdot,j)$, $\sigma_i=\operatorname{Var}_jF(i,\cdot)$
+— die nackte Voraussetzung von (Q) ist beschränkte Variation jeder Zeile und
+jeder Spalte des Flusses.
+
+**Geschrieben.** `Task23/PROTOKOLL.md`, Abschnitt „Die nackte Klasse,
+2026-09-03 (einundzwanzigster Lauf)", mit Theorem 12, den Korollaren 13, 14
+und 16, Proposition 15 und dem neunzehnten Sackgassen-Nachtrag.
+`Task23/naked_class.py` verifiziert die endliche Beweisalgebra exakt
+(Proben (A) Abel mit Randtermen, (B) beide Einschrittrelationen und die
+Nordrekursion, (C) der Koeffizientenvergleich, (D) die Fortsetzung nach
+Süden samt Produktschranke, (E) Variationen, Tonelli und die Wertschranke
+auf einem echten Flussfeld, (F) Typ 0 und $|1+c\mu|\ge1$); rc=0. Der
+Rückstau trägt den Zwischenstand.
+
+**Roadmap, und die zurückgestellte Entscheidung des zwanzigsten Laufs ist
+damit fällig geworden.** Jener hatte einen Eintrag zurückgestellt, weil die
+(H)-Fassung eine Hypothese verlangt, die die Manuskriptklasse nicht liefert.
+Für Korollar 14 gilt der Einwand nicht, und `MartingaleProblems`
+Meilenstein 8 trägt jetzt sieben neue Punkte: `tailProduct` (die
+Geschlecht-0-Schwänze samt Typ-0-Aussage),
+`norm_le_of_bddOn_imAxis_of_subexponential` (Phragmén–Lindelöf plus
+Liouville, mit dem $\varepsilon$-Kunstgriff, der Mathlibs
+Halbebenen-Fassung die fehlende Strahlschranke verschafft),
+`tailProduct_pairing_eq_zero` (Theorem 9), `crossGrid_eq_zero_of_bddFlux`
+(Theorem 12), `duality_of_atomic_twoChains_of_bounded` (Korollar 14),
+`Clock.atomBlocks` und `duality_of_atomic_blockStack_of_bounded`
+(Korollar 16).
+Die Abdeckungsliste bei `duality_of_atomic` und der Schlusssatz von
+`duality_of_atomic_intervalFinite` sind nachgezogen. Alle vier zitierten
+Mathlib-Deklarationen sind gegen `upstream/master` geprüft und nicht
+`deprecated`: `PhragmenLindelof.right_half_plane_of_bounded_on_real`
+(`Mathlib/Analysis/Complex/PhragmenLindelof.lean:717`, `namespace
+PhragmenLindelof` ab `:54`), `Differentiable.exists_eq_const_of_bounded`
+(`Mathlib/Analysis/Complex/Liouville.lean:128`, `namespace Differentiable`
+ab `:109`), `tendsto_tsum_of_dominated_convergence` (Tannery,
+`Mathlib/Analysis/Normed/Group/Tannery.lean:45`, Wurzelnamensraum),
+`multipliable_one_add_of_summable`
+(`Mathlib/Analysis/SpecialFunctions/Log/Summable.lean:171`) und
+`Real.log_le_sub_one_of_pos`
+(`Mathlib/Analysis/SpecialFunctions/Log/Basic.lean:307`).
+
+**Berichtigt am eigenen Bestand.** Der Laufbericht vom 2026-09-03 (zwanzigster
+Lauf) hielt fest, „die Halbebenen-Fassung für Typ 0 selbst steht dort nicht,
+die Datei führt Streifen und Quadranten". Die Datei führt auch Halbebenen:
+`PhragmenLindelof.right_half_plane_of_bounded_on_real` (`:717`) und
+`…right_half_plane_of_tendsto_zero_on_real` (`:646`). Sie verlangen neben der
+Schranke auf der imaginären Achse eine Schranke auf dem reellen Strahl, den
+die Typ-0-Fassung nicht braucht; der $\varepsilon$-Kunstgriff liefert sie,
+und deshalb ist der neue Roadmap-Punkt aus Mathlib heraus baubar statt
+klassisch zu zitieren.
+
+**Das Manuskript ist unverändert, und der Vorschlag an den Nutzer wächst.**
+Die Statustabelle in §6 führt „purely atomic, atoms a chain — proved,
+`prop:atomicdual`" (das ist der Fall endlich vieler Atome unter $t^*$) und
+„order-dense atoms — open"; für unendliche Ketten hat sie keine Zeile. Seit
+dem neunten Lauf steht der Vorschlag, `prop:atomicdual` auf den
+intervallendlichen Fall zu heben. Dazu kommt jetzt eine zweite Zeile:
+*diskrete Kette mit intervallendlicher Blockordnung, $\Phi$ beschränkt —
+bewiesen* (Korollar 16). Beide Beweise sind vollständig und im PROTOKOLL
+nachlesbar; ob und in welcher Gestalt sie ins Manuskript wandern, gehört dem
+Nutzer, zumal die zweite eine Hypothese hinzufügt, die `prop:atomicdual`
+heute ausdrücklich nicht stellt.
+
+**Was als Nächstes formalisiert werden soll: unverändert `atomGrid_symm`, in
+Lean** (`MartingaleProblems` Meilenstein 8) — zum siebten Mal, und die
+Begründung ist mit diesem Lauf nicht schwächer geworden, sondern präziser:
+`crossGrid_eq_zero_of_bddFlux` ruht auf denselben Einschrittrelationen, die
+`atomGrid_symm` endlich macht, und sein klassischer Rest ist jetzt vollständig
+an Mathlib-Deklarationen angeschlossen. Wer eine zweite Front will, nehme
+`norm_le_of_bddOn_imAxis_of_subexponential`: es ist von der
+Wahrscheinlichkeitstheorie unabhängig, hängt allein an den zwei oben
+belegten Mathlib-Sätzen, und ist die einzige Analysis, die Theorem 9 und
+Theorem 12 gemeinsam brauchen.
+
+### 2026-09-04 — Task 23, zweiundzwanzigster Lauf: die Einschrittrelation war nie nötig, und der ordnungsdichte Kern fällt
+
+Das Inventar ist geschlossen (keine Zeile mit `?`), der Rückstau führt als
+ersten Punkt Task 23; dieser Lauf hat dort weitergearbeitet und **nichts** am
+Inventar, an den Facts oder am Manuskript geändert. `check.py` meldet
+unverändert `clean` (129 Seiten).
+
+**Befund.** Der einundzwanzigste Lauf schloß, der ordnungsdichte Kern hänge
+„nicht mehr an der Analysis, sondern an der Algebra der Einschrittrelation":
+Theorem 12 setzt an Nachbaratomen an, eine in sich dichte Atommenge hat
+keine. Das ist zurückgenommen, und zwar durch Beweis. Wofür die Nachbarn
+dort stehen, ist die Abelsche Summation, und die ist in Wahrheit eine
+**Stieltjes-Produktregel** (Lemma 17.1): haben $f$ und $V$
+Zuwachsdarstellungen über einer abzählbaren Menge mit $\ell^1$-Sprüngen, so
+hat es $fV$ mit den Produktsprüngen — bewiesen durch Aufspalten einer
+Doppelsumme in $a'<a$, $a'>a$, $a'=a$, ohne ein Wort über Nachfolger oder
+Ordnungstyp.
+
+Damit läuft die ganze Transformationsmethode auf einer **beliebigen**
+abzählbaren Atomkette. Mit $W^c(a)=\prod_{a'>a}(1+cm_{a'})$ gibt Lemma 17.1
+die Identität $K(t;c)-cG(t;c)=\psi(t)-\Delta(t)V_0(c)$ (Probe (A):
+hypothesenfrei), und aus ihr an $t=b\in A$, $t=0$ und $t=t^*$ drei
+Gleichungen: $P=V_0Q$ (aus der Antisymmetrie von $\kappa$ und $\widehat w$,
+die die beiden Doppelsummen tötet), $R=\Delta(t^*)+cQ$ und
+$S=R\,(1-V_0)$. Die letzte macht $R$ auf $\Re c\ge0$ beschränkt, weil
+$|V_0(c)|\ge\prod_a(1+m_a^2|c|^2)^{1/2}\to\infty$; $R$ ist ganz vom Typ $0$,
+also nach Phragmén–Lindelöf und Liouville konstant, also $Q\equiv0$, also
+— mit Theorem 9, das auf der Kette wörtlich gilt — $\Delta\equiv0$ auf den
+Atomen und $h(a,a)=0$. Das ist **Theorem 17**: der ordnungsdichte Fall,
+seit dem elften Lauf der benannte Rest von Task 23, ist geschlossen, und mit
+ihm die ganze Cantor–Bendixson-Leiter — Theorem 17 kennt keine Blöcke,
+keinen Blockabstand und keine Induktion.
+
+**Der Preis, und er ist benannt.** Einzige Zusatzhypothese ist **(F)**
+$\sum_{a,b}m_am_b|h(a,b)|<\infty$, die $m\otimes m$-Integrierbarkeit der
+Dichte auf Atompaaren; hinreichend dafür ist $|\gamma|$ beschränkt auf
+$A\times A$. Sie geht an genau zwei Stellen ein (Fubini in $P=V_0Q$, Existenz
+von $P$) und ist **unvergleichbar** mit der Hypothese von Korollar 14, die
+den *Wert* $\Phi$ beschränkt statt der *Dichte*. `prop:atomicdual` und
+`prop:mixeddual` fordern gar keine Integrierbarkeit; Korollar 18 nennt (F)
+deshalb ausdrücklich.
+
+**Zwei Korrekturen am eigenen Bestand.** Erstens die Bemerkung des zwölften
+Laufs, der Mechanismus brauche ein $t$ **echt zwischen** einem Atom und
+seinem Nachfolger, und genau das nehme die Ordnungsdichte weg: sie beschreibt
+eine einzeilige Herleitung, nicht das System. Probe (E) zeigt, daß schon die
+lückenfreie Teilmenge der Bedingungen — (C1), (C2), (C3) nur auf
+$(A\cup\{t^*\})^2$ — die Diagonale erzwingt, auf endlichen Ketten bis $n=7$;
+Kontrolle (E'): ohne (C2) ist sie frei. Zweitens verlangt der Blockstapel des
+einundzwanzigsten Laufs in der Klasse (F) weder Diskretheit noch
+intervallendliche Blockordnung.
+
+**Geschrieben.** `Task23/PROTOKOLL.md`, Abschnitt „Die
+Stieltjes-Transformation, 2026-09-04 (zweiundzwanzigster Lauf)", mit den
+Lemmata 17.1 und 17.2, den drei Identitäten, Theorem 17, Korollar 18 und dem
+zwanzigsten Sackgassen-Nachtrag. `Task23/dense_chain.py` verifiziert die
+Beweisalgebra exakt in `Fraction` und **je unter genau den Hypothesen, die
+der Beweis für sie beansprucht** — sonst wäre die Probe entwertet, weil die
+volle Hypothesenmenge auf einer endlichen Kette die Diagonale ohnehin tötet:
+(A) Abel–Stieltjes hypothesenfrei, (B) $P=V_0Q$ aus (C2) und der
+Antisymmetrie auf $A\times A$, (C) $R=\Delta(t^*)+cQ$ aus (C1), (D)
+$S-R+cP=-\Delta(t^*)V_0$ aus (C1) und der Antisymmetrie am Deckel — bei (B),
+(C) und (D) mit nichtverschwindender Diagonale in allen Fällen, also nicht
+degeneriert —, (D') die Zusammensetzung, (E)/(E') die Rangprobe, (F) die
+Fußpunktzerlegung von Theorem 9 auf der Kette, (G) die zwei Ungleichungen des
+Wachstumsschritts; rc=0. Der Rückstau trägt den Zwischenstand.
+
+**Roadmap.** `MartingaleProblems` Meilenstein 8 trägt sechs neue Punkte:
+`HasAtomIncrements` (die Zuwachsdarstellung als Prädikat, samt der
+Sprungrückgewinnung über eine fallende Atomfolge, die die Abzählbarkeit
+liefert), `HasAtomIncrements.mul` (Lemma 17.1), `chainTailProduct` (die
+Geschlecht-0-Schwänze über einer Kette statt über `ℤ`, samt der unteren
+Schranke $\prod(1+m^2\|c\|^2)^{1/2}$ auf `0 ≤ c.re`),
+`chainTailProduct_pairing_eq_zero` (Theorem 9 mit Fußpunkt in `T` statt in
+`ℤ`), `atomDiag_eq_zero_of_integrable` (Theorem 17) und
+`duality_of_atomic_chain_of_integrable` (Korollar 18). Die Abdeckungsliste bei
+`duality_of_atomic` nennt jetzt sieben Sätze und sagt, was der siebte
+gegenüber den anderen tauscht — nichts am Ordnungstyp, alles an der Dichte;
+der Schlußsatz von `duality_of_atomic_blockStack_of_bounded` ist nachgezogen.
+Neue Mathlib-Zitate kommen nicht hinzu: die vier Deklarationen, auf denen die
+neuen Punkte ruhen (`PhragmenLindelof.right_half_plane_of_bounded_on_real`,
+`Differentiable.exists_eq_const_of_bounded`,
+`tendsto_tsum_of_dominated_convergence`, `multipliable_one_add_of_summable`),
+sind dieselben wie beim einundzwanzigsten Lauf und dort gegen
+`upstream/master` geprüft.
+
+**Das Manuskript ist unverändert, und der Vorschlag an den Nutzer wächst um
+eine dritte Zeile.** Die Statustabelle in §6 führt „purely atomic, atoms a
+chain — proved, `prop:atomicdual`" (endlich viele Atome) und „order-dense
+atoms — open". Vorgeschlagen sind seither: *intervallendliche Kette —
+bewiesen* (neunter Lauf), *diskrete Kette mit intervallendlicher
+Blockordnung, $\Phi$ beschränkt — bewiesen* (einundzwanzigster Lauf), und
+jetzt *beliebige Kette, $\gamma$ auf Atompaaren $m\otimes m$-integrierbar —
+bewiesen* (Korollar 18). Die dritte macht die Zeile „order-dense — open"
+falsch, sobald sie steht; ob und in welcher Gestalt sie ins Manuskript wandert
+— und ob die vorhandene Zeile in „open only without integrability" geändert
+wird —, gehört dem Nutzer.
+
+**Was als Nächstes formalisiert werden soll: `HasAtomIncrements.mul`**
+(`MartingaleProblems` Meilenstein 8). Es ruht auf nichts als absolut
+konvergenten Reihen über einer abzählbaren Menge — kein Maß, keine
+Wahrscheinlichkeitstheorie, keine Funktionentheorie —, und es ist jetzt der
+Träger von allem, was Task 23 auf unendlichen Atommengen kann: Theorem 9,
+Theorem 12 und Theorem 17 gehen sämtlich durch es hindurch. Es ist jetzt
+dran, weil es die einzige Aussage der ganzen Kette ist, deren Beweis eine
+reine Umordnung ist und deren Formalisierung deshalb keine Vorarbeit
+braucht. Wer eine zweite Front will, nehme unverändert `atomGrid_symm`; die
+Begründung des einundzwanzigsten Laufs steht.
+
+### 2026-09-04, zweiter Lauf des Tages — Task 23, dreiundzwanzigster Lauf: die unendliche Halbordnung ist falsch
+
+Das Inventar ist geschlossen (keine Zeile mit `?`), der Rückstau führt als
+ersten Punkt Task 23; dieser Lauf hat dort weitergearbeitet und **nichts** am
+Inventar-Tabellenteil und **nichts** am Manuskript geändert. Geändert sind der
+Rückstau (Punkt 1, Zwischenstand), `Task23/PROTOKOLL.md` (dreiundzwanzigster
+Lauf), `TauCeti/MartingaleProblems/README.md` (Meilenstein 8, zwei neue Punkte
+und eine korrigierte Schlußzeile), und neu ist `Task23/poset_infinite.py`.
+
+**Befund, und er ist ein Negativbefund.** Der zweiundzwanzigste Lauf ließ zwei
+benannte Dinge offen, die nackte Klasse auf Ketten und die unendliche
+Halbordnung. Das zweite ist entschieden: **es gilt nicht.** Auf der
+abzählbaren Antikette $\T=\{0\}\cup\{a_1,a_2,\dots\}\cup\{t^*\}$ mit
+$q(\{0\})=0$, positiven Massen $m_i$, $M=\sum m_i<\infty$, Schwänzen
+$\sigma_i=\sum_{j\ge i}m_j$ und
+
+$$\kappa(a_i,a_j)=\operatorname{sgn}(i-j)\,f(\min(i,j)),\qquad
+  f(i)=\frac1{\sigma_i\sigma_{i+1}},$$
+
+teleskopiert $m_jf(j)=1/\sigma_{j+1}-1/\sigma_j$ die Zeilensummen zu
+$\sum_jm_j\kappa(a_j,a_i)=1/M$ — **konstant und von Null verschieden** —,
+während jede einzelne Zeile absolut konvergiert
+($\sum_jm_j|\kappa(a_j,a_i)|=2/\sigma_i-1/M$). Mit
+$\kappa(a_j,0)=\kappa(a_j,t^*)=M^{-2}$ und $\gamma=\kappa/2$ erfüllt das
+zugehörige $\Phi$ beide Darstellungen von \eqref{eq:incrementrep} an jedem
+vergleichbaren Paar und hat $\Phi(t^*,0)-\Phi(0,t^*)=1/M$ (Theorem 19).
+`Task23/poset_infinite.py` rechnet das exakt nach, Proben (A)–(H), rc=0: alle
+$(\diamondsuit)$-Relationen, beide Darstellungen an jedem vergleichbaren Paar,
+jede unendliche Summe zweimal (geschlossene Form gegen Partialsumme plus
+exakten Schwanz), für drei Massenfolgen.
+
+**Was daran scharf ist.** Verletzt wird genau eine Hypothese, nämlich (F):
+$\sum_{i,j}m_im_j|\kappa|\ge\sum_im_i/\sigma_i=\infty$. Und sie ist die
+richtige: auf einer Antikette schließt unter (F) schon Fubini
+($\sum_im_iv_i=0$ gegen $\delta M$), Proposition 19.1. Der endliche Satz
+`prop:atomicposet` braucht sie nicht, weil dort jede Doppelsumme endlich ist —
+die „flache Spitze" des fünften Laufs *ist* dieser Fubini-Schritt, und er ist
+das erste, was im Unendlichen fällt.
+
+**Zwei Befunde, die künftige Hypothesenwahl festlegen.** Erstens hat das
+Gegenbeispiel **beschränktes $\Phi$** (drei Werte); die Hypothesengestalt von
+Korollar 14 — Beschränktheit des *Wertes* $\Phi$, die das Manuskript an der
+einzigen Stelle, an der es $\Phi$ herstellt, ohnehin trägt — ist außerhalb von
+Ketten wertlos. Unbeschränkt ist allein die *Dichte*. Zweitens braucht das
+Gegenbeispiel $q(\{0\})=0$: bei $q(\{0\})>0$ gibt $(\diamondsuit)$ am Paar
+$(0,a_i)$ sofort $\kappa(0,a_i)=0$ und damit $\delta(t^*)=0$
+(Proposition 19.2, Probe (H) lokalisiert den Bruch auf genau diese Paare).
+Das ist wörtlich die Bedingung, die `sharp.py` im dritten Lauf im endlichen
+Fall als notwendig für jeden Ausfall gefunden hatte; im Endlichen brauchte ein
+Ausfall darüber hinaus gemischte Vorzeichen, hier kauft die Unendlichkeit, was
+dort die negativen Massen kauften.
+
+**Warum es zweiundzwanzig Läufe überlebt hat.** Das Warnzeichen lag seit dem
+elften Lauf offen: der endliche Halbordnungsbeweis läuft über ein Zertifikat
+$T$, dessen Frobeniusnorm mit der Atomzahl explodiert, und ein Beweis, der
+nicht ausschöpfbar ist, sagt über den Limes nichts — in beide Richtungen. Die
+Trunkierung zeigt es jetzt von der anderen Seite: $v_i^{(N)}=1/M-f(i)\sigma_{N+1}$
+geht punktweise gegen $1/M$, aber an der Spitze $i=N$ ist der Fehler
+$1/\sigma_N\to\infty$; der Rest verschwindet punktweise und nicht gleichmäßig.
+
+**Was jetzt offen ist.** Drei benannte Dinge, in dieser Reihenfolge:
+die Halbordnung **unter (F)** (neu und präzise: für die Antikette ja, für jede
+Kette ja, für endliche Halbordnungen ja ohne (F) — für die unendliche
+Halbordnung offen), die **nackte Klasse** auf Ketten (unverändert), und ob ein
+Gegenbeispiel mit durchweg positiven Abwärtsmassen existiert.
+
+**Und ein zweites Ergebnis, das aus dem ersten fällt.** Unter (F) trägt die
+Ausschöpfung wieder — der elfte Lauf hatte sie an der **falschen Norm**
+gemessen. Mit $F\subset\T$ endlich, $e(s,t)=\sum_{a\notin F,a<s}m_a\kappa(a,t)$
+und dem Rest $E_{st}=-e(s,t)-e(t,s)+e(s,s)+e(t,t)$ gilt für jedes symmetrische
+$T$ mit $TV^F$ symmetrisch und $T\mathbb 1=e_{t^*}$ die Identität des elften
+Laufs, und $|\operatorname{tr}(TE)|\le4M\|T\|_m\varepsilon_F$ mit der
+**massegewichteten Supremumsnorm** $\|T\|_m=\sup_{s,t}|T_{st}|/(m_sm_t)$ und
+$\varepsilon_F=\sum_{a\notin F}m_a\sum_tm_t|\kappa(a,t)|$ — und (F) ist genau
+$\sum_am_a\rho_a<\infty$, also $\varepsilon_F\to0$ (Proposition 19.3). Die
+Cauchy–Schwarz-Ungleichung, deren Ersatz der elfte Lauf gesucht hat, ist damit
+durch die Hölder-Paarung $\ell^\infty(m\otimes m)$ gegen $\ell^1(m\otimes m)$
+ersetzt; sein Befund $C\sim\varepsilon^{-\max(n-2k,0)}$ betrifft $\|T\|_F$ und
+sagt über $\|T\|_m$ nichts. Die erste Rechnung des nächsten Laufs ist deshalb
+$\|T\|_m$ für das explizite Zertifikat des sechsten Laufs, auf den Familien
+von `Task23/dense.py`.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`duality_of_atomic_antichain_of_integrable` — die Dualität für eine rein
+atomare Uhr, deren Atome unter $t^*$ paarweise unvergleichbar sind, unter
+$m\otimes m$-Integrierbarkeit von $\gamma$ auf Atompaaren. Sie ruht auf
+\eqref{eq:incrementrep}, auf der Antisymmetrie des Defekts und auf einem
+einzigen Fubini-Schritt (`Summable.tsum_comm`); ihr Beweis steht als
+Proposition 19.1 fertig da, und sie ist jetzt dran, weil sie zusammen mit
+`duality_of_atomic_chain_of_integrable` die beiden Extremfälle der
+Ordnungsstruktur unter *derselben* Hypothese schließt und damit die Gestalt
+festlegt, in der die allgemeine unendliche Halbordnung anzugehen ist. Sie
+steht seit diesem Lauf in `MartingaleProblems` Meilenstein 8, zusammen mit
+`exists_atomic_antichain_duality_ne`, dem Gegenbeispiel als eigener
+Formalisierungsaufgabe.
+
+### 2026-09-04 (zweiter Teil) — Task 23, vierundzwanzigster Lauf: die Ausschöpfung ist gemessen und erledigt, und die Halbordnung fällt unter (F), sobald ihre Unvergleichbarkeit transitiv ist
+
+Das Inventar ist geschlossen und die vorrangigen Aufgaben sind leer; gearbeitet
+wurde am ersten Punkt des Rückstaus, also an Task 23, und zwar an genau der
+Rechnung, die der dreiundzwanzigste Lauf aufgegeben hatte.
+
+**Die Messung.** $\|T\|_m=\max_{s,t}|T_{st}|/(w_sw_t)$ — Gewichte $w_a=m_a$ an
+den Atomen und $w=1$ an den beiden massefreien Punkten $0$ und $t^*$, alles auf
+$M=1$ normiert, weil $\|T\|_m$ anders als $\|T\|_F$ **nicht** skaleninvariant
+ist — für das explizite Zertifikat des sechsten Laufs, exakt in `Fraction`,
+in `Task23/certificate_m.py`; die Konstruktion selbst ist an $70\,956$ Fällen
+(alle Halbordnungen auf vier Punkten, Massen aus $\{0,1,2\}$, jedes $t$)
+nachgeprüft. Drei Befunde:
+
+* **Die Antikette schafft es, gleichmäßig.** $\|T\|_m=1$ für jedes $|A|$ und
+  beide gemessenen Massenprofile, und die Formel ist geschlossen:
+  $T=\frac1M(e_{t^*}\mu^{\mathsf T}+\mu e_{t^*}^{\mathsf T})
+  -\frac1{M^2}\mu\mu^{\mathsf T}$ mit $\mu=m|_A$ (Theorem 20, bewiesen). Damit
+  schließt Proposition 19.3 die abzählbare Antikette unter (F) — dieselbe
+  Aussage wie Proposition 19.1, aber ohne Fubini und über die Ausschöpfung.
+* **Die ordnungsdichte Uhr schafft es nicht, und der Ausfall trifft die
+  Methode.** Auf der dyadischen Uhr (Atome $k/2^j$, Masse $4^{-j}$) ist
+  $\|T\|_m$ exakt $\bigl(2^{n-1}(2^n-1)\bigr)^2=1/m_{\min}^2$, also
+  $\varepsilon_{F_n}\|T\|_m\sim8^n\to\infty$. Diese Uhr ist eine **Kette**, und
+  auf Ketten gibt Theorem 17 des zweiundzwanzigsten Laufs die Konklusion unter
+  (F) längst — Proposition 19.3 scheitert also an einer Instanz, deren
+  Wahrheit feststeht. Die Ausschöpfung ist damit als Beweisvehikel erledigt,
+  in der vierten Norm nach Frobenius, linear und quadratisch. Der Grund ist
+  struktureller Art: eine auf ganz $A$ fallende Massenfunktion auf einer
+  ordnungsdichten Menge ist nicht summierbar, steigende Profile sind
+  unvermeidlich, und sie sind es, die $\|T\|_m$ sprengen.
+* **Die „freie Wahl innerhalb von $\mathcal L$" ist ausgenutzt und wertlos.**
+  37 lineare Programme (Minimum von $\|\cdot\|_m$ über *alle* Zertifikate)
+  geben durchweg genau den Wert des expliziten Zertifikats, Verhältnis $1.00$,
+  auch dort, wo der Lösungsraum groß ist ($\dim\{T=T^{\mathsf T},
+  TV=V^{\mathsf T}T, T\mathbb 1=0\}$ ist $1$ auf Ketten und wächst quadratisch
+  auf Antiketten).
+
+**Der Ertrag steht daneben.** Auf gestuften Halbordnungen hängt $\|T\|_m$ nur
+von der Folge der Stufenmassen ab — nicht von der Breite der Stufen und nicht
+von der Verteilung innerhalb einer Stufe, exakt gleiche Brüche für Breite
+$1,2,3$ und für die Aufteilungen $(\tfrac12,\tfrac12)$,
+$(\tfrac9{10},\tfrac1{10})$, $(\tfrac{99}{100},\tfrac1{100})$, während
+$\|T\|_F$ sich ändert. Das ist eine Hebung von Zertifikaten (Lemma 21.1) —
+und dahinter steckt eine Mittelung der **Daten**, die Proposition 19.3 gar
+nicht mehr braucht:
+
+> **Theorem 21 (Stufenmittelung).** Sei $\T$ eine abzählbare schwache Ordnung
+> (totale Präordnung; äquivalent: die Unvergleichbarkeit ist transitiv;
+> äquivalent: $\T$ ist ein Stapel von Antiketten), $m\ge0$ summierbar,
+> $\kappa$ antisymmetrisch mit $(\diamondsuit)$ an jedem **vergleichbaren**
+> Paar und $\sum_{a,b}m_am_b|\kappa(a,b)|<\infty$. Dann erfüllt der
+> stufengemittelte Kern $\widetilde\kappa$ auf der Stufenkette $(\diamondsuit)$
+> und (F), es ist $\widetilde\delta(j)=\mathbb E_{\pi_j}[\delta]$, und mit
+> Theorem 17 folgt $\delta(t^*)=0$, sobald $t^*$ allein in seiner Stufe steht.
+
+Das enthält Theorem 17 (lauter einelementige Stufen) und Proposition 19.1
+(eine einzige Stufe) als die beiden Extremfälle, erlaubt abzählbar unendliche
+Stufen und beliebige Massenverteilung darin, und es ist bewiesen, nicht
+gemessen. Die Grenze ist scharf benannt: beim „N" ($0<a,b$, $a<c$, $b$
+unvergleichbar zu $c$ und zu $a$) hängt $\T_{<s}$ nicht mehr nur von der Stufe
+ab, und die Mittelung hat keinen Gegenstand. Konsistenz mit Theorem 19: das
+Gegenbeispiel des dreiundzwanzigsten Laufs lebt auf einer Antikette, also auf
+einer schwachen Ordnung, und verletzt genau (F).
+
+Alles im `Task23/PROTOKOLL.md`, vierundzwanzigster Lauf; Rechnungen in
+`Task23/certificate_m.py` (Läufe `verify`, `chains`, `dyadic`, `antichain`,
+`posets`, `graded`, `graded2`, `scrambled`, `free`, `lp`) und
+`Task23/weakorder.py` (Proben (A)–(E), exakt, rc=0). Neu in
+`MartingaleProblems` Meilenstein 8: `Clock.atomLayers`,
+`Clock.atomLayerKernel`, `atomLayerKernel_increment_eq`, `atomLayerKernel_rel`
+und `duality_of_atomic_weakOrder_of_integrable`; die Aufzählung im Punkt
+`duality_of_atomic` nennt jetzt den schwach geordneten Fall statt des reinen
+Kettenfalls, weil jener diesen enthält.
+
+**Was offen blieb.** Die Halbordnung mit **nicht** transitiver
+Unvergleichbarkeit — das ist der ganze Rest der Halbordnungsfrage, kleinste
+Gestalt ein unendliches „N"-Muster. Dazu unverändert die nackte Klasse auf
+Ketten und die Frage nach einem Gegenbeispiel mit durchweg positiven
+Abwärtsmassen. Nicht angefaßt wurde das Manuskript.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`duality_of_atomic_weakOrder_of_integrable` samt seiner drei Vorstufen
+`Clock.atomLayers`, `Clock.atomLayerKernel` und `atomLayerKernel_rel` — die
+Dualität für eine rein atomare Uhr, deren Atome unter $t^*$ **total
+präordnet** sind, unter $m\otimes m$-Integrierbarkeit von $\gamma$ auf
+Atompaaren. Sie ruht auf \eqref{eq:incrementrep}, auf
+`duality_of_atomic_chain_of_integrable` und auf zwei Anwendungen von
+`Summable.tsum_comm`; ihr Beweis steht als Theorem 21 fertig da. Sie ist jetzt
+dran und nicht mehr `duality_of_atomic_antichain_of_integrable`, weil sie
+dieses **und** den Kettenfall unter derselben Hypothese enthält und weil ihr
+Gerüst in Mathlib schon liegt: `Antisymmetrization`
+(`Order/Antisymmetrization.lean:125`), `toAntisymmetrization` (`:131`),
+`instPartialOrderAntisymmetrization` (`:263`), die `LinearOrder`-Instanz unter
+`[@Std.Total α (· ≤ ·)]` (`:308`) und die Transportlemmata
+`toAntisymmetrization_le_toAntisymmetrization_iff` (`:317`) und
+`toAntisymmetrization_lt_toAntisymmetrization_iff` (`:322`) sind genau die
+Stufenkette — am 2026-09-04 gegen `upstream/master` geprüft —, so daß nur der
+Transport der Uhr und des Kerns neu ist.
