@@ -546,6 +546,44 @@ setzt, nennt den Beleg.
   Die zweite Bemerkung in `rem:atomsnotchange` — „die Konklusion ist genuin
   $Q$-fast jedes $t$" — wäre dann ebenfalls zu prüfen. Frage ans Manuskript.
 
+* **Die Endlichkeit in `prop:atomicposet` ist unentbehrlich, und der
+  Schlußsatz der Proposition sagt es nicht; am 2026-09-04, zweiter Lauf,
+  belegt.** Die Proposition schließt mit „No hypothesis is made on the mutual
+  position of the atoms, and none beyond the existence of the integrals in
+  \eqref{eq:incrementrep} and the non-negativity of $q$." Das ist richtig, legt
+  aber nahe, die Hypothese „die Atome in $\T_{<t^*}$ sind endlich viele" sei
+  eine Bequemlichkeit des Matrizenbeweises. Sie ist es nicht: auf einer
+  abzählbaren **Antikette** mit positiven summierbaren Massen gibt es
+  $\Phi,\gamma$, die \eqref{eq:incrementrep} an jedem vergleichbaren Paar
+  erfüllen und $\Phi(t^*,0)\neq\Phi(0,t^*)$ haben (Theorem 19,
+  `Task23/PROTOKOLL.md`, dreiundzwanzigster Lauf; exakt nachgerechnet in
+  `Task23/poset_infinite.py`). Das Manuskript ist davon **nicht** betroffen —
+  die Hypothese steht da —, aber eine Bemerkung wäre die schärfste Aussage, die
+  sich über die Reichweite von `prop:atomicposet` machen läßt, und sie stünde
+  neben `rem:atomicposet`. Vorschlag, zur Entscheidung des Nutzers:
+
+  > *Remark (the finiteness is sharp).* For infinitely many atoms the
+  > conclusion of `prop:atomicposet` fails. Let $\T=\{0\}\cup A\cup\{t^*\}$
+  > with $A=\{a_1,a_2,\dots\}$ pairwise incomparable and $0<a_i<t^*$, let
+  > $q(\{0\})=0$ and $m_i=q(\{a_i\})>0$ with $M=\sum_im_i<\infty$ and tails
+  > $\sigma_i=\sum_{j\ge i}m_j$, and put
+  > $\gamma(a_i,a_j)=\tfrac12\operatorname{sgn}(i-j)
+  > (\sigma_n\sigma_{n+1})^{-1}$ with $n=\min(i,j)$ and
+  > $\gamma(a_j,0)=\gamma(a_j,t^*)=\tfrac12M^{-2}$, extended antisymmetrically.
+  > Every integral in \eqref{eq:incrementrep} exists, both representations hold
+  > at every comparable pair, and $\Phi(t^*,0)-\Phi(0,t^*)=1/M$. What fails is
+  > the integrability of $\gamma$ for $q\otimes q$ on $A\times A$; under that
+  > hypothesis the conclusion holds on any antichain, by Fubini and the
+  > antisymmetry of $\kappa$.
+
+  Zweierlei ist daran auch für die Roadmaps von Belang, und beides steht seit
+  diesem Lauf in `MartingaleProblems` Meilenstein 8: das Gegenbeispiel hat
+  **beschränktes $\Phi$**, die Hypothesengestalt von
+  `duality_of_atomic_twoChains_of_bounded` ist außerhalb von Ketten also
+  wertlos; und es braucht $q(\{0\})=0$, also genau die Bedingung „es gibt ein
+  $s$ mit $\T_{<s}\neq\emptyset$ und $q(\T_{<s})=0$", die `sharp.py` im
+  endlichen Fall als notwendig gefunden hatte.
+
 ## Läufe
 
 ### 2026-08-29 — `fact:Dcountable`, `fact:monotoneclass`, `fact:optsampl`, `fact:doob`, `fact:fddconv`, `fact:relcompact`, `fact:relcompact2`, `fact:fdd`
@@ -3732,3 +3770,99 @@ dran, weil es die einzige Aussage der ganzen Kette ist, deren Beweis eine
 reine Umordnung ist und deren Formalisierung deshalb keine Vorarbeit
 braucht. Wer eine zweite Front will, nehme unverändert `atomGrid_symm`; die
 Begründung des einundzwanzigsten Laufs steht.
+
+### 2026-09-04, zweiter Lauf des Tages — Task 23, dreiundzwanzigster Lauf: die unendliche Halbordnung ist falsch
+
+Das Inventar ist geschlossen (keine Zeile mit `?`), der Rückstau führt als
+ersten Punkt Task 23; dieser Lauf hat dort weitergearbeitet und **nichts** am
+Inventar-Tabellenteil und **nichts** am Manuskript geändert. Geändert sind der
+Rückstau (Punkt 1, Zwischenstand), `Task23/PROTOKOLL.md` (dreiundzwanzigster
+Lauf), `TauCeti/MartingaleProblems/README.md` (Meilenstein 8, zwei neue Punkte
+und eine korrigierte Schlußzeile), und neu ist `Task23/poset_infinite.py`.
+
+**Befund, und er ist ein Negativbefund.** Der zweiundzwanzigste Lauf ließ zwei
+benannte Dinge offen, die nackte Klasse auf Ketten und die unendliche
+Halbordnung. Das zweite ist entschieden: **es gilt nicht.** Auf der
+abzählbaren Antikette $\T=\{0\}\cup\{a_1,a_2,\dots\}\cup\{t^*\}$ mit
+$q(\{0\})=0$, positiven Massen $m_i$, $M=\sum m_i<\infty$, Schwänzen
+$\sigma_i=\sum_{j\ge i}m_j$ und
+
+$$\kappa(a_i,a_j)=\operatorname{sgn}(i-j)\,f(\min(i,j)),\qquad
+  f(i)=\frac1{\sigma_i\sigma_{i+1}},$$
+
+teleskopiert $m_jf(j)=1/\sigma_{j+1}-1/\sigma_j$ die Zeilensummen zu
+$\sum_jm_j\kappa(a_j,a_i)=1/M$ — **konstant und von Null verschieden** —,
+während jede einzelne Zeile absolut konvergiert
+($\sum_jm_j|\kappa(a_j,a_i)|=2/\sigma_i-1/M$). Mit
+$\kappa(a_j,0)=\kappa(a_j,t^*)=M^{-2}$ und $\gamma=\kappa/2$ erfüllt das
+zugehörige $\Phi$ beide Darstellungen von \eqref{eq:incrementrep} an jedem
+vergleichbaren Paar und hat $\Phi(t^*,0)-\Phi(0,t^*)=1/M$ (Theorem 19).
+`Task23/poset_infinite.py` rechnet das exakt nach, Proben (A)–(H), rc=0: alle
+$(\diamondsuit)$-Relationen, beide Darstellungen an jedem vergleichbaren Paar,
+jede unendliche Summe zweimal (geschlossene Form gegen Partialsumme plus
+exakten Schwanz), für drei Massenfolgen.
+
+**Was daran scharf ist.** Verletzt wird genau eine Hypothese, nämlich (F):
+$\sum_{i,j}m_im_j|\kappa|\ge\sum_im_i/\sigma_i=\infty$. Und sie ist die
+richtige: auf einer Antikette schließt unter (F) schon Fubini
+($\sum_im_iv_i=0$ gegen $\delta M$), Proposition 19.1. Der endliche Satz
+`prop:atomicposet` braucht sie nicht, weil dort jede Doppelsumme endlich ist —
+die „flache Spitze" des fünften Laufs *ist* dieser Fubini-Schritt, und er ist
+das erste, was im Unendlichen fällt.
+
+**Zwei Befunde, die künftige Hypothesenwahl festlegen.** Erstens hat das
+Gegenbeispiel **beschränktes $\Phi$** (drei Werte); die Hypothesengestalt von
+Korollar 14 — Beschränktheit des *Wertes* $\Phi$, die das Manuskript an der
+einzigen Stelle, an der es $\Phi$ herstellt, ohnehin trägt — ist außerhalb von
+Ketten wertlos. Unbeschränkt ist allein die *Dichte*. Zweitens braucht das
+Gegenbeispiel $q(\{0\})=0$: bei $q(\{0\})>0$ gibt $(\diamondsuit)$ am Paar
+$(0,a_i)$ sofort $\kappa(0,a_i)=0$ und damit $\delta(t^*)=0$
+(Proposition 19.2, Probe (H) lokalisiert den Bruch auf genau diese Paare).
+Das ist wörtlich die Bedingung, die `sharp.py` im dritten Lauf im endlichen
+Fall als notwendig für jeden Ausfall gefunden hatte; im Endlichen brauchte ein
+Ausfall darüber hinaus gemischte Vorzeichen, hier kauft die Unendlichkeit, was
+dort die negativen Massen kauften.
+
+**Warum es zweiundzwanzig Läufe überlebt hat.** Das Warnzeichen lag seit dem
+elften Lauf offen: der endliche Halbordnungsbeweis läuft über ein Zertifikat
+$T$, dessen Frobeniusnorm mit der Atomzahl explodiert, und ein Beweis, der
+nicht ausschöpfbar ist, sagt über den Limes nichts — in beide Richtungen. Die
+Trunkierung zeigt es jetzt von der anderen Seite: $v_i^{(N)}=1/M-f(i)\sigma_{N+1}$
+geht punktweise gegen $1/M$, aber an der Spitze $i=N$ ist der Fehler
+$1/\sigma_N\to\infty$; der Rest verschwindet punktweise und nicht gleichmäßig.
+
+**Was jetzt offen ist.** Drei benannte Dinge, in dieser Reihenfolge:
+die Halbordnung **unter (F)** (neu und präzise: für die Antikette ja, für jede
+Kette ja, für endliche Halbordnungen ja ohne (F) — für die unendliche
+Halbordnung offen), die **nackte Klasse** auf Ketten (unverändert), und ob ein
+Gegenbeispiel mit durchweg positiven Abwärtsmassen existiert.
+
+**Und ein zweites Ergebnis, das aus dem ersten fällt.** Unter (F) trägt die
+Ausschöpfung wieder — der elfte Lauf hatte sie an der **falschen Norm**
+gemessen. Mit $F\subset\T$ endlich, $e(s,t)=\sum_{a\notin F,a<s}m_a\kappa(a,t)$
+und dem Rest $E_{st}=-e(s,t)-e(t,s)+e(s,s)+e(t,t)$ gilt für jedes symmetrische
+$T$ mit $TV^F$ symmetrisch und $T\mathbb 1=e_{t^*}$ die Identität des elften
+Laufs, und $|\operatorname{tr}(TE)|\le4M\|T\|_m\varepsilon_F$ mit der
+**massegewichteten Supremumsnorm** $\|T\|_m=\sup_{s,t}|T_{st}|/(m_sm_t)$ und
+$\varepsilon_F=\sum_{a\notin F}m_a\sum_tm_t|\kappa(a,t)|$ — und (F) ist genau
+$\sum_am_a\rho_a<\infty$, also $\varepsilon_F\to0$ (Proposition 19.3). Die
+Cauchy–Schwarz-Ungleichung, deren Ersatz der elfte Lauf gesucht hat, ist damit
+durch die Hölder-Paarung $\ell^\infty(m\otimes m)$ gegen $\ell^1(m\otimes m)$
+ersetzt; sein Befund $C\sim\varepsilon^{-\max(n-2k,0)}$ betrifft $\|T\|_F$ und
+sagt über $\|T\|_m$ nichts. Die erste Rechnung des nächsten Laufs ist deshalb
+$\|T\|_m$ für das explizite Zertifikat des sechsten Laufs, auf den Familien
+von `Task23/dense.py`.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`duality_of_atomic_antichain_of_integrable` — die Dualität für eine rein
+atomare Uhr, deren Atome unter $t^*$ paarweise unvergleichbar sind, unter
+$m\otimes m$-Integrierbarkeit von $\gamma$ auf Atompaaren. Sie ruht auf
+\eqref{eq:incrementrep}, auf der Antisymmetrie des Defekts und auf einem
+einzigen Fubini-Schritt (`Summable.tsum_comm`); ihr Beweis steht als
+Proposition 19.1 fertig da, und sie ist jetzt dran, weil sie zusammen mit
+`duality_of_atomic_chain_of_integrable` die beiden Extremfälle der
+Ordnungsstruktur unter *derselben* Hypothese schließt und damit die Gestalt
+festlegt, in der die allgemeine unendliche Halbordnung anzugehen ist. Sie
+steht seit diesem Lauf in `MartingaleProblems` Meilenstein 8, zusammen mit
+`exists_atomic_antichain_duality_ne`, dem Gegenbeispiel als eigener
+Formalisierungsaufgabe.

@@ -666,8 +666,44 @@ order.
   and everything of the density; the two before it ask nothing of the density
   and something of the order type or of the value `Φ`. What none of the seven
   reaches is a chain of atoms carrying a `γ` that is neither
-  `m ⊗ m`-integrable nor attached to a bounded `Φ`, and, beyond chains,
-  infinitely many incomparable atoms.
+  `m ⊗ m`-integrable nor attached to a bounded `Φ`. Beyond chains the
+  finiteness is not a convenience of the matrix proof but a hypothesis of the
+  statement: `exists_atomic_antichain_duality_ne` produces infinitely many
+  incomparable atoms of positive summable mass on which the conclusion fails,
+  and `duality_of_atomic_antichain_of_integrable` is what survives there.
+* `duality_of_atomic_antichain_of_integrable`: with `Φ, γ` as in
+  `chain_identity` and `γ₁ = γ₂ = γ`, a purely atomic clock, a `t` below which
+  the atoms are pairwise **incomparable**, and `γ` integrable for `m ⊗ m` on
+  pairs of atoms below `t`, one has `Φ t 0 = Φ 0 t`. Read the compatibility of
+  the two increment representations on the antisymmetric part `κ = γ - γ.swap`:
+  the relation at a pair `(a, t)` with `a` an atom gives
+  `∑' b, m b * κ b a = Φ t 0 - Φ 0 t` for every atom `a`, and summing that
+  against `m a` turns the left side into `∑' (a, b), m a * m b * κ b a`, which
+  vanishes by antisymmetry and `Summable.tsum_comm`, and the right side into
+  `(Φ t 0 - Φ 0 t) * q (Iio t)`. Integrability is exactly what licenses the
+  interchange, and it is the same hypothesis as in
+  `duality_of_atomic_chain_of_integrable`, so the two together are the
+  integrable case of an antichain and of a chain.
+* `exists_atomic_antichain_duality_ne`: there are a preordered `T` with a least
+  element, a purely atomic clock `q` of finite total mass whose atoms below `t`
+  are pairwise incomparable and carry strictly positive masses, and
+  `Φ, γ : T → T → ℝ` satisfying both increment representations of
+  `chain_identity` with `γ₁ = γ₂ = γ` at every comparable pair, all integrals
+  existing, such that `Φ t 0 ≠ Φ 0 t`. Take `T = {0} ∪ A ∪ {t}` with
+  `A = {a i | i : ℕ}` an antichain, `q {0} = 0`, `m i > 0` summable with total
+  mass `M` and tails `σ i`, and
+  `κ (a i) (a j) = (if j < i then 1 else if i < j then -1 else 0) * (σ (i ⊓ j) * σ (i ⊓ j + 1))⁻¹`,
+  `κ (a j) 0 = κ (a j) t = M⁻¹ ^ 2`, `γ = κ / 2`. The identity
+  `m j * (σ j * σ (j+1))⁻¹ = (σ (j+1))⁻¹ - (σ j)⁻¹` telescopes the row sums to
+  `∑' j, m j * κ (a j) (a i) = M⁻¹` for every `i`, which is the relation at
+  `(a i, t)`; the relations at `(0, a i)` and at pairs from `A` are trivial
+  because `q (Iio (a i)) = 0`. Every row converges absolutely, with
+  `∑' j, m j * |κ (a j) (a i)| = 2 * (σ i)⁻¹ - M⁻¹`, so the integrals of the
+  increment representation exist, while `∑' (i, j), m i * m j * |κ (a i) (a j)|`
+  diverges. `Φ` takes three values, so boundedness of `Φ` is not a substitute
+  for the integrability of `γ` outside chains. This is the sharpness statement
+  for the finiteness hypothesis of `duality_of_atomic` and for the
+  integrability hypothesis of `duality_of_atomic_antichain_of_integrable`.
 * `duality_of_atomic_intervalFinite`: with `Φ, γ` as in `chain_identity` and
   `γ₁ = γ₂ = γ`, a purely atomic clock, and a `t` below which the atoms are
   pairwise comparable and **interval-finite** — any two of them enclose only

@@ -3585,3 +3585,257 @@ Offen bleibt danach genau zweierlei, und beides ist benannt:
   gibt nur die Teilerdifferenz
   $E(c,d)=-[V_0(c)-V_0(d)][Q(c)-Q(d)]/(c-d)$ zurück, also nichts über (2)
   hinaus.
+
+## Die unendliche Halbordnung, 2026-09-04 (dreiundzwanzigster Lauf): sie ist falsch — auf der abzählbaren Antikette bricht die Dualität, bei lauter positiven Massen
+
+Der zweiundzwanzigste Lauf schloß den ordnungsdichten Kern und ließ genau zwei
+benannte Dinge offen: die **nackte Klasse** auf Ketten und die **unendliche
+Halbordnung**. Das zweite ist entschieden, und zwar **negativ**. Auf der
+einfachsten unendlichen Halbordnung überhaupt — einer abzählbaren Antikette
+zwischen $0$ und $t^*$ — gibt es eine rein atomare Uhr endlicher Masse mit
+lauter positiven Atommassen und ein Paar $\Phi,\gamma$, das
+\eqref{eq:incrementrep} mit $\gamma_1=\gamma_2=\gamma$ an **jedem**
+vergleichbaren Paar erfüllt und $\Phi(t^*,0)-\Phi(0,t^*)=1/M\neq0$ hat.
+
+Die Endlichkeitshypothese von `prop:atomicposet` ist damit keine Bequemlichkeit
+des Matrizenbeweises, sondern unentbehrlich, und die Hypothese (F) von
+Theorem 17 ist im Halbordnungsfall nicht wegzulassen. Alles in
+`Task23/poset_infinite.py` (Proben (A)–(H), exakt in `Fraction`, rc=0).
+
+### Das Gegenbeispiel
+
+$\T=\{0\}\cup A\cup\{t^*\}$ mit $A=\{a_1,a_2,\dots\}$ **paarweise
+unvergleichbar**, $0<a_i<t^*$; $q(\{0\})=0$, $m_i:=q(\{a_i\})>0$ mit
+$M:=\sum_im_i<\infty$, $\sigma_i:=\sum_{j\ge i}m_j$. Die Abwärtsmengen sind
+$\T_{<0}=\emptyset$, $\T_{<a_i}=\{0\}$, $\T_{<t^*}=\{0\}\cup A$. Setze
+
+$$f(i):=\frac1{\sigma_i\sigma_{i+1}},\qquad
+  \kappa(a_i,a_j):=\operatorname{sgn}(i-j)\,f(\min(i,j)),\qquad
+  \kappa(a_j,0)=\kappa(a_j,t^*):=\frac1{M^2},$$
+
+$\kappa(0,t^*):=0$, $\kappa$ sonst durch Antisymmetrie, und $\gamma:=\kappa/2$
+(der symmetrische Anteil von $\gamma$ kommt im Defekt nach dem dritten Lauf
+ohnehin nicht vor). Dann ist $\Phi(s,t):=-\tfrac12\Psi(t,0)+\tfrac12\Psi(s,t)$
+mit $\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$ die zugehörige Lösung.
+
+> **Theorem 19.** Für jede summierbare Massenfolge $m_i>0$ gilt
+> $$v_i:=\sum_j m_j\kappa(a_j,a_i)=\frac1M\qquad\text{für jedes }i,$$
+> jede Zeile konvergiert absolut ($r_i:=\sum_jm_j|\kappa(a_j,a_i)|
+> =2/\sigma_i-1/M<\infty$), und $\Phi,\gamma$ erfüllen \eqref{eq:incrementrep}
+> mit $\Phi(t^*,0)-\Phi(0,t^*)=1/M\neq0$.
+
+*Beweis.* Für $j<i$ ist $\kappa(a_j,a_i)=-f(j)$, für $j>i$ ist
+$\kappa(a_j,a_i)=+f(i)$. Also
+
+$$v_i=-\sum_{j<i}m_jf(j)+f(i)\sigma_{i+1}
+     =-\sum_{j<i}\Bigl(\frac1{\sigma_{j+1}}-\frac1{\sigma_j}\Bigr)
+      +\frac{\sigma_{i+1}}{\sigma_i\sigma_{i+1}}
+     =-\Bigl(\frac1{\sigma_i}-\frac1M\Bigr)+\frac1{\sigma_i}=\frac1M,$$
+
+weil $m_jf(j)=(\sigma_j-\sigma_{j+1})/(\sigma_j\sigma_{j+1})
+=1/\sigma_{j+1}-1/\sigma_j$ **teleskopiert**. Dieselbe Rechnung mit
+Absolutbeträgen gibt $r_i=(1/\sigma_i-1/M)+1/\sigma_i<\infty$. Die Relationen
+$(\diamondsuit)$ sind damit sämtlich erfüllt: an $(0,a_i)$ und $(a_i,a_j)$
+stehen wegen $q(\T_{<a_i})=0$ auf beiden Seiten Nullen; an $(a_i,t^*)$ steht
+$0+\Psi(t^*,a_i)=0+\delta(t^*)$, also $v_i=\delta(t^*)$, und
+$\delta(t^*)=\sum_jm_j\kappa(a_j,t^*)=M\cdot M^{-2}=1/M$; an $(0,t^*)$ steht
+$\Psi(t^*,0)=\sum_jm_j\kappa(a_j,0)=1/M=\delta(t^*)$. $\square$
+
+Probe (B) rechnet $v_i=1/M$ auf zwei Wegen nach — geschlossene Form gegen
+Partialsumme plus **exakten** Schwanz, für mehrere Abschneidestellen —, Probe
+(D) prüft $(\diamondsuit)$ an allen Paaren, Probe (E) beide Darstellungen von
+\eqref{eq:incrementrep} an **jedem** vergleichbaren Paar und den Defekt; alles
+für drei Massenfolgen ($2^{-i}$, $1/(i(i+1))$, $3^{-i}$).
+
+### Wo (F) ausfällt, und nur dort
+
+$$\sum_{i,j}m_im_j|\kappa(a_i,a_j)|=\sum_im_ir_i
+ \ \ge\ \sum_i\frac{m_i}{\sigma_i}=\infty,$$
+
+denn $\sum_im_i/\sigma_i$ divergiert für jede Folge mit $\sigma_i\downarrow0$
+(Probe (C) mißt es bis $N=5000$). Das ist die einzige Hypothese, die
+verletzt wird — und sie ist **scharf**:
+
+> **Proposition 19.1.** Ist $A$ eine Antikette und
+> $\sum_{i,j}m_im_j|\kappa(a_i,a_j)|<\infty$, so ist $\delta=0$.
+
+*Beweis.* $(\diamondsuit)$ an $(a_i,t^*)$ gibt $v_i=\delta$ für jedes $i$;
+Multiplikation mit $m_i$ und Summation über $i$ gibt links
+$\sum_{i,j}m_im_j\kappa(a_j,a_i)=0$ (Fubini und Antisymmetrie), rechts
+$\delta M$. Also $\delta=0$. $\square$
+
+Probe (G) prüft die Fubini-Identität $\sum_im_iv_i=0$ auf endlichen Antiketten
+mit zufälligen antisymmetrischen $\kappa$ nach; sie ist der ganze Inhalt des
+endlichen Antikettenfalls („flache Spitze", fünfter Lauf) und der Grund, warum
+`prop:atomicposet` im Endlichen keine Integrierbarkeit braucht.
+
+### Was das Gegenbeispiel braucht — und was es nicht braucht
+
+Es braucht **nicht**: unbeschränktes $\Phi$. $\Phi$ nimmt genau drei Werte an
+(Probe (E)), der Dualitätsdefekt ist beschränkt. Damit ist die
+Hypothesengestalt von Korollar 14 — Beschränktheit des **Wertes** $\Phi$, die
+das Manuskript an der Stelle, an der es $\Phi$ herstellt, ohnehin trägt — auf
+Halbordnungen **wertlos**; sie ist ein Kettenphänomen. Unbeschränkt ist allein
+die **Dichte** $\gamma$, und zwar auf der Nebendiagonale:
+$|\gamma(a_{i+1},a_i)|=f(i)/2\to\infty$.
+
+Es braucht **nicht**: daß der Defekt am obersten Punkt sitzt. Variante II
+schiebt zwischen $A$ und $t^*$ einen Punkt $c$ positiver Masse; dann ist
+$\delta(c)=1/M\neq0$ bei $q(\T_{<c})=M>0$. Der Defekt sitzt also an einem
+Punkt mit **positiver** Abwärtsmasse (Probe (D)/(E), Variante II).
+
+Es braucht $q(\{0\})=0$, also den Normalfall einer Uhr ohne Masse am kleinsten
+Punkt:
+
+> **Proposition 19.2.** Ist $\T=\{0\}\cup A\cup\{t^*\}$ mit $A$ Antikette und
+> $q(\{0\})>0$, so ist $\delta(t^*)=0$.
+
+*Beweis.* $(\diamondsuit)$ an $(0,a_i)$ liest sich $\Psi(a_i,0)=\delta(a_i)$,
+also $m_0\kappa(0,0)=m_0\kappa(0,a_i)$ und damit $\kappa(0,a_i)=0$;
+$(\diamondsuit)$ an $(0,t^*)$ liest sich $\Psi(t^*,0)=\delta(t^*)$, also
+$\delta(t^*)=m_0\kappa(0,0)+\sum_jm_j\kappa(a_j,0)
+=-\sum_jm_j\kappa(0,a_j)=0$. $\square$
+
+Probe (H) hält fest, daß das Gegenbeispiel unter $q(\{0\})>0$ genau an den
+Paaren $(0,a_i)$ zerbricht und an keinem anderen. Das ist **wörtlich die
+Bedingung**, die `sharp.py` im dritten Lauf im endlichen Fall als notwendig für
+jeden Ausfall gefunden hat: es gibt ein $s$ mit $\T_{<s}\neq\emptyset$ und
+$q(\T_{<s})=0$. Im Endlichen brauchte ein Ausfall darüber hinaus gemischte
+Vorzeichen; hier kauft die **Unendlichkeit**, was dort die negativen Massen
+kauften. Der dritte Lauf hatte notiert, für eine echte Uhr sei die Bedingung
+harmlos, „denn dann liegt unter $s$ kein Atom, und der Defekt ist ohnehin $0$" —
+das stimmt für $\delta(s)$ und eben nicht für die Punkte **über** $s$.
+
+### Warum die Ausschöpfung scheitern mußte
+
+Die Trunkierung auf die ersten $N$ Atome gibt
+$v_i^{(N)}=1/M-f(i)\sigma_{N+1}$: punktweise in $i$ geht der Rest gegen $1/M$,
+an der Spitze $i=N$ aber ist der Fehler $f(N)\sigma_{N+1}=1/\sigma_N\to\infty$
+(Probe (G)). Der Trunkierungsrest verschwindet **punktweise und nicht
+gleichmäßig**, und er wächst genau dort, wo die Zertifikatsnorm des elften
+Laufs explodiert. Der elfte bis dreizehnte Lauf haben die Ausschöpfung dreimal
+zerbrechen sehen (Frobenius, linear, quadratisch) und jedesmal nach einer
+feineren Paarung gesucht; auf der Antikette gibt es keine, weil es das Ergebnis
+nicht gibt.
+
+### Was jetzt offen ist, exakt
+
+* **Die unendliche Halbordnung unter (F).** Neu und präzise: gilt die Dualität
+  auf einer beliebigen abzählbaren Halbordnung mit summierbaren positiven
+  Massen, wenn $\sum_{a,b}m_am_b|\kappa(a,b)|<\infty$? Für die Antikette ja
+  (Proposition 19.1), für jede Kette ja (Theorem 17), für endliche
+  Halbordnungen ja ohne (F) (`prop:atomicposet`). Der Weg ist benannt: die
+  Fubini-Identität gibt auf einer allgemeinen Halbordnung nur die eine skalare
+  Relation
+  $\sum_{a,t}m_am_t\bigl[(\nu_a-\nu_t)-M([a<t]-[t<a])\bigr]\kappa(a,t)=0$ mit
+  $\nu_a=\sum_{s>a}m_s$, und die schließt allein nicht. Der Weg, der offen
+  steht, ist die Ausschöpfung — unter (F) trägt sie wieder, aber mit der
+  massegewichteten Supremumsnorm $\|T\|_m=\sup_{s,t}|T_{st}|/(m_sm_t)$ statt
+  der Frobeniusnorm des elften Laufs; siehe den Nachtrag desselben Laufs,
+  Proposition 19.3.
+* **Die nackte Klasse auf Ketten**, unverändert offen (zweiundzwanzigster
+  Lauf). Theorem 19 sagt darüber **nichts**: sein $\kappa$ lebt von der
+  Unvergleichbarkeit, und auf einer Kette vom Typ $\omega$ schließt schon der
+  vierzehnte Lauf ohne jede Integrierbarkeit.
+* **Ein Gegenbeispiel mit durchweg positiven Abwärtsmassen**, also mit
+  $q(\T_{<s})>0$ für jedes $s$ mit $\T_{<s}\neq\emptyset$. Proposition 19.2
+  verbietet es für die Antikette; ob eine tiefere Halbordnung es zuläßt, ist
+  offen und entscheidet, ob die Bedingung von `sharp.py` auch im Unendlichen
+  notwendig ist.
+
+### Nachtrag desselben Laufs: unter (F) ist die Ausschöpfung wieder offen — sie hängt an einer *anderen* Norm
+
+Der elfte Lauf hat die Ausschöpfung an der Zertifikatsnorm $\|T\|_F$
+zerbrechen sehen und der dreizehnte sie im Ganzen aufgegeben. Beide haben in
+der **freien** Klasse gerechnet, ohne (F). Unter (F) steht die Rechnung
+anders da, und zwar so:
+
+Sei $F\subset\T$ endlich, $V^F_{s,a}=[a<s]m_a$ und $K^F$ die Einschränkung von
+$\kappa$ auf $F$. Dann ist
+$(V^FK^F)_{st}=\Psi(s,t)-e(s,t)$ mit
+$e(s,t):=\sum_{a\notin F,\,a<s}m_a\kappa(a,t)$, und weil $(\diamondsuit)$ für
+$\Psi$ **exakt** gilt, ist der Rest von (S) auf $F$
+
+$$E_{st}=-e(s,t)-e(t,s)+e(s,s)+e(t,t).$$
+
+Die Identität des elften Laufs gibt für jedes symmetrische $T$ mit $TV^F$
+symmetrisch und $T\mathbb 1=e_{t^*}$
+
+$$\delta_F(t^*)=-\tfrac12\operatorname{tr}(TE),\qquad
+  \delta(t^*)=\delta_F(t^*)+e(t^*,t^*).$$
+
+Der zweite Summand geht gegen $0$, weil $\sum_am_a|\kappa(a,t^*)|<\infty$ die
+Existenz der Integrale in \eqref{eq:incrementrep} ohnehin verlangt. Für den
+ersten gilt: ist
+
+$$\|T\|_{m}:=\sup_{s,t}\frac{|T_{st}|}{m_sm_t}\ \le\ C,$$
+
+so ist $|\operatorname{tr}(TE)|\le\sum_{s,t}|T_{st}||E_{st}|
+\le C\sum_{s,t}m_sm_t|E_{st}|\le 4CM\varepsilon_F$ mit
+
+$$\varepsilon_F:=\sum_{a\notin F}m_a\rho_a,\qquad
+  \rho_a:=\sum_t m_t|\kappa(a,t)|,$$
+
+denn jeder der vier Terme von $E$ ist von der Gestalt
+$\sum_{s,t}m_sm_t|e(\cdot,\cdot)|\le M\varepsilon_F$. Und **(F) ist genau
+$\sum_am_a\rho_a<\infty$**, also $\varepsilon_F\to0$ längs jeder Ausschöpfung.
+
+> **Proposition 19.3.** Gilt (F) und gibt es eine Ausschöpfung $F_n\uparrow\T$
+> und Zertifikate $T_n$ auf $F_n$ — symmetrisch, $T_nV^{F_n}$ symmetrisch,
+> $T_n\mathbb 1=e_{t^*}$ — mit $\sup_n\|T_n\|_m<\infty$, so ist
+> $\delta(t^*)=0$.
+
+Das ist keine Wiederholung des elften Laufs, sondern seine Korrektur an der
+entscheidenden Stelle: dort stand $|\operatorname{tr}(TE)|\le\|T\|_F\|E\|_F$
+und damit die **Frobeniusnorm**, hier steht die **massegewichtete
+Supremumsnorm** $\|T\|_m$. Die beiden sind unvergleichbar, und der elfte Lauf
+hat die falsche gemessen: sein Befund
+$C\sim\varepsilon^{-\max(n-2k,0)}$ betrifft $\|T\|_F$ und sagt über $\|T\|_m$
+nichts. Die Cauchy–Schwarz-Ungleichung, deren Ersatz der elfte Lauf gesucht
+hat, ist hier durch die Hölder-Paarung $\ell^\infty(m\otimes m)$ gegen
+$\ell^1(m\otimes m)$ ersetzt, und die Struktur von $E$ als Schwanzbeitrag —
+das, was der elfte Lauf „nicht wegwerfen" wollte — steckt jetzt in
+$\varepsilon_F$.
+
+Zwei Randbemerkungen, damit der nächste Lauf nicht in dieselben Fallen läuft.
+Erstens: $T\mathbb 1=e_{t^*}$ mit $\|T\|_m<\infty$ verlangt $m_{t^*}>0$, ist
+also nur für Atome hinschreibbar. Für ein $t^*$ ohne Masse — im Gegenbeispiel
+oben ist $t^*$ kein Atom — nimmt man die weitere Klasse
+$|T_{st}|\le C(m_s+[s=t^*])(m_t+[t=t^*])$; die Abschätzung geht durch, weil in
+der Zeile $t^*$ nur $\sum_tm_t|e(t,t^*)|\le M\sum_{a\notin F}m_a|\kappa(a,t^*)|$
+gebraucht wird, und das ist der Schwanz einer absolut konvergenten Reihe.
+Zweitens: die Antikette zeigt, daß ohne (F) kein solches $T$ existieren kann —
+Proposition 19.3 ist also nicht durch ein Zertifikat zu erfüllen, das (F)
+nicht benutzt.
+
+**Was der nächste Lauf zuerst rechnet.** $\|T\|_m$ für das explizite Zertifikat
+des sechsten Laufs, auf denselben Familien, auf denen `Task23/dense.py`
+$\|T\|_F$ gemessen hat, und auf Halbordnungen mit fallenden Massenprofilen
+(die einzigen, die eine summierbare Uhr zuläßt). Bleibt $\|T\|_m$ beschränkt,
+wo $\|T\|_F$ explodiert, so ist die unendliche Halbordnung unter (F) über
+Proposition 19.3 geschlossen; explodiert auch $\|T\|_m$, so sagt die Gestalt
+der Explosion, welche Zertifikate stattdessen zu bauen sind — das Zertifikat
+ist nicht eindeutig, und die freie Wahl innerhalb von $\mathcal L$ ist noch
+nie ausgenutzt worden.
+
+### Sackgassen, einundzwanzigster Nachtrag
+
+* **Die unendliche Halbordnung für wahr halten, weil der endliche Fall keine
+  Bedingung an die Lage der Atome braucht.** Zweiundzwanzig Läufe lang stand
+  sie als „von keinem der beiden Sätze erfaßt" da, mit dem stillen Beiklang,
+  sie sei nur noch nicht bewiesen. Das Warnzeichen lag seit dem elften Lauf
+  offen: der endliche Beweis läuft über ein Zertifikat, dessen Norm mit der
+  Atomzahl explodiert, und ein Beweis, der nicht ausschöpfbar ist, sagt über
+  den Limes nichts — in beide Richtungen. Zum vierten Mal dieselbe Lehre wie
+  beim Kompaktheitsargument (siebzehnter Lauf), bei (H) (zwanzigster) und bei
+  der Einschrittrelation (zweiundzwanzigster): eine Prämisse, die aus der
+  Rechnung stammt statt aus dem Beweisbedarf. Diesmal mit umgekehrtem
+  Vorzeichen — nicht der Beweis war zu schwach, sondern die Behauptung falsch.
+* **Beschränktheit von $\Phi$ als Ersatzhypothese für Halbordnungen.** Sie
+  trägt auf zwei $\zeta$-Ketten (Korollar 14) und auf Blockstapeln (Korollar
+  16) und ist auf der Antikette **wirkungslos**: das Gegenbeispiel hat
+  dreiwertiges $\Phi$. Wer die Halbordnung angeht, nehme (F) und nicht die
+  Beschränktheit.
+* **Die Antikette für den harmlosen Fall halten.** Sie ist im Endlichen die
+  „flache Spitze" mit einem Zweizeilenbeweis (fünfter Lauf), und genau dieser
+  Zweizeilenbeweis ist Fubini — er fällt im Unendlichen als erstes.

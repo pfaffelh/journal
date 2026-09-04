@@ -291,6 +291,39 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `duality_of_atomic_chain_of_integrable` in `MartingaleProblems`
    Meilenstein 8.
 
+   *Zwischenstand 2026-09-04, dreiundzwanzigster Lauf: die zweite der beiden
+   Restfragen ist entschieden — die unendliche Halbordnung ist **falsch**.*
+   Auf der abzählbaren Antikette $\T=\{0\}\cup A\cup\{t^*\}$ mit positiven
+   summierbaren Massen $m_i$, Schwänzen $\sigma_i$ und
+   $\kappa(a_i,a_j)=\operatorname{sgn}(i-j)/(\sigma_n\sigma_{n+1})$,
+   $n=\min(i,j)$, teleskopiert $m_jf(j)=1/\sigma_{j+1}-1/\sigma_j$ die
+   Zeilensummen zu $\sum_jm_j\kappa(a_j,a_i)=1/M$ — konstant und von Null
+   verschieden, jede Zeile absolut konvergent ($r_i=2/\sigma_i-1/M$). Das löst
+   alle Relationen und gibt $\Phi(t^*,0)-\Phi(0,t^*)=1/M$ (Theorem 19).
+   Die Endlichkeit in `prop:atomicposet` ist damit unentbehrlich, und (F) ist
+   im Halbordnungsfall scharf: unter Integrierbarkeit schließt auf der
+   Antikette schon Fubini (Proposition 19.1). Zwei Befunde, die die
+   Hypothesenwahl künftiger Läufe festlegen: das Gegenbeispiel hat
+   **beschränktes $\Phi$** (drei Werte) — Korollar 14 ist ein Kettenphänomen
+   und außerhalb von Ketten wertlos —, und es braucht $q(\{0\})=0$
+   (Proposition 19.2), also genau die Bedingung, die `sharp.py` im dritten
+   Lauf im Endlichen als notwendig gefunden hat; die Unendlichkeit kauft hier,
+   was dort die negativen Massen kauften. Offen bleiben jetzt drei benannte
+   Dinge: die Halbordnung **unter (F)**, die nackte Klasse auf Ketten
+   (unverändert), und ob ein Gegenbeispiel mit durchweg positiven
+   Abwärtsmassen existiert. Für das erste steht der Weg schon da: unter (F)
+   trägt die Ausschöpfung wieder, aber mit der massegewichteten Supremumsnorm
+   $\|T\|_m=\sup_{s,t}|T_{st}|/(m_sm_t)$ statt der Frobeniusnorm, an der der
+   elfte Lauf gescheitert ist — $|\operatorname{tr}(TE)|\le4M\|T\|_m
+   \varepsilon_F$ mit $\varepsilon_F=\sum_{a\notin F}m_a\sum_tm_t|\kappa(a,t)|
+   \to0$, und das ist (F) (Proposition 19.3). Wer den Punkt aufnimmt, mißt
+   zuerst $\|T\|_m$ für das explizite Zertifikat des sechsten Laufs auf den
+   Familien von `Task23/dense.py`. `Task23/PROTOKOLL.md`, dreiundzwanzigster Lauf;
+   `Task23/poset_infinite.py` (Proben (A)–(H), exakt, rc=0); Roadmapeinträge
+   `duality_of_atomic_antichain_of_integrable` und
+   `exists_atomic_antichain_duality_ne` in `MartingaleProblems`
+   Meilenstein 8.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
