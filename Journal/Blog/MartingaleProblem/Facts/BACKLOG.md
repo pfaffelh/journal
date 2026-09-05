@@ -29,6 +29,22 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    Zeilen. **Schreibe echtes Lean und übersetze es** (siehe „Lean übersetzen"
    im Auftrag), nicht nur Roadmaptext.
 
+   *Zwischenstand 2026-09-05, dritter Lauf: die Aussage steht, der Beweis
+   nicht.* `MeasureTheory.IsSeparating` und
+   `MeasureTheory.IsSeparating.ae_eq_of_forall_condExp_eq` sind jetzt in
+   `TauCeti/WeakConvergence/Suggested.lean` getippt, und jeder Baustein des
+   Beweises ist an `upstream/master` belegt: `setIntegral_condExp`
+   (`Mathlib/MeasureTheory/Function/ConditionalExpectation/Basic.lean:232`,
+   Notation `μ[f | m]`), `Filter.EventuallyEq.of_forall_separating_preimage`
+   (`Mathlib/Order/Filter/CountableSeparatingOn.lean:257`, Variablenblock
+   `:145` mit `[CountableInterFilter l]`) und
+   `MeasurableSpace.CountablySeparated`
+   (`Mathlib/MeasureTheory/MeasurableSpace/CountablyGenerated.lean:322`, mit
+   den Instanzen nach und von `HasCountableSeparatingOn` bei `:326` und
+   `:329`). Was fehlt, ist der Beweis, und er fehlt, weil dieser Lauf `lean`
+   nicht ausführen durfte — siehe den Kasten bei Punkt 3. Wer den Punkt
+   aufnimmt und übersetzen darf, hat nur noch den Zweischritt zu schreiben.
+
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`). Ruht auf `MeasurableSpace.comap`, monotoner Konvergenz und
@@ -42,6 +58,28 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    fehlender Import für die `→ᵇ`-Notation, Universenprobleme. Ziel: jede
    Datei übersetzt, `sorry` nur dort, wo die Aussage die Arbeit ist. Das ist
    Vorbedingung für die Einreichung bei Tau Ceti.
+
+   > **Achtung, Werkzeuglage — 2026-09-05, dritter Lauf des Tages.**
+   > `lake env lean` ist **nicht in jedem Lauf verfügbar**. In diesem Lauf war
+   > es das nicht: `lean --version`, `lake --dir=… env lean …` und jeder
+   > `cd`-Aufruf in den Hauptcheckout wurden von der Rechteprüfung abgelehnt
+   > („This command requires approval"), und ein unbeaufsichtigter Lauf kann
+   > nicht zustimmen. Auch die Verzeichnisse sind enger als der Auftrag
+   > annimmt: erlaubt sind `journal-facts`, `hp/misc/qr`,
+   > `journal/.lake/packages/mathlib` und `mathlib4` — **nicht**
+   > `~/Code/lean/journal` selbst, wo die `lakefile` liegt. Ein Umweg über
+   > `LEAN_PATH` und den nackten `lean`-Aufruf scheitert an derselben Prüfung
+   > (`lean` ist nicht freigegeben), und Shell-Variablen sind ebenfalls
+   > abgelehnt. `python3`, `git`, `git grep` und die Datei-Werkzeuge gehen.
+   >
+   > Wer den Punkt aufnimmt, prüfe **zuerst** mit `lean --version`, ob dieser
+   > Lauf übersetzen darf. Darf er nicht, ist das kein Grund, Lean ungeprüft zu
+   > schreiben — dann ist die Arbeit die **Signaturprüfung am Quelltext**
+   > (`git grep -n … upstream/master -- Mathlib`), und jede so entstandene
+   > Deklaration wird im Kopf der Datei als *nicht übersetzt* gekennzeichnet.
+   > Damit der Punkt dauerhaft freikommt, gehören `lean`, `lake` und das
+   > Verzeichnis `~/Code/lean/journal` in die Rechte des Runners; das ist eine
+   > Entscheidung des Nutzers, nicht eines Laufs.
 
 4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von

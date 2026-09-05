@@ -13,9 +13,16 @@ import Mathlib.Analysis.RCLike.Basic
 
 Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
+
+**Status: not type-checked.**  The run of 2026-09-05 that revised this file had
+no permission to execute `lean` or `lake`, so the declarations below are checked
+only against the Mathlib sources (`upstream/master`, `251e86bd1fa`).  Three
+declarations of Milestones 3, 5, 9 and 10 still carry `True` or a `sorry` in the
+**statement** and are therefore drafts, not commitments; they are the ones whose
+roadmap text has not yet been turned into a proposition.
 -/
 
-open Filter Topology MeasureTheory Set
+open Filter Topology MeasureTheory ProbabilityTheory Set
 
 /-! ## Milestone 1: the clock -/
 
@@ -90,11 +97,17 @@ end Local
 variable {E : Type*} [MeasurableSpace E]
 
 /-- The test processes attached to an operator, a clock and a convention.
-The operator is a relation, not a function. -/
-def mpFamily (A : Set ((E → 𝕂) × (E → 𝕂))) (Q : Clock ι) (c : Clock.Conv)
+The operator is a relation, not a function.
+
+The lower end of the compensating integral is `⊥`, not `0`: the index of the
+abstract layer carries no `Zero`, and the roadmap's index bundle asks for an
+order, so `[OrderBot ι]` is the hypothesis that makes `Q.interval c ⊥ t` — which
+is `Set.Ioc ⊥ t` in the optional convention — the right-hand analogue of
+`∫_0^t`. -/
+def mpFamily [OrderBot ι] (A : Set ((E → 𝕂) × (E → 𝕂))) (Q : Clock ι) (c : Clock.Conv)
     (X : ι → Ω → E) : Set (ι → Ω → 𝕂) :=
   {Y | ∃ p ∈ A, ∀ t ω, Y t ω =
-    p.1 (X t ω) - ∫ s in Q.interval c 0 t, p.2 (X s ω) ∂Q.q}
+    p.1 (X t ω) - ∫ s in Q.interval c ⊥ t, p.2 (X s ω) ∂Q.q}
 
 /-! ## Milestone 3: determining sets and the finite dimensional criterion -/
 
