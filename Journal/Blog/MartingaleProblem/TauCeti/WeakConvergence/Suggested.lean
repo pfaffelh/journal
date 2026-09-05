@@ -17,12 +17,22 @@ import Mathlib.Topology.MetricSpace.Polish
 
 Prototypes only.
 
-**Status: not type-checked.**  The run of 2026-09-05 that revised this file had
-no permission to execute `lean` or `lake`, so every declaration below is checked
-only against the Mathlib sources (`upstream/master`, `251e86bd1fa`): each cited
-name exists, is not `deprecated`, and its instance arguments are read off the
-surrounding `variable` block.  That is weaker than a type check and is meant to
-be replaced by one.
+**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1` on
+2026-09-05.  Every declaration elaborates; the remaining `sorry`s are the
+statements' own proofs, which is what this file is for.
+
+Five of Milestone 1 are no longer `sorry` but proved: `IsSeparating.mono`,
+`IsConvergenceDetermining.mono`, `IsConvergenceDetermining.isSeparating`,
+`isSeparating_setOf_boundedContinuous` and
+`isConvergenceDetermining_setOf_boundedContinuous`.
+
+One statement is deliberately written for `upstream/master` rather than for
+`v4.33.1`, and so does not elaborate here:
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
+`ProbabilityMeasure.map`, which on master takes the *function*
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:626`) and in `v4.33.1` takes an
+`AEMeasurable` proof as well.  Master is what Tau Ceti builds on, so the
+statement follows master.
 -/
 
 open Filter Topology MeasureTheory Set ENNReal
@@ -44,8 +54,9 @@ determining (`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`,
 `MeasureTheory/Measure/FiniteMeasureExt.lean:72`).  The predicates exist
 because `IsSeparating` occurs as a hypothesis downstream. -/
 
-/-- A set of bounded measurable functions that separates finite Borel measures. -/
-/-- Separating, over PROBABILITY measures, as in the manuscript's
+/-- A set of bounded measurable functions that separates Borel measures.
+
+Separating, over PROBABILITY measures, as in the manuscript's
 `def:separating` (Ethier-Kurtz, Section 3.4).  Quantifying over finite measures
 instead gives a strictly stronger notion under which
 `IsConvergenceDetermining.isSeparating` is false -- on a one-point space the
@@ -68,11 +79,15 @@ def IsConvergenceDetermining [TopologicalSpace E] [OpensMeasurableSpace E]
       (𝓝 (∫ x, f x ∂(ν : Measure E)))) → Tendsto μ atTop (𝓝 ν)
 
 theorem IsSeparating.mono {Γ Γ' : Set (E → ℝ)} (h : IsSeparating Γ) (hsub : Γ ⊆ Γ') :
-    IsSeparating Γ' := sorry
+    IsSeparating Γ' := by
+  intro μ ν _ _ hμν
+  exact h μ ν fun f hf => hμν f (hsub hf)
 
 theorem IsConvergenceDetermining.mono [TopologicalSpace E] [OpensMeasurableSpace E]
     {Γ Γ' : Set (E → ℝ)} (h : IsConvergenceDetermining Γ) (hsub : Γ ⊆ Γ') :
-    IsConvergenceDetermining Γ' := sorry
+    IsConvergenceDetermining Γ' := by
+  intro μ ν hμν
+  exact h μ ν fun f hf => hμν f (hsub hf)
 
 /-- A convergence determining class separates **probability** measures: apply the
 hypothesis to the constant sequence and use that `ProbabilityMeasure E` is
@@ -84,23 +99,37 @@ It does **not** separate finite measures, so there is no
 `IsConvergenceDetermining.isSeparating`: on a one-point space every set of
 functions, `∅` included, is convergence determining, while `∅` does not tell the
 Dirac measure from twice the Dirac measure.  A convergence determining class
-never has to see the total mass. -/
-/-- With `IsSeparating` over probability measures this is the manuscript's
+never has to see the total mass.
+
+With `IsSeparating` over probability measures this is the manuscript's
 `def:separating`, last sentence.  Proof: test with the constant sequence
 `μ_n = μ`, so `μ_n → ν` weakly, and conclude by `ProbabilityMeasure.t2Space`. -/
 theorem IsConvergenceDetermining.isSeparating [TopologicalSpace E]
     [BorelSpace E] [HasOuterApproxClosed E] {Γ : Set (E → ℝ)}
-    (h : IsConvergenceDetermining Γ) : IsSeparating Γ := sorry
+    (h : IsConvergenceDetermining Γ) : IsSeparating Γ := by
+  intro μ ν _ _ hμν
+  let μ' : ProbabilityMeasure E := ⟨μ, ‹_›⟩
+  let ν' : ProbabilityMeasure E := ⟨ν, ‹_›⟩
+  have key : Tendsto (fun _ : ℕ => μ') atTop (𝓝 ν') :=
+    h _ _ fun f hf => by simp [μ', ν', hμν f hf]
+  exact congrArg (fun p : ProbabilityMeasure E => (p : Measure E))
+    (tendsto_nhds_unique tendsto_const_nhds key)
 
-/-- One line from `MeasureTheory.ext_of_forall_integral_eq_of_IsFiniteMeasure`. -/
+/-- One line from `MeasureTheory.ext_of_forall_integral_eq_of_IsFiniteMeasure`,
+which proves the stronger, finite measure statement. -/
 theorem isSeparating_setOf_boundedContinuous [TopologicalSpace E] [BorelSpace E]
     [HasOuterApproxClosed E] :
-    IsSeparating {f : E → ℝ | ∃ g : E →ᵇ ℝ, ⇑g = f} := sorry
+    IsSeparating {f : E → ℝ | ∃ g : E →ᵇ ℝ, ⇑g = f} := by
+  intro μ ν _ _ hμν
+  exact ext_of_forall_integral_eq_of_IsFiniteMeasure fun g => hμν g ⟨g, rfl⟩
 
 /-- One line from `MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`. -/
 theorem isConvergenceDetermining_setOf_boundedContinuous [TopologicalSpace E]
     [OpensMeasurableSpace E] :
-    IsConvergenceDetermining {f : E → ℝ | ∃ g : E →ᵇ ℝ, ⇑g = f} := sorry
+    IsConvergenceDetermining {f : E → ℝ | ∃ g : E →ᵇ ℝ, ⇑g = f} := by
+  intro μ ν hμν
+  exact ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.2
+    fun g => hμν g ⟨g, rfl⟩
 
 /-- From `MeasureTheory.ext_of_forall_mem_subalgebra_integral_eq_of_polish`.  That
 theorem is stated for a `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` with `[RCLike 𝕜]` and the
@@ -113,13 +142,88 @@ theorem IsSeparating.of_subalgebra [TopologicalSpace E] [PolishSpace E] [BorelSp
     (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints) :
     IsSeparating {f : E → ℝ | ∃ g ∈ A, ⇑g = f} := sorry
 
-/-- Missing from Mathlib: the Stone-Weierstrass step for the *convergence*
-notion.  Mathlib proves the separating half only. -/
-theorem isConvergenceDetermining_of_separatesPoints [TopologicalSpace E]
+/-! ### The Stone-Weierstrass step for the convergence notion
+
+Mathlib has this step **under a tightness hypothesis**:
+`MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+(`MeasureTheory/Measure/LevyConvergence.lean:154`) says that for `E` Polish, a
+`StarSubalgebra 𝕜 (E →ᵇ 𝕜)` whose image separates points, and a family
+`μ : ι → ProbabilityMeasure E` with `IsTightMeasureSet {(μ n : Measure E) | n}`,
+convergence of the integrals over the algebra gives `Tendsto μ 𝓕 (𝓝 μ₀)`.
+
+The tightness hypothesis is not removable at the price of mere separation of
+points, and the manuscript's `fact:stoneweierstrass` does not ask it to be: it
+asks for *strong* separation.  Witness that plain separation is too weak, with
+`E = ℝ` and
+
+  `A = {f : ℝ →ᵇ ℝ | Tendsto f atTop (𝓝 (f 0))}`,
+
+an `ℝ`-subalgebra (limits add and multiply, and so do the values at `0`)
+containing the constants and separating points (for `x ≠ y` pick a continuous
+function supported in a large ball with the prescribed two values, taking the
+value `0` at whichever of `x`, `y` is not `0`).  For `μ n = δ n` and `μ₀ = δ 0`
+every `f ∈ A` has `∫ f ∂δ n = f n → f 0 = ∫ f ∂δ 0`, while `δ n` does not
+converge weakly to `δ 0`.  The family `{δ n}` is not tight, and `A` does not
+strongly separate points at `0`, since `max i |h i n - h i 0| → 0` for every
+finite family from `A`.
+
+So what is missing is the passage from strong separation to tightness; the two
+declarations below are that passage and the theorem it yields. -/
+
+/-- Strong separation of points, as in the manuscript's `def:separating`: for
+every `x` and every `δ > 0` some finite family from `Γ` keeps all points at
+distance at least `δ` from `x` a fixed amount away from `x`.  Mathlib has
+`Set.SeparatesPoints` (`Logic/Function/Basic.lean:1225`) and no strong form. -/
+def StronglySeparatesPoints [PseudoMetricSpace E] (Γ : Set (E → ℝ)) : Prop :=
+  ∀ (x : E) (δ : ℝ), 0 < δ → ∃ (s : Finset (E → ℝ)) (ε : ℝ), ↑s ⊆ Γ ∧ 0 < ε ∧
+    ∀ y : E, δ ≤ dist y x → ∃ f ∈ s, ε ≤ |f y - f x|
+
+/-- Take `δ = dist y x`. -/
+theorem StronglySeparatesPoints.separatesPoints [MetricSpace E] {Γ : Set (E → ℝ)}
+    (h : StronglySeparatesPoints Γ) : Γ.SeparatesPoints := sorry
+
+/-- Missing from Mathlib, and the whole of what `fact:stoneweierstrass` still
+owes: a strongly separating subalgebra forces tightness of any family whose
+integrals over it converge.  Given this,
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` supplies the rest.
+
+That strong separation is what does the work is visible on `E = ℝ` with the
+algebra generated by `arctan`, which is strongly separating: `∫ arctan ∂δ n`
+converges, to `π / 2`, and no probability measure has `∫ arctan = π / 2`, so the
+hypothesis below is vacuous there rather than false. -/
+theorem isTightMeasureSet_of_stronglySeparatesPoints [MetricSpace E]
+    [PolishSpace E] [BorelSpace E] {ι : Type*} {𝓕 : Filter ι} [𝓕.NeBot]
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
+    (hA : StronglySeparatesPoints {f : E → ℝ | ∃ g ∈ A, ⇑g = f})
+    {μ : ι → ProbabilityMeasure E} {μ₀ : ProbabilityMeasure E}
+    (hμ : ∀ g ∈ A, Tendsto (fun n => ∫ x, g x ∂(μ n : Measure E)) 𝓕
+      (𝓝 (∫ x, g x ∂(μ₀ : Measure E)))) :
+    IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n} := sorry
+
+/-- `fact:stoneweierstrass`, convergence half.  From
+`isTightMeasureSet_of_stronglySeparatesPoints` and
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, whose separation
+hypothesis comes from `StronglySeparatesPoints.separatesPoints`. -/
+theorem isConvergenceDetermining_of_stronglySeparatesPoints [MetricSpace E]
     [PolishSpace E] [BorelSpace E] (A : Subalgebra ℝ (E →ᵇ ℝ))
-    (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints)
-    (hvan : ∀ x : E, ∃ g ∈ A, g x ≠ 0) :
+    (hA : StronglySeparatesPoints {f : E → ℝ | ∃ g ∈ A, ⇑g = f}) :
     IsConvergenceDetermining {f : E → ℝ | ∃ g ∈ A, ⇑g = f} := sorry
+
+/-- `fact:convdet` (Ethier-Kurtz, Proposition 3.4.4), first half.  Separability
+alone: no completeness, and no local compactness. -/
+theorem isConvergenceDetermining_setOf_uniformContinuous_isBounded_support
+    [MetricSpace E] [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E] :
+    IsConvergenceDetermining {f : E → ℝ | UniformContinuous f ∧
+      (∃ C, ∀ x, |f x| ≤ C) ∧ Bornology.IsBounded (Function.support f)} := sorry
+
+/-- `fact:convdet`, second half: on a locally compact separable metric space the
+continuous functions of compact support are convergence determining.  The total
+mass is not seen by them, and does not have to be: the measures are probability
+measures on both sides. -/
+theorem isConvergenceDetermining_setOf_hasCompactSupport
+    [MetricSpace E] [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E]
+    [LocallyCompactSpace E] :
+    IsConvergenceDetermining {f : E → ℝ | Continuous f ∧ HasCompactSupport f} := sorry
 
 /-- Missing from Mathlib: products, for an **arbitrary** index type.  This is what
 makes finite dimensional distributions determine a law; for a process the index
@@ -139,7 +243,11 @@ conditional equality in law: for `G` with `MeasurableSet[m] G`, the two finite
 measures `(P.restrict G).map U` and `(P.restrict G).map V` integrate every
 `f ∈ Γ` alike, by `setIntegral_condExp`
 (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:232`), so
-`IsSeparating` gives `P (U ⁻¹' B ∩ G) = P (V ⁻¹' B ∩ G)` for Borel `B`.  Second,
+`IsSeparating` gives `P (U ⁻¹' B ∩ G) = P (V ⁻¹' B ∩ G)` for Borel `B` -- but
+`IsSeparating` quantifies over *probability* measures, so this splits: for
+`P G = 0` both sides are at most `P G`, and for `P G ≠ 0` one applies it to
+`((P G)⁻¹ • P.restrict G).map U` and the same for `V`, the scaling passing
+through the integrals in both directions.  Second,
 `U ⁻¹' B =ᵐ[P] V ⁻¹' B` for each Borel `B`, by taking `G = V ⁻¹' B` and then its
 complement, and `Filter.EventuallyEq.of_forall_separating_preimage`
 (`Order/Filter/CountableSeparatingOn.lean:257`) concludes.  Its hypothesis
@@ -150,7 +258,7 @@ in both directions at `:326` and `:329`).
 
 The countability is the state space's, not `Γ`'s: no countable subfamily of `Γ`
 is chosen, and none exists in general. -/
-theorem IsSeparating.ae_eq_of_forall_condExp_eq
+theorem IsSeparating.ae_eq_of_forall_condExp_eq [TopologicalSpace E]
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {m : MeasurableSpace Ω} (hm : m ≤ mΩ)
     (P : @Measure Ω mΩ) [IsFiniteMeasure P]
     [MeasurableSpace.CountablySeparated E]

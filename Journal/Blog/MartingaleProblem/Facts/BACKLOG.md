@@ -41,9 +41,30 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `MeasurableSpace.CountablySeparated`
    (`Mathlib/MeasureTheory/MeasurableSpace/CountablyGenerated.lean:322`, mit
    den Instanzen nach und von `HasCountableSeparatingOn` bei `:326` und
-   `:329`). Was fehlt, ist der Beweis, und er fehlt, weil dieser Lauf `lean`
-   nicht ausführen durfte — siehe den Kasten bei Punkt 3. Wer den Punkt
-   aufnimmt und übersetzen darf, hat nur noch den Zweischritt zu schreiben.
+   `:329`). Was fehlt, ist der Beweis.
+
+   *Nachtrag 2026-09-05, vierter Lauf: die Aussage ist jetzt **typgeprüft**,
+   und dabei kam heraus, daß sie ein `[TopologicalSpace E]` brauchte, das ihr
+   fehlte (die Hypothese `∃ g : E →ᵇ ℝ, ⇑g = f` verlangt es). `lake env lean`
+   ist verfügbar — der Kasten, der bei Punkt 3 das Gegenteil behauptete, ist
+   mit jenem Punkt erledigt. Wer den Punkt aufnimmt, hat nur noch den
+   Zweischritt zu schreiben, und kann ihn sofort prüfen.*
+
+   *Dazu ein Nachtrag zum Beweisweg selbst.* Der Meilenstein schrieb „No
+   normalization and no case `P G = 0`, because `IsSeparating` is stated for
+   finite measures". Seit `IsSeparating` auf **Wahrscheinlichkeitsmaße**
+   umgestellt ist, stimmt das nicht mehr, und `(P.restrict G).map U` ist
+   keines. Schritt eins hat daher eine Fallunterscheidung: für `P G = 0` sind
+   beide Seiten $\le P(G)$; für `P G ≠ 0` wendet man `IsSeparating` auf
+   `((P G)⁻¹ • P.restrict G).map U` und ebenso für `V` an, wobei die
+   Skalierung durch die Integrale in beide Richtungen geht. Roadmap und
+   `Suggested.lean` sagen das jetzt; nur der Lean-Text fehlt.
+
+   *Fünf Nachbarn sind erledigt.* `IsSeparating.mono`,
+   `IsConvergenceDetermining.mono`, `IsConvergenceDetermining.isSeparating`,
+   `isSeparating_setOf_boundedContinuous` und
+   `isConvergenceDetermining_setOf_boundedContinuous` tragen seit dem
+   2026-09-05 Beweise statt `sorry`, alle typgeprüft.
 
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
@@ -52,34 +73,36 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    formulierte Roadmap-Punkte warten darauf. Ebenfalls als Lean zu schreiben
    und zu übersetzen.
 
-3. **Die drei `Suggested.lean` zum Übersetzen bringen.** Sie sind Prototypen
-   und waren nie übersetzt; der erste Durchlauf am 2026-09-05 zeigt echte
-   Fehler — fehlende `TopologicalSpace (ProbabilityMeasure E)`-Instanz,
-   fehlender Import für die `→ᵇ`-Notation, Universenprobleme. Ziel: jede
-   Datei übersetzt, `sorry` nur dort, wo die Aussage die Arbeit ist. Das ist
-   Vorbedingung für die Einreichung bei Tau Ceti.
+3. ~~**Die drei `Suggested.lean` zum Übersetzen bringen.**~~ *(erledigt
+   2026-09-05, vierter Lauf des Tages.)* Alle drei gehen jetzt durch
+   `lake env lean` gegen Mathlib `v4.33.1`, ohne Fehler und ohne Warnung; die
+   Köpfe halten das fest, mit Datum. Gefunden und behoben wurden sieben Dinge,
+   die die reine Signaturprüfung nicht sehen konnte:
 
-   > **Achtung, Werkzeuglage — 2026-09-05, dritter Lauf des Tages.**
-   > `lake env lean` ist **nicht in jedem Lauf verfügbar**. In diesem Lauf war
-   > es das nicht: `lean --version`, `lake --dir=… env lean …` und jeder
-   > `cd`-Aufruf in den Hauptcheckout wurden von der Rechteprüfung abgelehnt
-   > („This command requires approval"), und ein unbeaufsichtigter Lauf kann
-   > nicht zustimmen. Auch die Verzeichnisse sind enger als der Auftrag
-   > annimmt: erlaubt sind `journal-facts`, `hp/misc/qr`,
-   > `journal/.lake/packages/mathlib` und `mathlib4` — **nicht**
-   > `~/Code/lean/journal` selbst, wo die `lakefile` liegt. Ein Umweg über
-   > `LEAN_PATH` und den nackten `lean`-Aufruf scheitert an derselben Prüfung
-   > (`lean` ist nicht freigegeben), und Shell-Variablen sind ebenfalls
-   > abgelehnt. `python3`, `git`, `git grep` und die Datei-Werkzeuge gehen.
-   >
-   > Wer den Punkt aufnimmt, prüfe **zuerst** mit `lean --version`, ob dieser
-   > Lauf übersetzen darf. Darf er nicht, ist das kein Grund, Lean ungeprüft zu
-   > schreiben — dann ist die Arbeit die **Signaturprüfung am Quelltext**
-   > (`git grep -n … upstream/master -- Mathlib`), und jede so entstandene
-   > Deklaration wird im Kopf der Datei als *nicht übersetzt* gekennzeichnet.
-   > Damit der Punkt dauerhaft freikommt, gehören `lean`, `lake` und das
-   > Verzeichnis `~/Code/lean/journal` in die Rechte des Runners; das ist eine
-   > Entscheidung des Nutzers, nicht eines Laufs.
+   * `WeakConvergence` — zwei doppelte Doc-Kommentare, an denen die Datei nicht
+     einmal parste, und ein fehlendes `[TopologicalSpace E]` in
+     `IsSeparating.ae_eq_of_forall_condExp_eq`.
+   * `SkorokhodSpace` — ein fehlendes `[MeasurableSpace ι]` in
+     `IsCadlag.measurable`, `Real.exp` ohne seinen Import, eine ganze
+     Meilensteinhälfte über meßbare Abbildungen aus `D(ι, E)` ohne meßbare
+     Struktur darauf (jetzt als Borelstruktur der Metrik deklariert, und
+     `noncomputable`, weil die Metrik es ist), und ein `omit` an
+     `dist_eq_sub_of_le`, dessen Beweis weder `OrderTopology` noch
+     `ProperSpace` benutzt — die stehende Regel über minimale Voraussetzungen,
+     vom Linter gefunden.
+   * `MartingaleProblems` — `Shift.eval_comp` als nacktes `sorry` in einem
+     Strukturfeld hat keine ableitbare Universe und ist jetzt `(sorry : Prop)`.
+
+   Die Werkzeuglage, die der dritte Lauf hier notiert hatte, gilt **nicht
+   mehr**: `lean --version`, `cd ~/Code/lean/journal` und `lake env lean` auf
+   Dateien im Worktree sind freigegeben und wurden benutzt. Der erste Durchlauf
+   je Datei dauert wenige Minuten.
+
+   Was offen bleibt und in Punkt 1 und 2 gehört: die Beweise. `sorry` steht in
+   allen drei Dateien noch überall, und in `MartingaleProblems` stehen an vier
+   Stellen `True` oder `sorry` in der **Aussage** — das sind die
+   Meilensteintexte der Meilensteine 3, 5, 9 und 10, die noch keine Proposition
+   sind. Wer diese aufnimmt, arbeitet an den Aussagen, nicht am Übersetzen.
 
 4. **Die Grundtheorie von `ProbabilityMeasure E` als metrischem Raum
    formalisieren.** Am 2026-08-31 als Lücke belegt und als Block an den Kopf von

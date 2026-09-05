@@ -14,12 +14,17 @@ import Mathlib.Analysis.RCLike.Basic
 Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
-**Status: not type-checked.**  The run of 2026-09-05 that revised this file had
-no permission to execute `lean` or `lake`, so the declarations below are checked
-only against the Mathlib sources (`upstream/master`, `251e86bd1fa`).  Three
-declarations of Milestones 3, 5, 9 and 10 still carry `True` or a `sorry` in the
-**statement** and are therefore drafts, not commitments; they are the ones whose
-roadmap text has not yet been turned into a proposition.
+**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1` on
+2026-09-05.  Every declaration elaborates.
+
+Some declarations of Milestones 3, 5, 9 and 10 still carry `True` or a `sorry`
+in the **statement** and are therefore drafts, not commitments; they are the
+ones whose roadmap text has not yet been turned into a proposition.  The type
+check makes that visible rather than hiding it: `Shift.eval_comp` now reads
+`(sorry : Prop)`, because a bare `sorry` in a structure field has no inferable
+universe, and `Shift` carries no evaluation map to state the intended
+`eval t (θ r f) = eval (r + t) f` against.  Supplying that map is the work of
+Milestone 5.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -40,7 +45,7 @@ structure Clock (ι : Type*) [Preorder ι] where
   measure_Iic_ne_top : ∀ t : ι, q (Set.Iic t) ≠ ⊤
 
 /-- The compensating interval selected by the convention. -/
-def Clock.interval (Q : Clock ι) (c : Clock.Conv) (s t : ι) : Set ι :=
+def Clock.interval (_Q : Clock ι) (c : Clock.Conv) (s t : ι) : Set ι :=
   match c with
   | .optional => Set.Iic t \ Set.Iic s
   | .predictable => Set.Iio t \ Set.Iio s
@@ -127,7 +132,7 @@ structure Shift (F : Type*) [MeasurableSpace F] (ι : Type*) [Preorder ι] [Add 
     (E : Type*) [MeasurableSpace E] where
   θ : ι → F → F
   measurable : ∀ r, Measurable (θ r)
-  eval_comp : ∀ r t (f : F), sorry
+  eval_comp : ∀ (_r _t : ι) (_f : F), (sorry : Prop)
 
 theorem restart : True := sorry
 

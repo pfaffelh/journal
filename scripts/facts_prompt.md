@@ -139,7 +139,22 @@ $\widehat w$-Isomorphismus als Werkzeug. Alles in `Task23/PROTOKOLL.md`,
 siebzehnter Lauf.
 
 
-### Aufgabe: Meilenstein 1 von `WeakConvergence` ruht auf einem falschen Befund *(gestellt 2026-09-05)*
+### ~~Aufgabe: Meilenstein 1 von `WeakConvergence` ruht auf einem falschen Befund~~ *(gestellt 2026-09-05, erledigt 2026-09-05, vierter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, „2026-09-05, vierter Lauf des
+Tages". Kurz: Punkt 1 der Aufgabe trägt nur zur Hälfte — der Satz ist da, aber
+die Straffheit ist **nicht** geschenkt. Der Weg über
+`isTightMeasureSet_of_isCompact_closure` ist zirkulär (die Konvergenz ist die
+Behauptung), und die straffheitsfreie Fassung unter bloßer Punktetrennung ist
+falsch, mit `E = ℝ`, $A=\{f\in C_b: \lim_{x\to\infty}f(x)=f(0)\}$ und
+$\mu_n=\delta_n$. Das Manuskript verlangt an dieser Stelle **starke** Trennung,
+und genau der Schritt von starker Trennung zur Straffheit ist der einzige, der
+noch fehlt; er steht als `isTightMeasureSet_of_stronglySeparatesPoints` in
+Meilenstein 1. Punkt 2 fand eine Folgestelle
+(`MartingaleProblems` M11, `isRelativelyCompact_of_approx`), berichtigt. Punkt 3
+erledigt. `fact:convdet` war überdies ein leeres Zitat und hat jetzt zwei eigene
+Punkte in M1. Die Lehre steht als Abschnitt „Regel für den Negativbefund" im
+Inventar. `Suggested.lean` ist erstmals mit `lake env lean` typgeprüft.
 
 **Der Befund.** Seit dem 2026-08-29 steht in `WeakConvergence` Meilenstein 1,
 Mathlib beweise nur die *separierende* Hälfte des Stone--Weierstraß-Schritts und

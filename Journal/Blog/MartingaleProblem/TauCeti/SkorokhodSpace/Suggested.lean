@@ -6,6 +6,7 @@ Authors: Peter Pfaffelhuber
 import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+import Mathlib.Analysis.SpecialFunctions.Exp
 
 /-!
 # Suggested signatures for the Skorokhod space roadmap
@@ -14,9 +15,14 @@ Prototypes only. Names and argument orders are suggestions; the statements are
 the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
-**Status: not type-checked.**  The run of 2026-09-05 that revised this file had
-no permission to execute `lean` or `lake`, so the declarations below are checked
-only against the Mathlib sources (`upstream/master`, `251e86bd1fa`).
+**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1` on
+2026-09-05.  Every declaration elaborates; the `sorry`s are the statements' own
+proofs, which is what this file is for.  Three errors that the signature check
+of the previous run could not see came out of the first run: `IsCadlag.measurable`
+had no `MeasurableSpace ι`, `TimeChange.dist_le_of_normOn_le` used `Real.exp`
+without importing it, and Milestone 6 spoke of measurable maps out of `D(ι, E)`
+with no measurable structure on it.  The last is now declared, as the Borel
+structure of the metric.
 
 `Function.RightContinuous` and `IsCadlag` are **not** in Mathlib — a search of
 `upstream/master` for `IsCadlag` returns nothing — so the earlier version of this
@@ -45,7 +51,9 @@ def exhaustion (t₀ : ι) (m : ℕ) : Set ι := Metric.closedBall t₀ m
 
 theorem isCompact_exhaustion (t₀ : ι) (m : ℕ) : IsCompact (exhaustion t₀ m) := sorry
 
-/-- The metric is the difference of the length function to a base point. -/
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- The metric is the difference of the length function to a base point.  It is
+`AdditiveDist` alone that does this, neither the order topology nor properness. -/
 theorem dist_eq_sub_of_le {t₀ s t : ι} (h₀s : t₀ ≤ s) (hst : s ≤ t) :
     dist s t = dist t₀ t - dist t₀ s := by
   have := AdditiveDist.dist_add (α := ι) h₀s hst
@@ -92,7 +100,8 @@ def leftJumpSet (f : ι → E) : Set ι := {x | Function.leftLim f x ≠ f x}
 theorem countable_leftJumpSet {f : ι → E} (hf : IsCadlag f) :
     (leftJumpSet f).Countable := sorry
 
-theorem IsCadlag.measurable [MeasurableSpace E] [BorelSpace E] {f : ι → E}
+theorem IsCadlag.measurable [MeasurableSpace ι] [BorelSpace ι]
+    [MeasurableSpace E] [BorelSpace E] {f : ι → E}
     (hf : IsCadlag f) : Measurable f := sorry
 
 /-- A càdlàg function is determined by its values on a dense set. -/
@@ -157,7 +166,14 @@ theorem SkorokhodSpace.continuousAt_eval {t : ι} {f : D(ι, E)} :
     ContinuousAt (fun g : D(ι, E) => g.toFun t) f ↔
       Function.leftLim f.toFun t = f.toFun t := sorry
 
-/-! ## Milestone 6: the Borel structure -/
+/-! ## Milestone 6: the Borel structure
+
+The measurable structure on `D(ι, E)` is the Borel one of the metric above, so
+it is declared here rather than assumed; everything in this section is stated
+against it. -/
+
+noncomputable instance : MeasurableSpace D(ι, E) := borel _
+instance : BorelSpace D(ι, E) := ⟨rfl⟩
 
 variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 

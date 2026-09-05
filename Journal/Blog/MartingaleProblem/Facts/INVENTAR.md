@@ -32,6 +32,22 @@ Mathlib-Deklaration existiert unter diesem Namen und ist nicht `deprecated`, ode
 der Meilenstein nennt die Aussage. Nicht aus dem Gedächtnis. Wer einen Status
 setzt, nennt den Beleg.
 
+## Regel für den Negativbefund
+
+Vier Fehler dieses Inventars — `Locally` statt „local martingale",
+`IsStronglyProgressive` statt `ProgMeasurable`, `upcrossingsBefore` statt
+`upcrossing`, und am 2026-09-05 `SeparatesPoints`+`IsTightMeasureSet` statt
+„konvergenzbestimmend" — hatten dieselbe Ursache: gesucht wurde nach dem
+**Begriff**, den das Manuskript benutzt, statt nach der **Aussage**. Mathlib hat
+kein Prädikat „konvergenzbestimmend", also schien der Satz zu fehlen; er stand
+die ganze Zeit da, unter seinem mathematischen Namen.
+
+Daher: wer „Mathlib hat das nicht" schreiben will, formuliert die Aussage
+vorher **ohne unsere Vokabeln**, in Mathlibs eigenen Begriffen, und sucht
+danach. Und wer sie dann noch immer nicht findet, nennt im Bericht die
+Formulierungen, mit denen er gesucht hat. Ein Negativbefund ohne diese Liste
+ist kein Befund, sondern ein `?`.
+
 ## Tabelle
 
 | Fact | tragend | Aussage | Status | Beleg |
@@ -40,7 +56,7 @@ setzt, nennt den Beleg.
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung `induction_on_inter` |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
-| `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`), die konvergenzbestimmende fehlt |
+| `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
 | `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:optsampl` | 2 | Optional sampling; EK, Theorem 2.2.13, Remark 2.2.14,  | Roadmap | MartingaleProblems M9, `Submartingale.stoppedValue_min_le_condExp` — dort neu angelegt; Mathlibs `Martingale.stoppedValue_min_ae_eq_condExp` ist der diskrete Fall und nur für Martingale |
@@ -51,7 +67,7 @@ setzt, nennt den Beleg.
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
 | `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität |
-| `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1 |
+| `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1, `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` (separabel metrisch) und `isConvergenceDetermining_setOf_hasCompactSupport` (zusätzlich lokalkompakt) — am 2026-09-05 dort neu angelegt. ~~M1~~ nannte die Aussage bis dahin **nicht**: das Zitat war seit dem 2026-08-29 leer, kein Punkt von M1 spricht von gleichmäßig stetigen Funktionen mit beschränktem Träger oder von $C_c$. Mathlib hat sie nicht — in `MeasureTheory/Measure/` kommt `UniformContinuous` überhaupt nicht vor und `HasCompactSupport` in keiner Konvergenzaussage (`upstream/master`, 2026-09-05) |
 | `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` (b); beide stehen seit dem 2026-08-31 unter Stufe (A) „separabel metrisch", wie der Fact, und (b) unter Relativkompaktheit statt Straffheit, wie EK |
 | `fact:fullgenerator` | 1 | EK, Proposition 1.5.1 | Roadmap | MartingaleProblems M13 — dort neu angelegt; Mathlib hat keine Operatorhalbgruppen, `dissipative` kommt nicht vor, Hille--Yosida steht als `Q974405` ohne `decl` in `docs/1000.yaml` |
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
@@ -4408,3 +4424,184 @@ das einzige Prädikat, das **zwei** Roadmaps als Hypothese führen, und sie ist
 die letzte Zeile des Absolutstetigkeitssatzes in `MartingaleProblems`
 Meilenstein 9. Vorbedingung ist allein, daß der Lauf `lean` ausführen darf; wer
 sie aufnimmt, prüft das als erstes.
+
+### 2026-09-05, vierter Lauf des Tages — vorrangige Aufgabe: Meilenstein 1 ruht auf einem falschen Befund
+
+**Bearbeitet.** `fact:stoneweierstrass`, `fact:convdet`; dazu der eine Punkt
+anderer Roadmaps, der auf dem falschen Befund aufbaut
+(`MartingaleProblems` Meilenstein 11, `isRelativelyCompact_of_approx`).
+
+**Der Befund ist berichtigt, und er war zur Hälfte anders falsch, als die
+Aufgabe annahm.** Alles an `upstream/master` geprüft, frisch geholt.
+
+1. **Mathlib hat die konvergenzbestimmende Hälfte.**
+   `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`,
+   `MeasureTheory/Measure/LevyConvergence.lean:154` (die Aufgabe nannte `:153`),
+   nicht `deprecated`: `E` polnisch, `A : StarSubalgebra 𝕜 (E →ᵇ 𝕜)` mit
+   `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints`,
+   `IsTightMeasureSet {(μ n : Measure E) | n}`, Konvergenz der Integrale über
+   `A` — Schluß `Tendsto μ 𝓕 (𝓝 μ₀)`. Der Beweis ist der beschriebene:
+   `isCompact_closure_of_isTightMeasureSet`, dann
+   `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`,
+   dann Ultrafilter.
+
+2. **Die Straffheit ist nicht geschenkt, und die straffheitsfreie Fassung unter
+   bloßer Punktetrennung ist falsch.** Die Aufgabe vermutete, eine konvergente
+   Folge samt Limes sei kompakt und `isTightMeasureSet_of_isCompact_closure`
+   (`Measure/Prokhorov.lean:634`, unter `[CompleteSpace]`; existiert und trägt)
+   mache daraus Straffheit. Das ist zirkulär: die Konvergenz ist die
+   Behauptung, nicht die Voraussetzung. Und die Aussage selbst ist widerlegt,
+   mit `E = ℝ` und $A=\{f\in C_b(\mathbb R;\mathbb R):
+   \lim_{x\to\infty}f(x)=f(0)\}$. Das ist eine $\mathbb R$-Unteralgebra
+   (Limiten addieren und multiplizieren sich, die Werte in $0$ auch), sie
+   enthält die Konstanten — verschwindet also nirgends —, und sie trennt
+   Punkte: zu $x\ne y$ nimm eine stetige Funktion mit Träger in einer großen
+   Kugel, die die zwei Werte annimmt und in demjenigen von $x,y$, das $0$ ist,
+   den Wert $0$ hat. Für $\mu_n=\delta_n$, $\mu_0=\delta_0$ ist
+   $\int f\,\mathrm d\delta_n=f(n)\to f(0)=\int f\,\mathrm d\delta_0$ für jedes
+   $f\in A$, aber $\delta_n\not\Rightarrow\delta_0$ (teste mit
+   $x\mapsto\max(0,1-|x|)$). $\{\delta_n\}$ ist nicht straff, und $A$ trennt in
+   $0$ nicht **stark**: $\max_i|h_i(n)-h_i(0)|\to0$ für jede endliche Familie
+   aus $A$.
+
+   Damit ist die Deklaration `isConvergenceDetermining_of_separatesPoints`, die
+   seit dem 2026-09-05 (dritter Lauf) in
+   `TauCeti/WeakConvergence/Suggested.lean` stand, **als Aussage falsch** und
+   ist ersetzt.
+
+3. **Was wirklich fehlt, ist ein Punkt und nicht mehr:** der Schritt von
+   **starker** Trennung zur Straffheit,
+   `isTightMeasureSet_of_stronglySeparatesPoints`. Mit
+   `StronglySeparatesPoints.separatesPoints` speist er Mathlibs Satz und ergibt
+   `isConvergenceDetermining_of_stronglySeparatesPoints`, also
+   `fact:stoneweierstrass`, konvergenzbestimmende Hälfte, ohne
+   Straffheitshypothese — so wie das Manuskript sie führt. Daß starke Trennung
+   dabei arbeitet, sieht man an $\arctan$: die davon erzeugte Algebra trennt
+   stark, $\int\arctan\,\mathrm d\delta_n\to\pi/2$ konvergiert, und kein
+   Wahrscheinlichkeitsmaß hat $\int\arctan=\pi/2$ — die Hypothese wird dort
+   leer, nicht falsch. `StronglySeparatesPoints` legt Meilenstein 1 neu an;
+   Mathlib hat `Set.SeparatesPoints` (`Logic/Function/Basic.lean:1225`) und
+   keine starke Form (gesucht wurde nach `StronglySeparate` und
+   `stronglySeparate`; einziger Treffer ist unverwandte Kategorientheorie).
+
+4. **`fact:convdet` war ein leeres Zitat.** Die Zeile führte seit dem
+   2026-08-29 „Roadmap | WeakConvergence M1", und M1 nennt EK Proposition 3.4.4
+   nirgends: kein Punkt spricht von gleichmäßig stetigen Funktionen mit
+   beschränktem Träger oder von $C_c$. Der nächstgelegene Punkt („auf einem
+   polnischen Raum gibt es eine abzählbare konvergenzbestimmende Menge
+   beschränkter gleichmäßig stetiger Funktionen") ist eine andere Aussage und
+   verlangt überdies mehr, als der Fact verlangt — der Fact verlangt separabel,
+   nicht polnisch. Mathlib hat die Aussage nicht: `UniformContinuous` kommt in
+   `MeasureTheory/Measure/` überhaupt nicht vor, `HasCompactSupport` in keiner
+   Konvergenzaussage, und `LevyProkhorovMetric.lean` nennt kein `lipschitz`.
+   Neu in M1:
+   `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`
+   (separabel metrisch) und `isConvergenceDetermining_setOf_hasCompactSupport`
+   (zusätzlich lokalkompakt).
+
+5. **Der eine Folgepunkt.** `MartingaleProblems` Meilenstein 11,
+   `isRelativelyCompact_of_approx`, schloß „die Algebra ist
+   konvergenzbestimmend nach dem Stone--Weierstraß-Kriterium von
+   `WeakConvergence` Meilenstein 1, und daher dicht für gleichmäßige Konvergenz
+   auf Kompakta". Die Prämisse ist die widerlegte, und sie wird dort gar nicht
+   gebraucht: was der Beweis benutzt, ist die Dichtheit, und die ist
+   Stone--Weierstraß selbst, aus Punktetrennung allein —
+   `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`,
+   `Topology/ContinuousMap/StoneWeierstrass.lean:323`, ohne
+   Verschwindensklausel und ohne Maßtheorie. Der Punkt zitiert jetzt diesen
+   Satz; separierend bleibt die Algebra über `IsSeparating.of_subalgebra`.
+   Weitere Stellen gibt es nicht: die Suche über `TauCeti/` und `Facts/` nach
+   „separating half", „separierende Hälfte", „Stone", „tendsto_of_tight" und
+   „strongly separat" findet nur die hier behandelten.
+
+**Lean.** `lake env lean` läuft (Lean 4.33.1, `lean --version` als erstes
+geprüft). `TauCeti/WeakConvergence/Suggested.lean` ist damit **typgeprüft**;
+der Kopf sagt das jetzt, statt zu behaupten, es gehe nicht. Drei Fehler kamen
+dabei heraus, die die reine Signaturprüfung des dritten Laufs übersehen hatte:
+zwei doppelte Doc-Kommentare, an denen die Datei nicht einmal parste, und ein
+fehlendes `[TopologicalSpace E]` in `IsSeparating.ae_eq_of_forall_condExp_eq`
+(die Hypothese `∃ g : E →ᵇ ℝ, ⇑g = f` braucht es). Alle drei behoben. Ein
+Fehler bleibt stehen und ist gewollt:
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` benutzt
+`ProbabilityMeasure.map`, das auf `upstream/master` die **Funktion** nimmt
+(`Measure/ProbabilityMeasure.lean:626`) und in `v4.33.1` zusätzlich einen
+`AEMeasurable`-Beweis; Tau Ceti setzt auf master auf, also folgt die Aussage
+master. Der Kopf der Datei hält das fest. `StronglySeparatesPoints` und die
+vier neuen Deklarationen elaborieren sämtlich.
+
+**Die Lehre steht jetzt im Inventar**, als eigener Abschnitt „Regel für den
+Negativbefund" vor der Tabelle, mit allen vier Fehlern und mit der Auflage, die
+benutzten Suchformulierungen zu nennen.
+
+**Offen geblieben.** Nichts aus dieser Aufgabe. Die Tabelle hat nach diesem
+Lauf keine Zeile mehr mit Status `?`.
+
+**Was als Nächstes formalisiert werden soll:
+`MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints`.** Die Aussage
+steht oben unter 3 und in `WeakConvergence` Meilenstein 1; sie ruht auf
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, das fertig in Mathlib
+liegt, und auf `isTightMeasureSet_iff_exists_isCompact_measure_compl_le`. Sie
+ist jetzt dran, weil sie nach diesem Lauf der **einzige** unbewiesene Schritt
+zwischen Mathlib und `fact:stoneweierstrass` ist — einem Fact mit tragend $=3$,
+an dem `MartingaleProblems` Meilenstein 11 und `SkorokhodSpace` Meilenstein 8
+hängen —, und weil ihre Formulierung scharf ist: der $\delta_n$-Zeuge oben
+schließt die schwächere Hypothese aus, der $\arctan$-Zeuge zeigt, daß die
+stärkere nicht leerläuft.
+
+**Zweiter Teil desselben Laufs — Rückstau 3 ist erledigt: alle drei
+`Suggested.lean` übersetzen.** Da die vorrangige Aufgabe die
+`WeakConvergence`-Datei ohnehin zum Übersetzen zwang und dabei drei echte
+Fehler zutage förderte, war der Rückstaupunkt 3 die naheliegende Fortsetzung.
+Alle drei Dateien gehen jetzt durch `lake env lean` gegen `v4.33.1`, ohne
+Fehler und ohne Warnung. Was die Signaturprüfung des dritten Laufs nicht sehen
+konnte, steht bei Rückstau 3 im Einzelnen; die drei bemerkenswerten:
+
+* `SkorokhodSpace` Meilenstein 6 sprach von `MeasurableEmbedding` und von
+  `borel D(ι, E)`, ohne daß `D(ι, E)` je eine meßbare Struktur bekommen hätte.
+  Sie ist jetzt deklariert, als Borelstruktur der Metrik, und `noncomputable`,
+  weil die Metrik es ist.
+* `dist_eq_sub_of_le` führte `[OrderTopology ι]` und `[ProperSpace ι]` mit,
+  ohne sie zu benutzen — die stehende Regel über minimale Voraussetzungen,
+  diesmal vom Linter gefunden und nicht von einem Lauf. Jetzt mit `omit`.
+* `Shift.eval_comp` in `MartingaleProblems` war ein nacktes `sorry` in einem
+  Strukturfeld und hat als solches keine ableitbare Universe. Es ist jetzt
+  `(sorry : Prop)`, und der Kopf der Datei sagt, warum: `Shift` trägt keine
+  Auswertungsabbildung, gegen die man
+  `eval t (θ r f) = eval (r + t) f` überhaupt formulieren könnte. Das ist
+  Arbeit an der Aussage, nicht am Übersetzen, und gehört in Meilenstein 5.
+
+Die Werkzeuglage-Warnung, die der dritte Lauf bei Rückstau 3 hinterlassen hat
+(„`lake env lean` ist nicht in jedem Lauf verfügbar"), ist mit dem Punkt
+weggefallen: `lean --version`, `cd ~/Code/lean/journal` und `lake env lean` auf
+Dateien im Worktree sind freigegeben und wurden hier benutzt. Der Zwischenstand
+bei Rückstau 1 ist entsprechend berichtigt — auch er berief sich darauf.
+
+Damit steht die zweite Vorbedingung der Tau-Ceti-Einreichung: die
+Aussagen elaborieren. Die dritte, die Beweise, ist Rückstau 1 und 2 — und dort
+ist ein Anfang gemacht: **fünf Deklarationen von Meilenstein 1 tragen jetzt
+Beweise statt `sorry`**, geprüft mit `lake env lean`. `IsSeparating.mono` und
+`IsConvergenceDetermining.mono` sind je zwei Zeilen;
+`isSeparating_setOf_boundedContinuous` ist
+`ext_of_forall_integral_eq_of_IsFiniteMeasure`, das die stärkere
+Endlichmaß-Aussage beweist, und
+`isConvergenceDetermining_setOf_boundedContinuous` ist die Rückrichtung von
+`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`;
+`IsConvergenceDetermining.isSeparating` ist die konstante Folge und
+`tendsto_nhds_unique` unter `ProbabilityMeasure.t2Space`. Eine Fußangel dabei,
+für den nächsten Lauf: `ProbabilityMeasure E` ist ein `def` auf einen
+Untertyp, und die anonyme Konstruktornotation `(⟨μ, ‹_›⟩ : ProbabilityMeasure E)`
+faltet ihn auf, worauf die Instanzsuche `TopologicalSpace {μ // …}` nicht mehr
+findet. Ein `let μ' : ProbabilityMeasure E := ⟨μ, ‹_›⟩` behält den Typ.
+
+**Ein Nebenbefund beim Lesen dieser Beweise, und er betrifft Rückstau 1.** Der
+Beweisweg, den Meilenstein 1 für `IsSeparating.ae_eq_of_forall_condExp_eq`
+angibt, schließt mit den Worten „No normalization and no case `P G = 0`,
+because `IsSeparating` is stated for finite measures". Das stimmt seit dem
+2026-09-04 nicht mehr: derselbe Meilenstein hat `IsSeparating` damals — mit
+guten Gründen, sie stehen dort — auf **Wahrscheinlichkeitsmaße** umgestellt,
+und `(P.restrict G).map U` ist keines. Der Weg ist reparabel und nicht
+gefährdet, aber er hat einen Schritt mehr: für `P G = 0` sind beide Seiten
+$\le P(G)$, für `P G ≠ 0` wendet man `IsSeparating` auf
+`((P G)⁻¹ • P.restrict G).map U` und ebenso für `V` an, und die Skalierung geht
+durch die Integrale in beide Richtungen. Roadmap und `Suggested.lean` sagen das
+jetzt. Wer Rückstau 1 aufnimmt, schreibt diese Fallunterscheidung mit.
