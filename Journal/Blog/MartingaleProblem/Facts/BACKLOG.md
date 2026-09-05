@@ -391,6 +391,35 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `not_exists_isAtomCertificate_of_denseChain` in `MartingaleProblems`
    Meilenstein 8.
 
+   *Zwischenstand 2026-09-05, sechsundzwanzigster Lauf: die Grenze ist nicht
+   die Höhe, sondern die Fundiertheit — und der Hankelweg ist entwertet.*
+   **Proposition 24.1**: hat $\T$ ein Maximum $t^*$ mit $m_{t^*}=0$ und ist die
+   Atommenge $A$ nichtleer, abwärts gerichtet und **ohne minimales Element**,
+   so gibt es kein unendliches Zertifikat an der Stelle $t^*$ — das
+   verallgemeinert Proposition 23.1 (keine Kette nötig, größtes Element
+   erlaubt) und ist kürzer, weil der Widerspruch aus der Symmetrie von $T$
+   kommt. Umgekehrt hat die $\omega$-Kette, obwohl von unendlicher Höhe und mit
+   nicht nilpotentem $V$, sehr wohl ein Zertifikat: $\|T\|_m$ konvergiert auf
+   den Trunkierungen, für $m_i=\rho^{-i}$ exakt gegen $\rho^3/(\rho-1)^2$.
+   **Proposition 24.2** löst dort die drei Bedingungen vollständig auf: die
+   Spitzenzeile ist erzwungen ($T_{t^*\cdot}=e_{a_1}$), und der Atomblock ist
+   genau eine symmetrische Funktion $\Phi$ auf $\N_0^2$ mit $\Phi(i,0)=0$, der
+   Zwei-Diagonalen-Rekursion
+   $(m_i-m_j)\Phi(i,j)=m_i\Phi(i,j-1)-m_j\Phi(i-1,j)$, der Schwanzbedingung
+   $\Phi(i,k)\to[i=1]/m_1$ und der Lipschitzschranke
+   $|\Phi(i,j)-\Phi(i,j-1)|\le Cm_j$. **Der Hankelweg des fünfundzwanzigsten
+   Laufs trägt nicht**: auf der Leiter ist $\mathbb 1$ nicht zyklisch (Rang
+   $n+2$ gegen Dimension $2n+2$), der Lösungsraum hat Dimension $n+2$ statt
+   $1$, und in genau diesem Spielraum liegt die Lösung — deshalb läuft die
+   explizite Formel des sechsten Laufs dort davon ($6190$ bei $n=12$), während
+   das Minimum über alle Zertifikate bei $18$ stehenbleibt. Wer den Punkt
+   aufnimmt, zeigt für die $\omega$-Kette, daß die Zwei-Diagonalen-Rekursion
+   mit der Schwanzbedingung eine Lipschitzlösung hat — dieselbe Aufgabe wie im
+   siebzehnten Lauf, nur mit Existenz statt Eindeutigkeit. Vermutung des
+   Laufs: **fundiertes $A$** genügt für die Existenz.
+   `Task23/PROTOKOLL.md`, sechsundzwanzigster Lauf;
+   `Task23/infinite_height.py` (Proben (A)–(E), rc=0).
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,

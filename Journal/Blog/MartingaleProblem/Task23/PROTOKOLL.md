@@ -4373,3 +4373,319 @@ nicht sehen, was (F) kauft.
   Ausschnitte nirgends — und auf der ordnungsdichten Kette **existiert** der
   Limes der endlichen Zertifikate nicht, obwohl jedes einzelne existiert
   (Probe (E)).
+
+## Die unendliche Höhe, 2026-09-05 (sechsundzwanzigster Lauf): nicht die Höhe ist die Grenze, sondern die Fundiertheit — und auf der $\omega$-Kette ist das Zertifikat eine Zwei-Diagonalen-Rekursion mit Schwanzbedingung
+
+Der fünfundzwanzigste Lauf hat das Zertifikat auf jeder abzählbaren Halbordnung
+**endlicher Höhe** hingeschrieben (Theorem 23) und die Grenze der Methode an
+Ketten ohne kleinstes Atom gesehen (Proposition 23.1). Offen blieb die
+Halbordnung **unendlicher** Höhe mit nicht transitiver Unvergleichbarkeit,
+kleinste Gestalt die Leiter $a_i<b_j\iff i<j$ über zwei $\omega$-Ketten.
+
+Dieser Lauf verschiebt die Grenze. Zwei Sätze, beide bewiesen, und eine
+Messung, die den positiven Teil noch nicht deckt.
+
+### Der Rahmen ist der des fünfundzwanzigsten Laufs
+
+Unverändert: $\T$ abzählbare Halbordnung, $m:\T\to[0,\infty)$ mit
+$M=\sum_am_a<\infty$, $A:=\{a\in\T: m_a>0\}$, $V_{s,a}=[a<s]m_a$, und ein
+*unendliches Zertifikat an der Stelle $t$ in der Gewichtsklasse $Z$* (endlich)
+ist ein $T$ mit $w_s:=m_s+[s\in Z]$ und
+
+1. $T=T^{\mathsf T}$ und $|T_{su}|\le C\,w_sw_u$ für ein $C<\infty$;
+2. $m_u\sum_{a>u}T_{sa}=m_s\sum_{a>s}T_{au}$ für alle $s,u$;
+3. $\sum_aT_{sa}=[s=t]$.
+
+Theorem 22 (fünfundzwanzigster Lauf) schließt daraus unter (F) auf
+$\delta(t)=0$. Es geht hier also allein um die **Existenz** von $T$.
+
+Durchweg benutzt: aus Bedingung 1 folgt $\sum_a|T_{sa}|\le Cw_s\sum_aw_a
+=Cw_s(M+|Z|)<\infty$, jede Zeile ist absolut summierbar, und dominierte
+Konvergenz ist auf Zeilen erlaubt.
+
+### Proposition 24.1: die Sperre ist die fehlende Minimalität, nicht die Ordnungsdichte
+
+> **Proposition 24.1.** Sei $\T$ abzählbar mit **Maximum** $t^*$ und
+> $m_{t^*}=0$, und sei $A\neq\emptyset$ **abwärts gerichtet** (je zwei Atome
+> haben eine gemeinsame untere Schranke in $A$) und **ohne minimales Element**.
+> Dann gibt es kein unendliches Zertifikat an der Stelle $t^*$, in keiner
+> Gewichtsklasse.
+
+*Beweis.* Fünf Schritte.
+
+*(1) Nullmassezeilen sind saldenfrei über Aufwärtsmengen.* Ist $m_s=0$, so gibt
+Bedingung 2 an $(s,u)$ für jedes $u\in A$ die Gleichung
+$m_u\sum_{a>u}T_{sa}=0$, also $\theta_s(\{y>u\})=0$ für
+$\theta_s:=T_{s\cdot}$, und die Summe konvergiert absolut.
+
+*(2) Eine absteigende kofinale Folge.* $A$ ist abzählbar, abwärts gerichtet und
+ohne minimales Element. Zähle $A=\{v_1,v_2,\dots\}$ auf und wähle rekursiv
+$u_n\in A$ so, daß $u_n$ echt unter einer gemeinsamen unteren Schranke von
+$u_{n-1}$ und $v_n$ liegt (gerichtet: die Schranke existiert; ohne minimales
+Element: das echte Unterschreiten ist möglich). Dann ist $(u_n)$ streng
+fallend und $u_n<v_n$ für jedes $n$.
+
+*(3) Der Träger.* Setze $L:=\T\setminus\bigcup_{u\in A}\{y>u\}$ — die Punkte,
+die über **keinem** Atom liegen. Wegen $u_n<v_n$ ist
+$\bigcup_n\{y>u_n\}=\bigcup_{u\in A}\{y>u\}=\T\setminus L$, und die Mengen
+$\{y>u_n\}$ wachsen. Dominierte Konvergenz auf der absolut summierbaren Zeile
+$\theta_s$ gibt $\theta_s(\T\setminus L)=\lim_n\theta_s(\{y>u_n\})=0$: **jede
+Zeile mit $m_s=0$ ist auf $L$ getragen.**
+
+*(4) Wer in $L$ liegt, trägt keine Masse, und $t^*$ liegt nicht in $L$.* Hat
+$a\in A$ kein Atom echt unter sich, so wäre $a$ minimal in $A$; also ist
+$A\cap L=\emptyset$, und jedes $s\in L$ hat $m_s=0$, fällt also unter (3).
+Ferner ist $t^*>a$ für jedes $a\in A$ (Maximum, und $t^*\neq a$ wegen
+$m_{t^*}=0$), also $t^*\notin L$.
+
+*(5) Der Widerspruch.* Bedingung 3 an $s=t^*$ gibt $\sum_aT_{t^*a}=1$; nach (3)
+ist das $\sum_{a\in L}T_{t^*a}$. Für $a\in L$ ist aber $m_a=0$, also ist nach
+(3) auch die Zeile $T_{a\cdot}$ auf $L$ getragen, und wegen $t^*\notin L$ ist
+$T_{at^*}=0$, mit der Symmetrie also $T_{t^*a}=0$. Die Summe ist $0\neq1$.
+$\square$
+
+**Was das gegenüber Proposition 23.1 gewinnt.** Jene Proposition verlangte eine
+**Kette** $A$ ohne kleinstes **und ohne größtes** Element, eingebettet in
+$\{0\}\cup A\cup\{t^*\}$. Hier steht: die Kettenstruktur wird durch
+*abwärts gerichtet* ersetzt, das größte Element darf existieren, und $\T$ darf
+außerhalb $A\cup\{t^*\}$ beliebig sein. Der Beweis ist zugleich kürzer, weil
+er die Zeile nicht Punkt für Punkt annulliert, sondern in einem Schritt über
+die kofinale Folge — und weil er den Widerspruch aus der **Symmetrie** zieht
+statt aus einer zweiten Rekursion. Der Fall $A$ vom Typ $\omega^*$
+($\dots<a_{-2}<a_{-1}<a_0$, mit größtem Element) ist neu erfaßt.
+
+**Und was es sagt.** Die Sperre der Zertifikatsmethode ist **nicht** die
+unendliche Höhe. Sie ist die fehlende Minimalität: das Zertifikat will sein
+Gewicht auf den minimalen Atomen tragen, und wo es keine gibt, gibt es kein
+Zertifikat. Umgekehrt gesagt: die Vermutung, die alle Messungen dieses Laufs
+stützen, lautet, daß **Fundiertheit von $A$** die richtige Hypothese ist —
+sie umfaßt die endliche Höhe (Theorem 23) echt und schließt genau die Instanzen
+von Proposition 24.1 aus.
+
+### Die $\omega$-Kette hat ein Zertifikat, und Theorem 23 sieht sie nicht
+
+Die einfachste fundierte Halbordnung unendlicher Höhe ist die $\omega$-Kette
+$\T=\{0\}\cup\{a_1<a_2<\dots\}\cup\{t^*\}$ mit $m_0=m_{t^*}=0$, $m_i>0$,
+$M=\sum_im_i<\infty$. Dort ist $V$ **nicht** nilpotent, Theorem 23 also
+unanwendbar. Gemessen wird trotzdem Konvergenz, exakt in `Fraction`, auf den
+Trunkierungen $\T_n=\{0\}\cup\{a_1,\dots,a_n\}\cup\{t^*\}$, normiert auf
+$M=1$ (Probe (C) unten):
+
+| $m_i$ | $\|T\|_m$ bei $n=2,4,8,12,14$ | Limes |
+|---|---|---|
+| $2^{-i}$ | $4{,}5$; $7{,}03$; $7{,}94$; $7{,}998$; $7{,}999$ | $8$ |
+| $3^{-i}$ | $5{,}33$; $6{,}58$; $6{,}748$; $6{,}75$; $6{,}75$ | $27/4$ |
+| $\rho^{-i}$ (allgemein) | — | $\rho^3/(\rho-1)^2$ |
+| $(\tfrac14,\tfrac14,\tfrac18,\tfrac18,\dots)$ | $4$; $9$; $14{,}06$; $15{,}63$; $15{,}75$ | $16$ |
+| $1/(i(i+1))$ | $5{,}33$; $7{,}68$; $9{,}48$; $10{,}35$; $10{,}45$ | offen |
+
+Die geometrische Formel $\rho^3/(\rho-1)^2$ ist an $\rho=2,3,4$ geprüft.
+Wiederholte Massenwerte sind unschädlich (vierte Zeile). Nur das langsame
+Profil $1/(i(i+1))$ ist nach $14$ Stufen nicht entschieden; seine Zuwächse
+fallen, aber langsam.
+
+### Proposition 24.2: was auf der $\omega$-Kette ein Zertifikat ist
+
+Die Kette ist der eine Fall, in dem sich die drei Bedingungen vollständig
+auflösen lassen. Das Ergebnis ist eine Rekursion über zwei Diagonalen mit einer
+Schwanzbedingung — dieselbe Gestalt, in der der siebzehnte Lauf das exakte
+$h$-System starr gemacht hat.
+
+> **Proposition 24.2.** Auf der $\omega$-Kette gilt:
+>
+> **(a) Die Spitzenzeile ist erzwungen.** Jedes unendliche Zertifikat an der
+> Stelle $t^*$ hat $T_{t^*\cdot}=e_{a_1}$, und die Zeile $T_{0\cdot}$ ist auf
+> $\{0,a_1\}$ getragen mit $T_{00}=-T_{0a_1}$. Die Zahl $c:=T_{0a_1}$ ist die
+> einzige Freiheit außerhalb des Atomblocks.
+>
+> **(b) Der Atomblock ist eine symmetrische Funktion zweier Indizes.** Setze
+> $g_i:=[i=1]$ und, für $c=0$,
+> $$\Phi(i,k):=\frac1{m_i}\Bigl(\sum_{j>k}T_{a_ia_j}+g_i\Bigr),\qquad
+>   \Phi(0,\cdot):=0 .$$
+> Dann ist $T\mapsto\Phi$ eine Bijektion zwischen den Zertifikaten mit $c=0$
+> und den Funktionen $\Phi:\N_0^2\to\R$ mit
+> $$\Phi=\Phi^{\mathsf T},\qquad \Phi(i,0)=0,\qquad
+>   (m_i-m_j)\,\Phi(i,j)=m_i\Phi(i,j-1)-m_j\Phi(i-1,j)\ \ (i,j\ge1),$$
+> $$\lim_{k\to\infty}\Phi(i,k)=\frac{[i=1]}{m_1}\quad\text{für jedes }i,$$
+> vermöge $T_{a_ia_j}=m_i\bigl(\Phi(i,j-1)-\Phi(i,j)\bigr)$.
+>
+> **(c) Bedingung 1 ist eine Lipschitzbedingung.** In der Gewichtsklasse
+> $Z=\{0,t^*\}$ ist Bedingung 1 äquivalent zu
+> $|\Phi(i,j)-\Phi(i,j-1)|\le C\,m_j$ für alle $i,j\ge1$, zusammen mit
+> $C\ge1/m_1$.
+
+*Beweis.* (a) Ist $m_s=0$, so gibt Bedingung 2 an $(s,a_k)$ wie in
+Proposition 24.1 $\theta_s(\{y>a_k\})=0$ für jedes $k\ge1$. Wegen
+$\{y>a_k\}\setminus\{y>a_{k+1}\}=\{a_{k+1}\}$ folgt $\theta_s(a_j)=0$ für
+$j\ge2$, und dann aus $\theta_s(\{y>a_1\})=0$ auch $\theta_s(t^*)=0$. Das
+gilt für $s=t^*$ und für $s=0$. Bedingung 3 an $s=t^*$ gibt
+$\theta_{t^*}(0)+\theta_{t^*}(a_1)=1$; aus der Symmetrie ist
+$\theta_{t^*}(0)=T_{0t^*}=\theta_0(t^*)=0$, also $\theta_{t^*}(a_1)=1$.
+Bedingung 3 an $s=0$ gibt $T_{00}+T_{0a_1}=0$.
+
+(b) Mit $R_i(k):=\sum_{j>k}T_{a_ia_j}$ ist $\sum_{a>a_k}T_{a_ia}=R_i(k)+g_i$
+(die Aufwärtsmenge von $a_k$ enthält $t^*$ und $T_{a_it^*}=g_i$ nach (a)), und
+Bedingung 3 an $s=a_i$ gibt bei $c=0$ die Randbedingung $R_i(0)=-g_i$, also
+$\Phi(i,0)=0$. Bedingung 2 an $(a_i,a_k)$ lautet
+$m_k(R_i(k)+g_i)=m_i(R_k(i)+g_k)$, nach Division durch $m_im_k$ genau
+$\Phi(i,k)=\Phi(k,i)$. Aus $T_{a_ia_j}=R_i(j-1)-R_i(j)
+=m_i(\Phi(i,j-1)-\Phi(i,j))$ und der Symmetrie von $T$ folgt
+$m_i(\Phi(i,j-1)-\Phi(i,j))=m_j(\Phi(i-1,j)-\Phi(i,j))$, das ist die
+Rekursion; bei $i=1$ ist sie genau die Aussage $\Phi(0,j)=0$. Die
+Schwanzbedingung ist die absolute Summierbarkeit der Zeile: $R_i(k)\to0$, also
+$\Phi(i,k)\to g_i/m_i$. Die Umkehrung liest dieselben Zeilen rückwärts; die
+Bedingungen 2 an den Paaren mit $0$ oder $t^*$ sind nach (a) automatisch
+($\sum_{a>a_i}T_{at^*}=\sum_{j>i}g_j=0$ für $i\ge1$).
+
+(c) $|T_{a_ia_j}|\le Cm_im_j$ ist $|\Phi(i,j-1)-\Phi(i,j)|\le Cm_j$; die
+einzigen weiteren nichtverschwindenden Einträge sind $T_{t^*a_1}=1$ mit
+$w_{t^*}w_{a_1}=m_1$. $\square$
+
+**Wo die Freiheit sitzt, und was sie mit der Höhe zu tun hat.** Für $i\neq j$
+löst die Rekursion $\Phi(i,j)$ aus der Antidiagonale $i+j-1$ auf; die
+Diagonalwerte $\Phi(i,i)$ bleiben unbestimmt. Auf der **Trunkierung** ersetzt
+der Rand $\Phi(i,n)=g_i/m_i$ diese Freiheiten Stück für Stück — das ist
+genau das, was `free_dim` mit $\dim=1$ mißt (die eine verbleibende Freiheit ist
+$c$). Auf der **unendlichen** Kette tritt an die Stelle des Randes die
+**Schwanzbedingung**, und die Existenzfrage ist damit wörtlich die des
+siebzehnten Laufs: bestimmt eine Zwei-Diagonalen-Rekursion mit vorgegebenem
+Limes die Diagonale? Dort war die Antwort ja (Starrheit); hier wird sie für
+Existenz **und** Lipschitzschranke gebraucht.
+
+**Die Entartung.** Bei $m_i=m_j$ ist die Rekursion in $\Phi(i,j)$ nicht
+auflösbar, sondern wird zur Nebenbedingung $\Phi(i,j-1)=\Phi(i-1,j)$. Die
+Messung zeigt, daß das unschädlich ist: das Profil mit doppelten Massenwerten
+konvergiert (Limes $16$). Auf der Leiter dagegen fällt der Kollaps der
+LP-Schranke genau mit $\beta\to\alpha$ zusammen (siehe unten) — ob das
+dieselbe Entartung ist, ist offen und ist die schärfste Frage, die dieser Lauf
+hinterläßt.
+
+### Die Leiter: gemessen, nicht bewiesen
+
+$\T=\{0\}\cup\{a_i\}_{i\ge1}\cup\{b_j\}_{j\ge1}\cup\{t^*\}$ mit
+$a_i<a_{i'}\iff i<i'$, $b_j<b_{j'}\iff j<j'$, $a_i<b_j\iff i<j$, nie
+$b_j<a_i$; $m_{a_i}=\alpha^i$, $m_{b_j}=\beta^j$, normiert auf $M=1$. Die
+Unvergleichbarkeit ist nicht transitiv ($a_1\|b_1$, $b_1\|a_2$, aber
+$a_1<a_2$), die Höhe ist unendlich, $A$ ist fundiert mit den beiden minimalen
+Atomen $a_1,b_1$. Das ist die im fünfundzwanzigsten Lauf benannte kleinste
+offene Gestalt.
+
+**Erstens: die Formel des sechsten Laufs versagt hier, das Objekt nicht.** Auf
+den Trunkierungen wächst $\|T\|_m$ des **expliziten** Zertifikats ab $n=9$
+über alle Grenzen — bei $\alpha=\tfrac12,\beta=\tfrac13$ ist es
+$17{,}90$; $49{,}4$; $67{,}2$; $160{,}8$ auf $n=8,9,10,11$ und $6190$ auf
+$n=12$, bei $\alpha=\beta=\tfrac12$ schon $4{,}6\cdot10^{16}$ auf $n=12$ —,
+während das **Minimum** über alle
+Zertifikate bei $17{,}99\to18$ stehenbleibt. (Auf $(\tfrac13,\tfrac12)$,
+$(\tfrac12,\tfrac23)$ und $(\tfrac23,\tfrac12)$ trifft die explizite Formel
+umgekehrt bis $n=12$ genau das Minimum.) Der Grund ist strukturell: auf der
+Kette ist $\dim\{T=T^{\mathsf T},\,TV=V^{\mathsf T}T,\,T\mathbb 1=0\}=1$, das
+Zertifikat also fast eindeutig; auf der Leiter ist diese Dimension $n+2$ und
+wächst. Die Formel des sechsten Laufs greift in diesen Spielraum blind
+hinein. **Ein Ausfall der expliziten Formel ist deshalb kein Befund über die
+Existenz** — das ist die Lehre dieses Punktes.
+
+**Zweitens: das Minimum konvergiert, solange die beiden Massenskalen getrennt
+sind.** LP über alle Zertifikate der Trunkierung, Gleitkomma, $n\le16$:
+
+| $(\alpha,\beta)$ | $\min\|T\|_m$ bei $n=6,8,10,12$ | Verhalten |
+|---|---|---|
+| $(\tfrac12,\tfrac13)$ | $17{,}60$; $17{,}90$; $17{,}98$; $18{,}00$ | $\to18$ |
+| $(\tfrac13,\tfrac12)$ | $11{,}59$; $11{,}79$; $11{,}84$; $11{,}85$ | $\to\approx11{,}85$ |
+| $(\tfrac12,\tfrac23)$ | $17{,}51$; $18{,}91$; $19{,}51$; $19{,}77$ | $\to\approx19{,}8$ |
+| $(\tfrac23,\tfrac12)$ | $26{,}51$; $28{,}74$; $29{,}66$; $30{,}06$ | $\to\approx30{,}1$ |
+| $(\tfrac12,\tfrac12)$ | $31{,}0$; $62{,}3$; $148$; $238$ | wächst |
+| $(\tfrac12,\tfrac{49}{100})$ | $33{,}7$; $73{,}9$; $192$; $323$ | wächst |
+| $(\tfrac23,\tfrac23)$ | $34{,}1$; $46{,}1$; $61{,}0$; $84{,}0$ | wächst |
+
+Für die vier getrennten Profile ist damit die Voraussetzung von
+Proposition 19.3 (vierundzwanzigster Lauf) **gemessen** erfüllt: eine
+Ausschöpfung mit gleichmäßig beschränkten Zertifikaten. Bewiesen ist sie
+nicht, und das LP ist Gleitkomma — bei den wachsenden Profilen bricht es ab
+$n\approx13$ zusammen (Status $\neq0$), die dortigen Zahlen sind nur als
+Größenordnung zu lesen.
+
+**Drittens, und das ist der eigentliche Rest:** ob $\beta\to\alpha$ eine echte
+Resonanz ist oder ein Konditionierungsartefakt des LP, ist mit Gleitkomma nicht
+zu entscheiden. Auf der **Kette** ist die entsprechende Entartung nachweislich
+unschädlich (doppelte Massenwerte, Limes $16$, exakt gerechnet). Das spricht
+für ein Artefakt — aber die Kettenrekursion von Proposition 24.2 ist auf der
+Leiter nicht hergeleitet, und ohne sie ist das eine Analogie, kein Argument.
+
+### Gemessen
+
+`Task23/infinite_height.py`, Proben (A)–(E). (A)–(C) und (E) exakt in
+`fractions.Fraction`; (D) ist ein Gleitkomma-LP und als solches ausgewiesen.
+rc = 0 heißt: keine Abweichung.
+
+* **(A) Proposition 24.2(a), die erzwungene Spitzenzeile.** Auf den
+  Trunkierungen der $\omega$-Kette (vier Massenprofile) ist die Zeile
+  $T_{t^*\cdot}$ **exakt** $e_{a_1}$ und die Zeile $T_{0\cdot}$ identisch null;
+  auf den Trunkierungen der Leiter (drei Profile) ist $T_{t^*\cdot}$
+  auf $\{0,a_1,b_1\}$ getragen mit Summe $1$ — beides wie der Beweis es
+  verlangt, und für die Leiter ist die Aussage genau der allgemeine
+  Schritt (1) von Proposition 24.1.
+* **(B) Proposition 24.2(b), die Rekursion.** Aus dem exakten Zertifikat der
+  Trunkierung wird $\Phi$ gebildet und geprüft: $\Phi$ symmetrisch,
+  $\Phi(i,0)=0$, $\Phi(i,n)=g_i/m_i$, die Zwei-Diagonalen-Rekursion an allen
+  Paaren $i\neq j$, und die Rückgewinnung $T_{a_ia_j}=m_i(\Phi(i,j-1)-
+  \Phi(i,j))$ — für vier Massenprofile, ausnahmslos.
+* **(C) Die $\omega$-Kette konvergiert.** $\|T\|_m$ auf den Trunkierungen,
+  exakt: die Tabelle oben. Die geschlossene Form
+  $\rho^3/(\rho-1)^2$ wird für $\rho=2,3,4$ getroffen.
+* **(D) Die Leiter, LP.** Die Tabelle oben, mit ausgewiesenem LP-Status je
+  Zeile; zusätzlich das explizite Zertifikat des sechsten Laufs zum Vergleich,
+  dessen Norm ab $n=9$ davonläuft.
+* **(E) Der Bodenansatz ist unlösbar.** „$T_{su}=0$, außer $s$ oder $u$ liegt
+  in $\{0,a_1,b_1,t^*\}$" hat auf keiner Trunkierung der Leiter und auf keiner
+  der Kette eine Lösung (exakter Gauß). Die Spitzenzeile ist auf den Boden
+  gezwungen, das Zertifikat als ganzes nicht.
+
+### Was jetzt offen ist, exakt
+
+* **Die Vermutung, die dieser Lauf aufstellt.** *Ist $A$ fundiert (keine
+  unendlich absteigende Kette in $A$), so gibt es zu jedem $t$ ein unendliches
+  Zertifikat.* Sie umfaßt Theorem 23 echt (endliche Höhe $\Rightarrow$
+  fundiert), ist mit Proposition 24.1 verträglich (deren Hypothese ist die
+  Negation von „fundiert" plus Gerichtetheit) und wird von allen Messungen
+  dieses Laufs gestützt. Bewiesen ist sie für keine einzige Halbordnung
+  unendlicher Höhe.
+* **Der nächste Schritt, und er ist klein.** Die $\omega$-Kette, über
+  Proposition 24.2: zu zeigen ist, daß die Zwei-Diagonalen-Rekursion mit
+  $\Phi(\cdot,0)=0$ und $\Phi(i,k)\to[i=1]/m_1$ eine Lösung mit
+  $|\Phi(i,j)-\Phi(i,j-1)|\le Cm_j$ besitzt. Die Diagonalwerte $\Phi(i,i)$ sind
+  die Unbekannten, der Limes ist die Gleichung. Das ist dieselbe Aufgabe wie im
+  siebzehnten Lauf, nur mit Existenz statt Eindeutigkeit, und die dortige
+  Zwei-Diagonalen-Induktion ist das Werkzeug. Gelingt sie, ist die
+  $\omega$-Kette der erste bewiesene Fall unendlicher Höhe — und der
+  Ausgangspunkt für die Leiter, deren $b$-Block dieselbe Gestalt hat.
+* **Das Momentenproblem** (fünfundzwanzigster Lauf) bleibt der zweite Zugang,
+  ist aber durch diesen Lauf entwertet: auf der Leiter ist $\mathbb 1$
+  **nicht** zyklisch (die Potenzen $V^k\mathbb 1$ spannen $n+2$ Dimensionen
+  gegen $2n+2$), die Hankel-Beschreibung legt also nur einen Teil von $T$ fest,
+  und der Spielraum wächst mit $n$. Genau in diesem Spielraum liegt die
+  Lösung, und die Hankelform sieht ihn nicht.
+* **Die nackte Klasse auf Ketten**, unverändert offen (zweiundzwanzigster Lauf).
+* **Ein Gegenbeispiel mit durchweg positiven Abwärtsmassen**, unverändert offen
+  (dreiundzwanzigster Lauf, Proposition 19.2).
+
+### Sackgassen, vierundzwanzigster Nachtrag
+
+* **Aus dem Versagen der expliziten Formel auf Nichtexistenz schließen.** Auf
+  der Leiter läuft die Norm des Zertifikats des sechsten Laufs davon, das
+  Minimum über alle Zertifikate nicht. Die Formel ist eine Auswahl, und wo der
+  Lösungsraum wächst ($\dim=n+2$ statt $1$), ist sie eine schlechte. Erst
+  messen, wieviel Freiheit da ist, dann urteilen.
+* **Das Zertifikat auf $\{0,a_1,b_1,t^*\}$ tragen wollen.** Der Ansatz
+  „$T_{su}=0$, außer $s$ oder $u$ liegt im Boden" ist auf jeder Trunkierung
+  der Leiter **und** der Kette unlösbar (exakt geprüft, Probe (E)). Die
+  Spitzenzeile ist auf den Boden gezwungen (Proposition 24.2(a)), das
+  Zertifikat als ganzes nicht.
+* **Die endliche Höhe für die Grenze der Methode halten.** Sie war nur die
+  Grenze der einen Konstruktion. Die $\omega$-Kette hat unendliche Höhe, $V$
+  ist dort nicht nilpotent, und das Zertifikat existiert auf jeder Trunkierung
+  mit gleichmäßiger Schranke (gemessen, exakt, mit geschlossenem Limes
+  $\rho^3/(\rho-1)^2$). Zum sechsten Mal dieselbe Lehre wie
+  beim Kompaktheitsargument, bei (H), bei der Einschrittrelation, bei der
+  Endlichkeit und bei der Ausschöpfung: eine Prämisse, die aus der Rechnung
+  stammt statt aus dem Beweisbedarf.

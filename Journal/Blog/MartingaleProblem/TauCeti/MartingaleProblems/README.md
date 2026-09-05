@@ -1038,18 +1038,26 @@ order.
   `duality_of_atomic_chain_of_integrable` and with
   `duality_of_atomic_weakOrder_of_integrable`, both of which live on atom sets
   of unbounded chain length.
-* `not_exists_isAtomCertificate_of_denseChain`: on `T = {0} ∪ A ∪ {t}` with `A`
-  a chain having neither a least nor a greatest element, `m 0 = m t = 0` and
-  `m` strictly positive on `A`, there is no `T` with `Clock.IsAtomCertificate`
-  at `t`, for any `Z`. The relation at `(t, a)` gives `θ (Ioi a) = 0` for
-  `θ = T t ·` and the relation at `(0, a)` gives the same for `η = T 0 ·`,
-  both `ℓ¹` by the bound; absence of a least element makes `θ` and `η` vanish
-  on `A` — at an `a` with an immediate predecessor by differencing, elsewhere
-  by dominated convergence along `aₙ ↑ a` — and absence of a greatest element
-  makes them vanish at `t`, so `1 = ∑' x, θ x = θ 0 = T t 0 = T 0 t = 0`. The
-  certificate method therefore stops exactly where
-  `duality_of_atomic_chain_of_integrable` takes over, and the two are
-  genuinely different tools: neither hypothesis implies the other.
+* `not_exists_isAtomCertificate_of_isDirected_of_noMinOrder`: let `t` be the
+  greatest element of the poset with `m t = 0`, and let the atom set
+  `A = {a | m a ≠ 0}` be nonempty, directed downwards and without a minimal
+  element. Then there is no `T` with `Clock.IsAtomCertificate` at `t`, for any
+  `Z`. Three steps. The relation at `(s, u)` with `m s = 0` and `u ∈ A` gives
+  `θ (Ioi u) = 0` for `θ = T s ·`, absolutely summable by the bound. Directed
+  downwards, countable and without a minimal element gives a strictly
+  decreasing `u : ℕ → A` with `u n < v n` for a fixed enumeration `v` of `A`,
+  so `Ioi (u n) ↑ ⋃ a ∈ A, Ioi a`, and `tendsto_tsum_compl_atTop_zero`
+  (`Topology/Algebra/InfiniteSum/Group.lean`, the `to_additive` twin of
+  `tendsto_tprod_compl_atTop_one`) makes every row with `m s = 0` supported on
+  `L = {x | ∀ a ∈ A, ¬ a < x}`. Every point of `L` carries zero mass and `t`
+  does not lie in `L`, so `1 = ∑' x, T t x = ∑' x ∈ L, T t x = ∑' x ∈ L, T x t
+  = 0`. The hypotheses are exactly the negation of well-foundedness of `A` in
+  the presence of downward directedness, so this and
+  `exists_isAtomCertificate_of_finiteHeight` bound the certificate method from
+  both sides; it stops where `duality_of_atomic_chain_of_integrable` takes
+  over, and the two are genuinely different tools: neither hypothesis implies
+  the other. It contains the case of a chain `A` with neither a least nor a
+  greatest element.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.
