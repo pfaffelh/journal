@@ -45,8 +45,14 @@ determining (`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`,
 because `IsSeparating` occurs as a hypothesis downstream. -/
 
 /-- A set of bounded measurable functions that separates finite Borel measures. -/
+/-- Separating, over PROBABILITY measures, as in the manuscript's
+`def:separating` (Ethier-Kurtz, Section 3.4).  Quantifying over finite measures
+instead gives a strictly stronger notion under which
+`IsConvergenceDetermining.isSeparating` is false -- on a one-point space the
+empty set is convergence determining, there being only one probability measure,
+but does not separate `δ` from `2δ`. -/
 def IsSeparating (Γ : Set (E → ℝ)) : Prop :=
-  ∀ (μ ν : Measure E) [IsFiniteMeasure μ] [IsFiniteMeasure ν],
+  ∀ (μ ν : Measure E) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν],
     (∀ f ∈ Γ, ∫ x, f x ∂μ = ∫ x, f x ∂ν) → μ = ν
 
 /-- A set of functions along which weak convergence can be tested.
@@ -79,11 +85,12 @@ It does **not** separate finite measures, so there is no
 functions, `∅` included, is convergence determining, while `∅` does not tell the
 Dirac measure from twice the Dirac measure.  A convergence determining class
 never has to see the total mass. -/
-theorem IsConvergenceDetermining.eq_of_forall_integral_eq [TopologicalSpace E]
+/-- With `IsSeparating` over probability measures this is the manuscript's
+`def:separating`, last sentence.  Proof: test with the constant sequence
+`μ_n = μ`, so `μ_n → ν` weakly, and conclude by `ProbabilityMeasure.t2Space`. -/
+theorem IsConvergenceDetermining.isSeparating [TopologicalSpace E]
     [BorelSpace E] [HasOuterApproxClosed E] {Γ : Set (E → ℝ)}
-    (h : IsConvergenceDetermining Γ) {μ ν : ProbabilityMeasure E}
-    (heq : ∀ f ∈ Γ, ∫ x, f x ∂(μ : Measure E) = ∫ x, f x ∂(ν : Measure E)) :
-    μ = ν := sorry
+    (h : IsConvergenceDetermining Γ) : IsSeparating Γ := sorry
 
 /-- One line from `MeasureTheory.ext_of_forall_integral_eq_of_IsFiniteMeasure`. -/
 theorem isSeparating_setOf_boundedContinuous [TopologicalSpace E] [BorelSpace E]

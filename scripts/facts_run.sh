@@ -9,8 +9,12 @@
 
 set -uo pipefail
 
-# Cron hat einen minimalen PATH -- claude liegt in ~/.local/bin.
-export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+# Cron hat einen minimalen PATH -- claude liegt in ~/.local/bin, lake/lean/elan
+# liegen in ~/.elan/bin.  Ohne den elan-Pfad ist "Bash(lake:*)" zwar erlaubt,
+# aber `lake` nicht auffindbar: der Lauf vom 2026-09-05 (20260905T194326Z) sah
+# genau das -- "lake: Befehl nicht gefunden" -- und konnte kein Lean uebersetzen.
+# Der absolute Pfad hilft nicht, weil die Rechtefreigabe am Kommandonamen haengt.
+export PATH="$HOME/.local/bin:$HOME/.elan/bin:/usr/local/bin:/usr/bin:/bin"
 
 REPO="${FACTS_REPO:-$HOME/Code/lean/journal-facts}"
 BRANCH="${FACTS_BRANCH:-facts-inventory}"
