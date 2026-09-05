@@ -87,13 +87,20 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `[TopologicalSpace E]` and `[OpensMeasurableSpace E]`, which is exactly what
   the topology on `ProbabilityMeasure E` is an instance under
   (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:307`). Monotone in
-  `Γ`, and `IsConvergenceDetermining.eq_of_forall_integral_eq`: a convergence
-  determining class separates **probability** measures, by the constant sequence
-  and `ProbabilityMeasure.t2Space` (`ibid.:440`, which is where
-  `HasOuterApproxClosed` enters). It does not separate finite measures: on a
-  one-point space `∅` is convergence determining and does not tell the Dirac
-  measure from twice the Dirac measure, so a convergence determining class never
-  has to see the total mass.
+  `Γ`, and `IsConvergenceDetermining.isSeparating`, which is the last sentence
+  of the manuscript's `def:separating`: proved by testing with the constant
+  sequence and concluding with `ProbabilityMeasure.t2Space` (`ibid.:440`, which
+  is where `HasOuterApproxClosed` enters).
+
+  The quantifier matters and was got wrong once. `IsSeparating` runs over
+  **probability** measures, as `def:separating` does. Over *finite* measures the
+  implication fails: on a one-point space the only probability measure is
+  $\delta$, so `∅` is convergence determining, while `∅` does not separate
+  $\delta$ from $2\delta$ as finite measures. Mathlib's
+  `ext_of_forall_integral_eq_of_IsFiniteMeasure` proves the stronger,
+  finite-measure statement for `Cb(E,ℝ)`, which gives the probability version a
+  fortiori — so the bridging lemma below loses nothing by the weaker
+  definition.
 * The two bridging lemmas: `isSeparating_setOf_boundedContinuous` from
   `ext_of_forall_integral_eq_of_IsFiniteMeasure`, and
   `isConvergenceDetermining_setOf_boundedContinuous` from
