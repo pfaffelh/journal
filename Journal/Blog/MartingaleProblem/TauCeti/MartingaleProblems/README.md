@@ -1058,6 +1058,60 @@ order.
   over, and the two are genuinely different tools: neither hypothesis implies
   the other. It contains the case of a chain `A` with neither a least nor a
   greatest element.
+* `Lagrange.sum_inv_prod_sub_eq_zero`: for a `Finset s` with `2 ≤ #s` and an
+  `x : ι → F` injective on `s`, `∑ k ∈ s, (∏ l ∈ s.erase k, (x k - x l))⁻¹ = 0`,
+  while the sum is `(1 : F)` for `#s = 1`. It is `Lagrange.coeff_eq_sum`
+  (`LinearAlgebra/Lagrange.lean:490`) at `P = 1`, whose left hand side is
+  `(1 : F[X]).coeff (#s - 1)`. It belongs in
+  `Mathlib/LinearAlgebra/Lagrange.lean` and not here.
+* `Clock.atomTailProduct`: for `m : ℕ → ℝ` with `0 < m k` for all `k`,
+  `Summable m` and `Function.Injective m`, the product
+  `atomTailProduct m k i = ∏' l : {l // i < l}, (1 - m l / m k)`, together with
+  its multipliability and `atomTailProduct m k i ≠ 0`. Multipliability is
+  `Real.multipliable_one_add_of_summable`
+  (`Analysis/SpecialFunctions/Log/Summable.lean:96`) applied to
+  `fun l ↦ - m l / m k`; the value is nonzero because only finitely many `l`
+  have `m k ≤ m l`, so the product splits into a finite product of nonzero
+  factors and a positive tail, which is `Real.rexp_tsum_eq_tprod`
+  (`Analysis/SpecialFunctions/Log/Summable.lean:83`).
+* `Clock.atomTailProduct_sub_eq`: with `w m k i = if k ≤ i then
+  atomTailProduct m k i else 0`, one has `w m k i - w m k (i-1) =
+  m i / m k * w m k i` for all `i, k ≥ 1`. Three cases: `k < i` is the
+  definition of the product, `k = i` holds because `w m k (k-1) = 0` and
+  `m i / m k = 1`, and `i < k` has both sides zero. The step `k = i` is the
+  only one that is not formal.
+* `Clock.omegaChainPotential`: for `m` as above,
+  `omegaChainPotential m i j = ∑ k ∈ Finset.Icc 1 (min i j),
+  (m k * ∏' l : {l // l ≠ k}, (1 - m l / m k))⁻¹ *
+  atomTailProduct m k i * atomTailProduct m k j`, a finite sum, together with
+  its symmetry, `omegaChainPotential m i 0 = 0`, the recursion
+  `m i * (Φ i j - Φ i (j-1)) = m j * (Φ i j - Φ (i-1) j)` for `1 ≤ i, j` and
+  `Tendsto (omegaChainPotential m i) atTop (𝓝 (if i = 1 then (m 1)⁻¹ else 0))`.
+  The recursion holds for each rank one summand by `atomTailProduct_sub_eq`,
+  both sides being `m i * m j / m k * w m k i * w m k j`. The limit is
+  `Lagrange.sum_inv_prod_sub_eq_zero` at the nodes `(m k)⁻¹`, `k ≤ i`: the
+  tail products cancel against the infinite product in the coefficient, and
+  what is left is `∑ k ≤ i, (m k * ∏ l ≤ i, l ≠ k, (1 - m l / m k))⁻¹`.
+* `exists_isAtomCertificate_of_omegaChain`: let the poset be
+  `T = {0} ∪ Set.range a ∪ {t✶}` with `a : ℕ → T` strictly monotone,
+  `0 < a i < t✶`, `m 0 = m t✶ = 0` and atom masses `m i > 0` with `Summable m`
+  and `m (i+1) ≤ θ * m i` for some `θ < 1`. Then `Clock.IsAtomCertificate`
+  holds at `t✶` with `Z = {0, t✶}` for
+  `T (a i) (a j) = - m i * m j * (Φ i j - Φ i (j-1)) / m j`,
+  `T t✶ (a 1) = T (a 1) t✶ = 1` and all other entries zero, with
+  `Φ = omegaChainPotential m`. The bound of `Clock.IsAtomCertificate` is the
+  boundedness of `G i j = (Φ i j - Φ i (j-1)) / m j`, and it is a divided
+  difference: `G i j` is `(-1) ^ (j+1) / (∏ l ∈ Finset.Icc 1 j, m l)` times the
+  divided difference of `fun c ↦ c * ∏' l : {l // i < l}, (1 - c * m l)`
+  at the nodes `(m 1)⁻¹, …, (m j)⁻¹`, so the mean value form and Cauchy's
+  estimate on the circle of radius `(m j)⁻¹` give
+  `|G i j| ≤ 2 / m j ^ 2 * exp (2 * (∑' l : {l // i < l}, m l) / m j) *
+  ∏ l ∈ Finset.Icc 1 j, m j / m l`, which under `m (i+1) ≤ θ * m i` is at most
+  `2 / m 1 ^ 2 * exp (2 * θ / (1 - θ)) * θ ^ ((j-1) * (j-4) / 2)`. This is the
+  first atom set of infinite height for which the certificate is produced:
+  `exists_isAtomCertificate_of_finiteHeight` does not apply because `V` is not
+  nilpotent, and `not_exists_isAtomCertificate_of_isDirected_of_noMinOrder`
+  does not apply because the atom set has a least element.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.

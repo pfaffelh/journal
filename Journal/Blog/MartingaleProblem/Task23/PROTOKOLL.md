@@ -4689,3 +4689,321 @@ rc = 0 heißt: keine Abweichung.
   beim Kompaktheitsargument, bei (H), bei der Einschrittrelation, bei der
   Endlichkeit und bei der Ausschöpfung: eine Prämisse, die aus der Rechnung
   stammt statt aus dem Beweisbedarf.
+
+## Die $\omega$-Kette, 2026-09-05 (siebenundzwanzigster Lauf): das Zertifikat hat eine geschlossene Form, und bei geometrisch fallenden Massen existiert es
+
+Der sechsundzwanzigste Lauf hat die Existenzfrage auf der $\omega$-Kette in
+**Proposition 24.2** gebündelt: gesucht ist ein symmetrisches
+$\Phi:\N_0^2\to\R$ mit $\Phi(i,0)=0$, der Zwei-Diagonalen-Rekursion
+$(m_i-m_j)\Phi(i,j)=m_i\Phi(i,j-1)-m_j\Phi(i-1,j)$, der Schwanzbedingung
+$\Phi(i,k)\to[i=1]/m_1$ und der Lipschitzschranke
+$|\Phi(i,j)-\Phi(i,j-1)|\le Cm_j$. Dieser Lauf löst die ersten vier Forderungen
+**geschlossen und unbedingt** und die fünfte unter einer benannten Hypothese.
+
+### Die Umschreibung: Bedingung 1 ist die Beschränktheit einer symmetrischen Funktion
+
+Setze $G(i,j):=-T_{a_ia_j}/(m_im_j)$. Aus $T_{a_ia_j}=m_i(\Phi(i,j-1)-\Phi(i,j))$
+und der Symmetrie von $\Phi$ folgt
+
+$$\Phi(i,j)-\Phi(i,j-1)=m_j\,G(i,j),\qquad
+  \Phi(i,j)-\Phi(i-1,j)=m_i\,G(i,j),$$
+
+und beides zusammen: die Zwei-Diagonalen-Rekursion **ist** die Symmetrie von
+$G$, und Bedingung 1 (Proposition 24.2(c)) **ist** $\sup_{i,j}|G(i,j)|<\infty$,
+zusammen mit $C\ge1/m_1$ für den Eintrag $T_{t^*a_1}=1$. Das ist die ganze
+Umschreibung, und sie macht aus einer Rekursion mit Randbedingung eine Frage
+nach der Beschränktheit einer expliziten Reihe.
+
+### Theorem 25: die geschlossene Form, und sie löst vier der fünf Forderungen
+
+Seien die Massen $m_1,m_2,\dots>0$ **paarweise verschieden** mit
+$M=\sum_lm_l<\infty$. Setze $c_k:=1/m_k$ und
+
+$$\pi_k(i):=\prod_{l>i}\Bigl(1-\frac{m_l}{m_k}\Bigr)\quad(i\ge0),\qquad
+  \beta_k:=\frac{1}{m_k\prod_{l\neq k}\bigl(1-\frac{m_l}{m_k}\bigr)} .$$
+
+Beide Produkte konvergieren absolut ($\sum_lm_l<\infty$), und das zweite ist
+nach Voraussetzung von Null verschieden. Ferner $w_k(i):=[k\le i]\,\pi_k(i)$.
+
+> **Theorem 25.** Die Funktion
+> $$\Phi(i,j):=\sum_{k\le\min(i,j)}\beta_k\,\pi_k(i)\,\pi_k(j)
+>   \qquad(\text{eine }\textit{endliche}\text{ Summe}),\quad
+>   \Phi(i,0):=\Phi(0,j):=0,$$
+> ist symmetrisch, erfüllt $\Phi(i,0)=0$, die Zwei-Diagonalen-Rekursion an
+> allen $i,j\ge1$ und $\lim_{k\to\infty}\Phi(i,k)=[i=1]/m_1$ für jedes $i$.
+
+*Beweis.* Vier Schritte.
+
+*(1) Die Sprungrelation der Bausteine.* Für alle $i,k\ge1$ gilt
+
+$$w_k(i)-w_k(i-1)=\frac{m_i}{m_k}\,w_k(i).$$
+
+Für $i>k$ ist das $\pi_k(i-1)=(1-m_i/m_k)\pi_k(i)$; für $i=k$ ist
+$w_k(k-1)=0$ und $m_i/m_k=1$, also sind beide Seiten $=w_k(k)$; für $i<k$ sind
+beide Seiten $0$. Genau an der Stelle $i=k$, wo der Baustein einsetzt, trägt die
+Relation also von selbst — das ist der einzige nichtformale Punkt der ganzen
+Konstruktion.
+
+*(2) Jeder Baustein löst die Rekursion.* Für $\Psi:=w_k\otimes w_k$ ist nach (1)
+
+$$m_i\bigl(\Psi(i,j)-\Psi(i,j-1)\bigr)=\frac{m_im_j}{m_k}w_k(i)w_k(j)
+ =m_j\bigl(\Psi(i,j)-\Psi(i-1,j)\bigr),$$
+
+und das ist die Rekursion. Da $\Phi=\sum_k\beta_k\,w_k\otimes w_k$ punktweise
+eine endliche Summe ist ($w_k(i)=0$ für $k>i$), löst auch $\Phi$ sie. Symmetrie
+und $\Phi(i,0)=0$ sind unmittelbar ($w_k(0)=0$).
+
+*(3) Die Randidentität, und sie ist eine Residuensumme.* Für $k\le i$ ist
+$\prod_{l\neq k}(1-m_l/m_k)=\pi_k(i)\prod_{l\le i,\,l\neq k}(1-m_l/m_k)$ — die
+Schwanzprodukte kürzen sich. Mit $\Pi_i(c):=\prod_{l\le i}(1-cm_l)$ und
+$\Pi_i'(c_k)=-m_k\prod_{l\le i,\,l\neq k}(1-m_l/m_k)$ folgt
+
+$$\sum_{k\le i}\beta_k\pi_k(i)
+ =\sum_{k\le i}\frac{1}{m_k\prod_{l\le i,\,l\neq k}(1-m_l/m_k)}
+ =-\sum_{k\le i}\operatorname*{Res}_{c=c_k}\frac{1}{\Pi_i(c)} .$$
+
+$1/\Pi_i$ ist rational mit Zählergrad $0$ und Nennergrad $i$; die Summe **aller**
+seiner Residuen ist daher $0$ für $i\ge2$ und $-1/m_1$ für $i=1$. Also
+
+$$\sum_{k\le i}\beta_k\pi_k(i)=\frac{[i=1]}{m_1}\qquad\text{für alle }i\ge1 .$$
+
+*(4) Der Schwanz.* Für festes $k$ ist $\pi_k(j)\to1$ ($j\to\infty$), denn
+$\sum_{l>j}m_l/m_k\to0$. Für festes $i$ ist $\Phi(i,j)=\sum_{k\le i}
+\beta_k\pi_k(i)\pi_k(j)$, sobald $j\ge i$, eine feste endliche Summe; also
+$\lim_j\Phi(i,j)=\sum_{k\le i}\beta_k\pi_k(i)=[i=1]/m_1$ nach (3). $\square$
+
+**Was das heißt.** Die Existenz einer Lösung der Rekursion mit Rand *und*
+Schwanz ist damit **unbedingt** — sie braucht keine Hypothese an das
+Massenprofil außer der Verschiedenheit. Das ganze Gewicht der $\omega$-Kette
+sitzt in Bedingung 1.
+
+### Woher die Formel kommt: $V^{\mathsf T}$ hat auf der $\omega$-Kette Eigenvektoren
+
+Für ein einzelnes $x$ ist $T=xx^{\mathsf T}$ genau dann mit Bedingung 2
+verträglich, wenn $V^{\mathsf T}x\parallel x$ — die Bedingungen 1 und 2 sind
+eine **Spektralaufgabe**. Auf der endlichen Trunkierung ist $V^{\mathsf T}$
+strikt dreieckig und hat nur den Eigenwert $0$; auf der unendlichen
+$\omega$-Kette dagegen ist
+
+$$x_k:=\bigl(0,\;(m_i\pi_k(i)[i\ge k])_{i\ge1},\;-m_k\bigr)
+  \quad\text{über }(0,\ (a_i)_i,\ t^*)$$
+
+ein Eigenvektor von $V^{\mathsf T}$ zum Eigenwert $-m_k$: aus
+$(V^{\mathsf T}x)_a=m_a\sum_{s>a}x_s$ und der Teleskopidentität
+$m_i\pi_k(i)=m_k(\pi_k(i)-\pi_k(i-1))$ folgt $\sum_{i\ge k}m_i\pi_k(i)=m_k$,
+und damit verschwindet die Bedingung unterhalb von $a_k$ genau dann, wenn die
+letzte Komponente $-m_k$ ist. Mit $\gamma_k:=\beta_k/m_k$ ist der Atomblock von
+$T$ genau $-\sum_k\gamma_k\,x_kx_k^{\mathsf T}$, und dieselbe Reihe gibt auch
+die Spitzenzeile richtig:
+
+$$-\sum_k\gamma_k\,x_k(t^*)x_k(a_j)=m_j\sum_{k\le j}\beta_k\pi_k(j)=[j=1],$$
+
+also $T_{t^*\cdot}=e_{a_1}$ wie in Proposition 24.2(a). Einzig der Eintrag
+$(t^*,t^*)$ kommt spektral falsch heraus ($-\sum_k\beta_km_k=-1$ statt $0$; die
+Reihe ist $-\sum_k\operatorname{Res}_{c_k}(cP(c))^{-1}$ mit
+$P=\prod_l(1-cm_l)$, und der Pol in $0$ trägt die $1$), und das Zertifikat ist
+$T=-\sum_k\gamma_kx_kx_k^{\mathsf T}+e_{t^*}e_{t^*}^{\mathsf T}$. **Das ist der
+verallgemeinerbare Teil dieses Laufs**: nicht die Kettenrekursion, sondern die
+Eigenvektoren von $V^{\mathsf T}$.
+
+### Korollar 25.1: die Limiten von $G$ sind explizit, und $G$ verschwindet ab der dritten Spalte
+
+> **Korollar 25.1.** Für jedes feste $j$ existiert $\lim_{i\to\infty}G(i,j)$ und
+> ist
+> $$\lim_{i\to\infty}G(i,j)=\begin{cases}1/m_1^2,&j=1,\\
+> -1/(m_1m_2),&j=2,\\ 0,&j\ge3.\end{cases}$$
+
+*Beweis.* $\pi_k(i)\to1$, die Summe über $k\le j$ ist endlich, also ist der
+Limes $\sum_{k\le j}\gamma_k\pi_k(j)$. Dieselbe Kürzung wie in Theorem 25(3),
+diesmal mit $j$ statt $i$, gibt
+$\gamma_k\pi_k(j)=-\operatorname{Res}_{c_k}\frac{c}{\Pi_j(c)}$. Die rationale
+Funktion $c/\Pi_j(c)$ hat Zählergrad $1$ und Nennergrad $j$, verhält sich bei
+$\infty$ also wie $c^{1-j}$; die Summe aller Residuen ist $0$ für $j\ge3$,
+$1/(m_1m_2)$ für $j=2$ und $-1/m_1^2$ für $j=1$. $\square$
+
+Das ist die Konsistenz mit $\Phi(\infty,j)=[j=1]/m_1$ — dessen zweite Differenz
+sitzt gerade auf $j\le2$ — und es sagt: der Träger von $G$ „im Unendlichen"
+besteht aus zwei Spalten. Numerisch ist genau das der Grund, warum
+$\|T\|_m\to\max(1/m_1^2,\,1/(m_1m_2))$ zu vermuten ist; für $m_i=\rho^{-i}$
+(auf $M=1$ normiert, also $m_i=(\rho-1)\rho^{-i}$) ist
+$1/(m_1m_2)=\rho^3/(\rho-1)^2$ — **die geschlossene Form des
+sechsundzwanzigsten Laufs, jetzt bewiesen statt gemessen.**
+
+### Theorem 25.2: $G$ ist eine dividierte Differenz
+
+Dieselbe Kürzung, aber gegen $\pi_k(i)$ statt gegen $\pi_k(j)$, gibt für
+$j\le i$ mit $P_{>i}(c):=\prod_{l>i}(1-cm_l)$
+
+$$G(i,j)=-\sum_{k\le j}\operatorname*{Res}_{c=c_k}
+   \frac{c\,P_{>i}(c)}{\Pi_j(c)}$$
+
+(die Beiträge mit $k>j$ verschwinden, weil $P_{>i}(c_k)=0$ für $k>i\ge j$; die
+symmetrische Gestalt ist
+$G(i,j)=-\sum_k\operatorname{Res}_{c_k}\frac{cP(c)}{\Pi_i(c)\Pi_j(c)}$). Aus
+$\Pi_j(c)=(-1)^j\bigl(\prod_{l\le j}m_l\bigr)\prod_{l\le j}(c-c_l)$ wird daraus
+eine **dividierte Differenz der Ordnung $j-1$**:
+
+> **Theorem 25.2.** Für $1\le j\le i$ und $g_i(c):=c\,P_{>i}(c)$ gilt
+> $$G(i,j)=\frac{(-1)^{j+1}}{m_1m_2\cdots m_j}\;g_i[c_1,\dots,c_j].$$
+> Sind die Massen überdies nicht wachsend, so gilt für jedes $r>0$
+> $$|G(i,j)|\;\le\;\frac{(c_j+r)\,e^{(c_j+r)\sigma_i}}
+>      {m_1\cdots m_j\;r^{\,j-1}},\qquad \sigma_i=\sum_{l>i}m_l,$$
+> insbesondere, mit $r=c_j$,
+> $$|G(i,j)|\;\le\;\frac{2}{m_j^{2}}\,e^{2\sigma_i/m_j}
+>    \prod_{l\le j}\frac{m_j}{m_l}.$$
+
+*Beweis.* Die Identität ist die Definition der dividierten Differenz,
+$g[c_1,\dots,c_j]=\sum_k g(c_k)/\prod_{l\neq k}(c_k-c_l)$, eingesetzt in die
+Residuensumme. Für die Schranke: $g_i$ ist ganz und reell, also
+$g_i[c_1,\dots,c_j]=g_i^{(j-1)}(\eta)/(j-1)!$ für ein $\eta$ zwischen $c_1$ und
+$c_j$; bei nicht wachsenden Massen ist $c_j=\max_{l\le j}c_l$, also
+$0<\eta\le c_j$. Cauchy auf dem Kreis $|c-\eta|=r$ gibt
+$|g_i^{(j-1)}(\eta)|/(j-1)!\le r^{-(j-1)}\max_{|c-\eta|=r}|g_i|$, und dort ist
+$|g_i(c)|\le(c_j+r)\prod_{l>i}(1+(c_j+r)m_l)\le(c_j+r)e^{(c_j+r)\sigma_i}$.
+Schließlich ist $m_1\cdots m_j=\prod_{l\le j}c_l^{-1}$ und
+$c_1\cdots c_j\cdot 2c_j/c_j^{\,j-1}=2c_j^2\prod_{l\le j}(m_j/m_l)$. $\square$
+
+### Korollar 25.3: bei geometrisch fallenden Massen existiert das Zertifikat
+
+> **Korollar 25.3.** Gibt es ein $\theta\in(0,1)$ mit $m_{l+1}\le\theta m_l$ für
+> alle $l\ge1$, so ist $\sup_{i,j}|G(i,j)|<\infty$. Das $\Phi$ aus Theorem 25
+> erfüllt dann alle fünf Forderungen von Proposition 24.2, die $\omega$-Kette
+> trägt also ein unendliches Zertifikat an der Stelle $t^*$ in der
+> Gewichtsklasse $Z=\{0,t^*\}$, und nach Theorem 22 gilt unter (F) und
+> $\rho_0,\rho_{t^*}<\infty$ die Dualität: $\delta(t^*)=0$.
+
+*Beweis.* Die Massen sind streng fallend, insbesondere paarweise verschieden,
+und $\sigma_j\le m_j\theta/(1-\theta)$. Für $j=1$ ist
+$G(i,1)=\pi_1(i)/m_1^2$ mit $0<\pi_1(i)\le1$. Für $j\ge2$ und $i\ge j$ gibt
+Theorem 25.2 mit $\sigma_i\le\sigma_j$, $m_j/m_l\le\theta^{\,j-l}$ und
+$m_j\ge m_1\theta^{\,j-1}$
+
+$$|G(i,j)|\le\frac{2}{m_1^2}\,e^{2\theta/(1-\theta)}\,
+   \theta^{-2(j-1)}\,\theta^{\,j(j-1)/2}
+ =\frac{2e^{2\theta/(1-\theta)}}{m_1^2}\;\theta^{\,(j-1)(j-4)/2},$$
+
+und der Exponent $(j-1)(j-4)/2$ strebt gegen $+\infty$; das Supremum über $j$
+ist also endlich, angenommen bei $j\le4$. $\square$
+
+**Damit ist die $\omega$-Kette der erste bewiesene Fall unendlicher Höhe für
+die Zertifikatsmethode** — Theorem 23 sieht sie nicht ($V$ ist nicht
+nilpotent), Proposition 24.1 verbietet sie nicht ($A$ hat ein kleinstes
+Element). Für die *Konklusion* ist das kein Zugewinn: Theorem 17 (Stieltjes,
+zweiundzwanzigster Lauf) erledigt jede abzählbare Kette unter (F). Der Zugewinn
+ist der **Weg**: der Atomblock der $\omega$-Kette ist zugleich der $b$-Block der
+**Leiter**, und dort trägt Theorem 17 nicht, weil die Leiter keine Kette ist.
+
+### Was gemessen ist
+
+`Task23/omega_chain.py`, Proben (A)–(F), rc=0, mpmath mit 120 Stellen. Exakte
+Bruchrechnung ist hier unmöglich — die Bausteine $\pi_k(i)$ sind unendliche
+Produkte —, aber drei der sechs Proben brauchen sie nicht: **(A), (B) und (C)
+hängen von den Startwerten $\pi_k(N)$ überhaupt nicht ab.** Die Rekursion gilt
+für jede Wahl der Startwerte, und in der Randidentität wie in den Limiten
+kürzen sich die Schwanzprodukte gegen das unendliche Produkt in $\beta_k$
+heraus; geprüft wird dort also reine Algebra in den $m_l$, und die Residuen
+sind Rundungsfehler. Nur (D), (E) und (F) hängen an den Startwerten, und die
+werden exakt bis $N+400$ aufsummiert und erst danach per Euler–Maclaurin
+(`mp.sumem`) fortgesetzt — `mp.sumem` allein ist am Anfang ungenau (bei
+$\sum l^{-3/2}$ ab $l=1$ nur drei Stellen), und mit dem rohen Aufruf war die
+Schranke (E) auf den geometrischen Profilen scheinbar verletzt.
+
+* **(A)** Die geschlossene Form erfüllt Symmetrie, $\Phi(i,0)=0$ und die
+  Zwei-Diagonalen-Rekursion; größtes Residuum über vier Profile bei $N=14$:
+  $6\cdot10^{-120}$ (Symmetrie), $2\cdot10^{-121}$ (Rekursion), $0$ (Rand).
+* **(B)** Die Randidentität $\sum_{k\le i}\beta_k\pi_k(i)=[i=1]/m_1$
+  (Theorem 25(3)), Residuum $\le5\cdot10^{-119}$.
+* **(C)** Korollar 25.1, in der Gestalt, in der er algebraisch ist:
+  $\sum_{k\le j}\bigl(m_k^2\prod_{l\le j,\,l\ne k}(1-m_l/m_k)\bigr)^{-1}$
+  ist $1/m_1^2$, $-1/(m_1m_2)$, $0$ für $j=1,2,\ge3$; Residuum
+  $\le1{,}4\cdot10^{-117}$ bis $j=14$. Die Konvergenz von $G(N,j)$ dorthin ist
+  bei geometrischen Massen schnell (bei $m_i=2^{-i}$, $N=14$: $3{,}99951$;
+  $-7{,}99707$; $-0{,}0039$; $-1{,}3\cdot10^{-6}$) und bei $m_i=1/(i(i+1))$
+  langsam ($3{,}5$ gegen $4$; $-6{,}79$ gegen $-12$; $-4{,}94$ gegen $0$;
+  $N=40$ gibt $-9{,}83$ in der zweiten Spalte).
+* **(D)** Theorem 25.2, die dividierte Differenz: Übereinstimmung mit $G(i,j)$
+  bis $2{,}4\cdot10^{-119}$ an vier Paaren je Profil.
+* **(E)** Die Schranke von Theorem 25.2 wird auf keinem der $4\cdot105$
+  geprüften Paare verletzt. Sie ist aber **nur bei geometrischem Abfall
+  brauchbar**: bei $m_i=2^{-i}$ fällt sie ab $j=6$ unter $2$ (Werte an $i=j$:
+  $59{,}1$; $118$; $118$; $59{,}1$; $14{,}8$; $1{,}85$; $0{,}115$; $0{,}0036$),
+  bei $m_i=1/(i(i+1))$ wächst sie ($1{,}3\cdot10^3$ bei $j=2$ bis
+  $1{,}9\cdot10^6$ bei $j=8$) und bei $m_i=i^{-3/2}$ noch schneller
+  ($3{,}6\cdot10^{12}$ bei $j=8$), während $|G|$ dort unter $12$ bzw. unter $1$
+  bleibt. Korollar 25.3 ist damit genau so scharf wie sein Beweismittel und
+  nicht schärfer.
+* **(F)** Die Dreiecksschranke $\Lambda_j=\sum_{k\le j}|\gamma_k\pi_k(j)|$ —
+  der naive Ersatz für Korollar 25.1 — ist auf $m_i=2^{-i}$ zwar beschränkt,
+  aber mit dem Wert $198$ statt $8$, und auf $m_i=1/(i(i+1))$ wächst sie
+  polynomial ($4$; $24$; $72$; $160$; $\dots$; $5880$ bei $j=14$), ebenso auf
+  $m_i=i^{-3/2}$ ($1$; $5{,}9$; $\dots$; $11362$), während $|G|$ dort
+  beschränkt bleibt. **Die Auslöschung in der Summe ist wesentlich**, und jede
+  Abschätzung, die sie wegwirft, scheitert.
+
+Ferner gemessen (`omega_chain.py sup 40`, fünf Profile) und in die Vermutung
+unten eingegangen: $\sup_{i,j}|G(i,j)|$ ist auf jedem geprüften Profil endlich
+und $\le\max(1/m_1^2,1/(m_1m_2))$ — bei $m_i=2^{-i}$ und $m_i=2\cdot3^{-i}$
+wird die Schranke ($8$ bzw. $6{,}75$) auf acht Stellen **getroffen**, bei
+$m_i=1/(i(i+1))$ wird sie von unten angelaufen ($9{,}83$ gegen $12$), bei
+$m_i=i^{-3/2}$ ist der Wert $1{,}05$ gegen $2{,}83$, bei
+$m_i=1/((i+1)\log^2(i+1))$ der Wert $1{,}39$ gegen $3{,}48$. Das Maximum sitzt
+in allen fünf Fällen in einer der ersten vier Spalten; die Spaltenmaxima
+$\max_i|G(i,j)|$ fallen danach (bei $m_i=2^{-i}$ superexponentiell: $4{,}1$;
+$1{,}0$; $0{,}042$; $3{,}7\cdot10^{-4}$; $\dots$, bei den langsamen Profilen
+träge: $1{,}34$; $1{,}39$; $1{,}34$; $1{,}31$; $1{,}30$; $1{,}29$) und sind
+nicht durch den Abschnitt erzeugt: beim langsamsten Profil an $N=70$ eigens
+nachgerechnet (`omega_chain.py sup 70`, langsam) sind sie ab $j=5$ mit denen
+bei $N=40$ zifferngleich, und nur die ersten drei Spalten wandern noch, gegen
+ihre Limiten aus Korollar 25.1.
+
+### Was jetzt offen ist, exakt
+
+* **Bedingung 1 ohne geometrische Hypothese.** Vermutung:
+  $\sup_{i,j}|G(i,j)|=\max(1/m_1^2,\,1/(m_1m_2))$ für jedes nicht wachsende
+  summierbare Massenprofil mit paarweise verschiedenen Massen. Korollar 25.1
+  gibt „$\ge$" und die Grenzwerte; zu zeigen ist „$\le$", und die
+  Dreiecksungleichung reicht dafür nachweislich nicht (Probe (F)). Der Weg, der
+  noch nicht ausgereizt ist: $g_i(c)=cP_{>i}(c)$ liegt in der
+  Laguerre–Pólya-Klasse (ganz, Ordnung $0$, nur reelle nichtnegative
+  Nullstellen), und dividierte Differenzen solcher Funktionen an reellen Knoten
+  haben Vorzeichenstruktur; die Cauchy-Schranke von Theorem 25.2 wirft genau
+  diese Struktur weg.
+* **Gleiche Massen.** Die geschlossene Form setzt $m_k\neq m_l$ voraus
+  ($\beta_k$ hat sonst einen Pol). Der sechsundzwanzigste Lauf hat gemessen,
+  daß doppelte Massenwerte unschädlich sind (Limes $16$); zu zeigen ist, daß
+  $\Phi$ stetig von den Massen abhängt, oder die Formel mit mehrfachen Polen —
+  dividierte Differenzen mit zusammenfallenden Knoten, wofür Theorem 25.2 schon
+  die richtige Sprache ist.
+* **Die Leiter, und sie ist jetzt konkret.** Zu bestimmen sind die
+  Eigenvektoren von $V^{\mathsf T}$ auf $\T=\{0\}\cup\{a_i\}\cup\{b_j\}\cup
+  \{t^*\}$ mit $a_i<b_j\iff i<j$. Auf der Kette waren es die $x_k$ zum
+  Eigenwert $-m_k$, einer je Atom; auf der Leiter ist zu klären, ob es wieder
+  einen je Atom gibt und ob die zugehörige Reihe $T\mathbb 1=e_{t^*}$
+  erzwingt. Das ist die Rechnung, die der sechsundzwanzigste Lauf als
+  „dieselbe Gestalt wie der $b$-Block" nur vermutet hat, und sie ist der erste
+  Fall unendlicher Höhe **mit nicht transitiver Unvergleichbarkeit**.
+* **Die nackte Klasse auf Ketten**, unverändert offen (zweiundzwanzigster Lauf).
+* **Ein Gegenbeispiel mit durchweg positiven Abwärtsmassen**, unverändert offen
+  (dreiundzwanzigster Lauf, Proposition 19.2).
+
+### Sackgassen, fünfundzwanzigster Nachtrag
+
+* **Die Dreiecksungleichung auf die Spektralreihe anwenden.**
+  $|G(i,j)|\le\sum_{k\le j}|\gamma_k|\,|\pi_k(i)\pi_k(j)|$ ist bei
+  $m_i=2^{-i}$ um den Faktor $25$ zu grob und bei $m_i=1/(i(i+1))$ divergent,
+  weil dort $|\gamma_k|$ polynomial wächst, während $G$ beschränkt bleibt. Die
+  Koeffizienten der Zerlegung sind unbeschränkt; nur ihre alternierende Summe
+  ist es.
+* **Den Kreis $|c|=R$ als Kontur nehmen.** Der Integrand
+  $cP_{>i}(c)/\Pi_j(c)$ ist auf der **linken** Kreishälfte um den Faktor
+  $e^{2R\sigma_i}$ größer als auf der rechten; bei
+  $m_i=1/((i+1)\log^2(i+1))$ gibt das die Schranke $e^{j\log j}$ statt $O(1)$.
+  Die Knoten liegen alle auf der positiven Achse, und jede Kontur, die weit
+  nach links ausholt, zahlt dafür exponentiell. Die dividierte Differenz
+  (Theorem 25.2) ist die Reparatur: sie hält den Auswertungspunkt in
+  $[c_1,c_j]$ und zahlt nur den Cauchy-Radius.
+* **Aus dem Verhalten der Trunkierung auf die Gestalt der Lösung schließen.**
+  Auf der endlichen Trunkierung ist $V^{\mathsf T}$ nilpotent und hat gar keine
+  Eigenvektoren; die ganze Konstruktion dieses Laufs existiert **nur** im
+  Unendlichen. Zum siebten Mal dieselbe Lehre: eine Prämisse, die aus der
+  Rechnung stammt statt aus dem Beweisbedarf.

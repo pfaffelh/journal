@@ -420,6 +420,43 @@ Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
    `Task23/PROTOKOLL.md`, sechsundzwanzigster Lauf;
    `Task23/infinite_height.py` (Proben (A)–(E), rc=0).
 
+   *Zwischenstand 2026-09-05, siebenundzwanzigster Lauf: die $\omega$-Kette
+   hat ein Zertifikat in geschlossener Form, und bei geometrisch fallenden
+   Massen ist seine Existenz **bewiesen**.* Mit
+   $\pi_k(i)=\prod_{l>i}(1-m_l/m_k)$ und
+   $\beta_k=\bigl(m_k\prod_{l\ne k}(1-m_l/m_k)\bigr)^{-1}$ erfüllt die
+   punktweise **endliche** Summe
+   $\Phi(i,j)=\sum_{k\le\min(i,j)}\beta_k\pi_k(i)\pi_k(j)$ Symmetrie, Rand,
+   Zwei-Diagonalen-Rekursion und Schwanzbedingung — **unbedingt**, ohne
+   Hypothese an das Massenprofil außer der Verschiedenheit der Massen
+   (Theorem 25); die Rekursion trägt bausteinweise wegen
+   $w_k(i)-w_k(i-1)=\frac{m_i}{m_k}w_k(i)$, und die Schwanzbedingung ist die
+   Residuensumme $-\sum_{k\le i}\operatorname{Res}_{c_k}\Pi_i(c)^{-1}$ mit
+   $\Pi_i(c)=\prod_{l\le i}(1-cm_l)$. Damit sitzt die ganze Last auf
+   Bedingung 1, also auf der Beschränktheit von
+   $G(i,j)=-T_{a_ia_j}/(m_im_j)$; deren Limiten sind exakt
+   ($1/m_1^2$, $-1/(m_1m_2)$, $0$ für $j=1,2,\ge3$, Korollar 25.1 — was die
+   gemessene Form $\rho^3/(\rho-1)^2$ des sechsundzwanzigsten Laufs beweist),
+   und $G(i,j)$ ist eine **dividierte Differenz** der Ordnung $j-1$ von
+   $c\mapsto cP_{>i}(c)$ an den Knoten $1/m_k$ (Theorem 25.2), woraus bei
+   $m_{l+1}\le\theta m_l$ die Schranke
+   $\theta^{(j-1)(j-4)/2}$ und damit das Zertifikat folgt (Korollar 25.3).
+   Der übertragbare Fund: $T=xx^{\mathsf T}$ ist mit Bedingung 2 genau dann
+   verträglich, wenn $V^{\mathsf T}x\parallel x$ — auf der Trunkierung ist
+   $V^{\mathsf T}$ nilpotent und hat keine Eigenvektoren, auf der unendlichen
+   Kette ist $x_k=(0,(m_i\pi_k(i)[i\ge k])_i,-m_k)$ einer zum Eigenwert
+   $-m_k$. Wer den Punkt aufnimmt, rechnet die Eigenvektoren von
+   $V^{\mathsf T}$ auf der **Leiter** aus; offen bleiben ferner Bedingung 1
+   ohne geometrische Hypothese (Vermutung
+   $\sup|G|=\max(1/m_1^2,1/(m_1m_2))$; die Dreiecksungleichung reicht
+   nachweislich nicht) und der Fall gleicher Massen.
+   `Task23/PROTOKOLL.md`, siebenundzwanzigster Lauf; `Task23/omega_chain.py`
+   (Proben (A)–(F), rc=0); Roadmapeinträge
+   `Lagrange.sum_inv_prod_sub_eq_zero`, `Clock.atomTailProduct`,
+   `Clock.atomTailProduct_sub_eq`, `Clock.omegaChainPotential` und
+   `exists_isAtomCertificate_of_omegaChain` in `MartingaleProblems`
+   Meilenstein 8.
+
 2. **Prüfen, ob die Roadmaps noch zu Mathlib master passen.** Alle zitierten
    Deklarationen gegen master, auf Existenz und `deprecated`. Am 2026-08-29
    fanden sich so drei Fehler. Sinnvoll etwa alle zwei Wochen. *Am 2026-08-31,
