@@ -251,6 +251,14 @@ weder in den Worktree noch in den Hauptcheckout, und braucht keinen Build. Am
 `TopologicalSpace (ProbabilityMeasure E)`-Instanz, fehlender Import für die
 `→ᵇ`-Notation, eine Universenbedingung).
 
+Der Hauptcheckout `~/Code/lean/journal` ist dafür über `--add-dir` erreichbar
+und `lake`, `lean`, `elan` sind freigegeben. **Dort wird nur gelesen und
+übersetzt, niemals geschrieben** — er steht auf `master`, und eine Änderung dort
+landet außerhalb Deines Branches. Geht `lake env lean` in Deinem Lauf trotzdem
+nicht, so prüfe das mit `lean --version` als erstes, halte es im Bericht fest
+und arbeite mit Signaturprüfung am Quelltext weiter, statt Übersetztes zu
+behaupten.
+
 Damit gilt: **wer Lean schreibt, übersetzt es auch.** Eine Deklaration, die
 nicht durch `lake env lean` geht, ist kein Ergebnis, sondern ein Entwurf, und
 gehört als solcher gekennzeichnet. `sorry` ist erlaubt, wo die Aussage die
