@@ -4047,3 +4047,200 @@ nur die vier Matrizenaussagen, die ohnehin für `duality_of_atomic` zu
 formalisieren sind, plus die eine $\ell^1$-Abschätzung
 $|(V^{\mathsf T}x)_c|\le m_c\|x\|_1$. Der Weg von `duality_of_atomic` dorthin
 ist damit der kürzeste im ganzen Meilenstein 8.
+
+### 2026-09-05 — Task 23, sechsundzwanzigster Lauf: nicht die Höhe ist die Grenze, sondern die Fundiertheit
+
+Das Inventar ist geschlossen, der Rückstau steht auf Punkt 1 (Task 23). Der
+fünfundzwanzigste Lauf hatte genau eine Gestalt offen gelassen: die
+Halbordnung **unendlicher Höhe** mit nicht transitiver Unvergleichbarkeit,
+kleinste Form die Leiter $a_i<b_j\iff i<j$ über zwei $\omega$-Ketten.
+
+**Bearbeitet.** Task 23, die Existenz des unendlichen Zertifikats bei
+unendlicher Höhe.
+
+**Der Befund, in vier Sätzen.** Erstens ist die Sperre der Zertifikatsmethode
+nicht die Höhe, sondern die fehlende Minimalität: **Proposition 24.1** — hat
+$\T$ ein Maximum $t^*$ mit $m_{t^*}=0$ und ist die Atommenge $A$ nichtleer,
+abwärts gerichtet und ohne minimales Element, so gibt es kein unendliches
+Zertifikat an der Stelle $t^*$, in keiner Gewichtsklasse. Das verallgemeinert
+Proposition 23.1 (dort: $A$ eine Kette ohne kleinstes **und** ohne größtes
+Element in $\{0\}\cup A\cup\{t^*\}$) und ist kürzer, weil der Widerspruch aus
+der Symmetrie von $T$ kommt statt aus einer zweiten Rekursion. Zweitens hat die
+$\omega$-Kette — unendliche Höhe, $V$ nicht nilpotent, Theorem 23 unanwendbar —
+sehr wohl ein Zertifikat: exakt gerechnet konvergiert $\|T\|_m$ auf den
+Trunkierungen, für $m_i=\rho^{-i}$ gegen $\rho^3/(\rho-1)^2$ (an
+$\rho=2,3,4,5$ geprüft). Drittens ist auf dieser Kette **Proposition 24.2** die
+vollständige Auflösung der drei Bedingungen: die Spitzenzeile ist erzwungen
+($T_{t^*\cdot}=e_{a_1}$), und der Atomblock ist genau eine symmetrische
+Funktion $\Phi$ auf $\N_0^2$ mit $\Phi(i,0)=0$, der Zwei-Diagonalen-Rekursion
+$(m_i-m_j)\Phi(i,j)=m_i\Phi(i,j-1)-m_j\Phi(i-1,j)$ und der Schwanzbedingung
+$\Phi(i,k)\to[i=1]/m_1$; Bedingung 1 ist die Lipschitzbedingung
+$|\Phi(i,j)-\Phi(i,j-1)|\le Cm_j$. Viertens ist auf der Leiter das **Minimum**
+von $\|T\|_m$ über alle Zertifikate der Trunkierung stabil (gegen $18$ bei
+$\alpha=\tfrac12,\beta=\tfrac13$), während die explizite Formel des sechsten
+Laufs dort davonläuft ($6190$ bei $n=12$) — der Lösungsraum hat auf der Leiter
+die Dimension $n+2$ statt $1$, und aus dem Ausfall einer Auswahl folgt nichts
+über die Existenz.
+
+**Die Vermutung, die dieser Lauf aufstellt.** *Ist $A$ fundiert, so gibt es zu
+jedem $t$ ein unendliches Zertifikat.* Sie umfaßt Theorem 23 echt und schließt
+genau die Instanzen von Proposition 24.1 aus.
+
+**Verifiziert.** `Task23/infinite_height.py`, Proben (A)–(E), rc=0; (A), (B),
+(C), (E) exakt in `Fraction`, (D) ein Gleitkomma-LP und als solches
+ausgewiesen. (A) die erzwungene Spitzenzeile auf vier Kettenprofilen und drei
+Leiterprofilen; (B) $\Phi$ samt Symmetrie, Rand, Rekursion und Rückgewinnung;
+(C) die Konvergenz von $\|T\|_m$ und die geschlossene Form; (D) die Leiter,
+Minimum gegen explizite Formel; (E) der Bodenansatz „$T$ trägt nur auf den
+Zeilen von $\{0,a_1,b_1,t^*\}$" ist auf jeder Trunkierung unlösbar.
+Einzelheiten in `Task23/PROTOKOLL.md`, sechsundzwanzigster Lauf.
+
+**Offen geblieben.** Die Existenz auf der $\omega$-Kette ist gemessen, nicht
+bewiesen; ebenso die auf der Leiter. Ob der Kollaps der LP-Schranke bei
+$\beta\to\alpha$ eine echte Resonanz oder ein Konditionierungsartefakt des
+Gleitkomma-LP ist, ist nicht entschieden — auf der Kette ist die entsprechende
+Entartung ($m_i=m_j$) nachweislich unschädlich. Unverändert offen: die nackte
+Klasse auf Ketten und das Gegenbeispiel mit durchweg positiven Abwärtsmassen.
+
+**Vorschlag, was als Nächstes formalisiert wird, als benanntes Ziel.**
+`not_exists_isAtomCertificate_of_isDirected_of_noMinOrder` — es gibt
+kein unendliches Zertifikat an der Stelle $t^*$, wenn $\T$ ein Maximum $t^*$
+mit $m_{t^*}=0$ hat und die Atommenge $A$ nichtleer, abwärts gerichtet und ohne
+minimales Element ist (Proposition 24.1). Sie ruht auf `Clock.IsAtomCertificate`
+(dem Prädikat aus dem Vorschlag des fünfundzwanzigsten Laufs), auf
+`tendsto_tsum_compl_atTop_zero` für den Grenzübergang auf der wachsenden
+Mengenfolge (Mathlib, `Topology/Algebra/InfiniteSum/Group.lean:351`, als
+`to_additive`-Zwilling von `tendsto_tprod_compl_atTop_one`; am 2026-09-05 an
+`upstream/master` belegt), und auf den beiden Ordnungsklassen `IsDirected`
+(`Order/Directed.lean:144`) und `NoMinOrder` (`Order/Max.lean:56`) für die
+Konstruktion der absteigenden kofinalen Folge; mehr braucht sie nicht — kein
+Maß, keine Topologie, keine $\kappa$-Integrierbarkeit, denn (F) kommt im
+Beweis nicht vor.
+
+*Nebenbei, und für künftige Läufe wichtig:* `git grep "theorem <name>"` findet
+eine Mathlib-Deklaration **nicht**, wenn sie von `@[to_additive]` erzeugt wird.
+`tendsto_tsum_compl_atTop_zero` existiert und wird in vier Dateien benutzt, ist
+aber nirgends als `theorem` geschrieben. Wer einen Namen nur an seinen
+**Benutzungsstellen** findet, suche nach dem multiplikativen Zwilling, bevor er
+`?` einträgt.
+
+Sie ist jetzt dran, und zwar **vor** der positiven Richtung, aus zwei Gründen.
+Erstens ist sie die einzige Aussage des ganzen Meilensteins, die eine
+**Grenze** der Formalisierung festschreibt: sie sagt, welche Uhren die
+Zertifikatsmethode nicht erreicht, und damit, wo die Stieltjes-Methode
+(Theorem 17) unentbehrlich bleibt. Zweitens zwingt sie dazu,
+`Clock.IsAtomCertificate` in derjenigen Gestalt zu definieren, in der die
+Zeilen absolut summierbar sind — genau die Gestalt, die Theorem 22 braucht —,
+und diese Definition ist die gemeinsame Vorstufe von
+`duality_of_atomic_finiteHeight_of_integrable` (Vorschlag des
+fünfundzwanzigsten Laufs) und allem, was danach kommt. Eine Grenzaussage, die
+die Definition erzwingt, ist der billigere Einstieg als der Existenzsatz, der
+sie voraussetzt.
+
+### 2026-09-05, zweiter Lauf des Tages — Task 23, siebenundzwanzigster Lauf: das Zertifikat der $\omega$-Kette in geschlossener Form
+
+Das Inventar ist geschlossen, der Rückstau steht auf Punkt 1 (Task 23). Der
+sechsundzwanzigste Lauf hatte den nächsten Schritt klein und benannt
+hinterlassen: zu zeigen, daß die Zwei-Diagonalen-Rekursion von
+Proposition 24.2 mit der Schwanzbedingung eine Lipschitzlösung besitzt.
+
+**Bearbeitet.** Task 23, die Existenz des unendlichen Zertifikats auf der
+$\omega$-Kette.
+
+**Der Befund, in vier Sätzen.** Erstens hat die Lösung eine **geschlossene
+Form**: mit $\pi_k(i)=\prod_{l>i}(1-m_l/m_k)$ und
+$\beta_k=\bigl(m_k\prod_{l\ne k}(1-m_l/m_k)\bigr)^{-1}$ erfüllt
+$\Phi(i,j)=\sum_{k\le\min(i,j)}\beta_k\pi_k(i)\pi_k(j)$ — eine punktweise
+**endliche** Summe — Symmetrie, $\Phi(i,0)=0$, die Rekursion und die
+Schwanzbedingung, und zwar **unbedingt**, ohne jede Hypothese an das
+Massenprofil außer der Verschiedenheit der Massen (**Theorem 25**). Der Beweis
+ist zweiteilig: jeder Baustein $w_k\otimes w_k$ löst die Rekursion wegen der
+Sprungrelation $w_k(i)-w_k(i-1)=\frac{m_i}{m_k}w_k(i)$, die genau an der
+Einsatzstelle $i=k$ von selbst trägt, und die Schwanzbedingung ist die
+Residuensumme $-\sum_{k\le i}\operatorname{Res}_{c_k}\Pi_i(c)^{-1}$ mit
+$\Pi_i(c)=\prod_{l\le i}(1-cm_l)$, also $0$ für $i\ge2$ und $1/m_1$ für $i=1$.
+Zweitens ist damit die ganze Last auf **Bedingung 1** verschoben, und die ist
+die Beschränktheit von $G(i,j)=-T_{a_ia_j}/(m_im_j)$; deren Limiten sind exakt
+und explizit: $\lim_iG(i,j)$ ist $1/m_1^2$, $-1/(m_1m_2)$ und $0$ für
+$j=1,2,\ge3$ (**Korollar 25.1**) — insbesondere ist die geschlossene Form
+$\rho^3/(\rho-1)^2$, die der sechsundzwanzigste Lauf gemessen hatte, jetzt
+**bewiesen**, denn sie ist $1/(m_1m_2)$ für $m_i=(\rho-1)\rho^{-i}$. Drittens
+ist $G(i,j)$ eine **dividierte Differenz** der Ordnung $j-1$ von
+$c\mapsto c\prod_{l>i}(1-cm_l)$ an den Knoten $1/m_1,\dots,1/m_j$
+(**Theorem 25.2**), und Mittelwertform plus Cauchy geben
+$|G(i,j)|\le\frac{2}{m_j^2}e^{2\sigma_i/m_j}\prod_{l\le j}\frac{m_j}{m_l}$.
+Viertens fällt daraus bei **geometrisch fallenden Massen** ($m_{l+1}\le\theta
+m_l$, $\theta<1$) die Schranke
+$\frac{2}{m_1^2}e^{2\theta/(1-\theta)}\theta^{(j-1)(j-4)/2}$, also
+$\sup_{i,j}|G|<\infty$: die $\omega$-Kette trägt ein unendliches Zertifikat und
+erfüllt unter (F) die Dualität (**Korollar 25.3**). Das ist der **erste
+bewiesene Fall unendlicher Höhe** für die Zertifikatsmethode.
+
+**Der begriffliche Fund, und er ist der übertragbare Teil.** $T=xx^{\mathsf T}$
+ist mit Bedingung 2 genau dann verträglich, wenn $V^{\mathsf T}x\parallel x$ —
+die Bedingungen 1 und 2 sind eine **Spektralaufgabe**. Auf der endlichen
+Trunkierung ist $V^{\mathsf T}$ nilpotent und hat gar keine Eigenvektoren; auf
+der unendlichen $\omega$-Kette ist $x_k=(0,(m_i\pi_k(i)[i\ge k])_i,-m_k)$ einer,
+zum Eigenwert $-m_k$, und das Zertifikat ist
+$-\sum_k\frac{\beta_k}{m_k}x_kx_k^{\mathsf T}+e_{t^*}e_{t^*}^{\mathsf T}$.
+Die ganze Konstruktion existiert **nur** im Unendlichen.
+
+**Verifiziert.** `Task23/omega_chain.py`, Proben (A)–(F), mpmath mit 120
+Stellen (exakte Bruchrechnung ist unmöglich — die Bausteine sind unendliche
+Produkte; die Schwanzprodukte kommen per Euler–Maclaurin, die Residuen der
+geprüften Identitäten liegen bei $10^{-120}$). (A) Symmetrie, Rand und
+Rekursion der geschlossenen Form; (B) die Randidentität; (C) die Limiten von
+Korollar 25.1; (D) die dividierte Differenz, zehnstellig; (E) die Schranke von
+Theorem 25.2, nirgends verletzt und nur bei geometrischem Abfall brauchbar;
+(F) die Dreiecksschranke als Sackgasse — sie ist bei $m_i=2^{-i}$ um den
+Faktor $25$ zu grob und wächst bei $m_i=1/(i(i+1))$, weil die Koeffizienten
+der Zerlegung unbeschränkt sind und nur ihre alternierende Summe beschränkt
+ist. Einzelheiten in `Task23/PROTOKOLL.md`, siebenundzwanzigster Lauf.
+
+**In die Roadmap eingetragen** (`MartingaleProblems` Meilenstein 8, hinter
+`not_exists_isAtomCertificate_of_isDirected_of_noMinOrder`):
+`Lagrange.sum_inv_prod_sub_eq_zero`, `Clock.atomTailProduct`,
+`Clock.atomTailProduct_sub_eq`, `Clock.omegaChainPotential` und
+`exists_isAtomCertificate_of_omegaChain`. Drei Mathlib-Belege sind dabei am
+Quelltext von `upstream/master` geprüft: `Lagrange.coeff_eq_sum`
+(`LinearAlgebra/Lagrange.lean:490` — es gibt den Koeffizienten von
+$X^{\#s-1}$ als $\sum_i P(v_i)/\prod_{j\ne i}(v_i-v_j)$, und bei $P=1$ ist das
+genau die gebrauchte Residuensumme; `Lagrange.eq_interpolate` ebenda Zeile 362,
+`Lagrange.interpolate` Zeile 299, `Lagrange.basis` Zeile 199),
+`Real.multipliable_one_add_of_summable` und `Real.rexp_tsum_eq_tprod`
+(`Analysis/SpecialFunctions/Log/Summable.lean:96` bzw. `:83`).
+
+**Offen geblieben.** Bedingung 1 ohne geometrische Hypothese — die Vermutung
+lautet $\sup_{i,j}|G(i,j)|=\max(1/m_1^2,1/(m_1m_2))$, gemessen auf vier
+Profilen (auch $m_i=1/((i+1)\log^2(i+1))$), und die Dreiecksungleichung reicht
+dafür nachweislich nicht. Ferner der Fall gleicher Massen (die geschlossene
+Form hat dort Pole; dividierte Differenzen mit zusammenfallenden Knoten sind
+die richtige Sprache) und, unverändert, die nackte Klasse auf Ketten und das
+Gegenbeispiel mit durchweg positiven Abwärtsmassen.
+
+**Vorschlag, was als Nächstes formalisiert wird, als benanntes Ziel.**
+`exists_isAtomCertificate_of_omegaChain` — auf der $\omega$-Kette
+$\{0\}\cup\{a_1<a_2<\dots\}\cup\{t^*\}$ mit $m_0=m_{t^*}=0$, summierbaren
+Atommassen und $m_{i+1}\le\theta m_i$ für ein $\theta<1$ gibt es ein
+unendliches Zertifikat an der Stelle $t^*$ in der Gewichtsklasse
+$Z=\{0,t^*\}$. Sie ruht auf `Clock.IsAtomCertificate` (dem Prädikat aus dem
+Vorschlag des fünfundzwanzigsten Laufs, das der Vorschlag des
+sechsundzwanzigsten Laufs bereits als gemeinsame Vorstufe benannt hat), auf
+`Clock.omegaChainPotential` mit seinen vier Eigenschaften, und deren
+Randidentität ruht auf `Lagrange.sum_inv_prod_sub_eq_zero`, also auf
+`Lagrange.coeff_eq_sum` aus Mathlib; die Multiplizierbarkeit der
+Schwanzprodukte ist `Real.multipliable_one_add_of_summable`. Mehr braucht sie
+nicht — kein Maß, keine Topologie, keine $\kappa$-Integrierbarkeit; (F) kommt
+erst in Theorem 22 vor, das die Aussage zur Dualität fortsetzt.
+
+Sie ist jetzt dran, und zwar aus demselben Grund, aus dem der
+sechsundzwanzigste Lauf die Grenzaussage vorgezogen hat, nur mit umgekehrtem
+Vorzeichen: sie ist die **positive** Hälfte desselben Prädikats, sie zwingt
+`Clock.IsAtomCertificate` in genau der Gestalt, in der die Zeilen absolut
+summierbar sind, und sie liefert mit `Clock.omegaChainPotential` das erste
+Objekt des Meilensteins, das über einer unendlichen Kette explizit
+hingeschrieben ist statt implizit über eine Existenzaussage. Ihre Bausteine
+sind ferner die einzigen des Meilensteins, die in Mathlib schon fast
+dastehen — Lagrange-Interpolation und unendliche Produkte —, so daß der
+Formalisierungsaufwand fast ganz in der Definition und nicht in der Analysis
+steckt.

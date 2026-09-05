@@ -1038,18 +1038,80 @@ order.
   `duality_of_atomic_chain_of_integrable` and with
   `duality_of_atomic_weakOrder_of_integrable`, both of which live on atom sets
   of unbounded chain length.
-* `not_exists_isAtomCertificate_of_denseChain`: on `T = {0} ∪ A ∪ {t}` with `A`
-  a chain having neither a least nor a greatest element, `m 0 = m t = 0` and
-  `m` strictly positive on `A`, there is no `T` with `Clock.IsAtomCertificate`
-  at `t`, for any `Z`. The relation at `(t, a)` gives `θ (Ioi a) = 0` for
-  `θ = T t ·` and the relation at `(0, a)` gives the same for `η = T 0 ·`,
-  both `ℓ¹` by the bound; absence of a least element makes `θ` and `η` vanish
-  on `A` — at an `a` with an immediate predecessor by differencing, elsewhere
-  by dominated convergence along `aₙ ↑ a` — and absence of a greatest element
-  makes them vanish at `t`, so `1 = ∑' x, θ x = θ 0 = T t 0 = T 0 t = 0`. The
-  certificate method therefore stops exactly where
-  `duality_of_atomic_chain_of_integrable` takes over, and the two are
-  genuinely different tools: neither hypothesis implies the other.
+* `not_exists_isAtomCertificate_of_isDirected_of_noMinOrder`: let `t` be the
+  greatest element of the poset with `m t = 0`, and let the atom set
+  `A = {a | m a ≠ 0}` be nonempty, directed downwards and without a minimal
+  element. Then there is no `T` with `Clock.IsAtomCertificate` at `t`, for any
+  `Z`. Three steps. The relation at `(s, u)` with `m s = 0` and `u ∈ A` gives
+  `θ (Ioi u) = 0` for `θ = T s ·`, absolutely summable by the bound. Directed
+  downwards, countable and without a minimal element gives a strictly
+  decreasing `u : ℕ → A` with `u n < v n` for a fixed enumeration `v` of `A`,
+  so `Ioi (u n) ↑ ⋃ a ∈ A, Ioi a`, and `tendsto_tsum_compl_atTop_zero`
+  (`Topology/Algebra/InfiniteSum/Group.lean`, the `to_additive` twin of
+  `tendsto_tprod_compl_atTop_one`) makes every row with `m s = 0` supported on
+  `L = {x | ∀ a ∈ A, ¬ a < x}`. Every point of `L` carries zero mass and `t`
+  does not lie in `L`, so `1 = ∑' x, T t x = ∑' x ∈ L, T t x = ∑' x ∈ L, T x t
+  = 0`. The hypotheses are exactly the negation of well-foundedness of `A` in
+  the presence of downward directedness, so this and
+  `exists_isAtomCertificate_of_finiteHeight` bound the certificate method from
+  both sides; it stops where `duality_of_atomic_chain_of_integrable` takes
+  over, and the two are genuinely different tools: neither hypothesis implies
+  the other. It contains the case of a chain `A` with neither a least nor a
+  greatest element.
+* `Lagrange.sum_inv_prod_sub_eq_zero`: for a `Finset s` with `2 ≤ #s` and an
+  `x : ι → F` injective on `s`, `∑ k ∈ s, (∏ l ∈ s.erase k, (x k - x l))⁻¹ = 0`,
+  while the sum is `(1 : F)` for `#s = 1`. It is `Lagrange.coeff_eq_sum`
+  (`LinearAlgebra/Lagrange.lean:490`) at `P = 1`, whose left hand side is
+  `(1 : F[X]).coeff (#s - 1)`. It belongs in
+  `Mathlib/LinearAlgebra/Lagrange.lean` and not here.
+* `Clock.atomTailProduct`: for `m : ℕ → ℝ` with `0 < m k` for all `k`,
+  `Summable m` and `Function.Injective m`, the product
+  `atomTailProduct m k i = ∏' l : {l // i < l}, (1 - m l / m k)`, together with
+  its multipliability and `atomTailProduct m k i ≠ 0`. Multipliability is
+  `Real.multipliable_one_add_of_summable`
+  (`Analysis/SpecialFunctions/Log/Summable.lean:96`) applied to
+  `fun l ↦ - m l / m k`; the value is nonzero because only finitely many `l`
+  have `m k ≤ m l`, so the product splits into a finite product of nonzero
+  factors and a positive tail, which is `Real.rexp_tsum_eq_tprod`
+  (`Analysis/SpecialFunctions/Log/Summable.lean:83`).
+* `Clock.atomTailProduct_sub_eq`: with `w m k i = if k ≤ i then
+  atomTailProduct m k i else 0`, one has `w m k i - w m k (i-1) =
+  m i / m k * w m k i` for all `i, k ≥ 1`. Three cases: `k < i` is the
+  definition of the product, `k = i` holds because `w m k (k-1) = 0` and
+  `m i / m k = 1`, and `i < k` has both sides zero. The step `k = i` is the
+  only one that is not formal.
+* `Clock.omegaChainPotential`: for `m` as above,
+  `omegaChainPotential m i j = ∑ k ∈ Finset.Icc 1 (min i j),
+  (m k * ∏' l : {l // l ≠ k}, (1 - m l / m k))⁻¹ *
+  atomTailProduct m k i * atomTailProduct m k j`, a finite sum, together with
+  its symmetry, `omegaChainPotential m i 0 = 0`, the recursion
+  `m i * (Φ i j - Φ i (j-1)) = m j * (Φ i j - Φ (i-1) j)` for `1 ≤ i, j` and
+  `Tendsto (omegaChainPotential m i) atTop (𝓝 (if i = 1 then (m 1)⁻¹ else 0))`.
+  The recursion holds for each rank one summand by `atomTailProduct_sub_eq`,
+  both sides being `m i * m j / m k * w m k i * w m k j`. The limit is
+  `Lagrange.sum_inv_prod_sub_eq_zero` at the nodes `(m k)⁻¹`, `k ≤ i`: the
+  tail products cancel against the infinite product in the coefficient, and
+  what is left is `∑ k ≤ i, (m k * ∏ l ≤ i, l ≠ k, (1 - m l / m k))⁻¹`.
+* `exists_isAtomCertificate_of_omegaChain`: let the poset be
+  `T = {0} ∪ Set.range a ∪ {t✶}` with `a : ℕ → T` strictly monotone,
+  `0 < a i < t✶`, `m 0 = m t✶ = 0` and atom masses `m i > 0` with `Summable m`
+  and `m (i+1) ≤ θ * m i` for some `θ < 1`. Then `Clock.IsAtomCertificate`
+  holds at `t✶` with `Z = {0, t✶}` for
+  `T (a i) (a j) = - m i * m j * (Φ i j - Φ i (j-1)) / m j`,
+  `T t✶ (a 1) = T (a 1) t✶ = 1` and all other entries zero, with
+  `Φ = omegaChainPotential m`. The bound of `Clock.IsAtomCertificate` is the
+  boundedness of `G i j = (Φ i j - Φ i (j-1)) / m j`, and it is a divided
+  difference: `G i j` is `(-1) ^ (j+1) / (∏ l ∈ Finset.Icc 1 j, m l)` times the
+  divided difference of `fun c ↦ c * ∏' l : {l // i < l}, (1 - c * m l)`
+  at the nodes `(m 1)⁻¹, …, (m j)⁻¹`, so the mean value form and Cauchy's
+  estimate on the circle of radius `(m j)⁻¹` give
+  `|G i j| ≤ 2 / m j ^ 2 * exp (2 * (∑' l : {l // i < l}, m l) / m j) *
+  ∏ l ∈ Finset.Icc 1 j, m j / m l`, which under `m (i+1) ≤ θ * m i` is at most
+  `2 / m 1 ^ 2 * exp (2 * θ / (1 - θ)) * θ ^ ((j-1) * (j-4) / 2)`. This is the
+  first atom set of infinite height for which the certificate is produced:
+  `exists_isAtomCertificate_of_finiteHeight` does not apply because `V` is not
+  nilpotent, and `not_exists_isAtomCertificate_of_isDirected_of_noMinOrder`
+  does not apply because the atom set has a least element.
 * `duality_discrete`: the case `ι = ℕ` with counting measure, which follows from
   `chain_identity` alone and needs none of the analysis, and is the case
   `m ≡ 1` of `duality_of_atomic`.
