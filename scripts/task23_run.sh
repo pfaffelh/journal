@@ -9,8 +9,10 @@
 
 set -uo pipefail
 
-# Cron hat einen minimalen PATH -- claude liegt in ~/.local/bin.
-export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+# Cron hat einen minimalen PATH -- claude liegt in ~/.local/bin, lake/lean/elan
+# liegen in ~/.elan/bin.  Ohne den elan-Pfad ist "Bash(lake:*)" zwar erlaubt,
+# aber `lake` nicht auffindbar (so geschehen am 2026-09-05).
+export PATH="$HOME/.local/bin:$HOME/.elan/bin:/usr/local/bin:/usr/bin:/bin"
 
 REPO="${TASK23_REPO:-$HOME/Code/lean/journal-task23}"
 BRANCH="${TASK23_BRANCH:-task23-atomic-duality}"

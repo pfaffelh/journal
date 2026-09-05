@@ -13,9 +13,22 @@ import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 Prototypes only. Names and argument orders are suggestions; the statements are
 the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
+
+**Status: not type-checked.**  The run of 2026-09-05 that revised this file had
+no permission to execute `lean` or `lake`, so the declarations below are checked
+only against the Mathlib sources (`upstream/master`, `251e86bd1fa`).
+
+`Function.RightContinuous` and `IsCadlag` are **not** in Mathlib — a search of
+`upstream/master` for `IsCadlag` returns nothing — so the earlier version of this
+file, which used them without defining them, could not be elaborated at all.
+They are restated here, verbatim from Milestone 2 of the roadmap, so that the
+file stands against Mathlib alone; the intended source is
+`RemyDegenne/brownian-motion`, `BrownianMotion/StochasticIntegral/Cadlag.lean`
+(Apache 2.0), and that file is what should be reused.
 -/
 
 open Filter Topology Set MeasureTheory
+open scoped NNReal
 
 /-! ## Milestone 1: the index -/
 
@@ -55,9 +68,21 @@ theorem exists_orderIso_isometry_real :
 
 /-! ## Milestone 2: càdlàg functions
 
-`Function.RightContinuous` and `IsCadlag` follow
-`RemyDegenne/brownian-motion`, `BrownianMotion/StochasticIntegral/Cadlag.lean`
-(Apache 2.0); reuse that file rather than restating it. -/
+Neither predicate is in Mathlib. `Function.leftLim` and `Function.rightLim` are
+(`Mathlib/Topology/Order/LeftRightLim.lean:50` and `:59`), and the two lemmas
+that connect the structure to them, `tendsto_leftLim_of_tendsto` and
+`ContinuousWithinAt.rightLim_eq`, live in the same file. -/
+
+/-- Right continuity at every point. -/
+def Function.RightContinuous {α β : Type*} [TopologicalSpace α] [Preorder α]
+    [TopologicalSpace β] (f : α → β) : Prop :=
+  ∀ a, ContinuousWithinAt f (Set.Ioi a) a
+
+/-- Right continuous with left limits. -/
+structure IsCadlag {α β : Type*} [TopologicalSpace α] [Preorder α]
+    [TopologicalSpace β] (f : α → β) : Prop where
+  right_continuous : Function.RightContinuous f
+  left_limit : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)
 
 variable {E : Type*} [MetricSpace E]
 
@@ -82,15 +107,39 @@ structure TimeChange (ι : Type*) [LinearOrder ι] [MetricSpace ι] where
   lipschitz : ∃ C, LipschitzWith C toOrderIso
   lipschitz_symm : ∃ C, LipschitzWith C toOrderIso.symm
 
+/-- Composition and inversion make the time changes a group; this is what turns
+`normOn` into a length function and gives the triangle inequality of the metric
+below. -/
+instance : Group (TimeChange ι) := sorry
+
+/-- The least Lipschitz constant on `exhaustion t₀ m`. Mathlib carries no least
+Lipschitz constant: `LipschitzWith (K : ℝ≥0) (f : α → β)`
+(`Mathlib/Topology/EMetricSpace/Lipschitz.lean`) is a `Prop`, and
+`LipschitzWith.const` there is the theorem that a constant map is `0`-Lipschitz,
+not a constant attached to a map. -/
+noncomputable def TimeChange.lipConstOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ≥0 := sorry
+
 /-- `log` of the larger of the two Lipschitz constants, computed on `exhaustion t₀ m`. -/
 noncomputable def TimeChange.normOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ := sorry
 
+theorem TimeChange.normOn_one (t₀ : ι) (m : ℕ) :
+    TimeChange.normOn t₀ m (1 : TimeChange ι) = 0 := sorry
+
+theorem TimeChange.normOn_inv (t₀ : ι) (m : ℕ) (l : TimeChange ι) :
+    TimeChange.normOn t₀ m l⁻¹ = TimeChange.normOn t₀ m l := sorry
+
 theorem TimeChange.normOn_mul_le (t₀ : ι) (m : ℕ) (l l' : TimeChange ι) :
-    TimeChange.normOn t₀ m (sorry : TimeChange ι) ≤
+    TimeChange.normOn t₀ m (l * l') ≤
       TimeChange.normOn t₀ m l + TimeChange.normOn t₀ m l' := sorry
 
+/-- A time change of small norm moves the points of `exhaustion t₀ m` little.
+This is the estimate that makes the metric separate points. -/
+theorem TimeChange.dist_le_of_normOn_le (t₀ : ι) (m : ℕ) {l : TimeChange ι} {γ : ℝ}
+    (h : TimeChange.normOn t₀ m l ≤ γ) {t : ι} (ht : t ∈ exhaustion t₀ m) :
+    dist (l.toOrderIso t) t ≤ (Real.exp γ - 1) * (2 * m) := sorry
+
 /-- Càdlàg paths from `ι` to `E`. -/
-structure SkorokhodSpace (ι E : Type*) [LinearOrder ι] [MetricSpace ι]
+structure SkorokhodSpace (ι E : Type*) [LinearOrder ι] [TopologicalSpace ι]
     [TopologicalSpace E] where
   toFun : ι → E
   isCadlag : IsCadlag toFun
@@ -104,7 +153,7 @@ instance [PolishSpace E] : TopologicalSpace.SeparableSpace D(ι, E) := sorry
 instance [PolishSpace E] : PolishSpace D(ι, E) := sorry
 
 /-- Evaluation is continuous exactly at the paths that do not jump at `t`. -/
-theorem continuousAt_eval {t : ι} {f : D(ι, E)} :
+theorem SkorokhodSpace.continuousAt_eval {t : ι} {f : D(ι, E)} :
     ContinuousAt (fun g : D(ι, E) => g.toFun t) f ↔
       Function.leftLim f.toFun t = f.toFun t := sorry
 
@@ -112,22 +161,24 @@ theorem continuousAt_eval {t : ι} {f : D(ι, E)} :
 
 variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 
-theorem measurableEmbedding_piDense {D : Set ι} (hD : D.Countable) (hD' : Dense D) :
+theorem SkorokhodSpace.measurableEmbedding_piDense {D : Set ι} (hD : D.Countable)
+    (hD' : Dense D) :
     MeasurableEmbedding (fun f : D(ι, E) => fun t : D => f.toFun t) := sorry
 
-theorem borel_eq_comap_eval :
-    (borel D(ι, E)) = ⨆ t : ι, MeasurableSpace.comap (fun f : D(ι, E) => f.toFun t) inferInstance :=
+theorem SkorokhodSpace.borel_eq_iSup_comap_eval :
+    (borel D(ι, E)) =
+      ⨆ t : ι, MeasurableSpace.comap (fun f : D(ι, E) => f.toFun t) inferInstance :=
   sorry
 
 /-! ## Milestone 7: the modulus and compactness -/
 
 /-- The càdlàg modulus on `exhaustion t₀ m`. -/
-noncomputable def modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) (δ : ℝ) : ℝ := sorry
+noncomputable def SkorokhodSpace.modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) (δ : ℝ) : ℝ := sorry
 
-theorem tendsto_modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
-    Tendsto (modulus t₀ m f) (𝓝[>] 0) (𝓝 0) := sorry
+theorem SkorokhodSpace.tendsto_modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
+    Tendsto (SkorokhodSpace.modulus t₀ m f) (𝓝[>] 0) (𝓝 0) := sorry
 
-theorem isCompact_closure_iff (t₀ : ι) (A : Set D(ι, E)) :
+theorem SkorokhodSpace.isCompact_closure_iff (t₀ : ι) (A : Set D(ι, E)) :
     IsCompact (closure A) ↔ ∀ m : ℕ,
       IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion t₀ m, f.toFun t = x}) ∧
-      Tendsto (fun δ => ⨆ f ∈ A, modulus t₀ m f δ) (𝓝[>] 0) (𝓝 0) := sorry
+      Tendsto (fun δ => ⨆ f ∈ A, SkorokhodSpace.modulus t₀ m f δ) (𝓝[>] 0) (𝓝 0) := sorry

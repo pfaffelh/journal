@@ -9,8 +9,12 @@
 
 set -uo pipefail
 
-# Cron hat einen minimalen PATH -- claude liegt in ~/.local/bin.
-export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+# Cron hat einen minimalen PATH -- claude liegt in ~/.local/bin, lake/lean/elan
+# liegen in ~/.elan/bin.  Ohne den elan-Pfad ist "Bash(lake:*)" zwar erlaubt,
+# aber `lake` nicht auffindbar: der Lauf vom 2026-09-05 (20260905T194326Z) sah
+# genau das -- "lake: Befehl nicht gefunden" -- und konnte kein Lean uebersetzen.
+# Der absolute Pfad hilft nicht, weil die Rechtefreigabe am Kommandonamen haengt.
+export PATH="$HOME/.local/bin:$HOME/.elan/bin:/usr/local/bin:/usr/bin:/bin"
 
 REPO="${FACTS_REPO:-$HOME/Code/lean/journal-facts}"
 BRANCH="${FACTS_BRANCH:-facts-inventory}"
@@ -120,13 +124,21 @@ ALLOWED=(
   "Bash(pdflatex:*)" "Bash(latexmk:*)" "Bash(bibtex:*)" "Bash(pdftotext:*)"
   # Mathlib master gegenpruefen, wenn der lokale Checkout nicht ausreicht.
   WebSearch WebFetch "Bash(gh:*)"
+  # Lean typpruefen.  Der Worktree hat kein .lake; der Hauptcheckout hat ein
+  # fertig gebautes Mathlib, und `lake env lean <datei>` prueft dagegen, ohne
+  # irgendwo zu schreiben.  Ohne diese drei Freigaben scheitert das an der
+  # Rechtepruefung und nicht an Lean -- so geschehen am 2026-09-05.
+  "Bash(lake:*)" "Bash(lean:*)" "Bash(elan:*)"
 )
 
 # Der Worktree hat kein .lake -- Mathlib liegt nur im Hauptcheckout.  Ohne
 # diese Lesepfade kann der Lauf keinen einzigen Deklarationsnamen belegen.
 # Ein nicht vorhandenes --add-dir laesst claude sofort abbrechen, daher geprueft.
 ADDDIRS=()
-for d in "${FACTS_MATHLIB:-$HOME/Code/lean/journal/.lake/packages/mathlib}" \
+# $HOME/Code/lean/journal ist noetig, weil dort die lakefile und das gebaute
+# .lake liegen; der Auftrag verbietet ausdruecklich, dort zu schreiben.
+for d in "${FACTS_JOURNAL:-$HOME/Code/lean/journal}" \
+         "${FACTS_MATHLIB:-$HOME/Code/lean/journal/.lake/packages/mathlib}" \
          "${FACTS_MATHLIB_MASTER:-$HOME/Code/lean/mathlib4}"; do
   if [ -d "$d" ]; then
     ADDDIRS+=(--add-dir "$d")

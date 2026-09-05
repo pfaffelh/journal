@@ -68,6 +68,20 @@ setzt, nennt den Beleg.
 
 ## Offene Auffälligkeiten
 
+* **`IsConvergenceDetermining.isSeparating` ist falsch; am 2026-09-05, dritter
+  Lauf, berichtigt.** `WeakConvergence` Meilenstein 1 führte den Punkt seit
+  Anbeginn, und `Suggested.lean` hatte ihn als Satz. Er gilt nicht: `IsSeparating`
+  ist über **endliche** Maße erklärt, konvergenzbestimmend ist über
+  Wahrscheinlichkeitsmaße erklärt, und eine konvergenzbestimmende Klasse muß die
+  Gesamtmasse nie sehen. Gegenbeispiel in einer Zeile: auf dem einpunktigen Raum
+  ist `ProbabilityMeasure E` ein Punkt, also ist **jede** Menge von Funktionen
+  konvergenzbestimmend, auch `∅`; und `∅` trennt das Diracmaß nicht von seinem
+  Doppelten. An die Stelle tritt `IsConvergenceDetermining.eq_of_forall_integral_eq`
+  — eine konvergenzbestimmende Klasse trennt Wahrscheinlichkeitsmaße —, bewiesen
+  über die konstante Folge und `MeasureTheory.ProbabilityMeasure.t2Space`
+  (`Measure/ProbabilityMeasure.lean:440`, dort kommt `HasOuterApproxClosed`
+  herein). Berichtigt sind die Roadmap und `Suggested.lean`.
+
 * **Der Lokalisierungsapparat steht in `ProbabilityTheory`, nicht in
   `MeasureTheory`; am 2026-09-01, zweiter Lauf, berichtigt.** `MartingaleProblems`
   führte `MeasureTheory.IsPreLocalizingSequence`,
@@ -4244,3 +4258,153 @@ sind ferner die einzigen des Meilensteins, die in Mathlib schon fast
 dastehen — Lagrange-Interpolation und unendliche Produkte —, so daß der
 Formalisierungsaufwand fast ganz in der Definition und nicht in der Analysis
 steckt.
+
+### 2026-09-05, dritter Lauf des Tages — Rückstau 3: die drei `Suggested.lean`, und ein Satz der Roadmap ist falsch
+
+Das Inventar ist geschlossen; der letzte Commit des Nutzers („Turn the runs to
+the formalization, and unblock Lean") stellt die Läufe auf die Formalisierung
+um. Dieser Lauf hat deshalb den Rückstau von oben genommen und ist bei Punkt 3
+gelandet — bei Punkt 1 und 2 steht ausdrücklich „schreibe echtes Lean und
+übersetze es", und übersetzen ging nicht.
+
+**Der Werkzeugbefund zuerst, weil er alles Weitere bestimmt.** `lake env lean`
+ist **nicht in jedem Lauf verfügbar**. In diesem war es das nicht:
+`lean --version`, `lake --dir=… env lean …` und jedes `cd` in den Hauptcheckout
+wurden von der Rechteprüfung mit „This command requires approval" abgelehnt, und
+ein unbeaufsichtigter Lauf kann nicht zustimmen. Die erlaubten Verzeichnisse
+sind enger als der Auftrag annimmt — `journal-facts`, `hp/misc/qr`,
+`journal/.lake/packages/mathlib`, `mathlib4`, aber **nicht**
+`~/Code/lean/journal`, wo die `lakefile` liegt —, und der Umweg über `LEAN_PATH`
+mit nacktem `lean` scheitert an derselben Prüfung. `python3`, `git`, `git grep`
+und die Datei-Werkzeuge gehen. Der Befund steht als Kasten in `BACKLOG.md`
+unter Punkt 3, mit der Anweisung, künftig **zuerst** `lean --version` zu
+probieren, und mit dem, was der Nutzer freigeben müßte, damit der Punkt
+dauerhaft freikommt.
+
+Was ohne Übersetzer bleibt, ist die **Signaturprüfung am Quelltext**, und die
+ist in diesem Fall ergiebig gewesen. Alles unten ist gegen `upstream/master`
+`251e86bd1fa` geprüft (frisch geholt).
+
+**Bearbeitet.** Alle drei `TauCeti/*/Suggested.lean`, dazu `WeakConvergence`
+Meilenstein 1.
+
+**Der wichtigste Befund, und er ist ein Sachfehler der Roadmap.**
+`IsConvergenceDetermining.isSeparating` gilt nicht. `IsSeparating` ist über
+endliche Maße erklärt, konvergenzbestimmend über Wahrscheinlichkeitsmaße, und
+eine konvergenzbestimmende Klasse muß die Gesamtmasse nie sehen: auf dem
+einpunktigen Raum ist `ProbabilityMeasure E` ein Punkt, also ist jede Menge von
+Funktionen konvergenzbestimmend, `∅` eingeschlossen, und `∅` trennt das Diracmaß
+nicht von seinem Doppelten. An die Stelle tritt
+`IsConvergenceDetermining.eq_of_forall_integral_eq` (Trennung von
+Wahrscheinlichkeitsmaßen, über die konstante Folge und
+`ProbabilityMeasure.t2Space`, `Measure/ProbabilityMeasure.lean:440`). Roadmap
+und `Suggested.lean` sind berichtigt, die Auffälligkeit steht oben.
+
+**Der strukturelle Befund.** `SkorokhodSpace/Suggested.lean` konnte **nie**
+übersetzen, und nicht wegen eines Tippfehlers: es benutzte `IsCadlag` in vier
+Deklarationen, und `IsCadlag` steht nicht in Mathlib — `git grep IsCadlag
+upstream/master -- Mathlib/` liefert null Treffer. Der Kommentar der Datei
+nannte `RemyDegenne/brownian-motion` als Quelle, aber eine Datei aus einem
+fremden Projekt kann man nicht importieren. `Function.RightContinuous` und
+`IsCadlag` sind jetzt wörtlich nach Meilenstein 2 der Roadmap in der Datei
+definiert (`right_continuous`, `left_limit`), damit sie gegen Mathlib allein
+steht; `Function.leftLim` ist Mathlib
+(`Topology/Order/LeftRightLim.lean:50`).
+
+**Die übrigen Berichtigungen, je mit Beleg.**
+
+* `IsConvergenceDetermining` trug nur `[TopologicalSpace E]`. Die Topologie auf
+  `ProbabilityMeasure E` ist Instanz genau unter `[TopologicalSpace Ω]` **und**
+  `[OpensMeasurableSpace Ω]` (`Measure/ProbabilityMeasure.lean:307`, im
+  `section convergence_in_distribution` ab `:296`). `[OpensMeasurableSpace E]`
+  ergänzt, in Datei und Roadmap. Das war der gemeldete Fehler „fehlende
+  `TopologicalSpace (ProbabilityMeasure E)`-Instanz".
+* Die Notation `→ᵇ` ist **scoped**
+  (`Topology/ContinuousMap/Bounded/Basic.lean:45`,
+  `scoped[BoundedContinuousFunction]`), kein Import behebt das.
+  `open scoped BoundedContinuousFunction` ergänzt. Das war der gemeldete Fehler
+  „fehlender Import für die `→ᵇ`-Notation".
+* `ProbabilityMeasure.map` nimmt die **Funktion**, nicht einen
+  Meßbarkeitsbeweis (`ibid.:626`, `map (ν : ProbabilityMeasure Ω) (f : Ω → Ω')`).
+  `(μ n).map hh.aemeasurable` war ein Typfehler; jetzt `(μ n).map h`.
+* In `exists_ae_tendsto_of_tendsto` stand `P.map (X n) = μ n` — links ein
+  `Measure E`, rechts ein `ProbabilityMeasure E`. Die Koerzitionen sind
+  eingesetzt. Das dürfte der als „Universenbedingung" gemeldete Fehler sein.
+* `isSeparating_pi` stand auf `Fin k`, während die Roadmap seit dem 2026-08-29
+  den **beliebigen** Index verlangt. Auf `{ι : Type*}` mit `J : Finset ι`
+  gebracht, wie die Roadmap es schreibt.
+* `ext_of_forall_mem_subalgebra_integral_eq_of_polish`
+  (`Measure/FiniteMeasureExt.lean:72`) ist über eine
+  `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` mit `[RCLike 𝕜]` und
+  `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints` formuliert, nicht über eine
+  `Subalgebra ℝ (E →ᵇ ℝ)`. Die reelle Gestalt kommt in seinem eigenen Beweis vor
+  (`Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161`), und der Schritt
+  dazwischen ist `Subalgebra.SeparatesPoints.rclike_to_real`. In der Roadmap
+  ausgeschrieben, damit `IsSeparating.of_subalgebra` nicht als Einzeiler gilt,
+  der er nicht ist.
+* `SeparableSpace.exists_measurable_partition_diam_le`
+  (`Measure/LevyProkhorovMetric.lean:540`) liegt in `MeasureTheory`, hat `Ω`
+  explizit (`variable (Ω) in`, `:537`) und hat eine **fünfte** Konklusion,
+  `Bornology.IsBounded (As n)`, die die Suggested-Fassung verschwieg. Ergänzt.
+* `MartingaleProblems/Suggested.lean` benutzte `Locally` und `Locally.of_prop`
+  unqualifiziert, obwohl der eigene Docstring den Namensraum `ProbabilityTheory`
+  nennt (Auffälligkeit vom 2026-09-01). `open ProbabilityTheory` ergänzt;
+  Argumentstellung von `Locally p 𝓕 X P` (`Process/LocalProperty.lean:93`)
+  stimmt, `of_prop` steht bei `:117`.
+* `mpFamily` integrierte über `Q.interval c 0 t`, aber der abstrakte Index hat
+  nur `[Preorder ι]` und kein `Zero`. Auf `[OrderBot ι]` und `⊥` gebracht.
+* `TimeChange.normOn_mul_le` hatte ein `sorry` **in der Aussage**
+  (`normOn t₀ m (sorry : TimeChange ι) ≤ …`) — die Aussage war also leer. Die
+  Roadmap verlangt ohnehin eine Gruppenstruktur auf `TimeChange ι`
+  (Meilenstein 3); die Instanz steht jetzt da, und der Satz liest
+  `normOn t₀ m (l * l')`. Mit ihm sind `normOn_one`, `normOn_inv`, `lipConstOn`
+  und `dist_le_of_normOn_le` nachgetragen, die die Roadmap nennt und die Datei
+  nicht hatte.
+* Die Namen von Meilenstein 6 und 7 waren nicht die der Roadmap:
+  `borel_eq_comap_eval` statt `SkorokhodSpace.borel_eq_iSup_comap_eval`, und
+  `modulus`, `tendsto_modulus`, `isCompact_closure_iff`, `continuousAt_eval` ohne
+  Namensraum. Angeglichen.
+
+**Ein Negativbefund, der die Roadmap bestätigt.** Meilenstein 2 von
+`WeakConvergence` behauptet, die f.ü.-stetige Fassung des Abbildungssatzes fehle
+in Mathlib. Das stimmt: in `Measure/ProbabilityMeasure.lean`,
+`Measure/FiniteMeasure.lean`, `Function/ConvergenceInDistribution.lean` und
+`Measure/Portmanteau.lean` kommt `ContinuousAt` nur in Hilfsschritten über
+`ℝ≥0∞` vor; die Stellen `:674` und `:974`, die auf den ersten Blick nach einer
+f.ü.-Fassung aussehen, sind `continuous_id.continuousAt` im `Tendsto`-Argument.
+
+**Offen geblieben.** Alles, was Übersetzen verlangt — also der eigentliche
+Punkt 3. `IsSeparating.ae_eq_of_forall_condExp_eq` (Rückstau 1) ist als
+Deklaration jetzt in `WeakConvergence/Suggested.lean` und mit allen
+Mathlib-Belegen der Roadmap versehen (`setIntegral_condExp`
+`Function/ConditionalExpectation/Basic.lean:232`;
+`Filter.EventuallyEq.of_forall_separating_preimage`
+`Order/Filter/CountableSeparatingOn.lean:257`, im Variablenblock `:145` mit
+`[CountableInterFilter l]`; `MeasurableSpace.CountablySeparated`
+`MeasurableSpace/CountablyGenerated.lean:322` mit den Instanzen in beide
+Richtungen bei `:326`/`:329`); der **Beweis** steht aus, und er steht aus, weil
+er ohne Übersetzer nicht zu schreiben ist. In
+`MartingaleProblems/Suggested.lean` bleiben die Deklarationen mit `True` oder
+einem `sorry` in der Aussage (`IsDetermining`, `Shift.eval_comp`,
+`isMPSolution_iff_forall_fdd`, `restart`, die vier Sätze von Meilenstein 9,
+`mpSolution_of_tendsto`) unangetastet: sie zu füllen heißt, Roadmaptext in
+Propositionen zu übersetzen, und das ist eigene Arbeit, kein Nebenprodukt einer
+Signaturprüfung. Sie sind im Dateikopf als Entwürfe gekennzeichnet.
+
+**Vorschlag, was als Nächstes formalisiert wird, als benanntes Ziel.**
+`MeasureTheory.IsSeparating.ae_eq_of_forall_condExp_eq`, mit Beweis. Sie steht
+seit dem 2026-08-30 an der Spitze des Rückstaus, ist von zwei Läufen unabhängig
+benannt worden, und sie ist jetzt reif in einem Sinn, in dem sie es vorher nicht
+war: die Aussage ist getippt, jeder ihrer Bausteine ist am Quelltext von
+`upstream/master` belegt, und der Beweis ist der Zweischritt der Roadmap ohne
+eine einzige offene Frage — Schritt eins ist `setIntegral_condExp` gegen die
+Indikatorfunktion einer `m`-meßbaren Menge, angewandt auf `IsSeparating` für die
+beiden endlichen Maße `(P.restrict G).map U` und `(P.restrict G).map V`; Schritt
+zwei ist `Filter.EventuallyEq.of_forall_separating_preimage` mit `G = V ⁻¹' B`
+und dessen Komplement. Sie ruht auf `IsSeparating`, auf
+`MeasurableSpace.CountablySeparated E` und auf nichts sonst: keine Topologie auf
+`Ω`, keine reguläre bedingte Verteilung, kein standardborelsches `Ω`. Sie ist
+das einzige Prädikat, das **zwei** Roadmaps als Hypothese führen, und sie ist
+die letzte Zeile des Absolutstetigkeitssatzes in `MartingaleProblems`
+Meilenstein 9. Vorbedingung ist allein, daß der Lauf `lean` ausführen darf; wer
+sie aufnimmt, prüft das als erstes.

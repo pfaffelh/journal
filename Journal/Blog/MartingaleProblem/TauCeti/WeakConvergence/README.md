@@ -83,15 +83,39 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
 * `MeasureTheory.IsSeparating Γ` for `Γ : Set (E → ℝ)`: two finite Borel
   measures integrating every member of `Γ` alike are equal. Monotone in `Γ`.
 * `MeasureTheory.IsConvergenceDetermining Γ` for `Γ : Set (E → ℝ)`: pointwise
-  convergence of the integrals along `Γ` implies weak convergence. Monotone in
-  `Γ`, and `IsConvergenceDetermining.isSeparating`.
+  convergence of the integrals along `Γ` implies weak convergence. It carries
+  `[TopologicalSpace E]` and `[OpensMeasurableSpace E]`, which is exactly what
+  the topology on `ProbabilityMeasure E` is an instance under
+  (`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:307`). Monotone in
+  `Γ`, and `IsConvergenceDetermining.isSeparating`, which is the last sentence
+  of the manuscript's `def:separating`: proved by testing with the constant
+  sequence and concluding with `ProbabilityMeasure.t2Space` (`ibid.:440`, which
+  is where `HasOuterApproxClosed` enters).
+
+  The quantifier matters and was got wrong once. `IsSeparating` runs over
+  **probability** measures, as `def:separating` does. Over *finite* measures the
+  implication fails: on a one-point space the only probability measure is
+  $\delta$, so `∅` is convergence determining, while `∅` does not separate
+  $\delta$ from $2\delta$ as finite measures. Mathlib's
+  `ext_of_forall_integral_eq_of_IsFiniteMeasure` proves the stronger,
+  finite-measure statement for `Cb(E,ℝ)`, which gives the probability version a
+  fortiori — so the bridging lemma below loses nothing by the weaker
+  definition.
 * The two bridging lemmas: `isSeparating_setOf_boundedContinuous` from
   `ext_of_forall_integral_eq_of_IsFiniteMeasure`, and
   `isConvergenceDetermining_setOf_boundedContinuous` from
   `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`. These are one line
   each and exist so that no later proof reaches past the predicate.
 * `IsSeparating.of_subalgebra`, from
-  `ext_of_forall_mem_subalgebra_integral_eq_of_polish`.
+  `ext_of_forall_mem_subalgebra_integral_eq_of_polish`
+  (`Mathlib/MeasureTheory/Measure/FiniteMeasureExt.lean:72`). That theorem is
+  stated for a `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` with `[RCLike 𝕜]` and the separation
+  hypothesis `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints`; the roadmap
+  needs it over `ℝ` for a plain `Subalgebra ℝ (E →ᵇ ℝ)` with
+  `(A.map (toContinuousMapₐ ℝ)).SeparatesPoints`, which is the form its own proof
+  passes through (`Mathlib/Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161`),
+  and the step between the two is `Subalgebra.SeparatesPoints.rclike_to_real`
+  together with the triviality of the star operation on `ℝ`.
 * **Missing, and the reason this milestone exists.** The Stone–Weierstrass step
   for the *convergence* notion: on a Polish space, a subalgebra of `E →ᵇ ℝ` that
   separates points and vanishes nowhere is convergence determining. Mathlib
