@@ -234,6 +234,30 @@ Zeitlimit. Zwei Vorkehrungen, beide aus echten Ausfällen gelernt:
    lauffähig sein; ein Zwischenstand, der abbricht, soll lieber weniger
    dastehen lassen als etwas Widersprüchliches.
 
+## Lean übersetzen — das geht, entgegen dem, was frühere Läufe notiert haben
+
+Mehrere Läufe haben Rückstaupunkte mit „wartet auf `.lake`" liegen lassen. Der
+Worktree hat wirklich kein `.lake`, aber das ist keine Blockade: der
+Hauptcheckout hat ein **fertig gebautes Mathlib** (v4.33.1), und
+
+```
+lake env lean <absoluter Pfad zur Datei>
+```
+
+typprüft **jede** Datei dagegen — auch eine im Worktree. Es schreibt nichts,
+weder in den Worktree noch in den Hauptcheckout, und braucht keinen Build. Am
+2026-09-05 geprüft; ein Durchlauf über
+`TauCeti/WeakConvergence/Suggested.lean` meldete echte Fehler (fehlende
+`TopologicalSpace (ProbabilityMeasure E)`-Instanz, fehlender Import für die
+`→ᵇ`-Notation, eine Universenbedingung).
+
+Damit gilt: **wer Lean schreibt, übersetzt es auch.** Eine Deklaration, die
+nicht durch `lake env lean` geht, ist kein Ergebnis, sondern ein Entwurf, und
+gehört als solcher gekennzeichnet. `sorry` ist erlaubt, wo die Aussage die
+Arbeit ist; ein Fehler in der *Aussage* ist es nicht. Der erste Durchlauf einer
+großen Datei dauert einige Minuten, weil Mathlib geladen wird — das ist normal
+und im Zeitbudget vorgesehen.
+
 ## Regeln, die nicht verhandelbar sind
 
 1. **Nichts aus dem Gedächtnis.** Jeder Mathlib-Name wird am Quelltext belegt.
