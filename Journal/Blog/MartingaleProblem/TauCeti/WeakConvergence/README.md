@@ -38,6 +38,16 @@ Most of the elementary theory is present and is **not** to be rebuilt. In
 * `ProbabilityMeasure.tendsto_iff_tendsto_charFun` in `LevyConvergence.lean`:
   Lévy's theorem, so the characteristic functions are a convergence determining
   class on a finite dimensional inner product space.
+* `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` in
+  `LevyConvergence.lean` (`:154`): the Stone–Weierstrass step **for the
+  convergence notion, under tightness**. For `E` Polish, `A` a
+  `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` with `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints`,
+  a family `μ : ι → ProbabilityMeasure E` with
+  `IsTightMeasureSet {(μ n : Measure E) | n}` and integrals over `A` converging
+  to those of `μ₀`, it concludes `Tendsto μ 𝓕 (𝓝 μ₀)`. Its proof is Prokhorov
+  (`isCompact_closure_of_isTightMeasureSet`) for a cluster point,
+  `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
+  to identify it, and ultrafilters to close.
 * `FiniteMeasure.tendsto_map_of_tendsto_of_continuous`,
   `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` and
   `FiniteMeasure.continuous_map`: the continuous mapping theorem for maps that
@@ -117,13 +127,54 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   and the step between the two is `Subalgebra.SeparatesPoints.rclike_to_real`
   together with the triviality of the star operation on `ℝ`.
 * **Missing, and the reason this milestone exists.** The Stone–Weierstrass step
-  for the *convergence* notion: on a Polish space, a subalgebra of `E →ᵇ ℝ` that
-  separates points and vanishes nowhere is convergence determining. Mathlib
-  proves the separating half only. The extra content is that density in the
-  topology of uniform convergence on compact sets suffices, which is where
-  tightness enters — `IsTightMeasureSet` and
-  `MeasureTheory.isTightMeasureSet_of_isCompact_closure` reduce the estimate to
-  a compact set.
+  for the *convergence* notion, in the form `fact:stoneweierstrass` states it:
+  on a Polish space a subalgebra of `E →ᵇ ℝ` that **strongly** separates points
+  is convergence determining, with no hypothesis on the family of measures.
+  Mathlib has this step under a tightness hypothesis and under mere separation
+  of points, as `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` above.
+  What is missing is exactly the passage from strong separation to that
+  hypothesis, and it is one point:
+
+  `MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints` — let `E` be
+  Polish, `A : Subalgebra ℝ (E →ᵇ ℝ)` strongly separate points,
+  `μ : ι → ProbabilityMeasure E` along a `NeBot` filter, and let the integrals
+  over `A` converge to those of a `μ₀`. Then
+  `IsTightMeasureSet {(μ n : Measure E) | n}`. With
+  `StronglySeparatesPoints.separatesPoints` this feeds Mathlib's theorem and
+  yields `isConvergenceDetermining_of_stronglySeparatesPoints`.
+
+  Strong separation is not an artefact of the route. Under separation of points
+  alone the tightness-free statement is **false**, with `E = ℝ` and
+  `A = {f : ℝ →ᵇ ℝ | Tendsto f atTop (𝓝 (f 0))}`: this is an `ℝ`-subalgebra —
+  limits add and multiply, and so do the values at `0` — it contains the
+  constants, and it separates points, because for `x ≠ y` a continuous function
+  supported in a large ball realises any two values, subject only to taking the
+  value `0` at whichever of `x`, `y` is `0`. For `μ n = δ n` and `μ₀ = δ 0`
+  every `f ∈ A` has `∫ f ∂δ n = f n → f 0 = ∫ f ∂δ 0`, while `δ n` does not
+  converge weakly to `δ 0`. The family `{δ n}` is not tight, and `A` does not
+  strongly separate points at `0`, since `max i |h i n - h i 0| → 0` for every
+  finite family from `A`. In particular tightness is not obtainable from the
+  conclusion by way of `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+  (`Measure/Prokhorov.lean:634`): that theorem turns compact closure into
+  tightness, and compact closure is available only once weak convergence is
+  known, which is what is being proved.
+
+  `StronglySeparatesPoints` is a predicate this milestone introduces, Mathlib
+  having `Set.SeparatesPoints` (`Logic/Function/Basic.lean:1225`) and no strong
+  form: for every `x : E` and `δ > 0` there are a finite `s ⊆ Γ` and `ε > 0`
+  with `∀ y, δ ≤ dist y x → ∃ f ∈ s, ε ≤ |f y - f x|`. That is the manuscript's
+  `def:separating`, and `StronglySeparatesPoints.separatesPoints` is the case
+  `δ = dist y x`.
+* **Missing.** `fact:convdet` (Ethier–Kurtz, Proposition 3.4.4), which no other
+  point of this roadmap covers.
+  `MeasureTheory.isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`:
+  on a separable metric space the bounded uniformly continuous real functions of
+  bounded support are convergence determining. Separability alone — the
+  manuscript asks no completeness here, and none is used. And
+  `MeasureTheory.isConvergenceDetermining_setOf_hasCompactSupport`: if `E` is in
+  addition locally compact, the continuous functions of compact support are
+  convergence determining. That these see no total mass costs nothing, the
+  measures being probability measures on both sides.
 * **Missing.** Stability under uniformly bounded pointwise limits: if `Γ` is
   separating and every member of `Γ` is the pointwise limit of a uniformly
   bounded sequence from `Γ'`, then `Γ'` is separating. Dominated convergence;
@@ -165,8 +216,13 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
     finite measures `(P.restrict G).map U` and `(P.restrict G).map V` integrate
     every `f ∈ Γ` alike, by the defining property of `condExp` against the
     bounded `m`-measurable indicator of `G`; so `IsSeparating` gives
-    `P (U ⁻¹' B ∩ G) = P (V ⁻¹' B ∩ G)` for every Borel `B`. No normalization
-    and no case `P G = 0`, because `IsSeparating` is stated for finite measures.
+    `P (U ⁻¹' B ∩ G) = P (V ⁻¹' B ∩ G)` for every Borel `B`. `IsSeparating`
+    quantifies over probability measures, so this step splits: for `P G = 0`
+    both sides are at most `P G` and the equality is immediate; for `P G ≠ 0`
+    apply `IsSeparating` to `((P G)⁻¹ • P.restrict G).map U` and the same for
+    `V`, which are probability measures and whose integrals against `f` are
+    those of the unnormalized measures scaled by `(P G)⁻¹`, so the hypothesis
+    transports and the conclusion transports back.
   * `U ⁻¹' B =ᵐ[P] V ⁻¹' B` for each Borel `B`: take `G = V ⁻¹' B`, which is in
     `m` because `V` is `m`-measurable, and then its complement. Conclude with
     `Filter.EventuallyEq.of_forall_separating_preimage` of

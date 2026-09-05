@@ -1458,10 +1458,15 @@ roadmap **SkorokhodSpace**.
   an algebra separating points and vanishing nowhere, the approximation holds
   for each `(f,g) ∈ A`, and `{X n}` satisfies compact containment, then `{X n}`
   is relatively compact; hence every limit point solves the martingale problem
-  for `A`, and the martingale problem has a solution with càdlàg paths. The
-  algebra is convergence determining by the Stone–Weierstrass criterion of
-  **WeakConvergence**, Milestone 1, and hence dense for uniform convergence on
-  compact sets; the previous item makes each `postcomp f ∘ X n` tight; and
+  for `A`, and the martingale problem has a solution with càdlàg paths. What
+  the algebra is used for here is density for uniform convergence on compact
+  sets, and that is Stone–Weierstrass proper, from separation of points alone:
+  `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`
+  (`Topology/ContinuousMap/StoneWeierstrass.lean:323`), which needs neither the
+  vanishing-nowhere clause nor any measure theory. The algebra is separating by
+  `IsSeparating.of_subalgebra` of **WeakConvergence**, Milestone 1; it is not
+  thereby convergence determining, that notion asking strong separation of
+  points. The previous item makes each `postcomp f ∘ X n` tight; and
   `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` of Milestone 8 there
   lifts that back to `{X n}`.
 * `tendsto_of_isRelativelyCompact_of_unique`: with uniqueness from Milestone 6
