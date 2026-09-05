@@ -138,6 +138,50 @@ ordnungsdichten Kern selbst; einziger benannter Weg: die Schwanzrelationen
 $\widehat w$-Isomorphismus als Werkzeug. Alles in `Task23/PROTOKOLL.md`,
 siebzehnter Lauf.
 
+
+### Aufgabe: Meilenstein 1 von `WeakConvergence` ruht auf einem falschen Befund *(gestellt 2026-09-05)*
+
+**Der Befund.** Seit dem 2026-08-29 steht in `WeakConvergence` Meilenstein 1,
+Mathlib beweise nur die *separierende* Hälfte des Stone--Weierstraß-Schritts und
+die *konvergenzbestimmende* fehle. Das stimmt nicht. Mathlib hat sie, unter
+ihrem mathematischen Namen statt unter unserem:
+
+`MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+(`MeasureTheory/Measure/LevyConvergence.lean:153`) — ist $A$ eine
+`StarSubalgebra` von `E →ᵇ 𝕜`, die Punkte trennt, ist `E` polnisch, ist
+`{μ n}` straff im Sinne von `IsTightMeasureSet`, und konvergieren die Integrale
+über $A$, so gilt `Tendsto μ 𝓕 (𝓝 μ₀)`. Der Beweis ist genau der, den unser
+Meilenstein als zu leisten beschreibt: Prohorov liefert einen Häufungspunkt,
+`ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
+identifiziert ihn, Ultrafilter schließen ab.
+
+**Zu tun.**
+
+1. Meilenstein 1 auf diesen Satz umstellen: was dort als zu bauen steht, ist
+   gebaut. Was bleibt, ist die Fassung **ohne** Straffheitshypothese — und die
+   ist vermutlich geschenkt, denn eine konvergente Folge samt Limes ist kompakt,
+   und `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
+   (`Measure/Prokhorov.lean:634`, unter `[CompleteSpace]` und
+   Zweitabzählbarkeit) macht daraus Straffheit. Prüfe das, und wenn es trägt,
+   formuliere den straffheitsfreien Satz als den eigentlichen Meilensteinpunkt
+   und leite ihn ab.
+2. Prüfe **alle** Punkte, die auf dem falschen Befund aufbauen — in
+   `WeakConvergence` Meilenstein 1 und in jedem Punkt anderer Roadmaps, der
+   „die konvergenzbestimmende Hälfte fehlt" als Begründung führt.
+3. Trage im Inventar bei `fact:stoneweierstrass` und `fact:convdet` den
+   berichtigten Beleg ein, mit Datum und mit dem alten Befund als
+   durchgestrichener Notiz — nicht löschen, damit die Fehlerquelle sichtbar
+   bleibt.
+
+**Und die Lehre, die in die Suchregel gehört.** Das ist der vierte Fehler
+dieser Art. Alle vier hatten dieselbe Ursache: gesucht wurde nach dem *Begriff*,
+den unser Text benutzt, statt nach der *Aussage*. Es gibt in Mathlib kein
+Prädikat „konvergenzbestimmend", also schien der Satz zu fehlen — er steht unter
+`SeparatesPoints` und `IsTightMeasureSet`. Wer künftig „Mathlib hat das nicht"
+schreiben will, formuliert die Aussage vorher **ohne unsere Vokabeln**, in
+Mathlibs eigenen Begriffen, und sucht danach; und wer sie dann noch immer nicht
+findet, sagt im Bericht, mit welchen Formulierungen er gesucht hat.
+
 ## Worum es geht
 
 Die 29 mit `\begin{fact}` ausgezeichneten Aussagen des Manuskripts sind seine
@@ -180,7 +224,7 @@ ist besser als zehn oberflächlich.
    `gh api`/`gh search code` bleibt zulässig, ist aber langsamer als
    `git show upstream/master:` und nur nötig, wenn `upstream` nicht frisch
    geholt ist (`git fetch upstream master`). Suche
-   **nach dem Begriff, nicht nach dem Dateinamen**: Mathlib nennt Dinge oft anders, als das Manuskript sie nennt.
+   **nach der Aussage, nicht nach unserer Vokabel**: Mathlib nennt Dinge oft anders, als das Manuskript sie nennt.
    Am 2026-08-29 kostete genau das drei Fehler — `Locally` statt „local
    martingale", `IsStronglyProgressive` statt `ProgMeasurable`,
    `upcrossingsBefore` statt `upcrossing`. Prüfe für jeden gefundenen Namen,
