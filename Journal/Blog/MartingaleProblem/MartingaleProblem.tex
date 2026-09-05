@@ -5556,7 +5556,7 @@ the arguments stop.
   countable chain, any order type, with \eqref{eq:Fcond} & proved, Theorem~\ref{thm:densechain} \\
   countable, finite height, with \eqref{eq:Fcond} & proved, Theorem~\ref{thm:finiteheight} \\
   countable, without \eqref{eq:Fcond} & \emph{false}; Example~\ref{ex:antichain} \\
-  countable, infinite height, not a chain & open \\
+  countable with atoms lacking a minimum & open \\
   \bottomrule
   \end{tabular}
   \end{center}
@@ -6473,38 +6473,42 @@ shape of $\Psi$ itself.
 
 \begin{proposition}[Where no certificate exists; \eqref{T0} + \eqref{E0} + clock]
   \label{prop:nocertificate}
-  Let $\T = \{0\} \cup A \cup \{t^*\}$ with $A$ a chain, $0 < a < t^*$ for all
-  $a \in A$, $m_0 = m_{t^*} = 0$ and $m_a > 0$ on $A$.  If $A$ has neither a
-  least nor a greatest element, there is no infinite certificate at $t^*$, in
-  any weight class.
+  Let $\T$ be countable with a greatest element $t^*$ and $m_{t^*} = 0$, and let
+  the set $A$ of atoms be nonempty, \emph{downward directed} --- any two atoms
+  have a common lower bound in $A$ --- and \emph{without a minimal element}.
+  Then there is no infinite certificate at $t^*$, in any weight class.
 \end{proposition}
 
 \begin{proof}
-  Condition~\ref{def:certificate}(ii) at $(t^*,a)$ gives
-  $m_a \sum_{x>a} T_{t^*x} = m_{t^*}\sum_{x>t^*} T_{xa} = 0$, so
-  $\theta(\{x>a\}) = 0$ for $\theta = T_{t^*\cdot}$, and the same at $(0,a)$
-  gives $\eta(\{x>a\}) = 0$ for $\eta = T_{0\cdot}$; both families are
-  absolutely summable by \ref{def:certificate}(i).  From
-  $\theta(\{x>a\}) = 0$ for all $a$ one gets $\theta((a,a']) = 0$ for $a < a'$;
-  if $a'$ has an immediate predecessor in $A$ then $\theta(a') = 0$, and
-  otherwise $a_n \uparrow a'$ with $a_n < a'$ gives
-  $\theta(a') = \lim_n \theta((a_n,a']) = 0$ by dominated convergence.  As $A$
-  has no least element every $a'$ is of one of the two kinds, so
-  $\theta \equiv 0$ on $A$; as $A$ has no greatest element
-  $\bigcap_{a \in A}\{x > a\} = \{t^*\}$ and $\theta(t^*) = 0$ as well.  The
-  same words give $\eta \equiv 0$, in particular $T_{0t^*} = 0$, which
-  contradicts \ref{def:certificate}(iii).
+  Write $\theta = T_{t^*\cdot}$; it is absolutely summable by
+  Definition~\ref{def:certificate}(i), since $\sum_x w_x < \infty$.  A row of
+  zero mass is balanced over every up-set: if $m_s = 0$ then
+  Definition~\ref{def:certificate}(ii) at $(s,u)$ gives
+  $m_u \sum_{x > u} T_{sx} = 0$, so $\theta(\{x > a\}) = 0$ for every atom
+  $a$, the mass $m_a$ being positive.  Because $A$ is downward directed the
+  sets $\{x > a\}$, $a \in A$, are downward directed as well, and because $A$
+  has no minimal element their intersection over $a \in A$ is empty; dominated
+  convergence along a decreasing sequence therefore forces $\theta$ to vanish
+  on every atom and at $t^*$.  Symmetry of $T$ now propagates this: $T_{a t^*}
+  = T_{t^* a} = 0$ for every $a$, and \ref{def:certificate}(iii) at $s = t^*$
+  reads $\sum_a T_{t^* a} = 1$, a contradiction.
 \end{proof}
 
 \begin{remark}[Two methods, disjoint blind spots]
   \label{rem:twomethods}
   Theorem~\ref{thm:densechain} and Theorem~\ref{thm:finiteheight} are not
   comparable, and Proposition~\ref{prop:nocertificate} is why.  A chain whose
-  atoms have neither a least nor a greatest element has infinite height and
-  admits no certificate, so only the transform argument reaches it; an index of
-  finite height with infinitely wide levels --- the infinite \textsf{N}, the
-  crown $a_i < b_j \iff i \neq j$, the ladder $a_i < b_j \iff i < j$ --- is not a
-  chain, so only the certificate reaches it.  Neither is a special case of the
+  atoms have no minimal element admits no certificate, so only the transform
+  argument reaches it; an index of finite height with infinitely wide levels ---
+  the infinite \textsf{N}, the crown $a_i < b_j \iff i \neq j$, the ladder
+  $a_i < b_j \iff i < j$ --- is not a chain, so only the certificate reaches it.
+  What separates them is therefore \emph{minimality and not height}: the
+  $\omega$-chain $a_1 < a_2 < \dots$ has infinite height, so
+  Theorem~\ref{thm:finiteheight} does not apply to it, and it nevertheless
+  carries a certificate --- one can write it down in closed form, as a pointwise
+  finite sum, for any pairwise distinct masses.  Theorem~\ref{thm:finiteheight}
+  is thus sufficient and far from necessary, and the boundary of the certificate
+  method is drawn by Proposition~\ref{prop:nocertificate} alone.  Neither is a special case of the
   other, and the exhaustion route that eleven attempts pursued is closed for a
   reason that is now visible: it built certificates on finite sections and hoped
   for uniform bounds, where the certificate can simply be written down on the
