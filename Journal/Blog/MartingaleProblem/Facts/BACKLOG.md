@@ -129,6 +129,34 @@ kein gebautes Mathlib und taugt zu nichts.
    angewandt auf die von `f₁,…,fₙ` erzeugte Unteralgebra über dem kompakten
    Bild in `Fin n → ℝ`.
 
+   *Zwischenstand 2026-09-06, dritter Lauf des Tages: die algebraische Hälfte
+   von (ii) steht und ist übersetzt, die Approximationshälfte nicht.* Drei
+   weitere Deklarationen tragen Beweise und gehen durch `lake env lean`:
+   `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one` und
+   `exists_bound_of_mem_span_insert_one`. Dazu die Aussage von (ii) als
+   `of_continuous_comp_of_isMulSystem`, mit `sorry`.
+
+   **Der Befund, der die Gestalt von (ii) bestimmt.** Die naheliegende
+   Induktion über `Algebra.adjoin` **geht nicht**: ihr `mul`-Fall verlangt, daß
+   `P` unter Produkten abgeschlossen ist, und das ist `P` gerade nicht — es ist
+   linear, enthält die Konstanten und ist unter beschränkten monotonen Limiten
+   abgeschlossen, mehr nicht. Die Multiplikativität muß in `K` bleiben. Das
+   tragende Objekt ist deshalb `Submodule.span ℝ (insert 1 K)`: der Spann ist
+   unter Multiplikation abgeschlossen, weil `K * K ⊆ K` ist und die
+   hinzugefügte `1` eine Einheit ist, und `P` gilt auf ihm allein aus
+   Linearität. Er liegt also zwischen `K` und `P`, und (ii) zieht die
+   Approximanten durch ihn hindurch.
+
+   Der bessere Anker für die Approximationshälfte ist
+   `ContinuousMap.exists_mem_subalgebra_near_continuous_of_separatesPoints`
+   (`:313` in v4.33.1 wie auf master), die **unbebündelte** ε-Fassung: sie nimmt
+   `φ` als Funktion samt `Continuous`-Beweis und erspart das Bündeln zu
+   `C(X, ℝ)`. Was zu tun bleibt: die kompakte Box in `Fin n → ℝ`, die
+   Punktetrennung der von den Koordinaten erzeugten Unteralgebra, und der
+   Rückzug entlang `x ↦ (f₁ x, …, fₙ x)` in den Spann.
+
+   Mitgefunden: `abs_add` heißt in v4.33.1 `abs_add_le`.
+
 3. ~~**Die drei `Suggested.lean` zum Übersetzen bringen.**~~ *(erledigt
    2026-09-05, vierter Lauf des Tages.)* Alle drei gehen jetzt durch
    `lake env lean` gegen Mathlib `v4.33.1`, ohne Fehler und ohne Warnung; die
