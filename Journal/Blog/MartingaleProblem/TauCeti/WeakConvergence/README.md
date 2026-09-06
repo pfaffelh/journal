@@ -206,25 +206,39 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
 * **Missing.** On a Polish space there is a countable convergence determining
   set of bounded uniformly continuous functions, and a countable separating set.
 * **Missing.** The conditional form, `IsSeparating.ae_eq_of_forall_condExp_eq`.
-  Let `E` be standard Borel, `m ≤ mΩ` a sub-σ-algebra, `Γ ⊆ E →ᵇ ℝ` separating,
-  and `U V : Ω → E` measurable with `V` `m`-measurable. If
-  `P[f ∘ U | m] =ᵐ[P] f ∘ V` for every `f ∈ Γ`, then `U =ᵐ[P] V`. This is the
-  last step of the absolute continuity theorem in **MartingaleProblems**, and it
-  is the one place where a separating class is used against a σ-algebra rather
-  than against a second measure. Two steps.
+  Let `E` carry `[TopologicalSpace E]`, `[OpensMeasurableSpace E]` and
+  `[MeasurableSpace.CountablySeparated E]`, let `m ≤ mΩ` be a sub-σ-algebra,
+  `Γ ⊆ E →ᵇ ℝ` separating, and `U V : Ω → E` measurable with `V`
+  `m`-measurable. If `P[f ∘ U | m] =ᵐ[P] f ∘ V` for every `f ∈ Γ`, then
+  `U =ᵐ[P] V`. This is the last step of the absolute continuity theorem in
+  **MartingaleProblems**, and it is the one place where a separating class is
+  used against a σ-algebra rather than against a second measure.
+
+  `[OpensMeasurableSpace E]` is what makes the members of `Γ` integrable, being
+  the hypothesis of `Continuous.stronglyMeasurable` and of
+  `BoundedContinuousFunction.integrable`. The two σ-algebras are declared in the
+  order `{m mΩ : MeasurableSpace Ω}`, ambient last, as `condExp` declares them:
+  both are local instances of `MeasurableSpace Ω` and instance search takes the
+  last, so with `mΩ` first an unannotated `Measurable U` reads `Measurable[m] U`
+  and the theorem states something strictly weaker than intended.
+
+  Two steps.
   * Conditional equality in law: for `G` with `MeasurableSet[m] G`, the two
     finite measures `(P.restrict G).map U` and `(P.restrict G).map V` integrate
-    every `f ∈ Γ` alike, by the defining property of `condExp` against the
-    bounded `m`-measurable indicator of `G`; so `IsSeparating` gives
-    `P (U ⁻¹' B ∩ G) = P (V ⁻¹' B ∩ G)` for every Borel `B`. `IsSeparating`
-    quantifies over probability measures, so this step splits: for `P G = 0`
-    both sides are at most `P G` and the equality is immediate; for `P G ≠ 0`
-    apply `IsSeparating` to `((P G)⁻¹ • P.restrict G).map U` and the same for
-    `V`, which are probability measures and whose integrals against `f` are
-    those of the unnormalized measures scaled by `(P G)⁻¹`, so the hypothesis
-    transports and the conclusion transports back.
+    every `f ∈ Γ` alike, by `setIntegral_condExp` against `G`; so `IsSeparating`
+    gives `P (U ⁻¹' B ∩ G) = P (V ⁻¹' B ∩ G)` for every Borel `B`.
+    `IsSeparating` quantifies over probability measures, so this step splits:
+    for `P G = 0` the restriction itself vanishes by `Measure.restrict_eq_zero`
+    and both pushforwards are `0`; for `P G ≠ 0` apply `IsSeparating` to
+    `((P G)⁻¹ • P.restrict G).map U` and the same for `V`, which are probability
+    measures by `ENNReal.inv_mul_cancel` and whose integrals against `f` are
+    those of the unnormalized measures scaled by `(P G)⁻¹` through
+    `integral_smul_measure`, so the hypothesis transports and the conclusion
+    transports back by `smul_smul` and `ENNReal.mul_inv_cancel`.
   * `U ⁻¹' B =ᵐ[P] V ⁻¹' B` for each Borel `B`: take `G = V ⁻¹' B`, which is in
-    `m` because `V` is `m`-measurable, and then its complement. Conclude with
+    `m` because `V` is `m`-measurable, and then its complement; the second gives
+    `P (U ⁻¹' B \ V ⁻¹' B) = 0` outright and the first gives the other half
+    through `measure_inter_add_sdiff` and `ENNReal.add_right_inj`. Conclude with
     `Filter.EventuallyEq.of_forall_separating_preimage` of
     `Mathlib/Order/Filter/CountableSeparatingOn.lean`, whose hypothesis
     `HasCountableSeparatingOn E MeasurableSet Set.univ` is

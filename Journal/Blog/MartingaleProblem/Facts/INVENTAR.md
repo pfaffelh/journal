@@ -4605,3 +4605,135 @@ $\le P(G)$, für `P G ≠ 0` wendet man `IsSeparating` auf
 `((P G)⁻¹ • P.restrict G).map U` und ebenso für `V` an, und die Skalierung geht
 durch die Integrale in beide Richtungen. Roadmap und `Suggested.lean` sagen das
 jetzt. Wer Rückstau 1 aufnimmt, schreibt diese Fallunterscheidung mit.
+
+### 2026-09-06, erster Lauf des Tages
+
+**Lage zu Beginn.** Keine vorrangigen Aufgaben, keine Zeile der Tabelle mit
+Status `?`. Also Rückstau, von oben: Punkt 1,
+`IsSeparating.ae_eq_of_forall_condExp_eq`. Zwei Läufe hatten ihn unabhängig als
+nächstes Ziel benannt, die Aussage stand seit dem 2026-09-05 getippt und
+typgeprüft da, und was fehlte, war der Beweis.
+
+**Ergebnis: der Beweis steht und ist übersetzt.**
+`MeasureTheory.IsSeparating.ae_eq_of_forall_condExp_eq` trägt in
+`TauCeti/WeakConvergence/Suggested.lean` kein `sorry` mehr; die ganze Datei geht
+durch `lake env lean` gegen Mathlib `v4.33.1`, ohne Fehler und ohne Warnung
+(einzige Ausnahme unverändert und dokumentiert:
+`tendsto_map_of_measure_setOf_continuousAt_eq_one`, absichtlich für
+`upstream/master` geschrieben). Damit tragen sechs Deklarationen von
+`WeakConvergence` Meilenstein 1 Beweise statt `sorry`.
+
+Der Beweis ist der Zweischritt, den die Roadmap seit jeher beschreibt, und er
+ist an einer Stelle kürzer als der Nachtrag vom 2026-09-05: im Fall `P G = 0`
+sind nicht „beide Seiten höchstens `P G`", sondern die Restriktion selbst ist
+`0` (`Measure.restrict_eq_zero`), also sind es auch beide Bildmaße. Der Fall
+`P G ≠ 0` läuft wie beschrieben über `((P G)⁻¹ • P.restrict G).map U`, mit
+`ENNReal.inv_mul_cancel` für die Wahrscheinlichkeitseigenschaft,
+`integral_smul_measure` für den Hinweg und `smul_smul` samt
+`ENNReal.mul_inv_cancel` für den Rückweg. Schritt zwei nimmt `G = V ⁻¹' B` und
+dessen Komplement; das Komplement liefert `P (U ⁻¹' B \ V ⁻¹' B) = 0`
+unmittelbar, die andere Hälfte kommt aus `measure_inter_add_sdiff` und
+`ENNReal.add_right_inj`, und `Filter.EventuallyEq.of_forall_separating_preimage`
+schließt ab.
+
+**Zwei Befunde an der Aussage, beide vom Übersetzen gefunden.**
+
+1. **`[OpensMeasurableSpace E]` fehlte.** Ohne es ist kein Element von `Γ`
+   meßbar, also sind alle vorkommenden Integrale `0` und der Satz unbeweisbar.
+   Es ist die Hypothese von `Continuous.stronglyMeasurable`
+   (`MeasureTheory/Function/StronglyMeasurable/Basic.lean:718`) und von
+   `BoundedContinuousFunction.integrable`
+   (`MeasureTheory/Integral/BoundedContinuousFunction.lean:99`). Nachgetragen,
+   in `Suggested.lean` und in der Roadmap, mit Begründung an Ort und Stelle.
+
+2. **Die Reihenfolge der beiden σ-Algebren war falsch, und der Fehler ist von
+   der Sorte, die sich wiederholt.** Die Aussage stand auf
+   `{mΩ : MeasurableSpace Ω} {m : MeasurableSpace Ω}`. Beide sind lokale
+   Instanzen von `MeasurableSpace Ω`, und die Instanzsuche nimmt die
+   **letzte** — das unannotierte `Measurable U` in der Hypothese las deshalb
+   `Measurable[m] U`, die echt stärkere Hypothese, unter der der Satz viel
+   weniger sagt als gemeint. Die reine Signaturprüfung sah das nicht, und der
+   Durchlauf vom 2026-09-05 auch nicht, weil die Aussage in dieser Lesart
+   tadellos elaboriert; sichtbar wurde es erst, als der Beweis
+   `hV.mono hm le_rfl` schrieb und Lean ein `m ≤ m` verlangte. Mathlib schreibt
+   aus genau diesem Grund durchweg `{m m0 : MeasurableSpace α}`, die umgebende
+   σ-Algebra zuletzt. Berichtigt.
+
+   **Das ist eine allgemeine Fehlerquelle**, und die Lehre steht neben der des
+   sechsten Laufs vom 2026-09-01 („geprüft wurde der Name, nicht die
+   Signatur"): wo zwei Instanzen desselben Typs im Binderblock stehen,
+   entscheidet ihre **Reihenfolge** über die Bedeutung jeder unannotierten
+   Erwähnung, und eine Aussage kann fehlerfrei elaborieren und trotzdem das
+   Falsche sagen. Wer eine Aussage mit zwei σ-Algebren, zwei Topologien oder
+   zwei Maßen schreibt, annotiert entweder jede Erwähnung oder stellt die
+   umgebende Struktur zuletzt. **Die anderen drei `Suggested.lean` sind
+   daraufhin durchgesehen und sauber**: keine Deklaration führt zwei Instanzen
+   derselben Struktur auf demselben Typ. `MartingaleProblems` hat genau ein
+   `{m : MeasurableSpace Ω}` (Zeile 63) und daneben nur `MeasurableSpace` auf
+   `ι`, `E` und `F`; `SkorokhodSpace` hat `MeasurableSpace ι`,
+   `MeasurableSpace E` und die Borelstruktur auf `D(ι, E)`, sämtlich auf
+   verschiedenen Typen; `KolmogorovExtension` hat gar keine `Suggested.lean`.
+
+**Mitgefunden, zwei Veraltungen.** `measure_inter_add_diff` ist seit dem
+2026-06-03 `deprecated` und heißt jetzt `measure_inter_add_sdiff`
+(`Measure/MeasureSpace.lean:118`); `Set.diff_eq` ist `deprecated` zugunsten von
+`Set.sdiff_eq`. Beide sind in v4.33.1 noch da, aber der Linter meldet sie —
+ein Hinweis für Rückstau 5, dessen nächste Runde in etwa einer Woche fällig
+ist: der billigste Weg zu den Veraltungen ist, jede `Suggested.lean` einmal
+durch `lake env lean` zu schicken und die Warnungen zu lesen.
+
+**Ein Unfall, der aufgeräumt gehört.** Ein `lake env lean` ohne den
+vorangehenden `cd ~/Code/lean/journal` — das Arbeitsverzeichnis der Shell bleibt
+zwischen Werkzeugaufrufen stehen — hat `lake` im Worktree gestartet, das
+daraufhin anfing, sich ein eigenes Mathlib zu klonen, und
+`/home/pfaffelh/Code/lean/journal-facts/.lake` mit 671 MB halbfertiger
+Paketklone hinterlassen hat. Der Lauf konnte es nicht wieder löschen: die
+Sandbox verbietet `rm` unterhalb des Worktrees. **Der Ordner ist unbrauchbar
+und gehört von Hand gelöscht.** Die Regel steht jetzt oben in `BACKLOG.md`:
+`lake env lean` immer mit dem `cd` im selben Befehl.
+
+**Zweiter Teil desselben Laufs: `StronglySeparatesPoints.separatesPoints`.** Er
+war als billigster Nachbar in Meilenstein 1 angesetzt und ist es auch gewesen —
+sechs Zeilen: `δ := dist y x`, `dist_pos`, dann gibt `ε ≤ |f y - f x|` bei
+`f x = f y` ein `ε ≤ 0`. Damit tragen **sieben** Deklarationen von Meilenstein 1
+Beweise. Der Linter hat dabei noch einmal die stehende Regel über minimale
+Voraussetzungen durchgesetzt: `[MeasurableSpace E]` kommt im Beweis nicht vor
+und steht jetzt unter `omit`. Nicht angefaßt bleibt der dritte Nachbar,
+`IsSeparating.of_subalgebra`: Mathlibs
+`ext_of_forall_mem_subalgebra_integral_eq_of_polish`
+(`Measure/FiniteMeasureExt.lean:72`) ist über einer `StarSubalgebra 𝕜 (E →ᵇ 𝕜)`
+formuliert, unsere Aussage über einer `Subalgebra ℝ (E →ᵇ ℝ)`, und die
+Übersetzung geht über die triviale Sternstruktur auf reellwertigen Funktionen
+und über `RCLike.restrict_toContinuousMap_eq_toContinuousMapStar_restrict`
+(dieselbe Stelle, die Mathlib in seinem eigenen Beweis benutzt). Das ist eine
+eigene halbe Stunde und kein Nachbar mehr.
+
+**Offen geblieben.** Nichts aus Rückstau 1; der Punkt ist gestrichen.
+
+**Was als Nächstes formalisiert werden soll:
+`MeasureTheory.induction_on_mulSystem`,** der funktionale
+Monotone-Klassen-Satz — Rückstau 2, `WeakConvergence` Meilenstein 5, Task 25 in
+`PLAN.md`. Er ruht auf `MeasurableSpace.comap`, auf monotoner Konvergenz und auf
+`induction_on_inter`, das zugleich die Vorlage ist, und er deckt
+`fact:monotoneclass`, tragend `4` — die höchste Zahl der Tabelle, und der
+einzige Fact mit dieser Zahl, für den Mathlib nur die **Mengenfassung** hat. Er
+ist jetzt dran, weil Rückstau 1 weg ist und weil er die drei bereits
+formulierten Roadmap-Punkte freigibt, die auf ihm warten. Er ist allerdings
+kein Ein-Lauf-Ziel: er braucht zuerst `IsMulSystem` und `generateFromFuns`, die
+in keiner `Suggested.lean` stehen, und erst danach den Induktionssatz selbst.
+Wer ihn aufnimmt, schreibe im ersten Lauf die beiden Definitionen samt
+`isMulSystem_indicator_of_isPiSystem` und
+`generateFromFuns (indicators of 𝒞) = generateFrom 𝒞` und übersetze sie; das
+ist die Brücke zu `induction_on_inter`, und ohne sie hat der Induktionssatz
+keine Aussage, gegen die er bewiesen werden könnte.
+
+Zweiter Kandidat, kleiner und in einem Lauf zu schaffen:
+`IsSeparating.of_subalgebra`, die dritte offene Deklaration von Meilenstein 1.
+Sie ruht ganz auf `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, und die
+einzige Arbeit ist die Übersetzung zwischen `Subalgebra ℝ (E →ᵇ ℝ)` und
+`StarSubalgebra ℝ (E →ᵇ ℝ)` über die triviale Sternstruktur, samt der
+entsprechenden Übersetzung der Trennungshypothese. Sie ist dann dran, wenn
+Meilenstein 1 geschlossen werden soll, bevor Meilenstein 5 aufgemacht wird —
+denn `isTightMeasureSet_of_stronglySeparatesPoints`, der Vorschlag des Laufs
+vom 2026-09-05, ist nach diesem Lauf der einzige Punkt von Meilenstein 1, der
+echte neue Mathematik verlangt und nicht bloß Mathlib-Übersetzung.

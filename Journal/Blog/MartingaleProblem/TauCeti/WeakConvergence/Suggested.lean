@@ -9,6 +9,7 @@ import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
 import Mathlib.MeasureTheory.Measure.FiniteMeasureExt
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
+import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
 import Mathlib.MeasureTheory.MeasurableSpace.CountablyGenerated
 import Mathlib.Topology.MetricSpace.Polish
 
@@ -18,13 +19,15 @@ import Mathlib.Topology.MetricSpace.Polish
 Prototypes only.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1` on
-2026-09-05.  Every declaration elaborates; the remaining `sorry`s are the
-statements' own proofs, which is what this file is for.
+2026-09-06.  Every declaration elaborates, without warnings; the remaining
+`sorry`s are the statements' own proofs, which is what this file is for.
 
-Five of Milestone 1 are no longer `sorry` but proved: `IsSeparating.mono`,
+Seven of Milestone 1 are no longer `sorry` but proved: `IsSeparating.mono`,
 `IsConvergenceDetermining.mono`, `IsConvergenceDetermining.isSeparating`,
-`isSeparating_setOf_boundedContinuous` and
-`isConvergenceDetermining_setOf_boundedContinuous`.
+`isSeparating_setOf_boundedContinuous`,
+`isConvergenceDetermining_setOf_boundedContinuous` and, since 2026-09-06,
+`IsSeparating.ae_eq_of_forall_condExp_eq` and
+`StronglySeparatesPoints.separatesPoints`.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -178,9 +181,16 @@ def StronglySeparatesPoints [PseudoMetricSpace E] (Γ : Set (E → ℝ)) : Prop 
   ∀ (x : E) (δ : ℝ), 0 < δ → ∃ (s : Finset (E → ℝ)) (ε : ℝ), ↑s ⊆ Γ ∧ 0 < ε ∧
     ∀ y : E, δ ≤ dist y x → ∃ f ∈ s, ε ≤ |f y - f x|
 
-/-- Take `δ = dist y x`. -/
+omit [MeasurableSpace E] in
+/-- Take `δ = dist y x`.  No measurable structure enters, hence the `omit`. -/
 theorem StronglySeparatesPoints.separatesPoints [MetricSpace E] {Γ : Set (E → ℝ)}
-    (h : StronglySeparatesPoints Γ) : Γ.SeparatesPoints := sorry
+    (h : StronglySeparatesPoints Γ) : Γ.SeparatesPoints := by
+  intro x y hxy
+  obtain ⟨s, ε, hsΓ, hε, hs⟩ := h x (dist y x) (dist_pos.2 (Ne.symm hxy))
+  obtain ⟨f, hfs, hf⟩ := hs y le_rfl
+  refine ⟨f, hsΓ (Finset.mem_coe.2 hfs), fun hcontra => ?_⟩
+  rw [hcontra, sub_self, abs_zero] at hf
+  exact absurd hf (not_le.2 hε)
 
 /-- Missing from Mathlib, and the whole of what `fact:stoneweierstrass` still
 owes: a strongly separating subalgebra forces tightness of any family whose
@@ -257,16 +267,101 @@ complement, and `Filter.EventuallyEq.of_forall_separating_preimage`
 in both directions at `:326` and `:329`).
 
 The countability is the state space's, not `Γ`'s: no countable subfamily of `Γ`
-is chosen, and none exists in general. -/
+is chosen, and none exists in general.
+
+`[OpensMeasurableSpace E]` is what makes the members of `Γ` integrable: it is the
+hypothesis of `Continuous.stronglyMeasurable`
+(`MeasureTheory/Function/StronglyMeasurable/Basic.lean:718`, the second-countable
+side of `SecondCountableTopologyEither` being `ℝ`) and of
+`BoundedContinuousFunction.integrable`
+(`MeasureTheory/Integral/BoundedContinuousFunction.lean:99`).  Without it the
+statement is unprovable, `∫ f ∂μ` being `0` for every non-measurable `f`.
+
+The order of the two σ-algebras is not cosmetic.  Both `m` and `mΩ` are local
+instances of `MeasurableSpace Ω`, and instance search takes the **last** one, so
+with `mΩ` declared first the unannotated `Measurable U` reads `Measurable[m] U`
+-- the wrong, strictly stronger hypothesis, and one that makes the theorem say
+much less than it should.  Mathlib's own convention (`{m m0 : MeasurableSpace α}`
+throughout `ConditionalExpectation`) puts the ambient σ-algebra last for exactly
+this reason; that is what is done here. -/
 theorem IsSeparating.ae_eq_of_forall_condExp_eq [TopologicalSpace E]
-    {Ω : Type*} {mΩ : MeasurableSpace Ω} {m : MeasurableSpace Ω} (hm : m ≤ mΩ)
+    [OpensMeasurableSpace E]
+    {Ω : Type*} {m mΩ : MeasurableSpace Ω} (hm : m ≤ mΩ)
     (P : @Measure Ω mΩ) [IsFiniteMeasure P]
     [MeasurableSpace.CountablySeparated E]
     {Γ : Set (E → ℝ)} (hΓ : IsSeparating Γ)
     (hΓb : ∀ f ∈ Γ, ∃ g : E →ᵇ ℝ, ⇑g = f)
     {U V : Ω → E} (hU : Measurable U) (hV : Measurable[m] V)
     (h : ∀ f ∈ Γ, P[fun ω => f (U ω) | m] =ᵐ[P] fun ω => f (V ω)) :
-    U =ᵐ[P] V := sorry
+    U =ᵐ[P] V := by
+  have hV' : Measurable V := hV.mono hm le_rfl
+  -- Step one: on every `m`-measurable set the two conditional laws agree.
+  have key : ∀ G : Set Ω, MeasurableSet[m] G →
+      (P.restrict G).map U = (P.restrict G).map V := by
+    intro G hG
+    have hmassU : ((P.restrict G).map U) univ = P G := by
+      rw [Measure.map_apply hU MeasurableSet.univ, preimage_univ,
+        Measure.restrict_apply_univ]
+    have hmassV : ((P.restrict G).map V) univ = P G := by
+      rw [Measure.map_apply hV' MeasurableSet.univ, preimage_univ,
+        Measure.restrict_apply_univ]
+    have hint : ∀ f ∈ Γ,
+        ∫ x, f x ∂((P.restrict G).map U) = ∫ x, f x ∂((P.restrict G).map V) := by
+      intro f hf
+      obtain ⟨g, rfl⟩ := hΓb f hf
+      have hUint : Integrable (fun ω => g (U ω)) P := by
+        have : IsFiniteMeasure (P.map U) := Measure.isFiniteMeasure_map P U
+        exact (g.integrable (P.map U)).comp_measurable hU
+      rw [integral_map hU.aemeasurable
+          g.continuous.stronglyMeasurable.aestronglyMeasurable,
+        integral_map hV'.aemeasurable
+          g.continuous.stronglyMeasurable.aestronglyMeasurable]
+      calc ∫ ω in G, g (U ω) ∂P
+          = ∫ ω in G, (P[fun ω => g (U ω) | m]) ω ∂P :=
+            (setIntegral_condExp hm hUint hG).symm
+        _ = ∫ ω in G, g (V ω) ∂P :=
+            integral_congr_ae (ae_restrict_of_ae (h _ hf))
+    rcases eq_or_ne (P G) 0 with hPG | hPG
+    · have h0 : P.restrict G = 0 := Measure.restrict_eq_zero.2 hPG
+      rw [h0]
+      simp
+    · have hPGtop : P G ≠ ⊤ := measure_ne_top P G
+      have : IsProbabilityMeasure ((P G)⁻¹ • ((P.restrict G).map U)) := by
+        refine ⟨?_⟩
+        rw [Measure.smul_apply, smul_eq_mul, hmassU,
+          ENNReal.inv_mul_cancel hPG hPGtop]
+      have : IsProbabilityMeasure ((P G)⁻¹ • ((P.restrict G).map V)) := by
+        refine ⟨?_⟩
+        rw [Measure.smul_apply, smul_eq_mul, hmassV,
+          ENNReal.inv_mul_cancel hPG hPGtop]
+      have heq : (P G)⁻¹ • ((P.restrict G).map U) = (P G)⁻¹ • ((P.restrict G).map V) :=
+        hΓ _ _ fun f hf => by
+          rw [integral_smul_measure, integral_smul_measure, hint f hf]
+      have hscale := congrArg (fun μ : Measure E => (P G) • μ) heq
+      simpa only [smul_smul, ENNReal.mul_inv_cancel hPG hPGtop, one_smul] using hscale
+  -- Step two: the preimages of Borel sets agree almost everywhere.
+  refine EventuallyEq.of_forall_separating_preimage (l := ae P) MeasurableSet ?_
+  intro B hB
+  have hUB : MeasurableSet (U ⁻¹' B) := hU hB
+  have hVB : MeasurableSet[m] (V ⁻¹' B) := hV hB
+  have e1 : P (U ⁻¹' B ∩ V ⁻¹' B) = P (V ⁻¹' B) := by
+    have h1 : ((P.restrict (V ⁻¹' B)).map U) B = ((P.restrict (V ⁻¹' B)).map V) B := by
+      rw [key _ hVB]
+    rwa [Measure.map_apply hU hB, Measure.map_apply hV' hB,
+      Measure.restrict_apply hUB, Measure.restrict_apply (hV' hB),
+      Set.inter_self] at h1
+  have e2 : P (U ⁻¹' B \ V ⁻¹' B) = 0 := by
+    have h1 : ((P.restrict (V ⁻¹' B)ᶜ).map U) B = ((P.restrict (V ⁻¹' B)ᶜ).map V) B := by
+      rw [key _ hVB.compl]
+    rw [Measure.map_apply hU hB, Measure.map_apply hV' hB,
+      Measure.restrict_apply hUB, Measure.restrict_apply (hV' hB),
+      Set.inter_compl_self, measure_empty] at h1
+    rwa [Set.sdiff_eq]
+  rw [MeasureTheory.ae_eq_set]
+  refine ⟨e2, ?_⟩
+  have hadd := measure_inter_add_sdiff (μ := P) (V ⁻¹' B) hUB
+  rw [Set.inter_comm, e1] at hadd
+  exact (ENNReal.add_right_inj (measure_ne_top P _)).1 (by rw [add_zero]; exact hadd)
 
 /-! ## Milestone 2: the continuous mapping theorem for almost everywhere continuous maps
 
