@@ -127,6 +127,30 @@ kein gebautes Mathlib und taugt zu nichts.
    `sorry`, und jedes `sorry` steht in einem Beweis; **keine Aussage der Datei
    ist mehr `True`**.
 
+   *Fortgesetzt am 2026-09-06, fünfter Lauf des Tages: die ersten vier Beweise,
+   und zwei Aussagen, die sich nicht retten ließen.* In `MartingaleProblems`
+   trägt `IsQuasiLeftContinuous.ae_eq_leftLim` einen Beweis — nachdem die
+   Aussage berichtigt war: unter `¬ IsMin t` ist sie **falsch** (Zeuge
+   $\iota=\N$, $t=1$), und der Schritt von einer Folge zum Filter `𝓝[<] t`
+   braucht die Existenz des Linkslimes, weil das `∀ᵐ ω` innerhalb des
+   Folgenquantors steht. In `SkorokhodSpace` sind es
+   `IsCadlag.eq_of_eqOn_dense` — ebenfalls erst nach Berichtigung: unter bloßer
+   Dichtheit falsch, und \eqref{T2b} deckt das größte Element nicht ab —,
+   `isCompact_exhaustion` und `monotoneOn_dist_basepoint`. Beide Dateien
+   `rc=0`, ohne Fehler und ohne Linterwarnung; 11 bzw. 20 `sorry`.
+
+   **Was der Punkt für `SkorokhodSpace` jetzt meint, und es ist der Befund des
+   vierten Laufs eine Stufe tiefer:** die Datei hat keine `True`-Aussage, aber
+   fünf **Definitionen mit `sorry` im Rumpf** — `TimeChange.lipConstOn`,
+   `TimeChange.normOn`, `SkorokhodSpace.modulus`, `Group (TimeChange ι)` und
+   `MetricSpace D(ι, E)`. Elf der zwanzig `sorry` waren Sätze über sie, und die
+   redeten solange über `sorryAx`. **Drei davon sind im selben Lauf erledigt:**
+   die `Group`-Instanz ist konstruiert, `lipConstOn` und `normOn` sind
+   definiert, `normOn_inv` ist bewiesen; 16 `sorry` statt 20. Der nächste
+   Schritt steht im Inventar, fünfter Lauf des 2026-09-06, als benanntes Ziel:
+   `normOn_one` (Fallunterscheidung nach `(exhaustion t₀ m).Subsingleton`) und
+   `normOn_mul_le`.
+
    Die Frage, ob Hypothese (a) von `mpSolution_of_tendsto` gemeinsame oder
    einzelne Verteilungskonvergenz meint, ist am Manuskript entschieden —
    `rem:absconvtopfree` sagt es ausdrücklich: einzeln, „and nothing else".

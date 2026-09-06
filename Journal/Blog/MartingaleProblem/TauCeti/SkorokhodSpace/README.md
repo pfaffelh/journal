@@ -106,9 +106,13 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   types `ℝ` and `ℤ` carry all five instances already.
 * `dist_eq_sub_of_le` and `monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
   `dist s t = dist t₀ t - dist t₀ s`, and `t ↦ dist t₀ t` is monotone on
-  `Set.Ici t₀`. This is the step from which the embedding above follows.
+  `Set.Ici t₀`. This is the step from which the embedding above follows. Both
+  are proved (2026-09-06), and both need `AdditiveDist` alone: neither the order
+  topology nor properness enters.
 * `exhaustion`: fixing a base point `t₀`, the sets `B m = closedBall t₀ m` are
-  compact, increasing, cover the index, and each is a linear order with a least
+  compact — `isCompact_exhaustion`, proved on 2026-09-06 from
+  `isCompact_closedBall`, which is `ProperSpace` alone —, increasing, cover the
+  index, and each is a linear order with a least
   and a greatest element. Define the clamp
   `clamp m t = min (max t (B m).min) (B m).max` and prove it is monotone,
   continuous, idempotent, and the identity on `B m`.
@@ -211,17 +215,36 @@ Under (B), with `E` a pseudometric space:
   what makes the step functions definable and the countable dense `D` is what
   indexes them; this is (B) exactly, with σ-compactness for the exhausting
   sequence of steps.
-* A càdlàg map is determined by its restriction to a dense set: if `f` and `g`
-  are càdlàg and agree on a dense `D ⊆ ι`, they are equal. This is right
-  continuity together with the clause of (B) that every non-maximal point is
-  approximable from the right, and it is the sharpest use of that clause
-  anywhere in this roadmap. This is the statement Milestone 6 turns into a
-  measurable embedding.
+* `IsCadlag.eq_of_eqOn_dense`: a càdlàg map is determined by its restriction to
+  a set that is dense **from the right**. The hypothesis is, for every `t ∈ ι`,
+  that either `t ∈ D` or `(𝓝[D ∩ Set.Ioi t] t).NeBot`, and it implies `Dense D`.
+  This is right continuity together with the clause of (B) that every
+  non-maximal point is approximable from the right, and it is the sharpest use
+  of that clause anywhere in this roadmap. This is the statement Milestone 6
+  turns into a measurable embedding. Proved, and it needs neither the order
+  topology nor `AdditiveDist` nor properness.
+
+  Bare density is not enough, and (B) is not enough either; both gaps were found
+  by writing the proof, on 2026-09-06. Under bare density the point `1` of
+  `ι = [0,1] ∪ {2}` — allowed by Milestone 1, which pins `ι` down to a closed
+  subset of `ℝ` and not to an interval — is right isolated without being
+  isolated, so `D = ([0,1) ∩ ℚ) ∪ {2}` is dense while `f = 0` and
+  `g = ` the indicator of `{1}` are both càdlàg, agree on `D` and differ at `1`.
+  Under (B) that example is excluded, but a **maximal** point is not: on
+  `ι = [0,1]` with `D = [0,1) ∩ ℚ`, right continuity at `1` is vacuous because
+  `𝓝[>] 1 = ⊥`, and the same two functions separate. A maximal element must lie
+  in `D`, which is what the disjunction above says and what Billingsley requires
+  of the dense set in `D[0,1]`.
 
 ## Milestone 3: time changes
 
 * `TimeChange ι`, the type of bi-Lipschitz order isomorphisms `λ : ι ≃o ι`.
-  Give it a group structure.
+  Give it a group structure. Done on 2026-09-06: multiplication is composition
+  of functions, `l * l' = l ∘ l'`, the unit is `OrderIso.refl` and the inverse
+  is `OrderIso.symm`; the two Lipschitz fields close under it through
+  `LipschitzWith.comp` and `OrderIso.symm_trans`, and the axioms are
+  `TimeChange.ext rfl` — the extensionality lemma holds because the other two
+  fields of the structure are propositions.
 * `TimeChange.lipConst λ = sInf {K : ℝ≥0 | LipschitzWith K λ}`, the least
   Lipschitz constant, and `TimeChange.norm λ = log (max (lipConst λ) (lipConst λ⁻¹))`,
   with `TimeChange.lipConstOn m λ` and `TimeChange.normOn m λ` the same computed
@@ -238,7 +261,13 @@ Under (B), with `E` a pseudometric space:
 * `TimeChange.norm_one`, `TimeChange.norm_inv` (`norm λ⁻¹ = norm λ`) and
   `TimeChange.norm_mul_le` (`norm (λ * μ) ≤ norm λ + norm μ`): the norm is a
   length function. Both facts are the corresponding statements for Lipschitz
-  constants.
+  constants. `normOn_inv` is proved (2026-09-06), from `inv_inv` and `max_comm`
+  alone, once `normOn` is defined as above. `normOn_one` holds for two reasons
+  and needs the case distinction: if `B m` has two distinct points the set of
+  admissible constants of the identity is `Set.Ici 1`, so `lipConstOn = 1` and
+  `log 1 = 0`; if `B m` is a single point — `m = 0` in a discrete index — every
+  constant is admissible, `lipConstOn = 0`, and it is the junk value
+  `Real.log 0 = 0` that carries the statement.
 * `TimeChange.dist_le_of_norm_le`: on `B m`, `norm λ ≤ γ` implies
   `dist (λ t) t ≤ (exp γ - 1) * (2 * m)`, so a time change of small norm moves
   points of `B m` little. This is the estimate that makes the metric of

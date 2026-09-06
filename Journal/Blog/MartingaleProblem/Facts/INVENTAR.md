@@ -84,6 +84,50 @@ ist kein Befund, sondern ein `?`.
 
 ## Offene Auffälligkeiten
 
+* **`thm:fdd` braucht, daß ein größtes Element in $D$ liegt; gefunden am
+  2026-09-06, fünfter Lauf, beim Beweisen von `IsCadlag.eq_of_eqOn_dense`.**
+  Der Satz („Borel equals cylinder", §3.3) verlangt von $D\subset\T$ nur
+  „countable and dense" und behauptet, $\pi_D:\DT\to E^D$ sei eine meßbare
+  Einbettung. Unter \eqref{T3p} ist er so falsch, und zwar aus zwei Gründen,
+  beide an einem Punkt, an dem es keinen Rechtslimes gibt.
+  * Ein **größtes** Element muß in $D$ liegen. Auf $\T=[0,1]$ mit
+    $D=[0,1)\cap\Q$ sind $f\equiv0$ und $g=\mathbb 1_{\{1\}}$ beide càdlàg —
+    die Rechtsstetigkeit in $1$ ist leer, weil $\mathcal N_{>1}=\bot$ ist —,
+    stimmen auf $D$ überein und sind verschieden; $\pi_D$ ist also nicht
+    injektiv. \eqref{T2b} sieht das ausdrücklich vor („a maximal element is
+    allowed … and is the one point at which a right limit is not available"),
+    zieht daraus aber nicht die Folgerung für $D$. Billingsley verlangt an
+    dieser Stelle für $D([0,1])$, daß die dichte Menge die $1$ enthält.
+  * \eqref{T3p} verlangt \eqref{T2b} **nicht**, und ohne dessen Klausel
+    scheitert es schon an nicht maximalen Punkten: $\T=[0,1]\cup\{2\}$ ist ein
+    abgeschlossenes $\R$-Teilstück und erfüllt \eqref{T3p}, aber $1$ ist
+    rechtsisoliert, ohne isoliert zu sein; mit $D=([0,1)\cap\Q)\cup\{2\}$
+    trennen dieselben zwei Funktionen. Für $\T=[0,\infty)$ und $\T=[0,T]$ —
+    \eqref{T3} — tritt nur der erste Fall auf.
+
+  **Das Manuskript kennt die Klausel und schreibt sie an einer anderen Stelle
+  auch hin:** `thm:absconv` verlangt für den Fall $D\subsetneq\T$ ausdrücklich,
+  „$D$ contains the greatest element of $\T$ if there is one" (Zeile 8401). Es
+  ist also keine Lücke der Theorie, sondern eine Hypothese, die in `thm:fdd`
+  fehlt. Das Manuskript wird von diesen Läufen nicht geändert; die Roadmap
+  **SkorokhodSpace** trägt die Bedingung seit heute in Meilenstein 2, als
+  Disjunktion „$t\in D$ oder $t$ ist Häufungspunkt von $D$ von rechts", und
+  `IsCadlag.eq_of_eqOn_dense` ist unter ihr bewiesen.
+
+* **„\eqref{T3p} implies \eqref{T2b}" stimmt wörtlich nicht; gefunden am
+  2026-09-06, fünfter Lauf, neben der vorigen Auffälligkeit.** Der Absatz nach
+  `thm:DEpolish` (Zeile 2092) nennt die abzählbare dichte Teilmenge „available by
+  \eqref{T2b}, which \eqref{T3p} implies". \eqref{T2b} verlangt aber
+  $D\cap(t,u)\neq\emptyset$ für **alle** $t<u$ mit $t$ nicht maximal, und in
+  einer diskreten Ordnung ist $(t,u)$ leer: $\Z$ erfüllt \eqref{T3p} — die
+  Metrik ist additiv, induziert die (diskrete) Ordnungstopologie, und
+  abgeschlossene Kugeln sind endlich —, verletzt \eqref{T2b} aber an jedem
+  Punkt. Die Roadmap **SkorokhodSpace** führt `AddSubgroup.zmultiples h` in
+  Meilenstein 1 genau als Instanz dieses Bündels. Folgenlos ist es an der
+  zitierten Stelle, weil dort nur die Separabilität gebraucht wird und die aus
+  \eqref{T3p} direkt folgt (abgeschlossene Teilmenge von $\R$); zu prüfen wäre
+  jede andere Stelle, die \eqref{T2b} aus \eqref{T3p} zieht.
+
 * **`IsConvergenceDetermining.isSeparating` ist falsch; am 2026-09-05, dritter
   Lauf, berichtigt.** `WeakConvergence` Meilenstein 1 führte den Punkt seit
   Anbeginn, und `Suggested.lean` hatte ihn als Satz. Er gilt nicht: `IsSeparating`
@@ -5310,3 +5354,132 @@ Bericht: ob `¬ IsMin t` die Existenz der Folge `s n ↑ t` schon gibt oder ob d
 Aussage `(𝓝[<] t).NeBot` als Hypothese tragen muß — `leftLim_eq_of_tendsto`
 verlangt es, und auf einer Ordnung mit Sprüngen ist es echt stärker als
 `¬ IsMin t`.
+
+### 2026-09-06, fünfter Lauf des Tages — Rückstau 1: die ersten Beweise in `MartingaleProblems` und `SkorokhodSpace`, und zwei falsche Aussagen
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also der Rückstau von oben.
+Sein Punkt 1 und das benannte Ziel des vierten Laufs:
+`IsQuasiLeftContinuous.ae_eq_leftLim` **zu beweisen**, nicht nur zu formulieren.
+Erledigt, aber erst nachdem die Aussage berichtigt war — und dabei fiel dieselbe
+Sorte Fehler noch einmal an, in `SkorokhodSpace`. Vier Deklarationen tragen
+jetzt Beweise, die durch `lake env lean` gegen `v4.33.1` gehen; beide Dateien
+melden `rc=0` ohne Fehler und ohne Linterwarnung.
+
+**1. `IsQuasiLeftContinuous.ae_eq_leftLim` unter `¬ IsMin t` ist falsch.** Die
+Frage, die der vierte Lauf für diesen Lauf notiert hatte („gibt `¬ IsMin t` die
+Folge `s n ↑ t` schon her?"), ist damit beantwortet, und schärfer als erwartet:
+`¬ IsMin t` gibt sie nicht, und die Aussage ist unter ihm nicht bloß
+unbeweisbar, sondern **widerlegbar**. Auf $\iota=\N$ und $t=1$ ist jede
+monotone, durch $1$ beschränkte Folge von Stoppzeiten schließlich konstant, also
+gilt `IsQuasiLeftContinuous` leer; zugleich ist `𝓝[<] (1 : ℕ) = pure 0`, also
+`Function.leftLim (X · ω) 1 = X 0 ω`, und für einen einpunktigen Raum mit
+`X 0 ω ≠ X 1 ω` ist das nicht `X 1 ω`.
+
+**Und eine zweite Hypothese fehlte, die man am Text nicht sieht.** Der
+Allquantor über Folgen steht in `IsQuasiLeftContinuous` **außerhalb** des
+`∀ᵐ ω`, die Ausnahmemenge hängt also von der Folge ab, und überabzählbar viele
+Folgen lassen sich nicht vereinigen. Aus der Quasi-Linksstetigkeit kommt daher
+nur die Konvergenz entlang **einer** Folge, während `Function.leftLim` der Limes
+entlang des Filters `𝓝[<] t` ist. Der Schritt von der Folge zum Filter braucht
+die Existenz des Linkslimes als Hypothese — die zweite Hälfte von
+`IsCadlagPath`, die \EK{} an dieser Stelle ohnehin voraussetzt. Die Aussage
+trägt jetzt eine monotone Folge `s n < t` mit `s n → t`, die Existenz des
+Linkslimes und `[T2Space E]`; bewiesen über `tendsto_atTop_ciSup` und
+`WithTop.coe_iSup` für `⨆ n, (s n : WithTop ι) = t`, `isStoppingTime_const`,
+`stoppedValue_const` und `leftLim_eq_of_tendsto`. `[MeasurableSpace E]` wird
+nicht gebraucht und ist `omit`.
+
+**2. `IsCadlag.eq_of_eqOn_dense` unter bloßer Dichtheit ist falsch, und
+\eqref{T2b} rettet es nicht ganz.** Beim Beweisen aufgefallen, mit zwei Zeugen:
+
+* $\iota=[0,1]\cup\{2\}$ — nach Meilenstein 1 zulässig, denn der Index ist eine
+  **abgeschlossene Teilmenge von** $\R$ und kein Intervall — hat in $1$ einen
+  rechtsisolierten, nicht isolierten Punkt; mit $D=([0,1)\cap\Q)\cup\{2\}$ sind
+  $f\equiv0$ und $g=\mathbb 1_{\{1\}}$ beide càdlàg, stimmen auf dem dichten $D$
+  überein und sind verschieden.
+* Unter \eqref{T2b} fällt dieser Zeuge weg, ein **größtes** Element aber nicht:
+  auf $\iota=[0,1]$ mit $D=[0,1)\cap\Q$ trennen dieselben zwei Funktionen, weil
+  `𝓝[>] 1 = ⊥` ist und die Rechtsstetigkeit in $1$ nichts sagt.
+
+Die Hypothese, die der Beweis wirklich benutzt, ist die Rechtsdichtheit:
+`∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`. Sie impliziert `Dense D` und
+verlangt für ein größtes Element gerade `t ∈ D` — genau das, was Billingsley für
+$D([0,1])$ verlangt und was das Manuskript in `thm:absconv` selbst hinschreibt,
+in `thm:fdd` aber nicht. Zwei Manuskript-Auffälligkeiten dazu stehen oben
+(`thm:fdd`; und „\eqref{T3p} implies \eqref{T2b}", was für diskrete Indizes
+wörtlich falsch ist, Zeuge $\Z$). Der Beweis braucht weder die
+Ordnungstopologie noch `AdditiveDist` noch Properness — `omit` an drei
+Instanzen, wie die stehende Regel es verlangt.
+
+**3. Zwei Beweise, die dabei abfielen.** `isCompact_exhaustion` ist
+`isCompact_closedBall` (`ProperSpace` allein; `LinearOrder`, `OrderTopology`
+und `AdditiveDist` sind `omit`), und `monotoneOn_dist_basepoint` sind drei
+Zeilen über `dist_eq_sub_of_le` und `dist_nonneg` (`AdditiveDist` allein).
+Beide Roadmap-Stellen tragen den Vermerk samt der minimalen Voraussetzung.
+
+**4. Und die unterste Schicht von Meilenstein 3 dazu.** Nach den drei Beweisen
+war noch Zeit, und der Befund unter „Was als Nächstes zu tun ist" (unten) war
+schon geschrieben; also ist er zur Hälfte gleich mit erledigt.
+
+* **`Group (TimeChange ι)` ist konstruiert**, nicht mehr `sorry`. Multiplikation
+  ist Komposition (`l * l' = l ∘ l'`, also `OrderIso.trans` in der anderen
+  Reihenfolge), Eins ist `OrderIso.refl`, Inverses ist `OrderIso.symm`, und die
+  Bi-Lipschitz-Felder kommen aus `TimeChange.exists_lipschitzWith_trans` (neu,
+  über `LipschitzWith.comp` und `OrderIso.coe_trans`) und `OrderIso.symm_trans`.
+  Die vier Gruppenaxiome sind `TimeChange.ext rfl` bis auf
+  `OrderIso.self_trans_symm`; `TimeChange.ext` (neu, `@[ext]`) gilt, weil die
+  beiden anderen Felder Propositionen sind.
+* **`TimeChange.lipConstOn` und `TimeChange.normOn` sind definiert:**
+  `lipConstOn t₀ m l = sInf {K : ℝ≥0 | LipschitzOnWith K l.toOrderIso
+  (exhaustion t₀ m)}` und `normOn t₀ m l = Real.log (max (lipConstOn t₀ m l)
+  (lipConstOn t₀ m l⁻¹))`. Damit sind `normOn_one`, `normOn_mul_le` und
+  `dist_le_of_normOn_le` überhaupt erst Aussagen über etwas.
+* **`TimeChange.normOn_inv` ist bewiesen**, in einer Zeile: `inv_inv` und
+  `max_comm`.
+* Die Frage zu `normOn_one`, die der Vorschlag unten stellt, ist am Quelltext
+  entschieden und steht als Doc-Kommentar an der Aussage: der Satz **gilt** in
+  beiden Fällen, aber aus zwei verschiedenen Gründen. Hat `exhaustion t₀ m`
+  zwei verschiedene Punkte, so ist die Menge der zulässigen Konstanten der
+  Identität `Set.Ici 1`, also `lipConstOn = 1` und `Real.log 1 = 0`; ist sie
+  einpunktig — `m = 0` in einem diskreten Index —, so ist jede Konstante
+  zulässig, also `lipConstOn = 0`, und es trägt der **Müllwert**
+  `Real.log 0 = 0`. Der Beweis ist damit eine Fallunterscheidung und kein
+  Einzeiler; er steht noch aus.
+* Mitgefunden: die Datei importierte `Mathlib.Analysis.SpecialFunctions.Exp`,
+  aber nicht `…Log.Basic`, und `Real.log` gab „Unknown constant". Dasselbe war
+  am 2026-09-05 mit `Real.exp` passiert.
+
+**Stand der beiden Dateien.** `MartingaleProblems/Suggested.lean`: 37
+Deklarationen, 11 mit `sorry`, jede Aussage eine Aussage.
+`SkorokhodSpace/Suggested.lean`: 16 `sorry` statt 23. Beide `rc=0`, ohne Fehler
+und ohne Linterwarnung.
+
+**Was in `SkorokhodSpace` als Nächstes zu tun ist, und es ist derselbe Befund
+wie der vom vierten Lauf, nur eine Stufe tiefer.** Die Datei hat keine
+`True`-Aussage, aber **fünf Deklarationen mit `sorry` im Rumpf einer
+Definition**: `TimeChange.lipConstOn`, `TimeChange.normOn`,
+`SkorokhodSpace.modulus`, die `Group (TimeChange ι)`-Instanz und die
+`MetricSpace D(ι, E)`-Instanz. Für die Sätze darüber — `normOn_one`,
+`normOn_inv`, `normOn_mul_le`, `dist_le_of_normOn_le`, `tendsto_modulus`,
+`isCompact_closure_iff`, und die drei Instanzen `CompleteSpace`,
+`SeparableSpace`, `PolishSpace` auf `D(ι, E)` — ist das `rc=0` genauso wertlos
+wie für ein `theorem restart : True`: sie reden über `sorryAx`. Elf der
+zwanzig verbleibenden `sorry` der Datei hängen daran.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`TimeChange.normOn_one` und `TimeChange.normOn_mul_le` **zu beweisen**. Sie sind
+jetzt dran, weil `normOn` seit heute definiert ist und beide damit über etwas
+reden; weil sie zusammen die Längenfunktionseigenschaft ausmachen, aus der die
+Dreiecksungleichung der Metrik von Meilenstein 4 kommt — der einzigen der fünf
+`sorry`-Definitionen, die dann noch unterhalb von `D(ι, E)` steht —; und weil
+für beide der Weg feststeht. `normOn_one` ist die im Punkt 4 beschriebene
+Fallunterscheidung nach `(exhaustion t₀ m).Subsingleton`, in beiden Zweigen über
+`csInf_le` und `le_csInf`, mit `LipschitzWith.id.lipschitzOnWith` als oberer und
+`edist x y ≤ K * edist x y` bei $x\neq y$ als unterer Schranke. `normOn_mul_le`
+ist `LipschitzOnWith.comp` plus `Real.log_mul`, und zu klären ist dabei genau
+eine Sache, die in den Bericht gehört: `comp` verlangt, daß `l'` die Ausschöpfung
+in sich abbildet, was eine Zeitänderung im Allgemeinen **nicht** tut — ob der
+Meilenstein deshalb `normOn` auf `exhaustion t₀ (m+1)` für den inneren Faktor
+messen muß, wie Billingsley es tut, oder ob die Ordnungserhaltung samt
+`dist_le_of_normOn_le` genügt. Beides stützt `fact:Dcountable` (tragend `4`)
+über die Meilensteine 3 und 4, deren ganze Metrik daran hängt.

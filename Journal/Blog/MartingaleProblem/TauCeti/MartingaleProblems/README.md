@@ -1325,12 +1325,27 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   Ethier–Kurtz, Theorem 4.3.12. Mathlib has no notion of this kind: the strings
   `quasi-left` and `QuasiLeftContinuous` occur nowhere in the library.
 * `IsQuasiLeftContinuous.ae_eq_leftLim`: reading the definition at the constant
-  stopping times `τ n = s n` for `s n ↑ t` gives
-  `∀ᵐ ω ∂P, Function.leftLim (X · ω) t = X t ω` for every `t` that is not
-  minimal. This is the sharpening of Ethier–Kurtz, Lemma 3.7.7, which says only
-  that the set of `t` failing it is countable; that lemma is
+  stopping times `τ n = s n` for a monotone `s` with `s n < t` and
+  `s n → t` gives `∀ᵐ ω ∂P, Function.leftLim (X · ω) t = X t ω`, for a process
+  whose paths have left limits almost surely and a Hausdorff `E`. This is the
+  sharpening of Ethier–Kurtz, Lemma 3.7.7, which says only that the set of `t`
+  failing it is countable; that lemma is
   `SkorokhodSpace.exists_countable_dense_continuity` in **SkorokhodSpace**
-  Milestone 8.
+  Milestone 8. Proved on 2026-09-06.
+
+  Both hypotheses beyond the sequence are indispensable, and the version with
+  `¬ IsMin t` in their place is false. On `ι = ℕ` and `t = 1` every monotone
+  sequence of stopping times bounded by `1` is eventually constant, so
+  quasi-left-continuity holds vacuously, while `𝓝[<] (1 : ℕ) = pure 0` makes
+  `Function.leftLim (X · ω) 1 = X 0 ω`. What `¬ IsMin t` must be replaced by is
+  approachability from the left by a sequence — the hypothesis that
+  `not_isQuasiLeftContinuous_of_atom` below already carries. And since the
+  almost-sure quantifier of `IsQuasiLeftContinuous` sits inside the
+  quantifier over sequences, the exceptional set depends on the sequence and
+  uncountably many sequences cannot be combined: the passage from one sequence
+  to the filter `𝓝[<] t` is exactly what the existence of the left limit —
+  the second half of `IsCadlagPath`, assumed by Ethier–Kurtz here anyway —
+  supplies.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
   special shape. Let `Φ` be a regularizing class for `(X, 𝓧)` with `X` càdlàg,

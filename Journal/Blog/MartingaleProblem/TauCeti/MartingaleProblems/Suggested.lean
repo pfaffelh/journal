@@ -16,8 +16,10 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-06.  Every declaration elaborates; 37 declarations, 12 of them carrying
-`sorry`, and every one of those `sorry`s is a **proof**.  No statement in this
+2026-09-06.  Every declaration elaborates; 37 declarations, 11 of them carrying
+`sorry`, and every one of those `sorry`s is a **proof**.  The first proof of the
+file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
+corrected first: under `¬ IsMin t` alone it is false.  No statement in this
 file is `True` or `sorry` any more: the drafts of Milestones 3, 5, 9 and 10 were
 turned into propositions on 2026-09-06.  `Shift` now takes the coordinate maps
 `π` as a parameter, so that its compatibility field can be stated at all;
@@ -335,13 +337,50 @@ def IsQuasiLeftContinuous (X : ι → Ω → E) (𝓕 : Filtration ι m)
       Tendsto (fun n ↦ stoppedValue X (τ n) ω) atTop
         (𝓝 (stoppedValue X (fun ω ↦ ⨆ n, τ n ω) ω))
 
+omit [MeasurableSpace E] in
 /-- Read at the constant stopping times `τ n = s n` with `s n ↑ t`, the
-definition says that the path reaches its left limit at every `t` that is not
-minimal.  This sharpens Ethier--Kurtz, Lemma 3.7.7, which says only that the set
-of failing `t` is countable. -/
-theorem IsQuasiLeftContinuous.ae_eq_leftLim {X : ι → Ω → E} {𝓕 : Filtration ι m}
-    {P : Measure Ω} (h : IsQuasiLeftContinuous X 𝓕 P) {t : ι} (ht : ¬ IsMin t) :
-    ∀ᵐ ω ∂P, Function.leftLim (fun s ↦ X s ω) t = X t ω := sorry
+definition says that the path reaches its left limit at every `t` that is a limit
+from the left.  This sharpens Ethier--Kurtz, Lemma 3.7.7, which says only that
+the set of failing `t` is countable.
+
+Two hypotheses that the roadmap text does not name are indispensable, and both
+were found by writing the proof.
+
+* `¬ IsMin t` is **not** enough, and the statement under it is false: on `ι = ℕ`
+  and `t = 1` every monotone sequence of stopping times bounded by `1` is
+  eventually constant, so quasi-left-continuity is vacuous, while
+  `𝓝[<] (1 : ℕ) = pure 0` and hence `leftLim (X · ω) 1 = X 0 ω`, which for
+  `Ω` a point and `X 0 ω ≠ X 1 ω` is not `X 1 ω`.  What is needed is that `t` is
+  approached from the left by a sequence, exactly the hypothesis that
+  `not_isQuasiLeftContinuous_of_atom` carries.
+* Quasi-left-continuity alone gives convergence along **one** sequence at a time,
+  and the almost sure quantifier sits inside, so the exceptional set depends on
+  the sequence and uncountably many sequences may not be combined.  The passage
+  from a sequence to the filter `𝓝[<] t` therefore needs the existence of the
+  left limit as a hypothesis -- the second half of `IsCadlagPath`, which is what
+  Ethier--Kurtz assume at this point anyway. -/
+theorem IsQuasiLeftContinuous.ae_eq_leftLim [T2Space E] {X : ι → Ω → E}
+    {𝓕 : Filtration ι m} {P : Measure Ω} (h : IsQuasiLeftContinuous X 𝓕 P) {t : ι}
+    {s : ℕ → ι} (hmono : Monotone s) (hlt : ∀ n, s n < t)
+    (hs : Tendsto s atTop (𝓝 t))
+    (hX : ∀ᵐ ω ∂P, ∃ l, Tendsto (fun r ↦ X r ω) (𝓝[<] t) (𝓝 l)) :
+    ∀ᵐ ω ∂P, Function.leftLim (fun r ↦ X r ω) t = X t ω := by
+  have hs' : Tendsto s atTop (𝓝[<] t) :=
+    tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ hs (.of_forall hlt)
+  have : (𝓝[<] t).NeBot := hs'.neBot
+  have hbdd : BddAbove (Set.range s) := ⟨t, by rintro _ ⟨n, rfl⟩; exact (hlt n).le⟩
+  have hsup : ⨆ n, s n = t := tendsto_nhds_unique (tendsto_atTop_ciSup hmono hbdd) hs
+  have hsupT : (⨆ n, ((s n : WithTop ι))) = (t : WithTop ι) := by
+    rw [← WithTop.coe_iSup s hbdd, hsup]
+  have hq := h (fun n _ ↦ (s n : WithTop ι)) (fun n ↦ isStoppingTime_const 𝓕 _)
+    (fun a b hab _ ↦ WithTop.coe_le_coe.2 (hmono hab)) t
+  filter_upwards [hq, hX] with ω hω hlω
+  obtain ⟨l, hl⟩ := hlω
+  have h1 : Tendsto (fun n ↦ X (s n) ω) atTop (𝓝 l) := hl.comp hs'
+  have h2 : Tendsto (fun n ↦ X (s n) ω) atTop (𝓝 (X t ω)) := by
+    have := hω (le_of_eq hsupT)
+    simpa only [stoppedValue, hsupT, WithTop.untopD_coe] using this
+  rw [leftLim_eq_of_tendsto hl, tendsto_nhds_unique h1 h2]
 
 /-- Left continuity in `L¹` along stopping times: along every nondecreasing
 sequence `τ` of stopping times with supremum `τ'`, the increments of `C` between
