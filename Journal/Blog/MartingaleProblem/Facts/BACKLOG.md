@@ -16,55 +16,62 @@ nicht im Worktree, sondern unter
 Buchseite $n$ ist PDF-Seite $n+10$. Am 2026-08-31 geprüft an den Buchseiten
 102--104, 111--116, 126--133 und 142--145.
 
+**`lake env lean` immer mit dem `cd` im selben Befehl aufrufen**, also
+`cd ~/Code/lean/journal && lake env lean <absoluter Pfad>`. Das
+Arbeitsverzeichnis der Shell bleibt zwischen Werkzeugaufrufen stehen; wer den
+`cd` einmal wegläßt, ruft `lake` im Worktree auf, und `lake` fängt dann an, sich
+ein eigenes Mathlib zu klonen. Am 2026-09-06 ist genau das passiert und hat
+`/home/pfaffelh/Code/lean/journal-facts/.lake` angelegt — 671 MB
+halbfertiger Paketklone, die der Lauf nicht wieder löschen durfte (die
+Sandbox verbietet `rm` dort). **Der Ordner ist unbrauchbar und gehört
+gelöscht**; solange er dasteht, ist die Notiz „der Worktree hat kein `.lake`"
+im Auftrag irreführend, aber weiterhin praktisch richtig: dieses `.lake` hat
+kein gebautes Mathlib und taugt zu nichts.
+
 ## Offen
 
-1. **`IsSeparating` samt `IsSeparating.ae_eq_of_forall_condExp_eq`**
-   (`WeakConvergence` Meilenstein 1). Von zwei Läufen unabhängig als nächstes
-   Ziel benannt: das einzige Prädikat, das **zwei** Roadmaps als Hypothese
-   führen — der Satz über die càdlàg-Modifikation in `MartingaleProblems`
-   Meilenstein 9 und `isDetermining_products` in Meilenstein 3. Beides liegt
-   in Mathlib fertig vor (`ext_of_forall_integral_eq_of_IsFiniteMeasure`,
-   `Filter.EventuallyEq.of_forall_separating_preimage`), der Beweis ist der
-   Zweischritt aus dem Inventar, und die bedingte Fassung kostet zwanzig
-   Zeilen. **Schreibe echtes Lean und übersetze es** (siehe „Lean übersetzen"
-   im Auftrag), nicht nur Roadmaptext.
+1. ~~**`IsSeparating` samt `IsSeparating.ae_eq_of_forall_condExp_eq`**~~
+   *(erledigt 2026-09-06, erster Lauf des Tages.)* Der Beweis steht in
+   `TauCeti/WeakConvergence/Suggested.lean` und geht durch `lake env lean`
+   gegen `v4.33.1`, ohne Fehler und ohne Warnung; die Datei hat an dieser
+   Stelle kein `sorry` mehr. Er ist der Zweischritt, den die Roadmap
+   beschreibt, mit der Fallunterscheidung nach `P G` — im Nullfall
+   verschwindet die Restriktion selbst (`Measure.restrict_eq_zero`), was
+   kürzer ist als die „beide Seiten $\le P(G)$" des Nachtrags vom
+   2026-09-05.
 
-   *Zwischenstand 2026-09-05, dritter Lauf: die Aussage steht, der Beweis
-   nicht.* `MeasureTheory.IsSeparating` und
-   `MeasureTheory.IsSeparating.ae_eq_of_forall_condExp_eq` sind jetzt in
-   `TauCeti/WeakConvergence/Suggested.lean` getippt, und jeder Baustein des
-   Beweises ist an `upstream/master` belegt: `setIntegral_condExp`
-   (`Mathlib/MeasureTheory/Function/ConditionalExpectation/Basic.lean:232`,
-   Notation `μ[f | m]`), `Filter.EventuallyEq.of_forall_separating_preimage`
-   (`Mathlib/Order/Filter/CountableSeparatingOn.lean:257`, Variablenblock
-   `:145` mit `[CountableInterFilter l]`) und
-   `MeasurableSpace.CountablySeparated`
-   (`Mathlib/MeasureTheory/MeasurableSpace/CountablyGenerated.lean:322`, mit
-   den Instanzen nach und von `HasCountableSeparatingOn` bei `:326` und
-   `:329`). Was fehlt, ist der Beweis.
+   **Zwei Befunde, beide an der Aussage und nicht am Beweis.**
 
-   *Nachtrag 2026-09-05, vierter Lauf: die Aussage ist jetzt **typgeprüft**,
-   und dabei kam heraus, daß sie ein `[TopologicalSpace E]` brauchte, das ihr
-   fehlte (die Hypothese `∃ g : E →ᵇ ℝ, ⇑g = f` verlangt es). `lake env lean`
-   ist verfügbar — der Kasten, der bei Punkt 3 das Gegenteil behauptete, ist
-   mit jenem Punkt erledigt. Wer den Punkt aufnimmt, hat nur noch den
-   Zweischritt zu schreiben, und kann ihn sofort prüfen.*
+   * Die Aussage brauchte `[OpensMeasurableSpace E]`, das ihr fehlte. Ohne
+     es ist kein $f\in\Gamma$ meßbar, also sind alle Integrale $0$ und der
+     Satz unbeweisbar. Es ist die Hypothese von
+     `Continuous.stronglyMeasurable`
+     (`MeasureTheory/Function/StronglyMeasurable/Basic.lean:718`; die
+     zweitabzählbare Seite von `SecondCountableTopologyEither` ist `ℝ`) und
+     von `BoundedContinuousFunction.integrable`
+     (`MeasureTheory/Integral/BoundedContinuousFunction.lean:99`).
+   * **Die Reihenfolge der beiden σ-Algebren war falsch, und das ist keine
+     Kosmetik.** Die Aussage stand auf `{mΩ : MeasurableSpace Ω}
+     {m : MeasurableSpace Ω}`. Beide sind lokale Instanzen von
+     `MeasurableSpace Ω`, und die Instanzsuche nimmt die **letzte** — also
+     las das unannotierte `Measurable U` in Wahrheit `Measurable[m] U`, die
+     echt stärkere und falsche Hypothese, unter der der Satz viel weniger
+     sagt. Sichtbar wurde es erst beim Übersetzen, an einem
+     `m ≤ m`-Typfehler. Mathlib schreibt aus genau diesem Grund durchweg
+     `{m m0 : MeasurableSpace α}`, die umgebende σ-Algebra zuletzt; die
+     Aussage tut es jetzt auch. Das ist eine Fehlerquelle für jede Aussage
+     mit zwei σ-Algebren, und `MartingaleProblems` führt mehrere.
 
-   *Dazu ein Nachtrag zum Beweisweg selbst.* Der Meilenstein schrieb „No
-   normalization and no case `P G = 0`, because `IsSeparating` is stated for
-   finite measures". Seit `IsSeparating` auf **Wahrscheinlichkeitsmaße**
-   umgestellt ist, stimmt das nicht mehr, und `(P.restrict G).map U` ist
-   keines. Schritt eins hat daher eine Fallunterscheidung: für `P G = 0` sind
-   beide Seiten $\le P(G)$; für `P G ≠ 0` wendet man `IsSeparating` auf
-   `((P G)⁻¹ • P.restrict G).map U` und ebenso für `V` an, wobei die
-   Skalierung durch die Integrale in beide Richtungen geht. Roadmap und
-   `Suggested.lean` sagen das jetzt; nur der Lean-Text fehlt.
+   Im selben Lauf mit erledigt, als billigster Nachbar:
+   `StronglySeparatesPoints.separatesPoints` — sechs Zeilen, `δ := dist y x`,
+   und `[MeasurableSpace E]` unter `omit`, weil der Beweis es nicht benutzt.
+   Damit tragen sieben Deklarationen von Meilenstein 1 Beweise. Offen bleibt
+   dort `IsSeparating.of_subalgebra`; der Weg steht im Laufbericht.
 
-   *Fünf Nachbarn sind erledigt.* `IsSeparating.mono`,
-   `IsConvergenceDetermining.mono`, `IsConvergenceDetermining.isSeparating`,
-   `isSeparating_setOf_boundedContinuous` und
-   `isConvergenceDetermining_setOf_boundedContinuous` tragen seit dem
-   2026-09-05 Beweise statt `sorry`, alle typgeprüft.
+   Mitgefunden: `measure_inter_add_diff` ist seit dem 2026-06-03
+   `deprecated` (jetzt `measure_inter_add_sdiff`,
+   `Measure/MeasureSpace.lean:118`), ebenso `Set.diff_eq` (jetzt
+   `Set.sdiff_eq`).
 
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
