@@ -306,7 +306,11 @@ generating its σ-algebra, and `X : Ω → F`.
   for every `(f,g) ∈ A`; and the same with `h k` bounded continuous when `E` is
   metrizable. This is the statement that turns every later theorem into a
   statement about finite dimensional distributions, and it is the reason the
-  index needs no order structure beyond a preorder.
+  index needs no order structure beyond a preorder. The filtration is the
+  natural one of `X`, `𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) _`,
+  and that is a hypothesis of the equivalence and not a convention: the right
+  hand side tests against the coordinates alone, so for a larger filtration the
+  direction from right to left fails.
 * The consequence that the solution property depends only on the finite
   dimensional distributions of `X`.
 
@@ -348,7 +352,9 @@ A concrete family of solutions, built without any of the theory above. Index
   `E` is standard Borel.
 * Fix `[AddCommMonoid ι]` with a compatible order. A `Shift` on `F` is a family
   `θ r : F → F` of measurable maps with `π t ∘ θ r = π (r + t)`.
-* `ShiftSystem 𝓧°`: a family `𝓧° r` of families of adapted processes with
+* `ShiftSystem 𝓧°`: a family `𝓧° r` of families of `StronglyAdapted` processes
+  (`Mathlib/Probability/Process/Adapted.lean:105`; `Adapted` is a different
+  notion since 2026-01-13, see Milestone 9) with
   `𝓧° 0 = 𝓧°` such that every `Ŷ ∈ 𝓧° r` satisfies
   `Ŷ t ∘ θ r = Y (r + t) - Y r + κ` for some `Y ∈ 𝓧°` and some `𝓕° r`-measurable
   `κ`. Prove that `mpFamily A q c` carries a shift system when the clock is
@@ -1209,9 +1215,19 @@ and 11 use them.
   headers and author attribution preserved. `IsRealQuasimartingale` and the
   regularity sets it is built on belong to the material taken over.
 * `IsRegularizingClass Φ X 𝓧`: a set `Φ` of bounded continuous functions on `E`
-  such that for every `f ∈ Φ` there are `Y ∈ 𝓧` and an adapted `𝕂`-valued `C`
+  such that for every `f ∈ Φ` there are `Y ∈ 𝓧` and a `StronglyAdapted`
+  `𝕂`-valued `C`
   with `f (X t) = Y t + C t` almost surely for every `t`, with `C` almost surely
   having one sided limits along `D`, and with `C` right continuous in `L¹`.
+  `StronglyAdapted` (`Mathlib/Probability/Process/Adapted.lean:105`) and not
+  `Adapted`: since 2026-01-13 the latter (`ibid.:60`) is measurability with
+  respect to `𝓕 i` and asks for `[MeasurableSpace 𝕂]`, which `RCLike` does not
+  supply, while `StronglyAdapted` is the notion `Martingale` itself is built
+  from (`Mathlib/Probability/Martingale/Basic.lean:53`).
+  The pair `(Y, C)` belonging to `f` is one object, `IsCompensatorFor f Y C`,
+  and not two conditions on `Φ`: the theorem below on quasi-left-continuity asks
+  more of `C`, and it must be the same `C` that the decomposition uses, so the
+  two existential quantifiers have to bind together.
   Note that the first condition is not a hypothesis — `C := f ∘ X - Y` satisfies
   it — so the content is the choice of `Y` in `𝓧` together with the last two
   conditions. The standard verification of the last two is that `C` has finite
@@ -1309,12 +1325,27 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   Ethier–Kurtz, Theorem 4.3.12. Mathlib has no notion of this kind: the strings
   `quasi-left` and `QuasiLeftContinuous` occur nowhere in the library.
 * `IsQuasiLeftContinuous.ae_eq_leftLim`: reading the definition at the constant
-  stopping times `τ n = s n` for `s n ↑ t` gives
-  `∀ᵐ ω ∂P, Function.leftLim (X · ω) t = X t ω` for every `t` that is not
-  minimal. This is the sharpening of Ethier–Kurtz, Lemma 3.7.7, which says only
-  that the set of `t` failing it is countable; that lemma is
+  stopping times `τ n = s n` for a monotone `s` with `s n < t` and
+  `s n → t` gives `∀ᵐ ω ∂P, Function.leftLim (X · ω) t = X t ω`, for a process
+  whose paths have left limits almost surely and a Hausdorff `E`. This is the
+  sharpening of Ethier–Kurtz, Lemma 3.7.7, which says only that the set of `t`
+  failing it is countable; that lemma is
   `SkorokhodSpace.exists_countable_dense_continuity` in **SkorokhodSpace**
-  Milestone 8.
+  Milestone 8. Proved on 2026-09-06.
+
+  Both hypotheses beyond the sequence are indispensable, and the version with
+  `¬ IsMin t` in their place is false. On `ι = ℕ` and `t = 1` every monotone
+  sequence of stopping times bounded by `1` is eventually constant, so
+  quasi-left-continuity holds vacuously, while `𝓝[<] (1 : ℕ) = pure 0` makes
+  `Function.leftLim (X · ω) 1 = X 0 ω`. What `¬ IsMin t` must be replaced by is
+  approachability from the left by a sequence — the hypothesis that
+  `not_isQuasiLeftContinuous_of_atom` below already carries. And since the
+  almost-sure quantifier of `IsQuasiLeftContinuous` sits inside the
+  quantifier over sequences, the exceptional set depends on the sequence and
+  uncountably many sequences cannot be combined: the passage from one sequence
+  to the filter `𝓝[<] t` is exactly what the existence of the left limit —
+  the second half of `IsCadlagPath`, assumed by Ethier–Kurtz here anyway —
+  supplies.
 * `isQuasiLeftContinuous_of_isRegularizingClass`, the abstract form of
   Ethier–Kurtz, Theorem 4.3.12, with no operator and no compensator of any
   special shape. Let `Φ` be a regularizing class for `(X, 𝓧)` with `X` càdlàg,
@@ -1374,7 +1405,11 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
 * `not_isQuasiLeftContinuous_of_atom`, the sharpness, as a named example and not
   as a remark. Atomlessness is not a convenience of the proof, and it is not a
   hypothesis of `exists_cadlag_modification_of_isRegularizingClass`, which holds
-  for every clock: an atom of `q` at `u` is a fixed time of discontinuity. On
+  for every clock: an atom of `q` at a `u` that is approachable from the left is
+  a fixed time of discontinuity. Approachable from the left is a hypothesis of
+  the statement, `∃ s : ℕ → ι, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop
+  (𝓝 u)`; at `u = ⊥` the example does not exist, because there is no sequence
+  `s n ↑ u` and quasi-left-continuity asks nothing there. On
   `E = Bool` with `q = Measure.dirac u` there is a solution that flips a fair
   coin at `u` and is constant on either side of it, and for `s n ↑ u` its paths
   have `X (s n) → X (u-) ≠ X u` on an event of probability one half. The

@@ -7,6 +7,7 @@ import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!
 # Suggested signatures for the Skorokhod space roadmap
@@ -15,9 +16,20 @@ Prototypes only. Names and argument orders are suggestions; the statements are
 the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
-**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1` on
-2026-09-05.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  Three errors that the signature check
+**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
+2026-09-06.  Every declaration elaborates; the `sorry`s are the statements' own
+proofs, which is what this file is for.  Seven of them are gone since
+2026-09-06: `isCompact_exhaustion`, `monotoneOn_dist_basepoint` and
+`IsCadlag.eq_of_eqOn_dense` carry proofs --- the last had to be corrected first,
+its hypothesis was bare density, under which it is false ---, the `Group
+(TimeChange ι)` instance is constructed, `TimeChange.lipConstOn` and
+`TimeChange.normOn` are defined instead of being `sorry`, and
+`TimeChange.normOn_inv` follows from `inv_inv` and `max_comm`.  A definition
+whose body is `sorry` makes every theorem about it a statement about `sorryAx`,
+which is the same trap as a statement that is `True`; `normOn_one`,
+`normOn_mul_le` and `dist_le_of_normOn_le` are propositions about `normOn` only
+since today.  Three errors that the
+signature check
 of the previous run could not see came out of the first run: `IsCadlag.measurable`
 had no `MeasurableSpace ι`, `TimeChange.dist_le_of_normOn_le` used `Real.exp`
 without importing it, and Milestone 6 spoke of measurable maps out of `D(ι, E)`
@@ -49,7 +61,9 @@ variable {ι : Type*} [LinearOrder ι] [MetricSpace ι] [OrderTopology ι]
 /-- The exhaustion by closed balls around a base point. -/
 def exhaustion (t₀ : ι) (m : ℕ) : Set ι := Metric.closedBall t₀ m
 
-theorem isCompact_exhaustion (t₀ : ι) (m : ℕ) : IsCompact (exhaustion t₀ m) := sorry
+omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] in
+theorem isCompact_exhaustion (t₀ : ι) (m : ℕ) : IsCompact (exhaustion t₀ m) :=
+  isCompact_closedBall t₀ m
 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- The metric is the difference of the length function to a base point.  It is
@@ -59,8 +73,15 @@ theorem dist_eq_sub_of_le {t₀ s t : ι} (h₀s : t₀ ≤ s) (hst : s ≤ t) :
   have := AdditiveDist.dist_add (α := ι) h₀s hst
   linarith
 
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- Again `AdditiveDist` alone, through `dist_eq_sub_of_le`. -/
 theorem monotoneOn_dist_basepoint {t₀ : ι} :
-    MonotoneOn (fun t => dist t₀ t) (Set.Ici t₀) := sorry
+    MonotoneOn (fun t => dist t₀ t) (Set.Ici t₀) := by
+  intro s hs t _ hst
+  have h : dist s t = dist t₀ t - dist t₀ s := dist_eq_sub_of_le (Set.mem_Ici.1 hs) hst
+  have h' : (0 : ℝ) ≤ dist s t := dist_nonneg
+  simp only
+  linarith
 
 /-- Definitional, but it does not fire through a `SetLike` hull: the lattice
 `AddSubgroup.zmultiples h` needs its `Set` coercion, or this instance restated
@@ -104,9 +125,36 @@ theorem IsCadlag.measurable [MeasurableSpace ι] [BorelSpace ι]
     [MeasurableSpace E] [BorelSpace E] {f : ι → E}
     (hf : IsCadlag f) : Measurable f := sorry
 
-/-- A càdlàg function is determined by its values on a dense set. -/
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- A càdlàg function is determined by its values on a set that is dense **from
+the right**: every point of the index either lies in `D` or is approached by
+points of `D` from above.
+
+Density alone is not enough, and the statement under it is false as soon as the
+index has a point that is right isolated without being isolated -- which
+Milestone 1 allows, since it pins the index down to a *closed subset of* `ℝ` and
+not to an interval.  Take `ι = [0,1] ∪ {2}`, `D = ([0,1) ∩ ℚ) ∪ {2}`, which is
+dense, `f = 0` and `g = ` the indicator of `{1}`.  Both are càdlàg: at `1` the
+filter `𝓝[>] 1` is `⊥`, so right continuity there says nothing, and at `2` so is
+`𝓝[<] 2`.  They agree on `D` and differ at `1`.
+
+The hypothesis below is what the proof uses, and it implies `Dense D`.  Neither
+the order topology nor `AdditiveDist` nor properness enters, so they are
+omitted. -/
 theorem IsCadlag.eq_of_eqOn_dense {f g : ι → E} (hf : IsCadlag f) (hg : IsCadlag g)
-    {D : Set ι} (hD : Dense D) (h : EqOn f g D) : f = g := sorry
+    {D : Set ι} (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot) (h : EqOn f g D) :
+    f = g := by
+  funext t
+  rcases hD t with ht | ht
+  · exact h ht
+  · have := ht
+    have hf' : ContinuousWithinAt f (D ∩ Set.Ioi t) t :=
+      (hf.right_continuous t).mono Set.inter_subset_right
+    have hg' : ContinuousWithinAt g (D ∩ Set.Ioi t) t :=
+      (hg.right_continuous t).mono Set.inter_subset_right
+    have hfg : g =ᶠ[𝓝[D ∩ Set.Ioi t] t] f := by
+      filter_upwards [self_mem_nhdsWithin] with x hx using (h hx.1).symm
+    exact tendsto_nhds_unique hf' (Filter.Tendsto.congr' hfg hg')
 
 /-! ## Milestones 3 and 4: time changes and the metric -/
 
@@ -116,26 +164,73 @@ structure TimeChange (ι : Type*) [LinearOrder ι] [MetricSpace ι] where
   lipschitz : ∃ C, LipschitzWith C toOrderIso
   lipschitz_symm : ∃ C, LipschitzWith C toOrderIso.symm
 
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- Two time changes with the same order isomorphism are equal: the other two
+fields are propositions. -/
+@[ext]
+theorem TimeChange.ext {l l' : TimeChange ι} (h : l.toOrderIso = l'.toOrderIso) :
+    l = l' := by
+  cases l; cases l'; subst h; rfl
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+theorem TimeChange.exists_lipschitzWith_trans {e e' : ι ≃o ι}
+    (h : ∃ C, LipschitzWith C e) (h' : ∃ C, LipschitzWith C e') :
+    ∃ C, LipschitzWith C (e.trans e') := by
+  obtain ⟨C, hC⟩ := h
+  obtain ⟨C', hC'⟩ := h'
+  exact ⟨C' * C, by simpa only [OrderIso.coe_trans] using hC'.comp hC⟩
+
 /-- Composition and inversion make the time changes a group; this is what turns
 `normOn` into a length function and gives the triangle inequality of the metric
-below. -/
-instance : Group (TimeChange ι) := sorry
+below.  Multiplication is composition of functions, `l * l' = l ∘ l'`, which is
+`OrderIso.trans` in the other order. -/
+instance : Group (TimeChange ι) where
+  mul l l' :=
+    { toOrderIso := l'.toOrderIso.trans l.toOrderIso
+      lipschitz := TimeChange.exists_lipschitzWith_trans l'.lipschitz l.lipschitz
+      lipschitz_symm := by
+        rw [OrderIso.symm_trans]
+        exact TimeChange.exists_lipschitzWith_trans l.lipschitz_symm l'.lipschitz_symm }
+  one :=
+    { toOrderIso := OrderIso.refl ι
+      lipschitz := ⟨1, LipschitzWith.id⟩
+      lipschitz_symm := ⟨1, LipschitzWith.id⟩ }
+  inv l :=
+    { toOrderIso := l.toOrderIso.symm
+      lipschitz := l.lipschitz_symm
+      lipschitz_symm := by rw [OrderIso.symm_symm]; exact l.lipschitz }
+  mul_assoc l l' l'' := TimeChange.ext rfl
+  one_mul l := TimeChange.ext rfl
+  mul_one l := TimeChange.ext rfl
+  inv_mul_cancel l := TimeChange.ext (OrderIso.self_trans_symm l.toOrderIso)
 
 /-- The least Lipschitz constant on `exhaustion t₀ m`. Mathlib carries no least
 Lipschitz constant: `LipschitzWith (K : ℝ≥0) (f : α → β)`
 (`Mathlib/Topology/EMetricSpace/Lipschitz.lean`) is a `Prop`, and
 `LipschitzWith.const` there is the theorem that a constant map is `0`-Lipschitz,
 not a constant attached to a map. -/
-noncomputable def TimeChange.lipConstOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ≥0 := sorry
+noncomputable def TimeChange.lipConstOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ≥0 :=
+  sInf {K : ℝ≥0 | LipschitzOnWith K l.toOrderIso (exhaustion t₀ m)}
 
 /-- `log` of the larger of the two Lipschitz constants, computed on `exhaustion t₀ m`. -/
-noncomputable def TimeChange.normOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ := sorry
+noncomputable def TimeChange.normOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ :=
+  Real.log (max (TimeChange.lipConstOn t₀ m l) (TimeChange.lipConstOn t₀ m l⁻¹))
 
+/-- The two cases the proof has to distinguish, and they are the reason the
+statement is true at all: on an `exhaustion t₀ m` with two distinct points the
+set of admissible constants for the identity is `Set.Ici 1`, so `lipConstOn` is
+`1` and its logarithm is `0`; on a one point exhaustion -- `m = 0` in a discrete
+index -- every constant is admissible, `lipConstOn` is `0`, and `Real.log 0 = 0`
+by Mathlib's convention.  The junk value of `Real.log` is what carries the
+degenerate case, which is worth saying out loud rather than leaving to the
+reader. -/
 theorem TimeChange.normOn_one (t₀ : ι) (m : ℕ) :
     TimeChange.normOn t₀ m (1 : TimeChange ι) = 0 := sorry
 
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 theorem TimeChange.normOn_inv (t₀ : ι) (m : ℕ) (l : TimeChange ι) :
-    TimeChange.normOn t₀ m l⁻¹ = TimeChange.normOn t₀ m l := sorry
+    TimeChange.normOn t₀ m l⁻¹ = TimeChange.normOn t₀ m l := by
+  rw [TimeChange.normOn, TimeChange.normOn, inv_inv, max_comm]
 
 theorem TimeChange.normOn_mul_le (t₀ : ι) (m : ℕ) (l l' : TimeChange ι) :
     TimeChange.normOn t₀ m (l * l') ≤
