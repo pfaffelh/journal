@@ -73,6 +73,22 @@ kein gebautes Mathlib und taugt zu nichts.
    `Measure/MeasureSpace.lean:118`), ebenso `Set.diff_eq` (jetzt
    `Set.sdiff_eq`).
 
+1. **`SkorokhodSpace/Suggested.lean` und `MartingaleProblems/Suggested.lean`
+   zum Übersetzen bringen.** `WeakConvergence` ist durch — 48 Deklarationen, 27
+   davon bewiesen, die Datei geht durch `lake env lean`. Die anderen beiden
+   waren **nie übersetzt**: `SkorokhodSpace` hat 29 Deklarationen mit 25
+   `sorry`, `MartingaleProblems` 21 mit 14. Ziel ist nicht, sie zu beweisen,
+   sondern daß **die Aussagen typisieren**, mit `sorry` für die Beweise. Genau
+   das hat am 2026-09-06 die fehlende `[OpensMeasurableSpace E]`-Instanz
+   gefunden, ohne die der Satz still zur Trivialität geworden wäre — ein Fehler,
+   den man am Text nicht sieht.
+
+   Nimm eine Datei nach der anderen, von oben, und arbeite die Fehler ab. Wo
+   eine Aussage sich nur mit einer zusätzlichen Instanz oder einer korrigierten
+   Signatur retten läßt, ist das ein Befund für das Inventar. Wo sie sich gar
+   nicht retten läßt, ist sie falsch, und das ist der wertvollste Befund.
+   Beweise, die dabei billig abfallen, nimm mit; jage sie nicht.
+
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`). Ruht auf `MeasurableSpace.comap`, monotoner Konvergenz und
