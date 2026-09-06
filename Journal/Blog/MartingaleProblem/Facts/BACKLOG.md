@@ -80,6 +80,55 @@ kein gebautes Mathlib und taugt zu nichts.
    formulierte Roadmap-Punkte warten darauf. Ebenfalls als Lean zu schreiben
    und zu übersetzen.
 
+   *Zwischenstand 2026-09-06, zweiter Lauf des Tages: der Unterbau steht und
+   ist übersetzt, der Satz selbst nicht.* In
+   `TauCeti/WeakConvergence/Suggested.lean` tragen jetzt sieben Deklarationen
+   von Meilenstein 5 Beweise, die alle durch `lake env lean` gegen `v4.33.1`
+   gehen: `IsMulSystem`, `indicatorFuns` samt `indicatorFuns_mono`,
+   `isMulSystem_indicator_of_isPiSystem`, `generateFromFuns` samt
+   `measurable_generateFromFuns_of_mem`, `generateFromFuns_le_iff` und
+   `generateFromFuns_mono`, die Brücke `generateFromFuns_indicatorFuns`, das
+   π-System `ioiCells` samt `isPiSystem_ioiCells` und
+   `generateFromFuns_eq_generateFrom_ioiCells`, und — als erster Schritt des
+   Induktionssatzes — `of_tendstoUniformly_of_mono_lim`.
+
+   **Zwei Befunde an den Aussagen, beide beim Aufschreiben gefunden, beide in
+   der Roadmap berichtigt.** Erstens war
+   `isMulSystem_indicator_of_isPiSystem` in der Fassung der Roadmap **falsch**:
+   ein π-System muß `∅` nicht enthalten, und für $s\cap t=\emptyset$ ist das
+   Produkt der beiden Indikatoren die konstante $0$. Zeuge: $\mathcal C=
+   \{\{0\},\{1\}\}$ auf $\N$. Die Aussage steht jetzt über
+   `indicatorFuns (insert ∅ 𝒞)`, was nach
+   `MeasurableSpace.generateFrom_insert_empty` nichts kostet. Zweitens fehlte
+   `integral_mul_eq_zero_of_isMulSystem` die Hypothese über die Konstante:
+   für `K = {0}` ist `generateFromFuns K = ⊥`, dessen beschränkte meßbare
+   Funktionen die Konstanten sind, und `∫ g * c ∂μ = 0` verlangt `∫ g ∂μ = 0`.
+   Dieselbe Lücke wie die Gesamtmasse in
+   `ext_of_forall_integral_eq_of_isMulSystem`, die die Roadmap dort schon
+   richtig hatte.
+
+   Mitberichtigt: `induction_on_inter` liegt in `MeasurableSpace`, nicht in
+   `MeasureTheory`; `generateFromFuns` braucht `@[instance_reducible]` wie
+   `MeasurableSpace.generateFrom`, sonst meldet der Linter für
+   Klassendefinitionen.
+
+   **Was noch fehlt, und in welcher Reihenfolge.** Der Beweis von
+   `induction_on_mulSystem` in vier Schritten, von denen anderthalb stehen:
+   (i) Abschluß unter gleichmäßigen Limiten — erledigt,
+   `of_tendstoUniformly_of_mono_lim`; (ii) `P (φ ∘ (f₁,…,fₙ))` für stetiges
+   `φ`, über Polynome und Stone--Weierstraß auf dem kompakten Bild — offen,
+   und der eigentliche Brocken; (iii) die Indikatoren des π-Systems
+   `ioiCells K` und `MeasurableSpace.induction_on_inter` — die π-System-Hälfte
+   ist erledigt (`isPiSystem_ioiCells`,
+   `generateFromFuns_eq_generateFrom_ioiCells`, über `measurable_of_Ioi`), es
+   fehlt die Approximation des Indikators einer Box durch stetige Funktionen;
+   (iv) einfache Funktionen und ein letzter monotoner Limes — Routine.
+   Der nächste eigenständige Punkt ist (ii); der Anker in Mathlib ist
+   `ContinuousMap.exists_mem_subalgebra_near_continuousMap_of_separatesPoints`
+   (`Topology/ContinuousMap/StoneWeierstrass.lean:297`, die ε-Fassung),
+   angewandt auf die von `f₁,…,fₙ` erzeugte Unteralgebra über dem kompakten
+   Bild in `Fin n → ℝ`.
+
 3. ~~**Die drei `Suggested.lean` zum Übersetzen bringen.**~~ *(erledigt
    2026-09-05, vierter Lauf des Tages.)* Alle drei gehen jetzt durch
    `lake env lean` gegen Mathlib `v4.33.1`, ohne Fehler und ohne Warnung; die
