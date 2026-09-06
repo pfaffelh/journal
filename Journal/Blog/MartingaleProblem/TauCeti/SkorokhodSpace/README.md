@@ -257,21 +257,57 @@ Under (B), with `E` a pseudometric space:
   attained because `ι` is a metric space, so `edist s t ≠ ∞`, and the inequality
   `edist (λ s) (λ t) ≤ K * edist s t` passes to the infimum over `K` in
   `ℝ≥0∞`. With it `lipConst_one`, `lipConst_le_iff` and the submultiplicativity
-  `lipConst (λ * μ) ≤ lipConst λ * lipConst μ` from `LipschitzWith.comp`.
+  `lipConst (λ * μ) ≤ lipConst λ * lipConst μ` from `LipschitzWith.comp`. All of
+  this is proved (2026-09-07): `lipschitzWith_lipConst` is the attainment, over
+  `ENNReal.div_le_iff_le_mul` and `le_csInf`; `lipConst_one` needs
+  `[Nontrivial ι]` and is `1`, and `lipConst_of_subsingleton` is the other case,
+  where every constant is admissible and the least one is `0`;
+  `lipConst_mul_le` is `csInf_le'` applied to `LipschitzWith.comp` of the two
+  attained constants, through `OrderIso.coe_trans`.
 * `TimeChange.norm_one`, `TimeChange.norm_inv` (`norm λ⁻¹ = norm λ`) and
   `TimeChange.norm_mul_le` (`norm (λ * μ) ≤ norm λ + norm μ`): the norm is a
-  length function. Both facts are the corresponding statements for Lipschitz
-  constants. `normOn_inv` is proved (2026-09-06), from `inv_inv` and `max_comm`
-  alone, once `normOn` is defined as above. `normOn_one` holds for two reasons
-  and needs the case distinction: if `B m` has two distinct points the set of
+  length function. All three are proved (2026-09-07). `norm_inv` is `inv_inv`
+  and `max_comm`; `norm_one` and `norm_mul_le` split on
+  `subsingleton_or_nontrivial ι`, because on a subsingleton index every constant
+  is admissible, every `lipConst` is `0`, and it is the junk value
+  `Real.log 0 = 0` that carries the statement. On a nontrivial index the step
+  that makes the logarithm well behaved is `one_le_max_lipConst`,
+  `1 ≤ max (lipConst λ) (lipConst λ⁻¹)`: the two constants multiply to at least
+  `lipConst 1 = 1`, hence so does the square of their maximum. The same step
+  gives `TimeChange.norm_nonneg`, `0 ≤ norm λ`, also proved, which is what makes
+  the `max` in the `distOn` of Milestone 4 the intended quantity.
+* **The windowed norm is not a length function**, and `normOn_mul_le` is
+  therefore *not* part of this milestone: it is false. `not_normOn_mul_le`
+  states the refutation. On `ι = ℝ` with `t₀ = 0` and `m = 1`, so `B 1 = [-1,1]`,
+  take `λ' = (2 • ·)` and let `λ` be the piecewise linear order isomorphism that
+  is the identity on `Iic 1` and has slope `100` on `Ici 1`. Then `λ` and `λ⁻¹`
+  are the identity on `B 1`, so `normOn 0 1 λ = 0`, and `normOn 0 1 λ' = log 2`;
+  but `(λ * λ') x = λ (2 * x)` carries `1/2` to `1` and `1` to `101`, so
+  `normOn 0 1 (λ * λ') ≥ log 200`. The reason is structural and not an artefact
+  of the example: the inner factor of a composite need not map the window into
+  itself, and outside the window the outer factor is unconstrained, so the
+  failure can be made arbitrarily large. Milestone 4 therefore measures time
+  changes with the **global** `norm`, exactly as Billingsley does — his `d°ₘ`
+  truncates the *paths* to the window and leaves the time change untruncated.
+  What survives of the windowed norm is `normOn_inv` and `normOn_one`, both
+  proved (2026-09-06 and 2026-09-07); `normOn_one` holds for two reasons and
+  needs the case distinction: if `B m` has two distinct points the set of
   admissible constants of the identity is `Set.Ici 1`, so `lipConstOn = 1` and
   `log 1 = 0`; if `B m` is a single point — `m = 0` in a discrete index — every
-  constant is admissible, `lipConstOn = 0`, and it is the junk value
+  constant is admissible, `lipConstOn = 0`, and it is again the junk value
   `Real.log 0 = 0` that carries the statement.
-* `TimeChange.dist_le_of_norm_le`: on `B m`, `norm λ ≤ γ` implies
+* `TimeChange.dist_le_of_norm_le`: for a time change **fixing the base point**,
+  `λ t₀ = t₀`, and `t ∈ B m`, `norm λ ≤ γ` implies
   `dist (λ t) t ≤ (exp γ - 1) * (2 * m)`, so a time change of small norm moves
   points of `B m` little. This is the estimate that makes the metric of
-  Milestone 4 separate points.
+  Milestone 4 separate points. The anchor `λ t₀ = t₀` is not decoration: without
+  it the statement is false, because a translation of `ℝ` is an order
+  isomorphism with `lipConst = 1` in both directions, hence of norm `0`, and it
+  moves every point by the same arbitrary amount, while the bound at `γ = 0` is
+  `0`. Billingsley gets the anchor for free — his `Λ` consists of the increasing
+  homeomorphisms of `[0,∞)` onto itself and they all fix `0` — and on a two
+  sided index it has to be imposed. The time changes fixing `t₀` form a
+  subgroup, so `norm_one`, `norm_inv` and `norm_mul_le` restrict to it unchanged.
 * For the index `ℝ`, the identification of `norm` with Billingsley's
   `sup_{s < t} |log ((λ t - λ s) / (t - s))|`.
 
@@ -283,16 +319,21 @@ Under (B), with `E` a pseudometric space:
   `B m`.
 * The localized distances
   ```
-  distOn m f g = ⨅ λ, max (TimeChange.normOn m λ)
+  distOn m f g = ⨅ λ, max (TimeChange.norm λ)
                           (⨆ t, r (restrictExhaustion m f (λ t)) (restrictExhaustion m g t))
   dist f g     = ∑' m, 2⁻¹ ^ m * min 1 (distOn m f g)
   ```
-  Prove the supremum is attained on `B m` and is finite.
+  Prove the supremum is attained on `B m` and is finite. The infimum runs over
+  the time changes fixing the base point, and the norm in it is the **global**
+  `TimeChange.norm`, not `normOn m`: only the paths are localized to `B m`, the
+  time change is not. This is Billingsley's `d°ₘ` verbatim, and it is forced —
+  the windowed norm is not subadditive (`not_normOn_mul_le`, Milestone 3), so a
+  `distOn` built on it would have no triangle inequality.
 * `MetricSpace (D ι E)`: symmetry from `TimeChange.norm_inv`, the triangle
   inequality from `TimeChange.norm_mul_le`, and separation from
   `TimeChange.dist_le_of_norm_le` together with right continuity.
 * `SkorokhodSpace.tendsto_iff`: `f n → f` if and only if for every `m` there are
-  time changes `λ n` with `normOn m (λ n) → 0` and
+  time changes `λ n` fixing the base point with `norm (λ n) → 0` and
   `sup_{t ∈ B m} r (f n (λ n t)) (f t) → 0`.
 * `SkorokhodSpace.tendsto_of_tendsto_uniformly`: uniform convergence on compact
   sets implies convergence in `D ι E`; and the converse when the limit is

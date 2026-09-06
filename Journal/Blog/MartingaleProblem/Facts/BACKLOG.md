@@ -151,6 +151,23 @@ kein gebautes Mathlib und taugt zu nichts.
    `normOn_one` (Fallunterscheidung nach `(exhaustion t₀ m).Subsingleton`) und
    `normOn_mul_le`.
 
+   *Fortgesetzt am 2026-09-07, erster Lauf des Tages: `normOn_one` ist
+   bewiesen, `normOn_mul_le` ist **falsch**.* Die gefensterte Norm ist keine
+   Längenfunktion — Zeuge auf $\mathbb R$ mit $B_1=[-1,1]$, $\lambda'=2\cdot$
+   und $\lambda$ stückweis linear mit Steigung $100$ jenseits von $1$:
+   $\mathrm{normOn}\,\lambda=0$, $\mathrm{normOn}\,\lambda'=\log2$,
+   $\mathrm{normOn}(\lambda\lambda')\ge\log200$. Ebenso falsch ist
+   `dist_le_of_normOn_le`, aus einem zweiten Grund: `TimeChange` hat keinen
+   Anker, und eine Translation hat Norm $0$. Meilenstein 3 führt seither die
+   **globale** `TimeChange.lipConst`/`TimeChange.norm` samt Attainment
+   (`lipschitzWith_lipConst`), `lipConst_one`, `lipConst_of_subsingleton`,
+   `lipConst_mul_le`, `one_le_max_lipConst`, `norm_one`, `norm_inv`,
+   `norm_mul_le` — alle bewiesen —, Meilenstein 4 baut `distOn` darauf statt
+   auf `normOn`, und `dist_le_of_norm_le` trägt die Hypothese `λ t₀ = t₀`. 15
+   `sorry`; die beiden verbliebenen Definitionen mit `sorry` im Rumpf sind
+   `SkorokhodSpace.modulus` und `MetricSpace D(ι, E)`. Nächstes benanntes Ziel:
+   `TimeChange.dist_le_of_norm_le`, Weg im Inventar.
+
    Die Frage, ob Hypothese (a) von `mpSolution_of_tendsto` gemeinsame oder
    einzelne Verteilungskonvergenz meint, ist am Manuskript entschieden —
    `rem:absconvtopfree` sagt es ausdrücklich: einzeln, „and nothing else".

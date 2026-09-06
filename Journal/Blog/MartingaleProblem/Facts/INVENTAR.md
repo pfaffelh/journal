@@ -5483,3 +5483,150 @@ Meilenstein deshalb `normOn` auf `exhaustion t₀ (m+1)` für den inneren Faktor
 messen muß, wie Billingsley es tut, oder ob die Ordnungserhaltung samt
 `dist_le_of_normOn_le` genügt. Beides stützt `fact:Dcountable` (tragend `4`)
 über die Meilensteine 3 und 4, deren ganze Metrik daran hängt.
+
+### 2026-09-07, erster Lauf des Tages — Rückstau 1: die Länge der Zeitänderungen, und zwei weitere falsche Aussagen
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also der Rückstau von oben,
+und dort das benannte Ziel des fünften Laufs vom 2026-09-06:
+`TimeChange.normOn_one` und `TimeChange.normOn_mul_le` **zu beweisen**. Das
+erste ist bewiesen. Das zweite ist **falsch**, und zwar nicht knapp; die Frage,
+die der Vorschlag für diesen Lauf offen ließ — „muß der Meilenstein `normOn` für
+den inneren Faktor auf `exhaustion t₀ (m+1)` messen, wie Billingsley es tut,
+oder genügt die Ordnungserhaltung?" — ist damit beantwortet, und die Antwort ist
+keine von beiden: **die gefensterte Norm muß ganz weg.** Billingsley mißt die
+Zeitänderung gar nicht auf dem Fenster, sondern **global**; lokalisiert werden
+bei ihm nur die *Pfade*. Elf Deklarationen tragen jetzt Beweise, die durch
+`lake env lean` gegen `v4.33.1` gehen (Lean `4.33.1`, commit `819816b2`, Mathlib
+`0df444a3`); die Datei meldet `rc=0`, ohne Fehler und ohne Linterwarnung.
+
+**1. `TimeChange.normOn_mul_le` ist falsch, mit einem Zeugen auf `ℝ`.** Der
+Grund ist strukturell und kein Artefakt: `LipschitzOnWith.comp` verlangt, daß
+der innere Faktor das Fenster in sich abbildet, und eine Zeitänderung tut das
+nicht; außerhalb des Fensters ist der äußere Faktor durch `normOn` überhaupt
+nicht eingeschränkt. Der Zeuge, mit $\iota=\mathbb R$, $t_0=0$, $m=1$, also
+$B_1=[-1,1]$:
+
+* $\lambda' (x) = 2x$, also `lipConstOn` $=2$, für die Inverse $1/2$, und
+  $\mathrm{normOn}\,\lambda' = \log 2$.
+* $\lambda$ die stückweis lineare Ordnungsisomorphie, die auf $(-\infty,1]$ die
+  Identität ist und auf $[1,\infty)$ die Steigung $100$ hat. Auf $B_1$ sind
+  $\lambda$ **und** $\lambda^{-1}$ die Identität, also
+  $\mathrm{normOn}\,\lambda = \log 1 = 0$.
+* $(\lambda\lambda')(x) = \lambda(2x)$ schickt $1/2$ auf $1$ und $1$ auf $101$;
+  jede auf $B_1$ zulässige Konstante ist also $\ge 200$, und
+  $\mathrm{normOn}(\lambda\lambda') \ge \log 200 > \log 2$.
+
+Die Lücke ist beliebig groß zu machen: die Steigung $100$ ist frei. Damit fällt
+auch die Bauform von Meilenstein 4: `distOn m` stand dort auf
+`TimeChange.normOn m λ`, und ein `distOn` über einer nicht subadditiven Größe
+hat keine Dreiecksungleichung. Es steht jetzt auf der globalen
+`TimeChange.norm`, mit der Begründung im Meilenstein; ebenso
+`SkorokhodSpace.tendsto_iff`. Die Aussage selbst steht als
+`TimeChange.not_normOn_mul_le` in `Suggested.lean` — über dem **vollen** Bündel
+von Meilenstein 1 quantifiziert, denn nur so widerlegt sie die Roadmap-Aussage
+und nicht bloß eine allgemeinere —, mit der Rechnung im Doc-Kommentar und
+`sorry` als Beweis.
+
+**2. `TimeChange.dist_le_of_normOn_le` ist ebenfalls falsch, aus einem zweiten,
+unabhängigen Grund: `TimeChange` hat keinen Anker.** Eine Translation von
+$\mathbb R$ ist eine Ordnungsisomorphie mit `lipConst` $=1$ in beiden
+Richtungen, hat also Norm $0$, und verschiebt jeden Punkt um denselben
+beliebigen Betrag. Für $\gamma=0$ behauptet die Aussage
+$\mathrm{dist}(\lambda t,t)\le 0$, also $\lambda=\mathrm{id}$ auf dem Fenster.
+Billingsley bekommt den Anker geschenkt, weil sein $\Lambda$ aus den wachsenden
+Homöomorphismen von $[0,\infty)$ auf sich besteht und die alle $0$ festhalten;
+auf einem zweiseitigen Index muß er gefordert werden. Die Aussage heißt jetzt
+`TimeChange.dist_le_of_norm_le` und trägt die Hypothese `l.toOrderIso t₀ = t₀`.
+Die Zeitänderungen, die $t_0$ festhalten, sind eine Untergruppe, also übertragen
+sich `norm_one`, `norm_inv` und `norm_mul_le` unverändert auf sie; das Infimum
+in `distOn` läuft im Meilenstein jetzt über diese Untergruppe.
+
+**3. Was gebaut ist.** Der ganze globale Unterbau von Meilenstein 3, bewiesen:
+
+* `TimeChange.lipConst λ = sInf {K | LipschitzWith K λ}` und
+  `TimeChange.lipschitzWith_lipConst`, die **Attainment** — genau der Punkt, den
+  der Meilenstein als „das Infimum wird angenommen, weil `ι` ein metrischer Raum
+  ist" beschreibt. Der Beweis dividiert: `ENNReal.div_le_iff_le_mul` mit
+  `edist x y ≠ 0` und `≠ ⊤` macht aus `edist (λx) (λy) ≤ K * edist x y` die
+  Aussage, daß der Quotient eine untere Schranke der zulässigen `K` ist, und
+  `le_csInf` schließt ab. Für den Rückweg braucht es `ENNReal.coe_toNNReal`,
+  weil der Quotient endlich ist.
+* `TimeChange.lipConst_one` (`[Nontrivial ι]`, Wert `1`) und
+  `TimeChange.lipConst_of_subsingleton` (Wert `0`): die beiden Hälften, die
+  `normOn_one` schon am 2026-09-06 als Fallunterscheidung angekündigt hatte,
+  hier global.
+* `TimeChange.lipConst_mul_le`, `csInf_le'` auf `LipschitzWith.comp` der beiden
+  angenommenen Konstanten, über `OrderIso.coe_trans` für `l * l' = l ∘ l'`.
+* `TimeChange.norm`, `TimeChange.norm_inv`, `TimeChange.norm_one`,
+  `TimeChange.norm_mul_le` — die Längenfunktion, vollständig. Der Schritt, der
+  den Logarithmus überhaupt gutartig macht, ist eigens benannt:
+  `TimeChange.one_le_max_lipConst`, $1\le\max(\mathrm{lipConst}\,\lambda,
+  \mathrm{lipConst}\,\lambda^{-1})$ auf nichttrivialem Index, denn die beiden
+  Konstanten multiplizieren sich zu mindestens $\mathrm{lipConst}\,1 = 1$, also
+  auch das Quadrat ihres Maximums. Ohne ihn ist `Real.log_le_log` nicht
+  anwendbar. Derselbe Schritt gibt `TimeChange.norm_nonneg`, auch bewiesen —
+  ohne das ist das `max` in `distOn` nicht die gemeinte Größe.
+* **Und dabei fiel ein zweites Symptom der falschen `normOn` an:
+  `normOn` kann negativ sein.** `lipConstOn` mißt $\lambda$ auf dem Fenster und
+  $\lambda^{-1}$ **ebenfalls auf dem Fenster**, nicht auf dessen Bild, also
+  können beide zugleich $1/2$ sein: auf $\R$ mit $B_1=[-1,1]$ habe $\lambda$ die
+  Steigung $1/2$ auf $[-1,1]$ und die Steigung $2$ auf $[-6,-5]$, wo es die
+  Werte $[-1,1]$ annimmt. Dann ist $\mathrm{normOn}\,\lambda = -\log 2 < 0$. Die
+  Bemerkung steht am Doc-Kommentar von `norm_nonneg`.
+* `TimeChange.normOn_one`, das benannte Ziel, in der angekündigten Gestalt: die
+  Fallunterscheidung nach `(exhaustion t₀ m).Subsingleton`, im ersten Zweig
+  `lipConstOn = 0` und der Müllwert `Real.log 0 = 0`, im zweiten
+  `lipConstOn = 1` über `csInf_le'` und `le_csInf`, mit derselben
+  Divisionsrechnung wie oben.
+
+**4. Vier Mathlib-Beobachtungen, alle beim Übersetzen angefallen und alle für
+künftige Läufe teuer, wenn sie nicht dastehen.**
+
+* **`ℝ≥0∞` ist nicht in `open scoped NNReal`.** Es braucht
+  `open scoped ENNReal`. Der Parser meldet dafür „expected token" mitten in
+  einem Typ, was nicht nach einer fehlenden Notation aussieht.
+* **`mul_le_mul_left'` gibt es in `v4.33.1` nicht mehr** — „Unknown
+  identifier"; ein Volltextlauf über `Mathlib/` findet nur noch
+  `le_of_mul_le_mul_left'`. Was es gibt, ist `mul_le_mul_left`
+  (`Algebra/Order/Monoid/Unbundled/Basic.lean:78`), und es ist trotz des Namens
+  die **rechte** Multiplikation, mit der Hypothese als erstem Argument:
+  `(bc : b ≤ c) (a : α) : b * a ≤ c * a`. `mul_le_mul'` (`:203`) ist
+  unverändert.
+* **`zero_le` nimmt sein Argument implizit**, `zero_le _` ist ein Typfehler
+  („Function expected").
+* **`push_neg` ist deprecated**, zugunsten von `push Not`. Hier durch
+  `rw [not_le]` ersetzt, was ohnehin kürzer ist.
+
+**Stand der Datei.** `SkorokhodSpace/Suggested.lean`: 15 `sorry` statt 16, und
+die Zahl unterschätzt den Fortschritt, weil zwei der weggefallenen Aussagen
+falsch waren und durch eine berichtigte und eine Widerlegung ersetzt sind. Von
+den fünf Deklarationen mit `sorry` **im Rumpf einer Definition**, die der
+fünfte Lauf vom 2026-09-06 als die eigentliche Schwäche der Datei benannt hat,
+bleiben `SkorokhodSpace.modulus` und die `MetricSpace D(ι, E)`-Instanz; unter
+der Instanz hängen `CompleteSpace`, `SeparableSpace`, `PolishSpace` und
+`continuousAt_eval`.
+
+**Was offen blieb.** `TimeChange.not_normOn_mul_le` trägt `sorry`. Die Rechnung
+im Doc-Kommentar ist vollständig und elementar, aber sie ist nicht übersetzt;
+dafür fehlt die stückweis lineare Ordnungsisomorphie von $\mathbb R$ als Term
+(`StrictMono.orderIsoOfRightInverse`, `Order/Hom/Basic.lean:1206`, gibt sie her,
+zusammen mit ihrer Inversen) und die drei `lipConstOn`-Auswertungen.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`TimeChange.dist_le_of_norm_le` **zu beweisen**. Sie ist jetzt dran, weil sie
+seit heute richtig ausgesprochen ist — mit dem Anker `λ t₀ = t₀` —, weil
+`lipschitzWith_lipConst` seit heute das Werkzeug liefert, mit dem aus
+`norm λ ≤ γ` überhaupt eine Abschätzung von `edist (λ t) (λ t₀)` wird, und weil
+sie die letzte der drei Aussagen über `norm` ist, auf denen Meilenstein 4 die
+Metrik aufbaut: Symmetrie aus `norm_inv`, Dreieck aus `norm_mul_le`, beide seit
+heute bewiesen, und **Trennung** aus genau dieser. Der Weg steht fest und ist
+kurz: für $t\ge t_0$ ist $\lambda t\ge\lambda t_0=t_0$, also gibt `AdditiveDist`
+über `dist_eq_sub_of_le` die Identität
+$\mathrm{dist}(\lambda t,t)=|\mathrm{dist}(t_0,\lambda t)-\mathrm{dist}(t_0,t)|$,
+und `lipschitzWith_lipConst` für $\lambda$ und für $\lambda^{-1}$ klemmt
+$\mathrm{dist}(t_0,\lambda t)$ zwischen $e^{-\gamma}\mathrm{dist}(t_0,t)$ und
+$e^{\gamma}\mathrm{dist}(t_0,t)$ ein; der Fall $t\le t_0$ ist symmetrisch. Das
+ist die erste Stelle des ganzen Meilensteins, an der `AdditiveDist` wirklich
+gebraucht wird, und damit zugleich die Probe darauf, daß Meilenstein 1 die
+richtige Klasse führt. Sie stützt `fact:Dcountable` (tragend `4`) über die
+Meilensteine 3 und 4.
