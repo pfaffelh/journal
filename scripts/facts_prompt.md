@@ -198,7 +198,31 @@ Mathlibs eigenen Begriffen, und sucht danach; und wer sie dann noch immer nicht
 findet, sagt im Bericht, mit welchen Formulierungen er gesucht hat.
 
 
-### Aufgabe: charakteristische Funktionen als trennende Klasse *(gestellt 2026-09-06)*
+### ~~Aufgabe: charakteristische Funktionen als trennende Klasse~~ *(gestellt 2026-09-06, erledigt 2026-09-06, dritter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, „2026-09-06, dritter Lauf des
+Tages". Kurz: Punkt 1 eingetragen, an `upstream/master` `810b3888` **und** an
+v4.33.1 belegt (die Zeilennummern unten sind die von v4.33.1; auf master
+`:257`, `:462`, `:103`), nichts davon `deprecated`; mitgefunden, daß `charPoly`
+eine **Stern**-Unteralgebra ist, also gerade die Konjugationsabgeschlossenheit
+trägt, die `fact:stoneweierstrass` für $\K=\C$ eigens verlangt. Punkt 2 ist mit
+einer Tabelle aller acht Fundstellen beantwortet, und die Strukturfrage ist an
+**jeder** verneint: die beiden Stellen mit linearer Struktur helfen nicht —
+$E=\R^d$ (§7.5) instanziiert gar keine trennende Klasse, sondern läuft über
+Stroock--Varadhan, und $\mathcal S'(\R^d)$ ist nach `def:Ebundles` nicht
+metrisierbar, scheitert also an `[PseudoEMetricSpace V]`. Die einzige konkrete
+trennende Klasse des Manuskripts ist die Hawkes-Dualität, und sie ist ein
+Beinahe-Treffer aus zwei unabhängigen Gründen kein Treffer: Laplace statt
+Fourier, und $\hat E_t$ ist ein Untermonoid der Maße und kein $\R$-Modul.
+Punkt 3 ist **negativ**: Meilenstein 1 spart keinen Punkt ein, Punkt für Punkt
+begründet; der Ertrag ist der Beleg für seine Bauform und der Ausschluß
+künftiger Charakter-Umwege. Zwei Auffälligkeiten mitgefunden, beide im
+Inventar — `def:separating` ist nur für $\Cb(S)$ erklärt, während das
+Manuskript „trennend" auch für $\Bdd(E)$ benutzt (folgenlos, weil
+`IsSeparating` schon über beliebigen reellen Funktionen erklärt ist), und
+`prop:hawkesduality`(D2) zitiert die Bestimmung eines Punktprozesses durch sein
+Laplace-Funktional ohne `\begin{fact}` — Mathlib hat Punktprozesse überhaupt
+nicht.
 
 **Der Befund, vom Nutzer gefunden und am Quelltext bestätigt.** Mathlib hat
 „charakteristische Funktionen trennen Maße" — `Measure.ext_of_charFun`

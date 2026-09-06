@@ -53,16 +53,16 @@ ist kein Befund, sondern ein `?`.
 | Fact | tragend | Aussage | Status | Beleg |
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum |
-| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean` |
+| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one` — und die Aussage des Schritts selbst, `of_continuous_comp_of_isMulSystem` |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
-| `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht |
+| `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated` |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
 | `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:optsampl` | 2 | Optional sampling; EK, Theorem 2.2.13, Remark 2.2.14,  | Roadmap | MartingaleProblems M9, `Submartingale.stoppedValue_min_le_condExp` — dort neu angelegt; Mathlibs `Martingale.stoppedValue_min_ae_eq_condExp` ist der diskrete Fall und nur für Martingale |
 | `fact:prohorov` | 2 | Prohorov; EK, Lemma 3.2.1 and Theorem 3.2.2 | Mathlib | `MeasureTheory/Measure/Prokhorov.lean`, `isCompact_closure_of_isTightMeasureSet` und Umkehrung |
 | `fact:relcompact2` | 2 | Relative compactness, II; EK, Theorem 3.9.4 | Roadmap | MartingaleProblems M11, `isTight_map_postcomp_of_exists_martingale` — dort neu angelegt; `isRelativelyCompact_of_approx` nannte nur die Folgerung, nicht das Kriterium |
-| `fact:sepcond` | 2 | Conditional determination by separating sets; EK, Chap | Roadmap | WeakConvergence M1, `IsSeparating.ae_eq_of_forall_condExp_eq` — dort neu angelegt; Mathlib liefert `Filter.EventuallyEq.of_forall_separating_preimage` als Schlussschritt |
+| `fact:sepcond` | 2 | Conditional determination by separating sets; EK, Chap | Roadmap | WeakConvergence M1, `IsSeparating.ae_eq_of_forall_condExp_eq` — seit dem 2026-09-06, erster Lauf, mit Beweis und durch `lake env lean`; Mathlib liefert `Filter.EventuallyEq.of_forall_separating_preimage` als Schlussschritt. Die trennende Klasse `M`, die der Fact **konsumiert**, ist in Mathlib mit `charPoly` und `Measure.ext_of_charFun` fertig instanziiert (siehe `fact:stoneweierstrass`) — aber nur über einem vollständigen zweitabzählbaren Innenprodukt- bzw. Banachraum. Am 2026-09-06, dritter Lauf, wurde jede Fundstelle des Manuskripts durchgesehen, an der eine trennende Klasse konkret instanziiert wird; an **keiner** liegt diese lineare Struktur vor, siehe den Laufbericht |
 | `fact:submgreg` | 2 | Submartingale regularization; EK, Proposition 2.2.9; e | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
@@ -4893,3 +4893,285 @@ Zweiter Kandidat, unverändert vom ersten Lauf des Tages:
 `IsSeparating.of_subalgebra`, die dritte offene Deklaration von Meilenstein 1,
 eine reine Übersetzung zwischen `Subalgebra ℝ (E →ᵇ ℝ)` und
 `StarSubalgebra ℝ (E →ᵇ ℝ)`.
+
+### 2026-09-06, dritter Lauf des Tages — vorrangige Aufgabe: charakteristische Funktionen als trennende Klasse
+
+**Lage zu Beginn.** Die vorrangige Aufgabe vom 2026-09-06 stand ungestrichen da
+und trug keinen Zwischenstand; kein Laufbericht deckte sie ab. Sie hat also
+Vorrang vor dem Rückstau. Drei Punkte, alle drei erledigt; Punkt 3 negativ, und
+das ist der eigentliche Ertrag.
+
+**Punkt 1: der Befund ist am Quelltext bestätigt und eingetragen.** Geprüft an
+`upstream/master` `810b3888` (2026-09-05) und an v4.33.1, beide Male mit
+identischem Inhalt und nur verschobenen Zeilennummern:
+
+* `Measure.ext_of_charFun` — master `:257`, v4.33.1 `:248` —, unter
+  `[NormedAddCommGroup E] [InnerProductSpace ℝ E] [BorelSpace E]
+  [SecondCountableTopology E] [CompleteSpace E]` und
+  `[IsFiniteMeasure μ] [IsFiniteMeasure ν]`;
+* `Measure.ext_of_charFunDual` — master `:462`, v4.33.1 `:453` —, unter
+  `[NormedAddCommGroup E] [NormedSpace ℝ E]` und denselben drei
+  Raum-Instanzen;
+* beide über `ext_of_integral_char_eq` (master `:103`, v4.33.1 `:101`), dessen
+  erste Beweiszeile
+  `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
+  (`Measure/FiniteMeasureExt.lean:36`) auf `separatesPoints_charPoly`
+  (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`) anwendet;
+* `charPoly` (`ibid.:141`) ist die von den Charakteren erzeugte
+  `StarSubalgebra ℂ (V →ᵇ ℂ)`, gebaut als `(charAlgHom he hL).range` mit
+  `star_mem'` aus `star_mem_range_charAlgHom`.
+
+Keine der vier Deklarationen trägt `deprecated`; die Datei kennt das Attribut
+überhaupt nicht, ebensowenig `BoundedContinuousFunctionChar.lean` und
+`FiniteMeasureExt.lean`. Eingetragen ist das bei `fact:stoneweierstrass` und,
+mit der Einschränkung von Punkt 2, bei `fact:sepcond`; dazu ein Punkt in
+`WeakConvergence`, Abschnitt „What Mathlib already has", damit ein künftiger
+Lauf den Weg nicht noch einmal sucht.
+
+Zwei Beobachtungen, die über die Aufgabenstellung hinausgehen und die
+Bauform von Meilenstein 1 stützen. Erstens ist `charPoly` eine
+**Stern**-Unteralgebra, also genau die Konjugationsabgeschlossenheit, die
+`fact:stoneweierstrass` für $\K=\C$ eigens verlangt („the one place in the
+manuscript where the complex case is not automatic") — Manuskript und Mathlib
+stolpern hier über dieselbe Stelle und lösen sie gleich. Zweitens trennt
+`ext_of_charFun` **endliche** Maße, ist also stärker als unser `IsSeparating`,
+das über Wahrscheinlichkeitsmaßen quantifiziert; die Richtung stimmt, es ist
+eine Instanz und keine Abschwächung.
+
+**Punkt 2: jede Fundstelle des Manuskripts, an der eine trennende Klasse
+konkret instanziiert wird, mit der Antwort auf die Strukturfrage.** Die
+Einschränkung ist wie in der Aufgabe vermutet ernst, und sie ist bindend: alle
+drei Sätze verlangen, daß das Maß auf dem **Modul selbst** lebt —
+`ext_of_integral_char_eq` unter `[AddCommGroup V] [Module ℝ V]
+[PseudoEMetricSpace V] [CompleteSpace V] [SecondCountableTopology V]
+[BorelSpace V]`, die beiden Folgerungen unter Innenprodukt- bzw. Banachraum.
+\eqref{E2} gibt separabel metrisierbar, \eqref{E3} gibt polnisch, und keines
+von beidem gibt eine Vektorraumstruktur.
+
+| Fundstelle | trennende Klasse | Raum | lineare Struktur? |
+|---|---|---|---|
+| `ex:determining` (Z. 2355), \eqref{T2b}+\eqref{E2} | $\ZZ^\circ_t=\{\prod_i h_i(X_{t_i})\}$, $h_i\in\Cb(E)$ | Pfadraum $\DE$ bzw. $\CE$ über abstraktem $E$ | nein |
+| `fact:fdd` (Z. 1439) | $\{x\mapsto\prod_k f_k(x_k)\}$ aus trennenden $M_k$ | $\prod_k S_k$, $(S_k,d_k)$ separabel | nein |
+| `thm:absreg` (Z. 3081) | $\Phi\subset\Cb(E)$, trennend und mit abzählbarer punktetrennender Teilmenge | abstraktes $E$ unter \eqref{E2} | nein |
+| `rem:EKrelcompact` (Z. 8338) | eine Algebra in $\dom(A)$, punktetrennend und nirgends verschwindend | $(E,r)$ polnisch | nein |
+| `cor:uniqviadual`(i) (Z. 6879) | $\{f(\cdot,y):y\in E_2\}\subset\Bdd(E)$ | abstraktes $E$ unter \eqref{E2} | nein |
+| `prop:rieszmarkov` (Z. 7225) | $\mathcal H_1=\operatorname{span}\{H(\cdot,y)\}$, konvergenzbestimmende Algebra mit Konstanten | $E_1$ kompakt metrisierbar | nein |
+| `lem:histrestart`(iii) (Z. 7362), `prop:hawkesduality`(D2) (Z. 7622) | $\operatorname{span}\{H_r(\cdot,f)\}$, Laplace-Funktionale | $\hat E_r$ = endliche Zählmaße auf $[0,r]$ | **fast**, siehe unten |
+| `prop:jumpwellposed` (Z. 7942) | $\Bdd(E)$ | abstraktes $E$ | nein (keine Wahl getroffen) |
+
+Die Antwort ist also durchweg **nein**, und an den beiden Stellen, an denen
+lineare Struktur überhaupt im Manuskript vorkommt, hilft sie nicht:
+
+* **$E=\R^d$ (§7.5, `eq:sdegen` Z. 8081, `cor:sdewellposed`).** Hier läge die
+  Struktur vor, aber das Manuskript instanziiert dort **keine** trennende
+  Klasse: der $\R^d$-Weg läuft über `fact:strookvaradhan` (Stroock--Varadhan,
+  Z. 8100) und `fact:yamadawatanabe`, nicht über `thm:absreg` oder
+  `rem:EKrelcompact`. Die einzige konkrete Algebra in einem $\dom(A)$ über
+  einem linearen Zustandsraum ist $C^\infty_c(\R^d)$, und sie ist kompakt
+  getragen und reell — Charaktere sind weder das eine noch das andere. Auch
+  `ex:invariance` (Z. 8779, $E=\R^d$) wählt keine trennende Klasse, sondern
+  Generatorkonvergenz.
+* **$E=\mathcal S'(\R^d)$ (`rem:E1why`, Z. 938).** Das ist die Stelle, an der
+  Charaktere klassisch das Werkzeug sind (Bochner--Minlos), und genau dort
+  greift Mathlib nicht: `ext_of_integral_char_eq` verlangt
+  `[PseudoEMetricSpace V]`, und $\mathcal S'(\R^d)$ erfüllt nach
+  `def:Ebundles` (Z. 902) gerade \eqref{E1} und **nicht** \eqref{E2}, ist also
+  nicht metrisierbar; `ext_of_charFunDual` verlangt darüber hinaus eine Norm.
+  Das Manuskript sagt an derselben Stelle selbst, daß §\ref{sec:cadlag} und
+  §\ref{sec:convergence} dort nicht gelten und die Reparatur Mitomas Satz wäre.
+  Mathlib bringt diesen Fall also nicht näher, und `rem:E1why` steht
+  unverändert richtig da.
+
+**Der Beinahe-Treffer, und warum er keiner ist.** Die einzige *konkrete*
+trennende Klasse des ganzen Manuskripts ist die Hawkes-Dualität
+(`set:hawkesdual`, Z. 7439): $H_t(\hat x,f)=\exp\{-\int_{[0,t]}f\dif\hat x\}$
+auf $\hat E_t$ = endliche Zählmaße auf $[0,t]$, und
+`prop:hawkesduality`(D2) begründet die Trennung mit „Laplace functionals
+determining the law of a point process". Das ist strukturell dieselbe
+Konstruktion wie `charPoly` — der Spann von Exponentialen einer bilinearen
+Paarung —, und trotzdem ist Mathlibs Satz nicht anwendbar, aus zwei
+unabhängigen Gründen. Erstens ist der Exponent **reell**: Mathlibs `char` ist
+aus einem `AddChar ℝ Circle` gebaut, also Fourier und nicht Laplace, und
+`ext_of_charFun` sagt über Laplace-Transformierte nichts. Zweitens ist
+$\hat E_t$ unter Addition abgeschlossen, aber **kein $\R$-Modul** — die
+Zählmaße sind ein Untermonoid der Maße, kein Untervektorraum —, und das ist die
+Instanz `[Module ℝ V]`, an der `ext_of_integral_char_eq` hängt. Mitgeprüft:
+Mathlib hat Punktprozesse überhaupt nicht; `git grep` an `upstream/master` nach
+`Laplace functional`, `laplaceFunctional` und `PointProcess` über ganz
+`Mathlib/` liefert **keine einzige Datei**. Die Aussage, die
+`prop:hawkesduality`(D2) zitiert, ist damit weder in Mathlib noch in einer
+Roadmap — sie steht aber auch in keinem `\begin{fact}`, gehört also nicht in
+dieses Inventar, sondern unter die Auffälligkeiten (siehe unten).
+
+**Punkt 3: der Negativbefund. Meilenstein 1 spart keinen Punkt ein.** Die
+Aufgabe verlangt, das ebenso deutlich zu sagen wie einen Fund, und hier ist es,
+Punkt für Punkt:
+
+* `IsSeparating.of_subalgebra` ist die **allgemeine** Aussage über
+  `Subalgebra ℝ (E →ᵇ ℝ)` auf polnischem $E$; `Measure.ext_of_charFun` ist eine
+  einzelne Instanz davon über $\C$ und über einem Innenproduktraum und liefert
+  sie nicht. Umgekehrt ist der Punkt durch den Befund eher **bestätigt**: sein
+  Beleg `ext_of_forall_mem_subalgebra_integral_eq_of_polish` (`:72`) ist der
+  polnische Zwilling genau des Satzes, den Mathlib in `ext_of_integral_char_eq`
+  selbst benutzt.
+* `isTightMeasureSet_of_stronglySeparatesPoints` bleibt unberührt:
+  charakteristische Funktionen sagen über Straffheit nichts, und der Weg von
+  starker Trennung zur Straffheit kommt in `CharacteristicFunction/` nicht vor.
+* `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` und
+  `…_hasCompactSupport` bleiben unberührt: Charaktere haben keinen beschränkten
+  Träger, und `fact:convdet` ist eine Aussage über separabel metrische Räume
+  ohne lineare Struktur.
+* Der Produktpunkt, der Punkt über abzählbare trennende Klassen und
+  `IsSeparating.ae_eq_of_forall_condExp_eq` bleiben unberührt; alle drei sind
+  über abstraktem $E$ formuliert, und die Tabelle oben zeigt, daß genau so die
+  Fundstellen aussehen.
+
+Es bleibt also bei den Punkten, die Meilenstein 1 hat. Der Ertrag ist ein
+**Beleg für seine Bauform**, wie die Aufgabe es vorwegnimmt, und ein zweiter,
+den sie nicht vorwegnimmt: die Strukturfrage ist an allen acht Fundstellen
+verneint, und damit ist ausgeschlossen, daß ein späterer Lauf einen der Punkte
+durch eine Charakter-Instanz zu ersetzen versucht. **Die Aufgabe ist erledigt
+und nicht offen.**
+
+**Zwei Auffälligkeiten, mitgefunden.**
+
+1. **`def:separating` ist nur für $M\subset\Cb(S)$ erklärt, das Manuskript
+   benutzt „trennend" aber auch für $\Bdd(E)$-Familien** —
+   `cor:uniqviadual`(i) (Z. 6879: „$\{f(\cdot,y):y\in E_2\}\subset\Bdd(E)$ is
+   separating for $\Prob(E)$") und `prop:jumpwellposed` (Z. 7942: „since
+   $\Bdd(E)$ is separating"). Gemeint ist offensichtlich dieselbe Bedingung
+   $\int f\dif P=\int f\dif Q\ \forall f\in M\Rightarrow P=Q$, die die
+   Stetigkeit gar nicht braucht. Für die Formalisierung ist das folgenlos und
+   sogar schon richtig entschieden: Meilenstein 1 erklärt
+   `IsSeparating (Γ : Set (E → ℝ))` über **beliebigen** reellen Funktionen
+   (`Suggested.lean:79`), nicht über `E →ᵇ ℝ`, und deckt beide Lesarten ab. Das
+   Manuskript wird nicht geändert; festgehalten, damit niemand die
+   Lean-Definition nachträglich an `def:separating` „angleicht" und sich die
+   beiden Fundstellen verbaut.
+2. **`prop:hawkesduality`(D2) zitiert eine Aussage ohne `\begin{fact}`** — die
+   Bestimmung eines Punktprozesses durch sein Laplace-Funktional. Sie wird
+   benutzt und nicht bewiesen, gehört also der Sache nach zur
+   Voraussetzungsfläche, steht aber in keinem der 29 Facts und damit in keiner
+   Zeile dieses Inventars. Mathlib hat sie nicht (Negativbefund oben, mit den
+   drei Suchen). Das ist keine Lücke der Roadmaps im Sinne der Aufgabe — die
+   Roadmaps decken die Facts ab —, sondern eine Beobachtung am Zuschnitt der
+   Fact-Liste, und sie gehört dem Nutzer vorgelegt, bevor jemand daraus einen
+   Roadmap-Punkt macht.
+
+**Offen geblieben.** Nichts aus der Aufgabe. Der Rückstau ist unangetastet;
+Punkt 2 (`induction_on_mulSystem`) steht mit dem Zwischenstand des zweiten
+Laufs des Tages.
+
+**Zweiter Teil desselben Laufs: `IsSeparating.of_subalgebra` ist bewiesen und
+übersetzt.** Nachdem die vorrangige Aufgabe erledigt war, lag dieser Punkt so
+nahe, daß er vor dem Rückstau drankam — er ist genau die Deklaration, an der
+unser Prädikat an denjenigen Mathlib-Satz andockt, den Mathlib für
+`ext_of_charFun` selbst benutzt, und beide vorigen Läufe hatten ihn als
+Zweitkandidaten benannt. (Rückstau 2 bleibt damit unangetastet stehen; sein
+nächster Schritt (ii) ist der Stone--Weierstraß-Brocken und kein Rest eines
+Laufs.) `TauCeti/WeakConvergence/Suggested.lean` trägt an dieser Stelle kein
+`sorry` mehr; die Datei geht durch `lake env lean` gegen `v4.33.1` ohne andere
+Fehler als den unverändert dokumentierten von
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` (absichtlich für
+`upstream/master` geschrieben) und ohne andere Warnung als
+`declaration uses 'sorry'`. **Acht** Deklarationen von Meilenstein 1 tragen
+jetzt Beweise.
+
+Der Beweis ist die Übersetzung, die die Roadmap beschreibt, und sie ist kürzer
+als dort veranschlagt: `Subalgebra.SeparatesPoints.rclike_to_real` und
+`RCLike.restrict_toContinuousMap_eq_toContinuousMapStar_restrict` werden **nicht
+gebraucht**. Sie sind der Weg von einer `StarSubalgebra` über $\C$ zu ihrem
+reellen Teil; wir sind schon über $\R$ und brauchen nur die Gegenrichtung, das
+Anheften der trivialen Sternstruktur. Zwei Schritte: `A` wird zur
+`StarSubalgebra ℝ (E →ᵇ ℝ)` mit `star_mem'` aus `star g = g`, und da `A'` und
+`A` **dasselbe** `carrier` haben und `toContinuousMapStarₐ ℝ` dieselbe
+zugrundeliegende Funktion wie `toContinuousMapₐ ℝ`, ist die Trennungshypothese
+wörtlich dieselbe Aussage und geht durch Zerlegen und Wiederzusammensetzen des
+Zeugen (`⟨_, ⟨F, ⟨g, hg, rfl⟩, rfl⟩, hne⟩`). Danach ist es ein `exact` auf
+`ext_of_forall_mem_subalgebra_integral_eq_of_polish (𝕜 := ℝ)`.
+
+**Ein Befund am Übersetzen.** `star g = g` für `g : E →ᵇ ℝ` geht **nicht** mit
+`star_trivial`: das verlangt `TrivialStar (E →ᵇ ℝ)`, und diese Instanz gibt es
+in v4.33.1 nicht — Mathlib hat `TrivialStar ℝ`, aber nicht das Hochheben auf
+die beschränkten stetigen Funktionen. Der Ersatz ist punktweise, `ext a; simp`,
+und ist eine Zeile. Das ist dieselbe Sorte Fehler wie der Namensraumfehler vom
+2026-09-01: die Instanz *klingt*, als müßte sie da sein, und ist es nicht.
+An `upstream/master` nachgeprüft, und dort ist die Asymmetrie ebenso: für
+`C(α, β)` gibt es `ContinuousMap.instTrivialStar`
+(`Topology/ContinuousMap/Star.lean:54`), für `C_c(α, β)` gibt es sie
+(`ContinuousMap/CompactlySupported.lean:405`), für `C(X, R)₀` gibt es sie
+(`ContinuousMap/ContinuousMapZero.lean:318`) — und
+`Topology/ContinuousMap/Bounded/Star.lean` enthält das Wort `TrivialStar`
+kein einziges Mal. Das ist ein einzeiliger Beitrag nach oben, wenn jemand ihn
+mitnehmen will; für uns kostet es die eine `ext`-Zeile.
+
+**Dritter Teil desselben Laufs: Rückstau 2, die algebraische Hälfte von Schritt
+(ii).** Danach war noch Zeit, und der Reihenfolge nach steht Rückstau 2 oben.
+Der Schritt (ii) als Ganzes ist ein Mehr-Lauf-Ziel; was in diesem Lauf
+vollständig ging, ist seine algebraische Hälfte, und sie ist bewiesen und
+übersetzt: `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`
+und `exists_bound_of_mem_span_insert_one`. Dazu die Aussage von (ii) selbst als
+`of_continuous_comp_of_isMulSystem`, mit `sorry` — sie stand bisher in keiner
+`Suggested.lean`. **Zwanzig** Deklarationen der Datei tragen jetzt Beweise; sie
+geht unverändert durch `lake env lean` mit dem einen dokumentierten
+master-Fehler als einziger Ausnahme.
+
+**Und der Befund, der die Gestalt von (ii) festlegt.** Die naheliegende
+Induktion über `Algebra.adjoin` **trägt nicht**: ihr `mul`-Fall verlangt, daß
+`P` unter Produkten abgeschlossen ist, und genau das ist `P` nicht — es ist
+linear, enthält die Konstanten und ist unter beschränkten monotonen Limiten
+abgeschlossen, und mehr steht in den Hypothesen von `induction_on_mulSystem`
+nicht. Die Multiplikativität muß in `K` bleiben. Das tragende Objekt ist
+deshalb `Submodule.span ℝ (insert 1 K)`, die von `K` erzeugte Unteralgebra: der
+Spann ist unter Multiplikation abgeschlossen, weil `K * K ⊆ K` ist und die
+hinzugefügte `1` eine Einheit ist, und `P` gilt auf ihm allein aus Linearität.
+Er liegt zwischen `K` und `P`, und (ii) zieht die Stone--Weierstraß-Approximanten
+durch ihn hindurch. Das ist der Grund, warum die drei Lemmata eigene
+Deklarationen sind und nicht Zeilen im Beweis von (ii). Mitgefunden: der
+bessere Anker für die verbleibende Hälfte ist die **unbebündelte** ε-Fassung
+`ContinuousMap.exists_mem_subalgebra_near_continuous_of_separatesPoints`
+(`StoneWeierstrass.lean:313`, in v4.33.1 wie auf master), die `φ` als Funktion
+samt `Continuous`-Beweis nimmt; und `abs_add` heißt in v4.33.1 `abs_add_le`.
+Beides steht im Zwischenstand von Rückstau 2.
+
+**Was als Nächstes formalisiert werden soll: die Approximationshälfte von
+`MeasureTheory.of_continuous_comp_of_isMulSystem`** — Rückstau 2, das der
+Reihenfolge nach oben steht, und der einzige verbliebene Schritt des
+funktionalen Monotone-Klassen-Satzes mit echtem Inhalt. Die Aussage steht seit
+diesem Lauf getippt und typgeprüft da, die algebraische Hälfte ist bewiesen,
+und was fehlt, sind drei Dinge in dieser Reihenfolge: die kompakte Box
+`Set.pi univ (fun _ => Icc (-C) C)` in `Fin n → ℝ`, die die Bilder von
+`x ↦ (f₁ x, …, fₙ x)` enthält (`IsCompact.pi`, aus der Beschränktheit der
+`f i ∈ K`); die Punktetrennung der von den Koordinatenabbildungen erzeugten
+Unteralgebra von `C(box, ℝ)` — zwei Punkte der Box unterscheiden sich in einer
+Koordinate; und der Rückzug entlang `x ↦ (f₁ x, …, fₙ x)`, der die
+Unteralgebra nach `Submodule.span ℝ (insert 1 K)` schickt. Danach schließen
+`exists_mem_subalgebra_near_continuous_of_separatesPoints` (`:313`),
+`of_mem_span_insert_one` und `of_tendstoUniformly_of_mono_lim` den Beweis. Sie
+ist jetzt dran, weil sie drei fertige Roadmap-Punkte freigibt und weil ihre
+Vorarbeiten sämtlich in derselben Datei stehen; sie deckt `fact:monotoneclass`,
+tragend `4`.
+
+Zweiter Kandidat, und er ist nach diesem Lauf der Punkt von Meilenstein 1, an
+dem die längste Kette hängt:
+`MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints` — für polnisches
+`E`, eine `A : Subalgebra ℝ (E →ᵇ ℝ)`, die Punkte **stark** trennt, und eine
+Familie `μ : ι → ProbabilityMeasure E` entlang eines `NeBot`-Filters, deren
+Integrale über `A` gegen die eines `μ₀` konvergieren, gilt
+`IsTightMeasureSet {(μ n : Measure E) | n}`. Sie ruht auf
+`StronglySeparatesPoints.separatesPoints` (bewiesen, 2026-09-06, erster Lauf)
+und speist `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+(`Measure/LevyConvergence.lean:154`), woraus
+`isConvergenceDetermining_of_stronglySeparatesPoints` fällt — die
+konvergenzbestimmende Hälfte von `fact:stoneweierstrass`, tragend `3`. (Offen
+bleiben in Meilenstein 1 daneben die Punkte zu `fact:convdet`, die Produkte
+über beliebigem Index, die Stabilität unter beschränkten punktweisen Limiten
+und die abzählbaren Klassen; keiner von ihnen speist einen weiteren Punkt
+desselben Meilensteins.) Der Lauf vom 2026-09-05 hat
+mit dem Gegenbeispiel $E=\R$, $A=\{f:\lim_{x\to\infty}f=f(0)\}$,
+$\mu_n=\delta_n$ belegt, daß die Straffheit dabei wirklich aus der starken
+Trennung kommen muß und nicht geschenkt ist. Sie ist kein Ein-Lauf-Ziel; wer
+sie aufnimmt, baue zuerst die Hilfsaussage, daß starke Trennung an einem Punkt
+`x` eine endliche Familie aus `A` und ein `ε > 0` liefert, mit denen sich das
+Komplement einer Kugel um `x` gleichmäßig von `x` trennen läßt, und übersetze
+sie.
