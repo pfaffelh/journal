@@ -458,10 +458,11 @@ spaces are Mathlib's and not this roadmap's.
 ## Milestone 5: the functional monotone class theorem
 
 Mathlib has Dynkin's π–λ theorem for **sets**, as the induction principle
-`induction_on_inter` in `Mathlib/MeasureTheory/PiSystem.lean`. The functional
-form — a linear space of bounded functions containing the constants and a
-multiplicative class `K`, closed under bounded monotone limits, contains every
-bounded `σ K`-measurable function — is absent; `docs/1000.yaml`
+`MeasurableSpace.induction_on_inter` in `Mathlib/MeasureTheory/PiSystem.lean`
+(line 713; the namespace is `MeasurableSpace`, not `MeasureTheory`). The
+functional form — a linear space of bounded functions containing the constants
+and a multiplicative class `K`, closed under bounded monotone limits, contains
+every bounded `σ K`-measurable function — is absent; `docs/1000.yaml`
 carries the monotone class theorem as `Q242045` with no declaration. It is the
 tool the products of Milestone 1 rest on, and the determining sets of the
 roadmap **MartingaleProblems** are built with it. `Ω` here is a bare measurable
@@ -469,15 +470,40 @@ space; no topology is involved.
 
 * `MeasureTheory.IsMulSystem K` for `K : Set (Ω → ℝ)`, defined as
   `∀ f ∈ K, ∀ g ∈ K, f * g ∈ K`, the multiplicative counterpart of
-  `IsPiSystem`. With it `isMulSystem_indicator_of_isPiSystem`: for a π-system
-  `𝒞` the indicators `Set.indicator s 1` with `s ∈ 𝒞` form a multiplicative
-  system.
+  `IsPiSystem`, and `MeasureTheory.indicatorFuns 𝒞` for `𝒞 : Set (Set Ω)`,
+  defined as `{f | ∃ s ∈ 𝒞, Set.indicator s 1 = f}`, with its monotonicity in
+  `𝒞`. With them `isMulSystem_indicator_of_isPiSystem`: for a π-system `𝒞` the
+  set `indicatorFuns (insert ∅ 𝒞)` is a multiplicative system. The `insert ∅` is
+  necessary — for `s, t ∈ 𝒞` with `s ∩ t = ∅` the product of the two indicators
+  is the constant `0`, the indicator of `∅` and of no other set, and a π-system
+  need not contain `∅`; the witness is `𝒞 = {{0}, {1}}` on `ℕ`. It is also free,
+  by `MeasurableSpace.generateFrom_insert_empty`.
 * `MeasureTheory.generateFromFuns K`, defined as
   `⨆ f ∈ K, MeasurableSpace.comap f (borel ℝ)` with `MeasurableSpace.comap` of
-  `Mathlib/MeasureTheory/MeasurableSpace/Basic.lean`, together with
-  `measurable_generateFromFuns_of_mem` for `f ∈ K`, monotonicity in `K`, and the
-  identity `generateFromFuns (indicators of 𝒞) = MeasurableSpace.generateFrom 𝒞`
+  `Mathlib/MeasureTheory/MeasurableSpace/Basic.lean` and marked
+  `@[instance_reducible]` as `MeasurableSpace.generateFrom` is, together with
+  `measurable_generateFromFuns_of_mem` for `f ∈ K`, the characterisation
+  `generateFromFuns_le_iff` of `generateFromFuns K ≤ m` as measurability of
+  every `f ∈ K`, monotonicity in `K`, and the identity
+  `generateFromFuns (indicatorFuns (insert ∅ 𝒞)) = MeasurableSpace.generateFrom 𝒞`
   that connects the functional form to `induction_on_inter`.
+* `MeasureTheory.ioiCells K`, the finite intersections of the sets
+  `f ⁻¹' Set.Ioi c` with `f ∈ K`, indexed by a `List ((Ω → ℝ) × ℝ)` — a `Finset`
+  of pairs would do as well, a `Finset` of functions with one level each would
+  not, two members being allowed to name the same `f`. With it
+  `isPiSystem_ioiCells`, where appending lists is the closure under
+  intersection, and `generateFromFuns_eq_generateFrom_ioiCells`, which is the
+  place where the functional form meets the set form. The single preimages
+  `f ⁻¹' Ioi c` do not form a π-system, which is why the finite intersections
+  are built into the family. Rests on `measurable_of_Ioi`
+  (`Constructions/BorelSpace/Order.lean:653`) in one direction and on an
+  induction along the list in the other.
+* `MeasureTheory.of_tendstoUniformly_of_mono_lim`: a class of functions closed
+  under addition, containing the constants and closed under bounded monotone
+  limits is closed under uniform limits. Multiplicativity is not used, and the
+  proof is the subsequence trick — shift the `k`-th member of a subsequence that
+  is `(1/2)^(k+2)`-close down by `(1/2)^k`. It is the first step of the
+  induction theorem below.
 * `MeasureTheory.induction_on_mulSystem`: let `K : Set (Ω → ℝ)` be a
   multiplicative system of bounded functions and `P : (Ω → ℝ) → Prop` with
   `P f` for every `f ∈ K`; `P (fun _ ↦ c)` for every constant `c`; `P` preserved
@@ -485,15 +511,42 @@ space; no topology is involved.
   monotone limits, that is `P g` whenever `f : ℕ → Ω → ℝ` is pointwise monotone,
   satisfies `P (f n)` for every `n`, is uniformly bounded and tends to `g`
   pointwise. Then `P f` for every bounded `generateFromFuns K`-measurable `f`.
-  State it `@[elab_as_elim]`, as `induction_on_inter` is.
+  State it `@[elab_as_elim]`, as `induction_on_inter` is. The proof has four
+  steps: closure under uniform limits, which is
+  `of_tendstoUniformly_of_mono_lim`; then `P (φ ∘ (f₁, …, fₙ))` for `fᵢ ∈ K` and
+  `φ` continuous, since the polynomials in the `fᵢ` are covered by
+  multiplicativity, linearity and the constants and Stone–Weierstrass
+  approximates `φ` on the compact range uniformly; then `P` of the indicator of
+  every member of `ioiCells K`, by continuous functions increasing to the
+  indicator of a box, and `MeasurableSpace.induction_on_inter` along that
+  π-system to spread it over the whole σ-algebra; then linearity for the simple
+  functions and one more bounded monotone limit for the general bounded
+  measurable function.
 * `MeasureTheory.ext_of_forall_integral_eq_of_isMulSystem`: two finite measures
   agreeing on `∫ f` for every `f` in a multiplicative system of bounded
-  functions, and on the total mass, agree on `generateFromFuns K`.
+  measurable functions, and on the total mass, agree on `generateFromFuns K`.
+  The total mass is a hypothesis in its own right: a multiplicative system need
+  not contain the constants, and then the integrals over `K` say nothing about
+  `μ univ`.
 * `MeasureTheory.integral_mul_eq_zero_of_isMulSystem`: for `μ` finite and `g`
-  integrable, `∫ g * f ∂μ = 0` for every `f ∈ K` implies `∫ g * f ∂μ = 0` for
-  every bounded `generateFromFuns K`-measurable `f`; and the conditional form,
-  `∫ X * f ∂μ = ∫ Y * f ∂μ` for every `f ∈ K` implies
+  integrable with `∫ g ∂μ = 0`, `∫ g * f ∂μ = 0` for every `f ∈ K` implies
+  `∫ g * f ∂μ = 0` for every bounded `generateFromFuns K`-measurable `f`; and
+  the conditional form `condExp_eq_of_forall_integral_mul_eq`, where
+  `∫ X ∂μ = ∫ Y ∂μ` and `∫ X * f ∂μ = ∫ Y * f ∂μ` for every `f ∈ K` imply
   `μ[X | generateFromFuns K] =ᵐ[μ] μ[Y | generateFromFuns K]`. This is the form
-  in which the martingale property is verified.
-* The `RCLike` variants of all of the above, obtained from the real ones by
-  splitting into real and imaginary part.
+  in which the martingale property is verified. The hypothesis on the constant
+  is again necessary and again cheap: for `K = {0}` the σ-algebra is `⊥`, whose
+  bounded measurable functions are the constants, so `∫ g * c ∂μ = 0` forces
+  `∫ g ∂μ = 0`; asking `(1 : Ω → ℝ) ∈ K` implies it and is stronger.
+* The `RCLike` variants of the two conclusions, for `K` a multiplicative system
+  of bounded measurable `𝕂`-valued functions closed under conjugation. They
+  reduce to the real ones through `A_ℝ`, the real-valued members of the
+  `𝕂`-algebra `A` generated by `K` and the constants: `A_ℝ` is closed under
+  multiplication, the measures agree along it by linearity, and
+  `generateFromFuns A_ℝ = generateFromFuns K` because `Re f` and `Im f` lie in
+  `A_ℝ` for every `f ∈ A`. Splitting `K` itself into real and imaginary parts
+  does not work — `Re f · Re g` is not `Re (f * g)`.
+* `induction_on_mulSystem` has **no** `RCLike` variant. Its monotone limit
+  clause needs the order on `ℝ`, and the manuscript says so itself, in
+  `fact:submgreg`: "here, and in Fact~\ref{fact:monotoneclass}, `𝕂 = ℝ` is
+  genuinely needed, an order being involved".

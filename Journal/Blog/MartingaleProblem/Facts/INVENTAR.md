@@ -53,7 +53,7 @@ ist kein Befund, sondern ein `?`.
 | Fact | tragend | Aussage | Status | Beleg |
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum |
-| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung `induction_on_inter` |
+| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean` |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht |
@@ -4737,3 +4737,159 @@ Meilenstein 1 geschlossen werden soll, bevor Meilenstein 5 aufgemacht wird —
 denn `isTightMeasureSet_of_stronglySeparatesPoints`, der Vorschlag des Laufs
 vom 2026-09-05, ist nach diesem Lauf der einzige Punkt von Meilenstein 1, der
 echte neue Mathematik verlangt und nicht bloß Mathlib-Übersetzung.
+
+### 2026-09-06, zweiter Lauf des Tages — Rückstau 2: der Unterbau von Meilenstein 5
+
+**Lage zu Beginn.** Keine vorrangigen Aufgaben, keine Zeile der Tabelle mit
+Status `?`. Also Rückstau, von oben: Punkt 1 ist seit dem ersten Lauf des Tages
+gestrichen, Punkt 2 ist `MeasureTheory.induction_on_mulSystem`, der funktionale
+Monotone-Klassen-Satz — `WeakConvergence` Meilenstein 5, `fact:monotoneclass`,
+tragend `4`. Der erste Lauf des Tages hatte für den ersten Durchgang genau
+vorgeschrieben, was zu tun ist: die beiden Definitionen samt Brücke schreiben
+und übersetzen, bevor der Induktionssatz eine Aussage hat, gegen die er
+bewiesen werden könnte.
+
+**Der Negativbefund zuerst, mit der Liste, die die Regel verlangt.** Gesucht
+wurde an `upstream/master` (`810b3888`, 2026-09-05) mit `git grep`, in Mathlibs
+Vokabeln und nicht in unseren: `monotone class` (case-insensitiv, kein Treffer
+in ganz `Mathlib/`), `MulSystem`, `generateFromFuns`, `multiplicative system`,
+`monotone limits`, `bounded monotone convergence`, `functional monotone`,
+`multiplicative family of functions`. Kein einziger Treffer. Mathlib hat die
+Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter`
+(`MeasureTheory/PiSystem.lean:713`) — die Roadmap nannte sie ohne Namensraum,
+was in `MeasureTheory` zu lesen nahelag und falsch gewesen wäre; berichtigt.
+
+**Ergebnis: zwölf Deklarationen von Meilenstein 5, alle mit Beweis und alle
+übersetzt.** In `TauCeti/WeakConvergence/Suggested.lean` stehen jetzt, und die
+ganze Datei geht durch `lake env lean` gegen `v4.33.1` ohne Fehler und ohne
+andere Warnung als `declaration uses 'sorry'` (einzige Ausnahme unverändert und
+dokumentiert: `tendsto_map_of_measure_setOf_continuousAt_eq_one`, absichtlich
+für `upstream/master` geschrieben):
+
+* `IsMulSystem`, `indicatorFuns` und `indicatorFuns_mono`;
+* `isMulSystem_indicator_of_isPiSystem`;
+* `generateFromFuns`, `measurable_generateFromFuns_of_mem`,
+  `generateFromFuns_le_iff`, `generateFromFuns_mono`;
+* `generateFromFuns_indicatorFuns`, die Brücke zu `induction_on_inter`;
+* `ioiCells`, `isPiSystem_ioiCells` und
+  `generateFromFuns_eq_generateFrom_ioiCells` — das π-System, an dem
+  `induction_on_inter` angreift, und die Identität, die den funktionalen Satz
+  auf den Mengensatz legt;
+* `of_tendstoUniformly_of_mono_lim`, der erste der vier Beweisschritte.
+
+Dazu als Aussage mit `sorry`: `induction_on_mulSystem`,
+`ext_of_forall_integral_eq_of_isMulSystem`,
+`integral_mul_eq_zero_of_isMulSystem` und
+`condExp_eq_of_forall_integral_mul_eq`.
+
+**Drei Befunde an den Aussagen, alle beim Aufschreiben gefunden, alle in der
+Roadmap berichtigt.**
+
+1. **`isMulSystem_indicator_of_isPiSystem` war in der Fassung der Roadmap
+   falsch.** Sie sagte, für ein π-System `𝒞` bildeten die Indikatoren der
+   Mengen aus `𝒞` ein multiplikatives System. Das gilt nicht: ein π-System muß
+   `∅` nicht enthalten (Mathlibs `IsPiSystem` verlangt `s ∩ t ∈ C` nur für
+   nichtleeren Schnitt, gerade deshalb), und für `s ∩ t = ∅` ist das Produkt
+   der beiden Indikatoren die konstante `0`, also der Indikator von `∅` und von
+   keiner anderen Menge. Kleinster Zeuge: `𝒞 = {{0}, {1}}` auf `ℕ`, ein
+   π-System, dessen Bedingung leer erfüllt ist. Die Aussage steht jetzt über
+   `indicatorFuns (insert ∅ 𝒞)`, und das kostet nichts, weil
+   `MeasurableSpace.generateFrom_insert_empty` (`MeasurableSpace/Defs.lean:426`)
+   und die mitbewiesene Brücke
+   `generateFromFuns (indicatorFuns (insert ∅ 𝒞)) = generateFrom 𝒞` das `∅`
+   wieder wegnehmen.
+
+2. **`integral_mul_eq_zero_of_isMulSystem` fehlte die Hypothese über die
+   Konstante.** Die Roadmap sagte: `∫ g * f ∂μ = 0` für alle `f ∈ K` gebe
+   dasselbe für jede beschränkte `generateFromFuns K`-meßbare Funktion. Falsch
+   für `K = {0}`: dann ist `generateFromFuns K = ⊥`, dessen beschränkte meßbare
+   Funktionen auf nichtleerem `Ω` die Konstanten sind, und `∫ g * c ∂μ = 0`
+   verlangt `∫ g ∂μ = 0`, was die Hypothese über `K` nicht hergibt. Ergänzt als
+   eigene Hypothese `∫ g ∂μ = 0`; sie ist schwächer, als `(1 : Ω → ℝ) ∈ K` zu
+   verlangen. Es ist dieselbe Lücke wie die Gesamtmasse in
+   `ext_of_forall_integral_eq_of_isMulSystem` — dort hatte die Roadmap sie von
+   Anfang an richtig, hier nicht, und beide Male ist der Grund derselbe: ein
+   multiplikatives System muß die Konstanten nicht enthalten.
+
+3. **Die `RCLike`-Varianten galten pauschal „für alles Obige", und für den
+   Induktionssatz gibt es sie nicht.** Das Manuskript sagt es selbst, in
+   `fact:submgreg`: „here, and in Fact~\ref{fact:monotoneclass}, $\K = \R$ is
+   genuinely needed, an order being involved". Der monotone Limes braucht die
+   Ordnung. Für die beiden Folgerungen gibt es sie sehr wohl, aber nicht auf
+   dem in der Roadmap genannten Weg — `Re f · Re g` ist nicht `Re (f * g)`, das
+   Zerlegen von `K` in Real- und Imaginärteil zerstört also die
+   Multiplikativität. Der Weg, der trägt, steht jetzt dort: `A_ℝ`, die
+   reellwertigen Elemente der von `K` und den Konstanten erzeugten
+   `𝕂`-Algebra `A`, ist unter Multiplikation abgeschlossen, die Maße stimmen
+   auf ihm aus Linearität überein, und
+   `generateFromFuns A_ℝ = generateFromFuns K`, weil `Re f` und `Im f` für
+   `f ∈ A` in `A_ℝ` liegen (dafür ist `K` als konjugationsabgeschlossen
+   vorauszusetzen).
+
+**Mitgefunden, zwei Kleinigkeiten am Übersetzen.** `generateFromFuns` braucht
+`@[instance_reducible]`, weil es eine Definition von Klassentyp ist und der
+Linter sonst meldet; Mathlib macht es bei `MeasurableSpace.generateFrom`
+genauso (`MeasurableSpace/Defs.lean:329`). Und `MeasurableSet.empty` läßt sich
+nicht gegen eine erwartete, nicht als Instanz vorliegende σ-Algebra
+elaborieren — `MeasurableSpace.measurableSet_empty _` mit explizitem `m` tut es.
+
+**Der eine bewiesene Beweisschritt, und warum gerade er.** Der Beweisweg, den
+die Roadmap jetzt ausschreibt, hat vier Schritte: (i) Abschluß unter
+gleichmäßigen Limiten; (ii) `P (φ ∘ (f₁,…,fₙ))` für stetiges `φ`, über Polynome
+und Stone--Weierstraß auf dem kompakten Bild; (iii) die Indikatoren des
+π-Systems `{⋂ i ∈ s, f i ⁻¹' Ioi (c i)}` und `induction_on_inter`; (iv)
+einfache Funktionen und ein letzter monotoner Limes. Schritt (i) ist
+`of_tendstoUniformly_of_mono_lim` und ist bewiesen: wähle zu jedem `k` ein
+`m k` mit `|f (m k) x - g x| ≤ (1/2)^(k+2)` gleichmäßig und schiebe um
+`(1/2)^k` nach unten; die Verschiebung macht die Folge monoton (die Rechnung
+hat Luft: der Zuwachs ist mindestens `(1/2)^(k+3)`), läßt sie gleichmäßig
+beschränkt und ändert den Limes nicht. Er benutzt die Multiplikativität nicht
+und gilt für jede lineare Klasse — deshalb ist er ein eigenes Lemma und kein
+Teil der Induktion. Der frühere Beweisentwurf im Docstring — Indikatoren von
+`{f ≥ c}` als monotone Limiten von `min 1 (n * (f - c))⁺` — ist gestrichen: die
+Mengen `{f₁ ≥ c₁} ∩ {f₂ ≥ c₂}` sind nicht wieder von dieser Gestalt, das
+π-System kommt so nicht zustande.
+
+**Das π-System, im selben Lauf mit erledigt.** Nachdem Schritt (i) stand, war
+Schritt (iii) zur Hälfte greifbar und ist gemacht:
+`generateFromFuns_eq_generateFrom_ioiCells` sagt
+`generateFromFuns K = MeasurableSpace.generateFrom (ioiCells K)`, und
+`isPiSystem_ioiCells` sagt, daß `ioiCells K` ein π-System ist. Die eine
+Richtung ist `measurable_of_Ioi` (`Constructions/BorelSpace/Order.lean:653`;
+sein `{mδ : MeasurableSpace δ}` ist strikt implizit und nicht
+instanzimplizit, unifiziert also mit der erwarteten, nicht als Instanz
+vorliegenden σ-Algebra), die andere eine Induktion über die Liste. Zwei
+Entwurfsentscheidungen, die festgehalten gehören: **die einzelnen Urbilder
+`f ⁻¹' Ioi c` bilden kein π-System**, deshalb sind die endlichen Schnitte in
+die Familie eingebaut; und die Familie ist über eine
+`List ((Ω → ℝ) × ℝ)` indiziert und nicht über ein `Finset (Ω → ℝ)` mit
+Niveaufunktion, weil zwei Faktoren dasselbe `f` mit verschiedenen `c` nennen
+dürfen — das Aneinanderhängen von Listen ist dann genau der Abschluß unter
+Durchschnitt.
+
+**Offen geblieben.** Der Induktionssatz selbst, also Schritt (ii), die
+Approximationshälfte von (iii) und Schritt (iv), und mit ihm die drei
+Folgerungen. Rückstau 2 bleibt deshalb stehen, mit Zwischenstand.
+
+**Was als Nächstes formalisiert werden soll: Schritt (ii),
+`MeasureTheory.of_continuous_comp_of_isMulSystem`** — für `f : Fin n → Ω → ℝ`
+mit `f i ∈ K`, sämtlich beschränkt, und stetiges `φ : (Fin n → ℝ) → ℝ` gilt
+`P (fun x => φ (fun i => f i x))`. Sie ruht auf drei Dingen, die alle
+dastehen: `of_tendstoUniformly_of_mono_lim`, das dieser Lauf bewiesen hat und
+das die gleichmäßige Approximation überhaupt erst zuläßt; der
+Multiplikativität von `K` samt Linearität und Konstanten, die die Polynome in
+`f₁,…,fₙ` abdecken; und
+`ContinuousMap.exists_mem_subalgebra_near_continuousMap_of_separatesPoints`
+(`Topology/ContinuousMap/StoneWeierstrass.lean:297`, am 2026-09-06 an
+`upstream/master` belegt, Namensraum `ContinuousMap`, Zeilen 58–352), angewandt
+auf die von den Koordinaten erzeugte Unteralgebra über dem kompakten Bild von
+`x ↦ (f₁ x, …, fₙ x)` in `Fin n → ℝ`. Sie ist jetzt dran, weil sie der einzige
+verbleibende Schritt mit echtem mathematischem Inhalt ist: aus ihr folgt die
+Approximationshälfte von (iii) durch stetige Funktionen, die von unten gegen
+den Indikator einer Box wachsen, und Schritt (iv) ist danach Linearität und ein
+letzter monotoner Limes.
+
+Zweiter Kandidat, unverändert vom ersten Lauf des Tages:
+`IsSeparating.of_subalgebra`, die dritte offene Deklaration von Meilenstein 1,
+eine reine Übersetzung zwischen `Subalgebra ℝ (E →ᵇ ℝ)` und
+`StarSubalgebra ℝ (E →ᵇ ℝ)`.

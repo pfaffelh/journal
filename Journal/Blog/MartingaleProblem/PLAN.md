@@ -731,11 +731,27 @@ und beschränkter monotoner Konvergenz, so gilt sie für jede beschränkte
 
 Es ruht auf `MeasurableSpace.comap`
 (`Mathlib/MeasureTheory/MeasurableSpace/Basic.lean:82`), monotoner Konvergenz
-und `induction_on_inter` (`Mathlib/MeasureTheory/PiSystem.lean:692`) — das
-zugleich die Vorlage für Gestalt, `@[elab_as_elim]` und Beweisführung ist.
-Mathlib hat den Satz nicht: `docs/1000.yaml` führt ihn als `Q242045` ohne
-`decl`, und die Zeichenkette „monotone class" kommt weder in v4.33.1 noch auf
-master vor.
+und `MeasurableSpace.induction_on_inter`
+(`Mathlib/MeasureTheory/PiSystem.lean:692` in v4.33.1, `:713` auf master; der
+Namensraum ist `MeasurableSpace`) — das zugleich die Vorlage für Gestalt,
+`@[elab_as_elim]` und Beweisführung ist. Mathlib hat den Satz nicht:
+`docs/1000.yaml` führt ihn als `Q242045` ohne `decl`, und die Zeichenkette
+„monotone class" kommt weder in v4.33.1 noch auf master vor.
+
+**Zwischenstand 2026-09-06 (zweiter Lauf des Fact-Inventars): der Unterbau
+steht und ist übersetzt.** `IsMulSystem`, `indicatorFuns`, `generateFromFuns`
+samt ihren Grundlemmata, die Brücke `generateFromFuns_indicatorFuns` und der
+erste Beweisschritt `of_tendstoUniformly_of_mono_lim` tragen in
+`TauCeti/WeakConvergence/Suggested.lean` Beweise und gehen durch
+`lake env lean` gegen v4.33.1. Zwei Aussagen der Roadmap waren dabei falsch
+und sind berichtigt (das `insert ∅` bei den Indikatoren eines π-Systems, die
+Hypothese über die Konstante bei `integral_mul_eq_zero_of_isMulSystem`), eine
+dritte zu weit gefaßt (die `RCLike`-Varianten). Mit erledigt ist die
+π-System-Hälfte von Schritt (iii): `ioiCells`, `isPiSystem_ioiCells` und
+`generateFromFuns_eq_generateFrom_ioiCells`. Offen ist Schritt (ii), die
+Stone--Weierstraß-Stufe `of_continuous_comp_of_isMulSystem`, und nach ihr die
+Approximation des Box-Indikators und der Routineschritt (iv). Einzelheiten im
+Inventar unter „Läufe", 2026-09-06, zweiter Lauf des Tages.
 
 Es ist der erste, weil es der einzige Punkt ohne Vorbedingung außerhalb von
 Mathlib ist und drei bereits formulierte Roadmap-Punkte darauf warten: die
