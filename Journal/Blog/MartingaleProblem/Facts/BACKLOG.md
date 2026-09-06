@@ -89,6 +89,54 @@ kein gebautes Mathlib und taugt zu nichts.
    nicht retten läßt, ist sie falsch, und das ist der wertvollste Befund.
    Beweise, die dabei billig abfallen, nimm mit; jage sie nicht.
 
+   **Berichtigung 2026-09-06, vierter Lauf des Tages: die Prämisse „nie
+   übersetzt" stimmt nicht.** Beide Dateien gehen durch `lake env lean` gegen
+   `v4.33.1`, heute erneut geprüft, beide mit `rc=0` und ohne einen einzigen
+   Fehler — nur `declaration uses 'sorry'`-Warnungen, 23 in `SkorokhodSpace`,
+   20 in `MartingaleProblems`. Das ist auch das, was Punkt 3 dieses Rückstaus
+   für den 2026-09-05 festhält; die beiden Dateiköpfe tragen den Vermerk seit
+   damals. Was der Punkt in Wahrheit meint, bleibt aber richtig und ist
+   dringender: **das Typprüfen ist kein Beleg, solange die Aussage `True`
+   ist.** `MartingaleProblems/Suggested.lean` führt sieben Deklarationen, deren
+   *Aussage* `True` oder `sorry` ist (`isMPSolution_iff_forall_fdd`, `restart`,
+   `exists_cadlag_modification_of_isRegularizingClass`,
+   `isQuasiLeftContinuous_of_isRegularizingClass`,
+   `isQuasiLeftContinuous_of_isMPSolutionFor`,
+   `not_isQuasiLeftContinuous_of_atom`, `mpSolution_of_tendsto`) und drei
+   Definitionen, deren Rumpf `sorry` ist (`IsDetermining`,
+   `IsRegularizingClass`, `IsQuasiLeftContinuous`) — Meilensteine 3, 5, 9
+   und 10. Diese zehn sind der eigentliche Inhalt dieses Punktes: aus dem
+   Roadmaptext eine Proposition machen und **die** übersetzen. Solange sie
+   `True` sind, zählt das `rc=0` der Datei für sie nichts.
+
+   *Erledigt für `MartingaleProblems` am 2026-09-06, vierter Lauf des Tages:
+   alle zehn sind Aussagen, und die Datei übersetzt.* Meilenstein 9 ist ganz
+   geschrieben (`IsCadlagPath`, `IsSeparating`, `IsCompensatorFor`,
+   `IsRegularizingClass`, `CompactContainment`,
+   `exists_cadlag_modification_of_isRegularizingClass`,
+   `IsQuasiLeftContinuous`, `IsQuasiLeftContinuous.ae_eq_leftLim`,
+   `IsL1LeftContinuousAlongStoppingTimes`,
+   `isQuasiLeftContinuous_of_isRegularizingClass`,
+   `isQuasiLeftContinuous_of_isMPSolutionFor`,
+   `not_isQuasiLeftContinuous_of_atom`), Meilenstein 3 auch (`IsCanonical`,
+   `IsDetermining`, `isMPSolution_iff_forall_fdd` und die stetige Fassung),
+   Meilenstein 5 auch (`Shift` mit den Koordinaten als Parameter,
+   `IsShiftSystem`, `restart`, `restart_canonical`), Meilenstein 10 auch
+   (`TendstoLaw`, `mpSolution_of_tendsto`,
+   `isMPSolution_of_forall_condExp_eq_of_dense`). 37 Deklarationen, 12 mit
+   `sorry`, und jedes `sorry` steht in einem Beweis; **keine Aussage der Datei
+   ist mehr `True`**.
+
+   Die Frage, ob Hypothese (a) von `mpSolution_of_tendsto` gemeinsame oder
+   einzelne Verteilungskonvergenz meint, ist am Manuskript entschieden —
+   `rem:absconvtopfree` sagt es ausdrücklich: einzeln, „and nothing else".
+   Ferner fehlen
+   `MPSolutions.isConvex` und `MPSolutions.integral_mem` aus Meilenstein 5
+   ganz. Vier Befunde an den Aussagen sind in den Roadmaptext eingetragen
+   (`StronglyAdapted` statt `Adapted`, der gemeinsame Existenzquantor für den
+   Kompensator, die natürliche Filtration im fdd-Kriterium, die
+   Linkserreichbarkeit des Atoms); Einzelheiten im Inventar unter „Läufe".
+
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`). Ruht auf `MeasurableSpace.comap`, monotoner Konvergenz und

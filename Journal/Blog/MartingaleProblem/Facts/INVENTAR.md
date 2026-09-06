@@ -5175,3 +5175,138 @@ sie aufnimmt, baue zuerst die Hilfsaussage, daß starke Trennung an einem Punkt
 `x` eine endliche Familie aus `A` und ein `ε > 0` liefert, mit denen sich das
 Komplement einer Kugel um `x` gleichmäßig von `x` trennen läßt, und übersetze
 sie.
+
+### 2026-09-06, vierter Lauf des Tages — Rückstau 1: die Aussagen von `MartingaleProblems` sind jetzt Aussagen
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also der Rückstau von oben.
+Sein erster Punkt, am 2026-09-06 vom Nutzer eingetragen, verlangt
+`SkorokhodSpace/Suggested.lean` und `MartingaleProblems/Suggested.lean` „zum
+Übersetzen zu bringen", weil sie „nie übersetzt" seien.
+
+**Die Prämisse stimmt nicht, und das war in zwei Minuten geklärt.** Beide
+Dateien gehen unverändert durch `lake env lean` gegen `v4.33.1`, jede ohne eine
+einzige Fehlermeldung; es gibt nur `declaration uses 'sorry'`-Warnungen, 23 in
+`SkorokhodSpace`, 20 in `MartingaleProblems`. Punkt 3 desselben Rückstaus hält
+genau das für den 2026-09-05 fest, und beide Dateiköpfe tragen den Vermerk seit
+damals. Die Berichtigung steht im Rückstau.
+
+**Was der Punkt in Wahrheit meint, gilt aber, und es war die Arbeit dieses
+Laufs: eine `True`-Aussage übersetzt zwar, belegt aber nichts.**
+`MartingaleProblems/Suggested.lean` führte sieben Sätze, deren *Aussage* `True`
+war, und drei Definitionen, deren Rumpf `sorry` war — die Meilensteine 3, 5, 9
+und 10. Für sie ist das `rc=0` der Datei wertlos: `theorem restart : True`
+typisiert und sagt nichts. Aus dem Roadmaptext sind daraus Propositionen
+geworden; **die Datei geht danach wieder durch `lake env lean`, ohne Fehler**,
+mit jetzt 37 Deklarationen, von denen 12 ein `sorry` tragen — und jedes dieser
+`sorry` steht in einem *Beweis*, keines mehr in einer Aussage.
+
+**Meilenstein 9, der ganze Block zur Quasi-Linksstetigkeit.** Neu als Aussage:
+`IsCadlagPath` (die Pfadbedingung von `IsCadlag` der Roadmap **SkorokhodSpace**,
+Meilenstein 2, ausgeschrieben — der Pfadraum steht in dieser Datei nicht zur
+Verfügung), `IsSeparating` (dasselbe Prädikat wie in **WeakConvergence**
+Meilenstein 1, dort über `Set (E → ℝ)`, hier über `Set (E → 𝕂)`),
+`IsCompensatorFor` als Struktur mit den vier Feldern der Zerlegung,
+`IsRegularizingClass` als deren Existenzquantifizierung, `CompactContainment`,
+`exists_cadlag_modification_of_isRegularizingClass`, `IsQuasiLeftContinuous`
+wörtlich in der Gestalt, die der Roadmaptext vorgibt,
+`IsQuasiLeftContinuous.ae_eq_leftLim`, `IsL1LeftContinuousAlongStoppingTimes`,
+`isQuasiLeftContinuous_of_isRegularizingClass`,
+`isQuasiLeftContinuous_of_isMPSolutionFor` und
+`not_isQuasiLeftContinuous_of_atom`.
+
+Drei Befunde an den Aussagen, alle beim Aufschreiben gefunden:
+
+* **`Adapted` ist nicht mehr, was die Roadmap „adapted" nennt.** Mathlibs
+  `Adapted` (`Probability/Process/Adapted.lean:60`) ist seit dem 2026-01-13
+  Meßbarkeit bezüglich `f i` und verlangt `[∀ i, MeasurableSpace (β i)]`; die
+  Datei sagt es in ihrem eigenen Doc-Kommentar (`:59`). Der Begriff, den der
+  Roadmaptext meint und aus dem `Martingale` gebaut ist
+  (`Probability/Martingale/Basic.lean:53`), heißt jetzt `StronglyAdapted`
+  (`Adapted.lean:105`) und verlangt statt dessen die Topologie. Für ein
+  `𝕂`-wertiges `C` ist das nicht Kosmetik: `RCLike 𝕂` liefert keine
+  `MeasurableSpace 𝕂`-Instanz, die Aussage mit `Adapted` elaboriert also gar
+  nicht erst. Das ist der Fehlertyp der Regel für den Negativbefund, nur in der
+  Zeit statt im Namensraum, und er trifft jede Roadmapstelle, die „adapted"
+  sagt.
+* **Der Kompensator muß im Existenzquantor der Hypothese stehen, nicht in dem
+  von `IsRegularizingClass`.** Der Roadmaptext verlangt für
+  `isQuasiLeftContinuous_of_isRegularizingClass`, daß „der zu `f` gehörige
+  Kompensator `C`" rechtsstetig und `L¹`-linksstetig entlang Stoppzeiten sei.
+  Wer `IsRegularizingClass` als Hypothese nimmt und die Zusatzbedingung daneben
+  stellt, sagt etwas anderes: die beiden Existenzquantoren müssen dasselbe `C`
+  binden, sonst darf ein zweites, schlechteres `C` die erste Bedingung erfüllen.
+  Deshalb ist die Zerlegung als eigene Struktur `IsCompensatorFor` geschrieben,
+  und die Hypothese des Satzes bindet `Y` und `C` selbst; `IsRegularizingClass`
+  ist die Existenzquantifizierung darüber, und die Hypothese impliziert sie.
+* **`not_isQuasiLeftContinuous_of_atom` braucht, daß das Atom von links
+  erreichbar ist.** Der Roadmaptext nennt nur den Atomcharakter; für `u = ⊥` ist
+  die Behauptung falsch, weil es dann keine Folge `s n ↑ u` gibt und die
+  Quasi-Linksstetigkeit an `u` nichts verlangt. Die Aussage trägt die Hypothese
+  jetzt explizit (`∃ s, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop (𝓝 u)`).
+
+**Meilenstein 3.** `IsCanonical` und `IsDetermining` sind Aussagen, dazu
+`isMPSolution_iff_forall_fdd` und `isMPSolution_iff_forall_fdd_continuous`.
+Zwei Befunde: `IsDetermining` brauchte drei Argumente, die die alte Signatur
+nicht hatte (`X`, die Filtration, und die quantifizierten Maße) — ohne sie ist
+die Aussage nicht formulierbar; und das **Äquivalenz**-Kriterium gilt nur für
+die *natürliche* Filtration von `X`, weil die rechte Seite ausschließlich gegen
+Koordinaten testet. Das steht jetzt als Hypothese
+`h𝓕 : ∀ s, 𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) inferInstance` in
+beiden Sätzen; ohne sie ist die Richtung von rechts nach links falsch.
+Mitgefunden und für jede künftige Datei zu beachten: `°` ist in Lean kein
+Bezeichnerzeichen (`error: expected token`), die kanonischen Versionen heißen
+darum `𝓧₀`, `Y₀`.
+
+**Meilenstein 5.** `Shift` stand mit
+`eval_comp : ∀ (_r _t : ι) (_f : F), (sorry : Prop)` da, und der Kopf der Datei
+nannte als Grund, `Shift` trage „keine Auswertungsabbildung, gegen die sich
+`eval t (θ r f) = eval (r + t) f` formulieren ließe". Das ist behoben, indem die
+Koordinaten `π : ι → F → E` **Parameter der Struktur** werden; damit ist das
+Feld `π t (θ r f) = π (r + t) f`, und die Struktur sagt, was ein Shift ist. Dazu
+neu `IsShiftSystem`, `restart` und `restart_canonical` — die Aussagen des
+Meilensteins, mit `Z • P` als `P.withDensity (ENNReal.ofReal ∘ Z)`.
+
+**Meilenstein 10, und die Frage, die ihn aufgehalten hätte, ist am Manuskript
+entschieden.** Hypothese (a) verlangt, daß „die reellen Zufallsvariablen
+`Y₀ r (X n)` für `r ∈ D ∩ Iic t` und `(Y₀ t - Y₀ s) * Z (X n)` in Verteilung
+gegen ihre Gegenstücke konvergieren", und ob das **gemeinsam** (endliche
+Teilfamilien als Vektor) oder **einzeln** gemeint ist, sind zwei verschiedene
+Aussagen. Der Text entscheidet es, und zwar zweimal: `thm:absconv` benutzt seine
+Hypothesen \ref{it:C1} und \ref{it:C3a} im Beweis ausschließlich durch
+`fact:cmt` auf **je einen** Funktional (Schritt 0 auf $|Y^\circ_r|$, Schritt 1
+auf $\psi=(Y^\circ_t-Y^\circ_s)Z^\circ_s$, Schritt 2 auf
+$\varphi_N\circ Y^\circ_r$), ein gemeinsames Gesetz kommt nirgends vor; und
+`rem:absconvtopfree` zieht das ausdrücklich zusammen: \eqref{eq:C1prime} sind
+genau die beiden **einzelnen** Konvergenzen, „and nothing else", und ihr Ersatz
+läßt „the theorem and its proof standing verbatim". Also einzeln. Der Satz steht
+jetzt da, samt `TendstoLaw` — Verteilungskonvergenz von Zufallsvariablen auf
+**verschiedenen** Räumen, geschrieben durch Testen gegen beschränkte stetige
+Funktionen, weil Mathlibs `TendstoInDistribution` einen festen Raum hat — und
+samt der zweiten Hälfte `isMPSolution_of_forall_condExp_eq_of_dense`, dem
+Schritt von `D` nach `ι`, mit `hDmax` für das größte Element. Damit trägt die
+Datei **keine `True`-Aussage mehr**: 37 Deklarationen, 12 mit `sorry`, und jedes
+`sorry` steht in einem Beweis.
+
+Offen und nicht angefaßt: `MPSolutions.isConvex` und `MPSolutions.integral_mem`
+aus Meilenstein 5 stehen in der Datei überhaupt nicht; sie sind Aussagen über
+Mischungen und brauchen die Modulstruktur auf `Measure Ω`, die zuerst zu belegen
+ist. `SkorokhodSpace/Suggested.lean` ist in diesem Lauf nur übersetzt, nicht
+durchgesehen; seine 23 `sorry` stehen sämtlich in Beweisen, keine Aussage ist
+dort `True`.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`IsQuasiLeftContinuous.ae_eq_leftLim` in **MartingaleProblems** Meilenstein 9
+zu **beweisen**, nicht nur zu formulieren: für ein `t`, das kein Minimum ist,
+liefert die Definition an den konstanten Stoppzeiten `τ n = s n` mit `s n ↑ t`
+die Aussage `∀ᵐ ω, Function.leftLim (X · ω) t = X t ω`. Sie ist jetzt dran, weil
+sie der einzige Punkt des Blocks ist, dessen Beweis **nur** aus der eigenen
+Definition und Mathlib besteht — `MeasureTheory.isStoppingTime_const`
+(`Probability/Process/Stopping.lean:78`), `stoppedValue_const` (`:805`) und
+`Function.leftLim_eq_of_tendsto` (`Topology/Order/LeftRightLim.lean:66`) sind
+alles, was sie braucht —, und weil sie damit die erste bewiesene Deklaration
+dieser Datei wäre; sie stützt `fact:Dcountable` (tragend `4`), dessen
+Schärfung sie ist. Zu klären ist dabei genau eine Sache, und sie gehört in den
+Bericht: ob `¬ IsMin t` die Existenz der Folge `s n ↑ t` schon gibt oder ob die
+Aussage `(𝓝[<] t).NeBot` als Hypothese tragen muß — `leftLim_eq_of_tendsto`
+verlangt es, und auf einer Ordnung mit Sprüngen ist es echt stärker als
+`¬ IsMin t`.
