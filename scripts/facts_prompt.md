@@ -197,6 +197,53 @@ schreiben will, formuliert die Aussage vorher **ohne unsere Vokabeln**, in
 Mathlibs eigenen Begriffen, und sucht danach; und wer sie dann noch immer nicht
 findet, sagt im Bericht, mit welchen Formulierungen er gesucht hat.
 
+
+### Aufgabe: charakteristische Funktionen als trennende Klasse *(gestellt 2026-09-06)*
+
+**Der Befund, vom Nutzer gefunden und am Quelltext bestätigt.** Mathlib hat
+„charakteristische Funktionen trennen Maße" — `Measure.ext_of_charFun`
+(`MeasureTheory/Measure/CharacteristicFunction/Basic.lean:248`) und
+`Measure.ext_of_charFunDual` (`:453`), beide für **endliche** Maße unter
+`[BorelSpace E] [SecondCountableTopology E] [CompleteSpace E]`. Und es ruht
+genau auf unserem Angelpunkt: der allgemeine `ext_of_integral_char_eq` (`:101`)
+beginnt mit
+
+```
+apply ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable
+    (separatesPoints_charPoly he he' hL hL')
+```
+
+also auf dem Satz aus `FiniteMeasureExt.lean`, den `WeakConvergence`
+Meilenstein 1 seit dem 2026-08-29 führt. Charakteristische Funktionen sind in
+Mathlib **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden
+Unteralgebra; `charPoly` ist die von den Charakteren erzeugte Algebra, und
+`separatesPoints_charPoly` liefert die Trennung.
+
+**Zu tun.**
+
+1. Trage den Befund bei `fact:sepcond` und `fact:stoneweierstrass` im Inventar
+   ein: der Weg „punktetrennende Unteralgebra ⟹ Maße trennend" ist in Mathlib
+   nicht nur vorhanden, sondern **tragend** — Mathlib benutzt ihn selbst für den
+   prominentesten Spezialfall. Das ist ein Beleg für die Bauform von
+   Meilenstein 1, kein neuer Punkt.
+
+2. Prüfe, **wo das Manuskript trennende Klassen konkret instanziiert**, und ob
+   die Charaktere dort eine gangbare Wahl sind. Die Einschränkung ist ernst und
+   vorab zu nennen: `ext_of_charFun` verlangt lineare Struktur auf `E`
+   (Banach- bzw. Innenproduktraum), während \eqref{E2} und \eqref{E3} nur
+   einen polnischen metrischen Raum geben. Die Charaktere sind also **kein**
+   Ersatz für die allgemeine trennende Klasse, wohl aber möglicherweise eine
+   fertige Wahl für die konkreten Instanzen — $\R^d$, und der Fall
+   $\mathcal S'(\R^d)$ aus `rem:E1why`. Nenne für jede Fundstelle, ob die
+   Struktur da ist.
+
+3. Ergibt sich daraus ein Punkt, den Meilenstein 1 **einsparen** kann, so
+   streiche ihn und begründe es. Ergibt sich keiner, sage das ebenso deutlich —
+   ein Negativbefund ist hier so nützlich wie ein Fund, und die Aufgabe ist dann
+   erledigt und nicht offen.
+
+Das Manuskript wird dabei nicht geändert; Auffälligkeiten kommen ins Inventar.
+
 ## Worum es geht
 
 Die 29 mit `\begin{fact}` ausgezeichneten Aussagen des Manuskripts sind seine
