@@ -58,13 +58,15 @@ stating it as a class rather than fixing `[0,1]` or `[0,∞)` is what makes the
 four cases `ℝ`, `[0,∞)`, `[0,T]` and `h • ℤ` — and every closed subset of them —
 instances of one development.
 
-Prior art whose design is to be followed and whose code may be reused: the
-repository `RemyDegenne/brownian-motion`, Apache License 2.0, file
-`BrownianMotion/StochasticIntegral/Cadlag.lean`. It defines right continuity and
-the càdlàg property for a preorder with a topology, together with jump sets and
-closure properties. Milestone 2 below states what is wanted; where that file
-already contains a declaration, it is to be taken over with its copyright header
-and author attribution preserved, as the Apache licence requires.
+**Prior art, cited and not presupposed.** The repository
+`RemyDegenne/brownian-motion` (Apache-2.0) contains a development of càdlàg
+paths in `BrownianMotion/StochasticIntegral/Cadlag.lean`. It is named here as a
+source that an implementer may consult and, the licence permitting, draw on with
+its copyright header preserved — **not** as the specification. Every milestone
+below states what is wanted in full and is to be reviewed on its own terms; a
+declaration that agrees with that file is welcome, and one that improves on it
+is more welcome. Nothing here should be accepted merely because it matches the
+external material.
 
 ## Milestone 1: the index typeclass
 

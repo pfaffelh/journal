@@ -1208,12 +1208,14 @@ and 11 use them.
   `t ↦ 𝔼[Y t]` is right continuous, hence everywhere when that map is right
   continuous.
 * `Martingale.cadlagModif_ae_eq`: for a martingale the condition is automatic.
-  The repository `RemyDegenne/brownian-motion`, Apache License 2.0, carries this
-  development for quasimartingales in
-  `BrownianMotion/StochasticIntegral/Quasimartingale/`, in the shape described
-  above and with four remaining gaps; it may be taken over with its copyright
-  headers and author attribution preserved. `IsRealQuasimartingale` and the
-  regularity sets it is built on belong to the material taken over.
+  The three points above state what is wanted in full and are to be reviewed on
+  their own terms. As prior art, cited and not presupposed: the repository
+  `RemyDegenne/brownian-motion` (Apache-2.0) carries a development of this for
+  quasimartingales in `BrownianMotion/StochasticIntegral/Quasimartingale/`, in
+  the shape described above and with four remaining gaps. An implementer may
+  consult it and, the licence permitting, draw on it with its copyright header
+  preserved; nothing here should be accepted merely because it matches that
+  file.
 * `IsRegularizingClass Φ X 𝓧`: a set `Φ` of bounded continuous functions on `E`
   such that for every `f ∈ Φ` there are `Y ∈ 𝓧` and a `StronglyAdapted`
   `𝕂`-valued `C`
@@ -1516,6 +1518,13 @@ roadmap **SkorokhodSpace**.
 
 ## Milestone 12: existence from a dual process
 
+> **This milestone is a roadmap-for-a-roadmap, and is not to be attempted as
+> stated.** Its last step rests on the Kolmogorov extension theorem, which is
+> the separate `KolmogorovExtension` roadmap and does not yet exist in Mathlib;
+> and the fibred state space of its last point is a design change that no other
+> milestone here needs. It is recorded so that the shape of the argument is not
+> lost, not as work to attempt now.
+
 Index `[0,∞)` or `ℕ`, state spaces `E₁`, `E₂` Polish, a shift invariant clock.
 
 * Data: a Markov semigroup of kernels `(P t)` on `E₂`, a measurable
@@ -1546,6 +1555,24 @@ Index `[0,∞)` or `ℕ`, state spaces `E₁`, `E₂` Polish, a shift invariant 
   to `t`, is the instance that needs the fibred form.
 
 ## Milestone 13: the full generator, and which operators are generators
+
+> **This milestone is a roadmap-for-a-roadmap, and is not to be attempted as
+> stated.** It names one proposition and its converse, and it names them because
+> `rem:fullgenerator` of the manuscript rests on them; it does not develop the
+> theory they belong to. Contributors should not follow it. What a full treatment
+> would need is the subject of the `OneParameterSemigroups` roadmap, and the
+> boundary between the two is drawn in the next paragraph.
+
+**Relation to `OneParameterSemigroups`.** That roadmap builds *strongly
+continuous* semigroups on a Banach space, with the generator as a densely
+defined `LinearPMap`, the resolvent, Hille--Yosida and Lumer--Phillips. None of
+that applies here, and the reason is not a matter of taste: the transition
+semigroup of a Markov process, acting on the bounded measurable functions, is
+**not strongly continuous**, and its full generator is **multivalued**, so it is
+a relation and not a `LinearPMap`. The two developments meet only at the word
+*dissipative*, and even there on different objects. Whoever works on either
+should read the other first; if the definitions can be aligned, this milestone
+should be dropped in favour of theirs.
 
 Mathlib has no semigroup of operators. The word `dissipative` occurs nowhere in
 it, there is no strongly continuous or measurable one parameter semigroup, and

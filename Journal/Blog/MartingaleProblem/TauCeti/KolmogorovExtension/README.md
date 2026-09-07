@@ -58,12 +58,13 @@ Nearly all the scaffolding, and it is **not** to be rebuilt.
 What is missing is the bridge between the compact system and the content, and
 the theorem itself. That is one milestone of real work and one of assembly.
 
-Prior art whose code may be reused: the repository
-`RemyDegenne/kolmogorov_extension4`, Apache License 2.0, file
-`KolmogorovExtension4/KolmogorovExtension.lean`. Much of what it contains has
-since landed in Mathlib under the names above, so what is taken over is only the
-two items below. Copyright headers and author attribution are to be preserved,
-as the Apache licence requires.
+**Prior art, cited and not presupposed.** The repository
+`RemyDegenne/kolmogorov_extension4` (Apache-2.0) carries a development of the
+same theorem, most of which has since landed in Mathlib under the names above.
+It is named here as a source an implementer may consult and, the licence
+permitting, draw on with its copyright header preserved — **not** as the
+specification. The two milestones below state what is wanted in full and are to
+be reviewed on their own terms.
 
 ## Milestone 1: inner regularity makes a content σ-subadditive
 
