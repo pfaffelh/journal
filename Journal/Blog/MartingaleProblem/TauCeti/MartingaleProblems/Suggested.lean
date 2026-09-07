@@ -16,10 +16,18 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-06.  Every declaration elaborates; 37 declarations, 11 of them carrying
+2026-09-07.  Every declaration elaborates; 50 declarations, 10 of them carrying
 `sorry`, and every one of those `sorry`s is a **proof**.  The first proof of the
 file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
-corrected first: under `¬ IsMin t` alone it is false.  No statement in this
+corrected first: under `¬ IsMin t` alone it is false.  On 2026-09-07 twelve more
+proofs came in: `Clock.interval_union`, the additivity every compensator
+argument rests on; `not_isQuasiLeftContinuous_of_not_ae_tendsto`, the half of
+`not_isQuasiLeftContinuous_of_atom` that does not depend on the martingale
+problem; and the `AtomWitness` block, which builds the coin, the clock with an
+atom at `u`, the path, the càdlàg property of that path and the failure of
+quasi-left-continuity for it.
+The statement of `not_isQuasiLeftContinuous_of_atom` was corrected in the same
+run: it admitted the vacuous witness `A = ∅`.  No statement in this
 file is `True` or `sorry` any more: the drafts of Milestones 3, 5, 9 and 10 were
 turned into propositions on 2026-09-06.  `Shift` now takes the coordinate maps
 `π` as a parameter, so that its compatibility field can be stated at all;
@@ -55,7 +63,40 @@ def Clock.interval (_Q : Clock ι) (c : Clock.Conv) (s t : ι) : Set ι :=
 theorem Clock.interval_union (Q : Clock ι) (c : Clock.Conv) {s t u : ι}
     (hst : s ≤ t) (htu : t ≤ u) :
     Q.interval c s u = Q.interval c s t ∪ Q.interval c t u ∧
-      Disjoint (Q.interval c s t) (Q.interval c t u) := sorry
+      Disjoint (Q.interval c s t) (Q.interval c t u) := by
+  cases c with
+  | optional =>
+    refine ⟨?_, ?_⟩
+    · ext x
+      simp only [Clock.interval, Set.mem_sdiff, Set.mem_union, Set.mem_Iic]
+      constructor
+      · rintro ⟨hxu, hxs⟩
+        by_cases hxt : x ≤ t
+        · exact Or.inl ⟨hxt, hxs⟩
+        · exact Or.inr ⟨hxu, hxt⟩
+      · rintro (⟨hxt, hxs⟩ | ⟨hxu, hxt⟩)
+        · exact ⟨hxt.trans htu, hxs⟩
+        · exact ⟨hxu, fun h => hxt (h.trans hst)⟩
+    · simp only [Clock.interval]
+      rw [Set.disjoint_left]
+      rintro x ⟨hxt, -⟩ ⟨-, hxt'⟩
+      exact hxt' hxt
+  | predictable =>
+    refine ⟨?_, ?_⟩
+    · ext x
+      simp only [Clock.interval, Set.mem_sdiff, Set.mem_union, Set.mem_Iio]
+      constructor
+      · rintro ⟨hxu, hxs⟩
+        by_cases hxt : x < t
+        · exact Or.inl ⟨hxt, hxs⟩
+        · exact Or.inr ⟨hxu, hxt⟩
+      · rintro (⟨hxt, hxs⟩ | ⟨hxu, hxt⟩)
+        · exact ⟨hxt.trans_le htu, hxs⟩
+        · exact ⟨hxu, fun h => hxt (h.trans_le hst)⟩
+    · simp only [Clock.interval]
+      rw [Set.disjoint_left]
+      rintro x ⟨hxt, -⟩ ⟨-, hxt'⟩
+      exact hxt' hxt
 
 /-- The two conventions agree exactly for an atomless clock. -/
 def Clock.IsAtomless (Q : Clock ι) : Prop := ∀ t : ι, Q.q {u | t ≤ u ∧ u ≤ t} = 0
@@ -382,6 +423,33 @@ theorem IsQuasiLeftContinuous.ae_eq_leftLim [T2Space E] {X : ι → Ω → E}
     simpa only [stoppedValue, hsupT, WithTop.untopD_coe] using this
   rw [leftLim_eq_of_tendsto hl, tendsto_nhds_unique h1 h2]
 
+omit [MeasurableSpace E] [TopologicalSpace ι] [OrderTopology ι] in
+/-- The contrapositive half of the previous lemma, and the only half a
+counterexample needs: a single nondecreasing sequence `s n` with supremum `t`
+along which the path fails, almost surely, to reach `X t`, refutes
+quasi-left-continuity.
+
+It is the reusable part of `not_isQuasiLeftContinuous_of_atom`: the constant
+stopping times `τ n = s n` are the ones the definition is tested on, no left
+limit has to exist, and neither `T2Space E` nor a topology on the index beyond
+the order one enters.  What the counterexample still has to supply after this
+lemma is the martingale problem, not the failure of convergence. -/
+theorem not_isQuasiLeftContinuous_of_not_ae_tendsto {X : ι → Ω → E}
+    {𝓕 : Filtration ι m} {P : Measure Ω} {t : ι} {s : ℕ → ι} (hmono : Monotone s)
+    (hlt : ∀ n, s n ≤ t) (hsup : ⨆ n, s n = t)
+    (hX : ¬ ∀ᵐ ω ∂P, Tendsto (fun n ↦ X (s n) ω) atTop (𝓝 (X t ω))) :
+    ¬ IsQuasiLeftContinuous X 𝓕 P := by
+  intro h
+  refine hX ?_
+  have hbdd : BddAbove (Set.range s) := ⟨t, by rintro _ ⟨n, rfl⟩; exact hlt n⟩
+  have hsupT : (⨆ n, ((s n : WithTop ι))) = (t : WithTop ι) := by
+    rw [← WithTop.coe_iSup s hbdd, hsup]
+  have hq := h (fun n _ ↦ (s n : WithTop ι)) (fun n ↦ isStoppingTime_const 𝓕 _)
+    (fun a b hab _ ↦ WithTop.coe_le_coe.2 (hmono hab)) t
+  filter_upwards [hq] with ω hω
+  have := hω (le_of_eq hsupT)
+  simpa only [stoppedValue, hsupT, WithTop.untopD_coe] using this
+
 /-- Left continuity in `L¹` along stopping times: along every nondecreasing
 sequence `τ` of stopping times with supremum `τ'`, the increments of `C` between
 `min (τ n) t` and `min τ' t` tend to `0` in `L¹`.  This is the hypothesis on the
@@ -425,17 +493,144 @@ theorem isQuasiLeftContinuous_of_isMPSolutionFor {A : Set ((E → 𝕂) × (E �
     (hQ : Q.IsAtomless) :
     IsQuasiLeftContinuous X 𝓕 P := sorry
 
+/-! ### The witness of `not_isQuasiLeftContinuous_of_atom`
+
+The pieces of the counterexample that do not mention the martingale problem: the
+fair coin, the path that flips it at `u`, that its paths are càdlàg for **every**
+clock, and that it is not quasi-left-continuous.  What the counterexample needs
+beyond this block is that the path solves the martingale problem for a separating
+`A` -- and nothing else. -/
+
+namespace AtomWitness
+
+/-- The fair coin on `Bool`, the law of the witness. -/
+noncomputable def coinMeasure : Measure Bool :=
+  (2 : ENNReal)⁻¹ • (Measure.dirac true + Measure.dirac false)
+
+instance isProbabilityMeasure_coinMeasure : IsProbabilityMeasure coinMeasure := by
+  constructor
+  simp [coinMeasure, ENNReal.inv_two_add_inv_two]
+
+theorem coinMeasure_singleton_true : coinMeasure {true} = (2 : ENNReal)⁻¹ := by
+  simp [coinMeasure]
+
+/-- The clock with an atom at `u` and nowhere else.  The σ-algebra of the index
+is `⊤`, so every down-set is measurable for free; that is the cheapest clock
+that exists, and it is the point of the example that even it is a clock. -/
+noncomputable def atomClock (u : ι) : Clock ι where
+  measurableSpace := ⊤
+  q := @Measure.dirac ι ⊤ u
+  measurableSet_Iic := fun _ ↦ trivial
+  measurableSet_Iio := fun _ ↦ trivial
+  measure_Iic_ne_top := fun t ↦ by
+    refine ne_top_of_le_ne_top ?_ (measure_mono (Set.subset_univ (Set.Iic t)))
+    simp
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+theorem atomClock_apply_singleton (u : ι) : (atomClock u).q {u} = 1 := by
+  let _ : MeasurableSpace ι := ⊤
+  exact Measure.dirac_apply_of_mem rfl
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+theorem atomClock_apply_singleton_ne_zero (u : ι) : (atomClock u).q {u} ≠ 0 := by
+  rw [atomClock_apply_singleton]
+  exact one_ne_zero
+
+/-- The path that is `false` strictly before `u` and shows the coin from `u` on.
+Over `Ω = E = Bool` the coin is both the sample point and the state. -/
+def coinProcess (u : ι) (t : ι) (ω : Bool) : Bool := if u ≤ t then ω else false
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+theorem coinProcess_of_le {u t : ι} (h : u ≤ t) (ω : Bool) :
+    coinProcess u t ω = ω := if_pos h
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+theorem coinProcess_of_not_le {u t : ι} (h : ¬ u ≤ t) (ω : Bool) :
+    coinProcess u t ω = false := if_neg h
+
+omit [OrderBot ι] in
+/-- The paths are càdlàg, whatever the clock does: they are locally constant on
+either side of `u`.  This is the half of the example that
+`exists_cadlag_modification_of_isRegularizingClass` predicts. -/
+theorem isCadlagPath_coinProcess (u : ι) (ω : Bool) :
+    IsCadlagPath fun t ↦ coinProcess u t ω := by
+  constructor
+  · intro t
+    by_cases h : u ≤ t
+    · refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [self_mem_nhdsWithin] with s hs
+      rw [coinProcess_of_le h, coinProcess_of_le (h.trans (le_of_lt hs))]
+    · refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [nhdsWithin_le_nhds (isOpen_Iio.mem_nhds (not_le.1 h))]
+        with s hs
+      rw [coinProcess_of_not_le h, coinProcess_of_not_le (not_le.2 hs)]
+  · intro t
+    by_cases h : u < t
+    · refine ⟨ω, Filter.Tendsto.congr' ?_ tendsto_const_nhds⟩
+      filter_upwards [nhdsWithin_le_nhds (isOpen_Ioi.mem_nhds h)] with s hs
+      exact (coinProcess_of_le (le_of_lt hs) ω).symm
+    · refine ⟨false, Filter.Tendsto.congr' ?_ tendsto_const_nhds⟩
+      filter_upwards [self_mem_nhdsWithin] with s hs
+      exact (coinProcess_of_not_le (not_le.2 (lt_of_lt_of_le hs (not_lt.1 h))) ω).symm
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- The path is not quasi-left-continuous along any sequence increasing to `u`:
+it is `false` at every `s n` and the coin at `u`, so the almost sure convergence
+would say that the coin is almost surely `false`.  The filtration is arbitrary --
+quasi-left-continuity fails for every one of them, because the constant stopping
+times used by `not_isQuasiLeftContinuous_of_not_ae_tendsto` are stopping times
+for every filtration. -/
+theorem not_isQuasiLeftContinuous_coinProcess (u : ι) {s : ℕ → ι}
+    (hmono : Monotone s) (hlt : ∀ n, s n < u) (hsup : ⨆ n, s n = u)
+    (𝓕 : Filtration ι (inferInstance : MeasurableSpace Bool)) :
+    ¬ IsQuasiLeftContinuous (coinProcess u) 𝓕 coinMeasure := by
+  refine not_isQuasiLeftContinuous_of_not_ae_tendsto hmono (fun n ↦ (hlt n).le) hsup ?_
+  intro hae
+  have hfalse : ∀ᵐ ω ∂coinMeasure, ω = false := by
+    filter_upwards [hae] with ω hω
+    have h1 : (fun n : ℕ ↦ coinProcess u (s n) ω) = fun _ ↦ false := by
+      funext n
+      exact coinProcess_of_not_le (not_le.2 (hlt n)) ω
+    rw [h1, coinProcess_of_le le_rfl] at hω
+    exact (tendsto_const_nhds_iff.1 hω).symm
+  rw [ae_iff] at hfalse
+  have hset : {ω : Bool | ¬ ω = false} = {true} := by
+    ext ω; cases ω <;> simp
+  rw [hset, coinMeasure_singleton_true] at hfalse
+  exact (by simp : ((2 : ENNReal)⁻¹ ≠ 0)) hfalse
+
+end AtomWitness
+
 /-- The sharpness, as a named example and not as a remark: an atom of the clock
 at a point `u` approachable from the left is a fixed time of discontinuity, so
 the existence of a càdlàg modification -- which holds for **every** clock -- and
 quasi-left-continuity separate exactly at the atoms.  The witness is a fair coin
-flipped at `u`, constant on either side of it, over `E = Bool`. -/
+flipped at `u`, constant on either side of it, over `E = Bool`.
+
+**The witness must satisfy every hypothesis of
+`isQuasiLeftContinuous_of_isMPSolutionFor` except `hQ`, and the statement says
+so.**  Without that the example is empty: with `A = ∅` the family
+`mpFamily A Q c X` is empty, `IsMPSolution` holds of everything, and any process
+that is not quasi-left-continuous -- a fair coin over the one point index, with
+`Q.q = Measure.dirac u` -- proves the statement while showing nothing about
+atoms.  A sharpness claim that admits a vacuous witness is not a sharpness
+claim, so `hA`, `hsep` and the càdlàg paths are carried in the conclusion.
+`hsep` is what forces `A ≠ ∅`: on `Bool` the empty class does not separate,
+since the two probability measures `Measure.dirac true` and `Measure.dirac
+false` are distinct.  `IsProbabilityMeasure P` rules out `P = 0` for the same
+reason.  Found on 2026-09-07, sixth run of the day. -/
 theorem not_isQuasiLeftContinuous_of_atom (u : ι)
     (hu : ∃ s : ℕ → ι, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop (𝓝 u)) :
     ∃ (Ω' : Type) (m' : MeasurableSpace Ω') (P : @Measure Ω' m')
+      (_ : @IsProbabilityMeasure Ω' m' P)
       (𝓕 : @Filtration Ω' ι _ m') (Q : Clock ι) (c : Clock.Conv)
       (A : Set ((Bool → ℝ) × (Bool → ℝ))) (X : ι → Ω' → Bool),
-      Q.q {u} ≠ 0 ∧ @IsMPSolution ι _ Ω' m' ℝ _ (mpFamily A Q c X) 𝓕 P ∧
+      Q.q {u} ≠ 0 ∧
+        (∀ p ∈ A, Continuous p.1 ∧ (∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧
+          ∃ b, ∀ x, ‖p.2 x‖ ≤ b) ∧
+        IsSeparating (Prod.fst '' A) ∧
+        (∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω) ∧
+        @IsMPSolution ι _ Ω' m' ℝ _ (mpFamily A Q c X) 𝓕 P ∧
         ¬ IsQuasiLeftContinuous X 𝓕 P := sorry
 
 end Regularizing

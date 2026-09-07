@@ -1674,6 +1674,16 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   the sets on the right decrease to the single point `min τ' t`, and continuity
   from above of the clock on `Clock.interval q c ⊥ t`, which has finite measure,
   finishes it.
+* `not_isQuasiLeftContinuous_of_not_ae_tendsto`, the contrapositive of
+  `IsQuasiLeftContinuous.ae_eq_leftLim` and the half of the counterexample that
+  is independent of the martingale problem: for a nondecreasing `s : ℕ → ι` with
+  `∀ n, s n ≤ t` and `⨆ n, s n = t`,
+  `¬ (∀ᵐ ω ∂P, Tendsto (fun n ↦ X (s n) ω) atTop (𝓝 (X t ω)))` implies
+  `¬ IsQuasiLeftContinuous X 𝓕 P`. The constant stopping times `τ n = s n` are
+  what the definition is tested on, so no left limit has to exist and neither
+  `T2Space E` nor a topology on the index beyond the order one enters. It leaves
+  `not_isQuasiLeftContinuous_of_atom` with the construction of the solution and
+  nothing else.
 * `not_isQuasiLeftContinuous_of_atom`, the sharpness, as a named example and not
   as a remark. Atomlessness is not a convenience of the proof, and it is not a
   hypothesis of `exists_cadlag_modification_of_isRegularizingClass`, which holds
@@ -1681,7 +1691,30 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   a fixed time of discontinuity. Approachable from the left is a hypothesis of
   the statement, `∃ s : ℕ → ι, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop
   (𝓝 u)`; at `u = ⊥` the example does not exist, because there is no sequence
-  `s n ↑ u` and quasi-left-continuity asks nothing there. On
+  `s n ↑ u` and quasi-left-continuity asks nothing there. The conclusion carries
+  every hypothesis of `isQuasiLeftContinuous_of_isMPSolutionFor` except `hQ` —
+  `IsProbabilityMeasure P`, the bounds and the continuity of `hA`,
+  `IsSeparating (Prod.fst '' A)` and the almost sure càdlàg paths — because
+  without them the example is empty: for `A = ∅` the family `mpFamily A Q c X`
+  is empty, `IsMPSolution` holds of every measure, and any process that fails
+  quasi-left-continuity settles the statement while saying nothing about atoms.
+  `IsSeparating (Prod.fst '' A)` is what forces `A ≠ ∅`, since on `Bool` the
+  empty class does not separate `Measure.dirac true` from `Measure.dirac false`.
+  The witness is built in the namespace `AtomWitness`: `coinMeasure`, the fair
+  coin `2⁻¹ • (Measure.dirac true + Measure.dirac false)` on `Bool` with
+  `coinMeasure {true} = 2⁻¹`; `atomClock u`, the clock whose index σ-algebra is
+  `⊤` and whose measure is `Measure.dirac u`, with
+  `atomClock_apply_singleton : (atomClock u).q {u} = 1`, so that the atom is
+  there and every down-set is measurable for free;
+  `coinProcess u t ω = if u ≤ t then ω else false`,
+  the path over `Ω = E = Bool`, where the coin is both the sample point and the
+  state; `isCadlagPath_coinProcess`, which holds for every `u` and every `ω`
+  because the path is locally constant on either side of `u`; and
+  `not_isQuasiLeftContinuous_coinProcess`, which holds for **every** filtration,
+  the constant stopping times of `not_isQuasiLeftContinuous_of_not_ae_tendsto`
+  being stopping times for all of them. What the assembly adds to this block is
+  the filtration `⊥` below `u` and `⊤` from `u` on, and the martingale property
+  of `mpFamily A (atomClock u) Clock.Conv.optional (coinProcess u)`. On
   `E = Bool` with `q = Measure.dirac u` there is a solution that flips a fair
   coin at `u` and is constant on either side of it, and for `s n ↑ u` its paths
   have `X (s n) → X (u-) ≠ X u` on an event of probability one half. The
