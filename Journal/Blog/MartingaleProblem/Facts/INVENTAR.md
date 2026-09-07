@@ -53,7 +53,7 @@ ist kein Befund, sondern ein `?`.
 | Fact | tragend | Aussage | Status | Beleg |
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Was M8 darüber hinaus verlangt, ist die Fassung für **ein Maß** statt für einen Pfad — daß `{t | μ {f | f⁻ t = f t} = 1}` abzählbares Komplement hat —, und die folgt nicht punktweise aus der Pfadaussage, sondern braucht ein Fubini-Argument über die Sprunghöhen; das steht weiter aus |
-| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one`. Seit dem 2026-09-07, achtem Lauf, ist der **zweite Schritt selbst bewiesen**, `of_continuous_comp_of_isMulSystem`: die Stone--Weierstraß-Hälfte der Induktion, über `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints` (`Topology/ContinuousMap/StoneWeierstrass.lean:323`) und einen `AlgHom`-Rückzug in `Submodule.span ℝ (insert 1 K)`. Von den vier Schritten stehen damit (i) und (ii) ganz, (iii) zur Hälfte, (iv) ist Routine |
+| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one`. Seit dem 2026-09-07, achtem Lauf, ist der **zweite Schritt selbst bewiesen**, `of_continuous_comp_of_isMulSystem`: die Stone--Weierstraß-Hälfte der Induktion, über `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints` (`Topology/ContinuousMap/StoneWeierstrass.lean:323`) und einen `AlgHom`-Rückzug in `Submodule.span ℝ (insert 1 K)`. Seit dem 2026-09-07, neuntem Lauf, ist der **Satz selbst bewiesen**: Schritt (iii) als `ioiApprox` samt `of_indicator_mem_ioiCells` und `of_indicator_of_measurable` (die Rampen gemeinsam als *eine* stetige Funktion, weil `P` nicht multiplikationsabgeschlossen ist), Schritt (iv) als `of_simpleFunc` und `of_nonneg_of_measurable` (der Umweg über `ℝ≥0∞` ist das einzige, was die Approximation wachsend macht — `SimpleFunc.approxOn` gibt keine Monotonie), und `induction_on_mulSystem` selbst als die Verschiebung `f = (f + C) + (-C)`. Alle drei Folgerungen tragen ebenfalls Beweise: `ext_of_forall_integral_eq_of_isMulSystem`, `integral_mul_eq_zero_of_isMulSystem` und `condExp_eq_of_forall_integral_mul_eq`. Der Kern von Meilenstein 5 ist damit vollständig; was `fact:monotoneclass` noch trennt, ist kein Beweis mehr, sondern die Übernahme nach Mathlib. Alles durch `lake env lean` gegen v4.33.1 |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated` |
@@ -6712,3 +6712,193 @@ Aussage über die ganze σ-Algebra. Warum jetzt: es ist der letzte der vier
 Schritte mit Inhalt, (iv) ist Linearität und ein monotoner Limes, und damit ist
 `fact:monotoneclass` — tragend `4`, der höchstgewichtete Fact ohne
 Mathlib-Beleg — beweisbar statt bloß geplant.
+
+### 2026-09-07, neunter Lauf des Tages — Rückstau 2: der funktionale Monotone-Klassen-Satz ist bewiesen
+
+**Was bearbeitet wurde.** Rückstaupunkt 2 (`induction_on_mulSystem`), und zwar
+das Ziel, das der achte Lauf am Ende benannt hatte: Schritt (iii). Er ist
+erreicht, und im selben Lauf auch (iv), der Satz selbst und zwei seiner drei
+Folgerungen. `TauCeti/WeakConvergence/Suggested.lean` geht durch `lake env lean`
+gegen v4.33.1 mit genau den zwei bekannten Fehlern an
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` — der bewußt für
+`upstream/master` geschriebenen Aussage — und ohne jede Warnung außer `sorry`.
+
+**Damit ist `fact:monotoneclass` formalisiert.** Es war mit tragend `4` der
+höchstgewichtete Fact ohne Mathlib-Beleg; seine Zeile in der Tabelle nennt
+jetzt den vollständigen Beweis. Was in Meilenstein 5 noch aussteht, ist eine
+einzige Folgerung (`condExp_eq_of_forall_integral_mul_eq`), nicht mehr der
+Satz.
+
+**Schritt (iii): von den stetigen Funktionen zu den Indikatoren.** Zwei
+Deklarationen, dazu die Rampe.
+
+* `ioiApprox k t = min 1 (max 0 ((k+1) * t))`, die stetige Rampe, mit
+  `continuous_ioiApprox`, `ioiApprox_nonneg`, `ioiApprox_le_one`,
+  `ioiApprox_of_nonpos`, `ioiApprox_of_one_le` und `monotone_ioiApprox`. Die
+  Steigung ist `k+1` und nicht `k`, damit die Familie schon bei `k = 0`
+  wächst statt mit der konstanten `0` zu beginnen — sonst ist das erste Glied
+  entartet und die Monotonie fängt erst bei `1` an.
+* `of_indicator_mem_ioiCells`: `P (Set.indicator s 1)` für jede Zelle
+  `s ∈ ioiCells K`. Der Indikator der Zelle einer Liste `l` ist der punktweise
+  wachsende Limes der Produkte `∏ i, ioiApprox k (fᵢ x - cᵢ)`, und jedes davon
+  ist eine stetige Funktion der endlich vielen `fᵢ x`, also von Schritt (ii)
+  erfaßt.
+* `of_indicator_of_measurable`: dasselbe für jedes
+  `MeasurableSet[generateFromFuns K] s`, über
+  `MeasurableSpace.induction_on_inter` entlang `ioiCells K`.
+
+**Drei Befunde an diesem Schritt, alle beim Hinschreiben gefunden.**
+
+1. **Die Rampen müssen gemeinsam genommen werden, als *eine* stetige Funktion
+   der `n` Werte.** Faktorweise ginge es nicht: `P` ist nicht
+   multiplikationsabgeschlossen, und das Produkt der Indikatoren ist genau das,
+   was ein faktorweises Argument bräuchte. Das ist der Grund, warum Schritt (ii)
+   für eine stetige Funktion *endlich vieler* Mitglieder von `K` formuliert ist
+   und nicht für eines — die Roadmap sagte das bisher nicht, jetzt schon.
+2. **Die Disjunktheit im `iUnion`-Fall trägt genau eine Sache: die Schranke.**
+   Die Partialsummen der Indikatoren wachsen ohne jede Disjunktheit; was ohne
+   sie fehlt, ist `≤ 1`, und damit die Hypothese von `mono_lim`. Auch das steht
+   jetzt in der Roadmap, weil es die Stelle benennt, an der ein Beweis kippt,
+   der die Disjunktheit vergißt.
+3. **Der Komplementfall braucht keine Fallunterscheidung über Meßbarkeit**,
+   sondern nur `Set.indicator sᶜ 1 = 1 + (-1) • Set.indicator s 1` — Linearität
+   und die Konstanten, mehr nicht.
+
+**Schritt (iv): von den Indikatoren zu den beschränkten meßbaren Funktionen.**
+
+* `of_simpleFunc`: `P ⇑f` für jede `f : @SimpleFunc Ω (generateFromFuns K) ℝ`,
+  über `MeasureTheory.SimpleFunc.induction`, deren zwei Fälle das Vielfache
+  eines Indikators und die Summe sind. Beschränktheit ist hier **keine**
+  Hypothese: eine einfache Funktion hat endliches Bild.
+* `of_nonneg_of_measurable`: `P f` für beschränktes, nichtnegatives,
+  `generateFromFuns K`-meßbares `f`, als wachsender Limes von
+  `SimpleFunc.eapprox` von `ENNReal.ofReal ∘ f`, zurückgelesen über
+  `ENNReal.toReal`.
+
+**Der Befund, der die Gestalt von (iv) bestimmt: der Umweg über `ℝ≥0∞` ist
+nicht Bequemlichkeit, sondern das einzige, was die Approximation *wachsend*
+macht.** `SimpleFunc.approxOn`, der naheliegende reelle Weg, gibt Konvergenz und
+keine Monotonie, und `mono_lim` verlangt Monotonie. `SimpleFunc.eapprox` gibt
+sie (`monotone_eapprox`), die Werte sind endlich (`eapprox_lt_top`), und deshalb
+trägt `ENNReal.toReal_mono` sowohl die Monotonie als auch den Limes zurück nach
+`ℝ`. Der allgemeine beschränkte Fall ist dann die Verschiebung
+`f = (f + C) + (-C)` um eine Schranke von `f` — die Konstanten und die
+Additivität, sonst nichts.
+
+**Zwei Folgerungen tragen jetzt Beweise.**
+
+* `ext_of_forall_integral_eq_of_isMulSystem` — zwei endliche Maße, die auf `K`
+  und auf der Gesamtmasse übereinstimmen, stimmen auf `generateFromFuns K`
+  überein. Induziert wird über
+  `P f := Integrable f μ ∧ Integrable f ν ∧ ∫ f ∂μ = ∫ f ∂ν`; der Schluß ist
+  `integral_indicator_one` und `measureReal_eq_measureReal_iff`.
+* `integral_mul_eq_zero_of_isMulSystem` — dieselbe Bauform mit
+  `P f := Integrable (g * f) μ ∧ ∫ g * f ∂μ = 0`.
+
+**Und der Befund, der beide Folgerungen bestimmt: die Integrierbarkeit muß in
+der induzierten Eigenschaft mitlaufen.** Das ist keine Bequemlichkeit. Die
+Hypothesen `add` und `mono_lim` von `induction_on_mulSystem` müssen für
+**beliebige** Funktionen gelten, nicht nur für die meßbaren, und `∫(f+g) =
+∫f + ∫g` ist ohne Integrierbarkeit falsch; ebenso braucht der monotone Limes
+majorisierte Konvergenz und damit `AEStronglyMeasurable` der Glieder. `P` trägt
+deshalb die Integrierbarkeit als eigene Komponente, und die Meßbarkeit des
+Limes kommt aus `aestronglyMeasurable_of_tendsto_ae` — aus den Gliedern, nicht
+aus einer Meßbarkeitsannahme, die `P` gar nicht hätte.
+
+**Mitgefunden, beim Übersetzen.**
+
+* **`@[elab_as_elim]` schlägt zurück, sobald man den Satz als Term benutzt.**
+  `have hres := induction_on_mulSystem …` scheitert mit „failed to elaborate
+  eliminator, expected type is not available": das Motiv wird aus dem
+  Erwartungstyp gelesen, und ein `have` ohne Typannotation hat keinen. Der
+  erwartete Typ muß ausgeschrieben werden. Wer die drei Folgerungen fortsetzt,
+  schreibt ihn hin.
+* `Finset.range_subset` heißt in v4.33.1 `range n ⊆ s ↔ ∀ x < n, x ∈ s`; die
+  Aussage `range n ⊆ range m ↔ n ≤ m` ist `Finset.range_subset_range`.
+* `continuous_finset_prod` ist seit dem 2026-04-08 `deprecated`, der Name ist
+  `continuous_finsetProd`.
+* `push_neg` ist deprecated zugunsten von `push Not`; beide Stellen sind
+  stattdessen ohne Taktik ausgeschrieben.
+* `letI` für eine `MeasurableSpace`-Instanz in einem Beweis meldet der
+  Stil-Linter — in einem Beweis ist `let` vorzuziehen. Und: in
+  `ext_of_forall_integral_eq_of_isMulSystem` darf man `generateFromFuns K`
+  **nicht** als Instanz einführen, weil `mΩ` schon eine ist und die Suche die
+  letzte nimmt; dort steht die σ-Algebra deshalb überall annotiert. Das ist
+  derselbe Mechanismus wie der Reihenfolgefehler vom 2026-09-06.
+
+**Nachtrag desselben Laufs: die dritte Folgerung ist auch bewiesen, und damit
+ist der Kern von Meilenstein 5 vollständig.**
+`condExp_eq_of_forall_integral_mul_eq` trägt einen Beweis, und der Weg war der
+unten skizzierte:
+`integral_mul_eq_zero_of_isMulSystem` auf `g = X - Y` (dessen Hypothese
+`∫ g = 0` ist genau `h1`), dann `f = Set.indicator s 1` für
+`MeasurableSet[generateFromFuns K] s`, was `∫ x in s, X = ∫ x in s, Y` gibt
+(`integral_indicator`), und schließlich
+`MeasureTheory.ae_eq_condExp_of_forall_setIntegral_eq` gegen `μ[Y | …]`, dessen
+Voraussetzungen `integrable_condExp`, `stronglyMeasurable_condExp` und
+`setIntegral_condExp` liefern. Die `SigmaFinite (μ.trim hKle)`, die der Satz
+zusätzlich verlangt, ist bei endlichem `μ` `inferInstance` über
+`isFiniteMeasure_trim` (`Measure/Trim.lean:124`). Gemessen stand die Datei
+an dieser Stelle bei **59 Deklarationen und 13 `sorry`** (vorher 48 und 17),
+rc = 1 an der einen bewußten Master-Aussage und ohne jede weitere Warnung.
+
+**Zwei Kleinigkeiten aus diesem Nachtrag, beide Zeitfresser beim nächsten Mal.**
+`ring` scheitert an `(X x - Y x) * f x = ((fun x => …) - fun x => …) x`, weil es
+die Pi-Subtraktion nicht beta-reduziert — `ring_nf` normalisiert nur die linke
+Seite und läßt einen ratlos zurück; der Weg ist eine punktweise `have`-Gleichung
+und `simp only`, nicht eine Funktionsgleichung. Und der Stil-Linter verlangt in
+Beweisen `have` statt `haveI` auch für Instanzen, was für Prop-Klassen wie
+`SigmaFinite` gleichwertig ist.
+
+**Was offen bleibt.** Nichts mehr am funktionalen Monotone-Klassen-Satz. Was
+offen bleibt, ist sein erster Abnehmer, und der hat eine benannte Hürde:
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`MartingaleProblems.isMPSolution_iff_forall_fdd_continuous` **aus**
+`isMPSolution_iff_forall_fdd`, also der Schritt von beschränkt meßbaren zu
+beschränkt stetigen Testfunktionen. Worauf er ruht: auf
+`induction_on_mulSystem` samt `integral_mul_eq_zero_of_isMulSystem`, seit heute
+bewiesen, angewandt auf das multiplikative System der Produkte
+`∏ k, h k (X (r k) ω)` mit `h k` beschränkt stetig, dessen erzeugte σ-Algebra
+nach `generateFromFuns_eq_generateFrom_ioiCells` die von den Koordinaten
+erzeugte ist. Warum jetzt: es ist der einzige Punkt der vier Roadmaps, der
+`induction_on_mulSystem` **namentlich** zitiert und ihn jetzt wirklich bekommen
+kann, und `isMPSolution_iff_forall_fdd` daneben stehen zu lassen ist zulässig —
+die Äquivalenz der beiden Kriterien ist ein eigener Satz und braucht die
+Grundfassung nur als Hypothese.
+
+**Die Hürde dabei ist im selben Lauf weggeräumt.** Die Testfunktionen `h k`
+sind reell, das multiplikative System also auch; der **Integrand** ist aber
+`𝕂`-wertig, und `integral_mul_eq_zero_of_isMulSystem` ist über `ℝ` formuliert
+(`g : Ω → ℝ`). Die Brücke ist jetzt gebaut und bewiesen:
+`integral_mul_ofReal_eq_zero_of_isMulSystem`, für `𝕂`-wertiges `g` gegen ein
+**reelles** `K`, über Real- und Imaginärteil (`RCLike.mul_re` gibt
+`re (z * (r:𝕂)) = re z * r`, `integral_re` und `integral_im` vertauschen mit dem
+Integral, `RCLike.ext` setzt zusammen). Sie steht als eigener Punkt in
+Meilenstein 5, und dort ausdrücklich getrennt von den schon vorhandenen
+`RCLike`-Varianten, die etwas anderes und Größeres sind: dort ist `K` selbst
+`𝕂`-wertig und die Multiplikativität muß den Übergang zur reellen Unteralgebra
+überstehen. Hier bleibt `K` reell und nur der andere Faktor wandert — deshalb
+kostet die Brücke zwanzig Zeilen und nicht einen Meilenstein.
+
+**Und das zweite Stück, das der Abnehmer braucht, ist ebenfalls gebaut.**
+`generateFromFuns_setOf_continuous_bounded`: auf einem pseudometrisierbaren Raum
+mit seiner Borelstruktur erzeugen die beschränkten stetigen reellen Funktionen
+die Borel-σ-Algebra. Ohne das sagt die Induktion über ein aus stetigen
+Funktionen gebautes multiplikatives System nichts, weil ihre Konklusion über
+`generateFromFuns K` läuft und nicht über Borel. Der Beweis ist die trunkierte
+Abstandsfunktion `fun x => min 1 (Metric.infDist x Uᶜ)`; **der Sonderfall, den
+man dabei übersieht, ist `U = univ`** — dort ist `Uᶜ = ∅` und
+`Metric.infDist x ∅ = 0` per Konvention, die Formel also falsch, und der Fall
+ist eigens zu nehmen. Die Metrisierbarkeit wird genau hier und nur hier
+gebraucht, und das steht jetzt auch so in Meilenstein 5.
+
+Damit ist der nächste Lauf an `isMPSolution_iff_forall_fdd_continuous`
+voraussetzungsfrei: alles, was er aus `WeakConvergence` braucht, ist bewiesen —
+`induction_on_mulSystem`, die drei Folgerungen, die `RCLike`-Brücke und die
+Erzeugung der Borelstruktur. Was dort bleibt, ist die Rechnung in
+`MartingaleProblems`: das multiplikative System der Produkte
+`∏ k, h k (X (r k) ω)` mit `r k ≤ s`, seine erzeugte σ-Algebra als
+`⨆ r ∈ Set.Iic s, comap (X r) borel`, und der Fall `n = 0` — das leere Produkt
+ist `1`, und genau daraus kommt die Hypothese `∫ g ∂P = 0`, die die Folgerung
+zusätzlich verlangt. Am Ende des Laufs: **61 Deklarationen, 13 `sorry`** (gezählt mit `grep -cE "^(noncomputable )?(private |protected )*(theorem|lemma|def|structure|instance|abbrev) "`; die Sorry-Zahl ist die des Übersetzers).

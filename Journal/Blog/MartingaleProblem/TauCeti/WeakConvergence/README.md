@@ -740,23 +740,62 @@ space; no topology is involved.
   monotone limits, that is `P g` whenever `f : ℕ → Ω → ℝ` is pointwise monotone,
   satisfies `P (f n)` for every `n`, is uniformly bounded and tends to `g`
   pointwise. Then `P f` for every bounded `generateFromFuns K`-measurable `f`.
-  State it `@[elab_as_elim]`, as `induction_on_inter` is. The proof has four
-  steps: closure under uniform limits, which is
-  `of_tendstoUniformly_of_mono_lim`; then `P (φ ∘ (f₁, …, fₙ))` for `fᵢ ∈ K` and
-  `φ` continuous, since the polynomials in the `fᵢ` are covered by
-  multiplicativity, linearity and the constants and Stone–Weierstrass
-  approximates `φ` on the compact range uniformly; then `P` of the indicator of
-  every member of `ioiCells K`, by continuous functions increasing to the
-  indicator of a box, and `MeasurableSpace.induction_on_inter` along that
-  π-system to spread it over the whole σ-algebra; then linearity for the simple
-  functions and one more bounded monotone limit for the general bounded
-  measurable function.
+  State it `@[elab_as_elim]`, as `induction_on_inter` is. Proved (2026-09-07) in
+  the four steps below, each of which is a declaration of its own.
+* `MeasureTheory.ioiApprox`, the continuous ramp `min 1 (max 0 ((k + 1) * t))`
+  rising from `0` to `1` above `0`, with `continuous_ioiApprox`,
+  `ioiApprox_nonneg`, `ioiApprox_le_one`, `ioiApprox_of_nonpos`,
+  `ioiApprox_of_one_le` and `monotone_ioiApprox`. The slope is `k + 1` and not
+  `k` so that the family increases from `k = 0` on rather than starting at the
+  constant `0`.
+* `MeasureTheory.of_indicator_mem_ioiCells`, the third step: under the
+  hypotheses of `induction_on_mulSystem`, `P (Set.indicator s 1)` for every
+  `s ∈ ioiCells K`. The indicator of the cell of a list `l` is the pointwise
+  increasing limit of the products `∏ i, ioiApprox k (fᵢ x - cᵢ)`, each of which
+  is a continuous function of the finitely many `fᵢ x` and so is covered by
+  `of_continuous_comp_of_isMulSystem`. The ramps have to be taken jointly, as
+  one continuous function of the `n` values: `P` is not closed under
+  multiplication, and one factor at a time would need exactly that. Off the cell
+  one factor is `0` for every `k`; on it every factor reaches `1` for `k` large,
+  and that is the one place where the finiteness of the list is used.
+* `MeasureTheory.of_indicator_of_measurable`, the third step spread over the
+  σ-algebra: `P (Set.indicator s 1)` for every `s` with
+  `MeasurableSet[generateFromFuns K] s`, by `MeasurableSpace.induction_on_inter`
+  along `ioiCells K`. Complements come from `1 + (-1) • Set.indicator s 1`, so
+  from linearity and the constants; countable disjoint unions from the partial
+  sums, which increase and are bounded by `1`. Disjointness enters exactly once,
+  in that bound — without it the partial sums still increase but are unbounded.
+* `MeasureTheory.of_simpleFunc`, the first half of the fourth step: `P ⇑f` for
+  every `f : @SimpleFunc Ω (generateFromFuns K) ℝ`, by
+  `MeasureTheory.SimpleFunc.induction`, whose two cases are a scalar multiple of
+  an indicator and a sum. Boundedness is not a hypothesis: a simple function has
+  finite range.
+* `MeasureTheory.of_nonneg_of_measurable`, the second half: `P f` for `f`
+  bounded, nonnegative and `generateFromFuns K`-measurable, as the increasing
+  limit of `MeasureTheory.SimpleFunc.eapprox` of `ENNReal.ofReal ∘ f` read back
+  through `ENNReal.toReal`. The detour through `ℝ≥0∞` is what makes the
+  approximation *increasing*, which is what the monotone-limit hypothesis needs
+  and what `SimpleFunc.approxOn` does not give; the values are finite by
+  `SimpleFunc.eapprox_lt_top`, so `ENNReal.toReal_mono` carries both the
+  monotonicity and the limit back to `ℝ`. The general bounded measurable case is
+  the shift `f = (f + C) + (-C)` by a bound of `f`.
 * `MeasureTheory.ext_of_forall_integral_eq_of_isMulSystem`: two finite measures
   agreeing on `∫ f` for every `f` in a multiplicative system of bounded
   measurable functions, and on the total mass, agree on `generateFromFuns K`.
   The total mass is a hypothesis in its own right: a multiplicative system need
   not contain the constants, and then the integrals over `K` say nothing about
-  `μ univ`.
+  `μ univ`. Proved (2026-09-07), by induction on
+  `P f := Integrable f μ ∧ Integrable f ν ∧ ∫ f ∂μ = ∫ f ∂ν`, with
+  `integral_indicator_one` and `measureReal_eq_measureReal_iff` at the end.
+
+  Integrability has to travel inside the induced property, in this corollary and
+  in the two below. It is not convenience: `add` and `mono_lim` of
+  `induction_on_mulSystem` must hold of **arbitrary** functions, and the
+  integral is additive only on integrable ones, while the monotone limit needs
+  dominated convergence and hence `AEStronglyMeasurable` of the members. The
+  measurability of the limit then comes from `aestronglyMeasurable_of_tendsto_ae`
+  applied to the members, not from a measurability assumption the property does
+  not carry.
 * `MeasureTheory.integral_mul_eq_zero_of_isMulSystem`: for `μ` finite and `g`
   integrable with `∫ g ∂μ = 0`, `∫ g * f ∂μ = 0` for every `f ∈ K` implies
   `∫ g * f ∂μ = 0` for every bounded `generateFromFuns K`-measurable `f`; and
@@ -767,6 +806,36 @@ space; no topology is involved.
   is again necessary and again cheap: for `K = {0}` the σ-algebra is `⊥`, whose
   bounded measurable functions are the constants, so `∫ g * c ∂μ = 0` forces
   `∫ g ∂μ = 0`; asking `(1 : Ω → ℝ) ∈ K` implies it and is stronger.
+* `MeasureTheory.generateFromFuns_setOf_continuous_bounded`: on a pseudo
+  metrizable space with its Borel structure, the bounded continuous real
+  functions generate the Borel σ-algebra. Proved (2026-09-07). One direction is
+  that a continuous function is measurable; the other is the truncated distance
+  to the complement, `fun x ↦ min 1 (Metric.infDist x Uᶜ)`, which is bounded,
+  continuous, and has an open `U` as its preimage of `Set.Ioi 0`. The case
+  `U = univ` is separate: `infDist x ∅ = 0` by convention, so the formula fails
+  there and the set is measurable outright.
+
+  This is what turns a criterion tested against bounded **continuous** functions
+  into one tested against every bounded Borel function, and it is the only place
+  where the topology of the state space enters Milestone 5. Metrizability is
+  what is used and all that is used — separating a point from a closed set by a
+  continuous function; the statement is false for a topology too coarse for
+  that.
+* `MeasureTheory.integral_mul_ofReal_eq_zero_of_isMulSystem`: the same
+  conclusion for a `𝕂`-valued `g` against a **real** multiplicative system `K`,
+  that is `∫ g · (f : 𝕂) ∂μ = 0` for every bounded `generateFromFuns K`-measurable
+  real `f`. Proved (2026-09-07) by taking real and imaginary parts:
+  `RCLike.re (z * (r : 𝕂)) = RCLike.re z * r` for real `r`, so `integral_re` and
+  `integral_im` reduce it to the real conclusion twice over, and `RCLike.ext`
+  puts it back together.
+
+  This is a different statement from the `RCLike` variants below, and a smaller
+  one: there `K` itself is `𝕂`-valued and the multiplicativity has to survive
+  the passage to the real subalgebra, here `K` stays real and only the other
+  factor moves. It is the shape the consumer needs — in
+  `MartingaleProblems.isMPSolution_iff_forall_fdd_continuous` the test functions
+  are real products of bounded continuous functions of coordinates while the
+  integrand takes values in `𝕂`.
 * The `RCLike` variants of the two conclusions, for `K` a multiplicative system
   of bounded measurable `𝕂`-valued functions closed under conjugation. They
   reduce to the real ones through `A_ℝ`, the real-valued members of the

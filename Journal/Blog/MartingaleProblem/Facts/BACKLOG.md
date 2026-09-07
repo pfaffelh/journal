@@ -152,12 +152,19 @@ kein gebautes Mathlib und taugt zu nichts.
    Deklarationen auf `SkorokhodSpace.metricSpace t₀` — das ist eine
    Signaturänderung und kein Satz.*
 
-2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
+2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
-   `PLAN.md`). Ruht auf `MeasurableSpace.comap`, monotoner Konvergenz und
-   `induction_on_inter`, das zugleich die Vorlage ist. Drei bereits
-   formulierte Roadmap-Punkte warten darauf. Ebenfalls als Lean zu schreiben
-   und zu übersetzen.
+   `PLAN.md`).~~ *(erledigt 2026-09-07, neunter Lauf des Tages.)* Der Satz und
+   **alle drei** Folgerungen tragen Beweise und gehen durch `lake env lean`
+   gegen v4.33.1: `induction_on_mulSystem`, `ext_of_forall_integral_eq_of_isMulSystem`,
+   `integral_mul_eq_zero_of_isMulSystem` und `condExp_eq_of_forall_integral_mul_eq`.
+   Der Weg dahin steht in der Roadmap und im Laufbericht; die vier Schritte sind
+   `of_tendstoUniformly_of_mono_lim`, `of_continuous_comp_of_isMulSystem`,
+   `of_indicator_mem_ioiCells` mit `of_indicator_of_measurable`, und
+   `of_simpleFunc` mit `of_nonneg_of_measurable`. Was jetzt darauf wartet, steht
+   nicht mehr hier, sondern in `MartingaleProblems`
+   (`isMPSolution_iff_forall_fdd_continuous`) und in `SkorokhodSpace`
+   Meilenstein 8.
 
    *Zwischenstand 2026-09-06, zweiter Lauf des Tages: der Unterbau steht und
    ist übersetzt, der Satz selbst nicht.* In
@@ -207,6 +214,17 @@ kein gebautes Mathlib und taugt zu nichts.
    (`Topology/ContinuousMap/StoneWeierstrass.lean:297`, die ε-Fassung),
    angewandt auf die von `f₁,…,fₙ` erzeugte Unteralgebra über dem kompakten
    Bild in `Fin n → ℝ`.
+
+   *Zwischenstand 2026-09-07, neunter Lauf des Tages: **`induction_on_mulSystem`
+   ist bewiesen**, und mit ihm zwei seiner drei Folgerungen. Die Schritte (iii)
+   und (iv) sind gebaut — `ioiApprox` samt sechs Lemmata,
+   `of_indicator_mem_ioiCells`, `of_indicator_of_measurable`, `of_simpleFunc`,
+   `of_nonneg_of_measurable` —, der Satz selbst ist die Verschiebung
+   `f = (f + C) + (-C)`, und `ext_of_forall_integral_eq_of_isMulSystem` sowie
+   `integral_mul_eq_zero_of_isMulSystem` tragen Beweise. Alles durch
+   `lake env lean` gegen v4.33.1, ohne Warnung außer `sorry`. **Damit ist dieser
+   Punkt bis auf `condExp_eq_of_forall_integral_mul_eq` erledigt**; dessen Weg
+   steht im Laufbericht im Inventar. Einzelheiten dort.*
 
    *Zwischenstand 2026-09-07, achter Lauf des Tages: **(ii) ist bewiesen**,
    `of_continuous_comp_of_isMulSystem`, durch `lake env lean`. Der Anker ist
