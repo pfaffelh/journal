@@ -205,6 +205,20 @@ kein gebautes Mathlib und taugt zu nichts.
    `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`
    (`fact:convdet`); die Begründung steht im Laufbericht im Inventar.*
 
+   *Zwischenstand 2026-09-07, fünfzehnter Lauf des Tages: **dieser Schritt ist
+   getan**. `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`
+   ist bewiesen, `WeakConvergence` steht bei **11 `sorry`** und 91
+   Deklarationen (vorher 12 und 81), rc = 1 mit unverändert genau den zwei
+   angekündigten Fehlern, jetzt bei `:1300`. Neun Deklarationen sind neu:
+   `ballCutoff` mit sechs Lemmata, `lipschitzWith_mul_of_bounded` und
+   `integrable_of_continuous_of_bounded`. Die Aussage hat dabei ihre
+   Separabilitätshypothese **verloren** — EK und das Manuskript verlangen sie,
+   der Beweis benutzt keine abzählbare dichte Menge; Auffälligkeit und
+   Begründung im Inventar. Der nächste benannte Schritt in dieser Datei ist
+   `isConvergenceDetermining_setOf_hasCompactSupport`, die zweite Hälfte
+   desselben Facts, und was zwischen den beiden Klassen liegt, ist genau ein
+   Abschneidelemma; der Laufbericht nennt es.*
+
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`).~~ *(erledigt 2026-09-07, neunter Lauf des Tages.)* Der Satz und

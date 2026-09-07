@@ -10,6 +10,7 @@ import Mathlib.MeasureTheory.Measure.FiniteMeasureExt
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
+import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.MeasureTheory.MeasurableSpace.CountablyGenerated
 import Mathlib.MeasureTheory.PiSystem
 import Mathlib.Algebra.GroupWithZero.Indicator
@@ -97,6 +98,20 @@ separating one: the identification of a subsequential limit evaluates the class
 against a weakly convergent sequence, which sees bounded continuous functions
 and nothing else.
 
+Since 2026-09-07, fifteenth run, **`fact:convdet` has its first half proved**,
+`isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`, together
+with the cutoff it runs on: `ballCutoff` with `ballCutoff_nonneg`,
+`ballCutoff_le_one`, `abs_ballCutoff_le_one`, `ballCutoff_eq_one`,
+`support_ballCutoff`, `lipschitzWith_ballCutoff` and `tendsto_ballCutoff`, and
+the two auxiliary lemmas `lipschitzWith_mul_of_bounded` and
+`integrable_of_continuous_of_bounded`.  The statement **lost its separability
+hypothesis**: Ethier-Kurtz and the manuscript state Proposition 3.4.4 for
+separable `S`, and no step of the proof uses a countable dense set.  The route
+is Mathlib's `tendsto_iff_forall_lipschitz_integral_tendsto`, which reduces weak
+convergence to the bounded Lipschitz functions, and the truncation of such a
+function by a cutoff drawn from the class itself; the truncation is licensed by
+the tightness the cutoffs deliver.
+
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
 `tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
@@ -107,7 +122,7 @@ statement follows master.
 -/
 
 open Filter Topology MeasureTheory Set ENNReal
-open scoped BoundedContinuousFunction
+open scoped BoundedContinuousFunction NNReal
 
 namespace MeasureTheory
 
@@ -311,12 +326,270 @@ theorem isConvergenceDetermining_of_stronglySeparatesPoints [MetricSpace E]
     (hA : StronglySeparatesPoints {f : E → ℝ | ∃ g ∈ A, ⇑g = f}) :
     IsConvergenceDetermining {f : E → ℝ | ∃ g ∈ A, ⇑g = f} := sorry
 
-/-- `fact:convdet` (Ethier-Kurtz, Proposition 3.4.4), first half.  Separability
-alone: no completeness, and no local compactness. -/
+/-! ### The cutoff, and the truncation it performs
+
+`fact:convdet` needs one construction and one estimate.  The construction is a
+`1`-Lipschitz cutoff which is `1` on a ball and vanishes off the ball of one
+larger radius; it is a member of the class, and multiplying by it keeps a
+bounded Lipschitz function inside the class.  The estimate is that the
+truncation error is at most `‖f‖_∞` times the mass the cutoff misses, which is
+what turns convergence along the cutoffs into a tightness statement. -/
+
+section Cutoff
+
+variable [PseudoMetricSpace E]
+
+/-- The `1`-Lipschitz cutoff which is `1` on `closedBall x₀ R` and vanishes off
+`closedBall x₀ (R + 1)`. -/
+noncomputable def ballCutoff (x₀ : E) (R : ℝ) (x : E) : ℝ := min 1 (max 0 (R + 1 - dist x x₀))
+
+omit [MeasurableSpace E] in
+lemma ballCutoff_nonneg (x₀ : E) (R : ℝ) (x : E) : 0 ≤ ballCutoff x₀ R x :=
+  le_min zero_le_one (le_max_left _ _)
+
+omit [MeasurableSpace E] in
+lemma ballCutoff_le_one (x₀ : E) (R : ℝ) (x : E) : ballCutoff x₀ R x ≤ 1 := min_le_left _ _
+
+omit [MeasurableSpace E] in
+lemma abs_ballCutoff_le_one (x₀ : E) (R : ℝ) (x : E) : |ballCutoff x₀ R x| ≤ 1 :=
+  abs_le.2 ⟨by linarith [ballCutoff_nonneg x₀ R x], ballCutoff_le_one x₀ R x⟩
+
+omit [MeasurableSpace E] in
+lemma ballCutoff_eq_one {x₀ : E} {R : ℝ} {x : E} (h : dist x x₀ ≤ R) :
+    ballCutoff x₀ R x = 1 := by
+  unfold ballCutoff
+  rw [max_eq_right (by linarith), min_eq_left (by linarith)]
+
+omit [MeasurableSpace E] in
+lemma support_ballCutoff (x₀ : E) (R : ℝ) :
+    Function.support (ballCutoff x₀ R) ⊆ Metric.closedBall x₀ (R + 1) := by
+  intro x hx
+  simp only [Function.mem_support, ne_eq] at hx
+  simp only [Metric.mem_closedBall]
+  by_contra h
+  push_neg at h
+  refine hx ?_
+  unfold ballCutoff
+  rw [max_eq_left (by linarith), min_eq_right (by norm_num)]
+
+omit [MeasurableSpace E] in
+lemma lipschitzWith_ballCutoff (x₀ : E) (R : ℝ) : LipschitzWith 1 (ballCutoff x₀ R) := by
+  have h0 : LipschitzWith 1 (fun x : E => R + 1 - dist x x₀) := by
+    refine LipschitzWith.of_dist_le_mul fun x y => ?_
+    simp only [Real.dist_eq, NNReal.coe_one, one_mul]
+    have h : R + 1 - dist x x₀ - (R + 1 - dist y x₀) = dist y x₀ - dist x x₀ := by ring
+    rw [h]
+    exact (abs_dist_sub_le y x x₀).trans_eq (dist_comm y x)
+  exact (h0.const_max 0).const_min 1
+
+omit [MeasurableSpace E] in
+/-- The cutoffs of integer radius increase to `1` pointwise: each point lies in
+all but finitely many of the balls. -/
+lemma tendsto_ballCutoff (x₀ : E) (x : E) :
+    Tendsto (fun m : ℕ => ballCutoff x₀ (m : ℝ) x) atTop (𝓝 1) := by
+  refine tendsto_atTop_of_eventually_const (i₀ := ⌈dist x x₀⌉₊) fun m hm => ?_
+  exact ballCutoff_eq_one ((Nat.le_ceil _).trans (by exact_mod_cast hm))
+
+omit [MeasurableSpace E] in
+/-- A product of two bounded Lipschitz functions is Lipschitz.  Mathlib's
+`LipschitzWith.mul` is the `to_additive` companion of `LipschitzWith.add` and
+concerns the group operation, so it does not apply to a product of real valued
+functions; boundedness of both factors is what makes the statement true. -/
+lemma lipschitzWith_mul_of_bounded {f g : E → ℝ} {Kf Kg : ℝ≥0} {Cf Cg : ℝ}
+    (hf : LipschitzWith Kf f) (hg : LipschitzWith Kg g)
+    (hfb : ∀ x, |f x| ≤ Cf) (hgb : ∀ x, |g x| ≤ Cg) :
+    LipschitzWith (Cf.toNNReal * Kg + Cg.toNNReal * Kf) fun x => f x * g x := by
+  refine LipschitzWith.of_dist_le_mul fun x y => ?_
+  have hfd : |f x - f y| ≤ Kf * dist x y := by
+    simpa [Real.dist_eq] using hf.dist_le_mul x y
+  have hgd : |g x - g y| ≤ Kg * dist x y := by
+    simpa [Real.dist_eq] using hg.dist_le_mul x y
+  have hfb' : ∀ x, |f x| ≤ max Cf 0 := fun x => (hfb x).trans (le_max_left _ _)
+  have hgb' : ∀ x, |g x| ≤ max Cg 0 := fun x => (hgb x).trans (le_max_left _ _)
+  have h1 : |f x * g x - f y * g y| ≤ |f x| * |g x - g y| + |g y| * |f x - f y| := by
+    calc |f x * g x - f y * g y| = |f x * (g x - g y) + (f x - f y) * g y| := by
+          congr 1; ring
+      _ ≤ |f x * (g x - g y)| + |(f x - f y) * g y| := abs_add_le _ _
+      _ = |f x| * |g x - g y| + |g y| * |f x - f y| := by
+          rw [abs_mul, abs_mul]; ring
+  have h2 : |f x| * |g x - g y| ≤ max Cf 0 * (Kg * dist x y) :=
+    mul_le_mul (hfb' x) hgd (abs_nonneg _) (le_max_right _ _)
+  have h3 : |g y| * |f x - f y| ≤ max Cg 0 * (Kf * dist x y) :=
+    mul_le_mul (hgb' y) hfd (abs_nonneg _) (le_max_right _ _)
+  have hcoe : ((Cf.toNNReal * Kg + Cg.toNNReal * Kf : ℝ≥0) : ℝ) * dist x y
+      = max Cf 0 * (Kg * dist x y) + max Cg 0 * (Kf * dist x y) := by
+    push_cast [Real.coe_toNNReal']
+    ring
+  rw [Real.dist_eq, hcoe]
+  linarith
+
+end Cutoff
+
+/-- A bounded continuous function is integrable against a finite measure. -/
+lemma integrable_of_continuous_of_bounded [TopologicalSpace E] [OpensMeasurableSpace E]
+    {ρ : Measure E} [IsFiniteMeasure ρ] {g : E → ℝ} {C : ℝ}
+    (hg : Continuous g) (hb : ∀ x, |g x| ≤ C) : Integrable g ρ :=
+  Integrable.mono' (integrable_const C) hg.aestronglyMeasurable
+    (ae_of_all _ fun x => by simpa [Real.norm_eq_abs] using hb x)
+
+/-- `fact:convdet` (Ethier-Kurtz, Proposition 3.4.4), first half: on a metric
+space the uniformly continuous bounded functions with bounded support are
+convergence determining.
+
+**Separability is not needed**, and neither is completeness or local
+compactness -- the manuscript and Ethier-Kurtz state the fact for separable `S`,
+but no step below uses a countable dense set.  What carries the proof is
+Mathlib's `tendsto_iff_forall_lipschitz_integral_tendsto`
+(`MeasureTheory/Measure/Portmanteau.lean:688`), which reduces weak convergence
+to the bounded *Lipschitz* functions, plus the truncation of such a function by
+`ballCutoff`.  The truncation is legitimate only after the sequence is known to
+put almost all of its mass in a fixed ball, and that is the tightness step: the
+cutoffs are themselves members of the class, so their integrals converge, and
+`tendsto_ballCutoff` with dominated convergence says the limit measure charges
+the balls fully.
+
+Nonemptiness of `E` is not a hypothesis but a consequence: `ν` is a probability
+measure, so `E` cannot be empty, and the argument needs a centre for its
+balls. -/
 theorem isConvergenceDetermining_setOf_uniformContinuous_isBounded_support
-    [MetricSpace E] [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E] :
+    [MetricSpace E] [OpensMeasurableSpace E] :
     IsConvergenceDetermining {f : E → ℝ | UniformContinuous f ∧
-      (∃ C, ∀ x, |f x| ≤ C) ∧ Bornology.IsBounded (Function.support f)} := sorry
+      (∃ C, ∀ x, |f x| ≤ C) ∧ Bornology.IsBounded (Function.support f)} := by
+  intro μ ν hconv
+  -- The space is nonempty, since it carries a probability measure.
+  have hne : Nonempty E := by
+    by_contra h
+    rw [not_nonempty_iff] at h
+    have h1 : (ν : Measure E) univ = 1 := measure_univ
+    rw [Set.univ_eq_empty_iff.2 h, measure_empty] at h1
+    exact zero_ne_one h1
+  obtain ⟨x₀⟩ := hne
+  -- The cutoffs belong to the class.
+  have hcut : ∀ m : ℕ, ballCutoff x₀ (m : ℝ) ∈ {f : E → ℝ | UniformContinuous f ∧
+      (∃ C, ∀ x, |f x| ≤ C) ∧ Bornology.IsBounded (Function.support f)} := by
+    intro m
+    refine ⟨(lipschitzWith_ballCutoff x₀ (m : ℝ)).uniformContinuous,
+      ⟨1, abs_ballCutoff_le_one x₀ (m : ℝ)⟩, ?_⟩
+    exact (Metric.isBounded_closedBall).subset (support_ballCutoff x₀ (m : ℝ))
+  rw [tendsto_iff_forall_lipschitz_integral_tendsto]
+  intro f hfbdd hflip
+  obtain ⟨K, hK⟩ := hflip
+  obtain ⟨C₀, hC₀⟩ := hfbdd
+  -- A pointwise bound for `f`.
+  set C : ℝ := C₀ + |f x₀| with hCdef
+  have hC : ∀ x, |f x| ≤ C := by
+    intro x
+    have h := hC₀ x x₀
+    rw [Real.dist_eq] at h
+    calc |f x| = |f x - f x₀ + f x₀| := by congr 1; ring
+      _ ≤ |f x - f x₀| + |f x₀| := abs_add_le _ _
+      _ ≤ C := by simp only [hCdef]; linarith
+  have hC0 : 0 ≤ C := le_trans (abs_nonneg _) (hC x₀)
+  have hfcont : Continuous f := hK.continuous
+  -- Integrability of the three functions we integrate.
+  have hfint : ∀ (ρ : Measure E) [IsProbabilityMeasure ρ], Integrable f ρ :=
+    fun ρ _ => integrable_of_continuous_of_bounded hfcont hC
+  have hψint : ∀ (m : ℕ) (ρ : Measure E) [IsProbabilityMeasure ρ],
+      Integrable (ballCutoff x₀ (m : ℝ)) ρ := fun m ρ _ =>
+    integrable_of_continuous_of_bounded (lipschitzWith_ballCutoff x₀ (m : ℝ)).continuous
+      (abs_ballCutoff_le_one x₀ (m : ℝ))
+  have hfψint : ∀ (m : ℕ) (ρ : Measure E) [IsProbabilityMeasure ρ],
+      Integrable (fun x => f x * ballCutoff x₀ (m : ℝ) x) ρ := by
+    intro m ρ _
+    refine integrable_of_continuous_of_bounded (C := C)
+      (hfcont.mul (lipschitzWith_ballCutoff x₀ (m : ℝ)).continuous) fun x => ?_
+    rw [abs_mul]
+    calc |f x| * |ballCutoff x₀ (m : ℝ) x| ≤ C * 1 :=
+          mul_le_mul (hC x) (abs_ballCutoff_le_one _ _ _) (abs_nonneg _) hC0
+      _ = C := mul_one C
+  -- The truncation error is controlled by the mass the cutoff misses.
+  have hkey : ∀ (m : ℕ) (ρ : Measure E) [IsProbabilityMeasure ρ],
+      |∫ x, f x ∂ρ - ∫ x, f x * ballCutoff x₀ (m : ℝ) x ∂ρ|
+        ≤ C * (1 - ∫ x, ballCutoff x₀ (m : ℝ) x ∂ρ) := by
+    intro m ρ _
+    rw [← integral_sub (hfint ρ) (hfψint m ρ)]
+    calc |∫ x, (f x - f x * ballCutoff x₀ (m : ℝ) x) ∂ρ|
+        ≤ ∫ x, |f x - f x * ballCutoff x₀ (m : ℝ) x| ∂ρ := abs_integral_le_integral_abs
+      _ ≤ ∫ x, C * (1 - ballCutoff x₀ (m : ℝ) x) ∂ρ := by
+          refine integral_mono ((hfint ρ).sub (hfψint m ρ)).abs
+            (((integrable_const (1:ℝ)).sub (hψint m ρ)).const_mul C) fun x => ?_
+          · have hb : (0:ℝ) ≤ 1 - ballCutoff x₀ (m : ℝ) x := by
+              linarith [ballCutoff_le_one x₀ (m : ℝ) x]
+            have h1 : f x - f x * ballCutoff x₀ (m : ℝ) x
+                = f x * (1 - ballCutoff x₀ (m : ℝ) x) := by ring
+            rw [h1, abs_mul, abs_of_nonneg hb]
+            exact mul_le_mul_of_nonneg_right (hC x) hb
+      _ = C * (1 - ∫ x, ballCutoff x₀ (m : ℝ) x ∂ρ) := by
+          rw [integral_const_mul, integral_sub (integrable_const (1:ℝ)) (hψint m ρ)]
+          simp
+  refine Metric.tendsto_nhds.2 fun ε hε => ?_
+  set ε' : ℝ := ε / (8 * (C + 1)) with hε'def
+  have hε' : 0 < ε' := by rw [hε'def]; positivity
+  -- The cutoffs exhaust the limit measure, so one of them misses less than `ε'` of its mass.
+  have hDCT : Tendsto (fun m : ℕ => ∫ x, ballCutoff x₀ (m : ℝ) x ∂(ν : Measure E))
+      atTop (𝓝 1) := by
+    have h := tendsto_integral_of_dominated_convergence (μ := (ν : Measure E))
+      (F := fun (m : ℕ) (x : E) => ballCutoff x₀ (m : ℝ) x) (f := fun _ : E => (1:ℝ))
+      (bound := fun _ : E => (1:ℝ))
+      (fun m => ((lipschitzWith_ballCutoff x₀ (m : ℝ)).continuous).aestronglyMeasurable)
+      (integrable_const 1)
+      (fun m => ae_of_all _ fun x => by
+        simpa [Real.norm_eq_abs] using abs_ballCutoff_le_one x₀ (m : ℝ) x)
+      (ae_of_all _ fun x => tendsto_ballCutoff x₀ x)
+    simpa using h
+  obtain ⟨m, hm⟩ := (hDCT.eventually_const_lt (show (1:ℝ) - ε' < 1 by linarith)).exists
+  -- The truncated function belongs to the class as well.
+  have hfψmem : (fun x => f x * ballCutoff x₀ (m : ℝ) x) ∈ {f : E → ℝ | UniformContinuous f ∧
+      (∃ C, ∀ x, |f x| ≤ C) ∧ Bornology.IsBounded (Function.support f)} := by
+    refine ⟨(lipschitzWith_mul_of_bounded hK (lipschitzWith_ballCutoff x₀ (m : ℝ)) hC
+      (abs_ballCutoff_le_one x₀ (m : ℝ))).uniformContinuous, ⟨C, fun x => ?_⟩, ?_⟩
+    · rw [abs_mul]
+      calc |f x| * |ballCutoff x₀ (m : ℝ) x| ≤ C * 1 :=
+            mul_le_mul (hC x) (abs_ballCutoff_le_one _ _ _) (abs_nonneg _) hC0
+        _ = C := mul_one C
+    · have hsupp : Function.support (fun x => f x * ballCutoff x₀ (m : ℝ) x) ⊆
+          Function.support (ballCutoff x₀ (m : ℝ)) := by
+        intro x hx
+        simp only [Function.mem_support, ne_eq] at hx ⊢
+        intro h
+        exact hx (by rw [h, mul_zero])
+      exact (Metric.isBounded_closedBall).subset
+        (hsupp.trans (support_ballCutoff x₀ (m : ℝ)))
+  -- Along the sequence, the cutoff misses less than `2ε'`, and the truncations converge.
+  have h1 : ∀ᶠ n in atTop, 1 - ∫ x, ballCutoff x₀ (m : ℝ) x ∂(μ n : Measure E) < 2 * ε' := by
+    filter_upwards [(hconv _ (hcut m)).eventually_const_lt
+      (show 1 - 2 * ε' < ∫ x, ballCutoff x₀ (m : ℝ) x ∂(ν : Measure E) by linarith)] with n hn
+    linarith
+  have h2 : ∀ᶠ n in atTop, |∫ x, f x * ballCutoff x₀ (m : ℝ) x ∂(μ n : Measure E) -
+      ∫ x, f x * ballCutoff x₀ (m : ℝ) x ∂(ν : Measure E)| < ε' :=
+    (Metric.tendsto_nhds.1 (hconv _ hfψmem) ε' hε').mono fun n hn => by rwa [Real.dist_eq] at hn
+  filter_upwards [h1, h2] with n hn1 hn2
+  rw [Real.dist_eq]
+  have e1 := hkey m (μ n : Measure E)
+  have e2 := hkey m (ν : Measure E)
+  have habs3 : ∀ a b c d : ℝ, |a - d| ≤ |a - b| + |b - c| + |c - d| := by
+    intro a b c d
+    calc |a - d| = |(a - b) + (b - c) + (c - d)| := by congr 1; ring
+      _ ≤ |(a - b) + (b - c)| + |c - d| := abs_add_le _ _
+      _ ≤ |a - b| + |b - c| + |c - d| := by
+          have := abs_add_le (a - b) (b - c); linarith
+  have htri := habs3 (∫ x, f x ∂(μ n : Measure E))
+    (∫ x, f x * ballCutoff x₀ (m : ℝ) x ∂(μ n : Measure E))
+    (∫ x, f x * ballCutoff x₀ (m : ℝ) x ∂(ν : Measure E)) (∫ x, f x ∂(ν : Measure E))
+  have e2' : |∫ x, f x * ballCutoff x₀ (m : ℝ) x ∂(ν : Measure E) - ∫ x, f x ∂(ν : Measure E)|
+      ≤ C * (1 - ∫ x, ballCutoff x₀ (m : ℝ) x ∂(ν : Measure E)) := by
+    rw [abs_sub_comm]; exact e2
+  have b1 : C * (1 - ∫ x, ballCutoff x₀ (m : ℝ) x ∂(μ n : Measure E)) ≤ C * (2 * ε') :=
+    mul_le_mul_of_nonneg_left hn1.le hC0
+  have b2 : C * (1 - ∫ x, ballCutoff x₀ (m : ℝ) x ∂(ν : Measure E)) ≤ C * ε' :=
+    mul_le_mul_of_nonneg_left (by linarith) hC0
+  have hfin : C * (2 * ε') + ε' + C * ε' < ε := by
+    have hεeq : ε' * (8 * (C + 1)) = ε := by
+      rw [hε'def]; field_simp
+    calc C * (2 * ε') + ε' + C * ε' = (3 * C + 1) * ε' := by ring
+      _ < (8 * (C + 1)) * ε' := mul_lt_mul_of_pos_right (by linarith) hε'
+      _ = ε := by rw [mul_comm]; exact hεeq
+  linarith
 
 /-- `fact:convdet`, second half: on a locally compact separable metric space the
 continuous functions of compact support are convergence determining.  The total

@@ -191,16 +191,42 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   with `∀ y, δ ≤ dist y x → ∃ f ∈ s, ε ≤ |f y - f x|`. That is the manuscript's
   `def:separating`, and `StronglySeparatesPoints.separatesPoints` is the case
   `δ = dist y x`.
-* **Missing.** `fact:convdet` (Ethier–Kurtz, Proposition 3.4.4), which no other
-  point of this roadmap covers.
-  `MeasureTheory.isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`:
-  on a separable metric space the bounded uniformly continuous real functions of
-  bounded support are convergence determining. Separability alone — the
-  manuscript asks no completeness here, and none is used. And
-  `MeasureTheory.isConvergenceDetermining_setOf_hasCompactSupport`: if `E` is in
-  addition locally compact, the continuous functions of compact support are
-  convergence determining. That these see no total mass costs nothing, the
-  measures being probability measures on both sides.
+* `MeasureTheory.isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`,
+  `fact:convdet` (Ethier–Kurtz, Proposition 3.4.4), first half, which no other
+  point of this roadmap covers: on a metric space the bounded uniformly
+  continuous real functions of bounded support are convergence determining.
+  **Separability is not among the hypotheses.** The manuscript and Ethier–Kurtz
+  state the fact for separable `S`; no step of the proof uses a countable dense
+  set, and neither completeness nor local compactness enters either. The route
+  is `MeasureTheory.tendsto_iff_forall_lipschitz_integral_tendsto`
+  (`Measure/Portmanteau.lean:688`), which tests weak convergence against the
+  bounded **Lipschitz** functions, together with the truncation of such a
+  function by the cutoff
+  `MeasureTheory.ballCutoff x₀ R = min 1 (max 0 (R + 1 - dist · x₀))`, which is
+  `1` on `closedBall x₀ R`, vanishes off `closedBall x₀ (R + 1)`, and is itself
+  a member of the class. What licenses the truncation is a tightness step: the
+  integrals of the cutoffs converge because the cutoffs are members, and they
+  increase to `1` against the limit measure, so all but `ε` of the mass sits in
+  one fixed ball along the whole sequence. Nonemptiness of `E` is a consequence
+  of `ν` being a probability measure, not a hypothesis. Supporting
+  declarations: `ballCutoff` with `ballCutoff_nonneg`, `ballCutoff_le_one`,
+  `abs_ballCutoff_le_one`, `ballCutoff_eq_one`, `support_ballCutoff`,
+  `lipschitzWith_ballCutoff` and `tendsto_ballCutoff`;
+  `lipschitzWith_mul_of_bounded`, a product of two bounded Lipschitz functions
+  is Lipschitz — Mathlib's `LipschitzWith.mul`
+  (`Analysis/Normed/Group/Uniform.lean:308`) is the `to_additive` companion of
+  `LipschitzWith.add` and concerns the group operation, so it does not apply to
+  a product of real valued functions; and
+  `integrable_of_continuous_of_bounded`.
+* **Missing.**
+  `MeasureTheory.isConvergenceDetermining_setOf_hasCompactSupport`,
+  `fact:convdet`, second half: if `E` is in addition locally compact and
+  separable, the continuous functions of compact support are convergence
+  determining. That these see no total mass costs nothing, the measures being
+  probability measures on both sides. The first half does not imply it, the
+  class being the smaller one: what is to be supplied is the approximation of a
+  uniformly continuous function of bounded support by continuous functions of
+  compact support, and that is where local compactness enters.
 * **Missing.** Stability under uniformly bounded pointwise limits: if `Γ` is
   separating and every member of `Γ` is the pointwise limit of a uniformly
   bounded sequence from `Γ'`, then `Γ'` is separating. Dominated convergence;
@@ -425,6 +451,21 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `isTightMeasureSet_of_tendsto` produces nothing, there being no convergence to
   feed it. This is the instance on which a version of the point without the
   tightness hypothesis would be false.
+* **Escaping mass against the bounded support class.** `E = ℝ`, `Γ` the
+  bounded uniformly continuous functions of bounded support, `μ n = δ (1/(n+1))`
+  and `ν = δ 0`: every `f ∈ Γ` has `∫ f ∂μ n = f (1/(n+1)) → f 0`, and
+  `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` must
+  return `μ n → δ 0`. Now `μ n = δ n` instead. Every `f ∈ Γ` has
+  `∫ f ∂μ n = f n = 0` for `n` beyond the support, so the integrals converge, to
+  `0` — and there is no probability measure `ν` with `∫ f ∂ν = 0` for all
+  `f ∈ Γ`, since the cutoffs `ballCutoff 0 R` lie in `Γ` and one of them has
+  `∫ ballCutoff 0 R ∂ν > 0`. The hypothesis is therefore never met, and the
+  theorem says nothing false. This is the pair that fixes what the class may be
+  asked to do: it tests convergence **to a probability measure**, and a version
+  reading "the integrals converge, hence the sequence converges" — vague
+  convergence — would be false at `δ n`. It is also the instance the tightness
+  step inside the proof is for: `ballCutoff` is the member of `Γ` that sees the
+  escaping mass.
 * **The conditional form on a null piece.** `Ω = [0,1]` with Lebesgue measure,
   `m` the four-element σ-algebra generated by a single `P`-null set `A`, `E = ℝ`,
   `Γ = Cb(ℝ)`, `V` any `m`-measurable random variable and `U` with
