@@ -10,7 +10,25 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-### Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen *(gestellt 2026-09-07 vom Nutzer)*
+Zurzeit stehen hier keine Aufgaben.
+
+### ~~Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen~~ *(gestellt 2026-09-07 vom Nutzer, erledigt 2026-09-07, sechzehnter Lauf des Tages)*
+
+Ergebnis, damit es nicht noch einmal gesucht wird: geprüft mit einem
+`Lean.collectAxioms`-Metaprogramm je Datei. Zwei Instanzen in `SkorokhodSpace`
+hängen an `sorryAx`, ohne ein eigenes `sorry` zu tragen — sie erben es vom
+Platzhalter `MetricSpace D(ι, E)`. Der Zeuge zu
+`not_isQuasiLeftContinuous_of_atom` ist jetzt Lean statt Skizze
+(`exists_index_witness_for_atom`). Verallgemeinert wurde
+`IsSeparating.of_subalgebra`, weg von `PolishSpace`. Ein Vorbehalt zum Werkzeug,
+der beim nächsten Mal Zeit spart: `linter.unusedSectionVars` beantwortet, ob eine
+Annahme **ungenutzt** ist, nicht, ob sie sich **abschwächen** ließe; sein
+Schweigen schließt die Suche nicht ab. Wer sie fortsetzt, muß die Abschwächungen
+einzeln versuchen.
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen~~
 
 Dieser Lauf beweist nichts Neues. Er prüft, was dasteht, und sucht, wo es
 allgemeiner sein könnte. Beides in dieser Reihenfolge, und das Prüfen zuerst,
