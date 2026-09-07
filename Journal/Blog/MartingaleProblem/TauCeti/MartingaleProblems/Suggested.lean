@@ -7,6 +7,8 @@ import Mathlib.Probability.Martingale.Basic
 import Mathlib.Probability.Process.Stopping
 import Mathlib.Probability.Process.LocalProperty
 import Mathlib.Analysis.RCLike.Basic
+import Mathlib.Analysis.RCLike.Lemmas
+import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.Topology.Order.LeftRightLim
 
 /-!
@@ -43,6 +45,14 @@ turned into propositions on 2026-09-06.  `Shift` now takes the coordinate maps
 roadmap says; and the hypothesis (a) of `mpSolution_of_tendsto` is convergence
 in distribution one variable at a time, as the manuscript's remark on the
 topology free form of the theorem prescribes.
+
+The tenth run of 2026-09-07 added the clock's interval calculus
+(`Clock.interval_subset_Iic`, `Clock.measurableSet_interval`,
+`Clock.measure_interval_ne_top`), the two measure theoretic tools
+`stronglyMeasurable_integral_comp` and `integrableOn_of_bounded`, and the
+increment identity `mpFamily_sub_of_measurable_path`, all proved; and it
+corrected both forms of `isMPSolution_iff_forall_fdd`, which were **not
+provable** as they stood.  They now carry `Clock.IsProgressive Q X 𝓕`.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -105,6 +115,26 @@ theorem Clock.interval_union (Q : Clock ι) (c : Clock.Conv) {s t u : ι}
       rw [Set.disjoint_left]
       rintro x ⟨hxt, -⟩ ⟨-, hxt'⟩
       exact hxt' hxt
+
+theorem Clock.interval_subset_Iic (Q : Clock ι) (c : Clock.Conv) (s t : ι) :
+    Q.interval c s t ⊆ Set.Iic t := by
+  cases c with
+  | optional => exact Set.sdiff_subset
+  | predictable => exact fun _ hx => le_of_lt hx.1
+
+theorem Clock.measurableSet_interval (Q : Clock ι) (c : Clock.Conv) (s t : ι) :
+    MeasurableSet[Q.measurableSpace] (Q.interval c s t) := by
+  cases c with
+  | optional => exact (Q.measurableSet_Iic t).diff (Q.measurableSet_Iic s)
+  | predictable => exact (Q.measurableSet_Iio t).diff (Q.measurableSet_Iio s)
+
+/-- Every compensating interval has finite mass.  This is the only place where
+`Clock.measure_Iic_ne_top` is used, and it is what makes the compensator of
+`mpFamily` a bounded function of `ω` for a bounded `p.2`. -/
+theorem Clock.measure_interval_ne_top (Q : Clock ι) (c : Clock.Conv) (s t : ι) :
+    Q.q (Q.interval c s t) ≠ ⊤ :=
+  ne_top_of_le_ne_top (Q.measure_Iic_ne_top t)
+    (measure_mono (Q.interval_subset_Iic c s t))
 
 /-- The two conventions agree exactly for an atomless clock. -/
 def Clock.IsAtomless (Q : Clock ι) : Prop := ∀ t : ι, Q.q {u | t ≤ u ∧ u ≤ t} = 0
@@ -194,6 +224,74 @@ def IsDetermining {F : Type*} [MeasurableSpace F] (𝓩 : ι → Set (F → ℝ)
     (∀ Z ∈ 𝓩 s, ∫ ω, Y t ω * (Z (X ω) : 𝕂) ∂P = ∫ ω, Y s ω * (Z (X ω) : 𝕂) ∂P) →
       P[Y t | 𝓕 s] =ᵐ[P] Y s
 
+/-- Joint measurability of the path up to each time, relative to the filtration.
+
+This is Mathlib's `IsStronglyProgressive` in the shape a `Clock` forces: the
+clock carries its `MeasurableSpace ι` as a *field* and not as an instance, so the
+subtype `Set.Iic t` of that structure cannot be written without `@`; the
+equivalent formulation by a jointly measurable extension `Z`, which agrees with
+`X` below `t` and is `Q.measurableSpace ⊗ 𝓕 t`-measurable everywhere, is used
+instead.
+
+It is a hypothesis on `X` and the clock alone, never on `P`, and it is not
+cosmetic.  Without it neither side of `isMPSolution_iff_forall_fdd` is reachable
+from the other: `Martingale` unfolds to `StronglyAdapted ℱ Y ∧ …`, the
+compensator `fun ω ↦ ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q` is
+`𝓕 t`-measurable for no reason coming from `∀ t, Measurable (X t)` alone, and
+for a fixed `ω` the integrand `fun u ↦ p.2 (X u ω)` need not even be
+`Q.measurableSpace`-measurable, so that the compensator is the junk value `0` and
+`Clock.interval_union` does not make the two compensators subtract. -/
+def Clock.IsProgressive (Q : Clock ι) (X : ι → Ω → E) (𝓕 : Filtration ι m) : Prop :=
+  ∀ t : ι, ∃ Z : ι → Ω → E, (∀ u, u ≤ t → Z u = X u) ∧
+    Measurable[Q.measurableSpace.prod (𝓕 t)] (Function.uncurry Z)
+
+/-- The parametrised Bochner integral is strongly measurable in the parameter.
+This is `MeasureTheory.StronglyMeasurable.integral_prod_left`, packaged so that a
+clock's field `Q.measurableSpace` and a filtration's value `𝓕 t` — neither of
+which is an instance — can be handed to it. -/
+theorem stronglyMeasurable_integral_comp {α : Type*} [MeasurableSpace α]
+    {β : Type*} [MeasurableSpace β] {γ : Type*} [MeasurableSpace γ]
+    {𝕜 : Type*} [RCLike 𝕜] (μ : Measure α) [SFinite μ] {W : α → β → γ}
+    (hW : Measurable (Function.uncurry W)) {g : γ → 𝕜} (hg : Measurable g) :
+    StronglyMeasurable fun y => ∫ x, g (W x y) ∂μ :=
+  MeasureTheory.StronglyMeasurable.integral_prod_left
+    (f := fun x y => g (W x y)) ((hg.comp hW).stronglyMeasurable)
+
+/-- A bounded measurable function is integrable on every set of finite measure.
+The compensator of `mpFamily` is exactly of this shape, by
+`Clock.measure_interval_ne_top`. -/
+theorem integrableOn_of_bounded {α : Type*} [MeasurableSpace α] {𝕜 : Type*}
+    [RCLike 𝕜] (μ : Measure α) {s : Set α} (hs : μ s ≠ ⊤) {f : α → 𝕜}
+    (hf : Measurable f) {b : ℝ} (hb : ∀ x, ‖f x‖ ≤ b) : IntegrableOn f s μ := by
+  have : IsFiniteMeasure (μ.restrict s) :=
+    ⟨by rw [Measure.restrict_apply_univ]; exact lt_top_iff_ne_top.2 hs⟩
+  exact Integrable.mono' (integrable_const b) hf.stronglyMeasurable.aestronglyMeasurable
+    (Filter.Eventually.of_forall hb)
+
+omit [MeasurableSpace E] in
+/-- The increment of a member of `mpFamily` over `[s,t]` is the compensated
+increment that `isMPSolution_iff_forall_fdd` tests.  `Clock.interval_union` is
+what makes the two compensators subtract, and the integrability of the integrand
+on each half is `integrableOn_of_bounded` through
+`Clock.measure_interval_ne_top`.  The hypothesis `hZ` is the path measurability
+that `Clock.IsProgressive` supplies below `t`; it is not decoration, for without
+it both compensators are the junk value `0` and the identity is false. -/
+theorem mpFamily_sub_of_measurable_path [OrderBot ι] {Q : Clock ι} {c : Clock.Conv}
+    {X : ι → Ω → E} {f g : E → 𝕂} {Y : ι → Ω → 𝕂}
+    (hY : ∀ t ω, Y t ω = f (X t ω) - ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+    {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b) {s t : ι} (hst : s ≤ t) {ω : Ω}
+    (hZ : Measurable[Q.measurableSpace] fun u => g (X u ω)) :
+    Y t ω - Y s ω =
+      f (X t ω) - f (X s ω) - ∫ u in Q.interval c s t, g (X u ω) ∂Q.q := by
+  obtain ⟨hunion, hdisj⟩ := Q.interval_union c (bot_le : ⊥ ≤ s) hst
+  have hint := fun s' t' : ι =>
+    @integrableOn_of_bounded ι Q.measurableSpace 𝕂 _ Q.q (Q.interval c s' t')
+      (Q.measure_interval_ne_top c s' t') (fun u => g (X u ω)) hZ b
+      (fun u => hgb (X u ω))
+  rw [hY t ω, hY s ω, hunion,
+    setIntegral_union hdisj (Q.measurableSet_interval c s t) (hint ⊥ s) (hint s t)]
+  ring
+
 /-- The finite dimensional criterion, `isMPSolutionFor_iff_forall_fdd` of the
 roadmap: solving the martingale problem is an identity among finitely many
 coordinates.  It is what turns every later theorem into a statement about finite
@@ -202,13 +300,18 @@ structure beyond a preorder.
 
 The filtration must be the natural one of `X`: the right hand side tests only
 against the coordinates, so for a larger filtration the equivalence fails in the
-direction from right to left.  That hypothesis is `h𝓕`. -/
+direction from right to left.  That hypothesis is `h𝓕`.
+
+`hXprog` is the second hypothesis that cannot be dropped, and it was missing
+until 2026-09-07: the right hand side is a family of vanishing integrals and
+says nothing about measurability, while the left hand side unfolds to
+`StronglyAdapted 𝓕 Y ∧ …`.  See `Clock.IsProgressive`. -/
 theorem isMPSolution_iff_forall_fdd [OrderBot ι] {A : Set ((E → 𝕂) × (E → 𝕂))}
     {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E} {𝓕 : Filtration ι m}
     {P : Measure Ω} [IsProbabilityMeasure P]
     (hA : ∀ p ∈ A, (Measurable p.1 ∧ ∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧
       Measurable p.2 ∧ ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
-    (hX : ∀ t, Measurable (X t))
+    (hX : ∀ t, Measurable (X t)) (hXprog : Q.IsProgressive X 𝓕)
     (h𝓕 : ∀ s : ι, 𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) inferInstance) :
     IsMPSolution (mpFamily A Q c X) 𝓕 P ↔
       ∀ p ∈ A, ∀ s t : ι, s ≤ t → ∀ (n : ℕ) (r : Fin n → ι), (∀ k, r k ≤ s) →
@@ -229,7 +332,7 @@ theorem isMPSolution_iff_forall_fdd_continuous [OrderBot ι] [TopologicalSpace E
     {𝓕 : Filtration ι m} {P : Measure Ω} [IsProbabilityMeasure P]
     (hA : ∀ p ∈ A, (Measurable p.1 ∧ ∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧
       Measurable p.2 ∧ ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
-    (hX : ∀ t, Measurable (X t))
+    (hX : ∀ t, Measurable (X t)) (hXprog : Q.IsProgressive X 𝓕)
     (h𝓕 : ∀ s : ι, 𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) inferInstance) :
     IsMPSolution (mpFamily A Q c X) 𝓕 P ↔
       ∀ p ∈ A, ∀ s t : ι, s ≤ t → ∀ (n : ℕ) (r : Fin n → ι), (∀ k, r k ≤ s) →
