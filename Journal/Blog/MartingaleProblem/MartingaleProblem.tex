@@ -2244,13 +2244,22 @@ restores Lemma~\ref{lem:tccontrol}, at the price of a group depending on $\T$.
   strictly weaker than \eqref{T2b} and than every other bundle of
   Definition~\ref{def:bundles}: no linearity, no order topology, no countable
   dense subset.  The predicate is that cheap, and so are the closure properties
-  supplied with it.  What is \emph{not} that cheap is the jump theory built on
-  it --- that $\{x : r(f(x-),f(x)) \geq \varepsilon\}$ has no accumulation
-  point, that the jump set is countable, that a c\`adl\`ag map is measurable and
-  is determined by its values on a dense set.  Each of those uses the exhaustion
-  and therefore \eqref{T2b}, and the gap between the two is worth keeping in
-  view: it is the reason Section~\ref{sec:skorokhod} can define its paths under
-  a weak hypothesis and still need a strong one a page later.
+  supplied with it.  The jump theory built on it is dearer, but by less than was
+  assumed here until September 2026, and the difference is worth recording,
+  because the supposed gap was an argument in a design decision.  In the
+  formalization of Section~\ref{sec:skorokhod} the four statements separate.
+  That $\{x : r(f(x-),f(x)) \geq \varepsilon\}$ meets every compact set in a
+  finite set holds under \eqref{T2a} together with a metric and the order
+  topology and nothing further --- in particular without a countable dense
+  subset, hence without \eqref{T2b}.  That the jump set is countable adds
+  properness of the metric, which is what supplies the exhaustion; and properness
+  is a hypothesis of \eqref{T3p}, not one of \eqref{T2b}.  That a c\`adl\`ag
+  map is determined by its values on a set dense from the right needs the linear
+  order and the metric alone.  Only measurability is still open.  So the gap
+  between the predicate and the theory over it is real but narrow, and it runs
+  along properness rather than along separability --- which is the better news of
+  the two, since properness is inherited by closed subsets and separability is
+  the hypothesis one would have had to carry through every later statement.
   Definition~\ref{def:skorokhod} should reuse the predicate rather than restate
   it.
 
