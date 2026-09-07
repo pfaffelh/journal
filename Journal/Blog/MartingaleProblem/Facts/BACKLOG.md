@@ -189,6 +189,22 @@ kein gebautes Mathlib und taugt zu nichts.
    `SkorokhodSpace.restrictExhaustion` und `SkorokhodSpace.distOn` samt der
    Untergruppe `TimeChange.fixing t₀`, Weg im Inventar.
 
+   *Fortgesetzt am 2026-09-07, dritter Lauf des Tages: die beiden Daten der
+   Metrik stehen, und eine Aussage von Meilenstein 2 war unter ihrem Bündel
+   falsch.* `TimeChange.fixing t₀` (Untergruppe), `restrictExhaustion` (samt der
+   dafür fehlenden Aussage `IsCadlag.comp_monotone_continuous` von Meilenstein 2)
+   und `SkorokhodSpace.distOn` sind geschrieben und bewiesen, dazu
+   `isBounded_range_restrictExhaustion`,
+   `bddAbove_range_dist_restrictExhaustion`, `bddBelow_range_distOn`,
+   `distOn_nonneg`, `distOn_self`, `distOn_comm`, `exists_lt_distOn_add` und
+   `distOn_triangle` — fünfzehn neue Deklarationen, alle bewiesen, `rc=0`, keine
+   Linterwarnung, weiterhin 13 `sorry`. **Von den Metrikaxiomen fehlt nur noch
+   die Trennung.** `IsCadlag.isBounded_image_of_isCompact` stand unter dem
+   Bündel (A), einer bloßen Präordnung, und ist dort **falsch**; der Zeuge
+   ($\N\cup\{\omega\}$ mit unvergleichbarem $\omega$) steht in der Roadmap und
+   im Inventar. Nächstes benanntes Ziel: `countable_leftJumpSet`, das seit
+   diesem Lauf auf dem kritischen Weg zur Trennung liegt; Weg im Inventar.
+
    Die Frage, ob Hypothese (a) von `mpSolution_of_tendsto` gemeinsame oder
    einzelne Verteilungskonvergenz meint, ist am Manuskript entschieden —
    `rem:absconvtopfree` sagt es ausdrücklich: einzeln, „and nothing else".

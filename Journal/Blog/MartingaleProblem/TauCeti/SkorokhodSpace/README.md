@@ -196,9 +196,6 @@ Under (A), for `f : ι → E`:
 * Basic closure properties: constants, compositions with continuous maps, sums
   and products in a topological ring, pointwise limits that are uniform on
   compacts, and the restriction of a càdlàg function to a subinterval.
-* `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
-  càdlàg map into a pseudometric space is bounded. The metric here is on `E`;
-  the index contributes compactness of the domain and nothing else.
 * `IsCadlag` for a continuous map.
 
 Under (A′):
@@ -214,6 +211,35 @@ Under (A′):
 * The identity `Function.leftLim f x = f x` at continuity points, from
   `ContinuousWithinAt.leftLim_eq` applied to the restriction of continuity at
   `x` to `Iic x`, with `[T2Space E]`.
+* `IsCadlag.comp_monotone_continuous`: `f ∘ g` is càdlàg for càdlàg `f` and
+  monotone continuous `g : ι → ι`. This is what puts
+  `SkorokhodSpace.restrictExhaustion` of Milestone 4 back into the space, `clamp`
+  being monotone and continuous. Proved (2026-09-07). Both fields use the
+  monotonicity, and differently. On the right, `g` maps `Set.Ioi a` into
+  `Set.Ici (g a)`, which is where the right continuity of `f` is read, through
+  `continuousWithinAt_Ioi_iff_Ici`. On the left the proof splits: either `g` is
+  already constant to the left of `x`, and then so is `f ∘ g` on the whole
+  interval between the two equal values, or `g y < g x` for every `y < x`, and
+  then `g` tends to `g x` from strictly below, so the left limit of `f` at `g x`
+  is the left limit of `f ∘ g` at `x`. The first branch is the only place in
+  this milestone that uses the order topology, through `Ioo_mem_nhdsLT`.
+* `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
+  càdlàg map into a pseudometric space is bounded. Proved (2026-09-07), and the
+  proof is where the bundle of this item was found to be wrong. It needs the
+  **linear** order and nothing else of (A′) --- not the order topology ---
+  because it splits a neighbourhood of a point into its two one sided halves by
+  `nhdsLT_sup_nhdsGE`, `𝓝[<] x ⊔ 𝓝[≥] x = 𝓝 x`, which is `Iio x ∪ Ici x = univ`
+  and holds under `[TopologicalSpace ι] [LinearOrder ι]` alone; the two fields
+  of `IsCadlag` then bound `f` on each half.
+
+  Under (A) the statement is **false**, so this item cannot stay there. Take
+  `ι = ℕ ∪ {ω}` with the one point compactification of the discrete topology on
+  `ℕ`, ordered so that `ℕ` carries its usual order and `ω` is incomparable to
+  everything. Every point of `ℕ` is isolated and `Set.Iio ω = Set.Ioi ω = ∅`, so
+  `𝓝[<] x` and `𝓝[>] x` are `⊥` at every `x` and **every** `f : ι → ℝ` is
+  càdlàg; `ι` is compact; and `f n = n` has unbounded image. What fails is
+  exactly the split above: `ω` has neighbourhoods containing cofinitely much of
+  `ℕ`, and neither field of `IsCadlag` says anything there.
 
 Under (B), with `E` a pseudometric space:
 
@@ -357,6 +383,12 @@ Under (B), with `E` a pseudometric space:
   enters only through `dist t₀ t ≤ m`. It is the first statement of this
   milestone that uses `AdditiveDist` at all, and so the first check that
   Milestone 1 carries the right class.
+* `TimeChange.fixing t₀`, the time changes with `λ t₀ = t₀`, as a
+  `Subgroup (TimeChange ι)`. This is the index of the infimum of Milestone 4,
+  and it is a subgroup precisely so that `norm_one`, `norm_inv` and
+  `norm_mul_le` restrict to it unchanged --- the three metric axioms are read
+  off them there. Written and proved (2026-09-07), with
+  `TimeChange.mem_fixing_iff` as its `Iff.rfl` interface.
 * For the index `ℝ`, the identification of `norm` with Billingsley's
   `sup_{s < t} |log ((λ t - λ s) / (t - s))|`.
 
@@ -364,23 +396,57 @@ Under (B), with `E` a pseudometric space:
 
 * `SkorokhodSpace ι E`, notation `D ι E`, the type of càdlàg maps `ι → E`,
   as a structure bundling `toFun` with `isCadlag`.
-* `SkorokhodSpace.restrictExhaustion m f = f ∘ clamp m`, a path constant outside
-  `B m`.
+* `SkorokhodSpace.restrictExhaustion t₀ m f = f ∘ clamp t₀ m`, a path constant
+  outside `B m`. Written and proved to be càdlàg again (2026-09-07), from
+  `IsCadlag.comp_monotone_continuous` of Milestone 2 on `monotone_clamp` and
+  `continuous_clamp` of Milestone 1, with `restrictExhaustion_apply` and
+  `restrictExhaustion_eq_self` --- it agrees with `f` on `B m` --- as its
+  interface.
 * The localized distances
   ```
   distOn m f g = ⨅ λ, max (TimeChange.norm λ)
                           (⨆ t, r (restrictExhaustion m f (λ t)) (restrictExhaustion m g t))
   dist f g     = ∑' m, 2⁻¹ ^ m * min 1 (distOn m f g)
   ```
-  Prove the supremum is attained on `B m` and is finite. The infimum runs over
-  the time changes fixing the base point, and the norm in it is the **global**
+  The infimum runs over the time changes fixing the base point, `TimeChange.fixing t₀`
+  of Milestone 3, and the norm in it is the **global**
   `TimeChange.norm`, not `normOn m`: only the paths are localized to `B m`, the
   time change is not. This is Billingsley's `d°ₘ` verbatim, and it is forced —
   the windowed norm is not subadditive (`not_normOn_mul_le`, Milestone 3), so a
   `distOn` built on it would have no triangle inequality.
+
+  `distOn` is written (2026-09-07), and the two boundedness conditions it needs
+  in order to be the intended quantity are theorems:
+  `SkorokhodSpace.bddAbove_range_dist_restrictExhaustion`, so that the supremum
+  is the supremum and not the junk value `0`, and
+  `SkorokhodSpace.bddBelow_range_distOn`, so that `ciInf_le` applies to the
+  infimum. The first runs over
+  `SkorokhodSpace.isBounded_range_restrictExhaustion` — the truncated path has
+  bounded range, because its range is contained in the image of the compact
+  window — and this is the **only** place in Milestones 3 and 4 where the
+  compactness of `B m` is used at all. The second is `TimeChange.norm_nonneg`.
+
+  The supremum is taken over all of `ι` and not over `B m`. The two agree,
+  because both paths are constant outside the window, and quantifying over `ι`
+  is what makes the reindexing in `distOn_comm` a bijection of the index rather
+  than of a subset that the time change need not preserve.
 * `MetricSpace (D ι E)`: symmetry from `TimeChange.norm_inv`, the triangle
   inequality from `TimeChange.norm_mul_le`, and separation from
   `TimeChange.dist_le_of_norm_le` together with right continuity.
+  `SkorokhodSpace.distOn_nonneg`, `SkorokhodSpace.distOn_self`,
+  `SkorokhodSpace.distOn_comm` and `SkorokhodSpace.distOn_triangle` are proved
+  (2026-09-07), so of the axioms only the separation is left. Symmetry and the
+  triangle inequality are the two that read the subgroup structure of
+  Milestone 3, and they read it from the two sides. Symmetry: `λ ↦ λ⁻¹` is a
+  bijection of `TimeChange.fixing t₀`, `norm_inv` leaves the norm unchanged, and
+  the supremum is reindexed along the bijection `λ` of `ι`, which turns
+  `dist (f (λ t)) (g t)` into `dist (g (λ⁻¹ s)) (f s)` term by term. Triangle:
+  the witness for the composite is `λ * λ'`, which has to be admissible again,
+  and the `max` splits, `norm_mul_le` carrying one half and the triangle
+  inequality of `E` the other, with the middle path evaluated at `λ' t`. The
+  infimum is not attained, so the argument runs with an `ε` and
+  `SkorokhodSpace.exists_lt_distOn_add`, which is `exists_lt_of_ciInf_lt` on
+  `bddBelow_range_distOn`.
 * `SkorokhodSpace.tendsto_iff`: `f n → f` if and only if for every `m` there are
   time changes `λ n` fixing the base point with `norm (λ n) → 0` and
   `sup_{t ∈ B m} r (f n (λ n t)) (f t) → 0`.

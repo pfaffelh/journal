@@ -5786,3 +5786,169 @@ das ausdrücklich, und für einen unbeschränkten càdlàg-Pfad auf einem kompak
 Fenster ist es die Stelle, an der `isCompact_exhaustion` zum ersten Mal
 wirklich gebraucht wird. Das stützt `fact:Dcountable` (tragend `4`) über die
 Meilensteine 4, 5 und 6.
+
+### 2026-09-07, dritter Lauf des Tages — Rückstau 1: die beiden Daten der Metrik stehen, und eine Aussage von Meilenstein 2 ist unter ihrem Bündel falsch
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also wieder der Rückstau von
+oben und dort das benannte Ziel des zweiten Laufs von heute:
+`SkorokhodSpace.restrictExhaustion` und `SkorokhodSpace.distOn` samt der
+Untergruppe `TimeChange.fixing t₀`. Alle drei stehen, und im selben Lauf ist
+auch das benannte Ziel des *nächsten* Laufs gefallen, die Dreiecksungleichung.
+**Meilenstein 4 hat damit seine beiden Daten und jedes Axiom außer der
+Trennung**, und die Prüffrage des Vorschlags — ob das Supremum überhaupt endlich
+ist — ist als Satz beantwortet. `SkorokhodSpace/Suggested.lean` geht durch
+`lake env lean` gegen `v4.33.1`, ohne Fehler und ohne Linterwarnung; 94
+Deklarationen, 13 `sorry`, also genau die dreizehn des zweiten Laufs. Die
+fünfzehn neuen Deklarationen sind alle bewiesen.
+
+**1. Die Untergruppe, und warum sie eine sein muß.** `TimeChange.fixing t₀` ist
+`{l | l.toOrderIso t₀ = t₀}` als `Subgroup (TimeChange ι)`; `mul_mem'` ist
+`OrderIso.trans_apply` und zweimal Einsetzen, `inv_mem'` geht über die
+Injektivität von `l` statt über ein Rückwärts-`rw`, das sonst auch die beiden
+anderen `t₀` des Ziels träfe. `TimeChange.mem_fixing_iff` ist `Iff.rfl` und die
+einzige Schnittstelle, die der Rest braucht. Der Grund, weshalb die Anker eine
+**Untergruppe** bilden müssen und nicht bloß eine Teilmenge, ist die
+Axiomenliste selbst: die Symmetrie liest `norm_inv` an `l⁻¹` ab, das Dreieck
+`norm_mul_le` an `l * l'`, und beide Male muß das Ergebnis wieder ein
+zulässiger Index des Infimums sein.
+
+**2. `restrictExhaustion`, und die Aussage von Meilenstein 2, die dafür
+gefehlt hat.** `restrictExhaustion t₀ m f = f ∘ clamp t₀ m` ist hinschreibbar,
+seit `clamp` steht, aber daß es wieder càdlàg ist, war keine Aussage der
+Roadmap. Sie ist es jetzt, als `IsCadlag.comp_monotone_continuous` in
+Meilenstein 2: für càdlàg `f` und monotones stetiges `g : ι → ι` ist `f ∘ g`
+càdlàg. Beide Felder brauchen die Monotonie, und auf verschiedene Weise. Rechts
+bildet `g` die Menge `Set.Ioi a` nach `Set.Ici (g a)` ab, und **dort** ist die
+Rechtsstetigkeit von `f` lesbar — über `continuousWithinAt_Ioi_iff_Ici`
+(`Topology/Order/LeftRight.lean:79`, `PartialOrder` allein). Links zerfällt der
+Beweis: entweder ist `g` links von `x` schon konstant, und dann ist es `f ∘ g`
+auf dem ganzen Intervall zwischen den beiden gleichen Werten, oder es ist
+`g y < g x` für **jedes** `y < x`, und dann strebt `g` von echt unten gegen
+`g x`, so daß der Linkslimes von `f` an `g x` der von `f ∘ g` an `x` ist. Der
+erste Zweig ist die einzige Stelle des Meilensteins, an der die
+Ordnungstopologie vorkommt, über `Ioo_mem_nhdsLT`
+(`Topology/Order/OrderClosed.lean:282`, unter `ClosedIicTopology`).
+
+**3. Der Befund, und er ist der wertvollste des Laufs:
+`IsCadlag.isBounded_image_of_isCompact` ist unter dem Bündel (A) falsch.** Die
+Roadmap führte den Satz — das Bild einer kompakten Menge unter einer
+càdlàg-Abbildung ist beschränkt — unter (A), also unter
+`[Preorder ι] [TopologicalSpace ι]`, mit der Begründung, der Index steuere
+„compactness of the domain and nothing else" bei. Das stimmt nicht. Der Beweis
+zerlegt eine Umgebung eines Punktes in ihre beiden einseitigen Hälften, über
+`nhdsLT_sup_nhdsGE` (`Topology/Order/LeftRight.lean:101`), also über
+`Set.Iio x ∪ Set.Ici x = univ` — und das ist die Linearität. Genau da ist die
+Aussage auch falsch:
+
+* $\iota=\N\cup\{\omega\}$, topologisch die Einpunktkompaktifizierung des
+  diskreten $\N$, geordnet so, daß $\N$ seine übliche Ordnung trägt und
+  $\omega$ zu allem **unvergleichbar** ist. Jeder Punkt von $\N$ ist isoliert
+  und $\mathrm{Iio}\,\omega=\mathrm{Ioi}\,\omega=\emptyset$, also ist
+  $\mathcal N_{<x}=\mathcal N_{>x}=\bot$ an jedem $x$ und **jede** Funktion
+  $f:\iota\to\R$ ist càdlàg; $\iota$ ist kompakt; $f(n)=n$ hat unbeschränktes
+  Bild. Was fehlt, ist genau die Zerlegung: $\omega$ hat Umgebungen, die
+  koendlich viel von $\N$ enthalten, und dort sagt kein Feld von `IsCadlag`
+  etwas.
+
+Bewiesen ist der Satz jetzt unter `[LinearOrder ι] [TopologicalSpace ι]`, und
+die Ordnungstopologie geht **nicht** ein — vom `unusedSectionVars`-Linter
+bestätigt und als `omit` festgehalten. Das ist eine Stufe, die das Bündelschema
+des Meilensteins bisher nicht hatte: schwächer als (A′), das die
+Ordnungstopologie mitnimmt, und stärker als (A). Der Roadmaptext trägt Satz,
+Zeuge und Bündel seit heute; der Punkt ist aus der (A)-Liste in die (A′)-Liste
+gewandert, mit der Notiz, was von (A′) er wirklich verbraucht.
+
+**4. `distOn`, und die zwei Stellen, an denen ein bedingt vollständiges
+Supremum ein Müllwert sein könnte.** Die Definition ist Billingsleys `d°ₘ`
+wörtlich: Infimum über `TimeChange.fixing t₀` von
+`max (norm λ) (⨆ t, dist (restrictExhaustion f (λ t)) (restrictExhaustion g t))`.
+In `ℝ` ist `⨆` `sSup (range …)` und `⨅` `sInf (range …)`, und beide sind `0`,
+wenn die Menge unbeschränkt ist. Also gehören zwei Sätze zur Definition, und
+beide stehen:
+
+* `bddAbove_range_dist_restrictExhaustion` — über
+  `isBounded_range_restrictExhaustion`, der Beschränktheit des trunkierten
+  Pfades. Sie ist `IsCadlag.isBounded_image_of_isCompact` auf
+  `isCompact_exhaustion`, und **das ist die einzige Stelle in den Meilensteinen
+  3 und 4, an der die Kompaktheit des Fensters überhaupt gebraucht wird** — die
+  Frage, die der Vorschlag des zweiten Laufs zuerst geprüft haben wollte.
+  `dist_le_of_norm_le` braucht sie ausdrücklich nicht.
+* `bddBelow_range_distOn` — `TimeChange.norm_nonneg`, also der Satz des ersten
+  Laufs von heute, an der Stelle, für die er gedacht war.
+
+Das Supremum läuft über **ganz** `ι` und nicht über `B m`. Die beiden stimmen
+überein, weil beide Pfade außerhalb des Fensters konstant sind; und über `ι` zu
+quantifizieren ist das, was die Umindizierung in `distOn_comm` zu einer
+Bijektion des Index macht statt zu einer einer Teilmenge, die die Zeitänderung
+gar nicht erhalten muß. Das ist kein Schönheitsargument, sondern der Grund,
+warum der Beweis in vier Zeilen durchgeht.
+
+**5. Zwei der drei Axiome.** `distOn_nonneg` ist `le_ciInf` auf `norm_nonneg`.
+`distOn_self` ist `ciInf_le` an der `1` der Untergruppe, plus `norm_one` und
+`ciSup_const` — die Nichtleerheit von `ι`, die letzteres braucht, ist `⟨t₀⟩`,
+und ohne das Argument `t₀` wäre die Aussage über einem leeren Index eine über
+`sSup ∅`. `distOn_comm` ist der erste Satz, der die Untergruppenstruktur
+wirklich benutzt: `λ ↦ λ⁻¹` ist eine Bijektion von `TimeChange.fixing t₀`,
+`norm_inv` läßt die Norm stehen, und das Supremum wird längs der Bijektion `λ`
+von `ι` umindiziert, was `dist (f (λ t)) (g t)` gliedweise in
+`dist (g (λ⁻¹ s)) (f s)` überführt. Die Umindizierung ist im Beweis als
+Hilfsaussage `hre` ausgeschrieben, weil Mathlibs `Equiv.iSup_comp`
+(`Order/CompleteLattice/Basic.lean:185`) für **vollständige** Verbände gilt und
+`ℝ` keiner ist; sie ist eine Gleichheit von `Set.range`s und dann
+`congrArg sSup`.
+
+**6. Und das dritte Axiom gleich mit: `distOn_triangle`.** Es war als Ziel des
+nächsten Laufs vorgesehen und ist im selben Lauf gefallen, weil nach Punkt 5
+jede Zutat dastand. Es ist die **zweite** Stelle, an der die Anker eine
+Untergruppe sein müssen und keine bloße Menge: der Zeuge für die Verkettung ist
+`λ * λ'`, und der muß wieder zulässig sein. Das `max` zerfällt in seine beiden
+Hälften, `norm_mul_le` trägt die eine und die Dreiecksungleichung von `E` die
+andere, mit dem mittleren Pfad ausgewertet an `λ' t` — und das ist der zweite,
+unabhängige Grund dafür, das Supremum über ganz `ι` zu nehmen: das Bild des
+Fensters unter `λ'` ist nicht das Fenster. Das Infimum wird nicht angenommen,
+also läuft das Argument über ein `ε`; die Auswahl ist als eigene Aussage
+`SkorokhodSpace.exists_lt_distOn_add` aufgeschrieben, `exists_lt_of_ciInf_lt`
+(`Order/ConditionallyCompleteLattice/Indexed.lean:451`) auf
+`bddBelow_range_distOn`. Von den Metrikaxiomen fehlt damit allein die
+**Trennung**.
+
+Ein Nebenbefund am Rande: `omit [AdditiveDist ι]` trägt für `distOn_triangle`
+**nicht**, obwohl es für `distOn_nonneg`, `distOn_self` und `distOn_comm`
+trägt. Der Grund ist `bddAbove_range_dist_restrictExhaustion`, das über
+`isCompact_exhaustion` und `clamp` an der Klasse hängt — die
+Dreiecksungleichung ist damit die einzige der vier, die die Kompaktheit des
+Fensters wirklich verbraucht, und das paßt zu Punkt 4: sie ist die einzige, die
+das Supremum von unten abschätzt.
+
+**Was offen bleibt.** Die dreizehn `sorry` sind unverändert die des zweiten
+Laufs: `exists_orderIso_isometry_real` (M1), `countable_leftJumpSet` und
+`IsCadlag.measurable` (M2) und die zehn, die an der `MetricSpace D(ι, E)`-
+Instanz hängen. Von den beiden Definitionen mit `sorry` **im Rumpf** sind
+weiterhin beide da, `SkorokhodSpace.modulus` und die `MetricSpace`-Instanz —
+aber die Instanz hat seit heute zwei ihrer drei Axiome und beide Daten.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**`countable_leftJumpSet`** — die Abzählbarkeit der Sprungmenge einer
+càdlàg-Abbildung, Meilenstein 2, seit dem 2026-09-05 ein `sorry`. Es ist jetzt
+dran, weil es seit heute **auf dem kritischen Weg zur Trennung liegt**, dem
+einzigen fehlenden Metrikaxiom, und damit zur `MetricSpace D(ι, E)`-Instanz, an
+der zehn der dreizehn `sorry` der Datei hängen. Der Weg zur Trennung, damit die
+Reihenfolge sichtbar ist: aus `distOn t₀ m f g = 0` liefert
+`exists_lt_distOn_add` zu jedem `n` ein $\lambda_n$ mit
+$\mathrm{norm}\,\lambda_n\le 1/n$ **und** $\sup_t\mathrm{dist}(F(\lambda_n
+t),G(t))\le1/n$; `dist_le_of_norm_le` (bewiesen, zweiter Lauf von heute) macht
+daraus $\lambda_n t\to t$ gleichmäßig auf dem Fenster, also
+$G(t)=\lim_n F(\lambda_n t)$. Weil $\lambda_n t$ von **beiden** Seiten kommen
+darf, gibt das $G(t)=F(t)$ zunächst nur an den Stetigkeitsstellen von $F$; und
+daß die Stetigkeitsstellen den Rest tragen, ist genau
+`IsCadlag.eq_of_eqOn_dense` (bewiesen, 2026-09-06) — deren Hypothese aber
+verlangt, daß jeder Punkt in der Menge liegt oder von rechts aus ihr
+approximierbar ist, und das ist die Abzählbarkeit des Komplements, also
+`countable_leftJumpSet`. Ohne sie steht die Trennung ohne Unterbau. Der Weg für
+`countable_leftJumpSet` selbst steht im Meilenstein 2 und ist unverändert:
+`largeLeftJumpSet f ε` hat keinen Häufungspunkt — ein solcher lieferte eine
+monotone Folge gegen ihn, und der einseitige Limes dort widerspräche der
+Sprunghöhe —, trifft also jede kompakte Menge in einer endlichen, und die
+σ-Kompaktheit des Index (aus `isCompact_exhaustion`, jeder Index von
+Meilenstein 1 hat sie) macht daraus die Abzählbarkeit. Das stützt
+`fact:Dcountable` (tragend `4`) über die Meilensteine 4, 5 und 6.
