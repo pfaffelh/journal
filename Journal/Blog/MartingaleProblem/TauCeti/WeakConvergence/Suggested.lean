@@ -175,13 +175,22 @@ theorem isConvergenceDetermining_setOf_boundedContinuous [TopologicalSpace E]
   exact ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.2
     fun g => hμν g ⟨g, rfl⟩
 
-/-- From `MeasureTheory.ext_of_forall_mem_subalgebra_integral_eq_of_polish`.  That
+/-- From
+`MeasureTheory.ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
+(`MeasureTheory/Measure/FiniteMeasureExt.lean:36`).  That
 theorem is stated for a `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` with `[RCLike 𝕜]` and the
 hypothesis `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints`; over `ℝ` the star
 operation is trivial, and the real form of the separation hypothesis is the one
 that occurs inside its proof
-(`Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161`). -/
-theorem IsSeparating.of_subalgebra [TopologicalSpace E] [PolishSpace E] [BorelSpace E]
+(`Analysis/SpecialFunctions/MulExpNegMulSqIntegral.lean:161`).
+
+The bundle is the weaker of Mathlib's two: `PseudoEMetricSpace` with
+`CompleteSpace` and `SecondCountableTopology`, not `PolishSpace`.  Mathlib's
+`..._of_polish` (`:72`) is one line of `upgradeIsCompletelyMetrizable` away from
+the one used here, so nothing is lost, and the metric may be a pseudometric --
+the separation of `E` never enters, only the separation of the algebra. -/
+theorem IsSeparating.of_subalgebra [PseudoEMetricSpace E] [BorelSpace E] [CompleteSpace E]
+    [SecondCountableTopology E]
     (A : Subalgebra ℝ (E →ᵇ ℝ))
     (hsep : (A.map (BoundedContinuousFunction.toContinuousMapₐ ℝ)).SeparatesPoints) :
     IsSeparating {f : E → ℝ | ∃ g ∈ A, ⇑g = f} := by
@@ -198,7 +207,7 @@ theorem IsSeparating.of_subalgebra [TopologicalSpace E] [PolishSpace E] [BorelSp
     intro x y hxy
     obtain ⟨_, ⟨F, ⟨g, hg, rfl⟩, rfl⟩, hne⟩ := hsep hxy
     exact ⟨_, ⟨BoundedContinuousFunction.toContinuousMapStarₐ ℝ g, ⟨g, hg, rfl⟩, rfl⟩, hne⟩
-  exact ext_of_forall_mem_subalgebra_integral_eq_of_polish (𝕜 := ℝ) hsep'
+  exact ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable (𝕜 := ℝ) hsep'
     fun g hg => hμν g ⟨g, hg, rfl⟩
 
 /-! ### The Stone-Weierstrass step for the convergence notion

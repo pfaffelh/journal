@@ -942,6 +942,22 @@ theorem not_isQuasiLeftContinuous_of_atom (u : ι)
   · cases x <;> norm_num [AtomWitness.coinPair]
   · norm_num [AtomWitness.coinPair]
 
+/-- The hypothesis of `not_isQuasiLeftContinuous_of_atom` is satisfiable, and the
+witness is exhibited rather than asserted: `ι = ENNReal` carries all four instances
+the section asks of the index -- `ConditionallyCompleteLinearOrder`, `OrderBot`,
+`TopologicalSpace`, `OrderTopology` -- and `u = ⊤` is approached strictly from
+the left by `n ↦ (n : ENNReal)`.
+
+This is the check the two empty statements of 2026-09-05 and 2026-09-07 would
+have failed: a theorem whose hypotheses no instance satisfies proves nothing,
+however honest its proof.  Added 2026-09-07, tenth run. -/
+theorem exists_index_witness_for_atom :
+    ∃ s : ℕ → ENNReal, StrictMono s ∧ (∀ n, s n < (⊤ : ENNReal)) ∧
+      Tendsto s atTop (𝓝 (⊤ : ENNReal)) :=
+  ⟨fun n => (n : ENNReal), Nat.strictMono_cast (α := ENNReal),
+    fun n => lt_top_iff_ne_top.2 (ENNReal.natCast_ne_top n),
+    ENNReal.tendsto_nat_nhds_top⟩
+
 end Regularizing
 
 /-! ## Milestone 10: the abstract convergence theorem
