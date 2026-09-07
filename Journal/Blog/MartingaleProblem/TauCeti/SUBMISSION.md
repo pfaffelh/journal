@@ -62,6 +62,45 @@ reusing, and no roadmap may point an implementer at it. Extending the same
 `LICENSE` to the second repository is a one file change and is the request to
 make to the author.
 
+## Was die Projektdokumente verlangen
+
+Aus `TauCetiRoadmap/CONTRIBUTING.md`, am 2026-09-07 gelesen. **Eine Größengrenze
+für PRs gibt es nicht** — weder eine Zeilen- noch eine Meilensteinzahl. Gesteuert
+wird über Labels (`awaiting-review` / `awaiting-author`), und der PR merged
+automatisch, sobald ein Mitglied von `@TauCetiProject/roadmap-reviewers`
+zustimmt. Die eigentliche Grenze ist die Reviewlast: substantielles Review,
+besonders von Fachleuten, nennt das Dokument das Knappste im Projekt.
+
+Vier Regeln betreffen uns unmittelbar:
+
+* **Bodenhaftung.** „A roadmap must make contact with material that already
+  exists in Mathlib or Tau Ceti"; eine Roadmap, deren unterste Sprosse weit über
+  dem Formalisierten liegt, lasse Agenten „thrash and produce bad code". Das ist
+  unser stärkster Punkt — die Meilensteine ruhen auf zeilengenau geprüften
+  Mathlib-Deklarationen, und die Prüfung ist viermal wiederholt worden.
+* **Bereits Formalisiertes ist willkommen**, aber das eigene Repository ist als
+  *zitierte Quelle* zu behandeln, nicht als Spezifikation. Die bewiesenen
+  Deklarationen in `*/Suggested.lean` sind also Beleg, nicht Vorlage — so sind
+  sie ohnehin gemeint.
+* **Nicht ins Unbestimmte auslaufen.** Läuft eine Roadmap am Ende in etwas viel
+  Größeres, ist das ausdrücklich als *roadmap-for-a-roadmap* zu kennzeichnen,
+  mit dem Hinweis, dem nicht zu folgen. Bei uns betrifft das mindestens
+  `MartingaleProblems` Meilenstein 12 (Existenz aus einem Dualen, hängt an
+  `KolmogorovExtension`) und Meilenstein 13 (Halbgruppen und voller Erzeuger,
+  wo Mathlib nichts hat). **Vor der Einreichung zu kennzeichnen.**
+* **KI-Beteiligung nennen**, in der PR-Beschreibung, mit den benutzten Modellen.
+  Bei uns ist das kein Nebensatz: die Roadmaps sind über zwei Wochen von rund
+  fünfzig autonomen Läufen geschrieben, Opus 5 und zeitweise Fable 5, und jeder
+  Lauf ist in `Facts/INVENTAR.md` protokolliert. Review-Kommentare mit
+  KI-Hilfe tragen konventionell ein `:robot:`-Präfix.
+
+Empfehlung daraus: **vier getrennte PRs**, einer je Roadmap. Die Dokumente
+verlangen es nicht, aber die Abhängigkeitskette
+(`WeakConvergence` → `SkorokhodSpace` → `MartingaleProblems`, dazu
+`KolmogorovExtension`) macht sie einzeln prüfbar, und bei knappen Reviewern ist
+das die Höflichkeit, die zählt. `WeakConvergence` zuerst, weil es nur an Mathlib
+hängt und die meisten bewiesenen Deklarationen trägt.
+
 ## Steps
 
 1. Copy the four directories into a fork of `TauCetiProject/TauCetiRoadmap`.
