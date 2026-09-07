@@ -10,7 +10,55 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-Zurzeit stehen hier keine Aufgaben.
+### Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen *(gestellt 2026-09-07 vom Nutzer)*
+
+Dieser Lauf beweist nichts Neues. Er prüft, was dasteht, und sucht, wo es
+allgemeiner sein könnte. Beides in dieser Reihenfolge, und das Prüfen zuerst,
+weil eine Verallgemeinerung einer leeren Aussage wieder leer ist.
+
+**Erster Teil: prüfen.** Für alle drei Dateien unter `TauCeti/*/Suggested.lean`:
+
+1. `#print axioms` für jede bewiesene Deklaration. Jede, die von `sorryAx`
+   abhängt, ist nicht bewiesen, sondern hängt an einem `sorry` weiter oben;
+   nenne sie beim Namen. Das läuft am billigsten über eine angehängte Datei mit
+   `#print axioms` je Deklaration, nicht über 200 Einzelaufrufe.
+2. **Leere Aussagen.** Der Fehler ist zweimal vorgekommen — sieben Aussagen mit
+   Rumpf `True` am 2026-09-05, `not_isQuasiLeftContinuous_of_atom` mit dem
+   zulässigen Zeugen `A = ∅` am 2026-09-07 — und beide Male hat er einen ganzen
+   Lauf gekostet. Prüfe jede Aussage darauf, ob ihre Hypothesen gemeinsam
+   erfüllbar sind. Das Mittel ist, für jeden Satz mit nichttrivialen Hypothesen
+   **einen Zeugen anzugeben**: eine Instanziierung, unter der die Voraussetzungen
+   nachweislich gelten. Wo das mehr als ein paar Zeilen kostet, sag es im
+   Bericht, statt es zu behaupten.
+3. **Aussage gegen Absicht.** Vergleiche jede Aussage mit dem, was der
+   `README.md` des Meilensteins und das Manuskript an der belegten Stelle
+   behaupten. Sagt der Lean-Satz weniger, so ist der Beleg im Inventar zu weit.
+
+**Zweiter Teil: verallgemeinern.** Die Frage ist nicht, was noch zu beweisen
+ist, sondern was die vorhandenen Beweise schon hergeben.
+
+4. **Hypothesen abbauen.** Für jede bewiesene Deklaration: welche
+   Typklassen-Annahme wird wirklich gebraucht? Das Werkzeug ist `omit … in` —
+   der Linter meldet, wenn eine weggelassene Annahme doch nötig war, so daß der
+   Versuch billig und der Befund sicher ist. Reihenfolge: erst `ProperSpace ι`
+   und `AdditiveDist ι`, dann `OrderTopology ι`, dann `LinearOrder ι` gegen
+   `Preorder ι`. Beim Ziel dasselbe: geht `MetricSpace E` zu
+   `PseudoMetricSpace E`, geht `ℝ` zu `RCLike 𝕜` oder zu einem Banachraum?
+5. Trage jede erfolgreiche Abschwächung **in die Datei ein** — als geänderte
+   Signatur oder als `omit`-Zeile, nicht als Bemerkung im Bericht.
+6. Wo eine Verallgemeinerung möglich aussieht, aber der Beweis nicht durchgeht,
+   nenne die Stelle, an der er bricht. Ein benanntes Hindernis ist mehr wert als
+   eine Vermutung.
+
+**Woran der Lauf gemessen wird:** an der Liste der Deklarationen, deren
+Hypothesen er nachweislich verkleinert hat, und an der Liste derer, die er als
+leer, als von `sorryAx` abhängig oder als schwächer-als-behauptet entlarvt hat.
+Findet er nichts von beidem, so ist das ein Ergebnis und gehört mit den
+durchgeführten Prüfungen ins Inventar — aber nur, wenn die Prüfungen wirklich
+liefen.
+
+Das Manuskript bleibt unberührt, es sei denn, eine Prüfung deckt dort eine
+falsche Behauptung auf; dann gilt die übliche Regel.
 
 ### ~~Aufgabe: die mengen-indizierte Literatur, und die Summierbarkeit~~ *(gestellt 2026-09-01, erledigt 2026-09-02, siebzehnter Task-23-Lauf)*
 

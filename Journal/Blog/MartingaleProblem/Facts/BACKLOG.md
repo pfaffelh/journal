@@ -130,6 +130,25 @@ kein gebautes Mathlib und taugt zu nichts.
    `exists_orderIso_isometry_real`, ist ein eigener Satz. Wer diesen Punkt
    weiterträgt, nimmt `MartingaleProblems` und `WeakConvergence`.*
 
+   *Zwischenstand 2026-09-07, zehnter Lauf des Tages: `MartingaleProblems` steht
+   bei **67 Deklarationen und 9 `sorry`** (vorher 58 und 9), rc = 0 und ohne
+   jede Warnung außer `sorry`. Kein `sorry` ist gefallen, und das ist der
+   Bericht: das vom neunten Lauf benannte Ziel
+   `isMPSolution_iff_forall_fdd_continuous` ist in dieser Datei **nicht
+   formulierbar** — die drei `Suggested.lean` importieren nur `Mathlib.*` und
+   einander nicht, `induction_on_mulSystem` liegt also außerhalb des Kontexts.
+   Wer die stetige Form will, entscheidet zuerst, wo sie stehen soll; die drei
+   Möglichkeiten stehen im Laufbericht. Stattdessen ist die **Grundform
+   berichtigt**: sie war in beiden Formen nicht beweisbar, weil `Martingale` die
+   Adaptiertheit enthält und der Kompensator ohne gemeinsame Meßbarkeit von
+   `(u,ω) ↦ X u ω` sein Ersatzwert `0` ist. Beide tragen jetzt
+   `Clock.IsProgressive Q X 𝓕`, und sechs Deklarationen des Beweises sind
+   gebaut: die drei Intervall-Lemmata der Uhr,
+   `stronglyMeasurable_integral_comp`, `integrableOn_of_bounded` und die
+   Inkrementidentität `mpFamily_sub_of_measurable_path`. Der nächste Schritt ist
+   `forall_fdd_of_isMPSolution`, die Richtung von links nach rechts; die
+   Rechnung steht im Laufbericht.*
+
    *Nachtrag desselben Laufs zu `WeakConvergence`: gemessen sind es **48
    Deklarationen und 18 `sorry`**, nicht 50 und 21; und der Übersetzer meldet
    `rc = 1`, an genau einer Stelle und mit Absicht — der Modulkopf sagt seit dem

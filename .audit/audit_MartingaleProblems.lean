@@ -1018,3 +1018,72 @@ theorem isMPSolution_of_forall_condExp_eq_of_dense {𝓧 : Set (ι → Ω → �
     IsMPSolution 𝓧 𝓕 P := sorry
 
 end FromDense
+
+
+-- AUDIT: #print axioms fuer jede Deklaration
+section AxiomAudit
+#print axioms Clock.Conv
+#print axioms Clock
+#print axioms Clock.interval
+#print axioms Clock.interval_union
+#print axioms Clock.interval_subset_Iic
+#print axioms Clock.measurableSet_interval
+#print axioms Clock.measure_interval_ne_top
+#print axioms Clock.IsAtomless
+#print axioms IsMPSolution
+#print axioms mpSolutions
+#print axioms IsLocalMPSolution
+#print axioms isLocalMPSolution_of_isMPSolution
+#print axioms mpFamily
+#print axioms IsCanonical
+#print axioms IsDetermining
+#print axioms Clock.IsProgressive
+#print axioms stronglyMeasurable_integral_comp
+#print axioms integrableOn_of_bounded
+#print axioms mpFamily_sub_of_measurable_path
+#print axioms isMPSolution_iff_forall_fdd
+#print axioms isMPSolution_iff_forall_fdd_continuous
+#print axioms Shift
+#print axioms IsShiftSystem
+#print axioms restart
+#print axioms restart_canonical
+#print axioms IsSeparating
+#print axioms IsCadlagPath
+#print axioms IsCompensatorFor
+#print axioms IsRegularizingClass
+#print axioms CompactContainment
+#print axioms exists_cadlag_modification_of_isRegularizingClass
+#print axioms IsQuasiLeftContinuous
+#print axioms IsQuasiLeftContinuous.ae_eq_leftLim
+#print axioms is
+#print axioms not_isQuasiLeftContinuous_of_not_ae_tendsto
+#print axioms IsL1LeftContinuousAlongStoppingTimes
+#print axioms isQuasiLeftContinuous_of_isRegularizingClass
+#print axioms isQuasiLeftContinuous_of_isMPSolutionFor
+#print axioms AtomWitness.coinMeasure
+#print axioms AtomWitness.isProbabilityMeasure_coinMeasure
+#print axioms AtomWitness.coinMeasure_singleton_true
+#print axioms AtomWitness.atomClock
+#print axioms AtomWitness.atomClock_apply_singleton
+#print axioms AtomWitness.atomClock_apply_singleton_ne_zero
+#print axioms AtomWitness.not_isAtomless_atomClock
+#print axioms AtomWitness.coinProcess
+#print axioms AtomWitness.coinProcess_of_le
+#print axioms AtomWitness.coinProcess_of_not_le
+#print axioms AtomWitness.isCadlagPath_coinProcess
+#print axioms AtomWitness.not_isQuasiLeftContinuous_coinProcess
+#print axioms AtomWitness.integrable_bool
+#print axioms AtomWitness.integral_coinMeasure
+#print axioms AtomWitness.coinPair
+#print axioms AtomWitness.coinClass
+#print axioms AtomWitness.isSeparating_coinClass
+#print axioms AtomWitness.atomClock_real_of_mem
+#print axioms AtomWitness.atomClock_real_of_notMem
+#print axioms AtomWitness.integral_coinPair_snd
+#print axioms AtomWitness.coinFiltration
+#print axioms AtomWitness.isMPSolution_coinProcess
+#print axioms not_isQuasiLeftContinuous_of_atom
+#print axioms TendstoLaw
+#print axioms mpSolution_of_tendsto
+#print axioms isMPSolution_of_forall_condExp_eq_of_dense
+end AxiomAudit

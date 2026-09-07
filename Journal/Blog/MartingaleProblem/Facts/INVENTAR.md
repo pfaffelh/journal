@@ -6902,3 +6902,283 @@ Erzeugung der Borelstruktur. Was dort bleibt, ist die Rechnung in
 `⨆ r ∈ Set.Iic s, comap (X r) borel`, und der Fall `n = 0` — das leere Produkt
 ist `1`, und genau daraus kommt die Hypothese `∫ g ∂P = 0`, die die Folgerung
 zusätzlich verlangt. Am Ende des Laufs: **61 Deklarationen, 13 `sorry`** (gezählt mit `grep -cE "^(noncomputable )?(private |protected )*(theorem|lemma|def|structure|instance|abbrev) "`; die Sorry-Zahl ist die des Übersetzers).
+
+### 2026-09-07, zehnter Lauf des Tages — Rückstau 1: die beiden Formen des Endlichdimensionalitätskriteriums waren nicht beweisbar
+
+**Was bearbeitet wurde.** Rückstaupunkt 1 in `MartingaleProblems`, und zwar das
+Ziel, das der neunte Lauf am Ende benannt hatte:
+`isMPSolution_iff_forall_fdd_continuous`. Das Ziel ist **nicht** erreicht, aus
+zwei Gründen, die beide erst am Quelltext sichtbar wurden; beide sind Befunde,
+der zweite ist der schwerere. Erreicht ist stattdessen: die Aussagen sind
+berichtigt, und sechs Deklarationen, die ihr Beweis braucht, sind gebaut und
+bewiesen. Die Datei geht durch `lake env lean` gegen v4.33.1 mit `rc = 0` und
+**ohne jede Warnung außer `sorry`**; sie steht bei **67 Deklarationen und 9
+`sorry`** (vorher 58 und 9 — kein `sorry` dazu, keiner weg).
+
+**Erster Befund: das benannte Ziel ist in dieser Datei nicht formulierbar.**
+Die drei `Suggested.lean` sind **eigenständig** — jede importiert
+ausschließlich `Mathlib.*`, keine importiert eine andere (an den
+`import`-Zeilen aller drei geprüft). `induction_on_mulSystem` und seine
+Folgerungen liegen in `TauCeti/WeakConvergence/Suggested.lean` und sind in
+`TauCeti/MartingaleProblems/Suggested.lean` nicht im Kontext; ein `import`
+dorthin ginge nur über eine `.olean`, die es nicht gibt, und sie zu bauen hieße,
+für jeden späteren Lauf `lake env lean` unbrauchbar zu machen. **Der neunte Lauf
+hat das übersehen**, als er das Ziel „voraussetzungsfrei" nannte:
+voraussetzungsfrei ist es mathematisch, nicht mechanisch. Wer es aufnimmt, hat
+drei Möglichkeiten, und die Wahl gehört dem Nutzer: den Beweis in
+`WeakConvergence/Suggested.lean` führen, wo das Werkzeug liegt; die vier
+Deklarationen nach `MartingaleProblems/Suggested.lean` kopieren, was sie
+doppelt; oder die Prototypen zu einer Lake-Bibliothek zusammenfassen, was die
+Werkzeuglage aller künftigen Läufe ändert.
+
+**Zweiter Befund, an der Aussage: `isMPSolution_iff_forall_fdd` war in beiden
+Formen nicht beweisbar.** Es fehlte eine Hypothese, und keine kosmetische.
+
+* `Martingale` ist in v4.33.1 wie auf `upstream/master`
+  `StronglyAdapted ℱ f ∧ ∀ i j, i ≤ j → μ[f j | ℱ i] =ᵐ[μ] f i`
+  (`Probability/Martingale/Basic.lean:53`) — die **Adaptiertheit gehört zur
+  linken Seite**. Die rechte Seite ist eine Familie verschwindender Integrale
+  und sagt über Meßbarkeit nichts; die Richtung von rechts nach links war also
+  nicht zu haben.
+* Schlimmer, und das trifft **beide** Richtungen: der Kompensator von
+  `mpFamily` ist `fun ω ↦ ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q`. Für
+  festes `ω` braucht schon der *Integrand* `fun u ↦ p.2 (X u ω)` Meßbarkeit in
+  `u`, und `hX : ∀ t, Measurable (X t)` sagt nur etwas über die **Schnitte in
+  `ω`**. Ohne sie ist das Bochner-Integral sein Ersatzwert `0`, und damit
+  scheitert die Additivität, auf der die Aussage ruht: die Zerlegung
+  `Q.interval c ⊥ t = Q.interval c ⊥ s ∪ Q.interval c s t` macht die beiden
+  Kompensatoren nur dann zur Differenz, wenn `setIntegral_union` anwendbar ist,
+  und dessen Hypothese ist `IntegrableOn` auf beiden Hälften.
+
+Die Hypothese, die beides trägt, ist die **gemeinsame Meßbarkeit unterhalb
+jeder Zeit, relativ zur Filtration**, und sie steht jetzt in beiden Sätzen als
+
+```lean
+def Clock.IsProgressive (Q : Clock ι) (X : ι → Ω → E) (𝓕 : Filtration ι m) : Prop :=
+  ∀ t : ι, ∃ Z : ι → Ω → E, (∀ u, u ≤ t → Z u = X u) ∧
+    Measurable[Q.measurableSpace.prod (𝓕 t)] (Function.uncurry Z)
+```
+
+Das ist Mathlibs `IsStronglyProgressive` in der Gestalt, die der `Clock`
+erzwingt: die Uhr trägt ihre `MeasurableSpace ι` als **Feld** und nicht als
+Instanz, also ist der Untertyp `Set.Iic t` dieser Struktur ohne `@` nicht
+hinschreibbar, und die äquivalente Fassung über eine gemeinsam meßbare
+Fortsetzung `Z` ist die brauchbare. Sie ist eine Hypothese an `X` und die Uhr
+allein, **nie an `P`** — deshalb entwertet sie das Kriterium nicht.
+
+**Warum das keine Verschärfung über die Bündel hinaus ist.** Die schwächere
+Fassung „`(u,ω) ↦ X u ω` ist `Q.measurableSpace ⊗ m`-meßbar" trägt die
+Integrierbarkeit und die Additivität, aber **nicht** die Adaptiertheit: aus
+Meßbarkeit gegen die volle σ-Algebra `m` folgt keine gegen `𝓕 t`, und `h𝓕`
+hilft nicht, weil sich das Erzeugnis `⨆ r ∈ Iic s, comap (X r)` nicht durch das
+Produkt hindurchzieht. Umgekehrt wäre die Fassung ohne die Einschränkung auf
+`u ≤ t` echt zu stark: sie machte `X u` für **alle** `u` `𝓕 t`-meßbar, also den
+Prozeß trivial. Die `∃ Z`-Gestalt ist genau dazwischen.
+
+**Sechs Deklarationen, alle bewiesen, alle durch `lake env lean`.**
+
+* `Clock.interval_subset_Iic`, `Clock.measurableSet_interval` und
+  `Clock.measure_interval_ne_top` — das Intervall liegt unter seinem rechten
+  Ende, ist meßbar, hat endliche Masse. Das Letzte ist die einzige Stelle, an
+  der `Clock.measure_Iic_ne_top` überhaupt gebraucht wird, und es ist das, was
+  den Kompensator für beschränktes `p.2` zu einer beschränkten Funktion von `ω`
+  macht.
+* `stronglyMeasurable_integral_comp` —
+  `MeasureTheory.StronglyMeasurable.integral_prod_left`
+  (`MeasureTheory/Integral/Prod.lean:84`) mit **beiden** σ-Algebren als
+  Argument, damit `Q.measurableSpace` und `𝓕 t`, die keine Instanzen sind,
+  übergeben werden können.
+* `integrableOn_of_bounded` — beschränkt und meßbar ist integrierbar auf einer
+  Menge endlichen Maßes, über `Integrable.mono'` gegen `integrable_const`.
+* `mpFamily_sub_of_measurable_path` — die Inkrementidentität
+  `Y t ω - Y s ω = f (X t ω) - f (X s ω) - ∫ u in Q.interval c s t, g (X u ω) ∂Q.q`,
+  aus `Clock.interval_union` und `setIntegral_union`. Sie ist der Grund, warum
+  die rechte Seite des Kriteriums überhaupt das Inkrement von `Y` prüft.
+
+**Vier Kleinigkeiten, die beim Übersetzen Zeit gekostet haben.**
+
+1. **`RCLike 𝕂` liefert `SecondCountableTopology 𝕂`** — über
+   `RCLike.rclike_to_real : FiniteDimensional ℝ K`
+   (`Analysis/RCLike/Lemmas.lean:64`) —, und damit greift
+   `Measurable.stronglyMeasurable`. Daran hing die ganze Konstruktion, denn
+   `StronglyMeasurable.integral_prod_left` verlangt `StronglyMeasurable`,
+   während `hA` nur `Measurable` gibt. Geprüft mit
+   `example {𝕂 : Type*} [RCLike 𝕂] : SecondCountableTopology 𝕂 := by
+   infer_instance`. Nötig ist dafür der Import von `Analysis.RCLike.Lemmas`,
+   nicht nur `Basic`.
+2. **Wo `MeasurableSpace ι` keine Instanz ist, wird der Term `@`-annotiert, die
+   `have`-Zeile aber nicht.** `have hint : ∀ s' t', IntegrableOn … := …`
+   scheitert an der Instanzsuche für den *Typ*; `have hint := fun s' t' => @…`
+   nicht, weil dann nur der Term elaboriert wird. Das ist der billigste Ausweg
+   aus dem `Clock`-Feld-Problem und erspart das Ausschreiben von `IntegrableOn`s
+   Argumentreihenfolge.
+3. `Set.diff_subset` ist `deprecated`, der Name ist `Set.sdiff_subset`.
+4. `omit [MeasurableSpace E] in` steht **vor** dem Doc-Kommentar, nicht zwischen
+   ihm und dem `theorem`; sonst meldet der Parser `unexpected token 'omit'`.
+
+**Was offen bleibt.** Beide Formen von `isMPSolution_iff_forall_fdd` tragen
+weiterhin `sorry` — jetzt aber an einer Aussage, die stimmt, und mit dem
+Werkzeug daneben. Der Beweis der Grundform zerfällt in zwei Hälften:
+
+* **von links nach rechts** — `mpFamily_sub_of_measurable_path` gibt das
+  Inkrement, `∏ k, h k (X (r k) ω)` ist nach `h𝓕` beschränkt und
+  `𝓕 s`-meßbar, und die Herausziehregel ist
+  `MeasureTheory.condExp_smul_of_aestronglyMeasurable_left`
+  (`ConditionalExpectation/PullOut.lean:223`), reell in der ersten und
+  `[NormedSpace ℝ E]` in der zweiten Variablen, also genau auf unser Paar
+  (reelles `h`, `𝕂`-wertiges `Y`) zugeschnitten;
+  `RCLike.real_smul_eq_coe_mul` (`Analysis/RCLike/Basic.lean:107`) übersetzt
+  zwischen `•` und dem `*` der Aussage;
+* **von rechts nach links** — `ae_eq_condExp_of_forall_setIntegral_eq` verlangt
+  `∫ x in G, …` für **alle** `G ∈ 𝓕 s`, und die Produkte liefern nur die
+  Erzeuger. Der Schritt dazwischen ist `MeasurableSpace.induction_on_inter`
+  über dem π-System der endlichen Durchschnitte `⋂ k, X (r k) ⁻¹' (B k)` mit
+  `r k ≤ s`, dessen Erzeugnis nach `h𝓕` gerade `𝓕 s` ist. Das ist die
+  **Mengen**fassung des Monotone-Klassen-Satzes, die in Mathlib steht — die
+  Funktionenfassung `induction_on_mulSystem` wird hier **nicht** gebraucht,
+  sondern erst für die stetige Form.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.** Die Richtung **von
+links nach rechts** von `isMPSolution_iff_forall_fdd`, als eigene Deklaration
+`forall_fdd_of_isMPSolution` in `MartingaleProblems/Suggested.lean`. Worauf sie
+ruht: auf `mpFamily_sub_of_measurable_path` und `Clock.IsProgressive`, beide
+seit heute da; auf `condExp_smul_of_aestronglyMeasurable_left` aus Mathlib; und
+auf einem Hilfssatz, der aus `h𝓕` die `𝓕 s`-Meßbarkeit von
+`fun ω ↦ ∏ k, h k (X (r k) ω)` zieht (`Measurable.comap_le`, `le_iSup₂`). Warum
+jetzt: sie braucht **keine** Induktion über eine σ-Algebra und **kein** Werkzeug
+aus einer anderen Datei — sie ist genau die Hälfte, die der erste Befund dieses
+Laufs nicht blockiert, und sie zwingt die neue Hypothese sofort in einen Beweis,
+statt sie nur zu behaupten.
+
+### 2026-09-07, elfter Lauf des Tages — vorrangige Aufgabe: das Erreichte geprüft, und die Hypothesen mechanisch abgebaut
+
+**Erster Teil, Prüfung. Alle drei `Suggested.lean` sind durch ein
+`#print axioms`-Audit gegangen, und das Ergebnis ist sauber.** Methode: an jede
+Datei wurde mechanisch ein Block `#print axioms <Deklaration>` je Deklaration
+angehängt (59 in `WeakConvergence`, 61 in `MartingaleProblems`, 103 in
+`SkorokhodSpace`) und mit `lake env lean` gegen das gebaute Mathlib v4.33.1
+ausgewertet; die Skripte liegen im Lauf, nicht im Repo. Der Abgleich lief
+zweiseitig: die Menge der Deklarationen, deren Axiomliste `sorryAx` enthält,
+gegen die Menge der Deklarationen mit eigener `declaration uses 'sorry'`-Warnung.
+**Die beiden Mengen sind identisch** — 13 in `WeakConvergence`, 9 in
+`MartingaleProblems`, 7 benannte plus die vier anonymen Instanzen in
+`SkorokhodSpace`. Keine einzige als bewiesen geführte Deklaration hängt
+transitiv an einem fremden `sorry`. (`tendsto_map_of_measure_setOf_continuousAt_eq_one`
+war vom Audit ausgenommen: sie ist absichtlich gegen master geschrieben und
+elaboriert unter v4.33.1 nicht; das ist im Moduldok der Datei festgehalten.)
+
+**Ein Befund aus demselben Audit, der die Selbstauskunft der Datei präzisiert:**
+`SkorokhodSpace.modulus` ist ein `def` mit Rumpf `sorry`, und damit sind
+`SkorokhodSpace.tendsto_modulus` und `SkorokhodSpace.isCompact_closure_iff`
+zurzeit Aussagen **über `sorryAx`** — exakt die Falle, die das Moduldok der
+Datei am Beispiel `normOn` selbst beschreibt („A definition whose body is
+`sorry` makes every theorem about it a statement about `sorryAx`"). Dasselbe
+gilt abgeschwächt für die vier anonymen Instanzen am Dateiende: die
+`MeasurableSpace D(ι, E) := borel _`-Instanz ruht auf der `sorry`-Instanz
+`MetricSpace D(ι, E)`, so daß `continuousAt_eval`, `measurableEmbedding_piDense`
+und `borel_eq_iSup_comap_eval` über einer `sorryAx`-Topologie formuliert sind.
+Das ist dokumentierter, gewollter Zwischenzustand (der Basispunkt fehlt der
+Instanz, nicht ein Axiom) — aber wer Meilenstein 8 von hier aus weiterbaut,
+sollte zuerst `modulus` einen Rumpf geben, sonst beweist er über `sorryAx`.
+
+**Leere Aussagen: keine gefunden.** Für jede `sorry`-Aussage mit nichttrivialen
+Hypothesen wurde geprüft, ob die Hypothesen gemeinsam erfüllbar sind, per
+skizziertem Zeugen (mathematisch, nicht als Lean — wo der Zeuge mehr als ein
+paar Zeilen Lean kostet, steht das dabei):
+
+* `isTightMeasureSet_of_stronglySeparatesPoints` und
+  `isConvergenceDetermining_of_stronglySeparatesPoints` (WC M1): `E = ℝ`,
+  `A = ⊤` (alle beschränkten stetigen Funktionen), konstante Folge
+  `μ n = μ₀`. Stark trennend, weil `min (dist · x) δ` in `A` liegt; die
+  Integralkonvergenz ist trivial. Erfüllbar, Konklusion nichtleer (Ulam).
+* die beiden `fact:convdet`-Hälften und die vier Meilenstein-3-Sätze (WC):
+  nur Instanzhypothesen, `E = ℝ` erfüllt alle.
+* `isSeparating_pi` (WC M1): `S i = ℝ`, `Γ i` = beschränkt-stetig; das ist
+  `isSeparating_setOf_boundedContinuous`, in der Datei bewiesen.
+* `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` (WC M4):
+  `μ n = ν = δ₀`; die Truncation-Integrale sind `0`.
+* `isMPSolution_iff_forall_fdd` und die stetige Form (MP M3): der Zeuge ist
+  der **Münz-Zeuge der Datei selbst** — `E = Bool`, `X = coinProcess u`,
+  `Q = atomClock u`, `𝓕 = coinFiltration u`. `hA` und `hX` sind bewiesen
+  (`isMPSolution_coinProcess` benutzt sie), `hXprog` gilt mit `Z = X` für
+  `u ≤ t` (Rechteck `{s | u ≤ s} ×ˢ {true}` ist `⊤.prod ⊤`-meßbar) und
+  `Z = const false` sonst; `h𝓕` ist die Aussage, daß `coinFiltration` die
+  natürliche Filtration ist — wahr, aber als Lean ein eigener Beweis von
+  vielleicht dreißig Zeilen (die `⨆`-Berechnung über `Set.Iic s`), darum hier
+  nur skizziert.
+* `restart`/`restart_canonical` (MP M5): nichttrivialer Zeuge billig —
+  `ι = ℕ`, `F = ℕ → E`, `θ r f = f (r + ·)`, `𝓧₀ r = {0}`; alle Felder von
+  `IsShiftSystem` gelten mit `Y = 0`, `κ = 0`, die Dichte `Z = 1`.
+* `exists_cadlag_modification_of_isRegularizingClass` und
+  `isQuasiLeftContinuous_of_isRegularizingClass` (MP M9): `E = Bool`,
+  `X` konstant, `Φ = {Indikator von true}` (trennend nach
+  `isSeparating_coinClass`-Muster), Kompensator `C = 0`, `D = Set.univ` auf
+  `ι = ℕ`; Kompaktheit über `K = univ`.
+* `isQuasiLeftContinuous_of_isMPSolutionFor` (MP M9): `Q.q = 0` ist atomlos
+  und macht `mpFamily` zu `p.1 ∘ X`; mit konstantem `X` ist alles Martingal.
+  Erfüllbar — und der Münz-Zeuge zeigt zugleich, daß `hQ` nicht streichbar
+  ist (`not_isAtomless_atomClock`).
+* `mpSolution_of_tendsto` (MP M10) und
+  `isMPSolution_of_forall_condExp_eq_of_dense` (MP): `𝓧 = {0}`, `𝓩 s = {1}`,
+  konstante Folgen; bzw. `ι = ℝ`, `D = ℚ`, `hDmax` leer. Erfüllbar.
+* `exists_orderIso_isometry_real` (SK M1): keine Hypothesen außer dem Bündel;
+  `ι = ℝ` trägt es (`Real.instAdditiveDist` steht in der Datei).
+* `SkorokhodSpace.measurableEmbedding_piDense` (SK M6): die Hypothese ist
+  `D.Countable` **und** die Rechtsapproximationsklausel aus Meilenstein 2 —
+  geprüft, daß die Aussage die Klausel trägt, die der `thm:fdd`-Befund vom
+  2026-09-06 verlangt (siehe „Offene Auffälligkeiten"); sie tut es über
+  `hD : ∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`.
+
+**Aussage gegen Absicht:** die im Inventar belegten Zuordnungen
+(Meilenstein-Spalte der Tabelle) wurden beim Lesen aller drei Dateien
+mitgeprüft; die am 2026-09-05 bis 2026-09-07 dokumentierten Korrekturen
+(`not_isQuasiLeftContinuous_of_atom` trägt `hA`/`hsep`/càdlàg in der
+Konklusion; `isMPSolution_iff_forall_fdd` trägt `Clock.IsProgressive`;
+`eq_of_eqOn_dense` trägt die Rechtsklausel) stehen so in den Dateien. Kein
+neuer Fall von „Lean sagt weniger als die Roadmap" gefunden.
+
+**Zweiter Teil, Verallgemeinerung — das `omit`-Experiment, und warum sein
+Ergebnis ein Negativbefund mit einer Methodenlehre ist.** Mechanisch wurde für
+jede bewiesene Deklaration in `SkorokhodSpace` (Kandidaten `[OrderTopology ι]`,
+`[AdditiveDist ι]`, `[ProperSpace ι]`) und in `MartingaleProblems`,
+Regularizing-Sektion (Kandidaten `[OrderBot ι]`, `[TopologicalSpace ι]`,
+`[OrderTopology ι]`) jede noch nicht weggelassene Bündel-Instanz zusätzlich per
+`omit` entfernt, iterativ bis zur Fixpunkt-Datei, die `lake env lean` mit
+Rückgabewert 0 durchläuft. Dann wurden die **Signaturen** aller Deklarationen
+per `#check @name` gegen die Originaldatei verglichen. Ergebnis: **byteidentisch,
+in beiden Dateien, für jede Deklaration.** Die Dateien sind auf dieser Achse
+bereits minimal — keine einzige Bündel-Instanz läßt sich aus irgendeiner
+Signatur entfernen, und zwar aus einem Grund, der die Prüfmethode der Aufgabe
+korrigiert:
+
+* **`omit` ist kein verläßlicher Test, und ein fehlerfreier Übersetzungslauf
+  ist kein Zertifikat.** Lean 4 nimmt Sektionsvariablen ohnehin
+  **nutzungsbasiert** in die Signatur auf: `exhaustionMin` etwa trägt schon im
+  Original kein `[AdditiveDist ι]`, obwohl kein `omit` davorsteht. Und wo eine
+  per `omit` entfernte Instanz vom Rumpf doch gebraucht wird, meldet der
+  Elaborator das nur bei expliziter Referenz in der Aussage („cannot omit
+  referenced section variable"); bei `def`s und bei Instanzsuche im Beweis wird
+  sie **stillschweigend wieder aufgenommen** — die Experimentdatei übersetzte
+  fehlerfrei mit `omit [ProperSpace ι]` vor `exhaustionMin`, dessen Signatur
+  `[ProperSpace ι]` danach **unverändert** enthielt. Wer künftig eine
+  Abschwächung behauptet, belegt sie mit `#check @name` vorher/nachher, nicht
+  mit einem fehlerfreien Lauf.
+* Der Befund heißt nur: minimal relativ zu dem, was die **vorhandenen Beweise
+  benutzen**. Ob ein anderer Beweis eine Instanz vermeiden könnte, sieht das
+  Experiment nicht.
+
+**Die Achsen, die `omit` nicht testet, mit Begründung je Halt:**
+
+* `LinearOrder ι` gegen `Preorder ι`: in `MartingaleProblems` ist die
+  Grundschicht (Clock, `mpFamily`, beide fdd-Kriterien) **schon** `Preorder ι`;
+  die Regularizing-Sektion braucht `ConditionallyCompleteLinearOrder ι` für
+  `⨆ n, τ n ω` in `WithTop ι` (die Suprema der Stoppzeiten), die Sprungtheorie
+  von `SkorokhodSpace` braucht `LinearOrder ι` in `nhdsLT_sup_nhdsGE` (die
+  Zerlegung einer Umgebung in die zwei einseitigen Hälften ist der Kern von
+  `eventually_dist_leftLim_lt`). Benannte Hindernisse, keine Vermutungen.
+* `RCLike 𝕂` abschwächen: `stronglyMeasurable_integral_comp` und
+  `integrableOn_of_bounded` benutzen `RCLike` nur über
+  `SecondCountableTopology` und die Borelstruktur; eine Fassung für einen
+  beliebigen normierten Raum müßte beide als **zusätzliche** Hypothesen
+  anschreiben — das ist ein Tausch, keine Abschwächung, und für die Datei, die
+  ohnehin `𝕂`-wertige Testprozesse hat, kein Gewinn.

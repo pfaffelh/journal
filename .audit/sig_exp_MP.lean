@@ -425,6 +425,7 @@ def IsSeparating (Γ : Set (E → 𝕂)) : Prop :=
   ∀ (μ ν : Measure E) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν],
     (∀ f ∈ Γ, ∫ x, f x ∂μ = ∫ x, f x ∂ν) → μ = ν
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- Right continuous with left limits: `IsCadlag` of the roadmap
 **SkorokhodSpace**, Milestone 2, unfolded.  Mathlib has neither predicate, and
 the path space itself is not available here, so the path property is stated and
@@ -432,6 +433,7 @@ not the membership in `D(ι, E)`. -/
 def IsCadlagPath (g : ι → E) : Prop :=
   (∀ t, ContinuousWithinAt g (Set.Ioi t) t) ∧ ∀ t, ∃ l, Tendsto g (𝓝[<] t) (𝓝 l)
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- The decomposition attached to one `f` of a regularizing class: `f ∘ X` splits
 into a member of `𝓧` and a compensator `C` that is adapted, has one sided limits
 along `D` almost surely, and is right continuous in `L¹`.
@@ -453,12 +455,14 @@ structure IsCompensatorFor (X : ι → Ω → E) (𝓕 : Filtration ι m) (P : M
   l1_rightContinuous : ∀ t : ι,
     Tendsto (fun s ↦ ∫ ω, ‖C s ω - C t ω‖ ∂P) (𝓝[>] t) (𝓝 0)
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- A class of functions that forces a càdlàg modification: every `f ∈ Φ` admits
 a compensated decomposition along some `Y ∈ 𝓧`. -/
 def IsRegularizingClass (Φ : Set (E → 𝕂)) (X : ι → Ω → E) (𝓧 : Set (ι → Ω → 𝕂))
     (𝓕 : Filtration ι m) (P : Measure Ω) (D : Set ι) : Prop :=
   ∀ f ∈ Φ, ∃ Y ∈ 𝓧, ∃ C : ι → Ω → 𝕂, IsCompensatorFor X 𝓕 P D f Y C
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- For every `ε` and `T` a compact set that the path meets on `Iic T ∩ D` with
 probability more than `1 - ε`. -/
 def CompactContainment (X : ι → Ω → E) (P : Measure Ω) (D : Set ι) : Prop :=
@@ -561,6 +565,7 @@ theorem not_isQuasiLeftContinuous_of_not_ae_tendsto {X : ι → Ω → E}
   have := hω (le_of_eq hsupT)
   simpa only [stoppedValue, hsupT, WithTop.untopD_coe] using this
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- Left continuity in `L¹` along stopping times: along every nondecreasing
 sequence `τ` of stopping times with supremum `τ'`, the increments of `C` between
 `min (τ n) t` and `min τ' t` tend to `0` in `L¹`.  This is the hypothesis on the
@@ -625,6 +630,7 @@ instance isProbabilityMeasure_coinMeasure : IsProbabilityMeasure coinMeasure := 
 theorem coinMeasure_singleton_true : coinMeasure {true} = (2 : ENNReal)⁻¹ := by
   simp [coinMeasure]
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- The clock with an atom at `u` and nowhere else.  The σ-algebra of the index
 is `⊤`, so every down-set is measurable for free; that is the cheapest clock
 that exists, and it is the point of the example that even it is a clock. -/
@@ -663,6 +669,7 @@ theorem not_isAtomless_atomClock (u : ι) : ¬ (atomClock u).IsAtomless := by
   rintro x rfl
   exact ⟨le_rfl, le_rfl⟩
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- The path that is `false` strictly before `u` and shows the coin from `u` on.
 Over `Ω = E = Bool` the coin is both the sample point and the state. -/
 def coinProcess (u : ι) (t : ι) (ω : Bool) : Bool := if u ≤ t then ω else false
@@ -1018,3 +1025,70 @@ theorem isMPSolution_of_forall_condExp_eq_of_dense {𝓧 : Set (ι → Ω → �
     IsMPSolution 𝓧 𝓕 P := sorry
 
 end FromDense
+
+
+section SigDump
+#check @Clock.Conv
+#check @Clock
+#check @Clock.interval
+#check @Clock.interval_union
+#check @Clock.interval_subset_Iic
+#check @Clock.measurableSet_interval
+#check @Clock.measure_interval_ne_top
+#check @Clock.IsAtomless
+#check @IsMPSolution
+#check @mpSolutions
+#check @IsLocalMPSolution
+#check @isLocalMPSolution_of_isMPSolution
+#check @mpFamily
+#check @IsCanonical
+#check @IsDetermining
+#check @Clock.IsProgressive
+#check @stronglyMeasurable_integral_comp
+#check @integrableOn_of_bounded
+#check @mpFamily_sub_of_measurable_path
+#check @isMPSolution_iff_forall_fdd
+#check @isMPSolution_iff_forall_fdd_continuous
+#check @Shift
+#check @IsShiftSystem
+#check @restart
+#check @restart_canonical
+#check @IsSeparating
+#check @IsCadlagPath
+#check @IsCompensatorFor
+#check @IsRegularizingClass
+#check @CompactContainment
+#check @exists_cadlag_modification_of_isRegularizingClass
+#check @IsQuasiLeftContinuous
+#check @IsQuasiLeftContinuous.ae_eq_leftLim
+#check @not_isQuasiLeftContinuous_of_not_ae_tendsto
+#check @IsL1LeftContinuousAlongStoppingTimes
+#check @isQuasiLeftContinuous_of_isRegularizingClass
+#check @isQuasiLeftContinuous_of_isMPSolutionFor
+#check @AtomWitness.coinMeasure
+#check @AtomWitness.isProbabilityMeasure_coinMeasure
+#check @AtomWitness.coinMeasure_singleton_true
+#check @AtomWitness.atomClock
+#check @AtomWitness.atomClock_apply_singleton
+#check @AtomWitness.atomClock_apply_singleton_ne_zero
+#check @AtomWitness.not_isAtomless_atomClock
+#check @AtomWitness.coinProcess
+#check @AtomWitness.coinProcess_of_le
+#check @AtomWitness.coinProcess_of_not_le
+#check @AtomWitness.isCadlagPath_coinProcess
+#check @AtomWitness.not_isQuasiLeftContinuous_coinProcess
+#check @AtomWitness.integrable_bool
+#check @AtomWitness.integral_coinMeasure
+#check @AtomWitness.coinPair
+#check @AtomWitness.coinClass
+#check @AtomWitness.isSeparating_coinClass
+#check @AtomWitness.atomClock_real_of_mem
+#check @AtomWitness.atomClock_real_of_notMem
+#check @AtomWitness.integral_coinPair_snd
+#check @AtomWitness.coinFiltration
+#check @AtomWitness.isMPSolution_coinProcess
+#check @not_isQuasiLeftContinuous_of_atom
+#check @TendstoLaw
+#check @mpSolution_of_tendsto
+#check @isMPSolution_of_forall_condExp_eq_of_dense
+end SigDump
