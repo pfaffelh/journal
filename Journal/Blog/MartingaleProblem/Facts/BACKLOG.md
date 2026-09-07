@@ -266,6 +266,44 @@ kein gebautes Mathlib und taugt zu nichts.
    keine eigene Mathlib-Lücke mehr; die Begründung und der Beweisplan stehen
    im Laufbericht.*
 
+   *Zwischenstand 2026-09-08, erster Lauf des Tages: **dieser Schritt ist
+   getan, und `fact:stoneweierstrass` ist damit ganz bewiesen.**
+   `isTightMeasureSet_of_stronglySeparatesPoints` und sein Korollar
+   `isConvergenceDetermining_of_stronglySeparatesPoints` — der Fact in der Form
+   des Manuskripts — gehen durch `lake env lean` und hängen laut
+   `#print axioms` nur an `propext`, `Classical.choice`, `Quot.sound`.
+   `WeakConvergence` steht bei **101 Deklarationen und 8 `sorry`** (vorher 101
+   und 10), rc = 1 mit unverändert genau den zwei angekündigten Fehlern, jetzt
+   bei `:1925`; **Meilenstein 1 trägt kein `sorry` mehr**, alle acht liegen in
+   den Meilensteinen 2 und 3. Eine Hypothese hat sich geändert:
+   `[PolishSpace E]` ist durch `[CompleteSpace E] [SecondCountableTopology E]`
+   ersetzt — dieselbe Raumklasse, aber die Vollständigkeit an der gegebenen
+   Metrik, in der `Metric.thickening` lebt; Zeuge und Begründung im
+   Laufbericht.*
+
+   *Fortsetzung desselben Laufs: **Meilenstein 2 und der erste Punkt von
+   Meilenstein 3 sind dazugekommen.** `tendsto_of_measure_setOf_not_continuousAt_eq_zero`
+   (`fact:cmt`, die f.ü.-stetige Abbildung) ist bewiesen — die Bildmaße treten
+   als Daten mit ihren definierenden Gleichungen auf, wodurch **eine** Aussage
+   gegen v4.33.1 und gegen `upstream/master` elaboriert; die verpackte Fassung
+   `tendsto_map_of_measure_setOf_continuousAt_eq_one` behält ihr `sorry` allein
+   aus dem Versionsgrund. Und `isTightMeasureSet_of_forall_exists_finite_iUnion_ball`
+   (`fact:PSpolish`) ist das gelockerte Straffheitskriterium von Meilenstein 1
+   in vier Zeilen. Stand danach: **102 Deklarationen, 7 `sorry`**, rc = 1 mit
+   den zwei angekündigten Fehlern. Zwei Abschwächungen sind mitgefallen:
+   `SecondCountableTopology` aus dem Ball-Kriterium, `MetricSpace` und
+   `BorelSpace` aus dem gelockerten Kriterium (jetzt `[PseudoMetricSpace E]
+   [CompleteSpace E]`). Der nächste benannte Schritt in dieser Datei ist
+   `separableSpace_probabilityMeasure` (Meilenstein 3), und vor dem Beweis steht
+   eine Suche auf `upstream/master`, ob Mathlib die Aussage schon hat;
+   Begründung im Laufbericht.*
+
+   *Werkzeugnotiz aus demselben Lauf: die übliche Zählung
+   `grep -cE "^(theorem|lemma|def|…)"` zählt Fließtextzeilen des Modulkopfes
+   mit, die mit `theorem` beginnen. Zweimal an einem Tag hat das eine
+   Deklaration zu viel gemeldet; wer die Zahl nennt, prüft sie mit
+   `git diff --unified=0 HEAD | grep -E "^\+(theorem|lemma|def|…) "`.*
+
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`).~~ *(erledigt 2026-09-07, neunter Lauf des Tages.)* Der Satz und

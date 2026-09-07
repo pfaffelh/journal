@@ -152,22 +152,36 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   opposite direction. `TrivialStar (E →ᵇ ℝ)` is not an instance in Mathlib —
   `TrivialStar ℝ` is — so `star_trivial` does not apply to a bounded continuous
   function and the pointwise `ext` is what proves `star g = g`.
-* **Missing, and the reason this milestone exists.** The Stone–Weierstrass step
-  for the *convergence* notion, in the form `fact:stoneweierstrass` states it:
-  on a Polish space a subalgebra of `E →ᵇ ℝ` that **strongly** separates points
-  is convergence determining, with no hypothesis on the family of measures.
-  Mathlib has this step under a tightness hypothesis and under mere separation
-  of points, as `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` above.
-  What is missing is exactly the passage from strong separation to that
-  hypothesis, and it is one point:
+* **The Stone–Weierstrass step for the *convergence* notion, the reason this
+  milestone exists**, in the form `fact:stoneweierstrass` states it: on a
+  complete separable metric space a subalgebra of `E →ᵇ ℝ` that **strongly**
+  separates points is convergence determining, with no hypothesis on the family
+  of measures. Mathlib has this step under a tightness hypothesis and under mere
+  separation of points, as
+  `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` above. The passage
+  from strong separation to that hypothesis is one point:
 
-  `MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints` — let `E` be
-  Polish, `A : Subalgebra ℝ (E →ᵇ ℝ)` strongly separate points,
-  `μ : ι → ProbabilityMeasure E` along a `NeBot` filter with
+  `MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints`, **proved** on
+  2026-09-08, first run — let `A : Subalgebra ℝ (E →ᵇ ℝ)` strongly separate
+  points, `μ : ι → ProbabilityMeasure E` run along a `NeBot` filter with
   `Filter.cofinite ≤ 𝓕`, and let the integrals over `A` converge to those of a
   `μ₀`. Then `IsTightMeasureSet {(μ n : Measure E) | n}`. With
   `StronglySeparatesPoints.separatesPoints` this feeds Mathlib's theorem and
-  yields `isConvergenceDetermining_of_stronglySeparatesPoints`.
+  yields `MeasureTheory.isConvergenceDetermining_of_stronglySeparatesPoints`,
+  **proved** in the same run: the star structure on `A` is the trivial one, as
+  in `IsSeparating.of_subalgebra`, and `Nat.cofinite_eq_atTop` discharges the
+  filter hypothesis, `IsConvergenceDetermining` quantifying over sequences.
+
+  The bundle is `[MetricSpace E] [CompleteSpace E] [SecondCountableTopology E]
+  [BorelSpace E]` and not `[PolishSpace E]`, which is the same class of spaces —
+  the two hypotheses give `PolishSpace E` as an instance — with the completeness
+  attached to the **given** metric. That is what the proof needs, because it
+  runs in that metric: `Metric.thickening` does, and the relaxed criterion of
+  step (4) turns totally bounded into compact by completeness of that metric.
+  `PolishSpace E` says only that *some* compatible metric is complete. The
+  statement holds under `PolishSpace E` alone — strong separation is a condition
+  on the neighbourhood filter, hence independent of the compatible metric
+  chosen — over a proof that upgrades the metric first.
 
   `Filter.cofinite ≤ 𝓕` is a hypothesis of the statement, not a convenience of
   the proof, and without it the statement is **false**. Take `ι = ℕ`,
@@ -276,10 +290,14 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
      `MeasureTheory.isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`,
      **proved** on 2026-09-07, seventeenth run — the relaxed tightness
      criterion, Ethier–Kurtz, Theorem 3.2.2, and was **missing from Mathlib**:
-     on a complete metric space, if for every `ε > 0` and every `δ > 0` there
-     is a compact `K` with `μ ((Metric.thickening δ K)ᶜ) ≤ ε` for all `μ ∈ S`,
-     then `IsTightMeasureSet S`. Separability is not among its hypotheses; the
-     proof never needs a countable dense set, only completeness. This is what
+     on a complete pseudometric space, if for every `ε > 0` and every `δ > 0`
+     there is a compact `K` with `μ ((Metric.thickening δ K)ᶜ) ≤ ε` for all
+     `μ ∈ S`, then `IsTightMeasureSet S`. Its bundle is
+     `[PseudoMetricSpace E] [CompleteSpace E]` and nothing else — the proof
+     measures no set it has not been handed, using only `measure_mono` and
+     `measure_iUnion_le`, so neither `BorelSpace` nor separability occurs, and
+     the metric may be a pseudometric. Milestone 3 draws on it:
+     `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` is its corollary. This is what
      step (3) delivers and what
      `IsTightMeasureSet` does not say, because the thickening of a compact set
      is compact only on a **proper** space (`IsCompact.cthickening`,
@@ -295,23 +313,30 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
      compact set; `TotallyBounded.isCompact_of_isClosed` and completeness make
      it compact, and the geometric series bounds its complement by `ε`.
 
-     The bookkeeping that feeds it: `μ₀` is tight on its own, `E` being Polish
-     (`MeasureTheory.isTightMeasureSet_singleton`, `Measure/Tight.lean:99`,
-     under `IsCompletelyPseudoMetrizableSpace`, `SecondCountableTopology` and
-     `BorelSpace`), so step (3) gives a compact `K` with
-     `1 - ε ≤ liminf (μ n) (Metric.thickening δ K)`, hence
-     `μ n ((Metric.thickening δ K)ᶜ) ≤ ε` for all `n` in an `𝓕`-eventual set.
-     Its complement is finite by `Filter.cofinite ≤ 𝓕`, and the finitely many
-     exceptional indices are absorbed by enlarging `K` by their own compact
-     sets, one from the tightness of each single `μ n`
-     (`IsTightMeasureSet.union` and `IsCompact.union`). This is Ethier–Kurtz's
-     "applying Lemma 2.1 to `P` and to finitely many terms of the sequence",
-     and it is the step at which the `pure 0` witness above breaks a version
-     without `Filter.cofinite ≤ 𝓕`.
+     The bookkeeping that feeds it, **proved** on 2026-09-08, first run: `μ₀` is
+     tight on its own (`MeasureTheory.isTightMeasureSet_singleton`,
+     `Measure/Tight.lean:99`, under `IsCompletelyPseudoMetrizableSpace`,
+     `SecondCountableTopology` and `BorelSpace`), so it has a compact `K₀` with
+     `μ₀ K₀ᶜ ≤ ε / 2`, and step (3) turns that into
+     `1 - ε / 2 ≤ liminf (μ n) (Metric.thickening δ K₀)`. The half is what makes
+     the inequality **strict** against `1 - ε`, which is what
+     `Filter.eventually_lt_of_lt_liminf` consumes, so that
+     `μ n ((Metric.thickening δ K₀)ᶜ) ≤ ε` holds on an `𝓕`-eventual set. Its
+     complement is finite by `Filter.cofinite ≤ 𝓕` (`Filter.mem_cofinite`), and
+     the finitely many exceptional indices are absorbed by enlarging `K₀` by
+     their own compact sets, one from the tightness of each single `μ n`, the
+     union staying compact by `Set.Finite.isCompact_biUnion`; enlarging `K₀`
+     only enlarges the thickening, so the eventual indices keep their bound, and
+     `Metric.self_subset_thickening` covers the exceptional ones. This is
+     Ethier–Kurtz's "applying Lemma 2.1 to `P` and to finitely many terms of the
+     sequence", and it is the step at which the `pure 0` witness above breaks a
+     version without `Filter.cofinite ≤ 𝓕`. `ε ≥ 1` is a separate line: there
+     the empty set does it, a probability measure giving every set at most `1`.
 
-  Step 2 is the one that uses strong separation and nothing else. Steps 1, 2
-  and 3 are proved, and so is the relaxed criterion of step 4; what remains is
-  its bookkeeping half.
+  Step 2 is the one that uses strong separation and nothing else. All four
+  steps are proved, and with them the milestone's own two theorems; the whole of
+  `fact:stoneweierstrass` is thereby proved on our side, and what separates it
+  from Mathlib is adoption, not a proof.
 * `MeasureTheory.isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`,
   `fact:convdet` (Ethier–Kurtz, Proposition 3.4.4), first half, which no other
   point of this roadmap covers: on a metric space the bounded uniformly
@@ -627,6 +652,19 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   compact set. On `E = ℝ^d`, which is proper, the single-`δ` shortcut does work
   (`IsCompact.cthickening`), and that is the instance which shows the
   intersection is not an artefact of the statement but of the generality of `E`.
+* **The open interval, against `PolishSpace` in place of `CompleteSpace`.**
+  `E = (0, 1)` with the metric inherited from `ℝ`. It is Polish, being an open
+  subset of a Polish space (`IsOpen.polishSpace`), and its given metric is not
+  complete. `(0, 1/2]` is closed in `E` and totally bounded and not compact, so
+  `TotallyBounded.isCompact_of_isClosed` — the one step of
+  `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`
+  that consumes completeness — has no force here, and with it the route of
+  `isTightMeasureSet_of_stronglySeparatesPoints` collapses. Its conclusion does
+  not: every finite Borel measure on `E` is tight, `E` being Polish. That is the
+  instance which says that `[CompleteSpace E]` is a hypothesis of the **proof**
+  and that a proof under `[PolishSpace E]` alone changes the metric first;
+  `Metric.thickening`, which the statement of the criterion mentions, is the
+  reason it cannot be avoided by weakening the hypothesis alone.
 * **The discrete space of diameter `1`, against the compact support class.**
   `E = ℕ` with `dist x y = if x = y then 0 else 1`. It is a separable locally
   compact metric space, `C_c(E)` is the finitely supported functions, and
@@ -674,6 +712,36 @@ which is `IsGδ.setOfPred_continuousAt`
   `μ {x | ContinuousAt h x} = 1`, one has `(μ n).map h → μ.map h` weakly.
   Recover `tendsto_map_of_tendsto_of_continuous` as the case where the set is
   everything.
+
+  Its content is `MeasureTheory.tendsto_of_measure_setOf_not_continuousAt_eq_zero`,
+  **proved** on 2026-09-08, first run: the image measures enter as data with
+  their defining equations `(μ' n : Measure E') = (μ n : Measure E).map h`, so
+  that the statement names no image *construction* and elaborates against both
+  `v4.33.1` and `upstream/master`, whose `ProbabilityMeasure.map` differ in
+  signature. The packaged form is that theorem at `μ' n = (μ n).map h`, where
+  the equations are `rfl`.
+
+  The proof is portmanteau on both sides. For `F` closed,
+  `closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}` — a continuity point
+  in the closure of the preimage has `h x ∈ closure (h '' (h ⁻¹' F)) ⊆ F` by
+  `ContinuousWithinAt.mem_closure_image` and `IsClosed.closure_subset_iff` —
+  hence `limsup (μ n) (h ⁻¹' F) ≤ ν (closure (h ⁻¹' F)) ≤ ν (h ⁻¹' F)` by
+  `ProbabilityMeasure.limsup_measure_closed_le_of_tendsto` and subadditivity,
+  and `tendsto_of_forall_isClosed_limsup_le'` (`Measure/Portmanteau.lean:617`)
+  reads that back as weak convergence.
+
+  Its hypotheses are the weakest the two portmanteau implications ask:
+  `[OpensMeasurableSpace E] [HasOuterApproxClosed E]` on the source — every
+  pseudo-EMetric space has the latter — and `[TopologicalSpace E']
+  [OpensMeasurableSpace E']` on the target, **no metric**, the converse
+  implication being stated over an arbitrary topological space and a countably
+  generated filter. Separability of `E` is not used. The hypothesis is carried
+  as `ν {x | ¬ ContinuousAt h x} = 0` and not as
+  `ν {x | ContinuousAt h x} = 1`: for a set not known to be measurable the two
+  differ, a set and its complement both being able to have outer measure `1`,
+  and this is what keeps the metric off `E'`. Where the `= 1` form is wanted,
+  `measurableSet_of_continuousAt` and `prob_compl_eq_zero_iff`
+  (`Measure/Typeclasses/Probability.lean:157`) are the passage.
 * `MeasureTheory.TendstoInDistribution.continuousAt_comp`: the same statement on
   Mathlib's structure, for `X i : Ω i → E` with `TendstoInDistribution X l Z μ μ'`
   and `μ' {ω | ContinuousAt h (Z ω)} = 1`, concluding
@@ -770,11 +838,18 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   countably generated uniformity and does not apply to `ProbabilityMeasure E`
   itself — and carried back by `Homeomorph.secondCountableTopology`
   (`Mathlib/Topology/Homeomorph/Lemmas.lean:36`).
-* `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`: on a
-  complete second countable metric space, a set `S` of probability measures is
-  tight as soon as for every `ε > 0` and every `r > 0` there is a finite
-  `F ⊆ E` with `μ (⋃ x ∈ F, ball x r)ᶜ ≤ ε` for every `μ ∈ S` — uniform total
-  boundedness in measure. This is the skeleton of the proof of
+* `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`,
+  **proved** on 2026-09-08, first run: on a complete pseudometric space, a set
+  `S` of probability measures is tight as soon as for every `ε > 0` and every
+  `r > 0` there is a finite `F ⊆ E` with `μ (⋃ x ∈ F, ball x r)ᶜ ≤ ε` for every
+  `μ ∈ S` — uniform total boundedness in measure. It is
+  `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` of
+  Milestone 1 in four lines: a finite set is compact, and
+  `Metric.thickening_eq_biUnion_ball` (`Topology/MetricSpace/Thickening.lean:167`)
+  identifies the union of the balls around its points with its thickening, so
+  the hypothesis is that criterion's at `K = F`. `SecondCountableTopology E`
+  stood among the hypotheses and that route does not use it, so it is gone.
+  This is the skeleton of the proof of
   `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
   (`Mathlib/MeasureTheory/Measure/Prokhorov.lean:634`), where it is inlined:
   the compact set `⋂ m, ⋃ i ≤ k m, closure (ball (D i) (u m))`, the summation of

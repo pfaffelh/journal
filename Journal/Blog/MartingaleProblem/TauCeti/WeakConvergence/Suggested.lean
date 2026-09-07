@@ -7,6 +7,7 @@ import Mathlib.MeasureTheory.Measure.Portmanteau
 import Mathlib.MeasureTheory.Measure.Prokhorov
 import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
 import Mathlib.MeasureTheory.Measure.FiniteMeasureExt
+import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
@@ -155,9 +156,33 @@ proof of the Prokhorov converse builds, an intersection of shrinking
 The same run **corrected the statement** of
 `isTightMeasureSet_of_stronglySeparatesPoints`: over an arbitrary `NeBot` filter
 it is false, and the hypothesis it was missing is `Filter.cofinite ≤ 𝓕`.  The
-witness is in its doc string.  What remains of step (4) is its bookkeeping
-half: `μ₀` is tight on its own, and the exceptional indices below the
-`𝓕`-eventual set are absorbed by their own tightness.
+witness is in its doc string.
+
+Since 2026-09-08, first run, **Milestone 1 carries no `sorry` at all**: the
+bookkeeping half of step (4) is proved, and with it
+`isTightMeasureSet_of_stronglySeparatesPoints` and its corollary
+`isConvergenceDetermining_of_stronglySeparatesPoints`, which is
+`fact:stoneweierstrass` in the form the manuscript states it.  Both depend only
+on `propext`, `Classical.choice` and `Quot.sound` (`#print axioms`).  Their
+bundle is `[MetricSpace E] [CompleteSpace E] [SecondCountableTopology E]
+[BorelSpace E]` rather than `[PolishSpace E]`, the same class of spaces with the
+completeness attached to the *given* metric, which is what the proof runs in;
+the reason is in the doc string of the tightness theorem.  This is the one place
+where the file imports `Mathlib.MeasureTheory.Measure.LevyConvergence`, for
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`.
+
+The same run proved the content of Milestone 2,
+`tendsto_of_measure_setOf_not_continuousAt_eq_zero`, the continuous mapping
+result for maps continuous almost everywhere: the image measures are given
+as data with their defining equations, which is what lets one statement elaborate
+against both `v4.33.1` and `upstream/master`.  The packaged form
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` is that theorem instantiated
+and keeps its `sorry` for the version reason alone.
+
+The same run also proved the first point of Milestone 3,
+`isTightMeasureSet_of_forall_exists_finite_iUnion_ball`, which turned out to be
+the relaxed tightness criterion of Milestone 1 in four lines, and weakened that
+criterion's own bundle to `[PseudoMetricSpace E] [CompleteSpace E]`.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -678,9 +703,14 @@ totally bounded because it sits, for every `m`, inside the `u m`-thickening of a
 compact set; completeness turns that into compactness
 (`TotallyBounded.isCompact_of_isClosed`), and the geometric series bounds
 `μ` of its complement by `ε`.  Nothing is assumed of the measures beyond what
-`IsTightMeasureSet` says, so no finiteness hypothesis appears. -/
+`IsTightMeasureSet` says, so no finiteness hypothesis appears.
+
+The bundle is `[PseudoMetricSpace E] [CompleteSpace E]` and nothing else: the
+proof measures no set it has not been handed, using only `measure_mono` and
+`measure_iUnion_le`, so no `BorelSpace` or `OpensMeasurableSpace` occurs, and
+the metric may be a pseudometric. -/
 theorem isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le
-    [MetricSpace E] [CompleteSpace E] [BorelSpace E] {S : Set (Measure E)}
+    [PseudoMetricSpace E] [CompleteSpace E] {S : Set (Measure E)}
     (h : ∀ ε : ℝ≥0∞, 0 < ε → ∀ δ : ℝ, 0 < δ → ∃ K : Set E, IsCompact K ∧
       ∀ μ ∈ S, μ ((Metric.thickening δ K)ᶜ) ≤ ε) :
     IsTightMeasureSet S := by
@@ -744,25 +774,108 @@ whatever about `μ n` for `n ≥ 1`; but `{δ n | n}` is not tight, every compac
 subset of `ℝ` being bounded.  The hypothesis is what makes the complement of an
 `𝓕`-eventual set finite (`Filter.mem_cofinite`), which is what Ethier-Kurtz use
 when they apply their Lemma 2.1 "to `P` and to finitely many terms of the
-sequence".  For a sequence it is free: `Nat.cofinite_eq_atTop`. -/
+sequence".  For a sequence it is free: `Nat.cofinite_eq_atTop`.
+
+**Why `CompleteSpace E` and not `PolishSpace E`.**  `PolishSpace` says that
+*some* compatible metric is complete; the proof below runs entirely in the given
+one, because `Metric.thickening` does, and
+`isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` turns
+totally bounded into compact by completeness of that metric.  Together with
+`SecondCountableTopology E` -- which is what makes a single finite measure tight,
+`isTightMeasureSet_singleton` -- the two hypotheses give `PolishSpace E` back as
+an instance, so no consumer pays for the change.  The statement is presumably
+true under `PolishSpace E` alone, strong separation being a condition on the
+neighbourhood filter and hence independent of the compatible metric chosen; the
+proof of that would upgrade the metric first, and is not carried out here. -/
 theorem isTightMeasureSet_of_stronglySeparatesPoints [MetricSpace E]
-    [PolishSpace E] [BorelSpace E] {ι : Type*} {𝓕 : Filter ι} [𝓕.NeBot]
+    [CompleteSpace E] [SecondCountableTopology E] [BorelSpace E]
+    {ι : Type*} {𝓕 : Filter ι} [𝓕.NeBot]
     (h𝓕 : Filter.cofinite ≤ 𝓕)
     (A : Subalgebra ℝ (E →ᵇ ℝ))
     (hA : StronglySeparatesPoints {f : E → ℝ | ∃ g ∈ A, ⇑g = f})
     {μ : ι → ProbabilityMeasure E} {μ₀ : ProbabilityMeasure E}
     (hμ : ∀ g ∈ A, Tendsto (fun n => ∫ x, g x ∂(μ n : Measure E)) 𝓕
       (𝓝 (∫ x, g x ∂(μ₀ : Measure E)))) :
-    IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n} := sorry
+    IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n} := by
+  classical
+  refine isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le ?_
+  intro ε hε δ hδ
+  rcases le_or_gt 1 ε with h1 | h1
+  · exact ⟨∅, isCompact_empty, by rintro ν ⟨n, rfl⟩; exact prob_le_one.trans h1⟩
+  -- every single probability measure is tight, `E` being complete and second countable
+  have hsingle : ∀ ρ : Measure E, IsProbabilityMeasure ρ →
+      ∀ η : ℝ≥0∞, 0 < η → ∃ C : Set E, IsCompact C ∧ ρ Cᶜ ≤ η := by
+    intro ρ hρ η hη
+    have ht : IsTightMeasureSet {ρ} := isTightMeasureSet_singleton
+    rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le] at ht
+    obtain ⟨C, hC, hC'⟩ := ht η hη
+    exact ⟨C, hC, hC' ρ rfl⟩
+  -- a compact set carrying all but `ε / 2` of the limit measure
+  obtain ⟨K₀, hK₀, hK₀μ⟩ :=
+    hsingle (μ₀ : Measure E) inferInstance (ε / 2) (ENNReal.half_pos hε.ne')
+  have hhalf : ε / 2 < ε := ENNReal.half_lt_self hε.ne' (ne_top_of_lt h1)
+  have hK₀ge : 1 - ε / 2 ≤ (μ₀ : Measure E) K₀ := by
+    have hc : (μ₀ : Measure E) K₀ᶜ = 1 - (μ₀ : Measure E) K₀ := by
+      rw [measure_compl hK₀.isClosed.measurableSet (measure_ne_top _ _), measure_univ]
+    rw [hc, tsub_le_iff_right] at hK₀μ
+    rw [tsub_le_iff_right, add_comm]
+    exact hK₀μ
+  -- step (3), and the strict gap that turns a `liminf` bound into an eventual one
+  have hstep3 := le_liminf_measure_thickening_of_stronglySeparatesPoints hA hμ hK₀ hδ
+  have hne : (1 : ℝ≥0∞) - ε ≠ ⊤ := (tsub_le_self.trans_lt ENNReal.one_lt_top).ne
+  have hlt : (1 : ℝ≥0∞) - ε < 1 - ε / 2 :=
+    (ENNReal.cancel_of_ne hne).tsub_lt_tsub_left_of_le h1.le hhalf
+  have hev : ∀ᶠ n in 𝓕, (μ n : Measure E) ((Metric.thickening δ K₀)ᶜ) ≤ ε := by
+    have := Filter.eventually_lt_of_lt_liminf (hlt.trans_le (hK₀ge.trans hstep3))
+    filter_upwards [this] with n hn
+    rw [measure_compl Metric.isOpen_thickening.measurableSet (measure_ne_top _ _), measure_univ]
+    calc 1 - (μ n : Measure E) (Metric.thickening δ K₀) ≤ 1 - (1 - ε) :=
+          tsub_le_tsub_left hn.le 1
+      _ = ε := ENNReal.sub_sub_cancel (by simp) h1.le
+  -- the finitely many exceptional indices, absorbed by their own tightness
+  set P : Set ι := {n | (μ n : Measure E) ((Metric.thickening δ K₀)ᶜ) ≤ ε} with hPdef
+  have hPfin : Pᶜ.Finite := Filter.mem_cofinite.1 (h𝓕 hev)
+  have hC : ∀ n : ι, ∃ C : Set E, IsCompact C ∧ (μ n : Measure E) Cᶜ ≤ ε :=
+    fun n => hsingle _ inferInstance ε hε
+  choose C hCcomp hCμ using hC
+  refine ⟨K₀ ∪ ⋃ n ∈ Pᶜ, C n, hK₀.union (hPfin.isCompact_biUnion fun n _ => hCcomp n), ?_⟩
+  rintro ν ⟨n, rfl⟩
+  by_cases hn : n ∈ P
+  · refine le_trans (measure_mono ?_) hn
+    exact compl_subset_compl.2 (Metric.thickening_subset_of_subset δ subset_union_left)
+  · refine le_trans (measure_mono ?_) (hCμ n)
+    refine compl_subset_compl.2
+      ((Set.subset_biUnion_of_mem (u := C) (show n ∈ Pᶜ from hn)).trans ?_)
+    exact subset_union_right.trans (Metric.self_subset_thickening hδ _)
 
 /-- `fact:stoneweierstrass`, convergence half.  From
 `isTightMeasureSet_of_stronglySeparatesPoints` and
 `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, whose separation
-hypothesis comes from `StronglySeparatesPoints.separatesPoints`. -/
+hypothesis comes from `StronglySeparatesPoints.separatesPoints`.
+
+`IsConvergenceDetermining` quantifies over sequences, so the filter hypothesis of
+the tightness theorem is free here: `Nat.cofinite_eq_atTop`. -/
 theorem isConvergenceDetermining_of_stronglySeparatesPoints [MetricSpace E]
-    [PolishSpace E] [BorelSpace E] (A : Subalgebra ℝ (E →ᵇ ℝ))
+    [CompleteSpace E] [SecondCountableTopology E] [BorelSpace E]
+    (A : Subalgebra ℝ (E →ᵇ ℝ))
     (hA : StronglySeparatesPoints {f : E → ℝ | ∃ g ∈ A, ⇑g = f}) :
-    IsConvergenceDetermining {f : E → ℝ | ∃ g ∈ A, ⇑g = f} := sorry
+    IsConvergenceDetermining {f : E → ℝ | ∃ g ∈ A, ⇑g = f} := by
+  intro μ ν hconv
+  have hμ : ∀ g ∈ A, Tendsto (fun n => ∫ x, g x ∂(μ n : Measure E)) atTop
+      (𝓝 (∫ x, g x ∂(ν : Measure E))) := fun g hg => hconv _ ⟨g, hg, rfl⟩
+  have htight : IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n} :=
+    isTightMeasureSet_of_stronglySeparatesPoints (le_of_eq Nat.cofinite_eq_atTop) A hA hμ
+  -- over `ℝ` the star operation is the identity, so `A` is a `StarSubalgebra` as it stands
+  let A' : StarSubalgebra ℝ (E →ᵇ ℝ) :=
+    { toSubalgebra := A
+      star_mem' := fun {g} hg => by
+        have hstar : star g = g := by ext a; simp
+        rwa [hstar] }
+  have hsep : (A'.map (BoundedContinuousFunction.toContinuousMapStarₐ ℝ)).SeparatesPoints := by
+    intro x y hxy
+    obtain ⟨_, ⟨g, hg, rfl⟩, hne⟩ := hA.separatesPoints hxy
+    exact ⟨_, ⟨BoundedContinuousFunction.toContinuousMapStarₐ ℝ g, ⟨g, hg, rfl⟩, rfl⟩, hne⟩
+  exact ProbabilityMeasure.tendsto_of_tight_of_separatesPoints ℝ htight hsep hμ
 
 /-! ### The cutoff, and the truncation it performs
 
@@ -1822,6 +1935,74 @@ one place in this file that `lake env lean` reports an error; that is the
 deliberate choice recorded in the module doc, and the fix against `v4.33.1`
 would be to write `hh.aemeasurable` for `h` twice. -/
 
+/-- The continuous mapping theorem for almost everywhere continuous maps,
+`fact:cmt` (Ethier-Kurtz, Corollary 3.1.9), and the half of it Mathlib does not
+have.  The image measures are taken as data with their defining equations
+rather than through `ProbabilityMeasure.map`, which is the one construction
+whose signature differs between `v4.33.1` and `upstream/master`; the packaged
+form below is this theorem with `μ' n = (μ n).map h`, in whichever of the two
+spellings the version at hand uses.
+
+The proof is portmanteau on both sides and nothing else: for `F` closed,
+`closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}`, the second set being
+`ν`-null, so `limsup (μ n) (h ⁻¹' F) ≤ ν (closure (h ⁻¹' F)) ≤ ν (h ⁻¹' F)`, and
+`tendsto_of_forall_isClosed_limsup_le'` reads that back as weak convergence.
+The inclusion is `ContinuousWithinAt.mem_closure_image` together with
+`IsClosed.closure_subset_iff`.
+
+Hypotheses: `E` needs `HasOuterApproxClosed`, which is what
+`ProbabilityMeasure.limsup_measure_closed_le_of_tendsto` asks and which every
+pseudo-EMetric space has; `E'` needs no metric at all, only
+`OpensMeasurableSpace`, because the converse portmanteau implication is stated
+over an arbitrary topological space and a countably generated filter.
+Separability of `E` is not used.
+
+The hypothesis is the **null discontinuity set** and not
+`ν {x | ContinuousAt h x} = 1`.  For a set not known to be measurable the two
+are not the same statement, a set and its complement both being able to have
+outer measure `1`; and this way no metric on `E'` is needed to see that the
+continuity set is Borel.  Where it is wanted, Mathlib supplies the passage:
+`measurableSet_of_continuousAt`
+(`MeasureTheory/Constructions/BorelSpace/Basic.lean:252`, root namespace, for
+`[OpensMeasurableSpace E]` and `[PseudoEMetricSpace E']`) with
+`prob_compl_eq_zero_iff`. -/
+theorem tendsto_of_measure_setOf_not_continuousAt_eq_zero
+    [TopologicalSpace E] [OpensMeasurableSpace E] [HasOuterApproxClosed E]
+    [TopologicalSpace E'] [OpensMeasurableSpace E']
+    {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E} {h : E → E'}
+    (hh : Measurable h) (hconv : Tendsto μ atTop (𝓝 ν))
+    (hcont : (ν : Measure E) {x | ¬ ContinuousAt h x} = 0)
+    {μ' : ℕ → ProbabilityMeasure E'} {ν' : ProbabilityMeasure E'}
+    (hμ' : ∀ n, (μ' n : Measure E') = (μ n : Measure E).map h)
+    (hν' : (ν' : Measure E') = (ν : Measure E).map h) :
+    Tendsto μ' atTop (𝓝 ν') := by
+  refine tendsto_of_forall_isClosed_limsup_le' fun F hF => ?_
+  have hsub : closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x} := by
+    intro x hx
+    by_cases hc : ContinuousAt h x
+    · refine Or.inl ?_
+      have hmem : h x ∈ closure (h '' (h ⁻¹' F)) := hc.continuousWithinAt.mem_closure_image hx
+      have hcl : closure (h '' (h ⁻¹' F)) ⊆ F :=
+        hF.closure_subset_iff.2 (image_preimage_subset h F)
+      exact hcl hmem
+    · exact Or.inr hc
+  simp only [hμ', hν', Measure.map_apply hh hF.measurableSet]
+  calc Filter.limsup (fun n => (μ n : Measure E) (h ⁻¹' F)) atTop
+      ≤ Filter.limsup (fun n => (μ n : Measure E) (closure (h ⁻¹' F))) atTop :=
+        limsup_le_limsup (Eventually.of_forall fun n => measure_mono subset_closure)
+    _ ≤ (ν : Measure E) (closure (h ⁻¹' F)) :=
+        ProbabilityMeasure.limsup_measure_closed_le_of_tendsto hconv isClosed_closure
+    _ ≤ (ν : Measure E) (h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}) := measure_mono hsub
+    _ ≤ (ν : Measure E) (h ⁻¹' F) + (ν : Measure E) {x | ¬ ContinuousAt h x} :=
+        measure_union_le _ _
+    _ = (ν : Measure E) (h ⁻¹' F) := by rw [hcont, add_zero]
+
+/-- The packaged form, for `upstream/master`.  It is
+`tendsto_of_measure_setOf_not_continuousAt_eq_zero` at `μ' n = (μ n).map h` and
+`ν' = ν.map h`, whose defining equations are `rfl` there, with
+`measurableSet_setOf_continuousAt` turning `ν {x | ContinuousAt h x} = 1` into
+the null discontinuity set.  Only the spelling of `ProbabilityMeasure.map`
+keeps it from elaborating against `v4.33.1`. -/
 theorem tendsto_map_of_measure_setOf_continuousAt_eq_one [TopologicalSpace E]
     [BorelSpace E] [TopologicalSpace.SeparableSpace E] [MetricSpace E'] [BorelSpace E']
     {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E} {h : E → E'}
@@ -1851,13 +2032,28 @@ tightness.  A Cauchy sequence has no compact closure to start from, so the
 completeness below needs this form.  `IsTightMeasureSet`
 (`MeasureTheory/Measure/Tight.lean:55`) is a predicate on `Set (Measure E)`, and
 `isCompact_closure_of_isTightMeasureSet` (`Measure/Prokhorov.lean:530`) takes it
-in exactly the image form written here. -/
+in exactly the image form written here.
+
+It is `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`
+of Milestone 1 in four lines: a finite `F` is compact, and
+`Metric.thickening_eq_biUnion_ball` says that the `r`-thickening of `F` **is**
+the union of the balls of radius `r` around its points, so the hypothesis is the
+relaxed criterion's with `K = F`.  `SecondCountableTopology E` was among the
+hypotheses and is not used by that route. -/
 theorem isTightMeasureSet_of_forall_exists_finite_iUnion_ball [PseudoMetricSpace E]
-    [OpensMeasurableSpace E] [SecondCountableTopology E] [CompleteSpace E]
+    [OpensMeasurableSpace E] [CompleteSpace E]
     {S : Set (ProbabilityMeasure E)}
     (h : ∀ ε : ℝ≥0∞, 0 < ε → ∀ r : ℝ, 0 < r →
       ∃ F : Finset E, ∀ μ ∈ S, (μ : Measure E) (⋃ x ∈ F, Metric.ball x r)ᶜ ≤ ε) :
-    IsTightMeasureSet {((μ : ProbabilityMeasure E) : Measure E) | μ ∈ S} := sorry
+    IsTightMeasureSet {((μ : ProbabilityMeasure E) : Measure E) | μ ∈ S} := by
+  refine isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le ?_
+  intro ε hε δ hδ
+  obtain ⟨F, hF⟩ := h ε hε δ hδ
+  refine ⟨(F : Set E), F.finite_toSet.isCompact, ?_⟩
+  rintro ν ⟨μ, hμS, rfl⟩
+  refine le_trans (measure_mono (compl_subset_compl.2 ?_)) (hF μ hμS)
+  rw [Metric.thickening_eq_biUnion_ball]
+  simp
 
 /-- Tightness of a Cauchy sequence comes from `isTightMeasureSet_singleton`
 (Ulam, `MeasureTheory/Measure/Tight.lean:99`) for the finite head and from the
