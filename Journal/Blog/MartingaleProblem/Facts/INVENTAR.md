@@ -5952,3 +5952,162 @@ Sprunghöhe —, trifft also jede kompakte Menge in einer endlichen, und die
 σ-Kompaktheit des Index (aus `isCompact_exhaustion`, jeder Index von
 Meilenstein 1 hat sie) macht daraus die Abzählbarkeit. Das stützt
 `fact:Dcountable` (tragend `4`) über die Meilensteine 4, 5 und 6.
+
+### 2026-09-07, vierter Lauf des Tages — vorrangige Aufgabe: acceptance examples, vollständig
+
+Die am 2026-09-07 gestellte vorrangige Aufgabe, **erledigt in einem Lauf**.
+Ergänzt sind die Abschnitte `**Acceptance examples.**` für **alle 27**
+Meilensteine der vier Roadmaps: `WeakConvergence` (5), `SkorokhodSpace` (8),
+`KolmogorovExtension` (3) und `MartingaleProblems` (1–11). Die Meilensteine 12
+und 13 von `MartingaleProblems` haben, wie ausdrücklich verlangt, **keine**
+bekommen — sie sind *roadmap-for-a-roadmap*. Kein Fact hat den Status
+gewechselt, keine Meilensteinaussage wurde geändert, das Manuskript ist
+unberührt; `python3 check.py` meldet `clean` (132 Seiten). Die Beispiele stehen
+jeweils am Ende des Meilensteins, wie es `VORBILD-OneParameterSemigroups.md`
+Punkt 4 der Checkliste verlangt.
+
+**Der Maßstab, an dem ich sie gemessen habe.** Ein acceptance example ist eine
+Instanz, an der die API rechnet, und ein gutes deckt einen Fall ab, in dem eine
+naheliegende falsche Definition scheitert. Ich habe deshalb je Meilenstein
+mindestens ein **Paar** geschrieben — die Instanz, an der es geht, und die
+danebenliegende, an der es nicht geht —, statt vier positive Instanzen
+aufzuzählen. Herkunft, in der von der Aufgabe verlangten Reihenfolge: das
+Manuskript (`ex:atomicdiscontinuity`, `ex:invariance`, `ex:determining`,
+`prop:hawkesduality`), dann die Zeugen, die diese Läufe selbst gefunden haben
+(die `∅`-Klasse auf dem einpunktigen Raum, der `δ n`-Zeuge gegen die
+straffheitsfreie Fassung, `ι = ℕ ∪ {ω}`, das maximale Element außerhalb von `D`,
+`steep * double` gegen die gefensterte Norm, die Translationen gegen den Anker),
+und erst dann Neues.
+
+**Was dabei an Rechnung angefallen ist**, denn drei Beispiele sind mehr als ein
+Zitat:
+
+1. **Die trigonometrische Algebra auf `ℝ` trennt Punkte, aber nicht stark**
+   (`WeakConvergence` M1). Sie ist eine `ℝ`-Unteralgebra von `ℝ →ᵇ ℝ` — die
+   Produktformeln schreiben `cos(tx)cos(sx)` als Kombination von `cos((t±s)x)`
+   —, enthält die Konstanten bei `t = 0` und trennt Punkte. Stark trennt sie
+   **nicht**: für feste `t 1, …, t k` ist der Abschluß von
+   `{(t i · u mod 2π) | u ≥ R}` eine abgeschlossene Untergruppe des Torus, die
+   `0` enthält, also gibt es beliebig weit entfernte `y` mit
+   `max i |h i y - h i x|` beliebig klein. Da die Charaktere nach Lévy trotzdem
+   konvergenzbestimmend sind (`ProbabilityMeasure.tendsto_iff_tendsto_charFun`),
+   ist damit **belegt**, daß `isConvergenceDetermining_of_stronglySeparatesPoints`
+   keine Äquivalenz werden darf. Das ist der Ertrag der Aufgabe vom 2026-09-06
+   an einer Stelle, an der er sich rechnet.
+2. **Der schrumpfende Buckel entscheidet zwischen den beiden Normen**
+   (`SkorokhodSpace` M5). `x n = 1_{[1/2, 1/2+1/n)}` ist Cauchy unter
+   Billingsleys älterem `sup t, dist (λ t) t` — die stückweise lineare
+   Zeitänderung paßt die beiden Buckel exakt aufeinander und verschiebt Punkte
+   um höchstens `|1/n - 1/m|` — und hat keinen Grenzwert; unter
+   `TimeChange.norm` ist dieselbe Folge **nicht** Cauchy, weil jene Zeitänderung
+   um den Faktor `n/m` staucht und ihre Norm `|log (n/m)|` ist, was längs
+   `m = 2n` nicht gegen `0` geht. `CompleteSpace (D ι E)` ist also ein Satz über
+   die logarithmische Norm von Meilenstein 3 und für die naive falsch. Das ist
+   das schärfste Beispiel der beiden Roadmaps.
+3. **Die Ordnungskonvexität der Fenster ist ein Satz über `AdditiveDist`, nicht
+   über `clamp`** (`SkorokhodSpace` M1). Auf der Dreipunktordnung `{0 < 1 < 2}`
+   mit `dist 0 1 = 2`, `dist 1 2 = 1`, `dist 0 2 = 1` — eine Metrik, `2 ≤ 1+1` —
+   ist `B 1` um `t₀ = 0` die Menge `{0, 2}`, nicht ordnungskonvex, und
+   `clamp 1 1 = min (max 1 0) 2 = 1` verläßt das Fenster. Die Metrik ist nicht
+   additiv, und genau das ist der Punkt. Dazu paßt die zweite Instanz derselben
+   Sorte: `dist x y = min 1 |x - y|` auf `ℝ` induziert die Ordnungstopologie und
+   ist nicht additiv, und `orderIso_isometry_real` scheitert daran, weil eine
+   beschränkte Metrik keine Isometrie auf eine unbeschränkte abgeschlossene
+   Teilmenge von `ℝ` zuläßt.
+
+**Zwei Korrekturen an eigenen Entwürfen**, beide beim Nachrechnen gefunden und
+vor dem Schreiben behoben: der Mittelwert von `X n k = k/n` auf der
+Gleichverteilung über `{0,…,n}` ist exakt `1/2` und nicht `(n+2)/(2(n+1))`; und
+die Folge `1_{(1-1/n,∞)}`, die ich zuerst als Beispiel für einen nicht-càdlàg
+punktweisen Limes hatte, ist selbst nicht càdlàg — das richtige Beispiel ist
+`1_{[1+1/n,∞)}`, dessen punktweiser Limes `1_{(1,∞)}` ist und dessen
+`D ι E`-Limes `1_{[1,∞)}`.
+
+**Die zweite Hälfte**, im selben Lauf und mit denselben Regeln geschrieben.
+`KolmogorovExtension` und `MartingaleProblems` 1–11. Drei Befunde daraus, die
+über das Beispielschreiben hinausgehen:
+
+4. **Der schärfste Prüfstein von `KolmogorovExtension` ist Mathlibs eigenes
+   Produktmaß.** `MeasureTheory.Measure.infinitePi` ist für einen **beliebigen**
+   Index und **ohne jede topologische Voraussetzung** gebaut (am Quelltext
+   geprüft: `upstream/master:Mathlib/Probability/ProductMeasure.lean`, die
+   Variablenblöcke tragen nur `[∀ i, IsProbabilityMeasure (μ i)]`, der Beweis
+   läuft über `piContent_tendsto_zero`). Also muß `projectiveLimit` auf der
+   Produktfamilie mit ihm übereinstimmen, per `IsProjectiveLimit.unique` — ein
+   Vergleich zweier unabhängig gebauter Objekte. Nebenbei ist damit belegt, daß
+   die innere Regularität von Meilenstein 1 **hinreichend und nicht notwendig**
+   ist: auf `ℝ` mit der abzählbar-koabzählbaren σ-Algebra hat das Maß
+   `μ A = if A abzählbar then 0 else 1` überhaupt keine meßbare kompakte Menge
+   positiven Maßes, und der projektive Limes existiert trotzdem.
+5. **Der Diamant und die Antikette tragen `MartingaleProblems` Meilenstein 8
+   an zwei verschiedenen Stellen.** Der Diamant mit $m_c^2=m_am_b$ entscheidet
+   die **Konvention** — prädiktabel geht, optional ist falsch —, die Antikette
+   von `ex:antichain` entscheidet die **Integrierbarkeit**, und zwar dreifach
+   auf einmal: sie widerlegt die Ausdehnung von `duality_of_atomic` auf
+   abzählbare Atommengen, das Weglassen der $m\otimes m$-Integrierbarkeit in
+   `duality_of_atomic_antichain_of_integrable`, und — weil ihr $\Phi$ nur drei
+   Werte annimmt — jeden Ersatz der Integrierbarkeit durch Beschränktheit von
+   $\Phi$. Beide Zeugen standen schon im Roadmaptext; als acceptance example
+   sind sie jetzt an der Stelle, an der ein Implementierer sie rechnet.
+6. **Zwei Roadmaps benennen dieselbe Instanz jetzt gleich.** Das
+   `ex:determining`-Produkt $\prod h_i(X_{t_i})$ ist in `MartingaleProblems` M3
+   die bestimmende Klasse und in `WeakConvergence` M5 das multiplikative System
+   `K`, an dem `condExp_eq_of_forall_integral_mul_eq` die Martingaleigenschaft
+   prüft; `ex:invariance` steht in `MartingaleProblems` M10 als Prüfung aller
+   drei Hypothesen (a)–(c) und in `SkorokhodSpace` M8 als Straffheits- plus
+   fdd-Instanz; `ex:atomicdiscontinuity` steht in `WeakConvergence` M2,
+   `SkorokhodSpace` M4 und `MartingaleProblems` M1, M9, M10. Das war die
+   Nebenabsicht der Aufgabe und ist erreicht: die Beispiele verzahnen die vier
+   Roadmaps sichtbar, statt sie nebeneinanderzustellen.
+
+**Am Quelltext belegt** wurden in diesem Lauf zwei Namen, beide auf
+`upstream/master`: `MeasureTheory.Measure.infinitePi` samt
+`isProjectiveMeasureFamily_pi` und `piContent_tendsto_zero`
+(`Mathlib/Probability/ProductMeasure.lean`), und
+`ProbabilityTheory.poissonMeasure`
+(`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`, Namensraum
+`ProbabilityTheory`, Notation `Po(r)`) — letzteres, weil das acceptance example
+von `MartingaleProblems` M4 den Sprungprozeß mit `lam ≡ 1`,
+`mu x = δ (x+1)` gegen die Poissonverteilung rechnet und dafür der Name
+stimmen muß. `PMF.poisson`, was ich zuerst schreiben wollte, gibt es nicht.
+
+**Was offen bleibt.** Nichts an dieser Aufgabe. Die Checkliste in
+`VORBILD-OneParameterSemigroups.md` hat mit Punkt 4 jetzt drei von sechs
+Punkten erledigt; offen sind dort Punkt 2 (jede Stelle entschärfen, die
+`brownian-motion` oder `kolmogorov_extension4` als Spezifikation statt als
+Zitat führt), Punkt 5 (KI-Attribution in die PR-Beschreibung) und Punkt 6
+(`Exchangeability` und `OptimalTransport` querlesen).
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**`SkorokhodSpace.countable_leftJumpSet`** — die Abzählbarkeit der Sprungmenge
+einer càdlàg-Abbildung, `SkorokhodSpace` Meilenstein 2, seit dem 2026-09-05 ein
+`sorry`. Der dritte Lauf von heute hat es schon vorgeschlagen, und dieser Lauf
+verstärkt den Vorschlag um ein Argument, das vorher nicht dastand: das
+acceptance example, das ich für Meilenstein 2 geschrieben habe, **pinnt die
+Beweisform**. Der Pfad
+`f = ∑' n, 2⁻¹ ^ n * Set.indicator (Set.Ici (1/(n+1))) 1` ist càdlàg — der
+Linkslimes bei `0` ist `0`, und rechtsstetig ist er dort, weil die Restmasse
+jenseits von `1/(n+1)` gerade `2⁻¹ ^ n` ist — und seine `leftJumpSet`
+**hat** den Häufungspunkt `0`, während jede `largeLeftJumpSet f ε` endlich ist.
+Ein Beweis, der zeigen will, daß `leftJumpSet` keinen Häufungspunkt hat,
+scheitert damit an einer konkreten Instanz; die Zerlegung über `ε` ist keine
+Bequemlichkeit, sondern notwendig. Worauf es ruht: `IsCadlag`, die
+Häufungspunktaussage über `largeLeftJumpSet` (Meilenstein 2, (B) allein) und
+`isCompact_exhaustion` von Meilenstein 1 für die σ-Kompaktheit. Warum jetzt: es
+liegt weiterhin auf dem kritischen Weg zur Trennung, dem einzigen fehlenden
+Metrikaxiom von Meilenstein 4, an dem zehn der dreizehn `sorry` von
+`SkorokhodSpace/Suggested.lean` hängen — und es stützt `fact:Dcountable`
+(tragend `4`) über die Meilensteine 4, 5 und 6.
+
+Als zweites, kleineres Ziel im selben Lauf, falls das erste früh fällt:
+**`SkorokhodSpace.tendsto_distOn_slidingStep`**, das acceptance example von
+Meilenstein 4 als Lean-Aussage — für `f = Set.indicator (Set.Ici 1) 1` und
+`g ε = Set.indicator (Set.Ici (1+ε)) 1` auf `ι = ℝ`, `E = ℝ` gilt
+`distOn t₀ m f (g ε) ≤ Real.log (1 + ε)` für `ε ≤ 1 ≤ m`, mit der stückweise
+linearen Zeitänderung als Zeugen. Es braucht die `MetricSpace`-Instanz **nicht**
+— `distOn` ist definiert und seine beiden Schranken sind bewiesen —, es ist
+`ciInf_le` an einem expliziten Zeugen plus `norm`-Rechnung auf einer
+Streckung, und es wäre der erste Beleg dafür, daß `distOn` wirklich die
+`J₁`-Metrik ist und nicht die Supremumsmetrik. Ein acceptance example, das als
+übersetzte Deklaration dasteht, ist nach den Regeln dieses Projekts der
+stärkste Beleg, den ein Meilenstein haben kann.

@@ -153,6 +153,39 @@ Lebesgue measure. Fix `[Preorder ι]`.
   `∑ n, δ (n : ℝ)` on `[0,∞)`, and every locally finite Borel measure on a
   closed subset of `ℝ`.
 
+**Acceptance examples.**
+
+* **The manuscript's four clocks**, `ex:clocks`, each of which must be an
+  instance and must compute: `ι = Set.Ici (0:ℝ)` with Lebesgue measure, where
+  `interval q c 0 t` is `Set.Ioc 0 t` or `Set.Ico 0 t` and the compensator is
+  `∫ u in Set.Ioc 0 t, g (X u)`; `ι = ℕ` with counting measure, where it is
+  `∑ k ∈ Finset.Ioc 0 n, g (X k)`; `ι = Set.Ici (0:ℝ)` with `∑ n, δ n`, the
+  clock with atoms; and `ι = (Set.Ici (0:ℝ)) ^ 2` with Lebesgue measure, where
+  `Set.Iic t` is a box and the index is **not** linearly ordered. The fourth is
+  the one that decides the design: on it `Clock.Ico q s t` and `Set.Ico s t`
+  differ, and every downstream proof has to survive that.
+* **The diamond, where `Set.Ico` is the wrong interval.** `ι = {0 < a, b < t}`
+  with `a` and `b` incomparable. Then `Set.Ico a t = {a}` while
+  `Clock.Ico q a t = Set.Iio t \ Set.Iio a = {a, b}`. A definition of the
+  compensating interval by `Set.Ico` loses the mass at `b`, and
+  `Clock.interval_union` fails for it, since `Set.Ico 0 t` is `{0, a, b}` while
+  `Set.Ico 0 a ∪ Set.Ico a t = {0} ∪ {a}`. This is the instance that the
+  `@[simp]` lemmas `Clock.Ico_eq_setIco` must **not** fire on, `ι` not being
+  linearly ordered.
+* **Atomless and atomic, at the same point.** `ι = Set.Ici (0:ℝ)` with
+  `q = volume + Measure.dirac 1`. Then `Clock.IsAtomless q` is false, and
+  `Clock.interval_eq_of_isAtomless` must fail: `q (Clock.Ioc q 0 1) = 1 + 1` and
+  `q (Clock.Ico q 0 1) = 1`, the two conventions differing by exactly the atom.
+  With `q = volume` alone they agree at every pair, which is the other half of
+  the equivalence. This is the pair the convention parameter `Clock.Conv` exists
+  for, and the manuscript's `ex:atomicdiscontinuity` runs on its atomic part
+  `q = Measure.dirac 1` alone.
+* **Shift invariance is not automatic.** Lebesgue measure on `Set.Ici (0:ℝ)` and
+  counting measure on `ℕ` satisfy `Clock.IsShiftInvariant`; `∑ n, δ (n : ℝ)`
+  satisfies it for integer shifts only, and `volume + Measure.dirac 1` for none.
+  So `Clock.interval_add` must carry the hypothesis, and the three instances
+  must be checked separately rather than by a common lemma.
+
 ## Milestone 2: the abstract martingale problem
 
 Two named stages of hypotheses. The first two items below carry the marks
@@ -280,6 +313,41 @@ inherits it.
   it by adding the constant, and is stated as a lemma of its own next to the
   dominated convergence theorem.
 
+**Acceptance examples.**
+
+* **The Poisson process, computed by hand.** `ι = Set.Ici (0:ℝ)`, `E = ℕ`,
+  `q = volume`, `c` optional, `A = {(f, fun x ↦ f (x+1) - f x) | f bounded}`,
+  and `X` a Poisson process of rate `1`. Then `mpProcess q c X f (A f) t` is
+  `f (X t) - ∫ u in Set.Ioc 0 t, (f (X u + 1) - f (X u))`, and
+  `IsMPSolutionFor A q c X 𝓖 P` holds for the natural filtration. Taking
+  `f = id` truncated gives the compensated process `X t - t`, so the milestone's
+  definition must return the textbook compensator on this instance. Taking
+  `c` predictable changes nothing, the clock being atomless — which is
+  `Clock.interval_eq_of_isAtomless` of Milestone 1 doing visible work.
+* **A clock with an atom, where the two conventions give different solutions.**
+  `q = Measure.dirac 1` on `Set.Ici (0:ℝ)`, `E = ℝ`, `A = {(id, id)}` and `X`
+  the deterministic path `Set.indicator (Set.Ici 1) 1`. In the optional
+  convention the compensator is `X 1 * 1_{t ≥ 1}` and in the predictable one
+  `X 1 * 1_{t > 1}`, so `mpProcess` differs at `t = 1` and exactly one of the
+  two is adapted to the natural filtration. This is the manuscript's
+  `ex:atomicdiscontinuity`, and it is why `c` is a parameter of the definition
+  and not a global choice.
+* **`insert_of_tendsto` against the indicator.** `E = ℝ`, `U = Set.Ioo (-1) 1`,
+  `f n x = min 1 (n * Metric.infDist x Uᶜ)`, which is `0` off `U` and increases
+  pointwise to `Set.indicator U 1` on `U`, and `g n = 0`. Then `‖f n‖ ≤ 1` and `g n → 0`
+  pointwise, so `insert_of_tendsto_of_forall_norm_le` adjoins
+  `(Set.indicator U 1, 0)` to `A` without any closure construction. This is the
+  single use Ethier–Kurtz make of the bounded pointwise closure, and the
+  acceptance test is that the sequence suffices; Milestone 9 consumes exactly
+  this pair.
+* **The one sided companion is genuinely weaker.** With `g n = -C` constant and
+  `f n = 0` the conclusion of `submartingale_mpProcess_of_tendsto` is that
+  `fun t ω ↦ C * q (Clock.interval q c 0 t)` is a submartingale, which it is,
+  being increasing and deterministic; upgrading the conclusion to `Martingale`
+  is false for it as soon as `q ≠ 0`. So the two items must be separate
+  statements, and the lower bound on `g n` cannot be strengthened to a
+  conclusion.
+
 ## Milestone 3: canonical families, determining sets, and the finite dimensional criterion
 
 Fix a measurable path space `F` with measurable coordinates `π t : F → E`
@@ -314,6 +382,31 @@ generating its σ-algebra, and `X : Ω → F`.
 * The consequence that the solution property depends only on the finite
   dimensional distributions of `X`.
 
+**Acceptance examples.**
+
+* **The manuscript's `ex:determining`, verbatim.** `𝓕 t = σ(X s : s ≤ t)`,
+  `F = D ι E` or `C ι E`, `D ⊆ ι` dense, and
+  `𝓩° t = {fun ω ↦ ∏ i ∈ Finset.range n, h i (ω (t i)) | t i ∈ D ∩ Set.Iic t,
+  h i ∈ Cb(E)}`. `isDetermining_products` must return exactly this set as
+  determining, and the multiplicative system it feeds to `induction_on_mulSystem`
+  of **WeakConvergence** Milestone 5 is the same `K` that milestone's own
+  acceptance example uses for the martingale property. The two roadmaps meet on
+  one instance, and that they name it the same way is part of the test.
+* **The filtration is a hypothesis, not a convention.** Take `Ω = F × {0,1}` with
+  the second factor independent of `X` and fair, `𝓖 t` the σ-algebra generated
+  by `X` up to `t` **and** the coin, and `Y t = mpProcess q c X f g t + coin`.
+  The right hand side of `isMPSolutionFor_iff_forall_fdd` tests only against
+  products in the coordinates of `X`, so it cannot see the coin, while
+  `IsMPSolutionFor A q c X 𝓖 P` for the enlarged `𝓖` is a strictly stronger
+  statement. This is the instance on which the direction from right to left
+  fails for a larger filtration, and it is why the equivalence names the natural
+  filtration.
+* **Bounded continuous suffices exactly when `E` is metrizable.** For `E = ℝ`
+  both forms of `isMPSolutionFor_iff_forall_fdd` hold, and the bounded
+  continuous form is the one Milestone 10 consumes. For `E` a measurable space
+  with no topology only the bounded measurable form is even statable, which is
+  why the milestone carries both and marks which hypothesis each needs.
+
 ## Milestone 4: jump processes
 
 A concrete family of solutions, built without any of the theory above. Index
@@ -343,6 +436,42 @@ A concrete family of solutions, built without any of the theory above. Index
   same two statements. This is the family that supplies the examples for
   Milestones 7 and 9.
 
+**Acceptance examples.**
+
+* **The Poisson process as the degenerate jump process.** `E = ℕ`,
+  `lam x = 1`, `mu x = Measure.dirac (x + 1)`. Then
+  `A f x = f (x+1) - f x`, `jumpProcess lam mu (Measure.dirac 0)` is the Poisson
+  process of rate `1`, and `exists_unique_of_bounded` must return uniqueness
+  with one dimensional distributions `Measure.dirac 0 |>.map (exp (t • A))`,
+  which is the Poisson law of mean `t` because `exp (t • A)` is the Poisson
+  semigroup on `ℕ`. Every item of the milestone is instantiated at once, and the
+  answer is one a reader can check against
+  `ProbabilityTheory.poissonMeasure`
+  (`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`).
+* **A two state chain, where the exponential series is a matrix exponential.**
+  `E = {0,1}`, `lam ≡ 1`, `mu x = Measure.dirac (1 - x)`. Then `A` is the matrix
+  `!![-1, 1; 1, -1]` on `E → ℝ`, `‖A f‖ ≤ 2 * ‖f‖` is `norm_apply_le` at
+  `L = 1`, and the one dimensional law from `0` is
+  `((1 + exp (-2*t))/2, (1 - exp (-2*t))/2)`. This is the smallest instance on
+  which `exists_unique_of_bounded` produces a number, and a sign error in the
+  operator is visible in it.
+* **Explosion, which is what the unbounded case is about.** `E = ℕ`,
+  `lam n = 2 ^ n`, `mu n = Measure.dirac (n + 1)`. The jump times have
+  `∑ n, 2 ^ (-n) < ∞` in expectation, so the process explodes almost surely, the
+  global martingale problem has **no** solution with values in `ℕ`, and
+  `jumpProcess_isLocalMPSolution` is what survives. With `lam n = n` instead the
+  sum diverges, there is no explosion, and the global statement holds. This pair
+  is the acceptance test for the explosion criterion.
+* **The path dependent variant is not a state dependent one.** The Hawkes
+  process of the manuscript's `ex:hawkes`: `E = ℕ`,
+  `mu (t, ω, ·) = Measure.dirac (ω t⁻ + 1)` and the rate
+  `Λ t ω = μ₀ + ∫ s in Set.Ico 0 t, φ (t - s) ∂ω`, a predictable functional of
+  the whole past and not a function of `ω t`. It is a jump process in the sense
+  of the last item of this milestone and of none of the earlier ones, which is
+  why the variant is stated separately; and it never explodes, whatever the mass
+  of `φ`, so it is an instance of the **global** statement and not only of the
+  local one.
+
 ## Milestone 5: mixtures, shifts and the restart lemma
 
 * `MPSolutions.isConvex` and, more generally,
@@ -366,6 +495,29 @@ A concrete family of solutions, built without any of the theory above. Index
   property; it is four lines and everything in Milestone 6 rests on it.
 * `restart_canonical`, the special case `Ω = F`, `X = id`, where the conclusion
   reads `(Z • P).map (θ r) ∈ MPSolutions (𝓧° r)`.
+
+**Acceptance examples.**
+
+* **The shifted problem of the manuscript's `ex:shiftXA`.** For the family
+  `mpFamily A q c X` with a shift invariant clock, the shifted family `𝓧° r` is
+  again `mpFamily A q c X` up to the `𝓕° r`-measurable constant `κ` = the
+  compensator up to `r`. Instantiated at the Poisson process of Milestone 4 and
+  `r = 1`: `θ 1` is the time shift, and `restart` says that under `Z • P` the
+  process `N (1 + ·) - N 1` is again a Poisson process. That the constant `κ`
+  cannot be dropped is visible there — `N (1 + t)` is not a martingale after
+  compensation by `t` alone, only `N (1+t) - N 1` is.
+* **A clock that is not shift invariant breaks the shift system.**
+  `q = Measure.dirac 1` on `Set.Ici (0:ℝ)` and `r = 1/2`. The compensator of the
+  shifted process integrates over `Clock.interval q c 0 t` translated by `1/2`,
+  which carries no atom, so `mpFamily A q c X ∘ θ r` is not of the required
+  form. `Clock.IsShiftInvariant` is therefore a hypothesis of the shift system
+  and not of the clock, and this is the instance that shows it.
+* **Mixtures, at the smallest scale.** Two solutions `P 0` and `P 1` of the same
+  martingale problem with different initial laws `δ 0` and `δ 1`: the mixture
+  `(P 0 + P 1)/2` is a solution with initial law `(δ 0 + δ 1)/2`, by
+  `MPSolutions.isConvex`. It is **not** the solution started from the mean, and
+  no item of the milestone claims it is; the disintegration statement is what
+  recovers `P 0` and `P 1` from it, and requires `E` standard Borel.
 
 ## Milestone 6: uniqueness and the Markov property, without an operator
 
@@ -408,6 +560,33 @@ of the one dimensional distributions of the shifted problems.
   stopping time. State the transition operator `T t f x = ∫ f (ω t) ∂(P x)` and
   prove `𝔼[f (X (τ + t)) | 𝓖 τ] =ᵐ T t f (X τ)`.
 
+**Acceptance examples.**
+
+* **The two state chain of Milestone 4, all the way through.** `E = {0,1}`,
+  `lam ≡ 1`, `mu x = Measure.dirac (1 - x)`. `exists_unique_of_bounded` supplies
+  uniqueness of the one dimensional distributions for every initial law, so
+  `isMarkov_of_unique_onedim` must return the Markov property and
+  `subsingleton_mpSolutions_of_unique_onedim` uniqueness, with transition
+  operator `T t = exp (t • A)` — which is the `T t f x = ∫ f (ω t) ∂(P x)` of
+  `isStrongMarkov` computed. Every hypothesis of the milestone is discharged by
+  Milestone 4 on this instance, so it is the one that checks the interfaces
+  between the two match.
+* **Uniqueness of the one dimensional laws is genuinely weaker than uniqueness.**
+  The hypothesis of this milestone is that the one dimensional distributions of
+  the shifted problems are determined, for **every** shift; dropping the shift
+  and asking it at `r = 0` only is not enough, since the finite dimensional
+  distributions are built from the shifted problems by `restart`. So the
+  hypothesis must quantify over `r`, and an implementer who states it at one
+  time proves a different theorem.
+* **The converse direction, and where it is not.** Brownian motion is the unique
+  solution of the martingale problem for `(f, f''/2)` on `Cc^∞(ℝ)` — that is
+  Ethier–Kurtz Theorem 4.4.1, a Hille–Yosida statement, and it is **not** an
+  item of this milestone. Running the milestone the other way on the same
+  instance: given that the one dimensional laws of every solution are Gaussian,
+  the milestone concludes the Markov property and uniqueness. The two together
+  are the full picture, and the acceptance test is that this instance is
+  covered by exactly one half of it.
+
 ## Milestone 7: localization
 
 Stage (L) of Milestone 2 — `[LinearOrder ι]`, `[OrderBot ι]`,
@@ -443,6 +622,32 @@ this milestone speaks about `Locally`, which is declared under it.
 * The jump processes of Milestone 4 with unbounded rate as the example, and the
   path dependent variant as the example where the local problem is the primary
   one and the global problem needs an extra integrability hypothesis.
+
+**Acceptance examples.**
+
+* **The exploding jump process.** `E = ℕ`, `lam n = 2 ^ n`,
+  `mu n = Measure.dirac (n + 1)`, and `τ k` the `k`-th jump time. This is the
+  instance for which `IsLocalMPSolution` holds and `IsMPSolution` does not, so
+  the two predicates of Milestone 2 are genuinely different here, and
+  `localizingSystem_of_boundedJumps` applies with jump size `1`.
+* **The running supremum is not a convenience.** For a càdlàg `Y` with
+  `Y 0 = 0`, the hitting time `inf {t | n ≤ ‖Y t‖}` of the norm is not a
+  stopping time for `𝓕` itself — it is the debut of the open set
+  `{x | n < ‖x‖}` only after passing to `⨅ s > t, 𝓕 s` — while
+  `inf {t | n ≤ ⨆ s ∈ Set.Iic t, ‖Y s‖}` is, the running supremum being
+  adapted and non-decreasing so that `{τ ≤ t}` is `{n ≤ ⨆ s ∈ Set.Iic t, ‖Y s‖}`.
+  Concretely, on `Y t = Set.indicator (Set.Ici 1) 1` the two agree; on a path
+  that approaches level `n` from below without reaching it before time `1` and
+  crosses at `1` they do not. This is the distinction the milestone exists to
+  make, and a formalization that used the norm hitting times would be stating
+  the theorem for the right continuous filtration.
+* **The path dependent variant, where the local problem is primary.** The Hawkes
+  process of `ex:hawkes` with a rate that is a functional of the past: the
+  stopped processes are martingales for every localizing time by (L3), while the
+  global martingale property needs `𝔼[N t] < ∞`, which the manuscript supplies
+  through the renewal equation `m = μ₀ + φ * m`. So the milestone's two levels
+  are both instantiated on one process, and the extra hypothesis for the global
+  level is visible as a separate fact about `φ`.
 
 ## Milestone 8: duality
 
@@ -1143,6 +1348,53 @@ order.
   distributions, hence, with Milestone 6, gives uniqueness. This is the standard
   application and is the reason the milestone exists.
 
+**Acceptance examples.**
+
+* **The diamond, which fixes the convention.** `ι = {0 < a, b < c}` with
+  `m a = 1`, `m b = 4`, `m c = 2`, so that `m c ^ 2 = m a * m b`. In the
+  **predictable** convention `V s a = if a < s then m a else 0` is nilpotent and
+  `duality_of_atomic` gives `Φ c 0 = Φ 0 c`. In the **optional** convention
+  `V s a = if a ≤ s ∧ a ≠ 0 then m a else 0` has `m c` on the diagonal, `𝟙` is
+  orthogonal to the left eigenvector of `V` for that eigenvalue, and the
+  conclusion is **false**. So the convention is a hypothesis of
+  `duality_of_atomic` and not a limitation of the proof, and this is the
+  instance that shows a formalization cannot quietly state it for both.
+* **The antichain of `ex:antichain`, which fixes the integrability.**
+  `ι = {0} ∪ {a i | i : ℕ} ∪ {t✶}` with the `a i` pairwise incomparable,
+  `m i > 0` summable of total mass `M`, tails `σ i`, and
+  `κ (a i) (a j) = sgn (i - j) / (σ (i ⊓ j) * σ (i ⊓ j + 1))`,
+  `κ (a j) 0 = κ (a j) t✶ = M⁻¹ ^ 2`, `γ = κ / 2`. Every row converges
+  absolutely — `∑' j, m j * |κ (a j) (a i)| = 2 / σ i - 1 / M` — so all the
+  integrals of the increment representation exist, while
+  `∑' (i,j), m i * m j * |κ (a i) (a j)|` diverges, and
+  `Φ t✶ 0 - Φ 0 t✶ = 1 / M ≠ 0`. This is `exists_atomic_antichain_duality_ne`,
+  and it refutes at once: the extension of `duality_of_atomic` from finite to
+  countable atom sets, the dropping of the `m ⊗ m`-integrability from
+  `duality_of_atomic_antichain_of_integrable`, and — since `Φ` takes three
+  values — any attempt to replace that integrability by boundedness of `Φ`.
+* **The three order types an interval-finite chain must survive.** Atoms of type
+  `ω` accumulating at `t` (`a i = 1 - 2 ^ (-i)`), of type `ω*` accumulating at
+  `0` (`a i = 2 ^ (-i)`), and of type `ζ` accumulating at both. Each is
+  interval-finite, so `duality_of_atomic_intervalFinite` applies and sharpens to
+  `Φ (u i) (u j) = Φ (u j) (u i)` at every pair. Two `ζ`-chains stacked one
+  above the other are **not** interval-finite although every atom has both
+  neighbours, so the same item does not apply and
+  `duality_of_atomic_twoChains_of_bounded` is what covers it. The pair is the
+  acceptance test for the reach of the one step induction.
+* **The clock with no atoms, and the clock with both.** For `q = volume` on
+  `Set.Icc 0 t✶`, `duality_of_atomless` gives `Φ t 0 = Φ 0 t` at **every** `t`
+  by the time change `Q t = q (Set.Iio t)`, not merely almost every `t`; for
+  `q = volume + ∑ i ≤ N, m i • Measure.dirac (a i)`, `Clock.stretches` computes
+  `Set.range Q` as the union of the intervals `S j` with gaps of length exactly
+  `m j` at the atoms, and `duality_of_mixed` closes it with no lower bound on
+  the diffuse masses `c j` — so `c j = 0` for some `j`, a stretch degenerate to
+  a point, is part of the acceptance test and not an excluded case.
+* **`duality_discrete` as the collapse test.** `ι = ℕ` with counting measure is
+  the case `m ≡ 1` of `duality_of_atomic`, and it follows from `chain_identity`
+  alone. Any development of the milestone must reproduce it without invoking the
+  matrix algebra, the certificates or the complex analysis; if it cannot, the
+  layering of the milestone is wrong.
+
 ## Milestone 9: continuous time martingales and the càdlàg modification
 
 Fix `[LinearOrder ι]` with the order topology and a countable dense `D ⊆ ι`, and
@@ -1437,6 +1689,54 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   separate exactly at the atoms of the clock, and the example is what makes the
   separation checkable.
 
+**Acceptance examples.**
+
+* **A submartingale with no càdlàg modification, and the exact obstruction.**
+  `ι = Set.Ici (0:ℝ)`, `Y t = Set.indicator (Set.Ioi 1) 1` deterministic. It is
+  a submartingale, its paths are already càdlàg, and `t ↦ 𝔼[Y t]` is **not**
+  right continuous at `1`. Replacing it by `Y' t = Set.indicator (Set.Ici 1) 1`
+  gives the same left limits and a right continuous mean. So
+  `Submartingale.cadlagModif_ae_eq_iff_continuousWithinAt_integral` must
+  distinguish the two: `cadlagModif Y` is `Y'`, which is not a modification of
+  `Y` at `t = 1`, while it is one of `Y'`. This is the pair that shows the
+  criterion is an equivalence and not a technical hypothesis, and it is why the
+  martingale case (`Martingale.cadlagModif_ae_eq`) is automatic — the mean is
+  constant there.
+* **Optional sampling needs the boundedness, or the two hypotheses.**
+  `ι = Set.Ici (0:ℝ)`, `Y` a standard Brownian motion,
+  `τ = inf {t | Y t = 1}`, which is almost surely finite and not bounded.
+  Then `𝔼[stoppedValue Y τ] = 1 ≠ 0 = 𝔼[Y 0]`, so
+  `Submartingale.stoppedValue_min_le_condExp` for a bounded `τ` does not extend
+  by itself; the uniform integrability hypothesis
+  `Tendsto (fun T ↦ ∫ ω in {ω | T < τ ω}, ‖Y T ω‖ ∂P) atTop (𝓝 0)` of the second
+  item fails on it, and must therefore be carried. `τ ⊓ T` for fixed `T` is the
+  bounded instance on which the first item does apply.
+* **Doob's `Lᵖ` inequality, computed.** For `Y` a standard Brownian motion and
+  `p = 2`, `Martingale.eLpNorm_iSup_norm_le` must give
+  `𝔼[(⨆ t ∈ Set.Iic T, |Y t|) ^ 2] ≤ 4 * 𝔼[Y T ^ 2] = 4 * T`. The measurability
+  of the supremum here is exactly the reduction to `Set.Iic T ∩ ℚ` that the
+  milestone states as a lemma of its own; without right continuity the supremum
+  over an uncountable set need not be measurable, which is why that reduction is
+  an item and not a step.
+* **The coin at an atom, which separates the two theorems of this milestone.**
+  `E = Bool`, `q = Measure.dirac 1`, and the solution that flips a fair coin at
+  time `1` and is constant on either side. It **has** a càdlàg modification —
+  `exists_cadlag_modification_of_isRegularizingClass` asks nothing of the clock
+  — and it is **not** quasi-left-continuous, since `X (s n) → X 1⁻ ≠ X 1` with
+  probability `1/2` for any `s n ↑ 1`. This is
+  `not_isQuasiLeftContinuous_of_atom`, and the same process with `q = volume` is
+  quasi-left-continuous by `isQuasiLeftContinuous_of_isMPSolutionFor`. The pair
+  fixes where atomlessness is a hypothesis and where it is not.
+* **Cutting down to an open subset.** `E = ℝ`, `U = Set.Ioo (-1) 1`, and the
+  bump sequence `f n x = min 1 (n * Metric.infDist x Uᶜ)` of Milestone 2 with
+  `g n = 0`. For a solution started inside `U` whose paths do not leave it,
+  `IsMPSolutionFor.ae_forall_mem_of_tendsto` must conclude
+  `∀ᵐ ω ∂P, ∀ t, X t ω ∈ U` and càdlàg-ness as a `U`-valued map. For a Brownian
+  motion, which does leave `U`, the hypothesis `f n x → Set.indicator U 1 x`
+  still holds while the conclusion fails — because `(f n, 0)` is not in `A`
+  there, the compensator of a bump function under `f''/2` not being `0`. The
+  contrast is what shows the hypothesis is about `A` and not about the path.
+
 ## Milestone 10: the abstract convergence theorem
 
 Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
@@ -1468,6 +1768,37 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   statement on a larger space and costs nothing once that one is proved.
 * Uniform integrability of the limit family under `P`, as a separate lemma; it
   is what makes the passage from `D` to the whole index work.
+
+**Acceptance examples.**
+
+* **The rescaled Markov chain of the manuscript's `ex:invariance`.**
+  `E = ℝ^d`, `q n = (1/n) * ∑ k ≥ 1, δ (k/n)` with the optional convention,
+  `X n t = Ξ n ⌊n * t⌋` for a chain with one step kernel `P n`, and
+  `Y n t = f (Ξ n ⌊n t⌋) - ∑ j < ⌊n t⌋, (P n f - f) (Ξ n j)` — the Doob
+  decomposition read along the embedded grid. Hypothesis (c) of
+  `mpSolution_of_tendsto` is that the tested increments vanish, and it holds
+  because each `Y n` is an exact martingale; (a) and (b) are the convergence and
+  uniform integrability of finitely many real variables. The conclusion is that
+  the limit solves the martingale problem for the limiting operator. This is the
+  invariance principle, and it instantiates every hypothesis of the milestone at
+  once.
+* **Hypothesis (a) is about real random variables and carries no topology.** In
+  the example above the path space `F` is `D ι E` and the functionals
+  `Y° t` are evaluations, but the statement of (a) never mentions `F`'s
+  topology: it asks for convergence in distribution of `Y° r (X n)` and of
+  `(Y° t - Y° s) * Z (X n)`, finitely many real variables at a time. The
+  acceptance test is that `mpSolution_of_tendsto` can be applied with `F` a bare
+  measurable space, and that `mpSolution_of_tendsto_of_pContinuous` — which does
+  need a separable metric `F` — is derived from it and not the other way round.
+* **`PContinuous` is not continuity**, and the manuscript's
+  `ex:atomicdiscontinuity` is why. The evaluation `ψ = π 1` on `D ℝ ℝ` is
+  discontinuous at every path jumping at `1`; it is nevertheless `PContinuous`
+  for every `P` with `P {ω | ω 1⁻ = ω 1} = 1`, the certifying set `C` being that
+  event. For a limit law charging paths that jump at `1` — the generic case when
+  the clock has an atom there — no `C` works, and
+  `mpSolution_of_tendsto_augmented` is what remains: adjoining the coordinate at
+  `1` to the path space makes the functional continuous. This pair fixes the
+  division of labour between the two corollaries.
 
 ## Milestone 11: the Skorokhod instances
 
@@ -1533,6 +1864,45 @@ roadmap **SkorokhodSpace**.
   theorem of **WeakConvergence** and Fubini. State also the tightness criterion
   in that topology: a uniform bound on the conditional variation
   `sup over subdivisions of 𝔼[∑ ‖𝔼[X (t (i+1)) - X (t i) | 𝓕 (t i)]‖]`.
+
+**Acceptance examples.**
+
+* **Donsker, assembled from the items in order.** `E = ℝ`,
+  `X n t = (1/√n) * ∑ k ≤ ⌊n t⌋, ξ k` for i.i.d. centred `ξ k` of variance `1`,
+  and `A = {(f, f''/2) | f ∈ Cc^∞(ℝ)}`. `isTight_map_postcomp_of_exists_martingale`
+  gives tightness of each `postcomp f ∘ X n`,
+  `SkorokhodSpace.isTightMeasureSet_iff_forall_postcomp` lifts it to `{X n}`,
+  `isRelativelyCompact_of_approx` makes the family relatively compact,
+  `mpSolution_of_tendsto_cadlag` identifies every limit point as a solution for
+  `A`, and `tendsto_of_isRelativelyCompact_of_unique` upgrades relative
+  compactness to convergence once Milestone 6 supplies uniqueness. Each of the
+  five items is used exactly once and in this order, which is the acceptance
+  test for the milestone as a chain.
+* **The times `D` must avoid the fixed discontinuities.** In
+  `mpSolution_of_tendsto_cadlag`, `D` is taken to be the set of times at which
+  the limit has no fixed discontinuity. On the pair
+  `X n = Set.indicator (Set.Ici (1 + 1/n)) 1` and
+  `X = Set.indicator (Set.Ici 1) 1` of **SkorokhodSpace** Milestone 4, `X n → X`
+  in `D ι ℝ` while the finite dimensional distributions at `t = 1` do not
+  converge; so a version of the item with `D` an arbitrary dense set is false,
+  and `SkorokhodSpace.exists_countable_dense_continuity` is what supplies the
+  right `D`.
+* **The pathwise form is weaker where it matters.** Take `f n = f` and
+  `g n = g + n * Set.indicator {x n} 1` for points `x n` that the processes
+  `X n` visit with probability at most `1/n²`. Then `‖g n - g‖ = n` does not
+  tend to `0`, so `mpSolution_of_tendsto_cadlag` does not apply, while
+  `𝔼^{P n} ∫_0^t ‖(g n - g) (X n u)‖ du → 0` and
+  `mpSolution_of_tendsto_cadlag_of_pathwise` does. This is the instance that
+  shows the second item is not a restatement of the first.
+* **Separating is not convergence determining, and the milestone must not
+  confuse them.** In `isRelativelyCompact_of_approx` the algebra in the domain
+  of `A` is used twice: for density in the topology of uniform convergence on
+  compacts, which is Stone–Weierstrass proper, and for being separating, which
+  is `IsSeparating.of_subalgebra`. On `E = ℝ` the trigonometric algebra of
+  **WeakConvergence** Milestone 1 is separating and does **not** strongly
+  separate points, so it is not convergence determining by that route; the item
+  must therefore not claim the stronger property, and this is the instance on
+  which such a claim would be checked.
 
 ## Milestone 12: existence from a dual process
 

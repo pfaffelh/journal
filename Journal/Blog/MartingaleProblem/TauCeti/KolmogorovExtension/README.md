@@ -89,6 +89,30 @@ be reviewed on their own terms.
   `isCompactSystem_isCompact_isClosed`, and the passage to the cylinders over
   them is what this item adds.
 
+**Acceptance examples.**
+
+* **The decreasing cylinders that do not close up.** `ι = ℕ`, `α i = ℝ`,
+  `P J` the standard Gaussian on `Π j : J, ℝ`, and
+  `C n = {x | ∀ k ≤ n, |x k| ≤ a k}` with `a k` chosen so that
+  `∏ k, P {|y| ≤ a k} = 1/2`. The `C n` decrease, each is a cylinder of content
+  at least `1/2`, and `⋂ n, C n` is nonempty — it contains the zero sequence.
+  `AddContent.isSigmaSubadditive_of_innerRegular` must produce exactly this
+  conclusion from `IsCompactSystem.nonempty_iInter`, applied to the compact
+  boxes `Π k ≤ n, Set.Icc (-a k) (a k)` inside the `C n`. Replacing the boxes by
+  the open sets `{|x k| < a k}` breaks it: the intersection of a decreasing
+  sequence of nonempty open cylinders can be empty, which is why the compact
+  system and not mere nonemptiness is the hypothesis.
+* **The inner regularity hypothesis is sufficient and not necessary.** Let
+  `α i = ℝ` carry the countable–cocountable σ-algebra and `μ A = 0` for `A`
+  countable, `1` for `A` cocountable — a probability measure. Its measurable
+  compact sets are the countable compacts, of measure `0`, there being no
+  cocountable compact subset of `ℝ`; so inner regularity by compact sets fails
+  as badly as possible, and Milestone 1 does not apply. The projective limit of
+  the product family nevertheless exists, being
+  `MeasureTheory.Measure.infinitePi`. The milestone must therefore be stated as
+  a sufficient condition, and no later item may read the failure of inner
+  regularity as the failure of extension.
+
 ## Milestone 2: the theorem
 
 * `MeasureTheory.projectiveFamilyContent_isSigmaSubadditive`, under
@@ -108,6 +132,34 @@ be reviewed on their own terms.
   `MeasureTheory.IsProjectiveLimit.unique` of the head list, applied to
   `isProjectiveLimit_projectiveLimit`.
 
+**Acceptance examples.**
+
+* **Against the product measure, which Mathlib builds independently.**
+  `α i = ℝ` and `P J = Measure.pi (fun j : J ↦ μ j)` for probability measures
+  `μ i`. This family is projective by
+  `MeasureTheory.isProjectiveMeasureFamily_pi`, so `projectiveLimit P hP` is
+  defined; and `MeasureTheory.Measure.isProjectiveLimit_infinitePi` says
+  `Measure.infinitePi μ` is a projective limit of the same family. By
+  `IsProjectiveLimit.unique` the two must be **equal**. This is the sharpest
+  acceptance test the milestone admits, because `Measure.infinitePi` is built
+  along a completely different route — through `piContent_tendsto_zero` and a
+  countable set of coordinates — and under no topological hypothesis at all.
+* **Against Ionescu–Tulcea on `ℕ`.** `ι = ℕ`, `α n` Polish, and `P J` the
+  marginals of a family of kernels. Then `projectiveLimit P hP` and
+  `ProbabilityTheory.Kernel.traj` are projective limits of the same family, so
+  they agree, again by `IsProjectiveLimit.unique`. The manuscript records the
+  same collapse in `fact:kolmogorov`: for a countable `𝕋` that can be
+  enumerated, Ionescu–Tulcea suffices and the theorem of this milestone is not
+  needed.
+* **Wiener measure on an uncountable index.** `ι = Set.Ici (0:ℝ)`, `α i = ℝ`,
+  and `P J` the centred Gaussian on `Π j : J, ℝ` with covariance
+  `fun s t ↦ min s t`. Consistency is the marginal property of Gaussian
+  vectors, `ℝ` is Polish, so `isProjectiveLimit_projectiveLimit` yields a
+  probability measure on `Π t : Set.Ici (0:ℝ), ℝ` with the Brownian finite
+  dimensional distributions. Neither `Kernel.traj` nor `infinitePi` reaches it:
+  the index is uncountable and the coordinates are dependent. This is the
+  instance for which the milestone exists.
+
 ## Milestone 3: the standard applications
 
 * `exists_process_of_isProjectiveMeasureFamily`: for Polish `α i` and a
@@ -122,3 +174,30 @@ be reviewed on their own terms.
 * The extension of a consistent family of transition kernels along an arbitrary
   totally ordered index, generalizing the sequential
   `ProbabilityTheory.Kernel.traj`.
+
+**Acceptance examples.**
+
+* **Brownian motion as a process.** With the family of the previous milestone,
+  `exists_process_of_isProjectiveMeasureFamily` must return the coordinate
+  process `W t ω = ω t` on `Π t : Set.Ici (0:ℝ), ℝ` together with the statement
+  that its finite dimensional laws are the prescribed Gaussians, stated through
+  `ProbabilityTheory.isProjectiveLimit_map`. The paths of that process are not
+  continuous and no statement of this roadmap says they are: continuity is a
+  modification theorem and belongs to **SkorokhodSpace**. An item that promised
+  a process on `C(ι, E)` here would be false, `Π t, ℝ` carrying the product
+  σ-algebra in which `{ω | Continuous ω}` is not measurable.
+* **A Markov semigroup along `[0,∞)`.** `E` Polish, `μ t (x, ·)` a family of
+  kernels with `μ 0 (x, ·) = δ x` and Chapman–Kolmogorov, `ν` an initial law.
+  This is the manuscript's `fact:kolmogorov` verbatim, and the third item must
+  produce from it the law on `E^[0,∞)` under which the coordinate process is
+  Markov with those transitions. Instantiating `μ t (x, ·)` as the Gaussian
+  `N(x, t)` recovers the previous example, so the two items overlap on one
+  instance, and that they agree on it is the acceptance test.
+* **Independent coordinates, and the boundary of the Markov form.** A family of
+  kernels ignoring its state argument, `μ t (x, ·) = ν t` for all `x`, gives the
+  product family, and the second item — `isProjectiveLimit_infinitePi` recovered
+  as a special case — must return `Measure.infinitePi` on it. It is **not** an
+  instance of the Markov form of the previous example: `μ 0 (x, ·) = δ x` fails
+  unless `E` is a single point. So the roadmap needs both the projective-family
+  statement and the kernel statement, and neither subsumes the other; an item
+  that offered only the kernel form would not cover the product measure.

@@ -146,6 +146,38 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 * Independence of the base point: two base points give exhaustions each of which
   refines the other after finitely many steps.
 
+**Acceptance examples.**
+
+* **The four running instances, computed.** On `ι = ℝ` with `t₀ = 0`,
+  `B m = Set.Icc (-m) m`, `exhaustionMin = -m`, `exhaustionMax = m` and
+  `clamp m = fun t ↦ min (max t (-m)) m`. On
+  `ι = AddSubgroup.zmultiples (1 : ℝ)` with `t₀ = 0`, `B m` is the finite set
+  `{-⌊m⌋, …, ⌊m⌋}` and `clamp` is the same formula; `isCompact_exhaustion` here
+  is compactness of a finite set, so the milestone's exhaustion machinery must
+  not silently assume an interval. On `ι = Set.Icc (0:ℝ) T` with `t₀ = 0`,
+  `B m = Set.Icc 0 (min m T)` and `clamp m = id` as soon as `T ≤ m`, which is
+  the degenerate case every later induction over `m` has to survive.
+* **A metric that is not `AdditiveDist`.** Put `dist x y = min 1 |x - y|` on
+  `ℝ`. This is a metric inducing the order topology, and it is not additive:
+  `dist 0 3 = 1` while `dist 0 2 + dist 2 3 = 2`. `AdditiveDist.orderIso_isometry_real`
+  fails on it for the same reason — a bounded metric admits no isometry onto an
+  unbounded closed subset of `ℝ` — so the class is not decoration, and the
+  embedding theorem is where it is spent.
+* **`dist_eq_abs_sub_of_sameSide` needs its hypothesis.** On `ℝ` with `t₀ = 0`,
+  `s = -1`, `t = 1`: the left hand side is `2` and
+  `|dist 0 1 - dist 0 (-1)| = 0`. Any proof that drops the same-side clause is
+  refuted here, and this is why Milestone 3 anchors its time changes at `t₀`.
+* **A window that is not an interval of `ℝ`.** `ι = Set.Icc (0:ℝ) 1 ∪ {2}`, a
+  closed subset of `ℝ` and hence an instance. With `t₀ = 0` and `m = 3/2`,
+  `B m = Set.Icc 0 1`, so `exhaustionMax = 1` and `clamp (3/2) 2 = 1`. That the
+  value lands in `B m` again is `ordConnected_exhaustion` and not the formula:
+  on the three point order `{0 < 1 < 2}` with `dist 0 1 = 2`, `dist 1 2 = 1`,
+  `dist 0 2 = 1` — a metric, `2 ≤ 1 + 1` — the ball `B 1` around `t₀ = 0` is
+  `{0, 2}`, which is not order convex, and `clamp 1 1 = min (max 1 0) 2 = 1`
+  leaves the window. That metric is not `AdditiveDist`, which is exactly the
+  point: order convexity of the windows is a theorem about the class, not about
+  `clamp`.
+
 From Milestone 3 on, `ι` denotes an index with these instances and `E` a Polish
 space with metric `r`. Milestones 2 and 8 are the exceptions and state their
 own, weaker hypotheses item by item. In Milestone 2 the càdlàg predicate and
@@ -289,6 +321,40 @@ Under (B), with `E` a pseudometric space:
   in `D`, which is what the disjunction above says and what Billingsley requires
   of the dense set in `D[0,1]`.
 
+**Acceptance examples.**
+
+* **The single step, and its mirror image.** `ι = ℝ`, `E = ℝ`,
+  `f = Set.indicator (Set.Ici 1) 1`. Then `IsCadlag f`,
+  `Function.leftLim f 1 = 0 ≠ 1 = f 1`, `leftJumpSet f = {1}`, and
+  `largeLeftJumpSet f ε = {1}` for `ε ≤ 1` and `∅` beyond. The mirror
+  `g = Set.indicator (Set.Iic 1) 1` must **not** satisfy `IsCadlag`: it is left
+  continuous with right limits. A predicate that swapped `Set.Ioi` for
+  `Set.Iio` in `Function.RightContinuous`, or that asked for right limits
+  instead of left ones, accepts `g` and rejects `f`, so this pair pins the
+  orientation of the whole milestone.
+* **Jumps accumulating from the right.** `ι = ℝ`, `E = ℝ`,
+  `f = ∑' n, 2⁻¹ ^ n * Set.indicator (Set.Ici (1 / (n + 1))) 1`. This is càdlàg,
+  including at `0`, where the left limit is `0` and right continuity holds
+  because the tail mass beyond `1/(n+1)` is `2⁻¹ ^ n`. Its `leftJumpSet` is
+  infinite and **has** the accumulation point `0`, while each
+  `largeLeftJumpSet f ε` is finite. So `countable_leftJumpSet` cannot be proved
+  by showing that `leftJumpSet` has no accumulation point; the decomposition
+  over `ε` is not a convenience. This is also the path on which
+  `tendsto_modulus` of Milestone 7 is not a statement about finitely many jumps.
+* **The discrete index, where everything is trivially true.**
+  `ι = AddSubgroup.zmultiples (1 : ℝ)`. Every `f : ι → E` is càdlàg,
+  `Function.leftLim f x = f x`, `leftJumpSet f = ∅`, and each of the four
+  statements under (B) holds vacuously. The acceptance test is that the
+  instantiation goes through without an exhaustion argument, since (B) itself
+  fails here — `Set.Ioo t (t+1) = ∅`.
+* **The two witnesses already in the text, as tests of the bundles.**
+  `ι = ℕ ∪ {ω}` with `ω` incomparable refutes
+  `IsCadlag.isBounded_image_of_isCompact` under (A), so an implementer who
+  states that item under `[Preorder ι]` fails on it; and the pair `f = 0`,
+  `g = Set.indicator {1} 1` on `ι = Set.Icc (0:ℝ) 1` with
+  `D = Set.Ico (0:ℝ) 1 ∩ ℚ` refutes `IsCadlag.eq_of_eqOn_dense` when the maximal
+  point is left out of `D`.
+
 ## Milestone 3: time changes
 
 * `TimeChange ι`, the type of bi-Lipschitz order isomorphisms `λ : ι ≃o ι`.
@@ -394,6 +460,35 @@ Under (B), with `E` a pseudometric space:
 * For the index `ℝ`, the identification of `norm` with Billingsley's
   `sup_{s < t} |log ((λ t - λ s) / (t - s))|`.
 
+**Acceptance examples.**
+
+* **The dilations of `ℝ`, computed.** For `c > 0` and `λ = (c • ·)` one has
+  `lipConst λ = c`, `lipConst λ⁻¹ = c⁻¹` and hence
+  `TimeChange.norm λ = |Real.log c|`. In particular `norm double = Real.log 2`,
+  `norm 1 = 0`, and `norm λ⁻¹ = norm λ` is `|log c⁻¹| = |log c|`. The dilations
+  form a one parameter subgroup on which `norm_mul_le` is an equality, so they
+  are the instance on which the length function can be read off in closed form
+  and compared with Billingsley's `sup_{s<t} |log ((λ t - λ s)/(t - s))|`.
+* **`steep * double` on `B 1`**, which is `not_normOn_mul_le` run as a
+  computation: `normOn 0 1 steep = 0` and `normOn 0 1 double = Real.log 2`,
+  while `normOn 0 1 (steep * double) ≥ Real.log 200`. A `distOn` built on
+  `normOn` therefore has no triangle inequality, and Milestone 4 must use the
+  global `norm`. The witnesses are `TimeChange.steep = fun x ↦ max x (100*x-99)`
+  and `TimeChange.double = fun x ↦ 2 * x`.
+* **The translations, which is why `fixing t₀` exists.** On `ι = ℝ`,
+  `λ = (· + a)` is an order isomorphism with `lipConst λ = lipConst λ⁻¹ = 1`,
+  hence `norm λ = 0`, and it moves every point by `|a|`. So
+  `dist_le_of_norm_le` is false without the anchor `λ t₀ = t₀`, at `γ = 0`
+  already, and the metric of Milestone 4 would not separate points. On
+  `ι = Set.Ici (0:ℝ)` there are no translations, which is why Billingsley never
+  meets this.
+* **A subsingleton index.** `ι = Set.Icc (0:ℝ) 0`. Every constant is an
+  admissible Lipschitz constant, so `lipConst λ = 0` for the only time change
+  and `norm λ = Real.log 0 = 0` by the junk value. `norm_one`, `norm_mul_le` and
+  `normOn_one` must all still hold here, which is why each of them splits on
+  `subsingleton_or_nontrivial ι`. A proof that argues `1 ≤ lipConst` outright is
+  wrong on this index.
+
 ## Milestone 4: the space and its metric
 
 * `SkorokhodSpace ι E`, notation `D ι E`, the type of càdlàg maps `ι → E`,
@@ -458,6 +553,39 @@ Under (B), with `E` a pseudometric space:
 * Evaluation: `SkorokhodSpace.continuousAt_eval` — `f ↦ f t` is continuous at
   every `f` with `f⁻ t = f t`, and discontinuous at every other `f`.
 
+**Acceptance examples.**
+
+* **The sliding step: the metric is not the uniform metric.** `ι = ℝ`, `E = ℝ`,
+  `t₀ = 0`, `f = Set.indicator (Set.Ici 1) 1` and
+  `g ε = Set.indicator (Set.Ici (1 + ε)) 1` for `ε > 0`. The uniform distance
+  is `1` for every `ε`, while `distOn m f (g ε) ≤ Real.log (1 + ε)` for
+  `ε ≤ 1 ≤ m`, witnessed by the piecewise linear time change fixing `0` that carries
+  `1 + ε` to `1` and is affine on `[0, 1+ε]` and a translation beyond. So
+  `dist f (g ε) → 0` as `ε → 0`. This is the defining property of the `J₁`
+  topology, the one thing a wrong definition of `distOn` — the uniform metric,
+  or an infimum over all order isomorphisms without the norm term — gets wrong,
+  and the pair every later statement about `D ι E` is calibrated against.
+* **Evaluation at the jump, which is the manuscript's `ex:atomicdiscontinuity`.**
+  With `f` and `g (1/n)` as above, `g (1/n) → f` in `D ℝ ℝ` while
+  `eval 1 (g (1/n)) = 0` and `eval 1 f = 1`. So `continuousAt_eval` must be
+  false at `f`, and `f⁻ 1 = 0 ≠ 1 = f 1` is exactly its criterion; at any
+  `t ≠ 1` the same map is continuous at `f`. The manuscript reads this as the
+  failure of hypothesis `(C3a)` for a clock with an atom at `1`.
+* **The two jumps that cannot merge.** `f n = Set.indicator (Set.Ici 1) 1 +
+  Set.indicator (Set.Ici (1 + 1/n)) 1`. Pointwise `f n → 2 • Set.indicator
+  (Set.Ici 1) 1`, and in `D ℝ ℝ` it does **not** converge: a time change of
+  small norm moves `1` and `1 + 1/n` by little, so the image path still has two
+  jumps of height `1` while the candidate limit has one of height `2`: for every
+  càdlàg `h` and every `m ≥ 2`, `1/2 ≤ liminf n, distOn m (f n) h`, so no
+  subsequence converges. This is the
+  standard witness that `J₁` is not the topology of pointwise convergence, and
+  it reappears in Milestone 7 as a family without compact closure.
+* **The degenerate window.** `ι = Set.Icc (0:ℝ) 0` or `m = 0` on a discrete
+  index: `B m` is a single point, every `distOn m f g` is
+  `min over the trivial group of max 0 (r (f t₀) (g t₀))`, and `dist` is the sum
+  of the tail. The metric axioms must all hold there, which is where the junk
+  values of Milestone 3 are consumed.
+
 ## Milestone 5: completeness and separability
 
 * `CompleteSpace (D ι E)`: for a Cauchy sequence extract a subsequence whose
@@ -472,6 +600,34 @@ Under (B), with `E` a pseudometric space:
   subspace, on which the metric induces the topology of uniform convergence on
   compact sets.
 
+**Acceptance examples.**
+
+* **The shrinking bump: why the norm is logarithmic.** `ι = ℝ`, `E = ℝ`,
+  `x n = Set.indicator (Set.Ico (1/2) (1/2 + 1/n)) 1`. Measure the time changes
+  with Billingsley's older `sup t, dist (λ t) t` instead of `TimeChange.norm`.
+  Then `x n` is Cauchy: the piecewise linear `λ` carrying `1/2 + 1/n` to
+  `1/2 + 1/m` and fixing `0` and `1` matches the two paths exactly and moves
+  points by at most `|1/n - 1/m|`. And it has no limit: any candidate `h` would
+  have `‖h‖ ≥ 1` and a bump of vanishing width, which no càdlàg function has.
+  Under `TimeChange.norm` the same sequence is **not** Cauchy — that `λ`
+  compresses by the factor `n/m`, so its norm is `|log (n/m)|`, which does not
+  go to `0` along `m = 2n`. So `CompleteSpace (D ι E)` is a theorem about the
+  logarithmic norm of Milestone 3 and false for the naive one; this is the
+  instance that decides between the two definitions.
+* **A Cauchy sequence that does converge, and whose pointwise limit is not the
+  answer.** `f n = Set.indicator (Set.Ici (1 + 1/n)) 1` is Cauchy and converges
+  in `D ℝ ℝ` to `Set.indicator (Set.Ici 1) 1`, by the sliding step example of
+  Milestone 4. Its **pointwise** limit is `Set.indicator (Set.Ioi 1) 1` — the
+  open ray, since `f n 1 = 0` for every `n` — and that function is not càdlàg at
+  `1`. So the completeness proof cannot construct its limit pointwise, and a
+  statement of `CompleteSpace (D ι E)` that did would not typecheck.
+* **Separability, exhibited.** On `ι = Set.Icc (0:ℝ) 1` and `E = ℝ` the
+  countable dense set is the paths `∑ i < k, q i • Set.indicator (Set.Ici (p i)) 1`
+  with `p i, q i` rational. That `f = Set.indicator (Set.Ici (1/Real.sqrt 2)) 1`
+  is approximated by them uses the time change and not the values: no member of
+  the family agrees with `f` anywhere near the jump, and the approximation is in
+  `distOn`, at cost `|log (p / (1/Real.sqrt 2))|`.
+
 ## Milestone 6: the Borel structure
 
 * `SkorokhodSpace.measurable_eval`: `f ↦ f t` is Borel measurable for every `t`.
@@ -485,6 +641,28 @@ Under (B), with `E` a pseudometric space:
   set; a map into `D ι E` is measurable if and only if all its coordinates along
   such a set are; two processes with paths in `D ι E` that are modifications of
   each other induce the same law.
+
+**Acceptance examples.**
+
+* **Measurable but not continuous, on one path.** `f = Set.indicator (Set.Ici 1) 1`
+  in `D ℝ ℝ`. `measurable_eval 1` holds, while `continuousAt_eval 1` fails at
+  this `f` by the example of Milestone 4. The two items are therefore not the
+  same statement, and a proof of `measurable_eval` that went through continuity
+  is refuted here; the route is `eq_of_eqOn_dense` of Milestone 2 instead.
+* **The maximal point must be in `D`.** On `ι = Set.Icc (0:ℝ) 1` with
+  `D = Set.Ico (0:ℝ) 1 ∩ ℚ`, the paths `0` and `Set.indicator {1} 1` are both
+  càdlàg and agree on `D`, so `f ↦ (fun t : D ↦ f t)` is not injective and
+  `measurableEmbedding_piDense` is false for that `D`. With `D` replaced by
+  `(Set.Ico (0:ℝ) 1 ∩ ℚ) ∪ {1}` it holds. This is Milestone 2's witness read as
+  a statement about the σ-algebra, and it is the acceptance test for the
+  hypothesis on `D`.
+* **The law of a Poisson process is fixed by rational times.** `ι = Set.Ici (0:ℝ)`,
+  `E = ℝ`, `D = ℚ ∩ ι`. Two laws on `D ι ℝ` whose finite dimensional
+  distributions along `D` are those of a Poisson process of rate `1` are equal,
+  by `borel_eq_iSup_comap_eval` along a countable dense set. The times at which
+  the process jumps are almost surely irrational, so no coordinate in `D` sees a
+  jump: the example shows the conclusion does not need the coordinates to
+  determine the paths pointwise, only the σ-algebra.
 
 ## Milestone 7: the modulus and compactness
 
@@ -501,6 +679,40 @@ Under (B), with `E` a pseudometric space:
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, where the first condition is replaced by the existence of a
   compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
+
+**Acceptance examples.**
+
+* **One jump costs nothing.** `f = Set.indicator (Set.Ici 1) 1` on `ι = ℝ` with
+  `t₀ = 0` and `m = 2`. For `δ < 1` the subdivision `-2 < 1 < 2` has all gaps
+  larger than `δ` and `f` is constant on each `Set.Ico`, so
+  `modulus 2 f δ = 0`. This is the point of the `Ico` in the definition: a
+  modulus built on `Set.Icc`, or one that measured oscillation across the
+  subdivision points, would return `1` here and `tendsto_modulus` would be
+  false for every step function.
+* **Infinitely many jumps still give `tendsto_modulus`.** The accumulating path
+  `f = ∑' n, 2⁻¹ ^ n * Set.indicator (Set.Ici (1/(n+1))) 1` of Milestone 2 on
+  `ι = Set.Icc (0:ℝ) 1`. For `δ` small the subdivision takes the finitely many
+  jump times of height at least `ε` and lumps the rest into one interval next to
+  `0`, where the total variation is at most `ε`; so `modulus m f δ → 0` although
+  no subdivision separates all the jumps. A proof by "finitely many jumps"
+  fails on this path.
+* **The two jumps that cannot merge, as a compactness test.**
+  `A = {Set.indicator (Set.Ici 1) 1 + Set.indicator (Set.Ici (1 + 1/n)) 1 | n}`.
+  Every value lies in the compact `{0, 1, 2}` and the family is uniformly
+  bounded, so any criterion phrased on the values alone accepts it; but for
+  `δ ≥ 1/n` no admissible subdivision separates the two jump times, so
+  `sup f ∈ A, modulus m f δ ≥ 1` for every `δ > 0` and the closure is not
+  compact — as it must not be, the sequence having no convergent subsequence
+  (Milestone 4). This is the instance that makes the modulus condition
+  indispensable in `isCompact_closure_iff`.
+* **A family that does have compact closure.**
+  `A = {Set.indicator (Set.Ici a) 1 | a ∈ Set.Icc 1 2}`. The values lie in
+  `{0,1}` and `modulus m f δ = 0` for `δ` smaller than the distance from `a` to
+  the window ends, uniformly in `a` once the window is `B m` with `m ≥ 3`; so
+  both conditions hold and the closure is compact. It is: the closure is the
+  continuous image of `Set.Icc 1 2` under `a ↦ Set.indicator (Set.Ici a) 1`,
+  which is where the sliding step example of Milestone 4 says the map is
+  continuous.
 
 ## Milestone 8: tightness and convergence of finite dimensional distributions
 
@@ -587,3 +799,39 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   `D ι ℝ` for every `h ∈ H`. The forward direction is the previous item; the
   converse is Milestone 7 applied to the modulus, which compact containment plus
   a dense `H` recovers from the real-valued moduli.
+
+**Acceptance examples.**
+
+* **The invariance principle, which is what the milestone is for.** This is the
+  manuscript's `ex:invariance`: `E = ℝ^d`, `ι = Set.Ici (0:ℝ)`,
+  `X n t = Ξ n ⌊n * t⌋` for a Markov chain `Ξ n` with one step kernel `P n`,
+  each path a piecewise constant element of `D ι E`. The laws are tight by
+  `isTightMeasureSet_iff`, their finite dimensional distributions converge to
+  those of the limit, and
+  `tendsto_of_isTight_of_tendsto_finiteDimensional` concludes weak convergence
+  in `D ι E`. Every hypothesis of the milestone is instantiated once, and the
+  conclusion is a statement one recognises.
+* **The excluded times are not a technicality.**
+  `μ n = δ (Set.indicator (Set.Ici (1 + 1/n)) 1)` and
+  `μ = δ (Set.indicator (Set.Ici 1) 1)` in `D ℝ ℝ`. Then `μ n → μ` weakly, and
+  the finite dimensional distributions converge at every finite family of times
+  avoiding `1` and **fail** to converge at `t = 1`, where they are `δ 0` for
+  every `n` and `δ 1` in the limit. So
+  `tendsto_finiteDimensional_of_tendsto` must carry its hypothesis
+  `μ {f | f⁻ (t i) = f (t i)} = 1`, which here holds exactly off `{1}` — a set
+  that is countable, as `exists_countable_dense_continuity` claims, and not
+  empty.
+* **Compact containment alone is not tightness.**
+  `S = {δ (Set.indicator (Set.Ici 1) 1 + Set.indicator (Set.Ici (1+1/n)) 1) | n}`.
+  All paths take values in the compact `{0,1,2}`, so compact containment holds,
+  and `S` is not tight, because the modulus condition of Milestone 7 fails on
+  exactly this family. `isTightMeasureSet_iff` must have both clauses; the
+  witness is the two jumps that cannot merge.
+* **The converse of the reduction needs compact containment.** `E = ℝ`,
+  `S = {δ (fun _ ↦ (n : ℝ)) | n}`, the laws of the constant paths at height `n`.
+  For every bounded continuous `h : ℝ → ℝ` the image family
+  `{δ (fun _ ↦ h n) | n}` lives in the compact set of constant paths with values
+  in `closure (Set.range h)` and is tight; but `S` itself is not, no compact
+  `K ⊆ ℝ` containing every `n`. So
+  `isTightMeasureSet_iff_forall_postcomp` cannot drop the compact containment
+  hypothesis, and this is the family that shows it.
