@@ -138,8 +138,21 @@ die 129 bewiesenen Deklarationen beisteuern will, sollte das früh sagen.
 
 ## Checkliste vor unserer Einreichung
 
-1. Meilenstein 13 von `MartingaleProblems` gegen `OneParameterSemigroups`
-   halten — Kollision oder Anschluss?
+1. ~~Meilenstein 13 gegen `OneParameterSemigroups` halten~~ — **erledigt
+   2026-09-07, und die erste Antwort war zu eng.** Der Überlapp ist groß, aber
+   mit **Ethier--Kurtz**, nicht mit unserem Manuskript: EK Kapitel 1 ist
+   Halbgruppentheorie, und deren Roadmap deckt genau das ab. Unser Manuskript
+   benutzt davon nichts (`rem:noch1` zählt die ausgelassenen Sätze einzeln
+   auf), also stoßen die beiden Roadmaps aneinander, statt zu kollidieren.
+   **Was dort fehlt**, ist der *messbare* Zweig: ihre Teil-A-Halbgruppen sind
+   stark stetig mit `LinearPMap`-Erzeuger, und sie merken selbst an, daß eine
+   stark stetige Halbgruppe nicht normmeßbar sein muß — behandeln aber weder
+   meßbare Halbgruppen noch den vollen Erzeuger noch mehrwertige Erzeuger. Das
+   ist EK Prop. 1.5.1, und es ist genau unser Meilenstein 13.
+   **Empfehlung: anbieten statt behalten.** Der meßbare Zweig gehört in ihre
+   Teil A; ihr erklärtes Publikum nennt „Markov semigroups" ausdrücklich. Das
+   ist zugleich der Anlaß, sie vor dem PR auf Zulip anzusprechen — dort lief
+   nach PR #16 schon eine Diskussion über Arbeitsteilung.
 2. Jede Stelle entschärfen, die `brownian-motion` oder
    `kolmogorov_extension4` als Spezifikation statt als Zitat führt.
 3. Die beiden auslaufenden Meilensteine (12, 13) als *roadmap-for-a-roadmap*

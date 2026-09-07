@@ -1563,16 +1563,32 @@ Index `[0,∞)` or `ℕ`, state spaces `E₁`, `E₂` Polish, a shift invariant 
 > would need is the subject of the `OneParameterSemigroups` roadmap, and the
 > boundary between the two is drawn in the next paragraph.
 
-**Relation to `OneParameterSemigroups`.** That roadmap builds *strongly
-continuous* semigroups on a Banach space, with the generator as a densely
-defined `LinearPMap`, the resolvent, Hille--Yosida and Lumer--Phillips. None of
-that applies here, and the reason is not a matter of taste: the transition
-semigroup of a Markov process, acting on the bounded measurable functions, is
-**not strongly continuous**, and its full generator is **multivalued**, so it is
-a relation and not a `LinearPMap`. The two developments meet only at the word
-*dissipative*, and even there on different objects. Whoever works on either
-should read the other first; if the definitions can be aligned, this milestone
-should be dropped in favour of theirs.
+**Relation to `OneParameterSemigroups`, and an offer.** The overlap is large,
+but it is with Ethier--Kurtz rather than with this roadmap. Their Chapter 1 is
+semigroup theory --- Hille--Yosida, cores, resolvents, dissipativity, the
+exponential formula --- and the `OneParameterSemigroups` roadmap covers exactly
+that ground. The manuscript behind this roadmap deliberately does not use any of
+it: uniqueness is obtained from the abstract theorem together with duality, and
+the semigroup-based criteria of Ethier--Kurtz, Theorem 4.4.1 and Corollary
+4.4.4, are left out by design. So the two roadmaps do not collide; they abut,
+and `OneParameterSemigroups` is the natural home for the chapter this one
+declines to use.
+
+What does **not** stand there, and is the reason this milestone exists at all,
+is the *measurable* branch. Their Part A builds strongly continuous semigroups
+on a Banach space with the generator a densely defined `LinearPMap`, and it
+notes in passing that a strongly continuous semigroup need not be
+norm-measurable; it does not treat measurable semigroups, the full generator, or
+a multivalued generator. But the transition semigroup of a Markov process on the
+bounded measurable functions is **not strongly continuous**, and its full
+generator is **multivalued** --- a relation, not a `LinearPMap`. That is
+Ethier--Kurtz, Proposition 1.5.1, and it is the object below.
+
+The right resolution is therefore not to keep this milestone here but to offer
+it there: the measurable semigroup and its full generator belong in
+`OneParameterSemigroups` as a branch of Part A, whose stated audience already
+includes researchers in Markov semigroups. Until that is agreed, the statements
+below record what is needed, and they are not to be implemented from here.
 
 Mathlib has no semigroup of operators. The word `dissipative` occurs nowhere in
 it, there is no strongly continuous or measurable one parameter semigroup, and
