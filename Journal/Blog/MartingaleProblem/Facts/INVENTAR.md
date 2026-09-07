@@ -7182,3 +7182,151 @@ korrigiert:
   beliebigen normierten Raum müßte beide als **zusätzliche** Hypothesen
   anschreiben — das ist ein Tausch, keine Abschwächung, und für die Datei, die
   ohnehin `𝕂`-wertige Testprozesse hat, kein Gewinn.
+
+### 2026-09-07, zwölfter Lauf des Tages — vorrangige Aufgabe: das Audit maschinell wiederholt, zwei Korrekturen am Vorlauf, und eine Abschwächung, die trägt
+
+**Methode.** Der elfte Lauf hat das Axiom-Audit mit einem angehängten Block von
+`#print axioms`-Zeilen je Deklaration gefahren. Dieser Lauf ersetzt das durch
+**ein** Metaprogramm je Datei, das über `Lean.collectAxioms`
+(`Lean/Util/CollectAxioms.lean:149`, `public def`) läuft und alle Konstanten des
+laufenden Moduls aus `env.checked.get.constants.foldStage2` zieht. Der Vorteil
+ist nicht die Ersparnis, sondern die Vollständigkeit: die Liste wird nicht von
+Hand geführt, also kann keine Deklaration übersehen werden. Zahlen (bewiesen =
+ohne `sorryAx` in der Axiomliste):
+
+| Datei | Deklarationen | ohne `sorryAx` | mit `sorryAx` | eigene `sorry`-Warnung |
+|---|---|---|---|---|
+| `WeakConvergence` | 60 | 47 | 13 | 13 |
+| `SkorokhodSpace` | 165 | 152 | 13 | **11** |
+| `MartingaleProblems` | 128 | 119 | 9 | 9 |
+
+**Erste Korrektur am elften Lauf.** Er hält fest, die beiden Mengen — „hängt an
+`sorryAx`" und „hat eine eigene `sorry`-Warnung" — seien in allen drei Dateien
+identisch. In `SkorokhodSpace` sind sie es **nicht**: zwei Deklarationen sind
+ohne eigenes `sorry` und hängen doch daran, und sie heißen
+
+* `instMeasurableSpaceSkorokhodSpace` (`Suggested.lean:1670`,
+  `noncomputable instance : MeasurableSpace D(ι, E) := borel _`) und
+* `instBorelSpaceSkorokhodSpace` (`:1671`, `instance : BorelSpace D(ι, E) := ⟨rfl⟩`).
+
+Beide erben es von der Platzhalter-Instanz `MetricSpace D(ι, E) := sorry`
+(`:1653`), denn `borel _` liest die Topologie aus ihr. Sachlich ändert das den
+Befund des elften Laufs nicht — er hat genau diese Abhängigkeit im Fließtext
+beschrieben —, wohl aber seine Zählung, und die Zählung war das Zertifikat.
+Der Rest steht: **keine als bewiesen geführte Deklaration hängt an einem
+fremden `sorry`**, außer diesen beiden dokumentierten Instanzen.
+(`tendsto_map_of_measure_setOf_continuousAt_eq_one`, `WeakConvergence:448`, ist
+weiterhin die einzige Deklaration, die unter v4.33.1 gar nicht elaboriert; sie
+ist absichtlich gegen master geschrieben.)
+
+**Zweite Korrektur am elften Lauf, und sie betrifft seine Methodenlehre.** Er
+schließt aus dem `omit`-Experiment, „`omit` ist kein verläßlicher Test, und ein
+fehlerfreier Übersetzungslauf ist kein Zertifikat", und verlangt künftig
+`#check @name` vorher/nachher. Das ist richtig beobachtet und die falsche
+Konsequenz: Mathlib hat für genau diese Frage einen Linter, und er ist
+standardmäßig an. `linter.unusedSectionVars` meldet je Deklaration, welche
+automatisch aufgenommene Sektionsvariable in ihr **unbenutzt** ist, und schlägt
+die `omit`-Zeile im Wortlaut vor. Daß er in dieser Umgebung wirklich feuert, ist
+mit einer Testdatei geprüft worden (zwei Sätze über `[MetricSpace α]
+[Nonempty α] [Inhabited α]`; der Linter nennt bei dem einen beide, bei dem
+anderen nur `Nonempty α`). Über die drei `Suggested.lean` gelaufen meldet er
+**nichts** — in keiner der drei Dateien ist eine einzige Sektionsvariable
+unbenutzt. Damit ist der Negativbefund des elften Laufs unabhängig bestätigt und
+zugleich billig reproduzierbar: wer wissen will, ob eine Annahme entbehrlich
+ist, liest die Übersetzungswarnungen, statt ein Experiment zu bauen.
+
+Ergänzend lief ein zweites, unabhängiges Metaprogramm, das je Deklaration die
+Instanz-Binder des Typs durchgeht und prüft, ob der Binder im Resttyp **und** im
+Beweisterm frei von Vorkommen ist — das ist genau die Bedingung, unter der
+`omit` durchgeht. Es meldet ebenfalls nichts. (Es meldet allerdings auch im
+Selbsttest nichts, wo der Linter feuert, also ist es als Werkzeug schwächer als
+der Linter und nur als Gegenprobe zu nehmen; der Linter ist die maßgebliche
+Quelle.)
+
+**Die Abschwächung, die trägt, und sie steht in der Datei.**
+`IsSeparating.of_subalgebra` (`WeakConvergence/Suggested.lean:184`) stand unter
+
+    [TopologicalSpace E] [PolishSpace E] [BorelSpace E]
+
+und steht jetzt unter
+
+    [PseudoEMetricSpace E] [BorelSpace E] [CompleteSpace E] [SecondCountableTopology E].
+
+Der Grund ist die stehende Regel und nicht Geschmack: Mathlib hat den Satz in
+**zwei** Fassungen, und die Datei zitierte die stärkere.
+`ext_of_forall_mem_subalgebra_integral_eq_of_polish`
+(`MeasureTheory/Measure/FiniteMeasureExt.lean:72`) ist wörtlich
+`ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
+(`:36`) mit einem vorangestellten `upgradeIsCompletelyMetrizable`. Die
+Vollständigkeit kommt im Beweis vor (er geht über
+`ext_of_forall_integral_eq_of_IsFiniteMeasure` und die
+`mulExpNegMulSq`-Approximation), die **Trennung von `E`** dagegen nirgends —
+getrennt wird durch die Algebra, nicht durch den Raum, und darum darf die Metrik
+eine Pseudometrik sein. Belegt, nicht vermutet: die geänderte Datei ist mit
+`lake env lean` durchgelaufen, unverändert 13 `sorry` und kein neuer Fehler; der
+Beweis ist derselbe bis auf den Namen des zitierten Satzes. Der README-Punkt von
+Meilenstein 1 ist nachgezogen.
+
+**Zwei Achsen geprüft, mit Negativbefund, damit sie nicht wieder geprüft
+werden.**
+
+* `IsConvergenceDetermining.isSeparating` (`:151`) und
+  `isSeparating_setOf_boundedContinuous` (`:164`) tragen
+  `[BorelSpace E] [HasOuterApproxClosed E]`, und beides ist nötig:
+  `ProbabilityMeasure.t2Space` steht in
+  `MeasureTheory/Measure/ProbabilityMeasure.lean:422` unter genau dem
+  `variable [TopologicalSpace Ω] [HasOuterApproxClosed Ω] [BorelSpace Ω]`
+  (`:416`), und `ext_of_forall_integral_eq_of_IsFiniteMeasure`
+  (`HasOuterApproxClosed.lean:269`) ebenso. Minimal.
+* `MetricSpace E` gegen `PseudoMetricSpace E` in `SkorokhodSpace`,
+  Meilenstein 2: **bricht bei `IsCadlag.tendsto_leftLim`**. `Function.leftLim`
+  legt den Grenzwert nur in einem `T2Space` fest, und ein pseudometrischer Raum
+  ist genau dann `T2`, wenn er metrisch ist. Die ganze Sprungtheorie —
+  `leftJumpSet`, `countable_leftJumpSet`,
+  `continuousAt_iff_notMem_leftJumpSet` — ruht also auf der Trennung von `E`.
+  Ein benanntes Hindernis, kein Verdacht.
+
+**Der Zeuge, den der elfte Lauf nur skizziert hat, ist jetzt Lean.** Er hält für
+`not_isQuasiLeftContinuous_of_atom` fest, die Hypothese sei erfüllbar, ohne den
+Zeugen anzuschreiben — und das ist genau die Stelle, an der zweimal eine leere
+Aussage stehengeblieben ist. In `MartingaleProblems/Suggested.lean` steht daher
+jetzt, bewiesen und ohne `sorry`:
+
+    theorem exists_index_witness_for_atom :
+        ∃ s : ℕ → ENNReal, StrictMono s ∧ (∀ n, s n < (⊤ : ENNReal)) ∧
+          Tendsto s atTop (𝓝 (⊤ : ENNReal))
+
+Der Index ist `ℝ≥0∞`. Er trägt alle vier Instanzen, die die
+Regularizing-Sektion verlangt — `ConditionallyCompleteLinearOrder`, `OrderBot`,
+`TopologicalSpace`, `OrderTopology` —, der Atompunkt ist `u = ⊤`, und
+`n ↦ (n : ℝ≥0∞)` nähert ihn strikt von links (`Nat.strictMono_cast`,
+`ENNReal.natCast_ne_top`, `ENNReal.tendsto_nat_nhds_top`,
+`Mathlib/Topology/Instances/ENNReal/Lemmas.lean:147`). Damit ist die
+Schärfeaussage des Meilensteins 9 nicht mehr nur nichtleer behauptet, sondern
+nichtleer bewiesen. Die Datei ist mit der Ergänzung durchgelaufen, unverändert
+9 `sorry`.
+
+**Was offen blieb.** Die Abschwächung `MetricSpace ι` → `PseudoMetricSpace ι`
+für Meilenstein 1 von `SkorokhodSpace` sieht durch: `AdditiveDist` ist in der
+Datei ohnehin über `[PseudoMetricSpace α]` erklärt (`:140`), und
+`dist_eq_sub_of_le`, `monotoneOn_dist_basepoint`, `dist_eq_abs_sub_of_sameSide`,
+`ordConnected_exhaustion`, `mem_exhaustion_self` benutzen nichts darüber hinaus.
+Sie ist **nicht** durchgeführt, weil der `variable`-Block von 1700 Zeilen geteilt
+wird und `TimeChange` die echte Metrik braucht; es wäre eine eigene Sektion, und
+dieser Lauf hat sie nicht mehr geprüft. Behauptet wird sie darum nicht.
+
+**Vorschlag für das Nächste, als benanntes Ziel: `isSeparating_pi` beweisen**
+(`WeakConvergence/Suggested.lean:297`, Meilenstein 1) — trennende Klassen
+multiplizieren sich über einen **beliebigen** Indextyp. Worauf sie ruht: auf
+`isSeparating_setOf_boundedContinuous` (in der Datei bewiesen) und auf dem
+funktionalen Monotone-Klassen-Satz von Meilenstein 5, der seit dem 2026-09-07,
+neunter Lauf, vollständig bewiesen dasteht. Warum jetzt: die Klasse in ihrer
+Konklusion ist wörtlich eine `IsMulSystem` — endliche Produkte
+`∏ i ∈ J, g i (x i)` sind unter Multiplikation abgeschlossen —, und
+`ext_of_forall_integral_eq_of_isMulSystem` (`:1351`) ist genau der Satz, der aus
+einer `IsMulSystem` mit `generateFromFuns K = mΩ` die Gleichheit zweier Maße
+macht. Was zu zeigen bleibt, ist die σ-Algebra-Rechnung
+`generateFromFuns (Produkte) = MeasurableSpace.pi`, und dafür liegen
+`generateFromFuns_le_iff` (`:608`) und `generateFromFuns_mono` (`:613`) bereit.
+Das ist der erste Punkt des Meilensteins, der ohne neuen Unterbau fällt, und er
+ist der, den `thm:fdd` des Manuskripts unmittelbar braucht.

@@ -129,8 +129,13 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`. These are one line
   each and exist so that no later proof reaches past the predicate.
 * `IsSeparating.of_subalgebra`, from
-  `ext_of_forall_mem_subalgebra_integral_eq_of_polish`
-  (`Mathlib/MeasureTheory/Measure/FiniteMeasureExt.lean:72`). That theorem is
+  `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
+  (`Mathlib/MeasureTheory/Measure/FiniteMeasureExt.lean:36`), under
+  `[PseudoEMetricSpace E] [BorelSpace E] [CompleteSpace E]
+  [SecondCountableTopology E]`. That is the weaker of Mathlib's two bundles
+  here; the `PolishSpace` form (`:72`) is that one preceded by
+  `upgradeIsCompletelyMetrizable`, and the separation of `E` never enters, only
+  the separation of the algebra, so the metric may be a pseudometric. That theorem is
   stated for a `StarSubalgebra 𝕜 (E →ᵇ 𝕜)` with `[RCLike 𝕜]` and the separation
   hypothesis `(A.map (toContinuousMapStarₐ 𝕜)).SeparatesPoints`; the roadmap
   needs it over `ℝ` for a plain `Subalgebra ℝ (E →ᵇ ℝ)` with
