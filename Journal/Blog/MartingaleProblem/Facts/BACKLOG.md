@@ -85,13 +85,26 @@ kein gebautes Mathlib und taugt zu nichts.
    |---|---|---|
    | `WeakConvergence` | 50 | 21 |
    | `SkorokhodSpace` | 102 | 12 |
-   | `MartingaleProblems` | 34 | 14 |
+   | `MartingaleProblems` | 50 | 10 |
 
    Arbeite die verbleibenden `sorry` ab, von oben je Datei, und nimm dabei
-   `MartingaleProblems` mit — es ist seit dem 2026-09-06 unberührt, während
-   `SkorokhodSpace` viermal drankam. Was sich nicht billig beweisen läßt, laß
+   `MartingaleProblems` mit. Was sich nicht billig beweisen läßt, laß
    stehen und sag im Bericht, woran es hängt; ein `sorry` mit benannter Ursache
    ist mehr wert als einer ohne.
+
+   *Zwischenstand 2026-09-07, sechster Lauf des Tages:
+   `MartingaleProblems` ist von elf auf zehn `sorry` und von 38 auf 50
+   Deklarationen; die Zahlen der Tabelle sind die gemessenen. Bewiesen sind
+   `Clock.interval_union`, die Additivität von Meilenstein 1, und
+   `not_isQuasiLeftContinuous_of_not_ae_tendsto`, die Umkehrung von
+   `IsQuasiLeftContinuous.ae_eq_leftLim`; dazu steht der Namensraum
+   `AtomWitness` mit elf bewiesenen Deklarationen — die faire Münze, die Uhr
+   `atomClock u` mit ihrem Atom, der Pfad, der bei `u` umspringt, seine
+   càdlàg-Eigenschaft und das Scheitern der Quasi-Linksstetigkeit. Der nächste
+   Schritt in dieser Datei ist die Filtration samt der Martingaleigenschaft, die
+   `not_isQuasiLeftContinuous_of_atom` schließt; die Rechnung steht im
+   Laufbericht im Inventar. Mitgefunden und dort ebenfalls notiert: die Aussage
+   von `not_isQuasiLeftContinuous_of_atom` war leer und ist berichtigt.*
 
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in

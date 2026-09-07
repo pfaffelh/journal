@@ -6271,3 +6271,117 @@ Basispunkte dieselbe Topologie geben — das ist plausibel, aber die
 Untergruppen `TimeChange.fixing t₀` sind für verschiedene `t₀` verschieden, und
 ein Beweis dafür liegt nicht vor. `fact:Dcountable` (tragend `4`) und
 `fact:fddconv` (tragend `1`) hängen über die Meilensteine 5, 6 und 8 daran.
+
+### 2026-09-07, sechster Lauf des Tages — Rückstau 1: `MartingaleProblems`, zwei Beweise, ein halber Zeuge und eine leere Schärfeaussage
+
+Die vorrangigen Aufgaben sind leer — die acceptance examples des vierten Laufs
+decken alle siebenundzwanzig Meilensteine ab (5 + 8 + 3 + 11, gezählt gegen
+`grep -c '^## Milestone'`) —, und keine Zeile der Tabelle steht auf `?`. Also
+Rückstau, Punkt 1, und dort die Datei, die er ausdrücklich nennt:
+`MartingaleProblems/Suggested.lean`, seit dem 2026-09-06 unberührt, während
+`SkorokhodSpace` viermal drankam.
+
+**Ausgangslage, gemessen und nicht erinnert.** Ein Durchlauf von
+`lake env lean` gegen v4.33.1 vor jeder Änderung: rc = 0, elf `sorry`, keine
+weitere Warnung. Am Ende: rc = 0, **zehn** `sorry`, keine weitere Warnung, 50
+Deklarationen statt 38.
+
+**Bearbeitet.**
+
+* **`Clock.interval_union` ist bewiesen** — der erste `sorry` der Datei und die
+  Additivität, auf der nach der Roadmap („the only property used downstream")
+  jedes Kompensatorargument von Meilenstein 1 ruht. Beide Konventionen, beide
+  Hälften: die Zerlegung von `Set.Iic u \ Set.Iic s` in
+  `(Set.Iic t \ Set.Iic s) ∪ (Set.Iic u \ Set.Iic t)`, dieselbe für `Set.Iio`,
+  dazu die Disjunktheit. Der Beweis braucht **nur** `[Preorder ι]` und
+  Transitivität, wie die Roadmap behauptet; nirgends geht Vergleichbarkeit ein,
+  und das ist genau der Grund, aus dem die Uhr die Differenz von Abwärtsmengen
+  nimmt und nicht `Set.Ico`.
+
+* **`not_isQuasiLeftContinuous_of_not_ae_tendsto` ist neu und bewiesen** — die
+  Umkehrung von `IsQuasiLeftContinuous.ae_eq_leftLim`, die einzige Richtung, die
+  ein Gegenbeispiel braucht: aus einer monotonen Folge `s : ℕ → ι` mit
+  `∀ n, s n ≤ t` und `⨆ n, s n = t`, entlang der `X (s n)` fast sicher **nicht**
+  gegen `X t` läuft, folgt `¬ IsQuasiLeftContinuous X 𝓕 P`. Die konstanten
+  Stoppzeiten `τ n = s n` sind das, worauf die Definition getestet wird; deshalb
+  muß kein Linkslimes existieren, und weder `[T2Space E]` noch eine Topologie
+  auf dem Index über die Ordnung hinaus geht ein (`omit [MeasurableSpace E]
+  [TopologicalSpace ι] [OrderTopology ι]`, vom Linter bestätigt). Damit ist der
+  Zeuge auf die Konstruktion der Lösung reduziert und auf sonst nichts.
+
+* **Der Zeuge selbst ist gebaut und übersetzt, bis auf die
+  Martingaleigenschaft**, als Namensraum `AtomWitness` in derselben Datei, elf
+  Deklarationen, alle bewiesen:
+  `coinMeasure = 2⁻¹ • (Measure.dirac true + Measure.dirac false)` samt
+  `IsProbabilityMeasure`-Instanz und `coinMeasure {true} = 2⁻¹`; die Uhr
+  `atomClock u` mit `measurableSpace = ⊤` und `q = Measure.dirac u`, samt
+  `atomClock_apply_singleton : (atomClock u).q {u} = 1` und der Folgerung
+  `≠ 0` — über `⊤` ist jede Abwärtsmenge meßbar, und die endliche Masse ist die
+  eines Wahrscheinlichkeitsmaßes;
+  `coinProcess u t ω = if u ≤ t then ω else false` samt seinen beiden
+  Auswertungslemmata; `isCadlagPath_coinProcess`, für **jedes** `u` und jedes
+  `ω`, weil der Pfad zu beiden Seiten von `u` lokal konstant ist; und
+  `not_isQuasiLeftContinuous_coinProcess`, für **jede** Filtration. Über
+  `Ω = E = Bool` ist die Münze zugleich Stichprobenpunkt und Zustand, was den
+  Prozeß ohne Produktkonstruktion hinschreibbar macht. Was zur vollen Aussage
+  fehlt, ist genau zweierlei: die Filtration (`⊥` unterhalb von `u`, `⊤` von `u`
+  an) und die Martingaleigenschaft von
+  `mpFamily A (atomClock u) Clock.Conv.optional (coinProcess u)`.
+
+**Der Befund, und er ist der eigentliche Ertrag des Laufs:
+`not_isQuasiLeftContinuous_of_atom` war als Aussage leer.** Sie behauptet die
+Schärfe der Atomlosigkeit in `isQuasiLeftContinuous_of_isMPSolutionFor` und
+quantifizierte dabei existentiell über `A`, ohne eine Bedingung an `A`. Mit
+`A = ∅` ist `mpFamily A Q c X` leer, `IsMPSolution` gilt dann von **jedem** Maß,
+und irgendein nicht quasi-linksstetiger Prozeß über `Q.q = Measure.dirac u`
+erledigt die Aussage, ohne irgend etwas über Atome zu zeigen. Eine
+Schärfeaussage, die einen leeren Zeugen zuläßt, ist keine.
+
+Die Aussage trägt seit diesem Lauf **jede** Hypothese von
+`isQuasiLeftContinuous_of_isMPSolutionFor` außer `hQ` in ihrer Konklusion:
+`IsProbabilityMeasure P`, die Schranken und die Stetigkeit von `hA`,
+`IsSeparating (Prod.fst '' A)` und die fast sicher càdlàg-Pfade. `IsSeparating`
+ist dabei das, was `A ≠ ∅` erzwingt — über `Bool` trennt die leere Klasse
+`Measure.dirac true` nicht von `Measure.dirac false` —, und
+`IsProbabilityMeasure P` schließt `P = 0` aus demselben Grund aus (unter `P = 0`
+gilt jede fast sichere Aussage, also auch die Quasi-Linksstetigkeit selbst). Die
+Roadmap führt die Begründung im Meilenstein 9 mit. Das Muster ist dasselbe wie
+beim Diamant-Gegenbeispiel und bei der leeren Klasse: ein existentiell
+quantifiziertes Datum ohne Bedingung macht eine Negativaussage wertlos, und
+diese Datei führt mehrere solche Existenzaussagen — wer die nächste anfaßt,
+prüft sie zuerst gegen den trivialen Zeugen.
+
+**Mitgefunden, am Übersetzen und nicht am Lesen.**
+
+* `Set.mem_diff` ist `deprecated`, Nachfolger `Set.mem_sdiff` — und der muß
+  **qualifiziert** geschrieben werden: unter `open Filter Set`, wie diese Datei
+  es tut, ist `mem_sdiff` zwischen `Set.mem_sdiff` und `Filter.mem_sdiff`
+  mehrdeutig. Lean meldet dann „Ambiguous term", ohne daß der Beweis scheitert —
+  er geht per Definitionsgleichheit durch —, und der Linter meldet zusätzlich
+  ein `simp`-Argument als unbenutzt, das es in Wahrheit nicht ist.
+* `lt_of_not_le` gibt es in v4.33.1 nicht; `not_le.1` tut es.
+* `ℝ≥0∞` ist **scoped**-Notation und in dieser Datei nicht verfügbar, weil ihr
+  `open`-Kopf `ENNReal` nicht nennt. Ausgeschrieben `ENNReal`, statt den Kopf zu
+  ändern.
+* `omit … in` steht **vor** dem Doc-Kommentar, nicht zwischen ihm und der
+  Deklaration; dazwischen meldet Lean „unexpected token 'omit'".
+* `ENNReal.inv_two_add_inv_two` (`Basic/ENNReal/Inv.lean:525` auf
+  `upstream/master`) ist das Lemma, das `simp` für `2⁻¹ + 2⁻¹ = 1` fehlt.
+
+**Was als Nächstes formalisiert werden soll.**
+`AtomWitness.isMPSolution_coinProcess` und damit die Vervollständigung von
+`not_isQuasiLeftContinuous_of_atom`. Die Aussage: für `u : ι` löst
+`coinProcess u` unter `coinMeasure`, der Uhr `atomClock u` und der
+Filtration `fun t ↦ if u ≤ t then ⊤ else ⊥` das Martingalproblem zu
+`A = {(fun b ↦ if b then 1 else 0, fun _ ↦ 2⁻¹)}` in der Konvention
+`Clock.Conv.optional`. Sie ruht auf drei Rechnungen und keiner Theorie: dem
+Mengenintegral gegen `Measure.dirac` über `Q.interval c ⊥ t`, das für
+`¬ u ≤ ⊥` gerade `if u ≤ t then p.2 (X u ω) else 0` ist; der bedingten
+Erwartung gegen `⊥`, die die Konstante `∫ Y t ∂P` ist; und der Bilanz
+`p.1 true − p.1 false = p.2 true + p.2 false`, die die Martingaleigenschaft über
+`u` hinweg **genau** ausdrückt und der Grund ist, aus dem in `A` das feste `2⁻¹`
+steht und nicht irgendein Kompensator. Sie ist jetzt dran, weil die andere
+Hälfte des Zeugen steht und übersetzt ist, weil die Roadmap sie als acceptance
+example von Meilenstein 9 führt („the pair fixes where atomlessness is a
+hypothesis and where it is not"), und weil sie die einzige der zehn
+verbleibenden `sorry` der Datei ist, die eine Konstruktion und kein Satz ist.
