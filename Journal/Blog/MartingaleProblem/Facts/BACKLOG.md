@@ -241,6 +241,31 @@ kein gebautes Mathlib und taugt zu nichts.
    93 Deklarationen bei unverändert 10 `sorry`. Als Nächstes ist Schritt (1)
    dran, die schwache Konvergenz der Pushforwards nach $\R^k$.*
 
+   *Zwischenstand 2026-09-07, siebzehnter Lauf des Tages: **die Schritte (1)
+   und (3) sind bewiesen, ebenso die tragende Hälfte von Schritt (4)**, und die
+   Zielaussage war **falsch**. `WeakConvergence` steht bei **101 Deklarationen
+   und 10 `sorry`** (vorher 93 und 10, unverändert — sechs neue Deklarationen
+   sind bewiesen, keine neu als `sorry` liegengeblieben), rc = 1 mit
+   unverändert genau den zwei angekündigten Fehlern. Neu und bewiesen:
+   `coordMap`, `coordAlgebra`, `separatesPoints_coordAlgebra`,
+   `exists_mem_subalgebra_comp_of_mem_coordAlgebra`,
+   `tendsto_integral_comp_of_forall_tendsto_integral` (Schritt (1), über einem
+   beliebigen `Fintype` statt über `Fin k` — das ist es, was Schritt (3) die
+   Numerierung der Funktionen erspart), `le_liminf_measure_preimage_of_isOpen`,
+   `le_liminf_measure_thickening_of_stronglySeparatesPoints` (Schritt (3)) und
+   `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`,
+   das gelockerte Straffheitskriterium EK Thm. 3.2.2 — eine eigene
+   Mathlib-Lücke, jetzt **geschlossen**, ohne Separabilität.
+   `isTightMeasureSet_of_stronglySeparatesPoints` stand über einem beliebigen
+   `NeBot`-Filter und ist so widerlegt (`𝓕 = pure 0` auf `ℕ`, `A = ⊤`,
+   `μ n = δ n`); die fehlende Hypothese `Filter.cofinite ≤ 𝓕` steht jetzt in
+   der Aussage. Der nächste benannte Schritt in dieser Datei ist
+   `isTightMeasureSet_of_stronglySeparatesPoints` selbst **fertig zu
+   beweisen** — nach diesem Lauf reine Buchhaltung über den drei bewiesenen
+   Sätzen (Straffheit von `μ₀`, Schritt (3), das gelockerte Kriterium) und
+   keine eigene Mathlib-Lücke mehr; die Begründung und der Beweisplan stehen
+   im Laufbericht.*
+
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`).~~ *(erledigt 2026-09-07, neunter Lauf des Tages.)* Der Satz und

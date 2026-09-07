@@ -163,11 +163,24 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
 
   `MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints` — let `E` be
   Polish, `A : Subalgebra ℝ (E →ᵇ ℝ)` strongly separate points,
-  `μ : ι → ProbabilityMeasure E` along a `NeBot` filter, and let the integrals
-  over `A` converge to those of a `μ₀`. Then
-  `IsTightMeasureSet {(μ n : Measure E) | n}`. With
+  `μ : ι → ProbabilityMeasure E` along a `NeBot` filter with
+  `Filter.cofinite ≤ 𝓕`, and let the integrals over `A` converge to those of a
+  `μ₀`. Then `IsTightMeasureSet {(μ n : Measure E) | n}`. With
   `StronglySeparatesPoints.separatesPoints` this feeds Mathlib's theorem and
   yields `isConvergenceDetermining_of_stronglySeparatesPoints`.
+
+  `Filter.cofinite ≤ 𝓕` is a hypothesis of the statement, not a convenience of
+  the proof, and without it the statement is **false**. Take `ι = ℕ`,
+  `𝓕 = pure 0`, `E = ℝ`, `A = ⊤` — which strongly separates points, since
+  `fun y ↦ min (dist y x) δ` is a bounded continuous witness at `x` with
+  `ε = δ` — and `μ n = δ n`, `μ₀ = δ 0`. Convergence along `pure 0` is the
+  single equation `∫ g ∂μ 0 = ∫ g ∂μ₀`, which holds and constrains `μ n` for no
+  `n ≥ 1`; but `{δ n | n}` is not tight, every compact subset of `ℝ` being
+  bounded. What the hypothesis buys is that the complement of an `𝓕`-eventual
+  set is finite (`Filter.mem_cofinite`), which is what Ethier–Kurtz use when
+  they apply their Lemma 2.1 "to `P` and to finitely many terms of the
+  sequence". For a sequence it is free, `Nat.cofinite_eq_atTop`, so the
+  `IsConvergenceDetermining` consumer pays nothing.
 
   Strong separation is not an artefact of the route. Under separation of points
   alone the tightness-free statement is **false**, with `E = ℝ` and
@@ -196,16 +209,38 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   pages 113–114), each of which is a statement of this milestone in its own
   right:
 
-  1. `MeasureTheory.tendsto_map_of_forall_tendsto_integral_of_subalgebra` — for
-     `f 1, …, f k ∈ A`, the pushforwards `(μ n).map (fun x ↦ (f 1 x, …, f k x))`
-     on `ℝ^k` converge weakly to the pushforward of `μ₀`. That the integrals of
+  1. `MeasureTheory.tendsto_integral_comp_of_forall_tendsto_integral`,
+     **proved** on 2026-09-07, seventeenth run — for a finite index `κ` and
+     `f : κ → (E →ᵇ ℝ)` with all `f i ∈ A`, the integrals of
+     `F ∘ (fun x i ↦ f i x)` converge for **every** `F : (κ → ℝ) →ᵇ ℝ`, which is
+     weak convergence of the pushforwards on `κ → ℝ`. That the integrals of
      **polynomials** in the `f i` converge is the hypothesis together with `A`
-     being an algebra; the `f i` are bounded, so their joint range sits in a
-     compact box, and Stone–Weierstrass on that box
+     being an algebra, and that is
+     `MeasureTheory.exists_mem_subalgebra_comp_of_mem_coordAlgebra`: the
+     coordinate algebra `MeasureTheory.coordAlgebra κ = Algebra.adjoin ℝ (range
+     (coordMap κ))` pulls back into `A` along `fun x i ↦ f i x`, by
+     `Algebra.adjoin_induction`, the constants coming from
+     `A.smul_mem A.one_mem`. The `f i` are bounded, so their joint range sits in
+     `Metric.closedBall 0 (∑ i, ‖f i‖)`, compact because `κ → ℝ` is proper for
+     `κ` finite (`pi_properSpace`, `Topology/MetricSpace/ProperSpace.lean:132`)
+     and holding the range because the sup-metric compares coordinatewise
+     (`dist_pi_le_iff`); Stone–Weierstrass on that box
      (`ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`,
      `Topology/ContinuousMap/StoneWeierstrass.lean:323`, already used in
-     Milestone 5) extends the convergence to every bounded continuous function
-     on `ℝ^k`.
+     Milestone 5, and the variant that keeps the compact set inside `κ → ℝ`
+     rather than passing to a subtype) extends the convergence to every bounded
+     continuous function on `κ → ℝ`, along an `ε / 3` split whose outer thirds
+     are the approximation error against *every* probability measure at once.
+     A finite `κ` rather than `Fin k` is what lets step (3) index the functions
+     by the finite set of those the cover mentions, with no enumeration.
+
+     `MeasureTheory.le_liminf_measure_preimage_of_isOpen`, **proved** in the
+     same run, is the portmanteau consequence and the form step (3) consumes:
+     for `U ⊆ κ → ℝ` open, `μ₀ ((fun x i ↦ f i x) ⁻¹' U) ≤ liminf μ n (…)`. It
+     is step (1) through `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+     and `integral_map`, then
+     `ProbabilityMeasure.le_liminf_measure_open_of_tendsto`, then
+     `Measure.map_apply` to read the pushforward back as a preimage.
   2. `MeasureTheory.StronglySeparatesPoints.exists_finite_cover`, **proved** on
      2026-09-07, sixteenth run — the geometric core, and free of measures: if
      `Γ` strongly separates points,
@@ -221,28 +256,62 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
      (`Topology/Compactness/Compact.lean:350`), which is the form that keeps the
      centres inside `K`, and the second inclusion is
      `Metric.mem_thickening_iff` (`Topology/MetricSpace/Thickening.lean:151`).
-  3. `MeasureTheory.le_liminf_measure_thickening_of_stronglySeparatesPoints` —
-     `μ₀ K ≤ liminf (μ n) (Metric.thickening δ K)`. The set `⋃ l, G l` is the
-     preimage of an **open** set of `ℝ^m` under `fun y ↦ (g 1 y, …, g m y)` with
-     `g l y = max_{h ∈ s l} |h y - h (x l)|`, so step 1 and the portmanteau
-     theorem for open sets
-     (`MeasureTheory.ProbabilityMeasure.le_liminf_measure_open_of_tendsto`,
-     `Measure/Portmanteau.lean:326`, which is stated over an arbitrary filter
-     and so fits the filter form of this point) apply on `ℝ^m` rather than on
-     `E`. This is the step for which the pushforward of step 1 exists.
-  4. The conclusion: `μ₀` is tight on its own, `E` being Polish
+  3. `MeasureTheory.le_liminf_measure_thickening_of_stronglySeparatesPoints`,
+     **proved** on 2026-09-07, seventeenth run —
+     `μ₀ K ≤ liminf (μ n) (Metric.thickening δ K)`. This is where steps (1) and
+     (2) meet. The finitely many functions that the finitely many sets `G l` of
+     step (2) mention are collected into one `Finset (E → ℝ)`, and that finite
+     set, read as an index type `κ`, exhibits `⋃ l, G l` as the preimage under
+     `fun y i ↦ f i y` of the **open** set
+     `⋃ l, {z | ∀ i, ↑i ∈ s (x l) → |z i - ↑i (x l)| < ε l}` of `κ → ℝ`, which
+     is open as a union of finite intersections of preimages of open half-lines
+     under coordinates. Step (1) then bounds the liminf, and the two inclusions
+     of step (2) bracket the preimage between `K` and `Metric.thickening δ K`.
+     A member of the class is a *bounded continuous* function, being drawn from
+     a subalgebra of `E →ᵇ ℝ`, and that is what supplies the bundled
+     representatives step (1) needs; a class inside `C(E, ℝ)` would not.
+  4. The conclusion, in two pieces, of which the second is a statement about
+     tightness alone and has nothing to do with separating classes:
+
+     `MeasureTheory.isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`,
+     **proved** on 2026-09-07, seventeenth run — the relaxed tightness
+     criterion, Ethier–Kurtz, Theorem 3.2.2, and was **missing from Mathlib**:
+     on a complete metric space, if for every `ε > 0` and every `δ > 0` there
+     is a compact `K` with `μ ((Metric.thickening δ K)ᶜ) ≤ ε` for all `μ ∈ S`,
+     then `IsTightMeasureSet S`. Separability is not among its hypotheses; the
+     proof never needs a countable dense set, only completeness. This is what
+     step (3) delivers and what
+     `IsTightMeasureSet` does not say, because the thickening of a compact set
+     is compact only on a **proper** space (`IsCompact.cthickening`,
+     `Topology/MetricSpace/Thickening.lean:300`; on a merely complete space the
+     closed unit ball of an infinite-dimensional Banach space is the
+     counterexample, being `cthickening 1 {0}`). The witnessing set is the one
+     Mathlib's own proof of the Prokhorov converse builds
+     (`isTightMeasureSet_of_isCompact_closure`, `Measure/Prokhorov.lean`):
+     for a null sequence `u m ↓ 0` and compacts `K m` catching all but
+     `ε * 2⁻¹ ^ (m + 1)` of every `μ ∈ S` in `Metric.thickening (u m) (K m)`,
+     take `⋂ m, Metric.cthickening (u m) (K m)`. It is closed, and totally
+     bounded because for every `m` it sits inside the `u m`-thickening of a
+     compact set; `TotallyBounded.isCompact_of_isClosed` and completeness make
+     it compact, and the geometric series bounds its complement by `ε`.
+
+     The bookkeeping that feeds it: `μ₀` is tight on its own, `E` being Polish
      (`MeasureTheory.isTightMeasureSet_singleton`, `Measure/Tight.lean:99`,
      under `IsCompletelyPseudoMetrizableSpace`, `SecondCountableTopology` and
-     `BorelSpace`), so step 3 gives, for every `η > 0`, a compact `K` with
-     `1 - η ≤ liminf (μ n) (Metric.thickening δ K)`; the thickening of a compact
-     set has compact closure on a complete space, and finitely many exceptional
-     indices are absorbed by the tightness of each single `μ n`. That last
-     bookkeeping is Ethier–Kurtz's "applying Lemma 2.1 to `P` and to finitely
-     many terms of the sequence"; over a filter rather than a sequence it is the
-     `Filter.Eventually` form of the same.
+     `BorelSpace`), so step (3) gives a compact `K` with
+     `1 - ε ≤ liminf (μ n) (Metric.thickening δ K)`, hence
+     `μ n ((Metric.thickening δ K)ᶜ) ≤ ε` for all `n` in an `𝓕`-eventual set.
+     Its complement is finite by `Filter.cofinite ≤ 𝓕`, and the finitely many
+     exceptional indices are absorbed by enlarging `K` by their own compact
+     sets, one from the tightness of each single `μ n`
+     (`IsTightMeasureSet.union` and `IsCompact.union`). This is Ethier–Kurtz's
+     "applying Lemma 2.1 to `P` and to finitely many terms of the sequence",
+     and it is the step at which the `pure 0` witness above breaks a version
+     without `Filter.cofinite ≤ 𝓕`.
 
-  Step 2 is the one that uses strong separation and nothing else, and it is
-  where a proof should start.
+  Step 2 is the one that uses strong separation and nothing else. Steps 1, 2
+  and 3 are proved, and so is the relaxed criterion of step 4; what remains is
+  its bookkeeping half.
 * `MeasureTheory.isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`,
   `fact:convdet` (Ethier–Kurtz, Proposition 3.4.4), first half, which no other
   point of this roadmap covers: on a metric space the bounded uniformly
@@ -537,6 +606,27 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   convergence — would be false at `δ n`. It is also the instance the tightness
   step inside the proof is for: `ballCutoff` is the member of `Γ` that sees the
   escaping mass.
+* **`pure 0` against the filter form of the tightness step.** `ι = ℕ`,
+  `𝓕 = pure 0`, `E = ℝ`, `A = ⊤`, `μ n = δ n`, `μ₀ = δ 0`. Along `atTop` the
+  same data is the run-of-the-mill instance on which
+  `isTightMeasureSet_of_stronglySeparatesPoints` must **fail** to apply, its
+  hypothesis being false: `∫ arctan ∂δ n` does not converge to `∫ arctan ∂δ 0`.
+  Along `pure 0` the hypothesis is the single equation `∫ g ∂δ 0 = ∫ g ∂δ 0`,
+  which holds for every `g`, while `{δ n | n}` is not tight. So the instance
+  separates the two filters, and it is the one on which a version of the point
+  without `Filter.cofinite ≤ 𝓕` is false. `A = ⊤` strongly separates points on
+  `ℝ`: at `x` and `δ > 0` take the single function `fun y ↦ min (dist y x) δ`,
+  which is bounded and continuous, with `ε = δ`.
+* **The closed unit ball of `ℓ²`, against the relaxed tightness criterion.**
+  `E = ℓ²`, `K = {0}`, `δ = 1`, so `Metric.cthickening 1 K` is the closed unit
+  ball: closed, bounded, and **not** compact. A version of
+  `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`
+  that concluded by taking `Metric.cthickening δ K` for a single `δ` would be
+  false here, which is why the proof intersects over a null sequence of `δ`'s —
+  the intersection is totally bounded because *each* stage confines it near a
+  compact set. On `E = ℝ^d`, which is proper, the single-`δ` shortcut does work
+  (`IsCompact.cthickening`), and that is the instance which shows the
+  intersection is not an artefact of the statement but of the generality of `E`.
 * **The discrete space of diameter `1`, against the compact support class.**
   `E = ℕ` with `dist x y = if x = y then 0 else 1`. It is a separable locally
   compact metric space, `C_c(E)` is the finitely supported functions, and

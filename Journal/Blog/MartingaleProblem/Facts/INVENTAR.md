@@ -56,7 +56,7 @@ ist kein Befund, sondern ein `?`.
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one`. Seit dem 2026-09-07, achtem Lauf, ist der **zweite Schritt selbst bewiesen**, `of_continuous_comp_of_isMulSystem`: die Stone--Weierstraß-Hälfte der Induktion, über `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints` (`Topology/ContinuousMap/StoneWeierstrass.lean:323`) und einen `AlgHom`-Rückzug in `Submodule.span ℝ (insert 1 K)`. Seit dem 2026-09-07, neuntem Lauf, ist der **Satz selbst bewiesen**: Schritt (iii) als `ioiApprox` samt `of_indicator_mem_ioiCells` und `of_indicator_of_measurable` (die Rampen gemeinsam als *eine* stetige Funktion, weil `P` nicht multiplikationsabgeschlossen ist), Schritt (iv) als `of_simpleFunc` und `of_nonneg_of_measurable` (der Umweg über `ℝ≥0∞` ist das einzige, was die Approximation wachsend macht — `SimpleFunc.approxOn` gibt keine Monotonie), und `induction_on_mulSystem` selbst als die Verschiebung `f = (f + C) + (-C)`. Alle drei Folgerungen tragen ebenfalls Beweise: `ext_of_forall_integral_eq_of_isMulSystem`, `integral_mul_eq_zero_of_isMulSystem` und `condExp_eq_of_forall_integral_mul_eq`. Der Kern von Meilenstein 5 ist damit vollständig; was `fact:monotoneclass` noch trennt, ist kein Beweis mehr, sondern die Übernahme nach Mathlib. Alles durch `lake env lean` gegen v4.33.1 |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
-| `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated` |
+| `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated`. **Am 2026-09-07, siebzehnter Lauf, sind die Schritte (1) und (3) des fehlenden Beweises bewiesen** und gehen durch `lake env lean` gegen v4.33.1: `tendsto_integral_comp_of_forall_tendsto_integral` (die Pushforwards nach `κ → ℝ` konvergieren schwach, für beliebigen `Fintype κ`) samt `coordAlgebra`, `separatesPoints_coordAlgebra` und `exists_mem_subalgebra_comp_of_mem_coordAlgebra`, dazu die Portmanteau-Folgerung `le_liminf_measure_preimage_of_isOpen` und Schritt (3) selbst, `le_liminf_measure_thickening_of_stronglySeparatesPoints`. **Und die Aussage von `isTightMeasureSet_of_stronglySeparatesPoints` war über beliebigem Filter falsch** — Zeuge `𝓕 = pure 0` auf `ℕ`, `E = ℝ`, `A = ⊤`, `μ n = δ n`, `μ₀ = δ 0`: die Voraussetzung ist dort die einzige Gleichung `∫ g ∂μ 0 = ∫ g ∂μ₀`, die gilt, und die Familie `{δ n}` ist nicht straff. Die fehlende Hypothese ist `Filter.cofinite ≤ 𝓕`, sie steht jetzt in der Aussage, und für Folgen ist sie geschenkt (`Nat.cofinite_eq_atTop`). **Im selben Lauf ist auch das gelockerte Straffheitskriterium EK Thm. 3.2.2 bewiesen**, `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` — eine eigene Mathlib-Lücke, weil die Verdickung eines Kompaktums nur auf einem properen Raum kompakt ist, mit dem Zeugen `⋂ m, cthickening (u m) (K m)` für eine Nullfolge `u m`, der `TotallyBounded.isCompact_of_isClosed` trägt; auch **ohne** Separabilität. Offen bleibt allein die Buchhaltung darüber — Straffheit von `μ₀` plus die endlich vielen Ausnahmeindizes —, die den Filter-Schritt (4) abschließt |
 | `fact:bp` | 2 | EK, Lemma 3.4.1, Proposition 3.4.2, and Appendix 3, Pr | entbehrlich (2026-08-30) | Kein Beweis des Manuskripts benutzt `cor:bpclosure`, und EK 4.3.1 trägt dort nichts; der bp-Abschluss ist am 2026-08-30 aus MartingaleProblems M2 gestrichen und durch `insert_of_tendsto_of_forall_norm_le` und `submartingale_mpProcess_of_tendsto` ersetzt, M9 trägt die Anwendung (EK 4.3.9/4.3.10) |
 | `fact:cadlagext` | 2 | Regularization along a dense set; EK, Lemma 2.2.8; eqr | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:optsampl` | 2 | Optional sampling; EK, Theorem 2.2.13, Remark 2.2.14,  | Roadmap | MartingaleProblems M9, `Submartingale.stoppedValue_min_le_condExp` — dort neu angelegt; Mathlibs `Martingale.stoppedValue_min_ae_eq_condExp` ist der diskrete Fall und nur für Martingale |
@@ -7866,3 +7866,207 @@ die von `arctan` erzeugte Algebra stark trennend, $\int\arctan\,d\delta_n$
 konvergiert gegen $\pi/2$, und kein Wahrscheinlichkeitsmaß hat diesen Wert — die
 Voraussetzung ist dort also leer und nicht falsch, und ein Beweis, der das nicht
 respektiert, ist an dieser Stelle zu widerlegen.
+
+### 2026-09-07, siebzehnter Lauf des Tages — die Straffheit aus starker Trennung: Schritte (1), (3) und die tragende Hälfte von (4) bewiesen, und die Aussage war über beliebigem Filter falsch
+
+**Bearbeitet:** `fact:stoneweierstrass` (tragend 3, die höchste Zahl unter den
+Zeilen mit ausstehendem Beweis), nach dem benannten Ziel des sechzehnten Laufs:
+`isTightMeasureSet_of_stronglySeparatesPoints`, `WeakConvergence` Meilenstein 1.
+Der Vorlauf hatte den Beweis in vier Schritte zerlegt (EK Thm. 3.4.5(b),
+Buchseiten 113–114) und Schritt (2) bewiesen. Dieser Lauf hat **(1) und (3)
+bewiesen**, dazu **einen Fehler in der Aussage selbst gefunden**, und von
+Schritt (4) die tragende Hälfte — eine eigene Mathlib-Lücke — **ebenfalls
+bewiesen**; offen bleibt dort nur noch die Buchhaltung.
+
+**Was bewiesen ist**, alles in `TauCeti/WeakConvergence/Suggested.lean`, alles
+durch `lake env lean` gegen v4.33.1 (rc = 1 mit unverändert genau den **zwei**
+angekündigten Fehlern an `tendsto_map_of_measure_setOf_continuousAt_eq_one`,
+das für `upstream/master` geschrieben ist; sonst kein Fehler):
+
+* `coordMap`, `coordAlgebra`, `separatesPoints_coordAlgebra` — die von den
+  Koordinaten erzeugte Unteralgebra von `C(κ → ℝ, ℝ)` und ihre Punktetrennung.
+* `exists_mem_subalgebra_comp_of_mem_coordAlgebra` — sie zieht sich längs
+  `fun x i => f i x` **nach `A` zurück**, per `Algebra.adjoin_induction`; die
+  Konstanten kommen aus `A.smul_mem A.one_mem`, und das ist die einzige Stelle,
+  an der `A` eine `ℝ`-Algebra und nicht bloß ein Unterring sein muß. Der
+  Rückzug liefert ein Element von `E →ᵇ ℝ`, dessen Funktion mit `g ∘ Φ`
+  **übereinstimmt**, weshalb kein Beschränktheitsargument nötig ist.
+* `tendsto_integral_comp_of_forall_tendsto_integral` — **Schritt (1)**: für
+  einen beliebigen `Fintype κ`, `f : κ → (E →ᵇ ℝ)` mit `f i ∈ A` und **jedes**
+  beschränkt stetige `F` auf `κ → ℝ` konvergieren die Integrale von `F ∘ Φ`.
+  Die Box ist `Metric.closedBall 0 (∑ i, ‖f i‖)`, kompakt, weil `κ → ℝ` für
+  endliches `κ` ein `ProperSpace` ist (`pi_properSpace`,
+  `Topology/MetricSpace/ProperSpace.lean:132`), und sie hält das gemeinsame
+  Bild, weil die Supremumsmetrik koordinatenweise vergleicht
+  (`dist_pi_le_iff`). Darüber Stone–Weierstraß in der Fassung mit kompakter
+  **Menge** statt kompaktem Raum, also ohne Untertyp
+  (`ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`,
+  `Topology/ContinuousMap/StoneWeierstrass.lean:323`), und ein `ε/3`-Schnitt,
+  dessen äußere Drittel gegen **jedes** Wahrscheinlichkeitsmaß zugleich
+  abgeschätzt werden (`norm_integral_le_of_norm_le_const`).
+* `le_liminf_measure_preimage_of_isOpen` — die Portmanteau-Folgerung, und die
+  Form, die Schritt (3) verbraucht: für offenes `U ⊆ κ → ℝ` gilt
+  `μ₀ (Φ⁻¹' U) ≤ liminf (μ n) (Φ⁻¹' U)`. Sie geht über
+  `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`, `integral_map`,
+  `ProbabilityMeasure.le_liminf_measure_open_of_tendsto` (über beliebigem
+  Filter, weshalb hier keine Folge auftritt) und `Measure.map_apply`.
+* `le_liminf_measure_thickening_of_stronglySeparatesPoints` — **Schritt (3)**:
+  `μ₀ K ≤ liminf (μ n) (Metric.thickening δ K)`. Hier treffen (1) und (2)
+  zusammen. Die endlich vielen Funktionen, die die endlich vielen Mengen des
+  Überdeckungssatzes nennen, werden zu **einem** `Finset (E → ℝ)` gesammelt
+  (`htfin.toFinset.biUnion s`); dieser, als Indextyp gelesen, macht
+  `⋃ x ∈ t, G x` zum Urbild der offenen Menge
+  `⋃ x ∈ t, {z | ∀ i, ↑i ∈ s x → |z i - ↑i x| < ε x}` von `κ → ℝ`. Daß der
+  Index ein beliebiger `Fintype` sein darf und nicht `Fin k` sein muß, ist
+  genau der Grund, warum keine Numerierung der Funktionen nötig ist — die
+  einzige Stelle, an der dieser Lauf die Vorlage EK verlassen hat.
+* `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` —
+  das **gelockerte Straffheitskriterium**, EK Thm. 3.2.2, und die tragende
+  Hälfte von Schritt (4). Der Zeuge ist die Menge, die Mathlibs eigener Beweis
+  der Prohorov-Rückrichtung baut (`isTightMeasureSet_of_isCompact_closure`,
+  `Measure/Prokhorov.lean:688` auf `upstream/master`): zu einer Nullfolge
+  `u m ↓ 0` und Kompakta `K m`, die für jedes `μ ∈ S` alles bis auf
+  `ε · 2⁻¹^(m+1)` in `Metric.thickening (u m) (K m)` fangen, nimm
+  `⋂ m, Metric.cthickening (u m) (K m)`. Sie ist abgeschlossen und total
+  beschränkt, weil sie für **jedes** `m` in der `u m`-Verdickung eines
+  Kompaktums sitzt; `TotallyBounded.isCompact_of_isClosed` und die
+  Vollständigkeit machen daraus Kompaktheit, die geometrische Reihe schätzt
+  das Komplement durch `ε` ab. **Ohne** Separabilität — kein Schritt braucht
+  eine abzählbare dichte Menge, nur Vollständigkeit.
+
+Damit steht die Datei bei **101 Deklarationen** (vorher 93) und **10 `sorry`**
+(unverändert; sechs neue Deklarationen sind bewiesen, und eine neue Aussage —
+`isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`
+selbst — wurde im selben Lauf angelegt und gleich bewiesen, ohne je als
+`sorry` zu stehen).
+
+**Der Befund, und er ist der Ertrag dieses Laufs: die Aussage war falsch.**
+`isTightMeasureSet_of_stronglySeparatesPoints` stand seit dem 2026-09-05 über
+einem beliebigen Filter `{𝓕 : Filter ι} [𝓕.NeBot]`. So ist sie falsch, und
+billig:
+
+> `ι = ℕ`, `𝓕 = pure 0`, `E = ℝ`, `A = ⊤`, `μ n = δ n`, `μ₀ = δ 0`.
+
+`A = ⊤` trennt Punkte stark (zu `x` und `δ > 0` nimm die eine Funktion
+`fun y => min (dist y x) δ`, beschränkt und stetig, mit `ε = δ`). Konvergenz
+längs `pure 0` ist nach `tendsto_pure_left` die **einzige** Gleichung
+`∫ g ∂μ 0 = ∫ g ∂μ₀`, die gilt — und über `μ n` für `n ≥ 1` sagt sie nichts.
+Die Familie `{δ n | n}` ist nicht straff, weil jede kompakte Teilmenge von `ℝ`
+beschränkt ist. Die fehlende Hypothese ist `Filter.cofinite ≤ 𝓕`: sie ist genau
+die Aussage, daß das Komplement einer `𝓕`-fast-überall-Menge endlich ist
+(`Filter.mem_cofinite`), und damit genau das, was EK benutzen, wenn sie „Lemma
+2.1 auf `P` und auf endlich viele Glieder der Folge" anwenden. Für Folgen ist
+sie geschenkt (`Nat.cofinite_eq_atTop`), der Verbraucher
+`IsConvergenceDetermining` zahlt also nichts. Die Aussage trägt sie jetzt, mit
+dem Zeugen im Docstring und als acceptance example in der Roadmap.
+
+Zu beachten für künftige Läufe: die Richtung der Filterordnung. `𝓕 ≤ cofinite`
+hieße „jede koendliche Menge ist `𝓕`-fast-überall" und ist die **falsche**
+Richtung; gebraucht wird `cofinite ≤ 𝓕`, „jede `𝓕`-Menge ist koendlich". Auf
+`ℕ` mit `atTop` sind beide wahr, weil `cofinite = atTop` — an genau dieser
+Verwechslung wäre der Zeuge unentdeckt geblieben.
+
+**Was Schritt (4) braucht, und daß es keine bloße Buchhaltung war.** Der
+Vorlauf hatte Schritt (4) als „Buchhaltung über bekannten Sätzen" angekündigt.
+Das war falsch, und zwar an einer benennbaren Stelle: EK schließen mit ihrem
+Theorem 3.2.2, das Relativkompaktheit aus dem **gelockerten** Kriterium „für
+alle `ε, δ > 0` gibt es ein kompaktes `K` mit `inf_n P_n(K^δ) ≥ 1 - ε`" zieht.
+Mathlibs `IsTightMeasureSet` verlangt die kompakte Menge selbst, und
+`Metric.cthickening δ K` ist für kompaktes `K` nur auf einem **properen** Raum
+kompakt (`IsCompact.cthickening`,
+`Topology/MetricSpace/Thickening.lean:300`); auf einem bloß vollständigen Raum
+ist die abgeschlossene Einheitskugel eines unendlichdimensionalen Banachraums
+das Gegenbeispiel, sie ist `cthickening 1 {0}`. Der erste Anlauf dieses Laufs,
+die Verdickung sei „auf vollständigen Räumen total beschränkt", war genau
+dieser Fehler und ist verworfen.
+
+Deshalb ist Schritt (4) in **zwei** Punkte zerlegt, und beide sind jetzt
+bewiesen bzw. auf das Fehlende reduziert:
+
+* `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`
+  — das gelockerte Kriterium, EK Thm. 3.2.2, und **bewiesen**. Der Zeuge ist
+  die Menge, die Mathlibs eigener Beweis der Prohorov-Rückrichtung baut
+  (`isTightMeasureSet_of_isCompact_closure`, `Measure/Prokhorov.lean:688` auf
+  `upstream/master`): zu einer Nullfolge `u m ↓ 0` und Kompakta `K m`, die für
+  jedes `μ ∈ S` alles bis auf `ε · 2⁻¹^(m+1)` in
+  `Metric.thickening (u m) (K m)` fangen, nimm
+  `⋂ m, Metric.cthickening (u m) (K m)`. Sie ist abgeschlossen und total
+  beschränkt, weil sie für **jedes** `m` in der `u m`-Verdickung eines
+  Kompaktums sitzt; `TotallyBounded.isCompact_of_isClosed` und die
+  Vollständigkeit machen daraus Kompaktheit, die geometrische Reihe schätzt das
+  Komplement durch `ε` ab. Über die Maße wird nichts vorausgesetzt, und die
+  Aussage braucht **keine** Separabilität — kein Schritt des Beweises benutzt
+  eine abzählbare dichte Menge, nur Vollständigkeit.
+* Die Buchhaltung darüber bleibt offen: `μ₀` ist selbst straff
+  (`isTightMeasureSet_singleton`, `Measure/Tight.lean:99`), Schritt (3) macht
+  daraus `μ n ((Metric.thickening δ K)ᶜ) ≤ ε` für alle `n` einer `𝓕`-Menge,
+  deren Komplement nach `cofinite ≤ 𝓕` endlich ist, und die endlich vielen
+  Ausnahmeindizes werden durch Vergrößern von `K` um ihre eigenen Kompakta
+  absorbiert (`IsTightMeasureSet.union` ist auf `master` vorhanden,
+  `Measure/Tight.lean:119`). Das ist die einzige verbleibende Lücke zwischen
+  Schritt (3), dem gelockerten Kriterium und `isTightMeasureSet_of_stronglySeparatesPoints`
+  selbst.
+
+**Negativbefund, mit den Suchformulierungen.** Das gelockerte Kriterium hat
+Mathlib **nicht**, weder in v4.33.1 noch auf `upstream/master`. Gesucht wurde
+ohne unsere Vokabeln: `thickening` in `Measure/Tight.lean` und
+`Measure/Prokhorov.lean` (**kein** Treffer, in beiden Quellen), `TotallyBounded`
+in denselben beiden plus `Measure/TightNormed.lean` (zwei Treffer, beide
+*innerhalb* des Beweises der Prohorov-Rückrichtung, keine Aussage), und die
+vollständige Deklarationsliste von `master`s `Measure/Tight.lean`
+(`isTightMeasureSet_iff_exists_isCompact_measure_compl_le`, die drei
+`..._singleton...`, `of_compactSpace`, `subset`, `union`, `inter`, `map`,
+`prodMk` — nichts über Verdickungen).
+
+**Was nicht geprüft wurde, und was statt dessen dasteht.** `#print axioms` für
+die sechs neuen Sätze hätte einen zweiten Durchlauf der 3000-Zeilen-Datei
+gekostet und ist in diesem Lauf **nicht** gelaufen. Statt einer Behauptung die
+überprüfbare Tatsache: keiner der sechs Beweise enthält ein `sorry`, und die
+einzigen Deklarationen außerhalb von Mathlib, auf die sie sich stützen, sind
+`StronglySeparatesPoints.exists_finite_cover`, für die der sechzehnte Lauf
+`#print axioms` durchgeführt hat (nur `propext`, `Classical.choice`,
+`Quot.sound`), sowie einander selbst (Schritt (3) benutzt Schritt (1); das
+gelockerte Kriterium steht für sich). Wer den maschinellen Beleg will, hängt
+sechs Zeilen an und übersetzt einmal.
+
+**Mitgenommen.** Der Modulkopf, `WeakConvergence/README.md` (Meilenstein 1:
+Schritt (1) mit den zwei neuen Deklarationen, Schritt (3) als bewiesen, Schritt
+(4) mit seiner tragenden Hälfte bewiesen und der Buchhaltung offen, die
+Filterhypothese samt Zeuge, und zwei neue acceptance examples — `pure 0` gegen
+die Filterform, die Einheitskugel von `ℓ²` gegen das gelockerte Kriterium), die
+Tabellenzeile `fact:stoneweierstrass` und `Facts/BACKLOG.md`. Eine Stelle
+wurde umsortiert und nicht geändert: `integrable_of_continuous_of_bounded`
+steht jetzt vor dem Stone–Weierstraß-Abschnitt, weil Schritt (1) sie braucht
+und vor ihr stand.
+
+**Werkzeugnotizen.** (a) `lake env lean` **immer** mit dem `cd` im selben
+Befehl; der erste Aufruf dieses Laufs lief ohne, weil die Shell zwischendurch
+in den Worktree zurückgesetzt worden war. Das dort liegende `.lake` vom
+2026-09-06 (671 MB, ohne gebautes Mathlib) ist unverändert unbrauchbar und
+gehört weiterhin gelöscht. (b) `Set.mem_setOf_eq` ist in dieser
+Mathlib-Version `deprecated` (jetzt `Set.mem_ofPred_eq`), ebenso `push_neg`
+(jetzt `push Not`); wer eine `simp only`-Liste aus älteren Beweisen kopiert,
+erzeugt Warnungen. In dem einen Fall, in dem es hier vorkam, war das Lemma
+entbehrlich — `simpa` beta-reduziert selbst.
+
+**Vorschlag für das Nächste, als benanntes Ziel:
+`isTightMeasureSet_of_stronglySeparatesPoints` **fertig** beweisen**,
+`WeakConvergence` Meilenstein 1 — nach diesem Lauf reine Buchhaltung über drei
+bewiesenen Sätzen und keine eigene Mathlib-Lücke mehr. Der Beweis ist: `μ₀`
+straff via `isTightMeasureSet_singleton`; für `ε > 0` und eine Nullfolge `δ_m`
+liefert `le_liminf_measure_thickening_of_stronglySeparatesPoints` zu jedem
+`m` ein kompaktes `K m` mit `μ₀ K m ≥ 1 - ε 2⁻ᵐ` und
+`liminf (μ n) (Metric.thickening δ_m (K m)) ≥ 1 - ε 2⁻ᵐ`, also (mit
+`Filter.eventually_ge_of_liminf` o.ä.) eine `𝓕`-Menge, auf der
+`μ n ((Metric.thickening δ_m (K m))ᶜ) ≤ ε 2⁻ᵐ` gilt; das Komplement dieser
+Menge ist wegen `cofinite ≤ 𝓕` endlich, und für jeden der endlich vielen
+Ausnahmeindizes liefert `isTightMeasureSet_singleton` auf `μ n` selbst ein
+weiteres Kompaktum, das durch `IsCompact.union` in `K m` hineingezogen wird.
+Das Ergebnis speist
+`isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`.
+Warum jetzt: sie ist nach diesem Lauf das **ganze**, was
+`fact:stoneweierstrass` noch schuldet, und hängt an keinem neuen Mathlib-Fakt
+mehr, nur an der endlichen Vereinigung der Ausnahmefälle. Der Zeuge, an dem
+der Beweis sich messen muß, steht schon in M1: der `pure 0`-Zeuge zeigt, wo
+`cofinite ≤ 𝓕` wirklich gebraucht wird — an der Endlichkeit der
+Ausnahmemenge, nicht anderswo.
