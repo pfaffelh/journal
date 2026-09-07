@@ -581,6 +581,23 @@ Under (B), with `E` a pseudometric space:
   inequality from `TimeChange.norm_mul_le`, and separation from
   `TimeChange.dist_le_of_norm_le` together with right continuity.
 
+  It is written and proved (2026-09-07). The metric itself is
+  `SkorokhodSpace.totalDist t₀ f g = ∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)`,
+  and the four fields come from four theorems about it:
+  `SkorokhodSpace.totalDist_self`, `SkorokhodSpace.totalDist_comm`,
+  `SkorokhodSpace.totalDist_triangle` and
+  `SkorokhodSpace.eq_of_totalDist_eq_zero`. All four are term by term, and
+  `SkorokhodSpace.summable_totalDist` --- the series is dominated by the
+  geometric one, since `min 1 ·` is at most `1` --- is what lets them be:
+  the triangle inequality is `Summable.tsum_le_tsum` against
+  `Summable.tsum_add`, on the subadditivity of `min 1 ·` on the nonnegative
+  reals, and the separation is `Summable.le_tsum`, a series of nonnegative terms
+  vanishing only if every term does. The truncation at `1` is not cosmetic:
+  `distOn t₀ m f g` grows with the window and is unbounded in `m`, so the
+  weighted series would not converge without it. Only the triangle inequality
+  and the separation read `AdditiveDist ι`, the first three windowless axioms do
+  not; the linter has confirmed that.
+
   It carries the base point as a parameter and is a `def`, not an instance:
   `distOn` is anchored at `t₀` twice over, through the window `exhaustion t₀ m`
   and through the subgroup `TimeChange.fixing t₀`, while the type `D ι E` knows

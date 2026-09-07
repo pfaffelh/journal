@@ -6385,3 +6385,187 @@ Hälfte des Zeugen steht und übersetzt ist, weil die Roadmap sie als acceptance
 example von Meilenstein 9 führt („the pair fixes where atomlessness is a
 hypothesis and where it is not"), und weil sie die einzige der zehn
 verbleibenden `sorry` der Datei ist, die eine Konstruktion und kein Satz ist.
+
+### 2026-09-07, siebter Lauf des Tages — Rückstau 1: der Atom-Zeuge ist fertig, und die Konvention ist keine Wahl
+
+Keine vorrangige Aufgabe, keine Zeile der Tabelle auf `?`. Also Rückstau, Punkt
+1, und dort das benannte Ziel des sechsten Laufs: `isMPSolution_coinProcess`.
+**Es steht, und mit ihm `not_isQuasiLeftContinuous_of_atom` selbst.**
+`MartingaleProblems/Suggested.lean` geht durch `lake env lean` gegen `v4.33.1`,
+rc = 0, ohne Fehler und ohne Linterwarnung; **neun** `sorry` statt zehn, und zehn
+neue Deklarationen, alle bewiesen:
+
+`integrable_bool`, `integral_coinMeasure`, `coinPair`, `coinClass`,
+`isSeparating_coinClass`, `atomClock_real_of_mem`, `atomClock_real_of_notMem`,
+`integral_coinPair_snd`, `coinFiltration`, `isMPSolution_coinProcess`.
+
+Damit trägt die einzige Schärfeaussage der Roadmap zur Atomlosigkeit einen
+vollständigen, übersetzten Zeugen: eine Uhr mit einem Atom bei `u`, eine Lösung
+des Martingalproblems zu einer **trennenden** Klasse, càdlàg-Pfade — und keine
+Quasi-Linksstetigkeit. Kein Fact wechselt den Status; `fact:cadlagext`,
+`fact:submgreg`, `fact:optsampl`, `fact:doob` und `fact:stoppedlocalmg` stehen
+weiter auf Meilenstein 9, dessen Text jetzt die zehn Namen führt.
+
+**1. Der Befund, und er ist der Ertrag des Laufs: die Konvention ist keine Wahl,
+sondern erzwungen.** Der Zeuge löst das Martingalproblem in
+`Clock.Conv.optional` und in der anderen Konvention **nicht**, und zwar aus
+einem Grund, der nichts mit dem konkreten `coinPair` zu tun hat. In
+`Clock.Conv.predictable` ist das Kompensationsintervall `Set.Iio t \ Set.Iio ⊥`,
+und `Set.Iio ⊥` ist leer, weil `x < ⊥` unter `[OrderBot ι]` nie gilt; das
+Intervall ist also `Set.Iio t`, und die Uhr `Measure.dirac u` lädt es genau dann,
+wenn `u < t`. Der Kompensator feuert dann **echt nach** `u`, während der Pfad
+schon **bei** `u` springt. Die Martingaleigenschaft an der Stelle `t = u`, gegen
+die triviale σ-Algebra darunter gelesen, ist
+`2⁻¹ * (p.1 true + p.1 false) = p.1 false`, also `p.1 true = p.1 false`: jede
+prädiktable Fassung dieses Zeugen hat ein **konstantes** `p.1`, und eine
+konstante Funktion trennt `Measure.dirac true` nicht von `Measure.dirac false`.
+Die Hypothese `IsSeparating (Prod.fst '' A)`, die der sechste Lauf gegen den
+leeren Zeugen eingezogen hat, schließt also zugleich die prädiktable Konvention
+aus. Das ist kein Mangel der Schärfeaussage — sie quantifiziert über `c`
+existentiell —, und es verträgt sich mit
+`isQuasiLeftContinuous_of_isMPSolutionFor`, das über `c` universell
+quantifiziert: unter `Clock.IsAtomless` fallen die beiden Konventionen zusammen,
+eine Schärfeaussage braucht also nur eine von beiden. Im Roadmaptext von
+Meilenstein 9 steht die Rechnung jetzt mit.
+
+**2. Der Zeuge braucht auf dem Index keine Topologie.** Alle zehn neuen
+Deklarationen tragen `omit [TopologicalSpace ι] [OrderTopology ι]` (bei den
+beiden Uhrmassen zusätzlich `omit [OrderBot ι]`), vom Linter bestätigt und nicht
+geraten. Insbesondere `isMPSolution_coinProcess`: die Martingaleigenschaft ist
+reine Ordnungs- und Maßrechnung. Die Topologie des Index kommt erst in
+`not_isQuasiLeftContinuous_of_atom` selbst vor, und dort an genau einer Stelle —
+`⨆ n, s n = u` aus `Tendsto s atTop (𝓝 u)`, über `tendsto_atTop_ciSup` und
+`tendsto_nhds_unique`, wofür die Ordnungstopologie das `T2Space` liefert. Das
+ist dieselbe Rechnung wie in `IsQuasiLeftContinuous.ae_eq_leftLim` und die
+einzige Rolle, die die Topologie im ganzen Gegenbeispiel spielt.
+
+**3. Die zwei Rechnungen, aus denen der Beweis besteht.** Der Kompensator ist
+`setIntegral_const` gegen `Measure.dirac u`: das Intervall
+`Set.Iic t \ Set.Iic ⊥` enthält `u` genau dann, wenn `u ≤ t` — hier, und nur
+hier, geht `¬ u ≤ ⊥` ein, das aus `s 0 < u` und `not_lt_bot` kommt —, also ist
+der Kompensator `2⁻¹` von `u` an und `0` davor (`integral_coinPair_snd`, über
+`atomClock_real_of_mem` bzw. `atomClock_real_of_notMem`). Der Prozeß ist damit
+`0` strikt vor `u` und `(if ω then 1 else 0) - 2⁻¹` von `u` an. Die
+Martingaleigenschaft zerfällt in zwei Fälle: oberhalb von `u` ist `𝓕 s` die
+ganze σ-Algebra und `Y t = Y s`, also `condExp_of_stronglyMeasurable`; unterhalb
+ist `𝓕 s = ⊥` und `Y s = 0`, also `condExp_bot`, und was zu zeigen bleibt, ist
+`∫ Y t = 0` — das ist `integral_coinMeasure`, `2⁻¹(1 - 2⁻¹) + 2⁻¹(0 - 2⁻¹) = 0`.
+Die Konstante `2⁻¹` in `coinPair.2` ist deshalb keine Wahl, sondern die Bilanz
+`p.1 true - p.1 false = p.2 true + p.2 false`.
+
+**4. Die Trennung auf `Bool`, in vier Zeilen und mit einem Mathlib-Satz, den das
+Inventar noch nicht kannte.** `isSeparating_coinClass`: der Indikator von
+`{true}` ist `Set.indicator {true} 1`, sein Integral ist `μ.real {true}`
+(`integral_indicator_const`, `MeasureTheory/Integral/Bochner/Set.lean:531`), und
+`MeasureTheory.ext_iff_measureReal_singleton`
+(`MeasureTheory/Measure/Dirac.lean:118`) macht aus „gleich auf allen Singletons"
+die Gleichheit der Maße; die Masse von `{false}` ist der Rest, über
+`measureReal_add_measureReal_compl` (`Measure/Real.lean:223`) und `probReal_univ`
+(`Measure/Typeclasses/Probability.lean:118`). Eine trennende Klasse mit **einem**
+Element, und das ist die kleinste, die es auf `Bool` gibt.
+
+**Am Quelltext belegt** wurden in diesem Lauf, alle in `v4.33.1` und keine
+`deprecated`: `memLp_top_of_bound` (`Function/LpSeminorm/Basic.lean:538`),
+`MemLp.integrable` (`Function/L1Space/Integrable.lean:659`),
+`measurable_of_finite` (`MeasurableSpace/Basic.lean:291`),
+`Bool.instMeasurableSpace = ⊤` und `Bool.instMeasurableSingletonClass`
+(`MeasurableSpace/Instances.lean:26,56`), `DiscreteTopology Bool`
+(`Topology/Order.lean:574`), `integral_smul_measure`, `integral_add_measure`,
+`integral_dirac` (`Integral/Bochner/Basic.lean:1014,974,1106`),
+`Measure.dirac_apply'` (`Measure/Dirac.lean:44`), `setIntegral_const`
+(`Integral/Bochner/Set.lean:527`), `condExp_bot` und
+`condExp_of_stronglyMeasurable`
+(`Function/ConditionalExpectation/Basic.lean:288,142`) samt der Instanz
+`isFiniteMeasure_trim` (`Measure/Trim.lean:124`), die den `SigmaFinite`-Beweis
+der zweiten liefert, ohne daß er hingeschrieben werden muß.
+
+**Mitgefunden, am Übersetzen und nicht am Lesen.**
+
+* Ein `if u ∈ S then _ else _` in einer **Aussage** verlangt
+  `Decidable (u ∈ S)`, und für ein Kompensationsintervall gibt es die Instanz
+  nicht; `classical` im Beweis hilft nicht, weil die Aussage vor dem Beweis
+  elaboriert wird. Statt `open scoped Classical` stehen dort zwei Lemmata,
+  `atomClock_real_of_mem` und `atomClock_real_of_notMem` — kürzer und an der
+  Anwendungsstelle bequemer, weil die Fallunterscheidung dort ohnehin steht.
+* In einem **Strukturfeld** (`mono'`, `le'` von `Filtration`) ist das Ziel nicht
+  betareduziert: es steht `(fun t ↦ if u ≤ t then _ else ⊥) a ≤ …`, und
+  `rw [if_pos ha]` findet sein Muster nicht. Ein `show` mit der reduzierten
+  Gestalt behebt es; `simp only [if_pos ha, le_refl]` schließt dann.
+* Der Linter für unbenutzte Abschnittsvariablen meldet **kaskadierend**, eine
+  Deklaration je Durchlauf: erst nach dem `omit` an der ersten kam die Meldung
+  an der zweiten. Vier Durchläufe für vier `omit`.
+
+**Was in `MartingaleProblems` offen bleibt.** Die neun `sorry` der Datei sind
+`isMPSolution_iff_forall_fdd` und sein Nachbar (Meilenstein 3), die beiden
+Markov-Aussagen der Verschiebung (Meilenstein 5),
+`exists_cadlag_modification_of_isRegularizingClass`, die beiden Sätze zur
+Quasi-Linksstetigkeit (Meilenstein 9), `mpSolution_of_tendsto` (Meilenstein 10)
+und `isMPSolution_of_forall_condExp_eq_of_dense`.
+
+**Und im selben Lauf, weil Zeit blieb: die Metrik von `SkorokhodSpace`
+Meilenstein 4 ist gebaut und bewiesen.** Das war das benannte Ziel des fünften
+Laufs von heute. `SkorokhodSpace/Suggested.lean` geht durch `lake env lean`,
+rc = 0, ohne Fehler und ohne Warnung; sieben neue Deklarationen, alle bewiesen:
+`SkorokhodSpace.totalDist` — `∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)` —,
+`summable_totalDist`, `totalDist_self`, `totalDist_comm`, `totalDist_triangle`,
+`eq_of_totalDist_eq_zero` und `SkorokhodSpace.metricSpace (t₀ : ι)`, die
+`MetricSpace D(ι, E)`-Struktur mit dem Basispunkt als Parameter, wie
+Meilenstein 4 sie verlangt.
+
+Alles daran ist gliedweise. Die Summierbarkeit ist die geometrische Reihe, weil
+`min 1 ·` den Summanden auf `2⁻¹ ^ m` deckelt — und die Trunkierung ist nicht
+Kosmetik, sondern nötig: `distOn t₀ m f g` wächst mit dem Fenster und ist in `m`
+unbeschränkt. Die Dreiecksungleichung ist `Summable.tsum_le_tsum` gegen
+`Summable.tsum_add`, auf der Subadditivität von `min 1 ·` über den nichtnegativen
+Reellen (`min_def` und `split_ifs <;> linarith`, acht Fälle). Die Trennung ist
+`Summable.le_tsum`: eine Reihe nichtnegativer Glieder verschwindet nur, wenn
+jedes Glied verschwindet, also ist `min 1 (distOn t₀ m f g) = 0` für jedes `m`,
+also `distOn = 0`, und `eq_of_forall_distOn_eq_zero` vom fünften Lauf macht
+daraus die Gleichheit der Pfade. `AdditiveDist ι` verbrauchen von den fünf
+Aussagen nur die beiden letzten, vom Linter bestätigt.
+
+**Die Zahl der `sorry` in `SkorokhodSpace` bleibt trotzdem bei zwölf, und das
+ist der Befund dieser Hälfte.** Der parameterlose `instance : MetricSpace D(ι, E)`
+darunter bleibt stehen: was ihm fehlt, ist kein Axiom, sondern der
+**Basispunkt**. Zehn spätere Deklarationen der Datei elaborieren gegen ihn, und
+sie auf `SkorokhodSpace.metricSpace t₀` umzuschreiben ist eine Signaturänderung
+an zehn Stellen und kein Beweis; nicht behauptet ist dabei — und deshalb steht
+es auch nicht in der Roadmap —, daß zwei Basispunkte dieselbe Topologie geben,
+denn die Untergruppen `TimeChange.fixing t₀` sind für verschiedene `t₀`
+verschieden. Der Doc-Kommentar des `instance` sagt jetzt genau das, statt wie
+bisher die vier Axiome mitzuzählen.
+
+**Mitgefunden.** `summable_geometric_of_lt_one` läßt sich nicht als drittes
+Argument von `Summable.of_nonneg_of_le` schreiben — die Vergleichsfunktion ist
+dort noch eine Metavariable, und `norm_num` sieht `0 ≤ ?r`; die geometrische
+Reihe gehört in ein eigenes `have`. Und `simp` normalisiert `2⁻¹ ^ m` zu
+`(2 ^ m)⁻¹`, womit ein vorbereitetes `∀ m, 2⁻¹ ^ m * … = 0` nicht mehr paßt;
+`show` plus `tsum_congr` plus `tsum_zero` ist der Weg, der nicht daran vorbeiläuft.
+Eine `def` mit Klassentyp will `@[instance_reducible]`, sonst warnt der Linter —
+dieselbe Meldung wie bei `generateFromFuns` am 2026-09-06.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**`SkorokhodSpace.IsCadlag.measurable`** — daß eine càdlàg-Abbildung meßbar ist,
+Meilenstein 2, seit dem 2026-09-05 ein `sorry` und einer von nur noch zwei in der
+Datei, die nicht an der parameterlosen Instanz hängen. Worauf sie ruht: auf dem
+Bündel (B), das die Roadmap für genau diese Aussage führt — die abzählbare
+dichte Menge `D`, aus der heraus jeder nicht-maximale Punkt von rechts erreichbar
+ist. Der Weg ist die Approximation von rechts entlang `D`: die Approximanten
+nehmen abzählbar viele Werte an und sind darum meßbar, die Rechtsstetigkeit gibt
+den punktweisen Limes, und `measurable_of_tendsto_metrizable`
+(`MeasureTheory/Constructions/BorelSpace/Metrizable.lean:51`, am Quelltext
+geprüft) trägt ihn. Die Sprungtheorie des fünften Laufs liegt daneben bereit —
+`countable_leftJumpSet`, `IsCadlag.continuousAt_iff_notMem_leftJumpSet` und
+Mathlibs `measurableSet_of_continuousAt`
+(`Constructions/BorelSpace/Basic.lean:252`), das die Menge der Stetigkeitsstellen
+als meßbar ausweist —, falls die Ausnahmemenge einzeln behandelt werden muß.
+Warum jetzt: `fact:Dcountable` (tragend `4`) verlangt über Meilenstein 8 die
+Fassung **für ein Maß**, und deren Fubini-Argument über die Sprunghöhen braucht
+die Meßbarkeit der Pfadabbildung als erstes Datum — ohne sie ist der Schritt von
+der Pfadaussage zur Maßaussage nicht einmal formulierbar. Als zweites, kleineres
+Ziel im selben Lauf: `AtomWitness` um die Umkehrung ergänzen — daß die Uhr
+`atomClock u` **nicht** atomlos ist, `¬ (atomClock u).IsAtomless`, zwei Zeilen
+aus `atomClock_apply_singleton_ne_zero` und `measure_mono` an der Stelle `t = u`
+(die Menge `{v | u ≤ v ∧ v ≤ u}` enthält `u`), die die Schärfeaussage
+sichtbar an die Hypothese `hQ` von `isQuasiLeftContinuous_of_isMPSolutionFor`
+bindet.

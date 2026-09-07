@@ -85,7 +85,7 @@ kein gebautes Mathlib und taugt zu nichts.
    |---|---|---|
    | `WeakConvergence` | 50 | 21 |
    | `SkorokhodSpace` | 102 | 12 |
-   | `MartingaleProblems` | 50 | 10 |
+   | `MartingaleProblems` | 50 | 9 |
 
    Arbeite die verbleibenden `sorry` ab, von oben je Datei, und nimm dabei
    `MartingaleProblems` mit. Was sich nicht billig beweisen läßt, laß
@@ -105,6 +105,32 @@ kein gebautes Mathlib und taugt zu nichts.
    `not_isQuasiLeftContinuous_of_atom` schließt; die Rechnung steht im
    Laufbericht im Inventar. Mitgefunden und dort ebenfalls notiert: die Aussage
    von `not_isQuasiLeftContinuous_of_atom` war leer und ist berichtigt.*
+
+   *Zwischenstand 2026-09-07, siebter Lauf des Tages:
+   `not_isQuasiLeftContinuous_of_atom` **ist bewiesen**, die Datei steht bei
+   neun `sorry` (rc = 0, keine Warnung). Zehn neue Deklarationen schließen den
+   Zeugen ab — `integrable_bool`, `integral_coinMeasure`, `coinPair`,
+   `coinClass`, `isSeparating_coinClass`, `atomClock_real_of_mem` und
+   `atomClock_real_of_notMem`, `integral_coinPair_snd`, `coinFiltration`,
+   `isMPSolution_coinProcess` —, alle bewiesen. Die Zahl der Deklarationen
+   steigt von 48 auf 58, gezählt mit
+   `grep -cE "^(noncomputable |private |protected )*(theorem|lemma|def|structure|inductive|instance|abbrev) "`;
+   die 50 der Tabelle stammt aus einer anderen Zählung desselben Standes, die
+   Sorry-Zahlen sind die des Übersetzers. Der erste verbleibende `sorry` der
+   Datei ist `isMPSolution_iff_forall_fdd` (Meilenstein 3).*
+
+   *Zweiter Zwischenstand desselben Laufs: in `SkorokhodSpace` ist die
+   **Metrik von Meilenstein 4 gebaut und bewiesen** —
+   `SkorokhodSpace.totalDist`, `summable_totalDist`, `totalDist_self`,
+   `totalDist_comm`, `totalDist_triangle`, `eq_of_totalDist_eq_zero` und
+   `SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)`, sieben
+   Deklarationen, alle bewiesen; rc = 0, keine Warnung. Die Zahl der `sorry`
+   bleibt bei **zwölf**: der parameterlose `instance` darunter, gegen den zehn
+   spätere Deklarationen elaborieren, hat keinen Basispunkt, und den kann keine
+   Aussage über die Metrik ihm geben. Wer die zwölf weiter drücken will, fängt
+   deshalb nicht bei einem Beweis an, sondern beim Umschreiben dieser zehn
+   Deklarationen auf `SkorokhodSpace.metricSpace t₀` — das ist eine
+   Signaturänderung und kein Satz.*
 
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in

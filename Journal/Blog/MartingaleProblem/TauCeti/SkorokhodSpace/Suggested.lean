@@ -59,7 +59,7 @@ path truncated to the window --- càdlàg again by the new
 `bddAbove_range_dist_restrictExhaustion` and `bddBelow_range_distOn` for the two
 places where a conditionally complete supremum could otherwise be a junk value.
 `distOn_nonneg`, `distOn_self`, `distOn_comm` and `distOn_triangle` are proved,
-so of the metric axioms only the separation is left.  The one statement
+and so is the separation; every axiom of `distOn` is a theorem.  The one statement
 of Milestone 2 that had to be corrected first is
 `IsCadlag.isBounded_image_of_isCompact`: under the bundle (A) of the roadmap,
 a mere preorder, it is **false**, and the witness is in the roadmap; it holds
@@ -88,6 +88,15 @@ subset of `ℝ` need not --- but through the new
 `IsCadlag.eq_of_forall_exists_dist_le` of Milestone 2, playing the time change
 against its inverse: one of the two moves `t` up, and the right continuity of
 whichever path is evaluated there does the rest.
+
+Since 2026-09-07, seventh run, the **metric of Milestone 4 is assembled and
+proved**: `SkorokhodSpace.totalDist t₀ f g = ∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)`
+with `summable_totalDist`, `totalDist_self`, `totalDist_comm`,
+`totalDist_triangle` and `eq_of_totalDist_eq_zero`, and
+`SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)` built from them.
+It is a `def` with the base point as a parameter, as Milestone 4 asks; the
+parameterless `instance` below it stays `sorry` because it is the base point
+that is missing there, not an axiom.
 
 Seven `sorry`s went on 2026-09-06: `isCompact_exhaustion`,
 `monotoneOn_dist_basepoint` and
@@ -1511,15 +1520,111 @@ theorem SkorokhodSpace.eq_of_forall_distOn_eq_zero (t₀ : ι) (f g : D(ι, E))
   rwa [SkorokhodSpace.restrictExhaustion_eq_self ht,
     SkorokhodSpace.restrictExhaustion_eq_self ht] at hc
 
-/-- The `sorry` here is not only the four axioms, which are now all theorems
-about `distOn`.  The metric of Milestone 4 carries a **base point**: `distOn` is
-anchored at `t₀` through the window `exhaustion t₀ m` and through the subgroup
-`TimeChange.fixing t₀`, while `D(ι, E)` knows nothing of one.  Milestone 4
-therefore asks for `SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)`,
-a `def` with the base point as a parameter, and for the instance at the
-distinguished point of an index that has one.  The parameterless instance here
-is what the ten declarations after it elaborate against, and turning it into the
-`def` moves all ten. -/
+/-- The metric of Milestone 4, at a base point: the windowed distances,
+truncated at `1` and summed with geometric weights.  The truncation is what
+makes the sum converge for every pair of paths -- `distOn` is unbounded as the
+window grows -- and it costs nothing, since a metric is only ever read near
+`0`. -/
+noncomputable def SkorokhodSpace.totalDist (t₀ : ι) (f g : D(ι, E)) : ℝ :=
+  ∑' m : ℕ, (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g)
+
+omit [AdditiveDist ι] in
+/-- The series is dominated by the geometric one, term by term. -/
+theorem SkorokhodSpace.summable_totalDist (t₀ : ι) (f g : D(ι, E)) :
+    Summable fun m : ℕ ↦ (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g) := by
+  have hgeom : Summable fun m : ℕ ↦ (2 : ℝ)⁻¹ ^ m :=
+    summable_geometric_of_lt_one (by norm_num) (by norm_num)
+  refine Summable.of_nonneg_of_le (fun m ↦ ?_) (fun m ↦ ?_) hgeom
+  · exact mul_nonneg (by positivity)
+      (le_min zero_le_one (SkorokhodSpace.distOn_nonneg t₀ m f g))
+  · exact mul_le_of_le_one_right (by positivity) (min_le_left _ _)
+
+omit [AdditiveDist ι] in
+theorem SkorokhodSpace.totalDist_self (t₀ : ι) (f : D(ι, E)) :
+    SkorokhodSpace.totalDist t₀ f f = 0 := by
+  have h : ∀ m : ℕ, (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f f) = 0 := by
+    intro m
+    rw [SkorokhodSpace.distOn_self, min_eq_right zero_le_one, mul_zero]
+  show ∑' m : ℕ, (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f f) = 0
+  rw [tsum_congr h, tsum_zero]
+
+omit [AdditiveDist ι] in
+theorem SkorokhodSpace.totalDist_comm (t₀ : ι) (f g : D(ι, E)) :
+    SkorokhodSpace.totalDist t₀ f g = SkorokhodSpace.totalDist t₀ g f :=
+  tsum_congr fun m ↦ by rw [SkorokhodSpace.distOn_comm t₀ m f g]
+
+/-- The triangle inequality survives the truncation: `min 1 ·` is subadditive on
+the nonnegative reals, so the inequality holds term by term and the two series
+are summable. -/
+theorem SkorokhodSpace.totalDist_triangle (t₀ : ι) (f g h : D(ι, E)) :
+    SkorokhodSpace.totalDist t₀ f h
+      ≤ SkorokhodSpace.totalDist t₀ f g + SkorokhodSpace.totalDist t₀ g h := by
+  have key : ∀ a b c : ℝ, 0 ≤ a → 0 ≤ b → 0 ≤ c → a ≤ b + c →
+      min 1 a ≤ min 1 b + min 1 c := by
+    intro a b c ha hb hc habc
+    simp only [min_def]
+    split_ifs <;> linarith
+  simp only [SkorokhodSpace.totalDist]
+  rw [← (SkorokhodSpace.summable_totalDist t₀ f g).tsum_add
+    (SkorokhodSpace.summable_totalDist t₀ g h)]
+  refine (SkorokhodSpace.summable_totalDist t₀ f h).tsum_le_tsum (fun m ↦ ?_)
+    ((SkorokhodSpace.summable_totalDist t₀ f g).add
+      (SkorokhodSpace.summable_totalDist t₀ g h))
+  rw [← mul_add]
+  refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+  exact key _ _ _ (SkorokhodSpace.distOn_nonneg t₀ m f h)
+    (SkorokhodSpace.distOn_nonneg t₀ m f g) (SkorokhodSpace.distOn_nonneg t₀ m g h)
+    (SkorokhodSpace.distOn_triangle t₀ m f g h)
+
+/-- Separation, and the only axiom that is not a term by term computation: a
+series of nonnegative terms vanishes only if every term does, so every window
+distance is `0`, and `eq_of_forall_distOn_eq_zero` turns that into equality of
+the paths. -/
+theorem SkorokhodSpace.eq_of_totalDist_eq_zero (t₀ : ι) (f g : D(ι, E))
+    (h : SkorokhodSpace.totalDist t₀ f g = 0) : f = g := by
+  have hnn : ∀ m : ℕ, 0 ≤ (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g) :=
+    fun m ↦ mul_nonneg (by positivity)
+      (le_min zero_le_one (SkorokhodSpace.distOn_nonneg t₀ m f g))
+  have hz : ∀ m : ℕ, SkorokhodSpace.distOn t₀ m f g = 0 := by
+    intro m
+    have hle : (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g) ≤ 0 :=
+      calc (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g)
+          ≤ ∑' k : ℕ, (2 : ℝ)⁻¹ ^ k * min 1 (SkorokhodSpace.distOn t₀ k f g) :=
+            (SkorokhodSpace.summable_totalDist t₀ f g).le_tsum m fun j _ ↦ hnn j
+        _ = 0 := h
+    have hmin : min 1 (SkorokhodSpace.distOn t₀ m f g) ≤ 0 := by
+      by_contra hpos
+      exact absurd hle (not_le.2 (mul_pos (by positivity) (not_le.1 hpos)))
+    rcases min_le_iff.1 hmin with h1 | h1
+    · exact absurd h1 (by norm_num)
+    · exact le_antisymm h1 (SkorokhodSpace.distOn_nonneg t₀ m f g)
+  have hfg : f.toFun = g.toFun := SkorokhodSpace.eq_of_forall_distOn_eq_zero t₀ f g hz
+  obtain ⟨f', hf'⟩ := f
+  obtain ⟨g', hg'⟩ := g
+  have hfun : f' = g' := hfg
+  subst hfun
+  rfl
+
+/-- The metric space of Milestone 4, with the base point as a parameter: the
+metric carries one, since `distOn` is anchored at `t₀` twice over, through the
+window `exhaustion t₀ m` and through the subgroup `TimeChange.fixing t₀`, while
+`D(ι, E)` knows nothing of one.  The instance is this `def` at the distinguished
+point of an index that has one, which is `0` for all four running instances. -/
+@[instance_reducible]
+noncomputable def SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E) where
+  dist f g := SkorokhodSpace.totalDist t₀ f g
+  dist_self := SkorokhodSpace.totalDist_self t₀
+  dist_comm := SkorokhodSpace.totalDist_comm t₀
+  dist_triangle := SkorokhodSpace.totalDist_triangle t₀
+  eq_of_dist_eq_zero h := SkorokhodSpace.eq_of_totalDist_eq_zero t₀ _ _ h
+
+/-- The `sorry` here is not the metric, which is `SkorokhodSpace.metricSpace`
+above and carries proofs of all four axioms.  It is the base point: the ten
+declarations after this line elaborate against a **parameterless** instance,
+which no index supplies on its own.  Whether two base points give the same
+topology is not claimed anywhere -- the subgroups `TimeChange.fixing t₀` differ
+for different `t₀` -- so the placeholder stands until the ten are rewritten
+against `SkorokhodSpace.metricSpace t₀`. -/
 noncomputable instance : MetricSpace D(ι, E) := sorry
 
 instance [PolishSpace E] : CompleteSpace D(ι, E) := sorry

@@ -16,8 +16,8 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-07.  Every declaration elaborates; 50 declarations, 10 of them carrying
-`sorry`, and every one of those `sorry`s is a **proof**.  The first proof of the
+2026-09-07.  Every declaration elaborates; 9 declarations carry `sorry`, and
+every one of those `sorry`s is a **proof**.  The first proof of the
 file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
 corrected first: under `¬ IsMin t` alone it is false.  On 2026-09-07 twelve more
 proofs came in: `Clock.interval_union`, the additivity every compensator
@@ -27,7 +27,11 @@ problem; and the `AtomWitness` block, which builds the coin, the clock with an
 atom at `u`, the path, the càdlàg property of that path and the failure of
 quasi-left-continuity for it.
 The statement of `not_isQuasiLeftContinuous_of_atom` was corrected in the same
-run: it admitted the vacuous witness `A = ∅`.  No statement in this
+run: it admitted the vacuous witness `A = ∅`.  Ten further declarations closed
+it later the same day -- the operator `coinPair`, the class `coinClass` and its
+separation, the filtration, the two clock masses, the two integrals, the
+integrability of everything on `Bool`, and `isMPSolution_coinProcess` -- so that
+`not_isQuasiLeftContinuous_of_atom` itself now carries a proof.  No statement in this
 file is `True` or `sorry` any more: the drafts of Milestones 3, 5, 9 and 10 were
 turned into propositions on 2026-09-06.  `Shift` now takes the coordinate maps
 `π` as a parameter, so that its compatibility field can be stated at all;
@@ -599,6 +603,170 @@ theorem not_isQuasiLeftContinuous_coinProcess (u : ι) {s : ℕ → ι}
   rw [hset, coinMeasure_singleton_true] at hfalse
   exact (by simp : ((2 : ENNReal)⁻¹ ≠ 0)) hfalse
 
+/-- Every real function on the coin is integrable: `Bool` is finite, so every
+function on it is measurable and bounded, and the measure is finite. -/
+theorem integrable_bool {μ : Measure Bool} [IsFiniteMeasure μ] (f : Bool → ℝ) :
+    Integrable f μ :=
+  (memLp_top_of_bound (measurable_of_finite f).aestronglyMeasurable
+    (max ‖f true‖ ‖f false‖) (.of_forall fun b ↦ by
+      cases b
+      · exact le_max_right _ _
+      · exact le_max_left _ _)).integrable le_top
+
+/-- The integral against the fair coin is the mean of the two values. -/
+theorem integral_coinMeasure (f : Bool → ℝ) :
+    ∫ ω, f ω ∂coinMeasure = 2⁻¹ * f true + 2⁻¹ * f false := by
+  rw [coinMeasure, integral_smul_measure,
+    integral_add_measure (integrable_bool f) (integrable_bool f),
+    integral_dirac, integral_dirac]
+  simp only [ENNReal.toReal_inv, ENNReal.toReal_ofNat, smul_eq_mul]
+  ring
+
+/-- The test pair of the witness: the indicator of `true`, and the constant
+density `2⁻¹` of the compensator.  The constant is not a choice: the martingale
+property across `u` is exactly `p.1 true - p.1 false = p.2 true + p.2 false`. -/
+noncomputable def coinPair : (Bool → ℝ) × (Bool → ℝ) :=
+  (fun b ↦ if b then (1 : ℝ) else 0, fun _ ↦ (2 : ℝ)⁻¹)
+
+/-- The one element operator of the witness. -/
+noncomputable def coinClass : Set ((Bool → ℝ) × (Bool → ℝ)) := {coinPair}
+
+/-- A single indicator separates the probability measures on `Bool`: it pins the
+mass of `{true}`, and the mass of `{false}` is what is left of the total mass.
+This is what forces `A ≠ ∅` in `not_isQuasiLeftContinuous_of_atom`. -/
+theorem isSeparating_coinClass : IsSeparating (Prod.fst '' coinClass) := by
+  have key : ∀ ρ : Measure Bool, ∫ ω, coinPair.1 ω ∂ρ = ρ.real {true} := by
+    intro ρ
+    have hind : coinPair.1 = Set.indicator {true} fun _ ↦ (1 : ℝ) := by
+      funext b; cases b <;> simp [coinPair]
+    rw [hind, integral_indicator_const _ (measurableSet_singleton true)]
+    simp
+  intro μ ν _ _ h
+  have h1 : μ.real {true} = ν.real {true} := by
+    rw [← key μ, ← key ν]
+    exact h coinPair.1 ⟨coinPair, rfl, rfl⟩
+  refine MeasureTheory.ext_iff_measureReal_singleton.2 fun b ↦ ?_
+  cases b
+  · have hc : ({true} : Set Bool)ᶜ = {false} := by ext b; cases b <;> simp
+    have hμ := measureReal_add_measureReal_compl (μ := μ) (measurableSet_singleton true)
+    have hν := measureReal_add_measureReal_compl (μ := ν) (measurableSet_singleton true)
+    rw [hc] at hμ hν
+    simp only [probReal_univ] at hμ hν
+    linarith
+  · exact h1
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- The mass the clock puts on a set containing its atom.  Two lemmas rather than
+one with an `if`, because membership in the compensating interval carries no
+`Decidable` instance. -/
+theorem atomClock_real_of_mem (u : ι) {S : Set ι} (h : u ∈ S) :
+    (atomClock u).q.real S = 1 := by
+  let _ : MeasurableSpace ι := ⊤
+  have hq : (atomClock u).q S = S.indicator 1 u := Measure.dirac_apply' u trivial
+  rw [measureReal_def, hq, Set.indicator_of_mem h]
+  simp
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- The mass the clock puts on a set avoiding its atom. -/
+theorem atomClock_real_of_notMem (u : ι) {S : Set ι} (h : u ∉ S) :
+    (atomClock u).q.real S = 0 := by
+  let _ : MeasurableSpace ι := ⊤
+  have hq : (atomClock u).q S = S.indicator 1 u := Measure.dirac_apply' u trivial
+  rw [measureReal_def, hq, Set.indicator_of_notMem h]
+  simp
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- The compensator of the witness: it fires once, at `u`, and it fires in the
+optional convention only.  `hu` says that `u` is not the bottom of the index,
+which is what `Q.interval c ⊥ t` needs in order to see the atom at all. -/
+theorem integral_coinPair_snd (u : ι) (hu : ¬ u ≤ (⊥ : ι)) (t : ι) (ω : Bool) :
+    ∫ s in (atomClock u).interval Clock.Conv.optional ⊥ t,
+        coinPair.2 (coinProcess u s ω) ∂(atomClock u).q
+      = if u ≤ t then (2 : ℝ)⁻¹ else 0 := by
+  have hconst : ∀ s : ι, coinPair.2 (coinProcess u s ω) = (2 : ℝ)⁻¹ := fun _ ↦ rfl
+  simp_rw [hconst]
+  rw [setIntegral_const]
+  have hmem : u ∈ (atomClock u).interval Clock.Conv.optional ⊥ t ↔ u ≤ t := by
+    simp only [Clock.interval, Set.mem_sdiff, Set.mem_Iic]
+    exact ⟨fun h ↦ h.1, fun h ↦ ⟨h, hu⟩⟩
+  by_cases h : u ≤ t
+  · rw [atomClock_real_of_mem u (hmem.2 h), if_pos h]
+    simp
+  · rw [atomClock_real_of_notMem u fun hc ↦ h (hmem.1 hc), if_neg h]
+    simp
+
+/-- The filtration of the witness: nothing before `u`, everything from `u` on.
+It is the natural filtration of `coinProcess u`. -/
+def coinFiltration (u : ι) : Filtration ι (inferInstance : MeasurableSpace Bool) where
+  seq t := if u ≤ t then (inferInstance : MeasurableSpace Bool) else ⊥
+  mono' := fun a b hab ↦ by
+    show (if u ≤ a then (inferInstance : MeasurableSpace Bool) else ⊥) ≤
+      (if u ≤ b then (inferInstance : MeasurableSpace Bool) else ⊥)
+    by_cases ha : u ≤ a
+    · simp only [if_pos ha, if_pos (ha.trans hab), le_refl]
+    · simp only [if_neg ha]
+      exact bot_le
+  le' := fun t ↦ by
+    show (if u ≤ t then (inferInstance : MeasurableSpace Bool) else ⊥) ≤
+      (inferInstance : MeasurableSpace Bool)
+    by_cases ht : u ≤ t
+    · simp only [if_pos ht, le_refl]
+    · simp only [if_neg ht]
+      exact bot_le
+
+omit [TopologicalSpace ι] [OrderTopology ι] in
+/-- The coin flipped at `u` solves the martingale problem for `coinClass`, the
+clock with its atom at `u` and the optional convention.  Two computations and no
+theory: the compensator is `2⁻¹` from `u` on and `0` before it, so the process is
+`0` before `u` and centred afterwards, and the conditional expectation across `u`
+is the mean of the coin. -/
+theorem isMPSolution_coinProcess (u : ι) (hu : ¬ u ≤ (⊥ : ι)) :
+    IsMPSolution (mpFamily coinClass (atomClock u) Clock.Conv.optional (coinProcess u))
+      (coinFiltration u) coinMeasure := by
+  rintro Y ⟨p, hp, hY⟩
+  simp only [coinClass, Set.mem_singleton_iff] at hp
+  subst hp
+  have hval : ∀ (t : ι) (ω : Bool),
+      Y t ω = if u ≤ t then ((if ω then (1 : ℝ) else 0) - 2⁻¹) else 0 := by
+    intro t ω
+    rw [hY t ω, integral_coinPair_snd u hu t ω]
+    by_cases h : u ≤ t
+    · simp only [if_pos h, coinProcess_of_le h]
+      rfl
+    · simp only [if_neg h, coinProcess_of_not_le h]
+      norm_num [coinPair]
+  have hbefore : ∀ t : ι, ¬ u ≤ t → Y t = fun _ ↦ (0 : ℝ) :=
+    fun t ht ↦ funext fun ω ↦ by rw [hval t ω, if_neg ht]
+  have hzero : ∀ t : ι, ∫ ω, Y t ω ∂coinMeasure = 0 := by
+    intro t
+    simp only [hval t]
+    by_cases ht : u ≤ t
+    · simp only [if_pos ht]
+      rw [integral_coinMeasure]
+      norm_num
+    · simp only [if_neg ht]
+      simp
+  refine ⟨fun t ↦ ?_, fun s t hst ↦ ?_⟩
+  · by_cases ht : u ≤ t
+    · have hf : (coinFiltration u) t = (inferInstance : MeasurableSpace Bool) := if_pos ht
+      rw [hf]
+      exact (measurable_of_finite _).stronglyMeasurable
+    · have hf : (coinFiltration u) t = ⊥ := if_neg ht
+      rw [hf, hbefore t ht]
+      exact stronglyMeasurable_const
+  · by_cases hs : u ≤ s
+    · have hYts : Y t = Y s := funext fun ω ↦ by
+        rw [hval t ω, hval s ω, if_pos (hs.trans hst), if_pos hs]
+      have hle : (coinFiltration u) s ≤ (inferInstance : MeasurableSpace Bool) :=
+        (coinFiltration u).le' s
+      have hsm : StronglyMeasurable[(coinFiltration u) s] (Y s) := by
+        rw [show (coinFiltration u) s = (inferInstance : MeasurableSpace Bool) from if_pos hs]
+        exact (measurable_of_finite _).stronglyMeasurable
+      rw [hYts, condExp_of_stronglyMeasurable hle hsm (integrable_bool _)]
+    · have hf : (coinFiltration u) s = ⊥ := if_neg hs
+      rw [hf, hbefore s hs, condExp_bot]
+      exact Filter.Eventually.of_forall fun _ ↦ hzero t
+
 end AtomWitness
 
 /-- The sharpness, as a named example and not as a remark: an atom of the clock
@@ -631,7 +799,25 @@ theorem not_isQuasiLeftContinuous_of_atom (u : ι)
         IsSeparating (Prod.fst '' A) ∧
         (∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω) ∧
         @IsMPSolution ι _ Ω' m' ℝ _ (mpFamily A Q c X) 𝓕 P ∧
-        ¬ IsQuasiLeftContinuous X 𝓕 P := sorry
+        ¬ IsQuasiLeftContinuous X 𝓕 P := by
+  obtain ⟨s, hmono, hlt, hs⟩ := hu
+  have hbot : ¬ u ≤ (⊥ : ι) := fun h ↦ not_lt_bot ((hlt 0).trans_le h)
+  have hbdd : BddAbove (Set.range s) := ⟨u, by rintro _ ⟨n, rfl⟩; exact (hlt n).le⟩
+  have hsup : ⨆ n, s n = u :=
+    tendsto_nhds_unique (tendsto_atTop_ciSup hmono.monotone hbdd) hs
+  refine ⟨Bool, inferInstance, AtomWitness.coinMeasure, inferInstance,
+    AtomWitness.coinFiltration u, AtomWitness.atomClock u, Clock.Conv.optional,
+    AtomWitness.coinClass, AtomWitness.coinProcess u,
+    AtomWitness.atomClock_apply_singleton_ne_zero u, ?_, AtomWitness.isSeparating_coinClass,
+    Filter.Eventually.of_forall (AtomWitness.isCadlagPath_coinProcess u),
+    AtomWitness.isMPSolution_coinProcess u hbot,
+    AtomWitness.not_isQuasiLeftContinuous_coinProcess u hmono.monotone hlt hsup _⟩
+  rintro p hp
+  simp only [AtomWitness.coinClass, Set.mem_singleton_iff] at hp
+  subst hp
+  refine ⟨continuous_of_discreteTopology, ⟨1, fun x ↦ ?_⟩, ⟨2⁻¹, fun _ ↦ ?_⟩⟩
+  · cases x <;> norm_num [AtomWitness.coinPair]
+  · norm_num [AtomWitness.coinPair]
 
 end Regularizing
 
