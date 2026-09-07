@@ -67,7 +67,7 @@ ist kein Befund, sondern ein `?`.
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
 | `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität |
-| `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1, `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` (separabel metrisch) und `isConvergenceDetermining_setOf_hasCompactSupport` (zusätzlich lokalkompakt) — am 2026-09-05 dort neu angelegt. ~~M1~~ nannte die Aussage bis dahin **nicht**: das Zitat war seit dem 2026-08-29 leer, kein Punkt von M1 spricht von gleichmäßig stetigen Funktionen mit beschränktem Träger oder von $C_c$. Mathlib hat sie nicht — in `MeasureTheory/Measure/` kommt `UniformContinuous` überhaupt nicht vor und `HasCompactSupport` in keiner Konvergenzaussage (`upstream/master`, 2026-09-05) |
+| `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1, `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` und `isConvergenceDetermining_setOf_hasCompactSupport` (zusätzlich lokalkompakt) — am 2026-09-05 dort neu angelegt. **Die erste Hälfte ist seit dem 2026-09-07, fünfzehntem Lauf, bewiesen** und geht durch `lake env lean` gegen v4.33.1, und zwar **ohne Separabilität**: EK und das Manuskript verlangen sie, kein Beweisschritt benutzt eine abzählbare dichte Menge (Auffälligkeit unten). Der Weg ist `tendsto_iff_forall_lipschitz_integral_tendsto` (`Measure/Portmanteau.lean:688`), die die schwache Konvergenz auf die beschränkten **Lipschitz**funktionen zurückführt, plus die Abschneidung einer solchen an `ballCutoff`, einem Mitglied der Klasse; die Abschneidung ist durch die Straffheit gedeckt, die die Abschneider selbst liefern. Neun Hilfsdeklarationen, alle bewiesen. ~~M1~~ nannte die Aussage bis dahin **nicht**: das Zitat war seit dem 2026-08-29 leer, kein Punkt von M1 spricht von gleichmäßig stetigen Funktionen mit beschränktem Träger oder von $C_c$. Mathlib hat sie nicht — in `MeasureTheory/Measure/` kommt `UniformContinuous` überhaupt nicht vor und `HasCompactSupport` in keiner Konvergenzaussage (`upstream/master`, 2026-09-05) |
 | `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` (b); beide stehen seit dem 2026-08-31 unter Stufe (A) „separabel metrisch", wie der Fact, und (b) unter Relativkompaktheit statt Straffheit, wie EK |
 | `fact:fullgenerator` | 1 | EK, Proposition 1.5.1 | Roadmap | MartingaleProblems M13 — dort neu angelegt; Mathlib hat keine Operatorhalbgruppen, `dissipative` kommt nicht vor, Hille--Yosida steht als `Q974405` ohne `decl` in `docs/1000.yaml` |
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
@@ -83,6 +83,27 @@ ist kein Befund, sondern ein `?`.
 | `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `ProbabilityTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib (`Probability/Process/LocalProperty.lean:93,142,153`, Namensraum am 2026-09-01 berichtigt), der Martingalfall ist es nicht |
 
 ## Offene Auffälligkeiten
+
+* **`fact:convdet` verlangt Separabilität, die sein Beweis nicht braucht;
+  gefunden am 2026-09-07, fünfzehnter Lauf, beim Beweisen der ersten Hälfte.**
+  Das Manuskript schreibt (Zeile 1423, nach EK Prop. 3.4.4): „If $(S,d)$ is
+  separable, then the set of uniformly continuous $f\in\Cb(S)$ with bounded
+  support is convergence determining." Die Lean-Fassung
+  `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` steht
+  jetzt unter `[MetricSpace E] [OpensMeasurableSpace E]` allein und ist
+  bewiesen. Wo Separabilität hätte vorkommen können, kommt sie nicht vor: der
+  tragende Satz `tendsto_iff_forall_lipschitz_integral_tendsto`
+  (`Measure/Portmanteau.lean:688`) verlangt nur `[PseudoEMetricSpace Ω]`,
+  `[OpensMeasurableSpace Ω]` und einen abzählbar erzeugten Filter; die
+  Ausschöpfung des Grundraums geschieht durch **einen** Punkt
+  ($E=\bigcup_m \overline B(x_0,m)$, weil Abstände endlich sind, nicht durch
+  eine abzählbare dichte Menge), und dieser Punkt ist geschenkt, weil ein
+  Wahrscheinlichkeitsmaß auf $E$ lebt. Auch Vollständigkeit und
+  Lokalkompaktheit fehlen. **Folgenlos für das Manuskript**, das nur die
+  schwächere Aussage benutzt; der Befund ist eine Verallgemeinerung und keine
+  Korrektur, und die Roadmap trägt jetzt die schwächeren Hypothesen. Zu prüfen
+  bliebe, ob EK die Separabilität für die **zweite** Hälfte ($C_c$,
+  lokalkompakt) braucht — dort ist sie unangetastet.
 
 * **`thm:fdd` braucht, daß ein größtes Element in $D$ liegt; gefunden am
   2026-09-06, fünfter Lauf, beim Beweisen von `IsCadlag.eq_of_eqOn_dense`.**
@@ -7582,3 +7603,113 @@ diese Schrittfolge braucht, und `fact:convdet` ist der einzige Fact von
 Meilenstein 1, zu dem noch keine einzige Deklaration einen Beweis trägt.
 Separabilität allein genügt dabei, wie die Roadmap sagt; Vollständigkeit kommt
 im Beweis nicht vor, und wer sie doch braucht, nennt die Stelle.
+
+### 2026-09-07, fünfzehnter Lauf des Tages — `fact:convdet`, erste Hälfte, bewiesen und ohne Separabilität
+
+**Was der Lauf vorgefunden hat.** Keine vorrangige Aufgabe, keine `?`-Zeile in
+der Tabelle, also Rückstaupunkt 1. Der vierzehnte Lauf hatte das Ziel benannt:
+`isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`, die erste
+Hälfte von `fact:convdet` (Ethier--Kurtz, Proposition 3.4.4), der einzige Fact
+von `WeakConvergence` Meilenstein 1, zu dem noch keine Deklaration einen Beweis
+trug. Er ist bewiesen, geht durch `lake env lean` gegen v4.33.1, und **trägt
+eine Hypothese weniger, als er hatte**.
+
+**Der Satz.** Auf einem metrischen Raum sind die beschränkten gleichmäßig
+stetigen reellen Funktionen mit beschränktem Träger konvergenzbestimmend.
+Neun Deklarationen sind neu, alle bewiesen, alle in
+`WeakConvergence/Suggested.lean`:
+
+* `ballCutoff x₀ R = min 1 (max 0 (R + 1 - dist · x₀))` — der 1-Lipschitz-
+  Abschneider, der auf `closedBall x₀ R` gleich `1` ist und außerhalb von
+  `closedBall x₀ (R+1)` verschwindet —, samt `ballCutoff_nonneg`,
+  `ballCutoff_le_one`, `abs_ballCutoff_le_one`, `ballCutoff_eq_one`,
+  `support_ballCutoff`, `lipschitzWith_ballCutoff` und `tendsto_ballCutoff`
+  (die Abschneider ganzzahligen Radius wachsen punktweise gegen `1`, weil jeder
+  Punkt in allen bis auf endlich vielen Bällen liegt).
+* `lipschitzWith_mul_of_bounded` — ein Produkt zweier **beschränkter**
+  Lipschitzfunktionen ist Lipschitz, mit Konstante
+  `Cf.toNNReal * Kg + Cg.toNNReal * Kf`. Mathlibs `LipschitzWith.mul`
+  (`Analysis/Normed/Group/Uniform.lean:308`) ist der `to_additive`-Zwilling von
+  `LipschitzWith.add` und meint die Gruppenoperation; für ein Produkt reeller
+  Funktionen gibt es in Mathlib nichts, und ohne Beschränktheit ist die Aussage
+  falsch.
+* `integrable_of_continuous_of_bounded` — beschränkt stetig ist integrierbar
+  gegen ein endliches Maß, über `Integrable.mono'` und `integrable_const`.
+
+**Der Beweis, in drei Schritten.** Erstens die Reduktion: Mathlibs
+`tendsto_iff_forall_lipschitz_integral_tendsto`
+(`MeasureTheory/Measure/Portmanteau.lean:688`) prüft schwache Konvergenz an den
+beschränkten **Lipschitz**funktionen, und die sind nicht in unserer Klasse, weil
+ihr Träger nicht beschränkt sein muß. Zweitens die Straffheit, und sie ist der
+Schritt, den der vierzehnte Lauf als tragend angekündigt hatte: die Abschneider
+sind selbst Mitglieder der Klasse, ihre Integrale konvergieren also nach
+Voraussetzung, und majorisierte Konvergenz gibt
+`∫ ballCutoff x₀ m ∂ν → 1`; ist ein `m` mit `∫ ballCutoff x₀ m ∂ν > 1 - ε'`
+gewählt, so liegt schließlich auch unter jedem `μ n` alle Masse bis auf `2ε'` in
+**einem** festen Ball. Drittens die Abschneidung: `f · ballCutoff x₀ m` ist
+wieder in der Klasse (Lipschitz nach `lipschitzWith_mul_of_bounded`, Träger im
+Träger des Abschneiders), ihr Integral konvergiert also, und der
+Abschneidefehler ist punktweise durch `‖f‖_∞ · (1 - ballCutoff)` beschränkt —
+das ist `hkey`, die Rechnung, die die Straffheit in eine Integralabschätzung
+verwandelt. Drei Dreiecksschritte schließen mit `3Cε' + ε' < ε`.
+
+**Der Befund: Separabilität kommt im Beweis nicht vor.** Die Aussage stand seit
+dem 2026-09-05 unter `[TopologicalSpace.SeparableSpace E]`, weil das Manuskript
+(Zeile 1423) und EK sie so führen. Sie ist gestrichen. Wo eine abzählbare dichte
+Menge hätte auftreten können, tritt sie nicht auf: der tragende Mathlib-Satz
+verlangt `[PseudoEMetricSpace Ω]`, `[OpensMeasurableSpace Ω]` und einen
+abzählbar erzeugten Filter, sonst nichts; die Ausschöpfung des Raumes leistet
+**ein** Punkt, weil Abstände endlich sind ($E=\bigcup_m\overline B(x_0,m)$), und
+diesen Punkt liefert die Nichtleerheit, die ihrerseits aus der Existenz von `ν`
+folgt und deshalb auch keine Hypothese ist. Vollständigkeit und Lokalkompaktheit
+fehlen ohnehin. Der Befund steht als Auffälligkeit oben; das Manuskript bleibt
+unberührt, weil es nur die schwächere Aussage benutzt.
+
+**Stand der Datei.** 91 Deklarationen (gezählt mit
+`grep -cE "^(noncomputable |private |protected )*(theorem|lemma|def|structure|inductive|instance|abbrev) "`),
+**11 `sorry`** statt 12, gezählt als „declaration uses 'sorry'"-Warnungen des
+Übersetzers — der erste gefallene `sorry` von `WeakConvergence` seit vier
+Läufen. `rc = 1` mit genau den **zwei** angekündigten Fehlern an
+`tendsto_map_of_measure_setOf_continuousAt_eq_one`, deren Zeile durch die
+Einfügung von `:1041` auf `:1314` gewandert ist; keine neue Warnung außer der
+Deprecation von `push_neg` (im neuen Code, an einer Stelle).
+
+**Was mitgezogen wurde.** `WeakConvergence/README.md` führt den Punkt jetzt
+ohne Separabilität, mit dem Weg, den Stützdeklarationen und der Begründung,
+warum die zweite Hälfte ($C_c$, lokalkompakt) daraus **nicht** folgt — die
+Klasse ist die kleinere, zu leisten ist die Approximation einer gleichmäßig
+stetigen Funktion beschränkten Trägers durch kompakt getragene. Meilenstein 1
+hat ein neues acceptance example, ein Paar: `δ (1/(n+1)) → δ 0` wird von der
+Klasse erkannt, und an `δ n` konvergieren die Integrale aller Mitglieder gegen
+`0`, ohne daß ein Wahrscheinlichkeitsmaß dieses Funktional wäre — die
+Voraussetzung ist dort nie erfüllt, und eine Fassung „die Integrale
+konvergieren, also konvergiert die Folge" (vage Konvergenz) wäre falsch. Der
+Modulkopf und die Tabellenzeile `fact:convdet` sind nachgezogen.
+
+**Werkzeugnotizen, drei.** `abs_add` heißt in v4.33.1 `abs_add_le`, und
+`div_lt_iff` gibt es unter diesem Namen nicht — beides kostet einen Durchlauf,
+wenn man es nicht weiß; die Multiplikationsform (`mul_lt_mul_of_pos_right` plus
+eine `field_simp`-Identität für `ε'`) vermeidet die Frage ganz. `add_le_add_right
+h c` bedeutet hier `c + a ≤ c + b`, nicht `a + c ≤ b + c`; wer eine
+Dreiecksungleichung dreigliedrig aufbaut, schreibt sie besser als eigenes
+`∀ a b c d : ℝ`-Lemma und läßt `linarith` schließen. Entwickelt wurde wieder in
+einer Kleindatei unter `/tmp` mit drei Importen; fünf Durchläufe dort kosteten
+weniger als einer der 2500-Zeilen-Datei.
+
+**Vorschlag für das Nächste, als benanntes Ziel:
+`isConvergenceDetermining_setOf_hasCompactSupport` beweisen**, `fact:convdet`,
+zweite Hälfte, in `WeakConvergence` Meilenstein 1. Worauf sie ruht: auf der
+heute bewiesenen ersten Hälfte und **einer** neuen Aussage — daß auf einem
+lokalkompakten metrischen Raum jede gleichmäßig stetige Funktion mit
+beschränktem Träger gleichmäßig durch stetige Funktionen mit **kompaktem**
+Träger approximiert wird, und daß gleichmäßige Approximation der Mitglieder
+einer konvergenzbestimmenden Klasse die approximierende Klasse
+konvergenzbestimmend macht (das ist der Stabilitätspunkt von Meilenstein 1,
+„Stability under uniformly bounded pointwise limits", in der einfacheren
+gleichmäßigen Fassung). Warum jetzt: die erste Hälfte liegt, der Abstand
+zwischen den beiden Klassen ist genau ein Abschneidelemma, und `ballCutoff` ist
+das Muster dafür — in einem lokalkompakten Raum ist der Abschneider mit
+kompaktem Träger zu bauen, und die einzige Frage ist, ob dort abgeschlossene
+Bälle kompakt gewählt werden können oder ob es eine Ausschöpfung durch kompakte
+Umgebungen braucht. Das ist die Stelle, an der die Lokalkompaktheit eingeht, und
+sie ist benannt.
