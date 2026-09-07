@@ -369,6 +369,24 @@ A concrete family of solutions, built without any of the theory above. Index
 
 ## Milestone 6: uniqueness and the Markov property, without an operator
 
+**The converse direction is deliberately absent, and it is not ours to supply.**
+What is below runs from uniqueness to the Markov property: if the one
+dimensional distributions are determined, every solution is Markov and the
+solution is unique. Ethier--Kurtz, Theorem 4.4.1 runs the other way --- a Markov
+process is the unique solution of the martingale problem for its generator ---
+and it is not here, because it is a *semigroup* criterion: it asks for `A`
+linear and dissipative and for a subrelation `A'` with
+`range (lam - A') = domain A' = L` separating, for some `lam > 0`, which is a
+Hille--Yosida condition. The manuscript behind this roadmap takes uniqueness
+from the theorem below together with duality instead, and leaves Theorem 4.4.1
+and Corollary 4.4.4 out by design.
+
+That makes the missing direction a natural piece of joint work rather than a
+gap: the `OneParameterSemigroups` roadmap supplies Hille--Yosida, Theorem 4.4.1
+sits directly on it, and this milestone supplies the converse. Neither roadmap
+has the full uniqueness theory alone. Whoever takes it up should state it there
+and cite this milestone, not the other way round.
+
 Hypotheses: a shift system, a determining set for every `𝓧° r`, and uniqueness
 of the one dimensional distributions of the shifted problems.
 

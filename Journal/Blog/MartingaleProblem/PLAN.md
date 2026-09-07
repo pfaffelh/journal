@@ -790,9 +790,18 @@ Manuskript tragen ihn `fact:monotoneclass` und dessen vier Verwendungsstellen
   time-inhomogeneous version alongside. The (T4) half of Q3 also stands: the
   monoid structure is used through $\theta_r$ and cannot be avoided.
 * **(Q4)** Should the semigroup route (EK86 4.4.1 / 4.4.4) come back in later?
-  **Feller processes belong to this question**, not beside it: they are defined
-  through a strongly continuous semigroup on $\hat{C}(E)$ and need local
-  compactness, which D2 rejects. Asked and deferred 2026-08-24, see D30; if
+  **Feller processes belong to this question**, not beside it. *(Begründung am
+  2026-09-07 berichtigt.)* Der klassische Begriff — stark stetige Halbgruppe auf
+  $\hat{C}(E)$ — verlangt lokale Kompaktheit, die D2 ablehnt; **das ist aber
+  nicht der einzige Begriff**, und das Manuskript zitiert selbst einen anderen:
+  \CT{} charakterisieren die Markovschen Lifts stochastischer Volterra-Prozesse
+  durch eine *generalized Feller semigroup* auf gewichteten Räumen
+  $\mathcal{B}^\psi$ (Dörsek--Teichmann), gebaut genau dafür, die lokale
+  Kompaktheit loszuwerden, und der Zustandsraum ist dort ein Funktionenraum.
+  Dazwischen liegt der $C_b$-Feller-Begriff auf polnischen Räumen. Die
+  Zurückstellung bleibt richtig, aber die Kosten stecken in der
+  Halbgruppentheorie, nicht in der Kompaktheit; und die offene Frage ist nicht
+  „geht Feller überhaupt", sondern **welcher Feller-Begriff**. Asked and deferred 2026-08-24, see D30; if
   reopened, take Feller and 4.4.1/4.4.4 together as one package. Original
   wording: It
   was deliberately excluded; see Rem. 2.5 of the manuscript and decision D5 in

@@ -44,6 +44,24 @@ beide Roadmaps und wird von keiner abgedeckt:
 | Markov allgemein | meßbar auf $B(E)$, voller Erzeuger mehrwertig | polnisch | unser M13 |
 | Funktionalanalysis | stark stetig auf Banachraum | Banach | `OneParameterSemigroups` |
 
+**Und die lokale Kompaktheit ist keine Sperre** — das war meine erste
+Darstellung, und sie war zu eng. Sie gehört zum *klassischen* Begriff; daneben
+gibt es $C_b$-Feller auf polnischen Räumen und die *generalized Feller
+semigroups* auf gewichteten Räumen $\mathcal B^\psi$ (Dörsek--Teichmann), die
+das Manuskript in §7.7 selbst zitiert, weil \CT{} die Markovschen Lifts der
+Volterra-Prozesse damit charakterisieren. Die Frage an Zulip ist also nicht
+„geht Feller überhaupt", sondern **welcher Begriff** — und gewichtete Räume
+passen in deren Banach-Rahmen.
+
+**Der konkrete Satz, den man mitbringen kann.** EK Theorem 4.4.1: *ein
+Markovprozeß ist die eindeutige Lösung des Martingalproblems seines Erzeugers*.
+Er sitzt direkt auf Hille--Yosida — er verlangt $A$ linear und dissipativ und
+eine Teilrelation $A'$ mit $\mathcal R(\lambda-A')=\mathcal D(A')=L$
+trennend — also auf **ihrer** Teil A. Unser Meilenstein 6 hat die
+Gegenrichtung (aus Eindeutigkeit folgt Markov, EK 4.4.2). **Keine der beiden
+Roadmaps hat die vollständige Eindeutigkeitstheorie allein**; zusammen hätten
+sie sie. Das ist ein besseres Anliegen als eine Zuständigkeitsfrage.
+
 Dazu: unser Meilenstein 13 (voller Erzeuger einer **meßbaren** Halbgruppe, EK
 Prop. 1.5.1) fehlt in ihrer Roadmap ganz, und ihr erklärtes Publikum nennt
 „Markov semigroups". Das ist ein Angebot, kein Konflikt. Nach PR #16 gab es
