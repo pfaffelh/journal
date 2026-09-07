@@ -65,6 +65,30 @@ of Milestone 2 that had to be corrected first is
 a mere preorder, it is **false**, and the witness is in the roadmap; it holds
 under a linear order, and needs no order topology.
 
+Since 2026-09-07, fourth run, the jump theory of Milestone 2 is proved:
+`countable_leftJumpSet`, through the two statements it needed and which the
+roadmap did not name --- `IsCadlag.dist_leftLim_le_of_Ioo_subset`, the jump
+bound from a two sided oscillation bound, and
+`IsCadlag.eventually_dist_leftLim_lt`, the local finiteness of
+`largeLeftJumpSet` in its pointwise form --- together with
+`IsCadlag.finite_largeLeftJumpSet_inter`, `IsCadlag.tendsto_leftLim`, and the
+continuity characterization `IsCadlag.continuousAt_iff_notMem_leftJumpSet` with
+its global form `IsCadlag.continuous_iff_leftJumpSet_eq_empty`.  **The proof
+uses none of the bundle (B) of the roadmap**: no countable dense set and no
+right approximation clause enter it, only the linear order, the order topology,
+and the σ-compactness of the index; `AdditiveDist` is omitted throughout, and
+properness only through `isCompact_exhaustion`.
+
+In the same run the **separation** of Milestone 4 fell, the last of the four
+axioms of `distOn`: `SkorokhodSpace.eq_of_distOn_eq_zero`, with
+`SkorokhodSpace.eq_of_forall_distOn_eq_zero` for the passage from the windows to
+the paths.  It does not go through the continuity points and their density ---
+that step needs the index to supply a right dense set of them, which a closed
+subset of `ℝ` need not --- but through the new
+`IsCadlag.eq_of_forall_exists_dist_le` of Milestone 2, playing the time change
+against its inverse: one of the two moves `t` up, and the right continuity of
+whichever path is evaluated there does the rest.
+
 Seven `sorry`s went on 2026-09-06: `isCompact_exhaustion`,
 `monotoneOn_dist_basepoint` and
 `IsCadlag.eq_of_eqOn_dense` carry proofs --- the last had to be corrected first,
@@ -278,8 +302,213 @@ variable {E : Type*} [MetricSpace E]
 /-- The set of points where the left limit differs from the value. -/
 def leftJumpSet (f : ι → E) : Set ι := {x | Function.leftLim f x ≠ f x}
 
+/-- The set of points where the left limit differs from the value by at least `ε`. -/
+def largeLeftJumpSet (f : ι → E) (ε : ℝ) : Set ι :=
+  {x | ε ≤ dist (Function.leftLim f x) (f x)}
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- The `left_limit` field, read through `Function.leftLim`.  This is what makes
+the existing API of `Mathlib/Topology/Order/LeftRightLim.lean` apply, and it is
+unconditional: `tendsto_leftLim_of_tendsto` covers the degenerate case
+`𝓝[<] x = ⊥` itself. -/
+theorem IsCadlag.tendsto_leftLim {f : ι → E} (hf : IsCadlag f) (x : ι) :
+    Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x)) :=
+  tendsto_leftLim_of_tendsto (hf.left_limit x)
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- If `f` stays `r`-close to a point `c` of `E` on `Set.Ioo a y` and at `y`,
+then the jump of `f` at `y` is at most `2r`.  This is the one step of the jump
+theory that touches `Function.leftLim` directly, and it is used on both sides of
+a point: to the left with `c` the left limit there, to the right with `c` the
+value there.
+
+The degenerate case is not an exception but the reason the statement is about
+the jump and not about the left limit alone: where `𝓝[<] y = ⊥` the left limit
+*is* the value, by `Function.leftLim_eq_of_eq_bot`, and the jump is `0`. -/
+theorem IsCadlag.dist_leftLim_le_of_Ioo_subset {f : ι → E} (hf : IsCadlag f) {a y : ι}
+    (hay : a < y) {c : E} {r : ℝ} (hIoo : ∀ z ∈ Set.Ioo a y, dist (f z) c ≤ r)
+    (hy : dist (f y) c ≤ r) :
+    dist (Function.leftLim f y) (f y) ≤ r + r := by
+  have hr : (0 : ℝ) ≤ r := dist_nonneg.trans hy
+  rcases eq_or_neBot (𝓝[<] y) with hbot | hne
+  · rw [leftLim_eq_of_eq_bot f hbot, dist_self]
+    linarith
+  · have : (𝓝[<] y).NeBot := hne
+    have hmem : Set.Ioo a y ∈ 𝓝[<] y :=
+      mem_of_superset (inter_mem_nhdsWithin (Set.Iio y) (Ioi_mem_nhds hay))
+        fun z hz => ⟨hz.2, hz.1⟩
+    have h1 : dist (Function.leftLim f y) c ≤ r := by
+      refine le_of_tendsto ((hf.tendsto_leftLim y).dist tendsto_const_nhds) ?_
+      filter_upwards [hmem] with z hz using hIoo z hz
+    calc dist (Function.leftLim f y) (f y)
+        ≤ dist (Function.leftLim f y) c + dist c (f y) := dist_triangle _ _ _
+      _ ≤ r + r := by rw [dist_comm c]; exact add_le_add h1 hy
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- Local finiteness of the large jumps, in its sharpest form: **every** point of
+the index has a neighbourhood on which the only jump of size `ε` is possibly the
+point itself.  The point itself cannot be excluded --- a càdlàg function may jump
+at any single point --- and it need not be, since a set that meets a
+neighbourhood of each of its points in one point meets every compact set in a
+finite set.
+
+The proof is the two sided one, and it is where the linear order and the order
+topology are used: `nhdsLT_sup_nhdsGE` splits a neighbourhood of `x` into its two
+one sided halves, the left limit at `x` controls `f` on an interval `(a, x)` and
+the right continuity at `x` controls it on an interval `[x, u)`, and on each of
+the two `dist_leftLim_le_of_Ioo_subset` turns that control into a bound on the
+jump at the *interior* points of the interval.  The two degenerate cases --- `x`
+a bottom element, where `𝓝[<] x = ⊥`, and `x` a top element, where `Set.Ici x`
+is `{x}` --- carry no content and are discharged separately. -/
+theorem IsCadlag.eventually_dist_leftLim_lt {f : ι → E} (hf : IsCadlag f) (x : ι) {ε : ℝ}
+    (hε : 0 < ε) :
+    ∀ᶠ y in 𝓝 x, y ≠ x → dist (Function.leftLim f y) (f y) < ε := by
+  rw [← nhdsLT_sup_nhdsGE x, Filter.eventually_sup]
+  constructor
+  · by_cases hlt : ∃ l : ι, l < x
+    · obtain ⟨l, hl⟩ := hlt
+      have hA : {z | dist (f z) (Function.leftLim f x) ≤ ε / 4} ∈ 𝓝[<] x := by
+        filter_upwards [Metric.tendsto_nhds.1 (hf.tendsto_leftLim x) (ε / 4) (by positivity)]
+          with z hz using hz.le
+      obtain ⟨a, ha, hsub⟩ := (mem_nhdsLT_iff_exists_Ioo_subset' hl).1 hA
+      filter_upwards [(mem_nhdsLT_iff_exists_Ioo_subset' hl).2 ⟨a, ha, subset_rfl⟩]
+        with y hy _
+      have h1 : ∀ z ∈ Set.Ioo a y, dist (f z) (Function.leftLim f x) ≤ ε / 4 :=
+        fun z hz => hsub ⟨hz.1, hz.2.trans hy.2⟩
+      have h2 := hf.dist_leftLim_le_of_Ioo_subset hy.1 h1 (hsub hy)
+      linarith
+    · have hIio : Set.Iio x = (∅ : Set ι) := by
+        ext z
+        simp only [Set.mem_Iio, Set.mem_empty_iff_false, iff_false]
+        exact fun hz => hlt ⟨z, hz⟩
+      rw [hIio, nhdsWithin_empty]
+      exact Filter.eventually_bot
+  · by_cases hgt : ∃ u : ι, x < u
+    · obtain ⟨u', hu'⟩ := hgt
+      have hB : {z | dist (f z) (f x) ≤ ε / 4} ∈ 𝓝[≥] x := by
+        have h2 : Tendsto f (𝓝[≥] x) (𝓝 (f x)) :=
+          continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous x)
+        filter_upwards [Metric.tendsto_nhds.1 h2 (ε / 4) (by positivity)] with z hz using hz.le
+      obtain ⟨u, hu, hsub⟩ := (mem_nhdsGE_iff_exists_Ico_subset' hu').1 hB
+      filter_upwards [(mem_nhdsGE_iff_exists_Ico_subset' hu').2 ⟨u, hu, subset_rfl⟩]
+        with y hy hyx
+      have hxy : x < y := lt_of_le_of_ne hy.1 (Ne.symm hyx)
+      have h1 : ∀ z ∈ Set.Ioo x y, dist (f z) (f x) ≤ ε / 4 :=
+        fun z hz => hsub ⟨hz.1.le, hz.2.trans hy.2⟩
+      have h2 := hf.dist_leftLim_le_of_Ioo_subset hxy h1 (hsub hy)
+      linarith
+    · filter_upwards [self_mem_nhdsWithin] with y hy hyx
+      exact absurd (le_antisymm (not_lt.1 fun h => hgt ⟨y, h⟩) hy) hyx
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- The jumps of size `ε` meet a compact set in a finite set.  This is
+`eventually_dist_leftLim_lt` against `IsCompact.elim_nhds_subcover`: the
+neighbourhoods it produces meet `largeLeftJumpSet f ε` in at most one point, and
+finitely many of them cover the compact set. -/
+theorem IsCadlag.finite_largeLeftJumpSet_inter {f : ι → E} (hf : IsCadlag f) {ε : ℝ}
+    (hε : 0 < ε) {K : Set ι} (hK : IsCompact K) : (largeLeftJumpSet f ε ∩ K).Finite := by
+  have key : ∀ x : ι, ∃ U ∈ 𝓝 x, largeLeftJumpSet f ε ∩ U ⊆ {x} := by
+    intro x
+    refine ⟨{y | y ≠ x → dist (Function.leftLim f y) (f y) < ε},
+      hf.eventually_dist_leftLim_lt x hε, ?_⟩
+    rintro y ⟨hy1, hy2⟩
+    by_contra hne
+    exact absurd (hy2 hne) (not_lt.2 hy1)
+  choose U hU hUsub using key
+  obtain ⟨s, -, hcover⟩ := hK.elim_nhds_subcover U fun x _ => hU x
+  refine Set.Finite.subset (Set.Finite.biUnion s.finite_toSet
+    fun x _ => Set.finite_singleton x) ?_
+  rintro y ⟨hy1, hy2⟩
+  obtain ⟨x, hxs, hx⟩ := Set.mem_iUnion₂.1 (hcover hy2)
+  exact Set.mem_iUnion₂.2 ⟨x, hxs, hUsub x ⟨hy1, hx⟩⟩
+
+omit [AdditiveDist ι] in
+/-- The jump set of a càdlàg map is countable.  It decomposes over the jump size
+into the sets `largeLeftJumpSet f (1 / (n + 1))`, and each of those meets each
+member of the exhaustion in a finite set; properness of the index is what makes
+the exhaustion compact, and that is the only place it is used.
+
+The decomposition over `ε` is not a convenience: the jump set itself may have
+accumulation points, as it does for
+`f = ∑' n, 2⁻¹ ^ n * Set.indicator (Set.Ici (1 / (n + 1))) 1` at `0`. -/
 theorem countable_leftJumpSet {f : ι → E} (hf : IsCadlag f) :
-    (leftJumpSet f).Countable := sorry
+    (leftJumpSet f).Countable := by
+  rcases isEmpty_or_nonempty ι with hι | hne
+  · have := hι
+    exact Set.Countable.mono (Set.subset_univ _) (Set.Finite.countable Set.finite_univ)
+  · obtain ⟨t₀⟩ := hne
+    have hsub : leftJumpSet f ⊆
+        ⋃ (n : ℕ), ⋃ (m : ℕ), largeLeftJumpSet f (1 / (n + 1)) ∩ exhaustion t₀ m := by
+      intro x hx
+      obtain ⟨n, hn⟩ := exists_nat_one_div_lt (dist_pos.2 hx)
+      obtain ⟨m, hm⟩ := exists_nat_ge (dist t₀ x)
+      refine Set.mem_iUnion.2 ⟨n, Set.mem_iUnion.2 ⟨m, hn.le, ?_⟩⟩
+      simpa [exhaustion, Metric.mem_closedBall, dist_comm x t₀] using hm
+    refine Set.Countable.mono hsub
+      (Set.countable_iUnion fun n => Set.countable_iUnion fun m => ?_)
+    exact (hf.finite_largeLeftJumpSet_inter (by positivity)
+      (isCompact_exhaustion t₀ m)).countable
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- A càdlàg map is continuous at `x` exactly where it does not jump.  The two
+directions use the two fields separately: forwards it is
+`ContinuousWithinAt.leftLim_eq` on the restriction of continuity to `Set.Iic x`,
+backwards the left limit *is* the value, so `IsCadlag.tendsto_leftLim` gives
+convergence along `𝓝[<] x`, which together with the right continuity along
+`𝓝[≥] x` is convergence along `𝓝 x` by `nhdsLT_sup_nhdsGE`. -/
+theorem IsCadlag.continuousAt_iff_notMem_leftJumpSet {f : ι → E} (hf : IsCadlag f) {x : ι} :
+    ContinuousAt f x ↔ x ∉ leftJumpSet f := by
+  constructor
+  · intro hc
+    simpa [leftJumpSet] using hc.continuousWithinAt.leftLim_eq
+  · intro hx
+    have hx' : Function.leftLim f x = f x := by simpa [leftJumpSet] using hx
+    have h1 : Tendsto f (𝓝[<] x) (𝓝 (f x)) := hx' ▸ hf.tendsto_leftLim x
+    have h2 : Tendsto f (𝓝[≥] x) (𝓝 (f x)) :=
+      continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous x)
+    have := h1.sup h2
+    rwa [nhdsLT_sup_nhdsGE] at this
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- The global form: a càdlàg map is continuous exactly when it has no jump. -/
+theorem IsCadlag.continuous_iff_leftJumpSet_eq_empty {f : ι → E} (hf : IsCadlag f) :
+    Continuous f ↔ leftJumpSet f = ∅ := by
+  rw [continuous_iff_continuousAt, Set.eq_empty_iff_forall_notMem]
+  exact forall_congr' fun x => hf.continuousAt_iff_notMem_leftJumpSet
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- Two càdlàg maps agree at `t` as soon as, arbitrarily close to `t` **and on
+its right**, one of them may be evaluated against the other's value at `t` with
+arbitrarily small error.  The disjunction is not a weakening for convenience: it
+is what the separation of `SkorokhodSpace.distOn` delivers, where the two
+branches are the time change moving `t` up and its inverse doing so.
+
+This replaces the classical route to that separation, which agrees on the
+continuity points and then invokes their density.  Density is a statement about
+the index, and it fails for an index of Milestone 1 whose jump points are not
+right isolated; the right hand approximation here uses only the two
+`right_continuous` fields, and nothing about the index at all. -/
+theorem IsCadlag.eq_of_forall_exists_dist_le {F G : ι → E} (hF : IsCadlag F) (hG : IsCadlag G)
+    {t : ι} (h : ∀ ρ > 0, ∀ η > 0, ∃ s, t ≤ s ∧ dist s t < ρ ∧
+      (dist (F s) (G t) ≤ η ∨ dist (F t) (G s) ≤ η)) :
+    F t = G t := by
+  refine eq_of_forall_dist_le fun η hη => ?_
+  have hFc : Tendsto F (𝓝[≥] t) (𝓝 (F t)) :=
+    continuousWithinAt_Ioi_iff_Ici.1 (hF.right_continuous t)
+  have hGc : Tendsto G (𝓝[≥] t) (𝓝 (G t)) :=
+    continuousWithinAt_Ioi_iff_Ici.1 (hG.right_continuous t)
+  obtain ⟨ρ₁, hρ₁, h₁⟩ := Metric.tendsto_nhdsWithin_nhds.1 hFc (η / 2) (by positivity)
+  obtain ⟨ρ₂, hρ₂, h₂⟩ := Metric.tendsto_nhdsWithin_nhds.1 hGc (η / 2) (by positivity)
+  obtain ⟨s, hts, hsρ, hcase⟩ := h (min ρ₁ ρ₂) (lt_min hρ₁ hρ₂) (η / 2) (by positivity)
+  rcases hcase with hc | hc
+  · have hd := h₁ (Set.mem_Ici.2 hts) (hsρ.trans_le (min_le_left _ _))
+    calc dist (F t) (G t) ≤ dist (F t) (F s) + dist (F s) (G t) := dist_triangle _ _ _
+      _ ≤ η / 2 + η / 2 := add_le_add (by rw [dist_comm]; exact hd.le) hc
+      _ = η := by ring
+  · have hd := h₂ (Set.mem_Ici.2 hts) (hsρ.trans_le (min_le_right _ _))
+    calc dist (F t) (G t) ≤ dist (F t) (G s) + dist (G s) (G t) := dist_triangle _ _ _
+      _ ≤ η / 2 + η / 2 := add_le_add hc hd.le
+      _ = η := by ring
 
 theorem IsCadlag.measurable [MeasurableSpace ι] [BorelSpace ι]
     [MeasurableSpace E] [BorelSpace E] {f : ι → E}
@@ -1191,6 +1420,106 @@ theorem SkorokhodSpace.distOn_triangle (t₀ : ι) (m : ℕ) (f g h : D(ι, E)) 
     (hterm.trans ?_)
   linarith
 
+/-- The separation, the last of the metric axioms of `distOn`: two paths at
+`distOn`-distance zero have the same truncation to the window.
+
+The proof does **not** go through the continuity points and their density.  It
+uses the time change and its inverse against each other: given `ε`, a time
+change `λ` with `norm λ < ε` and `dist (F (λ s)) (G s) < ε` for every `s` either
+moves `t` up, and then `F (λ t)` is close to `F t` by the right continuity of
+`F`, or it moves `t` down, and then `λ⁻¹` moves `t` up, `G (λ⁻¹ t)` is close to
+`G t` by the right continuity of `G`, and the hypothesis read at `λ⁻¹ t` says
+`dist (F t) (G (λ⁻¹ t)) < ε`.  Either way `dist (F t) (G t)` is arbitrarily
+small.  That is `IsCadlag.eq_of_forall_exists_dist_le`, and it is what makes the
+separation independent of the index: the classical argument needs the continuity
+points to be dense, which an index of Milestone 1 need not provide. -/
+theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) (m : ℕ) (f g : D(ι, E))
+    (h : SkorokhodSpace.distOn t₀ m f g = 0) :
+    (SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+      = (SkorokhodSpace.restrictExhaustion t₀ m g).toFun := by
+  have hι : Nonempty ι := ⟨t₀⟩
+  -- an approximating time change for every `δ`, both of whose halves are small
+  have hstep : ∀ δ > 0, ∃ l : TimeChange.fixing t₀,
+      TimeChange.norm (l : TimeChange ι) < δ ∧
+        ∀ s, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+          ((l : TimeChange ι).toOrderIso s))
+          ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun s) < δ := by
+    intro δ hδ
+    obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ m f g hδ
+    rw [h, zero_add] at hl
+    refine ⟨l, (le_max_left _ _).trans_lt hl, fun s => ?_⟩
+    exact lt_of_le_of_lt ((le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion
+      t₀ m f g (l : TimeChange ι)) s).trans (le_max_right _ _)) hl
+  -- the displacement of a point of the window is small with the norm
+  have hsmall : ∀ ρ > 0, ∀ η > 0, ∃ δ, 0 < δ ∧ δ ≤ η ∧ (Real.exp δ - 1) * (2 * m) < ρ := by
+    intro ρ hρ η hη
+    have hcont : Tendsto (fun δ : ℝ => (Real.exp δ - 1) * (2 * m)) (𝓝[>] 0) (𝓝 0) := by
+      have h0 : Tendsto (fun δ : ℝ => (Real.exp δ - 1) * (2 * m)) (𝓝 0)
+          (𝓝 ((Real.exp 0 - 1) * (2 * m))) :=
+        ((Real.continuous_exp.sub continuous_const).mul continuous_const).tendsto 0
+      simpa using h0.mono_left nhdsWithin_le_nhds
+    have h1 : ∀ᶠ δ in 𝓝[>] (0 : ℝ), (Real.exp δ - 1) * (2 * m) < ρ := hcont (Iio_mem_nhds hρ)
+    have h2 : ∀ᶠ δ in 𝓝[>] (0 : ℝ), δ ≤ η :=
+      Filter.Eventually.filter_mono nhdsWithin_le_nhds
+        (Filter.Eventually.mono (Iio_mem_nhds hη) fun _ hx => hx.le)
+    obtain ⟨δ, hδρ, hδη, hδ0⟩ := (h1.and (h2.and self_mem_nhdsWithin)).exists
+    exact ⟨δ, hδ0, hδη, hδρ⟩
+  -- on the window the two truncations agree
+  have hwin : ∀ t ∈ exhaustion t₀ m,
+      (SkorokhodSpace.restrictExhaustion t₀ m f).toFun t
+        = (SkorokhodSpace.restrictExhaustion t₀ m g).toFun t := by
+    intro t ht
+    refine (SkorokhodSpace.restrictExhaustion t₀ m f).isCadlag.eq_of_forall_exists_dist_le
+      (SkorokhodSpace.restrictExhaustion t₀ m g).isCadlag ?_
+    intro ρ hρ η hη
+    obtain ⟨δ, hδ0, hδη, hδρ⟩ := hsmall ρ hρ η hη
+    obtain ⟨l, hlnorm, hldist⟩ := hstep δ hδ0
+    have hfix : (l : TimeChange ι).toOrderIso t₀ = t₀ := TimeChange.mem_fixing_iff.1 l.2
+    by_cases hcase : t ≤ (l : TimeChange ι).toOrderIso t
+    · refine ⟨(l : TimeChange ι).toOrderIso t, hcase, ?_, Or.inl ((hldist t).le.trans hδη)⟩
+      exact (TimeChange.dist_le_of_norm_le t₀ m hfix hlnorm.le ht).trans_lt hδρ
+    · have hinv : ((l : TimeChange ι)⁻¹).toOrderIso = (l : TimeChange ι).toOrderIso.symm := rfl
+      have hts : t ≤ (l : TimeChange ι).toOrderIso.symm t := by
+        have := (OrderIso.lt_iff_lt (l : TimeChange ι).toOrderIso.symm).2 (not_le.1 hcase)
+        simpa using this.le
+      refine ⟨(l : TimeChange ι).toOrderIso.symm t, hts, ?_, Or.inr ?_⟩
+      · have hfix' : ((l : TimeChange ι)⁻¹).toOrderIso t₀ = t₀ := by
+          rw [hinv]
+          exact (l : TimeChange ι).toOrderIso.symm_apply_eq.2 hfix.symm
+        have := TimeChange.dist_le_of_norm_le t₀ m hfix'
+          (le_of_eq_of_le (TimeChange.norm_inv (l : TimeChange ι)) hlnorm.le) ht
+        rw [hinv] at this
+        exact this.trans_lt hδρ
+      · have := hldist ((l : TimeChange ι).toOrderIso.symm t)
+        rw [OrderIso.apply_symm_apply] at this
+        exact this.le.trans hδη
+  funext t
+  have hc := hwin (clamp t₀ m t) (clamp_mem_exhaustion t₀ m t)
+  simpa [SkorokhodSpace.restrictExhaustion_apply, clamp_idem] using hc
+
+/-- The separation in the form the metric of `D(ι, E)` consumes it: a path is
+determined by its truncations, since every point lies in some window.  The
+metric itself is a weighted sum over the windows, and this is the only step of
+its separation that is not `SkorokhodSpace.eq_of_distOn_eq_zero`. -/
+theorem SkorokhodSpace.eq_of_forall_distOn_eq_zero (t₀ : ι) (f g : D(ι, E))
+    (h : ∀ m : ℕ, SkorokhodSpace.distOn t₀ m f g = 0) : f.toFun = g.toFun := by
+  funext t
+  obtain ⟨m, hm⟩ := exists_nat_ge (dist t₀ t)
+  have ht : t ∈ exhaustion t₀ m := by
+    simpa [exhaustion, Metric.mem_closedBall, dist_comm t t₀] using hm
+  have hc := congrFun (SkorokhodSpace.eq_of_distOn_eq_zero t₀ m f g (h m)) t
+  rwa [SkorokhodSpace.restrictExhaustion_eq_self ht,
+    SkorokhodSpace.restrictExhaustion_eq_self ht] at hc
+
+/-- The `sorry` here is not only the four axioms, which are now all theorems
+about `distOn`.  The metric of Milestone 4 carries a **base point**: `distOn` is
+anchored at `t₀` through the window `exhaustion t₀ m` and through the subgroup
+`TimeChange.fixing t₀`, while `D(ι, E)` knows nothing of one.  Milestone 4
+therefore asks for `SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)`,
+a `def` with the base point as a parameter, and for the instance at the
+distinguished point of an index that has one.  The parameterless instance here
+is what the ten declarations after it elaborate against, and turning it into the
+`def` moves all ten. -/
 noncomputable instance : MetricSpace D(ι, E) := sorry
 
 instance [PolishSpace E] : CompleteSpace D(ι, E) := sorry

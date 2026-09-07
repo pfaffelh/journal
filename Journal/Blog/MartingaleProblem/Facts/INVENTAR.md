@@ -52,7 +52,7 @@ ist kein Befund, sondern ein `?`.
 
 | Fact | tragend | Aussage | Status | Beleg |
 |---|---|---|---|---|
-| `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum |
+| `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Was M8 darüber hinaus verlangt, ist die Fassung für **ein Maß** statt für einen Pfad — daß `{t | μ {f | f⁻ t = f t} = 1}` abzählbares Komplement hat —, und die folgt nicht punktweise aus der Pfadaussage, sondern braucht ein Fubini-Argument über die Sprunghöhen; das steht weiter aus |
 | `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one` — und die Aussage des Schritts selbst, `of_continuous_comp_of_isMulSystem` |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
@@ -6111,3 +6111,163 @@ Streckung, und es wäre der erste Beleg dafür, daß `distOn` wirklich die
 `J₁`-Metrik ist und nicht die Supremumsmetrik. Ein acceptance example, das als
 übersetzte Deklaration dasteht, ist nach den Regeln dieses Projekts der
 stärkste Beleg, den ein Meilenstein haben kann.
+
+### 2026-09-07, fünfter Lauf des Tages — Rückstau 1: die Sprungtheorie braucht das Bündel (B) nicht, und die Trennung braucht die Stetigkeitsstellen nicht
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also der Rückstau von oben
+und dort das benannte Ziel des dritten Laufs von heute:
+**`countable_leftJumpSet`**. Es steht, mit Beweis, dazu die
+Stetigkeitscharakterisierung — und im selben Lauf ist die **Trennung** von
+Meilenstein 4 gefallen, das Ziel, das dieser Bericht erst als das des nächsten
+Laufs vorsehen wollte. `SkorokhodSpace/Suggested.lean` geht durch
+`lake env lean` gegen `v4.33.1`, ohne Fehler und ohne Linterwarnung; 12 `sorry`
+statt 13, und elf neue Deklarationen, alle bewiesen. Acht davon sind die
+Sprungtheorie:
+`IsCadlag.tendsto_leftLim`, `largeLeftJumpSet`,
+`IsCadlag.dist_leftLim_le_of_Ioo_subset`,
+`IsCadlag.eventually_dist_leftLim_lt`,
+`IsCadlag.finite_largeLeftJumpSet_inter`, `countable_leftJumpSet`,
+`IsCadlag.continuousAt_iff_notMem_leftJumpSet` und
+`IsCadlag.continuous_iff_leftJumpSet_eq_empty`; die drei anderen sind die
+Trennung, `IsCadlag.eq_of_forall_exists_dist_le`,
+`SkorokhodSpace.eq_of_distOn_eq_zero` und
+`SkorokhodSpace.eq_of_forall_distOn_eq_zero` (Punkt 6).
+
+**1. Der Befund, und er ist der wertvollste des Laufs: die Sprungtheorie steht
+unter (A′), nicht unter (B).** Meilenstein 2 führte drei Aussagen — die
+Häufungspunktfreiheit von `largeLeftJumpSet`, die Stetigkeitscharakterisierung
+und die Abzählbarkeit von `leftJumpSet` — seit dem 2026-08-29 unter dem Bündel
+(B), also unter „lineare Ordnung, Ordnungstopologie **und** eine abzählbare
+dichte Menge `D`, aus der heraus jeder nicht-maximale Punkt von rechts
+erreichbar ist". Der Beweis verbraucht von `D` **nichts**. Er benutzt die
+lineare Ordnung, die Ordnungstopologie (über
+`mem_nhdsLT_iff_exists_Ioo_subset'`, `mem_nhdsGE_iff_exists_Ico_subset'`,
+`Ioi_mem_nhds` und `leftLim_eq_of_eq_bot`) und für die Abzählbarkeit die
+σ-Kompaktheit des Index; `AdditiveDist` ist an allen acht Deklarationen
+`omit`, `ProperSpace` an allen bis auf `countable_leftJumpSet`, und dort nur
+für `isCompact_exhaustion`. Die drei Punkte sind im Roadmaptext in die
+(A′)-Liste gewandert, mit der Notiz, was von (A′) sie wirklich verbrauchen;
+unter (B) bleiben genau zwei, `IsCadlag.measurable` und
+`IsCadlag.eq_of_eqOn_dense`. Das ist die stehende Regel über minimale
+Voraussetzungen an der Stelle, an der sie etwas kostet: (B) ist mit dem Index
+von Meilenstein 1 unvergleichbar, also galt die Sprungtheorie unter (B) für den
+diskreten Index gar nicht, sondern mußte dort nur „instanziierbar" sein. Sie
+gilt dort jetzt.
+
+**2. Die Aussage, die der Roadmap gefehlt hat, und warum sie die Gestalt des
+Beweises bestimmt.** `IsCadlag.dist_leftLim_le_of_Ioo_subset`: bleibt `f` auf
+`Set.Ioo a y` und in `y` selbst `r`-nah an **einem** Punkt `c` von `E`, so ist
+der Sprung von `f` in `y` höchstens `2r`. Sie wird zweimal angewandt, links von
+`x` mit `c` = Linkslimes dort und rechts mit `c` = Wert dort, und sie ist der
+einzige Ort, an dem `Function.leftLim` direkt vorkommt. Der entartete Fall ist
+in ihr keine Ausnahme, sondern der Grund, sie über den *Sprung* zu formulieren
+und nicht über den Linkslimes: wo `𝓝[<] y = ⊥` ist, *ist* der Linkslimes der
+Wert (`leftLim_eq_of_eq_bot`), und der Sprung ist `0` — eine Aussage über den
+Linkslimes allein wäre dort falsch, weil `y` selbst nicht in `Ioo a y` liegt.
+
+**3. Die Häufungspunktaussage in ihrer scharfen Form.**
+`IsCadlag.eventually_dist_leftLim_lt` sagt: **jeder** Punkt `x` des Index — auch
+einer, der selbst springt — hat eine Umgebung, auf der `x` der einzig mögliche
+Sprung der Höhe `ε` ist. Der Punkt selbst läßt sich nicht ausschließen, eine
+càdlàg-Funktion darf an jeder einzelnen Stelle springen; und er muß es nicht,
+denn eine Menge, die eine Umgebung jedes Punktes des Index in höchstens einem
+Punkt trifft, trifft schon jede kompakte Menge in einer endlichen — das ist
+`IsCadlag.finite_largeLeftJumpSet_inter` über `IsCompact.elim_nhds_subcover`,
+mit `Set.finite_singleton` je Überdeckungsstück. Die Zerlegung der Umgebung ist
+`nhdsLT_sup_nhdsGE` und damit dieselbe wie in
+`IsCadlag.isBounded_image_of_isCompact` vom dritten Lauf; die beiden entarteten
+Fälle — `x` ein kleinstes Element, wo `Set.Iio x = ∅` und der Filter `⊥` ist,
+und `x` ein größtes, wo `Set.Ici x = {x}` ist — tragen keinen Inhalt und werden
+getrennt erledigt.
+
+**4. Die Abzählbarkeit, und der leere Index.** `countable_leftJumpSet` zerlegt
+über die Sprunghöhe (`exists_nat_one_div_lt`) und über die Ausschöpfung
+(`exists_nat_ge` auf `dist t₀ x`), also in eine abzählbare Vereinigung endlicher
+Mengen. Die Ausschöpfung braucht einen Basispunkt, den ein **leerer** Index
+nicht hat; der Fall steht als eigener Zweig (`isEmpty_or_nonempty`) und ist
+`Set.finite_univ`. Das ist keine Pedanterie: Meilenstein 1 verlangt vom Index
+keine Nichtleerheit, und von den laufenden Instanzen ist `Set.Icc (0:ℝ) T` für
+`T < 0` leer.
+
+**5. Die Stetigkeitscharakterisierung, im selben Lauf mitgenommen.**
+`IsCadlag.continuousAt_iff_notMem_leftJumpSet` und die globale Fassung
+`IsCadlag.continuous_iff_leftJumpSet_eq_empty`. Hin ist es
+`ContinuousWithinAt.leftLim_eq` auf der Einschränkung auf `Set.Iic x`, zurück
+`IsCadlag.tendsto_leftLim`, entlang `f⁻ x = f x` umgeschrieben, plus die
+Rechtsstetigkeit und wieder `nhdsLT_sup_nhdsGE`. Sie ist der nächste Baustein
+auf dem Weg zur Trennung: dort wird `G t = F t` zunächst nur an den
+Stetigkeitsstellen von `F` gewonnen, und „Stetigkeitsstelle" heißt ab jetzt
+„nicht in `leftJumpSet F`", was `countable_leftJumpSet` abzählbar macht.
+
+**6. Und im selben Lauf die Trennung, das letzte Metrikaxiom von Meilenstein 4 —
+über einen Weg, der die Dichtheit der Stetigkeitsstellen *nicht* braucht.**
+`SkorokhodSpace.eq_of_distOn_eq_zero`: aus `distOn t₀ m f g = 0` folgt
+`(restrictExhaustion t₀ m f).toFun = (restrictExhaustion t₀ m g).toFun`, dazu
+`SkorokhodSpace.eq_of_forall_distOn_eq_zero` für den Übergang von allen Fenstern
+zu den Pfaden. **Meilenstein 4 hat damit alle vier Axiome von `distOn` als
+Sätze.**
+
+Der klassische Beweis (Billingsley) liest `G = F` an den Stetigkeitsstellen von
+`F` und beruft sich dann auf deren Dichtheit. Das ist eine Aussage über den
+**Index**, und für einen Index von Meilenstein 1 — eine abgeschlossene Teilmenge
+von `ℝ`, kein Intervall — ist sie in dieser Stärke nicht verfügbar: die
+Sprungmenge ist zwar abzählbar, aber abzählbare Komplemente sind in einem
+beliebigen abgeschlossenen `ι` nicht rechtsdicht. (Daß sie es *doch* sind, ließe
+sich über Cantor--Bendixson zeigen — eine nichtleere abzählbare abgeschlossene
+Menge hat isolierte Punkte, und an isolierten Punkten springt nichts —, aber das
+ist ein Umweg über die Perfektmengen-Theorie und über
+`exists_orderIso_isometry_real`, das selbst noch ein `sorry` ist.)
+
+Der Weg, der stattdessen trägt, spielt die Zeitänderung gegen ihre Inverse aus
+und ist als eigene Aussage von Meilenstein 2 aufgeschrieben,
+`IsCadlag.eq_of_forall_exists_dist_le`: zwei càdlàg-Abbildungen stimmen in `t`
+überein, sobald beliebig nah an `t` und **rechts davon** die eine gegen den Wert
+der anderen in `t` mit beliebig kleinem Fehler auswertbar ist. Zu gegebenem `ε`
+liefert `exists_lt_distOn_add` ein `λ` mit `norm λ < ε` und
+`dist (F (λ s)) (G s) < ε` für **jedes** `s`. Entweder ist `λ t ≥ t` — dann ist
+`F (λ t)` nah an `F t`, weil `F` rechtsstetig ist —, oder `λ t < t`, und dann
+ist `t < λ⁻¹ t`, `G (λ⁻¹ t)` ist nah an `G t`, weil `G` rechtsstetig ist, und
+die Voraussetzung an der Stelle `λ⁻¹ t` gelesen ist `dist (F t) (G (λ⁻¹ t)) < ε`.
+**Beide Zweige nähern sich von rechts** — der einzigen Seite, die eine
+càdlàg-Abbildung kontrolliert —, und vom Index geht nur
+`TimeChange.dist_le_of_norm_le` ein. Der Beweis ist reine ε-δ-Rechnung
+(`Metric.tendsto_nhdsWithin_nhds`), ohne Teilfolgen und ohne Filter; die
+Verkleinerung `δ ↦ (exp δ − 1)·2m < ρ` steht als eigener Schritt, weil
+`dist_le_of_norm_le` die Verschiebung nur in dieser Form beschränkt.
+
+Bemerkenswert ist, was der Lauf damit über seine eigene Vorbereitung sagt:
+`countable_leftJumpSet` und die Stetigkeitscharakterisierung waren als
+Vorstufen der Trennung geplant und sind für **diesen** Beweis der Trennung
+**nicht nötig**. Sie bleiben richtig und tragend — `fact:Dcountable` ruht auf
+ihnen, und Meilenstein 8 braucht sie —, aber der kritische Weg zur
+`MetricSpace`-Instanz lief nicht über sie. Das ist kein Argument gegen die
+Reihenfolge, sondern eine Notiz für den nächsten Vorschlag: der angenommene
+kritische Weg war nicht der kürzeste.
+
+**Was offen bleibt.** Die zwölf `sorry` sind `exists_orderIso_isometry_real`
+(M1), `IsCadlag.measurable` (M2) und die zehn an der
+`MetricSpace D(ι, E)`-Instanz. Von den Definitionen mit `sorry` im Rumpf sind
+weiterhin `SkorokhodSpace.modulus` und die `MetricSpace`-Instanz da; letztere
+hat beide Daten und **alle** Axiome von `distOn`.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**Die Instanz `MetricSpace D(ι, E)` selbst**, also
+`dist f g = ∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)` von Meilenstein 4, mit den
+vier Axiomen aus `distOn_nonneg`, `distOn_self`, `distOn_comm`,
+`distOn_triangle` und `eq_of_forall_distOn_eq_zero` — gliedweise, denn `min 1 ·`
+erhält die Dreiecksungleichung, und die Summierbarkeit ist die geometrische
+Reihe. Worauf sie ruht, steht damit vollständig; an ihr hängen zehn der zwölf
+`sorry` der Datei. **Eine Vorfrage stand dabei im Weg und ist in diesem Lauf
+entschieden und in die Roadmap eingetragen:** die Metrik braucht einen
+Basispunkt, den der Typ `D(ι, E)` nicht kennt — `distOn` ist gleich doppelt an
+`t₀` verankert, über das Fenster `exhaustion t₀ m` **und** über die Untergruppe
+`TimeChange.fixing t₀` —, während die Datei sie als parameterlose `instance`
+führt und deshalb gar nicht definierbar hätte sein können. Meilenstein 4 führt
+sie seit diesem Lauf als `SkorokhodSpace.metricSpace (t₀ : ι)`, eine `def` mit
+dem Basispunkt als Parameter; die Instanz ist die am ausgezeichneten Punkt eines
+Index, der einen hat, und das ist `0` für alle vier laufenden Instanzen. Nicht
+behauptet und deshalb auch nicht in die Roadmap geschrieben ist, daß zwei
+Basispunkte dieselbe Topologie geben — das ist plausibel, aber die
+Untergruppen `TimeChange.fixing t₀` sind für verschiedene `t₀` verschieden, und
+ein Beweis dafür liegt nicht vor. `fact:Dcountable` (tragend `4`) und
+`fact:fddconv` (tragend `1`) hängen über die Meilensteine 5, 6 und 8 daran.
