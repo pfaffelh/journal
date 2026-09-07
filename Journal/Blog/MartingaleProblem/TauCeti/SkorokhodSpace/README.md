@@ -323,20 +323,30 @@ need (B), and this is a correction of 2026-09-07, found by writing the proofs:
   `Mathlib/Topology/Order/LeftRightLim.lean`, where only the module comment
   names it; the càdlàg case does not follow from it.
 
-  None of these three items uses the countable dense set of (B) or its right
+* `IsCadlag.measurable`: a càdlàg map is Borel measurable. Proved (2026-09-07),
+  and the bundle of this item is a second correction of the same day: it stood
+  under (B) with `E` Polish, to be proved by approximation with right continuous
+  step functions along `D`, and it needs neither. Continuity off the jump set is
+  `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, the jump set is countable by
+  `countable_leftJumpSet`, and a map continuous off a countable set is
+  measurable by `measurable_of_countable_not_continuousAt`
+  (`Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:509`); its
+  `MeasurableSingletonClass ι` is free from `T1Space` through
+  `OpensMeasurableSpace.toMeasurableSingletonClass` (`ibid.:351`). So the
+  hypotheses are those of `countable_leftJumpSet` --- the linear order, the
+  order topology, σ-compactness --- plus the Borel structures on index and
+  state. The step function route would have needed a linear structure on `E`
+  that the milestone nowhere else asks for.
+
+  None of these four items uses the countable dense set of (B) or its right
   approximation clause. They stood under (B) from 2026-08-29 to 2026-09-07, and
-  the proofs do not bear that out. What (B) is genuinely for are two of the
-  three items below, `IsCadlag.measurable` and `IsCadlag.eq_of_eqOn_dense`; the
-  third, `IsCadlag.eq_of_forall_exists_dist_le`, is again (A′) and is listed
-  there only because Milestone 4 consumes it next to them.
+  the proofs do not bear that out. What (B) is genuinely for is one of the two
+  items below, `IsCadlag.eq_of_eqOn_dense`; the other,
+  `IsCadlag.eq_of_forall_exists_dist_le`, is again (A′) and is listed there only
+  because Milestone 4 consumes it next to it.
 
 Under (B), with `E` a pseudometric space:
 
-* `IsCadlag.measurable`: a càdlàg map into a Polish space is Borel measurable,
-  via approximation by right continuous step functions along `D`. Linearity is
-  what makes the step functions definable and the countable dense `D` is what
-  indexes them; this is (B) exactly, with σ-compactness for the exhausting
-  sequence of steps.
 * `IsCadlag.eq_of_forall_exists_dist_le`, still under (A′) and stated here
   because it is a statement about càdlàg maps and nothing else: two of them
   agree at `t` as soon as, arbitrarily close to `t` and **on its right**, one of

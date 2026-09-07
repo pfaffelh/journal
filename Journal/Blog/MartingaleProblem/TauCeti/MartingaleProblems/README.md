@@ -1705,7 +1705,12 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `coinMeasure {true} = 2⁻¹`; `atomClock u`, the clock whose index σ-algebra is
   `⊤` and whose measure is `Measure.dirac u`, with
   `atomClock_apply_singleton : (atomClock u).q {u} = 1`, so that the atom is
-  there and every down-set is measurable for free;
+  there and every down-set is measurable for free, together with
+  `not_isAtomless_atomClock : ¬ (atomClock u).IsAtomless`, which is what binds
+  the sharpness to the hypothesis it is sharp against: without it the example
+  might still satisfy `hQ` of `isQuasiLeftContinuous_of_isMPSolutionFor` and
+  contradict that theorem instead of delimiting it. It is `measure_mono` from
+  the singleton into the degenerate interval `{v | u ≤ v ∧ v ≤ u}`;
   `coinProcess u t ω = if u ≤ t then ω else false`,
   the path over `Ω = E = Bool`, where the coin is both the sample point and the
   state; `isCadlagPath_coinProcess`, which holds for every `u` and every `ω`

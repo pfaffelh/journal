@@ -98,6 +98,12 @@ It is a `def` with the base point as a parameter, as Milestone 4 asks; the
 parameterless `instance` below it stays `sorry` because it is the base point
 that is missing there, not an axiom.
 
+Since 2026-09-07, eighth run, `IsCadlag.measurable` is proved, and its bundle
+was wrong: it stood under (B) with `E` Polish and a proof by right continuous
+step functions, and needs neither.  It falls out of the jump theory above
+against `measurable_of_countable_not_continuousAt`, so the whole of Milestone 2
+except `IsCadlag.eq_of_eqOn_dense` is now free of (B).
+
 Seven `sorry`s went on 2026-09-06: `isCompact_exhaustion`,
 `monotoneOn_dist_basepoint` and
 `IsCadlag.eq_of_eqOn_dense` carry proofs --- the last had to be corrected first,
@@ -519,9 +525,28 @@ theorem IsCadlag.eq_of_forall_exists_dist_le {F G : ι → E} (hF : IsCadlag F) 
       _ ≤ η / 2 + η / 2 := add_le_add hc hd.le
       _ = η := by ring
 
+omit [AdditiveDist ι] in
+/-- A càdlàg map is Borel measurable.  The route is **not** the approximation by
+right continuous step functions along a countable dense set: that needs the
+bundle (B) of the roadmap, and it needs a linear structure on `E` to define the
+steps.  The jump theory above is enough and asks for neither.  A càdlàg map is
+continuous off `leftJumpSet f` by `IsCadlag.continuousAt_iff_notMem_leftJumpSet`,
+that set is countable by `countable_leftJumpSet`, and a map continuous off a
+countable set is measurable by `measurable_of_countable_not_continuousAt`
+(`MeasureTheory/Constructions/BorelSpace/Basic.lean:509`), whose
+`MeasurableSingletonClass ι` comes from `T1Space` through
+`OpensMeasurableSpace.toMeasurableSingletonClass` (`ibid.:351`).
+
+So the hypotheses are those of `countable_leftJumpSet` --- the linear order, the
+order topology and properness --- and `E` a metric space with its Borel
+structure; `AdditiveDist` and `PolishSpace E` do not enter. -/
 theorem IsCadlag.measurable [MeasurableSpace ι] [BorelSpace ι]
     [MeasurableSpace E] [BorelSpace E] {f : ι → E}
-    (hf : IsCadlag f) : Measurable f := sorry
+    (hf : IsCadlag f) : Measurable f := by
+  refine measurable_of_countable_not_continuousAt ?_
+  refine (countable_leftJumpSet hf).mono fun x hx => ?_
+  by_contra hc
+  exact hx (hf.continuousAt_iff_notMem_leftJumpSet.2 hc)
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- A càdlàg function is determined by its values on a set that is dense **from

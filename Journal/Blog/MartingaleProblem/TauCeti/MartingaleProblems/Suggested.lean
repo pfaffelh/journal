@@ -31,7 +31,11 @@ run: it admitted the vacuous witness `A = ∅`.  Ten further declarations closed
 it later the same day -- the operator `coinPair`, the class `coinClass` and its
 separation, the filtration, the two clock masses, the two integrals, the
 integrability of everything on `Bool`, and `isMPSolution_coinProcess` -- so that
-`not_isQuasiLeftContinuous_of_atom` itself now carries a proof.  No statement in this
+`not_isQuasiLeftContinuous_of_atom` itself now carries a proof.  The eighth run
+of that day added `not_isAtomless_atomClock`, which is what makes the sharpness
+a delimitation rather than a contradiction: the clock of the witness fails the
+hypothesis `hQ` of `isQuasiLeftContinuous_of_isMPSolutionFor`, and that is now a
+theorem instead of an observation about the definition.  No statement in this
 file is `True` or `sorry` any more: the drafts of Milestones 3, 5, 9 and 10 were
 turned into propositions on 2026-09-06.  `Shift` now takes the coordinate maps
 `π` as a parameter, so that its compatibility field can be stated at all;
@@ -539,6 +543,22 @@ omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 theorem atomClock_apply_singleton_ne_zero (u : ι) : (atomClock u).q {u} ≠ 0 := by
   rw [atomClock_apply_singleton]
   exact one_ne_zero
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- The clock of the witness is **not** atomless, and at the very point where it
+carries its mass.  This is what makes the sharpness claim a theorem instead of a
+remark: `not_isQuasiLeftContinuous_of_atom` and
+`isQuasiLeftContinuous_of_isMPSolutionFor` do not overlap, because the clock of
+the first fails the hypothesis `hQ` of the second.  The proof is the singleton
+inside the degenerate interval `{v | u ≤ v ∧ v ≤ u}` and `measure_mono`; note
+that the interval is the same set for a preorder as for a partial order only
+because nothing here needs antisymmetry. -/
+theorem not_isAtomless_atomClock (u : ι) : ¬ (atomClock u).IsAtomless := by
+  intro h
+  refine atomClock_apply_singleton_ne_zero u (nonpos_iff_eq_zero.1 ?_)
+  refine (measure_mono ?_).trans (h u).le
+  rintro x rfl
+  exact ⟨le_rfl, le_rfl⟩
 
 /-- The path that is `false` strictly before `u` and shows the coin from `u` on.
 Over `Ω = E = Bool` the coin is both the sample point and the state. -/

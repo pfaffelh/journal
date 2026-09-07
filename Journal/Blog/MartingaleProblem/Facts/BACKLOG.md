@@ -119,6 +119,26 @@ kein gebautes Mathlib und taugt zu nichts.
    Sorry-Zahlen sind die des Übersetzers. Der erste verbleibende `sorry` der
    Datei ist `isMPSolution_iff_forall_fdd` (Meilenstein 3).*
 
+   *Zwischenstand 2026-09-07, achter Lauf des Tages: `SkorokhodSpace` steht bei
+   **elf** `sorry` — `IsCadlag.measurable` ist bewiesen, und die Roadmap
+   verlangte dafür ein Bündel, das der Beweis nicht braucht (Befund im
+   Inventar). `MartingaleProblems` bleibt bei neun und gewinnt
+   `not_isAtomless_atomClock`. **Für `SkorokhodSpace` ist dieser Punkt damit
+   ausgereizt**: von den elf verbleibenden `sorry` hängen zehn an der
+   parameterlosen `MetricSpace`-Instanz — dort ist der nächste Schritt eine
+   Signaturänderung an zehn Deklarationen und kein Beweis —, und der elfte,
+   `exists_orderIso_isometry_real`, ist ein eigener Satz. Wer diesen Punkt
+   weiterträgt, nimmt `MartingaleProblems` und `WeakConvergence`.*
+
+   *Nachtrag desselben Laufs zu `WeakConvergence`: gemessen sind es **48
+   Deklarationen und 18 `sorry`**, nicht 50 und 21; und der Übersetzer meldet
+   `rc = 1`, an genau einer Stelle und mit Absicht — der Modulkopf sagt seit dem
+   2026-09-06, daß `tendsto_map_of_measure_setOf_continuousAt_eq_one` für
+   `upstream/master` geschrieben ist, wo `ProbabilityMeasure.map` die Funktion
+   nimmt und nicht wie in v4.33.1 einen `AEMeasurable`-Beweis. Wer diese Datei
+   übersetzt, erwartet also **zwei** Fehler an dieser einen Aussage und keine
+   sonst.*
+
    *Zweiter Zwischenstand desselben Laufs: in `SkorokhodSpace` ist die
    **Metrik von Meilenstein 4 gebaut und bewiesen** —
    `SkorokhodSpace.totalDist`, `summable_totalDist`, `totalDist_self`,
@@ -187,6 +207,17 @@ kein gebautes Mathlib und taugt zu nichts.
    (`Topology/ContinuousMap/StoneWeierstrass.lean:297`, die ε-Fassung),
    angewandt auf die von `f₁,…,fₙ` erzeugte Unteralgebra über dem kompakten
    Bild in `Fin n → ℝ`.
+
+   *Zwischenstand 2026-09-07, achter Lauf des Tages: **(ii) ist bewiesen**,
+   `of_continuous_comp_of_isMulSystem`, durch `lake env lean`. Der Anker ist
+   nicht der hier genannte, sondern
+   `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`
+   (`ibid.:323`), die Fassung ohne Kompaktheit des Raumes — sie erspart den
+   Subtyp `↥box` vollständig. Offen sind damit noch (iii), die Approximation
+   des Indikators einer Box durch stetige Funktionen, und (iv), die einfachen
+   Funktionen und der letzte monotone Limes; danach ist
+   `induction_on_mulSystem` selbst zusammenzusetzen. Der nächste Schritt ist
+   (iii), und er ist der letzte mit Inhalt.*
 
    *Zwischenstand 2026-09-06, dritter Lauf des Tages: die algebraische Hälfte
    von (ii) steht und ist übersetzt, die Approximationshälfte nicht.* Drei
