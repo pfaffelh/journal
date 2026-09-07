@@ -171,6 +171,23 @@ kein gebautes Mathlib und taugt zu nichts.
    Deklarationen auf `SkorokhodSpace.metricSpace t₀` — das ist eine
    Signaturänderung und kein Satz.*
 
+   *Zwischenstand 2026-09-07, dreizehnter Lauf des Tages: `WeakConvergence` steht
+   bei **12 `sorry`** statt 13, und der gefallene ist der größte, der noch offen
+   war — `isSeparating_pi`, trennende Klassen über einem beliebigen Indextyp, die
+   Produkthälfte von `fact:fdd`. Mit ihm sind siebzehn Deklarationen neu und
+   bewiesen; die tragende darunter ist
+   `integral_indicator_mul_eq_of_isSeparating`, die eine trennende Klasse gegen
+   ein **Gewicht** statt gegen ein zweites Maß anwendbar macht, ohne daß ein
+   signiertes Maß im Beweis auftritt. Zwei Befunde stehen im Laufbericht: der vom
+   zwölften Lauf vorgeschlagene Weg über `ext_of_forall_integral_eq_of_isMulSystem`
+   trägt **nicht** (Produkte trennender Klassen sind kein multiplikatives System;
+   Zeuge in der Roadmap), und die Aussage brauchte zwei Hypothesen, die sie nicht
+   hatte — Beschränktheit und Meßbarkeit der Mitglieder. Die beiden Fehler bei
+   `:804` sind unverändert die angekündigten. Wer diesen Punkt fortsetzt, hat in
+   `WeakConvergence` als nächsten benannten Schritt `isConvergenceDetermining_pi`,
+   und dessen erster Teil ist eine Straffheitsaussage über abzählbare Produkte,
+   kein Satz über trennende Klassen.*
+
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`).~~ *(erledigt 2026-09-07, neunter Lauf des Tages.)* Der Satz und

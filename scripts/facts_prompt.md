@@ -335,7 +335,24 @@ Unteralgebra; `charPoly` ist die von den Charakteren erzeugte Algebra, und
 Das Manuskript wird dabei nicht geändert; Auffälligkeiten kommen ins Inventar.
 
 
-### Aufgabe: acceptance examples für jeden Meilenstein *(gestellt 2026-09-07)*
+### ~~Aufgabe: acceptance examples für jeden Meilenstein~~ *(gestellt 2026-09-07, erledigt 2026-09-07, vierter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, „2026-09-07, vierter Lauf des
+Tages". Alle **27** Meilensteine der vier Roadmaps tragen den Abschnitt
+`**Acceptance examples.**` am Ende — `WeakConvergence` (5), `SkorokhodSpace`
+(8), `KolmogorovExtension` (3), `MartingaleProblems` (1–11); 12 und 13 haben
+wie verlangt keinen. Der Maßstab, den der Lauf angelegt hat und der beim
+Weiterschreiben gilt: je Meilenstein ein **Paar** — die Instanz, an der die API
+rechnet, und die danebenliegende, an der eine naheliegende falsche Definition
+scheitert —, nicht vier positive Instanzen. Drei der Beispiele sind eigene
+Rechnungen und nicht bloß Zitate (die trigonometrische Algebra trennt Punkte,
+aber nicht stark; der schrumpfende Buckel scheidet die logarithmische von der
+naiven Zeitänderungsnorm; die Ordnungskonvexität der Fenster hängt an
+`AdditiveDist`, nicht an `clamp`).
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: acceptance examples für jeden Meilenstein~~
 
 **Warum.** Die Einreichung bei Tau Ceti steht in einer Woche an. Die gemergte
 Roadmap `OneParameterSemigroups` — die einzige, die unmittelbar an unsere Arbeit

@@ -205,22 +205,45 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   separating and every member of `Γ` is the pointwise limit of a uniformly
   bounded sequence from `Γ'`, then `Γ'` is separating. Dominated convergence;
   the same for the convergence determining notion.
-* **Missing.** Products, for an **arbitrary index** `ι`, not only a finite one.
-  For measurable spaces `S i`, `i : ι`, with `Γ i` separating on `S i`, the
-  functions `fun x ↦ ∏ i ∈ J, f i (x i)` with `J : Finset ι` and `f i ∈ Γ i` are
-  separating on `Π i, S i`; and the same statement for convergence determining
-  classes when `ι` is countable and the `S i` are Polish. `FiniteMeasurePi.lean`
-  has the product measure and the continuity of the product map, but not this.
-  It is the statement that makes finite dimensional distributions determine a
-  law — for a process the index is the time set, so the finite case does not
-  suffice. The determining sets of **MartingaleProblems** Milestone 3 are its
-  special case `Γ i` all bounded measurable, where the separating hypothesis is
-  vacuous, and `isDetermining_products` is proved there directly from
+* Products, for an **arbitrary index** `ι`, not only a finite one, as
+  `MeasureTheory.isSeparating_pi`. For measurable spaces `S i`, `i : ι`, with
+  `Γ i` separating on `S i` and every member of every `Γ i` bounded and
+  measurable, the functions `fun x ↦ ∏ i ∈ J, f i (x i)` with `J : Finset ι` and
+  `f i ∈ Γ i` are separating on `Π i, S i`; and the same statement for
+  convergence determining classes when `ι` is countable and the `S i` are
+  Polish. `FiniteMeasurePi.lean` has the product measure and the continuity of
+  the product map, but not this. It is the statement that makes finite
+  dimensional distributions determine a law — for a process the index is the
+  time set, so the finite case does not suffice. The determining sets of
+  **MartingaleProblems** Milestone 3 are its special case `Γ i` all bounded
+  measurable, where the separating hypothesis is vacuous, and
+  `isDetermining_products` is proved there directly from
   `induction_on_mulSystem`; what this point adds is that a *separating* `Γ i` —
   the bounded continuous functions, or a countable subfamily of them — already
-  suffices at each factor. The proof is the functional monotone class theorem of
-  Milestone 5 applied to those products, which form a multiplicative system
-  generating the product σ-algebra. The convergence determining half is the
+  suffices at each factor.
+
+  Boundedness and measurability of the members are carried explicitly, and they
+  are not slack. `IsSeparating` constrains only the map `μ ↦ (∫ f ∂μ)_{f ∈ Γ}`
+  and says nothing about the individual `f`, a non-integrable one contributing
+  `0` on both sides; the proof needs each `f` as a *weight*, which is where the
+  hypotheses are consumed.
+
+  The route is **not** the functional monotone class theorem of Milestone 5, and
+  the earlier claim that it was is withdrawn: those products are a multiplicative
+  system only when each `Γ i` is closed under multiplication, which a separating
+  class need not be — `Γ = {1_{\{1\}}, 1_{\{2\}}}` on `{0, 1, 2}` separates and
+  its two members multiply to `0`. What carries the proof is
+  `MeasureTheory.integral_indicator_mul_eq_of_isSeparating`: a separating class
+  is a *linear* condition, every finite signed measure of total mass `0` being a
+  scalar multiple of a difference of probability measures, so `Γ i` may be used
+  to replace `f i` by an arbitrary indicator `1_{B i}` inside a weighted
+  integral. Iterating that over `J` gives equality on the boxes `Set.pi ↑J B`,
+  and `isPiSystem_boxes` with `generateFrom_boxes` and `ext_of_generate_finite`
+  give equality of the measures. No signed measure occurs in the formalisation:
+  the Jordan pair `sepPos`/`sepNeg` of `W • (μ - ν)` is written as two positive
+  measures, and `IsSeparating` is applied to their normalisations, the
+  normalising constants agreeing because `∫ W ∂μ = ∫ W ∂ν` is the previous step
+  of the induction. The convergence determining half is the
   weaker of the two in reach: the one place in Ethier–Kurtz where it does the
   work is the last step of Corollary 3.9.2, which passes from the convergence of
   `(g 1, ..., g k) ∘ X n` for finite families out of a dense subalgebra to the

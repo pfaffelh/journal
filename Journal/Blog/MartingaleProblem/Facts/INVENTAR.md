@@ -78,7 +78,7 @@ ist kein Befund, sondern ein `?`.
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
-| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte trägt kein Beweis, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
+| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte **trägt seit dem 2026-09-07, dreizehntem Lauf, einen Beweis**: `isSeparating_pi` steht bewiesen in `WeakConvergence/Suggested.lean` und geht durch `lake env lean` gegen v4.33.1 — trennende Klassen multiplizieren sich über einen beliebigen Indextyp, sofern ihre Mitglieder beschränkt und meßbar sind. ~~die Produkthälfte trägt kein Beweis~~, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
 | `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
 | `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `ProbabilityTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib (`Probability/Process/LocalProperty.lean:93,142,153`, Namensraum am 2026-09-01 berichtigt), der Martingalfall ist es nicht |
 
@@ -7330,3 +7330,138 @@ macht. Was zu zeigen bleibt, ist die σ-Algebra-Rechnung
 `generateFromFuns_le_iff` (`:608`) und `generateFromFuns_mono` (`:613`) bereit.
 Das ist der erste Punkt des Meilensteins, der ohne neuen Unterbau fällt, und er
 ist der, den `thm:fdd` des Manuskripts unmittelbar braucht.
+
+### 2026-09-07, dreizehnter Lauf des Tages — `isSeparating_pi` ist bewiesen, und der angekündigte Weg dorthin war der falsche
+
+**Was der Lauf vorgefunden hat.** Die vorrangige Aufgabe „acceptance examples für
+jeden Meilenstein" war bereits erledigt — alle **27** Meilensteine der vier
+Roadmaps tragen den Abschnitt, gezählt am Text (`WeakConvergence` 5,
+`SkorokhodSpace` 8, `KolmogorovExtension` 3, `MartingaleProblems` 1–11; 12 und 13
+haben wie verlangt keinen). Sie ist im Auftrag durchgestrichen, mit ihrem
+Ergebnis und dem Maßstab, den der vierte Lauf angelegt hat. Die Tabelle des
+Inventars hat keine `?`-Zeile mehr, also ging es an Rückstaupunkt 1.
+
+**Das Ziel war benannt, und es steht.** Der zwölfte Lauf schlug
+`isSeparating_pi` vor (`WeakConvergence/Suggested.lean`, Meilenstein 1). Es ist
+**bewiesen**, ohne `sorry`, und die Datei geht durch `lake env lean` gegen
+v4.33.1: 12 `sorry` statt 13, keine neue Warnung, und weiterhin genau die beiden
+Fehler an `tendsto_map_of_measure_setOf_continuousAt_eq_one` (`:804`), die der
+Modulkopf seit dem 2026-09-06 ankündigt, weil jene Aussage absichtlich gegen
+`upstream/master` geschrieben ist.
+
+**Der vorgeschlagene Weg trug nicht, und das ist der zweite Befund des Laufs.**
+Der zwölfte Lauf nannte als Anker `ext_of_forall_integral_eq_of_isMulSystem` —
+den funktionalen Monotone-Klassen-Satz von Meilenstein 5 — mit der Begründung,
+die Klasse in der Konklusion von `isSeparating_pi` sei „wörtlich eine
+`IsMulSystem`". Sie ist es nicht. Endliche Produkte $\prod_{i\in J} g_i(x_i)$
+sind unter Multiplikation nur abgeschlossen, wenn jedes $\Gamma_i$ es ist, und
+eine trennende Klasse muß das nicht sein. Der kleinste Zeuge steht jetzt in der
+Roadmap: $\Gamma=\{\mathbb 1_{\{1\}},\mathbb 1_{\{2\}}\}$ auf $\{0,1,2\}$ ist
+trennend — die drei Bildpunkte $(0,0),(1,0),(0,1)$ sind affin unabhängig, also
+ist $\mu\mapsto(\int f\,d\mu)_{f\in\Gamma}$ auf dem Simplex injektiv —, und das
+Produkt seiner beiden Mitglieder ist die konstante $0$. Dieselbe Falle wie bei
+`isMulSystem_indicator_of_isPiSystem` am 2026-09-06, und aus demselben Grund:
+„erzeugt dieselbe σ-Algebra" ist nicht „ist multiplikativ abgeschlossen".
+
+**Der Weg, der trägt.** Trennung ist eine *lineare* Bedingung im Verborgenen:
+$\Gamma$ trennt Wahrscheinlichkeitsmaße genau dann, wenn kein von Null
+verschiedenes signiertes Maß der Gesamtmasse $0$ alle $f\in\Gamma$ annulliert —
+denn jedes solche signierte Maß ist nach Jordan ein Vielfaches einer Differenz
+zweier Wahrscheinlichkeitsmaße. Damit läßt sich in einem *gewichteten* Integral
+ein $f\in\Gamma_i$ gegen einen beliebigen Indikator $\mathbb 1_{B_i}$
+austauschen, und das ist der Induktionsschritt. Formalisiert ist das **ohne
+jedes signierte Maß**, was in Lean der Unterschied zwischen einem Nachmittag und
+einer Woche ist: das Jordan-Paar von $W\cdot(\mu-\nu)$ steht als zwei ehrliche
+positive Maße da,
+
+    sepPos T μ ν W = weightedMap T μ W + weightedMap T ν (-W)
+    sepNeg T μ ν W = weightedMap T ν W + weightedMap T μ (-W)
+
+mit `weightedMap T ρ w = (ρ.withDensity (ENNReal.ofReal ∘ w)).map T`, also dem
+Bild des mit dem Positivteil von `w` umgewichteten `ρ`. Gegen beschränktes
+meßbares `h` ist ihre Differenz genau
+$\int W\cdot(h\circ T)\,d\mu-\int W\cdot(h\circ T)\,d\nu$
+(`integral_sepPos_sub_integral_sepNeg`, über
+`integral_withDensity_eq_integral_smul` und `integral_map`). Beide Gesamtmassen
+stimmen überein, weil $\int W\,d\mu=\int W\,d\nu$ die vorige Induktionsstufe
+ist; ist sie $0$, sind beide Maße $0$, sonst normiert man und wendet
+`IsSeparating` an, und `ENNReal.mul_inv_cancel` holt die Normierung zurück. Das
+ist `integral_indicator_mul_eq_of_isSeparating`, und es ist das
+wiederverwendbare Stück: **jede** Stelle, an der eine trennende Klasse gegen ein
+Gewicht statt gegen ein zweites Maß benutzt wird, geht darüber.
+
+Darauf sitzt die Induktion über `J`, die die $g_i$ einen Index nach dem anderen
+durch Indikatoren ersetzt. Die Buchhaltung ist ein zweites `Finset` `J'` für die
+noch nicht ersetzten Indizes, disjunkt zu `J`; der Schritt ruft die
+Induktionsvoraussetzung zweimal, einmal mit `J'` für die Gesamtmasse und einmal
+mit `insert i₀ J'` und `Function.update g i₀ f` für die Hypothese der Engine.
+Heraus kommt Gleichheit auf den Quadern `Set.pi ↑J B`; `isPiSystem_boxes`,
+`generateFrom_boxes` und `ext_of_generate_finite` machen daraus die Gleichheit
+der Maße. Neu und bewiesen sind damit siebzehn Deklarationen:
+`integrable_of_measurable_of_bounded`, `abs_max_zero_le`, `abs_mul_le_mul`,
+`weightedMap`, `isFiniteMeasure_weightedMap`, `integral_weightedMap`, `sepPos`,
+`sepNeg`, `isFiniteMeasure_sepPos`, `isFiniteMeasure_sepNeg`,
+`integral_sepPos_sub_integral_sepNeg`,
+`integral_indicator_mul_eq_of_isSeparating`, `exists_nonneg_bound_prod`,
+`boxes`, `isPiSystem_boxes`, `generateFrom_boxes` und `isSeparating_pi` selbst.
+
+**Zwei Hypothesen, die die Aussage nicht hatte und braucht.** `isSeparating_pi`
+stand ohne jede Bedingung an die Mitglieder der $\Gamma_i$. So ist es nicht
+beweisbar, und der Grund ist die Lean-Konvention $\int f=0$ für nicht
+integrierbares $f$: `IsSeparating` bindet nur die Abbildung
+$\mu\mapsto(\int f\,d\mu)_{f\in\Gamma}$ und sagt über das einzelne $f$ nichts.
+Der Beweis dagegen benutzt jedes $g_i$ als **Gewicht**, und ein Gewicht muß
+beschränkt und meßbar sein, sonst ist `weightedMap` kein endliches Maß. Die
+Aussage trägt deshalb jetzt
+
+    (hmeas : ∀ i, ∀ f ∈ Γ i, Measurable f)
+    (hbdd  : ∀ i, ∀ f ∈ Γ i, ∃ C, ∀ y, |f y| ≤ C)
+
+und die Stelle, an der es ohne sie bricht, ist im Doc-String benannt
+(`isFiniteMeasure_weightedMap`). Das ist **keine** Verletzung der stehenden
+Regel, sondern ihr Gegenstück: die Regel verlangt die schwächsten Hypothesen,
+unter denen die Aussage **gilt**, und ohne diese beiden ist sie unbewiesen. Ob
+sie ohne sie falsch ist, bleibt offen; der Lauf hat kein Gegenbeispiel gefunden
+und behauptet keines. Der Rahmen dafür steht: wer eines sucht, sucht eine
+trennende Klasse, deren beschränkt-meßbarer Teil nicht mehr trennt — auf einem
+endlichen Raum gibt es das nicht, weil dort jede Funktion beschränkt und meßbar
+ist, und Zusatzfunktionen können nie schaden, weil sowohl `IsSeparating` als
+auch die Produktklasse monoton in $\Gamma$ sind (`IsSeparating.mono`).
+
+**Was mitgeprüft und nachgezogen wurde.** Der Meilensteinpunkt in
+`WeakConvergence/README.md` trägt jetzt den Zeugen gegen die Multiplikativität,
+die beiden Hypothesen mit ihrer Begründung und den wirklichen Beweisweg; die
+Behauptung „the proof is the functional monotone class theorem of Milestone 5"
+ist ausdrücklich zurückgenommen. Die Zeile `fact:fdd` der Tabelle ist
+nachgezogen, denn `isSeparating_pi` **ist** ihre Produkthälfte, und die stand
+seit dem 2026-08-31 als „trägt kein Beweis, §9 verlangt sie"; der alte Wortlaut
+ist als durchgestrichene Notiz stehengeblieben. Das Manuskript ist unberührt.
+
+**Werkzeugnotiz, die einen Lauf Zeit spart.** Entwickelt wurde in einer
+Kleindatei unter `/tmp`, die nur die vier gebrauchten Mathlib-Module und die
+Definition von `IsSeparating` importiert; ein Durchlauf kostet dort einen
+Bruchteil dessen, was die 1700-Zeilen-Datei kostet, und der fertige Block wurde
+erst danach eingesetzt. Zwei Dinge sind beim Umzug aufgefallen und gehören
+notiert: `Suggested.lean` öffnet `ENNReal`, aber **nicht** `NNReal`, also
+elaboriert `ℝ≥0∞` dort und `ℝ≥0` nicht (im Zweifel `NNReal` und `ENNReal`
+ausschreiben); und `cd ~/Code/lean/journal` gehört in **denselben** Befehl wie
+`lake env lean`, weil ein zwischengeschalteter Werkzeugaufruf mit eigenem `cd`
+das Arbeitsverzeichnis zurücksetzt — genau das ist hier einmal passiert und hat
+einen Durchlauf gekostet.
+
+**Vorschlag für das Nächste, als benanntes Ziel: `isConvergenceDetermining_pi`
+anlegen und beweisen**, die konvergenzbestimmende Hälfte desselben Punktes von
+Meilenstein 1 — für abzählbares `ι` und polnische `S i`, weil dort und nur dort
+Straffheit zu haben ist. Worauf sie ruht: auf `isSeparating_pi`, das jetzt
+dasteht, und auf
+`MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+(`Measure/LevyConvergence.lean:154`), das aus Straffheit plus Trennung die
+Konvergenz macht. Warum jetzt: die Roadmap führt beide Hälften in **einem**
+Punkt, die trennende ist seit heute bewiesen, und die konvergenzbestimmende ist
+die Hälfte, die `SkorokhodSpace` Meilenstein 8 und `MartingaleProblems`
+Meilenstein 11 auf ihrem eigenen Weg über Relativkompaktheit gerade **nicht**
+umgehen, wenn man Ethier–Kurtz Korollar 3.9.2 wörtlich nachbauen will. Der erste
+zu klärende Schritt ist nicht die Trennung, sondern die Straffheit: aus der
+Straffheit je Faktor die des abzählbaren Produkts, über die Kompaktheit von
+$\prod_i K_i$ und ein $\varepsilon 2^{-n}$-Argument. Erst wenn die steht, ist
+der Rest der Anschluß an den heutigen Satz.
