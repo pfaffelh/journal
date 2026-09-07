@@ -67,7 +67,7 @@ ist kein Befund, sondern ein `?`.
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
 | `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität |
-| `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1, `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` und `isConvergenceDetermining_setOf_hasCompactSupport` (zusätzlich lokalkompakt) — am 2026-09-05 dort neu angelegt. **Die erste Hälfte ist seit dem 2026-09-07, fünfzehntem Lauf, bewiesen** und geht durch `lake env lean` gegen v4.33.1, und zwar **ohne Separabilität**: EK und das Manuskript verlangen sie, kein Beweisschritt benutzt eine abzählbare dichte Menge (Auffälligkeit unten). Der Weg ist `tendsto_iff_forall_lipschitz_integral_tendsto` (`Measure/Portmanteau.lean:688`), die die schwache Konvergenz auf die beschränkten **Lipschitz**funktionen zurückführt, plus die Abschneidung einer solchen an `ballCutoff`, einem Mitglied der Klasse; die Abschneidung ist durch die Straffheit gedeckt, die die Abschneider selbst liefern. Neun Hilfsdeklarationen, alle bewiesen. ~~M1~~ nannte die Aussage bis dahin **nicht**: das Zitat war seit dem 2026-08-29 leer, kein Punkt von M1 spricht von gleichmäßig stetigen Funktionen mit beschränktem Träger oder von $C_c$. Mathlib hat sie nicht — in `MeasureTheory/Measure/` kommt `UniformContinuous` überhaupt nicht vor und `HasCompactSupport` in keiner Konvergenzaussage (`upstream/master`, 2026-09-05) |
+| `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1, `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` und `isConvergenceDetermining_setOf_hasCompactSupport` (zusätzlich lokalkompakt) — am 2026-09-05 dort neu angelegt. **Die erste Hälfte ist seit dem 2026-09-07, fünfzehntem Lauf, bewiesen** und geht durch `lake env lean` gegen v4.33.1, und zwar **ohne Separabilität**: EK und das Manuskript verlangen sie, kein Beweisschritt benutzt eine abzählbare dichte Menge (Auffälligkeit unten). Der Weg ist `tendsto_iff_forall_lipschitz_integral_tendsto` (`Measure/Portmanteau.lean:688`), die die schwache Konvergenz auf die beschränkten **Lipschitz**funktionen zurückführt, plus die Abschneidung einer solchen an `ballCutoff`, einem Mitglied der Klasse; die Abschneidung ist durch die Straffheit gedeckt, die die Abschneider selbst liefern. Neun Hilfsdeklarationen, alle bewiesen. **Die zweite Hälfte ist seit dem 2026-09-07, sechzehntem Lauf, ebenfalls bewiesen** und geht durch `lake env lean` gegen v4.33.1: `isConvergenceDetermining_setOf_hasCompactSupport`, auf einem lokalkompakten separablen metrischen Raum. Beide Hälften ruhen jetzt auf **einer** Deklaration, `tendsto_integral_of_tendsto_integral_mul` — der Abschneideschritt, von der Klasse gelöst, unter `[TopologicalSpace E] [OpensMeasurableSpace E]` und ohne Metrik —, und unterscheiden sich nur in der Familie der Abschneider: `ballCutoff x₀ m` für die erste, eine kompakt getragene Urysohn-Funktion über `compactCovering E m` für die zweite. Der in M1 bis dahin angekündigte Weg — die größere Klasse gleichmäßig durch die kleinere approximieren — ist **falsch**, und der Zeuge steht als acceptance example in M1: auf einem unendlichen diskreten Raum vom Durchmesser 1 ist die Konstante 1 gleichmäßig stetig mit beschränktem Träger und hat von jeder kompakt getragenen Funktion den gleichmäßigen Abstand 1. Die Lokalkompaktheit geht genau einmal ein, in `exists_continuous_one_zero_of_isCompact` (`Topology/UrysohnsLemma.lean:404`); die Separabilität geht nur über die σ-Kompaktheit ein (`sigmaCompactSpace_of_locallyCompact_secondCountable`). ~~M1~~ nannte die Aussage bis dahin **nicht**: das Zitat war seit dem 2026-08-29 leer, kein Punkt von M1 spricht von gleichmäßig stetigen Funktionen mit beschränktem Träger oder von $C_c$. Mathlib hat sie nicht — in `MeasureTheory/Measure/` kommt `UniformContinuous` überhaupt nicht vor und `HasCompactSupport` in keiner Konvergenzaussage (`upstream/master`, 2026-09-05) |
 | `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` (b); beide stehen seit dem 2026-08-31 unter Stufe (A) „separabel metrisch", wie der Fact, und (b) unter Relativkompaktheit statt Straffheit, wie EK |
 | `fact:fullgenerator` | 1 | EK, Proposition 1.5.1 | Roadmap | MartingaleProblems M13 — dort neu angelegt; Mathlib hat keine Operatorhalbgruppen, `dissipative` kommt nicht vor, Hille--Yosida steht als `Q974405` ohne `decl` in `docs/1000.yaml` |
 | `fact:jacodmemin` | 1 | Continuous mapping, Jacod--M'emin; CPS, Theorem 2.9 | bewusst | nicht formalisiert; `rem:augvsws` begründet, warum Augmentierung genügt |
@@ -7713,3 +7713,156 @@ kompaktem Träger zu bauen, und die einzige Frage ist, ob dort abgeschlossene
 Bälle kompakt gewählt werden können oder ob es eine Ausschöpfung durch kompakte
 Umgebungen braucht. Das ist die Stelle, an der die Lokalkompaktheit eingeht, und
 sie ist benannt.
+
+### 2026-09-07, sechzehnter Lauf des Tages — `fact:convdet` ist ganz bewiesen, und der angekündigte Weg dorthin war wieder der falsche
+
+**Was der Lauf vorgefunden hat.** Keine vorrangige Aufgabe, keine `?`-Zeile in
+der Tabelle, also Rückstaupunkt 1. Der fünfzehnte Lauf hatte das Ziel benannt:
+`isConvergenceDetermining_setOf_hasCompactSupport`, die zweite Hälfte von
+`fact:convdet` (Ethier--Kurtz, Proposition 3.4.4). Sie ist bewiesen, geht durch
+`lake env lean` gegen v4.33.1, und **damit trägt `fact:convdet` in beiden
+Hälften einen Beweis**.
+
+**Der Satz.** Auf einem lokalkompakten separablen metrischen Raum sind die
+stetigen reellen Funktionen mit kompaktem Träger konvergenzbestimmend.
+
+**Der angekündigte Weg war falsch, und das ist der eigentliche Befund.** Der
+fünfzehnte Lauf hatte geschrieben, zwischen den beiden Klassen liege „genau ein
+Abschneidelemma": jede gleichmäßig stetige Funktion mit beschränktem Träger sei
+auf einem lokalkompakten Raum gleichmäßig durch kompakt getragene stetige
+Funktionen zu approximieren, und gleichmäßige Approximation vererbe die
+Klasseneigenschaft. Der erste Teil ist **falsch**, und der Zeuge ist billig:
+$E=\N$ mit $d(x,y)=1$ für $x\ne y$ ist separabel, metrisch und lokalkompakt
+(Punkte sind offen und kompakt), sein Durchmesser ist $1$, also hat die
+Konstante $1$ beschränkten Träger und ist gleichmäßig stetig, während
+$C_c(E)$ die **endlich** getragenen Funktionen sind und
+$\|1-g\|_\infty=1$ für jedes solche $g$. Eine Approximation der größeren
+Klasse durch die kleinere gibt es dort nicht. Bemerkenswert daran ist, daß der
+Satz auf ebendiesem Raum trotzdem gilt — er sagt dort „$\mu_n\{k\}\to\nu\{k\}$
+für jedes $k$ zieht schwache Konvergenz nach sich", was Scheffé ist. Der Weg
+über die Approximation der Klassen ist also nicht bloß schwer, sondern führt an
+einer wahren Aussage vorbei.
+
+**Was statt dessen trägt: die Herauslösung des Abschneideschritts.** Der Beweis
+der ersten Hälfte bestand aus zwei Teilen, die nichts miteinander zu tun haben:
+der Reduktion auf die Lipschitzfunktionen (`Portmanteau.lean:688`) und einer
+Abschneiderechnung, die nur benutzt, daß die Abschneider Werte in $[0,1]$ haben
+und ihre Integrale gegen das Grenzmaß gegen $1$ streben. Der zweite Teil ist
+jetzt eine eigene Deklaration,
+
+* `tendsto_integral_of_tendsto_integral_mul` — für beschränkt stetiges `f` und
+  eine Familie stetiger $\psi_m:E\to[0,1]$ mit $\int\psi_m\,d\nu\to1$: gilt
+  $\int\psi_m\,d\mu_n\to\int\psi_m\,d\nu$ und
+  $\int f\psi_m\,d\mu_n\to\int f\psi_m\,d\nu$ für jedes $m$, so auch
+  $\int f\,d\mu_n\to\int f\,d\nu$. Die tragende Abschätzung ist
+  $|\int f\,d\rho-\int f\psi_m\,d\rho|\le\|f\|_\infty(1-\int\psi_m\,d\rho)$
+  für jedes Wahrscheinlichkeitsmaß $\rho$: sie verwandelt die vom Abschneider
+  verfehlte Masse in eine Schranke für den Abschneidefehler und trägt sie von
+  $\nu$ auf die $\mu_n$ über. Hypothesen: `[TopologicalSpace E]` und
+  `[OpensMeasurableSpace E]`, **keine Metrik**.
+
+**Beide Hälften sind jetzt diese eine Deklaration**, mit verschiedenen
+Abschneidern: `ballCutoff x₀ m` für die erste, eine kompakt getragene
+Urysohn-Funktion über `compactCovering E m` für die zweite. Der Beweis der
+ersten Hälfte ist dabei um rund sechzig Zeilen kürzer geworden und benutzt das
+Lemma; er wurde mitübersetzt und ist unverändert gültig.
+
+**Der Bau der zweiten Familie, mit den vier Mathlib-Stellen.** Separabilität
+gibt Zweitabzählbarkeit; Zweitabzählbarkeit und Lokalkompaktheit geben
+σ-Kompaktheit (`sigmaCompactSpace_of_locallyCompact_secondCountable`,
+`Topology/Compactness/SigmaCompact.lean:187`); `compactCovering`
+(`ibid.:204`, mit `isCompact_compactCovering`, `compactCovering_subset` und
+`exists_mem_compactCovering`) ist dann eine **wachsende** kompakte
+Ausschöpfung; und `exists_continuous_one_zero_of_isCompact`
+(`Topology/UrysohnsLemma.lean:404`, unter `[RegularSpace] [LocallyCompactSpace]`)
+macht aus jeder Stufe ein stetiges $\psi_m$ mit kompaktem Träger, Werten in
+$[0,1]$ und $\psi_m=1$ auf der Stufe; die zweite Menge ist $\emptyset$, was
+`isClosed_empty` und `disjoint_empty` erledigen. Jeder Punkt liegt in allen bis
+auf endlich vielen Stufen, also $\psi_m\to1$ punktweise, und majorisierte
+Konvergenz gibt $\int\psi_m\,d\nu\to1$. `f · ψ m` hat wieder kompakten Träger
+(`HasCompactSupport.mul_left`, `Topology/Algebra/Support.lean:483`).
+
+**Wo die Hypothesen eingehen.** Die Lokalkompaktheit **genau einmal**, in
+Urysohns Lemma. Die Separabilität nur über die σ-Kompaktheit — nicht über eine
+abzählbare dichte Menge, und nicht über Straffheit des Grenzmaßes, die der
+Beweis nirgends braucht. Beide sind damit nicht als „bequem" eingetragen,
+sondern an einer benannten Stelle. Abgeschlossene Bälle als Kompakta, die der
+fünfzehnte Lauf als mögliche Alternative erwogen hatte, kommen nicht vor und
+könnten es auch nicht: auf dem diskreten Zeugen oben ist $\overline B(x,1)$ der
+ganze Raum.
+
+**Stand der Datei.** `WeakConvergence/Suggested.lean`: 92 Deklarationen (vorher
+91), **10 `sorry`** statt 11, `rc = 1` mit unverändert genau den **zwei**
+angekündigten Fehlern an `tendsto_map_of_measure_setOf_continuousAt_eq_one`,
+deren Zeile durch die Einfügungen von `:1314` auf `:1414` gewandert ist. Ein
+Import ist neu, `Mathlib.Topology.UrysohnsLemma`. Keine neue Warnung.
+
+**Geprüft, wie es die Audit-Aufgabe vom 2026-09-07 verlangt.** `#print axioms`
+für alle drei Deklarationen, an drei zeitweilig angehängten Zeilen und wieder
+entfernt: `tendsto_integral_of_tendsto_integral_mul`,
+`isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` und
+`isConvergenceDetermining_setOf_hasCompactSupport` hängen sämtlich nur an
+`[propext, Classical.choice, Quot.sound]`, **kein `sorryAx`**. Beide Hälften von
+`fact:convdet` sind also bewiesen und nicht bloß an einen `sorry` weiter oben
+angeschlossen. Und die Aussagen sind nicht leer: für die zweite Hälfte ist
+$E=\R$ mit $\mu_n=\delta_{1/(n+1)}$, $\nu=\delta_0$ ein Zeuge, unter dem die
+Voraussetzung gilt (jedes kompakt getragene stetige $f$ hat
+$f(1/(n+1))\to f(0)$) und die Folgerung nicht trivial ist.
+
+**Was mitgezogen wurde.** Der Modulkopf, `WeakConvergence/README.md`
+(Meilenstein 1 führt den Abschneideschritt jetzt als eigenen Punkt und die
+zweite Hälfte nicht mehr unter „Missing"), die Tabellenzeile `fact:convdet` und
+`Facts/BACKLOG.md`, Punkt 1. Meilenstein 1 hat ein neues acceptance example, das
+Paar zum diskreten Zeugen: die Instanz, an der die API rechnet
+($\mu_n\{k\}\to\nu\{k\}$ zieht schwache Konvergenz nach sich, mit
+$\mu_n=\tfrac12\delta_0+\tfrac12\delta_n$ als danebenliegender Fall, in dem
+die Voraussetzung zu Recht scheitert), und dieselbe Instanz als Ausschluß der
+naheliegenden falschen Beweisidee.
+
+**Werkzeugnotiz.** Das Schreiben nach `/tmp` über eine Bash-Heredoc landet in
+der Sandbox und ist für `lake env lean` danach **nicht** da (`no such file or
+directory`); mit dem `Write`-Werkzeug geschriebene Dateien sind es. Wer wie die
+letzten Läufe in einer Kleindatei unter `/tmp` entwickelt, schreibt sie also mit
+`Write`. Der Nutzen bleibt groß: die Kleindatei mit drei Importen übersetzt in
+Sekunden, die 2700-Zeilen-Datei in Minuten, und beide neuen Sätze gingen dort im
+ersten Anlauf durch.
+
+**Nachtrag im selben Lauf: der Weg zum nächsten Ziel ist aufgeschlüsselt, und
+sein erster Schritt ist bewiesen.** Der Beweis von Ethier--Kurtz, Theorem
+3.4.5(b) (Buchseiten 113--114, am Scan gelesen) besteht aus vier Schritten, und
+sie stehen jetzt einzeln benannt in `WeakConvergence/README.md`, Meilenstein 1:
+(1) die Pushforwards nach $\R^k$ konvergieren schwach — Polynome in den $f_i$
+aus der Algebra plus Stone--Weierstraß auf dem kompakten Wertekasten; (2) der
+geometrische Kern; (3) Portmanteau für offene Mengen, **auf $\R^m$** und nicht
+auf $E$; (4) die Straffheit von $\mu_0$ selbst plus endlich viele
+Ausnahmeindizes. Schritt (2) ist **bewiesen** und geht durch `lake env lean`:
+`StronglySeparatesPoints.exists_finite_cover` — eine stark trennende Klasse
+liefert um jedes Kompaktum $K$ und zu jedem $\delta>0$ eine **endliche**
+Überdeckung von $K$ durch Mengen $\{y:\max_{f\in s_x}|f(y)-f(x)|<\varepsilon_x\}$
+mit Zentren in $K$, die in `Metric.thickening δ K` bleibt. Die beiden
+Inklusionen sind die beiden Hälften der starken Trennung, und mehr als die
+Stetigkeit der Mitglieder braucht der Schritt nicht. Damit steht die Datei bei
+93 Deklarationen, unverändert 10 `sorry`, und die zwei bekannten Fehler bei
+`:1470` (am Ende des Laufs nachgemessen).
+
+**Vorschlag für das Nächste, als benanntes Ziel:
+`isTightMeasureSet_of_stronglySeparatesPoints` beweisen**, `WeakConvergence`
+Meilenstein 1, und der nächste Schritt darin ist **(1)**, die schwache
+Konvergenz der Pushforwards nach $\R^k$ — sie ist der einzige der vier, der
+noch neues Mathlib-Handwerk verlangt (Stone--Weierstraß auf einem kompakten
+Kasten, so wie ihn Meilenstein 5 schon einmal benutzt), und (3) und (4) sind
+danach Buchhaltung über bekannten Sätzen. Worauf sie ruht: auf `StronglySeparatesPoints` (in der Datei
+erklärt und mit `StronglySeparatesPoints.separatesPoints` an Mathlibs
+`Set.SeparatesPoints` angebunden) und auf nichts sonst — sie ist die Aussage,
+daß eine stark trennende Unteralgebra die Straffheit einer Familie erzwingt,
+deren Integrale über ihr konvergieren. Warum jetzt: sie ist nach diesem Lauf der
+einzige `sorry` von Meilenstein 1, der nicht bloß Korollar eines anderen ist
+(`isConvergenceDetermining_of_stronglySeparatesPoints` folgt aus ihr und
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` in wenigen Zeilen), und
+sie ist **das Ganze dessen, was `fact:stoneweierstrass` noch schuldet** —
+tragend 3, die höchste Zahl unter allen Zeilen, deren Beweis noch aussteht. Der
+Zeuge, an dem sich der Beweis messen muß, steht schon im Docstring: auf $\R$ ist
+die von `arctan` erzeugte Algebra stark trennend, $\int\arctan\,d\delta_n$
+konvergiert gegen $\pi/2$, und kein Wahrscheinlichkeitsmaß hat diesen Wert — die
+Voraussetzung ist dort also leer und nicht falsch, und ein Beweis, der das nicht
+respektiert, ist an dieser Stelle zu widerlegen.

@@ -191,6 +191,58 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   with `∀ y, δ ≤ dist y x → ∃ f ∈ s, ε ≤ |f y - f x|`. That is the manuscript's
   `def:separating`, and `StronglySeparatesPoints.separatesPoints` is the case
   `δ = dist y x`.
+
+  The proof runs in four named steps, Ethier–Kurtz, Theorem 3.4.5(b) (book
+  pages 113–114), each of which is a statement of this milestone in its own
+  right:
+
+  1. `MeasureTheory.tendsto_map_of_forall_tendsto_integral_of_subalgebra` — for
+     `f 1, …, f k ∈ A`, the pushforwards `(μ n).map (fun x ↦ (f 1 x, …, f k x))`
+     on `ℝ^k` converge weakly to the pushforward of `μ₀`. That the integrals of
+     **polynomials** in the `f i` converge is the hypothesis together with `A`
+     being an algebra; the `f i` are bounded, so their joint range sits in a
+     compact box, and Stone–Weierstrass on that box
+     (`ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`,
+     `Topology/ContinuousMap/StoneWeierstrass.lean:323`, already used in
+     Milestone 5) extends the convergence to every bounded continuous function
+     on `ℝ^k`.
+  2. `MeasureTheory.StronglySeparatesPoints.exists_finite_cover`, **proved** on
+     2026-09-07, sixteenth run — the geometric core, and free of measures: if
+     `Γ` strongly separates points,
+     then for every compact `K` and every `δ > 0` there are finitely many
+     `x 1, …, x m ∈ K`, finite families `s l ⊆ Γ` and reals `ε l > 0` such that
+     the open sets `G l = {y | max_{h ∈ s l} |h y - h (x l)| < ε l}` satisfy
+     `K ⊆ ⋃ l, G l` and `⋃ l, G l ⊆ Metric.thickening δ K`. The first inclusion
+     is compactness applied to the cover by the `G x`, each of which contains
+     its own centre; the second is strong separation read contrapositively,
+     `d y (x l) ≥ δ` forcing `max ≥ ε l`. Members of `Γ` are assumed continuous,
+     which is the only thing beyond strong separation the step uses; the finite
+     subcover comes from `IsCompact.elim_finite_subcover_image`
+     (`Topology/Compactness/Compact.lean:350`), which is the form that keeps the
+     centres inside `K`, and the second inclusion is
+     `Metric.mem_thickening_iff` (`Topology/MetricSpace/Thickening.lean:151`).
+  3. `MeasureTheory.le_liminf_measure_thickening_of_stronglySeparatesPoints` —
+     `μ₀ K ≤ liminf (μ n) (Metric.thickening δ K)`. The set `⋃ l, G l` is the
+     preimage of an **open** set of `ℝ^m` under `fun y ↦ (g 1 y, …, g m y)` with
+     `g l y = max_{h ∈ s l} |h y - h (x l)|`, so step 1 and the portmanteau
+     theorem for open sets
+     (`MeasureTheory.ProbabilityMeasure.le_liminf_measure_open_of_tendsto`,
+     `Measure/Portmanteau.lean:326`, which is stated over an arbitrary filter
+     and so fits the filter form of this point) apply on `ℝ^m` rather than on
+     `E`. This is the step for which the pushforward of step 1 exists.
+  4. The conclusion: `μ₀` is tight on its own, `E` being Polish
+     (`MeasureTheory.isTightMeasureSet_singleton`, `Measure/Tight.lean:99`,
+     under `IsCompletelyPseudoMetrizableSpace`, `SecondCountableTopology` and
+     `BorelSpace`), so step 3 gives, for every `η > 0`, a compact `K` with
+     `1 - η ≤ liminf (μ n) (Metric.thickening δ K)`; the thickening of a compact
+     set has compact closure on a complete space, and finitely many exceptional
+     indices are absorbed by the tightness of each single `μ n`. That last
+     bookkeeping is Ethier–Kurtz's "applying Lemma 2.1 to `P` and to finitely
+     many terms of the sequence"; over a filter rather than a sequence it is the
+     `Filter.Eventually` form of the same.
+
+  Step 2 is the one that uses strong separation and nothing else, and it is
+  where a proof should start.
 * `MeasureTheory.isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`,
   `fact:convdet` (Ethier–Kurtz, Proposition 3.4.4), first half, which no other
   point of this roadmap covers: on a metric space the bounded uniformly
@@ -218,15 +270,34 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `LipschitzWith.add` and concerns the group operation, so it does not apply to
   a product of real valued functions; and
   `integrable_of_continuous_of_bounded`.
-* **Missing.**
-  `MeasureTheory.isConvergenceDetermining_setOf_hasCompactSupport`,
+* `MeasureTheory.tendsto_integral_of_tendsto_integral_mul`, the truncation step
+  of Ethier–Kurtz, Proposition 3.4.4, separated from the class it is applied to,
+  and the point of contact between the two halves of `fact:convdet`. For `f`
+  bounded continuous and cutoffs `ψ m : E → [0,1]` continuous with
+  `∫ ψ m ∂ν → 1`: if the integrals of `ψ m` and of `f · ψ m` converge along the
+  sequence, so do the integrals of `f`. The estimate that carries it is
+  `|∫ f ∂ρ - ∫ f · ψ m ∂ρ| ≤ ‖f‖ · (1 - ∫ ψ m ∂ρ)` for every probability
+  measure `ρ`, which turns the mass the cutoff misses into a bound on the
+  truncation error and transports it from `ν` to `μ n`. Only
+  `[TopologicalSpace E]` and `[OpensMeasurableSpace E]`; no metric.
+* `MeasureTheory.isConvergenceDetermining_setOf_hasCompactSupport`,
   `fact:convdet`, second half: if `E` is in addition locally compact and
   separable, the continuous functions of compact support are convergence
   determining. That these see no total mass costs nothing, the measures being
-  probability measures on both sides. The first half does not imply it, the
-  class being the smaller one: what is to be supplied is the approximation of a
-  uniformly continuous function of bounded support by continuous functions of
-  compact support, and that is where local compactness enters.
+  probability measures on both sides. The proof is the first half plus one
+  family of cutoffs: separability gives second countability, second countability
+  with local compactness gives σ-compactness, `compactCovering` is then an
+  increasing compact exhaustion, and Urysohn's lemma in its locally compact form
+  (`exists_continuous_one_zero_of_isCompact`, `Topology/UrysohnsLemma.lean:404`)
+  turns each stage into a continuous `ψ m : E → [0,1]` of compact support which
+  is `1` on it. Every point lies in all but finitely many stages, so `ψ m → 1`
+  pointwise and dominated convergence gives `∫ ψ m ∂ν → 1`; `f · ψ m` again has
+  compact support, and `tendsto_integral_of_tendsto_integral_mul` carries
+  convergence from the smaller class to the larger. **Uniform approximation is
+  not the route**, and cannot be: on an infinite discrete space of diameter `1`
+  the constant `1` is uniformly continuous with bounded support and has uniform
+  distance `1` from every compactly supported function. Local compactness enters
+  exactly once, in Urysohn's lemma.
 * **Missing.** Stability under uniformly bounded pointwise limits: if `Γ` is
   separating and every member of `Γ` is the pointwise limit of a uniformly
   bounded sequence from `Γ'`, then `Γ'` is separating. Dominated convergence;
@@ -466,6 +537,23 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   convergence — would be false at `δ n`. It is also the instance the tightness
   step inside the proof is for: `ballCutoff` is the member of `Γ` that sees the
   escaping mass.
+* **The discrete space of diameter `1`, against the compact support class.**
+  `E = ℕ` with `dist x y = if x = y then 0 else 1`. It is a separable locally
+  compact metric space, `C_c(E)` is the finitely supported functions, and
+  `isConvergenceDetermining_setOf_hasCompactSupport` must give: if
+  `μ n {k} → ν {k}` for every `k`, then `μ n → ν` weakly. Run it on
+  `μ n = 2⁻¹ δ 0 + 2⁻¹ δ n` and `ν = 2⁻¹ δ 0 + 2⁻¹ δ 1`: the hypothesis fails at
+  `k = 1`, and rightly so, since `μ n` does not converge to `ν`.
+
+  The same instance is the one on which the route through **uniform
+  approximation** — approximate a uniformly continuous function of bounded
+  support by compactly supported ones and inherit the class property — is false.
+  The constant `1` is uniformly continuous and its support `E` is bounded, the
+  whole space having diameter `1`, while `‖1 - g‖_∞ = 1` for every finitely
+  supported `g`. A proof of the second half that goes through approximating the
+  larger class by the smaller therefore cannot exist; what carries the theorem
+  is `tendsto_integral_of_tendsto_integral_mul`, which never compares the two
+  classes uniformly and asks only that `∫ ψ m ∂ν` come close to `1`.
 * **The conditional form on a null piece.** `Ω = [0,1]` with Lebesgue measure,
   `m` the four-element σ-algebra generated by a single `P`-null set `A`, `E = ℝ`,
   `Γ = Cb(ℝ)`, `V` any `m`-measurable random variable and `U` with

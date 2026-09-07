@@ -219,6 +219,28 @@ kein gebautes Mathlib und taugt zu nichts.
    desselben Facts, und was zwischen den beiden Klassen liegt, ist genau ein
    Abschneidelemma; der Laufbericht nennt es.*
 
+   *Zwischenstand 2026-09-07, sechzehnter Lauf des Tages: **auch dieser Schritt
+   ist getan**, und `fact:convdet` ist damit ganz bewiesen.
+   `isConvergenceDetermining_setOf_hasCompactSupport` geht durch
+   `lake env lean`; `WeakConvergence` steht bei **10 `sorry`** und 92
+   Deklarationen (vorher 11 und 91), rc = 1 mit unverändert genau den zwei
+   angekündigten Fehlern, jetzt bei `:1414`. Das angekündigte Abschneidelemma
+   war **nicht** das, was der fünfzehnte Lauf vermutet hatte: eine gleichmäßige
+   Approximation der größeren Klasse durch die kleinere gibt es nicht (Zeuge im
+   Laufbericht). Was trägt, ist die Herauslösung des Abschneideschritts aus dem
+   Beweis der ersten Hälfte —
+   `tendsto_integral_of_tendsto_integral_mul`, ohne Metrik —, den beide Hälften
+   jetzt teilen. Der nächste benannte Schritt in dieser Datei ist
+   `isTightMeasureSet_of_stronglySeparatesPoints` — nach diesem Lauf der
+   **einzige** `sorry` von Meilenstein 1, den nicht sein eigenes Korollar
+   trägt, und das Ganze dessen, was `fact:stoneweierstrass` noch schuldet; die
+   Begründung steht im Laufbericht. Derselbe Lauf hat den Beweis von EK 3.4.5(b)
+   in vier benannte Schritte zerlegt (in `WeakConvergence/README.md`,
+   Meilenstein 1) und den zweiten davon bewiesen,
+   `StronglySeparatesPoints.exists_finite_cover`, den geometrischen Kern; damit
+   93 Deklarationen bei unverändert 10 `sorry`. Als Nächstes ist Schritt (1)
+   dran, die schwache Konvergenz der Pushforwards nach $\R^k$.*
+
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`).~~ *(erledigt 2026-09-07, neunter Lauf des Tages.)* Der Satz und
