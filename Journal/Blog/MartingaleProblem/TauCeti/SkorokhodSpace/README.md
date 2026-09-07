@@ -323,20 +323,30 @@ need (B), and this is a correction of 2026-09-07, found by writing the proofs:
   `Mathlib/Topology/Order/LeftRightLim.lean`, where only the module comment
   names it; the càdlàg case does not follow from it.
 
-  None of these three items uses the countable dense set of (B) or its right
+* `IsCadlag.measurable`: a càdlàg map is Borel measurable. Proved (2026-09-07),
+  and the bundle of this item is a second correction of the same day: it stood
+  under (B) with `E` Polish, to be proved by approximation with right continuous
+  step functions along `D`, and it needs neither. Continuity off the jump set is
+  `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, the jump set is countable by
+  `countable_leftJumpSet`, and a map continuous off a countable set is
+  measurable by `measurable_of_countable_not_continuousAt`
+  (`Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:509`); its
+  `MeasurableSingletonClass ι` is free from `T1Space` through
+  `OpensMeasurableSpace.toMeasurableSingletonClass` (`ibid.:351`). So the
+  hypotheses are those of `countable_leftJumpSet` --- the linear order, the
+  order topology, σ-compactness --- plus the Borel structures on index and
+  state. The step function route would have needed a linear structure on `E`
+  that the milestone nowhere else asks for.
+
+  None of these four items uses the countable dense set of (B) or its right
   approximation clause. They stood under (B) from 2026-08-29 to 2026-09-07, and
-  the proofs do not bear that out. What (B) is genuinely for are two of the
-  three items below, `IsCadlag.measurable` and `IsCadlag.eq_of_eqOn_dense`; the
-  third, `IsCadlag.eq_of_forall_exists_dist_le`, is again (A′) and is listed
-  there only because Milestone 4 consumes it next to them.
+  the proofs do not bear that out. What (B) is genuinely for is one of the two
+  items below, `IsCadlag.eq_of_eqOn_dense`; the other,
+  `IsCadlag.eq_of_forall_exists_dist_le`, is again (A′) and is listed there only
+  because Milestone 4 consumes it next to it.
 
 Under (B), with `E` a pseudometric space:
 
-* `IsCadlag.measurable`: a càdlàg map into a Polish space is Borel measurable,
-  via approximation by right continuous step functions along `D`. Linearity is
-  what makes the step functions definable and the countable dense `D` is what
-  indexes them; this is (B) exactly, with σ-compactness for the exhausting
-  sequence of steps.
 * `IsCadlag.eq_of_forall_exists_dist_le`, still under (A′) and stated here
   because it is a statement about càdlàg maps and nothing else: two of them
   agree at `t` as soon as, arbitrarily close to `t` and **on its right**, one of
@@ -580,6 +590,23 @@ Under (B), with `E` a pseudometric space:
   `TimeChange.norm_inv`, the triangle
   inequality from `TimeChange.norm_mul_le`, and separation from
   `TimeChange.dist_le_of_norm_le` together with right continuity.
+
+  It is written and proved (2026-09-07). The metric itself is
+  `SkorokhodSpace.totalDist t₀ f g = ∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)`,
+  and the four fields come from four theorems about it:
+  `SkorokhodSpace.totalDist_self`, `SkorokhodSpace.totalDist_comm`,
+  `SkorokhodSpace.totalDist_triangle` and
+  `SkorokhodSpace.eq_of_totalDist_eq_zero`. All four are term by term, and
+  `SkorokhodSpace.summable_totalDist` --- the series is dominated by the
+  geometric one, since `min 1 ·` is at most `1` --- is what lets them be:
+  the triangle inequality is `Summable.tsum_le_tsum` against
+  `Summable.tsum_add`, on the subadditivity of `min 1 ·` on the nonnegative
+  reals, and the separation is `Summable.le_tsum`, a series of nonnegative terms
+  vanishing only if every term does. The truncation at `1` is not cosmetic:
+  `distOn t₀ m f g` grows with the window and is unbounded in `m`, so the
+  weighted series would not converge without it. Only the triangle inequality
+  and the separation read `AdditiveDist ι`, the first three windowless axioms do
+  not; the linter has confirmed that.
 
   It carries the base point as a parameter and is a `def`, not an instance:
   `distOn` is anchored at `t₀` twice over, through the window `exhaustion t₀ m`

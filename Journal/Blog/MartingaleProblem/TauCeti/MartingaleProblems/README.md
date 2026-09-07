@@ -1705,19 +1705,48 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `coinMeasure {true} = 2⁻¹`; `atomClock u`, the clock whose index σ-algebra is
   `⊤` and whose measure is `Measure.dirac u`, with
   `atomClock_apply_singleton : (atomClock u).q {u} = 1`, so that the atom is
-  there and every down-set is measurable for free;
+  there and every down-set is measurable for free, together with
+  `not_isAtomless_atomClock : ¬ (atomClock u).IsAtomless`, which is what binds
+  the sharpness to the hypothesis it is sharp against: without it the example
+  might still satisfy `hQ` of `isQuasiLeftContinuous_of_isMPSolutionFor` and
+  contradict that theorem instead of delimiting it. It is `measure_mono` from
+  the singleton into the degenerate interval `{v | u ≤ v ∧ v ≤ u}`;
   `coinProcess u t ω = if u ≤ t then ω else false`,
   the path over `Ω = E = Bool`, where the coin is both the sample point and the
   state; `isCadlagPath_coinProcess`, which holds for every `u` and every `ω`
   because the path is locally constant on either side of `u`; and
   `not_isQuasiLeftContinuous_coinProcess`, which holds for **every** filtration,
   the constant stopping times of `not_isQuasiLeftContinuous_of_not_ae_tendsto`
-  being stopping times for all of them. What the assembly adds to this block is
-  the filtration `⊥` below `u` and `⊤` from `u` on, and the martingale property
-  of `mpFamily A (atomClock u) Clock.Conv.optional (coinProcess u)`. On
-  `E = Bool` with `q = Measure.dirac u` there is a solution that flips a fair
-  coin at `u` and is constant on either side of it, and for `s n ↑ u` its paths
-  have `X (s n) → X (u-) ≠ X u` on an event of probability one half. The
+  being stopping times for all of them. The operator is `coinClass`, the
+  singleton of `coinPair = (fun b ↦ if b then 1 else 0, fun _ ↦ 2⁻¹)`, and
+  `isSeparating_coinClass` is `IsSeparating (Prod.fst '' coinClass)`: a single
+  indicator separates the probability measures on `Bool`, since it pins the mass
+  of `{true}` and the total mass pins the rest. `coinFiltration u` is `⊥` below
+  `u` and the whole σ-algebra from `u` on, and `isMPSolution_coinProcess` is the
+  martingale property of
+  `mpFamily coinClass (atomClock u) Clock.Conv.optional (coinProcess u)` under
+  `coinMeasure`, for every `u` with `¬ u ≤ ⊥`. It rests on two computations and
+  no theory: `integral_coinPair_snd`, that the compensator
+  `∫ s in Clock.interval q .optional ⊥ t, coinPair.2 (X s) ∂q` is `2⁻¹` for
+  `u ≤ t` and `0` otherwise — `setIntegral_const` against `Measure.dirac u`,
+  whose mass on the compensating interval is `atomClock_real_of_mem` or
+  `atomClock_real_of_notMem` according as `u ≤ t` — and `integral_coinMeasure`,
+  that the mean against the coin is the average of the two values. So the
+  process is `0` strictly before `u` and `(if ω then 1 else 0) - 2⁻¹` from `u`
+  on, which is centred: the constant `2⁻¹` in `coinPair.2` is not a choice, it
+  is the balance `p.1 true - p.1 false = p.2 true + p.2 false` that the
+  martingale property across `u` demands. `integrable_bool` is the side
+  condition throughout, every real function on `Bool` being bounded and
+  measurable. The convention is not a choice either: in
+  `Clock.Conv.predictable` the interval is `Set.Iio t`, the atom is charged only
+  strictly after `u`, and the martingale property at `t = u` reads
+  `2⁻¹ * (p.1 true + p.1 false) = p.1 false`, that is `p.1 true = p.1 false`, so
+  every predictable version of the witness has a constant `p.1` and no
+  separating one exists. Under `Clock.IsAtomless` the two conventions agree, so
+  one of them suffices for the sharpness. On `E = Bool` with
+  `q = Measure.dirac u` there is therefore a solution that flips a fair coin at
+  `u` and is constant on either side of it, and for `s n ↑ u` its paths have
+  `X (s n) → X (u-) ≠ X u` on an event of probability one half. The
   existence of a càdlàg modification and quasi-left-continuity therefore
   separate exactly at the atoms of the clock, and the example is what makes the
   separation checkable.

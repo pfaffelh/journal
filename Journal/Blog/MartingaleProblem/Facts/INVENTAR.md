@@ -53,7 +53,7 @@ ist kein Befund, sondern ein `?`.
 | Fact | tragend | Aussage | Status | Beleg |
 |---|---|---|---|---|
 | `fact:Dcountable` | 4 | EK, Lemma 3.7.7 | Roadmap | SkorokhodSpace M8, `SkorokhodSpace.exists_countable_dense_continuity`; Mathlib hat weder `cadlag` noch den Raum. Der Unterbau ist seit dem 2026-09-07, fünftem Lauf, bewiesen und geht durch `lake env lean`: `countable_leftJumpSet` — die Sprungmenge **einer** càdlàg-Abbildung ist abzählbar — samt `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, die „Stetigkeitsstelle" und „nicht in `leftJumpSet`" identifiziert (Meilenstein 2). Was M8 darüber hinaus verlangt, ist die Fassung für **ein Maß** statt für einen Pfad — daß `{t | μ {f | f⁻ t = f t} = 1}` abzählbares Komplement hat —, und die folgt nicht punktweise aus der Pfadaussage, sondern braucht ein Fubini-Argument über die Sprunghöhen; das steht weiter aus |
-| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one` — und die Aussage des Schritts selbst, `of_continuous_comp_of_isMulSystem` |
+| `fact:monotoneclass` | 4 | Monotone class theorem; EK, Appendix 4 | Roadmap | WeakConvergence M5, `induction_on_mulSystem` — dort neu angelegt; Mathlib hat nur die Mengenfassung, und sie heißt `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`, nicht `MeasureTheory.`). Am 2026-09-06, zweiter Lauf, negativ belegt an `upstream/master` `810b3888` mit den Suchen `monotone class`, `MulSystem`, `generateFromFuns`, `multiplicative system`, `monotone limits`, `bounded monotone convergence`, `functional monotone`, `multiplicative family of functions` — kein einziger Treffer in `Mathlib/`. Der Unterbau ist seither übersetzt: `IsMulSystem`, `indicatorFuns`, `generateFromFuns`, die Brücke `generateFromFuns_indicatorFuns`, das π-System `ioiCells` samt `generateFromFuns_eq_generateFrom_ioiCells` und der erste Beweisschritt `of_tendstoUniformly_of_mono_lim` gehen durch `lake env lean`; seit dem 2026-09-06, dritter Lauf, dazu die algebraische Hälfte des zweiten Schritts — `mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`, `exists_bound_of_mem_span_insert_one`. Seit dem 2026-09-07, achtem Lauf, ist der **zweite Schritt selbst bewiesen**, `of_continuous_comp_of_isMulSystem`: die Stone--Weierstraß-Hälfte der Induktion, über `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints` (`Topology/ContinuousMap/StoneWeierstrass.lean:323`) und einen `AlgHom`-Rückzug in `Submodule.span ℝ (insert 1 K)`. Seit dem 2026-09-07, neuntem Lauf, ist der **Satz selbst bewiesen**: Schritt (iii) als `ioiApprox` samt `of_indicator_mem_ioiCells` und `of_indicator_of_measurable` (die Rampen gemeinsam als *eine* stetige Funktion, weil `P` nicht multiplikationsabgeschlossen ist), Schritt (iv) als `of_simpleFunc` und `of_nonneg_of_measurable` (der Umweg über `ℝ≥0∞` ist das einzige, was die Approximation wachsend macht — `SimpleFunc.approxOn` gibt keine Monotonie), und `induction_on_mulSystem` selbst als die Verschiebung `f = (f + C) + (-C)`. Alle drei Folgerungen tragen ebenfalls Beweise: `ext_of_forall_integral_eq_of_isMulSystem`, `integral_mul_eq_zero_of_isMulSystem` und `condExp_eq_of_forall_integral_mul_eq`. Der Kern von Meilenstein 5 ist damit vollständig; was `fact:monotoneclass` noch trennt, ist kein Beweis mehr, sondern die Übernahme nach Mathlib. Alles durch `lake env lean` gegen v4.33.1 |
 | `fact:cmt` | 3 | Continuous mapping theorem; EK, Corollary 3.1.9 and Co | Roadmap | WeakConvergence M2 — der stetige Fall ist Mathlib in **beiden** Fassungen, für Maße als `FiniteMeasure.tendsto_map_of_tendsto_of_continuous` und für Zufallsvariablen als `MeasureTheory.TendstoInDistribution.continuous_comp` (`MeasureTheory/Function/ConvergenceInDistribution.lean:136`, am 2026-09-01, fünfter Lauf, gefunden); die f.ü.-stetige Fassung fehlt in beiden. M2 steht auf „separabel metrisch", und das ist richtig: EK Cor. 3.1.9 verlangt nicht mehr (am Scan geprüft, 2026-08-31) |
 | `fact:kolmogorov` | 3 | Kolmogorov extension; EK, Theorem 4.1.1; eqref{T0} + e | Roadmap | KolmogorovExtension M2 — Gerüst weitgehend in Mathlib, es fehlen σ-Subadditivität und `projectiveLimit` |
 | `fact:stoneweierstrass` | 3 | Stone--Weierstrass for separating classes; EK, Theorem | Roadmap | WeakConvergence M1 — die separierende Hälfte ist Mathlib (`ext_of_forall_mem_subalgebra_integral_eq_of_polish`); die konvergenzbestimmende ist es **auch**, unter Straffheit und bloßer Punktetrennung: `MeasureTheory.ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, `MeasureTheory/Measure/LevyConvergence.lean:154`, am 2026-09-05 an `upstream/master` geprüft, nicht `deprecated`. Es fehlt allein der Schritt von **starker** Trennung zu Straffheit, in M1 als `isTightMeasureSet_of_stronglySeparatesPoints` angelegt (2026-09-05). Die separierende Hälfte ist seit dem 2026-09-06, drittem Lauf, auch auf unserer Seite bewiesen: `IsSeparating.of_subalgebra`, die Anbindung unseres Prädikats an `ext_of_forall_mem_subalgebra_integral_eq_of_polish`, geht durch `lake env lean`. ~~die konvergenzbestimmende fehlt~~ — dieser Befund stand vom 2026-08-29 bis zum 2026-09-05 und war falsch: gesucht worden war nach unserer Vokabel „konvergenzbestimmend" statt nach der Aussage, die in Mathlib unter `SeparatesPoints` und `IsTightMeasureSet` steht. **Am 2026-09-06, dritter Lauf, belegt, daß dieser Weg in Mathlib nicht bloß vorhanden, sondern tragend ist:** `Measure.ext_of_charFun` (`Measure/CharacteristicFunction/Basic.lean:257` auf `upstream/master` `810b3888`, `:248` in v4.33.1) und `Measure.ext_of_charFunDual` (`:462` bzw. `:453`) — „charakteristische Funktionen trennen endliche Maße" — ruhen über `ext_of_integral_char_eq` (`:103` bzw. `:101`) Zeile für Zeile auf `ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable` (`Measure/FiniteMeasureExt.lean:36`), angewandt auf `separatesPoints_charPoly` (`Analysis/Fourier/BoundedContinuousFunctionChar.lean:155`). Charakteristische Funktionen sind dort **kein eigenes Fundament**, sondern eine Anwendung der punktetrennenden Unteralgebra `charPoly` (`ibid.:141`), und diese ist eine `StarSubalgebra ℂ (V →ᵇ ℂ)` — also genau die Konjugationsabgeschlossenheit, die der Fact für $\K=\C$ verlangt. Keine der vier Deklarationen ist `deprecated` |
@@ -6385,3 +6385,520 @@ Hälfte des Zeugen steht und übersetzt ist, weil die Roadmap sie als acceptance
 example von Meilenstein 9 führt („the pair fixes where atomlessness is a
 hypothesis and where it is not"), und weil sie die einzige der zehn
 verbleibenden `sorry` der Datei ist, die eine Konstruktion und kein Satz ist.
+
+### 2026-09-07, siebter Lauf des Tages — Rückstau 1: der Atom-Zeuge ist fertig, und die Konvention ist keine Wahl
+
+Keine vorrangige Aufgabe, keine Zeile der Tabelle auf `?`. Also Rückstau, Punkt
+1, und dort das benannte Ziel des sechsten Laufs: `isMPSolution_coinProcess`.
+**Es steht, und mit ihm `not_isQuasiLeftContinuous_of_atom` selbst.**
+`MartingaleProblems/Suggested.lean` geht durch `lake env lean` gegen `v4.33.1`,
+rc = 0, ohne Fehler und ohne Linterwarnung; **neun** `sorry` statt zehn, und zehn
+neue Deklarationen, alle bewiesen:
+
+`integrable_bool`, `integral_coinMeasure`, `coinPair`, `coinClass`,
+`isSeparating_coinClass`, `atomClock_real_of_mem`, `atomClock_real_of_notMem`,
+`integral_coinPair_snd`, `coinFiltration`, `isMPSolution_coinProcess`.
+
+Damit trägt die einzige Schärfeaussage der Roadmap zur Atomlosigkeit einen
+vollständigen, übersetzten Zeugen: eine Uhr mit einem Atom bei `u`, eine Lösung
+des Martingalproblems zu einer **trennenden** Klasse, càdlàg-Pfade — und keine
+Quasi-Linksstetigkeit. Kein Fact wechselt den Status; `fact:cadlagext`,
+`fact:submgreg`, `fact:optsampl`, `fact:doob` und `fact:stoppedlocalmg` stehen
+weiter auf Meilenstein 9, dessen Text jetzt die zehn Namen führt.
+
+**1. Der Befund, und er ist der Ertrag des Laufs: die Konvention ist keine Wahl,
+sondern erzwungen.** Der Zeuge löst das Martingalproblem in
+`Clock.Conv.optional` und in der anderen Konvention **nicht**, und zwar aus
+einem Grund, der nichts mit dem konkreten `coinPair` zu tun hat. In
+`Clock.Conv.predictable` ist das Kompensationsintervall `Set.Iio t \ Set.Iio ⊥`,
+und `Set.Iio ⊥` ist leer, weil `x < ⊥` unter `[OrderBot ι]` nie gilt; das
+Intervall ist also `Set.Iio t`, und die Uhr `Measure.dirac u` lädt es genau dann,
+wenn `u < t`. Der Kompensator feuert dann **echt nach** `u`, während der Pfad
+schon **bei** `u` springt. Die Martingaleigenschaft an der Stelle `t = u`, gegen
+die triviale σ-Algebra darunter gelesen, ist
+`2⁻¹ * (p.1 true + p.1 false) = p.1 false`, also `p.1 true = p.1 false`: jede
+prädiktable Fassung dieses Zeugen hat ein **konstantes** `p.1`, und eine
+konstante Funktion trennt `Measure.dirac true` nicht von `Measure.dirac false`.
+Die Hypothese `IsSeparating (Prod.fst '' A)`, die der sechste Lauf gegen den
+leeren Zeugen eingezogen hat, schließt also zugleich die prädiktable Konvention
+aus. Das ist kein Mangel der Schärfeaussage — sie quantifiziert über `c`
+existentiell —, und es verträgt sich mit
+`isQuasiLeftContinuous_of_isMPSolutionFor`, das über `c` universell
+quantifiziert: unter `Clock.IsAtomless` fallen die beiden Konventionen zusammen,
+eine Schärfeaussage braucht also nur eine von beiden. Im Roadmaptext von
+Meilenstein 9 steht die Rechnung jetzt mit.
+
+**2. Der Zeuge braucht auf dem Index keine Topologie.** Alle zehn neuen
+Deklarationen tragen `omit [TopologicalSpace ι] [OrderTopology ι]` (bei den
+beiden Uhrmassen zusätzlich `omit [OrderBot ι]`), vom Linter bestätigt und nicht
+geraten. Insbesondere `isMPSolution_coinProcess`: die Martingaleigenschaft ist
+reine Ordnungs- und Maßrechnung. Die Topologie des Index kommt erst in
+`not_isQuasiLeftContinuous_of_atom` selbst vor, und dort an genau einer Stelle —
+`⨆ n, s n = u` aus `Tendsto s atTop (𝓝 u)`, über `tendsto_atTop_ciSup` und
+`tendsto_nhds_unique`, wofür die Ordnungstopologie das `T2Space` liefert. Das
+ist dieselbe Rechnung wie in `IsQuasiLeftContinuous.ae_eq_leftLim` und die
+einzige Rolle, die die Topologie im ganzen Gegenbeispiel spielt.
+
+**3. Die zwei Rechnungen, aus denen der Beweis besteht.** Der Kompensator ist
+`setIntegral_const` gegen `Measure.dirac u`: das Intervall
+`Set.Iic t \ Set.Iic ⊥` enthält `u` genau dann, wenn `u ≤ t` — hier, und nur
+hier, geht `¬ u ≤ ⊥` ein, das aus `s 0 < u` und `not_lt_bot` kommt —, also ist
+der Kompensator `2⁻¹` von `u` an und `0` davor (`integral_coinPair_snd`, über
+`atomClock_real_of_mem` bzw. `atomClock_real_of_notMem`). Der Prozeß ist damit
+`0` strikt vor `u` und `(if ω then 1 else 0) - 2⁻¹` von `u` an. Die
+Martingaleigenschaft zerfällt in zwei Fälle: oberhalb von `u` ist `𝓕 s` die
+ganze σ-Algebra und `Y t = Y s`, also `condExp_of_stronglyMeasurable`; unterhalb
+ist `𝓕 s = ⊥` und `Y s = 0`, also `condExp_bot`, und was zu zeigen bleibt, ist
+`∫ Y t = 0` — das ist `integral_coinMeasure`, `2⁻¹(1 - 2⁻¹) + 2⁻¹(0 - 2⁻¹) = 0`.
+Die Konstante `2⁻¹` in `coinPair.2` ist deshalb keine Wahl, sondern die Bilanz
+`p.1 true - p.1 false = p.2 true + p.2 false`.
+
+**4. Die Trennung auf `Bool`, in vier Zeilen und mit einem Mathlib-Satz, den das
+Inventar noch nicht kannte.** `isSeparating_coinClass`: der Indikator von
+`{true}` ist `Set.indicator {true} 1`, sein Integral ist `μ.real {true}`
+(`integral_indicator_const`, `MeasureTheory/Integral/Bochner/Set.lean:531`), und
+`MeasureTheory.ext_iff_measureReal_singleton`
+(`MeasureTheory/Measure/Dirac.lean:118`) macht aus „gleich auf allen Singletons"
+die Gleichheit der Maße; die Masse von `{false}` ist der Rest, über
+`measureReal_add_measureReal_compl` (`Measure/Real.lean:223`) und `probReal_univ`
+(`Measure/Typeclasses/Probability.lean:118`). Eine trennende Klasse mit **einem**
+Element, und das ist die kleinste, die es auf `Bool` gibt.
+
+**Am Quelltext belegt** wurden in diesem Lauf, alle in `v4.33.1` und keine
+`deprecated`: `memLp_top_of_bound` (`Function/LpSeminorm/Basic.lean:538`),
+`MemLp.integrable` (`Function/L1Space/Integrable.lean:659`),
+`measurable_of_finite` (`MeasurableSpace/Basic.lean:291`),
+`Bool.instMeasurableSpace = ⊤` und `Bool.instMeasurableSingletonClass`
+(`MeasurableSpace/Instances.lean:26,56`), `DiscreteTopology Bool`
+(`Topology/Order.lean:574`), `integral_smul_measure`, `integral_add_measure`,
+`integral_dirac` (`Integral/Bochner/Basic.lean:1014,974,1106`),
+`Measure.dirac_apply'` (`Measure/Dirac.lean:44`), `setIntegral_const`
+(`Integral/Bochner/Set.lean:527`), `condExp_bot` und
+`condExp_of_stronglyMeasurable`
+(`Function/ConditionalExpectation/Basic.lean:288,142`) samt der Instanz
+`isFiniteMeasure_trim` (`Measure/Trim.lean:124`), die den `SigmaFinite`-Beweis
+der zweiten liefert, ohne daß er hingeschrieben werden muß.
+
+**Mitgefunden, am Übersetzen und nicht am Lesen.**
+
+* Ein `if u ∈ S then _ else _` in einer **Aussage** verlangt
+  `Decidable (u ∈ S)`, und für ein Kompensationsintervall gibt es die Instanz
+  nicht; `classical` im Beweis hilft nicht, weil die Aussage vor dem Beweis
+  elaboriert wird. Statt `open scoped Classical` stehen dort zwei Lemmata,
+  `atomClock_real_of_mem` und `atomClock_real_of_notMem` — kürzer und an der
+  Anwendungsstelle bequemer, weil die Fallunterscheidung dort ohnehin steht.
+* In einem **Strukturfeld** (`mono'`, `le'` von `Filtration`) ist das Ziel nicht
+  betareduziert: es steht `(fun t ↦ if u ≤ t then _ else ⊥) a ≤ …`, und
+  `rw [if_pos ha]` findet sein Muster nicht. Ein `show` mit der reduzierten
+  Gestalt behebt es; `simp only [if_pos ha, le_refl]` schließt dann.
+* Der Linter für unbenutzte Abschnittsvariablen meldet **kaskadierend**, eine
+  Deklaration je Durchlauf: erst nach dem `omit` an der ersten kam die Meldung
+  an der zweiten. Vier Durchläufe für vier `omit`.
+
+**Was in `MartingaleProblems` offen bleibt.** Die neun `sorry` der Datei sind
+`isMPSolution_iff_forall_fdd` und sein Nachbar (Meilenstein 3), die beiden
+Markov-Aussagen der Verschiebung (Meilenstein 5),
+`exists_cadlag_modification_of_isRegularizingClass`, die beiden Sätze zur
+Quasi-Linksstetigkeit (Meilenstein 9), `mpSolution_of_tendsto` (Meilenstein 10)
+und `isMPSolution_of_forall_condExp_eq_of_dense`.
+
+**Und im selben Lauf, weil Zeit blieb: die Metrik von `SkorokhodSpace`
+Meilenstein 4 ist gebaut und bewiesen.** Das war das benannte Ziel des fünften
+Laufs von heute. `SkorokhodSpace/Suggested.lean` geht durch `lake env lean`,
+rc = 0, ohne Fehler und ohne Warnung; sieben neue Deklarationen, alle bewiesen:
+`SkorokhodSpace.totalDist` — `∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)` —,
+`summable_totalDist`, `totalDist_self`, `totalDist_comm`, `totalDist_triangle`,
+`eq_of_totalDist_eq_zero` und `SkorokhodSpace.metricSpace (t₀ : ι)`, die
+`MetricSpace D(ι, E)`-Struktur mit dem Basispunkt als Parameter, wie
+Meilenstein 4 sie verlangt.
+
+Alles daran ist gliedweise. Die Summierbarkeit ist die geometrische Reihe, weil
+`min 1 ·` den Summanden auf `2⁻¹ ^ m` deckelt — und die Trunkierung ist nicht
+Kosmetik, sondern nötig: `distOn t₀ m f g` wächst mit dem Fenster und ist in `m`
+unbeschränkt. Die Dreiecksungleichung ist `Summable.tsum_le_tsum` gegen
+`Summable.tsum_add`, auf der Subadditivität von `min 1 ·` über den nichtnegativen
+Reellen (`min_def` und `split_ifs <;> linarith`, acht Fälle). Die Trennung ist
+`Summable.le_tsum`: eine Reihe nichtnegativer Glieder verschwindet nur, wenn
+jedes Glied verschwindet, also ist `min 1 (distOn t₀ m f g) = 0` für jedes `m`,
+also `distOn = 0`, und `eq_of_forall_distOn_eq_zero` vom fünften Lauf macht
+daraus die Gleichheit der Pfade. `AdditiveDist ι` verbrauchen von den fünf
+Aussagen nur die beiden letzten, vom Linter bestätigt.
+
+**Die Zahl der `sorry` in `SkorokhodSpace` bleibt trotzdem bei zwölf, und das
+ist der Befund dieser Hälfte.** Der parameterlose `instance : MetricSpace D(ι, E)`
+darunter bleibt stehen: was ihm fehlt, ist kein Axiom, sondern der
+**Basispunkt**. Zehn spätere Deklarationen der Datei elaborieren gegen ihn, und
+sie auf `SkorokhodSpace.metricSpace t₀` umzuschreiben ist eine Signaturänderung
+an zehn Stellen und kein Beweis; nicht behauptet ist dabei — und deshalb steht
+es auch nicht in der Roadmap —, daß zwei Basispunkte dieselbe Topologie geben,
+denn die Untergruppen `TimeChange.fixing t₀` sind für verschiedene `t₀`
+verschieden. Der Doc-Kommentar des `instance` sagt jetzt genau das, statt wie
+bisher die vier Axiome mitzuzählen.
+
+**Mitgefunden.** `summable_geometric_of_lt_one` läßt sich nicht als drittes
+Argument von `Summable.of_nonneg_of_le` schreiben — die Vergleichsfunktion ist
+dort noch eine Metavariable, und `norm_num` sieht `0 ≤ ?r`; die geometrische
+Reihe gehört in ein eigenes `have`. Und `simp` normalisiert `2⁻¹ ^ m` zu
+`(2 ^ m)⁻¹`, womit ein vorbereitetes `∀ m, 2⁻¹ ^ m * … = 0` nicht mehr paßt;
+`show` plus `tsum_congr` plus `tsum_zero` ist der Weg, der nicht daran vorbeiläuft.
+Eine `def` mit Klassentyp will `@[instance_reducible]`, sonst warnt der Linter —
+dieselbe Meldung wie bei `generateFromFuns` am 2026-09-06.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**`SkorokhodSpace.IsCadlag.measurable`** — daß eine càdlàg-Abbildung meßbar ist,
+Meilenstein 2, seit dem 2026-09-05 ein `sorry` und einer von nur noch zwei in der
+Datei, die nicht an der parameterlosen Instanz hängen. Worauf sie ruht: auf dem
+Bündel (B), das die Roadmap für genau diese Aussage führt — die abzählbare
+dichte Menge `D`, aus der heraus jeder nicht-maximale Punkt von rechts erreichbar
+ist. Der Weg ist die Approximation von rechts entlang `D`: die Approximanten
+nehmen abzählbar viele Werte an und sind darum meßbar, die Rechtsstetigkeit gibt
+den punktweisen Limes, und `measurable_of_tendsto_metrizable`
+(`MeasureTheory/Constructions/BorelSpace/Metrizable.lean:51`, am Quelltext
+geprüft) trägt ihn. Die Sprungtheorie des fünften Laufs liegt daneben bereit —
+`countable_leftJumpSet`, `IsCadlag.continuousAt_iff_notMem_leftJumpSet` und
+Mathlibs `measurableSet_of_continuousAt`
+(`Constructions/BorelSpace/Basic.lean:252`), das die Menge der Stetigkeitsstellen
+als meßbar ausweist —, falls die Ausnahmemenge einzeln behandelt werden muß.
+Warum jetzt: `fact:Dcountable` (tragend `4`) verlangt über Meilenstein 8 die
+Fassung **für ein Maß**, und deren Fubini-Argument über die Sprunghöhen braucht
+die Meßbarkeit der Pfadabbildung als erstes Datum — ohne sie ist der Schritt von
+der Pfadaussage zur Maßaussage nicht einmal formulierbar. Als zweites, kleineres
+Ziel im selben Lauf: `AtomWitness` um die Umkehrung ergänzen — daß die Uhr
+`atomClock u` **nicht** atomlos ist, `¬ (atomClock u).IsAtomless`, zwei Zeilen
+aus `atomClock_apply_singleton_ne_zero` und `measure_mono` an der Stelle `t = u`
+(die Menge `{v | u ≤ v ∧ v ≤ u}` enthält `u`), die die Schärfeaussage
+sichtbar an die Hypothese `hQ` von `isQuasiLeftContinuous_of_isMPSolutionFor`
+bindet.
+
+### 2026-09-07, achter Lauf des Tages
+
+**Was bearbeitet wurde.** Rückstaupunkt 1 (`SkorokhodSpace` und
+`MartingaleProblems` weiter beweisen), und zwar genau die beiden Ziele, die der
+siebte Lauf am Ende benannt hatte. Beide sind erreicht, beide Dateien gehen
+durch `lake env lean` gegen v4.33.1 mit rc = 0 und ohne Fehler.
+
+**1. `SkorokhodSpace.IsCadlag.measurable` ist bewiesen — und die Roadmap
+verlangte dafür ein Bündel, das der Beweis nicht braucht.** Die Datei steht bei
+elf `sorry` statt zwölf.
+
+Der Meilenstein 2 führte die Aussage seit dem 2026-08-29 unter dem Bündel (B),
+mit `E` polnisch, und schrieb den Weg vor: Approximation durch rechtsstetige
+Treppenfunktionen entlang der abzählbaren dichten Menge `D`. Dieser Weg braucht
+zweierlei, was der Meilenstein sonst nirgends verlangt — die dichte Menge, und
+eine **lineare Struktur auf `E`**, ohne die eine Treppenfunktion nicht
+definierbar ist. Gebraucht wird nichts davon. Die Sprungtheorie des vierten
+Laufs von heute trägt die Aussage in drei Zeilen:
+
+* `IsCadlag.continuousAt_iff_notMem_leftJumpSet` — càdlàg ist stetig genau
+  außerhalb von `leftJumpSet f`;
+* `countable_leftJumpSet` — diese Menge ist abzählbar;
+* `measurable_of_countable_not_continuousAt`
+  (`Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:509`, am Quelltext
+  von v4.33.1 geprüft, nicht `deprecated`) — wer außerhalb einer abzählbaren
+  Menge stetig ist, ist meßbar.
+
+Die `MeasurableSingletonClass ι`, die der Mathlib-Satz verlangt, ist geschenkt:
+`OpensMeasurableSpace.toMeasurableSingletonClass` (`ibid.:351`) gibt sie aus
+`T1Space`, und ein metrischer Raum mit Borelstruktur hat beides. Die Aussage
+steht damit unter denselben Voraussetzungen wie `countable_leftJumpSet` —
+lineare Ordnung, Ordnungstopologie, σ-Kompaktheit — plus den beiden
+Borelstrukturen; `AdditiveDist` ist per `omit` heraus, und der Linter bestätigt
+es. Die stehende Regel über minimale Voraussetzungen ist hier nicht bloß
+eingehalten, sondern hat den Befund erzeugt: der Versuch, den Beweis unter dem
+angegebenen Bündel zu führen, hätte `PolishSpace E` und `D` mitgeschleppt, die
+in der Aussage nicht vorkommen müssen.
+
+Der Meilenstein 2 ist damit **bis auf `IsCadlag.eq_of_eqOn_dense` vollständig
+frei von (B)**; die Roadmap sagt das jetzt, und die Zwischenüberschrift „Under
+(B)" führt nur noch zwei Punkte statt drei, von denen einer ohnehin nur der
+Nachbarschaft wegen dort steht. Das ist die zweite Bündelkorrektur an
+Meilenstein 2 an einem Tag — die erste war die Sprungtheorie selbst — und beide
+kamen daher, daß jemand den Beweis wirklich hingeschrieben hat.
+
+**2. `AtomWitness.not_isAtomless_atomClock` ist bewiesen.** `MartingaleProblems`
+bleibt bei neun `sorry` (der neue Punkt trägt einen Beweis) und wächst um eine
+Deklaration.
+
+Die Aussage ist `¬ (atomClock u).IsAtomless`, und sie ist der Grund, warum die
+Schärfeaussage `not_isQuasiLeftContinuous_of_atom` den Satz
+`isQuasiLeftContinuous_of_isMPSolutionFor` **begrenzt** statt ihm zu
+widersprechen: die Uhr des Gegenbeispiels verletzt dessen Hypothese `hQ`. Bis
+heute war das eine Bemerkung über die Definition, jetzt ist es ein Satz. Der
+Beweis ist `measure_mono` vom Singleton `{u}` in das entartete Intervall
+`{v | u ≤ v ∧ v ≤ u}`, gegen `atomClock_apply_singleton_ne_zero`.
+
+**Mitgefunden, beim Übersetzen.** `zero_le` hat in `ENNReal` sein Argument
+**implizit** — `le_antisymm ?_ (zero_le _)` meldet „Function expected at
+`zero_le`"; `nonpos_iff_eq_zero.1` ist der Weg, der nicht daran vorbeiläuft und
+zugleich kürzer ist.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.** In `SkorokhodSpace`
+ist der Rückstau jetzt strukturell verstopft: von den elf `sorry` hängen zehn an
+der parameterlosen `MetricSpace`-Instanz, der der Basispunkt fehlt, und der
+elfte ist `exists_orderIso_isometry_real`, die Einbettung des Index in `ℝ` —
+ein echter Satz und kein Restposten. Der nächste Lauf gehört deshalb nach
+`WeakConvergence`, und dort an **Schritt (ii) von `induction_on_mulSystem`**:
+`of_continuous_comp_of_isMulSystem`, die Approximationshälfte. Die algebraische
+Hälfte steht seit dem 2026-09-06
+(`mul_mem_span_insert_one_of_isMulSystem`, `of_mem_span_insert_one`,
+`exists_bound_of_mem_span_insert_one`), der Anker ist
+`ContinuousMap.exists_mem_subalgebra_near_continuous_of_separatesPoints`
+(`Topology/ContinuousMap/StoneWeierstrass.lean:313`), und was fehlt, ist die
+kompakte Box in `Fin n → ℝ`, die Punktetrennung der Koordinatenalgebra und der
+Rückzug entlang `x ↦ (f₁ x, …, fₙ x)` in den Spann. Warum jetzt:
+`fact:monotoneclass` ist mit tragend `4` der höchstgewichtete Fact ohne
+Mathlib-Beleg, drei formulierte Roadmap-Punkte warten auf
+`induction_on_mulSystem`, und (ii) ist der einzige Schritt der vier, der noch
+kein Teilergebnis hat — (i) ist fertig, (iii) zur Hälfte, (iv) Routine.
+
+**Nachtrag desselben Laufs: (ii) ist erledigt, im selben Lauf, in dem es
+vorgeschlagen wurde.** `of_continuous_comp_of_isMulSystem` trägt einen Beweis,
+und er geht durch `lake env lean`. Damit ist der „eigentliche Brocken" des
+funktionalen Monotone-Klassen-Satzes weg; von den vier Schritten steht jetzt (i)
+und (ii) ganz, (iii) zur Hälfte, (iv) ist Routine.
+
+Zwei Entscheidungen tragen den Beweis, und beide sind Befunde für die Roadmap,
+die den Weg anders vorgezeichnet hatte.
+
+* **Der Anker ist nicht die ε-Fassung über einem kompakten Raum, sondern
+  `ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`**
+  (`Topology/ContinuousMap/StoneWeierstrass.lean:323` in v4.33.1, am Quelltext
+  geprüft, nicht `deprecated`) — die Variante, in der der Raum **nicht** kompakt
+  sein muß und nur die Approximation auf eine kompakte Menge eingeschränkt ist.
+  Die Roadmap nannte `…_of_separatesPoints` (`:313`), und die zwingt zum Subtyp
+  `↥box`: Unteralgebra, Punktetrennung und Rückzug müßten alle über `C(↥box, ℝ)`
+  laufen, mit Restriktionen an jeder Stelle. Über die kompakte Variante lebt
+  alles über `Fin n → ℝ`, die Koordinaten sind `continuous_apply i`, und der
+  Subtyp kommt im Beweis nicht ein einziges Mal vor.
+* **Der Rückzug ist ein `AlgHom`, und die Spanne ist eine `Subalgebra`.** Statt
+  einer Induktion über `Algebra.adjoin` (die der dritte Lauf des 2026-09-06 mit
+  Recht verworfen hat, weil ihr `mul`-Fall `P` als multiplikativ verlangt) ist
+  der Rückzug `C(Fin n → ℝ, ℝ) →ₐ[ℝ] (Ω → ℝ)`, `g ↦ fun x ↦ g (f · x)`, dessen
+  fünf Felder sämtlich `rfl` sind; die Spanne wird über
+  `Submodule.toSubalgebra` zur Unteralgebra, und die Enthaltensein-Aussage ist
+  `Algebra.adjoin_le` gegen `Subalgebra.comap`, geprüft allein an den
+  Erzeugern — dort zieht die `i`-te Koordinate auf `f i` zurück, per
+  η-Gleichheit sogar definitionsgleich. Das ersetzt eine
+  `Algebra.adjoin_induction` durch eine Zeile.
+
+Mitgefunden, klein aber notwendig: die gemeinsame Schranke der endlich vielen
+`f i` ist `∑ j, |c j|` und **kein** Supremum — `Fin n` darf leer sein, und ein
+Supremum über eine leere Familie ist ein Junk-Wert.
+
+**Und ein Befund über die Datei selbst, der zunächst wie ein Fehler aussah.**
+`WeakConvergence/Suggested.lean` meldet `rc = 1`, und zwar an
+`tendsto_map_of_measure_setOf_continuousAt_eq_one`: `ProbabilityMeasure.map`
+nimmt in v4.33.1 (`Measure/ProbabilityMeasure.lean:608`) neben dem — impliziten —
+`f` einen `AEMeasurable`-Beweis, auf `upstream/master` (`ibid.:626`) dagegen die
+Funktion selbst. Das ist **kein** Versehen: der Modulkopf hält seit dem
+2026-09-06 ausdrücklich fest, daß diese eine Aussage bewußt für master
+geschrieben ist, weil Tau Ceti auf master aufsetzt. Der Lauf hat das erst
+korrigiert und dann zurückgenommen; im Doc-Kommentar der Aussage steht jetzt
+zusätzlich, wie die v4.33.1-Fassung lautete (`hh.aemeasurable` statt `h`), damit
+der nächste Lauf nicht denselben Umweg geht. Gemessen: 48 Deklarationen und 18
+`sorry`-Beweise, von denen der Übersetzer 17 als Warnung meldet — der achtzehnte
+ist der dieser bewußten Master-Aussage, die nicht elaboriert. Die 21 des
+Rückstaus sind damit überholt.
+
+**Der Vorschlag für den nächsten Lauf ist deshalb weiterzurücken, auf
+Schritt (iii) von `induction_on_mulSystem`**: `P` gilt für den Indikator jeder
+Zelle von `ioiCells K`. Worauf er ruht: auf (ii), das jetzt steht, und auf der
+π-System-Hälfte, die seit dem 2026-09-06 steht (`isPiSystem_ioiCells`,
+`generateFromFuns_eq_generateFrom_ioiCells`). Was fehlt, ist genau ein Stück
+Analysis — die Approximation des Indikators einer Box in `Fin n → ℝ` durch
+stetige Funktionen von unten, monoton und beschränkt —, und danach trägt
+`MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:713`) die
+Aussage über die ganze σ-Algebra. Warum jetzt: es ist der letzte der vier
+Schritte mit Inhalt, (iv) ist Linearität und ein monotoner Limes, und damit ist
+`fact:monotoneclass` — tragend `4`, der höchstgewichtete Fact ohne
+Mathlib-Beleg — beweisbar statt bloß geplant.
+
+### 2026-09-07, neunter Lauf des Tages — Rückstau 2: der funktionale Monotone-Klassen-Satz ist bewiesen
+
+**Was bearbeitet wurde.** Rückstaupunkt 2 (`induction_on_mulSystem`), und zwar
+das Ziel, das der achte Lauf am Ende benannt hatte: Schritt (iii). Er ist
+erreicht, und im selben Lauf auch (iv), der Satz selbst und zwei seiner drei
+Folgerungen. `TauCeti/WeakConvergence/Suggested.lean` geht durch `lake env lean`
+gegen v4.33.1 mit genau den zwei bekannten Fehlern an
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` — der bewußt für
+`upstream/master` geschriebenen Aussage — und ohne jede Warnung außer `sorry`.
+
+**Damit ist `fact:monotoneclass` formalisiert.** Es war mit tragend `4` der
+höchstgewichtete Fact ohne Mathlib-Beleg; seine Zeile in der Tabelle nennt
+jetzt den vollständigen Beweis. Was in Meilenstein 5 noch aussteht, ist eine
+einzige Folgerung (`condExp_eq_of_forall_integral_mul_eq`), nicht mehr der
+Satz.
+
+**Schritt (iii): von den stetigen Funktionen zu den Indikatoren.** Zwei
+Deklarationen, dazu die Rampe.
+
+* `ioiApprox k t = min 1 (max 0 ((k+1) * t))`, die stetige Rampe, mit
+  `continuous_ioiApprox`, `ioiApprox_nonneg`, `ioiApprox_le_one`,
+  `ioiApprox_of_nonpos`, `ioiApprox_of_one_le` und `monotone_ioiApprox`. Die
+  Steigung ist `k+1` und nicht `k`, damit die Familie schon bei `k = 0`
+  wächst statt mit der konstanten `0` zu beginnen — sonst ist das erste Glied
+  entartet und die Monotonie fängt erst bei `1` an.
+* `of_indicator_mem_ioiCells`: `P (Set.indicator s 1)` für jede Zelle
+  `s ∈ ioiCells K`. Der Indikator der Zelle einer Liste `l` ist der punktweise
+  wachsende Limes der Produkte `∏ i, ioiApprox k (fᵢ x - cᵢ)`, und jedes davon
+  ist eine stetige Funktion der endlich vielen `fᵢ x`, also von Schritt (ii)
+  erfaßt.
+* `of_indicator_of_measurable`: dasselbe für jedes
+  `MeasurableSet[generateFromFuns K] s`, über
+  `MeasurableSpace.induction_on_inter` entlang `ioiCells K`.
+
+**Drei Befunde an diesem Schritt, alle beim Hinschreiben gefunden.**
+
+1. **Die Rampen müssen gemeinsam genommen werden, als *eine* stetige Funktion
+   der `n` Werte.** Faktorweise ginge es nicht: `P` ist nicht
+   multiplikationsabgeschlossen, und das Produkt der Indikatoren ist genau das,
+   was ein faktorweises Argument bräuchte. Das ist der Grund, warum Schritt (ii)
+   für eine stetige Funktion *endlich vieler* Mitglieder von `K` formuliert ist
+   und nicht für eines — die Roadmap sagte das bisher nicht, jetzt schon.
+2. **Die Disjunktheit im `iUnion`-Fall trägt genau eine Sache: die Schranke.**
+   Die Partialsummen der Indikatoren wachsen ohne jede Disjunktheit; was ohne
+   sie fehlt, ist `≤ 1`, und damit die Hypothese von `mono_lim`. Auch das steht
+   jetzt in der Roadmap, weil es die Stelle benennt, an der ein Beweis kippt,
+   der die Disjunktheit vergißt.
+3. **Der Komplementfall braucht keine Fallunterscheidung über Meßbarkeit**,
+   sondern nur `Set.indicator sᶜ 1 = 1 + (-1) • Set.indicator s 1` — Linearität
+   und die Konstanten, mehr nicht.
+
+**Schritt (iv): von den Indikatoren zu den beschränkten meßbaren Funktionen.**
+
+* `of_simpleFunc`: `P ⇑f` für jede `f : @SimpleFunc Ω (generateFromFuns K) ℝ`,
+  über `MeasureTheory.SimpleFunc.induction`, deren zwei Fälle das Vielfache
+  eines Indikators und die Summe sind. Beschränktheit ist hier **keine**
+  Hypothese: eine einfache Funktion hat endliches Bild.
+* `of_nonneg_of_measurable`: `P f` für beschränktes, nichtnegatives,
+  `generateFromFuns K`-meßbares `f`, als wachsender Limes von
+  `SimpleFunc.eapprox` von `ENNReal.ofReal ∘ f`, zurückgelesen über
+  `ENNReal.toReal`.
+
+**Der Befund, der die Gestalt von (iv) bestimmt: der Umweg über `ℝ≥0∞` ist
+nicht Bequemlichkeit, sondern das einzige, was die Approximation *wachsend*
+macht.** `SimpleFunc.approxOn`, der naheliegende reelle Weg, gibt Konvergenz und
+keine Monotonie, und `mono_lim` verlangt Monotonie. `SimpleFunc.eapprox` gibt
+sie (`monotone_eapprox`), die Werte sind endlich (`eapprox_lt_top`), und deshalb
+trägt `ENNReal.toReal_mono` sowohl die Monotonie als auch den Limes zurück nach
+`ℝ`. Der allgemeine beschränkte Fall ist dann die Verschiebung
+`f = (f + C) + (-C)` um eine Schranke von `f` — die Konstanten und die
+Additivität, sonst nichts.
+
+**Zwei Folgerungen tragen jetzt Beweise.**
+
+* `ext_of_forall_integral_eq_of_isMulSystem` — zwei endliche Maße, die auf `K`
+  und auf der Gesamtmasse übereinstimmen, stimmen auf `generateFromFuns K`
+  überein. Induziert wird über
+  `P f := Integrable f μ ∧ Integrable f ν ∧ ∫ f ∂μ = ∫ f ∂ν`; der Schluß ist
+  `integral_indicator_one` und `measureReal_eq_measureReal_iff`.
+* `integral_mul_eq_zero_of_isMulSystem` — dieselbe Bauform mit
+  `P f := Integrable (g * f) μ ∧ ∫ g * f ∂μ = 0`.
+
+**Und der Befund, der beide Folgerungen bestimmt: die Integrierbarkeit muß in
+der induzierten Eigenschaft mitlaufen.** Das ist keine Bequemlichkeit. Die
+Hypothesen `add` und `mono_lim` von `induction_on_mulSystem` müssen für
+**beliebige** Funktionen gelten, nicht nur für die meßbaren, und `∫(f+g) =
+∫f + ∫g` ist ohne Integrierbarkeit falsch; ebenso braucht der monotone Limes
+majorisierte Konvergenz und damit `AEStronglyMeasurable` der Glieder. `P` trägt
+deshalb die Integrierbarkeit als eigene Komponente, und die Meßbarkeit des
+Limes kommt aus `aestronglyMeasurable_of_tendsto_ae` — aus den Gliedern, nicht
+aus einer Meßbarkeitsannahme, die `P` gar nicht hätte.
+
+**Mitgefunden, beim Übersetzen.**
+
+* **`@[elab_as_elim]` schlägt zurück, sobald man den Satz als Term benutzt.**
+  `have hres := induction_on_mulSystem …` scheitert mit „failed to elaborate
+  eliminator, expected type is not available": das Motiv wird aus dem
+  Erwartungstyp gelesen, und ein `have` ohne Typannotation hat keinen. Der
+  erwartete Typ muß ausgeschrieben werden. Wer die drei Folgerungen fortsetzt,
+  schreibt ihn hin.
+* `Finset.range_subset` heißt in v4.33.1 `range n ⊆ s ↔ ∀ x < n, x ∈ s`; die
+  Aussage `range n ⊆ range m ↔ n ≤ m` ist `Finset.range_subset_range`.
+* `continuous_finset_prod` ist seit dem 2026-04-08 `deprecated`, der Name ist
+  `continuous_finsetProd`.
+* `push_neg` ist deprecated zugunsten von `push Not`; beide Stellen sind
+  stattdessen ohne Taktik ausgeschrieben.
+* `letI` für eine `MeasurableSpace`-Instanz in einem Beweis meldet der
+  Stil-Linter — in einem Beweis ist `let` vorzuziehen. Und: in
+  `ext_of_forall_integral_eq_of_isMulSystem` darf man `generateFromFuns K`
+  **nicht** als Instanz einführen, weil `mΩ` schon eine ist und die Suche die
+  letzte nimmt; dort steht die σ-Algebra deshalb überall annotiert. Das ist
+  derselbe Mechanismus wie der Reihenfolgefehler vom 2026-09-06.
+
+**Nachtrag desselben Laufs: die dritte Folgerung ist auch bewiesen, und damit
+ist der Kern von Meilenstein 5 vollständig.**
+`condExp_eq_of_forall_integral_mul_eq` trägt einen Beweis, und der Weg war der
+unten skizzierte:
+`integral_mul_eq_zero_of_isMulSystem` auf `g = X - Y` (dessen Hypothese
+`∫ g = 0` ist genau `h1`), dann `f = Set.indicator s 1` für
+`MeasurableSet[generateFromFuns K] s`, was `∫ x in s, X = ∫ x in s, Y` gibt
+(`integral_indicator`), und schließlich
+`MeasureTheory.ae_eq_condExp_of_forall_setIntegral_eq` gegen `μ[Y | …]`, dessen
+Voraussetzungen `integrable_condExp`, `stronglyMeasurable_condExp` und
+`setIntegral_condExp` liefern. Die `SigmaFinite (μ.trim hKle)`, die der Satz
+zusätzlich verlangt, ist bei endlichem `μ` `inferInstance` über
+`isFiniteMeasure_trim` (`Measure/Trim.lean:124`). Gemessen stand die Datei
+an dieser Stelle bei **59 Deklarationen und 13 `sorry`** (vorher 48 und 17),
+rc = 1 an der einen bewußten Master-Aussage und ohne jede weitere Warnung.
+
+**Zwei Kleinigkeiten aus diesem Nachtrag, beide Zeitfresser beim nächsten Mal.**
+`ring` scheitert an `(X x - Y x) * f x = ((fun x => …) - fun x => …) x`, weil es
+die Pi-Subtraktion nicht beta-reduziert — `ring_nf` normalisiert nur die linke
+Seite und läßt einen ratlos zurück; der Weg ist eine punktweise `have`-Gleichung
+und `simp only`, nicht eine Funktionsgleichung. Und der Stil-Linter verlangt in
+Beweisen `have` statt `haveI` auch für Instanzen, was für Prop-Klassen wie
+`SigmaFinite` gleichwertig ist.
+
+**Was offen bleibt.** Nichts mehr am funktionalen Monotone-Klassen-Satz. Was
+offen bleibt, ist sein erster Abnehmer, und der hat eine benannte Hürde:
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`MartingaleProblems.isMPSolution_iff_forall_fdd_continuous` **aus**
+`isMPSolution_iff_forall_fdd`, also der Schritt von beschränkt meßbaren zu
+beschränkt stetigen Testfunktionen. Worauf er ruht: auf
+`induction_on_mulSystem` samt `integral_mul_eq_zero_of_isMulSystem`, seit heute
+bewiesen, angewandt auf das multiplikative System der Produkte
+`∏ k, h k (X (r k) ω)` mit `h k` beschränkt stetig, dessen erzeugte σ-Algebra
+nach `generateFromFuns_eq_generateFrom_ioiCells` die von den Koordinaten
+erzeugte ist. Warum jetzt: es ist der einzige Punkt der vier Roadmaps, der
+`induction_on_mulSystem` **namentlich** zitiert und ihn jetzt wirklich bekommen
+kann, und `isMPSolution_iff_forall_fdd` daneben stehen zu lassen ist zulässig —
+die Äquivalenz der beiden Kriterien ist ein eigener Satz und braucht die
+Grundfassung nur als Hypothese.
+
+**Die Hürde dabei ist im selben Lauf weggeräumt.** Die Testfunktionen `h k`
+sind reell, das multiplikative System also auch; der **Integrand** ist aber
+`𝕂`-wertig, und `integral_mul_eq_zero_of_isMulSystem` ist über `ℝ` formuliert
+(`g : Ω → ℝ`). Die Brücke ist jetzt gebaut und bewiesen:
+`integral_mul_ofReal_eq_zero_of_isMulSystem`, für `𝕂`-wertiges `g` gegen ein
+**reelles** `K`, über Real- und Imaginärteil (`RCLike.mul_re` gibt
+`re (z * (r:𝕂)) = re z * r`, `integral_re` und `integral_im` vertauschen mit dem
+Integral, `RCLike.ext` setzt zusammen). Sie steht als eigener Punkt in
+Meilenstein 5, und dort ausdrücklich getrennt von den schon vorhandenen
+`RCLike`-Varianten, die etwas anderes und Größeres sind: dort ist `K` selbst
+`𝕂`-wertig und die Multiplikativität muß den Übergang zur reellen Unteralgebra
+überstehen. Hier bleibt `K` reell und nur der andere Faktor wandert — deshalb
+kostet die Brücke zwanzig Zeilen und nicht einen Meilenstein.
+
+**Und das zweite Stück, das der Abnehmer braucht, ist ebenfalls gebaut.**
+`generateFromFuns_setOf_continuous_bounded`: auf einem pseudometrisierbaren Raum
+mit seiner Borelstruktur erzeugen die beschränkten stetigen reellen Funktionen
+die Borel-σ-Algebra. Ohne das sagt die Induktion über ein aus stetigen
+Funktionen gebautes multiplikatives System nichts, weil ihre Konklusion über
+`generateFromFuns K` läuft und nicht über Borel. Der Beweis ist die trunkierte
+Abstandsfunktion `fun x => min 1 (Metric.infDist x Uᶜ)`; **der Sonderfall, den
+man dabei übersieht, ist `U = univ`** — dort ist `Uᶜ = ∅` und
+`Metric.infDist x ∅ = 0` per Konvention, die Formel also falsch, und der Fall
+ist eigens zu nehmen. Die Metrisierbarkeit wird genau hier und nur hier
+gebraucht, und das steht jetzt auch so in Meilenstein 5.
+
+Damit ist der nächste Lauf an `isMPSolution_iff_forall_fdd_continuous`
+voraussetzungsfrei: alles, was er aus `WeakConvergence` braucht, ist bewiesen —
+`induction_on_mulSystem`, die drei Folgerungen, die `RCLike`-Brücke und die
+Erzeugung der Borelstruktur. Was dort bleibt, ist die Rechnung in
+`MartingaleProblems`: das multiplikative System der Produkte
+`∏ k, h k (X (r k) ω)` mit `r k ≤ s`, seine erzeugte σ-Algebra als
+`⨆ r ∈ Set.Iic s, comap (X r) borel`, und der Fall `n = 0` — das leere Produkt
+ist `1`, und genau daraus kommt die Hypothese `∫ g ∂P = 0`, die die Folgerung
+zusätzlich verlangt. Am Ende des Laufs: **61 Deklarationen, 13 `sorry`** (gezählt mit `grep -cE "^(noncomputable )?(private |protected )*(theorem|lemma|def|structure|instance|abbrev) "`; die Sorry-Zahl ist die des Übersetzers).
