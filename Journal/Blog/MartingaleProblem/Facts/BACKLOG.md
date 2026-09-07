@@ -205,6 +205,31 @@ kein gebautes Mathlib und taugt zu nichts.
    im Inventar. Nächstes benanntes Ziel: `countable_leftJumpSet`, das seit
    diesem Lauf auf dem kritischen Weg zur Trennung liegt; Weg im Inventar.
 
+   *Fortgesetzt am 2026-09-07, fünfter Lauf des Tages: die Sprungtheorie von
+   Meilenstein 2 ist bewiesen, und sie steht unter (A′) statt unter (B).*
+   `countable_leftJumpSet` trägt einen Beweis, dazu die sieben Deklarationen,
+   die er braucht oder mitnimmt: `IsCadlag.tendsto_leftLim`,
+   `largeLeftJumpSet`, `IsCadlag.dist_leftLim_le_of_Ioo_subset`,
+   `IsCadlag.eventually_dist_leftLim_lt`,
+   `IsCadlag.finite_largeLeftJumpSet_inter`,
+   `IsCadlag.continuousAt_iff_notMem_leftJumpSet` und
+   `IsCadlag.continuous_iff_leftJumpSet_eq_empty`. Von der abzählbaren dichten
+   Menge des Bündels (B), unter dem die Roadmap diese Aussagen seit dem
+   2026-08-29 führte, verbraucht der Beweis **nichts**; er braucht die lineare
+   Ordnung, die Ordnungstopologie und für die Abzählbarkeit die σ-Kompaktheit.
+   Der Roadmaptext ist entsprechend berichtigt. **Im selben Lauf ist die
+   Trennung von Meilenstein 4 gefallen**, das letzte Metrikaxiom:
+   `IsCadlag.eq_of_forall_exists_dist_le` (M2),
+   `SkorokhodSpace.eq_of_distOn_eq_zero` und
+   `SkorokhodSpace.eq_of_forall_distOn_eq_zero` (M4). Sie geht **nicht** über
+   die Dichtheit der Stetigkeitsstellen — die der Index von Meilenstein 1 nicht
+   hergeben muß —, sondern spielt die Zeitänderung gegen ihre Inverse aus: eine
+   von beiden bewegt `t` nach oben, und die Rechtsstetigkeit des dort
+   ausgewerteten Pfades tut den Rest. `rc=0`, keine Linterwarnung, 12 `sorry`
+   statt 13, elf neue Deklarationen. Nächstes benanntes Ziel: die Instanz
+   `MetricSpace D(ι, E)` selbst, samt der Vorfrage nach dem Basispunkt; Weg im
+   Inventar.
+
    Die Frage, ob Hypothese (a) von `mpSolution_of_tendsto` gemeinsame oder
    einzelne Verteilungskonvergenz meint, ist am Manuskript entschieden —
    `rem:absconvtopfree` sagt es ausdrücklich: einzeln, „and nothing else".

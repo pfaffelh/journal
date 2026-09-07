@@ -214,11 +214,15 @@ right approximation clause of (B), since `Set.Ioo t (t + h) = ∅`. Nothing is
 lost: on a discrete linear order `𝓝[<] x` and `𝓝[>] x` are both `⊥`, so
 `IsCadlag` holds for every function, `Function.leftLim f x = f x` by the
 definition in `Mathlib/Topology/Order/LeftRightLim.lean`, `leftJumpSet f = ∅`,
-and each of the four statements below is trivially true. The other three running
+and each of the statements below is trivially true. The other three running
 instances `ℝ`, `Set.Ici (0:ℝ)` and `Set.Icc (0:ℝ) T` satisfy (B), with `D` the
-rational points. So the jump theory is to be proved under (B) and instantiated
-for those three; the discrete index gets its own one line instance and no
-exhaustion argument. The metric on `ι` is first used in Milestone 3, and no
+rational points. So the two statements that really consume (B) --- the
+measurability and the determination by a right dense set --- are to be proved
+under it and instantiated for those three; the discrete index gets its own one
+line instance and no exhaustion argument. The jump theory needs none of this and
+stands under (A′), which the discrete index does satisfy: there the three
+statements are true and not merely instantiable. The metric on `ι` is first used
+in Milestone 3, and no
 statement of this milestone uses it: `largeLeftJumpSet` measures with `dist` on
 `E`.
 
@@ -241,7 +245,9 @@ Under (A′):
   through `continuousWithinAt_Ioi_iff_Ici`; the second adds `[T2Space E]`. These
   connect the structure to `Function.leftLim` and `Function.rightLim` so that
   the existing API applies; every later statement about left limits uses those
-  names, not a new one.
+  names, not a new one. `IsCadlag.tendsto_leftLim` is proved (2026-09-07), and
+  it is unconditional: `tendsto_leftLim_of_tendsto` covers the degenerate case
+  `𝓝[<] x = ⊥` itself, so no hypothesis on the point is needed.
 * The identity `Function.leftLim f x = f x` at continuity points, from
   `ContinuousWithinAt.leftLim_eq` applied to the restriction of continuity at
   `x` to `Iic x`, with `[T2Space E]`.
@@ -275,31 +281,73 @@ Under (A′):
   exactly the split above: `ω` has neighbourhoods containing cofinitely much of
   `ℕ`, and neither field of `IsCadlag` says anything there.
 
-Under (B), with `E` a pseudometric space:
+Still under (A′), with `E` a pseudometric space --- the jump theory does **not**
+need (B), and this is a correction of 2026-09-07, found by writing the proofs:
 
 * Jump sets: `leftJumpSet f = {x | f⁻ x ≠ f x}` and, for `ε > 0`,
   `largeLeftJumpSet f ε = {x | ε ≤ dist (f⁻ x) (f x)}`. That
   `largeLeftJumpSet f ε` has no accumulation point, hence meets every compact
-  set in a finite set, is (B) alone: an accumulation point yields a monotone
-  sequence converging to it, which is where linearity and the order topology are
-  used, and the one sided limit at that point contradicts the jump size. With
-  them, the characterization of continuity of a càdlàg map as
-  `leftJumpSet f = ∅`, from the identity of (A′) at continuity points in the one
-  direction and, in the other, from `IsCadlag.tendsto_leftLim` rewritten along
-  `f⁻ x = f x` to give continuity within `Iio x`, which together with the
-  `right_continuous` field gives continuity at `x`.
-* `leftJumpSet f` is countable. This adds **σ-compactness of `ι`** to (B), to
+  set in a finite set, is (A′) alone. Proved (2026-09-07) in the pointwise form
+  `IsCadlag.eventually_dist_leftLim_lt`, which is the sharp one: *every* point
+  `x` of the index --- not only a point outside the set --- has a neighbourhood
+  on which `x` itself is the only possible jump of size `ε`. The point itself
+  cannot be excluded, since a càdlàg function may jump at any single point, and
+  it need not be, because a set that meets a neighbourhood of each point of the
+  index in at most one point already meets every compact set in a finite set:
+  that is `IsCadlag.finite_largeLeftJumpSet_inter`, through
+  `IsCompact.elim_nhds_subcover`.
+
+  The proof is two sided and needs one statement the roadmap did not name,
+  `IsCadlag.dist_leftLim_le_of_Ioo_subset`: if `f` stays `r`-close to a point
+  `c` of `E` on `Set.Ioo a y` and at `y`, its jump at `y` is at most `2r`. It is
+  applied twice --- to the left of `x` with `c` the left limit there, to the
+  right with `c` the value there --- and the two intervals come from
+  `mem_nhdsLT_iff_exists_Ioo_subset'` and `mem_nhdsGE_iff_exists_Ico_subset'`,
+  which is where the order topology enters; `nhdsLT_sup_nhdsGE` glues the two
+  halves. The degenerate cases carry no content: where `𝓝[<] y = ⊥` the left
+  limit *is* the value, by `leftLim_eq_of_eq_bot`, so there is no jump there.
+* The characterization of continuity of a càdlàg map as `leftJumpSet f = ∅`.
+  Proved (2026-09-07) as `IsCadlag.continuousAt_iff_notMem_leftJumpSet`, with
+  the global form `IsCadlag.continuous_iff_leftJumpSet_eq_empty`. Forwards it is
+  `ContinuousWithinAt.leftLim_eq` on the restriction of continuity to
+  `Set.Iic x`; backwards `IsCadlag.tendsto_leftLim` rewritten along `f⁻ x = f x`
+  gives convergence along `𝓝[<] x`, which together with the `right_continuous`
+  field and `nhdsLT_sup_nhdsGE` is continuity at `x`.
+* `leftJumpSet f` is countable. This adds **σ-compactness of `ι`** to (A′), to
   turn local finiteness into countability along a countable exhaustion; every
-  index of Milestone 1 has it, since closed balls are compact. The monotone case
+  index of Milestone 1 has it, since closed balls are compact. Proved
+  (2026-09-07) as `countable_leftJumpSet`, decomposing over the jump size into
+  the sets `largeLeftJumpSet f (1 / (n + 1))`. The monotone case
   is `Monotone.countable_not_continuousAt`, which lives in
   `Mathlib/Topology/Order/Monotone.lean` and not in
   `Mathlib/Topology/Order/LeftRightLim.lean`, where only the module comment
   names it; the càdlàg case does not follow from it.
+
+  None of these three items uses the countable dense set of (B) or its right
+  approximation clause. They stood under (B) from 2026-08-29 to 2026-09-07, and
+  the proofs do not bear that out. What (B) is genuinely for are two of the
+  three items below, `IsCadlag.measurable` and `IsCadlag.eq_of_eqOn_dense`; the
+  third, `IsCadlag.eq_of_forall_exists_dist_le`, is again (A′) and is listed
+  there only because Milestone 4 consumes it next to them.
+
+Under (B), with `E` a pseudometric space:
+
 * `IsCadlag.measurable`: a càdlàg map into a Polish space is Borel measurable,
   via approximation by right continuous step functions along `D`. Linearity is
   what makes the step functions definable and the countable dense `D` is what
   indexes them; this is (B) exactly, with σ-compactness for the exhausting
   sequence of steps.
+* `IsCadlag.eq_of_forall_exists_dist_le`, still under (A′) and stated here
+  because it is a statement about càdlàg maps and nothing else: two of them
+  agree at `t` as soon as, arbitrarily close to `t` and **on its right**, one of
+  them may be evaluated against the other's value at `t` with arbitrarily small
+  error --- formally, for all `ρ, η > 0` there is an `s ≥ t` with
+  `dist s t < ρ` and `dist (F s) (G t) ≤ η` or `dist (F t) (G s) ≤ η`. Proved
+  (2026-09-07); it uses the two `right_continuous` fields and nothing else, not
+  even the order topology. The disjunction is not a weakening for convenience:
+  it is exactly what the separation of `SkorokhodSpace.distOn` in Milestone 4
+  delivers, and it is what lets that separation avoid the density of the
+  continuity points, which an index of Milestone 1 need not provide.
 * `IsCadlag.eq_of_eqOn_dense`: a càdlàg map is determined by its restriction to
   a set that is dense **from the right**. The hypothesis is, for every `t ∈ ι`,
   that either `t ∈ D` or `(𝓝[D ∩ Set.Ioi t] t).NeBot`, and it implies `Dense D`.
@@ -343,10 +391,11 @@ Under (B), with `E` a pseudometric space:
   `tendsto_modulus` of Milestone 7 is not a statement about finitely many jumps.
 * **The discrete index, where everything is trivially true.**
   `ι = AddSubgroup.zmultiples (1 : ℝ)`. Every `f : ι → E` is càdlàg,
-  `Function.leftLim f x = f x`, `leftJumpSet f = ∅`, and each of the four
-  statements under (B) holds vacuously. The acceptance test is that the
-  instantiation goes through without an exhaustion argument, since (B) itself
-  fails here — `Set.Ioo t (t+1) = ∅`.
+  `Function.leftLim f x = f x`, `leftJumpSet f = ∅`, and both statements under
+  (B) hold vacuously. The acceptance test is that the instantiation goes through
+  without an exhaustion argument, since (B) itself fails here —
+  `Set.Ioo t (t+1) = ∅`. The three jump statements are not vacuous here but
+  simply true, since they stand under (A′), which this index does satisfy.
 * **The two witnesses already in the text, as tests of the bundles.**
   `ι = ℕ ∪ {ω}` with `ω` incomparable refutes
   `IsCadlag.isBounded_image_of_isCompact` under (A), so an implementer who
@@ -527,12 +576,24 @@ Under (B), with `E` a pseudometric space:
   because both paths are constant outside the window, and quantifying over `ι`
   is what makes the reindexing in `distOn_comm` a bijection of the index rather
   than of a subset that the time change need not preserve.
-* `MetricSpace (D ι E)`: symmetry from `TimeChange.norm_inv`, the triangle
+* `SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)`: symmetry from
+  `TimeChange.norm_inv`, the triangle
   inequality from `TimeChange.norm_mul_le`, and separation from
   `TimeChange.dist_le_of_norm_le` together with right continuity.
+
+  It carries the base point as a parameter and is a `def`, not an instance:
+  `distOn` is anchored at `t₀` twice over, through the window `exhaustion t₀ m`
+  and through the subgroup `TimeChange.fixing t₀`, while the type `D ι E` knows
+  nothing of a base point. The instance is the one at the distinguished point of
+  an index that has one, which is `0` for all four running instances of
+  Milestone 1.
   `SkorokhodSpace.distOn_nonneg`, `SkorokhodSpace.distOn_self`,
   `SkorokhodSpace.distOn_comm` and `SkorokhodSpace.distOn_triangle` are proved
-  (2026-09-07), so of the axioms only the separation is left. Symmetry and the
+  (2026-09-07), and so is the separation: `SkorokhodSpace.eq_of_distOn_eq_zero`
+  --- `distOn t₀ m f g = 0` forces the two truncations to the window to be equal
+  --- with `SkorokhodSpace.eq_of_forall_distOn_eq_zero` for the passage from all
+  windows to the paths themselves, since every point lies in some window. **All
+  four axioms of `distOn` are theorems.** Symmetry and the
   triangle inequality are the two that read the subgroup structure of
   Milestone 3, and they read it from the two sides. Symmetry: `λ ↦ λ⁻¹` is a
   bijection of `TimeChange.fixing t₀`, `norm_inv` leaves the norm unchanged, and
@@ -544,6 +605,22 @@ Under (B), with `E` a pseudometric space:
   infimum is not attained, so the argument runs with an `ε` and
   `SkorokhodSpace.exists_lt_distOn_add`, which is `exists_lt_of_ciInf_lt` on
   `bddBelow_range_distOn`.
+
+  The separation does **not** go through the continuity points and their
+  density, and this is a correction of 2026-09-07 to the received proof. The
+  classical argument reads `g = f` at the continuity points of `f` and then
+  invokes their density, which is a statement about the index: for an index of
+  Milestone 1 --- a closed subset of `ℝ`, not an interval --- the continuity
+  points need not be dense from the right, so that step is not available at this
+  strength. What replaces it is `IsCadlag.eq_of_forall_exists_dist_le` of
+  Milestone 2, used with the time change and its inverse played against each
+  other. Given `ε`, a `λ` with `norm λ < ε` and `dist (F (λ s)) (G s) < ε` for
+  every `s` either moves `t` **up**, and then `F (λ t)` is close to `F t` by the
+  right continuity of `F`, or it moves `t` down, in which case `λ⁻¹` moves `t`
+  up, `G (λ⁻¹ t)` is close to `G t` by the right continuity of `G`, and the
+  hypothesis read at `λ⁻¹ t` is `dist (F t) (G (λ⁻¹ t)) < ε`. Both branches
+  approach `t` from the right, which is the only side either path controls, and
+  neither uses anything about the index beyond `TimeChange.dist_le_of_norm_le`.
 * `SkorokhodSpace.tendsto_iff`: `f n → f` if and only if for every `m` there are
   time changes `λ n` fixing the base point with `norm (λ n) → 0` and
   `sup_{t ∈ B m} r (f n (λ n t)) (f t) → 0`.
