@@ -151,6 +151,60 @@ kein gebautes Mathlib und taugt zu nichts.
    `normOn_one` (Fallunterscheidung nach `(exhaustion t₀ m).Subsingleton`) und
    `normOn_mul_le`.
 
+   *Fortgesetzt am 2026-09-07, erster Lauf des Tages: `normOn_one` ist
+   bewiesen, `normOn_mul_le` ist **falsch**.* Die gefensterte Norm ist keine
+   Längenfunktion — Zeuge auf $\mathbb R$ mit $B_1=[-1,1]$, $\lambda'=2\cdot$
+   und $\lambda$ stückweis linear mit Steigung $100$ jenseits von $1$:
+   $\mathrm{normOn}\,\lambda=0$, $\mathrm{normOn}\,\lambda'=\log2$,
+   $\mathrm{normOn}(\lambda\lambda')\ge\log200$. Ebenso falsch ist
+   `dist_le_of_normOn_le`, aus einem zweiten Grund: `TimeChange` hat keinen
+   Anker, und eine Translation hat Norm $0$. Meilenstein 3 führt seither die
+   **globale** `TimeChange.lipConst`/`TimeChange.norm` samt Attainment
+   (`lipschitzWith_lipConst`), `lipConst_one`, `lipConst_of_subsingleton`,
+   `lipConst_mul_le`, `one_le_max_lipConst`, `norm_one`, `norm_inv`,
+   `norm_mul_le` — alle bewiesen —, Meilenstein 4 baut `distOn` darauf statt
+   auf `normOn`, und `dist_le_of_norm_le` trägt die Hypothese `λ t₀ = t₀`. 15
+   `sorry`; die beiden verbliebenen Definitionen mit `sorry` im Rumpf sind
+   `SkorokhodSpace.modulus` und `MetricSpace D(ι, E)`. Nächstes benanntes Ziel:
+   `TimeChange.dist_le_of_norm_le`, Weg im Inventar.
+
+   *Fortgesetzt am 2026-09-07, zweiter Lauf des Tages: `dist_le_of_norm_le` ist
+   bewiesen, und `not_normOn_mul_le` gleich mit.* **Die Zeitänderungsschicht der
+   Meilensteine 3 und 4 hat damit kein `sorry` mehr.** Der erste Beweis läuft
+   über eine neue Aussage von Meilenstein 1,
+   `dist_eq_abs_sub_of_sameSide` — für $s,t$ auf **einer** Seite von $t_0$ ist
+   $\mathrm{dist}(s,t)=|\mathrm{dist}(t_0,t)-\mathrm{dist}(t_0,s)|$ —, und
+   braucht weder `OrderTopology` noch `ProperSpace`, insbesondere nicht die
+   Kompaktheit des Fensters. Der zweite ist der ausgeschriebene Zeuge auf $\R$:
+   `TimeChange.steep` und `TimeChange.double`, dazu `Real.instAdditiveDist`,
+   die erste der vier laufenden Instanzen von Meilenstein 1. Die Datei geht
+   durch `lake env lean` gegen `v4.33.1`, ohne Fehler und ohne Linterwarnung;
+   13 `sorry` statt 15. Die verbliebenen 13 sind
+   `exists_orderIso_isometry_real` (M1), `countable_leftJumpSet` und
+   `IsCadlag.measurable` (M2) und die zehn, die von der `MetricSpace D(ι, E)`-
+   Instanz an folgen. **Im selben Lauf ist Meilenstein 1 fertig geworden:**
+   `exhaustionMin`, `exhaustionMax`, `clamp` und seine fünf Eigenschaften, dazu
+   `ordConnected_exhaustion` — ohne das ist der Klemmoperator gar nicht im
+   Fenster, was der Meilensteintext übersehen hatte. Nächstes benanntes Ziel:
+   `SkorokhodSpace.restrictExhaustion` und `SkorokhodSpace.distOn` samt der
+   Untergruppe `TimeChange.fixing t₀`, Weg im Inventar.
+
+   *Fortgesetzt am 2026-09-07, dritter Lauf des Tages: die beiden Daten der
+   Metrik stehen, und eine Aussage von Meilenstein 2 war unter ihrem Bündel
+   falsch.* `TimeChange.fixing t₀` (Untergruppe), `restrictExhaustion` (samt der
+   dafür fehlenden Aussage `IsCadlag.comp_monotone_continuous` von Meilenstein 2)
+   und `SkorokhodSpace.distOn` sind geschrieben und bewiesen, dazu
+   `isBounded_range_restrictExhaustion`,
+   `bddAbove_range_dist_restrictExhaustion`, `bddBelow_range_distOn`,
+   `distOn_nonneg`, `distOn_self`, `distOn_comm`, `exists_lt_distOn_add` und
+   `distOn_triangle` — fünfzehn neue Deklarationen, alle bewiesen, `rc=0`, keine
+   Linterwarnung, weiterhin 13 `sorry`. **Von den Metrikaxiomen fehlt nur noch
+   die Trennung.** `IsCadlag.isBounded_image_of_isCompact` stand unter dem
+   Bündel (A), einer bloßen Präordnung, und ist dort **falsch**; der Zeuge
+   ($\N\cup\{\omega\}$ mit unvergleichbarem $\omega$) steht in der Roadmap und
+   im Inventar. Nächstes benanntes Ziel: `countable_leftJumpSet`, das seit
+   diesem Lauf auf dem kritischen Weg zur Trennung liegt; Weg im Inventar.
+
    Die Frage, ob Hypothese (a) von `mpSolution_of_tendsto` gemeinsame oder
    einzelne Verteilungskonvergenz meint, ist am Manuskript entschieden —
    `rem:absconvtopfree` sagt es ausdrücklich: einzeln, „and nothing else".

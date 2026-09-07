@@ -103,19 +103,44 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   for `AddSubgroup.zmultiples h` from `AddSubgroup.isClosed_of_discrete`;
   `OrderTopology` for an order-connected subset follows from the existing
   instance, and for a discrete subset from the two items above. As standalone
-  types `ℝ` and `ℤ` carry all five instances already.
+  types `ℝ` and `ℤ` carry all five instances already. `Real.instAdditiveDist`
+  is written and proved (2026-09-07) — three `abs_of_nonpos` and a `ring` on
+  `Real.dist_eq` —, because `TimeChange.not_normOn_mul_le` of Milestone 3
+  instantiates its refutation at `ℝ` and cannot do so without it. The other
+  three follow from it through `instAdditiveDistSubtype`.
 * `dist_eq_sub_of_le` and `monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
   `dist s t = dist t₀ t - dist t₀ s`, and `t ↦ dist t₀ t` is monotone on
   `Set.Ici t₀`. This is the step from which the embedding above follows. Both
   are proved (2026-09-06), and both need `AdditiveDist` alone: neither the order
   topology nor properness enters.
+* `dist_eq_abs_sub_of_sameSide`: for `s` and `t` on one side of `t₀` — both
+  above it or both below it — `dist s t = |dist t₀ t - dist t₀ s|`. This is the
+  two sided form of the previous item, and it is the form the estimate of
+  Milestone 3 consumes, where the two points compared are `t` and its image
+  under a time change fixing `t₀`, so that only their common position relative
+  to `t₀` is known. The hypothesis is necessary: on `ℝ` with `t₀ = 0`, `s = -1`
+  and `t = 1` the left hand side is `2` and the right hand side is `0`. Proved
+  (2026-09-07), again from `AdditiveDist` alone.
 * `exhaustion`: fixing a base point `t₀`, the sets `B m = closedBall t₀ m` are
   compact — `isCompact_exhaustion`, proved on 2026-09-06 from
   `isCompact_closedBall`, which is `ProperSpace` alone —, increasing, cover the
   index, and each is a linear order with a least
   and a greatest element. Define the clamp
   `clamp m t = min (max t (B m).min) (B m).max` and prove it is monotone,
-  continuous, idempotent, and the identity on `B m`.
+  continuous, idempotent, and the identity on `B m`. All of this is written and
+  proved (2026-09-07): `mem_exhaustion_self`, `exhaustionMin` and
+  `exhaustionMax` with their `isLeast`/`isGreatest` characterisations from
+  `IsCompact.exists_isLeast` and `IsCompact.exists_isGreatest`
+  (`Topology/Order/Compact.lean:148` and `:160`, both under the
+  `Closed{Iic,Ici}Topology` that `OrderTopology` supplies), then `clamp`,
+  `monotone_clamp`, `continuous_clamp`, `clamp_mem_exhaustion`,
+  `clamp_eq_self` and `clamp_idem`.
+* `ordConnected_exhaustion`: the window is an order interval. This is the step
+  the clamp actually needs — being between the least and the greatest element
+  of a set does not put a point in the set unless the set is order convex — and
+  it is `AdditiveDist` again: above the base point `monotoneOn_dist_basepoint`
+  gives it, below the base point the additivity is read from the other end.
+  Proved (2026-09-07). It needs neither the order topology nor properness.
 * Independence of the base point: two base points give exhaustions each of which
   refines the other after finitely many steps.
 
@@ -171,9 +196,6 @@ Under (A), for `f : ι → E`:
 * Basic closure properties: constants, compositions with continuous maps, sums
   and products in a topological ring, pointwise limits that are uniform on
   compacts, and the restriction of a càdlàg function to a subinterval.
-* `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
-  càdlàg map into a pseudometric space is bounded. The metric here is on `E`;
-  the index contributes compactness of the domain and nothing else.
 * `IsCadlag` for a continuous map.
 
 Under (A′):
@@ -189,6 +211,35 @@ Under (A′):
 * The identity `Function.leftLim f x = f x` at continuity points, from
   `ContinuousWithinAt.leftLim_eq` applied to the restriction of continuity at
   `x` to `Iic x`, with `[T2Space E]`.
+* `IsCadlag.comp_monotone_continuous`: `f ∘ g` is càdlàg for càdlàg `f` and
+  monotone continuous `g : ι → ι`. This is what puts
+  `SkorokhodSpace.restrictExhaustion` of Milestone 4 back into the space, `clamp`
+  being monotone and continuous. Proved (2026-09-07). Both fields use the
+  monotonicity, and differently. On the right, `g` maps `Set.Ioi a` into
+  `Set.Ici (g a)`, which is where the right continuity of `f` is read, through
+  `continuousWithinAt_Ioi_iff_Ici`. On the left the proof splits: either `g` is
+  already constant to the left of `x`, and then so is `f ∘ g` on the whole
+  interval between the two equal values, or `g y < g x` for every `y < x`, and
+  then `g` tends to `g x` from strictly below, so the left limit of `f` at `g x`
+  is the left limit of `f ∘ g` at `x`. The first branch is the only place in
+  this milestone that uses the order topology, through `Ioo_mem_nhdsLT`.
+* `IsCadlag.isBounded_image_of_isCompact`: the image of a compact set under a
+  càdlàg map into a pseudometric space is bounded. Proved (2026-09-07), and the
+  proof is where the bundle of this item was found to be wrong. It needs the
+  **linear** order and nothing else of (A′) --- not the order topology ---
+  because it splits a neighbourhood of a point into its two one sided halves by
+  `nhdsLT_sup_nhdsGE`, `𝓝[<] x ⊔ 𝓝[≥] x = 𝓝 x`, which is `Iio x ∪ Ici x = univ`
+  and holds under `[TopologicalSpace ι] [LinearOrder ι]` alone; the two fields
+  of `IsCadlag` then bound `f` on each half.
+
+  Under (A) the statement is **false**, so this item cannot stay there. Take
+  `ι = ℕ ∪ {ω}` with the one point compactification of the discrete topology on
+  `ℕ`, ordered so that `ℕ` carries its usual order and `ω` is incomparable to
+  everything. Every point of `ℕ` is isolated and `Set.Iio ω = Set.Ioi ω = ∅`, so
+  `𝓝[<] x` and `𝓝[>] x` are `⊥` at every `x` and **every** `f : ι → ℝ` is
+  càdlàg; `ι` is compact; and `f n = n` has unbounded image. What fails is
+  exactly the split above: `ω` has neighbourhoods containing cofinitely much of
+  `ℕ`, and neither field of `IsCadlag` says anything there.
 
 Under (B), with `E` a pseudometric space:
 
@@ -257,21 +308,87 @@ Under (B), with `E` a pseudometric space:
   attained because `ι` is a metric space, so `edist s t ≠ ∞`, and the inequality
   `edist (λ s) (λ t) ≤ K * edist s t` passes to the infimum over `K` in
   `ℝ≥0∞`. With it `lipConst_one`, `lipConst_le_iff` and the submultiplicativity
-  `lipConst (λ * μ) ≤ lipConst λ * lipConst μ` from `LipschitzWith.comp`.
+  `lipConst (λ * μ) ≤ lipConst λ * lipConst μ` from `LipschitzWith.comp`. All of
+  this is proved (2026-09-07): `lipschitzWith_lipConst` is the attainment, over
+  `ENNReal.div_le_iff_le_mul` and `le_csInf`; `lipConst_one` needs
+  `[Nontrivial ι]` and is `1`, and `lipConst_of_subsingleton` is the other case,
+  where every constant is admissible and the least one is `0`;
+  `lipConst_mul_le` is `csInf_le'` applied to `LipschitzWith.comp` of the two
+  attained constants, through `OrderIso.coe_trans`.
 * `TimeChange.norm_one`, `TimeChange.norm_inv` (`norm λ⁻¹ = norm λ`) and
   `TimeChange.norm_mul_le` (`norm (λ * μ) ≤ norm λ + norm μ`): the norm is a
-  length function. Both facts are the corresponding statements for Lipschitz
-  constants. `normOn_inv` is proved (2026-09-06), from `inv_inv` and `max_comm`
-  alone, once `normOn` is defined as above. `normOn_one` holds for two reasons
-  and needs the case distinction: if `B m` has two distinct points the set of
+  length function. All three are proved (2026-09-07). `norm_inv` is `inv_inv`
+  and `max_comm`; `norm_one` and `norm_mul_le` split on
+  `subsingleton_or_nontrivial ι`, because on a subsingleton index every constant
+  is admissible, every `lipConst` is `0`, and it is the junk value
+  `Real.log 0 = 0` that carries the statement. On a nontrivial index the step
+  that makes the logarithm well behaved is `one_le_max_lipConst`,
+  `1 ≤ max (lipConst λ) (lipConst λ⁻¹)`: the two constants multiply to at least
+  `lipConst 1 = 1`, hence so does the square of their maximum. The same step
+  gives `TimeChange.norm_nonneg`, `0 ≤ norm λ`, also proved, which is what makes
+  the `max` in the `distOn` of Milestone 4 the intended quantity.
+* **The windowed norm is not a length function**, and `normOn_mul_le` is
+  therefore *not* part of this milestone: it is false. `not_normOn_mul_le`
+  states the refutation. On `ι = ℝ` with `t₀ = 0` and `m = 1`, so `B 1 = [-1,1]`,
+  take `λ' = (2 • ·)` and let `λ` be the piecewise linear order isomorphism that
+  is the identity on `Iic 1` and has slope `100` on `Ici 1`. Then `λ` and `λ⁻¹`
+  are the identity on `B 1`, so `normOn 0 1 λ = 0`, and `normOn 0 1 λ' = log 2`;
+  but `(λ * λ') x = λ (2 * x)` carries `1/2` to `1` and `1` to `101`, so
+  `normOn 0 1 (λ * λ') ≥ log 200`. The reason is structural and not an artefact
+  of the example: the inner factor of a composite need not map the window into
+  itself, and outside the window the outer factor is unconstrained, so the
+  failure can be made arbitrarily large. Milestone 4 therefore measures time
+  changes with the **global** `norm`, exactly as Billingsley does — his `d°ₘ`
+  truncates the *paths* to the window and leaves the time change untruncated.
+  Proved (2026-09-07), so the choice Milestone 4 makes rests on a theorem. The
+  two witnesses are part of this milestone: `TimeChange.steep`, the piecewise
+  linear map above, written as `x ↦ max x (100 * x - 99)` with inverse
+  `y ↦ min y ((y + 99) / 100)`, and `TimeChange.double`, `x ↦ 2 * x` with
+  inverse `y ↦ y / 2`. Writing them as a `max` resp. a `min` of two affine maps
+  rather than with an `if` is what makes them cheap: `max_lt_max` gives strict
+  monotonicity, `LipschitzWith.max` and `LipschitzWith.min` the two Lipschitz
+  bounds, and the inverse is again of the same shape, so
+  `StrictMono.orderIsoOfRightInverse` applies with no case analysis beyond the
+  single `rcases le_total y 1` of the right inverse identity. The three
+  estimates are stated separately — `normOn_steep_le`, `normOn_double_le`,
+  `le_normOn_steep_mul_double` — and only the last needs the infimum from below,
+  through `le_csInf` on the two points `1/2` and `1` of the window.
+  What survives of the windowed norm is `normOn_inv` and `normOn_one`, both
+  proved (2026-09-06 and 2026-09-07); `normOn_one` holds for two reasons and
+  needs the case distinction: if `B m` has two distinct points the set of
   admissible constants of the identity is `Set.Ici 1`, so `lipConstOn = 1` and
   `log 1 = 0`; if `B m` is a single point — `m = 0` in a discrete index — every
-  constant is admissible, `lipConstOn = 0`, and it is the junk value
+  constant is admissible, `lipConstOn = 0`, and it is again the junk value
   `Real.log 0 = 0` that carries the statement.
-* `TimeChange.dist_le_of_norm_le`: on `B m`, `norm λ ≤ γ` implies
+* `TimeChange.dist_le_of_norm_le`: for a time change **fixing the base point**,
+  `λ t₀ = t₀`, and `t ∈ B m`, `norm λ ≤ γ` implies
   `dist (λ t) t ≤ (exp γ - 1) * (2 * m)`, so a time change of small norm moves
   points of `B m` little. This is the estimate that makes the metric of
-  Milestone 4 separate points.
+  Milestone 4 separate points. The anchor `λ t₀ = t₀` is not decoration: without
+  it the statement is false, because a translation of `ℝ` is an order
+  isomorphism with `lipConst = 1` in both directions, hence of norm `0`, and it
+  moves every point by the same arbitrary amount, while the bound at `γ = 0` is
+  `0`. Billingsley gets the anchor for free — his `Λ` consists of the increasing
+  homeomorphisms of `[0,∞)` onto itself and they all fix `0` — and on a two
+  sided index it has to be imposed. The time changes fixing `t₀` form a
+  subgroup, so `norm_one`, `norm_inv` and `norm_mul_le` restrict to it unchanged.
+  Proved (2026-09-07). The anchor and the order isomorphism put `t` and `λ t` on
+  one side of `t₀`, so `dist_eq_abs_sub_of_sameSide` of Milestone 1 turns the
+  left hand side into `|dist t₀ (λ t) - dist t₀ t|`; `lipschitzWith_lipConst`,
+  applied to `λ` and to `λ⁻¹` and read through `log (max …) ≤ γ`, squeezes
+  `dist t₀ (λ t)` between `e^{-γ}` and `e^{γ}` times `dist t₀ t`, and
+  `dist t₀ t ≤ m` closes it. The bound obtained is `(exp γ - 1) * m`, half of
+  what is claimed. The statement needs neither `OrderTopology` nor
+  `ProperSpace`, and in particular not the compactness of `B m`: the window
+  enters only through `dist t₀ t ≤ m`. It is the first statement of this
+  milestone that uses `AdditiveDist` at all, and so the first check that
+  Milestone 1 carries the right class.
+* `TimeChange.fixing t₀`, the time changes with `λ t₀ = t₀`, as a
+  `Subgroup (TimeChange ι)`. This is the index of the infimum of Milestone 4,
+  and it is a subgroup precisely so that `norm_one`, `norm_inv` and
+  `norm_mul_le` restrict to it unchanged --- the three metric axioms are read
+  off them there. Written and proved (2026-09-07), with
+  `TimeChange.mem_fixing_iff` as its `Iff.rfl` interface.
 * For the index `ℝ`, the identification of `norm` with Billingsley's
   `sup_{s < t} |log ((λ t - λ s) / (t - s))|`.
 
@@ -279,20 +396,59 @@ Under (B), with `E` a pseudometric space:
 
 * `SkorokhodSpace ι E`, notation `D ι E`, the type of càdlàg maps `ι → E`,
   as a structure bundling `toFun` with `isCadlag`.
-* `SkorokhodSpace.restrictExhaustion m f = f ∘ clamp m`, a path constant outside
-  `B m`.
+* `SkorokhodSpace.restrictExhaustion t₀ m f = f ∘ clamp t₀ m`, a path constant
+  outside `B m`. Written and proved to be càdlàg again (2026-09-07), from
+  `IsCadlag.comp_monotone_continuous` of Milestone 2 on `monotone_clamp` and
+  `continuous_clamp` of Milestone 1, with `restrictExhaustion_apply` and
+  `restrictExhaustion_eq_self` --- it agrees with `f` on `B m` --- as its
+  interface.
 * The localized distances
   ```
-  distOn m f g = ⨅ λ, max (TimeChange.normOn m λ)
+  distOn m f g = ⨅ λ, max (TimeChange.norm λ)
                           (⨆ t, r (restrictExhaustion m f (λ t)) (restrictExhaustion m g t))
   dist f g     = ∑' m, 2⁻¹ ^ m * min 1 (distOn m f g)
   ```
-  Prove the supremum is attained on `B m` and is finite.
+  The infimum runs over the time changes fixing the base point, `TimeChange.fixing t₀`
+  of Milestone 3, and the norm in it is the **global**
+  `TimeChange.norm`, not `normOn m`: only the paths are localized to `B m`, the
+  time change is not. This is Billingsley's `d°ₘ` verbatim, and it is forced —
+  the windowed norm is not subadditive (`not_normOn_mul_le`, Milestone 3), so a
+  `distOn` built on it would have no triangle inequality.
+
+  `distOn` is written (2026-09-07), and the two boundedness conditions it needs
+  in order to be the intended quantity are theorems:
+  `SkorokhodSpace.bddAbove_range_dist_restrictExhaustion`, so that the supremum
+  is the supremum and not the junk value `0`, and
+  `SkorokhodSpace.bddBelow_range_distOn`, so that `ciInf_le` applies to the
+  infimum. The first runs over
+  `SkorokhodSpace.isBounded_range_restrictExhaustion` — the truncated path has
+  bounded range, because its range is contained in the image of the compact
+  window — and this is the **only** place in Milestones 3 and 4 where the
+  compactness of `B m` is used at all. The second is `TimeChange.norm_nonneg`.
+
+  The supremum is taken over all of `ι` and not over `B m`. The two agree,
+  because both paths are constant outside the window, and quantifying over `ι`
+  is what makes the reindexing in `distOn_comm` a bijection of the index rather
+  than of a subset that the time change need not preserve.
 * `MetricSpace (D ι E)`: symmetry from `TimeChange.norm_inv`, the triangle
   inequality from `TimeChange.norm_mul_le`, and separation from
   `TimeChange.dist_le_of_norm_le` together with right continuity.
+  `SkorokhodSpace.distOn_nonneg`, `SkorokhodSpace.distOn_self`,
+  `SkorokhodSpace.distOn_comm` and `SkorokhodSpace.distOn_triangle` are proved
+  (2026-09-07), so of the axioms only the separation is left. Symmetry and the
+  triangle inequality are the two that read the subgroup structure of
+  Milestone 3, and they read it from the two sides. Symmetry: `λ ↦ λ⁻¹` is a
+  bijection of `TimeChange.fixing t₀`, `norm_inv` leaves the norm unchanged, and
+  the supremum is reindexed along the bijection `λ` of `ι`, which turns
+  `dist (f (λ t)) (g t)` into `dist (g (λ⁻¹ s)) (f s)` term by term. Triangle:
+  the witness for the composite is `λ * λ'`, which has to be admissible again,
+  and the `max` splits, `norm_mul_le` carrying one half and the triangle
+  inequality of `E` the other, with the middle path evaluated at `λ' t`. The
+  infimum is not attained, so the argument runs with an `ε` and
+  `SkorokhodSpace.exists_lt_distOn_add`, which is `exists_lt_of_ciInf_lt` on
+  `bddBelow_range_distOn`.
 * `SkorokhodSpace.tendsto_iff`: `f n → f` if and only if for every `m` there are
-  time changes `λ n` with `normOn m (λ n) → 0` and
+  time changes `λ n` fixing the base point with `norm (λ n) → 0` and
   `sup_{t ∈ B m} r (f n (λ n t)) (f t) → 0`.
 * `SkorokhodSpace.tendsto_of_tendsto_uniformly`: uniform convergence on compact
   sets implies convergence in `D ι E`; and the converse when the limit is

@@ -5483,3 +5483,472 @@ Meilenstein deshalb `normOn` auf `exhaustion t₀ (m+1)` für den inneren Faktor
 messen muß, wie Billingsley es tut, oder ob die Ordnungserhaltung samt
 `dist_le_of_normOn_le` genügt. Beides stützt `fact:Dcountable` (tragend `4`)
 über die Meilensteine 3 und 4, deren ganze Metrik daran hängt.
+
+### 2026-09-07, erster Lauf des Tages — Rückstau 1: die Länge der Zeitänderungen, und zwei weitere falsche Aussagen
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also der Rückstau von oben,
+und dort das benannte Ziel des fünften Laufs vom 2026-09-06:
+`TimeChange.normOn_one` und `TimeChange.normOn_mul_le` **zu beweisen**. Das
+erste ist bewiesen. Das zweite ist **falsch**, und zwar nicht knapp; die Frage,
+die der Vorschlag für diesen Lauf offen ließ — „muß der Meilenstein `normOn` für
+den inneren Faktor auf `exhaustion t₀ (m+1)` messen, wie Billingsley es tut,
+oder genügt die Ordnungserhaltung?" — ist damit beantwortet, und die Antwort ist
+keine von beiden: **die gefensterte Norm muß ganz weg.** Billingsley mißt die
+Zeitänderung gar nicht auf dem Fenster, sondern **global**; lokalisiert werden
+bei ihm nur die *Pfade*. Elf Deklarationen tragen jetzt Beweise, die durch
+`lake env lean` gegen `v4.33.1` gehen (Lean `4.33.1`, commit `819816b2`, Mathlib
+`0df444a3`); die Datei meldet `rc=0`, ohne Fehler und ohne Linterwarnung.
+
+**1. `TimeChange.normOn_mul_le` ist falsch, mit einem Zeugen auf `ℝ`.** Der
+Grund ist strukturell und kein Artefakt: `LipschitzOnWith.comp` verlangt, daß
+der innere Faktor das Fenster in sich abbildet, und eine Zeitänderung tut das
+nicht; außerhalb des Fensters ist der äußere Faktor durch `normOn` überhaupt
+nicht eingeschränkt. Der Zeuge, mit $\iota=\mathbb R$, $t_0=0$, $m=1$, also
+$B_1=[-1,1]$:
+
+* $\lambda' (x) = 2x$, also `lipConstOn` $=2$, für die Inverse $1/2$, und
+  $\mathrm{normOn}\,\lambda' = \log 2$.
+* $\lambda$ die stückweis lineare Ordnungsisomorphie, die auf $(-\infty,1]$ die
+  Identität ist und auf $[1,\infty)$ die Steigung $100$ hat. Auf $B_1$ sind
+  $\lambda$ **und** $\lambda^{-1}$ die Identität, also
+  $\mathrm{normOn}\,\lambda = \log 1 = 0$.
+* $(\lambda\lambda')(x) = \lambda(2x)$ schickt $1/2$ auf $1$ und $1$ auf $101$;
+  jede auf $B_1$ zulässige Konstante ist also $\ge 200$, und
+  $\mathrm{normOn}(\lambda\lambda') \ge \log 200 > \log 2$.
+
+Die Lücke ist beliebig groß zu machen: die Steigung $100$ ist frei. Damit fällt
+auch die Bauform von Meilenstein 4: `distOn m` stand dort auf
+`TimeChange.normOn m λ`, und ein `distOn` über einer nicht subadditiven Größe
+hat keine Dreiecksungleichung. Es steht jetzt auf der globalen
+`TimeChange.norm`, mit der Begründung im Meilenstein; ebenso
+`SkorokhodSpace.tendsto_iff`. Die Aussage selbst steht als
+`TimeChange.not_normOn_mul_le` in `Suggested.lean` — über dem **vollen** Bündel
+von Meilenstein 1 quantifiziert, denn nur so widerlegt sie die Roadmap-Aussage
+und nicht bloß eine allgemeinere —, mit der Rechnung im Doc-Kommentar und
+`sorry` als Beweis.
+
+**2. `TimeChange.dist_le_of_normOn_le` ist ebenfalls falsch, aus einem zweiten,
+unabhängigen Grund: `TimeChange` hat keinen Anker.** Eine Translation von
+$\mathbb R$ ist eine Ordnungsisomorphie mit `lipConst` $=1$ in beiden
+Richtungen, hat also Norm $0$, und verschiebt jeden Punkt um denselben
+beliebigen Betrag. Für $\gamma=0$ behauptet die Aussage
+$\mathrm{dist}(\lambda t,t)\le 0$, also $\lambda=\mathrm{id}$ auf dem Fenster.
+Billingsley bekommt den Anker geschenkt, weil sein $\Lambda$ aus den wachsenden
+Homöomorphismen von $[0,\infty)$ auf sich besteht und die alle $0$ festhalten;
+auf einem zweiseitigen Index muß er gefordert werden. Die Aussage heißt jetzt
+`TimeChange.dist_le_of_norm_le` und trägt die Hypothese `l.toOrderIso t₀ = t₀`.
+Die Zeitänderungen, die $t_0$ festhalten, sind eine Untergruppe, also übertragen
+sich `norm_one`, `norm_inv` und `norm_mul_le` unverändert auf sie; das Infimum
+in `distOn` läuft im Meilenstein jetzt über diese Untergruppe.
+
+**3. Was gebaut ist.** Der ganze globale Unterbau von Meilenstein 3, bewiesen:
+
+* `TimeChange.lipConst λ = sInf {K | LipschitzWith K λ}` und
+  `TimeChange.lipschitzWith_lipConst`, die **Attainment** — genau der Punkt, den
+  der Meilenstein als „das Infimum wird angenommen, weil `ι` ein metrischer Raum
+  ist" beschreibt. Der Beweis dividiert: `ENNReal.div_le_iff_le_mul` mit
+  `edist x y ≠ 0` und `≠ ⊤` macht aus `edist (λx) (λy) ≤ K * edist x y` die
+  Aussage, daß der Quotient eine untere Schranke der zulässigen `K` ist, und
+  `le_csInf` schließt ab. Für den Rückweg braucht es `ENNReal.coe_toNNReal`,
+  weil der Quotient endlich ist.
+* `TimeChange.lipConst_one` (`[Nontrivial ι]`, Wert `1`) und
+  `TimeChange.lipConst_of_subsingleton` (Wert `0`): die beiden Hälften, die
+  `normOn_one` schon am 2026-09-06 als Fallunterscheidung angekündigt hatte,
+  hier global.
+* `TimeChange.lipConst_mul_le`, `csInf_le'` auf `LipschitzWith.comp` der beiden
+  angenommenen Konstanten, über `OrderIso.coe_trans` für `l * l' = l ∘ l'`.
+* `TimeChange.norm`, `TimeChange.norm_inv`, `TimeChange.norm_one`,
+  `TimeChange.norm_mul_le` — die Längenfunktion, vollständig. Der Schritt, der
+  den Logarithmus überhaupt gutartig macht, ist eigens benannt:
+  `TimeChange.one_le_max_lipConst`, $1\le\max(\mathrm{lipConst}\,\lambda,
+  \mathrm{lipConst}\,\lambda^{-1})$ auf nichttrivialem Index, denn die beiden
+  Konstanten multiplizieren sich zu mindestens $\mathrm{lipConst}\,1 = 1$, also
+  auch das Quadrat ihres Maximums. Ohne ihn ist `Real.log_le_log` nicht
+  anwendbar. Derselbe Schritt gibt `TimeChange.norm_nonneg`, auch bewiesen —
+  ohne das ist das `max` in `distOn` nicht die gemeinte Größe.
+* **Und dabei fiel ein zweites Symptom der falschen `normOn` an:
+  `normOn` kann negativ sein.** `lipConstOn` mißt $\lambda$ auf dem Fenster und
+  $\lambda^{-1}$ **ebenfalls auf dem Fenster**, nicht auf dessen Bild, also
+  können beide zugleich $1/2$ sein: auf $\R$ mit $B_1=[-1,1]$ habe $\lambda$ die
+  Steigung $1/2$ auf $[-1,1]$ und die Steigung $2$ auf $[-6,-5]$, wo es die
+  Werte $[-1,1]$ annimmt. Dann ist $\mathrm{normOn}\,\lambda = -\log 2 < 0$. Die
+  Bemerkung steht am Doc-Kommentar von `norm_nonneg`.
+* `TimeChange.normOn_one`, das benannte Ziel, in der angekündigten Gestalt: die
+  Fallunterscheidung nach `(exhaustion t₀ m).Subsingleton`, im ersten Zweig
+  `lipConstOn = 0` und der Müllwert `Real.log 0 = 0`, im zweiten
+  `lipConstOn = 1` über `csInf_le'` und `le_csInf`, mit derselben
+  Divisionsrechnung wie oben.
+
+**4. Vier Mathlib-Beobachtungen, alle beim Übersetzen angefallen und alle für
+künftige Läufe teuer, wenn sie nicht dastehen.**
+
+* **`ℝ≥0∞` ist nicht in `open scoped NNReal`.** Es braucht
+  `open scoped ENNReal`. Der Parser meldet dafür „expected token" mitten in
+  einem Typ, was nicht nach einer fehlenden Notation aussieht.
+* **`mul_le_mul_left'` gibt es in `v4.33.1` nicht mehr** — „Unknown
+  identifier"; ein Volltextlauf über `Mathlib/` findet nur noch
+  `le_of_mul_le_mul_left'`. Was es gibt, ist `mul_le_mul_left`
+  (`Algebra/Order/Monoid/Unbundled/Basic.lean:78`), und es ist trotz des Namens
+  die **rechte** Multiplikation, mit der Hypothese als erstem Argument:
+  `(bc : b ≤ c) (a : α) : b * a ≤ c * a`. `mul_le_mul'` (`:203`) ist
+  unverändert.
+* **`zero_le` nimmt sein Argument implizit**, `zero_le _` ist ein Typfehler
+  („Function expected").
+* **`push_neg` ist deprecated**, zugunsten von `push Not`. Hier durch
+  `rw [not_le]` ersetzt, was ohnehin kürzer ist.
+
+**Stand der Datei.** `SkorokhodSpace/Suggested.lean`: 15 `sorry` statt 16, und
+die Zahl unterschätzt den Fortschritt, weil zwei der weggefallenen Aussagen
+falsch waren und durch eine berichtigte und eine Widerlegung ersetzt sind. Von
+den fünf Deklarationen mit `sorry` **im Rumpf einer Definition**, die der
+fünfte Lauf vom 2026-09-06 als die eigentliche Schwäche der Datei benannt hat,
+bleiben `SkorokhodSpace.modulus` und die `MetricSpace D(ι, E)`-Instanz; unter
+der Instanz hängen `CompleteSpace`, `SeparableSpace`, `PolishSpace` und
+`continuousAt_eval`.
+
+**Was offen blieb.** `TimeChange.not_normOn_mul_le` trägt `sorry`. Die Rechnung
+im Doc-Kommentar ist vollständig und elementar, aber sie ist nicht übersetzt;
+dafür fehlt die stückweis lineare Ordnungsisomorphie von $\mathbb R$ als Term
+(`StrictMono.orderIsoOfRightInverse`, `Order/Hom/Basic.lean:1206`, gibt sie her,
+zusammen mit ihrer Inversen) und die drei `lipConstOn`-Auswertungen.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+`TimeChange.dist_le_of_norm_le` **zu beweisen**. Sie ist jetzt dran, weil sie
+seit heute richtig ausgesprochen ist — mit dem Anker `λ t₀ = t₀` —, weil
+`lipschitzWith_lipConst` seit heute das Werkzeug liefert, mit dem aus
+`norm λ ≤ γ` überhaupt eine Abschätzung von `edist (λ t) (λ t₀)` wird, und weil
+sie die letzte der drei Aussagen über `norm` ist, auf denen Meilenstein 4 die
+Metrik aufbaut: Symmetrie aus `norm_inv`, Dreieck aus `norm_mul_le`, beide seit
+heute bewiesen, und **Trennung** aus genau dieser. Der Weg steht fest und ist
+kurz: für $t\ge t_0$ ist $\lambda t\ge\lambda t_0=t_0$, also gibt `AdditiveDist`
+über `dist_eq_sub_of_le` die Identität
+$\mathrm{dist}(\lambda t,t)=|\mathrm{dist}(t_0,\lambda t)-\mathrm{dist}(t_0,t)|$,
+und `lipschitzWith_lipConst` für $\lambda$ und für $\lambda^{-1}$ klemmt
+$\mathrm{dist}(t_0,\lambda t)$ zwischen $e^{-\gamma}\mathrm{dist}(t_0,t)$ und
+$e^{\gamma}\mathrm{dist}(t_0,t)$ ein; der Fall $t\le t_0$ ist symmetrisch. Das
+ist die erste Stelle des ganzen Meilensteins, an der `AdditiveDist` wirklich
+gebraucht wird, und damit zugleich die Probe darauf, daß Meilenstein 1 die
+richtige Klasse führt. Sie stützt `fact:Dcountable` (tragend `4`) über die
+Meilensteine 3 und 4.
+
+### 2026-09-07, zweiter Lauf des Tages — Rückstau 1: die Zeitänderungsschicht ist fertig, und der Zeuge gegen die gefensterte Norm ist übersetzt
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also wieder der Rückstau von
+oben und dort das benannte Ziel des ersten Laufs von heute,
+`TimeChange.dist_le_of_norm_le` **zu beweisen**. Es ist bewiesen, und der
+Restposten desselben Laufs, `TimeChange.not_normOn_mul_le`, gleich mit.
+**Damit trägt die Zeitänderungsschicht der Meilensteine 3 und 4 kein `sorry`
+mehr.** `SkorokhodSpace/Suggested.lean` geht durch `lake env lean` gegen
+`v4.33.1` (Lean `4.33.1`, commit `819816b2`), ohne Fehler und ohne
+Linterwarnung; 13 `sorry` statt 15.
+
+**1. `dist_le_of_norm_le`, und eine Aussage von Meilenstein 1, die dabei
+angefallen ist.** Der im Vorschlag skizzierte Weg trägt, aber er ist an einer
+Stelle länger als angekündigt: `dist_eq_sub_of_le` verlangt $t_0\le s\le t$,
+und der Beweis hat nur, daß $t$ und $\lambda t$ **auf einer Seite** von $t_0$
+liegen — welche, entscheidet sich erst in der Fallunterscheidung, und
+unterhalb von $t_0$ steht $t_0$ am falschen Ende der Additivität. Der
+Zwischenschritt ist deshalb als eigene Aussage von Meilenstein 1
+aufgeschrieben:
+
+* `dist_eq_abs_sub_of_sameSide` — sind $s$ und $t$ beide $\ge t_0$ oder beide
+  $\le t_0$, so ist $\mathrm{dist}(s,t)=|\mathrm{dist}(t_0,t)-
+  \mathrm{dist}(t_0,s)|$. Vier Zweige (zwei Seiten, je `le_total s t`), in
+  zweien davon `AdditiveDist.dist_add` direkt statt über `dist_eq_sub_of_le`,
+  weil dort $t_0$ oben steht; der Absolutbetrag wird jedesmal aus
+  `dist_nonneg` aufgelöst. Die Voraussetzung ist **nicht** entbehrlich: auf
+  $\mathbb R$ mit $t_0=0$, $s=-1$, $t=1$ steht links $2$ und rechts $0$. Wie
+  `dist_eq_sub_of_le` braucht sie `AdditiveDist` allein.
+
+Der Satz selbst geht dann in einem Zug: `norm_nonneg` gibt $\gamma\ge0$,
+`Real.log_le_iff_le_exp` macht aus $\log\max(\ldots)\le\gamma$ die Schranke
+$\max\le e^\gamma$ (mit dem Subsingleton-Zweig eigens, weil dort
+`lipConst = 0` und der Logarithmus sein Müllwert ist),
+`lipschitzWith_lipConst.dist_le_mul` für $\lambda$ und für $\lambda^{-1}$
+klemmt $d'=\mathrm{dist}(t_0,\lambda t)$ zwischen $e^{-\gamma}d$ und
+$e^{\gamma}d$ ein, und $d\le m$ schließt ab.
+
+**Zwei Befunde am Satz, beide vom Übersetzen und nicht vom Lesen.**
+
+* **Er braucht weder `OrderTopology` noch `ProperSpace`**, gefunden vom
+  `unusedSectionVars`-Linter und jetzt als `omit` festgehalten. Insbesondere
+  geht die **Kompaktheit des Fensters nicht ein**: `exhaustion t₀ m` kommt nur
+  über die Ungleichung $\mathrm{dist}(t_0,t)\le m$ vor. Das ist die stehende
+  Regel über minimale Voraussetzungen, und sie fällt hier auf der richtigen
+  Seite aus — der Satz ist allgemeiner, als der Meilenstein ihn führte.
+* **Die bewiesene Schranke ist $(e^\gamma-1)\,m$, also die Hälfte der
+  behaupteten $(e^\gamma-1)\,2m$.** Der Faktor $2$ ist Reserve, die der Beweis
+  nicht braucht; die Aussage bleibt, wie sie ist, weil Meilenstein 4 sie so
+  zitiert, aber der Meilensteintext hält den schärferen Wert jetzt fest. Der
+  Grund, daß es reicht: im Zweig $d'\le d$ ist $d'\le d\le m$ ohnehin, und im
+  anderen ist $d'-d\le(e^\gamma-1)d$ direkt.
+
+**2. `not_normOn_mul_le` ist übersetzt, samt Zeugen.** Der erste Lauf von heute
+hatte die Rechnung vollständig in den Doc-Kommentar geschrieben und als
+`sorry` stehenlassen, weil „die stückweis lineare Ordnungsisomorphie von
+$\mathbb R$ als Term" fehlte. Der Weg dorthin war kürzer als der dort genannte,
+und er ist der eigentliche Ertrag dieses Punktes: **kein `if`, sondern ein
+`max`.** Die Abbildung, die auf $(-\infty,1]$ die Identität ist und darüber
+Steigung $100$ hat, ist
+
+$$\lambda(x)=\max(x,\;100x-99),$$
+
+denn $100x-99\le x$ gilt genau für $x\le1$; ihre Inverse ist
+$\lambda^{-1}(y)=\min(y,(y+99)/100)$, von derselben Gestalt. Damit ist alles
+ein Einzeiler: `max_lt_max` gibt die strenge Monotonie, `LipschitzWith.max`
+(`Topology/MetricSpace/Lipschitz.lean:182`) und `LipschitzWith.min` (`:186`)
+die beiden Lipschitz-Schranken, `StrictMono.orderIsoOfRightInverse`
+(`Order/Hom/Basic.lean:1206`) macht daraus die Ordnungsisomorphie, und die
+Rechtsinversenidentität ist ein einziges `rcases le_total y 1` mit
+`min_eq_left`/`max_eq_left` bzw. `_right`. Mit `if` wären es vier Zweige je
+Aussage gewesen und der Absolutbetrag in jedem.
+
+Übersetzt sind: `TimeChange.steep` und `TimeChange.double` samt ihren acht
+Hilfsaussagen, die vier `@[simp]`-Auswertungen (alle `rfl`),
+`mem_exhaustion_real_iff`, und die drei Abschätzungen `normOn_steep_le`
+($\le0$), `normOn_double_le` ($\le\log2$) und `le_normOn_steep_mul_double`
+($\ge\log200$). Nur die letzte braucht das Infimum **von unten**, also
+`le_csInf` samt Nichtleerheit aus `(steep * double).lipschitz`, ausgewertet an
+den beiden Fensterpunkten $1/2$ und $1$: $(\lambda\lambda')(1/2)=\lambda(1)=1$
+und $(\lambda\lambda')(1)=\lambda(2)=101$, also $100\le K\cdot\tfrac12$ und
+$K\ge200$. Die beiden anderen sind `csInf_le'` auf einer vorgezeigten
+zulässigen Konstante.
+
+Mit angefallen und eingetragen: **`Real.instAdditiveDist`**, die erste der vier
+laufenden Instanzen von Meilenstein 1. Sie war nötig, weil die Widerlegung
+über dem vollen Bündel quantifiziert und deshalb an $\mathbb R$ instanziiert
+werden muß; drei `abs_of_nonpos` auf `Real.dist_eq` und ein `ring`. Die
+anderen drei Instanzen folgen aus ihr über `instAdditiveDistSubtype`.
+
+**Was das für den Meilenstein bedeutet.** Meilenstein 4 hatte am ersten Lauf
+von heute seine Bauform gewechselt — `distOn` steht seither auf der globalen
+`TimeChange.norm` statt auf `normOn` —, und die Begründung dafür war eine
+Rechnung im Doc-Kommentar. Sie ist jetzt ein Satz. Das ist der Unterschied,
+den der Rückstaupunkt meint, wenn er sagt, das Typprüfen zähle nichts, solange
+die Aussage nicht die Arbeit trägt.
+
+**Stand der Datei.** 13 `sorry`: `exists_orderIso_isometry_real` (M1),
+`countable_leftJumpSet` und `IsCadlag.measurable` (M2), und die zehn, die an
+der `MetricSpace D(ι, E)`-Instanz hängen — die Instanz selbst, `CompleteSpace`,
+`SeparableSpace`, `PolishSpace`, `continuousAt_eval`,
+`measurableEmbedding_piDense`, `borel_eq_iSup_comap_eval`, `modulus`,
+`tendsto_modulus`, `isCompact_closure_iff`. Von den fünf Definitionen mit
+`sorry` **im Rumpf**, die der fünfte Lauf vom 2026-09-06 als die eigentliche
+Schwäche der Datei benannt hat, sind noch zwei da: `SkorokhodSpace.modulus`
+und die `MetricSpace`-Instanz.
+
+**3. Im selben Lauf noch: der Klemmoperator, der letzte offene Punkt von
+Meilenstein 1.** Er war als Ziel des nächsten Laufs vorgesehen und ist statt
+dessen gleich mitgemacht worden, weil er kein Werkzeug brauchte, das nicht
+schon dastand. Neun Deklarationen, alle bewiesen: `mem_exhaustion_self`,
+`exhaustionMin` und `exhaustionMax` samt `isLeast_exhaustionMin` und
+`isGreatest_exhaustionMax` — aus `IsCompact.exists_isLeast`
+(`Topology/Order/Compact.lean:148`) und `IsCompact.exists_isGreatest` (`:160`)
+auf dem seit dem 2026-09-06 kompakten `exhaustion`, mit `t₀` als
+Nichtleerheitszeuge —, dann `clamp`, `monotone_clamp`, `continuous_clamp`,
+`clamp_mem_exhaustion`, `clamp_eq_self` und `clamp_idem`.
+
+**Und der Befund, der dabei anfiel, ist der interessante Teil.** Meilenstein 1
+verlangte vom Klemmoperator nur, daß er monoton, stetig, idempotent und auf
+`B m` die Identität sei. Das reicht nicht: daß
+`min (max t (B m).min) (B m).max` **in `B m` liegt**, folgt aus dem Dastehen
+zwischen kleinstem und größtem Element **nicht**, solange das Fenster keine
+Ordnungsintervall ist. Es ist eines, aber das ist ein eigener Satz und noch
+einmal `AdditiveDist`:
+
+* `ordConnected_exhaustion` — oberhalb von $t_0$ gibt es
+  `monotoneOn_dist_basepoint`, unterhalb wird die Additivität vom anderen Ende
+  gelesen ($x\le z\le t_0$ gibt $\mathrm{dist}(x,t_0)=\mathrm{dist}(x,z)+
+  \mathrm{dist}(z,t_0)$, also $\mathrm{dist}(z,t_0)\le\mathrm{dist}(x,t_0)$).
+  Weder Ordnungstopologie noch Eigentlichkeit gehen ein.
+
+Damit ist `AdditiveDist` an drei Stellen dieses Laufs die tragende Hypothese
+gewesen und an keiner entbehrlich — Meilenstein 1 führt die richtige Klasse,
+und das ist jetzt dreifach geprüft statt einmal behauptet.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**`SkorokhodSpace.restrictExhaustion` und `SkorokhodSpace.distOn`**, die beiden
+Daten der Metrik von Meilenstein 4. `restrictExhaustion t₀ m f = f ∘ clamp t₀ m`
+ist seit heute hinschreibbar und braucht als einzige Aussage, daß es wieder
+càdlàg ist — `clamp` ist monoton und stetig, also bleibt Rechtsstetigkeit
+erhalten und der Linkslimes existiert. Darauf steht dann
+`distOn t₀ m f g = ⨅ λ, max (TimeChange.norm λ) (⨆ t ∈ B m, dist (…))`, wobei
+das Infimum über die **Untergruppe der Zeitänderungen mit `λ t₀ = t₀`** läuft
+(so verlangt es `dist_le_of_norm_le`, und diese Untergruppe ist als solche noch
+nicht definiert — das ist die zweite Zutat, `TimeChange.fixing t₀` als
+`Subgroup (TimeChange ι)`). Es ist jetzt dran, weil es der einzige verbliebene
+Weg zur `MetricSpace D(ι, E)`-Instanz ist, an der zehn der dreizehn `sorry` der
+Datei hängen, und weil seit heute jede Aussage über `norm` bereitsteht, die
+ihre drei Axiome brauchen: Symmetrie aus `norm_inv`, Dreieck aus
+`norm_mul_le`, Trennung aus `dist_le_of_norm_le`. Zu prüfen ist dabei zuerst,
+ob das Supremum über `B m` überhaupt endlich ist — der Meilenstein verlangt
+das ausdrücklich, und für einen unbeschränkten càdlàg-Pfad auf einem kompakten
+Fenster ist es die Stelle, an der `isCompact_exhaustion` zum ersten Mal
+wirklich gebraucht wird. Das stützt `fact:Dcountable` (tragend `4`) über die
+Meilensteine 4, 5 und 6.
+
+### 2026-09-07, dritter Lauf des Tages — Rückstau 1: die beiden Daten der Metrik stehen, und eine Aussage von Meilenstein 2 ist unter ihrem Bündel falsch
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also wieder der Rückstau von
+oben und dort das benannte Ziel des zweiten Laufs von heute:
+`SkorokhodSpace.restrictExhaustion` und `SkorokhodSpace.distOn` samt der
+Untergruppe `TimeChange.fixing t₀`. Alle drei stehen, und im selben Lauf ist
+auch das benannte Ziel des *nächsten* Laufs gefallen, die Dreiecksungleichung.
+**Meilenstein 4 hat damit seine beiden Daten und jedes Axiom außer der
+Trennung**, und die Prüffrage des Vorschlags — ob das Supremum überhaupt endlich
+ist — ist als Satz beantwortet. `SkorokhodSpace/Suggested.lean` geht durch
+`lake env lean` gegen `v4.33.1`, ohne Fehler und ohne Linterwarnung; 94
+Deklarationen, 13 `sorry`, also genau die dreizehn des zweiten Laufs. Die
+fünfzehn neuen Deklarationen sind alle bewiesen.
+
+**1. Die Untergruppe, und warum sie eine sein muß.** `TimeChange.fixing t₀` ist
+`{l | l.toOrderIso t₀ = t₀}` als `Subgroup (TimeChange ι)`; `mul_mem'` ist
+`OrderIso.trans_apply` und zweimal Einsetzen, `inv_mem'` geht über die
+Injektivität von `l` statt über ein Rückwärts-`rw`, das sonst auch die beiden
+anderen `t₀` des Ziels träfe. `TimeChange.mem_fixing_iff` ist `Iff.rfl` und die
+einzige Schnittstelle, die der Rest braucht. Der Grund, weshalb die Anker eine
+**Untergruppe** bilden müssen und nicht bloß eine Teilmenge, ist die
+Axiomenliste selbst: die Symmetrie liest `norm_inv` an `l⁻¹` ab, das Dreieck
+`norm_mul_le` an `l * l'`, und beide Male muß das Ergebnis wieder ein
+zulässiger Index des Infimums sein.
+
+**2. `restrictExhaustion`, und die Aussage von Meilenstein 2, die dafür
+gefehlt hat.** `restrictExhaustion t₀ m f = f ∘ clamp t₀ m` ist hinschreibbar,
+seit `clamp` steht, aber daß es wieder càdlàg ist, war keine Aussage der
+Roadmap. Sie ist es jetzt, als `IsCadlag.comp_monotone_continuous` in
+Meilenstein 2: für càdlàg `f` und monotones stetiges `g : ι → ι` ist `f ∘ g`
+càdlàg. Beide Felder brauchen die Monotonie, und auf verschiedene Weise. Rechts
+bildet `g` die Menge `Set.Ioi a` nach `Set.Ici (g a)` ab, und **dort** ist die
+Rechtsstetigkeit von `f` lesbar — über `continuousWithinAt_Ioi_iff_Ici`
+(`Topology/Order/LeftRight.lean:79`, `PartialOrder` allein). Links zerfällt der
+Beweis: entweder ist `g` links von `x` schon konstant, und dann ist es `f ∘ g`
+auf dem ganzen Intervall zwischen den beiden gleichen Werten, oder es ist
+`g y < g x` für **jedes** `y < x`, und dann strebt `g` von echt unten gegen
+`g x`, so daß der Linkslimes von `f` an `g x` der von `f ∘ g` an `x` ist. Der
+erste Zweig ist die einzige Stelle des Meilensteins, an der die
+Ordnungstopologie vorkommt, über `Ioo_mem_nhdsLT`
+(`Topology/Order/OrderClosed.lean:282`, unter `ClosedIicTopology`).
+
+**3. Der Befund, und er ist der wertvollste des Laufs:
+`IsCadlag.isBounded_image_of_isCompact` ist unter dem Bündel (A) falsch.** Die
+Roadmap führte den Satz — das Bild einer kompakten Menge unter einer
+càdlàg-Abbildung ist beschränkt — unter (A), also unter
+`[Preorder ι] [TopologicalSpace ι]`, mit der Begründung, der Index steuere
+„compactness of the domain and nothing else" bei. Das stimmt nicht. Der Beweis
+zerlegt eine Umgebung eines Punktes in ihre beiden einseitigen Hälften, über
+`nhdsLT_sup_nhdsGE` (`Topology/Order/LeftRight.lean:101`), also über
+`Set.Iio x ∪ Set.Ici x = univ` — und das ist die Linearität. Genau da ist die
+Aussage auch falsch:
+
+* $\iota=\N\cup\{\omega\}$, topologisch die Einpunktkompaktifizierung des
+  diskreten $\N$, geordnet so, daß $\N$ seine übliche Ordnung trägt und
+  $\omega$ zu allem **unvergleichbar** ist. Jeder Punkt von $\N$ ist isoliert
+  und $\mathrm{Iio}\,\omega=\mathrm{Ioi}\,\omega=\emptyset$, also ist
+  $\mathcal N_{<x}=\mathcal N_{>x}=\bot$ an jedem $x$ und **jede** Funktion
+  $f:\iota\to\R$ ist càdlàg; $\iota$ ist kompakt; $f(n)=n$ hat unbeschränktes
+  Bild. Was fehlt, ist genau die Zerlegung: $\omega$ hat Umgebungen, die
+  koendlich viel von $\N$ enthalten, und dort sagt kein Feld von `IsCadlag`
+  etwas.
+
+Bewiesen ist der Satz jetzt unter `[LinearOrder ι] [TopologicalSpace ι]`, und
+die Ordnungstopologie geht **nicht** ein — vom `unusedSectionVars`-Linter
+bestätigt und als `omit` festgehalten. Das ist eine Stufe, die das Bündelschema
+des Meilensteins bisher nicht hatte: schwächer als (A′), das die
+Ordnungstopologie mitnimmt, und stärker als (A). Der Roadmaptext trägt Satz,
+Zeuge und Bündel seit heute; der Punkt ist aus der (A)-Liste in die (A′)-Liste
+gewandert, mit der Notiz, was von (A′) er wirklich verbraucht.
+
+**4. `distOn`, und die zwei Stellen, an denen ein bedingt vollständiges
+Supremum ein Müllwert sein könnte.** Die Definition ist Billingsleys `d°ₘ`
+wörtlich: Infimum über `TimeChange.fixing t₀` von
+`max (norm λ) (⨆ t, dist (restrictExhaustion f (λ t)) (restrictExhaustion g t))`.
+In `ℝ` ist `⨆` `sSup (range …)` und `⨅` `sInf (range …)`, und beide sind `0`,
+wenn die Menge unbeschränkt ist. Also gehören zwei Sätze zur Definition, und
+beide stehen:
+
+* `bddAbove_range_dist_restrictExhaustion` — über
+  `isBounded_range_restrictExhaustion`, der Beschränktheit des trunkierten
+  Pfades. Sie ist `IsCadlag.isBounded_image_of_isCompact` auf
+  `isCompact_exhaustion`, und **das ist die einzige Stelle in den Meilensteinen
+  3 und 4, an der die Kompaktheit des Fensters überhaupt gebraucht wird** — die
+  Frage, die der Vorschlag des zweiten Laufs zuerst geprüft haben wollte.
+  `dist_le_of_norm_le` braucht sie ausdrücklich nicht.
+* `bddBelow_range_distOn` — `TimeChange.norm_nonneg`, also der Satz des ersten
+  Laufs von heute, an der Stelle, für die er gedacht war.
+
+Das Supremum läuft über **ganz** `ι` und nicht über `B m`. Die beiden stimmen
+überein, weil beide Pfade außerhalb des Fensters konstant sind; und über `ι` zu
+quantifizieren ist das, was die Umindizierung in `distOn_comm` zu einer
+Bijektion des Index macht statt zu einer einer Teilmenge, die die Zeitänderung
+gar nicht erhalten muß. Das ist kein Schönheitsargument, sondern der Grund,
+warum der Beweis in vier Zeilen durchgeht.
+
+**5. Zwei der drei Axiome.** `distOn_nonneg` ist `le_ciInf` auf `norm_nonneg`.
+`distOn_self` ist `ciInf_le` an der `1` der Untergruppe, plus `norm_one` und
+`ciSup_const` — die Nichtleerheit von `ι`, die letzteres braucht, ist `⟨t₀⟩`,
+und ohne das Argument `t₀` wäre die Aussage über einem leeren Index eine über
+`sSup ∅`. `distOn_comm` ist der erste Satz, der die Untergruppenstruktur
+wirklich benutzt: `λ ↦ λ⁻¹` ist eine Bijektion von `TimeChange.fixing t₀`,
+`norm_inv` läßt die Norm stehen, und das Supremum wird längs der Bijektion `λ`
+von `ι` umindiziert, was `dist (f (λ t)) (g t)` gliedweise in
+`dist (g (λ⁻¹ s)) (f s)` überführt. Die Umindizierung ist im Beweis als
+Hilfsaussage `hre` ausgeschrieben, weil Mathlibs `Equiv.iSup_comp`
+(`Order/CompleteLattice/Basic.lean:185`) für **vollständige** Verbände gilt und
+`ℝ` keiner ist; sie ist eine Gleichheit von `Set.range`s und dann
+`congrArg sSup`.
+
+**6. Und das dritte Axiom gleich mit: `distOn_triangle`.** Es war als Ziel des
+nächsten Laufs vorgesehen und ist im selben Lauf gefallen, weil nach Punkt 5
+jede Zutat dastand. Es ist die **zweite** Stelle, an der die Anker eine
+Untergruppe sein müssen und keine bloße Menge: der Zeuge für die Verkettung ist
+`λ * λ'`, und der muß wieder zulässig sein. Das `max` zerfällt in seine beiden
+Hälften, `norm_mul_le` trägt die eine und die Dreiecksungleichung von `E` die
+andere, mit dem mittleren Pfad ausgewertet an `λ' t` — und das ist der zweite,
+unabhängige Grund dafür, das Supremum über ganz `ι` zu nehmen: das Bild des
+Fensters unter `λ'` ist nicht das Fenster. Das Infimum wird nicht angenommen,
+also läuft das Argument über ein `ε`; die Auswahl ist als eigene Aussage
+`SkorokhodSpace.exists_lt_distOn_add` aufgeschrieben, `exists_lt_of_ciInf_lt`
+(`Order/ConditionallyCompleteLattice/Indexed.lean:451`) auf
+`bddBelow_range_distOn`. Von den Metrikaxiomen fehlt damit allein die
+**Trennung**.
+
+Ein Nebenbefund am Rande: `omit [AdditiveDist ι]` trägt für `distOn_triangle`
+**nicht**, obwohl es für `distOn_nonneg`, `distOn_self` und `distOn_comm`
+trägt. Der Grund ist `bddAbove_range_dist_restrictExhaustion`, das über
+`isCompact_exhaustion` und `clamp` an der Klasse hängt — die
+Dreiecksungleichung ist damit die einzige der vier, die die Kompaktheit des
+Fensters wirklich verbraucht, und das paßt zu Punkt 4: sie ist die einzige, die
+das Supremum von unten abschätzt.
+
+**Was offen bleibt.** Die dreizehn `sorry` sind unverändert die des zweiten
+Laufs: `exists_orderIso_isometry_real` (M1), `countable_leftJumpSet` und
+`IsCadlag.measurable` (M2) und die zehn, die an der `MetricSpace D(ι, E)`-
+Instanz hängen. Von den beiden Definitionen mit `sorry` **im Rumpf** sind
+weiterhin beide da, `SkorokhodSpace.modulus` und die `MetricSpace`-Instanz —
+aber die Instanz hat seit heute zwei ihrer drei Axiome und beide Daten.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**`countable_leftJumpSet`** — die Abzählbarkeit der Sprungmenge einer
+càdlàg-Abbildung, Meilenstein 2, seit dem 2026-09-05 ein `sorry`. Es ist jetzt
+dran, weil es seit heute **auf dem kritischen Weg zur Trennung liegt**, dem
+einzigen fehlenden Metrikaxiom, und damit zur `MetricSpace D(ι, E)`-Instanz, an
+der zehn der dreizehn `sorry` der Datei hängen. Der Weg zur Trennung, damit die
+Reihenfolge sichtbar ist: aus `distOn t₀ m f g = 0` liefert
+`exists_lt_distOn_add` zu jedem `n` ein $\lambda_n$ mit
+$\mathrm{norm}\,\lambda_n\le 1/n$ **und** $\sup_t\mathrm{dist}(F(\lambda_n
+t),G(t))\le1/n$; `dist_le_of_norm_le` (bewiesen, zweiter Lauf von heute) macht
+daraus $\lambda_n t\to t$ gleichmäßig auf dem Fenster, also
+$G(t)=\lim_n F(\lambda_n t)$. Weil $\lambda_n t$ von **beiden** Seiten kommen
+darf, gibt das $G(t)=F(t)$ zunächst nur an den Stetigkeitsstellen von $F$; und
+daß die Stetigkeitsstellen den Rest tragen, ist genau
+`IsCadlag.eq_of_eqOn_dense` (bewiesen, 2026-09-06) — deren Hypothese aber
+verlangt, daß jeder Punkt in der Menge liegt oder von rechts aus ihr
+approximierbar ist, und das ist die Abzählbarkeit des Komplements, also
+`countable_leftJumpSet`. Ohne sie steht die Trennung ohne Unterbau. Der Weg für
+`countable_leftJumpSet` selbst steht im Meilenstein 2 und ist unverändert:
+`largeLeftJumpSet f ε` hat keinen Häufungspunkt — ein solcher lieferte eine
+monotone Folge gegen ihn, und der einseitige Limes dort widerspräche der
+Sprunghöhe —, trifft also jede kompakte Menge in einer endlichen, und die
+σ-Kompaktheit des Index (aus `isCompact_exhaustion`, jeder Index von
+Meilenstein 1 hat sie) macht daraus die Abzählbarkeit. Das stützt
+`fact:Dcountable` (tragend `4`) über die Meilensteine 4, 5 und 6.
