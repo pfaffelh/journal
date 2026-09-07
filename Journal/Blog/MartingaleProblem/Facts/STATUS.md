@@ -1,10 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260907T172301Z
-- **Zustand:** limit
-- **Notiz:** Nutzungsgrenze erreicht (Code 1), zweiter Versuch mit sonnet endete mit 1 -- nichts geleistet
+- **Letzter Lauf (UTC):** 20260907T182148Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** fisher
-- **Laeufe bisher:** 65
+- **Laeufe bisher:** 66
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
