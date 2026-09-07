@@ -188,6 +188,23 @@ kein gebautes Mathlib und taugt zu nichts.
    und dessen erster Teil ist eine Straffheitsaussage über abzählbare Produkte,
    kein Satz über trennende Klassen.*
 
+   *Zwischenstand 2026-09-07, vierzehnter Lauf des Tages:
+   **`isConvergenceDetermining_pi` ist bewiesen**, samt der Straffheitsaussage,
+   die der dreizehnte Lauf als ersten Schritt benannt hatte. Vier neue
+   Deklarationen, alle bewiesen: `IsTightMeasureSet.pi` (Straffheit abzählbarer
+   Produkte aus der Straffheit der Einkoordinatenränder — Mathlib hat nur den
+   Zweifaktorfall `IsTightMeasureSet.prodMk`, `Measure/Tight.lean:144`),
+   `isTightMeasureSet_of_tendsto`,
+   `tendsto_of_isSeparating_of_isTightMeasureSet` (Prohorov samt Identifikation,
+   für eine Klasse statt für eine `StarSubalgebra`) und der Satz selbst. Die Zahl
+   der `sorry` bleibt bei **12**, weil der Lauf keinen gefällt, sondern einen
+   Meilensteinpunkt gebaut hat, der noch keine Deklaration hatte; die Datei zählt
+   81 Deklarationen, rc = 1 mit unverändert genau den zwei angekündigten Fehlern,
+   deren Zeile jetzt `:1041` ist und nicht mehr `:804`. Der nächste benannte
+   Schritt in dieser Datei ist
+   `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`
+   (`fact:convdet`); die Begründung steht im Laufbericht im Inventar.*
+
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
    `PLAN.md`).~~ *(erledigt 2026-09-07, neunter Lauf des Tages.)* Der Satz und

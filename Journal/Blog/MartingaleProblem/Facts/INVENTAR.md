@@ -78,7 +78,7 @@ ist kein Befund, sondern ein `?`.
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
-| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte **trägt seit dem 2026-09-07, dreizehntem Lauf, einen Beweis**: `isSeparating_pi` steht bewiesen in `WeakConvergence/Suggested.lean` und geht durch `lake env lean` gegen v4.33.1 — trennende Klassen multiplizieren sich über einen beliebigen Indextyp, sofern ihre Mitglieder beschränkt und meßbar sind. ~~die Produkthälfte trägt kein Beweis~~, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
+| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte **trägt seit dem 2026-09-07, dreizehntem Lauf, einen Beweis**: `isSeparating_pi` steht bewiesen in `WeakConvergence/Suggested.lean` und geht durch `lake env lean` gegen v4.33.1 — trennende Klassen multiplizieren sich über einen beliebigen Indextyp, sofern ihre Mitglieder beschränkt und meßbar sind. Seit dem 2026-09-07, vierzehntem Lauf, trägt auch die **konvergenzbestimmende** Hälfte einen Beweis: `isConvergenceDetermining_pi`, für abzählbares `ι`, polnische `S i` und beschränkt-**stetige** Mitglieder, samt den drei Stücken, auf denen sie ruht — `IsTightMeasureSet.pi` (Straffheit abzählbarer Produkte; Mathlib hat nur den Zweifaktorfall `IsTightMeasureSet.prodMk`, `Measure/Tight.lean:144`), `isTightMeasureSet_of_tendsto` und `tendsto_of_isSeparating_of_isTightMeasureSet`. ~~die Produkthälfte trägt kein Beweis~~, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
 | `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
 | `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `ProbabilityTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib (`Probability/Process/LocalProperty.lean:93,142,153`, Namensraum am 2026-09-01 berichtigt), der Martingalfall ist es nicht |
 
@@ -7465,3 +7465,120 @@ zu klärende Schritt ist nicht die Trennung, sondern die Straffheit: aus der
 Straffheit je Faktor die des abzählbaren Produkts, über die Kompaktheit von
 $\prod_i K_i$ und ein $\varepsilon 2^{-n}$-Argument. Erst wenn die steht, ist
 der Rest der Anschluß an den heutigen Satz.
+
+### 2026-09-07, vierzehnter Lauf des Tages — `isConvergenceDetermining_pi`, und die Straffheit abzählbarer Produkte
+
+**Was der Lauf vorgefunden hat.** Keine vorrangige Aufgabe, keine `?`-Zeile in
+der Tabelle, also Rückstaupunkt 1. Der dreizehnte Lauf hatte das Ziel benannt:
+`isConvergenceDetermining_pi`, die konvergenzbestimmende Hälfte des
+Produktpunktes von `WeakConvergence` Meilenstein 1, und als ersten zu klärenden
+Schritt die Straffheit abzählbarer Produkte. Beides steht jetzt, bewiesen und
+durch `lake env lean` gegen v4.33.1.
+
+**Vier neue Deklarationen, alle bewiesen, alle in `WeakConvergence/Suggested.lean`.**
+
+* `IsTightMeasureSet.pi` — ist für abzählbares `ι` jede Familie
+  `Measure.map (· i) '' T` von Einkoordinatenrändern straff, so ist `T` straff.
+  Mathlib hat den **Zweifaktorfall** und nur ihn (`IsTightMeasureSet.prodMk`,
+  `MeasureTheory/Measure/Tight.lean:144`, in v4.33.1 wie auf master); für ein
+  abzählbares Produkt gibt es nichts. Der Beweis ist das
+  $\varepsilon 2^{-i}$-Argument, und die Abzählbarkeit wird zweimal gebraucht:
+  einmal, um $\varepsilon$ über die Koordinaten zu verteilen
+  (`ENNReal.exists_pos_sum_of_countable'`,
+  `Analysis/SpecificLimits/Basic.lean:648`), und einmal für die abzählbare
+  Subadditivität, die $(\mathrm{univ.pi}\,K)^c\subseteq\bigcup_i(\cdot\,i)^{-1}(K_i^c)$
+  in eine Summe verwandelt. Tychonoff liefert die kompakte Menge
+  (`isCompact_univ_pi`). Es geht **keine** Trennungs-, Borel- oder
+  Endlichkeitsvoraussetzung ein: das Komplement der kompakten Menge wird als
+  äußeres Maß gemessen und muß nie meßbar sein. Das ist die schwächste Fassung,
+  die der Beweis hergibt, und sie ist schwächer als die von `prodMk`, die
+  `TopologicalSpace 𝓨` mitführt.
+* `isTightMeasureSet_of_tendsto` — auf einem polnischen Raum ist eine
+  **konvergente** Folge von Wahrscheinlichkeitsmaßen straff.
+  `Filter.Tendsto.isCompact_insert_range`
+  (`Topology/Compactness/Compact.lean:645`) macht `insert ν (range μ)` kompakt,
+  also abgeschlossen, und `isTightMeasureSet_of_isCompact_closure`
+  (`Measure/Prokhorov.lean:635`) macht daraus Straffheit. **Das ist nicht der
+  zirkuläre Gebrauch jenes Satzes**, den der vierte Lauf des 2026-09-05
+  aufgedeckt hat: dort sollte er die Straffheit aus der zu beweisenden
+  Konvergenz holen, hier ist die Konvergenz Hypothese.
+* `tendsto_of_isSeparating_of_isTightMeasureSet` — auf einem polnischen Raum
+  testet eine **trennende** Klasse aus beschränkten **stetigen** Funktionen die
+  schwache Konvergenz, sobald die Folge straff ist. Prohorov gibt den kompakten
+  Abschluß, `IsCompact.tendsto_subseq` zu jeder Teilfolge eine konvergente
+  Teilteilfolge, die Klasse identifiziert deren Limes als `ν`, und
+  `tendsto_of_subseq_tendsto` setzt die Folge wieder zusammen. Das ist das
+  Gegenstück zu Mathlibs `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+  für eine Klasse statt für eine `StarSubalgebra`, und für eine Klasse, die
+  **Maße** trennt statt **Punkte**.
+* `isConvergenceDetermining_pi` selbst. Drei Schritte und keine neue Analysis:
+  die Hypothese an den Einindex-Mitgliedern `x ↦ f (x i)` — dem Fall `J = {i}`
+  der Produktklasse — gelesen, sagt genau, daß jede Randfolge konvergiert; jede
+  Randfamilie ist dann straff, also die Familie selbst; und `isSeparating_pi`
+  identifiziert den Limes.
+
+**Wo die konvergenzbestimmende Hälfte von der trennenden abweicht, und warum
+jede Abweichung nötig ist.** Sie trägt drei Hypothesen mehr, und jede hat genau
+eine Aufgabe. `[Countable ι]` ist, was `IsTightMeasureSet.pi` braucht — und die
+Aussage ist über einem überabzählbaren Index **falsch**, nicht bloß unbewiesen
+(Zeuge im Meilenstein: das Produkt von Standardnormalverteilungen über $[0,1]$,
+dessen Ränder einzeln straff sind und das selbst $\mu K^c=1$ für jedes kompakte
+$K$ hat, weil überabzählbar viele Faktoren unter $1$ das Produkt auf $0$
+drücken). `[PolishSpace (S i)]` macht aus der Konvergenz der Ränder ihre
+Straffheit und ist, was Prohorov braucht. Und **Stetigkeit statt Meßbarkeit** der
+Mitglieder: `isSeparating_pi` verlangt sie beschränkt und meßbar, hier müssen sie
+beschränkt und stetig sein, weil die Identifikation eines Teilfolgenlimes die
+Klasse gegen eine schwach konvergente Folge auswertet, und schwache Konvergenz
+sieht beschränkte stetige Funktionen und sonst nichts. Das ist keine
+Bequemlichkeit des Beweises, sondern die Stelle, an der er ohne sie bricht, und
+sie steht im Doc-String benannt.
+
+**Stand der Datei.** 81 Deklarationen (gezählt mit
+`grep -cE "^(noncomputable |private |protected )*(theorem|lemma|def|structure|inductive|instance|abbrev) "`)
+und unverändert **12 `sorry`** — der Lauf hat keinen `sorry` gefällt, sondern
+vier bewiesene Deklarationen hinzugefügt, die vorher nur als Meilensteinpunkt
+dastanden. `rc = 1` mit genau den **zwei** Fehlern an
+`tendsto_map_of_measure_setOf_continuousAt_eq_one`, die der Modulkopf seit dem
+2026-09-06 ankündigt, weil jene Aussage absichtlich gegen `upstream/master`
+geschrieben ist; ihre Zeile ist durch die Einfügungen von `:804` auf `:1041`
+gewandert. Keine neue Warnung.
+
+**Was mitgeprüft und nachgezogen wurde.** Der Produktpunkt in
+`WeakConvergence/README.md` nennt jetzt `isConvergenceDetermining_pi` mit seinen
+drei Zusatzhypothesen und deren Begründung; die drei Stützen stehen als eigene
+Punkte darunter, mit dem Vermerk, daß Mathlib nur `prodMk` hat. Meilenstein 1
+hat zwei neue acceptance examples, beide Paare im Sinne des vierten Laufs: das
+abzählbare Gaußprodukt auf `ℕ → ℝ`, an dem die Fenster $[-a_i,a_i]$ **wachsen**
+müssen (eine Fassung mit einem einzigen $K$ für alle Koordinaten summiert zu
+$\infty$), gegen dasselbe Produkt über $[0,1]$, an dem die Aussage falsch ist;
+und der `δ n`-Zeuge ein zweites Mal, jetzt gegen die Straffheitshypothese von
+`tendsto_of_isSeparating_of_isTightMeasureSet` — dort ist `Γ` trennend (über
+`IsSeparating.of_subalgebra`), beschränkt stetig, die Integrale konvergieren, und
+die Folgerung ist falsch, weil allein die Straffheit fehlt. Die Zeile `fact:fdd`
+der Tabelle ist nachgezogen. Das Manuskript ist unberührt.
+
+**Werkzeugnotizen, zwei.** `upgradeIsCompletelyMetrizable` liegt im Namensraum
+`TopologicalSpace` und ist ohne Qualifikation nicht sichtbar, obwohl
+`Suggested.lean` `Topology` öffnet — das sind zwei verschiedene Namen. Und die
+Entwicklung lief wieder in einer Kleindatei unter `/tmp`, die die fünf
+gebrauchten Mathlib-Module importiert und `IsSeparating`, `isSeparating_pi`,
+`IsConvergenceDetermining.isSeparating` und `exists_nonneg_bound_prod` als
+`sorry`-Stümpfe führt; drei Durchläufe dort kosten weniger als einer der
+2200-Zeilen-Datei.
+
+**Vorschlag für das Nächste, als benanntes Ziel:
+`isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` beweisen**,
+`fact:convdet` (Ethier--Kurtz, Proposition 3.4.4), erste Hälfte, in
+`WeakConvergence` Meilenstein 1. Worauf sie ruht: auf
+`ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`, also darauf, jede
+beschränkte stetige Funktion gegen die gegebene Folge durch gleichmäßig stetige
+mit beschränktem Träger zu approximieren — und der Schritt, der die Arbeit
+trägt, ist eine **Straffheitsaussage**: aus der Konvergenz der Integrale über
+die Klasse folgt zuerst, daß die Massen außerhalb großer Bälle gleichmäßig klein
+sind, und erst dann ist die Abschneidung erlaubt. Warum jetzt: der heutige Lauf
+hat mit `isTightMeasureSet_of_tendsto` und
+`tendsto_of_isSeparating_of_isTightMeasureSet` genau die Bausteine gelegt, die
+diese Schrittfolge braucht, und `fact:convdet` ist der einzige Fact von
+Meilenstein 1, zu dem noch keine einzige Deklaration einen Beweis trägt.
+Separabilität allein genügt dabei, wie die Roadmap sagt; Vollständigkeit kommt
+im Beweis nicht vor, und wer sie doch braucht, nennt die Stelle.

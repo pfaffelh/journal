@@ -81,6 +81,22 @@ without -- every member of every `Γ i` bounded and measurable -- and the reason
 is in its doc string.  The route is not the functional monotone class theorem:
 products out of separating classes need not be a multiplicative system.
 
+Since 2026-09-07, fourteenth run, **`isConvergenceDetermining_pi` is proved**,
+the convergence determining half of the same point, together with the three
+declarations it rests on: `IsTightMeasureSet.pi`, the tightness of a countable
+product from the tightness of its one-coordinate marginals, which Mathlib has
+only for two factors (`IsTightMeasureSet.prodMk`); `isTightMeasureSet_of_tendsto`,
+the tightness of a convergent sequence on a Polish space; and
+`tendsto_of_isSeparating_of_isTightMeasureSet`, Prokhorov plus identification --
+a separating class of bounded continuous functions tests weak convergence along
+a tight sequence.  The last is the plain-class counterpart of Mathlib's
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, which asks for a
+`StarSubalgebra` separating points rather than a class separating measures.
+Continuity is where the convergence determining half parts company with the
+separating one: the identification of a subsequential limit evaluates the class
+against a weakly convergent sequence, which sees bounded continuous functions
+and nothing else.
+
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
 `tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
@@ -310,6 +326,91 @@ theorem isConvergenceDetermining_setOf_hasCompactSupport
     [MetricSpace E] [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E]
     [LocallyCompactSpace E] :
     IsConvergenceDetermining {f : E → ℝ | Continuous f ∧ HasCompactSupport f} := sorry
+
+/-! ### From separating to convergence determining, along a tight sequence
+
+This is Prokhorov's theorem used the way Ethier-Kurtz uses it in Chapter 3: a
+separating class of *bounded continuous* functions tests weak convergence as
+soon as the sequence is tight, because tightness makes the closure of its range
+compact and the separating class pins every subsequential limit to the same
+measure.
+
+It is the plain-class counterpart of
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+(`MeasureTheory/Measure/LevyConvergence.lean:154`), which asks for a
+`StarSubalgebra` separating *points* rather than a class separating *measures*,
+and it is what a separating class alone cannot do: continuity is used, and has
+to be, in the identification step -- weak convergence of the subsequence gives
+convergence of `∫ f` only for `f` bounded continuous, so a member of `Γ` that is
+merely bounded measurable would leave the limit unidentified. -/
+
+/-- A convergent sequence of probability measures on a Polish space is tight: its
+range together with its limit is compact, hence closed, hence tight by
+`isTightMeasureSet_of_isCompact_closure` (`Measure/Prokhorov.lean:635`).
+
+There is no circularity here of the kind the tightness-free Stone-Weierstrass
+statement fell into: the convergence is a *hypothesis*, not the conclusion. -/
+theorem isTightMeasureSet_of_tendsto [TopologicalSpace E] [PolishSpace E] [BorelSpace E]
+    {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E}
+    (h : Tendsto μ atTop (𝓝 ν)) :
+    IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n} := by
+  let := TopologicalSpace.upgradeIsCompletelyMetrizable E
+  have hc : IsCompact (insert ν (Set.range μ)) := h.isCompact_insert_range
+  have hcl : closure (insert ν (Set.range μ)) = insert ν (Set.range μ) := hc.isClosed.closure_eq
+  have key := isTightMeasureSet_of_isCompact_closure (S := insert ν (Set.range μ))
+    (by rw [hcl]; exact hc)
+  refine key.subset ?_
+  rintro _ ⟨n, rfl⟩
+  exact ⟨μ n, Or.inr ⟨n, rfl⟩, rfl⟩
+
+/-- A separating class of bounded continuous functions is convergence determining
+**along tight sequences**.  Prokhorov gives a compact closure, `tendsto_subseq`
+a convergent subsequence of any subsequence, the class identifies its limit as
+`ν`, and `tendsto_of_subseq_tendsto` puts the sequence back together.
+
+The two side conditions are the same pair `isSeparating_pi` carries, with
+continuity in place of measurability, and continuity is the one that cannot be
+dropped: it is what lets weak convergence of the subsequence be evaluated
+against `f`. -/
+theorem tendsto_of_isSeparating_of_isTightMeasureSet [TopologicalSpace E] [PolishSpace E]
+    [BorelSpace E] {Γ : Set (E → ℝ)} (hsep : IsSeparating Γ)
+    (hcont : ∀ f ∈ Γ, Continuous f) (hbdd : ∀ f ∈ Γ, ∃ C, ∀ x, |f x| ≤ C)
+    {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E}
+    (htight : IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n})
+    (hconv : ∀ f ∈ Γ, Tendsto (fun n => ∫ x, f x ∂(μ n : Measure E)) atTop
+      (𝓝 (∫ x, f x ∂(ν : Measure E)))) :
+    Tendsto μ atTop (𝓝 ν) := by
+  let := TopologicalSpace.upgradeIsCompletelyMetrizable E
+  have hcomp : IsCompact (closure (Set.range μ)) := by
+    refine isCompact_closure_of_isTightMeasureSet ?_
+    have hset : {((m : ProbabilityMeasure E) : Measure E) | m ∈ Set.range μ}
+        = {((μ n : ProbabilityMeasure E) : Measure E) | n} := by
+      ext ρ
+      constructor
+      · rintro ⟨m, ⟨n, rfl⟩, rfl⟩; exact ⟨n, rfl⟩
+      · rintro ⟨n, rfl⟩; exact ⟨μ n, ⟨n, rfl⟩, rfl⟩
+    rw [hset]
+    exact htight
+  refine tendsto_of_subseq_tendsto fun ns hns => ?_
+  obtain ⟨a, -, φ, hφ, hlim⟩ := hcomp.tendsto_subseq
+    (x := fun k => μ (ns k)) (fun k => subset_closure ⟨ns k, rfl⟩)
+  refine ⟨φ, ?_⟩
+  have hsub : Tendsto (fun k => ns (φ k)) atTop atTop := hns.comp hφ.tendsto_atTop
+  have hav : a = ν := by
+    have : (a : Measure E) = (ν : Measure E) := by
+      refine hsep _ _ fun f hf => ?_
+      obtain ⟨C, hC⟩ := hbdd f hf
+      set g : E →ᵇ ℝ := BoundedContinuousFunction.ofNormedAddCommGroup f (hcont f hf) C
+        (fun x => by simpa [Real.norm_eq_abs] using hC x) with hg
+      have hgf : ⇑g = f := rfl
+      have h1 : Tendsto (fun k => ∫ x, g x ∂((μ (ns (φ k)) : ProbabilityMeasure E) : Measure E))
+          atTop (𝓝 (∫ x, g x ∂(a : Measure E))) :=
+        ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.1 hlim g
+      rw [hgf] at h1
+      exact tendsto_nhds_unique h1 ((hconv _ hf).comp hsub)
+    exact ProbabilityMeasure.toMeasure_injective this
+  rw [← hav]
+  exact hlim
 
 /-! ### The engine behind `isSeparating_pi`
 
@@ -673,6 +774,131 @@ theorem isSeparating_pi (Γ : ∀ i, Set (S i → ℝ)) (hsep : ∀ i, IsSeparat
     exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).1 h1
   exact ext_of_generate_finite (boxes S) generateFrom_boxes.symm isPiSystem_boxes hbox
     (by simp)
+
+/-- Missing from Mathlib, which has the two-factor case as
+`IsTightMeasureSet.prodMk` (`MeasureTheory/Measure/Tight.lean:144`) and nothing
+for a countable product: if every family of one-coordinate marginals is tight,
+so is the family itself.
+
+The proof is the `ε 2⁻ⁿ` argument, and countability of the index is what makes it
+work twice over -- once to distribute `ε` (`ENNReal.exists_pos_sum_of_countable'`)
+and once for the countable subadditivity that turns
+`(univ.pi K)ᶜ ⊆ ⋃ i, (· i) ⁻¹' (K i)ᶜ` into a sum.  Tychonoff supplies the compact
+set, `isCompact_univ_pi`, and no separation or Borel hypothesis is needed: the
+complement of the compact set is measured as an outer measure, so it never has to
+be measurable. -/
+theorem IsTightMeasureSet.pi [Countable ι] [∀ i, TopologicalSpace (S i)]
+    {T : Set (Measure (∀ i, S i))}
+    (h : ∀ i, IsTightMeasureSet ((fun ρ : Measure (∀ i, S i) => ρ.map (fun x => x i)) '' T)) :
+    IsTightMeasureSet T := by
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le]
+  intro ε hε
+  obtain ⟨δ, hδpos, hδsum⟩ := ENNReal.exists_pos_sum_of_countable' hε.ne' ι
+  have h' : ∀ i, ∃ K : Set (S i), IsCompact K ∧
+      ∀ ρ ∈ T, (ρ.map (fun x => x i)) Kᶜ ≤ δ i := by
+    intro i
+    obtain ⟨K, hK, hKle⟩ :=
+      isTightMeasureSet_iff_exists_isCompact_measure_compl_le.1 (h i) (δ i) (hδpos i)
+    exact ⟨K, hK, fun ρ hρ => hKle _ ⟨ρ, hρ, rfl⟩⟩
+  choose K hK hKle using h'
+  refine ⟨Set.univ.pi K, isCompact_univ_pi hK, fun ρ hρ => ?_⟩
+  have hsub : (Set.univ.pi K)ᶜ ⊆ ⋃ i, (fun x : ∀ i, S i => x i) ⁻¹' (K i)ᶜ := by
+    intro x hx
+    simp only [Set.mem_compl_iff, Set.mem_univ_pi, not_forall] at hx
+    obtain ⟨i, hi⟩ := hx
+    exact Set.mem_iUnion.2 ⟨i, hi⟩
+  calc ρ (Set.univ.pi K)ᶜ
+      ≤ ρ (⋃ i, (fun x : ∀ i, S i => x i) ⁻¹' (K i)ᶜ) := measure_mono hsub
+    _ ≤ ∑' i, ρ ((fun x : ∀ i, S i => x i) ⁻¹' (K i)ᶜ) := measure_iUnion_le _
+    _ ≤ ∑' i, δ i := ENNReal.tsum_le_tsum fun i =>
+        (Measure.le_map_apply (measurable_pi_apply i).aemeasurable _).trans (hKle i ρ hρ)
+    _ ≤ ε := hδsum.le
+
+/-- The convergence determining half of the product point, and the reason it
+carries hypotheses `isSeparating_pi` does not: a **countable** index and
+**Polish** factors.  Both enter through tightness and nowhere else.  Countability
+is what `IsTightMeasureSet.pi` needs; Polishness is what turns the convergence of
+the one-coordinate marginals into their tightness
+(`isTightMeasureSet_of_tendsto`), and it is also what
+`tendsto_of_isSeparating_of_isTightMeasureSet` needs for Prokhorov.
+
+Continuity replaces the measurability hypothesis of `isSeparating_pi`, and the
+boundedness hypothesis is the same one.  Continuity is not a convenience: the
+identification of a subsequential limit tests it against the class, and weak
+convergence sees only bounded continuous functions.
+
+The proof is three steps and no new analysis.  Testing the hypothesis on the
+one-index members `x ↦ f (x i)` of the product class shows every marginal
+sequence converges, which is `IsConvergenceDetermining (Γ i)` read backwards;
+each marginal family is then tight, hence so is the family itself; and
+`isSeparating_pi` identifies the limit. -/
+theorem isConvergenceDetermining_pi [Countable ι] [∀ i, TopologicalSpace (S i)]
+    [∀ i, PolishSpace (S i)] [∀ i, BorelSpace (S i)]
+    (Γ : ∀ i, Set (S i → ℝ)) (hcd : ∀ i, IsConvergenceDetermining (Γ i))
+    (hcont : ∀ i, ∀ f ∈ Γ i, Continuous f)
+    (hbdd : ∀ i, ∀ f ∈ Γ i, ∃ C, ∀ y, |f y| ≤ C) :
+    IsConvergenceDetermining {f : (∀ i, S i) → ℝ |
+      ∃ (J : Finset ι) (g : ∀ i, S i → ℝ), (∀ i ∈ J, g i ∈ Γ i) ∧
+        f = fun x => ∏ i ∈ J, g i (x i)} := by
+  classical
+  intro μ ν hyp
+  -- `x ↦ f (x i)` is the member of the product class with `J = {i}`.
+  have hmem : ∀ (i : ι), ∀ f ∈ Γ i, (fun x : ∀ j, S j => f (x i)) ∈
+      {f : (∀ i, S i) → ℝ | ∃ (J : Finset ι) (g : ∀ i, S i → ℝ), (∀ i ∈ J, g i ∈ Γ i) ∧
+        f = fun x => ∏ i ∈ J, g i (x i)} := by
+    intro i f hf
+    refine ⟨{i}, Function.update (fun j => (0 : S j → ℝ)) i f, ?_, ?_⟩
+    · intro j hj
+      rw [Finset.mem_singleton] at hj
+      subst hj
+      simpa using hf
+    · funext x
+      simp
+  -- Step 1: every one-coordinate marginal converges.
+  have hmarg : ∀ i, Tendsto
+      (fun n => (μ n).map (f := fun x : ∀ j, S j => x i) (measurable_pi_apply i).aemeasurable)
+      atTop (𝓝 (ν.map (f := fun x : ∀ j, S j => x i) (measurable_pi_apply i).aemeasurable)) := by
+    intro i
+    refine hcd i _ _ fun f hf => ?_
+    have hint : ∀ ρ : ProbabilityMeasure (∀ j, S j),
+        ∫ y, f y ∂((ρ.map (f := fun x : ∀ j, S j => x i)
+            (measurable_pi_apply i).aemeasurable : ProbabilityMeasure (S i)) : Measure (S i))
+          = ∫ x, f (x i) ∂(ρ : Measure (∀ j, S j)) := by
+      intro ρ
+      rw [ProbabilityMeasure.toMeasure_map]
+      exact integral_map (measurable_pi_apply i).aemeasurable
+        (hcont i f hf).aestronglyMeasurable
+    simp only [hint]
+    exact hyp _ (hmem i f hf)
+  -- Step 2: hence each marginal family is tight, and hence so is the family itself.
+  have htight : IsTightMeasureSet
+      {((μ n : ProbabilityMeasure (∀ j, S j)) : Measure (∀ j, S j)) | n} := by
+    refine IsTightMeasureSet.pi fun i => ?_
+    have h1 := isTightMeasureSet_of_tendsto (hmarg i)
+    have hset : (fun ρ : Measure (∀ j, S j) => ρ.map (fun x => x i)) ''
+        {((μ n : ProbabilityMeasure (∀ j, S j)) : Measure (∀ j, S j)) | n}
+        = {((μ n).map (f := fun x : ∀ j, S j => x i)
+            (measurable_pi_apply i).aemeasurable : Measure (S i)) | n} := by
+      ext ρ
+      constructor
+      · rintro ⟨_, ⟨n, rfl⟩, rfl⟩
+        exact ⟨n, rfl⟩
+      · rintro ⟨n, rfl⟩
+        exact ⟨(μ n : Measure (∀ j, S j)), ⟨n, rfl⟩, rfl⟩
+    rw [hset]
+    exact h1
+  -- Step 3: the product class separates, so it identifies the limit.
+  refine tendsto_of_isSeparating_of_isTightMeasureSet
+    (isSeparating_pi Γ (fun i => (hcd i).isSeparating)
+      (fun i f hf => (hcont i f hf).measurable) hbdd) ?_ ?_ htight hyp
+  · rintro _ ⟨J, g, hg, rfl⟩
+    exact continuous_finsetProd J fun i hi => (hcont i (g i) (hg i hi)).comp (continuous_apply i)
+  · rintro _ ⟨J, g, hg, rfl⟩
+    obtain ⟨C, -, hC⟩ := exists_nonneg_bound_prod (fun i (x : ∀ j, S j) => g i (x i)) J
+      (fun i hi => by
+        obtain ⟨D, hD⟩ := hbdd i (g i) (hg i hi)
+        exact ⟨D, fun x => hD _⟩)
+    exact ⟨C, hC⟩
 
 end Pi
 

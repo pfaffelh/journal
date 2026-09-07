@@ -209,9 +209,11 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `MeasureTheory.isSeparating_pi`. For measurable spaces `S i`, `i : ι`, with
   `Γ i` separating on `S i` and every member of every `Γ i` bounded and
   measurable, the functions `fun x ↦ ∏ i ∈ J, f i (x i)` with `J : Finset ι` and
-  `f i ∈ Γ i` are separating on `Π i, S i`; and the same statement for
-  convergence determining classes when `ι` is countable and the `S i` are
-  Polish. `FiniteMeasurePi.lean` has the product measure and the continuity of
+  `f i ∈ Γ i` are separating on `Π i, S i`; and, as
+  `MeasureTheory.isConvergenceDetermining_pi`, the same statement for convergence
+  determining classes when `ι` is countable, the `S i` are Polish and every
+  member of every `Γ i` is bounded and **continuous**.
+  `FiniteMeasurePi.lean` has the product measure and the continuity of
   the product map, but not this. It is the statement that makes finite
   dimensional distributions determine a law — for a process the index is the
   time set, so the finite case does not suffice. The determining sets of
@@ -243,15 +245,61 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   the Jordan pair `sepPos`/`sepNeg` of `W • (μ - ν)` is written as two positive
   measures, and `IsSeparating` is applied to their normalisations, the
   normalising constants agreeing because `∫ W ∂μ = ∫ W ∂ν` is the previous step
-  of the induction. The convergence determining half is the
-  weaker of the two in reach: the one place in Ethier–Kurtz where it does the
-  work is the last step of Corollary 3.9.2, which passes from the convergence of
+  of the induction.
+
+  The convergence determining half rests on the separating half and on the two
+  points below, and its three extra hypotheses each have one job and no other.
+  Countability of `ι` is what `IsTightMeasureSet.pi` needs; Polishness of the
+  `S i` is what turns the convergence of the marginals into their tightness and
+  what Prokhorov needs; and continuity of the members replaces their
+  measurability, because the identification of a subsequential limit tests the
+  class against a weakly convergent sequence, which sees bounded continuous
+  functions and nothing else. The proof is three steps: testing the hypothesis
+  on the one-index members `x ↦ f (x i)` — the `J = {i}` case — says exactly
+  that every one-coordinate marginal sequence converges; each marginal family is
+  then tight, hence so is the family itself; and `isSeparating_pi` identifies
+  the limit.
+
+  The place in Ethier–Kurtz where the convergence determining half does the work
+  is the last step of Corollary 3.9.2, which passes from the convergence of
   `(g 1, ..., g k) ∘ X n` for finite families out of a dense subalgebra to the
   convergence of the finite dimensional distributions. The route through
   Theorem 3.9.1 and Theorem 3.9.4, which is the one **SkorokhodSpace**
   Milestone 8 and **MartingaleProblems** Milestone 11 take, reaches the same
   conclusion by relative compactness and identification of the limit, and does
   not pass through it.
+* Tightness of a countable product, as `MeasureTheory.IsTightMeasureSet.pi`: for
+  `ι` countable and a set `T` of measures on `Π i, S i` whose one-coordinate
+  marginals `Measure.map (· i) '' T` are tight for every `i`, `T` is tight.
+  Mathlib has the two-factor case, `IsTightMeasureSet.prodMk`
+  (`MeasureTheory/Measure/Tight.lean:144`), and nothing for a countable product.
+  The proof is the `ε 2⁻ⁿ` argument, and countability is used twice: to
+  distribute `ε` over the coordinates (`ENNReal.exists_pos_sum_of_countable'`)
+  and for the countable subadditivity that turns
+  `(univ.pi K)ᶜ ⊆ ⋃ i, (· i) ⁻¹' (K i)ᶜ` into a sum. Tychonoff supplies the
+  compact set. No separation, Borel or finiteness hypothesis enters: the
+  complement of the compact set is measured as an outer measure and never has to
+  be measurable.
+* Prokhorov used the way Chapter 3 uses it, in two points.
+
+  `MeasureTheory.isTightMeasureSet_of_tendsto` — on a Polish `E`, a *convergent*
+  sequence `μ : ℕ → ProbabilityMeasure E` has `IsTightMeasureSet {μ n | n}`.
+  `Filter.Tendsto.isCompact_insert_range` makes `insert ν (range μ)` compact,
+  hence closed, and `isTightMeasureSet_of_isCompact_closure`
+  (`Measure/Prokhorov.lean:635`) turns that into tightness. This is not the
+  circular use of that theorem which the strong separation point rules out: here
+  the convergence is a hypothesis and not the conclusion.
+
+  `MeasureTheory.tendsto_of_isSeparating_of_isTightMeasureSet` — on a Polish `E`,
+  let `Γ` be separating with every member bounded and continuous, let
+  `μ : ℕ → ProbabilityMeasure E` be tight, and let the integrals over `Γ`
+  converge to those of `ν`. Then `μ → ν`. Prokhorov gives a compact closure,
+  `IsCompact.tendsto_subseq` a convergent subsequence of every subsequence, `Γ`
+  identifies its limit as `ν`, and `tendsto_of_subseq_tendsto` reassembles the
+  sequence. This is the plain-class counterpart of Mathlib's
+  `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, which asks for a
+  `StarSubalgebra` separating *points* rather than a class separating
+  *measures*, and it is what the product point consumes.
 * **Missing.** On a Polish space there is a countable convergence determining
   set of bounded uniformly continuous functions, and a countable separating set.
 * **Missing.** The conditional form, `IsSeparating.ae_eq_of_forall_condExp_eq`.
@@ -351,6 +399,32 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   manuscript's `ex:determining` is its instance with `Γ i = Cb(E)` and the times
   drawn from a dense `D ⊆ 𝕋`. A formulation restricted to a finite index type
   proves nothing here, the index being the time set of a process.
+* **The countable Gaussian product, and the same product over an uncountable
+  index.** `ι = ℕ`, `S i = ℝ`, and `μ` the product of standard Gaussians on
+  `ℕ → ℝ`. Every one-coordinate marginal is a single measure on `ℝ`, hence
+  tight, so `IsTightMeasureSet.pi` must give tightness of `{μ}` — and it must
+  produce a compact set whose coordinate windows `[-a i, a i]` **grow** with `i`,
+  since `μ (Π i, [-a i, a i]) = Π i, P(|X| ≤ a i)` is positive only when
+  `Σ i, P(|X| > a i) < ∞`. A version of the point that picks one compact `K` for
+  all coordinates gives `Σ i, ε = ∞` and proves nothing; the `ε 2⁻ⁱ` split is the
+  content.
+
+  Over `ι = [0, 1]` the same product measure exists, its marginals are still
+  tight one at a time, and it is **not** tight: a compact `K ⊆ [0,1] → ℝ` has
+  `π i '' K` bounded for every `i`, so `μ K ≤ Π i ∈ F, P(|X| ≤ a i)` for every
+  finite `F`, and uncountably many factors below `1` drive that to `0`, whence
+  `μ Kᶜ = 1`. So `[Countable ι]` is a hypothesis of the statement and not of the
+  proof, and this is the instance that says so.
+* **The `δ n` witness again, this time against tightness.** `E = ℝ`,
+  `Γ = {f : ℝ →ᵇ ℝ | Tendsto f atTop (𝓝 (f 0))}`, `μ n = δ n`, `ν = δ 0`. Here
+  `Γ` is separating — it is a subalgebra separating points, so
+  `IsSeparating.of_subalgebra` applies — its members are bounded and continuous,
+  and `∫ f ∂δ n = f n → f 0 = ∫ f ∂δ 0`, so every hypothesis of
+  `tendsto_of_isSeparating_of_isTightMeasureSet` holds except tightness, and the
+  conclusion is false. The same family run through
+  `isTightMeasureSet_of_tendsto` produces nothing, there being no convergence to
+  feed it. This is the instance on which a version of the point without the
+  tightness hypothesis would be false.
 * **The conditional form on a null piece.** `Ω = [0,1]` with Lebesgue measure,
   `m` the four-element σ-algebra generated by a single `P`-null set `A`, `E = ℝ`,
   `Γ = Cb(ℝ)`, `V` any `m`-measurable random variable and `U` with
