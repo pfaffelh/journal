@@ -9785,8 +9785,11 @@ Banach space, so it covers $\K = \C$ with nothing to do; Doob's inequalities
 (Fact~\ref{fact:doob}); Polish spaces; weak convergence of measures with the
 portmanteau theorem, the L\'evy--Prokhorov metric and Prohorov's theorem
 (Facts~\ref{fact:portmanteau}, \ref{fact:PSpolish}, \ref{fact:prohorov});
-uniform integrability (Fact~\ref{fact:ui}); monotone class theorems
-(Fact~\ref{fact:monotoneclass}); the Riesz--Markov--Kakutani representation of a
+uniform integrability (Fact~\ref{fact:ui}); the monotone class theorem for
+\emph{sets}, as \texttt{MeasurableSpace.}\allowbreak\texttt{induction\_on\_inter} --- but not
+the
+functional form of Fact~\ref{fact:monotoneclass}, on which see below; the
+Riesz--Markov--Kakutani representation of a
 positive linear functional on compactly supported continuous functions, in the
 form \texttt{integral\_rieszMeasure}, which is what
 Proposition~\ref{prop:rieszmarkov} needs; and part of what
@@ -9823,6 +9826,23 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
   Fact~\ref{fact:fullgenerator}); these are needed only for
   Proposition~\ref{prop:dissipative} and Remark~\ref{rem:fullgenerator}, which
   are themselves optional context;
+\item the functional monotone class theorem (Fact~\ref{fact:monotoneclass}).
+  Mathlib has the version for sets and no version for functions: as of
+  September~2026 the string ``monotone class'' does not occur in the library at
+  all, and the searches for \texttt{MulSystem}, \texttt{generateFrom}\allowbreak\texttt{Funs},
+  ``multiplicative system'', ``bounded monotone convergence'' and ``functional
+  monotone'' return nothing.  This is the one item of the present list that is
+  already done: the roadmap accompanying this manuscript proves it as
+  \texttt{induction\_on\_}\allowbreak\texttt{mulSystem}, together with the three consequences the
+  text actually uses --- extension of an integral identity, vanishing of an
+  integral against a multiplicative system, and the conditional-expectation form
+  that Section~\ref{sec:MP} needs.  Two things about the proof are worth
+  carrying over to any reworking of it.  The ramps of the indicator step must be
+  taken \emph{together}, as one continuous function, because the property being
+  propagated is not closed under multiplication; and the passage through
+  $\overline{\R}_{\geq 0}$ in the simple-function step is not convenience but
+  the only route that makes the approximation increasing, \texttt{approxOn}
+  supplying no monotonicity;
 \item the Kolmogorov extension theorem for an uncountable index
   (Fact~\ref{fact:kolmogorov}).  Mathlib has the scaffolding and the sequential
   case but not the theorem; this is the one external prerequisite of
