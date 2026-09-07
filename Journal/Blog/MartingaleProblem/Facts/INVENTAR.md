@@ -5630,3 +5630,159 @@ ist die erste Stelle des ganzen Meilensteins, an der `AdditiveDist` wirklich
 gebraucht wird, und damit zugleich die Probe darauf, daß Meilenstein 1 die
 richtige Klasse führt. Sie stützt `fact:Dcountable` (tragend `4`) über die
 Meilensteine 3 und 4.
+
+### 2026-09-07, zweiter Lauf des Tages — Rückstau 1: die Zeitänderungsschicht ist fertig, und der Zeuge gegen die gefensterte Norm ist übersetzt
+
+Keine vorrangige Aufgabe, kein `?` in der Tabelle; also wieder der Rückstau von
+oben und dort das benannte Ziel des ersten Laufs von heute,
+`TimeChange.dist_le_of_norm_le` **zu beweisen**. Es ist bewiesen, und der
+Restposten desselben Laufs, `TimeChange.not_normOn_mul_le`, gleich mit.
+**Damit trägt die Zeitänderungsschicht der Meilensteine 3 und 4 kein `sorry`
+mehr.** `SkorokhodSpace/Suggested.lean` geht durch `lake env lean` gegen
+`v4.33.1` (Lean `4.33.1`, commit `819816b2`), ohne Fehler und ohne
+Linterwarnung; 13 `sorry` statt 15.
+
+**1. `dist_le_of_norm_le`, und eine Aussage von Meilenstein 1, die dabei
+angefallen ist.** Der im Vorschlag skizzierte Weg trägt, aber er ist an einer
+Stelle länger als angekündigt: `dist_eq_sub_of_le` verlangt $t_0\le s\le t$,
+und der Beweis hat nur, daß $t$ und $\lambda t$ **auf einer Seite** von $t_0$
+liegen — welche, entscheidet sich erst in der Fallunterscheidung, und
+unterhalb von $t_0$ steht $t_0$ am falschen Ende der Additivität. Der
+Zwischenschritt ist deshalb als eigene Aussage von Meilenstein 1
+aufgeschrieben:
+
+* `dist_eq_abs_sub_of_sameSide` — sind $s$ und $t$ beide $\ge t_0$ oder beide
+  $\le t_0$, so ist $\mathrm{dist}(s,t)=|\mathrm{dist}(t_0,t)-
+  \mathrm{dist}(t_0,s)|$. Vier Zweige (zwei Seiten, je `le_total s t`), in
+  zweien davon `AdditiveDist.dist_add` direkt statt über `dist_eq_sub_of_le`,
+  weil dort $t_0$ oben steht; der Absolutbetrag wird jedesmal aus
+  `dist_nonneg` aufgelöst. Die Voraussetzung ist **nicht** entbehrlich: auf
+  $\mathbb R$ mit $t_0=0$, $s=-1$, $t=1$ steht links $2$ und rechts $0$. Wie
+  `dist_eq_sub_of_le` braucht sie `AdditiveDist` allein.
+
+Der Satz selbst geht dann in einem Zug: `norm_nonneg` gibt $\gamma\ge0$,
+`Real.log_le_iff_le_exp` macht aus $\log\max(\ldots)\le\gamma$ die Schranke
+$\max\le e^\gamma$ (mit dem Subsingleton-Zweig eigens, weil dort
+`lipConst = 0` und der Logarithmus sein Müllwert ist),
+`lipschitzWith_lipConst.dist_le_mul` für $\lambda$ und für $\lambda^{-1}$
+klemmt $d'=\mathrm{dist}(t_0,\lambda t)$ zwischen $e^{-\gamma}d$ und
+$e^{\gamma}d$ ein, und $d\le m$ schließt ab.
+
+**Zwei Befunde am Satz, beide vom Übersetzen und nicht vom Lesen.**
+
+* **Er braucht weder `OrderTopology` noch `ProperSpace`**, gefunden vom
+  `unusedSectionVars`-Linter und jetzt als `omit` festgehalten. Insbesondere
+  geht die **Kompaktheit des Fensters nicht ein**: `exhaustion t₀ m` kommt nur
+  über die Ungleichung $\mathrm{dist}(t_0,t)\le m$ vor. Das ist die stehende
+  Regel über minimale Voraussetzungen, und sie fällt hier auf der richtigen
+  Seite aus — der Satz ist allgemeiner, als der Meilenstein ihn führte.
+* **Die bewiesene Schranke ist $(e^\gamma-1)\,m$, also die Hälfte der
+  behaupteten $(e^\gamma-1)\,2m$.** Der Faktor $2$ ist Reserve, die der Beweis
+  nicht braucht; die Aussage bleibt, wie sie ist, weil Meilenstein 4 sie so
+  zitiert, aber der Meilensteintext hält den schärferen Wert jetzt fest. Der
+  Grund, daß es reicht: im Zweig $d'\le d$ ist $d'\le d\le m$ ohnehin, und im
+  anderen ist $d'-d\le(e^\gamma-1)d$ direkt.
+
+**2. `not_normOn_mul_le` ist übersetzt, samt Zeugen.** Der erste Lauf von heute
+hatte die Rechnung vollständig in den Doc-Kommentar geschrieben und als
+`sorry` stehenlassen, weil „die stückweis lineare Ordnungsisomorphie von
+$\mathbb R$ als Term" fehlte. Der Weg dorthin war kürzer als der dort genannte,
+und er ist der eigentliche Ertrag dieses Punktes: **kein `if`, sondern ein
+`max`.** Die Abbildung, die auf $(-\infty,1]$ die Identität ist und darüber
+Steigung $100$ hat, ist
+
+$$\lambda(x)=\max(x,\;100x-99),$$
+
+denn $100x-99\le x$ gilt genau für $x\le1$; ihre Inverse ist
+$\lambda^{-1}(y)=\min(y,(y+99)/100)$, von derselben Gestalt. Damit ist alles
+ein Einzeiler: `max_lt_max` gibt die strenge Monotonie, `LipschitzWith.max`
+(`Topology/MetricSpace/Lipschitz.lean:182`) und `LipschitzWith.min` (`:186`)
+die beiden Lipschitz-Schranken, `StrictMono.orderIsoOfRightInverse`
+(`Order/Hom/Basic.lean:1206`) macht daraus die Ordnungsisomorphie, und die
+Rechtsinversenidentität ist ein einziges `rcases le_total y 1` mit
+`min_eq_left`/`max_eq_left` bzw. `_right`. Mit `if` wären es vier Zweige je
+Aussage gewesen und der Absolutbetrag in jedem.
+
+Übersetzt sind: `TimeChange.steep` und `TimeChange.double` samt ihren acht
+Hilfsaussagen, die vier `@[simp]`-Auswertungen (alle `rfl`),
+`mem_exhaustion_real_iff`, und die drei Abschätzungen `normOn_steep_le`
+($\le0$), `normOn_double_le` ($\le\log2$) und `le_normOn_steep_mul_double`
+($\ge\log200$). Nur die letzte braucht das Infimum **von unten**, also
+`le_csInf` samt Nichtleerheit aus `(steep * double).lipschitz`, ausgewertet an
+den beiden Fensterpunkten $1/2$ und $1$: $(\lambda\lambda')(1/2)=\lambda(1)=1$
+und $(\lambda\lambda')(1)=\lambda(2)=101$, also $100\le K\cdot\tfrac12$ und
+$K\ge200$. Die beiden anderen sind `csInf_le'` auf einer vorgezeigten
+zulässigen Konstante.
+
+Mit angefallen und eingetragen: **`Real.instAdditiveDist`**, die erste der vier
+laufenden Instanzen von Meilenstein 1. Sie war nötig, weil die Widerlegung
+über dem vollen Bündel quantifiziert und deshalb an $\mathbb R$ instanziiert
+werden muß; drei `abs_of_nonpos` auf `Real.dist_eq` und ein `ring`. Die
+anderen drei Instanzen folgen aus ihr über `instAdditiveDistSubtype`.
+
+**Was das für den Meilenstein bedeutet.** Meilenstein 4 hatte am ersten Lauf
+von heute seine Bauform gewechselt — `distOn` steht seither auf der globalen
+`TimeChange.norm` statt auf `normOn` —, und die Begründung dafür war eine
+Rechnung im Doc-Kommentar. Sie ist jetzt ein Satz. Das ist der Unterschied,
+den der Rückstaupunkt meint, wenn er sagt, das Typprüfen zähle nichts, solange
+die Aussage nicht die Arbeit trägt.
+
+**Stand der Datei.** 13 `sorry`: `exists_orderIso_isometry_real` (M1),
+`countable_leftJumpSet` und `IsCadlag.measurable` (M2), und die zehn, die an
+der `MetricSpace D(ι, E)`-Instanz hängen — die Instanz selbst, `CompleteSpace`,
+`SeparableSpace`, `PolishSpace`, `continuousAt_eval`,
+`measurableEmbedding_piDense`, `borel_eq_iSup_comap_eval`, `modulus`,
+`tendsto_modulus`, `isCompact_closure_iff`. Von den fünf Definitionen mit
+`sorry` **im Rumpf**, die der fünfte Lauf vom 2026-09-06 als die eigentliche
+Schwäche der Datei benannt hat, sind noch zwei da: `SkorokhodSpace.modulus`
+und die `MetricSpace`-Instanz.
+
+**3. Im selben Lauf noch: der Klemmoperator, der letzte offene Punkt von
+Meilenstein 1.** Er war als Ziel des nächsten Laufs vorgesehen und ist statt
+dessen gleich mitgemacht worden, weil er kein Werkzeug brauchte, das nicht
+schon dastand. Neun Deklarationen, alle bewiesen: `mem_exhaustion_self`,
+`exhaustionMin` und `exhaustionMax` samt `isLeast_exhaustionMin` und
+`isGreatest_exhaustionMax` — aus `IsCompact.exists_isLeast`
+(`Topology/Order/Compact.lean:148`) und `IsCompact.exists_isGreatest` (`:160`)
+auf dem seit dem 2026-09-06 kompakten `exhaustion`, mit `t₀` als
+Nichtleerheitszeuge —, dann `clamp`, `monotone_clamp`, `continuous_clamp`,
+`clamp_mem_exhaustion`, `clamp_eq_self` und `clamp_idem`.
+
+**Und der Befund, der dabei anfiel, ist der interessante Teil.** Meilenstein 1
+verlangte vom Klemmoperator nur, daß er monoton, stetig, idempotent und auf
+`B m` die Identität sei. Das reicht nicht: daß
+`min (max t (B m).min) (B m).max` **in `B m` liegt**, folgt aus dem Dastehen
+zwischen kleinstem und größtem Element **nicht**, solange das Fenster keine
+Ordnungsintervall ist. Es ist eines, aber das ist ein eigener Satz und noch
+einmal `AdditiveDist`:
+
+* `ordConnected_exhaustion` — oberhalb von $t_0$ gibt es
+  `monotoneOn_dist_basepoint`, unterhalb wird die Additivität vom anderen Ende
+  gelesen ($x\le z\le t_0$ gibt $\mathrm{dist}(x,t_0)=\mathrm{dist}(x,z)+
+  \mathrm{dist}(z,t_0)$, also $\mathrm{dist}(z,t_0)\le\mathrm{dist}(x,t_0)$).
+  Weder Ordnungstopologie noch Eigentlichkeit gehen ein.
+
+Damit ist `AdditiveDist` an drei Stellen dieses Laufs die tragende Hypothese
+gewesen und an keiner entbehrlich — Meilenstein 1 führt die richtige Klasse,
+und das ist jetzt dreifach geprüft statt einmal behauptet.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel.**
+**`SkorokhodSpace.restrictExhaustion` und `SkorokhodSpace.distOn`**, die beiden
+Daten der Metrik von Meilenstein 4. `restrictExhaustion t₀ m f = f ∘ clamp t₀ m`
+ist seit heute hinschreibbar und braucht als einzige Aussage, daß es wieder
+càdlàg ist — `clamp` ist monoton und stetig, also bleibt Rechtsstetigkeit
+erhalten und der Linkslimes existiert. Darauf steht dann
+`distOn t₀ m f g = ⨅ λ, max (TimeChange.norm λ) (⨆ t ∈ B m, dist (…))`, wobei
+das Infimum über die **Untergruppe der Zeitänderungen mit `λ t₀ = t₀`** läuft
+(so verlangt es `dist_le_of_norm_le`, und diese Untergruppe ist als solche noch
+nicht definiert — das ist die zweite Zutat, `TimeChange.fixing t₀` als
+`Subgroup (TimeChange ι)`). Es ist jetzt dran, weil es der einzige verbliebene
+Weg zur `MetricSpace D(ι, E)`-Instanz ist, an der zehn der dreizehn `sorry` der
+Datei hängen, und weil seit heute jede Aussage über `norm` bereitsteht, die
+ihre drei Axiome brauchen: Symmetrie aus `norm_inv`, Dreieck aus
+`norm_mul_le`, Trennung aus `dist_le_of_norm_le`. Zu prüfen ist dabei zuerst,
+ob das Supremum über `B m` überhaupt endlich ist — der Meilenstein verlangt
+das ausdrücklich, und für einen unbeschränkten càdlàg-Pfad auf einem kompakten
+Fenster ist es die Stelle, an der `isCompact_exhaustion` zum ersten Mal
+wirklich gebraucht wird. Das stützt `fact:Dcountable` (tragend `4`) über die
+Meilensteine 4, 5 und 6.

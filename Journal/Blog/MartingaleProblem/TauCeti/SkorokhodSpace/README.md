@@ -103,19 +103,44 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   for `AddSubgroup.zmultiples h` from `AddSubgroup.isClosed_of_discrete`;
   `OrderTopology` for an order-connected subset follows from the existing
   instance, and for a discrete subset from the two items above. As standalone
-  types `ℝ` and `ℤ` carry all five instances already.
+  types `ℝ` and `ℤ` carry all five instances already. `Real.instAdditiveDist`
+  is written and proved (2026-09-07) — three `abs_of_nonpos` and a `ring` on
+  `Real.dist_eq` —, because `TimeChange.not_normOn_mul_le` of Milestone 3
+  instantiates its refutation at `ℝ` and cannot do so without it. The other
+  three follow from it through `instAdditiveDistSubtype`.
 * `dist_eq_sub_of_le` and `monotoneOn_dist_basepoint`: for `t₀ ≤ s ≤ t`,
   `dist s t = dist t₀ t - dist t₀ s`, and `t ↦ dist t₀ t` is monotone on
   `Set.Ici t₀`. This is the step from which the embedding above follows. Both
   are proved (2026-09-06), and both need `AdditiveDist` alone: neither the order
   topology nor properness enters.
+* `dist_eq_abs_sub_of_sameSide`: for `s` and `t` on one side of `t₀` — both
+  above it or both below it — `dist s t = |dist t₀ t - dist t₀ s|`. This is the
+  two sided form of the previous item, and it is the form the estimate of
+  Milestone 3 consumes, where the two points compared are `t` and its image
+  under a time change fixing `t₀`, so that only their common position relative
+  to `t₀` is known. The hypothesis is necessary: on `ℝ` with `t₀ = 0`, `s = -1`
+  and `t = 1` the left hand side is `2` and the right hand side is `0`. Proved
+  (2026-09-07), again from `AdditiveDist` alone.
 * `exhaustion`: fixing a base point `t₀`, the sets `B m = closedBall t₀ m` are
   compact — `isCompact_exhaustion`, proved on 2026-09-06 from
   `isCompact_closedBall`, which is `ProperSpace` alone —, increasing, cover the
   index, and each is a linear order with a least
   and a greatest element. Define the clamp
   `clamp m t = min (max t (B m).min) (B m).max` and prove it is monotone,
-  continuous, idempotent, and the identity on `B m`.
+  continuous, idempotent, and the identity on `B m`. All of this is written and
+  proved (2026-09-07): `mem_exhaustion_self`, `exhaustionMin` and
+  `exhaustionMax` with their `isLeast`/`isGreatest` characterisations from
+  `IsCompact.exists_isLeast` and `IsCompact.exists_isGreatest`
+  (`Topology/Order/Compact.lean:148` and `:160`, both under the
+  `Closed{Iic,Ici}Topology` that `OrderTopology` supplies), then `clamp`,
+  `monotone_clamp`, `continuous_clamp`, `clamp_mem_exhaustion`,
+  `clamp_eq_self` and `clamp_idem`.
+* `ordConnected_exhaustion`: the window is an order interval. This is the step
+  the clamp actually needs — being between the least and the greatest element
+  of a set does not put a point in the set unless the set is order convex — and
+  it is `AdditiveDist` again: above the base point `monotoneOn_dist_basepoint`
+  gives it, below the base point the additivity is read from the other end.
+  Proved (2026-09-07). It needs neither the order topology nor properness.
 * Independence of the base point: two base points give exhaustions each of which
   refines the other after finitely many steps.
 
@@ -289,6 +314,19 @@ Under (B), with `E` a pseudometric space:
   failure can be made arbitrarily large. Milestone 4 therefore measures time
   changes with the **global** `norm`, exactly as Billingsley does — his `d°ₘ`
   truncates the *paths* to the window and leaves the time change untruncated.
+  Proved (2026-09-07), so the choice Milestone 4 makes rests on a theorem. The
+  two witnesses are part of this milestone: `TimeChange.steep`, the piecewise
+  linear map above, written as `x ↦ max x (100 * x - 99)` with inverse
+  `y ↦ min y ((y + 99) / 100)`, and `TimeChange.double`, `x ↦ 2 * x` with
+  inverse `y ↦ y / 2`. Writing them as a `max` resp. a `min` of two affine maps
+  rather than with an `if` is what makes them cheap: `max_lt_max` gives strict
+  monotonicity, `LipschitzWith.max` and `LipschitzWith.min` the two Lipschitz
+  bounds, and the inverse is again of the same shape, so
+  `StrictMono.orderIsoOfRightInverse` applies with no case analysis beyond the
+  single `rcases le_total y 1` of the right inverse identity. The three
+  estimates are stated separately — `normOn_steep_le`, `normOn_double_le`,
+  `le_normOn_steep_mul_double` — and only the last needs the infimum from below,
+  through `le_csInf` on the two points `1/2` and `1` of the window.
   What survives of the windowed norm is `normOn_inv` and `normOn_one`, both
   proved (2026-09-06 and 2026-09-07); `normOn_one` holds for two reasons and
   needs the case distinction: if `B m` has two distinct points the set of
@@ -308,6 +346,17 @@ Under (B), with `E` a pseudometric space:
   homeomorphisms of `[0,∞)` onto itself and they all fix `0` — and on a two
   sided index it has to be imposed. The time changes fixing `t₀` form a
   subgroup, so `norm_one`, `norm_inv` and `norm_mul_le` restrict to it unchanged.
+  Proved (2026-09-07). The anchor and the order isomorphism put `t` and `λ t` on
+  one side of `t₀`, so `dist_eq_abs_sub_of_sameSide` of Milestone 1 turns the
+  left hand side into `|dist t₀ (λ t) - dist t₀ t|`; `lipschitzWith_lipConst`,
+  applied to `λ` and to `λ⁻¹` and read through `log (max …) ≤ γ`, squeezes
+  `dist t₀ (λ t)` between `e^{-γ}` and `e^{γ}` times `dist t₀ t`, and
+  `dist t₀ t ≤ m` closes it. The bound obtained is `(exp γ - 1) * m`, half of
+  what is claimed. The statement needs neither `OrderTopology` nor
+  `ProperSpace`, and in particular not the compactness of `B m`: the window
+  enters only through `dist t₀ t ≤ m`. It is the first statement of this
+  milestone that uses `AdditiveDist` at all, and so the first check that
+  Milestone 1 carries the right class.
 * For the index `ℝ`, the identification of `norm` with Billingsley's
   `sup_{s < t} |log ((λ t - λ s) / (t - s))|`.
 

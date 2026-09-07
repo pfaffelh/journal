@@ -30,6 +30,26 @@ its metric on the global `norm`, as Billingsley does.  And
 `dist_le_of_normOn_le`, which is now `dist_le_of_norm_le` and asks the time
 change to fix the base point; without that a translation refutes it.
 
+Since 2026-09-07, second run, **Milestones 3 and 4 carry no `sorry` at all** in
+their time change layer.  `dist_le_of_norm_le` is proved, through the new
+`dist_eq_abs_sub_of_sameSide` of Milestone 1; and `not_normOn_mul_le` is proved
+as well, so the failure on which Milestone 4 rests its choice of the global
+`norm` is a theorem and not a doc comment.  Its witness is spelled out here:
+`TimeChange.steep`, the piecewise linear order isomorphism of `ℝ`, and
+`TimeChange.double`, `x ↦ 2 * x`.  Both are written as a `max` resp. `min` of
+two affine maps rather than with an `if`, which is what makes them cheap:
+`max_lt_max` gives strict monotonicity, `LipschitzWith.max` and
+`LipschitzWith.min` the two Lipschitz bounds, and the inverse is of the same
+shape.  `Real.instAdditiveDist` is the first of the four running instances of
+Milestone 1, needed to instantiate the refutation at `ℝ`.
+
+The same run finished Milestone 1 apart from the embedding into `ℝ`:
+`exhaustionMin`, `exhaustionMax`, `clamp` and its five properties.  One step of
+it was missing from the roadmap and is not cosmetic — `ordConnected_exhaustion`.
+Lying between the least and the greatest element of a set does not put a point
+in the set, so without the window being an order interval the clamp does not
+land in it; and that the window is one is `AdditiveDist` a third time.
+
 Seven `sorry`s went on 2026-09-06: `isCompact_exhaustion`,
 `monotoneOn_dist_basepoint` and
 `IsCadlag.eq_of_eqOn_dense` carry proofs --- the last had to be corrected first,
@@ -94,12 +114,126 @@ theorem monotoneOn_dist_basepoint {t₀ : ι} :
   simp only
   linarith
 
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- On either side of the base point the metric is the difference of the two
+length functions.  This is `dist_eq_sub_of_le` in the form that
+`TimeChange.dist_le_of_norm_le` consumes, where the two points compared are `t`
+and its image under a time change fixing `t₀`, and only their common position
+relative to `t₀` is known.  Like `dist_eq_sub_of_le` it is `AdditiveDist` alone.
+
+The hypothesis cannot be dropped: on `ℝ` with `t₀ = 0`, `s = -1` and `t = 1` the
+left hand side is `2` and the right hand side is `0`. -/
+theorem dist_eq_abs_sub_of_sameSide {t₀ s t : ι}
+    (h : (t₀ ≤ s ∧ t₀ ≤ t) ∨ (s ≤ t₀ ∧ t ≤ t₀)) :
+    dist s t = |dist t₀ t - dist t₀ s| := by
+  have key : dist s t = dist t₀ t - dist t₀ s ∨ dist s t = dist t₀ s - dist t₀ t := by
+    rcases h with ⟨h₀s, h₀t⟩ | ⟨hs₀, ht₀⟩
+    · rcases le_total s t with hst | hts
+      · exact Or.inl (dist_eq_sub_of_le h₀s hst)
+      · refine Or.inr ?_
+        rw [dist_comm]
+        exact dist_eq_sub_of_le h₀t hts
+    · rcases le_total s t with hst | hts
+      · refine Or.inr ?_
+        have := AdditiveDist.dist_add (α := ι) hst ht₀
+        rw [dist_comm t₀ s, dist_comm t₀ t]
+        linarith
+      · refine Or.inl ?_
+        have := AdditiveDist.dist_add (α := ι) hts hs₀
+        rw [dist_comm s t, dist_comm t₀ s, dist_comm t₀ t]
+        linarith
+  rcases key with h1 | h1
+  · have h2 : (0 : ℝ) ≤ dist t₀ t - dist t₀ s := by rw [← h1]; exact dist_nonneg
+    rw [h1, abs_of_nonneg h2]
+  · have h2 : (0 : ℝ) ≤ dist t₀ s - dist t₀ t := by rw [← h1]; exact dist_nonneg
+    rw [h1, abs_of_nonpos (by linarith)]
+    ring
+
 /-- Definitional, but it does not fire through a `SetLike` hull: the lattice
 `AddSubgroup.zmultiples h` needs its `Set` coercion, or this instance restated
 for `SetLike` carriers. -/
 instance instAdditiveDistSubtype {α : Type*} [LinearOrder α] [PseudoMetricSpace α]
     [AdditiveDist α] (s : Set α) : AdditiveDist s where
   dist_add {_ _ _} hab hbc := AdditiveDist.dist_add (α := α) hab hbc
+
+/-- The first of the four running instances of the milestone: `ℝ` itself.  With
+`instAdditiveDistSubtype` above it carries the other three, and it is the index
+on which `TimeChange.not_normOn_mul_le` refutes the windowed norm. -/
+instance Real.instAdditiveDist : AdditiveDist ℝ where
+  dist_add {s t u} hst htu := by
+    rw [Real.dist_eq, Real.dist_eq, Real.dist_eq, abs_of_nonpos (by linarith),
+      abs_of_nonpos (by linarith), abs_of_nonpos (by linarith)]
+    ring
+
+omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+theorem mem_exhaustion_self (t₀ : ι) (m : ℕ) : t₀ ∈ exhaustion t₀ m :=
+  Metric.mem_closedBall_self (by positivity)
+
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- The window is an order interval.  This is `AdditiveDist` again, and it is
+what makes the clamp below land in the window: above the base point the length
+function is monotone, below it the additivity is read from the other end. -/
+theorem ordConnected_exhaustion (t₀ : ι) (m : ℕ) : (exhaustion t₀ m).OrdConnected := by
+  refine ⟨fun x hx y hy z hz => ?_⟩
+  obtain ⟨hxz, hzy⟩ := hz
+  simp only [exhaustion, Metric.mem_closedBall] at hx hy ⊢
+  rcases le_total t₀ z with h | h
+  · have h1 : dist t₀ z ≤ dist t₀ y :=
+      monotoneOn_dist_basepoint (Set.mem_Ici.2 h) (Set.mem_Ici.2 (h.trans hzy)) hzy
+    rw [dist_comm] at hy ⊢
+    linarith
+  · have h2 := AdditiveDist.dist_add (α := ι) hxz h
+    have h3 : (0 : ℝ) ≤ dist x z := dist_nonneg
+    linarith
+
+/-- The least element of the window; it exists because the window is compact and
+contains the base point. -/
+noncomputable def exhaustionMin (t₀ : ι) (m : ℕ) : ι :=
+  ((isCompact_exhaustion t₀ m).exists_isLeast ⟨t₀, mem_exhaustion_self t₀ m⟩).choose
+
+omit [AdditiveDist ι] in
+theorem isLeast_exhaustionMin (t₀ : ι) (m : ℕ) :
+    IsLeast (exhaustion t₀ m) (exhaustionMin t₀ m) :=
+  ((isCompact_exhaustion t₀ m).exists_isLeast ⟨t₀, mem_exhaustion_self t₀ m⟩).choose_spec
+
+/-- The greatest element of the window. -/
+noncomputable def exhaustionMax (t₀ : ι) (m : ℕ) : ι :=
+  ((isCompact_exhaustion t₀ m).exists_isGreatest ⟨t₀, mem_exhaustion_self t₀ m⟩).choose
+
+omit [AdditiveDist ι] in
+theorem isGreatest_exhaustionMax (t₀ : ι) (m : ℕ) :
+    IsGreatest (exhaustion t₀ m) (exhaustionMax t₀ m) :=
+  ((isCompact_exhaustion t₀ m).exists_isGreatest ⟨t₀, mem_exhaustion_self t₀ m⟩).choose_spec
+
+/-- The clamp onto the window.  Milestone 4 composes paths with it, so that a
+path restricted to `exhaustion t₀ m` is constant outside the window instead of
+being undefined there. -/
+noncomputable def clamp (t₀ : ι) (m : ℕ) (t : ι) : ι :=
+  min (max t (exhaustionMin t₀ m)) (exhaustionMax t₀ m)
+
+omit [AdditiveDist ι] in
+theorem monotone_clamp (t₀ : ι) (m : ℕ) : Monotone (clamp t₀ m) :=
+  fun _ _ h => min_le_min (max_le_max h le_rfl) le_rfl
+
+omit [AdditiveDist ι] in
+theorem continuous_clamp (t₀ : ι) (m : ℕ) : Continuous (clamp t₀ m) :=
+  (continuous_id.max continuous_const).min continuous_const
+
+theorem clamp_mem_exhaustion (t₀ : ι) (m : ℕ) (t : ι) : clamp t₀ m t ∈ exhaustion t₀ m := by
+  have hmin := isLeast_exhaustionMin t₀ m
+  have hmax := isGreatest_exhaustionMax t₀ m
+  have hle : exhaustionMin t₀ m ≤ exhaustionMax t₀ m := hmin.2 hmax.1
+  refine (ordConnected_exhaustion t₀ m).out hmin.1 hmax.1 ⟨?_, min_le_right _ _⟩
+  exact le_min (le_max_right _ _) hle
+
+omit [AdditiveDist ι] in
+theorem clamp_eq_self {t₀ : ι} {m : ℕ} {t : ι} (ht : t ∈ exhaustion t₀ m) :
+    clamp t₀ m t = t := by
+  rw [clamp, max_eq_left ((isLeast_exhaustionMin t₀ m).2 ht),
+    min_eq_left ((isGreatest_exhaustionMax t₀ m).2 ht)]
+
+theorem clamp_idem (t₀ : ι) (m : ℕ) (t : ι) : clamp t₀ m (clamp t₀ m t) = clamp t₀ m t :=
+  clamp_eq_self (clamp_mem_exhaustion t₀ m t)
 
 /-- An index satisfying the four hypotheses is order isomorphic and isometric to
 a closed subset of `ℝ`. -/
@@ -430,6 +564,194 @@ theorem TimeChange.norm_mul_le (l l' : TimeChange ι) :
       ≤ Real.log (M * M') := Real.log_le_log hpos (max_le hA hB)
     _ = Real.log M + Real.log M' := Real.log_mul (by linarith) (by linarith)
 
+/-! ### The two time changes of `ℝ` that refute the windowed norm
+
+Both are written as a `max` resp. `min` of two affine maps rather than with an
+`if`, which is what makes `StrictMono` and the Lipschitz bounds one-liners:
+`max_lt_max`, `LipschitzWith.max` and `LipschitzWith.min` do the work, and the
+inverse is again of the same shape. -/
+
+theorem strictMono_steepFun : StrictMono (fun x : ℝ => max x (100 * x - 99)) := by
+  intro x y hxy
+  exact max_lt_max hxy (by linarith)
+
+theorem rightInverse_steepFun :
+    Function.RightInverse (fun y : ℝ => min y ((y + 99) / 100))
+      (fun x : ℝ => max x (100 * x - 99)) := by
+  intro y
+  show max (min y ((y + 99) / 100)) (100 * min y ((y + 99) / 100) - 99) = y
+  rcases le_total y 1 with hy | hy
+  · rw [min_eq_left (by linarith), max_eq_left (by linarith)]
+  · rw [min_eq_right (by linarith), max_eq_right (by linarith)]
+    ring
+
+theorem lipschitzWith_steepFun : LipschitzWith 100 (fun x : ℝ => max x (100 * x - 99)) := by
+  have hg : LipschitzWith 100 (fun x : ℝ => 100 * x - 99) := by
+    refine LipschitzWith.of_dist_le_mul fun x y => ?_
+    rw [Real.dist_eq, Real.dist_eq,
+      show (100 : ℝ) * x - 99 - (100 * y - 99) = 100 * (x - y) by ring, abs_mul,
+      abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 100)]
+    norm_num
+  have h := LipschitzWith.max (Kf := 1) LipschitzWith.id hg
+  simpa using h
+
+theorem lipschitzWith_steepInvFun : LipschitzWith 1 (fun y : ℝ => min y ((y + 99) / 100)) := by
+  have hg : LipschitzWith 1 (fun y : ℝ => (y + 99) / 100) := by
+    refine LipschitzWith.of_dist_le_mul fun x y => ?_
+    rw [Real.dist_eq, Real.dist_eq,
+      show (x + 99) / 100 - (y + 99) / 100 = (x - y) / 100 by ring, abs_div,
+      abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 100),
+      div_le_iff₀ (by norm_num : (0 : ℝ) < 100)]
+    have : (0 : ℝ) ≤ |x - y| := abs_nonneg _
+    push_cast
+    nlinarith
+  have h := LipschitzWith.min (Kf := 1) LipschitzWith.id hg
+  simpa using h
+
+/-- The order isomorphism of `ℝ` that is the identity on `Set.Iic 1` and has
+slope `100` on `Set.Ici 1`, written as `x ↦ max x (100 * x - 99)`; the two
+branches agree at `1`, and the switch is at `1` because `100 * x - 99 ≤ x` if and
+only if `x ≤ 1`.  Its inverse is `y ↦ min y ((y + 99) / 100)`. -/
+noncomputable def TimeChange.steep : TimeChange ℝ where
+  toOrderIso :=
+    StrictMono.orderIsoOfRightInverse (fun x => max x (100 * x - 99)) strictMono_steepFun
+      (fun y => min y ((y + 99) / 100)) rightInverse_steepFun
+  lipschitz := ⟨100, lipschitzWith_steepFun⟩
+  lipschitz_symm := ⟨1, lipschitzWith_steepInvFun⟩
+
+theorem strictMono_doubleFun : StrictMono (fun x : ℝ => 2 * x) := by
+  intro x y hxy
+  simp only
+  linarith
+
+theorem rightInverse_doubleFun :
+    Function.RightInverse (fun y : ℝ => y / 2) (fun x : ℝ => 2 * x) := by
+  intro y
+  show 2 * (y / 2) = y
+  ring
+
+theorem lipschitzWith_doubleFun : LipschitzWith 2 (fun x : ℝ => 2 * x) := by
+  refine LipschitzWith.of_dist_le_mul fun x y => ?_
+  rw [Real.dist_eq, Real.dist_eq, show (2 : ℝ) * x - 2 * y = 2 * (x - y) by ring,
+    abs_mul, abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 2)]
+  norm_num
+
+theorem lipschitzWith_doubleInvFun : LipschitzWith 1 (fun y : ℝ => y / 2) := by
+  refine LipschitzWith.of_dist_le_mul fun x y => ?_
+  rw [Real.dist_eq, Real.dist_eq, show x / 2 - y / 2 = (x - y) / 2 by ring, abs_div,
+    abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 2), div_le_iff₀ (by norm_num : (0 : ℝ) < 2)]
+  have : (0 : ℝ) ≤ |x - y| := abs_nonneg _
+  push_cast
+  nlinarith
+
+/-- The doubling map of `ℝ`, `x ↦ 2 * x`, with inverse `y ↦ y / 2`. -/
+noncomputable def TimeChange.double : TimeChange ℝ where
+  toOrderIso :=
+    StrictMono.orderIsoOfRightInverse (fun x => 2 * x) strictMono_doubleFun
+      (fun y => y / 2) rightInverse_doubleFun
+  lipschitz := ⟨2, lipschitzWith_doubleFun⟩
+  lipschitz_symm := ⟨1, lipschitzWith_doubleInvFun⟩
+
+@[simp] theorem TimeChange.steep_apply (x : ℝ) :
+    TimeChange.steep.toOrderIso x = max x (100 * x - 99) := rfl
+
+@[simp] theorem TimeChange.steep_symm_apply (y : ℝ) :
+    (TimeChange.steep⁻¹).toOrderIso y = min y ((y + 99) / 100) := rfl
+
+@[simp] theorem TimeChange.double_apply (x : ℝ) :
+    TimeChange.double.toOrderIso x = 2 * x := rfl
+
+@[simp] theorem TimeChange.double_symm_apply (y : ℝ) :
+    (TimeChange.double⁻¹).toOrderIso y = y / 2 := rfl
+
+/-- Membership in the window `exhaustion (0 : ℝ) 1 = [-1, 1]`, in the only form
+the three estimates below use it. -/
+theorem mem_exhaustion_real_iff {x : ℝ} : x ∈ exhaustion (0 : ℝ) 1 ↔ -1 ≤ x ∧ x ≤ 1 := by
+  simp only [exhaustion, Metric.mem_closedBall, Real.dist_eq, sub_zero, Nat.cast_one]
+  exact abs_le
+
+/-- On the window `steep` and its inverse are the identity, so the windowed norm
+of `steep` is `log 1 = 0`. -/
+theorem TimeChange.normOn_steep_le : TimeChange.normOn (0 : ℝ) 1 TimeChange.steep ≤ 0 := by
+  have h1 : TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.steep ≤ 1 := by
+    refine csInf_le' ?_
+    refine LipschitzOnWith.of_dist_le_mul fun x hx y hy => ?_
+    obtain ⟨_, hx1⟩ := mem_exhaustion_real_iff.1 hx
+    obtain ⟨_, hy1⟩ := mem_exhaustion_real_iff.1 hy
+    rw [TimeChange.steep_apply, TimeChange.steep_apply, max_eq_left (by linarith),
+      max_eq_left (by linarith)]
+    simp
+  have h2 : TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.steep⁻¹ ≤ 1 := by
+    refine csInf_le' ?_
+    refine LipschitzOnWith.of_dist_le_mul fun x hx y hy => ?_
+    obtain ⟨_, hx1⟩ := mem_exhaustion_real_iff.1 hx
+    obtain ⟨_, hy1⟩ := mem_exhaustion_real_iff.1 hy
+    rw [TimeChange.steep_symm_apply, TimeChange.steep_symm_apply,
+      min_eq_left (by linarith), min_eq_left (by linarith)]
+    simp
+  rw [TimeChange.normOn]
+  refine Real.log_nonpos (le_trans (by positivity) (le_max_left _ _)) (max_le ?_ ?_)
+  · exact_mod_cast h1
+  · exact_mod_cast h2
+
+/-- `double` doubles distances and halves them back, so its windowed norm is at
+most `log 2`. -/
+theorem TimeChange.normOn_double_le :
+    TimeChange.normOn (0 : ℝ) 1 TimeChange.double ≤ Real.log 2 := by
+  have h1 : TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.double ≤ 2 := by
+    refine csInf_le' ?_
+    refine LipschitzOnWith.of_dist_le_mul fun x _ y _ => ?_
+    rw [TimeChange.double_apply, TimeChange.double_apply, Real.dist_eq, Real.dist_eq,
+      show (2 : ℝ) * x - 2 * y = 2 * (x - y) by ring, abs_mul,
+      abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 2)]
+    norm_num
+  have h2 : TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.double⁻¹ ≤ 2 := by
+    refine csInf_le' ?_
+    refine LipschitzOnWith.of_dist_le_mul fun x _ y _ => ?_
+    rw [TimeChange.double_symm_apply, TimeChange.double_symm_apply, Real.dist_eq, Real.dist_eq,
+      show x / 2 - y / 2 = (x - y) / 2 by ring, abs_div,
+      abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 2), div_le_iff₀ (by norm_num : (0 : ℝ) < 2)]
+    have : (0 : ℝ) ≤ |x - y| := abs_nonneg _
+    push_cast
+    nlinarith
+  have hmax : max ((TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.double : ℝ))
+      ((TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.double⁻¹ : ℝ)) ≤ 2 :=
+    max_le (by exact_mod_cast h1) (by exact_mod_cast h2)
+  have hnn : (0 : ℝ) ≤ max ((TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.double : ℝ))
+      ((TimeChange.lipConstOn (0 : ℝ) 1 TimeChange.double⁻¹ : ℝ)) :=
+    le_trans (by positivity) (le_max_left _ _)
+  rw [TimeChange.normOn]
+  rcases eq_or_lt_of_le hnn with h | h
+  · rw [← h, Real.log_zero]
+    exact le_of_lt (Real.log_pos (by norm_num))
+  · exact Real.log_le_log h hmax
+
+/-- The composite `steep * double` sends `1/2` to `1` and `1` to `101`, both of
+which lie in the window, so every constant admissible on the window is at least
+`200`. This is the whole counterexample: the outer factor is measured on the
+image of the window, which the windowed norm does not see. -/
+theorem TimeChange.le_normOn_steep_mul_double :
+    Real.log 200 ≤ TimeChange.normOn (0 : ℝ) 1 (TimeChange.steep * TimeChange.double) := by
+  have happ : ∀ x : ℝ, (TimeChange.steep * TimeChange.double).toOrderIso x
+      = max (2 * x) (100 * (2 * x) - 99) := fun _ => rfl
+  have h200 : (200 : ℝ≥0) ≤ TimeChange.lipConstOn (0 : ℝ) 1
+      (TimeChange.steep * TimeChange.double) := by
+    obtain ⟨C, hC⟩ := (TimeChange.steep * TimeChange.double).lipschitz
+    refine le_csInf ⟨C, hC.lipschitzOnWith⟩ fun K hK => ?_
+    have hm1 : (1 / 2 : ℝ) ∈ exhaustion (0 : ℝ) 1 := mem_exhaustion_real_iff.2 (by norm_num)
+    have hm2 : (1 : ℝ) ∈ exhaustion (0 : ℝ) 1 := mem_exhaustion_real_iff.2 (by norm_num)
+    have h := (lipschitzOnWith_iff_dist_le_mul.1 hK) (1 / 2 : ℝ) hm1 (1 : ℝ) hm2
+    rw [happ, happ, Real.dist_eq, Real.dist_eq] at h
+    norm_num at h
+    have h' : (200 : ℝ) ≤ (K : ℝ) := by linarith
+    exact_mod_cast h'
+  have hle : (200 : ℝ) ≤ max ((TimeChange.lipConstOn (0 : ℝ) 1
+      (TimeChange.steep * TimeChange.double) : ℝ))
+      ((TimeChange.lipConstOn (0 : ℝ) 1 (TimeChange.steep * TimeChange.double)⁻¹ : ℝ)) :=
+    le_trans (by exact_mod_cast h200) (le_max_left _ _)
+  rw [TimeChange.normOn]
+  exact Real.log_le_log (by norm_num) hle
+
 /-- **The windowed norm is not a length function.** Measuring the Lipschitz
 constants on `exhaustion t₀ m` alone destroys subadditivity, because the inner
 factor of a composite need not map the window into itself, and outside it the
@@ -453,8 +775,23 @@ theorem TimeChange.not_normOn_mul_le :
     ¬ ∀ (ι : Type) (_ : LinearOrder ι) (_ : MetricSpace ι) (_ : OrderTopology ι)
         (_ : AdditiveDist ι) (_ : ProperSpace ι) (t₀ : ι) (m : ℕ) (l l' : TimeChange ι),
         TimeChange.normOn t₀ m (l * l') ≤
-          TimeChange.normOn t₀ m l + TimeChange.normOn t₀ m l' := sorry
+          TimeChange.normOn t₀ m l + TimeChange.normOn t₀ m l' := by
+  intro hcon
+  have key := hcon ℝ inferInstance inferInstance inferInstance inferInstance inferInstance
+    0 1 TimeChange.steep TimeChange.double
+  have hlog2 : Real.log 200 ≤ Real.log 2 := by
+    have h1 : TimeChange.normOn (0 : ℝ) 1 TimeChange.steep ≤ 0 :=
+      TimeChange.normOn_steep_le
+    have h2 : TimeChange.normOn (0 : ℝ) 1 TimeChange.double ≤ Real.log 2 :=
+      TimeChange.normOn_double_le
+    have h3 : Real.log 200 ≤ TimeChange.normOn (0 : ℝ) 1
+        (TimeChange.steep * TimeChange.double) :=
+      TimeChange.le_normOn_steep_mul_double
+    linarith
+  have : Real.log 2 < Real.log 200 := Real.log_lt_log (by norm_num) (by norm_num)
+  linarith
 
+omit [OrderTopology ι] [ProperSpace ι] in
 /-- A time change of small norm moves the points of `exhaustion t₀ m` little.
 This is the estimate that makes the metric separate points.
 
@@ -464,10 +801,67 @@ both directions, so its norm is `0`, while it moves every point by the same
 arbitrary amount.  Billingsley gets the anchor for free, because his `Λ` consists
 of the increasing homeomorphisms of `[0,∞)` onto itself and they all fix `0`; on
 a two sided index it has to be imposed.  The time changes fixing `t₀` are a
-subgroup, so nothing else in Milestones 3 and 4 changes. -/
+subgroup, so nothing else in Milestones 3 and 4 changes.
+
+It needs neither the order topology nor properness, and in particular not the
+compactness of `exhaustion t₀ m`: the window enters only through the bound
+`dist t₀ t ≤ m`.  What it does need, and it is the first place in Milestone 3
+where this happens, is `AdditiveDist`, through `dist_eq_abs_sub_of_sameSide`. -/
 theorem TimeChange.dist_le_of_norm_le (t₀ : ι) (m : ℕ) {l : TimeChange ι} {γ : ℝ}
     (h₀ : l.toOrderIso t₀ = t₀) (h : l.norm ≤ γ) {t : ι} (ht : t ∈ exhaustion t₀ m) :
-    dist (l.toOrderIso t) t ≤ (Real.exp γ - 1) * (2 * m) := sorry
+    dist (l.toOrderIso t) t ≤ (Real.exp γ - 1) * (2 * m) := by
+  have hγ : 0 ≤ γ := (TimeChange.norm_nonneg l).trans h
+  have hE : (1 : ℝ) ≤ Real.exp γ := Real.one_le_exp hγ
+  -- both Lipschitz constants are at most `exp γ`; this is `norm λ ≤ γ` undone
+  have hmax : max (l.lipConst : ℝ) ((l⁻¹).lipConst : ℝ) ≤ Real.exp γ := by
+    rcases subsingleton_or_nontrivial ι with _ | _
+    · rw [TimeChange.lipConst_of_subsingleton, TimeChange.lipConst_of_subsingleton]
+      simpa using le_trans zero_le_one hE
+    · have h1 : (1 : ℝ) ≤ max (l.lipConst : ℝ) ((l⁻¹).lipConst : ℝ) := by
+        exact_mod_cast TimeChange.one_le_max_lipConst l
+      exact (Real.log_le_iff_le_exp (by linarith)).1 h
+  have hL : (l.lipConst : ℝ) ≤ Real.exp γ := (le_max_left _ _).trans hmax
+  have hLi : ((l⁻¹).lipConst : ℝ) ≤ Real.exp γ := (le_max_right _ _).trans hmax
+  -- the image of `t` is squeezed between `e^{-γ}` and `e^{γ}` times its distance
+  have hd' : dist t₀ (l.toOrderIso t) ≤ Real.exp γ * dist t₀ t := by
+    have h1 := l.lipschitzWith_lipConst.dist_le_mul t₀ t
+    rw [h₀] at h1
+    exact h1.trans (mul_le_mul_of_nonneg_right hL dist_nonneg)
+  have hd : dist t₀ t ≤ Real.exp γ * dist t₀ (l.toOrderIso t) := by
+    have hinv : (l⁻¹).toOrderIso = l.toOrderIso.symm := rfl
+    have h1 := (l⁻¹).lipschitzWith_lipConst.dist_le_mul (l.toOrderIso t₀) (l.toOrderIso t)
+    rw [hinv] at h1
+    simp only [OrderIso.symm_apply_apply] at h1
+    rw [h₀] at h1
+    exact h1.trans (mul_le_mul_of_nonneg_right hLi dist_nonneg)
+  -- `t` and its image lie on the same side of `t₀`, so the metric is a difference
+  have hside : (t₀ ≤ l.toOrderIso t ∧ t₀ ≤ t) ∨ (l.toOrderIso t ≤ t₀ ∧ t ≤ t₀) := by
+    rcases le_total t₀ t with hle | hle
+    · refine Or.inl ⟨?_, hle⟩
+      calc t₀ = l.toOrderIso t₀ := h₀.symm
+        _ ≤ l.toOrderIso t := l.toOrderIso.monotone hle
+    · refine Or.inr ⟨?_, hle⟩
+      calc l.toOrderIso t ≤ l.toOrderIso t₀ := l.toOrderIso.monotone hle
+        _ = t₀ := h₀
+  have hm : dist t₀ t ≤ (m : ℝ) := by
+    rw [dist_comm]
+    simpa only [exhaustion, Metric.mem_closedBall] using ht
+  have hm0 : (0 : ℝ) ≤ (m : ℝ) := Nat.cast_nonneg m
+  have habs : |dist t₀ t - dist t₀ (l.toOrderIso t)| ≤ (Real.exp γ - 1) * (m : ℝ) := by
+    rcases le_total (dist t₀ (l.toOrderIso t)) (dist t₀ t) with hle | hle
+    · rw [abs_of_nonneg (by linarith)]
+      have hbound : (Real.exp γ - 1) * dist t₀ (l.toOrderIso t)
+          ≤ (Real.exp γ - 1) * (m : ℝ) :=
+        mul_le_mul_of_nonneg_left (hle.trans hm) (by linarith)
+      linarith
+    · rw [abs_of_nonpos (by linarith)]
+      have hbound : (Real.exp γ - 1) * dist t₀ t ≤ (Real.exp γ - 1) * (m : ℝ) :=
+        mul_le_mul_of_nonneg_left hm (by linarith)
+      linarith
+  have hfinal : (Real.exp γ - 1) * (m : ℝ) ≤ (Real.exp γ - 1) * (2 * m) :=
+    mul_le_mul_of_nonneg_left (by linarith) (by linarith)
+  rw [dist_eq_abs_sub_of_sameSide hside]
+  linarith
 
 /-- Càdlàg paths from `ι` to `E`. -/
 structure SkorokhodSpace (ι E : Type*) [LinearOrder ι] [TopologicalSpace ι]
