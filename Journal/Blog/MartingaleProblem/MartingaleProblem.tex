@@ -1423,6 +1423,15 @@ Throughout this subsection $(S,d)$ is a metric space.
   If $(S,d)$ is separable, then the set of uniformly continuous $f \in \Cb(S)$
   with bounded support is convergence determining.  If $S$ is in addition
   locally compact, then $C_c(S)$ is convergence determining.
+
+  Separability is not needed for the first half.  \EK{} assume it and the
+  statement is quoted here as they give it, but the formalized proof does
+  without: what the argument exhausts around is a single point, and the limit
+  measure supplies one, whereas a countable dense set is never used.  The Lean
+  statement in the accompanying roadmap therefore carries
+  \texttt{MetricSpace} and \texttt{OpensMeasurableSpace} alone.  For the second
+  half the question is open; local compactness enters through a cut-off that has
+  no substitute here.
 \end{fact}
 
 \begin{fact}[Stone--Weierstrass for separating classes; \EK, Theorem 3.4.5]
