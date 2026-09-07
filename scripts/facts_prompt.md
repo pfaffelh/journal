@@ -268,6 +268,61 @@ Unteralgebra; `charPoly` ist die von den Charakteren erzeugte Algebra, und
 
 Das Manuskript wird dabei nicht geändert; Auffälligkeiten kommen ins Inventar.
 
+
+### Aufgabe: acceptance examples für jeden Meilenstein *(gestellt 2026-09-07)*
+
+**Warum.** Die Einreichung bei Tau Ceti steht in einer Woche an. Die gemergte
+Roadmap `OneParameterSemigroups` — die einzige, die unmittelbar an unsere Arbeit
+stößt, und diejenige, deren Reviewverlauf in
+`TauCeti/VORBILD-OneParameterSemigroups.md` aufbereitet ist — führt je Teil die
+Struktur **API → Meilenstein → acceptance examples**. Uns fehlt das Dritte.
+Beispiele daraus, zur Kalibrierung des Anspruchs:
+
+> **Acceptance examples.** The multiplication semigroup `S t f = e^{−t·m} f`
+> (generator `−m`) and `e^{tA}` for bounded `A`; the resolvent matches the
+> Neumann series `R(λ) = (λ−A)⁻¹`; the resolvent identity and `‖R(λ)‖ ≤ 1/λ`
+> hold on these concretely.
+
+> **Acceptance examples.** Bochner on `V = ℝ` recovers the classical statement;
+> the case `V = 0` (no spatial variable) collapses BCR back to Bernstein.
+
+**Was ein acceptance example ist, und was nicht.** Es ist eine **konkrete
+Instanz**, an der sich prüfen läßt, ob die API des Meilensteins das leistet,
+wofür sie gebaut wurde — benannt, mit dem Ergebnis, das herauskommen muß, und
+so, daß ein Implementierer sie hinschreiben und rechnen kann. Es ist **kein**
+weiterer Satz, keine Anwendung „später", und keine Wiederholung des
+Meilensteinziels in anderen Worten. Ein gutes Beispiel deckt einen Fall ab, in
+dem eine naheliegende falsche Definition scheitern würde.
+
+**Zu tun.** Ergänze für **jeden** Meilenstein der vier Roadmaps unter
+`TauCeti/` einen Abschnitt `**Acceptance examples.**` am Ende. Arbeite eine
+Roadmap nach der anderen ab, von `WeakConvergence` beginnend; die Aufgabe darf
+sich über mehrere Läufe ziehen und bleibt dann mit Zwischenstand stehen.
+
+Woher die Beispiele kommen sollen, in dieser Reihenfolge:
+
+1. **Aus dem Manuskript.** Es ist voll davon, und sie sind geprüft: die
+   Sprungprozesse aus §7.4, Hawkes und der Volterra-Limes, `ex:invariance`,
+   `ex:atomicdiscontinuity`, das Diamant-Gegenbeispiel, die $\omega$-Kette. Wo
+   ein Meilenstein eine Manuskriptaussage trägt, ist deren Beispiel das
+   natürliche.
+2. **Aus den Gegenbeispielen, die diese Läufe gefunden haben** — der Diamant
+   mit $m_c^2=m_am_b$, die Antikette mit Defekt $1/M$, der Zeuge gegen die
+   gefensterte Norm, die $\emptyset$-Klasse auf dem einpunktigen Raum. Die sind
+   besonders wertvoll, weil sie genau die naheliegenden falschen Definitionen
+   ausschließen.
+3. **Neu erfunden**, aber nur wenn 1 und 2 nichts hergeben, und dann so
+   einfach wie möglich.
+
+**Wo ein Beispiel schon als Lean dasteht**, nenne die Deklaration aus
+`Suggested.lean`; das ist der stärkste Beleg, den ein acceptance example haben
+kann. Wo es sich billig hinschreiben läßt, schreib es hin und übersetze es.
+
+**Nicht** ändern: das Manuskript, die Meilensteinziele selbst, und die beiden
+mit `roadmap-for-a-roadmap` gekennzeichneten Meilensteine 12 und 13 von
+`MartingaleProblems` — die bekommen keine acceptance examples, weil sie
+ausdrücklich nicht bearbeitet werden sollen.
+
 ## Worum es geht
 
 Die 29 mit `\begin{fact}` ausgezeichneten Aussagen des Manuskripts sind seine
