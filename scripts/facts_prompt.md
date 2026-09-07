@@ -10,7 +10,25 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-### Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen *(gestellt 2026-09-07 vom Nutzer)*
+Zurzeit stehen hier keine Aufgaben.
+
+### ~~Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen~~ *(gestellt 2026-09-07 vom Nutzer, erledigt 2026-09-07, sechzehnter Lauf des Tages)*
+
+Ergebnis, damit es nicht noch einmal gesucht wird: geprüft mit einem
+`Lean.collectAxioms`-Metaprogramm je Datei. Zwei Instanzen in `SkorokhodSpace`
+hängen an `sorryAx`, ohne ein eigenes `sorry` zu tragen — sie erben es vom
+Platzhalter `MetricSpace D(ι, E)`. Der Zeuge zu
+`not_isQuasiLeftContinuous_of_atom` ist jetzt Lean statt Skizze
+(`exists_index_witness_for_atom`). Verallgemeinert wurde
+`IsSeparating.of_subalgebra`, weg von `PolishSpace`. Ein Vorbehalt zum Werkzeug,
+der beim nächsten Mal Zeit spart: `linter.unusedSectionVars` beantwortet, ob eine
+Annahme **ungenutzt** ist, nicht, ob sie sich **abschwächen** ließe; sein
+Schweigen schließt die Suche nicht ab. Wer sie fortsetzt, muß die Abschwächungen
+einzeln versuchen.
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen~~
 
 Dieser Lauf beweist nichts Neues. Er prüft, was dasteht, und sucht, wo es
 allgemeiner sein könnte. Beides in dieser Reihenfolge, und das Prüfen zuerst,
@@ -317,7 +335,24 @@ Unteralgebra; `charPoly` ist die von den Charakteren erzeugte Algebra, und
 Das Manuskript wird dabei nicht geändert; Auffälligkeiten kommen ins Inventar.
 
 
-### Aufgabe: acceptance examples für jeden Meilenstein *(gestellt 2026-09-07)*
+### ~~Aufgabe: acceptance examples für jeden Meilenstein~~ *(gestellt 2026-09-07, erledigt 2026-09-07, vierter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, „2026-09-07, vierter Lauf des
+Tages". Alle **27** Meilensteine der vier Roadmaps tragen den Abschnitt
+`**Acceptance examples.**` am Ende — `WeakConvergence` (5), `SkorokhodSpace`
+(8), `KolmogorovExtension` (3), `MartingaleProblems` (1–11); 12 und 13 haben
+wie verlangt keinen. Der Maßstab, den der Lauf angelegt hat und der beim
+Weiterschreiben gilt: je Meilenstein ein **Paar** — die Instanz, an der die API
+rechnet, und die danebenliegende, an der eine naheliegende falsche Definition
+scheitert —, nicht vier positive Instanzen. Drei der Beispiele sind eigene
+Rechnungen und nicht bloß Zitate (die trigonometrische Algebra trennt Punkte,
+aber nicht stark; der schrumpfende Buckel scheidet die logarithmische von der
+naiven Zeitänderungsnorm; die Ordnungskonvexität der Fenster hängt an
+`AdditiveDist`, nicht an `clamp`).
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: acceptance examples für jeden Meilenstein~~
 
 **Warum.** Die Einreichung bei Tau Ceti steht in einer Woche an. Die gemergte
 Roadmap `OneParameterSemigroups` — die einzige, die unmittelbar an unsere Arbeit

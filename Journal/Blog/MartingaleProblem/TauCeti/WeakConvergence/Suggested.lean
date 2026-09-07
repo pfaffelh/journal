@@ -70,6 +70,33 @@ corollaries has to include integrability, because `add` and `mono_lim` must
 hold of arbitrary functions and the integral is additive only on integrable
 ones.
 
+Since 2026-09-07, thirteenth run, **`isSeparating_pi` is proved**, together with
+the machinery it runs on: `weightedMap` with `isFiniteMeasure_weightedMap` and
+`integral_weightedMap`, the Jordan pair `sepPos`/`sepNeg` with
+`integral_sepPos_sub_integral_sepNeg`, the engine
+`integral_indicator_mul_eq_of_isSeparating`, and, on the product side,
+`exists_nonneg_bound_prod`, `boxes`, `isPiSystem_boxes` and
+`generateFrom_boxes`.  The statement gained two hypotheses it could not do
+without -- every member of every `Γ i` bounded and measurable -- and the reason
+is in its doc string.  The route is not the functional monotone class theorem:
+products out of separating classes need not be a multiplicative system.
+
+Since 2026-09-07, fourteenth run, **`isConvergenceDetermining_pi` is proved**,
+the convergence determining half of the same point, together with the three
+declarations it rests on: `IsTightMeasureSet.pi`, the tightness of a countable
+product from the tightness of its one-coordinate marginals, which Mathlib has
+only for two factors (`IsTightMeasureSet.prodMk`); `isTightMeasureSet_of_tendsto`,
+the tightness of a convergent sequence on a Polish space; and
+`tendsto_of_isSeparating_of_isTightMeasureSet`, Prokhorov plus identification --
+a separating class of bounded continuous functions tests weak convergence along
+a tight sequence.  The last is the plain-class counterpart of Mathlib's
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`, which asks for a
+`StarSubalgebra` separating points rather than a class separating measures.
+Continuity is where the convergence determining half parts company with the
+separating one: the identification of a subsequential limit evaluates the class
+against a weakly convergent sequence, which sees bounded continuous functions
+and nothing else.
+
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
 `tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
@@ -300,14 +327,580 @@ theorem isConvergenceDetermining_setOf_hasCompactSupport
     [LocallyCompactSpace E] :
     IsConvergenceDetermining {f : E → ℝ | Continuous f ∧ HasCompactSupport f} := sorry
 
+/-! ### From separating to convergence determining, along a tight sequence
+
+This is Prokhorov's theorem used the way Ethier-Kurtz uses it in Chapter 3: a
+separating class of *bounded continuous* functions tests weak convergence as
+soon as the sequence is tight, because tightness makes the closure of its range
+compact and the separating class pins every subsequential limit to the same
+measure.
+
+It is the plain-class counterpart of
+`ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+(`MeasureTheory/Measure/LevyConvergence.lean:154`), which asks for a
+`StarSubalgebra` separating *points* rather than a class separating *measures*,
+and it is what a separating class alone cannot do: continuity is used, and has
+to be, in the identification step -- weak convergence of the subsequence gives
+convergence of `∫ f` only for `f` bounded continuous, so a member of `Γ` that is
+merely bounded measurable would leave the limit unidentified. -/
+
+/-- A convergent sequence of probability measures on a Polish space is tight: its
+range together with its limit is compact, hence closed, hence tight by
+`isTightMeasureSet_of_isCompact_closure` (`Measure/Prokhorov.lean:635`).
+
+There is no circularity here of the kind the tightness-free Stone-Weierstrass
+statement fell into: the convergence is a *hypothesis*, not the conclusion. -/
+theorem isTightMeasureSet_of_tendsto [TopologicalSpace E] [PolishSpace E] [BorelSpace E]
+    {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E}
+    (h : Tendsto μ atTop (𝓝 ν)) :
+    IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n} := by
+  let := TopologicalSpace.upgradeIsCompletelyMetrizable E
+  have hc : IsCompact (insert ν (Set.range μ)) := h.isCompact_insert_range
+  have hcl : closure (insert ν (Set.range μ)) = insert ν (Set.range μ) := hc.isClosed.closure_eq
+  have key := isTightMeasureSet_of_isCompact_closure (S := insert ν (Set.range μ))
+    (by rw [hcl]; exact hc)
+  refine key.subset ?_
+  rintro _ ⟨n, rfl⟩
+  exact ⟨μ n, Or.inr ⟨n, rfl⟩, rfl⟩
+
+/-- A separating class of bounded continuous functions is convergence determining
+**along tight sequences**.  Prokhorov gives a compact closure, `tendsto_subseq`
+a convergent subsequence of any subsequence, the class identifies its limit as
+`ν`, and `tendsto_of_subseq_tendsto` puts the sequence back together.
+
+The two side conditions are the same pair `isSeparating_pi` carries, with
+continuity in place of measurability, and continuity is the one that cannot be
+dropped: it is what lets weak convergence of the subsequence be evaluated
+against `f`. -/
+theorem tendsto_of_isSeparating_of_isTightMeasureSet [TopologicalSpace E] [PolishSpace E]
+    [BorelSpace E] {Γ : Set (E → ℝ)} (hsep : IsSeparating Γ)
+    (hcont : ∀ f ∈ Γ, Continuous f) (hbdd : ∀ f ∈ Γ, ∃ C, ∀ x, |f x| ≤ C)
+    {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E}
+    (htight : IsTightMeasureSet {((μ n : ProbabilityMeasure E) : Measure E) | n})
+    (hconv : ∀ f ∈ Γ, Tendsto (fun n => ∫ x, f x ∂(μ n : Measure E)) atTop
+      (𝓝 (∫ x, f x ∂(ν : Measure E)))) :
+    Tendsto μ atTop (𝓝 ν) := by
+  let := TopologicalSpace.upgradeIsCompletelyMetrizable E
+  have hcomp : IsCompact (closure (Set.range μ)) := by
+    refine isCompact_closure_of_isTightMeasureSet ?_
+    have hset : {((m : ProbabilityMeasure E) : Measure E) | m ∈ Set.range μ}
+        = {((μ n : ProbabilityMeasure E) : Measure E) | n} := by
+      ext ρ
+      constructor
+      · rintro ⟨m, ⟨n, rfl⟩, rfl⟩; exact ⟨n, rfl⟩
+      · rintro ⟨n, rfl⟩; exact ⟨μ n, ⟨n, rfl⟩, rfl⟩
+    rw [hset]
+    exact htight
+  refine tendsto_of_subseq_tendsto fun ns hns => ?_
+  obtain ⟨a, -, φ, hφ, hlim⟩ := hcomp.tendsto_subseq
+    (x := fun k => μ (ns k)) (fun k => subset_closure ⟨ns k, rfl⟩)
+  refine ⟨φ, ?_⟩
+  have hsub : Tendsto (fun k => ns (φ k)) atTop atTop := hns.comp hφ.tendsto_atTop
+  have hav : a = ν := by
+    have : (a : Measure E) = (ν : Measure E) := by
+      refine hsep _ _ fun f hf => ?_
+      obtain ⟨C, hC⟩ := hbdd f hf
+      set g : E →ᵇ ℝ := BoundedContinuousFunction.ofNormedAddCommGroup f (hcont f hf) C
+        (fun x => by simpa [Real.norm_eq_abs] using hC x) with hg
+      have hgf : ⇑g = f := rfl
+      have h1 : Tendsto (fun k => ∫ x, g x ∂((μ (ns (φ k)) : ProbabilityMeasure E) : Measure E))
+          atTop (𝓝 (∫ x, g x ∂(a : Measure E))) :=
+        ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.1 hlim g
+      rw [hgf] at h1
+      exact tendsto_nhds_unique h1 ((hconv _ hf).comp hsub)
+    exact ProbabilityMeasure.toMeasure_injective this
+  rw [← hav]
+  exact hlim
+
+/-! ### The engine behind `isSeparating_pi`
+
+A separating class is a *linear* condition in disguise: `Γ` separates probability
+measures exactly when no nonzero signed measure of total mass zero annihilates it,
+since every such signed measure is a scalar multiple of a difference of probability
+measures.  What follows exploits that without ever mentioning a signed measure: the
+pair `sepPos`/`sepNeg` is the Jordan decomposition of `W • (μ - ν)`, written as two
+honest positive measures, and `IsSeparating` is applied to their normalisations. -/
+
+section Weighted
+
+variable {Ω S : Type*} [MeasurableSpace Ω] [MeasurableSpace S]
+
+theorem integrable_of_measurable_of_bounded {ρ : Measure Ω} [IsFiniteMeasure ρ] {g : Ω → ℝ}
+    (hg : Measurable g) {C : ℝ} (hgb : ∀ x, |g x| ≤ C) : Integrable g ρ :=
+  Integrable.mono' (integrable_const C) hg.aestronglyMeasurable
+    (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hgb x)
+
+theorem abs_max_zero_le {a b : ℝ} (h : |a| ≤ b) : |max a 0| ≤ b := by
+  rw [abs_of_nonneg (le_max_right a 0)]
+  exact (max_le (le_abs_self a) (abs_nonneg a)).trans h
+
+theorem abs_mul_le_mul {a b c d : ℝ} (ha : |a| ≤ c) (hb : |b| ≤ d) : |a * b| ≤ c * d := by
+  rw [abs_mul]
+  exact mul_le_mul ha hb (abs_nonneg _) ((abs_nonneg a).trans ha)
+
+/-- The image under `T` of `ρ` reweighted by the positive part of `w`. -/
+noncomputable def weightedMap (T : Ω → S) (ρ : Measure Ω) (w : Ω → ℝ) : Measure S :=
+  (ρ.withDensity fun x => ENNReal.ofReal (w x)).map T
+
+theorem isFiniteMeasure_weightedMap (T : Ω → S) (ρ : Measure Ω) [IsFiniteMeasure ρ]
+    {w : Ω → ℝ} {C : ℝ} (hwb : ∀ x, w x ≤ C) : IsFiniteMeasure (weightedMap T ρ w) := by
+  have hfin : ∫⁻ x, ENNReal.ofReal (w x) ∂ρ ≠ ∞ := by
+    refine ne_top_of_le_ne_top ?_ (lintegral_mono fun x => ENNReal.ofReal_le_ofReal (hwb x))
+    rw [lintegral_const]
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top ρ _)
+  have := isFiniteMeasure_withDensity hfin
+  exact Measure.isFiniteMeasure_map _ _
+
+theorem integral_weightedMap {T : Ω → S} (hT : Measurable T) {ρ : Measure Ω}
+    {w : Ω → ℝ} (hw : Measurable w) {h : S → ℝ} (hh : Measurable h) :
+    ∫ y, h y ∂(weightedMap T ρ w) = ∫ x, max (w x) 0 * h (T x) ∂ρ := by
+  rw [weightedMap, integral_map hT.aemeasurable hh.aestronglyMeasurable]
+  rw [show (fun x => ENNReal.ofReal (w x))
+      = (fun x => ((Real.toNNReal (w x) : NNReal) : ENNReal)) from rfl]
+  rw [integral_withDensity_eq_integral_smul (hw.real_toNNReal)]
+  simp [NNReal.smul_def, Real.coe_toNNReal']
+
+variable {μ ν : Measure Ω} [IsFiniteMeasure μ] [IsFiniteMeasure ν]
+  {T : Ω → S} {W : Ω → ℝ} {CW : ℝ}
+
+/-- The positive half of the Jordan pair. -/
+noncomputable def sepPos (T : Ω → S) (μ ν : Measure Ω) (W : Ω → ℝ) : Measure S :=
+  weightedMap T μ W + weightedMap T ν (fun x => -W x)
+
+/-- The negative half of the Jordan pair. -/
+noncomputable def sepNeg (T : Ω → S) (μ ν : Measure Ω) (W : Ω → ℝ) : Measure S :=
+  weightedMap T ν W + weightedMap T μ (fun x => -W x)
+
+theorem isFiniteMeasure_sepPos (hWb : ∀ x, |W x| ≤ CW) :
+    IsFiniteMeasure (sepPos T μ ν W) := by
+  haveI h1 := isFiniteMeasure_weightedMap T μ (w := W) (C := CW)
+    fun x => (abs_le.1 (hWb x)).2
+  haveI h2 := isFiniteMeasure_weightedMap T ν (w := fun x => -W x) (C := CW)
+    fun x => by have := (abs_le.1 (hWb x)).1; linarith
+  exact inferInstanceAs
+    (IsFiniteMeasure (weightedMap T μ W + weightedMap T ν fun x => -W x))
+
+theorem isFiniteMeasure_sepNeg (hWb : ∀ x, |W x| ≤ CW) :
+    IsFiniteMeasure (sepNeg T μ ν W) := by
+  haveI h1 := isFiniteMeasure_weightedMap T ν (w := W) (C := CW)
+    fun x => (abs_le.1 (hWb x)).2
+  haveI h2 := isFiniteMeasure_weightedMap T μ (w := fun x => -W x) (C := CW)
+    fun x => by have := (abs_le.1 (hWb x)).1; linarith
+  exact inferInstanceAs
+    (IsFiniteMeasure (weightedMap T ν W + weightedMap T μ fun x => -W x))
+
+/-- The defining identity of the Jordan pair. -/
+theorem integral_sepPos_sub_integral_sepNeg (hT : Measurable T) (hW : Measurable W)
+    (hWb : ∀ x, |W x| ≤ CW) {h : S → ℝ} (hh : Measurable h) {D : ℝ} (hhb : ∀ y, |h y| ≤ D) :
+    ∫ y, h y ∂(sepPos T μ ν W) - ∫ y, h y ∂(sepNeg T μ ν W)
+      = ∫ x, W x * h (T x) ∂μ - ∫ x, W x * h (T x) ∂ν := by
+  haveI hfp : IsFiniteMeasure (sepPos T μ ν W) := isFiniteMeasure_sepPos hWb
+  haveI hfn : IsFiniteMeasure (sepNeg T μ ν W) := isFiniteMeasure_sepNeg hWb
+  haveI hμW := isFiniteMeasure_weightedMap T μ (w := W) (C := CW) fun x => (abs_le.1 (hWb x)).2
+  haveI hνW := isFiniteMeasure_weightedMap T ν (w := W) (C := CW) fun x => (abs_le.1 (hWb x)).2
+  haveI hμN := isFiniteMeasure_weightedMap T μ (w := fun x => -W x) (C := CW)
+    fun x => by have := (abs_le.1 (hWb x)).1; linarith
+  haveI hνN := isFiniteMeasure_weightedMap T ν (w := fun x => -W x) (C := CW)
+    fun x => by have := (abs_le.1 (hWb x)).1; linarith
+  have hint : ∀ (ρ : Measure S), IsFiniteMeasure ρ → Integrable h ρ :=
+    fun ρ hρ => integrable_of_measurable_of_bounded hh hhb
+  -- split the two sums
+  rw [sepPos, sepNeg, integral_add_measure (hint _ hμW) (hint _ hνN),
+    integral_add_measure (hint _ hνW) (hint _ hμN)]
+  simp only [integral_weightedMap hT hW hh,
+    integral_weightedMap hT (show Measurable fun x => -W x from hW.neg) hh]
+  -- and recombine, on each measure separately
+  have key : ∀ (ρ : Measure Ω), IsFiniteMeasure ρ →
+      ∫ x, max (W x) 0 * h (T x) ∂ρ - ∫ x, max (-W x) 0 * h (T x) ∂ρ
+        = ∫ x, W x * h (T x) ∂ρ := by
+    intro ρ hρ
+    have hp : Integrable (fun x => max (W x) 0 * h (T x)) ρ :=
+      integrable_of_measurable_of_bounded ((hW.max measurable_const).mul (hh.comp hT))
+        (C := CW * D) fun x => abs_mul_le_mul (abs_max_zero_le (hWb x)) (hhb _)
+    have hn : Integrable (fun x => max (-W x) 0 * h (T x)) ρ :=
+      integrable_of_measurable_of_bounded ((hW.neg.max measurable_const).mul (hh.comp hT))
+        (C := CW * D) fun x => abs_mul_le_mul
+          (abs_max_zero_le (by rw [abs_neg]; exact hWb x)) (hhb _)
+    rw [← integral_sub hp hn]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+    simp only
+    rw [← sub_mul]
+    congr 1
+    rcases le_total 0 (W x) with hx | hx
+    · rw [max_eq_left hx, max_eq_right (by linarith)]; ring
+    · rw [max_eq_right hx, max_eq_left (by linarith)]; ring
+  have kμ := key μ inferInstance
+  have kν := key ν inferInstance
+  linarith
+
+/-- **The engine.**  A separating class on the target of `T` turns equality of `W`-weighted
+integrals along `Γ` into equality of `W`-weighted integrals along indicators.  No signed
+measure appears: the Jordan pair `sepPos`/`sepNeg` is built out of the positive parts. -/
+theorem integral_indicator_mul_eq_of_isSeparating
+    {Γ : Set (S → ℝ)} (hΓ : IsSeparating Γ)
+    (hΓm : ∀ f ∈ Γ, Measurable f) (hΓb : ∀ f ∈ Γ, ∃ C, ∀ y, |f y| ≤ C)
+    (hT : Measurable T) (hW : Measurable W) (hWb : ∀ x, |W x| ≤ CW)
+    (h0 : ∫ x, W x ∂μ = ∫ x, W x ∂ν)
+    (hΓint : ∀ f ∈ Γ, ∫ x, W x * f (T x) ∂μ = ∫ x, W x * f (T x) ∂ν)
+    {A : Set S} (hA : MeasurableSet A) :
+    ∫ x, W x * A.indicator (1 : S → ℝ) (T x) ∂μ
+      = ∫ x, W x * A.indicator (1 : S → ℝ) (T x) ∂ν := by
+  haveI hfp : IsFiniteMeasure (sepPos T μ ν W) := isFiniteMeasure_sepPos hWb
+  haveI hfn : IsFiniteMeasure (sepNeg T μ ν W) := isFiniteMeasure_sepNeg hWb
+  set p := sepPos T μ ν W with hpdef
+  set q := sepNeg T μ ν W with hqdef
+  have hone : ∫ _y : S, (1:ℝ) ∂p - ∫ _y : S, (1:ℝ) ∂q = 0 := by
+    rw [integral_sepPos_sub_integral_sepNeg hT hW hWb (h := fun _ => (1:ℝ))
+      measurable_const (D := 1) (fun y => by norm_num)]
+    simp only [mul_one, h0, sub_self]
+  have hmass : p univ = q univ := by
+    have h1 : (p univ).toReal = (q univ).toReal := by
+      have := sub_eq_zero.1 hone
+      simpa [integral_const, measureReal_def] using this
+    exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).1 h1
+  have hpq : p = q := by
+    rcases eq_or_ne (p univ) 0 with hz | hz
+    · have hp0 : p = 0 := by rwa [← Measure.measure_univ_eq_zero]
+      have hq0 : q = 0 := by
+        rw [← Measure.measure_univ_eq_zero, ← hmass]; exact hz
+      rw [hp0, hq0]
+    · have hne : p univ ≠ ∞ := measure_ne_top _ _
+      haveI : IsProbabilityMeasure ((p univ)⁻¹ • p) :=
+        ⟨by rw [Measure.smul_apply, smul_eq_mul, ENNReal.inv_mul_cancel hz hne]⟩
+      haveI : IsProbabilityMeasure ((p univ)⁻¹ • q) :=
+        ⟨by rw [Measure.smul_apply, smul_eq_mul, ← hmass, ENNReal.inv_mul_cancel hz hne]⟩
+      have hsep : (p univ)⁻¹ • p = (p univ)⁻¹ • q := by
+        refine hΓ _ _ ?_
+        intro f hf
+        obtain ⟨C, hC⟩ := hΓb f hf
+        rw [integral_smul_measure, integral_smul_measure]
+        congr 1
+        have hd := integral_sepPos_sub_integral_sepNeg (μ := μ) (ν := ν) hT hW hWb
+          (hΓm f hf) hC
+        rw [hΓint f hf, sub_self] at hd
+        exact sub_eq_zero.1 hd
+      have := congrArg (fun ρ : Measure S => (p univ) • ρ) hsep
+      simpa [smul_smul, ENNReal.mul_inv_cancel hz hne] using this
+  have hd := integral_sepPos_sub_integral_sepNeg (μ := μ) (ν := ν) hT hW hWb
+    (h := A.indicator (1 : S → ℝ)) (measurable_const.indicator hA) (D := 1)
+    (fun y => by by_cases hy : y ∈ A <;> simp [hy])
+  rw [← hpdef, ← hqdef, hpq, sub_self] at hd
+  exact sub_eq_zero.1 hd.symm
+
+end Weighted
+
+section Pi
+
+variable {ι : Type*} {S : ι → Type*} [∀ i, MeasurableSpace (S i)]
+
+theorem exists_nonneg_bound_prod {α : Type*} (F : ι → α → ℝ) (J : Finset ι)
+    (h : ∀ i ∈ J, ∃ C, ∀ y, |F i y| ≤ C) :
+    ∃ C, 0 ≤ C ∧ ∀ y, |∏ i ∈ J, F i y| ≤ C := by
+  classical
+  revert h
+  induction J using Finset.induction_on with
+  | empty => intro _; exact ⟨1, zero_le_one, fun y => by simp⟩
+  | @insert i s hi ih =>
+      intro h
+      obtain ⟨C, hC0, hC⟩ := ih fun j hj => h j (Finset.mem_insert_of_mem hj)
+      obtain ⟨D, hD⟩ := h i (Finset.mem_insert_self i s)
+      refine ⟨max D 0 * C, mul_nonneg (le_max_right _ _) hC0, fun y => ?_⟩
+      rw [Finset.prod_insert hi, abs_mul]
+      exact mul_le_mul ((hD y).trans (le_max_left _ _)) (hC y) (abs_nonneg _) (le_max_right _ _)
+
+/-- The finite dimensional boxes: a `Set.pi` over a finite index set. -/
+def boxes (S : ι → Type*) [∀ i, MeasurableSpace (S i)] : Set (Set (∀ i, S i)) :=
+  {t | ∃ (J : Finset ι) (B : ∀ i, Set (S i)), (∀ i, MeasurableSet (B i)) ∧ t = Set.pi ↑J B}
+
+theorem isPiSystem_boxes : IsPiSystem (boxes S) := by
+  classical
+  rintro _ ⟨J₁, B₁, hB₁, rfl⟩ _ ⟨J₂, B₂, hB₂, rfl⟩ -
+  refine ⟨J₁ ∪ J₂, fun i => (if i ∈ J₁ then B₁ i else univ) ∩ (if i ∈ J₂ then B₂ i else univ),
+    fun i => ?_, ?_⟩
+  · exact MeasurableSet.inter (by by_cases h : i ∈ J₁ <;> simp [h, hB₁ i])
+      (by by_cases h : i ∈ J₂ <;> simp [h, hB₂ i])
+  · ext x
+    simp only [Set.mem_inter_iff, Set.mem_pi, Finset.coe_union, Set.mem_union, Finset.mem_coe]
+    constructor
+    · rintro ⟨h1, h2⟩ i hi
+      refine ⟨?_, ?_⟩
+      · by_cases h : i ∈ J₁
+        · simpa [h] using h1 i h
+        · simp [h]
+      · by_cases h : i ∈ J₂
+        · simpa [h] using h2 i h
+        · simp [h]
+    · intro h
+      exact ⟨fun i hi => by have := (h i (Or.inl hi)).1; simpa [hi] using this,
+        fun i hi => by have := (h i (Or.inr hi)).2; simpa [hi] using this⟩
+
+theorem generateFrom_boxes :
+    MeasurableSpace.generateFrom (boxes S) = (MeasurableSpace.pi : MeasurableSpace (∀ i, S i)) := by
+  classical
+  refine le_antisymm (MeasurableSpace.generateFrom_le ?_) (iSup_le fun i => ?_)
+  · rintro _ ⟨J, B, hB, rfl⟩
+    exact MeasurableSet.pi (Finset.countable_toSet J) fun i _ => hB i
+  · rintro s ⟨t, ht, rfl⟩
+    refine MeasurableSpace.measurableSet_generateFrom
+      ⟨{i}, Function.update (fun _ => univ) i t, fun j => ?_, ?_⟩
+    · by_cases hj : j = i
+      · subst hj; simpa using ht
+      · simp [Function.update_of_ne hj]
+    · ext x
+      simp
+
 /-- Missing from Mathlib: products, for an **arbitrary** index type.  This is what
 makes finite dimensional distributions determine a law; for a process the index
-is the time set, so the finite case does not suffice. -/
-theorem isSeparating_pi {ι : Type*} {S : ι → Type*} [∀ i, MeasurableSpace (S i)]
-    (Γ : ∀ i, Set (S i → ℝ)) (h : ∀ i, IsSeparating (Γ i)) :
+is the time set, so the finite case does not suffice.
+
+The two side conditions are not decoration.  `IsSeparating` says nothing about the
+members of `Γ i` themselves -- a non-integrable `f` contributes `∫ f = 0` on both
+sides -- and the proof needs each `g i` as an honest weight: `W` has to be a bounded
+measurable function for `sepPos T μ ν W` to be a finite measure at all.  Without
+them the statement is not false but unproved, and the place where the argument
+breaks is `isFiniteMeasure_weightedMap`.
+
+The proof is an induction on `J` that replaces the members of `Γ i` by indicators
+one index at a time, `integral_indicator_mul_eq_of_isSeparating` doing each step;
+what comes out is equality on the boxes `Set.pi ↑J B`, and `isPiSystem_boxes`
+together with `generateFrom_boxes` turns that into equality of measures. -/
+theorem isSeparating_pi (Γ : ∀ i, Set (S i → ℝ)) (hsep : ∀ i, IsSeparating (Γ i))
+    (hmeas : ∀ i, ∀ f ∈ Γ i, Measurable f)
+    (hbdd : ∀ i, ∀ f ∈ Γ i, ∃ C, ∀ y, |f y| ≤ C) :
     IsSeparating {f : (∀ i, S i) → ℝ |
       ∃ (J : Finset ι) (g : ∀ i, S i → ℝ), (∀ i ∈ J, g i ∈ Γ i) ∧
-        f = fun x => ∏ i ∈ J, g i (x i)} := sorry
+        f = fun x => ∏ i ∈ J, g i (x i)} := by
+  classical
+  intro μ ν _ _ hyp
+  have main : ∀ (J : Finset ι) (B : ∀ i, Set (S i)), (∀ i, MeasurableSet (B i)) →
+      ∀ (J' : Finset ι), (∀ i ∈ J, i ∉ J') → ∀ (g : ∀ i, S i → ℝ), (∀ i ∈ J', g i ∈ Γ i) →
+      ∫ x, (∏ i ∈ J, (B i).indicator (1 : S i → ℝ) (x i)) * ∏ i ∈ J', g i (x i) ∂μ
+        = ∫ x, (∏ i ∈ J, (B i).indicator (1 : S i → ℝ) (x i)) * ∏ i ∈ J', g i (x i) ∂ν := by
+    intro J
+    induction J using Finset.induction_on with
+    | empty =>
+        intro B hB J' _ g hg
+        simp only [Finset.prod_empty, one_mul]
+        exact hyp _ ⟨J', g, hg, rfl⟩
+    | @insert i₀ J hi₀ ih =>
+        intro B hB J' hdis g hg
+        have hi₀J' : i₀ ∉ J' := hdis i₀ (Finset.mem_insert_self i₀ J)
+        have hdis' : ∀ i ∈ J, i ∉ J' := fun i hi => hdis i (Finset.mem_insert_of_mem hi)
+        set W : (∀ i, S i) → ℝ :=
+          fun x => (∏ i ∈ J, (B i).indicator (1 : S i → ℝ) (x i)) * ∏ i ∈ J', g i (x i)
+          with hWdef
+        have hWmeas : Measurable W := by
+          refine Measurable.mul (Finset.measurable_prod _ fun i _ => ?_)
+            (Finset.measurable_prod _ fun i hi => ?_)
+          · exact (measurable_const.indicator (hB i)).comp (measurable_pi_apply i)
+          · exact (hmeas i (g i) (hg i hi)).comp (measurable_pi_apply i)
+        obtain ⟨C1, hC10, hC1⟩ := exists_nonneg_bound_prod
+          (fun i (x : ∀ i, S i) => (B i).indicator (1 : S i → ℝ) (x i)) J
+          (fun i _ => ⟨1, fun x => by by_cases hx : x i ∈ B i <;> simp [hx]⟩)
+        obtain ⟨C2, hC20, hC2⟩ := exists_nonneg_bound_prod
+          (fun i (x : ∀ i, S i) => g i (x i)) J'
+          (fun i hi => by
+            obtain ⟨C, hC⟩ := hbdd i (g i) (hg i hi)
+            exact ⟨C, fun x => hC _⟩)
+        have hWb : ∀ x, |W x| ≤ C1 * C2 := fun x => abs_mul_le_mul (hC1 x) (hC2 x)
+        have h0 : ∫ x, W x ∂μ = ∫ x, W x ∂ν := ih B hB J' hdis' g hg
+        have hΓ : ∀ f ∈ Γ i₀, ∫ x, W x * f (x i₀) ∂μ = ∫ x, W x * f (x i₀) ∂ν := by
+          intro f hf
+          have hdis'' : ∀ i ∈ J, i ∉ insert i₀ J' := by
+            intro i hi
+            simp only [Finset.mem_insert, not_or]
+            exact ⟨fun h => hi₀ (h ▸ hi), hdis' i hi⟩
+          have hg' : ∀ i ∈ insert i₀ J', Function.update g i₀ f i ∈ Γ i := by
+            intro i hi
+            rcases Finset.mem_insert.1 hi with rfl | hi'
+            · simpa using hf
+            · have hne : i ≠ i₀ := by
+                intro hEq
+                subst hEq
+                exact hi₀J' hi'
+              rw [Function.update_of_ne hne]
+              exact hg i hi'
+          have key := ih B hB (insert i₀ J') hdis'' (Function.update g i₀ f) hg'
+          have hrw : ∀ (ρ : Measure (∀ i, S i)),
+              ∫ x, (∏ i ∈ J, (B i).indicator (1 : S i → ℝ) (x i)) *
+                  ∏ i ∈ insert i₀ J', Function.update g i₀ f i (x i) ∂ρ
+                = ∫ x, W x * f (x i₀) ∂ρ := by
+            intro ρ
+            refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+            dsimp only
+            rw [Finset.prod_insert hi₀J']
+            have hres : ∀ i ∈ J', Function.update g i₀ f i (x i) = g i (x i) := by
+              intro i hi
+              rw [Function.update_of_ne (by rintro rfl; exact hi₀J' hi)]
+            rw [Finset.prod_congr rfl hres, Function.update_self]
+            simp only [hWdef]
+            ring
+          rw [hrw μ, hrw ν] at key
+          exact key
+        have hres := integral_indicator_mul_eq_of_isSeparating (hsep i₀) (hmeas i₀) (hbdd i₀)
+          (measurable_pi_apply i₀) hWmeas hWb h0 hΓ (hB i₀)
+        have hrw2 : ∀ (ρ : Measure (∀ i, S i)),
+            ∫ x, (∏ i ∈ insert i₀ J, (B i).indicator (1 : S i → ℝ) (x i)) *
+                ∏ i ∈ J', g i (x i) ∂ρ
+              = ∫ x, W x * (B i₀).indicator (1 : S i₀ → ℝ) (x i₀) ∂ρ := by
+          intro ρ
+          refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+          dsimp only
+          rw [Finset.prod_insert hi₀]
+          simp only [hWdef]
+          ring
+        rw [hrw2 μ, hrw2 ν]
+        exact hres
+  have hbox : ∀ s ∈ boxes S, μ s = ν s := by
+    rintro _ ⟨J, B, hB, rfl⟩
+    have h1 := main J B hB ∅ (fun i _ => Finset.notMem_empty i) (fun _ _ => 1) (by simp)
+    simp only [Finset.prod_empty, mul_one] at h1
+    have hind : ∀ (x : ∀ i, S i), (∏ i ∈ J, (B i).indicator (1 : S i → ℝ) (x i))
+        = (Set.pi ↑J B).indicator (1 : (∀ i, S i) → ℝ) x := by
+      intro x
+      by_cases hx : x ∈ Set.pi (↑J : Set ι) B
+      · rw [Set.indicator_of_mem hx]
+        refine Finset.prod_eq_one fun i hi => ?_
+        rw [Set.indicator_of_mem (hx i hi)]
+        rfl
+      · rw [Set.indicator_of_notMem hx]
+        simp only [Set.mem_pi, Finset.mem_coe, not_forall] at hx
+        obtain ⟨i, hi, hxi⟩ := hx
+        refine Finset.prod_eq_zero hi ?_
+        rw [Set.indicator_of_notMem hxi]
+    simp only [hind] at h1
+    rw [integral_indicator_one (MeasurableSet.pi (Finset.countable_toSet J) fun i _ => hB i),
+      integral_indicator_one (MeasurableSet.pi (Finset.countable_toSet J) fun i _ => hB i)] at h1
+    exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).1 h1
+  exact ext_of_generate_finite (boxes S) generateFrom_boxes.symm isPiSystem_boxes hbox
+    (by simp)
+
+/-- Missing from Mathlib, which has the two-factor case as
+`IsTightMeasureSet.prodMk` (`MeasureTheory/Measure/Tight.lean:144`) and nothing
+for a countable product: if every family of one-coordinate marginals is tight,
+so is the family itself.
+
+The proof is the `ε 2⁻ⁿ` argument, and countability of the index is what makes it
+work twice over -- once to distribute `ε` (`ENNReal.exists_pos_sum_of_countable'`)
+and once for the countable subadditivity that turns
+`(univ.pi K)ᶜ ⊆ ⋃ i, (· i) ⁻¹' (K i)ᶜ` into a sum.  Tychonoff supplies the compact
+set, `isCompact_univ_pi`, and no separation or Borel hypothesis is needed: the
+complement of the compact set is measured as an outer measure, so it never has to
+be measurable. -/
+theorem IsTightMeasureSet.pi [Countable ι] [∀ i, TopologicalSpace (S i)]
+    {T : Set (Measure (∀ i, S i))}
+    (h : ∀ i, IsTightMeasureSet ((fun ρ : Measure (∀ i, S i) => ρ.map (fun x => x i)) '' T)) :
+    IsTightMeasureSet T := by
+  rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le]
+  intro ε hε
+  obtain ⟨δ, hδpos, hδsum⟩ := ENNReal.exists_pos_sum_of_countable' hε.ne' ι
+  have h' : ∀ i, ∃ K : Set (S i), IsCompact K ∧
+      ∀ ρ ∈ T, (ρ.map (fun x => x i)) Kᶜ ≤ δ i := by
+    intro i
+    obtain ⟨K, hK, hKle⟩ :=
+      isTightMeasureSet_iff_exists_isCompact_measure_compl_le.1 (h i) (δ i) (hδpos i)
+    exact ⟨K, hK, fun ρ hρ => hKle _ ⟨ρ, hρ, rfl⟩⟩
+  choose K hK hKle using h'
+  refine ⟨Set.univ.pi K, isCompact_univ_pi hK, fun ρ hρ => ?_⟩
+  have hsub : (Set.univ.pi K)ᶜ ⊆ ⋃ i, (fun x : ∀ i, S i => x i) ⁻¹' (K i)ᶜ := by
+    intro x hx
+    simp only [Set.mem_compl_iff, Set.mem_univ_pi, not_forall] at hx
+    obtain ⟨i, hi⟩ := hx
+    exact Set.mem_iUnion.2 ⟨i, hi⟩
+  calc ρ (Set.univ.pi K)ᶜ
+      ≤ ρ (⋃ i, (fun x : ∀ i, S i => x i) ⁻¹' (K i)ᶜ) := measure_mono hsub
+    _ ≤ ∑' i, ρ ((fun x : ∀ i, S i => x i) ⁻¹' (K i)ᶜ) := measure_iUnion_le _
+    _ ≤ ∑' i, δ i := ENNReal.tsum_le_tsum fun i =>
+        (Measure.le_map_apply (measurable_pi_apply i).aemeasurable _).trans (hKle i ρ hρ)
+    _ ≤ ε := hδsum.le
+
+/-- The convergence determining half of the product point, and the reason it
+carries hypotheses `isSeparating_pi` does not: a **countable** index and
+**Polish** factors.  Both enter through tightness and nowhere else.  Countability
+is what `IsTightMeasureSet.pi` needs; Polishness is what turns the convergence of
+the one-coordinate marginals into their tightness
+(`isTightMeasureSet_of_tendsto`), and it is also what
+`tendsto_of_isSeparating_of_isTightMeasureSet` needs for Prokhorov.
+
+Continuity replaces the measurability hypothesis of `isSeparating_pi`, and the
+boundedness hypothesis is the same one.  Continuity is not a convenience: the
+identification of a subsequential limit tests it against the class, and weak
+convergence sees only bounded continuous functions.
+
+The proof is three steps and no new analysis.  Testing the hypothesis on the
+one-index members `x ↦ f (x i)` of the product class shows every marginal
+sequence converges, which is `IsConvergenceDetermining (Γ i)` read backwards;
+each marginal family is then tight, hence so is the family itself; and
+`isSeparating_pi` identifies the limit. -/
+theorem isConvergenceDetermining_pi [Countable ι] [∀ i, TopologicalSpace (S i)]
+    [∀ i, PolishSpace (S i)] [∀ i, BorelSpace (S i)]
+    (Γ : ∀ i, Set (S i → ℝ)) (hcd : ∀ i, IsConvergenceDetermining (Γ i))
+    (hcont : ∀ i, ∀ f ∈ Γ i, Continuous f)
+    (hbdd : ∀ i, ∀ f ∈ Γ i, ∃ C, ∀ y, |f y| ≤ C) :
+    IsConvergenceDetermining {f : (∀ i, S i) → ℝ |
+      ∃ (J : Finset ι) (g : ∀ i, S i → ℝ), (∀ i ∈ J, g i ∈ Γ i) ∧
+        f = fun x => ∏ i ∈ J, g i (x i)} := by
+  classical
+  intro μ ν hyp
+  -- `x ↦ f (x i)` is the member of the product class with `J = {i}`.
+  have hmem : ∀ (i : ι), ∀ f ∈ Γ i, (fun x : ∀ j, S j => f (x i)) ∈
+      {f : (∀ i, S i) → ℝ | ∃ (J : Finset ι) (g : ∀ i, S i → ℝ), (∀ i ∈ J, g i ∈ Γ i) ∧
+        f = fun x => ∏ i ∈ J, g i (x i)} := by
+    intro i f hf
+    refine ⟨{i}, Function.update (fun j => (0 : S j → ℝ)) i f, ?_, ?_⟩
+    · intro j hj
+      rw [Finset.mem_singleton] at hj
+      subst hj
+      simpa using hf
+    · funext x
+      simp
+  -- Step 1: every one-coordinate marginal converges.
+  have hmarg : ∀ i, Tendsto
+      (fun n => (μ n).map (f := fun x : ∀ j, S j => x i) (measurable_pi_apply i).aemeasurable)
+      atTop (𝓝 (ν.map (f := fun x : ∀ j, S j => x i) (measurable_pi_apply i).aemeasurable)) := by
+    intro i
+    refine hcd i _ _ fun f hf => ?_
+    have hint : ∀ ρ : ProbabilityMeasure (∀ j, S j),
+        ∫ y, f y ∂((ρ.map (f := fun x : ∀ j, S j => x i)
+            (measurable_pi_apply i).aemeasurable : ProbabilityMeasure (S i)) : Measure (S i))
+          = ∫ x, f (x i) ∂(ρ : Measure (∀ j, S j)) := by
+      intro ρ
+      rw [ProbabilityMeasure.toMeasure_map]
+      exact integral_map (measurable_pi_apply i).aemeasurable
+        (hcont i f hf).aestronglyMeasurable
+    simp only [hint]
+    exact hyp _ (hmem i f hf)
+  -- Step 2: hence each marginal family is tight, and hence so is the family itself.
+  have htight : IsTightMeasureSet
+      {((μ n : ProbabilityMeasure (∀ j, S j)) : Measure (∀ j, S j)) | n} := by
+    refine IsTightMeasureSet.pi fun i => ?_
+    have h1 := isTightMeasureSet_of_tendsto (hmarg i)
+    have hset : (fun ρ : Measure (∀ j, S j) => ρ.map (fun x => x i)) ''
+        {((μ n : ProbabilityMeasure (∀ j, S j)) : Measure (∀ j, S j)) | n}
+        = {((μ n).map (f := fun x : ∀ j, S j => x i)
+            (measurable_pi_apply i).aemeasurable : Measure (S i)) | n} := by
+      ext ρ
+      constructor
+      · rintro ⟨_, ⟨n, rfl⟩, rfl⟩
+        exact ⟨n, rfl⟩
+      · rintro ⟨n, rfl⟩
+        exact ⟨(μ n : Measure (∀ j, S j)), ⟨n, rfl⟩, rfl⟩
+    rw [hset]
+    exact h1
+  -- Step 3: the product class separates, so it identifies the limit.
+  refine tendsto_of_isSeparating_of_isTightMeasureSet
+    (isSeparating_pi Γ (fun i => (hcd i).isSeparating)
+      (fun i f hf => (hcont i f hf).measurable) hbdd) ?_ ?_ htight hyp
+  · rintro _ ⟨J, g, hg, rfl⟩
+    exact continuous_finsetProd J fun i hi => (hcont i (g i) (hg i hi)).comp (continuous_apply i)
+  · rintro _ ⟨J, g, hg, rfl⟩
+    obtain ⟨C, -, hC⟩ := exists_nonneg_bound_prod (fun i (x : ∀ j, S j) => g i (x i)) J
+      (fun i hi => by
+        obtain ⟨D, hD⟩ := hbdd i (g i) (hg i hi)
+        exact ⟨D, fun x => hD _⟩)
+    exact ⟨C, hC⟩
+
+end Pi
 
 /-- The conditional form, and the one place where a separating class is used
 against a σ-algebra rather than against a second measure.  It is the last step of
