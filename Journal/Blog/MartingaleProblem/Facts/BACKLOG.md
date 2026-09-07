@@ -73,172 +73,25 @@ kein gebautes Mathlib und taugt zu nichts.
    `Measure/MeasureSpace.lean:118`), ebenso `Set.diff_eq` (jetzt
    `Set.sdiff_eq`).
 
-1. **`SkorokhodSpace/Suggested.lean` und `MartingaleProblems/Suggested.lean`
-   zum Übersetzen bringen.** `WeakConvergence` ist durch — 48 Deklarationen, 27
-   davon bewiesen, die Datei geht durch `lake env lean`. Die anderen beiden
-   waren **nie übersetzt**: `SkorokhodSpace` hat 29 Deklarationen mit 25
-   `sorry`, `MartingaleProblems` 21 mit 14. Ziel ist nicht, sie zu beweisen,
-   sondern daß **die Aussagen typisieren**, mit `sorry` für die Beweise. Genau
-   das hat am 2026-09-06 die fehlende `[OpensMeasurableSpace E]`-Instanz
-   gefunden, ohne die der Satz still zur Trivialität geworden wäre — ein Fehler,
-   den man am Text nicht sieht.
+1. **`SkorokhodSpace` und `MartingaleProblems` weiter beweisen.** *(Stand
+   2026-09-07, vom Nutzer nachgezogen; die frühere Fassung dieses Punktes war
+   in ihrer Begründung falsch — beide Dateien übersetzten schon, als er
+   gestellt wurde, und die Zahlen darin sind längst überholt.)*
 
-   Nimm eine Datei nach der anderen, von oben, und arbeite die Fehler ab. Wo
-   eine Aussage sich nur mit einer zusätzlichen Instanz oder einer korrigierten
-   Signatur retten läßt, ist das ein Befund für das Inventar. Wo sie sich gar
-   nicht retten läßt, ist sie falsch, und das ist der wertvollste Befund.
-   Beweise, die dabei billig abfallen, nimm mit; jage sie nicht.
+   Alle drei Dateien gehen fehlerfrei durch `lake env lean` gegen v4.33.1, und
+   **kein `sorry` steht mehr in einer Aussage**, nur noch in Beweisen. Stand:
 
-   **Berichtigung 2026-09-06, vierter Lauf des Tages: die Prämisse „nie
-   übersetzt" stimmt nicht.** Beide Dateien gehen durch `lake env lean` gegen
-   `v4.33.1`, heute erneut geprüft, beide mit `rc=0` und ohne einen einzigen
-   Fehler — nur `declaration uses 'sorry'`-Warnungen, 23 in `SkorokhodSpace`,
-   20 in `MartingaleProblems`. Das ist auch das, was Punkt 3 dieses Rückstaus
-   für den 2026-09-05 festhält; die beiden Dateiköpfe tragen den Vermerk seit
-   damals. Was der Punkt in Wahrheit meint, bleibt aber richtig und ist
-   dringender: **das Typprüfen ist kein Beleg, solange die Aussage `True`
-   ist.** `MartingaleProblems/Suggested.lean` führt sieben Deklarationen, deren
-   *Aussage* `True` oder `sorry` ist (`isMPSolution_iff_forall_fdd`, `restart`,
-   `exists_cadlag_modification_of_isRegularizingClass`,
-   `isQuasiLeftContinuous_of_isRegularizingClass`,
-   `isQuasiLeftContinuous_of_isMPSolutionFor`,
-   `not_isQuasiLeftContinuous_of_atom`, `mpSolution_of_tendsto`) und drei
-   Definitionen, deren Rumpf `sorry` ist (`IsDetermining`,
-   `IsRegularizingClass`, `IsQuasiLeftContinuous`) — Meilensteine 3, 5, 9
-   und 10. Diese zehn sind der eigentliche Inhalt dieses Punktes: aus dem
-   Roadmaptext eine Proposition machen und **die** übersetzen. Solange sie
-   `True` sind, zählt das `rc=0` der Datei für sie nichts.
+   | | Deklarationen | `sorry` |
+   |---|---|---|
+   | `WeakConvergence` | 50 | 21 |
+   | `SkorokhodSpace` | 102 | 12 |
+   | `MartingaleProblems` | 34 | 14 |
 
-   *Erledigt für `MartingaleProblems` am 2026-09-06, vierter Lauf des Tages:
-   alle zehn sind Aussagen, und die Datei übersetzt.* Meilenstein 9 ist ganz
-   geschrieben (`IsCadlagPath`, `IsSeparating`, `IsCompensatorFor`,
-   `IsRegularizingClass`, `CompactContainment`,
-   `exists_cadlag_modification_of_isRegularizingClass`,
-   `IsQuasiLeftContinuous`, `IsQuasiLeftContinuous.ae_eq_leftLim`,
-   `IsL1LeftContinuousAlongStoppingTimes`,
-   `isQuasiLeftContinuous_of_isRegularizingClass`,
-   `isQuasiLeftContinuous_of_isMPSolutionFor`,
-   `not_isQuasiLeftContinuous_of_atom`), Meilenstein 3 auch (`IsCanonical`,
-   `IsDetermining`, `isMPSolution_iff_forall_fdd` und die stetige Fassung),
-   Meilenstein 5 auch (`Shift` mit den Koordinaten als Parameter,
-   `IsShiftSystem`, `restart`, `restart_canonical`), Meilenstein 10 auch
-   (`TendstoLaw`, `mpSolution_of_tendsto`,
-   `isMPSolution_of_forall_condExp_eq_of_dense`). 37 Deklarationen, 12 mit
-   `sorry`, und jedes `sorry` steht in einem Beweis; **keine Aussage der Datei
-   ist mehr `True`**.
-
-   *Fortgesetzt am 2026-09-06, fünfter Lauf des Tages: die ersten vier Beweise,
-   und zwei Aussagen, die sich nicht retten ließen.* In `MartingaleProblems`
-   trägt `IsQuasiLeftContinuous.ae_eq_leftLim` einen Beweis — nachdem die
-   Aussage berichtigt war: unter `¬ IsMin t` ist sie **falsch** (Zeuge
-   $\iota=\N$, $t=1$), und der Schritt von einer Folge zum Filter `𝓝[<] t`
-   braucht die Existenz des Linkslimes, weil das `∀ᵐ ω` innerhalb des
-   Folgenquantors steht. In `SkorokhodSpace` sind es
-   `IsCadlag.eq_of_eqOn_dense` — ebenfalls erst nach Berichtigung: unter bloßer
-   Dichtheit falsch, und \eqref{T2b} deckt das größte Element nicht ab —,
-   `isCompact_exhaustion` und `monotoneOn_dist_basepoint`. Beide Dateien
-   `rc=0`, ohne Fehler und ohne Linterwarnung; 11 bzw. 20 `sorry`.
-
-   **Was der Punkt für `SkorokhodSpace` jetzt meint, und es ist der Befund des
-   vierten Laufs eine Stufe tiefer:** die Datei hat keine `True`-Aussage, aber
-   fünf **Definitionen mit `sorry` im Rumpf** — `TimeChange.lipConstOn`,
-   `TimeChange.normOn`, `SkorokhodSpace.modulus`, `Group (TimeChange ι)` und
-   `MetricSpace D(ι, E)`. Elf der zwanzig `sorry` waren Sätze über sie, und die
-   redeten solange über `sorryAx`. **Drei davon sind im selben Lauf erledigt:**
-   die `Group`-Instanz ist konstruiert, `lipConstOn` und `normOn` sind
-   definiert, `normOn_inv` ist bewiesen; 16 `sorry` statt 20. Der nächste
-   Schritt steht im Inventar, fünfter Lauf des 2026-09-06, als benanntes Ziel:
-   `normOn_one` (Fallunterscheidung nach `(exhaustion t₀ m).Subsingleton`) und
-   `normOn_mul_le`.
-
-   *Fortgesetzt am 2026-09-07, erster Lauf des Tages: `normOn_one` ist
-   bewiesen, `normOn_mul_le` ist **falsch**.* Die gefensterte Norm ist keine
-   Längenfunktion — Zeuge auf $\mathbb R$ mit $B_1=[-1,1]$, $\lambda'=2\cdot$
-   und $\lambda$ stückweis linear mit Steigung $100$ jenseits von $1$:
-   $\mathrm{normOn}\,\lambda=0$, $\mathrm{normOn}\,\lambda'=\log2$,
-   $\mathrm{normOn}(\lambda\lambda')\ge\log200$. Ebenso falsch ist
-   `dist_le_of_normOn_le`, aus einem zweiten Grund: `TimeChange` hat keinen
-   Anker, und eine Translation hat Norm $0$. Meilenstein 3 führt seither die
-   **globale** `TimeChange.lipConst`/`TimeChange.norm` samt Attainment
-   (`lipschitzWith_lipConst`), `lipConst_one`, `lipConst_of_subsingleton`,
-   `lipConst_mul_le`, `one_le_max_lipConst`, `norm_one`, `norm_inv`,
-   `norm_mul_le` — alle bewiesen —, Meilenstein 4 baut `distOn` darauf statt
-   auf `normOn`, und `dist_le_of_norm_le` trägt die Hypothese `λ t₀ = t₀`. 15
-   `sorry`; die beiden verbliebenen Definitionen mit `sorry` im Rumpf sind
-   `SkorokhodSpace.modulus` und `MetricSpace D(ι, E)`. Nächstes benanntes Ziel:
-   `TimeChange.dist_le_of_norm_le`, Weg im Inventar.
-
-   *Fortgesetzt am 2026-09-07, zweiter Lauf des Tages: `dist_le_of_norm_le` ist
-   bewiesen, und `not_normOn_mul_le` gleich mit.* **Die Zeitänderungsschicht der
-   Meilensteine 3 und 4 hat damit kein `sorry` mehr.** Der erste Beweis läuft
-   über eine neue Aussage von Meilenstein 1,
-   `dist_eq_abs_sub_of_sameSide` — für $s,t$ auf **einer** Seite von $t_0$ ist
-   $\mathrm{dist}(s,t)=|\mathrm{dist}(t_0,t)-\mathrm{dist}(t_0,s)|$ —, und
-   braucht weder `OrderTopology` noch `ProperSpace`, insbesondere nicht die
-   Kompaktheit des Fensters. Der zweite ist der ausgeschriebene Zeuge auf $\R$:
-   `TimeChange.steep` und `TimeChange.double`, dazu `Real.instAdditiveDist`,
-   die erste der vier laufenden Instanzen von Meilenstein 1. Die Datei geht
-   durch `lake env lean` gegen `v4.33.1`, ohne Fehler und ohne Linterwarnung;
-   13 `sorry` statt 15. Die verbliebenen 13 sind
-   `exists_orderIso_isometry_real` (M1), `countable_leftJumpSet` und
-   `IsCadlag.measurable` (M2) und die zehn, die von der `MetricSpace D(ι, E)`-
-   Instanz an folgen. **Im selben Lauf ist Meilenstein 1 fertig geworden:**
-   `exhaustionMin`, `exhaustionMax`, `clamp` und seine fünf Eigenschaften, dazu
-   `ordConnected_exhaustion` — ohne das ist der Klemmoperator gar nicht im
-   Fenster, was der Meilensteintext übersehen hatte. Nächstes benanntes Ziel:
-   `SkorokhodSpace.restrictExhaustion` und `SkorokhodSpace.distOn` samt der
-   Untergruppe `TimeChange.fixing t₀`, Weg im Inventar.
-
-   *Fortgesetzt am 2026-09-07, dritter Lauf des Tages: die beiden Daten der
-   Metrik stehen, und eine Aussage von Meilenstein 2 war unter ihrem Bündel
-   falsch.* `TimeChange.fixing t₀` (Untergruppe), `restrictExhaustion` (samt der
-   dafür fehlenden Aussage `IsCadlag.comp_monotone_continuous` von Meilenstein 2)
-   und `SkorokhodSpace.distOn` sind geschrieben und bewiesen, dazu
-   `isBounded_range_restrictExhaustion`,
-   `bddAbove_range_dist_restrictExhaustion`, `bddBelow_range_distOn`,
-   `distOn_nonneg`, `distOn_self`, `distOn_comm`, `exists_lt_distOn_add` und
-   `distOn_triangle` — fünfzehn neue Deklarationen, alle bewiesen, `rc=0`, keine
-   Linterwarnung, weiterhin 13 `sorry`. **Von den Metrikaxiomen fehlt nur noch
-   die Trennung.** `IsCadlag.isBounded_image_of_isCompact` stand unter dem
-   Bündel (A), einer bloßen Präordnung, und ist dort **falsch**; der Zeuge
-   ($\N\cup\{\omega\}$ mit unvergleichbarem $\omega$) steht in der Roadmap und
-   im Inventar. Nächstes benanntes Ziel: `countable_leftJumpSet`, das seit
-   diesem Lauf auf dem kritischen Weg zur Trennung liegt; Weg im Inventar.
-
-   *Fortgesetzt am 2026-09-07, fünfter Lauf des Tages: die Sprungtheorie von
-   Meilenstein 2 ist bewiesen, und sie steht unter (A′) statt unter (B).*
-   `countable_leftJumpSet` trägt einen Beweis, dazu die sieben Deklarationen,
-   die er braucht oder mitnimmt: `IsCadlag.tendsto_leftLim`,
-   `largeLeftJumpSet`, `IsCadlag.dist_leftLim_le_of_Ioo_subset`,
-   `IsCadlag.eventually_dist_leftLim_lt`,
-   `IsCadlag.finite_largeLeftJumpSet_inter`,
-   `IsCadlag.continuousAt_iff_notMem_leftJumpSet` und
-   `IsCadlag.continuous_iff_leftJumpSet_eq_empty`. Von der abzählbaren dichten
-   Menge des Bündels (B), unter dem die Roadmap diese Aussagen seit dem
-   2026-08-29 führte, verbraucht der Beweis **nichts**; er braucht die lineare
-   Ordnung, die Ordnungstopologie und für die Abzählbarkeit die σ-Kompaktheit.
-   Der Roadmaptext ist entsprechend berichtigt. **Im selben Lauf ist die
-   Trennung von Meilenstein 4 gefallen**, das letzte Metrikaxiom:
-   `IsCadlag.eq_of_forall_exists_dist_le` (M2),
-   `SkorokhodSpace.eq_of_distOn_eq_zero` und
-   `SkorokhodSpace.eq_of_forall_distOn_eq_zero` (M4). Sie geht **nicht** über
-   die Dichtheit der Stetigkeitsstellen — die der Index von Meilenstein 1 nicht
-   hergeben muß —, sondern spielt die Zeitänderung gegen ihre Inverse aus: eine
-   von beiden bewegt `t` nach oben, und die Rechtsstetigkeit des dort
-   ausgewerteten Pfades tut den Rest. `rc=0`, keine Linterwarnung, 12 `sorry`
-   statt 13, elf neue Deklarationen. Nächstes benanntes Ziel: die Instanz
-   `MetricSpace D(ι, E)` selbst, samt der Vorfrage nach dem Basispunkt; Weg im
-   Inventar.
-
-   Die Frage, ob Hypothese (a) von `mpSolution_of_tendsto` gemeinsame oder
-   einzelne Verteilungskonvergenz meint, ist am Manuskript entschieden —
-   `rem:absconvtopfree` sagt es ausdrücklich: einzeln, „and nothing else".
-   Ferner fehlen
-   `MPSolutions.isConvex` und `MPSolutions.integral_mem` aus Meilenstein 5
-   ganz. Vier Befunde an den Aussagen sind in den Roadmaptext eingetragen
-   (`StronglyAdapted` statt `Adapted`, der gemeinsame Existenzquantor für den
-   Kompensator, die natürliche Filtration im fdd-Kriterium, die
-   Linkserreichbarkeit des Atoms); Einzelheiten im Inventar unter „Läufe".
+   Arbeite die verbleibenden `sorry` ab, von oben je Datei, und nimm dabei
+   `MartingaleProblems` mit — es ist seit dem 2026-09-06 unberührt, während
+   `SkorokhodSpace` viermal drankam. Was sich nicht billig beweisen läßt, laß
+   stehen und sag im Bericht, woran es hängt; ein `sorry` mit benannter Ursache
+   ist mehr wert als einer ohne.
 
 2. **`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in
