@@ -184,12 +184,23 @@ The same run also proved the first point of Milestone 3,
 the relaxed tightness criterion of Milestone 1 in four lines, and weakened that
 criterion's own bundle to `[PseudoMetricSpace E] [CompleteSpace E]`.
 
-The second run of 2026-09-08 proved the two Lévy-Prokhorov estimates that
-`separableSpace_probabilityMeasure` rests on, `levyProkhorovEDist_sum_dirac_le`
-and `levyProkhorovEDist_sum_dirac_weights_le`, together with the evaluation
-lemma `sum_smul_dirac_apply`.  The theorem itself keeps its `sorry`: what is
-still missing is the finite partition into balls around a dense sequence and the
-passage to rational weights, both written out in its doc string.
+The second and third runs of 2026-09-08 proved the four statements that
+`separableSpace_probabilityMeasure` rests on -- the two Lévy-Prokhorov estimates
+`levyProkhorovEDist_sum_dirac_le` and `levyProkhorovEDist_sum_dirac_weights_le`
+with the evaluation lemma `sum_smul_dirac_apply`, the finite partition
+`exists_finite_partition_ball_of_denseRange` and the rational weights
+`exists_nat_weights` -- and the fourth run put them together.
+`separableSpace_levyProkhorov_probabilityMeasure`,
+`separableSpace_probabilityMeasure` and
+`secondCountableTopology_probabilityMeasure` are proved and depend, by
+`#print axioms`, on `propext`, `Classical.choice` and `Quot.sound` alone;
+the same run then proved the completeness of the Lévy-Prokhorov metric
+(`isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt`,
+`isTightMeasureSet_of_cauchySeq`,
+`completeSpace_levyProkhorov_probabilityMeasure`,
+`isCompletelyMetrizableSpace_probabilityMeasure`), so that
+`polishSpace_probabilityMeasure` too rests on nothing unproved.  What is left of
+Milestone 3 is the Skorokhod representation alone.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -2398,34 +2409,144 @@ theorem exists_nat_weights {n : ℕ} (c : Fin n → ℝ≥0∞) (hc : ∑ i, c i
       _ = δ₀ := ENNReal.ofReal_toReal hδ₀top
       _ ≤ δ := min_le_left _ _
 
-/-- The laws on a separable metric space form a separable space.
+/-- The member of the approximating family attached to a triple `(n, k, m)`: the
+atoms `x (k i)` carry the normalised integer weights `m i / ∑ j, m j`.
 
-The countable dense family is the one the estimates above are built for: the
-measures `∑ i, ((m i : ℝ≥0∞) / ∑ j, m j) • δ (x (k i))` with `m : Fin n → ℕ`
-of positive total and `x : ℕ → E` a dense sequence.  Countability is the image
-of the countable type `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, along the injective
-coercion `ProbabilityMeasure.toMeasure_injective`.
+Naming the family as a function of the triple, rather than describing it inside
+the proof, is what makes its countability a one-liner: the triples form the
+countable type `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, and the family is its range. -/
+noncomputable def natWeightMeasure (x : ℕ → E) {n : ℕ} (k m : Fin n → ℕ) : Measure E :=
+  ∑ i, ((m i : ℝ≥0∞) / ((∑ j, m j : ℕ) : ℝ≥0∞)) • Measure.dirac (x (k i))
 
-All three mathematical steps are proved.  What is left is the bookkeeping that
-puts them together: given `μ` and `ε > 0`, apply
-`exists_finite_partition_ball_of_denseRange` with `r = ε.toReal` to get the
-partition `A`, the indices `k` and the exceptional set `G`; apply
-`levyProkhorovEDist_sum_dirac_le` to it, so that `∑ i, μ (A i) • δ (x (k i))` is
-`ε`-close to `μ`; apply `exists_nat_weights` to `c i = μ (A i)`, whose total is
-`1` because `A` is a partition, and then
-`levyProkhorovEDist_sum_dirac_weights_le`, so that the normalised integer
-weights cost another `ε`; `levyProkhorovEDist_triangle`
-(`Measure/LevyProkhorovMetric.lean:127`) gives `2ε`, and
-`LevyProkhorov.probabilityMeasureHomeomorph` (`ibid.:676`) carries the
-conclusion to the topology of convergence in distribution.
+/-- `natWeightMeasure` is a probability measure as soon as the numerators do not
+all vanish -- the total mass is `(∑ j, m j) / (∑ j, m j)`, and that is where the
+`+ 1` of `exists_nat_weights` earns its keep. -/
+theorem isProbabilityMeasure_natWeightMeasure (x : ℕ → E) {n : ℕ} (k m : Fin n → ℕ)
+    (hm : 0 < ∑ j, m j) : IsProbabilityMeasure (natWeightMeasure x k m) := by
+  constructor
+  have hM0 : ((∑ j, m j : ℕ) : ℝ≥0∞) ≠ 0 := by simpa using hm.ne'
+  have hMtop : ((∑ j, m j : ℕ) : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top _
+  rw [natWeightMeasure, sum_smul_dirac_apply _ _ MeasurableSet.univ]
+  simp only [Set.indicator_of_mem (Set.mem_univ _), Pi.one_apply, mul_one, div_eq_mul_inv,
+    ← Finset.sum_mul, ← Nat.cast_sum]
+  rw [← div_eq_mul_inv]
+  exact ENNReal.div_self hM0 hMtop
+
+/-- The laws on a separable metric space form a separable space -- stated on the
+Lévy-Prokhorov synonym, where there is a metric to estimate in.
+
+The countable dense family is `natWeightMeasure x k m`, the measures
+`∑ i, ((m i : ℝ≥0∞) / ∑ j, m j) • δ (x (k i))` with `m : Fin n → ℕ` and `x` a
+dense sequence.  Countability is the image of the countable type
+`Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, pulled back along the injective coercion
+`ProbabilityMeasure.toMeasure_injective`.
+
+The bookkeeping is: given `μ` and `r > 0`, put `ε = ENNReal.ofReal (r / 4)` and
+apply `exists_finite_partition_ball_of_denseRange` with radius `ε.toReal` to get
+the partition `A`, the indices `k` and the exceptional set `G`;
+`levyProkhorovEDist_sum_dirac_le` makes `∑ i, μ (A i) • δ (x (k i))` `ε`-close to
+`μ`; `exists_nat_weights` applies to `c i = μ (A i)`, whose total is `1` because
+`A` is a partition, and `levyProkhorovEDist_sum_dirac_weights_le` says the
+normalised integer weights cost another `ε`; `levyProkhorovEDist_triangle`
+(`Measure/LevyProkhorovMetric.lean:127`) gives `2ε`, that is `r / 2 < r`.
+
+The statement is made here on `LevyProkhorov (ProbabilityMeasure E)` and not on
+`ProbabilityMeasure E`, because that is where `Metric.dense_iff` applies, and
+because `LevyProkhorov` is a structure with one field and *not* a type synonym:
+a set of laws and its image under `LevyProkhorov.ofMeasure` are different terms,
+so the density has to be carried across and cannot be reinterpreted.
 
 The empty `E` is a separate line and not a hypothesis:
 `TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`) asks for
-`[Nonempty E]`, and over an empty `E` there is no probability measure at all, so
-`ProbabilityMeasure E` is empty and `∅` is dense in it. -/
+`[Nonempty E]`, and over an empty `E` there is no probability measure at all
+(`μ univ = 1` while `univ = ∅`), so `ProbabilityMeasure E` is empty and
+countable. -/
+theorem separableSpace_levyProkhorov_probabilityMeasure [PseudoMetricSpace E]
+    [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E] :
+    TopologicalSpace.SeparableSpace (LevyProkhorov (ProbabilityMeasure E)) := by
+  classical
+  rcases isEmpty_or_nonempty E with hE | hE
+  · have hempty : IsEmpty (ProbabilityMeasure E) := by
+      refine ⟨fun μ => ?_⟩
+      have h : (μ : Measure E) univ = 1 := measure_univ
+      rw [Set.univ_eq_empty_iff.2 hE, measure_empty] at h
+      exact zero_ne_one h
+    have : IsEmpty (LevyProkhorov (ProbabilityMeasure E)) := ⟨fun p => hempty.elim p.toMeasure⟩
+    infer_instance
+  obtain ⟨x, hx⟩ := TopologicalSpace.exists_dense_seq E
+  set S : Set (ProbabilityMeasure E) :=
+    {ν | ∃ (n : ℕ) (k m : Fin n → ℕ), (ν : Measure E) = natWeightMeasure x k m} with hSdef
+  have hcount : S.Countable := by
+    have hrange : (Set.range
+        (fun p : Σ n : ℕ, (Fin n → ℕ) × (Fin n → ℕ) =>
+          natWeightMeasure x p.2.1 p.2.2)).Countable := Set.countable_range _
+    refine Set.Countable.mono ?_ (hrange.preimage ProbabilityMeasure.toMeasure_injective)
+    rintro ν ⟨n, k, m, hν⟩
+    exact ⟨⟨n, k, m⟩, hν.symm⟩
+  have hdense : Dense (LevyProkhorov.ofMeasure '' S) := by
+    rw [Metric.dense_iff]
+    rintro p r hr
+    set μ : ProbabilityMeasure E := p.toMeasure with hμdef
+    set ε : ℝ≥0∞ := ENNReal.ofReal (r / 4) with hεdef
+    have hεpos : 0 < ε := ENNReal.ofReal_pos.2 (by linarith)
+    have hεtop : ε ≠ ∞ := ENNReal.ofReal_ne_top
+    have hεreal : ε.toReal = r / 4 := by rw [hεdef, ENNReal.toReal_ofReal (by linarith)]
+    have hεrealpos : 0 < ε.toReal := by rw [hεreal]; linarith
+    obtain ⟨n, A, k, G, hA, hdisj, hcover, hGm, hG, hd⟩ :=
+      exists_finite_partition_ball_of_denseRange (μ := (μ : Measure E))
+        hx (ε := ε) hεpos (r := ε.toReal) hεrealpos
+    have hfirst : levyProkhorovEDist (μ : Measure E)
+        (∑ i, (μ : Measure E) (A i) • Measure.dirac (x (k i))) ≤ ε :=
+      levyProkhorovEDist_sum_dirac_le hA hdisj hcover hG hd
+    have hc : ∑ i, (μ : Measure E) (A i) = 1 := by
+      rw [← measure_univ (μ := (μ : Measure E)), ← hcover, measure_iUnion hdisj hA, tsum_fintype]
+    obtain ⟨m, hm, d, hcq, hqc, hdsum⟩ :=
+      exists_nat_weights (fun i => (μ : Measure E) (A i)) hc (δ := ε) hεpos
+    have hsecond : levyProkhorovEDist (∑ i, (μ : Measure E) (A i) • Measure.dirac (x (k i)))
+        (natWeightMeasure x k m) ≤ ε :=
+      levyProkhorovEDist_sum_dirac_weights_le hcq hqc hdsum
+    have : IsProbabilityMeasure (natWeightMeasure x k m) :=
+      isProbabilityMeasure_natWeightMeasure x k m hm
+    set ν : ProbabilityMeasure E := ⟨natWeightMeasure x k m, inferInstance⟩ with hνdef
+    have hνS : ν ∈ S := ⟨n, k, m, rfl⟩
+    refine ⟨LevyProkhorov.ofMeasure ν, ?_, ⟨ν, hνS, rfl⟩⟩
+    have htri : levyProkhorovEDist (μ : Measure E) (ν : Measure E) ≤ ε + ε :=
+      (levyProkhorovEDist_triangle _ _ _).trans (add_le_add hfirst hsecond)
+    have hdist : dist (LevyProkhorov.ofMeasure ν) p
+        = (levyProkhorovEDist (ν : Measure E) (μ : Measure E)).toReal := rfl
+    rw [Metric.mem_ball, hdist, levyProkhorovEDist_comm]
+    have : (levyProkhorovEDist (μ : Measure E) (ν : Measure E)).toReal ≤ (ε + ε).toReal :=
+      ENNReal.toReal_mono (by simp [hεtop]) htri
+    rw [ENNReal.toReal_add hεtop hεtop, hεreal] at this
+    linarith
+  exact ⟨⟨LevyProkhorov.ofMeasure '' S, hcount.image _, hdense⟩⟩
+
+/-- **The laws on a separable metric space form a separable space.**  The
+statement of the milestone, carried from the Lévy-Prokhorov synonym along
+`LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`)
+by `DenseRange.separableSpace` (`Topology/Bases.lean:378`) -- the inverse
+homeomorphism is surjective, and a surjection has dense range. -/
 theorem separableSpace_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurableSpace E]
     [TopologicalSpace.SeparableSpace E] :
-    TopologicalSpace.SeparableSpace (ProbabilityMeasure E) := sorry
+    TopologicalSpace.SeparableSpace (ProbabilityMeasure E) := by
+  have := separableSpace_levyProkhorov_probabilityMeasure (E := E)
+  have hhom := LevyProkhorov.probabilityMeasureHomeomorph (Ω := E)
+  exact hhom.symm.surjective.denseRange.separableSpace hhom.symm.continuous
+
+/-- The space of laws is second countable.  This is the item above read on the
+synonym, where there is a uniformity to argue with:
+`UniformSpace.secondCountable_of_separable` (`Topology/UniformSpace/Cauchy.lean:932`)
+asks for a uniform space with countably generated uniformity, which
+`ProbabilityMeasure E` is not, and the metric synonym is; the conclusion is
+topological and comes back by `Homeomorph.secondCountableTopology`
+(`Topology/Homeomorph/Lemmas.lean:37`). -/
+theorem secondCountableTopology_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    [TopologicalSpace.SeparableSpace E] :
+    SecondCountableTopology (ProbabilityMeasure E) := by
+  have := separableSpace_levyProkhorov_probabilityMeasure (E := E)
+  have : SecondCountableTopology (LevyProkhorov (ProbabilityMeasure E)) :=
+    UniformSpace.secondCountable_of_separable _
+  exact (LevyProkhorov.probabilityMeasureHomeomorph (Ω := E)).secondCountableTopology
 
 /-- The skeleton of the proof of `isTightMeasureSet_of_isCompact_closure`, which
 Mathlib inlines there: uniform total boundedness in measure already gives
@@ -2456,20 +2577,188 @@ theorem isTightMeasureSet_of_forall_exists_finite_iUnion_ball [PseudoMetricSpace
   rw [Metric.thickening_eq_biUnion_ball]
   simp
 
-/-- Tightness of a Cauchy sequence comes from `isTightMeasureSet_singleton`
-(Ulam, `MeasureTheory/Measure/Tight.lean:99`) for the finite head and from the
-Lévy-Prokhorov estimate for the tail; `isCompact_closure_of_isTightMeasureSet`
-then gives a convergent subsequence. -/
+/-- **A Cauchy sequence of laws is tight.**  Stated with the Lévy-Prokhorov
+distance spelled out rather than as `CauchySeq`, so that it can be read off
+without an instance in sight; `isTightMeasureSet_of_cauchySeq` is the packaged
+form.
+
+The proof is the one place in Milestone 3 where the completeness of `E` is
+used, and it is used twice over: once through Ulam's theorem
+`isTightMeasureSet_singleton` (`Measure/Tight.lean:99`), which makes each single
+law tight, and once through
+`isTightMeasureSet_of_forall_exists_finite_iUnion_ball`, which turns uniform
+total boundedness in measure back into tightness.
+
+Given `ε` and a radius `r`, put `δ = min (ε/2) (ENNReal.ofReal (r/2))` and take
+`N` from the Cauchy property at `δ`.  The first `N + 1` laws are carried by the
+compact `L = ⋃ n ≤ N, K n`, whose `r/2`-net `F` is the finite set asked for; off
+`L` each of them has mass at most `ε/2`.  For `n > N` the Lévy-Prokhorov
+inequality `right_measure_le_of_levyProkhorovEDist_lt`
+(`Measure/LevyProkhorovMetric.lean:74`) sends the ball union `B` of radius `r/2`
+into its `δ`-thickening, which sits inside the union `A` of the balls of radius
+`r`, and `1 = (u N) B + (u N) Bᶜ ≤ ((u n) A + δ) + ε/2` gives `(u n) Aᶜ ≤ ε`.
+The subtraction is avoided throughout by `measure_add_measure_compl` and
+`ENNReal.add_le_add_iff_left`. -/
+theorem isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt [MetricSpace E]
+    [BorelSpace E] [CompleteSpace E] [TopologicalSpace.SeparableSpace E]
+    {u : ℕ → ProbabilityMeasure E}
+    (h : ∀ δ : ℝ≥0∞, 0 < δ → ∃ N, ∀ n, N ≤ n →
+      levyProkhorovEDist (u n : Measure E) (u N : Measure E) < δ) :
+    IsTightMeasureSet {((μ : ProbabilityMeasure E) : Measure E) | μ ∈ Set.range u} := by
+  classical
+  refine isTightMeasureSet_of_forall_exists_finite_iUnion_ball ?_
+  intro ε hε r hr
+  rcases eq_or_ne ε ∞ with rfl | hεtop
+  · exact ⟨∅, fun μ _ => le_top⟩
+  have hεhalf : 0 < ε / 2 := ENNReal.half_pos hε.ne'
+  set δ : ℝ≥0∞ := min (ε / 2) (ENNReal.ofReal (r / 2)) with hδdef
+  have hδpos : 0 < δ := lt_min hεhalf (ENNReal.ofReal_pos.2 (by linarith))
+  have hδhalf : δ ≤ ε / 2 := min_le_left _ _
+  have hδr : δ.toReal ≤ r / 2 := by
+    refine (ENNReal.toReal_le_toReal ?_ ENNReal.ofReal_ne_top).2 (min_le_right _ _) |>.trans ?_
+    · exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top (min_le_right _ _)
+    · rw [ENNReal.toReal_ofReal (by linarith)]
+  obtain ⟨N, hN⟩ := h δ hδpos
+  -- the compact set carrying the first `N + 1` measures
+  have hK : ∀ n : ℕ, ∃ K : Set E, IsCompact K ∧ (u n : Measure E) Kᶜ ≤ ε / 2 := by
+    intro n
+    have ht : IsTightMeasureSet {((u n : ProbabilityMeasure E) : Measure E)} :=
+      isTightMeasureSet_singleton
+    obtain ⟨K, hKc, hKle⟩ :=
+      isTightMeasureSet_iff_exists_isCompact_measure_compl_le.1 ht (ε / 2) hεhalf
+    exact ⟨K, hKc, hKle _ rfl⟩
+  choose K hKc hKle using hK
+  set L : Set E := ⋃ n ∈ Finset.range (N + 1), K n with hLdef
+  have hLc : IsCompact L :=
+    (Finset.range (N + 1)).finite_toSet.isCompact_biUnion fun n _ => hKc n
+  obtain ⟨t, htfin, htsub⟩ :=
+    Metric.totallyBounded_iff.1 hLc.totallyBounded (r / 2) (by linarith)
+  refine ⟨htfin.toFinset, ?_⟩
+  set F : Finset E := htfin.toFinset with hFdef
+  set A : Set E := ⋃ x ∈ F, Metric.ball x r with hAdef
+  set B : Set E := ⋃ x ∈ F, Metric.ball x (r / 2) with hBdef
+  have hAmeas : MeasurableSet A :=
+    Finset.measurableSet_biUnion _ fun x _ => Metric.isOpen_ball.measurableSet
+  have hBmeas : MeasurableSet B :=
+    Finset.measurableSet_biUnion _ fun x _ => Metric.isOpen_ball.measurableSet
+  have hBA : B ⊆ A := by
+    refine iUnion₂_mono fun x _ => Metric.ball_subset_ball (by linarith)
+  have hLB : L ⊆ B := by
+    refine htsub.trans ?_
+    simp only [hBdef, hFdef, Set.Finite.mem_toFinset]
+    exact subset_rfl
+  have hthick : Metric.thickening δ.toReal B ⊆ A := by
+    intro y hy
+    obtain ⟨z, hz, hdz⟩ := Metric.mem_thickening_iff.1 hy
+    simp only [hBdef, mem_iUnion, Metric.mem_ball, exists_prop] at hz
+    obtain ⟨x, hxF, hxz⟩ := hz
+    simp only [hAdef, mem_iUnion, Metric.mem_ball, exists_prop]
+    refine ⟨x, hxF, ?_⟩
+    calc dist y x ≤ dist y z + dist z x := dist_triangle _ _ _
+      _ < r / 2 + r / 2 := add_lt_add_of_lt_of_lt (lt_of_lt_of_le hdz hδr) hxz
+      _ = r := by ring
+  -- the tail bound, `μ Aᶜ ≤ ε`, one index at a time
+  rintro μ ⟨n, rfl⟩
+  have hKL : ∀ m : ℕ, m ≤ N → K m ⊆ L := fun m hm =>
+    subset_biUnion_of_mem (u := fun i => K i) (Finset.mem_range.2 (by omega))
+  have hcompl : ∀ m : ℕ, m ≤ N → (u m : Measure E) Aᶜ ≤ ε / 2 := fun m hm =>
+    le_trans (measure_mono (compl_subset_compl.2 (((hKL m hm).trans hLB).trans hBA))) (hKle m)
+  rcases le_or_gt n N with hn | hn
+  · exact (hcompl n hn).trans (ENNReal.half_le_self)
+  · have hlp : (u N : Measure E) B ≤ (u n : Measure E) (Metric.thickening δ.toReal B) + δ :=
+      right_measure_le_of_levyProkhorovEDist_lt (hN n hn.le) hBmeas
+    have hlp' : (u N : Measure E) B ≤ (u n : Measure E) A + δ :=
+      hlp.trans (add_le_add (measure_mono hthick) le_rfl)
+    have hone : (u N : Measure E) B + (u N : Measure E) Bᶜ = 1 := by
+      rw [measure_add_measure_compl hBmeas, measure_univ]
+    have hNB : (u N : Measure E) Bᶜ ≤ ε / 2 :=
+      le_trans (measure_mono (compl_subset_compl.2 ((hKL N le_rfl).trans hLB))) (hKle N)
+    have hlow : (1 : ℝ≥0∞) ≤ (u n : Measure E) A + (δ + ε / 2) := by
+      calc (1 : ℝ≥0∞) = (u N : Measure E) B + (u N : Measure E) Bᶜ := hone.symm
+        _ ≤ ((u n : Measure E) A + δ) + ε / 2 := add_le_add hlp' hNB
+        _ = (u n : Measure E) A + (δ + ε / 2) := by rw [add_assoc]
+    have hsum : (u n : Measure E) A + (u n : Measure E) Aᶜ = 1 := by
+      rw [measure_add_measure_compl hAmeas, measure_univ]
+    have hAtop : (u n : Measure E) A ≠ ∞ := measure_ne_top _ _
+    have : (u n : Measure E) Aᶜ ≤ δ + ε / 2 := by
+      rw [← ENNReal.add_le_add_iff_left hAtop, hsum]
+      exact hlow
+    refine this.trans ?_
+    calc δ + ε / 2 ≤ ε / 2 + ε / 2 := add_le_add hδhalf le_rfl
+      _ = ε := ENNReal.add_halves ε
+
+/-- A Cauchy sequence in the Lévy-Prokhorov metric is tight -- the previous
+theorem with the hypothesis read off `EMetric.cauchySeq_iff'`, which is possible
+because `edist` on `LevyProkhorov (ProbabilityMeasure E)` *is*
+`levyProkhorovEDist` (`edist_probabilityMeasure_def`). -/
+theorem isTightMeasureSet_of_cauchySeq [MetricSpace E] [BorelSpace E] [CompleteSpace E]
+    [TopologicalSpace.SeparableSpace E] {u : ℕ → LevyProkhorov (ProbabilityMeasure E)}
+    (hu : CauchySeq u) :
+    IsTightMeasureSet
+      {((μ : ProbabilityMeasure E) : Measure E) | μ ∈ Set.range fun n => (u n).toMeasure} := by
+  refine isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt fun δ hδ => ?_
+  obtain ⟨N, hN⟩ := EMetric.cauchySeq_iff'.1 hu δ hδ
+  exact ⟨N, fun n hn => hN n hn⟩
+
+/-- **The space of laws over a complete separable metric space is complete in
+the Lévy-Prokhorov metric.**  Tightness of the sequence comes from the theorem
+above, `isCompact_closure_of_isTightMeasureSet` (`Measure/Prokhorov.lean:530`)
+turns it into a compact closure, a compact set in the metrizable
+`ProbabilityMeasure E` is sequentially compact (`IsCompact.tendsto_subseq`), and
+`tendsto_nhds_of_cauchySeq_of_subseq` (`UniformSpace/Cauchy.lean:277`) upgrades
+the convergent subsequence to the sequence.  The subsequence converges in the
+*weak* topology and the sequence has to converge in the *metric* one, which is
+what `probabilityMeasureHomeomorph` is for. -/
 theorem completeSpace_levyProkhorov_probabilityMeasure [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] [CompleteSpace E] :
-    CompleteSpace (LevyProkhorov (ProbabilityMeasure E)) := sorry
+    CompleteSpace (LevyProkhorov (ProbabilityMeasure E)) := by
+  refine Metric.complete_of_cauchySeq_tendsto fun u hu => ?_
+  set v : ℕ → ProbabilityMeasure E := fun n => (u n).toMeasure with hv
+  have hcomp : IsCompact (closure (Set.range v)) :=
+    isCompact_closure_of_isTightMeasureSet (isTightMeasureSet_of_cauchySeq hu)
+  obtain ⟨a, -, φ, hφ, hlim⟩ := hcomp.tendsto_subseq fun n => subset_closure ⟨n, rfl⟩
+  refine ⟨LevyProkhorov.ofMeasure a, ?_⟩
+  refine tendsto_nhds_of_cauchySeq_of_subseq hu hφ.tendsto_atTop ?_
+  exact ((LevyProkhorov.probabilityMeasureHomeomorph (Ω := E)).continuous.tendsto a).comp hlim
 
+/-- Complete metrizability of the space of laws: the item above read on the
+space of laws itself, along `Homeomorph.isClosedEmbedding` and
+`Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
+(`Topology/Metrizable/CompletelyMetrizable.lean:249`).  This is the topological
+shadow of the completeness, and it is what `polishSpace_probabilityMeasure`
+consumes. -/
 theorem isCompletelyMetrizableSpace_probabilityMeasure [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] [CompleteSpace E] :
-    TopologicalSpace.IsCompletelyMetrizableSpace (ProbabilityMeasure E) := sorry
+    TopologicalSpace.IsCompletelyMetrizableSpace (ProbabilityMeasure E) := by
+  have : CompleteSpace (LevyProkhorov (ProbabilityMeasure E)) :=
+    completeSpace_levyProkhorov_probabilityMeasure
+  exact (LevyProkhorov.probabilityMeasureHomeomorph
+    (Ω := E)).isClosedEmbedding.IsCompletelyMetrizableSpace
 
-theorem polishSpace_probabilityMeasure [MetricSpace E] [BorelSpace E] [PolishSpace E] :
-    PolishSpace (ProbabilityMeasure E) := sorry
+/-- **The space of laws over a Polish space is Polish.**
+
+`PolishSpace` is `SecondCountableTopology` together with
+`IsCompletelyMetrizableSpace` (`Topology/MetricSpace/Polish.lean:62`), and
+Mathlib turns a separable completely metrizable space into a Polish one
+(`ibid.:65`); so this is `isCompletelyMetrizableSpace_probabilityMeasure` and
+`separableSpace_probabilityMeasure` put together, and nothing else.
+
+The statement carries **no metric on `E`**, and that is not economy but
+necessity: with a `[MetricSpace E]` in the signature, the complete metric
+supplied by `TopologicalSpace.upgradeIsCompletelyMetrizable`
+(`Topology/Metrizable/CompletelyMetrizable.lean:205`) is a second, competing
+instance, and the `CompleteSpace E` read off the upgrade is stated for the
+upgraded uniformity while the goal wants the given one -- the two do not meet.
+A Polish space has no distinguished metric, the upgrade provides the only one,
+and both hypotheses of the two inputs are then available at once. -/
+theorem polishSpace_probabilityMeasure [TopologicalSpace E] [PolishSpace E] [BorelSpace E] :
+    PolishSpace (ProbabilityMeasure E) := by
+  let := TopologicalSpace.upgradeIsCompletelyMetrizable E
+  have hsep : TopologicalSpace.SeparableSpace (ProbabilityMeasure E) :=
+    separableSpace_probabilityMeasure
+  have hmetr : TopologicalSpace.IsCompletelyMetrizableSpace (ProbabilityMeasure E) :=
+    isCompletelyMetrizableSpace_probabilityMeasure
+  infer_instance
 
 /-- Mathlib's `SeparableSpace.exists_measurable_partition_diam_le`
 (`MeasureTheory/Measure/LevyProkhorovMetric.lean:540`, in namespace

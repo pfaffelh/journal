@@ -822,7 +822,8 @@ rule for the whole milestone: a **uniform** statement about the space of laws is
 made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
 `ProbabilityMeasure E`, and the homeomorphism carries the second kind across.
 
-* `MeasureTheory.ProbabilityMeasure.separableSpace`: for `E` a separable
+* `MeasureTheory.separableSpace_probabilityMeasure`, **proved** on 2026-09-08,
+  fourth run: for `E` a separable
   pseudometric space with `[OpensMeasurableSpace E]`, `ProbabilityMeasure E` is
   separable. The countable dense set is the finitely supported measures with
   rational masses at points of a countable dense sequence of `E`
@@ -897,24 +898,49 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
     distinction at an exceptional index. The `+ 1` in the numerators is what
     keeps `∑ j, m j` positive when every floor vanishes.
 
-  What remains is the bookkeeping: apply the partition with `r = ε.toReal`, then
+  The bookkeeping that joins them, **proved** on 2026-09-08, fourth run: with
+  `ε = ENNReal.ofReal (r / 4)`, apply the partition with radius `ε.toReal`, then
   `levyProkhorovEDist_sum_dirac_le`, then `exists_nat_weights` to
-  `c i = μ (A i)` — whose total is `1` because `A` is a partition — then
+  `c i = μ (A i)` — whose total is `1` because `A` is a partition, by
+  `measure_iUnion` and `tsum_fintype` — then
   `levyProkhorovEDist_sum_dirac_weights_le`; `levyProkhorovEDist_triangle`
-  (`LevyProkhorovMetric.lean:127`) gives `2ε`, and the family is countable as
-  the image of `Σ n, (Fin n → ℕ) × (Fin n → ℕ)` along
+  (`LevyProkhorovMetric.lean:127`) gives `2ε`, that is `r / 2 < r`. The family is
+  named by `MeasureTheory.natWeightMeasure x k m`, a definition and not a
+  description, which is what makes its countability a line: it is the range of a
+  function on `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, pulled back along
   `MeasureTheory.ProbabilityMeasure.toMeasure_injective`
-  (`Measure/ProbabilityMeasure.lean:128`). The empty `E` is a separate line and
-  not a hypothesis: `TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`)
+  (`Measure/ProbabilityMeasure.lean:128`) by `Set.Countable.preimage`. That it is
+  a family of *probability* measures is
+  `MeasureTheory.isProbabilityMeasure_natWeightMeasure`, the one place where the
+  `+ 1` of `exists_nat_weights` is needed: the total mass is
+  `(∑ j, m j) / (∑ j, m j)`, and `ENNReal.div_self` wants a nonzero denominator.
+
+  Two things about *where* the density is proved, both discovered in the doing.
+  `LevyProkhorov` is a one-field structure and not a type synonym, so a set of
+  laws and its image under `LevyProkhorov.ofMeasure` are different terms and the
+  density has to be **carried** across, not reinterpreted; it is proved on the
+  synonym, where `Metric.dense_iff` applies, and carried back by
+  `DenseRange.separableSpace` (`Topology/Bases.lean:378`) along
+  `probabilityMeasureHomeomorph.symm`, whose surjectivity gives the dense range
+  for free. The empty `E` is a separate line and not a hypothesis:
+  `TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`)
   asks for `[Nonempty E]`, and on an empty `E` there is no probability measure
-  at all, so `ProbabilityMeasure E` is empty and `∅` is dense in it.
-* `MeasureTheory.ProbabilityMeasure.secondCountableTopology`: the item above,
+  at all — `μ univ = 1` while `univ = ∅` — so `ProbabilityMeasure E` is empty,
+  hence countable, hence separable.
+  The separability is stated twice, and both statements are wanted:
+  `MeasureTheory.separableSpace_levyProkhorov_probabilityMeasure` on the synonym,
+  which is where the estimate lives and what the next two items consume, and
+  `MeasureTheory.separableSpace_probabilityMeasure` on the space of laws, which is
+  the statement of the milestone.
+* `MeasureTheory.secondCountableTopology_probabilityMeasure`, **proved** on
+  2026-09-08, fourth run: the item above,
   read on the synonym, where there is a uniformity to argue with —
   `UniformSpace.secondCountable_of_separable`
-  (`Mathlib/Topology/UniformSpace/Cauchy.lean:931`) asks for a uniform space with
+  (`Mathlib/Topology/UniformSpace/Cauchy.lean:932`) asks for a uniform space with
   countably generated uniformity and does not apply to `ProbabilityMeasure E`
   itself — and carried back by `Homeomorph.secondCountableTopology`
-  (`Mathlib/Topology/Homeomorph/Lemmas.lean:36`).
+  (`Mathlib/Topology/Homeomorph/Lemmas.lean:37`). Like the separability, it needs
+  no completeness of `E`.
 * `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`,
   **proved** on 2026-09-08, first run: on a complete pseudometric space, a set
   `S` of probability measures is tight as soon as for every `ε > 0` and every
@@ -936,7 +962,17 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   costs nothing there — that theorem becomes its corollary — and it is what the
   completeness below needs, since a Cauchy sequence has no compact closure to
   start from.
-* `MeasureTheory.LevyProkhorov.completeSpace_probabilityMeasure`: for `E` a
+* `MeasureTheory.isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt` and its
+  packaged form `MeasureTheory.isTightMeasureSet_of_cauchySeq`, **proved** on
+  2026-09-08, fourth run: a Cauchy sequence of laws is tight. The first is stated
+  with the Lévy–Prokhorov distance spelled out and no `CauchySeq` in sight; the
+  second reads the hypothesis off `EMetric.cauchySeq_iff'`, which needs nothing
+  because `edist` on the synonym *is* `levyProkhorovEDist`
+  (`LevyProkhorovMetric.lean:324`). This is where the completeness of `E` is
+  spent, and twice over: through Ulam's theorem for the finite head and through
+  `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` for the conclusion.
+* `MeasureTheory.completeSpace_levyProkhorov_probabilityMeasure`, **proved** on
+  2026-09-08, fourth run: for `E` a
   complete separable metric space, `CompleteSpace (LevyProkhorov (ProbabilityMeasure E))`.
   Three steps.
   * A Cauchy sequence `μ` is tight. Fix `ε` and `r` and take `N` with
@@ -956,19 +992,33 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
     metrizable a compact set in it is sequentially compact, so a subsequence
     converges.
   * A Cauchy sequence with a convergent subsequence converges.
-* `MeasureTheory.ProbabilityMeasure.isCompletelyMetrizableSpace`: for `E` Polish
+* `MeasureTheory.isCompletelyMetrizableSpace_probabilityMeasure`, **proved** on
+  2026-09-08, fourth run: for `E` complete separable metric
   and Borel, transport the previous item along `probabilityMeasureHomeomorph`
   with `Homeomorph.isClosedEmbedding`
   (`Mathlib/Topology/Homeomorph/Defs.lean:296`) and
   `Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:249`).
-* `MeasureTheory.ProbabilityMeasure.polishSpace`: for `E` Polish,
-  `ProbabilityMeasure E` is Polish. Nothing is left to prove: `PolishSpace` is
+* `MeasureTheory.polishSpace_probabilityMeasure`, **proved** on 2026-09-08,
+  fourth run, and by the end of that run resting on nothing unproved: for `E` Polish,
+  `ProbabilityMeasure E` is Polish. `PolishSpace` is
   `SecondCountableTopology` together with `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:62`) and the instance at `:65`
   builds it from separability and complete metrizability, so this is the first
   and the fourth item. Here the completeness of `E` is used; separability alone
   gives the first two items and the whole of the rest of this milestone.
+
+  The statement carries **no metric on `E`** — `[TopologicalSpace E]`,
+  `[PolishSpace E]`, `[BorelSpace E]` — and that is not economy but necessity.
+  With a `[MetricSpace E]` in the signature, the complete metric supplied by
+  `TopologicalSpace.upgradeIsCompletelyMetrizable`
+  (`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:205`) is a second,
+  competing instance: the `CompleteSpace E` read off the upgrade is stated for
+  the upgraded uniformity while the goal wants the given one, and the two do not
+  meet. A Polish space has no distinguished metric; letting the upgrade provide
+  the only one makes the hypotheses of both inputs available at once. The same
+  reading applies to every statement of this milestone that wants `E` Polish
+  rather than `E` metric and complete.
 
 The representation theorem itself:
 
@@ -1011,7 +1061,7 @@ exactly what an almost surely convergent realisation witnesses.
 **Acceptance examples.**
 
 * **`E = ℚ`: separability without completeness.** `ProbabilityMeasure ℚ` is
-  separable by `ProbabilityMeasure.separableSpace`, which asks for nothing else,
+  separable by `separableSpace_probabilityMeasure`, which asks for nothing else,
   and `LevyProkhorov (ProbabilityMeasure ℚ)` is **not** complete. Take
   `q : ℕ → ℚ` with `q n → Real.sqrt 2` in `ℝ` and the two sides alternating.
   Then `δ (q n)` is Cauchy, the Lévy–Prokhorov distance being controlled by
@@ -1025,7 +1075,7 @@ exactly what an almost surely convergent realisation witnesses.
   uncountable set with `dist x y = 1` for `x ≠ y` — a complete metric space, not
   separable. The family `{δ x | x : E}` is uncountable and pairwise at
   Lévy–Prokhorov distance `1`, so `ProbabilityMeasure E` is not separable. This
-  is the instance on which a version of `ProbabilityMeasure.separableSpace`
+  is the instance on which a version of `separableSpace_probabilityMeasure`
   without the hypothesis on `E` is false.
 * **Skorokhod does not upgrade a given sequence.** `μ n = μ = ` the fair
   Bernoulli law on `ℝ` for every `n`, realised by independent coins `Y n` on

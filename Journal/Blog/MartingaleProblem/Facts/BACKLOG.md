@@ -315,6 +315,39 @@ kein gebautes Mathlib und taugt zu nichts.
    **Zerlegung** (`exists_finite_partition_ball_of_denseRange`), nicht die
    rationalen Gewichte; Begründung im Laufbericht.*
 
+   *Zwischenstand 2026-09-08, vierter Lauf des Tages: **das benannte Ziel ist
+   gefallen, und drei Nachbarn mit ihm.** `separableSpace_probabilityMeasure`,
+   `separableSpace_levyProkhorov_probabilityMeasure` (dieselbe Aussage auf dem
+   Synonym, wo die Metrik lebt), `secondCountableTopology_probabilityMeasure`
+   (ein Meilensteinpunkt, der bis dahin keine Deklaration hatte) und
+   `isProbabilityMeasure_natWeightMeasure` sind bewiesen und hängen laut
+   `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`; die
+   approximierende Familie steht als Definition `natWeightMeasure`, was ihre
+   Abzählbarkeit zu drei Zeilen macht. Mitgefallen ist
+   `polishSpace_probabilityMeasure`, jetzt Beweis statt `sorry` und allein auf
+   `isCompletelyMetrizableSpace_probabilityMeasure` ruhend — **mit schwächeren
+   Hypothesen**, weil eine mitgegebene Metrik auf `E` den Aufstieg zur
+   vollständigen blockiert (Befund im Laufbericht). `WeakConvergence` steht bei
+   **6 `sorry`** (vorher 7), rc = 1 mit unverändert genau den zwei
+   angekündigten Fehlern, jetzt bei `:2029`.*
+
+   *Fortsetzung desselben Laufs: **auch die Vollständigkeit ist bewiesen**, und
+   damit der ganze Block „der Raum der Gesetze" von Meilenstein 3.
+   `isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt` (eine Cauchy-Folge
+   von Gesetzen ist straff — der Kern, und die Stelle, an der die
+   Vollständigkeit von `E` zweimal bezahlt wird: Ulam für den endlichen Kopf,
+   `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` für den Schluß),
+   `isTightMeasureSet_of_cauchySeq`,
+   `completeSpace_levyProkhorov_probabilityMeasure` und
+   `isCompletelyMetrizableSpace_probabilityMeasure` sind bewiesen; alle fünf
+   betroffenen Sätze samt `polishSpace_probabilityMeasure` hängen laut
+   `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`.
+   `WeakConvergence` steht danach bei **3 `sorry`** (zu Beginn des Laufs 7),
+   rc = 1 mit unverändert genau den zwei angekündigten Fehlern. Übrig sind die
+   Skorokhod-Darstellung (zwei Deklarationen) und Meilenstein 4. Der nächste
+   benannte Schritt ist `exists_measurable_partition_diam_le_null_frontier`, die
+   Zerlegung mit Nullrändern; Begründung im Laufbericht.*
+
    *Werkzeugnotiz aus dem ersten Lauf des 2026-09-08: die übliche Zählung
    `grep -cE "^(theorem|lemma|def|…)"` zählt Fließtextzeilen des Modulkopfes
    mit, die mit `theorem` beginnen. Zweimal an einem Tag hat das eine
