@@ -11341,3 +11341,130 @@ mit Integral `0` fast überall verschwindet, also für einen Radius in jeder
 Umgebung. Erst danach wird die Instanz umgehängt, und erst danach ist
 `CompleteSpace D(ι, E)` — dessen übrige Bausteine seit dem siebzehnten und
 achtzehnten Lauf bewiesen dastehen — überhaupt wieder eine wahre Aussage.
+
+### 2026-09-08, zwanzigster Lauf des Tages — die vier Axiome von `intDist` sind bewiesen, und das vierte ist von anderer Art als die drei
+
+**Bearbeitet:** `SkorokhodSpace`, Meilenstein 4, genau entlang des Vorschlags des
+neunzehnten Laufs (Rückstau 2, „`SkorokhodSpace` und `MartingaleProblems` weiter
+beweisen"; die vorrangige Aufgabe ist seit dem neunzehnten Lauf gestrichen).
+`SkorokhodSpace/Suggested.lean` steht weiterhin bei **fünf** `sorry` — der Lauf
+hat keines gestrichen, denn keines der vier Axiome stand als `sorry` da; sie
+waren überhaupt nicht formuliert, weil der achtzehnte Lauf die alte Metrik
+verworfen und der neunzehnte die neue erst definiert hat. **Neunzehn neue
+Deklarationen**, alle mit `#print axioms` geprüft und alle nur auf `propext`,
+`Classical.choice`, `Quot.sound`; die Datei geht durch `lake env lean` gegen
+v4.33.1 ohne Fehler und ohne Warnung.
+
+#### Die drei algebraischen Axiome: der Radius ist Zuschauer
+
+`SkorokhodSpace.intWith t₀ λ f g` ist neu und ist das Integral für **einen**
+Zeitwechsel, aus `intDist` herausgezogen; `intDist` ist jetzt
+`⨅ λ, max ‖λ‖ (intWith t₀ λ f g)`, unverändert im Wert. Der Ertrag ist, daß jedes
+der drei Axiome in zwei zerfällt, und beide Hälften sind schon da: eine über
+`TimeChange.norm` (Meilenstein 3, seit dem 2026-09-07 bewiesen) und eine über
+`intWith`, und jede über `intWith` ist die entsprechende über `distWith`, bei
+festem Radius geführt und dann integriert.
+
+* `SkorokhodSpace.distWith_self` → `intWith_self` → `intDist_self`.
+* `SkorokhodSpace.distWith_inv` → `intWith_inv` → `intDist_comm`. Die
+  Umindizierung des Supremums längs `λ` selbst ist als
+  `SkorokhodSpace.ciSup_reindex` herausgezogen, aus dem Beweis von
+  `distOn_comm`, wo sie bisher als `have` stand.
+* `SkorokhodSpace.distWith_triangle` (Zeuge `λ * λ'`) → `intWith_triangle` →
+  `intDist_triangle`, dazu `bddBelow_range_intDist`, `intDist_nonneg`,
+  `intWith_nonneg` und `exists_lt_intDist_add` als Unterbau.
+
+**Die Integrierbarkeit wird an genau einer Stelle ausgegeben**, und zwar zweimal:
+`intWith_triangle` braucht `MeasureTheory.integral_add` und
+`MeasureTheory.integral_mono`, beide auf `integrableOn_intDist`. Ohne
+Integrierbarkeit ist das Integral der Müllwert `0`, und ein solcher Müllwert auf
+der **linken** Seite der Ungleichung machte sie falsch — nicht bloß unbeweisbar.
+
+#### Das vierte Axiom, und es ist nicht von dieser Form
+
+Der Vorschlag des neunzehnten Laufs lautete: „die Trennung ist
+`eq_of_distOn_eq_zero` plus die Beobachtung, daß ein nichtnegativer Integrand mit
+Integral `0` fast überall verschwindet". **Das trifft nicht zu, und der Grund ist
+der Unterschied zwischen einem Infimum und einem Minimum.** `intDist t₀ f g = 0`
+liefert keinen Zeitwechsel mit verschwindendem Integral, sondern eine **Folge**
+`λ n`, und zu keinem einzelnen `λ n` ist ein Radius benannt, an dem es gut ist.
+Die summierte Metrik hatte das Problem nicht: dort war jeder Radius verfügbar und
+`eq_of_forall_distOn_eq_zero` las sie einen nach dem anderen ab.
+
+Der Weg, der trägt, und er ist in Lean:
+
+1. Wähle `λ n` mit `‖λ n‖ < 2⁻ⁿ` **und** `intWith t₀ (λ n) f g < 2⁻ⁿ`; beides
+   fällt aus `exists_lt_intDist_add` mit `δ = 2⁻ⁿ`.
+2. `MeasureTheory.lintegral_tsum` und die geometrische Reihe machen
+   `∑' n, ENNReal.ofReal (exp (-u) * min 1 (distWith t₀ u (λ n) f g))` über
+   `Set.Ioi 0` integrierbar; `MeasureTheory.ae_lt_top` macht sie an fast jedem
+   Radius endlich, `ENNReal.tendsto_atTop_zero_of_tsum_ne_top` läßt dort ihre
+   Glieder gegen `0` gehen.
+3. An jedem solchen Radius greift das Kriterium bei festem Radius. Es ist neu
+   und heißt `SkorokhodSpace.eq_restrictExhaustion_of_forall_exists`: gibt es zu
+   jedem `δ` einen verankerten Zeitwechsel mit `‖λ‖ < δ`, der die eine
+   Trunkierung gleichmäßig bis auf `δ` in die andere trägt, so sind die
+   Trunkierungen gleich. Das ist der bisherige Rumpf von
+   `eq_of_distOn_eq_zero`, herausgezogen; `eq_of_distOn_eq_zero` gewinnt seine
+   Hypothese jetzt durch Abwickeln des eigenen Infimums und ist fünf Zeilen lang.
+   **Beide Metriken lesen dasselbe Kriterium**, und das war der Zweck der
+   Zerlegung.
+4. Eine Menge vollen Maßes in `Set.Ioi 0` reicht über jeden Punkt des Index
+   hinaus (`Real.volume_Ioi`, `MeasureTheory.ae_neBot`,
+   `MeasureTheory.self_mem_ae_restrict`), also gilt die Gleichheit überall.
+
+Das ist `SkorokhodSpace.eq_of_intDist_eq_zero`.
+
+#### Was der Preis der Integralgestalt wirklich ist: `SecondCountableTopology E`
+
+Die vier Axiome hätten `[MeasurableSpace ι] [BorelSpace ι] [MeasurableSpace E]
+[BorelSpace E] [SecondCountableTopology E]` geerbt, denn so standen
+`measurable_distWith` und `integrableOn_intDist` seit dem neunzehnten Lauf da.
+Das wäre für eine `MetricSpace`-Instanz viel zu teuer gewesen. **Vier der fünf
+sind weg, und der Grund ist, daß sie nie in der Aussage standen:** beide
+Deklarationen reden über Funktionen `ℝ → ℝ`, die σ-Algebren von `ι` und `E`
+kommen allein im Beweis vor, und dort werden sie jetzt mit `borel ι` bzw.
+`borel E` eingeführt statt vorausgesetzt.
+
+Übrig bleibt `[SecondCountableTopology E]`, und die ist echt: sie ist die
+Voraussetzung von `Measurable.dist`
+(`MeasureTheory/Constructions/BorelSpace/Metric.lean:77`, an `upstream/master`
+gelesen), und keine Wahl einer σ-Algebra liefert sie. Sie steht auf
+`intWith_triangle`, `intDist_triangle`, `eq_of_intDist_eq_zero` und
+`metricSpaceInt` und sonst nirgends im ganzen Bestand.
+
+#### `metricSpaceInt`, und warum die Instanz noch nicht umgehängt ist
+
+`SkorokhodSpace.metricSpaceInt (t₀ : ι) : MetricSpace D(ι, E)` ist gebaut, aus
+den vier Axiomen, mit `#print axioms` geprüft. Die parameterlose Instanz
+`SkorokhodSpace.instMetricSpace` liest weiterhin `SkorokhodSpace.metricSpace`,
+die summierte Metrik. **Das Umhängen ist keine Umbenennung, und das ist der
+Befund dieses Punktes:** die Widerlegung des achtzehnten Laufs —
+`SkorokhodSpace.continuous_eval_exhaustionMax` und
+`SkorokhodSpace.exists_jump_continuousAt_eval` — ist für die Topologie der
+*Instanz* formuliert und ist ein Satz über die **summierte** Metrik; die erste
+ist für `intDist` falsch, und genau deshalb wird die Summe ersetzt. Wer die
+Instanz umhängt, ohne diese beiden vorher ihre Metrik nennen zu lassen (über
+`SkorokhodSpace.metricSpace t₀` und deren Topologie), macht die Datei zu einer
+Behauptung über `intDist`, die `totalDist` disqualifiziert hat. Das steht so an
+`metricSpaceInt` und in der Roadmap.
+
+#### Vorschlag für den nächsten Lauf
+
+**Die beiden Widerlegungssätze auf `SkorokhodSpace.metricSpace t₀` umstellen und
+dann `SkorokhodSpace.instMetricSpace := metricSpaceInt basePoint` setzen.**
+Worauf es ruht: auf den vier bewiesenen Axiomen und auf nichts sonst; die Arbeit
+ist, `continuous_eval_exhaustionMax` und `exists_jump_continuousAt_eval` mit
+explizit genannter Metrik zu schreiben, und die etwa zwanzig Deklarationen zu
+prüfen, die die Topologie von `D(ι, E)` lesen — die Borel-Struktur `borel _`
+voran. Warum jetzt: ohne die Umhängung ist `CompleteSpace D(ι, E)` weiterhin
+keine wahre Aussage, und die Bausteine der Vollständigkeit (siebzehnter und
+achtzehnter Lauf) warten seit drei Läufen darauf. Danach, und erst danach, ist
+`CompleteSpace` an der Reihe; seine Rungen
+`TimeChange.exists_tendsto_of_summable_norm`, `IsCadlag.of_forall_eventuallyEq`
+und `IsCadlag.of_tendstoUniformlyOn_exhaustion` sind von der Metrik unabhängig
+und stehen bewiesen da.
+
+**Das Manuskript ist nicht angefaßt.** Am Inventar ändert sich keine Zeile: alle
+29 Facts stehen belegt, und `fact:Dcountable`, `fact:relcompact` und
+`fact:relcompact2` zeigen auf dieselben Meilensteine wie zuvor.

@@ -23,6 +23,21 @@ empty proposition.
 proofs, which is what this file is for.  There are five of them, down from
 eleven on 2026-09-07.
 
+**The four metric axioms of the integral metric are proved (2026-09-08), and
+`SkorokhodSpace.metricSpaceInt` is the metric space they build.**  Three of them
+are the corresponding statement about `SkorokhodSpace.distWith` held at a fixed
+radius and then integrated --- `distWith_self`, `distWith_inv`,
+`distWith_triangle`, then `intWith_self`, `intWith_inv`, `intWith_triangle`,
+then `intDist_self`, `intDist_comm`, `intDist_triangle` --- and the fourth is
+not, because an infimum equal to `0` names no radius at all: it yields a
+sequence of time changes, whose integrands are summable, hence finite at almost
+every radius, and `SkorokhodSpace.eq_of_intDist_eq_zero` runs the fixed radius
+criterion `eq_restrictExhaustion_of_forall_exists` at the radii that survive.
+The instance `SkorokhodSpace.instMetricSpace` still reads the summed metric,
+and what it costs to move it is stated at `metricSpaceInt`: the refutation of
+Milestone 5 is a theorem about the *sum* and has to name its metric before the
+instance moves.
+
 **The metric of Milestone 4 is not a Skorokhod metric, and this is proved here.**
 `SkorokhodSpace.dist_exhaustionMax_le_distOn` says that `distOn t₀ m` contains
 the undamped number `dist (f b) (g b)` at the window endpoint `b`, for every
@@ -2303,8 +2318,15 @@ theorem SkorokhodSpace.distOn_triangle (t₀ : ι) (u : ℝ) (f g h : D(ι, E)) 
     (hterm.trans ?_)
   linarith
 
-/-- The separation, the last of the metric axioms of `distOn`: two paths at
-`distOn`-distance zero have the same truncation to the window.
+/-- **The separation criterion at a fixed window radius**, and the shape both
+metrics read it in: if for every `δ` there is an anchored time change of norm
+below `δ` that carries the one truncation to within `δ` of the other, uniformly
+in the index, then the two truncations are equal.  `distOn` supplies the
+hypothesis by unwinding its infimum (`eq_of_distOn_eq_zero` below), and `intDist`
+supplies it at those radii at which its integrand is small along the minimising
+sequence (`eq_of_intDist_eq_zero` of Milestone 4).  Keeping the criterion
+separate is what lets the integral metric use it at **one** radius at a time,
+which is all an integral ever gives.
 
 The proof does **not** go through the continuity points and their density.  It
 uses the time change and its inverse against each other: given `ε`, a time
@@ -2316,23 +2338,15 @@ moves `t` up, and then `F (λ t)` is close to `F t` by the right continuity of
 small.  That is `IsCadlag.eq_of_forall_exists_dist_le`, and it is what makes the
 separation independent of the index: the classical argument needs the continuity
 points to be dense, which an index of Milestone 1 need not provide. -/
-theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) (f g : D(ι, E))
-    (h : SkorokhodSpace.distOn t₀ u f g = 0) :
-    (SkorokhodSpace.restrictExhaustion t₀ u f).toFun
-      = (SkorokhodSpace.restrictExhaustion t₀ u g).toFun := by
-  have hι : Nonempty ι := ⟨t₀⟩
-  -- an approximating time change for every `δ`, both of whose halves are small
-  have hstep : ∀ δ > 0, ∃ l : TimeChange.fixing t₀,
+theorem SkorokhodSpace.eq_restrictExhaustion_of_forall_exists (t₀ : ι) {u : ℝ} (hu : 0 ≤ u)
+    (f g : D(ι, E))
+    (hstep : ∀ δ > 0, ∃ l : TimeChange.fixing t₀,
       TimeChange.norm (l : TimeChange ι) < δ ∧
         ∀ s, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
           ((l : TimeChange ι).toOrderIso s))
-          ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun s) < δ := by
-    intro δ hδ
-    obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ u f g hδ
-    rw [h, zero_add] at hl
-    refine ⟨l, (le_max_left _ _).trans_lt hl, fun s => ?_⟩
-    exact lt_of_le_of_lt ((le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion
-      t₀ u f g (l : TimeChange ι)) s).trans (le_max_right _ _)) hl
+          ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun s) < δ) :
+    (SkorokhodSpace.restrictExhaustion t₀ u f).toFun
+      = (SkorokhodSpace.restrictExhaustion t₀ u g).toFun := by
   -- the displacement of a point of the window is small with the norm
   have hsmall : ∀ ρ > 0, ∀ η > 0, ∃ δ, 0 < δ ∧ δ ≤ η ∧ (Real.exp δ - 1) * (2 * u) < ρ := by
     intro ρ hρ η hη
@@ -2379,6 +2393,21 @@ theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) {u : ℝ} (hu : 0 ≤ u)
   funext t
   have hc := hwin (clamp t₀ u t) (clamp_mem_exhaustion t₀ u t)
   simpa [SkorokhodSpace.restrictExhaustion_apply, clamp_idem] using hc
+
+/-- The separation, the last of the metric axioms of `distOn`: two paths at
+`distOn`-distance zero have the same truncation to the window.  The infimum is
+unwound by `exists_lt_distOn_add`, and the supremum inside it is what turns the
+`distOn`-estimate into the pointwise estimate the criterion asks for. -/
+theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) (f g : D(ι, E))
+    (h : SkorokhodSpace.distOn t₀ u f g = 0) :
+    (SkorokhodSpace.restrictExhaustion t₀ u f).toFun
+      = (SkorokhodSpace.restrictExhaustion t₀ u g).toFun := by
+  refine SkorokhodSpace.eq_restrictExhaustion_of_forall_exists t₀ hu f g fun δ hδ => ?_
+  obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ u f g hδ
+  rw [h, zero_add] at hl
+  refine ⟨l, (le_max_left _ _).trans_lt hl, fun s => ?_⟩
+  exact lt_of_le_of_lt ((le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion
+    t₀ u f g (l : TimeChange ι)) s).trans (le_max_right _ _)) hl
 
 /-- The separation in the form the metric of `D(ι, E)` consumes it: a path is
 determined by its truncations, since every point lies in some window.  The
@@ -2681,10 +2710,20 @@ the one obligation the integral shape of Milestone 4 adds, and it is discharged
 here: the supremum over the index is, by `exists_countable_ciSup_eq`, a
 supremum over a *fixed* countable set, so `Measurable.iSup` applies, and each
 member of that family is a distance between two càdlàg paths read at a clamp
-that is measurable in the radius. -/
-theorem SkorokhodSpace.measurable_distWith [MeasurableSpace ι] [BorelSpace ι]
-    [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
+that is measurable in the radius.
+
+The statement is about a function `ℝ → ℝ`, so the Borel structures of `ι` and of
+`E` are hypotheses of the *proof* and not of the statement: they are introduced
+here rather than assumed, and only `SecondCountableTopology E` remains, which is
+what `Measurable.dist` needs and what no choice of σ-algebra supplies.  That is
+what keeps the metric instance of Milestone 4 free of measure theory. -/
+theorem SkorokhodSpace.measurable_distWith [SecondCountableTopology E]
+    (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
     Measurable fun u : ℝ => SkorokhodSpace.distWith t₀ u l f g := by
+  let mι : MeasurableSpace ι := borel ι
+  have : BorelSpace ι := ⟨rfl⟩
+  let mE : MeasurableSpace E := borel E
+  have : BorelSpace E := ⟨rfl⟩
   have : Nonempty ι := ⟨t₀⟩
   obtain ⟨C, hCc, hCne, hC⟩ := exists_countable_ciSup_eq (ι := ι)
   have : Countable C := hCc.to_subtype
@@ -2698,25 +2737,32 @@ theorem SkorokhodSpace.measurable_distWith [MeasurableSpace ι] [BorelSpace ι]
   exact (f.isCadlag.measurable.comp (measurable_clamp t₀ (l.toOrderIso (t : ι)))).dist
     (g.isCadlag.measurable.comp (measurable_clamp t₀ (t : ι)))
 
+/-- The integral half of the metric of Milestone 4, for **one** time change: the
+truncated windowed supremum `min 1 (distWith t₀ u l f g)` integrated over the
+window radius against `exp (-u)`.  Splitting it off from `intDist` is what makes
+the three metric axioms readable: each of them is one statement about `intWith`
+and one about `TimeChange.norm`, joined by `max`. -/
+noncomputable def SkorokhodSpace.intWith (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) : ℝ :=
+  ∫ u in Set.Ioi (0 : ℝ), Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+
 /-- **The metric of Milestone 4.**  The infimum is over the time changes fixing
 the base point, the first term of the `max` is the global logarithmic norm, and
-the second is the integral over the window radius of the truncated windowed
-supremum.  This is Ethier--Kurtz's `d`, and it replaces
+the second is `intWith`, the integral over the window radius of the truncated
+windowed supremum.  This is Ethier--Kurtz's `d`, and it replaces
 `SkorokhodSpace.totalDist`, which is the same quantity summed over the integer
 radii and, by `dist_exhaustionMax_le_distOn`, not a metric for `J₁`. -/
 noncomputable def SkorokhodSpace.intDist (t₀ : ι) (f g : D(ι, E)) : ℝ :=
   ⨅ l : TimeChange.fixing t₀, max (TimeChange.norm (l : TimeChange ι))
-    (∫ u in Set.Ioi (0 : ℝ),
-      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g))
+    (SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g)
 
 omit [BasePoint ι] in
-/-- The integral defining `intDist` is an integral of an integrable function:
+/-- The integral defining `intWith` is an integral of an integrable function:
 the integrand is measurable by `measurable_distWith` and dominated by
 `exp (-u)`, which is integrable on `Set.Ioi 0`.  Without this the integral
 would be the junk value `0` and `intDist` would collapse to
 `⨅ l, TimeChange.norm l = 0`. -/
-theorem SkorokhodSpace.integrableOn_intDist [MeasurableSpace ι] [BorelSpace ι]
-    [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
+theorem SkorokhodSpace.integrableOn_intDist [SecondCountableTopology E]
+    (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
     MeasureTheory.IntegrableOn
       (fun u : ℝ => Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g))
       (Set.Ioi (0 : ℝ)) := by
@@ -2733,6 +2779,374 @@ theorem SkorokhodSpace.integrableOn_intDist [MeasurableSpace ι] [BorelSpace ι]
       ≤ Real.exp (-u) * 1 :=
         mul_le_mul_of_nonneg_left (min_le_left _ _) (Real.exp_pos _).le
     _ = Real.exp (-u) := mul_one _
+
+/-! ### The metric axioms of `intDist`
+
+Each of the three axioms splits along the `max` into a statement about
+`TimeChange.norm` --- which is the one of `TimeChange`, proved in Milestone 3 ---
+and a statement about `intWith`, which is the corresponding statement about
+`distWith` held at a fixed radius and then integrated.  The radius is a
+spectator throughout: `distWith_self`, `distWith_inv` and `distWith_triangle`
+are the three statements about the windowed supremum, and `intWith_self`,
+`intWith_inv` and `intWith_triangle` carry them under the integral.
+
+The triangle inequality is the only one that spends `integrableOn_intDist`, and
+it spends it twice, for `MeasureTheory.integral_add` and for
+`MeasureTheory.integral_mono`; without integrability the integral is the junk
+value `0`, for which the inequality is false in the direction that matters --- a
+non-integrable *left* summand would read as `0` and let the right hand side be
+anything.  That is why `[SecondCountableTopology E]` appears on the triangle
+inequality and on nothing else here. -/
+
+omit [BasePoint ι] in
+/-- The windowed supremum is nonnegative: it is a supremum over a nonempty
+family of distances, and `bddAbove_range_dist_restrictExhaustion` is what makes
+it the supremum rather than the junk value. -/
+theorem SkorokhodSpace.distWith_nonneg (t₀ : ι) (u : ℝ) (l : TimeChange ι) (f g : D(ι, E)) :
+    0 ≤ SkorokhodSpace.distWith t₀ u l f g :=
+  le_ciSup_of_le (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g l) t₀
+    dist_nonneg
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The identity time change leaves nothing to measure. -/
+theorem SkorokhodSpace.distWith_self (t₀ : ι) (u : ℝ) (f : D(ι, E)) :
+    SkorokhodSpace.distWith t₀ u 1 f f = 0 := by
+  have : Nonempty ι := ⟨t₀⟩
+  simp [SkorokhodSpace.distWith, TimeChange.one_toOrderIso_apply]
+
+/-- A supremum is unchanged when its index is permuted, and this is the shape in
+which `distWith_inv` needs it: the two families are indexed by the same type and
+agree after the substitution `t = e s`. -/
+theorem SkorokhodSpace.ciSup_reindex {α : Type*} {h₁ h₂ : α → ℝ} (e : α → α)
+    (he : Function.Surjective e) (hpt : ∀ s, h₁ (e s) = h₂ s) : ⨆ t, h₁ t = ⨆ s, h₂ s := by
+  refine congrArg sSup ?_
+  ext y
+  constructor
+  · rintro ⟨t, rfl⟩
+    obtain ⟨s, rfl⟩ := he t
+    exact ⟨s, (hpt s).symm⟩
+  · rintro ⟨s, rfl⟩
+    exact ⟨e s, hpt s⟩
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- Symmetry at a fixed radius: reading the pair the other way round and
+inverting the time change gives the same windowed supremum.  The reindexing is
+along `l` itself, which is a bijection of the index. -/
+theorem SkorokhodSpace.distWith_inv (t₀ : ι) (u : ℝ) (l : TimeChange ι) (f g : D(ι, E)) :
+    SkorokhodSpace.distWith t₀ u l⁻¹ g f = SkorokhodSpace.distWith t₀ u l f g := by
+  refine SkorokhodSpace.ciSup_reindex (⇑l.toOrderIso) l.toOrderIso.surjective fun s => ?_
+  show dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun
+      (l.toOrderIso.symm (l.toOrderIso s)))
+      ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun (l.toOrderIso s)) = _
+  rw [OrderIso.symm_apply_apply, dist_comm]
+
+omit [BasePoint ι] in
+/-- The triangle inequality at a fixed radius, with `l * l'` as the composite
+time change.  This is the step that needs the anchors to form a **subgroup**,
+and the middle path is read at `l' t`, which is why the supremum runs over all
+of the index and not over the window. -/
+theorem SkorokhodSpace.distWith_triangle (t₀ : ι) (u : ℝ) (l l' : TimeChange ι)
+    (f g h : D(ι, E)) :
+    SkorokhodSpace.distWith t₀ u (l * l') f h
+      ≤ SkorokhodSpace.distWith t₀ u l f g + SkorokhodSpace.distWith t₀ u l' g h := by
+  have : Nonempty ι := ⟨t₀⟩
+  refine ciSup_le fun t => ?_
+  simp only [TimeChange.mul_toOrderIso_apply]
+  calc dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
+          (l.toOrderIso (l'.toOrderIso t)))
+        ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun t)
+      ≤ dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
+            (l.toOrderIso (l'.toOrderIso t)))
+          ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun (l'.toOrderIso t))
+        + dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun (l'.toOrderIso t))
+          ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun t) := dist_triangle _ _ _
+    _ ≤ _ := add_le_add
+        (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g l)
+          (l'.toOrderIso t))
+        (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u g h l') t)
+
+omit [BasePoint ι] in
+/-- The integral of a nonnegative integrand. -/
+theorem SkorokhodSpace.intWith_nonneg (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
+    0 ≤ SkorokhodSpace.intWith t₀ l f g :=
+  MeasureTheory.integral_nonneg fun u =>
+    mul_nonneg (Real.exp_pos _).le
+      (le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u l f g))
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- `distWith_self` under the integral: the integrand vanishes identically, so
+no integrability is spent here. -/
+theorem SkorokhodSpace.intWith_self (t₀ : ι) (f : D(ι, E)) :
+    SkorokhodSpace.intWith t₀ 1 f f = 0 := by
+  have h : ∀ u : ℝ, Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u 1 f f) = 0 := fun u => by
+    rw [SkorokhodSpace.distWith_self, min_eq_right zero_le_one, mul_zero]
+  simp [SkorokhodSpace.intWith, h]
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- `distWith_inv` under the integral, radius by radius. -/
+theorem SkorokhodSpace.intWith_inv (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
+    SkorokhodSpace.intWith t₀ l⁻¹ g f = SkorokhodSpace.intWith t₀ l f g := by
+  simp only [SkorokhodSpace.intWith, SkorokhodSpace.distWith_inv]
+
+omit [BasePoint ι] in
+/-- `distWith_triangle` under the integral.  Two things happen at once: `min 1 ·`
+is subadditive on the nonnegative reals, which is the same computation as in
+`totalDist_triangle`, and the integral is additive, which is
+`integrableOn_intDist` twice over. -/
+theorem SkorokhodSpace.intWith_triangle [SecondCountableTopology E] (t₀ : ι)
+    (l l' : TimeChange ι) (f g h : D(ι, E)) :
+    SkorokhodSpace.intWith t₀ (l * l') f h
+      ≤ SkorokhodSpace.intWith t₀ l f g + SkorokhodSpace.intWith t₀ l' g h := by
+  have hsub : ∀ a b c : ℝ, 0 ≤ a → 0 ≤ b → 0 ≤ c → a ≤ b + c →
+      min 1 a ≤ min 1 b + min 1 c := by
+    intro a b c ha hb hc habc
+    simp only [min_def]
+    split_ifs <;> linarith
+  rw [SkorokhodSpace.intWith, SkorokhodSpace.intWith, SkorokhodSpace.intWith,
+    ← MeasureTheory.integral_add (SkorokhodSpace.integrableOn_intDist t₀ l f g)
+      (SkorokhodSpace.integrableOn_intDist t₀ l' g h)]
+  refine MeasureTheory.integral_mono (SkorokhodSpace.integrableOn_intDist t₀ (l * l') f h)
+    ((SkorokhodSpace.integrableOn_intDist t₀ l f g).add
+      (SkorokhodSpace.integrableOn_intDist t₀ l' g h)) fun u => ?_
+  have key : min 1 (SkorokhodSpace.distWith t₀ u (l * l') f h)
+      ≤ min 1 (SkorokhodSpace.distWith t₀ u l f g)
+        + min 1 (SkorokhodSpace.distWith t₀ u l' g h) :=
+    hsub _ _ _ (SkorokhodSpace.distWith_nonneg t₀ u (l * l') f h)
+      (SkorokhodSpace.distWith_nonneg t₀ u l f g)
+      (SkorokhodSpace.distWith_nonneg t₀ u l' g h)
+      (SkorokhodSpace.distWith_triangle t₀ u l l' f g h)
+  calc Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l * l') f h)
+      ≤ Real.exp (-u) * (min 1 (SkorokhodSpace.distWith t₀ u l f g)
+          + min 1 (SkorokhodSpace.distWith t₀ u l' g h)) :=
+        mul_le_mul_of_nonneg_left key (Real.exp_pos _).le
+    _ = _ := by ring
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The infimum defining `intDist` is over a set bounded below by `0`. -/
+theorem SkorokhodSpace.bddBelow_range_intDist (t₀ : ι) (f g : D(ι, E)) :
+    BddBelow (Set.range fun l : TimeChange.fixing t₀ =>
+      max (TimeChange.norm (l : TimeChange ι))
+        (SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g)) := by
+  refine ⟨0, ?_⟩
+  rintro _ ⟨l, rfl⟩
+  exact le_max_of_le_left (TimeChange.norm_nonneg _)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+theorem SkorokhodSpace.intDist_nonneg (t₀ : ι) (f g : D(ι, E)) :
+    0 ≤ SkorokhodSpace.intDist t₀ f g :=
+  le_ciInf fun _ => le_max_of_le_left (TimeChange.norm_nonneg _)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- **The first axiom.**  The identity is an admissible time change, its norm is
+`0`, and `intWith_self` kills the integral. -/
+theorem SkorokhodSpace.intDist_self (t₀ : ι) (f : D(ι, E)) :
+    SkorokhodSpace.intDist t₀ f f = 0 := by
+  refine le_antisymm ?_ (SkorokhodSpace.intDist_nonneg t₀ f f)
+  refine (ciInf_le (SkorokhodSpace.bddBelow_range_intDist t₀ f f) 1).trans ?_
+  simp [OneMemClass.coe_one, TimeChange.norm_one, SkorokhodSpace.intWith_self]
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- **The second axiom.**  `λ ↦ λ⁻¹` is a bijection of the anchored subgroup,
+`TimeChange.norm_inv` leaves the first half of the `max` unchanged and
+`intWith_inv` the second, so the two infima are over the same set. -/
+theorem SkorokhodSpace.intDist_comm (t₀ : ι) (f g : D(ι, E)) :
+    SkorokhodSpace.intDist t₀ f g = SkorokhodSpace.intDist t₀ g f := by
+  have main : ∀ f g : D(ι, E),
+      SkorokhodSpace.intDist t₀ g f ≤ SkorokhodSpace.intDist t₀ f g := by
+    intro f g
+    refine le_ciInf fun l => ?_
+    refine (ciInf_le (SkorokhodSpace.bddBelow_range_intDist t₀ g f) l⁻¹).trans (le_of_eq ?_)
+    rw [InvMemClass.coe_inv, TimeChange.norm_inv, SkorokhodSpace.intWith_inv]
+  exact le_antisymm (main g f) (main f g)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The infimum in `intDist` is approached; it need not be attained, so the
+triangle inequality argues with an `ε`. -/
+theorem SkorokhodSpace.exists_lt_intDist_add (t₀ : ι) (f g : D(ι, E)) {δ : ℝ} (hδ : 0 < δ) :
+    ∃ l : TimeChange.fixing t₀,
+      max (TimeChange.norm (l : TimeChange ι))
+        (SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g)
+        < SkorokhodSpace.intDist t₀ f g + δ :=
+  exists_lt_of_ciInf_lt (lt_add_of_pos_right _ hδ)
+
+omit [BasePoint ι] in
+/-- **The third axiom.**  The witness for the composite pair is `λ * λ'`, which
+is admissible because the anchors are a subgroup; `TimeChange.norm_mul_le`
+carries the first half of the `max` and `intWith_triangle` the second. -/
+theorem SkorokhodSpace.intDist_triangle [SecondCountableTopology E] (t₀ : ι)
+    (f g h : D(ι, E)) :
+    SkorokhodSpace.intDist t₀ f h
+      ≤ SkorokhodSpace.intDist t₀ f g + SkorokhodSpace.intDist t₀ g h := by
+  refine le_of_forall_pos_le_add fun ε hε => ?_
+  obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_intDist_add t₀ f g (half_pos hε)
+  obtain ⟨l', hl'⟩ := SkorokhodSpace.exists_lt_intDist_add t₀ g h (half_pos hε)
+  have hterm :
+      max (TimeChange.norm ((l * l' : TimeChange.fixing t₀) : TimeChange ι))
+        (SkorokhodSpace.intWith t₀ ((l * l' : TimeChange.fixing t₀) : TimeChange ι) f h)
+      ≤ (max (TimeChange.norm (l : TimeChange ι))
+            (SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g))
+        + max (TimeChange.norm (l' : TimeChange ι))
+            (SkorokhodSpace.intWith t₀ (l' : TimeChange ι) g h) := by
+    rw [MulMemClass.coe_mul]
+    refine max_le ?_ ?_
+    · exact (TimeChange.norm_mul_le _ _).trans
+        (add_le_add (le_max_left _ _) (le_max_left _ _))
+    · exact (SkorokhodSpace.intWith_triangle t₀ _ _ f g h).trans
+        (add_le_add (le_max_right _ _) (le_max_right _ _))
+  refine (ciInf_le (SkorokhodSpace.bddBelow_range_intDist t₀ f h) (l * l')).trans
+    (hterm.trans ?_)
+  linarith
+
+omit [BasePoint ι] in
+/-- **The fourth axiom, and the only one that is not the corresponding statement
+about `distWith` integrated.**  The infimum being `0` does not produce a single
+time change that works at every radius; it produces a *sequence* of them, and
+the radius at which a given member of that sequence is good is not known.
+
+The argument is therefore the one an integral always forces.  Choose `l n` with
+`‖l n‖ < 2⁻ⁿ` and `intWith t₀ (l n) f g < 2⁻ⁿ`.  The sum of the integrands over
+`n` has finite integral --- `lintegral_tsum` and a geometric series --- hence is
+finite at almost every radius, so at almost every radius its terms tend to `0`,
+so at almost every radius `distWith t₀ u (l n) f g → 0` and
+`eq_restrictExhaustion_of_forall_exists` applies **there**.  A set of full
+measure in `Set.Ioi 0` is unbounded, and every point of the index lies in the
+window of a large enough radius, so the two paths agree everywhere.
+
+This is where the difference to `totalDist` is paid for and where it pays: the
+summed metric had `eq_of_forall_distOn_eq_zero`, one radius at a time and every
+radius available, while the integral gives no single radius at all and has to
+take what is left after a null set is removed.  It is the same trade that makes
+the integral metric a `J₁` metric and the sum not one. -/
+theorem SkorokhodSpace.eq_of_intDist_eq_zero [SecondCountableTopology E] (t₀ : ι)
+    (f g : D(ι, E)) (h : SkorokhodSpace.intDist t₀ f g = 0) : f = g := by
+  -- the minimising sequence, with a summable bound on both halves of the `max`
+  have hchoice : ∀ n : ℕ, ∃ l : TimeChange.fixing t₀,
+      TimeChange.norm (l : TimeChange ι) < (2 : ℝ)⁻¹ ^ n ∧
+        SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g < (2 : ℝ)⁻¹ ^ n := by
+    intro n
+    obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_intDist_add t₀ f g
+      (show (0 : ℝ) < (2 : ℝ)⁻¹ ^ n by positivity)
+    rw [h, zero_add] at hl
+    exact ⟨l, (le_max_left _ _).trans_lt hl, (le_max_right _ _).trans_lt hl⟩
+  choose l hlnorm hlint using hchoice
+  have hnn : ∀ (n : ℕ) (u : ℝ), 0 ≤ Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g) := fun n u =>
+    mul_nonneg (Real.exp_pos _).le
+      (le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u (l n : TimeChange ι) f g))
+  have hmeas : ∀ n : ℕ, Measurable fun u : ℝ => Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g) := fun n =>
+    (Real.measurable_exp.comp measurable_neg).mul
+      (measurable_const.min (SkorokhodSpace.measurable_distWith t₀ (l n : TimeChange ι) f g))
+  -- the series of the integrands has finite integral
+  have hfin : ∫⁻ u in Set.Ioi (0 : ℝ), ∑' n : ℕ, ENNReal.ofReal (Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g)) ≠ ⊤ := by
+    rw [MeasureTheory.lintegral_tsum fun n => ((hmeas n).ennreal_ofReal).aemeasurable]
+    have hterm : ∀ n : ℕ, ∫⁻ u in Set.Ioi (0 : ℝ), ENNReal.ofReal (Real.exp (-u) *
+        min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g))
+        ≤ ENNReal.ofReal ((2 : ℝ)⁻¹ ^ n) := by
+      intro n
+      rw [← MeasureTheory.ofReal_integral_eq_lintegral_ofReal
+        (SkorokhodSpace.integrableOn_intDist t₀ (l n : TimeChange ι) f g)
+        (Filter.Eventually.of_forall (hnn n))]
+      exact ENNReal.ofReal_le_ofReal (hlint n).le
+    refine ne_top_of_le_ne_top ?_ (ENNReal.tsum_le_tsum hterm)
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun n => by positivity)
+      (summable_geometric_of_lt_one (by norm_num) (by norm_num))]
+    exact ENNReal.ofReal_ne_top
+  -- hence it is finite at almost every radius
+  have hmtsum : Measurable fun u : ℝ => ∑' n : ℕ, ENNReal.ofReal (Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g)) := by
+    simp only [ENNReal.tsum_eq_iSup_sum]
+    exact Measurable.iSup fun s =>
+      Finset.measurable_sum s fun n _ => (hmeas n).ennreal_ofReal
+  have hae : ∀ᵐ u ∂(MeasureTheory.volume.restrict (Set.Ioi (0 : ℝ))),
+      (∑' n : ℕ, ENNReal.ofReal (Real.exp (-u) *
+        min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g))) ≠ ⊤ :=
+    (MeasureTheory.ae_lt_top hmtsum hfin).mono fun _ hu => hu.ne
+  -- and at every such radius the separation criterion applies
+  have hcrit : ∀ u : ℝ, 0 ≤ u →
+      (∑' n : ℕ, ENNReal.ofReal (Real.exp (-u) *
+        min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g))) ≠ ⊤ →
+      (SkorokhodSpace.restrictExhaustion t₀ u f).toFun
+        = (SkorokhodSpace.restrictExhaustion t₀ u g).toFun := by
+    intro u hu hufin
+    refine SkorokhodSpace.eq_restrictExhaustion_of_forall_exists t₀ hu f g fun δ hδ => ?_
+    have htend : Tendsto (fun n : ℕ => ENNReal.ofReal (Real.exp (-u) *
+        min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g))) atTop (𝓝 0) :=
+      ENNReal.tendsto_atTop_zero_of_tsum_ne_top hufin
+    have hpos : (0 : ℝ≥0∞) < ENNReal.ofReal (Real.exp (-u) * min δ 1) :=
+      ENNReal.ofReal_pos.2 (by positivity)
+    have h1 : ∀ᶠ n : ℕ in atTop, ENNReal.ofReal (Real.exp (-u) *
+        min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g))
+        < ENNReal.ofReal (Real.exp (-u) * min δ 1) := htend.eventually (gt_mem_nhds hpos)
+    have h2 : ∀ᶠ n : ℕ in atTop, (2 : ℝ)⁻¹ ^ n < δ :=
+      (tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num) (by norm_num)).eventually
+        (gt_mem_nhds hδ)
+    obtain ⟨n, hn1, hn2⟩ := (h1.and h2).exists
+    have hlt : Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g)
+        < Real.exp (-u) * min δ 1 := (ENNReal.ofReal_lt_ofReal_iff (by positivity)).1 hn1
+    have hmin : min 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g) < min δ 1 :=
+      lt_of_mul_lt_mul_left hlt (Real.exp_pos _).le
+    have hdist : SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g < δ := by
+      rcases min_cases 1 (SkorokhodSpace.distWith t₀ u (l n : TimeChange ι) f g) with
+        ⟨he, _⟩ | ⟨he, _⟩
+      · rw [he] at hmin
+        exact absurd hmin (not_lt.2 (min_le_right _ _))
+      · rw [he] at hmin
+        exact hmin.trans_le (min_le_left _ _)
+    exact ⟨l n, (hlnorm n).trans hn2, fun s =>
+      lt_of_le_of_lt (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g
+        (l n : TimeChange ι)) s) hdist⟩
+  -- a set of full measure in `Set.Ioi 0` reaches beyond every point of the index
+  have hfun : f.toFun = g.toFun := by
+    funext t
+    have hr0 : (0 : ℝ) ≤ max (dist t₀ t) 0 := le_max_right _ _
+    have hmono : MeasureTheory.volume.restrict (Set.Ioi (max (dist t₀ t) 0))
+        ≤ MeasureTheory.volume.restrict (Set.Ioi (0 : ℝ)) :=
+      MeasureTheory.Measure.restrict_mono (Set.Ioi_subset_Ioi hr0) le_rfl
+    have hne : (MeasureTheory.ae
+        (MeasureTheory.volume.restrict (Set.Ioi (max (dist t₀ t) 0)))).NeBot := by
+      refine MeasureTheory.ae_neBot.2 ?_
+      simp [MeasureTheory.Measure.restrict_eq_zero, Real.volume_Ioi]
+    obtain ⟨u, hufin, hur⟩ := ((hae.filter_mono (MeasureTheory.ae_mono hmono)).and
+      (MeasureTheory.self_mem_ae_restrict measurableSet_Ioi)).exists
+    have hru : max (dist t₀ t) 0 < u := hur
+    have hu0 : (0 : ℝ) ≤ u := hr0.trans hru.le
+    have ht : t ∈ exhaustion t₀ u := by
+      have hdt : dist t₀ t ≤ u := (le_max_left _ _).trans hru.le
+      simpa [exhaustion, Metric.mem_closedBall, dist_comm t t₀, max_eq_left hu0] using hdt
+    have hc := congrFun (hcrit u hu0 hufin) t
+    rwa [SkorokhodSpace.restrictExhaustion_eq_self ht,
+      SkorokhodSpace.restrictExhaustion_eq_self ht] at hc
+  obtain ⟨f', hf'⟩ := f
+  obtain ⟨g', hg'⟩ := g
+  have hfg : f' = g' := hfun
+  subst hfg
+  rfl
+
+/-- **The metric space of Milestone 4, at a base point, for the integral
+metric.**  All four axioms are proved above, so this is a `MetricSpace` and not
+a claim; what it is *not*, yet, is the instance.  Rehanging
+`SkorokhodSpace.instMetricSpace` from `SkorokhodSpace.metricSpace` --- the summed
+metric --- onto this one is the next step, and it is not a rename: the refutation
+of Milestone 5 below (`continuous_eval_exhaustionMax`,
+`exists_jump_continuousAt_eval`) is stated for the topology of the *instance* and
+is a theorem about the **summed** metric, false for this one.  Those statements
+have to name their metric explicitly before the instance moves, or the file would
+claim of `intDist` exactly what disqualified `totalDist`.
+
+`[SecondCountableTopology E]` is the price of the integral, and it is charged
+exactly once: the triangle inequality and the separation both read
+`integrableOn_intDist`, whose integrand is measurable only because
+`Measurable.dist` is available.  Nothing else in the file needs it. -/
+@[instance_reducible]
+noncomputable def SkorokhodSpace.metricSpaceInt [SecondCountableTopology E] (t₀ : ι) :
+    MetricSpace D(ι, E) where
+  dist f g := SkorokhodSpace.intDist t₀ f g
+  dist_self := SkorokhodSpace.intDist_self t₀
+  dist_comm := SkorokhodSpace.intDist_comm t₀
+  dist_triangle := SkorokhodSpace.intDist_triangle t₀
+  eq_of_dist_eq_zero h := SkorokhodSpace.eq_of_intDist_eq_zero t₀ _ _ h
 
 /-! ## Milestone 5: completeness, separability, Polishness
 

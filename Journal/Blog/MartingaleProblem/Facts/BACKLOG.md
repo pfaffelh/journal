@@ -211,6 +211,26 @@ kein gebautes Mathlib und taugt zu nichts.
    `integrable_id_of_isUniformlyIntegrableLaws` ist bewiesen; damit **177
    Deklarationen** bei unverändert zwei `sorry`.*
 
+   *Zwischenstand 2026-09-08, zwanzigster Lauf des Tages: in `SkorokhodSpace`
+   sind **die vier Metrikaxiome der Integralmetrik von Meilenstein 4 bewiesen**,
+   und `SkorokhodSpace.metricSpaceInt (t₀ : ι) : MetricSpace D(ι, E)` ist aus
+   ihnen gebaut; neunzehn neue Deklarationen, alle mit `#print axioms` geprüft,
+   rc = 0 und keine Warnung. Die Zahl der `sorry` bleibt bei **fünf**: keines
+   der vier Axiome stand als `sorry` da, sie waren seit der Widerlegung der
+   summierten Metrik (achtzehnter Lauf) gar nicht formuliert. Drei der Axiome
+   sind die entsprechende Aussage über `distWith` bei festem Radius, integriert;
+   das vierte, die Trennung, ist es **nicht** — ein Infimum gleich `0` nennt
+   keinen Radius, sondern liefert eine Folge von Zeitwechseln, und der Beweis
+   geht über die fast überall endliche Summe ihrer Integranden. Mitgefunden und
+   eingespart: `measurable_distWith` und `integrableOn_intDist` brauchen von den
+   fünf Meßbarkeitsannahmen, unter denen sie standen, nur
+   `[SecondCountableTopology E]`; die vier Borel-Annahmen kamen nie in der
+   Aussage vor und werden jetzt im Beweis eingeführt, weshalb die Metrik keine
+   Maßtheorie in ihrer Signatur trägt. Wer diesen Punkt fortsetzt, hängt die
+   Instanz um, und das ist eine Signaturarbeit und kein Satz: die beiden
+   Widerlegungssätze des achtzehnten Laufs sind für die Topologie der *Instanz*
+   formuliert und gelten für die summierte Metrik, nicht für die neue.*
+
    *Zwischenstand 2026-09-08, siebter Lauf des Tages: `WeakConvergence` steht
    weiterhin bei **zwei** `sorry` und denselben zwei bekannten Fehlern, aber die
    einstufige Kopplung ist bewiesen — `exists_coupling_of_partition` und

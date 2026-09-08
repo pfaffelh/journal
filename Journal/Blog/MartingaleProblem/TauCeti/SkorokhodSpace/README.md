@@ -701,12 +701,57 @@ Under (B), with `E` a pseudometric space:
   `integrableOn_exp_neg_Ioi`. Without it the integral would be the junk value
   `0` and `intDist` would collapse to `⨅ λ, ‖λ‖ = 0`.
 
-  The four metric axioms of `intDist` are what remains of Milestone 4, and until
-  they are theorems the `MetricSpace D(ι, E)` instance reads
-  `SkorokhodSpace.totalDist`, the summed quantity, whose axioms are proved.
-  Switching the instance first would put `sorryAx` back under the twenty
-  declarations that depend on the topology, which is the trap
-  `SkorokhodSpace.modulus` was in until 2026-09-08.
+  **The four metric axioms of `intDist` are theorems (2026-09-08), and
+  `SkorokhodSpace.metricSpaceInt (t₀ : ι) : MetricSpace D(ι, E)` is built from
+  them.** Each of the three algebraic ones is one statement about
+  `TimeChange.norm`, proved in Milestone 3, and one about `intWith` --- where
+  `SkorokhodSpace.intWith t₀ λ f g` is the integral for a single time change,
+  split off from `intDist` for exactly this purpose --- and each statement about
+  `intWith` is the corresponding statement about `distWith`, held at a fixed
+  radius and then integrated: `SkorokhodSpace.distWith_self` gives
+  `intWith_self` gives `intDist_self`; `SkorokhodSpace.distWith_inv`, the
+  reindexing of the supremum along `λ` itself, gives `intWith_inv` gives
+  `intDist_comm`; `SkorokhodSpace.distWith_triangle`, with `λ * λ'` as the
+  composite, gives `intWith_triangle` gives `intDist_triangle`. The triangle
+  inequality is the one place where `SkorokhodSpace.integrableOn_intDist` is
+  spent, and it is spent twice, for `MeasureTheory.integral_add` and for
+  `MeasureTheory.integral_mono`; without integrability the integral is the junk
+  value `0`, and a junk *left* summand would make the inequality false.
+
+  **The separation is not of that shape, and this is the one point at which the
+  integral costs something the sum did not.** `SkorokhodSpace.eq_of_intDist_eq_zero`
+  cannot name a radius: an infimum equal to `0` produces a *sequence* `λ n` of
+  time changes, and no radius at which a given `λ n` is good.  What it produces
+  instead is `‖λ n‖ < 2⁻ⁿ` together with `intWith t₀ (λ n) f g < 2⁻ⁿ`, whence
+  `MeasureTheory.lintegral_tsum` and a geometric series make
+  `∑' n, ENNReal.ofReal (exp (-u) * min 1 (distWith t₀ u (λ n) f g))` integrable
+  over `Set.Ioi 0`, hence finite at almost every radius, hence with terms tending
+  to `0` at almost every radius. At each such radius
+  `SkorokhodSpace.eq_restrictExhaustion_of_forall_exists` applies, and a set of
+  full measure in `Set.Ioi 0` reaches beyond every point of the index, so the two
+  paths agree everywhere. `eq_restrictExhaustion_of_forall_exists` is the
+  separation criterion at a **fixed** radius, factored out of
+  `SkorokhodSpace.eq_of_distOn_eq_zero`, which now derives its hypothesis by
+  unwinding its own infimum; both metrics read the same criterion.
+
+  `[SecondCountableTopology E]` is the whole price of the integral shape, and it
+  is charged on `intWith_triangle`, `intDist_triangle`, `eq_of_intDist_eq_zero`
+  and `metricSpaceInt` and nowhere else: it is the hypothesis of
+  `Measurable.dist`, and no choice of σ-algebra supplies it. The Borel
+  structures of `ι` and of `E` are **not** hypotheses.
+  `SkorokhodSpace.measurable_distWith` and `SkorokhodSpace.integrableOn_intDist`
+  are statements about functions `ℝ → ℝ`, so they introduce `borel ι` and
+  `borel E` in their proofs instead of assuming them, and the metric of
+  Milestone 4 therefore carries no measure theory in its signature.
+
+  `SkorokhodSpace.instMetricSpace` reads `SkorokhodSpace.metricSpace`, the summed
+  metric, and moving it onto `metricSpaceInt` is a statement about the refutation
+  of Milestone 5 and not a rename: `SkorokhodSpace.continuous_eval_exhaustionMax`
+  and `SkorokhodSpace.exists_jump_continuousAt_eval` are stated for the topology
+  of the *instance* and are theorems about the **summed** metric --- the first is
+  false for `intDist`, which is the entire point of replacing the sum. Those two
+  name their metric explicitly, through `SkorokhodSpace.metricSpace t₀` and its
+  topology, and the instance is then `metricSpaceInt (basePoint : ι)`.
 
   The infimum runs over the time changes fixing the base point, `TimeChange.fixing t₀`
   of Milestone 3, and the norm in it is the **global**
