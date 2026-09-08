@@ -372,6 +372,22 @@ kein gebautes Mathlib und taugt zu nichts.
    benannte Schritt ist `exists_measurable_partition_diam_le_null_frontier`, die
    Zerlegung mit Nullrändern; Begründung im Laufbericht.*
 
+   *Zwischenstand 2026-09-08, zehnter Lauf des Tages: `WeakConvergence` steht
+   weiterhin bei **zwei** `sorry` und denselben zwei bekannten Fehlern, und das
+   benannte Ziel der beiden Vorläufe ist gefallen:
+   `exists_measurable_pair_of_partition` — eine Stufe der Skorokhod-Darstellung
+   als *eine* Aussage, mit der Grenzvariablen als fester erster Koordinate — ist
+   bewiesen, mit acht Hilfsaussagen (`sum_smul_condLaw_eq`,
+   `tsum_measure_inter_eq`, `condRow` samt `tsum_condRow` und `mul_condRow`,
+   `measure_index_ne_prod`, `stageMeasure`,
+   `isProbabilityMeasure_volume_restrict_Ioc`); alle neun mit `#print axioms`
+   geprüft. Der nächste Schritt in dieser Datei ist
+   `exists_ae_tendsto_of_tendsto` selbst, und von den drei Stücken (c1)–(c3) des
+   siebten Laufs ist (c2) damit erledigt; was bleibt, sind die Teilfolge, Borel--
+   Cantelli und die Umindizierung aller Stufen auf `(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`
+   — Buchhaltung über bewiesenen Sätzen, keine neue Idee. Der Bauplan steht im
+   Laufbericht im Inventar.*
+
    *Werkzeugnotiz aus dem ersten Lauf des 2026-09-08: die übliche Zählung
    `grep -cE "^(theorem|lemma|def|…)"` zählt Fließtextzeilen des Modulkopfes
    mit, die mit `theorem` beginnen. Zweimal an einem Tag hat das eine

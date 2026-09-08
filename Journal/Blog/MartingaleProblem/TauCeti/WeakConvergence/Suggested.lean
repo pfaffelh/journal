@@ -3703,6 +3703,344 @@ theorem exists_coupling_of_tendsto [PseudoMetricSpace E] [OpensMeasurableSpace E
         (ENNReal.ofReal_tsum_of_nonneg (fun _ => abs_nonneg _) hsummable).symm
     _ ≤ ENNReal.ofReal ε := ENNReal.ofReal_le_ofReal hn.le
 
+/-- Lebesgue measure on `(0,1]` is a probability measure.  Mathlib has no instance for this
+concrete measure, and the randomisation step needs one for every `Measure.prod` it forms. -/
+theorem isProbabilityMeasure_volume_restrict_Ioc :
+    IsProbabilityMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) := by
+  constructor
+  rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+  norm_num
+
+/-- A countable measurable partition splits every measurable set additively.  This is the step
+`exists_coupling_of_partition` carries in its own proof as a `have`; it is stated here because the
+one-stage representation needs it three times, once for each of the two mass vectors and once for
+the law of the mixture. -/
+theorem tsum_measure_inter_eq (ρ : Measure E) [IsProbabilityMeasure ρ] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : (⋃ i, A i) = Set.univ) {S : Set E} (hS : MeasurableSet S) :
+    ∑' i, ρ (S ∩ A i) = ρ S := by
+  have hSU : S = ⋃ i, (S ∩ A i) := by rw [← Set.inter_iUnion, hAu, Set.inter_univ]
+  have hdisj : Pairwise (Function.onFun Disjoint fun i => S ∩ A i) := fun i j hij =>
+    Disjoint.mono Set.inter_subset_right Set.inter_subset_right (hAd hij)
+  rw [← measure_iUnion hdisj fun i => hS.inter (hAm i), ← hSU]
+
+/-- **A measure is the mixture of its conditional laws on a partition.**  `μ = ∑ᵢ μ(Aᵢ) · μ(·|Aᵢ)`,
+which is what turns the law of the randomisation step -- a `Measure.sum` of the conditional laws
+against the weights `μ (A i)` -- back into `μ` itself.  Null pieces are harmless: there the
+weight is `0` and the fallback value of `condLaw` is never looked at. -/
+theorem sum_smul_condLaw_eq (μ : Measure E) [IsProbabilityMeasure μ] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : (⋃ i, A i) = Set.univ) :
+    (Measure.sum fun i => μ (A i) • condLaw μ (A i)) = μ := by
+  ext S hS
+  rw [Measure.sum_apply _ hS]
+  have hval : ∀ i, (μ (A i) • condLaw μ (A i)) S = μ (S ∩ A i) := by
+    intro i
+    rw [Measure.smul_apply, smul_eq_mul, measure_mul_condLaw_apply hS]
+  simp_rw [hval]
+  exact tsum_measure_inter_eq μ hAm hAd hAu hS
+
+/-- The row of the conditional index law: given that the `ν`-index is `k`, the `μ`-index is `i`
+with probability `π i k / ν (A k)`. -/
+noncomputable def condRow (π : ℕ → ℕ → ℝ≥0∞) (q : ℕ → ℝ≥0∞) (k i : ℕ) : ℝ≥0∞ :=
+  if q k = 0 then (if i = 0 then 1 else 0) else π i k / q k
+
+/-- Every row of `condRow` is a probability vector, which is what
+`exists_measurable_index_of_stochastic_matrix` consumes.  On a null piece the row is the point mass
+at `0`; any probability vector would do there, and the choice is never observed because the piece
+carries no mass. -/
+theorem tsum_condRow {π : ℕ → ℕ → ℝ≥0∞} {q : ℕ → ℝ≥0∞} (hq : ∀ k, ∑' i, π i k = q k)
+    (hqtop : ∀ k, q k ≠ ∞) (k : ℕ) : ∑' i, condRow π q k i = 1 := by
+  by_cases h : q k = 0
+  · simp only [condRow, if_pos h]
+    exact tsum_ite_eq 0 1
+  · simp only [condRow, if_neg h, div_eq_mul_inv]
+    rw [ENNReal.tsum_mul_right, hq k, ← div_eq_mul_inv, ENNReal.div_self h (hqtop k)]
+
+/-- **The normalisation is exact.**  Weighting the row by the mass of the conditioning piece
+returns the coupling entry, `ν (A k) · c k i = π i k`, and it does so **also** on a null piece,
+where both sides vanish -- the left one because the weight does, the right one because
+`π i k ≤ ∑' i, π i k = ν (A k)`.  This identity is the whole bookkeeping of the stage: it is what
+makes the index of the constructed variable land in the `i`-th piece with probability
+`∑' k, π i k = μ (A i)`, and what turns the off-diagonal mass of `π` into the bound on the bad
+event. -/
+theorem mul_condRow {π : ℕ → ℕ → ℝ≥0∞} {q : ℕ → ℝ≥0∞} (hq : ∀ k, ∑' i, π i k = q k)
+    (hqtop : ∀ k, q k ≠ ∞) (k i : ℕ) : q k * condRow π q k i = π i k := by
+  by_cases h : q k = 0
+  · have hz : π i k = 0 := le_antisymm (by rw [← h, ← hq k]; exact ENNReal.le_tsum i) bot_le
+    simp [h, hz]
+  · rw [condRow, if_neg h, mul_comm, ENNReal.div_mul_cancel h (hqtop k)]
+
+/-- **The two indices disagree with the off-diagonal probability of the row law.**  On
+`E × (0,1]` the first coordinate decides the piece `j y` its point lies in and the uniform
+variable draws a second index `G (j y, ξ)` from the row `c (j y)`; the probability that the two
+differ is `∑ₖ ν (A k) · ∑_{i ≠ k} c k i`.
+
+This is the only estimate of the one-stage representation that is not an identity of laws, and it
+is where the off-diagonal bound of `exists_coupling_tsum_offDiag_le` enters: after
+`mul_condRow` the right-hand side is `∑ₖ ∑_{i ≠ k} π i k`, which `ENNReal.tsum_comm` turns into
+the quantity that theorem bounds.  The proof is the same two steps as `map_index_prod_eq` --
+Fubini over the uniform variable, then `lintegral_map` against `ν.map j`, a sum because the index
+space is countable -- with the point masses of a `Measure.dirac` read off an off-diagonal set
+instead of a singleton. -/
+theorem measure_index_ne_prod {ν : Measure E} [SFinite ν] {A : ℕ → Set E}
+    {j : E → ℕ} (hjm : Measurable j) (hj : ∀ i, j ⁻¹' {i} = A i)
+    {c : ℕ → ℕ → ℝ≥0∞} {G : ℕ × ℝ → ℕ} (hGm : Measurable G)
+    (hG : ∀ k, (volume.restrict (Set.Ioc (0 : ℝ) 1)).map (fun y => G (k, y))
+              = Measure.sum fun i => c k i • Measure.dirac i) :
+    (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))) {w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+      = ∑' k, ν (A k) * ∑' i, (if i = k then 0 else c k i) := by
+  classical
+  have hf : Measurable (fun w : E × ℝ => G (j w.1, w.2)) :=
+    hGm.comp ((hjm.comp measurable_fst).prodMk measurable_snd)
+  have hmap : Measurable (fun w : E × ℝ => (G (j w.1, w.2), j w.1)) :=
+    hf.prodMk (hjm.comp measurable_fst)
+  have hS : MeasurableSet {w : E × ℝ | G (j w.1, w.2) ≠ j w.1} := by
+    have hrw : {w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+        = (fun w : E × ℝ => (G (j w.1, w.2), j w.1)) ⁻¹' {p : ℕ × ℕ | p.1 ≠ p.2} := rfl
+    rw [hrw]
+    exact hmap (Set.to_countable _).measurableSet
+  rw [Measure.prod_apply hS]
+  have hslice : ∀ y : E, (volume.restrict (Set.Ioc (0 : ℝ) 1))
+      (Prod.mk y ⁻¹' {w : E × ℝ | G (j w.1, w.2) ≠ j w.1})
+      = ∑' i, (if i = j y then 0 else c (j y) i) := by
+    intro y
+    have h1 : (Prod.mk y ⁻¹' {w : E × ℝ | G (j w.1, w.2) ≠ j w.1})
+        = (fun ξ : ℝ => G (j y, ξ)) ⁻¹' {i : ℕ | i ≠ j y} := rfl
+    have hm2 : Measurable (fun ξ : ℝ => G (j y, ξ)) :=
+      hGm.comp (measurable_const.prodMk measurable_id)
+    have hTm : MeasurableSet {i : ℕ | i ≠ j y} := (Set.to_countable _).measurableSet
+    rw [h1, ← Measure.map_apply hm2 hTm, hG, Measure.sum_apply _ hTm]
+    refine tsum_congr fun i => ?_
+    rw [Measure.smul_apply, smul_eq_mul, Measure.dirac_apply' _ hTm]
+    by_cases hik : i = j y
+    · rw [if_pos hik, Set.indicator_of_notMem (by simpa using hik), mul_zero]
+    · rw [if_neg hik, Set.indicator_of_mem hik]
+      simp
+  simp only [hslice]
+  have hmeas : Measurable fun k : ℕ => ∑' i, (if i = k then (0 : ℝ≥0∞) else c k i) :=
+    measurable_of_countable _
+  have hchg : ∫⁻ y, (∑' i, (if i = j y then (0 : ℝ≥0∞) else c (j y) i)) ∂ν
+      = ∫⁻ k, (∑' i, (if i = k then (0 : ℝ≥0∞) else c k i)) ∂(ν.map j) :=
+    (lintegral_map hmeas hjm).symm
+  rw [hchg, lintegral_countable']
+  have hpt : ∀ k, (ν.map j) {k} = ν (A k) := by
+    intro k
+    rw [Measure.map_apply hjm (measurableSet_singleton k), hj k]
+  simp only [hpt]
+  exact tsum_congr fun k => mul_comm _ _
+
+/-- **The space carrying one stage of the Skorokhod representation.**  The first factor holds the
+limit variable `Y` (law `ν`) and a uniform variable; the second holds one independent draw from
+each conditional law `condLaw μ (A i)`, of which the index picks one. -/
+noncomputable def stageMeasure (μ ν : Measure E) [IsProbabilityMeasure μ] (A : ℕ → Set E) :
+    Measure ((E × ℝ) × (ℕ → E)) :=
+  (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).prod
+    (Measure.infinitePi fun i => condLaw μ (A i))
+
+/-- **One stage of the Skorokhod representation, as one statement.**  Under the hypotheses of
+`exists_coupling_of_partition` there is a measurable `X` on `(E × ℝ) × (ℕ → E)` with law `μ`, such
+that the **first coordinate itself** has law `ν` and the two are more than `ε` apart with
+probability at most `∑' i, (μ (A i) - ν (A i))`.
+
+**What this adds to `exists_coupling_of_partition`, and why the representation needs it.**  That
+theorem produces a joint law `γ` on `E × E`; its two coordinates are random variables on a space
+that depends on the stage.  Here the limit variable is `fun z => z.1.1`, a map that does **not**
+depend on `μ`, on the partition, or on `ε`.  Every stage of the representation therefore reads its
+limit variable off the *same* coordinate, which is exactly what iterating needs and what gluing a
+sequence of `γ`'s cannot give: the almost sure statement `X n ω → Y ω` is about one `Y`, not about
+one `Y` per stage.
+
+**The construction**, and it is Ethier--Kurtz, Lemma 3.1.3 with the pieces named.  The first
+factor `E × ℝ` carries `Y` and one uniform variable; the second factor `ℕ → E` carries one
+independent draw from each conditional law `condLaw μ (A i)`, all present at once.  Then
+
+* `j` (`exists_measurable_partitionIndex`) reads off the piece `Y` lies in;
+* `G` (`exists_measurable_index_of_stochastic_matrix`) draws, from the uniform variable and the
+  row `condRow π (ν ∘ A) (j Y)`, the piece `X` shall lie in -- this is where the index coupling
+  `π` of `exists_coupling_tsum_offDiag_le` is consumed, normalised row by row;
+* `X z = z.2 (G (j z.1.1, z.1.2))` looks up the draw belonging to that piece.
+
+Its law is `μ` by `map_index_prod_eq` (the index falls into the `i`-th piece with probability
+`∑' k, π i k = μ (A i)`), `map_eval_prod_infinitePi_of_map_eq` (the position is then distributed
+according to `condLaw μ (A i)`) and `sum_smul_condLaw_eq` (the mixture of the conditional laws is
+`μ`).
+
+**The estimate splits in two, and only the first part is quantitative.**  Either the two indices
+disagree, which `measure_index_ne_prod` bounds by the off-diagonal mass of `π`, or they agree --
+and then `Y` lies in the piece by the fibre property of `j`, `X` lies in it almost surely by
+`condLaw_compl_eq_zero`, and their distance is at most `Metric.diam (A i) ≤ ε`, so the bad event
+is null.  The one place where that argument is not available is a piece of `μ`-mass zero, where
+`condLaw` falls back to `μ` and is no longer carried by the piece; that set of stages is itself
+null, because the index law says the index lands in the `i`-th piece with probability `μ (A i)`.
+
+No topology on `E` is used beyond the metric and its Borel structure: the construction needs
+`MeasurableSpace E` alone, and `SecondCountableTopology E` enters only to make the bad event
+measurable. -/
+theorem exists_measurable_pair_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    [SecondCountableTopology E] (μ ν : Measure E)
+    [IsProbabilityMeasure μ] [IsProbabilityMeasure ν] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : ⋃ i, A i = univ) (hAb : ∀ i, Bornology.IsBounded (A i))
+    {ε : ℝ} (hAdiam : ∀ i, Metric.diam (A i) ≤ ε) :
+    ∃ X : (E × ℝ) × (ℕ → E) → E, Measurable X ∧
+      (stageMeasure μ ν A).map X = μ ∧
+      (stageMeasure μ ν A).map (fun z => z.1.1) = ν ∧
+      (stageMeasure μ ν A) {z | ε < dist (X z) z.1.1} ≤ ∑' i, (μ (A i) - ν (A i)) := by
+  classical
+  have hvol : IsProbabilityMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
+    isProbabilityMeasure_volume_restrict_Ioc
+  have hp : ∑' i, μ (A i) = 1 := by
+    simpa using tsum_measure_inter_eq μ hAm hAd hAu MeasurableSet.univ
+  have hq : ∑' i, ν (A i) = 1 := by
+    simpa using tsum_measure_inter_eq ν hAm hAd hAu MeasurableSet.univ
+  obtain ⟨π, hπp, hπq, hπoff⟩ := exists_coupling_tsum_offDiag_le hp hq
+  obtain ⟨j, hjm, hj⟩ := exists_measurable_partitionIndex hAm hAd hAu
+  have hqtop : ∀ k, ν (A k) ≠ ∞ := fun k => measure_ne_top _ _
+  have hcsum : ∀ k, ∑' i, condRow π (fun k => ν (A k)) k i = 1 := tsum_condRow hπq hqtop
+  have hcmul : ∀ k i, ν (A k) * condRow π (fun k => ν (A k)) k i = π i k := mul_condRow hπq hqtop
+  obtain ⟨G, hGm, hG⟩ := exists_measurable_index_of_stochastic_matrix hcsum
+  have hIm : Measurable (fun w : E × ℝ => G (j w.1, w.2)) :=
+    hGm.comp ((hjm.comp measurable_fst).prodMk measurable_snd)
+  -- the law of the index is the mass vector of `μ`
+  have hIlaw : (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).map (fun w : E × ℝ => G (j w.1, w.2))
+      = Measure.sum fun i => μ (A i) • Measure.dirac i := by
+    rw [map_index_prod_eq hjm hj hGm hG]
+    have hcoef : ∀ i, (∑' k, ν (A k) * condRow π (fun k => ν (A k)) k i) = μ (A i) := by
+      intro i
+      calc ∑' k, ν (A k) * condRow π (fun k => ν (A k)) k i
+          = ∑' k, π i k := tsum_congr fun k => hcmul k i
+        _ = μ (A i) := hπp i
+    simp only [hcoef]
+  -- the two random variables
+  have hev : Measurable (fun r : ℕ × (ℕ → E) => r.2 r.1) :=
+    measurable_from_prod_countable_right (fun i => measurable_pi_apply i)
+  have hXm : Measurable (fun z : (E × ℝ) × (ℕ → E) => z.2 (G (j z.1.1, z.1.2))) :=
+    hev.comp ((hIm.comp measurable_fst).prodMk measurable_snd)
+  have hYm : Measurable (fun z : (E × ℝ) × (ℕ → E) => z.1.1) := measurable_fst.fst
+  have hXlaw : (stageMeasure μ ν A).map (fun z : (E × ℝ) × (ℕ → E) => z.2 (G (j z.1.1, z.1.2)))
+      = μ :=
+    (map_eval_prod_infinitePi_of_map_eq _ hIm hIlaw (fun i => condLaw μ (A i))).trans
+      (sum_smul_condLaw_eq μ hAm hAd hAu)
+  have hYlaw : (stageMeasure μ ν A).map (fun z : (E × ℝ) × (ℕ → E) => z.1.1) = ν := by
+    have h1 : (fun z : (E × ℝ) × (ℕ → E) => z.1.1) = Prod.fst ∘ Prod.fst := rfl
+    rw [stageMeasure, h1, ← Measure.map_map measurable_fst measurable_fst,
+      Measure.map_fst_prod, Measure.map_smul, Measure.map_fst_prod]
+    simp
+  -- the bad event, and its two parts
+  have hBm : MeasurableSet
+      {z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1} :=
+    measurableSet_lt measurable_const (hXm.dist hYm)
+  have hSm : MeasurableSet {w : E × ℝ | G (j w.1, w.2) ≠ j w.1} := by
+    have hrw : {w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+        = (fun w : E × ℝ => (G (j w.1, w.2), j w.1)) ⁻¹' {p : ℕ × ℕ | p.1 ≠ p.2} := rfl
+    rw [hrw]
+    exact (hIm.prodMk (hjm.comp measurable_fst)) (Set.to_countable _).measurableSet
+  have hB1m : MeasurableSet
+      (({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))) :=
+    hSm.prod MeasurableSet.univ
+  -- the index part is bounded by the off-diagonal mass
+  have hB1 : (stageMeasure μ ν A)
+      ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))
+      ≤ ∑' i, (μ (A i) - ν (A i)) := by
+    rw [stageMeasure, Measure.prod_prod, measure_univ, mul_one,
+      measure_index_ne_prod hjm hj hGm hG]
+    refine le_trans (le_of_eq ?_) hπoff
+    have hrow : ∀ k, ν (A k) * ∑' i, (if i = k then (0 : ℝ≥0∞)
+          else condRow π (fun k => ν (A k)) k i)
+        = ∑' i, (if i = k then (0 : ℝ≥0∞) else π i k) := by
+      intro k
+      rw [← ENNReal.tsum_mul_left]
+      refine tsum_congr fun i => ?_
+      by_cases hik : i = k
+      · simp [hik]
+      · rw [if_neg hik, if_neg hik]
+        exact hcmul k i
+    simp only [hrow]
+    exact ENNReal.tsum_comm
+  -- the remainder is null
+  have hzero : (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1)))
+      {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} = 0 := by
+    have hSm' : MeasurableSet {k : ℕ | μ (A k) = 0} := (Set.to_countable _).measurableSet
+    have hrw : {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0}
+        = (fun w : E × ℝ => G (j w.1, w.2)) ⁻¹' {k : ℕ | μ (A k) = 0} := rfl
+    rw [hrw, ← Measure.map_apply hIm hSm', hIlaw, Measure.sum_apply _ hSm']
+    refine ENNReal.tsum_eq_zero.2 fun i => ?_
+    rw [Measure.smul_apply, smul_eq_mul, Measure.dirac_apply' _ hSm']
+    by_cases hi : μ (A i) = 0
+    · rw [hi, zero_mul]
+    · rw [Set.indicator_of_notMem (show i ∉ {k : ℕ | μ (A k) = 0} from hi), mul_zero]
+  have hbound : ∀ w : E × ℝ, (Measure.infinitePi fun i => condLaw μ (A i))
+      (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+        \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))))
+      ≤ Set.indicator {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} (fun _ => (1 : ℝ≥0∞)) w := by
+    intro w
+    by_cases hw : μ (A (G (j w.1, w.2))) = 0
+    · rw [Set.indicator_of_mem
+        (show w ∈ {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} from hw)]
+      exact prob_le_one
+    · rw [Set.indicator_of_notMem
+        (show w ∉ {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} from hw), nonpos_iff_eq_zero]
+      by_cases hk : G (j w.1, w.2) = j w.1
+      · have hw1 : w.1 ∈ A (G (j w.1, w.2)) := by
+          have hmem : w.1 ∈ j ⁻¹' {G (j w.1, w.2)} := by simp [hk]
+          rwa [hj] at hmem
+        have hsub : (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) |
+              ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+            \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))))
+            ⊆ (fun v : ℕ → E => v (G (j w.1, w.2))) ⁻¹' (A (G (j w.1, w.2)))ᶜ := by
+          rintro v ⟨hv, -⟩
+          intro hmem
+          exact absurd hv (not_lt.2
+            ((Metric.dist_le_diam_of_mem (hAb _) hmem hw1).trans (hAdiam _)))
+        refine measure_mono_null hsub ?_
+        rw [← Measure.map_apply (measurable_pi_apply _) (hAm _).compl,
+          Measure.infinitePi_map_eval]
+        exact condLaw_compl_eq_zero (hAm _) hw
+      · have hempty : (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) |
+              ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+            \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E))))) = ∅ := by
+          ext v
+          simp only [Set.mem_preimage, Set.mem_sdiff, Set.mem_empty_iff_false, iff_false, not_and,
+            not_not]
+          intro _
+          exact Set.mk_mem_prod hk (Set.mem_univ v)
+        rw [hempty, measure_empty]
+  have hnull : (stageMeasure μ ν A)
+      ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+        \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))) = 0 := by
+    rw [stageMeasure, Measure.prod_apply (hBm.diff hB1m)]
+    refine le_antisymm ?_ bot_le
+    calc ∫⁻ w, (Measure.infinitePi fun i => condLaw μ (A i))
+            (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) |
+                ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+              \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))))
+            ∂(ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1)))
+        ≤ ∫⁻ w, Set.indicator {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} (fun _ => (1 : ℝ≥0∞)) w
+            ∂(ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))) := lintegral_mono hbound
+      _ = 0 := by
+          have hSm'' : MeasurableSet {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} := by
+            have hrw : {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0}
+                = (fun w : E × ℝ => G (j w.1, w.2)) ⁻¹' {k : ℕ | μ (A k) = 0} := rfl
+            rw [hrw]
+            exact hIm (Set.to_countable _).measurableSet
+          rw [lintegral_indicator hSm'', setLIntegral_one, hzero]
+  refine ⟨_, hXm, hXlaw, hYlaw, ?_⟩
+  calc (stageMeasure μ ν A) {z : (E × ℝ) × (ℕ → E) |
+          ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+      ≤ (stageMeasure μ ν A)
+          (({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))
+            ∪ ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+              \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E))))) :=
+        measure_mono (fun z hz => (em (z ∈ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+          ×ˢ (univ : Set (ℕ → E))))).elim Or.inl (fun h => Or.inr ⟨hz, h⟩))
+    _ ≤ (stageMeasure μ ν A) ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))
+        + (stageMeasure μ ν A)
+          ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+            \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))) :=
+        measure_union_le _ _
+    _ ≤ ∑' i, (μ (A i) - ν (A i)) := by rw [hnull, add_zero]; exact hB1
+
 theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}
     {ν : ProbabilityMeasure E} (h : Tendsto μ atTop (𝓝 ν)) :

@@ -1238,6 +1238,52 @@ The representation theorem itself:
   `∑' k, π i k = μ (A i)`, so the index falls into the `i`-th piece with exactly
   the probability `μ` gives it -- which is what makes the law of the constructed
   variable equal `μ` once `map_eval_prod_infinitePi` fills in the positions.
+* `MeasureTheory.exists_measurable_pair_of_partition`, **proved** on 2026-09-08,
+  tenth run: **one stage of the representation, as one statement.** On
+  `stageMeasure μ ν A = (ν ⊗ Lebesgue|₍₀,₁₎) ⊗ infinitePi (condLaw μ ∘ A)` there
+  is a measurable `X` with `map X = μ` such that the **first coordinate itself**
+  has law `ν` and
+
+  ```
+  stageMeasure μ ν A {z | ε < dist (X z) z.1.1} ≤ ∑' i, (μ (A i) - ν (A i))
+  ```
+
+  under exactly the hypotheses of `exists_coupling_of_partition`. What it adds to
+  that theorem is what iterating needs: the limit variable is `fun z ↦ z.1.1`, a
+  map that depends neither on `μ` nor on the partition nor on `ε`, so every stage
+  reads its limit variable off the *same* coordinate. A glued family of laws `γ`
+  on `E × E` cannot give that — the almost sure statement `X n ω → Y ω` is about
+  one `Y`, not one `Y` per stage. Five auxiliary statements carry it, all proved
+  in the same run:
+
+  * `MeasureTheory.sum_smul_condLaw_eq`: `μ = ∑ᵢ μ(Aᵢ) · condLaw μ (Aᵢ)`, the
+    identity that turns the mixture law of the randomisation step back into `μ`;
+    `MeasureTheory.tsum_measure_inter_eq` is the additivity of a countable
+    partition it rests on.
+  * `MeasureTheory.condRow` with `tsum_condRow` and `mul_condRow`: the index
+    coupling `π` of `exists_coupling_tsum_offDiag_le`, normalised column by
+    column into a stochastic matrix, `c k i = π i k / ν (A k)`. `tsum_condRow`
+    is what `exists_measurable_index_of_stochastic_matrix` consumes;
+    `mul_condRow` — `ν (A k) · c k i = π i k`, **including** on a null piece,
+    where both sides vanish because `π i k ≤ ∑' i, π i k = ν (A k)` — is the
+    whole bookkeeping of the stage, used once for the law of `X` and once for
+    the estimate.
+  * `MeasureTheory.measure_index_ne_prod`: on `E × (0,1]` the two indices
+    disagree with probability `∑ₖ ν (A k) · ∑_{i ≠ k} c k i`, which
+    `mul_condRow` and `ENNReal.tsum_comm` turn into the off-diagonal mass
+    `exists_coupling_tsum_offDiag_le` bounds. This is the only inequality of the
+    stage; everything else is an identity of laws.
+
+  The estimate splits accordingly. Either the two indices disagree, and
+  `measure_index_ne_prod` bounds that; or they agree, and then `Y` lies in the
+  piece by the fibre property of `j`, `X` lies in it almost surely by
+  `condLaw_compl_eq_zero`, and `Metric.dist_le_diam_of_mem` makes the bad event
+  empty. The one stage at which that argument fails is a piece of `μ`-mass zero,
+  where `condLaw` falls back to `μ` and is no longer carried by the piece; that
+  set is itself null, because the index law says the index lands in the `i`-th
+  piece with probability `μ (A i)`. `MeasureTheory.stageMeasure` names the space,
+  and `MeasureTheory.isProbabilityMeasure_volume_restrict_Ioc` supplies the
+  instance for `(0,1]` that Mathlib does not have.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
@@ -1440,6 +1486,35 @@ exactly what an almost surely convergent realisation witnesses.
   as above. This is therefore the instance on which the two candidate
   constructions differ, and the reason the item is built from the product and
   not from disintegration together with `ProbabilityTheory.Kernel.traj`.
+* **The two-point space, where the bound `0` forces the diagonal — and the
+  neighbouring construction that has the right marginals and misses it.**
+  `E = {0,1}` with `dist 0 1 = 1`, `ε = 1/2`, `A 0 = {0}`, `A 1 = {1}` and
+  `A i = ∅` for `i ≥ 2`; `μ = ν =` the fair coin. Every diameter is `0 ≤ ε`,
+  the mass vectors agree, so `∑' i, (μ (A i) - ν (A i)) = 0` and
+  `exists_measurable_pair_of_partition` asserts `X = Y` almost surely. It does
+  produce that: `π` is the diagonal, `condRow π (ν ∘ A) k i = π i k / ν (A k)`
+  is `1` exactly at `i = k`, so `G (k, ξ) = k` for every `ξ`, and
+  `X z = z.2 (j z.1.1)` is the draw from `condLaw μ (A (j Y)) = δ_Y`. The
+  neighbouring construction that fails is the independent coupling `ν ⊗ ν`: its
+  marginals are right, and it puts mass `1/2` on `dist (X, Y) = 1 > ε`. So the
+  estimate, and not the pair of marginals, is what the statement is about.
+  Iterating this stage over `μ n = ν` also shows why the limit variable must be
+  a *coordinate*: gluing two such couplings as a product gives two limit
+  variables that are equal in law and independent, so `X n → Y` cannot even be
+  stated, whereas both stages of `exists_measurable_pair_of_partition` read the
+  same `fun z ↦ z.1.1`.
+* **A `μ`-null piece, where `condLaw` falls back and is never observed.**
+  `E = {0,1}`, `A` as above, `ε = 1/2`, `μ = δ 0` and `ν = (δ 0 + δ 1)/2`. Then
+  `μ (A 1) = 0`, so `condLaw μ (A 1) = μ = δ 0` is **not** carried by `A 1` and
+  the diagonal argument is unavailable there. It is never needed: the coupling
+  is `π 0 0 = π 0 1 = 1/2`, the row `condRow π (ν ∘ A) 1` is the point mass at
+  `0`, and the weight of the index `1` is `∑' k, π 1 k = μ (A 1) = 0`, so the
+  fallback measure is looked up on a null set. The bound is attained exactly:
+  `∑' i, (μ (A i) - ν (A i)) = 1/2`, and with probability `1/2` the limit
+  variable is `1` while `X = 0`. This is the instance on which a proof that
+  argued "the two indices agree, hence the distance is at most the diameter"
+  *without* first discarding the `μ`-null pieces would be wrong, and the reason
+  `mul_condRow` is stated to hold on null pieces too.
 
 ## Milestone 4: uniform integrability against convergence in distribution
 
