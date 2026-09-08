@@ -187,6 +187,30 @@ kein gebautes Mathlib und taugt zu nichts.
    $M_E$). Der nächste benannte Schritt in dieser Datei ist die letzte davon; die
    Begründung steht im Laufbericht im Inventar.*
 
+   *Zwischenstand 2026-09-08, dreizehnter Lauf des Tages: **das benannte Ziel ist
+   gefallen, und mit ihm Meilenstein 6 ganz.** `WeakConvergence` steht bei **176
+   Deklarationen und zwei `sorry`** (vorher 168 und drei), rc = 1 mit unverändert
+   genau den zwei angekündigten Fehlern bei `:2125`. Acht neue Deklarationen sind
+   bewiesen: `exists_countable_dense_distInMeasure` samt `separableSpace`,
+   `secondCountableTopology` und `polishSpace` — der Raum $M_E$ ist polnisch —,
+   dazu `distInMeasure_mk_le_add`, `stepFun`, `stronglyMeasurable_stepFun`,
+   `exists_mem_stepFun` und `stepClass`; alle mit `#print axioms` geprüft. Der
+   Bauplan des Meilensteins war an einer Stelle nicht typrichtig (die
+   approximierende Familie als Summen von Indikatoren, über einem `E` ohne
+   Addition) und ist berichtigt; der Ersatz ist die Stufenfunktion über einer
+   Liste von Indexpaaren, und sie erspart überdies die Disjunktifizierung der
+   überdeckenden Mengen. Übrig sind `exists_ae_tendsto_of_tendsto`
+   (Meilenstein 3) und `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`
+   (Meilenstein 4); der nächste benannte Schritt ist die erste davon, die
+   Begründung steht im Laufbericht im Inventar. Mitgefunden und berichtigt, beim
+   Durchsehen des zweiten: `IsUniformlyIntegrableLaws` war mit dem
+   **Bochner**-Integral formuliert und dadurch **entartet** — der Ersatzwert `0`
+   für einen nichtintegrierbaren Integranden machte das Kriterium von jeder
+   Familie mit unendlichem ersten Moment erfüllbar, und der Satz darüber war
+   falsch. Es steht jetzt mit dem unteren Integral, und
+   `integrable_id_of_isUniformlyIntegrableLaws` ist bewiesen; damit **177
+   Deklarationen** bei unverändert zwei `sorry`.*
+
    *Zwischenstand 2026-09-08, siebter Lauf des Tages: `WeakConvergence` steht
    weiterhin bei **zwei** `sorry` und denselben zwei bekannten Fehlern, aber die
    einstufige Kopplung ist bewiesen — `exists_coupling_of_partition` und
@@ -418,7 +442,13 @@ kein gebautes Mathlib und taugt zu nichts.
    `grep -cE "^(theorem|lemma|def|…)"` zählt Fließtextzeilen des Modulkopfes
    mit, die mit `theorem` beginnen. Zweimal an einem Tag hat das eine
    Deklaration zu viel gemeldet; wer die Zahl nennt, prüft sie mit
-   `git diff --unified=0 HEAD | grep -E "^\+(theorem|lemma|def|…) "`.*
+   `git diff --unified=0 HEAD | grep -E "^\+(theorem|lemma|def|…) "`.
+   **Ein drittes Mal am 2026-09-08, dreizehnter Lauf**, und diesmal nicht im
+   Modulkopf, sondern in einem `/-- … -/` an einer Deklaration, wo ein Umbruch
+   die Zeile mit `instance at …` beginnen ließ. Die Probe über den Diff hat es
+   gefunden; der Satz ist umgebrochen worden, damit die Zählung stimmt. Wer
+   Fließtext schreibt, in dem `theorem`, `def` oder `instance` vorkommt, achtet
+   auf den Zeilenanfang.*
 
    *Werkzeugnotiz aus dem zweiten Lauf des 2026-09-08, und sie spart Minuten:
    neue Beweise gehören in eine **eigene kleine Datei** mit nur den Imports, die

@@ -1545,6 +1545,30 @@ spaces are Mathlib's and not this roadmap's.
   varying spaces: uniform integrability is equivalent to
   `lim_{N→∞} sup_n 𝔼[|X n| - min |X n| N] = 0`. State it in that form, since it
   is the form the convergence proof uses; relate it to `uniformIntegrable_iff`.
+
+  **The truncated expectation is a lower integral**, `∫⁻ x, ENNReal.ofReal (|x| - min |x| N)`,
+  and not a Bochner integral. This is not cosmetic, and the reason is a
+  degeneracy found on 2026-09-08, thirteenth run, in the version of
+  `MeasureTheory.IsUniformlyIntegrableLaws` that stood in `Suggested.lean` until
+  then. The integrand is `max (|x| - N) 0`; a family with infinite first moment
+  makes it non-integrable for every `N`, whereupon `MeasureTheory.integral_undef`
+  (`Integral/Bochner/Basic.lean:202`) returns the junk value `0`, the supremum is
+  `0` for every `N`, and the criterion is **satisfied** — by exactly the families
+  it exists to exclude. `ProbabilityTheory.cauchyMeasure 0 1`
+  (`Probability/Distributions/Cauchy.lean:170`, a probability measure by the
+  instance at `:188`) is the witness, taken as the constant family: it satisfies
+  the old criterion and `Integrable id` fails for it, so the theorem below was
+  false as stated. In `ℝ≥0∞` there is no junk value, and the criterion then
+  *implies* the integrability of `id` under each `μ n` rather than presupposing
+  it — `MeasureTheory.integrable_id_of_isUniformlyIntegrableLaws`, **proved** in
+  the same run: for `N` with `⨆ k, ∫⁻ … < 1` one has
+  `|x| ≤ N + (|x| - min |x| N)` pointwise, so `∫⁻ x, ‖x‖ₑ ∂(μ n) ≤ N + 1 < ∞`.
+  The lesson generalises past this milestone: a criterion phrased as a Bochner
+  integral of a nonnegative integrand is silently vacuous wherever that integrand
+  fails to be integrable, and that is precisely where such criteria are applied.
+  (What Mathlib does not have is the witness's own property: `Cauchy.lean`
+  contains no statement that `id` is not integrable for it, so the failure of
+  the conclusion is argued and not formalised here.)
 * The de la Vallée-Poussin form: uniform integrability holds if and only if
   there is a convex increasing `φ` on `[0,∞)` with `φ x / x → ∞` and
   `sup_n 𝔼[φ (|X n|)] < ∞`.
@@ -1926,21 +1950,65 @@ metric equivalent to `dist` gives the same topology.
   of convergence in measure to appeal to: `ConvergenceInMeasure.lean` contains no
   statement with `Cauchy` in it (checked 2026-09-08 against v4.33.1), and the
   `Lᵖ` completeness (`LpSpace/Complete.lean:290`) is for a normed group.
-* `MeasureTheory.AEEqFun.separableSpace`, for
-  `[MeasureTheory.IsSeparable μ]` (`Measure/SeparableMeasure.lean:339`;
+* `MeasureTheory.AEEqFun.exists_countable_dense_distInMeasure` and
+  `MeasureTheory.AEEqFun.separableSpace`, **proved** on 2026-09-08, thirteenth
+  run, for `[MeasureTheory.IsSeparable μ]` (`Measure/SeparableMeasure.lean:339`;
   automatic for `[MeasurableSpace.CountablyGenerated α]` and `[SFinite μ]` by the
-  instance at `:382`) and `[TopologicalSpace.SeparableSpace E]`. The countable
-  dense family is the classes of the functions `∑ i, Set.indicator (A i) (fun _ ↦ y i)`
-  with `A` a finite family from a countable measure-dense family of measurable
-  sets and `y` from a countable dense subset of `E`; density in `distInMeasure`
-  is the two-step estimate — approximate `f` by a countable-valued function
-  within `ε` pointwise, then cut the tail using finiteness of `μ`, then move each
-  level set to a measure-dense one. This is the point Kurtz leaves to the
-  reader, and it is the only part of the milestone with no proof in the source.
-  Mathlib's `Lp.SecondCountableTopology` (`Measure/SeparableMeasure.lean:427`)
-  is the same statement for the `Lᵖ` metrics and fixes the right hypotheses;
-  it does not transfer, because `distInMeasure` is not a norm and `E` is not a
-  normed group.
+  instance at `:382`) and `[TopologicalSpace.SeparableSpace E]`. This is the
+  point Kurtz leaves to the reader, and it was the last statement of the
+  milestone without a proof. Mathlib's `Lp.SecondCountableTopology`
+  (`Measure/SeparableMeasure.lean:427`) is the same statement for the `Lᵖ`
+  metrics and fixes the right hypotheses; it does not transfer, because
+  `distInMeasure` is not a norm and `E` is not a normed group — its proof runs
+  through `Lp.induction`, whose additivity step has no counterpart here.
+
+  The approximating family is therefore **not** the sums
+  `∑ i, Set.indicator (A i) (fun _ ↦ y i)` this milestone described until that
+  run: `E` is a bare metric space and carries no addition, so those terms do not
+  typecheck. What replaces them is `MeasureTheory.AEEqFun.stepFun A y e l`, the
+  step function attached to a **list** `l : List (ℕ × ℕ)` of index pairs — the
+  first entry of a pair naming a set of the family `A`, the second a point of the
+  dense sequence `y`, and the earlier entries of the list having priority, with
+  the value `e` off every named set. A list is what makes the index type
+  countable with no bookkeeping at all (`Countable (List (ℕ × ℕ))` is instance
+  search) and what replaces the sum by a case distinction. Three statements
+  carry it, all proved:
+  * `MeasureTheory.AEEqFun.stronglyMeasurable_stepFun`: a step function is
+    *strongly* measurable and not merely measurable, because it takes finitely
+    many values; `StronglyMeasurable.ite`
+    (`Function/StronglyMeasurable/Basic.lean:817`) does it by induction on the
+    list, and no second countability of `E` is used.
+  * `MeasureTheory.AEEqFun.exists_mem_stepFun`: whichever branch fires, the value
+    is the point named by *some* entry whose set contains the argument. This is
+    what lets the covering sets **overlap**, and it is why the construction needs
+    no disjointification: every entry that can fire is a good one. It is stated
+    with `omit [MeasurableSpace α] [MetricSpace E]` — it is a statement about
+    lists and sets and nothing else.
+  * `MeasureTheory.AEEqFun.stepClass`, the class of a step function, named as a
+    *definition* and not described inside a proof; that is what makes the
+    countability of `Set.range (stepClass μ hA y (y 0))` one line, the same
+    device as `natWeightMeasure` in Milestone 3.
+
+  The density is one estimate, `MeasureTheory.AEEqFun.distInMeasure_mk_le_add`
+  (**proved** in the same run: `distInMeasure_le_add` against a *representative*
+  rather than against a class, the a.e. bookkeeping being one `measureReal_congr`
+  along `AEEqFun.coeFn_mk`), fed by two approximations. Given `ε`, put
+  `r = ε / (2 (μ.real univ + 1))` and `δ = ε / 8`.
+  * The sets `S m = {a | dist (f a) (y m) < r}` are measurable — this is where
+    `AEEqFun.stronglyMeasurable` is spent a second time — and cover `α` because
+    `y` is dense, so `⋃ m < n, S m ↑ α` and, `μ` being finite,
+    `tendsto_measure_iInter_atTop` gives an `N` with `μ (⋃ m < N, S m)ᶜ < δ`.
+  * `Measure.MeasureDense.approx` replaces each `S i`, `i < N`, by a set
+    `A (c i)` of the measure-dense family with
+    `μ (S i ∆ A (c i)) < δ / (N + 1)`; the `N + 1` is what makes the sum of the
+    `N` errors at most `δ` with no case distinction at `N = 0`.
+
+  Off `(⋃ m < N, S m)ᶜ ∪ ⋃ i, S i ∆ A (c i)`, a set of mass at most `2δ = ε / 4`,
+  the step function over the list `List.ofFn (fun i : Fin N ↦ (c i, i))` is within
+  `r` of `f`, and `r * μ.real univ ≤ ε / 2`. The empty `E` is a separate line and
+  not a hypothesis: `TopologicalSpace.exists_dense_seq` asks for `[Nonempty E]`,
+  and on an empty `E` the space `α →ₘ[μ] E` is a subsingleton — an element of it
+  forces `α` empty — hence countable, and `Set.univ` is its own dense set.
 * The instances themselves, **built** on 2026-09-08, twelfth run:
   `MeasureTheory.AEEqFun.instDist` with `dist_eq_distInMeasure`,
   `MeasureTheory.AEEqFun.metricSpace` from the four statements above, and
@@ -1950,13 +2018,21 @@ metric equivalent to `dist` gives the same topology.
   `MeasureTheory.AEEqFun.tendsto_nhds_iff_tendstoInMeasure` states the point of
   contact with `fact:pseudopath`(i) in its proper form — `Tendsto f l (𝓝 g)`, a
   statement about the *topology*, not about a sequence of numbers.
-* `MeasureTheory.AEEqFun.isCompletelyMetrizableSpace` and
-  `MeasureTheory.AEEqFun.polishSpace`, the two previous points combined, for
+* `MeasureTheory.AEEqFun.secondCountableTopology` and
+  `MeasureTheory.AEEqFun.polishSpace`, **proved** on 2026-09-08, thirteenth run,
+  the two previous points combined, for
   `[MetricSpace E] [CompleteSpace E] [SeparableSpace E]`, `[IsFiniteMeasure μ]`
-  and `[MeasureTheory.IsSeparable μ]`. After the twelfth run of 2026-09-08 these
-  are one line each behind `separableSpace`: the metric, its completeness and
-  `UniformSpace.secondCountable_of_separable` are all in place, and separability
-  is the only input still missing.
+  and `[MeasureTheory.IsSeparable μ]`. They are one line each behind
+  `separableSpace`, exactly as the twelfth run predicted: with the separability
+  in the local context, `infer_instance` finds
+  `UniformSpace.secondCountable_of_separable` and then the `PolishSpace` instance
+  of a complete separable metric space. `IsCompletelyMetrizableSpace` needs no
+  statement of its own here, unlike on `ProbabilityMeasure E` in the block above:
+  there the metric lives on a different type and has to be carried across, here it
+  is on `α →ₘ[μ] E` itself, so the instance of a complete metric space applies
+  directly. **This closes the milestone**: no statement of it carries a `sorry`,
+  and all of them are checked with `#print axioms` to depend on nothing but
+  `propext`, `Classical.choice` and `Quot.sound`.
 * `measurableSet_of_measurable_injective`, **proved** on 2026-09-08, eleventh
   run: for `γ : X → Y` measurable and injective and `S : Set X` with
   `MeasurableSet (γ '' S)`, the set `S` is measurable. It is

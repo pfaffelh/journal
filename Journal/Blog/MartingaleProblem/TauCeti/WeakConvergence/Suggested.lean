@@ -290,10 +290,13 @@ convergence in measure on `MeasureTheory.AEEqFun`, `distInMeasure`, and
 hypothesis of `distInMeasure` until that run and is gone: no proof uses it, the
 coercion of an a.e.-class being *strongly* measurable
 (`AEEqFun.stronglyMeasurable`) already.  Everything named here is proved and
-depends on no axiom beyond `propext`, `Classical.choice` and `Quot.sound`; the
-one remaining declaration of the milestone,
-`exists_countable_dense_distInMeasure`, is a statement carrying its own `sorry`
--- it is separability, the point Kurtz leaves to the reader.  The hinge is what
+depends on no axiom beyond `propext`, `Classical.choice` and `Quot.sound`.  Since
+2026-09-08, thirteenth run, **the milestone is closed**: separability, the point
+Kurtz leaves to the reader, is proved as
+`exists_countable_dense_distInMeasure` -- through `stepFun`,
+`stronglyMeasurable_stepFun`, `exists_mem_stepFun`, `stepClass` and the estimate
+`distInMeasure_mk_le_add` -- and with it `separableSpace`,
+`secondCountableTopology` and `polishSpace`.  The hinge is what
 makes the càdlàg paths
 a Borel subset of Kurtz' space `M_E [0, ∞)`, and with it the Skorokhod
 representation of Milestone 3 is consumed for **Polish** spaces only.
@@ -4090,9 +4093,59 @@ representation above reduces it to Mathlib's. -/
 
 /-- Uniform integrability of a family of real random variables living on
 different spaces, stated by truncation because that is the form the convergence
-proof uses. -/
+proof uses.
+
+The integral is a **lower** integral, and that is not cosmetic.  Until
+2026-09-08, thirteenth run, this read `∫ x, (|x| - min |x| N) ∂(μ n)`, with the
+Bochner integral, and in that form the predicate is **degenerate**: the integrand
+`|x| - min |x| N` is `max (|x| - N) 0`, so a family with infinite first moment
+makes it non-integrable for every `N`, whereupon `MeasureTheory.integral_undef`
+(`Integral/Bochner/Basic.lean:202`) returns the junk value `0`, the supremum is
+`0` for every `N`, and the hypothesis holds.  The conclusion `Integrable id ν`
+then fails --- witness `μ n = ν = ProbabilityTheory.cauchyMeasure 0 1`
+(`Probability/Distributions/Cauchy.lean:170`, which is a probability measure by
+the instance at `:188`).  In `ℝ≥0∞` there is no junk value, and the predicate
+*implies* the integrability of `id` under each `μ n` rather than presupposing
+it; that is `integrable_id_of_isUniformlyIntegrableLaws`. -/
 def IsUniformlyIntegrableLaws (μ : ℕ → ProbabilityMeasure ℝ) : Prop :=
-  Tendsto (fun N : ℕ => ⨆ n, ∫ x, (|x| - min |x| N) ∂(μ n : Measure ℝ)) atTop (𝓝 0)
+  Tendsto (fun N : ℕ => ⨆ n, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ n : Measure ℝ))
+    atTop (𝓝 0)
+
+/-- The truncation criterion carries the integrability of the limitands with it: no
+separate hypothesis is needed, and none may be added without weakening the theorem.
+For `N` with `⨆ k, ∫⁻ … < 1` one has `|x| ≤ N + (|x| - min |x| N)` pointwise, so
+`∫⁻ x, ‖x‖ₑ ∂(μ n) ≤ N + 1 < ∞`. -/
+theorem integrable_id_of_isUniformlyIntegrableLaws {μ : ℕ → ProbabilityMeasure ℝ}
+    (hui : IsUniformlyIntegrableLaws μ) (n : ℕ) : Integrable id (μ n : Measure ℝ) := by
+  obtain ⟨N, hN⟩ : ∃ N : ℕ,
+      ⨆ k, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ k : Measure ℝ) < 1 :=
+    (hui.eventually (gt_mem_nhds (by norm_num : (0 : ℝ≥0∞) < 1))).exists
+  have hle : ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ n : Measure ℝ) < 1 :=
+    lt_of_le_of_lt (le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| N)
+      ∂(μ k : Measure ℝ)) n) hN
+  refine ⟨aestronglyMeasurable_id, ?_⟩
+  rw [hasFiniteIntegral_iff_enorm]
+  have hbound : ∀ x : ℝ, ‖(id x : ℝ)‖ₑ ≤
+      ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| N) := by
+    intro x
+    have h1 : (0 : ℝ) ≤ |x| - min |x| N := by
+      simp only [sub_nonneg]
+      exact min_le_left _ _
+    have h2 : |x| ≤ (N : ℝ) + (|x| - min |x| N) := by
+      have := min_le_right |x| ((N : ℕ) : ℝ)
+      linarith
+    calc ‖(id x : ℝ)‖ₑ = ENNReal.ofReal |x| := by
+          rw [id, Real.enorm_eq_ofReal_abs]
+      _ ≤ ENNReal.ofReal ((N : ℝ) + (|x| - min |x| N)) := ENNReal.ofReal_le_ofReal h2
+      _ = ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| N) :=
+          ENNReal.ofReal_add (Nat.cast_nonneg N) h1
+  calc ∫⁻ x, ‖(id x : ℝ)‖ₑ ∂(μ n : Measure ℝ)
+      ≤ ∫⁻ x, (ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| N))
+          ∂(μ n : Measure ℝ) := lintegral_mono hbound
+    _ = ENNReal.ofReal (N : ℝ) + ∫⁻ x, ENNReal.ofReal (|x| - min |x| N)
+          ∂(μ n : Measure ℝ) := by
+        rw [lintegral_add_left' aemeasurable_const, lintegral_const, measure_univ, mul_one]
+    _ < ⊤ := ENNReal.add_lt_top.2 ⟨ENNReal.ofReal_lt_top, hle.trans_le le_top⟩
 
 theorem tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws
     {μ : ℕ → ProbabilityMeasure ℝ} {ν : ProbabilityMeasure ℝ}
@@ -5440,6 +5493,22 @@ theorem distInMeasure_le_add [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) {ε : 
           integral_const, integral_indicator_const (1 : ℝ) hS]
         simp [mul_comm]
 
+/-- The same estimate against a *representative* rather than against a class: the
+exceptional set is written with the honest function `g`, which is what an
+approximation argument produces.  The bookkeeping is one `measureReal_congr` along
+`AEEqFun.coeFn_mk`. -/
+theorem distInMeasure_mk_le_add [IsFiniteMeasure μ] (f : α →ₘ[μ] E) {g : α → E}
+    (hg : AEStronglyMeasurable g μ) {r : ℝ} (hr : 0 ≤ r) :
+    distInMeasure f (AEEqFun.mk g hg) ≤
+      r * μ.real Set.univ + μ.real {a | r ≤ dist (f a) (g a)} := by
+  have h := distInMeasure_le_add f (AEEqFun.mk g hg) hr
+  have hae : {a | r ≤ dist (f a) ((AEEqFun.mk g hg : α →ₘ[μ] E) a)}
+      =ᵐ[μ] {a | r ≤ dist (f a) (g a)} := by
+    filter_upwards [AEEqFun.coeFn_mk g hg] with a ha
+    change (r ≤ dist (f a) ((AEEqFun.mk g hg : α →ₘ[μ] E) a)) = (r ≤ dist (f a) (g a))
+    rw [ha]
+  rwa [measureReal_congr hae] at h
+
 /-- The statement that names the metric correctly: `distInMeasure` metrizes
 Mathlib's `TendstoInMeasure`.  This is the point of contact with the manuscript's
 `fact:pseudopath`(i), which says that the pseudo-path topology on `D_E` is the
@@ -5621,16 +5690,222 @@ instance completeSpace [IsFiniteMeasure μ] [CompleteSpace E] :
     Metric.cauchySeq_iff.mp hu ε hε
   exact ⟨g, tendsto_iff_dist_tendsto_zero.mpr hg⟩
 
+open scoped Classical in
+/-- The countably valued step function attached to a list of index pairs: the first
+entry of a pair names a set of the family `A`, the second a point of the sequence
+`y`, and the earlier entries of the list have priority.  A **list**, rather than a
+finite family, is what makes the index type countable with no bookkeeping at all:
+`List (ℕ × ℕ)` is countable by instance search. -/
+noncomputable def stepFun (A : ℕ → Set α) (y : ℕ → E) (e : E) : List (ℕ × ℕ) → α → E
+  | [] => fun _ => e
+  | p :: l => fun a => if a ∈ A p.1 then y p.2 else stepFun A y e l a
+
+/-- A step function is *strongly* measurable, not merely measurable: it takes
+finitely many values, so no second countability of `E` is needed. -/
+theorem stronglyMeasurable_stepFun {A : ℕ → Set α} (hA : ∀ i, MeasurableSet (A i))
+    (y : ℕ → E) (e : E) : ∀ l : List (ℕ × ℕ), StronglyMeasurable (stepFun A y e l)
+  | [] => stronglyMeasurable_const
+  | p :: l => by
+      refine StronglyMeasurable.ite (p := fun a => a ∈ A p.1) ?_ stronglyMeasurable_const
+        (stronglyMeasurable_stepFun hA y e l)
+      simpa using hA p.1
+
+omit [MeasurableSpace α] [MetricSpace E] in
+/-- Whichever branch of the list fires, the value is the point named by *some* entry
+whose set contains the argument.  This is all the approximation needs, and it is why
+the sets may overlap: every entry that can fire is a good one, so no disjointification
+of the covering sets is required. -/
+theorem exists_mem_stepFun {A : ℕ → Set α} {y : ℕ → E} {e : E} {a : α} :
+    ∀ {l : List (ℕ × ℕ)}, (∃ p ∈ l, a ∈ A p.1) →
+      ∃ p ∈ l, a ∈ A p.1 ∧ stepFun A y e l a = y p.2 := by
+  intro l
+  induction l with
+  | nil => rintro ⟨p, hp, -⟩; simp at hp
+  | cons q l ih =>
+      intro h
+      by_cases hq : a ∈ A q.1
+      · refine ⟨q, List.mem_cons_self .., hq, ?_⟩
+        simp only [stepFun, if_pos hq]
+      · have h' : ∃ p ∈ l, a ∈ A p.1 := by
+          obtain ⟨p, hp, hpa⟩ := h
+          rcases List.mem_cons.1 hp with rfl | hp'
+          · exact absurd hpa hq
+          · exact ⟨p, hp', hpa⟩
+        obtain ⟨p, hpl, hpa, hpeq⟩ := ih h'
+        refine ⟨p, List.mem_cons_of_mem _ hpl, hpa, ?_⟩
+        simp only [stepFun, if_neg hq]
+        exact hpeq
+
+/-- The class of a step function.  Naming the approximating family as a *definition*,
+rather than describing it inside the proof, is what makes its countability one line;
+the same device as `natWeightMeasure` in Milestone 3. -/
+noncomputable def stepClass (μ : Measure α) {A : ℕ → Set α} (hA : ∀ i, MeasurableSet (A i))
+    (y : ℕ → E) (e : E) (l : List (ℕ × ℕ)) : α →ₘ[μ] E :=
+  AEEqFun.mk (stepFun A y e l) (stronglyMeasurable_stepFun hA y e l).aestronglyMeasurable
+
 /-- Separability.  The countable dense family is the classes of the countably valued
 functions built from a countable measure-dense family of measurable sets and a
 countable dense subset of `E`.  This is the point Kurtz leaves to the reader;
 `MeasureTheory.IsSeparable` is Mathlib's hypothesis for the same statement
-about the `Lᵖ` metrics (`Measure/SeparableMeasure.lean`). -/
+about the `Lᵖ` metrics (`Measure/SeparableMeasure.lean`).
+
+The proof is one estimate, `distInMeasure_mk_le_add`, fed by two approximations.
+The first replaces `f` by a countably valued function: the sets
+`S m = {a | dist (f a) (y m) < r}` cover `α` because `y` is dense, and finiteness of
+`μ` cuts the cover down to the first `N` of them at the cost of a set of mass `δ`.
+The second replaces each `S i` by a set `A (c i)` of the measure-dense family, at the
+cost of `∑ i, μ (S i ∆ A (c i))`.  Off the union of those two exceptional sets, the
+step function is within `r` of `f`, and no disjointness of the `S i` is needed --- see
+`exists_mem_stepFun`. -/
 theorem exists_countable_dense_distInMeasure [IsFiniteMeasure μ] [IsSeparable μ]
     [TopologicalSpace.SeparableSpace E] :
     ∃ s : Set (α →ₘ[μ] E), s.Countable ∧
       ∀ f : α →ₘ[μ] E, ∀ ε > 0, ∃ g ∈ s, distInMeasure f g < ε := by
-  sorry
+  classical
+  -- On an empty `E` the space is a subsingleton and there is nothing to do; the
+  -- dense sequence of `E` is what needs it nonempty.
+  rcases isEmpty_or_nonempty E with hE | hE
+  · have : Subsingleton (α →ₘ[μ] E) :=
+      ⟨fun f g => AEEqFun.ext (Filter.Eventually.of_forall fun a => (IsEmpty.false (f a)).elim)⟩
+    exact ⟨Set.univ, Set.countable_univ, fun f ε hε =>
+      ⟨f, Set.mem_univ f, by rw [distInMeasure_self]; exact hε⟩⟩
+  obtain ⟨y, hy⟩ := TopologicalSpace.exists_dense_seq E
+  obtain ⟨𝒜, hcount, h𝒜⟩ := exists_countable_measureDense μ
+  obtain ⟨A, hAeq⟩ := hcount.exists_eq_range h𝒜.nonempty
+  have hA : ∀ i, MeasurableSet (A i) := fun i => by
+    refine h𝒜.measurable _ ?_
+    rw [hAeq]
+    exact Set.mem_range_self i
+  refine ⟨Set.range (stepClass μ hA y (y 0)), Set.countable_range _, ?_⟩
+  intro f ε hε
+  set M : ℝ := μ.real Set.univ with hMdef
+  have hM0 : 0 ≤ M := measureReal_nonneg
+  set r : ℝ := ε / (2 * (M + 1)) with hrdef
+  have hrpos : 0 < r := div_pos hε (by linarith)
+  set δ : ℝ := ε / 8 with hδdef
+  have hδpos : 0 < δ := by positivity
+  -- the sets on which `f` is within `r` of a point of the dense sequence
+  set S : ℕ → Set α := fun m => {a | dist (f a) (y m) < r} with hSdef
+  have hSmeas : ∀ m, MeasurableSet (S m) := fun m =>
+    measurableSet_lt (f.stronglyMeasurable.dist stronglyMeasurable_const).measurable
+      measurable_const
+  set U : ℕ → Set α := fun n => ⋃ m < n, S m with hUdef
+  have hUmeas : ∀ n, MeasurableSet (U n) := fun n =>
+    MeasurableSet.iUnion fun _ => MeasurableSet.iUnion fun _ => hSmeas _
+  have hUmono : Monotone U := by
+    intro a b hab z hz
+    simp only [hUdef, mem_iUnion, exists_prop] at hz ⊢
+    obtain ⟨j, hj, hzj⟩ := hz
+    exact ⟨j, hj.trans_le hab, hzj⟩
+  have hUuniv : (⋃ n, U n) = univ := by
+    refine eq_univ_of_forall fun a => ?_
+    obtain ⟨m, hm⟩ := hy.exists_dist_lt (f a) hrpos
+    refine mem_iUnion.2 ⟨m + 1, ?_⟩
+    simp only [hUdef, mem_iUnion, exists_prop]
+    exact ⟨m, Nat.lt_succ_self m, hm⟩
+  have hten : Tendsto (fun n => μ (U n)ᶜ) atTop (𝓝 0) := by
+    have h := tendsto_measure_iInter_atTop (μ := μ) (s := fun n => (U n)ᶜ)
+      (fun n => (hUmeas n).compl.nullMeasurableSet)
+      (fun a b hab => compl_subset_compl.2 (hUmono hab)) ⟨0, measure_ne_top _ _⟩
+    rwa [← compl_iUnion, hUuniv, compl_univ, measure_empty] at h
+  obtain ⟨N, hN⟩ : ∃ N, μ (U N)ᶜ < ENNReal.ofReal δ :=
+    (hten.eventually (gt_mem_nhds (ENNReal.ofReal_pos.2 hδpos))).exists
+  -- the measure-dense replacements of the first `N` of them
+  have hkey : ∀ i : Fin N, ∃ j : ℕ,
+      μ (symmDiff (S i) (A j)) < ENNReal.ofReal (δ / ((N : ℝ) + 1)) := by
+    intro i
+    obtain ⟨t, ht, hμt⟩ := h𝒜.approx (S i) (hSmeas i) (measure_ne_top μ _)
+      (δ / ((N : ℝ) + 1)) (by positivity)
+    rw [hAeq] at ht
+    obtain ⟨j, rfl⟩ := ht
+    exact ⟨j, hμt⟩
+  choose c hc using hkey
+  set l : List (ℕ × ℕ) := List.ofFn (fun i : Fin N => (c i, (i : ℕ))) with hldef
+  set B : Set α := (U N)ᶜ ∪ ⋃ i : Fin N, symmDiff (S i) (A (c i)) with hBdef
+  -- off `B`, the step function is within `r` of `f`
+  have hsub : {a | r ≤ dist (f a) (stepFun A y (y 0) l a)} ⊆ B := by
+    intro a ha
+    by_contra hB
+    simp only [hBdef, mem_union, not_or, mem_iUnion, not_exists] at hB
+    obtain ⟨hU, hsymm⟩ := hB
+    have haU : a ∈ U N := not_notMem.1 hU
+    have hex : ∃ p ∈ l, a ∈ A p.1 := by
+      simp only [hUdef, mem_iUnion, exists_prop] at haU
+      obtain ⟨m, hmN, hmS⟩ := haU
+      refine ⟨(c ⟨m, hmN⟩, m), ?_, ?_⟩
+      · rw [hldef, List.mem_ofFn']
+        exact ⟨⟨m, hmN⟩, rfl⟩
+      · by_contra hmem
+        exact hsymm ⟨m, hmN⟩ (Set.mem_symmDiff.2 (Or.inl ⟨hmS, hmem⟩))
+    obtain ⟨p, hpl, hpa, hpeq⟩ := exists_mem_stepFun (y := y) (e := y 0) hex
+    rw [hldef, List.mem_ofFn'] at hpl
+    obtain ⟨i, rfl⟩ := hpl
+    have hiS : a ∈ S i := by
+      by_contra hmem
+      exact hsymm i (Set.mem_symmDiff.2 (Or.inr ⟨hpa, hmem⟩))
+    replace ha : r ≤ dist (f a) (stepFun A y (y 0) l a) := ha
+    rw [hpeq] at ha
+    exact absurd (show dist (f a) (y (i : ℕ)) < r from hiS) (not_lt.2 ha)
+  -- the measure of `B`
+  have hNreal : (0 : ℝ) < (N : ℝ) + 1 := by positivity
+  have hsum : (N : ℝ) * (δ / ((N : ℝ) + 1)) ≤ δ := by
+    rw [mul_div_assoc', div_le_iff₀ hNreal]
+    nlinarith [hδpos.le, Nat.cast_nonneg (α := ℝ) N]
+  have hBle : μ B ≤ ENNReal.ofReal (δ + δ) := by
+    rw [ENNReal.ofReal_add hδpos.le hδpos.le]
+    calc μ B ≤ μ (U N)ᶜ + μ (⋃ i : Fin N, symmDiff (S i) (A (c i))) := measure_union_le _ _
+      _ ≤ ENNReal.ofReal δ + ∑ i : Fin N, μ (symmDiff (S i) (A (c i))) :=
+          add_le_add hN.le (measure_iUnion_fintype_le _ _)
+      _ ≤ ENNReal.ofReal δ + ∑ _i : Fin N, ENNReal.ofReal (δ / ((N : ℝ) + 1)) := by
+          gcongr with i
+          exact (hc i).le
+      _ = ENNReal.ofReal δ + (N : ℝ≥0∞) * ENNReal.ofReal (δ / ((N : ℝ) + 1)) := by
+          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+      _ ≤ ENNReal.ofReal δ + ENNReal.ofReal δ := by
+          gcongr
+          rw [← ENNReal.ofReal_natCast N, ← ENNReal.ofReal_mul (Nat.cast_nonneg N)]
+          exact ENNReal.ofReal_le_ofReal hsum
+  have hBreal : μ.real B ≤ δ + δ :=
+    ENNReal.toReal_le_of_le_ofReal (by linarith) hBle
+  -- putting it together
+  refine ⟨stepClass μ hA y (y 0) l, Set.mem_range_self _, ?_⟩
+  have hrM : r * M ≤ ε / 2 := by
+    rw [hrdef, div_mul_eq_mul_div, div_le_div_iff₀ (by linarith) (by norm_num)]
+    nlinarith [hM0, hε.le]
+  calc distInMeasure f (stepClass μ hA y (y 0) l)
+      ≤ r * M + μ.real {a | r ≤ dist (f a) (stepFun A y (y 0) l a)} :=
+        distInMeasure_mk_le_add f _ hrpos.le
+    _ ≤ r * M + (δ + δ) := by
+        have h := (measureReal_mono hsub (measure_ne_top μ B)).trans hBreal
+        linarith
+    _ < ε := by rw [hδdef]; linarith
+
+/-- Separability as a statement about the topology, which is what
+`UniformSpace.secondCountable_of_separable` and `PolishSpace` consume. -/
+theorem separableSpace [IsFiniteMeasure μ] [IsSeparable μ]
+    [TopologicalSpace.SeparableSpace E] : TopologicalSpace.SeparableSpace (α →ₘ[μ] E) := by
+  obtain ⟨s, hs, hdense⟩ := exists_countable_dense_distInMeasure (μ := μ) (E := E)
+  refine ⟨s, hs, ?_⟩
+  rw [Metric.dense_iff]
+  intro f r hr
+  obtain ⟨g, hgs, hg⟩ := hdense f r hr
+  refine ⟨g, Metric.mem_ball.2 ?_, hgs⟩
+  rw [dist_eq_distInMeasure, distInMeasure_comm]
+  exact hg
+
+theorem secondCountableTopology [IsFiniteMeasure μ] [IsSeparable μ]
+    [TopologicalSpace.SeparableSpace E] : SecondCountableTopology (α →ₘ[μ] E) := by
+  have hsep := separableSpace (μ := μ) (E := E)
+  infer_instance
+
+/-- **The space `M_E` is Polish.**  Completeness is `completeSpace`, separability is
+`separableSpace`, and `PolishSpace` is the two of them; this is the statement through
+which Step 1 of the manuscript's `thm:MZconv` runs, and the reason the Skorokhod
+representation of Milestone 3 is needed for Polish spaces only. -/
+theorem polishSpace [IsFiniteMeasure μ] [IsSeparable μ] [CompleteSpace E]
+    [TopologicalSpace.SeparableSpace E] : PolishSpace (α →ₘ[μ] E) := by
+  have hsep := separableSpace (μ := μ) (E := E)
+  infer_instance
 
 end AEEqFun
 
