@@ -1290,6 +1290,72 @@ The representation theorem itself:
   piece with probability `μ (A i)`. `MeasureTheory.stageMeasure` names the space,
   and `MeasureTheory.isProbabilityMeasure_volume_restrict_Ioc` supplies the
   instance for `(0,1]` that Mathlib does not have.
+* `MeasureTheory.ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge`, **proved** on
+  2026-09-08, fourteenth run: **the almost sure convergence, from a nested bad
+  event.** If the event "stage `n` is off by more than `δ (k n)`" lies, up to a
+  null set, in a set `B (k n)` depending on the *level* `k n` alone, if the
+  levels tend to infinity and if `P (⋃ m ≥ K, B m) → 0`, then `X n → Y` almost
+  surely. It is Ethier–Kurtz (3.1.36) with its two ingredients named, and it is
+  what the representation ends on.
+
+  **Borel–Cantelli over `n` is not available, and that is a statement about the
+  theorem and not about the proof.** The one-stage bound of
+  `exists_measurable_pair_of_partition` is `∑' i, (μ n (A i) - ν (A i))`, and that
+  quantity may go to `0` arbitrarily slowly: on `E = ℝ` with `ν = dirac 0` and
+  `μ n = (1 - 1/log n) • dirac 0 + (1/log n) • dirac 1` every partition into
+  pieces of diameter below `1` separates the two atoms, so the bound is at least
+  `1/log n` at *every* level, and `∑ 1/log n = ∞`. No choice of levels repairs
+  that, because the divergence is a property of the sequence of laws and not of
+  the partition. The theorem holds for that sequence all the same, and the witness
+  says what carries it: with `U` uniform and `X n = 1` exactly on `{U ≤ 1/log n}`
+  the bad events are *nested*, so their intersection over tails is `{U ≤ 0}`
+  although their probabilities are not summable. Almost sure convergence comes
+  from the dependence between the stages, not from the per-stage bounds.
+* `MeasureTheory.exists_measurable_index_of_stochastic_matrix_diag`: the index map
+  of `exists_measurable_index_of_stochastic_matrix` with the **diagonal branch on
+  a named interval** — a measurable `G : ℕ × ℝ → ℕ` realising every row `c j` as
+  the law of `G (j, ·)` under Lebesgue measure on `(0,1]` *and* satisfying
+  `G (j, y) = j` for `0 < y ≤ (c j j).toReal`. It is the previous statement
+  applied, for each `j`, to the vector `c j ∘ Equiv.swap 0 j` and the points
+  `Equiv.swap 0 j`, so that the diagonal entry is the first interval of the
+  partial sums; `Measure.sum_comp_equiv` (`Measure/MeasureSpace.lean:1415`) and `Equiv.tsum_eq`
+  carry the reindexing, and the first-interval property is `Nat.find_eq_zero` (`Data/Nat/Find.lean:106`)
+  inside
+  `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`, whose statement
+  gains the conjunct `∀ y, 0 < y → y ≤ (p 0).toReal → g y = x 0`.
+
+  This is the statement that converts a *number* into an *inclusion*: with the
+  diagonal at a known place, "the two indices disagree" is contained in an event
+  of the uniform variable alone, `{ξ > (c j j).toReal}`, and events of one
+  variable are what nest.
+* `MeasureTheory.exists_finite_partition_diam_le_null_frontier`: for `ν` a
+  probability measure on a separable metric `E` and `ε, η > 0`, finitely many
+  disjoint measurable `A 1, …, A N` of **positive** `ν`-mass, of diameter at most
+  `ε` and with `ν (frontier (A i)) = 0`, whose complement `A 0` satisfies
+  `ν (A 0) ≤ η`. It is `exists_measurable_partition_diam_le_null_frontier`
+  truncated: the countable partition has `ν (⋃ i ≥ N, A i) → 0` by
+  `tendsto_measure_iUnion_atTop` (`Measure/MeasureSpace.lean:648`), and the pieces of mass zero are absorbed into
+  the remainder, whose frontier is null because the frontier of a finite union is
+  contained in the union of the frontiers (`frontier_biInter_range_subset` has the
+  intersection form of this).
+
+  Two hypotheses of the stage hang on the finiteness and on the positivity, and
+  neither is decoration. Positivity makes the *row defect*
+  `(ν (A i) - μ n (A i)) / ν (A i)` finite, finiteness makes its supremum over the
+  pieces attained and hence small for large `n` — and it is that supremum, not the
+  `ℓ¹`-bound, that bounds the interval on which the index coupling leaves the
+  diagonal.
+* `MeasureTheory.exists_measurable_pair_of_partition_subset`: the stage of
+  `exists_measurable_pair_of_partition` with the estimate as an **inclusion**. On
+  `stageMeasure μ ν A` with `A` the finite partition of the previous item and with
+  `t` an upper bound for the row defects, the `X` built there satisfies, almost
+  everywhere,
+  `{z | ε < dist (X z) z.1.1} ⊆ {z | z.1.1 ∈ A 0} ∪ {z | z.1.2 ≤ t}`.
+  The two disjuncts are the two ways the argument of
+  `exists_measurable_pair_of_partition` can fail: the limit variable falls in the
+  remainder, where no diameter controls anything, or the index coupling leaves the
+  diagonal, which by the item above happens only on `{ξ ≤ t}`. The `μ`-null pieces
+  are the almost everywhere in the statement, exactly as there.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
@@ -1297,6 +1363,22 @@ The representation theorem itself:
   the previous items, so that `Portmanteau`'s
   `MeasureTheory.tendsto_measure_of_null_frontier` (`Portmanteau.lean:243`)
   applies to each piece.
+
+  **The levels, and the one uniform variable they share.** Level `k` carries the
+  finite partition `A^{(k)}` of `exists_finite_partition_diam_le_null_frontier`
+  with `ε = 2⁻ᵏ` and `η = 2⁻ᵏ`. Since the partition is finite and every piece has
+  positive mass and null frontier, `tendsto_measure_of_null_frontier` gives
+  `μ n (A^{(k)} i) → ν (A^{(k)} i)` for each of them, so the row defect
+  `t k n = ⨆ i ≤ N k, (ν (A i) - μ n (A i)) / ν (A i)` tends to `0` in `n` for
+  fixed `k`; put `k n = max ({1} ∪ {k ≤ n | t k n ≤ 1/k})`, which tends to
+  infinity. Stage `n` is then the stage of
+  `exists_measurable_pair_of_partition_subset` at level `k n`, and its bad event
+  lies in `B k = {Y ∈ A^{(k)} 0} ∪ {ξ ≤ 1/k}` with
+  `P (⋃ m ≥ K, B m) ≤ ∑ k ≥ K, 2⁻ᵏ + 1/K → 0`, because the second disjuncts are
+  nested in the *one* uniform variable and the first are summable.
+  `ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` with `δ k = 2⁻ᵏ` closes it.
+  This is Ethier–Kurtz's (3.1.33)–(3.1.36) with `k n` their `k_n` and `1/k` their
+  `ε_k / k`.
 
   **The common space, and why it is not a gluing of the one-stage couplings.**
   `exists_coupling_of_tendsto` returns, for each stage, a law `γ` on `E × E`

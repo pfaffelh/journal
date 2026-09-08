@@ -301,6 +301,20 @@ makes the càdlàg paths
 a Borel subset of Kurtz' space `M_E [0, ∞)`, and with it the Skorokhod
 representation of Milestone 3 is consumed for **Polish** spaces only.
 
+On 2026-09-08, fourteenth run, the *last* step of the Skorokhod representation
+was corrected.  The plan of the tenth run ended it with the Borel-Cantelli lemma,
+and that step does not exist: the bound a stage delivers is
+`∑' i, (μ n (A i) - ν (A i))`, and it may go to `0` arbitrarily slowly -- the
+witness is in the doc-string of
+`ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge`, which is the replacement,
+and it is proved.  Almost sure convergence comes from the *dependence* between
+the stages: one uniform variable shared by all of them, the estimate of a stage
+as an **inclusion** into an event of that variable, and finitely many pieces of
+positive mass with a remainder.  That is Ethier-Kurtz's (3.1.33)-(3.1.36), and
+the three statements still missing are named in Milestone 3.  The common space
+is accordingly `(E × ℝ) × (ℕ × ℕ → E)` -- one uniform variable, not one per
+stage.
+
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
 `tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
@@ -4074,6 +4088,55 @@ theorem exists_measurable_pair_of_partition [PseudoMetricSpace E] [OpensMeasurab
             \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))) :=
         measure_union_le _ _
     _ ≤ ∑' i, (μ (A i) - ν (A i)) := by rw [hnull, add_zero]; exact hB1
+
+omit [MeasurableSpace E] in
+/-- **The almost sure convergence of the representation, from a nested bad event.**  If the event
+"stage `n` is off by more than `δ (k n)`" is contained in a set `B (k n)` that depends on the
+*level* `k n` alone, if the levels tend to infinity, and if the tails `⋃ m ≥ K, B m` have
+vanishing measure, then `X n → Y` almost surely.
+
+**This is not the Borel--Cantelli lemma, and Borel--Cantelli is not available here.**  The obvious
+route -- bound `P {ω | ε < dist (X n ω) (Y ω)}` for each `n` and sum over `n` -- fails, and it
+fails for a reason that no choice of levels repairs.  The one-stage bound of
+`exists_measurable_pair_of_partition` is `∑' i, (μ n (A i) - ν (A i))`, and that quantity may tend
+to `0` arbitrarily slowly: on `E = ℝ` with `ν = dirac 0` and
+`μ n = (1 - 1/log n) • dirac 0 + (1/log n) • dirac 1`, every partition into pieces of diameter
+below `1` separates the two atoms, so the bound is at least `1/log n` at *every* level, and
+`∑ 1/log n = ∞`.  The theorem is nevertheless true for that sequence, and the witness shows what
+carries it: with `U` uniform and `X n = 1` exactly on `{U ≤ 1/log n}` the bad events are
+*nested*, so their limsup is `{U ≤ 0}`, a null set, although their probabilities are not summable.
+Almost sure convergence therefore comes from the dependence between the stages, not from the
+per-stage bounds -- which is why the stages must share one uniform variable, and why the estimate
+of a stage has to be an *inclusion* into an event of that variable rather than a number.  This is
+Ethier--Kurtz's (3.1.35)--(3.1.36), stated with the two ingredients named separately.
+
+The inclusion is asked for almost everywhere, not everywhere, because that is the form a stage
+delivers: the stage of `exists_measurable_pair_of_partition` argues on the pieces of positive mass
+and discards a null set of pieces, so it has one exceptional set per stage, and countably many null
+sets are null (`ae_all_iff`).
+
+The proof is three lines of measure theory and one squeeze: `⋂ K, ⋃ m ≥ K, B m` is null because it
+is contained in each tail; off that set some tail misses `ω` altogether, so from the index on which
+`k n ≥ K` the distance is at most `δ (k n) → 0`. -/
+theorem ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge {Ω : Type*} [MeasurableSpace Ω]
+    {P : Measure Ω} [PseudoMetricSpace E] {X : ℕ → Ω → E} {Y : Ω → E} {k : ℕ → ℕ}
+    {B : ℕ → Set Ω} {δ : ℕ → ℝ}
+    (hδ : Tendsto δ atTop (𝓝 0)) (hk : Tendsto k atTop atTop)
+    (hbad : ∀ n, ∀ᵐ ω ∂P, δ (k n) < dist (X n ω) (Y ω) → ω ∈ B (k n))
+    (hB : Tendsto (fun K => P (⋃ m ≥ K, B m)) atTop (𝓝 0)) :
+    ∀ᵐ ω ∂P, Tendsto (fun n => X n ω) atTop (𝓝 (Y ω)) := by
+  have hnull : P (⋂ K, ⋃ m ≥ K, B m) = 0 :=
+    le_antisymm (ge_of_tendsto hB (Eventually.of_forall fun K =>
+      measure_mono (Set.iInter_subset _ K))) bot_le
+  filter_upwards [measure_eq_zero_iff_ae_notMem.1 hnull, ae_all_iff.2 hbad] with ω hω hbadω
+  simp only [Set.mem_iInter, Set.mem_iUnion, exists_prop, not_forall, not_exists,
+    not_and] at hω
+  obtain ⟨K, hK⟩ := hω
+  rw [tendsto_iff_dist_tendsto_zero]
+  refine squeeze_zero' (Eventually.of_forall fun n => dist_nonneg) ?_ (hδ.comp hk)
+  filter_upwards [hk.eventually_ge_atTop K] with n hn
+  by_contra hcon
+  exact hK (k n) hn (hbadω n (not_le.1 hcon))
 
 theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}
