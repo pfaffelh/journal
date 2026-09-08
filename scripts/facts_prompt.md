@@ -10,7 +10,67 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-Zurzeit stehen hier keine offenen Aufgaben.
+### Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$? *(gestellt 2026-09-08 vom Nutzer)*
+
+Der Nutzer hat Kurtz (1991), *Random time changes and convergence in distribution
+under the Meyer--Zheng conditions*, Ann. Probab. **19**, 1010--1034, beigebracht;
+das PDF liegt unter `~/Uni/Download/Papers/Kurtz1991a.pdf` (JSTOR-Scan, reines
+Bild, also seitenweise mit dem Read-Werkzeug zu lesen, `pdftotext` liefert
+nichts). Daraus ein Fund, der den schwersten offenen Punkt der Roadmap erledigen
+könnte und der **noch nicht geprüft ist**.
+
+**Der Fund.** Kurtz definiert auf Seite 1022 auf $M_E[0,\infty)$ — den
+Äquivalenzklassen Borel-meßbarer $E$-wertiger Funktionen auf $[0,\infty)$, zwei
+gleich, wenn sie Lebesgue-f.ü. übereinstimmen — die Metrik
+$$d_m(x,y) = \int_0^\infty e^{-t}\,\bigl(1 \wedge r(x(t),y(t))\bigr)\,dt$$
+und stellt fest: sie metrisiert die Konvergenz in Maß, und
+$(M_E[0,\infty), d_m)$ ist **vollständig und separabel**, sobald $(E,r)$ es ist —
+also polnisch, und `(E3)` fordert $E$ polnisch ohnehin. Nicht polnisch ist nur
+$D_E$ **als Teilmenge** davon; dort ist es bloß borelsch. Das ist etwas anderes,
+als `rem:MZcost` daraus macht.
+
+**Die Behauptung, die zu prüfen ist.** Schritt 1 von `thm:MZconv` (Manuskript, um
+Zeile 9335) beruft sich auf `fact:PSpolish` für den nicht-polnischen
+Pseudopfad-Raum $D_E$. Statt dessen sollte gehen:
+
+1. Die Inklusion $D_E \hookrightarrow M_E$ ist stetig — die Pseudopfad-Topologie
+   ist nach `fact:pseudopath`(i) genau die Konvergenz in $\lambda$-Maß, und $d_m$
+   metrisiert eben diese. Also überträgt sich $X_n \Rightarrow X$ nach $M_E$.
+2. Auf dem **polnischen** $M_E$ liefert die gewöhnliche Skorohod-Darstellung die
+   f.s. konvergente Realisierung.
+3. Jedes $\tilde X_n$ hat das Gesetz von $X_n$, das auf $D_E$ konzentriert ist;
+   ist $D_E$ borelsch in $M_E$, so ist $\tilde X_n$ f.s. càdlàg.
+4. Schritt 2 braucht ohnehin nur die Konvergenz in $\lambda$-Maß.
+
+**Zu prüfen, in dieser Reihenfolge**, weil ein Scheitern die späteren Punkte
+erübrigt:
+
+(a) Ist $D_E$ borelsch in $(M_E, d_m)$? `fact:pseudopath`(ii) sagt es für das
+    MZ-Modell (Borelmenge eines kompakten metrisierbaren Raums); für $M_E$ ist es
+    zu belegen oder zu widerlegen. **Das ist der Angelpunkt.**
+(b) Ist die Spur der Borel-σ-Algebra von $M_E$ auf $D_E$ dieselbe wie
+    $\sigma(\pi_u)$, also die aus `fact:pseudopath`(iii)? Sonst reden Schritt 1
+    und Schritt 2 nicht von derselben σ-Algebra.
+(c) Hält der Rest des Beweises von `thm:MZconv` unverändert?
+(d) Wird `fact:cmt` an derselben Stelle in nicht-polnischer Allgemeinheit
+    gebraucht, oder erledigt sich das mit?
+
+**Was daran hängt.** Trägt es, so braucht die Roadmap `fact:PSpolish` und
+`fact:cmt` **nur für polnische Räume**, und der Punkt, an dem `WeakConvergence`
+seit dem Abend des 2026-09-07 arbeitet (`exists_ae_tendsto_of_tendsto` für bloß
+separables $S$), entfällt oder wird zur Zugabe. Trägt es nicht, so sag **woran**
+es bricht — das ist dann die Begründung, die `rem:MZcost` heute fehlt.
+
+**Manuskript.** `rem:MZcost` behauptet im zweiten Absatz, eine Formalisierung
+*müsse* beides in nicht-polnischer Allgemeinheit haben. Ist die Prüfung positiv
+und vollständig, so ist das falsch und die Stelle zu korrigieren; sonst bleibt
+das Manuskript unberührt und der Befund steht im Inventar.
+
+**Nicht** die laufende Arbeit an `exists_ae_tendsto_of_tendsto` wegwerfen, bevor
+die Prüfung durch ist. Was dort bewiesen ist, bleibt richtig und ist auch im
+polnischen Fall brauchbar.
+
+Zurzeit stehen hier sonst keine offenen Aufgaben.
 
 ### ~~Aufgabe: Ionescu--Tulcea ist in Mathlib, und der Befund des 20. Laufs steht schief~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, neunter Lauf des Tages)*
 
