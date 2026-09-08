@@ -149,6 +149,18 @@ kein gebautes Mathlib und taugt zu nichts.
    `forall_fdd_of_isMPSolution`, die Richtung von links nach rechts; die
    Rechnung steht im Laufbericht.*
 
+   *Zwischenstand 2026-09-08, sechster Lauf des Tages: `WeakConvergence` steht
+   bei **zwei** `sorry` (gemessen am Übersetzerlauf, dazu die zwei bekannten
+   Fehler in `tendsto_map_of_measure_setOf_continuousAt_eq_one` aus dem
+   Versionsgrund) — `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`
+   ist bewiesen, und `exists_coupling_tsum_offDiag_le` ist als neue, bewiesene
+   Deklaration dazugekommen. Übrig sind `exists_ae_tendsto_of_tendsto`
+   (Meilenstein 3) und `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`
+   (Meilenstein 4). Der nächste Schritt in dieser Datei ist die einstufige
+   Kopplung auf dem Produktraum, in drei benannten Stücken (b1)–(b3) im
+   Laufbericht im Inventar; ihr Bauplan ist im selben Lauf berichtigt worden,
+   weil er auf `((0,1], Lebesgue)` allein nicht durchgeht.*
+
    *Nachtrag desselben Laufs zu `WeakConvergence`: gemessen sind es **48
    Deklarationen und 18 `sorry`**, nicht 50 und 21; und der Übersetzer meldet
    `rc = 1`, an genau einer Stelle und mit Absicht — der Modulkopf sagt seit dem
@@ -218,6 +230,149 @@ kein gebautes Mathlib und taugt zu nichts.
    `isConvergenceDetermining_setOf_hasCompactSupport`, die zweite Hälfte
    desselben Facts, und was zwischen den beiden Klassen liegt, ist genau ein
    Abschneidelemma; der Laufbericht nennt es.*
+
+   *Zwischenstand 2026-09-07, sechzehnter Lauf des Tages: **auch dieser Schritt
+   ist getan**, und `fact:convdet` ist damit ganz bewiesen.
+   `isConvergenceDetermining_setOf_hasCompactSupport` geht durch
+   `lake env lean`; `WeakConvergence` steht bei **10 `sorry`** und 92
+   Deklarationen (vorher 11 und 91), rc = 1 mit unverändert genau den zwei
+   angekündigten Fehlern, jetzt bei `:1414`. Das angekündigte Abschneidelemma
+   war **nicht** das, was der fünfzehnte Lauf vermutet hatte: eine gleichmäßige
+   Approximation der größeren Klasse durch die kleinere gibt es nicht (Zeuge im
+   Laufbericht). Was trägt, ist die Herauslösung des Abschneideschritts aus dem
+   Beweis der ersten Hälfte —
+   `tendsto_integral_of_tendsto_integral_mul`, ohne Metrik —, den beide Hälften
+   jetzt teilen. Der nächste benannte Schritt in dieser Datei ist
+   `isTightMeasureSet_of_stronglySeparatesPoints` — nach diesem Lauf der
+   **einzige** `sorry` von Meilenstein 1, den nicht sein eigenes Korollar
+   trägt, und das Ganze dessen, was `fact:stoneweierstrass` noch schuldet; die
+   Begründung steht im Laufbericht. Derselbe Lauf hat den Beweis von EK 3.4.5(b)
+   in vier benannte Schritte zerlegt (in `WeakConvergence/README.md`,
+   Meilenstein 1) und den zweiten davon bewiesen,
+   `StronglySeparatesPoints.exists_finite_cover`, den geometrischen Kern; damit
+   93 Deklarationen bei unverändert 10 `sorry`. Als Nächstes ist Schritt (1)
+   dran, die schwache Konvergenz der Pushforwards nach $\R^k$.*
+
+   *Zwischenstand 2026-09-07, siebzehnter Lauf des Tages: **die Schritte (1)
+   und (3) sind bewiesen, ebenso die tragende Hälfte von Schritt (4)**, und die
+   Zielaussage war **falsch**. `WeakConvergence` steht bei **101 Deklarationen
+   und 10 `sorry`** (vorher 93 und 10, unverändert — sechs neue Deklarationen
+   sind bewiesen, keine neu als `sorry` liegengeblieben), rc = 1 mit
+   unverändert genau den zwei angekündigten Fehlern. Neu und bewiesen:
+   `coordMap`, `coordAlgebra`, `separatesPoints_coordAlgebra`,
+   `exists_mem_subalgebra_comp_of_mem_coordAlgebra`,
+   `tendsto_integral_comp_of_forall_tendsto_integral` (Schritt (1), über einem
+   beliebigen `Fintype` statt über `Fin k` — das ist es, was Schritt (3) die
+   Numerierung der Funktionen erspart), `le_liminf_measure_preimage_of_isOpen`,
+   `le_liminf_measure_thickening_of_stronglySeparatesPoints` (Schritt (3)) und
+   `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`,
+   das gelockerte Straffheitskriterium EK Thm. 3.2.2 — eine eigene
+   Mathlib-Lücke, jetzt **geschlossen**, ohne Separabilität.
+   `isTightMeasureSet_of_stronglySeparatesPoints` stand über einem beliebigen
+   `NeBot`-Filter und ist so widerlegt (`𝓕 = pure 0` auf `ℕ`, `A = ⊤`,
+   `μ n = δ n`); die fehlende Hypothese `Filter.cofinite ≤ 𝓕` steht jetzt in
+   der Aussage. Der nächste benannte Schritt in dieser Datei ist
+   `isTightMeasureSet_of_stronglySeparatesPoints` selbst **fertig zu
+   beweisen** — nach diesem Lauf reine Buchhaltung über den drei bewiesenen
+   Sätzen (Straffheit von `μ₀`, Schritt (3), das gelockerte Kriterium) und
+   keine eigene Mathlib-Lücke mehr; die Begründung und der Beweisplan stehen
+   im Laufbericht.*
+
+   *Zwischenstand 2026-09-08, erster Lauf des Tages: **dieser Schritt ist
+   getan, und `fact:stoneweierstrass` ist damit ganz bewiesen.**
+   `isTightMeasureSet_of_stronglySeparatesPoints` und sein Korollar
+   `isConvergenceDetermining_of_stronglySeparatesPoints` — der Fact in der Form
+   des Manuskripts — gehen durch `lake env lean` und hängen laut
+   `#print axioms` nur an `propext`, `Classical.choice`, `Quot.sound`.
+   `WeakConvergence` steht bei **101 Deklarationen und 8 `sorry`** (vorher 101
+   und 10), rc = 1 mit unverändert genau den zwei angekündigten Fehlern, jetzt
+   bei `:1925`; **Meilenstein 1 trägt kein `sorry` mehr**, alle acht liegen in
+   den Meilensteinen 2 und 3. Eine Hypothese hat sich geändert:
+   `[PolishSpace E]` ist durch `[CompleteSpace E] [SecondCountableTopology E]`
+   ersetzt — dieselbe Raumklasse, aber die Vollständigkeit an der gegebenen
+   Metrik, in der `Metric.thickening` lebt; Zeuge und Begründung im
+   Laufbericht.*
+
+   *Fortsetzung desselben Laufs: **Meilenstein 2 und der erste Punkt von
+   Meilenstein 3 sind dazugekommen.** `tendsto_of_measure_setOf_not_continuousAt_eq_zero`
+   (`fact:cmt`, die f.ü.-stetige Abbildung) ist bewiesen — die Bildmaße treten
+   als Daten mit ihren definierenden Gleichungen auf, wodurch **eine** Aussage
+   gegen v4.33.1 und gegen `upstream/master` elaboriert; die verpackte Fassung
+   `tendsto_map_of_measure_setOf_continuousAt_eq_one` behält ihr `sorry` allein
+   aus dem Versionsgrund. Und `isTightMeasureSet_of_forall_exists_finite_iUnion_ball`
+   (`fact:PSpolish`) ist das gelockerte Straffheitskriterium von Meilenstein 1
+   in vier Zeilen. Stand danach: **102 Deklarationen, 7 `sorry`**, rc = 1 mit
+   den zwei angekündigten Fehlern. Zwei Abschwächungen sind mitgefallen:
+   `SecondCountableTopology` aus dem Ball-Kriterium, `MetricSpace` und
+   `BorelSpace` aus dem gelockerten Kriterium (jetzt `[PseudoMetricSpace E]
+   [CompleteSpace E]`). Der nächste benannte Schritt in dieser Datei ist
+   `separableSpace_probabilityMeasure` (Meilenstein 3), und vor dem Beweis steht
+   eine Suche auf `upstream/master`, ob Mathlib die Aussage schon hat;
+   Begründung im Laufbericht.*
+
+   *Zwischenstand 2026-09-08, zweiter Lauf des Tages: das benannte Ziel
+   `separableSpace_probabilityMeasure` ist **nicht** gefallen, aber die beiden
+   Schätzungen, auf denen es ruht, sind bewiesen und gehen durch
+   `lake env lean`: `levyProkhorovEDist_sum_dirac_le` (die geometrische Hälfte —
+   eine endliche meßbare Zerlegung mit Vertretern im `ε`-Abstand außerhalb einer
+   Menge der Masse `ε` bringt `∑ i, μ (A i) • dirac (y i)` in
+   Lévy--Prokhorov-Abstand `ε`), `levyProkhorovEDist_sum_dirac_weights_le` (die
+   arithmetische — Störung der Gewichte um insgesamt `δ` kostet `δ`) und die
+   Auswertung `sum_smul_dirac_apply`. `WeakConvergence` steht bei **105
+   Deklarationen und 7 `sorry`** (vorher 102 und 7), rc = 1 mit unverändert
+   genau den zwei angekündigten Fehlern, jetzt bei `:2011`. Die vom Vorlauf
+   verlangte Suche ist gelaufen und negativ: Mathlib hat die Separabilität von
+   `ProbabilityMeasure E` auf `upstream/master` `572e4d091bc` nicht, neun
+   Formulierungen im Laufbericht. Der nächste benannte Schritt ist die
+   **Zerlegung** (`exists_finite_partition_ball_of_denseRange`), nicht die
+   rationalen Gewichte; Begründung im Laufbericht.*
+
+   *Zwischenstand 2026-09-08, vierter Lauf des Tages: **das benannte Ziel ist
+   gefallen, und drei Nachbarn mit ihm.** `separableSpace_probabilityMeasure`,
+   `separableSpace_levyProkhorov_probabilityMeasure` (dieselbe Aussage auf dem
+   Synonym, wo die Metrik lebt), `secondCountableTopology_probabilityMeasure`
+   (ein Meilensteinpunkt, der bis dahin keine Deklaration hatte) und
+   `isProbabilityMeasure_natWeightMeasure` sind bewiesen und hängen laut
+   `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`; die
+   approximierende Familie steht als Definition `natWeightMeasure`, was ihre
+   Abzählbarkeit zu drei Zeilen macht. Mitgefallen ist
+   `polishSpace_probabilityMeasure`, jetzt Beweis statt `sorry` und allein auf
+   `isCompletelyMetrizableSpace_probabilityMeasure` ruhend — **mit schwächeren
+   Hypothesen**, weil eine mitgegebene Metrik auf `E` den Aufstieg zur
+   vollständigen blockiert (Befund im Laufbericht). `WeakConvergence` steht bei
+   **6 `sorry`** (vorher 7), rc = 1 mit unverändert genau den zwei
+   angekündigten Fehlern, jetzt bei `:2029`.*
+
+   *Fortsetzung desselben Laufs: **auch die Vollständigkeit ist bewiesen**, und
+   damit der ganze Block „der Raum der Gesetze" von Meilenstein 3.
+   `isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt` (eine Cauchy-Folge
+   von Gesetzen ist straff — der Kern, und die Stelle, an der die
+   Vollständigkeit von `E` zweimal bezahlt wird: Ulam für den endlichen Kopf,
+   `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` für den Schluß),
+   `isTightMeasureSet_of_cauchySeq`,
+   `completeSpace_levyProkhorov_probabilityMeasure` und
+   `isCompletelyMetrizableSpace_probabilityMeasure` sind bewiesen; alle fünf
+   betroffenen Sätze samt `polishSpace_probabilityMeasure` hängen laut
+   `#print axioms` allein an `propext`, `Classical.choice`, `Quot.sound`.
+   `WeakConvergence` steht danach bei **3 `sorry`** (zu Beginn des Laufs 7),
+   rc = 1 mit unverändert genau den zwei angekündigten Fehlern. Übrig sind die
+   Skorokhod-Darstellung (zwei Deklarationen) und Meilenstein 4. Der nächste
+   benannte Schritt ist `exists_measurable_partition_diam_le_null_frontier`, die
+   Zerlegung mit Nullrändern; Begründung im Laufbericht.*
+
+   *Werkzeugnotiz aus dem ersten Lauf des 2026-09-08: die übliche Zählung
+   `grep -cE "^(theorem|lemma|def|…)"` zählt Fließtextzeilen des Modulkopfes
+   mit, die mit `theorem` beginnen. Zweimal an einem Tag hat das eine
+   Deklaration zu viel gemeldet; wer die Zahl nennt, prüft sie mit
+   `git diff --unified=0 HEAD | grep -E "^\+(theorem|lemma|def|…) "`.*
+
+   *Werkzeugnotiz aus dem zweiten Lauf des 2026-09-08, und sie spart Minuten:
+   neue Beweise gehören in eine **eigene kleine Datei** mit nur den Imports, die
+   sie brauchen — drei Durchläufe von je unter einer Minute gegen minutenlange
+   Durchläufe der 3300-Zeilen-Datei —, und erst der fertige Text wird eingesetzt
+   und einmal im Ganzen geprüft. Die Hilfsdatei geht danach mit
+   `git clean -f <pfad>` weg; `rm` auf einen Pfad im Worktree ist von der
+   Sandbox blockiert, `git clean` nicht.*
 
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in

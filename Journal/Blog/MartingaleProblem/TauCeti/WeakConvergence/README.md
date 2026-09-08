@@ -152,22 +152,49 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   opposite direction. `TrivialStar (E →ᵇ ℝ)` is not an instance in Mathlib —
   `TrivialStar ℝ` is — so `star_trivial` does not apply to a bounded continuous
   function and the pointwise `ext` is what proves `star g = g`.
-* **Missing, and the reason this milestone exists.** The Stone–Weierstrass step
-  for the *convergence* notion, in the form `fact:stoneweierstrass` states it:
-  on a Polish space a subalgebra of `E →ᵇ ℝ` that **strongly** separates points
-  is convergence determining, with no hypothesis on the family of measures.
-  Mathlib has this step under a tightness hypothesis and under mere separation
-  of points, as `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` above.
-  What is missing is exactly the passage from strong separation to that
-  hypothesis, and it is one point:
+* **The Stone–Weierstrass step for the *convergence* notion, the reason this
+  milestone exists**, in the form `fact:stoneweierstrass` states it: on a
+  complete separable metric space a subalgebra of `E →ᵇ ℝ` that **strongly**
+  separates points is convergence determining, with no hypothesis on the family
+  of measures. Mathlib has this step under a tightness hypothesis and under mere
+  separation of points, as
+  `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints` above. The passage
+  from strong separation to that hypothesis is one point:
 
-  `MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints` — let `E` be
-  Polish, `A : Subalgebra ℝ (E →ᵇ ℝ)` strongly separate points,
-  `μ : ι → ProbabilityMeasure E` along a `NeBot` filter, and let the integrals
-  over `A` converge to those of a `μ₀`. Then
-  `IsTightMeasureSet {(μ n : Measure E) | n}`. With
+  `MeasureTheory.isTightMeasureSet_of_stronglySeparatesPoints`, **proved** on
+  2026-09-08, first run — let `A : Subalgebra ℝ (E →ᵇ ℝ)` strongly separate
+  points, `μ : ι → ProbabilityMeasure E` run along a `NeBot` filter with
+  `Filter.cofinite ≤ 𝓕`, and let the integrals over `A` converge to those of a
+  `μ₀`. Then `IsTightMeasureSet {(μ n : Measure E) | n}`. With
   `StronglySeparatesPoints.separatesPoints` this feeds Mathlib's theorem and
-  yields `isConvergenceDetermining_of_stronglySeparatesPoints`.
+  yields `MeasureTheory.isConvergenceDetermining_of_stronglySeparatesPoints`,
+  **proved** in the same run: the star structure on `A` is the trivial one, as
+  in `IsSeparating.of_subalgebra`, and `Nat.cofinite_eq_atTop` discharges the
+  filter hypothesis, `IsConvergenceDetermining` quantifying over sequences.
+
+  The bundle is `[MetricSpace E] [CompleteSpace E] [SecondCountableTopology E]
+  [BorelSpace E]` and not `[PolishSpace E]`, which is the same class of spaces —
+  the two hypotheses give `PolishSpace E` as an instance — with the completeness
+  attached to the **given** metric. That is what the proof needs, because it
+  runs in that metric: `Metric.thickening` does, and the relaxed criterion of
+  step (4) turns totally bounded into compact by completeness of that metric.
+  `PolishSpace E` says only that *some* compatible metric is complete. The
+  statement holds under `PolishSpace E` alone — strong separation is a condition
+  on the neighbourhood filter, hence independent of the compatible metric
+  chosen — over a proof that upgrades the metric first.
+
+  `Filter.cofinite ≤ 𝓕` is a hypothesis of the statement, not a convenience of
+  the proof, and without it the statement is **false**. Take `ι = ℕ`,
+  `𝓕 = pure 0`, `E = ℝ`, `A = ⊤` — which strongly separates points, since
+  `fun y ↦ min (dist y x) δ` is a bounded continuous witness at `x` with
+  `ε = δ` — and `μ n = δ n`, `μ₀ = δ 0`. Convergence along `pure 0` is the
+  single equation `∫ g ∂μ 0 = ∫ g ∂μ₀`, which holds and constrains `μ n` for no
+  `n ≥ 1`; but `{δ n | n}` is not tight, every compact subset of `ℝ` being
+  bounded. What the hypothesis buys is that the complement of an `𝓕`-eventual
+  set is finite (`Filter.mem_cofinite`), which is what Ethier–Kurtz use when
+  they apply their Lemma 2.1 "to `P` and to finitely many terms of the
+  sequence". For a sequence it is free, `Nat.cofinite_eq_atTop`, so the
+  `IsConvergenceDetermining` consumer pays nothing.
 
   Strong separation is not an artefact of the route. Under separation of points
   alone the tightness-free statement is **false**, with `E = ℝ` and
@@ -191,6 +218,125 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   with `∀ y, δ ≤ dist y x → ∃ f ∈ s, ε ≤ |f y - f x|`. That is the manuscript's
   `def:separating`, and `StronglySeparatesPoints.separatesPoints` is the case
   `δ = dist y x`.
+
+  The proof runs in four named steps, Ethier–Kurtz, Theorem 3.4.5(b) (book
+  pages 113–114), each of which is a statement of this milestone in its own
+  right:
+
+  1. `MeasureTheory.tendsto_integral_comp_of_forall_tendsto_integral`,
+     **proved** on 2026-09-07, seventeenth run — for a finite index `κ` and
+     `f : κ → (E →ᵇ ℝ)` with all `f i ∈ A`, the integrals of
+     `F ∘ (fun x i ↦ f i x)` converge for **every** `F : (κ → ℝ) →ᵇ ℝ`, which is
+     weak convergence of the pushforwards on `κ → ℝ`. That the integrals of
+     **polynomials** in the `f i` converge is the hypothesis together with `A`
+     being an algebra, and that is
+     `MeasureTheory.exists_mem_subalgebra_comp_of_mem_coordAlgebra`: the
+     coordinate algebra `MeasureTheory.coordAlgebra κ = Algebra.adjoin ℝ (range
+     (coordMap κ))` pulls back into `A` along `fun x i ↦ f i x`, by
+     `Algebra.adjoin_induction`, the constants coming from
+     `A.smul_mem A.one_mem`. The `f i` are bounded, so their joint range sits in
+     `Metric.closedBall 0 (∑ i, ‖f i‖)`, compact because `κ → ℝ` is proper for
+     `κ` finite (`pi_properSpace`, `Topology/MetricSpace/ProperSpace.lean:132`)
+     and holding the range because the sup-metric compares coordinatewise
+     (`dist_pi_le_iff`); Stone–Weierstrass on that box
+     (`ContinuousMap.exists_mem_subalgebra_near_continuous_of_isCompact_of_separatesPoints`,
+     `Topology/ContinuousMap/StoneWeierstrass.lean:323`, already used in
+     Milestone 5, and the variant that keeps the compact set inside `κ → ℝ`
+     rather than passing to a subtype) extends the convergence to every bounded
+     continuous function on `κ → ℝ`, along an `ε / 3` split whose outer thirds
+     are the approximation error against *every* probability measure at once.
+     A finite `κ` rather than `Fin k` is what lets step (3) index the functions
+     by the finite set of those the cover mentions, with no enumeration.
+
+     `MeasureTheory.le_liminf_measure_preimage_of_isOpen`, **proved** in the
+     same run, is the portmanteau consequence and the form step (3) consumes:
+     for `U ⊆ κ → ℝ` open, `μ₀ ((fun x i ↦ f i x) ⁻¹' U) ≤ liminf μ n (…)`. It
+     is step (1) through `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+     and `integral_map`, then
+     `ProbabilityMeasure.le_liminf_measure_open_of_tendsto`, then
+     `Measure.map_apply` to read the pushforward back as a preimage.
+  2. `MeasureTheory.StronglySeparatesPoints.exists_finite_cover`, **proved** on
+     2026-09-07, sixteenth run — the geometric core, and free of measures: if
+     `Γ` strongly separates points,
+     then for every compact `K` and every `δ > 0` there are finitely many
+     `x 1, …, x m ∈ K`, finite families `s l ⊆ Γ` and reals `ε l > 0` such that
+     the open sets `G l = {y | max_{h ∈ s l} |h y - h (x l)| < ε l}` satisfy
+     `K ⊆ ⋃ l, G l` and `⋃ l, G l ⊆ Metric.thickening δ K`. The first inclusion
+     is compactness applied to the cover by the `G x`, each of which contains
+     its own centre; the second is strong separation read contrapositively,
+     `d y (x l) ≥ δ` forcing `max ≥ ε l`. Members of `Γ` are assumed continuous,
+     which is the only thing beyond strong separation the step uses; the finite
+     subcover comes from `IsCompact.elim_finite_subcover_image`
+     (`Topology/Compactness/Compact.lean:350`), which is the form that keeps the
+     centres inside `K`, and the second inclusion is
+     `Metric.mem_thickening_iff` (`Topology/MetricSpace/Thickening.lean:151`).
+  3. `MeasureTheory.le_liminf_measure_thickening_of_stronglySeparatesPoints`,
+     **proved** on 2026-09-07, seventeenth run —
+     `μ₀ K ≤ liminf (μ n) (Metric.thickening δ K)`. This is where steps (1) and
+     (2) meet. The finitely many functions that the finitely many sets `G l` of
+     step (2) mention are collected into one `Finset (E → ℝ)`, and that finite
+     set, read as an index type `κ`, exhibits `⋃ l, G l` as the preimage under
+     `fun y i ↦ f i y` of the **open** set
+     `⋃ l, {z | ∀ i, ↑i ∈ s (x l) → |z i - ↑i (x l)| < ε l}` of `κ → ℝ`, which
+     is open as a union of finite intersections of preimages of open half-lines
+     under coordinates. Step (1) then bounds the liminf, and the two inclusions
+     of step (2) bracket the preimage between `K` and `Metric.thickening δ K`.
+     A member of the class is a *bounded continuous* function, being drawn from
+     a subalgebra of `E →ᵇ ℝ`, and that is what supplies the bundled
+     representatives step (1) needs; a class inside `C(E, ℝ)` would not.
+  4. The conclusion, in two pieces, of which the second is a statement about
+     tightness alone and has nothing to do with separating classes:
+
+     `MeasureTheory.isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`,
+     **proved** on 2026-09-07, seventeenth run — the relaxed tightness
+     criterion, Ethier–Kurtz, Theorem 3.2.2, and was **missing from Mathlib**:
+     on a complete pseudometric space, if for every `ε > 0` and every `δ > 0`
+     there is a compact `K` with `μ ((Metric.thickening δ K)ᶜ) ≤ ε` for all
+     `μ ∈ S`, then `IsTightMeasureSet S`. Its bundle is
+     `[PseudoMetricSpace E] [CompleteSpace E]` and nothing else — the proof
+     measures no set it has not been handed, using only `measure_mono` and
+     `measure_iUnion_le`, so neither `BorelSpace` nor separability occurs, and
+     the metric may be a pseudometric. Milestone 3 draws on it:
+     `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` is its corollary. This is what
+     step (3) delivers and what
+     `IsTightMeasureSet` does not say, because the thickening of a compact set
+     is compact only on a **proper** space (`IsCompact.cthickening`,
+     `Topology/MetricSpace/Thickening.lean:300`; on a merely complete space the
+     closed unit ball of an infinite-dimensional Banach space is the
+     counterexample, being `cthickening 1 {0}`). The witnessing set is the one
+     Mathlib's own proof of the Prokhorov converse builds
+     (`isTightMeasureSet_of_isCompact_closure`, `Measure/Prokhorov.lean`):
+     for a null sequence `u m ↓ 0` and compacts `K m` catching all but
+     `ε * 2⁻¹ ^ (m + 1)` of every `μ ∈ S` in `Metric.thickening (u m) (K m)`,
+     take `⋂ m, Metric.cthickening (u m) (K m)`. It is closed, and totally
+     bounded because for every `m` it sits inside the `u m`-thickening of a
+     compact set; `TotallyBounded.isCompact_of_isClosed` and completeness make
+     it compact, and the geometric series bounds its complement by `ε`.
+
+     The bookkeeping that feeds it, **proved** on 2026-09-08, first run: `μ₀` is
+     tight on its own (`MeasureTheory.isTightMeasureSet_singleton`,
+     `Measure/Tight.lean:99`, under `IsCompletelyPseudoMetrizableSpace`,
+     `SecondCountableTopology` and `BorelSpace`), so it has a compact `K₀` with
+     `μ₀ K₀ᶜ ≤ ε / 2`, and step (3) turns that into
+     `1 - ε / 2 ≤ liminf (μ n) (Metric.thickening δ K₀)`. The half is what makes
+     the inequality **strict** against `1 - ε`, which is what
+     `Filter.eventually_lt_of_lt_liminf` consumes, so that
+     `μ n ((Metric.thickening δ K₀)ᶜ) ≤ ε` holds on an `𝓕`-eventual set. Its
+     complement is finite by `Filter.cofinite ≤ 𝓕` (`Filter.mem_cofinite`), and
+     the finitely many exceptional indices are absorbed by enlarging `K₀` by
+     their own compact sets, one from the tightness of each single `μ n`, the
+     union staying compact by `Set.Finite.isCompact_biUnion`; enlarging `K₀`
+     only enlarges the thickening, so the eventual indices keep their bound, and
+     `Metric.self_subset_thickening` covers the exceptional ones. This is
+     Ethier–Kurtz's "applying Lemma 2.1 to `P` and to finitely many terms of the
+     sequence", and it is the step at which the `pure 0` witness above breaks a
+     version without `Filter.cofinite ≤ 𝓕`. `ε ≥ 1` is a separate line: there
+     the empty set does it, a probability measure giving every set at most `1`.
+
+  Step 2 is the one that uses strong separation and nothing else. All four
+  steps are proved, and with them the milestone's own two theorems; the whole of
+  `fact:stoneweierstrass` is thereby proved on our side, and what separates it
+  from Mathlib is adoption, not a proof.
 * `MeasureTheory.isConvergenceDetermining_setOf_uniformContinuous_isBounded_support`,
   `fact:convdet` (Ethier–Kurtz, Proposition 3.4.4), first half, which no other
   point of this roadmap covers: on a metric space the bounded uniformly
@@ -218,15 +364,34 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   `LipschitzWith.add` and concerns the group operation, so it does not apply to
   a product of real valued functions; and
   `integrable_of_continuous_of_bounded`.
-* **Missing.**
-  `MeasureTheory.isConvergenceDetermining_setOf_hasCompactSupport`,
+* `MeasureTheory.tendsto_integral_of_tendsto_integral_mul`, the truncation step
+  of Ethier–Kurtz, Proposition 3.4.4, separated from the class it is applied to,
+  and the point of contact between the two halves of `fact:convdet`. For `f`
+  bounded continuous and cutoffs `ψ m : E → [0,1]` continuous with
+  `∫ ψ m ∂ν → 1`: if the integrals of `ψ m` and of `f · ψ m` converge along the
+  sequence, so do the integrals of `f`. The estimate that carries it is
+  `|∫ f ∂ρ - ∫ f · ψ m ∂ρ| ≤ ‖f‖ · (1 - ∫ ψ m ∂ρ)` for every probability
+  measure `ρ`, which turns the mass the cutoff misses into a bound on the
+  truncation error and transports it from `ν` to `μ n`. Only
+  `[TopologicalSpace E]` and `[OpensMeasurableSpace E]`; no metric.
+* `MeasureTheory.isConvergenceDetermining_setOf_hasCompactSupport`,
   `fact:convdet`, second half: if `E` is in addition locally compact and
   separable, the continuous functions of compact support are convergence
   determining. That these see no total mass costs nothing, the measures being
-  probability measures on both sides. The first half does not imply it, the
-  class being the smaller one: what is to be supplied is the approximation of a
-  uniformly continuous function of bounded support by continuous functions of
-  compact support, and that is where local compactness enters.
+  probability measures on both sides. The proof is the first half plus one
+  family of cutoffs: separability gives second countability, second countability
+  with local compactness gives σ-compactness, `compactCovering` is then an
+  increasing compact exhaustion, and Urysohn's lemma in its locally compact form
+  (`exists_continuous_one_zero_of_isCompact`, `Topology/UrysohnsLemma.lean:404`)
+  turns each stage into a continuous `ψ m : E → [0,1]` of compact support which
+  is `1` on it. Every point lies in all but finitely many stages, so `ψ m → 1`
+  pointwise and dominated convergence gives `∫ ψ m ∂ν → 1`; `f · ψ m` again has
+  compact support, and `tendsto_integral_of_tendsto_integral_mul` carries
+  convergence from the smaller class to the larger. **Uniform approximation is
+  not the route**, and cannot be: on an infinite discrete space of diameter `1`
+  the constant `1` is uniformly continuous with bounded support and has uniform
+  distance `1` from every compactly supported function. Local compactness enters
+  exactly once, in Urysohn's lemma.
 * **Missing.** Stability under uniformly bounded pointwise limits: if `Γ` is
   separating and every member of `Γ` is the pointwise limit of a uniformly
   bounded sequence from `Γ'`, then `Γ'` is separating. Dominated convergence;
@@ -466,6 +631,57 @@ tie them to the existing theorems, and prove the instances Mathlib lacks.
   convergence — would be false at `δ n`. It is also the instance the tightness
   step inside the proof is for: `ballCutoff` is the member of `Γ` that sees the
   escaping mass.
+* **`pure 0` against the filter form of the tightness step.** `ι = ℕ`,
+  `𝓕 = pure 0`, `E = ℝ`, `A = ⊤`, `μ n = δ n`, `μ₀ = δ 0`. Along `atTop` the
+  same data is the run-of-the-mill instance on which
+  `isTightMeasureSet_of_stronglySeparatesPoints` must **fail** to apply, its
+  hypothesis being false: `∫ arctan ∂δ n` does not converge to `∫ arctan ∂δ 0`.
+  Along `pure 0` the hypothesis is the single equation `∫ g ∂δ 0 = ∫ g ∂δ 0`,
+  which holds for every `g`, while `{δ n | n}` is not tight. So the instance
+  separates the two filters, and it is the one on which a version of the point
+  without `Filter.cofinite ≤ 𝓕` is false. `A = ⊤` strongly separates points on
+  `ℝ`: at `x` and `δ > 0` take the single function `fun y ↦ min (dist y x) δ`,
+  which is bounded and continuous, with `ε = δ`.
+* **The closed unit ball of `ℓ²`, against the relaxed tightness criterion.**
+  `E = ℓ²`, `K = {0}`, `δ = 1`, so `Metric.cthickening 1 K` is the closed unit
+  ball: closed, bounded, and **not** compact. A version of
+  `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`
+  that concluded by taking `Metric.cthickening δ K` for a single `δ` would be
+  false here, which is why the proof intersects over a null sequence of `δ`'s —
+  the intersection is totally bounded because *each* stage confines it near a
+  compact set. On `E = ℝ^d`, which is proper, the single-`δ` shortcut does work
+  (`IsCompact.cthickening`), and that is the instance which shows the
+  intersection is not an artefact of the statement but of the generality of `E`.
+* **The open interval, against `PolishSpace` in place of `CompleteSpace`.**
+  `E = (0, 1)` with the metric inherited from `ℝ`. It is Polish, being an open
+  subset of a Polish space (`IsOpen.polishSpace`), and its given metric is not
+  complete. `(0, 1/2]` is closed in `E` and totally bounded and not compact, so
+  `TotallyBounded.isCompact_of_isClosed` — the one step of
+  `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le`
+  that consumes completeness — has no force here, and with it the route of
+  `isTightMeasureSet_of_stronglySeparatesPoints` collapses. Its conclusion does
+  not: every finite Borel measure on `E` is tight, `E` being Polish. That is the
+  instance which says that `[CompleteSpace E]` is a hypothesis of the **proof**
+  and that a proof under `[PolishSpace E]` alone changes the metric first;
+  `Metric.thickening`, which the statement of the criterion mentions, is the
+  reason it cannot be avoided by weakening the hypothesis alone.
+* **The discrete space of diameter `1`, against the compact support class.**
+  `E = ℕ` with `dist x y = if x = y then 0 else 1`. It is a separable locally
+  compact metric space, `C_c(E)` is the finitely supported functions, and
+  `isConvergenceDetermining_setOf_hasCompactSupport` must give: if
+  `μ n {k} → ν {k}` for every `k`, then `μ n → ν` weakly. Run it on
+  `μ n = 2⁻¹ δ 0 + 2⁻¹ δ n` and `ν = 2⁻¹ δ 0 + 2⁻¹ δ 1`: the hypothesis fails at
+  `k = 1`, and rightly so, since `μ n` does not converge to `ν`.
+
+  The same instance is the one on which the route through **uniform
+  approximation** — approximate a uniformly continuous function of bounded
+  support by compactly supported ones and inherit the class property — is false.
+  The constant `1` is uniformly continuous and its support `E` is bounded, the
+  whole space having diameter `1`, while `‖1 - g‖_∞ = 1` for every finitely
+  supported `g`. A proof of the second half that goes through approximating the
+  larger class by the smaller therefore cannot exist; what carries the theorem
+  is `tendsto_integral_of_tendsto_integral_mul`, which never compares the two
+  classes uniformly and asks only that `∫ ψ m ∂ν` come close to `1`.
 * **The conditional form on a null piece.** `Ω = [0,1]` with Lebesgue measure,
   `m` the four-element σ-algebra generated by a single `P`-null set `A`, `E = ℝ`,
   `Γ = Cb(ℝ)`, `V` any `m`-measurable random variable and `U` with
@@ -496,6 +712,36 @@ which is `IsGδ.setOfPred_continuousAt`
   `μ {x | ContinuousAt h x} = 1`, one has `(μ n).map h → μ.map h` weakly.
   Recover `tendsto_map_of_tendsto_of_continuous` as the case where the set is
   everything.
+
+  Its content is `MeasureTheory.tendsto_of_measure_setOf_not_continuousAt_eq_zero`,
+  **proved** on 2026-09-08, first run: the image measures enter as data with
+  their defining equations `(μ' n : Measure E') = (μ n : Measure E).map h`, so
+  that the statement names no image *construction* and elaborates against both
+  `v4.33.1` and `upstream/master`, whose `ProbabilityMeasure.map` differ in
+  signature. The packaged form is that theorem at `μ' n = (μ n).map h`, where
+  the equations are `rfl`.
+
+  The proof is portmanteau on both sides. For `F` closed,
+  `closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}` — a continuity point
+  in the closure of the preimage has `h x ∈ closure (h '' (h ⁻¹' F)) ⊆ F` by
+  `ContinuousWithinAt.mem_closure_image` and `IsClosed.closure_subset_iff` —
+  hence `limsup (μ n) (h ⁻¹' F) ≤ ν (closure (h ⁻¹' F)) ≤ ν (h ⁻¹' F)` by
+  `ProbabilityMeasure.limsup_measure_closed_le_of_tendsto` and subadditivity,
+  and `tendsto_of_forall_isClosed_limsup_le'` (`Measure/Portmanteau.lean:617`)
+  reads that back as weak convergence.
+
+  Its hypotheses are the weakest the two portmanteau implications ask:
+  `[OpensMeasurableSpace E] [HasOuterApproxClosed E]` on the source — every
+  pseudo-EMetric space has the latter — and `[TopologicalSpace E']
+  [OpensMeasurableSpace E']` on the target, **no metric**, the converse
+  implication being stated over an arbitrary topological space and a countably
+  generated filter. Separability of `E` is not used. The hypothesis is carried
+  as `ν {x | ¬ ContinuousAt h x} = 0` and not as
+  `ν {x | ContinuousAt h x} = 1`: for a set not known to be measurable the two
+  differ, a set and its complement both being able to have outer measure `1`,
+  and this is what keeps the metric off `E'`. Where the `= 1` form is wanted,
+  `measurableSet_of_continuousAt` and `prob_compl_eq_zero_iff`
+  (`Measure/Typeclasses/Probability.lean:157`) are the passage.
 * `MeasureTheory.TendstoInDistribution.continuousAt_comp`: the same statement on
   Mathlib's structure, for `X i : Ω i → E` with `TendstoInDistribution X l Z μ μ'`
   and `μ' {ω | ContinuousAt h (Z ω)} = 1`, concluding
@@ -576,27 +822,137 @@ rule for the whole milestone: a **uniform** statement about the space of laws is
 made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
 `ProbabilityMeasure E`, and the homeomorphism carries the second kind across.
 
-* `MeasureTheory.ProbabilityMeasure.separableSpace`: for `E` a separable
+* `MeasureTheory.separableSpace_probabilityMeasure`, **proved** on 2026-09-08,
+  fourth run: for `E` a separable
   pseudometric space with `[OpensMeasurableSpace E]`, `ProbabilityMeasure E` is
   separable. The countable dense set is the finitely supported measures with
   rational masses at points of a countable dense sequence of `E`
   (`TopologicalSpace.exists_dense_seq`); the estimate is run in the
-  Lévy–Prokhorov pseudometric through `probabilityMeasureHomeomorph`, and the
-  partition of `E` into countably many measurable sets of diameter at most `ε`
-  that it needs is `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
-  (`LevyProkhorovMetric.lean:540`). Completeness of `E` is nowhere used.
-* `MeasureTheory.ProbabilityMeasure.secondCountableTopology`: the item above,
+  Lévy–Prokhorov pseudometric through `probabilityMeasureHomeomorph`.
+  Completeness of `E` is nowhere used. Mathlib has none of this: searched on
+  `upstream/master` `572e4d091bc` on 2026-09-08 for `SeparableSpace
+  (ProbabilityMeasure`, `SeparableSpace (FiniteMeasure`, `SeparableSpace
+  (LevyProkhorov`, `PolishSpace (ProbabilityMeasure`, `CompleteSpace
+  (LevyProkhorov`, for `SeparableSpace` and `ProbabilityMeasure` in either
+  order on one line, and for `dense` next to `dirac` — no hit; the four files
+  that mention `LevyProkhorov` at all are `FiniteMeasurePi`,
+  `FiniteMeasureProd`, `LevyProkhorovMetric` and `Prokhorov`, and
+  `Measure/DiracProba.lean` embeds `E` into `ProbabilityMeasure E` without
+  saying anything about the target's separability.
+
+  Two estimates carry the proof, and both are **proved** on 2026-09-08, second
+  run, in `Suggested.lean`.
+
+  * `MeasureTheory.levyProkhorovEDist_sum_dirac_le`, the geometric half: for a
+    finite measurable partition `A : Fin n → Set E` of `E`, a set `G` with
+    `μ G ≤ ε`, and points `y i` with `dist z (y i) ≤ ε.toReal` for every
+    `z ∈ A i \ G`, the discrete measure `∑ i, μ (A i) • Measure.dirac (y i)` is
+    at Lévy–Prokhorov distance at most `ε` from `μ`. Neither finiteness of `μ`
+    nor separability of `E` is a hypothesis: the partition is where they will
+    enter. Both inequalities of
+    `MeasureTheory.levyProkhorovEDist_le_of_forall`
+    (`LevyProkhorovMetric.lean:95`) come from the same two facts — off `G`,
+    every point of `B` lies in an `A i` whose representative is then in the
+    thickening of `B`, and conversely the discrete mass of `B` is
+    `μ (⋃ i ∈ {i | y i ∈ B}, A i)` by disjointness, a union that off `G` lies
+    in the thickening of `B`.
+  * `MeasureTheory.levyProkhorovEDist_sum_dirac_weights_le`, the arithmetic
+    half: two discrete measures on the same atoms are Lévy–Prokhorov `δ`-close
+    once their weights satisfy `c i ≤ q i + d i` and `q i ≤ c i + d i` with
+    `∑ i, d i ≤ δ`. The discrepancies appear as a third vector rather than as
+    `|c i - q i|` because truncated subtraction in `ℝ≥0∞` is not worth using;
+    this is the step that replaces the weights `μ (A i)` by rational ones and
+    so makes the family countable.
+
+  Two further statements carry it, and both are **proved** on 2026-09-08, third
+  run, in `Suggested.lean`.
+
+  * `MeasureTheory.exists_finite_partition_ball_of_denseRange`, the partition:
+    for a dense sequence `x`, a finite `μ`, a mass `ε > 0` and a radius `r > 0`
+    there are a finite measurable partition `A : Fin n → Set E`, indices
+    `k : Fin n → ℕ` and a set `G` with `μ G ≤ ε` such that off `G` every point
+    of `A i` is within `r` of `x (k i)`. It is the disjointification
+    `A i = ball (x i) r \ ⋃ j < i, ball (x j) r` of the first `n` balls together
+    with the uncovered remainder `G = (⋃ j < n, ball (x j) r)ᶜ` as the last
+    piece, so `G` is at once a piece and the exceptional set and the condition
+    on it is vacuous; the cutoff `n` exists because the unions increase to `E`
+    by density, so their complements decrease to `∅` and, `μ` being finite,
+    their masses tend to `0` (`tendsto_measure_iInter_atTop`). The
+    representatives are returned as *indices*, not as points: it is the indices
+    that make the approximating family countable. Mathlib's
+    `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
+    (`LevyProkhorovMetric.lean:540`) is the same disjointification but
+    *countably* indexed and with the representatives forgotten, which is why the
+    partition is built here rather than taken from there. This statement is the
+    one place where `SeparableSpace E` is consumed.
+  * `MeasureTheory.exists_nat_weights`, the rational weights: a vector
+    `c : Fin n → ℝ≥0∞` of total mass `1` is approximated to within a total error
+    `δ` by the *normalised* integer vector `m i / ∑ j, m j`. Take
+    `m i = ⌊(c i).toReal * N⌋₊ + 1`; then `∑ j, m j` lies between `N` and
+    `N + n`, each `m i` between `(c i).toReal * N` and `(c i).toReal * N + 1`,
+    so each normalised weight is within `(n + 1) / N` of `c i` and the total
+    discrepancy is at most `n (n + 1) / N`. Normalising, rather than pinning the
+    sum to `1` by rounding down and letting one exceptional index absorb the
+    slack, is what makes the step short: `∑ i, m i / ∑ j, m j = 1` holds by
+    construction, so there is neither truncated subtraction in `ℝ≥0∞` nor a case
+    distinction at an exceptional index. The `+ 1` in the numerators is what
+    keeps `∑ j, m j` positive when every floor vanishes.
+
+  The bookkeeping that joins them, **proved** on 2026-09-08, fourth run: with
+  `ε = ENNReal.ofReal (r / 4)`, apply the partition with radius `ε.toReal`, then
+  `levyProkhorovEDist_sum_dirac_le`, then `exists_nat_weights` to
+  `c i = μ (A i)` — whose total is `1` because `A` is a partition, by
+  `measure_iUnion` and `tsum_fintype` — then
+  `levyProkhorovEDist_sum_dirac_weights_le`; `levyProkhorovEDist_triangle`
+  (`LevyProkhorovMetric.lean:127`) gives `2ε`, that is `r / 2 < r`. The family is
+  named by `MeasureTheory.natWeightMeasure x k m`, a definition and not a
+  description, which is what makes its countability a line: it is the range of a
+  function on `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, pulled back along
+  `MeasureTheory.ProbabilityMeasure.toMeasure_injective`
+  (`Measure/ProbabilityMeasure.lean:128`) by `Set.Countable.preimage`. That it is
+  a family of *probability* measures is
+  `MeasureTheory.isProbabilityMeasure_natWeightMeasure`, the one place where the
+  `+ 1` of `exists_nat_weights` is needed: the total mass is
+  `(∑ j, m j) / (∑ j, m j)`, and `ENNReal.div_self` wants a nonzero denominator.
+
+  Two things about *where* the density is proved, both discovered in the doing.
+  `LevyProkhorov` is a one-field structure and not a type synonym, so a set of
+  laws and its image under `LevyProkhorov.ofMeasure` are different terms and the
+  density has to be **carried** across, not reinterpreted; it is proved on the
+  synonym, where `Metric.dense_iff` applies, and carried back by
+  `DenseRange.separableSpace` (`Topology/Bases.lean:378`) along
+  `probabilityMeasureHomeomorph.symm`, whose surjectivity gives the dense range
+  for free. The empty `E` is a separate line and not a hypothesis:
+  `TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`)
+  asks for `[Nonempty E]`, and on an empty `E` there is no probability measure
+  at all — `μ univ = 1` while `univ = ∅` — so `ProbabilityMeasure E` is empty,
+  hence countable, hence separable.
+  The separability is stated twice, and both statements are wanted:
+  `MeasureTheory.separableSpace_levyProkhorov_probabilityMeasure` on the synonym,
+  which is where the estimate lives and what the next two items consume, and
+  `MeasureTheory.separableSpace_probabilityMeasure` on the space of laws, which is
+  the statement of the milestone.
+* `MeasureTheory.secondCountableTopology_probabilityMeasure`, **proved** on
+  2026-09-08, fourth run: the item above,
   read on the synonym, where there is a uniformity to argue with —
   `UniformSpace.secondCountable_of_separable`
-  (`Mathlib/Topology/UniformSpace/Cauchy.lean:931`) asks for a uniform space with
+  (`Mathlib/Topology/UniformSpace/Cauchy.lean:932`) asks for a uniform space with
   countably generated uniformity and does not apply to `ProbabilityMeasure E`
   itself — and carried back by `Homeomorph.secondCountableTopology`
-  (`Mathlib/Topology/Homeomorph/Lemmas.lean:36`).
-* `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`: on a
-  complete second countable metric space, a set `S` of probability measures is
-  tight as soon as for every `ε > 0` and every `r > 0` there is a finite
-  `F ⊆ E` with `μ (⋃ x ∈ F, ball x r)ᶜ ≤ ε` for every `μ ∈ S` — uniform total
-  boundedness in measure. This is the skeleton of the proof of
+  (`Mathlib/Topology/Homeomorph/Lemmas.lean:37`). Like the separability, it needs
+  no completeness of `E`.
+* `MeasureTheory.isTightMeasureSet_of_forall_exists_finite_iUnion_ball`,
+  **proved** on 2026-09-08, first run: on a complete pseudometric space, a set
+  `S` of probability measures is tight as soon as for every `ε > 0` and every
+  `r > 0` there is a finite `F ⊆ E` with `μ (⋃ x ∈ F, ball x r)ᶜ ≤ ε` for every
+  `μ ∈ S` — uniform total boundedness in measure. It is
+  `isTightMeasureSet_of_forall_exists_isCompact_measure_compl_thickening_le` of
+  Milestone 1 in four lines: a finite set is compact, and
+  `Metric.thickening_eq_biUnion_ball` (`Topology/MetricSpace/Thickening.lean:167`)
+  identifies the union of the balls around its points with its thickening, so
+  the hypothesis is that criterion's at `K = F`. `SecondCountableTopology E`
+  stood among the hypotheses and that route does not use it, so it is gone.
+  This is the skeleton of the proof of
   `MeasureTheory.isTightMeasureSet_of_isCompact_closure`
   (`Mathlib/MeasureTheory/Measure/Prokhorov.lean:634`), where it is inlined:
   the compact set `⋂ m, ⋃ i ≤ k m, closure (ball (D i) (u m))`, the summation of
@@ -606,7 +962,17 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   costs nothing there — that theorem becomes its corollary — and it is what the
   completeness below needs, since a Cauchy sequence has no compact closure to
   start from.
-* `MeasureTheory.LevyProkhorov.completeSpace_probabilityMeasure`: for `E` a
+* `MeasureTheory.isTightMeasureSet_of_forall_exists_levyProkhorovEDist_lt` and its
+  packaged form `MeasureTheory.isTightMeasureSet_of_cauchySeq`, **proved** on
+  2026-09-08, fourth run: a Cauchy sequence of laws is tight. The first is stated
+  with the Lévy–Prokhorov distance spelled out and no `CauchySeq` in sight; the
+  second reads the hypothesis off `EMetric.cauchySeq_iff'`, which needs nothing
+  because `edist` on the synonym *is* `levyProkhorovEDist`
+  (`LevyProkhorovMetric.lean:324`). This is where the completeness of `E` is
+  spent, and twice over: through Ulam's theorem for the finite head and through
+  `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` for the conclusion.
+* `MeasureTheory.completeSpace_levyProkhorov_probabilityMeasure`, **proved** on
+  2026-09-08, fourth run: for `E` a
   complete separable metric space, `CompleteSpace (LevyProkhorov (ProbabilityMeasure E))`.
   Three steps.
   * A Cauchy sequence `μ` is tight. Fix `ε` and `r` and take `N` with
@@ -626,23 +992,38 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
     metrizable a compact set in it is sequentially compact, so a subsequence
     converges.
   * A Cauchy sequence with a convergent subsequence converges.
-* `MeasureTheory.ProbabilityMeasure.isCompletelyMetrizableSpace`: for `E` Polish
+* `MeasureTheory.isCompletelyMetrizableSpace_probabilityMeasure`, **proved** on
+  2026-09-08, fourth run: for `E` complete separable metric
   and Borel, transport the previous item along `probabilityMeasureHomeomorph`
   with `Homeomorph.isClosedEmbedding`
   (`Mathlib/Topology/Homeomorph/Defs.lean:296`) and
   `Topology.IsClosedEmbedding.IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:249`).
-* `MeasureTheory.ProbabilityMeasure.polishSpace`: for `E` Polish,
-  `ProbabilityMeasure E` is Polish. Nothing is left to prove: `PolishSpace` is
+* `MeasureTheory.polishSpace_probabilityMeasure`, **proved** on 2026-09-08,
+  fourth run, and by the end of that run resting on nothing unproved: for `E` Polish,
+  `ProbabilityMeasure E` is Polish. `PolishSpace` is
   `SecondCountableTopology` together with `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:62`) and the instance at `:65`
   builds it from separability and complete metrizability, so this is the first
   and the fourth item. Here the completeness of `E` is used; separability alone
   gives the first two items and the whole of the rest of this milestone.
 
+  The statement carries **no metric on `E`** — `[TopologicalSpace E]`,
+  `[PolishSpace E]`, `[BorelSpace E]` — and that is not economy but necessity.
+  With a `[MetricSpace E]` in the signature, the complete metric supplied by
+  `TopologicalSpace.upgradeIsCompletelyMetrizable`
+  (`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:205`) is a second,
+  competing instance: the `CompleteSpace E` read off the upgrade is stated for
+  the upgraded uniformity while the goal wants the given one, and the two do not
+  meet. A Polish space has no distinguished metric; letting the upgrade provide
+  the only one makes the hypotheses of both inputs available at once. The same
+  reading applies to every statement of this milestone that wants `E` Polish
+  rather than `E` metric and complete.
+
 The representation theorem itself:
 
-* `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le_null_frontier`:
+* `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le_null_frontier`,
+  **proved** on 2026-09-08, fifth run:
   for a finite measure `μ` on a separable metric space `E` and `ε > 0`, a
   countable measurable partition of `E` into sets of diameter at most `ε` all of
   whose frontiers are `μ`-null. Mathlib's partition
@@ -659,13 +1040,121 @@ The representation theorem itself:
   (`Mathlib/Topology/Closure.lean:537,544,528`) bound the frontier of a finite
   Boolean combination by the union of the frontiers. This is the step that
   carries the whole Skorokhod approximation.
+
+  The radii are drawn from the **open** interval `(ε/4, ε/2)`, one per centre.
+  The lower bound is what still makes the balls cover `E`, the upper bound is
+  what keeps the diameter of a ball below `ε`, and the interval must be open on
+  both sides because `exists_null_frontier_thickening` only avoids countably
+  many charged radii — it produces a radius in an interval, not a prescribed
+  one. The frontier bound is split off as two statements of its own, both proved:
+  `MeasureTheory.frontier_biInter_range_subset`, the finite intersection case
+  that Mathlib has only for two sets, and
+  `MeasureTheory.frontier_disjointed_subset`, which reads `disjointed S n` as
+  `S n ∩ ⋂ j < n, (S j)ᶜ` through `disjointed_eq_inter_compl`
+  (`Mathlib/Order/Disjointed.lean:323`) and so bounds its frontier by the
+  frontiers of `S 0, …, S n`.
+* `MeasureTheory.tendsto_tsum_posPart_sub_of_tendsto_measure`, **proved** on
+  2026-09-08, fifth run: for a countable measurable partition `A` and laws with
+  `μ n (A i) → ν (A i)` for every `i`, the sum over *all* pieces at once,
+  `∑' i, max (ν (A i) - μ n (A i)) 0`, tends to `0`. This is the analytic content
+  the Skorokhod construction consumes — that the coupling built stage by stage
+  misplaces a total mass tending to zero — and it does not follow from the
+  piecewise convergence by any finite argument. The proof is Tannery's theorem,
+  `tendsto_tsum_of_dominated_convergence`
+  (`Mathlib/Analysis/Normed/Group/Tannery.lean:40`), with `ν (A i)` as the
+  dominating summable function; the domination
+  `max (ν (A i) - μ n (A i)) 0 ≤ ν (A i)` holds because `μ n (A i) ≥ 0`, and that
+  is why the *positive part* and not the absolute value is the quantity with an
+  `n`-free bound.
+* `MeasureTheory.tendsto_tsum_abs_sub_of_tendsto_measure`, **proved** on the same
+  day: the same for `∑' i, |ν (A i) - μ n (A i)|`, the total variation distance
+  of the two laws read on the partition, which is the form the coupling consumes.
+  Not a second application of Tannery — the absolute values admit no `n`-free
+  summable bound — but a consequence of the previous item through
+  `|d| = 2 * max d 0 - d` and `∑' i, (ν (A i) - μ n (A i)) = 1 - 1 = 0`. The
+  covering hypothesis `⋃ i, A i = univ` is spent here and nowhere else; the two
+  small statements it runs through, `summable_toReal_measure_of_pairwise_disjoint`
+  and `tsum_toReal_measure_eq_one`, are proved with it.
+* `MeasureTheory.exists_measurable_map_restrict_volume_eq_sum_smul_dirac`,
+  **proved** on 2026-09-08, sixth run: a
+  probability vector `p : ℕ → ℝ≥0∞` and a sequence of points `x : ℕ → E` are
+  realised by a measurable map out of `(0,1]` with Lebesgue measure — the map
+  that is constant `x i` on the `i`-th interval of the partition of `(0,1]` by
+  the partial sums of `p`. This is the construction step of the representation,
+  separated from the analysis: no weak convergence enters it, only the
+  bookkeeping of `Finset.sum` over `Set.Ioc`. The image measure is written with
+  `Measure.sum`, Mathlib's form for a countable superposition.
+
+  Two points of the construction are not free, and both are about the right
+  endpoint. With `S i = ∑ j ∈ Finset.range i, p j` and `s i = (S i).toReal`, the
+  map is `g y = x (Nat.find (h y))` for the predicate
+  `P i y := y ≤ s (i + 1) ∨ 1 ≤ y`, and its measurability is
+  `Measurable.find` (`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:516`)
+  applied to the constant maps `fun _ => x i`. The disjunct `1 ≤ y` is what makes
+  `h : ∀ y, ∃ i, P i y` true at all: for `y < 1` there is an `i` with
+  `y ≤ s (i + 1)` because `s i → 1`, but at `y = 1` there need be none, since the
+  partial sums reach `1` only when `p` has finite support. That single point is
+  Lebesgue-null, and so is `Set.Ioc 0 1 \ ⋃ i, Set.Ioc (s i) (s (i + 1))`, whose
+  measure is `1 - ∑' i, p i = 0`; the identification `g = x i` on
+  `Set.Ioc (s i) (s (i + 1)) \ {1}` and those two null sets are the whole proof of
+  the image measure.
+* `MeasureTheory.exists_coupling_tsum_offDiag_le`, **proved** on 2026-09-08,
+  sixth run: two probability vectors `p q : ℕ → ℝ≥0∞` are the marginals of a
+  `π : ℕ → ℕ → ℝ≥0∞` whose off-diagonal mass `∑' i, ∑' j, if i = j then 0 else π i j`
+  is at most `∑' i, (p i - q i)`, the truncated subtraction of `ℝ≥0∞` — half the
+  total variation distance, and exactly the quantity that
+  `tendsto_tsum_abs_sub_of_tendsto_measure` drives to zero when the vectors are
+  the masses of a partition. This is the index-level half of the one-stage
+  coupling: it decides *which piece* the two realisations land in and says
+  nothing about where inside the piece.
+
+  The coupling is `π i j = (if i = j then min (p i) (q i) else 0) + a i * b j / D`
+  with `a i = p i - q i`, `b j = q j - p j`, `D = ∑' i, a i`: the common part on
+  the diagonal, the two residues coupled independently after normalising by
+  their common total mass. Two things are settled by writing it this way. The
+  degenerate case `D = 0` — the vectors are equal — needs no separate treatment,
+  because `a i = 0` makes the second summand `0` through `zero_mul` and `0 / 0`
+  never has to be evaluated; and the diagonal is a **summand** rather than the
+  `then` branch of the whole formula, because an `if` there would have to remove
+  `a i * b i / D` from the row sum, and `ℝ≥0∞` has no subtraction that survives a
+  `tsum`. That the two residues have the same total mass, `∑' i, a i = ∑' j, b j`,
+  is not additivity of truncated subtraction but the cancellation
+  `M + D = 1 = M + D'` through `ENNReal.add_right_inj`, available because
+  `M = ∑' i, min (p i) (q i) ≤ 1` is finite.
+* The one-stage coupling: for `ε > 0` and `μ n → ν` weakly there is an `N` such
+  that for `n ≥ N` there are `X n` and `Y` on a common probability space with
+  laws `μ n` and `ν` and `P (dist (X n) Y > ε) < ε`. This is where the items
+  above meet: the partition of diameter `≤ ε` with `ν`-null frontiers gives, by
+  `tendsto_measure_of_null_frontier`, the convergence of every piece;
+  `tendsto_tsum_abs_sub_of_tendsto_measure` turns that into a bound on the total
+  mass on which the two realisations fall into different pieces;
+  `exists_coupling_tsum_offDiag_le` produces the joint law of the two piece
+  indices; and the discrete realisation
+  `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`, applied to that
+  joint law on `ℕ × ℕ`, puts the index pair on `((0,1], Lebesgue)`.
+
+  **The common probability space is a product, and it is not `((0,1], Lebesgue)`
+  alone.** The index pair fixes only which piece each realisation lands in; the
+  position inside the piece is distributed according to the conditional law
+  `μ (· ∩ A i) / μ (A i)`, and realising *that* by a measurable map out of the
+  unit interval is not available for a separable metric `E` — it is the Borel
+  isomorphism theorem, which needs `E` Polish and is a strictly bigger hypothesis
+  than the rest of this milestone uses. The conditional laws therefore enter as
+  **coordinates of a product measure** and not as functions of one uniform
+  variable: the space is `((0,1], Lebesgue)` for the index pair times a
+  `MeasureTheory.Measure.pi` of the conditional laws, and the random variables
+  are the projections. This is how Ethier–Kurtz build it (Lemma 3.1.3, p. 100:
+  “Let `X, Y₀, …, Y_N, ξ` be independent random variables on some probability
+  space … with `X, Y₀, …, Y_N` having distributions `P, Q₀, …, Q_N` and `ξ`
+  uniformly distributed on `[0,1]`”), and no step of their proof asks for a
+  measurable map out of the unit interval.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
   Separability is the only hypothesis; the construction uses the partition of
   the previous item, so that `Portmanteau`'s
   `MeasureTheory.tendsto_measure_of_null_frontier` (`Portmanteau.lean:243`)
-  applies to each piece, and the unit interval with Lebesgue measure as the
+  applies to each piece, and the product space of the previous item as the
   common space.
 * The version for a single limit along a filter with a countable basis.
 
@@ -681,7 +1170,7 @@ exactly what an almost surely convergent realisation witnesses.
 **Acceptance examples.**
 
 * **`E = ℚ`: separability without completeness.** `ProbabilityMeasure ℚ` is
-  separable by `ProbabilityMeasure.separableSpace`, which asks for nothing else,
+  separable by `separableSpace_probabilityMeasure`, which asks for nothing else,
   and `LevyProkhorov (ProbabilityMeasure ℚ)` is **not** complete. Take
   `q : ℕ → ℚ` with `q n → Real.sqrt 2` in `ℝ` and the two sides alternating.
   Then `δ (q n)` is Cauchy, the Lévy–Prokhorov distance being controlled by
@@ -695,7 +1184,7 @@ exactly what an almost surely convergent realisation witnesses.
   uncountable set with `dist x y = 1` for `x ≠ y` — a complete metric space, not
   separable. The family `{δ x | x : E}` is uncountable and pairwise at
   Lévy–Prokhorov distance `1`, so `ProbabilityMeasure E` is not separable. This
-  is the instance on which a version of `ProbabilityMeasure.separableSpace`
+  is the instance on which a version of `separableSpace_probabilityMeasure`
   without the hypothesis on `E` is false.
 * **Skorokhod does not upgrade a given sequence.** `μ n = μ = ` the fair
   Bernoulli law on `ℝ` for every `n`, realised by independent coins `Y n` on
@@ -720,6 +1209,28 @@ exactly what an almost surely convergent realisation witnesses.
   radius per centre inside `(ε/2, ε)`, avoiding the countably many charged
   spheres. This is the step the Skorokhod approximation rests on, and the
   instance on which the fixed-radius shortcut fails.
+* **The geometric law on `(0,1]`, and the point that has to be thrown away.**
+  `p i = 2 ^ (-(i+1))` and `x i = (i : ℝ)`: `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`
+  must return the map that is constant `i` on `(1 - 2 ^ (-i), 1 - 2 ^ (-(i+1))]`,
+  whose image of Lebesgue measure on `(0,1]` is the geometric law. Here every
+  partial sum satisfies `s i < 1`, so the predicate `y ≤ s (i+1)` alone is
+  satisfied by **no** `i` at `y = 1` and `Nat.find` cannot be formed at all: the
+  disjunct `1 ≤ y` is not a convenience but what makes the definition
+  well-formed. The neighbouring instance that hides this is `p = (1, 0, 0, …)`,
+  where `s 1 = 1` already and the naive predicate happens to work — which is why
+  it is the wrong instance to test on.
+* **The quantile coupling misses the bound by a factor that is not bounded.**
+  `p = (1/2, 1/2, 0, …)` and `q = (0, 1/2, 1/2, 0, …)`, so
+  `∑' i, (p i - q i) = 1/2`. Reading both vectors on the *same* uniform variable
+  through the previous item — the obvious way to couple two laws already
+  realised on `(0,1]` — gives `X = 0, Y = 1` on `(0,1/2]` and `X = 1, Y = 2` on
+  `(1/2,1]`, so the two disagree with probability `1`, twice the bound.
+  `exists_coupling_tsum_offDiag_le` must attain it: with
+  `min (p i) (q i) = (0, 1/2, 0, …)` the diagonal carries `π 1 1 = 1/2` and the
+  residues `a = (1/2, 0, …)`, `b = (0, 0, 1/2, …)` give the single off-diagonal
+  atom `π 0 2 = 1/2`. The degenerate neighbour is `p = q`, where `D = 0` and the
+  coupling must come out as the diagonal `π i j = if i = j then p i else 0`
+  without `0 / 0` ever being evaluated.
 
 ## Milestone 4: uniform integrability against convergence in distribution
 
