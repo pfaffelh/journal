@@ -1075,7 +1075,8 @@ The representation theorem itself:
   covering hypothesis `⋃ i, A i = univ` is spent here and nowhere else; the two
   small statements it runs through, `summable_toReal_measure_of_pairwise_disjoint`
   and `tsum_toReal_measure_eq_one`, are proved with it.
-* `MeasureTheory.exists_measurable_map_restrict_volume_eq_sum_smul_dirac`: a
+* `MeasureTheory.exists_measurable_map_restrict_volume_eq_sum_smul_dirac`,
+  **proved** on 2026-09-08, sixth run: a
   probability vector `p : ℕ → ℝ≥0∞` and a sequence of points `x : ℕ → E` are
   realised by a measurable map out of `(0,1]` with Lebesgue measure — the map
   that is constant `x i` on the `i`-th interval of the partition of `(0,1]` by
@@ -1097,21 +1098,63 @@ The representation theorem itself:
   measure is `1 - ∑' i, p i = 0`; the identification `g = x i` on
   `Set.Ioc (s i) (s (i + 1)) \ {1}` and those two null sets are the whole proof of
   the image measure.
+* `MeasureTheory.exists_coupling_tsum_offDiag_le`, **proved** on 2026-09-08,
+  sixth run: two probability vectors `p q : ℕ → ℝ≥0∞` are the marginals of a
+  `π : ℕ → ℕ → ℝ≥0∞` whose off-diagonal mass `∑' i, ∑' j, if i = j then 0 else π i j`
+  is at most `∑' i, (p i - q i)`, the truncated subtraction of `ℝ≥0∞` — half the
+  total variation distance, and exactly the quantity that
+  `tendsto_tsum_abs_sub_of_tendsto_measure` drives to zero when the vectors are
+  the masses of a partition. This is the index-level half of the one-stage
+  coupling: it decides *which piece* the two realisations land in and says
+  nothing about where inside the piece.
+
+  The coupling is `π i j = (if i = j then min (p i) (q i) else 0) + a i * b j / D`
+  with `a i = p i - q i`, `b j = q j - p j`, `D = ∑' i, a i`: the common part on
+  the diagonal, the two residues coupled independently after normalising by
+  their common total mass. Two things are settled by writing it this way. The
+  degenerate case `D = 0` — the vectors are equal — needs no separate treatment,
+  because `a i = 0` makes the second summand `0` through `zero_mul` and `0 / 0`
+  never has to be evaluated; and the diagonal is a **summand** rather than the
+  `then` branch of the whole formula, because an `if` there would have to remove
+  `a i * b i / D` from the row sum, and `ℝ≥0∞` has no subtraction that survives a
+  `tsum`. That the two residues have the same total mass, `∑' i, a i = ∑' j, b j`,
+  is not additivity of truncated subtraction but the cancellation
+  `M + D = 1 = M + D'` through `ENNReal.add_right_inj`, available because
+  `M = ∑' i, min (p i) (q i) ≤ 1` is finite.
 * The one-stage coupling: for `ε > 0` and `μ n → ν` weakly there is an `N` such
-  that for `n ≥ N` there are `X n` and `Y` on `((0,1], Lebesgue)` with laws
-  `μ n` and `ν` and `P (dist (X n) Y > ε) < ε`. This is where the three items
+  that for `n ≥ N` there are `X n` and `Y` on a common probability space with
+  laws `μ n` and `ν` and `P (dist (X n) Y > ε) < ε`. This is where the items
   above meet: the partition of diameter `≤ ε` with `ν`-null frontiers gives, by
   `tendsto_measure_of_null_frontier`, the convergence of every piece;
   `tendsto_tsum_abs_sub_of_tendsto_measure` turns that into a bound on the total
-  mass on which the two realisations fall into different pieces; and the discrete
-  realisation puts both on the same interval, matched piece by piece.
+  mass on which the two realisations fall into different pieces;
+  `exists_coupling_tsum_offDiag_le` produces the joint law of the two piece
+  indices; and the discrete realisation
+  `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`, applied to that
+  joint law on `ℕ × ℕ`, puts the index pair on `((0,1], Lebesgue)`.
+
+  **The common probability space is a product, and it is not `((0,1], Lebesgue)`
+  alone.** The index pair fixes only which piece each realisation lands in; the
+  position inside the piece is distributed according to the conditional law
+  `μ (· ∩ A i) / μ (A i)`, and realising *that* by a measurable map out of the
+  unit interval is not available for a separable metric `E` — it is the Borel
+  isomorphism theorem, which needs `E` Polish and is a strictly bigger hypothesis
+  than the rest of this milestone uses. The conditional laws therefore enter as
+  **coordinates of a product measure** and not as functions of one uniform
+  variable: the space is `((0,1], Lebesgue)` for the index pair times a
+  `MeasureTheory.Measure.pi` of the conditional laws, and the random variables
+  are the projections. This is how Ethier–Kurtz build it (Lemma 3.1.3, p. 100:
+  “Let `X, Y₀, …, Y_N, ξ` be independent random variables on some probability
+  space … with `X, Y₀, …, Y_N` having distributions `P, Q₀, …, Q_N` and `ξ`
+  uniformly distributed on `[0,1]`”), and no step of their proof asks for a
+  measurable map out of the unit interval.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
   Separability is the only hypothesis; the construction uses the partition of
   the previous item, so that `Portmanteau`'s
   `MeasureTheory.tendsto_measure_of_null_frontier` (`Portmanteau.lean:243`)
-  applies to each piece, and the unit interval with Lebesgue measure as the
+  applies to each piece, and the product space of the previous item as the
   common space.
 * The version for a single limit along a filter with a countable basis.
 
@@ -1166,6 +1209,28 @@ exactly what an almost surely convergent realisation witnesses.
   radius per centre inside `(ε/2, ε)`, avoiding the countably many charged
   spheres. This is the step the Skorokhod approximation rests on, and the
   instance on which the fixed-radius shortcut fails.
+* **The geometric law on `(0,1]`, and the point that has to be thrown away.**
+  `p i = 2 ^ (-(i+1))` and `x i = (i : ℝ)`: `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`
+  must return the map that is constant `i` on `(1 - 2 ^ (-i), 1 - 2 ^ (-(i+1))]`,
+  whose image of Lebesgue measure on `(0,1]` is the geometric law. Here every
+  partial sum satisfies `s i < 1`, so the predicate `y ≤ s (i+1)` alone is
+  satisfied by **no** `i` at `y = 1` and `Nat.find` cannot be formed at all: the
+  disjunct `1 ≤ y` is not a convenience but what makes the definition
+  well-formed. The neighbouring instance that hides this is `p = (1, 0, 0, …)`,
+  where `s 1 = 1` already and the naive predicate happens to work — which is why
+  it is the wrong instance to test on.
+* **The quantile coupling misses the bound by a factor that is not bounded.**
+  `p = (1/2, 1/2, 0, …)` and `q = (0, 1/2, 1/2, 0, …)`, so
+  `∑' i, (p i - q i) = 1/2`. Reading both vectors on the *same* uniform variable
+  through the previous item — the obvious way to couple two laws already
+  realised on `(0,1]` — gives `X = 0, Y = 1` on `(0,1/2]` and `X = 1, Y = 2` on
+  `(1/2,1]`, so the two disagree with probability `1`, twice the bound.
+  `exists_coupling_tsum_offDiag_le` must attain it: with
+  `min (p i) (q i) = (0, 1/2, 0, …)` the diagonal carries `π 1 1 = 1/2` and the
+  residues `a = (1/2, 0, …)`, `b = (0, 0, 1/2, …)` give the single off-diagonal
+  atom `π 0 2 = 1/2`. The degenerate neighbour is `p = q`, where `D = 0` and the
+  coupling must come out as the diagonal `π i j = if i = j then p i else 0`
+  without `0 / 0` ever being evaluated.
 
 ## Milestone 4: uniform integrability against convergence in distribution
 

@@ -149,6 +149,18 @@ kein gebautes Mathlib und taugt zu nichts.
    `forall_fdd_of_isMPSolution`, die Richtung von links nach rechts; die
    Rechnung steht im Laufbericht.*
 
+   *Zwischenstand 2026-09-08, sechster Lauf des Tages: `WeakConvergence` steht
+   bei **zwei** `sorry` (gemessen am Übersetzerlauf, dazu die zwei bekannten
+   Fehler in `tendsto_map_of_measure_setOf_continuousAt_eq_one` aus dem
+   Versionsgrund) — `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`
+   ist bewiesen, und `exists_coupling_tsum_offDiag_le` ist als neue, bewiesene
+   Deklaration dazugekommen. Übrig sind `exists_ae_tendsto_of_tendsto`
+   (Meilenstein 3) und `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`
+   (Meilenstein 4). Der nächste Schritt in dieser Datei ist die einstufige
+   Kopplung auf dem Produktraum, in drei benannten Stücken (b1)–(b3) im
+   Laufbericht im Inventar; ihr Bauplan ist im selben Lauf berichtigt worden,
+   weil er auf `((0,1], Lebesgue)` allein nicht durchgeht.*
+
    *Nachtrag desselben Laufs zu `WeakConvergence`: gemessen sind es **48
    Deklarationen und 18 `sorry`**, nicht 50 und 21; und der Übersetzer meldet
    `rc = 1`, an genau einer Stelle und mit Absicht — der Modulkopf sagt seit dem

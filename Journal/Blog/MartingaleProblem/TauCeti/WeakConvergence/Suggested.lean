@@ -213,8 +213,18 @@ partition -- `tendsto_tsum_posPart_sub_of_tendsto_measure` and its total
 variation form `tendsto_tsum_abs_sub_of_tendsto_measure`, with
 `summable_toReal_measure_of_pairwise_disjoint` and `tsum_toReal_measure_eq_one`;
 this is the one place where the file imports
-`Mathlib.Analysis.Normed.Group.Tannery`.  Of Milestone 3 only
-`exists_ae_tendsto_of_tendsto` itself is now unproved.
+`Mathlib.Analysis.Normed.Group.Tannery`.
+
+The sixth run of 2026-09-08 proved the third input, the construction step
+`exists_measurable_map_restrict_volume_eq_sum_smul_dirac` -- a purely atomic law
+is the image of Lebesgue measure on `(0,1]` -- and the index-level coupling
+`exists_coupling_tsum_offDiag_le`, the discrete maximal coupling of two
+probability vectors on `ℕ`; both depend on `propext`, `Classical.choice` and
+`Quot.sound` alone.  Of Milestone 3 only `exists_ae_tendsto_of_tendsto` itself is
+now unproved, and the roadmap's description of the space it is built on was
+corrected in the same run: the conditional laws inside the pieces enter as
+coordinates of a product measure, not as functions of one uniform variable, so
+`((0,1], Lebesgue)` carries the index pair and nothing else.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -2959,12 +2969,246 @@ the partition of `(0,1]` by the partial sums of `p`.  It is the construction ste
 of the Skorokhod representation, separated from the analysis: no weak convergence
 enters, only the bookkeeping of `Finset.sum` over `Set.Ioc`.  The image measure is
 written with `Measure.sum` rather than a `tsum`, which is Mathlib's form for a
-countable superposition of measures. -/
+countable superposition of measures.
+
+The map is `g y = x (Nat.find (hex y))` for the predicate
+`P i y := y ≤ s (i+1) ∨ 1 ≤ y`, where `s i` is the `i`-th partial sum of `p` as a
+real number; its measurability is `Measurable.find` at the constant maps
+`fun _ => x i`.  The disjunct `1 ≤ y` is what the totality `∀ y, ∃ i, P i y`
+hangs on: for `y < 1` some partial sum passes `y` because `s i → 1`, but at
+`y = 1` none need to, since the partial sums reach `1` only when `p` has finite
+support.  That single point is the only discrepancy between the pieces
+`{y | Nat.find (hex y) = i}` and the intervals `Ioc (s i) (s (i+1))`, and it is a
+Lebesgue null set -- which is why the identification of the two is stated as an
+almost-everywhere equality and not as an equality of sets. -/
 theorem exists_measurable_map_restrict_volume_eq_sum_smul_dirac
     {p : ℕ → ℝ≥0∞} (hp : ∑' i, p i = 1) (x : ℕ → E) :
     ∃ g : ℝ → E, Measurable g ∧
       (volume.restrict (Set.Ioc (0 : ℝ) 1)).map g
-        = Measure.sum fun i => p i • Measure.dirac (x i) := sorry
+        = Measure.sum fun i => p i • Measure.dirac (x i) := by
+  classical
+  -- the partial sums, as real numbers
+  have hpne : ∀ i, p i ≠ ∞ := by
+    intro i
+    have h := ENNReal.le_tsum (f := p) i
+    rw [hp] at h
+    exact ne_top_of_le_ne_top one_ne_top h
+  have hSle : ∀ i : ℕ, (∑ j ∈ Finset.range i, p j) ≤ 1 := by
+    intro i; rw [← hp]; exact ENNReal.sum_le_tsum _
+  have hSne : ∀ i : ℕ, (∑ j ∈ Finset.range i, p j) ≠ ∞ :=
+    fun i => ne_top_of_le_ne_top one_ne_top (hSle i)
+  set s : ℕ → ℝ := fun i => (∑ j ∈ Finset.range i, p j).toReal with hs_def
+  have hs0 : s 0 = 0 := by simp [hs_def]
+  have hstep : ∀ i, s (i + 1) = s i + (p i).toReal := by
+    intro i
+    simp only [hs_def, Finset.sum_range_succ]
+    rw [ENNReal.toReal_add (hSne i) (hpne i)]
+  have hsmono : Monotone s := by
+    refine monotone_nat_of_le_succ fun i => ?_
+    rw [hstep]
+    simp [ENNReal.toReal_nonneg]
+  have hsnonneg : ∀ i, 0 ≤ s i := fun _ => ENNReal.toReal_nonneg
+  have hsle1 : ∀ i, s i ≤ 1 := by
+    intro i
+    have h := ENNReal.toReal_mono one_ne_top (hSle i)
+    simpa [hs_def] using h
+  have hst : Tendsto s atTop (𝓝 1) := by
+    have hsum : HasSum p 1 := by rw [← hp]; exact ENNReal.summable.hasSum
+    have h := (ENNReal.tendsto_toReal one_ne_top).comp hsum.tendsto_sum_nat
+    simpa [hs_def, Function.comp_def] using h
+  -- the selection predicate
+  set P : ℕ → ℝ → Prop := fun i y => y ≤ s (i + 1) ∨ 1 ≤ y with hP_def
+  have hex : ∀ y : ℝ, ∃ i, P i y := by
+    intro y
+    rcases le_or_gt 1 y with h | h
+    · exact ⟨0, Or.inr h⟩
+    · obtain ⟨i, hi⟩ := (hst.eventually_const_lt h).exists
+      exact ⟨i, Or.inl (le_of_lt (lt_of_lt_of_le hi (hsmono (Nat.le_succ i))))⟩
+  have hPm : ∀ i, MeasurableSet {y : ℝ | P i y} := by
+    intro i
+    have hunion : {y : ℝ | P i y} = Iic (s (i + 1)) ∪ Ici 1 := by
+      ext y; simp [hP_def]
+    rw [hunion]
+    exact measurableSet_Iic.union measurableSet_Ici
+  set g' : ℝ → ℕ := fun y => Nat.find (hex y) with hg'_def
+  have hg'm : Measurable g' := measurable_find hex hPm
+  set T : ℕ → Set ℝ := fun i => g' ⁻¹' {i} with hT_def
+  have hTm : ∀ i, MeasurableSet (T i) := fun i => hg'm (measurableSet_singleton i)
+  -- the characterisation of the pieces away from the endpoint `1`
+  have hchar : ∀ (i : ℕ) (y : ℝ), 0 < y → y < 1 →
+      (y ∈ Ioc (s i) (s (i + 1)) ↔ g' y = i) := by
+    intro i y hy0 hy1
+    have hPy : ∀ j, P j y ↔ y ≤ s (j + 1) := by
+      intro j
+      constructor
+      · rintro (h | h)
+        · exact h
+        · linarith
+      · exact fun h => Or.inl h
+    constructor
+    · rintro ⟨h1, h2⟩
+      have hle : Nat.find (hex y) ≤ i := Nat.find_le ((hPy i).2 h2)
+      have hge : i ≤ Nat.find (hex y) := by
+        rw [Nat.le_find_iff]
+        intro j hj hPj
+        have hj1 := (hPy j).1 hPj
+        have hj2 : s (j + 1) ≤ s i := hsmono hj
+        linarith
+      simp only [hg'_def]
+      omega
+    · intro hfind
+      have hspec := Nat.find_spec (hex y)
+      simp only [hg'_def] at hfind
+      rw [hfind] at hspec
+      have h2 : y ≤ s (i + 1) := (hPy i).1 hspec
+      refine ⟨?_, h2⟩
+      rcases Nat.eq_zero_or_pos i with rfl | hi
+      · simpa [hs0] using hy0
+      · obtain ⟨k, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hi.ne'
+        have hmin : ¬ P k y := Nat.find_min (hex y) (by omega)
+        have hnot := (hPy k).not.1 hmin
+        linarith [not_le.1 hnot]
+  -- each piece has Lebesgue measure `p i`
+  have hone : ∀ᵐ y : ℝ, y ≠ 1 := by
+    rw [ae_iff]
+    have hset : {y : ℝ | ¬ y ≠ 1} = ({1} : Set ℝ) := by ext y; simp
+    rw [hset]
+    exact Real.volume_singleton
+  have hae : ∀ i, (T i ∩ Ioc (0 : ℝ) 1 : Set ℝ) =ᵐ[volume] (Ioc (s i) (s (i + 1)) : Set ℝ) := by
+    intro i
+    rw [Filter.eventuallyEq_set]
+    filter_upwards [hone] with y hy
+    constructor
+    · rintro ⟨hT, hy0, hy1⟩
+      exact (hchar i y hy0 (lt_of_le_of_ne hy1 hy)).2 hT
+    · intro hmem
+      have hy0 : 0 < y := lt_of_le_of_lt (hsnonneg i) hmem.1
+      have hylt : y < 1 := lt_of_le_of_ne (le_trans hmem.2 (hsle1 (i + 1))) hy
+      exact ⟨(hchar i y hy0 hylt).1 hmem, hy0, le_of_lt hylt⟩
+  have hkey : ∀ i, (volume.restrict (Ioc (0 : ℝ) 1)) (T i) = p i := by
+    intro i
+    rw [Measure.restrict_apply (hTm i), measure_congr (hae i), Real.volume_Ioc, hstep i]
+    simp [ENNReal.ofReal_toReal (hpne i)]
+  -- the image of an arbitrary set of indices
+  have hdisj : Pairwise (Function.onFun Disjoint T) := by
+    intro i j hij
+    exact Disjoint.preimage g' (by simpa using hij)
+  have hpre : ∀ A : Set ℕ,
+      (volume.restrict (Ioc (0 : ℝ) 1)) (g' ⁻¹' A) = ∑' i, A.indicator p i := by
+    intro A
+    have hEq : g' ⁻¹' A = ⋃ i ∈ A, T i := by
+      ext y; simp [hT_def]
+    rw [hEq, measure_biUnion A.to_countable (hdisj.set_pairwise A) (fun i _ => hTm i),
+      ← tsum_subtype A p]
+    exact tsum_congr fun i => hkey i
+  refine ⟨fun y => x (g' y), Measurable.find (fun _ => measurable_const) hPm hex, ?_⟩
+  ext S hSm
+  rw [Measure.map_apply (Measurable.find (fun _ => measurable_const) hPm hex) hSm,
+    Measure.sum_apply _ hSm]
+  have hpre' : (fun y => x (g' y)) ⁻¹' S = g' ⁻¹' (x ⁻¹' S) := rfl
+  rw [hpre', hpre]
+  refine tsum_congr fun i => ?_
+  rw [Measure.smul_apply, Measure.dirac_apply' _ hSm, smul_eq_mul]
+  by_cases h : x i ∈ S <;> simp [Set.indicator, h]
+
+/-- **The discrete maximal coupling.**  Two probability vectors on `ℕ` are the
+marginals of a joint distribution whose off-diagonal mass is at most
+`∑' i, (p i - q i)`, the truncated subtraction of `ℝ≥0∞` -- which is half the
+total variation distance, and is what
+`tendsto_tsum_abs_sub_of_tendsto_measure` bounds when the vectors are the masses
+of a partition.  This is the index-level half of the one-stage coupling: it says
+*which piece* the two realisations land in, and nothing about where inside the
+piece.
+
+The coupling is `π i j = (if i = j then min (p i) (q i) else 0) + a i * b j / D`
+with `a i = p i - q i`, `b j = q j - p j` and `D = ∑' i, a i`, that is: the
+common part carried on the diagonal, and the two residues coupled independently
+after normalising by their common total mass.  Written this way the degenerate
+case `D = 0` -- the vectors are equal -- needs no separate treatment, because
+`a i = 0` then makes the second summand `0` through `zero_mul`, and it is the
+reason the diagonal is written as a summand rather than as the `then` branch of
+the whole formula: an `if` there would have to *remove* `a i * b i / D` from the
+row sum, and `ℝ≥0∞` has no subtraction that survives a `tsum`.
+
+That `∑' i, a i = ∑' j, b j` -- the two residues have the same total mass -- is
+not the additivity of truncated subtraction but the cancellation
+`M + D = 1 = M + D'` in `ENNReal.add_right_inj`, which is available because
+`M = ∑' i, min (p i) (q i) ≤ 1` is finite. -/
+theorem exists_coupling_tsum_offDiag_le {p q : ℕ → ℝ≥0∞}
+    (hp : ∑' i, p i = 1) (hq : ∑' i, q i = 1) :
+    ∃ π : ℕ → ℕ → ℝ≥0∞, (∀ i, ∑' j, π i j = p i) ∧ (∀ j, ∑' i, π i j = q j) ∧
+      ∑' i, ∑' j, (if i = j then 0 else π i j) ≤ ∑' i, (p i - q i) := by
+  classical
+  set m : ℕ → ℝ≥0∞ := fun i => min (p i) (q i) with hm_def
+  set a : ℕ → ℝ≥0∞ := fun i => p i - q i with ha_def
+  set b : ℕ → ℝ≥0∞ := fun j => q j - p j with hb_def
+  have hma : ∀ i, m i + a i = p i := by
+    intro i
+    rcases le_total (p i) (q i) with h | h
+    · simp [hm_def, ha_def, min_eq_left h, tsub_eq_zero_of_le h]
+    · simp only [hm_def, ha_def, min_eq_right h]
+      exact add_tsub_cancel_of_le h
+  have hmb : ∀ j, m j + b j = q j := by
+    intro j
+    rcases le_total (q j) (p j) with h | h
+    · simp [hm_def, hb_def, min_eq_right h, tsub_eq_zero_of_le h]
+    · simp only [hm_def, hb_def, min_eq_left h]
+      exact add_tsub_cancel_of_le h
+  set M : ℝ≥0∞ := ∑' i, m i with hM_def
+  set D : ℝ≥0∞ := ∑' i, a i with hD_def
+  have hMDp : M + D = 1 := by
+    rw [hM_def, hD_def, ← ENNReal.tsum_add, ← hp]
+    exact tsum_congr hma
+  have hMDq : M + ∑' j, b j = 1 := by
+    rw [hM_def, ← ENNReal.tsum_add, ← hq]
+    exact tsum_congr hmb
+  have hMtop : M ≠ ∞ := by
+    intro h
+    rw [h, top_add] at hMDp
+    exact ENNReal.top_ne_one hMDp
+  have hbD : ∑' j, b j = D := by
+    have hMM := hMDp.trans hMDq.symm
+    exact ((ENNReal.add_right_inj hMtop).1 hMM).symm
+  have hDtop : D ≠ ∞ := by
+    intro h
+    rw [h, add_top] at hMDp
+    exact ENNReal.top_ne_one hMDp
+  have haD : ∀ i, a i ≤ D := fun i => ENNReal.le_tsum i
+  have hbD' : ∀ j, b j ≤ D := fun j => hbD ▸ ENNReal.le_tsum j
+  -- the two cancellations, valid also in the degenerate case `D = 0`
+  have hcancelA : ∀ i, a i / D * D = a i := by
+    intro i
+    refine ENNReal.div_mul_cancel' (fun h0 => ?_) (fun h => absurd h hDtop)
+    exact le_antisymm (h0 ▸ haD i) bot_le
+  have hcancelB : ∀ j, b j / D * D = b j := by
+    intro j
+    refine ENNReal.div_mul_cancel' (fun h0 => ?_) (fun h => absurd h hDtop)
+    exact le_antisymm (h0 ▸ hbD' j) bot_le
+  have hrow : ∀ i, ∑' j, a i * b j / D = a i := by
+    intro i
+    have hcomm : ∀ j, a i * b j / D = a i / D * b j := by
+      intro j; rw [div_eq_mul_inv, div_eq_mul_inv, mul_right_comm]
+    rw [tsum_congr hcomm, ENNReal.tsum_mul_left, hbD, hcancelA i]
+  have hcol : ∀ j, ∑' i, a i * b j / D = b j := by
+    intro j
+    have hcomm : ∀ i, a i * b j / D = a i * (b j / D) := by
+      intro i; rw [mul_div_assoc]
+    rw [tsum_congr hcomm, ENNReal.tsum_mul_right, ← hD_def, mul_comm, hcancelB j]
+  refine ⟨fun i j => (if i = j then m i else 0) + a i * b j / D, fun i => ?_, fun j => ?_, ?_⟩
+  · rw [ENNReal.tsum_add, hrow i]
+    have hdiag : ∑' j, (if i = j then m i else 0) = m i :=
+      (tsum_eq_single i fun j hj => if_neg (Ne.symm hj)).trans (by simp)
+    rw [hdiag, hma i]
+  · rw [ENNReal.tsum_add, hcol j]
+    have hdiag : ∑' i, (if i = j then m i else 0) = m j :=
+      (tsum_eq_single j fun i hi => if_neg hi).trans (by simp)
+    rw [hdiag, hmb j]
+  · have hle : ∀ i, ∑' j, (if i = j then (0 : ℝ≥0∞)
+        else (if i = j then m i else 0) + a i * b j / D) ≤ a i := by
+      intro i
+      refine le_trans (ENNReal.tsum_le_tsum fun j => ?_) (le_of_eq (hrow i))
+      split_ifs with h <;> simp
+    exact ENNReal.tsum_le_tsum hle
 
 theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}
