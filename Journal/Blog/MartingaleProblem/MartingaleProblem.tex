@@ -1430,8 +1430,11 @@ Throughout this subsection $(S,d)$ is a metric space.
   measure supplies one, whereas a countable dense set is never used.  The Lean
   statement in the accompanying roadmap therefore carries
   \texttt{MetricSpace} and \texttt{OpensMeasurableSpace} alone.  For the second
-  half the question is open; local compactness enters through a cut-off that has
-  no substitute here.
+  half local compactness is genuinely used, and used in the cut-off rather than
+  in an approximation: the compactly supported functions are \emph{not} uniformly
+  dense in the uniformly continuous ones of bounded support, so a proof by
+  approximating the larger class by the smaller cannot work, and what carries it
+  is a truncation that only needs the integral of the cut-off to be near one.
 \end{fact}
 
 \begin{fact}[Stone--Weierstrass for separating classes; \EK, Theorem 3.4.5]
@@ -9301,7 +9304,12 @@ and now \ref{it:C1} itself.
   to a law $P$ under which the coordinate process is again a quasimartingale ---
   in particular is c\`adl\`ag.  \Ku{} extends the criterion to a separable metric
   state space and identifies the resulting convergence as $J_1$-convergence of
-  time-changed processes.
+  time-changed processes.  For a state space with no linear structure the usable
+  form is his Corollary~1.4: if $\{f_i\} \subset \Cb(E)$ separates points, the
+  compact containment condition \eqref{eq:ccn} holds and
+  $\sup_n V(f_i \circ X_n) < \infty$ for each $i$, then the conclusion follows.
+  That is the criterion to verify in an application --- one conditional variation
+  bound per member of a separating class, and nothing about jumps.
 \end{fact}
 
 The point of Fact~\ref{fact:MZtight} is what it does \emph{not} require: no
@@ -9407,7 +9415,9 @@ reason to want the following.
   continuity set of the limit and knows by Fact~\ref{fact:Dcountable} that its
   complement is countable.  Here $D$ is an unspecified countable subset of an
   unspecified Lebesgue-full set, and there is no analogue of
-  Fact~\ref{fact:Dcountable}: \MZ, Theorem~5 gives full measure and no more.  This
+  Fact~\ref{fact:Dcountable}: \MZ, Theorem~5 gives full measure and no more, and
+  so, in a cleaner form, does \Ku, Remark~4.9 --- a Lebesgue null set off which
+  the finite dimensional distributions converge along a subsequence.  This
   costs nothing because Theorem~\ref{thm:absconv} was written for an arbitrary
   dense $D$ from the start, and the passage from $D$ to $\T$ is its Step~3 --- the
   same regularization that Section~\ref{sec:cadlag} performs in general.  Note the
@@ -9840,13 +9850,21 @@ Fact~\ref{fact:kolmogorov} needs --- see the list there.
   theory (Definition~\ref{def:separating},
   Facts~\ref{fact:convdet}, \ref{fact:stoneweierstrass}, \ref{fact:fdd},
   \ref{fact:sepcond}) --- the separating half of \ref{fact:fdd} only, its path
-  space half being Theorem~\ref{thm:fdd};
+  space half being Theorem~\ref{thm:fdd}.  Of these,
+  Fact~\ref{fact:stoneweierstrass} is formalized whole, both the separating and
+  the convergence determining half; so is Fact~\ref{fact:convdet}, and so is the
+  separating half of Fact~\ref{fact:fdd}, for a countable product;
 \item bounded pointwise convergence and bp-closures
   (Definition~\ref{def:bp}, Fact~\ref{fact:bp}) --- but only for
   Corollary~\ref{cor:bpclosure}, which is itself optional: the working statement
   is Lemma~\ref{lem:closure}, and that is dominated convergence;
 \item the continuous mapping theorem in the form of Fact~\ref{fact:cmt} and the
-  Skorokhod representation (Fact~\ref{fact:PSpolish});
+  Skorokhod representation (Fact~\ref{fact:PSpolish}) --- both only for Polish
+  spaces, by Remark~\ref{rem:MZcost}.  The almost everywhere continuous half of
+  Fact~\ref{fact:cmt} is formalized, as are the separability and second
+  countability of $\Prob(S)$; what remains is the representation itself, and the
+  space $M_E$ of that remark, whose separability is the one step \Ku{} leaves to
+  the reader;
 \item convergence of finite-dimensional distributions in $\DE$ and the relative
   compactness criteria (Facts~\ref{fact:fddconv}, \ref{fact:relcompact},
   \ref{fact:relcompact2});
