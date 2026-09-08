@@ -10865,3 +10865,143 @@ dichten Teilmenge von `ι` selbst kommen, die es nach `ProperSpace ι` gibt
 (σ-kompakt, also separabel), und nicht aus den Rationalen. Das ist derselbe
 Fallstrick, an dem 2026-09-07 die Separation von `distOn` beinahe gescheitert
 wäre.
+
+### 2026-09-08, siebzehnter Lauf des Tages — die unendliche Komposition der Zeitwechsel, samt ihrer Surjektivität
+
+*Zweiter von vier Läufen der vorrangigen Aufgabe an `SkorokhodSpace`.* Punkt 2
+der Aufgabe, `CompleteSpace`. Kein `sorry` ist gefallen — die Datei steht
+weiterhin bei **acht** —, aber die Sprosse, an der der Beweis seit dem sechzehnten
+Lauf hing, ist bewiesen, und mit ihr vierzehn weitere Deklarationen. Alle fünfzehn
+sind mit `#print axioms` geprüft und hängen an `propext`, `Classical.choice`,
+`Quot.sound` und an nichts sonst; die Datei geht durch `lake env lean` gegen
+v4.33.1.
+
+#### Was bewiesen ist
+
+**`TimeChange.exists_tendsto_of_summable_norm`** — der Kern. Sind
+`l : ℕ → TimeChange ι` alle in `TimeChange.fixing t₀` und ist `‖l n‖ ≤ γ n` mit
+`γ` summierbar, so konvergieren die Teilkompositionen
+`TimeChange.partialComp l n = l 0 ∘ ⋯ ∘ l (n-1)` punktweise gegen einen
+Zeitwechsel `L`, der wieder `t₀` festhält und `‖L‖ ≤ ∑' γ` erfüllt.
+
+*Die Surjektivität, und wie sie kommt.* Der vorige Lauf hat sie als den harten
+Punkt benannt, und sie war es. Der punktweise Limes einer Folge von
+Ordnungsisomorphismen ist umsonst monoton und, unter einer gleichmäßigen
+bi-Lipschitz-Schranke, injektiv; **daß sein Bild ganz `ι` ist, folgt daraus
+nicht.** Der Index dieses Meilensteins ist nicht als zusammenhängend
+vorausgesetzt — `AddSubgroup.zmultiples (1:ℝ)` ist eine der vier laufenden
+Instanzen —, also hilft kein Zwischenwertargument, und das Bild ist zwar
+abgeschlossen, aber Abgeschlossenheit allein füllt keine Lücke.
+
+Das Mittel ist, **dieselbe Rechnung auf den Inversen zu führen**. Die
+Teilkompositionen erfüllen `partialComp l (n+1) = partialComp l n * l n`, also
+`(partialComp l (n+1))⁻¹ = (l n)⁻¹ * (partialComp l n)⁻¹`: der Schritt der
+inversen Folge verschiebt einen Punkt um genau die Verschiebung von `(l n)⁻¹`,
+gelesen an der Stelle `(partialComp l n)⁻¹ t`. Diese Stelle liegt im Fenster
+`exhaustion t₀ ⌈exp (∑' γ) * m⌉₊`, wenn `t` im Fenster `m` liegt, weil
+`(partialComp l n)⁻¹` den Basispunkt festhält und `exp (∑' γ)`-Lipschitz ist.
+Also greift `TimeChange.dist_le_of_norm_le` auch hier, die inverse Folge ist
+punktweise Cauchy, ihr Limes `M` existiert, und
+`partialComp l n ((partialComp l n)⁻¹ t) = t` geht mit der gleichmäßigen
+Lipschitz-Schranke in den Limes über: `L (M t) = t` und `M (L t) = t`. Der Limes
+ist damit eine Bijektion **mit benanntem Inversen**, und nicht bloß eine
+Einbettung. Beide Richtungen der Monotonie geben `map_rel_iff'`, und die beiden
+Lipschitz-Felder der Struktur `TimeChange` sind die beiden Grenzwertabschätzungen.
+
+*Was die Abschätzung summierbar macht.* Nicht `dist_le_of_norm_le` allein: sie
+liefert `dist (l t) t ≤ (exp γₙ - 1) * (2m)`, und `exp γₙ - 1` ist zwar eine
+Nullfolge, aber ohne weiteres nicht summierbar aus der Summierbarkeit von `γ`.
+Der Schritt ist `exp x - 1 ≤ x * exp x`, was `Real.add_one_le_exp (-x)` mal
+`exp x` ist; damit ist `exp γₙ - 1 ≤ γₙ * exp (∑' γ)` und die Schranke hat die
+Gestalt `C * γ n` mit von `n` unabhängigem `C`. Das ist die Stelle, an der die
+**Logarithmus**-Gestalt der Norm von Meilenstein 3 zahlt: eine additive Norm
+liefert multiplikative Lipschitz-Konstanten, und deren Produkt über die
+Teilkomposition bleibt beschränkt.
+
+*Vollständigkeit von `ι`.* Aus `ProperSpace ι` über `complete_of_proper`
+(`Mathlib/Topology/MetricSpace/ProperSpace.lean:104`). Das ist die einzige
+Stelle der Meilensteine 3 bis 5, an der `ProperSpace` für etwas anderes als die
+Kompaktheit eines Fensters gebraucht wird.
+
+**`TimeChange.exists_tendsto_norm_tail_le`** — dieselbe Aussage mit **Rate**.
+Für jedes `n` ist `‖(partialComp l n)⁻¹ * L‖ ≤ ∑' i, γ (n + i)`. Ohne sie sagt
+die Existenz nur, daß ein Limes da ist; mit ihr ist die `n`-te Näherung
+quantitativ nah, und das ist es, was ein Konvergenzbeweis in `D(ι, E)` liest.
+Der Beweis läuft die Existenzaussage auf jeder verschobenen Folge noch einmal
+und identifiziert `L` mit `partialComp l n * (der verschobene Limes)` über die
+Eindeutigkeit des Grenzwerts; das Bindeglied ist
+`TimeChange.partialComp_add`, also
+`partialComp l (n + k) = partialComp l n * partialComp (l ∘ (n + ·)) k`.
+
+**Die Hilfssätze**, alle neu und alle gebraucht:
+`TimeChange.lipConst_le_exp_norm` (`lipConst ≤ exp ‖·‖`),
+`TimeChange.dist_le_exp_norm_mul`, `TimeChange.norm_le_of_lipschitzWith` (die
+Umkehrung, mit dem entarteten Zweig `Real.log 0 = 0` für den einpunktigen Index),
+`TimeChange.partialComp` samt `partialComp_zero`, `partialComp_succ`,
+`partialComp_mem_fixing` und `norm_partialComp_le`.
+
+**Und drei Aussagen über das Verhältnis von Metrik und Fenster**, die der
+Zusammenbau an beiden Enden braucht:
+`SkorokhodSpace.min_one_distOn_le` (`min 1 (distOn t₀ m f g) ≤ 2^m * totalDist t₀ f g`),
+`SkorokhodSpace.distOn_le_of_two_pow_mul_lt_one` (dieselbe Schranke ohne die
+Trunkierung, für Paare mit `2^m * totalDist < 1` — die Voraussetzung ist kein
+Mangel, denn `distOn` ist im Fenster unbeschränkt, und eine Cauchyfolge liefert
+sie für alle bis auf endlich viele Indizes) und
+`SkorokhodSpace.totalDist_le_sum_add`
+(`totalDist ≤ ∑_{m<M} 2⁻¹^m · min 1 (distOn m) + 2·2⁻¹^M`, die Gegenrichtung:
+Konvergenz in endlich vielen Fenstern genügt, weil die Trunkierung den Schwanz
+trägt).
+
+**Und drei Aussagen zur Kohärenz der Fenster**, die dem offenen Punkt unten
+vorarbeiten: `exhaustion_subset_of_le` (die Fenster um **einen** Basispunkt sind
+geschachtelt, ohne die Radiusvergrößerung, die
+`exhaustion_subset_exhaustion` für zwei Basispunkte zahlen muß),
+`clamp_clamp_of_le` (`clamp t₀ m' (clamp t₀ m t) = clamp t₀ m t` für `m ≤ m'`)
+und `SkorokhodSpace.restrictExhaustion_restrictExhaustion` (auf ein großes
+Fenster trunkieren und dann auf ein kleines ist auf das kleine trunkieren). Das
+ist die algebraische Seite der Verträglichkeit; die analytische steht noch aus.
+
+#### Woran der nächste Lauf hängt, und es ist nicht mehr die Komposition
+
+`CompleteSpace D(ι, E)` steht jetzt auf sechs benannten Punkten, von denen fünf
+bewiesen sind. Der offene ist die **Verträglichkeit der Fenstergrenzwerte**, und
+er ist präziser, als der sechzehnte Lauf ihn stellen konnte. Für jedes `m` liefert
+die Konstruktion einen Grenzwert der Trunkierungen auf `exhaustion t₀ m`, und die
+Zeitwechsel, mit denen sie ihn liefert, hängen von `m` ab. Zu zeigen ist, daß ein
+einziges `f : D(ι, E)` für **jedes** `m` zugleich `distOn t₀ m fₙ f → 0` erfüllt.
+
+*Der naheliegende Weg geht nicht, und das ist ein Befund.* Man möchte
+`distOn t₀ m ≤ distOn t₀ (m+1)` haben und daraus die Verträglichkeit ablesen. Der
+Zeitwechsel, der für das größere Fenster zulässig ist, vergleicht aber
+`f ∘ clamp (m+1) ∘ λ` mit `g ∘ clamp (m+1)`, und liest man diesen Vergleich an
+einem Punkt des kleineren Fensters, so stehen die beiden `clamp` nicht
+zusammen — links `clamp (m+1) (λ t)`, rechts `clamp (m+1) t`, und keines von
+beiden ist `clamp m` von irgend etwas. Der Punkt ist also über die Trunkierungen
+zu führen und nicht über die Pseudoabstände; so steht er jetzt in Meilenstein 5,
+als `SkorokhodSpace.exists_restrictExhaustion_limit`.
+
+#### Vorschlag für den nächsten Lauf
+
+**`SkorokhodSpace.exists_restrictExhaustion_limit`** — zu einer im
+`totalDist t₀` Cauchyschen Folge `fₙ` gibt es ein `f : D(ι, E)` mit
+`distOn t₀ m fₙ f → 0` für jedes `m`.
+
+*Worauf sie ruht.* Auf den fünf bewiesenen Punkten oben, und der Arbeitsanteil
+ist allein die Verträglichkeit: die Eindeutigkeit **innerhalb** eines Fensters ist
+`SkorokhodSpace.eq_of_distOn_eq_zero` (bewiesen 2026-09-07), die Erzeugung des
+Grenzpfads ist `IsCadlag.of_tendstoUniformly` samt
+`TimeChange.exists_tendsto_norm_tail_le`, und der Zusammenbau zur Metrik ist
+`SkorokhodSpace.totalDist_le_sum_add`.
+
+*Warum jetzt.* Weil sie der letzte offene Punkt von `CompleteSpace D(ι, E)` ist
+und weil `SeparableSpace` und `PolishSpace` — der dritte kostet nach dem
+sechzehnten Lauf nichts mehr — hinter ihr stehen. Sie ist überdies die einzige
+der drei, deren Beweis nicht in der Literatur nachzuschlagen ist: Billingsley
+führt `D[0,∞)` über die Restriktionsabbildungen nach `D[0,m]`, was in dieser
+Allgemeinheit kein Gegenstück hat, weil ein Fenster hier kein Intervall sein muß.
+
+*Und die Warnung zur Separabilität, die vom sechzehnten Lauf steht und weiter
+gilt.* Die Sprungzeiten der dichten Treppenpfade müssen aus einer abzählbar
+dichten Teilmenge von `ι` selbst kommen — die es nach `ProperSpace ι` gibt, denn
+σ-kompakt heißt separabel —, und nicht aus den Rationalen: ein Index dieses
+Meilensteins ist eine abgeschlossene Teilmenge von `ℝ` und keine Strecke.

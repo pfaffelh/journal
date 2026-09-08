@@ -8,6 +8,7 @@ import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.Topology.Algebra.InfiniteSum.Real
 
 /-!
 # Suggested signatures for the Skorokhod space roadmap
@@ -41,6 +42,20 @@ completeness of Milestone 5: the uniform limit of càdlàg paths is càdlàg, wh
 is where the limit path of a Cauchy sequence in `D(ι, E)` is caught.  It belongs
 to Milestone 2 and is proved there, out of Mathlib's
 `TendstoUniformly.tendsto_of_eventually_tendsto` alone.
+
+The run after it added **the infinite composition of time changes**, which is the
+rung that argument hung on: `TimeChange.exists_tendsto_of_summable_norm` and its
+quantitative form `TimeChange.exists_tendsto_norm_tail_le`.  The point that is
+more than a convergence argument there is the *surjectivity* of the limit, and it
+is obtained by running the same estimate on the inverses; the reasoning is at the
+declaration.  With it Milestone 5 has six named items and five of them are proved
+--- `min_one_distOn_le`, `distOn_le_of_two_pow_mul_lt_one` and
+`totalDist_le_sum_add`, all proved the same day, are the passage between the
+metric and its windows in both directions.  What is open is the compatibility of
+the limits across windows, and the route through `distOn t₀ m ≤ distOn t₀ (m+1)`
+is *not* available: an admissible time change for the larger window compares
+`f ∘ clamp (m+1) ∘ λ` with `g ∘ clamp (m+1)`, whose two `clamp`s do not line up
+at a point of the smaller window.
 
 Since 2026-09-07 the whole of `TimeChange.lipConst` and `TimeChange.norm` is
 proved: the attainment `lipschitzWith_lipConst`, `lipConst_one`,
@@ -363,6 +378,23 @@ theorem clamp_eq_self {t₀ : ι} {m : ℕ} {t : ι} (ht : t ∈ exhaustion t₀
 
 theorem clamp_idem (t₀ : ι) (m : ℕ) (t : ι) : clamp t₀ m (clamp t₀ m t) = clamp t₀ m t :=
   clamp_eq_self (clamp_mem_exhaustion t₀ m t)
+
+omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The windows around one base point are nested.  This is the case of
+`exhaustion_subset_exhaustion` that the exhaustion is named for, and it is
+separate because it costs no enlargement of the radius. -/
+theorem exhaustion_subset_of_le (t₀ : ι) {m m' : ℕ} (h : m ≤ m') :
+    exhaustion t₀ m ⊆ exhaustion t₀ m' :=
+  Metric.closedBall_subset_closedBall (by exact_mod_cast h)
+
+/-- Clamping to a window and then to a larger one changes nothing.  This is the
+algebraic backbone of the compatibility of the window limits in Milestone 5: a
+path truncated to `exhaustion t₀ m` is already truncated to every larger window,
+so the truncations of a single path form a coherent family and the limits taken
+window by window have a single candidate to converge to. -/
+theorem clamp_clamp_of_le (t₀ : ι) {m m' : ℕ} (h : m ≤ m') (t : ι) :
+    clamp t₀ m' (clamp t₀ m t) = clamp t₀ m t :=
+  clamp_eq_self (exhaustion_subset_of_le t₀ h (clamp_mem_exhaustion t₀ m t))
 
 /-- An index satisfying the four hypotheses is order isomorphic and isometric to
 a closed subset of `ℝ`. -/
@@ -1367,6 +1399,408 @@ omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 theorem TimeChange.mem_fixing_iff {t₀ : ι} {l : TimeChange ι} :
     l ∈ TimeChange.fixing t₀ ↔ l.toOrderIso t₀ = t₀ := Iff.rfl
 
+/-! ### The infinite composition of time changes
+
+This is the second of the three named steps of `CompleteSpace D(ι, E)` in
+Milestone 5.  Billingsley composes infinitely many time changes along the
+exhaustion; what follows is that composition, and the point where it is more than
+a convergence argument is the **surjectivity** of the limit.  A pointwise limit of
+order isomorphisms is monotone and injective for free, but nothing forces it onto
+`ι`.  The device that supplies it here is to run the *same* argument on the
+inverses: `μ n ⁻¹` satisfies the same summable estimate, because
+`(μ n * l n)⁻¹ = (l n)⁻¹ * μ n ⁻¹` moves a point by exactly the displacement of
+`l n ⁻¹`, so it has a limit `M` as well, and `μ n (μ n ⁻¹ t) = t` passes to the
+limit through the uniform Lipschitz bound.  The limit is therefore a bijection
+with a named inverse, and not merely an embedding. -/
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The least Lipschitz constant is at most the exponential of the norm.  This is
+`TimeChange.norm` read forwards rather than backwards, and it is what turns the
+length function of Milestone 3 into a Lipschitz bound uniform along a composition
+whose norms are summable. -/
+theorem TimeChange.lipConst_le_exp_norm (l : TimeChange ι) :
+    (l.lipConst : ℝ) ≤ Real.exp l.norm := by
+  rcases subsingleton_or_nontrivial ι with _ | _
+  · rw [TimeChange.lipConst_of_subsingleton]
+    simpa using (Real.exp_pos l.norm).le
+  · have h1 : (1 : ℝ) ≤ max (l.lipConst : ℝ) ((l⁻¹).lipConst : ℝ) := by
+      exact_mod_cast TimeChange.one_le_max_lipConst l
+    rw [TimeChange.norm, Real.exp_log (by linarith)]
+    exact le_max_left _ _
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The estimate `lipConst_le_exp_norm` in the form the composition consumes it. -/
+theorem TimeChange.dist_le_exp_norm_mul (l : TimeChange ι) (s t : ι) :
+    dist (l.toOrderIso s) (l.toOrderIso t) ≤ Real.exp l.norm * dist s t :=
+  (l.lipschitzWith_lipConst.dist_le_mul s t).trans
+    (mul_le_mul_of_nonneg_right l.lipConst_le_exp_norm dist_nonneg)
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The converse of `lipConst_le_exp_norm`: two Lipschitz bounds with the same
+constant `exp γ`, one for `l` and one for `l⁻¹`, bound the norm by `γ`.  The
+degenerate branch is the subsingleton index, where `lipConst` is `0` and
+`Real.log 0 = 0 ≤ γ` carries the statement. -/
+theorem TimeChange.norm_le_of_lipschitzWith {l : TimeChange ι} {γ : ℝ} (hγ : 0 ≤ γ)
+    (h : LipschitzWith (Real.exp γ).toNNReal l.toOrderIso)
+    (h' : LipschitzWith (Real.exp γ).toNNReal l⁻¹.toOrderIso) :
+    l.norm ≤ γ := by
+  have hK : (((Real.exp γ).toNNReal : ℝ≥0) : ℝ) = Real.exp γ :=
+    Real.coe_toNNReal _ (Real.exp_pos γ).le
+  have hb : ∀ m : TimeChange ι, LipschitzWith (Real.exp γ).toNNReal m.toOrderIso →
+      (m.lipConst : ℝ) ≤ Real.exp γ := by
+    intro m hm
+    have hle : m.lipConst ≤ (Real.exp γ).toNNReal := csInf_le' hm
+    calc (m.lipConst : ℝ) ≤ (((Real.exp γ).toNNReal : ℝ≥0) : ℝ) := by exact_mod_cast hle
+      _ = Real.exp γ := hK
+  have hmax : max (l.lipConst : ℝ) ((l⁻¹).lipConst : ℝ) ≤ Real.exp γ :=
+    max_le (hb l h) (hb l⁻¹ h')
+  rw [TimeChange.norm]
+  rcases lt_or_ge (0 : ℝ) (max (l.lipConst : ℝ) ((l⁻¹).lipConst : ℝ)) with hpos | hz
+  · calc Real.log (max (l.lipConst : ℝ) ((l⁻¹).lipConst : ℝ))
+        ≤ Real.log (Real.exp γ) := Real.log_le_log hpos hmax
+      _ = γ := Real.log_exp γ
+  · have hzero : max (l.lipConst : ℝ) ((l⁻¹).lipConst : ℝ) = 0 :=
+      le_antisymm hz (le_max_of_le_left (NNReal.coe_nonneg _))
+    rw [hzero, Real.log_zero]
+    exact hγ
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The partial compositions `l 0 ∘ l 1 ∘ ⋯ ∘ l (n-1)`.  The order matters and it
+is this one: `partialComp l (n + 1) = partialComp l n * l n` appends the new time
+change on the **inside**, so that `partialComp l (n+1) t` differs from
+`partialComp l n t` by the displacement of `l n` alone, magnified by the Lipschitz
+constant of the already assembled prefix.  Appending on the outside would leave
+the displacement to be estimated on the moving image of `t` instead. -/
+def TimeChange.partialComp (l : ℕ → TimeChange ι) : ℕ → TimeChange ι
+  | 0 => 1
+  | n + 1 => TimeChange.partialComp l n * l n
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+@[simp]
+theorem TimeChange.partialComp_zero (l : ℕ → TimeChange ι) :
+    TimeChange.partialComp l 0 = 1 := rfl
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+@[simp]
+theorem TimeChange.partialComp_succ (l : ℕ → TimeChange ι) (n : ℕ) :
+    TimeChange.partialComp l (n + 1) = TimeChange.partialComp l n * l n := rfl
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The anchors are a subgroup, so the composition stays anchored. -/
+theorem TimeChange.partialComp_mem_fixing {t₀ : ι} {l : ℕ → TimeChange ι}
+    (hl : ∀ n, l n ∈ TimeChange.fixing t₀) (n : ℕ) :
+    TimeChange.partialComp l n ∈ TimeChange.fixing t₀ := by
+  induction n with
+  | zero => exact (TimeChange.fixing t₀).one_mem
+  | succ n ih => exact (TimeChange.fixing t₀).mul_mem ih (hl n)
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The norm is a length function, so it is subadditive along the composition.
+This is the only place where `TimeChange.norm_mul_le` is spent, and it is why the
+norm of Milestone 3 had to be the global one. -/
+theorem TimeChange.norm_partialComp_le (l : ℕ → TimeChange ι) (n : ℕ) :
+    (TimeChange.partialComp l n).norm ≤ ∑ i ∈ Finset.range n, (l i).norm := by
+  induction n with
+  | zero => simpa using TimeChange.norm_one.le
+  | succ n ih =>
+      rw [TimeChange.partialComp_succ, Finset.sum_range_succ]
+      exact (TimeChange.norm_mul_le _ _).trans (add_le_add ih le_rfl)
+
+/-- **The infinite composition.**  If the norms of `l 0, l 1, …` are dominated by
+a summable `γ`, then the partial compositions converge pointwise to a time change
+`L`, again anchored at `t₀`, and `L` obeys the same bound `‖L‖ ≤ ∑' γ` that the
+partial compositions do.
+
+Three ingredients, and each is needed for a different reason.  The uniform bound
+`‖partialComp l n‖ ≤ ∑' γ` makes every partial composition `exp (∑' γ)`-Lipschitz,
+which is what converts a displacement of `l n` into a displacement of the whole
+prefix.  `TimeChange.dist_le_of_norm_le` converts `‖l n‖ ≤ γ n` into that
+displacement on a window, and `Real.exp x - 1 ≤ x * exp x` makes the resulting
+bound summable rather than merely null.  Properness of `ι` supplies the limit;
+this is the one statement of Milestones 3 to 5 that consumes it for something
+other than the compactness of a window.
+
+The inverse limit `M` is constructed alongside and is the whole content of the
+surjectivity: without it `L` is an order embedding with closed image and there is
+no argument in this generality that its image is all of `ι` --- the index is not
+assumed connected, and on a disconnected index the image of a monotone continuous
+map need not be cofinal in the gaps. -/
+theorem TimeChange.exists_tendsto_of_summable_norm (t₀ : ι) (l : ℕ → TimeChange ι)
+    (hl : ∀ n, l n ∈ TimeChange.fixing t₀) (γ : ℕ → ℝ)
+    (hγ : ∀ n, (l n).norm ≤ γ n) (hs : Summable γ) :
+    ∃ L : TimeChange ι, L ∈ TimeChange.fixing t₀ ∧ L.norm ≤ ∑' i, γ i ∧
+      ∀ t : ι, Tendsto (fun n => (TimeChange.partialComp l n).toOrderIso t) atTop
+        (𝓝 (L.toOrderIso t)) := by
+  classical
+  have hγ0 : ∀ n, 0 ≤ γ n := fun n => (TimeChange.norm_nonneg (l n)).trans (hγ n)
+  have hγΓ : ∀ n, γ n ≤ ∑' i, γ i := fun n => hs.le_tsum n fun j _ => hγ0 j
+  have hΓ0 : (0 : ℝ) ≤ ∑' i, γ i := (hγ0 0).trans (hγΓ 0)
+  have hpcfix : ∀ n, TimeChange.partialComp l n ∈ TimeChange.fixing t₀ :=
+    TimeChange.partialComp_mem_fixing hl
+  have hpcnorm : ∀ n, (TimeChange.partialComp l n).norm ≤ ∑' i, γ i := by
+    intro n
+    refine (TimeChange.norm_partialComp_le l n).trans ?_
+    exact (Finset.sum_le_sum fun i _ => hγ i).trans
+      (Summable.sum_le_tsum _ (fun j _ => hγ0 j) hs)
+  have hexp1 : ∀ x : ℝ, Real.exp x - 1 ≤ x * Real.exp x := by
+    intro x
+    have h := Real.add_one_le_exp (-x)
+    have h2 : (-x + 1) * Real.exp x ≤ Real.exp (-x) * Real.exp x :=
+      mul_le_mul_of_nonneg_right h (Real.exp_pos x).le
+    rw [← Real.exp_add, neg_add_cancel, Real.exp_zero] at h2
+    nlinarith
+  have hlipfwd : ∀ (n : ℕ) (s t : ι),
+      dist ((TimeChange.partialComp l n).toOrderIso s)
+        ((TimeChange.partialComp l n).toOrderIso t) ≤ Real.exp (∑' i, γ i) * dist s t := by
+    intro n s t
+    exact (TimeChange.dist_le_exp_norm_mul _ s t).trans
+      (mul_le_mul_of_nonneg_right (Real.exp_le_exp.2 (hpcnorm n)) dist_nonneg)
+  have hlipbwd : ∀ (n : ℕ) (s t : ι),
+      dist ((TimeChange.partialComp l n)⁻¹.toOrderIso s)
+        ((TimeChange.partialComp l n)⁻¹.toOrderIso t) ≤ Real.exp (∑' i, γ i) * dist s t := by
+    intro n s t
+    refine (TimeChange.dist_le_exp_norm_mul _ s t).trans
+      (mul_le_mul_of_nonneg_right (Real.exp_le_exp.2 ?_) dist_nonneg)
+    rw [TimeChange.norm_inv]
+    exact hpcnorm n
+  have hmem : ∀ t : ι, ∃ m : ℕ, t ∈ exhaustion t₀ m := by
+    intro t
+    obtain ⟨m, hm⟩ := exists_nat_ge (dist t₀ t)
+    exact ⟨m, by simpa [exhaustion, Metric.mem_closedBall, dist_comm t t₀] using hm⟩
+  -- the forward step estimate, summable in `n` and uniform on the window
+  have hstep : ∀ (m : ℕ) (t : ι), t ∈ exhaustion t₀ m → ∀ n : ℕ,
+      dist ((TimeChange.partialComp l n).toOrderIso t)
+        ((TimeChange.partialComp l (n + 1)).toOrderIso t)
+        ≤ (Real.exp (∑' i, γ i) * (Real.exp (∑' i, γ i) * (2 * m))) * γ n := by
+    intro m t ht n
+    have hmove : dist ((l n).toOrderIso t) t ≤ (Real.exp (γ n) - 1) * (2 * m) :=
+      TimeChange.dist_le_of_norm_le t₀ m (TimeChange.mem_fixing_iff.1 (hl n)) (hγ n) ht
+    have h1 : Real.exp (γ n) - 1 ≤ γ n * Real.exp (∑' i, γ i) :=
+      (hexp1 (γ n)).trans (mul_le_mul_of_nonneg_left (Real.exp_le_exp.2 (hγΓ n)) (hγ0 n))
+    have h2 : (0 : ℝ) ≤ 2 * (m : ℝ) := by positivity
+    have hmove' : dist ((l n).toOrderIso t) t
+        ≤ (Real.exp (∑' i, γ i) * (2 * m)) * γ n := by
+      refine hmove.trans ?_
+      nlinarith [mul_le_mul_of_nonneg_right h1 h2]
+    have heq : (TimeChange.partialComp l (n + 1)).toOrderIso t
+        = (TimeChange.partialComp l n).toOrderIso ((l n).toOrderIso t) := rfl
+    rw [heq]
+    calc dist ((TimeChange.partialComp l n).toOrderIso t)
+          ((TimeChange.partialComp l n).toOrderIso ((l n).toOrderIso t))
+        ≤ Real.exp (∑' i, γ i) * dist t ((l n).toOrderIso t) := hlipfwd n _ _
+      _ ≤ Real.exp (∑' i, γ i) * ((Real.exp (∑' i, γ i) * (2 * m)) * γ n) := by
+          rw [dist_comm t]
+          exact mul_le_mul_of_nonneg_left hmove' (Real.exp_pos _).le
+      _ = (Real.exp (∑' i, γ i) * (Real.exp (∑' i, γ i) * (2 * m))) * γ n := by ring
+  -- and the same for the inverses, on the enlarged window the prefix cannot leave
+  have hstepinv : ∀ (m : ℕ) (t : ι), t ∈ exhaustion t₀ m → ∀ n : ℕ,
+      dist ((TimeChange.partialComp l n)⁻¹.toOrderIso t)
+        ((TimeChange.partialComp l (n + 1))⁻¹.toOrderIso t)
+        ≤ (Real.exp (∑' i, γ i) * (2 * (⌈Real.exp (∑' i, γ i) * m⌉₊ : ℕ))) * γ n := by
+    intro m t ht n
+    have hufix : (TimeChange.partialComp l n)⁻¹.toOrderIso t₀ = t₀ :=
+      TimeChange.mem_fixing_iff.1 ((TimeChange.fixing t₀).inv_mem (hpcfix n))
+    have humem : (TimeChange.partialComp l n)⁻¹.toOrderIso t
+        ∈ exhaustion t₀ ⌈Real.exp (∑' i, γ i) * m⌉₊ := by
+      have htm : dist t₀ t ≤ (m : ℝ) := by
+        rw [dist_comm]
+        simpa [exhaustion, Metric.mem_closedBall] using ht
+      have hd : dist t₀ ((TimeChange.partialComp l n)⁻¹.toOrderIso t)
+          ≤ Real.exp (∑' i, γ i) * dist t₀ t := by
+        nth_rewrite 1 [← hufix]
+        exact hlipbwd n t₀ t
+      have hd' : dist t₀ ((TimeChange.partialComp l n)⁻¹.toOrderIso t)
+          ≤ Real.exp (∑' i, γ i) * m :=
+        hd.trans (mul_le_mul_of_nonneg_left htm (Real.exp_pos _).le)
+      have hceil : Real.exp (∑' i, γ i) * m ≤ (⌈Real.exp (∑' i, γ i) * m⌉₊ : ℝ) :=
+        Nat.le_ceil _
+      simpa [exhaustion, Metric.mem_closedBall,
+        dist_comm ((TimeChange.partialComp l n)⁻¹.toOrderIso t) t₀] using hd'.trans hceil
+    have heq : (TimeChange.partialComp l (n + 1))⁻¹.toOrderIso t
+        = (l n)⁻¹.toOrderIso ((TimeChange.partialComp l n)⁻¹.toOrderIso t) := by
+      show ((TimeChange.partialComp l n * l n)⁻¹).toOrderIso t = _
+      rw [mul_inv_rev]
+      rfl
+    rw [heq, dist_comm]
+    have hmove : dist ((l n)⁻¹.toOrderIso ((TimeChange.partialComp l n)⁻¹.toOrderIso t))
+        ((TimeChange.partialComp l n)⁻¹.toOrderIso t)
+        ≤ (Real.exp (γ n) - 1) * (2 * (⌈Real.exp (∑' i, γ i) * m⌉₊ : ℕ)) := by
+      refine TimeChange.dist_le_of_norm_le t₀ _
+        (TimeChange.mem_fixing_iff.1 ((TimeChange.fixing t₀).inv_mem (hl n))) ?_ humem
+      rw [TimeChange.norm_inv]
+      exact hγ n
+    refine hmove.trans ?_
+    have h1 : Real.exp (γ n) - 1 ≤ γ n * Real.exp (∑' i, γ i) :=
+      (hexp1 (γ n)).trans (mul_le_mul_of_nonneg_left (Real.exp_le_exp.2 (hγΓ n)) (hγ0 n))
+    have h2 : (0 : ℝ) ≤ 2 * ((⌈Real.exp (∑' i, γ i) * m⌉₊ : ℕ) : ℝ) := by positivity
+    nlinarith [mul_le_mul_of_nonneg_right h1 h2]
+  -- the two limits
+  have hcvgfwd : ∀ t : ι, ∃ y, Tendsto (fun n => (TimeChange.partialComp l n).toOrderIso t)
+      atTop (𝓝 y) := by
+    intro t
+    obtain ⟨m, ht⟩ := hmem t
+    exact cauchySeq_tendsto_of_complete
+      (cauchySeq_of_dist_le_of_summable _ (hstep m t ht) (hs.mul_left _))
+  have hcvgbwd : ∀ t : ι, ∃ y, Tendsto (fun n => (TimeChange.partialComp l n)⁻¹.toOrderIso t)
+      atTop (𝓝 y) := by
+    intro t
+    obtain ⟨m, ht⟩ := hmem t
+    exact cauchySeq_tendsto_of_complete
+      (cauchySeq_of_dist_le_of_summable _ (hstepinv m t ht) (hs.mul_left _))
+  choose L hL using hcvgfwd
+  choose M hM using hcvgbwd
+  have hmonoL : Monotone L := fun s t hst =>
+    le_of_tendsto_of_tendsto' (hL s) (hL t) fun n =>
+      (TimeChange.partialComp l n).toOrderIso.monotone hst
+  have hmonoM : Monotone M := fun s t hst =>
+    le_of_tendsto_of_tendsto' (hM s) (hM t) fun n =>
+      (TimeChange.partialComp l n)⁻¹.toOrderIso.monotone hst
+  have hlipL : ∀ s t : ι, dist (L s) (L t) ≤ Real.exp (∑' i, γ i) * dist s t := fun s t =>
+    le_of_tendsto ((hL s).dist (hL t)) (Eventually.of_forall fun n => hlipfwd n s t)
+  have hlipM : ∀ s t : ι, dist (M s) (M t) ≤ Real.exp (∑' i, γ i) * dist s t := fun s t =>
+    le_of_tendsto ((hM s).dist (hM t)) (Eventually.of_forall fun n => hlipbwd n s t)
+  -- the two inverse relations, and this is the surjectivity
+  have hLM : ∀ t : ι, L (M t) = t := by
+    intro t
+    have hid : ∀ n : ℕ, (TimeChange.partialComp l n).toOrderIso
+        ((TimeChange.partialComp l n)⁻¹.toOrderIso t) = t := fun n =>
+      OrderIso.apply_symm_apply _ _
+    have hbd : ∀ n : ℕ, dist t (L (M t)) ≤
+        Real.exp (∑' i, γ i) * dist ((TimeChange.partialComp l n)⁻¹.toOrderIso t) (M t)
+          + dist ((TimeChange.partialComp l n).toOrderIso (M t)) (L (M t)) := by
+      intro n
+      calc dist t (L (M t))
+          = dist ((TimeChange.partialComp l n).toOrderIso
+              ((TimeChange.partialComp l n)⁻¹.toOrderIso t)) (L (M t)) := by rw [hid n]
+        _ ≤ dist ((TimeChange.partialComp l n).toOrderIso
+              ((TimeChange.partialComp l n)⁻¹.toOrderIso t))
+              ((TimeChange.partialComp l n).toOrderIso (M t))
+            + dist ((TimeChange.partialComp l n).toOrderIso (M t)) (L (M t)) :=
+            dist_triangle _ _ _
+        _ ≤ _ := add_le_add (hlipfwd n _ _) le_rfl
+    have ha : Tendsto (fun n => dist ((TimeChange.partialComp l n)⁻¹.toOrderIso t) (M t))
+        atTop (𝓝 0) := by
+      simpa using (hM t).dist (tendsto_const_nhds (x := M t) (f := (atTop : Filter ℕ)))
+    have hb : Tendsto (fun n => dist ((TimeChange.partialComp l n).toOrderIso (M t)) (L (M t)))
+        atTop (𝓝 0) := by
+      simpa using (hL (M t)).dist (tendsto_const_nhds (x := L (M t)) (f := (atTop : Filter ℕ)))
+    have hzero : dist t (L (M t)) ≤ 0 := by
+      have htend := (ha.const_mul (Real.exp (∑' i, γ i))).add hb
+      exact ge_of_tendsto (by simpa using htend) (Eventually.of_forall hbd)
+    exact (dist_le_zero.1 hzero).symm
+  have hML : ∀ t : ι, M (L t) = t := by
+    intro t
+    have hid : ∀ n : ℕ, (TimeChange.partialComp l n)⁻¹.toOrderIso
+        ((TimeChange.partialComp l n).toOrderIso t) = t := fun n =>
+      OrderIso.symm_apply_apply _ _
+    have hbd : ∀ n : ℕ, dist t (M (L t)) ≤
+        Real.exp (∑' i, γ i) * dist ((TimeChange.partialComp l n).toOrderIso t) (L t)
+          + dist ((TimeChange.partialComp l n)⁻¹.toOrderIso (L t)) (M (L t)) := by
+      intro n
+      calc dist t (M (L t))
+          = dist ((TimeChange.partialComp l n)⁻¹.toOrderIso
+              ((TimeChange.partialComp l n).toOrderIso t)) (M (L t)) := by rw [hid n]
+        _ ≤ dist ((TimeChange.partialComp l n)⁻¹.toOrderIso
+              ((TimeChange.partialComp l n).toOrderIso t))
+              ((TimeChange.partialComp l n)⁻¹.toOrderIso (L t))
+            + dist ((TimeChange.partialComp l n)⁻¹.toOrderIso (L t)) (M (L t)) :=
+            dist_triangle _ _ _
+        _ ≤ _ := add_le_add (hlipbwd n _ _) le_rfl
+    have ha : Tendsto (fun n => dist ((TimeChange.partialComp l n).toOrderIso t) (L t))
+        atTop (𝓝 0) := by
+      simpa using (hL t).dist (tendsto_const_nhds (x := L t) (f := (atTop : Filter ℕ)))
+    have hb : Tendsto (fun n => dist ((TimeChange.partialComp l n)⁻¹.toOrderIso (L t)) (M (L t)))
+        atTop (𝓝 0) := by
+      simpa using (hM (L t)).dist (tendsto_const_nhds (x := M (L t)) (f := (atTop : Filter ℕ)))
+    have hzero : dist t (M (L t)) ≤ 0 := by
+      have htend := (ha.const_mul (Real.exp (∑' i, γ i))).add hb
+      exact ge_of_tendsto (by simpa using htend) (Eventually.of_forall hbd)
+    exact (dist_le_zero.1 hzero).symm
+  -- assembling the limit into a time change
+  have hKco : (((Real.exp (∑' i, γ i)).toNNReal : ℝ≥0) : ℝ) = Real.exp (∑' i, γ i) :=
+    Real.coe_toNNReal _ (Real.exp_pos _).le
+  have hLlip : LipschitzWith (Real.exp (∑' i, γ i)).toNNReal L :=
+    LipschitzWith.of_dist_le_mul fun x y => by rw [hKco]; exact hlipL x y
+  have hMlip : LipschitzWith (Real.exp (∑' i, γ i)).toNNReal M :=
+    LipschitzWith.of_dist_le_mul fun x y => by rw [hKco]; exact hlipM x y
+  have hrel : ∀ a b : ι, L a ≤ L b ↔ a ≤ b := by
+    intro a b
+    refine ⟨fun h => ?_, fun h => hmonoL h⟩
+    have := hmonoM h
+    rwa [hML a, hML b] at this
+  refine ⟨{ toOrderIso := { toEquiv := ⟨L, M, hML, hLM⟩, map_rel_iff' := fun {a b} => hrel a b },
+            lipschitz := ⟨_, hLlip⟩,
+            lipschitz_symm := ⟨_, hMlip⟩ }, ?_, ?_, fun t => hL t⟩
+  · show L t₀ = t₀
+    refine tendsto_nhds_unique (hL t₀) ?_
+    have : ∀ n : ℕ, (TimeChange.partialComp l n).toOrderIso t₀ = t₀ := fun n =>
+      TimeChange.mem_fixing_iff.1 (hpcfix n)
+    simp [this]
+  · exact TimeChange.norm_le_of_lipschitzWith hΓ0 hLlip hMlip
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The composition splits at any stage into its first `n` factors and the rest.
+This is what turns the limit above into a **tail** estimate, and the tail estimate
+is what a convergence proof in `D(ι, E)` reads: after `n` steps the part of the
+limit time change still to be performed is `(partialComp l n)⁻¹ * L`. -/
+theorem TimeChange.partialComp_add (l : ℕ → TimeChange ι) (n k : ℕ) :
+    TimeChange.partialComp l (n + k)
+      = TimeChange.partialComp l n * TimeChange.partialComp (fun i => l (n + i)) k := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+      show TimeChange.partialComp l (n + k + 1) = _
+      simp only [TimeChange.partialComp_succ]
+      rw [ih, mul_assoc]
+
+/-- The infinite composition **with a rate**: the norm of what the first `n`
+factors have left undone is at most the tail `∑' i, γ (n + i)` of the dominating
+series.  Without it `exists_tendsto_of_summable_norm` only says that a limit
+exists, which is not enough to see that a Cauchy sequence of paths converges *to
+it*; with it the `n`-th approximation is quantitatively close.
+
+The proof runs the existence theorem once more on each shifted sequence and
+identifies `L` with `partialComp l n * (the shifted limit)` by uniqueness of
+limits: `partialComp l (n + k) = partialComp l n * partialComp (l ∘ (n + ·)) k` is
+a tail of the original sequence, so both sides converge to the same point. -/
+theorem TimeChange.exists_tendsto_norm_tail_le (t₀ : ι) (l : ℕ → TimeChange ι)
+    (hl : ∀ n, l n ∈ TimeChange.fixing t₀) (γ : ℕ → ℝ)
+    (hγ : ∀ n, (l n).norm ≤ γ n) (hs : Summable γ) :
+    ∃ L : TimeChange ι, L ∈ TimeChange.fixing t₀ ∧
+      (∀ n : ℕ, ((TimeChange.partialComp l n)⁻¹ * L).norm ≤ ∑' i, γ (n + i)) ∧
+      ∀ t : ι, Tendsto (fun n => (TimeChange.partialComp l n).toOrderIso t) atTop
+        (𝓝 (L.toOrderIso t)) := by
+  obtain ⟨L, hLfix, -, hLconv⟩ :=
+    TimeChange.exists_tendsto_of_summable_norm t₀ l hl γ hγ hs
+  have hshift : ∀ n : ℕ, ∃ N : TimeChange ι, N ∈ TimeChange.fixing t₀ ∧
+      N.norm ≤ ∑' i, γ (n + i) ∧
+      ∀ t : ι, Tendsto (fun k => (TimeChange.partialComp (fun i => l (n + i)) k).toOrderIso t)
+        atTop (𝓝 (N.toOrderIso t)) := fun n =>
+    TimeChange.exists_tendsto_of_summable_norm t₀ (fun i => l (n + i))
+      (fun i => hl (n + i)) (fun i => γ (n + i)) (fun i => hγ (n + i))
+      (hs.comp_injective (add_right_injective n))
+  choose N _ hNnorm hNconv using hshift
+  refine ⟨L, hLfix, fun n => ?_, hLconv⟩
+  have key : L = TimeChange.partialComp l n * N n := by
+    refine TimeChange.ext (DFunLike.ext _ _ fun t => ?_)
+    have h1 : Tendsto (fun k => (TimeChange.partialComp l (n + k)).toOrderIso t) atTop
+        (𝓝 (L.toOrderIso t)) := by
+      have h := (hLconv t).comp (tendsto_add_atTop_nat n)
+      simpa [Function.comp_def, Nat.add_comm] using h
+    have h2 : Tendsto (fun k => (TimeChange.partialComp l (n + k)).toOrderIso t) atTop
+        (𝓝 ((TimeChange.partialComp l n * N n).toOrderIso t)) := by
+      have hc : Continuous ⇑(TimeChange.partialComp l n).toOrderIso :=
+        (TimeChange.partialComp l n).lipschitzWith_lipConst.continuous
+      refine Filter.Tendsto.congr (fun k => ?_)
+        ((hc.tendsto ((N n).toOrderIso t)).comp (hNconv n t))
+      show (TimeChange.partialComp l n).toOrderIso
+        ((TimeChange.partialComp (fun i => l (n + i)) k).toOrderIso t) = _
+      rw [TimeChange.partialComp_add]
+      rfl
+    exact tendsto_nhds_unique h1 h2
+  rw [key, inv_mul_cancel_left]
+  exact hNnorm n
+
 /-- Càdlàg paths from `ι` to `E`. -/
 structure SkorokhodSpace (ι E : Type*) [LinearOrder ι] [TopologicalSpace ι]
     [TopologicalSpace E] where
@@ -1394,6 +1828,23 @@ theorem SkorokhodSpace.restrictExhaustion_eq_self {t₀ : ι} {m : ℕ} {f : D(�
     (ht : t ∈ exhaustion t₀ m) :
     (SkorokhodSpace.restrictExhaustion t₀ m f).toFun t = f.toFun t := by
   rw [SkorokhodSpace.restrictExhaustion_apply, clamp_eq_self ht]
+
+/-- Truncating to a large window and then to a small one is truncating to the
+small one.  Stated on `toFun` rather than on `D(ι, E)`, in the style of the
+separation lemmas of Milestone 4, because `SkorokhodSpace` carries no `ext`
+lemma.  This is the coherence that
+`SkorokhodSpace.exists_restrictExhaustion_limit` of Milestone 5 will read: the
+truncations of one path to the successive windows determine each other in the
+one direction that a limit argument needs, and the family of window limits has to
+be checked against exactly this. -/
+theorem SkorokhodSpace.restrictExhaustion_restrictExhaustion (t₀ : ι) {m m' : ℕ}
+    (h : m ≤ m') (f : D(ι, E)) :
+    (SkorokhodSpace.restrictExhaustion t₀ m
+        (SkorokhodSpace.restrictExhaustion t₀ m' f)).toFun
+      = (SkorokhodSpace.restrictExhaustion t₀ m f).toFun := by
+  funext t
+  simp only [SkorokhodSpace.restrictExhaustion_apply]
+  rw [clamp_clamp_of_le t₀ h]
 
 /-- The truncated path has bounded range.  This is the one place where the
 compactness of the window is spent, and it is what makes the supremum in
@@ -1724,6 +2175,76 @@ theorem SkorokhodSpace.totalDist_triangle (t₀ : ι) (f g h : D(ι, E)) :
   exact key _ _ _ (SkorokhodSpace.distOn_nonneg t₀ m f h)
     (SkorokhodSpace.distOn_nonneg t₀ m f g) (SkorokhodSpace.distOn_nonneg t₀ m g h)
     (SkorokhodSpace.distOn_triangle t₀ m f g h)
+
+omit [AdditiveDist ι] in
+/-- Each window distance is dominated by the metric, at the price of the
+geometric weight of its window.  This is the direction a completeness proof reads
+first: a Cauchy sequence for the metric is Cauchy for every `distOn t₀ m`, and
+`distOn` is what produces the time changes. -/
+theorem SkorokhodSpace.min_one_distOn_le (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
+    min 1 (SkorokhodSpace.distOn t₀ m f g) ≤ 2 ^ m * SkorokhodSpace.totalDist t₀ f g := by
+  have hnn : ∀ k : ℕ, 0 ≤ (2 : ℝ)⁻¹ ^ k * min 1 (SkorokhodSpace.distOn t₀ k f g) :=
+    fun k => mul_nonneg (by positivity)
+      (le_min zero_le_one (SkorokhodSpace.distOn_nonneg t₀ k f g))
+  have hle : (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g)
+      ≤ SkorokhodSpace.totalDist t₀ f g :=
+    (SkorokhodSpace.summable_totalDist t₀ f g).le_tsum m fun j _ => hnn j
+  have hid : (2 : ℝ) ^ m * (2 : ℝ)⁻¹ ^ m = 1 := by
+    rw [← mul_pow]; norm_num
+  calc min 1 (SkorokhodSpace.distOn t₀ m f g)
+      = 2 ^ m * ((2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g)) := by
+        rw [← mul_assoc, hid, one_mul]
+    _ ≤ 2 ^ m * SkorokhodSpace.totalDist t₀ f g :=
+        mul_le_mul_of_nonneg_left hle (by positivity)
+
+omit [AdditiveDist ι] in
+/-- The same estimate without the truncation, on the range where the truncation
+is inactive.  The hypothesis is not a defect: `distOn` is genuinely unbounded as
+the window grows, so no bound of this shape can hold for all pairs at once, and a
+completeness proof only ever uses it for pairs already close in the metric. -/
+theorem SkorokhodSpace.distOn_le_of_two_pow_mul_lt_one (t₀ : ι) (m : ℕ) (f g : D(ι, E))
+    (h : 2 ^ m * SkorokhodSpace.totalDist t₀ f g < 1) :
+    SkorokhodSpace.distOn t₀ m f g ≤ 2 ^ m * SkorokhodSpace.totalDist t₀ f g := by
+  have hmin := SkorokhodSpace.min_one_distOn_le t₀ m f g
+  rcases min_cases 1 (SkorokhodSpace.distOn t₀ m f g) with ⟨he, _⟩ | ⟨he, _⟩
+  · rw [he] at hmin; linarith
+  · rw [he] at hmin; exact hmin
+
+omit [AdditiveDist ι] in
+/-- And the converse direction, which a completeness proof reads last: the metric
+is recovered from finitely many windows up to a geometric error, so a sequence
+that converges in every `distOn t₀ m` converges in the metric.  The tail is
+estimated by the truncation alone, which is what the `min 1` in `totalDist` is
+for. -/
+theorem SkorokhodSpace.totalDist_le_sum_add (t₀ : ι) (M : ℕ) (f g : D(ι, E)) :
+    SkorokhodSpace.totalDist t₀ f g
+      ≤ (∑ m ∈ Finset.range M, (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g))
+        + 2 * (2 : ℝ)⁻¹ ^ M := by
+  have hsum := SkorokhodSpace.summable_totalDist t₀ f g
+  have hsplit := hsum.sum_add_tsum_nat_add M
+  have hgeom : Summable fun i : ℕ => (2 : ℝ)⁻¹ ^ i :=
+    summable_geometric_of_lt_one (by norm_num) (by norm_num)
+  have hbd : ∀ i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+      ≤ (2 : ℝ)⁻¹ ^ M * (2 : ℝ)⁻¹ ^ i := by
+    intro i
+    have h1 : min 1 (SkorokhodSpace.distOn t₀ (i + M) f g) ≤ 1 := min_le_left _ _
+    have h2 : (0 : ℝ) ≤ (2 : ℝ)⁻¹ ^ (i + M) := by positivity
+    calc (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+        ≤ (2 : ℝ)⁻¹ ^ (i + M) * 1 := mul_le_mul_of_nonneg_left h1 h2
+      _ = (2 : ℝ)⁻¹ ^ M * (2 : ℝ)⁻¹ ^ i := by rw [mul_one, pow_add]; ring
+  have htail : ∑' i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+      ≤ 2 * (2 : ℝ)⁻¹ ^ M := by
+    calc ∑' i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+        ≤ ∑' i : ℕ, (2 : ℝ)⁻¹ ^ M * (2 : ℝ)⁻¹ ^ i :=
+          (hsum.comp_injective (add_left_injective M)).tsum_le_tsum hbd (hgeom.mul_left _)
+      _ = (2 : ℝ)⁻¹ ^ M * ∑' i : ℕ, (2 : ℝ)⁻¹ ^ i := hgeom.tsum_mul_left _
+      _ = 2 * (2 : ℝ)⁻¹ ^ M := by
+          rw [tsum_geometric_of_lt_one (by norm_num) (by norm_num)]
+          norm_num
+          ring
+  show ∑' m : ℕ, (2 : ℝ)⁻¹ ^ m * min 1 (SkorokhodSpace.distOn t₀ m f g) ≤ _
+  rw [← hsplit]
+  exact add_le_add le_rfl htail
 
 /-- Separation, and the only axiom that is not a term by term computation: a
 series of nonnegative terms vanishes only if every term does, so every window

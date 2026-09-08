@@ -743,7 +743,55 @@ Under (B), with `E` a pseudometric space:
 * `CompleteSpace (D ι E)`: for a Cauchy sequence extract a subsequence whose
   consecutive distances are summable, compose the time changes, and use
   completeness of `E` together with `TimeChange.norm_mul_le` to see that the
-  composed time changes converge.
+  composed time changes converge. The statement rests on five named items, and
+  four of them are proved:
+  * `SkorokhodSpace.min_one_distOn_le` and
+    `SkorokhodSpace.distOn_le_of_two_pow_mul_lt_one`, the passage from the metric
+    to the window pseudodistance: `min 1 (distOn t₀ m f g) ≤ 2 ^ m * totalDist t₀ f g`,
+    and the same without the truncation for pairs with `2 ^ m * totalDist < 1`.
+    The hypothesis of the second is not a defect — `distOn` is unbounded as the
+    window grows, so no bound of that shape holds for all pairs — and a Cauchy
+    sequence supplies it for all but finitely many indices (2026-09-08).
+  * `SkorokhodSpace.exists_lt_distOn_add`, the approximate minimiser that turns
+    a small `distOn` into an actual time change (2026-09-06).
+  * `TimeChange.exists_tendsto_of_summable_norm` and
+    `TimeChange.exists_tendsto_norm_tail_le`, the infinite composition: if
+    `‖l n‖ ≤ γ n` with `γ` summable and every `l n` fixes `t₀`, the partial
+    compositions `TimeChange.partialComp l n = l 0 ∘ ⋯ ∘ l (n-1)` converge
+    pointwise to a time change `L` fixing `t₀` with `‖L‖ ≤ ∑' γ`, and after `n`
+    steps what is left undone satisfies `‖(partialComp l n)⁻¹ * L‖ ≤ ∑' i, γ (n + i)`
+    (2026-09-08). The step that is more than a convergence argument is the
+    **surjectivity** of `L`: a pointwise limit of order isomorphisms is monotone
+    and injective for free, but on an index that is not assumed connected nothing
+    forces its image to be all of `ι`. It is obtained by running the same
+    estimate on the inverses — `(partialComp l n * l n)⁻¹ = (l n)⁻¹ * (partialComp l n)⁻¹`
+    displaces a point by exactly the displacement of `(l n)⁻¹`, on the window
+    enlarged by the uniform Lipschitz constant `exp (∑' γ)` — so that the inverse
+    limit `M` exists and `partialComp l n ((partialComp l n)⁻¹ t) = t` passes to
+    the limit. The supporting items are `TimeChange.lipConst_le_exp_norm`,
+    `TimeChange.norm_le_of_lipschitzWith`, `TimeChange.norm_partialComp_le` and
+    `TimeChange.partialComp_add`.
+  * `IsCadlag.of_tendstoUniformly`, which catches the limit path (2026-09-08).
+  * `SkorokhodSpace.exists_restrictExhaustion_limit`, the **compatibility of the
+    window limits**, which is what remains. For each `m` the construction above
+    produces a limit of the truncations to `exhaustion t₀ m`, and the time changes
+    it uses depend on `m`; the statement is that a single `f : D ι E` has
+    `distOn t₀ m f_n f → 0` for every `m` at once. Uniqueness within one window is
+    `SkorokhodSpace.eq_of_distOn_eq_zero`, so what the item adds is that the
+    limits for `m` and `m + 1` agree after truncation to the smaller window. The
+    obvious route, `distOn t₀ m ≤ distOn t₀ (m + 1)`, is **not** available as
+    stated: a time change admissible for the larger window compares
+    `f ∘ clamp (m+1) ∘ λ` with `g ∘ clamp (m+1)`, and reading that comparison at a
+    point of the smaller window leaves the two `clamp`s mismatched. The item is
+    therefore about the truncations and not about the pseudodistances, and the
+    coherence it reads them through is proved:
+    `SkorokhodSpace.restrictExhaustion_restrictExhaustion`, that truncating to a
+    large window and then to a small one is truncating to the small one, over
+    `clamp_clamp_of_le` and `exhaustion_subset_of_le` of Milestone 1
+    (2026-09-08).
+  * `SkorokhodSpace.totalDist_le_sum_add` (proved 2026-09-08), which assembles the
+    convergence in the metric out of the convergence in finitely many windows, the
+    tail being controlled by the truncation alone.
 * `SeparableSpace (D ι E)`: the piecewise constant paths taking finitely many
   values from a countable dense subset of `E` on the intervals of a rational
   subdivision of `B m` are dense.

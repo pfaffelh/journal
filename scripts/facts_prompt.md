@@ -95,6 +95,49 @@ bewiesen sind: `SkorokhodSpace.exists_lt_distOn_add` liefert die Zeitwechsel,
 Sprosse ist nicht die Konvergenz, sondern die **Surjektivität** des
 Grenzzeitwechsels.
 
+**Zwischenstand nach dem zweiten von vieren (2026-09-08, siebzehnter Lauf des
+Tages).** Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-08, siebzehnter Lauf
+des Tages". Die Datei steht weiterhin bei **acht** `sorry` — dieser Lauf hat
+keines gestrichen, sondern die Sprosse gebaut, an der zwei von ihnen hängen.
+Fünfzehn neue Deklarationen, alle mit `#print axioms` geprüft und alle nur auf
+`propext`, `Classical.choice`, `Quot.sound`.
+
+*Die offene Sprosse aus Punkt 2 ist zu.*
+`TimeChange.exists_tendsto_of_summable_norm`: sind alle `l n` in
+`TimeChange.fixing t₀` und ist `‖l n‖ ≤ γ n` mit summierbarem `γ`, so
+konvergieren die Teilkompositionen `TimeChange.partialComp l n` punktweise gegen
+einen Zeitwechsel `L` mit `L ∈ fixing t₀` und `‖L‖ ≤ ∑' γ`. Dazu
+`TimeChange.exists_tendsto_norm_tail_le` mit der Rate
+`‖(partialComp l n)⁻¹ * L‖ ≤ ∑' i, γ (n+i)` — ohne sie sagt die Existenz nur,
+daß ein Limes da ist, mit ihr ist die `n`-te Näherung quantitativ nah.
+
+*Die Surjektivität, und sie war wirklich der Punkt.* Ein punktweiser Limes von
+Ordnungsisomorphismen ist umsonst monoton und injektiv; daß sein Bild ganz `ι`
+ist, folgt nicht — der Index ist nicht zusammenhängend vorausgesetzt, eine der
+vier laufenden Instanzen ist `AddSubgroup.zmultiples (1:ℝ)`. Das Mittel ist,
+**dieselbe Rechnung auf den Inversen zu führen**: aus
+`(partialComp l (n+1))⁻¹ = (l n)⁻¹ * (partialComp l n)⁻¹` folgt, daß die inverse
+Folge einen Punkt um genau die Verschiebung von `(l n)⁻¹` bewegt, gelesen auf dem
+um `exp (∑' γ)` vergrößerten Fenster; sie ist also ebenfalls Cauchy, hat einen
+Limes `M`, und `partialComp l n ((partialComp l n)⁻¹ t) = t` geht in den Limes
+über. Der Grenzzeitwechsel ist damit eine Bijektion mit benanntem Inversen.
+
+*Und sechs Aussagen zum Zusammenbau*: `SkorokhodSpace.min_one_distOn_le`,
+`SkorokhodSpace.distOn_le_of_two_pow_mul_lt_one` und
+`SkorokhodSpace.totalDist_le_sum_add` für den Übergang zwischen Metrik und
+Fenster in beiden Richtungen, `exhaustion_subset_of_le`, `clamp_clamp_of_le` und
+`SkorokhodSpace.restrictExhaustion_restrictExhaustion` für die algebraische Seite
+der Verträglichkeit.
+
+*Woran der nächste hängt.* `CompleteSpace D(ι, E)` steht jetzt auf sechs
+benannten Punkten, fünf davon bewiesen. Offen ist allein die **Verträglichkeit
+der Fenstergrenzwerte**: die Konstruktion liefert je Fenster einen Limes, mit
+von `m` abhängigen Zeitwechseln, und ein einziges `f : D(ι, E)` muß für alle `m`
+zugleich taugen. Der naheliegende Weg `distOn t₀ m ≤ distOn t₀ (m+1)` geht
+**nicht** — die beiden `clamp` stehen an einem Punkt des kleineren Fensters nicht
+zusammen —, der Punkt ist über die Trunkierungen zu führen und steht als
+`SkorokhodSpace.exists_restrictExhaustion_limit` in Meilenstein 5.
+
 Zurzeit stehen hier sonst keine offenen Aufgaben.
 
 ### ~~Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$?~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, elfter Lauf des Tages)*
