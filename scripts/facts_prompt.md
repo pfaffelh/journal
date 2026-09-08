@@ -10,7 +10,63 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-### Aufgabe: Ionescu--Tulcea ist in Mathlib, und der Befund des 20. Laufs steht schief *(gestellt 2026-09-08 vom Nutzer)*
+Zurzeit stehen hier keine offenen Aufgaben.
+
+### ~~Aufgabe: Ionescu--Tulcea ist in Mathlib, und der Befund des 20. Laufs steht schief~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, neunter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, „2026-09-08, neunter Lauf des
+Tages". Kurz, in den drei Teilen der Aufgabe:
+
+*Erstens.* Berichtigt an drei Stellen — durchgestrichen samt Berichtigung im
+Bericht des achten Laufs, in der Tabellenzeile `fact:PSpolish`, und der Absatz
+„The common space" in `WeakConvergence` Meilenstein 3 neu geschrieben, mit
+`ProbabilityTheory.Kernel.traj` (`IonescuTulcea/Traj.lean:518`, gleiche Zeile in
+v4.33.1 **und** auf `upstream/master` `572e4d091bc`), `traj_map_frestrictLe`
+(`:530`), `trajMeasure` (`:763`), `Kernel.IsMarkovKernel.comap`
+(`Composition/MapComap.lean:187`). Warum die Suche danebenging: **nicht** am
+Nichtfinden — der achte Lauf hatte `traj` in der Hand und verwarf sie mit „für
+eine Filtration", einer *Beschreibung* statt einer *Voraussetzung*, und las
+damit die Allgemeinheit von `traj` (die Kerne dürfen die Vergangenheit lesen)
+als Einschränkung; überdies stand `traj` mit Namen und Datei bereits fünfmal im
+eigenen Bestand (`TauCeti/KolmogorovExtension/README.md`, das Inventar selbst).
+Die „Regel für den Negativbefund" im Inventar hat dafür eine zweite Hälfte
+bekommen: wer einen Kandidaten verwirft, nennt die Voraussetzung, an der er
+scheitert, und durchsucht vorher den eigenen Bestand.
+
+*Zweitens, die Abwägung, an der Gebrauchsstelle gerechnet.* `fact:PSpolish` wird
+an zwei Stellen konsumiert: `rem:EKrelcompact` (dort `D_E` unter `J_1`, polnisch)
+und `thm:MZconv` Schritt 1 (dort `D_E` in der **Pseudopfad**-Topologie,
+nach `fact:pseudopath`(ii) separabel metrisch und ausdrücklich **nicht**
+polnisch). Der überraschende Befund: `StandardBorelSpace` ist nicht
+`PolishSpace`, sondern eine Eigenschaft der σ-Algebra allein (`Polish/Basic.lean:81`),
+und an der Pseudopfad-Stelle ist sie **erfüllt** — `fact:pseudopath`(iii) sagt,
+daß die Borel-σ-Algebra dieselbe ist wie die von `J_1`, und unter `J_1` ist der
+Raum polnisch. Mathematisch steht es also ohnehin da. Frei ist es trotzdem
+nicht, und zwar aus drei benannten Gründen: (1) `fact:PSpolish` ist für `S`
+separabel formuliert, und separabel metrisch impliziert nicht standard-borelsch
+(Zeuge: nicht-borelsches `A ⊆ ℝ`, sonst machte Lusin--Souslin,
+`MeasurableSet.image_of_measurable_injOn`, `A` in `ℝ` borelsch) — der
+Meilensteinpunkt wäre schwächer als der Fact, den er abtragen soll; (2) die
+Einlösung an der Gebrauchsstelle ist ein Satz über den Pseudopfadraum, den keine
+Roadmap baut („pseudo-path" kommt unter `TauCeti/` nirgends vor); (3)
+`Measure.condKernel` verlangt zusätzlich `[Nonempty Ω]`. **Also: die Entscheidung
+des achten Laufs war im Ergebnis richtig und nur die Begründung schief** — sie
+trägt jetzt allein auf der Desintegration, nicht mehr auf einer Abwesenheit.
+
+*Drittens.* Die Route wird **nicht** gewechselt, und der Grund ist gerechnet und
+nicht vermutet: der Verklebeweg beweist eine echt kleinere Aussage und würfe die
+sieben bewiesenen Aussagen des achten Laufs für eine Montage vergleichbarer
+Länge weg. Mitgekommen ist statt dessen der Zeuge, der die Berichtigung
+typprüfbar macht: `ProbabilityTheory.exists_kernel_pi_of_markov` in
+`TauCeti/KolmogorovExtension/scratch/TrajPi.lean` baut aus Markovkernen
+`K : ℕ → Kernel E E` über bloßem `[MeasurableSpace E]` einen Markovkern
+`η : Kernel E (ℕ → E)` mit `(η y).map (fun x ↦ x 0) = dirac y` und
+`(η y).map (fun x ↦ x (n+1)) = K n y`; durch `lake env lean` gegen v4.33.1, mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft.
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: Ionescu--Tulcea ist in Mathlib, und der Befund des 20. Laufs steht schief~~
 
 Der zwanzigste Lauf hat den Schritt (c2) der Skorohod-Darstellung gegen das
 Verkleben entschieden, mit der Begründung, Mathlib habe kein abzählbares Produkt
@@ -58,8 +114,6 @@ Beides ist ein Ergebnis. Was **nicht** zählt, ist eine Präferenz ohne Rechnung
 **Drittens, nur wenn Zeit bleibt:** wechsle die Route nicht auf Verdacht. Der
 bestehende Weg ist weit gediehen; ein Wechsel lohnt nur, wenn die Abwägung ihn
 deutlich trägt, und dann als eigener Lauf mit eigenem Zwischenstand.
-
-Zurzeit stehen hier sonst keine Aufgaben.
 
 ### ~~Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen~~ *(gestellt 2026-09-07 vom Nutzer, erledigt 2026-09-07, sechzehnter Lauf des Tages)*
 

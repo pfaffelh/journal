@@ -53,7 +53,14 @@ Nearly all the scaffolding, and it is **not** to be rebuilt.
   for an arbitrary index, `MeasureTheory.Measure.isProjectiveLimit_infinitePi`
   in `Mathlib/Probability/ProductMeasure.lean` — in the namespace
   `MeasureTheory.Measure`, with `MeasureTheory.Measure.isProjectiveLimit_infinitePiNat`
-  for the index `ℕ`.
+  for the index `ℕ`. The first of these covers more than its name suggests: the
+  countable *product* of Markov kernels over a common base point is the case of
+  `Kernel.traj` in which the kernels do not read the past, and `traj` assumes
+  nothing but `[∀ n, MeasurableSpace (X n)]` and `[∀ n, IsMarkovKernel (κ n)]`.
+  `ProbabilityTheory.exists_kernel_pi_of_markov` in `scratch/TrajPi.lean` is
+  that specialisation, proved: from `K : ℕ → Kernel E E` Markov it builds a
+  Markov kernel `η : Kernel E (ℕ → E)` with `(η y).map (fun x ↦ x 0) = dirac y`
+  and `(η y).map (fun x ↦ x (n + 1)) = K n y`.
 
 What is missing is the bridge between the compact system and the content, and
 the theorem itself. That is one milestone of real work and one of assembly.
