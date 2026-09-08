@@ -37,6 +37,20 @@ carries `SkorokhodSpace.HasCountableCore ι` and so does
 `SkorokhodSpace.instPolishSpace`.  What that class asks of the index, and why a
 countable dense subset of `ι` is not it, is at the class itself.
 
+**And the class is inhabited**, since the second run of 2026-09-09:
+`Real.instHasCountableCore` is `ℚ ⊆ ℝ` together with a named time change, built
+in the coordinate out of a sum of tents by
+`SkorokhodSpace.exists_rat_nodes_perturbation`,
+`SkorokhodSpace.perturbation_orderIso_facts` and
+`TimeChange.exists_real_of_perturbation`.  Without it the two instances below
+would be statements about a class no index was known to satisfy, which is the
+same trap as a hypothesis that cannot be met.
+`SkorokhodSpace.hasCountableCore_of_countable` is the second instance and costs
+nothing, the identity time change serving a countable index; and
+`stepRetract_orderIso` is the bookkeeping the separability still owes, proved
+ahead of it --- with `l (d i) = t i` the approximant at the subdivision `t`
+becomes, after the time change, the approximant at the subdivision `d`.
+
 **The subdivision of a càdlàg path is the rung Milestones 5 and 7 share**, and
 it is proved: `IsCadlag.exists_subdivision` cuts a compact window into finitely
 many cells on which the path varies by at most `ε`.  It is a least upper bound
@@ -1307,6 +1321,31 @@ theorem stepRetract_mem_range {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) :
   split
   · exact ⟨_, rfl⟩
   · exact ⟨0, rfl⟩
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- **The retraction commutes with an order isomorphism that carries one tuple
+onto the other.**  This is the bookkeeping step of separability, and it is where
+the countable core is spent: with `l (d i) = t i` the approximant read at the
+subdivision `t` becomes, after the time change, the approximant read at the
+subdivision `d`, whose points lie in the countable set.  It is an *equality* of
+paths and not an estimate, so it costs the metric nothing beyond `‖l‖`.
+
+The proof is one line of content: `e` being an order isomorphism,
+`t i ≤ e x` and `d i ≤ x` are the same condition, so the two `Finset.filter`s
+whose maximum `stepRetract` takes are the same finite set, and both branches of
+the `dif` then agree entry by entry. -/
+theorem stepRetract_orderIso {n : ℕ} {d t : Fin (n + 1) → ι} (e : ι ≃o ι)
+    (he : ∀ i, e (d i) = t i) (x : ι) :
+    stepRetract t (e x) = e (stepRetract d x) := by
+  classical
+  have hset : (Finset.univ.filter fun i : Fin (n + 1) => t i ≤ e x)
+      = (Finset.univ.filter fun i : Fin (n + 1) => d i ≤ x) := by
+    refine Finset.filter_congr fun i _ => ?_
+    rw [← he i, e.le_iff_le]
+  rw [stepRetract, stepRetract, hset]
+  split
+  · exact (he _).symm
+  · exact (he 0).symm
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- The retraction is constant on a right neighbourhood of every point: either
@@ -5088,6 +5127,8 @@ subset of `E`, and `exists_finite_range_distWith_le` is the analytic half.
 `SkorokhodSpace.not_separableSpace_of_rigid`: an index all of whose cheap time
 changes are the identity, the middle thirds Cantor set for instance, satisfies
 everything else this file assumes and has no countable dense family of paths.
+**It is also not empty**: `Real.instHasCountableCore` below satisfies it with
+`C = ℚ`, so the two instances that carry it are about something.
 
 **And a countable dense subset of `ι` is not enough**, which is the finding of
 2026-09-08.  On `ι = Set.Icc (0 : ℝ) 1` with base point `0` every time change is
@@ -5108,6 +5149,369 @@ class SkorokhodSpace.HasCountableCore : Prop where
       ∃ (d : Fin (n + 1) → ι) (l : TimeChange ι), (∀ i, d i ∈ C) ∧
         l.toOrderIso (basePoint : ι) = basePoint ∧ l.norm ≤ δ ∧
         ∀ i, l.toOrderIso (d i) = t i
+
+/-! ### `HasCountableCore ℝ`
+
+The class is not vacuous, and the witness is the one the manuscript uses:
+`ℚ ⊆ ℝ`.  What has to be produced for a prescribed finite tuple `t` and a
+prescribed `δ > 0` is a *named* time change carrying rationals onto the `t i`,
+and the four declarations below build one.
+
+The shape of the construction, and it is chosen for the reason recorded at
+`exists_orderIso_isometry_real`: everything is written in the coordinate, so
+that `TimeChange.exists_of_lengthCoord` can consume it.  The time change is
+`x ↦ x + ψ x` for a perturbation `ψ` which is a **sum of tents**, one at each
+rational node `d i`, of height the displacement `t i - d i` and of a radius `ρ`
+small enough that the tents neither overlap nor reach the base point `0`.  Its
+Lipschitz constant is at most `(n + 1) · η / ρ` where `η` bounds the
+displacements, and since `η` may be shrunk after `ρ` is fixed, that constant is
+as small as one likes --- which is what buys the norm bound.
+
+Two points of the construction are not decoration.  The first is that the tents
+have to miss `0`: the time change must fix the base point, and a node may sit
+arbitrarily close to `0` without being `0`.  That is why the separation `ε` is
+taken over the finite family `{0} ∪ range t` and not over `range t`, through
+`exists_pos_forall_le_abs_sub` on `Option (Fin (n + 1))`, and why the node of a
+`t i` which *is* `0` is `0` itself.  The second is that no optimal Lipschitz
+constant is needed anywhere: the crude bound `∑ᵢ |t i - d i| / ρ`, which ignores
+that the tents have disjoint supports, is already enough. -/
+
+/-- A finite family of reals is uniformly discrete: distinct values are at least
+`ε` apart, for a single `ε` serving all pairs.  It is the finite-set fact that
+`SkorokhodSpace.exists_rat_nodes_perturbation` needs about `{0} ∪ range t`, and
+it is stated over a `Fintype` rather than a `Finset ℝ` so that the family may be
+`Option (Fin (n + 1))` with `none ↦ 0`. -/
+theorem exists_pos_forall_le_abs_sub {α : Type*} [Fintype α] (u : α → ℝ) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ a b : α, u a ≠ u b → ε ≤ |u a - u b| := by
+  classical
+  let T : Finset (α × α) := Finset.univ.filter fun p : α × α => u p.1 ≠ u p.2
+  let f : α × α → ℝ := fun p => |u p.1 - u p.2|
+  have hmemT : ∀ a b : α, u a ≠ u b → (a, b) ∈ T := by
+    intro a b hab
+    simp only [T, Finset.mem_filter]
+    exact ⟨Finset.mem_univ _, hab⟩
+  rcases T.eq_empty_or_nonempty with h | h
+  · refine ⟨1, one_pos, fun a b hab => absurd (hmemT a b hab) ?_⟩
+    rw [h]
+    simp
+  · have hSne : (T.image f).Nonempty := h.image f
+    refine ⟨(T.image f).min' hSne, ?_, fun a b hab => ?_⟩
+    · have hmem := (T.image f).min'_mem hSne
+      rw [Finset.mem_image] at hmem
+      obtain ⟨p, hp, hpe⟩ := hmem
+      simp only [T, Finset.mem_filter] at hp
+      rw [← hpe]
+      exact abs_pos.2 (sub_ne_zero_of_ne hp.2)
+    · exact Finset.min'_le _ (f (a, b)) (Finset.mem_image_of_mem f (hmemT a b hab))
+
+/-- The tent of height `1`, radius `ρ` and centre `c`.  It is the bump the
+perturbation is assembled from, and it is piecewise linear rather than smooth
+because nothing here differentiates and `max` is cheaper than a mollifier. -/
+noncomputable def SkorokhodSpace.tent (ρ c x : ℝ) : ℝ := max 0 (1 - |x - c| / ρ)
+
+theorem SkorokhodSpace.tent_self (ρ c : ℝ) : SkorokhodSpace.tent ρ c c = 1 := by
+  simp [SkorokhodSpace.tent]
+
+theorem SkorokhodSpace.tent_eq_zero {ρ c x : ℝ} (hρ : 0 < ρ) (h : ρ ≤ |x - c|) :
+    SkorokhodSpace.tent ρ c x = 0 := by
+  have h1 : 1 - |x - c| / ρ ≤ 0 := by
+    rw [sub_nonpos, le_div_iff₀ hρ, one_mul]
+    exact h
+  simp [SkorokhodSpace.tent, max_eq_left h1]
+
+/-- The tent is `ρ⁻¹`-Lipschitz.  `abs_max_sub_max_le_abs` does the truncation
+and `abs_abs_sub_abs_le_abs_sub` the distance to the centre; between them there
+is nothing left. -/
+theorem SkorokhodSpace.abs_tent_sub_le {ρ : ℝ} (hρ : 0 < ρ) (c x y : ℝ) :
+    |SkorokhodSpace.tent ρ c x - SkorokhodSpace.tent ρ c y| ≤ |x - y| / ρ := by
+  have h1 : |SkorokhodSpace.tent ρ c x - SkorokhodSpace.tent ρ c y| ≤
+      |(1 - |x - c| / ρ) - (1 - |y - c| / ρ)| := by
+    rw [SkorokhodSpace.tent, SkorokhodSpace.tent, max_comm 0, max_comm 0]
+    exact abs_max_sub_max_le_abs _ _ 0
+  have h2 : (1 - |x - c| / ρ) - (1 - |y - c| / ρ) = (|y - c| - |x - c|) / ρ := by ring
+  rw [h2, abs_div, abs_of_pos hρ] at h1
+  refine h1.trans ?_
+  have h3 : abs (|y - c| - |x - c|) ≤ |x - y| := by
+    calc abs (|y - c| - |x - c|) ≤ |(y - c) - (x - c)| := abs_abs_sub_abs_le_abs_sub _ _
+      _ = |x - y| := by rw [show (y - c) - (x - c) = -(x - y) by ring, abs_neg]
+  gcongr
+
+/-- **The analytic half of `HasCountableCore ℝ`**: every finite strictly
+monotone tuple of reals is the image of a tuple of *rationals* under a map
+`x ↦ x + ψ x` whose perturbation `ψ` is `K`-Lipschitz for a prescribed `K > 0`
+and vanishes at `0`.
+
+`K` is prescribed and not produced, which is what makes the statement usable:
+the norm of the resulting time change is bounded through `K`, so the caller
+fixes `K` from `δ` and reads the nodes off afterwards. -/
+theorem SkorokhodSpace.exists_rat_nodes_perturbation {n : ℕ} (t : Fin (n + 1) → ℝ)
+    (ht : StrictMono t) {K : ℝ} (hK : 0 < K) :
+    ∃ (d : Fin (n + 1) → ℚ) (ψ : ℝ → ℝ), ψ 0 = 0 ∧
+      (∀ x y : ℝ, |ψ x - ψ y| ≤ K * |x - y|) ∧
+      ∀ i, ((d i : ℝ) + ψ (d i)) = t i := by
+  classical
+  obtain ⟨ε, hε, hsep⟩ :=
+    exists_pos_forall_le_abs_sub (fun a : Option (Fin (n + 1)) => a.elim 0 t)
+  have hsep0 : ∀ i, t i ≠ 0 → ε ≤ |t i| := by
+    intro i hi
+    have := hsep (some i) none (by simpa using hi)
+    simpa using this
+  have hsept : ∀ i j, i ≠ j → ε ≤ |t i - t j| := by
+    intro i j hij
+    have := hsep (some i) (some j) (by simpa using fun h => hij (ht.injective h))
+    simpa using this
+  set ρ : ℝ := ε / 4 with hρdef
+  have hρ : 0 < ρ := by rw [hρdef]; linarith
+  set η : ℝ := min (ε / 8) (K * ε / (8 * ((n : ℝ) + 1))) with hηdef
+  have hn : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hηpos : 0 < η := by
+    rw [hηdef]
+    exact lt_min (by linarith) (by positivity)
+  have hηε : η ≤ ε / 8 := by rw [hηdef]; exact min_le_left _ _
+  have hηK : η ≤ K * ε / (8 * ((n : ℝ) + 1)) := by rw [hηdef]; exact min_le_right _ _
+  have hd : ∀ i, ∃ q : ℚ, (t i = 0 → (q : ℝ) = 0) ∧ |(q : ℝ) - t i| ≤ η := by
+    intro i
+    by_cases h : t i = 0
+    · exact ⟨0, fun _ => by norm_num, by simp [h, hηpos.le]⟩
+    · obtain ⟨q, hq1, hq2⟩ := exists_rat_btwn (show t i - η < t i + η by linarith)
+      exact ⟨q, fun hc => absurd hc h, by rw [abs_le]; constructor <;> linarith⟩
+  choose d hdz hdc using hd
+  have hdfar : ∀ i, t i ≠ 0 → ρ ≤ |(d i : ℝ)| := by
+    intro i hi
+    have h1 : ε ≤ |t i| := hsep0 i hi
+    have h2 : |(d i : ℝ) - t i| ≤ η := hdc i
+    have h3 := dist_triangle (t i) ((d i : ℝ)) (0 : ℝ)
+    rw [Real.dist_eq, Real.dist_eq, Real.dist_eq, sub_zero, sub_zero] at h3
+    have h4 : |t i - (d i : ℝ)| = |(d i : ℝ) - t i| := abs_sub_comm _ _
+    rw [hρdef]
+    rw [h4] at h3
+    linarith
+  have hdsep : ∀ i j, i ≠ j → ρ ≤ |(d i : ℝ) - (d j : ℝ)| := by
+    intro i j hij
+    have h1 : ε ≤ |t i - t j| := hsept i j hij
+    have h2 : |(d i : ℝ) - t i| ≤ η := hdc i
+    have h3 : |(d j : ℝ) - t j| ≤ η := hdc j
+    have h4 := dist_triangle (t i) ((d i : ℝ)) (t j)
+    have h5 := dist_triangle ((d i : ℝ)) ((d j : ℝ)) (t j)
+    rw [Real.dist_eq, Real.dist_eq, Real.dist_eq] at h4
+    rw [Real.dist_eq, Real.dist_eq, Real.dist_eq] at h5
+    have h6 : |t i - (d i : ℝ)| = |(d i : ℝ) - t i| := abs_sub_comm _ _
+    rw [h6] at h4
+    rw [hρdef]
+    linarith
+  refine ⟨d, fun x => ∑ i : Fin (n + 1), (t i - (d i : ℝ)) * SkorokhodSpace.tent ρ (d i) x,
+    ?_, ?_, ?_⟩
+  · refine Finset.sum_eq_zero fun i _ => ?_
+    by_cases h : t i = 0
+    · rw [hdz i h, h]; ring
+    · rw [SkorokhodSpace.tent_eq_zero hρ (by simpa using hdfar i h), mul_zero]
+  · intro x y
+    have hstep : (∑ i : Fin (n + 1), (t i - (d i : ℝ)) * SkorokhodSpace.tent ρ (d i) x) -
+        (∑ i : Fin (n + 1), (t i - (d i : ℝ)) * SkorokhodSpace.tent ρ (d i) y) =
+        ∑ i : Fin (n + 1), (t i - (d i : ℝ)) *
+          (SkorokhodSpace.tent ρ (d i) x - SkorokhodSpace.tent ρ (d i) y) := by
+      rw [← Finset.sum_sub_distrib]
+      exact Finset.sum_congr rfl fun i _ => by ring
+    rw [hstep]
+    have hterm : ∀ i : Fin (n + 1),
+        |(t i - (d i : ℝ)) *
+            (SkorokhodSpace.tent ρ (d i) x - SkorokhodSpace.tent ρ (d i) y)| ≤
+          η * (|x - y| / ρ) := by
+      intro i
+      rw [abs_mul]
+      refine mul_le_mul ?_ (SkorokhodSpace.abs_tent_sub_le hρ _ _ _) (abs_nonneg _) hηpos.le
+      have h := hdc i
+      rw [abs_sub_comm] at h
+      exact h
+    have hcoef : ((n : ℝ) + 1) * (η / ρ) ≤ K := by
+      have h1 : ((n : ℝ) + 1) * η ≤ K * ε / 8 := by
+        have := mul_le_mul_of_nonneg_left hηK hn.le
+        have h2 : ((n : ℝ) + 1) * (K * ε / (8 * ((n : ℝ) + 1))) = K * ε / 8 := by
+          field_simp
+        linarith [h2 ▸ this]
+      have hε0 : ε ≠ 0 := ne_of_gt hε
+      have h2 : ((n : ℝ) + 1) * (η / ρ) = (((n : ℝ) + 1) * η) * (4 / ε) := by
+        rw [show ρ = ε / 4 from rfl]
+        field_simp
+      have h3 : (K * ε / 8) * (4 / ε) = K / 2 := by
+        field_simp
+        ring
+      have h4 : (((n : ℝ) + 1) * η) * (4 / ε) ≤ (K * ε / 8) * (4 / ε) :=
+        mul_le_mul_of_nonneg_right h1 (by positivity)
+      rw [h2]
+      linarith
+    calc |∑ i : Fin (n + 1), (t i - (d i : ℝ)) *
+            (SkorokhodSpace.tent ρ (d i) x - SkorokhodSpace.tent ρ (d i) y)|
+        ≤ ∑ i : Fin (n + 1), |(t i - (d i : ℝ)) *
+            (SkorokhodSpace.tent ρ (d i) x - SkorokhodSpace.tent ρ (d i) y)| :=
+          Finset.abs_sum_le_sum_abs _ _
+      _ ≤ ∑ _i : Fin (n + 1), η * (|x - y| / ρ) := Finset.sum_le_sum fun i _ => hterm i
+      _ = ((n : ℝ) + 1) * (η * (|x - y| / ρ)) := by
+          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+          push_cast
+          ring
+      _ = (((n : ℝ) + 1) * (η / ρ)) * |x - y| := by ring
+      _ ≤ K * |x - y| := mul_le_mul_of_nonneg_right hcoef (abs_nonneg _)
+  · intro j
+    have hsum : (∑ i : Fin (n + 1), (t i - (d i : ℝ)) *
+        SkorokhodSpace.tent ρ (d i) (d j : ℝ)) = t j - (d j : ℝ) := by
+      rw [Finset.sum_eq_single j]
+      · rw [SkorokhodSpace.tent_self, mul_one]
+      · intro i _ hij
+        rw [SkorokhodSpace.tent_eq_zero hρ (hdsep j i (Ne.symm hij)), mul_zero]
+      · intro h; exact absurd (Finset.mem_univ j) h
+    simp only []
+    rw [hsum]
+    ring
+
+/-- **The four properties of `x ↦ x + ψ x` that a time change needs**, for a
+perturbation `ψ` fixing `0` and `K`-Lipschitz with `K < 1`.  Surjectivity is the
+one that costs anything, and it is `Continuous.surjective` against the two
+bounds `(1 - K) x ≤ x + ψ x` on `Ici 0` and `x + ψ x ≤ (1 - K) x` on `Iic 0`,
+both of which are `ψ 0 = 0` read through the Lipschitz estimate. -/
+theorem SkorokhodSpace.perturbation_orderIso_facts {ψ : ℝ → ℝ} {K : ℝ} (hK0 : 0 ≤ K)
+    (hK1 : K < 1) (hψ0 : ψ 0 = 0) (hlip : ∀ x y : ℝ, |ψ x - ψ y| ≤ K * |x - y|) :
+    StrictMono (fun x : ℝ => x + ψ x) ∧ Function.Surjective (fun x : ℝ => x + ψ x) ∧
+      (∀ x y : ℝ, |(x + ψ x) - (y + ψ y)| ≤ (1 + K) * |x - y|) ∧
+      (∀ x y : ℝ, (1 - K) * |x - y| ≤ |(x + ψ x) - (y + ψ y)|) := by
+  have hup : ∀ x y : ℝ, |(x + ψ x) - (y + ψ y)| ≤ (1 + K) * |x - y| := by
+    intro x y
+    have h1 : (x + ψ x) - (y + ψ y) = (x - y) + (ψ x - ψ y) := by ring
+    calc |(x + ψ x) - (y + ψ y)| = |(x - y) + (ψ x - ψ y)| := by rw [h1]
+      _ ≤ |x - y| + |ψ x - ψ y| := abs_add_le _ _
+      _ ≤ |x - y| + K * |x - y| := by linarith [hlip x y]
+      _ = (1 + K) * |x - y| := by ring
+  have hlo : ∀ x y : ℝ, (1 - K) * |x - y| ≤ |(x + ψ x) - (y + ψ y)| := by
+    intro x y
+    have h1 : (x + ψ x) - (y + ψ y) = (x - y) + (ψ x - ψ y) := by ring
+    have h2 := abs_sub_abs_le_abs_sub (x - y) (-(ψ x - ψ y))
+    rw [abs_neg, sub_neg_eq_add] at h2
+    rw [h1]
+    linarith [hlip x y]
+  have hmono : StrictMono (fun x : ℝ => x + ψ x) := by
+    intro x y hxy
+    have h := hlip y x
+    rw [abs_of_pos (show (0:ℝ) < y - x by linarith)] at h
+    have h2 := (abs_le.1 h).1
+    simp only
+    nlinarith
+  refine ⟨hmono, ?_, hup, hlo⟩
+  have hψc : Continuous ψ := by
+    have hL : LipschitzWith K.toNNReal ψ := by
+      refine LipschitzWith.of_dist_le_mul fun x y => ?_
+      rw [Real.dist_eq, Real.dist_eq, Real.coe_toNNReal K hK0]
+      exact hlip x y
+    exact hL.continuous
+  have hcont : Continuous fun x : ℝ => x + ψ x := continuous_id.add hψc
+  have hK1' : (0:ℝ) < 1 - K := by linarith
+  have hlow : ∀ x : ℝ, 0 ≤ x → (1 - K) * x ≤ x + ψ x := by
+    intro x hx
+    have h := hlip x 0
+    rw [hψ0, sub_zero, sub_zero, abs_of_nonneg hx] at h
+    have h2 := (abs_le.1 h).1
+    linarith
+  have hhigh : ∀ x : ℝ, x ≤ 0 → x + ψ x ≤ (1 - K) * x := by
+    intro x hx
+    have h := hlip x 0
+    rw [hψ0, sub_zero, sub_zero, abs_of_nonpos hx] at h
+    have h2 := (abs_le.1 h).2
+    linarith
+  have htop : Tendsto (fun x : ℝ => x + ψ x) atTop atTop := by
+    refine Filter.tendsto_atTop_mono' atTop ?_
+      (Filter.Tendsto.const_mul_atTop hK1' Filter.tendsto_id)
+    filter_upwards [eventually_ge_atTop (0:ℝ)] with x hx using hlow x hx
+  have hbot : Tendsto (fun x : ℝ => x + ψ x) atBot atBot := by
+    refine Filter.tendsto_atBot_mono' atBot ?_
+      (Filter.Tendsto.const_mul_atBot hK1' Filter.tendsto_id)
+    filter_upwards [eventually_le_atBot (0:ℝ)] with x hx using hhigh x hx
+  exact hcont.surjective htop hbot
+
+/-- On `ℝ` with its base point the coordinate is the identity.  This is the one
+line that lets `TimeChange.exists_of_lengthCoord` be read as a statement about
+`ℝ` itself, and it is what makes its two range hypotheses vacuous there. -/
+@[simp]
+theorem lengthCoord_real (x : ℝ) : lengthCoord (0 : ℝ) x = x := by
+  rw [lengthCoord]
+  split_ifs with h
+  · rw [Real.dist_eq, abs_of_nonpos (by linarith : (0:ℝ) - x ≤ 0)]
+    ring
+  · rw [Real.dist_eq, abs_of_nonneg (by linarith [not_le.1 h] : (0:ℝ) ≤ 0 - x)]
+    ring
+
+/-- **A time change of `ℝ` out of a small perturbation.**  `x ↦ x + ψ x` with
+`ψ` `K`-Lipschitz, `K < 1`, is a bi-Lipschitz order isomorphism with constants
+`1 + K` and `(1 - K)⁻¹`; both are at most `exp γ` under the hypotheses, so the
+norm is at most `γ`. -/
+theorem TimeChange.exists_real_of_perturbation {ψ : ℝ → ℝ} {K γ : ℝ} (hK0 : 0 ≤ K)
+    (hK1 : K < 1) (hγ : 0 ≤ γ) (hψ0 : ψ 0 = 0)
+    (hlip : ∀ x y : ℝ, |ψ x - ψ y| ≤ K * |x - y|)
+    (h1 : 1 + K ≤ Real.exp γ) (h2 : (1 - K)⁻¹ ≤ Real.exp γ) :
+    ∃ l : TimeChange ℝ, l.toOrderIso 0 = 0 ∧ l.norm ≤ γ ∧
+      ∀ x : ℝ, l.toOrderIso x = x + ψ x := by
+  obtain ⟨hmono, hsurj, hup, hlo⟩ :=
+    SkorokhodSpace.perturbation_orderIso_facts hK0 hK1 hψ0 hlip
+  have hK1' : (0:ℝ) < 1 - K := by linarith
+  obtain ⟨l, hl0, hlnorm, hlcoord⟩ :=
+    TimeChange.exists_of_lengthCoord (ι := ℝ) 0 (fun x => x + ψ x) hγ
+      (by simpa using hψ0) hmono
+      (fun s => ⟨s + ψ s, by simp only [lengthCoord_real]⟩)
+      (fun s => by
+        obtain ⟨x, hx⟩ := hsurj s
+        exact ⟨x, by simp only [lengthCoord_real]; exact hx⟩)
+      (fun x y => (hup x y).trans (mul_le_mul_of_nonneg_right h1 (abs_nonneg _)))
+      (fun x y => by
+        have h3 : |x - y| ≤ (1 - K)⁻¹ * |(x + ψ x) - (y + ψ y)| := by
+          rw [inv_mul_eq_div, le_div_iff₀ hK1']
+          calc |x - y| * (1 - K) = (1 - K) * |x - y| := by ring
+            _ ≤ |(x + ψ x) - (y + ψ y)| := hlo x y
+        exact h3.trans (mul_le_mul_of_nonneg_right h2 (abs_nonneg _)))
+  refine ⟨l, hl0, hlnorm, fun x => ?_⟩
+  have hx := hlcoord x
+  rwa [lengthCoord_real, lengthCoord_real] at hx
+
+/-- **`ℝ` has a countable core**, so the separability instance below is not a
+statement about an empty class.  The countable set is `ℚ`, and the time change
+is the one built above; `K := 1 - exp (-δ)` is what makes both Lipschitz
+constants at most `exp δ`, the second by `(1 - K)⁻¹ = exp δ` exactly and the
+first because `2 - a⁻¹ ≤ a` for `a > 0` is `(a - 1)² ≥ 0`. -/
+instance Real.instHasCountableCore : SkorokhodSpace.HasCountableCore ℝ where
+  exists_core := by
+    refine ⟨Set.range ((↑) : ℚ → ℝ), Set.countable_range _, ?_⟩
+    intro n t ht δ hδ
+    have hexppos : 0 < Real.exp δ := Real.exp_pos δ
+    have hexp : Real.exp (-δ) = (Real.exp δ)⁻¹ := Real.exp_neg δ
+    have hexplt : Real.exp (-δ) < 1 := by
+      rw [show (1:ℝ) = Real.exp 0 from (Real.exp_zero).symm]
+      exact Real.exp_lt_exp.2 (by linarith)
+    set K : ℝ := 1 - Real.exp (-δ) with hKdef
+    have hK0 : 0 < K := by rw [hKdef]; linarith
+    have hK1 : K < 1 := by
+      have := Real.exp_pos (-δ)
+      rw [hKdef]; linarith
+    have h2 : (1 - K)⁻¹ ≤ Real.exp δ := by
+      rw [hKdef, sub_sub_cancel, hexp, inv_inv]
+    have h1 : 1 + K ≤ Real.exp δ := by
+      have hinv : (Real.exp δ)⁻¹ * Real.exp δ = 1 := inv_mul_cancel₀ (ne_of_gt hexppos)
+      rw [hKdef, hexp]
+      nlinarith [sq_nonneg (Real.exp δ - 1), hinv, hexppos]
+    obtain ⟨d, ψ, hψ0, hψlip, hval⟩ :=
+      SkorokhodSpace.exists_rat_nodes_perturbation t ht hK0
+    obtain ⟨l, hl0, hlnorm, hlapp⟩ :=
+      TimeChange.exists_real_of_perturbation hK0.le hK1 hδ.le hψ0 hψlip h1 h2
+    exact ⟨fun i => (d i : ℝ), l, fun i => ⟨d i, rfl⟩, hl0, hlnorm,
+      fun i => by rw [hlapp]; exact hval i⟩
+
+/-- **A countable index has a countable core**, and for nothing: take `C = ι`
+and the identity time change, whose norm is `0`.  This is the second of the
+running instances, `AddSubgroup.zmultiples (1 : ℝ)`, and it needs no
+construction of its own --- which is worth saying, because it is exactly the
+case in which the paths are step paths to begin with. -/
+instance SkorokhodSpace.hasCountableCore_of_countable [Countable ι] :
+    SkorokhodSpace.HasCountableCore ι where
+  exists_core :=
+    ⟨Set.univ, Set.countable_univ, fun _ t _ δ hδ =>
+      ⟨t, 1, fun _ => Set.mem_univ _, rfl,
+        by rw [TimeChange.norm_one]; exact hδ.le, fun _ => rfl⟩⟩
 
 /-- **Separability**: the step paths with finitely many jumps, the jump times in
 the countable set `C` of `SkorokhodSpace.HasCountableCore` and the values in a

@@ -12283,3 +12283,148 @@ Paketverzeichnis darunter — das Arbeitsverzeichnis entscheidet, welches
 `lakefile` gilt.
 
 **Das Manuskript ist nicht angefaßt.**
+
+
+### 2026-09-09, zweiter Lauf des Tages — `HasCountableCore ℝ` ist bewiesen, und die Klasse ist damit nicht leer
+
+**Vorrangige Aufgabe, Teil A, Punkt 1.** Der vorige Lauf hat
+`SkorokhodSpace.instSeparableSpace` berichtigt statt bewiesen und die schwere
+Hälfte der Separabilität als Typklasse `SkorokhodSpace.HasCountableCore ι`
+isoliert. Dieser Lauf löst die erste ihrer drei Instanzen ein.
+`SkorokhodSpace/Suggested.lean` steht weiter bei **vier** `sorry`; gestrichen ist
+keines. Elf neue Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft
+und alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`.
+
+#### Der Befund: die Klasse ist erfüllbar, und `ℝ` erfüllt sie mit `C = ℚ`
+
+`Real.instHasCountableCore` ist bewiesen. Das ist keine Zugabe, sondern die
+Antwort auf den Vorwurf, den der vorige Lauf an seine eigene Konstruktion
+erhoben hat: `not_separableSpace_of_rigid` zeigt, daß die Separabilität von
+`D(ι, E)` für einen Index scheitern kann, den diese Datei zuläßt, und daraus
+folgt eine Hypothese — aber eine Hypothese, von der niemand weiß, ob sie je
+erfüllt ist, ist von einer leeren Aussage nicht zu unterscheiden. Sie ist es
+jetzt: `instSeparableSpace` und `instPolishSpace` sind Aussagen über eine
+bewohnte Klasse, und ihr Zeuge ist der Index, den das Manuskript überall meint.
+
+#### Die Konstruktion, und warum sie eine Störung und keine Interpolation ist
+
+Die Roadmap hatte hier ein **stückweise lineares** `φ` vorgesehen: die Identität
+außerhalb disjunkter `η`-Umgebungen der `t i`, darin die Gerade von `d i` nach
+`t i`. Gebaut ist statt dessen `φ x = x + ψ x` mit
+
+```
+ψ x = ∑ i, (t i - d i) * tent ρ (d i) x,   tent ρ c x = max 0 (1 - |x - c| / ρ),
+```
+
+und das ist derselbe Gedanke in der Gestalt, in der er sich rechnen läßt. Der
+Grund ist eine Buchführung: bei der Interpolation muß man die Steigung auf jedem
+der `2(n+1)` Stücke einzeln kontrollieren und dazu wissen, welches Stück wo
+liegt; bei der Störung genügt die **grobe** Schranke
+
+```
+Lip ψ ≤ ∑ i |t i - d i| / ρ ≤ (n+1) · η / ρ,
+```
+
+die davon, daß die Zelte disjunkte Träger haben, gar keinen Gebrauch macht — und
+die trotzdem reicht, weil `η` **nach** `ρ` gewählt werden darf. Der Radius `ρ`
+wird von der Trennung der Knoten diktiert, die Höhe `η` von nichts, also nimmt
+man `η ≤ K·ε/(8(n+1))` und ist fertig. Aus `Lip ψ ≤ K < 1` folgt alles Übrige:
+`x ↦ x + ψ x` ist streng monoton, surjektiv (`Continuous.surjective` gegen
+`(1-K)x ≤ x + ψ x` auf `Ici 0` und `x + ψ x ≤ (1-K)x` auf `Iic 0`, beides
+`ψ 0 = 0` durch die Lipschitz-Schranke gelesen), und bi-Lipschitz mit den
+Konstanten `1 + K` und `(1-K)⁻¹`. Mit `K = 1 - exp(-δ)` sind beide höchstens
+`exp δ`: die zweite ist es exakt, die erste, weil `2 - a⁻¹ ≤ a` für `a > 0`
+nichts anderes ist als `(a-1)² ≥ 0`.
+
+Der Übergang zum Index ist `TimeChange.exists_of_lengthCoord` aus Meilenstein 3,
+und für `ι = ℝ` sind seine beiden lästigen Hypothesen — daß `φ` den Bereich der
+Koordinate auf sich abbildet — gratis, weil `lengthCoord (0:ℝ)` die Identität
+ist (`lengthCoord_real`, `@[simp]`).
+
+#### Der Basispunkt ist die Stelle, an der die Konstruktion beinahe bricht
+
+Zwei Einzelheiten sind keine Verzierung, und beide betreffen die `0`.
+
+*Erstens ist die Trennung über `{0} ∪ range t` zu nehmen und nicht über
+`range t`.* Der Zeitwechsel muß den Basispunkt festhalten, also darf kein Zelt
+ihn überdecken; ein Knoten kann aber beliebig nah an `0` liegen, ohne `0` zu
+sein, und aus den Abständen der `t i` untereinander folgt darüber nichts. Zeuge:
+`n = 0`, `t 0 = 10⁻¹⁰⁰` — die Menge der Lücken von `t` ist leer, und jede
+Schranke, die nur aus ihr gewonnen wird, ist vakuum. Das Mittel ist
+`exists_pos_forall_le_abs_sub` über `Option (Fin (n+1))` mit `none ↦ 0`: eine
+endliche Familie reeller Zahlen ist gleichmäßig diskret, und die Aussage über
+`{0} ∪ range t` ist dieselbe Aussage über eine Familie mit einem Element mehr.
+
+*Zweitens ist der Knoten eines `t i`, das **selbst** `0` ist, die `0`.* Dann hat
+sein Zelt die Höhe `0`, und der Term verschwindet, obwohl das Zelt den
+Basispunkt sehr wohl überdeckt. Ohne diese Fallunterscheidung müßte man `0` aus
+dem Bild von `t` ausschließen, was die Aussage schwächte.
+
+#### Die neuen Deklarationen
+
+* `exists_pos_forall_le_abs_sub` — eine endliche Familie reeller Zahlen ist
+  gleichmäßig diskret. Über `Fintype α` und nicht über `Finset ℝ` formuliert,
+  gerade damit `Option (Fin (n+1))` eingesetzt werden kann.
+* `SkorokhodSpace.tent`, `tent_self`, `tent_eq_zero`, `abs_tent_sub_le` — das
+  Zelt und die drei Aussagen über es. Es ist stückweise linear und nicht glatt,
+  weil hier nichts differenziert wird.
+* `SkorokhodSpace.exists_rat_nodes_perturbation` — die analytische Hälfte: zu
+  jedem streng monotonen `t : Fin (n+1) → ℝ` und jedem `K > 0` rationale Knoten
+  `d` und ein `K`-lipschitzstetiges `ψ` mit `ψ 0 = 0` und `d i + ψ (d i) = t i`.
+  `K` wird **vorgegeben** und nicht produziert; das ist es, was die Aussage
+  brauchbar macht, denn der Aufrufer gewinnt `K` aus `δ`.
+* `SkorokhodSpace.perturbation_orderIso_facts` — die vier Eigenschaften von
+  `x ↦ x + ψ x`, die ein Zeitwechsel braucht.
+* `lengthCoord_real` — `lengthCoord (0:ℝ) x = x`.
+* `TimeChange.exists_real_of_perturbation` — der Zeitwechsel auf `ℝ` samt
+  Normschranke.
+* `Real.instHasCountableCore` — die Instanz.
+* `SkorokhodSpace.hasCountableCore_of_countable` — **die zweite Instanz, und sie
+  kostet nichts**: ist der Index abzählbar, so ist `C` er selbst und `l` die
+  Identität, deren Norm `0` ist. Damit ist auch
+  `AddSubgroup.zmultiples (1:ℝ)` erledigt, die zweite der vier laufenden
+  Instanzen der Datei. Es ist die Klasse in dem Fall, in dem die Pfade ohnehin
+  schon Treppenpfade sind.
+* `stepRetract_orderIso` — **die Buchführung der Separabilität, vorweggenommen**:
+  trägt ein Ordnungsisomorphismus `e` das Tupel `d` auf `t`, so ist
+  `stepRetract t (e x) = e (stepRetract d x)`. Das ist eine *Gleichheit* von
+  Pfaden und keine Abschätzung, kostet an der Metrik also nichts außer `‖l‖`,
+  und es ist die Stelle, an der der abzählbare Kern ausgegeben wird: der
+  Approximant an der Unterteilung `t` wird nach dem Zeitwechsel zum
+  Approximanten an der Unterteilung `d`, deren Punkte in `C` liegen. Der Beweis
+  hat eine Zeile Inhalt — `t i ≤ e x` und `d i ≤ x` sind dieselbe Bedingung,
+  also sind die beiden `Finset.filter`, deren Maximum `stepRetract` nimmt, ein
+  und dieselbe endliche Menge.
+
+#### Was offen blieb
+
+Die dritte Instanz der Klasse, `Set.Icc (0:ℝ) 1` (dort ist
+`C = (ℚ ∩ [0,1]) ∪ {0,1}`, und die beiden Endpunkte sind die Punkte, die kein
+Zeitwechsel bewegt), und die Separabilität unter der Klasse selbst. Punkt 2 und
+der Rest von Punkt 3 der vorrangigen Aufgabe sind unberührt.
+
+#### Vorschlag für den nächsten Lauf
+
+**`SkorokhodSpace.instSeparableSpace` unter `[HasCountableCore ι]`.** Worauf sie
+ruht: auf `SkorokhodSpace.exists_finite_range_intDist_le` (bewiesen, 2026-09-09),
+das zu `f`, `ε > 0` und `M ≥ 0` ein `g` mit endlichem Wertebereich und
+`intDist t₀ f g ≤ ε + exp (-M)` liefert, und auf der Klasse, die jetzt bewohnt
+ist. Was noch zu tun ist, ist Buchführung und keine Analysis: die Werte in eine
+abzählbare dichte Teilmenge von `E` zu schieben kostet `ε` im gefensterten
+Supremum und keinen Zeitwechsel, und der Umbau der Sprungzeiten ist
+`stepRetract_orderIso`, in diesem Lauf **bewiesen**.
+
+Was danach bleibt, ist die Abzählbarkeit der Familie als solche — eine
+Surjektion von einem abzählbaren Typ auf sie —, und dafür ist der Treppenpfad
+als **Term** hinzuschreiben: `stepPath d v : D(ι, E)` zu `d : Fin (n+1) → ι` mit
+Werten in `C` und `v : Fin (n+1) → E` mit Werten in einer abzählbaren dichten
+Teilmenge. Hier liegt die eine Signaturfrage, und sie ist vor dem ersten Beweis
+zu entscheiden: `stepRetract` gibt heute den *Punkt* `t i` zurück und nicht den
+*Index* `i`, die Werte lassen sich also nicht unmittelbar daran hängen. Entweder
+tritt ein `stepIdx` daneben, mit `stepRetract t = t ∘ stepIdx t`, oder
+`stepRetract` wird `Fin (n+1)`-wertig und die heutige Fassung ihre Komposition
+mit `t`. Warum jetzt: es ist die letzte offene Zusage von Meilenstein 5,
+`instPolishSpace` ist danach `inferInstance`, und `fact:PSpolish` hängt an nichts
+sonst.
+
+**Das Manuskript ist nicht angefaßt.**

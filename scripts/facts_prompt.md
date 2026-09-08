@@ -86,6 +86,45 @@ war als Satz gedacht und kann keiner sein.
 Integralbuchführung dorthin ist bezahlt
 (`SkorokhodSpace.exists_finite_range_intDist_le`, `intDist t₀ f g ≤ ε + exp(-M)`).
 
+**Zwischenstand Teil A (2026-09-09, zweiter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, zweiter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht weiter bei **vier** `sorry`. Elf neue
+Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`.
+
+*Der Schritt, den der vorige Lauf angesagt hat, ist getan:*
+`Real.instHasCountableCore` ist bewiesen, mit `C = ℚ`. **Damit ist die Klasse
+nicht leer**, und das war der eigentliche Einwand gegen sie — eine Hypothese,
+von der niemand weiß, ob sie je erfüllt ist, ist von einer leeren Aussage nicht
+zu unterscheiden. `instSeparableSpace` und `instPolishSpace` sind jetzt Aussagen
+über eine bewohnte Klasse.
+
+*Die Konstruktion weicht von der Roadmap ab, und der Grund steht dort:* statt
+des stückweise linearen `φ` ist es die **Störung** `φ x = x + ψ x` mit `ψ` einer
+Summe von Zelten. Die grobe Lipschitz-Schranke `∑ᵢ |t i - d i| / ρ`, die von der
+Disjunktheit der Träger keinen Gebrauch macht, genügt, weil die Höhe `η` **nach**
+dem Radius `ρ` gewählt werden darf; die Interpolation hätte `2(n+1)` Steigungen
+einzeln zu kontrollieren verlangt. Der Basispunkt ist die Stelle, an der es
+beinahe bricht: die Trennung ist über `{0} ∪ range t` zu nehmen und nicht über
+`range t` (Zeuge `n = 0`, `t 0 = 10⁻¹⁰⁰`), und der Knoten eines `t i`, das selbst
+`0` ist, ist die `0`.
+
+*Zwei weitere Stücke sind mitgekommen.*
+`SkorokhodSpace.hasCountableCore_of_countable` erledigt die zweite Instanz
+(`AddSubgroup.zmultiples (1:ℝ)`) umsonst — abzählbarer Index, `C` er selbst,
+Zeitwechsel die Identität —, und `stepRetract_orderIso` ist die Buchführung der
+Separabilität, vorweg bewiesen: `stepRetract t (l x) = l (stepRetract d x)`,
+wenn `l (d i) = t i`.
+
+*Der nächste Schritt* ist die Separabilität unter der Klasse. Analysis und
+Buchführung sind beide bezahlt; was bleibt, ist die **Abzählbarkeit der Familie
+als Term**, und darin die eine Signaturfrage: `stepRetract` gibt den Punkt `t i`
+zurück und nicht den Index `i`, die Werte lassen sich also nicht daran hängen.
+Entweder tritt `stepIdx` daneben, oder `stepRetract` wird `Fin (n+1)`-wertig.
+Entscheide das vor dem ersten Beweis und begründe die Wahl im Bericht. Offen
+bleibt außerdem die dritte Instanz der Klasse (`Set.Icc (0:ℝ) 1`); an ihr hängt
+nichts.
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 

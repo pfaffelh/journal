@@ -1000,7 +1000,8 @@ convenience: `SkorokhodSpace.not_separableSpace_of_rigid`, proved the same day,
 shows that `D ι E` is not separable for every index this file admits, and the
 witness is the middle thirds Cantor set. The milestone therefore owes three
 things and not one — the class, its three instances, and the separability under
-it.
+it. The class stands, and the first of its three instances,
+`Real.instHasCountableCore`, is **proved** since 2026-09-09.
 
 * `CompleteSpace (D ι E)`, **proved 2026-09-08**: for a Cauchy sequence extract a
   subsequence whose consecutive distances are summable, compose the time changes,
@@ -1196,16 +1197,33 @@ it.
   `Set.Icc (0 : ℝ) 1` need not contain `1`; the `C` of the class does contain
   it, the one point tuple `t = ![1]` having only the identity to carry anything
   onto it.
-* `SkorokhodSpace.instHasCountableCoreReal`, and the same for
+* `Real.instHasCountableCore`, and the same for
   `AddSubgroup.zmultiples (1 : ℝ)` and for `Set.Icc (0 : ℝ) 1`: the three
-  running instances of the file discharge the class. On `ℝ` the construction is
-  `TimeChange.exists_of_lengthCoord` of Milestone 3 applied to the piecewise
-  linear `φ` that is the identity outside disjoint neighbourhoods of the `t i`
-  and carries a nearby rational `d i` to `t i` inside them; `C` is `ℚ`, and the
-  Lipschitz constants are `1 ± |d i - t i| / η` on a neighbourhood of radius
-  `η`, so `δ` is bought by taking `d i` close enough. On
+  running instances of the file discharge the class. **`ℝ` is proved**
+  (2026-09-09). The construction is `TimeChange.exists_of_lengthCoord` of
+  Milestone 3 applied to `φ x = x + ψ x`, where `ψ` is a **sum of tents**, one
+  at each rational node `d i`, of height the displacement `t i - d i` and of a
+  radius `ρ` small enough that the tents neither overlap nor reach the base
+  point; `C` is `ℚ`. Writing `φ` as a perturbation of the identity rather than
+  as a piecewise linear interpolant is what keeps the estimate uniform in the
+  number of nodes: the crude bound `∑ᵢ |t i - d i| / ρ` on the Lipschitz
+  constant of `ψ`, which ignores that the tents have disjoint supports, already
+  suffices, because the displacements may be shrunk after `ρ` is fixed. The
+  Lipschitz constants of `φ` are then `1 + K` and `(1 - K)⁻¹`, and
+  `K = 1 - exp (-δ)` makes both at most `exp δ`.
+
+  Two points of it are not decoration, and both concern the base point. The
+  separation `ε` is taken over `{0} ∪ range t` and not over `range t`
+  (`exists_pos_forall_le_abs_sub` on `Option (Fin (n+1))`), because a node may
+  sit arbitrarily close to `0` without being `0`; and the node of a `t i` which
+  *is* `0` is `0` itself, so that the tent there has height `0`. Without the
+  first the tent at that node would cover the base point and the time change
+  would move it. On
   `AddSubgroup.zmultiples (1 : ℝ)` the index is countable, `C` is all of it and
-  `l` is the identity. On `Set.Icc (0 : ℝ) 1` it is the construction on `ℝ` with
+  `l` is the identity; that case is
+  `SkorokhodSpace.hasCountableCore_of_countable`, **proved 2026-09-09**, and it
+  is stated for an arbitrary countable index because nothing about the integers
+  enters it. On `Set.Icc (0 : ℝ) 1` it is the construction on `ℝ` with
   `C = (ℚ ∩ [0,1]) ∪ {0, 1}`, the two endpoints being the points no time change
   moves. In general the `C` that works is a countable dense set together with
   the boundaries of the connected components of the index read as a closed
@@ -1225,12 +1243,23 @@ it.
   `SkorokhodSpace.exists_finite_range_intDist_le` gives `intDist t₀ f g ≤
   ε + exp (-M)`, over `SkorokhodSpace.intWith_le_of_forall_distWith_le`, which
   splits `Set.Ioi 0` at `M` and pays the far radii with the mass `exp (-M)` and
-  the truncation at `1`. What is left is the move of the jump times, and with
-  the class in hand it is bookkeeping: `l` being an order isomorphism with
-  `l (d i) = t i`, one has `t i ≤ l s` exactly when `d i ≤ s`, so
-  `f ∘ stepRetract t ∘ l = f ∘ l ∘ stepRetract d` — the same values at the times
-  `d i ∈ C` — and the values are moved into a countable dense subset of `E` for
-  free, no time change being involved in that.
+  the truncation at `1`. The move of the jump times is proved too (2026-09-09):
+  `stepRetract_orderIso` says that `stepRetract t (l x) = l (stepRetract d x)`
+  whenever `l (d i) = t i`, so the approximant read at the subdivision `t`
+  becomes, after the time change, the approximant read at the subdivision `d`,
+  whose points lie in `C`. It is an equality of paths and not an estimate, so it
+  costs nothing beyond `‖l‖`; the values are moved into a countable dense subset
+  of `E` for free, no time change being involved in that.
+
+  What is left is the countability of the family as such, which asks for the
+  step path as a **term**: `stepPath d v : D ι E` for `d` with values in `C` and
+  `v` with values in the countable dense subset, and a surjection onto the
+  family from a countable type. There is one signature question in it and it is
+  settled before the first proof: `stepRetract` returns the *point* `t i` and
+  not the *index* `i`, so the values do not hang on it directly. Either a
+  `stepIdx` stands beside it with `stepRetract t = t ∘ stepIdx t`, or
+  `stepRetract` becomes `Fin (n+1)`-valued and the present one is its
+  composition with `t`.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
