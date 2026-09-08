@@ -123,7 +123,7 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   to `t₀` is known. The hypothesis is necessary: on `ℝ` with `t₀ = 0`, `s = -1`
   and `t = 1` the left hand side is `2` and the right hand side is `0`. Proved
   (2026-09-07), again from `AdditiveDist` alone.
-* `exhaustion`: fixing a base point `t₀`, the sets `B m = closedBall t₀ m` are
+* `exhaustion`: fixing a base point `t₀`, the sets `B u = closedBall t₀ u` are
   compact — `isCompact_exhaustion`, proved on 2026-09-06 from
   `isCompact_closedBall`, which is `ProperSpace` alone —, increasing, cover the
   index, and each is a linear order with a least
@@ -137,6 +137,41 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   `Closed{Iic,Ici}Topology` that `OrderTopology` supplies), then `clamp`,
   `monotone_clamp`, `continuous_clamp`, `clamp_mem_exhaustion`,
   `clamp_eq_self` and `clamp_idem`.
+
+  **The radius is a real number** (2026-09-08), because the metric of
+  Milestone 4 integrates over it and a countable set of radii is not enough:
+  `SkorokhodSpace.dist_exhaustionMax_le_distOn`. The definition is
+  `closedBall t₀ (max u 0)` and not `closedBall t₀ u`, so that `exhaustionMin`,
+  `exhaustionMax` and `clamp` stay total — a negative radius would empty the
+  window and they are `def`s that need it inhabited. For `0 ≤ u` the two agree,
+  which is `exhaustion_eq_closedBall`, and `0 ≤ u` is a hypothesis of exactly
+  those statements that would otherwise be false at a negative radius:
+  `TimeChange.dist_le_of_norm_le`, `exhaustion_subset_exhaustion` and
+  `SkorokhodSpace.eq_of_distOn_eq_zero`.
+* `monotone_exhaustionMax` and `antitone_exhaustionMin`: the window endpoints
+  move monotonically with the radius. Proved (2026-09-08), and they are what
+  makes `measurable_clamp` — the clamp is measurable in the radius, for each
+  fixed point of the index — a two line consequence of `Monotone.measurable`.
+  This is the only place where the index carries a measurable structure, and it
+  is a hypothesis of those statements and not of the milestone.
+* `rightIsolated ι = {t | IsOpen (Set.Iic t)}`, the points approached from the
+  right by nothing, and `countable_rightIsolated`: **there are countably many
+  of them.** Proved (2026-09-08), and the proof is intrinsic — it does not go
+  through the embedding of the index into `ℝ`, which is still
+  `exists_orderIso_isometry_real` and still open. For a right isolated `t` the
+  set `Set.Iic t` is open, so a countable basis has a member `v` with
+  `t ∈ v ⊆ Set.Iic t`, and `v s = v t` forces `s ≤ t` and `t ≤ s` at once. The
+  hypothesis is second countability, which the index has from `ProperSpace`.
+* `exists_countable_ciSup_eq`: **one countable set computes the supremum of
+  every right continuous real function on the index.** Proved (2026-09-08). It
+  is a countable dense set together with `rightIsolated ι`, and the second
+  summand is not decoration: on `ι = Set.Icc (0:ℝ) 1` the dense set
+  `ℚ ∩ [0,1)` misses the point `1`, which is approached from the left only, and
+  a right continuous function may exceed its supremum over that set there. The
+  set does not depend on the function, which is the whole point — a
+  supremum-approximating sequence would, and a different countable set for
+  every window radius computes nothing. This is what discharges the
+  measurability obligation of Milestone 4.
 * `ordConnected_exhaustion`: the window is an order interval. This is the step
   the clamp actually needs — being between the least and the greatest element
   of a set does not put a point in the set unless the set is order convex — and
@@ -145,9 +180,10 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   Proved (2026-09-07). It needs neither the order topology nor properness.
 * Independence of the base point: two base points give exhaustions each of which
   refines the other after finitely many steps.
-  `exhaustion_subset_exhaustion : exhaustion t₀ m ⊆ exhaustion t₁ (m + ⌈dist t₀ t₁⌉₊)`,
-  proved (2026-09-08) from the triangle inequality and `Nat.le_ceil`, needing
-  neither the order nor `AdditiveDist` nor properness. This is the whole of what
+  `exhaustion_subset_exhaustion : exhaustion t₀ u ⊆ exhaustion t₁ (u + dist t₀ t₁)`
+  for `0 ≤ u`, proved (2026-09-08) from the triangle inequality alone, needing
+  neither the order nor `AdditiveDist` nor properness. The ceiling that stood
+  here while the radius was an integer is gone with the integer. This is the whole of what
   relates two base points; the subgroups `TimeChange.fixing t₀` of Milestone 3
   are a second anchoring and are not related by it.
 * ```
@@ -642,9 +678,35 @@ Under (B), with `E` a pseudometric space:
   `λ` the integrand `u ↦ ⨆ t, r (f (clamp u (λ t))) (g (clamp u t))` is Borel
   measurable. This is why the infimum over `λ` stands **outside** the integral and
   not inside it, as it does in `distOn`: outside, measurability is needed for one
-  time change at a time and follows from right continuity, which lets the
-  supremum be taken over a countable dense subset of `ι`; inside, the integrand
-  would be an infimum over an uncountable family.
+  time change at a time; inside, the integrand would be an infimum over an
+  uncountable family.
+
+  The obligation is discharged (2026-09-08). `SkorokhodSpace.distWith t₀ u λ f g`
+  is that supremum, `SkorokhodSpace.distOn_eq_iInf_distWith` says `distOn` is the
+  infimum of `max ‖λ‖ ·` over it — by `rfl` — and
+  `SkorokhodSpace.measurable_distWith` is the measurability. It runs on three
+  proved items: `SkorokhodSpace.rightContinuous_dist_restrictExhaustion`, that
+  the integrand is right continuous in the index; `exists_countable_ciSup_eq` of
+  Milestone 1, which turns that supremum into a supremum over a countable set
+  fixed once and for all; and `measurable_clamp`, that the clamp is measurable
+  in the radius. **A countable dense subset of `ι` does not suffice** and the
+  earlier wording of this bullet was wrong about that: a right continuous
+  function may exceed its supremum over a dense set at a point approached from
+  the left only, and what has to be added is `rightIsolated ι`, which
+  `countable_rightIsolated` shows to be countable.
+
+  `SkorokhodSpace.intDist` is the metric itself, and
+  `SkorokhodSpace.integrableOn_intDist` says its integrand is integrable on
+  `Set.Ioi 0`: measurable by the above and dominated by `exp (-u)`, which is
+  `integrableOn_exp_neg_Ioi`. Without it the integral would be the junk value
+  `0` and `intDist` would collapse to `⨅ λ, ‖λ‖ = 0`.
+
+  The four metric axioms of `intDist` are what remains of Milestone 4, and until
+  they are theorems the `MetricSpace D(ι, E)` instance reads
+  `SkorokhodSpace.totalDist`, the summed quantity, whose axioms are proved.
+  Switching the instance first would put `sorryAx` back under the twenty
+  declarations that depend on the topology, which is the trap
+  `SkorokhodSpace.modulus` was in until 2026-09-08.
 
   The infimum runs over the time changes fixing the base point, `TimeChange.fixing t₀`
   of Milestone 3, and the norm in it is the **global**

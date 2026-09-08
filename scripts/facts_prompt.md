@@ -10,7 +10,44 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-### Aufgabe: die nächsten vier Läufe an `SkorokhodSpace` *(gestellt 2026-09-08 vom Nutzer)*
+### ~~Aufgabe: die nächsten vier Läufe an `SkorokhodSpace`~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, neunzehnter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, die vier Abschnitte vom sechzehnten
+bis zum neunzehnten Lauf des 2026-09-08. Kurz, an den vier Punkten der Aufgabe
+gemessen: `SkorokhodSpace/Suggested.lean` steht bei **fünf** `sorry` statt elf.
+
+*Punkt 1 ist erledigt* (sechzehnter Lauf), und die Wahl ist die Typklasse
+`BasePoint ι`; der Grund gegen `Classical.arbitrary` ist, daß der so gewonnene
+Punkt opak wäre und kein acceptance example der Meilensteine 4 bis 7 sich dann
+noch hinschreiben ließe. `SkorokhodSpace.dist_eq` ist `rfl`.
+
+*Punkt 2 ist nicht erledigt, sondern widerlegt* (achtzehnter Lauf), und das ist
+das Ergebnis der vier Läufe: `CompleteSpace D(ι, E)` ist **falsch** für die
+summierte Metrik, weil `SkorokhodSpace.dist_exhaustionMax_le_distOn` die
+Auswertung an jedem Fensterrand stetig macht. Die Reparatur ist Ethier--Kurtz'
+Integral über den reellen Radius; sie steht in der Roadmap, der Radius ist
+umgestellt (neunzehnter Lauf), die Metrik ist definiert (`intDist`), und ihre
+einzige zusätzliche Beweispflicht — die Meßbarkeit des Integranden — ist
+bezahlt. Was von `CompleteSpace` unabhängig von der Metrik war, ist bewiesen:
+die unendliche Komposition der Zeitwechsel samt Surjektivität des Grenzwerts
+(siebzehnter Lauf) und die beiden Auffangsätze für den Grenzpfad.
+
+*Punkt 3 ist unberührt geblieben*, und das ist die eine Abweichung vom
+Auftrag: die meßbare Einbettung steht weiterhin als `sorry`. Der Grund ist, daß
+Punkt 2 nicht abgearbeitet, sondern umgeworfen wurde und die Reparatur die
+Läufe achtzehn und neunzehn gekostet hat.
+
+*Punkt 4 ist zur Hälfte erledigt* (sechzehnter Lauf): `modulus` ist definiert
+statt `sorry`, samt `IsSubdivision`, `subdivisionOsc` und zwei Sätzen über sie;
+`tendsto_modulus` und das Kompaktheitskriterium sind offen.
+
+*Was als Nächstes zu tun ist*, steht am Ende des neunzehnten Laufberichts: die
+vier Axiome von `intDist`, dann die Umhängung der `MetricSpace`-Instanz, dann
+`CompleteSpace`.
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: die nächsten vier Läufe an `SkorokhodSpace`~~
 
 `WeakConvergence` hat seit dem 2026-09-07 rund fünfzehn Läufe bekommen und steht
 bei zwei `sorry`, von denen eines Absicht ist. `SkorokhodSpace` hat seit dem

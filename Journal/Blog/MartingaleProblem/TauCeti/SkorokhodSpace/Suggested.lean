@@ -9,6 +9,7 @@ import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Real
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
 
 /-!
 # Suggested signatures for the Skorokhod space roadmap
@@ -221,12 +222,27 @@ export BasePoint (basePoint)
 variable {ι : Type*} [LinearOrder ι] [MetricSpace ι] [OrderTopology ι]
   [AdditiveDist ι] [ProperSpace ι]
 
-/-- The exhaustion by closed balls around a base point. -/
-def exhaustion (t₀ : ι) (m : ℕ) : Set ι := Metric.closedBall t₀ m
+/-- The exhaustion by closed balls around a base point.
+
+**The radius is a real number**, and this is the correction of 2026-09-08: a
+metric that sums over a countable set of radii is not a metric for `J₁`
+(`SkorokhodSpace.dist_exhaustionMax_le_distOn`), so the metric of Milestone 4
+integrates over the radius and the radius has to be able to run over an
+interval.  The truncation `max u 0` keeps every declaration below total: a
+negative radius would make the window empty, and `exhaustionMin`, `exhaustionMax`
+and `clamp` are `def`s that need it inhabited.  For `0 ≤ u` it is the closed
+ball, which is `exhaustion_eq_closedBall`. -/
+def exhaustion (t₀ : ι) (u : ℝ) : Set ι := Metric.closedBall t₀ (max u 0)
+
+omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+@[simp]
+theorem exhaustion_eq_closedBall (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) :
+    exhaustion t₀ u = Metric.closedBall t₀ u := by
+  rw [exhaustion, max_eq_left hu]
 
 omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] in
-theorem isCompact_exhaustion (t₀ : ι) (m : ℕ) : IsCompact (exhaustion t₀ m) :=
-  isCompact_closedBall t₀ m
+theorem isCompact_exhaustion (t₀ : ι) (u : ℝ) : IsCompact (exhaustion t₀ u) :=
+  isCompact_closedBall t₀ _
 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- The metric is the difference of the length function to a base point.  It is
@@ -313,7 +329,7 @@ theorem BasePoint.coe_ofMem {α : Type*} [BasePoint α] {s : Set α} (h : basePo
     ((@basePoint s (BasePoint.ofMem h)) : α) = basePoint := rfl
 
 omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
-theorem mem_exhaustion_self (t₀ : ι) (m : ℕ) : t₀ ∈ exhaustion t₀ m :=
+theorem mem_exhaustion_self (t₀ : ι) (u : ℝ) : t₀ ∈ exhaustion t₀ u :=
   Metric.mem_closedBall_self (by positivity)
 
 omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
@@ -324,20 +340,20 @@ base points that the metric of Milestone 4 makes available, and it is what any
 comparison of `SkorokhodSpace.metricSpace t₀` with `SkorokhodSpace.metricSpace
 t₁` has to run on.  The comparison itself is *not* claimed here: the subgroups
 `TimeChange.fixing t₀` also differ, and no argument in this file relates them. -/
-theorem exhaustion_subset_exhaustion (t₀ t₁ : ι) (m : ℕ) :
-    exhaustion t₀ m ⊆ exhaustion t₁ (m + ⌈dist t₀ t₁⌉₊) := by
+theorem exhaustion_subset_exhaustion (t₀ t₁ : ι) {u : ℝ} (hu : 0 ≤ u) :
+    exhaustion t₀ u ⊆ exhaustion t₁ (u + dist t₀ t₁) := by
   intro t ht
-  simp only [exhaustion, Metric.mem_closedBall] at ht ⊢
+  have hd : (0 : ℝ) ≤ dist t₀ t₁ := dist_nonneg
+  simp only [exhaustion, Metric.mem_closedBall, max_eq_left hu,
+    max_eq_left (by linarith : (0 : ℝ) ≤ u + dist t₀ t₁)] at ht ⊢
   have h1 : dist t t₁ ≤ dist t t₀ + dist t₀ t₁ := dist_triangle _ _ _
-  have h2 : dist t₀ t₁ ≤ (⌈dist t₀ t₁⌉₊ : ℝ) := Nat.le_ceil _
-  push_cast
   linarith
 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- The window is an order interval.  This is `AdditiveDist` again, and it is
 what makes the clamp below land in the window: above the base point the length
 function is monotone, below it the additivity is read from the other end. -/
-theorem ordConnected_exhaustion (t₀ : ι) (m : ℕ) : (exhaustion t₀ m).OrdConnected := by
+theorem ordConnected_exhaustion (t₀ : ι) (u : ℝ) : (exhaustion t₀ u).OrdConnected := by
   refine ⟨fun x hx y hy z hz => ?_⟩
   obtain ⟨hxz, hzy⟩ := hz
   simp only [exhaustion, Metric.mem_closedBall] at hx hy ⊢
@@ -352,52 +368,52 @@ theorem ordConnected_exhaustion (t₀ : ι) (m : ℕ) : (exhaustion t₀ m).OrdC
 
 /-- The least element of the window; it exists because the window is compact and
 contains the base point. -/
-noncomputable def exhaustionMin (t₀ : ι) (m : ℕ) : ι :=
-  ((isCompact_exhaustion t₀ m).exists_isLeast ⟨t₀, mem_exhaustion_self t₀ m⟩).choose
+noncomputable def exhaustionMin (t₀ : ι) (u : ℝ) : ι :=
+  ((isCompact_exhaustion t₀ u).exists_isLeast ⟨t₀, mem_exhaustion_self t₀ u⟩).choose
 
 omit [AdditiveDist ι] in
-theorem isLeast_exhaustionMin (t₀ : ι) (m : ℕ) :
-    IsLeast (exhaustion t₀ m) (exhaustionMin t₀ m) :=
-  ((isCompact_exhaustion t₀ m).exists_isLeast ⟨t₀, mem_exhaustion_self t₀ m⟩).choose_spec
+theorem isLeast_exhaustionMin (t₀ : ι) (u : ℝ) :
+    IsLeast (exhaustion t₀ u) (exhaustionMin t₀ u) :=
+  ((isCompact_exhaustion t₀ u).exists_isLeast ⟨t₀, mem_exhaustion_self t₀ u⟩).choose_spec
 
 /-- The greatest element of the window. -/
-noncomputable def exhaustionMax (t₀ : ι) (m : ℕ) : ι :=
-  ((isCompact_exhaustion t₀ m).exists_isGreatest ⟨t₀, mem_exhaustion_self t₀ m⟩).choose
+noncomputable def exhaustionMax (t₀ : ι) (u : ℝ) : ι :=
+  ((isCompact_exhaustion t₀ u).exists_isGreatest ⟨t₀, mem_exhaustion_self t₀ u⟩).choose
 
 omit [AdditiveDist ι] in
-theorem isGreatest_exhaustionMax (t₀ : ι) (m : ℕ) :
-    IsGreatest (exhaustion t₀ m) (exhaustionMax t₀ m) :=
-  ((isCompact_exhaustion t₀ m).exists_isGreatest ⟨t₀, mem_exhaustion_self t₀ m⟩).choose_spec
+theorem isGreatest_exhaustionMax (t₀ : ι) (u : ℝ) :
+    IsGreatest (exhaustion t₀ u) (exhaustionMax t₀ u) :=
+  ((isCompact_exhaustion t₀ u).exists_isGreatest ⟨t₀, mem_exhaustion_self t₀ u⟩).choose_spec
 
 /-- The clamp onto the window.  Milestone 4 composes paths with it, so that a
-path restricted to `exhaustion t₀ m` is constant outside the window instead of
+path restricted to `exhaustion t₀ u` is constant outside the window instead of
 being undefined there. -/
-noncomputable def clamp (t₀ : ι) (m : ℕ) (t : ι) : ι :=
-  min (max t (exhaustionMin t₀ m)) (exhaustionMax t₀ m)
+noncomputable def clamp (t₀ : ι) (u : ℝ) (t : ι) : ι :=
+  min (max t (exhaustionMin t₀ u)) (exhaustionMax t₀ u)
 
 omit [AdditiveDist ι] in
-theorem monotone_clamp (t₀ : ι) (m : ℕ) : Monotone (clamp t₀ m) :=
+theorem monotone_clamp (t₀ : ι) (u : ℝ) : Monotone (clamp t₀ u) :=
   fun _ _ h => min_le_min (max_le_max h le_rfl) le_rfl
 
 omit [AdditiveDist ι] in
-theorem continuous_clamp (t₀ : ι) (m : ℕ) : Continuous (clamp t₀ m) :=
+theorem continuous_clamp (t₀ : ι) (u : ℝ) : Continuous (clamp t₀ u) :=
   (continuous_id.max continuous_const).min continuous_const
 
-theorem clamp_mem_exhaustion (t₀ : ι) (m : ℕ) (t : ι) : clamp t₀ m t ∈ exhaustion t₀ m := by
-  have hmin := isLeast_exhaustionMin t₀ m
-  have hmax := isGreatest_exhaustionMax t₀ m
-  have hle : exhaustionMin t₀ m ≤ exhaustionMax t₀ m := hmin.2 hmax.1
-  refine (ordConnected_exhaustion t₀ m).out hmin.1 hmax.1 ⟨?_, min_le_right _ _⟩
+theorem clamp_mem_exhaustion (t₀ : ι) (u : ℝ) (t : ι) : clamp t₀ u t ∈ exhaustion t₀ u := by
+  have hmin := isLeast_exhaustionMin t₀ u
+  have hmax := isGreatest_exhaustionMax t₀ u
+  have hle : exhaustionMin t₀ u ≤ exhaustionMax t₀ u := hmin.2 hmax.1
+  refine (ordConnected_exhaustion t₀ u).out hmin.1 hmax.1 ⟨?_, min_le_right _ _⟩
   exact le_min (le_max_right _ _) hle
 
 omit [AdditiveDist ι] in
-theorem clamp_eq_self {t₀ : ι} {m : ℕ} {t : ι} (ht : t ∈ exhaustion t₀ m) :
-    clamp t₀ m t = t := by
-  rw [clamp, max_eq_left ((isLeast_exhaustionMin t₀ m).2 ht),
-    min_eq_left ((isGreatest_exhaustionMax t₀ m).2 ht)]
+theorem clamp_eq_self {t₀ : ι} {u : ℝ} {t : ι} (ht : t ∈ exhaustion t₀ u) :
+    clamp t₀ u t = t := by
+  rw [clamp, max_eq_left ((isLeast_exhaustionMin t₀ u).2 ht),
+    min_eq_left ((isGreatest_exhaustionMax t₀ u).2 ht)]
 
-theorem clamp_idem (t₀ : ι) (m : ℕ) (t : ι) : clamp t₀ m (clamp t₀ m t) = clamp t₀ m t :=
-  clamp_eq_self (clamp_mem_exhaustion t₀ m t)
+theorem clamp_idem (t₀ : ι) (u : ℝ) (t : ι) : clamp t₀ u (clamp t₀ u t) = clamp t₀ u t :=
+  clamp_eq_self (clamp_mem_exhaustion t₀ u t)
 
 omit [AdditiveDist ι] in
 /-- Above the window the clamp is the greatest point of the window.  Innocent as
@@ -405,33 +421,33 @@ it looks, this is the half of the clamp that
 `SkorokhodSpace.dist_exhaustionMax_le_distOn` reads, and through it the
 obstruction of 2026-09-08: far out on the right *both* arguments of the supremum
 in `distOn` are clamped to the same point, whatever the time change does. -/
-theorem clamp_eq_exhaustionMax_of_le {t₀ : ι} {m : ℕ} {t : ι}
-    (h : exhaustionMax t₀ m ≤ t) : clamp t₀ m t = exhaustionMax t₀ m := by
+theorem clamp_eq_exhaustionMax_of_le {t₀ : ι} {u : ℝ} {t : ι}
+    (h : exhaustionMax t₀ u ≤ t) : clamp t₀ u t = exhaustionMax t₀ u := by
   rw [clamp, min_eq_right (h.trans (le_max_left _ _))]
 
 omit [AdditiveDist ι] in
 /-- And the mirror half, below the window. -/
-theorem clamp_eq_exhaustionMin_of_le {t₀ : ι} {m : ℕ} {t : ι}
-    (h : t ≤ exhaustionMin t₀ m) : clamp t₀ m t = exhaustionMin t₀ m := by
+theorem clamp_eq_exhaustionMin_of_le {t₀ : ι} {u : ℝ} {t : ι}
+    (h : t ≤ exhaustionMin t₀ u) : clamp t₀ u t = exhaustionMin t₀ u := by
   rw [clamp, max_eq_right h,
-    min_eq_left ((isLeast_exhaustionMin t₀ m).2 (isGreatest_exhaustionMax t₀ m).1)]
+    min_eq_left ((isLeast_exhaustionMin t₀ u).2 (isGreatest_exhaustionMax t₀ u).1)]
 
 omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The windows around one base point are nested.  This is the case of
 `exhaustion_subset_exhaustion` that the exhaustion is named for, and it is
 separate because it costs no enlargement of the radius. -/
-theorem exhaustion_subset_of_le (t₀ : ι) {m m' : ℕ} (h : m ≤ m') :
-    exhaustion t₀ m ⊆ exhaustion t₀ m' :=
-  Metric.closedBall_subset_closedBall (by exact_mod_cast h)
+theorem exhaustion_subset_of_le (t₀ : ι) {u u' : ℝ} (h : u ≤ u') :
+    exhaustion t₀ u ⊆ exhaustion t₀ u' :=
+  Metric.closedBall_subset_closedBall (max_le_max h le_rfl)
 
 /-- Clamping to a window and then to a larger one changes nothing.  This is the
 algebraic backbone of the compatibility of the window limits in Milestone 5: a
-path truncated to `exhaustion t₀ m` is already truncated to every larger window,
+path truncated to `exhaustion t₀ u` is already truncated to every larger window,
 so the truncations of a single path form a coherent family and the limits taken
 window by window have a single candidate to converge to. -/
-theorem clamp_clamp_of_le (t₀ : ι) {m m' : ℕ} (h : m ≤ m') (t : ι) :
-    clamp t₀ m' (clamp t₀ m t) = clamp t₀ m t :=
-  clamp_eq_self (exhaustion_subset_of_le t₀ h (clamp_mem_exhaustion t₀ m t))
+theorem clamp_clamp_of_le (t₀ : ι) {u u' : ℝ} (h : u ≤ u') (t : ι) :
+    clamp t₀ u' (clamp t₀ u t) = clamp t₀ u t :=
+  clamp_eq_self (exhaustion_subset_of_le t₀ h (clamp_mem_exhaustion t₀ u t))
 
 /-- An index satisfying the four hypotheses is order isomorphic and isometric to
 a closed subset of `ℝ`. -/
@@ -847,7 +863,10 @@ theorem IsCadlag.of_tendstoUniformlyOn_exhaustion [CompleteSpace E] (t₀ : ι)
     have hc := (h m).comp (clamp t₀ m)
     rwa [hpre, tendstoUniformlyOn_univ] at hc
   · have hnhds : exhaustion t₀ m ∈ 𝓝 x :=
-      mem_nhds_iff.2 ⟨Metric.ball t₀ m, Metric.ball_subset_closedBall, Metric.isOpen_ball,
+      mem_nhds_iff.2 ⟨Metric.ball t₀ m,
+        Metric.ball_subset_closedBall.trans
+          (Metric.closedBall_subset_closedBall (le_max_left _ _)),
+        Metric.isOpen_ball,
         Metric.mem_ball.2 hm⟩
     filter_upwards [hnhds] with t ht
     show f t = f (clamp t₀ m t)
@@ -887,6 +906,113 @@ theorem IsCadlag.isBounded_image_of_isCompact {f : ι → E} (hf : IsCadlag f)
   rintro _ ⟨y, hyK, rfl⟩
   obtain ⟨x, hxs, hx⟩ := Set.mem_iUnion₂.1 (hsub hyK)
   exact Set.mem_iUnion₂.2 ⟨x, hxs, by simpa [Metric.mem_closedBall] using hx⟩
+
+/-! ### A countable set that computes suprema of right continuous functions
+
+This is what the integral metric of Milestone 4 needs and nothing else in the
+file did: for the integrand `u ↦ ⨆ t, r (f (clamp u (λ t))) (g (clamp u t))` to
+be integrable it has first to be measurable, and a supremum over the whole
+index is not.  A countable **dense** set does not suffice, and the obstruction
+is real: on `ι = Set.Icc (0:ℝ) 1` the set `D = ℚ ∩ [0,1)` is dense, and a right
+continuous function may exceed its supremum over `D` at the point `1`, which is
+approached from the left only.  What has to be added to a dense set is the set
+of points that are approached from the right by nothing, and the content of
+`countable_rightIsolated` is that there are only countably many of them. -/
+
+variable (ι) in
+/-- The points of the index at which nothing lies immediately to the right.
+The definition is the closedness-free form `IsOpen (Set.Iic t)`, which is
+equivalent to `𝓝[>] t = ⊥` and is the form both proofs below consume: it says
+that `t` has an open neighbourhood not meeting `Set.Ioi t`, up to the
+always-open `Set.Iio t`. -/
+def rightIsolated : Set ι := {t : ι | IsOpen (Set.Iic t)}
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- A point which no open set separates from its right is not right isolated.
+This is the direction the supremum lemma uses. -/
+theorem nonempty_inter_Ioi_of_notMem_rightIsolated {t : ι} (ht : t ∉ rightIsolated ι)
+    {W : Set ι} (hW : IsOpen W) (htW : t ∈ W) : (W ∩ Set.Ioi t).Nonempty := by
+  rcases Set.eq_empty_or_nonempty (W ∩ Set.Ioi t) with hempty | hne
+  · refine absurd ?_ ht
+    have hsub : W ⊆ Set.Iic t := by
+      intro x hx
+      by_contra hxt
+      exact (Set.eq_empty_iff_forall_notMem.1 hempty x) ⟨hx, not_le.1 hxt⟩
+    have heq : Set.Iic t = Set.Iio t ∪ W := by
+      refine Set.Subset.antisymm (fun x hx => ?_)
+        (Set.union_subset Set.Iio_subset_Iic_self hsub)
+      rcases lt_or_eq_of_le (Set.mem_Iic.1 hx) with h | h
+      · exact Or.inl h
+      · exact Or.inr (h ▸ htW)
+    show IsOpen (Set.Iic t)
+    rw [heq]
+    exact isOpen_Iio.union hW
+  · exact hne
+
+omit [OrderTopology ι] [AdditiveDist ι] in
+/-- **There are only countably many right isolated points.**  The proof is
+intrinsic --- it does not go through the embedding of the index into `ℝ`, which
+is still `exists_orderIso_isometry_real` and still a `sorry`.  For a right
+isolated `t` the set `Set.Iic t` is open, so a countable basis has a member `v`
+with `t ∈ v ⊆ Set.Iic t`; and that assignment is injective, because
+`v s = v t` forces `s ≤ t` and `t ≤ s` at once.  Second countability is the
+only hypothesis, and the index has it from `ProperSpace`. -/
+theorem countable_rightIsolated : (rightIsolated ι).Countable := by
+  have hbasis := TopologicalSpace.isBasis_countableBasis ι
+  have : Countable (TopologicalSpace.countableBasis ι) :=
+    (TopologicalSpace.countable_countableBasis ι).to_subtype
+  rw [← Set.countable_coe_iff]
+  have key : ∀ t : rightIsolated ι, ∃ v : TopologicalSpace.countableBasis ι,
+      (t : ι) ∈ (v : Set ι) ∧ (v : Set ι) ⊆ Set.Iic (t : ι) := by
+    intro t
+    obtain ⟨v, hv, htv, hsub⟩ :=
+      hbasis.exists_subset_of_mem_open (Set.mem_Iic.2 le_rfl) t.2
+    exact ⟨⟨v, hv⟩, htv, hsub⟩
+  choose φ hmem hsub using key
+  refine Function.Injective.countable (f := φ) fun s t hst => ?_
+  have h1 : (s : ι) ≤ (t : ι) := Set.mem_Iic.1 (hsub t (hst ▸ hmem s))
+  have h2 : (t : ι) ≤ (s : ι) := Set.mem_Iic.1 (hsub s (hst.symm ▸ hmem t))
+  exact Subtype.ext (le_antisymm h1 h2)
+
+omit [AdditiveDist ι] in
+/-- **One countable set computes the supremum of every right continuous
+function on the index.**  It is a countable dense set together with the
+countably many right isolated points, and it is what makes the integrand of the
+metric of Milestone 4 measurable: the supremum over the index is a supremum
+over a countable family, hence measurable in the window radius as soon as each
+member is.
+
+The set does not depend on the function, which is the whole point --- a
+supremum-approximating sequence would depend on it, and a different countable
+set for every radius computes nothing. -/
+theorem exists_countable_ciSup_eq [Nonempty ι] :
+    ∃ C : Set ι, C.Countable ∧ C.Nonempty ∧
+      ∀ h : ι → ℝ, Function.RightContinuous h → BddAbove (Set.range h) →
+        ⨆ t : ι, h t = ⨆ t : C, h (t : ι) := by
+  obtain ⟨D, hDc, hDd⟩ := TopologicalSpace.exists_countable_dense ι
+  refine ⟨D ∪ rightIsolated ι, hDc.union countable_rightIsolated,
+    (hDd.nonempty).mono Set.subset_union_left, fun h hrc hbdd => ?_⟩
+  set C : Set ι := D ∪ rightIsolated ι with hC
+  have hCne : C.Nonempty := (hDd.nonempty).mono Set.subset_union_left
+  have : Nonempty C := hCne.to_subtype
+  have hbddC : BddAbove (Set.range fun t : C => h (t : ι)) :=
+    hbdd.mono (by rintro _ ⟨t, rfl⟩; exact ⟨(t : ι), rfl⟩)
+  refine le_antisymm (ciSup_le fun t => ?_) (ciSup_le fun t => le_ciSup hbdd (t : ι))
+  by_contra hcon
+  have hlt : (⨆ s : C, h (s : ι)) < h t := not_le.1 hcon
+  by_cases hti : t ∈ rightIsolated ι
+  · exact absurd (le_ciSup hbddC (⟨t, Or.inr hti⟩ : C)) (not_le.2 hlt)
+  -- `h` stays above the supremum just to the right of `t`, and there the
+  -- dense set has a point
+  have hIoi : h ⁻¹' Set.Ioi (⨆ t : C, h (t : ι)) ∈ 𝓝[>] t :=
+    hrc t (Ioi_mem_nhds hlt)
+  obtain ⟨W, hW, htW, hWsub⟩ := mem_nhdsWithin.1 hIoi
+  obtain ⟨x, hx⟩ := nonempty_inter_Ioi_of_notMem_rightIsolated hti hW htW
+  obtain ⟨d, hdD, hdW⟩ :=
+    hDd.exists_mem_open (hW.inter isOpen_Ioi) ⟨x, hx⟩
+  have hdmem : d ∈ C := Or.inl hdD
+  have : (⨆ t : C, h (t : ι)) < h d := hWsub ⟨hdW.1, hdW.2⟩
+  exact absurd (le_ciSup hbddC (⟨d, hdmem⟩ : C)) (not_le.2 this)
 
 /-! ## Milestones 3 and 4: time changes and the metric -/
 
@@ -945,8 +1071,8 @@ noncomputable def TimeChange.lipConst (l : TimeChange ι) : ℝ≥0 :=
   sInf {K : ℝ≥0 | LipschitzWith K l.toOrderIso}
 
 /-- The same constant computed on `exhaustion t₀ m` only. -/
-noncomputable def TimeChange.lipConstOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ≥0 :=
-  sInf {K : ℝ≥0 | LipschitzOnWith K l.toOrderIso (exhaustion t₀ m)}
+noncomputable def TimeChange.lipConstOn (t₀ : ι) (u : ℝ) (l : TimeChange ι) : ℝ≥0 :=
+  sInf {K : ℝ≥0 | LipschitzOnWith K l.toOrderIso (exhaustion t₀ u)}
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The infimum is attained. This is where `ι` being a metric space and not
@@ -1019,40 +1145,40 @@ noncomputable def TimeChange.norm (l : TimeChange ι) : ℝ :=
 
 /-- The same, computed on `exhaustion t₀ m`. It is a lower bound for `norm` and
 nothing more; the metric of Milestone 4 uses `norm`. -/
-noncomputable def TimeChange.normOn (t₀ : ι) (m : ℕ) (l : TimeChange ι) : ℝ :=
-  Real.log (max (TimeChange.lipConstOn t₀ m l) (TimeChange.lipConstOn t₀ m l⁻¹))
+noncomputable def TimeChange.normOn (t₀ : ι) (u : ℝ) (l : TimeChange ι) : ℝ :=
+  Real.log (max (TimeChange.lipConstOn t₀ u l) (TimeChange.lipConstOn t₀ u l⁻¹))
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 theorem TimeChange.norm_inv (l : TimeChange ι) : (l⁻¹).norm = l.norm := by
   rw [TimeChange.norm, TimeChange.norm, inv_inv, max_comm]
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
-theorem TimeChange.normOn_inv (t₀ : ι) (m : ℕ) (l : TimeChange ι) :
-    TimeChange.normOn t₀ m l⁻¹ = TimeChange.normOn t₀ m l := by
+theorem TimeChange.normOn_inv (t₀ : ι) (u : ℝ) (l : TimeChange ι) :
+    TimeChange.normOn t₀ u l⁻¹ = TimeChange.normOn t₀ u l := by
   rw [TimeChange.normOn, TimeChange.normOn, inv_inv, max_comm]
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The two cases the proof has to distinguish, and they are the reason the
-statement is true at all: on an `exhaustion t₀ m` with two distinct points the
+statement is true at all: on an `exhaustion t₀ u` with two distinct points the
 set of admissible constants for the identity is `Set.Ici 1`, so `lipConstOn` is
-`1` and its logarithm is `0`; on a one point exhaustion -- `m = 0` in a discrete
+`1` and its logarithm is `0`; on a one point exhaustion -- `u = 0` in a discrete
 index -- every constant is admissible, `lipConstOn` is `0`, and `Real.log 0 = 0`
 by Mathlib's convention.  The junk value of `Real.log` is what carries the
 degenerate case, which is worth saying out loud rather than leaving to the
 reader. -/
-theorem TimeChange.normOn_one (t₀ : ι) (m : ℕ) :
-    TimeChange.normOn t₀ m (1 : TimeChange ι) = 0 := by
+theorem TimeChange.normOn_one (t₀ : ι) (u : ℝ) :
+    TimeChange.normOn t₀ u (1 : TimeChange ι) = 0 := by
   have hone : ∀ t : ι, (1 : TimeChange ι).toOrderIso t = t := fun _ => rfl
-  have key : TimeChange.lipConstOn t₀ m (1 : TimeChange ι) = 0 ∨
-      TimeChange.lipConstOn t₀ m (1 : TimeChange ι) = 1 := by
+  have key : TimeChange.lipConstOn t₀ u (1 : TimeChange ι) = 0 ∨
+      TimeChange.lipConstOn t₀ u (1 : TimeChange ι) = 1 := by
     rw [TimeChange.lipConstOn]
-    by_cases hs : (exhaustion t₀ m).Subsingleton
+    by_cases hs : (exhaustion t₀ u).Subsingleton
     · refine Or.inl (le_antisymm (csInf_le' ?_) zero_le)
-      show LipschitzOnWith (0 : ℝ≥0) ⇑(1 : TimeChange ι).toOrderIso (exhaustion t₀ m)
+      show LipschitzOnWith (0 : ℝ≥0) ⇑(1 : TimeChange ι).toOrderIso (exhaustion t₀ u)
       intro a ha b hb
       simp [hone, hs ha hb]
     · obtain ⟨x, hx, y, hy, hxy⟩ := Set.not_subsingleton_iff.mp hs
-      have hmem : LipschitzOnWith 1 ⇑(1 : TimeChange ι).toOrderIso (exhaustion t₀ m) := by
+      have hmem : LipschitzOnWith 1 ⇑(1 : TimeChange ι).toOrderIso (exhaustion t₀ u) := by
         intro a _ b _
         simp [hone]
       refine Or.inr (le_antisymm (csInf_le' hmem) (le_csInf ⟨1, hmem⟩ fun K hK => ?_))
@@ -1254,7 +1380,8 @@ noncomputable def TimeChange.double : TimeChange ℝ where
 /-- Membership in the window `exhaustion (0 : ℝ) 1 = [-1, 1]`, in the only form
 the three estimates below use it. -/
 theorem mem_exhaustion_real_iff {x : ℝ} : x ∈ exhaustion (0 : ℝ) 1 ↔ -1 ≤ x ∧ x ≤ 1 := by
-  simp only [exhaustion, Metric.mem_closedBall, Real.dist_eq, sub_zero, Nat.cast_one]
+  simp only [exhaustion, Metric.mem_closedBall, Real.dist_eq, sub_zero,
+    max_eq_left (zero_le_one' ℝ)]
   exact abs_le
 
 /-- On the window `steep` and its inverse are the identity, so the windowed norm
@@ -1360,9 +1487,9 @@ does: his `d°ₘ` truncates the *paths* to the window and measures the time cha
 globally. -/
 theorem TimeChange.not_normOn_mul_le :
     ¬ ∀ (ι : Type) (_ : LinearOrder ι) (_ : MetricSpace ι) (_ : OrderTopology ι)
-        (_ : AdditiveDist ι) (_ : ProperSpace ι) (t₀ : ι) (m : ℕ) (l l' : TimeChange ι),
-        TimeChange.normOn t₀ m (l * l') ≤
-          TimeChange.normOn t₀ m l + TimeChange.normOn t₀ m l' := by
+        (_ : AdditiveDist ι) (_ : ProperSpace ι) (t₀ : ι) (u : ℝ) (l l' : TimeChange ι),
+        TimeChange.normOn t₀ u (l * l') ≤
+          TimeChange.normOn t₀ u l + TimeChange.normOn t₀ u l' := by
   intro hcon
   have key := hcon ℝ inferInstance inferInstance inferInstance inferInstance inferInstance
     0 1 TimeChange.steep TimeChange.double
@@ -1394,9 +1521,9 @@ It needs neither the order topology nor properness, and in particular not the
 compactness of `exhaustion t₀ m`: the window enters only through the bound
 `dist t₀ t ≤ m`.  What it does need, and it is the first place in Milestone 3
 where this happens, is `AdditiveDist`, through `dist_eq_abs_sub_of_sameSide`. -/
-theorem TimeChange.dist_le_of_norm_le (t₀ : ι) (m : ℕ) {l : TimeChange ι} {γ : ℝ}
-    (h₀ : l.toOrderIso t₀ = t₀) (h : l.norm ≤ γ) {t : ι} (ht : t ∈ exhaustion t₀ m) :
-    dist (l.toOrderIso t) t ≤ (Real.exp γ - 1) * (2 * m) := by
+theorem TimeChange.dist_le_of_norm_le (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) {l : TimeChange ι}
+    {γ : ℝ} (h₀ : l.toOrderIso t₀ = t₀) (h : l.norm ≤ γ) {t : ι} (ht : t ∈ exhaustion t₀ u) :
+    dist (l.toOrderIso t) t ≤ (Real.exp γ - 1) * (2 * u) := by
   have hγ : 0 ≤ γ := (TimeChange.norm_nonneg l).trans h
   have hE : (1 : ℝ) ≤ Real.exp γ := Real.one_le_exp hγ
   -- both Lipschitz constants are at most `exp γ`; this is `norm λ ≤ γ` undone
@@ -1430,22 +1557,22 @@ theorem TimeChange.dist_le_of_norm_le (t₀ : ι) (m : ℕ) {l : TimeChange ι} 
     · refine Or.inr ⟨?_, hle⟩
       calc l.toOrderIso t ≤ l.toOrderIso t₀ := l.toOrderIso.monotone hle
         _ = t₀ := h₀
-  have hm : dist t₀ t ≤ (m : ℝ) := by
+  have hm : dist t₀ t ≤ (u : ℝ) := by
     rw [dist_comm]
-    simpa only [exhaustion, Metric.mem_closedBall] using ht
-  have hm0 : (0 : ℝ) ≤ (m : ℝ) := Nat.cast_nonneg m
-  have habs : |dist t₀ t - dist t₀ (l.toOrderIso t)| ≤ (Real.exp γ - 1) * (m : ℝ) := by
+    simpa only [exhaustion, Metric.mem_closedBall, max_eq_left hu] using ht
+  have hm0 : (0 : ℝ) ≤ (u : ℝ) := hu
+  have habs : |dist t₀ t - dist t₀ (l.toOrderIso t)| ≤ (Real.exp γ - 1) * (u : ℝ) := by
     rcases le_total (dist t₀ (l.toOrderIso t)) (dist t₀ t) with hle | hle
     · rw [abs_of_nonneg (by linarith)]
       have hbound : (Real.exp γ - 1) * dist t₀ (l.toOrderIso t)
-          ≤ (Real.exp γ - 1) * (m : ℝ) :=
+          ≤ (Real.exp γ - 1) * (u : ℝ) :=
         mul_le_mul_of_nonneg_left (hle.trans hm) (by linarith)
       linarith
     · rw [abs_of_nonpos (by linarith)]
-      have hbound : (Real.exp γ - 1) * dist t₀ t ≤ (Real.exp γ - 1) * (m : ℝ) :=
+      have hbound : (Real.exp γ - 1) * dist t₀ t ≤ (Real.exp γ - 1) * (u : ℝ) :=
         mul_le_mul_of_nonneg_left hm (by linarith)
       linarith
-  have hfinal : (Real.exp γ - 1) * (m : ℝ) ≤ (Real.exp γ - 1) * (2 * m) :=
+  have hfinal : (Real.exp γ - 1) * (u : ℝ) ≤ (Real.exp γ - 1) * (2 * u) :=
     mul_le_mul_of_nonneg_left (by linarith) (by linarith)
   rw [dist_eq_abs_sub_of_sameSide hside]
   linarith
@@ -1659,7 +1786,8 @@ theorem TimeChange.exists_tendsto_of_summable_norm (t₀ : ι) (l : ℕ → Time
         ≤ (Real.exp (∑' i, γ i) * (Real.exp (∑' i, γ i) * (2 * m))) * γ n := by
     intro m t ht n
     have hmove : dist ((l n).toOrderIso t) t ≤ (Real.exp (γ n) - 1) * (2 * m) :=
-      TimeChange.dist_le_of_norm_le t₀ m (TimeChange.mem_fixing_iff.1 (hl n)) (hγ n) ht
+      TimeChange.dist_le_of_norm_le t₀ (m.cast_nonneg)
+        (TimeChange.mem_fixing_iff.1 (hl n)) (hγ n) ht
     have h1 : Real.exp (γ n) - 1 ≤ γ n * Real.exp (∑' i, γ i) :=
       (hexp1 (γ n)).trans (mul_le_mul_of_nonneg_left (Real.exp_le_exp.2 (hγΓ n)) (hγ0 n))
     have h2 : (0 : ℝ) ≤ 2 * (m : ℝ) := by positivity
@@ -1710,7 +1838,7 @@ theorem TimeChange.exists_tendsto_of_summable_norm (t₀ : ι) (l : ℕ → Time
     have hmove : dist ((l n)⁻¹.toOrderIso ((TimeChange.partialComp l n)⁻¹.toOrderIso t))
         ((TimeChange.partialComp l n)⁻¹.toOrderIso t)
         ≤ (Real.exp (γ n) - 1) * (2 * (⌈Real.exp (∑' i, γ i) * m⌉₊ : ℕ)) := by
-      refine TimeChange.dist_le_of_norm_le t₀ _
+      refine TimeChange.dist_le_of_norm_le t₀ (Nat.cast_nonneg _)
         (TimeChange.mem_fixing_iff.1 ((TimeChange.fixing t₀).inv_mem (hl n))) ?_ humem
       rw [TimeChange.norm_inv]
       exact hγ n
@@ -1897,21 +2025,21 @@ structure SkorokhodSpace (ι E : Type*) [LinearOrder ι] [TopologicalSpace ι]
 /-- A path truncated to the window: it agrees with `f` on `exhaustion t₀ m` and
 is constant on either side of it.  It is again càdlàg by
 `IsCadlag.comp_monotone_continuous`, `clamp` being monotone and continuous. -/
-noncomputable def SkorokhodSpace.restrictExhaustion (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
+noncomputable def SkorokhodSpace.restrictExhaustion (t₀ : ι) (u : ℝ) (f : D(ι, E)) :
     D(ι, E) where
-  toFun := f.toFun ∘ clamp t₀ m
+  toFun := f.toFun ∘ clamp t₀ u
   isCadlag :=
-    f.isCadlag.comp_monotone_continuous (monotone_clamp t₀ m) (continuous_clamp t₀ m)
+    f.isCadlag.comp_monotone_continuous (monotone_clamp t₀ u) (continuous_clamp t₀ u)
 
 omit [AdditiveDist ι] in
 @[simp]
-theorem SkorokhodSpace.restrictExhaustion_apply (t₀ : ι) (m : ℕ) (f : D(ι, E)) (t : ι) :
-    (SkorokhodSpace.restrictExhaustion t₀ m f).toFun t = f.toFun (clamp t₀ m t) := rfl
+theorem SkorokhodSpace.restrictExhaustion_apply (t₀ : ι) (u : ℝ) (f : D(ι, E)) (t : ι) :
+    (SkorokhodSpace.restrictExhaustion t₀ u f).toFun t = f.toFun (clamp t₀ u t) := rfl
 
 omit [AdditiveDist ι] in
-theorem SkorokhodSpace.restrictExhaustion_eq_self {t₀ : ι} {m : ℕ} {f : D(ι, E)} {t : ι}
-    (ht : t ∈ exhaustion t₀ m) :
-    (SkorokhodSpace.restrictExhaustion t₀ m f).toFun t = f.toFun t := by
+theorem SkorokhodSpace.restrictExhaustion_eq_self {t₀ : ι} {u : ℝ} {f : D(ι, E)} {t : ι}
+    (ht : t ∈ exhaustion t₀ u) :
+    (SkorokhodSpace.restrictExhaustion t₀ u f).toFun t = f.toFun t := by
   rw [SkorokhodSpace.restrictExhaustion_apply, clamp_eq_self ht]
 
 /-- Truncating to a large window and then to a small one is truncating to the
@@ -1922,11 +2050,11 @@ lemma.  This is the coherence that
 truncations of one path to the successive windows determine each other in the
 one direction that a limit argument needs, and the family of window limits has to
 be checked against exactly this. -/
-theorem SkorokhodSpace.restrictExhaustion_restrictExhaustion (t₀ : ι) {m m' : ℕ}
-    (h : m ≤ m') (f : D(ι, E)) :
-    (SkorokhodSpace.restrictExhaustion t₀ m
-        (SkorokhodSpace.restrictExhaustion t₀ m' f)).toFun
-      = (SkorokhodSpace.restrictExhaustion t₀ m f).toFun := by
+theorem SkorokhodSpace.restrictExhaustion_restrictExhaustion (t₀ : ι) {u u' : ℝ}
+    (h : u ≤ u') (f : D(ι, E)) :
+    (SkorokhodSpace.restrictExhaustion t₀ u
+        (SkorokhodSpace.restrictExhaustion t₀ u' f)).toFun
+      = (SkorokhodSpace.restrictExhaustion t₀ u f).toFun := by
   funext t
   simp only [SkorokhodSpace.restrictExhaustion_apply]
   rw [clamp_clamp_of_le t₀ h]
@@ -1934,24 +2062,24 @@ theorem SkorokhodSpace.restrictExhaustion_restrictExhaustion (t₀ : ι) {m m' :
 /-- The truncated path has bounded range.  This is the one place where the
 compactness of the window is spent, and it is what makes the supremum in
 `distOn` a real number rather than a junk value. -/
-theorem SkorokhodSpace.isBounded_range_restrictExhaustion (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
-    Bornology.IsBounded (Set.range (SkorokhodSpace.restrictExhaustion t₀ m f).toFun) := by
-  refine (f.isCadlag.isBounded_image_of_isCompact (isCompact_exhaustion t₀ m)).subset ?_
+theorem SkorokhodSpace.isBounded_range_restrictExhaustion (t₀ : ι) (u : ℝ) (f : D(ι, E)) :
+    Bornology.IsBounded (Set.range (SkorokhodSpace.restrictExhaustion t₀ u f).toFun) := by
+  refine (f.isCadlag.isBounded_image_of_isCompact (isCompact_exhaustion t₀ u)).subset ?_
   rintro _ ⟨t, rfl⟩
-  exact ⟨clamp t₀ m t, clamp_mem_exhaustion t₀ m t, rfl⟩
+  exact ⟨clamp t₀ u t, clamp_mem_exhaustion t₀ u t, rfl⟩
 
 /-- The supremum defining `distOn` is over a set bounded above, so the `⨆` below
 is the supremum and not `0`.  Milestone 4 asks for this explicitly, and it is
 where `isBounded_range_restrictExhaustion`, hence the compactness of the window,
 is used. -/
-theorem SkorokhodSpace.bddAbove_range_dist_restrictExhaustion (t₀ : ι) (m : ℕ)
+theorem SkorokhodSpace.bddAbove_range_dist_restrictExhaustion (t₀ : ι) (u : ℝ)
     (f g : D(ι, E)) (l : TimeChange ι) :
     BddAbove (Set.range fun t : ι =>
-      dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun (l.toOrderIso t))
-        ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun t)) := by
+      dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun (l.toOrderIso t))
+        ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t)) := by
   obtain ⟨C, hC⟩ := Metric.isBounded_iff.1
-    ((SkorokhodSpace.isBounded_range_restrictExhaustion t₀ m f).union
-      (SkorokhodSpace.isBounded_range_restrictExhaustion t₀ m g))
+    ((SkorokhodSpace.isBounded_range_restrictExhaustion t₀ u f).union
+      (SkorokhodSpace.isBounded_range_restrictExhaustion t₀ u g))
   refine ⟨C, ?_⟩
   rintro _ ⟨t, rfl⟩
   exact hC (Or.inl ⟨l.toOrderIso t, rfl⟩) (Or.inr ⟨t, rfl⟩)
@@ -1961,29 +2089,29 @@ is **not**.  The infimum runs over the time changes fixing the base point, and
 the norm in it is the global `TimeChange.norm`; the windowed `normOn` is not
 subadditive (`TimeChange.not_normOn_mul_le`), so a `distOn` built on it would
 have no triangle inequality. -/
-noncomputable def SkorokhodSpace.distOn (t₀ : ι) (m : ℕ) (f g : D(ι, E)) : ℝ :=
+noncomputable def SkorokhodSpace.distOn (t₀ : ι) (u : ℝ) (f g : D(ι, E)) : ℝ :=
   ⨅ l : TimeChange.fixing t₀,
     max (TimeChange.norm (l : TimeChange ι))
-      (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+      (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
           ((l : TimeChange ι).toOrderIso t))
-        ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun t))
+        ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t))
 
 omit [AdditiveDist ι] in
 /-- The infimum defining `distOn` is over a set bounded below by `0`, so `ciInf_le`
 applies to it. -/
-theorem SkorokhodSpace.bddBelow_range_distOn (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
+theorem SkorokhodSpace.bddBelow_range_distOn (t₀ : ι) (u : ℝ) (f g : D(ι, E)) :
     BddBelow (Set.range fun l : TimeChange.fixing t₀ =>
       max (TimeChange.norm (l : TimeChange ι))
-        (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+        (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
             ((l : TimeChange ι).toOrderIso t))
-          ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun t))) := by
+          ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t))) := by
   refine ⟨0, ?_⟩
   rintro _ ⟨l, rfl⟩
   exact le_max_of_le_left (TimeChange.norm_nonneg _)
 
 omit [AdditiveDist ι] in
-theorem SkorokhodSpace.distOn_nonneg (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
-    0 ≤ SkorokhodSpace.distOn t₀ m f g :=
+theorem SkorokhodSpace.distOn_nonneg (t₀ : ι) (u : ℝ) (f g : D(ι, E)) :
+    0 ≤ SkorokhodSpace.distOn t₀ u f g :=
   le_ciInf fun _ => le_max_of_le_left (TimeChange.norm_nonneg _)
 
 omit [AdditiveDist ι] in
@@ -1991,8 +2119,8 @@ omit [AdditiveDist ι] in
 that the anchored subgroup is the right index for the infimum: `λ ↦ λ⁻¹` is a
 bijection of it, `TimeChange.norm_inv` leaves the norm unchanged, and the
 supremum is reindexed along the bijection `λ` of the index. -/
-theorem SkorokhodSpace.distOn_comm (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
-    SkorokhodSpace.distOn t₀ m f g = SkorokhodSpace.distOn t₀ m g f := by
+theorem SkorokhodSpace.distOn_comm (t₀ : ι) (u : ℝ) (f g : D(ι, E)) :
+    SkorokhodSpace.distOn t₀ u f g = SkorokhodSpace.distOn t₀ u g f := by
   have hre : ∀ (h₁ h₂ : ι → ℝ) (e : ι → ι), Function.Surjective e →
       (∀ s, h₁ (e s) = h₂ s) → ⨆ t, h₁ t = ⨆ s, h₂ s := by
     intro h₁ h₂ e he hpt
@@ -2005,23 +2133,23 @@ theorem SkorokhodSpace.distOn_comm (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
     · rintro ⟨s, rfl⟩
       exact ⟨e s, hpt s⟩
   have main : ∀ f g : D(ι, E),
-      SkorokhodSpace.distOn t₀ m g f ≤ SkorokhodSpace.distOn t₀ m f g := by
+      SkorokhodSpace.distOn t₀ u g f ≤ SkorokhodSpace.distOn t₀ u f g := by
     intro f g
     refine le_ciInf fun l => ?_
-    refine (ciInf_le (SkorokhodSpace.bddBelow_range_distOn t₀ m g f) l⁻¹).trans ?_
+    refine (ciInf_le (SkorokhodSpace.bddBelow_range_distOn t₀ u g f) l⁻¹).trans ?_
     have hnorm : TimeChange.norm ((l⁻¹ : TimeChange.fixing t₀) : TimeChange ι)
         = TimeChange.norm (l : TimeChange ι) := by
       rw [InvMemClass.coe_inv, TimeChange.norm_inv]
-    have hsup : ⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun
+    have hsup : ⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun
           (((l⁻¹ : TimeChange.fixing t₀) : TimeChange ι).toOrderIso t))
-          ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun t)
-        = ⨆ s : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+          ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun t)
+        = ⨆ s : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
             ((l : TimeChange ι).toOrderIso s))
-            ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun s) := by
+            ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun s) := by
       refine hre _ _ ⇑(l : TimeChange ι).toOrderIso (l : TimeChange ι).toOrderIso.surjective
         fun s => ?_
       rw [InvMemClass.coe_inv]
-      show dist ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun
+      show dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun
           ((l : TimeChange ι).toOrderIso.symm ((l : TimeChange ι).toOrderIso s))) _ = _
       rw [OrderIso.symm_apply_apply, dist_comm]
     rw [hnorm, hsup]
@@ -2030,11 +2158,11 @@ theorem SkorokhodSpace.distOn_comm (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
 omit [AdditiveDist ι] in
 /-- The first of the three metric axioms.  The identity is an admissible time
 change, its norm is `0`, and the supremum of the constant `0` is `0`. -/
-theorem SkorokhodSpace.distOn_self (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
-    SkorokhodSpace.distOn t₀ m f f = 0 := by
+theorem SkorokhodSpace.distOn_self (t₀ : ι) (u : ℝ) (f : D(ι, E)) :
+    SkorokhodSpace.distOn t₀ u f f = 0 := by
   have : Nonempty ι := ⟨t₀⟩
-  refine le_antisymm ?_ (SkorokhodSpace.distOn_nonneg t₀ m f f)
-  refine (ciInf_le (SkorokhodSpace.bddBelow_range_distOn t₀ m f f) 1).trans ?_
+  refine le_antisymm ?_ (SkorokhodSpace.distOn_nonneg t₀ u f f)
+  refine (ciInf_le (SkorokhodSpace.bddBelow_range_distOn t₀ u f f) 1).trans ?_
   simp [TimeChange.norm_one]
 
 /-! ### The window endpoints are read off `distOn`
@@ -2042,10 +2170,10 @@ theorem SkorokhodSpace.distOn_self (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
 The two statements that follow are the **obstruction of 2026-09-08**, and they
 are the reason Milestone 5 carries no `CompleteSpace` instance any more.
 
-`distOn t₀ m` truncates the two paths with `clamp t₀ m` and lets the time change
+`distOn t₀ u` truncates the two paths with `clamp t₀ u` and lets the time change
 `l` range over all of `TimeChange.fixing t₀`.  Take `t` beyond both
-`exhaustionMax t₀ m` and `l⁻¹ (exhaustionMax t₀ m)`.  Then `clamp t₀ m t` and
-`clamp t₀ m (l t)` are *both* `exhaustionMax t₀ m`, so the supremum in `distOn`
+`exhaustionMax t₀ u` and `l⁻¹ (exhaustionMax t₀ u)`.  Then `clamp t₀ u t` and
+`clamp t₀ u (l t)` are *both* `exhaustionMax t₀ u`, so the supremum in `distOn`
 contains the plain number `dist (f b) (g b)` --- and it does so for **every**
 `l`, so the infimum cannot get below it.
 
@@ -2059,42 +2187,42 @@ radius rather than summing over integer radii; the bad radii of a pair of paths
 are countably many, hence Lebesgue null, and the integral does not see them. -/
 
 /-- **The right window endpoint is a lower bound for `distOn`.**  No time change
-can separate the two paths at `exhaustionMax t₀ m`, because every `t` far enough
-to the right has both `clamp t₀ m t` and `clamp t₀ m (l t)` equal to it. -/
-theorem SkorokhodSpace.dist_exhaustionMax_le_distOn (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
-    dist (f.toFun (exhaustionMax t₀ m)) (g.toFun (exhaustionMax t₀ m))
-      ≤ SkorokhodSpace.distOn t₀ m f g := by
+can separate the two paths at `exhaustionMax t₀ u`, because every `t` far enough
+to the right has both `clamp t₀ u t` and `clamp t₀ u (l t)` equal to it. -/
+theorem SkorokhodSpace.dist_exhaustionMax_le_distOn (t₀ : ι) (u : ℝ) (f g : D(ι, E)) :
+    dist (f.toFun (exhaustionMax t₀ u)) (g.toFun (exhaustionMax t₀ u))
+      ≤ SkorokhodSpace.distOn t₀ u f g := by
   refine le_ciInf fun l => le_trans ?_ (le_max_right _ _)
-  obtain ⟨t, h1, h2⟩ : ∃ t : ι, clamp t₀ m t = exhaustionMax t₀ m ∧
-      clamp t₀ m ((l : TimeChange ι).toOrderIso t) = exhaustionMax t₀ m := by
-    refine ⟨max ((l : TimeChange ι).toOrderIso.symm (exhaustionMax t₀ m))
-        (exhaustionMax t₀ m), clamp_eq_exhaustionMax_of_le (le_max_right _ _),
+  obtain ⟨t, h1, h2⟩ : ∃ t : ι, clamp t₀ u t = exhaustionMax t₀ u ∧
+      clamp t₀ u ((l : TimeChange ι).toOrderIso t) = exhaustionMax t₀ u := by
+    refine ⟨max ((l : TimeChange ι).toOrderIso.symm (exhaustionMax t₀ u))
+        (exhaustionMax t₀ u), clamp_eq_exhaustionMax_of_le (le_max_right _ _),
       clamp_eq_exhaustionMax_of_le ?_⟩
     have h := (l : TimeChange ι).toOrderIso.monotone
-      (le_max_left ((l : TimeChange ι).toOrderIso.symm (exhaustionMax t₀ m))
-        (exhaustionMax t₀ m))
+      (le_max_left ((l : TimeChange ι).toOrderIso.symm (exhaustionMax t₀ u))
+        (exhaustionMax t₀ u))
     rwa [OrderIso.apply_symm_apply] at h
   refine le_trans (le_of_eq ?_)
-    (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ m f g
+    (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g
       (l : TimeChange ι)) t)
   rw [SkorokhodSpace.restrictExhaustion_apply, SkorokhodSpace.restrictExhaustion_apply, h1, h2]
 
 /-- The mirror statement at the left window endpoint. -/
-theorem SkorokhodSpace.dist_exhaustionMin_le_distOn (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
-    dist (f.toFun (exhaustionMin t₀ m)) (g.toFun (exhaustionMin t₀ m))
-      ≤ SkorokhodSpace.distOn t₀ m f g := by
+theorem SkorokhodSpace.dist_exhaustionMin_le_distOn (t₀ : ι) (u : ℝ) (f g : D(ι, E)) :
+    dist (f.toFun (exhaustionMin t₀ u)) (g.toFun (exhaustionMin t₀ u))
+      ≤ SkorokhodSpace.distOn t₀ u f g := by
   refine le_ciInf fun l => le_trans ?_ (le_max_right _ _)
-  obtain ⟨t, h1, h2⟩ : ∃ t : ι, clamp t₀ m t = exhaustionMin t₀ m ∧
-      clamp t₀ m ((l : TimeChange ι).toOrderIso t) = exhaustionMin t₀ m := by
-    refine ⟨min ((l : TimeChange ι).toOrderIso.symm (exhaustionMin t₀ m))
-        (exhaustionMin t₀ m), clamp_eq_exhaustionMin_of_le (min_le_right _ _),
+  obtain ⟨t, h1, h2⟩ : ∃ t : ι, clamp t₀ u t = exhaustionMin t₀ u ∧
+      clamp t₀ u ((l : TimeChange ι).toOrderIso t) = exhaustionMin t₀ u := by
+    refine ⟨min ((l : TimeChange ι).toOrderIso.symm (exhaustionMin t₀ u))
+        (exhaustionMin t₀ u), clamp_eq_exhaustionMin_of_le (min_le_right _ _),
       clamp_eq_exhaustionMin_of_le ?_⟩
     have h := (l : TimeChange ι).toOrderIso.monotone
-      (min_le_left ((l : TimeChange ι).toOrderIso.symm (exhaustionMin t₀ m))
-        (exhaustionMin t₀ m))
+      (min_le_left ((l : TimeChange ι).toOrderIso.symm (exhaustionMin t₀ u))
+        (exhaustionMin t₀ u))
     rwa [OrderIso.apply_symm_apply] at h
   refine le_trans (le_of_eq ?_)
-    (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ m f g
+    (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g
       (l : TimeChange ι)) t)
   rw [SkorokhodSpace.restrictExhaustion_apply, SkorokhodSpace.restrictExhaustion_apply, h1, h2]
 
@@ -2103,14 +2231,14 @@ omit [AdditiveDist ι] in
 subgroup of anchored time changes is not compact in any sense --- so the
 triangle inequality below argues with an `ε`, and this is the step that replaces
 attainment. -/
-theorem SkorokhodSpace.exists_lt_distOn_add (t₀ : ι) (m : ℕ) (f g : D(ι, E)) {δ : ℝ}
+theorem SkorokhodSpace.exists_lt_distOn_add (t₀ : ι) (u : ℝ) (f g : D(ι, E)) {δ : ℝ}
     (hδ : 0 < δ) :
     ∃ l : TimeChange.fixing t₀,
       max (TimeChange.norm (l : TimeChange ι))
-        (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+        (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
             ((l : TimeChange ι).toOrderIso t))
-          ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun t))
-        < SkorokhodSpace.distOn t₀ m f g + δ :=
+          ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t))
+        < SkorokhodSpace.distOn t₀ u f g + δ :=
   exists_lt_of_ciInf_lt (lt_add_of_pos_right _ hδ)
 
 /-- The triangle inequality, the last of the three axioms.  This is the second
@@ -2120,58 +2248,58 @@ again.  The `max` splits into its two halves, `TimeChange.norm_mul_le` carries
 the first and the triangle inequality of `E` the second, where the middle path
 is evaluated at `λ' t` --- which is why the supremum is taken over all of `ι`
 and not over the window, whose image under `λ'` is not the window. -/
-theorem SkorokhodSpace.distOn_triangle (t₀ : ι) (m : ℕ) (f g h : D(ι, E)) :
-    SkorokhodSpace.distOn t₀ m f h
-      ≤ SkorokhodSpace.distOn t₀ m f g + SkorokhodSpace.distOn t₀ m g h := by
+theorem SkorokhodSpace.distOn_triangle (t₀ : ι) (u : ℝ) (f g h : D(ι, E)) :
+    SkorokhodSpace.distOn t₀ u f h
+      ≤ SkorokhodSpace.distOn t₀ u f g + SkorokhodSpace.distOn t₀ u g h := by
   have hι : Nonempty ι := ⟨t₀⟩
   refine le_of_forall_pos_le_add fun ε hε => ?_
-  obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ m f g (half_pos hε)
-  obtain ⟨l', hl'⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ m g h (half_pos hε)
+  obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ u f g (half_pos hε)
+  obtain ⟨l', hl'⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ u g h (half_pos hε)
   have hS1 : ∀ s : ι,
-      dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun ((l : TimeChange ι).toOrderIso s))
-        ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun s)
-      ≤ ⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+      dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun ((l : TimeChange ι).toOrderIso s))
+        ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun s)
+      ≤ ⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
             ((l : TimeChange ι).toOrderIso t))
-          ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun t) :=
-    fun s => le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ m f g _) s
+          ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t) :=
+    fun s => le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g _) s
   have hS2 : ∀ s : ι,
-      dist ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun ((l' : TimeChange ι).toOrderIso s))
-        ((SkorokhodSpace.restrictExhaustion t₀ m h).toFun s)
-      ≤ ⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun
+      dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun ((l' : TimeChange ι).toOrderIso s))
+        ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun s)
+      ≤ ⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun
             ((l' : TimeChange ι).toOrderIso t))
-          ((SkorokhodSpace.restrictExhaustion t₀ m h).toFun t) :=
-    fun s => le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ m g h _) s
+          ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun t) :=
+    fun s => le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u g h _) s
   have hterm :
       max (TimeChange.norm ((l * l' : TimeChange.fixing t₀) : TimeChange ι))
-        (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+        (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
             (((l * l' : TimeChange.fixing t₀) : TimeChange ι).toOrderIso t))
-          ((SkorokhodSpace.restrictExhaustion t₀ m h).toFun t))
+          ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun t))
       ≤ (max (TimeChange.norm (l : TimeChange ι))
-          (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+          (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
               ((l : TimeChange ι).toOrderIso t))
-            ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun t)))
+            ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t)))
         + max (TimeChange.norm (l' : TimeChange ι))
-          (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun
+          (⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun
               ((l' : TimeChange ι).toOrderIso t))
-            ((SkorokhodSpace.restrictExhaustion t₀ m h).toFun t)) := by
+            ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun t)) := by
     refine max_le ?_ (ciSup_le fun t => ?_)
     · rw [MulMemClass.coe_mul]
       exact (TimeChange.norm_mul_le _ _).trans
         (add_le_add (le_max_left _ _) (le_max_left _ _))
     · simp only [MulMemClass.coe_mul, TimeChange.mul_toOrderIso_apply]
-      calc dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+      calc dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
               ((l : TimeChange ι).toOrderIso ((l' : TimeChange ι).toOrderIso t)))
-            ((SkorokhodSpace.restrictExhaustion t₀ m h).toFun t)
-          ≤ dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+            ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun t)
+          ≤ dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
               ((l : TimeChange ι).toOrderIso ((l' : TimeChange ι).toOrderIso t)))
-              ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun
+              ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun
                 ((l' : TimeChange ι).toOrderIso t))
-            + dist ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun
+            + dist ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun
                 ((l' : TimeChange ι).toOrderIso t))
-              ((SkorokhodSpace.restrictExhaustion t₀ m h).toFun t) := dist_triangle _ _ _
+              ((SkorokhodSpace.restrictExhaustion t₀ u h).toFun t) := dist_triangle _ _ _
         _ ≤ _ := add_le_add ((hS1 _).trans (le_max_right _ _))
               ((hS2 t).trans (le_max_right _ _))
-  refine (ciInf_le (SkorokhodSpace.bddBelow_range_distOn t₀ m f h) (l * l')).trans
+  refine (ciInf_le (SkorokhodSpace.bddBelow_range_distOn t₀ u f h) (l * l')).trans
     (hterm.trans ?_)
   linarith
 
@@ -2188,51 +2316,51 @@ moves `t` up, and then `F (λ t)` is close to `F t` by the right continuity of
 small.  That is `IsCadlag.eq_of_forall_exists_dist_le`, and it is what makes the
 separation independent of the index: the classical argument needs the continuity
 points to be dense, which an index of Milestone 1 need not provide. -/
-theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) (m : ℕ) (f g : D(ι, E))
-    (h : SkorokhodSpace.distOn t₀ m f g = 0) :
-    (SkorokhodSpace.restrictExhaustion t₀ m f).toFun
-      = (SkorokhodSpace.restrictExhaustion t₀ m g).toFun := by
+theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) (f g : D(ι, E))
+    (h : SkorokhodSpace.distOn t₀ u f g = 0) :
+    (SkorokhodSpace.restrictExhaustion t₀ u f).toFun
+      = (SkorokhodSpace.restrictExhaustion t₀ u g).toFun := by
   have hι : Nonempty ι := ⟨t₀⟩
   -- an approximating time change for every `δ`, both of whose halves are small
   have hstep : ∀ δ > 0, ∃ l : TimeChange.fixing t₀,
       TimeChange.norm (l : TimeChange ι) < δ ∧
-        ∀ s, dist ((SkorokhodSpace.restrictExhaustion t₀ m f).toFun
+        ∀ s, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun
           ((l : TimeChange ι).toOrderIso s))
-          ((SkorokhodSpace.restrictExhaustion t₀ m g).toFun s) < δ := by
+          ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun s) < δ := by
     intro δ hδ
-    obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ m f g hδ
+    obtain ⟨l, hl⟩ := SkorokhodSpace.exists_lt_distOn_add t₀ u f g hδ
     rw [h, zero_add] at hl
     refine ⟨l, (le_max_left _ _).trans_lt hl, fun s => ?_⟩
     exact lt_of_le_of_lt ((le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion
-      t₀ m f g (l : TimeChange ι)) s).trans (le_max_right _ _)) hl
+      t₀ u f g (l : TimeChange ι)) s).trans (le_max_right _ _)) hl
   -- the displacement of a point of the window is small with the norm
-  have hsmall : ∀ ρ > 0, ∀ η > 0, ∃ δ, 0 < δ ∧ δ ≤ η ∧ (Real.exp δ - 1) * (2 * m) < ρ := by
+  have hsmall : ∀ ρ > 0, ∀ η > 0, ∃ δ, 0 < δ ∧ δ ≤ η ∧ (Real.exp δ - 1) * (2 * u) < ρ := by
     intro ρ hρ η hη
-    have hcont : Tendsto (fun δ : ℝ => (Real.exp δ - 1) * (2 * m)) (𝓝[>] 0) (𝓝 0) := by
-      have h0 : Tendsto (fun δ : ℝ => (Real.exp δ - 1) * (2 * m)) (𝓝 0)
-          (𝓝 ((Real.exp 0 - 1) * (2 * m))) :=
+    have hcont : Tendsto (fun δ : ℝ => (Real.exp δ - 1) * (2 * u)) (𝓝[>] 0) (𝓝 0) := by
+      have h0 : Tendsto (fun δ : ℝ => (Real.exp δ - 1) * (2 * u)) (𝓝 0)
+          (𝓝 ((Real.exp 0 - 1) * (2 * u))) :=
         ((Real.continuous_exp.sub continuous_const).mul continuous_const).tendsto 0
       simpa using h0.mono_left nhdsWithin_le_nhds
-    have h1 : ∀ᶠ δ in 𝓝[>] (0 : ℝ), (Real.exp δ - 1) * (2 * m) < ρ := hcont (Iio_mem_nhds hρ)
+    have h1 : ∀ᶠ δ in 𝓝[>] (0 : ℝ), (Real.exp δ - 1) * (2 * u) < ρ := hcont (Iio_mem_nhds hρ)
     have h2 : ∀ᶠ δ in 𝓝[>] (0 : ℝ), δ ≤ η :=
       Filter.Eventually.filter_mono nhdsWithin_le_nhds
         (Filter.Eventually.mono (Iio_mem_nhds hη) fun _ hx => hx.le)
     obtain ⟨δ, hδρ, hδη, hδ0⟩ := (h1.and (h2.and self_mem_nhdsWithin)).exists
     exact ⟨δ, hδ0, hδη, hδρ⟩
   -- on the window the two truncations agree
-  have hwin : ∀ t ∈ exhaustion t₀ m,
-      (SkorokhodSpace.restrictExhaustion t₀ m f).toFun t
-        = (SkorokhodSpace.restrictExhaustion t₀ m g).toFun t := by
+  have hwin : ∀ t ∈ exhaustion t₀ u,
+      (SkorokhodSpace.restrictExhaustion t₀ u f).toFun t
+        = (SkorokhodSpace.restrictExhaustion t₀ u g).toFun t := by
     intro t ht
-    refine (SkorokhodSpace.restrictExhaustion t₀ m f).isCadlag.eq_of_forall_exists_dist_le
-      (SkorokhodSpace.restrictExhaustion t₀ m g).isCadlag ?_
+    refine (SkorokhodSpace.restrictExhaustion t₀ u f).isCadlag.eq_of_forall_exists_dist_le
+      (SkorokhodSpace.restrictExhaustion t₀ u g).isCadlag ?_
     intro ρ hρ η hη
     obtain ⟨δ, hδ0, hδη, hδρ⟩ := hsmall ρ hρ η hη
     obtain ⟨l, hlnorm, hldist⟩ := hstep δ hδ0
     have hfix : (l : TimeChange ι).toOrderIso t₀ = t₀ := TimeChange.mem_fixing_iff.1 l.2
     by_cases hcase : t ≤ (l : TimeChange ι).toOrderIso t
     · refine ⟨(l : TimeChange ι).toOrderIso t, hcase, ?_, Or.inl ((hldist t).le.trans hδη)⟩
-      exact (TimeChange.dist_le_of_norm_le t₀ m hfix hlnorm.le ht).trans_lt hδρ
+      exact (TimeChange.dist_le_of_norm_le t₀ hu hfix hlnorm.le ht).trans_lt hδρ
     · have hinv : ((l : TimeChange ι)⁻¹).toOrderIso = (l : TimeChange ι).toOrderIso.symm := rfl
       have hts : t ≤ (l : TimeChange ι).toOrderIso.symm t := by
         have := (OrderIso.lt_iff_lt (l : TimeChange ι).toOrderIso.symm).2 (not_le.1 hcase)
@@ -2241,7 +2369,7 @@ theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) (m : ℕ) (f g : D(ι, E
       · have hfix' : ((l : TimeChange ι)⁻¹).toOrderIso t₀ = t₀ := by
           rw [hinv]
           exact (l : TimeChange ι).toOrderIso.symm_apply_eq.2 hfix.symm
-        have := TimeChange.dist_le_of_norm_le t₀ m hfix'
+        have := TimeChange.dist_le_of_norm_le t₀ hu hfix'
           (le_of_eq_of_le (TimeChange.norm_inv (l : TimeChange ι)) hlnorm.le) ht
         rw [hinv] at this
         exact this.trans_lt hδρ
@@ -2249,7 +2377,7 @@ theorem SkorokhodSpace.eq_of_distOn_eq_zero (t₀ : ι) (m : ℕ) (f g : D(ι, E
         rw [OrderIso.apply_symm_apply] at this
         exact this.le.trans hδη
   funext t
-  have hc := hwin (clamp t₀ m t) (clamp_mem_exhaustion t₀ m t)
+  have hc := hwin (clamp t₀ u t) (clamp_mem_exhaustion t₀ u t)
   simpa [SkorokhodSpace.restrictExhaustion_apply, clamp_idem] using hc
 
 /-- The separation in the form the metric of `D(ι, E)` consumes it: a path is
@@ -2262,7 +2390,7 @@ theorem SkorokhodSpace.eq_of_forall_distOn_eq_zero (t₀ : ι) (f g : D(ι, E))
   obtain ⟨m, hm⟩ := exists_nat_ge (dist t₀ t)
   have ht : t ∈ exhaustion t₀ m := by
     simpa [exhaustion, Metric.mem_closedBall, dist_comm t t₀] using hm
-  have hc := congrFun (SkorokhodSpace.eq_of_distOn_eq_zero t₀ m f g (h m)) t
+  have hc := congrFun (SkorokhodSpace.eq_of_distOn_eq_zero t₀ (Nat.cast_nonneg m) f g (h m)) t
   rwa [SkorokhodSpace.restrictExhaustion_eq_self ht,
     SkorokhodSpace.restrictExhaustion_eq_self ht] at hc
 
@@ -2381,17 +2509,17 @@ theorem SkorokhodSpace.totalDist_le_sum_add (t₀ : ι) (M : ℕ) (f g : D(ι, E
   have hsplit := hsum.sum_add_tsum_nat_add M
   have hgeom : Summable fun i : ℕ => (2 : ℝ)⁻¹ ^ i :=
     summable_geometric_of_lt_one (by norm_num) (by norm_num)
-  have hbd : ∀ i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+  have hbd : ∀ i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ ((i + M : ℕ) : ℝ) f g)
       ≤ (2 : ℝ)⁻¹ ^ M * (2 : ℝ)⁻¹ ^ i := by
     intro i
-    have h1 : min 1 (SkorokhodSpace.distOn t₀ (i + M) f g) ≤ 1 := min_le_left _ _
+    have h1 : min 1 (SkorokhodSpace.distOn t₀ ((i + M : ℕ) : ℝ) f g) ≤ 1 := min_le_left _ _
     have h2 : (0 : ℝ) ≤ (2 : ℝ)⁻¹ ^ (i + M) := by positivity
-    calc (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+    calc (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ ((i + M : ℕ) : ℝ) f g)
         ≤ (2 : ℝ)⁻¹ ^ (i + M) * 1 := mul_le_mul_of_nonneg_left h1 h2
       _ = (2 : ℝ)⁻¹ ^ M * (2 : ℝ)⁻¹ ^ i := by rw [mul_one, pow_add]; ring
-  have htail : ∑' i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+  have htail : ∑' i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ ((i + M : ℕ) : ℝ) f g)
       ≤ 2 * (2 : ℝ)⁻¹ ^ M := by
-    calc ∑' i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ (i + M) f g)
+    calc ∑' i : ℕ, (2 : ℝ)⁻¹ ^ (i + M) * min 1 (SkorokhodSpace.distOn t₀ ((i + M : ℕ) : ℝ) f g)
         ≤ ∑' i : ℕ, (2 : ℝ)⁻¹ ^ M * (2 : ℝ)⁻¹ ^ i :=
           (hsum.comp_injective (add_left_injective M)).tsum_le_tsum hbd (hgeom.mul_left _)
       _ = (2 : ℝ)⁻¹ ^ M * ∑' i : ℕ, (2 : ℝ)⁻¹ ^ i := hgeom.tsum_mul_left _
@@ -2475,6 +2603,137 @@ what lets an acceptance example on `D(ℝ, E)` compute with `totalDist 0`. -/
 theorem SkorokhodSpace.dist_eq (f g : D(ι, E)) :
     dist f g = SkorokhodSpace.totalDist (basePoint : ι) f g := rfl
 
+/-! ### The metric of Milestone 4 is an integral over the window radius
+
+`SkorokhodSpace.totalDist` below sums `min 1 (distOn t₀ m f g)` over the integer
+radii, and the eighteenth run of 2026-09-08 showed that this is not a metric for
+`J₁`: `SkorokhodSpace.dist_exhaustionMax_le_distOn` makes every window endpoint a
+point of continuity of the evaluation, which the Skorokhod topology does not
+have.  The repair is Ethier--Kurtz's: keep `distOn`'s integrand, let the radius
+run over `Set.Ioi 0`, and integrate against `exp (-u)`.  The radii at which a
+given pair of paths misbehaves are countably many, hence Lebesgue null, and the
+integral does not see them.
+
+The infimum over the time change stands **outside** the integral, which is what
+makes the integrand measurable at all: for one time change at a time the
+supremum over the index is a supremum over the countable set of
+`exists_countable_ciSup_eq`, while an infimum over the uncountable family of
+time changes inside the integral would be measurable for no stated reason. -/
+
+/-- Ethier--Kurtz's `d(x, y, λ, u)`: the windowed supremum for **one** time
+change, before the infimum and before the truncation at `1`.  It is the
+integrand of `SkorokhodSpace.intDist` and the inner term of
+`SkorokhodSpace.distOn`, which is `distOn_eq_iInf_distWith`. -/
+noncomputable def SkorokhodSpace.distWith (t₀ : ι) (u : ℝ) (l : TimeChange ι)
+    (f g : D(ι, E)) : ℝ :=
+  ⨆ t : ι, dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun (l.toOrderIso t))
+    ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+@[simp]
+theorem SkorokhodSpace.distOn_eq_iInf_distWith (t₀ : ι) (u : ℝ) (f g : D(ι, E)) :
+    SkorokhodSpace.distOn t₀ u f g =
+      ⨅ l : TimeChange.fixing t₀, max (TimeChange.norm (l : TimeChange ι))
+        (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g) := rfl
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The integrand of `distWith` is right continuous in the index, which is what
+`exists_countable_ciSup_eq` consumes.  Both halves are càdlàg --- the left one
+because a càdlàg path composed with an order isomorphism is càdlàg
+(`IsCadlag.comp_monotone_continuous`, the order isomorphism being monotone and,
+in the order topology, continuous). -/
+theorem SkorokhodSpace.rightContinuous_dist_restrictExhaustion (t₀ : ι) (u : ℝ)
+    (l : TimeChange ι) (f g : D(ι, E)) :
+    Function.RightContinuous fun t : ι =>
+      dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun (l.toOrderIso t))
+        ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t) := by
+  have hcomp : IsCadlag ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun ∘ l.toOrderIso) :=
+    (SkorokhodSpace.restrictExhaustion t₀ u f).isCadlag.comp_monotone_continuous
+      l.toOrderIso.monotone l.toOrderIso.continuous
+  intro a
+  exact (hcomp.right_continuous a).dist
+    ((SkorokhodSpace.restrictExhaustion t₀ u g).isCadlag.right_continuous a)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The greatest point of the window grows with the radius. -/
+theorem monotone_exhaustionMax (t₀ : ι) : Monotone (exhaustionMax t₀) := fun _ _ h =>
+  (isGreatest_exhaustionMax t₀ _).2
+    (exhaustion_subset_of_le t₀ h (isGreatest_exhaustionMax t₀ _).1)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- And the least point falls. -/
+theorem antitone_exhaustionMin (t₀ : ι) : Antitone (exhaustionMin t₀) := fun _ _ h =>
+  (isLeast_exhaustionMin t₀ _).2 (exhaustion_subset_of_le t₀ h (isLeast_exhaustionMin t₀ _).1)
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- The clamp is measurable in the radius, for each fixed point of the index.
+Monotonicity in the radius is all it is: `exhaustionMax` rises, `exhaustionMin`
+falls, and both are measurable because a monotone map into a second countable
+linear order is. -/
+theorem measurable_clamp [MeasurableSpace ι] [BorelSpace ι] (t₀ : ι) (s : ι) :
+    Measurable fun u : ℝ => clamp t₀ u s :=
+  (measurable_const.max (antitone_exhaustionMin t₀).measurable).min
+    (monotone_exhaustionMax t₀).measurable
+
+omit [BasePoint ι] in
+/-- **The integrand of the metric is measurable in the window radius.**  This is
+the one obligation the integral shape of Milestone 4 adds, and it is discharged
+here: the supremum over the index is, by `exists_countable_ciSup_eq`, a
+supremum over a *fixed* countable set, so `Measurable.iSup` applies, and each
+member of that family is a distance between two càdlàg paths read at a clamp
+that is measurable in the radius. -/
+theorem SkorokhodSpace.measurable_distWith [MeasurableSpace ι] [BorelSpace ι]
+    [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
+    Measurable fun u : ℝ => SkorokhodSpace.distWith t₀ u l f g := by
+  have : Nonempty ι := ⟨t₀⟩
+  obtain ⟨C, hCc, hCne, hC⟩ := exists_countable_ciSup_eq (ι := ι)
+  have : Countable C := hCc.to_subtype
+  have hrw : ∀ u : ℝ, SkorokhodSpace.distWith t₀ u l f g
+      = ⨆ t : C, dist (f.toFun (clamp t₀ u (l.toOrderIso (t : ι))))
+          (g.toFun (clamp t₀ u (t : ι))) := fun u =>
+    hC _ (SkorokhodSpace.rightContinuous_dist_restrictExhaustion t₀ u l f g)
+      (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g l)
+  simp only [hrw]
+  refine Measurable.iSup fun t => ?_
+  exact (f.isCadlag.measurable.comp (measurable_clamp t₀ (l.toOrderIso (t : ι)))).dist
+    (g.isCadlag.measurable.comp (measurable_clamp t₀ (t : ι)))
+
+/-- **The metric of Milestone 4.**  The infimum is over the time changes fixing
+the base point, the first term of the `max` is the global logarithmic norm, and
+the second is the integral over the window radius of the truncated windowed
+supremum.  This is Ethier--Kurtz's `d`, and it replaces
+`SkorokhodSpace.totalDist`, which is the same quantity summed over the integer
+radii and, by `dist_exhaustionMax_le_distOn`, not a metric for `J₁`. -/
+noncomputable def SkorokhodSpace.intDist (t₀ : ι) (f g : D(ι, E)) : ℝ :=
+  ⨅ l : TimeChange.fixing t₀, max (TimeChange.norm (l : TimeChange ι))
+    (∫ u in Set.Ioi (0 : ℝ),
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g))
+
+omit [BasePoint ι] in
+/-- The integral defining `intDist` is an integral of an integrable function:
+the integrand is measurable by `measurable_distWith` and dominated by
+`exp (-u)`, which is integrable on `Set.Ioi 0`.  Without this the integral
+would be the junk value `0` and `intDist` would collapse to
+`⨅ l, TimeChange.norm l = 0`. -/
+theorem SkorokhodSpace.integrableOn_intDist [MeasurableSpace ι] [BorelSpace ι]
+    [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E] (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) :
+    MeasureTheory.IntegrableOn
+      (fun u : ℝ => Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g))
+      (Set.Ioi (0 : ℝ)) := by
+  refine MeasureTheory.Integrable.mono' (integrableOn_exp_neg_Ioi 0)
+    (((Real.measurable_exp.comp measurable_neg).mul
+      (measurable_const.min
+        (SkorokhodSpace.measurable_distWith t₀ l f g))).aestronglyMeasurable.restrict) ?_
+  filter_upwards with u
+  have h0 : (0 : ℝ) ≤ min 1 (SkorokhodSpace.distWith t₀ u l f g) := by
+    refine le_min zero_le_one (le_ciSup_of_le
+      (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g l) t₀ dist_nonneg)
+  rw [Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+  calc Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+      ≤ Real.exp (-u) * 1 :=
+        mul_le_mul_of_nonneg_left (min_le_left _ _) (Real.exp_pos _).le
+    _ = Real.exp (-u) := mul_one _
+
 /-! ## Milestone 5: completeness, separability, Polishness
 
 **This section carried three declarations until 2026-09-08 --- `CompleteSpace`,
@@ -2540,12 +2799,12 @@ theorem SkorokhodSpace.continuous_eval_exhaustionMax (m : ℕ) :
 /-- The greatest point of the window `exhaustion 0 m` of `ℝ` is `m`.  Needed to
 read the counterexample below off `continuous_eval_exhaustionMax`, whose window
 endpoint is opaque in general and is an integer here. -/
-theorem exhaustionMax_real (m : ℕ) : exhaustionMax (0 : ℝ) m = (m : ℝ) := by
-  refine IsGreatest.unique (isGreatest_exhaustionMax (0 : ℝ) m) ?_
-  have hset : exhaustion (0 : ℝ) m = Set.Icc (-(m : ℝ)) (m : ℝ) := by
+theorem exhaustionMax_real (u : ℝ) : exhaustionMax (0 : ℝ) u = max u 0 := by
+  refine IsGreatest.unique (isGreatest_exhaustionMax (0 : ℝ) u) ?_
+  have hset : exhaustion (0 : ℝ) u = Set.Icc (-max u 0) (max u 0) := by
     simp [exhaustion, Real.closedBall_eq_Icc]
   rw [hset]
-  exact isGreatest_Icc (by linarith [Nat.cast_nonneg (α := ℝ) m])
+  exact isGreatest_Icc (by linarith [le_max_right u (0 : ℝ)])
 
 /-- The unit step at `1`, the simplest path of `D(ℝ, ℝ)` with a jump. -/
 noncomputable def SkorokhodSpace.step : D(ℝ, ℝ) where
@@ -2603,7 +2862,7 @@ theorem SkorokhodSpace.exists_jump_continuousAt_eval :
   · rw [SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply, if_pos le_rfl]
     norm_num
   · have h := SkorokhodSpace.continuous_eval_exhaustionMax (ι := ℝ) (E := ℝ) 1
-    have hb : exhaustionMax (basePoint : ℝ) 1 = (1 : ℝ) := by
+    have hb : exhaustionMax (basePoint : ℝ) ((1 : ℕ) : ℝ) = (1 : ℝ) := by
       rw [show (basePoint : ℝ) = 0 from rfl, exhaustionMax_real]
       norm_num
     rw [hb] at h
@@ -2646,9 +2905,9 @@ the window, all of whose consecutive gaps exceed `δ`.  This is Billingsley's
 condition `min i, (t i - t (i-1)) > δ` verbatim, and the `>` is strict on
 purpose: it is what makes the one jump of a step function cost nothing, since
 the jump time may be used as a subdivision point. -/
-def SkorokhodSpace.IsSubdivision (t₀ : ι) (m : ℕ) (δ : ℝ) {n : ℕ}
+def SkorokhodSpace.IsSubdivision (t₀ : ι) (u : ℝ) (δ : ℝ) {n : ℕ}
     (t : Fin (n + 1) → ι) : Prop :=
-  StrictMono t ∧ t 0 = exhaustionMin t₀ m ∧ t (Fin.last n) = exhaustionMax t₀ m ∧
+  StrictMono t ∧ t 0 = exhaustionMin t₀ u ∧ t (Fin.last n) = exhaustionMax t₀ u ∧
     ∀ i : Fin n, δ < dist (t i.castSucc) (t i.succ)
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
@@ -2663,7 +2922,7 @@ noncomputable def SkorokhodSpace.subdivisionOsc (f : D(ι, E)) {n : ℕ}
     edist (f.toFun s) (f.toFun (t i.castSucc))
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
-/-- The càdlàg modulus on `exhaustion t₀ m`, Billingsley's `w'`: the least
+/-- The càdlàg modulus on `exhaustion t₀ u`, Billingsley's `w'`: the least
 oscillation achievable by a `δ`-sparse subdivision of the window.
 
 **It is `ℝ≥0∞` valued, and the roadmap said `ℝ`.**  The reason is the empty
@@ -2676,8 +2935,8 @@ which destroys the monotonicity in `δ` that Milestone 7 asks for and would make
 convention and makes `SkorokhodSpace.modulus_mono` a theorem.  The same choice
 pays a second time in `isCompact_closure_iff`, where `⨆ f ∈ A, modulus …` over
 an unbounded family would again be a junk `0` in `ℝ`. -/
-noncomputable def SkorokhodSpace.modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) (δ : ℝ) : ℝ≥0∞ :=
-  ⨅ n : ℕ, ⨅ t : Fin (n + 1) → ι, ⨅ _ : SkorokhodSpace.IsSubdivision t₀ m δ t,
+noncomputable def SkorokhodSpace.modulus (t₀ : ι) (u : ℝ) (f : D(ι, E)) (δ : ℝ) : ℝ≥0∞ :=
+  ⨅ n : ℕ, ⨅ t : Fin (n + 1) → ι, ⨅ _ : SkorokhodSpace.IsSubdivision t₀ u δ t,
     SkorokhodSpace.subdivisionOsc f t
 
 omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
@@ -2685,8 +2944,8 @@ omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BaseP
 every smaller `δ₁`, so the infimum defining `modulus δ₁` runs over a larger set.
 This is the item of Milestone 7 that the `ℝ≥0∞` valuation buys; over `ℝ` it is
 false, by the junk value at large `δ`. -/
-theorem SkorokhodSpace.modulus_mono (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
-    Monotone (SkorokhodSpace.modulus t₀ m f) := by
+theorem SkorokhodSpace.modulus_mono (t₀ : ι) (u : ℝ) (f : D(ι, E)) :
+    Monotone (SkorokhodSpace.modulus t₀ u f) := by
   intro δ₁ δ₂ h
   refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
   exact iInf_le_of_le n (iInf_le_of_le t (iInf_le_of_le
@@ -2700,17 +2959,17 @@ window is a single point the empty subdivision `n = 0` is admissible for every
 orientation of the definition: with `Set.Icc` cells, or with the oscillation
 taken between the subdivision points rather than inside the cells, the empty
 subdivision would not be admissible and this would fail. -/
-theorem SkorokhodSpace.modulus_eq_zero_of_exhaustion_subsingleton (t₀ : ι) (m : ℕ)
-    (f : D(ι, E)) (δ : ℝ) (h : exhaustionMin t₀ m = exhaustionMax t₀ m) :
-    SkorokhodSpace.modulus t₀ m f δ = 0 := by
+theorem SkorokhodSpace.modulus_eq_zero_of_exhaustion_subsingleton (t₀ : ι) (u : ℝ)
+    (f : D(ι, E)) (δ : ℝ) (h : exhaustionMin t₀ u = exhaustionMax t₀ u) :
+    SkorokhodSpace.modulus t₀ u f δ = 0 := by
   refine le_antisymm ?_ (by simp)
-  have hsm : StrictMono (fun _ : Fin (0 + 1) => exhaustionMin t₀ m) := by
+  have hsm : StrictMono (fun _ : Fin (0 + 1) => exhaustionMin t₀ u) := by
     intro a b hab
     have ha := a.isLt
     have hb := b.isLt
     have hab' : (a : ℕ) < (b : ℕ) := hab
     omega
-  refine iInf_le_of_le 0 (iInf_le_of_le (fun _ => exhaustionMin t₀ m)
+  refine iInf_le_of_le 0 (iInf_le_of_le (fun _ => exhaustionMin t₀ u)
     (iInf_le_of_le ⟨hsm, rfl, h, fun i => i.elim0⟩ ?_))
   simp [SkorokhodSpace.subdivisionOsc]
 
@@ -2728,3 +2987,4 @@ theorem SkorokhodSpace.isCompact_closure_iff (A : Set D(ι, E)) :
       IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion (basePoint : ι) m, f.toFun t = x}) ∧
       Tendsto (fun δ => ⨆ f ∈ A, SkorokhodSpace.modulus (basePoint : ι) m f δ)
         (𝓝[>] 0) (𝓝 0) := sorry
+

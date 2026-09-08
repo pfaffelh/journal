@@ -11237,3 +11237,107 @@ in diesem Lauf bewiesen und ist die Stelle, an der
 der Metrik unabhängig und wartet auf den reellen Radius, nicht umgekehrt. Von
 `CompleteSpace D(ι, E)` steht damit alles außer der Metrik selbst und dem
 Zusammenbau.
+
+### 2026-09-08, neunzehnter Lauf des Tages
+
+**Vorrangige Aufgabe, vierter von vier Läufen an `SkorokhodSpace`.** Der Punkt,
+an dem der achtzehnte Lauf endete, war eine Signatur und keine Lücke: der Radius
+des Fensters mußte reell werden, sonst ist keiner der offenen Punkte
+formulierbar. Er ist es. `SkorokhodSpace/Suggested.lean` steht weiterhin bei
+**fünf** `sorry` — der Lauf hat keines gestrichen, sondern die Datei auf die
+Metrik umgestellt, die Meilenstein 4 seit dem achtzehnten Lauf verlangt, und
+deren einzige neue Beweispflicht bezahlt. Neunzehn neue Deklarationen, alle mit
+`#print axioms` geprüft und alle nur auf `propext`, `Classical.choice`,
+`Quot.sound`; die Datei geht durch `lake env lean` ohne Fehler und ohne Warnung.
+
+**Der reelle Radius.** `exhaustion`, `exhaustionMin`, `exhaustionMax`, `clamp`,
+`TimeChange.normOn`, `TimeChange.lipConstOn`, `TimeChange.dist_le_of_norm_le`,
+`SkorokhodSpace.restrictExhaustion`, `distOn`, `IsSubdivision`, `modulus` und
+alles, was daran hängt, nehmen jetzt `u : ℝ`. Zwei Entscheidungen dabei, beide
+begründungsbedürftig:
+
+*Erstens, `exhaustion t₀ u = Metric.closedBall t₀ (max u 0)` und nicht
+`closedBall t₀ u`.* Ein negativer Radius machte das Fenster leer, und
+`exhaustionMin`, `exhaustionMax`, `clamp` sind `def`s, die es bewohnt brauchen —
+sie wählen aus einer Kompaktheitsaussage, die auf der leeren Menge keine Zeugen
+hat. Mit der Trunkierung bleibt jede Deklaration total; für `0 ≤ u` ist es die
+Kugel, und das ist `exhaustion_eq_closedBall`.
+
+*Zweitens, `0 ≤ u` als Hypothese, und zwar an genau drei Stellen.*
+`TimeChange.dist_le_of_norm_le` (die Schranke `(exp γ - 1) * (2 * u)` ist für
+`u < 0` negativ und die Aussage damit falsch), `exhaustion_subset_exhaustion`
+und `SkorokhodSpace.eq_of_distOn_eq_zero`. Nirgends sonst; die übrigen Beweise
+lesen den Radius als Atom und überstehen den Wechsel unverändert. Als Zugabe
+verliert `exhaustion_subset_exhaustion` sein `⌈dist t₀ t₁⌉₊`: die Aufrundung war
+ein Artefakt des ganzzahligen Radius, und die Aussage lautet jetzt
+`exhaustion t₀ u ⊆ exhaustion t₁ (u + dist t₀ t₁)`.
+
+**Die Meßbarkeit des Integranden, und sie war der Preis der Reparatur.** Der
+achtzehnte Lauf hatte sie als die einzige zusätzliche Beweispflicht der
+Integralgestalt benannt und den Weg dazu angegeben: die rechte Stetigkeit lasse
+das Supremum über eine abzählbare **dichte** Teilmenge von `ι` nehmen. **Das ist
+falsch, und der Zeuge ist billig:** auf `ι = Set.Icc (0:ℝ) 1` ist `ℚ ∩ [0,1)`
+dicht, und eine rechtsstetige Funktion darf im Punkt `1` — der nur von links
+angelaufen wird — über ihrem Supremum auf dieser Menge liegen. Was zu einer
+dichten Menge hinzukommen muß, sind die Punkte, an die von rechts nichts
+heranreicht.
+
+*Und davon gibt es abzählbar viele.* `rightIsolated ι = {t | IsOpen (Set.Iic t)}`
+und `countable_rightIsolated`. Der Beweis ist **intrinsisch** — er geht nicht
+über die Einbettung des Index in `ℝ`, die `exists_orderIso_isometry_real` heißt
+und weiterhin ein `sorry` ist. Für rechtsisoliertes `t` ist `Set.Iic t` offen,
+also hat eine abzählbare Basis ein Glied `v` mit `t ∈ v ⊆ Set.Iic t`, und diese
+Zuordnung ist injektiv: aus `v s = v t` folgt `s ≤ t` und `t ≤ s` zugleich.
+Zweitabzählbarkeit ist die einzige Voraussetzung, und der Index hat sie aus
+`ProperSpace`. Die andere Hälfte ist
+`nonempty_inter_Ioi_of_notMem_rightIsolated`: ist `Set.Iic t` nicht offen, so
+trifft jede offene Umgebung von `t` die Menge `Set.Ioi t` — denn sonst wäre
+`Set.Iic t = Set.Iio t ∪ W` offen, und `Set.Iio t` ist es in der
+Ordnungstopologie immer.
+
+*Damit `exists_countable_ciSup_eq`:* **eine abzählbare Menge berechnet das
+Supremum jeder rechtsstetigen reellen Funktion auf dem Index.** Sie ist die
+dichte Menge vereinigt mit `rightIsolated ι`, und daß sie **nicht von der
+Funktion abhängt**, ist der ganze Punkt: eine supremumsapproximierende Folge
+hinge von ihr ab, und eine andere abzählbare Menge je Fensterradius berechnet
+nichts.
+
+**Die Metrik.** `SkorokhodSpace.distWith t₀ u λ f g` ist Ethier--Kurtz'
+`d(x, y, λ, u)` — das gefensterte Supremum für *einen* Zeitwechsel —,
+`SkorokhodSpace.distOn_eq_iInf_distWith` identifiziert `distOn` als das Infimum
+von `max ‖λ‖ ·` darüber, und zwar durch `rfl`, so daß die bewiesenen Aussagen
+über `distOn` unangetastet bleiben. Darauf:
+
+* `SkorokhodSpace.rightContinuous_dist_restrictExhaustion` — der Integrand ist
+  rechtsstetig im Index; beide Hälften sind càdlàg, die linke, weil ein
+  càdlàg-Pfad nach einem Ordnungsisomorphismus wieder càdlàg ist.
+* `monotone_exhaustionMax`, `antitone_exhaustionMin`, `measurable_clamp` — der
+  Clamp ist meßbar im Radius, und das ist nichts als Monotonie.
+* `SkorokhodSpace.measurable_distWith` — die Meßbarkeit, aus den dreien und
+  `Measurable.iSup` über die abzählbare Menge.
+* `SkorokhodSpace.intDist` — die Metrik von Meilenstein 4, mit dem Infimum über
+  die Zeitwechsel **außerhalb** des Integrals, und
+  `SkorokhodSpace.integrableOn_intDist`: der Integrand ist von `exp (-u)`
+  dominiert (`integrableOn_exp_neg_Ioi`) und damit integrierbar. Ohne diese
+  Aussage wäre das Integral der Müllwert `0` und `intDist` fiele auf
+  `⨅ λ, ‖λ‖ = 0` zusammen.
+
+**Was der Lauf ausdrücklich nicht getan hat.** Die `MetricSpace D(ι, E)`-Instanz
+liest weiterhin `SkorokhodSpace.totalDist`, die über die ganzzahligen Radien
+summierte Größe, deren vier Axiome bewiesen sind. Die vier Axiome von `intDist`
+sind es nicht, und die Instanz umzuhängen, bevor sie es sind, setzte `sorryAx`
+unter die zwanzig Deklarationen, die die Topologie lesen — genau die Falle, in
+der `modulus` bis zum sechzehnten Lauf saß. Das steht so in der Roadmap.
+
+**Woran der nächste hängt.** An den vier Axiomen von `intDist`, und sie sind
+jetzt gewöhnliche Arbeit statt einer offenen Frage: `intDist_self` ist der
+Zeitwechsel `1` und ein Integrand, der verschwindet; `intDist_comm` ist die
+Umindizierung `λ ↦ λ⁻¹` des siebzehnten Laufs, punktweise im Radius geführt und
+dann integriert; die Dreiecksungleichung ist `distOn_triangle` punktweise im
+Radius, `min 1 ·` subadditiv auf den nichtnegativen Reellen, und
+`MeasureTheory.integral_add` auf `integrableOn_intDist`; die Trennung ist
+`eq_of_distOn_eq_zero` plus die Beobachtung, daß ein nichtnegativer Integrand
+mit Integral `0` fast überall verschwindet, also für einen Radius in jeder
+Umgebung. Erst danach wird die Instanz umgehängt, und erst danach ist
+`CompleteSpace D(ι, E)` — dessen übrige Bausteine seit dem siebzehnten und
+achtzehnten Lauf bewiesen dastehen — überhaupt wieder eine wahre Aussage.
