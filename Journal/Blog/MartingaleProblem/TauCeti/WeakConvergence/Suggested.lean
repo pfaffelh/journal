@@ -11,6 +11,7 @@ import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.Probability.ConditionalProbability
+import Mathlib.Probability.ProductMeasure
 import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.MeasureTheory.MeasurableSpace.CountablyGenerated
@@ -241,6 +242,30 @@ random variables and a joint law is a measure on `E × E`.  What survives of the
 sixth run's finding is its core -- the conditional laws must enter as *measures*,
 not as functions of one uniform variable, that being the Borel isomorphism theorem.
 Of Milestone 3 only `exists_ae_tendsto_of_tendsto` itself is now unproved.
+
+The eighth run of 2026-09-08 proved the randomisation step and the two index maps
+the representation needs on top of the one-stage coupling:
+`map_eval_prod_infinitePi` with `sum_smul_dirac_singleton`,
+`map_eval_prod_infinitePi_of_map_eq` and
+`exists_measurable_map_prod_infinitePi_eq_sum_smul`, then
+`exists_measurable_partitionIndex`,
+`exists_measurable_index_of_stochastic_matrix` and, putting the two together,
+`map_index_prod_eq` -- the law of the index on `E × ℝ`; all seven depend on `propext`,
+`Classical.choice` and `Quot.sound` alone.  This is the one place where the file
+imports `Mathlib.Probability.ProductMeasure`, for `Measure.infinitePi`.  Their
+point is a hypothesis that is *not* incurred: drawing a point from a prescribed
+law as a measurable function of one uniform variable is the Borel isomorphism
+theorem and needs `E` Polish, while drawing it as a coordinate of a countable
+product of the laws needs no topology on `E` at all -- the six statements mention
+only `MeasurableSpace E`.  That is why the whole milestone stays at
+`SeparableSpace E`.
+
+The same run settled how the stages are put on one space, and the answer is that
+they are not glued: gluing the one-stage couplings along their common second
+marginal is disintegration followed by a countable product of kernels, and
+Mathlib has no product of kernels over a countable index (checked on
+`upstream/master` at `572e4d091bc`).  All stages are built at once instead, on
+`(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`, which is Ethier-Kurtz's Lemma 3.1.3 with `N = ∞`.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -3126,6 +3151,202 @@ theorem exists_measurable_map_restrict_volume_eq_sum_smul_dirac
   refine tsum_congr fun i => ?_
   rw [Measure.smul_apply, Measure.dirac_apply' _ hSm, smul_eq_mul]
   by_cases h : x i ∈ S <;> simp [Set.indicator, h]
+
+/-! ### Randomisation: drawing from a countable mixture without a Borel isomorphism
+
+The Skorokhod representation has to produce, on **one** space, a random point whose conditional
+law given an index `i` is a prescribed measure `m i`.  Written as a map out of the unit interval
+this is the Borel isomorphism theorem and costs `E` Polish.  Written instead on the product of the
+index space with a family of independent draws -- one draw per index, all of them present at once,
+and the index selecting which draw is looked at -- it costs nothing at all: the three declarations
+below need no topology on `E` whatsoever, only `MeasurableSpace E`.
+
+That is the reason the milestone can keep its hypothesis `SeparableSpace E` throughout.  Mathlib's
+countable product of probability measures, `MeasureTheory.Measure.infinitePi`
+(`Probability/ProductMeasure.lean:358`), is what supplies the independent draws; it exists for an
+arbitrary index type and an arbitrary family of probability measures, which is exactly the
+generality the mixture needs. -/
+
+/-- **The randomisation step.**  On the product of a space carrying a measurable index `ι` with the
+countable product of the laws `m`, the map "look up the `ι`-th coordinate" has the mixture law
+`∑ᵢ P{ι = i} · m i`.
+
+The index space `κ` is any countable measurable space with measurable singletons; the application
+uses `κ = ℕ` for a single stage and `κ = ℕ × ℕ` for a family of stages at once.  No hypothesis on
+the index map beyond measurability, and none on `E` beyond `MeasurableSpace E`: the proof is
+Fubini (`Measure.prod_apply`), the coordinate law of the product measure
+(`Measure.infinitePi_map_eval`), and the change of variables `lintegral_map` into an integral over
+`κ`, which is a sum because `κ` is countable. -/
+theorem map_eval_prod_infinitePi {Ω κ : Type*} [MeasurableSpace Ω] [MeasurableSpace κ]
+    [Countable κ] [MeasurableSingletonClass κ] (P : Measure Ω) [SFinite P]
+    {ι : Ω → κ} (hι : Measurable ι) (m : κ → Measure E) [∀ i, IsProbabilityMeasure (m i)] :
+    (P.prod (Measure.infinitePi m)).map (fun z => z.2 (ι z.1))
+      = Measure.sum fun i => (P.map ι {i}) • m i := by
+  have hev : Measurable (fun q : κ × (κ → E) => q.2 q.1) :=
+    measurable_from_prod_countable_right (fun i => measurable_pi_apply i)
+  have hf : Measurable (fun z : Ω × (κ → E) => z.2 (ι z.1)) :=
+    hev.comp ((hι.comp measurable_fst).prodMk measurable_snd)
+  ext S hS
+  rw [Measure.map_apply hf hS, Measure.sum_apply _ hS]
+  rw [Measure.prod_apply (hf hS)]
+  have hslice : ∀ ω : Ω, (Measure.infinitePi m)
+      (Prod.mk ω ⁻¹' ((fun z : Ω × (κ → E) => z.2 (ι z.1)) ⁻¹' S)) = m (ι ω) S := by
+    intro ω
+    have : (Prod.mk ω ⁻¹' ((fun z : Ω × (κ → E) => z.2 (ι z.1)) ⁻¹' S))
+        = (fun v : κ → E => v (ι ω)) ⁻¹' S := rfl
+    rw [this, ← Measure.map_apply (measurable_pi_apply (ι ω)) hS,
+      Measure.infinitePi_map_eval]
+  simp only [hslice]
+  have hmeas : Measurable fun i : κ => m i S := measurable_of_countable _
+  have hchg : ∫⁻ ω, m (ι ω) S ∂P = ∫⁻ i, m i S ∂(P.map ι) :=
+    (lintegral_map hmeas hι).symm
+  rw [hchg, lintegral_countable']
+  refine tsum_congr fun i => ?_
+  rw [Measure.smul_apply, smul_eq_mul, mul_comm]
+
+/-- The point masses of a countable superposition of Diracs are its weights.  Stated separately
+because `Measure.sum` is how the discrete realisation reports its law, while
+`map_eval_prod_infinitePi` reports the index law through its point masses. -/
+theorem sum_smul_dirac_singleton {κ : Type*} [MeasurableSpace κ] [MeasurableSingletonClass κ]
+    (p : κ → ℝ≥0∞) (j : κ) :
+    (Measure.sum fun i => p i • Measure.dirac i) {j} = p j := by
+  rw [Measure.sum_apply _ (measurableSet_singleton j)]
+  refine tsum_eq_single j ?_ |>.trans ?_
+  · intro i hij
+    rw [Measure.smul_apply, Measure.dirac_apply' _ (measurableSet_singleton j)]
+    simp [Set.indicator_of_notMem, hij]
+  · rw [Measure.smul_apply, Measure.dirac_apply' _ (measurableSet_singleton j)]
+    simp
+
+/-- The randomisation step with the index law given as a weight vector. -/
+theorem map_eval_prod_infinitePi_of_map_eq {Ω κ : Type*} [MeasurableSpace Ω] [MeasurableSpace κ]
+    [Countable κ] [MeasurableSingletonClass κ] (P : Measure Ω) [SFinite P]
+    {ι : Ω → κ} (hι : Measurable ι) {p : κ → ℝ≥0∞}
+    (hp : P.map ι = Measure.sum fun i => p i • Measure.dirac i)
+    (m : κ → Measure E) [∀ i, IsProbabilityMeasure (m i)] :
+    (P.prod (Measure.infinitePi m)).map (fun z => z.2 (ι z.1))
+      = Measure.sum fun i => p i • m i := by
+  rw [map_eval_prod_infinitePi P hι m]
+  simp only [hp, sum_smul_dirac_singleton]
+
+/-- **A countable mixture is realised on `(0,1] × (ℕ → E)`.**  This is
+`exists_measurable_map_restrict_volume_eq_sum_smul_dirac` with the point masses `dirac (x i)`
+replaced by arbitrary probability measures `m i`, and it is the form the Skorokhod representation
+uses: the first coordinate carries the *index* -- drawn from `p` by the partial-sum construction --
+and the second carries one independent draw from each `m i`, of which the index picks one.
+
+The measure on the second factor is Mathlib's `Measure.infinitePi`, so the draws are independent;
+that independence is not needed for the law of the mixture, only for the conditional structure the
+representation builds on top of it. -/
+theorem exists_measurable_map_prod_infinitePi_eq_sum_smul
+    {p : ℕ → ℝ≥0∞} (hp : ∑' i, p i = 1) (m : ℕ → Measure E) [∀ i, IsProbabilityMeasure (m i)] :
+    ∃ f : ℝ × (ℕ → E) → E, Measurable f ∧
+      ((volume.restrict (Set.Ioc (0 : ℝ) 1)).prod (Measure.infinitePi m)).map f
+        = Measure.sum fun i => p i • m i := by
+  obtain ⟨g, hgm, hg⟩ := exists_measurable_map_restrict_volume_eq_sum_smul_dirac (E := ℕ) hp id
+  have hev : Measurable (fun q : ℕ × (ℕ → E) => q.2 q.1) :=
+    measurable_from_prod_countable_right (fun i => measurable_pi_apply i)
+  refine ⟨fun z => z.2 (g z.1), hev.comp ((hgm.comp measurable_fst).prodMk measurable_snd), ?_⟩
+  exact map_eval_prod_infinitePi_of_map_eq _ hgm (by simpa using hg) m
+
+/-- **The index of the piece a point falls into.**  A countable measurable partition of `E` has a
+measurable index map, and its fibres are the pieces.  This is what turns "the piece `Y` lies in"
+into a `ℕ`-valued random variable, which is what the randomisation step above takes as its index;
+`Measurable.find` is the whole proof, and disjointness is what makes the fibre of `i` be `A i` and
+not merely a subset of it. -/
+theorem exists_measurable_partitionIndex {A : ℕ → Set E} (hAm : ∀ i, MeasurableSet (A i))
+    (hAd : Pairwise (Function.onFun Disjoint A)) (hAu : (⋃ i, A i) = Set.univ) :
+    ∃ j : E → ℕ, Measurable j ∧ ∀ i, j ⁻¹' {i} = A i := by
+  classical
+  have hex : ∀ y : E, ∃ i, y ∈ A i := by
+    intro y
+    have : y ∈ ⋃ i, A i := by rw [hAu]; trivial
+    simpa using this
+  refine ⟨fun y => Nat.find (hex y), measurable_find hex (fun i => hAm i), fun i => ?_⟩
+  ext y
+  simp only [Set.mem_preimage, Set.mem_singleton_iff]
+  constructor
+  · intro h; exact h ▸ Nat.find_spec (hex y)
+  · intro hy
+    have h2 : y ∈ A (Nat.find (hex y)) := Nat.find_spec (hex y)
+    by_contra hne
+    exact ((hAd (fun h => hne h)).le_bot ⟨h2, hy⟩).elim
+
+/-- **The conditional index map.**  A stochastic matrix `c` -- a probability vector `c j` for every
+`j` -- is realised by *one* measurable map `G : ℕ × ℝ → ℕ` on the unit interval, uniformly in the
+conditioning index `j`: for each `j`, the image of Lebesgue measure under `G (j, ·)` is the law
+`c j`.
+
+This is `exists_measurable_map_restrict_volume_eq_sum_smul_dirac` applied once per `j` and the
+choices glued; the gluing is measurable because the conditioning index runs over a **countable**
+space, which is `measurable_from_prod_countable_right`.  It is the step "given the piece `Y` fell
+into, draw the piece `X` falls into" of the Skorokhod representation, and it is where the index
+coupling `exists_coupling_tsum_offDiag_le` is consumed, normalised row by row. -/
+theorem exists_measurable_index_of_stochastic_matrix {c : ℕ → ℕ → ℝ≥0∞}
+    (hc : ∀ j, ∑' i, c j i = 1) :
+    ∃ G : ℕ × ℝ → ℕ, Measurable G ∧ ∀ j,
+      (volume.restrict (Set.Ioc (0 : ℝ) 1)).map (fun y => G (j, y))
+        = Measure.sum fun i => c j i • Measure.dirac i := by
+  choose g hgm hg using fun j => exists_measurable_map_restrict_volume_eq_sum_smul_dirac
+    (E := ℕ) (hc j) id
+  exact ⟨fun q => g q.1 q.2, measurable_from_prod_countable_right hgm, hg⟩
+
+/-- **The law of the index, on `E × ℝ`.**  Put the two index maps together: `j` reads off which
+piece of the partition the point `y` lies in, `G` draws from the row `c (j y)` using the uniform
+variable, and the law of the result is the mixture `∑ₖ ν (A k) · c k` of the rows against the
+masses of the pieces.
+
+This is the mass bookkeeping of the Skorokhod representation, and it is where the fibre statement
+of `exists_measurable_partitionIndex` is spent: `(ν.map j) {k} = ν (A k)` needs the fibre to be
+*equal* to the piece, not merely contained in it.  For the row `c k i = π i k / ν (A k)` coming
+from `exists_coupling_of_partition` the weight is `∑' k, π i k = μ (A i)`, so the index of the
+random variable the representation builds falls into the `i`-th piece with exactly the probability
+`μ` gives it -- which is what makes its law `μ` once `map_eval_prod_infinitePi` fills in the
+positions.
+
+The proof is the same two steps as `map_eval_prod_infinitePi`: Fubini over the uniform variable,
+then `lintegral_map` against `ν.map j`, which is a sum because the index space is countable; the
+transposition at the end is `ENNReal.tsum_comm`. -/
+theorem map_index_prod_eq {ν : Measure E} [SFinite ν] {A : ℕ → Set E}
+    {j : E → ℕ} (hjm : Measurable j) (hj : ∀ i, j ⁻¹' {i} = A i)
+    {c : ℕ → ℕ → ℝ≥0∞} {G : ℕ × ℝ → ℕ} (hGm : Measurable G)
+    (hG : ∀ k, (volume.restrict (Set.Ioc (0 : ℝ) 1)).map (fun y => G (k, y))
+              = Measure.sum fun i => c k i • Measure.dirac i) :
+    (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).map (fun z => G (j z.1, z.2))
+      = Measure.sum fun i => (∑' k, ν (A k) * c k i) • Measure.dirac i := by
+  have hf : Measurable (fun z : E × ℝ => G (j z.1, z.2)) :=
+    hGm.comp ((hjm.comp measurable_fst).prodMk measurable_snd)
+  ext S hS
+  rw [Measure.map_apply hf hS, Measure.prod_apply (hf hS), Measure.sum_apply _ hS]
+  have hslice : ∀ y : E, (volume.restrict (Set.Ioc (0 : ℝ) 1))
+      (Prod.mk y ⁻¹' ((fun z : E × ℝ => G (j z.1, z.2)) ⁻¹' S))
+      = ∑' i, c (j y) i * Measure.dirac i S := by
+    intro y
+    have h1 : (Prod.mk y ⁻¹' ((fun z : E × ℝ => G (j z.1, z.2)) ⁻¹' S))
+        = (fun ξ : ℝ => G (j y, ξ)) ⁻¹' S := rfl
+    have hm2 : Measurable (fun ξ : ℝ => G (j y, ξ)) :=
+      hGm.comp (measurable_const.prodMk measurable_id)
+    rw [h1, ← Measure.map_apply hm2 hS, hG, Measure.sum_apply _ hS]
+    exact tsum_congr fun i => by rw [Measure.smul_apply, smul_eq_mul]
+  simp only [hslice]
+  have hmeas : Measurable fun k : ℕ => ∑' i, c k i * Measure.dirac i S :=
+    measurable_of_countable _
+  have hchg : ∫⁻ y, (∑' i, c (j y) i * Measure.dirac i S) ∂ν
+      = ∫⁻ k, (∑' i, c k i * Measure.dirac i S) ∂(ν.map j) := (lintegral_map hmeas hjm).symm
+  rw [hchg, lintegral_countable']
+  have hpt : ∀ k, (ν.map j) {k} = ν (A k) := by
+    intro k
+    rw [Measure.map_apply hjm (measurableSet_singleton k), hj k]
+  simp only [hpt]
+  calc ∑' k, (∑' i, c k i * Measure.dirac i S) * ν (A k)
+      = ∑' k, ∑' i, ν (A k) * c k i * Measure.dirac i S := by
+        refine tsum_congr fun k => ?_
+        rw [← ENNReal.tsum_mul_right]
+        exact tsum_congr fun i => by ring
+    _ = ∑' i, ∑' k, ν (A k) * c k i * Measure.dirac i S := ENNReal.tsum_comm
+    _ = ∑' i, ((∑' k, ν (A k) * c k i) • Measure.dirac i) S := by
+        refine tsum_congr fun i => ?_
+        rw [Measure.smul_apply, smul_eq_mul, ENNReal.tsum_mul_right]
 
 /-- **The discrete maximal coupling.**  Two probability vectors on `ℕ` are the
 marginals of a joint distribution whose off-diagonal mass is at most

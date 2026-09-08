@@ -1191,14 +1191,84 @@ The representation theorem itself:
   property the coupling uses — holds on a null piece too, both sides being `0`;
   its purpose is to make `IsProbabilityMeasure (condLaw μ A)` hold
   *unconditionally* and so be an instance.
+* `MeasureTheory.map_eval_prod_infinitePi`, **proved** on 2026-09-08, eighth
+  run, together with `sum_smul_dirac_singleton`,
+  `map_eval_prod_infinitePi_of_map_eq` and
+  `exists_measurable_map_prod_infinitePi_eq_sum_smul`: **the randomisation
+  step**. On the product of a space carrying a measurable index `ι : Ω → κ`
+  with `MeasureTheory.Measure.infinitePi m` — Mathlib's countable product of
+  the probability measures `m i` (`Probability/ProductMeasure.lean:358`) — the
+  map `z ↦ z.2 (ι z.1)`, "look up the coordinate the index names", has the
+  mixture law `∑ᵢ P{ι = i} · m i`. The index space `κ` is any countable
+  measurable space with measurable singletons: `ℕ` for one stage, `ℕ × ℕ` for a
+  family of stages at once.
+
+  **This is what keeps the milestone at `SeparableSpace E`.** Realising the
+  position inside a piece as a measurable **function** of one uniform variable
+  is the Borel isomorphism theorem and needs `E` Polish; realising it as a
+  **coordinate** of a product of the conditional laws needs nothing — the four
+  declarations mention no topology on `E` at all, only `MeasurableSpace E`, and
+  the proof is Fubini (`Measure.prod_apply`), the coordinate law
+  `Measure.infinitePi_map_eval`, and `lintegral_map` into an integral over `κ`,
+  which is a sum because `κ` is countable. The conditional laws enter as
+  measures, as they must, and the independence of the draws is a by-product of
+  `infinitePi`, not something the mixture law needs.
+* `MeasureTheory.exists_measurable_partitionIndex` and
+  `MeasureTheory.exists_measurable_index_of_stochastic_matrix`, **proved** on
+  2026-09-08, eighth run: the two index maps the representation needs. The
+  first turns a countable measurable partition into a measurable `j : E → ℕ`
+  whose fibres are exactly the pieces (`Measurable.find`; disjointness is what
+  makes the fibre of `i` be `A i` and not a subset of it). The second realises
+  a whole **stochastic matrix** `c` — a probability vector `c j` for every `j` —
+  by one measurable `G : ℕ × ℝ → ℕ` on the unit interval, with
+  `(volume.restrict (Ioc 0 1)).map (G (j, ·))` the law `c j` for every `j`; the
+  choices are glued measurably because the conditioning index runs over a
+  countable space (`measurable_from_prod_countable_right`). Together they say:
+  "given which piece `Y` fell into, draw which piece `X` falls into" is a
+  measurable function of `(Y, ξ)` with `ξ` uniform, and it is where the index
+  coupling `exists_coupling_tsum_offDiag_le` is consumed, normalised row by row.
+* `MeasureTheory.map_index_prod_eq`, **proved** on 2026-09-08, eighth run: the
+  two index maps put together. On `(E × ℝ, ν ⊗ Lebesgue|₍₀,₁₎)` the law of
+  `z ↦ G (j z.1, z.2)` is the mixture `∑ₖ ν (A k) · c k` of the rows of the
+  stochastic matrix against the masses of the pieces. This is the mass
+  bookkeeping of the representation, and the place where the *fibre* statement
+  of `exists_measurable_partitionIndex` is spent: `(ν.map j) {k} = ν (A k)`
+  needs the fibre to equal the piece, not merely to be contained in it. For the
+  row `c k i = π i k / ν (A k)` of `exists_coupling_of_partition` the weight is
+  `∑' k, π i k = μ (A i)`, so the index falls into the `i`-th piece with exactly
+  the probability `μ` gives it -- which is what makes the law of the constructed
+  variable equal `μ` once `map_eval_prod_infinitePi` fills in the positions.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
   Separability is the only hypothesis; the construction uses the partition of
-  the previous item, so that `Portmanteau`'s
+  the previous items, so that `Portmanteau`'s
   `MeasureTheory.tendsto_measure_of_null_frontier` (`Portmanteau.lean:243`)
-  applies to each piece, and the product space of the previous item as the
-  common space.
+  applies to each piece.
+
+  **The common space, and why it is not a gluing of the one-stage couplings.**
+  `exists_coupling_of_tendsto` returns, for each stage, a law `γ` on `E × E`
+  with second marginal `μ`. Gluing a countable family of such laws along their
+  common second marginal is disintegration — `Measure.condKernel`, which needs
+  `E` standard Borel — followed by a countable product of the resulting kernels,
+  which Mathlib does not have at all: `infinitePi` is a product of *measures*,
+  and there is no product of kernels over a countable index. Searched on
+  2026-09-08 on `upstream/master` at `572e4d091bc`, in Mathlib's own vocabulary
+  rather than ours: `infinitePi` occurs in six files, all of them about
+  measures (`ProductMeasure`, `Independence/InfinitePi`, `HasLawExists`,
+  `IdentDistribIndep`, `Distributions/SetBernoulli`,
+  `Combinatorics/BinomialRandomGraph/Defs`), and neither `infinitePi` nor
+  `Kernel.pi` nor any `def pi` occurs anywhere under `Probability/Kernel/`;
+  what is there is `Kernel.prod` for two factors and the Ionescu–Tulcea `traj`
+  for a filtration. The construction therefore
+  does **not** glue: it builds all stages at once on
+  `(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`, where the first factor carries `Y ∼ μ` and one
+  uniform variable per stage, and the second carries one independent draw from
+  each conditional law `condLaw (μ n) (A n i)`. `X n` is then
+  `z ↦ z.2 (n, G n (j n (Y z), ξ n z))` and the three items above compute its
+  law. That is Ethier–Kurtz's Lemma 3.1.3 (p. 100, "Let `X, Y₀, …, Y_N, ξ` be
+  independent random variables …") with `N = ∞`, and it is the reason the
+  milestone never needs `E` Polish.
 * The version for a single limit along a filter with a countable basis.
 
 The converse direction is Mathlib's and is not to be rebuilt: almost sure
@@ -1281,6 +1351,45 @@ exactly what an almost surely convergent realisation witnesses.
   demands. This is the instance on which a construction that coupled the two
   laws through one shared uniform variable *without* the index coupling would
   also succeed, which is why the previous item and not this one is the test.
+* **The randomisation step collapses onto the Dirac case.** Take
+  `m i = Measure.dirac (x i)` in `map_eval_prod_infinitePi_of_map_eq`. Then
+  `Measure.infinitePi (fun i ↦ dirac (x i)) = dirac x` by Mathlib's
+  `infinitePi_dirac` (`ProductMeasure.lean:466`), so the second factor of the
+  product carries no randomness at all, the map `z ↦ z.2 (ι z.1)` is
+  `y ↦ x (g y)`, and the conclusion is verbatim
+  `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`. The general
+  statement must reproduce the special one on this instance, and it does;
+  that is the cheapest check that the product factor is indexed by the
+  *index* space and not by anything else.
+* **The draw must not be read off the same variable as the index.** `E = ℝ`,
+  `p = (1/2, 1/2, 0, …)`, `m 0 = m 1 = Measure.dirac 0`, so the mixture law is
+  `δ 0`. The tempting economy — the index is already a function of the uniform
+  variable `ξ`, so let the position be a function of `ξ` too, say `ξ` itself —
+  gives law Lebesgue on `(0,1]`, not `δ 0`. So the second factor of
+  `exists_measurable_map_prod_infinitePi_eq_sum_smul` is not decoration: the
+  draws must be independent of the index. The neighbouring instance on which
+  the economy is not punished is `m 0 = m 1 =` the uniform law on `(0,1]`,
+  where reading the position off `ξ` happens to give the right answer — which
+  is why it is the wrong instance to test on.
+* **The fibres of the index map, and why disjointness is the hypothesis that
+  matters.** `E = ℝ`, `A i = Set.Icc 0 (i + 1)`: a countable family of
+  measurable sets covering nothing new and covering `⋃ i, A i = Ici 0` — not
+  `univ`, and not disjoint. `exists_measurable_partitionIndex` fails on both
+  counts, and the instructive half is the second: with `A 0 = Icc 0 1` and
+  `A 1 = Icc 0 2` the `Nat.find` map still exists and is still measurable, but
+  its fibre over `1` is `∅` rather than `A 1`, so the conclusion
+  `j ⁻¹' {i} = A i` is false while `∀ y, y ∈ A (j y)` still holds. The weaker
+  conclusion is the one a construction would silently use and the one that
+  breaks the mass bookkeeping `P{j = i} = μ (A i)`.
+* **The stochastic matrix must be normalised row by row.** `c 0 = (1, 0, …)`
+  and `c 1 = (1/2, 1/2, 0, …)`: `exists_measurable_index_of_stochastic_matrix`
+  returns a `G` that is constant `0` on the whole interval for `j = 0` and
+  splits it in half for `j = 1`. The neighbouring instance that fails is the
+  *unnormalised* matrix `c j i = π i j` of `exists_coupling_tsum_offDiag_le`,
+  whose rows sum to `ν (A j)` and not to `1`: the hypothesis `∀ j, ∑' i, c j i = 1`
+  is what forces the division by `ν (A j)` to happen before the index map is
+  built, and it is the one place where a null piece has to be given a value by
+  hand, exactly as in `condLaw`.
 * **The quantile coupling misses the bound by a factor that is not bounded.**
   `p = (1/2, 1/2, 0, …)` and `q = (0, 1/2, 1/2, 0, …)`, so
   `∑' i, (p i - q i) = 1/2`. Reading both vectors on the *same* uniform variable
