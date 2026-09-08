@@ -1,8 +1,8 @@
 # Was am Wochenende bei Dir liegt
 
-Stand 2026-09-07. Alles, was ich vorbereiten konnte, ist vorbereitet und
+Stand 2026-09-08. Alles, was ich vorbereiten konnte, ist vorbereitet und
 gepusht; was hier steht, braucht Dich. Die Läufe arbeiten unterdessen weiter,
-alle drei Stunden, und sammeln auf `facts-inventory`.
+seit dem 7. September stündlich, und sammeln auf `facts-inventory`.
 
 ## 1. Die Einreichung bei Tau Ceti — der einzige echte Engpass
 
@@ -98,19 +98,61 @@ Branch 5231 Commits hinter master. Drei davon — #36089, #36160, #36225 zu
 Schlafen sie ein, hat die Roadmap eine Lücke, die sie für gefüllt hält. Das ist
 Deine Sache; ich kann Dir ansehen, woran sie hängen, wenn Du willst.
 
+## 6. Ein Mathlib-PR, der nebenbei abfällt
+
+Kein Roadmap-Punkt, sondern ein Fund beim Beweisen von `fact:stoneweierstrass`.
+Er ist **absichtlich nicht** an die Läufe gegeben, damit sie am Martingalproblem
+bleiben; er liegt hier, bis Du Lust darauf hast.
+
+**Was Mathlib hat.** `ProbabilityMeasure.tendsto_of_tight_of_separatesPoints`
+(`MeasureTheory/Measure/LevyConvergence.lean:154`) — schon über einem beliebigen
+Filter, das ist also nichts, was wir überbieten müßten. Sie *setzt* aber die
+Straffheit voraus.
+
+**Was Mathlib nicht hat.** Einen Weg *zur* Straffheit in einem allgemeinen
+metrischen Raum. Alles, was `IsTightMeasureSet` als Konklusion hat, verlangt
+`ProperSpace`, ein Innenprodukt samt Orthonormalbasis (`TightNormed.lean`) oder
+gleich relative Kompaktheit (`Prokhorov.lean`) — durchweg der normierte Fall.
+Unser `isTightMeasureSet_of_stronglySeparatesPoints` zieht sie statt dessen aus
+einer Bedingung an die **Funktionenklasse**. Das ist keine Verallgemeinerung
+eines vorhandenen Lemmas, sondern eine fehlende Kante.
+
+**Und die kleine, prüfbare Frage**, die einen sauberen PR ergäbe: jenes Lemma
+trägt `[PolishSpace E]`, ruft im Beweis aber die schwächere Extensionalität
+`ext_of_forall_mem_subalgebra_integral_eq_of_pseudoEMetric_complete_countable`
+auf. Polnisch wird dort nur noch für `upgradeIsCompletelyMetrizable` und die
+Kompaktheit des Abschlusses gebraucht. Ob `CompleteSpace` +
+`SecondCountableTopology` reichen, entscheidet sich in einer Viertelstunde:
+Aussage abschreiben, Voraussetzungen schwächen, denselben Beweis laufen lassen,
+sehen wo er bricht. Geht es durch, ist es ein kleiner PR, der mit unserer
+Roadmap nichts zu tun hat und trotzdem aus ihr fällt.
+
 ## Was inzwischen ohne Dich läuft
 
-54 Läufe bisher, alle drei Stunden, Opus 5. Aktuelle Aufgabe: acceptance
-examples für jeden Meilenstein, weil `OneParameterSemigroups` sie führt und uns
-fehlen. Danach der Rückstau, fünf Punkte.
+78 Läufe bisher, seit dem 7. September stündlich, Opus 5. Am 7./8. September
+sind in einem Tag rund 4000 Zeilen Lean dazugekommen. Vier Läufe fielen am
+7. September an der Sitzungsgrenze des Kontos aus; der Runner erkennt sie jetzt,
+merkt sich den Rücksetzzeitpunkt und setzt bis dahin aus, statt stündlich
+dagegenzulaufen.
 
-Lean-Stand, alle drei Dateien fehlerfrei gegen Mathlib v4.33.1:
+Lean-Stand, alle drei Dateien gegen Mathlib v4.33.1 geprüft:
 
-| | Deklarationen | `sorry` |
-|---|---|---|
-| `WeakConvergence` | 50 | 21 |
-| `SkorokhodSpace` | 92 | 19 |
-| `MartingaleProblems` | 34 | 14 |
+| | Deklarationen | bewiesen | `sorry` |
+|---|---:|---:|---:|
+| `WeakConvergence` | 133 | 131 | 2 |
+| `SkorokhodSpace` | 109 | 98 | 11 |
+| `MartingaleProblems` | 67 | 58 | 9 |
+
+Ganz bewiesen sind seither `fact:monotoneclass` (der funktionale
+Monotone-Klassen-Satz, den Mathlib nur für Mengen hat), `fact:stoneweierstrass`
+und die erste Hälfte von `fact:convdet`; `fact:PSpolish` steht bis auf den
+Übergang vom atomaren zum allgemeinen Fall.
+
+Drei Stellen im Manuskript sind dabei korrigiert worden, alle in dieselbe
+Richtung — die Formalisierung war schärfer als die Prosa: `rem:skorokhodform`
+(die Sprungtheorie braucht (T2b) nicht, nur Properness), `fact:monotoneclass`
+(stand fälschlich unter „was Mathlib hat"), `fact:convdet` (die Separabilität
+ist für die erste Hälfte entbehrlich).
 
 Kein `sorry` steht mehr in einer *Aussage*, nur noch in Beweisen.
 
