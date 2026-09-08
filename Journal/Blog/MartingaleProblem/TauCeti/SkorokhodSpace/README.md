@@ -93,11 +93,26 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
     `OrderTopology.of_linearLocallyFinite [LinearOrder α] [LocallyFiniteOrder α]
     [DiscreteTopology α]`, or the `OrderTopology` instance directly. Both
     instances are in `Mathlib/Topology/Instances/Discrete.lean`.
-* `AdditiveDist.orderIso_isometry_real`: a linear order with a metric inducing
-  the order topology and additive along the order embeds into `ℝ` by an order
-  isomorphism onto its image which is an isometry; the image is closed when
-  closed balls are compact. State the embedding as a bundled
-  `OrderIso`-and-`Isometry` onto its range.
+* `lengthCoord`, **written and proved 2026-09-08**: the coordinate of the index,
+  `lengthCoord t₀ t = if t₀ ≤ t then dist t₀ t else -dist t₀ t`. Its increment
+  along the order is the distance itself, with no absolute value
+  (`sub_lengthCoord_of_le`), from which `strictMono_lengthCoord`,
+  `isometry_lengthCoord` and `lengthCoord_self` follow. The coordinate is
+  written out rather than being read off the existence statement below, because
+  a construction of a time change needs a *named* coordinate: the order
+  isomorphism produced by an existential is opaque, and no explicit time change
+  can be written against it. This is the same reason `BasePoint` is data.
+* `exists_orderIso_isometry_real`, **proved 2026-09-08**: a linear order with a
+  metric additive along the order is order isomorphic and isometric to a closed
+  subset of `ℝ`, namely the range of `lengthCoord`. It is `lengthCoord` together
+  with `StrictMono.orderIso` and `Isometry.isClosedEmbedding`. **The order
+  topology is not used**, and the statement is `omit [OrderTopology ι]`:
+  `AdditiveDist` makes the coordinate an isometry, `MetricSpace` rather than
+  `PseudoMetricSpace` makes it strictly monotone, and `ProperSpace` makes its
+  range closed — through `complete_of_proper`, so what is used is completeness
+  and not properness itself. The empty index is a case of its own and takes
+  `s = ∅`, since with no point there is no base point to take the coordinate
+  around.
 * The four running instances `ℝ`, `Set.Ici (0:ℝ)`, `Set.Icc (0:ℝ) T`,
   `AddSubgroup.zmultiples (h : ℝ)` carry
   `[LinearOrder] [MetricSpace] [OrderTopology] [AdditiveDist] [ProperSpace]`.
@@ -157,8 +172,9 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 * `rightIsolated ι = {t | IsOpen (Set.Iic t)}`, the points approached from the
   right by nothing, and `countable_rightIsolated`: **there are countably many
   of them.** Proved (2026-09-08), and the proof is intrinsic — it does not go
-  through the embedding of the index into `ℝ`, which is still
-  `exists_orderIso_isometry_real` and still open. For a right isolated `t` the
+  through the embedding of the index into `ℝ`, which is
+  `exists_orderIso_isometry_real`, proved later the same day and not used here.
+  For a right isolated `t` the
   set `Set.Iic t` is open, so a countable basis has a member `v` with
   `t ∈ v ⊆ Set.Iic t`, and `v s = v t` forces `s ≤ t` and `t ≤ s` at once. The
   hypothesis is second countability, which the index has from `ProperSpace`.
@@ -469,6 +485,46 @@ Under (B), with `E` a pseudometric space:
   each of its interior points, so `of_forall_eventuallyEq` assembles the two.
   This is what Milestone 5 actually consumes, since its estimate is windowed and
   never global.
+* `IsCadlag.exists_subdivision`: **the structure theorem, and the rung
+  Milestones 5 and 7 share.** For `f` càdlàg, `a ≤ b`, `Set.Icc a b` compact and
+  `ε > 0` there are `n` and a strictly monotone `t : Fin (n+1) → ι` from `a` to
+  `b` with `dist (f x) (f (t i.castSucc)) ≤ ε` for every `x` in every cell
+  `Set.Ico (t i.castSucc) (t i.succ)`. Proved (2026-09-08). The proof is a least
+  upper bound argument and **not** an induction, because the cells cannot be
+  chosen in advance: their lengths are dictated by the jumps of `f` and may
+  shrink to `0`. Let `S` be the set of endpoints reachable by such a subdivision
+  and `c` the greatest point of `closure S`; the left limit at `c` puts `c` in
+  `S` and right continuity at `c` would push past it if `c < b`. Compactness of
+  the window is a **hypothesis** and not `ProperSpace ι`, so the statement also
+  serves an index whose closed balls are not compact; `AdditiveDist` and the
+  metric of the index do not enter. `exists_snoc_subdivision` is the one
+  combinatorial step, `Fin.snoc`, with no càdlàg hypothesis and no topology.
+* `stepRetract t`, the retraction of the index onto the range of a finite tuple
+  — every point goes to the greatest entry below it, and to `t 0` if there is
+  none — with `stepRetract_eq_of_forall_le`, `stepRetract_eq_first` and
+  `stepRetract_mem_range`. Written and proved (2026-09-08). The step path of
+  Milestone 5 is `f ∘ stepRetract t`, built as a composition rather than a case
+  distinction so that the càdlàg proof is one lemma about the retraction alone.
+* `IsCadlag.of_eventually_const`: a map constant on a right neighbourhood of
+  every point and on a left neighbourhood of every point is càdlàg. Proved
+  (2026-09-08). The degenerate cases need no separate treatment: at a greatest
+  element `𝓝[>] x = ⊥` and at a least one `𝓝[<] x = ⊥`.
+* `eventually_stepRetract_eq_nhdsGT` and
+  `exists_eventually_stepRetract_eq_nhdsLT`: the retraction is locally constant,
+  to the right and to the left. Proved (2026-09-08), through the greatest index
+  with `t i ≤ x` and the greatest with `t i < x` respectively.
+* `isCadlag_comp_stepRetract`: **the step path is càdlàg, and the path it is
+  read off need not be.** Proved (2026-09-08). It rests on the local constancy
+  of the retraction alone, which is why the hypothesis is absent rather than
+  unused.
+* `finite_range_comp_stepRetract`: the step path takes finitely many values.
+  Proved (2026-09-08). This is what the counting of Milestone 5 needs, and it is
+  the only reason the retraction runs over a `Finset`.
+* `dist_comp_stepRetract_le`: on `Set.Icc (t 0) (t (Fin.last n))` the step path
+  is uniformly `ε`-close to its path when the cells carry `ε`. Proved
+  (2026-09-08), and the tuple need **not** be strictly monotone: the retraction
+  reads the greatest index out of a `Finset`, so a repeated entry changes which
+  value is taken but not that it is taken inside a cell of the hypothesis.
 
 **Acceptance examples.**
 
@@ -514,6 +570,19 @@ Under (B), with `E` a pseudometric space:
   `LipschitzWith.comp` and `OrderIso.symm_trans`, and the axioms are
   `TimeChange.ext rfl` — the extensionality lemma holds because the other two
   fields of the structure are propositions.
+* `TimeChange.exists_of_lengthCoord`, **proved 2026-09-08**: time changes are
+  built in the coordinate of Milestone 1. A strictly monotone `φ : ℝ → ℝ` with
+  `φ 0 = 0`, bi-Lipschitz with the two constants `exp γ`, and mapping the range
+  of `lengthCoord t₀` **onto itself**, yields a time change fixing `t₀`, of norm
+  at most `γ`, whose coordinate is `φ`. Until it was written nothing in the file
+  constructed a time change on a general index: `TimeChange.steep` and
+  `TimeChange.double` are written on `ℝ`. The two surjectivity hypotheses are
+  the obstruction and not an artefact of the statement, and this is what they
+  say: for `ι = h • ℤ` the range of the coordinate is `h • ℤ` and the only
+  admissible `φ` is the identity, so that index has no time change but the
+  trivial one. Every construction of a time change on a general index is
+  therefore a statement about the range of the coordinate, and the lemma is the
+  place where that becomes visible.
 * `TimeChange.lipConst λ = sInf {K : ℝ≥0 | LipschitzWith K λ}`, the least
   Lipschitz constant, and `TimeChange.norm λ = log (max (lipConst λ) (lipConst λ⁻¹))`,
   with `TimeChange.lipConstOn m λ` and `TimeChange.normOn m λ` the same computed
@@ -1075,7 +1144,47 @@ owes.
     it does not do is produce a limit.
 * `SeparableSpace (D ι E)`: the piecewise constant paths taking finitely many
   values from a countable dense subset of `E` on the intervals of a rational
-  subdivision of `B m` are dense.
+  subdivision of `B m` are dense. The proof runs
+  `Metric.secondCountable_of_almost_dense_set` — a countable `ε`-net for every
+  `ε` (`Mathlib/Topology/MetricSpace/Pseudo/Basic.lean:247`), then the instance
+  `TopologicalSpace.SecondCountableTopology.to_separableSpace`
+  (`Mathlib/Topology/Bases.lean:896`) — and it splits into two
+  halves of very different weight. **The light half is proved** (2026-09-08):
+  `SkorokhodSpace.exists_finite_range_distWith_le` gives, for every `f`, every
+  `ε > 0` and every radius `M`, a `g : D ι E` with finite range and
+  `distWith t₀ u 1 f g ≤ ε` for all `u ≤ M` — the approximation of a càdlàg path
+  by a step path **at its own jump times**, uniform on the window, for the
+  identity time change. It is `IsCadlag.exists_subdivision` of Milestone 2 read
+  through `stepRetract`, the retraction of the index onto the range of a finite
+  tuple. The heavy half is moving those jump times onto the countable set, and
+  it is a statement about the index and not about the paths: it asks for a time
+  change of small norm carrying finitely many prescribed points onto finitely
+  many nearby ones. Since 2026-09-08 the place to make it is named —
+  `TimeChange.exists_of_lengthCoord` of Milestone 3 — and so is the condition it
+  has to meet: the piecewise linear `φ` that does the moving must carry the
+  range of `lengthCoord t₀` onto itself. On `ι = ℝ` every piecewise linear `φ`
+  does; on `ι = h • ℤ` only the identity does, and there the countable dense set
+  is the index itself and the jump times need no moving. **The milestone
+  therefore owes the interpolation lemma on the range of the coordinate**, not a
+  construction on `ℝ`.
+* `SkorokhodSpace.exists_countable_timeChangeInvariant`: a countable `C ⊆ ι`
+  that is dense **and** contains every point that no time change moves. This is
+  the set the jump times of the countable family are drawn from, and it is not
+  an arbitrary countable dense subset of `ι`, which is the finding of
+  2026-09-08. On `ι = Set.Icc (0 : ℝ) 1` with base point `0` every time change
+  is an order isomorphism of a linear order with a greatest element and
+  therefore fixes `1`; the càdlàg path `f = Set.indicator {1} 1` then keeps its
+  distance from every step path whose jump times avoid `1`, since such a `g` is
+  constant on `[d, 1]` for its last jump time `d < 1` and its value `c` there
+  has to answer both `f (l 1) = 1` and `f (l d) = 0`, so
+  `distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1/2` for every `l` and every `u ≥ 1`,
+  whence `intDist t₀ f g ≥ exp (-1) / 2`. A countable dense subset of
+  `Set.Icc (0 : ℝ) 1` need not contain `1`. The construction is the mirror of
+  `rightIsolated` and `exists_countable_ciSup_eq` of Milestone 2, which close the
+  same gap for suprema: a dense set plus a countable exceptional set, the latter
+  countable because `exists_orderIso_isometry_real` of Milestone 1 exhibits the
+  index as a closed subset of `ℝ` and the immovable points as the boundaries of
+  its connected components.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
@@ -1190,7 +1299,11 @@ owes.
   same choice pays a second time in `isCompact_closure_iff`, where
   `⨆ f ∈ A, modulus …` over an unbounded family would again be a junk `0`.
 * `SkorokhodSpace.tendsto_modulus`: `modulus m f δ → 0` as `δ → 0`, for each
-  fixed `f` and `m`. This is the càdlàg property in quantitative form.
+  fixed `f` and `m`. This is the càdlàg property in quantitative form. Proved
+  (2026-09-08) out of `IsCadlag.exists_subdivision` of Milestone 2 and one
+  observation: the gaps of a strictly monotone subdivision are finitely many and
+  each positive, so some `δ₀ > 0` lies below all of them, and every `δ < δ₀`
+  admits that same subdivision as a `δ`-sparse one.
 * `modulus` is monotone in `δ` and in `m`. `SkorokhodSpace.modulus_mono`, the
   monotonicity in `δ`, is proved (2026-09-08): a `δ₂`-sparse subdivision is
   `δ₁`-sparse for every smaller `δ₁`, so the infimum runs over a larger set.

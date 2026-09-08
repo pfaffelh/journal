@@ -10,6 +10,136 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
+### Aufgabe: `SkorokhodSpace` fertig, dann Meilenstein 4 von `MartingaleProblems` *(gestellt 2026-09-08 vom Nutzer)*
+
+Zwei Teile, streng nacheinander. Teil B wird **nicht** angefangen, solange Teil A
+offen ist.
+
+**Teil A — `SkorokhodSpace` zu Ende bringen.** Sechs `sorry`, in dieser
+Reihenfolge:
+
+1. `instSeparableSpace` — der letzte offene Punkt von Meilenstein 5. Danach ist
+   `instPolishSpace` `inferInstance` und schuldet nichts Eigenes. Vorlage:
+   `stepFun` aus `WeakConvergence/Suggested.lean` (dort für $M_E$ gebaut, mit
+   Liste statt Summe, weil `E` keine Addition hat).
+2. Die meßbare Einbettung (`thm:fdd`) — von `MartingaleProblems` Meilenstein 11
+   gebraucht.
+3. Meilenstein 7, `tendsto_modulus` und das Kompaktheitskriterium.
+4. `exists_orderIso_isometry_real`, wenn Zeit bleibt; es hängt nichts daran.
+
+**Zwischenstand Teil A (2026-09-08, fünfundzwanzigster Lauf des Tages).** Bericht
+in `Facts/INVENTAR.md`, Läufe, „fünfundzwanzigster Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **vier** `sorry` statt sechs.
+
+*Punkt 4 ist erledigt* (vierundzwanzigster Lauf), *Punkt 3 zur Hälfte*
+(fünfundzwanzigster Lauf): `tendsto_modulus` ist bewiesen, das
+Kompaktheitskriterium `isCompact_closure_iff` ist offen.
+
+*Punkt 3 wurde vor Punkt 1 gearbeitet, und das ist die eine Abweichung.* Der
+Grund ist eine Abhängigkeit in der falschen Richtung: **die Separabilität ruht
+auf dem Satz, der Meilenstein 7 trägt.** Billingsleys Treppenpfad *ist* die
+Unterteilung mit kleiner Zellschwingung, deren Existenz `tendsto_modulus`
+behauptet; wer Punkt 1 zuerst anfaßt, beweist sie unterwegs und ohne Namen. Sie
+heißt jetzt `IsCadlag.exists_subdivision`, ist bewiesen, und beide Punkte lesen
+sie.
+
+*Punkt 1 ist zur Hälfte erledigt.* `SkorokhodSpace.exists_finite_range_distWith_le`
+ist bewiesen: zu jedem `f`, `ε > 0` und Radius `M` ein `g` mit endlichem
+Wertebereich und `distWith t₀ u 1 f g ≤ ε` für `u ≤ M`, für den identischen
+Zeitwechsel. Das ist die analytische Hälfte, samt `stepRetract` und fünf Sätzen
+darüber. Offen ist die Abzählbarkeit, und dazu ein **Befund, der die Aufgabe
+ändert**: eine beliebige abzählbare dichte Teilmenge von `ι` genügt **nicht**.
+Zeuge: `ι = Set.Icc (0:ℝ) 1`, Basispunkt `0`, `f = Set.indicator {1} 1` — jeder
+Zeitwechsel fixiert `1`, und jeder Treppenpfad, dessen Sprungzeiten `1` meiden,
+bleibt `exp (-1) / 2` von `f` entfernt. Der nächste Schritt heißt darum
+`SkorokhodSpace.exists_countable_timeChangeInvariant` und steht in Meilenstein 5.
+
+*Punkt 2 ist unberührt.*
+
+**Teil B — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.**
+
+Der Grund, und er ist kein ästhetischer: **die Existenztheorie hat sonst keinen
+Boden.** §`sec:Existence` des Manuskripts hat drei Zweige, und zwei davon sind
+relativ — aus einem dualen Prozeß (`thm:exduality`; Meilenstein 12 ist
+ausdrücklich *not to be attempted as stated*, weil Kolmogorov für überabzählbaren
+Index fehlt) und aus Konvergenz (`thm:absconv`, das die Approximanten schon
+voraussetzt). Der dritte, die Übergangshalbgruppe, ist durch `rem:noch1`
+ausgeschlossen: kein Hille--Yosida, kein Kapitel 1 von Ethier--Kurtz. Bleibt
+`thm:jumpMP`, und das ist die **einzige Konstruktion von Hand**. Ohne sie steht
+in keiner der drei Dateien ein Prozeß, von dem in Lean bewiesen wäre, daß er ein
+Martingalproblem *löst* — die Münze aus `AtomWitness` ist ein Gegenbeispiel, kein
+Beispiel.
+
+Der Meilenstein steht ausformuliert in `TauCeti/MartingaleProblems/README.md`.
+Reihenfolge:
+
+*Reihenfolge, auf Wunsch des Nutzers: erst das eigentliche Ziel, die Beispiele
+danach.*
+
+0. **`IsStepPath` zuerst, als Prädikat.** Die Konstruktion liefert Pfade, die in
+   endlicher Zeit nur endlich oft springen, und drei sonst unangenehme Stellen
+   werden auf ihnen leicht: die Meßbarkeit in `(t, ω)` ist eine Summe über
+   endlich viele Stücke statt eines Grenzwertarguments, `Nat.find` für die
+   Zuordnung `t ↦ n` ist formbar, und càdlàg folgt. Also
+   ```
+   def IsStepPath (f : ι → E) : Prop :=
+     ∀ K : Set ι, IsCompact K → (leftJumpSet f ∩ K).Finite
+   ```
+   mit der Brücke `IsStepPath f → IsCadlag f`. **Keine Typklasse** — es ist eine
+   Eigenschaft eines Terms, die Instanzensuche hätte nichts, woran sie ansetzt,
+   und Mathlibs Ausweichkonstruktion `Fact` ist ausdrücklich nicht dafür gedacht
+   (`Logic/Basic.lean:167`, library_note „fact non-instances"). Erst wenn mehr
+   als zwei Sätze sie tragen, wird daraus eine gebündelte Struktur nach dem
+   Muster von `D(ι, E)`. Die halbe Arbeit steht schon:
+   `IsCadlag.finite_largeLeftJumpSet_inter` in `SkorokhodSpace/Suggested.lean`
+   sagt dasselbe für die **großen** Sprünge und ohne Zusatzvoraussetzung; hier
+   sind es alle. Das Manuskript nennt die Menge dieser Pfade `F` in
+   `set:pathjump`.
+1. `jumpProcess lam mu nu` als Konstruktion auf einem expliziten
+   Wahrscheinlichkeitsraum, mit càdlàg und stückweise konstanten Pfaden. Der
+   Unterbau ist da und braucht **keine Topologie**:
+   `ProbabilityTheory.exists_kernel_pi_of_markov`
+   (`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`, aus Mathlibs
+   Ionescu--Tulcea `Kernel.traj`) für die Kette,
+   `ProbabilityTheory.exponentialPDF` für die Wartezeiten.
+2. `jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`, und
+   es ist **das eigentliche Ziel des Meilensteins**: die erste in Lean bewiesene
+   Lösung eines Martingalproblems überhaupt.
+3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
+   Roadmap „no analysis beyond `NormedSpace`".
+4. **Erst danach das Akzeptanzbeispiel**, und dann wirklich als Beweis: `E = ℕ`,
+   `lam ≡ 1`, `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x` — der
+   Poissonprozeß, mit den eindimensionalen Verteilungen gegen
+   `ProbabilityTheory.poissonMeasure` geprüft. Es instanziiert jede Einzelheit
+   des Meilensteins auf einmal; steht es nur als Prosa da, prüft es nichts (die
+   Lehre des 2026-09-08). Bricht es, so ist der Befund wertvoller als der Satz
+   darüber, und er gehört in den Bericht statt in eine Abschwächung.
+5. Der lokale Fall und die pfadabhängige Variante zuletzt; sie liefern die
+   Beispiele für die Meilensteine 7 und 9.
+
+**Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
+*Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:
+
+* **M/M/1**, `b ≡ β`, `d x = δ * 1_{x ≥ 1}` auf `E = ℕ`. Beschränkt, also
+  greifen `thm:jumpMP` und `exists_unique_of_bounded` unmittelbar.
+* **Linearer Geburt-Tod**, `b x = β * x`, `d x = δ * x`. Hier ist
+  `λ̄ = ∞`, der Satz greift **nicht**, und das Beispiel prüft als einziges den
+  lokalen Zweig samt Nichtexplosionskriterium (`∑ 1/(β n)` divergiert). Der
+  Yule-Prozeß `δ = 0` fällt als Sonderfall ab und hat geschlossene
+  eindimensionale Verteilungen — geometrisch —, also eine unabhängige Kontrolle
+  wie `poissonMeasure` beim Poissonprozeß.
+* **Hawkes**, prädiktables `Λ(t, ω) = ν + ∫_0^{t-} h(t-s) dN_s`, das
+  nicht-markovsche Beispiel und die Instanz von `ex:hawkes`. Es gehört zur
+  pfadabhängigen Variante und kommt zuletzt.
+
+In jedem Fall zuerst der Erzeuger als Rechnung: für Geburt-Tod kürzt sich `λ`
+heraus und es muß `A f x = b x * (f (x+1) - f x) + d x * (f (x-1) - f x)`
+herauskommen. Kommt dort etwas anderes heraus, ist die Form von `set:jumpdata`
+unhandlich und das ist der Befund.
+
+**Was zählt:** eine in Lean bewiesene Lösung eines Martingalproblems. **Was nicht
+zählt:** ein Prädikat, das sagt, was eine Lösung wäre.
+
 ### ~~Aufgabe: die nächsten vier Läufe an `SkorokhodSpace`~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, neunzehnter Lauf des Tages)*
 
 **Ergebnis** in `Facts/INVENTAR.md`, Läufe, die vier Abschnitte vom sechzehnten

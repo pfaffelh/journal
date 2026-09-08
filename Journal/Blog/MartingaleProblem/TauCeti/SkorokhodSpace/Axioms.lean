@@ -38,4 +38,25 @@ Mathlib `v4.33.1` with `rc = 0` and six `sorry` warnings:
 `SkorokhodSpace.measurableEmbedding_piDense`,
 `SkorokhodSpace.borel_eq_iSup_comap_eval`, `SkorokhodSpace.tendsto_modulus` and
 `SkorokhodSpace.isCompact_closure_iff`.
+
+## 2026-09-08, twenty-fourth run
+
+Seven declarations, all of them printing `[propext, Classical.choice,
+Quot.sound]`.
+
+* `lengthCoord`
+* `sub_lengthCoord_of_le`
+* `strictMono_lengthCoord`
+* `isometry_lengthCoord`
+* `lengthCoord_self`
+* `exists_orderIso_isometry_real`
+* `TimeChange.exists_of_lengthCoord`
+
+After that run `Suggested.lean` goes through `lake env lean` against Mathlib
+`v4.33.1` with `rc = 0` and **five** `sorry` warnings ---
+`exists_orderIso_isometry_real` has left the list --- and no linter message:
+`SkorokhodSpace.instSeparableSpace`,
+`SkorokhodSpace.measurableEmbedding_piDense`,
+`SkorokhodSpace.borel_eq_iSup_comap_eval`, `SkorokhodSpace.tendsto_modulus` and
+`SkorokhodSpace.isCompact_closure_iff`.
 -/
