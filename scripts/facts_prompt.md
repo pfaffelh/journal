@@ -10,6 +10,62 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
+### Aufgabe: `SkorokhodSpace` fertig, dann Meilenstein 4 von `MartingaleProblems` *(gestellt 2026-09-08 vom Nutzer)*
+
+Zwei Teile, streng nacheinander. Teil B wird **nicht** angefangen, solange Teil A
+offen ist.
+
+**Teil A — `SkorokhodSpace` zu Ende bringen.** Sechs `sorry`, in dieser
+Reihenfolge:
+
+1. `instSeparableSpace` — der letzte offene Punkt von Meilenstein 5. Danach ist
+   `instPolishSpace` `inferInstance` und schuldet nichts Eigenes. Vorlage:
+   `stepFun` aus `WeakConvergence/Suggested.lean` (dort für $M_E$ gebaut, mit
+   Liste statt Summe, weil `E` keine Addition hat).
+2. Die meßbare Einbettung (`thm:fdd`) — von `MartingaleProblems` Meilenstein 11
+   gebraucht.
+3. Meilenstein 7, `tendsto_modulus` und das Kompaktheitskriterium.
+4. `exists_orderIso_isometry_real`, wenn Zeit bleibt; es hängt nichts daran.
+
+**Teil B — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.**
+
+Der Grund, und er ist kein ästhetischer: **die Existenztheorie hat sonst keinen
+Boden.** §`sec:Existence` des Manuskripts hat drei Zweige, und zwei davon sind
+relativ — aus einem dualen Prozeß (`thm:exduality`; Meilenstein 12 ist
+ausdrücklich *not to be attempted as stated*, weil Kolmogorov für überabzählbaren
+Index fehlt) und aus Konvergenz (`thm:absconv`, das die Approximanten schon
+voraussetzt). Der dritte, die Übergangshalbgruppe, ist durch `rem:noch1`
+ausgeschlossen: kein Hille--Yosida, kein Kapitel 1 von Ethier--Kurtz. Bleibt
+`thm:jumpMP`, und das ist die **einzige Konstruktion von Hand**. Ohne sie steht
+in keiner der drei Dateien ein Prozeß, von dem in Lean bewiesen wäre, daß er ein
+Martingalproblem *löst* — die Münze aus `AtomWitness` ist ein Gegenbeispiel, kein
+Beispiel.
+
+Der Meilenstein steht ausformuliert in `TauCeti/MartingaleProblems/README.md`.
+Reihenfolge:
+
+1. **Das Akzeptanzbeispiel zuerst, nicht zuletzt.** `E = ℕ`, `lam ≡ 1`,
+   `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x`: der Poissonprozeß. Es
+   instanziiert jede Einzelheit des Meilensteins auf einmal, und wenn eine
+   Definition der Meilensteine 1--3 nicht trägt, bricht es hier und nicht in
+   einem allgemeinen Satz. Das ist die Lehre aus dem 2026-09-08: ein acceptance
+   example, das nur dasteht, prüft nichts.
+2. `jumpProcess lam mu nu` als Konstruktion auf einem expliziten
+   Wahrscheinlichkeitsraum, mit càdlàg und stückweise konstanten Pfaden. Der
+   Unterbau ist da und braucht **keine Topologie**:
+   `ProbabilityTheory.exists_kernel_pi_of_markov`
+   (`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`, aus Mathlibs
+   Ionescu--Tulcea `Kernel.traj`) für die Kette,
+   `ProbabilityTheory.exponentialPDF` für die Wartezeiten.
+3. `jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`.
+4. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
+   Roadmap „no analysis beyond `NormedSpace`".
+5. Der lokale Fall und die pfadabhängige Variante zuletzt; sie liefern die
+   Beispiele für die Meilensteine 7 und 9.
+
+**Was zählt:** eine in Lean bewiesene Lösung eines Martingalproblems. **Was nicht
+zählt:** ein Prädikat, das sagt, was eine Lösung wäre.
+
 ### ~~Aufgabe: die nächsten vier Läufe an `SkorokhodSpace`~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, neunzehnter Lauf des Tages)*
 
 **Ergebnis** in `Facts/INVENTAR.md`, Läufe, die vier Abschnitte vom sechzehnten
