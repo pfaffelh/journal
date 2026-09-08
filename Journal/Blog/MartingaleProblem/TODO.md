@@ -127,6 +127,47 @@ Aussage abschreiben, Voraussetzungen schwächen, denselben Beweis laufen lassen,
 sehen wo er bricht. Geht es durch, ist es ein kleiner PR, der mit unserer
 Roadmap nichts zu tun hat und trotzdem aus ihr fällt.
 
+## 7. Zwei Kleinigkeiten, die aus dem 8. September übrigblieben
+
+Beides klein, beides nicht dringend, beides ausdrücklich **nicht** an die Läufe
+gegeben.
+
+**a) Die Werkstattdatei einsortieren.** `exists_kernel_pi_of_markov` liegt in
+`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`. Sie beweist aus Mathlibs
+Ionescu--Tulcea (`ProbabilityTheory.Kernel.traj`) über bloßem
+`[MeasurableSpace E]` einen Markovkern `η : Kernel E (ℕ → E)` mit vorgegebenen
+Rändern, übersetzt gegen v4.33.1 und hängt an nichts als `propext`,
+`Classical.choice`, `Quot.sound`. Für uns ist sie richtig abgelegt; eine
+Tau-Ceti-Roadmap soll aber keinen Werkstattkram enthalten. Vor der Einreichung
+also entweder in `Suggested.lean` aufnehmen — dort gehört sie hin, wenn
+`KolmogorovExtension` das abzählbare Produkt braucht — oder aus dem
+Einreichungsbaum heraus.
+
+**b) Ionescu--Tulcea über einen allgemeinen Index.** Mathlibs `Traj.lean` ist auf
+`{X : ℕ → Type*}` festgelegt, während die Hilfsdatei `Maps.lean` daneben schon
+für `[LinearOrder ι] [LocallyFiniteOrder ι] [DecidableLE ι]` geschrieben ist —
+die Tür steht also offen und ist nicht durchschritten.
+
+*Was es wert ist:* wenig Mathematik, etwas Bequemlichkeit. Eine lokal endliche
+lineare Ordnung mit kleinstem Element ist ordnungsisomorph zu einem Anfangsstück
+von $\mathbb N$ (jedes $x$ hat wegen $|[\bot,x]|<\infty$ endlichen Rang, und
+$x \mapsto |[\bot,x)|$ ist der Isomorphismus), es wäre also Umindizierung, kein
+Satz. Für uns trotzdem an einer bekannten Stelle nützlich: die Gitter
+$h\cdot\mathbb Z_{\ge 0}$ aus `rem:skorokhodform` sind isomorph zu $\mathbb N$,
+aber nicht definitionsgleich, und heute müßte man den Isomorphismus jedesmal von
+Hand durchschieben.
+
+*Und wo die Grenze liegt:* weiter geht es nicht. Ionescu--Tulcea iteriert Kerne
+und braucht eine Nachfolgerstruktur; für überabzählbaren Index — also unser
+eigentliches $\T=[0,\infty)$ — gibt es keine Fassung. Dort ist Kolmogorov
+zuständig, und der verlangt eine Voraussetzung an den Raum. Das ist die
+Arbeitsteilung der beiden Sätze, keine Lücke:
+
+| | Index | Voraussetzung an den Raum |
+|---|---|---|
+| Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
+| Kolmogorov | beliebig | standard-borelsch o. ä. |
+
 ## Was inzwischen ohne Dich läuft
 
 78 Läufe bisher, seit dem 7. September stündlich, Opus 5. Am 7./8. September
