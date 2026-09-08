@@ -161,7 +161,19 @@ kein gebautes Mathlib und taugt zu nichts.
    Laufbericht im Inventar; ihr Bauplan ist im selben Lauf berichtigt worden,
    weil er auf `((0,1], Lebesgue)` allein nicht durchgeht.*
 
-   *Nachtrag desselben Laufs zu `WeakConvergence`: gemessen sind es **48
+   *Zwischenstand 2026-09-08, siebter Lauf des Tages: `WeakConvergence` steht
+   weiterhin bei **zwei** `sorry` und denselben zwei bekannten Fehlern, aber die
+   einstufige Kopplung ist bewiesen — `exists_coupling_of_partition` und
+   `exists_coupling_of_tendsto`, dazu `condLaw` mit vier Hilfssätzen. Der
+   Bauplan (b1)–(b3) des Vorlaufs hat sich dabei auf (b1) und (b3) verkürzt:
+   (b2), der Produktraum, ist entfallen, weil der gemeinsame Raum `E × E` ist
+   und nicht `((0,1], Lebesgue) × Measure.pi`. Der nächste Schritt in dieser
+   Datei ist `exists_ae_tendsto_of_tendsto` selbst, in drei benannten Stücken
+   (c1)–(c3) im Laufbericht im Inventar; (c2) — das Verkleben der Stufen zu
+   **einem** Raum — ist der einzige, der eine Entscheidung verlangt, und die
+   Frage daran ist, ob er `E` polnisch statt bloß separabel braucht.*
+
+   *Nachtrag des sechsten Laufs zu `WeakConvergence`: gemessen sind es **48
    Deklarationen und 18 `sorry`**, nicht 50 und 21; und der Übersetzer meldet
    `rc = 1`, an genau einer Stelle und mit Absicht — der Modulkopf sagt seit dem
    2026-09-06, daß `tendsto_map_of_measure_setOf_continuousAt_eq_one` für
