@@ -485,6 +485,46 @@ Under (B), with `E` a pseudometric space:
   each of its interior points, so `of_forall_eventuallyEq` assembles the two.
   This is what Milestone 5 actually consumes, since its estimate is windowed and
   never global.
+* `IsCadlag.exists_subdivision`: **the structure theorem, and the rung
+  Milestones 5 and 7 share.** For `f` càdlàg, `a ≤ b`, `Set.Icc a b` compact and
+  `ε > 0` there are `n` and a strictly monotone `t : Fin (n+1) → ι` from `a` to
+  `b` with `dist (f x) (f (t i.castSucc)) ≤ ε` for every `x` in every cell
+  `Set.Ico (t i.castSucc) (t i.succ)`. Proved (2026-09-08). The proof is a least
+  upper bound argument and **not** an induction, because the cells cannot be
+  chosen in advance: their lengths are dictated by the jumps of `f` and may
+  shrink to `0`. Let `S` be the set of endpoints reachable by such a subdivision
+  and `c` the greatest point of `closure S`; the left limit at `c` puts `c` in
+  `S` and right continuity at `c` would push past it if `c < b`. Compactness of
+  the window is a **hypothesis** and not `ProperSpace ι`, so the statement also
+  serves an index whose closed balls are not compact; `AdditiveDist` and the
+  metric of the index do not enter. `exists_snoc_subdivision` is the one
+  combinatorial step, `Fin.snoc`, with no càdlàg hypothesis and no topology.
+* `stepRetract t`, the retraction of the index onto the range of a finite tuple
+  — every point goes to the greatest entry below it, and to `t 0` if there is
+  none — with `stepRetract_eq_of_forall_le`, `stepRetract_eq_first` and
+  `stepRetract_mem_range`. Written and proved (2026-09-08). The step path of
+  Milestone 5 is `f ∘ stepRetract t`, built as a composition rather than a case
+  distinction so that the càdlàg proof is one lemma about the retraction alone.
+* `IsCadlag.of_eventually_const`: a map constant on a right neighbourhood of
+  every point and on a left neighbourhood of every point is càdlàg. Proved
+  (2026-09-08). The degenerate cases need no separate treatment: at a greatest
+  element `𝓝[>] x = ⊥` and at a least one `𝓝[<] x = ⊥`.
+* `eventually_stepRetract_eq_nhdsGT` and
+  `exists_eventually_stepRetract_eq_nhdsLT`: the retraction is locally constant,
+  to the right and to the left. Proved (2026-09-08), through the greatest index
+  with `t i ≤ x` and the greatest with `t i < x` respectively.
+* `isCadlag_comp_stepRetract`: **the step path is càdlàg, and the path it is
+  read off need not be.** Proved (2026-09-08). It rests on the local constancy
+  of the retraction alone, which is why the hypothesis is absent rather than
+  unused.
+* `finite_range_comp_stepRetract`: the step path takes finitely many values.
+  Proved (2026-09-08). This is what the counting of Milestone 5 needs, and it is
+  the only reason the retraction runs over a `Finset`.
+* `dist_comp_stepRetract_le`: on `Set.Icc (t 0) (t (Fin.last n))` the step path
+  is uniformly `ε`-close to its path when the cells carry `ε`. Proved
+  (2026-09-08), and the tuple need **not** be strictly monotone: the retraction
+  reads the greatest index out of a `Finset`, so a repeated entry changes which
+  value is taken but not that it is taken inside a cell of the hypothesis.
 
 **Acceptance examples.**
 
@@ -1109,20 +1149,42 @@ owes.
   `ε` (`Mathlib/Topology/MetricSpace/Pseudo/Basic.lean:247`), then the instance
   `TopologicalSpace.SecondCountableTopology.to_separableSpace`
   (`Mathlib/Topology/Bases.lean:896`) — and it splits into two
-  halves of very different weight. The light half is the approximation of a
-  càdlàg path by a step path **at its own jump times**, which is uniform on the
-  window and therefore needs no time change at all; it is the subdivision of
-  Milestone 7 and it will come with `tendsto_modulus`. The heavy half is moving
-  those jump times onto the countable set, and it is a statement about the
-  index and not about the paths: it asks for a time change of small norm
-  carrying finitely many prescribed points onto finitely many nearby ones. Since
-  2026-09-08 the place to make it is named — `TimeChange.exists_of_lengthCoord`
-  of Milestone 3 — and so is the condition it has to meet: the piecewise linear
-  `φ` that does the moving must carry the range of `lengthCoord t₀` onto itself.
-  On `ι = ℝ` every piecewise linear `φ` does; on `ι = h • ℤ` only the identity
-  does, and there the countable dense set is the index itself and the jump times
-  need no moving. **The milestone therefore owes the interpolation lemma on the
-  range of the coordinate**, not a construction on `ℝ`.
+  halves of very different weight. **The light half is proved** (2026-09-08):
+  `SkorokhodSpace.exists_finite_range_distWith_le` gives, for every `f`, every
+  `ε > 0` and every radius `M`, a `g : D ι E` with finite range and
+  `distWith t₀ u 1 f g ≤ ε` for all `u ≤ M` — the approximation of a càdlàg path
+  by a step path **at its own jump times**, uniform on the window, for the
+  identity time change. It is `IsCadlag.exists_subdivision` of Milestone 2 read
+  through `stepRetract`, the retraction of the index onto the range of a finite
+  tuple. The heavy half is moving those jump times onto the countable set, and
+  it is a statement about the index and not about the paths: it asks for a time
+  change of small norm carrying finitely many prescribed points onto finitely
+  many nearby ones. Since 2026-09-08 the place to make it is named —
+  `TimeChange.exists_of_lengthCoord` of Milestone 3 — and so is the condition it
+  has to meet: the piecewise linear `φ` that does the moving must carry the
+  range of `lengthCoord t₀` onto itself. On `ι = ℝ` every piecewise linear `φ`
+  does; on `ι = h • ℤ` only the identity does, and there the countable dense set
+  is the index itself and the jump times need no moving. **The milestone
+  therefore owes the interpolation lemma on the range of the coordinate**, not a
+  construction on `ℝ`.
+* `SkorokhodSpace.exists_countable_timeChangeInvariant`: a countable `C ⊆ ι`
+  that is dense **and** contains every point that no time change moves. This is
+  the set the jump times of the countable family are drawn from, and it is not
+  an arbitrary countable dense subset of `ι`, which is the finding of
+  2026-09-08. On `ι = Set.Icc (0 : ℝ) 1` with base point `0` every time change
+  is an order isomorphism of a linear order with a greatest element and
+  therefore fixes `1`; the càdlàg path `f = Set.indicator {1} 1` then keeps its
+  distance from every step path whose jump times avoid `1`, since such a `g` is
+  constant on `[d, 1]` for its last jump time `d < 1` and its value `c` there
+  has to answer both `f (l 1) = 1` and `f (l d) = 0`, so
+  `distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1/2` for every `l` and every `u ≥ 1`,
+  whence `intDist t₀ f g ≥ exp (-1) / 2`. A countable dense subset of
+  `Set.Icc (0 : ℝ) 1` need not contain `1`. The construction is the mirror of
+  `rightIsolated` and `exists_countable_ciSup_eq` of Milestone 2, which close the
+  same gap for suprema: a dense set plus a countable exceptional set, the latter
+  countable because `exists_orderIso_isometry_real` of Milestone 1 exhibits the
+  index as a closed subset of `ℝ` and the immovable points as the boundaries of
+  its connected components.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
@@ -1237,7 +1299,11 @@ owes.
   same choice pays a second time in `isCompact_closure_iff`, where
   `⨆ f ∈ A, modulus …` over an unbounded family would again be a junk `0`.
 * `SkorokhodSpace.tendsto_modulus`: `modulus m f δ → 0` as `δ → 0`, for each
-  fixed `f` and `m`. This is the càdlàg property in quantitative form.
+  fixed `f` and `m`. This is the càdlàg property in quantitative form. Proved
+  (2026-09-08) out of `IsCadlag.exists_subdivision` of Milestone 2 and one
+  observation: the gaps of a strictly monotone subdivision are finitely many and
+  each positive, so some `δ₀ > 0` lies below all of them, and every `δ < δ₀`
+  admits that same subdivision as a `δ`-sparse one.
 * `modulus` is monotone in `δ` and in `m`. `SkorokhodSpace.modulus_mono`, the
   monotonicity in `δ`, is proved (2026-09-08): a `δ₂`-sparse subdivision is
   `δ₁`-sparse for every smaller `δ₁`, so the infimum runs over a larger set.

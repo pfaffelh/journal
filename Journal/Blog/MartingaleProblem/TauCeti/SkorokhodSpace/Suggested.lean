@@ -20,12 +20,29 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-08.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  There are **five** of them since the
-twenty-fourth run of 2026-09-08, which proved `exists_orderIso_isometry_real`
-and with it closed Milestone 1: `SkorokhodSpace.instSeparableSpace`, the one
-commitment of Milestone 5 still open, the two of Milestone 6 and the two of
-Milestone 7.  `SkorokhodSpace.instCompleteSpace` was the other of Milestone 5,
-and it is **proved** since the twenty-third run of 2026-09-08.
+proofs, which is what this file is for.  There are **four** of them since the
+twenty-fifth run of 2026-09-08, which proved `SkorokhodSpace.tendsto_modulus`:
+`SkorokhodSpace.instSeparableSpace`, the one commitment of Milestone 5 still
+open, the two of Milestone 6 and the compactness criterion of Milestone 7.
+`SkorokhodSpace.instCompleteSpace` was the other of Milestone 5, and it is
+**proved** since the twenty-third run of 2026-09-08;
+`exists_orderIso_isometry_real` closed Milestone 1 in the twenty-fourth.
+
+**The subdivision of a càdlàg path is the rung Milestones 5 and 7 share**, and
+it is proved: `IsCadlag.exists_subdivision` cuts a compact window into finitely
+many cells on which the path varies by at most `ε`.  It is a least upper bound
+argument and not an induction, since the cells are dictated by the jumps and may
+shrink to `0`; `exists_snoc_subdivision` is the one combinatorial step in it.
+Milestone 7 reads it as `SkorokhodSpace.tendsto_modulus`, a subdivision being
+`δ`-sparse for every `δ` under its least gap, and Milestone 5 reads it through
+`stepRetract`, the retraction of the index onto the range of a finite tuple:
+`isCadlag_comp_stepRetract` says the step path is càdlàg for **every** path it
+is read off, `finite_range_comp_stepRetract` that it has finitely many values,
+and `SkorokhodSpace.exists_finite_range_distWith_le` that it is within `ε` of
+its path on every window, for the identity time change.  What separability still
+owes is the passage to a *countable* family, and the obstruction to drawing the
+jump times from an arbitrary countable dense subset of `ι` is recorded at
+`SkorokhodSpace.instSeparableSpace`.
 
 **The index is a closed subset of `ℝ`, and now by a named map.**
 `lengthCoord t₀` is the signed distance to the base point; it is a strictly
@@ -1063,6 +1080,344 @@ theorem IsCadlag.isBounded_image_of_isCompact {f : ι → E} (hf : IsCadlag f)
   rintro _ ⟨y, hyK, rfl⟩
   obtain ⟨x, hxs, hx⟩ := Set.mem_iUnion₂.1 (hsub hyK)
   exact Set.mem_iUnion₂.2 ⟨x, hxs, by simpa [Metric.mem_closedBall] using hx⟩
+
+/-! ### Subdivisions with small oscillation
+
+This is the structure theorem for càdlàg paths on a compact window, and it is
+the rung that Milestones 5 and 7 share: Milestone 7 reads it as
+`SkorokhodSpace.tendsto_modulus`, since a subdivision with oscillation below
+`ε` is `δ`-sparse for every `δ` below its least gap, and the separability of
+Milestone 5 reads it as the step path that approximates a given one.  Nothing
+below mentions the metric of the index or its properness; the window enters as
+a compact set and the order topology does the rest. -/
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- Appending one point to a subdivision.  This is the only combinatorial step
+of `IsCadlag.exists_subdivision`, and it is `Fin.snoc`: the tuple grows by one
+at the top, the old cells are unchanged and the new cell is `Set.Ico s c`.
+There is no càdlàg hypothesis and no topology --- the oscillation bound on the
+new cell is an assumption here and is supplied by the caller, once from a left
+limit and once from right continuity. -/
+theorem exists_snoc_subdivision {f : ι → E} {ε : ℝ} {a s c : ι} {n : ℕ}
+    {t : Fin (n + 1) → ι} (ht : StrictMono t) (h0 : t 0 = a)
+    (hlast : t (Fin.last n) = s)
+    (hcell : ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
+      dist (f x) (f (t i.castSucc)) ≤ ε)
+    (hsc : s < c) (hnew : ∀ x ∈ Set.Ico s c, dist (f x) (f s) ≤ ε) :
+    ∃ t' : Fin (n + 1 + 1) → ι, StrictMono t' ∧ t' 0 = a ∧
+      t' (Fin.last (n + 1)) = c ∧
+      ∀ i : Fin (n + 1), ∀ x ∈ Set.Ico (t' i.castSucc) (t' i.succ),
+        dist (f x) (f (t' i.castSucc)) ≤ ε := by
+  have hle : ∀ i : Fin (n + 1), t i ≤ s := fun i => hlast ▸ ht.monotone (Fin.le_last i)
+  refine ⟨Fin.snoc t c, ?_, ?_, ?_, ?_⟩
+  · intro i j hij
+    cases j using Fin.lastCases with
+    | last =>
+      obtain ⟨i, rfl⟩ := Fin.eq_castSucc_of_ne_last (Fin.ne_last_of_lt hij)
+      rw [Fin.snoc_castSucc, Fin.snoc_last]
+      exact lt_of_le_of_lt (hle i) hsc
+    | cast j =>
+      obtain ⟨i, rfl⟩ :=
+        Fin.eq_castSucc_of_ne_last (Fin.ne_last_of_lt (hij.trans (Fin.castSucc_lt_last j)))
+      rw [Fin.snoc_castSucc, Fin.snoc_castSucc]
+      exact ht (by simpa using hij)
+  · rw [show (0 : Fin (n + 1 + 1)) = (0 : Fin (n + 1)).castSucc from rfl, Fin.snoc_castSucc]
+    exact h0
+  · exact Fin.snoc_last _ _
+  · intro i x hx
+    cases i using Fin.lastCases with
+    | last =>
+      simp only [Fin.succ_last, Fin.snoc_last, Fin.snoc_castSucc, hlast] at hx ⊢
+      exact hnew x hx
+    | cast j =>
+      simp only [Fin.succ_castSucc, Fin.snoc_castSucc] at hx ⊢
+      exact hcell j x hx
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- **Every càdlàg path admits an `ε`-fine subdivision of a compact window.**
+Billingsley's Lemma 1 of §12, and the statement Milestone 7's modulus is built
+to measure: the window `Set.Icc a b` is cut into finitely many cells
+`Set.Ico (t i) (t (i+1))` on each of which `f` stays within `ε` of the value at
+the left endpoint.
+
+The proof is the least upper bound argument and not an induction, because the
+cells cannot be chosen in advance: their lengths are dictated by the jumps of
+`f` and may shrink to `0`.  Let `S` be the set of endpoints reachable by such a
+subdivision and `c` the greatest point of its closure, which exists because the
+window is compact.  The left limit at `c` shows `c ∈ S` --- pick a reachable
+`s` inside the interval on which `f` stays within `ε/2` of the left limit, and
+append `c` --- and right continuity at `c` would push past it if `c < b`, so
+`c = b`.
+
+Properness of the index is not used: the compactness of the window is a
+hypothesis, so the statement also serves an index whose closed balls are not
+compact.  Only the order topology and the metric on `E` enter. -/
+theorem IsCadlag.exists_subdivision {f : ι → E} (hf : IsCadlag f) {a b : ι} (hab : a ≤ b)
+    (hK : IsCompact (Set.Icc a b)) {ε : ℝ} (hε : 0 < ε) :
+    ∃ (n : ℕ) (t : Fin (n + 1) → ι), StrictMono t ∧ t 0 = a ∧ t (Fin.last n) = b ∧
+      ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
+        dist (f x) (f (t i.castSucc)) ≤ ε := by
+  set S : Set ι := {s | s ∈ Set.Icc a b ∧ ∃ (n : ℕ) (t : Fin (n + 1) → ι),
+      StrictMono t ∧ t 0 = a ∧ t (Fin.last n) = s ∧
+      ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
+        dist (f x) (f (t i.castSucc)) ≤ ε} with hSdef
+  have hsm1 : StrictMono (fun _ : Fin (0 + 1) => a) := by
+    intro i j hij
+    have hi := i.isLt
+    have hj := j.isLt
+    have hij' : (i : ℕ) < (j : ℕ) := hij
+    omega
+  have haS : a ∈ S := ⟨⟨le_rfl, hab⟩, 0, fun _ => a, hsm1, rfl, rfl, fun i => i.elim0⟩
+  have hclos : closure S ⊆ Set.Icc a b := by
+    have : closure S ⊆ closure (Set.Icc a b) := closure_mono fun s hs => hs.1
+    rwa [isClosed_Icc.closure_eq] at this
+  obtain ⟨c, hcmem, hcub⟩ :=
+    (hK.of_isClosed_subset isClosed_closure hclos).exists_isGreatest ⟨a, subset_closure haS⟩
+  have hcS : ∀ s ∈ S, s ≤ c := fun s hs => hcub (subset_closure hs)
+  have hcIcc : c ∈ Set.Icc a b := hclos hcmem
+  -- `c` is approached from the left by points of `S`, unless it is the least one
+  have hbelow : ∀ y : ι, y < c → ∃ s ∈ S, y < s := by
+    intro y hy
+    by_contra hcon
+    push_neg at hcon
+    have hsub : closure S ⊆ Set.Iic y := closure_minimal (fun s hs => hcon s hs) isClosed_Iic
+    exact absurd (hsub hcmem) (not_le.2 hy)
+  -- the greatest point of the closure is itself reachable
+  have hPc : c ∈ S := by
+    rcases eq_or_lt_of_le hcIcc.1 with hac | hac
+    · exact hac ▸ haS
+    obtain ⟨y, hyc, hsub⟩ : ∃ y, y < c ∧
+        ∀ z ∈ Set.Ioo y c, dist (f z) (Function.leftLim f c) ≤ ε / 2 := by
+      have hA : {z | dist (f z) (Function.leftLim f c) ≤ ε / 2} ∈ 𝓝[<] c := by
+        filter_upwards [Metric.tendsto_nhds.1 (hf.tendsto_leftLim c) (ε / 2) (by positivity)]
+          with z hz using hz.le
+      obtain ⟨y, hy, hsub⟩ := (mem_nhdsLT_iff_exists_Ioo_subset' hac).1 hA
+      exact ⟨y, hy, fun z hz => hsub hz⟩
+    obtain ⟨s, hsS, hys⟩ := hbelow y hyc
+    rcases eq_or_lt_of_le (hcS s hsS) with rfl | hsc
+    · exact hsS
+    obtain ⟨-, n, t, ht, h0, hlast, hcell⟩ := hsS
+    have hnew : ∀ x ∈ Set.Ico s c, dist (f x) (f s) ≤ ε := by
+      intro x hx
+      have hxm : x ∈ Set.Ioo y c := ⟨lt_of_lt_of_le hys hx.1, hx.2⟩
+      have hsm : s ∈ Set.Ioo y c := ⟨hys, hsc⟩
+      calc dist (f x) (f s)
+          ≤ dist (f x) (Function.leftLim f c) + dist (Function.leftLim f c) (f s) :=
+            dist_triangle _ _ _
+        _ ≤ ε / 2 + ε / 2 :=
+            add_le_add (hsub x hxm) (by rw [dist_comm]; exact hsub s hsm)
+        _ = ε := by ring
+    obtain ⟨t', ht', h0', hlast', hcell'⟩ := exists_snoc_subdivision ht h0 hlast hcell hsc hnew
+    exact ⟨hcIcc, n + 1, t', ht', h0', hlast', hcell'⟩
+  -- and it is the right endpoint, for otherwise right continuity would push past it
+  rcases eq_or_lt_of_le hcIcc.2 with hcb | hcb
+  · exact hcb ▸ hPc.2
+  exfalso
+  obtain ⟨u, hu, hsubu⟩ : ∃ u, c < u ∧ ∀ z ∈ Set.Ico c u, dist (f z) (f c) ≤ ε := by
+    have hB : {z | dist (f z) (f c) ≤ ε} ∈ 𝓝[≥] c := by
+      have h2 : Tendsto f (𝓝[≥] c) (𝓝 (f c)) :=
+        continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous c)
+      filter_upwards [Metric.tendsto_nhds.1 h2 ε hε] with z hz using hz.le
+    obtain ⟨u, hu, hsub⟩ := (mem_nhdsGE_iff_exists_Ico_subset' hcb).1 hB
+    exact ⟨u, hu, fun z hz => hsub hz⟩
+  obtain ⟨-, n, t, ht, h0, hlast, hcell⟩ := hPc
+  have hcz : c < min u b := lt_min hu hcb
+  have hnew : ∀ x ∈ Set.Ico c (min u b), dist (f x) (f c) ≤ ε := fun x hx =>
+    hsubu x ⟨hx.1, lt_of_lt_of_le hx.2 (min_le_left _ _)⟩
+  obtain ⟨t', ht', h0', hlast', hcell'⟩ := exists_snoc_subdivision ht h0 hlast hcell hcz hnew
+  have hzS : min u b ∈ S :=
+    ⟨⟨le_trans hcIcc.1 hcz.le, min_le_right _ _⟩, n + 1, t', ht', h0', hlast', hcell'⟩
+  exact absurd (hcS _ hzS) (not_le.2 hcz)
+
+/-! ### Step paths
+
+The approximating family of Milestone 5 consists of paths that are constant
+between finitely many jump times, and this is their construction.
+`stepRetract t` is the retraction of the index onto the range of a strictly
+monotone tuple --- every point goes to the greatest entry below it, and to the
+first entry if there is none --- so that `f ∘ stepRetract t` reads `f` at the
+subdivision points and holds each value until the next one.  It is càdlàg for
+**every** `f`, càdlàg or not, because `stepRetract t` is locally constant: to
+the right of every point outright, and to the left of every point as well, the
+tuple being finite. -/
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- A map that is constant on a right neighbourhood of every point and constant
+on a left neighbourhood of every point is càdlàg.  The two degenerate cases need
+no separate treatment: at a top element `𝓝[>] x` is `⊥` and at a bottom element
+`𝓝[<] x` is `⊥`, and an eventually constant map along `⊥` is anything at all. -/
+theorem IsCadlag.of_eventually_const {h : ι → E}
+    (hr : ∀ x : ι, ∀ᶠ y in 𝓝[>] x, h y = h x)
+    (hl : ∀ x : ι, ∃ c : E, ∀ᶠ y in 𝓝[<] x, h y = c) : IsCadlag h := by
+  refine ⟨fun x => ?_, fun x => ?_⟩
+  · exact Filter.Tendsto.congr' (by filter_upwards [hr x] with y hy using hy.symm)
+      tendsto_const_nhds
+  · obtain ⟨c, hc⟩ := hl x
+    exact ⟨c, Filter.Tendsto.congr' (by filter_upwards [hc] with y hy using hy.symm)
+      tendsto_const_nhds⟩
+
+/-- The retraction of the index onto the range of a strictly monotone tuple:
+`x` goes to the greatest entry `t i` with `t i ≤ x`, and to `t 0` when there is
+none.  The junk branch is not junk: it is what makes the step path constant
+below the window instead of undefined there, exactly as `clamp` does for the
+window. -/
+noncomputable def stepRetract {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) : ι :=
+  if h : (Finset.univ.filter fun i => t i ≤ x).Nonempty then
+    t ((Finset.univ.filter fun i => t i ≤ x).max' h)
+  else t 0
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The defining property of `stepRetract`: it is `t i` at every `x` for which
+`i` is the greatest index below `x`. -/
+theorem stepRetract_eq_of_forall_le {n : ℕ} {t : Fin (n + 1) → ι} {x : ι} {i : Fin (n + 1)}
+    (hi : t i ≤ x) (hmax : ∀ j : Fin (n + 1), t j ≤ x → j ≤ i) :
+    stepRetract t x = t i := by
+  have hmem : i ∈ Finset.univ.filter fun j => t j ≤ x :=
+    Finset.mem_filter.2 ⟨Finset.mem_univ _, hi⟩
+  rw [stepRetract, dif_pos ⟨i, hmem⟩]
+  congr 1
+  exact le_antisymm (hmax _ (Finset.mem_filter.1 (Finset.max'_mem _ ⟨i, hmem⟩)).2)
+    (Finset.le_max' _ _ hmem)
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- Below the tuple the retraction is its first entry. -/
+theorem stepRetract_eq_first {n : ℕ} {t : Fin (n + 1) → ι} (ht : StrictMono t) {x : ι}
+    (hx : x < t 0) : stepRetract t x = t 0 := by
+  have hne : ¬ (Finset.univ.filter fun j => t j ≤ x).Nonempty := by
+    rintro ⟨j, hj⟩
+    exact absurd (le_trans (ht.monotone (Fin.zero_le j)) (Finset.mem_filter.1 hj).2)
+      (not_le.2 hx)
+  rw [stepRetract, dif_neg hne]
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The retraction lands in the tuple, which is what makes the step path take
+finitely many values. -/
+theorem stepRetract_mem_range {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) :
+    stepRetract t x ∈ Set.range t := by
+  rw [stepRetract]
+  split
+  · exact ⟨_, rfl⟩
+  · exact ⟨0, rfl⟩
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- The retraction is constant on a right neighbourhood of every point: either
+`x` lies below the tuple, and the retraction is `t 0` up to `t 0`; or the
+greatest index below `x` is the last one, and the retraction is constant from
+`x` on; or it is `t i` up to the next entry. -/
+theorem eventually_stepRetract_eq_nhdsGT {n : ℕ} {t : Fin (n + 1) → ι} (ht : StrictMono t)
+    (x : ι) : ∀ᶠ y in 𝓝[>] x, stepRetract t y = stepRetract t x := by
+  by_cases hx : x < t 0
+  · filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds hx)] with y hy
+    rw [stepRetract_eq_first ht hy, stepRetract_eq_first ht hx]
+  · have hx' : t 0 ≤ x := not_lt.1 hx
+    have hne : (Finset.univ.filter fun j : Fin (n + 1) => t j ≤ x).Nonempty :=
+      ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ _, hx'⟩⟩
+    set i := (Finset.univ.filter fun j : Fin (n + 1) => t j ≤ x).max' hne with hidef
+    have hix : t i ≤ x := (Finset.mem_filter.1 (Finset.max'_mem _ hne)).2
+    have hmax : ∀ j : Fin (n + 1), t j ≤ x → j ≤ i := fun j hj =>
+      Finset.le_max' _ j (Finset.mem_filter.2 ⟨Finset.mem_univ _, hj⟩)
+    have hxeq : stepRetract t x = t i := stepRetract_eq_of_forall_le hix hmax
+    by_cases hlast : i = Fin.last n
+    · filter_upwards [eventually_mem_nhdsWithin] with y hy
+      rw [hxeq]
+      exact stepRetract_eq_of_forall_le (hix.trans (le_of_lt hy))
+        fun j _ => hlast ▸ Fin.le_last j
+    · obtain ⟨j, hj⟩ := Fin.eq_castSucc_of_ne_last hlast
+      have hxj : x < t j.succ := by
+        by_contra hcon
+        have hle := hmax _ (not_lt.1 hcon)
+        rw [← hj] at hle
+        exact absurd hle (not_le.2 (Fin.castSucc_lt_succ (i := j)))
+      filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds hxj), eventually_mem_nhdsWithin]
+        with y hy hy'
+      rw [hxeq]
+      refine stepRetract_eq_of_forall_le (hix.trans (le_of_lt hy')) fun k hk => ?_
+      by_contra hcon
+      have hjk : j.succ ≤ k := by
+        rw [← hj] at hcon
+        simp only [not_le, Fin.lt_def, Fin.le_def, Fin.coe_castSucc, Fin.val_succ] at hcon ⊢
+        omega
+      exact absurd (le_trans (ht.monotone hjk) hk) (not_le.2 hy)
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- And constant on a left neighbourhood of every point, by the same reading of
+the greatest index *strictly* below `x`. -/
+theorem exists_eventually_stepRetract_eq_nhdsLT {n : ℕ} {t : Fin (n + 1) → ι}
+    (ht : StrictMono t) (x : ι) : ∃ c : ι, ∀ᶠ y in 𝓝[<] x, stepRetract t y = c := by
+  by_cases hx : t 0 < x
+  · have hne : (Finset.univ.filter fun j : Fin (n + 1) => t j < x).Nonempty :=
+      ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ _, hx⟩⟩
+    set i := (Finset.univ.filter fun j : Fin (n + 1) => t j < x).max' hne with hidef
+    have hix : t i < x := (Finset.mem_filter.1 (Finset.max'_mem _ hne)).2
+    have hmax : ∀ j : Fin (n + 1), t j < x → j ≤ i := fun j hj =>
+      Finset.le_max' _ j (Finset.mem_filter.2 ⟨Finset.mem_univ _, hj⟩)
+    refine ⟨t i, ?_⟩
+    filter_upwards [nhdsWithin_le_nhds (Ioi_mem_nhds hix), eventually_mem_nhdsWithin]
+      with y hy hy'
+    exact stepRetract_eq_of_forall_le (le_of_lt hy) fun k hk => hmax k (lt_of_le_of_lt hk hy')
+  · refine ⟨t 0, ?_⟩
+    filter_upwards [eventually_mem_nhdsWithin] with y hy
+    exact stepRetract_eq_first ht (lt_of_lt_of_le hy (not_lt.1 hx))
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- **The step path is càdlàg**, and `f` need not be: the retraction is locally
+constant, so the composite is locally constant, and a locally constant map is
+càdlàg by `IsCadlag.of_eventually_const`. -/
+theorem isCadlag_comp_stepRetract (f : ι → E) {n : ℕ} {t : Fin (n + 1) → ι}
+    (ht : StrictMono t) : IsCadlag fun x => f (stepRetract t x) := by
+  refine IsCadlag.of_eventually_const (fun x => ?_) (fun x => ?_)
+  · filter_upwards [eventually_stepRetract_eq_nhdsGT ht x] with y hy using by rw [hy]
+  · obtain ⟨c, hc⟩ := exists_eventually_stepRetract_eq_nhdsLT ht x
+    exact ⟨f c, by filter_upwards [hc] with y hy using by rw [hy]⟩
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [MetricSpace E] in
+/-- The step path takes finitely many values.  This is what makes the family of
+step paths countable once the tuple and the values run over countable sets, and
+it is the only reason the retraction is defined through a `Finset`. -/
+theorem finite_range_comp_stepRetract (f : ι → E) {n : ℕ} (t : Fin (n + 1) → ι) :
+    (Set.range fun x => f (stepRetract t x)).Finite := by
+  refine Set.Finite.subset ((Set.finite_range t).image f) ?_
+  rintro _ ⟨x, rfl⟩
+  exact ⟨stepRetract t x, stepRetract_mem_range t x, rfl⟩
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- **The step path of an `ε`-fine subdivision is uniformly `ε`-close to the
+path on the window it subdivides.**  This is the half of the separability of
+Milestone 5 that needs no time change: the approximant has the same jump times
+as `f`, and only the passage to a *countable* family has to move them.
+
+The tuple is not assumed strictly monotone, and the linter is right that it need
+not be: the retraction reads the *greatest* index below `x` out of a `Finset`,
+so a repeated or misordered entry changes which value is taken but not that the
+value is taken inside a cell of the hypothesis. -/
+theorem dist_comp_stepRetract_le {f : ι → E} {n : ℕ} {t : Fin (n + 1) → ι}
+    {ε : ℝ} (hε : 0 ≤ ε)
+    (hcell : ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
+      dist (f x) (f (t i.castSucc)) ≤ ε)
+    {x : ι} (hx : x ∈ Set.Icc (t 0) (t (Fin.last n))) :
+    dist (f x) (f (stepRetract t x)) ≤ ε := by
+  have hne : (Finset.univ.filter fun j : Fin (n + 1) => t j ≤ x).Nonempty :=
+    ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ _, hx.1⟩⟩
+  set i := (Finset.univ.filter fun j : Fin (n + 1) => t j ≤ x).max' hne with hidef
+  have hix : t i ≤ x := (Finset.mem_filter.1 (Finset.max'_mem _ hne)).2
+  have hmax : ∀ j : Fin (n + 1), t j ≤ x → j ≤ i := fun j hj =>
+    Finset.le_max' _ j (Finset.mem_filter.2 ⟨Finset.mem_univ _, hj⟩)
+  rw [stepRetract_eq_of_forall_le hix hmax]
+  by_cases hlast : i = Fin.last n
+  · have hxi : x = t i := by
+      rw [hlast]
+      exact le_antisymm hx.2 (by rw [← hlast]; exact hix)
+    rw [← hxi, dist_self]
+    exact hε
+  · obtain ⟨j, hj⟩ := Fin.eq_castSucc_of_ne_last hlast
+    have hxj : x < t j.succ := by
+      by_contra hcon
+      have hle := hmax _ (not_lt.1 hcon)
+      rw [← hj] at hle
+      exact absurd hle (not_le.2 (Fin.castSucc_lt_succ (i := j)))
+    have hix' : t j.castSucc ≤ x := by rw [hj]; exact hix
+    rw [← hj]
+    exact hcell j x ⟨hix', hxj⟩
 
 /-! ### A countable set that computes suprema of right continuous functions
 
@@ -4412,11 +4767,69 @@ instance SkorokhodSpace.instCompleteSpace [SecondCountableTopology E] [CompleteS
     hκfix hκnorm hunif
   simpa using hmain
 
+omit [BasePoint ι] in
+/-- **The step paths approximate uniformly on every window, without a time
+change.**  This is the first half of the separability of Milestone 5, and it is
+the half that carries the analysis: given `f` and `ε`, the subdivision of
+`IsCadlag.exists_subdivision` cuts the window of radius `M` into cells on which
+`f` varies by at most `ε`, and the step path that reads `f` at the left ends of
+those cells is within `ε` of `f` at every point of every smaller window, for the
+identity time change.
+
+The approximant has **finitely many values**, and that is what is recorded
+rather than the tuple it was built from: it is what the counting of Milestone 5
+needs, and it is stable under replacing the values by nearby ones.
+
+What is *not* here, and is the whole of the second half, is that the approximant
+may be taken from a **countable** family.  Its jump times are those of `f` and
+run over all of `ι`, so they have to be moved, and moving them is exactly what
+the time change is for.  The obstruction is recorded at
+`SkorokhodSpace.instSeparableSpace` below. -/
+theorem SkorokhodSpace.exists_finite_range_distWith_le (t₀ : ι) (f : D(ι, E)) {ε : ℝ}
+    (hε : 0 < ε) (M : ℝ) :
+    ∃ g : D(ι, E), (Set.range g.toFun).Finite ∧
+      ∀ u ≤ M, SkorokhodSpace.distWith t₀ u 1 f g ≤ ε := by
+  haveI : Nonempty ι := ⟨t₀⟩
+  have hmin := isLeast_exhaustionMin t₀ M
+  have hmax := isGreatest_exhaustionMax t₀ M
+  have hK : IsCompact (Set.Icc (exhaustionMin t₀ M) (exhaustionMax t₀ M)) :=
+    (isCompact_exhaustion t₀ M).of_isClosed_subset isClosed_Icc
+      ((ordConnected_exhaustion t₀ M).out hmin.1 hmax.1)
+  obtain ⟨n, t, ht, h0, hlast, hcell⟩ :=
+    f.isCadlag.exists_subdivision (hmin.2 hmax.1) hK hε
+  refine ⟨⟨fun x => f.toFun (stepRetract t x), isCadlag_comp_stepRetract f.toFun ht⟩,
+    finite_range_comp_stepRetract f.toFun t, fun u hu => ?_⟩
+  rw [SkorokhodSpace.distWith]
+  refine ciSup_le fun x => ?_
+  simp only [SkorokhodSpace.restrictExhaustion_apply, TimeChange.one_toOrderIso_apply]
+  refine dist_comp_stepRetract_le hε.le hcell ?_
+  have hmem : clamp t₀ u x ∈ exhaustion t₀ M :=
+    exhaustion_subset_of_le t₀ hu (clamp_mem_exhaustion t₀ u x)
+  rw [h0, hlast]
+  exact ⟨hmin.2 hmem, hmax.2 hmem⟩
+
 /-- **Separability**: the step paths with finitely many jumps, the jump times in a
 countable dense subset of `ι` and the values in a countable dense subset of `E`,
 are dense in `D(ι, E)`.  They are countable because `ι` is proper, hence
 separable, and each window meets only finitely many of the jump times of a given
 path (`countable_leftJumpSet` of Milestone 2, with `isCompact_exhaustion`).
+
+**The countable set of jump times is not an arbitrary countable dense subset of
+`ι`, and this is the open point.**  `SkorokhodSpace.exists_finite_range_distWith_le`
+supplies an approximant with finitely many values whose jump times are those of
+`f`; making the family countable means moving those times onto a fixed countable
+set, and a time change is what moves them.  On `ι = Set.Icc (0 : ℝ) 1` with base
+point `0` every time change fixes `1`, being an order isomorphism of a linear
+order with a greatest element, so the path `f = Set.indicator {1} 1` keeps its
+distance from every step path whose jumps avoid `1`: for `u ≥ 1` the window is
+all of `ι`, `f (l t) = 1` holds only at `t = 1`, and a step path `g` whose last
+jump time is `d < 1` is constant on `[d, 1]`, so its value `c` there has to
+answer both `f (l 1) = 1` and `f (l d) = 0`, whence
+`distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1/2` for **every** `l`, and the
+integral over the radius is at least `exp (-1) / 2`.  A countable dense subset of
+`Set.Icc (0 : ℝ) 1` need not contain `1`, so the times have to be drawn from a
+countable set that also carries the points no time change can move --- the
+mirror of `rightIsolated` and `exists_countable_ciSup_eq` for suprema.
 
 `[SeparableSpace E]` is the hypothesis, not `[PolishSpace E]`: the approximation
 of a càdlàg path by a step path uses the right limits and the compactness of the
@@ -4540,8 +4953,62 @@ theorem SkorokhodSpace.modulus_eq_zero_of_exhaustion_subsingleton (t₀ : ι) (u
   simp [SkorokhodSpace.subdivisionOsc]
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **Billingsley's `w'(f, δ) → 0`.**  This is the defining property of the
+modulus, the one that separates it from the ordinary modulus of continuity: a
+càdlàg path has small `modulus` for small `δ` although its oscillation on small
+intervals need not be small at all, because the subdivision is allowed to place
+its points at the jumps.
+
+The proof is `IsCadlag.exists_subdivision` and then one observation.  That
+lemma produces, for a given `ε`, a subdivision of the window whose cells carry
+oscillation at most `ε`; its gaps are finitely many and each is positive, since
+the subdivision is strictly monotone, so *some* `δ₀ > 0` lies below all of
+them.  Every `δ < δ₀` therefore admits that same subdivision as a `δ`-sparse
+one, and the infimum defining `modulus t₀ m f δ` is at most `ε` from `δ₀` on.
+The `ℝ≥0∞` valuation costs one step here and no more: `ENNReal.tendsto_nhds_zero`
+asks for `ε : ℝ≥0∞`, and `ENNReal.ofReal_toReal` turns it into a real one, the
+value `⊤` being free. -/
 theorem SkorokhodSpace.tendsto_modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
-    Tendsto (SkorokhodSpace.modulus t₀ m f) (𝓝[>] 0) (𝓝 0) := sorry
+    Tendsto (SkorokhodSpace.modulus t₀ m f) (𝓝[>] 0) (𝓝 0) := by
+  rw [ENNReal.tendsto_nhds_zero]
+  intro ε hε
+  obtain ⟨ε', hε', hle⟩ : ∃ ε' : ℝ, 0 < ε' ∧ ENNReal.ofReal ε' ≤ ε := by
+    rcases eq_or_ne ε ⊤ with rfl | hne
+    · exact ⟨1, one_pos, le_top⟩
+    · exact ⟨ε.toReal, ENNReal.toReal_pos hε.ne' hne, (ENNReal.ofReal_toReal hne).le⟩
+  have hmin := isLeast_exhaustionMin t₀ (m : ℝ)
+  have hmax := isGreatest_exhaustionMax t₀ (m : ℝ)
+  have hab : exhaustionMin t₀ (m : ℝ) ≤ exhaustionMax t₀ (m : ℝ) := hmin.2 hmax.1
+  have hK : IsCompact (Set.Icc (exhaustionMin t₀ (m : ℝ)) (exhaustionMax t₀ (m : ℝ))) :=
+    (isCompact_exhaustion t₀ (m : ℝ)).of_isClosed_subset isClosed_Icc
+      ((ordConnected_exhaustion t₀ (m : ℝ)).out hmin.1 hmax.1)
+  obtain ⟨n, t, ht, h0, hlast, hcell⟩ := f.isCadlag.exists_subdivision hab hK hε'
+  obtain ⟨δ₀, hδ₀, hδ₀lt⟩ :
+      ∃ δ₀ : ℝ, 0 < δ₀ ∧ ∀ i : Fin n, δ₀ < dist (t i.castSucc) (t i.succ) := by
+    have hpos : ∀ i : Fin n, 0 < dist (t i.castSucc) (t i.succ) := fun i =>
+      dist_pos.2 (ht (Fin.castSucc_lt_succ (i := i))).ne
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · exact ⟨1, one_pos, fun i => i.elim0⟩
+    · have hne : (Finset.univ : Finset (Fin n)).Nonempty := ⟨⟨0, hn⟩, Finset.mem_univ _⟩
+      set g : Fin n → ℝ := fun i => dist (t i.castSucc) (t i.succ) with hg
+      have hinf : 0 < Finset.univ.inf' hne g := by
+        rw [Finset.lt_inf'_iff]
+        exact fun i _ => hpos i
+      refine ⟨Finset.univ.inf' hne g / 2, by linarith, fun i => ?_⟩
+      have h1 : Finset.univ.inf' hne g ≤ g i := Finset.inf'_le _ (Finset.mem_univ i)
+      have h2 : 0 < g i := hpos i
+      simp only [hg] at h1 ⊢
+      linarith
+  have hev : ∀ᶠ δ : ℝ in 𝓝[>] 0, δ < δ₀ :=
+    (Filter.eventually_iff_exists_mem.2 ⟨Set.Iio δ₀, Iio_mem_nhds hδ₀, fun _ hx => hx⟩).filter_mono
+      nhdsWithin_le_nhds
+  filter_upwards [hev] with δ hδ
+  refine le_trans ?_ hle
+  refine iInf_le_of_le n (iInf_le_of_le t
+    (iInf_le_of_le ⟨ht, h0, hlast, fun i => hδ.trans (hδ₀lt i)⟩ ?_))
+  refine iSup_le fun i => iSup_le fun s => iSup_le fun hs => ?_
+  rw [edist_dist]
+  exact ENNReal.ofReal_le_ofReal (hcell i s hs)
 
 /-- The compactness criterion.  The base point is the one of the instance and
 not a parameter: the left hand side speaks of the topology of `D(ι, E)`, which

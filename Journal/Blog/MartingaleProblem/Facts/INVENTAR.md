@@ -11973,3 +11973,157 @@ schwerer und jetzt wenigstens benannt.
 **Das Manuskript ist nicht angefaßt.** Am Inventar ändert sich eine Zeile,
 `fact:PSpolish`, um den Stand von Meilenstein 1 und um die Zerlegung der
 Separabilität.
+
+### 2026-09-08, fünfundzwanzigster Lauf des Tages — die Unterteilung ist bewiesen, und mit ihr fällt Meilenstein 7 zur Hälfte und Meilenstein 5 zur Hälfte
+
+**Bearbeitet:** `SkorokhodSpace/Suggested.lean`, Meilensteine 2, 5 und 7.
+`fact:PSpolish` bleibt `Roadmap`. Die Datei steht bei **vier** `sorry` statt
+fünf. **Vierzehn neue Deklarationen**, alle durch `lake env lean` gegen v4.33.1
+geprüft und alle mit `#print axioms`: sämtlich nur `propext`,
+`Classical.choice`, `Quot.sound`.
+
+#### Zur Reihenfolge, und sie weicht vom Auftrag ab
+
+Der Auftrag nennt `instSeparableSpace` als Punkt 1 und Meilenstein 7 als
+Punkt 3. Dieser Lauf hat Punkt 3 zuerst angefaßt, und der Grund ist kein
+Geschmack, sondern eine Abhängigkeit in der falschen Richtung: **die
+Separabilität ruht auf dem Satz, der Meilenstein 7 trägt.** Billingsleys Beweis
+der Separabilität von `D` approximiert einen Pfad durch einen Treppenpfad, und
+die Treppe ist genau eine Unterteilung des Fensters, auf deren Zellen der Pfad
+um höchstens `ε` schwankt — dieselbe Unterteilung, deren Existenz
+`tendsto_modulus` behauptet. Wer die Separabilität zuerst anfaßt, beweist die
+Unterteilung unterwegs und ohne Namen. Der Vorschlag des vierundzwanzigsten
+Laufs sagte dasselbe („es ist **die leichte Hälfte der Separabilität**"), und
+dieser Lauf ist ihm gefolgt.
+
+#### Der Satz, auf dem beides steht
+
+`IsCadlag.exists_subdivision`: ist `f` càdlàg, `a ≤ b` und `Set.Icc a b`
+kompakt, so gibt es zu jedem `ε > 0` ein `n` und ein streng monotones
+`t : Fin (n+1) → ι` mit `t 0 = a`, `t (Fin.last n) = b` und
+
+    ∀ i, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ), dist (f x) (f (t i.castSucc)) ≤ ε.
+
+*Der Beweis ist ein Supremumsargument und keine Induktion*, und das ist der
+Punkt: die Zellen lassen sich nicht vorab wählen, ihre Längen sind von den
+Sprüngen von `f` diktiert und dürfen gegen `0` gehen. Sei `S` die Menge der
+Endpunkte, die eine solche Unterteilung erreicht, und `c` der größte Punkt von
+`closure S` — er existiert, weil das Fenster kompakt ist. Der *Linkslimes* bei
+`c` zeigt `c ∈ S`: auf einem Intervall `(y, c)` bleibt `f` innerhalb `ε/2` des
+Linkslimes, ein erreichbares `s > y` liegt darin, und die Zelle `[s, c)` kostet
+nach der Dreiecksungleichung `ε`. Die *Rechtsstetigkeit* bei `c` zeigt `c = b`:
+wäre `c < b`, so ließe sich `min u b` anhängen und `c` wäre nicht der größte.
+
+*Minimale Voraussetzungen, und sie sind kleiner als erwartet.* Die Kompaktheit
+des Fensters ist **Hypothese** und nicht `ProperSpace ι`; `AdditiveDist` und die
+Metrik des Index kommen nicht vor. Nur die Ordnungstopologie und die Metrik auf
+`E` gehen ein. Der eine kombinatorische Schritt ist abgetrennt:
+`exists_snoc_subdivision`, das Anhängen eines Punktes über `Fin.snoc`, ohne
+càdlàg und ohne Topologie.
+
+#### Meilenstein 7: `tendsto_modulus` ist bewiesen
+
+`SkorokhodSpace.tendsto_modulus (t₀) (m : ℕ) (f) : Tendsto (modulus t₀ m f)
+(𝓝[>] 0) (𝓝 0)`. Aus der Unterteilung mit einer Beobachtung: ihre Lücken sind
+endlich viele und jede positiv, weil sie streng monoton ist, also liegt ein
+`δ₀ > 0` unter allen; jedes `δ < δ₀` läßt dieselbe Unterteilung als
+`δ`-spärliche zu, und das Infimum in `modulus t₀ m f δ` ist von `δ₀` an
+höchstens `ε`. Die `ℝ≥0∞`-Wertigkeit — die Abweichung des sechzehnten Laufs —
+kostet hier genau einen Schritt: `ENNReal.tendsto_nhds_zero` verlangt ein
+`ε : ℝ≥0∞`, `ENNReal.ofReal_toReal` macht ein reelles daraus, und der Wert `⊤`
+ist gratis.
+
+Von Meilenstein 7 bleibt allein `isCompact_closure_iff`.
+
+#### Meilenstein 5: die Treppenpfade, und wo die Separabilität wirklich hängt
+
+Der Treppenpfad ist als Komposition gebaut und nicht als Fallunterscheidung:
+`stepRetract t` ist die Retraktion des Index auf das Bild eines endlichen
+Tupels — jeder Punkt geht auf den größten Eintrag unter ihm, und auf `t 0`,
+wenn es keinen gibt —, und der Treppenpfad ist `f ∘ stepRetract t`. Fünf
+bewiesene Aussagen darüber:
+
+* `IsCadlag.of_eventually_const` — wer auf einer Rechtsumgebung jedes Punktes
+  und auf einer Linksumgebung jedes Punktes konstant ist, ist càdlàg. Die
+  beiden entarteten Fälle brauchen keine Sonderbehandlung: an einem größten
+  Element ist `𝓝[>] x = ⊥`, an einem kleinsten `𝓝[<] x = ⊥`.
+* `eventually_stepRetract_eq_nhdsGT` und
+  `exists_eventually_stepRetract_eq_nhdsLT` — die Retraktion ist lokal
+  konstant, rechts wie links. Rechts über den größten Index `i` mit `t i ≤ x`
+  und den nächsten Eintrag `t (i+1) > x`, links über den größten Index mit
+  `t i < x`.
+* `isCadlag_comp_stepRetract` — **der Treppenpfad ist càdlàg, und `f` muß es
+  nicht sein.** Das ist keine Schwächung, sondern der ehrliche Umfang: die
+  Aussage steht auf der lokalen Konstanz der Retraktion allein.
+* `finite_range_comp_stepRetract` — er nimmt endlich viele Werte an. Das ist,
+  was das Abzählen später braucht, und der einzige Grund, warum die Retraktion
+  über ein `Finset` läuft.
+* `dist_comp_stepRetract_le` — auf `Set.Icc (t 0) (t (Fin.last n))` ist er
+  gleichmäßig `ε`-nah an `f`, wenn die Zellen `ε` tragen. Das Tupel muß dafür
+  **nicht** streng monoton sein, und der Linter hat recht: die Retraktion liest
+  den größten Index aus einem `Finset`, ein wiederholter Eintrag ändert, welcher
+  Wert genommen wird, aber nicht, daß er in einer Zelle der Hypothese liegt.
+
+Zusammengesetzt: `SkorokhodSpace.exists_finite_range_distWith_le (t₀) (f) (hε)
+(M)` — zu jedem `f`, `ε > 0` und `M` gibt es ein `g : D(ι, E)` mit endlichem
+Wertebereich und `distWith t₀ u 1 f g ≤ ε` für alle `u ≤ M`, für den
+**identischen** Zeitwechsel. Das ist die Hälfte der Separabilität, die die
+Analysis trägt.
+
+#### Und der Befund, der die andere Hälfte betrifft
+
+Was fehlt, ist nicht die Approximation, sondern die **Abzählbarkeit**: die
+Sprungzeiten des Approximanten sind die von `f` und laufen über ganz `ι`. Sie
+auf eine feste abzählbare Menge zu schieben, ist Sache des Zeitwechsels, und
+dabei gilt:
+
+> **Eine beliebige abzählbare dichte Teilmenge von `ι` genügt nicht.**
+
+Der Zeuge, von Hand gerechnet und an der Deklaration
+`SkorokhodSpace.instSeparableSpace` eingetragen: `ι = Set.Icc (0:ℝ) 1` mit
+Basispunkt `0`. Jeder Zeitwechsel ist ein Ordnungsisomorphismus einer linearen
+Ordnung mit größtem Element, **fixiert also `1`**. Der Pfad
+`f = Set.indicator {1} 1` ist càdlàg (bei `1` ist `𝓝[>] 1 = ⊥`). Ist `g` ein
+Treppenpfad, dessen Sprungzeiten `1` meiden, und `d < 1` seine letzte
+Sprungzeit, so ist `g` auf `[d, 1]` konstant mit Wert `c`; für jedes `l` ist
+`f (l 1) = 1` und `f (l d) = 0`, also
+
+    distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1/2   für u ≥ 1,
+
+und damit `intDist t₀ f g ≥ exp (-1) / 2` für **jedes** solche `g` und jedes
+`l`. Eine abzählbare dichte Teilmenge von `Set.Icc (0:ℝ) 1` muß `1` nicht
+enthalten.
+
+Die Sprungzeiten sind also aus einer abzählbaren Menge zu nehmen, die
+zusätzlich die von keinem Zeitwechsel bewegbaren Punkte trägt — das Spiegelbild
+von `rightIsolated` und `exists_countable_ciSup_eq`, die dieselbe Lücke für die
+Suprema schließen und schon in der Datei stehen. Das ist der benannte nächste
+Schritt und steht so in Meilenstein 5.
+
+#### Vorschlag für den nächsten Lauf
+
+**`SkorokhodSpace.exists_countable_timeChangeInvariant`** — eine abzählbare
+Menge `C ⊆ ι`, die dicht ist **und** jeden Punkt enthält, den kein Zeitwechsel
+bewegt. Worauf sie ruht: auf `countable_rightIsolated` (bewiesen, im selben
+Stil), auf `exists_countable_ciSup_eq` (bewiesen, dieselbe Bauform: dicht plus
+eine abzählbare Ausnahmemenge), und auf `exists_orderIso_isometry_real`, das
+den Index als abgeschlossene Teilmenge von `ℝ` sieht und die unbeweglichen
+Punkte als die Ränder ihrer Zusammenhangskomponenten identifiziert. Warum
+jetzt: es ist der einzige noch unbenannte Schritt der Separabilität — die
+Analysis ist mit `exists_finite_range_distWith_le` bezahlt, die Abzählbarkeit
+der Werte ist `[SeparableSpace E]` —, und der Zeuge oben zeigt, daß ohne ihn
+kein Beweis geführt werden **kann**, nicht bloß keiner geführt wurde.
+
+Danach, und erst danach, das Interpolationslemma: zu endlich vielen Punkten
+`t 0 < … < t n` und Nachbarn `d i ∈ C` ein Zeitwechsel kleiner Norm mit
+`l (t i) = d i`.
+
+**Zweiter Vorschlag, unabhängig und billig:** die Integralbuchführung von
+`exists_finite_range_distWith_le` nach `intDist` — aus `distWith ≤ ε` für
+`u ≤ M` und `min 1 (·) ≤ 1` sonst folgt `intDist t₀ f g ≤ ε + exp (-M)`, über
+`integral_exp_neg_Ioi` (`Mathlib/Analysis/SpecialFunctions/ImproperIntegrals.lean:57`)
+und eine Zerlegung `Set.Ioi 0 = Set.Ioc 0 M ∪ Set.Ioi M`. Das macht aus der
+Fensteraussage eine echte Dichtheitsaussage über die Metrik und ist von der
+Frage über den Index unabhängig.
+
+**Das Manuskript ist nicht angefaßt.**

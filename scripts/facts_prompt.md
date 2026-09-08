@@ -27,6 +27,35 @@ Reihenfolge:
 3. Meilenstein 7, `tendsto_modulus` und das Kompaktheitskriterium.
 4. `exists_orderIso_isometry_real`, wenn Zeit bleibt; es hängt nichts daran.
 
+**Zwischenstand Teil A (2026-09-08, fünfundzwanzigster Lauf des Tages).** Bericht
+in `Facts/INVENTAR.md`, Läufe, „fünfundzwanzigster Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **vier** `sorry` statt sechs.
+
+*Punkt 4 ist erledigt* (vierundzwanzigster Lauf), *Punkt 3 zur Hälfte*
+(fünfundzwanzigster Lauf): `tendsto_modulus` ist bewiesen, das
+Kompaktheitskriterium `isCompact_closure_iff` ist offen.
+
+*Punkt 3 wurde vor Punkt 1 gearbeitet, und das ist die eine Abweichung.* Der
+Grund ist eine Abhängigkeit in der falschen Richtung: **die Separabilität ruht
+auf dem Satz, der Meilenstein 7 trägt.** Billingsleys Treppenpfad *ist* die
+Unterteilung mit kleiner Zellschwingung, deren Existenz `tendsto_modulus`
+behauptet; wer Punkt 1 zuerst anfaßt, beweist sie unterwegs und ohne Namen. Sie
+heißt jetzt `IsCadlag.exists_subdivision`, ist bewiesen, und beide Punkte lesen
+sie.
+
+*Punkt 1 ist zur Hälfte erledigt.* `SkorokhodSpace.exists_finite_range_distWith_le`
+ist bewiesen: zu jedem `f`, `ε > 0` und Radius `M` ein `g` mit endlichem
+Wertebereich und `distWith t₀ u 1 f g ≤ ε` für `u ≤ M`, für den identischen
+Zeitwechsel. Das ist die analytische Hälfte, samt `stepRetract` und fünf Sätzen
+darüber. Offen ist die Abzählbarkeit, und dazu ein **Befund, der die Aufgabe
+ändert**: eine beliebige abzählbare dichte Teilmenge von `ι` genügt **nicht**.
+Zeuge: `ι = Set.Icc (0:ℝ) 1`, Basispunkt `0`, `f = Set.indicator {1} 1` — jeder
+Zeitwechsel fixiert `1`, und jeder Treppenpfad, dessen Sprungzeiten `1` meiden,
+bleibt `exp (-1) / 2` von `f` entfernt. Der nächste Schritt heißt darum
+`SkorokhodSpace.exists_countable_timeChangeInvariant` und steht in Meilenstein 5.
+
+*Punkt 2 ist unberührt.*
+
 **Teil B — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.**
 
 Der Grund, und er ist kein ästhetischer: **die Existenztheorie hat sonst keinen
