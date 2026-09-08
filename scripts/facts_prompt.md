@@ -10,7 +10,56 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-Zurzeit stehen hier keine Aufgaben.
+### Aufgabe: Ionescu--Tulcea ist in Mathlib, und der Befund des 20. Laufs steht schief *(gestellt 2026-09-08 vom Nutzer)*
+
+Der zwanzigste Lauf hat den Schritt (c2) der Skorohod-Darstellung gegen das
+Verkleben entschieden, mit der Begründung, Mathlib habe kein abzählbares Produkt
+von Kernen: gesucht wurde nach `infinitePi` und nach `def pi` unter
+`Probability/Kernel/`. Es heißt aber weder so noch liegt es dort. Es heißt
+**`ProbabilityTheory.Kernel.traj`** und steht in
+`Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean:518`, als *Ionescu--Tulcea
+Theorem* im Doc-Kommentar benannt:
+
+```
+variable {κ : (n : ℕ) → Kernel (Π i : Iic n, X i) (X (n + 1))} [∀ n, IsMarkovKernel (κ n)]
+noncomputable def traj (a : ℕ) : Kernel (Π i : Iic a, X i) (Π n, X n)
+```
+
+Voraussetzungen: `[∀ n, MeasurableSpace (X n)]` und Markov, **sonst nichts** —
+keine Topologie. Die charakterisierende Eigenschaft ist `traj_map_frestrictLe`
+(`:530`): die Projektion auf `Iic b` ist `partialTraj κ a b`. Der Nutzer hat es
+gefunden, nicht der Lauf; das ist die Suchregel weiter unten, und sie hat hier
+nicht gegriffen.
+
+**Erstens: das Inventar richtigstellen.** Der Befund „Mathlib hat kein
+abzählbares Produkt von Kernen" ist falsch und steht so im Bericht des
+zwanzigsten Laufs und in Meilenstein 3. Trage die Berichtigung dort ein, mit dem
+Namen, der Datei und der Zeile, und schreibe dazu, *warum* die Suche danebenging
+— damit die nächste nach der Aussage sucht statt nach der Vokabel.
+
+**Zweitens: die beiden Wege gegeneinander abwägen.** Die Begründung stand auf
+zwei Beinen; das zweite, die Desintegration, trägt noch. `Measure.disintegrate`
+und `condKernel` gibt es, aber der brauchbare Fall verlangt
+`StandardBorelSpace`. Der jetzige Weg — alle Stufen auf einmal auf
+`(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`, EK Lemma 3.1.3 mit `N = ∞` — zahlt diesen Preis
+nicht: seine sieben Aussagen nennen über `E` nichts als `MeasurableSpace E`. Die
+Frage ist also **nicht**, welcher Weg schöner ist, sondern:
+
+> Kostet `StandardBorelSpace E` an dieser Stelle etwas, oder steht es ohnehin da?
+
+Beantworte sie an der Stelle, wo die Skorohod-Darstellung *gebraucht* wird
+(`fact:PSpolish`, Meilenstein 3, und was im Manuskript darauf zeigt), nicht im
+luftleeren Raum. Kommt heraus, daß der Raum dort ohnehin polnisch ist, dann ist
+`StandardBorelSpace` gratis und der Verklebeweg womöglich der kürzere; kommt
+heraus, daß die Darstellung anderswo unter schwächeren Annahmen gebraucht wird,
+dann war die Entscheidung im Ergebnis richtig und nur die Begründung schief.
+Beides ist ein Ergebnis. Was **nicht** zählt, ist eine Präferenz ohne Rechnung.
+
+**Drittens, nur wenn Zeit bleibt:** wechsle die Route nicht auf Verdacht. Der
+bestehende Weg ist weit gediehen; ein Wechsel lohnt nur, wenn die Abwägung ihn
+deutlich trägt, und dann als eigener Lauf mit eigenem Zwischenstand.
+
+Zurzeit stehen hier sonst keine Aufgaben.
 
 ### ~~Aufgabe: das Erreichte prüfen, und nach Verallgemeinerungen suchen~~ *(gestellt 2026-09-07 vom Nutzer, erledigt 2026-09-07, sechzehnter Lauf des Tages)*
 
