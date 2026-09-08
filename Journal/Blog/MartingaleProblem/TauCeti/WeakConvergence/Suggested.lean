@@ -14,6 +14,7 @@ import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.MeasureTheory.MeasurableSpace.CountablyGenerated
 import Mathlib.MeasureTheory.PiSystem
+import Mathlib.Analysis.Normed.Group.Tannery
 import Mathlib.Algebra.GroupWithZero.Indicator
 import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.Topology.UrysohnsLemma
@@ -201,6 +202,19 @@ the same run then proved the completeness of the Lévy-Prokhorov metric
 `isCompletelyMetrizableSpace_probabilityMeasure`), so that
 `polishSpace_probabilityMeasure` too rests on nothing unproved.  What is left of
 Milestone 3 is the Skorokhod representation alone.
+
+The fifth run of 2026-09-08 proved the step the Skorokhod representation rests
+on, `exists_measurable_partition_diam_le_null_frontier`, together with the two
+frontier statements it needed and Mathlib does not have,
+`frontier_biInter_range_subset` and `frontier_disjointed_subset`; all three
+depend on `propext`, `Classical.choice` and `Quot.sound` alone.  The same run
+proved the second input of the representation, the Scheffé step for a countable
+partition -- `tendsto_tsum_posPart_sub_of_tendsto_measure` and its total
+variation form `tendsto_tsum_abs_sub_of_tendsto_measure`, with
+`summable_toReal_measure_of_pairwise_disjoint` and `tsum_toReal_measure_eq_one`;
+this is the one place where the file imports
+`Mathlib.Analysis.Normed.Group.Tannery`.  Of Milestone 3 only
+`exists_ae_tendsto_of_tendsto` itself is now unproved.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -2760,18 +2774,197 @@ theorem polishSpace_probabilityMeasure [TopologicalSpace E] [PolishSpace E] [Bor
     isCompletelyMetrizableSpace_probabilityMeasure
   infer_instance
 
+/-- The frontier of a finite intersection is contained in the union of the
+frontiers.  Mathlib has the two-set case, `frontier_inter_subset`
+(`Topology/Closure.lean:537`), but not the finite one; the induction is over
+`Finset.range_add_one` (`Data/Finset/Range.lean:79`, *not* `Finset.range_succ`,
+which does not exist). -/
+theorem frontier_biInter_range_subset [TopologicalSpace E] (S : ℕ → Set E) (n : ℕ) :
+    frontier (⋂ j ∈ Finset.range n, S j) ⊆ ⋃ j ∈ Finset.range n, frontier (S j) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [Finset.range_add_one, Finset.set_biInter_insert]
+      refine (frontier_inter_subset _ _).trans ?_
+      intro x hx
+      rw [Finset.set_biUnion_insert]
+      rcases hx with h | h
+      · exact Or.inl h.1
+      · exact Or.inr (ih h.2)
+
+/-- Disjointification keeps null frontiers null: the frontier of `disjointed S n`
+is covered by the frontiers of `S 0, …, S n`.  This is the reason the fixed-radius
+partition can be replaced by one whose pieces have `μ`-null frontier without any
+further choice -- once the balls have null frontiers, so do the disjointified
+pieces.  Uses `disjointed_eq_inter_compl` (`Order/Disjointed.lean:323`) and
+`frontier_compl` (`Topology/Closure.lean:528`). -/
+theorem frontier_disjointed_subset [TopologicalSpace E] (S : ℕ → Set E) (n : ℕ) :
+    frontier (disjointed S n) ⊆ ⋃ j ∈ Finset.range (n + 1), frontier (S j) := by
+  have hd : disjointed S n = S n ∩ ⋂ j ∈ Finset.range n, (S j)ᶜ := by
+    rw [disjointed_eq_inter_compl]
+    simp
+  rw [hd]
+  refine (frontier_inter_subset _ _).trans ?_
+  intro x hx
+  rw [Finset.range_add_one, Finset.set_biUnion_insert]
+  rcases hx with h | h
+  · exact Or.inl h.1
+  · refine Or.inr ?_
+    have := frontier_biInter_range_subset (fun j => (S j)ᶜ) n h.2
+    simpa [frontier_compl] using this
+
 /-- Mathlib's `SeparableSpace.exists_measurable_partition_diam_le`
 (`MeasureTheory/Measure/LevyProkhorovMetric.lean:540`, in namespace
 `MeasureTheory`, with `Ω` explicit) uses balls of one fixed radius and says
 nothing about frontiers; the Skorokhod construction needs the radii chosen so
 that the frontiers are null.  Its boundedness clause is kept here, because the
-proof is the same disjointification of balls. -/
+proof is the same disjointification of balls.
+
+The proof is Mathlib's with one change: the radius is chosen **per centre**, in
+`Ioo (ε/4) (ε/2)`, by `exists_null_frontier_thickening`
+(`Measure/Portmanteau.lean:401`) applied to the singleton `{xs n}` and read as a
+ball through `Metric.thickening_singleton`
+(`Topology/MetricSpace/Thickening.lean:157`).  The lower bound `ε/4` is what
+still makes the balls cover `E`, the upper bound `ε/2` is what keeps the diameter
+below `ε`, and the interval has to be *open* on both sides because
+`exists_null_frontier_thickening` only avoids countably many charged radii. -/
 theorem exists_measurable_partition_diam_le_null_frontier [PseudoMetricSpace E]
     [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E]
     (μ : Measure E) [IsFiniteMeasure μ] {ε : ℝ} (hε : 0 < ε) :
     ∃ As : ℕ → Set E, (∀ n, MeasurableSet (As n)) ∧ (∀ n, Bornology.IsBounded (As n)) ∧
       (∀ n, Metric.diam (As n) ≤ ε) ∧ (∀ n, μ (frontier (As n)) = 0) ∧
-      (⋃ n, As n = univ) ∧ Pairwise (fun n m : ℕ => Disjoint (As n) (As m)) := sorry
+      (⋃ n, As n = univ) ∧ Pairwise (fun n m : ℕ => Disjoint (As n) (As m)) := by
+  cases isEmpty_or_nonempty E
+  · refine ⟨fun _ ↦ ∅, fun _ ↦ MeasurableSet.empty, fun _ ↦ Bornology.isBounded_empty,
+      fun _ ↦ by simpa only [Metric.diam_empty] using hε.le, fun _ ↦ by simp, ?_,
+      fun _ _ _ ↦ disjoint_of_subsingleton⟩
+    subsingleton
+  obtain ⟨xs, xs_dense⟩ := TopologicalSpace.exists_dense_seq E
+  have hchoice : ∀ n, ∃ r ∈ Set.Ioo (ε / 4) (ε / 2),
+      μ (frontier (Metric.ball (xs n) r)) = 0 := by
+    intro n
+    obtain ⟨r, hr, hr0⟩ :=
+      exists_null_frontier_thickening μ ({xs n} : Set E) (by linarith : ε / 4 < ε / 2)
+    exact ⟨r, hr, by rwa [Metric.thickening_singleton] at hr0⟩
+  choose r hr hr0 using hchoice
+  set Bs : ℕ → Set E := fun n ↦ Metric.ball (xs n) (r n) with hBs
+  set As := disjointed Bs with hAs
+  have hrpos : ∀ n, 0 < r n := fun n ↦ lt_trans (by linarith) (hr n).1
+  refine ⟨As, ?_, ?_, ?_, ?_, ?_, disjoint_disjointed Bs⟩
+  · exact MeasurableSet.disjointed fun n ↦ measurableSet_ball
+  · exact fun n ↦ Bornology.IsBounded.subset Metric.isBounded_ball (disjointed_subset Bs n)
+  · intro n
+    refine (Metric.diam_mono (disjointed_subset Bs n) Metric.isBounded_ball).trans ?_
+    refine (Metric.diam_ball (hrpos n).le).trans ?_
+    have := (hr n).2
+    linarith
+  · intro n
+    refine measure_mono_null (frontier_disjointed_subset Bs n) ?_
+    refine (measure_biUnion_null_iff (Finset.range (n + 1)).countable_toSet).2 ?_
+    exact fun j _ ↦ hr0 j
+  · rw [hAs, iUnion_disjointed]
+    refine eq_univ_of_forall fun y ↦ ?_
+    obtain ⟨n, hn⟩ := Metric.denseRange_iff.mp xs_dense y (ε / 4) (by linarith)
+    exact Set.mem_iUnion.2 ⟨n, by simpa [hBs, Metric.mem_ball, dist_comm] using hn.trans (hr n).1⟩
+
+/-- The masses a countable measurable partition carries under a finite measure are
+summable as reals.  Small, but it is the hypothesis every statement below needs
+and it is where `measure_iUnion` is spent. -/
+theorem summable_toReal_measure_of_pairwise_disjoint {ν : Measure E} [IsFiniteMeasure ν]
+    {A : ℕ → Set E} (hAm : ∀ i, MeasurableSet (A i))
+    (hAd : Pairwise (Function.onFun Disjoint A)) :
+    Summable fun i => (ν (A i)).toReal := by
+  refine ENNReal.summable_toReal ?_
+  rw [← measure_iUnion hAd hAm]
+  exact measure_ne_top ν _
+
+theorem tsum_toReal_measure_eq_one {ν : Measure E} [IsProbabilityMeasure ν] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : ⋃ i, A i = univ) : ∑' i, (ν (A i)).toReal = 1 := by
+  rw [← ENNReal.tsum_toReal_eq fun i => measure_ne_top ν (A i), ← measure_iUnion hAd hAm, hAu]
+  simp
+
+/-- **Scheffé's step for a countable partition**: if the mass of every piece
+converges, then the *positive parts* of the mass defects converge to zero
+**summed over all pieces at once**.  This is the analytic content the Skorokhod
+construction consumes: it is what says that the coupling built stage by stage
+misplaces a total mass that tends to zero, and it does not follow from the
+piecewise convergence by any finite argument.
+
+The proof is Tannery's theorem, `tendsto_tsum_of_dominated_convergence`
+(`Analysis/Normed/Group/Tannery.lean:40`), with the limit measure's own masses as
+the dominating summable function -- the domination
+`max (ν (A i) - μ n (A i)) 0 ≤ ν (A i)` holds because `μ n (A i) ≥ 0`, and that is
+the whole reason the *positive part* and not the absolute value is the quantity
+that admits an `n`-free bound. -/
+theorem tendsto_tsum_posPart_sub_of_tendsto_measure {μ : ℕ → Measure E} {ν : Measure E}
+    [∀ n, IsFiniteMeasure (μ n)] [IsFiniteMeasure ν] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hconv : ∀ i, Tendsto (fun n => μ n (A i)) atTop (𝓝 (ν (A i)))) :
+    Tendsto (fun n => ∑' i, max ((ν (A i)).toReal - (μ n (A i)).toReal) 0) atTop (𝓝 0) := by
+  have hbound := summable_toReal_measure_of_pairwise_disjoint (ν := ν) hAm hAd
+  have key : Tendsto (fun n => ∑' i, max ((ν (A i)).toReal - (μ n (A i)).toReal) 0) atTop
+      (𝓝 (∑' _i : ℕ, (0 : ℝ))) := by
+    refine tendsto_tsum_of_dominated_convergence (bound := fun i => (ν (A i)).toReal) hbound
+      (fun i => ?_) (Eventually.of_forall fun n i => ?_)
+    · have h := ((ENNReal.tendsto_toReal (measure_ne_top ν (A i))).comp (hconv i))
+      have h2 := ((tendsto_const_nhds (x := (ν (A i)).toReal)).sub h).max
+        (tendsto_const_nhds (x := (0 : ℝ)))
+      simpa using h2
+    · rw [Real.norm_eq_abs, abs_of_nonneg (le_max_right _ _)]
+      exact max_le (by simp [ENNReal.toReal_nonneg]) ENNReal.toReal_nonneg
+  simpa using key
+
+/-- The same convergence for the absolute values, which is the form the coupling
+consumes: the total variation distance of the two laws *read on the partition*
+tends to zero.  It is not a second application of Tannery -- the absolute values
+admit no `n`-free summable bound -- but follows from the positive parts and the
+identity `|d| = 2 * max d 0 - d`, together with the fact that the defects sum to
+`1 - 1 = 0` because both measures are probability measures.  This is where the
+covering hypothesis `hAu` is spent, and it is the only place. -/
+theorem tendsto_tsum_abs_sub_of_tendsto_measure {μ : ℕ → Measure E} {ν : Measure E}
+    [∀ n, IsProbabilityMeasure (μ n)] [IsProbabilityMeasure ν] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : ⋃ i, A i = univ)
+    (hconv : ∀ i, Tendsto (fun n => μ n (A i)) atTop (𝓝 (ν (A i)))) :
+    Tendsto (fun n => ∑' i, |(ν (A i)).toReal - (μ n (A i)).toReal|) atTop (𝓝 0) := by
+  have hpos := tendsto_tsum_posPart_sub_of_tendsto_measure hAm hAd hconv
+  have hrw : ∀ n, ∑' i, |(ν (A i)).toReal - (μ n (A i)).toReal|
+      = 2 * ∑' i, max ((ν (A i)).toReal - (μ n (A i)).toReal) 0 := by
+    intro n
+    have hsν := summable_toReal_measure_of_pairwise_disjoint (ν := ν) hAm hAd
+    have hsμ := summable_toReal_measure_of_pairwise_disjoint (ν := μ n) hAm hAd
+    have hd : Summable fun i => (ν (A i)).toReal - (μ n (A i)).toReal := hsν.sub hsμ
+    have hmax : Summable fun i => max ((ν (A i)).toReal - (μ n (A i)).toReal) 0 :=
+      hsν.of_nonneg_of_le (fun i => le_max_right _ _)
+        (fun i => max_le (by simp [ENNReal.toReal_nonneg]) ENNReal.toReal_nonneg)
+    have habs : ∀ i, |(ν (A i)).toReal - (μ n (A i)).toReal|
+        = 2 * max ((ν (A i)).toReal - (μ n (A i)).toReal) 0
+          - ((ν (A i)).toReal - (μ n (A i)).toReal) := by
+      intro i
+      rcases le_total ((ν (A i)).toReal - (μ n (A i)).toReal) 0 with h | h
+      · rw [abs_of_nonpos h, max_eq_right h]; ring
+      · rw [abs_of_nonneg h, max_eq_left h]; ring
+    rw [tsum_congr habs, (hmax.mul_left 2).tsum_sub hd, tsum_mul_left,
+      hsν.tsum_sub hsμ, tsum_toReal_measure_eq_one hAm hAd hAu,
+      tsum_toReal_measure_eq_one hAm hAd hAu]
+    ring
+  simp only [hrw]
+  simpa using hpos.const_mul (2 : ℝ)
+
+/-- The discrete realisation on the unit interval: a probability vector `p` and a
+sequence of points `x` are realised by a measurable map out of `(0,1]` with
+Lebesgue measure, namely the one that is constant `x i` on the `i`-th interval of
+the partition of `(0,1]` by the partial sums of `p`.  It is the construction step
+of the Skorokhod representation, separated from the analysis: no weak convergence
+enters, only the bookkeeping of `Finset.sum` over `Set.Ioc`.  The image measure is
+written with `Measure.sum` rather than a `tsum`, which is Mathlib's form for a
+countable superposition of measures. -/
+theorem exists_measurable_map_restrict_volume_eq_sum_smul_dirac
+    {p : ℕ → ℝ≥0∞} (hp : ∑' i, p i = 1) (x : ℕ → E) :
+    ∃ g : ℝ → E, Measurable g ∧
+      (volume.restrict (Set.Ioc (0 : ℝ) 1)).map g
+        = Measure.sum fun i => p i • Measure.dirac (x i) := sorry
 
 theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}

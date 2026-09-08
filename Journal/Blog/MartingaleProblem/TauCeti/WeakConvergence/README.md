@@ -1022,7 +1022,8 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
 
 The representation theorem itself:
 
-* `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le_null_frontier`:
+* `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le_null_frontier`,
+  **proved** on 2026-09-08, fifth run:
   for a finite measure `μ` on a separable metric space `E` and `ε > 0`, a
   countable measurable partition of `E` into sets of diameter at most `ε` all of
   whose frontiers are `μ`-null. Mathlib's partition
@@ -1039,6 +1040,71 @@ The representation theorem itself:
   (`Mathlib/Topology/Closure.lean:537,544,528`) bound the frontier of a finite
   Boolean combination by the union of the frontiers. This is the step that
   carries the whole Skorokhod approximation.
+
+  The radii are drawn from the **open** interval `(ε/4, ε/2)`, one per centre.
+  The lower bound is what still makes the balls cover `E`, the upper bound is
+  what keeps the diameter of a ball below `ε`, and the interval must be open on
+  both sides because `exists_null_frontier_thickening` only avoids countably
+  many charged radii — it produces a radius in an interval, not a prescribed
+  one. The frontier bound is split off as two statements of its own, both proved:
+  `MeasureTheory.frontier_biInter_range_subset`, the finite intersection case
+  that Mathlib has only for two sets, and
+  `MeasureTheory.frontier_disjointed_subset`, which reads `disjointed S n` as
+  `S n ∩ ⋂ j < n, (S j)ᶜ` through `disjointed_eq_inter_compl`
+  (`Mathlib/Order/Disjointed.lean:323`) and so bounds its frontier by the
+  frontiers of `S 0, …, S n`.
+* `MeasureTheory.tendsto_tsum_posPart_sub_of_tendsto_measure`, **proved** on
+  2026-09-08, fifth run: for a countable measurable partition `A` and laws with
+  `μ n (A i) → ν (A i)` for every `i`, the sum over *all* pieces at once,
+  `∑' i, max (ν (A i) - μ n (A i)) 0`, tends to `0`. This is the analytic content
+  the Skorokhod construction consumes — that the coupling built stage by stage
+  misplaces a total mass tending to zero — and it does not follow from the
+  piecewise convergence by any finite argument. The proof is Tannery's theorem,
+  `tendsto_tsum_of_dominated_convergence`
+  (`Mathlib/Analysis/Normed/Group/Tannery.lean:40`), with `ν (A i)` as the
+  dominating summable function; the domination
+  `max (ν (A i) - μ n (A i)) 0 ≤ ν (A i)` holds because `μ n (A i) ≥ 0`, and that
+  is why the *positive part* and not the absolute value is the quantity with an
+  `n`-free bound.
+* `MeasureTheory.tendsto_tsum_abs_sub_of_tendsto_measure`, **proved** on the same
+  day: the same for `∑' i, |ν (A i) - μ n (A i)|`, the total variation distance
+  of the two laws read on the partition, which is the form the coupling consumes.
+  Not a second application of Tannery — the absolute values admit no `n`-free
+  summable bound — but a consequence of the previous item through
+  `|d| = 2 * max d 0 - d` and `∑' i, (ν (A i) - μ n (A i)) = 1 - 1 = 0`. The
+  covering hypothesis `⋃ i, A i = univ` is spent here and nowhere else; the two
+  small statements it runs through, `summable_toReal_measure_of_pairwise_disjoint`
+  and `tsum_toReal_measure_eq_one`, are proved with it.
+* `MeasureTheory.exists_measurable_map_restrict_volume_eq_sum_smul_dirac`: a
+  probability vector `p : ℕ → ℝ≥0∞` and a sequence of points `x : ℕ → E` are
+  realised by a measurable map out of `(0,1]` with Lebesgue measure — the map
+  that is constant `x i` on the `i`-th interval of the partition of `(0,1]` by
+  the partial sums of `p`. This is the construction step of the representation,
+  separated from the analysis: no weak convergence enters it, only the
+  bookkeeping of `Finset.sum` over `Set.Ioc`. The image measure is written with
+  `Measure.sum`, Mathlib's form for a countable superposition.
+
+  Two points of the construction are not free, and both are about the right
+  endpoint. With `S i = ∑ j ∈ Finset.range i, p j` and `s i = (S i).toReal`, the
+  map is `g y = x (Nat.find (h y))` for the predicate
+  `P i y := y ≤ s (i + 1) ∨ 1 ≤ y`, and its measurability is
+  `Measurable.find` (`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:516`)
+  applied to the constant maps `fun _ => x i`. The disjunct `1 ≤ y` is what makes
+  `h : ∀ y, ∃ i, P i y` true at all: for `y < 1` there is an `i` with
+  `y ≤ s (i + 1)` because `s i → 1`, but at `y = 1` there need be none, since the
+  partial sums reach `1` only when `p` has finite support. That single point is
+  Lebesgue-null, and so is `Set.Ioc 0 1 \ ⋃ i, Set.Ioc (s i) (s (i + 1))`, whose
+  measure is `1 - ∑' i, p i = 0`; the identification `g = x i` on
+  `Set.Ioc (s i) (s (i + 1)) \ {1}` and those two null sets are the whole proof of
+  the image measure.
+* The one-stage coupling: for `ε > 0` and `μ n → ν` weakly there is an `N` such
+  that for `n ≥ N` there are `X n` and `Y` on `((0,1], Lebesgue)` with laws
+  `μ n` and `ν` and `P (dist (X n) Y > ε) < ε`. This is where the three items
+  above meet: the partition of diameter `≤ ε` with `ν`-null frontiers gives, by
+  `tendsto_measure_of_null_frontier`, the convergence of every piece;
+  `tendsto_tsum_abs_sub_of_tendsto_measure` turns that into a bound on the total
+  mass on which the two realisations fall into different pieces; and the discrete
+  realisation puts both on the same interval, matched piece by piece.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
