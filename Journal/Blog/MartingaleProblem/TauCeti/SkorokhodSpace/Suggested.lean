@@ -20,10 +20,19 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-08.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  There are six of them: five, plus
-`SkorokhodSpace.instSeparableSpace`, the one commitment of Milestone 5 still
-open.  `SkorokhodSpace.instCompleteSpace` was the other, and it is **proved**
-since the twenty-third run of 2026-09-08.
+proofs, which is what this file is for.  There are **five** of them since the
+twenty-fourth run of 2026-09-08, which proved `exists_orderIso_isometry_real`
+and with it closed Milestone 1: `SkorokhodSpace.instSeparableSpace`, the one
+commitment of Milestone 5 still open, the two of Milestone 6 and the two of
+Milestone 7.  `SkorokhodSpace.instCompleteSpace` was the other of Milestone 5,
+and it is **proved** since the twenty-third run of 2026-09-08.
+
+**The index is a closed subset of `ℝ`, and now by a named map.**
+`lengthCoord t₀` is the signed distance to the base point; it is a strictly
+monotone isometry, its range is closed, and `exists_orderIso_isometry_real` is
+the three of those put together.  `TimeChange.exists_of_lengthCoord` is what it
+was written for: a time change on a general index is a bi-Lipschitz `φ : ℝ → ℝ`
+fixing `0` and carrying the range of the coordinate onto itself.
 
 **`SkorokhodSpace.instMetricSpace` is the integral metric**, since the
 twenty-first run of 2026-09-08: it is `SkorokhodSpace.metricSpaceInt basePoint`,
@@ -511,10 +520,96 @@ theorem clamp_clamp_of_le (t₀ : ι) {u u' : ℝ} (h : u ≤ u') (t : ι) :
     clamp t₀ u' (clamp t₀ u t) = clamp t₀ u t :=
   clamp_eq_self (exhaustion_subset_of_le t₀ h (clamp_mem_exhaustion t₀ u t))
 
+/-- **The coordinate of the index**: the distance to the base point, signed by
+the side of it on which the point lies.  It is the map that realises the index
+as a closed subset of `ℝ` (`exists_orderIso_isometry_real`), and it is written
+out rather than obtained from that existence statement because everything a
+construction of a time change needs is a *named* coordinate: the order
+isomorphism produced by an existential is opaque, and no explicit time change
+can be written against it. -/
+noncomputable def lengthCoord (t₀ : ι) (t : ι) : ℝ :=
+  if t₀ ≤ t then dist t₀ t else -dist t₀ t
+
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- The increment of the coordinate along the order is the distance, with no
+absolute value: this is the one statement from which strict monotonicity and the
+isometry both follow, and it is `AdditiveDist` alone.  The three cases are the
+three positions of the pair relative to the base point; the mixed one is the
+only one in which the two distances *add* rather than subtract. -/
+theorem sub_lengthCoord_of_le (t₀ : ι) {s t : ι} (hst : s ≤ t) :
+    lengthCoord t₀ t - lengthCoord t₀ s = dist s t := by
+  rcases lt_or_ge s t₀ with hs₀ | h₀s
+  · rcases lt_or_ge t t₀ with ht₀ | h₀t
+    · simp only [lengthCoord, if_neg (not_le.2 hs₀), if_neg (not_le.2 ht₀)]
+      have hadd := AdditiveDist.dist_add (α := ι) hst ht₀.le
+      have hcs : dist t₀ s = dist s t₀ := dist_comm _ _
+      have hct : dist t₀ t = dist t t₀ := dist_comm _ _
+      linarith
+    · simp only [lengthCoord, if_neg (not_le.2 hs₀), if_pos h₀t]
+      have hadd := AdditiveDist.dist_add (α := ι) hs₀.le h₀t
+      have hc : dist t₀ s = dist s t₀ := dist_comm _ _
+      linarith
+  · have h₀t : t₀ ≤ t := h₀s.trans hst
+    simp only [lengthCoord, if_pos h₀s, if_pos h₀t]
+    rw [dist_eq_sub_of_le h₀s hst]
+
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- The coordinate is strictly monotone.  Strictness is where `MetricSpace`
+enters instead of `PseudoMetricSpace`: it is `dist_pos`. -/
+theorem strictMono_lengthCoord (t₀ : ι) : StrictMono (lengthCoord t₀) := by
+  intro s t hst
+  have h := sub_lengthCoord_of_le t₀ hst.le
+  have hpos : 0 < dist s t := dist_pos.2 (ne_of_lt hst)
+  linarith
+
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- The coordinate is an isometry. -/
+theorem isometry_lengthCoord (t₀ : ι) : Isometry (lengthCoord t₀) := by
+  refine Isometry.of_dist_eq fun s t => ?_
+  rw [Real.dist_eq]
+  rcases le_total s t with h | h
+  · have := sub_lengthCoord_of_le t₀ h
+    rw [show lengthCoord t₀ s - lengthCoord t₀ t = -dist s t by linarith, abs_neg,
+      abs_of_nonneg dist_nonneg]
+  · have := sub_lengthCoord_of_le t₀ h
+    rw [show lengthCoord t₀ s - lengthCoord t₀ t = dist t s by linarith,
+      abs_of_nonneg dist_nonneg, dist_comm]
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The base point sits at the origin of its own coordinate.  This is what makes
+`TimeChange.fixing t₀` readable in the coordinate: a time change fixes `t₀`
+exactly when the map of `ℝ` that represents it fixes `0`. -/
+@[simp]
+theorem lengthCoord_self (t₀ : ι) : lengthCoord t₀ t₀ = 0 := by
+  simp [lengthCoord]
+
+omit [OrderTopology ι] in
 /-- An index satisfying the four hypotheses is order isomorphic and isometric to
-a closed subset of `ℝ`. -/
+a closed subset of `ℝ`.
+
+Three of the four hypotheses do the work and the fourth does none:
+`AdditiveDist` makes `lengthCoord` an isometry, `MetricSpace` (rather than
+`PseudoMetricSpace`) makes it strictly monotone, and `ProperSpace` makes its
+range closed --- through `complete_of_proper` and `Isometry.isClosedEmbedding`,
+so what is really used is completeness.  `OrderTopology` is not used at all and
+is omitted; the statement holds for any linear order carrying a metric additive
+along it, whatever its topology.  That is not vacuous, because the topology of
+the index enters everywhere else in this file --- `isCompact_exhaustion`,
+`continuous_clamp`, `countable_rightIsolated` --- and it is the one place where
+the roadmap asked for more than the proof needs. -/
 theorem exists_orderIso_isometry_real :
-    ∃ (s : Set ℝ) (e : ι ≃o s), IsClosed s ∧ Isometry e := sorry
+    ∃ (s : Set ℝ) (e : ι ≃o s), IsClosed s ∧ Isometry e := by
+  rcases isEmpty_or_nonempty ι with hι | hι
+  · have he : IsEmpty ((∅ : Set ℝ) : Type) := by simp
+    exact ⟨∅, ⟨Equiv.equivOfIsEmpty ι _, fun {a _} => isEmptyElim a⟩, isClosed_empty,
+      fun x _ => isEmptyElim x⟩
+  · obtain ⟨t₀⟩ := hι
+    have hiso := isometry_lengthCoord (ι := ι) t₀
+    have hmono := strictMono_lengthCoord (ι := ι) t₀
+    refine ⟨Set.range (lengthCoord t₀), hmono.orderIso _,
+      hiso.isClosedEmbedding.isClosed_range, Isometry.of_dist_eq fun s t => ?_⟩
+    rw [Subtype.dist_eq]
+    exact hiso.dist_eq s t
 
 /-! ## Milestone 2: càdlàg functions
 
@@ -1737,6 +1832,77 @@ theorem TimeChange.norm_le_of_lipschitzWith {l : TimeChange ι} {γ : ℝ} (hγ 
       le_antisymm hz (le_max_of_le_left (NNReal.coe_nonneg _))
     rw [hzero, Real.log_zero]
     exact hγ
+
+omit [OrderTopology ι] [ProperSpace ι] in
+/-- **Time changes are built in the coordinate.**  A strictly monotone
+`φ : ℝ → ℝ` which fixes `0`, which maps the coordinate of the index *onto*
+itself, and which is bi-Lipschitz with the two constants `exp γ`, yields a time
+change fixing `t₀` of norm at most `γ`, and it is the one whose coordinate is
+`φ`.
+
+This is the bridge the whole file lacked until 2026-09-08: `TimeChange.steep`
+and `TimeChange.double` are written on `ℝ` and nothing constructs a time change
+on a general index.  With `lengthCoord` there is nothing left to construct ---
+an order isomorphism of the index is an order isomorphism of a subset of `ℝ` ---
+and the two `∃` hypotheses are exactly the statement that `φ` maps the range of
+the coordinate onto itself.
+
+**Those two hypotheses are the obstruction and not an artefact**, which is why
+they are stated separately rather than being derived from `φ` being onto `ℝ`:
+for `ι = ℤ` the range of the coordinate is `ℤ` and the only `φ` admissible is
+the identity, so the index has no time change but the trivial one.  A proof of
+`SkorokhodSpace.instSeparableSpace` has to produce a `φ` that respects the
+range, and on a general index that is a condition on the index, not a
+construction on `ℝ`. -/
+theorem TimeChange.exists_of_lengthCoord (t₀ : ι) (φ : ℝ → ℝ) {γ : ℝ} (hγ : 0 ≤ γ)
+    (hφ₀ : φ 0 = 0) (hmono : StrictMono φ)
+    (hmaps : ∀ t : ι, ∃ s : ι, lengthCoord t₀ s = φ (lengthCoord t₀ t))
+    (hsurj : ∀ s : ι, ∃ t : ι, φ (lengthCoord t₀ t) = lengthCoord t₀ s)
+    (hlip : ∀ x y : ℝ, |φ x - φ y| ≤ Real.exp γ * |x - y|)
+    (hanti : ∀ x y : ℝ, |x - y| ≤ Real.exp γ * |φ x - φ y|) :
+    ∃ l : TimeChange ι, l.toOrderIso t₀ = t₀ ∧ l.norm ≤ γ ∧
+      ∀ t : ι, lengthCoord t₀ (l.toOrderIso t) = φ (lengthCoord t₀ t) := by
+  classical
+  have hcm := strictMono_lengthCoord (ι := ι) t₀
+  have hci := isometry_lengthCoord (ι := ι) t₀
+  have hdist : ∀ s t : ι, |lengthCoord t₀ s - lengthCoord t₀ t| = dist s t := fun s t => by
+    rw [← Real.dist_eq]; exact hci.dist_eq s t
+  choose g hg using hmaps
+  have hgmono : StrictMono g := by
+    intro s t hst
+    exact hcm.lt_iff_lt.1 (by rw [hg s, hg t]; exact hmono (hcm hst))
+  have hgsurj : Function.Surjective g := by
+    intro s
+    obtain ⟨t, ht⟩ := hsurj s
+    exact ⟨t, hcm.injective (by rw [hg t, ht])⟩
+  have hglip : ∀ s t : ι, dist (g s) (g t) ≤ Real.exp γ * dist s t := by
+    intro s t
+    rw [← hdist (g s) (g t), ← hdist s t, hg s, hg t]
+    exact hlip _ _
+  have hganti : ∀ s t : ι, dist s t ≤ Real.exp γ * dist (g s) (g t) := by
+    intro s t
+    rw [← hdist (g s) (g t), ← hdist s t, hg s, hg t]
+    exact hanti _ _
+  set e : ι ≃o ι := hgmono.orderIsoOfSurjective g hgsurj with he
+  have hecoe : ⇑e = g := StrictMono.coe_orderIsoOfSurjective g hgmono hgsurj
+  have hK : ((Real.exp γ).toNNReal : ℝ) = Real.exp γ :=
+    Real.coe_toNNReal _ (Real.exp_pos γ).le
+  have hlip1 : LipschitzWith (Real.exp γ).toNNReal ⇑e := by
+    refine LipschitzWith.of_dist_le_mul fun s t => ?_
+    rw [hecoe, hK]
+    exact hglip s t
+  have hlip2 : LipschitzWith (Real.exp γ).toNNReal ⇑e.symm := by
+    refine LipschitzWith.of_dist_le_mul fun s t => ?_
+    rw [hK]
+    have := hganti (e.symm s) (e.symm t)
+    rwa [← hecoe, e.apply_symm_apply, e.apply_symm_apply] at this
+  refine ⟨⟨e, ⟨_, hlip1⟩, ⟨_, hlip2⟩⟩, ?_, ?_, ?_⟩
+  · refine hcm.injective ?_
+    show lengthCoord t₀ (g t₀) = lengthCoord t₀ t₀
+    rw [hg t₀, lengthCoord_self, hφ₀]
+  · exact TimeChange.norm_le_of_lipschitzWith hγ hlip1 hlip2
+  · intro t
+    exact hg t
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The partial compositions `l 0 ∘ l 1 ∘ ⋯ ∘ l (n-1)`.  The order matters and it

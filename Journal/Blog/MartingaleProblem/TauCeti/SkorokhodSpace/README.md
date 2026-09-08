@@ -93,11 +93,26 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
     `OrderTopology.of_linearLocallyFinite [LinearOrder α] [LocallyFiniteOrder α]
     [DiscreteTopology α]`, or the `OrderTopology` instance directly. Both
     instances are in `Mathlib/Topology/Instances/Discrete.lean`.
-* `AdditiveDist.orderIso_isometry_real`: a linear order with a metric inducing
-  the order topology and additive along the order embeds into `ℝ` by an order
-  isomorphism onto its image which is an isometry; the image is closed when
-  closed balls are compact. State the embedding as a bundled
-  `OrderIso`-and-`Isometry` onto its range.
+* `lengthCoord`, **written and proved 2026-09-08**: the coordinate of the index,
+  `lengthCoord t₀ t = if t₀ ≤ t then dist t₀ t else -dist t₀ t`. Its increment
+  along the order is the distance itself, with no absolute value
+  (`sub_lengthCoord_of_le`), from which `strictMono_lengthCoord`,
+  `isometry_lengthCoord` and `lengthCoord_self` follow. The coordinate is
+  written out rather than being read off the existence statement below, because
+  a construction of a time change needs a *named* coordinate: the order
+  isomorphism produced by an existential is opaque, and no explicit time change
+  can be written against it. This is the same reason `BasePoint` is data.
+* `exists_orderIso_isometry_real`, **proved 2026-09-08**: a linear order with a
+  metric additive along the order is order isomorphic and isometric to a closed
+  subset of `ℝ`, namely the range of `lengthCoord`. It is `lengthCoord` together
+  with `StrictMono.orderIso` and `Isometry.isClosedEmbedding`. **The order
+  topology is not used**, and the statement is `omit [OrderTopology ι]`:
+  `AdditiveDist` makes the coordinate an isometry, `MetricSpace` rather than
+  `PseudoMetricSpace` makes it strictly monotone, and `ProperSpace` makes its
+  range closed — through `complete_of_proper`, so what is used is completeness
+  and not properness itself. The empty index is a case of its own and takes
+  `s = ∅`, since with no point there is no base point to take the coordinate
+  around.
 * The four running instances `ℝ`, `Set.Ici (0:ℝ)`, `Set.Icc (0:ℝ) T`,
   `AddSubgroup.zmultiples (h : ℝ)` carry
   `[LinearOrder] [MetricSpace] [OrderTopology] [AdditiveDist] [ProperSpace]`.
@@ -157,8 +172,9 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
 * `rightIsolated ι = {t | IsOpen (Set.Iic t)}`, the points approached from the
   right by nothing, and `countable_rightIsolated`: **there are countably many
   of them.** Proved (2026-09-08), and the proof is intrinsic — it does not go
-  through the embedding of the index into `ℝ`, which is still
-  `exists_orderIso_isometry_real` and still open. For a right isolated `t` the
+  through the embedding of the index into `ℝ`, which is
+  `exists_orderIso_isometry_real`, proved later the same day and not used here.
+  For a right isolated `t` the
   set `Set.Iic t` is open, so a countable basis has a member `v` with
   `t ∈ v ⊆ Set.Iic t`, and `v s = v t` forces `s ≤ t` and `t ≤ s` at once. The
   hypothesis is second countability, which the index has from `ProperSpace`.
@@ -514,6 +530,19 @@ Under (B), with `E` a pseudometric space:
   `LipschitzWith.comp` and `OrderIso.symm_trans`, and the axioms are
   `TimeChange.ext rfl` — the extensionality lemma holds because the other two
   fields of the structure are propositions.
+* `TimeChange.exists_of_lengthCoord`, **proved 2026-09-08**: time changes are
+  built in the coordinate of Milestone 1. A strictly monotone `φ : ℝ → ℝ` with
+  `φ 0 = 0`, bi-Lipschitz with the two constants `exp γ`, and mapping the range
+  of `lengthCoord t₀` **onto itself**, yields a time change fixing `t₀`, of norm
+  at most `γ`, whose coordinate is `φ`. Until it was written nothing in the file
+  constructed a time change on a general index: `TimeChange.steep` and
+  `TimeChange.double` are written on `ℝ`. The two surjectivity hypotheses are
+  the obstruction and not an artefact of the statement, and this is what they
+  say: for `ι = h • ℤ` the range of the coordinate is `h • ℤ` and the only
+  admissible `φ` is the identity, so that index has no time change but the
+  trivial one. Every construction of a time change on a general index is
+  therefore a statement about the range of the coordinate, and the lemma is the
+  place where that becomes visible.
 * `TimeChange.lipConst λ = sInf {K : ℝ≥0 | LipschitzWith K λ}`, the least
   Lipschitz constant, and `TimeChange.norm λ = log (max (lipConst λ) (lipConst λ⁻¹))`,
   with `TimeChange.lipConstOn m λ` and `TimeChange.normOn m λ` the same computed
@@ -1075,7 +1104,25 @@ owes.
     it does not do is produce a limit.
 * `SeparableSpace (D ι E)`: the piecewise constant paths taking finitely many
   values from a countable dense subset of `E` on the intervals of a rational
-  subdivision of `B m` are dense.
+  subdivision of `B m` are dense. The proof runs
+  `Metric.secondCountable_of_almost_dense_set` — a countable `ε`-net for every
+  `ε` (`Mathlib/Topology/MetricSpace/Pseudo/Basic.lean:247`), then the instance
+  `TopologicalSpace.SecondCountableTopology.to_separableSpace`
+  (`Mathlib/Topology/Bases.lean:896`) — and it splits into two
+  halves of very different weight. The light half is the approximation of a
+  càdlàg path by a step path **at its own jump times**, which is uniform on the
+  window and therefore needs no time change at all; it is the subdivision of
+  Milestone 7 and it will come with `tendsto_modulus`. The heavy half is moving
+  those jump times onto the countable set, and it is a statement about the
+  index and not about the paths: it asks for a time change of small norm
+  carrying finitely many prescribed points onto finitely many nearby ones. Since
+  2026-09-08 the place to make it is named — `TimeChange.exists_of_lengthCoord`
+  of Milestone 3 — and so is the condition it has to meet: the piecewise linear
+  `φ` that does the moving must carry the range of `lengthCoord t₀` onto itself.
+  On `ι = ℝ` every piecewise linear `φ` does; on `ι = h • ℤ` only the identity
+  does, and there the countable dense set is the index itself and the jump times
+  need no moving. **The milestone therefore owes the interpolation lemma on the
+  range of the coordinate**, not a construction on `ℝ`.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
