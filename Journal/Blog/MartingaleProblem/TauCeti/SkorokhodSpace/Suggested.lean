@@ -19,18 +19,37 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-08.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  There are eight of them, down from
+proofs, which is what this file is for.  There are five of them, down from
 eleven on 2026-09-07.
+
+**The metric of Milestone 4 is not a Skorokhod metric, and this is proved here.**
+`SkorokhodSpace.dist_exhaustionMax_le_distOn` says that `distOn t₀ m` contains
+the undamped number `dist (f b) (g b)` at the window endpoint `b`, for every
+admissible time change, because far out on the right the two `clamp`s agree
+whatever the time change does.  `SkorokhodSpace.continuous_eval_exhaustionMax`
+turns that into the continuity of evaluation at `b`, and
+`SkorokhodSpace.exists_jump_continuousAt_eval` exhibits a path of `D(ℝ, ℝ)` that
+jumps at `1` and at which evaluation at `1` is continuous nonetheless.  Three
+`sorry`s went out with that finding rather than being proved --- `CompleteSpace`,
+`SeparableSpace` and the characterisation of the continuity points of
+evaluation --- because the first and the third are **false** as they stood.  The
+diagnosis, the Cauchy sequence without a limit, and the repair (integrate over
+the window radius instead of summing over integer radii, which is what
+Ethier--Kurtz do and why they do it) are at the head of Milestone 5 below.
+`SkorokhodSpace.distOn` itself survives the repair: it is Ethier--Kurtz's
+`d(x, y, λ, u)` and everything proved about it stands.  So do the two lemmas of
+Milestone 2 that the corrected completeness argument needs and that the same run
+proved: `IsCadlag.of_forall_eventuallyEq`, that being càdlàg is a local
+property, and `IsCadlag.of_tendstoUniformlyOn_exhaustion`, that uniform
+convergence on every window is enough --- which is the shape the estimate there
+actually has.
 
 Since 2026-09-08 the **base point is a typeclass**, `BasePoint`, and with it the
 parameterless `MetricSpace D(ι, E)` is a theorem: `SkorokhodSpace.instMetricSpace`
 is `SkorokhodSpace.metricSpace basePoint` and depends on `propext`,
 `Classical.choice` and `Quot.sound` alone.  `SkorokhodSpace.dist_eq` is its
 interface, by `rfl`.  Two more `sorry`s went with it.
-`SkorokhodSpace.instPolishSpace` is `inferInstance` --- Mathlib assembles
-`PolishSpace` from `SeparableSpace` and a complete metric --- so it owes nothing
-of its own and is axiom clean the moment the two instances above it are.  And
-`SkorokhodSpace.modulus` is written out instead of being `sorry` as a
+And `SkorokhodSpace.modulus` is written out instead of being `sorry` as a
 *definition*: `IsSubdivision`, `subdivisionOsc`, `modulus`, with `modulus_mono`
 and `modulus_eq_zero_of_exhaustion_subsingleton` proved.  It is `ℝ≥0∞` valued
 and the roadmap said `ℝ`; the reason is at the declaration, and it is the empty
@@ -48,14 +67,15 @@ rung that argument hung on: `TimeChange.exists_tendsto_of_summable_norm` and its
 quantitative form `TimeChange.exists_tendsto_norm_tail_le`.  The point that is
 more than a convergence argument there is the *surjectivity* of the limit, and it
 is obtained by running the same estimate on the inverses; the reasoning is at the
-declaration.  With it Milestone 5 has six named items and five of them are proved
---- `min_one_distOn_le`, `distOn_le_of_two_pow_mul_lt_one` and
-`totalDist_le_sum_add`, all proved the same day, are the passage between the
-metric and its windows in both directions.  What is open is the compatibility of
-the limits across windows, and the route through `distOn t₀ m ≤ distOn t₀ (m+1)`
-is *not* available: an admissible time change for the larger window compares
-`f ∘ clamp (m+1) ∘ λ` with `g ∘ clamp (m+1)`, whose two `clamp`s do not line up
-at a point of the smaller window.
+declaration.  Those two, together with `min_one_distOn_le`,
+`distOn_le_of_two_pow_mul_lt_one` and `totalDist_le_sum_add` --- the passage
+between the metric and its windows in both directions --- are the rungs of the
+completeness argument, and they are **not** lost with the instance they were
+built for: they are statements about `TimeChange` and about `distOn`, and both
+survive the repair of the metric unchanged.  What the third run of 2026-09-08
+found is that the missing rung, the compatibility of the window limits, is
+missing because there is nothing there: the window endpoints obstruct it, and the
+obstruction is `SkorokhodSpace.dist_exhaustionMax_le_distOn`.
 
 Since 2026-09-07 the whole of `TimeChange.lipConst` and `TimeChange.norm` is
 proved: the attainment `lipschitzWith_lipConst`, `lipConst_one`,
@@ -379,6 +399,23 @@ theorem clamp_eq_self {t₀ : ι} {m : ℕ} {t : ι} (ht : t ∈ exhaustion t₀
 theorem clamp_idem (t₀ : ι) (m : ℕ) (t : ι) : clamp t₀ m (clamp t₀ m t) = clamp t₀ m t :=
   clamp_eq_self (clamp_mem_exhaustion t₀ m t)
 
+omit [AdditiveDist ι] in
+/-- Above the window the clamp is the greatest point of the window.  Innocent as
+it looks, this is the half of the clamp that
+`SkorokhodSpace.dist_exhaustionMax_le_distOn` reads, and through it the
+obstruction of 2026-09-08: far out on the right *both* arguments of the supremum
+in `distOn` are clamped to the same point, whatever the time change does. -/
+theorem clamp_eq_exhaustionMax_of_le {t₀ : ι} {m : ℕ} {t : ι}
+    (h : exhaustionMax t₀ m ≤ t) : clamp t₀ m t = exhaustionMax t₀ m := by
+  rw [clamp, min_eq_right (h.trans (le_max_left _ _))]
+
+omit [AdditiveDist ι] in
+/-- And the mirror half, below the window. -/
+theorem clamp_eq_exhaustionMin_of_le {t₀ : ι} {m : ℕ} {t : ι}
+    (h : t ≤ exhaustionMin t₀ m) : clamp t₀ m t = exhaustionMin t₀ m := by
+  rw [clamp, max_eq_right h,
+    min_eq_left ((isLeast_exhaustionMin t₀ m).2 (isGreatest_exhaustionMax t₀ m).1)]
+
 omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The windows around one base point are nested.  This is the case of
 `exhaustion_subset_exhaustion` that the exhaustion is named for, and it is
@@ -485,6 +522,30 @@ theorem IsCadlag.of_tendstoUniformly [CompleteSpace E] {F : ℕ → ι → E} {f
       obtain ⟨l, hl⟩ := cauchySeq_tendsto_of_complete hcauchy
       exact ⟨l, h.tendsto_of_eventually_tendsto
         (Eventually.of_forall fun n => (hF n).tendsto_leftLim x) hl⟩
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- **Being càdlàg is local.**  A function that agrees near every point with
+*some* càdlàg function is càdlàg.  Both clauses of `IsCadlag` are statements
+about `𝓝[>] a` and `𝓝[<] x`, and both filters lie below `𝓝` of their point, so
+the whole content is `Filter.Tendsto.congr'`.
+
+This is what `IsCadlag.of_tendstoUniformly` needs beside it in the completeness
+argument of Milestone 5: the estimate there holds on windows and not on all of
+`ι`, so the limit path is a *locally* uniform limit, and it is caught window by
+window --- as `f ∘ clamp t₀ m`, which *is* a global uniform limit --- and then
+assembled here, every point lying in the interior of a window. -/
+theorem IsCadlag.of_forall_eventuallyEq {f : ι → E}
+    (h : ∀ x : ι, ∃ g : ι → E, IsCadlag g ∧ f =ᶠ[𝓝 x] g) : IsCadlag f where
+  right_continuous a := by
+    obtain ⟨g, hg, hfg⟩ := h a
+    have hev : f =ᶠ[𝓝[>] a] g := hfg.filter_mono nhdsWithin_le_nhds
+    show Tendsto f (𝓝[Set.Ioi a] a) (𝓝 (f a))
+    rw [hfg.eq_of_nhds]
+    exact Filter.Tendsto.congr' hev.symm (hg.right_continuous a)
+  left_limit x := by
+    obtain ⟨g, hg, hfg⟩ := h x
+    obtain ⟨l, hl⟩ := hg.left_limit x
+    exact ⟨l, Filter.Tendsto.congr' (hfg.filter_mono nhdsWithin_le_nhds).symm hl⟩
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- If `f` stays `r`-close to a point `c` of `E` on `Set.Ioo a y` and at `y`,
@@ -767,6 +828,30 @@ theorem IsCadlag.comp_monotone_continuous {f : ι → E} (hf : IsCadlag f) {g : 
         hgc.continuousWithinAt ?_
       filter_upwards [self_mem_nhdsWithin] with y hy
       exact lt_of_le_of_ne (hgm (le_of_lt hy)) (hconst y hy)
+
+/-- The form the completeness argument of Milestone 5 consumes
+`IsCadlag.of_forall_eventuallyEq` in: uniform convergence **on every window** is
+enough.  The passage is the clamp --- `F n ∘ clamp t₀ m` converges uniformly on
+all of `ι`, because `clamp` lands in the window --- and the localisation is that
+every point lies in the open ball of some integer radius. -/
+theorem IsCadlag.of_tendstoUniformlyOn_exhaustion [CompleteSpace E] (t₀ : ι)
+    {F : ℕ → ι → E} {f : ι → E} (hF : ∀ n, IsCadlag (F n))
+    (h : ∀ m : ℕ, TendstoUniformlyOn F f atTop (exhaustion t₀ m)) : IsCadlag f := by
+  refine IsCadlag.of_forall_eventuallyEq fun x => ?_
+  obtain ⟨m, hm⟩ := exists_nat_gt (dist x t₀)
+  refine ⟨f ∘ clamp t₀ m, ?_, ?_⟩
+  · refine IsCadlag.of_tendstoUniformly
+      (fun n => (hF n).comp_monotone_continuous (monotone_clamp t₀ m) (continuous_clamp t₀ m)) ?_
+    have hpre : clamp t₀ m ⁻¹' exhaustion t₀ m = Set.univ :=
+      Set.eq_univ_iff_forall.2 (clamp_mem_exhaustion t₀ m)
+    have hc := (h m).comp (clamp t₀ m)
+    rwa [hpre, tendstoUniformlyOn_univ] at hc
+  · have hnhds : exhaustion t₀ m ∈ 𝓝 x :=
+      mem_nhds_iff.2 ⟨Metric.ball t₀ m, Metric.ball_subset_closedBall, Metric.isOpen_ball,
+        Metric.mem_ball.2 hm⟩
+    filter_upwards [hnhds] with t ht
+    show f t = f (clamp t₀ m t)
+    rw [clamp_eq_self ht]
 
 omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The image of a compact set under a càdlàg map is bounded.  Milestone 4 needs
@@ -1952,6 +2037,67 @@ theorem SkorokhodSpace.distOn_self (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
   refine (ciInf_le (SkorokhodSpace.bddBelow_range_distOn t₀ m f f) 1).trans ?_
   simp [TimeChange.norm_one]
 
+/-! ### The window endpoints are read off `distOn`
+
+The two statements that follow are the **obstruction of 2026-09-08**, and they
+are the reason Milestone 5 carries no `CompleteSpace` instance any more.
+
+`distOn t₀ m` truncates the two paths with `clamp t₀ m` and lets the time change
+`l` range over all of `TimeChange.fixing t₀`.  Take `t` beyond both
+`exhaustionMax t₀ m` and `l⁻¹ (exhaustionMax t₀ m)`.  Then `clamp t₀ m t` and
+`clamp t₀ m (l t)` are *both* `exhaustionMax t₀ m`, so the supremum in `distOn`
+contains the plain number `dist (f b) (g b)` --- and it does so for **every**
+`l`, so the infimum cannot get below it.
+
+The consequence is `SkorokhodSpace.continuous_eval_exhaustionMax`: evaluation at
+a window endpoint is continuous for the metric of Milestone 4, at every path,
+jump or no jump.  For the Skorokhod topology it is continuous exactly at the
+paths that do not jump there, so the metric of Milestone 4 is **not** a
+Skorokhod metric, and `SkorokhodSpace.exists_jump_continuousAt_eval` says so in
+one concrete instance.  Ethier--Kurtz avoid this by integrating over the window
+radius rather than summing over integer radii; the bad radii of a pair of paths
+are countably many, hence Lebesgue null, and the integral does not see them. -/
+
+/-- **The right window endpoint is a lower bound for `distOn`.**  No time change
+can separate the two paths at `exhaustionMax t₀ m`, because every `t` far enough
+to the right has both `clamp t₀ m t` and `clamp t₀ m (l t)` equal to it. -/
+theorem SkorokhodSpace.dist_exhaustionMax_le_distOn (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
+    dist (f.toFun (exhaustionMax t₀ m)) (g.toFun (exhaustionMax t₀ m))
+      ≤ SkorokhodSpace.distOn t₀ m f g := by
+  refine le_ciInf fun l => le_trans ?_ (le_max_right _ _)
+  obtain ⟨t, h1, h2⟩ : ∃ t : ι, clamp t₀ m t = exhaustionMax t₀ m ∧
+      clamp t₀ m ((l : TimeChange ι).toOrderIso t) = exhaustionMax t₀ m := by
+    refine ⟨max ((l : TimeChange ι).toOrderIso.symm (exhaustionMax t₀ m))
+        (exhaustionMax t₀ m), clamp_eq_exhaustionMax_of_le (le_max_right _ _),
+      clamp_eq_exhaustionMax_of_le ?_⟩
+    have h := (l : TimeChange ι).toOrderIso.monotone
+      (le_max_left ((l : TimeChange ι).toOrderIso.symm (exhaustionMax t₀ m))
+        (exhaustionMax t₀ m))
+    rwa [OrderIso.apply_symm_apply] at h
+  refine le_trans (le_of_eq ?_)
+    (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ m f g
+      (l : TimeChange ι)) t)
+  rw [SkorokhodSpace.restrictExhaustion_apply, SkorokhodSpace.restrictExhaustion_apply, h1, h2]
+
+/-- The mirror statement at the left window endpoint. -/
+theorem SkorokhodSpace.dist_exhaustionMin_le_distOn (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
+    dist (f.toFun (exhaustionMin t₀ m)) (g.toFun (exhaustionMin t₀ m))
+      ≤ SkorokhodSpace.distOn t₀ m f g := by
+  refine le_ciInf fun l => le_trans ?_ (le_max_right _ _)
+  obtain ⟨t, h1, h2⟩ : ∃ t : ι, clamp t₀ m t = exhaustionMin t₀ m ∧
+      clamp t₀ m ((l : TimeChange ι).toOrderIso t) = exhaustionMin t₀ m := by
+    refine ⟨min ((l : TimeChange ι).toOrderIso.symm (exhaustionMin t₀ m))
+        (exhaustionMin t₀ m), clamp_eq_exhaustionMin_of_le (min_le_right _ _),
+      clamp_eq_exhaustionMin_of_le ?_⟩
+    have h := (l : TimeChange ι).toOrderIso.monotone
+      (min_le_left ((l : TimeChange ι).toOrderIso.symm (exhaustionMin t₀ m))
+        (exhaustionMin t₀ m))
+    rwa [OrderIso.apply_symm_apply] at h
+  refine le_trans (le_of_eq ?_)
+    (le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ m f g
+      (l : TimeChange ι)) t)
+  rw [SkorokhodSpace.restrictExhaustion_apply, SkorokhodSpace.restrictExhaustion_apply, h1, h2]
+
 omit [AdditiveDist ι] in
 /-- The infimum in `distOn` is approached.  It need not be attained --- the
 subgroup of anchored time changes is not compact in any sense --- so the
@@ -2197,6 +2343,17 @@ theorem SkorokhodSpace.min_one_distOn_le (t₀ : ι) (m : ℕ) (f g : D(ι, E)) 
     _ ≤ 2 ^ m * SkorokhodSpace.totalDist t₀ f g :=
         mul_le_mul_of_nonneg_left hle (by positivity)
 
+/-- The obstruction in the form the metric consumes it: the value of a path at a
+window endpoint is determined by the metric, up to the geometric weight of the
+window.  This is `SkorokhodSpace.dist_exhaustionMax_le_distOn` and
+`SkorokhodSpace.min_one_distOn_le` composed, and it is one step away from the
+continuity of evaluation there. -/
+theorem SkorokhodSpace.min_one_dist_exhaustionMax_le (t₀ : ι) (m : ℕ) (f g : D(ι, E)) :
+    min 1 (dist (f.toFun (exhaustionMax t₀ m)) (g.toFun (exhaustionMax t₀ m)))
+      ≤ 2 ^ m * SkorokhodSpace.totalDist t₀ f g :=
+  le_trans (min_le_min le_rfl (SkorokhodSpace.dist_exhaustionMax_le_distOn t₀ m f g))
+    (SkorokhodSpace.min_one_distOn_le t₀ m f g)
+
 omit [AdditiveDist ι] in
 /-- The same estimate without the truncation, on the range where the truncation
 is inactive.  The hypothesis is not a defect: `distOn` is genuinely unbounded as
@@ -2318,24 +2475,139 @@ what lets an acceptance example on `D(ℝ, E)` compute with `totalDist 0`. -/
 theorem SkorokhodSpace.dist_eq (f g : D(ι, E)) :
     dist f g = SkorokhodSpace.totalDist (basePoint : ι) f g := rfl
 
-instance SkorokhodSpace.instCompleteSpace [PolishSpace E] : CompleteSpace D(ι, E) := sorry
-instance SkorokhodSpace.instSeparableSpace [PolishSpace E] :
-    TopologicalSpace.SeparableSpace D(ι, E) := sorry
+/-! ## Milestone 5: completeness, separability, Polishness
 
-/-- Polish, and this one is a derivation rather than a `sorry`: Mathlib builds
-`PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
-(`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
-complete metric (`MetricSpace.toIsCompletelyMetrizableSpace`,
-`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`).  It depends on
-`sorryAx` only through the two instances above it, never on its own account, and
-it will be axiom clean the moment they are.  This is the third item of
-Milestone 5, and it costs nothing once the first two are in. -/
-instance SkorokhodSpace.instPolishSpace [PolishSpace E] : PolishSpace D(ι, E) := inferInstance
+**This section carried three declarations until 2026-09-08 --- `CompleteSpace`,
+`SeparableSpace` and `PolishSpace` for `D(ι, E)` --- and they are gone, because
+the first of them is false for the metric above.**  What stands here instead is
+the refutation, and it is proved rather than asserted.
 
-/-- Evaluation is continuous exactly at the paths that do not jump at `t`. -/
-theorem SkorokhodSpace.continuousAt_eval {t : ι} {f : D(ι, E)} :
-    ContinuousAt (fun g : D(ι, E) => g.toFun t) f ↔
-      Function.leftLim f.toFun t = f.toFun t := sorry
+`SkorokhodSpace.dist_exhaustionMax_le_distOn` shows that `distOn t₀ m` sees the
+values of the two paths at `exhaustionMax t₀ m` undamped by any time change, and
+`SkorokhodSpace.continuous_eval_exhaustionMax` turns that into the continuity of
+evaluation at that point.  For `ι = ℝ` and `t₀ = 0` the window endpoints are the
+integers, so convergence in the metric of Milestone 4 forces pointwise
+convergence at every integer time, which the Skorokhod topology does not.
+`SkorokhodSpace.exists_jump_continuousAt_eval` exhibits a path that jumps at
+`1` and at which evaluation at `1` is nevertheless continuous.
+
+Completeness fails with it, and the witness is the classical one: with
+`x n := fun t => if t < 1 + 1/(n+1) then 1 else 0` in `D(ℝ, ℝ)`, the sequence is
+Cauchy --- a piecewise linear time change fixing `0`, the identity outside
+`[1/2, 2]`, carrying `1 + 1/(k+1)` to `1 + 1/(n+1)`, has norm tending to `0` and
+makes every windowed supremum vanish --- while no `w ∈ D(ℝ, ℝ)` can be its
+limit: `dist (x n 1) (w 1) ≤ distOn 0 1 (x n) w` forces `w 1 = 1`, so the jump of
+`w` sits strictly right of `1`, while the time changes of the second window would
+have to carry it to `1 + 1/(n+1) → 1` with norms tending to `0`.
+
+The repair is not a proof but a definition, and it is Milestone 4's: the metric
+has to integrate over the window radius, `∫ u in Ioi 0, exp (-u) * min 1 (…)`,
+instead of summing over integer radii.  The set of radii at which a given pair of
+paths jumps is countable, hence Lebesgue null, and the integral does not see
+it; that is exactly why Ethier--Kurtz write an integral and Billingsley a ramp
+function.  `SkorokhodSpace.distOn` itself survives the repair unchanged apart
+from the radius becoming real --- it is Ethier--Kurtz's `d(x, y, λ, u)` --- and
+so does everything proved about it. -/
+
+/-- **Evaluation at a window endpoint is continuous, jump or no jump.**  This is
+`SkorokhodSpace.min_one_dist_exhaustionMax_le` read as a modulus of continuity:
+`2 ^ m * dist f g < 1` already forces `dist (f b) (g b) ≤ 2 ^ m * dist f g`.
+
+For the Skorokhod topology the corresponding statement is an equivalence ---
+evaluation at `t` is continuous at `f` exactly when `Function.leftLim f t = f t`
+--- and that equivalence stood here as a `sorry` until 2026-09-08.  It is false
+for the metric of Milestone 4, and `SkorokhodSpace.exists_jump_continuousAt_eval`
+is the counterexample. -/
+theorem SkorokhodSpace.continuous_eval_exhaustionMax (m : ℕ) :
+    Continuous fun f : D(ι, E) => f.toFun (exhaustionMax (basePoint : ι) m) := by
+  rw [Metric.continuous_iff]
+  intro f ε hε
+  refine ⟨min ε 1 / 2 ^ m, by positivity, fun g hg => ?_⟩
+  have hkey := SkorokhodSpace.min_one_dist_exhaustionMax_le (basePoint : ι) m g f
+  rw [← SkorokhodSpace.dist_eq] at hkey
+  have hlt : 2 ^ m * dist g f < min ε 1 := by
+    have h2 : (0 : ℝ) < 2 ^ m := by positivity
+    have := mul_lt_mul_of_pos_left hg h2
+    rwa [mul_div_cancel₀ _ (ne_of_gt h2)] at this
+  have hmin := lt_of_le_of_lt hkey hlt
+  rcases min_cases 1 (dist (g.toFun (exhaustionMax (basePoint : ι) m))
+      (f.toFun (exhaustionMax (basePoint : ι) m))) with ⟨he, _⟩ | ⟨he, _⟩
+  · rw [he] at hmin
+    exact absurd (hmin.trans_le (min_le_right ε 1)) (lt_irrefl 1)
+  · rw [he] at hmin
+    exact hmin.trans_le (min_le_left _ _)
+
+/-- The greatest point of the window `exhaustion 0 m` of `ℝ` is `m`.  Needed to
+read the counterexample below off `continuous_eval_exhaustionMax`, whose window
+endpoint is opaque in general and is an integer here. -/
+theorem exhaustionMax_real (m : ℕ) : exhaustionMax (0 : ℝ) m = (m : ℝ) := by
+  refine IsGreatest.unique (isGreatest_exhaustionMax (0 : ℝ) m) ?_
+  have hset : exhaustion (0 : ℝ) m = Set.Icc (-(m : ℝ)) (m : ℝ) := by
+    simp [exhaustion, Real.closedBall_eq_Icc]
+  rw [hset]
+  exact isGreatest_Icc (by linarith [Nat.cast_nonneg (α := ℝ) m])
+
+/-- The unit step at `1`, the simplest path of `D(ℝ, ℝ)` with a jump. -/
+noncomputable def SkorokhodSpace.step : D(ℝ, ℝ) where
+  toFun t := if (1 : ℝ) ≤ t then 1 else 0
+  isCadlag := by
+    constructor
+    · intro a
+      show Filter.Tendsto (fun t => if (1 : ℝ) ≤ t then (1 : ℝ) else 0) (𝓝[Set.Ioi a] a)
+        (𝓝 (if (1 : ℝ) ≤ a then (1 : ℝ) else 0))
+      rcases lt_or_ge a 1 with ha | ha
+      · rw [if_neg (not_le.2 ha)]
+        refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))
+        filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
+          (Iio_mem_nhds ha)] with t ht
+        rw [if_neg (not_le.2 ht)]
+      · have ha' : (1 : ℝ) ≤ a := ha
+        rw [if_pos ha']
+        refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (1 : ℝ)))
+        filter_upwards [self_mem_nhdsWithin] with t ht
+        simp only [Set.mem_Ioi] at ht
+        rw [if_pos (ha'.trans ht.le)]
+    · intro x
+      rcases lt_or_ge 1 x with hx | hx
+      · refine ⟨1, Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (1 : ℝ)))⟩
+        filter_upwards [Filter.Eventually.filter_mono nhdsWithin_le_nhds
+          (Ioi_mem_nhds hx)] with t ht
+        rw [if_pos (le_of_lt ht)]
+      · have hx' : x ≤ 1 := hx
+        refine ⟨0, Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))⟩
+        filter_upwards [self_mem_nhdsWithin] with t ht
+        simp only [Set.mem_Iio] at ht
+        rw [if_neg (not_le.2 (ht.trans_le hx'))]
+
+theorem SkorokhodSpace.step_apply (t : ℝ) :
+    SkorokhodSpace.step.toFun t = if (1 : ℝ) ≤ t then 1 else 0 := rfl
+
+theorem SkorokhodSpace.leftLim_step : Function.leftLim SkorokhodSpace.step.toFun 1 = 0 := by
+  refine leftLim_eq_of_tendsto ?_
+  refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℝ)))
+  filter_upwards [self_mem_nhdsWithin] with t ht
+  simp only [Set.mem_Iio] at ht
+  rw [SkorokhodSpace.step_apply, if_neg (not_le.2 ht)]
+
+/-- **The refutation.**  `SkorokhodSpace.step` jumps at `1`, and evaluation at
+`1` is continuous at it --- because `1` is the greatest point of the window
+`exhaustion 0 1` of `ℝ`, and `SkorokhodSpace.continuous_eval_exhaustionMax`
+makes evaluation there continuous everywhere.  The equivalence that Milestone 6
+used to claim, `ContinuousAt (· t) f ↔ Function.leftLim f t = f t`, therefore
+fails in its forward direction, and it fails for the same reason completeness
+does. -/
+theorem SkorokhodSpace.exists_jump_continuousAt_eval :
+    ∃ f : D(ℝ, ℝ), Function.leftLim f.toFun 1 ≠ f.toFun 1 ∧
+      ContinuousAt (fun g : D(ℝ, ℝ) => g.toFun 1) f := by
+  refine ⟨SkorokhodSpace.step, ?_, ?_⟩
+  · rw [SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply, if_pos le_rfl]
+    norm_num
+  · have h := SkorokhodSpace.continuous_eval_exhaustionMax (ι := ℝ) (E := ℝ) 1
+    have hb : exhaustionMax (basePoint : ℝ) 1 = (1 : ℝ) := by
+      rw [show (basePoint : ℝ) = 0 from rfl, exhaustionMax_real]
+      norm_num
+    rw [hb] at h
+    exact h.continuousAt
 
 /-! ## Milestone 6: the Borel structure
 

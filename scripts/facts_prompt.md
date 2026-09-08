@@ -138,6 +138,60 @@ zugleich taugen. Der naheliegende Weg `distOn t₀ m ≤ distOn t₀ (m+1)` geht
 zusammen —, der Punkt ist über die Trunkierungen zu führen und steht als
 `SkorokhodSpace.exists_restrictExhaustion_limit` in Meilenstein 5.
 
+**Zwischenstand nach dem dritten von vieren (2026-09-08, achtzehnter Lauf des
+Tages).** Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-08, achtzehnter Lauf
+des Tages". Die Datei steht bei **fünf** `sorry` statt acht. Dreizehn neue
+Deklarationen, alle mit `#print axioms` geprüft und alle nur auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+*Punkt 2 ist nicht erledigt, sondern widerlegt, und das ist das Ergebnis.*
+`CompleteSpace D(ι, E)` ist **falsch** für die Metrik von Meilenstein 4, und der
+Grund ist ein Zweizeiler, den drei Läufe übersehen haben:
+`SkorokhodSpace.dist_exhaustionMax_le_distOn` — für `b = exhaustionMax t₀ m` und
+**jeden** zulässigen Zeitwechsel `λ` liegt `t = max (λ⁻¹ b) b` so, daß
+`clamp t = clamp (λ t) = b`, also enthält das Supremum in `distOn` den Term
+`r (f b) (g b)` und das Infimum kommt nicht darunter. Damit erzwingt die Metrik
+punktweise Konvergenz an allen Fensterrändern (für `ℝ` mit `t₀ = 0`: an allen
+ganzen Zahlen), was die $J_1$-Topologie nicht tut.
+
+*Zwei Folgerungen, beide in Lean.*
+`SkorokhodSpace.continuous_eval_exhaustionMax`: die Auswertung am Fensterrand ist
+stetig, an jedem Pfad, mit Sprung oder ohne. Und
+`SkorokhodSpace.exists_jump_continuousAt_eval`, der konkrete Zeuge in `D(ℝ, ℝ)`,
+der `SkorokhodSpace.continuousAt_eval` widerlegt — das war der zweite falsche
+`sorry`. Die Cauchy-Folge ohne Grenzwert ist
+`x n = 1_{(-∞, 1 + 1/(n+1))}`, von Hand gerechnet und im Bericht vollständig
+ausgeführt; ihr Kern, `w 1 = 1` für jeden Kandidaten, ist der bewiesene Satz.
+
+*Entfernt*, mit Begründung an der Stelle: `instCompleteSpace` und
+`continuousAt_eval` (falsch), `instSeparableSpace` und `instPolishSpace`
+(Aussagen über eine Metrik, die keine Skorokhod-Metrik ist). *Unberührt*: alles
+über `TimeChange` und alles über `distOn` — die fünfzehn Deklarationen des
+siebzehnten Laufs eingeschlossen. `distOn` ist wörtlich Ethier--Kurtz'
+`d(x, y, λ, u)` und übersteht die Reparatur.
+
+*Die Reparatur, und sie steht in `SkorokhodSpace/README.md`, Meilenstein 4.* Der
+Radius wird reell und die Metrik ein Integral,
+`∫ u in Ioi 0, exp (-u) * min 1 (…)`, mit dem Infimum über `λ` außerhalb. Die
+schlechten Radien eines Pfadpaars sind abzählbar, also Lebesgue-null; genau
+deshalb schreiben Ethier--Kurtz ein Integral und Billingsley eine Rampe, und die
+Rampe scheidet hier aus, weil sie Pfadwerte mit Skalaren multipliziert.
+
+*Und die Probe, die es hätte finden müssen.* Das **erste acceptance example von
+Meilenstein 4** ist für die summierte Metrik falsch — beim Radius `1` ist
+`f 1 = 1`, `g ε 1 = 0`, also `distOn 1 f (g ε) ≥ 1` für jedes `ε`. Es steht seit
+dem 2026-09-07 da. Ein acceptance example, das nur dasteht, prüft nichts.
+
+*Woran der vierte hängt.* Nicht mehr an einem Beweis, sondern an einer Signatur:
+`exhaustion`, `clamp`, `restrictExhaustion`, `distOn` auf reellen Radius
+umzustellen. Das ist mechanisch — `m` geht in die vorhandenen Beweise nur als
+`(m : ℝ)` ein — und ohne es ist keiner der offenen Punkte formulierbar. Was
+danach kommt, liegt bereit: `IsCadlag.of_forall_eventuallyEq` und
+`IsCadlag.of_tendstoUniformlyOn_exhaustion` sind im selben Lauf bewiesen — càdlàg
+ist eine lokale Eigenschaft, und gleichmäßige Konvergenz auf jedem Fenster genügt
+—, und sie sind die Stelle, an der `SkorokhodSpace.tendsto_of_partialComp` seinen
+Grenzpfad auffängt. Beide sind von der Metrik unabhängig.
+
 Zurzeit stehen hier sonst keine offenen Aufgaben.
 
 ### ~~Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$?~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, elfter Lauf des Tages)*

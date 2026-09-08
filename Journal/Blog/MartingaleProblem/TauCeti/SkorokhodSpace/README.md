@@ -418,6 +418,21 @@ Under (B), with `E` a pseudometric space:
   `le_of_tendsto`. The degenerate filter `𝓝[<] x = ⊥` is a separate branch with
   an arbitrary witness. The proof uses neither `AdditiveDist` nor `ProperSpace`,
   and nothing of bundle (B).
+* `IsCadlag.of_forall_eventuallyEq`: **being càdlàg is local.** A function that
+  agrees on a neighbourhood of every point with *some* càdlàg function is càdlàg.
+  Proved (2026-09-08), and the whole content is `Filter.Tendsto.congr'`: both
+  clauses of `IsCadlag` speak of `𝓝[>] a` and `𝓝[<] x`, and both filters lie
+  below `𝓝` of their point. It uses neither the order topology, nor
+  `AdditiveDist`, nor `ProperSpace`.
+* `IsCadlag.of_tendstoUniformlyOn_exhaustion`: uniform convergence **on every
+  window** is enough — if every `F n` is càdlàg and `F n → f` uniformly on
+  `exhaustion t₀ m` for every `m`, then `f` is càdlàg. Proved (2026-09-08). The
+  passage is the clamp: `F n ∘ clamp t₀ m` converges uniformly on all of `ι`,
+  because `clamp` lands in the window, so `of_tendstoUniformly` applies to it;
+  and `f` agrees with `f ∘ clamp t₀ m` on the window, which is a neighbourhood of
+  each of its interior points, so `of_forall_eventuallyEq` assembles the two.
+  This is what Milestone 5 actually consumes, since its estimate is windowed and
+  never global.
 
 **Acceptance examples.**
 
@@ -600,10 +615,37 @@ Under (B), with `E` a pseudometric space:
   interface.
 * The localized distances
   ```
-  distOn m f g = ⨅ λ, max (TimeChange.norm λ)
-                          (⨆ t, r (restrictExhaustion m f (λ t)) (restrictExhaustion m g t))
-  dist f g     = ∑' m, 2⁻¹ ^ m * min 1 (distOn m f g)
+  distOn u f g = ⨅ λ, max (TimeChange.norm λ)
+                          (⨆ t, r (restrictExhaustion u f (λ t)) (restrictExhaustion u g t))
+  dist f g     = ⨅ λ, max (TimeChange.norm λ)
+                          (∫ u in Ioi 0, Real.exp (-u) *
+                             min 1 (⨆ t, r (restrictExhaustion u f (λ t))
+                                            (restrictExhaustion u g t)))
   ```
+  **The window radius `u` is a real number and the metric integrates over it.**
+  It is Ethier–Kurtz's `d(x, y, λ, u)` and their `d`, and the reason it is not a
+  weighted sum over integer radii is a theorem of 2026-09-08:
+  `SkorokhodSpace.dist_exhaustionMax_le_distOn` says that
+  `r (f b) (g b) ≤ distOn u f g` for `b = exhaustionMax t₀ u`, for **every**
+  admissible time change, because a `t` beyond both `b` and `λ⁻¹ b` has
+  `clamp u t = clamp u (λ t) = b`, so the supremum contains that number and the
+  infimum cannot get below it. A sum over a fixed countable set of radii
+  therefore forces pointwise convergence at every window endpoint, which the `J₁`
+  topology does not have, and with it the space is not complete: the first
+  acceptance example below is the witness. The integral does not see the
+  endpoints, because the radii at which a given pair of paths jumps are countably
+  many and hence Lebesgue null. Billingsley's alternative, a continuous ramp in
+  place of the clamp, is not available here — it multiplies path values by
+  scalars, and `E` is a metric space with no linear structure.
+
+  The obligation this shape adds, and it is the only one: for fixed `f`, `g` and
+  `λ` the integrand `u ↦ ⨆ t, r (f (clamp u (λ t))) (g (clamp u t))` is Borel
+  measurable. This is why the infimum over `λ` stands **outside** the integral and
+  not inside it, as it does in `distOn`: outside, measurability is needed for one
+  time change at a time and follows from right continuity, which lets the
+  supremum be taken over a countable dense subset of `ι`; inside, the integrand
+  would be an infimum over an uncountable family.
+
   The infimum runs over the time changes fixing the base point, `TimeChange.fixing t₀`
   of Milestone 3, and the norm in it is the **global**
   `TimeChange.norm`, not `normOn m`: only the paths are localized to `B m`, the
@@ -703,26 +745,45 @@ Under (B), with `E` a pseudometric space:
   sets implies convergence in `D ι E`; and the converse when the limit is
   continuous.
 * Evaluation: `SkorokhodSpace.continuousAt_eval` — `f ↦ f t` is continuous at
-  every `f` with `f⁻ t = f t`, and discontinuous at every other `f`.
+  every `f` with `f⁻ t = f t`, and discontinuous at every other `f`. The second
+  half is what pins the metric down to `J₁`, and it is what fails for a metric
+  summed over a fixed countable set of radii:
+  `SkorokhodSpace.continuous_eval_exhaustionMax` and
+  `SkorokhodSpace.exists_jump_continuousAt_eval` are the proof of that failure,
+  and the reason the metric above is an integral.
 
 **Acceptance examples.**
 
-* **The sliding step: the metric is not the uniform metric.** `ι = ℝ`, `E = ℝ`,
-  `t₀ = 0`, `f = Set.indicator (Set.Ici 1) 1` and
+* **The sliding step: the metric is not the uniform metric, and it is not summed
+  over the integers either.** `ι = ℝ`, `E = ℝ`, `t₀ = 0`,
+  `f = Set.indicator (Set.Ici 1) 1` and
   `g ε = Set.indicator (Set.Ici (1 + ε)) 1` for `ε > 0`. The uniform distance
-  is `1` for every `ε`, while `distOn m f (g ε) ≤ Real.log (1 + ε)` for
-  `ε ≤ 1 ≤ m`, witnessed by the piecewise linear time change fixing `0` that carries
+  is `1` for every `ε`, while `distOn u f (g ε) ≤ Real.log (1 + ε)` for
+  `1 + ε ≤ u`, witnessed by the piecewise linear time change fixing `0` that carries
   `1 + ε` to `1` and is affine on `[0, 1+ε]` and a translation beyond. So
   `dist f (g ε) → 0` as `ε → 0`. This is the defining property of the `J₁`
   topology, the one thing a wrong definition of `distOn` — the uniform metric,
   or an infimum over all order isomorphisms without the norm term — gets wrong,
   and the pair every later statement about `D ι E` is calibrated against.
+
+  It is also the pair that **detected** the defect of 2026-09-08, and it detects
+  it at the radius `u = 1`: there `b = exhaustionMax 0 1 = 1`, `f 1 = 1` and
+  `g ε 1 = 0`, so `1 ≤ distOn 1 f (g ε)` by
+  `SkorokhodSpace.dist_exhaustionMax_le_distOn`, whatever `ε` is. A metric
+  summing `min 1 (distOn m f g)` over `m : ℕ` is therefore at least `1/2` on this
+  pair for every `ε`, and the example is false for it. The bad radii here are
+  the single point `u = 1`, of Lebesgue measure zero, so the integral above is
+  unaffected — which is the whole content of the repair.
 * **Evaluation at the jump, which is the manuscript's `ex:atomicdiscontinuity`.**
   With `f` and `g (1/n)` as above, `g (1/n) → f` in `D ℝ ℝ` while
   `eval 1 (g (1/n)) = 0` and `eval 1 f = 1`. So `continuousAt_eval` must be
   false at `f`, and `f⁻ 1 = 0 ≠ 1 = f 1` is exactly its criterion; at any
   `t ≠ 1` the same map is continuous at `f`. The manuscript reads this as the
   failure of hypothesis `(C3a)` for a clock with an atom at `1`.
+
+  `SkorokhodSpace.exists_jump_continuousAt_eval` is the same example run against
+  the summed metric, where it comes out the wrong way: evaluation at `1` is
+  continuous there at `SkorokhodSpace.step`, jump and all.
 * **The two jumps that cannot merge.** `f n = Set.indicator (Set.Ici 1) 1 +
   Set.indicator (Set.Ici (1 + 1/n)) 1`. Pointwise `f n → 2 • Set.indicator
   (Set.Ici 1) 1`, and in `D ℝ ℝ` it does **not** converge: a time change of
@@ -772,26 +833,33 @@ Under (B), with `E` a pseudometric space:
     `TimeChange.norm_le_of_lipschitzWith`, `TimeChange.norm_partialComp_le` and
     `TimeChange.partialComp_add`.
   * `IsCadlag.of_tendstoUniformly`, which catches the limit path (2026-09-08).
-  * `SkorokhodSpace.exists_restrictExhaustion_limit`, the **compatibility of the
-    window limits**, which is what remains. For each `m` the construction above
-    produces a limit of the truncations to `exhaustion t₀ m`, and the time changes
-    it uses depend on `m`; the statement is that a single `f : D ι E` has
-    `distOn t₀ m f_n f → 0` for every `m` at once. Uniqueness within one window is
-    `SkorokhodSpace.eq_of_distOn_eq_zero`, so what the item adds is that the
-    limits for `m` and `m + 1` agree after truncation to the smaller window. The
-    obvious route, `distOn t₀ m ≤ distOn t₀ (m + 1)`, is **not** available as
-    stated: a time change admissible for the larger window compares
-    `f ∘ clamp (m+1) ∘ λ` with `g ∘ clamp (m+1)`, and reading that comparison at a
-    point of the smaller window leaves the two `clamp`s mismatched. The item is
-    therefore about the truncations and not about the pseudodistances, and the
-    coherence it reads them through is proved:
-    `SkorokhodSpace.restrictExhaustion_restrictExhaustion`, that truncating to a
-    large window and then to a small one is truncating to the small one, over
-    `clamp_clamp_of_le` and `exhaustion_subset_of_le` of Milestone 1
-    (2026-09-08).
-  * `SkorokhodSpace.totalDist_le_sum_add` (proved 2026-09-08), which assembles the
-    convergence in the metric out of the convergence in finitely many windows, the
-    tail being controlled by the truncation alone.
+  * `SkorokhodSpace.tendsto_of_partialComp`, the assembly, which is what remains.
+    From a subsequence `x n` with `dist (x n) (x (n+1))` small enough that
+    `distOn (n+1) (x n) (x (n+1)) ≤ γ n` with `γ` summable, take the time changes
+    `l n` of `exists_lt_distOn_add`, let `P n = TimeChange.partialComp l n` and
+    `L` be their infinite composition. The comparison to make is between
+    `y n = x n ∘ (P n)⁻¹ ∘ L` and `y (n+1)`: substituting `s = (P (n+1))⁻¹ (L t)`
+    turns `r (y n t) (y (n+1) t)` into `r (x n (l n s)) (x (n+1) s)`, which is
+    what `distOn` bounds, so the `y n` are uniformly Cauchy on each window with
+    the summable rate `γ`. Their limit `z` is the limit path, and
+    `dist (x n) z` is estimated with the time change `(P n)⁻¹ * L`, whose norm is
+    the tail `∑' i, γ (n + i)` by `exists_tendsto_norm_tail_le`. The estimate
+    holds only on windows, so `z` is a **locally** uniform limit, and that it is
+    càdlàg is `IsCadlag.of_tendstoUniformlyOn_exhaustion` of Milestone 2, proved
+    2026-09-08: uniform convergence on every window suffices, since
+    `y n ∘ clamp u` converges uniformly on all of `ι` and every point lies in the
+    interior of some window. It rests on `IsCadlag.of_forall_eventuallyEq`, that
+    a function agreeing near every point with some càdlàg function is càdlàg,
+    both clauses of `IsCadlag` being statements about `𝓝[>] a` and `𝓝[<] x`.
+  * The route through the truncations — a limit per window, glued along
+    `SkorokhodSpace.restrictExhaustion_restrictExhaustion` — is **not** the route,
+    and this is the correction of 2026-09-08. It fails at the window endpoints and
+    not for a technical reason: `SkorokhodSpace.dist_exhaustionMax_le_distOn` shows
+    that `distOn u` reads `r (f b) (g b)` at `b = exhaustionMax t₀ u` off the
+    paths directly, so a limit in `distOn u` has to match the sequence pointwise
+    at `b`, and the `J₁` limit of a sequence need not. The coherence
+    `restrictExhaustion_restrictExhaustion` is proved (2026-09-08) and stays; what
+    it does not do is produce a limit.
 * `SeparableSpace (D ι E)`: the piecewise constant paths taking finitely many
   values from a countable dense subset of `E` on the intervals of a rational
   subdivision of `B m` are dense.
@@ -801,8 +869,21 @@ Under (B), with `E` a pseudometric space:
   complete metric (`MetricSpace.toIsCompletelyMetrizableSpace`,
   `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`), so the
   declaration is `inferInstance` and carries no proof obligation of its own
-  (2026-09-08). It is not axiom clean, and will not be until the two above it
-  are; that is the whole of what it still owes.
+  (2026-09-08).
+
+  All three are stated for the metric of Milestone 4 as it stands there, the
+  integral over the window radius. For the weighted sum over integer radii that
+  `SkorokhodSpace.totalDist` computes, the first of them is **false**, and the
+  sequence `x n = Set.indicator (Set.Iio (1 + 1/(n+1))) 1` in `D ℝ ℝ` is the
+  witness: it is Cauchy, because the piecewise linear time change fixing `0`,
+  the identity outside `[1/2, 2]`, carrying `1 + 1/(k+1)` to `1 + 1/(n+1)`, makes
+  every windowed supremum vanish and has norm tending to `0`; and it has no
+  limit, because `SkorokhodSpace.dist_exhaustionMax_le_distOn` at the radius `1`
+  forces `w 1 = lim x n 1 = 1` for any candidate `w`, putting the jump of `w`
+  strictly to the right of `1`, while the time changes of the radius `2` would
+  have to carry that jump to `1 + 1/(n+1) → 1` with norms tending to `0`. Since
+  `x n 1 = 1` for every `n` and the bad radius is the single point `u = 1`, the
+  integral of Milestone 4 does not see it.
 * `SkorokhodSpace.isClosed_range_continuous`: the continuous paths form a closed
   subspace, on which the metric induces the topology of uniform convergence on
   compact sets.
