@@ -3659,6 +3659,272 @@ theorem TimeChange.eq_of_gap_of_norm_lt (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) {A 
     rw [dist_comm] at hd1
     linarith
 
+omit [OrderTopology ι] [ProperSpace ι] [BasePoint ι] in
+/-- **Betweenness bounds the distance.**  A point of `Set.uIcc a b` is nearer to
+`a` than `b` is, and that is `AdditiveDist` alone.  It is what turns the order
+information of `min_max_pair_cases` into the metric information that the
+oscillation hypotheses of `SkorokhodSpace.distWith_le_of_oscillation` are
+stated in. -/
+theorem dist_le_dist_of_mem_uIcc {a b c : ι} (h : c ∈ Set.uIcc a b) :
+    dist a c ≤ dist a b := by
+  rcases le_total a b with hab | hab
+  · rw [Set.uIcc_of_le hab] at h
+    have h1 := AdditiveDist.dist_add (α := ι) h.1 h.2
+    have h2 : (0 : ℝ) ≤ dist c b := dist_nonneg
+    linarith
+  · rw [Set.uIcc_of_ge hab] at h
+    have h1 := AdditiveDist.dist_add (α := ι) h.1 h.2
+    have h2 : (0 : ℝ) ≤ dist b c := dist_nonneg
+    rw [dist_comm a c, dist_comm a b]
+    linarith
+
+/-- **The two clamps of one point**, and it is pure order theory: clamping `t`
+into `[b, a]` and into `[b', a']` either gives the same point, or gives two
+points that both lie between the two upper ends, or two that both lie between
+the two lower ends.
+
+This is the combinatorial heart of what is left of completeness.  In
+`SkorokhodSpace.distWith t₀ u l f g` the two paths are clamped **separately**,
+`f` at `clamp u (l t)` and `g` at `clamp u t`, and reading the first through
+`l⁻¹` turns it into the clamp of `t` into `[l⁻¹ B, l⁻¹ A]` while the second is
+the clamp into `[B, A]`.  The lemma says that the discrepancy between the two
+lives at the window endpoints and nowhere else, which is why the oscillation of
+`g` at those two points is all that has to be controlled. -/
+theorem min_max_pair_cases {α : Type*} [LinearOrder α] {a b a' b' t : α}
+    (hba : b ≤ a) (hba' : b' ≤ a') :
+    min (max t b') a' = min (max t b) a ∨
+      (min (max t b') a' ∈ Set.uIcc a a' ∧ min (max t b) a ∈ Set.uIcc a a') ∨
+      (min (max t b') a' ∈ Set.uIcc b b' ∧ min (max t b) a ∈ Set.uIcc b b') := by
+  have low : ∀ c d : α, d ≤ c → t ≤ d → min (max t d) c = d := by
+    intro c d hdc h
+    rw [max_eq_right h, min_eq_left hdc]
+  have mid : ∀ c d : α, d ≤ t → t ≤ c → min (max t d) c = t := by
+    intro c d h1 h2
+    rw [max_eq_left h1, min_eq_left h2]
+  have high : ∀ c d : α, d ≤ c → c ≤ t → min (max t d) c = c := by
+    intro c d hdc h
+    rw [max_eq_left (hdc.trans h), min_eq_right h]
+  rcases le_total t b with hsb | hbt
+  · rw [low a b hba hsb]
+    rcases le_total t b' with hpb | hb't
+    · rw [low a' b' hba' hpb]
+      exact Or.inr (Or.inr ⟨Set.right_mem_uIcc, Set.left_mem_uIcc⟩)
+    · rcases le_total t a' with hta' | ha't
+      · rw [mid a' b' hb't hta']
+        exact Or.inr (Or.inr ⟨Set.mem_uIcc_of_ge hb't hsb, Set.left_mem_uIcc⟩)
+      · rw [high a' b' hba' ha't]
+        exact Or.inr (Or.inr ⟨Set.mem_uIcc_of_ge hba' (ha't.trans hsb), Set.left_mem_uIcc⟩)
+  · rcases le_total t a with hta | hat
+    · rw [mid a b hbt hta]
+      rcases le_total t b' with hpb | hb't
+      · rw [low a' b' hba' hpb]
+        exact Or.inr (Or.inr ⟨Set.right_mem_uIcc, Set.mem_uIcc_of_le hbt hpb⟩)
+      · rcases le_total t a' with hta' | ha't
+        · rw [mid a' b' hb't hta']
+          exact Or.inl rfl
+        · rw [high a' b' hba' ha't]
+          exact Or.inr (Or.inl ⟨Set.right_mem_uIcc, Set.mem_uIcc_of_ge ha't hta⟩)
+    · rw [high a b hba hat]
+      rcases le_total t b' with hpb | hb't
+      · rw [low a' b' hba' hpb]
+        exact Or.inr (Or.inl ⟨Set.mem_uIcc_of_le (hat.trans hpb) hba', Set.left_mem_uIcc⟩)
+      · rcases le_total t a' with hta' | ha't
+        · rw [mid a' b' hb't hta']
+          exact Or.inr (Or.inl ⟨Set.mem_uIcc_of_le hat hta', Set.left_mem_uIcc⟩)
+        · rw [high a' b' hba' ha't]
+          exact Or.inr (Or.inl ⟨Set.right_mem_uIcc, Set.left_mem_uIcc⟩)
+
+omit [BasePoint ι] in
+/-- **The windowed pseudodistance is bounded by three oscillations.**  This is
+the step from locally uniform convergence back to the metric, and it is the one
+place where the separate clamping of the two paths has to be paid for.
+
+The three hypotheses are the three sources of the bound.  `hunif` is the uniform
+estimate, and it is stated exactly on the set where it is needed: on the points
+`s` whose image `l s` lies in the window, which is `l⁻¹` of the window and not
+the window itself.  `hA` and `hB` are the oscillation of `g` between a window
+endpoint and its preimage under `l`; they are vacuous when `l` fixes that
+endpoint, since then the interval is a single point, and they are the
+continuity of `g` there when it does not.
+
+Neither `0 ≤ u` nor `l t₀ = t₀` is needed: the statement is about the clamp and
+the order isomorphism alone. -/
+theorem SkorokhodSpace.distWith_le_of_oscillation (t₀ : ι) (u : ℝ) (l : TimeChange ι)
+    (f g : D(ι, E)) {ε : ℝ} (hε : 0 ≤ ε)
+    (hunif : ∀ s : ι, l.toOrderIso s ∈ exhaustion t₀ u →
+      dist (f.toFun (l.toOrderIso s)) (g.toFun s) ≤ ε)
+    (hA : ∀ q ∈ Set.uIcc (exhaustionMax t₀ u) (l.toOrderIso.symm (exhaustionMax t₀ u)),
+      dist (g.toFun q) (g.toFun (exhaustionMax t₀ u)) ≤ ε)
+    (hB : ∀ q ∈ Set.uIcc (exhaustionMin t₀ u) (l.toOrderIso.symm (exhaustionMin t₀ u)),
+      dist (g.toFun q) (g.toFun (exhaustionMin t₀ u)) ≤ ε) :
+    SkorokhodSpace.distWith t₀ u l f g ≤ 3 * ε := by
+  have : Nonempty ι := ⟨t₀⟩
+  refine ciSup_le fun t => ?_
+  have hBA : exhaustionMin t₀ u ≤ exhaustionMax t₀ u :=
+    (isLeast_exhaustionMin t₀ u).2 (isGreatest_exhaustionMax t₀ u).1
+  have hBA' : l.toOrderIso.symm (exhaustionMin t₀ u) ≤ l.toOrderIso.symm (exhaustionMax t₀ u) :=
+    l.toOrderIso.symm.monotone hBA
+  -- the preimage of the clamped image is the clamp into the moved window
+  have hp : l.toOrderIso.symm (clamp t₀ u (l.toOrderIso t))
+      = min (max t (l.toOrderIso.symm (exhaustionMin t₀ u)))
+          (l.toOrderIso.symm (exhaustionMax t₀ u)) := by
+    rw [clamp, l.toOrderIso.symm.monotone.map_min, l.toOrderIso.symm.monotone.map_max,
+      OrderIso.symm_apply_apply]
+  -- the uniform estimate at the preimage
+  have hu1 : dist (f.toFun (clamp t₀ u (l.toOrderIso t)))
+      (g.toFun (l.toOrderIso.symm (clamp t₀ u (l.toOrderIso t)))) ≤ ε := by
+    have := hunif (l.toOrderIso.symm (clamp t₀ u (l.toOrderIso t)))
+      (by rw [OrderIso.apply_symm_apply]; exact clamp_mem_exhaustion t₀ u _)
+    rwa [OrderIso.apply_symm_apply] at this
+  -- the oscillation between the two clamps
+  have hu2 : dist (g.toFun (l.toOrderIso.symm (clamp t₀ u (l.toOrderIso t))))
+      (g.toFun (clamp t₀ u t)) ≤ 2 * ε := by
+    have hcl : clamp t₀ u t = min (max t (exhaustionMin t₀ u)) (exhaustionMax t₀ u) := rfl
+    rw [hp, hcl]
+    rcases min_max_pair_cases (t := t) hBA hBA' with heq | ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · rw [heq, dist_self]
+      linarith
+    · calc dist (g.toFun _) (g.toFun _)
+          ≤ dist (g.toFun _) (g.toFun (exhaustionMax t₀ u))
+            + dist (g.toFun (exhaustionMax t₀ u)) (g.toFun _) := dist_triangle _ _ _
+        _ ≤ ε + ε := by
+            refine add_le_add (hA _ h1) ?_
+            rw [dist_comm]
+            exact hA _ h2
+        _ = 2 * ε := by ring
+    · calc dist (g.toFun _) (g.toFun _)
+          ≤ dist (g.toFun _) (g.toFun (exhaustionMin t₀ u))
+            + dist (g.toFun (exhaustionMin t₀ u)) (g.toFun _) := dist_triangle _ _ _
+        _ ≤ ε + ε := by
+            refine add_le_add (hB _ h1) ?_
+            rw [dist_comm]
+            exact hB _ h2
+        _ = 2 * ε := by ring
+  calc dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun (l.toOrderIso t))
+        ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t)
+      = dist (f.toFun (clamp t₀ u (l.toOrderIso t))) (g.toFun (clamp t₀ u t)) := rfl
+    _ ≤ dist (f.toFun (clamp t₀ u (l.toOrderIso t)))
+          (g.toFun (l.toOrderIso.symm (clamp t₀ u (l.toOrderIso t))))
+        + dist (g.toFun (l.toOrderIso.symm (clamp t₀ u (l.toOrderIso t))))
+          (g.toFun (clamp t₀ u t)) := dist_triangle _ _ _
+    _ ≤ ε + 2 * ε := add_le_add hu1 hu2
+    _ = 3 * ε := by ring
+
+omit [OrderTopology ι] [ProperSpace ι] [BasePoint ι] in
+/-- The mirror of `TimeChange.eq_of_gap_of_norm_lt`: a gap **below** a point of
+the window pins every small time change down at it just as well.  The two are
+separate because the trichotomy reads the gap on the side where the image
+lands, and `exhaustionMin t₀ u` is isolated from below where `exhaustionMax t₀ u`
+is isolated from above. -/
+theorem TimeChange.eq_of_gap_below_of_norm_lt (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) {A : ι}
+    (hA : A ∈ exhaustion t₀ u) {δ : ℝ}
+    (hgap : ∀ t : ι, t < A → δ ≤ dist A t) {l : TimeChange ι}
+    (h₀ : l.toOrderIso t₀ = t₀) (h : (Real.exp l.norm - 1) * (2 * u) < δ) :
+    l.toOrderIso A = A := by
+  have hfix : l ∈ TimeChange.fixing t₀ := h₀
+  have hinv : (l⁻¹).toOrderIso t₀ = t₀ := (TimeChange.fixing t₀).inv_mem hfix
+  have hd1 : dist (l.toOrderIso A) A ≤ (Real.exp l.norm - 1) * (2 * u) :=
+    TimeChange.dist_le_of_norm_le t₀ hu h₀ le_rfl hA
+  have hd2 : dist ((l⁻¹).toOrderIso A) A ≤ (Real.exp l.norm - 1) * (2 * u) :=
+    TimeChange.dist_le_of_norm_le t₀ hu hinv (TimeChange.norm_inv l).le hA
+  rcases lt_trichotomy (l.toOrderIso A) A with hlt | heq | hgt
+  · have hge := hgap _ hlt
+    rw [dist_comm] at hd1
+    linarith
+  · exact heq
+  · have hgt' : (l⁻¹).toOrderIso A < A := by
+      have hs := l.toOrderIso.symm.strictMono hgt
+      show l.toOrderIso.symm A < A
+      simpa using hs
+    have hge := hgap _ hgt'
+    rw [dist_comm] at hd2
+    linarith
+
+omit [OrderTopology ι] in
+/-- **Without a gap above it the window grows.**  If the index has points
+immediately above `exhaustionMax t₀ u`, then every larger radius has a strictly
+larger greatest point: a point above `A` at distance below `u' - u` is in the
+larger window.
+
+This is what makes the exceptional radii of completeness countable rather than
+merely individually null, and it is the correction of the roadmap's dichotomy:
+a level set being null is no reason to discard a radius --- the *union* of the
+bad radii has to be null, and it is, because on the radii without a gap the map
+`exhaustionMax t₀` is injective and the jump set of a càdlàg path is
+countable. -/
+theorem exhaustionMax_lt_exhaustionMax_of_no_gap (t₀ : ι) {u u' : ℝ} (hu : 0 ≤ u) (h : u < u')
+    (hno : ∀ δ : ℝ, 0 < δ →
+      ∃ t : ι, exhaustionMax t₀ u < t ∧ dist (exhaustionMax t₀ u) t < δ) :
+    exhaustionMax t₀ u < exhaustionMax t₀ u' := by
+  obtain ⟨t, ht, hd⟩ := hno (u' - u) (by linarith)
+  have hAmem : exhaustionMax t₀ u ∈ exhaustion t₀ u := (isGreatest_exhaustionMax t₀ u).1
+  have hA : dist t₀ (exhaustionMax t₀ u) ≤ u := by
+    have := hAmem
+    simp only [exhaustion, Metric.mem_closedBall, max_eq_left hu] at this
+    rwa [dist_comm]
+  have htmem : t ∈ exhaustion t₀ u' := by
+    have h1 : dist t₀ t ≤ dist t₀ (exhaustionMax t₀ u) + dist (exhaustionMax t₀ u) t :=
+      dist_triangle _ _ _
+    simp only [exhaustion, Metric.mem_closedBall, max_eq_left (by linarith : (0 : ℝ) ≤ u')]
+    rw [dist_comm]
+    linarith
+  exact lt_of_lt_of_le ht ((isGreatest_exhaustionMax t₀ u').2 htmem)
+
+omit [OrderTopology ι] in
+/-- The mirror below. -/
+theorem exhaustionMin_lt_exhaustionMin_of_no_gap (t₀ : ι) {u u' : ℝ} (hu : 0 ≤ u) (h : u < u')
+    (hno : ∀ δ : ℝ, 0 < δ →
+      ∃ t : ι, t < exhaustionMin t₀ u ∧ dist (exhaustionMin t₀ u) t < δ) :
+    exhaustionMin t₀ u' < exhaustionMin t₀ u := by
+  obtain ⟨t, ht, hd⟩ := hno (u' - u) (by linarith)
+  have hAmem : exhaustionMin t₀ u ∈ exhaustion t₀ u := (isLeast_exhaustionMin t₀ u).1
+  have hA : dist t₀ (exhaustionMin t₀ u) ≤ u := by
+    have := hAmem
+    simp only [exhaustion, Metric.mem_closedBall, max_eq_left hu] at this
+    rwa [dist_comm]
+  have htmem : t ∈ exhaustion t₀ u' := by
+    have h1 : dist t₀ t ≤ dist t₀ (exhaustionMin t₀ u) + dist (exhaustionMin t₀ u) t :=
+      dist_triangle _ _ _
+    simp only [exhaustion, Metric.mem_closedBall, max_eq_left (by linarith : (0 : ℝ) ≤ u')]
+    rw [dist_comm]
+    linarith
+  exact lt_of_le_of_lt ((isLeast_exhaustionMin t₀ u').2 htmem) ht
+
+omit [OrderTopology ι] [BasePoint ι] in
+/-- **The bad radii are countably many.**  Over a countable set `S` of the index
+--- in the application the jump set of the limit path --- the radii whose
+greatest window point lies in `S` and has no gap above it form a countable set,
+because `exhaustionMax t₀` is injective on the radii without a gap. -/
+theorem countable_radius_exhaustionMax (t₀ : ι) {S : Set ι} (hS : S.Countable) :
+    {u : ℝ | 0 ≤ u ∧ exhaustionMax t₀ u ∈ S ∧ ∀ δ : ℝ, 0 < δ →
+      ∃ t : ι, exhaustionMax t₀ u < t ∧ dist (exhaustionMax t₀ u) t < δ}.Countable := by
+  obtain ⟨φ, hφ⟩ := Set.countable_iff_exists_injOn.1 hS
+  refine Set.countable_iff_exists_injOn.2 ⟨fun u => φ (exhaustionMax t₀ u), ?_⟩
+  intro u hu u' hu' heq
+  have hAA : exhaustionMax t₀ u = exhaustionMax t₀ u' := hφ hu.2.1 hu'.2.1 heq
+  by_contra hne
+  rcases lt_or_gt_of_ne hne with hlt | hlt
+  · exact absurd hAA
+      (ne_of_lt (exhaustionMax_lt_exhaustionMax_of_no_gap t₀ hu.1 hlt hu.2.2))
+  · exact absurd hAA.symm
+      (ne_of_lt (exhaustionMax_lt_exhaustionMax_of_no_gap t₀ hu'.1 hlt hu'.2.2))
+
+omit [OrderTopology ι] [BasePoint ι] in
+/-- The mirror below. -/
+theorem countable_radius_exhaustionMin (t₀ : ι) {S : Set ι} (hS : S.Countable) :
+    {u : ℝ | 0 ≤ u ∧ exhaustionMin t₀ u ∈ S ∧ ∀ δ : ℝ, 0 < δ →
+      ∃ t : ι, t < exhaustionMin t₀ u ∧ dist (exhaustionMin t₀ u) t < δ}.Countable := by
+  obtain ⟨φ, hφ⟩ := Set.countable_iff_exists_injOn.1 hS
+  refine Set.countable_iff_exists_injOn.2 ⟨fun u => φ (exhaustionMin t₀ u), ?_⟩
+  intro u hu u' hu' heq
+  have hAA : exhaustionMin t₀ u = exhaustionMin t₀ u' := hφ hu.2.1 hu'.2.1 heq
+  by_contra hne
+  rcases lt_or_gt_of_ne hne with hlt | hlt
+  · exact absurd hAA.symm
+      (ne_of_lt (exhaustionMin_lt_exhaustionMin_of_no_gap t₀ hu.1 hlt hu.2.2))
+  · exact absurd hAA
+      (ne_of_lt (exhaustionMin_lt_exhaustionMin_of_no_gap t₀ hu'.1 hlt hu'.2.2))
+
 /-- **Completeness**, and it is a commitment again: it was withdrawn on 2026-09-08
 because it is false for the summed metric, and the instance is now the integral
 one, for which the counterexample --- a jump marching down onto a window endpoint
