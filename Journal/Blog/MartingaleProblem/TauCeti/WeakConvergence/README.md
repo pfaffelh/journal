@@ -863,19 +863,46 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
     this is the step that replaces the weights `μ (A i)` by rational ones and
     so makes the family countable.
 
-  What remains is two steps and the bookkeeping. (1) The partition: for `ε > 0`
-  there is an `n` with `μ (⋃ k < n, ball (x k) ε)ᶜ ≤ ε`, those balls increasing
-  to `E` by density of `x` and `μ` being finite; `disjointed` makes them
-  disjoint, and the uncovered remainder is at once the last piece of the
-  partition and the set `G` of the first estimate. Mathlib's
-  `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
-  (`LevyProkhorovMetric.lean:540`) is the same disjointification but *countably*
-  indexed and with the representatives forgotten, which is why the partition is
-  built here rather than taken from there. (2) The rational weights: for
-  `c : Fin n → ℝ≥0∞` with `∑ i, c i = 1`, choose `q i ≤ c i` rational with
-  `c i ≤ q i + δ / n` for `i ≠ 0` and let `q 0` absorb the slack, which keeps
-  the sum equal to `1` and rational. Countability of the resulting family is the
-  image of `Σ n, (Fin n → ℕ) × (Fin n → ℚ≥0)` along
+  Two further statements carry it, and both are **proved** on 2026-09-08, third
+  run, in `Suggested.lean`.
+
+  * `MeasureTheory.exists_finite_partition_ball_of_denseRange`, the partition:
+    for a dense sequence `x`, a finite `μ`, a mass `ε > 0` and a radius `r > 0`
+    there are a finite measurable partition `A : Fin n → Set E`, indices
+    `k : Fin n → ℕ` and a set `G` with `μ G ≤ ε` such that off `G` every point
+    of `A i` is within `r` of `x (k i)`. It is the disjointification
+    `A i = ball (x i) r \ ⋃ j < i, ball (x j) r` of the first `n` balls together
+    with the uncovered remainder `G = (⋃ j < n, ball (x j) r)ᶜ` as the last
+    piece, so `G` is at once a piece and the exceptional set and the condition
+    on it is vacuous; the cutoff `n` exists because the unions increase to `E`
+    by density, so their complements decrease to `∅` and, `μ` being finite,
+    their masses tend to `0` (`tendsto_measure_iInter_atTop`). The
+    representatives are returned as *indices*, not as points: it is the indices
+    that make the approximating family countable. Mathlib's
+    `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
+    (`LevyProkhorovMetric.lean:540`) is the same disjointification but
+    *countably* indexed and with the representatives forgotten, which is why the
+    partition is built here rather than taken from there. This statement is the
+    one place where `SeparableSpace E` is consumed.
+  * `MeasureTheory.exists_nat_weights`, the rational weights: a vector
+    `c : Fin n → ℝ≥0∞` of total mass `1` is approximated to within a total error
+    `δ` by the *normalised* integer vector `m i / ∑ j, m j`. Take
+    `m i = ⌊(c i).toReal * N⌋₊ + 1`; then `∑ j, m j` lies between `N` and
+    `N + n`, each `m i` between `(c i).toReal * N` and `(c i).toReal * N + 1`,
+    so each normalised weight is within `(n + 1) / N` of `c i` and the total
+    discrepancy is at most `n (n + 1) / N`. Normalising, rather than pinning the
+    sum to `1` by rounding down and letting one exceptional index absorb the
+    slack, is what makes the step short: `∑ i, m i / ∑ j, m j = 1` holds by
+    construction, so there is neither truncated subtraction in `ℝ≥0∞` nor a case
+    distinction at an exceptional index. The `+ 1` in the numerators is what
+    keeps `∑ j, m j` positive when every floor vanishes.
+
+  What remains is the bookkeeping: apply the partition with `r = ε.toReal`, then
+  `levyProkhorovEDist_sum_dirac_le`, then `exists_nat_weights` to
+  `c i = μ (A i)` — whose total is `1` because `A` is a partition — then
+  `levyProkhorovEDist_sum_dirac_weights_le`; `levyProkhorovEDist_triangle`
+  (`LevyProkhorovMetric.lean:127`) gives `2ε`, and the family is countable as
+  the image of `Σ n, (Fin n → ℕ) × (Fin n → ℕ)` along
   `MeasureTheory.ProbabilityMeasure.toMeasure_injective`
   (`Measure/ProbabilityMeasure.lean:128`). The empty `E` is a separate line and
   not a hypothesis: `TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`)

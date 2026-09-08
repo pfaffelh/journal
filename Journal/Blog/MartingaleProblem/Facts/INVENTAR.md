@@ -66,7 +66,7 @@ ist kein Befund, sondern ein `?`.
 | `fact:submgreg` | 2 | Submartingale regularization; EK, Proposition 2.2.9; e | Roadmap | MartingaleProblems M9; Vorarbeit in `brownian-motion` (Apache-2.0) |
 | `fact:ui` | 2 | Uniform integrability; EK, Appendix 2 | Mathlib+ | `MeasureTheory.UniformIntegrable`, `uniformIntegrable_iff`; die Kopplung an Verteilungskonvergenz fehlt → WeakConvergence M4 |
 | `fact:MZtight` | 1 | Tightness; MZ, Theorem~4, and Ku | Roadmap | MartingaleProblems M11 |
-| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität. **Der erste Punkt des Blocks ist seit dem 2026-09-08, erster Lauf, bewiesen**: `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` — gleichmäßige Totalbeschränktheit im Maß gibt Straffheit — ist das gelockerte Straffheitskriterium von Meilenstein 1 in vier Zeilen, über `Metric.thickening_eq_biUnion_ball`; dabei ist `SecondCountableTopology` als unbenutzt aus der Aussage entfallen und das Kriterium selbst auf `[PseudoMetricSpace E] [CompleteSpace E]` abgeschwächt (vorher `[MetricSpace E] [CompleteSpace E] [BorelSpace E]`). **Am 2026-09-08, zweiter Lauf, sind die beiden Schätzungen bewiesen, auf denen die Separabilität von `ProbabilityMeasure E` ruht** — `levyProkhorovEDist_sum_dirac_le` (die geometrische Hälfte: eine endliche meßbare Zerlegung mit Vertretern im `ε`-Abstand außerhalb einer Menge kleiner Masse bringt das diskrete Maß `∑ i, μ (A i) • dirac (y i)` in Lévy--Prokhorov-Abstand `ε`) und `levyProkhorovEDist_sum_dirac_weights_le` (die arithmetische: Störung der Gewichte um insgesamt `δ` kostet `δ`), samt `sum_smul_dirac_apply`; alle drei durch `lake env lean` gegen v4.33.1. Der Satz selbst trägt weiterhin `sorry`, es fehlen die Zerlegung und die rationalen Gewichte, beide in Meilenstein 3 ausgeschrieben. Daß Mathlib die Separabilität nicht hat, ist am selben Tag gegen `upstream/master` `572e4d091bc` belegt, mit den im Laufbericht einzeln aufgezählten Suchformulierungen |
+| `fact:PSpolish` | 1 | EK, Theorems 3.1.7 and 3.1.8 | Roadmap | WeakConvergence M3 — Skorokhod-Darstellung fehlt in Mathlib (dort nur `docs/1000.yaml`); dass 𝒫(S) separabel bzw. polnisch ist, fehlt seit dem 2026-08-31 belegt ebenfalls (Mathlib hat nur `instMetrizableSpaceProbabilityMeasure`), und steht jetzt als eigener Block in M3; der Block ist am 2026-08-31, dritter Lauf, auf typrichtige Aussagen gebracht — `CompleteSpace` gehört auf `LevyProkhorov (ProbabilityMeasure S)`, auf `ProbabilityMeasure S` gibt es keine Uniformität. **Der erste Punkt des Blocks ist seit dem 2026-09-08, erster Lauf, bewiesen**: `isTightMeasureSet_of_forall_exists_finite_iUnion_ball` — gleichmäßige Totalbeschränktheit im Maß gibt Straffheit — ist das gelockerte Straffheitskriterium von Meilenstein 1 in vier Zeilen, über `Metric.thickening_eq_biUnion_ball`; dabei ist `SecondCountableTopology` als unbenutzt aus der Aussage entfallen und das Kriterium selbst auf `[PseudoMetricSpace E] [CompleteSpace E]` abgeschwächt (vorher `[MetricSpace E] [CompleteSpace E] [BorelSpace E]`). **Am 2026-09-08, zweiter Lauf, sind die beiden Schätzungen bewiesen, auf denen die Separabilität von `ProbabilityMeasure E` ruht** — `levyProkhorovEDist_sum_dirac_le` (die geometrische Hälfte: eine endliche meßbare Zerlegung mit Vertretern im `ε`-Abstand außerhalb einer Menge kleiner Masse bringt das diskrete Maß `∑ i, μ (A i) • dirac (y i)` in Lévy--Prokhorov-Abstand `ε`) und `levyProkhorovEDist_sum_dirac_weights_le` (die arithmetische: Störung der Gewichte um insgesamt `δ` kostet `δ`), samt `sum_smul_dirac_apply`; alle drei durch `lake env lean` gegen v4.33.1. Der Satz selbst trägt weiterhin `sorry`, es fehlen die Zerlegung und die rationalen Gewichte, beide in Meilenstein 3 ausgeschrieben. Daß Mathlib die Separabilität nicht hat, ist am selben Tag gegen `upstream/master` `572e4d091bc` belegt, mit den im Laufbericht einzeln aufgezählten Suchformulierungen. **Am 2026-09-08, dritter Lauf, sind die beiden verbliebenen mathematischen Schritte bewiesen** und gehen durch `lake env lean` gegen v4.33.1: `exists_finite_partition_ball_of_denseRange` (die endliche Zerlegung in kleine Stücke mit benannten Vertretern — die einzige Stelle, an der `SeparableSpace E` verbraucht wird; die Vertreter kommen als **Indizes** `Fin n → ℕ` heraus, denn die Indizes sind es, die die Familie abzählbar machen) und `exists_nat_weights` (die rationale Approximation des Gewichtsvektors, mit **normierten** ganzzahligen Gewichten `m i / ∑ j, m j` statt auf Summe `1` festgenagelter — das erspart die abgeschnittene Subtraktion in `ℝ≥0∞` und den Ausnahmeindex). Der Satz selbst trägt weiterhin `sorry`; was fehlt, ist allein die Buchhaltung, die die vier Stücke zusammensetzt, und sie steht in Meilenstein 3 ausgeschrieben |
 | `fact:convdet` | 1 | EK, Proposition 3.4.4 | Roadmap | WeakConvergence M1, `isConvergenceDetermining_setOf_uniformContinuous_isBounded_support` und `isConvergenceDetermining_setOf_hasCompactSupport` (zusätzlich lokalkompakt) — am 2026-09-05 dort neu angelegt. **Die erste Hälfte ist seit dem 2026-09-07, fünfzehntem Lauf, bewiesen** und geht durch `lake env lean` gegen v4.33.1, und zwar **ohne Separabilität**: EK und das Manuskript verlangen sie, kein Beweisschritt benutzt eine abzählbare dichte Menge (Auffälligkeit unten). Der Weg ist `tendsto_iff_forall_lipschitz_integral_tendsto` (`Measure/Portmanteau.lean:688`), die die schwache Konvergenz auf die beschränkten **Lipschitz**funktionen zurückführt, plus die Abschneidung einer solchen an `ballCutoff`, einem Mitglied der Klasse; die Abschneidung ist durch die Straffheit gedeckt, die die Abschneider selbst liefern. Neun Hilfsdeklarationen, alle bewiesen. **Die zweite Hälfte ist seit dem 2026-09-07, sechzehntem Lauf, ebenfalls bewiesen** und geht durch `lake env lean` gegen v4.33.1: `isConvergenceDetermining_setOf_hasCompactSupport`, auf einem lokalkompakten separablen metrischen Raum. Beide Hälften ruhen jetzt auf **einer** Deklaration, `tendsto_integral_of_tendsto_integral_mul` — der Abschneideschritt, von der Klasse gelöst, unter `[TopologicalSpace E] [OpensMeasurableSpace E]` und ohne Metrik —, und unterscheiden sich nur in der Familie der Abschneider: `ballCutoff x₀ m` für die erste, eine kompakt getragene Urysohn-Funktion über `compactCovering E m` für die zweite. Der in M1 bis dahin angekündigte Weg — die größere Klasse gleichmäßig durch die kleinere approximieren — ist **falsch**, und der Zeuge steht als acceptance example in M1: auf einem unendlichen diskreten Raum vom Durchmesser 1 ist die Konstante 1 gleichmäßig stetig mit beschränktem Träger und hat von jeder kompakt getragenen Funktion den gleichmäßigen Abstand 1. Die Lokalkompaktheit geht genau einmal ein, in `exists_continuous_one_zero_of_isCompact` (`Topology/UrysohnsLemma.lean:404`); die Separabilität geht nur über die σ-Kompaktheit ein (`sigmaCompactSpace_of_locallyCompact_secondCountable`). ~~M1~~ nannte die Aussage bis dahin **nicht**: das Zitat war seit dem 2026-08-29 leer, kein Punkt von M1 spricht von gleichmäßig stetigen Funktionen mit beschränktem Träger oder von $C_c$. Mathlib hat sie nicht — in `MeasureTheory/Measure/` kommt `UniformContinuous` überhaupt nicht vor und `HasCompactSupport` in keiner Konvergenzaussage (`upstream/master`, 2026-09-05) |
 | `fact:fddconv` | 1 | EK, Theorem 3.7.8 | Roadmap | SkorokhodSpace M8, `tendsto_finiteDimensional_of_tendsto` (a) und `tendsto_of_isCompact_closure_of_tendsto_finiteDimensional` (b); beide stehen seit dem 2026-08-31 unter Stufe (A) „separabel metrisch", wie der Fact, und (b) unter Relativkompaktheit statt Straffheit, wie EK |
 | `fact:fullgenerator` | 1 | EK, Proposition 1.5.1 | Roadmap | MartingaleProblems M13 — dort neu angelegt; Mathlib hat keine Operatorhalbgruppen, `dissipative` kommt nicht vor, Hille--Yosida steht als `Q974405` ohne `decl` in `docs/1000.yaml` |
@@ -8379,3 +8379,120 @@ vorhanden, aber die Fin-Indizierung gegen `⋃ k < n` ist Handarbeit), während
 Schritt (2) reine Arithmetik über `ℚ≥0` ist und keine Rückfrage an Mathlib
 stellt. Und sie ist zugleich die Aussage, die `SeparableSpace E` überhaupt
 verbraucht — danach ist der Satz Buchhaltung über drei bewiesenen Stücken.
+
+### 2026-09-08, dritter Lauf des Tages — die Zerlegung und die Gewichte; `separableSpace_probabilityMeasure` ist nur noch Buchhaltung
+
+**Bearbeitet:** `fact:PSpolish` (tragend 1), nach dem benannten Ziel des
+Vorlaufs. Das Ziel — `exists_finite_partition_ball_of_denseRange` — ist erreicht,
+und der Lauf hat den zweiten der beiden ausstehenden Schritte gleich mitgenommen.
+`separableSpace_probabilityMeasure` selbst trägt weiterhin `sorry`, aber kein
+mathematischer Schritt fehlt ihm mehr.
+
+**Bewiesen und durch `lake env lean` gegen v4.33.1** (in
+`TauCeti/WeakConvergence/Suggested.lean`; rc = 1 mit unverändert genau den
+**zwei** angekündigten Fehlern an
+`tendsto_map_of_measure_setOf_continuousAt_eq_one`, jetzt bei `:2018`, und
+keinem weiteren Fehler):
+
+* `exists_finite_partition_ball_of_denseRange` — zu einer dichten Folge `x`,
+  einem endlichen `μ`, einer Masse `ε > 0` und einem Radius `r > 0` gibt es eine
+  endliche meßbare Zerlegung `A : Fin n → Set E`, Indizes `k : Fin n → ℕ` und
+  eine Menge `G` mit `μ G ≤ ε`, so daß außerhalb `G` jeder Punkt von `A i` im
+  Abstand `r` von `x (k i)` liegt. Das ist genau die Hypothese von
+  `levyProkhorovEDist_sum_dirac_le`, hergestellt.
+
+  Drei Entscheidungen, die den Beweis kurz gehalten haben und die beim
+  Weiterschreiben gelten sollten. **Erstens: die Vertreter sind Indizes, keine
+  Punkte.** `k : Fin n → ℕ` statt `y : Fin n → E` — die Punkte selbst machen die
+  approximierende Familie nicht abzählbar, die Indizes in die dichte Folge tun
+  es. **Zweitens: die Ausnahmemenge ist ein Stück der Zerlegung.** `A` läuft über
+  `Fin (n+1)`, die ersten `n` Stücke sind die Disjunktifizierung
+  `ball (x i) r \ ⋃ j < i, ball (x j) r`, das letzte ist der unbedeckte Rest
+  `G = (⋃ j < n, ball (x j) r)ᶜ` — dadurch ist die Abstandsbedingung an diesem
+  Stück leer (`A i \ G = ∅`) und braucht keinen eigenen Zeugen; für `n = 0`
+  bleibt die Aussage richtig, mit `A 0 = univ = G`.
+  **Drittens: der Abschnitt läuft über die Komplemente, nicht über die Massen.**
+  `tendsto_measure_iInter_atTop` auf `(U m)ᶜ` mit `⋂ m, (U m)ᶜ = ∅` gibt
+  `μ (U m)ᶜ → 0` direkt; der Weg über `tendsto_measure_iUnion_atTop` und
+  `μ univ - μ (U m)` hätte eine Subtraktion in `ℝ≥0∞` gekostet, die man nicht
+  braucht. Die Endlichkeit von `μ` geht genau einmal ein, als
+  `∃ i, μ (s i) ≠ ∞` in dieser Anwendung.
+
+  Mathlibs `SeparableSpace.exists_measurable_partition_diam_le`
+  (`Measure/LevyProkhorovMetric.lean:540`) ist dieselbe Disjunktifizierung, aber
+  abzählbar indiziert und ohne die Vertreter; weder der endliche Index noch die
+  Punkte überleben sie, darum wird die Zerlegung hier gebaut.
+
+* `exists_nat_weights` — ein Gewichtsvektor `c : Fin n → ℝ≥0∞` mit
+  `∑ i, c i = 1` wird bis auf einen Gesamtfehler `δ` durch den **normierten**
+  ganzzahligen Vektor `m i / ∑ j, m j` approximiert.
+
+  **Der Befund, der hier zählt, ist eine Vereinfachung des angekündigten Wegs.**
+  Der Meilenstein verlangte bis heute rationale Gewichte, die auf Summe `1`
+  festgenagelt sind: `q i ≤ c i` abrunden und `q 0` den Rest aufnehmen lassen.
+  Das braucht die abgeschnittene Subtraktion in `ℝ≥0∞` (oder in `ℚ≥0`) und eine
+  Fallunterscheidung am Ausnahmeindex, an dem die Abweichung dann `(n-1)`-mal so
+  groß ist wie an den übrigen. **Normieren spart beides.** Mit
+  `m i = ⌊(c i).toReal * N⌋₊ + 1` liegt `∑ j, m j` zwischen `N` und `N + n`,
+  jedes `m i` zwischen `(c i).toReal * N` und `(c i).toReal * N + 1`, also jedes
+  normierte Gewicht im Abstand `(n+1)/N` von `c i` — **an jedem Index derselbe
+  Fehler**, kein Ausnahmeindex —, und `∑ i, m i / ∑ j, m j = 1` gilt nach
+  Konstruktion statt als Beweisverpflichtung. Das `+ 1` in den Zählern ist nicht
+  kosmetisch: es hält `∑ j, m j` positiv, auch wenn alle Abrundungen
+  verschwinden. Die Familie wird damit über `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`
+  indiziert, nicht über `Σ n, (Fin n → ℕ) × (Fin n → ℚ≥0)`; die Roadmap ist
+  entsprechend geändert.
+
+  Werkzeugnotiz: der Beweis rechnet in `ℝ` (über `.toReal`) und wird erst am
+  Ende nach `ℝ≥0∞` gehoben, über `ENNReal.ofReal_div_of_pos`,
+  `ENNReal.ofReal_add` und `ENNReal.ofReal_toReal`. Vier Zeilen Umrechnung gegen
+  einen ganzen Beweis in `ℝ≥0∞` — die Division und die Subtraktion dort sind
+  jede für sich teurer als die Hebung.
+
+**Was jetzt noch fehlt, und es ist kein mathematischer Schritt mehr.** Die
+Buchhaltung: Zerlegung mit `r = ε.toReal` holen,
+`levyProkhorovEDist_sum_dirac_le` anwenden, `exists_nat_weights` auf
+`c i = μ (A i)` (Gesamtmasse `1`, weil `A` eine Zerlegung ist), dann
+`levyProkhorovEDist_sum_dirac_weights_le`, `levyProkhorovEDist_triangle`
+(`Measure/LevyProkhorovMetric.lean:127`) gibt `2ε`, und
+`LevyProkhorov.probabilityMeasureHomeomorph` (`ibid.:676`) trägt es in die
+Topologie der Verteilungskonvergenz. Dazu die Abzählbarkeit des Bildes von
+`Σ n, (Fin n → ℕ) × (Fin n → ℕ)` unter `ProbabilityMeasure.toMeasure_injective`
+(`Measure/ProbabilityMeasure.lean:128`) und die eigene Zeile für leeres `E`
+(`TopologicalSpace.exists_dense_seq`, `Topology/Bases.lean:346`, verlangt
+`[Nonempty E]`; über leerem `E` ist `ProbabilityMeasure E` leer und `∅` darin
+dicht). Alles steht ausgeschrieben im Docstring von
+`separableSpace_probabilityMeasure` und im Meilenstein.
+
+Die Datei gewinnt **genau zwei** Deklarationen, beide bewiesen, und **kein**
+neues `sorry`: der Zähler über `git diff --unified=0 HEAD` auf hinzugefügte
+Zeilen, die mit `theorem`/`lemma`/`def`/`instance` beginnen, gibt 2, und
+`grep -cE ":= sorry$"` steht unverändert bei 7. (Die absolute
+Deklarationszahl hängt am gewählten Muster — `^(theorem|lemma|def) ` gibt 103,
+mit `instance` 108 —; der Vorlauf hat 105 genannt, die Differenz ist das Muster
+und nicht der Inhalt. Der Delta-Zähler über `git diff` ist der belastbare.)
+
+Die Entwicklung lief wieder in einer eigenen kleinen Datei mit **einem** Import
+(`Mathlib.MeasureTheory.Measure.LevyProkhorovMetric`) — vier Durchläufe in je
+unter einer Minute —, und erst der fertige Text wurde eingesetzt und zweimal im
+Ganzen geprüft; die Hilfsdatei ist mit `git clean -f` entfernt. Das ist jetzt
+zum zweiten Mal die Vorgehensweise, die den Lauf gerettet hat, und sie gehört
+zum Standard.
+
+Mitgefunden, beim Übersetzen: `Set.diff_subset` ist `deprecated` (jetzt
+`Set.sdiff_subset`), und `zero_le'` ebenfalls (jetzt `zero_le`, mit implizitem
+Argument — `zero_le _` ist ein Fehler, nicht bloß eine Warnung).
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel:
+`separableSpace_probabilityMeasure` selbst**, `WeakConvergence` Meilenstein 3.
+Warum jetzt: es ist der erste Lauf, in dem der Satz **keine** Mathlib-Suche mehr
+stellt und keine offene mathematische Frage mehr hat — vier bewiesene Stücke,
+eine Dreiecksungleichung und ein Homöomorphismus, alle mit Fundstelle. Die
+einzige Stelle, an der noch etwas schiefgehen kann, ist die Abzählbarkeit: sie
+läuft über die Injektivität der Vergröberung `ProbabilityMeasure E → Measure E`
+und über `Set.Countable.image` auf einem `Sigma`-Typ, und der Beweis muß dafür
+das approximierende Maß als `ProbabilityMeasure` **bündeln**, also
+`IsProbabilityMeasure (∑ i, (m i / M) • dirac (x (k i)))` nachweisen — das ist
+`∑ i, m i / M = M / M = 1` über `ENNReal.div_self`, und es ist die eine
+Rechnung, die der nächste Lauf zuerst hinschreiben sollte, weil alles Übrige
+davon abhängt.

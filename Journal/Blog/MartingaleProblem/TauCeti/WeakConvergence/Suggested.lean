@@ -2150,26 +2150,279 @@ theorem levyProkhorovEDist_sum_dirac_weights_le [PseudoMetricSpace E] [OpensMeas
           add_le_add le_rfl (hd.trans he.le)
   exact ⟨key c q hcq, key q c hqc⟩
 
+/-- **The finite partition into small pieces with named representatives.**  On a
+metric space with a dense sequence `x`, a finite measure `μ`, a mass `ε > 0` and
+a radius `r > 0`, there is a finite measurable partition `A` of `E`, a set `G`
+of `μ`-mass at most `ε`, and indices `k` such that off `G` every point of `A i`
+is within `r` of `x (k i)`.
+
+This is the hypothesis of `levyProkhorovEDist_sum_dirac_le` produced, and it is
+the one place in `separableSpace_probabilityMeasure` where separability of `E`
+is consumed.  The representatives are returned as *indices* `k : Fin n → ℕ`
+into the dense sequence, not as points: it is the indices that make the
+approximating family countable.
+
+The construction is the disjointification of the first `n` balls of radius `r`
+around the sequence, `A i = ball (x i) r \ ⋃ j < i, ball (x j) r`, together with
+the uncovered remainder `G = (⋃ j < n, ball (x j) r)ᶜ` as the last piece --- so
+`G` is at once a piece of the partition and the exceptional set, and the
+condition on it is vacuous.  The cutoff `n` exists because those unions increase
+to `E` by density, so their complements decrease to `∅` and, `μ` being finite,
+their masses tend to `0` (`tendsto_measure_iInter_atTop`).
+
+Mathlib's `SeparableSpace.exists_measurable_partition_diam_le`
+(`Measure/LevyProkhorovMetric.lean:540`) is the same disjointification, but
+indexed by all of `ℕ` and with the representatives forgotten; neither the finite
+index nor the points survive it, which is why the partition is built here. -/
+theorem exists_finite_partition_ball_of_denseRange [PseudoMetricSpace E]
+    [OpensMeasurableSpace E]
+    {x : ℕ → E} (hx : DenseRange x) (μ : Measure E) [IsFiniteMeasure μ]
+    {ε : ℝ≥0∞} (hε : 0 < ε) {r : ℝ} (hr : 0 < r) :
+    ∃ (n : ℕ) (A : Fin n → Set E) (k : Fin n → ℕ) (G : Set E),
+      (∀ i, MeasurableSet (A i)) ∧ Pairwise (Function.onFun Disjoint A) ∧
+      (⋃ i, A i) = univ ∧ MeasurableSet G ∧ μ G ≤ ε ∧
+      ∀ i, ∀ z ∈ A i \ G, dist z (x (k i)) ≤ r := by
+  classical
+  set U : ℕ → Set E := fun m => ⋃ j < m, Metric.ball (x j) r with hUdef
+  have hUmeas : ∀ m, MeasurableSet (U m) := fun m =>
+    MeasurableSet.iUnion fun _ => MeasurableSet.iUnion fun _ => Metric.isOpen_ball.measurableSet
+  have hUmono : Monotone U := by
+    intro a b hab z hz
+    simp only [hUdef, mem_iUnion, exists_prop] at hz ⊢
+    obtain ⟨j, hj, hzj⟩ := hz
+    exact ⟨j, hj.trans_le hab, hzj⟩
+  have hUuniv : (⋃ m, U m) = univ := by
+    refine eq_univ_of_forall fun z => ?_
+    obtain ⟨j, hj⟩ := hx.exists_dist_lt z hr
+    refine mem_iUnion.2 ⟨j + 1, ?_⟩
+    simp only [hUdef, mem_iUnion, exists_prop]
+    exact ⟨j, Nat.lt_succ_self j, Metric.mem_ball.2 hj⟩
+  have hten : Tendsto (fun m => μ (U m)ᶜ) atTop (𝓝 0) := by
+    have h := tendsto_measure_iInter_atTop (μ := μ) (s := fun m => (U m)ᶜ)
+      (fun m => (hUmeas m).compl.nullMeasurableSet)
+      (fun a b hab => compl_subset_compl.2 (hUmono hab)) ⟨0, measure_ne_top _ _⟩
+    rwa [← compl_iUnion, hUuniv, compl_univ, measure_empty] at h
+  obtain ⟨n, hn⟩ : ∃ n, μ (U n)ᶜ < ε := (hten.eventually (gt_mem_nhds hε)).exists
+  set A : Fin (n + 1) → Set E :=
+    fun i => if h : (i : ℕ) < n then Metric.ball (x i) r \ U i else (U n)ᶜ with hAdef
+  have hAsub : ∀ i : Fin (n + 1), (h : (i : ℕ) < n) → A i ⊆ Metric.ball (x i) r := by
+    intro i h
+    simp only [hAdef, dif_pos h]
+    exact Set.sdiff_subset
+  have hAdisj : ∀ i : Fin (n + 1), (h : (i : ℕ) < n) → Disjoint (A i) (U i) := by
+    intro i h
+    simp only [hAdef, dif_pos h]
+    exact disjoint_sdiff_left
+  have hball : ∀ (i : ℕ) (m : ℕ), i < m → Metric.ball (x i) r ⊆ U m := by
+    intro i m him z hz
+    simp only [hUdef, mem_iUnion, exists_prop]
+    exact ⟨i, him, hz⟩
+  refine ⟨n + 1, A, fun i => if (i : ℕ) < n then (i : ℕ) else 0, (U n)ᶜ, ?_, ?_, ?_,
+    (hUmeas n).compl, hn.le, ?_⟩
+  · intro i
+    simp only [hAdef]
+    split
+    · exact Metric.isOpen_ball.measurableSet.diff (hUmeas _)
+    · exact (hUmeas n).compl
+  · have key : ∀ i j : Fin (n + 1), (i : ℕ) < (j : ℕ) → Disjoint (A i) (A j) := by
+      intro i j hij
+      by_cases hj : (j : ℕ) < n
+      · have hi : (i : ℕ) < n := hij.trans hj
+        exact ((hAdisj j hj).mono_right ((hAsub i hi).trans (hball _ _ hij))).symm
+      · have hi : (i : ℕ) < n := lt_of_lt_of_le hij (by omega)
+        have hAj : A j = (U n)ᶜ := by simp only [hAdef, dif_neg hj]
+        rw [hAj]
+        exact Disjoint.mono_left ((hAsub i hi).trans (hball _ _ hi)) disjoint_compl_right
+    intro i j hne
+    rcases lt_or_gt_of_ne (fun h : (i : ℕ) = (j : ℕ) => hne (Fin.ext h)) with h | h
+    · exact key i j h
+    · exact (key j i h).symm
+  · refine eq_univ_of_forall fun z => ?_
+    by_cases hz : z ∈ U n
+    · have hex : ∃ j, z ∈ Metric.ball (x j) r := by
+        simp only [hUdef, mem_iUnion, exists_prop] at hz
+        obtain ⟨j, _, hzj⟩ := hz
+        exact ⟨j, hzj⟩
+      have hlt : Nat.find hex < n := by
+        simp only [hUdef, mem_iUnion, exists_prop] at hz
+        obtain ⟨j, hjn, hzj⟩ := hz
+        exact lt_of_le_of_lt (Nat.find_le hzj) hjn
+      refine mem_iUnion.2 ⟨⟨Nat.find hex, by omega⟩, ?_⟩
+      simp only [hAdef, dif_pos hlt]
+      refine ⟨Nat.find_spec hex, ?_⟩
+      simp only [hUdef, mem_iUnion, exists_prop, not_exists, not_and]
+      exact fun l hl => Nat.find_min hex hl
+    · refine mem_iUnion.2 ⟨Fin.last n, ?_⟩
+      simp only [hAdef, Fin.val_last, lt_irrefl, dif_neg, not_false_eq_true]
+      exact hz
+  · intro i z hz
+    by_cases h : (i : ℕ) < n
+    · simp only [if_pos h]
+      exact le_of_lt (Metric.mem_ball.1 (hAsub i h hz.1))
+    · exact absurd hz.1 (by simp only [hAdef, dif_neg h]; exact hz.2)
+
+/-- **Rational approximation of a finite probability vector.**  A weight vector
+`c : Fin n → ℝ≥0∞` of total mass `1` is approximated, to within a total error
+`δ`, by the *normalised* integer vector `m i / ∑ j, m j`.
+
+This is what feeds `levyProkhorovEDist_sum_dirac_weights_le` and makes the
+approximating family countable: after it the family is indexed by
+`Σ n, (Fin n → ℕ) × (Fin n → ℕ)` --- the indices into the dense sequence and the
+numerators --- rather than by arbitrary reals.
+
+Normalising is what makes the proof short, and it is the reason the weights are
+integers here rather than elements of `ℚ≥0`.  Take `m i = ⌊(c i).toReal * N⌋₊ + 1`:
+then `∑ j, m j` lies between `N` and `N + n`, each `m i` between
+`(c i).toReal * N` and `(c i).toReal * N + 1`, so every normalised weight is
+within `(n + 1) / N` of `c i` and the total discrepancy is at most
+`n (n + 1) / N`, which the choice of `N` makes at most `δ`.  Pinning the sum to
+`1` instead --- rounding down and letting one exceptional index absorb the slack
+--- would need truncated subtraction in `ℝ≥0∞` and a case distinction at that
+index; normalising needs neither, because `∑ i, m i / ∑ j, m j = 1` holds by
+construction.
+
+The `+ 1` in the numerators is not cosmetic: it is what makes `∑ j, m j`
+positive, so that the normalisation is defined even when every `c i` is small
+enough for its floor to vanish. -/
+theorem exists_nat_weights {n : ℕ} (c : Fin n → ℝ≥0∞) (hc : ∑ i, c i = 1)
+    {δ : ℝ≥0∞} (hδ : 0 < δ) :
+    ∃ m : Fin n → ℕ, 0 < ∑ j, m j ∧
+      ∃ d : Fin n → ℝ≥0∞,
+        (∀ i, c i ≤ (m i : ℝ≥0∞) / ((∑ j, m j : ℕ) : ℝ≥0∞) + d i) ∧
+        (∀ i, (m i : ℝ≥0∞) / ((∑ j, m j : ℕ) : ℝ≥0∞) ≤ c i + d i) ∧
+        ∑ i, d i ≤ δ := by
+  classical
+  set δ₀ : ℝ≥0∞ := min δ 1 with hδ₀def
+  have hδ₀pos : 0 < δ₀ := lt_min hδ one_pos
+  have hδ₀top : δ₀ ≠ ∞ := ne_top_of_le_ne_top one_ne_top (min_le_right _ _)
+  have hδ₀real : 0 < δ₀.toReal := ENNReal.toReal_pos hδ₀pos.ne' hδ₀top
+  have hn : 0 < n := by
+    rcases Nat.eq_zero_or_pos n with h | h
+    · subst h; simp at hc
+    · exact h
+  have : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
+  have hctop : ∀ i, c i ≠ ∞ := fun i => ne_top_of_le_ne_top one_ne_top
+    (hc ▸ Finset.single_le_sum (f := c) (fun j _ => zero_le) (Finset.mem_univ i))
+  set b : Fin n → ℝ := fun i => (c i).toReal with hbdef
+  have hb0 : ∀ i, 0 ≤ b i := fun i => ENNReal.toReal_nonneg
+  have hbsum : ∑ i, b i = 1 := by
+    rw [hbdef, ← ENNReal.toReal_sum (fun i _ => hctop i), hc]
+    simp
+  have hb1 : ∀ i, b i ≤ 1 :=
+    fun i => hbsum ▸ Finset.single_le_sum (fun j _ => hb0 j) (Finset.mem_univ i)
+  obtain ⟨N, hN⟩ := exists_nat_gt (((n : ℝ) * (n + 1)) / δ₀.toReal)
+  have hNpos : 0 < N := by
+    by_contra h
+    have hN0 : N = 0 := by omega
+    rw [hN0] at hN
+    have : 0 < ((n : ℝ) * (n + 1)) / δ₀.toReal := by
+      apply div_pos _ hδ₀real
+      have : (0 : ℝ) < n := by exact_mod_cast hn
+      nlinarith
+    simp at hN
+    linarith
+  have hNr : (0 : ℝ) < N := by exact_mod_cast hNpos
+  set m : Fin n → ℕ := fun i => ⌊b i * N⌋₊ + 1 with hmdef
+  set M : ℕ := ∑ j, m j with hMdef
+  have hMpos : 0 < M := Finset.sum_pos (fun i _ => Nat.succ_pos _) Finset.univ_nonempty
+  have hMr : (0 : ℝ) < M := by exact_mod_cast hMpos
+  have hlow : ∀ i, b i * N ≤ (m i : ℝ) := by
+    intro i
+    have h := Nat.lt_floor_add_one (b i * N)
+    simp only [hmdef, Nat.cast_add, Nat.cast_one]
+    linarith
+  have hhigh : ∀ i, (m i : ℝ) ≤ b i * N + 1 := by
+    intro i
+    have h : (⌊b i * N⌋₊ : ℝ) ≤ b i * N :=
+      Nat.floor_le (mul_nonneg (hb0 i) (Nat.cast_nonneg N))
+    simp only [hmdef, Nat.cast_add, Nat.cast_one]
+    linarith
+  have hMlow : (N : ℝ) ≤ M := by
+    have h1 : (N : ℝ) = ∑ i, b i * N := by rw [← Finset.sum_mul, hbsum, one_mul]
+    have h2 : ((M : ℕ) : ℝ) = ∑ i, ((m i : ℕ) : ℝ) := by rw [hMdef]; push_cast; ring
+    rw [h1, h2]
+    exact Finset.sum_le_sum fun i _ => hlow i
+  have hMhigh : (M : ℝ) ≤ (N : ℝ) + n := by
+    have h1 : ∑ i, (b i * N + 1) = (N : ℝ) + n := by
+      rw [Finset.sum_add_distrib, ← Finset.sum_mul, hbsum, one_mul]
+      simp
+    have h2 : ((M : ℕ) : ℝ) = ∑ i, ((m i : ℕ) : ℝ) := by rw [hMdef]; push_cast; ring
+    rw [h2, ← h1]
+    exact Finset.sum_le_sum fun i _ => hhigh i
+  set η : ℝ := ((n : ℝ) + 1) / N with hηdef
+  have hη0 : 0 ≤ η := by positivity
+  have hNne : (N : ℝ) ≠ 0 := hNr.ne'
+  have hηN : η * N = (n : ℝ) + 1 := by rw [hηdef, div_mul_cancel₀ _ hNne]
+  have hup : ∀ i, (m i : ℝ) / M ≤ b i + η := by
+    intro i
+    rw [div_le_iff₀ hMr]
+    have hbη : (0 : ℝ) ≤ b i + η := add_nonneg (hb0 i) hη0
+    have hn1 : (1 : ℝ) ≤ (n : ℝ) + 1 := by
+      have : (0 : ℝ) ≤ n := Nat.cast_nonneg n
+      linarith
+    calc (m i : ℝ) ≤ b i * N + 1 := hhigh i
+      _ ≤ b i * N + η * N := by rw [hηN]; linarith
+      _ = (b i + η) * N := by ring
+      _ ≤ (b i + η) * M := mul_le_mul_of_nonneg_left hMlow hbη
+  have hdown : ∀ i, b i ≤ (m i : ℝ) / M + η := by
+    intro i
+    rw [← sub_le_iff_le_add, le_div_iff₀ hMr]
+    have h1 : b i * ((M : ℝ) - N) ≤ (n : ℝ) := by nlinarith [hb0 i, hb1 i, hMhigh, hMlow]
+    have h2 : (n : ℝ) ≤ η * M := by nlinarith [hηN, hMlow, hη0]
+    nlinarith [hlow i]
+  refine ⟨m, hMpos, fun _ => ENNReal.ofReal η, ?_, ?_, ?_⟩
+  · intro i
+    have hw : (m i : ℝ≥0∞) / ((M : ℕ) : ℝ≥0∞) = ENNReal.ofReal ((m i : ℝ) / M) := by
+      rw [ENNReal.ofReal_div_of_pos hMr]
+      simp
+    rw [hw, ← ENNReal.ofReal_toReal (hctop i), ← ENNReal.ofReal_add (by positivity) hη0]
+    exact ENNReal.ofReal_le_ofReal (hdown i)
+  · intro i
+    have hw : (m i : ℝ≥0∞) / ((M : ℕ) : ℝ≥0∞) = ENNReal.ofReal ((m i : ℝ) / M) := by
+      rw [ENNReal.ofReal_div_of_pos hMr]
+      simp
+    rw [hw, ← ENNReal.ofReal_toReal (hctop i), ← ENNReal.ofReal_add ENNReal.toReal_nonneg hη0]
+    exact ENNReal.ofReal_le_ofReal (hup i)
+  · have hsum : ∑ _i : Fin n, ENNReal.ofReal η = ENNReal.ofReal ((n : ℝ) * η) := by
+      rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
+        ← ENNReal.ofReal_natCast n, ← ENNReal.ofReal_mul (Nat.cast_nonneg n)]
+    rw [hsum]
+    have hle : (n : ℝ) * η ≤ δ₀.toReal := by
+      rw [hηdef]
+      rw [div_lt_iff₀ hδ₀real] at hN
+      rw [mul_div_assoc']
+      rw [div_le_iff₀ hNr]
+      nlinarith [hN]
+    calc ENNReal.ofReal ((n : ℝ) * η) ≤ ENNReal.ofReal δ₀.toReal :=
+          ENNReal.ofReal_le_ofReal hle
+      _ = δ₀ := ENNReal.ofReal_toReal hδ₀top
+      _ ≤ δ := min_le_left _ _
+
 /-- The laws on a separable metric space form a separable space.
 
-The countable dense family is the one the two estimates above are built for:
-the measures `∑ i, (q i : ℝ≥0∞) • δ (x (m i))` with `q : Fin n → ℚ≥0` summing to
-`1` and `x : ℕ → E` a dense sequence.  Countability is the image of the
-countable type `Σ n, (Fin n → ℕ) × (Fin n → ℚ≥0)`, along the injective
-coercion `ProbabilityMeasure.toMeasure_injective`.  Density is
-`levyProkhorovEDist_sum_dirac_le` followed by
-`levyProkhorovEDist_sum_dirac_weights_le`, transported to the topology of
-convergence in distribution along `LevyProkhorov.probabilityMeasureHomeomorph`
-(`Measure/LevyProkhorovMetric.lean:676`).
+The countable dense family is the one the estimates above are built for: the
+measures `∑ i, ((m i : ℝ≥0∞) / ∑ j, m j) • δ (x (k i))` with `m : Fin n → ℕ`
+of positive total and `x : ℕ → E` a dense sequence.  Countability is the image
+of the countable type `Σ n, (Fin n → ℕ) × (Fin n → ℕ)`, along the injective
+coercion `ProbabilityMeasure.toMeasure_injective`.
 
-Two steps are left, both named.  (1) The partition: for `ε > 0` there is an `n`
-with `μ (⋃ k < n, ball (x k) ε)ᶜ ≤ ε`, because those balls increase to `E` by
-density and `μ` is finite (`tendsto_measure_iUnion_atTop`); `disjointed` makes
-them disjoint, and the complement becomes the last piece and the set `G` of
-`levyProkhorovEDist_sum_dirac_le` at once.  (2) The rational weights: given
-`c : Fin n → ℝ≥0∞` with `∑ c i = 1`, pick `q i ≤ c i` rational with
-`c i ≤ q i + δ/n` for `i ≠ 0` and let `q 0` take up the slack, which keeps
-`∑ q i = 1` and rational and bounds every discrepancy by `δ`. -/
+All three mathematical steps are proved.  What is left is the bookkeeping that
+puts them together: given `μ` and `ε > 0`, apply
+`exists_finite_partition_ball_of_denseRange` with `r = ε.toReal` to get the
+partition `A`, the indices `k` and the exceptional set `G`; apply
+`levyProkhorovEDist_sum_dirac_le` to it, so that `∑ i, μ (A i) • δ (x (k i))` is
+`ε`-close to `μ`; apply `exists_nat_weights` to `c i = μ (A i)`, whose total is
+`1` because `A` is a partition, and then
+`levyProkhorovEDist_sum_dirac_weights_le`, so that the normalised integer
+weights cost another `ε`; `levyProkhorovEDist_triangle`
+(`Measure/LevyProkhorovMetric.lean:127`) gives `2ε`, and
+`LevyProkhorov.probabilityMeasureHomeomorph` (`ibid.:676`) carries the
+conclusion to the topology of convergence in distribution.
+
+The empty `E` is a separate line and not a hypothesis:
+`TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`) asks for
+`[Nonempty E]`, and over an empty `E` there is no probability measure at all, so
+`ProbabilityMeasure E` is empty and `∅` is dense in it. -/
 theorem separableSpace_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurableSpace E]
     [TopologicalSpace.SeparableSpace E] :
     TopologicalSpace.SeparableSpace (ProbabilityMeasure E) := sorry
