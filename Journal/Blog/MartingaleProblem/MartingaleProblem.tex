@@ -9416,9 +9416,29 @@ reason to want the following.
 
   \emph{The path space is not Polish.}  It is separable metric, which is all that
   Facts~\ref{fact:cmt} and~\ref{fact:PSpolish} were stated for, and this
-  manuscript never used more.  It does mean that a formalization must have the
-  continuous mapping theorem and the Skorokhod representation at that generality
-  and not only for Polish spaces (Section~\ref{ssec:available}).
+  manuscript never used more.  It does \emph{not} follow that a formalization
+  needs either of them at that generality.  Fact~\ref{fact:cmt} does not enter
+  this proof at all --- Step~3 verifies \eqref{eq:C1prime} by exhibiting the
+  convergence, and every other use in this manuscript is under
+  Setting~\ref{set:abstract}, where $F$ is Polish.  And Step~1 may be run in a
+  larger space that \emph{is} Polish.  Let $M_E$ be the set of Borel maps
+  $\Rp \to E$ modulo $\lambda$-a.e.\ equality, metrized by
+  \[
+    d_m(x,y) \;=\; \int_0^\infty e^{-u} \bigl( 1 \wedge r(x(u),y(u)) \bigr) \dif u ,
+  \]
+  where $r$ is any metric on $E$; under \eqref{E3} this is a complete separable
+  metric space, and $d_m$ metrizes convergence in $\lambda$-measure (\Ku,
+  Section~4).  Then $\DE$ is a
+  topological subspace of $M_E$ by
+  Fact~\ref{fact:pseudopath}\ref{it:pp_meas}; the pseudo-path map is injective
+  on all of $M_E$ and continuous, so part~\ref{it:pp_sep} makes $\DE$ a
+  \emph{Borel} subset of $M_E$; and the trace of $\Bor(M_E)$ on $\DE$ is
+  $\sigma(\pi_u)$ by part~\ref{it:pp_sigma}.  Pushing the laws forward along the
+  inclusion, the ordinary Skorokhod representation on $M_E$ delivers the
+  $\tilde X_n$ of Step~1; they are c\`adl\`ag a.s.\ because their laws charge
+  only the Borel set $\DE$, and Step~2 reads $d_m(\tilde X_n, \tilde X) \to 0$
+  off the shelf.  What a formalization pays instead is the construction of
+  $M_E$, and that is elementary.
 
   \emph{C\`adl\`ag paths of the limit must be known separately.}  In the
   pseudo-path topology $\DE$ is not closed, and the limit of pseudo-paths of

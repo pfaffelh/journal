@@ -809,6 +809,12 @@ metrizability of it occurs anywhere in Mathlib. They come first, because the
 Skorokhod representation below and every relative compactness argument
 downstream live in this space.
 
+The representation is stated for `E` separable, which is what its proof uses;
+the two places the manuscript consumes it — `rem:EKrelcompact`, where the space
+is `D_E` under `J₁`, and Step 1 of `thm:MZconv`, where it is the space of
+Milestone 6 — are both Polish, so the separable form proves strictly more than
+they ask.
+
 Where each statement lives is fixed by Mathlib's design. `LevyProkhorov` is a
 one-field structure wrapping a measure (`LevyProkhorovMetric.lean:259`), and the
 distance instances sit on it: `LevyProkhorov.instPseudoMetricSpaceProbabilityMeasure`
@@ -1238,6 +1244,52 @@ The representation theorem itself:
   `∑' k, π i k = μ (A i)`, so the index falls into the `i`-th piece with exactly
   the probability `μ` gives it -- which is what makes the law of the constructed
   variable equal `μ` once `map_eval_prod_infinitePi` fills in the positions.
+* `MeasureTheory.exists_measurable_pair_of_partition`, **proved** on 2026-09-08,
+  tenth run: **one stage of the representation, as one statement.** On
+  `stageMeasure μ ν A = (ν ⊗ Lebesgue|₍₀,₁₎) ⊗ infinitePi (condLaw μ ∘ A)` there
+  is a measurable `X` with `map X = μ` such that the **first coordinate itself**
+  has law `ν` and
+
+  ```
+  stageMeasure μ ν A {z | ε < dist (X z) z.1.1} ≤ ∑' i, (μ (A i) - ν (A i))
+  ```
+
+  under exactly the hypotheses of `exists_coupling_of_partition`. What it adds to
+  that theorem is what iterating needs: the limit variable is `fun z ↦ z.1.1`, a
+  map that depends neither on `μ` nor on the partition nor on `ε`, so every stage
+  reads its limit variable off the *same* coordinate. A glued family of laws `γ`
+  on `E × E` cannot give that — the almost sure statement `X n ω → Y ω` is about
+  one `Y`, not one `Y` per stage. Five auxiliary statements carry it, all proved
+  in the same run:
+
+  * `MeasureTheory.sum_smul_condLaw_eq`: `μ = ∑ᵢ μ(Aᵢ) · condLaw μ (Aᵢ)`, the
+    identity that turns the mixture law of the randomisation step back into `μ`;
+    `MeasureTheory.tsum_measure_inter_eq` is the additivity of a countable
+    partition it rests on.
+  * `MeasureTheory.condRow` with `tsum_condRow` and `mul_condRow`: the index
+    coupling `π` of `exists_coupling_tsum_offDiag_le`, normalised column by
+    column into a stochastic matrix, `c k i = π i k / ν (A k)`. `tsum_condRow`
+    is what `exists_measurable_index_of_stochastic_matrix` consumes;
+    `mul_condRow` — `ν (A k) · c k i = π i k`, **including** on a null piece,
+    where both sides vanish because `π i k ≤ ∑' i, π i k = ν (A k)` — is the
+    whole bookkeeping of the stage, used once for the law of `X` and once for
+    the estimate.
+  * `MeasureTheory.measure_index_ne_prod`: on `E × (0,1]` the two indices
+    disagree with probability `∑ₖ ν (A k) · ∑_{i ≠ k} c k i`, which
+    `mul_condRow` and `ENNReal.tsum_comm` turn into the off-diagonal mass
+    `exists_coupling_tsum_offDiag_le` bounds. This is the only inequality of the
+    stage; everything else is an identity of laws.
+
+  The estimate splits accordingly. Either the two indices disagree, and
+  `measure_index_ne_prod` bounds that; or they agree, and then `Y` lies in the
+  piece by the fibre property of `j`, `X` lies in it almost surely by
+  `condLaw_compl_eq_zero`, and `Metric.dist_le_diam_of_mem` makes the bad event
+  empty. The one stage at which that argument fails is a piece of `μ`-mass zero,
+  where `condLaw` falls back to `μ` and is no longer carried by the piece; that
+  set is itself null, because the index law says the index lands in the `i`-th
+  piece with probability `μ (A i)`. `MeasureTheory.stageMeasure` names the space,
+  and `MeasureTheory.isProbabilityMeasure_volume_restrict_Ioc` supplies the
+  instance for `(0,1]` that Mathlib does not have.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
@@ -1440,6 +1492,35 @@ exactly what an almost surely convergent realisation witnesses.
   as above. This is therefore the instance on which the two candidate
   constructions differ, and the reason the item is built from the product and
   not from disintegration together with `ProbabilityTheory.Kernel.traj`.
+* **The two-point space, where the bound `0` forces the diagonal — and the
+  neighbouring construction that has the right marginals and misses it.**
+  `E = {0,1}` with `dist 0 1 = 1`, `ε = 1/2`, `A 0 = {0}`, `A 1 = {1}` and
+  `A i = ∅` for `i ≥ 2`; `μ = ν =` the fair coin. Every diameter is `0 ≤ ε`,
+  the mass vectors agree, so `∑' i, (μ (A i) - ν (A i)) = 0` and
+  `exists_measurable_pair_of_partition` asserts `X = Y` almost surely. It does
+  produce that: `π` is the diagonal, `condRow π (ν ∘ A) k i = π i k / ν (A k)`
+  is `1` exactly at `i = k`, so `G (k, ξ) = k` for every `ξ`, and
+  `X z = z.2 (j z.1.1)` is the draw from `condLaw μ (A (j Y)) = δ_Y`. The
+  neighbouring construction that fails is the independent coupling `ν ⊗ ν`: its
+  marginals are right, and it puts mass `1/2` on `dist (X, Y) = 1 > ε`. So the
+  estimate, and not the pair of marginals, is what the statement is about.
+  Iterating this stage over `μ n = ν` also shows why the limit variable must be
+  a *coordinate*: gluing two such couplings as a product gives two limit
+  variables that are equal in law and independent, so `X n → Y` cannot even be
+  stated, whereas both stages of `exists_measurable_pair_of_partition` read the
+  same `fun z ↦ z.1.1`.
+* **A `μ`-null piece, where `condLaw` falls back and is never observed.**
+  `E = {0,1}`, `A` as above, `ε = 1/2`, `μ = δ 0` and `ν = (δ 0 + δ 1)/2`. Then
+  `μ (A 1) = 0`, so `condLaw μ (A 1) = μ = δ 0` is **not** carried by `A 1` and
+  the diagonal argument is unavailable there. It is never needed: the coupling
+  is `π 0 0 = π 0 1 = 1/2`, the row `condRow π (ν ∘ A) 1` is the point mass at
+  `0`, and the weight of the index `1` is `∑' k, π 1 k = μ (A 1) = 0`, so the
+  fallback measure is looked up on a null set. The bound is attained exactly:
+  `∑' i, (μ (A i) - ν (A i)) = 1/2`, and with probability `1/2` the limit
+  variable is `1` while `X = 0`. This is the instance on which a proof that
+  argued "the two indices agree, hence the distance is at most the diameter"
+  *without* first discarding the `μ`-null pieces would be wrong, and the reason
+  `mul_condRow` is stated to hold on null pieces too.
 
 ## Milestone 4: uniform integrability against convergence in distribution
 
@@ -1756,3 +1837,168 @@ space; no topology is involved.
   by times `≤ s`" into `𝔼[Y t | Filt s] =ᵐ Y s`: the martingale property is
   verified against countably many test products rather than against the whole
   σ-algebra.
+
+## Milestone 6: the space of measurable paths modulo null sets, and its Polish structure
+
+Let `α` be a measurable space, `μ` a finite measure on it and `E` a metric
+space. Mathlib has the quotient — `MeasureTheory.AEEqFun`, written
+`α →ₘ[μ] E` (`MeasureTheory/Function/AEEqFun.lean`), the a.e.-equality classes
+of a.e.-strongly-measurable maps — and it has the convergence —
+`MeasureTheory.TendstoInMeasure` (`MeasureTheory/Function/ConvergenceInMeasure.lean:57`),
+a predicate on families of functions. It does not connect them: `α →ₘ[μ] E`
+carries the algebraic instances of `E` and no metric, and `TendstoInMeasure`
+carries no topology. The metric that joins the two is
+
+```
+distInMeasure f g = ∫ a, min 1 (dist (f a) (g a)) ∂μ ,
+```
+
+and for `μ` finite it metrizes `TendstoInMeasure μ`, is complete when `E` is,
+and is separable when `E` and `μ` are. That is Kurtz (1991), *Random time
+changes and convergence in distribution under the Meyer–Zheng conditions*,
+Ann. Probab. **19**, 1010–1034, Section 4, where `α = [0,∞)` and
+`μ(dt) = e^{-t} dt`; the space is his `M_E[0,∞)` and it is the Polish space
+through which Step 1 of the manuscript's `thm:MZconv` runs, so that the
+Skorokhod representation of Milestone 3 is needed for **Polish** spaces only.
+
+The metric goes directly on `α →ₘ[μ] E` and not on a type synonym: Mathlib's
+competing metrics of a.e.-classes live on `MeasureTheory.Lp`, which is a
+different type, so nothing is shadowed. The truncation `min 1 (dist · ·)` is
+what makes the integral finite without an integrability hypothesis; it is the
+same device as `ENNReal.ofReal` in the Lévy–Prokhorov distance, and any bounded
+metric equivalent to `dist` gives the same topology.
+
+* `MeasureTheory.AEEqFun.distInMeasure`, for `[MetricSpace E]` and
+  `[IsFiniteMeasure μ]`, defined as `∫ a, min 1 (dist (f a) (g a)) ∂μ` and
+  well-defined on classes because the integrand changes on a null set only, with
+  `distInMeasure_nonneg`, `distInMeasure_comm`, `distInMeasure_self` — all
+  **proved** — and the `Dist (α →ₘ[μ] E)` instance. The integrand is integrable
+  because it is bounded by `1` and `μ` is finite (`integrable_min_one_dist`,
+  **proved** on 2026-09-08, twelfth run), and it is measurable because the
+  coercion of an a.e.-class is *strongly* measurable and not merely a.e. so
+  (`AEEqFun.stronglyMeasurable`, `AEEqFun.lean:139`); that is what makes the sets
+  `{a | ε ≤ dist (f a) (g a)}` honestly measurable and is recorded as
+  `measurable_dist_coeFn`. `SecondCountableTopology E` is **not** a hypothesis of
+  any of this — it stood in the file until 2026-09-08 and no proof used it.
+* `MeasureTheory.AEEqFun.distInMeasure_triangle`, **proved** on 2026-09-08,
+  twelfth run, and the `PseudoMetricSpace (α →ₘ[μ] E)` instance. The triangle
+  inequality is pointwise — `min 1` is subadditive on nonnegative reals, which is
+  the private `min_one_add_le` — followed by monotonicity of the integral, so it
+  needs no property of `μ` beyond finiteness.
+* `MeasureTheory.AEEqFun.distInMeasure_eq_zero_iff`, **proved** on 2026-09-08,
+  twelfth run, and the `MetricSpace (α →ₘ[μ] E)` instance for `[MetricSpace E]`.
+  A nonnegative integrable function with vanishing integral is a.e. zero
+  (`integral_eq_zero_iff_of_nonneg`), so `min 1 (dist (f a) (g a)) = 0` a.e.; the
+  truncation is undone by `min_eq_iff`, whose first branch would force `1 = 0`.
+  So `f = g` a.e., so `f = g` in the quotient by `AEEqFun.ext`. This is the one
+  place where `E` must be a metric and not a pseudometric space, and it is why the
+  quotient is taken.
+* `MeasureTheory.AEEqFun.tendsto_iff_tendstoInMeasure`, **proved** on 2026-09-08,
+  twelfth run: for `l : Filter ι` and `f : ι → (α →ₘ[μ] E)`,
+  `Tendsto (fun i ↦ distInMeasure (f i) g) l (𝓝 0)` if and only if
+  `TendstoInMeasure μ (fun i ↦ (f i : α → E)) l g`. This is the statement that
+  names the metric correctly, and it is the point of contact with the manuscript's
+  `fact:pseudopath`(i). Both directions run through
+  `tendstoInMeasure_iff_measureReal_dist`
+  (`ConvergenceInMeasure.lean:110`, stated for `[IsFiniteMeasure μ]`): one way by
+  Markov's inequality `mul_meas_ge_le_integral_of_nonneg`
+  (`Integral/Bochner/Basic.lean:1129`) applied at the level `min 1 ε` — the
+  truncation has to be carried into the level as well, or the inclusion of sets
+  is the wrong way round — the other by splitting the integral at level `ε` into
+  `ε` plus the measure of the exceptional set. That second half is
+  `distInMeasure_le_add`, `distInMeasure f g ≤ ε * μ.real univ + μ.real {a | ε ≤ dist (f a) (g a)}`,
+  a statement of its own because it is what makes the estimate reusable.
+* `MeasureTheory.AEEqFun.exists_tendsto_distInMeasure_of_cauchy`, **proved** on
+  2026-09-08, twelfth run, for `[CompleteSpace E]` and `[IsFiniteMeasure μ]`;
+  the `CompleteSpace` instance is this statement once the metric instance is
+  installed. Kurtz (4.2)–(4.4): from a Cauchy sequence select a subsequence with
+  `∑ k, distInMeasure (x (n k)) (x (n (k+1))) < ∞`; `lintegral_tsum` moves the sum
+  inside the integral, so `∑ k, min 1 (dist ..)` is finite on a set of full
+  measure; there the sequence is Cauchy in `E` — the truncation is undone by
+  *summability itself*, because the terms tend to `0` and so are eventually below
+  `1` — and has a limit by `cauchySeq_of_summable_dist` and completeness. Off the
+  set the limit is put equal to `x 0`, **not** to a fixed `x₀ : E`: `E` need not be
+  nonempty, and taking the first term of the sequence as the fallback is what makes
+  the definition unconditional. Measurability of the limit is
+  `aestronglyMeasurable_of_tendsto_ae`, its convergence in measure is
+  `tendstoInMeasure_of_tendsto_ae`, and the passage back to the whole sequence is
+  the triangle inequality against the subsequence. Mathlib has **no** completeness
+  of convergence in measure to appeal to: `ConvergenceInMeasure.lean` contains no
+  statement with `Cauchy` in it (checked 2026-09-08 against v4.33.1), and the
+  `Lᵖ` completeness (`LpSpace/Complete.lean:290`) is for a normed group.
+* `MeasureTheory.AEEqFun.separableSpace`, for
+  `[MeasureTheory.IsSeparable μ]` (`Measure/SeparableMeasure.lean:339`;
+  automatic for `[MeasurableSpace.CountablyGenerated α]` and `[SFinite μ]` by the
+  instance at `:382`) and `[TopologicalSpace.SeparableSpace E]`. The countable
+  dense family is the classes of the functions `∑ i, Set.indicator (A i) (fun _ ↦ y i)`
+  with `A` a finite family from a countable measure-dense family of measurable
+  sets and `y` from a countable dense subset of `E`; density in `distInMeasure`
+  is the two-step estimate — approximate `f` by a countable-valued function
+  within `ε` pointwise, then cut the tail using finiteness of `μ`, then move each
+  level set to a measure-dense one. This is the point Kurtz leaves to the
+  reader, and it is the only part of the milestone with no proof in the source.
+  Mathlib's `Lp.SecondCountableTopology` (`Measure/SeparableMeasure.lean:427`)
+  is the same statement for the `Lᵖ` metrics and fixes the right hypotheses;
+  it does not transfer, because `distInMeasure` is not a norm and `E` is not a
+  normed group.
+* The instances themselves, **built** on 2026-09-08, twelfth run:
+  `MeasureTheory.AEEqFun.instDist` with `dist_eq_distInMeasure`,
+  `MeasureTheory.AEEqFun.metricSpace` from the four statements above, and
+  `MeasureTheory.AEEqFun.completeSpace` from
+  `exists_tendsto_distInMeasure_of_cauchy` through
+  `Metric.complete_of_cauchySeq_tendsto`. With the metric installed,
+  `MeasureTheory.AEEqFun.tendsto_nhds_iff_tendstoInMeasure` states the point of
+  contact with `fact:pseudopath`(i) in its proper form — `Tendsto f l (𝓝 g)`, a
+  statement about the *topology*, not about a sequence of numbers.
+* `MeasureTheory.AEEqFun.isCompletelyMetrizableSpace` and
+  `MeasureTheory.AEEqFun.polishSpace`, the two previous points combined, for
+  `[MetricSpace E] [CompleteSpace E] [SeparableSpace E]`, `[IsFiniteMeasure μ]`
+  and `[MeasureTheory.IsSeparable μ]`. After the twelfth run of 2026-09-08 these
+  are one line each behind `separableSpace`: the metric, its completeness and
+  `UniformSpace.secondCountable_of_separable` are all in place, and separability
+  is the only input still missing.
+* `measurableSet_of_measurable_injective`, **proved** on 2026-09-08, eleventh
+  run: for `γ : X → Y` measurable and injective and `S : Set X` with
+  `MeasurableSet (γ '' S)`, the set `S` is measurable. It is
+  `MeasurableSet.preimage` of `γ` at `γ '' S` together with
+  `Function.Injective.preimage_image`, and it carries **no topology** — the
+  hypotheses are two bare `MeasurableSpace` instances. It is stated separately
+  because it is the whole of the argument that puts the càdlàg paths inside the
+  space as a Borel set: no Lusin–Souslin, no completeness, no separability. The
+  manuscript uses it with `Y` the compact space of pseudo-paths, `γ` the
+  pseudo-path map — injective on all of `α →ₘ[μ] E`, not only on the càdlàg
+  classes — and `S` the càdlàg classes, whose image is Borel by
+  `fact:pseudopath`(ii). `measurableSet_of_continuous_injective` is the
+  topological corollary, under `[OpensMeasurableSpace X]` and `[BorelSpace Y]`,
+  and it is the form in which the pseudo-path map is applied.
+* `MeasureTheory.AEEqFun.map_of_continuous_tendsto`: this is Mathlib's
+  `MeasureTheory.ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`
+  (`Measure/ProbabilityMeasure.lean:657`) applied to the inclusion of a subspace
+  of `α →ₘ[μ] E`, and it is recorded here to fix that the transfer of weak
+  convergence into this space costs the trivial half of the continuous mapping
+  theorem — no metric on the source, no separability, no almost-everywhere
+  continuity. Together with `Subtype.borelSpace`
+  (`Constructions/BorelSpace/Basic.lean:187`), which says that the Borel σ-algebra
+  of a subspace is the trace of the ambient one, it is what makes a law carried
+  by a subspace and its push-forward into the whole space the same object.
+
+**Acceptance examples.** `α = ℝ≥0` with `μ = e^{-t}` times Lebesgue measure and
+`E` Polish is Kurtz's `M_E[0,∞)`, and on it `distInMeasure` must be exactly
+`d_m` of his (4.1) and `polishSpace` must fire; the càdlàg classes then form a
+Borel subset by `measurableSet_preimage_of_continuous_injOn`, which is what
+Step 1 of `thm:MZconv` consumes. The instructive failure next to it is the
+**untruncated** integral `∫ a, dist (f a) (g a) ∂μ`: on the same `α` and `μ`
+with `E = ℝ`, the classes of `f n = n · 1_{[0,1/n]}` satisfy
+`distInMeasure (f n) 0 → 0` — the paths converge in measure — while
+`∫ |f n| dμ` stays bounded away from `0`, so the untruncated formula is not even
+finite on all pairs and metrizes `L¹` convergence where it is, which is strictly
+stronger. The second failure is dropping finiteness of `μ`, and it is the sharper one
+because it is silent: with `α = ℝ≥0`, `μ` Lebesgue and `E = ℝ`, the integrand
+`min 1 (dist (f a) 0)` for `f = 1_{[n, ∞)}` equals `1` on `[n, ∞)` and is not
+integrable, so Mathlib's Bochner integral returns its junk value `0`. Hence
+`distInMeasure f 0 = 0` with `f ≠ 0`: `distInMeasure_eq_zero_iff` fails, the
+`MetricSpace` instance is unsound, and nothing in the elaboration complains.
+`[IsFiniteMeasure μ]` is therefore a hypothesis of `distInMeasure` itself and
+not only of the theorems about it, and the manuscript's `λ(du) = e^{-u} du` is
+chosen for exactly that reason and not for the convergence it induces, which is
+the same as local convergence in Lebesgue measure.

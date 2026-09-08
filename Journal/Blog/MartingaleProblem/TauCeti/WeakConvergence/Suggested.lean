@@ -9,6 +9,9 @@ import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
 import Mathlib.MeasureTheory.Measure.FiniteMeasureExt
 import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.MeasureTheory.Function.UniformIntegrable
+import Mathlib.MeasureTheory.Function.AEEqFun
+import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+import Mathlib.MeasureTheory.Measure.SeparableMeasure
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.Probability.ConditionalProbability
 import Mathlib.Probability.ProductMeasure
@@ -263,9 +266,37 @@ only `MeasurableSpace E`.  That is why the whole milestone stays at
 The same run settled how the stages are put on one space, and the answer is that
 they are not glued: gluing the one-stage couplings along their common second
 marginal is disintegration followed by a countable product of kernels, and
-Mathlib has no product of kernels over a countable index (checked on
-`upstream/master` at `572e4d091bc`).  All stages are built at once instead, on
+`Measure.condKernel` requires `[StandardBorelSpace Ω] [Nonempty Ω]`
+(`Probability/Kernel/Disintegration/StandardBorel.lean:77`, `:361`), which
+separable metric does not give.  (The eighth run gave a second reason, that
+Mathlib has no countable product of kernels; that is **false** and was corrected
+on 2026-09-08, ninth run: it is `ProbabilityTheory.Kernel.traj`,
+`Probability/Kernel/IonescuTulcea/Traj.lean:518`, the Ionescu-Tulcea theorem,
+assuming nothing but `MeasurableSpace` and Markov.  The decision stands on the
+disintegration alone.)  All stages are built at once instead, on
 `(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`, which is Ethier-Kurtz's Lemma 3.1.3 with `N = ∞`.
+
+Since 2026-09-08, eleventh run, Milestone 6 has its hinge:
+`measurableSet_of_measurable_injective` and its topological corollary
+`measurableSet_of_continuous_injective` -- a measurable injection carries a
+measurable image back to a measurable set -- together with the metric of
+convergence in measure on `MeasureTheory.AEEqFun`, `distInMeasure`, and
+`distInMeasure_nonneg`, `distInMeasure_comm`, `distInMeasure_self`.  Since
+2026-09-08, twelfth run, the metric itself is built: `distInMeasure_triangle`,
+`distInMeasure_eq_zero_iff`, `tendsto_iff_tendstoInMeasure` and
+`exists_tendsto_distInMeasure_of_cauchy` are proved, and with them the instances
+`instDist`, `metricSpace` and `completeSpace` and the topological form
+`tendsto_nhds_iff_tendstoInMeasure`.  `SecondCountableTopology E` was a
+hypothesis of `distInMeasure` until that run and is gone: no proof uses it, the
+coercion of an a.e.-class being *strongly* measurable
+(`AEEqFun.stronglyMeasurable`) already.  Everything named here is proved and
+depends on no axiom beyond `propext`, `Classical.choice` and `Quot.sound`; the
+one remaining declaration of the milestone,
+`exists_countable_dense_distInMeasure`, is a statement carrying its own `sorry`
+-- it is separability, the point Kurtz leaves to the reader.  The hinge is what
+makes the càdlàg paths
+a Borel subset of Kurtz' space `M_E [0, ∞)`, and with it the Skorokhod
+representation of Milestone 3 is consumed for **Polish** spaces only.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -3703,6 +3734,344 @@ theorem exists_coupling_of_tendsto [PseudoMetricSpace E] [OpensMeasurableSpace E
         (ENNReal.ofReal_tsum_of_nonneg (fun _ => abs_nonneg _) hsummable).symm
     _ ≤ ENNReal.ofReal ε := ENNReal.ofReal_le_ofReal hn.le
 
+/-- Lebesgue measure on `(0,1]` is a probability measure.  Mathlib has no instance for this
+concrete measure, and the randomisation step needs one for every `Measure.prod` it forms. -/
+theorem isProbabilityMeasure_volume_restrict_Ioc :
+    IsProbabilityMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) := by
+  constructor
+  rw [Measure.restrict_apply_univ, Real.volume_Ioc]
+  norm_num
+
+/-- A countable measurable partition splits every measurable set additively.  This is the step
+`exists_coupling_of_partition` carries in its own proof as a `have`; it is stated here because the
+one-stage representation needs it three times, once for each of the two mass vectors and once for
+the law of the mixture. -/
+theorem tsum_measure_inter_eq (ρ : Measure E) [IsProbabilityMeasure ρ] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : (⋃ i, A i) = Set.univ) {S : Set E} (hS : MeasurableSet S) :
+    ∑' i, ρ (S ∩ A i) = ρ S := by
+  have hSU : S = ⋃ i, (S ∩ A i) := by rw [← Set.inter_iUnion, hAu, Set.inter_univ]
+  have hdisj : Pairwise (Function.onFun Disjoint fun i => S ∩ A i) := fun i j hij =>
+    Disjoint.mono Set.inter_subset_right Set.inter_subset_right (hAd hij)
+  rw [← measure_iUnion hdisj fun i => hS.inter (hAm i), ← hSU]
+
+/-- **A measure is the mixture of its conditional laws on a partition.**  `μ = ∑ᵢ μ(Aᵢ) · μ(·|Aᵢ)`,
+which is what turns the law of the randomisation step -- a `Measure.sum` of the conditional laws
+against the weights `μ (A i)` -- back into `μ` itself.  Null pieces are harmless: there the
+weight is `0` and the fallback value of `condLaw` is never looked at. -/
+theorem sum_smul_condLaw_eq (μ : Measure E) [IsProbabilityMeasure μ] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : (⋃ i, A i) = Set.univ) :
+    (Measure.sum fun i => μ (A i) • condLaw μ (A i)) = μ := by
+  ext S hS
+  rw [Measure.sum_apply _ hS]
+  have hval : ∀ i, (μ (A i) • condLaw μ (A i)) S = μ (S ∩ A i) := by
+    intro i
+    rw [Measure.smul_apply, smul_eq_mul, measure_mul_condLaw_apply hS]
+  simp_rw [hval]
+  exact tsum_measure_inter_eq μ hAm hAd hAu hS
+
+/-- The row of the conditional index law: given that the `ν`-index is `k`, the `μ`-index is `i`
+with probability `π i k / ν (A k)`. -/
+noncomputable def condRow (π : ℕ → ℕ → ℝ≥0∞) (q : ℕ → ℝ≥0∞) (k i : ℕ) : ℝ≥0∞ :=
+  if q k = 0 then (if i = 0 then 1 else 0) else π i k / q k
+
+/-- Every row of `condRow` is a probability vector, which is what
+`exists_measurable_index_of_stochastic_matrix` consumes.  On a null piece the row is the point mass
+at `0`; any probability vector would do there, and the choice is never observed because the piece
+carries no mass. -/
+theorem tsum_condRow {π : ℕ → ℕ → ℝ≥0∞} {q : ℕ → ℝ≥0∞} (hq : ∀ k, ∑' i, π i k = q k)
+    (hqtop : ∀ k, q k ≠ ∞) (k : ℕ) : ∑' i, condRow π q k i = 1 := by
+  by_cases h : q k = 0
+  · simp only [condRow, if_pos h]
+    exact tsum_ite_eq 0 1
+  · simp only [condRow, if_neg h, div_eq_mul_inv]
+    rw [ENNReal.tsum_mul_right, hq k, ← div_eq_mul_inv, ENNReal.div_self h (hqtop k)]
+
+/-- **The normalisation is exact.**  Weighting the row by the mass of the conditioning piece
+returns the coupling entry, `ν (A k) · c k i = π i k`, and it does so **also** on a null piece,
+where both sides vanish -- the left one because the weight does, the right one because
+`π i k ≤ ∑' i, π i k = ν (A k)`.  This identity is the whole bookkeeping of the stage: it is what
+makes the index of the constructed variable land in the `i`-th piece with probability
+`∑' k, π i k = μ (A i)`, and what turns the off-diagonal mass of `π` into the bound on the bad
+event. -/
+theorem mul_condRow {π : ℕ → ℕ → ℝ≥0∞} {q : ℕ → ℝ≥0∞} (hq : ∀ k, ∑' i, π i k = q k)
+    (hqtop : ∀ k, q k ≠ ∞) (k i : ℕ) : q k * condRow π q k i = π i k := by
+  by_cases h : q k = 0
+  · have hz : π i k = 0 := le_antisymm (by rw [← h, ← hq k]; exact ENNReal.le_tsum i) bot_le
+    simp [h, hz]
+  · rw [condRow, if_neg h, mul_comm, ENNReal.div_mul_cancel h (hqtop k)]
+
+/-- **The two indices disagree with the off-diagonal probability of the row law.**  On
+`E × (0,1]` the first coordinate decides the piece `j y` its point lies in and the uniform
+variable draws a second index `G (j y, ξ)` from the row `c (j y)`; the probability that the two
+differ is `∑ₖ ν (A k) · ∑_{i ≠ k} c k i`.
+
+This is the only estimate of the one-stage representation that is not an identity of laws, and it
+is where the off-diagonal bound of `exists_coupling_tsum_offDiag_le` enters: after
+`mul_condRow` the right-hand side is `∑ₖ ∑_{i ≠ k} π i k`, which `ENNReal.tsum_comm` turns into
+the quantity that theorem bounds.  The proof is the same two steps as `map_index_prod_eq` --
+Fubini over the uniform variable, then `lintegral_map` against `ν.map j`, a sum because the index
+space is countable -- with the point masses of a `Measure.dirac` read off an off-diagonal set
+instead of a singleton. -/
+theorem measure_index_ne_prod {ν : Measure E} [SFinite ν] {A : ℕ → Set E}
+    {j : E → ℕ} (hjm : Measurable j) (hj : ∀ i, j ⁻¹' {i} = A i)
+    {c : ℕ → ℕ → ℝ≥0∞} {G : ℕ × ℝ → ℕ} (hGm : Measurable G)
+    (hG : ∀ k, (volume.restrict (Set.Ioc (0 : ℝ) 1)).map (fun y => G (k, y))
+              = Measure.sum fun i => c k i • Measure.dirac i) :
+    (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))) {w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+      = ∑' k, ν (A k) * ∑' i, (if i = k then 0 else c k i) := by
+  classical
+  have hf : Measurable (fun w : E × ℝ => G (j w.1, w.2)) :=
+    hGm.comp ((hjm.comp measurable_fst).prodMk measurable_snd)
+  have hmap : Measurable (fun w : E × ℝ => (G (j w.1, w.2), j w.1)) :=
+    hf.prodMk (hjm.comp measurable_fst)
+  have hS : MeasurableSet {w : E × ℝ | G (j w.1, w.2) ≠ j w.1} := by
+    have hrw : {w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+        = (fun w : E × ℝ => (G (j w.1, w.2), j w.1)) ⁻¹' {p : ℕ × ℕ | p.1 ≠ p.2} := rfl
+    rw [hrw]
+    exact hmap (Set.to_countable _).measurableSet
+  rw [Measure.prod_apply hS]
+  have hslice : ∀ y : E, (volume.restrict (Set.Ioc (0 : ℝ) 1))
+      (Prod.mk y ⁻¹' {w : E × ℝ | G (j w.1, w.2) ≠ j w.1})
+      = ∑' i, (if i = j y then 0 else c (j y) i) := by
+    intro y
+    have h1 : (Prod.mk y ⁻¹' {w : E × ℝ | G (j w.1, w.2) ≠ j w.1})
+        = (fun ξ : ℝ => G (j y, ξ)) ⁻¹' {i : ℕ | i ≠ j y} := rfl
+    have hm2 : Measurable (fun ξ : ℝ => G (j y, ξ)) :=
+      hGm.comp (measurable_const.prodMk measurable_id)
+    have hTm : MeasurableSet {i : ℕ | i ≠ j y} := (Set.to_countable _).measurableSet
+    rw [h1, ← Measure.map_apply hm2 hTm, hG, Measure.sum_apply _ hTm]
+    refine tsum_congr fun i => ?_
+    rw [Measure.smul_apply, smul_eq_mul, Measure.dirac_apply' _ hTm]
+    by_cases hik : i = j y
+    · rw [if_pos hik, Set.indicator_of_notMem (by simpa using hik), mul_zero]
+    · rw [if_neg hik, Set.indicator_of_mem hik]
+      simp
+  simp only [hslice]
+  have hmeas : Measurable fun k : ℕ => ∑' i, (if i = k then (0 : ℝ≥0∞) else c k i) :=
+    measurable_of_countable _
+  have hchg : ∫⁻ y, (∑' i, (if i = j y then (0 : ℝ≥0∞) else c (j y) i)) ∂ν
+      = ∫⁻ k, (∑' i, (if i = k then (0 : ℝ≥0∞) else c k i)) ∂(ν.map j) :=
+    (lintegral_map hmeas hjm).symm
+  rw [hchg, lintegral_countable']
+  have hpt : ∀ k, (ν.map j) {k} = ν (A k) := by
+    intro k
+    rw [Measure.map_apply hjm (measurableSet_singleton k), hj k]
+  simp only [hpt]
+  exact tsum_congr fun k => mul_comm _ _
+
+/-- **The space carrying one stage of the Skorokhod representation.**  The first factor holds the
+limit variable `Y` (law `ν`) and a uniform variable; the second holds one independent draw from
+each conditional law `condLaw μ (A i)`, of which the index picks one. -/
+noncomputable def stageMeasure (μ ν : Measure E) [IsProbabilityMeasure μ] (A : ℕ → Set E) :
+    Measure ((E × ℝ) × (ℕ → E)) :=
+  (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).prod
+    (Measure.infinitePi fun i => condLaw μ (A i))
+
+/-- **One stage of the Skorokhod representation, as one statement.**  Under the hypotheses of
+`exists_coupling_of_partition` there is a measurable `X` on `(E × ℝ) × (ℕ → E)` with law `μ`, such
+that the **first coordinate itself** has law `ν` and the two are more than `ε` apart with
+probability at most `∑' i, (μ (A i) - ν (A i))`.
+
+**What this adds to `exists_coupling_of_partition`, and why the representation needs it.**  That
+theorem produces a joint law `γ` on `E × E`; its two coordinates are random variables on a space
+that depends on the stage.  Here the limit variable is `fun z => z.1.1`, a map that does **not**
+depend on `μ`, on the partition, or on `ε`.  Every stage of the representation therefore reads its
+limit variable off the *same* coordinate, which is exactly what iterating needs and what gluing a
+sequence of `γ`'s cannot give: the almost sure statement `X n ω → Y ω` is about one `Y`, not about
+one `Y` per stage.
+
+**The construction**, and it is Ethier--Kurtz, Lemma 3.1.3 with the pieces named.  The first
+factor `E × ℝ` carries `Y` and one uniform variable; the second factor `ℕ → E` carries one
+independent draw from each conditional law `condLaw μ (A i)`, all present at once.  Then
+
+* `j` (`exists_measurable_partitionIndex`) reads off the piece `Y` lies in;
+* `G` (`exists_measurable_index_of_stochastic_matrix`) draws, from the uniform variable and the
+  row `condRow π (ν ∘ A) (j Y)`, the piece `X` shall lie in -- this is where the index coupling
+  `π` of `exists_coupling_tsum_offDiag_le` is consumed, normalised row by row;
+* `X z = z.2 (G (j z.1.1, z.1.2))` looks up the draw belonging to that piece.
+
+Its law is `μ` by `map_index_prod_eq` (the index falls into the `i`-th piece with probability
+`∑' k, π i k = μ (A i)`), `map_eval_prod_infinitePi_of_map_eq` (the position is then distributed
+according to `condLaw μ (A i)`) and `sum_smul_condLaw_eq` (the mixture of the conditional laws is
+`μ`).
+
+**The estimate splits in two, and only the first part is quantitative.**  Either the two indices
+disagree, which `measure_index_ne_prod` bounds by the off-diagonal mass of `π`, or they agree --
+and then `Y` lies in the piece by the fibre property of `j`, `X` lies in it almost surely by
+`condLaw_compl_eq_zero`, and their distance is at most `Metric.diam (A i) ≤ ε`, so the bad event
+is null.  The one place where that argument is not available is a piece of `μ`-mass zero, where
+`condLaw` falls back to `μ` and is no longer carried by the piece; that set of stages is itself
+null, because the index law says the index lands in the `i`-th piece with probability `μ (A i)`.
+
+No topology on `E` is used beyond the metric and its Borel structure: the construction needs
+`MeasurableSpace E` alone, and `SecondCountableTopology E` enters only to make the bad event
+measurable. -/
+theorem exists_measurable_pair_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    [SecondCountableTopology E] (μ ν : Measure E)
+    [IsProbabilityMeasure μ] [IsProbabilityMeasure ν] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : ⋃ i, A i = univ) (hAb : ∀ i, Bornology.IsBounded (A i))
+    {ε : ℝ} (hAdiam : ∀ i, Metric.diam (A i) ≤ ε) :
+    ∃ X : (E × ℝ) × (ℕ → E) → E, Measurable X ∧
+      (stageMeasure μ ν A).map X = μ ∧
+      (stageMeasure μ ν A).map (fun z => z.1.1) = ν ∧
+      (stageMeasure μ ν A) {z | ε < dist (X z) z.1.1} ≤ ∑' i, (μ (A i) - ν (A i)) := by
+  classical
+  have hvol : IsProbabilityMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
+    isProbabilityMeasure_volume_restrict_Ioc
+  have hp : ∑' i, μ (A i) = 1 := by
+    simpa using tsum_measure_inter_eq μ hAm hAd hAu MeasurableSet.univ
+  have hq : ∑' i, ν (A i) = 1 := by
+    simpa using tsum_measure_inter_eq ν hAm hAd hAu MeasurableSet.univ
+  obtain ⟨π, hπp, hπq, hπoff⟩ := exists_coupling_tsum_offDiag_le hp hq
+  obtain ⟨j, hjm, hj⟩ := exists_measurable_partitionIndex hAm hAd hAu
+  have hqtop : ∀ k, ν (A k) ≠ ∞ := fun k => measure_ne_top _ _
+  have hcsum : ∀ k, ∑' i, condRow π (fun k => ν (A k)) k i = 1 := tsum_condRow hπq hqtop
+  have hcmul : ∀ k i, ν (A k) * condRow π (fun k => ν (A k)) k i = π i k := mul_condRow hπq hqtop
+  obtain ⟨G, hGm, hG⟩ := exists_measurable_index_of_stochastic_matrix hcsum
+  have hIm : Measurable (fun w : E × ℝ => G (j w.1, w.2)) :=
+    hGm.comp ((hjm.comp measurable_fst).prodMk measurable_snd)
+  -- the law of the index is the mass vector of `μ`
+  have hIlaw : (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).map (fun w : E × ℝ => G (j w.1, w.2))
+      = Measure.sum fun i => μ (A i) • Measure.dirac i := by
+    rw [map_index_prod_eq hjm hj hGm hG]
+    have hcoef : ∀ i, (∑' k, ν (A k) * condRow π (fun k => ν (A k)) k i) = μ (A i) := by
+      intro i
+      calc ∑' k, ν (A k) * condRow π (fun k => ν (A k)) k i
+          = ∑' k, π i k := tsum_congr fun k => hcmul k i
+        _ = μ (A i) := hπp i
+    simp only [hcoef]
+  -- the two random variables
+  have hev : Measurable (fun r : ℕ × (ℕ → E) => r.2 r.1) :=
+    measurable_from_prod_countable_right (fun i => measurable_pi_apply i)
+  have hXm : Measurable (fun z : (E × ℝ) × (ℕ → E) => z.2 (G (j z.1.1, z.1.2))) :=
+    hev.comp ((hIm.comp measurable_fst).prodMk measurable_snd)
+  have hYm : Measurable (fun z : (E × ℝ) × (ℕ → E) => z.1.1) := measurable_fst.fst
+  have hXlaw : (stageMeasure μ ν A).map (fun z : (E × ℝ) × (ℕ → E) => z.2 (G (j z.1.1, z.1.2)))
+      = μ :=
+    (map_eval_prod_infinitePi_of_map_eq _ hIm hIlaw (fun i => condLaw μ (A i))).trans
+      (sum_smul_condLaw_eq μ hAm hAd hAu)
+  have hYlaw : (stageMeasure μ ν A).map (fun z : (E × ℝ) × (ℕ → E) => z.1.1) = ν := by
+    have h1 : (fun z : (E × ℝ) × (ℕ → E) => z.1.1) = Prod.fst ∘ Prod.fst := rfl
+    rw [stageMeasure, h1, ← Measure.map_map measurable_fst measurable_fst,
+      Measure.map_fst_prod, Measure.map_smul, Measure.map_fst_prod]
+    simp
+  -- the bad event, and its two parts
+  have hBm : MeasurableSet
+      {z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1} :=
+    measurableSet_lt measurable_const (hXm.dist hYm)
+  have hSm : MeasurableSet {w : E × ℝ | G (j w.1, w.2) ≠ j w.1} := by
+    have hrw : {w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+        = (fun w : E × ℝ => (G (j w.1, w.2), j w.1)) ⁻¹' {p : ℕ × ℕ | p.1 ≠ p.2} := rfl
+    rw [hrw]
+    exact (hIm.prodMk (hjm.comp measurable_fst)) (Set.to_countable _).measurableSet
+  have hB1m : MeasurableSet
+      (({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))) :=
+    hSm.prod MeasurableSet.univ
+  -- the index part is bounded by the off-diagonal mass
+  have hB1 : (stageMeasure μ ν A)
+      ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))
+      ≤ ∑' i, (μ (A i) - ν (A i)) := by
+    rw [stageMeasure, Measure.prod_prod, measure_univ, mul_one,
+      measure_index_ne_prod hjm hj hGm hG]
+    refine le_trans (le_of_eq ?_) hπoff
+    have hrow : ∀ k, ν (A k) * ∑' i, (if i = k then (0 : ℝ≥0∞)
+          else condRow π (fun k => ν (A k)) k i)
+        = ∑' i, (if i = k then (0 : ℝ≥0∞) else π i k) := by
+      intro k
+      rw [← ENNReal.tsum_mul_left]
+      refine tsum_congr fun i => ?_
+      by_cases hik : i = k
+      · simp [hik]
+      · rw [if_neg hik, if_neg hik]
+        exact hcmul k i
+    simp only [hrow]
+    exact ENNReal.tsum_comm
+  -- the remainder is null
+  have hzero : (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1)))
+      {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} = 0 := by
+    have hSm' : MeasurableSet {k : ℕ | μ (A k) = 0} := (Set.to_countable _).measurableSet
+    have hrw : {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0}
+        = (fun w : E × ℝ => G (j w.1, w.2)) ⁻¹' {k : ℕ | μ (A k) = 0} := rfl
+    rw [hrw, ← Measure.map_apply hIm hSm', hIlaw, Measure.sum_apply _ hSm']
+    refine ENNReal.tsum_eq_zero.2 fun i => ?_
+    rw [Measure.smul_apply, smul_eq_mul, Measure.dirac_apply' _ hSm']
+    by_cases hi : μ (A i) = 0
+    · rw [hi, zero_mul]
+    · rw [Set.indicator_of_notMem (show i ∉ {k : ℕ | μ (A k) = 0} from hi), mul_zero]
+  have hbound : ∀ w : E × ℝ, (Measure.infinitePi fun i => condLaw μ (A i))
+      (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+        \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))))
+      ≤ Set.indicator {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} (fun _ => (1 : ℝ≥0∞)) w := by
+    intro w
+    by_cases hw : μ (A (G (j w.1, w.2))) = 0
+    · rw [Set.indicator_of_mem
+        (show w ∈ {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} from hw)]
+      exact prob_le_one
+    · rw [Set.indicator_of_notMem
+        (show w ∉ {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} from hw), nonpos_iff_eq_zero]
+      by_cases hk : G (j w.1, w.2) = j w.1
+      · have hw1 : w.1 ∈ A (G (j w.1, w.2)) := by
+          have hmem : w.1 ∈ j ⁻¹' {G (j w.1, w.2)} := by simp [hk]
+          rwa [hj] at hmem
+        have hsub : (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) |
+              ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+            \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))))
+            ⊆ (fun v : ℕ → E => v (G (j w.1, w.2))) ⁻¹' (A (G (j w.1, w.2)))ᶜ := by
+          rintro v ⟨hv, -⟩
+          intro hmem
+          exact absurd hv (not_lt.2
+            ((Metric.dist_le_diam_of_mem (hAb _) hmem hw1).trans (hAdiam _)))
+        refine measure_mono_null hsub ?_
+        rw [← Measure.map_apply (measurable_pi_apply _) (hAm _).compl,
+          Measure.infinitePi_map_eval]
+        exact condLaw_compl_eq_zero (hAm _) hw
+      · have hempty : (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) |
+              ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+            \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E))))) = ∅ := by
+          ext v
+          simp only [Set.mem_preimage, Set.mem_sdiff, Set.mem_empty_iff_false, iff_false, not_and,
+            not_not]
+          intro _
+          exact Set.mk_mem_prod hk (Set.mem_univ v)
+        rw [hempty, measure_empty]
+  have hnull : (stageMeasure μ ν A)
+      ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+        \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))) = 0 := by
+    rw [stageMeasure, Measure.prod_apply (hBm.diff hB1m)]
+    refine le_antisymm ?_ bot_le
+    calc ∫⁻ w, (Measure.infinitePi fun i => condLaw μ (A i))
+            (Prod.mk w ⁻¹' ({z : (E × ℝ) × (ℕ → E) |
+                ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+              \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))))
+            ∂(ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1)))
+        ≤ ∫⁻ w, Set.indicator {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} (fun _ => (1 : ℝ≥0∞)) w
+            ∂(ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))) := lintegral_mono hbound
+      _ = 0 := by
+          have hSm'' : MeasurableSet {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0} := by
+            have hrw : {w : E × ℝ | μ (A (G (j w.1, w.2))) = 0}
+                = (fun w : E × ℝ => G (j w.1, w.2)) ⁻¹' {k : ℕ | μ (A k) = 0} := rfl
+            rw [hrw]
+            exact hIm (Set.to_countable _).measurableSet
+          rw [lintegral_indicator hSm'', setLIntegral_one, hzero]
+  refine ⟨_, hXm, hXlaw, hYlaw, ?_⟩
+  calc (stageMeasure μ ν A) {z : (E × ℝ) × (ℕ → E) |
+          ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+      ≤ (stageMeasure μ ν A)
+          (({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))
+            ∪ ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+              \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E))))) :=
+        measure_mono (fun z hz => (em (z ∈ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1}
+          ×ˢ (univ : Set (ℕ → E))))).elim Or.inl (fun h => Or.inr ⟨hz, h⟩))
+    _ ≤ (stageMeasure μ ν A) ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))
+        + (stageMeasure μ ν A)
+          ({z : (E × ℝ) × (ℕ → E) | ε < dist (z.2 (G (j z.1.1, z.1.2))) z.1.1}
+            \ ({w : E × ℝ | G (j w.1, w.2) ≠ j w.1} ×ˢ (univ : Set (ℕ → E)))) :=
+        measure_union_le _ _
+    _ ≤ ∑' i, (μ (A i) - ν (A i)) := by rw [hnull, add_zero]; exact hB1
+
 theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}
     {ν : ProbabilityMeasure E} (h : Tendsto μ atTop (𝓝 ν)) :
@@ -4927,5 +5296,342 @@ theorem condExp_eq_of_forall_integral_mul_eq {mΩ : MeasurableSpace Ω}
   exact hset s hs
 
 end MulSystem
+
+end MeasureTheory
+
+/-!
+## Milestone 6: the space of measurable paths modulo null sets
+
+The hinge of the argument that puts the càdlàg paths into the space of
+`λ`-a.e. classes as a Borel set, and the metric of convergence in measure.
+-/
+
+section MeasurableInjective
+
+/-- If `γ` is measurable and injective and the image of `S` is measurable, so is `S`.
+No topology is involved: this is `Set.preimage_image_eq` under a measurable map.
+It is the whole of the argument that makes `D_E` a Borel subset of `M_E`, with `γ`
+the pseudo-path map and the image Borel in the compact pseudo-path model. -/
+theorem measurableSet_of_measurable_injective {X Y : Type*}
+    [MeasurableSpace X] [MeasurableSpace Y] {γ : X → Y}
+    (hγ : Measurable γ) (hinj : Function.Injective γ) {S : Set X}
+    (hS : MeasurableSet (γ '' S)) : MeasurableSet S := by
+  have hpre : γ ⁻¹' (γ '' S) = S := hinj.preimage_image S
+  exact hpre ▸ hS.preimage hγ
+
+/-- The continuous form of `measurableSet_of_measurable_injective`, which is how the
+pseudo-path map is used: it is continuous on the whole space of `λ`-a.e. classes,
+not only on the càdlàg ones. -/
+theorem measurableSet_of_continuous_injective {X Y : Type*}
+    [TopologicalSpace X] [MeasurableSpace X] [OpensMeasurableSpace X]
+    [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y] {γ : X → Y}
+    (hγ : Continuous γ) (hinj : Function.Injective γ) {S : Set X}
+    (hS : MeasurableSet (γ '' S)) : MeasurableSet S :=
+  measurableSet_of_measurable_injective hγ.measurable hinj hS
+
+end MeasurableInjective
+
+namespace MeasureTheory
+
+namespace AEEqFun
+
+variable {α : Type*} [MeasurableSpace α] {μ : Measure α}
+variable {E : Type*} [MetricSpace E]
+
+/-- The distance of convergence in measure on the a.e.-classes of measurable maps,
+`∫ a, min 1 (dist (f a) (g a)) ∂μ`.  For `μ` finite this is Kurtz' `d_m` of
+(1991), Section 4, whose instance on `ℝ≥0` with `μ (dt) = e ^ (-t) dt` is the
+space `M_E [0, ∞)`.  The truncation at `1` is what makes the integral finite
+without an integrability hypothesis. -/
+noncomputable def distInMeasure (f g : α →ₘ[μ] E) : ℝ :=
+  ∫ a, min 1 (dist (f a) (g a)) ∂μ
+
+theorem distInMeasure_nonneg (f g : α →ₘ[μ] E) : 0 ≤ distInMeasure f g :=
+  integral_nonneg fun _ => le_min zero_le_one dist_nonneg
+
+/-- The coercion of an a.e.-class is strongly measurable, not merely a.e. strongly
+measurable (`AEEqFun.stronglyMeasurable`), so the sets `{a | ε ≤ dist (f a) (g a)}`
+that carry the whole argument are honestly measurable. -/
+theorem measurable_dist_coeFn (f g : α →ₘ[μ] E) :
+    Measurable fun a => dist (f a) (g a) :=
+  (f.stronglyMeasurable.dist g.stronglyMeasurable).measurable
+
+/-- The truncation at `1` is what makes the integrand integrable with no hypothesis
+on `f` and `g` beyond measurability; finiteness of `μ` is what makes the constant `1`
+integrable. -/
+theorem integrable_min_one_dist [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) :
+    _root_.MeasureTheory.Integrable (fun a => min 1 (dist (f a) (g a))) μ := by
+  refine _root_.MeasureTheory.Integrable.mono' (integrable_const (1 : ℝ)) ?_ ?_
+  · exact (continuous_const.min continuous_id).comp_aestronglyMeasurable
+      (f.aestronglyMeasurable.dist g.aestronglyMeasurable)
+  · filter_upwards with a
+    rw [Real.norm_eq_abs, abs_of_nonneg (le_min zero_le_one dist_nonneg)]
+    exact min_le_left _ _
+
+/-- Subadditivity of `min 1` on the nonnegative reals, the pointwise content of the
+triangle inequality. -/
+private theorem min_one_add_le (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    min 1 (a + b) ≤ min 1 a + min 1 b := by
+  rcases le_total 1 a with h | h
+  · calc min 1 (a + b) ≤ 1 := min_le_left _ _
+      _ = min 1 a := (min_eq_left h).symm
+      _ ≤ min 1 a + min 1 b := le_add_of_nonneg_right (le_min zero_le_one hb)
+  rcases le_total 1 b with h' | h'
+  · calc min 1 (a + b) ≤ 1 := min_le_left _ _
+      _ = min 1 b := (min_eq_left h').symm
+      _ ≤ min 1 a + min 1 b := le_add_of_nonneg_left (le_min zero_le_one ha)
+  · rw [min_eq_right h, min_eq_right h']
+    exact min_le_right _ _
+
+theorem distInMeasure_comm (f g : α →ₘ[μ] E) :
+    distInMeasure f g = distInMeasure g f := by
+  simp only [distInMeasure, dist_comm]
+
+theorem distInMeasure_self (f : α →ₘ[μ] E) : distInMeasure f f = 0 := by
+  simp [distInMeasure]
+
+/-- The triangle inequality.  Pointwise, `min 1` being subadditive on nonnegative
+reals, followed by monotonicity of the integral; no property of `μ` beyond
+finiteness enters. -/
+theorem distInMeasure_triangle [IsFiniteMeasure μ] (f g h : α →ₘ[μ] E) :
+    distInMeasure f h ≤ distInMeasure f g + distInMeasure g h := by
+  rw [distInMeasure, distInMeasure, distInMeasure,
+    ← integral_add (integrable_min_one_dist f g) (integrable_min_one_dist g h)]
+  refine integral_mono (integrable_min_one_dist f h)
+    ((integrable_min_one_dist f g).add (integrable_min_one_dist g h)) fun a => ?_
+  exact le_trans (min_le_min le_rfl (dist_triangle (f a) (g a) (h a)))
+    (min_one_add_le _ _ dist_nonneg dist_nonneg)
+
+/-- The separation.  A nonnegative integrable function with vanishing integral is
+a.e. zero, so `f` and `g` agree a.e., so they agree in the quotient.  This is the
+one place where `E` must be a metric and not a pseudometric space. -/
+theorem distInMeasure_eq_zero_iff [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) :
+    distInMeasure f g = 0 ↔ f = g := by
+  refine ⟨fun h => ?_, fun h => by subst h; simp [distInMeasure]⟩
+  rw [distInMeasure, integral_eq_zero_iff_of_nonneg
+    (fun a => le_min zero_le_one dist_nonneg) (integrable_min_one_dist f g)] at h
+  refine AEEqFun.ext ?_
+  filter_upwards [h] with a ha
+  have hmin : min 1 (dist (f a) (g a)) = 0 := ha
+  rcases min_eq_iff.mp hmin with ⟨h1, _⟩ | ⟨h2, _⟩
+  · exact absurd h1 one_ne_zero
+  · exact dist_eq_zero.mp h2
+
+/-- The elementary estimate that splits the truncated integral at the level `ε`:
+below `ε` the integrand is at most `ε`, above it at most `1`.  It is the half of
+`tendsto_iff_tendstoInMeasure` that does not go through Markov's inequality. -/
+theorem distInMeasure_le_add [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) {ε : ℝ} (hε : 0 ≤ ε) :
+    distInMeasure f g ≤ ε * μ.real Set.univ + μ.real {a | ε ≤ dist (f a) (g a)} := by
+  have hS : MeasurableSet {a | ε ≤ dist (f a) (g a)} :=
+    measurableSet_le measurable_const (measurable_dist_coeFn f g)
+  have hint : _root_.MeasureTheory.Integrable
+      (fun a => ε + Set.indicator {a | ε ≤ dist (f a) (g a)} (fun _ => (1 : ℝ)) a) μ :=
+    (integrable_const ε).add ((integrable_const (1 : ℝ)).indicator hS)
+  calc distInMeasure f g
+      ≤ ∫ a, (ε + Set.indicator {a | ε ≤ dist (f a) (g a)} (fun _ => (1 : ℝ)) a) ∂μ := by
+        refine integral_mono (integrable_min_one_dist f g) hint fun a => ?_
+        by_cases ha : a ∈ {a | ε ≤ dist (f a) (g a)}
+        · rw [Set.indicator_of_mem ha]
+          exact le_trans (min_le_left _ _) (by linarith)
+        · rw [Set.indicator_of_notMem ha, add_zero]
+          exact le_trans (min_le_right _ _) (le_of_not_ge ha)
+    _ = ε * μ.real Set.univ + μ.real {a | ε ≤ dist (f a) (g a)} := by
+        rw [integral_add (integrable_const ε) ((integrable_const (1 : ℝ)).indicator hS),
+          integral_const, integral_indicator_const (1 : ℝ) hS]
+        simp [mul_comm]
+
+/-- The statement that names the metric correctly: `distInMeasure` metrizes
+Mathlib's `TendstoInMeasure`.  This is the point of contact with the manuscript's
+`fact:pseudopath`(i), which says that the pseudo-path topology on `D_E` is the
+topology of convergence in `λ`-measure. -/
+theorem tendsto_iff_tendstoInMeasure [IsFiniteMeasure μ] {ι : Type*} {l : Filter ι}
+    (f : ι → (α →ₘ[μ] E)) (g : α →ₘ[μ] E) :
+    Filter.Tendsto (fun i => distInMeasure (f i) g) l (nhds 0) ↔
+      TendstoInMeasure μ (fun i a => f i a) l (fun a => g a) := by
+  constructor
+  · intro h
+    refine tendstoInMeasure_iff_measureReal_dist.mpr fun ε hε => ?_
+    set c : ℝ := min 1 ε with hc_def
+    have hc : 0 < c := lt_min zero_lt_one hε
+    refine squeeze_zero (fun i => measureReal_nonneg) (fun i => ?_)
+      (by simpa using h.div_const c)
+    have hsub : {a | ε ≤ dist (f i a) (g a)} ⊆ {a | c ≤ min 1 (dist (f i a) (g a))} := by
+      intro a ha
+      simp only [Set.mem_ofPred_eq] at ha ⊢
+      exact min_le_min le_rfl ha
+    have hmono : μ.real {a | ε ≤ dist (f i a) (g a)}
+        ≤ μ.real {a | c ≤ min 1 (dist (f i a) (g a))} :=
+      measureReal_mono hsub (measure_ne_top _ _)
+    have hmarkov := mul_meas_ge_le_integral_of_nonneg
+      (Eventually.of_forall fun a => le_min zero_le_one (dist_nonneg (x := f i a) (y := g a)))
+      (integrable_min_one_dist (f i) g) c
+    rw [le_div_iff₀ hc, mul_comm]
+    exact le_trans (by gcongr) hmarkov
+  · intro h
+    refine NormedAddGroup.tendsto_nhds_zero.mpr fun δ hδ => ?_
+    have hm : (0 : ℝ) ≤ μ.real Set.univ := measureReal_nonneg
+    set c : ℝ := δ / (2 * (μ.real Set.univ + 1)) with hc_def
+    have hc : 0 < c := by positivity
+    have hcm : c * μ.real Set.univ < δ / 2 := by
+      rw [hc_def, div_mul_eq_mul_div, div_lt_div_iff₀ (by linarith) (by norm_num)]
+      nlinarith
+    have h2 := (NormedAddGroup.tendsto_nhds_zero.mp
+      (tendstoInMeasure_iff_measureReal_dist.mp h c hc)) (δ / 2) (by linarith)
+    filter_upwards [h2] with i hi
+    rw [Real.norm_eq_abs, abs_of_nonneg (distInMeasure_nonneg _ _)]
+    have hi' : μ.real {a | c ≤ dist (f i a) (g a)} < δ / 2 := by
+      rw [Real.norm_eq_abs, abs_of_nonneg measureReal_nonneg] at hi
+      exact hi
+    calc distInMeasure (f i) g
+        ≤ c * μ.real Set.univ + μ.real {a | c ≤ dist (f i a) (g a)} :=
+          distInMeasure_le_add (f i) g hc.le
+      _ < δ / 2 + δ / 2 := by linarith
+      _ = δ := by ring
+
+/-- Completeness, after Kurtz (1991), (4.2)--(4.4): from a Cauchy sequence select a
+subsequence with summable successive distances, take the pointwise limit on the
+resulting set of full measure, and put it constant off that set. -/
+theorem exists_tendsto_distInMeasure_of_cauchy [IsFiniteMeasure μ] [CompleteSpace E]
+    (f : ℕ → (α →ₘ[μ] E))
+    (hf : ∀ ε > 0, ∃ N, ∀ m ≥ N, ∀ n ≥ N, distInMeasure (f m) (f n) < ε) :
+    ∃ g : α →ₘ[μ] E, Filter.Tendsto (fun n => distInMeasure (f n) g) Filter.atTop (nhds 0) := by
+  classical
+  choose N hN using fun k : ℕ => hf ((1 / 2 : ℝ) ^ k) (by positivity)
+  let ns : ℕ → ℕ := fun k =>
+    Nat.rec (motive := fun _ => ℕ) (N 0) (fun j ih => max (N (j + 1)) (ih + 1)) k
+  have hns_succ : ∀ k, ns (k + 1) = max (N (k + 1)) (ns k + 1) := fun _ => rfl
+  have hns_mono : StrictMono ns := strictMono_nat_of_lt_succ fun k => by
+    rw [hns_succ]
+    exact lt_of_lt_of_le (Nat.lt_succ_self _) (le_max_right _ _)
+  have hns_ge : ∀ k, N k ≤ ns k := by
+    intro k
+    cases k with
+    | zero => exact le_rfl
+    | succ k => rw [hns_succ]; exact le_max_left _ _
+  have hd : ∀ k, distInMeasure (f (ns k)) (f (ns (k + 1))) < (1 / 2 : ℝ) ^ k := fun k =>
+    hN k _ (hns_ge k) _ (le_trans (hns_ge k) (hns_mono (Nat.lt_succ_self k)).le)
+  have hsummable : Summable fun k => distInMeasure (f (ns k)) (f (ns (k + 1))) :=
+    Summable.of_nonneg_of_le (fun k => distInMeasure_nonneg _ _) (fun k => (hd k).le)
+      (summable_geometric_of_lt_one (by norm_num) (by norm_num))
+  set F : ℕ → α → E := fun k => (f (ns k) : α → E) with hF_def
+  have hmeas : ∀ k, Measurable fun a => min 1 (dist (F k a) (F (k + 1) a)) := fun k =>
+    measurable_const.min (measurable_dist_coeFn (f (ns k)) (f (ns (k + 1))))
+  have hlint : ∀ k, ∫⁻ a, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) ∂μ
+      = ENNReal.ofReal (distInMeasure (f (ns k)) (f (ns (k + 1)))) := fun k =>
+    (ofReal_integral_eq_lintegral_ofReal (integrable_min_one_dist _ _)
+      (Eventually.of_forall fun a => le_min zero_le_one dist_nonneg)).symm
+  have htsum : ∫⁻ a, ∑' k, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) ∂μ ≠ ⊤ := by
+    rw [lintegral_tsum fun k => ((hmeas k).ennreal_ofReal).aemeasurable]
+    simp_rw [hlint]
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun k => distInMeasure_nonneg _ _) hsummable]
+    exact ENNReal.ofReal_ne_top
+  have hmtsum : Measurable fun a => ∑' k, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) := by
+    simp_rw [ENNReal.tsum_eq_iSup_sum]
+    exact Measurable.iSup fun s => s.measurable_fun_sum fun k _ => (hmeas k).ennreal_ofReal
+  have hae : ∀ᵐ a ∂μ, ∑' k, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) < ⊤ :=
+    ae_lt_top hmtsum htsum
+  have hcauchy : ∀ᵐ a ∂μ, ∃ l, Filter.Tendsto (fun k => F k a) Filter.atTop (nhds l) := by
+    filter_upwards [hae] with a ha
+    have hs : Summable fun k => min 1 (dist (F k a) (F (k + 1) a)) := by
+      refine (ENNReal.summable_toReal ha.ne).congr fun k => ?_
+      exact ENNReal.toReal_ofReal (le_min zero_le_one dist_nonneg)
+    have h0 : Filter.Tendsto (fun k => min 1 (dist (F k a) (F (k + 1) a)))
+        Filter.atTop (nhds 0) := hs.tendsto_atTop_zero
+    obtain ⟨K, hK⟩ := Filter.eventually_atTop.mp (h0.eventually_lt_const zero_lt_one)
+    have hs' : Summable fun k => dist (F k a) (F (k + 1) a) := by
+      rw [← summable_nat_add_iff K]
+      refine ((summable_nat_add_iff K).mpr hs).congr fun k => ?_
+      have hk := hK (k + K) (Nat.le_add_left K k)
+      have hlt : dist (F (k + K) a) (F (k + K + 1) a) < 1 := by
+        rcases min_lt_iff.mp hk with h | h
+        · exact absurd h (lt_irrefl 1)
+        · exact h
+      exact min_eq_right hlt.le
+    exact cauchySeq_tendsto_of_complete (cauchySeq_of_summable_dist hs')
+  set G : α → E := fun a =>
+    if h : ∃ l, Filter.Tendsto (fun k => F k a) Filter.atTop (nhds l) then h.choose else F 0 a
+    with hG_def
+  have hGlim : ∀ᵐ a ∂μ, Filter.Tendsto (fun k => F k a) Filter.atTop (nhds (G a)) := by
+    filter_upwards [hcauchy] with a ha
+    rw [hG_def]
+    simp only [dif_pos ha]
+    exact ha.choose_spec
+  have hGmeas : AEStronglyMeasurable G μ :=
+    aestronglyMeasurable_of_tendsto_ae Filter.atTop
+      (fun k => (f (ns k)).aestronglyMeasurable) hGlim
+  refine ⟨AEEqFun.mk G hGmeas, ?_⟩
+  have hTIM : TendstoInMeasure μ F Filter.atTop fun a => (AEEqFun.mk G hGmeas : α →ₘ[μ] E) a :=
+    TendstoInMeasure.congr_right (AEEqFun.coeFn_mk G hGmeas).symm
+      (tendstoInMeasure_of_tendsto_ae (fun k => (f (ns k)).aestronglyMeasurable) hGlim)
+  have hsub : Filter.Tendsto (fun k => distInMeasure (f (ns k)) (AEEqFun.mk G hGmeas))
+      Filter.atTop (nhds 0) :=
+    (tendsto_iff_tendstoInMeasure (fun k => f (ns k)) (AEEqFun.mk G hGmeas)).mpr hTIM
+  refine NormedAddGroup.tendsto_nhds_zero.mpr fun δ hδ => ?_
+  obtain ⟨N₀, hN₀⟩ := hf (δ / 2) (by linarith)
+  obtain ⟨K, hK⟩ := Filter.eventually_atTop.mp (NormedAddGroup.tendsto_nhds_zero.mp hsub (δ / 2)
+    (by linarith))
+  obtain ⟨k, hk1, hk2⟩ : ∃ k, K ≤ k ∧ N₀ ≤ ns k :=
+    ⟨max K N₀, le_max_left _ _, le_trans (le_max_right _ _) hns_mono.le_apply⟩
+  have hkG : distInMeasure (f (ns k)) (AEEqFun.mk G hGmeas) < δ / 2 := by
+    have := hK k hk1
+    rwa [Real.norm_eq_abs, abs_of_nonneg (distInMeasure_nonneg _ _)] at this
+  filter_upwards [Filter.eventually_ge_atTop N₀] with m hm
+  rw [Real.norm_eq_abs, abs_of_nonneg (distInMeasure_nonneg _ _)]
+  calc distInMeasure (f m) (AEEqFun.mk G hGmeas)
+      ≤ distInMeasure (f m) (f (ns k)) + distInMeasure (f (ns k)) (AEEqFun.mk G hGmeas) :=
+        distInMeasure_triangle _ _ _
+    _ < δ / 2 + δ / 2 := by
+        have := hN₀ m hm (ns k) hk2
+        linarith
+    _ = δ := by ring
+
+/-- The metric of convergence in measure as a `Dist` instance.  Nothing is shadowed:
+Mathlib's competing metrics of a.e.-classes live on `MeasureTheory.Lp`, a different
+type (`LpSpace/Basic.lean:223`), and `α →ₘ[μ] E` itself carries no distance. -/
+noncomputable instance instDist [IsFiniteMeasure μ] : Dist (α →ₘ[μ] E) where
+  dist := distInMeasure
+
+theorem dist_eq_distInMeasure [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) :
+    dist f g = distInMeasure f g := rfl
+
+/-- The three axioms are `distInMeasure_self`, `distInMeasure_comm`,
+`distInMeasure_triangle` and `distInMeasure_eq_zero_iff`; the last is the one that
+needs `E` to be a metric and not a pseudometric space. -/
+noncomputable instance metricSpace [IsFiniteMeasure μ] : MetricSpace (α →ₘ[μ] E) where
+  dist_self := distInMeasure_self
+  dist_comm := distInMeasure_comm
+  dist_triangle := distInMeasure_triangle
+  eq_of_dist_eq_zero := fun {f g} h => (distInMeasure_eq_zero_iff f g).mp h
+
+/-- The statement that names the topology, not merely the numbers: convergence in
+`α →ₘ[μ] E` is `TendstoInMeasure`.  This is the point of contact with the
+manuscript's `fact:pseudopath`(i). -/
+theorem tendsto_nhds_iff_tendstoInMeasure [IsFiniteMeasure μ] {ι : Type*} {l : Filter ι}
+    (f : ι → (α →ₘ[μ] E)) (g : α →ₘ[μ] E) :
+    Filter.Tendsto f l (nhds g) ↔
+      TendstoInMeasure μ (fun i a => f i a) l (fun a => g a) := by
+  rw [tendsto_iff_dist_tendsto_zero]
+  exact tendsto_iff_tendstoInMeasure f g
+
+/-- Completeness as an instance. -/
+instance completeSpace [IsFiniteMeasure μ] [CompleteSpace E] :
+    CompleteSpace (α →ₘ[μ] E) := by
+  refine Metric.complete_of_cauchySeq_tendsto fun u hu => ?_
+  obtain ⟨g, hg⟩ := exists_tendsto_distInMeasure_of_cauchy u fun ε hε =>
+    Metric.cauchySeq_iff.mp hu ε hε
+  exact ⟨g, tendsto_iff_dist_tendsto_zero.mpr hg⟩
+
+/-- Separability.  The countable dense family is the classes of the countably valued
+functions built from a countable measure-dense family of measurable sets and a
+countable dense subset of `E`.  This is the point Kurtz leaves to the reader;
+`MeasureTheory.IsSeparable` is Mathlib's hypothesis for the same statement
+about the `Lᵖ` metrics (`Measure/SeparableMeasure.lean`). -/
+theorem exists_countable_dense_distInMeasure [IsFiniteMeasure μ] [IsSeparable μ]
+    [TopologicalSpace.SeparableSpace E] :
+    ∃ s : Set (α →ₘ[μ] E), s.Countable ∧
+      ∀ f : α →ₘ[μ] E, ∀ ε > 0, ∃ g ∈ s, distInMeasure f g < ε := by
+  sorry
+
+end AEEqFun
 
 end MeasureTheory
