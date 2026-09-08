@@ -47,6 +47,25 @@ Reihenfolge:
 *Reihenfolge, auf Wunsch des Nutzers: erst das eigentliche Ziel, die Beispiele
 danach.*
 
+0. **`IsStepPath` zuerst, als Prädikat.** Die Konstruktion liefert Pfade, die in
+   endlicher Zeit nur endlich oft springen, und drei sonst unangenehme Stellen
+   werden auf ihnen leicht: die Meßbarkeit in `(t, ω)` ist eine Summe über
+   endlich viele Stücke statt eines Grenzwertarguments, `Nat.find` für die
+   Zuordnung `t ↦ n` ist formbar, und càdlàg folgt. Also
+   ```
+   def IsStepPath (f : ι → E) : Prop :=
+     ∀ K : Set ι, IsCompact K → (leftJumpSet f ∩ K).Finite
+   ```
+   mit der Brücke `IsStepPath f → IsCadlag f`. **Keine Typklasse** — es ist eine
+   Eigenschaft eines Terms, die Instanzensuche hätte nichts, woran sie ansetzt,
+   und Mathlibs Ausweichkonstruktion `Fact` ist ausdrücklich nicht dafür gedacht
+   (`Logic/Basic.lean:167`, library_note „fact non-instances"). Erst wenn mehr
+   als zwei Sätze sie tragen, wird daraus eine gebündelte Struktur nach dem
+   Muster von `D(ι, E)`. Die halbe Arbeit steht schon:
+   `IsCadlag.finite_largeLeftJumpSet_inter` in `SkorokhodSpace/Suggested.lean`
+   sagt dasselbe für die **großen** Sprünge und ohne Zusatzvoraussetzung; hier
+   sind es alle. Das Manuskript nennt die Menge dieser Pfade `F` in
+   `set:pathjump`.
 1. `jumpProcess lam mu nu` als Konstruktion auf einem expliziten
    Wahrscheinlichkeitsraum, mit càdlàg und stückweise konstanten Pfaden. Der
    Unterbau ist da und braucht **keine Topologie**:
@@ -68,6 +87,26 @@ danach.*
    darüber, und er gehört in den Bericht statt in eine Abschwächung.
 5. Der lokale Fall und die pfadabhängige Variante zuletzt; sie liefern die
    Beispiele für die Meilensteine 7 und 9.
+
+**Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
+*Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:
+
+* **M/M/1**, `b ≡ β`, `d x = δ * 1_{x ≥ 1}` auf `E = ℕ`. Beschränkt, also
+  greifen `thm:jumpMP` und `exists_unique_of_bounded` unmittelbar.
+* **Linearer Geburt-Tod**, `b x = β * x`, `d x = δ * x`. Hier ist
+  `λ̄ = ∞`, der Satz greift **nicht**, und das Beispiel prüft als einziges den
+  lokalen Zweig samt Nichtexplosionskriterium (`∑ 1/(β n)` divergiert). Der
+  Yule-Prozeß `δ = 0` fällt als Sonderfall ab und hat geschlossene
+  eindimensionale Verteilungen — geometrisch —, also eine unabhängige Kontrolle
+  wie `poissonMeasure` beim Poissonprozeß.
+* **Hawkes**, prädiktables `Λ(t, ω) = ν + ∫_0^{t-} h(t-s) dN_s`, das
+  nicht-markovsche Beispiel und die Instanz von `ex:hawkes`. Es gehört zur
+  pfadabhängigen Variante und kommt zuletzt.
+
+In jedem Fall zuerst der Erzeuger als Rechnung: für Geburt-Tod kürzt sich `λ`
+heraus und es muß `A f x = b x * (f (x+1) - f x) + d x * (f (x-1) - f x)`
+herauskommen. Kommt dort etwas anderes heraus, ist die Form von `set:jumpdata`
+unhandlich und das ist der Befund.
 
 **Was zählt:** eine in Lean bewiesene Lösung eines Martingalproblems. **Was nicht
 zählt:** ein Prädikat, das sagt, was eine Lösung wäre.
