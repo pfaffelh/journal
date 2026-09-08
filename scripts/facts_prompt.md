@@ -52,10 +52,39 @@ darüber. Offen ist die Abzählbarkeit, und dazu ein **Befund, der die Aufgabe
 ändert**: eine beliebige abzählbare dichte Teilmenge von `ι` genügt **nicht**.
 Zeuge: `ι = Set.Icc (0:ℝ) 1`, Basispunkt `0`, `f = Set.indicator {1} 1` — jeder
 Zeitwechsel fixiert `1`, und jeder Treppenpfad, dessen Sprungzeiten `1` meiden,
-bleibt `exp (-1) / 2` von `f` entfernt. Der nächste Schritt heißt darum
-`SkorokhodSpace.exists_countable_timeChangeInvariant` und steht in Meilenstein 5.
+bleibt `exp (-1) / 2` von `f` entfernt.
 
 *Punkt 2 ist unberührt.*
+
+**Zwischenstand Teil A (2026-09-09, erster Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, erster Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht weiter bei **vier** `sorry`; dieser Lauf
+hat keines gestrichen, sondern eines **berichtigt**. Zehn neue Deklarationen,
+alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms`
+auf `propext`, `Classical.choice`, `Quot.sound`.
+
+*Punkt 1 ist nicht erledigt, sondern in der bisherigen Fassung widerlegt.*
+`SeparableSpace D(ι, E)` ist **falsch** für einen Index, den diese Datei
+zuläßt, und `SkorokhodSpace.not_separableSpace_of_rigid` sagt es in Lean: ist
+`ι` überabzählbar und ist der einzige Zeitwechsel mit Norm unter einem `c > 0`
+die Identität, so ist `D(ι, E)` nicht separabel. Der Zeuge für die Hypothesen
+ist die **Cantormenge**: ihre Lücken haben die Längen `3^{-n}`, ein
+bi-Lipschitz-Ordnungsisomorphismus mit Konstanten unter `3` kann keine
+Lückenlänge ändern, fixiert also jede Lücke und damit alles. Diese Rechnung ist
+auf Papier und nicht in Lean, und genau deshalb steht `hrigid` als Hypothese.
+
+*Was daraus folgt und schon getan ist:* `instSeparableSpace` und
+`instPolishSpace` tragen jetzt die Typklasse
+`SkorokhodSpace.HasCountableCore ι` — eine abzählbare Menge `C` samt
+Zeitwechsel beliebig kleiner Norm, die jedes endliche Tupel auf `C` zurückholt.
+Sie ist die schwere Hälfte der Separabilität, als Aussage **über den Index**
+isoliert. `exists_countable_timeChangeInvariant` ist damit **gestrichen**: es
+war als Satz gedacht und kann keiner sein.
+
+*Der nächste Schritt* ist `HasCountableCore ℝ` über
+`TimeChange.exists_of_lengthCoord`, dann die Separabilität unter der Klasse; die
+Integralbuchführung dorthin ist bezahlt
+(`SkorokhodSpace.exists_finite_range_intDist_le`, `intDist t₀ f g ≤ ε + exp(-M)`).
 
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:

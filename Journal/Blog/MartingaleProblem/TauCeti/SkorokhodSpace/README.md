@@ -994,6 +994,14 @@ The first of the three is **proved** since 2026-09-08 and the third follows from
 it by `inferInstance` once the second is; the second is what the milestone still
 owes.
 
+Since 2026-09-09 the second carries a hypothesis on the index,
+`SkorokhodSpace.HasCountableCore ι`, and so does the third. That is not a
+convenience: `SkorokhodSpace.not_separableSpace_of_rigid`, proved the same day,
+shows that `D ι E` is not separable for every index this file admits, and the
+witness is the middle thirds Cantor set. The milestone therefore owes three
+things and not one — the class, its three instances, and the separability under
+it.
+
 * `CompleteSpace (D ι E)`, **proved 2026-09-08**: for a Cauchy sequence extract a
   subsequence whose consecutive distances are summable, compose the time changes,
   and use completeness of `E` together with `TimeChange.norm_mul_le` to see that
@@ -1142,35 +1150,41 @@ owes.
     at `b`, and the `J₁` limit of a sequence need not. The coherence
     `restrictExhaustion_restrictExhaustion` is proved (2026-09-08) and stays; what
     it does not do is produce a limit.
-* `SeparableSpace (D ι E)`: the piecewise constant paths taking finitely many
-  values from a countable dense subset of `E` on the intervals of a rational
-  subdivision of `B m` are dense. The proof runs
-  `Metric.secondCountable_of_almost_dense_set` — a countable `ε`-net for every
-  `ε` (`Mathlib/Topology/MetricSpace/Pseudo/Basic.lean:247`), then the instance
-  `TopologicalSpace.SecondCountableTopology.to_separableSpace`
-  (`Mathlib/Topology/Bases.lean:896`) — and it splits into two
-  halves of very different weight. **The light half is proved** (2026-09-08):
-  `SkorokhodSpace.exists_finite_range_distWith_le` gives, for every `f`, every
-  `ε > 0` and every radius `M`, a `g : D ι E` with finite range and
-  `distWith t₀ u 1 f g ≤ ε` for all `u ≤ M` — the approximation of a càdlàg path
-  by a step path **at its own jump times**, uniform on the window, for the
-  identity time change. It is `IsCadlag.exists_subdivision` of Milestone 2 read
-  through `stepRetract`, the retraction of the index onto the range of a finite
-  tuple. The heavy half is moving those jump times onto the countable set, and
-  it is a statement about the index and not about the paths: it asks for a time
-  change of small norm carrying finitely many prescribed points onto finitely
-  many nearby ones. Since 2026-09-08 the place to make it is named —
-  `TimeChange.exists_of_lengthCoord` of Milestone 3 — and so is the condition it
-  has to meet: the piecewise linear `φ` that does the moving must carry the
-  range of `lengthCoord t₀` onto itself. On `ι = ℝ` every piecewise linear `φ`
-  does; on `ι = h • ℤ` only the identity does, and there the countable dense set
-  is the index itself and the jump times need no moving. **The milestone
-  therefore owes the interpolation lemma on the range of the coordinate**, not a
-  construction on `ℝ`.
-* `SkorokhodSpace.exists_countable_timeChangeInvariant`: a countable `C ⊆ ι`
-  that is dense **and** contains every point that no time change moves. This is
-  the set the jump times of the countable family are drawn from, and it is not
-  an arbitrary countable dense subset of `ι`, which is the finding of
+* `SkorokhodSpace.not_separableSpace_of_rigid`, **proved 2026-09-09**, and it is
+  what fixes the shape of everything below it: if `ι` is uncountable and the
+  only time change fixing the base point of norm below some `c > 0` is the
+  identity, then `D ι E` is **not separable** for any `E` with two points. The
+  mechanism is `SkorokhodSpace.stepAt x a b`, the path taking `a` from `x` on
+  and `b` strictly below, càdlàg by `IsCadlag.of_eventually_const`; two of them
+  differ by `dist a b` at `min x y` for the identity time change
+  (`SkorokhodSpace.dist_le_distWith_stepAt`), hence by
+  `exp (-dist t₀ (min x y)) * min 1 (dist a b)` in `intWith`
+  (`SkorokhodSpace.le_intWith_stepAt`) and, `hrigid` disposing of the other time
+  changes, in the metric (`SkorokhodSpace.le_intDist_stepAt`). An uncountable
+  index has an uncountable closed ball, and an uncountable uniformly separated
+  family admits no countable dense set.
+
+  The witness for the hypotheses is the **middle thirds Cantor set**: closed in
+  `ℝ`, hence carrying `LinearOrder`, `MetricSpace`, `OrderTopology`,
+  `AdditiveDist` by `instAdditiveDistSubtype` and `ProperSpace` by compactness,
+  and uncountable. Its gaps have the lengths `3 ^ (-n)`, an order isomorphism
+  carries gaps to gaps, and a bi-Lipschitz one with both constants below `3`
+  cannot change a gap length, the ratio of two distinct ones being at least `3`;
+  so it fixes the unique gap of length `1/3`, by induction along the order every
+  gap, hence every gap endpoint, hence — the endpoints being dense —
+  everything. Every non-identity time change has norm at least `log 3`. **That
+  computation is on paper and not in Lean**, which is why the theorem carries
+  `hrigid` as a hypothesis; building the Cantor set with its gap structure is
+  the one thing that would make the refutation unconditional, and it is not
+  needed for anything else.
+* `SkorokhodSpace.HasCountableCore ι`: the class the previous item forces. It
+  asks for a countable `C ⊆ ι` together with, for every finite strictly monotone
+  tuple `t : Fin (n+1) → ι` and every `δ > 0`, a tuple `d` in `C` and a time
+  change `l` fixing the base point with `‖l‖ ≤ δ` and `l (d i) = t i`. It is
+  the heavy half of separability isolated as a statement **about the index and
+  not about the paths**, and it is a hypothesis and not a theorem.
+
+  **A countable dense subset of `ι` is not enough**, which is the finding of
   2026-09-08. On `ι = Set.Icc (0 : ℝ) 1` with base point `0` every time change
   is an order isomorphism of a linear order with a greatest element and
   therefore fixes `1`; the càdlàg path `f = Set.indicator {1} 1` then keeps its
@@ -1179,12 +1193,44 @@ owes.
   has to answer both `f (l 1) = 1` and `f (l d) = 0`, so
   `distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1/2` for every `l` and every `u ≥ 1`,
   whence `intDist t₀ f g ≥ exp (-1) / 2`. A countable dense subset of
-  `Set.Icc (0 : ℝ) 1` need not contain `1`. The construction is the mirror of
-  `rightIsolated` and `exists_countable_ciSup_eq` of Milestone 2, which close the
-  same gap for suprema: a dense set plus a countable exceptional set, the latter
-  countable because `exists_orderIso_isometry_real` of Milestone 1 exhibits the
-  index as a closed subset of `ℝ` and the immovable points as the boundaries of
-  its connected components.
+  `Set.Icc (0 : ℝ) 1` need not contain `1`; the `C` of the class does contain
+  it, the one point tuple `t = ![1]` having only the identity to carry anything
+  onto it.
+* `SkorokhodSpace.instHasCountableCoreReal`, and the same for
+  `AddSubgroup.zmultiples (1 : ℝ)` and for `Set.Icc (0 : ℝ) 1`: the three
+  running instances of the file discharge the class. On `ℝ` the construction is
+  `TimeChange.exists_of_lengthCoord` of Milestone 3 applied to the piecewise
+  linear `φ` that is the identity outside disjoint neighbourhoods of the `t i`
+  and carries a nearby rational `d i` to `t i` inside them; `C` is `ℚ`, and the
+  Lipschitz constants are `1 ± |d i - t i| / η` on a neighbourhood of radius
+  `η`, so `δ` is bought by taking `d i` close enough. On
+  `AddSubgroup.zmultiples (1 : ℝ)` the index is countable, `C` is all of it and
+  `l` is the identity. On `Set.Icc (0 : ℝ) 1` it is the construction on `ℝ` with
+  `C = (ℚ ∩ [0,1]) ∪ {0, 1}`, the two endpoints being the points no time change
+  moves. In general the `C` that works is a countable dense set together with
+  the boundaries of the connected components of the index read as a closed
+  subset of `ℝ` through `exists_orderIso_isometry_real` of Milestone 1 — and the
+  Cantor set is precisely the case where that boundary is uncountable, which is
+  the refutation above seen from the other side.
+* `SeparableSpace (D ι E)` under `[SkorokhodSpace.HasCountableCore ι]`: the step
+  paths with jump times in `C` and values in a countable dense subset of `E` are
+  dense. **The analytic half is proved** (2026-09-08):
+  `SkorokhodSpace.exists_finite_range_distWith_le` gives, for every `f`, every
+  `ε > 0` and every radius `M`, a `g : D ι E` with finite range and
+  `distWith t₀ u 1 f g ≤ ε` for all `u ≤ M` — the approximation of a càdlàg path
+  by a step path **at its own jump times**, uniform on the window, for the
+  identity time change. It is `IsCadlag.exists_subdivision` of Milestone 2 read
+  through `stepRetract`, the retraction of the index onto the range of a finite
+  tuple. Its passage to the metric is proved too (2026-09-09):
+  `SkorokhodSpace.exists_finite_range_intDist_le` gives `intDist t₀ f g ≤
+  ε + exp (-M)`, over `SkorokhodSpace.intWith_le_of_forall_distWith_le`, which
+  splits `Set.Ioi 0` at `M` and pays the far radii with the mass `exp (-M)` and
+  the truncation at `1`. What is left is the move of the jump times, and with
+  the class in hand it is bookkeeping: `l` being an order isomorphism with
+  `l (d i) = t i`, one has `t i ≤ l s` exactly when `d i ≤ s`, so
+  `f ∘ stepRetract t ∘ l = f ∘ l ∘ stepRetract d` — the same values at the times
+  `d i ∈ C` — and the values are moved into a countable dense subset of `E` for
+  free, no time change being involved in that.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
@@ -1236,7 +1282,21 @@ owes.
   with `p i, q i` rational. That `f = Set.indicator (Set.Ici (1/Real.sqrt 2)) 1`
   is approximated by them uses the time change and not the values: no member of
   the family agrees with `f` anywhere near the jump, and the approximation is in
-  `distOn`, at cost `|log (p / (1/Real.sqrt 2))|`.
+  `distOn`, at cost `|log (p / (1/Real.sqrt 2))|`. That the family works at all
+  is `HasCountableCore (Set.Icc (0:ℝ) 1)` with `C = (ℚ ∩ [0,1]) ∪ {0, 1}`; drop
+  `1` from `C` and `Set.indicator {1} 1` is `exp (-1) / 2` away from every
+  member of the family, which is the other half of this pair.
+* **Separability, refuted, and it is the instance that fixes the shape of the
+  statement.** `ι` the middle thirds Cantor set with base point `0`, `E = ℝ`,
+  and the family `SkorokhodSpace.stepAt x 1 0` for `x ∈ ι`. It is uncountable,
+  and any two of its members are at distance at least `min (log 3) (exp (-1))`:
+  a non-identity time change costs `log 3`, because it would have to change a
+  gap length and the ratio of two distinct gap lengths of the Cantor set is at
+  least `3`, and the identity leaves the two paths `1` apart at `min x y` for
+  every radius above `1`. So `D ι ℝ` is not separable, `HasCountableCore` fails,
+  and a `SeparableSpace (D ι E)` stated without it would be false. The
+  implication is `SkorokhodSpace.not_separableSpace_of_rigid` in Lean; the
+  arithmetic of the gap lengths that discharges its `hrigid` is on paper.
 
 ## Milestone 6: the Borel structure
 
@@ -1411,8 +1471,9 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   subsequence because `ProbabilityMeasure (D ι E)` is metrizable, by
   `MeasureTheory.instMetrizableSpaceProbabilityMeasure`
   (`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean:695`) applied to
-  `SeparableSpace (D ι E)` of Milestone 5, which itself asks only for a countable
-  dense subset of `E`. Its ingredients, in the
+  `SeparableSpace (D ι E)` of Milestone 5, which asks for a countable dense
+  subset of `E` **and** for `SkorokhodSpace.HasCountableCore ι`, the second
+  since 2026-09-09 and not droppable. Its ingredients, in the
   order the proof needs them: right continuity of the paths, to move the times
   of a finite family from `T` to the continuity points of the limit;
   `exists_countable_dense_continuity` below, which makes those continuity

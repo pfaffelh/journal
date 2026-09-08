@@ -19,7 +19,7 @@ the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-08.  Every declaration elaborates; the `sorry`s are the statements' own
+2026-09-09.  Every declaration elaborates; the `sorry`s are the statements' own
 proofs, which is what this file is for.  There are **four** of them since the
 twenty-fifth run of 2026-09-08, which proved `SkorokhodSpace.tendsto_modulus`:
 `SkorokhodSpace.instSeparableSpace`, the one commitment of Milestone 5 still
@@ -27,6 +27,15 @@ open, the two of Milestone 6 and the compactness criterion of Milestone 7.
 `SkorokhodSpace.instCompleteSpace` was the other of Milestone 5, and it is
 **proved** since the twenty-third run of 2026-09-08;
 `exists_orderIso_isometry_real` closed Milestone 1 in the twenty-fourth.
+
+On 2026-09-09 `SkorokhodSpace.instSeparableSpace` was **corrected rather than
+proved**: it is false as it stood, for an index this file admits.
+`SkorokhodSpace.not_separableSpace_of_rigid` shows that an uncountable index
+whose only cheap time change is the identity has no countable dense family of
+paths, the middle thirds Cantor set being such an index, so the instance now
+carries `SkorokhodSpace.HasCountableCore ι` and so does
+`SkorokhodSpace.instPolishSpace`.  What that class asks of the index, and why a
+countable dense subset of `ι` is not it, is at the class itself.
 
 **The subdivision of a càdlàg path is the rung Milestones 5 and 7 share**, and
 it is proved: `IsCadlag.exists_subdivision` cuts a compact window into finitely
@@ -4808,42 +4817,328 @@ theorem SkorokhodSpace.exists_finite_range_distWith_le (t₀ : ι) (f : D(ι, E)
   rw [h0, hlast]
   exact ⟨hmin.2 hmem, hmax.2 hmem⟩
 
-/-- **Separability**: the step paths with finitely many jumps, the jump times in a
-countable dense subset of `ι` and the values in a countable dense subset of `E`,
-are dense in `D(ι, E)`.  They are countable because `ι` is proper, hence
-separable, and each window meets only finitely many of the jump times of a given
-path (`countable_leftJumpSet` of Milestone 2, with `isCompact_exhaustion`).
+omit [BasePoint ι] in
+/-- **From the window to the metric.**  A pair of paths whose windowed suprema
+stay below `ε` out to the radius `M`, for one time change, is at most
+`ε + exp (-M)` apart in `intWith`: the radii below `M` contribute at most `ε`
+against a probability density, and the radii above `M` contribute at most their
+own mass `exp (-M)`, the truncation at `1` being all that is known of them.
+This is the bookkeeping that turns `exists_finite_range_distWith_le`, a
+statement about windows, into a statement about the metric of Milestone 4. -/
+theorem SkorokhodSpace.intWith_le_of_forall_distWith_le [SecondCountableTopology E]
+    (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) {ε M : ℝ} (hε : 0 ≤ ε) (hM : 0 ≤ M)
+    (h : ∀ u : ℝ, 0 < u → u ≤ M → SkorokhodSpace.distWith t₀ u l f g ≤ ε) :
+    SkorokhodSpace.intWith t₀ l f g ≤ ε + Real.exp (-M) := by
+  have hint := SkorokhodSpace.integrableOn_intDist t₀ l f g
+  have hsub1 : Set.Ioc (0 : ℝ) M ⊆ Set.Ioi (0 : ℝ) := Set.Ioc_subset_Ioi_self
+  have hsub2 : Set.Ioi M ⊆ Set.Ioi (0 : ℝ) := Set.Ioi_subset_Ioi hM
+  have hdisj : Disjoint (Set.Ioc (0 : ℝ) M) (Set.Ioi M) :=
+    Set.disjoint_left.2 fun _ hx hx' => absurd hx.2 (not_le.2 hx')
+  rw [SkorokhodSpace.intWith, ← Set.Ioc_union_Ioi_eq_Ioi hM,
+    MeasureTheory.setIntegral_union hdisj measurableSet_Ioi (hint.mono_set hsub1)
+      (hint.mono_set hsub2)]
+  have hA : ∫ u in Set.Ioc (0 : ℝ) M,
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g) ≤ ε := by
+    calc ∫ u in Set.Ioc (0 : ℝ) M,
+          Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+        ≤ ∫ u in Set.Ioc (0 : ℝ) M, Real.exp (-u) * ε := by
+          refine MeasureTheory.setIntegral_mono_on (hint.mono_set hsub1)
+            (((integrableOn_exp_neg_Ioi 0).mono_set hsub1).mul_const ε) measurableSet_Ioc ?_
+          intro u hu
+          exact mul_le_mul_of_nonneg_left ((min_le_right _ _).trans (h u hu.1 hu.2))
+            (Real.exp_pos _).le
+      _ ≤ ∫ u in Set.Ioi (0 : ℝ), Real.exp (-u) * ε :=
+          MeasureTheory.setIntegral_mono_set ((integrableOn_exp_neg_Ioi 0).mul_const ε)
+            (Filter.Eventually.of_forall fun _ => mul_nonneg (Real.exp_pos _).le hε)
+            (Filter.Eventually.of_forall hsub1)
+      _ = ε := by
+          rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi]
+          simp
+  have hB : ∫ u in Set.Ioi M,
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g) ≤ Real.exp (-M) := by
+    calc ∫ u in Set.Ioi M, Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+        ≤ ∫ u in Set.Ioi M, Real.exp (-u) := by
+          refine MeasureTheory.setIntegral_mono_on (hint.mono_set hsub2)
+            (integrableOn_exp_neg_Ioi M) measurableSet_Ioi fun u _ => ?_
+          calc Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+              ≤ Real.exp (-u) * 1 :=
+                mul_le_mul_of_nonneg_left (min_le_left _ _) (Real.exp_pos _).le
+            _ = Real.exp (-u) := mul_one _
+      _ = Real.exp (-M) := integral_exp_neg_Ioi M
+  linarith
 
-**The countable set of jump times is not an arbitrary countable dense subset of
-`ι`, and this is the open point.**  `SkorokhodSpace.exists_finite_range_distWith_le`
-supplies an approximant with finitely many values whose jump times are those of
-`f`; making the family countable means moving those times onto a fixed countable
-set, and a time change is what moves them.  On `ι = Set.Icc (0 : ℝ) 1` with base
-point `0` every time change fixes `1`, being an order isomorphism of a linear
-order with a greatest element, so the path `f = Set.indicator {1} 1` keeps its
-distance from every step path whose jumps avoid `1`: for `u ≥ 1` the window is
-all of `ι`, `f (l t) = 1` holds only at `t = 1`, and a step path `g` whose last
-jump time is `d < 1` is constant on `[d, 1]`, so its value `c` there has to
-answer both `f (l 1) = 1` and `f (l d) = 0`, whence
-`distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1/2` for **every** `l`, and the
-integral over the radius is at least `exp (-1) / 2`.  A countable dense subset of
-`Set.Icc (0 : ℝ) 1` need not contain `1`, so the times have to be drawn from a
-countable set that also carries the points no time change can move --- the
-mirror of `rightIsolated` and `exists_countable_ciSup_eq` for suprema.
+omit [BasePoint ι] in
+/-- **The paths with finitely many values are dense**, and this is the window
+statement of `exists_finite_range_distWith_le` read through the integral: for
+every `f`, every `ε > 0` and every radius `M ≥ 0` there is a `g` with finite
+range and `intDist t₀ f g ≤ ε + exp (-M)`.  The time change is the identity
+throughout, so `TimeChange.norm_one` disposes of the first half of the `max` and
+`intWith_le_of_forall_distWith_le` of the second. -/
+theorem SkorokhodSpace.exists_finite_range_intDist_le [SecondCountableTopology E]
+    (t₀ : ι) (f : D(ι, E)) {ε : ℝ} (hε : 0 < ε) {M : ℝ} (hM : 0 ≤ M) :
+    ∃ g : D(ι, E), (Set.range g.toFun).Finite ∧
+      SkorokhodSpace.intDist t₀ f g ≤ ε + Real.exp (-M) := by
+  obtain ⟨g, hgfin, hg⟩ := SkorokhodSpace.exists_finite_range_distWith_le t₀ f hε M
+  refine ⟨g, hgfin, (ciInf_le (SkorokhodSpace.bddBelow_range_intDist t₀ f g) 1).trans ?_⟩
+  rw [OneMemClass.coe_one]
+  refine max_le ?_ (SkorokhodSpace.intWith_le_of_forall_distWith_le t₀ 1 f g hε.le hM
+    fun u _ hu => hg u hu)
+  rw [TimeChange.norm_one]
+  have := Real.exp_pos (-M)
+  linarith
+
+/-! ### Separability is a hypothesis on the index, not a theorem about it
+
+`exists_finite_range_distWith_le` is the analytic half of Billingsley's argument
+and it is paid for.  The other half is the **countability** of the approximating
+family: the jump times of the approximant are those of `f` and run over all of
+`ι`, so they have to be moved onto a fixed countable set, and the time change is
+what moves them.  An index with too few time changes has no countable dense
+family at all, and the four theorems below say so.
+
+The mechanism is the pair `stepAt x a b`, `stepAt y a b`: two paths that differ
+by `dist a b` at `min x y` for the identity time change, hence sit
+`exp (-dist t₀ (min x y)) * min 1 (dist a b)` apart in the metric unless some
+time change of small norm moves one onto the other.  Where the index has no such
+time changes, an uncountable index gives an uncountable `r`-separated family and
+`D(ι, E)` is not separable. -/
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- The indicator path of an up-set: the value `a` from `x` on and `b` strictly
+below it.  Càdlàg for a reason that needs no limit at all --- it is constant on a
+right neighbourhood and on a left neighbourhood of every point, which is
+`IsCadlag.of_eventually_const`, and at a top or bottom element the degenerate
+filter carries the case by itself. -/
+noncomputable def SkorokhodSpace.stepAt (x : ι) (a b : E) : D(ι, E) where
+  toFun := fun t => if x ≤ t then a else b
+  isCadlag := by
+    refine IsCadlag.of_eventually_const (fun t => ?_) (fun t => ?_)
+    · rcases le_or_gt x t with hxt | htx
+      · filter_upwards [self_mem_nhdsWithin] with y hy
+        rw [if_pos (hxt.trans (le_of_lt hy)), if_pos hxt]
+      · filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds htx)] with y hy
+        rw [if_neg (not_le.2 hy), if_neg (not_le.2 htx)]
+    · rcases lt_or_ge x t with hxt | htx
+      · refine ⟨a, ?_⟩
+        filter_upwards [nhdsWithin_le_nhds (Ioi_mem_nhds hxt)] with y hy
+        exact if_pos (le_of_lt hy)
+      · refine ⟨b, ?_⟩
+        filter_upwards [self_mem_nhdsWithin] with y hy
+        exact if_neg (not_le.2 (lt_of_lt_of_le hy htx))
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+@[simp]
+theorem SkorokhodSpace.stepAt_apply (x : ι) (a b : E) (t : ι) :
+    (SkorokhodSpace.stepAt x a b).toFun t = if x ≤ t then a else b := rfl
+
+omit [BasePoint ι] in
+/-- **The two step paths are `dist a b` apart at the smaller of their two jump
+times**, for the *identity* time change and every window containing that time.
+Below `min x y` both paths take the value `b` and above `max x y` both take `a`;
+the one point at which the statement can be read off is `min x y` itself, and the
+window has to contain it, which is what `hmem` says. -/
+theorem SkorokhodSpace.dist_le_distWith_stepAt (t₀ : ι) {u : ℝ} {a b : E} {x y : ι}
+    (hxy : x ≠ y) (hmem : min x y ∈ exhaustion t₀ u) :
+    dist a b ≤ SkorokhodSpace.distWith t₀ u 1 (SkorokhodSpace.stepAt x a b)
+      (SkorokhodSpace.stepAt y a b) := by
+  refine le_ciSup_of_le (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u
+    (SkorokhodSpace.stepAt x a b) (SkorokhodSpace.stepAt y a b) 1) (min x y) ?_
+  simp only [SkorokhodSpace.restrictExhaustion_apply, TimeChange.one_toOrderIso_apply,
+    clamp_eq_self hmem, SkorokhodSpace.stepAt_apply]
+  rcases hxy.lt_or_gt with h | h
+  · rw [min_eq_left h.le, if_pos le_rfl, if_neg (not_le.2 h)]
+  · rw [min_eq_right h.le, if_pos le_rfl, if_neg (not_le.2 h), dist_comm]
+
+omit [BasePoint ι] in
+/-- The same statement carried under the integral over the window radius.  Every
+radius above `dist t₀ (min x y)` sees the separation, and those radii carry the
+mass `exp (-dist t₀ (min x y))`. -/
+theorem SkorokhodSpace.le_intWith_stepAt [SecondCountableTopology E] (t₀ : ι)
+    {a b : E} {x y : ι} (hxy : x ≠ y) :
+    Real.exp (-dist t₀ (min x y)) * min 1 (dist a b)
+      ≤ SkorokhodSpace.intWith t₀ 1 (SkorokhodSpace.stepAt x a b)
+          (SkorokhodSpace.stepAt y a b) := by
+  have hd0 : (0 : ℝ) ≤ dist t₀ (min x y) := dist_nonneg
+  have hsub : Set.Ioi (dist t₀ (min x y)) ⊆ Set.Ioi (0 : ℝ) := Set.Ioi_subset_Ioi hd0
+  have hint := SkorokhodSpace.integrableOn_intDist t₀ (1 : TimeChange ι)
+    (SkorokhodSpace.stepAt x a b) (SkorokhodSpace.stepAt y a b)
+  have hstep : Real.exp (-dist t₀ (min x y)) * min 1 (dist a b)
+      = ∫ u in Set.Ioi (dist t₀ (min x y)), Real.exp (-u) * min 1 (dist a b) := by
+    rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi]
+  rw [SkorokhodSpace.intWith, hstep]
+  refine le_trans ?_ (MeasureTheory.setIntegral_mono_set hint
+    (Filter.Eventually.of_forall fun u => mul_nonneg (Real.exp_pos _).le
+      (le_min zero_le_one (SkorokhodSpace.distWith_nonneg _ _ _ _ _)))
+    (Filter.Eventually.of_forall hsub))
+  refine MeasureTheory.setIntegral_mono_on
+    ((integrableOn_exp_neg_Ioi _).mul_const _) (hint.mono_set hsub) measurableSet_Ioi ?_
+  intro u hu
+  refine mul_le_mul_of_nonneg_left (min_le_min le_rfl ?_) (Real.exp_pos _).le
+  refine SkorokhodSpace.dist_le_distWith_stepAt t₀ hxy ?_
+  rw [exhaustion, Metric.mem_closedBall, dist_comm]
+  exact le_max_of_le_left (le_of_lt hu)
+
+omit [BasePoint ι] in
+/-- **The separation in the metric of Milestone 4.**  Either the time change is
+cheap, and then it is the identity by `hrigid` and the integral bound applies, or
+it costs `c`.  An index whose only cheap time change is the identity therefore
+keeps the whole family `stepAt · a b` spread out. -/
+theorem SkorokhodSpace.le_intDist_stepAt [SecondCountableTopology E] (t₀ : ι) {c : ℝ}
+    (hrigid : ∀ l : TimeChange.fixing t₀, (l : TimeChange ι).norm < c →
+      (l : TimeChange ι) = 1)
+    {a b : E} {x y : ι} (hxy : x ≠ y) :
+    min c (Real.exp (-dist t₀ (min x y)) * min 1 (dist a b))
+      ≤ SkorokhodSpace.intDist t₀ (SkorokhodSpace.stepAt x a b)
+          (SkorokhodSpace.stepAt y a b) := by
+  refine le_ciInf fun l => ?_
+  rcases lt_or_ge ((l : TimeChange ι).norm) c with hlt | hge
+  · rw [hrigid l hlt]
+    exact le_trans (min_le_right _ _)
+      (le_max_of_le_right (SkorokhodSpace.le_intWith_stepAt t₀ hxy))
+  · exact le_trans (min_le_left _ _) (le_max_of_le_left hge)
+
+/-- **`D(ι, E)` is not separable for every index this file admits.**  If the only
+time change fixing the base point and of norm below `c > 0` is the identity, and
+`ι` is uncountable, then the paths `stepAt x a b` for `x` in an uncountable
+closed ball are uniformly separated and no countable set is dense.
+
+**The hypotheses are consistent, and the witness is the middle thirds Cantor
+set**, which is a closed subset of `ℝ`, hence carries `LinearOrder`,
+`MetricSpace`, `OrderTopology`, `AdditiveDist` (by `instAdditiveDistSubtype`)
+and `ProperSpace` (it is compact), and which is uncountable.  Its complement in
+`[0, 1]` is a disjoint union of open intervals of lengths `3 ^ (-n)`, an order
+isomorphism carries gaps to gaps, and a bi-Lipschitz one with both constants
+below `3` cannot change a gap length, since the ratio of two distinct gap
+lengths is at least `3`; so it fixes the unique gap of length `1 / 3`, and by
+induction along the order every gap, hence every gap endpoint, hence --- the
+endpoints being dense --- everything.  Every non-identity time change therefore
+has norm at least `log 3`, and `hrigid` holds with `c = log 3`.  That last
+sentence is a computation on paper and **not** in Lean; what is in Lean is the
+implication, and it is stated with `hrigid` as a hypothesis for exactly that
+reason.
+
+This is why `SkorokhodSpace.instSeparableSpace` below carries
+`SkorokhodSpace.HasCountableCore ι`.  The `Set.Icc (0 : ℝ) 1` witness recorded
+at that class shows that an arbitrary countable dense subset of `ι` will not do;
+this one shows that no countable subset will do at all. -/
+theorem SkorokhodSpace.not_separableSpace_of_rigid [SecondCountableTopology E]
+    (hι : ¬ (Set.univ : Set ι).Countable) {c : ℝ} (hc : 0 < c)
+    (hrigid : ∀ l : TimeChange.fixing (basePoint : ι), (l : TimeChange ι).norm < c →
+      (l : TimeChange ι) = 1)
+    {a b : E} (hab : a ≠ b) :
+    ¬ TopologicalSpace.SeparableSpace D(ι, E) := by
+  intro hsep
+  have := hsep
+  obtain ⟨P, hPc, hPd⟩ := TopologicalSpace.exists_countable_dense D(ι, E)
+  have hball : ∃ n : ℕ, ¬ (Metric.closedBall (basePoint : ι) (n : ℝ)).Countable := by
+    by_contra hall
+    push_neg at hall
+    refine hι (Set.Countable.mono ?_ (Set.countable_iUnion fun n : ℕ => hall n))
+    intro t _
+    obtain ⟨n, hn⟩ := exists_nat_ge (dist t (basePoint : ι))
+    exact Set.mem_iUnion.2 ⟨n, Metric.mem_closedBall.2 hn⟩
+  obtain ⟨n, hn⟩ := hball
+  have hab0 : 0 < dist a b := dist_pos.2 hab
+  set r : ℝ := min c (Real.exp (-(n : ℝ)) * min 1 (dist a b)) with hrdef
+  have hr : 0 < r := lt_min hc (mul_pos (Real.exp_pos _) (lt_min one_pos hab0))
+  have hfar : ∀ x ∈ Metric.closedBall (basePoint : ι) (n : ℝ),
+      ∀ y ∈ Metric.closedBall (basePoint : ι) (n : ℝ), x ≠ y →
+      r ≤ dist (SkorokhodSpace.stepAt x a b) (SkorokhodSpace.stepAt y a b) := by
+    intro x hx y hy hxy
+    rw [SkorokhodSpace.dist_eq]
+    refine le_trans ?_ (SkorokhodSpace.le_intDist_stepAt (basePoint : ι) hrigid hxy)
+    refine min_le_min le_rfl (mul_le_mul_of_nonneg_right ?_ (le_min zero_le_one dist_nonneg))
+    refine Real.exp_le_exp.2 (neg_le_neg ?_)
+    rcases min_choice x y with h | h <;> rw [h, dist_comm]
+    · exact Metric.mem_closedBall.1 hx
+    · exact Metric.mem_closedBall.1 hy
+  have hcov : Metric.closedBall (basePoint : ι) (n : ℝ) ⊆
+      ⋃ p ∈ P, (Metric.closedBall (basePoint : ι) (n : ℝ) ∩
+        {x | dist (SkorokhodSpace.stepAt x a b) p < r / 2}) := by
+    intro x hx
+    obtain ⟨p, hpP, hp⟩ :=
+      Metric.mem_closure_iff.1 (hPd (SkorokhodSpace.stepAt x a b)) (r / 2) (by linarith)
+    exact Set.mem_biUnion hpP ⟨hx, hp⟩
+  have hsingle : ∀ p : D(ι, E),
+      (Metric.closedBall (basePoint : ι) (n : ℝ) ∩
+        {x | dist (SkorokhodSpace.stepAt x a b) p < r / 2}).Subsingleton := by
+    intro p x hx y hy
+    by_contra hxy
+    have h1 := hfar x hx.1 y hy.1 hxy
+    have h2 : dist (SkorokhodSpace.stepAt x a b) (SkorokhodSpace.stepAt y a b) < r :=
+      calc dist (SkorokhodSpace.stepAt x a b) (SkorokhodSpace.stepAt y a b)
+          ≤ dist (SkorokhodSpace.stepAt x a b) p + dist p (SkorokhodSpace.stepAt y a b) :=
+            dist_triangle _ _ _
+        _ < r / 2 + r / 2 := by
+            refine add_lt_add hx.2 ?_
+            rw [dist_comm]
+            exact hy.2
+        _ = r := by ring
+    linarith
+  exact hn (Set.Countable.mono hcov (hPc.biUnion fun p _ => (hsingle p).countable))
+
+variable (ι) in
+/-- **What the index has to supply for `D(ι, E)` to be separable**: a countable
+set `C` of admissible jump times, together with a time change of arbitrarily
+small norm carrying `C` onto any prescribed finite tuple.  The countable family
+is then the step paths with jump times in `C` and values in a countable dense
+subset of `E`, and `exists_finite_range_distWith_le` is the analytic half.
+
+**It is a hypothesis and not a theorem**, by
+`SkorokhodSpace.not_separableSpace_of_rigid`: an index all of whose cheap time
+changes are the identity, the middle thirds Cantor set for instance, satisfies
+everything else this file assumes and has no countable dense family of paths.
+
+**And a countable dense subset of `ι` is not enough**, which is the finding of
+2026-09-08.  On `ι = Set.Icc (0 : ℝ) 1` with base point `0` every time change is
+an order isomorphism of a linear order with a greatest element and therefore
+fixes `1`; the path `Set.indicator {1} 1` then keeps its distance from every step
+path whose jump times avoid `1`, since such a `g` is constant on `[d, 1]` for its
+last jump time `d < 1` and its value `c` there has to answer both `f (l 1) = 1`
+and `f (l d) = 0`, so `distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1 / 2` for every
+`l` and every `u ≥ 1`, whence `intDist t₀ f g ≥ exp (-1) / 2`.  A countable dense
+subset of `Set.Icc (0 : ℝ) 1` need not contain `1`; the `C` asked for here does,
+because the tuple `t` may be the one point `1` and only the identity carries
+anything onto it. -/
+class SkorokhodSpace.HasCountableCore : Prop where
+  /-- A countable set of admissible jump times which every finite tuple can be
+  moved onto by a time change of arbitrarily small norm. -/
+  exists_core : ∃ C : Set ι, C.Countable ∧
+    ∀ (n : ℕ) (t : Fin (n + 1) → ι), StrictMono t → ∀ δ : ℝ, 0 < δ →
+      ∃ (d : Fin (n + 1) → ι) (l : TimeChange ι), (∀ i, d i ∈ C) ∧
+        l.toOrderIso (basePoint : ι) = basePoint ∧ l.norm ≤ δ ∧
+        ∀ i, l.toOrderIso (d i) = t i
+
+/-- **Separability**: the step paths with finitely many jumps, the jump times in
+the countable set `C` of `SkorokhodSpace.HasCountableCore` and the values in a
+countable dense subset of `E`, are dense in `D(ι, E)`.  They are countable
+because `C` is and the values are drawn from a countable set.
+
+The proof is `exists_finite_range_distWith_le` followed by two moves.  The values
+move first, and that is free: replacing each of the finitely many values of the
+approximant by a point of a countable dense subset of `E` costs `ε` in the
+windowed supremum and needs no time change.  The jump times move second, and that
+is what `HasCountableCore` buys: with `l (d i) = t i` the step path
+`f ∘ stepRetract t ∘ l` is `f ∘ l ∘ stepRetract d`, since `l` is an order
+isomorphism and so `t i ≤ l s` exactly when `d i ≤ s`; its jump times are the
+`d i ∈ C` and its values are the old ones.
 
 `[SeparableSpace E]` is the hypothesis, not `[PolishSpace E]`: the approximation
 of a càdlàg path by a step path uses the right limits and the compactness of the
 window, and completeness of `E` occurs in it nowhere. -/
 instance SkorokhodSpace.instSeparableSpace [SecondCountableTopology E]
-    [TopologicalSpace.SeparableSpace E] : TopologicalSpace.SeparableSpace D(ι, E) := sorry
+    [TopologicalSpace.SeparableSpace E] [SkorokhodSpace.HasCountableCore ι] :
+    TopologicalSpace.SeparableSpace D(ι, E) := sorry
 
 /-- **Polishness**, and it owes nothing of its own: Mathlib builds `PolishSpace`
 out of a separable topology and a completely metrizable one, and
 `SkorokhodSpace.instMetricSpace` together with the two instances above is exactly
 that.  It is `fact:PSpolish` of the manuscript for the `J₁` topology, and it is
-what `rem:EKrelcompact` consumes. -/
-instance SkorokhodSpace.instPolishSpace [PolishSpace E] [CompleteSpace E] :
-    PolishSpace D(ι, E) := inferInstance
+what `rem:EKrelcompact` consumes.  `HasCountableCore ι` travels with it, for the
+reason recorded at `not_separableSpace_of_rigid`: without it the conclusion is
+false. -/
+instance SkorokhodSpace.instPolishSpace [PolishSpace E] [CompleteSpace E]
+    [SkorokhodSpace.HasCountableCore ι] : PolishSpace D(ι, E) := inferInstance
 
 /-! ## Milestone 6: the Borel structure
 
