@@ -1,6 +1,7 @@
 /.lake
 /references
 /scratch
+/axcheck_tmp.lean
 logs/
 .facts.lock
 

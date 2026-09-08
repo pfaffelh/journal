@@ -10,7 +10,44 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-### Aufgabe: die nächsten vier Läufe an `SkorokhodSpace` *(gestellt 2026-09-08 vom Nutzer)*
+### ~~Aufgabe: die nächsten vier Läufe an `SkorokhodSpace`~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, neunzehnter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, die vier Abschnitte vom sechzehnten
+bis zum neunzehnten Lauf des 2026-09-08. Kurz, an den vier Punkten der Aufgabe
+gemessen: `SkorokhodSpace/Suggested.lean` steht bei **fünf** `sorry` statt elf.
+
+*Punkt 1 ist erledigt* (sechzehnter Lauf), und die Wahl ist die Typklasse
+`BasePoint ι`; der Grund gegen `Classical.arbitrary` ist, daß der so gewonnene
+Punkt opak wäre und kein acceptance example der Meilensteine 4 bis 7 sich dann
+noch hinschreiben ließe. `SkorokhodSpace.dist_eq` ist `rfl`.
+
+*Punkt 2 ist nicht erledigt, sondern widerlegt* (achtzehnter Lauf), und das ist
+das Ergebnis der vier Läufe: `CompleteSpace D(ι, E)` ist **falsch** für die
+summierte Metrik, weil `SkorokhodSpace.dist_exhaustionMax_le_distOn` die
+Auswertung an jedem Fensterrand stetig macht. Die Reparatur ist Ethier--Kurtz'
+Integral über den reellen Radius; sie steht in der Roadmap, der Radius ist
+umgestellt (neunzehnter Lauf), die Metrik ist definiert (`intDist`), und ihre
+einzige zusätzliche Beweispflicht — die Meßbarkeit des Integranden — ist
+bezahlt. Was von `CompleteSpace` unabhängig von der Metrik war, ist bewiesen:
+die unendliche Komposition der Zeitwechsel samt Surjektivität des Grenzwerts
+(siebzehnter Lauf) und die beiden Auffangsätze für den Grenzpfad.
+
+*Punkt 3 ist unberührt geblieben*, und das ist die eine Abweichung vom
+Auftrag: die meßbare Einbettung steht weiterhin als `sorry`. Der Grund ist, daß
+Punkt 2 nicht abgearbeitet, sondern umgeworfen wurde und die Reparatur die
+Läufe achtzehn und neunzehn gekostet hat.
+
+*Punkt 4 ist zur Hälfte erledigt* (sechzehnter Lauf): `modulus` ist definiert
+statt `sorry`, samt `IsSubdivision`, `subdivisionOsc` und zwei Sätzen über sie;
+`tendsto_modulus` und das Kompaktheitskriterium sind offen.
+
+*Was als Nächstes zu tun ist*, steht am Ende des neunzehnten Laufberichts: die
+vier Axiome von `intDist`, dann die Umhängung der `MetricSpace`-Instanz, dann
+`CompleteSpace`.
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: die nächsten vier Läufe an `SkorokhodSpace`~~
 
 `WeakConvergence` hat seit dem 2026-09-07 rund fünfzehn Läufe bekommen und steht
 bei zwei `sorry`, von denen eines Absicht ist. `SkorokhodSpace` hat seit dem
@@ -94,6 +131,103 @@ bewiesen sind: `SkorokhodSpace.exists_lt_distOn_add` liefert die Zeitwechsel,
 `IsCadlag.of_tendstoUniformly` fängt den Limes auf. Der harte Punkt der offenen
 Sprosse ist nicht die Konvergenz, sondern die **Surjektivität** des
 Grenzzeitwechsels.
+
+**Zwischenstand nach dem zweiten von vieren (2026-09-08, siebzehnter Lauf des
+Tages).** Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-08, siebzehnter Lauf
+des Tages". Die Datei steht weiterhin bei **acht** `sorry` — dieser Lauf hat
+keines gestrichen, sondern die Sprosse gebaut, an der zwei von ihnen hängen.
+Fünfzehn neue Deklarationen, alle mit `#print axioms` geprüft und alle nur auf
+`propext`, `Classical.choice`, `Quot.sound`.
+
+*Die offene Sprosse aus Punkt 2 ist zu.*
+`TimeChange.exists_tendsto_of_summable_norm`: sind alle `l n` in
+`TimeChange.fixing t₀` und ist `‖l n‖ ≤ γ n` mit summierbarem `γ`, so
+konvergieren die Teilkompositionen `TimeChange.partialComp l n` punktweise gegen
+einen Zeitwechsel `L` mit `L ∈ fixing t₀` und `‖L‖ ≤ ∑' γ`. Dazu
+`TimeChange.exists_tendsto_norm_tail_le` mit der Rate
+`‖(partialComp l n)⁻¹ * L‖ ≤ ∑' i, γ (n+i)` — ohne sie sagt die Existenz nur,
+daß ein Limes da ist, mit ihr ist die `n`-te Näherung quantitativ nah.
+
+*Die Surjektivität, und sie war wirklich der Punkt.* Ein punktweiser Limes von
+Ordnungsisomorphismen ist umsonst monoton und injektiv; daß sein Bild ganz `ι`
+ist, folgt nicht — der Index ist nicht zusammenhängend vorausgesetzt, eine der
+vier laufenden Instanzen ist `AddSubgroup.zmultiples (1:ℝ)`. Das Mittel ist,
+**dieselbe Rechnung auf den Inversen zu führen**: aus
+`(partialComp l (n+1))⁻¹ = (l n)⁻¹ * (partialComp l n)⁻¹` folgt, daß die inverse
+Folge einen Punkt um genau die Verschiebung von `(l n)⁻¹` bewegt, gelesen auf dem
+um `exp (∑' γ)` vergrößerten Fenster; sie ist also ebenfalls Cauchy, hat einen
+Limes `M`, und `partialComp l n ((partialComp l n)⁻¹ t) = t` geht in den Limes
+über. Der Grenzzeitwechsel ist damit eine Bijektion mit benanntem Inversen.
+
+*Und sechs Aussagen zum Zusammenbau*: `SkorokhodSpace.min_one_distOn_le`,
+`SkorokhodSpace.distOn_le_of_two_pow_mul_lt_one` und
+`SkorokhodSpace.totalDist_le_sum_add` für den Übergang zwischen Metrik und
+Fenster in beiden Richtungen, `exhaustion_subset_of_le`, `clamp_clamp_of_le` und
+`SkorokhodSpace.restrictExhaustion_restrictExhaustion` für die algebraische Seite
+der Verträglichkeit.
+
+*Woran der nächste hängt.* `CompleteSpace D(ι, E)` steht jetzt auf sechs
+benannten Punkten, fünf davon bewiesen. Offen ist allein die **Verträglichkeit
+der Fenstergrenzwerte**: die Konstruktion liefert je Fenster einen Limes, mit
+von `m` abhängigen Zeitwechseln, und ein einziges `f : D(ι, E)` muß für alle `m`
+zugleich taugen. Der naheliegende Weg `distOn t₀ m ≤ distOn t₀ (m+1)` geht
+**nicht** — die beiden `clamp` stehen an einem Punkt des kleineren Fensters nicht
+zusammen —, der Punkt ist über die Trunkierungen zu führen und steht als
+`SkorokhodSpace.exists_restrictExhaustion_limit` in Meilenstein 5.
+
+**Zwischenstand nach dem dritten von vieren (2026-09-08, achtzehnter Lauf des
+Tages).** Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-08, achtzehnter Lauf
+des Tages". Die Datei steht bei **fünf** `sorry` statt acht. Dreizehn neue
+Deklarationen, alle mit `#print axioms` geprüft und alle nur auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+*Punkt 2 ist nicht erledigt, sondern widerlegt, und das ist das Ergebnis.*
+`CompleteSpace D(ι, E)` ist **falsch** für die Metrik von Meilenstein 4, und der
+Grund ist ein Zweizeiler, den drei Läufe übersehen haben:
+`SkorokhodSpace.dist_exhaustionMax_le_distOn` — für `b = exhaustionMax t₀ m` und
+**jeden** zulässigen Zeitwechsel `λ` liegt `t = max (λ⁻¹ b) b` so, daß
+`clamp t = clamp (λ t) = b`, also enthält das Supremum in `distOn` den Term
+`r (f b) (g b)` und das Infimum kommt nicht darunter. Damit erzwingt die Metrik
+punktweise Konvergenz an allen Fensterrändern (für `ℝ` mit `t₀ = 0`: an allen
+ganzen Zahlen), was die $J_1$-Topologie nicht tut.
+
+*Zwei Folgerungen, beide in Lean.*
+`SkorokhodSpace.continuous_eval_exhaustionMax`: die Auswertung am Fensterrand ist
+stetig, an jedem Pfad, mit Sprung oder ohne. Und
+`SkorokhodSpace.exists_jump_continuousAt_eval`, der konkrete Zeuge in `D(ℝ, ℝ)`,
+der `SkorokhodSpace.continuousAt_eval` widerlegt — das war der zweite falsche
+`sorry`. Die Cauchy-Folge ohne Grenzwert ist
+`x n = 1_{(-∞, 1 + 1/(n+1))}`, von Hand gerechnet und im Bericht vollständig
+ausgeführt; ihr Kern, `w 1 = 1` für jeden Kandidaten, ist der bewiesene Satz.
+
+*Entfernt*, mit Begründung an der Stelle: `instCompleteSpace` und
+`continuousAt_eval` (falsch), `instSeparableSpace` und `instPolishSpace`
+(Aussagen über eine Metrik, die keine Skorokhod-Metrik ist). *Unberührt*: alles
+über `TimeChange` und alles über `distOn` — die fünfzehn Deklarationen des
+siebzehnten Laufs eingeschlossen. `distOn` ist wörtlich Ethier--Kurtz'
+`d(x, y, λ, u)` und übersteht die Reparatur.
+
+*Die Reparatur, und sie steht in `SkorokhodSpace/README.md`, Meilenstein 4.* Der
+Radius wird reell und die Metrik ein Integral,
+`∫ u in Ioi 0, exp (-u) * min 1 (…)`, mit dem Infimum über `λ` außerhalb. Die
+schlechten Radien eines Pfadpaars sind abzählbar, also Lebesgue-null; genau
+deshalb schreiben Ethier--Kurtz ein Integral und Billingsley eine Rampe, und die
+Rampe scheidet hier aus, weil sie Pfadwerte mit Skalaren multipliziert.
+
+*Und die Probe, die es hätte finden müssen.* Das **erste acceptance example von
+Meilenstein 4** ist für die summierte Metrik falsch — beim Radius `1` ist
+`f 1 = 1`, `g ε 1 = 0`, also `distOn 1 f (g ε) ≥ 1` für jedes `ε`. Es steht seit
+dem 2026-09-07 da. Ein acceptance example, das nur dasteht, prüft nichts.
+
+*Woran der vierte hängt.* Nicht mehr an einem Beweis, sondern an einer Signatur:
+`exhaustion`, `clamp`, `restrictExhaustion`, `distOn` auf reellen Radius
+umzustellen. Das ist mechanisch — `m` geht in die vorhandenen Beweise nur als
+`(m : ℝ)` ein — und ohne es ist keiner der offenen Punkte formulierbar. Was
+danach kommt, liegt bereit: `IsCadlag.of_forall_eventuallyEq` und
+`IsCadlag.of_tendstoUniformlyOn_exhaustion` sind im selben Lauf bewiesen — càdlàg
+ist eine lokale Eigenschaft, und gleichmäßige Konvergenz auf jedem Fenster genügt
+—, und sie sind die Stelle, an der `SkorokhodSpace.tendsto_of_partialComp` seinen
+Grenzpfad auffängt. Beide sind von der Metrik unabhängig.
 
 Zurzeit stehen hier sonst keine offenen Aufgaben.
 
