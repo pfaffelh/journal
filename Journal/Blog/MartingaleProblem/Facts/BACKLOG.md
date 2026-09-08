@@ -42,6 +42,14 @@ gelöscht**; solange er dasteht, ist die Notiz „der Worktree hat kein `.lake`"
 im Auftrag irreführend, aber weiterhin praktisch richtig: dieses `.lake` hat
 kein gebautes Mathlib und taugt zu nichts.
 
+**Die Axiomprobe gehört nach `scratch/`.** Der billigste Weg, eine ganze Datei zu
+prüfen, ist eine Kopie mit `#print axioms` je Deklaration; `lake env lean` läuft
+darüber wie über das Original. Sie darf aber **nicht** in die Wurzel des
+Worktrees: die Sandbox verweigert `rm` auch dort, wo sie das Schreiben erlaubt,
+und der Lauf bleibt auf seiner Kopie sitzen. Am 2026-09-08, einundzwanzigster
+Lauf, passiert; `axcheck_tmp.lean` steht seither eingedampft und in `.gitignore`.
+`scratch/` ist ohnehin ignoriert und ist der Ort.
+
 ## Offen
 
 1. ~~**`IsSeparating` samt `IsSeparating.ae_eq_of_forall_condExp_eq`**~~
@@ -230,6 +238,26 @@ kein gebautes Mathlib und taugt zu nichts.
    Instanz um, und das ist eine Signaturarbeit und kein Satz: die beiden
    Widerlegungssätze des achtzehnten Laufs sind für die Topologie der *Instanz*
    formuliert und gelten für die summierte Metrik, nicht für die neue.*
+
+   *Zwischenstand 2026-09-08, einundzwanzigster Lauf des Tages: **die Instanz ist
+   umgehängt** — `SkorokhodSpace.instMetricSpace` ist `metricSpaceInt basePoint`,
+   `dist_eq` liest `intDist basePoint`, beides `rfl` und beides frei von
+   `sorryAx`. Der Preis ist `SkorokhodSpace.totalTopology`, die benannte Topologie
+   der summierten Metrik: die beiden Widerlegungssätze nennen sie jetzt, statt
+   ihre Topologie von der Instanz abzulesen, und sind neu bewiesen. Damit sind
+   `CompleteSpace` und `SeparableSpace` wieder Verpflichtungen von Meilenstein 5
+   (`PolishSpace` ist `inferInstance` und schuldet nichts), also **sieben `sorry`
+   statt fünf** bei 188 Deklarationen — die Zahl steigt, weil die Datei wieder
+   etwas verspricht, und nicht, weil etwas mißlungen wäre. Bezahlt ist im selben
+   Lauf die einzige Sprosse, die der Metrikwechsel gekostet hat:
+   `SkorokhodSpace.ae_summable_min_one_distWith`, summierbare Kosten in `intWith`
+   ergeben an fast jedem Radius summierbare Fensterabstände. Offen ist die
+   Montage `tendsto_of_partialComp`; sie ist die letzte Sprosse von
+   `instCompleteSpace`. Zwei Handgriffe, die Zeit kosteten und beim nächsten Mal
+   nicht mehr: `totalTopology` braucht `@[instance_reducible]`, sonst schließt
+   der Beweis nicht, und `[SecondCountableTopology E]` gehört **auf die
+   Instanz** und nicht in eine `variable`-Zeile, weil es sonst in den
+   Meilensteinen 6 und 7 mit `[PolishSpace E]` überlappt, das es erweitert.*
 
    *Zwischenstand 2026-09-08, siebter Lauf des Tages: `WeakConvergence` steht
    weiterhin bei **zwei** `sorry` und denselben zwei bekannten Fehlern, aber die

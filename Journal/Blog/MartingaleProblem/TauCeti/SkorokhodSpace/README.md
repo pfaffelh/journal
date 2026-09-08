@@ -744,14 +744,19 @@ Under (B), with `E` a pseudometric space:
   `borel E` in their proofs instead of assuming them, and the metric of
   Milestone 4 therefore carries no measure theory in its signature.
 
-  `SkorokhodSpace.instMetricSpace` reads `SkorokhodSpace.metricSpace`, the summed
-  metric, and moving it onto `metricSpaceInt` is a statement about the refutation
-  of Milestone 5 and not a rename: `SkorokhodSpace.continuous_eval_exhaustionMax`
-  and `SkorokhodSpace.exists_jump_continuousAt_eval` are stated for the topology
-  of the *instance* and are theorems about the **summed** metric --- the first is
-  false for `intDist`, which is the entire point of replacing the sum. Those two
-  name their metric explicitly, through `SkorokhodSpace.metricSpace t₀` and its
-  topology, and the instance is then `metricSpaceInt (basePoint : ι)`.
+  **`SkorokhodSpace.instMetricSpace` is `metricSpaceInt (basePoint : ι)`**
+  (2026-09-08). The move was a statement about the refutation of Milestone 5 and
+  not a rename: `SkorokhodSpace.continuous_eval_exhaustionMax` and
+  `SkorokhodSpace.exists_jump_continuousAt_eval` used to be stated for the
+  topology of the *instance* and are theorems about the **summed** metric — the
+  first is false for `intDist`, which is the entire point of replacing the sum.
+  They therefore name their topology, and the name is
+  `SkorokhodSpace.totalTopology t₀`, the topology of `SkorokhodSpace.metricSpace
+  t₀`; the summed metric is kept for exactly that reason and for no other.
+  `SkorokhodSpace.dist_eq` identifies `dist f g` with `intDist basePoint f g`, by
+  `rfl`, and `[SecondCountableTopology E]` is carried on the instance rather than
+  as a section variable, so that Milestones 6 and 7 draw it from `PolishSpace E`,
+  which extends it.
 
   The infimum runs over the time changes fixing the base point, `TimeChange.fixing t₀`
   of Milestone 3, and the norm in it is the **global**
@@ -900,26 +905,56 @@ Under (B), with `E` a pseudometric space:
   subsequence converges. This is the
   standard witness that `J₁` is not the topology of pointwise convergence, and
   it reappears in Milestone 7 as a family without compact closure.
-* **The degenerate window.** `ι = Set.Icc (0:ℝ) 0` or `m = 0` on a discrete
-  index: `B m` is a single point, every `distOn m f g` is
-  `min over the trivial group of max 0 (r (f t₀) (g t₀))`, and `dist` is the sum
-  of the tail. The metric axioms must all hold there, which is where the junk
-  values of Milestone 3 are consumed.
+* **The degenerate window.** `ι = Set.Icc (0:ℝ) 0`, or a discrete index at small
+  radius: `B u` is a single point, every `distOn u f g` is
+  `min over the trivial group of max 0 (r (f t₀) (g t₀))`, and `dist f g` is
+  `∫ u in Ioi 0, exp (-u) * min 1 (that)`, which is that number truncated at `1`.
+  The metric axioms must all hold there, which is where the junk values of
+  Milestone 3 are consumed.
 
 ## Milestone 5: completeness and separability
+
+All three declarations of this milestone stand in `Suggested.lean` again since
+2026-09-08, against the instance `SkorokhodSpace.instMetricSpace`, which is the
+integral metric: `SkorokhodSpace.instCompleteSpace`,
+`SkorokhodSpace.instSeparableSpace` and `SkorokhodSpace.instPolishSpace`. They
+were withdrawn earlier the same day and the reason was the summed metric, for
+which the first is false; the refutation stays and is stated for
+`SkorokhodSpace.totalTopology`, which names that metric and not the instance.
 
 * `CompleteSpace (D ι E)`: for a Cauchy sequence extract a subsequence whose
   consecutive distances are summable, compose the time changes, and use
   completeness of `E` together with `TimeChange.norm_mul_le` to see that the
-  composed time changes converge. The statement rests on five named items, and
-  four of them are proved:
+  composed time changes converge. The statement rests on six named items, and
+  five of them are proved:
   * `SkorokhodSpace.min_one_distOn_le` and
     `SkorokhodSpace.distOn_le_of_two_pow_mul_lt_one`, the passage from the metric
     to the window pseudodistance: `min 1 (distOn t₀ m f g) ≤ 2 ^ m * totalDist t₀ f g`,
     and the same without the truncation for pairs with `2 ^ m * totalDist < 1`.
     The hypothesis of the second is not a defect — `distOn` is unbounded as the
     window grows, so no bound of that shape holds for all pairs — and a Cauchy
-    sequence supplies it for all but finitely many indices (2026-09-08).
+    sequence supplies it for all but finitely many indices (2026-09-08). These
+    two are stated for `totalDist`, the summed metric, and the instance is the
+    integral one, so this rung is the one that had to be rewritten: from
+    `intDist t₀ f g < ε` no single radius is small, because the integral carries
+    no weight at any named radius — which is exactly what makes it a Skorokhod
+    metric and the sum not one.
+  * `SkorokhodSpace.ae_summable_min_one_distWith`, the rewritten rung, proved
+    2026-09-08. If the time changes `l n` compare the pairs `x n`, `y n` at a
+    summable cost `γ n` in `intWith`, then at **almost every** radius `u` the
+    truncated window distances `min 1 (distWith t₀ u (l n) (x n) (y n))` are
+    summable in `n`. A completeness proof needs a summable rate at one radius at
+    a time and is free to choose the radius, so it chooses one of these; that is
+    the entire adaptation of Billingsley's argument to the integral form. The
+    proof is the one `SkorokhodSpace.eq_of_intDist_eq_zero` runs with
+    `γ n = 2⁻ⁿ`, factored out for a general summable `γ`:
+    `MeasureTheory.lintegral_tsum` makes the series of integrands integrable,
+    `MeasureTheory.ae_lt_top` makes it finite almost everywhere, and
+    `ENNReal.tsum_coe_ne_top_iff_summable` turns that finiteness back into
+    summability over `ℝ`. The weight `Real.exp (-u)` divides out by
+    `summable_mul_left_iff`, since it does not depend on `n`; the weight `2⁻ᵐ` of
+    the sum could not, and that asymmetry is the whole difference between the two
+    metrics for this proof.
   * `SkorokhodSpace.exists_lt_distOn_add`, the approximate minimiser that turns
     a small `distOn` into an actual time change (2026-09-06).
   * `TimeChange.exists_tendsto_of_summable_norm` and

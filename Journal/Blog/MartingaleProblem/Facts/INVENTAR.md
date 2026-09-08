@@ -11468,3 +11468,130 @@ und stehen bewiesen da.
 **Das Manuskript ist nicht angefaßt.** Am Inventar ändert sich keine Zeile: alle
 29 Facts stehen belegt, und `fact:Dcountable`, `fact:relcompact` und
 `fact:relcompact2` zeigen auf dieselben Meilensteine wie zuvor.
+
+### 2026-09-08, einundzwanzigster Lauf des Tages — die Instanz ist umgehängt, und was sie kostete, ist bezahlt
+
+**Bearbeitet:** `SkorokhodSpace`, Meilensteine 4 und 5, genau entlang des
+Vorschlags des zwanzigsten Laufs (Rückstau 2, „`SkorokhodSpace` und
+`MartingaleProblems` weiter beweisen"; vorrangige Aufgaben stehen keine offen).
+`SkorokhodSpace/Suggested.lean` geht durch `lake env lean` gegen v4.33.1 **ohne
+Fehler und ohne Warnung**; 188 Deklarationen, sieben `sorry`.
+
+**Die Zahl steigt von fünf auf sieben, und das ist kein Rückschritt, sondern die
+Buchführung.** Zwei der zurückgenommenen Aussagen des achtzehnten Laufs sind
+wieder Verpflichtungen, weil die Metrik, für die sie falsch waren, nicht mehr die
+Instanz ist. Wer nur zählt, sieht zwei mehr; wer liest, sieht, daß Meilenstein 5
+seit heute überhaupt wieder etwas schuldet.
+
+#### `SkorokhodSpace.instMetricSpace` ist `metricSpaceInt basePoint`
+
+Das war der Auftrag, und er ist erledigt. `SkorokhodSpace.dist_eq` ist jetzt
+`dist f g = intDist basePoint f g`, weiterhin `rfl`, weiterhin `@[simp]`.
+`#print axioms` gibt für `instMetricSpace` und `dist_eq` `propext`,
+`Classical.choice`, `Quot.sound` und sonst nichts.
+
+**Die Umhängung war keine Umbenennung, und der Preis ist eine neue Deklaration.**
+`SkorokhodSpace.totalTopology (t₀ : ι) : TopologicalSpace D(ι, E)` ist die
+Topologie der summierten Metrik, benannt. Die beiden Widerlegungssätze des
+achtzehnten Laufs lasen ihre Topologie von der Instanz ab; stünden sie so da,
+behauptete die Datei nach der Umhängung von `intDist` genau das, was `totalDist`
+disqualifiziert hat. Sie nennen sie jetzt:
+
+* `SkorokhodSpace.continuous_eval_exhaustionMax (t₀ : ι) (m : ℕ)` trägt den
+  Basispunkt wieder als Parameter — er ist kein Instanzparameter mehr, sondern
+  der der genannten Metrik — und ihre Aussage ist
+  `Continuous[SkorokhodSpace.totalTopology t₀, inferInstance]`.
+* `SkorokhodSpace.exists_jump_continuousAt_eval` desgleichen, mit
+  `@ContinuousAt _ _ (SkorokhodSpace.totalTopology (0 : ℝ)) _`.
+
+Beide sind neu bewiesen und hängen an `propext`, `Classical.choice`,
+`Quot.sound`. Der Zeuge `SkorokhodSpace.step` ist unverändert. Die summierte
+Metrik `SkorokhodSpace.metricSpace` bleibt aus genau diesem Grund stehen und aus
+keinem anderen: ohne sie gäbe es die Widerlegung nicht mehr, für die sie
+widerlegt wurde.
+
+**Zwei Handgriffe, die nicht offensichtlich waren.** `totalTopology` braucht
+`@[instance_reducible]`, sonst scheitert der Defeq-Vergleich bei reduzierbarer
+Transparenz und der Beweis läßt sich nicht schließen; der Linter verlangt das
+Attribut ohnehin für Definitionen von Klassentyp. Und
+`[SecondCountableTopology E]` steht **auf der Instanz** und nicht als
+`variable`: als Abschnittsvariable kollidiert es in den Meilensteinen 6 und 7 mit
+`[PolishSpace E]`, das es erweitert (`Topology/MetricSpace/Polish.lean:62`, dort
+`extends SecondCountableTopology α, IsCompletelyMetrizableSpace α`), und der
+`linter.overlappingInstances` meldet das an fünf Deklarationen. Auf der Instanz
+getragen, ziehen die späteren Meilensteine es aus ihrem `PolishSpace E`. Dafür
+mußte in Meilenstein 6 die `variable`-Zeile **vor** die
+`MeasurableSpace D(ι, E) := borel _`-Instanz rücken, die sonst keine Topologie
+mehr findet.
+
+#### Meilenstein 5 schuldet wieder etwas, und es sind zwei Aussagen und nicht drei
+
+`SkorokhodSpace.instCompleteSpace` (unter `[CompleteSpace E]`) und
+`SkorokhodSpace.instSeparableSpace` (unter `[SeparableSpace E]`, **nicht** unter
+`[PolishSpace E]` — die Approximation durch Treppenpfade benutzt die
+Rechtsstetigkeit und die Kompaktheit des Fensters, die Vollständigkeit von `E`
+nirgends) stehen als `sorry`. `SkorokhodSpace.instPolishSpace` ist wie am
+sechzehnten Lauf `inferInstance` und schuldet nichts Eigenes; `#print axioms`
+zeigt bei allen dreien `sorryAx`, bei den ersten beiden aus eigenem `sorry`, bei
+der dritten geerbt. Das steht an der Deklaration, denn ein `sorry` in einer
+`instance` färbt auf alles ab, was sie benutzt.
+
+#### Die eine Sprosse, die die Metrik wirklich gekostet hat, ist bezahlt
+
+`SkorokhodSpace.ae_summable_min_one_distWith` ist bewiesen, in einem Zug, und
+hängt an `propext`, `Classical.choice`, `Quot.sound`.
+
+> Vergleichen die Zeitwechsel `l n` die Paare `x n`, `y n` mit summierbaren
+> Kosten `γ n` in `intWith`, so ist an **fast jedem** Radius `u` die Folge
+> `min 1 (distWith t₀ u (l n) (x n) (y n))` in `n` summierbar.
+
+Das ist die Stelle, an der die beiden Metriken auseinandergehen, und sie ist die
+einzige. Für die Summe war der Übergang `min_one_distOn_le` und galt an
+**jedem** Radius, weil jeder ganzzahlige Radius sein eigenes Gewicht `2⁻ᵐ` in der
+Summe trägt — und genau daran ist die Summe gestorben. Das Integral trägt an
+keinem *benannten* Radius ein Gewicht, und ein kleines `intDist` sagt dort
+nichts; was es sagt, ist diese Aussage. Ein Vollständigkeitsbeweis braucht eine
+summierbare Rate an *einem* Radius und darf ihn wählen, also wählt er einen
+davon. Mehr ist an Billingsleys Argument nicht anzupassen.
+
+Der Beweis ist der von `eq_of_intDist_eq_zero` mit `γ n = 2⁻ⁿ`, herausgezogen und
+für summierbares `γ` geführt: `MeasureTheory.lintegral_tsum` macht die Reihe der
+Integranden integrierbar, `MeasureTheory.ae_lt_top` macht sie fast überall
+endlich, und `ENNReal.tsum_coe_ne_top_iff_summable`
+(`Topology/Algebra/InfiniteSum/ENNReal.lean:64`) macht aus der Endlichkeit
+zurück eine Summierbarkeit über `ℝ`. Das Gewicht `Real.exp (-u)` kürzt sich mit
+`summable_mul_left_iff` (`Topology/Algebra/InfiniteSum/Ring.lean:106`) heraus,
+weil es nicht von `n` abhängt; `2⁻ᵐ` hätte das nicht getan, und diese Asymmetrie
+ist der ganze Unterschied der beiden Metriken für diesen Beweis.
+
+#### Am Rande: ein Skript, das der Lauf nicht löschen durfte
+
+Die Axiomprobe läuft am billigsten über eine Kopie der Datei mit `#print axioms`
+je Deklaration. Die erste Kopie landete als `axcheck_tmp.lean` in der Wurzel des
+Worktrees, und die Sandbox verweigert dort `rm` — wie unter `.lake`, und diesmal
+in einem ausdrücklich erlaubten Verzeichnis. Die Datei ist auf einen
+Erklärungsblock eingedampft und in `.gitignore` eingetragen; die zweite Kopie
+liegt unter `scratch/`, das ohnehin ignoriert wird. **Für den nächsten Lauf:
+diese Kopie gleich unter `scratch/` anlegen.**
+
+#### Vorschlag für den nächsten Lauf
+
+**`SkorokhodSpace.instCompleteSpace` beweisen.** Worauf es ruht: auf sechs
+benannten Sprossen, von denen fünf bewiesen sind —
+`SkorokhodSpace.ae_summable_min_one_distWith` für den Übergang von der Metrik
+zum Radius (neu, dieser Lauf), `SkorokhodSpace.exists_lt_intDist_add` für die
+Zeitwechsel, `TimeChange.exists_tendsto_of_summable_norm` samt
+`TimeChange.exists_tendsto_norm_tail_le` für ihre unendliche Komposition und die
+Surjektivität des Grenzwerts, `IsCadlag.of_tendstoUniformlyOn_exhaustion` samt
+`IsCadlag.of_forall_eventuallyEq` für den Auffang des Grenzpfads. Offen ist
+allein die Montage, `SkorokhodSpace.tendsto_of_partialComp`, und sie steht in
+`SkorokhodSpace/README.md`, Meilenstein 5, mit der Substitution
+`s = (P (n+1))⁻¹ (L t)` ausgeschrieben. Warum jetzt: es ist die letzte offene
+Sprosse, die Metrik steht seit diesem Lauf fest, und `instSeparableSpace` ist
+ohne sie nicht die schwächere Aufgabe, sondern die andere. Danach
+`instSeparableSpace`, dann Meilenstein 6.
+
+**Das Manuskript ist nicht angefaßt.** Am Inventar ändert sich keine Zeile.
+`fact:PSpolish` zeigt weiterhin auf `SkorokhodSpace` Meilenstein 5, und dieser
+Lauf ist der erste seit dem achtzehnten, nach dem dort wieder eine Aussage steht,
+auf die er zeigen kann.

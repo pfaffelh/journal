@@ -20,25 +20,45 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-08.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  There are five of them, down from
-eleven on 2026-09-07.
+proofs, which is what this file is for.  There are seven of them: five, plus the
+two commitments of Milestone 5 that were withdrawn on 2026-09-08 and are back
+because the metric they were false for is no longer the instance.
 
-**The four metric axioms of the integral metric are proved (2026-09-08), and
-`SkorokhodSpace.metricSpaceInt` is the metric space they build.**  Three of them
-are the corresponding statement about `SkorokhodSpace.distWith` held at a fixed
-radius and then integrated --- `distWith_self`, `distWith_inv`,
-`distWith_triangle`, then `intWith_self`, `intWith_inv`, `intWith_triangle`,
-then `intDist_self`, `intDist_comm`, `intDist_triangle` --- and the fourth is
-not, because an infimum equal to `0` names no radius at all: it yields a
-sequence of time changes, whose integrands are summable, hence finite at almost
-every radius, and `SkorokhodSpace.eq_of_intDist_eq_zero` runs the fixed radius
-criterion `eq_restrictExhaustion_of_forall_exists` at the radii that survive.
-The instance `SkorokhodSpace.instMetricSpace` still reads the summed metric,
-and what it costs to move it is stated at `metricSpaceInt`: the refutation of
-Milestone 5 is a theorem about the *sum* and has to name its metric before the
-instance moves.
+**`SkorokhodSpace.instMetricSpace` is the integral metric**, since the
+twenty-first run of 2026-09-08: it is `SkorokhodSpace.metricSpaceInt basePoint`,
+and `SkorokhodSpace.dist_eq` identifies `dist f g` with `intDist basePoint f g`
+by `rfl`.  Its four axioms are proved.  Three of them are the corresponding
+statement about `SkorokhodSpace.distWith` held at a fixed radius and then
+integrated --- `distWith_self`, `distWith_inv`, `distWith_triangle`, then
+`intWith_self`, `intWith_inv`, `intWith_triangle`, then `intDist_self`,
+`intDist_comm`, `intDist_triangle` --- and the fourth is not, because an infimum
+equal to `0` names no radius at all: it yields a sequence of time changes, whose
+integrands are summable, hence finite at almost every radius, and
+`SkorokhodSpace.eq_of_intDist_eq_zero` runs the fixed radius criterion
+`eq_restrictExhaustion_of_forall_exists` at the radii that survive.
+`[SecondCountableTopology E]` is the whole price of the integral form, and it is
+carried on the instance rather than as a section variable, so that Milestones 6
+and 7 draw it from their `[PolishSpace E]`.
 
-**The metric of Milestone 4 is not a Skorokhod metric, and this is proved here.**
+Moving the instance was not a rename, and the price is
+`SkorokhodSpace.totalTopology`: the two refutation statements of Milestone 5 are
+theorems about the **summed** metric and would be false of the instance, so they
+name their topology instead of reading it off the instance.  With that,
+`CompleteSpace`, `SeparableSpace` and `PolishSpace` for `D(ι, E)` are commitments
+again; `SkorokhodSpace.instPolishSpace` owes nothing of its own and is
+`inferInstance`, so the two `sorry`s of Milestone 5 are the two the milestone
+really owes.
+
+The rung of the completeness proof that the change of metric cost is proved with
+it: `SkorokhodSpace.ae_summable_min_one_distWith`.  A small `intDist` is small at
+no *named* radius --- that is what the sum got wrong and the integral gets right
+--- but a **summable** cost in `intWith` is a summable cost in the window
+distance at almost every radius, and a completeness proof may choose its radius.
+Everything else Billingsley's argument needs was already proved and is
+independent of which metric is the instance.
+
+**The summed metric of the old Milestone 4 is not a Skorokhod metric, and this is
+proved here.**
 `SkorokhodSpace.dist_exhaustionMax_le_distOn` says that `distOn t₀ m` contains
 the undamped number `dist (f b) (g b)` at the window endpoint `b`, for every
 admissible time change, because far out on the right the two `clamp`s agree
@@ -48,7 +68,8 @@ turns that into the continuity of evaluation at `b`, and
 jumps at `1` and at which evaluation at `1` is continuous nonetheless.  Three
 `sorry`s went out with that finding rather than being proved --- `CompleteSpace`,
 `SeparableSpace` and the characterisation of the continuity points of
-evaluation --- because the first and the third are **false** as they stood.  The
+evaluation --- because the first and the third are **false** as they stood; the
+first two are back, against the integral metric, and the third stays out.  The
 diagnosis, the Cauchy sequence without a limit, and the repair (integrate over
 the window radius instead of summing over integer radii, which is what
 Ethier--Kurtz do and why they do it) are at the head of Milestone 5 below.
@@ -62,9 +83,11 @@ actually has.
 
 Since 2026-09-08 the **base point is a typeclass**, `BasePoint`, and with it the
 parameterless `MetricSpace D(ι, E)` is a theorem: `SkorokhodSpace.instMetricSpace`
-is `SkorokhodSpace.metricSpace basePoint` and depends on `propext`,
-`Classical.choice` and `Quot.sound` alone.  `SkorokhodSpace.dist_eq` is its
-interface, by `rfl`.  Two more `sorry`s went with it.
+depends on `propext`, `Classical.choice` and `Quot.sound` alone.
+`SkorokhodSpace.dist_eq` is its interface, by `rfl`.  Two more `sorry`s went with
+it.  (It read `SkorokhodSpace.metricSpace basePoint` when it was written and
+reads `SkorokhodSpace.metricSpaceInt basePoint` since; what `BasePoint` supplies
+is the same either way.)
 And `SkorokhodSpace.modulus` is written out instead of being `sorry` as a
 *definition*: `IsSubdivision`, `subdivisionOsc`, `modulus`, with `modulus_mono`
 and `modulus_eq_zero_of_exhaustion_subsingleton` proved.  It is `ℝ≥0∞` valued
@@ -162,14 +185,14 @@ subset of `ℝ` need not --- but through the new
 against its inverse: one of the two moves `t` up, and the right continuity of
 whichever path is evaluated there does the rest.
 
-Since 2026-09-07, seventh run, the **metric of Milestone 4 is assembled and
-proved**: `SkorokhodSpace.totalDist t₀ f g = ∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)`
+Since 2026-09-07, seventh run, the **summed metric is assembled and proved**:
+`SkorokhodSpace.totalDist t₀ f g = ∑' m, 2⁻¹ ^ m * min 1 (distOn t₀ m f g)`
 with `summable_totalDist`, `totalDist_self`, `totalDist_comm`,
 `totalDist_triangle` and `eq_of_totalDist_eq_zero`, and
-`SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)` built from them.
-It is a `def` with the base point as a parameter, as Milestone 4 asks; the
-parameterless `instance` below it was `sorry` because it is the base point that
-was missing there, not an axiom, and since 2026-09-08 `BasePoint` supplies it.
+`SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)` built from them.  It
+is superseded as the metric of Milestone 4 by `metricSpaceInt` and it is kept,
+because the refutation that superseded it is a theorem about it and needs it to
+exist: `SkorokhodSpace.totalTopology` is its topology.
 
 Since 2026-09-07, eighth run, `IsCadlag.measurable` is proved, and its bundle
 was wrong: it stood under (B) with `E` Polish and a proof by right continuous
@@ -2602,35 +2625,19 @@ noncomputable def SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E) 
   dist_triangle := SkorokhodSpace.totalDist_triangle t₀
   eq_of_dist_eq_zero h := SkorokhodSpace.eq_of_totalDist_eq_zero t₀ _ _ h
 
+/-- The topology of the summed metric, named.  Until the twenty-first run of
+2026-09-08 the `MetricSpace D(ι, E)` instance *was* `SkorokhodSpace.metricSpace
+basePoint`, so the two refutation statements of Milestone 5 could read their
+topology off the instance and say `Continuous`.  The instance is now the integral
+metric `SkorokhodSpace.metricSpaceInt`, for which the first of those two is
+false; so they have to name the topology they are about, and this is the name.
+Naming it is what keeps the refutation a refutation instead of turning it, by the
+mere move of an instance, into a claim about `intDist`. -/
+@[instance_reducible]
+noncomputable def SkorokhodSpace.totalTopology (t₀ : ι) : TopologicalSpace D(ι, E) :=
+  (SkorokhodSpace.metricSpace (E := E) t₀).toUniformSpace.toTopologicalSpace
+
 variable [BasePoint ι]
-
-/-- The parameterless instance, and it is no longer a `sorry`: it is
-`SkorokhodSpace.metricSpace` at the distinguished point of the index.  What was
-missing here was never an axiom --- all four are proved above --- but the base
-point, and `BasePoint` is where it now comes from.
-
-The alternative, `[Nonempty ι]` with `Classical.arbitrary ι`, was rejected: it
-produces a point about which nothing is provable, so `dist` on `D(ℝ, E)` could
-not be identified with `totalDist 0`, and every acceptance example of the
-following milestones names its base point.  See the class for the argument.
-
-Whether two base points give the same topology is still not claimed, and it is
-deliberately not stated as a `sorry` either: the windows are cofinal in each
-other (`exhaustion_subset_exhaustion` of Milestone 1), but the subgroups
-`TimeChange.fixing t₀` are not conjugate by anything of small norm --- the
-translation that carries `t₁` back to `t₀` has norm `0` and yet displaces the
-paths --- so the statement is open in both directions and would be a claim, not
-a commitment.  Everything below that mentions the topology of `D(ι, E)`
-therefore reads its base point from the instance, and not from a parameter. -/
-noncomputable instance SkorokhodSpace.instMetricSpace : MetricSpace D(ι, E) :=
-  SkorokhodSpace.metricSpace (basePoint : ι)
-
-/-- The metric is the one of `SkorokhodSpace.metricSpace` at the base point, by
-definition.  This is the lemma that `Classical.arbitrary` could not have: it is
-what lets an acceptance example on `D(ℝ, E)` compute with `totalDist 0`. -/
-@[simp]
-theorem SkorokhodSpace.dist_eq (f g : D(ι, E)) :
-    dist f g = SkorokhodSpace.totalDist (basePoint : ι) f g := rfl
 
 /-! ### The metric of Milestone 4 is an integral over the window radius
 
@@ -3125,15 +3132,16 @@ theorem SkorokhodSpace.eq_of_intDist_eq_zero [SecondCountableTopology E] (t₀ :
   rfl
 
 /-- **The metric space of Milestone 4, at a base point, for the integral
-metric.**  All four axioms are proved above, so this is a `MetricSpace` and not
-a claim; what it is *not*, yet, is the instance.  Rehanging
-`SkorokhodSpace.instMetricSpace` from `SkorokhodSpace.metricSpace` --- the summed
-metric --- onto this one is the next step, and it is not a rename: the refutation
-of Milestone 5 below (`continuous_eval_exhaustionMax`,
-`exists_jump_continuousAt_eval`) is stated for the topology of the *instance* and
-is a theorem about the **summed** metric, false for this one.  Those statements
-have to name their metric explicitly before the instance moves, or the file would
-claim of `intDist` exactly what disqualified `totalDist`.
+metric.**  All four axioms are proved above, so this is a `MetricSpace` and not a
+claim, and since the twenty-first run of 2026-09-08 it is also *the* instance:
+`SkorokhodSpace.instMetricSpace` is this at `basePoint`.
+
+The move was not a rename, and what it cost is the two declarations of Milestone 5
+below.  `continuous_eval_exhaustionMax` and `exists_jump_continuousAt_eval` used
+to read their topology off the instance and are theorems about the **summed**
+metric, false for this one; they now name their topology,
+`SkorokhodSpace.totalTopology`, so that moving the instance does not silently
+turn the refutation of `totalDist` into a claim about `intDist`.
 
 `[SecondCountableTopology E]` is the price of the integral, and it is charged
 exactly once: the triangle inequality and the separation both read
@@ -3148,12 +3156,50 @@ noncomputable def SkorokhodSpace.metricSpaceInt [SecondCountableTopology E] (t�
   dist_triangle := SkorokhodSpace.intDist_triangle t₀
   eq_of_dist_eq_zero h := SkorokhodSpace.eq_of_intDist_eq_zero t₀ _ _ h
 
+/-- The parameterless instance, and since the twenty-first run of 2026-09-08 it is
+the **integral** metric at the distinguished point of the index.  What was missing
+here was never an axiom --- all four of `metricSpaceInt` are proved above --- but
+the base point, and `BasePoint` is where it comes from.
+
+The alternative, `[Nonempty ι]` with `Classical.arbitrary ι`, was rejected: it
+produces a point about which nothing is provable, so `dist` on `D(ℝ, E)` could
+not be identified with `intDist 0`, and every acceptance example of the following
+milestones names its base point.  See the class for the argument.
+
+Whether two base points give the same topology is still not claimed, and it is
+deliberately not stated as a `sorry` either: the windows are cofinal in each
+other (`exhaustion_subset_exhaustion` of Milestone 1), but the subgroups
+`TimeChange.fixing t₀` are not conjugate by anything of small norm --- the
+translation that carries `t₁` back to `t₀` has norm `0` and yet displaces the
+paths --- so the statement is open in both directions and would be a claim, not
+a commitment.  Everything below that mentions the topology of `D(ι, E)`
+therefore reads its base point from the instance, and not from a parameter.
+
+`[SecondCountableTopology E]` rides along, and it is the whole price of the
+integral form: it is the hypothesis of `Measurable.dist`, through
+`integrableOn_intDist`, and nothing else in the file asks for it.  It is carried
+on the declaration rather than as a section variable, so that Milestone 6 and
+Milestone 7 draw it from their `[PolishSpace E]`, which extends it. -/
+noncomputable instance SkorokhodSpace.instMetricSpace [SecondCountableTopology E] :
+    MetricSpace D(ι, E) :=
+  SkorokhodSpace.metricSpaceInt (basePoint : ι)
+
+/-- The metric is `SkorokhodSpace.intDist` at the base point, by definition.  This
+is the lemma that `Classical.arbitrary` could not have: it is what lets an
+acceptance example on `D(ℝ, E)` compute with `intDist 0`. -/
+@[simp]
+theorem SkorokhodSpace.dist_eq [SecondCountableTopology E] (f g : D(ι, E)) :
+    dist f g = SkorokhodSpace.intDist (basePoint : ι) f g := rfl
+
 /-! ## Milestone 5: completeness, separability, Polishness
 
-**This section carried three declarations until 2026-09-08 --- `CompleteSpace`,
-`SeparableSpace` and `PolishSpace` for `D(ι, E)` --- and they are gone, because
-the first of them is false for the metric above.**  What stands here instead is
-the refutation, and it is proved rather than asserted.
+**The three commitments of this section --- `CompleteSpace`, `SeparableSpace` and
+`PolishSpace` for `D(ι, E)` --- were withdrawn on 2026-09-08 and are back, and
+the two events are one event: they were false for the summed metric, and the
+instance is now the integral one.**  They stand below as statements whose proofs
+are the work.  What stands beside them is the refutation of the summed metric,
+proved rather than asserted, and it is what forced the change; it is stated for
+`SkorokhodSpace.totalTopology` and says nothing about the instance.
 
 `SkorokhodSpace.dist_exhaustionMax_le_distOn` shows that `distOn t₀ m` sees the
 values of the two paths at `exhaustionMax t₀ m` undamped by any time change, and
@@ -3173,38 +3219,50 @@ limit: `dist (x n 1) (w 1) ≤ distOn 0 1 (x n) w` forces `w 1 = 1`, so the jump
 `w` sits strictly right of `1`, while the time changes of the second window would
 have to carry it to `1 + 1/(n+1) → 1` with norms tending to `0`.
 
-The repair is not a proof but a definition, and it is Milestone 4's: the metric
-has to integrate over the window radius, `∫ u in Ioi 0, exp (-u) * min 1 (…)`,
-instead of summing over integer radii.  The set of radii at which a given pair of
-paths jumps is countable, hence Lebesgue null, and the integral does not see
-it; that is exactly why Ethier--Kurtz write an integral and Billingsley a ramp
-function.  `SkorokhodSpace.distOn` itself survives the repair unchanged apart
-from the radius becoming real --- it is Ethier--Kurtz's `d(x, y, λ, u)` --- and
-so does everything proved about it. -/
+The repair was not a proof but a definition, and it is Milestone 4's: the metric
+integrates over the window radius, `∫ u in Ioi 0, exp (-u) * min 1 (…)`, instead
+of summing over integer radii.  The set of radii at which a given pair of paths
+jumps is countable, hence Lebesgue null, and the integral does not see it; that
+is exactly why Ethier--Kurtz write an integral and Billingsley a ramp function.
+`SkorokhodSpace.distOn` itself survived the repair unchanged apart from the
+radius becoming real --- it is Ethier--Kurtz's `d(x, y, λ, u)` --- and so did
+everything proved about it. -/
 
-/-- **Evaluation at a window endpoint is continuous, jump or no jump.**  This is
-`SkorokhodSpace.min_one_dist_exhaustionMax_le` read as a modulus of continuity:
-`2 ^ m * dist f g < 1` already forces `dist (f b) (g b) ≤ 2 ^ m * dist f g`.
+omit [BasePoint ι] in
+/-- **For the summed metric, evaluation at a window endpoint is continuous, jump
+or no jump.**  This is `SkorokhodSpace.min_one_dist_exhaustionMax_le` read as a
+modulus of continuity: `2 ^ m * totalDist t₀ f g < 1` already forces
+`dist (f b) (g b) ≤ 2 ^ m * totalDist t₀ f g`.
+
+The topology is named --- `SkorokhodSpace.totalTopology t₀`, the topology of
+`SkorokhodSpace.metricSpace t₀` --- and that is the point of the statement, not a
+formality.  The `MetricSpace D(ι, E)` instance is the integral metric of
+Milestone 4, for which this is false; stated against the instance, the theorem
+would assert of `intDist` exactly what disqualified `totalDist`.
 
 For the Skorokhod topology the corresponding statement is an equivalence ---
 evaluation at `t` is continuous at `f` exactly when `Function.leftLim f t = f t`
 --- and that equivalence stood here as a `sorry` until 2026-09-08.  It is false
-for the metric of Milestone 4, and `SkorokhodSpace.exists_jump_continuousAt_eval`
-is the counterexample. -/
-theorem SkorokhodSpace.continuous_eval_exhaustionMax (m : ℕ) :
-    Continuous fun f : D(ι, E) => f.toFun (exhaustionMax (basePoint : ι) m) := by
+for the summed metric, and `SkorokhodSpace.exists_jump_continuousAt_eval` is the
+counterexample. -/
+theorem SkorokhodSpace.continuous_eval_exhaustionMax (t₀ : ι) (m : ℕ) :
+    Continuous[SkorokhodSpace.totalTopology (E := E) t₀, inferInstance]
+      fun f : D(ι, E) => f.toFun (exhaustionMax t₀ m) := by
+  let _ : MetricSpace D(ι, E) := SkorokhodSpace.metricSpace t₀
+  show Continuous fun f : D(ι, E) => f.toFun (exhaustionMax t₀ m)
   rw [Metric.continuous_iff]
   intro f ε hε
   refine ⟨min ε 1 / 2 ^ m, by positivity, fun g hg => ?_⟩
-  have hkey := SkorokhodSpace.min_one_dist_exhaustionMax_le (basePoint : ι) m g f
-  rw [← SkorokhodSpace.dist_eq] at hkey
+  have hkey := SkorokhodSpace.min_one_dist_exhaustionMax_le t₀ m g f
+  have hdist : SkorokhodSpace.totalDist t₀ g f = dist g f := rfl
+  rw [hdist] at hkey
   have hlt : 2 ^ m * dist g f < min ε 1 := by
     have h2 : (0 : ℝ) < 2 ^ m := by positivity
     have := mul_lt_mul_of_pos_left hg h2
     rwa [mul_div_cancel₀ _ (ne_of_gt h2)] at this
   have hmin := lt_of_le_of_lt hkey hlt
-  rcases min_cases 1 (dist (g.toFun (exhaustionMax (basePoint : ι) m))
-      (f.toFun (exhaustionMax (basePoint : ι) m))) with ⟨he, _⟩ | ⟨he, _⟩
+  rcases min_cases 1 (dist (g.toFun (exhaustionMax t₀ m))
+      (f.toFun (exhaustionMax t₀ m))) with ⟨he, _⟩ | ⟨he, _⟩
   · rw [he] at hmin
     exact absurd (hmin.trans_le (min_le_right ε 1)) (lt_irrefl 1)
   · rw [he] at hmin
@@ -3262,36 +3320,156 @@ theorem SkorokhodSpace.leftLim_step : Function.leftLim SkorokhodSpace.step.toFun
   simp only [Set.mem_Iio] at ht
   rw [SkorokhodSpace.step_apply, if_neg (not_le.2 ht)]
 
-/-- **The refutation.**  `SkorokhodSpace.step` jumps at `1`, and evaluation at
-`1` is continuous at it --- because `1` is the greatest point of the window
-`exhaustion 0 1` of `ℝ`, and `SkorokhodSpace.continuous_eval_exhaustionMax`
-makes evaluation there continuous everywhere.  The equivalence that Milestone 6
-used to claim, `ContinuousAt (· t) f ↔ Function.leftLim f t = f t`, therefore
-fails in its forward direction, and it fails for the same reason completeness
-does. -/
+/-- **The refutation.**  `SkorokhodSpace.step` jumps at `1`, and for the summed
+metric of Milestone 4 evaluation at `1` is continuous at it --- because `1` is the
+greatest point of the window `exhaustion 0 1` of `ℝ`, and
+`SkorokhodSpace.continuous_eval_exhaustionMax` makes evaluation there continuous
+everywhere.  The equivalence that Milestone 6 used to claim,
+`ContinuousAt (· t) f ↔ Function.leftLim f t = f t`, therefore fails in its
+forward direction, and it fails for the same reason completeness does.
+
+The topology is `SkorokhodSpace.totalTopology (0 : ℝ)` and is named for the same
+reason as in the previous declaration: this is a statement about the metric that
+was *replaced*, and it is the reason it was replaced. -/
 theorem SkorokhodSpace.exists_jump_continuousAt_eval :
     ∃ f : D(ℝ, ℝ), Function.leftLim f.toFun 1 ≠ f.toFun 1 ∧
-      ContinuousAt (fun g : D(ℝ, ℝ) => g.toFun 1) f := by
+      @ContinuousAt _ _ (SkorokhodSpace.totalTopology (E := ℝ) (0 : ℝ)) _
+        (fun g : D(ℝ, ℝ) => g.toFun 1) f := by
   refine ⟨SkorokhodSpace.step, ?_, ?_⟩
   · rw [SkorokhodSpace.leftLim_step, SkorokhodSpace.step_apply, if_pos le_rfl]
     norm_num
-  · have h := SkorokhodSpace.continuous_eval_exhaustionMax (ι := ℝ) (E := ℝ) 1
-    have hb : exhaustionMax (basePoint : ℝ) ((1 : ℕ) : ℝ) = (1 : ℝ) := by
-      rw [show (basePoint : ℝ) = 0 from rfl, exhaustionMax_real]
+  · have h := SkorokhodSpace.continuous_eval_exhaustionMax (ι := ℝ) (E := ℝ) 0 1
+    have hb : exhaustionMax (0 : ℝ) ((1 : ℕ) : ℝ) = (1 : ℝ) := by
+      rw [exhaustionMax_real]
       norm_num
     rw [hb] at h
-    exact h.continuousAt
+    exact @Continuous.continuousAt _ _ (SkorokhodSpace.totalTopology (E := ℝ) (0 : ℝ)) _ _ _ h
+
+omit [BasePoint ι] in
+/-- **The one rung at which the integral metric and the summed one part company.**
+
+For the summed metric the passage from the metric to a window is
+`SkorokhodSpace.min_one_distOn_le`, and it holds at *every* window: each integer
+radius carries its own geometric weight in the sum, so a small `totalDist` is a
+small `distOn` at each radius separately.  The integral has no such weights, and
+a small `intDist` says nothing at any *named* radius --- which is exactly why it
+is a Skorokhod metric and the sum is not.
+
+What survives, and it is enough, is this: if the time changes `l n` compare the
+pairs `x n`, `y n` at a summable cost `γ n` in `intWith`, then at **almost every**
+radius the truncated window distances are themselves summable in `n`.  A
+completeness proof needs a summable rate at one radius at a time and may choose
+the radius, so it may choose one of these; that is the whole adaptation.  The
+argument is the one `SkorokhodSpace.eq_of_intDist_eq_zero` runs with `γ n = 2⁻ⁿ`,
+factored out and stated with a general summable `γ`: `lintegral_tsum` makes the
+series of integrands integrable, `MeasureTheory.ae_lt_top` makes it finite almost
+everywhere, and at a radius where it is finite `ENNReal.tsum_coe_ne_top_iff_summable`
+turns the finiteness back into summability over `ℝ`.
+
+The factor `Real.exp (-u)` divides out because it does not depend on `n`; that is
+`summable_mul_left_iff`, and it is why the weight of the integral costs nothing
+here while the weight `2⁻ᵐ` of the sum was what made the sum too strong. -/
+theorem SkorokhodSpace.ae_summable_min_one_distWith [SecondCountableTopology E]
+    (t₀ : ι) (l : ℕ → TimeChange ι) (x y : ℕ → D(ι, E)) (γ : ℕ → ℝ)
+    (hγ : Summable γ) (hle : ∀ n, SkorokhodSpace.intWith t₀ (l n) (x n) (y n) ≤ γ n) :
+    ∀ᵐ u ∂(MeasureTheory.volume.restrict (Set.Ioi (0 : ℝ))),
+      Summable fun n : ℕ => min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n)) := by
+  have hnn : ∀ (n : ℕ) (u : ℝ), 0 ≤ Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n)) := fun n u =>
+    mul_nonneg (Real.exp_pos _).le
+      (le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u (l n) (x n) (y n)))
+  have hmeas : ∀ n : ℕ, Measurable fun u : ℝ => Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n)) := fun n =>
+    (Real.measurable_exp.comp measurable_neg).mul
+      (measurable_const.min (SkorokhodSpace.measurable_distWith t₀ (l n) (x n) (y n)))
+  have hγ0 : ∀ n, 0 ≤ γ n := fun n =>
+    (SkorokhodSpace.intWith_nonneg t₀ (l n) (x n) (y n)).trans (hle n)
+  have hfin : ∫⁻ u in Set.Ioi (0 : ℝ), ∑' n : ℕ, ENNReal.ofReal (Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n))) ≠ ⊤ := by
+    rw [MeasureTheory.lintegral_tsum fun n => ((hmeas n).ennreal_ofReal).aemeasurable]
+    have hterm : ∀ n : ℕ, ∫⁻ u in Set.Ioi (0 : ℝ), ENNReal.ofReal (Real.exp (-u) *
+        min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n)))
+        ≤ ENNReal.ofReal (γ n) := by
+      intro n
+      rw [← MeasureTheory.ofReal_integral_eq_lintegral_ofReal
+        (SkorokhodSpace.integrableOn_intDist t₀ (l n) (x n) (y n))
+        (Filter.Eventually.of_forall (hnn n))]
+      exact ENNReal.ofReal_le_ofReal (hle n)
+    refine ne_top_of_le_ne_top ?_ (ENNReal.tsum_le_tsum hterm)
+    rw [← ENNReal.ofReal_tsum_of_nonneg hγ0 hγ]
+    exact ENNReal.ofReal_ne_top
+  have hmtsum : Measurable fun u : ℝ => ∑' n : ℕ, ENNReal.ofReal (Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n))) := by
+    simp only [ENNReal.tsum_eq_iSup_sum]
+    exact Measurable.iSup fun s =>
+      Finset.measurable_sum s fun n _ => (hmeas n).ennreal_ofReal
+  refine (MeasureTheory.ae_lt_top hmtsum hfin).mono fun u hu => ?_
+  have hnnreal : Summable fun n : ℕ => Real.toNNReal (Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n))) :=
+    ENNReal.tsum_coe_ne_top_iff_summable.1 hu.ne
+  have hsum : Summable fun n : ℕ => Real.exp (-u) *
+      min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n)) :=
+    (NNReal.summable_coe.2 hnnreal).congr fun n => Real.coe_toNNReal _ (hnn n u)
+  exact (summable_mul_left_iff (Real.exp_pos (-u)).ne').1 hsum
+
+/-- **Completeness**, and it is a commitment again: it was withdrawn on 2026-09-08
+because it is false for the summed metric, and the instance is now the integral
+one, for which the counterexample --- a jump marching down onto a window endpoint
+--- is not one, because a single radius is a Lebesgue null set.
+
+The proof is Billingsley's, and its rungs are proved and stand above, all of them
+independent of which of the two metrics is the instance.
+`SkorokhodSpace.exists_lt_intDist_add` produces, from a Cauchy sequence, one time
+change per step with summable norms; `TimeChange.exists_tendsto_of_summable_norm`
+composes them into a single time change and
+`TimeChange.exists_tendsto_norm_tail_le` says how far the `n`-th partial
+composition still is from it; `IsCadlag.of_tendstoUniformlyOn_exhaustion` catches
+the limit path, uniform convergence on every window being enough because being
+càdlàg is local (`IsCadlag.of_forall_eventuallyEq`).  What the integral form adds
+over the summed one, and it is the whole difference, is the step from
+`intDist (x n) (x k) < ε` to a windowed estimate: it holds not at every radius
+but at almost every radius, which is what `SkorokhodSpace.eq_of_intDist_eq_zero`
+already does for the separation axiom and what a completeness proof does again
+with `ε` in place of `0`.
+
+Anything below that uses this instance depends on `sorryAx` until it is proved;
+that is what a `sorry` in an `instance` costs, and it is why the three
+declarations here are the three the milestone owes and not one more. -/
+instance SkorokhodSpace.instCompleteSpace [SecondCountableTopology E] [CompleteSpace E] :
+    CompleteSpace D(ι, E) := sorry
+
+/-- **Separability**: the step paths with finitely many jumps, the jump times in a
+countable dense subset of `ι` and the values in a countable dense subset of `E`,
+are dense in `D(ι, E)`.  They are countable because `ι` is proper, hence
+separable, and each window meets only finitely many of the jump times of a given
+path (`countable_leftJumpSet` of Milestone 2, with `isCompact_exhaustion`).
+
+`[SeparableSpace E]` is the hypothesis, not `[PolishSpace E]`: the approximation
+of a càdlàg path by a step path uses the right limits and the compactness of the
+window, and completeness of `E` occurs in it nowhere. -/
+instance SkorokhodSpace.instSeparableSpace [SecondCountableTopology E]
+    [TopologicalSpace.SeparableSpace E] : TopologicalSpace.SeparableSpace D(ι, E) := sorry
+
+/-- **Polishness**, and it owes nothing of its own: Mathlib builds `PolishSpace`
+out of a separable topology and a completely metrizable one, and
+`SkorokhodSpace.instMetricSpace` together with the two instances above is exactly
+that.  It is `fact:PSpolish` of the manuscript for the `J₁` topology, and it is
+what `rem:EKrelcompact` consumes. -/
+instance SkorokhodSpace.instPolishSpace [PolishSpace E] [CompleteSpace E] :
+    PolishSpace D(ι, E) := inferInstance
 
 /-! ## Milestone 6: the Borel structure
 
 The measurable structure on `D(ι, E)` is the Borel one of the metric above, so
 it is declared here rather than assumed; everything in this section is stated
-against it. -/
+against it.  `[PolishSpace E]` comes first because it is what supplies the
+`[SecondCountableTopology E]` of `SkorokhodSpace.instMetricSpace`, and without a
+metric on `D(ι, E)` there is no Borel structure to declare. -/
+
+variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 
 noncomputable instance : MeasurableSpace D(ι, E) := borel _
 instance : BorelSpace D(ι, E) := ⟨rfl⟩
-
-variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 
 theorem SkorokhodSpace.measurableEmbedding_piDense {D : Set ι} (hD : D.Countable)
     (hD' : Dense D) :
@@ -3393,7 +3571,7 @@ theorem SkorokhodSpace.tendsto_modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
 
 /-- The compactness criterion.  The base point is the one of the instance and
 not a parameter: the left hand side speaks of the topology of `D(ι, E)`, which
-is `SkorokhodSpace.metricSpace basePoint`, and a `t₀` free to differ from it
+is `SkorokhodSpace.metricSpaceInt basePoint`, and a `t₀` free to differ from it
 would make the two sides speak of two different spaces.  This is the correction
 that `BasePoint` forced, and it is the reason the class carries data. -/
 theorem SkorokhodSpace.isCompact_closure_iff (A : Set D(ι, E)) :
