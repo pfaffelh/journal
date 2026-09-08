@@ -1104,6 +1104,13 @@ The representation theorem itself:
   measure is `1 - ∑' i, p i = 0`; the identification `g = x i` on
   `Set.Ioc (s i) (s (i + 1)) \ {1}` and those two null sets are the whole proof of
   the image measure.
+
+  The statement carries a third conjunct, `∀ y, y ≤ (p 0).toReal → g y = x 0`: the
+  **first** interval is named, and on it the map is constantly `x 0`. Its proof is
+  `Nat.find_eq_zero` (`Mathlib/Data/Nat/Find.lean:106`) at `s 1 = (p 0).toReal`, and
+  it is what lets a caller turn a bound on a *mass* into an inclusion of events of
+  `y` alone. No positivity of `y` is needed, and the statement does not ask for it:
+  for `y ≤ 0` the first partial sum already passes `y`.
 * `MeasureTheory.exists_coupling_tsum_offDiag_le`, **proved** on 2026-09-08,
   sixth run: two probability vectors `p q : ℕ → ℝ≥0∞` are the marginals of a
   `π : ℕ → ℕ → ℝ≥0∞` whose off-diagonal mass `∑' i, ∑' j, if i = j then 0 else π i j`
@@ -1311,33 +1318,55 @@ The representation theorem itself:
   the bad events are *nested*, so their intersection over tails is `{U ≤ 0}`
   although their probabilities are not summable. Almost sure convergence comes
   from the dependence between the stages, not from the per-stage bounds.
-* `MeasureTheory.exists_measurable_index_of_stochastic_matrix_diag`: the index map
-  of `exists_measurable_index_of_stochastic_matrix` with the **diagonal branch on
+* `MeasureTheory.exists_measurable_index_of_stochastic_matrix_diag`, **proved** on
+  2026-09-08, fifteenth run: the index map of
+  `exists_measurable_index_of_stochastic_matrix` with the **diagonal branch on
   a named interval** — a measurable `G : ℕ × ℝ → ℕ` realising every row `c j` as
   the law of `G (j, ·)` under Lebesgue measure on `(0,1]` *and* satisfying
-  `G (j, y) = j` for `0 < y ≤ (c j j).toReal`. It is the previous statement
+  `G (j, y) = j` for every `y ≤ (c j j).toReal`. It is the previous statement
   applied, for each `j`, to the vector `c j ∘ Equiv.swap 0 j` and the points
   `Equiv.swap 0 j`, so that the diagonal entry is the first interval of the
-  partial sums; `Measure.sum_comp_equiv` (`Measure/MeasureSpace.lean:1415`) and `Equiv.tsum_eq`
-  carry the reindexing, and the first-interval property is `Nat.find_eq_zero` (`Data/Nat/Find.lean:106`)
-  inside
-  `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`, whose statement
-  gains the conjunct `∀ y, 0 < y → y ≤ (p 0).toReal → g y = x 0`.
+  partial sums; `Measure.sum_comp_equiv` (`Measure/MeasureSpace.lean:1415`) carries the
+  reindexing of the conclusion and `Equiv.tsum_eq`
+  (`Topology/Algebra/InfiniteSum/Basic.lean:562`, the additive form of
+  `Equiv.tprod_eq`) that of the hypothesis, and the first-interval property is the
+  last conjunct of `exists_measurable_map_restrict_volume_eq_sum_smul_dirac` at
+  `Equiv.swap_apply_left`.
 
   This is the statement that converts a *number* into an *inclusion*: with the
   diagonal at a known place, "the two indices disagree" is contained in an event
   of the uniform variable alone, `{ξ > (c j j).toReal}`, and events of one
   variable are what nest.
-* `MeasureTheory.exists_finite_partition_diam_le_null_frontier`: for `ν` a
-  probability measure on a separable metric `E` and `ε, η > 0`, finitely many
-  disjoint measurable `A 1, …, A N` of **positive** `ν`-mass, of diameter at most
-  `ε` and with `ν (frontier (A i)) = 0`, whose complement `A 0` satisfies
-  `ν (A 0) ≤ η`. It is `exists_measurable_partition_diam_le_null_frontier`
-  truncated: the countable partition has `ν (⋃ i ≥ N, A i) → 0` by
-  `tendsto_measure_iUnion_atTop` (`Measure/MeasureSpace.lean:648`), and the pieces of mass zero are absorbed into
-  the remainder, whose frontier is null because the frontier of a finite union is
-  contained in the union of the frontiers (`frontier_biInter_range_subset` has the
-  intersection form of this).
+* `MeasureTheory.frontier_biUnion_finset_subset`, **proved** on 2026-09-08,
+  fifteenth run: `frontier (⋃ j ∈ K, S j) ⊆ ⋃ j ∈ K, frontier (S j)` for a
+  `Finset` index. Mathlib has the two-set case, `frontier_union_subset`
+  (`Topology/Closure.lean:544`), and it is stated *sharply* —
+  `frontier s ∩ closure tᶜ ∪ closure sᶜ ∩ frontier t` — so the induction over
+  `Finset.set_biUnion_insert` has to discard the intersections by hand. It is the
+  companion of `frontier_biInter_range_subset`.
+* `MeasureTheory.exists_finite_partition_diam_le_null_frontier`, **proved** on
+  2026-09-08, fifteenth run: for `ν` a probability measure on a separable
+  pseudometric `E` and `ε, η > 0`, a `K : Finset ℕ` with `0 ∉ K` and an
+  `A : ℕ → Set E` that is a countable measurable partition of `E`, empty outside
+  `insert 0 K`, with every `A j`, `j ∈ K`, of **positive** `ν`-mass and of
+  diameter at most `ε`, with `ν (frontier (A i)) = 0` for **every** `i` — the
+  remainder included — and `ν (A 0) ≤ η`. Indexing by a `Finset` rather than by a
+  prefix `1, …, N` is what keeps the statement free of a re-enumeration of the
+  surviving pieces, and it costs nothing at the point of use: the family is still
+  a `ℕ`-indexed partition, so every statement stated for one applies to it.
+
+  Truncation is the easy half: the tails `T M = (⋃ i < M, As i)ᶜ` of
+  `exists_measurable_partition_diam_le_null_frontier` decrease to `∅`, so
+  `tendsto_measure_iInter_atTop` (`Measure/MeasureSpace.lean:672`) makes `ν (T M)`
+  small. The work is the other half, absorbing the pieces of **zero** mass into
+  the remainder, and the reason it costs nothing is that `A 0` is not assembled
+  out of leftovers but taken as the *complement* of the finite union `U` of the
+  kept pieces: a complement has the frontier of what it complements
+  (`frontier_compl`), and that frontier is null by
+  `frontier_biUnion_finset_subset`. The mass bound is then the inclusion
+  `Uᶜ ⊆ T M ∪ ⋃ {As i | i < M, ν (As i) = 0}`, which is where the covering and
+  the disjointness of the countable partition are spent — and it avoids
+  subtraction in `ℝ≥0∞` entirely.
 
   Two hypotheses of the stage hang on the finiteness and on the positivity, and
   neither is decoration. Positivity makes the *row defect*

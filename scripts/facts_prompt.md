@@ -10,7 +10,57 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-Zurzeit stehen hier keine offenen Aufgaben.
+### Aufgabe: die nächsten vier Läufe an `SkorokhodSpace` *(gestellt 2026-09-08 vom Nutzer)*
+
+`WeakConvergence` hat seit dem 2026-09-07 rund fünfzehn Läufe bekommen und steht
+bei zwei `sorry`, von denen eines Absicht ist. `SkorokhodSpace` hat seit dem
+2026-09-07 vormittags keinen gesehen und steht bei elf. Für die Einreichung
+zählt die schwächste Datei, also wird jetzt dort gearbeitet.
+
+**Diese Aufgabe gilt für vier Läufe.** Trage nach jedem Lauf einen Zwischenstand
+hier ein — welcher Punkt fiel, woran der nächste hängt, und der wievielte von
+vieren es war. Streiche sie erst nach dem vierten, oder früher, wenn die Datei
+kein `sorry` mehr trägt.
+
+**Reihenfolge, und sie ist begründet, nicht beliebig:**
+
+1. **Die `MetricSpace D(ι, E)`-Instanz ohne Basispunkt** (`:1653`). Der Befund
+   des fünften Laufs vom 2026-09-07 lautet: ihr fehlt **kein Axiom**, sondern der
+   Basispunkt — `SkorokhodSpace.metricSpace (t₀ : ι)` ist bewiesen, samt allen
+   vier Axiomen und der Endlichkeit des Supremums. Was fehlt, ist die
+   Entscheidung, wie die parameterlose Instanz an ihren Basispunkt kommt, und
+   das ist eine Signaturfrage. Zwei Wege stehen offen: `[Nonempty ι]` plus
+   `Classical.arbitrary`, oder eine Typklasse `[BasePoint ι]`. Wähle einen,
+   **begründe die Wahl im Bericht**, und ziehe die zehn Deklarationen darunter
+   nach. Das ist der Angelpunkt: `CompleteSpace`, `SeparableSpace` und
+   `PolishSpace` (`:1655`–`:1657`) hängen alle daran und sind ohne sie nicht
+   einmal formulierbar.
+2. **`CompleteSpace`, `SeparableSpace`, `PolishSpace`** — in dieser Reihenfolge.
+   Die Vollständigkeit ist Billingsleys Argument der unendlichen Komposition,
+   längs der Ausschöpfung zusammengesetzt; die Separabilität sind die
+   Treppenpfade mit Sprungzeiten in einer abzählbar dichten Menge. **Beides
+   existiert schon außerhalb von Mathlib** — siehe `rem:skorokhodform` im
+   Manuskript und `rem:bmrepo`: die Lizenzfrage ist geklärt, der Code darf
+   verwendet werden, aber die Roadmap darf **keinen Implementierer dorthin
+   schicken**, wo keine Lizenz steht. Lies, was zu lesen ist, und schreibe
+   eigenen Beweis.
+3. **Die meßbare Einbettung** (`:1677`, `:1682`): daß die Koordinaten die
+   Borel-σ-Algebra erzeugen. Das ist `thm:fdd` im Manuskript und wird von
+   `MartingaleProblems` Meilenstein 11 gebraucht.
+4. **Meilenstein 7, Modul und Kompaktheit** (`:1687`–`:1695`). `modulus` ist
+   heute `sorry` als **Definition** — und eine Definition mit `sorry`-Rumpf macht
+   jeden Satz über sie zu einer Aussage über `sorryAx`. Definiere sie zuerst
+   wirklich, dann `tendsto_modulus`, dann das Kompaktheitskriterium.
+
+**Was nicht zählt.** Ein `sorry` durch ein schwächeres Statement zu ersetzen; die
+Aussage so abzuschwächen, daß sie leicht wird, ohne es zu sagen; oder die
+Signaturfrage aus Punkt 1 zu umgehen, indem der Basispunkt überall als Parameter
+mitgeschleppt wird — das ist zwar richtig, aber es ist die Aufgabe nicht.
+
+**Was zählt.** Bewiesene Deklarationen, jede mit `#print axioms` geprüft, und
+bei jeder Abweichung vom obigen Weg ein Satz darüber, warum.
+
+Zurzeit stehen hier sonst keine offenen Aufgaben.
 
 ### ~~Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$?~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, elfter Lauf des Tages)*
 

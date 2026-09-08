@@ -315,6 +315,19 @@ the three statements still missing are named in Milestone 3.  The common space
 is accordingly `(E × ℝ) × (ℕ × ℕ → E)` -- one uniform variable, not one per
 stage.
 
+The fifteenth run of 2026-09-08 proved two of those three:
+`exists_measurable_index_of_stochastic_matrix_diag`, which puts the diagonal of a
+stochastic matrix on the *first* interval of the partial sums and is what turns a
+number into an inclusion, together with the conjunct
+`∀ y, y ≤ (p 0).toReal → g y = x 0` it needs from
+`exists_measurable_map_restrict_volume_eq_sum_smul_dirac`; and
+`exists_finite_partition_diam_le_null_frontier`, the finite partition whose pieces
+have positive mass, with the frontier statement
+`frontier_biUnion_finset_subset` it needs and Mathlib does not have.  All of them
+depend on `propext`, `Classical.choice` and `Quot.sound` alone.  The one statement
+still missing before the assembly is
+`exists_measurable_pair_of_partition_subset`.
+
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
 `tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
@@ -2891,6 +2904,26 @@ theorem frontier_biInter_range_subset [TopologicalSpace E] (S : ℕ → Set E) (
       · exact Or.inl h.1
       · exact Or.inr (ih h.2)
 
+/-- The frontier of a finite union is contained in the union of the frontiers.
+Mathlib has the two-set case, `frontier_union_subset` (`Topology/Closure.lean:544`),
+but not the `Finset` one, and the two-set case is stated sharply
+(`frontier s ∩ closure tᶜ ∪ closure sᶜ ∩ frontier t`), so the induction has to
+throw the intersections away by hand.  It is the companion of
+`frontier_biInter_range_subset` and is what makes the *remainder* of a finite
+partition a continuity set once the pieces are. -/
+theorem frontier_biUnion_finset_subset [TopologicalSpace E] (K : Finset ℕ) (S : ℕ → Set E) :
+    frontier (⋃ j ∈ K, S j) ⊆ ⋃ j ∈ K, frontier (S j) := by
+  classical
+  induction K using Finset.induction_on with
+  | empty => simp
+  | insert a s _ ih =>
+      rw [Finset.set_biUnion_insert]
+      refine (frontier_union_subset _ _).trans ?_
+      rw [Finset.set_biUnion_insert]
+      refine union_subset ?_ ?_
+      · exact inter_subset_left.trans subset_union_left
+      · exact inter_subset_right.trans (ih.trans subset_union_right)
+
 /-- Disjointification keeps null frontiers null: the frontier of `disjointed S n`
 is covered by the frontiers of `S 0, …, S n`.  This is the reason the fixed-radius
 partition can be replaced by one whose pieces have `μ`-null frontier without any
@@ -2965,6 +2998,173 @@ theorem exists_measurable_partition_diam_le_null_frontier [PseudoMetricSpace E]
     refine eq_univ_of_forall fun y ↦ ?_
     obtain ⟨n, hn⟩ := Metric.denseRange_iff.mp xs_dense y (ε / 4) (by linarith)
     exact Set.mem_iUnion.2 ⟨n, by simpa [hBs, Metric.mem_ball, dist_comm] using hn.trans (hr n).1⟩
+
+/-- **The finite partition whose pieces have positive mass.**  For a probability measure `ν` on a
+separable pseudometric space and `ε, η > 0`: finitely many pairwise disjoint measurable pieces
+`A j`, `j ∈ K`, of diameter at most `ε`, of **positive** `ν`-mass and with `ν`-null frontier,
+together with a remainder `A 0` of mass at most `η` which is also a continuity set of `ν`.  The
+index `0` is kept free for the remainder; outside `insert 0 K` the family is empty, so the whole
+`A : ℕ → Set E` is still a countable partition of `E` and every statement stated for one applies.
+
+The truncation is the easy half: the tails `T M = (⋃ i < M, As i)ᶜ` of the countable partition
+decrease to `∅`, so `tendsto_measure_iInter_atTop` (`Measure/MeasureSpace.lean:672`) makes
+`ν (T M)` small.  The work is the other half, absorbing the pieces of **zero** mass into the
+remainder, and the reason it costs nothing is that `A 0` is not built as a union of leftovers but
+as the *complement* of the finite union `U` of the kept pieces: a complement has the frontier of
+what it complements (`frontier_compl`), and the frontier of a finite union is null by
+`frontier_biUnion_finset_subset`.  That the mass of `A 0` is still at most `η` is then the
+inclusion `Uᶜ ⊆ T M ∪ ⋃ {As i | i < M, ν (As i) = 0}`, which is where the covering and the
+disjointness of the countable partition are spent.
+
+Both hypotheses of the stage hang on this statement and neither is decoration.  Positivity makes
+the row defect `(ν (A i) - μ n (A i)) / ν (A i)` finite; finiteness makes its supremum over the
+pieces attained, and hence small for large `n` -- and it is that supremum, not the `ℓ¹`-bound, that
+bounds the interval on which the index coupling leaves the diagonal. -/
+theorem exists_finite_partition_diam_le_null_frontier [PseudoMetricSpace E]
+    [OpensMeasurableSpace E] [TopologicalSpace.SeparableSpace E]
+    (ν : Measure E) [IsProbabilityMeasure ν] {ε : ℝ} (hε : 0 < ε) {η : ℝ≥0∞} (hη : 0 < η) :
+    ∃ (K : Finset ℕ) (A : ℕ → Set E), 0 ∉ K ∧
+      (∀ i, MeasurableSet (A i)) ∧
+      Pairwise (Function.onFun Disjoint A) ∧
+      (⋃ i, A i) = univ ∧
+      (∀ i, ν (frontier (A i)) = 0) ∧
+      (∀ i, i ≠ 0 → i ∉ K → A i = ∅) ∧
+      (∀ i ∈ K, 0 < ν (A i)) ∧
+      (∀ i ∈ K, Metric.diam (A i) ≤ ε) ∧
+      ν (A 0) ≤ η := by
+  classical
+  obtain ⟨As, hAsm, -, hAsdiam, hAsfr, hAsu, hAsd⟩ :=
+    exists_measurable_partition_diam_le_null_frontier ν hε
+  -- the tails of the countable partition
+  set T : ℕ → Set E := fun M => (⋃ i ∈ Finset.range M, As i)ᶜ with hT_def
+  have hTm : ∀ M, MeasurableSet (T M) := by
+    intro M
+    exact (MeasurableSet.biUnion (Finset.range M).countable_toSet fun i _ => hAsm i).compl
+  have hTanti : Antitone T := by
+    intro M N hMN
+    simp only [hT_def]
+    refine compl_subset_compl.2 ?_
+    intro x hx
+    simp only [mem_iUnion, Finset.mem_range, exists_prop] at hx ⊢
+    obtain ⟨i, hi, hxi⟩ := hx
+    exact ⟨i, lt_of_lt_of_le hi hMN, hxi⟩
+  have hTint : (⋂ M, T M) = (∅ : Set E) := by
+    ext x
+    simp only [mem_iInter, hT_def, mem_compl_iff, mem_iUnion, Finset.mem_range,
+      mem_empty_iff_false, iff_false, not_forall, not_not, exists_prop]
+    have hx : x ∈ ⋃ n, As n := by rw [hAsu]; trivial
+    obtain ⟨i, hi⟩ := mem_iUnion.1 hx
+    exact ⟨i + 1, i, by omega, hi⟩
+  have htend : Tendsto (fun M => ν (T M)) atTop (𝓝 0) := by
+    have h := tendsto_measure_iInter_atTop (μ := ν)
+      (fun M => (hTm M).nullMeasurableSet) hTanti ⟨0, measure_ne_top _ _⟩
+    rw [hTint] at h
+    simpa [Function.comp_def] using h
+  obtain ⟨M, hM⟩ : ∃ M, ν (T M) ≤ η :=
+    ((htend.eventually (eventually_lt_nhds hη)).exists).imp fun _ h => h.le
+  -- the pieces of positive mass, shifted so that `0` is free for the remainder
+  set K : Finset ℕ := ((Finset.range M).filter fun i => ν (As i) ≠ 0).image (· + 1) with hK_def
+  have hK0 : (0 : ℕ) ∉ K := by simp [hK_def]
+  have hKmem : ∀ j ∈ K, j ≠ 0 ∧ j - 1 < M ∧ ν (As (j - 1)) ≠ 0 := by
+    intro j hj
+    simp only [hK_def, Finset.mem_image, Finset.mem_filter, Finset.mem_range] at hj
+    obtain ⟨i, ⟨hiM, hi0⟩, rfl⟩ := hj
+    exact ⟨by omega, by omega, by simpa using hi0⟩
+  have hKmem' : ∀ i, i < M → ν (As i) ≠ 0 → i + 1 ∈ K := by
+    intro i hiM hi0
+    simp only [hK_def, Finset.mem_image, Finset.mem_filter, Finset.mem_range]
+    exact ⟨i, ⟨hiM, hi0⟩, rfl⟩
+  set U : Set E := ⋃ j ∈ K, As (j - 1) with hU_def
+  have hUm : MeasurableSet U :=
+    MeasurableSet.biUnion K.countable_toSet fun j _ => hAsm (j - 1)
+  set A : ℕ → Set E := fun i => if i ∈ K then As (i - 1) else if i = 0 then Uᶜ else ∅
+    with hA_def
+  have hA0 : A 0 = Uᶜ := by simp [hA_def, hK0]
+  have hAK : ∀ j ∈ K, A j = As (j - 1) := fun j hj => by simp [hA_def, hj]
+  have hAout : ∀ i, i ≠ 0 → i ∉ K → A i = ∅ := fun i hi0 hiK => by simp [hA_def, hi0, hiK]
+  have hAsub : ∀ j ∈ K, A j ⊆ U := by
+    intro j hj
+    rw [hAK j hj]
+    exact subset_biUnion_of_mem (u := fun j => As (j - 1)) (by simpa using hj)
+  refine ⟨K, A, hK0, ?_, ?_, ?_, ?_, hAout, ?_, ?_, ?_⟩
+  · -- measurability
+    intro i
+    by_cases hi : i ∈ K
+    · rw [hAK i hi]; exact hAsm _
+    · by_cases hi0 : i = 0
+      · rw [hi0, hA0]; exact hUm.compl
+      · rw [hAout i hi0 hi]; exact MeasurableSet.empty
+  · -- pairwise disjointness
+    intro i j hij
+    show Disjoint (A i) (A j)
+    have key : ∀ a b : ℕ, a ≠ b → a ∈ K → Disjoint (A a) (A b) := by
+      intro a b hab ha
+      by_cases hb : b ∈ K
+      · rw [hAK a ha, hAK b hb]
+        refine hAsd ?_
+        have h1 := (hKmem a ha).1
+        have h2 := (hKmem b hb).1
+        omega
+      · by_cases hb0 : b = 0
+        · rw [hb0, hA0]
+          exact disjoint_compl_right_iff_subset.2 (hAsub a ha)
+        · rw [hAout b hb0 hb]; exact disjoint_bot_right
+    by_cases hi : i ∈ K
+    · exact key i j hij hi
+    · by_cases hj : j ∈ K
+      · exact (key j i (Ne.symm hij) hj).symm
+      · by_cases hi0 : i = 0
+        · have hj0 : j ≠ 0 := fun h => hij (by rw [hi0, h])
+          rw [hAout j hj0 hj]; exact disjoint_bot_right
+        · rw [hAout i hi0 hi]; exact disjoint_bot_left
+  · -- the family covers
+    refine eq_univ_of_forall fun x => ?_
+    by_cases hx : x ∈ U
+    · obtain ⟨j, hj, hxj⟩ := mem_iUnion₂.1 hx
+      exact mem_iUnion.2 ⟨j, by rw [hAK j (by simpa using hj)]; exact hxj⟩
+    · exact mem_iUnion.2 ⟨0, by rw [hA0]; exact hx⟩
+  · -- null frontiers
+    intro i
+    by_cases hi : i ∈ K
+    · rw [hAK i hi]; exact hAsfr _
+    · by_cases hi0 : i = 0
+      · rw [hi0, hA0, frontier_compl]
+        refine measure_mono_null (frontier_biUnion_finset_subset K fun j => As (j - 1)) ?_
+        exact (measure_biUnion_null_iff K.countable_toSet).2 fun j _ => hAsfr _
+      · rw [hAout i hi0 hi]; simp
+  · -- positive mass
+    intro j hj
+    rw [hAK j hj]
+    exact pos_iff_ne_zero.2 (hKmem j hj).2.2
+  · -- small diameter
+    intro j hj
+    rw [hAK j hj]
+    exact hAsdiam _
+  · -- the remainder is small
+    rw [hA0]
+    have hsub : (U : Set E)ᶜ ⊆ T M ∪ ⋃ i ∈ (Finset.range M).filter fun i => ν (As i) = 0, As i := by
+      intro x hx
+      by_cases hxT : x ∈ T M
+      · exact Or.inl hxT
+      · simp only [hT_def, mem_compl_iff, not_not] at hxT
+        obtain ⟨i, hi, hxi⟩ := mem_iUnion₂.1 hxT
+        simp only [Finset.mem_range] at hi
+        by_cases hz : ν (As i) = 0
+        · refine Or.inr (mem_iUnion₂.2 ⟨i, ?_, hxi⟩)
+          simp only [Finset.mem_filter, Finset.mem_range]
+          exact ⟨hi, hz⟩
+        · refine absurd (mem_iUnion₂.2 ⟨i + 1, ?_, ?_⟩) hx
+          · simpa using hKmem' i hi hz
+          · simpa using hxi
+    refine le_trans (measure_mono hsub) ?_
+    refine le_trans (measure_union_le _ _) ?_
+    have hnull : ν (⋃ i ∈ (Finset.range M).filter fun i => ν (As i) = 0, As i) = 0 :=
+      (measure_biUnion_null_iff (Finset.finite_toSet _).countable).2 <| by
+        intro i hi
+        simp only [Finset.mem_coe, Finset.mem_filter, Finset.mem_range] at hi
+        exact hi.2
+    rw [hnull, add_zero]
+    exact hM
 
 /-- The masses a countable measurable partition carries under a finite measure are
 summable as reals.  Small, but it is the hypothesis every statement below needs
@@ -3069,12 +3269,19 @@ hangs on: for `y < 1` some partial sum passes `y` because `s i → 1`, but at
 support.  That single point is the only discrepancy between the pieces
 `{y | Nat.find (hex y) = i}` and the intervals `Ioc (s i) (s (i+1))`, and it is a
 Lebesgue null set -- which is why the identification of the two is stated as an
-almost-everywhere equality and not as an equality of sets. -/
+almost-everywhere equality and not as an equality of sets.
+
+The last conjunct names the **first** interval: on `y ≤ (p 0).toReal` the map is
+constantly `x 0`.  Its proof is `Nat.find_eq_zero`, and it is what lets a caller
+turn a bound on a *mass* into an inclusion of events of `y` alone -- and events
+of one variable are what nest.  No positivity of `y` is required: for `y ≤ 0` the
+first partial sum already passes `y`. -/
 theorem exists_measurable_map_restrict_volume_eq_sum_smul_dirac
     {p : ℕ → ℝ≥0∞} (hp : ∑' i, p i = 1) (x : ℕ → E) :
     ∃ g : ℝ → E, Measurable g ∧
       (volume.restrict (Set.Ioc (0 : ℝ) 1)).map g
-        = Measure.sum fun i => p i • Measure.dirac (x i) := by
+          = (Measure.sum fun i => p i • Measure.dirac (x i)) ∧
+      ∀ y : ℝ, y ≤ (p 0).toReal → g y = x 0 := by
   classical
   -- the partial sums, as real numbers
   have hpne : ∀ i, p i ≠ ∞ := by
@@ -3190,7 +3397,15 @@ theorem exists_measurable_map_restrict_volume_eq_sum_smul_dirac
     rw [hEq, measure_biUnion A.to_countable (hdisj.set_pairwise A) (fun i _ => hTm i),
       ← tsum_subtype A p]
     exact tsum_congr fun i => hkey i
-  refine ⟨fun y => x (g' y), Measurable.find (fun _ => measurable_const) hPm hex, ?_⟩
+  -- the first interval is the fibre of `0`
+  have hs1 : s 1 = (p 0).toReal := by rw [hstep 0, hs0, zero_add]
+  have hdiag : ∀ y : ℝ, y ≤ (p 0).toReal → x (g' y) = x 0 := by
+    intro y hy
+    have h0 : g' y = 0 := by
+      simp only [hg'_def, Nat.find_eq_zero]
+      exact Or.inl (by rw [hs1]; exact hy)
+    rw [h0]
+  refine ⟨fun y => x (g' y), Measurable.find (fun _ => measurable_const) hPm hex, ?_, hdiag⟩
   ext S hSm
   rw [Measure.map_apply (Measurable.find (fun _ => measurable_const) hPm hex) hSm,
     Measure.sum_apply _ hSm]
@@ -3291,7 +3506,8 @@ theorem exists_measurable_map_prod_infinitePi_eq_sum_smul
     ∃ f : ℝ × (ℕ → E) → E, Measurable f ∧
       ((volume.restrict (Set.Ioc (0 : ℝ) 1)).prod (Measure.infinitePi m)).map f
         = Measure.sum fun i => p i • m i := by
-  obtain ⟨g, hgm, hg⟩ := exists_measurable_map_restrict_volume_eq_sum_smul_dirac (E := ℕ) hp id
+  obtain ⟨g, hgm, hg, -⟩ :=
+    exists_measurable_map_restrict_volume_eq_sum_smul_dirac (E := ℕ) hp id
   have hev : Measurable (fun q : ℕ × (ℕ → E) => q.2 q.1) :=
     measurable_from_prod_countable_right (fun i => measurable_pi_apply i)
   refine ⟨fun z => z.2 (g z.1), hev.comp ((hgm.comp measurable_fst).prodMk measurable_snd), ?_⟩
@@ -3335,9 +3551,50 @@ theorem exists_measurable_index_of_stochastic_matrix {c : ℕ → ℕ → ℝ≥
     ∃ G : ℕ × ℝ → ℕ, Measurable G ∧ ∀ j,
       (volume.restrict (Set.Ioc (0 : ℝ) 1)).map (fun y => G (j, y))
         = Measure.sum fun i => c j i • Measure.dirac i := by
-  choose g hgm hg using fun j => exists_measurable_map_restrict_volume_eq_sum_smul_dirac
+  choose g hgm hg _ using fun j => exists_measurable_map_restrict_volume_eq_sum_smul_dirac
     (E := ℕ) (hc j) id
   exact ⟨fun q => g q.1 q.2, measurable_from_prod_countable_right hgm, hg⟩
+
+/-- **The conditional index map with the diagonal on a named interval.**  The same map as
+`exists_measurable_index_of_stochastic_matrix`, but arranged so that the *diagonal* index `j` is
+drawn on the **first** interval of the partial sums: `G (j, y) = j` for every `y ≤ (c j j).toReal`.
+
+This is the statement that converts a *number* into an *inclusion*.  With the diagonal at a known
+place, the event "the two indices disagree" is contained in `{y | (c j j).toReal < y}`, an event of
+the uniform variable alone -- and events of one variable are what nest, which is what
+`ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` consumes.  A Borel--Cantelli argument over the
+stages is not available here, so the nesting is not a convenience but the only route.
+
+The proof is `exists_measurable_map_restrict_volume_eq_sum_smul_dirac` applied, for each `j`, to the
+weights `c j ∘ Equiv.swap 0 j` and the points `Equiv.swap 0 j`, so that the diagonal entry becomes
+the zeroth one; `Equiv.tsum_eq` carries the hypothesis and `Measure.sum_comp_equiv` carries the
+conclusion back through the transposition, and the first-interval property is the last conjunct of
+that theorem at `Equiv.swap_apply_left`. -/
+theorem exists_measurable_index_of_stochastic_matrix_diag {c : ℕ → ℕ → ℝ≥0∞}
+    (hc : ∀ j, ∑' i, c j i = 1) :
+    ∃ G : ℕ × ℝ → ℕ, Measurable G ∧
+      (∀ j, (volume.restrict (Set.Ioc (0 : ℝ) 1)).map (fun y => G (j, y))
+        = Measure.sum fun i => c j i • Measure.dirac i) ∧
+      (∀ j y, y ≤ (c j j).toReal → G (j, y) = j) := by
+  classical
+  have key : ∀ j : ℕ, ∃ g : ℝ → ℕ, Measurable g ∧
+      (volume.restrict (Set.Ioc (0 : ℝ) 1)).map g
+          = (Measure.sum fun i => c j i • Measure.dirac i) ∧
+      ∀ y : ℝ, y ≤ (c j j).toReal → g y = j := by
+    intro j
+    have hswap : ∑' i, c j (Equiv.swap 0 j i) = 1 := by
+      rw [(Equiv.swap (0 : ℕ) j).tsum_eq fun i => c j i]; exact hc j
+    obtain ⟨g, hgm, hg, hg0⟩ := exists_measurable_map_restrict_volume_eq_sum_smul_dirac
+      (E := ℕ) (p := fun i => c j (Equiv.swap 0 j i)) hswap (fun i => Equiv.swap 0 j i)
+    refine ⟨g, hgm, ?_, ?_⟩
+    · rw [hg]
+      exact Measure.sum_comp_equiv (Equiv.swap 0 j) fun i => c j i • Measure.dirac i
+    · intro y hy
+      have h := hg0 y (by simpa using hy)
+      simpa using h
+  choose g hgm hg hg0 using key
+  exact ⟨fun q => g q.1 q.2, measurable_from_prod_countable_right hgm, hg,
+    fun j y hy => hg0 j y hy⟩
 
 /-- **The law of the index, on `E × ℝ`.**  Put the two index maps together: `j` reads off which
 piece of the partition the point `y` lies in, `G` draws from the row `c (j y)` using the uniform
