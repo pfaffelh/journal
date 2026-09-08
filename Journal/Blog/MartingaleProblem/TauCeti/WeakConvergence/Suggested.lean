@@ -10,6 +10,7 @@ import Mathlib.MeasureTheory.Measure.FiniteMeasureExt
 import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
+import Mathlib.Probability.ConditionalProbability
 import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.MeasureTheory.MeasurableSpace.CountablyGenerated
@@ -225,6 +226,21 @@ now unproved, and the roadmap's description of the space it is built on was
 corrected in the same run: the conditional laws inside the pieces enter as
 coordinates of a product measure, not as functions of one uniform variable, so
 `((0,1], Lebesgue)` carries the index pair and nothing else.
+
+The seventh run of 2026-09-08 proved the one-stage coupling, in both its forms:
+`exists_coupling_of_partition`, the geometric core, and `exists_coupling_of_tendsto`,
+the same statement driven by weak convergence, together with the conditional law
+`condLaw` and its four lemmas; all depend on `propext`, `Classical.choice` and
+`Quot.sound` alone.  This is the one place where the file imports
+`Mathlib.Probability.ConditionalProbability`, for `ProbabilityTheory.cond`, of which
+`condLaw` is the total variant -- Mathlib's is the zero measure on a null set, which
+a coupling cannot use.  The same run corrected the sixth run's description of the
+space once more, and this time downward: the common probability space is `E × E`
+itself, since all the statement asserts about the space is the joint law of the two
+random variables and a joint law is a measure on `E × E`.  What survives of the
+sixth run's finding is its core -- the conditional laws must enter as *measures*,
+not as functions of one uniform variable, that being the Borel isomorphism theorem.
+Of Milestone 3 only `exists_ae_tendsto_of_tendsto` itself is now unproved.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -3209,6 +3225,262 @@ theorem exists_coupling_tsum_offDiag_le {p q : ℕ → ℝ≥0∞}
       refine le_trans (ENNReal.tsum_le_tsum fun j => ?_) (le_of_eq (hrow i))
       split_ifs with h <;> simp
     exact ENNReal.tsum_le_tsum hle
+
+/-- The conditional law of `μ` on `A`, made total: it is `ProbabilityTheory.cond μ A`, that is
+`(μ A)⁻¹ • μ.restrict A`, wherever `μ A ≠ 0`, and `μ` itself where `μ A = 0`.
+
+Mathlib's `ProbabilityTheory.cond` is the zero measure on a null set, which is what one wants
+for conditioning but not for a coupling: the pieces of a partition are indexed by all of `ℕ`,
+null pieces included, and the construction below multiplies the conditional laws together in a
+product measure, where a zero factor would destroy the marginals.  The fallback value is
+irrelevant to every statement -- a null piece carries no coupling mass -- and its only purpose
+is to make `IsProbabilityMeasure (condLaw μ A)` hold **unconditionally**, so that it is an
+instance and `Measure.map_fst_prod` fires with `measure_univ`. -/
+noncomputable def condLaw (μ : Measure E) (A : Set E) : Measure E :=
+  if μ A = 0 then μ else ProbabilityTheory.cond μ A
+
+lemma condLaw_of_ne_zero {μ : Measure E} {A : Set E} (h : μ A ≠ 0) :
+    condLaw μ A = (μ A)⁻¹ • μ.restrict A := by
+  rw [condLaw, if_neg h, ProbabilityTheory.cond]
+
+instance isProbabilityMeasure_condLaw (μ : Measure E) [IsProbabilityMeasure μ] (A : Set E) :
+    IsProbabilityMeasure (condLaw μ A) := by
+  by_cases h : μ A = 0
+  · rw [condLaw, if_pos h]; infer_instance
+  · refine ⟨?_⟩
+    rw [condLaw_of_ne_zero h, Measure.smul_apply, Measure.restrict_apply_univ, smul_eq_mul,
+      ENNReal.inv_mul_cancel h (measure_ne_top μ A)]
+
+/-- The defining property of `condLaw`, and the only one the coupling uses: the conditional law
+weighted by the mass of the piece recovers the measure of the trace.  It holds **also** on a null
+piece, where both sides vanish, which is why the fallback value of `condLaw` never has to be
+mentioned again. -/
+lemma measure_mul_condLaw_apply {μ : Measure E} [IsFiniteMeasure μ] {A : Set E} {S : Set E}
+    (hS : MeasurableSet S) : μ A * condLaw μ A S = μ (S ∩ A) := by
+  by_cases h : μ A = 0
+  · rw [h, zero_mul]
+    exact (measure_mono_null Set.inter_subset_right h).symm
+  · rw [condLaw_of_ne_zero h, Measure.smul_apply, Measure.restrict_apply hS, smul_eq_mul,
+      ← mul_assoc, ENNReal.mul_inv_cancel h (measure_ne_top μ A), one_mul]
+
+/-- On a piece of positive mass the conditional law is carried by the piece.  This is what turns
+the diameter bound of the partition into an almost sure bound on the distance of the two
+coordinates. -/
+lemma condLaw_compl_eq_zero {μ : Measure E} {A : Set E} (hA : MeasurableSet A) (h : μ A ≠ 0) :
+    condLaw μ A Aᶜ = 0 := by
+  rw [condLaw_of_ne_zero h, Measure.smul_apply, Measure.restrict_apply hA.compl, smul_eq_mul]
+  simp
+
+/-- **The one-stage coupling.**  Two laws that a countable measurable partition into pieces of
+diameter at most `ε` cannot tell apart by much are `ε`-close in the coupling sense: there is a
+law `γ` on `E × E` with marginals `μ` and `ν` which puts mass at most `∑' i, (μ (A i) - ν (A i))`
+-- the truncated subtraction of `ℝ≥0∞`, half the total variation distance read on the partition
+-- on the event that the two coordinates are more than `ε` apart.
+
+This is the step of the Skorokhod representation at which the partition, the index coupling and
+the conditional laws meet.  The construction is
+`γ = ∑' (i,j), π i j • (condLaw μ (A i)).prod (condLaw ν (A j))` with `π` the index coupling of
+`exists_coupling_tsum_offDiag_le` applied to the mass vectors `μ (A i)` and `ν (A i)`: the index
+pair says which piece each coordinate falls into, the conditional laws say where inside the
+piece, and inside a piece the two are independent.
+
+**The common space is `E × E` itself and not a product of an interval with a sequence space.**
+An earlier plan for this step realised the index pair on `((0,1], Lebesgue)` through
+`exists_measurable_map_restrict_volume_eq_sum_smul_dirac` and the positions inside the pieces as
+coordinates of a `Measure.infinitePi` of the conditional laws.  That is Ethier-Kurtz's Lemma
+3.1.3 verbatim and it works, but the extra structure is spent immediately: all the theorem
+asserts about the space is the joint law of the two random variables, and that joint law is a
+measure on `E × E`.  Stated on `E × E` the random variables are `Prod.fst` and `Prod.snd`, and
+the two marginal computations are `Measure.map_fst_prod` and `Measure.map_snd_prod` under a
+`Measure.sum`, with `ENNReal.tsum_prod'` for the passage from the double sum over `ℕ × ℕ` to the
+iterated one.
+
+Three points are not free.
+
+* The **null pieces**.  A piece with `μ (A i) = 0` carries no coupling mass, since
+  `π i i ≤ ∑' j, π i j = μ (A i)`, so the diagonal estimate never has to look at the conditional
+  law there; but the *marginal* computation runs over all `i` at once and needs each factor to be
+  a probability measure, which is what `condLaw` and not `ProbabilityTheory.cond` provides.
+* The **diagonal** estimate is an identity, not an inequality: on `i = j` the two coordinates lie
+  in the same piece almost surely, so their distance is at most `Metric.diam (A i) ≤ ε` and the
+  bad event is null.  It is here that boundedness of the pieces is consumed, through
+  `Metric.dist_le_diam_of_mem`; `Metric.diam` of an unbounded set is `0` and the hypothesis
+  `Metric.diam (A i) ≤ ε` would then say nothing.
+* The bad event `{z | ε < dist z.1 z.2}` is open, and its measurability on `E × E` is what the
+  `[SecondCountableTopology E]` hypothesis buys, through `Prod.opensMeasurableSpace`. -/
+theorem exists_coupling_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    [SecondCountableTopology E] (μ ν : Measure E)
+    [IsProbabilityMeasure μ] [IsProbabilityMeasure ν] {A : ℕ → Set E}
+    (hAm : ∀ i, MeasurableSet (A i)) (hAd : Pairwise (Function.onFun Disjoint A))
+    (hAu : ⋃ i, A i = univ) (hAb : ∀ i, Bornology.IsBounded (A i))
+    {ε : ℝ} (hAdiam : ∀ i, Metric.diam (A i) ≤ ε) :
+    ∃ γ : Measure (E × E), IsProbabilityMeasure γ ∧
+      γ.map Prod.fst = μ ∧ γ.map Prod.snd = ν ∧
+      γ {z : E × E | ε < dist z.1 z.2} ≤ ∑' i, (μ (A i) - ν (A i)) := by
+  classical
+  -- the masses of the pieces are probability vectors
+  have hsum : ∀ (ρ : Measure E), IsProbabilityMeasure ρ → ∀ S : Set E, MeasurableSet S →
+      ∑' i, ρ (S ∩ A i) = ρ S := by
+    intro ρ _ S hS
+    have hSU : S = ⋃ i, (S ∩ A i) := by rw [← Set.inter_iUnion, hAu, Set.inter_univ]
+    have hdisj : Pairwise (Function.onFun Disjoint fun i => S ∩ A i) := fun i j hij =>
+      Disjoint.mono Set.inter_subset_right Set.inter_subset_right (hAd hij)
+    rw [← measure_iUnion hdisj fun i => hS.inter (hAm i), ← hSU]
+  have hp : ∑' i, μ (A i) = 1 := by
+    have := hsum μ ‹_› univ MeasurableSet.univ
+    simpa using this
+  have hq : ∑' i, ν (A i) = 1 := by
+    have := hsum ν ‹_› univ MeasurableSet.univ
+    simpa using this
+  obtain ⟨π, hπp, hπq, hπoff⟩ := exists_coupling_tsum_offDiag_le hp hq
+  have hfst : (Measure.sum fun ij : ℕ × ℕ =>
+      π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2)))).map Prod.fst = μ := by
+    rw [Measure.map_sum measurable_fst.aemeasurable]
+    have hstep : ∀ ij : ℕ × ℕ,
+        (π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2)))).map Prod.fst
+          = π ij.1 ij.2 • condLaw μ (A ij.1) := by
+      intro ij
+      rw [Measure.map_smul, Measure.map_fst_prod, measure_univ, one_smul]
+    simp_rw [hstep]
+    ext S hS
+    rw [Measure.sum_apply _ hS]
+    have hval : ∀ ij : ℕ × ℕ, (π ij.1 ij.2 • condLaw μ (A ij.1)) S
+        = π ij.1 ij.2 * condLaw μ (A ij.1) S := fun ij => rfl
+    simp_rw [hval]
+    rw [ENNReal.tsum_prod']
+    have hrow : ∀ i, ∑' j, π i j * condLaw μ (A i) S = μ (S ∩ A i) := by
+      intro i
+      rw [ENNReal.tsum_mul_right, hπp i]
+      exact measure_mul_condLaw_apply hS
+    simp_rw [hrow]
+    exact hsum μ ‹_› S hS
+  have hsnd : (Measure.sum fun ij : ℕ × ℕ =>
+      π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2)))).map Prod.snd = ν := by
+    rw [Measure.map_sum measurable_snd.aemeasurable]
+    have hstep : ∀ ij : ℕ × ℕ,
+        (π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2)))).map Prod.snd
+          = π ij.1 ij.2 • condLaw ν (A ij.2) := by
+      intro ij
+      rw [Measure.map_smul, Measure.map_snd_prod, measure_univ, one_smul]
+    simp_rw [hstep]
+    ext S hS
+    rw [Measure.sum_apply _ hS]
+    have hval : ∀ ij : ℕ × ℕ, (π ij.1 ij.2 • condLaw ν (A ij.2)) S
+        = π ij.1 ij.2 * condLaw ν (A ij.2) S := fun ij => rfl
+    simp_rw [hval]
+    rw [ENNReal.tsum_prod', ENNReal.tsum_comm]
+    have hcol : ∀ j, ∑' i, π i j * condLaw ν (A j) S = ν (S ∩ A j) := by
+      intro j
+      rw [ENNReal.tsum_mul_right, hπq j]
+      exact measure_mul_condLaw_apply hS
+    simp_rw [hcol]
+    exact hsum ν ‹_› S hS
+  have hB : MeasurableSet {z : E × E | ε < dist z.1 z.2} :=
+    (isOpen_lt continuous_const (continuous_fst.dist continuous_snd)).measurableSet
+  refine ⟨_, ⟨?_⟩, hfst, hsnd, ?_⟩
+  · have := congrArg (fun m : Measure E => m univ) hfst
+    simpa [Measure.map_apply measurable_fst MeasurableSet.univ] using this
+  · rw [Measure.sum_apply _ hB]
+    have hkey : ∀ ij : ℕ × ℕ,
+        (π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2))))
+            {z : E × E | ε < dist z.1 z.2}
+          ≤ (if ij.1 = ij.2 then 0 else π ij.1 ij.2) := by
+      rintro ⟨i, j⟩
+      by_cases hij : i = j
+      · subst hij
+        rw [if_pos rfl, nonpos_iff_eq_zero]
+        by_cases hπ0 : π i i = 0
+        · simp [hπ0]
+        have hle1 : π i i ≤ μ (A i) := hπp i ▸ ENNReal.le_tsum i
+        have hle2 : π i i ≤ ν (A i) := hπq i ▸ ENNReal.le_tsum i
+        have hμ0 : μ (A i) ≠ 0 := fun h => hπ0 (le_antisymm (h ▸ hle1) bot_le)
+        have hν0 : ν (A i) ≠ 0 := fun h => hπ0 (le_antisymm (h ▸ hle2) bot_le)
+        have hsub : {z : E × E | ε < dist z.1 z.2}
+            ⊆ ((A i)ᶜ ×ˢ (univ : Set E)) ∪ ((univ : Set E) ×ˢ (A i)ᶜ) := by
+          rintro ⟨x, y⟩ hz
+          by_contra hcon
+          simp only [Set.mem_union, Set.mem_prod, Set.mem_compl_iff, Set.mem_univ, and_true,
+            true_and, not_or, not_not] at hcon
+          exact absurd hz (not_lt.2 ((Metric.dist_le_diam_of_mem (hAb i) hcon.1 hcon.2).trans
+            (hAdiam i)))
+        have hz : ((condLaw μ (A i)).prod (condLaw ν (A i)))
+            {z : E × E | ε < dist z.1 z.2} = 0 := by
+          refine measure_mono_null hsub (measure_union_null ?_ ?_)
+          · rw [Measure.prod_prod, condLaw_compl_eq_zero (hAm i) hμ0, zero_mul]
+          · rw [Measure.prod_prod, condLaw_compl_eq_zero (hAm i) hν0, mul_zero]
+        rw [Measure.smul_apply, smul_eq_mul, hz, mul_zero]
+      · rw [if_neg hij, Measure.smul_apply, smul_eq_mul]
+        calc π i j * ((condLaw μ (A i)).prod (condLaw ν (A j))) {z : E × E | ε < dist z.1 z.2}
+            ≤ π i j * 1 := by gcongr; exact prob_le_one
+          _ = π i j := mul_one _
+    calc ∑' ij : ℕ × ℕ, (π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2))))
+            {z : E × E | ε < dist z.1 z.2}
+        ≤ ∑' ij : ℕ × ℕ, (if ij.1 = ij.2 then 0 else π ij.1 ij.2) := ENNReal.tsum_le_tsum hkey
+      _ = ∑' i, ∑' j, (if i = j then 0 else π i j) := ENNReal.tsum_prod'
+      _ ≤ ∑' i, (μ (A i) - ν (A i)) := hπoff
+
+/-- **The one-stage coupling, driven by weak convergence.**  If `μ n → ν` weakly then, from some
+index on, `μ n` and `ν` admit a coupling that puts mass at most `ε` on the event that the two
+coordinates are more than `ε` apart.  This is the statement the Skorokhod representation iterates
+over a sequence `ε → 0`, and it is where the three analytic inputs of the milestone are spent, one
+each: the null-frontier partition of diameter `≤ ε`
+(`exists_measurable_partition_diam_le_null_frontier`) makes every piece a continuity set of `ν`,
+Portmanteau (`ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto'`) turns weak
+convergence into convergence of every piece's mass, and Scheffé's step
+(`tendsto_tsum_abs_sub_of_tendsto_measure`) turns that into convergence of the masses *summed over
+all pieces at once* -- which is the quantity `exists_coupling_of_partition` bounds the bad event
+by.
+
+The bridge between the two is the one place where the truncated subtraction of `ℝ≥0∞` and the
+absolute value in `ℝ` meet: `a - b = ENNReal.ofReal (a.toReal - b.toReal)` for finite `a`, `b` (in
+both orders, the case `a ≤ b` being `0 = ofReal` of a nonpositive number), and
+`ENNReal.ofReal_tsum_of_nonneg` moves `ENNReal.ofReal` through the sum.  Only after that is the
+hypothesis on the pieces a statement about one real number, which the Scheffé step drives below
+`ε`. -/
+theorem exists_coupling_of_tendsto [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E}
+    (h : Tendsto μ atTop (𝓝 ν)) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ n in atTop, ∃ γ : Measure (E × E), IsProbabilityMeasure γ ∧
+      γ.map Prod.fst = (μ n : Measure E) ∧ γ.map Prod.snd = (ν : Measure E) ∧
+      γ {z : E × E | ε < dist z.1 z.2} ≤ ENNReal.ofReal ε := by
+  obtain ⟨A, hAm, hAb, hAdiam, hAfr, hAu, hAd⟩ :=
+    exists_measurable_partition_diam_le_null_frontier (ν : Measure E) hε
+  have hconv : ∀ i, Tendsto (fun n => (μ n : Measure E) (A i)) atTop
+      (𝓝 ((ν : Measure E) (A i))) :=
+    fun i => ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto' h (hAfr i)
+  have habs := tendsto_tsum_abs_sub_of_tendsto_measure (μ := fun n => (μ n : Measure E))
+    (ν := (ν : Measure E)) hAm hAd hAu hconv
+  have hev : ∀ᶠ n in atTop,
+      ∑' i, |((ν : Measure E) (A i)).toReal - ((μ n : Measure E) (A i)).toReal| < ε :=
+    habs.eventually_lt_const hε
+  filter_upwards [hev] with n hn
+  obtain ⟨γ, hγp, hγ1, hγ2, hγ3⟩ :=
+    exists_coupling_of_partition (μ n : Measure E) (ν : Measure E) hAm hAd hAu hAb hAdiam
+  refine ⟨γ, hγp, hγ1, hγ2, hγ3.trans ?_⟩
+  have hbridge : ∀ i, ((μ n : Measure E) (A i) - (ν : Measure E) (A i))
+      ≤ ENNReal.ofReal |((ν : Measure E) (A i)).toReal - ((μ n : Measure E) (A i)).toReal| := by
+    intro i
+    rcases le_total ((μ n : Measure E) (A i)) ((ν : Measure E) (A i)) with hab | hab
+    · simp [tsub_eq_zero_of_le hab]
+    · have hrw : (μ n : Measure E) (A i) - (ν : Measure E) (A i)
+          = ENNReal.ofReal (((μ n : Measure E) (A i)).toReal
+            - ((ν : Measure E) (A i)).toReal) := by
+        rw [ENNReal.ofReal_sub _ ENNReal.toReal_nonneg,
+          ENNReal.ofReal_toReal (measure_ne_top _ _), ENNReal.ofReal_toReal (measure_ne_top _ _)]
+      rw [hrw]
+      exact ENNReal.ofReal_le_ofReal (by rw [abs_sub_comm]; exact le_abs_self _)
+  have hsummable : Summable fun i =>
+      |((ν : Measure E) (A i)).toReal - ((μ n : Measure E) (A i)).toReal| :=
+    ((summable_toReal_measure_of_pairwise_disjoint (ν := (ν : Measure E)) hAm hAd).sub
+      (summable_toReal_measure_of_pairwise_disjoint (ν := (μ n : Measure E)) hAm hAd)).abs
+  calc ∑' i, ((μ n : Measure E) (A i) - (ν : Measure E) (A i))
+      ≤ ∑' i, ENNReal.ofReal
+          |((ν : Measure E) (A i)).toReal - ((μ n : Measure E) (A i)).toReal| :=
+        ENNReal.tsum_le_tsum hbridge
+    _ = ENNReal.ofReal (∑' i,
+          |((ν : Measure E) (A i)).toReal - ((μ n : Measure E) (A i)).toReal|) :=
+        (ENNReal.ofReal_tsum_of_nonneg (fun _ => abs_nonneg _) hsummable).symm
+    _ ≤ ENNReal.ofReal ε := ENNReal.ofReal_le_ofReal hn.le
 
 theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}

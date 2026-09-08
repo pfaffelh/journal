@@ -1121,33 +1121,76 @@ The representation theorem itself:
   is not additivity of truncated subtraction but the cancellation
   `M + D = 1 = M + D'` through `ENNReal.add_right_inj`, available because
   `M = ∑' i, min (p i) (q i) ≤ 1` is finite.
-* The one-stage coupling: for `ε > 0` and `μ n → ν` weakly there is an `N` such
-  that for `n ≥ N` there are `X n` and `Y` on a common probability space with
-  laws `μ n` and `ν` and `P (dist (X n) Y > ε) < ε`. This is where the items
-  above meet: the partition of diameter `≤ ε` with `ν`-null frontiers gives, by
-  `tendsto_measure_of_null_frontier`, the convergence of every piece;
-  `tendsto_tsum_abs_sub_of_tendsto_measure` turns that into a bound on the total
-  mass on which the two realisations fall into different pieces;
-  `exists_coupling_tsum_offDiag_le` produces the joint law of the two piece
-  indices; and the discrete realisation
-  `exists_measurable_map_restrict_volume_eq_sum_smul_dirac`, applied to that
-  joint law on `ℕ × ℕ`, puts the index pair on `((0,1], Lebesgue)`.
+* `MeasureTheory.exists_coupling_of_tendsto`, **proved** on 2026-09-08, seventh
+  run: the one-stage coupling. For `ε > 0` and `μ n → ν` weakly, eventually in
+  `n` there is a law `γ` on `E × E` with marginals `μ n` and `ν` and
+  `γ {z | ε < dist z.1 z.2} ≤ ENNReal.ofReal ε` — the random variables being
+  `Prod.fst` and `Prod.snd`. This is where the items above meet, each spent
+  exactly once: the partition of diameter `≤ ε` with `ν`-null frontiers makes
+  every piece a continuity set, so
+  `ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto'`
+  (`Portmanteau.lean:336`) gives the convergence of every piece's mass;
+  `tendsto_tsum_abs_sub_of_tendsto_measure` turns that into convergence of the
+  masses summed over all pieces at once; and
+  `exists_coupling_of_partition` turns *that* one number into the coupling.
 
-  **The common probability space is a product, and it is not `((0,1], Lebesgue)`
-  alone.** The index pair fixes only which piece each realisation lands in; the
-  position inside the piece is distributed according to the conditional law
-  `μ (· ∩ A i) / μ (A i)`, and realising *that* by a measurable map out of the
-  unit interval is not available for a separable metric `E` — it is the Borel
-  isomorphism theorem, which needs `E` Polish and is a strictly bigger hypothesis
-  than the rest of this milestone uses. The conditional laws therefore enter as
-  **coordinates of a product measure** and not as functions of one uniform
-  variable: the space is `((0,1], Lebesgue)` for the index pair times a
-  `MeasureTheory.Measure.pi` of the conditional laws, and the random variables
-  are the projections. This is how Ethier–Kurtz build it (Lemma 3.1.3, p. 100:
-  “Let `X, Y₀, …, Y_N, ξ` be independent random variables on some probability
-  space … with `X, Y₀, …, Y_N` having distributions `P, Q₀, …, Q_N` and `ξ`
-  uniformly distributed on `[0,1]`”), and no step of their proof asks for a
-  measurable map out of the unit interval.
+  One step is not bookkeeping, and it is the passage between the two number
+  systems: the coupling bounds the bad event by `∑' i, (μ n (A i) - ν (A i))` in
+  `ℝ≥0∞`, the Scheffé step produces `∑' i, |ν (A i) - μ n (A i)|` in `ℝ`, and
+  `a - b = ENNReal.ofReal (a.toReal - b.toReal)` joins them for finite `a`, `b`
+  — in both orders, the case `a ≤ b` being `0 = ENNReal.ofReal` of a nonpositive
+  number — with `ENNReal.ofReal_tsum_of_nonneg` moving `ENNReal.ofReal` through
+  the sum. Neither `BorelSpace E` nor completeness is a hypothesis;
+  `[PseudoMetricSpace E] [OpensMeasurableSpace E] [SeparableSpace E]` is all of
+  it, and the second countability that `exists_coupling_of_partition` wants
+  comes from the first and the third.
+
+  Its geometric core is `MeasureTheory.exists_coupling_of_partition`, **proved**
+  on 2026-09-08, seventh run: for two laws `μ`, `ν` on a separable metric `E`
+  and a countable measurable partition `A` into bounded pieces of diameter at
+  most `ε`, there is a law `γ` on `E × E` with marginals `μ` and `ν` and
+  `γ {z | ε < dist z.1 z.2} ≤ ∑' i, (μ (A i) - ν (A i))`, the truncated
+  subtraction of `ℝ≥0∞`. The construction is
+  `γ = ∑' (i,j), π i j • (condLaw μ (A i)).prod (condLaw ν (A j))`: the index
+  pair says which piece each coordinate falls into, the conditional laws say
+  where inside the piece, and inside a piece the two are independent. No weak
+  convergence enters it; the whole analytic input is the one number
+  `∑' i, (μ (A i) - ν (A i))`, which is what the Scheffé step above drives to
+  zero.
+
+  **The common probability space is `E × E` itself.** Everything the statement
+  asserts about the space is the joint law of the two random variables, and a
+  joint law is a measure on `E × E`; the random variables are then `Prod.fst`
+  and `Prod.snd`, the marginal computations are `Measure.map_fst_prod` and
+  `Measure.map_snd_prod` under a `Measure.sum`, and `ENNReal.tsum_prod'` passes
+  from the double sum over `ℕ × ℕ` to the iterated one. The route through a
+  uniform variable — realise the index pair on `((0,1], Lebesgue)` by
+  `exists_measurable_map_restrict_volume_eq_sum_smul_dirac` and the positions
+  inside the pieces as coordinates of a `Measure.infinitePi` of the conditional
+  laws — is Ethier–Kurtz's Lemma 3.1.3 verbatim (p. 100: “Let `X, Y₀, …, Y_N, ξ`
+  be independent random variables on some probability space … with
+  `X, Y₀, …, Y_N` having distributions `P, Q₀, …, Q_N` and `ξ` uniformly
+  distributed on `[0,1]`”) and it works, but it builds structure that the
+  statement immediately forgets. What it does settle, and what stays: realising
+  the position inside a piece as a measurable **function** of one uniform
+  variable is the Borel isomorphism theorem, which needs `E` Polish and is a
+  strictly bigger hypothesis than the rest of this milestone uses. The
+  conditional laws must therefore enter as measures — as factors of a product
+  measure — and not as functions of a uniform variable, and on `E × E` they do.
+* `MeasureTheory.condLaw`, **proved** on 2026-09-08, seventh run, together with
+  `condLaw_of_ne_zero`, `isProbabilityMeasure_condLaw`,
+  `measure_mul_condLaw_apply` and `condLaw_compl_eq_zero`: the conditional law
+  of `μ` on `A`, made total — `ProbabilityTheory.cond μ A`, that is
+  `(μ A)⁻¹ • μ.restrict A`, wherever `μ A ≠ 0`, and `μ` itself where `μ A = 0`.
+  Mathlib's `ProbabilityTheory.cond` (`Probability/ConditionalProbability.lean:76`)
+  is the **zero** measure on a null set, which is right for conditioning and
+  wrong for a coupling: the pieces of the partition are indexed by all of `ℕ`,
+  null pieces included, and a zero factor in the product measure destroys the
+  marginals. The fallback value is never mentioned again, because
+  `measure_mul_condLaw_apply` — `μ A * condLaw μ A S = μ (S ∩ A)`, the only
+  property the coupling uses — holds on a null piece too, both sides being `0`;
+  its purpose is to make `IsProbabilityMeasure (condLaw μ A)` hold
+  *unconditionally* and so be an instance.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
@@ -1219,6 +1262,25 @@ exactly what an almost surely convergent realisation witnesses.
   well-formed. The neighbouring instance that hides this is `p = (1, 0, 0, …)`,
   where `s 1 = 1` already and the naive predicate happens to work — which is why
   it is the wrong instance to test on.
+* **A piece that is not bounded, and the diameter that says nothing.** `E = ℝ`,
+  `A 0 = univ` and `A i = ∅` for `i ≥ 1`, `μ = δ 0`, `ν = δ 100`, `ε = 1`. The
+  mass vectors agree, so `∑' i, (μ (A i) - ν (A i)) = 0`, and
+  `Metric.diam (A 0) = 0 ≤ ε` — because `Metric.diam` of an unbounded set is
+  `0` by convention, not because the piece is small. Yet every coupling of `δ 0`
+  and `δ 100` is `δ (0, 100)` and puts *all* its mass on `dist > 1`. So
+  `exists_coupling_of_partition` is false without the hypothesis
+  `∀ i, Bornology.IsBounded (A i)`; it is consumed in exactly one step,
+  `Metric.dist_le_diam_of_mem`. The neighbouring instance on which the omission
+  does not show is `A 0 = Set.Icc 0 100`, where the diameter is honest.
+* **The same partition, honestly.** `E = ℝ`, `ε = 1`, `A i` the half-open unit
+  intervals of `ℝ` enumerated by `ℕ`, `μ = δ 0` and `ν = δ (1/2)`, both carried
+  by `A 0 = Set.Ico 0 1`. Every mass vector entry agrees, so the bound is `0`,
+  the index coupling is the diagonal `π 0 0 = 1`, the conditional laws are
+  `δ 0` and `δ (1/2)` and the coupling `exists_coupling_of_partition` returns is
+  `δ (0, 1/2)` — a set of distance `1/2 ≤ ε` of full measure, as the bound `0`
+  demands. This is the instance on which a construction that coupled the two
+  laws through one shared uniform variable *without* the index coupling would
+  also succeed, which is why the previous item and not this one is the test.
 * **The quantile coupling misses the bound by a factor that is not bounded.**
   `p = (1/2, 1/2, 0, …)` and `q = (0, 1/2, 1/2, 0, …)`, so
   `∑' i, (p i - q i) = 1/2`. Reading both vectors on the *same* uniform variable
