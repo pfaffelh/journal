@@ -1249,26 +1249,48 @@ The representation theorem itself:
   **The common space, and why it is not a gluing of the one-stage couplings.**
   `exists_coupling_of_tendsto` returns, for each stage, a law `γ` on `E × E`
   with second marginal `μ`. Gluing a countable family of such laws along their
-  common second marginal is disintegration — `Measure.condKernel`, which needs
-  `E` standard Borel — followed by a countable product of the resulting kernels,
-  which Mathlib does not have at all: `infinitePi` is a product of *measures*,
-  and there is no product of kernels over a countable index. Searched on
-  2026-09-08 on `upstream/master` at `572e4d091bc`, in Mathlib's own vocabulary
-  rather than ours: `infinitePi` occurs in six files, all of them about
-  measures (`ProductMeasure`, `Independence/InfinitePi`, `HasLawExists`,
-  `IdentDistribIndep`, `Distributions/SetBernoulli`,
-  `Combinatorics/BinomialRandomGraph/Defs`), and neither `infinitePi` nor
-  `Kernel.pi` nor any `def pi` occurs anywhere under `Probability/Kernel/`;
-  what is there is `Kernel.prod` for two factors and the Ionescu–Tulcea `traj`
-  for a filtration. The construction therefore
-  does **not** glue: it builds all stages at once on
+  common second marginal is available in Mathlib, in both of its two steps.
+  Disintegration is `MeasureTheory.Measure.condKernel`
+  (`Probability/Kernel/Disintegration/StandardBorel.lean:361`): it turns `γ n`
+  into a Markov kernel `K n : Kernel E E` with `μ ⊗ₘ K n = γ n`. The countable
+  product of those kernels over the common base is the **Ionescu–Tulcea
+  theorem**, `ProbabilityTheory.Kernel.traj`
+  (`Probability/Kernel/IonescuTulcea/Traj.lean:518`, so named in its own
+  doc-comment): with `X n := E` for all `n` and
+  `κ n := (K n).comap (fun x ↦ x ⟨0, _⟩)` — a Markov kernel by
+  `ProbabilityTheory.Kernel.IsMarkovKernel.comap`
+  (`Probability/Kernel/Composition/MapComap.lean:187`) — the kernel `traj κ 0`
+  goes from `Π i : Iic 0, E ≃ᵐ E` to `ℕ → E`, its coordinates are conditionally
+  independent given the base point with laws `K n`, and `Kernel.trajMeasure μ κ`
+  (`Traj.lean:763`) is the glued measure; `traj_map_frestrictLe` (`:530`)
+  characterises it by its finite-dimensional projections. A product of kernels
+  is the special case of Ionescu–Tulcea in which the kernels do not read the
+  past, and `traj` asks for nothing but `[∀ n, MeasurableSpace (X n)]` and
+  `[∀ n, IsMarkovKernel (κ n)]` — no topology. That specialisation is carried
+  out and proved in `ProbabilityTheory.exists_kernel_pi_of_markov`
+  (`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`).
+
+  The construction below is nevertheless the other one, and the reason is a
+  hypothesis and not an absence. `Measure.condKernel` requires
+  `[StandardBorelSpace Ω] [Nonempty Ω]` on the fibre (variable block at
+  `StandardBorel.lean:77`), so the gluing proves this item for `E` standard
+  Borel, whereas the item is stated for `E` separable — and separable metric
+  does not imply standard Borel. Witness: a non-Borel `A ⊆ ℝ` with the subspace
+  topology is separable metric, and its trace σ-algebra is not standard, since
+  otherwise Lusin–Souslin
+  (`MeasurableSet.image_of_measurable_injOn`,
+  `MeasureTheory/Constructions/Polish/Basic.lean:834`) applied to
+  `Subtype.val : A → ℝ` on `Set.univ` would make `A` Borel in `ℝ`. The
+  construction therefore does **not** glue: it builds all stages at once on
   `(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`, where the first factor carries `Y ∼ μ` and one
   uniform variable per stage, and the second carries one independent draw from
   each conditional law `condLaw (μ n) (A n i)`. `X n` is then
   `z ↦ z.2 (n, G n (j n (Y z), ξ n z))` and the three items above compute its
   law. That is Ethier–Kurtz's Lemma 3.1.3 (p. 100, "Let `X, Y₀, …, Y_N, ξ` be
-  independent random variables …") with `N = ∞`, and it is the reason the
-  milestone never needs `E` Polish.
+  independent random variables …") with `N = ∞`, and it is the reason this item
+  holds under separability alone: its seven ingredients name nothing about `E`
+  beyond `MeasurableSpace E`, so neither `PolishSpace E` nor
+  `StandardBorelSpace E` enters anywhere.
 * The version for a single limit along a filter with a countable basis.
 
 The converse direction is Mathlib's and is not to be rebuilt: almost sure
@@ -1402,6 +1424,22 @@ exactly what an almost surely convergent realisation witnesses.
   atom `π 0 2 = 1/2`. The degenerate neighbour is `p = q`, where `D = 0` and the
   coupling must come out as the diagonal `π i j = if i = j then p i else 0`
   without `0 / 0` ever being evaluated.
+* **Separable, and not standard Borel: the instance that separates the two
+  possible constructions.** Let `A ⊆ ℝ` be non-Borel and `E = A` with the
+  subspace topology — metric, separable, and `BorelSpace` by
+  `Subtype.borelSpace`, hence an admissible instance of
+  `exists_ae_tendsto_of_tendsto`. Being uncountable, `A` has a condensation
+  point in itself, so there are `a n → a` in `A` with `μ n = δ (a n) → δ a = μ`
+  weakly, and the conclusion is witnessed by the constant random variables
+  `X n = a n`, `X = a` on any probability space. Every ingredient of the
+  construction is available over this `E`: the partition of
+  `exists_measurable_partition_diam_le_null_frontier` consumes separability and
+  nothing else, and the randomisation of `map_eval_prod_infinitePi` consumes
+  `MeasurableSpace E` and nothing else. `Measure.condKernel`, by contrast, does
+  not apply here at all, its `[StandardBorelSpace E]` failing by Lusin–Souslin
+  as above. This is therefore the instance on which the two candidate
+  constructions differ, and the reason the item is built from the product and
+  not from disintegration together with `ProbabilityTheory.Kernel.traj`.
 
 ## Milestone 4: uniform integrability against convergence in distribution
 
