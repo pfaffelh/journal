@@ -60,6 +60,41 @@ mitgeschleppt wird — das ist zwar richtig, aber es ist die Aufgabe nicht.
 **Was zählt.** Bewiesene Deklarationen, jede mit `#print axioms` geprüft, und
 bei jeder Abweichung vom obigen Weg ein Satz darüber, warum.
 
+**Zwischenstand nach dem ersten von vieren (2026-09-08, sechzehnter Lauf des
+Tages).** Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-08, sechzehnter Lauf
+des Tages". `SkorokhodSpace/Suggested.lean` steht bei **acht** `sorry` statt elf.
+
+*Punkt 1 ist erledigt, und die Wahl ist die Typklasse.* `class BasePoint (α)
+where basePoint : α`, mit `Real.instBasePoint := ⟨0⟩` und `BasePoint.ofMem` für
+die drei Teilraum-Instanzen. Der Grund gegen `[Nonempty ι]` samt
+`Classical.arbitrary` ist einer und er ist entscheidend: der so gewonnene Punkt
+ist **opak**, `dist f g` auf `D(ℝ, E)` wäre nie mit `totalDist 0 f g` zu
+identifizieren, und damit ließe sich kein einziges der acceptance examples der
+Meilensteine 4 bis 7 überhaupt hinschreiben — sie nennen alle ihren Basispunkt,
+und alle nennen `0`. Mit `BasePoint` ist die Identifikation
+`SkorokhodSpace.dist_eq`, und sie ist `rfl`. `SkorokhodSpace.instMetricSpace`
+hängt an `propext`, `Classical.choice`, `Quot.sound` und an nichts sonst.
+
+*Zwei weitere `sorry` fielen mit.* `SkorokhodSpace.instPolishSpace` ist
+`inferInstance` (Mathlib baut `PolishSpace` aus `SeparableSpace` und einer
+vollständigen Metrik) und schuldet nichts Eigenes mehr. Und `modulus` aus
+Punkt 4 ist **definiert** statt `sorry`, samt `IsSubdivision`,
+`subdivisionOsc`, `modulus_mono` und
+`modulus_eq_zero_of_exhaustion_subsingleton`; die eine Abweichung ist der
+Wertebereich `ℝ≥0∞` statt `ℝ`, begründet im Bericht und an der Deklaration.
+
+*Punkt 2 hat seine erste Sprosse.* `IsCadlag.of_tendstoUniformly` ist bewiesen —
+der gleichmäßige Limes càdlàg-Pfade ist càdlàg, unter `[CompleteSpace E]` —, und
+das ist die Stelle, an der `CompleteSpace D(ι, E)` seinen Grenzpfad auffängt.
+
+*Woran der nächste hängt.* Nicht mehr an der Signatur.
+`CompleteSpace D(ι, E)` steht auf drei benannten Schritten, von denen zwei
+bewiesen sind: `SkorokhodSpace.exists_lt_distOn_add` liefert die Zeitwechsel,
+`TimeChange.tendsto_of_summable_norm` (offen) setzt sie unendlich zusammen,
+`IsCadlag.of_tendstoUniformly` fängt den Limes auf. Der harte Punkt der offenen
+Sprosse ist nicht die Konvergenz, sondern die **Surjektivität** des
+Grenzzeitwechsels.
+
 Zurzeit stehen hier sonst keine offenen Aufgaben.
 
 ### ~~Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$?~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, elfter Lauf des Tages)*
