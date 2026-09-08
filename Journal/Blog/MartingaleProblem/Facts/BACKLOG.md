@@ -298,11 +298,36 @@ kein gebautes Mathlib und taugt zu nichts.
    eine Suche auf `upstream/master`, ob Mathlib die Aussage schon hat;
    Begründung im Laufbericht.*
 
-   *Werkzeugnotiz aus demselben Lauf: die übliche Zählung
+   *Zwischenstand 2026-09-08, zweiter Lauf des Tages: das benannte Ziel
+   `separableSpace_probabilityMeasure` ist **nicht** gefallen, aber die beiden
+   Schätzungen, auf denen es ruht, sind bewiesen und gehen durch
+   `lake env lean`: `levyProkhorovEDist_sum_dirac_le` (die geometrische Hälfte —
+   eine endliche meßbare Zerlegung mit Vertretern im `ε`-Abstand außerhalb einer
+   Menge der Masse `ε` bringt `∑ i, μ (A i) • dirac (y i)` in
+   Lévy--Prokhorov-Abstand `ε`), `levyProkhorovEDist_sum_dirac_weights_le` (die
+   arithmetische — Störung der Gewichte um insgesamt `δ` kostet `δ`) und die
+   Auswertung `sum_smul_dirac_apply`. `WeakConvergence` steht bei **105
+   Deklarationen und 7 `sorry`** (vorher 102 und 7), rc = 1 mit unverändert
+   genau den zwei angekündigten Fehlern, jetzt bei `:2011`. Die vom Vorlauf
+   verlangte Suche ist gelaufen und negativ: Mathlib hat die Separabilität von
+   `ProbabilityMeasure E` auf `upstream/master` `572e4d091bc` nicht, neun
+   Formulierungen im Laufbericht. Der nächste benannte Schritt ist die
+   **Zerlegung** (`exists_finite_partition_ball_of_denseRange`), nicht die
+   rationalen Gewichte; Begründung im Laufbericht.*
+
+   *Werkzeugnotiz aus dem ersten Lauf des 2026-09-08: die übliche Zählung
    `grep -cE "^(theorem|lemma|def|…)"` zählt Fließtextzeilen des Modulkopfes
    mit, die mit `theorem` beginnen. Zweimal an einem Tag hat das eine
    Deklaration zu viel gemeldet; wer die Zahl nennt, prüft sie mit
    `git diff --unified=0 HEAD | grep -E "^\+(theorem|lemma|def|…) "`.*
+
+   *Werkzeugnotiz aus dem zweiten Lauf des 2026-09-08, und sie spart Minuten:
+   neue Beweise gehören in eine **eigene kleine Datei** mit nur den Imports, die
+   sie brauchen — drei Durchläufe von je unter einer Minute gegen minutenlange
+   Durchläufe der 3300-Zeilen-Datei —, und erst der fertige Text wird eingesetzt
+   und einmal im Ganzen geprüft. Die Hilfsdatei geht danach mit
+   `git clean -f <pfad>` weg; `rm` auf einen Pfad im Worktree ist von der
+   Sandbox blockiert, `git clean` nicht.*
 
 2. ~~**`MeasureTheory.induction_on_mulSystem`**, der funktionale
    Monotone-Klassen-Satz (`WeakConvergence` Meilenstein 5, Task 25 in

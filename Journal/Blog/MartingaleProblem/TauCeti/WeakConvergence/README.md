@@ -827,10 +827,60 @@ made on `LevyProkhorov (ProbabilityMeasure E)`, a **topological** one on
   separable. The countable dense set is the finitely supported measures with
   rational masses at points of a countable dense sequence of `E`
   (`TopologicalSpace.exists_dense_seq`); the estimate is run in the
-  Lévy–Prokhorov pseudometric through `probabilityMeasureHomeomorph`, and the
-  partition of `E` into countably many measurable sets of diameter at most `ε`
-  that it needs is `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
-  (`LevyProkhorovMetric.lean:540`). Completeness of `E` is nowhere used.
+  Lévy–Prokhorov pseudometric through `probabilityMeasureHomeomorph`.
+  Completeness of `E` is nowhere used. Mathlib has none of this: searched on
+  `upstream/master` `572e4d091bc` on 2026-09-08 for `SeparableSpace
+  (ProbabilityMeasure`, `SeparableSpace (FiniteMeasure`, `SeparableSpace
+  (LevyProkhorov`, `PolishSpace (ProbabilityMeasure`, `CompleteSpace
+  (LevyProkhorov`, for `SeparableSpace` and `ProbabilityMeasure` in either
+  order on one line, and for `dense` next to `dirac` — no hit; the four files
+  that mention `LevyProkhorov` at all are `FiniteMeasurePi`,
+  `FiniteMeasureProd`, `LevyProkhorovMetric` and `Prokhorov`, and
+  `Measure/DiracProba.lean` embeds `E` into `ProbabilityMeasure E` without
+  saying anything about the target's separability.
+
+  Two estimates carry the proof, and both are **proved** on 2026-09-08, second
+  run, in `Suggested.lean`.
+
+  * `MeasureTheory.levyProkhorovEDist_sum_dirac_le`, the geometric half: for a
+    finite measurable partition `A : Fin n → Set E` of `E`, a set `G` with
+    `μ G ≤ ε`, and points `y i` with `dist z (y i) ≤ ε.toReal` for every
+    `z ∈ A i \ G`, the discrete measure `∑ i, μ (A i) • Measure.dirac (y i)` is
+    at Lévy–Prokhorov distance at most `ε` from `μ`. Neither finiteness of `μ`
+    nor separability of `E` is a hypothesis: the partition is where they will
+    enter. Both inequalities of
+    `MeasureTheory.levyProkhorovEDist_le_of_forall`
+    (`LevyProkhorovMetric.lean:95`) come from the same two facts — off `G`,
+    every point of `B` lies in an `A i` whose representative is then in the
+    thickening of `B`, and conversely the discrete mass of `B` is
+    `μ (⋃ i ∈ {i | y i ∈ B}, A i)` by disjointness, a union that off `G` lies
+    in the thickening of `B`.
+  * `MeasureTheory.levyProkhorovEDist_sum_dirac_weights_le`, the arithmetic
+    half: two discrete measures on the same atoms are Lévy–Prokhorov `δ`-close
+    once their weights satisfy `c i ≤ q i + d i` and `q i ≤ c i + d i` with
+    `∑ i, d i ≤ δ`. The discrepancies appear as a third vector rather than as
+    `|c i - q i|` because truncated subtraction in `ℝ≥0∞` is not worth using;
+    this is the step that replaces the weights `μ (A i)` by rational ones and
+    so makes the family countable.
+
+  What remains is two steps and the bookkeeping. (1) The partition: for `ε > 0`
+  there is an `n` with `μ (⋃ k < n, ball (x k) ε)ᶜ ≤ ε`, those balls increasing
+  to `E` by density of `x` and `μ` being finite; `disjointed` makes them
+  disjoint, and the uncovered remainder is at once the last piece of the
+  partition and the set `G` of the first estimate. Mathlib's
+  `MeasureTheory.SeparableSpace.exists_measurable_partition_diam_le`
+  (`LevyProkhorovMetric.lean:540`) is the same disjointification but *countably*
+  indexed and with the representatives forgotten, which is why the partition is
+  built here rather than taken from there. (2) The rational weights: for
+  `c : Fin n → ℝ≥0∞` with `∑ i, c i = 1`, choose `q i ≤ c i` rational with
+  `c i ≤ q i + δ / n` for `i ≠ 0` and let `q 0` absorb the slack, which keeps
+  the sum equal to `1` and rational. Countability of the resulting family is the
+  image of `Σ n, (Fin n → ℕ) × (Fin n → ℚ≥0)` along
+  `MeasureTheory.ProbabilityMeasure.toMeasure_injective`
+  (`Measure/ProbabilityMeasure.lean:128`). The empty `E` is a separate line and
+  not a hypothesis: `TopologicalSpace.exists_dense_seq` (`Topology/Bases.lean:346`)
+  asks for `[Nonempty E]`, and on an empty `E` there is no probability measure
+  at all, so `ProbabilityMeasure E` is empty and `∅` is dense in it.
 * `MeasureTheory.ProbabilityMeasure.secondCountableTopology`: the item above,
   read on the synonym, where there is a uniformity to argue with —
   `UniformSpace.secondCountable_of_separable`

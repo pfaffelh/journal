@@ -184,6 +184,13 @@ The same run also proved the first point of Milestone 3,
 the relaxed tightness criterion of Milestone 1 in four lines, and weakened that
 criterion's own bundle to `[PseudoMetricSpace E] [CompleteSpace E]`.
 
+The second run of 2026-09-08 proved the two Lévy-Prokhorov estimates that
+`separableSpace_probabilityMeasure` rests on, `levyProkhorovEDist_sum_dirac_le`
+and `levyProkhorovEDist_sum_dirac_weights_le`, together with the evaluation
+lemma `sum_smul_dirac_apply`.  The theorem itself keeps its `sorry`: what is
+still missing is the finite partition into balls around a dense sequence and the
+passage to rational weights, both written out in its doc string.
+
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
 `tendsto_map_of_measure_setOf_continuousAt_eq_one` uses
@@ -2022,6 +2029,147 @@ uniformity, so completeness is stated on the synonym and crosses back as
 in namespace `TopologicalSpace`) along
 `LevyProkhorov.probabilityMeasureHomeomorph` (`ibid.:676`). -/
 
+/-- A finite convex combination of Dirac measures, evaluated on a measurable set.
+
+The bookkeeping lemma under the two Lévy-Prokhorov estimates below.  It is
+stated with `Set.indicator` rather than with a `Finset.filter` over
+`{i | y i ∈ T}` on purpose: the filter needs a `DecidablePred` instance in the
+*statement*, which then has to be matched at every use site, while the
+indicator carries its own case distinction. -/
+theorem sum_smul_dirac_apply {n : ℕ} (w : Fin n → ℝ≥0∞) (y : Fin n → E) {T : Set E}
+    (hT : MeasurableSet T) :
+    (∑ i, w i • Measure.dirac (y i)) T = ∑ i, w i * T.indicator 1 (y i) := by
+  simp [Measure.coe_finsetSum, Measure.dirac_apply' _ hT]
+
+/-- **Rounding a measure onto finitely many atoms.**  If `A` is a finite
+measurable partition of `E`, `G` a set of `μ`-mass at most `ε`, and each `A i`
+lies within `ε` of the point `y i` off `G`, then the discrete measure
+`∑ i, μ (A i) • δ (y i)` is at Lévy-Prokhorov distance at most `ε` from `μ`.
+
+This is the geometric half of `separableSpace_probabilityMeasure`, and it is
+where the separability of `E` will enter: the partition is the
+disjointification of finitely many balls of radius `ε` around a dense sequence,
+and `G` is what those balls fail to cover.
+
+Both inequalities of `levyProkhorovEDist_le_of_forall` come out of the same two
+observations, and neither needs `μ` to be finite.  For `μ B`: off `G` every
+point of `B` lies in some `A i`, whose representative `y i` is then in the
+`c`-thickening of `B`, so `B \ G` is covered by those `A i` whose weight the
+discrete measure already puts inside the thickening.  For the discrete measure
+of `B`: its mass on `B` is `μ (⋃ i ∈ {i | y i ∈ B}, A i)` by disjointness, and
+off `G` that union lies in the thickening of `B`.  The mass of `G` is the `ε`
+of the estimate on both sides. -/
+theorem levyProkhorovEDist_sum_dirac_le [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    {μ : Measure E} {n : ℕ} {A : Fin n → Set E} {y : Fin n → E}
+    (hA : ∀ i, MeasurableSet (A i)) (hdisj : Pairwise (Function.onFun Disjoint A))
+    (hcover : (⋃ i, A i) = univ)
+    {G : Set E} {ε : ℝ≥0∞} (hεG : μ G ≤ ε)
+    (hd : ∀ i, ∀ z ∈ A i \ G, dist z (y i) ≤ ε.toReal) :
+    levyProkhorovEDist μ (∑ i, μ (A i) • Measure.dirac (y i)) ≤ ε := by
+  classical
+  refine levyProkhorovEDist_le_of_forall _ _ _ fun c B hc hc' hB => ?_
+  have hεtop : ε ≠ ∞ := (hc.trans hc').ne
+  have hlt : ε.toReal < c.toReal := (ENNReal.toReal_lt_toReal hεtop hc'.ne).2 hc
+  have hthick : MeasurableSet (Metric.thickening c.toReal B) :=
+    Metric.isOpen_thickening.measurableSet
+  have heq : ∀ T : Set E, MeasurableSet T →
+      (∑ i, μ (A i) • Measure.dirac (y i)) T
+        = μ (⋃ i ∈ Finset.univ.filter (fun i => y i ∈ T), A i) := by
+    intro T hT
+    rw [sum_smul_dirac_apply _ _ hT,
+      measure_biUnion_finset (fun i _ j _ hij => hdisj hij) (fun i _ => hA i), Finset.sum_filter]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    by_cases h : y i ∈ T <;> simp [h]
+  constructor
+  · have h1 : μ B ≤ μ (B \ G) + μ G :=
+      (measure_mono (Set.subset_sdiff_union B G)).trans (measure_union_le _ _)
+    have hsub : B \ G ⊆
+        ⋃ i ∈ Finset.univ.filter (fun i => y i ∈ Metric.thickening c.toReal B), A i := by
+      intro z hz
+      obtain ⟨i, hi⟩ : ∃ i, z ∈ A i := by
+        have hz' : z ∈ (⋃ i, A i) := hcover ▸ mem_univ z
+        simpa using hz'
+      refine Set.mem_biUnion (Finset.mem_filter.2 ⟨Finset.mem_univ _, ?_⟩) hi
+      refine Metric.mem_thickening_iff.2 ⟨z, hz.1, ?_⟩
+      calc dist (y i) z = dist z (y i) := dist_comm _ _
+        _ ≤ ε.toReal := hd i z ⟨hi, hz.2⟩
+        _ < c.toReal := hlt
+    rw [heq _ hthick]
+    exact h1.trans (add_le_add (measure_mono hsub) (hεG.trans hc.le))
+  · rw [heq _ hB]
+    set U := ⋃ i ∈ Finset.univ.filter (fun i => y i ∈ B), A i with hU
+    have h1 : μ U ≤ μ (U \ G) + μ G :=
+      (measure_mono (Set.subset_sdiff_union U G)).trans (measure_union_le _ _)
+    have hsub2 : U \ G ⊆ Metric.thickening c.toReal B := by
+      rintro z ⟨hz, hzG⟩
+      rw [hU] at hz
+      simp only [Set.mem_iUnion, Finset.mem_filter, Finset.mem_univ, true_and,
+        exists_prop] at hz
+      obtain ⟨i, hyi, hzi⟩ := hz
+      exact Metric.mem_thickening_iff.2 ⟨y i, hyi, lt_of_le_of_lt (hd i z ⟨hzi, hzG⟩) hlt⟩
+    exact h1.trans (add_le_add (measure_mono hsub2) (hεG.trans hc.le))
+
+/-- **Perturbing the weights of finitely many atoms.**  Two discrete measures
+on the same atoms are Lévy-Prokhorov close as soon as their weights differ, atom
+by atom, by amounts of small total.
+
+This is the arithmetic half of `separableSpace_probabilityMeasure`: it is what
+turns the weights `μ (A i)` of `levyProkhorovEDist_sum_dirac_le`, which are
+arbitrary reals, into rational ones, and so a countable family.  The
+discrepancies are given as a third vector `d` rather than as `|c i - q i|`
+because `ℝ≥0∞` has no subtraction worth using; `c i ≤ q i + d i` and
+`q i ≤ c i + d i` say the same thing without one. -/
+theorem levyProkhorovEDist_sum_dirac_weights_le [PseudoMetricSpace E] [OpensMeasurableSpace E]
+    {n : ℕ} {y : Fin n → E} {c q d : Fin n → ℝ≥0∞} {δ : ℝ≥0∞}
+    (hcq : ∀ i, c i ≤ q i + d i) (hqc : ∀ i, q i ≤ c i + d i) (hd : ∑ i, d i ≤ δ) :
+    levyProkhorovEDist (∑ i, c i • Measure.dirac (y i))
+      (∑ i, q i • Measure.dirac (y i)) ≤ δ := by
+  refine levyProkhorovEDist_le_of_forall _ _ _ fun e B he he' hB => ?_
+  have hthick : MeasurableSet (Metric.thickening e.toReal B) :=
+    Metric.isOpen_thickening.measurableSet
+  have hepos : 0 < e.toReal := ENNReal.toReal_pos (pos_of_gt he).ne' he'.ne
+  have hBsub : B ⊆ Metric.thickening e.toReal B := Metric.self_subset_thickening hepos B
+  have key : ∀ v w : Fin n → ℝ≥0∞, (∀ i, v i ≤ w i + d i) →
+      (∑ i, v i • Measure.dirac (y i)) B
+        ≤ (∑ i, w i • Measure.dirac (y i)) (Metric.thickening e.toReal B) + e := by
+    intro v w hvw
+    rw [sum_smul_dirac_apply _ _ hB, sum_smul_dirac_apply _ _ hthick]
+    have pt : ∀ i, v i * B.indicator (1 : E → ℝ≥0∞) (y i)
+        ≤ w i * (Metric.thickening e.toReal B).indicator 1 (y i) + d i := by
+      intro i
+      by_cases h : y i ∈ B
+      · simp only [Set.indicator_of_mem h, Set.indicator_of_mem (hBsub h), Pi.one_apply, mul_one]
+        exact hvw i
+      · simp [h]
+    calc ∑ i, v i * B.indicator 1 (y i)
+        ≤ ∑ i, (w i * (Metric.thickening e.toReal B).indicator 1 (y i) + d i) :=
+          Finset.sum_le_sum fun i _ => pt i
+      _ = (∑ i, w i * (Metric.thickening e.toReal B).indicator 1 (y i)) + ∑ i, d i :=
+          Finset.sum_add_distrib
+      _ ≤ (∑ i, w i * (Metric.thickening e.toReal B).indicator 1 (y i)) + e :=
+          add_le_add le_rfl (hd.trans he.le)
+  exact ⟨key c q hcq, key q c hqc⟩
+
+/-- The laws on a separable metric space form a separable space.
+
+The countable dense family is the one the two estimates above are built for:
+the measures `∑ i, (q i : ℝ≥0∞) • δ (x (m i))` with `q : Fin n → ℚ≥0` summing to
+`1` and `x : ℕ → E` a dense sequence.  Countability is the image of the
+countable type `Σ n, (Fin n → ℕ) × (Fin n → ℚ≥0)`, along the injective
+coercion `ProbabilityMeasure.toMeasure_injective`.  Density is
+`levyProkhorovEDist_sum_dirac_le` followed by
+`levyProkhorovEDist_sum_dirac_weights_le`, transported to the topology of
+convergence in distribution along `LevyProkhorov.probabilityMeasureHomeomorph`
+(`Measure/LevyProkhorovMetric.lean:676`).
+
+Two steps are left, both named.  (1) The partition: for `ε > 0` there is an `n`
+with `μ (⋃ k < n, ball (x k) ε)ᶜ ≤ ε`, because those balls increase to `E` by
+density and `μ` is finite (`tendsto_measure_iUnion_atTop`); `disjointed` makes
+them disjoint, and the complement becomes the last piece and the set `G` of
+`levyProkhorovEDist_sum_dirac_le` at once.  (2) The rational weights: given
+`c : Fin n → ℝ≥0∞` with `∑ c i = 1`, pick `q i ≤ c i` rational with
+`c i ≤ q i + δ/n` for `i ≠ 0` and let `q 0` take up the slack, which keeps
+`∑ q i = 1` and rational and bounds every discrepancy by `δ`. -/
 theorem separableSpace_probabilityMeasure [PseudoMetricSpace E] [OpensMeasurableSpace E]
     [TopologicalSpace.SeparableSpace E] :
     TopologicalSpace.SeparableSpace (ProbabilityMeasure E) := sorry
