@@ -281,10 +281,20 @@ Since 2026-09-08, eleventh run, Milestone 6 has its hinge:
 `measurableSet_of_continuous_injective` -- a measurable injection carries a
 measurable image back to a measurable set -- together with the metric of
 convergence in measure on `MeasureTheory.AEEqFun`, `distInMeasure`, and
-`distInMeasure_nonneg`, `distInMeasure_comm`, `distInMeasure_self`.  All five
-theorems are proved and depend on no axiom beyond `propext`, `Classical.choice`
-and `Quot.sound`; the remaining five declarations of the milestone are
-statements carrying their own `sorry`.  The hinge is what makes the càdlàg paths
+`distInMeasure_nonneg`, `distInMeasure_comm`, `distInMeasure_self`.  Since
+2026-09-08, twelfth run, the metric itself is built: `distInMeasure_triangle`,
+`distInMeasure_eq_zero_iff`, `tendsto_iff_tendstoInMeasure` and
+`exists_tendsto_distInMeasure_of_cauchy` are proved, and with them the instances
+`instDist`, `metricSpace` and `completeSpace` and the topological form
+`tendsto_nhds_iff_tendstoInMeasure`.  `SecondCountableTopology E` was a
+hypothesis of `distInMeasure` until that run and is gone: no proof uses it, the
+coercion of an a.e.-class being *strongly* measurable
+(`AEEqFun.stronglyMeasurable`) already.  Everything named here is proved and
+depends on no axiom beyond `propext`, `Classical.choice` and `Quot.sound`; the
+one remaining declaration of the milestone,
+`exists_countable_dense_distInMeasure`, is a statement carrying its own `sorry`
+-- it is separability, the point Kurtz leaves to the reader.  The hinge is what
+makes the càdlàg paths
 a Borel subset of Kurtz' space `M_E [0, ∞)`, and with it the Skorokhod
 representation of Milestone 3 is consumed for **Polish** spaces only.
 
@@ -5333,14 +5343,45 @@ variable {E : Type*} [MetricSpace E]
 (1991), Section 4, whose instance on `ℝ≥0` with `μ (dt) = e ^ (-t) dt` is the
 space `M_E [0, ∞)`.  The truncation at `1` is what makes the integral finite
 without an integrability hypothesis. -/
-noncomputable def distInMeasure [SecondCountableTopology E]
-    (f g : α →ₘ[μ] E) : ℝ :=
+noncomputable def distInMeasure (f g : α →ₘ[μ] E) : ℝ :=
   ∫ a, min 1 (dist (f a) (g a)) ∂μ
-
-variable [SecondCountableTopology E]
 
 theorem distInMeasure_nonneg (f g : α →ₘ[μ] E) : 0 ≤ distInMeasure f g :=
   integral_nonneg fun _ => le_min zero_le_one dist_nonneg
+
+/-- The coercion of an a.e.-class is strongly measurable, not merely a.e. strongly
+measurable (`AEEqFun.stronglyMeasurable`), so the sets `{a | ε ≤ dist (f a) (g a)}`
+that carry the whole argument are honestly measurable. -/
+theorem measurable_dist_coeFn (f g : α →ₘ[μ] E) :
+    Measurable fun a => dist (f a) (g a) :=
+  (f.stronglyMeasurable.dist g.stronglyMeasurable).measurable
+
+/-- The truncation at `1` is what makes the integrand integrable with no hypothesis
+on `f` and `g` beyond measurability; finiteness of `μ` is what makes the constant `1`
+integrable. -/
+theorem integrable_min_one_dist [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) :
+    _root_.MeasureTheory.Integrable (fun a => min 1 (dist (f a) (g a))) μ := by
+  refine _root_.MeasureTheory.Integrable.mono' (integrable_const (1 : ℝ)) ?_ ?_
+  · exact (continuous_const.min continuous_id).comp_aestronglyMeasurable
+      (f.aestronglyMeasurable.dist g.aestronglyMeasurable)
+  · filter_upwards with a
+    rw [Real.norm_eq_abs, abs_of_nonneg (le_min zero_le_one dist_nonneg)]
+    exact min_le_left _ _
+
+/-- Subadditivity of `min 1` on the nonnegative reals, the pointwise content of the
+triangle inequality. -/
+private theorem min_one_add_le (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    min 1 (a + b) ≤ min 1 a + min 1 b := by
+  rcases le_total 1 a with h | h
+  · calc min 1 (a + b) ≤ 1 := min_le_left _ _
+      _ = min 1 a := (min_eq_left h).symm
+      _ ≤ min 1 a + min 1 b := le_add_of_nonneg_right (le_min zero_le_one hb)
+  rcases le_total 1 b with h' | h'
+  · calc min 1 (a + b) ≤ 1 := min_le_left _ _
+      _ = min 1 b := (min_eq_left h').symm
+      _ ≤ min 1 a + min 1 b := le_add_of_nonneg_left (le_min zero_le_one ha)
+  · rw [min_eq_right h, min_eq_right h']
+    exact min_le_right _ _
 
 theorem distInMeasure_comm (f g : α →ₘ[μ] E) :
     distInMeasure f g = distInMeasure g f := by
@@ -5354,14 +5395,50 @@ reals, followed by monotonicity of the integral; no property of `μ` beyond
 finiteness enters. -/
 theorem distInMeasure_triangle [IsFiniteMeasure μ] (f g h : α →ₘ[μ] E) :
     distInMeasure f h ≤ distInMeasure f g + distInMeasure g h := by
-  sorry
+  rw [distInMeasure, distInMeasure, distInMeasure,
+    ← integral_add (integrable_min_one_dist f g) (integrable_min_one_dist g h)]
+  refine integral_mono (integrable_min_one_dist f h)
+    ((integrable_min_one_dist f g).add (integrable_min_one_dist g h)) fun a => ?_
+  exact le_trans (min_le_min le_rfl (dist_triangle (f a) (g a) (h a)))
+    (min_one_add_le _ _ dist_nonneg dist_nonneg)
 
 /-- The separation.  A nonnegative integrable function with vanishing integral is
 a.e. zero, so `f` and `g` agree a.e., so they agree in the quotient.  This is the
 one place where `E` must be a metric and not a pseudometric space. -/
 theorem distInMeasure_eq_zero_iff [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) :
     distInMeasure f g = 0 ↔ f = g := by
-  sorry
+  refine ⟨fun h => ?_, fun h => by subst h; simp [distInMeasure]⟩
+  rw [distInMeasure, integral_eq_zero_iff_of_nonneg
+    (fun a => le_min zero_le_one dist_nonneg) (integrable_min_one_dist f g)] at h
+  refine AEEqFun.ext ?_
+  filter_upwards [h] with a ha
+  have hmin : min 1 (dist (f a) (g a)) = 0 := ha
+  rcases min_eq_iff.mp hmin with ⟨h1, _⟩ | ⟨h2, _⟩
+  · exact absurd h1 one_ne_zero
+  · exact dist_eq_zero.mp h2
+
+/-- The elementary estimate that splits the truncated integral at the level `ε`:
+below `ε` the integrand is at most `ε`, above it at most `1`.  It is the half of
+`tendsto_iff_tendstoInMeasure` that does not go through Markov's inequality. -/
+theorem distInMeasure_le_add [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) {ε : ℝ} (hε : 0 ≤ ε) :
+    distInMeasure f g ≤ ε * μ.real Set.univ + μ.real {a | ε ≤ dist (f a) (g a)} := by
+  have hS : MeasurableSet {a | ε ≤ dist (f a) (g a)} :=
+    measurableSet_le measurable_const (measurable_dist_coeFn f g)
+  have hint : _root_.MeasureTheory.Integrable
+      (fun a => ε + Set.indicator {a | ε ≤ dist (f a) (g a)} (fun _ => (1 : ℝ)) a) μ :=
+    (integrable_const ε).add ((integrable_const (1 : ℝ)).indicator hS)
+  calc distInMeasure f g
+      ≤ ∫ a, (ε + Set.indicator {a | ε ≤ dist (f a) (g a)} (fun _ => (1 : ℝ)) a) ∂μ := by
+        refine integral_mono (integrable_min_one_dist f g) hint fun a => ?_
+        by_cases ha : a ∈ {a | ε ≤ dist (f a) (g a)}
+        · rw [Set.indicator_of_mem ha]
+          exact le_trans (min_le_left _ _) (by linarith)
+        · rw [Set.indicator_of_notMem ha, add_zero]
+          exact le_trans (min_le_right _ _) (le_of_not_ge ha)
+    _ = ε * μ.real Set.univ + μ.real {a | ε ≤ dist (f a) (g a)} := by
+        rw [integral_add (integrable_const ε) ((integrable_const (1 : ℝ)).indicator hS),
+          integral_const, integral_indicator_const (1 : ℝ) hS]
+        simp [mul_comm]
 
 /-- The statement that names the metric correctly: `distInMeasure` metrizes
 Mathlib's `TendstoInMeasure`.  This is the point of contact with the manuscript's
@@ -5371,7 +5448,45 @@ theorem tendsto_iff_tendstoInMeasure [IsFiniteMeasure μ] {ι : Type*} {l : Filt
     (f : ι → (α →ₘ[μ] E)) (g : α →ₘ[μ] E) :
     Filter.Tendsto (fun i => distInMeasure (f i) g) l (nhds 0) ↔
       TendstoInMeasure μ (fun i a => f i a) l (fun a => g a) := by
-  sorry
+  constructor
+  · intro h
+    refine tendstoInMeasure_iff_measureReal_dist.mpr fun ε hε => ?_
+    set c : ℝ := min 1 ε with hc_def
+    have hc : 0 < c := lt_min zero_lt_one hε
+    refine squeeze_zero (fun i => measureReal_nonneg) (fun i => ?_)
+      (by simpa using h.div_const c)
+    have hsub : {a | ε ≤ dist (f i a) (g a)} ⊆ {a | c ≤ min 1 (dist (f i a) (g a))} := by
+      intro a ha
+      simp only [Set.mem_ofPred_eq] at ha ⊢
+      exact min_le_min le_rfl ha
+    have hmono : μ.real {a | ε ≤ dist (f i a) (g a)}
+        ≤ μ.real {a | c ≤ min 1 (dist (f i a) (g a))} :=
+      measureReal_mono hsub (measure_ne_top _ _)
+    have hmarkov := mul_meas_ge_le_integral_of_nonneg
+      (Eventually.of_forall fun a => le_min zero_le_one (dist_nonneg (x := f i a) (y := g a)))
+      (integrable_min_one_dist (f i) g) c
+    rw [le_div_iff₀ hc, mul_comm]
+    exact le_trans (by gcongr) hmarkov
+  · intro h
+    refine NormedAddGroup.tendsto_nhds_zero.mpr fun δ hδ => ?_
+    have hm : (0 : ℝ) ≤ μ.real Set.univ := measureReal_nonneg
+    set c : ℝ := δ / (2 * (μ.real Set.univ + 1)) with hc_def
+    have hc : 0 < c := by positivity
+    have hcm : c * μ.real Set.univ < δ / 2 := by
+      rw [hc_def, div_mul_eq_mul_div, div_lt_div_iff₀ (by linarith) (by norm_num)]
+      nlinarith
+    have h2 := (NormedAddGroup.tendsto_nhds_zero.mp
+      (tendstoInMeasure_iff_measureReal_dist.mp h c hc)) (δ / 2) (by linarith)
+    filter_upwards [h2] with i hi
+    rw [Real.norm_eq_abs, abs_of_nonneg (distInMeasure_nonneg _ _)]
+    have hi' : μ.real {a | c ≤ dist (f i a) (g a)} < δ / 2 := by
+      rw [Real.norm_eq_abs, abs_of_nonneg measureReal_nonneg] at hi
+      exact hi
+    calc distInMeasure (f i) g
+        ≤ c * μ.real Set.univ + μ.real {a | c ≤ dist (f i a) (g a)} :=
+          distInMeasure_le_add (f i) g hc.le
+      _ < δ / 2 + δ / 2 := by linarith
+      _ = δ := by ring
 
 /-- Completeness, after Kurtz (1991), (4.2)--(4.4): from a Cauchy sequence select a
 subsequence with summable successive distances, take the pointwise limit on the
@@ -5380,7 +5495,131 @@ theorem exists_tendsto_distInMeasure_of_cauchy [IsFiniteMeasure μ] [CompleteSpa
     (f : ℕ → (α →ₘ[μ] E))
     (hf : ∀ ε > 0, ∃ N, ∀ m ≥ N, ∀ n ≥ N, distInMeasure (f m) (f n) < ε) :
     ∃ g : α →ₘ[μ] E, Filter.Tendsto (fun n => distInMeasure (f n) g) Filter.atTop (nhds 0) := by
-  sorry
+  classical
+  choose N hN using fun k : ℕ => hf ((1 / 2 : ℝ) ^ k) (by positivity)
+  let ns : ℕ → ℕ := fun k =>
+    Nat.rec (motive := fun _ => ℕ) (N 0) (fun j ih => max (N (j + 1)) (ih + 1)) k
+  have hns_succ : ∀ k, ns (k + 1) = max (N (k + 1)) (ns k + 1) := fun _ => rfl
+  have hns_mono : StrictMono ns := strictMono_nat_of_lt_succ fun k => by
+    rw [hns_succ]
+    exact lt_of_lt_of_le (Nat.lt_succ_self _) (le_max_right _ _)
+  have hns_ge : ∀ k, N k ≤ ns k := by
+    intro k
+    cases k with
+    | zero => exact le_rfl
+    | succ k => rw [hns_succ]; exact le_max_left _ _
+  have hd : ∀ k, distInMeasure (f (ns k)) (f (ns (k + 1))) < (1 / 2 : ℝ) ^ k := fun k =>
+    hN k _ (hns_ge k) _ (le_trans (hns_ge k) (hns_mono (Nat.lt_succ_self k)).le)
+  have hsummable : Summable fun k => distInMeasure (f (ns k)) (f (ns (k + 1))) :=
+    Summable.of_nonneg_of_le (fun k => distInMeasure_nonneg _ _) (fun k => (hd k).le)
+      (summable_geometric_of_lt_one (by norm_num) (by norm_num))
+  set F : ℕ → α → E := fun k => (f (ns k) : α → E) with hF_def
+  have hmeas : ∀ k, Measurable fun a => min 1 (dist (F k a) (F (k + 1) a)) := fun k =>
+    measurable_const.min (measurable_dist_coeFn (f (ns k)) (f (ns (k + 1))))
+  have hlint : ∀ k, ∫⁻ a, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) ∂μ
+      = ENNReal.ofReal (distInMeasure (f (ns k)) (f (ns (k + 1)))) := fun k =>
+    (ofReal_integral_eq_lintegral_ofReal (integrable_min_one_dist _ _)
+      (Eventually.of_forall fun a => le_min zero_le_one dist_nonneg)).symm
+  have htsum : ∫⁻ a, ∑' k, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) ∂μ ≠ ⊤ := by
+    rw [lintegral_tsum fun k => ((hmeas k).ennreal_ofReal).aemeasurable]
+    simp_rw [hlint]
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun k => distInMeasure_nonneg _ _) hsummable]
+    exact ENNReal.ofReal_ne_top
+  have hmtsum : Measurable fun a => ∑' k, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) := by
+    simp_rw [ENNReal.tsum_eq_iSup_sum]
+    exact Measurable.iSup fun s => s.measurable_fun_sum fun k _ => (hmeas k).ennreal_ofReal
+  have hae : ∀ᵐ a ∂μ, ∑' k, ENNReal.ofReal (min 1 (dist (F k a) (F (k + 1) a))) < ⊤ :=
+    ae_lt_top hmtsum htsum
+  have hcauchy : ∀ᵐ a ∂μ, ∃ l, Filter.Tendsto (fun k => F k a) Filter.atTop (nhds l) := by
+    filter_upwards [hae] with a ha
+    have hs : Summable fun k => min 1 (dist (F k a) (F (k + 1) a)) := by
+      refine (ENNReal.summable_toReal ha.ne).congr fun k => ?_
+      exact ENNReal.toReal_ofReal (le_min zero_le_one dist_nonneg)
+    have h0 : Filter.Tendsto (fun k => min 1 (dist (F k a) (F (k + 1) a)))
+        Filter.atTop (nhds 0) := hs.tendsto_atTop_zero
+    obtain ⟨K, hK⟩ := Filter.eventually_atTop.mp (h0.eventually_lt_const zero_lt_one)
+    have hs' : Summable fun k => dist (F k a) (F (k + 1) a) := by
+      rw [← summable_nat_add_iff K]
+      refine ((summable_nat_add_iff K).mpr hs).congr fun k => ?_
+      have hk := hK (k + K) (Nat.le_add_left K k)
+      have hlt : dist (F (k + K) a) (F (k + K + 1) a) < 1 := by
+        rcases min_lt_iff.mp hk with h | h
+        · exact absurd h (lt_irrefl 1)
+        · exact h
+      exact min_eq_right hlt.le
+    exact cauchySeq_tendsto_of_complete (cauchySeq_of_summable_dist hs')
+  set G : α → E := fun a =>
+    if h : ∃ l, Filter.Tendsto (fun k => F k a) Filter.atTop (nhds l) then h.choose else F 0 a
+    with hG_def
+  have hGlim : ∀ᵐ a ∂μ, Filter.Tendsto (fun k => F k a) Filter.atTop (nhds (G a)) := by
+    filter_upwards [hcauchy] with a ha
+    rw [hG_def]
+    simp only [dif_pos ha]
+    exact ha.choose_spec
+  have hGmeas : AEStronglyMeasurable G μ :=
+    aestronglyMeasurable_of_tendsto_ae Filter.atTop
+      (fun k => (f (ns k)).aestronglyMeasurable) hGlim
+  refine ⟨AEEqFun.mk G hGmeas, ?_⟩
+  have hTIM : TendstoInMeasure μ F Filter.atTop fun a => (AEEqFun.mk G hGmeas : α →ₘ[μ] E) a :=
+    TendstoInMeasure.congr_right (AEEqFun.coeFn_mk G hGmeas).symm
+      (tendstoInMeasure_of_tendsto_ae (fun k => (f (ns k)).aestronglyMeasurable) hGlim)
+  have hsub : Filter.Tendsto (fun k => distInMeasure (f (ns k)) (AEEqFun.mk G hGmeas))
+      Filter.atTop (nhds 0) :=
+    (tendsto_iff_tendstoInMeasure (fun k => f (ns k)) (AEEqFun.mk G hGmeas)).mpr hTIM
+  refine NormedAddGroup.tendsto_nhds_zero.mpr fun δ hδ => ?_
+  obtain ⟨N₀, hN₀⟩ := hf (δ / 2) (by linarith)
+  obtain ⟨K, hK⟩ := Filter.eventually_atTop.mp (NormedAddGroup.tendsto_nhds_zero.mp hsub (δ / 2)
+    (by linarith))
+  obtain ⟨k, hk1, hk2⟩ : ∃ k, K ≤ k ∧ N₀ ≤ ns k :=
+    ⟨max K N₀, le_max_left _ _, le_trans (le_max_right _ _) hns_mono.le_apply⟩
+  have hkG : distInMeasure (f (ns k)) (AEEqFun.mk G hGmeas) < δ / 2 := by
+    have := hK k hk1
+    rwa [Real.norm_eq_abs, abs_of_nonneg (distInMeasure_nonneg _ _)] at this
+  filter_upwards [Filter.eventually_ge_atTop N₀] with m hm
+  rw [Real.norm_eq_abs, abs_of_nonneg (distInMeasure_nonneg _ _)]
+  calc distInMeasure (f m) (AEEqFun.mk G hGmeas)
+      ≤ distInMeasure (f m) (f (ns k)) + distInMeasure (f (ns k)) (AEEqFun.mk G hGmeas) :=
+        distInMeasure_triangle _ _ _
+    _ < δ / 2 + δ / 2 := by
+        have := hN₀ m hm (ns k) hk2
+        linarith
+    _ = δ := by ring
+
+/-- The metric of convergence in measure as a `Dist` instance.  Nothing is shadowed:
+Mathlib's competing metrics of a.e.-classes live on `MeasureTheory.Lp`, a different
+type (`LpSpace/Basic.lean:223`), and `α →ₘ[μ] E` itself carries no distance. -/
+noncomputable instance instDist [IsFiniteMeasure μ] : Dist (α →ₘ[μ] E) where
+  dist := distInMeasure
+
+theorem dist_eq_distInMeasure [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) :
+    dist f g = distInMeasure f g := rfl
+
+/-- The three axioms are `distInMeasure_self`, `distInMeasure_comm`,
+`distInMeasure_triangle` and `distInMeasure_eq_zero_iff`; the last is the one that
+needs `E` to be a metric and not a pseudometric space. -/
+noncomputable instance metricSpace [IsFiniteMeasure μ] : MetricSpace (α →ₘ[μ] E) where
+  dist_self := distInMeasure_self
+  dist_comm := distInMeasure_comm
+  dist_triangle := distInMeasure_triangle
+  eq_of_dist_eq_zero := fun {f g} h => (distInMeasure_eq_zero_iff f g).mp h
+
+/-- The statement that names the topology, not merely the numbers: convergence in
+`α →ₘ[μ] E` is `TendstoInMeasure`.  This is the point of contact with the
+manuscript's `fact:pseudopath`(i). -/
+theorem tendsto_nhds_iff_tendstoInMeasure [IsFiniteMeasure μ] {ι : Type*} {l : Filter ι}
+    (f : ι → (α →ₘ[μ] E)) (g : α →ₘ[μ] E) :
+    Filter.Tendsto f l (nhds g) ↔
+      TendstoInMeasure μ (fun i a => f i a) l (fun a => g a) := by
+  rw [tendsto_iff_dist_tendsto_zero]
+  exact tendsto_iff_tendstoInMeasure f g
+
+/-- Completeness as an instance. -/
+instance completeSpace [IsFiniteMeasure μ] [CompleteSpace E] :
+    CompleteSpace (α →ₘ[μ] E) := by
+  refine Metric.complete_of_cauchySeq_tendsto fun u hu => ?_
+  obtain ⟨g, hg⟩ := exists_tendsto_distInMeasure_of_cauchy u fun ε hε =>
+    Metric.cauchySeq_iff.mp hu ε hε
+  exact ⟨g, tendsto_iff_dist_tendsto_zero.mpr hg⟩
 
 /-- Separability.  The countable dense family is the classes of the countably valued
 functions built from a countable measure-dense family of measurable sets and a

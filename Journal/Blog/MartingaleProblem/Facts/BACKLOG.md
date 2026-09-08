@@ -23,7 +23,21 @@ Arbeitsverzeichnis der Shell bleibt zwischen Werkzeugaufrufen stehen; wer den
 ein eigenes Mathlib zu klonen. Am 2026-09-06 ist genau das passiert und hat
 `/home/pfaffelh/Code/lean/journal-facts/.lake` angelegt — 671 MB
 halbfertiger Paketklone, die der Lauf nicht wieder löschen durfte (die
-Sandbox verbietet `rm` dort). **Der Ordner ist unbrauchbar und gehört
+Sandbox verbietet `rm` dort). **Am 2026-09-08, zwölfter Lauf, ist es ein
+zweites Mal passiert**, diesmal aus dem Mathlib-Verzeichnis heraus (ein `cd` in
+einem vorangegangenen `grep` blieb stehen): `lake` hat acht Pakete nach
+`~/Code/lean/journal/.lake/packages/mathlib/.lake/packages/` geklont, 57 MB, und
+die Sandbox verbietet das `rm` auch dort. Die Lehre ist dieselbe und schärfer:
+**jeder Werkzeugaufruf beginnt mit seinem eigenen `cd`**, auch der harmlose
+`grep`, denn das Arbeitsverzeichnis des vorigen ist noch da. Und die zweite Hälfte derselben
+Lehre, im selben Lauf teuer gelernt: **in Skripten stehen absolute Pfade**. Ein
+`python3`-Einzeiler mit dem relativen Pfad `Journal/Blog/…/INVENTAR.md` lief
+nach einem `cd ~/Code/lean/journal` gegen die **Inventardatei des
+Hauptcheckouts** statt gegen die des Worktrees — hier folgenlos, weil das Skript
+nichts zu ersetzen fand und die Datei byteweise gleich zurückschrieb
+(`git status` im Hauptcheckout blieb leer), aber der nächste Fall dieser Art
+schreibt außerhalb des Branches. Die beiden Inventare haben verschiedene Längen;
+das ist die billigste Probe, ob man die richtige Datei vor sich hat. **Der Ordner ist unbrauchbar und gehört
 gelöscht**; solange er dasteht, ist die Notiz „der Worktree hat kein `.lake`"
 im Auftrag irreführend, aber weiterhin praktisch richtig: dieses `.lake` hat
 kein gebautes Mathlib und taugt zu nichts.
@@ -160,6 +174,18 @@ kein gebautes Mathlib und taugt zu nichts.
    Kopplung auf dem Produktraum, in drei benannten Stücken (b1)–(b3) im
    Laufbericht im Inventar; ihr Bauplan ist im selben Lauf berichtigt worden,
    weil er auf `((0,1], Lebesgue)` allein nicht durchgeht.*
+
+   *Zwischenstand 2026-09-08, zwölfter Lauf des Tages: `WeakConvergence` steht bei
+   **168 Deklarationen und drei `sorry`** (gemessen am Übersetzerlauf; dazu
+   unverändert die zwei bekannten Fehler bei `:2125` aus dem Versionsgrund).
+   Gefallen sind die vier `sorry` von Meilenstein 6 — `distInMeasure_triangle`,
+   `distInMeasure_eq_zero_iff`, `tendsto_iff_tendstoInMeasure` und
+   `exists_tendsto_distInMeasure_of_cauchy` —, dazu drei neue bewiesene
+   Hilfssätze. Übrig sind `exists_ae_tendsto_of_tendsto` (Meilenstein 3),
+   `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` (Meilenstein 4) und
+   `exists_countable_dense_distInMeasure` (Meilenstein 6, die Separabilität von
+   $M_E$). Der nächste benannte Schritt in dieser Datei ist die letzte davon; die
+   Begründung steht im Laufbericht im Inventar.*
 
    *Zwischenstand 2026-09-08, siebter Lauf des Tages: `WeakConvergence` steht
    weiterhin bei **zwei** `sorry` und denselben zwei bekannten Fehlern, aber die

@@ -1868,45 +1868,64 @@ what makes the integral finite without an integrability hypothesis; it is the
 same device as `ENNReal.ofReal` in the Lévy–Prokhorov distance, and any bounded
 metric equivalent to `dist` gives the same topology.
 
-* `MeasureTheory.AEEqFun.distInMeasure`, for `[PseudoMetricSpace E]` and
+* `MeasureTheory.AEEqFun.distInMeasure`, for `[MetricSpace E]` and
   `[IsFiniteMeasure μ]`, defined as `∫ a, min 1 (dist (f a) (g a)) ∂μ` and
   well-defined on classes because the integrand changes on a null set only, with
-  `distInMeasure_le_one`, `distInMeasure_nonneg`, `distInMeasure_comm`,
-  `distInMeasure_self`, and the `Dist (α →ₘ[μ] E)` instance. The integrand is
-  a.e. strongly measurable as `AEEqFun.comp₂` of `min 1 ∘ dist`, which is
-  continuous, and bounded by `1`, hence integrable for `μ` finite.
-* `MeasureTheory.AEEqFun.distInMeasure_triangle` and the
-  `PseudoMetricSpace (α →ₘ[μ] E)` instance. The triangle inequality is
-  pointwise — `min 1` is subadditive on nonnegative reals — followed by
-  monotonicity of the integral, so it needs no property of `μ` beyond
-  finiteness.
-* `MeasureTheory.AEEqFun.distInMeasure_eq_zero_iff` and the
-  `MetricSpace (α →ₘ[μ] E)` instance for `[MetricSpace E]`. A nonnegative
-  integrable function with vanishing integral is a.e. zero, so
-  `min 1 (dist (f a) (g a)) = 0` a.e., so `f = g` a.e., so `f = g` in the
-  quotient. This is the one place where `E` must be a metric and not a
-  pseudometric space, and it is why the quotient is taken.
-* `MeasureTheory.AEEqFun.tendsto_iff_tendstoInMeasure`: for `l : Filter ι` and
-  `f : ι → (α →ₘ[μ] E)`, `Tendsto f l (𝓝 g)` if and only if
+  `distInMeasure_nonneg`, `distInMeasure_comm`, `distInMeasure_self` — all
+  **proved** — and the `Dist (α →ₘ[μ] E)` instance. The integrand is integrable
+  because it is bounded by `1` and `μ` is finite (`integrable_min_one_dist`,
+  **proved** on 2026-09-08, twelfth run), and it is measurable because the
+  coercion of an a.e.-class is *strongly* measurable and not merely a.e. so
+  (`AEEqFun.stronglyMeasurable`, `AEEqFun.lean:139`); that is what makes the sets
+  `{a | ε ≤ dist (f a) (g a)}` honestly measurable and is recorded as
+  `measurable_dist_coeFn`. `SecondCountableTopology E` is **not** a hypothesis of
+  any of this — it stood in the file until 2026-09-08 and no proof used it.
+* `MeasureTheory.AEEqFun.distInMeasure_triangle`, **proved** on 2026-09-08,
+  twelfth run, and the `PseudoMetricSpace (α →ₘ[μ] E)` instance. The triangle
+  inequality is pointwise — `min 1` is subadditive on nonnegative reals, which is
+  the private `min_one_add_le` — followed by monotonicity of the integral, so it
+  needs no property of `μ` beyond finiteness.
+* `MeasureTheory.AEEqFun.distInMeasure_eq_zero_iff`, **proved** on 2026-09-08,
+  twelfth run, and the `MetricSpace (α →ₘ[μ] E)` instance for `[MetricSpace E]`.
+  A nonnegative integrable function with vanishing integral is a.e. zero
+  (`integral_eq_zero_iff_of_nonneg`), so `min 1 (dist (f a) (g a)) = 0` a.e.; the
+  truncation is undone by `min_eq_iff`, whose first branch would force `1 = 0`.
+  So `f = g` a.e., so `f = g` in the quotient by `AEEqFun.ext`. This is the one
+  place where `E` must be a metric and not a pseudometric space, and it is why the
+  quotient is taken.
+* `MeasureTheory.AEEqFun.tendsto_iff_tendstoInMeasure`, **proved** on 2026-09-08,
+  twelfth run: for `l : Filter ι` and `f : ι → (α →ₘ[μ] E)`,
+  `Tendsto (fun i ↦ distInMeasure (f i) g) l (𝓝 0)` if and only if
   `TendstoInMeasure μ (fun i ↦ (f i : α → E)) l g`. This is the statement that
   names the metric correctly, and it is the point of contact with the manuscript's
   `fact:pseudopath`(i). Both directions run through
   `tendstoInMeasure_iff_measureReal_dist`
   (`ConvergenceInMeasure.lean:110`, stated for `[IsFiniteMeasure μ]`): one way by
-  Markov's inequality, `μ {a | ε ≤ dist (f i a) (g a)} ≤ distInMeasure (f i) g / min 1 ε`,
-  the other by splitting the integral at level `ε` into `ε` plus the measure of
-  the exceptional set.
-* `MeasureTheory.AEEqFun.completeSpace`, for `[CompleteSpace E]` and
-  `[IsFiniteMeasure μ]`. Kurtz (4.2)–(4.4): from a Cauchy sequence select a
-  subsequence with `∑ k, distInMeasure (x (n k)) (x (n (k+1))) < ∞`; monotone
-  convergence moves the sum inside the integral, so the pointwise sum is finite
-  on a set of full measure; there the sequence is Cauchy in `E` and has a limit;
-  off it, put the limit equal to a fixed `x₀ : E`. Dominated convergence, the
-  integrand being bounded by `1`, gives `distInMeasure (x (n k)) x → 0`, and a
-  Cauchy sequence with a convergent subsequence converges. Mathlib's
-  `MeasureTheory.ExistsSeq.tendstoInMeasure_of_tendstoInMeasure` machinery is
-  not what is wanted here; the summable-subsequence argument is written out
-  because the limit has to be produced, not recognized.
+  Markov's inequality `mul_meas_ge_le_integral_of_nonneg`
+  (`Integral/Bochner/Basic.lean:1129`) applied at the level `min 1 ε` — the
+  truncation has to be carried into the level as well, or the inclusion of sets
+  is the wrong way round — the other by splitting the integral at level `ε` into
+  `ε` plus the measure of the exceptional set. That second half is
+  `distInMeasure_le_add`, `distInMeasure f g ≤ ε * μ.real univ + μ.real {a | ε ≤ dist (f a) (g a)}`,
+  a statement of its own because it is what makes the estimate reusable.
+* `MeasureTheory.AEEqFun.exists_tendsto_distInMeasure_of_cauchy`, **proved** on
+  2026-09-08, twelfth run, for `[CompleteSpace E]` and `[IsFiniteMeasure μ]`;
+  the `CompleteSpace` instance is this statement once the metric instance is
+  installed. Kurtz (4.2)–(4.4): from a Cauchy sequence select a subsequence with
+  `∑ k, distInMeasure (x (n k)) (x (n (k+1))) < ∞`; `lintegral_tsum` moves the sum
+  inside the integral, so `∑ k, min 1 (dist ..)` is finite on a set of full
+  measure; there the sequence is Cauchy in `E` — the truncation is undone by
+  *summability itself*, because the terms tend to `0` and so are eventually below
+  `1` — and has a limit by `cauchySeq_of_summable_dist` and completeness. Off the
+  set the limit is put equal to `x 0`, **not** to a fixed `x₀ : E`: `E` need not be
+  nonempty, and taking the first term of the sequence as the fallback is what makes
+  the definition unconditional. Measurability of the limit is
+  `aestronglyMeasurable_of_tendsto_ae`, its convergence in measure is
+  `tendstoInMeasure_of_tendsto_ae`, and the passage back to the whole sequence is
+  the triangle inequality against the subsequence. Mathlib has **no** completeness
+  of convergence in measure to appeal to: `ConvergenceInMeasure.lean` contains no
+  statement with `Cauchy` in it (checked 2026-09-08 against v4.33.1), and the
+  `Lᵖ` completeness (`LpSpace/Complete.lean:290`) is for a normed group.
 * `MeasureTheory.AEEqFun.separableSpace`, for
   `[MeasureTheory.IsSeparable μ]` (`Measure/SeparableMeasure.lean:339`;
   automatic for `[MeasurableSpace.CountablyGenerated α]` and `[SFinite μ]` by the
@@ -1922,10 +1941,22 @@ metric equivalent to `dist` gives the same topology.
   is the same statement for the `Lᵖ` metrics and fixes the right hypotheses;
   it does not transfer, because `distInMeasure` is not a norm and `E` is not a
   normed group.
+* The instances themselves, **built** on 2026-09-08, twelfth run:
+  `MeasureTheory.AEEqFun.instDist` with `dist_eq_distInMeasure`,
+  `MeasureTheory.AEEqFun.metricSpace` from the four statements above, and
+  `MeasureTheory.AEEqFun.completeSpace` from
+  `exists_tendsto_distInMeasure_of_cauchy` through
+  `Metric.complete_of_cauchySeq_tendsto`. With the metric installed,
+  `MeasureTheory.AEEqFun.tendsto_nhds_iff_tendstoInMeasure` states the point of
+  contact with `fact:pseudopath`(i) in its proper form — `Tendsto f l (𝓝 g)`, a
+  statement about the *topology*, not about a sequence of numbers.
 * `MeasureTheory.AEEqFun.isCompletelyMetrizableSpace` and
   `MeasureTheory.AEEqFun.polishSpace`, the two previous points combined, for
   `[MetricSpace E] [CompleteSpace E] [SeparableSpace E]`, `[IsFiniteMeasure μ]`
-  and `[Measure.IsSeparable μ]`.
+  and `[MeasureTheory.IsSeparable μ]`. After the twelfth run of 2026-09-08 these
+  are one line each behind `separableSpace`: the metric, its completeness and
+  `UniformSpace.secondCountable_of_separable` are all in place, and separability
+  is the only input still missing.
 * `measurableSet_of_measurable_injective`, **proved** on 2026-09-08, eleventh
   run: for `γ : X → Y` measurable and injective and `S : Set X` with
   `MeasurableSet (γ '' S)`, the set `S` is measurable. It is
