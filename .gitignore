@@ -2,6 +2,7 @@
 /references
 /scratch
 /axcheck_tmp.lean
+/axcheck.lean
 logs/
 .facts.lock
 
