@@ -12,8 +12,9 @@ nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
 ### Aufgabe: `SkorokhodSpace` fertig, dann Meilenstein 4 von `MartingaleProblems` *(gestellt 2026-09-08 vom Nutzer)*
 
-Zwei Teile, streng nacheinander. Teil B wird **nicht** angefangen, solange Teil A
-offen ist.
+Drei Teile, streng nacheinander. Ein Teil wird **nicht** angefangen, solange ein
+früherer offen ist. (Reihenfolge vom Nutzer am 2026-09-09 so festgelegt: erst
+der Pfadraum, dann die schwache Konvergenz fertig, dann die Prozesse.)
 
 **Teil A — `SkorokhodSpace` zu Ende bringen.** Sechs `sorry`, in dieser
 Reihenfolge:
@@ -56,7 +57,35 @@ bleibt `exp (-1) / 2` von `f` entfernt. Der nächste Schritt heißt darum
 
 *Punkt 2 ist unberührt.*
 
-**Teil B — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.**
+**Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
+offene Beweise, in dieser Reihenfolge:
+
+1. `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` (`:4470`) — der
+   Rest von Meilenstein 4, und ein Lauf sollte reichen: abschneiden bei `M`, die
+   abgeschnittene Funktion ist beschränkt stetig, also greift die schwache
+   Konvergenz, und die gleichmäßige Integrierbarkeit kontrolliert die Ränder
+   gleichmäßig in `n`. `integrable_id_of_isUniformlyIntegrableLaws` ist bewiesen
+   und die Definition seit dem 2026-09-08 repariert (unteres Integral statt
+   Bochner, sonst machte `integral_undef` das Kriterium für jede Familie mit
+   unendlichem ersten Moment wahr — Zeuge: die Cauchy-Verteilung). Damit ist ein
+   ganzer Meilenstein geschlossen.
+2. `exists_ae_tendsto_of_tendsto` (`:4398`) — die Skorohod-Darstellung, der
+   Zusammenbau. Alle Bausteine stehen; offen sind die drei im Inventar benannten
+   Punkte, beginnend mit der Indexabbildung mit dem Diagonalzweig.
+
+   **Zur Vorgeschichte, damit sie sich nicht wiederholt:** der Bauplan ist
+   zweimal verworfen worden — das Verkleben einstufiger Kopplungen zugunsten des
+   Alles-auf-einmal-Raums `(E × ℝ) × (ℕ × ℕ → E)`, und danach der Schluß über
+   Borel--Cantelli, den es nicht gibt (die Schranke einer Stufe darf beliebig
+   langsam fallen; Zeuge `ν = δ₀`, `μ n = (1-1/log n)·δ₀ + (1/log n)·δ₁`). Was
+   trägt, ist EK Thm. 3.1.8, Buchseiten 102--103: **eine** allen Stufen
+   gemeinsame gleichverteilte Variable, eine **Inklusion** statt einer Zahl,
+   endlich viele Stücke positiver Masse. Wer den Plan ein drittes Mal ändern
+   will, sagt zuerst, welcher Schritt des jetzigen bricht, und rechnet ihn am
+   Zeugen nach.
+
+**Teil C — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.** Erst
+wenn A und B durch sind.
 
 Der Grund, und er ist kein ästhetischer: **die Existenztheorie hat sonst keinen
 Boden.** §`sec:Existence` des Manuskripts hat drei Zweige, und zwei davon sind
