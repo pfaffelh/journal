@@ -9,6 +9,9 @@ import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
 import Mathlib.MeasureTheory.Measure.FiniteMeasureExt
 import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.MeasureTheory.Function.UniformIntegrable
+import Mathlib.MeasureTheory.Function.AEEqFun
+import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+import Mathlib.MeasureTheory.Measure.SeparableMeasure
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.Probability.ConditionalProbability
 import Mathlib.Probability.ProductMeasure
@@ -263,9 +266,27 @@ only `MeasurableSpace E`.  That is why the whole milestone stays at
 The same run settled how the stages are put on one space, and the answer is that
 they are not glued: gluing the one-stage couplings along their common second
 marginal is disintegration followed by a countable product of kernels, and
-Mathlib has no product of kernels over a countable index (checked on
-`upstream/master` at `572e4d091bc`).  All stages are built at once instead, on
+`Measure.condKernel` requires `[StandardBorelSpace Ω] [Nonempty Ω]`
+(`Probability/Kernel/Disintegration/StandardBorel.lean:77`, `:361`), which
+separable metric does not give.  (The eighth run gave a second reason, that
+Mathlib has no countable product of kernels; that is **false** and was corrected
+on 2026-09-08, ninth run: it is `ProbabilityTheory.Kernel.traj`,
+`Probability/Kernel/IonescuTulcea/Traj.lean:518`, the Ionescu-Tulcea theorem,
+assuming nothing but `MeasurableSpace` and Markov.  The decision stands on the
+disintegration alone.)  All stages are built at once instead, on
 `(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`, which is Ethier-Kurtz's Lemma 3.1.3 with `N = ∞`.
+
+Since 2026-09-08, eleventh run, Milestone 6 has its hinge:
+`measurableSet_of_measurable_injective` and its topological corollary
+`measurableSet_of_continuous_injective` -- a measurable injection carries a
+measurable image back to a measurable set -- together with the metric of
+convergence in measure on `MeasureTheory.AEEqFun`, `distInMeasure`, and
+`distInMeasure_nonneg`, `distInMeasure_comm`, `distInMeasure_self`.  All five
+theorems are proved and depend on no axiom beyond `propext`, `Classical.choice`
+and `Quot.sound`; the remaining five declarations of the milestone are
+statements carrying their own `sorry`.  The hinge is what makes the càdlàg paths
+a Borel subset of Kurtz' space `M_E [0, ∞)`, and with it the Skorokhod
+representation of Milestone 3 is consumed for **Polish** spaces only.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -5265,5 +5286,113 @@ theorem condExp_eq_of_forall_integral_mul_eq {mΩ : MeasurableSpace Ω}
   exact hset s hs
 
 end MulSystem
+
+end MeasureTheory
+
+/-!
+## Milestone 6: the space of measurable paths modulo null sets
+
+The hinge of the argument that puts the càdlàg paths into the space of
+`λ`-a.e. classes as a Borel set, and the metric of convergence in measure.
+-/
+
+section MeasurableInjective
+
+/-- If `γ` is measurable and injective and the image of `S` is measurable, so is `S`.
+No topology is involved: this is `Set.preimage_image_eq` under a measurable map.
+It is the whole of the argument that makes `D_E` a Borel subset of `M_E`, with `γ`
+the pseudo-path map and the image Borel in the compact pseudo-path model. -/
+theorem measurableSet_of_measurable_injective {X Y : Type*}
+    [MeasurableSpace X] [MeasurableSpace Y] {γ : X → Y}
+    (hγ : Measurable γ) (hinj : Function.Injective γ) {S : Set X}
+    (hS : MeasurableSet (γ '' S)) : MeasurableSet S := by
+  have hpre : γ ⁻¹' (γ '' S) = S := hinj.preimage_image S
+  exact hpre ▸ hS.preimage hγ
+
+/-- The continuous form of `measurableSet_of_measurable_injective`, which is how the
+pseudo-path map is used: it is continuous on the whole space of `λ`-a.e. classes,
+not only on the càdlàg ones. -/
+theorem measurableSet_of_continuous_injective {X Y : Type*}
+    [TopologicalSpace X] [MeasurableSpace X] [OpensMeasurableSpace X]
+    [TopologicalSpace Y] [MeasurableSpace Y] [BorelSpace Y] {γ : X → Y}
+    (hγ : Continuous γ) (hinj : Function.Injective γ) {S : Set X}
+    (hS : MeasurableSet (γ '' S)) : MeasurableSet S :=
+  measurableSet_of_measurable_injective hγ.measurable hinj hS
+
+end MeasurableInjective
+
+namespace MeasureTheory
+
+namespace AEEqFun
+
+variable {α : Type*} [MeasurableSpace α] {μ : Measure α}
+variable {E : Type*} [MetricSpace E]
+
+/-- The distance of convergence in measure on the a.e.-classes of measurable maps,
+`∫ a, min 1 (dist (f a) (g a)) ∂μ`.  For `μ` finite this is Kurtz' `d_m` of
+(1991), Section 4, whose instance on `ℝ≥0` with `μ (dt) = e ^ (-t) dt` is the
+space `M_E [0, ∞)`.  The truncation at `1` is what makes the integral finite
+without an integrability hypothesis. -/
+noncomputable def distInMeasure [SecondCountableTopology E]
+    (f g : α →ₘ[μ] E) : ℝ :=
+  ∫ a, min 1 (dist (f a) (g a)) ∂μ
+
+variable [SecondCountableTopology E]
+
+theorem distInMeasure_nonneg (f g : α →ₘ[μ] E) : 0 ≤ distInMeasure f g :=
+  integral_nonneg fun _ => le_min zero_le_one dist_nonneg
+
+theorem distInMeasure_comm (f g : α →ₘ[μ] E) :
+    distInMeasure f g = distInMeasure g f := by
+  simp only [distInMeasure, dist_comm]
+
+theorem distInMeasure_self (f : α →ₘ[μ] E) : distInMeasure f f = 0 := by
+  simp [distInMeasure]
+
+/-- The triangle inequality.  Pointwise, `min 1` being subadditive on nonnegative
+reals, followed by monotonicity of the integral; no property of `μ` beyond
+finiteness enters. -/
+theorem distInMeasure_triangle [IsFiniteMeasure μ] (f g h : α →ₘ[μ] E) :
+    distInMeasure f h ≤ distInMeasure f g + distInMeasure g h := by
+  sorry
+
+/-- The separation.  A nonnegative integrable function with vanishing integral is
+a.e. zero, so `f` and `g` agree a.e., so they agree in the quotient.  This is the
+one place where `E` must be a metric and not a pseudometric space. -/
+theorem distInMeasure_eq_zero_iff [IsFiniteMeasure μ] (f g : α →ₘ[μ] E) :
+    distInMeasure f g = 0 ↔ f = g := by
+  sorry
+
+/-- The statement that names the metric correctly: `distInMeasure` metrizes
+Mathlib's `TendstoInMeasure`.  This is the point of contact with the manuscript's
+`fact:pseudopath`(i), which says that the pseudo-path topology on `D_E` is the
+topology of convergence in `λ`-measure. -/
+theorem tendsto_iff_tendstoInMeasure [IsFiniteMeasure μ] {ι : Type*} {l : Filter ι}
+    (f : ι → (α →ₘ[μ] E)) (g : α →ₘ[μ] E) :
+    Filter.Tendsto (fun i => distInMeasure (f i) g) l (nhds 0) ↔
+      TendstoInMeasure μ (fun i a => f i a) l (fun a => g a) := by
+  sorry
+
+/-- Completeness, after Kurtz (1991), (4.2)--(4.4): from a Cauchy sequence select a
+subsequence with summable successive distances, take the pointwise limit on the
+resulting set of full measure, and put it constant off that set. -/
+theorem exists_tendsto_distInMeasure_of_cauchy [IsFiniteMeasure μ] [CompleteSpace E]
+    (f : ℕ → (α →ₘ[μ] E))
+    (hf : ∀ ε > 0, ∃ N, ∀ m ≥ N, ∀ n ≥ N, distInMeasure (f m) (f n) < ε) :
+    ∃ g : α →ₘ[μ] E, Filter.Tendsto (fun n => distInMeasure (f n) g) Filter.atTop (nhds 0) := by
+  sorry
+
+/-- Separability.  The countable dense family is the classes of the countably valued
+functions built from a countable measure-dense family of measurable sets and a
+countable dense subset of `E`.  This is the point Kurtz leaves to the reader;
+`MeasureTheory.IsSeparable` is Mathlib's hypothesis for the same statement
+about the `Lᵖ` metrics (`Measure/SeparableMeasure.lean`). -/
+theorem exists_countable_dense_distInMeasure [IsFiniteMeasure μ] [IsSeparable μ]
+    [TopologicalSpace.SeparableSpace E] :
+    ∃ s : Set (α →ₘ[μ] E), s.Countable ∧
+      ∀ f : α →ₘ[μ] E, ∀ ε > 0, ∃ g ∈ s, distInMeasure f g < ε := by
+  sorry
+
+end AEEqFun
 
 end MeasureTheory

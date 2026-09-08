@@ -10,7 +10,62 @@ Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
 Reihenfolge weiter unten. Eine Aufgabe, die mehr als einen Lauf braucht, wird
 nicht gestrichen, sondern um einen Zwischenstand ergänzt.
 
-### Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$? *(gestellt 2026-09-08 vom Nutzer)*
+Zurzeit stehen hier keine offenen Aufgaben.
+
+### ~~Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$?~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, elfter Lauf des Tages)*
+
+**Ergebnis** in `Facts/INVENTAR.md`, Läufe, „2026-09-08, elfter Lauf des
+Tages". Kurz, in den vier Punkten der Aufgabe: **(a) ja, (b) ja, (c) ja,
+(d) ja** — der Fund trägt vollständig.
+
+*(a) $\DE$ ist borelsch in $(M_E,d_m)$*, und der Beweis braucht kein
+Lusin--Souslin und nicht einmal, daß $M_E$ polnisch ist. Die Pseudopfad-Abbildung
+$\gamma$ ist auf **ganz** $M_E$ injektiv — `fact:pseudopath` sagt es wörtlich
+(„identifies two paths exactly when they agree $\lambda$-a.e."), das Manuskript
+zieht daraus nur die schwächere Folgerung für $\DE$ — und stetig
+(Teilfolgenprinzip plus dominierte Konvergenz gegen $C([0,\infty]\times\hat E)$).
+Da $\gamma(\DE)$ nach `fact:pseudopath`(ii) borelsch im kompakten Modell ist, ist
+$\DE = \gamma^{-1}(\gamma(\DE)) \cap M_E$ borelsch.
+
+*(b) Die Spur ist $\sigma(\pi_u)$*, zweimal unabhängig: $\Bor(Y)=\Bor(X)|_Y$ gilt
+für **jeden** Teilraum eines topologischen Raums, und die Teilraumtopologie ist
+nach `fact:pseudopath`(i) die Pseudopfad-Topologie, deren Borelfeld
+`fact:pseudopath`(iii) benennt. Kurtz' Proposition 4.5 (S. 1026) sagt dasselbe
+von der Seite der f.ü.-endlichdimensionalen Verteilungen her.
+
+*(c) Der Rest hält*, und Schritt 2 wird **kürzer**: auf dem $M_E$-Weg *ist*
+$\int \rho(\tilde X_n,\tilde X)\dif\lambda$ die Metrik $d_m$, die f.s. gegen
+$0$ geht, statt erst aus der Konvergenz im Maß gewonnen werden zu müssen.
+
+*(d) `fact:cmt` wird nicht in nicht-polnischer Allgemeinheit gebraucht* — und
+das war schon **vor** dieser Prüfung so, aus einem von ihr unabhängigen Grund:
+`set:abstract` verlangt unter (E3) für $F$ ausdrücklich eine polnische Topologie,
+`def:weakstrong` sagt „let $F$ be Polish", und der Beweis von `thm:MZconv`
+benutzt gar kein `fact:cmt`, sondern (C1$'$) aus `rem:absconvtopfree` — er sagt
+es selbst. Zwischen `:9314` und `:9400` steht kein einziges `\ref{fact:cmt}`.
+
+*Was es kostet, ehrlich genannt:* die Konstruktion von $M_E$ selbst — Quotient,
+Metrik, Vollständigkeit (Kurtz beweist sie), Separabilität (Kurtz: „left to the
+reader"). Das steht jetzt als `WeakConvergence` **Meilenstein 6** in der
+Roadmap, mit Mathlibs `MeasureTheory.AEEqFun` als Ort, `TendstoInMeasure` als
+Anschluß und `Measure.IsSeparable` als richtiger Hypothese.
+
+*Am Manuskript:* `rem:MZcost`, zweiter Absatz, ist korrigiert; `check.py` meldet
+`clean` (133 Seiten). Der erste Satz („The path space is not Polish. It is
+separable metric …") bleibt, weil er wahr ist; ersetzt ist allein die Folgerung,
+durch den Weg über $M_E$ samt `\Ku`-Zitat. **Nicht** angefaßt ist die Liste in
+`ssec:available`: sie führt `fact:cmt` und `fact:PSpolish` unter „to be built"
+ohne Angabe einer Allgemeinheit und bleibt damit richtig.
+
+*Nicht weggeworfen:* `exists_ae_tendsto_of_tendsto` und die Deklarationen der
+Läufe fünf bis zehn. Der polnische Fall ist ein Spezialfall des separablen, und
+Mathlib hat die Skorokhod-Darstellung in keiner Fassung; was gebaut ist, deckt
+beide Gebrauchsstellen ab. Was sich ändert, ist die Reihenfolge der Not:
+`WeakConvergence` M3 ist nicht mehr der Engpaß von `thm:MZconv`.
+
+*Der ursprüngliche Wortlaut der Aufgabe:*
+
+### ~~Aufgabe: geht Schritt 1 von `thm:MZconv` über den polnischen Raum $M_E$?~~
 
 Der Nutzer hat Kurtz (1991), *Random time changes and convergence in distribution
 under the Meyer--Zheng conditions*, Ann. Probab. **19**, 1010--1034, beigebracht;
@@ -69,8 +124,6 @@ das Manuskript unberührt und der Befund steht im Inventar.
 **Nicht** die laufende Arbeit an `exists_ae_tendsto_of_tendsto` wegwerfen, bevor
 die Prüfung durch ist. Was dort bewiesen ist, bleibt richtig und ist auch im
 polnischen Fall brauchbar.
-
-Zurzeit stehen hier sonst keine offenen Aufgaben.
 
 ### ~~Aufgabe: Ionescu--Tulcea ist in Mathlib, und der Befund des 20. Laufs steht schief~~ *(gestellt 2026-09-08 vom Nutzer, erledigt 2026-09-08, neunter Lauf des Tages)*
 

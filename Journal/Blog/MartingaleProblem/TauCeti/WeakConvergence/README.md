@@ -809,6 +809,12 @@ metrizability of it occurs anywhere in Mathlib. They come first, because the
 Skorokhod representation below and every relative compactness argument
 downstream live in this space.
 
+The representation is stated for `E` separable, which is what its proof uses;
+the two places the manuscript consumes it — `rem:EKrelcompact`, where the space
+is `D_E` under `J₁`, and Step 1 of `thm:MZconv`, where it is the space of
+Milestone 6 — are both Polish, so the separable form proves strictly more than
+they ask.
+
 Where each statement lives is fixed by Mathlib's design. `LevyProkhorov` is a
 one-field structure wrapping a measure (`LevyProkhorovMetric.lean:259`), and the
 distance instances sit on it: `LevyProkhorov.instPseudoMetricSpaceProbabilityMeasure`
@@ -1831,3 +1837,137 @@ space; no topology is involved.
   by times `≤ s`" into `𝔼[Y t | Filt s] =ᵐ Y s`: the martingale property is
   verified against countably many test products rather than against the whole
   σ-algebra.
+
+## Milestone 6: the space of measurable paths modulo null sets, and its Polish structure
+
+Let `α` be a measurable space, `μ` a finite measure on it and `E` a metric
+space. Mathlib has the quotient — `MeasureTheory.AEEqFun`, written
+`α →ₘ[μ] E` (`MeasureTheory/Function/AEEqFun.lean`), the a.e.-equality classes
+of a.e.-strongly-measurable maps — and it has the convergence —
+`MeasureTheory.TendstoInMeasure` (`MeasureTheory/Function/ConvergenceInMeasure.lean:57`),
+a predicate on families of functions. It does not connect them: `α →ₘ[μ] E`
+carries the algebraic instances of `E` and no metric, and `TendstoInMeasure`
+carries no topology. The metric that joins the two is
+
+```
+distInMeasure f g = ∫ a, min 1 (dist (f a) (g a)) ∂μ ,
+```
+
+and for `μ` finite it metrizes `TendstoInMeasure μ`, is complete when `E` is,
+and is separable when `E` and `μ` are. That is Kurtz (1991), *Random time
+changes and convergence in distribution under the Meyer–Zheng conditions*,
+Ann. Probab. **19**, 1010–1034, Section 4, where `α = [0,∞)` and
+`μ(dt) = e^{-t} dt`; the space is his `M_E[0,∞)` and it is the Polish space
+through which Step 1 of the manuscript's `thm:MZconv` runs, so that the
+Skorokhod representation of Milestone 3 is needed for **Polish** spaces only.
+
+The metric goes directly on `α →ₘ[μ] E` and not on a type synonym: Mathlib's
+competing metrics of a.e.-classes live on `MeasureTheory.Lp`, which is a
+different type, so nothing is shadowed. The truncation `min 1 (dist · ·)` is
+what makes the integral finite without an integrability hypothesis; it is the
+same device as `ENNReal.ofReal` in the Lévy–Prokhorov distance, and any bounded
+metric equivalent to `dist` gives the same topology.
+
+* `MeasureTheory.AEEqFun.distInMeasure`, for `[PseudoMetricSpace E]` and
+  `[IsFiniteMeasure μ]`, defined as `∫ a, min 1 (dist (f a) (g a)) ∂μ` and
+  well-defined on classes because the integrand changes on a null set only, with
+  `distInMeasure_le_one`, `distInMeasure_nonneg`, `distInMeasure_comm`,
+  `distInMeasure_self`, and the `Dist (α →ₘ[μ] E)` instance. The integrand is
+  a.e. strongly measurable as `AEEqFun.comp₂` of `min 1 ∘ dist`, which is
+  continuous, and bounded by `1`, hence integrable for `μ` finite.
+* `MeasureTheory.AEEqFun.distInMeasure_triangle` and the
+  `PseudoMetricSpace (α →ₘ[μ] E)` instance. The triangle inequality is
+  pointwise — `min 1` is subadditive on nonnegative reals — followed by
+  monotonicity of the integral, so it needs no property of `μ` beyond
+  finiteness.
+* `MeasureTheory.AEEqFun.distInMeasure_eq_zero_iff` and the
+  `MetricSpace (α →ₘ[μ] E)` instance for `[MetricSpace E]`. A nonnegative
+  integrable function with vanishing integral is a.e. zero, so
+  `min 1 (dist (f a) (g a)) = 0` a.e., so `f = g` a.e., so `f = g` in the
+  quotient. This is the one place where `E` must be a metric and not a
+  pseudometric space, and it is why the quotient is taken.
+* `MeasureTheory.AEEqFun.tendsto_iff_tendstoInMeasure`: for `l : Filter ι` and
+  `f : ι → (α →ₘ[μ] E)`, `Tendsto f l (𝓝 g)` if and only if
+  `TendstoInMeasure μ (fun i ↦ (f i : α → E)) l g`. This is the statement that
+  names the metric correctly, and it is the point of contact with the manuscript's
+  `fact:pseudopath`(i). Both directions run through
+  `tendstoInMeasure_iff_measureReal_dist`
+  (`ConvergenceInMeasure.lean:110`, stated for `[IsFiniteMeasure μ]`): one way by
+  Markov's inequality, `μ {a | ε ≤ dist (f i a) (g a)} ≤ distInMeasure (f i) g / min 1 ε`,
+  the other by splitting the integral at level `ε` into `ε` plus the measure of
+  the exceptional set.
+* `MeasureTheory.AEEqFun.completeSpace`, for `[CompleteSpace E]` and
+  `[IsFiniteMeasure μ]`. Kurtz (4.2)–(4.4): from a Cauchy sequence select a
+  subsequence with `∑ k, distInMeasure (x (n k)) (x (n (k+1))) < ∞`; monotone
+  convergence moves the sum inside the integral, so the pointwise sum is finite
+  on a set of full measure; there the sequence is Cauchy in `E` and has a limit;
+  off it, put the limit equal to a fixed `x₀ : E`. Dominated convergence, the
+  integrand being bounded by `1`, gives `distInMeasure (x (n k)) x → 0`, and a
+  Cauchy sequence with a convergent subsequence converges. Mathlib's
+  `MeasureTheory.ExistsSeq.tendstoInMeasure_of_tendstoInMeasure` machinery is
+  not what is wanted here; the summable-subsequence argument is written out
+  because the limit has to be produced, not recognized.
+* `MeasureTheory.AEEqFun.separableSpace`, for
+  `[MeasureTheory.IsSeparable μ]` (`Measure/SeparableMeasure.lean:339`;
+  automatic for `[MeasurableSpace.CountablyGenerated α]` and `[SFinite μ]` by the
+  instance at `:382`) and `[TopologicalSpace.SeparableSpace E]`. The countable
+  dense family is the classes of the functions `∑ i, Set.indicator (A i) (fun _ ↦ y i)`
+  with `A` a finite family from a countable measure-dense family of measurable
+  sets and `y` from a countable dense subset of `E`; density in `distInMeasure`
+  is the two-step estimate — approximate `f` by a countable-valued function
+  within `ε` pointwise, then cut the tail using finiteness of `μ`, then move each
+  level set to a measure-dense one. This is the point Kurtz leaves to the
+  reader, and it is the only part of the milestone with no proof in the source.
+  Mathlib's `Lp.SecondCountableTopology` (`Measure/SeparableMeasure.lean:427`)
+  is the same statement for the `Lᵖ` metrics and fixes the right hypotheses;
+  it does not transfer, because `distInMeasure` is not a norm and `E` is not a
+  normed group.
+* `MeasureTheory.AEEqFun.isCompletelyMetrizableSpace` and
+  `MeasureTheory.AEEqFun.polishSpace`, the two previous points combined, for
+  `[MetricSpace E] [CompleteSpace E] [SeparableSpace E]`, `[IsFiniteMeasure μ]`
+  and `[Measure.IsSeparable μ]`.
+* `measurableSet_of_measurable_injective`, **proved** on 2026-09-08, eleventh
+  run: for `γ : X → Y` measurable and injective and `S : Set X` with
+  `MeasurableSet (γ '' S)`, the set `S` is measurable. It is
+  `MeasurableSet.preimage` of `γ` at `γ '' S` together with
+  `Function.Injective.preimage_image`, and it carries **no topology** — the
+  hypotheses are two bare `MeasurableSpace` instances. It is stated separately
+  because it is the whole of the argument that puts the càdlàg paths inside the
+  space as a Borel set: no Lusin–Souslin, no completeness, no separability. The
+  manuscript uses it with `Y` the compact space of pseudo-paths, `γ` the
+  pseudo-path map — injective on all of `α →ₘ[μ] E`, not only on the càdlàg
+  classes — and `S` the càdlàg classes, whose image is Borel by
+  `fact:pseudopath`(ii). `measurableSet_of_continuous_injective` is the
+  topological corollary, under `[OpensMeasurableSpace X]` and `[BorelSpace Y]`,
+  and it is the form in which the pseudo-path map is applied.
+* `MeasureTheory.AEEqFun.map_of_continuous_tendsto`: this is Mathlib's
+  `MeasureTheory.ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`
+  (`Measure/ProbabilityMeasure.lean:657`) applied to the inclusion of a subspace
+  of `α →ₘ[μ] E`, and it is recorded here to fix that the transfer of weak
+  convergence into this space costs the trivial half of the continuous mapping
+  theorem — no metric on the source, no separability, no almost-everywhere
+  continuity. Together with `Subtype.borelSpace`
+  (`Constructions/BorelSpace/Basic.lean:187`), which says that the Borel σ-algebra
+  of a subspace is the trace of the ambient one, it is what makes a law carried
+  by a subspace and its push-forward into the whole space the same object.
+
+**Acceptance examples.** `α = ℝ≥0` with `μ = e^{-t}` times Lebesgue measure and
+`E` Polish is Kurtz's `M_E[0,∞)`, and on it `distInMeasure` must be exactly
+`d_m` of his (4.1) and `polishSpace` must fire; the càdlàg classes then form a
+Borel subset by `measurableSet_preimage_of_continuous_injOn`, which is what
+Step 1 of `thm:MZconv` consumes. The instructive failure next to it is the
+**untruncated** integral `∫ a, dist (f a) (g a) ∂μ`: on the same `α` and `μ`
+with `E = ℝ`, the classes of `f n = n · 1_{[0,1/n]}` satisfy
+`distInMeasure (f n) 0 → 0` — the paths converge in measure — while
+`∫ |f n| dμ` stays bounded away from `0`, so the untruncated formula is not even
+finite on all pairs and metrizes `L¹` convergence where it is, which is strictly
+stronger. The second failure is dropping finiteness of `μ`, and it is the sharper one
+because it is silent: with `α = ℝ≥0`, `μ` Lebesgue and `E = ℝ`, the integrand
+`min 1 (dist (f a) 0)` for `f = 1_{[n, ∞)}` equals `1` on `[n, ∞)` and is not
+integrable, so Mathlib's Bochner integral returns its junk value `0`. Hence
+`distInMeasure f 0 = 0` with `f ≠ 0`: `distInMeasure_eq_zero_iff` fails, the
+`MetricSpace` instance is unsound, and nothing in the elaboration complains.
+`[IsFiniteMeasure μ]` is therefore a hypothesis of `distInMeasure` itself and
+not only of the theorems about it, and the manuscript's `λ(du) = e^{-u} du` is
+chosen for exactly that reason and not for the convergence it induces, which is
+the same as local convergence in Lebesgue measure.
