@@ -44,22 +44,28 @@ Beispiel.
 Der Meilenstein steht ausformuliert in `TauCeti/MartingaleProblems/README.md`.
 Reihenfolge:
 
-1. **Das Akzeptanzbeispiel zuerst, nicht zuletzt.** `E = ℕ`, `lam ≡ 1`,
-   `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x`: der Poissonprozeß. Es
-   instanziiert jede Einzelheit des Meilensteins auf einmal, und wenn eine
-   Definition der Meilensteine 1--3 nicht trägt, bricht es hier und nicht in
-   einem allgemeinen Satz. Das ist die Lehre aus dem 2026-09-08: ein acceptance
-   example, das nur dasteht, prüft nichts.
-2. `jumpProcess lam mu nu` als Konstruktion auf einem expliziten
+*Reihenfolge, auf Wunsch des Nutzers: erst das eigentliche Ziel, die Beispiele
+danach.*
+
+1. `jumpProcess lam mu nu` als Konstruktion auf einem expliziten
    Wahrscheinlichkeitsraum, mit càdlàg und stückweise konstanten Pfaden. Der
    Unterbau ist da und braucht **keine Topologie**:
    `ProbabilityTheory.exists_kernel_pi_of_markov`
    (`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`, aus Mathlibs
    Ionescu--Tulcea `Kernel.traj`) für die Kette,
    `ProbabilityTheory.exponentialPDF` für die Wartezeiten.
-3. `jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`.
-4. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
+2. `jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`, und
+   es ist **das eigentliche Ziel des Meilensteins**: die erste in Lean bewiesene
+   Lösung eines Martingalproblems überhaupt.
+3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
+4. **Erst danach das Akzeptanzbeispiel**, und dann wirklich als Beweis: `E = ℕ`,
+   `lam ≡ 1`, `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x` — der
+   Poissonprozeß, mit den eindimensionalen Verteilungen gegen
+   `ProbabilityTheory.poissonMeasure` geprüft. Es instanziiert jede Einzelheit
+   des Meilensteins auf einmal; steht es nur als Prosa da, prüft es nichts (die
+   Lehre des 2026-09-08). Bricht es, so ist der Befund wertvoller als der Satz
+   darüber, und er gehört in den Bericht statt in eine Abschwächung.
 5. Der lokale Fall und die pfadabhängige Variante zuletzt; sie liefern die
    Beispiele für die Meilensteine 7 und 9.
 
