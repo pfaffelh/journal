@@ -259,6 +259,30 @@ Lauf, passiert; `axcheck_tmp.lean` steht seither eingedampft und in `.gitignore`
    Instanz** und nicht in eine `variable`-Zeile, weil es sonst in den
    Meilensteinen 6 und 7 mit `[PolishSpace E]` überlappt, das es erweitert.*
 
+   *Zwischenstand 2026-09-08, zweiundzwanzigster Lauf des Tages: `SkorokhodSpace`
+   steht bei **193 Deklarationen und unverändert sieben `sorry`** (rc = 0, keine
+   Warnung außer den sieben). Bewiesen ist die Montage, die der Vorlauf als
+   letzte offene Sprosse von `CompleteSpace` benannt hatte:
+   `SkorokhodSpace.tendsto_of_partialComp` liefert aus verankerten Zeitwechseln
+   mit summierbaren Normen und summierbaren `intWith`-Kosten den Grenzpfad `z`,
+   den einen Zeitwechsel `L` und die gleichmäßige Konvergenz von
+   `x n ∘ ((partialComp l n)⁻¹ * L)` gegen `z` auf jedem Fenster; dazu
+   `SkorokhodSpace.exists_gt_summable_distWith` (gute Radien sind unbeschränkt,
+   weil die schlechten null sind und `Set.Ioi c` nicht),
+   `summable_of_summable_min_one`, `SkorokhodSpace.dist_le_distWith` und
+   `TimeChange.eq_of_gap_of_norm_lt`. Alle fünf mit `#print axioms` geprüft, alle
+   nur auf `propext`, `Classical.choice`, `Quot.sound`. **Die Zahl der `sorry`
+   bleibt, und das ist der Befund:** der Schritt von der lokal gleichmäßigen
+   Konvergenz zurück zu `intDist` ist keine Folgerung aus der Montage, sondern
+   ein eigener Satz — `distWith` schneidet die beiden Pfade getrennt ab und liest
+   oberhalb von `exhaustionMax t₀ u` den Term `r (x n A) (z A)` an einem Punkt
+   ab. Er steht jetzt als
+   `SkorokhodSpace.tendsto_intDist_of_tendsto_of_partialComp` in
+   `SkorokhodSpace/README.md`, Meilenstein 5, samt der Dichotomie, deren eine
+   Hälfte `TimeChange.eq_of_gap_of_norm_lt` bezahlt; der Meilenstein zählt
+   seither sieben benannte Sprossen statt sechs, davon sechs bewiesen. Wer diesen
+   Punkt fortsetzt, nimmt ihn.*
+
    *Zwischenstand 2026-09-08, siebter Lauf des Tages: `WeakConvergence` steht
    weiterhin bei **zwei** `sorry` und denselben zwei bekannten Fehlern, aber die
    einstufige Kopplung ist bewiesen — `exists_coupling_of_partition` und

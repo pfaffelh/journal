@@ -11595,3 +11595,122 @@ ohne sie nicht die schwächere Aufgabe, sondern die andere. Danach
 `fact:PSpolish` zeigt weiterhin auf `SkorokhodSpace` Meilenstein 5, und dieser
 Lauf ist der erste seit dem achtzehnten, nach dem dort wieder eine Aussage steht,
 auf die er zeigen kann.
+
+### 2026-09-08, zweiundzwanzigster Lauf des Tages — die Montage ist bewiesen, und was von der Vollständigkeit bleibt, ist ein Randpunkt
+
+**Bearbeitet.** Keine Fact-Zeile; der Lauf steht im Rückstau, Punkt 2
+(`SkorokhodSpace` weiter beweisen), an der Stelle, die der einundzwanzigste Lauf
+benannt hat: `SkorokhodSpace.tendsto_of_partialComp`, die letzte offene Sprosse
+von `CompleteSpace D(ι, E)`.
+
+**Stand der Datei.** `SkorokhodSpace/Suggested.lean` zählt **193
+Deklarationen** (vorher 188) und unverändert **sieben `sorry`**; `lake env lean`
+gegen v4.33.1 meldet `rc = 0` und außer den sieben `sorry`-Warnungen keine
+einzige. Fünf neue Deklarationen, alle mit `#print axioms` geprüft und alle nur
+auf `propext`, `Classical.choice`, `Quot.sound`. Daß die Zahl der `sorry` steht,
+ist der Bericht und kein Versäumnis: die Montage war nie ein `sorry`, sie war
+eine Verpflichtung der Roadmap ohne Deklaration, und `instCompleteSpace` bleibt
+offen, weil ihm nach der Montage noch **ein** Schritt fehlt — ein anderer, als
+die Roadmap bis heute annahm.
+
+#### Die Montage, und sie ist bewiesen
+
+`SkorokhodSpace.tendsto_of_partialComp`:
+
+> Sind die Zeitwechsel `l n` bei `t₀` verankert und sind sowohl ihre Normen als
+> auch ihre Kosten `intWith t₀ (l n) (x n) (x (n+1))` durch ein summierbares `γ`
+> beschränkt, so gibt es einen Pfad `z : D(ι, E)` und **einen** Zeitwechsel `L`
+> mit `‖(partialComp l n)⁻¹ * L‖ ≤ ∑' i, γ (n + i)`, so daß
+> `x n ∘ ((partialComp l n)⁻¹ * L)` auf **jedem** Fenster gleichmäßig gegen `z`
+> konvergiert.
+
+Die Voraussetzung ist genau das, was `SkorokhodSpace.exists_lt_intDist_add` aus
+einer Cauchyfolge mit summierbaren Nachbarabständen hergibt. Drei Dinge tragen
+den Beweis, und sie sind der Grund, daß er in einem Zug durchgeht:
+
+* **Die Rekursion.** Mit `κ n := (partialComp l n)⁻¹ * L` ist
+  `κ n = l n * κ (n+1)` — eine Zeile in der Gruppe der Zeitwechsel —, und damit
+  wird das Inkrement `r (x n (κ n t)) (x (n+1) (κ (n+1) t))` durch die
+  Substitution `s = κ (n+1) t` zu `r (x n (l n s)) (x (n+1) s)`, also zu einem
+  Term des Supremums, das `distWith` ist.
+* **Die gleichmäßige Normschranke.** `‖κ n‖ ≤ ∑' γ` für **alle** `n` (die
+  Schwänze von `γ` liegen unter seiner Summe), also verschiebt kein `κ n` einen
+  Punkt des Fensters vom Radius `m` weiter als auf den Radius
+  `exp (∑' γ) · m`. Damit liegen `s` und `l n s` gleichzeitig in *einem*
+  Fenster, und ein einziges `distWith` beschränkt das Inkrement für das ganze
+  Fenster auf einmal.
+* **Der Radius.** `SkorokhodSpace.exists_gt_summable_distWith`, neu und
+  bewiesen: über **jeder** Schranke gibt es einen Radius, an dem die
+  `distWith t₀ u (l n) (x n) (y n)` in `n` summierbar sind. Denn die schlechten
+  Radien sind nach `ae_summable_min_one_distWith` eine Nullmenge, und
+  `Set.Ioi c` hat nach `Real.volume_Ioi` unendliches Maß. Das ist die Stelle,
+  an der die Integralmetrik ihre Arbeit tut, und es ist der einzige Schritt der
+  Montage, den die summierte Metrik anders gegangen wäre.
+
+Dann geben `cauchySeq_of_dist_le_of_summable` und `cauchySeq_tendsto_of_complete`
+den Grenzwert punktweise, `dist_le_tsum_of_dist_le_of_tendsto` mit
+`tendsto_sum_nat_add` die Gleichmäßigkeit auf dem Fenster samt Rate, und
+`IsCadlag.of_tendstoUniformlyOn_exhaustion` fängt den Grenzpfad auf. Zwei
+Kleinigkeiten kommen mit: `summable_of_summable_min_one` — die Trunkierung bei
+`1`, die `ae_summable_min_one_distWith` stehen läßt, kostet nichts, weil eine
+summierbare Folge gegen `0` geht und Summierbarkeit ein endliches Anfangsstück
+nicht sieht — und `SkorokhodSpace.dist_le_distWith`, ein Term des Supremums.
+
+#### Was von `CompleteSpace` bleibt, und es ist nicht die Montage
+
+Der Schritt zurück von der lokal gleichmäßigen Konvergenz zu `intDist` ist
+**keine Wiederholung** der Montage, und der Grund steht in der Definition:
+`distWith t₀ u λ f g` schneidet die beiden Pfade **getrennt** ab, `f` bei
+`clamp u (λ t)` und `g` bei `clamp u t`. Oberhalb von `A := exhaustionMax t₀ u`
+fallen beide Lesarten auf `A` zusammen, und der Term ist `r (x n A) (z A)` —
+ein Vergleich der beiden Pfade an *einem* Punkt, um den Zeitwechsel verschoben.
+Er geht nicht ohne weiteres gegen `0`: `x n A = (x n ∘ κ n) (κ n⁻¹ A)`, und
+`κ n⁻¹ A → A` liefert `z (κ n⁻¹ A) → z A` nur, wenn `z` bei `A` stetig ist.
+
+Dominierte Konvergenz über den Radius (der Integrand liegt unter `1`,
+`exp (-u)` ist auf `Set.Ioi 0` integrierbar) reduziert die Behauptung auf fast
+jeden Radius, und dort steht eine **Dichotomie**, die dieser Lauf zur Hälfte
+bezahlt hat:
+
+* Entweder ist die Niveaumenge `{u : exhaustionMax t₀ u = A}` eine Nullmenge —
+  dann fällt der Radius mit der Nullmenge weg.
+* Oder sie ist es nicht. Dann hat der Index über `A` eine **Lücke**, und
+  `TimeChange.eq_of_gap_of_norm_lt` (neu, bewiesen) sagt: ein bei `t₀`
+  verankerter Zeitwechsel, dessen Verschiebung `(exp ‖λ‖ - 1) · 2u` auf dem
+  Fenster unter der Lückenbreite liegt, **fixiert `A`**. Beide Anordnungen
+  scheiden aus, `λ A < A` an der Lücke über `A` durch `λ⁻¹`, `A < λ A` direkt;
+  beides über `TimeChange.dist_le_of_norm_le`, angewandt auf `λ` und auf `λ⁻¹`.
+  Der Satz braucht weder `OrderTopology ι` noch `ProperSpace ι`, und beide sind
+  an der Deklaration mit `omit` weggenommen.
+
+Damit ist der Randpunkt in beiden Fällen erledigt; offen bleibt, die Dichotomie
+selbst zu führen (die Lückenbreite entsteht durch Kompaktheit: die Punkte über
+`A` in beschränktem Abstand bilden eine kompakte Menge, die sich nicht bei `A`
+häuft, und haben daher ein kleinstes Element) und die Fallunterscheidung des
+Supremums auszuschreiben. Das steht als
+`SkorokhodSpace.tendsto_intDist_of_tendsto_of_partialComp` in
+`SkorokhodSpace/README.md`, Meilenstein 5.
+
+**Das ist eine Berichtigung der Roadmap.** Bis zu diesem Lauf las Meilenstein 5,
+`dist (x n) z` werde „mit dem Zeitwechsel `(P n)⁻¹ * L` abgeschätzt, dessen Norm
+der Schwanz `∑' i, γ (n + i)` ist" — als sei das eine Folgerung aus der Montage.
+Es ist keine: die Norm ist klein, aber das Integral über die Fensterabstände ist
+es aus dem genannten Grund nicht ohne die Dichotomie. Der Meilenstein zählt
+seither **sieben** benannte Sprossen statt sechs, davon sechs bewiesen.
+
+#### Vorschlag für den nächsten Lauf
+
+**`SkorokhodSpace.tendsto_intDist_of_tendsto_of_partialComp` beweisen**, also
+den eben benannten Punkt, und danach `instCompleteSpace` als seine
+Zusammensetzung mit `tendsto_of_partialComp`. Worauf er ruht: auf
+`TimeChange.eq_of_gap_of_norm_lt` (bewiesen, dieser Lauf), auf
+`SkorokhodSpace.integrableOn_intDist` für die Dominante, auf
+`monotone_exhaustionMax` und `antitone_exhaustionMin` für die Niveaumengen, und
+auf `clamp_eq_exhaustionMax_of_le` und `clamp_eq_exhaustionMin_of_le` für die
+Fallunterscheidung des Supremums. Warum jetzt: es ist der einzige noch offene
+Schritt von `CompleteSpace D(ι, E)`, alle übrigen sind bewiesen, und die
+untere Fensterkante kostet nichts — dort ist `z` von selbst rechtsstetig, das
+ist die càdlàg-Eigenschaft. Erst danach `instSeparableSpace`.
+
+**Das Manuskript ist nicht angefaßt.** Am Inventar ändert sich keine Zeile;
+`fact:PSpolish` zeigt weiterhin auf `SkorokhodSpace` Meilenstein 5.

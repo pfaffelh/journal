@@ -925,8 +925,8 @@ which the first is false; the refutation stays and is stated for
 * `CompleteSpace (D ι E)`: for a Cauchy sequence extract a subsequence whose
   consecutive distances are summable, compose the time changes, and use
   completeness of `E` together with `TimeChange.norm_mul_le` to see that the
-  composed time changes converge. The statement rests on six named items, and
-  five of them are proved:
+  composed time changes converge. The statement rests on seven named items, and
+  six of them are proved:
   * `SkorokhodSpace.min_one_distOn_le` and
     `SkorokhodSpace.distOn_le_of_two_pow_mul_lt_one`, the passage from the metric
     to the window pseudodistance: `min 1 (distOn t₀ m f g) ≤ 2 ^ m * totalDist t₀ f g`,
@@ -975,24 +975,54 @@ which the first is false; the refutation stays and is stated for
     `TimeChange.norm_le_of_lipschitzWith`, `TimeChange.norm_partialComp_le` and
     `TimeChange.partialComp_add`.
   * `IsCadlag.of_tendstoUniformly`, which catches the limit path (2026-09-08).
-  * `SkorokhodSpace.tendsto_of_partialComp`, the assembly, which is what remains.
-    From a subsequence `x n` with `dist (x n) (x (n+1))` small enough that
-    `distOn (n+1) (x n) (x (n+1)) ≤ γ n` with `γ` summable, take the time changes
-    `l n` of `exists_lt_distOn_add`, let `P n = TimeChange.partialComp l n` and
-    `L` be their infinite composition. The comparison to make is between
-    `y n = x n ∘ (P n)⁻¹ ∘ L` and `y (n+1)`: substituting `s = (P (n+1))⁻¹ (L t)`
-    turns `r (y n t) (y (n+1) t)` into `r (x n (l n s)) (x (n+1) s)`, which is
-    what `distOn` bounds, so the `y n` are uniformly Cauchy on each window with
-    the summable rate `γ`. Their limit `z` is the limit path, and
-    `dist (x n) z` is estimated with the time change `(P n)⁻¹ * L`, whose norm is
-    the tail `∑' i, γ (n + i)` by `exists_tendsto_norm_tail_le`. The estimate
-    holds only on windows, so `z` is a **locally** uniform limit, and that it is
-    càdlàg is `IsCadlag.of_tendstoUniformlyOn_exhaustion` of Milestone 2, proved
-    2026-09-08: uniform convergence on every window suffices, since
-    `y n ∘ clamp u` converges uniformly on all of `ι` and every point lies in the
-    interior of some window. It rests on `IsCadlag.of_forall_eventuallyEq`, that
-    a function agreeing near every point with some càdlàg function is càdlàg,
-    both clauses of `IsCadlag` being statements about `𝓝[>] a` and `𝓝[<] x`.
+  * `SkorokhodSpace.tendsto_of_partialComp`, the assembly, **proved 2026-09-08**.
+    From a sequence `x n` and time changes `l n` anchored at `t₀` whose norms and
+    whose `intWith` costs are both dominated by a summable `γ` — which is what
+    `SkorokhodSpace.exists_lt_intDist_add` produces from a Cauchy sequence with
+    summable consecutive distances — it produces the limit path `z`, the single
+    time change `L` of `exists_tendsto_norm_tail_le`, and the convergence of
+    `x n ∘ κ n`, `κ n = (partialComp l n)⁻¹ * L`, to `z` **uniformly on every
+    window**. Three things carry it. The recursion `κ n = l n * κ (n+1)` turns
+    the increment `r (x n (κ n t)) (x (n+1) (κ (n+1) t))` into
+    `r (x n (l n s)) (x (n+1) s)` with `s = κ (n+1) t`, which is one term of
+    `distWith`. The uniform bound `‖κ n‖ ≤ ∑' γ` keeps both `s` and `l n s`
+    inside the window of radius `exp (∑' γ) · m` whenever `t` lies in the window
+    of radius `m`, so one `distWith` bounds the increment for the whole window at
+    once. And `SkorokhodSpace.exists_gt_summable_distWith` supplies, above that
+    radius, a radius at which those `distWith` are summable in `n` — the good
+    radii are unbounded because the bad ones are null and `Set.Ioi c` has
+    infinite measure. Then `cauchySeq_of_dist_le_of_summable` gives the limit
+    pointwise and `dist_le_tsum_of_dist_le_of_tendsto` gives it uniformly, with
+    the tail of the series as the rate. That `z` is càdlàg is
+    `IsCadlag.of_tendstoUniformlyOn_exhaustion` of Milestone 2: uniform
+    convergence on every window suffices, since `x n ∘ κ n ∘ clamp u` converges
+    uniformly on all of `ι` and every point lies in the interior of some window.
+    Two small items go with it: `summable_of_summable_min_one`, which undoes the
+    truncation at `1` that `ae_summable_min_one_distWith` leaves behind, and
+    `SkorokhodSpace.dist_le_distWith`, one term of the supremum.
+  * `SkorokhodSpace.tendsto_intDist_of_tendsto_of_partialComp`: locally uniform
+    convergence of `x n ∘ κ n` to `z`, together with `‖κ n‖ → 0`, gives
+    `intDist t₀ (x n) z → 0`. This is what is left of completeness, and it is not
+    a repetition of the assembly: `distWith t₀ u (κ n) (x n) z` clamps the two
+    paths **separately**, `x n` at `κ n t` and `z` at `t`, so on the part of the
+    index above `A = exhaustionMax t₀ u` both readings collapse onto `A` and the
+    term becomes `r (x n A) (z A)` — a comparison of the two paths at one point,
+    off by the time change. Dominated convergence over the radius (the integrand
+    is below `1` and `exp (-u)` is integrable on `Set.Ioi 0`) reduces the claim to
+    almost every radius, and at a radius where the term survives it survives for
+    one of exactly two reasons, which is the dichotomy to formalise:
+    * either the level set `{u : exhaustionMax t₀ u = A}` is null, and then that
+      radius is discarded with the null set;
+    * or it is not, and then the index has a **gap** above `A` — no point at
+      distance in an interval beyond `A` — and
+      `TimeChange.eq_of_gap_of_norm_lt` (proved 2026-09-08, and it needs neither
+      `OrderTopology ι` nor `ProperSpace ι`) says that a time change anchored at
+      `t₀` whose displacement `(exp ‖λ‖ - 1) · 2u` on the window is below the gap
+      width fixes `A` outright, so the term is `r (x n A) (z A) = r (z A) (z A)`
+      in the limit and vanishes.
+    The gap width itself is produced by compactness: the points above `A` within
+    a bounded distance form a closed bounded, hence compact, set that does not
+    accumulate at `A`, so it has a least element.
   * The route through the truncations — a limit per window, glued along
     `SkorokhodSpace.restrictExhaustion_restrictExhaustion` — is **not** the route,
     and this is the correction of 2026-09-08. It fails at the window endpoints and

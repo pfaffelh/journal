@@ -116,6 +116,20 @@ found is that the missing rung, the compatibility of the window limits, is
 missing because there is nothing there: the window endpoints obstruct it, and the
 obstruction is `SkorokhodSpace.dist_exhaustionMax_le_distOn`.
 
+Since 2026-09-08, twenty-second run, the **assembly** stands as well:
+`SkorokhodSpace.tendsto_of_partialComp` builds the limit path out of the
+infinite composition and delivers uniform convergence on every window, and
+`SkorokhodSpace.exists_gt_summable_distWith` is what feeds it a radius --- the
+good radii of `ae_summable_min_one_distWith` are unbounded, because the bad ones
+are null while `Set.Ioi c` is not.  What `CompleteSpace D(ι, E)` still owes is
+the passage from that locally uniform convergence back to `intDist`, and the one
+case of it that is not a limit argument is the window endpoint: `distWith` clamps
+the two paths separately, so above `exhaustionMax t₀ u` it reads
+`r (x n A) (z A)` off the paths at one point, off by the time change.  Half of
+that case is paid: `TimeChange.eq_of_gap_of_norm_lt` says that where the index has
+a gap above `A` --- which is exactly when the radii with that endpoint are not a
+null set --- every anchored time change of small enough norm fixes `A` outright.
+
 Since 2026-09-07 the whole of `TimeChange.lipConst` and `TimeChange.norm` is
 proved: the attainment `lipschitzWith_lipConst`, `lipConst_one`,
 `lipConst_of_subsingleton`, `lipConst_mul_le`, `one_le_max_lipConst`,
@@ -3411,6 +3425,239 @@ theorem SkorokhodSpace.ae_summable_min_one_distWith [SecondCountableTopology E]
       min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n)) :=
     (NNReal.summable_coe.2 hnnreal).congr fun n => Real.coe_toNNReal _ (hnn n u)
   exact (summable_mul_left_iff (Real.exp_pos (-u)).ne').1 hsum
+
+/-- Undoing the truncation at `1`.  `ae_summable_min_one_distWith` delivers the
+summability of `min 1 aₙ`, and the assembly below needs it for `aₙ` itself,
+because the increments it estimates are bounded by `distWith` and not by its
+truncation.  It costs nothing: a summable sequence tends to `0`, so `min 1 aₙ`
+is eventually `aₙ`, and summability does not see a finite prefix. -/
+theorem summable_of_summable_min_one {a : ℕ → ℝ}
+    (h : Summable fun n => min 1 (a n)) : Summable a := by
+  have hev : ∀ᶠ n in Filter.atTop, min 1 (a n) < 1 :=
+    h.tendsto_atTop_zero.eventually_lt_const one_pos
+  obtain ⟨N, hN⟩ := Filter.eventually_atTop.1 hev
+  rw [← summable_nat_add_iff N]
+  refine ((summable_nat_add_iff N).2 h).congr fun n => ?_
+  have hlt := hN (n + N) (Nat.le_add_left N n)
+  rcases lt_or_ge (a (n + N)) 1 with hax | hax
+  · exact min_eq_right hax.le
+  · rw [min_eq_left hax] at hlt
+    exact absurd hlt (lt_irrefl 1)
+
+omit [BasePoint ι] in
+/-- One term of the supremum that defines `distWith` lies below it.  This is the
+form in which the assembly reads the window pseudodistance off a single pair of
+points, and it is `le_ciSup` against
+`bddAbove_range_dist_restrictExhaustion`. -/
+theorem SkorokhodSpace.dist_le_distWith (t₀ : ι) (u : ℝ) (l : TimeChange ι)
+    (f g : D(ι, E)) (t : ι) :
+    dist (f.toFun (clamp t₀ u (l.toOrderIso t))) (g.toFun (clamp t₀ u t))
+      ≤ SkorokhodSpace.distWith t₀ u l f g :=
+  le_ciSup (SkorokhodSpace.bddAbove_range_dist_restrictExhaustion t₀ u f g l) t
+
+omit [BasePoint ι] in
+/-- **Good radii are unbounded.**  `ae_summable_min_one_distWith` says that the
+window distances are summable at almost every radius; the assembly needs one
+such radius above *every* bound, because it has to control a window large
+enough to contain the images of `exhaustion t₀ m` under all the time changes at
+once.  It gets one because the bad radii form a null set while `Set.Ioi c` has
+infinite measure. -/
+theorem SkorokhodSpace.exists_gt_summable_distWith [SecondCountableTopology E]
+    (t₀ : ι) (l : ℕ → TimeChange ι) (x y : ℕ → D(ι, E)) (γ : ℕ → ℝ)
+    (hγ : Summable γ) (hle : ∀ n, SkorokhodSpace.intWith t₀ (l n) (x n) (y n) ≤ γ n)
+    (c : ℝ) :
+    ∃ u : ℝ, c < u ∧ 0 < u ∧
+      Summable fun n : ℕ => SkorokhodSpace.distWith t₀ u (l n) (x n) (y n) := by
+  have hae := SkorokhodSpace.ae_summable_min_one_distWith t₀ l x y γ hγ hle
+  rw [MeasureTheory.ae_restrict_iff' measurableSet_Ioi] at hae
+  by_contra hcon
+  have hsub : Set.Ioi (max c 0) ⊆ {u : ℝ | ¬ (u ∈ Set.Ioi (0 : ℝ) →
+      Summable fun n : ℕ => min 1 (SkorokhodSpace.distWith t₀ u (l n) (x n) (y n)))} := by
+    intro v hv
+    simp only [Set.mem_ofPred_eq]
+    intro hmem
+    have hv0 : (0 : ℝ) < v := lt_of_le_of_lt (le_max_right _ _) hv
+    exact hcon ⟨v, lt_of_le_of_lt (le_max_left _ _) hv, hv0,
+      summable_of_summable_min_one (hmem (Set.mem_Ioi.2 hv0))⟩
+  have hmono := MeasureTheory.measure_mono (μ := MeasureTheory.volume) hsub
+  rw [MeasureTheory.ae_iff.1 hae, Real.volume_Ioi] at hmono
+  simp at hmono
+
+omit [BasePoint ι] in
+/-- **The assembly**, the last rung of `CompleteSpace D(ι, E)` and the one the
+README of Milestone 5 names `tendsto_of_partialComp`.
+
+The data is a sequence of paths `x` together with time changes `l n` whose norms
+and whose windowed costs are both dominated by a summable `γ` --- exactly what
+`SkorokhodSpace.exists_lt_intDist_add` produces from a Cauchy sequence whose
+consecutive distances are summable.  The conclusion is the limit path `z` and the
+single time change `L` of `TimeChange.exists_tendsto_norm_tail_le`, together with
+the statement that the reparametrised paths `x n ∘ (Pₙ⁻¹ L)` converge to `z`
+**uniformly on every window**, `Pₙ` being the `n`-th partial composition.
+
+Three things carry it.  The recursion `κ n = l n * κ (n+1)` for
+`κ n = Pₙ⁻¹ * L` turns the increment `dist (x n (κ n t)) (x (n+1) (κ (n+1) t))`
+into `dist (x n (l n s)) (x (n+1) s)` with `s = κ (n+1) t`, which is one term of
+`distWith`.  The uniform norm bound `‖κ n‖ ≤ ∑' γ` keeps `s` and `l n s` inside
+the window of radius `exp (∑' γ) * m` whenever `t` lies in the window of radius
+`m`, so the same `distWith` bounds the increment for every `t` of that window at
+once.  And `exists_gt_summable_distWith` supplies, above that radius, one at
+which the `distWith` are summable in `n`; `cauchySeq_of_dist_le_of_summable`
+then gives the limit pointwise and `dist_le_tsum_of_dist_le_of_tendsto` gives it
+uniformly, with the tail of the series as the rate. -/
+theorem SkorokhodSpace.tendsto_of_partialComp [SecondCountableTopology E]
+    [CompleteSpace E] (t₀ : ι) (x : ℕ → D(ι, E)) (l : ℕ → TimeChange ι)
+    (hl : ∀ n, l n ∈ TimeChange.fixing t₀) (γ : ℕ → ℝ) (hγ : Summable γ)
+    (hnorm : ∀ n, (l n).norm ≤ γ n)
+    (hint : ∀ n, SkorokhodSpace.intWith t₀ (l n) (x n) (x (n + 1)) ≤ γ n) :
+    ∃ (z : D(ι, E)) (L : TimeChange ι), L ∈ TimeChange.fixing t₀ ∧
+      (∀ n : ℕ, ((TimeChange.partialComp l n)⁻¹ * L).norm ≤ ∑' i, γ (n + i)) ∧
+      ∀ m : ℕ, TendstoUniformlyOn
+        (fun (n : ℕ) (t : ι) =>
+          (x n).toFun (((TimeChange.partialComp l n)⁻¹ * L).toOrderIso t))
+        z.toFun Filter.atTop (exhaustion t₀ m) := by
+  classical
+  have hγ0 : ∀ n, 0 ≤ γ n := fun n => (TimeChange.norm_nonneg (l n)).trans (hnorm n)
+  obtain ⟨L, hLfix, hLtail, -⟩ :=
+    TimeChange.exists_tendsto_norm_tail_le t₀ l hl γ hnorm hγ
+  set κ : ℕ → TimeChange ι := fun n => (TimeChange.partialComp l n)⁻¹ * L with hκdef
+  have hκfix : ∀ n, κ n ∈ TimeChange.fixing t₀ := fun n =>
+    (TimeChange.fixing t₀).mul_mem
+      ((TimeChange.fixing t₀).inv_mem (TimeChange.partialComp_mem_fixing hl n)) hLfix
+  have hrec : ∀ n, κ n = l n * κ (n + 1) := by
+    intro n
+    simp only [hκdef, TimeChange.partialComp_succ, mul_inv_rev]
+    group
+  -- the tails of `γ` are below its sum, so all the `κ n` share one Lipschitz bound
+  have hΓ0 : (0 : ℝ) ≤ ∑' i, γ i := tsum_nonneg hγ0
+  have hTle : ∀ n : ℕ, (∑' i, γ (n + i)) ≤ ∑' i, γ i := by
+    intro n
+    have hcomm : (∑' i, γ (n + i)) = ∑' i, γ (i + n) := by
+      simp only [Nat.add_comm]
+    have hsplit := hγ.sum_add_tsum_nat_add (f := γ) n
+    have hnn : 0 ≤ ∑ i ∈ Finset.range n, γ i := Finset.sum_nonneg fun i _ => hγ0 i
+    rw [hcomm]
+    linarith
+  have hκnorm : ∀ n, (κ n).norm ≤ ∑' i, γ i := fun n => (hLtail n).trans (hTle n)
+  -- the image of a window under any `κ n` sits inside the window blown up by `exp (∑' γ)`
+  have hwin : ∀ (m : ℕ) (t : ι), t ∈ exhaustion t₀ (m : ℝ) → ∀ n : ℕ,
+      dist ((κ n).toOrderIso t) t₀ ≤ Real.exp (∑' i, γ i) * m := by
+    intro m t ht n
+    have h₀ : (κ n).toOrderIso t₀ = t₀ := hκfix n
+    have hd := TimeChange.dist_le_exp_norm_mul (κ n) t₀ t
+    rw [h₀] at hd
+    have hdt : dist t₀ t ≤ (m : ℝ) := by
+      have := ht
+      simp only [exhaustion, Metric.mem_closedBall] at this
+      rw [dist_comm]
+      exact this.trans (max_le le_rfl (Nat.cast_nonneg m))
+    rw [dist_comm]
+    refine hd.trans ?_
+    exact mul_le_mul (Real.exp_le_exp.2 (hκnorm n)) hdt dist_nonneg (Real.exp_pos _).le
+  -- one good radius per window, above the blown up radius
+  have hgood : ∀ m : ℕ, ∃ u : ℝ, Real.exp (∑' i, γ i) * m < u ∧ 0 < u ∧
+      Summable fun n : ℕ => SkorokhodSpace.distWith t₀ u (l n) (x n) (x (n + 1)) := fun m =>
+    SkorokhodSpace.exists_gt_summable_distWith t₀ l x (fun n => x (n + 1)) γ hγ hint _
+  choose u hu hu0 husum using hgood
+  set Z : ℕ → ι → E := fun n t => (x n).toFun ((κ n).toOrderIso t) with hZdef
+  have hZcadlag : ∀ n, IsCadlag (Z n) := fun n =>
+    (x n).isCadlag.comp_monotone_continuous (κ n).toOrderIso.monotone
+      (κ n).toOrderIso.continuous
+  -- the increment on a window is one term of `distWith` at the good radius
+  have hstep : ∀ (m : ℕ) (t : ι), t ∈ exhaustion t₀ (m : ℝ) → ∀ n : ℕ,
+      dist (Z n t) (Z (n + 1) t)
+        ≤ SkorokhodSpace.distWith t₀ (u m) (l n) (x n) (x (n + 1)) := by
+    intro m t ht n
+    have hmem : ∀ k : ℕ, (κ k).toOrderIso t ∈ exhaustion t₀ (u m) := by
+      intro k
+      simp only [exhaustion, Metric.mem_closedBall]
+      exact (hwin m t ht k).trans (le_max_of_le_left (hu m).le)
+    have hkey : (κ n).toOrderIso t = (l n).toOrderIso ((κ (n + 1)).toOrderIso t) := by
+      conv_lhs => rw [hrec n]
+      rfl
+    have h₁ : clamp t₀ (u m) ((l n).toOrderIso ((κ (n + 1)).toOrderIso t))
+        = (l n).toOrderIso ((κ (n + 1)).toOrderIso t) := by
+      rw [← hkey]
+      exact clamp_eq_self (hmem n)
+    have h₂ : clamp t₀ (u m) ((κ (n + 1)).toOrderIso t) = (κ (n + 1)).toOrderIso t :=
+      clamp_eq_self (hmem (n + 1))
+    have hbound := SkorokhodSpace.dist_le_distWith t₀ (u m) (l n) (x n) (x (n + 1))
+      ((κ (n + 1)).toOrderIso t)
+    rw [h₁, h₂] at hbound
+    simpa only [hZdef, hkey] using hbound
+  -- pointwise convergence, then the limit path
+  have hpt : ∀ t : ι, ∃ e : E, Filter.Tendsto (fun n => Z n t) Filter.atTop (𝓝 e) := by
+    intro t
+    obtain ⟨m, hm⟩ := exists_nat_ge (dist t t₀)
+    have ht : t ∈ exhaustion t₀ (m : ℝ) := by
+      simp only [exhaustion, Metric.mem_closedBall]
+      exact hm.trans (le_max_left _ _)
+    exact cauchySeq_tendsto_of_complete (cauchySeq_of_dist_le_of_summable
+      (fun n => SkorokhodSpace.distWith t₀ (u m) (l n) (x n) (x (n + 1)))
+      (fun n => hstep m t ht n) (husum m))
+  choose zf hzf using hpt
+  have hunif : ∀ m : ℕ,
+      TendstoUniformlyOn Z zf Filter.atTop (exhaustion t₀ (m : ℝ)) := by
+    intro m
+    rw [Metric.tendstoUniformlyOn_iff]
+    intro ε hε
+    have htail : Filter.Tendsto
+        (fun n : ℕ => ∑' k : ℕ,
+          SkorokhodSpace.distWith t₀ (u m) (l (n + k)) (x (n + k)) (x (n + k + 1)))
+        Filter.atTop (𝓝 0) := by
+      have h := tendsto_sum_nat_add
+        (fun i : ℕ => SkorokhodSpace.distWith t₀ (u m) (l i) (x i) (x (i + 1)))
+      simpa only [Nat.add_comm] using h
+    filter_upwards [htail.eventually (gt_mem_nhds hε)] with n hn t ht
+    have hle := dist_le_tsum_of_dist_le_of_tendsto
+      (fun k => SkorokhodSpace.distWith t₀ (u m) (l k) (x k) (x (k + 1)))
+      (fun k => hstep m t ht k) (husum m) (hzf t) n
+    rw [dist_comm]
+    exact lt_of_le_of_lt hle hn
+  refine ⟨⟨zf, IsCadlag.of_tendstoUniformlyOn_exhaustion t₀ hZcadlag hunif⟩, L, hLfix,
+    hLtail, fun m => hunif m⟩
+
+omit [OrderTopology ι] [ProperSpace ι] [BasePoint ι] in
+/-- **A gap above a point pins every small time change down at it.**
+
+This is the first rung of what is left of `CompleteSpace D(ι, E)` after
+`SkorokhodSpace.tendsto_of_partialComp`, and it settles the one case of that
+step which is not a limit argument.  Passing from locally uniform convergence
+back to `intDist` compares `x n` with `z` at `exhaustionMax t₀ u`, the greatest
+point of the window, because `clamp` sends everything above it there; the
+comparison is off by the time change, so it needs `z` to be continuous at that
+point --- unless the time change fixes it.
+
+The radii at which `exhaustionMax t₀ u` is a *fixed* point of the index form a
+level set of a monotone map, and such a set has positive measure only when the
+index has a gap above that point.  Where there is a gap of width `δ`, this lemma
+applies: a time change anchored at `t₀` moves no point of the window by more than
+`(exp ‖λ‖ - 1) · 2u`, and its inverse moves it no further, so once that quantity
+is below `δ` neither `λ A` nor `λ⁻¹ A` can clear the gap, and both orderings
+`λ A < A` and `A < λ A` are excluded. -/
+theorem TimeChange.eq_of_gap_of_norm_lt (t₀ : ι) {u : ℝ} (hu : 0 ≤ u) {A : ι}
+    (hA : A ∈ exhaustion t₀ u) {δ : ℝ}
+    (hgap : ∀ t : ι, A < t → δ ≤ dist A t) {l : TimeChange ι}
+    (h₀ : l.toOrderIso t₀ = t₀) (h : (Real.exp l.norm - 1) * (2 * u) < δ) :
+    l.toOrderIso A = A := by
+  have hfix : l ∈ TimeChange.fixing t₀ := h₀
+  have hinv : (l⁻¹).toOrderIso t₀ = t₀ := (TimeChange.fixing t₀).inv_mem hfix
+  have hd1 : dist (l.toOrderIso A) A ≤ (Real.exp l.norm - 1) * (2 * u) :=
+    TimeChange.dist_le_of_norm_le t₀ hu h₀ le_rfl hA
+  have hd2 : dist ((l⁻¹).toOrderIso A) A ≤ (Real.exp l.norm - 1) * (2 * u) :=
+    TimeChange.dist_le_of_norm_le t₀ hu hinv (TimeChange.norm_inv l).le hA
+  rcases lt_trichotomy (l.toOrderIso A) A with hlt | heq | hgt
+  · have hlt' : A < (l⁻¹).toOrderIso A := by
+      have hs := l.toOrderIso.symm.strictMono hlt
+      show A < l.toOrderIso.symm A
+      simpa using hs
+    have hge := hgap _ hlt'
+    rw [dist_comm] at hd2
+    linarith
+  · exact heq
+  · have hge := hgap _ hgt
+    rw [dist_comm] at hd1
+    linarith
 
 /-- **Completeness**, and it is a commitment again: it was withdrawn on 2026-09-08
 because it is false for the summed metric, and the instance is now the integral
