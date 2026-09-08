@@ -10660,3 +10660,208 @@ Regel bleibt und wird schärfer: **jedem `lake env lean` geht ein eigenes
 `cd ~/Code/lean/journal` unmittelbar voraus**, und `cd` in ein Unterverzeichnis
 von `.lake` unterbleibt — `grep -rn … <Pfad>` tut dasselbe ohne
 Verzeichniswechsel.
+
+### 2026-09-08, sechzehnter Lauf des Tages — der Basispunkt wird eine Typklasse, und mit ihm fallen drei `sorry` in `SkorokhodSpace`
+
+Erster von vier Läufen der vorrangigen Aufgabe. `SkorokhodSpace/Suggested.lean`
+steht bei **acht** `sorry` statt elf; die Datei geht durch `lake env lean` gegen
+v4.33.1 ohne Fehler und ohne Linterwarnung.
+
+#### Punkt 1: die Signaturfrage, und warum die Typklasse gewinnt
+
+Der Befund des fünften Laufs vom 2026-09-07 war richtig: der parameterlosen
+`MetricSpace D(ι, E)` fehlte **kein Axiom**, sondern der Basispunkt. Von den
+beiden angebotenen Wegen ist der zweite genommen:
+
+```
+class BasePoint (α : Type*) where
+  basePoint : α
+```
+
+mit `Real.instBasePoint : BasePoint ℝ := ⟨0⟩` und
+`BasePoint.ofMem : basePoint ∈ s → BasePoint s` für die drei
+Teilraum-Instanzen von Meilenstein 1. `ofMem` ist ein `def` und keine
+`instance`, und das ist die ehrliche Form: `Set.Icc (1:ℝ) 2` ist ein Index
+dieses Meilensteins und hat keinen kanonischen Ursprung.
+
+**Die Begründung, und sie ist ein einziges Argument.** `[Nonempty ι]` samt
+`Classical.arbitrary ι` liefert auch einen Punkt, aber einen **opaken**: über
+`Classical.arbitrary ℝ` ist nichts beweisbar, insbesondere nicht, daß er `0`
+ist. Damit wäre `dist f g` auf `D(ℝ, E)` nie mit `totalDist 0 f g` zu
+identifizieren — und die acceptance examples der Meilensteine 4 bis 7 nennen
+**alle** ihren Basispunkt, und alle nennen `0`: der gleitende Sprung, die
+Auswertung am Sprung, die beiden Sprünge, die nicht verschmelzen, das
+schrumpfende Bündel, „One jump costs nothing" mit `t₀ = 0` und `m = 2`. Keines
+davon ließe sich unter `Classical.arbitrary` auch nur hinschreiben. Mit
+`BasePoint` ist die Identifikation
+
+```
+theorem SkorokhodSpace.dist_eq (f g : D(ι, E)) :
+    dist f g = SkorokhodSpace.totalDist (basePoint : ι) f g := rfl
+```
+
+und sie ist `rfl`. Das ist der ganze Unterschied, und er ist der Grund, daß die
+Klasse **Daten** trägt und kein `Prop` ist.
+
+Zwei Nebenpunkte, die die Wahl mitgetragen haben. Erstens: Mathlib hat keine
+unbundled Typklasse für punktierte Typen — `git grep "class .*Pointed"` und
+`git grep basePoint` auf `upstream/master -- Mathlib/` finden nichts, und einen
+`Zero → Inhabited`-Übergang gibt es in `Algebra/Group/ZeroOne.lean` auch nicht;
+es war also nichts zu übernehmen. Zweitens: `[Inhabited ι]` wäre die
+naheliegende Zweckentfremdung gewesen, aber `default` ist in Mathlib der
+Junkwert und nicht der Ursprung, und ein Index kann seinen `Inhabited`-Zeugen
+aus einer ganz anderen Quelle beziehen als seinen Nullpunkt.
+
+**Bewiesen, mit `#print axioms` geprüft** (alle auf `propext`,
+`Classical.choice`, `Quot.sound`, keines auf `sorryAx`):
+
+* `SkorokhodSpace.instMetricSpace : MetricSpace D(ι, E)` — die parameterlose
+  Instanz, `SkorokhodSpace.metricSpace basePoint`. **Der Angelpunkt der
+  Aufgabe.**
+* `SkorokhodSpace.dist_eq` — ihre Schnittstelle, `rfl`.
+* `Real.instBasePoint`, `BasePoint.ofMem`, `BasePoint.coe_ofMem` (die beiden
+  letzten hängen an gar keinem Axiom).
+* `exhaustion_subset_exhaustion : exhaustion t₀ m ⊆ exhaustion t₁ (m + ⌈dist t₀ t₁⌉₊)`
+  — die Fenster zweier Basispunkte sind ineinander kofinal. Dreiecksungleichung
+  und `Nat.le_ceil`; es braucht weder die Ordnung noch `AdditiveDist` noch
+  Properheit.
+
+**Was ausdrücklich *nicht* behauptet wird, und warum nicht als `sorry`.** Ob
+zwei Basispunkte dieselbe Topologie geben, steht nirgends — auch nicht als
+`sorry`-Theorem, obwohl das der bequeme Weg gewesen wäre. Der Grund ist ein
+gerechneter: die Fenster sind kofinal (siehe oben), aber die Untergruppen
+`TimeChange.fixing t₀` sind es nicht — die Translation, die `t₁` nach `t₀`
+zurückträgt, hat Norm `0` und verschiebt trotzdem die Pfade, so daß aus
+`λ ∈ fixing t₀` mit kleiner Norm kein `μ ∈ fixing t₁` mit kleiner Norm **und**
+kleinem Pfadabstand folgt. Die Aussage ist in beiden Richtungen offen, und ein
+`sorry` darauf wäre eine Behauptung und keine Verpflichtung gewesen. Statt
+dessen ist sie **umgangen**: alles, was unterhalb der Instanz die Topologie von
+`D(ι, E)` erwähnt, liest seinen Basispunkt aus der Instanz und nicht aus einem
+Parameter. Das betrifft `SkorokhodSpace.isCompact_closure_iff`, dem der freie
+`t₀` genommen ist — mit ihm hätten die beiden Seiten der Äquivalenz von zwei
+verschiedenen Räumen gesprochen.
+
+#### Punkt 2, halb: `PolishSpace` ist geschenkt
+
+`SkorokhodSpace.instPolishSpace` ist `inferInstance` und kein `sorry` mehr.
+Mathlib baut `PolishSpace` aus `SeparableSpace` und `IsCompletelyMetrizableSpace`
+(`Mathlib/Topology/MetricSpace/Polish.lean:66`), und letzteres aus einer
+vollständigen Metrik (`MetricSpace.toIsCompletelyMetrizableSpace`,
+`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`). Es hängt an
+`sorryAx` nur durch die beiden Instanzen darüber, nie auf eigene Rechnung, und
+ist axiomrein in dem Augenblick, in dem die beiden es sind. Das ist der dritte
+Punkt von Meilenstein 5, und er kostet nichts.
+
+`CompleteSpace` und `SeparableSpace` selbst stehen weiter als `sorry` — sie sind
+jetzt aber, wie die Aufgabe es wollte, überhaupt erst **formulierbar**, weil die
+Metrik da ist. Beide Instanzen haben Namen bekommen
+(`SkorokhodSpace.instCompleteSpace`, `SkorokhodSpace.instSeparableSpace`),
+damit `#print axioms` sie erreicht.
+
+#### Punkt 4, erste Hälfte: `modulus` ist eine Definition und kein `sorry` mehr
+
+Die Aufgabe nennt es beim Namen: eine Definition mit `sorry`-Rumpf macht jeden
+Satz über sie zu einer Aussage über `sorryAx`. Geschrieben und bewiesen:
+
+* `SkorokhodSpace.IsSubdivision t₀ m δ (t : Fin (n+1) → ι)` — `StrictMono t`,
+  `t 0 = (B m).min`, `t (Fin.last n) = (B m).max`, und `δ < dist (t i.castSucc)
+  (t i.succ)` für jedes `i`. Als benanntes Prädikat, damit das Infimum unten
+  über ein `Prop` läuft und kein `BddBelow` braucht.
+* `SkorokhodSpace.subdivisionOsc f t` — die Oszillation über den halboffenen
+  Zellen `Set.Ico (t i.castSucc) (t i.succ)`, vom linken Randpunkt aus gemessen.
+* `SkorokhodSpace.modulus t₀ m f δ = ⨅ n, ⨅ t, ⨅ _ : IsSubdivision t₀ m δ t,
+  subdivisionOsc f t`.
+* `SkorokhodSpace.modulus_mono` — Monotonie in `δ`.
+* `SkorokhodSpace.modulus_eq_zero_of_exhaustion_subsingleton` — auf einem
+  einpunktigen Fenster ist der Modul `0`, durch die leere Zerlegung `n = 0`.
+
+**Die eine Abweichung, und ihr Grund.** Der Modul ist **`ℝ≥0∞`-wertig**, die
+Roadmap sagte `ℝ`. Das ist nicht Geschmack, sondern der leere Fall: sobald `δ`
+den Durchmesser des Fensters erreicht, gibt es überhaupt keine `δ`-dünne
+Zerlegung mehr — nicht einmal die triviale vom kleinsten zum größten Punkt —,
+und das Infimum läuft über die leere Menge. In `ℝ` ist das der Junkwert `0`,
+`modulus` wäre also `0` für alle großen `δ`, die von Meilenstein 7 verlangte
+Monotonie in `δ` wäre **falsch** und `tendsto_modulus` sagte nichts. In `ℝ≥0∞`
+ist es `⊤`, was die klassische Konvention ist, und `modulus_mono` ist ein Satz.
+Dieselbe Wahl zahlt ein zweites Mal in `isCompact_closure_iff`, wo
+`⨆ f ∈ A, modulus …` über eine unbeschränkte Familie in `ℝ` wieder ein Junk-`0`
+gewesen wäre.
+
+`modulus_eq_zero_of_exhaustion_subsingleton` ist dabei mehr als eine
+Beispielrechnung: es ist der einzige Wert von `modulus`, der vor
+`tendsto_modulus` zu haben ist, und er legt die Orientierung der Definition
+fest. Mit `Set.Icc`-Zellen, oder mit der Oszillation zwischen den
+Teilungspunkten statt innerhalb der Zellen, wäre die leere Zerlegung nicht
+zulässig und die Aussage falsch.
+
+#### Roadmap
+
+`SkorokhodSpace/README.md` ist an vier Stellen nachgezogen: Meilenstein 1 trägt
+`BasePoint` samt der Begründung gegen `Classical.arbitrary` und
+`exhaustion_subset_exhaustion`; Meilenstein 4 die parameterlose Instanz und
+`dist_eq`; Meilenstein 5 den Nachweis, daß `PolishSpace` nichts kostet;
+Meilenstein 7 die fünf neuen Deklarationen samt der `ℝ≥0∞`-Begründung und dem
+Basispunkt in `isCompact_closure_iff`.
+
+#### Punkt 2, die erste Sprosse der Vollständigkeit: bewiesen
+
+**`IsCadlag.of_tendstoUniformly`** — der gleichmäßige Limes càdlàg-Funktionen
+ist càdlàg, unter `[CompleteSpace E]`. Bewiesen, `#print axioms` nennt
+`propext`, `Classical.choice`, `Quot.sound`. Der Beweis braucht weder
+`AdditiveDist` noch `ProperSpace` und nichts aus dem Bündel (B).
+
+*Worauf sie ruht.* Auf Mathlibs
+`TendstoUniformly.tendsto_of_eventually_tendsto`
+(`Topology/UniformSpace/UniformConvergence.lean:625`): konvergieren die `F i`
+gleichmäßig gegen `f` und hat jedes `F i` einen Limes `L i` längs eines Filters
+`p'`, und konvergieren die `L i` gegen `ℓ`, so ist `Tendsto f p' (𝓝 ℓ)`. Beide
+Klauseln von `IsCadlag` sind Instanzen davon — die Rechtsstetigkeit mit
+`p' = 𝓝[>] a` und `L i = F i a`, die Linkslimiten mit `p' = 𝓝[<] x` und
+`L i = Function.leftLim (F i) x`. Für die zweite ist zu zeigen, daß die `L i`
+eine Cauchyfolge bilden, und das ist die gleichmäßige Schranke plus die
+Vollständigkeit von `E`; der Fall `𝓝[<] x = ⊥` ist getrennt und trivial.
+Vorhanden ist alles Weitere: `IsCadlag.tendsto_leftLim` von Meilenstein 2 macht
+`Function.leftLim` zur Aussage über den Strukturzeugen.
+
+*Warum sie zählt.* Weil sie die Sprosse ist, an der `CompleteSpace D(ι, E)`
+seinen Grenzpfad **erzeugt**. Billingsleys Beweis komponiert die Zeitwechsel
+unendlich und erhält daraus eine gleichmäßig auf den Fenstern konvergente Folge
+`gₖ ∘ μₖ⁻¹`; daß ihr Limes wieder in `D(ι, E)` liegt und nicht bloß in den
+beschränkten Funktionen, ist genau diese Aussage. Sie stand in keinem
+Meilenstein — Meilenstein 2 führte die Abschlußeigenschaften von `IsCadlag`
+unter Komposition (`comp_monotone_continuous`) und unter Gleichheit auf dichten
+Mengen (`eq_of_eqOn_dense`), aber nicht unter gleichmäßiger Konvergenz — und
+steht jetzt dort.
+
+#### Vorschlag für den nächsten Lauf
+
+**`TimeChange.tendsto_of_summable_norm`** — hat `l : ℕ → TimeChange ι`
+summierbare Normen, so konvergieren die Teilkompositionen `l 0 * ⋯ * l n`
+gleichmäßig auf jedem Fenster gegen einen Zeitwechsel. Das ist Billingsleys
+unendliche Komposition.
+
+*Worauf sie ruht.* Auf `TimeChange.norm_mul_le` und
+`TimeChange.dist_le_of_norm_le`, beide bewiesen — die erste macht die Normen der
+Teilkompositionen summierbar, die zweite übersetzt eine Normschranke in eine
+Verschiebungsschranke auf dem Fenster —, und auf der Vollständigkeit von `ι`,
+die aus `ProperSpace ι` kommt. Der Punkt, an dem mit Arbeit zu rechnen ist, ist
+nicht die Konvergenz, sondern daß der Limes wieder ein `TimeChange` ist:
+strenge Monotonie und Stetigkeit erbt er, die **Surjektivität** nicht, und sie
+ist bei Billingsley der eigentliche Inhalt.
+
+*Warum jetzt.* Weil `CompleteSpace D(ι, E)` mit der heute bewiesenen ersten
+Sprosse nur noch an ihr und an einem Zusammenbau hängt:
+`SkorokhodSpace.exists_lt_distOn_add` (bewiesen) liefert aus der
+Cauchy-Eigenschaft die Zeitwechsel mit kleinen Normen,
+`TimeChange.tendsto_of_summable_norm` setzt sie zusammen, und
+`IsCadlag.of_tendstoUniformly` fängt den Grenzpfad auf. Drei benannte Schritte,
+von denen zwei stehen.
+
+*Für die Separabilität, und es ist eine Warnung.* Meilenstein 5 beschreibt die
+dichte Menge als Treppenpfade mit Sprungzeiten in einer abzählbar dichten Menge
+des Index. Ein Index dieses Meilensteins ist eine **abgeschlossene** Teilmenge
+von `ℝ` und keine Strecke; die Sprungzeiten müssen also aus einer abzählbar
+dichten Teilmenge von `ι` selbst kommen, die es nach `ProperSpace ι` gibt
+(σ-kompakt, also separabel), und nicht aus den Rationalen. Das ist derselbe
+Fallstrick, an dem 2026-09-07 die Separation von `distOn` beinahe gescheitert
+wäre.

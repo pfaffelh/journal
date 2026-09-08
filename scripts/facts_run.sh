@@ -233,6 +233,18 @@ case "$RC" in
        fi ;;
 esac
 
+# --- Aufraeumen: verirrte lake-Klone im Hauptcheckout -----------------------
+# Ein `lake env lean` aus dem falschen Arbeitsverzeichnis laesst lake Mathlib als
+# Wurzelpaket behandeln und seine Abhaengigkeiten neu klonen -- 57 MB, zweimal am
+# 2026-09-08 vorgekommen.  Der Lauf selbst darf dort nicht loeschen; hier, ausser-
+# halb der Sandbox, wird es nachgeholt.  `build` und `config` bleiben unberuehrt,
+# nur das faelschlich angelegte `packages` unter mathlib faellt weg.
+STRAY="$HOME/Code/lean/journal/.lake/packages/mathlib/.lake/packages"
+if [ -d "$STRAY" ]; then
+  echo "$(date -u +%FT%TZ) verirrte lake-Klone entfernt: $(du -sh "$STRAY" | cut -f1)" >> "$RUNLOG"
+  rm -rf "$STRAY"
+fi
+
 # --- Schutznetz: das Manuskript muss uebersetzen ----------------------------
 # Unbeaufsichtigt darf kein Lauf ein kaputtes Manuskript hinterlassen.  Faellt
 # check.py durch, werden die .tex- und .pdf-Aenderungen dieses Laufs verworfen;

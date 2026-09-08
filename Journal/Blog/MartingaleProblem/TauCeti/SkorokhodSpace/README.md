@@ -145,6 +145,30 @@ class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop w
   Proved (2026-09-07). It needs neither the order topology nor properness.
 * Independence of the base point: two base points give exhaustions each of which
   refines the other after finitely many steps.
+  `exhaustion_subset_exhaustion : exhaustion t₀ m ⊆ exhaustion t₁ (m + ⌈dist t₀ t₁⌉₊)`,
+  proved (2026-09-08) from the triangle inequality and `Nat.le_ceil`, needing
+  neither the order nor `AdditiveDist` nor properness. This is the whole of what
+  relates two base points; the subgroups `TimeChange.fixing t₀` of Milestone 3
+  are a second anchoring and are not related by it.
+* ```
+  class BasePoint (α : Type*) where
+    basePoint : α
+  ```
+  the index with a distinguished point, and the origin of the exhaustion.
+  Written (2026-09-08), with `Real.instBasePoint : BasePoint ℝ := ⟨0⟩` and
+  `BasePoint.ofMem : basePoint ∈ s → BasePoint s` for the other three running
+  instances, which is a `def` and not an instance: `Set.Icc (1:ℝ) 2` is an index
+  of this milestone and has no canonical origin.
+
+  It is data, and the alternative — `[Nonempty ι]` with `Classical.arbitrary ι` —
+  is rejected on a named ground. The metric of Milestone 4 is anchored at a
+  point twice over, through `exhaustion t₀ m` and through `TimeChange.fixing t₀`,
+  while the type `D ι E` carries none, so the parameterless instance has to read
+  one off the index; `Classical.arbitrary` reads an opaque one. Under it
+  `dist f g` on `D(ℝ, E)` cannot be identified with `totalDist 0 f g`, so not
+  one of the acceptance examples of Milestones 4 to 7 — all of which name their
+  base point, and all of which name `0` — can be stated, let alone checked. With
+  `BasePoint` the identification is `SkorokhodSpace.dist_eq`, and it is `rfl`.
 
 **Acceptance examples.**
 
@@ -378,6 +402,22 @@ Under (B), with `E` a pseudometric space:
   `𝓝[>] 1 = ⊥`, and the same two functions separate. A maximal element must lie
   in `D`, which is what the disjunction above says and what Billingsley requires
   of the dense set in `D[0,1]`.
+* `IsCadlag.of_tendstoUniformly`: the uniform limit of càdlàg paths is càdlàg,
+  under `[CompleteSpace E]`. Proved (2026-09-08). It is the step at which
+  `CompleteSpace (D ι E)` of Milestone 5 produces its limit path: the composed
+  time changes give a sequence converging uniformly on each window, and that its
+  limit lies in `D ι E` and not merely in the bounded functions is this
+  statement. Both clauses come from Mathlib's
+  `TendstoUniformly.tendsto_of_eventually_tendsto`
+  (`Topology/UniformSpace/UniformConvergence.lean:625`) — right continuity along
+  `𝓝[>] a` with the values `F n a`, the left limits along `𝓝[<] x` with the left
+  limits `Function.leftLim (F n) x`. The two differ in one place, and it is
+  where the completeness of `E` is spent: the values converge because the
+  uniform limit exists pointwise, the left limits have to be shown Cauchy first,
+  from the uniform estimate read through `Filter.Tendsto.dist` and
+  `le_of_tendsto`. The degenerate filter `𝓝[<] x = ⊥` is a separate branch with
+  an arbitrary witness. The proof uses neither `AdditiveDist` nor `ProperSpace`,
+  and nothing of bundle (B).
 
 **Acceptance examples.**
 
@@ -614,6 +654,14 @@ Under (B), with `E` a pseudometric space:
   nothing of a base point. The instance is the one at the distinguished point of
   an index that has one, which is `0` for all four running instances of
   Milestone 1.
+* The parameterless instance `MetricSpace D(ι, E)`, written and proved
+  (2026-09-08): it is `SkorokhodSpace.metricSpace basePoint`, with
+  `BasePoint ι` of Milestone 1 supplying the point. Its interface is
+  `SkorokhodSpace.dist_eq : dist f g = SkorokhodSpace.totalDist basePoint f g`,
+  which holds by `rfl`, and it is what every statement below that mentions the
+  topology of `D ι E` reads. Everything from here on takes its base point from
+  the instance and not from a parameter, since a free `t₀` beside a fixed
+  ambient topology would let a statement speak of two spaces at once.
   `SkorokhodSpace.distOn_nonneg`, `SkorokhodSpace.distOn_self`,
   `SkorokhodSpace.distOn_comm` and `SkorokhodSpace.distOn_triangle` are proved
   (2026-09-07), and so is the separation: `SkorokhodSpace.eq_of_distOn_eq_zero`
@@ -699,7 +747,14 @@ Under (B), with `E` a pseudometric space:
 * `SeparableSpace (D ι E)`: the piecewise constant paths taking finitely many
   values from a countable dense subset of `E` on the intervals of a rational
   subdivision of `B m` are dense.
-* `PolishSpace (D ι E)`, from the two above.
+* `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
+  builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
+  (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
+  complete metric (`MetricSpace.toIsCompletelyMetrizableSpace`,
+  `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`), so the
+  declaration is `inferInstance` and carries no proof obligation of its own
+  (2026-09-08). It is not axiom clean, and will not be until the two above it
+  are; that is the whole of what it still owes.
 * `SkorokhodSpace.isClosed_range_continuous`: the continuous paths form a closed
   subspace, on which the metric induces the topology of uniform convergence on
   compact sets.
@@ -770,16 +825,48 @@ Under (B), with `E` a pseudometric space:
 
 ## Milestone 7: the modulus and compactness
 
-* `SkorokhodSpace.modulus m f δ`, the infimum of those `ε ≥ 0` for which there is
-  a finite subdivision `min (B m) = t 0 < ... < t n = max (B m)` with
-  `dist (t (i-1)) (t i) > δ` for every `i` and `r (f s) (f (t (i-1))) ≤ ε` for
-  all `s ∈ Set.Ico (t (i-1)) (t i)`.
+* `SkorokhodSpace.IsSubdivision t₀ m δ (t : Fin (n+1) → ι)`: the subdivision
+  predicate, `StrictMono t` with `t 0 = (B m).min`, `t (Fin.last n) = (B m).max`
+  and `δ < dist (t i.castSucc) (t i.succ)` for every `i`. Written (2026-09-08).
+  It is a named predicate and not an existential inside the modulus, so that the
+  infimum below ranges over a `Prop` and needs no `BddBelow`.
+* `SkorokhodSpace.subdivisionOsc f t`, the oscillation of `f` over the half open
+  cells `Set.Ico (t i.castSucc) (t i.succ)`, measured from the left endpoint of
+  each cell. Written (2026-09-08). The cells are `Set.Ico` and not `Set.Icc`:
+  the jump of a càdlàg path sits at the left endpoint of the next cell, and a
+  modulus that saw it from the previous one would not tend to `0` for any step
+  function.
+* `SkorokhodSpace.modulus t₀ m f δ = ⨅ n, ⨅ t, ⨅ _ : IsSubdivision t₀ m δ t,
+  subdivisionOsc f t`, Billingsley's `w'`: the least oscillation achievable by a
+  `δ`-sparse subdivision of the window. Written (2026-09-08), and **it is
+  `ℝ≥0∞` valued**. The reason is the empty case and it is not cosmetic: once `δ`
+  reaches the diameter of the window there is no `δ`-sparse subdivision at all,
+  not even the trivial one from the least to the greatest point, so the infimum
+  is over the empty set. Over `ℝ` that is the junk value `0`, `modulus` is then
+  `0` for all large `δ`, the monotonicity below is false and `tendsto_modulus`
+  says nothing. Over `ℝ≥0∞` it is `⊤`, which is the classical convention. The
+  same choice pays a second time in `isCompact_closure_iff`, where
+  `⨆ f ∈ A, modulus …` over an unbounded family would again be a junk `0`.
 * `SkorokhodSpace.tendsto_modulus`: `modulus m f δ → 0` as `δ → 0`, for each
   fixed `f` and `m`. This is the càdlàg property in quantitative form.
-* `modulus` is monotone in `δ` and in `m`.
+* `modulus` is monotone in `δ` and in `m`. `SkorokhodSpace.modulus_mono`, the
+  monotonicity in `δ`, is proved (2026-09-08): a `δ₂`-sparse subdivision is
+  `δ₁`-sparse for every smaller `δ₁`, so the infimum runs over a larger set.
+  This is the item the `ℝ≥0∞` valuation buys.
+* `SkorokhodSpace.modulus_eq_zero_of_exhaustion_subsingleton`: on a one point
+  window the modulus vanishes for every `δ`, since the empty subdivision `n = 0`
+  is admissible and has no cells. Proved (2026-09-08). It is the one value of
+  `modulus` available before `tendsto_modulus`, and it fixes the orientation of
+  the definition: with `Set.Icc` cells, or with the oscillation taken between
+  the subdivision points rather than inside the cells, the empty subdivision
+  would not be admissible and it would fail.
 * `SkorokhodSpace.isCompact_closure_iff`: `A ⊆ D ι E` has compact closure if and
   only if for every `m` the set `{f t | f ∈ A, t ∈ B m}` has compact closure in
-  `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. Both directions.
+  `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. Both directions. The window
+  is the one around `basePoint` and not around a free `t₀`: the left hand side
+  speaks of the topology of `D ι E`, which is `SkorokhodSpace.metricSpace
+  basePoint`, and a `t₀` free to differ from it would make the two sides speak
+  of two spaces.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, where the first condition is replaced by the existence of a
   compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.

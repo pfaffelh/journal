@@ -17,8 +17,30 @@ the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-07.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.
+2026-09-08.  Every declaration elaborates; the `sorry`s are the statements' own
+proofs, which is what this file is for.  There are eight of them, down from
+eleven on 2026-09-07.
+
+Since 2026-09-08 the **base point is a typeclass**, `BasePoint`, and with it the
+parameterless `MetricSpace D(ι, E)` is a theorem: `SkorokhodSpace.instMetricSpace`
+is `SkorokhodSpace.metricSpace basePoint` and depends on `propext`,
+`Classical.choice` and `Quot.sound` alone.  `SkorokhodSpace.dist_eq` is its
+interface, by `rfl`.  Two more `sorry`s went with it.
+`SkorokhodSpace.instPolishSpace` is `inferInstance` --- Mathlib assembles
+`PolishSpace` from `SeparableSpace` and a complete metric --- so it owes nothing
+of its own and is axiom clean the moment the two instances above it are.  And
+`SkorokhodSpace.modulus` is written out instead of being `sorry` as a
+*definition*: `IsSubdivision`, `subdivisionOsc`, `modulus`, with `modulus_mono`
+and `modulus_eq_zero_of_exhaustion_subsingleton` proved.  It is `ℝ≥0∞` valued
+and the roadmap said `ℝ`; the reason is at the declaration, and it is the empty
+subdivision set at large `δ`, which over `ℝ` is a junk `0` that would refute the
+monotonicity.
+
+The same run proved `IsCadlag.of_tendstoUniformly`, the first rung of the
+completeness of Milestone 5: the uniform limit of càdlàg paths is càdlàg, which
+is where the limit path of a Cauchy sequence in `D(ι, E)` is caught.  It belongs
+to Milestone 2 and is proved there, out of Mathlib's
+`TendstoUniformly.tendsto_of_eventually_tendsto` alone.
 
 Since 2026-09-07 the whole of `TimeChange.lipConst` and `TimeChange.norm` is
 proved: the attainment `lipschitzWith_lipConst`, `lipConst_one`,
@@ -95,8 +117,8 @@ with `summable_totalDist`, `totalDist_self`, `totalDist_comm`,
 `totalDist_triangle` and `eq_of_totalDist_eq_zero`, and
 `SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E)` built from them.
 It is a `def` with the base point as a parameter, as Milestone 4 asks; the
-parameterless `instance` below it stays `sorry` because it is the base point
-that is missing there, not an axiom.
+parameterless `instance` below it was `sorry` because it is the base point that
+was missing there, not an axiom, and since 2026-09-08 `BasePoint` supplies it.
 
 Since 2026-09-07, eighth run, `IsCadlag.measurable` is proved, and its bundle
 was wrong: it stood under (B) with `E` Polish and a proof by right continuous
@@ -139,6 +161,27 @@ open scoped NNReal ENNReal
 `ProperSpace` this pins the index down to a closed subset of `ℝ`. -/
 class AdditiveDist (α : Type*) [LinearOrder α] [PseudoMetricSpace α] : Prop where
   dist_add : ∀ {s t u : α}, s ≤ t → t ≤ u → dist s u = dist s t + dist t u
+
+/-- An index with a distinguished point, the origin of the exhaustion.  The
+Skorokhod metric of Milestone 4 is anchored at a point twice over --- through
+the window `exhaustion t₀ m` and through the subgroup `TimeChange.fixing t₀` ---
+while the type `D(ι, E)` carries none, so the parameterless `MetricSpace`
+instance has to read one off the index.  This class is that reading.
+
+It is data and not a `Prop`, and that is the whole point of it: the alternative
+`[Nonempty ι]` with `Classical.arbitrary ι` also produces a point, but an opaque
+one, about which nothing is provable.  Under it `dist f g` on `D(ℝ, E)` could
+never be identified with `totalDist 0 f g`, so not one of the acceptance
+examples of Milestones 4 to 7 --- all of which name their base point, and all of
+which name `0` --- could be stated, let alone checked, and the explicit `t₀` of
+`SkorokhodSpace.isCompact_closure_iff` would silently be a *different* point
+from the one the ambient topology is built on.  With `BasePoint` the
+identification is `SkorokhodSpace.dist_eq` below, and it is `rfl`. -/
+class BasePoint (α : Type*) where
+  /-- The distinguished point of the index. -/
+  basePoint : α
+
+export BasePoint (basePoint)
 
 variable {ι : Type*} [LinearOrder ι] [MetricSpace ι] [OrderTopology ι]
   [AdditiveDist ι] [ProperSpace ι]
@@ -219,9 +262,41 @@ instance Real.instAdditiveDist : AdditiveDist ℝ where
       abs_of_nonpos (by linarith), abs_of_nonpos (by linarith)]
     ring
 
+/-- The base point of `ℝ` is `0`, as it is for all four running instances. -/
+instance Real.instBasePoint : BasePoint ℝ := ⟨0⟩
+
+/-- The other three running instances go through subtypes, and a subtype is an
+index with a base point exactly when it contains the ambient one.  That is a
+hypothesis and not an instance, which is the honest form: `Set.Icc (1:ℝ) 2` is
+an index of Milestone 1 and has no canonical origin. -/
+@[instance_reducible]
+def BasePoint.ofMem {α : Type*} [BasePoint α] {s : Set α} (h : basePoint ∈ s) :
+    BasePoint s := ⟨⟨basePoint, h⟩⟩
+
+@[simp]
+theorem BasePoint.coe_ofMem {α : Type*} [BasePoint α] {s : Set α} (h : basePoint ∈ s) :
+    ((@basePoint s (BasePoint.ofMem h)) : α) = basePoint := rfl
+
 omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 theorem mem_exhaustion_self (t₀ : ι) (m : ℕ) : t₀ ∈ exhaustion t₀ m :=
   Metric.mem_closedBall_self (by positivity)
+
+omit [LinearOrder ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The windows around two base points are cofinal in each other: every window
+around `t₀` sits inside a window around `t₁`, at the cost of enlarging the
+radius by the distance of the two points.  This is the only relation between two
+base points that the metric of Milestone 4 makes available, and it is what any
+comparison of `SkorokhodSpace.metricSpace t₀` with `SkorokhodSpace.metricSpace
+t₁` has to run on.  The comparison itself is *not* claimed here: the subgroups
+`TimeChange.fixing t₀` also differ, and no argument in this file relates them. -/
+theorem exhaustion_subset_exhaustion (t₀ t₁ : ι) (m : ℕ) :
+    exhaustion t₀ m ⊆ exhaustion t₁ (m + ⌈dist t₀ t₁⌉₊) := by
+  intro t ht
+  simp only [exhaustion, Metric.mem_closedBall] at ht ⊢
+  have h1 : dist t t₁ ≤ dist t t₀ + dist t₀ t₁ := dist_triangle _ _ _
+  have h2 : dist t₀ t₁ ≤ (⌈dist t₀ t₁⌉₊ : ℝ) := Nat.le_ceil _
+  push_cast
+  linarith
 
 omit [OrderTopology ι] [ProperSpace ι] in
 /-- The window is an order interval.  This is `AdditiveDist` again, and it is
@@ -329,6 +404,55 @@ unconditional: `tendsto_leftLim_of_tendsto` covers the degenerate case
 theorem IsCadlag.tendsto_leftLim {f : ι → E} (hf : IsCadlag f) (x : ι) :
     Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x)) :=
   tendsto_leftLim_of_tendsto (hf.left_limit x)
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- **The uniform limit of càdlàg paths is càdlàg.**  This is the step at which
+the completeness of `D(ι, E)` produces its limit path: Billingsley's proof
+composes the time changes infinitely and obtains a sequence converging uniformly
+on each window, and that its limit lies in `D(ι, E)` and not merely in the
+bounded functions is this statement.
+
+Both clauses are instances of Mathlib's
+`TendstoUniformly.tendsto_of_eventually_tendsto`
+(`Topology/UniformSpace/UniformConvergence.lean:625`) --- right continuity along
+`𝓝[>] a` with the values `F n a`, the left limits along `𝓝[<] x` with the left
+limits `Function.leftLim (F n) x`.  The two differ in exactly one place, and it
+is where `CompleteSpace E` is spent: the values converge because the uniform
+limit exists pointwise, while the left limits have to be shown to be a Cauchy
+sequence first.  Their limit is `⊥`-safe: when `𝓝[<] x` is the bottom filter the
+witness is arbitrary, and the argument is skipped rather than repaired. -/
+theorem IsCadlag.of_tendstoUniformly [CompleteSpace E] {F : ℕ → ι → E} {f : ι → E}
+    (hF : ∀ n, IsCadlag (F n)) (h : TendstoUniformly F f atTop) : IsCadlag f where
+  right_continuous a :=
+    h.tendsto_of_eventually_tendsto
+      (Eventually.of_forall fun n => (hF n).right_continuous a) (h.tendsto_at a)
+  left_limit x := by
+    rcases eq_or_neBot (𝓝[<] x) with hx | hx
+    · exact ⟨f x, by simp [hx]⟩
+    · -- the uniform estimate, in the form the two limits below consume
+      have huc : ∀ ε > 0, ∃ N, ∀ n ≥ N, ∀ t, dist (F n t) (f t) < ε := by
+        intro ε hε
+        obtain ⟨N, hN⟩ := eventually_atTop.1 (Metric.tendstoUniformly_iff.1 h ε hε)
+        exact ⟨N, fun n hn t => by simpa [dist_comm] using hN n hn t⟩
+      have hcauchy : CauchySeq fun n => Function.leftLim (F n) x := by
+        rw [Metric.cauchySeq_iff]
+        intro ε hε
+        obtain ⟨N, hN⟩ := huc (ε / 4) (by linarith)
+        refine ⟨N, fun n hn m hm => ?_⟩
+        have hlim : Tendsto (fun t => dist (F n t) (F m t)) (𝓝[<] x)
+            (𝓝 (dist (Function.leftLim (F n) x) (Function.leftLim (F m) x))) :=
+          ((hF n).tendsto_leftLim x).dist ((hF m).tendsto_leftLim x)
+        have hle : dist (Function.leftLim (F n) x) (Function.leftLim (F m) x) ≤ ε / 2 := by
+          refine le_of_tendsto hlim (Eventually.of_forall fun t => ?_)
+          have h1 := hN n hn t
+          have h2 := hN m hm t
+          have := dist_triangle (F n t) (f t) (F m t)
+          rw [dist_comm (f t) (F m t)] at this
+          linarith
+        linarith
+      obtain ⟨l, hl⟩ := cauchySeq_tendsto_of_complete hcauchy
+      exact ⟨l, h.tendsto_of_eventually_tendsto
+        (Eventually.of_forall fun n => (hF n).tendsto_leftLim x) hl⟩
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- If `f` stays `r`-close to a point `c` of `E` on `Set.Ioo a y` and at `y`,
@@ -1643,18 +1767,49 @@ noncomputable def SkorokhodSpace.metricSpace (t₀ : ι) : MetricSpace D(ι, E) 
   dist_triangle := SkorokhodSpace.totalDist_triangle t₀
   eq_of_dist_eq_zero h := SkorokhodSpace.eq_of_totalDist_eq_zero t₀ _ _ h
 
-/-- The `sorry` here is not the metric, which is `SkorokhodSpace.metricSpace`
-above and carries proofs of all four axioms.  It is the base point: the ten
-declarations after this line elaborate against a **parameterless** instance,
-which no index supplies on its own.  Whether two base points give the same
-topology is not claimed anywhere -- the subgroups `TimeChange.fixing t₀` differ
-for different `t₀` -- so the placeholder stands until the ten are rewritten
-against `SkorokhodSpace.metricSpace t₀`. -/
-noncomputable instance : MetricSpace D(ι, E) := sorry
+variable [BasePoint ι]
 
-instance [PolishSpace E] : CompleteSpace D(ι, E) := sorry
-instance [PolishSpace E] : TopologicalSpace.SeparableSpace D(ι, E) := sorry
-instance [PolishSpace E] : PolishSpace D(ι, E) := sorry
+/-- The parameterless instance, and it is no longer a `sorry`: it is
+`SkorokhodSpace.metricSpace` at the distinguished point of the index.  What was
+missing here was never an axiom --- all four are proved above --- but the base
+point, and `BasePoint` is where it now comes from.
+
+The alternative, `[Nonempty ι]` with `Classical.arbitrary ι`, was rejected: it
+produces a point about which nothing is provable, so `dist` on `D(ℝ, E)` could
+not be identified with `totalDist 0`, and every acceptance example of the
+following milestones names its base point.  See the class for the argument.
+
+Whether two base points give the same topology is still not claimed, and it is
+deliberately not stated as a `sorry` either: the windows are cofinal in each
+other (`exhaustion_subset_exhaustion` of Milestone 1), but the subgroups
+`TimeChange.fixing t₀` are not conjugate by anything of small norm --- the
+translation that carries `t₁` back to `t₀` has norm `0` and yet displaces the
+paths --- so the statement is open in both directions and would be a claim, not
+a commitment.  Everything below that mentions the topology of `D(ι, E)`
+therefore reads its base point from the instance, and not from a parameter. -/
+noncomputable instance SkorokhodSpace.instMetricSpace : MetricSpace D(ι, E) :=
+  SkorokhodSpace.metricSpace (basePoint : ι)
+
+/-- The metric is the one of `SkorokhodSpace.metricSpace` at the base point, by
+definition.  This is the lemma that `Classical.arbitrary` could not have: it is
+what lets an acceptance example on `D(ℝ, E)` compute with `totalDist 0`. -/
+@[simp]
+theorem SkorokhodSpace.dist_eq (f g : D(ι, E)) :
+    dist f g = SkorokhodSpace.totalDist (basePoint : ι) f g := rfl
+
+instance SkorokhodSpace.instCompleteSpace [PolishSpace E] : CompleteSpace D(ι, E) := sorry
+instance SkorokhodSpace.instSeparableSpace [PolishSpace E] :
+    TopologicalSpace.SeparableSpace D(ι, E) := sorry
+
+/-- Polish, and this one is a derivation rather than a `sorry`: Mathlib builds
+`PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
+(`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
+complete metric (`MetricSpace.toIsCompletelyMetrizableSpace`,
+`Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`).  It depends on
+`sorryAx` only through the two instances above it, never on its own account, and
+it will be axiom clean the moment they are.  This is the third item of
+Milestone 5, and it costs nothing once the first two are in. -/
+instance SkorokhodSpace.instPolishSpace [PolishSpace E] : PolishSpace D(ι, E) := inferInstance
 
 /-- Evaluation is continuous exactly at the paths that do not jump at `t`. -/
 theorem SkorokhodSpace.continuousAt_eval {t : ι} {f : D(ι, E)} :
@@ -1681,15 +1836,102 @@ theorem SkorokhodSpace.borel_eq_iSup_comap_eval :
       ⨆ t : ι, MeasurableSpace.comap (fun f : D(ι, E) => f.toFun t) inferInstance :=
   sorry
 
-/-! ## Milestone 7: the modulus and compactness -/
+/-! ## Milestone 7: the modulus and compactness
 
-/-- The càdlàg modulus on `exhaustion t₀ m`. -/
-noncomputable def SkorokhodSpace.modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) (δ : ℝ) : ℝ := sorry
+`SkorokhodSpace.modulus` was `sorry` as a **definition** until 2026-09-08, which
+made every statement about it a statement about `sorryAx` --- the same trap as a
+statement whose body is `True`.  It is now written out, and two deviations from
+the roadmap's wording were forced by that writing; both are recorded at the
+declarations themselves.  The first is the value type: the modulus is `ℝ≥0∞` and
+not `ℝ`.  The second is that the subdivision predicate is named and separate, so
+that the infimum ranges over a `Prop` and needs no `BddBelow`. -/
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- A `δ`-sparse subdivision of the window `exhaustion t₀ m`: a strictly
+monotone `t : Fin (n + 1) → ι` running from the least to the greatest point of
+the window, all of whose consecutive gaps exceed `δ`.  This is Billingsley's
+condition `min i, (t i - t (i-1)) > δ` verbatim, and the `>` is strict on
+purpose: it is what makes the one jump of a step function cost nothing, since
+the jump time may be used as a subdivision point. -/
+def SkorokhodSpace.IsSubdivision (t₀ : ι) (m : ℕ) (δ : ℝ) {n : ℕ}
+    (t : Fin (n + 1) → ι) : Prop :=
+  StrictMono t ∧ t 0 = exhaustionMin t₀ m ∧ t (Fin.last n) = exhaustionMax t₀ m ∧
+    ∀ i : Fin n, δ < dist (t i.castSucc) (t i.succ)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The oscillation of `f` over the half open cells of a subdivision, measured
+from the left endpoint of each cell.  The cells are `Set.Ico` and not
+`Set.Icc`: the jump of a càdlàg path sits at the left endpoint of the *next*
+cell, and a modulus that saw it from the previous one would not tend to `0` for
+any step function. -/
+noncomputable def SkorokhodSpace.subdivisionOsc (f : D(ι, E)) {n : ℕ}
+    (t : Fin (n + 1) → ι) : ℝ≥0∞ :=
+  ⨆ i : Fin n, ⨆ s ∈ Set.Ico (t i.castSucc) (t i.succ),
+    edist (f.toFun s) (f.toFun (t i.castSucc))
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The càdlàg modulus on `exhaustion t₀ m`, Billingsley's `w'`: the least
+oscillation achievable by a `δ`-sparse subdivision of the window.
+
+**It is `ℝ≥0∞` valued, and the roadmap said `ℝ`.**  The reason is the empty
+case, and it is not cosmetic.  Once `δ` reaches the diameter of the window
+there is no `δ`-sparse subdivision at all --- not even the trivial one from the
+least to the greatest point --- so the infimum is over the empty set.  In `ℝ`
+that is the junk value `0`, and `modulus` would then be `0` for all large `δ`,
+which destroys the monotonicity in `δ` that Milestone 7 asks for and would make
+`tendsto_modulus` say nothing.  In `ℝ≥0∞` it is `⊤`, which is the classical
+convention and makes `SkorokhodSpace.modulus_mono` a theorem.  The same choice
+pays a second time in `isCompact_closure_iff`, where `⨆ f ∈ A, modulus …` over
+an unbounded family would again be a junk `0` in `ℝ`. -/
+noncomputable def SkorokhodSpace.modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) (δ : ℝ) : ℝ≥0∞ :=
+  ⨅ n : ℕ, ⨅ t : Fin (n + 1) → ι, ⨅ _ : SkorokhodSpace.IsSubdivision t₀ m δ t,
+    SkorokhodSpace.subdivisionOsc f t
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The modulus is monotone in `δ`: a `δ₂`-sparse subdivision is `δ₁`-sparse for
+every smaller `δ₁`, so the infimum defining `modulus δ₁` runs over a larger set.
+This is the item of Milestone 7 that the `ℝ≥0∞` valuation buys; over `ℝ` it is
+false, by the junk value at large `δ`. -/
+theorem SkorokhodSpace.modulus_mono (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
+    Monotone (SkorokhodSpace.modulus t₀ m f) := by
+  intro δ₁ δ₂ h
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  exact iInf_le_of_le n (iInf_le_of_le t (iInf_le_of_le
+    ⟨ht.1, ht.2.1, ht.2.2.1, fun i => lt_of_le_of_lt h (ht.2.2.2 i)⟩ le_rfl))
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The degenerate window of Milestone 4's fourth acceptance example: when the
+window is a single point the empty subdivision `n = 0` is admissible for every
+`δ`, and it has no cells, so the modulus is `0`.  This is the one value of
+`modulus` that is available before `tendsto_modulus`, and it is what fixes the
+orientation of the definition: with `Set.Icc` cells, or with the oscillation
+taken between the subdivision points rather than inside the cells, the empty
+subdivision would not be admissible and this would fail. -/
+theorem SkorokhodSpace.modulus_eq_zero_of_exhaustion_subsingleton (t₀ : ι) (m : ℕ)
+    (f : D(ι, E)) (δ : ℝ) (h : exhaustionMin t₀ m = exhaustionMax t₀ m) :
+    SkorokhodSpace.modulus t₀ m f δ = 0 := by
+  refine le_antisymm ?_ (by simp)
+  have hsm : StrictMono (fun _ : Fin (0 + 1) => exhaustionMin t₀ m) := by
+    intro a b hab
+    have ha := a.isLt
+    have hb := b.isLt
+    have hab' : (a : ℕ) < (b : ℕ) := hab
+    omega
+  refine iInf_le_of_le 0 (iInf_le_of_le (fun _ => exhaustionMin t₀ m)
+    (iInf_le_of_le ⟨hsm, rfl, h, fun i => i.elim0⟩ ?_))
+  simp [SkorokhodSpace.subdivisionOsc]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
 theorem SkorokhodSpace.tendsto_modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
     Tendsto (SkorokhodSpace.modulus t₀ m f) (𝓝[>] 0) (𝓝 0) := sorry
 
-theorem SkorokhodSpace.isCompact_closure_iff (t₀ : ι) (A : Set D(ι, E)) :
+/-- The compactness criterion.  The base point is the one of the instance and
+not a parameter: the left hand side speaks of the topology of `D(ι, E)`, which
+is `SkorokhodSpace.metricSpace basePoint`, and a `t₀` free to differ from it
+would make the two sides speak of two different spaces.  This is the correction
+that `BasePoint` forced, and it is the reason the class carries data. -/
+theorem SkorokhodSpace.isCompact_closure_iff (A : Set D(ι, E)) :
     IsCompact (closure A) ↔ ∀ m : ℕ,
-      IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion t₀ m, f.toFun t = x}) ∧
-      Tendsto (fun δ => ⨆ f ∈ A, SkorokhodSpace.modulus t₀ m f δ) (𝓝[>] 0) (𝓝 0) := sorry
+      IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion (basePoint : ι) m, f.toFun t = x}) ∧
+      Tendsto (fun δ => ⨆ f ∈ A, SkorokhodSpace.modulus (basePoint : ι) m f δ)
+        (𝓝[>] 0) (𝓝 0) := sorry
