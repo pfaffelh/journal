@@ -168,6 +168,37 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
+## 8. Drei Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+
+Alle drei beim Beweisen aufgefallen, alle drei gegen `upstream/master` geprüft,
+und alle drei sind kleine, in sich abgeschlossene Beiträge. Sie gehören
+thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
+
+* **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
+  Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
+  noch auf `master`. Wir haben es am 2026-09-09 als `chainKernel_map_shift`
+  bewiesen, über die endlichdimensionalen Verteilungen; der ganze Inhalt ist
+  `partialTraj_succ_map_shiftIic`, wo die verschobene Familie definitionsgleich
+  der nächsten ist, der Rest Induktion und Eindeutigkeit des projektiven Limes.
+  Für Mathlib wäre die richtige Fassung nicht unsere, sondern eine über
+  `Kernel.traj` selbst, mit einer Homogenitätshypothese an die Familie.
+
+* **Gedächtnislosigkeit der Exponentialverteilung.** Die Zeichenkette
+  `memoryless` kommt in der ganzen Bibliothek nicht vor. Wir haben sie als
+  `expMeasure_Ioi_add` bewiesen. Sie ist der einzige nicht buchhalterische
+  Schritt im Beweis von `thm:jumpMP`, und sie ist elementar — ein Kandidat für
+  einen Vier-Zeilen-PR neben `Probability/Distributions/Exponential.lean`.
+
+* **Vollständigkeit der Konvergenz im Maß.** `ConvergenceInMeasure.lean` enthält
+  das Wort `cauchy` nicht ein einziges Mal; der $L^p$-Fall verlangt eine
+  Normgruppe, während der Grenzwert hier *erzeugt* und nicht wiedererkannt werden
+  muß. Wir haben es am 2026-09-08 für $M_E$ als
+  `exists_tendsto_distInMeasure_of_cauchy` nach Kurtz (4.2)--(4.4) bewiesen.
+
+Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
+Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
+lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festliegt.
+
 ## Was inzwischen ohne Dich läuft
 
 78 Läufe bisher, seit dem 7. September stündlich, Opus 5. Am 7./8. September
