@@ -995,6 +995,45 @@ A concrete family of solutions, built without any of the theory above. Index
   `abs_integral_jumpProcess_sub_le`, read from the law at time `a` instead of
   from `nu`; and the integrability of the compensator is `abs_jumpApply_le`
   together with the joint measurability of `(r, ω) ↦ jumpProcess lam r ω`.
+* `abs_integral_jumpMeasure_add_sub_le_past` and
+  `jumpMeasure_integral_jumpProcess_add_past`: the **Markov property tested
+  against the past**,
+  ```
+  ∫ G · h (X (s + t)) d(jumpMeasure mu nu) = ∫ G · (P t h) (X s) d(jumpMeasure mu nu)
+  ```
+  for every `G` with `Measurable G`, `|G| ≤ 1` and `IsPastFunctional lam s G`.
+  **Proved** on 2026-09-10, first run, as the induction over the number of jumps
+  carrying the factor along and its limit. The initial law, the horizon **and the
+  functional** are quantified inside the induction, because the branch
+  `{T 1 ≤ s}` applies the inductive hypothesis to `mu z`, to `s - σ / lam z` and
+  to the restarted functional at once. Two steps are new and both are the two
+  theorems of `IsPastFunctional`: on `{s < T 1}` the factor leaves the integral
+  because it is a function of the initial state there
+  (`eq_jumpConst_of_isPastFunctional`, then `integral_jumpKernel_zero_eq`), and
+  on `{T 1 ≤ s}` it restarts as a functional of the past
+  (`IsPastFunctional.comp_jumpPrepend`), the identification `G ω = G (jumpPrepend
+  (ω.1 0) (ω.2 0) (jumpShift ω))` being `jumpPrepend_self` and hence pointwise.
+  The first branch runs under `jumpKernel mu z` and not under `jumpMeasure`, so
+  non explosion is needed there in its kernel form
+  (`ae_mem_nonExplosive_jumpKernel`, from `jumpKernel_map_snd`): non explosion is
+  a statement about the waiting times alone, and they are the second marginal of
+  the kernel just as they are of the measure.
+* `setIntegral_jumpProcess_sub_eq_intervalIntegral`: the **expectation identity
+  tested against a set of the past**,
+  ```
+  ∫_S h (X (s + t)) dP - ∫_S h (X s) dP = ∫_0^t ∫_S (A h) (X (s + r)) dP dr
+  ```
+  for every measurable `S` whose indicator is a functional of the past up to `s`.
+  **Proved** on 2026-09-10, first run. It is not a new statement about the
+  process: with the item above the left hand side is an expectation of the
+  semigroup at time `s`, and the semigroup at time `s` is an expectation under
+  the construction restarted from the law of `X s` conditioned on `S`, that is
+  from `ν = (P S)⁻¹ • ((P.restrict S).map (X s))`; on `ν` the identity is
+  literally `jumpMeasure_integral_sub_eq_intervalIntegral`, and the normalising
+  factors cancel. The functional is an **indicator** and not a general bounded
+  one, because that is what makes `ν` a measure -- for a general one the density
+  would need `withDensity`, and a signed one gives no measure at all. The
+  conditional expectation asks only for sets, so this costs nothing.
 * `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
   **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a

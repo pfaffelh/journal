@@ -15964,3 +15964,137 @@ dem es teuer wird, und er ist vorher zu benennen: die gemeinsame Meßbarkeit von
 `measurable_jumpPrepend` und der Meßbarkeit von `G`, nicht aus
 `IsPastFunctional`, das eine reine Invarianzaussage ist. Wer den Weg ändern
 will, sage zuerst, an welchem Schritt dieser bricht.
+
+### 2026-09-10, erster Lauf des Tages — die Markoveigenschaft mit einem Faktor aus der Vergangenheit
+
+Ein Ziel, das des Vorschlags vom siebenundzwanzigsten Lauf des 2026-09-09:
+`abs_integral_jumpMeasure_add_sub_le_past`. Es steht, und mit ihm sein Grenzwert
+und der Zusammenbau, den der Vorschlag erst für den übernächsten Lauf vorgesehen
+hatte. **Fünf neue Deklarationen** in
+`TauCeti/MartingaleProblems/Suggested.lean`, im neuen Abschnitt
+`ConditionalMarkov` am Ende von `section Space`; die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 **ohne einen Fehler** (unverändert zehn `sorry`,
+keine neuen), und alle fünf hängen mit `#print axioms` nur an `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Was dasteht.**
+
+* `abs_integral_jumpMeasure_add_sub_le_past` — die Induktion über die Zahl der
+  Sprünge, mit einem Faktor aus der Vergangenheit:
+  ```
+  |∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)
+     - ∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)|
+    ≤ 2 * C * (jumpMeasure mu nu).real {ω | jumpTime lam ω.1 ω.2 n ≤ s},
+  ```
+  für alle `nu`, alle `s ≥ 0` und alle `G` mit `Measurable G`, `|G| ≤ 1` und
+  `IsPastFunctional lam s G`. Anfangsgesetz, Horizont **und Funktional** stehen
+  unter dem Quantor, denn der Zweig `{T 1 ≤ s}` wendet die
+  Induktionsvoraussetzung auf `mu z`, auf `s - a / lam z` und auf das
+  verschobene Funktional zugleich an.
+* `jumpMeasure_integral_jumpProcess_add_past` — der Grenzwert, also die
+  **Markoveigenschaft, gegen die Vergangenheit getestet**:
+  `E[G · h (X (s+t))] = E[G · (P t h) (X s)]`. Der Fehlerterm geht mit
+  `tendsto_measureReal_jumpTime_le` gegen null, wörtlich wie im unbedingten Fall.
+* `jumpKernel_map_snd` und `ae_mem_nonExplosive_jumpKernel` — die beiden
+  Aussagen über den Kern, unter dem der erste Zweig der Induktion läuft.
+* `setIntegral_jumpProcess_sub_eq_intervalIntegral` — die **Erwartungsidentität
+  auf einer Menge der Vergangenheit**, in der Gestalt, die die bedingte
+  Erwartung verlangt:
+  ```
+  ∫_S h (X (s+t)) dP - ∫_S h (X s) dP = ∫_0^t ∫_S (A h) (X (s+r)) dP dr.
+  ```
+  Sie ist **keine neue Aussage über den Prozeß**, sondern eine Normierung: mit
+  der getesteten Markoveigenschaft ist die linke Seite ein Erwartungswert der
+  Halbgruppe zur Zeit `s`, und die Halbgruppe zur Zeit `s` ist ein
+  Erwartungswert unter der Konstruktion, gestartet aus dem auf `S` bedingten
+  Gesetz von `X s` — dem Maß `ν := (P S)⁻¹ • ((P.restrict S).map (X s))`. Auf
+  `ν` ist die Behauptung wörtlich
+  `jumpMeasure_integral_sub_eq_intervalIntegral`, und die beiden Faktoren `c`
+  und `c⁻¹` kürzen sich.
+
+**Der Beweis ist der des unbedingten Falls, an genau zwei Stellen ein anderer,
+und beide Stellen sind die beiden Sätze des siebenundzwanzigsten Laufs.**
+
+*Erstens, der Zweig `{s < T 1}`.* Dort war die Gleichheit der beiden Seiten
+`integral_jumpKernel_add_of_lt_jumpTime_one`, ein Satz über `jumpKernel mu z`.
+Mit dem Faktor davor genügt das nicht: `G` muß aus dem Integral heraus. Es geht
+heraus, weil es dort eine Funktion des Anfangszustands ist
+(`eq_jumpConst_of_isPastFunctional`, mit `Ψ x := G (jumpConst lam s x)`), und
+weil `integral_jumpKernel_zero_eq` den Anfangszustand unter dem Kern durch `z`
+ersetzt. Dabei fällt das Hilfslemma `hpull` an, das für **jeden** beschränkten
+meßbaren Integranden gilt und darum auf beide Seiten zugleich paßt; die
+Abschneidung auf `{s < T 1}` wird als Indikator in den Integranden gezogen,
+damit `integral_jumpKernel_zero_eq` — das über das ganze `ω` integriert —
+überhaupt anwendbar ist.
+
+*Zweitens, der Zweig `{T 1 ≤ s}`.* Dort ist der Faktor `G ω` nach der Zerlegung
+`G (jumpPrepend (ω.1 0) (ω.2 0) (jumpShift ω))`, und das ist **punktweise**
+gleich `G ω` (`jumpPrepend_self`, kein `ae`). Daß der so entstandene Ausdruck
+wieder ein Funktional der Vergangenheit ist, ist
+`IsPastFunctional.comp_jumpPrepend`, und das ist die Aussage, auf die die
+Induktionsvoraussetzung paßt.
+
+**Drei Befunde, die für die weitere Arbeit zählen.**
+
+(a) **Die Nichtexplosion wird unter dem Kern gebraucht, nicht unter dem Maß.**
+`ae_mem_nonExplosive` steht über `jumpMeasure mu nu`, der erste Zweig läuft aber
+über `jumpKernel mu z` — und `jumpMeasure` ist erst eine Mischung davon. Bewiesen
+ist die Kernfassung genau wie die andere, über die **zweite Randverteilung**:
+`jumpKernel mu z` ist ein Produkt, sein zweiter Faktor ist `waitingMeasure`
+(`jumpKernel_map_snd`), und alles Weitere sagt nur etwas über die Wartezeiten.
+Die Nichtexplosion ist eine Aussage über die Wartezeiten allein, und die Kette
+kommt in ihr nicht vor; das ist der Grund, aus dem sie diesen Wechsel des Maßes
+umsonst übersteht.
+
+(b) **`Measurable.mul` liefert `f * g` und nicht `fun x ↦ f x * g x`**, und
+darum scheitert ein `rw` mit einem Satz, dessen Integrand aus `hGm.mul (hAm r)`
+gewonnen wurde: der unifizierte Integrand ist der punktweise Produktterm und
+nicht der Lambda-Ausdruck des Ziels. Das Mittel ist, die Meßbarkeit mit
+**angegebenem Erwartungstyp** zu binden (`hGAm`, `hGBm`); dann fällt die
+Umformung in die Elaboration und nicht in die Unifikation. Dieselbe Falle wartet
+an jeder Stelle, an der ein Produkt in ein Integral eingesetzt wird.
+
+(c) **Die Voraussetzung `0 ≤ t` ist an genau einer Stelle nötig**, und es ist
+nicht die, an der man sie vermutet: der Zweig `{T 1 ≤ s}` schiebt den Pfad an
+`s + t` über den ersten Sprung, und dafür muß `T 1 ≤ s + t` sein. Aus `T 1 ≤ s`
+folgt das nur mit `0 ≤ t`.
+
+(d) **Der Zusammenbau verlangt einen Indikator und nicht ein beschränktes
+Funktional.** Der Schritt, der aus dem Faktor ein Maß macht, ist
+`ν := (P S)⁻¹ • ((P.restrict S).map (X s))`; für ein allgemeines `G` wäre statt
+der Restriktion ein `withDensity` zu bilden, und ein signiertes `G` gäbe
+überhaupt kein Maß. Für die bedingte Erwartung genügt der Indikator, denn
+`MeasureTheory.ae_eq_condExp_of_forall_setIntegral_eq` fragt nur nach Mengen.
+Der Fall `P S = 0` ist getrennt zu führen und trivial — beide Seiten sind null —,
+und er ist nicht Kosmetik: ohne ihn ist `ν` kein Wahrscheinlichkeitsmaß.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel: `jumpProcess_isMPSolution`
+selbst. Nach diesem Lauf ist an ihm **nichts Wahrscheinlichkeitstheoretisches**
+mehr offen; was bleibt, ist die Buchführung zwischen der Gestalt von `mpFamily`
+und der Gestalt von `setIntegral_jumpProcess_sub_eq_intervalIntegral`, in vier
+benannten Schritten:
+
+1. **Der Indikator ist ein Funktional der Vergangenheit.** Für `S ∈ 𝓕 i` ist
+   `(NonExplosive lam).indicator (S.indicator 1) = (NonExplosive lam ∩ S).indicator 1`
+   nach `isPastFunctional_indicator` eines, und `indicator_nonExplosive_ae_eq`
+   sagt, daß der Übergang von `S` zu `NonExplosive lam ∩ S` kein Integral ändert.
+2. **Die beiden Kompensatoren subtrahieren sich** zu einem über `Set.Ioc i j`;
+   das ist `Clock.interval_union`, der Satz, für den dieses Feld da ist.
+3. **Fubini in `(u, ω)`**: `∫_S ∫_{Ioc i j} (A f) (X u ω) du dP` ist
+   `∫_{Ioc i j} ∫_S (A f) (X u ω) dP du`, und die gemeinsame Meßbarkeit dafür ist
+   `measurable_jumpProcess` — nicht `measurable_uncurry_jumpProcess`, denn hier
+   wird gegen `m0` integriert und nicht gegen `𝓕 t`.
+4. **Der Wechsel des Index von `ℝ≥0` nach `ℝ`.** `lebesgueClock.q` ist
+   `((volume : Measure ℝ).restrict (Set.Ici 0)).map Real.toNNReal`, also ist
+   `∫ u in Set.Ioc i j, g u ∂lebesgueClock.q` über `integral_map` das reelle
+   `∫ x in Set.Ioc (i:ℝ) (j:ℝ), g (Real.toNNReal x)`, und mit der Verschiebung
+   `x = i + r` ist das `∫ r in (0:ℝ)..(j - i)`, die Gestalt des Satzes dieses
+   Laufs. Das ist der einzige Schritt, an dem noch etwas schiefgehen kann, und
+   der Grund ist die Restriktion auf `Set.Ici 0` in der Uhr: sie fällt weg, weil
+   `Set.Ioc (i:ℝ) (j:ℝ) ⊆ Set.Ici 0` für `0 ≤ i`, aber sie fällt nicht von
+   selbst weg.
+
+Dazu kommt die Integrierbarkeit von `Y j`, die
+`ae_eq_condExp_of_forall_setIntegral_eq` als eigene Voraussetzung führt; sie ist
+`integrable_of_abs_le` mit der Schranke `C + 2 * L * C * j` aus `abs_jumpApply_le`.
+Wer den Weg ändern will, sage zuerst, an welchem dieser Schritte er bricht.

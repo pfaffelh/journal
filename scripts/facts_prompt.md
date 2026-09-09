@@ -530,10 +530,48 @@ danach.*
    Nullmenge kostet (`indicator_nonExplosive_ae_eq`) und was bei
    `StronglyAdapted` gerade **nicht** erlaubt war (neunzehnter Lauf).
 
-   **Was jetzt noch fehlt**, ist die Induktion mit dem Faktor aus der
-   Vergangenheit, `abs_integral_jumpMeasure_add_sub_le_past`; sie steht
-   ausgeschrieben am Ende des Laufberichts, samt der Angabe, welcher vorhandene
-   Satz jeden ihrer Schritte trägt.
+   ~~**Was jetzt noch fehlt**, ist die Induktion mit dem Faktor aus der
+   Vergangenheit, `abs_integral_jumpMeasure_add_sub_le_past`.~~ *(erledigt
+   2026-09-10, erster Lauf des Tages, samt dem Zusammenbau.)*
+
+   **Zwischenstand 2026-09-10, erster Lauf des Tages.** Die **bedingte
+   Markoveigenschaft** steht, und mit ihr die **Erwartungsidentität auf einer
+   Menge der Vergangenheit**. Fünf neue Deklarationen in
+   `TauCeti/MartingaleProblems/Suggested.lean`, Abschnitt `ConditionalMarkov`,
+   alle durch `lake env lean` gegen v4.33.1 **ohne einen Fehler** und alle mit
+   `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft; die
+   Zahl der `sorry` ist unverändert zehn. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-10, erster Lauf des Tages".
+
+   * `abs_integral_jumpMeasure_add_sub_le_past` ist die angesagte Induktion, mit
+     Anfangsgesetz, Horizont **und Funktional** unter dem Quantor;
+     `jumpMeasure_integral_jumpProcess_add_past` ist ihr Grenzwert,
+     `E[G · h (X (s+t))] = E[G · (P t h) (X s)]`.
+   * `setIntegral_jumpProcess_sub_eq_intervalIntegral` ist der Zusammenbau, den
+     der siebenundzwanzigste Lauf erst für den übernächsten vorgesehen hatte:
+     `∫_S h (X (s+t)) - ∫_S h (X s) = ∫_0^t ∫_S (A h) (X (s+r)) dr`. Er ist
+     **kein neuer Satz über den Prozeß**, sondern eine Normierung — auf dem auf
+     `S` bedingten Gesetz von `X s` ist die Behauptung wörtlich
+     `jumpMeasure_integral_sub_eq_intervalIntegral`.
+   * `jumpKernel_map_snd` und `ae_mem_nonExplosive_jumpKernel`: die Nichtexplosion
+     wird im ersten Zweig **unter dem Kern** gebraucht und nicht unter dem Maß.
+
+   **Zwei Befunde, die der nächste Lauf braucht.** (a) Der Zusammenbau verlangt,
+   daß das Funktional der Vergangenheit ein **Indikator** ist und nicht bloß
+   beschränkt: nur dann ist `(P.restrict S).map (X s)` ein Maß. Für die bedingte
+   Erwartung genügt das, denn `ae_eq_condExp_of_forall_setIntegral_eq` fragt nur
+   nach Mengen. (b) `Measurable.mul` liefert `f * g` und nicht
+   `fun x ↦ f x * g x`; ein `rw` mit einem Satz, dessen Integrand daraus gewonnen
+   wurde, findet sein Muster nicht. Das Mittel ist, die Meßbarkeit mit
+   **angegebenem Erwartungstyp** zu binden.
+
+   **Was jetzt noch fehlt, ist `jumpProcess_isMPSolution` selbst, und daran ist
+   nichts Wahrscheinlichkeitstheoretisches mehr offen** — nur noch die
+   Buchführung zwischen der Gestalt von `mpFamily` und der des neuen Satzes:
+   `isPastFunctional_indicator` für den Indikator, `Clock.interval_union` für die
+   Differenz der beiden Kompensatoren, Fubini in `(u, ω)`, und der Wechsel des
+   Index von `ℝ≥0` nach `ℝ` durch `lebesgueClock.q`. Die vier Schritte stehen
+   einzeln ausgeschrieben am Ende des Laufberichts.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 
