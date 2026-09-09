@@ -16,6 +16,7 @@ import Mathlib.Probability.Distributions.Exponential
 import Mathlib.Probability.BorelCantelli
 import Mathlib.Probability.CDF
 import Mathlib.Topology.Algebra.InfiniteSum.Real
+import Mathlib.MeasureTheory.Function.Floor
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -24,9 +25,10 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-09.  Every declaration elaborates; 9 declarations carry `sorry`, and
+2026-09-09.  Every declaration elaborates; 10 declarations carry `sorry`, and
 every one of those `sorry`s is a **proof**.  The last two blocks of the file are
-Milestone 4 and carry none.  The first, `IsStepPath`, was added on 2026-09-09:
+Milestone 4; the only `sorry` in them is the conditional expectation of
+`jumpProcess_isMPSolution`, whose adaptedness half is proved.  The first, `IsStepPath`, was added on 2026-09-09:
 its three declarations are proved, and one of them,
 `exists_finite_setOf_leftLim_ne_not_isCadlagPath`, is the witness that the
 roadmap's first proposal for that predicate -- local finiteness of the jump set
@@ -1794,6 +1796,319 @@ theorem abs_jumpApply_le {lam : E → ℝ} {mu : Kernel E E} [IsMarkovKernel mu]
         exact mul_le_mul (hL x) hint (norm_nonneg _) hL0
     _ = 2 * L * C := by ring
 
+/-! ### The operator as a relation -/
+
+/-- **The generator as a set of pairs**, which is the shape `mpFamily` consumes: the graph of
+`jumpApply` on the bounded measurable functions.  Boundedness and measurability are carried by
+the *members* of the set and not by an ambient hypothesis, because `mpFamily` quantifies over
+`p ∈ A` and every statement about a member has to be able to reproduce them. -/
+def jumpOperator (lam : E → ℝ) (mu : Kernel E E) : Set ((E → ℝ) × (E → ℝ)) :=
+  {p | Measurable p.1 ∧ (∃ C, ∀ x, |p.1 x| ≤ C) ∧ p.2 = jumpApply lam mu p.1}
+
+theorem mem_jumpOperator {lam : E → ℝ} {mu : Kernel E E} {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hC : ∀ x, |f x| ≤ C) : (f, jumpApply lam mu f) ∈ jumpOperator lam mu :=
+  ⟨hf, ⟨C, hC⟩, rfl⟩
+
+theorem measurable_jumpApply {lam : E → ℝ} (hlam : Measurable lam) {mu : Kernel E E}
+    [IsMarkovKernel mu] {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
+    Measurable (jumpApply lam mu f) := by
+  have hb : ∀ x, ‖f x‖ ≤ C := fun x ↦ hC x
+  have h1 : Measurable fun x ↦ ∫ y, f y ∂(mu x) :=
+    (StronglyMeasurable.integral_kernel_prod_right'
+      (f := fun p : E × E ↦ f p.2) (hf.comp measurable_snd).stronglyMeasurable).measurable
+  have h2 : (fun x ↦ ∫ y, (f y - f x) ∂(mu x)) = fun x ↦ (∫ y, f y ∂(mu x)) - f x := by
+    funext x
+    rw [integral_sub (Integrable.mono' (integrable_const C) hf.aestronglyMeasurable
+      (Filter.Eventually.of_forall hb)) (integrable_const _), integral_const]
+    simp
+  have h3 : Measurable fun x ↦ ∫ y, (f y - f x) ∂(mu x) := by rw [h2]; exact h1.sub hf
+  exact hlam.mul h3
+
 end Space
+
+/-! ### The natural filtration
+
+The two pieces that `jumpProcess_isMPSolution` was missing on 2026-09-09, eighteenth run: the
+operator as a set — above — and the filtration.  Mathlib's `MeasureTheory.Filtration.natural`
+(`Probability/Process/Filtration.lean:395`) cannot be used, and the reason is a hypothesis and
+not an inconvenience: it asks for `StronglyMeasurable (u i)`, which over a bare
+`[MeasurableSpace E]` cannot even be *stated*, the declaration carrying
+`[TopologicalSpace (β i)] [MetrizableSpace (β i)] [BorelSpace (β i)]`.  Nothing in the
+construction uses any of that — the field `le'` needs each `u i` to be measurable and nothing
+more — so the version here takes `Measurable` and no topology. -/
+
+/-- **The natural filtration of a measurable process**, without a topology on the state space. -/
+def naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*} {m' : MeasurableSpace Ω'}
+    {F : Type*} [mF : MeasurableSpace F] (X : ι' → Ω' → F) (hX : ∀ i, Measurable (X i)) :
+    Filtration ι' m' where
+  seq i := ⨆ j ≤ i, MeasurableSpace.comap (X j) mF
+  mono' _ _ hij := biSup_mono fun _ ↦ ge_trans hij
+  le' i := by
+    refine iSup₂_le ?_
+    rintro j - s ⟨u, hu, rfl⟩
+    exact hX j hu
+
+/-- Every coordinate below `i` is measurable for the `i`-th σ-algebra of the natural
+filtration. -/
+theorem measurable_naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*}
+    {m' : MeasurableSpace Ω'} {F : Type*} [mF : MeasurableSpace F] {X : ι' → Ω' → F}
+    (hX : ∀ i, Measurable (X i)) {i j : ι'} (hji : j ≤ i) :
+    Measurable[naturalFiltration (m' := m') X hX i] (X j) :=
+  Measurable.mono (comap_measurable (X j))
+    (le_iSup₂ (f := fun j (_ : j ≤ i) ↦ MeasurableSpace.comap (X j) mF) j hji) le_rfl
+
+/-! ### Right continuity, and progressive measurability
+
+`MeasureTheory.Martingale` asks for `StronglyAdapted` and not for an almost sure version of it,
+so the measurability of the compensator has to hold at **every** sample point, the explosion set
+included.  That is why the right continuity of `stepPath` is isolated here without any
+hypothesis at all, and it is why the argument below runs over the *real valued* process
+`h ∘ X` rather than over `X` itself. -/
+
+section Progressive
+
+variable {Ω : Type*} [MeasurableSpace Ω]
+
+/-- **The step path is right continuous at every time, for every sequence of jump times.**
+Neither monotonicity nor non explosion is needed: if some window contains `t`, then the least
+such window is a right neighbourhood of `t` on which the index is constant, and if none does,
+then the index is the junk value `0` at `t` and at every later time as well.
+
+This is the half of `IsStepPath` that survives on the explosion set, and it is the half the
+progressive measurability below consumes. -/
+theorem eventuallyEq_nhdsGE_stepPath {E : Type*} (T : ℕ → ℝ) (y : ℕ → E) (t : ℝ) :
+    ∀ᶠ r in 𝓝[≥] t, stepPath T y r = stepPath T y t := by
+  by_cases hex : ∃ n, t < T (n + 1)
+  · have hlt : t < T (stepIndex T t + 1) := lt_stepIndex_succ hex
+    have hmem : Set.Ico t (T (stepIndex T t + 1)) ∈ 𝓝[≥] t :=
+      mem_nhdsWithin.2 ⟨Set.Iio (T (stepIndex T t + 1)), isOpen_Iio, hlt,
+        fun z hz ↦ ⟨hz.2, hz.1⟩⟩
+    filter_upwards [hmem] with r hr
+    have h1 : stepIndex T r ≤ stepIndex T t := stepIndex_le hr.2
+    have h2 : stepIndex T t ≤ stepIndex T r := by
+      by_contra hc
+      push_neg at hc
+      have h3 : T (stepIndex T r + 1) ≤ t := le_of_lt_stepIndex hc
+      have h4 : r < T (stepIndex T r + 1) := lt_stepIndex_succ ⟨stepIndex T t, hr.2⟩
+      exact absurd (h4.trans_le (h3.trans hr.1)) (lt_irrefl r)
+    simp only [stepPath, le_antisymm h1 h2]
+  · push_neg at hex
+    filter_upwards [self_mem_nhdsWithin] with r (hr : t ≤ r)
+    have ht0 : stepIndex T t = 0 := stepIndex_eq_iff.2 (Or.inr ⟨rfl, hex⟩)
+    have hr0 : stepIndex T r = 0 :=
+      stepIndex_eq_iff.2 (Or.inr ⟨rfl, fun k ↦ (hex k).trans hr⟩)
+    simp only [stepPath, ht0, hr0]
+
+/-- Right continuity is preserved by clamping the time at `0` from below.  The clamp is what
+makes the index of the martingale problem — which is `ℝ≥0` — reach the process, which is defined
+on `ℝ`: at a negative time the process may be anything at all, and the σ-algebras of the
+filtration know nothing about it. -/
+theorem eventuallyEq_nhdsGE_comp_max {α : Type*} {g : ℝ → α}
+    (hg : ∀ s : ℝ, ∀ᶠ r in 𝓝[≥] s, g r = g s) (s : ℝ) :
+    ∀ᶠ r in 𝓝[≥] s, g (max r 0) = g (max s 0) := by
+  rcases le_or_gt 0 s with hs | hs
+  · filter_upwards [hg s, self_mem_nhdsWithin] with r hr (hrs : s ≤ r)
+    rw [max_eq_left (hs.trans hrs), max_eq_left hs, hr]
+  · have hmem : Set.Ico s 0 ∈ 𝓝[≥] s :=
+      mem_nhdsWithin.2 ⟨Set.Iio 0, isOpen_Iio, hs, fun z hz ↦ ⟨hz.2, hz.1⟩⟩
+    filter_upwards [hmem] with r hr
+    rw [max_eq_right hr.2.le, max_eq_right hs.le]
+
+/-- The dyadic approximation from the right, capped at `t`: `Int.floor` and not `Nat.floor`,
+because a negative time must be approximated too — `Nat.floor` sends every negative number to
+`0` and the approximation would jump to `2⁻ⁿ`. -/
+noncomputable def dyadicUp (t : ℝ) (n : ℕ) (k : ℤ) : ℝ := min t ((k + 1 : ℤ) / 2 ^ n)
+
+theorem dyadicUp_le (t : ℝ) (n : ℕ) (k : ℤ) : dyadicUp t n k ≤ t := min_le_left _ _
+
+theorem le_dyadicUp (t s : ℝ) (n : ℕ) : min s t ≤ dyadicUp t n ⌊s * 2 ^ n⌋ := by
+  have h : s ≤ ((⌊s * 2 ^ n⌋ + 1 : ℤ) : ℝ) / 2 ^ n := by
+    rw [le_div_iff₀ (by positivity : (0:ℝ) < 2 ^ n)]
+    push_cast
+    exact (Int.lt_floor_add_one (s * 2 ^ n)).le
+  rw [dyadicUp, min_comm s t]
+  exact min_le_min le_rfl h
+
+theorem dyadicUp_le_add (t s : ℝ) (n : ℕ) :
+    dyadicUp t n ⌊s * 2 ^ n⌋ ≤ min s t + (2 : ℝ)⁻¹ ^ n := by
+  have hx : ((⌊s * 2 ^ n⌋ + 1 : ℤ) : ℝ) / 2 ^ n ≤ s + (2 : ℝ)⁻¹ ^ n := by
+    rw [div_le_iff₀ (by positivity : (0:ℝ) < 2 ^ n)]
+    have h1 : ((⌊s * 2 ^ n⌋ : ℤ) : ℝ) ≤ s * 2 ^ n := Int.floor_le _
+    have h2 : ((2 : ℝ)⁻¹) ^ n * 2 ^ n = 1 := by
+      rw [← mul_pow]; norm_num
+    push_cast
+    nlinarith [h1, h2]
+  have h3 : dyadicUp t n ⌊s * 2 ^ n⌋ ≤ min t (s + (2 : ℝ)⁻¹ ^ n) :=
+    min_le_min le_rfl hx
+  have h4 : min t (s + (2 : ℝ)⁻¹ ^ n) ≤ min s t + (2 : ℝ)⁻¹ ^ n := by
+    rcases le_total s t with h | h
+    · rw [min_eq_left h]
+      exact (min_le_right _ _).trans le_rfl
+    · rw [min_eq_right h]
+      exact (min_le_left _ _).trans (le_add_of_nonneg_right (by positivity))
+  exact h3.trans h4
+
+theorem tendsto_dyadicUp (t s : ℝ) :
+    Tendsto (fun n : ℕ ↦ dyadicUp t n ⌊s * 2 ^ n⌋) atTop (𝓝[≥] (min s t)) := by
+  refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_
+    (Filter.Eventually.of_forall fun n ↦ le_dyadicUp t s n)
+  have h0 : Tendsto (fun n : ℕ ↦ min s t + (2 : ℝ)⁻¹ ^ n) atTop (𝓝 (min s t + 0)) :=
+    tendsto_const_nhds.add (tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num) (by norm_num))
+  rw [add_zero] at h0
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds h0
+    (fun n ↦ le_dyadicUp t s n) (fun n ↦ dyadicUp_le_add t s n)
+
+/-- **A right continuous real process is jointly measurable in `(t, ω)` up to a fixed time.**
+
+There is no hypothesis on a state space here, and that is the point.  The `E` valued process of
+the jump construction is *not* jointly measurable in this sense over a bare
+`[MeasurableSpace E]` — the argument approximates `X s` by `X r` for `r` slightly above `s` and
+passes to the limit, and a limit of `E` valued measurable maps is measurable only when the
+diagonal of `E` is, which for an arbitrary σ-algebra it is not.  Every *real* functional
+`h ∘ X` of it is jointly measurable, by the same argument run in `ℝ`, and the compensator of
+`mpFamily` is such a functional.  Hence this statement and not a `Clock.IsProgressive` for the
+jump process itself. -/
+theorem measurable_uncurry_min_of_eventuallyEq {ι' : Type*} [MeasurableSpace ι'] {φ : ι' → ℝ}
+    (hφ : Measurable φ) {G : ℝ → Ω → ℝ} {t : ℝ}
+    {𝓖 : MeasurableSpace Ω} (hmeas : ∀ r, r ≤ t → Measurable[𝓖] (G r))
+    (hrc : ∀ (ω : Ω) (s : ℝ), ∀ᶠ r in 𝓝[≥] s, G r ω = G s ω) :
+    Measurable[(inferInstance : MeasurableSpace ι').prod 𝓖]
+      fun p : ι' × Ω ↦ G (min (φ p.1) t) p.2 := by
+  let _ : MeasurableSpace Ω := 𝓖
+  have hstep : ∀ n : ℕ, Measurable fun p : ι' × Ω ↦ G (dyadicUp t n ⌊φ p.1 * 2 ^ n⌋) p.2 := by
+    intro n
+    have hF : Measurable fun q : Ω × ℤ ↦ G (dyadicUp t n q.2) q.1 :=
+      measurable_from_prod_countable_left fun k ↦ hmeas _ (dyadicUp_le t n k)
+    exact hF.comp (measurable_snd.prodMk
+      (Int.measurable_floor.comp ((hφ.comp measurable_fst).mul_const _)))
+  refine measurable_of_tendsto_metrizable hstep (tendsto_pi_nhds.2 fun p ↦ ?_)
+  have hev : ∀ᶠ n in atTop, G (dyadicUp t n ⌊φ p.1 * 2 ^ n⌋) p.2 = G (min (φ p.1) t) p.2 :=
+    (tendsto_dyadicUp t (φ p.1)).eventually (hrc p.2 (min (φ p.1) t))
+  refine tendsto_const_nhds.congr' ?_
+  filter_upwards [hev] with n hn
+  exact hn.symm
+
+end Progressive
+
+/-! ### The filtration of the jump process, and its compensator -/
+
+section JumpFiltration
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The natural filtration of the jump process**, indexed by `ℝ≥0` because `mpFamily` needs
+`[OrderBot ι]`. -/
+noncomputable def jumpFiltration (lam : E → ℝ) (hlam : Measurable lam) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  naturalFiltration (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω)
+    fun _ ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+
+/-- The jump process is right continuous at every time and at every sample point, the explosion
+set included: `eventuallyEq_nhdsGE_stepPath` read through the definition. -/
+theorem eventuallyEq_nhdsGE_jumpProcess {lam : E → ℝ} (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ) :
+    ∀ᶠ r in 𝓝[≥] s, jumpProcess lam r ω = jumpProcess lam s ω :=
+  eventuallyEq_nhdsGE_stepPath (jumpTime lam ω.1 ω.2) ω.1 s
+
+/-- **Every real functional of the jump process is jointly measurable in `(u, ω)` for the
+σ-algebra of the past up to `t`.**  This is the progressive measurability that the compensator
+of `mpFamily` consumes, and the right continuity of the paths is the only input. -/
+theorem measurable_uncurry_jumpProcess {lam : E → ℝ} (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) (t : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (jumpFiltration lam hlam t)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+        h (jumpProcess lam (min (p.1 : ℝ) (t : ℝ)) p.2) := by
+  have hmeas : ∀ r, r ≤ (t : ℝ) →
+      Measurable[jumpFiltration lam hlam t] fun ω ↦ h (jumpProcess lam (max r 0) ω) := by
+    intro r hr
+    have hu : Real.toNNReal r ≤ t := Real.toNNReal_le_iff_le_coe.2 hr
+    have hX := measurable_naturalFiltration
+      (X := fun s : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcess lam (s : ℝ) ω)
+      (fun _ ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)) hu
+    rw [Real.coe_toNNReal'] at hX
+    exact hh.comp hX
+  have hrc : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ),
+      ∀ᶠ r in 𝓝[≥] s, h (jumpProcess lam (max r 0) ω) = h (jumpProcess lam (max s 0) ω) :=
+    fun ω s ↦ eventuallyEq_nhdsGE_comp_max (g := fun r ↦ h (jumpProcess lam r ω))
+      (fun s' ↦ (eventuallyEq_nhdsGE_jumpProcess ω s').mono fun r hr ↦ by rw [hr]) s
+  have key := measurable_uncurry_min_of_eventuallyEq (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+    measurable_coe_nnreal_real hmeas hrc
+  have heq : ∀ p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)),
+      h (jumpProcess lam (max (min (p.1 : ℝ) (t : ℝ)) 0) p.2)
+        = h (jumpProcess lam (min (p.1 : ℝ) (t : ℝ)) p.2) := fun p ↦ by
+    rw [max_eq_left (le_min p.1.coe_nonneg t.coe_nonneg)]
+  simpa only [heq] using key
+
+/-- **The compensator of the jump martingale problem is measurable for the past.**  This is the
+half of `MeasureTheory.Martingale` that is not a conditional expectation, and it is the half
+that has to hold at *every* sample point: `StronglyAdapted` is not an almost sure notion, so the
+explosion set — a null set, but not the empty set — may not be discarded here. -/
+theorem measurable_compensator {lam : E → ℝ} (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) (c : Clock.Conv) (t : ℝ≥0) :
+    Measurable[jumpFiltration lam hlam t] fun ω ↦
+      ∫ u in lebesgueClock.interval c ⊥ t, h (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q := by
+  set S := lebesgueClock.interval c ⊥ t with hS
+  haveI hfin : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ]
+    exact lt_top_iff_ne_top.2 (ne_top_of_le_ne_top (lebesgueClock.measure_Iic_ne_top t)
+      (measure_mono (lebesgueClock.interval_subset_Iic c ⊥ t)))
+  have hW := measurable_uncurry_jumpProcess hlam hh t
+  have hsm : StronglyMeasurable[jumpFiltration lam hlam t] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      ∫ u in S, h (jumpProcess lam (min (u : ℝ) (t : ℝ)) ω) ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace
+      ((ℕ → E) × (ℕ → ℝ)) (jumpFiltration lam hlam t) ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) _
+      (fun u ω ↦ h (jumpProcess lam (min (u : ℝ) (t : ℝ)) ω)) hW id measurable_id
+  have hcongr : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        ∫ u in S, h (jumpProcess lam (min (u : ℝ) (t : ℝ)) ω) ∂lebesgueClock.q)
+      = fun ω ↦ ∫ u in S, h (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q := by
+    funext ω
+    refine setIntegral_congr_fun (lebesgueClock.measurableSet_interval c ⊥ t) fun u hu ↦ ?_
+    rw [min_eq_left]
+    exact_mod_cast lebesgueClock.interval_subset_Iic c ⊥ t hu
+  rw [← hcongr]
+  exact hsm.measurable
+
+/-- **The test processes of the jump martingale problem are adapted to the natural filtration of
+the jump process.**  This is the first of the two conjuncts of `MeasureTheory.Martingale`, and it
+is the one that does not mention the measure at all. -/
+theorem stronglyAdapted_mpFamily_jumpProcess {lam : E → ℝ} (hlam : Measurable lam)
+    {mu : Kernel E E} [IsMarkovKernel mu] (c : Clock.Conv)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock c
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω)) :
+    StronglyAdapted (jumpFiltration lam hlam) Y := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  intro t
+  have h1 : Measurable[jumpFiltration lam hlam t] fun ω ↦ p.1 (jumpProcess lam (t : ℝ) ω) :=
+    hf.comp (measurable_naturalFiltration
+      (X := fun s : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcess lam (s : ℝ) ω)
+      (fun _ ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+      (le_refl t))
+  have h2 : Measurable[jumpFiltration lam hlam t] fun ω ↦
+      ∫ u in lebesgueClock.interval c ⊥ t, p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q := by
+    rw [hp2]
+    exact measurable_compensator hlam (measurable_jumpApply hlam hf hC) c t
+  have hYt : Y t = fun ω ↦ p.1 (jumpProcess lam (t : ℝ) ω) -
+      ∫ u in lebesgueClock.interval c ⊥ t, p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q :=
+    funext fun ω ↦ hYeq t ω
+  rw [hYt]
+  exact (h1.sub h2).stronglyMeasurable
+
+/-- **`thm:jumpMP`: the jump process solves the martingale problem of its generator.**  This is
+the goal of Milestone 4 and the first solution of a martingale problem in this file that is a
+solution and not a counterexample.
+
+Everything except the conditional expectation is in place: `stronglyAdapted_mpFamily_jumpProcess`
+is the adaptedness, `jumpMeasure_map_jumpProcess_zero` the initial law, and `expMeasure_Ioi_add`
+the memorylessness on which the conditional expectation will rest. -/
+theorem jumpProcess_isMPSolution {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω))
+      (jumpFiltration lam hlam) (jumpMeasure mu nu) := sorry
+
+end JumpFiltration
 
 end JumpConstruction
