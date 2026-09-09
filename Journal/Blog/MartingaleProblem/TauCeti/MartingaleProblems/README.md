@@ -372,6 +372,21 @@ generating its σ-algebra, and `X : Ω → F`.
   and not as an instance, so the subtype of `Set.Iic t` cannot be written without
   `@` — and it is a hypothesis of `isMPSolutionFor_iff_forall_fdd` in both its
   forms. It is a hypothesis on `X` and the clock alone, never on `P`.
+* `Clock.IsProgressiveComp Q X 𝓕`: the same statement for the **real
+  functionals** of the process, `∀ h : E → ℝ` measurable, `(u, ω) ↦ h (Z u ω)`
+  is `Q.measurableSpace ⊗ 𝓕 t`-measurable, together with
+  `isMPSolutionFor_iff_forall_fdd` restated on it. The `E` valued form above is
+  **not available over a bare `[MeasurableSpace E]`**: its only proof
+  approximates `X s` by `X r` with `r` slightly above `s` and passes to the
+  limit, and a limit of `E` valued measurable maps is measurable only when the
+  diagonal of `E` is, which for an arbitrary σ-algebra it is not. The real form
+  is, by the same argument run in `ℝ`, and it is what the criterion actually
+  consumes — `mpFamily_sub_of_measurable_path` already takes
+  `Measurable[Q.measurableSpace] fun u ↦ g (X u ω)` and not the measurability of
+  `X` itself, and `stronglyMeasurable_integral_comp` is stated for a composite
+  `g ∘ W`. Milestone 4 supplies the instance for the jump process
+  (`measurable_uncurry_jumpProcess`), and it is the only construction in this
+  roadmap whose state space carries no topology.
 * `Clock.interval_subset_Iic`, `Clock.measurableSet_interval` and
   `Clock.measure_interval_ne_top`: every compensating interval lies below its
   right end, is measurable, and has finite mass. The last is what makes the
@@ -594,12 +609,77 @@ A concrete family of solutions, built without any of the theory above. Index
   costs nothing, because `Clock` carries its measurable space and its measure as
   *fields*, which is what that design decision was for: the clock is
   `((volume : Measure ℝ).restrict (Set.Ici 0)).map Real.toNNReal`.
+* `jumpOperator lam mu = {p | Measurable p.1 ∧ (∃ C, ∀ x, |p.1 x| ≤ C) ∧`
+  `p.2 = jumpApply lam mu p.1}`: the generator as a *set of pairs*, which is the
+  shape `mpFamily` consumes. **Defined** on 2026-09-09, nineteenth run, together
+  with `mem_jumpOperator` and `measurable_jumpApply`. Boundedness and
+  measurability are carried by the members and not by an ambient hypothesis,
+  because `mpFamily` quantifies over `p ∈ A` and every statement about a member
+  has to be able to reproduce them.
+* `naturalFiltration X hX`: the natural filtration of a measurable process,
+  **without a topology on the state space**. **Defined** on 2026-09-09,
+  nineteenth run, with `measurable_naturalFiltration`. Mathlib's
+  `MeasureTheory.Filtration.natural` (`Probability/Process/Filtration.lean:395`)
+  is the same σ-algebra, but it carries
+  `[TopologicalSpace (β i)] [MetrizableSpace (β i)] [BorelSpace (β i)]`, so over
+  a bare `[MeasurableSpace E]` it cannot even be *stated*. None of that is used:
+  the field `le'` needs each `u i` to be measurable and nothing more.
+  `jumpFiltration lam hlam : Filtration ℝ≥0 _` is its instance at the jump
+  process.
+* `eventuallyEq_nhdsGE_stepPath`: **the step path is right continuous at every
+  time, for every sequence of jump times** — neither monotonicity nor non
+  explosion. **Proved** on 2026-09-09, nineteenth run. The hypothesis-free form
+  is not generality for its own sake: `MeasureTheory.Martingale` asks for
+  `StronglyAdapted`, which is not an almost sure notion, so the measurability of
+  the compensator has to hold at *every* sample point — the explosion set is a
+  null set but not the empty set, and `ae_isStepPath_jumpProcess` is therefore
+  of no use there. If some window contains `t` then the least such window is a
+  right neighbourhood of `t` on which the index is constant; if none does, the
+  index is the junk value `0` at `t` and at every later time as well.
+* `measurable_uncurry_min_of_eventuallyEq`: **a right continuous real process is
+  jointly measurable in `(t, ω)` for the σ-algebra of the past.** **Proved** on
+  2026-09-09, nineteenth run, with `dyadicUp`, `le_dyadicUp`, `dyadicUp_le_add`,
+  `tendsto_dyadicUp` and `eventuallyEq_nhdsGE_comp_max`; the instances for the
+  jump process are `measurable_uncurry_jumpProcess` and
+  `measurable_compensator`.
+
+  **This is not `Clock.IsProgressive` for the jump process, and the difference
+  is a theorem that is false rather than a convenience.** The argument
+  approximates `X s` by `X r` with `r` slightly above `s` and passes to the
+  limit. A limit of **`E` valued** measurable maps is measurable only when the
+  diagonal of `E` is a measurable set, which for an arbitrary σ-algebra it is
+  not; so the `E` valued joint measurability is not available over a bare
+  `[MeasurableSpace E]`. Every **real** functional `h ∘ X` of the process is
+  jointly measurable, by the same argument run in `ℝ`, and the compensator of
+  `mpFamily` is such a functional. Whoever wants
+  `isMPSolution_iff_forall_fdd` at the jump process must first weaken its
+  `Clock.IsProgressive` hypothesis to this shape;
+  `mpFamily_sub_of_measurable_path` already takes `g ∘ X` and not `X`.
+  The approximation uses `Int.floor` and not `Nat.floor`, because a negative
+  time has to be approximated too, and `Nat.floor` sends every negative number
+  to `0`.
+* `stronglyAdapted_mpFamily_jumpProcess`: the test processes of the jump
+  martingale problem are adapted to the natural filtration of the jump process.
+  **Proved** on 2026-09-09, nineteenth run. This is the first of the two
+  conjuncts of `MeasureTheory.Martingale`, and the one that does not mention the
+  measure.
+* `jumpMeasure_integral_eq_of_firstJump`: the first jump decomposition
+  `E[h (X t)] = ∫ e^{-lam z * t} h z dnu + E[h (X t) ; T 1 ≤ t]`, the renewal
+  equation before the Markov property is used on its second term. **Proved** on
+  2026-09-09, twentieth run, for a general initial law and over
+  `[MeasurableSpace E]` alone.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
-  `Clock.Conv.optional (fun t ω ↦ jumpProcess lam (t : ℝ) ω)) 𝓕 (jumpMeasure mu nu)`,
-  and every piece of it except the operator as a *set* and the filtration is
-  built.
+  `Clock.Conv.optional (fun t ω ↦ jumpProcess lam (t : ℝ) ω))`
+  `(jumpFiltration lam hlam) (jumpMeasure mu nu)`, **stated** on 2026-09-09,
+  nineteenth run, with its adaptedness half proved. What remains is the
+  conditional expectation `P[Y t | 𝓕 s] =ᵐ Y s`, in three steps: the Markov
+  property of the process at a fixed time, out of `expMeasure_Ioi_add` and
+  `chainKernel`; the expectation identity
+  `E_x[f (X t)] - f x = ∫_0^t E_x[A f (X s)] ds`, which is the backward
+  equation and the only step needing analysis beyond bookkeeping; and their
+  combination.
 * `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
   **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a

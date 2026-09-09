@@ -14738,3 +14738,170 @@ Limes einfacher Funktionen. Für die Konstruktion ist das kein Hindernis (die
 Pfade nehmen abzählbar viele Werte an, und `measurable_stepPath` faktorisiert
 über `ℕ`), aber es ist eine Beweispflicht und keine Instanz, und der nächste
 Lauf soll sie einplanen statt sie zu entdecken.
+
+### 2026-09-09, neunzehnter Lauf des Tages — die Filtration steht, und die Progressivität ist reell und nicht $E$-wertig
+
+**Auftrag.** Vorrangige Aufgabe, Teil C, Punkt 2: `jumpProcess_isMPSolution`. Der
+achtzehnte Lauf hatte zwei fehlende Stücke benannt — den Erzeuger als *Menge*
+und die **Filtration** — und dem nächsten aufgetragen, die Filtration
+*einzuplanen statt sie zu entdecken*. Beide sind erledigt; der Satz ist
+hingeschrieben und trägt sein `sorry`, und seine erste Hälfte ist bewiesen.
+
+**Achtzehn neue Deklarationen** in
+`TauCeti/MartingaleProblems/Suggested.lean`, alle durch `lake env lean` gegen
+v4.33.1 geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`:
+
+* `jumpOperator`, `mem_jumpOperator`, `measurable_jumpApply` — der Erzeuger als
+  Menge von Paaren.
+* `naturalFiltration`, `measurable_naturalFiltration` — die natürliche
+  Filtration eines meßbaren Prozesses, ohne Topologie auf dem Zustandsraum.
+* `eventuallyEq_nhdsGE_stepPath`, `eventuallyEq_nhdsGE_comp_max` — die
+  Rechtsstetigkeit, hypothesenfrei.
+* `dyadicUp`, `dyadicUp_le`, `le_dyadicUp`, `dyadicUp_le_add`,
+  `tendsto_dyadicUp`, `measurable_uncurry_min_of_eventuallyEq` — die
+  Progressivität.
+* `jumpFiltration`, `eventuallyEq_nhdsGE_jumpProcess`,
+  `measurable_uncurry_jumpProcess`, `measurable_compensator`,
+  `stronglyAdapted_mpFamily_jumpProcess` — die Anwendung auf den Sprungprozeß.
+
+Dazu `jumpProcess_isMPSolution` selbst, mit `sorry`.
+
+#### Erstens: der angesagte Grund gegen `Filtration.natural` war der falsche
+
+Der achtzehnte Lauf schrieb, `MeasureTheory.Filtration.natural`
+(`Probability/Process/Filtration.lean:395`) verlange `StronglyMeasurable` der
+erzeugenden Abbildungen, und das sei über einem bloß topologischen `E` nicht
+`Measurable`; für Treppenpfade sei es beweisbar, aber eine Beweispflicht.
+
+Das ist zweimal daneben. Erstens ist die Deklaration über einem bloßen
+`[MeasurableSpace E]` **gar nicht hinschreibbar**: sie steht unter
+`variable {β : ι → Type*} [∀ i, TopologicalSpace (β i)] [∀ i, MetrizableSpace (β i)]`
+`[mβ : ∀ i, MeasurableSpace (β i)] [∀ i, BorelSpace (β i)]` (`:387`–`:389`), und
+unser `E` hat keine Topologie, geschweige denn eine metrisierbare mit
+Borel-σ-Algebra. Zweitens wird von alledem **nichts** gebraucht: der Rumpf ist
+
+```
+seq i := ⨆ j ≤ i, MeasurableSpace.comap (u j) (mβ j)
+mono' _ _ hij := biSup_mono fun _ => ge_trans hij
+le' i := ... exact (hum j).measurable ht
+```
+
+und das Feld `le'` benutzt von `hum j` allein `.measurable`. `naturalFiltration`
+nimmt darum `Measurable` und keine Topologie; es sind sieben Zeilen, und kein
+Satz über Treppenpfade wird gebraucht.
+
+**Für die Suchregel:** wer ein Mathlib-Lemma als unbrauchbar verwirft, nennt die
+Voraussetzung, an der es scheitert *und* liest nach, welche davon der Beweis
+wirklich benutzt. Hier war die genannte Voraussetzung nicht die, die stört, und
+die, die stört, wird im Rumpf nicht angerührt.
+
+#### Zweitens, und das ist der Befund des Laufs: die Progressivität ist reell und nicht $E$-wertig
+
+Für `StronglyAdapted` — die erste Hälfte von `MeasureTheory.Martingale` — muß
+der Kompensator $\omega \mapsto \int_0^t Af(X_s\omega)\,\dif s$ meßbar für
+`𝓕 t` sein, also $(s,\omega)\mapsto Af(X_s\omega)$ gemeinsam meßbar für
+`𝓑 ⊗ 𝓕 t`. Der einzige Beweis, den es dafür gibt, nähert $X_s$ durch $X_r$ mit
+$r$ etwas oberhalb von $s$ — jedes solche $X_r$ mit $r\le t$ ist ein Erzeuger
+von `𝓕 t` — und geht zum Limes.
+
+**Ein Limes `E`-wertiger meßbarer Abbildungen ist aber nur meßbar, wenn die
+Diagonale von `E` meßbar ist**, und für eine beliebige σ-Algebra ist sie es
+nicht (der Standardzeuge ist $E=\R$ mit der σ-Algebra der abzählbaren und
+ko-abzählbaren Mengen). Genau darum trägt Mathlibs ganze Progressivitäts-API
+`[PseudoMetrizableSpace β]`. Die Aussage `Clock.IsProgressive` für den
+Sprungprozeß über bloßem `[MeasurableSpace E]` ist also nicht bloß ungebaut,
+sie ist mutmaßlich **falsch**.
+
+Gebraucht wird sie nicht. `measurable_uncurry_min_of_eventuallyEq` führt
+dasselbe Argument in `ℝ`: ist `G : ℝ → Ω → ℝ` mit `G r` meßbar für `𝓖` für jedes
+`r ≤ t`, und ist jeder Pfad rechtsstetig im Sinne von
+`∀ᶠ r in 𝓝[≥] s, G r ω = G s ω`, so ist `(r, ω) ↦ G (min r t) ω` meßbar für
+`𝓑 ⊗ 𝓖`. Jedes reelle Funktional `h ∘ X` des Prozesses fällt darunter, und der
+Kompensator ist eines. Der Preis ist eine Verallgemeinerung, die ohnehin fällig
+war: `mpFamily_sub_of_measurable_path` nimmt schon heute `g ∘ X` und nicht `X`,
+und wer `isMPSolution_iff_forall_fdd` auf den Sprungprozeß anwenden will, muß
+dessen `Clock.IsProgressive`-Hypothese auf diese Gestalt abschwächen. Das steht
+als Punkt in Meilenstein 4.
+
+#### Drittens: warum die Rechtsstetigkeit ohne jede Hypothese bewiesen ist
+
+`eventuallyEq_nhdsGE_stepPath` sagt, daß `stepPath T y` an **jeder** Stelle
+rechtsstetig ist, für **jede** Folge `T` und **jedes** `y` — weder `Monotone T`
+noch Nichtexplosion. Das ist keine Generalität um ihrer selbst willen:
+`MeasureTheory.Martingale` verlangt `StronglyAdapted` und nicht dessen
+f.s.-Fassung, also muß die Meßbarkeit des Kompensators an **jedem** Punkt
+gelten. Die Explosionsmenge ist eine Nullmenge, aber nicht die leere Menge, und
+`ae_isStepPath_jumpProcess` — das Ergebnis des achtzehnten Laufs — hilft hier
+darum nicht.
+
+Der Beweis ist zwei Zeilen lang, sobald man ihn richtig herum ansieht. Enthält
+irgendein Fenster `t`, so ist `n₀ = stepIndex T t` der kleinste Index mit
+`t < T (n₀+1)`, und auf `Set.Ico t (T (n₀+1))` ist der Index konstant `n₀`: nach
+oben, weil `n₀` weiter zulässig ist; nach unten, weil jedes `m < n₀` schon
+`T (m+1) ≤ t ≤ r` erfüllt. Enthält keines `t`, so ist der Index die
+Ausweichzahl `0` bei `t` und bei jedem späteren `r` ebenso, weil
+`{n | r < T (n+1)} ⊆ {n | t < T (n+1)} = ∅`. Die zweite Hälfte von `IsStepPath`
+— die linksseitigen Limiten — braucht `StrictMono` und Nichtexplosion wirklich;
+die erste nicht.
+
+Die Klammer dazu ist `eventuallyEq_nhdsGE_comp_max`: die Rechtsstetigkeit
+überlebt das Abschneiden der Zeit bei `0`. Sie wird gebraucht, weil der Index
+des Martingalproblems `ℝ≥0` ist und der Prozeß auf `ℝ` lebt: bei negativer Zeit
+kann der Prozeß irgendetwas sein, und die σ-Algebren der Filtration wissen
+nichts davon.
+
+Und die Näherung benutzt `Int.floor` und nicht `Nat.floor`, aus demselben
+Grund: `Nat.floor` schickt jede negative Zahl auf `0`, und die Näherung von
+unten spränge dann auf `2⁻ⁿ`.
+
+#### Was der Satz jetzt noch schuldet
+
+Genau ein Stück: die bedingte Erwartung `P[Y t | 𝓕 s] =ᵐ[P] Y s`. Der Weg
+dorthin, in der Reihenfolge, und der dritte Punkt ist der teure:
+
+1. **Die Markoveigenschaft an einer festen Zeit.** Aus `expMeasure_Ioi_add`
+   (der Gedächtnislosigkeit, achtzehnter Lauf) und `chainKernel`: bedingt auf
+   `𝓕 t` ist die Zukunft der Sprungprozeß, gestartet in `X t`, mit einer
+   Restwartezeit derselben Verteilung.
+2. **Die Erwartungsidentität** `E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`.
+3. **Die Kombination.** Punkt 2 ist die Rückwärtsgleichung und der einzige
+   Schritt, der Analysis jenseits der Buchhaltung braucht — Differentiation
+   unter dem Integral, entlang der Erneuerungsgleichung
+   `u(t,x) = e^{-λ_x t} f x + λ_x ∫_0^t e^{-λ_x s} (μ_x u(t-s,·)) ds`.
+
+**Vorschlag für den nächsten Lauf, als benanntes Ziel:** die Erneuerungsgleichung
+selbst, als `jumpMeasure_integral_eq_of_firstJump` — das Gesetz von
+`(T 1, y 1)` unter `jumpMeasure mu nu` ist explizit (`chainKernel` gibt `y 1`,
+`waitingMeasure` gibt `ξ 0`, und die beiden sind unabhängig), und die
+Zerlegung des Erwartungswerts nach `T 1 ≤ t` oder nicht ist eine Rechnung mit
+`Measure.prod` und `expMeasure_Ioi`, ohne Analysis. Sie ruht auf
+`jumpMeasure_map_chain_zero`, `jumpMeasure_map_snd` und `expMeasure_Ioi`, und
+sie ist jetzt dran, weil sie der einzige Schritt zwischen dem Gebauten und
+Punkt 2 ist, der noch keine Ableitung braucht.
+
+**Nicht angefaßt:** das Manuskript, und die Facts-Tabelle. Der Lauf lag
+vollständig in der vorrangigen Aufgabe.
+
+### 2026-09-09, zwanzigster Lauf des Tages (Sparlauf)
+
+Ein Ziel, wie beauftragt. **`jumpMeasure_integral_eq_of_firstJump` ist bewiesen**
+— die Erneuerungsgleichung in der Gestalt, die noch keine Analysis braucht:
+`∫ h(X_t) dP = ∫ e^{-lam z·t} h z dν + ∫_{T₁ ≤ t} h(X_t) dP`. Mit ihr drei
+Hilfssätze in `TauCeti/MartingaleProblems/Suggested.lean` (`jumpTime_one`,
+`jumpProcess_of_lt_jumpTime_one`, `comp_chainKernel_map_zero`); die ganze Datei
+geht durch `lake env lean` gegen v4.33.1 (unverändert zehn `sorry`), und alle
+vier neuen Deklarationen hängen mit `#print axioms` nur an `propext`,
+`Classical.choice`, `Quot.sound`. Der Beweis ist die Zerlegung nach `T 1 ≤ t`
+plus Fubini auf dem Produkt: `{t < T₁}` ist nach `jumpTime_one` das Ereignis
+`{ξ₀ > lam(y₀)·t}` der **einen** nullten Wartezeit, auf ihm steht der Pfad still
+(`jumpProcess_of_lt_jumpTime_one`, ohne Monotonie und ohne Nichtexplosion), und
+seine Wahrscheinlichkeit ist der Schwanz `expMeasure_Ioi`. Der Satz ist für
+allgemeines `nu` formuliert und nicht für `Measure.dirac x`: die Diracfassung
+müßte `ω.1 0 = x` f.s. ablesen, und dazu müßte `{x}ᶜ` meßbar sein, was über
+bloßem `[MeasurableSpace E]` niemand hergibt. **Woran es sonst hängt:** die
+Rückwärtsgleichung braucht jetzt nur noch die Markoveigenschaft für den zweiten
+Term. **Vorschlag:** die Verschiebung als *pfadweise* Identität —
+`jumpProcess lam t ω = jumpProcess lam (t - T₁) (ω.1 ∘ succ, ω.2 ∘ succ)` auf
+`{T₁ ≤ t}` —, denn sie ist Buchhaltung an `stepIndex` und trennt die Kombinatorik
+von der Maßtheorie des Neustarts.

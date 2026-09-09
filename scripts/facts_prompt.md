@@ -4,6 +4,17 @@ einem git-Worktree auf dem Branch `facts-inventory`. Zeitbudget: 120 Minuten.
 
 ## Vorrangige Aufgaben
 
+### ~~SPARLAUF — gilt nur für Läufe am 2026-09-09 nach 16:00~~ *(gestellt vom Nutzer, erledigt 2026-09-09, zwanzigster Lauf des Tages)*
+
+**Ergebnis.** `jumpMeasure_integral_eq_of_firstJump` ist bewiesen, samt drei
+Hilfssätzen (`jumpTime_one`, `jumpProcess_of_lt_jumpTime_one`,
+`comp_chainKernel_map_zero`); ganze Datei durch `lake env lean` gegen v4.33.1,
+alle vier mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`.
+Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09, zwanzigster Lauf des Tages".
+Damit gilt wieder Teil C der Aufgabe darunter; sein Punkt 2 schuldet nur noch die
+Markoveigenschaft für den zweiten Term der Zerlegung.
+
+
 Stehen hier Aufgaben, so haben sie Vorrang vor allem Übrigen, in der genannten
 Reihenfolge. Ist eine erledigt, streicht der Lauf sie hier heraus und trägt das
 Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
@@ -279,15 +290,59 @@ danach.*
    Mathlib nicht hat und die der einzige nicht buchhalterische Schritt des
    Beweises sein wird).
 
-   **Es fehlen zwei Stücke, und das zweite ist das riskante:** der Erzeuger als
+   ~~**Es fehlen zwei Stücke, und das zweite ist das riskante:** der Erzeuger als
    *Menge* `jumpOperator lam mu : Set ((E → ℝ) × (E → ℝ))`, und die
-   **Filtration**. `MeasureTheory.Filtration.natural`
-   (`Probability/Process/Filtration.lean:395`) verlangt `StronglyMeasurable`
-   der erzeugenden Abbildungen, und das ist über einem bloß topologischen `E`
-   *nicht* `Measurable`. Für Treppenpfade ist es beweisbar — sie nehmen
-   abzählbar viele Werte an, und `measurable_stepPath` faktorisiert über `ℕ` —,
-   aber es ist eine Beweispflicht und keine Instanz. Der nächste Lauf plant sie
-   ein, statt sie zu entdecken.
+   **Filtration**.~~ *(beide erledigt 2026-09-09, neunzehnter Lauf des Tages)*
+
+   **Zwischenstand 2026-09-09, neunzehnter Lauf des Tages.** Die beiden fehlenden
+   Stücke stehen, und mit ihnen die **erste Hälfte des Satzes**: achtzehn neue
+   Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, alle durch
+   `lake env lean` gegen v4.33.1 und alle mit `#print axioms` auf `propext`,
+   `Classical.choice`, `Quot.sound` geprüft. `jumpProcess_isMPSolution` ist
+   hingeschrieben und trägt sein `sorry`; was ihm fehlt, ist allein die bedingte
+   Erwartung. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09, neunzehnter
+   Lauf des Tages".
+
+   **Der angesagte Grund gegen `Filtration.natural` war der falsche, und der
+   richtige ist billiger.** Nicht `StronglyMeasurable` über einem topologischen
+   `E` ist das Hindernis: die Deklaration
+   (`Probability/Process/Filtration.lean:395`) trägt
+   `[TopologicalSpace (β i)] [MetrizableSpace (β i)] [BorelSpace (β i)]`, also
+   ist sie über einem bloßen `[MeasurableSpace E]` **nicht einmal
+   hinschreibbar**. Gebraucht wird von alledem nichts — das Feld `le'` verlangt
+   Meßbarkeit und sonst nichts —, also steht jetzt `naturalFiltration` mit
+   `Measurable` und ohne Topologie da. Kein Beweis über Treppenpfade, sieben
+   Zeilen.
+
+   **Was wirklich riskant war, ist die Progressivität, und sie ist nicht
+   `Clock.IsProgressive`.** Für `StronglyAdapted` muß der Kompensator
+   `ω ↦ ∫_0^t Af(X_s ω) ds` meßbar für `𝓕 t` sein, also `(s, ω) ↦ Af(X_s ω)`
+   gemeinsam meßbar. Der Beweis nähert `X_s` durch `X_r` mit `r` etwas oberhalb
+   von `s` und geht zum Limes — und ein Limes **`E`-wertiger** meßbarer
+   Abbildungen ist nur meßbar, wenn die Diagonale von `E` es ist, was für eine
+   beliebige σ-Algebra falsch ist. Die Aussage `Clock.IsProgressive` für den
+   Sprungprozeß ist über bloßem `[MeasurableSpace E]` also vermutlich **nicht
+   beweisbar**. Sie wird auch nicht gebraucht: `measurable_uncurry_min_of_eventuallyEq`
+   führt dasselbe Argument in `ℝ` für jedes reelle Funktional `h ∘ X`, und der
+   Kompensator ist eines. Wer `isMPSolution_iff_forall_fdd` auf den Sprungprozeß
+   anwenden will, muß dessen Hypothese vorher auf diese Gestalt abschwächen —
+   `mpFamily_sub_of_measurable_path` nimmt ohnehin schon `g ∘ X` und nicht `X`.
+
+   **Und die Rechtfertigung dafür, daß die Rechtsstetigkeit ohne jede Hypothese
+   bewiesen ist** (`eventuallyEq_nhdsGE_stepPath`, weder `Monotone T` noch
+   Nichtexplosion): `MeasureTheory.Martingale` verlangt `StronglyAdapted` und
+   nicht dessen f.s.-Fassung, also muß die Meßbarkeit des Kompensators an
+   **jedem** Punkt gelten, die Explosionsmenge eingeschlossen. Die ist eine
+   Nullmenge, aber nicht die leere Menge, und `ae_isStepPath_jumpProcess` hilft
+   hier darum nicht.
+
+   **Was für den Satz jetzt noch fehlt, ist genau ein Stück:** die bedingte
+   Erwartung `P[Y t | 𝓕 s] =ᵐ Y s`. Der Weg dorthin, in der Reihenfolge:
+   (a) die Markoveigenschaft des Sprungprozesses an einer festen Zeit, aus
+   `expMeasure_Ioi_add` und `chainKernel`; (b) die Erwartungsidentität
+   `E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`; (c) die Kombination beider. Der
+   Punkt, an dem es teuer wird, ist (b) — es ist die Rückwärtsgleichung, und sie
+   ist der einzige Schritt, der Analysis jenseits der Buchhaltung braucht.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 
