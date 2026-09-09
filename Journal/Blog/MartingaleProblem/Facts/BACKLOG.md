@@ -1219,3 +1219,33 @@ Lauf, passiert; `axcheck_tmp.lean` steht seither eingedampft und in `.gitignore`
    `Clock.atomTailProduct_sub_eq`, `Clock.omegaChainPotential` und
    `exists_isAtomCertificate_of_omegaChain` in `MartingaleProblems`
    Meilenstein 8.
+
+7. **`MeasureTheory.HasLaw` prüfen und, wenn es trägt, übernehmen.** *(gestellt
+   2026-09-09 vom Nutzer; **erst nach `jumpProcess_isMPSolution`**, nicht davor.)*
+
+   Mathlib hat seit kurzem
+   ```
+   structure HasLaw (X : Ω → 𝓧) (μ : Measure 𝓧) (P : Measure Ω) : Prop where
+     protected aemeasurable : AEMeasurable X P
+     protected map_eq : P.map X = μ
+   ```
+   (`Probability/HasLaw.lean:39`), also genau das Paar, das unsere drei Dateien
+   überall von Hand mitführen — `HasLaw` selbst kommt in keiner von ihnen vor.
+   Dafür spricht: es bündelt die zwei Verpflichtungen, trägt `@[fun_prop]` auf
+   der Meßbarkeit, und es ist die Vokabel, in der Mathlib inzwischen über
+   Verteilungen spricht, was für eine Roadmap ein Wert an sich ist.
+
+   **Die Frage, die zu beantworten ist, bevor irgend etwas umgestellt wird:**
+   `HasLaw` verlangt `AEMeasurable X P`, also Meßbarkeit modulo einer Nullmenge
+   *eines festen* `P`. Unsere Sprungkonstruktion arbeitet seit dem 2026-09-09
+   mit **Kernen** — `jumpKernel` statt `jumpMeasure` war die Antwort darauf, daß
+   sich über bloßem `[MeasurableSpace E]` sonst nichts hinschreiben ließ — und
+   liefert echte Meßbarkeit. Trägt `HasLaw` die Kernfassung, oder erzwingt es den
+   Rückschritt auf ein festes Anfangsgesetz? Prüfe das an
+   `jumpMeasure_map_chain_zero` und an `integral_jumpKernel_zero_eq`, **ehe** Du
+   umschreibst; kommt heraus, daß es nicht trägt, so ist das der Befund und die
+   Umstellung unterbleibt.
+
+   Umfang, falls es trägt: jede Gesetzesaussage in `MartingaleProblems`, dazu die
+   `P.map (X n) = μ n` in `WeakConvergence`. Mechanisch, aber breit — deshalb
+   nicht vor dem offenen Beweis.
