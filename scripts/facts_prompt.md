@@ -343,6 +343,37 @@ danach.*
    `E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`; (c) die Kombination beider. Der
    Punkt, an dem es teuer wird, ist (b) — es ist die Rückwärtsgleichung, und sie
    ist der einzige Schritt, der Analysis jenseits der Buchhaltung braucht.
+
+   **Zwischenstand 2026-09-09, einundzwanzigster Lauf des Tages.** Die
+   **Verschiebung** steht, in allen drei Stücken, aus denen sie besteht:
+   pfadweise (`jumpProcess_jumpShift`), auf den Wartezeiten
+   (`waitingMeasure_map_shift`) und auf der Kette (`chainKernel_map_shift`).
+   Siebzehn neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`,
+   alle durch `lake env lean` gegen v4.33.1 und alle mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` ist
+   unverändert zehn. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09,
+   einundzwanzigster Lauf des Tages".
+
+   **Der teure Teil war die Kette, und der Grund ist eine Lücke in Mathlib.**
+   `ProbabilityTheory.Kernel.traj` ist für eine **beliebige** Kernfamilie gebaut
+   und trägt darum keine Zeithomogenität; weder v4.33.1 noch `upstream/master`
+   sagt, daß die Verschiebung einer homogenen Kette wieder dieselbe Kette ist
+   (`git grep shift upstream/master -- .../IonescuTulcea/` ist leer). Der Beweis
+   geht darum über die endlichdimensionalen Verteilungen: eine Induktion über
+   `Kernel.partialTraj`, deren ganzer Inhalt der **eine** Schritt
+   `partialTraj_succ_map_shiftIic` ist — der Kern zur Zeit `b+1` liest die
+   letzte Koordinate, und die Verschiebung trägt sie auf die letzte Koordinate
+   des verschobenen Tupels. Die Induktion selbst ist dann vier Umformungen
+   (`map_comp`, `comp_map`, IH, `kernel_comp_comap`), und der Übergang von
+   `partialTraj` zu `traj` ist die Eindeutigkeit des projektiven Limes
+   (`ext_of_map_frestrictLe`).
+
+   **Was jetzt noch fehlt**, ist die Zusammensetzung: die drei Verschiebungen
+   sind einzeln bewiesen und müssen zur Erneuerungsgleichung zusammengeführt
+   werden — der zweite Term von `jumpMeasure_integral_eq_of_firstJump` als
+   Integral über `T₁` mit `E_y[h(X_{t-T₁})]` unter `y ~ mu (y₀)`. Dafür ist die
+   Fassung von `chainKernel_map_shift` als **Kernidentität** (nicht nur
+   punktweise) zu nehmen und mit `jumpMeasure` als Produkt zu verbinden.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 
