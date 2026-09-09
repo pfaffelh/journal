@@ -1499,6 +1499,21 @@ theorem jumpProcess_zero (hxi : ∀ n, 0 < xi n) (hlam : ∀ x, 0 < lam x) :
   simp only [jumpProcess, stepPath,
     stepIndex_eq_of (Or.inl rfl) h1 (strictMono_jumpTime hxi hlam).monotone]
 
+/-- **The first jump time reads only the initial state and the zeroth waiting time.**  This is
+what makes the law of `T 1` explicit under `jumpMeasure mu nu`: the chain contributes `y 0` and
+the waiting times contribute `ξ 0`, and the two are independent because the measure is a
+product. -/
+theorem jumpTime_one (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) :
+    jumpTime lam y xi 1 = xi 0 / lam (y 0) := by
+  rw [jumpTime_succ, jumpTime_zero, zero_add]
+
+/-- **Before the first jump the path sits at its initial state.**  No monotonicity and no non
+explosion are needed: `t < T 1` bounds the step index by `0` outright. -/
+theorem jumpProcess_of_lt_jumpTime_one {t : ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+    (h : t < jumpTime lam ω.1 ω.2 1) : jumpProcess lam t ω = ω.1 0 := by
+  have h0 : stepIndex (jumpTime lam ω.1 ω.2) t = 0 := Nat.le_zero.1 (stepIndex_le h)
+  simp [jumpProcess, stepPath, h0]
+
 /-! ### The explicit probability space -/
 
 section Space
@@ -1658,6 +1673,17 @@ noncomputable def jumpMeasure (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measur
 instance (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
     IsProbabilityMeasure (jumpMeasure mu nu) := by unfold jumpMeasure; infer_instance
 
+/-- **The chain started from `nu` has initial law `nu`.**  Stated for the law of the chain alone,
+because the first jump decomposition integrates a function of the initial state against it and
+not against `jumpMeasure`. -/
+theorem comp_chainKernel_map_zero (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) :
+    (chainKernel mu ∘ₘ nu).map (fun x : ℕ → E ↦ x 0) = nu := by
+  rw [Measure.map_comp _ _ (measurable_pi_apply 0)]
+  have hker : (chainKernel mu).map (fun x : ℕ → E ↦ x 0) = Kernel.id := by
+    ext z s hs
+    rw [Kernel.map_apply _ (measurable_pi_apply 0), chainKernel_map_zero, Kernel.id_apply]
+  rw [hker, Measure.id_comp]
+
 /-- **The initial law is the one prescribed.**  This is the only place where `nu` enters, and it
 is what makes the construction one *of* `nu` and not merely one indexed by it. -/
 theorem jumpMeasure_map_chain_zero (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
@@ -1665,11 +1691,7 @@ theorem jumpMeasure_map_chain_zero (mu : Kernel E E) [IsMarkovKernel mu] (nu : M
   have hmap : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.1 0)
       = (fun x : ℕ → E ↦ x 0) ∘ Prod.fst := rfl
   rw [jumpMeasure, hmap, ← Measure.map_map (measurable_pi_apply 0) measurable_fst,
-    Measure.map_fst_prod, measure_univ, one_smul, Measure.map_comp _ _ (measurable_pi_apply 0)]
-  have hker : (chainKernel mu).map (fun x : ℕ → E ↦ x 0) = Kernel.id := by
-    ext z s hs
-    rw [Kernel.map_apply _ (measurable_pi_apply 0), chainKernel_map_zero, Kernel.id_apply]
-  rw [hker, Measure.id_comp]
+    Measure.map_fst_prod, measure_univ, one_smul, comp_chainKernel_map_zero]
 
 theorem measurable_jumpTime {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ) :
     Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 n := by
@@ -1737,6 +1759,79 @@ theorem jumpMeasure_map_jumpProcess_zero {lam : E → ℝ} (hlam : ∀ x, 0 < la
     filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
     exact jumpProcess_zero (y := ω.1) (xi := ω.2) hω hlam
   rw [Measure.map_congr h, jumpMeasure_map_chain_zero]
+
+/-! ### The first jump decomposition
+
+The renewal equation of the construction, before the Markov property is used on its second term.
+Splitting the expectation at the first jump costs no analysis at all: the event `{t < T 1}` is
+`{ξ 0 > lam (y 0) * t}` by `jumpTime_one`, on it the path has not moved
+(`jumpProcess_of_lt_jumpTime_one`), and its probability is the tail `expMeasure_Ioi` of a single
+exponential variable, computed on the second factor of the product measure.
+
+The statement is for a general initial law `nu`, not for `Measure.dirac x`, and the first term is
+therefore an integral against `nu` rather than a single exponential factor.  That is not
+generality for its own sake: pinning `nu` to a Dirac measure and reading off `ω.1 0 = x` almost
+surely would need `{x}ᶜ` to be measurable, and `E` carries nothing but a `MeasurableSpace`. -/
+theorem jumpMeasure_integral_eq_of_firstJump {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] {h : E → ℝ} (hh : Measurable h) {C : ℝ} (hC : ∀ z, |h z| ≤ C)
+    {t : ℝ} (ht : 0 ≤ t) :
+    ∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)
+      = (∫ z, Real.exp (-(lam z * t)) * h z ∂nu)
+        + ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t},
+            h (jumpProcess lam t ω) ∂(jumpMeasure mu nu) := by
+  have hS : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t} :=
+    measurableSet_le (measurable_jumpTime hlam 1) measurable_const
+  have hXmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ h (jumpProcess lam t ω) :=
+    hh.comp ((measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+  have hzmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ h (ω.1 0) :=
+    hh.comp ((measurable_pi_apply 0).comp measurable_fst)
+  have hXint : Integrable (fun ω ↦ h (jumpProcess lam t ω)) (jumpMeasure mu nu) :=
+    Integrable.mono' (integrable_const C) hXmeas.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun ω ↦ hC _)
+  have hind : Integrable
+      ({ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ.indicator fun ω ↦ h (ω.1 0))
+      ((chainKernel mu ∘ₘ nu).prod waitingMeasure) :=
+    (Integrable.mono' (integrable_const C) hzmeas.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun ω ↦ hC _)).indicator hS.compl
+  have hEq : Set.EqOn (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ h (jumpProcess lam t ω))
+      (fun ω ↦ h (ω.1 0)) {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ := by
+    intro ω hω
+    simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_le] at hω
+    simp only [jumpProcess_of_lt_jumpTime_one hω]
+  have hinner : ∀ yy : ℕ → E,
+      (∫ ξ : ℕ → ℝ, {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ.indicator
+          (fun ω ↦ h (ω.1 0)) (yy, ξ) ∂waitingMeasure)
+        = Real.exp (-(lam (yy 0) * t)) * h (yy 0) := by
+    intro yy
+    have hiff : ∀ ξ : ℕ → ℝ,
+        ((yy, ξ) ∈ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ)
+          ↔ ξ 0 ∈ Set.Ioi (lam (yy 0) * t) := by
+      intro ξ
+      simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_le, jumpTime_one, Set.mem_Ioi]
+      rw [lt_div_iff₀ (hlam0 _), mul_comm t (lam (yy 0))]
+    have hset : (fun ξ : ℕ → ℝ ↦ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ.indicator
+        (fun ω ↦ h (ω.1 0)) (yy, ξ))
+        = {ξ : ℕ → ℝ | ξ 0 ∈ Set.Ioi (lam (yy 0) * t)}.indicator (fun _ ↦ h (yy 0)) := by
+      funext ξ
+      simp only [Set.indicator_apply, hiff ξ, Set.mem_setOf_eq]
+    rw [hset, integral_indicator_const (h (yy 0))
+        (s := {ξ : ℕ → ℝ | ξ 0 ∈ Set.Ioi (lam (yy 0) * t)})
+        (measurableSet_Ioi.preimage (measurable_pi_apply 0)), measureReal_def,
+      waitingMeasure_eval_preimage measurableSet_Ioi 0,
+      expMeasure_Ioi one_pos (mul_nonneg (hlam0 _).le ht),
+      ENNReal.toReal_ofReal (Real.exp_pos _).le, one_mul, smul_eq_mul]
+  have key : ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ t}ᶜ,
+      h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)
+      = ∫ z, Real.exp (-(lam z * t)) * h z ∂nu := by
+    rw [setIntegral_congr_fun hS.compl hEq, ← integral_indicator hS.compl, jumpMeasure,
+      integral_prod _ hind]
+    simp_rw [hinner]
+    conv_rhs => rw [← comp_chainKernel_map_zero mu nu]
+    rw [integral_map (measurable_pi_apply 0).aemeasurable
+      (((Real.measurable_exp.comp ((hlam.mul measurable_const).neg)).mul hh)).aestronglyMeasurable]
+  rw [← integral_add_compl hS hXint, key]
+  exact add_comm _ _
 
 /-! ### The clock of the jump construction -/
 

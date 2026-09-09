@@ -14882,3 +14882,26 @@ Punkt 2 ist, der noch keine Ableitung braucht.
 
 **Nicht angefaßt:** das Manuskript, und die Facts-Tabelle. Der Lauf lag
 vollständig in der vorrangigen Aufgabe.
+
+### 2026-09-09, zwanzigster Lauf des Tages (Sparlauf)
+
+Ein Ziel, wie beauftragt. **`jumpMeasure_integral_eq_of_firstJump` ist bewiesen**
+— die Erneuerungsgleichung in der Gestalt, die noch keine Analysis braucht:
+`∫ h(X_t) dP = ∫ e^{-lam z·t} h z dν + ∫_{T₁ ≤ t} h(X_t) dP`. Mit ihr drei
+Hilfssätze in `TauCeti/MartingaleProblems/Suggested.lean` (`jumpTime_one`,
+`jumpProcess_of_lt_jumpTime_one`, `comp_chainKernel_map_zero`); die ganze Datei
+geht durch `lake env lean` gegen v4.33.1 (unverändert zehn `sorry`), und alle
+vier neuen Deklarationen hängen mit `#print axioms` nur an `propext`,
+`Classical.choice`, `Quot.sound`. Der Beweis ist die Zerlegung nach `T 1 ≤ t`
+plus Fubini auf dem Produkt: `{t < T₁}` ist nach `jumpTime_one` das Ereignis
+`{ξ₀ > lam(y₀)·t}` der **einen** nullten Wartezeit, auf ihm steht der Pfad still
+(`jumpProcess_of_lt_jumpTime_one`, ohne Monotonie und ohne Nichtexplosion), und
+seine Wahrscheinlichkeit ist der Schwanz `expMeasure_Ioi`. Der Satz ist für
+allgemeines `nu` formuliert und nicht für `Measure.dirac x`: die Diracfassung
+müßte `ω.1 0 = x` f.s. ablesen, und dazu müßte `{x}ᶜ` meßbar sein, was über
+bloßem `[MeasurableSpace E]` niemand hergibt. **Woran es sonst hängt:** die
+Rückwärtsgleichung braucht jetzt nur noch die Markoveigenschaft für den zweiten
+Term. **Vorschlag:** die Verschiebung als *pfadweise* Identität —
+`jumpProcess lam t ω = jumpProcess lam (t - T₁) (ω.1 ∘ succ, ω.2 ∘ succ)` auf
+`{T₁ ≤ t}` —, denn sie ist Buchhaltung an `stepIndex` und trennt die Kombinatorik
+von der Maßtheorie des Neustarts.

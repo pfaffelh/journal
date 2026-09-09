@@ -663,6 +663,11 @@ A concrete family of solutions, built without any of the theory above. Index
   **Proved** on 2026-09-09, nineteenth run. This is the first of the two
   conjuncts of `MeasureTheory.Martingale`, and the one that does not mention the
   measure.
+* `jumpMeasure_integral_eq_of_firstJump`: the first jump decomposition
+  `E[h (X t)] = ∫ e^{-lam z * t} h z dnu + E[h (X t) ; T 1 ≤ t]`, the renewal
+  equation before the Markov property is used on its second term. **Proved** on
+  2026-09-09, twentieth run, for a general initial law and over
+  `[MeasurableSpace E]` alone.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
