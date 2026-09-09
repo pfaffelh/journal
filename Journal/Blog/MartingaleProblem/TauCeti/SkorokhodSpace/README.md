@@ -1660,23 +1660,62 @@ over a shrinking family and is therefore an infimum.
   and not the first: the cells being `Set.Ico`, `x` either lies below the last
   node, and the shorter subdivision catches it, or it lies in the final cell;
   splitting at the first node would leave the half open final cell nameless.
-* `SkorokhodSpace.exists_compact_range_of_isCompact`: the other conjunct of the
-  forward half, that `{f t | f ∈ A, t ∈ B m}` has compact closure in `E`. It
-  rests on the same total boundedness, on `IsCadlag.exists_subdivision` and on
-  `exists_mem_Ico_of_strictMono`: off the nodes a càdlàg path takes only values
-  within `ε'` of the finitely many node values, so its range over the window is
-  totally bounded, and uniformly so over the finitely many centres.
-* `SkorokhodSpace.isCompact_closure_iff`: `A ⊆ D ι E` has compact closure if and
-  only if for every `m` the set `{f t | f ∈ A, t ∈ B m}` has compact closure in
-  `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. Both directions. The window
-  is the one around `basePoint` and not around a free `t₀`: the left hand side
-  speaks of the topology of `D ι E`, which is `SkorokhodSpace.metricSpace
-  basePoint`, and a `t₀` free to differ from it would make the two sides speak
-  of two spaces. The modulus is the corrected one; with `modulusPinned` the
-  statement is false, by `SkorokhodSpace.not_tendsto_iSup_modulusPinned`.
+* `IsCadlag.totallyBounded_image_Icc`: a càdlàg path has totally bounded image on
+  a compact window. Proved (2026-09-09). It is `IsCadlag.exists_subdivision` and
+  `exists_mem_Ico_of_strictMono`: off the nodes the path stays within `ε` of one
+  of the finitely many node values, and the right endpoint is itself a node. Total
+  boundedness and not relative compactness is the conclusion, because no
+  completeness of `E` is used.
+* `SkorokhodSpace.totallyBounded_values_of_isCompact`: the other conjunct of the
+  forward half, that `{f t | f ∈ A, t ∈ B m}` is totally bounded. Proved
+  (2026-09-09). It rests on the same total boundedness of `A` as the modulus
+  half, on the previous item for each of the finitely many centres, and on
+  `exists_timeChange_distWith_lt_of_intDist_lt` to carry a value of a path of the
+  ball to a value of its centre. The value is read at `y` and the centre's at
+  `l⁻¹ y`, which is why the centres' windows have radius `m + 1`.
+* `SkorokhodSpace.isCompact_closure_values_of_isCompact`: the same under
+  `CompleteSpace E`, with compact closure. Proved (2026-09-09). This is the one
+  place in the criterion where the completeness of the *given* metric is used;
+  `PolishSpace E` grants only that the topology comes from some complete metric,
+  and that does not suffice to turn total boundedness into compact closure.
+* `SkorokhodSpace.not_isCompact_closure_of_rigid`: **the converse of the criterion
+  is false for a general index.** Proved (2026-09-09). If the only time change of
+  norm below `c > 0` is the identity and an uncountable set `S` of jump times
+  keeps its distance `η` from every window end, then the family `stepAt x a b`,
+  `x ∈ S`, satisfies *both* conditions — two values, and the subdivision made of
+  the two window ends with `x` between them has no oscillation at all — and is
+  `r`-separated by `le_intDist_stepAt`, hence not totally bounded. The witness is
+  the middle thirds Cantor set of `not_separableSpace_of_rigid`, with `S` its part
+  in `Set.Icc (1/4 : ℝ) (3/4)`, `η = 1/4`, `N = 1` and `c = Real.log 3`; as there,
+  the rigidity is a computation on paper and stands as a hypothesis.
+* `SkorokhodSpace.isCompact_closure_iff`, **over the index `ℝ`**: `A ⊆ D ℝ E` has
+  compact closure if and only if for every `m` the set `{f t | f ∈ A, t ∈ B m}`
+  has compact closure in `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. The
+  forward direction is proved for *every* index, as the pair
+  `isCompact_closure_values_of_isCompact` and
+  `tendsto_iSup_modulus_of_isCompact`; only the converse is index bound, by the
+  previous item, and it is stated where it is true rather than under a class
+  invented to make it true. `HasCountableCore ι` would exclude the witness but is
+  the class of *separability*: it yields a countable family of step paths, and
+  total boundedness asks for a finite one. The window is the one around
+  `basePoint` and not around a free `t₀`: the left hand side speaks of the
+  topology of `D ℝ E`, which is `SkorokhodSpace.metricSpaceInt basePoint`, and a
+  `t₀` free to differ from it would make the two sides speak of two spaces. The
+  modulus is the corrected one; with `modulusPinned` the statement is false, by
+  `SkorokhodSpace.not_tendsto_iSup_modulusPinned`.
+* The converse's proof is the finite net: for `ε` take `m` with `exp (-m) < ε`,
+  then `δ` from the modulus condition, then for each path a `δ`-sparse subdivision
+  of oscillation below `ε`; its nodes are pushed onto a **finite grid** of the
+  window — this is where `ℝ` is used and where the rigid index fails — and its
+  values onto a finite net of the value compactum. The approximant is
+  `SkorokhodSpace.stepPath`, the bound is `SkorokhodSpace.distWith_stepPath_le`,
+  and the passage from the window to the integral is
+  `SkorokhodSpace.intWith_le_of_ae_distWith_le`. What is new is the grid together
+  with the time change onto it, and the bound on the *number* of nodes, which
+  comes from the sparseness and the compactness of the window.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
-  used in practice, where the first condition is replaced by the existence of a
-  compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
+  used in practice, over `ℝ`, where the first condition is replaced by the
+  existence of a compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
 
 **Acceptance examples.**
 
@@ -1722,6 +1761,17 @@ over a shrinking family and is therefore an infimum.
   continuous image of `Set.Icc 1 2` under `a ↦ Set.indicator (Set.Ici a) 1`,
   which is where the sliding step example of Milestone 4 says the map is
   continuous.
+* **The same family on a rigid index, where the criterion must not be stated.**
+  `A = {stepAt x 1 0 | x ∈ C ∩ Set.Icc (1/4 : ℝ) (3/4)}` with `C` the middle
+  thirds Cantor set as index and base point `0`. Both conditions hold exactly as
+  in the previous example — two values, and the subdivision `0 < x < 1` has no
+  oscillation for `δ < 1/4` — but `a ↦ stepAt a 1 0` is not continuous here and
+  cannot be: no time change of norm below `log 3` moves anything, so the family is
+  uncountable and uniformly separated and its closure is not compact
+  (`SkorokhodSpace.not_isCompact_closure_of_rigid`). The pair of these two
+  examples is what confines `isCompact_closure_iff` to `ℝ`: the criterion sees
+  only values and times, and on a rigid index that is not enough to count the
+  paths.
 
 ## Milestone 8: tightness and convergence of finite dimensional distributions
 

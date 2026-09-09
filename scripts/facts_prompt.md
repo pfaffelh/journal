@@ -345,6 +345,49 @@ Meilenstein 5 wie seit je angesagt. (iii) Der Zusammenbau von
 als Nächstes dran; er ist der kürzeste und macht die Hinrichtung vollständig.
 
 
+**Zwischenstand Teil A (2026-09-09, achter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, achter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht weiter bei **einem** `sorry`; dieser Lauf
+hat es nicht gestrichen, sondern seine Aussage **berichtigt**. Vier neue
+Deklarationen und eine umgeschriebene, alle durch `lake env lean` gegen v4.33.1
+geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`.
+
+*Punkt (i) des vorigen Laufs ist erledigt, und die Hinrichtung ist damit
+vollständig.* `IsCadlag.totallyBounded_image_Icc` — ein càdlàg-Pfad hat auf einem
+kompakten Fenster totalbeschränktes Bild — und darauf
+`SkorokhodSpace.totallyBounded_values_of_isCompact`, die Wertebedingung, geführt
+wie die Modulbedingung des vorigen Laufs und um einen Radius kürzer.
+`SkorokhodSpace.isCompact_closure_values_of_isCompact` macht daraus unter
+`[CompleteSpace E]` die relative Kompaktheit; das ist die **einzige** Stelle, an
+der die Vollständigkeit der gegebenen Metrik eingeht, denn `PolishSpace E` gibt
+nur irgendeine.
+
+*Punkt (ii), die Rückrichtung, ist nicht offen, sondern widerlegt.*
+`SkorokhodSpace.not_isCompact_closure_of_rigid`: ist der einzige Zeitwechsel mit
+Norm unter `c > 0` die Identität und hält eine überabzählbare Menge `S` den
+Abstand `η` von allen Fensterenden, so erfüllt `{stepAt x a b : x ∈ S}` **beide**
+Konjunktionen der rechten Seite — zwei Werte, und die Unterteilung aus den
+Fensterenden mit `x` dazwischen hat gar keine Schwingung — und ist doch
+`r`-getrennt (`le_intDist_stepAt`), also nicht totalbeschränkt. Zeuge wieder die
+Cantormenge, `S` ihr Teil in `Icc (1/4) (3/4)`.
+
+*Was daraus gemacht wurde:* `SkorokhodSpace.isCompact_closure_iff` steht jetzt
+über `D(ℝ, E)`. Die Hinrichtung gilt für jeden Index und ist bewiesen; das
+`sorry` schuldet allein die Rückrichtung. Der Weg über eine Typklasse ist geprüft
+und verworfen — `HasCountableCore` schlösse den Zeugen aus, ist aber die Klasse
+der Separabilität und liefert eine **abzählbare** Familie, während die
+Totalbeschränktheit eine endliche verlangt; eine Klasse zu erfinden, die die
+Aussage wahr macht, ohne sie zu beweisen, ist die Fehlerform, die dieses Inventar
+protokolliert.
+
+*Als Nächstes:* die Rückrichtung über `ℝ`, das letzte Stück von Meilenstein 7.
+Ihr Weg steht am Ende des Laufberichts und in Meilenstein 7: endliches Gitter für
+die Knoten, endliches Netz für die Werte, `stepPath` als Approximant,
+`distWith_stepPath_le` als Schranke, `intWith_le_of_ae_distWith_le` als
+Buchführung. Neu zu bauen ist das Gitter samt dem Zeitwechsel darauf und die
+Schranke für die Anzahl der Knoten.
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 

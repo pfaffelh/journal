@@ -13103,3 +13103,107 @@ den noch offenen achten (`exists_compact_range_of_isCompact`).
    `tendsto_iSup_modulus_of_isCompact`.
 
 **Das Manuskript ist nicht angefaßt.**
+
+### 2026-09-09, achter Lauf des Tages — die Wertebedingung ist bewiesen, und die Rückrichtung ist widerlegt
+
+**Aufgabe.** Vorrangige Aufgabe, Teil A, Punkt 3: das Kompaktheitskriterium
+`SkorokhodSpace.isCompact_closure_iff`, das letzte `sorry` der Datei. Der vorige
+Lauf hatte drei Stücke benannt und (i), die Wertebedingung, als das nächste
+bezeichnet.
+
+**Stand der Datei.** `SkorokhodSpace/Suggested.lean` steht weiter bei **einem**
+`sorry`; dieser Lauf hat es nicht gestrichen, sondern seine Aussage
+**berichtigt**. Vier neue Deklarationen und eine umgeschriebene, alle durch
+`lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Punkt (i) ist erledigt, und die Hinrichtung ist damit vollständig.** Zwei
+Sätze, und der erste ist von der Metrik auf `D(ι, E)` gänzlich unabhängig:
+
+* `IsCadlag.totallyBounded_image_Icc` — ein càdlàg-Pfad hat auf einem kompakten
+  Fenster totalbeschränktes Bild. Das ist `IsCadlag.exists_subdivision` plus
+  `exists_mem_Ico_of_strictMono` des vorigen Laufs: die Zellen überdecken ihre
+  halboffene Spanne, jeder Wert liegt also innerhalb `ε` bei einem der endlich
+  vielen Knotenwerte, und der rechte Rand ist selbst ein Knoten.
+* `SkorokhodSpace.totallyBounded_values_of_isCompact` — hat `A` kompakten
+  Abschluß, so ist `{f t : f ∈ A, t ∈ exhaustion basePoint m}` totalbeschränkt.
+  Das ist der Beweis von `tendsto_iSup_modulus_of_isCompact`, auf den Werten
+  statt auf dem Modul geführt, und er ist um einen Radius kürzer: die endlich
+  vielen Mittelpunkte kommen aus der Totalbeschränktheit von `A`, ihre
+  Fensterwerte aus dem vorigen Satz, und
+  `exists_timeChange_distWith_lt_of_intDist_lt` trägt einen Wert eines Pfades der
+  Kugel auf einen Wert seines Mittelpunkts. Die eine Stelle, an der der
+  Zeitwechsel eingeht: der Wert wird bei `y` gelesen, der des Mittelpunkts bei
+  `l⁻¹ y`, weshalb die Fenster der Mittelpunkte den Radius `m + 1` haben.
+
+*Totalbeschränktheit ist die richtige Konklusion und keine Abschwächung.* Sie
+braucht **keine** Vollständigkeit von `E`, und
+`SkorokhodSpace.isCompact_closure_values_of_isCompact` gewinnt daraus unter
+`[CompleteSpace E]` die relative Kompaktheit in einer Zeile. Das ist die einzige
+Stelle des Kriteriums, an der die Vollständigkeit der **gegebenen** Metrik
+gebraucht wird — `PolishSpace E` gibt nur, daß die Topologie von *irgendeiner*
+vollständigen Metrik herkommt, und das genügt hier nicht.
+
+**Und der Befund, der die Ansage des vorigen Laufs umwirft: die Rückrichtung ist
+falsch.** `SkorokhodSpace.not_isCompact_closure_of_rigid` sagt es in Lean: ist
+der einzige Zeitwechsel mit Norm unter einem `c > 0` die Identität, und gibt es
+eine überabzählbare Menge `S` von Sprungzeiten, die von allen Fensterenden den
+Abstand `η` hält, so erfüllt die Familie `stepAt x a b`, `x ∈ S`, **beide**
+Konjunktionen der rechten Seite und hat doch keinen kompakten Abschluß.
+
+*Warum die rechte Seite gilt.* Die Werte sind die zwei Punkte `a` und `b`, also
+ist die Wertebedingung an jedem Fenster auf den Punkt erfüllt. Und die
+Unterteilung aus den beiden Fensterenden mit `x` dazwischen hat **gar keine**
+Schwingung — unterhalb von `x` ist der Pfad konstant `b`, oberhalb konstant `a`,
+und beide Zellen sind `Set.Ico` —, also ist der Modul `0` für jedes `δ < η` und
+das Supremum über die Familie geht gegen `0`. Die Disjunktion in der Hypothese
+`hwin` ist das entartete Fenster, das
+`modulus_eq_zero_of_exhaustion_subsingleton` erledigt.
+
+*Warum die linke Seite nicht gilt.* Unter der Starrheit ist die Familie
+`r`-getrennt, mit `r = min c (exp(-N) · min 1 (dist a b))`, und das ist wörtlich
+`SkorokhodSpace.le_intDist_stepAt` — derselbe Satz, der am ersten Lauf dieses
+Tages die Separabilität zu Fall gebracht hat. Eine überabzählbare `r`-getrennte
+Menge ist nicht totalbeschränkt.
+
+*Der Zeuge ist wieder die Cantormenge*, mit `S` ihrem Teil in `Icc (1/4) (3/4)`,
+`η = 1/4`, `N = 1` und `c = log 3`; ihre Fenster sind `{0}` für `m = 0` und ganz
+`ι` für `m ≥ 1`, was genau die Disjunktion `hwin` ist. Wie am ersten Lauf steht
+die Starrheit als Hypothese und die Rechnung auf Papier.
+
+**Was daraus für das Kriterium folgt, und was dieser Lauf entschieden hat.** Die
+Hinrichtung gilt für **jeden** Index, den die Datei zuläßt, und steht als das
+Paar `isCompact_closure_values_of_isCompact` /
+`tendsto_iSup_modulus_of_isCompact` da. Die Rückrichtung ist indexgebunden.
+`SkorokhodSpace.isCompact_closure_iff` ist deshalb **auf `D(ℝ, E)` umgestellt**:
+seine Hinrichtung ist die Spezialisierung der beiden allgemeinen Sätze, sein
+`sorry` schuldet nur noch die Rückrichtung, und `ℝ` ist der Index, den die
+Roadmap verbraucht und den Ethier--Kurtz nehmen.
+
+*Der Weg über eine Typklasse ist geprüft und verworfen, und der Grund gehört in
+den Bericht.* `HasCountableCore ι` schlösse den Zeugen aus — eine starre
+überabzählbare Menge hat keinen abzählbaren Kern —, aber es ist die Klasse der
+**Separabilität** und liefert eine abzählbare Familie von Treppenpfaden. Die
+Totalbeschränktheit verlangt eine **endliche**, und daß eine abzählbare genügte,
+ist von niemandem bewiesen. Eine Klasse zu erfinden, die die Aussage wahr macht,
+ohne die Aussage zu beweisen, ist die Fehlerform, die dieses Inventar seit dem
+2026-09-05 protokolliert; also steht das Kriterium dort, wo es wahr ist, und die
+Klasse ist die Sache dessen, der einen zweiten Index braucht.
+
+**Was als Nächstes zu tun ist.** Die Rückrichtung von
+`SkorokhodSpace.isCompact_closure_iff` über `ℝ`, und sie ist jetzt das einzige
+offene Stück von Meilenstein 7. Ihr Weg: aus der Modulbedingung und der
+Wertebedingung ein **endliches** `ε`-Netz bauen. Zu jedem `ε` ein `m` mit
+`exp (-m) < ε` (der Schwanz des Integrals), dazu ein `δ` aus der Modulbedingung,
+dann für jeden Pfad eine `δ`-sparsame Unterteilung mit Schwingung unter `ε`;
+ihre Knoten werden auf ein **endliches Gitter** des Fensters geschoben — das ist
+die Stelle, an der `ℝ` gebraucht wird und der starre Index scheitert —, ihre
+Werte auf ein endliches Netz des Wertekompaktums. Der Approximant ist
+`SkorokhodSpace.stepPath` des dritten Laufs, die Schranke ist
+`SkorokhodSpace.distWith_stepPath_le` des vierten, und die Buchführung vom
+Fenster zum Integral ist `SkorokhodSpace.intWith_le_of_ae_distWith_le`. Alle drei
+stehen bewiesen da; neu zu bauen ist allein das Gitter samt dem Zeitwechsel, der
+die Knoten darauf schiebt, und die Schranke für die **Anzahl** der Knoten, die
+aus der Sparsamkeit und der Kompaktheit des Fensters kommt.
+
+**Das Manuskript ist nicht angefaßt.**
