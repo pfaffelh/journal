@@ -13,6 +13,9 @@ import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Probability.Kernel.IonescuTulcea.Traj
 import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Distributions.Exponential
+import Mathlib.Probability.BorelCantelli
+import Mathlib.Probability.CDF
+import Mathlib.Topology.Algebra.InfiniteSum.Real
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -30,7 +33,19 @@ roadmap's first proposal for that predicate -- local finiteness of the jump set
 -- does not imply càdlàg.  The second, `JumpConstruction`, was added the same
 day: thirty three proved declarations building `jumpProcess` on the explicit space
 `(ℕ → E) × (ℕ → ℝ)` with the measure `jumpMeasure mu nu`, and showing its paths
-to be step paths, hence càdlàg, and jointly measurable in `(t, ω)`.  The first
+to be step paths, hence càdlàg, and jointly measurable in `(t, ω)`.  Ten more
+came the same day: the waiting times are almost surely positive with divergent
+partial sums (`ae_pos_waiting`, `tendsto_sum_waiting_atTop`, the second
+Borel--Cantelli lemma on `{ξ n > 1}`), so that `ae_isStepPath_jumpProcess` and
+`ae_isCadlagPath_jumpProcess` hold for `jumpMeasure mu nu`-almost every `ω`
+under `0 < lam ≤ L` alone.  Four more the same day: the tail of the exponential
+law and its memorylessness (`expMeasure_Ioi`, `expMeasure_Ioi_add`, neither of
+which is in Mathlib), the generator `jumpApply` and its bound
+`abs_jumpApply_le`.  And four more: `jumpProcess_zero` with
+`jumpMeasure_map_jumpProcess_zero`, which say that the *process* -- and not
+merely the chain driving it -- starts with law `nu`, and `lebesgueClock`, the
+clock of the jump martingale problem, on the index `ℝ≥0` that `[OrderBot ι]`
+forces.  The first
 proof of the
 file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
 corrected first: under `¬ IsMin t` alone it is false.  On 2026-09-07 twelve more
@@ -68,6 +83,8 @@ provable** as they stood.  They now carry `Clock.IsProgressive Q X 𝓕`.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
+
+open scoped NNReal
 
 /-! ## Milestone 1: the clock -/
 
@@ -1469,6 +1486,17 @@ theorem isCadlagPath_jumpProcess [TopologicalSpace E] {L : ℝ} (hL0 : 0 < L)
     IsCadlagPath (fun t => jumpProcess lam t (y, xi)) :=
   (isStepPath_jumpProcess hL0 hlam hL hxi hsum).isCadlagPath
 
+/-- **The jump process starts at the initial state of the embedded chain.**  The zeroth window
+`[0, T 1)` contains `0` as soon as the first holding time is positive, and then the step index of
+`0` is `0`. -/
+theorem jumpProcess_zero (hxi : ∀ n, 0 < xi n) (hlam : ∀ x, 0 < lam x) :
+    jumpProcess lam 0 (y, xi) = y 0 := by
+  have h1 : (0 : ℝ) < jumpTime lam y xi 1 := by
+    rw [jumpTime_succ, jumpTime_zero, zero_add]
+    exact div_pos (hxi 0) (hlam _)
+  simp only [jumpProcess, stepPath,
+    stepIndex_eq_of (Or.inl rfl) h1 (strictMono_jumpTime hxi hlam).monotone]
+
 /-! ### The explicit probability space -/
 
 section Space
@@ -1512,6 +1540,112 @@ noncomputable def waitingMeasure : Measure (ℕ → ℝ) :=
 
 instance : IsProbabilityMeasure waitingMeasure := by unfold waitingMeasure; infer_instance
 
+/-- **The law of a single waiting time.**  This is the only property of `Measure.infinitePi` the
+divergence argument needs beyond the independence of the coordinates. -/
+theorem waitingMeasure_eval_preimage {A : Set ℝ} (hA : MeasurableSet A) (n : ℕ) :
+    waitingMeasure {ω : ℕ → ℝ | ω n ∈ A} = expMeasure 1 A := by
+  have h : waitingMeasure {ω : ℕ → ℝ | ω n ∈ A}
+      = (waitingMeasure.map (fun ω : ℕ → ℝ ↦ ω n)) A := by
+    rw [Measure.map_apply (measurable_pi_apply n) hA]; rfl
+  rw [h]
+  unfold waitingMeasure
+  rw [Measure.infinitePi_map_eval]
+
+/-- The standard exponential law has no atom at `0` and no mass below it. -/
+theorem expMeasure_one_Iic_zero : expMeasure 1 (Set.Iic 0) = 0 := by
+  rw [← ofReal_cdf, cdf_expMeasure_eq one_pos]
+  norm_num
+
+/-- **The tail of the exponential law.**  Mathlib has the distribution function
+(`cdf_expMeasure_eq`) but not the tail, and not the memorylessness below; neither is in
+v4.33.1 nor on `upstream/master`. -/
+theorem expMeasure_Ioi {r : ℝ} (hr : 0 < r) {x : ℝ} (hx : 0 ≤ x) :
+    expMeasure r (Set.Ioi x) = ENNReal.ofReal (Real.exp (-(r * x))) := by
+  have hprob : IsProbabilityMeasure (expMeasure r) := isProbabilityMeasure_expMeasure hr
+  have hpos : (0 : ℝ) ≤ Real.exp (-(r * x)) := (Real.exp_pos _).le
+  have hle : Real.exp (-(r * x)) ≤ 1 := Real.exp_le_one_iff.2 (by nlinarith)
+  have h1 : expMeasure r (Set.Iic x) = 1 - ENNReal.ofReal (Real.exp (-(r * x))) := by
+    rw [← ofReal_cdf, cdf_expMeasure_eq hr, if_pos hx, ENNReal.ofReal_sub _ hpos,
+      ENNReal.ofReal_one]
+  rw [← Set.compl_Iic, prob_compl_eq_one_sub measurableSet_Iic, h1,
+    ENNReal.sub_sub_cancel ENNReal.one_ne_top]
+  rw [← ENNReal.ofReal_one]
+  exact ENNReal.ofReal_le_ofReal hle
+
+/-- **The exponential law is memoryless**, in the multiplicative form of its tail.  This is the
+one distributional property of the waiting times the martingale property of the jump process
+rests on. -/
+theorem expMeasure_Ioi_add {r : ℝ} (hr : 0 < r) {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) :
+    expMeasure r (Set.Ioi (s + t)) = expMeasure r (Set.Ioi s) * expMeasure r (Set.Ioi t) := by
+  rw [expMeasure_Ioi hr (by linarith), expMeasure_Ioi hr hs, expMeasure_Ioi hr ht,
+    ← ENNReal.ofReal_mul (Real.exp_pos _).le, ← Real.exp_add,
+    show -(r * s) + -(r * t) = -(r * (s + t)) from by ring]
+
+/-- A single waiting time exceeds `1` with the positive probability `exp (-1)`.  Only the
+positivity is used; the value is what makes the series of the Borel--Cantelli lemma diverge. -/
+theorem expMeasure_one_Ioi_one_ne_zero : expMeasure 1 (Set.Ioi (1 : ℝ)) ≠ 0 := by
+  rw [expMeasure_Ioi one_pos zero_le_one, ne_eq, ENNReal.ofReal_eq_zero, not_le]
+  exact Real.exp_pos _
+
+/-- **The coordinates of `waitingMeasure` are independent events.**  The product formula for
+cylinder sets of `Measure.infinitePi` is exactly the characterisation
+`iIndepSet_iff_meas_biInter`. -/
+theorem iIndepSet_waiting {A : ℕ → Set ℝ} (hA : ∀ n, MeasurableSet (A n)) :
+    iIndepSet (fun n ↦ {ω : ℕ → ℝ | ω n ∈ A n}) waitingMeasure := by
+  refine (iIndepSet_iff_meas_biInter
+    (fun n ↦ (hA n).preimage (measurable_pi_apply n))).2 fun S ↦ ?_
+  have hset : (⋂ i ∈ S, ((fun f : ℕ → ℝ ↦ f i) ⁻¹' A i)) = Set.pi (S : Set ℕ) A := by
+    ext ω; simp [Set.mem_pi]
+  rw [hset]
+  unfold waitingMeasure
+  rw [Measure.infinitePi_pi (μ := fun _ : ℕ ↦ expMeasure 1) (fun i _ ↦ hA i)]
+  exact Finset.prod_congr rfl fun i _ ↦ (waitingMeasure_eval_preimage (hA i) i).symm
+
+/-- **Almost every waiting time is positive**, which is the first of the two hypotheses of
+`isStepPath_jumpProcess`. -/
+theorem ae_pos_waiting : ∀ᵐ ω ∂waitingMeasure, ∀ n, 0 < ω n := by
+  rw [ae_all_iff]
+  intro n
+  rw [ae_iff]
+  have h : {ω : ℕ → ℝ | ¬ 0 < ω n} = {ω : ℕ → ℝ | ω n ∈ Set.Iic 0} := by
+    ext ω; simp [not_lt]
+  rw [h, waitingMeasure_eval_preimage measurableSet_Iic n, expMeasure_one_Iic_zero]
+
+/-- **Infinitely many waiting times exceed one**, almost surely: the second Borel--Cantelli lemma
+on the independent events `{ω n > 1}`, whose common probability `exp (-1)` is positive, so that
+the series of their measures diverges. -/
+theorem frequently_one_lt_waiting :
+    ∀ᵐ ω ∂waitingMeasure, ∃ᶠ n in atTop, 1 < ω n := by
+  set s : ℕ → Set (ℕ → ℝ) := fun n ↦ {ω : ℕ → ℝ | ω n ∈ Set.Ioi (1 : ℝ)} with hs
+  have hm : ∀ n : ℕ, MeasurableSet (s n) :=
+    fun n ↦ measurableSet_Ioi.preimage (measurable_pi_apply n)
+  have hsum : (∑' n : ℕ, waitingMeasure (s n)) = ⊤ := by
+    simp_rw [hs, fun n ↦ waitingMeasure_eval_preimage (measurableSet_Ioi (a := (1 : ℝ))) n]
+    exact ENNReal.tsum_const_eq_top_of_ne_zero expMeasure_one_Ioi_one_ne_zero
+  have hone := measure_limsup_eq_one hm (iIndepSet_waiting fun _ ↦ measurableSet_Ioi) hsum
+  have hmeas : MeasurableSet (limsup s atTop) := by
+    rw [limsup_eq_iInf_iSup_of_nat]
+    simp only [Set.iInf_eq_iInter, Set.iSup_eq_iUnion]
+    exact MeasurableSet.iInter fun n ↦
+      MeasurableSet.iUnion fun i ↦ MeasurableSet.iUnion fun _ ↦ hm i
+  have hae : ∀ᵐ ω ∂waitingMeasure, ω ∈ limsup s atTop :=
+    (ae_mem_iff_measure_eq hmeas.nullMeasurableSet).2 (by rw [hone, measure_univ])
+  filter_upwards [hae] with ω hω
+  exact mem_limsup_iff_frequently_mem.1 hω
+
+/-- **The partial sums of the waiting times diverge**, almost surely.  This is the second and
+last hypothesis of `isStepPath_jumpProcess`, and it is the whole probabilistic content of non
+explosion: a summable sequence of nonnegative terms tends to `0`, which no sequence exceeding
+`1` infinitely often does. -/
+theorem tendsto_sum_waiting_atTop :
+    ∀ᵐ ω ∂waitingMeasure, Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω k) atTop atTop := by
+  filter_upwards [ae_pos_waiting, frequently_one_lt_waiting] with ω hpos hfreq
+  refine (not_summable_iff_tendsto_nat_atTop_of_nonneg fun n ↦ (hpos n).le).1 fun hsum ↦ ?_
+  have hev : ∀ᶠ n in atTop, ω n < 1 :=
+    hsum.tendsto_atTop_zero.eventually (gt_mem_nhds zero_lt_one)
+  obtain ⟨n, h1, h2⟩ := (hfreq.and_eventually hev).exists
+  exact absurd h1 (not_lt.2 h2.le)
+
 /-- **The explicit probability space of the jump construction.**  A point is a trajectory of the
 embedded chain together with the sequence of its waiting times, and the two are independent
 because the measure is a product. -/
@@ -1549,6 +1683,116 @@ theorem measurable_jumpProcess {lam : E → ℝ} (hlam : Measurable lam) :
     Measurable fun p : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦ jumpProcess lam p.1 p.2 :=
   measurable_stepPath (fun n ↦ measurable_jumpTime hlam n)
     (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
+
+/-- **The waiting times of the jump construction have the law `waitingMeasure`.**  The measure is
+a product, so its second marginal is the second factor. -/
+theorem jumpMeasure_map_snd (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] : (jumpMeasure mu nu).map Prod.snd = waitingMeasure := by
+  rw [jumpMeasure, Measure.map_snd_prod, measure_univ, one_smul]
+
+/-- **Almost every path of the jump process is a step path**, unconditionally: the two hypotheses
+of `isStepPath_jumpProcess` are the two almost sure statements about the waiting times, and they
+hold under `jumpMeasure mu nu` because the waiting times are its second marginal. -/
+theorem ae_isStepPath_jumpProcess [TopologicalSpace E] {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L)
+    (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsStepPath (fun t ↦ jumpProcess lam t ω) := by
+  have h : ∀ᵐ ω ∂(jumpMeasure mu nu), (∀ n, 0 < ω.2 n) ∧
+      Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop := by
+    refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2)
+      (p := fun xi : ℕ → ℝ ↦ (∀ n, 0 < xi n) ∧
+        Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop)
+      measurable_snd.aemeasurable ?_
+    rw [jumpMeasure_map_snd]
+    exact ae_pos_waiting.and tendsto_sum_waiting_atTop
+  filter_upwards [h] with ω hω
+  exact isStepPath_jumpProcess (y := ω.1) (xi := ω.2) hL0 hlam hL hω.1 hω.2
+
+/-- **Almost every path of the jump process is càdlàg**, unconditionally. -/
+theorem ae_isCadlagPath_jumpProcess [TopologicalSpace E] {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L)
+    (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlagPath (fun t ↦ jumpProcess lam t ω) := by
+  filter_upwards [ae_isStepPath_jumpProcess hL0 hlam hL mu nu] with ω hω
+  exact hω.isCadlagPath
+
+/-- The waiting times of the jump construction are almost surely positive. -/
+theorem ae_pos_snd_jumpMeasure (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] : ∀ᵐ ω ∂(jumpMeasure mu nu), ∀ n, 0 < ω.2 n := by
+  refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2)
+    (p := fun xi : ℕ → ℝ ↦ ∀ n, 0 < xi n) measurable_snd.aemeasurable ?_
+  rw [jumpMeasure_map_snd]
+  exact ae_pos_waiting
+
+/-- **The jump process has the prescribed initial law.**  Together with
+`ae_isCadlagPath_jumpProcess` this is what makes `jumpProcess lam mu nu` a construction *of*
+`nu`: the process itself, and not merely the chain that drives it, starts with law `nu`. -/
+theorem jumpMeasure_map_jumpProcess_zero {lam : E → ℝ} (hlam : ∀ x, 0 < lam x)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    (jumpMeasure mu nu).map (jumpProcess lam 0) = nu := by
+  have h : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcess lam 0 ω)
+      =ᵐ[jumpMeasure mu nu] fun ω ↦ ω.1 0 := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+    exact jumpProcess_zero (y := ω.1) (xi := ω.2) hω hlam
+  rw [Measure.map_congr h, jumpMeasure_map_chain_zero]
+
+/-! ### The clock of the jump construction -/
+
+/-- **Lebesgue measure as a clock on `ℝ≥0`.**  The index of the abstract layer needs
+`[OrderBot ι]`, which `ℝ` has not, so the martingale problem of the jump process is indexed by
+`ℝ≥0` and its process is `fun t ω ↦ jumpProcess lam (t : ℝ) ω`.
+
+`ℝ≥0` carries a `MeasurableSpace` instance
+(`MeasureTheory/Constructions/BorelSpace/Basic.lean:717`) but **no** `MeasureSpace` instance, so
+there is no `volume` on it; Mathlib gives subtypes their measure through
+`MeasureTheory.Measure.Subtype.measureSpace`, which is deliberately not an instance
+(`MeasureTheory/Measure/Restrict.lean:843`).  That costs nothing here, because `Clock` carries
+its measurable space and its measure as *fields* and not as instances -- which is what that
+design decision was for. -/
+noncomputable def lebesgueClock : Clock ℝ≥0 where
+  measurableSpace := inferInstance
+  q := ((volume : Measure ℝ).restrict (Set.Ici (0 : ℝ))).map Real.toNNReal
+  measurableSet_Iic := fun _ ↦ measurableSet_Iic
+  measurableSet_Iio := fun _ ↦ measurableSet_Iio
+  measure_Iic_ne_top := fun t ↦ by
+    rw [Measure.map_apply measurable_real_toNNReal measurableSet_Iic,
+      show Real.toNNReal ⁻¹' Set.Iic t = Set.Iic (t : ℝ) from by
+        ext x; simp [Real.toNNReal_le_iff_le_coe],
+      Measure.restrict_apply measurableSet_Iic]
+    refine ne_top_of_le_ne_top (b := volume (Set.Icc (0 : ℝ) t)) ?_ (measure_mono ?_)
+    · rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
+    · rintro x ⟨hx1, hx2⟩; exact ⟨hx2, hx1⟩
+
+/-! ### The generator -/
+
+/-- **The generator of the jump process**, `A f x = lam x * ∫ y, (f y - f x) ∂(mu x)`.  It is
+`set:jumpdata` of the manuscript, and it needs no topology and no boundedness: those enter only
+in the statements about it. -/
+noncomputable def jumpApply (lam : E → ℝ) (mu : Kernel E E) (f : E → ℝ) (x : E) : ℝ :=
+  lam x * ∫ y, (f y - f x) ∂(mu x)
+
+/-- **The generator is bounded by `2 L` on the functions bounded by `C`.**  This is
+`norm_apply_le` of the milestone, in the shape that avoids introducing a normed space of bounded
+measurable functions: the hypothesis and the conclusion are pointwise bounds, and no
+integrability of `f` is needed, because `norm_integral_le_of_norm_le` dominates by a constant
+which is integrable for a probability measure whether `f` is or not. -/
+theorem abs_jumpApply_le {lam : E → ℝ} {mu : Kernel E E} [IsMarkovKernel mu] {f : E → ℝ}
+    {L C : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) (hf : ∀ x, |f x| ≤ C) (x : E) :
+    |jumpApply lam mu f x| ≤ 2 * L * C := by
+  have hC : 0 ≤ C := (abs_nonneg _).trans (hf x)
+  have hL0 : 0 ≤ L := (hlam0 x).trans (hL x)
+  have hint : ‖∫ y, (f y - f x) ∂(mu x)‖ ≤ 2 * C := by
+    refine (norm_integral_le_of_norm_le (μ := mu x) (f := fun y ↦ f y - f x)
+      (g := fun _ ↦ 2 * C) (integrable_const _)
+      (Filter.Eventually.of_forall fun y ↦ ?_)).trans ?_
+    · calc ‖f y - f x‖ ≤ |f y| + |f x| := (abs_sub _ _).trans_eq rfl
+        _ ≤ 2 * C := by have := hf y; have := hf x; linarith
+    · simp
+  calc |jumpApply lam mu f x| = |lam x| * ‖∫ y, (f y - f x) ∂(mu x)‖ := abs_mul _ _
+    _ ≤ L * (2 * C) := by
+        rw [abs_of_nonneg (hlam0 x)]
+        exact mul_le_mul (hL x) hint (norm_nonneg _) hL0
+    _ = 2 * L * C := by ring
 
 end Space
 

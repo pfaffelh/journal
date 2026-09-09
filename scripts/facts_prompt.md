@@ -248,21 +248,55 @@ danach.*
    absorbierende Fall verlangt Sprungzeiten in `ℝ≥0∞`; Punkt 2 braucht ihn
    nicht, Punkt 5 (der lokale Fall) wird ihn nicht umgehen können.
 
-   **Was noch fehlt, und es ist klein:** `∀ᵐ ω, Tendsto (∑_{k<n} ξ k) atTop atTop`
-   und `∀ᵐ ω, ∀ n, 0 < ξ n` unter `waitingMeasure`. Das sind die beiden
-   Hypothesen, unter denen die Pfadsätze heute stehen; mit ihnen wird
-   `isCadlagPath_jumpProcess` eine f.s.-Aussage über `jumpMeasure mu nu`. Weg:
-   zweites Borel--Cantelli (`ProbabilityTheory.measure_limsup_eq_one`,
-   `Mathlib/Probability/BorelCantelli.lean:69`) auf `{ξ n > 1}`, Unabhängigkeit
-   aus `ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`
-   (`Mathlib/Probability/Independence/InfinitePi.lean:103`). Das ist der erste
-   Schritt des nächsten Laufs; Punkt 2 darf nicht mit „falls der Prozeß nicht
-   explodiert" beginnen.
+   ~~**Was noch fehlt, und es ist klein:** die beiden f.s.-Aussagen über
+   `waitingMeasure`.~~ *(erledigt 2026-09-09, achtzehnter Lauf des Tages)* Zehn
+   weitere Deklarationen, alle bewiesen und alle mit `#print axioms` geprüft;
+   `ae_isStepPath_jumpProcess` und `ae_isCadlagPath_jumpProcess` sind jetzt
+   **unbedingte** f.s.-Aussagen über `jumpMeasure mu nu` unter `0 < lam ≤ L`
+   allein. Punkt 1 ist damit vollständig. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-09, achtzehnter Lauf des Tages".
+
+   **Der angesagte Weg zur Unabhängigkeit war ein Umweg, und der Befund gehört
+   zur Suchregel.** `iIndepFun_iff_map_fun_eq_infinitePi_map` liefert
+   `iIndepFun` der Koordinaten, und `measure_limsup_eq_one` verlangt
+   `iIndepSet` der Ereignisse; von dem einen zum anderen hat Mathlib **kein**
+   Lemma. Genommen ist `ProbabilityTheory.iIndepSet_iff_meas_biInter`
+   (`Independence/Basic.lean:623`), das sagt, daß `iIndepSet` *die
+   Produktformel für endliche Durchschnitte ist* — und die ist für
+   Koordinatenereignisse `MeasureTheory.Measure.infinitePi_pi`. Sieben Zeilen
+   statt eines eigenen Bausteins.
 2. `jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`, und
    es ist **das eigentliche Ziel des Meilensteins**: die erste in Lean bewiesene
    Lösung eines Martingalproblems überhaupt.
+
+   **Zwischenstand 2026-09-09, achtzehnter Lauf des Tages.** Der Satz ist noch
+   nicht hingeschrieben; von seiner *Aussage* stehen jetzt aber alle Stücke bis
+   auf zwei. Gebaut und geprüft sind der Erzeuger `jumpApply`, die Uhr
+   `lebesgueClock : Clock ℝ≥0` — **der Index ist `ℝ≥0` und nicht `ℝ`**, weil
+   `mpFamily` `[OrderBot ι]` verlangt —, das Anfangsgesetz des Prozesses
+   (`jumpMeasure_map_jumpProcess_zero`, nicht dasselbe wie das der Kette) und
+   die Gedächtnislosigkeit der Exponentialverteilung (`expMeasure_Ioi_add`, die
+   Mathlib nicht hat und die der einzige nicht buchhalterische Schritt des
+   Beweises sein wird).
+
+   **Es fehlen zwei Stücke, und das zweite ist das riskante:** der Erzeuger als
+   *Menge* `jumpOperator lam mu : Set ((E → ℝ) × (E → ℝ))`, und die
+   **Filtration**. `MeasureTheory.Filtration.natural`
+   (`Probability/Process/Filtration.lean:395`) verlangt `StronglyMeasurable`
+   der erzeugenden Abbildungen, und das ist über einem bloß topologischen `E`
+   *nicht* `Measurable`. Für Treppenpfade ist es beweisbar — sie nehmen
+   abzählbar viele Werte an, und `measurable_stepPath` faktorisiert über `ℕ` —,
+   aber es ist eine Beweispflicht und keine Instanz. Der nächste Lauf plant sie
+   ein, statt sie zu entdecken.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
+
+   **`norm_apply_le` ist erledigt** (2026-09-09, achtzehnter Lauf des Tages), als
+   `abs_jumpApply_le` in punktweiser Gestalt
+   `(∀ x, |f x| ≤ C) → |jumpApply lam mu f x| ≤ 2 * L * C`. Es ist außer der
+   Reihe gefallen, weil es beim Hinschreiben des Erzeugers ohnehin anfiel und
+   vier Zeilen kostete; `exists_unique_of_bounded` steht unverändert offen und
+   bleibt hinter Punkt 2.
 4. **Erst danach das Akzeptanzbeispiel**, und dann wirklich als Beweis: `E = ℕ`,
    `lam ≡ 1`, `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x` — der
    Poissonprozeß, mit den eindimensionalen Verteilungen gegen
