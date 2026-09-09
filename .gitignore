@@ -3,6 +3,7 @@
 /scratch
 /axcheck_tmp.lean
 /axcheck.lean
+/ax_check.lean
 logs/
 .facts.lock
 

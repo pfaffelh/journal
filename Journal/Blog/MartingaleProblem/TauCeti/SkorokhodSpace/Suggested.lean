@@ -21,9 +21,12 @@ the commitments. `sorry` marks a statement whose proof is the work, never an
 empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-09.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  There is **one** of them since the tenth
-run of 2026-09-09, and it is the **converse** of the compactness criterion
+2026-09-09, and **free of `sorry` since the thirteenth run of that day**.  Every
+declaration elaborates and every one of them is proved; `#print axioms` on
+`SkorokhodSpace.isCompact_closure_iff`, the last statement to be discharged,
+gives `propext`, `Classical.choice`, `Quot.sound`.
+
+The last `sorry` was the **converse** of the compactness criterion
 `SkorokhodSpace.isCompact_closure_iff` of Milestone 7, whose modulus the ninth
 run corrected for the second time: with subdivisions free of the base point the
 converse is false over `ℝ` as well, by
@@ -9594,6 +9597,398 @@ theorem SkorokhodSpace.exists_finite_grid_timeChange {δ γ : ℝ} (hδ : 0 < δ
     · exact ⟨neg_le_of_abs_le hkZ, le_of_abs_le hkZ⟩
     · rw [hgdef]
 
+omit [BasePoint ι] in
+/-- **The bad radii, counted without reading the length of the subdivision.**
+This is `SkorokhodSpace.exists_bad_radii_set` with
+`SkorokhodSpace.volume_badRadii_le` replaced by
+`SkorokhodSpace.volume_inter_badRadii_le_of_sparse`, and the replacement is the
+whole point: the crude count carries `n`, the length of the subdivision, which is
+fixed in the separability (there the subdivision belongs to one path) and
+unbounded in the converse (there it varies over the family).  The sharp count
+carries `n₀` instead, and `n₀` is whatever the caller has fixed in advance by
+`2 (M + γ + κ) ≤ n₀ δ`.
+
+The displacement budget `γ` and the sparseness `δ` are now two parameters and not
+one.  They are chosen in opposite orders: `δ` first, because the modulus
+condition names it, and `γ` afterwards and as small as one likes. -/
+theorem SkorokhodSpace.exists_bad_radii_set_of_sparse (t₀ : ι) (f : D(ι, E)) {n n₀ : ℕ}
+    {t d : Fin (n + 1) → ι} {w : Fin (n + 1) → E} {l : TimeChange ι} {ε γ δ M : ℝ}
+    (hε : 0 ≤ ε) (hγ0 : 0 < γ) (hδ0 : 0 < δ) (hM0 : 0 ≤ M) (hl0 : l.toOrderIso t₀ = t₀)
+    (hlnorm : l.norm ≤ γ) (hnodes : ∀ i, l.toOrderIso (d i) = t i)
+    (hdt : ∀ i, dist (d i) (t i) ≤ γ) (hmono : Monotone t)
+    (hgap : ∀ i : Fin n, δ ≤ dist (t i.castSucc) (t i.succ))
+    (hn₀ : 2 * (M + γ + (Real.exp γ - 1) * (2 * M)) ≤ (n₀ : ℝ) * δ)
+    (hcell : ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
+      dist (f.toFun x) (f.toFun (t i.castSucc)) ≤ ε)
+    (ht0 : t 0 ≤ exhaustionMin t₀ M) (htlast : exhaustionMax t₀ M ≤ t (Fin.last n))
+    (hw : ∀ i, dist (f.toFun (t i)) (w i) ≤ ε) :
+    ∃ B : Set ℝ, MeasurableSet B ∧
+      MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B)
+        ≤ ENNReal.ofReal (((n₀ : ℝ) + 1) * (2 * γ + (Real.exp γ - 1) * (2 * M))) ∧
+      ∀ u : ℝ, 0 < u → u ≤ M → u ∉ B →
+        SkorokhodSpace.distWith t₀ u l f (SkorokhodSpace.stepPath d w) ≤ 3 * (2 * ε) := by
+  have hexp1 : (0 : ℝ) ≤ Real.exp γ - 1 := by linarith [Real.one_le_exp hγ0.le]
+  have hκ0 : (0 : ℝ) ≤ (Real.exp γ - 1) * (2 * M) := mul_nonneg hexp1 (by linarith)
+  exact ⟨SkorokhodSpace.badRadii t₀ t d ((Real.exp γ - 1) * (2 * M)),
+    SkorokhodSpace.measurableSet_badRadii t₀ t d _,
+    SkorokhodSpace.volume_inter_badRadii_le_of_sparse t₀ hδ0 hγ0.le hκ0 hM0 hmono hgap hdt hn₀,
+    fun u hu0 huM huB => SkorokhodSpace.distWith_stepPath_le_of_notMem_badRadii t₀ f hε hγ0
+      hM0 hl0 hlnorm hnodes hcell ht0 htlast hw hu0 huM huB⟩
+
+/-! ### Trimming a subdivision to fixed marks
+
+`SkorokhodSpace.IsSubdivision` only asks that the tuple *cover* the window, so a
+node may sit arbitrarily far outside it and the length `n` is unbounded over a
+family of paths.  The finite net of the converse cannot afford either:
+`SkorokhodSpace.stepPathFamilyLe` is finite only under a fixed bound on the
+length, and `SkorokhodSpace.exists_finite_grid_timeChange` produces a grid that
+is finite only inside a window.  So the subdivision is cut back to the fixed
+marks `± (M + 1)` --- a full step outside the window of radius `M`, and that step
+is what makes the cut free. -/
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [MeasurableSpace E] [BorelSpace E]
+  [PolishSpace E] [BasePoint ι] in
+/-- **A subdivision whose cells refine those of another has at most twice its
+oscillation.**  The loss of the factor `2` is real and it is the price of moving
+the *left endpoint*: `SkorokhodSpace.subdivisionOsc` measures each cell from its
+own left endpoint, and the refined cell's left endpoint is some interior point of
+the coarse cell, not its left endpoint.  Two applications of the coarse bound and
+the triangle inequality is all there is, and the constant cannot be improved --- a
+path that jumps by `ε` at the left endpoint of the coarse cell and back at its
+midpoint has oscillation `ε` for the coarse subdivision and `2 ε` for a refinement
+cutting at the midpoint. -/
+theorem SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells (f : D(ι, E)) {n n' : ℕ}
+    {t : Fin (n + 1) → ι} {s : Fin (n' + 1) → ι} (hs : StrictMono s)
+    (hcells : ∀ k : Fin n', ∃ i : Fin n,
+      Set.Ico (s k.castSucc) (s k.succ) ⊆ Set.Ico (t i.castSucc) (t i.succ)) :
+    SkorokhodSpace.subdivisionOsc f s ≤ 2 * SkorokhodSpace.subdivisionOsc f t := by
+  rw [SkorokhodSpace.subdivisionOsc]
+  refine iSup_le fun k => iSup₂_le fun x hx => ?_
+  obtain ⟨i, hsub⟩ := hcells k
+  have hxt : x ∈ Set.Ico (t i.castSucc) (t i.succ) := hsub hx
+  have hlt : s k.castSucc < s k.succ := hs (Fin.castSucc_lt_succ (i := k))
+  have hst : s k.castSucc ∈ Set.Ico (t i.castSucc) (t i.succ) := hsub ⟨le_rfl, hlt⟩
+  have h1 : edist (f.toFun x) (f.toFun (t i.castSucc)) ≤ SkorokhodSpace.subdivisionOsc f t := by
+    rw [SkorokhodSpace.subdivisionOsc]
+    exact le_iSup_of_le i (le_iSup₂_of_le x hxt le_rfl)
+  have h2 : edist (f.toFun (t i.castSucc)) (f.toFun (s k.castSucc))
+      ≤ SkorokhodSpace.subdivisionOsc f t := by
+    rw [edist_comm, SkorokhodSpace.subdivisionOsc]
+    exact le_iSup_of_le i (le_iSup₂_of_le (s k.castSucc) hst le_rfl)
+  calc edist (f.toFun x) (f.toFun (s k.castSucc))
+      ≤ edist (f.toFun x) (f.toFun (t i.castSucc))
+        + edist (f.toFun (t i.castSucc)) (f.toFun (s k.castSucc)) := edist_triangle _ _ _
+    _ ≤ SkorokhodSpace.subdivisionOsc f t + SkorokhodSpace.subdivisionOsc f t := add_le_add h1 h2
+    _ = 2 * SkorokhodSpace.subdivisionOsc f t := (two_mul _).symm
+
+/-- **Trimming a based subdivision to the marks `± (M + 1)`.**  Every node lands
+in `Set.Icc (-(M+1)) (M+1)`, the length is bounded by `2 (M + 1) / δ` --- and so
+by a quantity depending on `M` and `δ` alone, not on the path the subdivision came
+from --- the sparseness and the covering survive, the base point stays a node, and
+every cell of the trimmed tuple sits inside a cell of the original, so that
+`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells` carries the oscillation over.
+
+**The marks are fixed, and they are not the window's edges.**  Cutting at
+`exhaustionMin (0:ℝ) M` and `exhaustionMax (0:ℝ) M` destroys the sparseness: the
+truncated boundary gap is then the distance from the window edge to the first node
+inside, and that can be arbitrarily small.  Cutting a full unit outside cannot,
+because a node that gets cut was strictly beyond `M + 1` while its neighbour on
+the inside is beyond `-M` --- so the truncated gap exceeds `1`, and `δ ≤ 1` is the
+hypothesis that turns this into sparseness.  Taking `δ` small is no loss: the
+converse chooses it.
+
+**And this is the one place where the index `ℝ` is used for its own sake.**  On a
+general index the mark `M + 1` need not be a unit away from the window: it is
+`exhaustionMin t₀ (M+1)`, and its distance to `exhaustionMin t₀ M` can be
+arbitrarily small while a node still sits strictly below the larger window.  Take
+`ι = {-3, -1.05, -1, 0, 1} ⊆ ℝ` with `t₀ = 0` and `M = 1`: a subdivision may have
+`t i₀ = -3` and `t (i₀ + 1) = -1`, the trimmed first node is `-1.05`, and the
+trimmed first gap is `0.05`.  Over `ℝ` the two marks are `-(M+1)` and `-M`, and
+their distance is `1`. -/
+theorem SkorokhodSpace.IsSubdivisionBased.trim {M δ : ℝ} (hM : 1 ≤ M) (hδ0 : 0 < δ)
+    (hδ1 : δ ≤ 1) {n : ℕ} {t : Fin (n + 1) → ℝ}
+    (ht : SkorokhodSpace.IsSubdivisionBased (0 : ℝ) M δ t) :
+    ∃ (n' : ℕ) (s : Fin (n' + 1) → ℝ),
+      SkorokhodSpace.IsSubdivisionBased (0 : ℝ) M δ s ∧
+      (∀ k, s k ∈ Set.Icc (-(M + 1)) (M + 1)) ∧
+      (n' : ℝ) * δ ≤ 2 * (M + 1) ∧
+      (∀ k : Fin n', ∃ i : Fin n,
+        Set.Ico (s k.castSucc) (s k.succ) ⊆ Set.Ico (t i.castSucc) (t i.succ)) := by
+  classical
+  obtain ⟨⟨hmono, ht0, htlast, hgap⟩, hbase⟩ := ht
+  have hM0 : (0 : ℝ) ≤ M := by linarith
+  rw [exhaustionMin_real, max_eq_left hM0] at ht0
+  rw [exhaustionMax_real, max_eq_left hM0] at htlast
+  obtain ⟨i₀, hi₀, hi₀max⟩ :
+      ∃ i₀ : Fin (n + 1), t i₀ ≤ -M ∧ ∀ i : Fin (n + 1), i₀ < i → -M < t i := by
+    have hne : (Finset.univ.filter (fun i : Fin (n + 1) => t i ≤ -M)).Nonempty :=
+      ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ _, ht0⟩⟩
+    refine ⟨_, (Finset.mem_filter.1 (Finset.max'_mem _ hne)).2, ?_⟩
+    intro i hlt
+    by_contra hcon
+    push_neg at hcon
+    exact absurd (Finset.le_max' _ i (Finset.mem_filter.2 ⟨Finset.mem_univ _, hcon⟩))
+      (not_le.2 hlt)
+  obtain ⟨j₀, hj₀, hj₀min⟩ :
+      ∃ j₀ : Fin (n + 1), M ≤ t j₀ ∧ ∀ i : Fin (n + 1), i < j₀ → t i < M := by
+    have hne : (Finset.univ.filter (fun i : Fin (n + 1) => M ≤ t i)).Nonempty :=
+      ⟨Fin.last n, Finset.mem_filter.2 ⟨Finset.mem_univ _, htlast⟩⟩
+    refine ⟨_, (Finset.mem_filter.1 (Finset.min'_mem _ hne)).2, ?_⟩
+    intro i hlt
+    by_contra hcon
+    push_neg at hcon
+    exact absurd (Finset.min'_le _ i (Finset.mem_filter.2 ⟨Finset.mem_univ _, hcon⟩))
+      (not_le.2 hlt)
+  have hij : (i₀ : ℕ) < (j₀ : ℕ) := Fin.lt_def.1 (hmono.lt_iff_lt.1 (by linarith))
+  obtain ⟨n', hn'⟩ : ∃ n' : ℕ, (j₀ : ℕ) = (i₀ : ℕ) + n' := ⟨(j₀ : ℕ) - (i₀ : ℕ), by omega⟩
+  have hn'0 : n' ≠ 0 := by omega
+  have hjlt : (j₀ : ℕ) < n + 1 := j₀.isLt
+  have hbd : ∀ k : Fin (n' + 1), (i₀ : ℕ) + (k : ℕ) < n + 1 := by
+    intro k
+    have := k.isLt
+    omega
+  set u : Fin (n' + 1) → Fin (n + 1) := fun k => ⟨(i₀ : ℕ) + (k : ℕ), hbd k⟩ with hudef
+  have hu0 : u 0 = i₀ := by
+    apply Fin.ext
+    simp only [hudef, Fin.val_zero, add_zero]
+  have hulast : u (Fin.last n') = j₀ := by
+    apply Fin.ext
+    simp only [hudef, Fin.val_last]
+    omega
+  have humono : StrictMono u := by
+    intro a b hab
+    have h : (a : ℕ) < (b : ℕ) := hab
+    simp only [hudef, Fin.lt_def]
+    omega
+  have hclow : ∀ k : Fin (n' + 1), k ≠ Fin.last n' → t (u k) < M := by
+    intro k hk
+    refine hj₀min _ ?_
+    rw [← hulast]
+    exact humono (lt_of_le_of_ne (Fin.le_last k) hk)
+  have hchigh : ∀ k : Fin (n' + 1), k ≠ 0 → -M < t (u k) := by
+    intro k hk
+    refine hi₀max _ ?_
+    rw [← hu0]
+    exact humono (lt_of_le_of_ne (Fin.zero_le k) (Ne.symm hk))
+  set s : Fin (n' + 1) → ℝ := fun k => max (-(M + 1)) (min (M + 1) (t (u k))) with hsdef
+  have hsIcc : ∀ k, s k ∈ Set.Icc (-(M + 1)) (M + 1) := by
+    intro k
+    simp only [hsdef]
+    exact ⟨le_max_left _ _, max_le (by linarith) (min_le_left _ _)⟩
+  have hsleft : ∀ k : Fin (n' + 1), k ≠ Fin.last n' → s k = max (-(M + 1)) (t (u k)) := by
+    intro k hk
+    have h := hclow k hk
+    simp only [hsdef]
+    rw [min_eq_right (by linarith)]
+  have hsright : ∀ k : Fin (n' + 1), k ≠ 0 → s k = min (M + 1) (t (u k)) := by
+    intro k hk
+    have h := hchigh k hk
+    have hle : -(M + 1) ≤ min (M + 1) (t (u k)) := by
+      rcases le_total (M + 1) (t (u k)) with hc | hc
+      · rw [min_eq_left hc]; linarith
+      · rw [min_eq_right hc]; linarith
+    simp only [hsdef]
+    exact max_eq_right hle
+  have hcellbd : ∀ k : Fin n', (i₀ : ℕ) + (k : ℕ) < n := by
+    intro k
+    have := k.isLt
+    omega
+  have hcast : ∀ k : Fin n',
+      u k.castSucc = (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).castSucc := by
+    intro k
+    apply Fin.ext
+    simp only [hudef, Fin.val_castSucc]
+  have hsucc : ∀ k : Fin n', u k.succ = (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).succ := by
+    intro k
+    apply Fin.ext
+    simp only [hudef, Fin.val_succ]
+    omega
+  have hgapreal : ∀ k : Fin n', s k.castSucc + δ < s k.succ := by
+    intro k
+    have hkc : (k.castSucc : Fin (n' + 1)) ≠ Fin.last n' :=
+      Fin.ne_of_lt (Fin.castSucc_lt_last k)
+    have hks : (k.succ : Fin (n' + 1)) ≠ 0 := Fin.succ_ne_zero k
+    have hlow : t (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).castSucc < M := by
+      rw [← hcast k]; exact hclow _ hkc
+    have hhigh : -M < t (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).succ := by
+      rw [← hsucc k]; exact hchigh _ hks
+    have horig := hgap ⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩
+    have hltjj : t (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).castSucc
+        < t (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).succ :=
+      hmono (by simp [Fin.lt_def])
+    rw [Real.dist_eq, abs_of_nonpos (by linarith)] at horig
+    rw [hsleft _ hkc, hsright _ hks, hcast k, hsucc k]
+    rcases le_or_gt (-(M + 1)) (t (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).castSucc)
+      with hc1 | hc1
+    · rw [max_eq_right hc1]
+      rcases le_or_gt (t (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).succ) (M + 1) with hc2 | hc2
+      · rw [min_eq_right hc2]; linarith
+      · rw [min_eq_left hc2.le]; linarith
+    · rw [max_eq_left hc1.le]
+      rcases le_or_gt (t (⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩ : Fin n).succ) (M + 1) with hc2 | hc2
+      · rw [min_eq_right hc2]; linarith
+      · rw [min_eq_left hc2.le]; linarith
+  have hsmono : StrictMono s := by
+    rw [Fin.strictMono_iff_lt_succ]
+    intro k
+    have := hgapreal k
+    linarith
+  have hsgap : ∀ k : Fin n', δ < dist (s k.castSucc) (s k.succ) := by
+    intro k
+    have h := hgapreal k
+    rw [Real.dist_eq, abs_of_nonpos (by linarith)]
+    linarith
+  have hlast0 : (0 : Fin (n' + 1)) ≠ Fin.last n' := by
+    intro h
+    have := congrArg Fin.val h
+    simp only [Fin.val_zero, Fin.val_last] at this
+    omega
+  have hs0 : s 0 ≤ -M := by
+    rw [hsleft _ hlast0, hu0]
+    exact max_le (by linarith) hi₀
+  have hslast : M ≤ s (Fin.last n') := by
+    rw [hsright _ (fun h => hlast0 h.symm), hulast]
+    exact le_min (by linarith) hj₀
+  obtain ⟨kk, hkk⟩ := hbase
+  have hik : (i₀ : ℕ) < (kk : ℕ) :=
+    Fin.lt_def.1 (hmono.lt_iff_lt.1 (by rw [hkk]; linarith))
+  have hkj : (kk : ℕ) < (j₀ : ℕ) :=
+    Fin.lt_def.1 (hmono.lt_iff_lt.1 (by rw [hkk]; linarith))
+  have hkbd : (kk : ℕ) - (i₀ : ℕ) < n' + 1 := by omega
+  have hkval : u ⟨(kk : ℕ) - (i₀ : ℕ), hkbd⟩ = kk := by
+    apply Fin.ext
+    simp only [hudef]
+    omega
+  have hknelast : (⟨(kk : ℕ) - (i₀ : ℕ), hkbd⟩ : Fin (n' + 1)) ≠ Fin.last n' := by
+    intro h
+    have := congrArg Fin.val h
+    simp only [Fin.val_last] at this
+    omega
+  have hsbase : s ⟨(kk : ℕ) - (i₀ : ℕ), hkbd⟩ = 0 := by
+    rw [hsleft _ hknelast, hkval, hkk]
+    exact max_eq_right (by linarith)
+  have hlen : (n' : ℝ) * δ ≤ 2 * (M + 1) := by
+    have h := mul_le_dist_first_last (ι := ℝ) hsmono.monotone (fun k => (hsgap k).le)
+    obtain ⟨h0a, h0b⟩ := hsIcc 0
+    obtain ⟨hla, hlb⟩ := hsIcc (Fin.last n')
+    rw [Real.dist_eq] at h
+    have habs : |s 0 - s (Fin.last n')| ≤ 2 * (M + 1) := by
+      rw [abs_le]; constructor <;> linarith
+    linarith
+  have hcells : ∀ k : Fin n', ∃ i : Fin n,
+      Set.Ico (s k.castSucc) (s k.succ) ⊆ Set.Ico (t i.castSucc) (t i.succ) := by
+    intro k
+    have hkc : (k.castSucc : Fin (n' + 1)) ≠ Fin.last n' :=
+      Fin.ne_of_lt (Fin.castSucc_lt_last k)
+    have hks : (k.succ : Fin (n' + 1)) ≠ 0 := Fin.succ_ne_zero k
+    refine ⟨⟨(i₀ : ℕ) + (k : ℕ), hcellbd k⟩, Set.Ico_subset_Ico ?_ ?_⟩
+    · rw [hsleft _ hkc, hcast k]; exact le_max_right _ _
+    · rw [hsright _ hks, hsucc k]; exact min_le_right _ _
+  refine ⟨n', s, ⟨⟨hsmono, ?_, ?_, hsgap⟩, ⟨⟨(kk : ℕ) - (i₀ : ℕ), hkbd⟩, hsbase⟩⟩,
+    hsIcc, hlen, hcells⟩
+  · rw [exhaustionMin_real, max_eq_left hM0]; exact hs0
+  · rw [exhaustionMax_real, max_eq_left hM0]; exact hslast
+
+/-- **One path, one member of the finite family.**  This is the converse of
+Milestone 7 for a single path, and the converse itself is this statement applied
+to every member of the family with the *same* `G`, `Q` and `n₀` --- which is
+exactly why those three are hypotheses here rather than constructions: `G` comes
+from `SkorokhodSpace.exists_finite_grid_timeChange`, `Q` from the relative
+compactness of the values, and `n₀` from
+`SkorokhodSpace.IsSubdivisionBased.trim`, and all three are fixed before the path
+is seen.
+
+The five steps, and each of them is a theorem of this file.
+`SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt` unfolds the modulus
+into a subdivision; `SkorokhodSpace.IsSubdivisionBased.trim` cuts it back to the
+marks `± (M+1)` and bounds its length, at the price of a factor `2` in the
+oscillation (`SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`); the grid moves
+its nodes onto `G`; the values are read off `Q`; and
+`SkorokhodSpace.exists_bad_radii_set_of_sparse` together with
+`SkorokhodSpace.intWith_le_of_ae_distWith_le` turns the windowed estimate into
+one about the metric.
+
+**The time change of the estimate is the inverse of the grid's.**  The grid
+carries a node to a grid point, and
+`SkorokhodSpace.distWith_stepPath_le` asks for the time change carrying the
+*approximant's* nodes back to the path's; `TimeChange.norm_inv` is what makes
+that free. -/
+theorem SkorokhodSpace.exists_mem_stepPathFamilyLe_intDist_le
+    (f : D(ℝ, E)) {M δ γ ε : ℝ} {n₀ : ℕ} {G : Set ℝ} {Q : Set E}
+    (hM : 1 ≤ M) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hγ0 : 0 < γ) (hε : 0 < ε)
+    (hG : ∀ (n : ℕ) (s : Fin (n + 1) → ℝ), StrictMono s →
+      (∀ i : Fin n, δ ≤ dist (s i.castSucc) (s i.succ)) → (0 : ℝ) ∈ Set.range s →
+      ∃ l : TimeChange ℝ, l.toOrderIso 0 = 0 ∧ l.norm ≤ γ ∧
+        (∀ x : ℝ, |l.toOrderIso x - x| ≤ γ) ∧
+        ∀ i, s i ∈ exhaustion (0 : ℝ) (M + 1) → l.toOrderIso (s i) ∈ G)
+    (hn₀ : 2 * (M + 1) ≤ (n₀ : ℝ) * δ)
+    (hn₀' : 2 * (M + γ + (Real.exp γ - 1) * (2 * M)) ≤ (n₀ : ℝ) * δ)
+    (hmod : SkorokhodSpace.modulusBased (0 : ℝ) M f δ < ENNReal.ofReal ε)
+    (hQ : ∀ x ∈ Set.Icc (-(M + 1)) (M + 1), ∃ q ∈ Q, dist (f.toFun x) q ≤ ε) :
+    ∃ g ∈ SkorokhodSpace.stepPathFamilyLe G Q n₀,
+      SkorokhodSpace.intDist (0 : ℝ) f g ≤ max γ (3 * (2 * (2 * ε))
+        + ((n₀ : ℝ) + 1) * (2 * γ + (Real.exp γ - 1) * (2 * M)) + Real.exp (-M)) := by
+  classical
+  have hM0 : (0 : ℝ) ≤ M := by linarith
+  obtain ⟨n, t, hsubdiv, hosc⟩ :=
+    SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt (0 : ℝ) M f hmod
+  obtain ⟨n', s, htrim, hsIcc, hslen, hcells⟩ :=
+    SkorokhodSpace.IsSubdivisionBased.trim hM hδ0 hδ1 hsubdiv
+  have hosc' : SkorokhodSpace.subdivisionOsc f s ≤ ENNReal.ofReal (2 * ε) := by
+    refine le_trans (SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells f htrim.1.1 hcells) ?_
+    have h2 : ENNReal.ofReal (2 * ε) = 2 * ENNReal.ofReal ε := by
+      rw [ENNReal.ofReal_mul (by norm_num : (0 : ℝ) ≤ 2)]
+      norm_num
+    rw [h2]
+    gcongr
+  have hcell : ∀ i : Fin n', ∀ x ∈ Set.Ico (s i.castSucc) (s i.succ),
+      dist (f.toFun x) (f.toFun (s i.castSucc)) ≤ 2 * ε :=
+    SkorokhodSpace.dist_le_of_subdivisionOsc_le f (by linarith) hosc'
+  have hn'le : n' ≤ n₀ := by
+    have h : (n' : ℝ) * δ ≤ (n₀ : ℝ) * δ := le_trans hslen hn₀
+    have h' : (n' : ℝ) ≤ (n₀ : ℝ) := le_of_mul_le_mul_right (by linarith) hδ0
+    exact_mod_cast h'
+  obtain ⟨l, hl0, hlnorm, hldisp, hlG⟩ :=
+    hG n' s htrim.1.1 (fun i => (htrim.1.2.2.2 i).le) htrim.2
+  have hmemwin : ∀ i, s i ∈ exhaustion (0 : ℝ) (M + 1) := by
+    intro i
+    rw [exhaustion_eq_closedBall (0 : ℝ) (by linarith : (0 : ℝ) ≤ M + 1),
+      Real.closedBall_eq_Icc]
+    simpa using hsIcc i
+  have hinv0 : (l⁻¹).toOrderIso (0 : ℝ) = 0 := by
+    show l.toOrderIso.symm 0 = 0
+    exact l.toOrderIso.symm_apply_eq.2 hl0.symm
+  have hinvnorm : (l⁻¹).norm ≤ γ := by rw [TimeChange.norm_inv]; exact hlnorm
+  have hnodes : ∀ i, (l⁻¹).toOrderIso (l.toOrderIso (s i)) = s i := by
+    intro i
+    show l.toOrderIso.symm (l.toOrderIso (s i)) = s i
+    exact l.toOrderIso.symm_apply_apply _
+  have hdt : ∀ i, dist (l.toOrderIso (s i)) (s i) ≤ γ := by
+    intro i
+    rw [Real.dist_eq]
+    exact hldisp (s i)
+  have hQ' : ∀ i : Fin (n' + 1), ∃ q ∈ Q, dist (f.toFun (s i)) q ≤ ε :=
+    fun i => hQ _ (hsIcc i)
+  choose qq hqqQ hqqd using hQ'
+  obtain ⟨B, hBmeas, hBvol, hgood⟩ :=
+    SkorokhodSpace.exists_bad_radii_set_of_sparse (0 : ℝ) f (n₀ := n₀)
+      (w := qq) (by linarith : (0 : ℝ) ≤ 2 * ε) hγ0 hδ0 hM0 hinv0 hinvnorm hnodes hdt
+      htrim.1.1.monotone (fun i => (htrim.1.2.2.2 i).le) hn₀' hcell htrim.1.2.1
+      htrim.1.2.2.1 (fun i => (hqqd i).trans (by linarith))
+  have hexp1 : (0 : ℝ) ≤ Real.exp γ - 1 := by linarith [Real.one_le_exp hγ0.le]
+  refine ⟨SkorokhodSpace.stepPath (fun i => l.toOrderIso (s i)) qq,
+    SkorokhodSpace.stepPath_mem_stepPathFamilyLe hn'le
+      (fun i => hlG i (hmemwin i)) hqqQ, ?_⟩
+  have hint := SkorokhodSpace.intWith_le_of_ae_distWith_le (0 : ℝ) l⁻¹ f
+    (SkorokhodSpace.stepPath (fun i => l.toOrderIso (s i)) qq)
+    (by linarith : (0 : ℝ) ≤ 3 * (2 * (2 * ε))) hM0
+    (mul_nonneg (by positivity)
+      (add_nonneg (by linarith) (mul_nonneg hexp1 (by linarith))))
+    hBmeas hBvol hgood
+  refine le_trans (ciInf_le (SkorokhodSpace.bddBelow_range_intDist (0 : ℝ) f _)
+    (⟨l⁻¹, hinv0⟩ : TimeChange.fixing (0 : ℝ))) ?_
+  exact max_le_max hinvnorm hint
+
 /-- **The compactness criterion, and it is stated over the index `ℝ`.**  The base
 point is the one of the instance and not a parameter: the left hand side speaks
 of the topology of `D(ℝ, E)`, which is `SkorokhodSpace.metricSpaceInt basePoint`,
@@ -9639,12 +10034,17 @@ way --- and every step of it survived the correction, because
 `IsCadlag.exists_subdivision` to `IsCadlag.exists_subdivision_through` with `t₀`
 prescribed.
 
-**What the remaining `sorry` owes** is the converse, and it reads
-`SkorokhodSpace.tendsto_of_partialComp` of Milestone 5: the finite net is built
-from a finite grid of nodes, and it is the cell at the base point which the
-refutation shows must be there.  The bound on how many nodes such a grid needs is
-`SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`, and what remains is the
-grid itself together with the time change onto it. -/
+**The converse is proved too**, and it is total boundedness: `CompleteSpace D(ℝ, E)`
+of Milestone 5 turns it into compactness of the closure, and the finite net is
+`SkorokhodSpace.stepPathFamilyLe G Q n₀` --- a finite grid `G` of nodes from
+`SkorokhodSpace.exists_finite_grid_timeChange`, a finite net `Q` of values from
+the first conjunct, and a bound `n₀` on the length from
+`SkorokhodSpace.IsSubdivisionBased.trim`.  The single path's step is
+`SkorokhodSpace.exists_mem_stepPathFamilyLe_intDist_le`, and the order in which
+the four constants are chosen is forced: `M` from the tail of the integral, `ε`
+from the oscillation, `δ` from the modulus condition at `M`, `n₀` from `M` and
+`δ`, and the displacement `γ` last, because the bad radii cost `(n₀ + 1)` times
+it. -/
 theorem SkorokhodSpace.isCompact_closure_iff [CompleteSpace E] (A : Set D(ℝ, E)) :
     IsCompact (closure A) ↔ ∀ m : ℕ,
       IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t = x}) ∧
@@ -9654,4 +10054,101 @@ theorem SkorokhodSpace.isCompact_closure_iff [CompleteSpace E] (A : Set D(ℝ, E
   · intro hA m
     exact ⟨SkorokhodSpace.isCompact_closure_values_of_isCompact hA m,
       SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact hA m⟩
-  · sorry
+  intro h
+  refine isCompact_iff_totallyBounded_isComplete.2 ⟨?_, isClosed_closure.isComplete⟩
+  refine TotallyBounded.closure ?_
+  rw [Metric.totallyBounded_iff]
+  intro r hr
+  -- the radius of the window, chosen so that the tail of the integral is negligible
+  obtain ⟨m, hm1, hmr⟩ : ∃ m : ℕ, 1 ≤ m ∧ Real.exp (-(m : ℝ)) < r / 8 := by
+    refine ⟨max 1 ⌈Real.log (16 / r)⌉₊, le_max_left _ _, ?_⟩
+    have h16 : (0 : ℝ) < 16 / r := by positivity
+    have hle : Real.log (16 / r) ≤ ((max 1 ⌈Real.log (16 / r)⌉₊ : ℕ) : ℝ) := by
+      refine le_trans (Nat.le_ceil _) ?_
+      exact_mod_cast Nat.le_max_right 1 ⌈Real.log (16 / r)⌉₊
+    calc Real.exp (-((max 1 ⌈Real.log (16 / r)⌉₊ : ℕ) : ℝ))
+        ≤ Real.exp (-Real.log (16 / r)) := Real.exp_le_exp.2 (by linarith)
+      _ = (16 / r)⁻¹ := by rw [Real.exp_neg, Real.exp_log h16]
+      _ = r / 16 := inv_div 16 r
+      _ < r / 8 := by linarith
+  set M : ℝ := (m : ℝ) with hMdef
+  have hM : (1 : ℝ) ≤ M := by rw [hMdef]; exact_mod_cast hm1
+  have hM0 : (0 : ℝ) ≤ M := by linarith
+  -- the oscillation budget
+  obtain ⟨ε, hε0, hεr⟩ : ∃ ε : ℝ, 0 < ε ∧ 3 * (2 * (2 * ε)) < r / 4 :=
+    ⟨r / 64, by linarith, by linarith⟩
+  -- the finite net of values on the window of radius `M + 1`
+  have hvaltb : TotallyBounded
+      {x | ∃ f ∈ A, ∃ t ∈ exhaustion (0 : ℝ) (((m + 1 : ℕ) : ℝ)), f.toFun t = x} :=
+    TotallyBounded.subset subset_closure (h (m + 1)).1.totallyBounded
+  obtain ⟨Q, hQfin, hQcov⟩ := (Metric.totallyBounded_iff.1 hvaltb) ε hε0
+  -- the sparseness, from the modulus condition
+  obtain ⟨δ, hδ0, hδ1, hδsup⟩ : ∃ δ : ℝ, 0 < δ ∧ δ ≤ 1 ∧
+      (⨆ f ∈ A, SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) f δ) < ENNReal.ofReal ε := by
+    have hpos : (0 : ℝ≥0∞) < ENNReal.ofReal ε := ENNReal.ofReal_pos.2 hε0
+    have hev := (h m).2.eventually (gt_mem_nhds hpos)
+    have hev1 : ∀ᶠ x in 𝓝[>] (0 : ℝ), x < 1 :=
+      (gt_mem_nhds (show (0 : ℝ) < 1 by norm_num)).filter_mono nhdsWithin_le_nhds
+    obtain ⟨δ, ⟨⟨h1, h2⟩, h3⟩⟩ :=
+      ((hev.and hev1).and (self_mem_nhdsWithin (a := (0 : ℝ)) (s := Set.Ioi (0 : ℝ)))).exists
+    exact ⟨δ, h3, h2.le, h1⟩
+  -- the length budget, chosen after the sparseness and before the displacement
+  obtain ⟨n₀, hn₀⟩ : ∃ n₀ : ℕ, 2 * (M + 2) ≤ (n₀ : ℝ) * δ := by
+    refine ⟨⌈2 * (M + 2) / δ⌉₊, ?_⟩
+    have h1 : 2 * (M + 2) / δ ≤ ((⌈2 * (M + 2) / δ⌉₊ : ℕ) : ℝ) := Nat.le_ceil _
+    rw [div_le_iff₀ hδ0] at h1
+    linarith
+  -- the displacement budget, chosen last
+  obtain ⟨γ, hγ0, hγ1, hγκ, hγr, hγerr⟩ : ∃ γ : ℝ, 0 < γ ∧ γ ≤ 1 ∧
+      (Real.exp γ - 1) * (2 * M) ≤ 1 ∧ γ < r / 4 ∧
+      ((n₀ : ℝ) + 1) * (2 * γ + (Real.exp γ - 1) * (2 * M)) < r / 4 := by
+    have hc1 : Filter.Tendsto (fun x : ℝ => (Real.exp x - 1) * (2 * M)) (𝓝 0) (𝓝 0) := by
+      have hca : ContinuousAt (fun x : ℝ => (Real.exp x - 1) * (2 * M)) 0 := by fun_prop
+      simpa using hca.tendsto
+    have hc2 : Filter.Tendsto
+        (fun x : ℝ => ((n₀ : ℝ) + 1) * (2 * x + (Real.exp x - 1) * (2 * M))) (𝓝 0) (𝓝 0) := by
+      have hca : ContinuousAt
+          (fun x : ℝ => ((n₀ : ℝ) + 1) * (2 * x + (Real.exp x - 1) * (2 * M))) 0 := by fun_prop
+      simpa using hca.tendsto
+    have e1 := hc1.eventually (gt_mem_nhds (show (0 : ℝ) < 1 by norm_num))
+    have e2 := hc2.eventually (gt_mem_nhds (show (0 : ℝ) < r / 4 by linarith))
+    have e3 : ∀ᶠ x in 𝓝 (0 : ℝ), x < min 1 (r / 4) :=
+      gt_mem_nhds (lt_min (by norm_num) (by linarith))
+    obtain ⟨γ, ⟨⟨⟨g1, g2⟩, g3⟩, g4⟩⟩ :=
+      ((((e1.and e2).and e3).filter_mono nhdsWithin_le_nhds).and
+        (self_mem_nhdsWithin (a := (0 : ℝ)) (s := Set.Ioi (0 : ℝ)))).exists
+    exact ⟨γ, g4, (lt_of_lt_of_le g3 (min_le_left _ _)).le, g1.le,
+      lt_of_lt_of_le g3 (min_le_right _ _), g2⟩
+  have hn₀' : 2 * (M + γ + (Real.exp γ - 1) * (2 * M)) ≤ (n₀ : ℝ) * δ := by linarith
+  have hn₀'' : 2 * (M + 1) ≤ (n₀ : ℝ) * δ := by linarith
+  -- the finite grid of nodes
+  obtain ⟨G, -, hGprop⟩ := SkorokhodSpace.exists_finite_grid_timeChange hδ0 hγ0 (M + 1)
+  refine ⟨SkorokhodSpace.stepPathFamilyLe (G : Set ℝ) Q n₀,
+    SkorokhodSpace.finite_stepPathFamilyLe G.finite_toSet hQfin n₀, ?_⟩
+  intro f hf
+  have hmodf : SkorokhodSpace.modulusBased (0 : ℝ) M f δ < ENNReal.ofReal ε :=
+    lt_of_le_of_lt (le_iSup₂ (f := fun g (_ : g ∈ A) =>
+      SkorokhodSpace.modulusBased (0 : ℝ) (m : ℝ) g δ) f hf) hδsup
+  have hQf : ∀ x ∈ Set.Icc (-(M + 1)) (M + 1), ∃ q ∈ Q, dist (f.toFun x) q ≤ ε := by
+    intro x hx
+    have hxmem : x ∈ exhaustion (0 : ℝ) (((m + 1 : ℕ) : ℝ)) := by
+      rw [exhaustion_eq_closedBall (0 : ℝ) (by positivity), Real.closedBall_eq_Icc]
+      have hcast : ((m + 1 : ℕ) : ℝ) = M + 1 := by rw [hMdef]; push_cast; ring
+      rw [hcast]
+      simpa using hx
+    obtain ⟨q, hqQ, hq⟩ := Set.mem_iUnion₂.1 (hQcov ⟨f, hf, x, hxmem, rfl⟩)
+    exact ⟨q, hqQ, (Metric.mem_ball.1 hq).le⟩
+  obtain ⟨g, hgmem, hgd⟩ :=
+    SkorokhodSpace.exists_mem_stepPathFamilyLe_intDist_le f hM hδ0 hδ1 hγ0 hε0
+      (fun n s hs hgap hb => by
+        obtain ⟨l, a1, a2, a3, a4⟩ := hGprop n s hs hgap hb
+        exact ⟨l, a1, a2, a3, fun i hi => Finset.mem_coe.2 (a4 i hi)⟩)
+      hn₀'' hn₀' hmodf hQf
+  refine Set.mem_biUnion hgmem ?_
+  rw [Metric.mem_ball]
+  have hdd : dist f g = SkorokhodSpace.intDist (0 : ℝ) f g := SkorokhodSpace.dist_eq f g
+  rw [hdd]
+  refine lt_of_le_of_lt hgd ?_
+  refine max_lt (by linarith) ?_
+  have hexpM : Real.exp (-M) < r / 8 := by rw [hMdef]; exact hmr
+  linarith

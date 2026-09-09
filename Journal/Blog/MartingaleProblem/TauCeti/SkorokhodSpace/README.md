@@ -1740,7 +1740,8 @@ over a shrinking family and is therefore an infimum.
 * `SkorokhodSpace.isCompact_closure_iff`, **over the index `ℝ` and with
   `modulusBased`**: `A ⊆ D ℝ E` has compact closure if and only if for every `m`
   the set `{f t | f ∈ A, t ∈ B m}` has compact closure in `E` and
-  `lim_{δ→0} sup_{f ∈ A} modulusBased m f δ = 0`. Only the converse is index
+  `lim_{δ→0} sup_{f ∈ A} modulusBased m f δ = 0`. Proved (2026-09-09), both
+  halves. Only the converse is index
   bound, by `not_isCompact_closure_of_rigid`, and it is stated where it is true
   rather than under a class invented to make it true. `HasCountableCore ι` would
   exclude that witness but is the class of *separability*: it yields a countable
@@ -1784,8 +1785,7 @@ over a shrinking family and is therefore an infimum.
   survives unchanged, and only its input moves from
   `IsCadlag.exists_subdivision` to `IsCadlag.exists_subdivision_through`. With
   `isCompact_closure_values_of_isCompact` this closes the forward direction of
-  `isCompact_closure_iff`, and the remaining `sorry` of the file is the converse
-  alone.
+  `isCompact_closure_iff`.
 * `dist_first_last_eq_sum`: under `AdditiveDist ι` the gaps of a monotone tuple
   telescope, `dist (t 0) (t (Fin.last n)) = ∑ i, dist (t i.castSucc) (t i.succ)`.
   Proved (2026-09-09). Monotonicity is the real hypothesis — strictness is not
@@ -1845,21 +1845,27 @@ over a shrinking family and is therefore an infimum.
   prescribed `n₀`. Written and proved (2026-09-09). Without the bound on the
   length the family is an infinite union even over a single node set; what
   supplies the bound is `sub_mul_le_two_mul_of_isSubdivision`.
-* The converse's proof is the finite net: for `ε` take `m` with `exp (-m) < ε`,
-  then `δ` from the modulus condition, then for each path a `δ`-sparse based
-  subdivision of oscillation below `ε`; its nodes are pushed onto the finite grid
-  of `exists_finite_grid_timeChange` — this is where `ℝ` is used and where the
-  rigid index fails — and its values onto a finite net of the value compactum.
-  The approximant is `SkorokhodSpace.stepPath`, it is counted by
-  `finite_stepPathFamilyLe`, the bound is
-  `SkorokhodSpace.distWith_stepPath_le`, and the passage from the window to the
-  integral is `SkorokhodSpace.intWith_le_of_ae_distWith_le`. The bound on the
-  *number* of nodes is `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`. The
-  grid holds the base point, and the displacement of a node is bounded by a
-  fraction of its distance to the base point rather than by an absolute amount:
-  that is what `le_intDist_stepAt_of_exp_mul_lt` shows to be necessary. What
-  remains is the assembly, and in it the two window ends, which are
-  `SkorokhodSpace.exists_bad_radii_set` and `intWith_le_of_ae_distWith_le`.
+* The converse's proof is the finite net, and it is proved (2026-09-09):
+  `CompleteSpace D(ℝ, E)` of Milestone 5 turns total boundedness into compactness
+  of the closure, and total boundedness is the finite family
+  `stepPathFamilyLe G Q n₀`. The five constants are chosen in a forced order —
+  the window radius `M` from the tail of the integral, the oscillation `ε`, the
+  sparseness `δ` from the modulus condition at `M`, the length bound `n₀` from
+  `M` and `δ`, and the displacement `γ` last, the bad radii costing `(n₀+1)`
+  times it. The nodes are pushed onto the finite grid of
+  `exists_finite_grid_timeChange` — this is where `ℝ` is used and where the rigid
+  index fails — and the values onto a finite net of the value compactum. The
+  approximant is `SkorokhodSpace.stepPath`, it is counted by
+  `finite_stepPathFamilyLe`, the bound is `SkorokhodSpace.distWith_stepPath_le`,
+  and the passage from the window to the integral is
+  `SkorokhodSpace.intWith_le_of_ae_distWith_le`. The bound on the *number* of
+  nodes is `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision` through
+  `IsSubdivisionBased.trim`. The grid holds the base point, and the displacement
+  of a node is bounded by a fraction of its distance to the base point rather
+  than by an absolute amount: that is what `le_intDist_stepAt_of_exp_mul_lt`
+  shows to be necessary. The per-path half is
+  `SkorokhodSpace.exists_mem_stepPathFamilyLe_intDist_le`; what the criterion
+  itself adds is only the choice of the constants.
 * `SkorokhodSpace.badRadiiPiece` and `SkorokhodSpace.badRadii`: the bad radii of
   a node and of a tuple, as **definitions** rather than as anonymous sets inside
   a proof, with `measurableSet_badRadiiPiece`,
@@ -1886,16 +1892,45 @@ over a shrinking family and is therefore an infimum.
   begins with — the `iInf` unfolded, so that a bound on `modulusBased` produces a
   subdivision, and the passage from `subdivisionOsc` in `ℝ≥0∞` to the cellwise
   real estimate `distWith_stepPath_le` asks for. Both proved (2026-09-09).
-* `SkorokhodSpace.IsSubdivision.trim`: to a based `δ`-sparse subdivision of the
-  window of radius `M` a based `min δ 1`-sparse subdivision of the same window
-  with all nodes in `Set.Icc (-(M+1)) (M+1)`, length at most `2 (M+1) / min δ 1`
-  and the same cell oscillations. This is what hands `stepPathFamilyLe` a tuple
-  of bounded length. Trimming at the **window ends** is closed — the trimmed
-  extreme gaps can be arbitrarily small, and sparseness is what separates the
-  tents of `exists_finite_grid_timeChange` — but trimming at the fixed marks
+* `SkorokhodSpace.IsSubdivisionBased.trim`: to a based `δ`-sparse subdivision of
+  the window of radius `M`, for `1 ≤ M` and `0 < δ ≤ 1`, a based `δ`-sparse
+  subdivision of the same window with all nodes in `Set.Icc (-(M+1)) (M+1)`,
+  length `n'` bounded by `n' δ ≤ 2 (M+1)`, and every cell contained in a cell of
+  the original. Proved (2026-09-09). This is what hands `stepPathFamilyLe` a
+  tuple of bounded length. Trimming at the **window ends** is closed — the
+  trimmed extreme gaps can be arbitrarily small, and sparseness is what separates
+  the tents of `exists_finite_grid_timeChange` — but trimming at the fixed marks
   `±(M+1)`, a full step outside the window, is not: the trimmed edge gap is
-  either the old one or at least `1`, the trimmed cell is contained in the old
-  one, and both marks lie beyond the window.
+  either the old one or at least `1`, which is where `δ ≤ 1` is spent, the
+  trimmed cell is contained in the old one, and both marks lie beyond the window.
+  **This is the one place where the index `ℝ` is used for its own sake**: on a
+  general index the mark `M+1` is `exhaustionMin t₀ (M+1)`, whose distance to
+  `exhaustionMin t₀ M` can be arbitrarily small while a node still sits strictly
+  below the larger window — `ι = {-3, -1.05, -1, 0, 1} ⊆ ℝ` with `M = 1`, a
+  subdivision with `t i₀ = -3` and `t (i₀+1) = -1`, trimmed first gap `0.05`.
+* `SkorokhodSpace.subdivisionOsc_le_two_mul_of_cells`: a subdivision each of
+  whose cells lies inside a cell of another has at most **twice** its
+  oscillation. Proved (2026-09-09). The factor is the price of moving the *left
+  endpoint*, `subdivisionOsc` measuring each cell from its own, and it cannot be
+  improved: a path jumping by `ε` at the left endpoint of a coarse cell and back
+  at its midpoint has oscillation `ε` coarsely and `2 ε` for the refinement
+  cutting at the midpoint. It is what carries the oscillation across `trim`.
+* `SkorokhodSpace.exists_bad_radii_set_of_sparse`: `exists_bad_radii_set` with
+  `volume_badRadii_le` replaced by `volume_inter_badRadii_le_of_sparse`, so that
+  the count reads `n₀` and not the length `n`. Proved (2026-09-09). Here the
+  sparseness `δ` and the displacement budget `γ` become two parameters instead of
+  one, and that is the order in which the converse must choose them: `δ` first,
+  the modulus condition naming it, and `γ` afterwards and as small as one likes.
+* `SkorokhodSpace.exists_mem_stepPathFamilyLe_intDist_le`: **one path, one member
+  of the finite family.** Given `M`, `δ`, `γ`, `ε`, a grid `G`, a value net `Q`
+  and a length bound `n₀` — all fixed before the path is seen — a path whose
+  based modulus at `δ` is below `ε` and whose values on `Set.Icc (-(M+1)) (M+1)`
+  are within `ε` of `Q` lies within
+  `max γ (12 ε + (n₀+1) (2 γ + (exp γ - 1) 2M) + exp (-M))` of a member of
+  `stepPathFamilyLe G Q n₀`. Proved (2026-09-09). The time change of the estimate
+  is the **inverse** of the grid's — the grid carries a node to a grid point, and
+  `distWith_stepPath_le` asks for the change carrying the approximant's nodes
+  back to the path's — and `TimeChange.norm_inv` is what makes that free.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, over `ℝ`, where the first condition is replaced by the
   existence of a compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
