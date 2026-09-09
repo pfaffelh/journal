@@ -6120,6 +6120,45 @@ theorem SkorokhodSpace.countable_stepPathFamily {C : Set ι} {Q : Set E} (hC : C
   have := hQ.to_subtype
   exact Set.countable_iUnion fun _ => Set.countable_range _
 
+/-- **The finite family**, and it is the countable one with the length bounded:
+the step paths of at most `n₀ + 1` cells whose nodes lie in `C` and whose values
+lie in `Q`.
+
+The bound on the length is not decoration.  Total boundedness asks for a *finite*
+net where separability asked for a countable one, and finiteness fails without
+it: even over a single node set, `⋃ n` is an infinite union.  What supplies the
+bound is `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision` --- a `δ`-sparse
+subdivision has at most `2 u / δ` cells inside the window of radius `u`. -/
+def SkorokhodSpace.stepPathFamilyLe (C : Set ι) (Q : Set E) (n₀ : ℕ) : Set D(ι, E) :=
+  ⋃ n ∈ Set.Iic n₀, Set.range fun p : (Fin (n + 1) → C) × (Fin (n + 1) → Q) =>
+    SkorokhodSpace.stepPath (fun i => (p.1 i : ι)) fun i => (p.2 i : E)
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+theorem SkorokhodSpace.stepPath_mem_stepPathFamilyLe {C : Set ι} {Q : Set E} {n₀ n : ℕ}
+    (hn : n ≤ n₀) {d : Fin (n + 1) → ι} {v : Fin (n + 1) → E} (hd : ∀ i, d i ∈ C)
+    (hv : ∀ i, v i ∈ Q) :
+    SkorokhodSpace.stepPath d v ∈ SkorokhodSpace.stepPathFamilyLe C Q n₀ :=
+  Set.mem_biUnion (Set.mem_Iic.2 hn) ⟨⟨fun i => ⟨d i, hd i⟩, fun i => ⟨v i, hv i⟩⟩, rfl⟩
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- **The bounded family is finite**, and this is the whole of the counting for
+the converse: a finite set of nodes and a finite set of values give finitely many
+tuples of each, `Fin (n + 1)` being finite, and finitely many lengths. -/
+theorem SkorokhodSpace.finite_stepPathFamilyLe {C : Set ι} {Q : Set E} (hC : C.Finite)
+    (hQ : Q.Finite) (n₀ : ℕ) : (SkorokhodSpace.stepPathFamilyLe C Q n₀).Finite := by
+  have := hC.to_subtype
+  have := hQ.to_subtype
+  exact (Set.finite_Iic n₀).biUnion fun _ _ => Set.finite_range _
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+theorem SkorokhodSpace.stepPathFamilyLe_subset_stepPathFamily {C : Set ι} {Q : Set E}
+    (n₀ : ℕ) :
+    SkorokhodSpace.stepPathFamilyLe C Q n₀ ⊆ SkorokhodSpace.stepPathFamily C Q := by
+  intro f hf
+  rw [SkorokhodSpace.stepPathFamilyLe, Set.mem_iUnion₂] at hf
+  obtain ⟨n, -, hn⟩ := hf
+  exact Set.mem_iUnion.2 ⟨n, hn⟩
+
 omit [AdditiveDist ι] [BasePoint ι] in
 /-- **Moving the values is free.**  Two step paths on the same nodes whose values
 are pairwise within `ε` are within `ε` in every window, for the identity time
@@ -6364,14 +6403,25 @@ being *constant* between a window end and its preimage.
 The lower end is allowed a second way out, and it is the one an index with gaps
 takes: a time change that fixes it makes the interval a point.  Without that
 alternative the estimate would be unusable, since the set of radii whose lower
-edge is sticky need not be small. -/
+edge is sticky need not be small.
+
+**The subdivision only has to cover the window, not to end on it**, and that is
+the weakening of 2026-09-09: `ht0` and `htlast` were equalities until the
+converse of Milestone 7 asked for them as inequalities.  It costs nothing --- the
+two are used at one place, to put `l s` between the extreme nodes, and `≤` does
+that as well as `=` --- and it is what makes the estimate applicable to the
+subdivisions `SkorokhodSpace.modulusBased` actually produces, which are the
+overshooting ones of `SkorokhodSpace.IsSubdivision`.  Trimming them to the window
+instead is *not* an option: the trimmed first and last gaps can be arbitrarily
+small, and the sparseness is exactly what
+`SkorokhodSpace.exists_finite_grid_timeChange` needs to separate its tents. -/
 theorem SkorokhodSpace.distWith_stepPath_le (t₀ : ι) (f : D(ι, E)) {n : ℕ}
     {t d : Fin (n + 1) → ι} {w : Fin (n + 1) → E} {l : TimeChange ι} {ε u M : ℝ}
     (hε : 0 ≤ ε) (huM : u ≤ M)
     (hnodes : ∀ i, l.toOrderIso (d i) = t i)
     (hcell : ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
       dist (f.toFun x) (f.toFun (t i.castSucc)) ≤ ε)
-    (ht0 : t 0 = exhaustionMin t₀ M) (htlast : t (Fin.last n) = exhaustionMax t₀ M)
+    (ht0 : t 0 ≤ exhaustionMin t₀ M) (htlast : exhaustionMax t₀ M ≤ t (Fin.last n))
     (hw : ∀ i, dist (f.toFun (t i)) (w i) ≤ ε)
     (hmax : ∀ i, exhaustionMax t₀ u ∉ Set.Ico (min (d i) (t i)) (max (d i) (t i)))
     (hmin : (∀ i, exhaustionMin t₀ u ∉ Set.Ico (min (d i) (t i)) (max (d i) (t i))) ∨
@@ -6381,9 +6431,9 @@ theorem SkorokhodSpace.distWith_stepPath_le (t₀ : ι) (f : D(ι, E)) {n : ℕ}
     (ε := 2 * ε) (by linarith) ?_ ?_ ?_
   · intro s hs
     have hy : l.toOrderIso s ∈ Set.Icc (t 0) (t (Fin.last n)) := by
-      rw [ht0, htlast]
       have hmem : l.toOrderIso s ∈ exhaustion t₀ M := exhaustion_subset_of_le t₀ huM hs
-      exact ⟨(isLeast_exhaustionMin t₀ M).2 hmem, (isGreatest_exhaustionMax t₀ M).2 hmem⟩
+      exact ⟨ht0.trans ((isLeast_exhaustionMin t₀ M).2 hmem),
+        ((isGreatest_exhaustionMax t₀ M).2 hmem).trans htlast⟩
     have h1 : dist (f.toFun (l.toOrderIso s)) (f.toFun (stepRetract t (l.toOrderIso s))) ≤ ε :=
       dist_comp_stepRetract_le hε hcell hy
     have h2 : (SkorokhodSpace.stepPath d w).toFun s = w (stepIdx t (l.toOrderIso s)) := by
@@ -6587,7 +6637,7 @@ instance SkorokhodSpace.instSeparableSpace [SecondCountableTopology E]
       exact Set.mem_iUnion.2 ⟨i, Or.inl
         (radius_exhaustionMax_mem_Ico_subset (basePoint : ι) _ _ ⟨hu0', hcon⟩)⟩
     refine SkorokhodSpace.distWith_stepPath_le (basePoint : ι) f hε.le huM hnodes hcell
-      ht0 htlast (fun i => hqqd _) hmaxgood ?_
+      ht0.le htlast.ge (fun i => hqqd _) hmaxgood ?_
     by_cases hfix : l.toOrderIso.symm (exhaustionMin (basePoint : ι) u)
         = exhaustionMin (basePoint : ι) u
     · exact Or.inr hfix
@@ -9032,6 +9082,249 @@ theorem SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision (t₀ : ι) {u δ : �
   calc dist (t i) (t j) ≤ dist (t i) t₀ + dist t₀ (t j) := dist_triangle _ _ _
     _ ≤ u + u := add_le_add h1 h2
     _ = 2 * u := by ring
+
+/-! ### The finite grid, and the time change onto it
+
+This is the last piece the converse has to build.  The forward direction reads a
+subdivision off a path; the converse has to put the nodes of *every* path's
+subdivision onto **one finite set**, and it may spend a small time change doing
+it.  The construction is the perturbation `x ↦ x + ψ x` of
+`Real.instHasCountableCore`, with the countable set `ℚ` replaced by the finite
+grid `ρ ℤ` truncated to the window; what changes is the estimate, and that change
+is the whole difficulty --- see `SkorokhodSpace.abs_sum_tent_sub_le`. -/
+
+omit [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [MeasurableSpace E] [BorelSpace E]
+  [PolishSpace E] [BasePoint ι] in
+/-- **A sum of tents with separated centres is bounded by the bound on its
+coefficients**, however many tents there are.  It is the displacement estimate
+that goes with `SkorokhodSpace.abs_sum_tent_sub_le` and it has the same proof:
+the supports being disjoint, at most one term is nonzero at any point. -/
+theorem SkorokhodSpace.abs_sum_tent_le {n : ℕ} {c v : Fin n → ℝ} {r η : ℝ}
+    (hr : 0 < r) (hη : 0 ≤ η) (hsep : ∀ i j, i ≠ j → 2 * r ≤ |c i - c j|)
+    (hv : ∀ i, |v i| ≤ η) (x : ℝ) :
+    |∑ i, v i * SkorokhodSpace.tent r (c i) x| ≤ η := by
+  classical
+  have hne : ∀ i : Fin n, SkorokhodSpace.tent r (c i) x ≠ 0 → |x - c i| < r := by
+    intro i hi
+    by_contra h
+    exact hi (SkorokhodSpace.tent_eq_zero hr (not_lt.1 h))
+  set A : Finset (Fin n) :=
+    Finset.univ.filter (fun i : Fin n => SkorokhodSpace.tent r (c i) x ≠ 0) with hA
+  have hcard : A.card ≤ 1 := by
+    refine Finset.card_le_one.2 fun a ha b hb => ?_
+    by_contra hab
+    have h1 := hne a (Finset.mem_filter.1 ha).2
+    have h2 := hne b (Finset.mem_filter.1 hb).2
+    have h0 := hsep a b hab
+    have h3 : |c a - c b| ≤ |c a - x| + |x - c b| := abs_sub_le _ _ _
+    rw [abs_sub_comm (c a) x] at h3
+    linarith
+  have hsum : (∑ i, v i * SkorokhodSpace.tent r (c i) x)
+      = ∑ i ∈ A, v i * SkorokhodSpace.tent r (c i) x := by
+    refine (Finset.sum_subset (Finset.subset_univ A) ?_).symm
+    intro i _ hi
+    have hx : SkorokhodSpace.tent r (c i) x = 0 := by
+      by_contra h
+      exact hi (by rw [hA]; exact Finset.mem_filter.2 ⟨Finset.mem_univ _, h⟩)
+    rw [hx, mul_zero]
+  have hterm : ∀ i : Fin n, |v i * SkorokhodSpace.tent r (c i) x| ≤ η := by
+    intro i
+    rw [abs_mul]
+    have h0 : (0 : ℝ) ≤ SkorokhodSpace.tent r (c i) x := le_max_left _ _
+    have h1 : SkorokhodSpace.tent r (c i) x ≤ 1 := by
+      refine max_le (by norm_num) ?_
+      have : (0 : ℝ) ≤ |x - c i| / r := div_nonneg (abs_nonneg _) hr.le
+      linarith
+    calc |v i| * |SkorokhodSpace.tent r (c i) x|
+        = |v i| * SkorokhodSpace.tent r (c i) x := by rw [abs_of_nonneg h0]
+      _ ≤ η * 1 := mul_le_mul (hv i) h1 h0 ((abs_nonneg _).trans (hv i))
+      _ = η := mul_one η
+  rw [hsum]
+  calc |∑ i ∈ A, v i * SkorokhodSpace.tent r (c i) x|
+      ≤ ∑ i ∈ A, |v i * SkorokhodSpace.tent r (c i) x| := Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ _i ∈ A, η := Finset.sum_le_sum fun i _ => hterm i
+    _ = (A.card : ℝ) * η := by rw [Finset.sum_const, nsmul_eq_mul]
+    _ ≤ 1 * η := mul_le_mul_of_nonneg_right (by exact_mod_cast hcard) hη
+    _ = η := one_mul η
+
+/-- **The grid of the converse, together with the time change onto it.**  To a
+sparseness `δ` and a norm budget `γ` there is **one finite** set `G ∋ 0` of reals
+such that every `δ`-sparse strictly monotone tuple carrying `0` among its nodes
+can be moved onto `G` --- as far as its nodes lie in the window of radius `u` ---
+by a time change of norm at most `γ` which moves no point of `ℝ` by more than
+`γ`.
+
+**Why the tuple is not given first.**  The order of the quantifiers is the whole
+point: `G` is produced from `δ`, `γ` and `u` alone, before any tuple is seen, and
+a single `G` serves all of them.  That is what a finite net needs, and it is what
+`SkorokhodSpace.exists_rat_nodes_perturbation` --- which produces its nodes
+*after* seeing the tuple, and produces countably many --- does not give.  The
+price is that the Lipschitz estimate for the perturbation may not be summed term
+by term; it is `SkorokhodSpace.abs_sum_tent_sub_le`, which does not grow with the
+number of tents, and the disjointness of the supports is what pays for it.
+
+**The constants close in one direction.**  The grid is `ρ ℤ`, the tents have
+radius `δ / 4` and height `ρ / 2` --- a node moves to the nearest grid point ---
+so the perturbation is `4 ρ / δ`-Lipschitz, and `ρ` is chosen *last*, small
+enough that `4 ρ / δ` stays under `1 - exp (-γ)`.  The sparseness enters twice:
+it separates the tents, and it is what makes the number of nodes in the window
+finite, which is `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`.
+
+**The base point is a node and stays one.**  `ψ 0 = 0` holds because `0` is
+itself a grid point, so the tent sitting on it carries the coefficient `0`; every
+other tent is `δ`-far from `0` and vanishes there.  Without a node at `0` the
+perturbation would move it, the time change would leave
+`TimeChange.fixing 0`, and the metric of Milestone 4 --- whose infimum runs over
+the time changes fixing the base point --- would not see it.  This is the same
+place where `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` bites,
+and it is why `SkorokhodSpace.modulusBased` is the modulus of the criterion. -/
+theorem SkorokhodSpace.exists_finite_grid_timeChange {δ γ : ℝ} (hδ : 0 < δ) (hγ : 0 < γ)
+    (u : ℝ) :
+    ∃ G : Finset ℝ, (0 : ℝ) ∈ G ∧
+      ∀ (n : ℕ) (t : Fin (n + 1) → ℝ), StrictMono t →
+        (∀ i : Fin n, δ ≤ dist (t i.castSucc) (t i.succ)) → (0 : ℝ) ∈ Set.range t →
+        ∃ l : TimeChange ℝ, l.toOrderIso 0 = 0 ∧ l.norm ≤ γ ∧
+          (∀ x : ℝ, |l.toOrderIso x - x| ≤ γ) ∧
+          ∀ i, t i ∈ exhaustion (0 : ℝ) u → l.toOrderIso (t i) ∈ G := by
+  classical
+  have hexppos : 0 < Real.exp γ := Real.exp_pos γ
+  have hexp : Real.exp (-γ) = (Real.exp γ)⁻¹ := Real.exp_neg γ
+  have hexplt : Real.exp (-γ) < 1 := by
+    rw [show (1 : ℝ) = Real.exp 0 from (Real.exp_zero).symm]
+    exact Real.exp_lt_exp.2 (by linarith)
+  set K : ℝ := 1 - Real.exp (-γ) with hKdef
+  have hK0 : 0 < K := by rw [hKdef]; linarith
+  have hK1 : K < 1 := by
+    have := Real.exp_pos (-γ)
+    rw [hKdef]; linarith
+  have h2 : (1 - K)⁻¹ ≤ Real.exp γ := by rw [hKdef, sub_sub_cancel, hexp, inv_inv]
+  have h1 : 1 + K ≤ Real.exp γ := by
+    have hinv : (Real.exp γ)⁻¹ * Real.exp γ = 1 := inv_mul_cancel₀ (ne_of_gt hexppos)
+    rw [hKdef, hexp]
+    nlinarith [sq_nonneg (Real.exp γ - 1), hinv, hexppos]
+  set ρ : ℝ := min (K * δ / 4) γ with hρdef
+  have hρ : 0 < ρ := lt_min (by positivity) hγ
+  have hργ : ρ ≤ γ := min_le_right _ _
+  have hρK : 4 * ρ ≤ K * δ := by
+    have := min_le_left (K * δ / 4) γ
+    rw [← hρdef] at this
+    linarith
+  set N : ℕ := ⌈(max u 0 + γ) / ρ⌉₊ with hNdef
+  refine ⟨(Finset.Icc (-(N : ℤ)) (N : ℤ)).image fun k : ℤ => ρ * (k : ℝ), ?_, ?_⟩
+  · refine Finset.mem_image.2 ⟨0, Finset.mem_Icc.2
+      ⟨neg_nonpos_of_nonneg (Int.natCast_nonneg N), Int.natCast_nonneg N⟩, ?_⟩
+    simp
+  intro n t ht hgap h0
+  obtain ⟨i₀, hi₀⟩ := h0
+  -- the nodes are `δ`-separated
+  have hsep : ∀ i j : Fin (n + 1), i ≠ j → δ ≤ |t i - t j| := by
+    have hle : ∀ i j : Fin (n + 1), i ≤ j → i ≠ j → δ ≤ |t i - t j| := by
+      intro i j hij hne
+      have hd := mul_le_dist_of_sparse (ι := ℝ) ht.monotone hgap hij
+      have hij' : (i : ℕ) ≤ (j : ℕ) := hij
+      have hone : 1 ≤ ((j : ℕ) - (i : ℕ) : ℕ) := by
+        have : (i : ℕ) ≠ (j : ℕ) := fun hc => hne (Fin.ext hc)
+        omega
+      have hone' : (1 : ℝ) ≤ (((j : ℕ) - (i : ℕ) : ℕ) : ℝ) := by exact_mod_cast hone
+      rw [Real.dist_eq] at hd
+      nlinarith [hδ.le]
+    intro i j hij
+    rcases le_total i j with h | h
+    · exact hle i j h hij
+    · rw [abs_sub_comm]; exact hle j i h (Ne.symm hij)
+  -- the grid point nearest to each node
+  set g : Fin (n + 1) → ℝ := fun i => ρ * ((round (t i / ρ) : ℤ) : ℝ) with hgdef
+  have hgclose : ∀ i, |g i - t i| ≤ ρ / 2 := by
+    intro i
+    have hid : t i - ρ * ((round (t i / ρ) : ℤ) : ℝ)
+        = ρ * (t i / ρ - ((round (t i / ρ) : ℤ) : ℝ)) := by
+      field_simp
+    have hr := abs_sub_round (t i / ρ)
+    have : |t i - ρ * ((round (t i / ρ) : ℤ) : ℝ)| ≤ ρ / 2 := by
+      rw [hid, abs_mul, abs_of_pos hρ]
+      nlinarith [abs_nonneg (t i / ρ - ((round (t i / ρ) : ℤ) : ℝ))]
+    rw [hgdef]
+    simpa only [abs_sub_comm] using this
+  have hg0 : g i₀ = 0 := by
+    rw [hgdef]
+    simp only [hi₀, zero_div, round_zero, Int.cast_zero, mul_zero]
+  -- the perturbation
+  set r : ℝ := δ / 4 with hrdef
+  have hr : 0 < r := by rw [hrdef]; linarith
+  set v : Fin (n + 1) → ℝ := fun i => g i - t i with hvdef
+  have hv : ∀ i, |v i| ≤ ρ / 2 := fun i => hgclose i
+  have hsep2 : ∀ i j : Fin (n + 1), i ≠ j → 2 * r ≤ |t i - t j| := by
+    intro i j hij
+    have := hsep i j hij
+    rw [hrdef]; linarith
+  set ψ : ℝ → ℝ := fun x => ∑ i : Fin (n + 1), v i * SkorokhodSpace.tent r (t i) x with hψdef
+  have hψnode : ∀ j, ψ (t j) = v j := by
+    intro j
+    rw [hψdef]
+    simp only []
+    rw [Finset.sum_eq_single j]
+    · rw [SkorokhodSpace.tent_self, mul_one]
+    · intro i _ hij
+      refine mul_eq_zero_of_right _ (SkorokhodSpace.tent_eq_zero hr ?_)
+      have := hsep j i (Ne.symm hij)
+      rw [hrdef]; linarith
+    · intro h; exact absurd (Finset.mem_univ j) h
+  have hψ0 : ψ 0 = 0 := by
+    have := hψnode i₀
+    rw [hi₀] at this
+    rw [this, hvdef]
+    simp only []
+    rw [hg0, hi₀, sub_zero]
+  have hψlip : ∀ x y : ℝ, |ψ x - ψ y| ≤ K * |x - y| := by
+    intro x y
+    have hbase := SkorokhodSpace.abs_sum_tent_sub_le (c := t) (v := v) hr
+      (by positivity : (0:ℝ) ≤ ρ / 2) hsep2 hv x y
+    have hcoef : 2 * (ρ / 2) / r ≤ K := by
+      rw [hrdef, div_le_iff₀ (by positivity : (0:ℝ) < δ / 4)]
+      linarith
+    refine le_trans hbase ?_
+    exact mul_le_mul_of_nonneg_right hcoef (abs_nonneg _)
+  have hψbd : ∀ x : ℝ, |ψ x| ≤ ρ / 2 :=
+    fun x => SkorokhodSpace.abs_sum_tent_le (c := t) (v := v) hr
+      (by positivity : (0:ℝ) ≤ ρ / 2) hsep2 hv x
+  obtain ⟨l, hl0, hlnorm, hlapp⟩ :=
+    TimeChange.exists_real_of_perturbation hK0.le hK1 hγ.le hψ0 hψlip h1 h2
+  refine ⟨l, hl0, hlnorm, fun x => ?_, ?_⟩
+  · rw [hlapp x, add_sub_cancel_left]
+    exact (hψbd x).trans (by linarith)
+  · intro i hi
+    have hval : l.toOrderIso (t i) = g i := by
+      rw [hlapp, hψnode i, hvdef]
+      simp only []
+      ring
+    have htbd : |t i| ≤ max u 0 := by
+      have : dist (t i) (0 : ℝ) ≤ max u 0 := by
+        simpa only [exhaustion, Metric.mem_closedBall] using hi
+      simpa only [Real.dist_eq, sub_zero] using this
+    have hgbd : |g i| ≤ max u 0 + γ := by
+      have h1 := hgclose i
+      have h2 : |g i| ≤ |g i - t i| + |t i| := by
+        simpa using abs_add_le (g i - t i) (t i)
+      linarith
+    have hkbd : |((round (t i / ρ) : ℤ) : ℝ)| ≤ (N : ℝ) := by
+      have hgi : |g i| = ρ * |((round (t i / ρ) : ℤ) : ℝ)| := by
+        rw [hgdef]
+        simp only []
+        rw [abs_mul, abs_of_pos hρ]
+      have hle : |((round (t i / ρ) : ℤ) : ℝ)| ≤ (max u 0 + γ) / ρ := by
+        rw [le_div_iff₀ hρ]
+        rw [hgi] at hgbd
+        linarith
+      exact hle.trans (Nat.le_ceil _)
+    have hkZ : |round (t i / ρ)| ≤ (N : ℤ) := by
+      have : ((|round (t i / ρ)| : ℤ) : ℝ) ≤ ((N : ℤ) : ℝ) := by
+        push_cast
+        simpa only [Int.cast_abs] using hkbd
+      exact_mod_cast this
+    rw [hval]
+    refine Finset.mem_image.2 ⟨round (t i / ρ), Finset.mem_Icc.2 ?_, ?_⟩
+    · exact ⟨neg_le_of_abs_le hkZ, le_of_abs_le hkZ⟩
+    · rw [hgdef]
 
 /-- **The compactness criterion, and it is stated over the index `ℝ`.**  The base
 point is the one of the instance and not a parameter: the left hand side speaks

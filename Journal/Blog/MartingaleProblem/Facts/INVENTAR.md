@@ -13473,3 +13473,117 @@ stehen bewiesen da. **Der Basispunkt muß im Gitter liegen** — das ist es, was
 `not_isCompact_closure_of_jumps_at_basePoint` erzwingt, und der Grund, warum die
 Verschiebung eines Knotens an einem Bruchteil seines Abstands zu `t₀` zu messen
 ist und nicht an einem absoluten Betrag.
+
+### 2026-09-09, elfter Lauf des Tages — das Gitter steht, und die Unterteilung muß das Fenster nur überdecken
+
+**Bearbeitet:** `TauCeti/SkorokhodSpace/Suggested.lean`, Meilenstein 7, die
+Rückrichtung von `SkorokhodSpace.isCompact_closure_iff`; dazu Meilenstein 5,
+`SkorokhodSpace.distWith_stepPath_le`. Die Datei steht weiterhin bei **einem**
+`sorry`. Sechs Deklarationen sind neu und zwei geändert, alle durch
+`lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` — die beiden geänderten (`distWith_stepPath_le`
+und ihr Abnehmer `SkorokhodSpace.instSeparableSpace`) eingeschlossen, samt
+`SkorokhodSpace.instPolishSpace`.
+
+**Das Gitter, das der zehnte Lauf angesagt hat, steht, und die Ansage hat
+gehalten — mit einer Änderung an den Konstanten und einer an der Reihenfolge der
+Quantoren.**
+
+`SkorokhodSpace.exists_finite_grid_timeChange`: zu `δ > 0`, `γ > 0` und einem
+Radius `u` gibt es **eine endliche** Menge `G ⊆ ℝ` mit `0 ∈ G`, so daß jedes
+`δ`-sparsame streng monotone Tupel, das `0` unter seinen Knoten trägt, von einem
+Zeitwechsel `l` mit `l 0 = 0` und `‖l‖ ≤ γ` auf `G` getragen wird — soweit seine
+Knoten im Fenster vom Radius `u` liegen —, und dieser Zeitwechsel verschiebt
+überdies **keinen** Punkt von `ℝ` um mehr als `γ`.
+
+*Die Reihenfolge der Quantoren ist der ganze Inhalt.* `G` wird aus `δ`, `γ` und
+`u` allein hergestellt, ehe irgendein Tupel gesehen ist, und ein einziges `G`
+bedient alle. Das ist es, was ein **endliches** Netz braucht, und es ist genau
+das, was `SkorokhodSpace.exists_rat_nodes_perturbation` nicht gibt: jenes
+erzeugt seine Knoten *nach* dem Tupel und erzeugt abzählbar viele. Der Preis
+dafür ist, daß die Lipschitz-Schranke der Störung nicht gliedweise summiert
+werden darf; sie ist `SkorokhodSpace.abs_sum_tent_sub_le` vom zehnten Lauf, und
+die Disjunktheit der Träger bezahlt sie.
+
+*Die Konstanten schließen sich in einer Richtung, und die Ansage war an einer
+Stelle um den Faktor zwei daneben.* Die Zelte haben Radius `r = δ/4` und Höhe
+`η = ρ/2`, also ist `2η/r = 4ρ/δ` und nicht `2ρ/δ`, wie der zehnte Lauf
+gerechnet hatte; das ändert nichts am Weg, weil `ρ` zuletzt gewählt wird, und
+`ρ ≤ (1 - exp(-γ)) δ/4` ist die Bedingung. `K := 1 - exp (-γ)` ist dieselbe Wahl
+wie in `Real.instHasCountableCore`, und sie macht beide Lipschitz-Konstanten der
+Störung höchstens `exp γ`.
+
+*Die Trennung der Zeltmittelpunkte ist nicht `δ - ρ`, sondern `δ`.* Die Zelte
+sitzen auf den **Knoten** und nicht auf den Gitterpunkten — die Störung wird an
+den Knoten ausgewertet und trägt sie auf das Gitter, nicht umgekehrt —, also ist
+`2r = δ/2 ≤ δ` die Trennung, und `ρ` geht in sie gar nicht ein. Das ist die
+zweite Berichtigung der Ansage, und sie macht die Rechnung kürzer statt länger.
+
+*Der Basispunkt ist ein Knoten und bleibt einer.* `ψ 0 = 0` gilt, weil `0`
+selbst ein Gitterpunkt ist: das Zelt, das dort sitzt, trägt den Koeffizienten
+`0`, und jedes andere ist `δ` weit weg und verschwindet dort. Ohne einen Knoten
+bei `0` verschöbe die Störung ihn, der Zeitwechsel verließe
+`TimeChange.fixing 0`, und die Metrik von Meilenstein 4 — deren Infimum über die
+Zeitwechsel läuft, die den Basispunkt festhalten — sähe ihn nicht. Das ist
+dieselbe Stelle, an der
+`SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` zubeißt.
+
+*Das Gitter selbst* ist `ρ ℤ`, abgeschnitten auf `⌈(max u 0 + γ)/ρ⌉₊` Schritte
+nach beiden Seiten; ein Knoten im Fenster geht auf den nächsten Gitterpunkt
+(`round`), verschiebt sich also um höchstens `ρ/2 ≤ γ` und bleibt in dem
+Abschnitt.
+
+**Mitgekommen ist die Verschiebungsschranke**, `SkorokhodSpace.abs_sum_tent_le`:
+eine Summe von Zelten mit getrennten Mittelpunkten ist durch die Schranke ihrer
+Koeffizienten beschränkt, gleichviel wie viele es sind. Sie ist
+`abs_sum_tent_sub_le` mit demselben Beweis und einem Glied statt zweien.
+
+**Und ein Befund, der eine Sackgasse abschneidet, ehe sie gegangen wird:
+`SkorokhodSpace.distWith_stepPath_le` verlangte die Unterteilung an den
+Fensterenden gepinnt, und das ist genau die Fassung, die der sechste Lauf für den
+Modul widerlegt hat.** Die beiden Hypothesen `t 0 = (B M).min` und
+`t (Fin.last n) = (B M).max` sind jetzt Ungleichungen — `t 0 ≤ (B M).min` und
+`(B M).max ≤ t (Fin.last n)` —, also die **Überdeckung** von
+`SkorokhodSpace.IsSubdivision`. Es kostet nichts: die beiden werden an einer
+einzigen Stelle gelesen, um `l s` zwischen die äußersten Knoten zu setzen, und
+dafür taugt `≤` so gut wie `=`. `SkorokhodSpace.instSeparableSpace` ist
+nachgezogen (`ht0.le`, `htlast.ge`) und hängt weiterhin an keinem `sorryAx`.
+
+*Warum das nötig war, und warum die naheliegende Alternative nicht geht.* Der
+Modul, den die Rückrichtung liest, ist `modulusBased`, und seine Unterteilungen
+ragen über das Fenster hinaus — seit der Berichtigung des sechsten Laufs
+ausdrücklich. Sie zu **stutzen** wäre der naheliegende Ausweg und er ist
+verschlossen: der gestutzte erste und letzte Abstand können beliebig klein
+werden, und die Sparsamkeit ist genau das, was
+`exists_finite_grid_timeChange` braucht, um seine Zelte zu trennen. Die
+Schwingung überstünde das Stutzen (Faktor `2`), die Sparsamkeit nicht.
+
+**Und die Abzählung ist auf endlich umgestellt.**
+`SkorokhodSpace.stepPathFamilyLe C Q n₀` ist `stepPathFamily` mit beschränkter
+Länge, `SkorokhodSpace.finite_stepPathFamilyLe` seine Endlichkeit, dazu die
+Zugehörigkeit und die Inklusion in die abzählbare Familie. Ohne die Schranke an
+die Länge ist die Familie auch über einer endlichen Knotenmenge eine unendliche
+Vereinigung; was die Schranke liefert, ist
+`SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision` vom zehnten Lauf.
+
+**Das Manuskript ist nicht angefaßt.**
+
+**Was als Nächstes zu tun ist.** Der **Zusammenbau der Rückrichtung**, und alle
+seine Stücke stehen jetzt bewiesen da. Der Weg: zu `ε` ein `M` mit
+`exp (-M) < ε`; aus der Modulbedingung ein `δ` und zu jedem `f ∈ A` eine
+gestützte `δ`-sparsame Unterteilung mit Schwingung unter `ε`; aus
+`exists_finite_grid_timeChange` das Gitter `G` und den Zeitwechsel;
+`sub_mul_le_two_mul_of_isSubdivision` für die Länge; aus der Wertebedingung ein
+endliches Netz `Q`; `SkorokhodSpace.stepPath` als Approximant,
+`distWith_stepPath_le` als Schranke (jetzt anwendbar, siehe oben),
+`finite_stepPathFamilyLe` als Netz und `intWith_le_of_ae_distWith_le` als
+Buchführung. **Der eine Punkt, an dem er noch klemmen kann, ist der
+Fensterrand**, und er ist derselbe wie bei der Separabilität: die Radien, bei
+denen ein Fensterende zwischen einen Knoten und seinen Gitterpunkt gerät, sind
+durch `volume_radius_exhaustionMax_mem_Ico` und
+`volume_radius_exhaustionMin_mem_Ico` gemessen, und ihr Maß ist durch die
+Verschiebung `ρ/2` mal der Knotenzahl beschränkt — die Knotenzahl steht vor `ρ`
+fest, `ρ` darf also nach ihr gewählt werden, und das ist dieselbe Reihenfolge,
+die `instSeparableSpace` bereits geht. Diese Reihenfolge ist zu prüfen, bevor
+gerechnet wird: sie ist die einzige Stelle, an der die Rückrichtung noch brechen
+kann.

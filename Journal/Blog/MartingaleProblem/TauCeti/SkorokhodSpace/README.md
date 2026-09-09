@@ -1318,6 +1318,14 @@ both 2026-09-09. What is left of the milestone is the third instance,
   separability has to supply are its three hypotheses.
   `SkorokhodSpace.distWith_stepPath_le` (**proved 2026-09-09**) supplies them and
   is the whole estimate at one radius, `distWith t₀ u l f (stepPath d w) ≤ 6 ε`.
+  Its subdivision only has to **cover** the window: `t 0 ≤ (B M).min` and
+  `(B M).max ≤ t (Fin.last n)` are inequalities since 2026-09-09, where they were
+  equalities before. It costs nothing — they are read at one place, to put `l s`
+  between the extreme nodes — and it is what makes the estimate applicable to the
+  subdivisions `modulusBased` actually produces, which are the overshooting ones
+  of `IsSubdivision`. Trimming those to the window instead is not an option: the
+  trimmed first and last gaps can be arbitrarily small, and the sparseness is
+  exactly what `exists_finite_grid_timeChange` needs to separate its tents.
   The uniform hypothesis costs `2 ε` — `stepIdx_orderIso` carries the values
   across the time change unchanged, then `dist_comp_stepRetract_le` and the move
   into `Q` cost `ε` each. The two oscillation hypotheses cost **nothing**: the
@@ -1796,19 +1804,52 @@ over a shrinking family and is therefore an infimum.
   at most one tent is nonzero, so the difference has at most **two** nonzero
   terms, one for each argument, however many tents there are. The `2` is the
   price of not knowing which argument sits in which support.
+* `SkorokhodSpace.abs_sum_tent_le`: the displacement estimate going with the
+  previous item — such a sum is bounded by the bound on its coefficients,
+  whatever the number of tents. Proved (2026-09-09), by the same disjointness of
+  the supports.
+* `SkorokhodSpace.exists_finite_grid_timeChange`: **the grid of the converse,
+  together with the time change onto it.** To a sparseness `δ`, a norm budget `γ`
+  and a radius `u` there is **one finite** set `G ∋ 0` of reals such that every
+  `δ`-sparse strictly monotone tuple carrying `0` among its nodes is moved onto
+  `G` — as far as its nodes lie in `B u` — by a time change of norm at most `γ`
+  which displaces no point of `ℝ` by more than `γ`. Proved (2026-09-09). The
+  order of the quantifiers is the content: `G` is produced from `δ`, `γ` and `u`
+  alone, before any tuple is seen, which is what a *finite* net needs and what
+  `exists_rat_nodes_perturbation` — producing countably many nodes, and only
+  after seeing the tuple — does not give. The construction is the same
+  perturbation `x ↦ x + ψ x` as in `Real.instHasCountableCore`, with `ℚ` replaced
+  by `ρ ℤ` truncated to `B (u + γ)`; the constants close in one direction, the
+  tents having radius `δ / 4` and height `ρ / 2`, so `ψ` is `4 ρ / δ`-Lipschitz
+  and `ρ` is chosen last, under `(1 - exp (-γ)) δ / 4`. The base point is a node
+  and stays one: `0` is itself a grid point, so its tent carries the coefficient
+  `0` and every other tent vanishes there — without which the time change would
+  leave `TimeChange.fixing 0` and the metric of Milestone 4 would not see it,
+  which is where `not_isCompact_closure_of_jumps_at_basePoint` bites.
+* `SkorokhodSpace.stepPathFamilyLe`, `SkorokhodSpace.finite_stepPathFamilyLe`,
+  `SkorokhodSpace.stepPath_mem_stepPathFamilyLe` and
+  `SkorokhodSpace.stepPathFamilyLe_subset_stepPathFamily`: the **finite**
+  analogue of `stepPathFamily` and its counting, the length being bounded by a
+  prescribed `n₀`. Written and proved (2026-09-09). Without the bound on the
+  length the family is an infinite union even over a single node set; what
+  supplies the bound is `sub_mul_le_two_mul_of_isSubdivision`.
 * The converse's proof is the finite net: for `ε` take `m` with `exp (-m) < ε`,
   then `δ` from the modulus condition, then for each path a `δ`-sparse based
-  subdivision of oscillation below `ε`; its nodes are pushed onto a **finite
-  grid** of the window — this is where `ℝ` is used and where the rigid index
-  fails — and its values onto a finite net of the value compactum. The approximant
-  is `SkorokhodSpace.stepPath`, the bound is
+  subdivision of oscillation below `ε`; its nodes are pushed onto the finite grid
+  of `exists_finite_grid_timeChange` — this is where `ℝ` is used and where the
+  rigid index fails — and its values onto a finite net of the value compactum.
+  The approximant is `SkorokhodSpace.stepPath`, it is counted by
+  `finite_stepPathFamilyLe`, the bound is
   `SkorokhodSpace.distWith_stepPath_le`, and the passage from the window to the
   integral is `SkorokhodSpace.intWith_le_of_ae_distWith_le`. The bound on the
-  *number* of nodes is `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`;
-  what is new is the grid together with the time change onto it. The
+  *number* of nodes is `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`. The
   grid holds the base point, and the displacement of a node is bounded by a
   fraction of its distance to the base point rather than by an absolute amount:
-  that is what `le_intDist_stepAt_of_exp_mul_lt` shows to be necessary.
+  that is what `le_intDist_stepAt_of_exp_mul_lt` shows to be necessary. What
+  remains is the assembly, and in it the two window ends: the set of radii at
+  which an end is caught between a node and its grid point is what
+  `volume_radius_exhaustionMax_mem_Ico` and `volume_radius_exhaustionMin_mem_Ico`
+  measure, and `intWith_le_of_ae_distWith_le` pays for it.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, over `ℝ`, where the first condition is replaced by the
   existence of a compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.

@@ -494,6 +494,47 @@ allein die Wahl der Konstanten, und sie schließt sich: Gitter `ρ ℤ`, Zeltrad
 und `δ` bestimmt. Der Zusammenbau danach — `stepPath`, `distWith_stepPath_le`,
 `intWith_le_of_ae_distWith_le` — steht vollständig bewiesen da.
 
+**Zwischenstand Teil A (2026-09-09, elfter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, elfter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht weiter bei **einem** `sorry`. Sechs neue
+Deklarationen und zwei geänderte, alle durch `lake env lean` gegen v4.33.1
+geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`.
+
+*Das angesagte Gitter steht.* `SkorokhodSpace.exists_finite_grid_timeChange`: zu
+`δ > 0`, `γ > 0` und `u` **eine endliche** Menge `G ∋ 0`, so daß jedes
+`δ`-sparsame streng monotone Tupel mit `0` unter seinen Knoten von einem
+Zeitwechsel `l` mit `l 0 = 0`, `‖l‖ ≤ γ` und globaler Verschiebung `≤ γ` auf `G`
+getragen wird, soweit seine Knoten im Fenster liegen. Die Reihenfolge der
+Quantoren ist der Inhalt: `G` entsteht vor jedem Tupel, und eines bedient alle.
+Mitgekommen `SkorokhodSpace.abs_sum_tent_le` (die Verschiebungsschranke) und die
+endliche Familie `SkorokhodSpace.stepPathFamilyLe` samt
+`finite_stepPathFamilyLe`.
+
+*Zwei Berichtigungen an der Ansage, beide zugunsten der Rechnung:* `2η/r` ist
+`4ρ/δ` und nicht `2ρ/δ`, was nichts ändert, weil `ρ` zuletzt gewählt wird; und
+die Zelte sitzen auf den **Knoten**, nicht auf den Gitterpunkten, ihre Trennung
+ist also `δ` und nicht `δ - ρ`.
+
+*Und ein Befund, der eine Sackgasse abschneidet:*
+`SkorokhodSpace.distWith_stepPath_le` verlangte die Unterteilung an den
+Fensterenden **gepinnt** — genau die Fassung, die der sechste Lauf für den Modul
+widerlegt hat. Die beiden Hypothesen sind jetzt Ungleichungen, also die
+Überdeckung von `IsSubdivision`; es kostet nichts (sie werden an einer einzigen
+Stelle gelesen), `instSeparableSpace` ist nachgezogen. Ohne diese Abschwächung
+hätte der Zusammenbau die Unterteilung **stutzen** müssen, und das geht nicht:
+der gestutzte erste und letzte Abstand können beliebig klein werden, die
+Sparsamkeit ist aber genau das, was die Zelte des Gitters trennt.
+
+*Als Nächstes:* der **Zusammenbau der Rückrichtung**; alle Stücke stehen
+bewiesen da, der Weg steht am Ende des elften Laufberichts. Der eine Punkt, an
+dem er noch brechen kann, ist der **Fensterrand** — die Radien, bei denen ein
+Fensterende zwischen einen Knoten und seinen Gitterpunkt gerät
+(`volume_radius_exhaustionMax_mem_Ico`, `volume_radius_exhaustionMin_mem_Ico`) —,
+und dort ist zuerst die Reihenfolge der Wahlen zu prüfen: `δ` aus der
+Modulbedingung, dann die Knotenzahl aus
+`sub_mul_le_two_mul_of_isSubdivision`, dann erst `γ` und mit ihm `ρ`.
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 
