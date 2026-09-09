@@ -1937,6 +1937,196 @@ theorem chainKernel_map_shift (mu : Kernel E E) [IsMarkovKernel mu] (z : E) :
     Measure.map_comp _ _ hmeas, hker, comap_comp_measure, hone]
   rw [chainKernel, comap_comp_measure]
 
+/-! ### The splitting of the driving data at the first jump
+
+`chainKernel_map_shift` and `waitingMeasure_map_shift` describe the shifted data alone.  The
+renewal equation needs the *joint* law of the initial state, the zeroth waiting time and the
+shifted data, because its integrand reads all three: the first jump time is
+`ξ 0 / lam (y 0)` and the restarted path is a path of `jumpShift ω`.  That joint law is the
+content of `jumpMeasure_map_split`, and it says that under `jumpMeasure mu nu` the shifted data
+is again a jump construction, started from one step of `mu`
+(`prod_comp_chainKernel_eq_jumpMeasure`). -/
+
+/-- **A marginal that is a Dirac measure splits off as a product.**  This is the step that makes
+the initial state independent of the shifted chain, and it is stated for a general `μ` because
+over a bare `[MeasurableSpace E]` one cannot pass to the almost sure statement `f =ᵐ[μ] z`: that
+would need `{z}` to be measurable.  The proof therefore works on measurable rectangles, where
+only `μ (f ⁻¹' s) ∈ {0, 1}` is used. -/
+theorem map_prodMk_of_map_eq_dirac {α β γ : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    [MeasurableSpace γ] {μ : Measure α} [IsProbabilityMeasure μ] {f : α → β} {g : α → γ}
+    (hf : Measurable f) (hg : Measurable g) {z : β} (hfz : μ.map f = Measure.dirac z) :
+    μ.map (fun x ↦ (f x, g x)) = (Measure.dirac z).prod (μ.map g) := by
+  have : IsProbabilityMeasure (μ.map g) := Measure.isProbabilityMeasure_map hg.aemeasurable
+  refine (Measure.prod_eq fun s t hs ht ↦ ?_).symm
+  rw [Measure.map_apply (hf.prodMk hg) (hs.prod ht), Measure.dirac_apply' z hs,
+    Measure.map_apply hg ht]
+  have hpre : (fun x ↦ (f x, g x)) ⁻¹' (s ×ˢ t) = f ⁻¹' s ∩ g ⁻¹' t := rfl
+  have hval : μ (f ⁻¹' s) = s.indicator 1 z := by
+    rw [← Measure.map_apply hf hs, hfz, Measure.dirac_apply' z hs]
+  rw [hpre]
+  by_cases hz : z ∈ s
+  · have hone : μ (f ⁻¹' s) = 1 := by rw [hval, Set.indicator_of_mem hz]; rfl
+    have hc : μ (f ⁻¹' s)ᶜ = 0 := by
+      rw [measure_compl (hf hs) (measure_ne_top _ _), hone, measure_univ, tsub_self]
+    have hsub : g ⁻¹' t ⊆ (f ⁻¹' s ∩ g ⁻¹' t) ∪ (f ⁻¹' s)ᶜ := by
+      intro x hx
+      by_cases h : x ∈ f ⁻¹' s
+      · exact Or.inl ⟨h, hx⟩
+      · exact Or.inr h
+    have h1 : μ (f ⁻¹' s ∩ g ⁻¹' t) = μ (g ⁻¹' t) :=
+      le_antisymm (measure_mono Set.inter_subset_right)
+        (le_trans (measure_mono hsub)
+          (le_trans (measure_union_le _ _) (by rw [hc, add_zero])))
+    rw [h1, Set.indicator_of_mem hz]
+    simp
+  · have hnull : μ (f ⁻¹' s) = 0 := by rw [hval, Set.indicator_of_notMem hz]
+    rw [measure_mono_null Set.inter_subset_left hnull, Set.indicator_of_notMem hz]
+    simp
+
+/-- **Prepending a value to a sequence indexed by `ℕ`.** -/
+def natCons {X : Type*} (p : X × (ℕ → X)) : ℕ → X :=
+  fun n ↦ if n = 0 then p.1 else p.2 (n - 1)
+
+theorem measurable_natCons {X : Type*} [MeasurableSpace X] :
+    Measurable (natCons : X × (ℕ → X) → ℕ → X) := by
+  refine measurable_pi_lambda _ fun n ↦ ?_
+  by_cases h : n = 0
+  · simpa [natCons, h] using measurable_fst
+  · simp only [natCons, if_neg h]
+    fun_prop
+
+/-- **An infinite product over `ℕ` of one and the same law is invariant under prepending an
+independent copy.**  Mathlib has the reindexings of `Measure.infinitePi` along injections
+(`Measure.map_infinitePi_infinitePi_of_inj`) and the independence of the coordinates, but not the
+independence of a single coordinate from the whole tail; that statement is not a reindexing, and
+it is what the splitting of the waiting times needs. -/
+theorem infinitePi_map_natCons {X : Type*} [MeasurableSpace X] (μ : Measure X)
+    [IsProbabilityMeasure μ] :
+    (μ.prod (Measure.infinitePi fun _ : ℕ ↦ μ)).map natCons
+      = Measure.infinitePi fun _ : ℕ ↦ μ := by
+  classical
+  refine Measure.eq_infinitePi (fun _ : ℕ ↦ μ) fun s t ht ↦ ?_
+  set s' : Finset ℕ := (s.erase 0).image (fun i ↦ i - 1) with hs'
+  set A : Set X := if 0 ∈ s then t 0 else Set.univ with hA
+  have hpre : (natCons : X × (ℕ → X) → ℕ → X) ⁻¹' (Set.pi (↑s) t)
+      = A ×ˢ Set.pi (↑s') (fun j ↦ t (j + 1)) := by
+    ext p
+    simp only [Set.mem_preimage, Set.mem_pi, Set.mem_prod, Finset.mem_coe, hs',
+      Finset.coe_image, Set.mem_image, Finset.mem_erase]
+    constructor
+    · intro h
+      refine ⟨?_, ?_⟩
+      · by_cases h0 : 0 ∈ s
+        · have := h 0 h0
+          simpa [hA, h0, natCons] using this
+        · simp [hA, h0]
+      · rintro j ⟨i, ⟨hi0, his⟩, rfl⟩
+        obtain ⟨k, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hi0
+        have := h (k + 1) his
+        simpa [natCons] using this
+    · rintro ⟨h1, h2⟩ i hi
+      by_cases hi0 : i = 0
+      · subst hi0
+        simpa [natCons] using (by simpa [hA, hi] using h1 : p.1 ∈ t 0)
+      · obtain ⟨k, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hi0
+        have := h2 k ⟨k + 1, ⟨Nat.succ_ne_zero k, hi⟩, rfl⟩
+        simpa [natCons] using this
+  have hinj : ∀ x ∈ s.erase 0, ∀ y ∈ s.erase 0, x - 1 = y - 1 → x = y := by
+    intro x hx y hy hxy
+    have hx0 : x ≠ 0 := (Finset.mem_erase.1 hx).1
+    have hy0 : y ≠ 0 := (Finset.mem_erase.1 hy).1
+    omega
+  rw [Measure.map_apply measurable_natCons
+      (MeasurableSet.pi s.countable_toSet fun i _ ↦ ht i), hpre, Measure.prod_prod,
+    Measure.infinitePi_pi (μ := fun _ : ℕ ↦ μ) (fun j _ ↦ ht (j + 1)), hs',
+    Finset.prod_image hinj]
+  have hcongr : ∀ i ∈ s.erase 0, μ (t (i - 1 + 1)) = μ (t i) := by
+    intro i hi
+    have hi0 : i ≠ 0 := (Finset.mem_erase.1 hi).1
+    have : i - 1 + 1 = i := by omega
+    rw [this]
+  rw [Finset.prod_congr rfl hcongr]
+  by_cases h0 : 0 ∈ s
+  · rw [hA, if_pos h0, Finset.mul_prod_erase s (fun i ↦ μ (t i)) h0]
+  · rw [hA, if_neg h0, Finset.erase_eq_of_notMem h0, measure_univ, one_mul]
+
+/-- **The zeroth coordinate and the tail are independent** under an infinite product of one and
+the same law. -/
+theorem infinitePi_map_split {X : Type*} [MeasurableSpace X] (μ : Measure X)
+    [IsProbabilityMeasure μ] :
+    (Measure.infinitePi fun _ : ℕ ↦ μ).map (fun x : ℕ → X ↦ (x 0, fun n ↦ x (n + 1)))
+      = μ.prod (Measure.infinitePi fun _ : ℕ ↦ μ) := by
+  have hsplit : Measurable (fun x : ℕ → X ↦ (x 0, fun n ↦ x (n + 1))) :=
+    (measurable_pi_apply 0).prodMk (measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _)
+  conv_lhs => rw [← infinitePi_map_natCons μ]
+  rw [Measure.map_map hsplit measurable_natCons]
+  have hid : (fun x : ℕ → X ↦ (x 0, fun n ↦ x (n + 1))) ∘ natCons = id := by
+    funext p
+    refine Prod.ext ?_ ?_
+    · simp [natCons]
+    · funext n; simp [natCons]
+  rw [hid, Measure.map_id]
+
+theorem measurable_natSplit {X : Type*} [MeasurableSpace X] :
+    Measurable (fun x : ℕ → X ↦ (x 0, fun n ↦ x (n + 1))) :=
+  (measurable_pi_apply 0).prodMk (measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _)
+
+/-- **The chain splits at its first step.**  The initial state is independent of the shifted
+chain because the former is deterministic under `chainKernel mu z`. -/
+theorem chainKernel_map_split (mu : Kernel E E) [IsMarkovKernel mu] (z : E) :
+    (chainKernel mu z).map (fun x : ℕ → E ↦ (x 0, fun n ↦ x (n + 1)))
+      = (Measure.dirac z).prod (chainKernel mu ∘ₘ (mu z)) := by
+  rw [← chainKernel_map_shift mu z]
+  exact map_prodMk_of_map_eq_dirac (measurable_pi_apply 0)
+    (measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _) (chainKernel_map_zero mu z)
+
+/-- **The law of the chain, split at its first step**: the initial state has law `nu` and the
+shifted chain is the chain started from one step of `mu`.  This is the composition-with-`nu`
+form of `chainKernel_map_split`, and the `Measure.compProd` on the right is exactly the
+disintegration the renewal equation integrates against. -/
+theorem comp_chainKernel_map_split (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [SFinite nu] :
+    (chainKernel mu ∘ₘ nu).map (fun x : ℕ → E ↦ (x 0, fun n ↦ x (n + 1)))
+      = nu ⊗ₘ (chainKernel mu ∘ₖ mu) := by
+  rw [Measure.map_comp _ _ measurable_natSplit, Measure.compProd_eq_comp_prod]
+  congr 1
+  ext z : 1
+  rw [Kernel.map_apply _ measurable_natSplit, Kernel.prod_apply, Kernel.id_apply,
+    Kernel.comp_apply]
+  exact chainKernel_map_split mu z
+
+/-- **The waiting times split at the zeroth one.** -/
+theorem waitingMeasure_map_split :
+    waitingMeasure.map (fun xi : ℕ → ℝ ↦ (xi 0, fun n ↦ xi (n + 1)))
+      = (expMeasure 1).prod waitingMeasure :=
+  infinitePi_map_split (expMeasure 1)
+
+/-- **The jump construction splits at the first jump.**  Reading the initial state, the zeroth
+waiting time and the shifted data at once: the pair `(y 0, ξ 0)` carries the first jump time
+`ξ 0 / lam (y 0)`, and the shifted data `jumpShift ω = (fun n ↦ y (n + 1), fun n ↦ ξ (n + 1))` is
+the second component of each factor.  Together with `prod_comp_chainKernel_eq_jumpMeasure` this
+is the Markov property at the first jump. -/
+theorem jumpMeasure_map_split (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] :
+    (jumpMeasure mu nu).map (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        ((ω.1 0, fun n ↦ ω.1 (n + 1)), (ω.2 0, fun n ↦ ω.2 (n + 1))))
+      = (nu ⊗ₘ (chainKernel mu ∘ₖ mu)).prod ((expMeasure 1).prod waitingMeasure) := by
+  rw [← comp_chainKernel_map_split mu nu, ← waitingMeasure_map_split,
+    Measure.map_prod_map _ _ measurable_natSplit measurable_natSplit, jumpMeasure]
+  rfl
+
+/-- **What the shifted data is**: a jump construction started from one step of `mu`.  This is the
+statement that makes `jumpMeasure_map_split` a *restart* and not merely a factorisation. -/
+theorem prod_comp_chainKernel_eq_jumpMeasure (mu : Kernel E E) [IsMarkovKernel mu] (z : E) :
+    ((chainKernel mu ∘ₖ mu) z).prod waitingMeasure = jumpMeasure mu (mu z) := by
+  rw [jumpMeasure, Kernel.comp_apply]
+
+omit [MeasurableSpace E] in
+/-- The shift of the driving data, read off the splitting: what `jumpMeasure_map_split` computes
+is the joint law of `(y 0, ξ 0)` and `jumpShift ω`. -/
+theorem jumpShift_eq_split (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpShift ω = ((ω.1 0, fun n ↦ ω.1 (n + 1)).2, (ω.2 0, fun n ↦ ω.2 (n + 1)).2) := rfl
+
 /-- **The initial law is the one prescribed.**  This is the only place where `nu` enters, and it
 is what makes the construction one *of* `nu` and not merely one indexed by it. -/
 theorem jumpMeasure_map_chain_zero (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)

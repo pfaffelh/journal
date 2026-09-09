@@ -15018,3 +15018,134 @@ ruht auf `chainKernel_map_shift`, `waitingMeasure_map_shift` und
 `Measure.prod_map`; sie ist jetzt dran, weil sie das letzte Stück zwischen der
 Verschiebung und der Erneuerungsgleichung ist und weil ohne sie
 `jumpProcess_jumpShift` nichts trägt.
+
+### 2026-09-09, zweiundzwanzigster Lauf des Tages — die Verschiebung ist zusammengesetzt, und Mathlib trennt eine Koordinate nicht von ihrem Schwanz
+
+Ein Ziel, das des Vorschlags vom einundzwanzigsten Lauf: die gemeinsame
+Verteilung von Anfangszustand, nullter Wartezeit und verschobenen Daten. **Sie
+steht**, als `jumpMeasure_map_split`. Zwölf neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 (unverändert zehn `sorry`, keine neuen), und alle
+zwölf hängen mit `#print axioms` nur an `propext`, `Classical.choice`,
+`Quot.sound`.
+
+**Der Satz.** Unter `jumpMeasure mu nu` mit `nu` einem Wahrscheinlichkeitsmaß
+gilt
+
+```
+(jumpMeasure mu nu).map
+    (fun ω ↦ ((ω.1 0, fun n ↦ ω.1 (n+1)), (ω.2 0, fun n ↦ ω.2 (n+1))))
+  = (nu ⊗ₘ (chainKernel mu ∘ₖ mu)).prod ((expMeasure 1).prod waitingMeasure),
+```
+
+und `prod_comp_chainKernel_eq_jumpMeasure` erkennt den zweiten Faktor jeder
+Hälfte wieder: `((chainKernel mu ∘ₖ mu) z).prod waitingMeasure
+= jumpMeasure mu (mu z)`. In Worten: der Anfangszustand hat das Gesetz `nu`, die
+nullte Wartezeit ist davon unabhängig standardexponentiell — die beiden tragen
+zusammen die erste Sprungzeit `T₁ = ξ₀ / lam y₀` —, und die verschobenen Daten
+sind, gegeben den Anfangszustand `z`, wieder eine Sprungkonstruktion, gestartet
+aus **einem Schritt von `mu`**. `jumpShift_eq_split` hält fest, daß die
+verschobenen Daten genau die zweiten Komponenten der beiden Paare sind.
+
+**Ehrlich zur Gestalt:** die Aussage steht in der *ungeordneten* Fassung, auf
+`(E × (ℕ→E)) × (ℝ × (ℕ→ℝ))` und nicht auf `(E × ℝ) × ((ℕ→E) × (ℕ→ℝ))`. Sie
+trägt den Integranden der Erneuerungsgleichung vollständig — er ist eine
+Funktion von `((y₀, y∘succ), (ξ₀, ξ∘succ))` —, aber wer die vier Integrale zu
+`∫_nu ∫_{expMeasure} ∫_{jumpMeasure mu (mu z)}` zusammenzieht, muß dabei die
+Reihenfolge von `y∘succ` und `ξ₀` einmal mit Fubini vertauschen. Die geordnete
+Fassung wäre eine Vertauschung von `Measure.compProd` gegen ein Produkt, und die
+hat Mathlib nicht; sie kostet so viel wie das Vertauschen an der Gebrauchsstelle
+und wurde darum nicht gebaut.
+
+**Erster Befund: die angesagte Kernidentität war nicht das fehlende Stück.** Der
+Vorschlag des einundzwanzigsten Laufs lautete, `chainKernel_map_shift` als
+Kernidentität zu nehmen. Das ist richtig, aber es genügt nicht: gebraucht wird
+die **gemeinsame** Verteilung von `y 0` und `y ∘ succ`, und aus den beiden
+Randverteilungen (`chainKernel_map_zero` sagt `dirac z`,
+`chainKernel_map_shift` sagt `chainKernel mu ∘ₘ mu z`) folgt sie nicht von
+selbst. Der naheliegende Schluß „die erste ist ein Dirac, also ist `y 0 = z`
+fast sicher, also sind sie trivial unabhängig" ist über bloßem
+`[MeasurableSpace E]` **nicht führbar**: aus `μ.map f = Measure.dirac z` folgt
+`f =ᵐ[μ] z` nur, wenn `{z}` meßbar ist, und das gibt eine beliebige σ-Algebra
+nicht her. Genommen ist statt dessen `map_prodMk_of_map_eq_dirac`, das auf
+meßbaren Rechtecken `s ×ˢ t` rechnet (`Measure.prod_eq`) und dort nur benutzt,
+daß `μ (f ⁻¹' s) = 1_s(z) ∈ {0, 1}` ist — im Fall `1` ist der Durchschnitt
+konull, im Fall `0` sind beide Seiten null. Das ist dieselbe Schranke, an der
+schon `jumpMeasure_integral_eq_of_firstJump` für allgemeines `nu` statt für
+`Measure.dirac x` formuliert werden mußte, und sie ist ein zweites Mal die
+schwächere Voraussetzung wert.
+
+**Zweiter Befund, und er ist eine Lücke: Mathlib trennt eine Koordinate nicht
+von ihrem Schwanz.** Gesucht war die Aussage
+`(infinitePi μ).map (fun x ↦ (x 0, x ∘ succ)) = μ.prod (infinitePi μ)`. Was da
+ist, deckt sie nicht ab, und zwar dreimal knapp daneben:
+
+* `MeasureTheory.Measure.map_infinitePi_infinitePi_of_inj`
+  (`Probability/Independence/InfinitePi.lean:144` in v4.33.1) gibt jede
+  **Reindizierung** längs einer Injektion — daher `waitingMeasure_map_shift` des
+  einundzwanzigsten Laufs. Die Abspaltung ist keine Reindizierung: rechts steht
+  kein `infinitePi`, sondern ein Produkt.
+* `Measure.infinitePi_map_eval_prod` (`:135`, gleiche Zeile auf
+  `upstream/master` `572e4d091bc`, `:133`) gibt das Paar **zweier** Koordinaten,
+  nicht Koordinate gegen Schwanz.
+* `ProbabilityTheory.iIndepFun_infinitePi` (`:127`) gibt die Unabhängigkeit der
+  Koordinaten, und `iIndepFun.indepFun_finset`
+  (`Independence/Basic.lean:796`, ebenso auf master) trennt daraus nur **zwei
+  endliche** Indexmengen. Der Schwanz ist unendlich; von `iIndepFun` zur
+  Unabhängigkeit einer Koordinate vom ganzen Rest führt kein Lemma.
+
+Gesucht wurde nach der Aussage und nicht nach der Vokabel: nach `infinitePi`
+zusammen mit `cons`, `snoc`, `tail`, `succ`, `split`, `prod`; nach
+`indepFun_compl`, `indepFun_of_disjoint`, `indep_tail`. Bewiesen ist sie hier
+als `infinitePi_map_natCons` — nicht in der Zerlegungsrichtung, sondern in der
+Zusammensetzungsrichtung, weil die dann eine Aussage über **Quader** ist und
+`Measure.eq_infinitePi` gerade danach fragt. `natCons p` stellt `p.1` vor die
+Folge `p.2`; das Urbild eines Quaders `Set.pi ↑s t` unter `natCons` ist wieder
+ein Rechteck, nämlich `A ×ˢ Set.pi ↑((s.erase 0).image (· - 1)) (t ∘ succ)` mit
+`A = t 0` oder `Set.univ` je nachdem, ob `0 ∈ s`; `Measure.prod_prod`,
+`Measure.infinitePi_pi`, `Finset.prod_image` und `Finset.mul_prod_erase`
+schließen ab. `infinitePi_map_split` ist dann die Umkehrung, weil die Abspaltung
+links invers zum Voranstellen ist (`Measure.map_id`).
+
+**Die Deklarationen, in Abhängigkeitsordnung.** `map_prodMk_of_map_eq_dirac`,
+`natCons`, `measurable_natCons`, `infinitePi_map_natCons`,
+`infinitePi_map_split`, `measurable_natSplit`, `chainKernel_map_split`,
+`comp_chainKernel_map_split`, `waitingMeasure_map_split`, `jumpMeasure_map_split`,
+`prod_comp_chainKernel_eq_jumpMeasure`, `jumpShift_eq_split`. Die ersten fünf
+sind allgemeine Maßtheorie und nennen weder `E` noch eine Topologie; die letzten
+sieben stehen im Abschnitt `Space` von `JumpConstruction`. Der Übergang von der
+punktweisen Fassung `chainKernel_map_split` zur Kompositionsfassung
+`comp_chainKernel_map_split` ist `Measure.map_comp` plus
+`Measure.compProd_eq_comp_prod` (`Kernel/Composition/MeasureComp.lean:103`), also
+`μ ⊗ₘ κ = (Kernel.id ×ₖ κ) ∘ₘ μ`; und `jumpMeasure_map_split` selbst ist danach
+drei Zeilen, weil `Measure.map_prod_map` (`Measure/Prod.lean:833`) die beiden
+Hälften unabhängig durchreicht.
+
+**Was für `jumpProcess_isMPSolution` jetzt noch fehlt.** Der Weg des neunzehnten
+Laufs hatte drei Punkte; (a), die Markoveigenschaft an einer festen Zeit, ist mit
+diesem Lauf maßtheoretisch vollständig — `jumpMeasure_integral_eq_of_firstJump`
+zerlegt am ersten Sprung, `jumpProcess_jumpShift` sagt, daß der Integrand des
+zweiten Terms eine Funktion der verschobenen Daten ist, und
+`jumpMeasure_map_split` samt `prod_comp_chainKernel_eq_jumpMeasure` benennt deren
+Gesetz. Offen ist (b), die **Rückwärtsgleichung**
+`E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`, und sie ist wie angekündigt der
+einzige Schritt, der Analysis jenseits der Buchhaltung braucht: die
+Erneuerungsgleichung ist nach `t` zu differenzieren.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel:
+`jumpMeasure_integral_eq_renewal`, die Erneuerungsgleichung in geschlossener
+Gestalt
+```
+∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)
+  = ∫ z, ( exp (-(lam z * t)) * h z
+      + ∫ s in Ioc 0 (lam z * t), exp (-s) *
+          (∫ ω', h (jumpProcess lam (t - s / lam z) ω') ∂(jumpMeasure mu (mu z))) ) ∂nu.
+```
+Sie ruht auf `jumpMeasure_integral_eq_of_firstJump` (erster Term, schon
+bewiesen), auf `jumpProcess_jumpShift` (Umschreiben des Integranden auf dem
+Ereignis `{T₁ ≤ t}`, unter der f.s. Nichtexplosion aus
+`ae_isStepPath_jumpProcess`) und auf `jumpMeasure_map_split` (Gesetz des zweiten
+Terms). Sie ist jetzt dran, weil sie das letzte rein maßtheoretische Stück ist
+und weil die Differentiation nach `t` erst an ihr ansetzen kann; die
+Fubini-Vertauschung von `y ∘ succ` gegen `ξ₀`, die oben als offene Buchhaltung
+genannt ist, fällt in ihrem Beweis an und nirgends sonst.
