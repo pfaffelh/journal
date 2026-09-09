@@ -1374,17 +1374,65 @@ The representation theorem itself:
   pieces attained and hence small for large `n` — and it is that supremum, not the
   `ℓ¹`-bound, that bounds the interval on which the index coupling leaves the
   diagonal.
-* `MeasureTheory.exists_measurable_pair_of_partition_subset`: the stage of
-  `exists_measurable_pair_of_partition` with the estimate as an **inclusion**. On
-  `stageMeasure μ ν A` with `A` the finite partition of the previous item and with
-  `t` an upper bound for the row defects, the `X` built there satisfies, almost
-  everywhere,
-  `{z | ε < dist (X z) z.1.1} ⊆ {z | z.1.1 ∈ A 0} ∪ {z | z.1.2 ≤ t}`.
-  The two disjuncts are the two ways the argument of
-  `exists_measurable_pair_of_partition` can fail: the limit variable falls in the
-  remainder, where no diameter controls anything, or the index coupling leaves the
-  diagonal, which by the item above happens only on `{ξ ≤ t}`. The `μ`-null pieces
-  are the almost everywhere in the statement, exactly as there.
+* `MeasureTheory.stagesMeasure` and
+  `MeasureTheory.exists_measurable_pair_of_partition_subset`, **proved** on
+  2026-09-09, fifteenth run: **every stage at once, with the estimate as an
+  inclusion.** On
+  `stagesMeasure ν μ A = (ν ⊗ Lebesgue|₍₀,₁₎) ⊗ infinitePi (fun (n,i) ↦ condLaw (μ n) (A n i))`
+  there are measurable `X n` with `map (X n) = μ n`, all reading their limit
+  variable off the *same* coordinate `z.1.1`, whose law is `ν`, and such that for
+  every `n`, almost everywhere,
+
+  ```
+  ε n < dist (X n z) z.1.1  →  z.1.1 ∈ A n 0  ∨  1 - t n < z.1.2
+  ```
+
+  The hypotheses are those of `exists_measurable_pair_of_partition` per stage —
+  `A n` a countable measurable partition, its pieces other than `A n 0` bounded
+  and of diameter at most `ε n` — with the *number* of that theorem replaced by
+  the **row defect** `hdef : ∀ n i, i ≠ 0 → ENNReal.ofReal (1 - t n) * ν (A n i) ≤ μ n (A n i)`:
+  the mass `μ n` gives a piece is at least `1 - t n` times the mass `ν` gives it.
+
+  **The space is built once and the uniform variable is shared.** It is a single
+  space for all stages, not a family of one-stage spaces, and that is what the
+  final step needs: the second disjunct is an event of the **one** coordinate
+  `z.1.2`, so the disjuncts nest as `t n → 0`. With one uniform variable per
+  stage they would be independent and only Borel–Cantelli could close the
+  argument, which the per-stage bounds do not allow. The index space of the
+  product is `ℕ × ℕ` — stage and piece — which is why
+  `map_eval_prod_infinitePi` was stated for an arbitrary countable `κ`;
+  `MeasureTheory.sum_prod_slice_eq` collapses the resulting `Measure.sum` over
+  `ℕ × ℕ` back to the slice of stage `n`, where `sum_smul_condLaw_eq` recognises
+  `μ n`.
+
+  **The second disjunct is `1 - t n < ξ`, not `ξ ≤ t n`.** The diagonal branch of
+  `exists_measurable_index_of_stochastic_matrix_diag` puts the index coupling on
+  the diagonal for `ξ ≤ (c k k).toReal`, so the disagreement lies **above** a
+  threshold close to `1`, not below one close to `0`. Both forms have Lebesgue
+  measure `t n` on `(0,1]` and both nest, but only this one is what the
+  construction delivers.
+
+  Two chains of the argument were paid for elsewhere and are spent here, each
+  once. The diagonal entry is at least `1 - t n` because
+  `exists_coupling_tsum_offDiag_le` now also returns `min (p i) (q i) ≤ π i i`
+  — a fourth conjunct, free from the explicit coupling it constructs — and
+  `condRow` divides it by `ν (A n k)`, so `hdef` and `ofReal (1 - t n) ≤ 1`
+  bracket the minimum from below. And the pieces other than the remainder must be
+  **bounded**, not merely of small diameter, since `Metric.dist_le_diam_of_mem`
+  says nothing on an unbounded set;
+  `exists_finite_partition_diam_le_null_frontier` therefore also returns
+  `∀ i ∈ K, Bornology.IsBounded (A i)`, which it inherits from
+  `exists_measurable_partition_diam_le_null_frontier`.
+
+  Exactly two events can carry the bad set once the two indices agree, and both
+  are the null sets of `exists_measurable_pair_of_partition`: the limit variable
+  lies in a piece that `ν` does not charge, null because its law is `ν`; or the
+  drawn point misses the piece it was drawn from, null by
+  `condLaw_compl_eq_zero` off the `μ n`-null pieces, which are themselves null
+  because the index law is the mass vector of `μ n`. The hypotheses on `E` are
+  `[PseudoMetricSpace E]` and nothing else — neither `OpensMeasurableSpace` nor
+  `SecondCountableTopology`, both of which the one-stage theorem carries for the
+  measurability of the bad *set*, which an inclusion does not need.
 * `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
@@ -1393,21 +1441,60 @@ The representation theorem itself:
   `MeasureTheory.tendsto_measure_of_null_frontier` (`Portmanteau.lean:243`)
   applies to each piece.
 
-  **The levels, and the one uniform variable they share.** Level `k` carries the
-  finite partition `A^{(k)}` of `exists_finite_partition_diam_le_null_frontier`
-  with `ε = 2⁻ᵏ` and `η = 2⁻ᵏ`. Since the partition is finite and every piece has
-  positive mass and null frontier, `tendsto_measure_of_null_frontier` gives
-  `μ n (A^{(k)} i) → ν (A^{(k)} i)` for each of them, so the row defect
-  `t k n = ⨆ i ≤ N k, (ν (A i) - μ n (A i)) / ν (A i)` tends to `0` in `n` for
-  fixed `k`; put `k n = max ({1} ∪ {k ≤ n | t k n ≤ 1/k})`, which tends to
-  infinity. Stage `n` is then the stage of
-  `exists_measurable_pair_of_partition_subset` at level `k n`, and its bad event
-  lies in `B k = {Y ∈ A^{(k)} 0} ∪ {ξ ≤ 1/k}` with
-  `P (⋃ m ≥ K, B m) ≤ ∑ k ≥ K, 2⁻ᵏ + 1/K → 0`, because the second disjuncts are
-  nested in the *one* uniform variable and the first are summable.
+  **The space lives in the universe of `E`, and asking for `Ω : Type` is a
+  different and false statement.** The common space is
+  `(E × ℝ) × (ℕ × ℕ → E)`, which is in `Type u` when `E : Type u`, and nothing
+  brings it down to `Type 0`: a `Type 0` space would force the position inside a
+  piece to be a measurable *function of one real variable*, which is the Borel
+  isomorphism theorem and needs `E` Polish — strictly more than this milestone
+  assumes. The statement therefore carries its own universe,
+  `exists_ae_tendsto_of_tendsto.{u} {F : Type u}`. `Type _` is not a fix: it
+  auto-binds a *second*, universally quantified universe, and the witness then
+  does not fit (`failed to solve universe constraint`).
+
+  **The levels, and the one uniform variable they share.** Level `k ≥ 1` carries
+  the finite partition `A^{(k)}` of
+  `exists_finite_partition_diam_le_null_frontier` with `ε = 2⁻ᵏ` and `η = 2⁻ᵏ`.
+  Since the partition is finite and every piece of it has positive mass and null
+  frontier, `tendsto_measure_of_null_frontier` gives
+  `μ n (A^{(k)} i) → ν (A^{(k)} i)` for each of them, so the row defect condition
+
+  ```
+  Q k n :  ∀ i ∈ K k,  ENNReal.ofReal (1 - 1/k) * ν (A^{(k)} i) ≤ μ n (A^{(k)} i)
+  ```
+
+  — which is exactly the hypothesis `hdef` of
+  `exists_measurable_pair_of_partition_subset` — holds for all large `n` at each
+  fixed `k`. Put `k n = max ((Finset.Icc 1 (n+1)).filter (Q · n))`. **The maximum
+  is over a nonempty set for every `n`, and that is not an accident of the
+  bookkeeping:** `Q 1 n` holds unconditionally, because `1 - 1/1 = 0` and
+  `ENNReal.ofReal 0 = 0`. Level `1` is the level at which the statement says
+  nothing, and it is what makes `k n` total without a case distinction. That
+  `k n → ∞` is the convergence above.
+
+  Stage `n` is then the stage of
+  `exists_measurable_pair_of_partition_subset` at level `k n`, that is with
+  `A n := A^{(k n)}`, `ε n := 2^{-(k n)}` and `t n := 1/(k n)`, and its bad event
+  lies in
+
+  ```
+  B k = {z | z.1.1 ∈ A^{(k)} 0} ∪ {z | 1 - 1/k < z.1.2}
+  ```
+
+  with `P (⋃ m ≥ K, B m) ≤ ∑ m ≥ K, 2⁻ᵐ + 1/K → 0`: the second disjuncts are
+  events of the *one* uniform variable and nest, since `1 - 1/m ≥ 1 - 1/K` for
+  `m ≥ K`, so their union over `m ≥ K` is already `{ξ > 1 - 1/K}`, of Lebesgue
+  measure `1/K`; the first are summable because `ν (A^{(m)} 0) ≤ 2⁻ᵐ`.
   `ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` with `δ k = 2⁻ᵏ` closes it.
   This is Ethier–Kurtz's (3.1.33)–(3.1.36) with `k n` their `k_n` and `1/k` their
   `ε_k / k`.
+
+  The threshold is `1 - 1/k` and not `1/k`, and the direction matters: the
+  diagonal branch of `exists_measurable_index_of_stochastic_matrix_diag` puts the
+  index coupling on the diagonal for `ξ` **below** `(c k k).toReal`, a number
+  close to `1`, so the disagreement of the two indices is an event above a
+  threshold close to `1`. Both forms have measure `1/k` and both nest; only this
+  one is what the construction delivers.
 
   **The common space, and why it is not a gluing of the one-stage couplings.**
   `exists_coupling_of_tendsto` returns, for each stage, a law `γ` on `E × E`
