@@ -11,6 +11,7 @@ import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Function.AEEqFun
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.MeasureTheory.Measure.SeparableMeasure
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.Probability.ConditionalProbability
@@ -29,8 +30,8 @@ import Mathlib.Topology.UrysohnsLemma
 
 Prototypes only.
 
-**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1` on
-2026-09-06.  Every declaration elaborates, and the only warnings are
+**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
+2026-09-09.  Every declaration elaborates, and the only warnings are
 `declaration uses 'sorry'`; those `sorry`s are the statements' own proofs, which
 is what this file is for.
 
@@ -327,6 +328,28 @@ have positive mass, with the frontier statement
 depend on `propext`, `Classical.choice` and `Quot.sound` alone.  The one statement
 still missing before the assembly is
 `exists_measurable_pair_of_partition_subset`.
+
+Since 2026-09-09, fourteenth run, **the convergence theorem of Milestone 4 is
+proved**, in both of its forms:
+`tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` for the laws and
+`tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable` for random
+variables on varying spaces, the latter through Mathlib's
+`MeasureTheory.TendstoInDistribution` as the milestone asks.  The approximant is
+`truncBdd N`, the identity clamped to `[-N, N]` as a bounded continuous function,
+and `abs_sub_truncBdd` says its truncation error is *exactly* the integrand of
+`IsUniformlyIntegrableLaws`, so the same expression that the hypothesis drives to
+zero bounds the displacement of the mean
+(`abs_integral_sub_integral_truncBdd_le`).  The step that the hypothesis does not
+give is the tail of the **limit** law, `ν` being no member of the family: it is
+`lintegral_truncTail_le_of_tendsto`, the portmanteau inequality for a nonnegative
+continuous function.  `integrable_id_of_isUniformlyIntegrableLaws` is since that
+run a corollary of `integrable_id_of_lintegral_truncTail_lt_top`, the same
+argument for a single measure, which is what the limit law can use.  All nine
+declarations of that run depend on `propext`, `Classical.choice` and `Quot.sound`
+alone.  What of
+Milestone 4 has no signature in this file, and never had one, is the de la
+Vallée-Poussin form and the four stability lemmas.  The only **open** `sorry` of
+this file is `exists_ae_tendsto_of_tendsto` of Milestone 3.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -3031,9 +3054,10 @@ theorem exists_finite_partition_diam_le_null_frontier [PseudoMetricSpace E]
       (∀ i, i ≠ 0 → i ∉ K → A i = ∅) ∧
       (∀ i ∈ K, 0 < ν (A i)) ∧
       (∀ i ∈ K, Metric.diam (A i) ≤ ε) ∧
+      (∀ i ∈ K, Bornology.IsBounded (A i)) ∧
       ν (A 0) ≤ η := by
   classical
-  obtain ⟨As, hAsm, -, hAsdiam, hAsfr, hAsu, hAsd⟩ :=
+  obtain ⟨As, hAsm, hAsb, hAsdiam, hAsfr, hAsu, hAsd⟩ :=
     exists_measurable_partition_diam_le_null_frontier ν hε
   -- the tails of the countable partition
   set T : ℕ → Set E := fun M => (⋃ i ∈ Finset.range M, As i)ᶜ with hT_def
@@ -3086,7 +3110,7 @@ theorem exists_finite_partition_diam_le_null_frontier [PseudoMetricSpace E]
     intro j hj
     rw [hAK j hj]
     exact subset_biUnion_of_mem (u := fun j => As (j - 1)) (by simpa using hj)
-  refine ⟨K, A, hK0, ?_, ?_, ?_, ?_, hAout, ?_, ?_, ?_⟩
+  refine ⟨K, A, hK0, ?_, ?_, ?_, ?_, hAout, ?_, ?_, ?_, ?_⟩
   · -- measurability
     intro i
     by_cases hi : i ∈ K
@@ -3140,6 +3164,10 @@ theorem exists_finite_partition_diam_le_null_frontier [PseudoMetricSpace E]
     intro j hj
     rw [hAK j hj]
     exact hAsdiam _
+  · -- the pieces are bounded
+    intro j hj
+    rw [hAK j hj]
+    exact hAsb _
   · -- the remainder is small
     rw [hA0]
     have hsub : (U : Set E)ᶜ ⊆ T M ∪ ⋃ i ∈ (Finset.range M).filter fun i => ν (As i) = 0, As i := by
@@ -3679,7 +3707,8 @@ not the additivity of truncated subtraction but the cancellation
 theorem exists_coupling_tsum_offDiag_le {p q : ℕ → ℝ≥0∞}
     (hp : ∑' i, p i = 1) (hq : ∑' i, q i = 1) :
     ∃ π : ℕ → ℕ → ℝ≥0∞, (∀ i, ∑' j, π i j = p i) ∧ (∀ j, ∑' i, π i j = q j) ∧
-      ∑' i, ∑' j, (if i = j then 0 else π i j) ≤ ∑' i, (p i - q i) := by
+      (∑' i, ∑' j, (if i = j then 0 else π i j) ≤ ∑' i, (p i - q i)) ∧
+      (∀ i, min (p i) (q i) ≤ π i i) := by
   classical
   set m : ℕ → ℝ≥0∞ := fun i => min (p i) (q i) with hm_def
   set a : ℕ → ℝ≥0∞ := fun i => p i - q i with ha_def
@@ -3736,7 +3765,8 @@ theorem exists_coupling_tsum_offDiag_le {p q : ℕ → ℝ≥0∞}
     have hcomm : ∀ i, a i * b j / D = a i * (b j / D) := by
       intro i; rw [mul_div_assoc]
     rw [tsum_congr hcomm, ENNReal.tsum_mul_right, ← hD_def, mul_comm, hcancelB j]
-  refine ⟨fun i j => (if i = j then m i else 0) + a i * b j / D, fun i => ?_, fun j => ?_, ?_⟩
+  refine ⟨fun i j => (if i = j then m i else 0) + a i * b j / D, fun i => ?_, fun j => ?_, ?_,
+    fun i => ?_⟩
   · rw [ENNReal.tsum_add, hrow i]
     have hdiag : ∑' j, (if i = j then m i else 0) = m i :=
       (tsum_eq_single i fun j hj => if_neg (Ne.symm hj)).trans (by simp)
@@ -3751,6 +3781,9 @@ theorem exists_coupling_tsum_offDiag_le {p q : ℕ → ℝ≥0∞}
       refine le_trans (ENNReal.tsum_le_tsum fun j => ?_) (le_of_eq (hrow i))
       split_ifs with h <;> simp
     exact ENNReal.tsum_le_tsum hle
+  · show min (p i) (q i) ≤ (if i = i then m i else 0) + a i * b i / D
+    rw [if_pos rfl]
+    exact le_self_add
 
 /-- The conditional law of `μ` on `A`, made total: it is `ProbabilityTheory.cond μ A`, that is
 `(μ A)⁻¹ • μ.restrict A`, wherever `μ A ≠ 0`, and `μ` itself where `μ A = 0`.
@@ -3858,7 +3891,7 @@ theorem exists_coupling_of_partition [PseudoMetricSpace E] [OpensMeasurableSpace
   have hq : ∑' i, ν (A i) = 1 := by
     have := hsum ν ‹_› univ MeasurableSet.univ
     simpa using this
-  obtain ⟨π, hπp, hπq, hπoff⟩ := exists_coupling_tsum_offDiag_le hp hq
+  obtain ⟨π, hπp, hπq, hπoff, -⟩ := exists_coupling_tsum_offDiag_le hp hq
   have hfst : (Measure.sum fun ij : ℕ × ℕ =>
       π ij.1 ij.2 • ((condLaw μ (A ij.1)).prod (condLaw ν (A ij.2)))).map Prod.fst = μ := by
     rw [Measure.map_sum measurable_fst.aemeasurable]
@@ -4199,7 +4232,7 @@ theorem exists_measurable_pair_of_partition [PseudoMetricSpace E] [OpensMeasurab
     simpa using tsum_measure_inter_eq μ hAm hAd hAu MeasurableSet.univ
   have hq : ∑' i, ν (A i) = 1 := by
     simpa using tsum_measure_inter_eq ν hAm hAd hAu MeasurableSet.univ
-  obtain ⟨π, hπp, hπq, hπoff⟩ := exists_coupling_tsum_offDiag_le hp hq
+  obtain ⟨π, hπp, hπq, hπoff, -⟩ := exists_coupling_tsum_offDiag_le hp hq
   obtain ⟨j, hjm, hj⟩ := exists_measurable_partitionIndex hAm hAd hAu
   have hqtop : ∀ k, ν (A k) ≠ ∞ := fun k => measure_ne_top _ _
   have hcsum : ∀ k, ∑' i, condRow π (fun k => ν (A k)) k i = 1 := tsum_condRow hπq hqtop
@@ -4346,6 +4379,280 @@ theorem exists_measurable_pair_of_partition [PseudoMetricSpace E] [OpensMeasurab
         measure_union_le _ _
     _ ≤ ∑' i, (μ (A i) - ν (A i)) := by rw [hnull, add_zero]; exact hB1
 
+/-! ### All stages at once, and the estimate as an inclusion
+
+The one-stage theorem above bounds the bad event by a *number*.  That is not enough to iterate:
+`ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` asks for an **inclusion** into an event of one
+variable, because Borel--Cantelli over the stages is unavailable (the witness is in that theorem's
+doc-comment).  The two changes that make the inclusion possible are both already paid for: the
+index map carries its diagonal on a named interval of the uniform variable
+(`exists_measurable_index_of_stochastic_matrix_diag`), and the partition is finite with pieces of
+positive mass (`exists_finite_partition_diam_le_null_frontier`), so that a single number `t` bounds
+every row defect at once.
+
+The stages are built on **one** space, and the uniform variable is shared by all of them.  That is
+the whole point: with one uniform variable per stage the exceptional events would be independent
+and only Borel--Cantelli could close the argument. -/
+
+/-- Collapsing a `Measure.sum` over `ℕ × ℕ` that is carried by a single slice. -/
+theorem sum_prod_slice_eq {α : Type*} [MeasurableSpace α] (n : ℕ) (w : ℕ → ℝ≥0∞)
+    (m : ℕ × ℕ → Measure α) :
+    (Measure.sum fun q : ℕ × ℕ => (if q.1 = n then w q.2 else 0) • m q)
+      = Measure.sum fun i => w i • m (n, i) := by
+  ext S hS
+  rw [Measure.sum_apply _ hS, Measure.sum_apply _ hS, ENNReal.tsum_prod']
+  refine (tsum_eq_single n ?_).trans ?_
+  · intro k hk
+    simp [hk]
+  · exact tsum_congr fun i => by simp
+
+/-- **The space carrying every stage of the Skorokhod representation at once.**  The first factor
+holds the limit variable `Y` (law `ν`) together with **one** uniform variable, shared by all
+stages; the second holds one independent draw from each conditional law `condLaw (μ n) (A n i)`,
+indexed by the pair (stage, piece).
+
+Sharing the uniform variable is not economy but necessity, and it is what
+`ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` consumes: the exceptional event of a stage is
+then an event of *one* variable, and events of one variable nest.  With one uniform variable per
+stage they would be independent, and the per-stage bounds are not summable. -/
+noncomputable def stagesMeasure (ν : Measure E) (μ : ℕ → Measure E)
+    [∀ n, IsProbabilityMeasure (μ n)] (A : ℕ → ℕ → Set E) :
+    Measure ((E × ℝ) × (ℕ × ℕ → E)) :=
+  (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).prod
+    (Measure.infinitePi fun p : ℕ × ℕ => condLaw (μ p.1) (A p.1 p.2))
+
+/-- **Every stage of the Skorokhod representation, with the estimate as an inclusion.**  On
+`stagesMeasure ν μ A` there are measurable `X n` with laws `μ n`, all of them reading their limit
+variable off the *same* coordinate `z.1.1`, whose law is `ν`, and such that almost everywhere
+
+```
+ε n < dist (X n z) z.1.1  →  z.1.1 ∈ A n 0  ∨  1 - t n < z.1.2
+```
+
+-- the bad event of stage `n` lies in the union of "the limit variable falls in the remainder
+piece" and an event of the **one** uniform variable `z.1.2`.
+
+The hypothesis that replaces the number of `exists_measurable_pair_of_partition` is `hdef`: the
+mass `μ n` gives a piece is at least `1 - t n` times the mass `ν` gives it.  It is exactly what
+makes the diagonal entry of the index coupling at least `1 - t n`, hence what puts the whole
+disagreement of the two indices inside `{ξ > 1 - t n}` through the diagonal branch of
+`exists_measurable_index_of_stochastic_matrix_diag`.  On the remainder piece `A n 0` nothing is
+assumed -- no diameter, no defect -- which is why it appears as the first disjunct.
+
+Only two events can carry the bad set once the indices agree: the limit variable lies in a piece
+that `ν` does not charge, which is null because its law is `ν`; or the drawn point misses the piece
+it was drawn from, which is null because the draw's law is `condLaw (μ n) (A n i)`.  Both are the
+null sets of `exists_measurable_pair_of_partition`, and the argument is the same Fubini. -/
+theorem exists_measurable_pair_of_partition_subset [PseudoMetricSpace E]
+    (ν : Measure E) [IsProbabilityMeasure ν] (μ : ℕ → Measure E)
+    [∀ n, IsProbabilityMeasure (μ n)] {A : ℕ → ℕ → Set E}
+    (hAm : ∀ n i, MeasurableSet (A n i))
+    (hAd : ∀ n, Pairwise (Function.onFun Disjoint (A n)))
+    (hAu : ∀ n, (⋃ i, A n i) = univ)
+    (hAb : ∀ n i, i ≠ 0 → Bornology.IsBounded (A n i))
+    {ε t : ℕ → ℝ} (ht : ∀ n, 0 ≤ t n)
+    (hAdiam : ∀ n i, i ≠ 0 → Metric.diam (A n i) ≤ ε n)
+    (hdef : ∀ n i, i ≠ 0 → ENNReal.ofReal (1 - t n) * ν (A n i) ≤ μ n (A n i)) :
+    ∃ X : ℕ → ((E × ℝ) × (ℕ × ℕ → E)) → E, (∀ n, Measurable (X n)) ∧
+      (∀ n, (stagesMeasure ν μ A).map (X n) = μ n) ∧
+      (stagesMeasure ν μ A).map (fun z => z.1.1) = ν ∧
+      (∀ n, ∀ᵐ z ∂(stagesMeasure ν μ A),
+        ε n < dist (X n z) z.1.1 → z.1.1 ∈ A n 0 ∨ 1 - t n < z.1.2) := by
+  classical
+  haveI hvol : IsProbabilityMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
+    isProbabilityMeasure_volume_restrict_Ioc
+  choose j hjm hj using fun n => exists_measurable_partitionIndex (hAm n) (hAd n) (hAu n)
+  have hmem : ∀ n y, y ∈ A n (j n y) := by
+    intro n y
+    have hy : y ∈ j n ⁻¹' {j n y} := rfl
+    rwa [hj n (j n y)] at hy
+  have hjeq : ∀ n y k, y ∈ A n k → j n y = k := by
+    intro n y k hy
+    have hy' : y ∈ j n ⁻¹' {k} := by rw [hj n k]; exact hy
+    simpa using hy'
+  -- the index of the piece the constructed variable falls into, with the diagonal already located
+  obtain ⟨Φ, hΦm, hΦlaw, hΦdiag⟩ : ∃ Φ : ℕ → (E × ℝ) → ℕ, (∀ n, Measurable (Φ n)) ∧
+      (∀ n, (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).map (Φ n)
+        = Measure.sum fun i => μ n (A n i) • Measure.dirac i) ∧
+      (∀ n (w : E × ℝ), j n w.1 ≠ 0 → ν (A n (j n w.1)) ≠ 0 → w.2 ≤ 1 - t n →
+        Φ n w = j n w.1) := by
+    have hp : ∀ n, ∑' i, μ n (A n i) = 1 := by
+      intro n
+      simpa using tsum_measure_inter_eq (μ n) (hAm n) (hAd n) (hAu n) MeasurableSet.univ
+    have hq : ∀ n, ∑' i, ν (A n i) = 1 := by
+      intro n
+      simpa using tsum_measure_inter_eq ν (hAm n) (hAd n) (hAu n) MeasurableSet.univ
+    choose π hπp hπq _hπoff hπdiag using fun n => exists_coupling_tsum_offDiag_le (hp n) (hq n)
+    have hqtop : ∀ n k, ν (A n k) ≠ ∞ := fun n k => measure_ne_top _ _
+    have hcsum : ∀ n k, ∑' i, condRow (π n) (fun k => ν (A n k)) k i = 1 :=
+      fun n => tsum_condRow (hπq n) (hqtop n)
+    have hcmul : ∀ n k i, ν (A n k) * condRow (π n) (fun k => ν (A n k)) k i = π n i k :=
+      fun n => mul_condRow (hπq n) (hqtop n)
+    choose G hGm hG hGdiag using fun n =>
+      exists_measurable_index_of_stochastic_matrix_diag (hcsum n)
+    refine ⟨fun n w => G n (j n w.1, w.2),
+      fun n => (hGm n).comp (((hjm n).comp measurable_fst).prodMk measurable_snd), ?_, ?_⟩
+    · intro n
+      rw [map_index_prod_eq (hjm n) (hj n) (hGm n) (hG n)]
+      have hcoef : ∀ i, (∑' k, ν (A n k) * condRow (π n) (fun k => ν (A n k)) k i)
+          = μ n (A n i) := by
+        intro i
+        calc ∑' k, ν (A n k) * condRow (π n) (fun k => ν (A n k)) k i
+            = ∑' k, π n i k := tsum_congr fun k => hcmul n k i
+          _ = μ n (A n i) := hπp n i
+      simp only [hcoef]
+    · intro n w hk0 hν0 hξ
+      show G n (j n w.1, w.2) = j n w.1
+      refine hGdiag n (j n w.1) w.2 (le_trans hξ ?_)
+      have hνtop : ν (A n (j n w.1)) ≠ ∞ := hqtop n _
+      have hmulle : ENNReal.ofReal (1 - t n) * ν (A n (j n w.1))
+          ≤ π n (j n w.1) (j n w.1) := by
+        refine le_trans (le_min (hdef n (j n w.1) hk0) ?_) (hπdiag n (j n w.1))
+        calc ENNReal.ofReal (1 - t n) * ν (A n (j n w.1))
+            ≤ 1 * ν (A n (j n w.1)) := by
+              gcongr
+              exact ENNReal.ofReal_le_one.2 (by linarith [ht n])
+          _ = ν (A n (j n w.1)) := one_mul _
+      have hcd : ENNReal.ofReal (1 - t n)
+          ≤ condRow (π n) (fun k => ν (A n k)) (j n w.1) (j n w.1) := by
+        rw [condRow, if_neg hν0]
+        exact (ENNReal.le_div_iff_mul_le (Or.inl hν0) (Or.inl hνtop)).2 hmulle
+      have hcle : condRow (π n) (fun k => ν (A n k)) (j n w.1) (j n w.1) ≤ 1 := by
+        rw [← hcsum n (j n w.1)]
+        exact ENNReal.le_tsum _
+      exact (ENNReal.ofReal_le_iff_le_toReal
+        (ne_top_of_le_ne_top ENNReal.one_ne_top hcle)).1 hcd
+  have hev : Measurable fun r : (ℕ × ℕ) × (ℕ × ℕ → E) => r.2 r.1 :=
+    measurable_from_prod_countable_right (fun i => measurable_pi_apply i)
+  have hιm : ∀ n, Measurable fun w : E × ℝ => ((n, Φ n w) : ℕ × ℕ) :=
+    fun n => measurable_const.prodMk (hΦm n)
+  have hXm : ∀ n, Measurable fun z : (E × ℝ) × (ℕ × ℕ → E) => z.2 (n, Φ n z.1) :=
+    fun n => hev.comp (((hιm n).comp measurable_fst).prodMk measurable_snd)
+  have hqlaw : ∀ n (q : ℕ × ℕ),
+      ((ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))).map
+          fun w : E × ℝ => ((n, Φ n w) : ℕ × ℕ)) {q}
+        = if q.1 = n then μ n (A n q.2) else 0 := by
+    intro n q
+    rw [Measure.map_apply (hιm n) (measurableSet_singleton q)]
+    by_cases hq1 : q.1 = n
+    · have hpre : (fun w : E × ℝ => ((n, Φ n w) : ℕ × ℕ)) ⁻¹' {q} = (Φ n) ⁻¹' {q.2} := by
+        ext w
+        simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff]
+        exact ⟨fun h => h.2, fun h => ⟨hq1.symm, h⟩⟩
+      rw [hpre, if_pos hq1, ← Measure.map_apply (hΦm n) (measurableSet_singleton q.2),
+        hΦlaw n, sum_smul_dirac_singleton]
+    · have hpre : (fun w : E × ℝ => ((n, Φ n w) : ℕ × ℕ)) ⁻¹' {q} = (∅ : Set (E × ℝ)) := by
+        ext w
+        simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff,
+          Set.mem_empty_iff_false, iff_false, not_and]
+        intro h
+        exact absurd h.symm hq1
+      rw [hpre, if_neg hq1, measure_empty]
+  refine ⟨fun n z => z.2 (n, Φ n z.1), hXm, ?_, ?_, ?_⟩
+  · -- the law of stage `n` is `μ n`
+    intro n
+    have hmain := map_eval_prod_infinitePi (E := E) (κ := ℕ × ℕ)
+      (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))) (hιm n)
+      (fun q : ℕ × ℕ => condLaw (μ q.1) (A q.1 q.2))
+    rw [stagesMeasure]
+    refine hmain.trans ?_
+    simp only [hqlaw n]
+    rw [sum_prod_slice_eq n (fun i => μ n (A n i))
+      (fun q : ℕ × ℕ => condLaw (μ q.1) (A q.1 q.2))]
+    exact sum_smul_condLaw_eq (μ n) (hAm n) (hAd n) (hAu n)
+  · -- the limit variable has law `ν`
+    have h1 : (fun z : (E × ℝ) × (ℕ × ℕ → E) => z.1.1) = Prod.fst ∘ Prod.fst := rfl
+    rw [stagesMeasure, h1, ← Measure.map_map measurable_fst measurable_fst,
+      Measure.map_fst_prod, Measure.map_smul, Measure.map_fst_prod]
+    simp
+  · -- the bad event of stage `n`, as an inclusion
+    intro n
+    rw [ae_iff]
+    have hyk : ∀ z : (E × ℝ) × (ℕ × ℕ → E), z.1.1 ∈ A n (j n z.1.1) := fun z => hmem n z.1.1
+    have hsub : {z : (E × ℝ) × (ℕ × ℕ → E) |
+        ¬ (ε n < dist (z.2 (n, Φ n z.1)) z.1.1 → z.1.1 ∈ A n 0 ∨ 1 - t n < z.1.2)}
+        ⊆ (((j n ⁻¹' {k : ℕ | ν (A n k) = 0}) ×ˢ (univ : Set ℝ)) ×ˢ
+            (univ : Set (ℕ × ℕ → E)))
+          ∪ {z : (E × ℝ) × (ℕ × ℕ → E) | z.2 (n, Φ n z.1) ∉ A n (Φ n z.1)} := by
+      intro z hz
+      simp only [Set.mem_setOf_eq, _root_.not_imp, not_or, not_lt] at hz
+      obtain ⟨hdist, hnot0, hξ⟩ := hz
+      by_cases hν0 : ν (A n (j n z.1.1)) = 0
+      · exact Or.inl ⟨⟨hν0, Set.mem_univ _⟩, Set.mem_univ _⟩
+      · refine Or.inr ?_
+        have hk0 : j n z.1.1 ≠ 0 := fun h => hnot0 (h ▸ hyk z)
+        have hGk : Φ n z.1 = j n z.1.1 := hΦdiag n z.1 hk0 hν0 hξ
+        simp only [Set.mem_setOf_eq, hGk]
+        intro hcon
+        rw [hGk] at hdist
+        exact absurd hdist (not_lt.2
+          ((Metric.dist_le_diam_of_mem (hAb n _ hk0) hcon (hyk z)).trans (hAdiam n _ hk0)))
+    refine measure_mono_null hsub (measure_union_null ?_ ?_)
+    · -- the limit variable falls into a piece that `ν` does not charge
+      have hpre : j n ⁻¹' {k : ℕ | ν (A n k) = 0} = ⋃ k ∈ {k : ℕ | ν (A n k) = 0}, A n k := by
+        ext y
+        simp only [Set.mem_preimage, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+        refine ⟨fun hy => ⟨j n y, hy, hmem n y⟩, ?_⟩
+        rintro ⟨k, hk, hy⟩
+        rwa [hjeq n y k hy]
+      rw [stagesMeasure, Measure.prod_prod, Measure.prod_prod, measure_univ, measure_univ,
+        mul_one, mul_one, hpre]
+      exact (measure_biUnion_null_iff (Set.to_countable _)).2 fun k hk => hk
+    · -- the drawn point misses the piece it was drawn from
+      have hDm : MeasurableSet {r : ℕ × E | r.2 ∉ A n r.1} := by
+        have hrw : {r : ℕ × E | r.2 ∉ A n r.1} = ⋃ i : ℕ, ({i} : Set ℕ) ×ˢ (A n i)ᶜ := by
+          ext r
+          simp only [Set.mem_setOf_eq, Set.mem_iUnion, Set.mem_prod, Set.mem_singleton_iff,
+            Set.mem_compl_iff]
+          refine ⟨fun h => ⟨r.1, rfl, h⟩, ?_⟩
+          rintro ⟨i, hi, h⟩
+          rw [hi]
+          exact h
+        rw [hrw]
+        exact MeasurableSet.iUnion fun i => (measurableSet_singleton i).prod (hAm n i).compl
+      have hCm : MeasurableSet {z : (E × ℝ) × (ℕ × ℕ → E) |
+          z.2 (n, Φ n z.1) ∉ A n (Φ n z.1)} :=
+        (((hΦm n).comp measurable_fst).prodMk (hXm n)) hDm
+      rw [stagesMeasure, Measure.prod_apply hCm]
+      have hbound : ∀ w : E × ℝ,
+          (Measure.infinitePi fun p : ℕ × ℕ => condLaw (μ p.1) (A p.1 p.2))
+            (Prod.mk w ⁻¹' {z : (E × ℝ) × (ℕ × ℕ → E) | z.2 (n, Φ n z.1) ∉ A n (Φ n z.1)})
+          ≤ Set.indicator {w : E × ℝ | μ n (A n (Φ n w)) = 0} (fun _ => (1 : ℝ≥0∞)) w := by
+        intro w
+        by_cases hw : μ n (A n (Φ n w)) = 0
+        · rw [Set.indicator_of_mem (show w ∈ {w : E × ℝ | μ n (A n (Φ n w)) = 0} from hw)]
+          exact prob_le_one
+        · rw [Set.indicator_of_notMem
+            (show w ∉ {w : E × ℝ | μ n (A n (Φ n w)) = 0} from hw), nonpos_iff_eq_zero]
+          have hsub' : (Prod.mk w ⁻¹' {z : (E × ℝ) × (ℕ × ℕ → E) |
+              z.2 (n, Φ n z.1) ∉ A n (Φ n z.1)})
+              ⊆ (fun v : ℕ × ℕ → E => v (n, Φ n w)) ⁻¹' (A n (Φ n w))ᶜ := fun v hv => hv
+          refine measure_mono_null hsub' ?_
+          rw [← Measure.map_apply (measurable_pi_apply _) (hAm n (Φ n w)).compl,
+            Measure.infinitePi_map_eval]
+          exact condLaw_compl_eq_zero (hAm n (Φ n w)) hw
+      have hSm' : MeasurableSet {i : ℕ | μ n (A n i) = 0} := (Set.to_countable _).measurableSet
+      have hrw : {w : E × ℝ | μ n (A n (Φ n w)) = 0}
+          = (Φ n) ⁻¹' {i : ℕ | μ n (A n i) = 0} := rfl
+      have hSm'' : MeasurableSet {w : E × ℝ | μ n (A n (Φ n w)) = 0} := by
+        rw [hrw]; exact (hΦm n) hSm'
+      have hzero : (ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1)))
+          {w : E × ℝ | μ n (A n (Φ n w)) = 0} = 0 := by
+        rw [hrw, ← Measure.map_apply (hΦm n) hSm', hΦlaw n, Measure.sum_apply _ hSm']
+        refine ENNReal.tsum_eq_zero.2 fun i => ?_
+        rw [Measure.smul_apply, smul_eq_mul, Measure.dirac_apply' _ hSm']
+        by_cases hi : μ n (A n i) = 0
+        · rw [hi, zero_mul]
+        · rw [Set.indicator_of_notMem (show i ∉ {i : ℕ | μ n (A n i) = 0} from hi), mul_zero]
+      refine le_antisymm ?_ bot_le
+      calc ∫⁻ w, (Measure.infinitePi fun p : ℕ × ℕ => condLaw (μ p.1) (A p.1 p.2))
+              (Prod.mk w ⁻¹' {z : (E × ℝ) × (ℕ × ℕ → E) | z.2 (n, Φ n z.1) ∉ A n (Φ n z.1)})
+              ∂(ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1)))
+          ≤ ∫⁻ w, Set.indicator {w : E × ℝ | μ n (A n (Φ n w)) = 0} (fun _ => (1 : ℝ≥0∞)) w
+              ∂(ν.prod (volume.restrict (Set.Ioc (0 : ℝ) 1))) := lintegral_mono hbound
+        _ = 0 := by
+            rw [lintegral_indicator hSm'', setLIntegral_one, hzero]
+
 omit [MeasurableSpace E] in
 /-- **The almost sure convergence of the representation, from a nested bad event.**  If the event
 "stage `n` is off by more than `δ (k n)`" is contained in a set `B (k n)` that depends on the
@@ -4395,21 +4702,43 @@ theorem ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge {Ω : Type*} [Measurab
   by_contra hcon
   exact hK (k n) hn (hbadω n (not_le.1 hcon))
 
-theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
-    [TopologicalSpace.SeparableSpace E] {μ : ℕ → ProbabilityMeasure E}
-    {ν : ProbabilityMeasure E} (h : Tendsto μ atTop (𝓝 ν)) :
-    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (P : Measure Ω) (_ : IsProbabilityMeasure P)
-      (X : ℕ → Ω → E) (Y : Ω → E),
+/-- **The Skorokhod representation theorem.**  If `μ n → ν` in distribution then there are a
+probability space and random variables `X n`, `Y` on it with laws `μ n`, `ν` and `X n → Y` almost
+surely.  Separability of `E` is the only hypothesis on the space.
+
+**The common space lives in the universe of `E`, and that is not bookkeeping.**  Until 2026-09-09,
+fifteenth run, this statement asked for `Ω : Type`, and in that form it is *not* the theorem: the
+construction puts `Ω = (E × ℝ) × (ℕ × ℕ → E)`, which lives in `Type u` when `E : Type u`, and no
+route brings it down to `Type 0`.  Realising the position inside a piece of the partition as a
+measurable function of one real variable -- which is what a `Type 0` space would force -- is the
+Borel isomorphism theorem, and that needs `E` Polish, a strictly stronger hypothesis than the one
+this milestone is stated under.  Since the section variable `E` has an auto-bound universe that
+cannot be named, the type variable is introduced here with a universe of its own; `Type _` does not
+work, because it auto-binds a *second*, universally quantified universe and the witness then does
+not fit. -/
+theorem exists_ae_tendsto_of_tendsto.{u} {F : Type u} [MeasurableSpace F] [MetricSpace F]
+    [BorelSpace F] [TopologicalSpace.SeparableSpace F] {μ : ℕ → ProbabilityMeasure F}
+    {ν : ProbabilityMeasure F} (h : Tendsto μ atTop (𝓝 ν)) :
+    ∃ (Ω : Type u) (_ : MeasurableSpace Ω) (P : Measure Ω) (_ : IsProbabilityMeasure P)
+      (X : ℕ → Ω → F) (Y : Ω → F),
       (∀ n, Measurable (X n)) ∧ Measurable Y ∧
-      (∀ n, P.map (X n) = (μ n : Measure E)) ∧ P.map Y = (ν : Measure E) ∧
+      (∀ n, P.map (X n) = (μ n : Measure F)) ∧ P.map Y = (ν : Measure F) ∧
       ∀ᵐ ω ∂P, Tendsto (fun n => X n ω) atTop (𝓝 (Y ω)) := sorry
 
 /-! ## Milestone 4: uniform integrability against convergence in distribution
 
 Mathlib's uniform integrability theory (`uniformIntegrable_iff`, the Vitali
 theorems in `MeasureTheory/Function/UniformIntegrable.lean`) is about a single
-measure.  This is the statement for laws on varying spaces; the Skorokhod
-representation above reduces it to Mathlib's. -/
+measure.  This is the statement for laws on varying spaces.
+
+**It does not go through the Skorokhod representation, and the roadmap said it
+would.**  That route -- put everything on one space and appeal to Mathlib's Vitali
+theorem -- would make this milestone wait on the one statement of Milestone 3 that
+is still open, and it is not needed: truncation is a direct argument, and its only
+non-elementary ingredient is the portmanteau inequality for a nonnegative
+continuous function, `lintegral_truncTail_le_of_tendsto` below.  The dependency
+was recorded as an implementation route and never as a necessity, so nothing else
+moves with it. -/
 
 /-- Uniform integrability of a family of real random variables living on
 different spaces, stated by truncation because that is the form the convergence
@@ -4431,18 +4760,56 @@ def IsUniformlyIntegrableLaws (μ : ℕ → ProbabilityMeasure ℝ) : Prop :=
   Tendsto (fun N : ℕ => ⨆ n, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ n : Measure ℝ))
     atTop (𝓝 0)
 
-/-- The truncation criterion carries the integrability of the limitands with it: no
-separate hypothesis is needed, and none may be added without weakening the theorem.
-For `N` with `⨆ k, ∫⁻ … < 1` one has `|x| ≤ N + (|x| - min |x| N)` pointwise, so
-`∫⁻ x, ‖x‖ₑ ∂(μ n) ≤ N + 1 < ∞`. -/
-theorem integrable_id_of_isUniformlyIntegrableLaws {μ : ℕ → ProbabilityMeasure ℝ}
-    (hui : IsUniformlyIntegrableLaws μ) (n : ℕ) : Integrable id (μ n : Measure ℝ) := by
-  obtain ⟨N, hN⟩ : ∃ N : ℕ,
-      ⨆ k, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ k : Measure ℝ) < 1 :=
-    (hui.eventually (gt_mem_nhds (by norm_num : (0 : ℝ≥0∞) < 1))).exists
-  have hle : ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ n : Measure ℝ) < 1 :=
-    lt_of_le_of_lt (le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| N)
-      ∂(μ k : Measure ℝ)) n) hN
+/-- The identity clamped to `[-N, N]`, as a bounded continuous function.  It is the
+approximant of the convergence proof: bounded and continuous, so weak convergence acts
+on it, and its truncation error is exactly the integrand of
+`IsUniformlyIntegrableLaws`. -/
+noncomputable def truncBdd (N : ℕ) : ℝ →ᵇ ℝ :=
+  BoundedContinuousFunction.ofNormedAddCommGroup
+    (fun x => max (-(N : ℝ)) (min (N : ℝ) x))
+    (continuous_const.max (continuous_const.min continuous_id)) N
+    (fun x => by
+      have hN : (0 : ℝ) ≤ (N : ℕ) := Nat.cast_nonneg N
+      rw [Real.norm_eq_abs, abs_le]
+      exact ⟨le_max_left _ _, max_le (by linarith) (min_le_left _ _)⟩)
+
+@[simp] theorem truncBdd_apply (N : ℕ) (x : ℝ) :
+    truncBdd N x = max (-(N : ℝ)) (min (N : ℝ) x) := rfl
+
+/-- The truncation error of `truncBdd N` is exactly the integrand of
+`IsUniformlyIntegrableLaws`.  That is the reason the criterion is stated by truncation
+and not by tail mass: the same expression bounds the displacement of the mean and is
+what the hypothesis drives to zero. -/
+theorem abs_sub_truncBdd (N : ℕ) (x : ℝ) :
+    |x - truncBdd N x| = |x| - min |x| (N : ℝ) := by
+  have hN : (0 : ℝ) ≤ (N : ℕ) := Nat.cast_nonneg N
+  rw [truncBdd_apply]
+  rcases le_total |x| (N : ℝ) with h | h
+  · have h1 : -(N : ℝ) ≤ x := (abs_le.1 h).1
+    have h2 : x ≤ (N : ℝ) := (abs_le.1 h).2
+    rw [min_eq_right h2, max_eq_right h1, min_eq_left h, sub_self, abs_zero, sub_self]
+  · rw [min_eq_right h]
+    rcases le_total 0 x with hx | hx
+    · have hxa : |x| = x := abs_of_nonneg hx
+      have h2 : (N : ℝ) ≤ x := by rwa [hxa] at h
+      have h3 : (0 : ℝ) ≤ x - (N : ℝ) := by linarith
+      rw [min_eq_left h2, max_eq_right (by linarith : -(N : ℝ) ≤ (N : ℝ)),
+        abs_of_nonneg h3, hxa]
+    · have hxa : |x| = -x := abs_of_nonpos hx
+      have h2 : x ≤ -(N : ℝ) := by rw [hxa] at h; linarith
+      have h3 : x - -(N : ℝ) ≤ 0 := by linarith
+      rw [min_eq_right (by linarith : x ≤ (N : ℝ)), max_eq_left h2, abs_of_nonpos h3, hxa]
+      ring
+
+/-- A single probability measure on `ℝ` whose truncation tail is finite at **one** level
+has an integrable identity.  `|x| ≤ N + (|x| - min |x| N)` pointwise, so
+`∫⁻ x, ‖x‖ₑ ∂ρ ≤ N + (that tail) < ∞`.
+
+It is stated for a single measure rather than for the family because the *limit* law
+needs it too, and the limit law is not a member of the family. -/
+theorem integrable_id_of_lintegral_truncTail_lt_top {ρ : Measure ℝ} [IsProbabilityMeasure ρ]
+    {N : ℕ} (h : ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ < ⊤) :
+    Integrable id ρ := by
   refine ⟨aestronglyMeasurable_id, ?_⟩
   rw [hasFiniteIntegral_iff_enorm]
   have hbound : ∀ x : ℝ, ‖(id x : ℝ)‖ₑ ≤
@@ -4459,20 +4826,169 @@ theorem integrable_id_of_isUniformlyIntegrableLaws {μ : ℕ → ProbabilityMeas
       _ ≤ ENNReal.ofReal ((N : ℝ) + (|x| - min |x| N)) := ENNReal.ofReal_le_ofReal h2
       _ = ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| N) :=
           ENNReal.ofReal_add (Nat.cast_nonneg N) h1
-  calc ∫⁻ x, ‖(id x : ℝ)‖ₑ ∂(μ n : Measure ℝ)
-      ≤ ∫⁻ x, (ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| N))
-          ∂(μ n : Measure ℝ) := lintegral_mono hbound
-    _ = ENNReal.ofReal (N : ℝ) + ∫⁻ x, ENNReal.ofReal (|x| - min |x| N)
-          ∂(μ n : Measure ℝ) := by
+  calc ∫⁻ x, ‖(id x : ℝ)‖ₑ ∂ρ
+      ≤ ∫⁻ x, (ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| (N : ℝ))) ∂ρ :=
+        lintegral_mono hbound
+    _ = ENNReal.ofReal (N : ℝ) + ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ := by
         rw [lintegral_add_left' aemeasurable_const, lintegral_const, measure_univ, mul_one]
-    _ < ⊤ := ENNReal.add_lt_top.2 ⟨ENNReal.ofReal_lt_top, hle.trans_le le_top⟩
+    _ < ⊤ := ENNReal.add_lt_top.2 ⟨ENNReal.ofReal_lt_top, h⟩
 
+/-- The truncation criterion carries the integrability of the limitands with it: no
+separate hypothesis is needed, and none may be added without weakening the theorem.
+One level with `⨆ k, ∫⁻ … < 1` suffices, which is
+`integrable_id_of_lintegral_truncTail_lt_top`. -/
+theorem integrable_id_of_isUniformlyIntegrableLaws {μ : ℕ → ProbabilityMeasure ℝ}
+    (hui : IsUniformlyIntegrableLaws μ) (n : ℕ) : Integrable id (μ n : Measure ℝ) := by
+  obtain ⟨N, hN⟩ : ∃ N : ℕ,
+      ⨆ k, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ k : Measure ℝ) < 1 :=
+    (hui.eventually (gt_mem_nhds (by norm_num : (0 : ℝ≥0∞) < 1))).exists
+  exact integrable_id_of_lintegral_truncTail_lt_top
+    (((le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ))
+      ∂(μ k : Measure ℝ)) n).trans_lt hN).trans ENNReal.one_lt_top)
+
+/-- Truncation displaces the mean by at most the truncation tail.  This is the only
+place where the integrability of the identity is consumed, and it is consumed under
+**each** of the laws, the limit one included. -/
+theorem abs_integral_sub_integral_truncBdd_le {ρ : Measure ℝ} [IsProbabilityMeasure ρ]
+    (hint : Integrable id ρ) (N : ℕ) :
+    |∫ x, x ∂ρ - ∫ x, truncBdd N x ∂ρ| ≤
+      (∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ).toReal := by
+  have hbdd : Integrable (fun x => truncBdd N x) ρ := (truncBdd N).integrable ρ
+  have hint' : Integrable (fun x : ℝ => x) ρ := hint
+  have hcont : Continuous (fun x : ℝ => |x| - min |x| (N : ℝ)) :=
+    continuous_abs.sub (continuous_abs.min continuous_const)
+  have hnn : ∀ x : ℝ, 0 ≤ |x| - min |x| (N : ℝ) := fun x => by
+    simp only [sub_nonneg]; exact min_le_left _ _
+  calc |∫ x, x ∂ρ - ∫ x, truncBdd N x ∂ρ|
+      = |∫ x, (x - truncBdd N x) ∂ρ| := by rw [integral_sub hint' hbdd]
+    _ ≤ ∫ x, |x - truncBdd N x| ∂ρ := abs_integral_le_integral_abs
+    _ = ∫ x, (|x| - min |x| (N : ℝ)) ∂ρ :=
+        integral_congr_ae (Eventually.of_forall fun x => abs_sub_truncBdd N x)
+    _ = (∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ).toReal :=
+        integral_eq_lintegral_of_nonneg_ae (Eventually.of_forall hnn)
+          hcont.aestronglyMeasurable
+
+/-- The truncation tail of the **limit** law is dominated by the supremum of the tails
+along the sequence.  This is what the hypothesis does not say and the proof needs: the
+family is uniformly integrable, `ν` is not a member of the family, and nothing in weak
+convergence transports an integral of an *unbounded* function.
+
+What does transport it is the portmanteau inequality for nonnegative continuous
+functions, `lintegral_le_liminf_lintegral_of_forall_isOpen_measure_le_liminf_measure`
+(`Measure/Portmanteau.lean:499`), whose hypothesis is the liminf condition on open sets,
+i.e. `ProbabilityMeasure.le_liminf_measure_open_of_tendsto` (`:326`).  A liminf bounded
+termwise by a constant is bounded by it, and the constant is the supremum. -/
+theorem lintegral_truncTail_le_of_tendsto {μ : ℕ → ProbabilityMeasure ℝ}
+    {ν : ProbabilityMeasure ℝ} (hconv : Tendsto μ atTop (𝓝 ν)) (N : ℕ) :
+    ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(ν : Measure ℝ) ≤
+      ⨆ n, ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) := by
+  have hcont : Continuous (fun x : ℝ => |x| - min |x| (N : ℝ)) :=
+    continuous_abs.sub (continuous_abs.min continuous_const)
+  have hnn : (0 : ℝ → ℝ) ≤ fun x : ℝ => |x| - min |x| (N : ℝ) := fun x => by
+    simp only [Pi.zero_apply, sub_nonneg]; exact min_le_left _ _
+  have hopens : ∀ G : Set ℝ, IsOpen G →
+      (ν : Measure ℝ) G ≤ atTop.liminf fun n => (μ n : Measure ℝ) G :=
+    fun _ hG => ProbabilityMeasure.le_liminf_measure_open_of_tendsto hconv hG
+  refine (lintegral_le_liminf_lintegral_of_forall_isOpen_measure_le_liminf_measure
+    hcont hnn hopens).trans ?_
+  refine le_trans (liminf_le_liminf (Eventually.of_forall fun n =>
+    le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ k : Measure ℝ)) n)) ?_
+  simp
+
+/-- Milestone 4: weak convergence plus uniform integrability gives convergence of the
+means, and the limit law has a mean at all.
+
+The three ε/3 are: the truncation error under `μ n`, uniform in `n` by hypothesis; the
+truncation error under `ν`, by `lintegral_truncTail_le_of_tendsto`; and the convergence
+of the truncated means, which is weak convergence tested against `truncBdd N`. -/
 theorem tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws
     {μ : ℕ → ProbabilityMeasure ℝ} {ν : ProbabilityMeasure ℝ}
     (hconv : Tendsto μ atTop (𝓝 ν)) (hui : IsUniformlyIntegrableLaws μ) :
     Integrable id (ν : Measure ℝ) ∧
-      Tendsto (fun n => ∫ x, x ∂(μ n : Measure ℝ)) atTop (𝓝 (∫ x, x ∂(ν : Measure ℝ))) :=
-  sorry
+      Tendsto (fun n => ∫ x, x ∂(μ n : Measure ℝ)) atTop (𝓝 (∫ x, x ∂(ν : Measure ℝ))) := by
+  set S : ℕ → ℝ≥0∞ := fun N =>
+    ⨆ n, ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) with hSdef
+  have hμle : ∀ (N n : ℕ),
+      ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) ≤ S N :=
+    fun N n => le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ))
+      ∂(μ k : Measure ℝ)) n
+  have hνle : ∀ N : ℕ,
+      ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(ν : Measure ℝ) ≤ S N :=
+    fun N => lintegral_truncTail_le_of_tendsto hconv N
+  have hsmall : ∀ r : ℝ≥0∞, 0 < r → ∃ N : ℕ, S N < r :=
+    fun r hr => (hui.eventually (gt_mem_nhds hr)).exists
+  have hintμ : ∀ (N n : ℕ), S N < ⊤ → Integrable id (μ n : Measure ℝ) :=
+    fun N n hN => integrable_id_of_lintegral_truncTail_lt_top ((hμle N n).trans_lt hN)
+  have hintν : ∀ N : ℕ, S N < ⊤ → Integrable id (ν : Measure ℝ) :=
+    fun N hN => integrable_id_of_lintegral_truncTail_lt_top ((hνle N).trans_lt hN)
+  obtain ⟨N₁, hN₁⟩ := hsmall 1 (by norm_num)
+  refine ⟨hintν N₁ (hN₁.trans ENNReal.one_lt_top), ?_⟩
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  obtain ⟨N, hN⟩ := hsmall (ENNReal.ofReal (ε / 3)) (ENNReal.ofReal_pos.2 (by linarith))
+  have hStop : S N ≠ ⊤ := (hN.trans_le le_top).ne
+  have hSlt : (S N).toReal < ε / 3 := ENNReal.toReal_lt_of_lt_ofReal hN
+  have hboundμ : ∀ n, |∫ x, x ∂(μ n : Measure ℝ) - ∫ x, truncBdd N x ∂(μ n : Measure ℝ)|
+      ≤ (S N).toReal := fun n =>
+    (abs_integral_sub_integral_truncBdd_le
+      (hintμ N n (lt_top_iff_ne_top.2 hStop)) N).trans (ENNReal.toReal_mono hStop (hμle N n))
+  have hboundν : |∫ x, x ∂(ν : Measure ℝ) - ∫ x, truncBdd N x ∂(ν : Measure ℝ)|
+      ≤ (S N).toReal :=
+    (abs_integral_sub_integral_truncBdd_le
+      (hintν N (lt_top_iff_ne_top.2 hStop)) N).trans (ENNReal.toReal_mono hStop (hνle N))
+  have hbc : Tendsto (fun n => ∫ x, truncBdd N x ∂(μ n : Measure ℝ)) atTop
+      (𝓝 (∫ x, truncBdd N x ∂(ν : Measure ℝ))) :=
+    ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.1 hconv (truncBdd N)
+  obtain ⟨n₀, hn₀⟩ := Metric.tendsto_atTop.1 hbc (ε / 3) (by linarith)
+  refine ⟨n₀, fun n hn => ?_⟩
+  have h1 := abs_le.1 (hboundμ n)
+  have h2 := abs_le.1 hboundν
+  have h3 := abs_lt.1 (by rw [← Real.dist_eq]; exact hn₀ n hn)
+  rw [Real.dist_eq]
+  exact abs_lt.2 ⟨by linarith, by linarith⟩
+
+/-- The same theorem for random variables on varying spaces, which is the shape the
+milestone asks for and the shape `MartingaleProblems` consumes: the hypothesis is
+Mathlib's `MeasureTheory.TendstoInDistribution`, so the differing spaces are Mathlib's
+and not this roadmap's, and the truncation criterion is stated on the random variables
+themselves.  Everything between the two forms is `lintegral_map'` and `integral_map`. -/
+theorem tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)} {P : (n : ℕ) → Measure (Ω n)}
+    [∀ n, IsProbabilityMeasure (P n)] {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {P' : Measure Ω'} [IsProbabilityMeasure P'] {X : (n : ℕ) → Ω n → ℝ} {Z : Ω' → ℝ}
+    (h : TendstoInDistribution X atTop Z P P')
+    (hui : Tendsto (fun N : ℕ => ⨆ n,
+        ∫⁻ ω, ENNReal.ofReal (|X n ω| - min |X n ω| N) ∂(P n)) atTop (𝓝 0)) :
+    Integrable Z P' ∧
+      Tendsto (fun n => ∫ ω, X n ω ∂(P n)) atTop (𝓝 (∫ ω, Z ω ∂P')) := by
+  set μ : ℕ → ProbabilityMeasure ℝ := fun n =>
+    ⟨(P n).map (X n), Measure.isProbabilityMeasure_map (h.forall_aemeasurable n)⟩ with hμ
+  set ν : ProbabilityMeasure ℝ :=
+    ⟨P'.map Z, Measure.isProbabilityMeasure_map h.aemeasurable_limit⟩ with hν
+  have hcoeμ : ∀ n, ((μ n : Measure ℝ)) = (P n).map (X n) := fun _ => rfl
+  have hcoeν : ((ν : Measure ℝ)) = P'.map Z := rfl
+  have hlin : ∀ (N n : ℕ),
+      ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) =
+        ∫⁻ ω, ENNReal.ofReal (|X n ω| - min |X n ω| (N : ℝ)) ∂(P n) := by
+    intro N n
+    rw [hcoeμ n, lintegral_map' _ (h.forall_aemeasurable n)]
+    exact (ENNReal.measurable_ofReal.comp
+      (continuous_abs.sub (continuous_abs.min continuous_const)).measurable).aemeasurable
+  have hui' : IsUniformlyIntegrableLaws μ := by
+    simpa only [IsUniformlyIntegrableLaws, hlin] using hui
+  obtain ⟨hZ, htend⟩ := tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws h.tendsto hui'
+  have hint : Integrable Z P' := by
+    rw [hcoeν] at hZ
+    exact (integrable_map_measure aestronglyMeasurable_id h.aemeasurable_limit).1 hZ
+  refine ⟨hint, ?_⟩
+  have hZint : ∫ x, x ∂(ν : Measure ℝ) = ∫ ω, Z ω ∂P' := by
+    rw [hcoeν, integral_map (f := fun x : ℝ => x) h.aemeasurable_limit
+      aestronglyMeasurable_id]
+  have hXint : ∀ n, ∫ x, x ∂(μ n : Measure ℝ) = ∫ ω, X n ω ∂(P n) := fun n => by
+    rw [hcoeμ n, integral_map (f := fun x : ℝ => x) (h.forall_aemeasurable n)
+      aestronglyMeasurable_id]
+  rw [← hZint]
+  exact htend.congr hXint
 
 /-! ## Milestone 5: the functional monotone class theorem
 
