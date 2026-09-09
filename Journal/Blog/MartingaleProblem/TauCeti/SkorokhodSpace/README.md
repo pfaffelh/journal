@@ -1732,9 +1732,13 @@ over a shrinking family and is therefore an infimum.
   file — pinned to the window's edges by `not_tendsto_iSup_modulusPinned`, free of
   the base point by `not_isCompact_closure_of_jumps_at_basePoint`.
 * `IsCadlag.exists_subdivision_through`: a càdlàg subdivision of `Set.Icc a b`
-  through a prescribed interior point `c`, with cell oscillation at most `ε`. It
-  is `IsCadlag.exists_subdivision` twice, on `[a,c]` and on `[c,b]`, and the two
-  `Fin` tuples concatenated. Both halves of the criterion read it: the forward
+  through a prescribed interior point `c`, with cell oscillation at most `ε`.
+  Proved (2026-09-09). It is `IsCadlag.exists_subdivision` twice, on `[a,c]` and
+  on `[c,b]`, and the two `Fin` tuples concatenated at their common endpoint —
+  which is what carries the strictness of the monotonicity across the seam
+  (`t₁ i ≤ t₁ (last n) = c = t₂ 0 < t₂ (j-n)`) and what makes the cell at the
+  seam be `[c, t₂ 1)`, the zeroth cell of `t₂`, with no case distinction. Both
+  halves of the criterion read it: the forward
   half because the argument of `tendsto_iSup_modulus_of_isCompact` transports
   through `isSubdivision_comp`, which carries a node at `t₀` to a node at `t₀`,
   and needs only its *input* to carry one; the converse because the finite net is
