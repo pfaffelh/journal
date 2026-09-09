@@ -12865,3 +12865,116 @@ sie liest `SkorokhodSpace.tendsto_of_partialComp` von Meilenstein 5. Danach ist
 `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`) ist dran.
 
 **Das Manuskript ist nicht angefaßt.**
+
+### 2026-09-09, sechster Lauf des Tages — das Kompaktheitskriterium ist falsch, und die Unterteilung darf über das Fenster hinausragen
+
+**Facts:** keiner neu; `fact:PSpolish` unberührt. Gearbeitet an Teil A, Punkt 3
+der vorrangigen Aufgabe — dem letzten `sorry` von
+`SkorokhodSpace/Suggested.lean`, `SkorokhodSpace.isCompact_closure_iff`.
+
+**Stand.** Die Datei steht weiter bei **einem** `sorry`. Dieser Lauf hat es nicht
+gestrichen, sondern die Aussage darüber **berichtigt**: sie war falsch. 21
+Deklarationen sind neu und vier sind geändert; alle 25 sind durch
+`lake env lean` gegen v4.33.1 geprüft und alle hängen mit `#print axioms` an
+`propext`, `Classical.choice`, `Quot.sound` und an nichts sonst.
+
+*Der Befund.* `SkorokhodSpace.IsSubdivision` verlangte bis heute, daß die
+Unterteilung am kleinsten Punkt des Fensters **beginnt** und am größten
+**endet**. Mit dieser Pinnung ist das Kriterium falsch, und der Zeuge steht in
+Lean: `SkorokhodSpace.not_tendsto_iSup_modulusPinned`. In `D(ℝ, ℝ)` konvergieren
+die Treppenpfade `stepAt (1/(n+2) - 1) 1 0` gegen `stepAt (-1) 1 0`; die Menge
+`A` aus der Folge und ihrem Grenzwert ist also kompakt, und sie nimmt nur die
+Werte `0` und `1` an, so daß die Wertebedingung an **jedem** Fenster erfüllt ist.
+Der Sprung des `n`-ten Pfades sitzt aber im Abstand `1/(n+2)` **rechts** vom
+linken Rand `-1` des Fensters `exhaustion 0 1`, und eine gepinnte Unterteilung
+kann ihn dort nicht abtrennen: ihr erster Knoten *ist* der Rand, ihre erste Lücke
+übertrifft `δ`, also liegt der Sprung in der ersten Zelle, deren Schwingung vom
+Rand aus gemessen wird. Der Modul ist damit `1` für jedes `δ ≥ 1/(n+2)`, das
+Supremum über `A` also `1` für **jedes** `δ > 0`, und die rechte Seite des
+Kriteriums ist falsch, während die linke gilt.
+
+*Die Reparatur ist Ethier--Kurtz'.* Ihre Unterteilung von `[0,T]` ((3.6.2), Buch
+S. 122) läuft `0 = t₀ < ⋯ < t_{n-1} < T ≤ t_n` — der **letzte Knoten darf über
+`T` hinausragen**. Auf einem zweiseitigen Index wird dieselbe Freiheit am nahen
+Ende gebraucht, und `IsSubdivision` trägt sie jetzt als zwei Ungleichungen
+(`t 0 ≤ exhaustionMin`, `exhaustionMax ≤ t (Fin.last n)`) statt zweier
+Gleichungen. Am Zeugen gerechnet: `-2 < 1/(n+2) - 1 < 2` ist zulässig, alle
+Lücken sind größer als `1/2`, und beide Zellen sind konstant, also ist der Modul
+`0`.
+
+*Was die Änderung kostet, und es ist nichts.* Die zulässige Menge wird größer,
+das Infimum also kleiner: `SkorokhodSpace.modulus_le_modulusPinned`. Jede obere
+Schranke, die für den gepinnten Modul bewiesen war, gilt weiter, und
+`tendsto_modulus` liest `IsCadlag.exists_subdivision` unverändert — der von dort
+gelieferte Zeuge trifft die Fensterenden genau und ist damit erst recht zulässig
+(`h0.le` und `hlast.ge` sind die ganze Anpassung). Auch
+`modulus_eq_zero_of_exhaustion_subsingleton` und `modulus_mono` bleiben stehen.
+Die gepinnte Fassung ist **nicht** gelöscht, sondern heißt jetzt
+`IsSubdivisionPinned` samt `modulusPinned`; eine Widerlegung braucht ein Subjekt,
+und die Lehre des 2026-09-08 und des fünften Laufs von heute ist, daß eine
+falsche Zusage, die nur als Prosa danebensteht, nichts prüft.
+
+*Der allgemeine Satz hinter dem Zeugen ist benannt und nicht in ihn verwoben:*
+`SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le` sagt, daß der gepinnte
+Modul zu **jedem** Pfad, jedem `δ` und jedem Punkt `x` des Fensters mit
+`dist (exhaustionMin t₀ u) x ≤ δ` mindestens `edist (f x) (f (exhaustionMin))`
+ist. Am rechten Rand gilt nichts dergleichen, denn die Zellen sind `Set.Ico` und
+der Wert bei `exhaustionMax` wird nie gelesen; **die beiden Fensterenden sind
+wieder nicht symmetrisch**, wie schon bei `volume_radius_exhaustionMin_mem_Ico`
+im vierten Lauf.
+
+*Der Zusammenbau des Zeugen, und er ist die eigentliche Arbeit.* Zu zeigen war,
+daß die Folge im Sinne der **Integralmetrik** konvergiert, und das ist genau die
+Stelle, an der die Metrik von Meilenstein 4 sich von der verworfenen summierten
+unterscheidet. Der Zeitwechsel ist die Skalierung `x ↦ (1-ε) x`
+(`TimeChange.scale`), die den Basispunkt umsonst festhält und
+`norm ≤ -Real.log (1-ε)` hat. Sie trägt den einen Treppenpfad **exakt** auf den
+anderen, für jeden Radius außerhalb `Set.Ioc (1-ε) 1`
+(`SkorokhodSpace.distWith_scale_stepAt_le_zero`): unterhalb von `1-ε` liegt keine
+der beiden Sprungzeiten im Fenster und beide Pfade lesen sich konstant, oberhalb
+von `1` ist die Klemmung an beiden Schwellen durchsichtig und
+`(1-ε) t ≥ ε-1 ↔ t ≥ -1` ist die Skalierung selbst. Dazwischen liegt ein
+Intervall der Länge `ε`, und dort ist die Aussage wirklich falsch — der linke
+Fensterrand trennt die beiden Sprungzeiten. Genau dafür ist
+`intWith_le_of_ae_distWith_le` aus dem dritten Lauf gebaut: es zahlt das Maß der
+schlechten Radien. Mit `M = -Real.log ε`, das den Schwanz `exp (-M) = ε` gegen
+sie ausbalanciert, ist
+`intDist 0 (stepAt (ε-1) 1 0) (stepAt (-1) 1 0) ≤ max (-Real.log (1-ε)) (2 ε)`
+(`SkorokhodSpace.intDist_stepAt_le`), und das geht gegen `0`.
+
+*Daß dieselbe Folge in der Auswertung bei `-1` **nicht** konvergiert, ist kein
+Widerspruch, sondern der Kern:* `-1` ist ein Sprungpunkt des Grenzpfades, die
+Auswertung dort ist nicht stetig (fünfter Lauf, `continuous_eval_of_nhdsGT_eq_bot`
+sagt, wann sie es ist), und der gepinnte Modul mißt seine erste Zelle von genau
+diesem Punkt aus. Die summierte Metrik des 2026-09-08 hätte die Folge nicht
+konvergieren lassen — sie erzwang Konvergenz an allen Fensterrändern
+(`dist_exhaustionMax_le_distOn`) —, und unter ihr wäre das gepinnte Kriterium
+womöglich richtig gewesen. **Der Fehler ist also mit der Metrik mitgewandert und
+nicht bemerkt worden**, obwohl der Modul seit dem 2026-09-08 dasteht und die
+Metrik am selben Tag ersetzt wurde. Wer eine Definition ersetzt, hat jede
+Aussage, die die alte las, neu gegen die neue zu halten; `modulus` las sie über
+`exhaustionMin`.
+
+*Die Roadmap ist nachgezogen*: Meilenstein 7 in
+`SkorokhodSpace/README.md` führt die korrigierte Fassung, die gepinnte, die
+Widerlegung und die acht Bausteine des Zeugen, und er hat ein **fünftes
+acceptance example** bekommen — den Sprung, der zum Fensterrand marschiert. Es
+ist das Spiegelbild des dritten (der zwei Sprünge, die nicht verschmelzen): dort
+muß das Kriterium ablehnen, hier muß es annehmen. Die vier alten Beispiele sind
+gegen die korrigierte Definition nachgerechnet und bleiben richtig; die
+Unterteilung `-2 < 1 < 2` des ersten trifft die Fensterenden genau und ist unter
+beiden Fassungen zulässig.
+
+*Was als Nächstes zu tun ist.* Punkt 3 von Teil A ist damit **nicht** erledigt:
+`isCompact_closure_iff` steht weiter als `sorry`, jetzt aber mit einer Aussage,
+die nicht schon am Zeugen scheitert. Der nächste Schritt ist die **Hinrichtung**
+(kompakter Abschluß ⟹ Modulbedingung), und der eine Punkt, an dem sie hängt, ist
+benannt: aus `f_k → g` in der Integralmetrik eine Unterteilung von `g` zu
+*übertragen* — die Knoten von `g` unter dem Zeitwechsel `l_k` zu lesen und zu
+zeigen, daß die Lücken dabei höchstens um den Faktor `exp ‖l_k‖` schrumpfen. Das
+ist `TimeChange.dist_le_exp_norm_mul`, es steht seit dem 2026-09-08, und die
+Schwingung überträgt sich über `exists_orderIso_dist_lt_of_intDist_lt` aus dem
+fünften Lauf von heute. Die Rückrichtung liest danach
+`SkorokhodSpace.tendsto_of_partialComp` wie angesagt.
+
+**Das Manuskript ist nicht angefaßt.**

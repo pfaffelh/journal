@@ -246,6 +246,49 @@ das letzte `sorry` der Datei und als Nächstes dran.* `tendsto_modulus` steht,
 `IsCadlag.exists_subdivision` steht; was fehlt, ist die Rückrichtung, und sie
 liest `SkorokhodSpace.tendsto_of_partialComp` von Meilenstein 5.
 
+**Zwischenstand Teil A (2026-09-09, sechster Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, sechster Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht weiter bei **einem** `sorry`; dieser Lauf
+hat es nicht gestrichen, sondern seine Aussage **berichtigt**. Einundzwanzig
+neue Deklarationen und vier geänderte, alle durch `lake env lean` gegen v4.33.1
+geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`.
+
+*Punkt 3 ist nicht erledigt, sondern in der bisherigen Fassung widerlegt.*
+`SkorokhodSpace.IsSubdivision` verlangte, daß die Unterteilung an den
+Fensterenden **beginnt und endet**, und mit dieser Pinnung ist das Kriterium
+falsch. `SkorokhodSpace.not_tendsto_iSup_modulusPinned` sagt es in `D(ℝ, ℝ)`:
+die Treppenpfade `stepAt (1/(n+2) - 1) 1 0` konvergieren gegen `stepAt (-1) 1 0`,
+die Menge aus Folge und Grenzwert ist also kompakt und nimmt nur die Werte `0`
+und `1` an; der Sprung des `n`-ten Pfades sitzt aber im Abstand `1/(n+2)` rechts
+vom linken Rand `-1` des Fensters `exhaustion 0 1`, eine gepinnte Unterteilung
+kann ihn dort nicht abtrennen, und das Supremum der Module ist `1` für jedes
+`δ > 0`.
+
+*Die Reparatur ist Ethier--Kurtz' eigene:* ihre Unterteilung von `[0,T]`
+((3.6.2)) läßt den letzten Knoten über `T` hinausragen; auf einem zweiseitigen
+Index wird dieselbe Freiheit am nahen Ende gebraucht, und `IsSubdivision` trägt
+sie jetzt als zwei Ungleichungen. Sie kostet nichts —
+`modulus_le_modulusPinned` —, und `tendsto_modulus` liest
+`IsCadlag.exists_subdivision` unverändert. Die gepinnte Fassung steht als
+`IsSubdivisionPinned` samt `modulusPinned` weiter da, weil eine Widerlegung ein
+Subjekt braucht.
+
+*Der Fehler ist mit der Metrik mitgewandert:* unter der summierten Metrik, die
+am 2026-09-08 ersetzt wurde, konvergiert die Folge nicht (jene erzwang
+Konvergenz an allen Fensterrändern), unter der Integralmetrik schon — die
+schlechten Radien sind ein Intervall der Länge `ε`, und
+`intWith_le_of_ae_distWith_le` zahlt genau deren Maß. Der Zeitwechsel ist die
+Skalierung `TimeChange.scale`, und `SkorokhodSpace.intDist_stepAt_le` ist die
+Schranke `max (-log (1-ε)) (2 ε)`.
+
+*Was als Nächstes zu tun ist:* die **Hinrichtung** des Kriteriums (kompakter
+Abschluß ⟹ Modulbedingung). Sie hängt an einem benannten Punkt — eine
+Unterteilung des Grenzpfades unter dem Zeitwechsel `l_k` zu lesen und zu zeigen,
+daß die Lücken höchstens um `exp ‖l_k‖` schrumpfen, das ist
+`TimeChange.dist_le_exp_norm_mul` —, und die Schwingung überträgt
+`exists_orderIso_dist_lt_of_intDist_lt`.
+
 
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:

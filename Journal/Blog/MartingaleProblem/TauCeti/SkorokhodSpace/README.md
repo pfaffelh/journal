@@ -1526,10 +1526,49 @@ over a shrinking family and is therefore an infimum.
 ## Milestone 7: the modulus and compactness
 
 * `SkorokhodSpace.IsSubdivision t₀ m δ (t : Fin (n+1) → ι)`: the subdivision
-  predicate, `StrictMono t` with `t 0 = (B m).min`, `t (Fin.last n) = (B m).max`
-  and `δ < dist (t i.castSucc) (t i.succ)` for every `i`. Written (2026-09-08).
-  It is a named predicate and not an existential inside the modulus, so that the
-  infimum below ranges over a `Prop` and needs no `BddBelow`.
+  predicate, `StrictMono t` with `t 0 ≤ (B m).min`, `(B m).max ≤ t (Fin.last n)`
+  and `δ < dist (t i.castSucc) (t i.succ)` for every `i`. Written (2026-09-08),
+  corrected (2026-09-09). It is a named predicate and not an existential inside
+  the modulus, so that the infimum below ranges over a `Prop` and needs no
+  `BddBelow`. The subdivision **covers** the window, its endpoints are not
+  pinned to the window's: Ethier–Kurtz's partition of `[0,T]` (their (3.6.2))
+  admits `0 = t₀ < ⋯ < t_{n-1} < T ≤ t_n`, an overshoot at the far end, and on
+  a two-sided index the mirror freedom at the near end is needed too.
+* `SkorokhodSpace.IsSubdivisionPinned` and `SkorokhodSpace.modulusPinned`: the
+  form the two carried until 2026-09-09, with `t 0 = (B m).min` and
+  `t (Fin.last n) = (B m).max`. They are kept because the refutation below is a
+  theorem and a theorem needs a subject.
+* `SkorokhodSpace.modulus_le_modulusPinned`: the correction only lowers the
+  modulus, so every upper bound proved of the pinned form survives. Proved
+  (2026-09-09).
+* `SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le`: **the defect of the
+  pinned form.** A pinned subdivision starts at `(B m).min` and its first gap
+  exceeds `δ`, so every point of the window within `δ` of that edge lies in the
+  first cell, whose oscillation is measured from the edge; the pinned modulus
+  therefore charges, for every `δ` and undiminished, the whole jump of `f`
+  between the window's left edge and any point that close to it. Proved
+  (2026-09-09). Nothing like it holds at the right edge, the cells being
+  `Set.Ico`; the two ends of the window are not symmetric, here as in
+  `volume_radius_exhaustionMin_mem_Ico`.
+* `SkorokhodSpace.not_tendsto_iSup_modulusPinned`: **`isCompact_closure_iff` with
+  the pinned modulus is false.** In `D(ℝ, ℝ)` the step paths
+  `stepAt (1/(n+2) - 1) 1 0` converge to `stepAt (-1) 1 0`, so
+  `A = insert (stepAt (-1) 1 0) (range …)` is compact and takes only the values
+  `0` and `1`; but the jump of the `n`-th path sits at distance `1/(n+2)` to the
+  right of the left edge `-1` of `B 1`, so its pinned modulus at `δ` is at least
+  `1` as soon as `1/(n+2) ≤ δ`, and the supremum over `A` is at least `1` for
+  every `δ > 0`. Proved (2026-09-09), and it is the reason the endpoints of
+  `IsSubdivision` are inequalities.
+* The witness is assembled from `TimeChange.scale hc` (the scaling `x ↦ c * x`
+  of `ℝ`, which fixes the base point and has `norm ≤ -Real.log c` for `c ≤ 1`),
+  `exhaustionMin_real`, `clamp_real`, `clamp_real_le_iff`,
+  `SkorokhodSpace.distWith_scale_stepAt_le_zero` (the scaling carries one step
+  path exactly onto the other at every radius outside `Set.Ioc (1-ε) 1`),
+  `SkorokhodSpace.intWith_scale_stepAt_le`, `SkorokhodSpace.intDist_stepAt_le`
+  (`≤ max (-Real.log (1-ε)) (2 ε)`) and
+  `SkorokhodSpace.tendsto_stepAt_shift`. All proved (2026-09-09). The bad radii
+  are an interval of length `ε` and the integral metric pays exactly their
+  measure — the same accounting as in `intWith_le_of_ae_distWith_le`.
 * `SkorokhodSpace.subdivisionOsc f t`, the oscillation of `f` over the half open
   cells `Set.Ico (t i.castSucc) (t i.succ)`, measured from the left endpoint of
   each cell. Written (2026-09-08). The cells are `Set.Ico` and not `Set.Icc`:
@@ -1570,7 +1609,8 @@ over a shrinking family and is therefore an infimum.
   is the one around `basePoint` and not around a free `t₀`: the left hand side
   speaks of the topology of `D ι E`, which is `SkorokhodSpace.metricSpace
   basePoint`, and a `t₀` free to differ from it would make the two sides speak
-  of two spaces.
+  of two spaces. The modulus is the corrected one; with `modulusPinned` the
+  statement is false, by `SkorokhodSpace.not_tendsto_iSup_modulusPinned`.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, where the first condition is replaced by the existence of a
   compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
@@ -1600,6 +1640,17 @@ over a shrinking family and is therefore an infimum.
   compact — as it must not be, the sequence having no convergent subsequence
   (Milestone 4). This is the instance that makes the modulus condition
   indispensable in `isCompact_closure_iff`.
+* **The jump that marches to the window's edge, and why the endpoints are not
+  pinned.** `A = insert (stepAt (-1) 1 0) {stepAt (1/(n+2) - 1) 1 0 | n}` in
+  `D(ℝ, ℝ)`, window `B 1 = [-1, 1]`. The sequence converges, so `A` is compact,
+  and the values lie in `{0,1}`; the corrected modulus is `0` for every `δ < 1/2`
+  by the subdivision `-2 < 1/(n+2) - 1 < 2`, which *undershoots* the window at
+  the near end. Pin the endpoints and the same subdivision is inadmissible, the
+  jump is trapped in the first cell and the supremum of the moduli is `1` for
+  every `δ > 0`: `SkorokhodSpace.not_tendsto_iSup_modulusPinned`. This is the
+  instance that fixes the endpoints of `IsSubdivision` as inequalities, and it is
+  the mirror of the previous one — there the criterion must reject, here it must
+  accept.
 * **A family that does have compact closure.**
   `A = {Set.indicator (Set.Ici a) 1 | a ∈ Set.Icc 1 2}`. The values lie in
   `{0,1}` and `modulus m f δ = 0` for `δ` smaller than the distance from `a` to

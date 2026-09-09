@@ -6826,15 +6826,36 @@ not `ℝ`.  The second is that the subdivision predicate is named and separate, 
 that the infimum ranges over a `Prop` and needs no `BddBelow`. -/
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
-/-- A `δ`-sparse subdivision of the window `exhaustion t₀ m`: a strictly
-monotone `t : Fin (n + 1) → ι` running from the least to the greatest point of
-the window, all of whose consecutive gaps exceed `δ`.  This is Billingsley's
-condition `min i, (t i - t (i-1)) > δ` verbatim, and the `>` is strict on
+/-- A `δ`-sparse subdivision **covering** the window `exhaustion t₀ u`: a
+strictly monotone `t : Fin (n + 1) → ι` whose first point lies at or below the
+least point of the window and whose last point lies at or above the greatest,
+all of whose consecutive gaps exceed `δ`.  The strict `>` in the gap condition
+is Billingsley's `min i, (t i - t (i-1)) > δ` verbatim, and it is strict on
 purpose: it is what makes the one jump of a step function cost nothing, since
-the jump time may be used as a subdivision point. -/
+the jump time may be used as a subdivision point.
+
+**The two inequalities were equalities until 2026-09-09, and pinning them there
+is false.**  Ethier--Kurtz's partition of `[0, T]` (their (3.6.2)) admits
+`0 = t₀ < ⋯ < t_{n-1} < T ≤ t_n`, that is, an *overshoot* at the far end, and on
+a two-sided index the mirror freedom at the near end is needed as well.  With the
+endpoints pinned, a jump sitting strictly between `exhaustionMin t₀ u` and
+`exhaustionMin t₀ u + δ` cannot be separated from the window's edge by any
+admissible subdivision, so it is charged in full --- and a sequence of paths whose
+jumps march towards that edge stays uniformly far from `0` in the modulus while
+converging in `D(ι, E)`.  That is
+`SkorokhodSpace.not_tendsto_iSup_modulusPinned`, in `D(ℝ, ℝ)`, and it refutes the
+pinned form of `SkorokhodSpace.isCompact_closure_iff`.  The pinned predicate is
+kept as `SkorokhodSpace.IsSubdivisionPinned` so that the refutation is a theorem
+and not a remark.
+
+Enlarging the admissible set makes the infimum smaller, so every theorem proved
+about the pinned modulus before the correction survives verbatim; that is
+`SkorokhodSpace.modulus_le_modulusPinned`.  Nothing is *required* to overshoot:
+`t 0 = exhaustionMin t₀ u` is still admissible, which is why
+`SkorokhodSpace.tendsto_modulus` reads `IsCadlag.exists_subdivision` unchanged. -/
 def SkorokhodSpace.IsSubdivision (t₀ : ι) (u : ℝ) (δ : ℝ) {n : ℕ}
     (t : Fin (n + 1) → ι) : Prop :=
-  StrictMono t ∧ t 0 = exhaustionMin t₀ u ∧ t (Fin.last n) = exhaustionMax t₀ u ∧
+  StrictMono t ∧ t 0 ≤ exhaustionMin t₀ u ∧ exhaustionMax t₀ u ≤ t (Fin.last n) ∧
     ∀ i : Fin n, δ < dist (t i.castSucc) (t i.succ)
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
@@ -6897,7 +6918,7 @@ theorem SkorokhodSpace.modulus_eq_zero_of_exhaustion_subsingleton (t₀ : ι) (u
     have hab' : (a : ℕ) < (b : ℕ) := hab
     omega
   refine iInf_le_of_le 0 (iInf_le_of_le (fun _ => exhaustionMin t₀ u)
-    (iInf_le_of_le ⟨hsm, rfl, h, fun i => i.elim0⟩ ?_))
+    (iInf_le_of_le ⟨hsm, le_rfl, h.ge, fun i => i.elim0⟩ ?_))
   simp [SkorokhodSpace.subdivisionOsc]
 
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
@@ -6953,16 +6974,371 @@ theorem SkorokhodSpace.tendsto_modulus (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
   filter_upwards [hev] with δ hδ
   refine le_trans ?_ hle
   refine iInf_le_of_le n (iInf_le_of_le t
-    (iInf_le_of_le ⟨ht, h0, hlast, fun i => hδ.trans (hδ₀lt i)⟩ ?_))
+    (iInf_le_of_le ⟨ht, h0.le, hlast.ge, fun i => hδ.trans (hδ₀lt i)⟩ ?_))
   refine iSup_le fun i => iSup_le fun s => iSup_le fun hs => ?_
   rw [edist_dist]
   exact ENNReal.ofReal_le_ofReal (hcell i s hs)
+
+/-! ### The pinned modulus, and the sequence that refutes it
+
+Everything from here to `SkorokhodSpace.not_tendsto_iSup_modulusPinned` is the
+record of a false statement.  `SkorokhodSpace.IsSubdivision` demanded, until
+2026-09-09, that the subdivision *begin* at `exhaustionMin t₀ u` and *end* at
+`exhaustionMax t₀ u`.  That form is kept here under the name
+`IsSubdivisionPinned`, together with the modulus built on it, because the
+refutation is a theorem about it and a theorem needs a subject. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The subdivision with its endpoints **pinned** to the endpoints of the window.
+This is the predicate `SkorokhodSpace.IsSubdivision` carried until 2026-09-09. -/
+def SkorokhodSpace.IsSubdivisionPinned (t₀ : ι) (u : ℝ) (δ : ℝ) {n : ℕ}
+    (t : Fin (n + 1) → ι) : Prop :=
+  StrictMono t ∧ t 0 = exhaustionMin t₀ u ∧ t (Fin.last n) = exhaustionMax t₀ u ∧
+    ∀ i : Fin n, δ < dist (t i.castSucc) (t i.succ)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The modulus of the pinned subdivisions. -/
+noncomputable def SkorokhodSpace.modulusPinned (t₀ : ι) (u : ℝ) (f : D(ι, E)) (δ : ℝ) : ℝ≥0∞ :=
+  ⨅ n : ℕ, ⨅ t : Fin (n + 1) → ι, ⨅ _ : SkorokhodSpace.IsSubdivisionPinned t₀ u δ t,
+    SkorokhodSpace.subdivisionOsc f t
+
+omit [AdditiveDist ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The correction only ever *lowers* the modulus: a pinned subdivision covers the
+window, so the infimum of the corrected `modulus` runs over a larger set.  Every
+upper bound proved for the pinned modulus therefore still holds for the corrected
+one, and `SkorokhodSpace.tendsto_modulus` is not weakened by the correction. -/
+theorem SkorokhodSpace.modulus_le_modulusPinned (t₀ : ι) (u : ℝ) (f : D(ι, E)) (δ : ℝ) :
+    SkorokhodSpace.modulus t₀ u f δ ≤ SkorokhodSpace.modulusPinned t₀ u f δ := by
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  exact iInf_le_of_le n (iInf_le_of_le t (iInf_le_of_le
+    ⟨ht.1, ht.2.1.le, ht.2.2.1.ge, ht.2.2.2⟩ le_rfl))
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The defect of the pinned modulus, as a general statement.**  A pinned
+subdivision starts at `exhaustionMin t₀ u` and its first gap exceeds `δ`, so
+every point of the window within `δ` of that edge lies in the *first cell*, whose
+oscillation is measured from the edge itself.  The pinned modulus therefore sees,
+undiminished and for every `δ`, the whole jump of `f` between the window's left
+edge and any point that close to it.
+
+Nothing like this holds at the right edge: the cells are `Set.Ico`, so the value
+at `exhaustionMax t₀ u` is never read.  The two ends of the window are not
+symmetric, here as in `volume_radius_exhaustionMin_mem_Ico`. -/
+theorem SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le (t₀ : ι) (u : ℝ)
+    (f : D(ι, E)) {δ : ℝ} {x : ι} (hne : exhaustionMin t₀ u ≠ exhaustionMax t₀ u)
+    (hx : exhaustionMin t₀ u ≤ x) (hxδ : dist (exhaustionMin t₀ u) x ≤ δ) :
+    edist (f.toFun x) (f.toFun (exhaustionMin t₀ u))
+      ≤ SkorokhodSpace.modulusPinned t₀ u f δ := by
+  refine le_iInf fun n => le_iInf fun t => le_iInf fun ht => ?_
+  obtain ⟨hmono, h0, hlast, hgap⟩ := ht
+  have hn : 0 < n := by
+    rcases Nat.eq_zero_or_pos n with rfl | h
+    · have hcoll : t 0 = t (Fin.last 0) := congrArg t (Fin.ext (by simp))
+      rw [h0, hlast] at hcoll
+      exact absurd hcoll hne
+    · exact h
+  set i : Fin n := ⟨0, hn⟩ with hi
+  have hcast : i.castSucc = (0 : Fin (n + 1)) := by
+    refine Fin.ext ?_
+    simp [hi]
+  have hbase : t i.castSucc = exhaustionMin t₀ u := by rw [hcast, h0]
+  have hxlt : x < t i.succ := by
+    by_contra hcon
+    push_neg at hcon
+    have h1 : t i.castSucc ≤ t i.succ := (hmono (Fin.castSucc_lt_succ (i := i))).le
+    have h2 : dist (t i.castSucc) (t i.succ) ≤ dist (t i.castSucc) x :=
+      monotoneOn_dist_basepoint (Set.mem_Ici.2 h1) (Set.mem_Ici.2 (h1.trans hcon)) hcon
+    have hxδ' : dist (t i.castSucc) x ≤ δ := by rw [hbase]; exact hxδ
+    exact absurd (lt_of_lt_of_le (hgap i) h2) (not_lt.2 hxδ')
+  refine le_iSup_of_le i (le_iSup₂_of_le x ⟨hbase.symm ▸ hx, hxlt⟩ ?_)
+  rw [hbase]
+
+/-! ### The witness in `D(ℝ, ℝ)`
+
+The paths are `SkorokhodSpace.stepAt y 1 0`, the jump times `y` march up to the
+left edge `-1` of the window `exhaustion 0 1`, and the time change that carries
+one onto the other is the scaling `x ↦ (1 - ε) * x`, which fixes the base point
+`0` for free. -/
+
+theorem strictMono_scaleFun {c : ℝ} (hc : 0 < c) : StrictMono (fun x : ℝ => c * x) :=
+  fun _ _ hxy => by simpa using mul_lt_mul_of_pos_left hxy hc
+
+theorem rightInverse_scaleFun {c : ℝ} (hc : 0 < c) :
+    Function.RightInverse (fun y : ℝ => y / c) (fun x : ℝ => c * x) := fun y => by
+  show c * (y / c) = y
+  field_simp
+
+theorem lipschitzWith_scaleFun_le {c K : ℝ} (hc : 0 < c) (hK : c ≤ K) :
+    LipschitzWith K.toNNReal (fun x : ℝ => c * x) := by
+  refine LipschitzWith.of_dist_le_mul fun x y => ?_
+  rw [Real.dist_eq, Real.dist_eq, Real.coe_toNNReal K (hc.le.trans hK),
+    show c * x - c * y = c * (x - y) by ring, abs_mul, abs_of_pos hc]
+  exact mul_le_mul_of_nonneg_right hK (abs_nonneg _)
+
+theorem lipschitzWith_scaleInvFun_le {c K : ℝ} (hc : 0 < c) (hK : c⁻¹ ≤ K) :
+    LipschitzWith K.toNNReal (fun y : ℝ => y / c) := by
+  refine LipschitzWith.of_dist_le_mul fun x y => ?_
+  rw [Real.dist_eq, Real.dist_eq, Real.coe_toNNReal K ((inv_pos.2 hc).le.trans hK),
+    show x / c - y / c = c⁻¹ * (x - y) by rw [div_sub_div_same, inv_mul_eq_div],
+    abs_mul, abs_of_pos (inv_pos.2 hc)]
+  exact mul_le_mul_of_nonneg_right hK (abs_nonneg _)
+
+/-- The scaling `x ↦ c * x` of `ℝ`, with inverse `y ↦ y / c`.  It fixes `0`, so
+it lies in `TimeChange.fixing 0`, and it moves the point `-1` to `-c` --- which
+is the whole construction of the counterexample below. -/
+noncomputable def TimeChange.scale {c : ℝ} (hc : 0 < c) : TimeChange ℝ where
+  toOrderIso :=
+    StrictMono.orderIsoOfRightInverse (fun x => c * x) (strictMono_scaleFun hc)
+      (fun y => y / c) (rightInverse_scaleFun hc)
+  lipschitz := ⟨c.toNNReal, lipschitzWith_scaleFun_le hc le_rfl⟩
+  lipschitz_symm := ⟨(c⁻¹).toNNReal, lipschitzWith_scaleInvFun_le hc le_rfl⟩
+
+@[simp] theorem TimeChange.scale_apply {c : ℝ} (hc : 0 < c) (x : ℝ) :
+    (TimeChange.scale hc).toOrderIso x = c * x := rfl
+
+@[simp] theorem TimeChange.scale_symm_apply {c : ℝ} (hc : 0 < c) (y : ℝ) :
+    ((TimeChange.scale hc)⁻¹).toOrderIso y = y / c := rfl
+
+theorem TimeChange.scale_mem_fixing {c : ℝ} (hc : 0 < c) :
+    TimeChange.scale hc ∈ TimeChange.fixing (0 : ℝ) := by
+  rw [TimeChange.mem_fixing_iff, TimeChange.scale_apply, mul_zero]
+
+/-- A contraction of `ℝ` has norm at most `-Real.log c`: both it and its inverse
+are `c⁻¹ = exp (-log c)`-Lipschitz. -/
+theorem TimeChange.norm_scale_le {c : ℝ} (hc : 0 < c) (hc1 : c ≤ 1) :
+    (TimeChange.scale hc).norm ≤ -Real.log c := by
+  have hγ : 0 ≤ -Real.log c := neg_nonneg.2 (Real.log_nonpos hc.le hc1)
+  have hKe : Real.exp (-Real.log c) = c⁻¹ := by rw [Real.exp_neg, Real.exp_log hc]
+  have hcc : c ≤ c⁻¹ := by
+    have h1 : c * c⁻¹ = 1 := mul_inv_cancel₀ hc.ne'
+    have h2 : 0 < c⁻¹ := inv_pos.2 hc
+    nlinarith
+  refine TimeChange.norm_le_of_lipschitzWith hγ ?_ ?_
+  · exact lipschitzWith_scaleFun_le hc (by rw [hKe]; exact hcc)
+  · exact lipschitzWith_scaleInvFun_le hc (by rw [hKe])
+
+/-- The least point of the window `exhaustion 0 u` of `ℝ`, the mirror of
+`exhaustionMax_real`. -/
+theorem exhaustionMin_real (u : ℝ) : exhaustionMin (0 : ℝ) u = -max u 0 := by
+  refine IsLeast.unique (isLeast_exhaustionMin (0 : ℝ) u) ?_
+  have hset : exhaustion (0 : ℝ) u = Set.Icc (-max u 0) (max u 0) := by
+    simp [exhaustion, Real.closedBall_eq_Icc]
+  rw [hset]
+  exact isLeast_Icc (by linarith [le_max_right u (0 : ℝ)])
+
+/-- The clamp of `ℝ` onto `[-u, u]`, written out. -/
+theorem clamp_real {u : ℝ} (hu : 0 ≤ u) (t : ℝ) :
+    clamp (0 : ℝ) u t = min (max t (-u)) u := by
+  rw [clamp, exhaustionMin_real, exhaustionMax_real, max_eq_left hu]
+
+/-- Reading a threshold through the clamp: a threshold strictly inside the window
+is crossed by the clamped point exactly when it is crossed by the point. -/
+theorem clamp_real_le_iff {u t r : ℝ} (hru : r < u) (hur : -u < r) :
+    (r ≤ min (max t (-u)) u) ↔ (r ≤ t) := by
+  constructor
+  · intro h
+    by_contra hc
+    push_neg at hc
+    have h1 : max t (-u) < r := max_lt hc hur
+    have h2 : min (max t (-u)) u ≤ max t (-u) := min_le_left _ _
+    linarith
+  · intro h
+    exact le_min (le_max_of_le_left h) hru.le
+
+/-- **The scaling carries one step path onto the other, at every radius but the
+few between them.**  For `u ≤ 1 - ε` neither jump time is in the window and both
+paths read as constant on it; for `u > 1` the clamp is transparent at both
+thresholds and `(1 - ε) * t ≥ ε - 1 ↔ t ≥ -1` is the scaling itself.  What is
+left over is `u ∈ (1 - ε, 1]`, a set of radii of measure `ε`, and it is genuinely
+bad: there the window's left edge separates the two jump times. -/
+theorem SkorokhodSpace.distWith_scale_stepAt_le_zero {ε u : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1)
+    (hu : 0 < u) (hgood : u ≤ 1 - ε ∨ 1 < u) :
+    SkorokhodSpace.distWith (0 : ℝ) u
+        (TimeChange.scale (show (0 : ℝ) < 1 - ε by linarith))
+        (SkorokhodSpace.stepAt (ε - 1) (1 : ℝ) 0)
+        (SkorokhodSpace.stepAt (-1) (1 : ℝ) 0) ≤ 0 := by
+  refine ciSup_le fun t => ?_
+  have hkey : ((ε - 1 : ℝ) ≤ clamp (0 : ℝ) u ((1 - ε) * t)) ↔
+      ((-1 : ℝ) ≤ clamp (0 : ℝ) u t) := by
+    rw [clamp_real hu.le, clamp_real hu.le]
+    rcases hgood with h | h
+    · exact iff_of_true (le_min (le_max_of_le_right (by linarith)) (by linarith))
+        (le_min (le_max_of_le_right (by linarith)) (by linarith))
+    · rw [clamp_real_le_iff (show (ε - 1 : ℝ) < u by linarith)
+          (show -u < (ε - 1 : ℝ) by linarith),
+        clamp_real_le_iff (show (-1 : ℝ) < u by linarith) (show -u < (-1 : ℝ) by linarith)]
+      constructor
+      · intro h'
+        by_contra hcon
+        push_neg at hcon
+        nlinarith
+      · intro h'
+        nlinarith
+  simp only [SkorokhodSpace.restrictExhaustion_apply, TimeChange.scale_apply,
+    SkorokhodSpace.stepAt_apply]
+  by_cases hc : (-1 : ℝ) ≤ clamp (0 : ℝ) u t
+  · rw [if_pos hc, if_pos (hkey.2 hc)]
+    simp
+  · rw [if_neg hc, if_neg (fun hh => hc (hkey.1 hh))]
+    simp
+
+/-- The windowed estimate carried under the integral: the bad radii form the
+measurable set `Set.Ioc (1 - ε) 1` of measure `ε`, which is what
+`SkorokhodSpace.intWith_le_of_ae_distWith_le` is for. -/
+theorem SkorokhodSpace.intWith_scale_stepAt_le {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1)
+    {M : ℝ} (hM : 0 ≤ M) :
+    SkorokhodSpace.intWith (0 : ℝ)
+        (TimeChange.scale (show (0 : ℝ) < 1 - ε by linarith))
+        (SkorokhodSpace.stepAt (ε - 1) (1 : ℝ) 0)
+        (SkorokhodSpace.stepAt (-1) (1 : ℝ) 0) ≤ 0 + ε + Real.exp (-M) := by
+  refine SkorokhodSpace.intWith_le_of_ae_distWith_le (B := Set.Ioc (1 - ε) 1) (0 : ℝ) _ _ _
+    le_rfl hM hε0.le measurableSet_Ioc ?_ ?_
+  · refine le_trans (MeasureTheory.measure_mono Set.inter_subset_right) ?_
+    rw [Real.volume_Ioc]
+    exact le_of_eq (by ring_nf)
+  · intro u hu _ hnot
+    refine SkorokhodSpace.distWith_scale_stepAt_le_zero hε0 hε1 hu ?_
+    rw [Set.mem_Ioc, not_and_or, not_lt, not_le] at hnot
+    exact hnot
+
+/-- **The two step paths are close in the metric of Milestone 4.**  The scaling is
+the time change, `-Real.log (1 - ε)` its norm, and the radius `M = -Real.log ε`
+balances the tail `exp (-M) = ε` against the bad radii. -/
+theorem SkorokhodSpace.intDist_stepAt_le {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1) :
+    SkorokhodSpace.intDist (0 : ℝ) (SkorokhodSpace.stepAt (ε - 1) (1 : ℝ) 0)
+        (SkorokhodSpace.stepAt (-1) (1 : ℝ) 0) ≤ max (-Real.log (1 - ε)) (2 * ε) := by
+  have hc : (0 : ℝ) < 1 - ε := by linarith
+  have hM : (0 : ℝ) ≤ -Real.log ε := neg_nonneg.2 (Real.log_nonpos hε0.le hε1.le)
+  have hexp : Real.exp (-(-Real.log ε)) = ε := by rw [neg_neg, Real.exp_log hε0]
+  refine le_trans (ciInf_le (SkorokhodSpace.bddBelow_range_intDist (0 : ℝ) _ _)
+    (⟨TimeChange.scale hc, TimeChange.scale_mem_fixing hc⟩ :
+      TimeChange.fixing (0 : ℝ))) ?_
+  refine max_le_max (TimeChange.norm_scale_le hc (by linarith)) ?_
+  refine le_trans (SkorokhodSpace.intWith_scale_stepAt_le hε0 hε1 hM) ?_
+  rw [hexp]
+  linarith
+
+/-- The sequence of jump times marching up to `-1`, and its convergence in
+`D(ℝ, ℝ)`.  It converges *although* the evaluation at `-1` does not: the jump is
+carried across the window's left edge by a time change of vanishing norm, and the
+radii at which the edge separates the two jump times form a set of measure
+`ε` --- the integral metric does not see them. -/
+theorem SkorokhodSpace.tendsto_stepAt_shift :
+    Tendsto (fun n : ℕ => SkorokhodSpace.stepAt (1 / ((n : ℝ) + 2) - 1) (1 : ℝ) 0) atTop
+      (𝓝 (SkorokhodSpace.stepAt (-1) (1 : ℝ) 0)) := by
+  have hpos : ∀ n : ℕ, (0 : ℝ) < 1 / ((n : ℝ) + 2) := fun n => by positivity
+  have hlt1 : ∀ n : ℕ, 1 / ((n : ℝ) + 2) < 1 := fun n => by
+    have hn : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+    rw [div_lt_one (by linarith)]
+    linarith
+  have hbig : Tendsto (fun n : ℕ => ((n : ℝ) + 2)) atTop atTop :=
+    tendsto_atTop_add_const_right _ 2 tendsto_natCast_atTop_atTop
+  have hε : Tendsto (fun n : ℕ => 1 / ((n : ℝ) + 2)) atTop (𝓝 0) := by
+    simpa only [one_div, Function.comp_def] using tendsto_inv_atTop_zero.comp hbig
+  have hlog : Tendsto (fun n : ℕ => -Real.log (1 - 1 / ((n : ℝ) + 2))) atTop (𝓝 0) := by
+    have h1 : Tendsto (fun n : ℕ => 1 - 1 / ((n : ℝ) + 2)) atTop (𝓝 1) := by
+      simpa using (tendsto_const_nhds (x := (1 : ℝ)) (f := atTop (α := ℕ))).sub hε
+    simpa [Real.log_one] using (h1.log one_ne_zero).neg
+  have hmax : Tendsto (fun n : ℕ => max (-Real.log (1 - 1 / ((n : ℝ) + 2)))
+      (2 * (1 / ((n : ℝ) + 2)))) atTop (𝓝 0) := by
+    have h := hlog.max (hε.const_mul (2 : ℝ))
+    rwa [mul_zero, max_self] at h
+  refine tendsto_iff_dist_tendsto_zero.2 (squeeze_zero (fun _ => dist_nonneg) (fun n => ?_) hmax)
+  rw [SkorokhodSpace.dist_eq]
+  exact SkorokhodSpace.intDist_stepAt_le (hpos n) (hlt1 n)
+
+/-- **The refutation.**  The set `A` is a convergent sequence of step paths
+together with its limit, so its closure is compact; every path in it takes only
+the two values `0` and `1`, so the compact containment condition holds at every
+window on the nose.  But the jump of the `n`-th path sits at distance
+`1 / (n + 2)` to the right of the left edge `-1` of the window `exhaustion 0 1`,
+so by `SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le` the pinned
+modulus of that path at `δ` is at least `1` as soon as `1 / (n + 2) ≤ δ` --- and
+some `n` does that for every `δ > 0`.  The supremum over `A` is therefore at
+least `1` for every positive `δ`, and it does not tend to `0`.
+
+`SkorokhodSpace.isCompact_closure_iff` with `modulusPinned` in place of `modulus`
+is thus false, and this is why `SkorokhodSpace.IsSubdivision` admits an
+undershoot at the near end of the window. -/
+theorem SkorokhodSpace.not_tendsto_iSup_modulusPinned :
+    ∃ A : Set D(ℝ, ℝ), IsCompact (closure A) ∧
+      (∀ m : ℕ, IsCompact (closure
+        {x : ℝ | ∃ f ∈ A, ∃ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t = x})) ∧
+      ¬ Tendsto (fun δ : ℝ => ⨆ f ∈ A, SkorokhodSpace.modulusPinned (0 : ℝ) 1 f δ)
+          (𝓝[>] 0) (𝓝 0) := by
+  set F : ℕ → D(ℝ, ℝ) :=
+    fun n => SkorokhodSpace.stepAt (1 / ((n : ℝ) + 2) - 1) (1 : ℝ) 0 with hF
+  set A : Set D(ℝ, ℝ) := insert (SkorokhodSpace.stepAt (-1) (1 : ℝ) 0) (Set.range F) with hA
+  have hcompact : IsCompact A :=
+    SkorokhodSpace.tendsto_stepAt_shift.isCompact_insert_range
+  refine ⟨A, ?_, ?_, ?_⟩
+  · rwa [hcompact.isClosed.closure_eq]
+  · intro m
+    have hsub : {x : ℝ | ∃ f ∈ A, ∃ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t = x}
+        ⊆ ({0, 1} : Set ℝ) := by
+      rintro x ⟨f, hf, t, -, rfl⟩
+      rcases hf with rfl | ⟨n, rfl⟩
+      · by_cases h : (-1 : ℝ) ≤ t
+        · exact Or.inr (by rw [SkorokhodSpace.stepAt_apply, if_pos h]; rfl)
+        · exact Or.inl (by rw [SkorokhodSpace.stepAt_apply, if_neg h])
+      · by_cases h : 1 / ((n : ℝ) + 2) - 1 ≤ t
+        · exact Or.inr (by rw [hF]; rw [SkorokhodSpace.stepAt_apply, if_pos h]; rfl)
+        · exact Or.inl (by rw [hF]; rw [SkorokhodSpace.stepAt_apply, if_neg h])
+    refine ((Set.finite_singleton (1 : ℝ)).insert 0).isCompact.of_isClosed_subset
+      isClosed_closure ?_
+    exact closure_minimal hsub ((Set.finite_singleton (1 : ℝ)).insert 0).isClosed
+  · intro hten
+    have hopen : Set.Iio (1 : ℝ≥0∞) ∈ 𝓝 (0 : ℝ≥0∞) :=
+      isOpen_Iio.mem_nhds (by norm_num)
+    have hev : ∀ᶠ δ : ℝ in 𝓝[>] (0 : ℝ),
+        (⨆ f ∈ A, SkorokhodSpace.modulusPinned (0 : ℝ) 1 f δ) < 1 := hten hopen
+    have hmem0 : ∀ᶠ δ : ℝ in 𝓝[>] (0 : ℝ), δ ∈ Set.Ioi (0 : ℝ) := self_mem_nhdsWithin
+    obtain ⟨δ, hδlt, hδpos⟩ := (hev.and hmem0).exists
+    obtain ⟨n, hn⟩ := exists_nat_one_div_lt (Set.mem_Ioi.1 hδpos)
+    have hnle : 1 / ((n : ℝ) + 2) ≤ δ := by
+      have hcast : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+      have h1 : 1 / ((n : ℝ) + 2) ≤ 1 / ((n : ℝ) + 1) :=
+        one_div_le_one_div_of_le (by linarith) (by linarith)
+      linarith
+    have hmin : exhaustionMin (0 : ℝ) 1 = -1 := by
+      rw [exhaustionMin_real, max_eq_left (zero_le_one' ℝ)]
+    have hmax : exhaustionMax (0 : ℝ) 1 = 1 := by
+      rw [exhaustionMax_real, max_eq_left (zero_le_one' ℝ)]
+    have hne : exhaustionMin (0 : ℝ) 1 ≠ exhaustionMax (0 : ℝ) 1 := by
+      rw [hmin, hmax]; norm_num
+    have hxpos : (0 : ℝ) < 1 / ((n : ℝ) + 2) := by positivity
+    have hx : exhaustionMin (0 : ℝ) 1 ≤ 1 / ((n : ℝ) + 2) - 1 := by
+      rw [hmin]; linarith
+    have hxδ : dist (exhaustionMin (0 : ℝ) 1) (1 / ((n : ℝ) + 2) - 1) ≤ δ := by
+      rw [hmin, Real.dist_eq]
+      rw [show (-1 : ℝ) - (1 / ((n : ℝ) + 2) - 1) = -(1 / ((n : ℝ) + 2)) by ring, abs_neg,
+        abs_of_pos hxpos]
+      exact hnle
+    have hkey := SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le (0 : ℝ) 1 (F n)
+      hne hx hxδ
+    have hval : edist ((F n).toFun (1 / ((n : ℝ) + 2) - 1))
+        ((F n).toFun (exhaustionMin (0 : ℝ) 1)) = 1 := by
+      rw [hmin, hF]
+      simp only [SkorokhodSpace.stepAt_apply, if_pos (le_refl (1 / ((n : ℝ) + 2) - 1)),
+        if_neg (by linarith : ¬ 1 / ((n : ℝ) + 2) - 1 ≤ (-1 : ℝ))]
+      rw [edist_dist, Real.dist_eq]
+      norm_num
+    rw [hval] at hkey
+    have hmem : F n ∈ A := Set.mem_insert_iff.2 (Or.inr (Set.mem_range_self n))
+    have hle : (1 : ℝ≥0∞) ≤ ⨆ f ∈ A, SkorokhodSpace.modulusPinned (0 : ℝ) 1 f δ :=
+      le_iSup₂_of_le (F n) hmem hkey
+    exact absurd hδlt (not_lt.2 hle)
 
 /-- The compactness criterion.  The base point is the one of the instance and
 not a parameter: the left hand side speaks of the topology of `D(ι, E)`, which
 is `SkorokhodSpace.metricSpaceInt basePoint`, and a `t₀` free to differ from it
 would make the two sides speak of two different spaces.  This is the correction
-that `BasePoint` forced, and it is the reason the class carries data. -/
+that `BasePoint` forced, and it is the reason the class carries data.
+
+The modulus is the corrected one of `SkorokhodSpace.IsSubdivision`, whose
+subdivisions may over- and undershoot the window.  With the pinned subdivisions
+the statement is **false**, by
+`SkorokhodSpace.not_tendsto_iSup_modulusPinned`. -/
 theorem SkorokhodSpace.isCompact_closure_iff (A : Set D(ι, E)) :
     IsCompact (closure A) ↔ ∀ m : ℕ,
       IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion (basePoint : ι) m, f.toFun t = x}) ∧
