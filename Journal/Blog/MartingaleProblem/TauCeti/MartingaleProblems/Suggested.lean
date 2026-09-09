@@ -18,8 +18,13 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-07.  Every declaration elaborates; 9 declarations carry `sorry`, and
-every one of those `sorry`s is a **proof**.  The first proof of the
+2026-09-09.  Every declaration elaborates; 9 declarations carry `sorry`, and
+every one of those `sorry`s is a **proof**.  The last block of the file,
+Milestone 4's `IsStepPath`, was added on 2026-09-09 and carries none: its three
+declarations are proved, and one of them,
+`exists_finite_setOf_leftLim_ne_not_isCadlagPath`, is the witness that the
+roadmap's first proposal for that predicate -- local finiteness of the jump set
+-- does not imply càdlàg.  The first proof of the
 file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
 corrected first: under `¬ IsMin t` alone it is false.  On 2026-09-07 twelve more
 proofs came in: `Clock.interval_union`, the additivity every compensator
@@ -1034,3 +1039,160 @@ theorem isMPSolution_of_forall_condExp_eq_of_dense {𝓧 : Set (ι → Ω → �
     IsMPSolution 𝓧 𝓕 P := sorry
 
 end FromDense
+
+/-! ## Milestone 4: the paths the jump construction delivers
+
+The jump process of Milestone 4 is built to have paths that are constant between
+consecutive jumps and jump only finitely often in finite time.  Three otherwise
+awkward steps of that construction are easy on such paths: the joint
+measurability in `(t, ω)` is a sum over finitely many pieces instead of a limit
+argument, the assignment `t ↦ n` of a time to its jump index is a `Nat.find`,
+and the càdlàg property is immediate.  The property is therefore isolated first,
+as a **predicate** and not as a type class -- it is a property of a term, so
+instance search would have nothing to key on, and Mathlib's fallback `Fact` is
+expressly not meant for this (`Logic/Basic.lean`, library note "fact
+non-instances"). -/
+
+section StepPath
+
+variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]
+variable {E : Type*} [TopologicalSpace E]
+
+/-- **A step path**: constant on a right neighbourhood of every point, and
+constant on some left neighbourhood of every point.
+
+**This is not the condition the roadmap first proposed, and the difference is
+not a matter of taste.**  The proposal was to ask for the *jump set* to be
+locally finite,
+
+```
+∀ K : Set ι, IsCompact K → ({x | Function.leftLim f x ≠ f x} ∩ K).Finite
+```
+
+and to derive right continuity and the existence of left limits from it.  That
+implication is **false**, and the witness is one line:
+`exists_finite_setOf_leftLim_ne_not_isCadlagPath` below exhibits
+`f = Set.indicator {0} 1` on `ℝ`, whose jump set is the single point `0` -- so
+the condition holds on every compact set -- and which is not right continuous at
+`0`.  The reason is that `Function.leftLim` is *total*
+(`Topology/Order/LeftRightLim.lean:50`): where no left limit exists it returns
+the value `f x`, so a path with no left limits anywhere has an **empty** jump
+set and passes the test vacuously.  A condition on the jump set alone therefore
+cannot see either half of càdlàg.
+
+Constancy on a one sided neighbourhood sees both, and it is what the
+construction actually produces: between two consecutive jump times the path does
+not move.  Right continuity is the first conjunct read as a limit, the left
+limit is the constant of the second, and the local finiteness of the jumps is a
+*consequence* (`IsStepPath.finite_setOf_not_continuousAt_inter`) rather than the
+definition. -/
+def IsStepPath (f : ι → E) : Prop :=
+  (∀ x : ι, ∀ᶠ y in 𝓝[≥] x, f y = f x) ∧ ∀ x : ι, ∃ c, ∀ᶠ y in 𝓝[<] x, f y = c
+
+omit [OrderTopology ι] in
+/-- **A step path is càdlàg.**  Both halves are the same two lines: a function
+that is eventually constant along a filter converges along it to that constant.
+Right continuity uses `𝓝[>] x ≤ 𝓝[≥] x`, which is where the first conjunct is
+stated on the *closed* right neighbourhood -- that is the form the construction
+delivers, since the path takes the value `f x` at `x` itself and keeps it. -/
+theorem IsStepPath.isCadlagPath {f : ι → E} (hf : IsStepPath f) : IsCadlagPath f := by
+  refine ⟨fun t => ?_, fun t => ?_⟩
+  · have h : ∀ᶠ y in 𝓝[>] t, f y = f t :=
+      (hf.1 t).filter_mono (nhdsWithin_mono t Set.Ioi_subset_Ici_self)
+    exact Filter.Tendsto.congr' (h.mono fun y hy => hy.symm) tendsto_const_nhds
+  · obtain ⟨c, hc⟩ := hf.2 t
+    exact ⟨c, Filter.Tendsto.congr' (hc.mono fun y hy => hy.symm) tendsto_const_nhds⟩
+
+/-- **A step path is discontinuous at only finitely many points of a compact
+set.**  This is the property the construction is built for, and on the present
+definition it is a theorem rather than a hypothesis.
+
+The proof is `IsCompact.elim_nhds_subcover` against a punctured neighbourhood of
+continuity, exactly as in `IsCadlag.finite_largeLeftJumpSet_inter` of the
+roadmap **SkorokhodSpace**.  The punctured neighbourhood costs nothing and needs
+**no case distinction on `IsMax x` or `IsMin x`**: `mem_nhdsWithin` returns the
+two witnesses already *open*, so the two conjuncts give open `V, W ∋ x` with
+`f = f x` on `V ∩ Set.Ici x` and `f = c` on `W ∩ Set.Iio x`.  Since `Set.Ioi x`
+and `Set.Iio x` are open in the order topology, `V ∩ Set.Ioi x` and
+`W ∩ Set.Iio x` are open sets on which `f` is constant, so `f` is continuous at
+every point of either; and by trichotomy every `y ∈ V ∩ W` other than `x` lies in
+one of them.  Extracting intervals `Set.Ico x u` and `Set.Ioo l x` instead --
+which is what a max or a min would make awkward -- is therefore not needed: what
+carries the argument is that the two *sides* are open, not that they have
+endpoints. -/
+theorem IsStepPath.finite_setOf_not_continuousAt_inter {f : ι → E} (hf : IsStepPath f)
+    {K : Set ι} (hK : IsCompact K) : ({x | ¬ ContinuousAt f x} ∩ K).Finite := by
+  have key : ∀ x : ι, ∃ U ∈ 𝓝 x, ∀ y ∈ U, y ≠ x → ContinuousAt f y := by
+    intro x
+    obtain ⟨V, hVo, hxV, hVsub⟩ := mem_nhdsWithin.1 (hf.1 x)
+    obtain ⟨c, hc⟩ := hf.2 x
+    obtain ⟨W, hWo, hxW, hWsub⟩ := mem_nhdsWithin.1 hc
+    refine ⟨V ∩ W, (hVo.inter hWo).mem_nhds ⟨hxV, hxW⟩, fun y hy hyx => ?_⟩
+    rcases lt_trichotomy y x with hlt | heq | hgt
+    · have hOpen : IsOpen (W ∩ Set.Iio x) := hWo.inter isOpen_Iio
+      have hmem : y ∈ W ∩ Set.Iio x := ⟨hy.2, hlt⟩
+      have hconst : ∀ z ∈ W ∩ Set.Iio x, f z = f y := by
+        intro z hz
+        rw [hWsub hz, hWsub hmem]
+      refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [hOpen.mem_nhds hmem] with z hz using (hconst z hz).symm
+    · exact absurd heq hyx
+    · have hOpen : IsOpen (V ∩ Set.Ioi x) := hVo.inter isOpen_Ioi
+      have hmem : y ∈ V ∩ Set.Ioi x := ⟨hy.1, hgt⟩
+      have hconst : ∀ z ∈ V ∩ Set.Ioi x, f z = f y := by
+        intro z hz
+        rw [hVsub ⟨hz.1, hz.2.le⟩, hVsub ⟨hmem.1, hmem.2.le⟩]
+      refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [hOpen.mem_nhds hmem] with z hz using (hconst z hz).symm
+  choose U hU hUsub using key
+  obtain ⟨s, -, hcover⟩ := hK.elim_nhds_subcover U fun x _ => hU x
+  refine Set.Finite.subset s.finite_toSet ?_
+  rintro y ⟨hy1, hy2⟩
+  obtain ⟨x, hxs, hx⟩ := Set.mem_iUnion₂.1 (hcover hy2)
+  by_contra hys
+  exact hy1 (hUsub x y hx (by rintro rfl; exact hys hxs))
+
+/-- **The witness against the jump set as a definition.**  There is an
+`f : ℝ → ℝ` whose jump set meets every compact set in a finite set and which is
+not càdlàg: `f = Set.indicator {0} 1`.
+
+Its jump set is `{0}`, and the reason it is not bigger is the totality of
+`Function.leftLim`: away from `0` the left limit is `0` and so is the value.  Its
+failure is on the *other* side -- `f` is `0` on `Set.Ioi 0` and `1` at `0`, so it
+is not right continuous at `0` -- and the jump set is blind to that, since the
+jump set is defined from the left limit alone.
+
+This is why `IsStepPath` is stated by constancy on one sided neighbourhoods and
+not by a condition on the jump set. -/
+theorem exists_finite_setOf_leftLim_ne_not_isCadlagPath :
+    ∃ f : ℝ → ℝ, (∀ K : Set ℝ, IsCompact K →
+        ({x : ℝ | Function.leftLim f x ≠ f x} ∩ K).Finite) ∧ ¬ IsCadlagPath f := by
+  classical
+  set f : ℝ → ℝ := Set.indicator {(0 : ℝ)} (fun _ => (1 : ℝ)) with hf_def
+  have hf0 : f 0 = 1 := by simp [hf_def]
+  have hfne : ∀ x : ℝ, x ≠ 0 → f x = 0 := by
+    intro x hx
+    simp [hf_def, hx]
+  have hjump : {x : ℝ | Function.leftLim f x ≠ f x} ⊆ {0} := by
+    intro x hx
+    by_contra hx0
+    refine hx ?_
+    have hev : ∀ᶠ y in 𝓝[<] x, f y = 0 :=
+      ((eventually_ne_nhds (by simpa using hx0)).filter_mono nhdsWithin_le_nhds).mono
+        fun y hy => hfne y hy
+    have htend : Tendsto f (𝓝[<] x) (𝓝 0) :=
+      Filter.Tendsto.congr' (hev.mono fun y hy => hy.symm) tendsto_const_nhds
+    rw [_root_.leftLim_eq_of_tendsto htend, hfne x (by simpa using hx0)]
+  refine ⟨f, fun K hK => Set.Finite.subset (Set.finite_singleton (0 : ℝ)) ?_, ?_⟩
+  · exact fun x hx => hjump hx.1
+  · rintro ⟨hr, -⟩
+    have h1 : Tendsto f (𝓝[>] (0 : ℝ)) (𝓝 (f 0)) := hr 0
+    have h0 : Tendsto f (𝓝[>] (0 : ℝ)) (𝓝 0) := by
+      refine Filter.Tendsto.congr' (Filter.EventuallyEq.symm ?_) tendsto_const_nhds
+      filter_upwards [self_mem_nhdsWithin] with y hy
+      exact hfne y (ne_of_gt hy)
+    have hone := tendsto_nhds_unique h1 h0
+    rw [hf0] at hone
+    exact one_ne_zero hone
+
+end StepPath

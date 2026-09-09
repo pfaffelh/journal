@@ -31,9 +31,8 @@ import Mathlib.Topology.UrysohnsLemma
 Prototypes only.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-09.  Every declaration elaborates, and the only warnings are
-`declaration uses 'sorry'`; those `sorry`s are the statements' own proofs, which
-is what this file is for.
+2026-09-09.  Every declaration elaborates, and none of them carries a `sorry`
+any more.
 
 Twenty declarations are no longer `sorry` but proved.  Of Milestone 1:
 `IsSeparating.mono`, `IsConvergenceDetermining.mono`,
@@ -348,8 +347,12 @@ argument for a single measure, which is what the limit law can use.  All nine
 declarations of that run depend on `propext`, `Classical.choice` and `Quot.sound`
 alone.  What of
 Milestone 4 has no signature in this file, and never had one, is the de la
-Vallée-Poussin form and the four stability lemmas.  The only **open** `sorry` of
-this file is `exists_ae_tendsto_of_tendsto` of Milestone 3.
+Vallée-Poussin form and the four stability lemmas.
+
+Since 2026-09-09, sixteenth run, this file carries **no `sorry` at all**: the
+last one, `exists_ae_tendsto_of_tendsto` of Milestone 3 -- the Skorokhod
+representation theorem -- is proved, and depends on `propext`,
+`Classical.choice` and `Quot.sound` alone.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -4715,7 +4718,33 @@ Borel isomorphism theorem, and that needs `E` Polish, a strictly stronger hypoth
 this milestone is stated under.  Since the section variable `E` has an auto-bound universe that
 cannot be named, the type variable is introduced here with a universe of its own; `Type _` does not
 work, because it auto-binds a *second*, universally quantified universe and the witness then does
-not fit. -/
+not fit.
+
+**The levels, and why the level function is total.**  Level `k` carries the finite partition of
+`exists_finite_partition_diam_le_null_frontier` with `ε = η = 2⁻ᵏ`; since each of its finitely many
+pieces has positive `ν`-mass and null frontier,
+`ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto'` makes the row defect
+
+```
+∀ i ∈ K k,  ENNReal.ofReal (1 - 1/k) * ν (A k i) ≤ μ n (A k i)
+```
+
+-- which is exactly the hypothesis `hdef` of `exists_measurable_pair_of_partition_subset` -- hold
+for all large `n`.  The level of stage `n` is the largest `k ≤ n + 1` for which it already holds.
+That maximum is over a **nonempty** set for every `n`, and not by an accident of the bookkeeping:
+`1 - 1/1 = 0` and `ENNReal.ofReal 0 = 0`, so level `1` asserts nothing and is always admissible.
+Level `1` is what makes the level function total without a case distinction, and the convergence
+above is what makes it tend to infinity.
+
+**The tail estimate, and where the two disjuncts part company.**  With
+`B k = {z | z.1.1 ∈ A k 0} ∪ {z | 1 - 1/k < z.1.2}` the two halves are bounded by wholly different
+means.  The first halves are summable -- `ν (A m 0) ≤ 2⁻ᵐ` is the `η` of the partition -- so the
+union over `m ≥ K` costs a geometric tail.  The second halves are **not** summed at all: they are
+events of the *one* shared uniform variable and they nest, `1 - 1/m ≥ 1 - 1/K` for `m ≥ K`, so
+their union over `m ≥ K` is already `{ξ > 1 - 1/K}`, of Lebesgue measure `1/K` on `(0,1]`.  Summing
+them instead would give `∑ 1/m = ∞` and prove nothing; this is the point at which the whole design
+of `stagesMeasure` -- one uniform variable for all stages -- is cashed in, and it is why
+`ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` asks for the tails and not for the terms. -/
 theorem exists_ae_tendsto_of_tendsto.{u} {F : Type u} [MeasurableSpace F] [MetricSpace F]
     [BorelSpace F] [TopologicalSpace.SeparableSpace F] {μ : ℕ → ProbabilityMeasure F}
     {ν : ProbabilityMeasure F} (h : Tendsto μ atTop (𝓝 ν)) :
@@ -4723,7 +4752,194 @@ theorem exists_ae_tendsto_of_tendsto.{u} {F : Type u} [MeasurableSpace F] [Metri
       (X : ℕ → Ω → F) (Y : Ω → F),
       (∀ n, Measurable (X n)) ∧ Measurable Y ∧
       (∀ n, P.map (X n) = (μ n : Measure F)) ∧ P.map Y = (ν : Measure F) ∧
-      ∀ᵐ ω ∂P, Tendsto (fun n => X n ω) atTop (𝓝 (Y ω)) := sorry
+      ∀ᵐ ω ∂P, Tendsto (fun n => X n ω) atTop (𝓝 (Y ω)) := by
+  classical
+  have : IsProbabilityMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
+    isProbabilityMeasure_volume_restrict_Ioc
+  have hpos : ∀ k : ℕ, (0 : ℝ) < (1 / 2 : ℝ) ^ k := fun k => pow_pos (by norm_num) k
+  have hposE : ∀ k : ℕ, (0 : ℝ≥0∞) < ENNReal.ofReal ((1 / 2 : ℝ) ^ k) :=
+    fun k => ENNReal.ofReal_pos.2 (hpos k)
+  -- the levels: level `k` is the finite partition into pieces of diameter and remainder `2⁻ᵏ`
+  choose KK AA hK0 hAm hAd hAu hAfr hAout hApos hAdiam hAbdd hA0 using
+    fun k : ℕ => exists_finite_partition_diam_le_null_frontier (ν : Measure F) (hpos k) (hposE k)
+  have hAb : ∀ k i, i ≠ 0 → Bornology.IsBounded (AA k i) := by
+    intro k i hi
+    by_cases hik : i ∈ KK k
+    · exact hAbdd k i hik
+    · rw [hAout k i hi hik]; exact Bornology.isBounded_empty
+  have hAdm : ∀ k i, i ≠ 0 → Metric.diam (AA k i) ≤ (1 / 2 : ℝ) ^ k := by
+    intro k i hi
+    by_cases hik : i ∈ KK k
+    · exact hAdiam k i hik
+    · rw [hAout k i hi hik, Metric.diam_empty]; exact (hpos k).le
+  have hconv : ∀ k i, Tendsto (fun n => (μ n : Measure F) (AA k i)) atTop
+      (𝓝 ((ν : Measure F) (AA k i))) :=
+    fun k i => ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto' h (hAfr k i)
+  -- the level of stage `n`: the largest level below `n + 1` whose row defect is already paid
+  obtain ⟨kn, hkn1, hknQ, hkntop⟩ : ∃ kn : ℕ → ℕ, (∀ n, 1 ≤ kn n) ∧
+      (∀ n, ∀ i ∈ KK (kn n), ENNReal.ofReal (1 - 1 / (kn n : ℝ)) * (ν : Measure F) (AA (kn n) i)
+        ≤ (μ n : Measure F) (AA (kn n) i)) ∧ Tendsto kn atTop atTop := by
+    have hQ1 : ∀ n : ℕ, ∀ i ∈ KK 1,
+        ENNReal.ofReal (1 - 1 / ((1 : ℕ) : ℝ)) * (ν : Measure F) (AA 1 i)
+          ≤ (μ n : Measure F) (AA 1 i) := by
+      intro n i _
+      have h1 : (1 : ℝ) - 1 / ((1 : ℕ) : ℝ) = 0 := by norm_num
+      rw [h1, ENNReal.ofReal_zero, zero_mul]
+      exact zero_le
+    have hne : ∀ n : ℕ, ((Finset.Icc 1 (n + 1)).filter fun k =>
+        ∀ i ∈ KK k, ENNReal.ofReal (1 - 1 / (k : ℝ)) * (ν : Measure F) (AA k i)
+          ≤ (μ n : Measure F) (AA k i)).Nonempty := by
+      intro n
+      exact ⟨1, Finset.mem_filter.2 ⟨Finset.mem_Icc.2 ⟨le_refl 1, by omega⟩, hQ1 n⟩⟩
+    refine ⟨fun n => ((Finset.Icc 1 (n + 1)).filter fun k =>
+        ∀ i ∈ KK k, ENNReal.ofReal (1 - 1 / (k : ℝ)) * (ν : Measure F) (AA k i)
+          ≤ (μ n : Measure F) (AA k i)).max' (hne n), ?_, ?_, ?_⟩
+    · intro n
+      exact (Finset.mem_Icc.1 (Finset.mem_filter.1 (Finset.max'_mem _ (hne n))).1).1
+    · intro n
+      exact (Finset.mem_filter.1 (Finset.max'_mem _ (hne n))).2
+    · rw [tendsto_atTop]
+      intro b
+      rcases Nat.eq_zero_or_pos b with rfl | hb
+      · exact Eventually.of_forall fun n => Nat.zero_le _
+      · have hQb : ∀ᶠ n in atTop, ∀ i ∈ KK b,
+            ENNReal.ofReal (1 - 1 / (b : ℝ)) * (ν : Measure F) (AA b i)
+              ≤ (μ n : Measure F) (AA b i) := by
+          refine (Filter.eventually_all_finset (KK b)).2 fun i hi => ?_
+          have hνpos : (ν : Measure F) (AA b i) ≠ 0 := (hApos b i hi).ne'
+          have hνtop : (ν : Measure F) (AA b i) ≠ ⊤ := measure_ne_top _ _
+          have hlt1 : ENNReal.ofReal (1 - 1 / (b : ℝ)) < 1 := by
+            refine ENNReal.ofReal_lt_one.2 ?_
+            have : (0 : ℝ) < 1 / (b : ℝ) := by
+              have : (0 : ℝ) < (b : ℝ) := by exact_mod_cast hb
+              positivity
+            linarith
+          have hstrict : ENNReal.ofReal (1 - 1 / (b : ℝ)) * (ν : Measure F) (AA b i)
+              < (ν : Measure F) (AA b i) := by
+            calc ENNReal.ofReal (1 - 1 / (b : ℝ)) * (ν : Measure F) (AA b i)
+                < 1 * (ν : Measure F) (AA b i) :=
+                  ENNReal.mul_lt_mul_left hνpos hνtop hlt1
+              _ = (ν : Measure F) (AA b i) := one_mul _
+          exact ((hconv b i).eventually (eventually_gt_nhds hstrict)).mono fun n hn => hn.le
+        filter_upwards [hQb, eventually_ge_atTop b] with n hn hnb
+        exact Finset.le_max' _ b (Finset.mem_filter.2 ⟨Finset.mem_Icc.2 ⟨hb, by omega⟩, hn⟩)
+  -- the stages, on one space and with one uniform variable
+  have hdef : ∀ n i, i ≠ 0 → ENNReal.ofReal (1 - 1 / (kn n : ℝ)) * (ν : Measure F) (AA (kn n) i)
+      ≤ (μ n : Measure F) (AA (kn n) i) := by
+    intro n i hi
+    by_cases hik : i ∈ KK (kn n)
+    · exact hknQ n i hik
+    · rw [hAout (kn n) i hi hik]; simp
+  obtain ⟨X, hXm, hXlaw, hY, hbad⟩ := exists_measurable_pair_of_partition_subset
+    (ν : Measure F) (fun n => (μ n : Measure F)) (A := fun n => AA (kn n))
+    (fun n i => hAm (kn n) i) (fun n => hAd (kn n)) (fun n => hAu (kn n))
+    (fun n i hi => hAb (kn n) i hi) (ε := fun n => (1 / 2 : ℝ) ^ kn n)
+    (t := fun n => 1 / (kn n : ℝ)) (fun n => by positivity)
+    (fun n i hi => hAdm (kn n) i hi) hdef
+  set P : Measure ((F × ℝ) × (ℕ × ℕ → F)) :=
+    stagesMeasure (ν : Measure F) (fun n => (μ n : Measure F)) (fun n => AA (kn n)) with hP_def
+  have hPprob : IsProbabilityMeasure P := by rw [hP_def, stagesMeasure]; infer_instance
+  -- the bad event of level `k`
+  set B : ℕ → Set ((F × ℝ) × (ℕ × ℕ → F)) := fun k =>
+    {z | z.1.1 ∈ AA k 0} ∪ {z | 1 - 1 / (k : ℝ) < z.1.2} with hB_def
+  have hYm : Measurable fun z : (F × ℝ) × (ℕ × ℕ → F) => z.1.1 :=
+    measurable_fst.comp measurable_fst
+  have hC : ∀ m, P {z : (F × ℝ) × (ℕ × ℕ → F) | z.1.1 ∈ AA m 0} = (ν : Measure F) (AA m 0) := by
+    intro m
+    have hset : {z : (F × ℝ) × (ℕ × ℕ → F) | z.1.1 ∈ AA m 0}
+        = (fun z : (F × ℝ) × (ℕ × ℕ → F) => z.1.1) ⁻¹' AA m 0 := rfl
+    rw [hset, ← Measure.map_apply hYm (hAm m 0), hY]
+  have hD : ∀ c : ℝ, P {z : (F × ℝ) × (ℕ × ℕ → F) | c < z.1.2}
+      = (volume.restrict (Set.Ioc (0 : ℝ) 1)) (Set.Ioi c) := by
+    intro c
+    have hset : {z : (F × ℝ) × (ℕ × ℕ → F) | c < z.1.2}
+        = ((univ : Set F) ×ˢ Set.Ioi c) ×ˢ (univ : Set (ℕ × ℕ → F)) := by
+      ext z; simp [Set.mem_prod]
+    rw [hP_def, hset, stagesMeasure]
+    simp only [Measure.prod_prod, measure_univ, one_mul, mul_one]
+  -- the tail of the bad events
+  have hB : Tendsto (fun K => P (⋃ m ≥ K, B m)) atTop (𝓝 0) := by
+    have hbound : ∀ K : ℕ, 1 ≤ K →
+        P (⋃ m ≥ K, B m) ≤ ENNReal.ofReal ((1 / 2 : ℝ) ^ K * 2 + 1 / (K : ℝ)) := by
+      intro K hK
+      have hsub : (⋃ m ≥ K, B m)
+          ⊆ (⋃ j : ℕ, {z : (F × ℝ) × (ℕ × ℕ → F) | z.1.1 ∈ AA (j + K) 0})
+            ∪ {z : (F × ℝ) × (ℕ × ℕ → F) | 1 - 1 / (K : ℝ) < z.1.2} := by
+        intro z hz
+        simp only [Set.mem_iUnion, exists_prop] at hz
+        obtain ⟨m, hm, hzm⟩ := hz
+        rcases hzm with hz1 | hz2
+        · exact Or.inl (Set.mem_iUnion.2 ⟨m - K, by simpa [Nat.sub_add_cancel hm] using hz1⟩)
+        · refine Or.inr ?_
+          have hle : 1 - 1 / (K : ℝ) ≤ 1 - 1 / (m : ℝ) := by
+            have hKR : (0 : ℝ) < (K : ℝ) := by exact_mod_cast hK
+            have hmR : (K : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+            have : 1 / (m : ℝ) ≤ 1 / (K : ℝ) := by
+              apply one_div_le_one_div_of_le hKR hmR
+            linarith
+          exact lt_of_le_of_lt hle hz2
+      refine le_trans (measure_mono hsub) ?_
+      refine le_trans (measure_union_le _ _) ?_
+      have h1 : P (⋃ j : ℕ, {z : (F × ℝ) × (ℕ × ℕ → F) | z.1.1 ∈ AA (j + K) 0})
+          ≤ ENNReal.ofReal ((1 / 2 : ℝ) ^ K * 2) := by
+        refine le_trans (measure_iUnion_le _) ?_
+        have hterm : ∀ j : ℕ, P {z : (F × ℝ) × (ℕ × ℕ → F) | z.1.1 ∈ AA (j + K) 0}
+            ≤ ENNReal.ofReal ((1 / 2 : ℝ) ^ (j + K)) := by
+          intro j
+          rw [hC]
+          exact hA0 (j + K)
+        refine le_trans (ENNReal.tsum_le_tsum hterm) ?_
+        have hsummable : Summable fun j : ℕ => (1 / 2 : ℝ) ^ (j + K) := by
+          simpa [pow_add] using (summable_geometric_of_lt_one (by norm_num) (by norm_num) :
+            Summable fun j : ℕ => (1 / 2 : ℝ) ^ j).mul_right ((1 / 2 : ℝ) ^ K)
+        rw [← ENNReal.ofReal_tsum_of_nonneg (fun j => (hpos (j + K)).le) hsummable]
+        refine ENNReal.ofReal_le_ofReal ?_
+        have : ∑' j : ℕ, (1 / 2 : ℝ) ^ (j + K) = (1 / 2 : ℝ) ^ K * 2 := by
+          rw [show (fun j : ℕ => (1 / 2 : ℝ) ^ (j + K))
+            = fun j : ℕ => (1 / 2 : ℝ) ^ K * (1 / 2 : ℝ) ^ j from
+              funext fun j => by rw [pow_add, mul_comm], tsum_mul_left,
+            tsum_geometric_of_lt_one (by norm_num) (by norm_num)]
+          norm_num
+        exact this.le
+      have h2 : P {z : (F × ℝ) × (ℕ × ℕ → F) | 1 - 1 / (K : ℝ) < z.1.2}
+          ≤ ENNReal.ofReal (1 / (K : ℝ)) := by
+        rw [hD, Measure.restrict_apply measurableSet_Ioi]
+        refine le_trans (measure_mono (?_ : Set.Ioi (1 - 1 / (K : ℝ)) ∩ Set.Ioc (0 : ℝ) 1
+          ⊆ Set.Ioc (1 - 1 / (K : ℝ)) 1)) ?_
+        · rintro x ⟨hx1, hx2⟩
+          exact ⟨hx1, hx2.2⟩
+        · rw [Real.volume_Ioc]
+          exact ENNReal.ofReal_le_ofReal (by ring_nf; rfl)
+      calc P (⋃ j : ℕ, {z : (F × ℝ) × (ℕ × ℕ → F) | z.1.1 ∈ AA (j + K) 0})
+            + P {z : (F × ℝ) × (ℕ × ℕ → F) | 1 - 1 / (K : ℝ) < z.1.2}
+          ≤ ENNReal.ofReal ((1 / 2 : ℝ) ^ K * 2) + ENNReal.ofReal (1 / (K : ℝ)) :=
+            add_le_add h1 h2
+        _ = ENNReal.ofReal ((1 / 2 : ℝ) ^ K * 2 + 1 / (K : ℝ)) := by
+            rw [← ENNReal.ofReal_add (by positivity) (by positivity)]
+    have hlim : Tendsto (fun K : ℕ => ENNReal.ofReal ((1 / 2 : ℝ) ^ K * 2 + 1 / (K : ℝ)))
+        atTop (𝓝 0) := by
+      have hr : Tendsto (fun K : ℕ => (1 / 2 : ℝ) ^ K * 2 + 1 / (K : ℝ)) atTop (𝓝 0) := by
+        have h1 : Tendsto (fun K : ℕ => (1 / 2 : ℝ) ^ K * 2) atTop (𝓝 0) := by
+          simpa using (tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num) (by norm_num)
+            : Tendsto (fun K : ℕ => (1 / 2 : ℝ) ^ K) atTop (𝓝 0)).mul_const 2
+        simpa using h1.add tendsto_one_div_atTop_nhds_zero_nat
+      have := (ENNReal.continuous_ofReal.tendsto 0).comp hr
+      simpa [Function.comp_def] using this
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hlim
+      (Eventually.of_forall fun K => zero_le) ?_
+    filter_upwards [eventually_ge_atTop 1] with K hK using hbound K hK
+  -- the conclusion
+  refine ⟨(F × ℝ) × (ℕ × ℕ → F), inferInstance, P, hPprob, X, fun z => z.1.1, hXm,
+    measurable_fst.comp measurable_fst, hXlaw, hY, ?_⟩
+  refine ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge
+    (δ := fun k => (1 / 2 : ℝ) ^ k) (k := kn) (B := B)
+    (tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num) (by norm_num)) hkntop ?_ hB
+  intro n
+  filter_upwards [hbad n] with z hz
+  intro hd
+  rcases hz hd with h1 | h2
+  · exact Or.inl h1
+  · exact Or.inr h2
 
 /-! ## Milestone 4: uniform integrability against convergence in distribution
 
