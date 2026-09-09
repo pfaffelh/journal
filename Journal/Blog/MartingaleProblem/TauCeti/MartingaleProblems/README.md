@@ -536,21 +536,82 @@ A concrete family of solutions, built without any of the theory above. Index
   times values in `ℝ≥0∞`, and the milestone does not need it: `lam` bounded away
   from `0` and from `∞` is exactly the hypothesis of `jumpProcess_isMPSolution`.
 * `tendsto_sum_waiting_atTop`: the partial sums of the waiting times diverge
-  `waitingMeasure`-almost surely. This is the one probabilistic input the path
-  statements above take as a hypothesis, and it is what makes
+  `waitingMeasure`-almost surely. **Proved** on 2026-09-09, eighteenth run,
+  together with `ae_pos_waiting`, `frequently_one_lt_waiting`,
+  `iIndepSet_waiting`, `waitingMeasure_eval_preimage`, `expMeasure_one_Iic_zero`
+  and `expMeasure_one_Ioi_one_ne_zero`. This is the one probabilistic input the
+  path statements above take as a hypothesis, and it is what makes
   `isCadlagPath_jumpProcess` an almost sure statement about `jumpMeasure mu nu`
   rather than a conditional one. It is the second Borel--Cantelli lemma,
-  `ProbabilityTheory.measure_limsup_eq_one`, on the independent events
+  `ProbabilityTheory.measure_limsup_eq_one`
+  (`Mathlib/Probability/BorelCantelli.lean:69`), on the independent events
   `{ξ n > 1}`, whose common probability `expMeasure 1 (Set.Ioi 1) = exp (-1)` is
-  positive; the independence comes from
-  `MeasureTheory.Measure.infinitePi` through
-  `ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`. Together with
-  `∀ n, 0 < ξ n` almost surely — the exponential law has no atom at `0` — it
-  discharges both hypotheses of `isStepPath_jumpProcess` at once.
+  positive — `expMeasure_one_Ioi_one_ne_zero` states the positivity alone, which
+  is all `ENNReal.tsum_const_eq_top_of_ne_zero` consumes. Together with `∀ n, 0 < ξ n` almost surely — the exponential law has
+  no atom at `0`, which is `cdf_expMeasure_eq` at `0` — it discharges both
+  hypotheses of `isStepPath_jumpProcess` at once.
+
+  **The independence is the product formula and not the independence API.** The
+  route through `ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`
+  (`Independence/InfinitePi.lean:103`) is a detour: it produces `iIndepFun` of
+  the coordinates, from which `iIndepSet` of the events `{ξ n > 1}` still has to
+  be extracted, and Mathlib has no lemma in that direction. What
+  `measure_limsup_eq_one` wants is `iIndepSet`, and
+  `ProbabilityTheory.iIndepSet_iff_meas_biInter`
+  (`Independence/Basic.lean:623`) says it *is* the product formula for finite
+  intersections — which for coordinate events is `Set.pi` and therefore
+  `MeasureTheory.Measure.infinitePi_pi` (`Probability/ProductMeasure.lean:405`)
+  in one step. The general lesson is the file's own: ask for the statement the
+  consumer needs, not for the named concept nearest to it.
+* `ae_isStepPath_jumpProcess`, `ae_isCadlagPath_jumpProcess`: the two path
+  statements of the previous item with their hypotheses discharged, so that they
+  hold for `jumpMeasure mu nu`-almost every `ω` under `0 < lam ≤ L` alone.
+  **Proved** in the same run, over `jumpMeasure_map_snd`: the waiting times are
+  the second marginal of a product measure, so `MeasureTheory.ae_of_ae_map`
+  carries every almost sure statement about `waitingMeasure` to the sample
+  space.
+* `expMeasure_Ioi`, `expMeasure_Ioi_add`: the tail `exp (-(r * x))` of the
+  exponential law and its memorylessness. **Proved** on 2026-09-09, eighteenth
+  run. Mathlib has the distribution function (`cdf_expMeasure_eq`) and neither of
+  these, in v4.33.1 nor on `upstream/master`; a search for `memoryless` over
+  `Mathlib/` returns nothing. This is the one distributional property of the
+  waiting times that the martingale property below rests on, and it is the reason
+  the holding time at a state can be given by a rate rather than by a clock.
+* `jumpProcess_zero`, `jumpMeasure_map_jumpProcess_zero`: the *process* starts
+  with law `nu`, and not merely the chain that drives it.
+  **Proved** on 2026-09-09, eighteenth run. The zeroth window contains `0` as
+  soon as the first holding time is positive, so the two statements differ by an
+  almost sure equality and `Measure.map_congr`.
+* `lebesgueClock : Clock ℝ≥0`: the clock of the jump martingale problem.
+  **Proved** on 2026-09-09, eighteenth run. **The index is `ℝ≥0` and not `ℝ`**,
+  because `mpFamily` needs `[OrderBot ι]`, and the process of the martingale
+  problem is therefore `fun t ω ↦ jumpProcess lam (t : ℝ) ω`. `ℝ≥0` has a
+  `MeasurableSpace` instance
+  (`MeasureTheory/Constructions/BorelSpace/Basic.lean:717`) but **no**
+  `MeasureSpace` instance and hence no `volume`; Mathlib gives subtypes their
+  measure through `MeasureTheory.Measure.Subtype.measureSpace`, which is
+  deliberately not an instance (`MeasureTheory/Measure/Restrict.lean:843`). That
+  costs nothing, because `Clock` carries its measurable space and its measure as
+  *fields*, which is what that design decision was for: the clock is
+  `((volume : Measure ℝ).restrict (Set.Ici 0)).map Real.toNNReal`.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
+  This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
+  `Clock.Conv.optional (fun t ω ↦ jumpProcess lam (t : ℝ) ω)) 𝓕 (jumpMeasure mu nu)`,
+  and every piece of it except the operator as a *set* and the filtration is
+  built.
+* `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
+  **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a
-  bounded linear map on bounded measurable functions.
+  bounded linear map on bounded measurable functions. **Proved** on 2026-09-09,
+  eighteenth run, as `abs_jumpApply_le`, in the pointwise shape
+  `(∀ x, |f x| ≤ C) → |jumpApply lam mu f x| ≤ 2 * L * C`. The pointwise shape is
+  deliberate: it needs no normed space of bounded measurable functions, and it
+  needs no integrability of `f` either, because
+  `MeasureTheory.norm_integral_le_of_norm_le` dominates by a constant, which is
+  integrable for a Markov kernel whether `f` is or not. The bundled form is the
+  same statement read in `E →ᵇ ℝ` and is what the Picard iteration of the next
+  item will take.
 * `exists_unique_of_bounded`: for `lam` bounded the martingale problem for
   `(A, nu)` has exactly one solution, and its one dimensional distributions are
   `nu.map (exp (t • A))` given by the exponential series of the bounded operator.

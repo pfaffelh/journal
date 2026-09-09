@@ -14517,3 +14517,224 @@ Prozeß nicht explodiert" beginnen. Er ist überdies klein genug, um in einem La
 zu fallen, und macht damit den Weg zu Punkt 2 frei, der lang ist.
 
 **Das Manuskript ist nicht angefaßt.**
+
+
+### 2026-09-09, achtzehnter Lauf des Tages — die Wartezeiten divergieren, und der Sprungprozeß hat unbedingt Treppenpfade
+
+**Vorrangige Aufgabe, Teil C: der letzte Rest von Punkt 1 ist weg.** Die beiden
+f.s.-Aussagen über `waitingMeasure`, die der siebzehnte Lauf als Hypothesen hat
+stehen lassen, sind bewiesen, und mit ihnen sind `ae_isStepPath_jumpProcess` und
+`ae_isCadlagPath_jumpProcess` **unbedingte** Aussagen über `jumpMeasure mu nu`.
+**Zehn neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+Abschnitt `JumpConstruction`; die ganze Datei geht durch `lake env lean` gegen
+v4.33.1 ohne Fehler und mit denselben neun alten `sorry` wie zuvor, keines davon
+im neuen Block, und alle zehn sind einzeln mit `#print axioms` geprüft und hängen
+an `propext`, `Classical.choice`, `Quot.sound` und an nichts sonst.
+
+Die zehn, in Abhängigkeitsreihenfolge: `waitingMeasure_eval_preimage`,
+`expMeasure_one_Iic_zero`, `expMeasure_one_Ioi_one_ne_zero`, `iIndepSet_waiting`,
+`ae_pos_waiting`, `frequently_one_lt_waiting`, `tendsto_sum_waiting_atTop`,
+`jumpMeasure_map_snd`, `ae_isStepPath_jumpProcess`, `ae_isCadlagPath_jumpProcess`.
+
+#### Der angesagte Weg zur Unabhängigkeit war ein Umweg, und der Befund ist die Suchregel selbst
+
+Der siebzehnte Lauf hatte
+`ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`
+(`Mathlib/Probability/Independence/InfinitePi.lean:103`) als Weg genannt. Er
+führt an der Sache vorbei: er liefert `iIndepFun` der Koordinaten, und was
+`measure_limsup_eq_one` verlangt, ist `iIndepSet` der Ereignisse `{ξ n > 1}`.
+Von `iIndepFun` zu `iIndepSet` der Urbilder hat Mathlib **kein** Lemma; man
+müßte es selbst bauen.
+
+Genommen ist statt dessen die Aussage, die der Verbraucher wirklich will:
+`ProbabilityTheory.iIndepSet_iff_meas_biInter`
+(`Mathlib/Probability/Independence/Basic.lean:623`) sagt, daß `iIndepSet` **die
+Produktformel für endliche Durchschnitte ist**, nicht mehr und nicht weniger.
+Für Koordinatenereignisse ist dieser Durchschnitt ein `Set.pi`, und die
+Produktformel dafür steht als `MeasureTheory.Measure.infinitePi_pi`
+(`Mathlib/Probability/ProductMeasure.lean:405`). `iIndepSet_waiting` ist damit
+sieben Zeilen. Das ist wieder die Regel des 2026-09-05: nach der **Aussage**
+suchen, nicht nach dem Begriff, der ihr am nächsten klingt — hier war der
+Begriff sogar gefunden, und er war trotzdem der falsche Baustein.
+
+#### Die Divergenz kommt ohne Summenbuchhaltung aus
+
+`tendsto_sum_waiting_atTop` sieht nach einer Rechnung mit endlichen Teilsummen
+aus (aus unendlich vielen Gliedern über `1` eine untere Schranke bauen), und sie
+ist keine. `not_summable_iff_tendsto_nat_atTop_of_nonneg`
+(`Mathlib/Topology/Algebra/InfiniteSum/Real.lean:61`) macht aus dem Ziel für
+nichtnegative Glieder die **Nichtsummierbarkeit**, und die ist ein Dreizeiler:
+wäre die Folge summierbar, so ginge sie gegen `0` (`Summable.tendsto_atTop_zero`),
+läge also schließlich unter `1`, und das widerspricht `∃ᶠ n, 1 < ξ n` durch
+`Frequently.and_eventually`. Der ganze Beweis ist vier Zeilen. Die Nichtnegativität
+kommt aus `ae_pos_waiting` und wird an genau dieser Stelle gebraucht — ohne sie ist
+Nichtsummierbarkeit nicht Divergenz.
+
+#### Zwei kleine Lücken in Mathlib, benannt
+
+* **`MeasurableSet (limsup s atTop)` gibt es nicht** — weder als
+  `MeasurableSet.limsup` noch unter einem anderen Namen; die Suche nach
+  `MeasurableSet (limsup` findet in ganz Mathlib nur die σ-Algebren-Fassung
+  `MeasurableSet[limsup s f] t` des Null-Eins-Gesetzes, die etwas anderes ist.
+  `measure_limsup_eq_one` selbst braucht sie nicht, weil es über
+  `filtrationOfSet` geht; wer aus ihr eine f.s.-Aussage machen will, braucht sie.
+  Sie ist drei Zeilen über `Filter.limsup_eq_iInf_iSup_of_nat` plus
+  `Set.iInf_eq_iInter`, `Set.iSup_eq_iUnion`, und sie steht jetzt inline in
+  `frequently_one_lt_waiting`. Das ist ein Kandidat für einen Mathlib-PR.
+* **Die Elaboration von `{ω | ω i ∈ A i}`**: Lean normalisiert das im Ziel zu
+  `(fun f => f i) ⁻¹' A i`, und ein `rw` mit der `setOf`-Fassung findet dann
+  nichts. Kostet zwei Minuten, wenn man es weiß, und einen Fehldurchlauf, wenn
+  nicht.
+
+#### Der Übergang auf den Produktraum
+
+`jumpMeasure_map_snd` ist ein Einzeiler (`Measure.map_snd_prod`, `measure_univ`,
+`one_smul`), und mit ihm trägt `MeasureTheory.ae_of_ae_map`
+(`MeasureTheory/Measure/Map.lean:248`) jede f.s.-Aussage über `waitingMeasure`
+auf den Stichprobenraum. Beide f.s.-Aussagen werden dabei **zusammen**
+transportiert (`ae_pos_waiting.and tendsto_sum_waiting_atTop`), weil
+`isStepPath_jumpProcess` sie zusammen braucht; getrennt transportiert wären es
+zwei Filter-Argumente statt eines.
+
+Die Unabhängigkeit von Kette und Wartezeiten wird an keiner Stelle gebraucht —
+nur, daß die Wartezeiten die zweite Randverteilung sind. Das Produkt in
+`jumpMeasure` leistet hier also weniger, als es aussieht; gebraucht wird es
+später, im Beweis von `jumpProcess_isMPSolution`, wo das Gedächtnislosigkeits-
+argument über der bedingten Verteilung der nächsten Wartezeit läuft.
+
+#### Was das für den Meilenstein heißt
+
+Punkt 0 und Punkt 1 von Meilenstein 4 sind vollständig durch, ohne Hypothese,
+die nicht in der Signatur steht. `MartingaleProblems/README.md`, Meilenstein 4,
+ist nachgezogen: der Punkt `tendsto_sum_waiting_atTop` trägt das Ergebnis samt
+dem Befund über den Umweg, und `ae_isStepPath_jumpProcess` steht als eigener
+Punkt dahinter.
+
+#### Vorschlag für den nächsten Lauf
+
+**`jumpProcess_isMPSolution`, Punkt 2 des Meilensteins** — `thm:jumpMP`, die
+erste in Lean bewiesene Lösung eines Martingalproblems. Alles, worauf sie ruht,
+steht jetzt: der Prozeß (`jumpProcess`), sein Raum (`jumpMeasure`), das
+Anfangsgesetz (`jumpMeasure_map_chain_zero`), die gemeinsame Meßbarkeit
+(`measurable_jumpProcess`) und die Pfade (`ae_isCadlagPath_jumpProcess`), und
+keine dieser Aussagen trägt noch eine Hypothese über die Wartezeiten. Warum
+jetzt: es ist das eigentliche Ziel des Meilensteins, und der Meilenstein ist der
+einzige Zweig der Existenztheorie, der von Hand konstruiert statt aus einem
+anderen Prozeß gewonnen wird. Der erste Schritt ist die Filtration und die
+Zerlegung von `f (X t) - f (X 0) - ∫_0^t A f (X s) ds` längs der Sprungzeiten;
+der einzige nicht buchhalterische Schritt darin ist die Gedächtnislosigkeit der
+Exponentialverteilung, für die zuerst zu klären ist, was Mathlib dazu hat
+(`expMeasure`, `Probability/Distributions/Exponential.lean` — die Datei kennt
+Dichte und Verteilungsfunktion, ein Gedächtnislosigkeitslemma ist dort nicht zu
+sehen und wäre dann selbst zu beweisen).
+
+**Das Manuskript ist nicht angefaßt.**
+
+#### Derselbe Lauf, zweiter Teil — die Gedächtnislosigkeit und der Erzeuger
+
+Nach dem Abschluß von Punkt 1 sind vier weitere Deklarationen dazugekommen, alle
+bewiesen, alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft, und die Datei geht weiterhin ohne Fehler durch
+`lake env lean`.
+
+**`expMeasure_Ioi` und `expMeasure_Ioi_add` — und Mathlib hat beides nicht.**
+`expMeasure r (Set.Ioi x) = ENNReal.ofReal (exp (-(r * x)))` für `0 ≤ x`, und
+daraus die Gedächtnislosigkeit in der multiplikativen Gestalt
+`P(ξ > s + t) = P(ξ > s) · P(ξ > t)`. `Mathlib/Probability/Distributions/`
+`Exponential.lean` kennt Dichte, Integrierbarkeit und Verteilungsfunktion
+(`cdf_expMeasure_eq`), aber nicht den Schwanz; und eine Suche nach `memoryless`
+über ganz `Mathlib/` liefert **nichts**, weder in v4.33.1 noch auf
+`upstream/master` (`git grep -il memoryless upstream/master -- Mathlib/`, leer).
+Das ist ein Kandidat für einen Mathlib-PR und, wichtiger, es ist die eine
+Verteilungsaussage, auf der die Martingaleigenschaft des Sprungprozesses ruht:
+sie ist der Grund, aus dem die Haltezeit an einem Zustand durch eine **Rate**
+und nicht durch eine Uhr gegeben werden darf. Als Nebenertrag ist
+`expMeasure_one_Ioi_one_ne_zero` jetzt ein Zweizeiler aus `expMeasure_Ioi`
+statt einer eigenen Rechnung an der Verteilungsfunktion.
+
+**`jumpApply` und `abs_jumpApply_le` — Punkt 3 des Meilensteins, zur Hälfte.**
+`jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)` ist der Erzeuger von
+`set:jumpdata`, über `[MeasurableSpace E]` allein, und
+`abs_jumpApply_le` ist `norm_apply_le` in punktweiser Gestalt:
+`(∀ x, |f x| ≤ C) → |jumpApply lam mu f x| ≤ 2 * L * C` unter `0 ≤ lam ≤ L`.
+
+Die punktweise Gestalt ist Absicht und spart zweierlei. Sie braucht **keinen
+normierten Raum beschränkter meßbarer Funktionen** — der wäre erst zu bauen —,
+und sie braucht **keine Integrierbarkeit von `f`**, weil
+`MeasureTheory.norm_integral_le_of_norm_le`
+(`MeasureTheory/Integral/Bochner/Basic.lean:947`) gegen eine *Konstante*
+majorisiert, und die ist unter einem Markovkern integrierbar, ob `f` es ist oder
+nicht. Wer statt dessen über `integral_mono` ginge, müßte die Integrierbarkeit
+von `f` unter `mu x` aus Beschränktheit und Meßbarkeit erst herstellen, und
+`Measurable f` steht dann in der Signatur, wo es nicht hingehört.
+
+#### Ein benanntes Hindernis für Punkt 2, damit der nächste Lauf nicht darüber stolpert
+
+`mpFamily` verlangt `[OrderBot ι]`, und der Index des Sprungprozesses ist `ℝ`,
+das keinen hat. Der Index des Martingalproblems muß also `ℝ≥0` sein (oder der
+Teilraum `Set.Ici (0:ℝ)`), mit `X t ω = jumpProcess lam (t : ℝ) ω`. `ℝ≥0` hat
+`LinearOrder`, `OrderBot`, `OrderTopology` und nach
+`MeasureTheory/Constructions/BorelSpace/Basic.lean:717` eine
+`MeasurableSpace`-Instanz — aber **keine `MeasureSpace`-Instanz**, also kein
+`volume`; Mathlib gibt Teilräumen ihr Maß über `Measure.Subtype.measureSpace`,
+das ausdrücklich *keine* Instanz ist (`Measure/Restrict.lean:843`, so gemacht
+für `unitInterval`).
+
+Das ist hier **kein** Hindernis, und der Grund ist die Bauform von `Clock`: sie
+trägt `measurableSpace` und `q` als **Felder** und nicht als Instanzen, genau
+damit an dieser Stelle nichts an einer fehlenden Instanz hängt. Die Uhr des
+Sprungprozesses ist also `⟨inferInstance, Measure.comap NNReal.toReal volume, …⟩`,
+und die drei Beweispflichten (`Iic` und `Iio` meßbar, `q (Iic t) ≠ ⊤`) sind je
+eine Zeile. Der Befund gehört trotzdem hierher, weil die naheliegende Vermutung
+„`ℝ≥0` hat schon ein `volume`" falsch ist und einen Lauf kosten würde.
+
+#### Der Vorschlag, präzisiert
+
+Der nächste Lauf beginnt mit der Uhr `lebesgueClock : Clock ℝ≥0` und der
+Aussage von `jumpProcess_isMPSolution`, in dieser Reihenfolge und ohne
+dazwischen etwas anderes anzufangen; die Filtration ist die von
+`jumpProcess lam` erzeugte, und der Erzeuger steht mit `jumpApply` bereit. Erst
+wenn die Aussage steht und typprüft, wird an ihrem Beweis gearbeitet; der erste
+Schritt darin ist die Zerlegung längs der Sprungzeiten, und der einzige nicht
+buchhalterische ist `expMeasure_Ioi_add`, die jetzt dasteht.
+
+#### Derselbe Lauf, dritter Teil — das Anfangsgesetz des Prozesses, und die Uhr
+
+Vier weitere Deklarationen, alle bewiesen und alle mit `#print axioms` geprüft;
+die Datei geht weiterhin ohne Fehler durch `lake env lean`, mit denselben neun
+`sorry` wie am Morgen. Der Lauf hat damit **achtzehn** neue Deklarationen und
+kein neues `sorry`.
+
+**`jumpProcess_zero` und `jumpMeasure_map_jumpProcess_zero`.** Der siebzehnte
+Lauf hatte `jumpMeasure_map_chain_zero` — das Anfangsgesetz der **Kette** ist
+`nu`. Das ist nicht dasselbe wie das Anfangsgesetz des **Prozesses**, und die
+Differenz ist genau die Frage, ob `stepIndex T 0 = 0` ist. Sie ist es, sobald
+die erste Haltezeit positiv ist, also f.s.; die beiden Aussagen unterscheiden
+sich um eine f.s.-Gleichheit und `Measure.map_congr`. Ohne diesen Schritt wäre
+„Lösung des Martingalproblems für `(A, nu)`" um die Hälfte seiner Aussage
+ärmer.
+
+**`lebesgueClock : Clock ℝ≥0`, und die Indexfrage ist damit entschieden.** Der
+Index ist `ℝ≥0` und nicht `ℝ`, weil `mpFamily` `[OrderBot ι]` verlangt; der
+Prozeß des Martingalproblems ist also `fun t ω ↦ jumpProcess lam (t : ℝ) ω`. Das
+Maß ist `((volume : Measure ℝ).restrict (Set.Ici 0)).map Real.toNNReal`, und die
+drei Beweispflichten sind je eine Zeile — `Real.toNNReal_le_iff_le_coe` macht
+das Urbild von `Iic t` zu `Iic (t : ℝ)`, und `Real.volume_Icc` schließt ab.
+
+Der Weg über `Measure.comap NNReal.toReal volume` wäre der naheliegendere und
+ist der teurere: er verlangt, `NNReal.toReal` als meßbare Einbettung
+nachzuweisen, bevor `Measure.comap` überhaupt rechnet. Der Weg über
+`Measure.map` braucht nur `measurable_real_toNNReal`, und die Einschränkung auf
+`Set.Ici 0` ist es, die `Real.toNNReal` auf dem Träger injektiv macht.
+
+**Woran das nächste hängt.** Von der Aussage `jumpProcess_isMPSolution` fehlen
+jetzt noch zwei Stücke, und beide sind benannt: der Erzeuger als **Menge**
+(`jumpOperator lam mu : Set ((E → ℝ) × (E → ℝ))`, die Paare `(f, jumpApply … f)`
+für beschränktes meßbares `f`) und die **Filtration**. Die Filtration ist der
+Punkt, an dem es klemmen kann: `MeasureTheory.Filtration.natural` verlangt
+`StronglyMeasurable` der erzeugenden Abbildungen, und `StronglyMeasurable` über
+einem bloß topologischen `E` ist nicht `Measurable` — es ist der punktweise
+Limes einfacher Funktionen. Für die Konstruktion ist das kein Hindernis (die
+Pfade nehmen abzählbar viele Werte an, und `measurable_stepPath` faktorisiert
+über `ℕ`), aber es ist eine Beweispflicht und keine Instanz, und der nächste
+Lauf soll sie einplanen statt sie zu entdecken.
