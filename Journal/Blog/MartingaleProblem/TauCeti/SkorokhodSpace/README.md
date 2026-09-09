@@ -1688,31 +1688,77 @@ over a shrinking family and is therefore an infimum.
   the middle thirds Cantor set of `not_separableSpace_of_rigid`, with `S` its part
   in `Set.Icc (1/4 : ℝ) (3/4)`, `η = 1/4`, `N = 1` and `c = Real.log 3`; as there,
   the rigidity is a computation on paper and stands as a hypothesis.
-* `SkorokhodSpace.isCompact_closure_iff`, **over the index `ℝ`**: `A ⊆ D ℝ E` has
-  compact closure if and only if for every `m` the set `{f t | f ∈ A, t ∈ B m}`
-  has compact closure in `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. The
-  forward direction is proved for *every* index, as the pair
-  `isCompact_closure_values_of_isCompact` and
-  `tendsto_iSup_modulus_of_isCompact`; only the converse is index bound, by the
-  previous item, and it is stated where it is true rather than under a class
-  invented to make it true. `HasCountableCore ι` would exclude the witness but is
-  the class of *separability*: it yields a countable family of step paths, and
-  total boundedness asks for a finite one. The window is the one around
-  `basePoint` and not around a free `t₀`: the left hand side speaks of the
-  topology of `D ℝ E`, which is `SkorokhodSpace.metricSpaceInt basePoint`, and a
-  `t₀` free to differ from it would make the two sides speak of two spaces. The
-  modulus is the corrected one; with `modulusPinned` the statement is false, by
-  `SkorokhodSpace.not_tendsto_iSup_modulusPinned`.
+* `SkorokhodSpace.dist_le_distWith_stepAt_of_exp_norm_mul_lt`,
+  `SkorokhodSpace.le_intWith_stepAt_of_exp_norm_mul_lt` and
+  `SkorokhodSpace.le_intDist_stepAt_of_exp_mul_lt`: **the separation of two step
+  paths without a rigidity hypothesis.** If `t₀ ≤ x < y` and a time change fixing
+  `t₀` has `exp ‖l‖ * dist t₀ x < dist t₀ y`, then `l⁻¹ x` still lies below `y`
+  and the two paths are `dist a b` apart there; so either the time change costs
+  `c` or the integral sees `exp (-dist t₀ y) * min 1 (dist a b)`. Proved
+  (2026-09-09). It is the quantitative form of the fact that the metric fixes the
+  base point: near `t₀` the admissible time changes are short, so what is
+  preserved there is a *ratio* of distances and not a distance.
+* `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint`: **the converse of
+  the criterion is false over `ℝ` too**, for a modulus whose subdivisions may
+  avoid the base point. Proved (2026-09-09), with no hypothesis left on paper.
+  The family is `stepAt ((1/4)^(k+1)) a b`, its jump times accumulating at the
+  base point: two values, and the subdivision `-(m+1) < (1/4)^(k+1) < m+1` is
+  `δ`-sparse for every `δ < 3/4` with no oscillation at all, so both conditions
+  hold; but the previous item makes it `r`-separated with
+  `r = min (log 2) (exp (-1) * min 1 (dist a b))`, and an infinite `r`-separated
+  set is not totally bounded.
+* `SkorokhodSpace.IsSubdivisionBased`, `SkorokhodSpace.modulusBased` and
+  `SkorokhodSpace.modulus_le_modulusBased`: the repair, and it is Ethier–Kurtz's
+  own. Their partition of `[0,T]` begins at `0`, where the base point, the left
+  end of the index and the left end of every window coincide; on a two-sided
+  index those come apart and what the criterion needs is the base point **among
+  the nodes**, `t₀ ∈ Set.range t`. Written (2026-09-09). It separates the two
+  refutations correctly: the family just above is rejected, the cell starting at
+  `t₀` being wider than `δ` and swallowing the jump, while the family of
+  `not_tendsto_iSup_modulusPinned`, whose jumps march to the window's *edge*, is
+  still accepted by the subdivision `-m-1 < jump < 0 < m+1`.
+* `SkorokhodSpace.isCompact_closure_iff`, **over the index `ℝ` and with
+  `modulusBased`**: `A ⊆ D ℝ E` has compact closure if and only if for every `m`
+  the set `{f t | f ∈ A, t ∈ B m}` has compact closure in `E` and
+  `lim_{δ→0} sup_{f ∈ A} modulusBased m f δ = 0`. Only the converse is index
+  bound, by `not_isCompact_closure_of_rigid`, and it is stated where it is true
+  rather than under a class invented to make it true. `HasCountableCore ι` would
+  exclude that witness but is the class of *separability*: it yields a countable
+  family of step paths, and total boundedness asks for a finite one. The window is
+  the one around `basePoint` and not around a free `t₀`: the left hand side speaks
+  of the topology of `D ℝ E`, which is `SkorokhodSpace.metricSpaceInt basePoint`,
+  and a `t₀` free to differ from it would make the two sides speak of two spaces.
+  Three forms of the modulus have been tried and two are refuted theorems of this
+  file — pinned to the window's edges by `not_tendsto_iSup_modulusPinned`, free of
+  the base point by `not_isCompact_closure_of_jumps_at_basePoint`.
+* `IsCadlag.exists_subdivision_through`: a càdlàg subdivision of `Set.Icc a b`
+  through a prescribed interior point `c`, with cell oscillation at most `ε`. It
+  is `IsCadlag.exists_subdivision` twice, on `[a,c]` and on `[c,b]`, and the two
+  `Fin` tuples concatenated. Both halves of the criterion read it: the forward
+  half because the argument of `tendsto_iSup_modulus_of_isCompact` transports
+  through `isSubdivision_comp`, which carries a node at `t₀` to a node at `t₀`,
+  and needs only its *input* to carry one; the converse because the finite net is
+  built from a grid whose cell at the base point is what the refutation above
+  shows must be there.
+* `SkorokhodSpace.tendsto_modulusBased`: the based analogue of
+  `tendsto_modulus`, out of the previous item.
+* `SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact`: the forward half for
+  the based modulus. `modulus ≤ modulusBased` runs the wrong way, so the estimate
+  proved for `modulus` does not transfer and the Arzelà–Ascoli argument is
+  repeated on based subdivisions; every step of it survives unchanged.
 * The converse's proof is the finite net: for `ε` take `m` with `exp (-m) < ε`,
-  then `δ` from the modulus condition, then for each path a `δ`-sparse subdivision
-  of oscillation below `ε`; its nodes are pushed onto a **finite grid** of the
-  window — this is where `ℝ` is used and where the rigid index fails — and its
-  values onto a finite net of the value compactum. The approximant is
-  `SkorokhodSpace.stepPath`, the bound is `SkorokhodSpace.distWith_stepPath_le`,
-  and the passage from the window to the integral is
-  `SkorokhodSpace.intWith_le_of_ae_distWith_le`. What is new is the grid together
-  with the time change onto it, and the bound on the *number* of nodes, which
-  comes from the sparseness and the compactness of the window.
+  then `δ` from the modulus condition, then for each path a `δ`-sparse based
+  subdivision of oscillation below `ε`; its nodes are pushed onto a **finite
+  grid** of the window — this is where `ℝ` is used and where the rigid index
+  fails — and its values onto a finite net of the value compactum. The approximant
+  is `SkorokhodSpace.stepPath`, the bound is
+  `SkorokhodSpace.distWith_stepPath_le`, and the passage from the window to the
+  integral is `SkorokhodSpace.intWith_le_of_ae_distWith_le`. What is new is the
+  grid together with the time change onto it, and the bound on the *number* of
+  nodes, which comes from the sparseness and the compactness of the window. The
+  grid holds the base point, and the displacement of a node is bounded by a
+  fraction of its distance to the base point rather than by an absolute amount:
+  that is what `le_intDist_stepAt_of_exp_mul_lt` shows to be necessary.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, over `ℝ`, where the first condition is replaced by the
   existence of a compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
@@ -1772,6 +1818,20 @@ over a shrinking family and is therefore an infimum.
   examples is what confines `isCompact_closure_iff` to `ℝ`: the criterion sees
   only values and times, and on a rigid index that is not enough to count the
   paths.
+* **The jump that marches to the base point, and why the subdivision is based.**
+  `A = {stepAt ((1/4)^(k+1)) 1 0 | k}` in `D(ℝ, ℝ)` with base point `0`. Every
+  value lies in `{0,1}`, and for `δ < 3/4` the subdivision `-(m+1) < (1/4)^(k+1) <
+  m+1` is admissible with no oscillation, so an unbased modulus is `0` for the
+  whole family and every window. The closure is nevertheless not compact: a time
+  change fixing `0` moves a point by a bounded *ratio* of its distance to `0`, so
+  jump times differing by the factor `4` are uniformly separated
+  (`SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint`). Demand `0`
+  among the nodes and the family is rejected — the cell starting at `0` is wider
+  than `δ` and carries the whole jump — while the previous example, whose jumps
+  approach the window's edge and not `0`, is still accepted. These two are the
+  pair that fixes the modulus of the criterion: one forbids pinning at the
+  window's edges, the other forbids ignoring the base point, and no third
+  condition is left.
 
 ## Milestone 8: tightness and convergence of finite dimensional distributions
 

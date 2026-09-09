@@ -388,6 +388,54 @@ die Knoten, endliches Netz für die Werte, `stepPath` als Approximant,
 Buchführung. Neu zu bauen ist das Gitter samt dem Zeitwechsel darauf und die
 Schranke für die Anzahl der Knoten.
 
+**Zwischenstand Teil A (2026-09-09, neunter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, neunter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **zwei** `sorry` statt einem; der Lauf
+hat keines gestrichen, sondern die Aussage, der sie gehören, ein zweites Mal
+**berichtigt** — das eine `sorry` einer falschen Aussage ist zu zweien einer
+wahren geworden. Acht neue Deklarationen, alle durch `lake env lean` gegen
+v4.33.1 geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`.
+
+*Der angesagte Weg ist nicht gegangen worden, weil er nicht geht: die
+Rückrichtung ist über `ℝ` genauso falsch wie über dem starren Index.*
+`SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` sagt es in Lean und
+ohne jede Hypothese auf Papier — anders als der Cantor-Zeuge des achten Laufs.
+Die Familie ist `stepAt ((1/4)^(k+1)) a b`: ihre Sprungzeiten häufen sich am
+**Basispunkt**. Die rechte Seite gilt (zwei Werte; die Unterteilung
+`-(m+1) < (1/4)^(k+1) < m+1` ist für `δ < 3/4` zulässig und hat keine
+Schwingung), die linke nicht — die Metrik nimmt ihr Infimum über die
+Zeitwechsel, die den Basispunkt **festhalten**, und ein solcher bewegt einen
+Punkt um ein beschränktes **Verhältnis** seines Abstands zu `t₀`; die Familie ist
+`r`-getrennt mit `r = min (log 2) (exp (-1) · min 1 (dist a b))`. Das Mittel ist
+`SkorokhodSpace.le_intDist_stepAt_of_exp_mul_lt`, die Trennung **ohne**
+Starrheitshypothese, über `dist_le_distWith_stepAt_of_exp_norm_mul_lt` und
+`le_intWith_stepAt_of_exp_norm_mul_lt`.
+
+*Die Reparatur ist Ethier--Kurtz' eigene, zum zweiten Mal:* ihre Unterteilung von
+`[0,T]` beginnt bei `0`, und dort ist `0` zugleich Basispunkt, linkes Ende des
+Index und linkes Ende jedes Fensters. Auf einem zweiseitigen Index fallen die
+drei auseinander, und gebraucht wird der **Basispunkt als Knoten**.
+`SkorokhodSpace.IsSubdivisionBased`, `SkorokhodSpace.modulusBased` und
+`modulus_le_modulusBased` stehen; `isCompact_closure_iff` ist umgestellt. Die
+Bedingung scheidet beide Zeugen richtig: die Familie dieses Laufs wird verworfen
+(die Zelle bei `t₀` verschluckt den Sprung), die von
+`not_tendsto_iSup_modulusPinned` — Sprünge am **Fensterrand** — weiterhin
+angenommen.
+
+*Warum es zwei `sorry` sind:* `modulus ≤ modulusBased` läuft in die falsche
+Richtung, die bewiesene Hinrichtung überträgt sich also **nicht** und ist auf
+gestützten Unterteilungen zu wiederholen. Jeder ihrer Schritte übersteht das —
+`isSubdivision_comp` trägt einen Knoten bei `t₀` auf einen solchen, die
+Zeitwechsel halten ihn fest — bis auf ihre Eingabe.
+
+*Als Nächstes, und es ist ein einziges benanntes Stück:*
+`IsCadlag.exists_subdivision_through`, eine càdlàg-Unterteilung von
+`Set.Icc a b` durch einen vorgeschriebenen inneren Punkt. Sie ruht zweimal auf
+`IsCadlag.exists_subdivision` und auf nichts sonst (die Arbeit ist das
+Aneinandersetzen zweier `Fin`-Tupel), und **beide** offenen `sorry` lesen sie.
+Danach `tendsto_modulusBased` und die Hinrichtung, dann die Rückrichtung.
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 

@@ -13207,3 +13207,114 @@ die Knoten darauf schiebt, und die Schranke für die **Anzahl** der Knoten, die
 aus der Sparsamkeit und der Kompaktheit des Fensters kommt.
 
 **Das Manuskript ist nicht angefaßt.**
+
+### 2026-09-09, neunter Lauf des Tages — die Rückrichtung ist auch über `ℝ` falsch, und der Grund ist der Basispunkt
+
+**Aufgabe.** Vorrangige Aufgabe, Teil A, Punkt 3: das Kompaktheitskriterium
+`SkorokhodSpace.isCompact_closure_iff`, das letzte `sorry` der Datei. Der vorige
+Lauf hatte die Rückrichtung über `ℝ` als das einzige offene Stück von
+Meilenstein 7 benannt und ihren Weg — endliches Gitter, endliches Netz,
+`stepPath` — angesagt.
+
+**Stand der Datei.** `SkorokhodSpace/Suggested.lean` steht bei **zwei** `sorry`
+statt einem. Der Lauf hat keines gestrichen, sondern die Aussage, der sie
+gehören, ein zweites Mal **berichtigt**; das eine `sorry` einer falschen Aussage
+ist zu zweien einer wahren geworden. Acht neue Deklarationen, alle durch
+`lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Der angesagte Weg ist nicht gegangen worden, weil er nicht geht: die
+Rückrichtung ist über `ℝ` genauso falsch wie über dem starren Index.**
+`SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` sagt es in Lean,
+und zwar ohne jede Hypothese auf Papier — anders als der Cantor-Zeuge des
+vorigen Laufs, der `hrigid` ungeprüft trägt. Die Familie ist
+`stepAt ((1/4)^(k+1)) a b`, `k ∈ ℕ`: ihre Sprungzeiten häufen sich am
+**Basispunkt**.
+
+*Warum die rechte Seite gilt.* Die Werte sind `a` und `b`, also ist die
+Wertebedingung an jedem Fenster erfüllt. Und die Unterteilung
+`-(m+1) < (1/4)^(k+1) < m+1` ist für jedes `δ < 3/4` zulässig — ihre beiden
+Lücken sind mindestens `1` und mindestens `3/4` — und hat **gar keine**
+Schwingung, der Pfad ist unter seinem Sprung konstant `b` und darüber konstant
+`a`. Der Modul ist also `0`, gleichmäßig über die Familie, für jedes Fenster und
+jedes kleine `δ`. Die Freiheit des Überstehens wird dabei nicht gebraucht: für
+`m ≥ 1` ist dieselbe Unterteilung auch gepinnt zulässig.
+
+*Warum die linke Seite nicht gilt.* Die Metrik von Meilenstein 4 nimmt ihr
+Infimum über die Zeitwechsel, die den **Basispunkt festhalten**, und ein solcher
+bewegt einen Punkt um ein beschränktes **Verhältnis** seines Abstands zu `t₀`.
+Zwei Sprungzeiten, deren Abstände zu `t₀` sich um den Faktor `4` unterscheiden,
+sind darum gleichmäßig getrennt: die Familie ist `r`-getrennt mit
+`r = min (log 2) (exp (-1) · min 1 (dist a b))`, und eine unendliche
+`r`-getrennte Menge ist nicht totalbeschränkt.
+
+**Das Mittel, und es ist der Satz, den `le_intDist_stepAt` nicht sagen konnte.**
+Drei Deklarationen, jede die vorige unter einem Integral:
+
+* `SkorokhodSpace.dist_le_distWith_stepAt_of_exp_norm_mul_lt` — ist `t₀ ≤ x < y`
+  und hält `l` den Basispunkt fest mit `exp ‖l‖ · dist t₀ x < dist t₀ y`, so
+  liegt `s = l⁻¹ x` noch echt unter `y`, und an dieser einen Stelle liest der
+  erste Pfad schon `a`, während der zweite noch `b` liest. Beide Klemmungen
+  fallen, weil `s` und `x` innerhalb des Fensters liegen; der Zeitwechsel geht
+  allein über `TimeChange.dist_le_exp_norm_mul`, gelesen auf `l⁻¹`.
+* `SkorokhodSpace.le_intWith_stepAt_of_exp_norm_mul_lt` — dasselbe unter dem
+  Radienintegral, mit der Masse `exp (-dist t₀ y)`.
+* `SkorokhodSpace.le_intDist_stepAt_of_exp_mul_lt` — **die Trennung ohne
+  Starrheitshypothese.** Entweder kostet der Zeitwechsel `c`, oder er ist billig
+  und kann dann `x` nicht so weit hinaustragen wie `y`. Das ist die quantitative
+  Form davon, daß die Metrik den Basispunkt festhält: nahe `t₀` sind die
+  zulässigen Zeitwechsel kurz, und darum ist eine am Basispunkt sich häufende
+  Familie von Sprungzeiten gleichmäßig getrennt.
+
+**Die Reparatur ist Ethier--Kurtz' eigene, zum zweiten Mal.** Ihre Unterteilung
+von `[0,T]` beginnt bei `0` — und dort ist `0` zugleich Basispunkt, linkes Ende
+des Index und linkes Ende **jedes** Fensters. Auf einem zweiseitigen Index
+fallen die drei auseinander, und das Kriterium braucht genau eines davon: den
+Basispunkt als Knoten. `SkorokhodSpace.IsSubdivisionBased` (`IsSubdivision` samt
+`t₀ ∈ Set.range t`), `SkorokhodSpace.modulusBased` und
+`SkorokhodSpace.modulus_le_modulusBased` stehen; `isCompact_closure_iff` ist auf
+`modulusBased` umgestellt.
+
+*Daß die Bedingung beide Zeugen richtig scheidet, ist der Prüfstein und keine
+Hoffnung.* Die Familie dieses Laufs wird **verworfen**: die Zelle, die bei `t₀`
+beginnt, ist breiter als `δ` und verschluckt den Sprung, ihre Schwingung ist
+`dist a b`. Die Familie von `not_tendsto_iSup_modulusPinned` — Sprünge, die an
+den **Fensterrand** wandern — wird weiterhin **angenommen**: die Unterteilung
+`-m-1 < Sprung < 0 < m+1` trägt den Basispunkt und hat keine Schwingung. Die
+beiden widerlegten Formen sind damit die beiden Seiten derselben Verwechslung,
+und die dritte ist die einzige, die keine von beiden macht.
+
+**Was die zwei `sorry` schulden, und warum es zwei sind.** Die Ungleichung
+`modulus ≤ modulusBased` läuft in die falsche Richtung, also überträgt sich die
+bewiesene Hinrichtung **nicht**: sie ist auf gestützten Unterteilungen zu
+wiederholen. Jeder ihrer Schritte übersteht das — `isSubdivision_comp` trägt
+einen Knoten bei `t₀` auf einen Knoten bei `t₀`, denn die Zeitwechsel halten ihn
+fest — bis auf ihre Eingabe, und die ist `IsCadlag.exists_subdivision`. **Das
+eine neu zu bauende Stück ist damit benannt: eine càdlàg-Unterteilung von
+`Set.Icc a b` durch einen vorgeschriebenen inneren Punkt** (`t₁` von `a` nach
+`c`, `t₂` von `c` nach `b`, aneinandergesetzt zu `Fin (n+p+1)`); beide
+Richtungen des Kriteriums lesen sie. Die Wertebedingung der Hinrichtung ist
+unberührt und steht weiter bewiesen da
+(`isCompact_closure_values_of_isCompact`), ebenso das allgemeine Paar für
+`modulus`.
+
+**Und die Lehre.** Der Modul sieht Fenster und Sparsamkeit, und beide sind in
+der **Metrik des Index** formuliert; die Metrik von Meilenstein 4 ist am
+Basispunkt für das **Verhältnis** der Abstände empfindlich. Wo die beiden
+auseinandergehen, sagt der Modul nichts. Das ist derselbe Riß, den
+`not_separableSpace_of_rigid` am ersten Lauf dieses Tages aufgemacht hat, nur
+diesmal auf `ℝ` und ohne Starrheit — und er erklärt nachträglich, warum die
+acceptance examples von Meilenstein 7 das Loch nicht gefunden haben: alle ihre
+Sprünge sitzen fern vom Basispunkt. Ein weiteres gehört dazu, und es ist die
+Familie dieses Laufs; es steht jetzt dort.
+
+**Das Manuskript ist nicht angefaßt.**
+
+**Was als Nächstes zu tun ist.** `IsCadlag.exists_subdivision_through` — zu
+`a ≤ c ≤ b` und `ε > 0` eine Unterteilung von `Set.Icc a b` mit `c` unter ihren
+Knoten und Zellschwingung höchstens `ε`. Sie ruht auf
+`IsCadlag.exists_subdivision` zweimal und auf nichts sonst; die Arbeit ist das
+Aneinandersetzen zweier `Fin`-Tupel, und sie ist die Eingabe **beider** offenen
+`sorry` von Meilenstein 7. Danach `tendsto_modulusBased` (der Ersatz für
+`tendsto_modulus`, den die Berichtigung schuldet) und die Hinrichtung auf
+gestützten Unterteilungen, dann die Rückrichtung.
