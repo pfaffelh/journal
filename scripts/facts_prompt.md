@@ -403,13 +403,60 @@ danach.*
    `infinitePi_map_natCons` über `Measure.eq_infinitePi`, mit dem Voranstellen
    `natCons` als der Abbildung, die die Aussage auf Quader zurückführt.
 
-   **Was für den Satz jetzt noch fehlt**, und es ist Punkt (b) des Weges: die
+   ~~**Was für den Satz jetzt noch fehlt**, und es ist Punkt (b) des Weges: die
    **Rückwärtsgleichung** `E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`. Alle
    maßtheoretischen Stücke sind da — `jumpMeasure_integral_eq_of_firstJump`
    zerlegt am ersten Sprung, `jumpMeasure_map_split` benennt das Gesetz des
    zweiten Terms, `jumpProcess_jumpShift` sagt, daß der Integrand dort eine
    Funktion der verschobenen Daten ist. Was fehlt, ist die Analysis: die
-   Differentiation der Erneuerungsgleichung nach `t`.
+   Differentiation der Erneuerungsgleichung nach `t`.~~ *(die
+   Erneuerungsgleichung selbst ist erledigt 2026-09-09, dreiundzwanzigster Lauf
+   des Tages; es fehlt allein noch die Differentiation.)*
+
+   **Zwischenstand 2026-09-09, dreiundzwanzigster Lauf des Tages.** Die
+   **Erneuerungsgleichung** steht, als `jumpMeasure_integral_eq_renewal`:
+   ```
+   ∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)
+     = (∫ z, exp (-(lam z * t)) * h z ∂nu)
+       + ∫ z, (∫ s in Ioc 0 (lam z * t), exp (-s) *
+           ∫ ω', h (jumpProcess lam (t - s / lam z) ω') ∂(jumpMeasure mu (mu z))) ∂nu.
+   ```
+   Acht neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, die
+   ganze Datei durch `lake env lean` gegen v4.33.1 **ohne einen Fehler**
+   (unverändert zehn `sorry`), alle acht mit `#print axioms` auf `propext`,
+   `Classical.choice`, `Quot.sound`. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-09, dreiundzwanzigster Lauf des Tages". **Damit ist an Punkt 2 nichts
+   Maßtheoretisches mehr offen.**
+
+   **Vier Befunde, die der nächste Lauf braucht.** (a) Die Bündelung der beiden
+   Schwänze `y ∘ succ` und `ξ ∘ succ` zu einem Punkt von `(ℕ → E) × (ℕ → ℝ)`
+   *ist* die Fubini-Vertauschung von `y ∘ succ` gegen `ξ 0`, und nicht etwas
+   daneben: `jumpMeasure_map_split` liefert die Koordinaten in der Reihenfolge
+   `z, yc, s, xt`, gebraucht wird `z, s, (yc, xt)`, und benachbart werden `yc`
+   und `xt` genau dadurch, daß `s` über `yc` hinauswandert. Bezahlt ist das
+   einmal und für immer in `integral_jumpMeasure_eq_of_split`; eine geordnete
+   Fassung von `jumpMeasure_map_split` hätte nichts gespart. (b) Die
+   Beschränktheit des Integranden ist die einzige Voraussetzung und **fünffach**
+   nötig — drei Sorten von Integrierbarkeitspflicht (Produkt, Komposition,
+   vertauschtes Produkt) —, und was die Schranke nach innen durch die
+   Schachtelung trägt, ist `abs_integral_le_of_abs_le`. (c) **Mathlib hat
+   `expMeasure` als Dichte, aber nicht als Integralformel**: `expMeasure r` ist
+   per `rfl` ein `volume.withDensity`, doch
+   `∫ s, F s ∂(expMeasure 1) = ∫ s in Ioi 0, exp (-s) * F s` steht nirgends und
+   heißt hier `integral_expMeasure_one`, **ohne jede Voraussetzung an `F`**. Die
+   Gestalt ist gewählt, weil `t` dann in der *Grenze* des Integrationsbereichs
+   steht und nicht im Integranden — das ist es, worauf die Differentiation
+   ansetzt. (d) Die Nichtexplosion braucht **keine Topologie**:
+   `ae_exists_lt_jumpTime` steht über bloßem `[MeasurableSpace E]`, während
+   `ae_isStepPath_jumpProcess` `[TopologicalSpace E]` trägt.
+
+   **Was jetzt noch fehlt**, und es ist der einzige Schritt mit Analysis: die
+   **Differentiation nach `t`**. Zunächst an der Stelle `t = 0`, wo der zweite
+   Term am einfachsten wird (der Bereich `Ioc 0 (lam z * t)` schrumpft auf die
+   leere Menge); die Klippe ist, daß der Integrand des zweiten Terms selbst von
+   `t` abhängt, seine Ableitung also nicht bloß die der Grenze ist. Das genaue
+   Ziel steht am Ende des Laufberichts als
+   `jumpMeasure_hasDerivAt_integral`.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 

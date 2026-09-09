@@ -15149,3 +15149,152 @@ Terms). Sie ist jetzt dran, weil sie das letzte rein maßtheoretische Stück ist
 und weil die Differentiation nach `t` erst an ihr ansetzen kann; die
 Fubini-Vertauschung von `y ∘ succ` gegen `ξ₀`, die oben als offene Buchhaltung
 genannt ist, fällt in ihrem Beweis an und nirgends sonst.
+
+### 2026-09-09, dreiundzwanzigster Lauf des Tages — die Erneuerungsgleichung steht, und die Vertauschung ist einmal und für immer bezahlt
+
+Ein Ziel, das des Vorschlags vom zweiundzwanzigsten Lauf:
+`jumpMeasure_integral_eq_renewal`. **Sie steht.** Acht neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 **ohne einen einzigen Fehler** (unverändert zehn
+`sorry`, keine neuen), und alle acht hängen mit `#print axioms` nur an `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Der Satz.** Unter `0 < lam ≤ L`, `lam` meßbar, `h` meßbar mit `|h| ≤ C` und
+`0 ≤ t`:
+
+```
+∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)
+  = (∫ z, exp (-(lam z * t)) * h z ∂nu)
+    + ∫ z, (∫ s in Ioc 0 (lam z * t), exp (-s) *
+        ∫ ω', h (jumpProcess lam (t - s / lam z) ω') ∂(jumpMeasure mu (mu z))) ∂nu.
+```
+
+Auf `{T₁ > t}` hat sich der Pfad nicht bewegt und der Faktor ist der
+Exponentialschwanz; auf `{T₁ ≤ t}` startet der Prozeß neu aus einem von `mu`
+gezogenen Zustand, nach einer Haltezeit `s / lam z`, und die verbleibende Zeit ist
+`t - s / lam z`. Damit ist Punkt (b) des Weges vom neunzehnten Lauf bis auf die
+Analysis erledigt: **was noch fehlt, ist die Differentiation nach `t`, und nichts
+Maßtheoretisches mehr.**
+
+**Ehrlich zur Gestalt, zwei Abweichungen von der angesagten.** (a) Die beiden
+Terme stehen als **zwei** Integrale gegen `nu` und nicht unter einem — genau so,
+wie `jumpMeasure_integral_eq_of_firstJump` sie liefert. Sie zusammenzuziehen
+verlangte die Integrierbarkeit des zweiten Integranden gegen `nu` als eigenen
+Schritt und ließe die Aussage nichts mehr sagen. (b) Der angesagte Wortlaut
+schrieb `∫ z, (… + …) ∂nu`; das ist derselbe Satz, einen `integral_add` entfernt.
+
+**Der Kern des Laufs ist `integral_jumpMeasure_eq_of_split`, und es ist die
+Vertauschung, die der zweiundzwanzigste Lauf als offene Buchhaltung notiert
+hatte.** Für beschränktes meßbares `G`:
+
+```
+∫ ω, G ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu)
+  = ∫ z, ∫ s, ∫ ω', G ((z, s), ω') ∂(jumpMeasure mu (mu z)) ∂(expMeasure 1) ∂nu.
+```
+
+Fünf Schritte, und der vierte ist der einzige nicht mechanische: (1)
+`integral_map` längs `jumpMeasure_map_split`; (2) zweimal `integral_prod`, was
+vier geschachtelte Integrale gibt, in der Reihenfolge `(z, yc)`, `s`, `xt`; (3)
+`Measure.integral_compProd`, das `nu` von der verschobenen Kette trennt; (4)
+`MeasureTheory.integral_integral_swap` auf `yc` gegen `s`; (5) `integral_prod`
+rückwärts, was `yc` und `xt` zu einem Punkt von `(ℕ → E) × (ℕ → ℝ)` zusammenlegt,
+und `prod_comp_chainKernel_eq_jumpMeasure`, das dessen Gesetz als
+`jumpMeasure mu (mu z)` erkennt.
+
+**Der Befund dazu: die Bündelung der beiden Schwänze *ist* die Vertauschung.** Das
+klang im zweiundzwanzigsten Lauf wie zwei Dinge — „die ungeordnete Fassung" und
+„eine Fubini-Vertauschung an der Gebrauchsstelle" — und ist eines. Die
+Reihenfolge, in der `jumpMeasure_map_split` die vier Koordinaten liefert, ist
+`z, yc, s, xt`; die Reihenfolge, in der die Erneuerungsgleichung sie braucht, ist
+`z, s, (yc, xt)`. Das Zusammenlegen von `yc` und `xt` zu einem Punkt verlangt, daß
+sie in der Schachtelung benachbart sind, und benachbart werden sie genau dadurch,
+daß `s` über `yc` hinauswandert. Eine geordnete Fassung von
+`jumpMeasure_map_split` hätte darum nichts gespart, sondern bloß denselben Schritt
+an einer anderen Stelle bezahlt — die Einschätzung des zweiundzwanzigsten Laufs,
+sie nicht zu bauen, war richtig, und der Grund ist jetzt gerechnet und nicht
+geschätzt.
+
+**Zweiter Befund: die Beschränktheit ist die einzige Voraussetzung, und sie ist
+fünffach nötig.** Jeder der fünf Schritte oben hat eine Integrierbarkeitspflicht,
+und sie sind von drei verschiedenen Sorten: gegen ein Produkt (`integral_prod`),
+gegen eine Komposition (`Measure.integral_compProd`) und gegen ein Produkt in der
+vertauschten Reihenfolge (`integral_integral_swap`). Eine einzige Konstante
+bedient alle drei, über die beiden Werkzeuge `integrable_of_abs_le` und
+`abs_integral_le_of_abs_le` — das zweite ist das, was die Schranke **nach innen**
+durch die Schachtelung trägt: der Integrand des äußeren Integrals ist ein
+inneres Integral, und ohne die Aussage „eine Schranke am Integranden ist eine
+Schranke am Integral über ein Wahrscheinlichkeitsmaß" wäre für jede Stufe eine
+eigene Rechnung fällig. Mathlibs `norm_integral_le_of_norm_le_const`
+(`Integral/Bochner/Basic.lean:966`) gibt sie bis auf den Faktor `μ.real univ`.
+
+**Dritter Befund, und er ist ein Fund in Mathlib und eine Lücke daneben:
+`expMeasure` ist eine Dichte, aber niemand sagt es als Integralformel.**
+`ProbabilityTheory.expMeasure r = gammaMeasure 1 r = volume.withDensity
+(gammaPDF 1 r)` (`Distributions/Exponential.lean:96`,
+`Distributions/Gamma.lean:128`), also ist `expMeasure_eq_withDensity` ein `rfl`;
+was fehlt, ist die *Integral*fassung. Bewiesen ist sie hier als
+`integral_expMeasure_one`,
+```
+∫ s, F s ∂(expMeasure 1) = ∫ s in Ioi 0, exp (-s) * F s,
+```
+**ohne jede Voraussetzung an `F`** — die Identität ist die Dichte, und wo `F`
+nicht integrierbar ist, stehen auf beiden Seiten dieselben Junkwerte. Das Mittel
+ist `integral_withDensity_eq_integral_toReal_smul`
+(`Integral/Bochner/ContinuousLinearMap.lean:317`), und der einzige Handgriff
+danach ist, daß `(exponentialPDF 1 s).toReal` der auf `Set.Ici 0` abgeschnittene
+`exp (-s)` ist und `integral_Ici_eq_integral_Ioi` den Rand wegwirft. Gesucht wurde
+nach der Aussage und nicht nach der Vokabel: nach `expMeasure` zusammen mit
+`integral`, `withDensity`, `lintegral`, `rnDeriv`; Mathlib hat zu `expMeasure`
+allein die Verteilungsfunktion (`cdf_expMeasure_eq`) und sonst nichts.
+
+**Warum diese Gestalt und nicht `∫ s ∂(expMeasure 1)`:** weil der nächste Schritt
+nach `t` differenziert. `Ioc 0 (lam z * t)` hat `t` in der *Grenze*, und ein
+Integral gegen das Lebesguemaß mit `t` in der Grenze ist das, worauf
+`intervalIntegral.integral_hasDerivAt_right` und seine Verwandten ansetzen; ein
+Integral gegen `expMeasure 1` mit `t` im Integranden ist es nicht.
+
+**Vierter Befund: die Nichtexplosion braucht die Topologie nicht.**
+`jumpProcess_jumpShift` verlangt `∃ n, t < jumpTime … (n+1)`, und
+`ae_isStepPath_jumpProcess` liefert das nur unter `[TopologicalSpace E]`, weil
+`IsStepPath` topologisch ist. Die Aussage über die Sprungzeiten allein ist
+`ae_exists_lt_jumpTime`, und sie steht über bloßem `[MeasurableSpace E]`:
+`tendsto_jumpTime_atTop` sieht den Zustandsraum nie an. Damit trägt die
+Erneuerungsgleichung **keine Topologie**, so wie der ganze Abschnitt `Space`.
+
+**Die Deklarationen, in Abhängigkeitsordnung.** `integrable_of_abs_le`,
+`abs_integral_le_of_abs_le` (allgemeine Maßtheorie, neben
+`integrableOn_of_bounded`); `expMeasure_eq_withDensity`,
+`toReal_exponentialPDF_one`, `integral_expMeasure_one` (bei den übrigen
+Aussagen über `expMeasure`); `ae_exists_lt_jumpTime` (nach
+`ae_pos_snd_jumpMeasure`); `integral_jumpMeasure_eq_of_split`,
+`jumpMeasure_integral_eq_renewal` (im neuen Unterabschnitt „The restart at the
+first jump, and the renewal equation"). Der Entwicklungsstand ist in
+`TauCeti/MartingaleProblems/scratch/Renewal.lean` durch einen Hinweis ersetzt, wie
+beim zweiundzwanzigsten Lauf: ein Gerüst mit `sorry`-Stümpfen für Sätze, die in
+`Suggested.lean` bewiesen sind, wäre eine zweite, irreführende Quelle.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel:
+`jumpMeasure_hasDerivAt_integral`, die **Rückwärtsgleichung in
+Differentialform**,
+```
+HasDerivAt (fun t ↦ ∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu))
+  (∫ z, jumpApply lam mu h z ∂nu) 0
+```
+zunächst **an der Stelle `t = 0`**, und danach in der Fassung mit `nu` durch das
+Gesetz zur Zeit `t` ersetzt. Sie ruht auf `jumpMeasure_integral_eq_renewal`
+(die ganze Analysis sitzt in ihren beiden Termen), auf `abs_jumpApply_le` (die
+Beschränktheit, die die Differentiation gleichmäßig macht) und auf
+`jumpMeasure_map_jumpProcess_zero` (der Wert bei `t = 0`). Sie ist jetzt dran,
+weil die Erneuerungsgleichung der einzige Zugang zur Zeitableitung ist und weil
+`t = 0` der Fall ist, in dem der zweite Term am einfachsten wird: sein
+Integrationsbereich `Ioc 0 (lam z * t)` schrumpft auf die leere Menge, sein
+Integrand ist beschränkt, und der erste Term liefert schon
+`-lam z * h z`. Der teure Punkt, und er ist zu benennen, bevor er überrascht: der
+Integrand des zweiten Terms hängt selbst von `t` ab (`h (X (t - s / lam z))`), also
+ist seine Ableitung nicht bloß die der Grenze; bei `t = 0` fällt dieser Anteil weg,
+weil der Bereich Maß null hat, und **nur** darum ist `t = 0` billiger als
+allgemeines `t`. Und die zweite Klippe, die schon der neunzehnte Lauf hätte
+nennen können: der Beitrag der Grenze ist
+`lam z * (∫ h dmu z)` erst, nachdem `∫ ω' h (jumpProcess lam 0 ω') ∂(jumpMeasure mu (mu z))`
+durch `∫ h d(mu z)` ersetzt ist, und das ist `jumpMeasure_map_jumpProcess_zero`
+angewandt auf das Anfangsgesetz `mu z` — nicht auf `nu`.

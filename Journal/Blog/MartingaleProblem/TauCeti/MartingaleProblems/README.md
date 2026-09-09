@@ -729,6 +729,50 @@ A concrete family of solutions, built without any of the theory above. Index
   `(E × (ℕ → E)) × (ℝ × (ℕ → ℝ))`; collapsing the four integrals to
   `∫ nu, ∫ expMeasure 1, ∫ jumpMeasure mu (mu z)` interchanges `y ∘ succ` with
   `ξ 0` once by Fubini.
+* `integrable_of_abs_le`, `abs_integral_le_of_abs_le`,
+  `integral_jumpMeasure_eq_of_split`: **the restart at the first jump as an
+  integral identity**. For `G` bounded measurable,
+  ```
+  ∫ G ((ω.1 0, ω.2 0), jumpShift ω) d(jumpMeasure mu nu)
+    = ∫ nu, ∫ expMeasure 1, ∫ jumpMeasure mu (mu z), G ((z, s), ω').
+  ```
+  **Proved** on 2026-09-09, twenty third run. This is the Fubini interchange the
+  previous item names, performed once and for all, and it is what makes
+  `jumpMeasure_map_split` usable: the bundling of the two tails
+  `y ∘ succ` and `ξ ∘ succ` into a single point of `(ℕ → E) × (ℕ → ℝ)` — so that
+  `prod_comp_chainKernel_eq_jumpMeasure` can recognise their law as a jump
+  construction again — *is* the interchange of `y ∘ succ` with `ξ 0`. A single
+  constant bound supplies the integrability of all five nested integrals, through
+  the two tools; the swap itself is `MeasureTheory.integral_integral_swap` and the
+  separation of `nu` from the shifted chain is `Measure.integral_compProd`.
+* `expMeasure_eq_withDensity`, `toReal_exponentialPDF_one`,
+  `integral_expMeasure_one`: **integration against the standard exponential law is
+  integration of `exp (-s) * ·` over `Set.Ioi 0`**. **Proved** on 2026-09-09,
+  twenty third run, with **no** hypothesis on the integrand: the identity is the
+  definition of `expMeasure` as a density, and both sides are the same junk value
+  when the integrand fails to be integrable. Mathlib has the distribution
+  function of `expMeasure` (`cdf_expMeasure_eq`) but no statement of this shape,
+  and it is the step that turns the renewal equation into a statement about an
+  integral in the *time* variable against Lebesgue measure, which is what the
+  differentiation of the backward equation acts on.
+* `ae_exists_lt_jumpTime`: almost surely the jump times exhaust the half line.
+  **Proved** on 2026-09-09, twenty third run. This is non explosion in the form
+  `jumpProcess_jumpShift` asks for, and unlike `ae_isStepPath_jumpProcess` it
+  carries **no topology on `E`**: the statement is about the jump times alone, and
+  `tendsto_jumpTime_atTop` never looks at the state space.
+* `jumpMeasure_integral_eq_renewal`: **the renewal equation**,
+  ```
+  ∫ h (X t) d(jumpMeasure mu nu)
+    = ∫ nu, e^{-(lam z * t)} * h z
+      + ∫ nu, ∫_{Ioc 0 (lam z * t)} e^{-s} * ∫ h (X (t - s / lam z)) d(jumpMeasure mu (mu z)) ds.
+  ```
+  **Proved** on 2026-09-09, twenty third run, for `h` bounded measurable, `lam`
+  measurable with `0 < lam ≤ L`, and `0 ≤ t`. It is the last purely measure
+  theoretic step of `thm:jumpMP`: on `{T 1 > t}` the path has not moved and the
+  factor is the exponential tail; on `{T 1 ≤ t}` the process restarts from a
+  state drawn by `mu` after a holding time `s / lam z`. Both halves stand as
+  integrals against `nu` rather than combined under one, exactly as
+  `jumpMeasure_integral_eq_of_firstJump` states them.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
@@ -738,7 +782,8 @@ A concrete family of solutions, built without any of the theory above. Index
   conditional expectation `P[Y t | 𝓕 s] =ᵐ Y s`. Of its three steps the first is
   done: the Markov property of the process at a fixed time is
   `jumpMeasure_integral_eq_of_firstJump` together with `jumpProcess_jumpShift`
-  and `jumpMeasure_map_split`, complete on 2026-09-09, twenty second run. What
+  and `jumpMeasure_map_split`, complete on 2026-09-09, twenty second run, and
+  assembled into `jumpMeasure_integral_eq_renewal` on the twenty third. What
   remains is the expectation identity
   `E_x[f (X t)] - f x = ∫_0^t E_x[A f (X s)] ds`, which is the backward
   equation and the only step needing analysis beyond bookkeeping — the renewal
