@@ -15452,3 +15452,186 @@ eine der Koordinaten `ξ n`, sondern `T (N+1) - s` mit dem zufälligen Index
 Unabhängigkeit vom Vergangenen ist über den Spaltungssatz zu führen und nicht
 über eine Reindizierung. Wer den Weg ändern will, sage zuerst, an welchem
 Schritt dieser bricht.
+
+### 2026-09-09, fünfundzwanzigster Lauf des Tages — der Sprungprozeß wird ein Kern, und die Markoveigenschaft steht in ihrem ersten Fall
+
+Ein Ziel, das des Vorschlags vom vierundzwanzigsten Lauf: die zeithomogene
+Markoveigenschaft in integrierter Gestalt. **Einundzwanzig neue Deklarationen**
+in `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 **ohne einen Fehler** (unverändert zehn `sorry`,
+keine neuen), und alle einundzwanzig hängen mit `#print axioms` nur an `propext`,
+`Classical.choice`, `Quot.sound`. Der Satz selbst ist **nicht** fertig; fertig ist
+sein **Basisfall** samt dem ganzen Unterbau, den er verlangt, und der Unterbau ist
+das eigentliche Ergebnis des Laufs.
+
+**Die angesagte Aussage ist wahr, aber sie ist kein Primitiv, und das war der
+erste Befund.** Der Vorschlag lautete
+
+```
+∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)
+  = ∫ ω, h (jumpProcess lam t ω)
+      ∂(jumpMeasure mu ((jumpMeasure mu nu).map (jumpProcess lam s))).
+```
+
+Ihre rechte Seite nennt ein Maß, das die **Verkettung von nichts mit nichts** ist:
+`(jumpMeasure mu nu).map (jumpProcess lam s)` ist ein einzelnes Maß, kein Kern,
+und darum ist die Aussage nicht auf sich selbst anwendbar. Der Beweis geht aber
+über eine **Induktion nach der Zahl der Sprünge in `[0, s]`** — auf `{T 1 ≤ s}`
+startet die Konstruktion aus `mu z` zur Restzeit `s - σ / lam z` neu, und dort
+muß die Induktionsvoraussetzung greifen —, und einer Aussage über ein festes
+Anfangsgesetz fehlt dafür genau das, woran die Induktion ansetzt. Das Primitiv
+ist die Halbgruppenidentität `P (s + t) h = P s (P t h)` **bei festem
+Anfangszustand**,
+
+```
+∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpKernel mu z)
+  = ∫ ω, jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z),
+```
+
+und die angesagte Form folgt daraus mit `integral_jumpSemigroup_eq` in einer
+Zeile.
+
+**Zweiter Befund, und er ist der teuerste: die rechte Seite ließ sich bisher nicht
+einmal hinschreiben.** `jumpSemigroup lam mu h t` muß meßbar sein, damit
+`jumpSemigroup lam mu h t (jumpProcess lam s ω)` unter dem Integral stehen kann —
+und über bloßem `[MeasurableSpace E]` gibt **keine** Aussage über ein festes
+Anfangsgesetz diese Meßbarkeit her. Sie kommt allein daher, daß die Konstruktion
+ein **Kern** ist. Also steht jetzt
+
+```
+noncomputable def jumpKernel (mu : Kernel E E) [IsMarkovKernel mu] :
+    Kernel E ((ℕ → E) × (ℕ → ℝ)) :=
+  (chainKernel mu).prod (Kernel.const E waitingMeasure)
+```
+
+da, mit `jumpMeasure_eq_comp : jumpMeasure mu nu = jumpKernel mu ∘ₘ nu`. Der
+Beweis ist `Measure.prod_eq` auf Rechtecken; er benutzt, daß der zweite Faktor
+`waitingMeasure` vom Anfangszustand **nicht abhängt** — genau deshalb ist die
+Mischung über `nu` wieder ein Produkt und nicht bloß eine bedingte
+Unabhängigkeit. Damit fallen drei Dinge zugleich ab:
+`integral_jumpMeasure_eq_integral_jumpKernel` (die Zerlegung des Erwartungswerts
+über den Anfangszustand, über `Kernel.integral_comp` und
+`Measure.comp_eq_comp_const_apply`), `measurable_integral_jumpKernel`, und die
+**gemeinsame** Meßbarkeit in `(t, z)` (`measurable_uncurry_jumpSemigroup`, über
+`Kernel.prodMkLeft ℝ (jumpKernel mu)`), die die Zeitintegration des Kompensators
+brauchen wird.
+
+**Dritter Befund: `ω.1 0 = z` gilt nicht f.s., und der Ersatz ist ein Satz.**
+Unter `jumpKernel mu z` ist der Anfangszustand der Kette `z` — aber über bloßem
+`[MeasurableSpace E]` ist daraus **nicht** `ω.1 0 =ᵐ z` zu machen, weil `{z}`
+nicht meßbar sein muß. Das ist derselbe Stein wie im zweiundzwanzigsten Lauf, und
+er wird auf dieselbe Weise umgangen: `integral_chainKernel_zero_eq` und
+`integral_jumpKernel_zero_eq` sagen, daß ein **beschränktes meßbares** Funktional
+`z` statt `ω.1 0` lesen darf, und ihr Beweis läuft über `chainKernel_map_split`,
+wo `Measure.dirac z` als Faktor auftritt und `integral_dirac'` die Auswertung
+macht. Gebraucht wird das im Basisfall **zweimal** — einmal für den Faktor
+`exp (-(lam (ω.1 0) * s))`, einmal für den Integranden selbst.
+
+**Vierter Befund, und der überraschendste: die Verschiebung um eine feste Zeit
+ist keine Umindizierung, sondern die Änderung *einer* Koordinate.** Der Vorschlag
+hatte gewarnt, die Restwartezeit zur Zeit `s` sei `T (N+1) - s` mit dem zufälligen
+Index `N = stepIndex`, und die Unabhängigkeit vom Vergangenen sei über den
+Spaltungssatz zu führen. Für das **erste** Fenster ist das nicht so, und zwar
+nicht knapp, sondern gar nicht: kürzt man die nullte Wartezeit um
+`lam (y 0) * s`, so verschiebt sich **jede** Sprungzeit `T (n+1)` um genau `-s`
+(`jumpTime_waitShift`, eine Induktion in drei Zeilen), `T 0 = 0` und die Kette
+bleiben unberührt, und `stepIndex` liest ohnehin nur die `T (n+1)`. Also gilt
+
+```
+jumpProcess lam t (waitShift (lam (ω.1 0) * s) ω) = jumpProcess lam (s + t) ω
+```
+
+**ohne jede Voraussetzung außer `lam (ω.1 0) ≠ 0`** — keine Monotonie, keine
+Nichtexplosion, kein Vorzeichen von `s` (`jumpProcess_waitShift`). Das ist
+billiger als der Schnitt am ersten Sprung (`stepIndex_shift`), der beide
+Voraussetzungen braucht.
+
+**Fünfter Befund: `expMeasure_Ioi_add` reicht nicht, und es ist weiterhin
+unverbraucht.** Der Vorschlag hatte es als das eine distributive Stück
+angekündigt, auf dem die Markoveigenschaft ruht. Es ist eine Aussage über die
+**Mengen** `Ioi` und sagt nicht, daß das Gesetz der Restwartezeit wieder
+exponentiell **und vom ganzen Schwanz unabhängig** ist. Gebraucht und bewiesen
+ist statt dessen
+
+```
+∫ ξ in {ξ | a < ξ 0}, F (fun n ↦ if n = 0 then ξ 0 - a else ξ n) ∂waitingMeasure
+  = Real.exp (-a) * ∫ ξ, F ξ ∂waitingMeasure
+```
+
+(`integral_waitingMeasure_waitShift`, für `0 ≤ a` und beschränktes meßbares `F`).
+Der Beweis geht über die Dichte (`integral_expMeasure_one`) und die
+Translationsinvarianz des Lebesguemaßes (`integral_add_right_eq_self`), und er
+setzt die gekürzte Koordinate mit `infinitePi_map_natCons` wieder vor den
+unberührten Schwanz. `expMeasure_Ioi_add` ist von keiner Aussage der Datei
+benutzt und bleibt es.
+
+**Das Ergebnis: der Basisfall.** `integral_jumpKernel_waitShift` sagt, daß auf dem
+Ereignis `{s < T 1}` der Neustart zur Zeit `s` wieder die volle Konstruktion aus
+demselben Anfangszustand ist, zum Preis des Überlebensfaktors:
+
+```
+∫ ω in {ω | s < jumpTime lam ω.1 ω.2 1}, F (waitShift (lam (ω.1 0) * s) ω)
+    ∂(jumpKernel mu z)
+  = Real.exp (-(lam z * s)) * ∫ ω, F ω ∂(jumpKernel mu z).
+```
+
+Daraus folgt `integral_jumpKernel_add_of_lt_jumpTime_one`, die Markoveigenschaft
+auf demselben Ereignis: **beide** Seiten der Halbgruppenidentität sind dort
+`exp (-(lam z * s)) * jumpSemigroup lam mu h t z`. Bemerkenswert ist, wie billig
+die rechte Seite fällt: sie ist derselbe Satz, angewandt auf das Funktional
+`F ω = jumpSemigroup lam mu h t (ω.1 0)`, denn `waitShift` rührt die erste
+Komponente nicht an.
+
+**Die Deklarationen, in Abhängigkeitsordnung.** `jumpKernel`,
+`instIsMarkovKernelJumpKernel`, `jumpKernel_apply`, `jumpMeasure_eq_comp`,
+`integral_jumpMeasure_eq_integral_jumpKernel`, `measurable_integral_jumpKernel`,
+`integral_chainKernel_zero_eq`, `integral_jumpKernel_zero_eq`, `jumpSemigroup`,
+`measurable_uncurry_jumpSemigroup`, `measurable_jumpSemigroup`,
+`abs_jumpSemigroup_le`, `integral_jumpSemigroup_eq`, `waitShift`,
+`measurable_waitShift`, `jumpTime_waitShift`, `jumpProcess_waitShift`,
+`waitingMeasure_map_natCons`, `integral_waitingMeasure_waitShift`,
+`integral_jumpKernel_waitShift`, `integral_jumpKernel_add_of_lt_jumpTime_one`.
+Alle im Abschnitt `JumpConstruction`, `section Space`, vor „The first jump
+decomposition". Die Datei importiert dafür neu
+`Mathlib.Probability.Kernel.Composition.IntegralCompProd`
+(`Kernel.integral_comp` liegt dort in `namespace Kernel`, nicht unmittelbar in
+`ProbabilityTheory`). Der Entwicklungsstand in
+`TauCeti/MartingaleProblems/scratch/Markov.lean` ist durch einen Hinweis ersetzt,
+wie beim zweiundzwanzigsten bis vierundzwanzigsten Lauf.
+
+**Zur Arbeitsweise, weil sie sich zum zweiten Mal bewährt hat.** Das Gerüst hat
+die gebrauchten Voraussetzungen wörtlich als `axiom` übernommen; ein Durchlauf
+kostete **zweieinhalb Sekunden**. Der einzige wiederkehrende Reibungspunkt war
+kein mathematischer, sondern die **Betareduktion**: `integral_congr_ae` und
+`Measurable.comp` lassen `(fun p ↦ …) x` und `(z, y).1` stehen, und `rw` findet
+sein Muster dann nicht. Das Mittel ist ein `show` mit der ausgeschriebenen
+Gestalt; es steht an fünf Stellen und kostet je zwei Zeilen. Zweimal lief die
+Elaboration in einen `isDefEq`-Timeout, beide Male an einer Komposition gegen ein
+Ziel mit einem Kernargument — das Mittel ist dasselbe: die Zwischenaussage
+ausschreiben, statt sie unifizieren zu lassen.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel:
+`abs_integral_jumpKernel_add_sub_le`, die Induktion über die Zahl der Sprünge,
+
+```
+|(∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+   - ∫ ω, jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)|
+  ≤ 2 * C * (jumpMeasure mu nu).real {ω | jumpTime lam ω.1 ω.2 n ≤ s},
+```
+
+für jedes `n` und beliebiges `nu`. Sie ruht auf drei Stücken, die alle dastehen:
+dem Basisfall dieses Laufs für den Zweig `{s < T 1}`;
+`integral_jumpMeasure_eq_of_split` für den Zweig `{T 1 ≤ s}`, der die Konstruktion
+aus `mu z` zur Restzeit `s - σ / lam z` neu startet und dort die
+Induktionsvoraussetzung anwendet; und `abs_integral_le_of_abs_le`, das die
+punktweise Schranke nach außen trägt, ohne daß der innere Ausdruck integrierbar
+sein müßte (der Kunstgriff des vierundzwanzigsten Laufs). Sie ist jetzt dran,
+weil sie das **letzte** Stück zwischen dem Basisfall und der Markoveigenschaft
+ist. Der Punkt, an dem es teuer wird, und er ist vorher zu benennen: die Schranke
+muß gegen `0` gehen, und dafür ist `(jumpMeasure mu nu).real {ω | T n ≤ s} → 0`
+zu zeigen. Über `sum_div_le_jumpTime` ist
+`{T n ≤ s} ⊆ {∑_{k<n} ξ k ≤ L * s}`, und der billigste Weg dorthin ist die
+**Chernoff-Schranke** `P(∑_{k<n} ξ k ≤ a) ≤ e^a * 2^{-n}` aus `E[e^{-ξ}] = 1/2`
+und der Unabhängigkeit der Koordinaten — nicht die Gammaverteilung, die Mathlib
+für `Measure.infinitePi` nicht in dieser Gestalt hergibt. Wer den Weg ändern
+will, sage zuerst, an welchem Schritt dieser bricht.

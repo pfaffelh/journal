@@ -822,16 +822,81 @@ A concrete family of solutions, built without any of the theory above. Index
   `E_x[f (X t)] - f x = ∫_0^t E_x[A f (X s)] ds`, which is the backward
   equation and the only step needing analysis beyond bookkeeping. Its value at
   `t = 0` is `jumpMeasure_hasDerivWithinAt_integral`, proved on 2026-09-09,
-  twenty fourth run. What remains of it is the time homogeneous Markov property
-  in integrated form,
+  twenty fourth run. What remains of it is the time homogeneous Markov property,
+  which moves the derivative from `0` to every `s`; with it the identity follows
+  from `intervalIntegral.integral_eq_sub_of_hasDerivAt`.
+
+  **The Markov property is a statement about the initial *state* and not about an
+  initial law, and that is why `jumpKernel` exists.** The form announced on
+  2026-09-09, twenty fourth run,
   ```
   ∫ h (X (s + t)) d(jumpMeasure mu nu)
-    = ∫ h (X t) d(jumpMeasure mu ((jumpMeasure mu nu).map (jumpProcess lam s))),
+    = ∫ h (X t) d(jumpMeasure mu ((jumpMeasure mu nu).map (jumpProcess lam s)))
   ```
-  which moves the derivative from `0` to every `s` and is the one statement that
-  consumes `expMeasure_Ioi_add`, the memorylessness of the exponential law: the
-  holding time still to run at the deterministic time `s` is exponential again.
-  With it the identity follows from `intervalIntegral.integral_eq_sub_of_hasDerivAt`.
+  is true, but it is a *corollary* and not a usable primitive: its right hand
+  side names a measure that is not the composition of anything with anything, so
+  the identity cannot be applied to itself, and an induction over the number of
+  jumps -- which is what carries the proof -- has nothing to induct on. The
+  primitive is the semigroup identity `P (s + t) h = P s (P t h)` at a fixed
+  initial state,
+  ```
+  ∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpKernel mu z)
+    = ∫ ω, jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z),
+  ```
+  and the announced form follows from it by `integral_jumpSemigroup_eq`.
+* `jumpKernel mu = (chainKernel mu).prod (Kernel.const E waitingMeasure)`: the
+  jump construction as a **kernel in the initial state**, with
+  `jumpMeasure_eq_comp : jumpMeasure mu nu = jumpKernel mu ∘ₘ nu`. **Proved** on
+  2026-09-09, twenty fifth run. It is what makes
+  `jumpSemigroup lam mu h t z = ∫ ω, h (jumpProcess lam t ω) ∂(jumpKernel mu z)`
+  measurable in `z` (`measurable_jumpSemigroup`) and jointly measurable in
+  `(t, z)` (`measurable_uncurry_jumpSemigroup`); over a bare
+  `[MeasurableSpace E]` no statement about a fixed initial law delivers that, and
+  without it the right hand side of the Markov property cannot even be written
+  down.
+* `integral_chainKernel_zero_eq` and `integral_jumpKernel_zero_eq`: under
+  `jumpKernel mu z` a bounded measurable functional may read `z` in place of
+  `ω.1 0`. **Proved** on 2026-09-09, twenty fifth run. The almost sure statement
+  `ω.1 0 = z` is *not* available over a bare `[MeasurableSpace E]` -- it needs
+  `{z}` measurable -- so the substitution is proved on the splitting of the chain
+  at its first step (`chainKernel_map_split`), where only `Measure.dirac z` as a
+  factor is used.
+* `waitShift a ω = (ω.1, fun n ↦ if n = 0 then ω.2 0 - a else ω.2 n)` and
+  `jumpProcess_waitShift`: shortening the zeroth waiting time by `lam (ω.1 0) * s`
+  **is** the shift of the time axis by `s`,
+  `jumpProcess lam t (waitShift (lam (ω.1 0) * s) ω) = jumpProcess lam (s + t) ω`.
+  **Proved** on 2026-09-09, twenty fifth run, and it carries **no hypothesis
+  beyond `lam (ω.1 0) ≠ 0`**: no monotonicity of the jump times, no non
+  explosion, and no sign of `s`. The reason is that `jumpTime_waitShift` moves
+  *every* jump time `T (n+1)` back by exactly `s` and leaves `T 0 = 0` and the
+  chain alone, while `stepIndex` reads only the times `T (n+1)`. This is the
+  combinatorial half of the restart at a deterministic time, and unlike the
+  restart at the first jump (`jumpProcess_jumpShift`, `stepIndex_shift`) it is
+  not a reindexing of the driving data but a change of one coordinate.
+* `integral_waitingMeasure_waitShift`: for `0 ≤ a` and `F` bounded measurable,
+  ```
+  ∫ ξ in {ξ | a < ξ 0}, F (fun n ↦ if n = 0 then ξ 0 - a else ξ n) d(waitingMeasure)
+    = exp (-a) * ∫ ξ, F ξ d(waitingMeasure).
+  ```
+  **Proved** on 2026-09-09, twenty fifth run. This is the memorylessness of the
+  exponential law in the form the restart needs, and it is **not**
+  `expMeasure_Ioi_add`: that identity is a statement about the *sets* `Ioi`, and
+  it does not say that the law of the residual waiting time is again exponential
+  and still independent of the whole tail. The proof runs on the density
+  (`integral_expMeasure_one`) and the translation invariance of Lebesgue measure,
+  and it uses `infinitePi_map_natCons` to put the shortened coordinate back in
+  front of the untouched tail.
+* `integral_jumpKernel_waitShift` and
+  `integral_jumpKernel_add_of_lt_jumpTime_one`: the **base case of the Markov
+  property at a fixed time**, on the event `{s < T 1}` that the first jump has not
+  yet happened. **Proved** on 2026-09-09, twenty fifth run. Both sides of the
+  semigroup identity restricted to that event are
+  `exp (-(lam z * s)) * jumpSemigroup lam mu h t z`. What remains for the full
+  Markov property is the induction over the number of jumps in `[0, s]`: on
+  `{T 1 ≤ s}` the split `integral_jumpMeasure_eq_of_split` restarts the
+  construction from `mu z` at time `s - σ / lam z`, and the inductive hypothesis
+  applies there; the induction closes because the jump times exhaust the half
+  line (`ae_exists_lt_jumpTime`).
 * `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
   **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a
