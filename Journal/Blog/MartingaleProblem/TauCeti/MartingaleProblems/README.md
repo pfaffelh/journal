@@ -822,9 +822,12 @@ A concrete family of solutions, built without any of the theory above. Index
   `E_x[f (X t)] - f x = ∫_0^t E_x[A f (X s)] ds`, which is the backward
   equation and the only step needing analysis beyond bookkeeping. Its value at
   `t = 0` is `jumpMeasure_hasDerivWithinAt_integral`, proved on 2026-09-09,
-  twenty fourth run. What remains of it is the time homogeneous Markov property,
-  which moves the derivative from `0` to every `s`; with it the identity follows
-  from `intervalIntegral.integral_eq_sub_of_hasDerivAt`.
+  twenty fourth run, and the time homogeneous Markov property that moves the
+  derivative from `0` to every `s` is `jumpMeasure_integral_jumpProcess_add`,
+  proved on 2026-09-09, twenty sixth run. The identity itself follows from them
+  and is `jumpMeasure_integral_sub_eq_intervalIntegral`, proved in the same run.
+  **What remains of `jumpProcess_isMPSolution` is therefore only the passage from
+  the expectation identity to the conditional one**, `P[Y t | 𝓕 s] =ᵐ Y s`.
 
   **The Markov property is a statement about the initial *state* and not about an
   initial law, and that is why `jumpKernel` exists.** The form announced on
@@ -891,12 +894,59 @@ A concrete family of solutions, built without any of the theory above. Index
   property at a fixed time**, on the event `{s < T 1}` that the first jump has not
   yet happened. **Proved** on 2026-09-09, twenty fifth run. Both sides of the
   semigroup identity restricted to that event are
-  `exp (-(lam z * s)) * jumpSemigroup lam mu h t z`. What remains for the full
-  Markov property is the induction over the number of jumps in `[0, s]`: on
-  `{T 1 ≤ s}` the split `integral_jumpMeasure_eq_of_split` restarts the
-  construction from `mu z` at time `s - σ / lam z`, and the inductive hypothesis
-  applies there; the induction closes because the jump times exhaust the half
-  line (`ae_exists_lt_jumpTime`).
+  `exp (-(lam z * s)) * jumpSemigroup lam mu h t z`.
+* `abs_integral_jumpMeasure_add_sub_le`: the **induction over the number of
+  jumps** in `[0, s]`, which carries the base case to the whole space,
+  ```
+  |∫ h (X (s + t)) d(jumpMeasure mu nu) - ∫ (P t h) (X s) d(jumpMeasure mu nu)|
+    ≤ 2 * C * (jumpMeasure mu nu).real {ω | T n ω ≤ s}
+  ```
+  for every `n` and every initial law `nu`. **Proved** on 2026-09-09, twenty
+  sixth run. The initial law is quantified *inside* the statement and not fixed
+  as a parameter, because on `{T 1 ≤ s}` the split
+  `integral_jumpMeasure_eq_of_split` restarts the construction from `mu z` at
+  time `s - σ / lam z`, and that is where the inductive hypothesis is used. The
+  two branches differ in kind: on `{s < T 1}` there is no error at all, and on
+  `{T 1 ≤ s}` the error is the inherited one. Adding the first jump to the
+  further `n` gives `{T 1 ≤ s} ∩ {T (n+1) ≤ s}`, and only its **inclusion** in
+  `{T (n+1) ≤ s}` is used: over a bare `[MeasurableSpace E]` the two sets are
+  not equal, because `T n ∘ jumpShift` is only almost surely nonnegative.
+* `integral_jumpMeasure_eq_of_split_prod`: the splitting with its two outer
+  integrals joined into one measure `nu.prod (expMeasure 1)` on `E × ℝ`.
+  **Proved** on 2026-09-09, twenty sixth run. The estimate above compares two
+  integrals, and the monotonicity of the Bochner integral is a statement about
+  **one** measure; the iterated form of `integral_jumpMeasure_eq_of_split` would
+  need the measurability of the inner integral in the initial state as a separate
+  step at every use. That measurability is
+  `measurable_integral_jumpMeasure_step`, and it rests on
+  `jumpMeasure_step_eq_comp : jumpMeasure mu (mu z) = (jumpKernel mu ∘ₖ mu) z` --
+  over a bare `[MeasurableSpace E]` nothing but the kernel supplies it.
+* `tendsto_measureReal_jumpTime_le`: the probability of `n` jumps before a fixed
+  time goes to zero. **Proved** on 2026-09-09, twenty sixth run, from non
+  explosion (`ae_exists_lt_jumpTime`) and the strict monotonicity of the jump
+  times. The family `{T n ≤ s}` is only **almost surely** decreasing, so the
+  continuity of the measure from above does not apply and the argument is run on
+  the indicators by dominated convergence. No Chernoff bound and no Gamma
+  distribution is needed.
+* `jumpMeasure_integral_jumpProcess_add`: the **Markov property of the jump
+  process at a fixed time**, `P (s + t) h = P s (P t h)` averaged over the
+  initial law. **Proved** on 2026-09-09, twenty sixth run, as the two preceding
+  items combined. `jumpMeasure_integral_jumpProcess_add'` is the corollary in the
+  form announced on the twenty fourth run.
+* `jumpMeasure_integral_sub_eq_intervalIntegral`: the **expectation identity**
+  `E[h (X t)] - E[h (X 0)] = ∫_0^t E[A h (X r)] dr`. **Proved** on 2026-09-09,
+  twenty sixth run. The theorem of the calculus it takes is
+  `intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le`, and that choice is
+  forced: `jumpMeasure_hasDerivWithinAt_integral` is one sided by necessity, and
+  `eq_zero_of_hasDerivAt_integral_jumpProcess` says that a two sided derivative
+  at `0` does not exist. Its three hypotheses are supplied by three statements
+  about the construction and by no assumption: the derivative from the right at
+  `r` is the derivative at `0` of the construction restarted from the law at time
+  `r`, which is `jumpMeasure_integral_jumpProcess_add'` composed with the shift
+  `x ↦ x - r`; the continuity on the closed interval is the Lipschitz estimate
+  `abs_integral_jumpProcess_sub_le`, read from the law at time `a` instead of
+  from `nu`; and the integrability of the compensator is `abs_jumpApply_le`
+  together with the joint measurability of `(r, ω) ↦ jumpProcess lam r ω`.
 * `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
   **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a

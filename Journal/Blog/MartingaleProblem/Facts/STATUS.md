@@ -1,10 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260909T182301Z
-- **Zustand:** limit-sitzung
-- **Notiz:** Sitzungsgrenze des Kontos erreicht; kein Ausweichmodell, es traefe dieselbe Grenze. Naechster Versuch ab 2026-09-09 22:20 CEST
+- **Letzter Lauf (UTC):** 20260909T202301Z
+- **Zustand:** ok
+- **Notiz:** Lauf regulaer beendet
 - **Host:** fisher
-- **Laeufe bisher:** 123
+- **Laeufe bisher:** 124
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
