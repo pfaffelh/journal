@@ -10,6 +10,9 @@ import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Analysis.RCLike.Lemmas
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.Topology.Order.LeftRightLim
+import Mathlib.Probability.Kernel.IonescuTulcea.Traj
+import Mathlib.Probability.ProductMeasure
+import Mathlib.Probability.Distributions.Exponential
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -19,12 +22,16 @@ mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-09.  Every declaration elaborates; 9 declarations carry `sorry`, and
-every one of those `sorry`s is a **proof**.  The last block of the file,
-Milestone 4's `IsStepPath`, was added on 2026-09-09 and carries none: its three
-declarations are proved, and one of them,
+every one of those `sorry`s is a **proof**.  The last two blocks of the file are
+Milestone 4 and carry none.  The first, `IsStepPath`, was added on 2026-09-09:
+its three declarations are proved, and one of them,
 `exists_finite_setOf_leftLim_ne_not_isCadlagPath`, is the witness that the
 roadmap's first proposal for that predicate -- local finiteness of the jump set
--- does not imply càdlàg.  The first proof of the
+-- does not imply càdlàg.  The second, `JumpConstruction`, was added the same
+day: thirty three proved declarations building `jumpProcess` on the explicit space
+`(ℕ → E) × (ℕ → ℝ)` with the measure `jumpMeasure mu nu`, and showing its paths
+to be step paths, hence càdlàg, and jointly measurable in `(t, ω)`.  The first
+proof of the
 file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
 corrected first: under `¬ IsMin t` alone it is false.  On 2026-09-07 twelve more
 proofs came in: `Clock.interval_union`, the additivity every compensator
@@ -1196,3 +1203,353 @@ theorem exists_finite_setOf_leftLim_ne_not_isCadlagPath :
     exact one_ne_zero hone
 
 end StepPath
+
+/-! ## Milestone 4: the jump process itself
+
+The construction of `jumpProcess lam mu nu`, on an explicit probability space, and the proof
+that its paths are the step paths of the block above.
+
+The sample space is `(ℕ → E) × (ℕ → ℝ)`: the trajectory of the embedded Markov chain, and the
+sequence of its waiting times.  The chain is Mathlib's Ionescu--Tulcea kernel
+`ProbabilityTheory.Kernel.traj` with the family that reads the *last* coordinate -- unlike
+`ProbabilityTheory.exists_kernel_pi_of_markov` of the roadmap **KolmogorovExtension**, whose
+kernels read only the base point and which is therefore a product and not a chain.  The waiting
+times are `MeasureTheory.Measure.infinitePi` of `ProbabilityTheory.expMeasure 1`.  Neither
+carries a topology on `E`; only the path statements do.
+
+The deterministic core is separated from the probabilistic one, and that separation is the point
+of the block.  `stepIndex T t` is the index of the window `[T n, T (n+1))` containing `t`,
+defined as `sInf {n | t < T (n+1)}` -- `Nat.find` made total by `sInf ∅ = 0`, which is what makes
+the joint measurability in `(t, ω)` a description of countably many preimages rather than a
+limit argument.  Everything about the paths is then a statement about `stepPath`, under the two
+hypotheses `StrictMono T` and `∀ s, ∃ n, s < T (n+1)`; the second is exactly non explosion, and
+`tendsto_jumpTime_atTop` is the only place where a bound on the rate is used. -/
+
+section JumpConstruction
+
+variable {E : Type*}
+
+/-! ### The step index -/
+
+/-- The index of the window a time belongs to: the least `n` with `t < T (n + 1)`.
+
+`Nat.find` would need a proof of existence at every call.  `sInf` on `ℕ` is the same function
+made total by `sInf ∅ = 0`, and the junk value is harmless: it is returned exactly on the
+explosion set, where no window contains `t`. -/
+noncomputable def stepIndex (T : ℕ → ℝ) (t : ℝ) : ℕ := sInf {n | t < T (n + 1)}
+
+variable {T : ℕ → ℝ} {t : ℝ} {n : ℕ}
+
+theorem lt_stepIndex_succ (hex : ∃ n, t < T (n + 1)) : t < T (stepIndex T t + 1) :=
+  Nat.sInf_mem hex
+
+theorem le_of_lt_stepIndex (h : n < stepIndex T t) : T (n + 1) ≤ t :=
+  not_lt.1 (Nat.notMem_of_lt_sInf h)
+
+theorem stepIndex_le (h : t < T (n + 1)) : stepIndex T t ≤ n := Nat.sInf_le h
+
+/-- The characterisation of the step index by the window it names. -/
+theorem stepIndex_eq_of (h1 : n = 0 ∨ T n ≤ t) (h2 : t < T (n + 1)) (hT : Monotone T) :
+    stepIndex T t = n := by
+  refine le_antisymm (stepIndex_le h2) ?_
+  by_contra hlt
+  push_neg at hlt
+  rcases h1 with rfl | h1
+  · exact Nat.not_lt_zero _ hlt
+  · exact absurd (lt_stepIndex_succ ⟨n, h2⟩)
+      (not_lt.2 ((h1.trans' (hT (Nat.succ_le_of_lt hlt))).trans_eq rfl))
+
+/-- The left endpoint of the window is below the time, unless the index is `0`. -/
+theorem T_stepIndex_le (h : stepIndex T t ≠ 0) : T (stepIndex T t) ≤ t := by
+  obtain ⟨m, hm⟩ := Nat.exists_eq_succ_of_ne_zero h
+  rw [hm]
+  exact le_of_lt_stepIndex (hm ▸ Nat.lt_succ_self m)
+
+/-! ### The step path -/
+
+/-- The path that takes the value `y n` on `[T n, T (n + 1))`. -/
+noncomputable def stepPath (T : ℕ → ℝ) (y : ℕ → E) (t : ℝ) : E := y (stepIndex T t)
+
+/-- Every time lies in a window: the index it receives has its left endpoint below it (or is
+`0`) and its right endpoint above it. -/
+theorem exists_stepIndex_window (hex : ∀ s : ℝ, ∃ n, s < T (n + 1)) (x : ℝ) :
+    ∃ n, (n = 0 ∨ T n ≤ x) ∧ x < T (n + 1) := by
+  refine ⟨stepIndex T x, ?_, lt_stepIndex_succ (hex x)⟩
+  by_cases h : stepIndex T x = 0
+  · exact Or.inl h
+  · exact Or.inr (T_stepIndex_le h)
+
+/-- **The path built from a strictly increasing, unbounded sequence of jump times is a step
+path**, hence càdlàg by `IsStepPath.isCadlagPath`.
+
+The two conjuncts are the two sides of a jump time and they are not symmetric.  On the right,
+the window `Set.Ico x (T (n + 1))` of the index `n` of `x` itself works, because the path takes
+the value `y n` *at* `x`.  On the left there are three cases, and the third is the only one that
+uses `StrictMono` rather than `Monotone`: when `x = T (m + 1)` is itself a jump time, the
+constant is `y m` and the neighbourhood is `Set.Ioo (T m) x`, which is a neighbourhood only
+because `T m < T (m + 1)`.  The other two are `T n < x`, where the same window serves, and
+`x ≤ T 0`, where the path is constant `y 0` on all of `Set.Iio x`. -/
+theorem isStepPath_stepPath [TopologicalSpace E] (hT : StrictMono T)
+    (hex : ∀ s : ℝ, ∃ n, s < T (n + 1)) (y : ℕ → E) : IsStepPath (stepPath T y) := by
+  have hmono : Monotone T := hT.monotone
+  have key : ∀ (s : ℝ) (m : ℕ), (m = 0 ∨ T m ≤ s) → s < T (m + 1) → stepPath T y s = y m := by
+    intro s m h1 h2
+    simp only [stepPath, stepIndex_eq_of h1 h2 hmono]
+  constructor
+  · intro x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window hex x
+    have hmem : Set.Ico x (T (n + 1)) ∈ 𝓝[≥] x := by
+      refine mem_nhdsWithin.2 ⟨Set.Iio (T (n + 1)), isOpen_Iio, hx2, ?_⟩
+      rintro z ⟨hz1, hz2⟩
+      exact ⟨hz2, hz1⟩
+    filter_upwards [hmem] with z hz
+    rw [key z n (hx1.imp id (fun h => h.trans hz.1)) hz.2, key x n hx1 hx2]
+  · intro x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window hex x
+    by_cases hlt : T n < x
+    · refine ⟨y n, ?_⟩
+      have hmem : Set.Ioo (T n) x ∈ 𝓝[<] x :=
+        mem_nhdsWithin.2 ⟨Set.Ioi (T n), isOpen_Ioi, hlt, fun z hz => ⟨hz.1, hz.2⟩⟩
+      filter_upwards [hmem] with z hz
+      exact key z n (Or.inr hz.1.le) (hz.2.trans hx2)
+    · push_neg at hlt
+      rcases Nat.eq_zero_or_pos n with rfl | hpos
+      · refine ⟨y 0, ?_⟩
+        filter_upwards [self_mem_nhdsWithin] with z (hz : z < x)
+        exact key z 0 (Or.inl rfl) (hz.trans hx2)
+      · obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, (Nat.succ_pred_eq_of_pos hpos).symm⟩
+        have hxeq : T (m + 1) = x :=
+          le_antisymm (hx1.resolve_left (Nat.succ_ne_zero m)) hlt
+        refine ⟨y m, ?_⟩
+        have hmlt : T m < x := hxeq ▸ hT (Nat.lt_succ_self m)
+        have hmem : Set.Ioo (T m) x ∈ 𝓝[<] x :=
+          mem_nhdsWithin.2 ⟨Set.Ioi (T m), isOpen_Ioi, hmlt, fun z hz => ⟨hz.1, hz.2⟩⟩
+        filter_upwards [hmem] with z hz
+        exact key z m (Or.inr hz.1.le) (hxeq ▸ hz.2)
+
+/-! ### Joint measurability in `(t, ω)` -/
+
+/-- The step index, decided.  The second disjunct is the explosion set, on which the index is
+`0` by the convention `sInf ∅ = 0` and not because the time lies in the zeroth window. -/
+theorem stepIndex_eq_iff : stepIndex T t = n ↔
+    ((t < T (n + 1) ∧ ∀ m < n, T (m + 1) ≤ t) ∨ (n = 0 ∧ ∀ k, T (k + 1) ≤ t)) := by
+  constructor
+  · intro h
+    by_cases hne : ∃ k, t < T (k + 1)
+    · exact Or.inl ⟨h ▸ lt_stepIndex_succ hne, fun m hm => le_of_lt_stepIndex (h ▸ hm)⟩
+    · push_neg at hne
+      refine Or.inr ⟨?_, hne⟩
+      rw [← h]
+      exact Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2
+        fun k hk => absurd hk (not_lt.2 (hne k))))
+  · rintro (⟨h1, h2⟩ | ⟨rfl, h⟩)
+    · refine le_antisymm (stepIndex_le h1) (not_lt.1 fun hc => ?_)
+      exact absurd (lt_stepIndex_succ ⟨n, h1⟩) (not_lt.2 (h2 _ hc))
+    · exact Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2
+        fun k hk => absurd hk (not_lt.2 (h k))))
+
+variable {Ω : Type*} [MeasurableSpace Ω]
+
+/-- **The step index is jointly measurable in the time and the sample point.**  The proof is a
+description of the preimage of `{n}` and needs no limit: it is the set on which the `n`-th
+window contains the time, together, for `n = 0`, with the explosion set. -/
+theorem measurable_stepIndex {T : Ω → ℕ → ℝ} (hT : ∀ n, Measurable fun ω => T ω n) :
+    Measurable fun p : ℝ × Ω => stepIndex (T p.2) p.1 := by
+  refine measurable_to_countable' fun n => ?_
+  have hset : (fun p : ℝ × Ω => stepIndex (T p.2) p.1) ⁻¹' {n} =
+      ({p : ℝ × Ω | p.1 < T p.2 (n + 1)} ∩ ⋂ m ∈ Set.Iio n, {p : ℝ × Ω | T p.2 (m + 1) ≤ p.1})
+        ∪ {p : ℝ × Ω | n = 0 ∧ ∀ k, T p.2 (k + 1) ≤ p.1} := by
+    ext p
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_inter_iff,
+      Set.mem_setOf_eq, Set.mem_iInter, Set.mem_Iio]
+    rw [stepIndex_eq_iff]
+  rw [hset]
+  refine MeasurableSet.union (MeasurableSet.inter ?_ ?_) ?_
+  · exact measurableSet_lt measurable_fst ((hT (n + 1)).comp measurable_snd)
+  · exact MeasurableSet.biInter (Set.to_countable _) fun m _ =>
+      measurableSet_le ((hT (m + 1)).comp measurable_snd) measurable_fst
+  · by_cases hn : n = 0
+    · have : {p : ℝ × Ω | n = 0 ∧ ∀ k, T p.2 (k + 1) ≤ p.1}
+          = ⋂ k, {p : ℝ × Ω | T p.2 (k + 1) ≤ p.1} := by ext p; simp [hn]
+      rw [this]
+      exact MeasurableSet.iInter fun k =>
+        measurableSet_le ((hT (k + 1)).comp measurable_snd) measurable_fst
+    · have : {p : ℝ × Ω | n = 0 ∧ ∀ k, T p.2 (k + 1) ≤ p.1} = (∅ : Set (ℝ × Ω)) := by
+        ext p; simp [hn]
+      rw [this]
+      exact MeasurableSet.empty
+
+/-- **The step path is jointly measurable in the time and the sample point.**  This is the first
+of the three steps the roadmap says are easy on step paths: countably many pieces, and no limit
+argument. -/
+theorem measurable_stepPath [MeasurableSpace E] {T : Ω → ℕ → ℝ} {y : Ω → ℕ → E}
+    (hT : ∀ n, Measurable fun ω => T ω n) (hy : ∀ n, Measurable fun ω => y ω n) :
+    Measurable fun p : ℝ × Ω => stepPath (T p.2) (y p.2) p.1 :=
+  (measurable_from_prod_countable_left (α := Ω) (β := ℕ) (f := fun q => y q.1 q.2) hy).comp
+    (measurable_snd.prodMk (measurable_stepIndex hT))
+
+/-! ### The jump times -/
+
+/-- The jump times of the construction: `T 0 = 0`, and the `n`-th holding time is the `n`-th
+waiting time divided by the rate at the `n`-th state. -/
+noncomputable def jumpTime (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) : ℕ → ℝ
+  | 0 => 0
+  | (n + 1) => jumpTime lam y xi n + xi n / lam (y n)
+
+@[simp] theorem jumpTime_zero (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) :
+    jumpTime lam y xi 0 = 0 := rfl
+
+theorem jumpTime_succ (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTime lam y xi (n + 1) = jumpTime lam y xi n + xi n / lam (y n) := rfl
+
+variable {lam : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ}
+
+/-- **The jump times increase strictly** as soon as every waiting time and every rate is
+positive.
+
+The positivity of the rate is **not** cosmetic, and it is a genuine restriction of the present
+signature: `x / 0 = 0` in Lean, so at a state with `lam x = 0` -- which the model intends to be
+absorbing, with an infinite holding time -- the holding time computes to `0` and the path leaves
+at once.  Carrying the absorbing case means giving the jump times values in `ℝ≥0∞`, and the
+statements below say instead what is true of the construction as it stands. -/
+theorem strictMono_jumpTime (hxi : ∀ n, 0 < xi n) (hlam : ∀ x, 0 < lam x) :
+    StrictMono (jumpTime lam y xi) :=
+  strictMono_nat_of_lt_succ fun n => by
+    rw [jumpTime_succ]
+    exact lt_add_of_pos_right _ (div_pos (hxi n) (hlam _))
+
+/-- The `n`-th jump time is at least the `n`-th partial sum of the waiting times divided by a
+bound on the rate.  This inequality is the whole of the non explosion argument for a bounded
+rate. -/
+theorem sum_div_le_jumpTime {L : ℝ} (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (hxi : ∀ n, 0 ≤ xi n) (n : ℕ) :
+    (∑ k ∈ Finset.range n, xi k) / L ≤ jumpTime lam y xi n := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [Finset.sum_range_succ, add_div, jumpTime_succ]
+      refine add_le_add ih ?_
+      gcongr
+      · exact hxi n
+      · exact hlam _
+      · exact hL _
+
+/-- **Non explosion for a bounded rate**, given that the waiting times have divergent partial
+sums.  The second hypothesis is what an independent sequence of exponential waiting times
+supplies almost surely, and it is the only probabilistic input the path statements need. -/
+theorem tendsto_jumpTime_atTop {L : ℝ} (hL0 : 0 < L) (hlam : ∀ x, 0 < lam x)
+    (hL : ∀ x, lam x ≤ L) (hxi : ∀ n, 0 ≤ xi n)
+    (hsum : Tendsto (fun n => ∑ k ∈ Finset.range n, xi k) atTop atTop) :
+    Tendsto (jumpTime lam y xi) atTop atTop :=
+  tendsto_atTop_mono (fun n => sum_div_le_jumpTime hlam hL hxi n) (hsum.atTop_div_const hL0)
+
+theorem exists_lt_succ_of_tendsto_atTop (h : Tendsto T atTop atTop) (s : ℝ) :
+    ∃ n, s < T (n + 1) :=
+  ((h.comp (tendsto_add_atTop_nat 1)).eventually_gt_atTop s).exists
+
+/-- **The jump process**, as a process in the roadmap's convention `ι → Ω → E`: the state at
+time `t` is the state of the embedded chain at the index of the window containing `t`. -/
+noncomputable def jumpProcess (lam : E → ℝ) (t : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : E :=
+  stepPath (jumpTime lam ω.1 ω.2) ω.1 t
+
+/-- **The paths of the jump process are step paths**, for a rate bounded above and below and
+waiting times whose partial sums diverge. -/
+theorem isStepPath_jumpProcess [TopologicalSpace E] {L : ℝ} (hL0 : 0 < L)
+    (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (hxi : ∀ n, 0 < xi n)
+    (hsum : Tendsto (fun n => ∑ k ∈ Finset.range n, xi k) atTop atTop) :
+    IsStepPath (fun t => jumpProcess lam t (y, xi)) :=
+  isStepPath_stepPath (strictMono_jumpTime hxi hlam)
+    (exists_lt_succ_of_tendsto_atTop
+      (tendsto_jumpTime_atTop hL0 hlam hL (fun n => (hxi n).le) hsum)) y
+
+/-- **The paths of the jump process are càdlàg.** -/
+theorem isCadlagPath_jumpProcess [TopologicalSpace E] {L : ℝ} (hL0 : 0 < L)
+    (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (hxi : ∀ n, 0 < xi n)
+    (hsum : Tendsto (fun n => ∑ k ∈ Finset.range n, xi k) atTop atTop) :
+    IsCadlagPath (fun t => jumpProcess lam t (y, xi)) :=
+  (isStepPath_jumpProcess hL0 hlam hL hxi hsum).isCadlagPath
+
+/-! ### The explicit probability space -/
+
+section Space
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The law of the embedded chain**: Mathlib's Ionescu--Tulcea kernel specialised to a
+sequence of kernels each of which reads only the *last* coordinate.  Unlike the product kernel
+`ProbabilityTheory.exists_kernel_pi_of_markov` of the roadmap **KolmogorovExtension**, whose
+kernels read only the base point, this is the Markov chain proper.  It carries no topology on
+`E`. -/
+noncomputable def chainKernel (mu : Kernel E E) [IsMarkovKernel mu] : Kernel E (ℕ → E) :=
+  (Kernel.traj (X := fun _ ↦ E)
+      (fun n ↦ mu.comap (fun x : (i : Finset.Iic n) → E ↦ x ⟨n, Finset.mem_Iic.2 le_rfl⟩)
+        (measurable_pi_apply _)) 0).comap
+    (fun z (_ : Finset.Iic 0) ↦ z) (measurable_pi_lambda _ fun _ ↦ measurable_id)
+
+instance instIsMarkovKernelChainKernel (mu : Kernel E E) [IsMarkovKernel mu] :
+    IsMarkovKernel (chainKernel mu) := by
+  unfold chainKernel; infer_instance
+
+/-- **The chain starts where it is told to.** -/
+theorem chainKernel_map_zero (mu : Kernel E E) [IsMarkovKernel mu] (z : E) :
+    (chainKernel mu z).map (fun x ↦ x 0) = Measure.dirac z := by
+  have h0 : (fun x : ℕ → E ↦ x 0)
+      = (fun w : (i : Finset.Iic 0) → E ↦ w ⟨0, Finset.mem_Iic.2 le_rfl⟩) ∘
+        Preorder.frestrictLe 0 := rfl
+  rw [chainKernel, Kernel.comap_apply, h0, ← Measure.map_map
+    (measurable_pi_apply (X := fun _ : Finset.Iic 0 ↦ E) ⟨0, Finset.mem_Iic.2 le_rfl⟩)
+    (Preorder.measurable_frestrictLe 0), ← Kernel.map_apply _ (Preorder.measurable_frestrictLe 0),
+    Kernel.traj_map_frestrictLe_of_le (le_refl 0), Kernel.deterministic_apply,
+    Measure.map_dirac' (measurable_pi_apply _)]
+  rfl
+
+instance instIsProbabilityMeasureExpMeasureOne : IsProbabilityMeasure (expMeasure 1) :=
+  isProbabilityMeasure_expMeasure one_pos
+
+/-- **The waiting times**: an independent sequence of standard exponential variables. -/
+noncomputable def waitingMeasure : Measure (ℕ → ℝ) :=
+  Measure.infinitePi fun _ : ℕ ↦ expMeasure 1
+
+instance : IsProbabilityMeasure waitingMeasure := by unfold waitingMeasure; infer_instance
+
+/-- **The explicit probability space of the jump construction.**  A point is a trajectory of the
+embedded chain together with the sequence of its waiting times, and the two are independent
+because the measure is a product. -/
+noncomputable def jumpMeasure (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) :
+    Measure ((ℕ → E) × (ℕ → ℝ)) :=
+  (chainKernel mu ∘ₘ nu).prod waitingMeasure
+
+instance (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsProbabilityMeasure (jumpMeasure mu nu) := by unfold jumpMeasure; infer_instance
+
+/-- **The initial law is the one prescribed.**  This is the only place where `nu` enters, and it
+is what makes the construction one *of* `nu` and not merely one indexed by it. -/
+theorem jumpMeasure_map_chain_zero (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] : (jumpMeasure mu nu).map (fun ω ↦ ω.1 0) = nu := by
+  have hmap : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.1 0)
+      = (fun x : ℕ → E ↦ x 0) ∘ Prod.fst := rfl
+  rw [jumpMeasure, hmap, ← Measure.map_map (measurable_pi_apply 0) measurable_fst,
+    Measure.map_fst_prod, measure_univ, one_smul, Measure.map_comp _ _ (measurable_pi_apply 0)]
+  have hker : (chainKernel mu).map (fun x : ℕ → E ↦ x 0) = Kernel.id := by
+    ext z s hs
+    rw [Kernel.map_apply _ (measurable_pi_apply 0), chainKernel_map_zero, Kernel.id_apply]
+  rw [hker, Measure.id_comp]
+
+theorem measurable_jumpTime {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ) :
+    Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTime lam ω.1 ω.2 n := by
+  induction n with
+  | zero => exact measurable_const
+  | succ n ih =>
+      simp only [jumpTime_succ]
+      exact ih.add (((measurable_pi_apply n).comp measurable_snd).div
+        (hlam.comp ((measurable_pi_apply n).comp measurable_fst)))
+
+/-- **The jump process is jointly measurable in `(t, ω)`.** -/
+theorem measurable_jumpProcess {lam : E → ℝ} (hlam : Measurable lam) :
+    Measurable fun p : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦ jumpProcess lam p.1 p.2 :=
+  measurable_stepPath (fun n ↦ measurable_jumpTime hlam n)
+    (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
+
+end Space
+
+end JumpConstruction
