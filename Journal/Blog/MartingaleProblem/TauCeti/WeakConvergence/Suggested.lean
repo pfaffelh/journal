@@ -11,6 +11,7 @@ import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Function.AEEqFun
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
 import Mathlib.MeasureTheory.Measure.SeparableMeasure
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.Probability.ConditionalProbability
@@ -29,8 +30,8 @@ import Mathlib.Topology.UrysohnsLemma
 
 Prototypes only.
 
-**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1` on
-2026-09-06.  Every declaration elaborates, and the only warnings are
+**Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
+2026-09-09.  Every declaration elaborates, and the only warnings are
 `declaration uses 'sorry'`; those `sorry`s are the statements' own proofs, which
 is what this file is for.
 
@@ -327,6 +328,28 @@ have positive mass, with the frontier statement
 depend on `propext`, `Classical.choice` and `Quot.sound` alone.  The one statement
 still missing before the assembly is
 `exists_measurable_pair_of_partition_subset`.
+
+Since 2026-09-09, fourteenth run, **the convergence theorem of Milestone 4 is
+proved**, in both of its forms:
+`tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` for the laws and
+`tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable` for random
+variables on varying spaces, the latter through Mathlib's
+`MeasureTheory.TendstoInDistribution` as the milestone asks.  The approximant is
+`truncBdd N`, the identity clamped to `[-N, N]` as a bounded continuous function,
+and `abs_sub_truncBdd` says its truncation error is *exactly* the integrand of
+`IsUniformlyIntegrableLaws`, so the same expression that the hypothesis drives to
+zero bounds the displacement of the mean
+(`abs_integral_sub_integral_truncBdd_le`).  The step that the hypothesis does not
+give is the tail of the **limit** law, `ν` being no member of the family: it is
+`lintegral_truncTail_le_of_tendsto`, the portmanteau inequality for a nonnegative
+continuous function.  `integrable_id_of_isUniformlyIntegrableLaws` is since that
+run a corollary of `integrable_id_of_lintegral_truncTail_lt_top`, the same
+argument for a single measure, which is what the limit law can use.  All nine
+declarations of that run depend on `propext`, `Classical.choice` and `Quot.sound`
+alone.  What of
+Milestone 4 has no signature in this file, and never had one, is the de la
+Vallée-Poussin form and the four stability lemmas.  The only **open** `sorry` of
+this file is `exists_ae_tendsto_of_tendsto` of Milestone 3.
 
 One statement is deliberately written for `upstream/master` rather than for
 `v4.33.1`, and so does not elaborate here:
@@ -4408,8 +4431,16 @@ theorem exists_ae_tendsto_of_tendsto [MetricSpace E] [BorelSpace E]
 
 Mathlib's uniform integrability theory (`uniformIntegrable_iff`, the Vitali
 theorems in `MeasureTheory/Function/UniformIntegrable.lean`) is about a single
-measure.  This is the statement for laws on varying spaces; the Skorokhod
-representation above reduces it to Mathlib's. -/
+measure.  This is the statement for laws on varying spaces.
+
+**It does not go through the Skorokhod representation, and the roadmap said it
+would.**  That route -- put everything on one space and appeal to Mathlib's Vitali
+theorem -- would make this milestone wait on the one statement of Milestone 3 that
+is still open, and it is not needed: truncation is a direct argument, and its only
+non-elementary ingredient is the portmanteau inequality for a nonnegative
+continuous function, `lintegral_truncTail_le_of_tendsto` below.  The dependency
+was recorded as an implementation route and never as a necessity, so nothing else
+moves with it. -/
 
 /-- Uniform integrability of a family of real random variables living on
 different spaces, stated by truncation because that is the form the convergence
@@ -4431,18 +4462,56 @@ def IsUniformlyIntegrableLaws (μ : ℕ → ProbabilityMeasure ℝ) : Prop :=
   Tendsto (fun N : ℕ => ⨆ n, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ n : Measure ℝ))
     atTop (𝓝 0)
 
-/-- The truncation criterion carries the integrability of the limitands with it: no
-separate hypothesis is needed, and none may be added without weakening the theorem.
-For `N` with `⨆ k, ∫⁻ … < 1` one has `|x| ≤ N + (|x| - min |x| N)` pointwise, so
-`∫⁻ x, ‖x‖ₑ ∂(μ n) ≤ N + 1 < ∞`. -/
-theorem integrable_id_of_isUniformlyIntegrableLaws {μ : ℕ → ProbabilityMeasure ℝ}
-    (hui : IsUniformlyIntegrableLaws μ) (n : ℕ) : Integrable id (μ n : Measure ℝ) := by
-  obtain ⟨N, hN⟩ : ∃ N : ℕ,
-      ⨆ k, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ k : Measure ℝ) < 1 :=
-    (hui.eventually (gt_mem_nhds (by norm_num : (0 : ℝ≥0∞) < 1))).exists
-  have hle : ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ n : Measure ℝ) < 1 :=
-    lt_of_le_of_lt (le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| N)
-      ∂(μ k : Measure ℝ)) n) hN
+/-- The identity clamped to `[-N, N]`, as a bounded continuous function.  It is the
+approximant of the convergence proof: bounded and continuous, so weak convergence acts
+on it, and its truncation error is exactly the integrand of
+`IsUniformlyIntegrableLaws`. -/
+noncomputable def truncBdd (N : ℕ) : ℝ →ᵇ ℝ :=
+  BoundedContinuousFunction.ofNormedAddCommGroup
+    (fun x => max (-(N : ℝ)) (min (N : ℝ) x))
+    (continuous_const.max (continuous_const.min continuous_id)) N
+    (fun x => by
+      have hN : (0 : ℝ) ≤ (N : ℕ) := Nat.cast_nonneg N
+      rw [Real.norm_eq_abs, abs_le]
+      exact ⟨le_max_left _ _, max_le (by linarith) (min_le_left _ _)⟩)
+
+@[simp] theorem truncBdd_apply (N : ℕ) (x : ℝ) :
+    truncBdd N x = max (-(N : ℝ)) (min (N : ℝ) x) := rfl
+
+/-- The truncation error of `truncBdd N` is exactly the integrand of
+`IsUniformlyIntegrableLaws`.  That is the reason the criterion is stated by truncation
+and not by tail mass: the same expression bounds the displacement of the mean and is
+what the hypothesis drives to zero. -/
+theorem abs_sub_truncBdd (N : ℕ) (x : ℝ) :
+    |x - truncBdd N x| = |x| - min |x| (N : ℝ) := by
+  have hN : (0 : ℝ) ≤ (N : ℕ) := Nat.cast_nonneg N
+  rw [truncBdd_apply]
+  rcases le_total |x| (N : ℝ) with h | h
+  · have h1 : -(N : ℝ) ≤ x := (abs_le.1 h).1
+    have h2 : x ≤ (N : ℝ) := (abs_le.1 h).2
+    rw [min_eq_right h2, max_eq_right h1, min_eq_left h, sub_self, abs_zero, sub_self]
+  · rw [min_eq_right h]
+    rcases le_total 0 x with hx | hx
+    · have hxa : |x| = x := abs_of_nonneg hx
+      have h2 : (N : ℝ) ≤ x := by rwa [hxa] at h
+      have h3 : (0 : ℝ) ≤ x - (N : ℝ) := by linarith
+      rw [min_eq_left h2, max_eq_right (by linarith : -(N : ℝ) ≤ (N : ℝ)),
+        abs_of_nonneg h3, hxa]
+    · have hxa : |x| = -x := abs_of_nonpos hx
+      have h2 : x ≤ -(N : ℝ) := by rw [hxa] at h; linarith
+      have h3 : x - -(N : ℝ) ≤ 0 := by linarith
+      rw [min_eq_right (by linarith : x ≤ (N : ℝ)), max_eq_left h2, abs_of_nonpos h3, hxa]
+      ring
+
+/-- A single probability measure on `ℝ` whose truncation tail is finite at **one** level
+has an integrable identity.  `|x| ≤ N + (|x| - min |x| N)` pointwise, so
+`∫⁻ x, ‖x‖ₑ ∂ρ ≤ N + (that tail) < ∞`.
+
+It is stated for a single measure rather than for the family because the *limit* law
+needs it too, and the limit law is not a member of the family. -/
+theorem integrable_id_of_lintegral_truncTail_lt_top {ρ : Measure ℝ} [IsProbabilityMeasure ρ]
+    {N : ℕ} (h : ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ < ⊤) :
+    Integrable id ρ := by
   refine ⟨aestronglyMeasurable_id, ?_⟩
   rw [hasFiniteIntegral_iff_enorm]
   have hbound : ∀ x : ℝ, ‖(id x : ℝ)‖ₑ ≤
@@ -4459,20 +4528,169 @@ theorem integrable_id_of_isUniformlyIntegrableLaws {μ : ℕ → ProbabilityMeas
       _ ≤ ENNReal.ofReal ((N : ℝ) + (|x| - min |x| N)) := ENNReal.ofReal_le_ofReal h2
       _ = ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| N) :=
           ENNReal.ofReal_add (Nat.cast_nonneg N) h1
-  calc ∫⁻ x, ‖(id x : ℝ)‖ₑ ∂(μ n : Measure ℝ)
-      ≤ ∫⁻ x, (ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| N))
-          ∂(μ n : Measure ℝ) := lintegral_mono hbound
-    _ = ENNReal.ofReal (N : ℝ) + ∫⁻ x, ENNReal.ofReal (|x| - min |x| N)
-          ∂(μ n : Measure ℝ) := by
+  calc ∫⁻ x, ‖(id x : ℝ)‖ₑ ∂ρ
+      ≤ ∫⁻ x, (ENNReal.ofReal (N : ℝ) + ENNReal.ofReal (|x| - min |x| (N : ℝ))) ∂ρ :=
+        lintegral_mono hbound
+    _ = ENNReal.ofReal (N : ℝ) + ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ := by
         rw [lintegral_add_left' aemeasurable_const, lintegral_const, measure_univ, mul_one]
-    _ < ⊤ := ENNReal.add_lt_top.2 ⟨ENNReal.ofReal_lt_top, hle.trans_le le_top⟩
+    _ < ⊤ := ENNReal.add_lt_top.2 ⟨ENNReal.ofReal_lt_top, h⟩
 
+/-- The truncation criterion carries the integrability of the limitands with it: no
+separate hypothesis is needed, and none may be added without weakening the theorem.
+One level with `⨆ k, ∫⁻ … < 1` suffices, which is
+`integrable_id_of_lintegral_truncTail_lt_top`. -/
+theorem integrable_id_of_isUniformlyIntegrableLaws {μ : ℕ → ProbabilityMeasure ℝ}
+    (hui : IsUniformlyIntegrableLaws μ) (n : ℕ) : Integrable id (μ n : Measure ℝ) := by
+  obtain ⟨N, hN⟩ : ∃ N : ℕ,
+      ⨆ k, ∫⁻ x, ENNReal.ofReal (|x| - min |x| N) ∂(μ k : Measure ℝ) < 1 :=
+    (hui.eventually (gt_mem_nhds (by norm_num : (0 : ℝ≥0∞) < 1))).exists
+  exact integrable_id_of_lintegral_truncTail_lt_top
+    (((le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ))
+      ∂(μ k : Measure ℝ)) n).trans_lt hN).trans ENNReal.one_lt_top)
+
+/-- Truncation displaces the mean by at most the truncation tail.  This is the only
+place where the integrability of the identity is consumed, and it is consumed under
+**each** of the laws, the limit one included. -/
+theorem abs_integral_sub_integral_truncBdd_le {ρ : Measure ℝ} [IsProbabilityMeasure ρ]
+    (hint : Integrable id ρ) (N : ℕ) :
+    |∫ x, x ∂ρ - ∫ x, truncBdd N x ∂ρ| ≤
+      (∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ).toReal := by
+  have hbdd : Integrable (fun x => truncBdd N x) ρ := (truncBdd N).integrable ρ
+  have hint' : Integrable (fun x : ℝ => x) ρ := hint
+  have hcont : Continuous (fun x : ℝ => |x| - min |x| (N : ℝ)) :=
+    continuous_abs.sub (continuous_abs.min continuous_const)
+  have hnn : ∀ x : ℝ, 0 ≤ |x| - min |x| (N : ℝ) := fun x => by
+    simp only [sub_nonneg]; exact min_le_left _ _
+  calc |∫ x, x ∂ρ - ∫ x, truncBdd N x ∂ρ|
+      = |∫ x, (x - truncBdd N x) ∂ρ| := by rw [integral_sub hint' hbdd]
+    _ ≤ ∫ x, |x - truncBdd N x| ∂ρ := abs_integral_le_integral_abs
+    _ = ∫ x, (|x| - min |x| (N : ℝ)) ∂ρ :=
+        integral_congr_ae (Eventually.of_forall fun x => abs_sub_truncBdd N x)
+    _ = (∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂ρ).toReal :=
+        integral_eq_lintegral_of_nonneg_ae (Eventually.of_forall hnn)
+          hcont.aestronglyMeasurable
+
+/-- The truncation tail of the **limit** law is dominated by the supremum of the tails
+along the sequence.  This is what the hypothesis does not say and the proof needs: the
+family is uniformly integrable, `ν` is not a member of the family, and nothing in weak
+convergence transports an integral of an *unbounded* function.
+
+What does transport it is the portmanteau inequality for nonnegative continuous
+functions, `lintegral_le_liminf_lintegral_of_forall_isOpen_measure_le_liminf_measure`
+(`Measure/Portmanteau.lean:499`), whose hypothesis is the liminf condition on open sets,
+i.e. `ProbabilityMeasure.le_liminf_measure_open_of_tendsto` (`:326`).  A liminf bounded
+termwise by a constant is bounded by it, and the constant is the supremum. -/
+theorem lintegral_truncTail_le_of_tendsto {μ : ℕ → ProbabilityMeasure ℝ}
+    {ν : ProbabilityMeasure ℝ} (hconv : Tendsto μ atTop (𝓝 ν)) (N : ℕ) :
+    ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(ν : Measure ℝ) ≤
+      ⨆ n, ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) := by
+  have hcont : Continuous (fun x : ℝ => |x| - min |x| (N : ℝ)) :=
+    continuous_abs.sub (continuous_abs.min continuous_const)
+  have hnn : (0 : ℝ → ℝ) ≤ fun x : ℝ => |x| - min |x| (N : ℝ) := fun x => by
+    simp only [Pi.zero_apply, sub_nonneg]; exact min_le_left _ _
+  have hopens : ∀ G : Set ℝ, IsOpen G →
+      (ν : Measure ℝ) G ≤ atTop.liminf fun n => (μ n : Measure ℝ) G :=
+    fun _ hG => ProbabilityMeasure.le_liminf_measure_open_of_tendsto hconv hG
+  refine (lintegral_le_liminf_lintegral_of_forall_isOpen_measure_le_liminf_measure
+    hcont hnn hopens).trans ?_
+  refine le_trans (liminf_le_liminf (Eventually.of_forall fun n =>
+    le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ k : Measure ℝ)) n)) ?_
+  simp
+
+/-- Milestone 4: weak convergence plus uniform integrability gives convergence of the
+means, and the limit law has a mean at all.
+
+The three ε/3 are: the truncation error under `μ n`, uniform in `n` by hypothesis; the
+truncation error under `ν`, by `lintegral_truncTail_le_of_tendsto`; and the convergence
+of the truncated means, which is weak convergence tested against `truncBdd N`. -/
 theorem tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws
     {μ : ℕ → ProbabilityMeasure ℝ} {ν : ProbabilityMeasure ℝ}
     (hconv : Tendsto μ atTop (𝓝 ν)) (hui : IsUniformlyIntegrableLaws μ) :
     Integrable id (ν : Measure ℝ) ∧
-      Tendsto (fun n => ∫ x, x ∂(μ n : Measure ℝ)) atTop (𝓝 (∫ x, x ∂(ν : Measure ℝ))) :=
-  sorry
+      Tendsto (fun n => ∫ x, x ∂(μ n : Measure ℝ)) atTop (𝓝 (∫ x, x ∂(ν : Measure ℝ))) := by
+  set S : ℕ → ℝ≥0∞ := fun N =>
+    ⨆ n, ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) with hSdef
+  have hμle : ∀ (N n : ℕ),
+      ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) ≤ S N :=
+    fun N n => le_iSup (fun k => ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ))
+      ∂(μ k : Measure ℝ)) n
+  have hνle : ∀ N : ℕ,
+      ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(ν : Measure ℝ) ≤ S N :=
+    fun N => lintegral_truncTail_le_of_tendsto hconv N
+  have hsmall : ∀ r : ℝ≥0∞, 0 < r → ∃ N : ℕ, S N < r :=
+    fun r hr => (hui.eventually (gt_mem_nhds hr)).exists
+  have hintμ : ∀ (N n : ℕ), S N < ⊤ → Integrable id (μ n : Measure ℝ) :=
+    fun N n hN => integrable_id_of_lintegral_truncTail_lt_top ((hμle N n).trans_lt hN)
+  have hintν : ∀ N : ℕ, S N < ⊤ → Integrable id (ν : Measure ℝ) :=
+    fun N hN => integrable_id_of_lintegral_truncTail_lt_top ((hνle N).trans_lt hN)
+  obtain ⟨N₁, hN₁⟩ := hsmall 1 (by norm_num)
+  refine ⟨hintν N₁ (hN₁.trans ENNReal.one_lt_top), ?_⟩
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  obtain ⟨N, hN⟩ := hsmall (ENNReal.ofReal (ε / 3)) (ENNReal.ofReal_pos.2 (by linarith))
+  have hStop : S N ≠ ⊤ := (hN.trans_le le_top).ne
+  have hSlt : (S N).toReal < ε / 3 := ENNReal.toReal_lt_of_lt_ofReal hN
+  have hboundμ : ∀ n, |∫ x, x ∂(μ n : Measure ℝ) - ∫ x, truncBdd N x ∂(μ n : Measure ℝ)|
+      ≤ (S N).toReal := fun n =>
+    (abs_integral_sub_integral_truncBdd_le
+      (hintμ N n (lt_top_iff_ne_top.2 hStop)) N).trans (ENNReal.toReal_mono hStop (hμle N n))
+  have hboundν : |∫ x, x ∂(ν : Measure ℝ) - ∫ x, truncBdd N x ∂(ν : Measure ℝ)|
+      ≤ (S N).toReal :=
+    (abs_integral_sub_integral_truncBdd_le
+      (hintν N (lt_top_iff_ne_top.2 hStop)) N).trans (ENNReal.toReal_mono hStop (hνle N))
+  have hbc : Tendsto (fun n => ∫ x, truncBdd N x ∂(μ n : Measure ℝ)) atTop
+      (𝓝 (∫ x, truncBdd N x ∂(ν : Measure ℝ))) :=
+    ProbabilityMeasure.tendsto_iff_forall_integral_tendsto.1 hconv (truncBdd N)
+  obtain ⟨n₀, hn₀⟩ := Metric.tendsto_atTop.1 hbc (ε / 3) (by linarith)
+  refine ⟨n₀, fun n hn => ?_⟩
+  have h1 := abs_le.1 (hboundμ n)
+  have h2 := abs_le.1 hboundν
+  have h3 := abs_lt.1 (by rw [← Real.dist_eq]; exact hn₀ n hn)
+  rw [Real.dist_eq]
+  exact abs_lt.2 ⟨by linarith, by linarith⟩
+
+/-- The same theorem for random variables on varying spaces, which is the shape the
+milestone asks for and the shape `MartingaleProblems` consumes: the hypothesis is
+Mathlib's `MeasureTheory.TendstoInDistribution`, so the differing spaces are Mathlib's
+and not this roadmap's, and the truncation criterion is stated on the random variables
+themselves.  Everything between the two forms is `lintegral_map'` and `integral_map`. -/
+theorem tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable
+    {Ω : ℕ → Type*} {mΩ : ∀ n, MeasurableSpace (Ω n)} {P : (n : ℕ) → Measure (Ω n)}
+    [∀ n, IsProbabilityMeasure (P n)] {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
+    {P' : Measure Ω'} [IsProbabilityMeasure P'] {X : (n : ℕ) → Ω n → ℝ} {Z : Ω' → ℝ}
+    (h : TendstoInDistribution X atTop Z P P')
+    (hui : Tendsto (fun N : ℕ => ⨆ n,
+        ∫⁻ ω, ENNReal.ofReal (|X n ω| - min |X n ω| N) ∂(P n)) atTop (𝓝 0)) :
+    Integrable Z P' ∧
+      Tendsto (fun n => ∫ ω, X n ω ∂(P n)) atTop (𝓝 (∫ ω, Z ω ∂P')) := by
+  set μ : ℕ → ProbabilityMeasure ℝ := fun n =>
+    ⟨(P n).map (X n), Measure.isProbabilityMeasure_map (h.forall_aemeasurable n)⟩ with hμ
+  set ν : ProbabilityMeasure ℝ :=
+    ⟨P'.map Z, Measure.isProbabilityMeasure_map h.aemeasurable_limit⟩ with hν
+  have hcoeμ : ∀ n, ((μ n : Measure ℝ)) = (P n).map (X n) := fun _ => rfl
+  have hcoeν : ((ν : Measure ℝ)) = P'.map Z := rfl
+  have hlin : ∀ (N n : ℕ),
+      ∫⁻ x, ENNReal.ofReal (|x| - min |x| (N : ℝ)) ∂(μ n : Measure ℝ) =
+        ∫⁻ ω, ENNReal.ofReal (|X n ω| - min |X n ω| (N : ℝ)) ∂(P n) := by
+    intro N n
+    rw [hcoeμ n, lintegral_map' _ (h.forall_aemeasurable n)]
+    exact (ENNReal.measurable_ofReal.comp
+      (continuous_abs.sub (continuous_abs.min continuous_const)).measurable).aemeasurable
+  have hui' : IsUniformlyIntegrableLaws μ := by
+    simpa only [IsUniformlyIntegrableLaws, hlin] using hui
+  obtain ⟨hZ, htend⟩ := tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws h.tendsto hui'
+  have hint : Integrable Z P' := by
+    rw [hcoeν] at hZ
+    exact (integrable_map_measure aestronglyMeasurable_id h.aemeasurable_limit).1 hZ
+  refine ⟨hint, ?_⟩
+  have hZint : ∫ x, x ∂(ν : Measure ℝ) = ∫ ω, Z ω ∂P' := by
+    rw [hcoeν, integral_map (f := fun x : ℝ => x) h.aemeasurable_limit
+      aestronglyMeasurable_id]
+  have hXint : ∀ n, ∫ x, x ∂(μ n : Measure ℝ) = ∫ ω, X n ω ∂(P n) := fun n => by
+    rw [hcoeμ n, integral_map (f := fun x : ℝ => x) (h.forall_aemeasurable n)
+      aestronglyMeasurable_id]
+  rw [← hZint]
+  exact htend.congr hXint
 
 /-! ## Milestone 5: the functional monotone class theorem
 

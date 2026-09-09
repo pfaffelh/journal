@@ -49,19 +49,31 @@ Befunde daraus sind für die weitere Arbeit wichtig genug, um hier zu bleiben:
   gehalten (2026-09-08 und 2026-09-09, fünfter Lauf). Ein acceptance example, das
   nur dasteht, prüft nichts.
 
-**Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
-offene Beweise, in dieser Reihenfolge:
+**Teil B — `WeakConvergence` fertigmachen.** Teil A ist durch, also gilt dieser
+Teil. Noch **ein** offener Beweis:
 
-1. `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` (`:4470`) — der
-   Rest von Meilenstein 4, und ein Lauf sollte reichen: abschneiden bei `M`, die
-   abgeschnittene Funktion ist beschränkt stetig, also greift die schwache
-   Konvergenz, und die gleichmäßige Integrierbarkeit kontrolliert die Ränder
-   gleichmäßig in `n`. `integrable_id_of_isUniformlyIntegrableLaws` ist bewiesen
-   und die Definition seit dem 2026-09-08 repariert (unteres Integral statt
-   Bochner, sonst machte `integral_undef` das Kriterium für jede Familie mit
-   unendlichem ersten Moment wahr — Zeuge: die Cauchy-Verteilung). Damit ist ein
-   ganzer Meilenstein geschlossen.
-2. `exists_ae_tendsto_of_tendsto` (`:4398`) — die Skorohod-Darstellung, der
+1. ~~`tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`~~ *(erledigt
+   2026-09-09, vierzehnter Lauf des Tages)*. Bericht in `Facts/INVENTAR.md`,
+   Läufe, „2026-09-09, vierzehnter Lauf des Tages". Sieben neue Deklarationen,
+   eine von `sorry` zu einem Beweis geworden und eine umgeschrieben; alle durch
+   `lake env lean` gegen v4.33.1 geprüft und alle
+   mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`.
+
+   Der angesagte Weg über die **Skorohod-Darstellung** ist nicht gegangen worden
+   und wird nicht gebraucht — er hätte diesen Meilenstein an Punkt 2 gehängt. Der
+   Beweis ist die Abschneidung: `truncBdd N` ist die auf `[-N, N]` geklemmte
+   Identität als `ℝ →ᵇ ℝ`, und `abs_sub_truncBdd` sagt, daß ihr Abschneidefehler
+   **auf die Nase** der Integrand des Kriteriums ist. Der einzige nicht
+   elementare Schritt ist der Schwanz des **Grenzgesetzes**, das kein Glied der
+   Familie ist; er kommt aus der Portmanteau-Ungleichung für nichtnegative
+   stetige Funktionen (`lintegral_truncTail_le_of_tendsto`). Mitgekommen:
+   `integrable_id_of_lintegral_truncTail_lt_top` (ein Maß, ein Niveau — die
+   Familienfassung erreicht das Grenzgesetz nicht) und
+   `tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable`, die Fassung
+   mit Mathlibs `TendstoInDistribution`, die der Meilenstein dem Wortlaut nach
+   verlangt. Ohne Signatur bleiben von Meilenstein 4 die
+   de-la-Vallée-Poussin-Form und die vier Stabilitätslemmata.
+2. `exists_ae_tendsto_of_tendsto` (`:4421`) — die Skorohod-Darstellung, der
    Zusammenbau. Alle Bausteine stehen; offen sind die drei im Inventar benannten
    Punkte, beginnend mit der Indexabbildung mit dem Diagonalzweig.
 

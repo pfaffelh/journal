@@ -1649,9 +1649,32 @@ spaces are Mathlib's and not this roadmap's.
 
 * `tendsto_integral_of_tendstoInDistribution_of_uniformIntegrable`: for real
   random variables with `TendstoInDistribution X l Z μ μ'` and `X` uniformly
-  integrable, `Z` is integrable and `∫ ω, X i ω ∂(μ i) → ∫ ω, Z ω ∂μ'`. Prove it
-  through the Skorokhod representation of Milestone 3, which puts everything on
-  one space and reduces the statement to Mathlib's Vitali theorem.
+  integrable, `Z` is integrable and `∫ ω, X i ω ∂(μ i) → ∫ ω, Z ω ∂μ'`.
+
+  **Proved on 2026-09-09, fourteenth run**, together with its form for the laws,
+  `tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`; both depend on
+  `propext`, `Classical.choice` and `Quot.sound` alone. The proof is truncation
+  and **not** the Skorokhod representation, which is what this point asked for
+  until that run: the approximant is `truncBdd N`, the identity clamped to
+  `[-N, N]` as a bounded continuous function, and `abs_sub_truncBdd` identifies
+  its truncation error with the integrand of the criterion below, so one and the
+  same expression is what the hypothesis drives to zero and what bounds the
+  displacement of the mean (`abs_integral_sub_integral_truncBdd_le`). Three ε/3:
+  that displacement under each `μ n`, uniform in `n` by hypothesis; the same
+  under `μ'`; and the convergence of the truncated means, which is weak
+  convergence tested against a bounded continuous function.
+
+  The step the hypothesis does *not* give is the middle one, and it is the only
+  non-elementary ingredient: the limit law is no member of the family, so its
+  truncation tail must be got from the family, and nothing in weak convergence
+  transports the integral of an unbounded function. What does is the portmanteau
+  inequality for a nonnegative continuous function,
+  `MeasureTheory.lintegral_le_liminf_lintegral_of_forall_isOpen_measure_le_liminf_measure`
+  (`Measure/Portmanteau.lean:499`) over
+  `MeasureTheory.ProbabilityMeasure.le_liminf_measure_open_of_tendsto` (`:326`);
+  that is `lintegral_truncTail_le_of_tendsto`. Going through Milestone 3 would
+  have made this milestone wait on the one statement of Milestone 3 still open,
+  for no gain.
 * The truncation characterization for a family of real random variables on
   varying spaces: uniform integrability is equivalent to
   `lim_{N→∞} sup_n 𝔼[|X n| - min |X n| N] = 0`. State it in that form, since it
@@ -1674,6 +1697,12 @@ spaces are Mathlib's and not this roadmap's.
   it — `MeasureTheory.integrable_id_of_isUniformlyIntegrableLaws`, **proved** in
   the same run: for `N` with `⨆ k, ∫⁻ … < 1` one has
   `|x| ≤ N + (|x| - min |x| N)` pointwise, so `∫⁻ x, ‖x‖ₑ ∂(μ n) ≤ N + 1 < ∞`.
+  Since 2026-09-09, fourteenth run, that is a corollary of
+  `MeasureTheory.integrable_id_of_lintegral_truncTail_lt_top`, the same argument
+  for a **single** measure with a finite tail at a **single** level. The
+  generalisation is not decoration: the limit law is not a member of the family,
+  so the family version cannot reach it, and the integrability of `Z` is half the
+  conclusion of the theorem above.
   The lesson generalises past this milestone: a criterion phrased as a Bochner
   integral of a nonnegative integrand is silently vacuous wherever that integrand
   fails to be integrable, and that is precisely where such criteria are applied.
@@ -1707,6 +1736,16 @@ spaces are Mathlib's and not this roadmap's.
   theorem must then give `∫ X n = 1 / Real.sqrt (n+1) → 0 = ∫ 0`. The two spikes
   differ only in the height, which is what makes the pair a test of the
   criterion rather than of the example.
+
+  **The example does not need de la Vallée-Poussin, and since 2026-09-09,
+  fourteenth run, it must not**: that form has no signature in `Suggested.lean`
+  and is not proved, while the convergence theorem is, so an example routed
+  through it would exercise nothing. The truncation criterion is computable here
+  in closed form: `𝔼[|X n| - |X n| ⊓ N] = max (√(n+1) - N) 0 / (n+1)`, which
+  vanishes for `n + 1 ≤ N²` and is `(u - N)/u²` with `u = √(n+1)` beyond it; that
+  is maximal at `u = 2N`, so `⨆ n 𝔼[…] ≤ 1/(4N) → 0`. The pair of spikes is
+  therefore a test of one and the same criterion at two heights, and both halves
+  of it are exercised against **proved** statements.
 * **A family on varying spaces.** `Ω n = ({0, …, n}, uniform)` and `X n k = k / n`,
   with `Z = id` on `([0,1], Lebesgue)`. Then `TendstoInDistribution X atTop Z μ μ'`
   holds, the family is uniformly bounded by `1` and hence uniformly integrable,
