@@ -4,6 +4,24 @@ einem git-Worktree auf dem Branch `facts-inventory`. Zeitbudget: 120 Minuten.
 
 ## Vorrangige Aufgaben
 
+### SPARLAUF — gilt nur für Läufe am 2026-09-09 nach 16:00 *(vom Nutzer gesetzt)*
+
+Das Kontingent des Nutzers ist knapp. **Ein Ziel, dann Schluß.** Konkret:
+
+* Arbeite **ausschließlich** an `MartingaleProblems.jumpMeasure_integral_eq_of_firstJump`,
+  der Erneuerungsgleichung. Ist sie bewiesen, hörst Du auf — auch wenn Zeit bleibt.
+* **Keine** Roadmap-Prosa, **keine** neuen acceptance examples, **keine** Suche in
+  Mathlib über das hinaus, was der Beweis unmittelbar braucht, **kein** Nachziehen
+  von `README.md` außer einer Zeile, **kein** Durchsehen anderer Dateien.
+* Der Bericht ist **höchstens zehn Zeilen**: was bewiesen ist, woran es sonst
+  hängt, ein Satz Vorschlag. Ins Inventar kommt derselbe kurze Absatz, sonst
+  nichts.
+* Kommst Du nicht durch, brich nach dem ersten gescheiterten Ansatz ab und
+  schreibe in zwei Sätzen, woran er scheiterte. **Nicht** mehrere Wege probieren.
+* Die üblichen Regeln bleiben: `lake env lean` muß durchgehen, `#print axioms`
+  für jede neue Deklaration, Manuskript unberührt.
+
+
 Stehen hier Aufgaben, so haben sie Vorrang vor allem Übrigen, in der genannten
 Reihenfolge. Ist eine erledigt, streicht der Lauf sie hier heraus und trägt das
 Ergebnis an der genannten Stelle ein; sind alle erledigt, gilt wieder die
