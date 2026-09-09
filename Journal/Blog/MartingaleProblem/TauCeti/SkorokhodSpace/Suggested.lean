@@ -6335,6 +6335,57 @@ variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 noncomputable instance : MeasurableSpace D(ι, E) := borel _
 instance : BorelSpace D(ι, E) := ⟨rfl⟩
 
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **A good radius is produced, never chosen.**  `SkorokhodSpace.distWith` is
+not monotone in the radius --- that is why Milestone 4 integrates over the radius
+instead of summing --- so no bound on `intWith` gives a bound on `distWith` at a
+*named* radius.  What it gives is a radius: if `intWith t₀ l f g` is below
+`exp (-(M+1)) * c`, then *some* `u` in the unit interval `Set.Ioc M (M+1)` has
+`distWith t₀ u l f g < c`.
+
+The proof is the mean value of the integral over a window of measure one, and
+the truncation at `1` is what forces `c ≤ 1`: below that threshold `min 1 d` is
+`d` and the integrand really is bounded below by `exp (-(M+1)) * c` on the whole
+window.
+
+This is the shared engine of Milestones 6 and 7.  It was written out inside
+`SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt` until 2026-09-09, where
+`M` was `dist t₀ s + 1` and `c` was half the target accuracy; the compactness
+criterion needs the same step with `M` given by the window and `c` by the
+oscillation, so it stands on its own here. -/
+theorem SkorokhodSpace.exists_radius_distWith_lt [SecondCountableTopology E]
+    (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) {M c : ℝ} (hM : 0 < M) (hc0 : 0 < c)
+    (hc1 : c ≤ 1) (h : SkorokhodSpace.intWith t₀ l f g < Real.exp (-(M + 1)) * c) :
+    ∃ u : ℝ, u ∈ Set.Ioc M (M + 1) ∧ SkorokhodSpace.distWith t₀ u l f g < c := by
+  by_contra hcon
+  push_neg at hcon
+  have hnn : ∀ u : ℝ, (0 : ℝ) ≤ min 1 (SkorokhodSpace.distWith t₀ u l f g) :=
+    fun u => le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u _ f g)
+  have hFint := SkorokhodSpace.integrableOn_intDist t₀ l f g
+  have hsub : Set.Ioc M (M + 1) ⊆ Set.Ioi (0 : ℝ) := fun x hx => hM.trans hx.1
+  have h1 : ∫ u in Set.Ioc M (M + 1),
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+      ≤ SkorokhodSpace.intWith t₀ l f g :=
+    MeasureTheory.setIntegral_mono_set hFint
+      (Filter.Eventually.of_forall fun u => mul_nonneg (Real.exp_nonneg _) (hnn u))
+      hsub.eventuallyLE
+  have hvol : MeasureTheory.volume (Set.Ioc M (M + 1)) = 1 := by
+    rw [Real.volume_Ioc]; simp
+  have hconst : ∫ _u in Set.Ioc M (M + 1), Real.exp (-(M + 1)) * c
+      = Real.exp (-(M + 1)) * c := by
+    rw [MeasureTheory.setIntegral_const, MeasureTheory.measureReal_def, hvol]
+    simp
+  have h2 : Real.exp (-(M + 1)) * c
+      ≤ ∫ u in Set.Ioc M (M + 1),
+          Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g) := by
+    rw [← hconst]
+    refine MeasureTheory.setIntegral_mono_on
+      (MeasureTheory.integrableOn_const (by rw [hvol]; exact ENNReal.one_ne_top))
+      (hFint.mono_set hsub) measurableSet_Ioc fun u hu => ?_
+    exact mul_le_mul (Real.exp_le_exp.2 (by linarith [hu.2]))
+      (le_min hc1 (hcon u hu)) hc0.le (Real.exp_nonneg _)
+  linarith
+
 omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
 /-- **The approximation lemma of Milestone 6**, and the one statement that makes
 the coordinates measurable at all.
@@ -6391,37 +6442,9 @@ theorem SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt [SecondCountableTop
   have hint : SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g < δ₂ :=
     lt_of_le_of_lt (le_max_right _ _) (hl.trans_le (min_le_right _ _))
   -- the good radius: it is produced, not chosen
-  have hgood : ∃ u : ℝ, u ∈ Set.Ioc U (U + 1) ∧
-      SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g < c / 2 := by
-    by_contra hcon
-    push_neg at hcon
-    have hnn : ∀ u : ℝ, (0 : ℝ) ≤ min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g) :=
-      fun u => le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u _ f g)
-    have hFint := SkorokhodSpace.integrableOn_intDist t₀ (l : TimeChange ι) f g
-    have hsub : Set.Ioc U (U + 1) ⊆ Set.Ioi (0 : ℝ) := fun x hx => hU0.trans hx.1
-    have h1 : ∫ u in Set.Ioc U (U + 1),
-        Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g)
-        ≤ SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g :=
-      MeasureTheory.setIntegral_mono_set hFint
-        (Filter.Eventually.of_forall fun u => mul_nonneg (Real.exp_nonneg _) (hnn u))
-        hsub.eventuallyLE
-    have hvol : MeasureTheory.volume (Set.Ioc U (U + 1)) = 1 := by
-      rw [Real.volume_Ioc]; simp
-    have hconst : ∫ _u in Set.Ioc U (U + 1), Real.exp (-(U + 1)) * (c / 2)
-        = Real.exp (-(U + 1)) * (c / 2) := by
-      rw [MeasureTheory.setIntegral_const, MeasureTheory.measureReal_def, hvol]
-      simp
-    have h2 : Real.exp (-(U + 1)) * (c / 2)
-        ≤ ∫ u in Set.Ioc U (U + 1),
-            Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g) := by
-      rw [← hconst]
-      refine MeasureTheory.setIntegral_mono_on
-        (MeasureTheory.integrableOn_const (by rw [hvol]; exact ENNReal.one_ne_top))
-        (hFint.mono_set hsub) measurableSet_Ioc fun u hu => ?_
-      refine mul_le_mul (Real.exp_le_exp.2 (by linarith [hu.2]))
-        (le_min (by linarith) (hcon u hu)) (by linarith) (Real.exp_nonneg _)
-    linarith
-  obtain ⟨u, hu, hdist⟩ := hgood
+  obtain ⟨u, hu, hdist⟩ :=
+    SkorokhodSpace.exists_radius_distWith_lt (M := U) (c := c / 2) t₀ (l : TimeChange ι) f g
+      hU0 (by linarith) (by linarith) (by rw [hδ₂] at hint; exact hint)
   have hu0 : 0 < u := hU0.trans hu.1
   -- the witness, and it is `λ⁻¹ s`
   have hlfix : (l : TimeChange ι).toOrderIso t₀ = t₀ := l.2
@@ -7328,6 +7351,414 @@ theorem SkorokhodSpace.not_tendsto_iSup_modulusPinned :
     have hle : (1 : ℝ≥0∞) ≤ ⨆ f ∈ A, SkorokhodSpace.modulusPinned (0 : ℝ) 1 f δ :=
       le_iSup₂_of_le (F n) hmem hkey
     exact absurd hδlt (not_lt.2 hle)
+
+/-! ### Transporting a subdivision along a time change
+
+This is the machinery of the **forward** half of the criterion, `IsCompact
+(closure A)` implies the modulus condition.  The shape of that argument is
+Arzelà--Ascoli's: a compact closure is totally bounded, so finitely many paths
+`g₁, …, g_N` of `A` approximate all of them; each `g_j` has, by
+`SkorokhodSpace.tendsto_modulus`, a subdivision of small oscillation; and the
+subdivision of `g_j` has to be **carried over** to an arbitrary `f` near `g_j`.
+
+Carrying it over is the whole content, and it is not the trivial step it looks
+like.  The only thing relating `f` to `g_j` is a time change `l` of small norm,
+so the transported nodes are `l (t i)` and three things have to survive the
+transport:
+
+* the *sparseness*.  A time change can compress, and the gaps of the transported
+  subdivision are smaller.  They shrink by at most the factor `exp ‖l‖`, and
+  that is `TimeChange.dist_le_exp_norm_mul` read on `l⁻¹`.
+* the *covering*.  `SkorokhodSpace.IsSubdivision t₀ u' δ t` says `t 0` lies below
+  `exhaustionMin t₀ u'` and `t (Fin.last n)` above `exhaustionMax t₀ u'`; after
+  the transport the same has to hold for the window of radius `u`.  The proof is
+  not a case distinction on whether the index has points that low --- it is
+  `TimeChange.dist_le_of_norm_le` applied to `l⁻¹` at the two ends of the *small*
+  window, giving two points of the *large* window, and then
+  `isLeast_exhaustionMin` and `isGreatest_exhaustionMax` do the rest.  The
+  degenerate case where the index has a least element is carried by that argument
+  without being named: an order isomorphism fixes a least element, and the
+  estimate is then vacuous.
+* the *oscillation*, which picks up `2 η` where `η` bounds
+  `edist (f (l x)) (g x)` on the window.
+
+`SkorokhodSpace.modulus_le_of_edist_le` is the three put together. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- The bridge from the metric of Milestone 4 to a time change with a uniform
+bound on a *named* window: below a threshold depending only on the window radius
+`M` and the accuracy `ε`, closeness in `intDist` yields a time change of norm
+below `ε` and a radius in `Set.Ioc M (M + 1)` at which the windowed supremum is
+below `ε`.  The radius is produced by `SkorokhodSpace.exists_radius_distWith_lt`
+and cannot be named in advance. -/
+theorem SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt [SecondCountableTopology E]
+    (t₀ : ι) {M ε : ℝ} (hM : 0 < M) (hε : 0 < ε) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ f g : D(ι, E), SkorokhodSpace.intDist t₀ f g < δ →
+      ∃ l : TimeChange ι, l.toOrderIso t₀ = t₀ ∧ l.norm < ε ∧
+        ∃ u : ℝ, u ∈ Set.Ioc M (M + 1) ∧ SkorokhodSpace.distWith t₀ u l f g < ε := by
+  have hc0 : 0 < min ε 1 := lt_min hε one_pos
+  refine ⟨min ε (Real.exp (-(M + 1)) * min ε 1), lt_min hε (by positivity), fun f g hfg => ?_⟩
+  simp only [SkorokhodSpace.intDist] at hfg
+  obtain ⟨l, hl⟩ := exists_lt_of_ciInf_lt hfg
+  have hnorm : (l : TimeChange ι).norm < ε :=
+    lt_of_le_of_lt (le_max_left _ _) (hl.trans_le (min_le_left _ _))
+  have hint : SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g
+      < Real.exp (-(M + 1)) * min ε 1 :=
+    lt_of_le_of_lt (le_max_right _ _) (hl.trans_le (min_le_right _ _))
+  obtain ⟨u, hu, hd⟩ := SkorokhodSpace.exists_radius_distWith_lt (M := M) (c := min ε 1)
+    t₀ (l : TimeChange ι) f g hM hc0 (min_le_right _ _) hint
+  exact ⟨(l : TimeChange ι), l.2, hnorm, u, hu, hd.trans_le (min_le_left _ _)⟩
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- `distWith` read as a bound on a single pair of values.  The two clamps of
+`SkorokhodSpace.dist_le_distWith` disappear as soon as the point and its image
+both lie in the window, which is the only form the subdivision transport uses. -/
+theorem SkorokhodSpace.edist_le_ofReal_distWith (t₀ : ι) (u : ℝ) (l : TimeChange ι)
+    (f g : D(ι, E)) {x : ι} (hx : x ∈ exhaustion t₀ u)
+    (hlx : l.toOrderIso x ∈ exhaustion t₀ u) :
+    edist (f.toFun (l.toOrderIso x)) (g.toFun x)
+      ≤ ENNReal.ofReal (SkorokhodSpace.distWith t₀ u l f g) := by
+  rw [edist_dist]
+  refine ENNReal.ofReal_le_ofReal ?_
+  have h := SkorokhodSpace.dist_le_distWith t₀ u l f g x
+  rwa [clamp_eq_self hlx, clamp_eq_self hx] at h
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The image of a subdivision is a subdivision, on a smaller window and with a
+smaller sparseness.**  A `δ`-sparse subdivision of the window of radius `u'`,
+pushed forward by a time change of norm at most `γ` fixing the base point, is an
+`exp (-γ) * δ`-sparse subdivision of the window of radius `u`, provided the large
+radius leaves room for the displacement, `u + (exp γ - 1) * (2 * u) ≤ u'`.
+
+Both hypotheses are sharp in the sense that dropping either breaks the
+conclusion: without the base point being fixed a translation of `ℝ` has norm `0`
+and moves the window off itself, and without the room the image of the
+subdivision can fail to reach around the smaller window. -/
+theorem SkorokhodSpace.isSubdivision_comp (t₀ : ι) {u u' γ δ δ' : ℝ} (hu : 0 ≤ u)
+    (hu' : 0 ≤ u') {l : TimeChange ι} (h₀ : l.toOrderIso t₀ = t₀) (hnorm : l.norm ≤ γ)
+    (hcover : u + (Real.exp γ - 1) * (2 * u) ≤ u') (hδ : 0 ≤ δ)
+    (hδ' : δ' ≤ Real.exp (-γ) * δ) {n : ℕ} {t : Fin (n + 1) → ι}
+    (ht : SkorokhodSpace.IsSubdivision t₀ u' δ t) :
+    SkorokhodSpace.IsSubdivision t₀ u δ' (fun i => l.toOrderIso (t i)) := by
+  obtain ⟨hmono, h0, hlast, hgap⟩ := ht
+  have hinv : (l⁻¹).toOrderIso t₀ = t₀ := by
+    show l.toOrderIso.symm t₀ = t₀
+    exact l.toOrderIso.symm_apply_eq.2 h₀.symm
+  have hnorminv : (l⁻¹).norm ≤ γ := by rwa [TimeChange.norm_inv]
+  have hmemiff : ∀ v : ℝ, 0 ≤ v → ∀ y : ι, y ∈ exhaustion t₀ v ↔ dist y t₀ ≤ v := by
+    intro v hv y
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hv]
+  have key : ∀ x : ι, x ∈ exhaustion t₀ u → l.toOrderIso.symm x ∈ exhaustion t₀ u' := by
+    intro x hx
+    have hd : dist (l.toOrderIso.symm x) x ≤ (Real.exp γ - 1) * (2 * u) :=
+      TimeChange.dist_le_of_norm_le t₀ hu hinv hnorminv hx
+    have hx' : dist x t₀ ≤ u := (hmemiff u hu x).1 hx
+    refine (hmemiff u' hu' _).2 ?_
+    calc dist (l.toOrderIso.symm x) t₀
+        ≤ dist (l.toOrderIso.symm x) x + dist x t₀ := dist_triangle _ _ _
+      _ ≤ (Real.exp γ - 1) * (2 * u) + u := add_le_add hd hx'
+      _ ≤ u' := by linarith
+  refine ⟨fun a b hab => l.toOrderIso.strictMono (hmono hab), ?_, ?_, fun i => ?_⟩
+  · have hm := key _ (isLeast_exhaustionMin t₀ u).1
+    have hle : t 0 ≤ l.toOrderIso.symm (exhaustionMin t₀ u) :=
+      h0.trans ((isLeast_exhaustionMin t₀ u').2 hm)
+    have hmono' := l.toOrderIso.monotone hle
+    rwa [OrderIso.apply_symm_apply] at hmono'
+  · have hm := key _ (isGreatest_exhaustionMax t₀ u).1
+    have hle : l.toOrderIso.symm (exhaustionMax t₀ u) ≤ t (Fin.last n) :=
+      ((isGreatest_exhaustionMax t₀ u').2 hm).trans hlast
+    have hmono' := l.toOrderIso.monotone hle
+    rwa [OrderIso.apply_symm_apply] at hmono'
+  · have h1 := TimeChange.dist_le_exp_norm_mul l⁻¹ (l.toOrderIso (t i.castSucc))
+      (l.toOrderIso (t i.succ))
+    rw [show ((l⁻¹).toOrderIso (l.toOrderIso (t i.castSucc))) = t i.castSucc from
+        l.toOrderIso.symm_apply_apply _,
+      show ((l⁻¹).toOrderIso (l.toOrderIso (t i.succ))) = t i.succ from
+        l.toOrderIso.symm_apply_apply _,
+      TimeChange.norm_inv] at h1
+    have hexp : (0 : ℝ) < Real.exp (-l.norm) := Real.exp_pos _
+    have step1 : Real.exp (-γ) * δ ≤ Real.exp (-l.norm) * δ :=
+      mul_le_mul_of_nonneg_right (Real.exp_le_exp.2 (by linarith)) hδ
+    have step2 : Real.exp (-l.norm) * δ
+        < Real.exp (-l.norm) * dist (t i.castSucc) (t i.succ) :=
+      mul_lt_mul_of_pos_left (hgap i) hexp
+    have step3 : Real.exp (-l.norm) * dist (t i.castSucc) (t i.succ)
+        ≤ dist (l.toOrderIso (t i.castSucc)) (l.toOrderIso (t i.succ)) := by
+      have h2 := mul_le_mul_of_nonneg_left h1 hexp.le
+      rwa [← mul_assoc, ← Real.exp_add, neg_add_cancel, Real.exp_zero, one_mul] at h2
+    show δ' < dist (l.toOrderIso (t i.castSucc)) (l.toOrderIso (t i.succ))
+    linarith
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The oscillation survives the transport, up to `2 η`.**  If `f (l x)` and
+`g x` are `η` apart at every point of a window containing the nodes, then the
+cells of the transported subdivision carry at most the oscillation of the
+original ones plus `2 η` --- once for the point inside the cell and once for its
+left endpoint.
+
+The half open cells are what makes this exact: `x ↦ l x` is an order
+isomorphism, so it maps `Set.Ico (t i) (t (i+1))` **onto**
+`Set.Ico (l (t i)) (l (t (i+1)))`, and no point of the transported cell is
+unaccounted for. -/
+theorem SkorokhodSpace.subdivisionOsc_comp_le (t₀ : ι) (w : ℝ) (f g : D(ι, E))
+    (l : TimeChange ι) {n : ℕ} {t : Fin (n + 1) → ι} {η : ℝ≥0∞}
+    (hmem : ∀ i, t i ∈ exhaustion t₀ w)
+    (h : ∀ x ∈ exhaustion t₀ w, edist (f.toFun (l.toOrderIso x)) (g.toFun x) ≤ η) :
+    SkorokhodSpace.subdivisionOsc f (fun i => l.toOrderIso (t i))
+      ≤ SkorokhodSpace.subdivisionOsc g t + 2 * η := by
+  refine iSup_le fun i => iSup_le fun s => iSup_le fun hs => ?_
+  set x : ι := l.toOrderIso.symm s with hxdef
+  have hsx : l.toOrderIso x = s := l.toOrderIso.apply_symm_apply s
+  have hxmem : x ∈ Set.Ico (t i.castSucc) (t i.succ) := by
+    constructor
+    · have hs1 : l.toOrderIso (t i.castSucc) ≤ s := hs.1
+      have hs1' := l.toOrderIso.symm.monotone hs1
+      rwa [OrderIso.symm_apply_apply] at hs1'
+    · have hs2 : s < l.toOrderIso (t i.succ) := hs.2
+      have hs2' := l.toOrderIso.symm.strictMono hs2
+      rwa [OrderIso.symm_apply_apply] at hs2'
+  have hxE : x ∈ exhaustion t₀ w :=
+    (ordConnected_exhaustion t₀ w).out (hmem i.castSucc) (hmem i.succ)
+      ⟨hxmem.1, hxmem.2.le⟩
+  have h1 : edist (f.toFun s) (g.toFun x) ≤ η := by
+    rw [← hsx]; exact h x hxE
+  have h3 : edist (g.toFun (t i.castSucc)) (f.toFun (l.toOrderIso (t i.castSucc))) ≤ η := by
+    rw [edist_comm]; exact h _ (hmem _)
+  have h2 : edist (g.toFun x) (g.toFun (t i.castSucc))
+      ≤ SkorokhodSpace.subdivisionOsc g t :=
+    le_iSup_of_le i (le_iSup₂_of_le x hxmem le_rfl)
+  show edist (f.toFun s) (f.toFun (l.toOrderIso (t i.castSucc)))
+      ≤ SkorokhodSpace.subdivisionOsc g t + 2 * η
+  calc edist (f.toFun s) (f.toFun (l.toOrderIso (t i.castSucc)))
+      ≤ edist (f.toFun s) (g.toFun x)
+        + edist (g.toFun x) (f.toFun (l.toOrderIso (t i.castSucc))) := edist_triangle _ _ _
+    _ ≤ edist (f.toFun s) (g.toFun x) + (edist (g.toFun x) (g.toFun (t i.castSucc))
+        + edist (g.toFun (t i.castSucc)) (f.toFun (l.toOrderIso (t i.castSucc)))) :=
+      add_le_add le_rfl (edist_triangle _ _ _)
+    _ ≤ η + (SkorokhodSpace.subdivisionOsc g t + η) := add_le_add h1 (add_le_add h2 h3)
+    _ = SkorokhodSpace.subdivisionOsc g t + 2 * η := by ring
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The modulus is carried along a time change.**  This is the two previous
+statements put together, and it is the form the forward half of the criterion
+consumes: one subdivision of one nearby path bounds the modulus of *every* path
+close to it, uniformly, with the loss `2 η` in the oscillation and the loss
+`exp (-γ)` in the sparseness.
+
+The infimum defining the modulus is not touched --- it is instantiated at the
+transported subdivision --- so nothing here needs the modulus of `g` at all. -/
+theorem SkorokhodSpace.modulus_le_of_edist_le (t₀ : ι) {u u' w γ δ δ' : ℝ} (hu : 0 ≤ u)
+    (hu' : 0 ≤ u') (f g : D(ι, E)) {l : TimeChange ι} (h₀ : l.toOrderIso t₀ = t₀)
+    (hnorm : l.norm ≤ γ) (hcover : u + (Real.exp γ - 1) * (2 * u) ≤ u') (hδ : 0 ≤ δ)
+    (hδ' : δ' ≤ Real.exp (-γ) * δ) {n : ℕ} {t : Fin (n + 1) → ι}
+    (ht : SkorokhodSpace.IsSubdivision t₀ u' δ t) (hmem : ∀ i, t i ∈ exhaustion t₀ w)
+    {η : ℝ≥0∞}
+    (h : ∀ x ∈ exhaustion t₀ w, edist (f.toFun (l.toOrderIso x)) (g.toFun x) ≤ η) :
+    SkorokhodSpace.modulus t₀ u f δ' ≤ SkorokhodSpace.subdivisionOsc g t + 2 * η :=
+  le_trans
+    (iInf_le_of_le n (iInf_le_of_le (fun i => l.toOrderIso (t i))
+      (iInf_le_of_le
+        (SkorokhodSpace.isSubdivision_comp t₀ hu hu' h₀ hnorm hcover hδ hδ' ht) le_rfl)))
+    (SkorokhodSpace.subdivisionOsc_comp_le t₀ w f g l hmem h)
+
+/-- **The cells of a subdivision cover its half open span.**  Every point between
+the first and the last node, the last excluded, lies in one of the cells
+`Set.Ico (t i.castSucc) (t i.succ)`.
+
+This is the statement that turns a subdivision of small oscillation into a finite
+`ε`-net for the values of the path: off the nodes there is nothing, so the values
+on the span are within `ε` of the finitely many values at the nodes.  It is what
+the *other* conjunct of the forward half of `isCompact_closure_iff` --- the
+relative compactness of `{f t | f ∈ A, t ∈ B m}` --- consumes, and it is stated
+here for a bare `LinearOrder` because nothing else is used.
+
+The induction is on the number of cells and it splits at the *last* node rather
+than the first: the cells being `Set.Ico`, the point either lies below the last
+node, and then it is caught by the shorter subdivision, or it lies in the final
+cell.  Splitting at the first node would leave the half open final cell without a
+name. -/
+theorem exists_mem_Ico_of_strictMono {α : Type*} [LinearOrder α] :
+    ∀ {n : ℕ} {t : Fin (n + 1) → α}, StrictMono t → ∀ {x : α}, t 0 ≤ x →
+      x < t (Fin.last n) → ∃ i : Fin n, x ∈ Set.Ico (t i.castSucc) (t i.succ) := by
+  intro n
+  induction n with
+  | zero =>
+    intro t _ x hx hx'
+    rw [show (Fin.last 0) = (0 : Fin (0 + 1)) from Fin.ext (by simp)] at hx'
+    exact absurd (lt_of_le_of_lt hx hx') (lt_irrefl _)
+  | succ n ih =>
+    intro t ht x hx hx'
+    by_cases hcase : x < t (Fin.last n).castSucc
+    · have hmono : StrictMono fun i : Fin (n + 1) => t i.castSucc :=
+        fun a b hab => ht (Fin.castSucc_lt_castSucc_iff.2 hab)
+      have hx0 : (fun i : Fin (n + 1) => t i.castSucc) 0 ≤ x := by
+        simpa only [Fin.castSucc_zero] using hx
+      obtain ⟨i, hi⟩ := ih hmono hx0 hcase
+      refine ⟨i.castSucc, ?_⟩
+      rw [Fin.succ_castSucc]
+      exact hi
+    · push_neg at hcase
+      refine ⟨Fin.last n, hcase, ?_⟩
+      rwa [Fin.succ_last]
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The forward half of the criterion, for the modulus.**  A set with compact
+closure has a modulus that tends to `0` *uniformly over the set*.
+
+This is Arzelà--Ascoli's argument and nothing else: compact closure gives total
+boundedness, finitely many balls of radius `δ₀` cover `A`, each centre has a
+subdivision of oscillation at most `ε'` by `IsCadlag.exists_subdivision`, and
+`SkorokhodSpace.modulus_le_of_edist_le` carries that subdivision to every path of
+the ball.  The sparseness surviving is what makes the finitely many centres
+enough: the transported subdivisions all have gaps above `exp (-γ)` times the
+smallest gap of the finitely many originals, so **one** `δ` serves the whole set.
+
+Four radii appear and they are nested for a reason.  The modulus is asked for on
+`exhaustion t₀ m`; the subdivision is taken on `exhaustion t₀ (m + 1)`, which is
+the room the time change needs to displace the window's two ends; the nodes live
+there too, so that is where the uniform estimate has to hold; and the radius at
+which `SkorokhodSpace.exists_radius_distWith_lt` supplies that estimate is above
+`m + 2`, because the time change has to map `exhaustion t₀ (m + 1)` into the
+window before `SkorokhodSpace.edist_le_ofReal_distWith` may drop its two clamps.
+The single quantity that makes all four fit is `γ`, chosen so that
+`(exp γ - 1) * (2 * (m + 1)) ≤ 1`. -/
+theorem SkorokhodSpace.tendsto_iSup_modulus_of_isCompact [SecondCountableTopology E]
+    {A : Set D(ι, E)} (hA : IsCompact (closure A)) (m : ℕ) :
+    Tendsto (fun δ : ℝ => ⨆ f ∈ A, SkorokhodSpace.modulus (basePoint : ι) (m : ℝ) f δ)
+      (𝓝[>] 0) (𝓝 0) := by
+  classical
+  rw [ENNReal.tendsto_nhds_zero]
+  intro ε hε
+  obtain ⟨ε', hε', hle⟩ : ∃ ε' : ℝ, 0 < ε' ∧ 3 * ENNReal.ofReal ε' ≤ ε := by
+    rcases eq_or_ne ε ⊤ with rfl | hne
+    · exact ⟨1, one_pos, le_top⟩
+    · have h0 : 0 < ε.toReal := ENNReal.toReal_pos hε.ne' hne
+      refine ⟨ε.toReal / 4, by linarith, ?_⟩
+      have hmul : (3 : ℝ≥0∞) * ENNReal.ofReal (ε.toReal / 4)
+          = ENNReal.ofReal (3 * (ε.toReal / 4)) := by
+        rw [ENNReal.ofReal_mul (by norm_num)]
+        norm_num
+      rw [hmul]
+      calc ENNReal.ofReal (3 * (ε.toReal / 4)) ≤ ENNReal.ofReal ε.toReal :=
+            ENNReal.ofReal_le_ofReal (by linarith)
+        _ = ε := ENNReal.ofReal_toReal hne
+  have hm0 : (0 : ℝ) ≤ (m : ℝ) := Nat.cast_nonneg m
+  have hw0 : (0 : ℝ) < (m : ℝ) + 1 := by linarith
+  obtain ⟨γ, hγ0, hγ⟩ : ∃ γ : ℝ, 0 < γ ∧ (Real.exp γ - 1) * (2 * ((m : ℝ) + 1)) ≤ 1 := by
+    refine ⟨Real.log (1 + 1 / (2 * ((m : ℝ) + 1))), Real.log_pos (by
+      have : 0 < 1 / (2 * ((m : ℝ) + 1)) := by positivity
+      linarith), ?_⟩
+    rw [Real.exp_log (by positivity)]
+    field_simp
+    linarith
+  have hγexp : (0 : ℝ) ≤ Real.exp γ - 1 := by
+    have := Real.one_le_exp hγ0.le
+    linarith
+  -- the four radii
+  have hcover : (m : ℝ) + (Real.exp γ - 1) * (2 * (m : ℝ)) ≤ (m : ℝ) + 1 := by
+    have h1 : (Real.exp γ - 1) * (2 * (m : ℝ)) ≤ (Real.exp γ - 1) * (2 * ((m : ℝ) + 1)) :=
+      mul_le_mul_of_nonneg_left (by linarith) hγexp
+    linarith
+  have hM0 : (0 : ℝ) < (m : ℝ) + 2 := by linarith
+  obtain ⟨δ₀, hδ₀, hbridge⟩ :=
+    SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt (E := E) (basePoint : ι)
+      (M := (m : ℝ) + 2) (ε := min γ ε') hM0 (lt_min hγ0 hε')
+  -- a subdivision of every path on the window of radius `m + 1`
+  have hsubd : ∀ g : D(ι, E), ∃ d : ℝ, 0 < d ∧ ∃ (n : ℕ) (t : Fin (n + 1) → ι),
+      SkorokhodSpace.IsSubdivision (basePoint : ι) ((m : ℝ) + 1) d t ∧
+        (∀ i, t i ∈ exhaustion (basePoint : ι) ((m : ℝ) + 1)) ∧
+        SkorokhodSpace.subdivisionOsc g t ≤ ENNReal.ofReal ε' := by
+    intro g
+    have hmin := isLeast_exhaustionMin (basePoint : ι) ((m : ℝ) + 1)
+    have hmax := isGreatest_exhaustionMax (basePoint : ι) ((m : ℝ) + 1)
+    have hab : exhaustionMin (basePoint : ι) ((m : ℝ) + 1)
+        ≤ exhaustionMax (basePoint : ι) ((m : ℝ) + 1) := hmin.2 hmax.1
+    have hK : IsCompact (Set.Icc (exhaustionMin (basePoint : ι) ((m : ℝ) + 1))
+        (exhaustionMax (basePoint : ι) ((m : ℝ) + 1))) :=
+      (isCompact_exhaustion (basePoint : ι) ((m : ℝ) + 1)).of_isClosed_subset isClosed_Icc
+        ((ordConnected_exhaustion (basePoint : ι) ((m : ℝ) + 1)).out hmin.1 hmax.1)
+    obtain ⟨n, t, ht, h0, hlast, hcell⟩ := g.isCadlag.exists_subdivision hab hK hε'
+    obtain ⟨d, hd0, hdlt⟩ :
+        ∃ d : ℝ, 0 < d ∧ ∀ i : Fin n, d < dist (t i.castSucc) (t i.succ) := by
+      have hpos : ∀ i : Fin n, 0 < dist (t i.castSucc) (t i.succ) := fun i =>
+        dist_pos.2 (ht (Fin.castSucc_lt_succ (i := i))).ne
+      rcases Nat.eq_zero_or_pos n with rfl | hn
+      · exact ⟨1, one_pos, fun i => i.elim0⟩
+      · have hne : (Finset.univ : Finset (Fin n)).Nonempty := ⟨⟨0, hn⟩, Finset.mem_univ _⟩
+        have hinf : 0 < Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ) := by
+          rw [Finset.lt_inf'_iff]
+          exact fun i _ => hpos i
+        refine ⟨(Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ)) / 2,
+          by linarith, fun i => ?_⟩
+        have h1 : (Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ))
+            ≤ dist (t i.castSucc) (t i.succ) := Finset.inf'_le _ (Finset.mem_univ i)
+        have h2 : 0 < dist (t i.castSucc) (t i.succ) := hpos i
+        linarith
+    refine ⟨d, hd0, n, t, ⟨ht, h0.le, hlast.ge, hdlt⟩, fun i => ?_, ?_⟩
+    · refine (ordConnected_exhaustion (basePoint : ι) ((m : ℝ) + 1)).out hmin.1 hmax.1 ⟨?_, ?_⟩
+      · rw [← h0]; exact ht.monotone (Fin.zero_le i)
+      · rw [← hlast]; exact ht.monotone (Fin.le_last i)
+    · refine iSup_le fun i => iSup_le fun s => iSup_le fun hs => ?_
+      rw [edist_dist]
+      exact ENNReal.ofReal_le_ofReal (hcell i s hs)
+  choose dd hdd0 nn tt htt httmem httosc using hsubd
+  -- finitely many centres
+  have htb : TotallyBounded A := TotallyBounded.subset subset_closure hA.totallyBounded
+  obtain ⟨T, hTfin, hTcov⟩ := (Metric.totallyBounded_iff.1 htb) δ₀ hδ₀
+  obtain ⟨δ₁, hδ₁0, hδ₁⟩ : ∃ δ₁ : ℝ, 0 < δ₁ ∧ ∀ g ∈ T, δ₁ ≤ dd g := by
+    rcases T.eq_empty_or_nonempty with rfl | hTne
+    · exact ⟨1, one_pos, by simp⟩
+    · have hnee : hTfin.toFinset.Nonempty := by
+        obtain ⟨g, hg⟩ := hTne
+        exact ⟨g, hTfin.mem_toFinset.2 hg⟩
+      refine ⟨hTfin.toFinset.inf' hnee dd, ?_,
+        fun g hg => Finset.inf'_le _ (hTfin.mem_toFinset.2 hg)⟩
+      rw [Finset.lt_inf'_iff]
+      exact fun g _ => hdd0 g
+  have hev : ∀ᶠ δ : ℝ in 𝓝[>] 0, δ < Real.exp (-γ) * δ₁ :=
+    (Filter.eventually_iff_exists_mem.2 ⟨Set.Iio (Real.exp (-γ) * δ₁),
+      Iio_mem_nhds (by positivity), fun _ hx => hx⟩).filter_mono nhdsWithin_le_nhds
+  filter_upwards [hev] with δ hδ
+  refine le_trans (iSup₂_le fun f hf => ?_) hle
+  obtain ⟨g, hgT, hfg⟩ : ∃ g ∈ T, f ∈ Metric.ball g δ₀ := by
+    have h := hTcov hf
+    simpa only [Set.mem_iUnion, exists_prop] using h
+  have hint : SkorokhodSpace.intDist (basePoint : ι) f g < δ₀ := by
+    rw [← SkorokhodSpace.dist_eq]
+    exact Metric.mem_ball.1 hfg
+  obtain ⟨l, hl0, hlnorm, u, hu, hdist⟩ := hbridge f g hint
+  -- the uniform estimate on the window carrying the nodes
+  have hmoved : ∀ x ∈ exhaustion (basePoint : ι) ((m : ℝ) + 1),
+      l.toOrderIso x ∈ exhaustion (basePoint : ι) u := by
+    intro x hx
+    have hmove : dist (l.toOrderIso x) x ≤ (Real.exp γ - 1) * (2 * ((m : ℝ) + 1)) :=
+      TimeChange.dist_le_of_norm_le (basePoint : ι) hw0.le hl0
+        (hlnorm.le.trans (min_le_left _ _)) hx
+    have hx' : dist x (basePoint : ι) ≤ (m : ℝ) + 1 := by
+      simpa only [exhaustion, Metric.mem_closedBall, max_eq_left hw0.le] using hx
+    have hutop : (m : ℝ) + 2 < u := hu.1
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left (by linarith : (0 : ℝ) ≤ u)]
+    calc dist (l.toOrderIso x) (basePoint : ι)
+        ≤ dist (l.toOrderIso x) x + dist x (basePoint : ι) := dist_triangle _ _ _
+      _ ≤ 1 + ((m : ℝ) + 1) := add_le_add (hmove.trans hγ) hx'
+      _ ≤ u := by linarith
+  have hηu : ∀ x ∈ exhaustion (basePoint : ι) ((m : ℝ) + 1),
+      edist (f.toFun (l.toOrderIso x)) (g.toFun x) ≤ ENNReal.ofReal ε' := by
+    intro x hx
+    have hxu : x ∈ exhaustion (basePoint : ι) u :=
+      exhaustion_subset_of_le (basePoint : ι) (by linarith [hu.1]) hx
+    refine le_trans (SkorokhodSpace.edist_le_ofReal_distWith (basePoint : ι) u l f g hxu
+      (hmoved x hx)) (ENNReal.ofReal_le_ofReal ?_)
+    exact (hdist.trans_le (min_le_right _ _)).le
+  have hkey := SkorokhodSpace.modulus_le_of_edist_le (basePoint : ι) hm0 hw0.le f g hl0
+    (hlnorm.le.trans (min_le_left _ _)) hcover (hdd0 g).le
+    (hδ.le.trans (mul_le_mul_of_nonneg_left (hδ₁ g hgT) (Real.exp_pos _).le))
+    (htt g) (httmem g) hηu
+  refine hkey.trans ?_
+  have h3 : (3 : ℝ≥0∞) * ENNReal.ofReal ε'
+      = ENNReal.ofReal ε' + 2 * ENNReal.ofReal ε' := by ring
+  rw [h3]
+  exact add_le_add (httosc g) le_rfl
 
 /-- The compactness criterion.  The base point is the one of the instance and
 not a parameter: the left hand side speaks of the topology of `D(ι, E)`, which

@@ -12978,3 +12978,128 @@ fünften Lauf von heute. Die Rückrichtung liest danach
 `SkorokhodSpace.tendsto_of_partialComp` wie angesagt.
 
 **Das Manuskript ist nicht angefaßt.**
+
+### 2026-09-09, siebter Lauf des Tages — die Hinrichtung des Kompaktheitskriteriums, und der Motor, der sie trägt
+
+**Facts:** keiner neu; `fact:PSpolish` unberührt. Gearbeitet an Teil A, Punkt 3
+der vorrangigen Aufgabe — dem letzten `sorry` von
+`SkorokhodSpace/Suggested.lean`, `SkorokhodSpace.isCompact_closure_iff`.
+
+**Stand.** Die Datei steht weiter bei **einem** `sorry`. Neun Deklarationen sind
+neu oder umgeschrieben; alle neun sind durch `lake env lean` gegen v4.33.1
+geprüft, acht hängen mit `#print axioms` an `propext`, `Classical.choice`,
+`Quot.sound` und die neunte an `propext` allein. Der Nachweis steht in
+`SkorokhodSpace/Axioms.lean`, Abschnitt „2026-09-09, seventh run of the day".
+
+*Was fällt.* `SkorokhodSpace.tendsto_iSup_modulus_of_isCompact`: hat `A`
+kompakten Abschluß, so geht `⨆ f ∈ A, modulus basePoint m f δ` für `δ → 0+`
+gegen `0`. Das ist die **Modulbedingung, gleichmäßig über `A`**, und sie ist die
+zweite Konjunktion der rechten Seite des Kriteriums. Das `sorry` bleibt stehen,
+weil `isCompact_closure_iff` eine Äquivalenz zweier Konjunktionen ist; von den
+vier zu erbringenden Stücken ist eines jetzt da.
+
+*Der Beweis ist Arzelà--Ascoli und sonst nichts, und das ist der Punkt.*
+Kompakter Abschluß gibt Totalbeschränktheit, also endlich viele Mittelpunkte
+`g₁, …, g_N`, deren Kugeln vom Radius `δ₀` ganz `A` überdecken. Jedem `g_j` gibt
+`IsCadlag.exists_subdivision` eine Unterteilung mit Zellschwingung höchstens
+`ε'`. Und dann ist alles daran, diese Unterteilung auf ein beliebiges `f` der
+Kugel **überzutragen**. Das ist der Motor, und er heißt
+`SkorokhodSpace.modulus_le_of_edist_le`: *eine* Unterteilung *eines* nahen
+Pfades beschränkt den Modul *aller* Pfade seiner Kugel. Daß dabei die
+**Sparsamkeit** überlebt, ist der Grund, warum endlich viele Mittelpunkte
+genügen: die übertragenen Unterteilungen haben alle Lücken oberhalb von
+`exp (-γ)` mal der kleinsten Lücke der endlich vielen Originale, und darum tut es
+**ein** `δ` für ganz `A`.
+
+*Der Motor ist in vier benannte Stücke zerlegt, und jedes steht für sich.*
+
+* `SkorokhodSpace.exists_radius_distWith_lt` — der gute Radius. Ist
+  `intWith t₀ l f g < exp (-(M+1)) · c` mit `0 < c ≤ 1`, so hat *irgendein*
+  `u ∈ Set.Ioc M (M+1)` die Schranke `distWith t₀ u l f g < c`. Es ist der
+  Mittelwert des Integrals über ein Fenster vom Maß Eins, und die Trunkierung
+  bei `1` erzwingt `c ≤ 1`.
+* `SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt` — die Brücke von
+  der Integralmetrik zu einem Zeitwechsel samt gefensterter Schranke auf einem
+  **benannten** Fenster.
+* `SkorokhodSpace.isSubdivision_comp` — die Unterteilung längs des Zeitwechsels.
+* `SkorokhodSpace.subdivisionOsc_comp_le` — die Schwingung, mit Verlust `2 η`.
+
+*Der gute Radius ist nicht neu geschrieben, sondern **herausgezogen**.* Er stand
+seit dem fünften Lauf von heute inline im Beweis von
+`SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt`, dort mit
+`M = dist t₀ s + 1` und `c` gleich der halben Zielgenauigkeit. Der Satz liest ihn
+jetzt, statt ihn zu wiederholen; das ist die einzige Änderung an Meilenstein 6,
+und sie ist eine Änderung des Beweises und nicht der Aussage.
+
+*Ein Befund, der die Ansage des sechsten Laufs berichtigt.* Dort stand, die
+Schwingung übertrage `exists_orderIso_dist_lt_of_intDist_lt`. Sie tut es
+**nicht**: jener Satz ist punktweise und liefert zu *jedem* Punkt einen *anderen*
+Ordnungsisomorphismus, während der Modul einen einzigen für das ganze Fenster
+braucht — die Zellen einer Unterteilung sind nicht ein Punkt nach dem anderen,
+sondern ein Fenster auf einmal. Was gebraucht wird, ist die gefensterte Schranke
+selbst, also `distWith`, und deren Preis ist genau der, den Meilenstein 4 schon
+einmal bezahlt hat: der Radius wird **produziert und nicht gewählt**, weil
+`distWith` in ihm nicht monoton ist. Eben darum steht der gute Radius jetzt als
+eigener Satz da und nicht mehr im Bauch eines anderen Beweises.
+
+*Die Überdeckung ist die Stelle, an der es beinahe eine Fallunterscheidung
+gebraucht hätte.* `IsSubdivision t₀ u' δ t` verlangt `t 0 ≤ exhaustionMin t₀ u'`
+und `exhaustionMax t₀ u' ≤ t (Fin.last n)`; nach dem Transport muß dasselbe für
+das *kleinere* Fenster gelten. Der naive Weg — den verschobenen Knoten unterhalb
+des kleinen Fensterrandes zu halten — bricht auf einem Index, der so weit unten
+gar keine Punkte hat (`Set.Icc (0:ℝ) 1` bei `0`, eine der laufenden Instanzen),
+und verlangt dort ein eigenes Argument. Der Weg, der ohne auskommt, führt
+**rückwärts**: `TimeChange.dist_le_of_norm_le`, angewandt auf `l⁻¹` an den beiden
+Enden des *kleinen* Fensters, liefert zwei Punkte des *großen*, und dann sagen
+`isLeast_exhaustionMin` und `isGreatest_exhaustionMax` den Rest. Der entartete
+Fall ist darin enthalten, ohne genannt zu werden: hat der Index ein kleinstes
+Element, so hält jeder Ordnungsisomorphismus es fest und die Abschätzung ist
+leer.
+
+*Und die halboffenen Zellen zahlen sich ein zweites Mal aus.* `l` bildet
+`Set.Ico (t i) (t (i+1))` **auf** `Set.Ico (l (t i)) (l (t (i+1)))` ab, also ist
+kein Punkt der übertragenen Zelle unversorgt und der Verlust ist wirklich `2 η`
+und nicht mehr: einmal für den Punkt in der Zelle, einmal für ihren linken
+Endpunkt. Mit `Set.Icc` wäre die Abbildung nicht mehr surjektiv auf die Zelle,
+und die Zerlegung des Fensters in Zellen hätte Ränder doppelt gezählt.
+
+*Vier Radien treten auf, und ihre Schachtelung ist nicht Buchführung, sondern der
+Beweis.* Der Modul wird auf `exhaustion t₀ m` verlangt; die Unterteilung wird auf
+`exhaustion t₀ (m+1)` genommen, denn das ist der Raum, den der Zeitwechsel zum
+Verschieben der beiden Fensterenden braucht; die Knoten liegen dort, also muß
+dort auch die gleichmäßige Schranke gelten; und der Radius, an dem
+`exists_radius_distWith_lt` sie liefert, liegt über `m+2`, weil der Zeitwechsel
+`exhaustion t₀ (m+1)` erst **in** das Fenster tragen muß, ehe
+`SkorokhodSpace.edist_le_ofReal_distWith` seine beiden Klemmungen fallen lassen
+darf. Die eine Größe, die alle vier zusammenhält, ist `γ` mit
+`(exp γ - 1) · (2 (m+1)) ≤ 1`, und sie ist zugleich die Norm-Schranke des
+Zeitwechsels und der Schrumpffaktor der Lücken.
+
+*Die Roadmap ist nachgezogen*: Meilenstein 7 in `SkorokhodSpace/README.md` führt
+die sieben neuen Punkte, die Schachtelung der vier Radien als eigenen Punkt, und
+den noch offenen achten (`exists_compact_range_of_isCompact`).
+
+*Was als Nächstes zu tun ist,* und es sind drei Stücke, in dieser Reihenfolge:
+
+1. **Die Wertebedingung der Hinrichtung**,
+   `SkorokhodSpace.exists_compact_range_of_isCompact`: aus kompaktem Abschluß von
+   `A` die relative Kompaktheit von `{f t : f ∈ A, t ∈ exhaustion basePoint m}`
+   in `E`. Sie hängt nicht am Modul, sondern daran, daß ein càdlàg-Pfad auf einem
+   kompakten Fenster totalbeschränktes Bild hat — das ist wieder
+   `IsCadlag.exists_subdivision`, dessen endlich viele Zellwerte ein `ε'`-Netz
+   bilden —, und die Gleichmäßigkeit über `A` läuft über **dieselbe**
+   Totalbeschränktheit wie der Satz dieses Laufs. Sie ist deshalb jetzt dran:
+   sie ist das kürzeste der drei Stücke, sie liest nichts Neues, und mit ihr ist
+   die Hinrichtung vollständig. *Ihr kombinatorisches Stück ist in diesem Lauf
+   noch mitgekommen und bewiesen*: `exists_mem_Ico_of_strictMono` sagt, daß die
+   Zellen einer Unterteilung ihre halboffene Spanne überdecken — daß also
+   außerhalb der Knoten nichts liegt und die Knotenwerte wirklich ein Netz sind.
+   Die Induktion spaltet am **letzten** Knoten und nicht am ersten, denn die
+   Zellen sind `Set.Ico` und die letzte bliebe sonst ohne Namen. Der Satz braucht
+   nichts als `LinearOrder` und hängt an `propext` allein.
+2. Die **Rückrichtung**, die `SkorokhodSpace.tendsto_of_partialComp` von
+   Meilenstein 5 liest.
+3. Der Zusammenbau von `isCompact_closure_iff` aus 1, 2 und
+   `tendsto_iSup_modulus_of_isCompact`.
+
+**Das Manuskript ist nicht angefaßt.**

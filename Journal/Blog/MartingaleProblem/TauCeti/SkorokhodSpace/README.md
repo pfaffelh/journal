@@ -1603,6 +1603,69 @@ over a shrinking family and is therefore an infimum.
   the definition: with `Set.Icc` cells, or with the oscillation taken between
   the subdivision points rather than inside the cells, the empty subdivision
   would not be admissible and it would fail.
+* `SkorokhodSpace.exists_radius_distWith_lt`: if `intWith t₀ l f g` is below
+  `exp (-(M+1)) * c` with `0 < c ≤ 1`, then *some* radius `u ∈ Set.Ioc M (M+1)`
+  has `distWith t₀ u l f g < c`. Proved (2026-09-09). It is the mean value of the
+  integral over a window of measure one, and the radius is **produced and not
+  named**, `distWith` being non-monotone in it — that non-monotonicity is why
+  Milestone 4 integrates over the radius rather than summing. Shared with
+  Milestone 6, where it stood inline inside
+  `exists_orderIso_dist_lt_of_intDist_lt` until it was extracted here.
+* `SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt`: the bridge from
+  the metric to a uniform estimate on a *named* window — below a threshold
+  depending only on `M` and `ε`, closeness in `intDist` yields a time change of
+  norm below `ε` and a radius above `M` at which the windowed supremum is below
+  `ε`. Proved (2026-09-09).
+* `SkorokhodSpace.edist_le_ofReal_distWith`: `distWith` read as a bound on one
+  pair of values, the two clamps of `dist_le_distWith` dropping as soon as the
+  point *and its image* lie in the window. Proved (2026-09-09).
+* `SkorokhodSpace.isSubdivision_comp`: **the image of a subdivision is a
+  subdivision.** A `δ`-sparse subdivision of `B u'`, pushed forward by a time
+  change of norm at most `γ` fixing the base point, is `exp (-γ) * δ`-sparse on
+  `B u` whenever `u + (exp γ - 1) * 2u ≤ u'`. Proved (2026-09-09). The
+  sparseness is `TimeChange.dist_le_exp_norm_mul` read on `l⁻¹`; the covering is
+  `TimeChange.dist_le_of_norm_le` applied to `l⁻¹` at the two ends of the small
+  window, giving two points of the large one, and then `isLeast_exhaustionMin`
+  and `isGreatest_exhaustionMax`. That argument carries the degenerate index
+  without naming it: an order isomorphism fixes a least element, so where the
+  index has no room the estimate is vacuous.
+* `SkorokhodSpace.subdivisionOsc_comp_le`: the oscillation survives the
+  transport up to `2 η`, where `η` bounds `edist (f (l x)) (g x)` on a window
+  holding the nodes — once for the point inside the cell, once for its left
+  endpoint. Proved (2026-09-09). The half open cells are what makes it exact:
+  `l` maps `Set.Ico (t i) (t (i+1))` *onto* `Set.Ico (l (t i)) (l (t (i+1)))`.
+* `SkorokhodSpace.modulus_le_of_edist_le`: the three put together —
+  `modulus t₀ u f δ' ≤ subdivisionOsc g t + 2 η`. Proved (2026-09-09). This is
+  the engine of the forward half: **one** subdivision of **one** nearby path
+  bounds the modulus of **every** path close to it.
+* `SkorokhodSpace.tendsto_iSup_modulus_of_isCompact`: **the forward half, for the
+  modulus.** Compact closure gives `sup_{f ∈ A} modulus basePoint m f δ → 0`.
+  Proved (2026-09-09). It is Arzelà–Ascoli's argument: total boundedness gives
+  finitely many centres, `IsCadlag.exists_subdivision` gives each of them a
+  subdivision of oscillation at most `ε'`, and `modulus_le_of_edist_le` carries
+  it to the whole ball. The *sparseness* surviving the transport is what makes
+  finitely many centres enough — one `δ` then serves all of `A`.
+* Four radii appear in that proof and they are nested for a reason: the modulus
+  is asked for on `B m`; the subdivision is taken on `B (m+1)`, which is the room
+  the time change needs to displace the window's two ends; the nodes live there,
+  so that is where the uniform estimate must hold; and the radius supplied by
+  `exists_radius_distWith_lt` is above `m + 2`, because the time change must map
+  `B (m+1)` *into* the window before `edist_le_ofReal_distWith` may drop its
+  clamps. The one quantity fitting all four is `γ` with
+  `(exp γ - 1) * (2 (m+1)) ≤ 1`.
+* `exists_mem_Ico_of_strictMono`: the cells of a subdivision cover its half open
+  span — every `x` with `t 0 ≤ x < t (Fin.last n)` lies in some
+  `Set.Ico (t i.castSucc) (t i.succ)`. Proved (2026-09-09), for a bare
+  `LinearOrder`, nothing else being used. The induction splits at the *last* node
+  and not the first: the cells being `Set.Ico`, `x` either lies below the last
+  node, and the shorter subdivision catches it, or it lies in the final cell;
+  splitting at the first node would leave the half open final cell nameless.
+* `SkorokhodSpace.exists_compact_range_of_isCompact`: the other conjunct of the
+  forward half, that `{f t | f ∈ A, t ∈ B m}` has compact closure in `E`. It
+  rests on the same total boundedness, on `IsCadlag.exists_subdivision` and on
+  `exists_mem_Ico_of_strictMono`: off the nodes a càdlàg path takes only values
+  within `ε'` of the finitely many node values, so its range over the window is
+  totally bounded, and uniformly so over the finitely many centres.
 * `SkorokhodSpace.isCompact_closure_iff`: `A ⊆ D ι E` has compact closure if and
   only if for every `m` the set `{f t | f ∈ A, t ∈ B m}` has compact closure in
   `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. Both directions. The window

@@ -289,6 +289,61 @@ daß die Lücken höchstens um `exp ‖l_k‖` schrumpfen, das ist
 `TimeChange.dist_le_exp_norm_mul` —, und die Schwingung überträgt
 `exists_orderIso_dist_lt_of_intDist_lt`.
 
+**Zwischenstand Teil A (2026-09-09, siebter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, siebter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht weiter bei **einem** `sorry`. Neun
+Deklarationen sind neu oder umgeschrieben, alle durch `lake env lean` gegen
+v4.33.1 geprüft; acht mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`, die neunte auf `propext` allein.
+
+*Die Hinrichtung, die der vorige Lauf angesagt hat, ist zur Hälfte bewiesen, und
+zwar an der Hälfte, die die Arbeit ist:*
+`SkorokhodSpace.tendsto_iSup_modulus_of_isCompact` — hat `A` kompakten Abschluß,
+so geht `⨆ f ∈ A, modulus basePoint m f δ` gegen `0`. Das ist die
+Modulbedingung, gleichmäßig über `A`, und sie ist die zweite Konjunktion der
+rechten Seite von `isCompact_closure_iff`.
+
+*Der Weg dorthin ist in vier benannte Stücke zerlegt, und jedes steht für sich.*
+`exists_radius_distWith_lt` ist der gute Radius, aus dem Beweis von Meilenstein 6
+**herausgezogen** (er stand dort seit dem fünften Lauf inline) und dort wieder
+eingesetzt; `exists_timeChange_distWith_lt_of_intDist_lt` ist die Brücke von der
+Integralmetrik zu einem Zeitwechsel mit gefensterter Schranke;
+`isSubdivision_comp` trägt die Unterteilung längs des Zeitwechsels — Sparsamkeit
+über `dist_le_exp_norm_mul` auf `l⁻¹`, Überdeckung über
+`TimeChange.dist_le_of_norm_le` an den beiden Fensterenden;
+`subdivisionOsc_comp_le` trägt die Schwingung, mit Verlust `2 η`. Zusammen sind
+sie `modulus_le_of_edist_le`, und das ist der Motor: **eine** Unterteilung eines
+Mittelpunkts beschränkt den Modul **aller** Pfade seiner Kugel.
+
+*Der Befund, der die Ansage des vorigen Laufs berichtigt:*
+`exists_orderIso_dist_lt_of_intDist_lt` überträgt die Schwingung **nicht** — es
+ist punktweise und liefert für jeden Punkt einen anderen Zeitwechsel, während der
+Modul einen für das ganze Fenster braucht. Was gebraucht wird, ist die
+gefensterte Schranke selbst (`distWith`), und deren Preis ist, daß der Radius
+**produziert** und nicht gewählt wird; genau darum steht
+`exists_radius_distWith_lt` jetzt als eigener Satz da.
+
+*Vier Radien, und ihre Schachtelung ist nicht Buchhaltung, sondern der Beweis:*
+der Modul wird auf `m` verlangt, die Unterteilung auf `m+1` genommen (das ist der
+Raum, den der Zeitwechsel zum Verschieben der Fensterenden braucht), die Knoten
+liegen dort, und der Radius der gefensterten Schranke liegt über `m+2`, weil der
+Zeitwechsel `exhaustion t₀ (m+1)` erst **in** das Fenster tragen muß, ehe
+`edist_le_ofReal_distWith` seine beiden Klemmungen fallen lassen darf. Die eine
+Größe, die alle vier zusammenhält, ist `γ` mit `(exp γ - 1) * (2 (m+1)) ≤ 1`.
+
+*Was offen bleibt, und es sind drei Stücke.* (i) Die **Wertebedingung** der
+Hinrichtung: aus kompaktem Abschluß die relative Kompaktheit von
+`{f t : f ∈ A, t ∈ exhaustion t₀ m}`. Sie hängt nicht am Modul, sondern daran,
+daß ein càdlàg-Pfad auf einem kompakten Fenster relativ kompaktes Bild hat, und
+das ist `IsCadlag.exists_subdivision` plus die endlich vielen Zellwerte —
+gleichmäßig über `A` dann über dieselbe Totalbeschränktheit wie oben. Ihr
+kombinatorisches Stück ist schon bewiesen: `exists_mem_Ico_of_strictMono`, die
+Zellen einer Unterteilung überdecken ihre halboffene Spanne. (ii) Die
+**Rückrichtung**, und sie liest `SkorokhodSpace.tendsto_of_partialComp` von
+Meilenstein 5 wie seit je angesagt. (iii) Der Zusammenbau von
+`isCompact_closure_iff` aus (i), (ii) und dem Satz dieses Laufs. Punkt (i) ist
+als Nächstes dran; er ist der kürzeste und macht die Hinrichtung vollständig.
+
 
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
