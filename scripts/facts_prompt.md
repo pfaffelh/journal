@@ -174,6 +174,45 @@ und dann greift die Zelleigenschaft, oder sie umgreifen ein Fensterende, und dan
 ist der Radius ein schlechter. Offen bleibt außerdem die dritte Instanz der Klasse
 (`Set.Icc (0:ℝ) 1`); an ihr hängt nichts.
 
+**Zwischenstand Teil A (2026-09-09, vierter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, vierter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **drei** `sorry` statt vier. Fünf neue
+Deklarationen und eine, die von `sorry` zu einem Beweis geworden ist; alle durch
+`lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+*Punkt 1 ist erledigt.* `SkorokhodSpace.instSeparableSpace` trägt einen Beweis,
+`SkorokhodSpace.instPolishSpace` ist weiterhin `inferInstance`, hängt aber seit
+diesem Lauf an keinem `sorryAx` mehr. **Meilenstein 5 ist damit geschlossen** bis
+auf die dritte Instanz der Typklasse (`Set.Icc (0:ℝ) 1`), an der nichts hängt, und
+`fact:PSpolish` ist an seiner zweiten Gebrauchsstelle (`rem:EKrelcompact`)
+eingelöst.
+
+*Die Ansage des vorigen Laufs war an einer Stelle zu viel und an einer zu wenig.*
+Die Fallunterscheidung am Supremum ist **keine neue**: `min_max_pair_cases` steht
+bereits innerhalb von `SkorokhodSpace.distWith_le_of_oscillation`, und zu liefern
+waren nicht seine Fälle, sondern seine drei Hypothesen — das ist
+`SkorokhodSpace.distWith_stepPath_le`, `distWith t₀ u l f (stepPath d w) ≤ 6 ε`,
+mit `2 ε` für die gleichmäßige Hypothese und **nichts** für die beiden
+Schwingungshypothesen: der Treppenpfad ist zwischen einem Fensterende und seinem
+Urbild konstant (`SkorokhodSpace.stepIdx_eq_of_mem_uIcc`, darunter
+`stepIdx_congr_of_forall_notMem_Ioc`).
+
+*Und der Befund, den der vorige Lauf übersehen hatte: die beiden Fensterenden sind
+nicht symmetrisch.* `volume_radius_exhaustionMax_mem_Ico` gespiegelt, mit
+`exhaustionMin` an Stelle von `exhaustionMax`, ist **falsch** —
+`exhaustionMin t₀` ist antiton, also schließt `Set.Ico a b` sein klebriges Ende
+ein statt aus, und auf einem nach unten beschränkten Index (`Set.Icc (0:ℝ) 1`, eine
+laufende Instanz) ist das Maß unendlich. `radius_exhaustionMin_mem_Ico_subset`
+und `volume_radius_exhaustionMin_mem_Ico` tragen darum die Zusatzhypothese
+`∃ s < exhaustionMin t₀ u, dist (exhaustionMin t₀ u) s ≤ κ`, die die Anwendung hat,
+und schätzen `dist a b + κ`; die andere Seite davon ist die Disjunktion in
+`distWith_stepPath_le`, wonach am unteren Ende auch genügt, daß der Zeitwechsel es
+festhält.
+
+*Punkt 2 ist unberührt, und er ist als Nächstes dran.*
+
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 

@@ -990,18 +990,18 @@ integral metric: `SkorokhodSpace.instCompleteSpace`,
 were withdrawn earlier the same day and the reason was the summed metric, for
 which the first is false; the refutation stays and is stated for
 `SkorokhodSpace.totalTopology`, which names that metric and not the instance.
-The first of the three is **proved** since 2026-09-08 and the third follows from
-it by `inferInstance` once the second is; the second is what the milestone still
-owes.
+All three are **proved** since 2026-09-09: the first on 2026-09-08, the second
+on 2026-09-09, and the third by `inferInstance` from the two.
 
-Since 2026-09-09 the second carries a hypothesis on the index,
-`SkorokhodSpace.HasCountableCore ι`, and so does the third. That is not a
-convenience: `SkorokhodSpace.not_separableSpace_of_rigid`, proved the same day,
-shows that `D ι E` is not separable for every index this file admits, and the
-witness is the middle thirds Cantor set. The milestone therefore owes three
-things and not one — the class, its three instances, and the separability under
-it. The class stands, and the first of its three instances,
-`Real.instHasCountableCore`, is **proved** since 2026-09-09.
+The second and third carry a hypothesis on the index,
+`SkorokhodSpace.HasCountableCore ι`. That is not a convenience:
+`SkorokhodSpace.not_separableSpace_of_rigid`, proved 2026-09-09, shows that
+`D ι E` is not separable for every index this file admits, and the witness is
+the middle thirds Cantor set. The milestone therefore owes the class its
+instances as well, and two of the three are proved —
+`Real.instHasCountableCore` and `SkorokhodSpace.hasCountableCore_of_countable`,
+both 2026-09-09. What is left of the milestone is the third instance,
+`Set.Icc (0 : ℝ) 1`, and nothing rests on it.
 
 * `CompleteSpace (D ι E)`, **proved 2026-09-08**: for a Cauchy sequence extract a
   subsequence whose consecutive distances are summable, compose the time changes,
@@ -1242,9 +1242,9 @@ it. The class stands, and the first of its three instances,
   subset of `ℝ` through `exists_orderIso_isometry_real` of Milestone 1 — and the
   Cantor set is precisely the case where that boundary is uncountable, which is
   the refutation above seen from the other side.
-* `SeparableSpace (D ι E)` under `[SkorokhodSpace.HasCountableCore ι]`: the step
-  paths with jump times in `C` and values in a countable dense subset of `E` are
-  dense. **The analytic half is proved** (2026-09-08):
+* `SeparableSpace (D ι E)` under `[SkorokhodSpace.HasCountableCore ι]`, **proved
+  2026-09-09**: the step paths with jump times in `C` and values in a countable
+  dense subset of `E` are dense. Its analytic half is (2026-09-08):
   `SkorokhodSpace.exists_finite_range_distWith_le` gives, for every `f`, every
   `ε > 0` and every radius `M`, a `g : D ι E` with finite range and
   `distWith t₀ u 1 f g ≤ ε` for all `u ≤ M` — the approximation of a càdlàg path
@@ -1313,18 +1313,59 @@ it. The class stands, and the first of its three instances,
   and nothing more, so `B` is taken to be the finite union of those intervals over
   the nodes and `δ` is chosen after the length `n` of the subdivision.
 
-  One item remains: the case distinction on the supremum itself, which is
-  `min_max_pair_cases` again, the same combinatorial lemma
-  `SkorokhodSpace.distWith_le_of_oscillation` runs — the two clamps of a point
-  either agree, and then the cell property of the subdivision applies, or they
-  straddle a window end, and then the radius is one of the bad ones.
+  The case distinction on the supremum is **not** a fresh one:
+  `SkorokhodSpace.distWith_le_of_oscillation` already runs it, and what the
+  separability has to supply are its three hypotheses.
+  `SkorokhodSpace.distWith_stepPath_le` (**proved 2026-09-09**) supplies them and
+  is the whole estimate at one radius, `distWith t₀ u l f (stepPath d w) ≤ 6 ε`.
+  The uniform hypothesis costs `2 ε` — `stepIdx_orderIso` carries the values
+  across the time change unchanged, then `dist_comp_stepRetract_le` and the move
+  into `Q` cost `ε` each. The two oscillation hypotheses cost **nothing**: the
+  step path is *constant* between a window end and its preimage, which is
+  `SkorokhodSpace.stepIdx_eq_of_mem_uIcc` (2026-09-09), and the condition it asks
+  of the window end `A` is a condition on the index alone — that `A` avoid every
+  `Set.Ico (min (d i) (t i)) (max (d i) (t i))`, the interval spanned by a node
+  and its image. Its proof is the trichotomy of `A` against `l⁻¹ A` read through
+  the order isomorphism, and its combinatorial half is
+  `stepIdx_congr_of_forall_notMem_Ioc`: the cell index only sees the nodes in
+  `Set.Ioc` of the two points, half open on the same side `stepIdx` reads.
+
+  **The two window ends are not symmetric, and that is the last finding**
+  (2026-09-09, fourth run). `exhaustionMax t₀` is monotone and
+  `exhaustionMin t₀` is antitone, so `Set.Ico a b` excludes exactly the sticky
+  end of the first and includes the sticky end of the second: the mirror of
+  `volume_radius_exhaustionMax_mem_Ico` with `exhaustionMin` in place of
+  `exhaustionMax` is **false**, and on an index bounded below it fails by an
+  infinite margin — the lower edge sits at the least point for every radius past
+  its coordinate. `radius_exhaustionMin_mem_Ico_subset` and
+  `volume_radius_exhaustionMin_mem_Ico` (**proved 2026-09-09**) therefore carry
+  an extra hypothesis, and it is exactly what the application has: the edge is a
+  bad radius only when the time change *moves* it, and a time change that moves
+  the least point of the window puts a point of the index within `κ` below that
+  point — its image or its preimage, whichever falls low. That point is outside
+  the window, so the radius is at most `κ` past the coordinate of the edge, and
+  the sticky tail is cut at `κ`; the bound is `dist a b + κ` and not `dist a b`.
+  The other side of the same coin is the disjunction in
+  `SkorokhodSpace.distWith_stepPath_le`: at the lower edge it is enough that the
+  time change *fix* it, which is what an index with a gap below forces and what
+  makes the bound usable there at all.
+
+  So the budget of the assembly is: `6 ε ≤ r/4` fixes `ε` from `r`; `M` is fixed
+  from `r` by `exp (-M) < r/4`; the subdivision fixes `n`; and only then is `δ`
+  chosen, small enough that `δ < r/4` bounds `‖l‖` and
+  `(n+1) (2 δ + (exp δ - 1) 2M) < r/4` bounds the bad radii. The order is forced
+  — `n` depends on `ε` and `M`, and the bad set on `n` — and it is why the
+  displacement clause of the class quantifies over `δ` after the tuple.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
   complete metric (`MetricSpace.toIsCompletelyMetrizableSpace`,
   `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`), so the
   declaration is `inferInstance` and carries no proof obligation of its own
-  (2026-09-08).
+  (2026-09-08). Since 2026-09-09 it depends on nothing but `propext`,
+  `Classical.choice` and `Quot.sound`, the separability under it being proved;
+  it is `fact:PSpolish` for the `J₁` topology and what `rem:EKrelcompact`
+  consumes.
 
   All three are stated for the metric of Milestone 4 as it stands there, the
   integral over the window radius. For the weighted sum over integer radii that
@@ -1386,6 +1427,24 @@ it. The class stands, and the first of its three instances,
   arithmetic of the gap lengths that discharges its `hrigid` is on paper.
 
 ## Milestone 6: the Borel structure
+
+This is `thm:fdd`, and since 2026-09-09 it may take Milestone 5 for granted:
+`SkorokhodSpace.instPolishSpace` is proved under `HasCountableCore ι`, so
+`D ι E` is a standard Borel space and the second half of the embedding —
+a measurable injection between standard Borel spaces is a measurable embedding,
+`MeasurableEmbedding.of_measurable_inverse` over Lusin--Souslin — is available.
+That second half is the cheap one, and its injectivity is
+`IsCadlag.eq_of_eqOn_dense` of Milestone 2.
+
+**The whole content is the first item, and the manuscript says so at
+`thm:fdd`:** `π_t` is *discontinuous* at every path with a jump at `t`, so the
+measurability of a coordinate is a theorem and not a remark, and the acceptance
+example below is the refutation of the route through continuity. The route is
+to exhibit `π_t` as a pointwise limit of `d`-continuous functionals; of the two
+the manuscript names, the one to take here is the one that **does not put a
+linear structure on `E`** — it uses `t ∈ D` only and spends right continuity,
+which is what the shape of the statement is arranged to allow. `E` is a bare
+metric space in this file and averaging over a window is not available.
 
 * `SkorokhodSpace.measurable_eval`: `f ↦ f t` is Borel measurable for every `t`.
 * `SkorokhodSpace.measurableEmbedding_piDense`: for countable dense `D ⊆ ι`, the
