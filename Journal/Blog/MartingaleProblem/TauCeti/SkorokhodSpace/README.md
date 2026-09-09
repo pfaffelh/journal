@@ -1745,11 +1745,45 @@ over a shrinking family and is therefore an infimum.
   built from a grid whose cell at the base point is what the refutation above
   shows must be there.
 * `SkorokhodSpace.tendsto_modulusBased`: the based analogue of
-  `tendsto_modulus`, out of the previous item.
+  `tendsto_modulus`, out of the previous item. Proved (2026-09-09). The base
+  point is admissible as the prescribed node because it lies in every window
+  (`mem_exhaustion_self`), so nothing is assumed about the radius; and the extra
+  node costs nothing quantitatively, the gaps of the refined subdivision being
+  still finitely many and still positive.
+* `SkorokhodSpace.isSubdivisionBased_comp` and
+  `SkorokhodSpace.modulusBased_le_of_edist_le`: the based analogues of
+  `isSubdivision_comp` and `modulus_le_of_edist_le`. Proved (2026-09-09). The
+  first is the second plus one line, and that line is why the correction is
+  affordable at all: the time changes over which the metric of Milestone 4 takes
+  its infimum fix the base point, so a node at `t₀` goes to a node at `t₀`. Under
+  an unbased metric the based modulus would not be transportable.
 * `SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact`: the forward half for
-  the based modulus. `modulus ≤ modulusBased` runs the wrong way, so the estimate
-  proved for `modulus` does not transfer and the Arzelà–Ascoli argument is
-  repeated on based subdivisions; every step of it survives unchanged.
+  the based modulus. Proved (2026-09-09). `modulus ≤ modulusBased` runs the wrong
+  way, so the estimate proved for `modulus` does not transfer and the
+  Arzelà–Ascoli argument is repeated on based subdivisions; every step of it
+  survives unchanged, and only its input moves from
+  `IsCadlag.exists_subdivision` to `IsCadlag.exists_subdivision_through`. With
+  `isCompact_closure_values_of_isCompact` this closes the forward direction of
+  `isCompact_closure_iff`, and the remaining `sorry` of the file is the converse
+  alone.
+* `dist_first_last_eq_sum`: under `AdditiveDist ι` the gaps of a monotone tuple
+  telescope, `dist (t 0) (t (Fin.last n)) = ∑ i, dist (t i.castSucc) (t i.succ)`.
+  Proved (2026-09-09). Monotonicity is the real hypothesis — strictness is not
+  used — and it is needed: without it `dist` is only subadditive and the identity
+  becomes an inequality in the useless direction.
+* `mul_le_dist_first_last` and `mul_le_dist_of_sparse`: a `δ`-sparse monotone
+  tuple spans at least `n * δ`, and any two of its nodes are at least their index
+  gap times `δ` apart. Proved (2026-09-09). The second is the first applied to
+  the sub-tuple between the two nodes, and it is the form the converse consumes,
+  where the two nodes are the extreme ones lying *inside* a window.
+* `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`: **the bound on the number
+  of nodes.** For two nodes of a `δ`-sparse subdivision that lie in the window of
+  radius `u`, the gap between their indices is at most `2u / δ`. Proved
+  (2026-09-09), and stated as an inequality rather than as a cardinality so that
+  it carries no `Nat` division. Nothing forbids a subdivision from placing nodes
+  far outside the window — `IsSubdivision` only asks that it *cover* it — and
+  those nodes are not counted, which is why the statement quantifies over two
+  nodes known to lie inside.
 * The converse's proof is the finite net: for `ε` take `m` with `exp (-m) < ε`,
   then `δ` from the modulus condition, then for each path a `δ`-sparse based
   subdivision of oscillation below `ε`; its nodes are pushed onto a **finite
@@ -1757,9 +1791,9 @@ over a shrinking family and is therefore an infimum.
   fails — and its values onto a finite net of the value compactum. The approximant
   is `SkorokhodSpace.stepPath`, the bound is
   `SkorokhodSpace.distWith_stepPath_le`, and the passage from the window to the
-  integral is `SkorokhodSpace.intWith_le_of_ae_distWith_le`. What is new is the
-  grid together with the time change onto it, and the bound on the *number* of
-  nodes, which comes from the sparseness and the compactness of the window. The
+  integral is `SkorokhodSpace.intWith_le_of_ae_distWith_le`. The bound on the
+  *number* of nodes is `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`;
+  what is new is the grid together with the time change onto it. The
   grid holds the base point, and the displacement of a node is bounded by a
   fraction of its distance to the base point rather than by an absolute amount:
   that is what `le_intDist_stepAt_of_exp_mul_lt` shows to be necessary.

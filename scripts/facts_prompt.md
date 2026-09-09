@@ -440,6 +440,50 @@ gestützten Unterteilungen (`tendsto_iSup_modulusBased_of_isCompact` — der Bew
 von `tendsto_iSup_modulus_of_isCompact` wörtlich wiederholt, mit dem neuen
 Werkzeug als Eingabe), dann die Rückrichtung.
 
+**Zwischenstand Teil A (2026-09-09, zehnter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, zehnter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry` statt zweien. Acht
+neue Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Dieser Lauf hat
+nichts widerlegt und nichts umgestellt — der erste seit dem fünften dieses Tages.
+
+*Die beiden ersten der drei angesagten Schritte sind getan, und die Ansage hat
+Zeile für Zeile gehalten.* `SkorokhodSpace.tendsto_modulusBased` ist
+`tendsto_modulus` mit `IsCadlag.exists_subdivision_through` als Eingabe (der
+Basispunkt ist als vorgeschriebener Knoten zulässig, weil er nach
+`mem_exhaustion_self` in **jedem** Fenster liegt);
+`SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact` ist der Beweis von
+`tendsto_iSup_modulus_of_isCompact` an genau zwei Stellen geändert. Dazwischen
+stehen `SkorokhodSpace.isSubdivisionBased_comp` — `isSubdivision_comp` und **eine
+Zeile mehr**, und diese Zeile ist der Grund, daß die Berichtigung des neunten
+Laufs bezahlbar ist: die Zeitwechsel halten `t₀` fest, also geht ein Knoten dort
+auf einen Knoten dort — und `SkorokhodSpace.modulusBased_le_of_edist_le`.
+**Die Hinrichtung ist damit vollständig**, und der linke Zweig von
+`isCompact_closure_iff` trägt kein `sorry` mehr.
+
+*Und die Ansage des achten Laufs für die Rückrichtung ist zur Hälfte eingelöst:
+die Schranke für die Anzahl der Knoten steht.* `dist_first_last_eq_sum` (unter
+`AdditiveDist` teleskopieren die Lücken eines **monotonen** Tupels — die Strenge
+wird nicht gebraucht, die Monotonie schon, sonst ist `dist` nur subadditiv),
+`mul_le_dist_first_last`, `mul_le_dist_of_sparse` und
+`SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`: liegen zwei Knoten einer
+`δ`-sparsamen Unterteilung im Fenster vom Radius `u`, so ist ihr Indexabstand
+höchstens `2u / δ`. **Die naive Fassung wäre falsch**, und der Grund ist die
+Berichtigung des sechsten Laufs: `IsSubdivision` verlangt nur die Überdeckung des
+Fensters, die Knoten dürfen beliebig weit darüber hinausragen, eine Schranke für
+`n` selbst gibt es also nicht. Gezählt werden können allein die Knoten **im**
+Fenster.
+
+*Als Nächstes:* das **Gitter samt dem Zeitwechsel darauf**, das letzte neu zu
+bauende Stück von Meilenstein 7 — zu `m`, `δ` und `ρ` eine endliche Menge
+`G ⊆ ℝ` mit `0 ∈ G` und zu jedem gestützten `δ`-sparsamen Tupel ein Zeitwechsel
+kleiner Norm, der dessen Knoten nach `G` trägt. Die Knotenzahl ist beschränkt
+(siehe oben), die Konstruktion ist `TimeChange.exists_real_of_perturbation` samt
+`SkorokhodSpace.tent`, dieselbe Störung `φ x = x + ψ x` wie in
+`Real.instHasCountableCore`, nur endlich viele Zelte. Der Zusammenbau danach —
+`stepPath`, `distWith_stepPath_le`, `intWith_le_of_ae_distWith_le` — steht
+vollständig bewiesen da.
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 

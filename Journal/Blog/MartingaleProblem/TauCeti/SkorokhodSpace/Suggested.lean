@@ -22,16 +22,18 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-09.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  There are **two** of them since the
-ninth run of 2026-09-09, and both belong to the compactness criterion
-`SkorokhodSpace.isCompact_closure_iff` of Milestone 7, whose modulus that run
-corrected for the second time: with subdivisions free of the base point the
+proofs, which is what this file is for.  There is **one** of them since the tenth
+run of 2026-09-09, and it is the **converse** of the compactness criterion
+`SkorokhodSpace.isCompact_closure_iff` of Milestone 7, whose modulus the ninth
+run corrected for the second time: with subdivisions free of the base point the
 converse is false over `ℝ` as well, by
 `SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint`, so the criterion
-now reads `SkorokhodSpace.modulusBased` --- and the forward half, proved for
-`SkorokhodSpace.modulus`, does not transfer to it, `modulus ≤ modulusBased`
-running the wrong way.  Both `sorry`s wait on one thing, a càdlàg subdivision
-through a prescribed interior point.
+reads `SkorokhodSpace.modulusBased`.  The forward half, proved for
+`SkorokhodSpace.modulus`, did not transfer to it --- `modulus ≤ modulusBased`
+runs the wrong way --- and it is proved again on based subdivisions as
+`SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact`, reading
+`IsCadlag.exists_subdivision_through` where the unbased proof read
+`IsCadlag.exists_subdivision`.
 
 **Milestone 6 is closed**, and the theorem that closes it is
 `SkorokhodSpace.measurable_eval`: evaluation at a point of the index is Borel
@@ -8818,6 +8820,130 @@ theorem SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact [SecondCountableTo
   rw [h3]
   exact add_le_add (httosc g) le_rfl
 
+/-! ### Towards the converse: how many nodes a sparse subdivision can have
+
+The converse builds a *finite* net, so it needs a bound on the number of nodes a
+`δ`-sparse subdivision can place inside a window, and that bound is the only
+place where `AdditiveDist ι` is used for its own sake rather than through the
+window.  Sparseness bounds each single gap from below; what is needed is the
+bound on their *sum*, and under `AdditiveDist` the sum of the gaps is the
+distance from the first node to the last. -/
+
+omit [OrderTopology ι] [ProperSpace ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+  [BasePoint ι] in
+/-- **The gaps of a monotone tuple telescope.**  Under `AdditiveDist` the
+distance from the first node to the last is the sum of the gaps.  Monotonicity is
+what the hypothesis really is --- strictness is not used --- and it is needed:
+without it `dist` is only subadditive and the identity becomes an inequality in
+the useless direction. -/
+theorem dist_first_last_eq_sum : ∀ {n : ℕ} {t : Fin (n + 1) → ι}, Monotone t →
+    dist (t 0) (t (Fin.last n)) = ∑ i : Fin n, dist (t i.castSucc) (t i.succ) := by
+  intro n
+  induction n with
+  | zero => intro t _; simp
+  | succ n ih =>
+      intro t ht
+      have hmono : Monotone fun i : Fin (n + 1) => t i.castSucc :=
+        fun a b hab => ht (by simpa only [Fin.le_def, Fin.coe_castSucc] using hab)
+      have h2 := ih hmono
+      have h1 : dist (t 0) (t (Fin.last (n + 1)))
+          = dist (t 0) (t ((Fin.last n).castSucc))
+            + dist (t ((Fin.last n).castSucc)) (t (Fin.last (n + 1))) :=
+        AdditiveDist.dist_add (ht (Fin.zero_le _)) (ht (Fin.le_last _))
+      rw [h1, Fin.sum_univ_castSucc, Fin.succ_last]
+      have h3 : dist (t 0) (t ((Fin.last n).castSucc))
+          = ∑ i : Fin n, dist (t i.castSucc.castSucc) (t i.castSucc.succ) := by
+        simp only [Fin.succ_castSucc]
+        simpa only [Fin.castSucc_zero] using h2
+      rw [h3]
+
+omit [OrderTopology ι] [ProperSpace ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+  [BasePoint ι] in
+/-- **A `δ`-sparse monotone tuple spans at least `n * δ`.**  This is the previous
+identity and `Finset.sum_le_sum`, and it is the form in which sparseness becomes
+a bound on the number of nodes: a tuple spanning a set of diameter `D` has at
+most `D / δ` cells. -/
+theorem mul_le_dist_first_last {n : ℕ} {t : Fin (n + 1) → ι} (ht : Monotone t) {δ : ℝ}
+    (hgap : ∀ i : Fin n, δ ≤ dist (t i.castSucc) (t i.succ)) :
+    (n : ℝ) * δ ≤ dist (t 0) (t (Fin.last n)) := by
+  rw [dist_first_last_eq_sum ht]
+  have h : ∑ _i : Fin n, δ ≤ ∑ i : Fin n, dist (t i.castSucc) (t i.succ) :=
+    Finset.sum_le_sum fun i _ => hgap i
+  simpa only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul] using h
+
+omit [OrderTopology ι] [ProperSpace ι] [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
+  [BasePoint ι] in
+/-- **Any two nodes of a `δ`-sparse monotone tuple are `δ` times their index gap
+apart.**  The previous statement is the case `i = 0`, `j = Fin.last n`; the
+general one is it applied to the sub-tuple between `i` and `j`, and it is the
+form the converse consumes, where the two nodes are the extreme ones *inside a
+window* and the nodes outside are not to be counted. -/
+theorem mul_le_dist_of_sparse {n : ℕ} {t : Fin (n + 1) → ι} (ht : Monotone t) {δ : ℝ}
+    (hgap : ∀ i : Fin n, δ ≤ dist (t i.castSucc) (t i.succ)) {i j : Fin (n + 1)}
+    (hij : i ≤ j) : (((j : ℕ) - (i : ℕ) : ℕ) : ℝ) * δ ≤ dist (t i) (t j) := by
+  have hij' : (i : ℕ) ≤ (j : ℕ) := hij
+  have hjlt : (j : ℕ) < n + 1 := j.isLt
+  have hjp : (i : ℕ) + ((j : ℕ) - (i : ℕ)) = (j : ℕ) := by omega
+  have hbd : ∀ k : Fin (((j : ℕ) - (i : ℕ)) + 1), (i : ℕ) + (k : ℕ) < n + 1 := by
+    intro k
+    have := k.isLt
+    omega
+  obtain ⟨s, hs⟩ : ∃ s : Fin (((j : ℕ) - (i : ℕ)) + 1) → ι,
+      ∀ k, s k = t ⟨(i : ℕ) + (k : ℕ), hbd k⟩ :=
+    ⟨fun k => t ⟨(i : ℕ) + (k : ℕ), hbd k⟩, fun _ => rfl⟩
+  have hsmono : Monotone s := by
+    intro a b hab
+    have hab' : (a : ℕ) ≤ (b : ℕ) := hab
+    rw [hs, hs]
+    exact ht (by simpa only [Fin.le_def] using Nat.add_le_add_left hab' (i : ℕ))
+  have hsgap : ∀ k : Fin ((j : ℕ) - (i : ℕ)), δ ≤ dist (s k.castSucc) (s k.succ) := by
+    intro k
+    have hkn : (i : ℕ) + (k : ℕ) < n := by
+      have := k.isLt
+      omega
+    have e1 : s k.castSucc = t (⟨(i : ℕ) + (k : ℕ), hkn⟩ : Fin n).castSucc := by
+      rw [hs]
+      exact congrArg t (Fin.ext (by simp))
+    have e2 : s k.succ = t (⟨(i : ℕ) + (k : ℕ), hkn⟩ : Fin n).succ := by
+      rw [hs]
+      exact congrArg t (Fin.ext (by simp only [Fin.val_succ, Fin.val_mk]; omega))
+    rw [e1, e2]
+    exact hgap _
+  have h := mul_le_dist_first_last hsmono hsgap
+  have h0 : s 0 = t i := by
+    rw [hs]
+    exact congrArg t (Fin.ext (by simp))
+  have hlast : s (Fin.last ((j : ℕ) - (i : ℕ))) = t j := by
+    rw [hs]
+    exact congrArg t (Fin.ext (by simp only [Fin.val_last]; omega))
+  rwa [h0, hlast] at h
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **A `δ`-sparse subdivision has at most `2u / δ + 1` nodes in the window of
+radius `u`.**  Stated as the inequality rather than as a cardinality so that it
+carries no `Nat` division: the index gap between the extreme nodes of the
+subdivision that lie in the window is at most `2u / δ`, and the nodes between two
+nodes of the window lie in the window as well, the window being order connected.
+
+This is the bound the finite net of the converse rests on.  Nothing forbids a
+subdivision from placing nodes far outside the window --- `IsSubdivision` only
+asks that it *cover* the window --- and those nodes are not counted here, which
+is why the statement quantifies over two nodes known to lie inside. -/
+theorem SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision (t₀ : ι) {u δ : ℝ} (hu : 0 ≤ u)
+    {n : ℕ} {t : Fin (n + 1) → ι} (ht : SkorokhodSpace.IsSubdivision t₀ u δ t)
+    {i j : Fin (n + 1)} (hij : i ≤ j) (hi : t i ∈ exhaustion t₀ u)
+    (hj : t j ∈ exhaustion t₀ u) :
+    (((j : ℕ) - (i : ℕ) : ℕ) : ℝ) * δ ≤ 2 * u := by
+  refine le_trans (mul_le_dist_of_sparse ht.1.monotone (fun k => (ht.2.2.2 k).le) hij) ?_
+  have h1 : dist (t i) t₀ ≤ u := by
+    simpa only [exhaustion, Metric.mem_closedBall, max_eq_left hu] using hi
+  have h2 : dist t₀ (t j) ≤ u := by
+    rw [dist_comm]
+    simpa only [exhaustion, Metric.mem_closedBall, max_eq_left hu] using hj
+  calc dist (t i) (t j) ≤ dist (t i) t₀ + dist t₀ (t j) := dist_triangle _ _ _
+    _ ≤ u + u := add_le_add h1 h2
+    _ = 2 * u := by ring
+
 /-- **The compactness criterion, and it is stated over the index `ℝ`.**  The base
 point is the one of the instance and not a parameter: the left hand side speaks
 of the topology of `D(ℝ, E)`, which is `SkorokhodSpace.metricSpaceInt basePoint`,
@@ -8852,19 +8978,23 @@ is what total boundedness asks for.
 `CompleteSpace E` is Ethier--Kurtz' standing hypothesis and it is consumed in one
 place only, `SkorokhodSpace.isCompact_closure_values_of_isCompact`.
 
-**What the two `sorry`s owe.**  The first is the forward half *for the based
-modulus*: `SkorokhodSpace.tendsto_iSup_modulus_of_isCompact` bounds `modulus`,
-and `SkorokhodSpace.modulus_le_modulusBased` runs the wrong way, so the argument
-has to be repeated on based subdivisions.  Every step of it survives ---
-`SkorokhodSpace.isSubdivision_comp` carries a node at `t₀` to a node at `t₀`, the
-time changes fixing it --- except its input, which is
-`IsCadlag.exists_subdivision` and produces a subdivision of a *window*.  The one
-thing to build is therefore a càdlàg subdivision of `Set.Icc a b` through a
-prescribed interior point, and both halves of the criterion then read it.  The
-second `sorry` is the converse, and it reads
-`SkorokhodSpace.tendsto_of_partialComp` of Milestone 5 together with that same
-tool: the finite net is built from a finite grid of nodes, and it is the cell at
-the base point which the refutation shows must be there. -/
+**The forward half is proved, on based subdivisions.**  It is the pair
+`SkorokhodSpace.isCompact_closure_values_of_isCompact` and
+`SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact`.  The second is the
+argument of `SkorokhodSpace.tendsto_iSup_modulus_of_isCompact` repeated --- it
+had to be repeated, `SkorokhodSpace.modulus_le_modulusBased` running the wrong
+way --- and every step of it survived the correction, because
+`SkorokhodSpace.isSubdivisionBased_comp` carries a node at `t₀` to a node at
+`t₀`, the time changes of Milestone 4 fixing it.  Only the input changed, from
+`IsCadlag.exists_subdivision` to `IsCadlag.exists_subdivision_through` with `t₀`
+prescribed.
+
+**What the remaining `sorry` owes** is the converse, and it reads
+`SkorokhodSpace.tendsto_of_partialComp` of Milestone 5: the finite net is built
+from a finite grid of nodes, and it is the cell at the base point which the
+refutation shows must be there.  The bound on how many nodes such a grid needs is
+`SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`, and what remains is the
+grid itself together with the time change onto it. -/
 theorem SkorokhodSpace.isCompact_closure_iff [CompleteSpace E] (A : Set D(ℝ, E)) :
     IsCompact (closure A) ↔ ∀ m : ℕ,
       IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion (0 : ℝ) (m : ℝ), f.toFun t = x}) ∧

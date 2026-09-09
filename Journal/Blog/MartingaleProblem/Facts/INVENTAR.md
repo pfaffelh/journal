@@ -13333,3 +13333,119 @@ lesen jetzt ein fertiges Werkzeug: die Unterteilung durch den Basispunkt steht,
 `isSubdivision_comp` trägt einen Knoten bei `t₀` auf einen solchen, und der Rest
 des Beweises von `tendsto_iSup_modulus_of_isCompact` ist wörtlich zu
 wiederholen.
+
+### 2026-09-09, zehnter Lauf des Tages — die Hinrichtung steht auch gestützt, und nur noch die Rückrichtung fehlt
+
+**Aufgabe.** Vorrangige Aufgabe, Teil A, Punkt 3. Der vorige Lauf hatte drei
+Schritte in dieser Reihenfolge angesagt: `SkorokhodSpace.tendsto_modulusBased`,
+dann die Hinrichtung auf gestützten Unterteilungen, dann die Rückrichtung. Die
+ersten beiden sind getan.
+
+**Stand der Datei.** `SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry`
+statt zweien, und es ist die Rückrichtung des Kompaktheitskriteriums. Acht neue
+Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Dieser Lauf hat
+nichts widerlegt und nichts umgestellt — der erste seit dem fünften Lauf dieses
+Tages, der die Aussage, an der er arbeitet, unverändert läßt.
+
+**Die Hinrichtung ist vollständig, und `isCompact_closure_iff` schuldet nur noch
+die Rückrichtung.** Der linke Zweig des Beweises lautet jetzt
+
+```lean
+exact ⟨SkorokhodSpace.isCompact_closure_values_of_isCompact hA m,
+  SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact hA m⟩
+```
+
+und trägt kein `sorry` mehr. Vier Deklarationen sind der Weg dorthin, und keine
+von ihnen ist eine Überraschung — das ist der Befund. Die Ansage des vorigen
+Laufs, jeder Schritt der Hinrichtung überstehe die Umstellung auf gestützte
+Unterteilungen und allein ihre Eingabe sei zu ersetzen, hat sich Zeile für Zeile
+bestätigt:
+
+* `SkorokhodSpace.isSubdivisionBased_comp` ist `isSubdivision_comp` und **eine
+  Zeile mehr**, und diese eine Zeile ist der Grund, daß die Berichtigung des
+  neunten Laufs überhaupt bezahlbar ist: die Zeitwechsel, über die die Metrik von
+  Meilenstein 4 ihr Infimum nimmt, halten den Basispunkt fest, also geht ein
+  Knoten bei `t₀` auf einen Knoten bei `t₀`. Unter einer Metrik ohne Basispunkt
+  wäre der gestützte Modul gar nicht transportierbar, und das Kriterium hätte
+  keine dritte Form mehr, auf die es hätte ausweichen können.
+* `SkorokhodSpace.modulusBased_le_of_edist_le` ist danach wörtlich
+  `modulus_le_of_edist_le`, mit demselben Verlust `2 η` in der Schwingung und
+  `exp (-γ)` in der Sparsamkeit. `subdivisionOsc_comp_le` wird unverändert
+  gelesen — der gestützte Knoten geht die Schwingung nichts an.
+* `SkorokhodSpace.tendsto_modulusBased` ist `tendsto_modulus` mit
+  `IsCadlag.exists_subdivision_through` an Stelle von
+  `IsCadlag.exists_subdivision`. Daß der Basispunkt als vorgeschriebener Knoten
+  überhaupt zulässig ist, ist `mem_exhaustion_self`: er liegt in **jedem**
+  Fenster, also ist über den Radius nichts vorauszusetzen. Und der zusätzliche
+  Knoten kostet quantitativ nichts, die Lücken der verfeinerten Unterteilung sind
+  weiterhin endlich viele und weiterhin positiv, also greift dasselbe
+  `δ₀`-Argument.
+* `SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact` ist der Beweis von
+  `tendsto_iSup_modulus_of_isCompact`, an genau zwei Stellen geändert: die
+  Unterteilung der endlich vielen Mittelpunkte geht durch `t₀`, und der Transport
+  läuft über `modulusBased_le_of_edist_le`. Die vier geschachtelten Radien, die
+  Wahl von `γ` mit `(exp γ - 1) * (2 (m+1)) ≤ 1` und die Totalbeschränktheit
+  bleiben, wie sie waren.
+
+*Warum das kein Zufall ist und wo es hätte brechen können.* Der gestützte Knoten
+überlebt den Transport nur, weil `l.toOrderIso t₀ = t₀` ohnehin unter den
+Hypothesen von `isSubdivision_comp` steht — es ist dieselbe Hypothese, die dort
+schon gebraucht wurde, damit das Bild der Unterteilung das Fenster noch
+überdeckt (ohne sie hat eine Verschiebung von `ℝ` die Norm `0` und trägt das
+Fenster von sich fort). Die Bedingung, die der neunte Lauf aus der Not erfunden
+hat, und die Bedingung, unter der der siebte Lauf schon rechnete, sind dieselbe.
+
+**Und die Ansage für die Rückrichtung ist zur Hälfte eingelöst.** Der achte Lauf
+hatte zwei neu zu bauende Stücke benannt: das Gitter samt Zeitwechsel darauf, und
+**die Schranke für die Anzahl der Knoten**. Die zweite steht:
+
+* `dist_first_last_eq_sum` — unter `AdditiveDist ι` teleskopieren die Lücken
+  eines monotonen Tupels, `dist (t 0) (t (Fin.last n)) = ∑ i, dist (t i.castSucc)
+  (t i.succ)`. Die eigentliche Voraussetzung ist die **Monotonie** und nicht die
+  Strenge, und sie wird gebraucht: ohne sie ist `dist` nur subadditiv und die
+  Identität wird zu einer Ungleichung in der unbrauchbaren Richtung. Dies ist die
+  einzige Stelle der Datei, an der `AdditiveDist ι` um seiner selbst willen
+  gelesen wird und nicht durch das Fenster hindurch.
+* `mul_le_dist_first_last` — ein `δ`-sparsames monotones Tupel überspannt
+  mindestens `n * δ`.
+* `mul_le_dist_of_sparse` — je zwei seiner Knoten sind mindestens ihr
+  Indexabstand mal `δ` voneinander entfernt; das ist die vorige Aussage,
+  angewandt auf das Teiltupel zwischen den beiden Knoten.
+* `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision` — liegen zwei Knoten einer
+  `δ`-sparsamen Unterteilung im Fenster vom Radius `u`, so ist ihr Indexabstand
+  höchstens `2u / δ`. Das ist die Schranke, und sie ist als Ungleichung
+  formuliert und nicht als Kardinalität, damit keine `Nat`-Division darin
+  vorkommt.
+
+*Der Punkt, an dem die naive Fassung dieser Schranke falsch gewesen wäre, und er
+ist der Grund für die Gestalt der letzten Aussage:* `IsSubdivision` verlangt nur,
+daß die Unterteilung das Fenster **überdeckt**, seit der Berichtigung des
+sechsten Laufs also ausdrücklich mit der Freiheit, an beiden Enden darüber
+hinauszuragen. Die Knoten müssen darum **nicht** im Fenster liegen, und ein
+einzelner darf beliebig weit draußen sitzen; eine Schranke für `n` selbst gibt es
+nicht. Gezählt werden können allein die Knoten **im** Fenster, und darum
+quantifiziert die Aussage über zwei Knoten, von denen bekannt ist, daß sie darin
+liegen. Für die Rückrichtung genügt das, denn außerhalb des Fensters sieht die
+Metrik nichts, was der Schwanz `exp (-M)` nicht schon bezahlt.
+
+**Das Manuskript ist nicht angefaßt.**
+
+**Was als Nächstes zu tun ist.** Das **Gitter samt dem Zeitwechsel darauf**, und
+es ist das letzte neu zu bauende Stück von Meilenstein 7. Gebraucht wird: zu
+`m`, `δ > 0` und `ρ > 0` eine endliche Menge `G ⊆ ℝ`, die den Basispunkt enthält,
+und zu jedem `δ`-sparsamen gestützten Tupel `t` mit Knoten im Fenster ein
+Zeitwechsel `l ∈ TimeChange.fixing 0` kleiner Norm, der jeden Knoten von `t` auf
+einen Punkt von `G` trägt. Die Anzahl der zu verschiebenden Knoten ist durch
+`SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision` beschränkt, die Konstruktion
+des Zeitwechsels ist `TimeChange.exists_real_of_perturbation` samt
+`SkorokhodSpace.tent` — dieselbe Störung `φ x = x + ψ x`, die
+`Real.instHasCountableCore` im zweiten Lauf dieses Tages trägt, nur mit einer
+endlichen Menge von Zelten statt einer abzählbaren Familie. Danach ist der
+Zusammenbau `SkorokhodSpace.stepPath` als Approximant,
+`SkorokhodSpace.distWith_stepPath_le` als Schranke und
+`SkorokhodSpace.intWith_le_of_ae_distWith_le` als Buchführung, und alle drei
+stehen bewiesen da. **Der Basispunkt muß im Gitter liegen** — das ist es, was
+`not_isCompact_closure_of_jumps_at_basePoint` erzwingt, und der Grund, warum die
+Verschiebung eines Knotens an einem Bruchteil seines Abstands zu `t₀` zu messen
+ist und nicht an einem absoluten Betrag.
