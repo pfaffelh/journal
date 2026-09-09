@@ -14167,3 +14167,195 @@ ihr `sorry`. Zwei Dinge sind dabei nachgerechnet und nicht vermutet:
   automatisch gebundenes Universum keinen ansprechbaren Namen hat. Darum heißt
   der Typ in dieser einen Aussage `F` und nicht `E`; die
   `MeasurableSpace`-Instanz steht deshalb ausdrücklich in der Signatur.
+
+### 2026-09-09, sechzehnter Lauf des Tages — die Skorohod-Darstellung steht, und `WeakConvergence/Suggested.lean` trägt kein `sorry` mehr
+
+**Aufgabe.** Teil B, Punkt 2 der vorrangigen Aufgabe:
+`exists_ae_tendsto_of_tendsto`, der Zusammenbau. Er war der letzte offene Beweis
+der Datei.
+
+**Ergebnis.** Er ist bewiesen. `lake env lean` gegen v4.33.1 meldet für die
+Datei keinen einzigen `sorry`-Hinweis mehr, und
+`#print axioms MeasureTheory.exists_ae_tendsto_of_tendsto` gibt
+
+```
+depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+
+Damit ist **Teil B der vorrangigen Aufgabe erledigt** und Meilenstein 3 von
+`WeakConvergence` geschlossen. Der einzige Fehler, den die Datei noch meldet,
+ist der seit dem 2026-09-08 bekannte und am Deklarationskommentar von
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` festgehaltene: Zeile 2178 ist
+für `upstream/master` geschrieben, wo `ProbabilityMeasure.map` die Funktion
+allein nimmt, während v4.33.1 zusätzlich `AEMeasurable` verlangt. Das ist
+Absicht und kein Rückstand.
+
+#### Der Beweis, in vier Stücken
+
+Er folgt genau dem Rezept, das der fünfzehnte Lauf hinterlassen hat; keiner der
+vier Schritte hat sich beim Ausschreiben als falsch erwiesen.
+
+1. **Die Stufen.** `exists_finite_partition_diam_le_null_frontier` mit
+   `ε = η = (1/2)^k` für jedes `k`, per `choose` zu Familien `KK : ℕ → Finset ℕ`
+   und `AA : ℕ → ℕ → Set F` gebündelt. Zwei Zusagen mußten von „für `i ∈ K`" auf
+   „für `i ≠ 0`" gehoben werden — Beschränktheit und Durchmesser —, und beide
+   Male ist die Hebung dieselbe Zeile: außerhalb von `K` und außer `0` ist das
+   Stück **leer**, und die leere Menge ist beschränkt und hat Durchmesser `0`.
+   Das ist der Grund, aus dem
+   `exists_finite_partition_diam_le_null_frontier` seine Zusage
+   `∀ i, i ≠ 0 → i ∉ K → A i = ∅` überhaupt trägt.
+2. **Die Niveauwahl.** `kn n` ist das Maximum von
+   `(Finset.Icc 1 (n+1)).filter (Q · n)` zum Prädikat
+   `Q k n : ∀ i ∈ KK k, ofReal (1 - 1/k) * ν (AA k i) ≤ μ n (AA k i)`. Die
+   Nichtleere ist `Q 1 n`, das immer gilt, weil `1 - 1/1 = 0` und
+   `ENNReal.ofReal 0 = 0` ist. `Tendsto kn atTop atTop` kommt aus
+   `tendsto_measure_of_null_frontier_of_tendsto'` je Stück, über die **endlich**
+   vielen Stücke der Stufe mit `Filter.eventually_all_finset` zusammengefaßt;
+   die Strenge ist `ENNReal.mul_lt_mul_left`, angewandt auf
+   `ofReal (1 - 1/k) < 1` und `0 < ν (AA k i) < ∞`, und **hier** wird die
+   Positivität der Stücke verbraucht, die
+   `exists_finite_partition_diam_le_null_frontier` eigens zusagt. Die ganze
+   Niveauwahl steht unter **einem** `obtain` mit ausgeschriebener
+   Existenzaussage, so daß `Q` und der Filter im Rest des Beweises nicht mehr
+   vorkommen.
+3. **Der Stufensatz.** `exists_measurable_pair_of_partition_subset` mit
+   `A n := AA (kn n)`, `ε n := (1/2)^(kn n)`, `t n := 1/(kn n)`. Der
+   Zeilendefekt `hdef` ist `Q (kn n) n` auf den Stücken von `KK (kn n)` und die
+   leere Menge sonst.
+4. **Die Schwanzrechnung.** `P (⋃ m ≥ K, B m) ≤ ofReal ((1/2)^K * 2 + 1/K)` für
+   `K ≥ 1`, dann `tendsto_of_tendsto_of_tendsto_of_le_of_le'` gegen `0` und
+   `ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` mit `δ k = (1/2)^k`.
+
+#### Der eine Punkt, an dem die Rechnung etwas sagt
+
+**Die beiden Disjunkte von `B k` werden auf ganz verschiedene Weise
+abgeschätzt, und nur einer von beiden wird summiert.** Die ersten,
+`{z | z.1.1 ∈ AA m 0}`, haben Masse `ν (AA m 0) ≤ 2⁻ᵐ` — das ist das `η`, um
+das die Zerlegung gebeten wurde —, also kostet ihre Vereinigung über `m ≥ K`
+eine geometrische Reihe, `∑_j 2^{-(j+K)} = 2^{-K}·2`. Die zweiten,
+`{z | 1 - 1/m < z.1.2}`, werden **nicht** summiert: sie sind Ereignisse der
+einen gemeinsamen gleichverteilten Variablen und schachteln sich, denn
+`1 - 1/m ≥ 1 - 1/K` für `m ≥ K`, so daß ihre Vereinigung über `m ≥ K` bereits
+`{ξ > 1 - 1/K}` ist, mit Lebesgue-Masse `1/K` auf `(0,1]`. Summiert man sie,
+kommt `∑ 1/m = ∞` heraus und nichts ist bewiesen.
+
+Das ist die Stelle, an der der ganze Aufbau von `stagesMeasure` bezahlt wird,
+und sie ist in genau einer Zeile Lean sichtbar: die Inklusion
+
+```
+(⋃ m ≥ K, B m) ⊆ (⋃ j, {z | z.1.1 ∈ AA (j+K) 0}) ∪ {z | 1 - 1/K < z.1.2}
+```
+
+hat rechts **kein** `⋃` über dem zweiten Summanden. Und es ist der Grund, aus
+dem `ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` nach der Masse der
+**Schwänze** fragt und nicht nach der der Glieder: nach den Gliedern gefragt
+wäre der Satz Borel--Cantelli, und den gibt es hier nicht (Zeuge im
+Doc-Kommentar jenes Satzes).
+
+#### Zwei Kleinigkeiten aus dem Übersetzen
+
+Beide kosten wenig und beide wären beim nächsten Mal wieder aufgetreten.
+
+* Die Marginale der Grenzvariablen wird **nicht** neu ausgerechnet: der
+  Stufensatz gibt `P.map (fun z => z.1.1) = ν` heraus, und `Measure.map_apply`
+  liest daraus `P {z | z.1.1 ∈ S} = ν S` ab. Damit die Umschreibung greift, muß
+  der Meßbarkeitsbeweis für die **Lambda-Form** `fun z => z.1.1` und nicht für
+  `Prod.fst ∘ Prod.fst` benannt sein, sonst findet `rw` sein Muster nicht.
+* Die Marginale der gleichverteilten Variablen ist dagegen von Hand zu rechnen,
+  und sie ist billig: `{z | c < z.1.2} = ((univ ×ˢ Ioi c) ×ˢ univ)`, dann
+  zweimal `Measure.prod_prod` und `measure_univ`. Die
+  `IsProbabilityMeasure`-Instanz für `Measure.infinitePi` liefert Mathlib
+  (`Probability/ProductMeasure.lean:381`), die für `volume.restrict (Ioc 0 1)`
+  ist `isProbabilityMeasure_volume_restrict_Ioc` aus dieser Datei.
+
+#### Stand der Datei
+
+`TauCeti/WeakConvergence/Suggested.lean` trägt kein `sorry` mehr. Von den sechs
+Meilensteinen sind 1, 2, 3 und 5 ohne offene Aussage; Meilenstein 4 hat zwei
+Punkte ohne Signatur (die de-la-Vallée-Poussin-Form und die vier
+Stabilitätslemmata), Meilenstein 6 ist der Raum `M_E` und steht seit dem elften
+Lauf des 2026-09-08 als Aufgabe da.
+
+#### Derselbe Lauf, zweiter Teil: Teil C beginnt, und sein Punkt 0 war falsch angesagt
+
+Mit Teil A (dreizehnter Lauf) und Teil B (dieser) durch, gilt **Teil C**:
+Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse. Sein Punkt 0 ist
+`IsStepPath`, das Prädikat der Pfade, die in endlicher Zeit nur endlich oft
+springen. Drei Deklarationen, alle in
+`TauCeti/MartingaleProblems/Suggested.lean`, alle durch `lake env lean` gegen
+v4.33.1 und alle mit `#print axioms` geprüft — `IsStepPath.isCadlagPath` hängt
+sogar nur an `propext` und `Quot.sound`, die anderen beiden zusätzlich an
+`Classical.choice`.
+
+**Der Befund, und er ist der Ertrag dieses Teils: die angesagte Definition ist
+nicht brauchbar, weil die angesagte Brücke falsch ist.** Der Auftrag lautete
+
+```
+def IsStepPath (f : ι → E) : Prop :=
+  ∀ K : Set ι, IsCompact K → (leftJumpSet f ∩ K).Finite
+```
+
+„mit der Brücke `IsStepPath f → IsCadlag f`". Diese Implikation gilt **nicht**,
+und der Zeuge ist eine Zeile: `f = Set.indicator {0} 1` auf `ℝ`. Seine
+Sprungmenge ist `{0}`, also endlich auf jedem Kompaktum, und `f` ist an `0`
+**nicht rechtsstetig** — auf `Set.Ioi 0` ist es `0` und an `0` ist es `1`. In
+Lean als `exists_finite_setOf_leftLim_ne_not_isCadlagPath`.
+
+Der Grund dahinter ist allgemeiner als der Zeuge und wäre sonst später teuer
+geworden: **`Function.leftLim` ist total**
+(`Topology/Order/LeftRightLim.lean:50`) — existiert kein linksseitiger Limes, so
+gibt es den Wert `f x` zurück. Ein Pfad ohne linksseitige Limiten irgendwo hat
+darum eine **leere** Sprungmenge und besteht die Prüfung leer. Eine Bedingung an
+die Sprungmenge allein sieht also **keine** der beiden Hälften von càdlàg:
+weder die Rechtsstetigkeit (der Zeuge oben) noch die Existenz der linksseitigen
+Limiten (jeder Pfad ohne solche). Das ist derselbe Fehlertyp wie die leeren
+Aussagen vom 2026-09-05 und 2026-09-07, nur an einer Definition statt an einem
+Satz.
+
+**Die Definition, die trägt**, sagt statt dessen, was die Konstruktion wirklich
+liefert — zwischen zwei Sprungzeiten bewegt sich der Pfad nicht:
+
+```
+def IsStepPath (f : ι → E) : Prop :=
+  (∀ x, ∀ᶠ y in 𝓝[≥] x, f y = f x) ∧ ∀ x, ∃ c, ∀ᶠ y in 𝓝[<] x, f y = c
+```
+
+Daraus ist càdlàg zwei Zeilen (`IsStepPath.isCadlagPath`): eine Funktion, die
+längs eines Filters schließlich konstant ist, konvergiert längs seiner gegen
+diese Konstante. Und die lokale Endlichkeit der Unstetigkeitsstellen ist jetzt
+ein **Satz** statt der Definition,
+`IsStepPath.finite_setOf_not_continuousAt_inter`.
+
+**Eine Kleinigkeit aus dessen Beweis, die zwei erwartete Fallunterscheidungen
+erspart.** Der Beweis ist `IsCompact.elim_nhds_subcover` gegen eine punktierte
+Umgebung von Stetigkeit, wie
+`IsCadlag.finite_largeLeftJumpSet_inter` in `SkorokhodSpace/Suggested.lean`.
+Erwartet hatte ich, aus `V ∈ 𝓝[≥] x` ein `Set.Ico x u` und aus `W ∈ 𝓝[<] x` ein
+`Set.Ioo l x` ziehen zu müssen (`mem_nhdsGE_iff_exists_Ico_subset'`), mit den
+Fällen `IsMax x` und `IsMin x` einzeln. Das ist unnötig: `mem_nhdsWithin` gibt
+seine Zeugen bereits **offen** heraus, und `Set.Ioi x`, `Set.Iio x` sind in der
+Ordnungstopologie offen, also sind `V ∩ Set.Ioi x` und `W ∩ Set.Iio x` offene
+Mengen, auf denen `f` konstant ist; nach Trichotomie liegt jedes `y ∈ V ∩ W`
+außer `x` in einer von beiden. Was den Beweis trägt, ist die **Offenheit der
+beiden Seiten**, nicht ihre Endpunkte.
+
+`MartingaleProblems/README.md`, Meilenstein 4, trägt den Punkt jetzt als ersten,
+mit der Begründung gegen die Sprungmengen-Fassung und mit dem Zeugenpaar als
+acceptance example (`Set.indicator {0} 1` scheitert, `Set.indicator (Set.Ici 0) 1`
+besteht).
+
+#### Was als Nächstes zu formalisieren ist
+
+**`MartingaleProblems` Meilenstein 4, Punkt 1: `jumpProcess lam mu nu`** auf
+einem expliziten Wahrscheinlichkeitsraum, samt `IsStepPath` für seine Pfade.
+Worauf es ruht, steht vollständig und braucht **keine Topologie**:
+`ProbabilityTheory.exists_kernel_pi_of_markov`
+(`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`, aus Mathlibs
+Ionescu--Tulcea `Kernel.traj`) für die eingebettete Kette und
+`ProbabilityTheory.exponentialPDF` für die Wartezeiten. Warum jetzt: Punkt 0 ist
+durch, und Punkt 1 ist die einzige Konstruktion des Meilensteins, die von Hand
+zu machen ist — `jumpProcess_isMPSolution` (Punkt 2, `thm:jumpMP`) ist das
+eigentliche Ziel und ohne den konstruierten Prozeß nicht einmal formulierbar.
+Die Zusage, die Punkt 1 an Punkt 2 weiterreicht, ist genau `IsStepPath` für die
+Pfade; dafür ist das Prädikat gebaut worden, und daran ist es beim Schreiben von
+Punkt 1 zu messen.

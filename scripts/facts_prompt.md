@@ -49,8 +49,38 @@ Befunde daraus sind für die weitere Arbeit wichtig genug, um hier zu bleiben:
   gehalten (2026-09-08 und 2026-09-09, fünfter Lauf). Ein acceptance example, das
   nur dasteht, prüft nichts.
 
-**Teil B — `WeakConvergence` fertigmachen.** Teil A ist durch, also gilt dieser
-Teil. Noch **ein** offener Beweis:
+~~**Teil B — `WeakConvergence` fertigmachen.**~~ *(erledigt 2026-09-09,
+sechzehnter Lauf des Tages)*
+
+**Ergebnis.** `WeakConvergence/Suggested.lean` trägt **kein `sorry`** mehr.
+Beide Punkte des Auftrags sind erledigt:
+`tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws` (vierzehnter Lauf)
+und `exists_ae_tendsto_of_tendsto`, die Skorohod-Darstellung (sechzehnter
+Lauf), letztere mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09, sechzehnter
+Lauf des Tages"; Meilenstein 3 von `WeakConvergence` ist geschlossen. Der
+einzige Fehler, den die Datei noch meldet, ist der bekannte in Zeile 2178: sie
+ist für `upstream/master` geschrieben, wo `ProbabilityMeasure.map` die Funktion
+allein nimmt. Ohne Signatur bleiben von Meilenstein 4 die
+de-la-Vallée-Poussin-Form und die vier Stabilitätslemmata; Meilenstein 6 (der
+Raum `M_E`) steht seit dem elften Lauf des 2026-09-08 als eigene Aufgabe da.
+
+Zwei Befunde daraus sind für die weitere Arbeit wichtig genug, um hier zu
+bleiben:
+
+* **Nur einer der beiden Disjunkte des schlechten Ereignisses wird summiert.**
+  Die Stücke `{z | z.1.1 ∈ A^{(m)} 0}` haben Masse `≤ 2⁻ᵐ` und kosten eine
+  geometrische Reihe; die Stücke `{z | 1 - 1/m < z.1.2}` sind Ereignisse der
+  **einen** gemeinsamen gleichverteilten Variablen, schachteln sich und fallen
+  über `m ≥ K` zu `{ξ > 1 - 1/K}` zusammen, Masse `1/K`. Summierte man auch
+  sie, käme `∑ 1/m = ∞` heraus. Das ist der Punkt, an dem der Aufbau von
+  `stagesMeasure` bezahlt wird, und der Grund, aus dem
+  `ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` nach den **Schwänzen**
+  fragt und nicht nach den Gliedern.
+* **`Q 1 n` gilt immer**, weil `ofReal (1 - 1/1) = 0` ist; das macht die
+  Niveauwahl `kn` total, ohne Fallunterscheidung.
+
+*Der ursprüngliche Wortlaut des Teils:*
 
 1. ~~`tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`~~ *(erledigt
    2026-09-09, vierzehnter Lauf des Tages)*. Bericht in `Facts/INVENTAR.md`,
@@ -95,6 +125,8 @@ Teil. Noch **ein** offener Beweis:
    der Raum in `Type u` liegt und ein `Type 0`-Raum den Borelschen
    Isomorphiesatz erzwänge; sie heißt jetzt
    `exists_ae_tendsto_of_tendsto.{u} {F : Type u}` und trägt weiter ihr `sorry`.
+   *(Nachtrag: das `sorry` ist im sechzehnten Lauf gefallen; beide
+   Berichtigungen haben sich beim Ausschreiben als richtig erwiesen.)*
 
    **Was noch fehlt, in vier Schritten** (ausgeschrieben im Laufbericht und in
    `WeakConvergence/README.md`, Meilenstein 3): die Stufen `A^{(k)}` mit
@@ -117,8 +149,9 @@ Teil. Noch **ein** offener Beweis:
    will, sagt zuerst, welcher Schritt des jetzigen bricht, und rechnet ihn am
    Zeugen nach.
 
-**Teil C — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.** Erst
-wenn A und B durch sind.
+**Teil C — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.** Teil A
+und Teil B sind beide durch (2026-09-09, dreizehnter und sechzehnter Lauf), also
+gilt dieser Teil. Er ist damit der laufende Auftrag.
 
 Der Grund, und er ist kein ästhetischer: **die Existenztheorie hat sonst keinen
 Boden.** §`sec:Existence` des Manuskripts hat drei Zweige, und zwei davon sind
@@ -138,7 +171,33 @@ Reihenfolge:
 *Reihenfolge, auf Wunsch des Nutzers: erst das eigentliche Ziel, die Beispiele
 danach.*
 
-0. **`IsStepPath` zuerst, als Prädikat.** Die Konstruktion liefert Pfade, die in
+0. ~~**`IsStepPath` zuerst, als Prädikat.**~~ *(erledigt 2026-09-09, sechzehnter
+   Lauf des Tages)* Drei Deklarationen in
+   `TauCeti/MartingaleProblems/Suggested.lean`: `IsStepPath`,
+   `IsStepPath.isCadlagPath` und `IsStepPath.finite_setOf_not_continuousAt_inter`,
+   alle bewiesen und mit `#print axioms` geprüft. Der Punkt ist als **Prädikat**
+   umgesetzt, wie verlangt, und nicht als Typklasse.
+
+   **Aber die unten angesagte Definition ist nicht genommen worden, weil die
+   angesagte Brücke falsch ist.** `Function.leftLim` ist total: existiert kein
+   linksseitiger Limes, gibt es `f x` zurück. Damit hat ein Pfad ohne
+   linksseitige Limiten eine **leere** Sprungmenge, und eine Bedingung an die
+   Sprungmenge allein sieht keine der beiden Hälften von càdlàg. Zeuge gegen
+   `IsStepPath f → IsCadlag f` in der Fassung unten:
+   `f = Set.indicator {0} 1` auf `ℝ`, Sprungmenge `{0}`, an `0` nicht
+   rechtsstetig; in Lean als
+   `exists_finite_setOf_leftLim_ne_not_isCadlagPath`. Genommen ist statt dessen,
+   was die Konstruktion wirklich liefert — zwischen zwei Sprungzeiten bewegt
+   sich der Pfad nicht:
+   ```
+   def IsStepPath (f : ι → E) : Prop :=
+     (∀ x, ∀ᶠ y in 𝓝[≥] x, f y = f x) ∧ ∀ x, ∃ c, ∀ᶠ y in 𝓝[<] x, f y = c
+   ```
+   Die lokale Endlichkeit der Unstetigkeitsstellen ist daraus ein **Satz**.
+   Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09, sechzehnter Lauf des
+   Tages", Abschnitt „Derselbe Lauf, zweiter Teil".
+
+   *Der ursprüngliche Wortlaut:* Die Konstruktion liefert Pfade, die in
    endlicher Zeit nur endlich oft springen, und drei sonst unangenehme Stellen
    werden auf ihnen leicht: die Meßbarkeit in `(t, ω)` ist eine Summe über
    endlich viele Stücke statt eines Grenzwertarguments, `Nat.find` für die

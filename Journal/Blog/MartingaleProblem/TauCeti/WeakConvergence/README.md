@@ -1433,7 +1433,8 @@ The representation theorem itself:
   `[PseudoMetricSpace E]` and nothing else — neither `OpensMeasurableSpace` nor
   `SecondCountableTopology`, both of which the one-stage theorem carries for the
   measurability of the bad *set*, which an inclusion does not need.
-* `MeasureTheory.ProbabilityMeasure.exists_ae_tendsto_of_tendsto`: if
+* `MeasureTheory.exists_ae_tendsto_of_tendsto`, **proved** on 2026-09-09,
+  sixteenth run: if
   `μ n → μ` weakly, there is a probability space and `E`-valued random
   variables `X n`, `X` on it with laws `μ n`, `μ` and `X n → X` almost surely.
   Separability is the only hypothesis; the construction uses the partition of
@@ -1532,15 +1533,28 @@ The representation theorem itself:
   `MeasureTheory/Constructions/Polish/Basic.lean:834`) applied to
   `Subtype.val : A → ℝ` on `Set.univ` would make `A` Borel in `ℝ`. The
   construction therefore does **not** glue: it builds all stages at once on
-  `(E × (ℕ → ℝ)) × (ℕ × ℕ → E)`, where the first factor carries `Y ∼ μ` and one
-  uniform variable per stage, and the second carries one independent draw from
-  each conditional law `condLaw (μ n) (A n i)`. `X n` is then
-  `z ↦ z.2 (n, G n (j n (Y z), ξ n z))` and the three items above compute its
-  law. That is Ethier–Kurtz's Lemma 3.1.3 (p. 100, "Let `X, Y₀, …, Y_N, ξ` be
-  independent random variables …") with `N = ∞`, and it is the reason this item
-  holds under separability alone: its seven ingredients name nothing about `E`
-  beyond `MeasurableSpace E`, so neither `PolishSpace E` nor
-  `StandardBorelSpace E` enters anywhere.
+  `stagesMeasure`'s space `(E × ℝ) × (ℕ × ℕ → E)`, where the first factor
+  carries `Y ∼ μ` together with **one** uniform variable shared by every stage,
+  and the second carries one independent draw from each conditional law
+  `condLaw (μ n) (A n i)`. `X n` is then `z ↦ z.2 (n, Φ n z.1)` and the three
+  items above compute its law. That is Ethier–Kurtz's Lemma 3.1.3 (p. 100, "Let
+  `X, Y₀, …, Y_N, ξ` be independent random variables …") with `N = ∞`, and it is
+  the reason this item holds under separability alone: its seven ingredients
+  name nothing about `E` beyond `MeasurableSpace E`, so neither `PolishSpace E`
+  nor `StandardBorelSpace E` enters anywhere.
+
+  **The two halves of the tail are bounded by different means, and that is the
+  whole of the final step.** With
+  `B k = {z | z.1.1 ∈ A^{(k)} 0} ∪ {z | 1 - 1/k < z.1.2}` the first halves are
+  summable, because `ν (A^{(m)} 0) ≤ 2⁻ᵐ` is the `η` the partition was asked
+  for, so their union over `m ≥ K` costs a geometric tail. The second halves are
+  **not** summed: they are events of the one shared uniform variable and they
+  nest, `1 - 1/m ≥ 1 - 1/K` for `m ≥ K`, so their union over `m ≥ K` is already
+  `{ξ > 1 - 1/K}`, of Lebesgue measure `1/K` on `(0,1]`. Summing them would give
+  `∑ 1/m = ∞` and prove nothing. This is where the design of `stagesMeasure` is
+  cashed in, and it is why
+  `ae_tendsto_of_subset_of_tendsto_measure_iUnion_ge` asks for the measure of
+  the **tails** and not for the measures of the terms.
 * The version for a single limit along a filter with a countable basis.
 
 The converse direction is Mathlib's and is not to be rebuilt: almost sure

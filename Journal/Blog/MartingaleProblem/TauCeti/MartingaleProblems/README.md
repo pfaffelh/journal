@@ -448,6 +448,47 @@ generating its σ-algebra, and `X : Ω → F`.
 A concrete family of solutions, built without any of the theory above. Index
 `[0,∞)`, state space `E` with `[MeasurableSpace E]`.
 
+* `IsStepPath`, **proved** on 2026-09-09, sixteenth run, together with
+  `IsStepPath.isCadlagPath` and
+  `IsStepPath.finite_setOf_not_continuousAt_inter`: the paths the construction
+  below delivers, isolated first, because three otherwise awkward steps are easy
+  on them — the joint measurability in `(t, ω)` is a sum over finitely many
+  pieces instead of a limit argument, the assignment `t ↦ n` of a time to its
+  jump index is a `Nat.find`, and càdlàg is immediate. It is a **predicate** and
+  not a type class: it is a property of a term, so instance search has nothing to
+  key on, and Mathlib's fallback `Fact` is expressly not meant for it
+  (`Logic/Basic.lean`, library note "fact non-instances"). Only when more than
+  two theorems carry it does it become a bundled structure after the pattern of
+  `D(ι, E)`. The manuscript calls this set of paths `F` in `set:pathjump`.
+
+  **The definition is constancy on one sided neighbourhoods and not local
+  finiteness of the jump set, and the difference is a counterexample and not a
+  preference.** Asking for
+  `∀ K, IsCompact K → ({x | Function.leftLim f x ≠ f x} ∩ K).Finite` and
+  deriving càdlàg from it does **not** work:
+  `exists_finite_setOf_leftLim_ne_not_isCadlagPath` exhibits
+  `f = Set.indicator {0} 1` on `ℝ`, whose jump set is `{0}` — finite on every
+  compact set — and which is not right continuous at `0`. `Function.leftLim` is
+  *total* (`Topology/Order/LeftRightLim.lean:50`): where no left limit exists it
+  returns the value, so a path with no left limits anywhere has an **empty** jump
+  set and passes such a test vacuously. A condition on the jump set alone sees
+  neither half of càdlàg. The definition is therefore
+
+  ```
+  def IsStepPath (f : ι → E) : Prop :=
+    (∀ x, ∀ᶠ y in 𝓝[≥] x, f y = f x) ∧ ∀ x, ∃ c, ∀ᶠ y in 𝓝[<] x, f y = c
+  ```
+
+  — between two consecutive jump times the path does not move — and the local
+  finiteness of the discontinuities is a *theorem* on it,
+  `IsStepPath.finite_setOf_not_continuousAt_inter`, proved by
+  `IsCompact.elim_nhds_subcover` as in
+  `IsCadlag.finite_largeLeftJumpSet_inter` of **SkorokhodSpace** Milestone 2.
+  That proof needs **no** case distinction on `IsMax x` or `IsMin x`:
+  `mem_nhdsWithin` returns its witnesses already open, and `Set.Ioi x`,
+  `Set.Iio x` are open, so the two sides are open sets on which `f` is constant
+  and every point of `V ∩ W` other than `x` lies in one of them. What carries the
+  argument is that the two sides are open, not that they have endpoints.
 * Data: a measurable rate `lam : E → [0,∞)` and a Markov kernel `mu : Kernel E E`.
   The operator is `A f x = lam x * ∫ y, (f y - f x) ∂(mu x)` with
   `A = {(f, A f) | f bounded measurable}`.
@@ -474,6 +515,15 @@ A concrete family of solutions, built without any of the theory above. Index
 
 **Acceptance examples.**
 
+* **A single spike is a step path and is not càdlàg.**
+  `f = Set.indicator {0} 1 : ℝ → ℝ` satisfies the *naive* condition — its jump
+  set is `{0}`, finite on every compact set — and fails `IsCadlagPath`, because
+  `f` is `0` on `Set.Ioi 0` and `1` at `0`. It also fails `IsStepPath`, at the
+  first conjunct and at `x = 0`, which is exactly what the definition has to
+  achieve. Moving the spike to the *left* of the value, `Set.indicator (Set.Ici 0) 1`,
+  gives a path that satisfies both. This pair is the acceptance test for the
+  definition, and it is in Lean as
+  `exists_finite_setOf_leftLim_ne_not_isCadlagPath`.
 * **The Poisson process as the degenerate jump process.** `E = ℕ`,
   `lam x = 1`, `mu x = Measure.dirac (x + 1)`. Then
   `A f x = f (x+1) - f x`, `jumpProcess lam mu (Measure.dirac 0)` is the Poisson
