@@ -28,6 +28,20 @@ mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-10.  Every declaration elaborates; 10 declarations carry `sorry`, and
+Five more the same day, in `section JumpFiltration`, are the four bookkeeping
+facts about `lebesgueClock` that the conditional expectation of
+`jumpProcess_isMPSolution` still needed, plus their assembly:
+`lebesgueClock_interval_optional_eq` identifies the compensating window with
+`Set.Ioc`, `lebesgueClock_apply_Ioc` gives its exact mass (via
+`lebesgueClock_preimage_Ioc`), `integral_lebesgueClock_Ioc` reindexes a
+compensating integral as a genuine `ℝ`-interval integral starting at `0`, and
+`setIntegral_compensator_sub_eq_intervalIntegral` assembles all of it with
+`Clock.interval_union` and `intervalIntegral_integral_swap` into: the
+difference of two nested compensating windows, integrated over a set of paths,
+equals the interval integral of the set integral of the shifted process. That
+is steps two through four of the four steps `jumpProcess_isMPSolution` names at
+the end of its docstring; what remains is step one (the indicator of the past)
+and the final assembly into `ae_eq_condExp_of_forall_setIntegral_eq`.
 every one of those `sorry`s is a **proof**.  The last two blocks of the file are
 Milestone 4; the only `sorry` in them is the conditional expectation of
 `jumpProcess_isMPSolution`, whose adaptedness half is proved.  The first, `IsStepPath`, was added on 2026-09-09:
@@ -3479,6 +3493,74 @@ noncomputable def lebesgueClock : Clock ℝ≥0 where
     · rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
     · rintro x ⟨hx1, hx2⟩; exact ⟨hx2, hx1⟩
 
+/-- **The compensating interval of `lebesgueClock` under the optional convention is an honest
+half open interval of `ℝ≥0`.** This is what lets the four bookkeeping facts below speak of
+`Set.Ioc` instead of unfolding `Clock.interval` at every step. -/
+theorem lebesgueClock_interval_optional_eq (a b : ℝ≥0) :
+    lebesgueClock.interval Clock.Conv.optional a b = Set.Ioc a b := by
+  ext x
+  simp [Clock.interval, Set.mem_diff, Set.mem_Iic, Set.mem_Ioc, not_le]
+
+/-- The preimage of an `ℝ≥0` window under `Real.toNNReal`, intersected with the nonnegative reals
+that `lebesgueClock.q` restricts to, is the corresponding real window: the fact that makes the
+pushforward defining `lebesgueClock.q` computable on `Set.Ioc`. -/
+theorem lebesgueClock_preimage_Ioc (a b : ℝ≥0) :
+    (Real.toNNReal ⁻¹' Set.Ioc a b) ∩ Set.Ici (0 : ℝ) = Set.Ioc (a : ℝ) (b : ℝ) := by
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_Ici, Set.mem_preimage, Set.mem_Ioc,
+    Real.lt_toNNReal_iff_coe_lt, Real.toNNReal_le_iff_le_coe]
+  constructor
+  · rintro ⟨⟨h1, h2⟩, -⟩; exact ⟨h1, h2⟩
+  · rintro ⟨h1, h2⟩; exact ⟨⟨h1, h2⟩, a.coe_nonneg.trans h1.le⟩
+
+/-- **The exact mass of a window under `lebesgueClock`.**  Unlike `measure_Iic_ne_top`, which only
+bounds it, the compensator's difference over two nested windows needs the precise value. -/
+theorem lebesgueClock_apply_Ioc (a b : ℝ≥0) :
+    lebesgueClock.q (Set.Ioc a b) = ENNReal.ofReal ((b : ℝ) - (a : ℝ)) := by
+  show ((volume : Measure ℝ).restrict (Set.Ici (0 : ℝ))).map Real.toNNReal (Set.Ioc a b)
+      = ENNReal.ofReal ((b : ℝ) - (a : ℝ))
+  rw [Measure.map_apply measurable_real_toNNReal measurableSet_Ioc,
+    Measure.restrict_apply (measurable_real_toNNReal measurableSet_Ioc),
+    lebesgueClock_preimage_Ioc, Real.volume_Ioc]
+
+/-- **A compensating integral over `lebesgueClock` is a genuine interval integral of `ℝ`, shifted
+to start at `0`.**  This is the fourth of the four bookkeeping steps `jumpProcess_isMPSolution`
+needs: it turns the outer integral of the martingale identity, which lives on `ℝ≥0` because
+`mpFamily` needs `[OrderBot ι]`, into something `intervalIntegral_integral_swap` and the
+fundamental theorem of calculus can consume. -/
+theorem integral_lebesgueClock_Ioc {a b : ℝ≥0} (hab : a ≤ b) {F : ℝ≥0 → ℝ} (hF : Measurable F) :
+    ∫ u in Set.Ioc a b, F u ∂lebesgueClock.q
+      = ∫ r in (0 : ℝ)..((b : ℝ) - (a : ℝ)), F (Real.toNNReal ((a : ℝ) + r)) := by
+  have hset : Set.Ici (0 : ℝ) ∩ (Real.toNNReal ⁻¹' Set.Ioc a b) = Set.Ioc (a : ℝ) (b : ℝ) := by
+    rw [Set.inter_comm]; exact lebesgueClock_preimage_Ioc a b
+  have h1 : ∫ u in Set.Ioc a b, F u ∂lebesgueClock.q
+      = ∫ x in Set.Ici (0 : ℝ), (Set.Ioc a b).indicator F (Real.toNNReal x) ∂volume := by
+    show ∫ u in Set.Ioc a b, F u
+        ∂(((volume : Measure ℝ).restrict (Set.Ici (0 : ℝ))).map Real.toNNReal)
+      = ∫ x in Set.Ici (0 : ℝ), (Set.Ioc a b).indicator F (Real.toNNReal x) ∂volume
+    rw [← integral_indicator measurableSet_Ioc,
+      integral_map measurable_real_toNNReal.aemeasurable
+        (hF.indicator measurableSet_Ioc).aestronglyMeasurable]
+  have h2 : (Set.Ici (0 : ℝ)).indicator (fun x => (Set.Ioc a b).indicator F (Real.toNNReal x))
+      = Set.indicator (Set.Ioc (a : ℝ) (b : ℝ)) (fun x => F (Real.toNNReal x)) := by
+    funext x
+    by_cases hmem : x ∈ Set.Ioc (a : ℝ) (b : ℝ)
+    · have hx0 : x ∈ Set.Ici (0 : ℝ) := a.coe_nonneg.trans hmem.1.le
+      have hxIoc : Real.toNNReal x ∈ Set.Ioc a b := by rw [← hset] at hmem; exact hmem.2
+      rw [Set.indicator_of_mem hx0, Set.indicator_of_mem hxIoc, Set.indicator_of_mem hmem]
+    · rw [Set.indicator_of_notMem hmem]
+      by_cases hx0 : x ∈ Set.Ici (0 : ℝ)
+      · have hxIoc : Real.toNNReal x ∉ Set.Ioc a b := by
+          intro hc; exact hmem (by rw [← hset]; exact ⟨hx0, hc⟩)
+        rw [Set.indicator_of_mem hx0, Set.indicator_of_notMem hxIoc]
+      · rw [Set.indicator_of_notMem hx0]
+  rw [h1, ← integral_indicator measurableSet_Ici, h2, integral_indicator measurableSet_Ioc,
+    ← intervalIntegral.integral_of_le (by exact_mod_cast hab : (a : ℝ) ≤ (b : ℝ))]
+  have hcomp := intervalIntegral.integral_comp_add_left (a := (0 : ℝ)) (b := (b : ℝ) - (a : ℝ))
+    (fun x => F (Real.toNNReal x)) (a : ℝ)
+  simp only [add_zero, add_sub_cancel] at hcomp
+  rw [← hcomp]
+
 /-! ### The generator -/
 
 /-- **The generator of the jump process**, `A f x = lam x * ∫ y, (f y - f x) ∂(mu x)`.  It is
@@ -5198,6 +5280,97 @@ theorem measurable_compensator {lam : E → ℝ} (hlam : Measurable lam) {h : E 
     exact_mod_cast lebesgueClock.interval_subset_Iic c ⊥ t hu
   rw [← hcongr]
   exact hsm.measurable
+
+/-- **The difference of two nested compensating windows is the compensating integral of what lies
+between them, turned into a genuine interval integral of the shifted process with the set
+integral moved to the outside.**  This assembles the second, third and fourth of the four
+bookkeeping steps `jumpProcess_isMPSolution` needs: `Clock.interval_union` splits the windows,
+`integral_lebesgueClock_Ioc` reindexes the remainder as a real interval integral, and
+`intervalIntegral_integral_swap` is Fubini between that interval integral and the set integral. -/
+theorem setIntegral_compensator_sub_eq_intervalIntegral {lam : E → ℝ} (hlam : Measurable lam)
+    {i j : ℝ≥0} (hij : i ≤ j) {g : E → ℝ} (hg : Measurable g) {D : ℝ} (hD : ∀ x, |g x| ≤ D)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    {S : Set ((ℕ → E) × (ℕ → ℝ))} (hSm : MeasurableSet S) :
+    (∫ ω in S, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j,
+          g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) ∂(jumpMeasure mu nu))
+      - ∫ ω in S, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+          g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) ∂(jumpMeasure mu nu)
+    = ∫ r in (0 : ℝ)..((j : ℝ) - (i : ℝ)), ∫ ω in S, g (jumpProcess lam ((i : ℝ) + r) ω)
+        ∂(jumpMeasure mu nu) := by
+  set μ0 := jumpMeasure mu nu with hμ0def
+  have hWm : Measurable fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) => jumpProcess lam (p.1 : ℝ) p.2 :=
+    (measurable_jumpProcess hlam).comp
+      ((measurable_coe_nnreal_real.comp measurable_fst).prodMk measurable_snd)
+  have hgXu : ∀ ω, Measurable fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω) := fun ω =>
+    hg.comp (hWm.comp (measurable_id.prodMk measurable_const))
+  have hmeas_win : ∀ t : ℝ≥0, Measurable fun ω =>
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q := fun t =>
+    Measurable.mono (measurable_compensator hlam hg Clock.Conv.optional t)
+      ((jumpFiltration lam hlam).le' t) le_rfl
+  have houterbound : ∀ (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)),
+      |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ D * (t : ℝ) := by
+    intro t ω
+    rw [lebesgueClock_interval_optional_eq]
+    have hlt : lebesgueClock.q (Set.Ioc (⊥ : ℝ≥0) t) < ⊤ := by
+      rw [lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
+    have hle := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q)
+      (s := Set.Ioc (⊥ : ℝ≥0) t) (f := fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω)) (C := D) hlt
+      (fun u _ => by simpa using hD (jumpProcess lam (u : ℝ) ω))
+    rwa [Real.norm_eq_abs, measureReal_def, lebesgueClock_apply_Ioc,
+      show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
+      ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
+  have hInt_i : IntegrableOn (fun ω => ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+      g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) S μ0 :=
+    integrableOn_of_bounded μ0 (measure_ne_top μ0 S) (hmeas_win i) (houterbound i)
+  have hInt_j : IntegrableOn (fun ω => ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j,
+      g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) S μ0 :=
+    integrableOn_of_bounded μ0 (measure_ne_top μ0 S) (hmeas_win j) (houterbound j)
+  rw [← integral_sub hInt_j hInt_i]
+  have habij : (0 : ℝ) ≤ (j : ℝ) - (i : ℝ) := by
+    have := (NNReal.coe_le_coe).2 hij; linarith
+  have hpt : ∀ ω, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+      - (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+      = ∫ r in (0 : ℝ)..((j : ℝ) - (i : ℝ)), g (jumpProcess lam ((i : ℝ) + r) ω) := by
+    intro ω
+    obtain ⟨hunion, hdisj⟩ := lebesgueClock.interval_union Clock.Conv.optional
+      (bot_le : (⊥ : ℝ≥0) ≤ i) hij
+    have hIa : IntegrableOn (fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω))
+        (lebesgueClock.interval Clock.Conv.optional ⊥ i) lebesgueClock.q :=
+      integrableOn_of_bounded lebesgueClock.q
+        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional ⊥ i) (hgXu ω) (fun u => hD _)
+    have hIb : IntegrableOn (fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω))
+        (lebesgueClock.interval Clock.Conv.optional i j) lebesgueClock.q :=
+      integrableOn_of_bounded lebesgueClock.q
+        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional i j) (hgXu ω) (fun u => hD _)
+    rw [hunion,
+      setIntegral_union hdisj (lebesgueClock.measurableSet_interval Clock.Conv.optional i j)
+        hIa hIb]
+    rw [show (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+          + (∫ u in lebesgueClock.interval Clock.Conv.optional i j,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+        - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q
+        = ∫ u in lebesgueClock.interval Clock.Conv.optional i j,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q from by ring,
+      lebesgueClock_interval_optional_eq, integral_lebesgueClock_Ioc hij (hgXu ω)]
+    refine intervalIntegral.integral_congr fun r hr => ?_
+    rw [Set.uIcc_of_le habij] at hr
+    rw [Real.coe_toNNReal ((i : ℝ) + r) (by linarith [hr.1, NNReal.coe_nonneg i])]
+  simp_rw [hpt]
+  haveI : IsFiniteMeasure (volume.restrict (Set.uIoc (0 : ℝ) ((j : ℝ) - (i : ℝ)))) := by
+    rw [Set.uIoc_of_le habij]; infer_instance
+  have hIntSwap : Integrable (Function.uncurry fun (r : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) =>
+      g (jumpProcess lam ((i : ℝ) + r) ω))
+      ((volume.restrict (Set.uIoc (0 : ℝ) ((j : ℝ) - (i : ℝ)))).prod (μ0.restrict S)) := by
+    refine integrable_of_abs_le ?_ (fun p => hD _)
+    exact hg.comp ((measurable_jumpProcess hlam).comp
+      ((measurable_const.add measurable_fst).prodMk measurable_snd))
+  exact (intervalIntegral_integral_swap hIntSwap).symm
 
 /-- **The test processes of the jump martingale problem are adapted to the natural filtration of
 the jump process.**  This is the first of the two conjuncts of `MeasureTheory.Martingale`, and it

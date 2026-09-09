@@ -565,13 +565,43 @@ danach.*
    wurde, findet sein Muster nicht. Das Mittel ist, die Meßbarkeit mit
    **angegebenem Erwartungstyp** zu binden.
 
-   **Was jetzt noch fehlt, ist `jumpProcess_isMPSolution` selbst, und daran ist
+   ~~**Was jetzt noch fehlt, ist `jumpProcess_isMPSolution` selbst, und daran ist
    nichts Wahrscheinlichkeitstheoretisches mehr offen** — nur noch die
    Buchführung zwischen der Gestalt von `mpFamily` und der des neuen Satzes:
    `isPastFunctional_indicator` für den Indikator, `Clock.interval_union` für die
    Differenz der beiden Kompensatoren, Fubini in `(u, ω)`, und der Wechsel des
-   Index von `ℝ≥0` nach `ℝ` durch `lebesgueClock.q`. Die vier Schritte stehen
-   einzeln ausgeschrieben am Ende des Laufberichts.
+   Index von `ℝ≥0` nach `ℝ` durch `lebesgueClock.q`.~~ *(die drei letzten dieser
+   vier Schritte sind erledigt, 2026-09-10, zweiter Lauf des Tages, in einem
+   Satz.)*
+
+   **Zwischenstand 2026-09-10, zweiter Lauf des Tages.** Fünf neue
+   Deklarationen, `lebesgueClock_interval_optional_eq`,
+   `lebesgueClock_preimage_Ioc`, `lebesgueClock_apply_Ioc`,
+   `integral_lebesgueClock_Ioc` und
+   `setIntegral_compensator_sub_eq_intervalIntegral`, alle durch `lake env lean`
+   gegen v4.33.1 **ohne einen Fehler** und alle mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` ist
+   unverändert zehn. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10, zweiter
+   Lauf des Tages". Der letzte Satz zieht `Clock.interval_union`, die
+   Reindizierung von `ℝ≥0` nach `ℝ` und `intervalIntegral_integral_swap` zu
+   einer Identität zusammen: die Differenz zweier geschachtelter
+   Kompensatorfenster, über eine Menge integriert, ist das Intervallintegral
+   des Mengenintegrals des verschobenen Prozesses. Zwei Befunde für den
+   nächsten Lauf: `rw [show lebesgueClock.q = … from rfl]` bricht an der
+   *nächsten* Umformung, weil `Clock`s eigenes `measurableSpace`-Feld
+   (`:= inferInstance`) für `rw` nicht bis zur Instanz `NNReal.measurableSpace`
+   reduziert — `show` statt `rw […from rfl]` behebt es; und ein
+   `fun u => g (jumpProcess lam (u:ℝ) ω)` ohne explizite Bindung `u : ℝ≥0`
+   errät gelegentlich `u : ℝ`, weil benannte Argumente nicht notwendig in
+   Schreibreihenfolge elaboriert werden.
+
+   **Was jetzt noch fehlt, ist der Zusammenbau von `jumpProcess_isMPSolution`
+   selbst, und daran ist nichts Wahrscheinlichkeitstheoretisches mehr offen** —
+   vier benannte Bindeglieder stehen am Ende des Laufberichts: der Übergang zu
+   `S' := NonExplosive lam ∩ S` für `isPastFunctional_indicator`, die
+   Integrierbarkeit von `Y i`/`Y j` selbst, `Nonempty E` aus
+   `[IsProbabilityMeasure nu]` für `hL0 : 0 < L`, und der Aufruf von
+   `ae_eq_condExp_of_forall_setIntegral_eq`.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 

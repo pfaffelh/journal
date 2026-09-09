@@ -16098,3 +16098,92 @@ Dazu kommt die Integrierbarkeit von `Y j`, die
 `ae_eq_condExp_of_forall_setIntegral_eq` als eigene Voraussetzung führt; sie ist
 `integrable_of_abs_le` mit der Schranke `C + 2 * L * C * j` aus `abs_jumpApply_le`.
 Wer den Weg ändern will, sage zuerst, an welchem dieser Schritte er bricht.
+
+### 2026-09-10, zweiter Lauf des Tages — die Punkte 2 bis 4 der Buchführung stehen, in einem Satz
+
+Fünf neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, im
+Abschnitt `JumpFiltration`: `lebesgueClock_interval_optional_eq`,
+`lebesgueClock_preimage_Ioc`, `lebesgueClock_apply_Ioc`,
+`integral_lebesgueClock_Ioc` und `setIntegral_compensator_sub_eq_intervalIntegral`.
+Die ganze Datei geht durch `lake env lean` gegen v4.33.1 **ohne einen Fehler**
+(unverändert zehn `sorry`, keine neuen), und alle fünf hängen mit
+`#print axioms` nur an `propext`, `Classical.choice`, `Quot.sound`.
+
+**Was dasteht.** Die letzten drei der vier im ersten Lauf des Tages benannten
+Schritte, in einem einzigen Satz zusammengefaßt:
+```
+theorem setIntegral_compensator_sub_eq_intervalIntegral {lam} (hlam) {i j : ℝ≥0} (hij : i ≤ j)
+    {g : E → ℝ} (hg) {D} (hD : ∀ x, |g x| ≤ D) (mu) [IsMarkovKernel mu] (nu) [IsProbabilityMeasure nu]
+    {S} (hSm) :
+    (∫ ω in S, (∫ u in lebesgueClock.interval optional ⊥ j, g (jumpProcess lam u ω) ∂lebesgueClock.q) ∂μ)
+      - ∫ ω in S, (∫ u in lebesgueClock.interval optional ⊥ i, g (jumpProcess lam u ω) ∂lebesgueClock.q) ∂μ
+    = ∫ r in (0:ℝ)..(j - i), ∫ ω in S, g (jumpProcess lam (i + r) ω) ∂μ
+```
+mit `μ := jumpMeasure mu nu`. Das ist genau die Buchführung, die
+`jumpProcess_isMPSolution` zwischen `mpFamily`s Kompensator (ein Integral über
+`ℝ≥0`, mit zwei Fensterrändern `i ≤ j`) und der Gestalt von
+`setIntegral_jumpProcess_sub_eq_intervalIntegral` (ein reelles Intervallintegral
+über die Verschiebung des Prozesses um `i`) noch schuldete.
+
+**Der Beweis in drei Schritten, wie angesagt.** Erstens `Clock.interval_union`
+zerlegt `interval ⊥ j` in `interval ⊥ i ∪ interval i j`, disjunkt, und
+`setIntegral_union` trägt die Differenz auf das mittlere Stück zusammen — hier
+genügt `ring`, weil beide Vorkommen von `∫ interval ⊥ i, …` nach dem `rw`
+syntaktisch identisch sind. Zweitens macht `integral_lebesgueClock_Ioc` daraus
+ein reelles Intervallintegral: die drei vorbereitenden Sätze
+`lebesgueClock_interval_optional_eq` (`interval optional a b = Set.Ioc a b`),
+`lebesgueClock_preimage_Ioc` (`toNNReal⁻¹' Ioc a b ∩ Ici 0 = Ioc (a:ℝ) (b:ℝ)`)
+und `lebesgueClock_apply_Ioc` (`lebesgueClock.q (Ioc a b) = ENNReal.ofReal (b-a)`)
+tragen das Gewicht; letzterer ist die **exakte** Masse, nicht nur eine Schranke
+wie `measure_Iic_ne_top`, und wird für die Integrierbarkeitsschranken *und* für
+den Indexwechsel selbst gebraucht. Drittens `intervalIntegral_integral_swap`
+vertauscht das Intervallintegral mit dem Mengenintegral über `S`, gegen das
+endliche Produktmaß `(volume.restrict (uIoc 0 (j-i))).prod (μ.restrict S)`.
+
+**Zwei Befunde, die den nächsten Lauf betreffen.** (a) `lebesgueClock.q` als
+Feld eines `Clock`-Werts trägt sein eigenes `measurableSpace`-Feld
+(`:= inferInstance`), und ein `rw [show lebesgueClock.q = … from rfl]` schlägt
+danach an der **nächsten** Umformung fehl, weil der frisch eingesetzte Term die
+Instanz `NNReal.measurableSpace` neu sucht statt `lebesgueClock.measurableSpace`
+zu tragen — beide sind gleich, aber nicht bis zur von `rw` verwendeten
+Transparenz reduzierbar. Das Mittel ist `show … ` statt `rw [show … from rfl]`
+an der Stelle, an der `lebesgueClock.q` durch seine Definition ersetzt wird:
+`show` prüft Definitionsgleichheit mit voller Transparenz, `rw`s Unifikator
+nicht. (b) Ein `fun u => g (jumpProcess lam (u:ℝ) ω)` ohne explizite Bindung
+`u : ℝ≥0` läßt Lean bisweilen `u : ℝ` erraten (die Aufwärtscoercion `(u:ℝ)`
+wird dann zur Identität), wenn der Typ von `u` nicht aus einem anderen
+benannten Argument vor der Lambda-Elaboration feststeht — benannte Argumente
+werden nicht notwendig in Schreibreihenfolge elaboriert. Das Mittel ist die
+explizite Bindung `fun u : ℝ≥0 => …` an jeder so verwendeten Stelle.
+
+**Was jetzt noch fehlt, ist der Zusammenbau von `jumpProcess_isMPSolution`
+selbst, und daran ist nichts Wahrscheinlichkeitstheoretisches mehr offen** — die
+Schritte, die dieser und der vorige Lauf gebaut haben, tragen zusammen genau
+die Erwartungsidentität `∫_S h(X(s+t)) - ∫_S h(X s) = ∫_0^t ∫_S (Ah)(X(s+r))`, die
+`setIntegral_jumpProcess_sub_eq_intervalIntegral` schon für `p.1` liefert und die
+jetzige Deklaration für den Kompensatorterm von `p.2 = jumpApply lam mu p.1`
+nachvollzieht — beide Seiten der Differenz `∫_S Y j - ∫_S Y i` treffen auf
+dasselbe `∫_0^{j-i} ∫_S jumpApply(p.1)(X(i+r)) dr`. Was bleibt, ist reine
+Bindeglied-Arbeit, in der Reihenfolge des vorigen Laufberichts:
+
+1. Der Indikator einer `𝓕 i`-meßbaren Menge `S` ist nach `isPastFunctional_indicator`
+   ein Funktional der Vergangenheit, aber erst nach Schnitt mit `NonExplosive lam`;
+   `setIntegral_jumpProcess_sub_eq_intervalIntegral` ist auf `S' := NonExplosive lam ∩ S`
+   anzuwenden und das Ergebnis über `indicator_nonExplosive_ae_eq`
+   (bzw. `ae_eq_set`) auf `S` zurückzuholen.
+2. Die Integrierbarkeit von `Y i` und `Y j` selbst (für
+   `ae_eq_condExp_of_forall_setIntegral_eq`s `hf`): `|Y t ω| ≤ C + 2LC·t` aus
+   `hC` und der jetzigen `houterbound`-Rechnung (hier nur lokal gebaut, dort
+   als eigener Satz zu benennen).
+3. `Nonempty E` aus `[IsProbabilityMeasure nu]` (sonst `nu univ = 1` und
+   `nu univ = 0` im Widerspruch), um `hL0 : 0 < L` aus `hlam0`/`hL` zu gewinnen —
+   `jumpProcess_isMPSolution`s eigene Voraussetzungen tragen kein `0 < L` direkt.
+4. Der Aufruf von `ae_eq_condExp_of_forall_setIntegral_eq` selbst, mit
+   `m := jumpFiltration lam hlam i`, `f := Y j`, `g := Y i`; `SigmaFinite
+   (μ.trim _)` kommt aus `isFiniteMeasure_trim` + `IsFiniteMeasure.toSigmaFinite`
+   automatisch, `hgm` aus `stronglyAdapted_mpFamily_jumpProcess`.
+
+Vorschlag für den nächsten Lauf: genau diese vier Punkte, in dieser Reihenfolge,
+und damit `jumpProcess_isMPSolution` fertig — der eigentliche Abschluß von
+Meilenstein 4 und der gesamten `SkorokhodSpace`/`WeakConvergence`/
+`MartingaleProblems`-Aufgabe vom 2026-09-08.
