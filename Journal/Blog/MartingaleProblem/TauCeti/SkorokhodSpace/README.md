@@ -990,9 +990,18 @@ integral metric: `SkorokhodSpace.instCompleteSpace`,
 were withdrawn earlier the same day and the reason was the summed metric, for
 which the first is false; the refutation stays and is stated for
 `SkorokhodSpace.totalTopology`, which names that metric and not the instance.
-The first of the three is **proved** since 2026-09-08 and the third follows from
-it by `inferInstance` once the second is; the second is what the milestone still
-owes.
+All three are **proved** since 2026-09-09: the first on 2026-09-08, the second
+on 2026-09-09, and the third by `inferInstance` from the two.
+
+The second and third carry a hypothesis on the index,
+`SkorokhodSpace.HasCountableCore ι`. That is not a convenience:
+`SkorokhodSpace.not_separableSpace_of_rigid`, proved 2026-09-09, shows that
+`D ι E` is not separable for every index this file admits, and the witness is
+the middle thirds Cantor set. The milestone therefore owes the class its
+instances as well, and two of the three are proved —
+`Real.instHasCountableCore` and `SkorokhodSpace.hasCountableCore_of_countable`,
+both 2026-09-09. What is left of the milestone is the third instance,
+`Set.Icc (0 : ℝ) 1`, and nothing rests on it.
 
 * `CompleteSpace (D ι E)`, **proved 2026-09-08**: for a Cauchy sequence extract a
   subsequence whose consecutive distances are summable, compose the time changes,
@@ -1142,35 +1151,53 @@ owes.
     at `b`, and the `J₁` limit of a sequence need not. The coherence
     `restrictExhaustion_restrictExhaustion` is proved (2026-09-08) and stays; what
     it does not do is produce a limit.
-* `SeparableSpace (D ι E)`: the piecewise constant paths taking finitely many
-  values from a countable dense subset of `E` on the intervals of a rational
-  subdivision of `B m` are dense. The proof runs
-  `Metric.secondCountable_of_almost_dense_set` — a countable `ε`-net for every
-  `ε` (`Mathlib/Topology/MetricSpace/Pseudo/Basic.lean:247`), then the instance
-  `TopologicalSpace.SecondCountableTopology.to_separableSpace`
-  (`Mathlib/Topology/Bases.lean:896`) — and it splits into two
-  halves of very different weight. **The light half is proved** (2026-09-08):
-  `SkorokhodSpace.exists_finite_range_distWith_le` gives, for every `f`, every
-  `ε > 0` and every radius `M`, a `g : D ι E` with finite range and
-  `distWith t₀ u 1 f g ≤ ε` for all `u ≤ M` — the approximation of a càdlàg path
-  by a step path **at its own jump times**, uniform on the window, for the
-  identity time change. It is `IsCadlag.exists_subdivision` of Milestone 2 read
-  through `stepRetract`, the retraction of the index onto the range of a finite
-  tuple. The heavy half is moving those jump times onto the countable set, and
-  it is a statement about the index and not about the paths: it asks for a time
-  change of small norm carrying finitely many prescribed points onto finitely
-  many nearby ones. Since 2026-09-08 the place to make it is named —
-  `TimeChange.exists_of_lengthCoord` of Milestone 3 — and so is the condition it
-  has to meet: the piecewise linear `φ` that does the moving must carry the
-  range of `lengthCoord t₀` onto itself. On `ι = ℝ` every piecewise linear `φ`
-  does; on `ι = h • ℤ` only the identity does, and there the countable dense set
-  is the index itself and the jump times need no moving. **The milestone
-  therefore owes the interpolation lemma on the range of the coordinate**, not a
-  construction on `ℝ`.
-* `SkorokhodSpace.exists_countable_timeChangeInvariant`: a countable `C ⊆ ι`
-  that is dense **and** contains every point that no time change moves. This is
-  the set the jump times of the countable family are drawn from, and it is not
-  an arbitrary countable dense subset of `ι`, which is the finding of
+* `SkorokhodSpace.not_separableSpace_of_rigid`, **proved 2026-09-09**, and it is
+  what fixes the shape of everything below it: if `ι` is uncountable and the
+  only time change fixing the base point of norm below some `c > 0` is the
+  identity, then `D ι E` is **not separable** for any `E` with two points. The
+  mechanism is `SkorokhodSpace.stepAt x a b`, the path taking `a` from `x` on
+  and `b` strictly below, càdlàg by `IsCadlag.of_eventually_const`; two of them
+  differ by `dist a b` at `min x y` for the identity time change
+  (`SkorokhodSpace.dist_le_distWith_stepAt`), hence by
+  `exp (-dist t₀ (min x y)) * min 1 (dist a b)` in `intWith`
+  (`SkorokhodSpace.le_intWith_stepAt`) and, `hrigid` disposing of the other time
+  changes, in the metric (`SkorokhodSpace.le_intDist_stepAt`). An uncountable
+  index has an uncountable closed ball, and an uncountable uniformly separated
+  family admits no countable dense set.
+
+  The witness for the hypotheses is the **middle thirds Cantor set**: closed in
+  `ℝ`, hence carrying `LinearOrder`, `MetricSpace`, `OrderTopology`,
+  `AdditiveDist` by `instAdditiveDistSubtype` and `ProperSpace` by compactness,
+  and uncountable. Its gaps have the lengths `3 ^ (-n)`, an order isomorphism
+  carries gaps to gaps, and a bi-Lipschitz one with both constants below `3`
+  cannot change a gap length, the ratio of two distinct ones being at least `3`;
+  so it fixes the unique gap of length `1/3`, by induction along the order every
+  gap, hence every gap endpoint, hence — the endpoints being dense —
+  everything. Every non-identity time change has norm at least `log 3`. **That
+  computation is on paper and not in Lean**, which is why the theorem carries
+  `hrigid` as a hypothesis; building the Cantor set with its gap structure is
+  the one thing that would make the refutation unconditional, and it is not
+  needed for anything else.
+* `SkorokhodSpace.HasCountableCore ι`: the class the previous item forces. It
+  asks for a countable `C ⊆ ι` together with, for every finite strictly monotone
+  tuple `t : Fin (n+1) → ι` and every `δ > 0`, a tuple `d` in `C` and a time
+  change `l` fixing the base point with `‖l‖ ≤ δ`, `l (d i) = t i` **and
+  `dist (d i) (t i) ≤ δ`**. It is the heavy half of separability isolated as a
+  statement **about the index and not about the paths**, and it is a hypothesis
+  and not a theorem.
+
+  The displacement clause is the third and it was added on 2026-09-09, for the
+  reason recorded at the separability below: it is the displacement and not the
+  norm that bounds the measure of the radii whose window edge separates a node
+  from its image, and at those radii the metric compares the two paths with no
+  time change interposed. It is **not implied** by the norm clause: on an index
+  with gaps the identity has norm `0` and a time change of norm `0` can carry a
+  point across a whole gap, so a small norm says nothing about how far a point
+  travels. Both proved instances satisfy it —
+  `SkorokhodSpace.exists_rat_nodes_perturbation` takes its rationals within a
+  prescribed `ζ` of the `t i`, and on a countable index `d` is `t` itself.
+
+  **A countable dense subset of `ι` is not enough**, which is the finding of
   2026-09-08. On `ι = Set.Icc (0 : ℝ) 1` with base point `0` every time change
   is an order isomorphism of a linear order with a greatest element and
   therefore fixes `1`; the càdlàg path `f = Set.indicator {1} 1` then keeps its
@@ -1179,19 +1206,166 @@ owes.
   has to answer both `f (l 1) = 1` and `f (l d) = 0`, so
   `distWith t₀ u l f g ≥ max |c - 1| |c| ≥ 1/2` for every `l` and every `u ≥ 1`,
   whence `intDist t₀ f g ≥ exp (-1) / 2`. A countable dense subset of
-  `Set.Icc (0 : ℝ) 1` need not contain `1`. The construction is the mirror of
-  `rightIsolated` and `exists_countable_ciSup_eq` of Milestone 2, which close the
-  same gap for suprema: a dense set plus a countable exceptional set, the latter
-  countable because `exists_orderIso_isometry_real` of Milestone 1 exhibits the
-  index as a closed subset of `ℝ` and the immovable points as the boundaries of
-  its connected components.
+  `Set.Icc (0 : ℝ) 1` need not contain `1`; the `C` of the class does contain
+  it, the one point tuple `t = ![1]` having only the identity to carry anything
+  onto it.
+* `Real.instHasCountableCore`, and the same for
+  `AddSubgroup.zmultiples (1 : ℝ)` and for `Set.Icc (0 : ℝ) 1`: the three
+  running instances of the file discharge the class. **`ℝ` is proved**
+  (2026-09-09). The construction is `TimeChange.exists_of_lengthCoord` of
+  Milestone 3 applied to `φ x = x + ψ x`, where `ψ` is a **sum of tents**, one
+  at each rational node `d i`, of height the displacement `t i - d i` and of a
+  radius `ρ` small enough that the tents neither overlap nor reach the base
+  point; `C` is `ℚ`. Writing `φ` as a perturbation of the identity rather than
+  as a piecewise linear interpolant is what keeps the estimate uniform in the
+  number of nodes: the crude bound `∑ᵢ |t i - d i| / ρ` on the Lipschitz
+  constant of `ψ`, which ignores that the tents have disjoint supports, already
+  suffices, because the displacements may be shrunk after `ρ` is fixed. The
+  Lipschitz constants of `φ` are then `1 + K` and `(1 - K)⁻¹`, and
+  `K = 1 - exp (-δ)` makes both at most `exp δ`.
+
+  Two points of it are not decoration, and both concern the base point. The
+  separation `ε` is taken over `{0} ∪ range t` and not over `range t`
+  (`exists_pos_forall_le_abs_sub` on `Option (Fin (n+1))`), because a node may
+  sit arbitrarily close to `0` without being `0`; and the node of a `t i` which
+  *is* `0` is `0` itself, so that the tent there has height `0`. Without the
+  first the tent at that node would cover the base point and the time change
+  would move it. On
+  `AddSubgroup.zmultiples (1 : ℝ)` the index is countable, `C` is all of it and
+  `l` is the identity; that case is
+  `SkorokhodSpace.hasCountableCore_of_countable`, **proved 2026-09-09**, and it
+  is stated for an arbitrary countable index because nothing about the integers
+  enters it. On `Set.Icc (0 : ℝ) 1` it is the construction on `ℝ` with
+  `C = (ℚ ∩ [0,1]) ∪ {0, 1}`, the two endpoints being the points no time change
+  moves. In general the `C` that works is a countable dense set together with
+  the boundaries of the connected components of the index read as a closed
+  subset of `ℝ` through `exists_orderIso_isometry_real` of Milestone 1 — and the
+  Cantor set is precisely the case where that boundary is uncountable, which is
+  the refutation above seen from the other side.
+* `SeparableSpace (D ι E)` under `[SkorokhodSpace.HasCountableCore ι]`, **proved
+  2026-09-09**: the step paths with jump times in `C` and values in a countable
+  dense subset of `E` are dense. Its analytic half is (2026-09-08):
+  `SkorokhodSpace.exists_finite_range_distWith_le` gives, for every `f`, every
+  `ε > 0` and every radius `M`, a `g : D ι E` with finite range and
+  `distWith t₀ u 1 f g ≤ ε` for all `u ≤ M` — the approximation of a càdlàg path
+  by a step path **at its own jump times**, uniform on the window, for the
+  identity time change. It is `IsCadlag.exists_subdivision` of Milestone 2 read
+  through `stepRetract`, the retraction of the index onto the range of a finite
+  tuple. Its passage to the metric is proved too (2026-09-09):
+  `SkorokhodSpace.exists_finite_range_intDist_le` gives `intDist t₀ f g ≤
+  ε + exp (-M)`, over `SkorokhodSpace.intWith_le_of_forall_distWith_le`, which
+  splits `Set.Ioi 0` at `M` and pays the far radii with the mass `exp (-M)` and
+  the truncation at `1`. The move of the jump times is proved too (2026-09-09):
+  `stepRetract_orderIso` says that `stepRetract t (l x) = l (stepRetract d x)`
+  whenever `l (d i) = t i`, so the approximant read at the subdivision `t`
+  becomes, after the time change, the approximant read at the subdivision `d`,
+  whose points lie in `C`. It is an equality of paths and not an estimate, so it
+  costs nothing beyond `‖l‖`; the values are moved into a countable dense subset
+  of `E` for free, no time change being involved in that.
+
+  The countability of the family is proved too (2026-09-09).
+  `SkorokhodSpace.stepPath d v : D ι E` is the step path as a **term**, for
+  arbitrary nodes `d : Fin (n+1) → ι` and values `v : Fin (n+1) → E`;
+  `SkorokhodSpace.stepPathFamily C Q` is the set of those with `d` in `C` and `v`
+  in `Q`, and `SkorokhodSpace.countable_stepPathFamily` says it is countable.
+  The signature question is settled in favour of a second declaration:
+  `stepIdx t x` is the *index* the retraction reads and `stepRetract t = t ∘
+  stepIdx t` is now its definition, so the five theorems about `stepRetract` and
+  its consumer stay as they are, while the values hang on `stepIdx`. Three of
+  those five got **weaker hypotheses** out of the move —
+  `eventually_stepRetract_eq_nhdsGT`, `exists_eventually_stepRetract_eq_nhdsLT`
+  and `isCadlag_comp_stepRetract` no longer ask `StrictMono t`, since the
+  retraction reads a maximum out of a `Finset` and that is insensitive to the
+  enumeration — and that is what makes `stepPath` a **total** function, which the
+  counting needs: the family is the range of a map out of
+  `Σ n, (Fin (n+1) → C) × (Fin (n+1) → Q)` with no side condition on the data.
+  The two moves are `SkorokhodSpace.distWith_one_stepPath_le` for the values and
+  `SkorokhodSpace.stepPath_apply_orderIso` for the nodes.
+
+  **What is left is the window edge, and it is analysis and not bookkeeping**
+  (finding of 2026-09-09, third run). The two moves control
+  `distWith t₀ u l f g` in the interior of the window at every radius and do not
+  control it at the edge. For `x` beyond `B = exhaustionMax t₀ u` both readings of
+  `distWith` clamp to `B`, so the term is `dist (f B) (g B)` with **no time change
+  interposed** — that is `SkorokhodSpace.dist_exhaustionMax_le_distOn`, the fact
+  that killed the summed metric — while `g B` is the value of the cell of `B`
+  counted with the *moved* nodes, `stepIdx t (l B)` and not `stepIdx t B`. Those
+  differ exactly when a node separates `B` from `l B`, and then the term is the
+  jump of `f` at that node, which no `ε` makes small. There is no way round it by
+  choosing the direction of the displacement: moving the nodes down makes `l B`
+  fall below `B` and the same term reappears on the other side.
+
+  The repair is the displacement clause of `HasCountableCore` together with
+  `volume_radius_exhaustionMax_mem_Ico` (**proved 2026-09-09**), which bounds the
+  measure of the radii whose edge falls in `Set.Ico a b` by `dist a b`; the bad
+  radii for one node are those whose edge falls between `d i` and `t i`, so they
+  have measure at most `∑ᵢ dist (d i) (t i) ≤ (n+1) δ`, and the integrand of
+  `intWith` being bounded by `1` they cost no more than that.
+
+  The integral half of the repair is proved too (2026-09-09):
+  `SkorokhodSpace.intWith_le_of_ae_distWith_le` asks the windowed bound only *off*
+  a measurable set `B` of radii and pays `B`'s measure below `M`, so the estimate
+  reads `ε + β + exp (-M)`; the split of `Set.Ioc 0 M` is `Set.diff_union_inter`
+  and the bad piece is bounded by `1`, the integrand being `exp (-u) * min 1 _`.
+  `radius_exhaustionMax_mem_Ico_subset` is what supplies a *measurable* `B`: the
+  radius set itself is only visibly contained in
+  `Set.Icc (lengthCoord t₀ a) (lengthCoord t₀ b)`, `exhaustionMax` being monotone
+  and nothing more, so `B` is taken to be the finite union of those intervals over
+  the nodes and `δ` is chosen after the length `n` of the subdivision.
+
+  The case distinction on the supremum is **not** a fresh one:
+  `SkorokhodSpace.distWith_le_of_oscillation` already runs it, and what the
+  separability has to supply are its three hypotheses.
+  `SkorokhodSpace.distWith_stepPath_le` (**proved 2026-09-09**) supplies them and
+  is the whole estimate at one radius, `distWith t₀ u l f (stepPath d w) ≤ 6 ε`.
+  The uniform hypothesis costs `2 ε` — `stepIdx_orderIso` carries the values
+  across the time change unchanged, then `dist_comp_stepRetract_le` and the move
+  into `Q` cost `ε` each. The two oscillation hypotheses cost **nothing**: the
+  step path is *constant* between a window end and its preimage, which is
+  `SkorokhodSpace.stepIdx_eq_of_mem_uIcc` (2026-09-09), and the condition it asks
+  of the window end `A` is a condition on the index alone — that `A` avoid every
+  `Set.Ico (min (d i) (t i)) (max (d i) (t i))`, the interval spanned by a node
+  and its image. Its proof is the trichotomy of `A` against `l⁻¹ A` read through
+  the order isomorphism, and its combinatorial half is
+  `stepIdx_congr_of_forall_notMem_Ioc`: the cell index only sees the nodes in
+  `Set.Ioc` of the two points, half open on the same side `stepIdx` reads.
+
+  **The two window ends are not symmetric, and that is the last finding**
+  (2026-09-09, fourth run). `exhaustionMax t₀` is monotone and
+  `exhaustionMin t₀` is antitone, so `Set.Ico a b` excludes exactly the sticky
+  end of the first and includes the sticky end of the second: the mirror of
+  `volume_radius_exhaustionMax_mem_Ico` with `exhaustionMin` in place of
+  `exhaustionMax` is **false**, and on an index bounded below it fails by an
+  infinite margin — the lower edge sits at the least point for every radius past
+  its coordinate. `radius_exhaustionMin_mem_Ico_subset` and
+  `volume_radius_exhaustionMin_mem_Ico` (**proved 2026-09-09**) therefore carry
+  an extra hypothesis, and it is exactly what the application has: the edge is a
+  bad radius only when the time change *moves* it, and a time change that moves
+  the least point of the window puts a point of the index within `κ` below that
+  point — its image or its preimage, whichever falls low. That point is outside
+  the window, so the radius is at most `κ` past the coordinate of the edge, and
+  the sticky tail is cut at `κ`; the bound is `dist a b + κ` and not `dist a b`.
+  The other side of the same coin is the disjunction in
+  `SkorokhodSpace.distWith_stepPath_le`: at the lower edge it is enough that the
+  time change *fix* it, which is what an index with a gap below forces and what
+  makes the bound usable there at all.
+
+  So the budget of the assembly is: `6 ε ≤ r/4` fixes `ε` from `r`; `M` is fixed
+  from `r` by `exp (-M) < r/4`; the subdivision fixes `n`; and only then is `δ`
+  chosen, small enough that `δ < r/4` bounds `‖l‖` and
+  `(n+1) (2 δ + (exp δ - 1) 2M) < r/4` bounds the bad radii. The order is forced
+  — `n` depends on `ε` and `M`, and the bad set on `n` — and it is why the
+  displacement clause of the class quantifies over `δ` after the tuple.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a
   complete metric (`MetricSpace.toIsCompletelyMetrizableSpace`,
   `Mathlib/Topology/Metrizable/CompletelyMetrizable.lean:172`), so the
   declaration is `inferInstance` and carries no proof obligation of its own
-  (2026-09-08).
+  (2026-09-08). Since 2026-09-09 it depends on nothing but `propext`,
+  `Classical.choice` and `Quot.sound`, the separability under it being proved;
+  it is `fact:PSpolish` for the `J₁` topology and what `rem:EKrelcompact`
+  consumes.
 
   All three are stated for the metric of Milestone 4 as it stands there, the
   integral over the window radius. For the weighted sum over integer radii that
@@ -1236,16 +1410,87 @@ owes.
   with `p i, q i` rational. That `f = Set.indicator (Set.Ici (1/Real.sqrt 2)) 1`
   is approximated by them uses the time change and not the values: no member of
   the family agrees with `f` anywhere near the jump, and the approximation is in
-  `distOn`, at cost `|log (p / (1/Real.sqrt 2))|`.
+  `distOn`, at cost `|log (p / (1/Real.sqrt 2))|`. That the family works at all
+  is `HasCountableCore (Set.Icc (0:ℝ) 1)` with `C = (ℚ ∩ [0,1]) ∪ {0, 1}`; drop
+  `1` from `C` and `Set.indicator {1} 1` is `exp (-1) / 2` away from every
+  member of the family, which is the other half of this pair.
+* **Separability, refuted, and it is the instance that fixes the shape of the
+  statement.** `ι` the middle thirds Cantor set with base point `0`, `E = ℝ`,
+  and the family `SkorokhodSpace.stepAt x 1 0` for `x ∈ ι`. It is uncountable,
+  and any two of its members are at distance at least `min (log 3) (exp (-1))`:
+  a non-identity time change costs `log 3`, because it would have to change a
+  gap length and the ratio of two distinct gap lengths of the Cantor set is at
+  least `3`, and the identity leaves the two paths `1` apart at `min x y` for
+  every radius above `1`. So `D ι ℝ` is not separable, `HasCountableCore` fails,
+  and a `SeparableSpace (D ι E)` stated without it would be false. The
+  implication is `SkorokhodSpace.not_separableSpace_of_rigid` in Lean; the
+  arithmetic of the gap lengths that discharges its `hrigid` is on paper.
 
 ## Milestone 6: the Borel structure
 
+This is `thm:fdd`, and it is **closed since the fifth run of 2026-09-09.** It
+takes Milestone 5 for granted: `SkorokhodSpace.instPolishSpace` is proved under
+`HasCountableCore ι`, so `D ι E` is a standard Borel space and the second half
+of the embedding — a measurable injection between standard Borel spaces is a
+measurable embedding, `Measurable.measurableEmbedding` over Lusin--Souslin — is
+available. That second half is the cheap one, and its injectivity is
+`IsCadlag.eq_of_eqOn_dense` of Milestone 2.
+
+**The whole content is the first item, and the manuscript says so at
+`thm:fdd`:** `π_t` is *discontinuous* at every path with a jump at `t`, so the
+measurability of a coordinate is a theorem and not a remark, and the acceptance
+example below is the refutation of the route through continuity. The route
+avoids any linear structure on `E` — `E` is a bare metric space in this file and
+averaging over a window is not available — and it spends right continuity.
+
+**It is not, as this roadmap said until 2026-09-09, a pointwise limit of
+`d`-continuous functionals.** The functionals of the proof are the window
+suprema `⨆ s ∈ ball t ρ ∩ Ioi t, edist (f s) y`, and they are lower
+semicontinuous and *not* continuous: at the path that jumps at `t` the supremum
+over the punctured right neighbourhood is the value after the jump, and an
+approximating sequence whose jump sits just to the right of `t` has the value
+before it inside the window. Lower semicontinuity is all the approximation
+lemma gives — it moves a witness of the supremum to a nearby point, which is a
+one-sided statement — and it is all that is needed, because the limit is taken
+over a shrinking family and is therefore an infimum.
+
+* `SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt`: given `s` and `ε`
+  there is a `δ`, depending on neither path, such that `intDist t₀ f g < δ`
+  produces an order isomorphism `e` with `dist (e s) s < ε`,
+  `dist (e.symm s) s < ε` and `dist (f s) (g (e.symm s)) < ε`. Proved
+  (2026-09-09). This is what the integral metric gives in place of the
+  continuity it denies, and both halves of `measurable_eval` read it. The radius
+  at which the windowed supremum is small has to be **produced** and cannot be
+  chosen, because `distWith` is not monotone in it; that is the same
+  non-monotonicity for which Milestone 4 integrates.
+* `SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot`: at a point with nothing
+  immediately above it, evaluation *is* continuous. Proved (2026-09-09). Both
+  displacements above are below the isolation radius, so `e t ≤ t` and
+  `e.symm t ≤ t`, and the second with monotonicity gives `e.symm t = t`.
+* `SkorokhodSpace.lowerSemicontinuous_iSup_edist`: `f ↦ ⨆ s ∈ ball t ρ ∩ Ioi t,
+  edist (f s) y` is lower semicontinuous. Proved (2026-09-09). The supremum is
+  `ℝ≥0∞` valued, as `modulus` is, so that the empty window and an unbounded
+  family are both the supremum and not a junk value.
+* `SkorokhodSpace.iInf_iSup_edist_eq`: at a point that is not right isolated,
+  the infimum of those suprema over shrinking windows is `edist (f t) y`. Proved
+  (2026-09-09). Right continuity is spent here and in both directions.
 * `SkorokhodSpace.measurable_eval`: `f ↦ f t` is Borel measurable for every `t`.
-* `SkorokhodSpace.measurableEmbedding_piDense`: for countable dense `D ⊆ ι`, the
-  map `f ↦ (fun t : D ↦ f t)` into `D → E` is a measurable embedding.
+  Proved (2026-09-09), by the two cases above.
+* `SkorokhodSpace.measurableEmbedding_piDense`: for countable `D ⊆ ι` that is
+  dense **from the right** — `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot` — the map
+  `f ↦ (fun t : D ↦ f t)` into `D → E` is a measurable embedding. Proved
+  (2026-09-09). Plain density is **not** enough, and the second acceptance
+  example below is the refutation; it stood here from 2026-09-07 while the Lean
+  statement asked for `Dense D`, and it is the second time an acceptance example
+  that was never run against its own statement caught a false commitment.
+* `exists_countable_rightDense`: a countable right dense set exists. Proved
+  (2026-09-09), so the hypothesis above is not vacuous. The right isolated
+  points are countable — each carries a basic open set of which it is the
+  greatest element — and adjoining them to a countable dense set is enough.
 * `SkorokhodSpace.borel_eq_iSup_comap_eval`:
-  `borel (D ι E) = ⨆ t, MeasurableSpace.comap (eval t) (borel E)`, and the same
-  with `t` ranging over a countable dense set only.
+  `borel (D ι E) = ⨆ t, MeasurableSpace.comap (eval t) (borel E)`. Proved
+  (2026-09-09), one inclusion from `measurable_eval` and the other from the
+  embedding at a countable right dense set.
 * Consequences, each stated separately: a Borel probability measure on `D ι E`
   is determined by its finite dimensional distributions along a countable dense
   set; a map into `D ι E` is measurable if and only if all its coordinates along
@@ -1265,7 +1510,11 @@ owes.
   `measurableEmbedding_piDense` is false for that `D`. With `D` replaced by
   `(Set.Ico (0:ℝ) 1 ∩ ℚ) ∪ {1}` it holds. This is Milestone 2's witness read as
   a statement about the σ-algebra, and it is the acceptance test for the
-  hypothesis on `D`.
+  hypothesis on `D`. **It caught one:** from 2026-09-07 to 2026-09-09 the Lean
+  statement asked for `Dense D` and was false, with this example standing
+  underneath it unread. The hypothesis is now right density,
+  `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`, which `(Set.Ico 0 1 ∩ ℚ) ∪ {1}`
+  satisfies and `Set.Ico 0 1 ∩ ℚ` does not.
 * **The law of a Poisson process is fixed by rational times.** `ι = Set.Ici (0:ℝ)`,
   `E = ℝ`, `D = ℚ ∩ ι`. Two laws on `D ι ℝ` whose finite dimensional
   distributions along `D` are those of a Poisson process of rate `1` are equal,
@@ -1277,10 +1526,49 @@ owes.
 ## Milestone 7: the modulus and compactness
 
 * `SkorokhodSpace.IsSubdivision t₀ m δ (t : Fin (n+1) → ι)`: the subdivision
-  predicate, `StrictMono t` with `t 0 = (B m).min`, `t (Fin.last n) = (B m).max`
-  and `δ < dist (t i.castSucc) (t i.succ)` for every `i`. Written (2026-09-08).
-  It is a named predicate and not an existential inside the modulus, so that the
-  infimum below ranges over a `Prop` and needs no `BddBelow`.
+  predicate, `StrictMono t` with `t 0 ≤ (B m).min`, `(B m).max ≤ t (Fin.last n)`
+  and `δ < dist (t i.castSucc) (t i.succ)` for every `i`. Written (2026-09-08),
+  corrected (2026-09-09). It is a named predicate and not an existential inside
+  the modulus, so that the infimum below ranges over a `Prop` and needs no
+  `BddBelow`. The subdivision **covers** the window, its endpoints are not
+  pinned to the window's: Ethier–Kurtz's partition of `[0,T]` (their (3.6.2))
+  admits `0 = t₀ < ⋯ < t_{n-1} < T ≤ t_n`, an overshoot at the far end, and on
+  a two-sided index the mirror freedom at the near end is needed too.
+* `SkorokhodSpace.IsSubdivisionPinned` and `SkorokhodSpace.modulusPinned`: the
+  form the two carried until 2026-09-09, with `t 0 = (B m).min` and
+  `t (Fin.last n) = (B m).max`. They are kept because the refutation below is a
+  theorem and a theorem needs a subject.
+* `SkorokhodSpace.modulus_le_modulusPinned`: the correction only lowers the
+  modulus, so every upper bound proved of the pinned form survives. Proved
+  (2026-09-09).
+* `SkorokhodSpace.le_modulusPinned_of_dist_exhaustionMin_le`: **the defect of the
+  pinned form.** A pinned subdivision starts at `(B m).min` and its first gap
+  exceeds `δ`, so every point of the window within `δ` of that edge lies in the
+  first cell, whose oscillation is measured from the edge; the pinned modulus
+  therefore charges, for every `δ` and undiminished, the whole jump of `f`
+  between the window's left edge and any point that close to it. Proved
+  (2026-09-09). Nothing like it holds at the right edge, the cells being
+  `Set.Ico`; the two ends of the window are not symmetric, here as in
+  `volume_radius_exhaustionMin_mem_Ico`.
+* `SkorokhodSpace.not_tendsto_iSup_modulusPinned`: **`isCompact_closure_iff` with
+  the pinned modulus is false.** In `D(ℝ, ℝ)` the step paths
+  `stepAt (1/(n+2) - 1) 1 0` converge to `stepAt (-1) 1 0`, so
+  `A = insert (stepAt (-1) 1 0) (range …)` is compact and takes only the values
+  `0` and `1`; but the jump of the `n`-th path sits at distance `1/(n+2)` to the
+  right of the left edge `-1` of `B 1`, so its pinned modulus at `δ` is at least
+  `1` as soon as `1/(n+2) ≤ δ`, and the supremum over `A` is at least `1` for
+  every `δ > 0`. Proved (2026-09-09), and it is the reason the endpoints of
+  `IsSubdivision` are inequalities.
+* The witness is assembled from `TimeChange.scale hc` (the scaling `x ↦ c * x`
+  of `ℝ`, which fixes the base point and has `norm ≤ -Real.log c` for `c ≤ 1`),
+  `exhaustionMin_real`, `clamp_real`, `clamp_real_le_iff`,
+  `SkorokhodSpace.distWith_scale_stepAt_le_zero` (the scaling carries one step
+  path exactly onto the other at every radius outside `Set.Ioc (1-ε) 1`),
+  `SkorokhodSpace.intWith_scale_stepAt_le`, `SkorokhodSpace.intDist_stepAt_le`
+  (`≤ max (-Real.log (1-ε)) (2 ε)`) and
+  `SkorokhodSpace.tendsto_stepAt_shift`. All proved (2026-09-09). The bad radii
+  are an interval of length `ε` and the integral metric pays exactly their
+  measure — the same accounting as in `intWith_le_of_ae_distWith_le`.
 * `SkorokhodSpace.subdivisionOsc f t`, the oscillation of `f` over the half open
   cells `Set.Ico (t i.castSucc) (t i.succ)`, measured from the left endpoint of
   each cell. Written (2026-09-08). The cells are `Set.Ico` and not `Set.Icc`:
@@ -1315,16 +1603,119 @@ owes.
   the definition: with `Set.Icc` cells, or with the oscillation taken between
   the subdivision points rather than inside the cells, the empty subdivision
   would not be admissible and it would fail.
-* `SkorokhodSpace.isCompact_closure_iff`: `A ⊆ D ι E` has compact closure if and
-  only if for every `m` the set `{f t | f ∈ A, t ∈ B m}` has compact closure in
-  `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. Both directions. The window
-  is the one around `basePoint` and not around a free `t₀`: the left hand side
-  speaks of the topology of `D ι E`, which is `SkorokhodSpace.metricSpace
-  basePoint`, and a `t₀` free to differ from it would make the two sides speak
-  of two spaces.
+* `SkorokhodSpace.exists_radius_distWith_lt`: if `intWith t₀ l f g` is below
+  `exp (-(M+1)) * c` with `0 < c ≤ 1`, then *some* radius `u ∈ Set.Ioc M (M+1)`
+  has `distWith t₀ u l f g < c`. Proved (2026-09-09). It is the mean value of the
+  integral over a window of measure one, and the radius is **produced and not
+  named**, `distWith` being non-monotone in it — that non-monotonicity is why
+  Milestone 4 integrates over the radius rather than summing. Shared with
+  Milestone 6, where it stood inline inside
+  `exists_orderIso_dist_lt_of_intDist_lt` until it was extracted here.
+* `SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt`: the bridge from
+  the metric to a uniform estimate on a *named* window — below a threshold
+  depending only on `M` and `ε`, closeness in `intDist` yields a time change of
+  norm below `ε` and a radius above `M` at which the windowed supremum is below
+  `ε`. Proved (2026-09-09).
+* `SkorokhodSpace.edist_le_ofReal_distWith`: `distWith` read as a bound on one
+  pair of values, the two clamps of `dist_le_distWith` dropping as soon as the
+  point *and its image* lie in the window. Proved (2026-09-09).
+* `SkorokhodSpace.isSubdivision_comp`: **the image of a subdivision is a
+  subdivision.** A `δ`-sparse subdivision of `B u'`, pushed forward by a time
+  change of norm at most `γ` fixing the base point, is `exp (-γ) * δ`-sparse on
+  `B u` whenever `u + (exp γ - 1) * 2u ≤ u'`. Proved (2026-09-09). The
+  sparseness is `TimeChange.dist_le_exp_norm_mul` read on `l⁻¹`; the covering is
+  `TimeChange.dist_le_of_norm_le` applied to `l⁻¹` at the two ends of the small
+  window, giving two points of the large one, and then `isLeast_exhaustionMin`
+  and `isGreatest_exhaustionMax`. That argument carries the degenerate index
+  without naming it: an order isomorphism fixes a least element, so where the
+  index has no room the estimate is vacuous.
+* `SkorokhodSpace.subdivisionOsc_comp_le`: the oscillation survives the
+  transport up to `2 η`, where `η` bounds `edist (f (l x)) (g x)` on a window
+  holding the nodes — once for the point inside the cell, once for its left
+  endpoint. Proved (2026-09-09). The half open cells are what makes it exact:
+  `l` maps `Set.Ico (t i) (t (i+1))` *onto* `Set.Ico (l (t i)) (l (t (i+1)))`.
+* `SkorokhodSpace.modulus_le_of_edist_le`: the three put together —
+  `modulus t₀ u f δ' ≤ subdivisionOsc g t + 2 η`. Proved (2026-09-09). This is
+  the engine of the forward half: **one** subdivision of **one** nearby path
+  bounds the modulus of **every** path close to it.
+* `SkorokhodSpace.tendsto_iSup_modulus_of_isCompact`: **the forward half, for the
+  modulus.** Compact closure gives `sup_{f ∈ A} modulus basePoint m f δ → 0`.
+  Proved (2026-09-09). It is Arzelà–Ascoli's argument: total boundedness gives
+  finitely many centres, `IsCadlag.exists_subdivision` gives each of them a
+  subdivision of oscillation at most `ε'`, and `modulus_le_of_edist_le` carries
+  it to the whole ball. The *sparseness* surviving the transport is what makes
+  finitely many centres enough — one `δ` then serves all of `A`.
+* Four radii appear in that proof and they are nested for a reason: the modulus
+  is asked for on `B m`; the subdivision is taken on `B (m+1)`, which is the room
+  the time change needs to displace the window's two ends; the nodes live there,
+  so that is where the uniform estimate must hold; and the radius supplied by
+  `exists_radius_distWith_lt` is above `m + 2`, because the time change must map
+  `B (m+1)` *into* the window before `edist_le_ofReal_distWith` may drop its
+  clamps. The one quantity fitting all four is `γ` with
+  `(exp γ - 1) * (2 (m+1)) ≤ 1`.
+* `exists_mem_Ico_of_strictMono`: the cells of a subdivision cover its half open
+  span — every `x` with `t 0 ≤ x < t (Fin.last n)` lies in some
+  `Set.Ico (t i.castSucc) (t i.succ)`. Proved (2026-09-09), for a bare
+  `LinearOrder`, nothing else being used. The induction splits at the *last* node
+  and not the first: the cells being `Set.Ico`, `x` either lies below the last
+  node, and the shorter subdivision catches it, or it lies in the final cell;
+  splitting at the first node would leave the half open final cell nameless.
+* `IsCadlag.totallyBounded_image_Icc`: a càdlàg path has totally bounded image on
+  a compact window. Proved (2026-09-09). It is `IsCadlag.exists_subdivision` and
+  `exists_mem_Ico_of_strictMono`: off the nodes the path stays within `ε` of one
+  of the finitely many node values, and the right endpoint is itself a node. Total
+  boundedness and not relative compactness is the conclusion, because no
+  completeness of `E` is used.
+* `SkorokhodSpace.totallyBounded_values_of_isCompact`: the other conjunct of the
+  forward half, that `{f t | f ∈ A, t ∈ B m}` is totally bounded. Proved
+  (2026-09-09). It rests on the same total boundedness of `A` as the modulus
+  half, on the previous item for each of the finitely many centres, and on
+  `exists_timeChange_distWith_lt_of_intDist_lt` to carry a value of a path of the
+  ball to a value of its centre. The value is read at `y` and the centre's at
+  `l⁻¹ y`, which is why the centres' windows have radius `m + 1`.
+* `SkorokhodSpace.isCompact_closure_values_of_isCompact`: the same under
+  `CompleteSpace E`, with compact closure. Proved (2026-09-09). This is the one
+  place in the criterion where the completeness of the *given* metric is used;
+  `PolishSpace E` grants only that the topology comes from some complete metric,
+  and that does not suffice to turn total boundedness into compact closure.
+* `SkorokhodSpace.not_isCompact_closure_of_rigid`: **the converse of the criterion
+  is false for a general index.** Proved (2026-09-09). If the only time change of
+  norm below `c > 0` is the identity and an uncountable set `S` of jump times
+  keeps its distance `η` from every window end, then the family `stepAt x a b`,
+  `x ∈ S`, satisfies *both* conditions — two values, and the subdivision made of
+  the two window ends with `x` between them has no oscillation at all — and is
+  `r`-separated by `le_intDist_stepAt`, hence not totally bounded. The witness is
+  the middle thirds Cantor set of `not_separableSpace_of_rigid`, with `S` its part
+  in `Set.Icc (1/4 : ℝ) (3/4)`, `η = 1/4`, `N = 1` and `c = Real.log 3`; as there,
+  the rigidity is a computation on paper and stands as a hypothesis.
+* `SkorokhodSpace.isCompact_closure_iff`, **over the index `ℝ`**: `A ⊆ D ℝ E` has
+  compact closure if and only if for every `m` the set `{f t | f ∈ A, t ∈ B m}`
+  has compact closure in `E` and `lim_{δ→0} sup_{f ∈ A} modulus m f δ = 0`. The
+  forward direction is proved for *every* index, as the pair
+  `isCompact_closure_values_of_isCompact` and
+  `tendsto_iSup_modulus_of_isCompact`; only the converse is index bound, by the
+  previous item, and it is stated where it is true rather than under a class
+  invented to make it true. `HasCountableCore ι` would exclude the witness but is
+  the class of *separability*: it yields a countable family of step paths, and
+  total boundedness asks for a finite one. The window is the one around
+  `basePoint` and not around a free `t₀`: the left hand side speaks of the
+  topology of `D ℝ E`, which is `SkorokhodSpace.metricSpaceInt basePoint`, and a
+  `t₀` free to differ from it would make the two sides speak of two spaces. The
+  modulus is the corrected one; with `modulusPinned` the statement is false, by
+  `SkorokhodSpace.not_tendsto_iSup_modulusPinned`.
+* The converse's proof is the finite net: for `ε` take `m` with `exp (-m) < ε`,
+  then `δ` from the modulus condition, then for each path a `δ`-sparse subdivision
+  of oscillation below `ε`; its nodes are pushed onto a **finite grid** of the
+  window — this is where `ℝ` is used and where the rigid index fails — and its
+  values onto a finite net of the value compactum. The approximant is
+  `SkorokhodSpace.stepPath`, the bound is `SkorokhodSpace.distWith_stepPath_le`,
+  and the passage from the window to the integral is
+  `SkorokhodSpace.intWith_le_of_ae_distWith_le`. What is new is the grid together
+  with the time change onto it, and the bound on the *number* of nodes, which
+  comes from the sparseness and the compactness of the window.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
-  used in practice, where the first condition is replaced by the existence of a
-  compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
+  used in practice, over `ℝ`, where the first condition is replaced by the
+  existence of a compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
 
 **Acceptance examples.**
 
@@ -1351,6 +1742,17 @@ owes.
   compact — as it must not be, the sequence having no convergent subsequence
   (Milestone 4). This is the instance that makes the modulus condition
   indispensable in `isCompact_closure_iff`.
+* **The jump that marches to the window's edge, and why the endpoints are not
+  pinned.** `A = insert (stepAt (-1) 1 0) {stepAt (1/(n+2) - 1) 1 0 | n}` in
+  `D(ℝ, ℝ)`, window `B 1 = [-1, 1]`. The sequence converges, so `A` is compact,
+  and the values lie in `{0,1}`; the corrected modulus is `0` for every `δ < 1/2`
+  by the subdivision `-2 < 1/(n+2) - 1 < 2`, which *undershoots* the window at
+  the near end. Pin the endpoints and the same subdivision is inadmissible, the
+  jump is trapped in the first cell and the supremum of the moduli is `1` for
+  every `δ > 0`: `SkorokhodSpace.not_tendsto_iSup_modulusPinned`. This is the
+  instance that fixes the endpoints of `IsSubdivision` as inequalities, and it is
+  the mirror of the previous one — there the criterion must reject, here it must
+  accept.
 * **A family that does have compact closure.**
   `A = {Set.indicator (Set.Ici a) 1 | a ∈ Set.Icc 1 2}`. The values lie in
   `{0,1}` and `modulus m f δ = 0` for `δ` smaller than the distance from `a` to
@@ -1359,6 +1761,17 @@ owes.
   continuous image of `Set.Icc 1 2` under `a ↦ Set.indicator (Set.Ici a) 1`,
   which is where the sliding step example of Milestone 4 says the map is
   continuous.
+* **The same family on a rigid index, where the criterion must not be stated.**
+  `A = {stepAt x 1 0 | x ∈ C ∩ Set.Icc (1/4 : ℝ) (3/4)}` with `C` the middle
+  thirds Cantor set as index and base point `0`. Both conditions hold exactly as
+  in the previous example — two values, and the subdivision `0 < x < 1` has no
+  oscillation for `δ < 1/4` — but `a ↦ stepAt a 1 0` is not continuous here and
+  cannot be: no time change of norm below `log 3` moves anything, so the family is
+  uncountable and uniformly separated and its closure is not compact
+  (`SkorokhodSpace.not_isCompact_closure_of_rigid`). The pair of these two
+  examples is what confines `isCompact_closure_iff` to `ℝ`: the criterion sees
+  only values and times, and on a rigid index that is not enough to count the
+  paths.
 
 ## Milestone 8: tightness and convergence of finite dimensional distributions
 
@@ -1411,8 +1824,9 @@ state the second, as Theorem 3.9.1, for a complete separable `E` as well.
   subsequence because `ProbabilityMeasure (D ι E)` is metrizable, by
   `MeasureTheory.instMetrizableSpaceProbabilityMeasure`
   (`Mathlib/MeasureTheory/Measure/LevyProkhorovMetric.lean:695`) applied to
-  `SeparableSpace (D ι E)` of Milestone 5, which itself asks only for a countable
-  dense subset of `E`. Its ingredients, in the
+  `SeparableSpace (D ι E)` of Milestone 5, which asks for a countable dense
+  subset of `E` **and** for `SkorokhodSpace.HasCountableCore ι`, the second
+  since 2026-09-09 and not droppable. Its ingredients, in the
   order the proof needs them: right continuity of the paths, to move the times
   of a finite family from `T` to the continuity points of the limit;
   `exists_countable_dense_continuity` below, which makes those continuity

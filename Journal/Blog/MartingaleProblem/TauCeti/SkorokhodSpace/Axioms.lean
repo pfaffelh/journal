@@ -59,4 +59,26 @@ After that run `Suggested.lean` goes through `lake env lean` against Mathlib
 `SkorokhodSpace.measurableEmbedding_piDense`,
 `SkorokhodSpace.borel_eq_iSup_comap_eval`, `SkorokhodSpace.tendsto_modulus` and
 `SkorokhodSpace.isCompact_closure_iff`.
+
+## 2026-09-09, seventh run of the day
+
+Nine declarations.  Eight printed `[propext, Classical.choice, Quot.sound]`;
+`exists_mem_Ico_of_strictMono` printed `[propext]` alone, being an induction on
+`Fin` over a bare `LinearOrder`.  `exists_orderIso_dist_lt_of_intDist_lt` is in
+the list because it was rewritten, not because it is new: the good radius came
+out of its proof and is now `exists_radius_distWith_lt`, which it consumes.
+
+* `SkorokhodSpace.exists_radius_distWith_lt`
+* `SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt`
+* `SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt`
+* `SkorokhodSpace.edist_le_ofReal_distWith`
+* `SkorokhodSpace.isSubdivision_comp`
+* `SkorokhodSpace.subdivisionOsc_comp_le`
+* `SkorokhodSpace.modulus_le_of_edist_le`
+* `SkorokhodSpace.tendsto_iSup_modulus_of_isCompact`
+* `exists_mem_Ico_of_strictMono`
+
+After that run `Suggested.lean` goes through `lake env lean` against Mathlib
+`v4.33.1` with `rc = 0` and **one** `sorry` warning,
+`SkorokhodSpace.isCompact_closure_iff`.
 -/
