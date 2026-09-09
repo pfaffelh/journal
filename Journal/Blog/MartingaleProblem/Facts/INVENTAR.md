@@ -15635,3 +15635,191 @@ zu zeigen. Über `sum_div_le_jumpTime` ist
 und der Unabhängigkeit der Koordinaten — nicht die Gammaverteilung, die Mathlib
 für `Measure.infinitePi` nicht in dieser Gestalt hergibt. Wer den Weg ändern
 will, sage zuerst, an welchem Schritt dieser bricht.
+
+### 2026-09-09, sechsundzwanzigster Lauf des Tages — die Markoveigenschaft des Sprungprozesses zu einer festen Zeit
+
+Ein Ziel, das des Vorschlags vom fünfundzwanzigsten Lauf: die Induktion über die
+Zahl der Sprünge. **Neun neue Deklarationen** in
+`TauCeti/MartingaleProblems/Suggested.lean` — acht in diesem Teil und eine im
+zweiten, unten —, die ganze Datei geht durch `lake env lean` gegen v4.33.1
+**ohne einen Fehler** (unverändert zehn `sorry`, keine neuen), und alle neun
+hängen mit `#print axioms` nur an `propext`, `Classical.choice`, `Quot.sound`.
+**Der Satz selbst ist fertig**:
+
+```
+jumpMeasure_integral_jumpProcess_add :
+  ∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)
+    = ∫ ω, jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)
+```
+
+unter `Measurable lam`, `0 < lam ≤ L`, `h` beschränkt meßbar, `0 ≤ s`, `0 ≤ t`
+und `nu` ein Wahrscheinlichkeitsmaß. Die im vierundzwanzigsten Lauf angesagte
+Gestalt
+
+```
+∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)
+  = ∫ ω, h (jumpProcess lam t ω)
+      ∂(jumpMeasure mu ((jumpMeasure mu nu).map (jumpProcess lam s)))
+```
+
+steht daneben als `jumpMeasure_integral_jumpProcess_add'` und kostet, wie der
+fünfundzwanzigste Lauf vorhergesagt hatte, drei Zeilen über
+`integral_jumpSemigroup_eq` und `integral_map`.
+
+**Die Induktion, und der eine Punkt, an dem sie anders aussieht als angesagt.**
+`abs_integral_jumpMeasure_add_sub_le` sagt für jedes `n` und **jedes**
+Anfangsgesetz
+
+```
+|(∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+   - ∫ ω, jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)|
+  ≤ 2 * C * (jumpMeasure mu nu).real {ω | jumpTime lam ω.1 ω.2 n ≤ s}.
+```
+
+Das Anfangsgesetz ist **innerhalb** der Aussage quantifiziert und nicht als
+Parameter gebunden — der Zweig `{T 1 ≤ s}` startet aus `mu z` neu, und dort wird
+die Induktionsvoraussetzung angewandt; mit festem `nu` hätte die Induktion
+nichts, woran sie ansetzt. Der Induktionsanfang ist `n = 0`, wo
+`{T 0 ≤ s} = univ` ist und die Schranke `2 * C` allein aus der Beschränktheit
+folgt.
+
+Der angesagte Schluß der Induktion war die Zusammensetzung der beiden Zweige.
+Genommen ist statt dessen eine **Inklusion**:
+`T (n+1) ω = T 1 ω + T n (jumpShift ω)` gibt
+
+```
+{ω | T 1 ω ≤ s} ∩ {ω | T (n+1) ω ≤ s} ⊆ {ω | T (n+1) ω ≤ s},
+```
+
+und mehr wird nicht gebraucht. Die **Gleichheit** der beiden Mengen ist über
+bloßem `[MeasurableSpace E]` falsch, weil `T n ∘ jumpShift` nur f.s.
+nichtnegativ ist; sie zu beweisen hätte eine f.s.-Aussage in eine Abschätzung
+getragen, die punktweise ist.
+
+**Der teure Punkt war nicht die Analysis, sondern die Meßbarkeit des inneren
+Integrals — und der Ausweg ist, die beiden äußeren Integrale zu *einem* zu
+machen.** Die Abschätzung vergleicht zwei Integrale, und `integral_mono` ist eine
+Aussage über **ein** Maß; die iterierte Gestalt von
+`integral_jumpMeasure_eq_of_split` (`∫ z ∫ σ ∫ ω'`) hätte an jeder
+Gebrauchsstelle die Meßbarkeit von `z ↦ ∫ σ ∫ ω' …` als eigenen Schritt
+verlangt. `integral_jumpMeasure_eq_of_split_prod` legt `z` und `σ` in das
+Produktmaß `nu.prod (expMeasure 1)` auf `E × ℝ` zusammen, und die verbleibende
+Meßbarkeit ist `measurable_integral_jumpMeasure_step`. Sie ruht auf
+`jumpMeasure_step_eq_comp : jumpMeasure mu (mu z) = (jumpKernel mu ∘ₖ mu) z` —
+also wieder darauf, daß die Konstruktion ein **Kern** ist, wie schon der
+fünfundzwanzigste Lauf für `jumpSemigroup` festgestellt hat. Über bloßem
+`[MeasurableSpace E]` gibt es keine andere Quelle.
+
+**Der Vorschlag zur Nullfolge war ein Umweg, und das ist der zweite Befund.** Er
+lautete: `{T n ≤ s} ⊆ {∑_{k<n} ξ k ≤ L * s}`, dann die **Chernoff-Schranke**
+`P(∑_{k<n} ξ k ≤ a) ≤ e^a * 2^{-n}` aus `E[e^{-ξ}] = 1/2` und der
+Unabhängigkeit der Koordinaten. Gebraucht wird davon **nichts**.
+`tendsto_measureReal_jumpTime_le` geht über die Indikatoren: f.s. gibt es nach
+`ae_exists_lt_jumpTime` ein `N` mit `s < T (N+1)`, und f.s. ist `jumpTime` nach
+`strictMono_jumpTime` streng monoton, also ist `1_{T n ≤ s}` von `n ≥ N+1` an
+**gleich Null**; dominierte Konvergenz macht daraus die Konvergenz der Maße. Kein
+Momenterzeugendes, keine Gammaverteilung, keine Unabhängigkeit über die schon
+bewiesene Nichtexplosion hinaus. Der Grund, warum nicht einfach die Stetigkeit
+des Maßes von oben genommen wird: die Familie `{T n ≤ s}` ist nur **f.s.**
+fallend — die Sprungzeiten wachsen dort, wo die Wartezeiten positiv sind, und
+sonst nirgends —, und `tendsto_measure_iInter_atTop` verlangt `Antitone` und
+nicht dessen f.s.-Fassung. Auf den Indikatoren ist die f.s.-Fassung gerade das,
+was dominierte Konvergenz ohnehin nimmt.
+
+**Die Deklarationen, in Abhängigkeitsordnung.** `jumpMeasure_step_eq_comp`,
+`measurable_integral_jumpMeasure_step`, `integral_jumpMeasure_eq_of_split_prod`,
+`setIntegral_jumpMeasure_eq_integral_jumpKernel`,
+`abs_integral_jumpMeasure_add_sub_le`, `tendsto_measureReal_jumpTime_le`,
+`jumpMeasure_integral_jumpProcess_add`, `jumpMeasure_integral_jumpProcess_add'`.
+Alle im Abschnitt `JumpConstruction`, `section Space`, im neuen
+`section MarkovProperty` zwischen der Erneuerungsgleichung und der Uhr. Der
+Entwicklungsstand in `TauCeti/MartingaleProblems/scratch/MarkovInduction.lean`
+ist durch einen Hinweis ersetzt, wie beim zweiundzwanzigsten bis
+fünfundzwanzigsten Lauf.
+
+**Ein Hilfssatz ist wieder verschwunden, und der Grund gehört zur Suchregel.**
+Der Beweis hat `abs_sub_le_add : |a - b| ≤ |a| + |b|` als eigenen Satz
+mitgeführt, weil `grep` nach `abs_add` in den Mathlib-Quellen leer ausging.
+Beides ist da: die Additionsfassung heißt `abs_add_le`, und die
+Subtraktionsfassung heißt schlicht **`abs_sub`** und wird in derselben Datei seit
+dem achtzehnten Lauf im Beweis von `abs_jumpApply_le` benutzt. Der Hilfssatz ist
+gestrichen und beide Gebrauchsstellen sind auf `abs_sub` umgestellt. Die Lehre
+ist die alte in neuer Gestalt: **auch der eigene Bestand ist zu durchsuchen**,
+und ein leeres `grep` nach einer Vokabel ist kein Negativbefund.
+
+**Zur Arbeitsweise, weil sie sich zum dritten Mal bewährt hat.** Das Gerüst hat
+die gebrauchten Voraussetzungen wörtlich als `axiom` übernommen; ein Durchlauf
+kostete **vier Sekunden** statt der zehn, die die ganze Datei braucht. Die drei
+Fehler des ersten Durchlaufs waren alle vom selben Schlag und keiner
+mathematisch: ein Mathlib-Name (`abs_add_le`, nicht `abs_add`) und zweimal ein
+`Set.indicator_of_mem`, dessen Menge der Elaborator aus einem `_` nicht erraten
+konnte. Das Mittel ist beide Male, die Menge im `show` auszuschreiben.
+
+### Derselbe Lauf, zweiter Teil — die Erwartungsidentität
+
+Da die Markoveigenschaft zur Halbzeit stand, ist der Vorschlag für den nächsten
+Lauf im selben gemacht worden. **Eine neunte Deklaration**,
+`jumpMeasure_integral_sub_eq_intervalIntegral`, ebenfalls durch `lake env lean`
+gegen v4.33.1 und mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft:
+
+```
+(∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)) - ∫ z, h z ∂nu
+  = ∫ r in (0)..t, ∫ ω, jumpApply lam mu h (jumpProcess lam r ω)
+      ∂(jumpMeasure mu nu).
+```
+
+**Der angesagte Weg — die Zweiseitigkeit der Ableitung — ist nicht gegangen
+worden und wird nicht gebraucht.** Der Vorschlag hatte gesagt, an jedem `r > 0`
+sei `r ↦ ∫ h (X r)` **zweiseitig** zu differenzieren, weil
+`intervalIntegral.integral_eq_sub_of_hasDerivAt` das verlange. Mathlib hat die
+einseitige Fassung: `intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le`
+(`MeasureTheory/Integral/IntervalIntegral/FundThmCalculus.lean:1116`) verlangt
+`HasDerivWithinAt f (f' x) (Ioi x) x` auf dem **offenen** Intervall, Stetigkeit
+auf dem abgeschlossenen und Integrierbarkeit von `f'` — und mehr steht hier auch
+nicht zur Verfügung: `eq_zero_of_hasDerivAt_integral_jumpProcess` sagt, daß die
+zweiseitige Ableitung an `0` gar nicht existiert. Der Vorschlag hätte also eine
+Aussage verlangt, die an einem Rand des Intervalls **falsch** ist.
+
+**Alle drei Voraussetzungen kommen aus Sätzen über die Konstruktion und keine
+aus einer Annahme.** Die Ableitung von rechts an der Stelle `r` ist die
+Ableitung an der Stelle `0` der aus dem Gesetz zur Zeit `r` neu gestarteten
+Konstruktion — das ist `jumpMeasure_integral_jumpProcess_add'`, verkettet mit
+der Verschiebung `x ↦ x - r` über `HasDerivWithinAt.comp`, und dort wird die
+Markoveigenschaft verbraucht. Die Stetigkeit ist die Lipschitz-Abschätzung
+`abs_integral_jumpProcess_sub_le`, gelesen vom Gesetz zur Zeit `a` statt von
+`nu`: `|F b - F a| ≤ 2 * C * L * (b - a)` für `0 ≤ a ≤ b`. Und die
+Integrierbarkeit des Kompensators ist `abs_jumpApply_le` samt der gemeinsamen
+Meßbarkeit von `(r, ω) ↦ jumpProcess lam r ω`.
+
+**Ein Fallstrick der Elaboration, weil er zweimal Zeit gekostet hat.**
+`HasDerivWithinAt.comp` liest die innere Funktion aus dem Term `h x` in der
+Aussage über die äußere. Steht dort `(fun x ↦ x - r) r`, so betareduziert Lean
+zu `r - r` und rät `h := HSub.hSub r`, also `fun y ↦ r - y` — die
+Verschiebung in die falsche Richtung. Das Mittel ist, die innere Funktion als
+benanntes Argument mitzugeben (`HasDerivWithinAt.comp (h := fun x ↦ x - r) …`)
+und die Aussage über die äußere vorher mit `simpa` in die Gestalt zu bringen,
+die den unreduzierten Term `((fun x ↦ x - r) r)` trägt.
+
+**Damit fehlt an `jumpProcess_isMPSolution` genau noch ein Schritt:** der
+Übergang von der Erwartungsidentität zur **bedingten**,
+`P[Y t | 𝓕 s] =ᵐ Y s`.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel:
+`jumpProcess_isMPSolution` selbst, also das einzige `sorry` des Abschnitts
+`JumpFiltration`. Es ruht auf
+vier Stücken, die alle dastehen: `stronglyAdapted_mpFamily_jumpProcess` (die
+Adaptiertheit, neunzehnter Lauf), `jumpMeasure_integral_sub_eq_intervalIntegral`
+(dieser Lauf), `mpFamily_sub_of_measurable_path` (der Zuwachs eines Gliedes von
+`mpFamily` über `[s,t]`) und `isMPSolution_iff_forall_fdd`. Es ist jetzt dran,
+weil es das **Ziel des Meilensteins** ist und nach diesem Lauf nichts mehr
+dazwischensteht. Der Punkt, an dem es teuer wird, und er ist vorher zu benennen:
+die Erwartungsidentität ist eine Aussage über **unbedingte** Erwartungen unter
+`jumpMeasure mu nu`, und die Martingaleigenschaft verlangt sie unter der
+bedingten Verteilung gegeben `𝓕 s`. Der Weg dorthin ist, sie auf das Gesetz
+`jumpMeasure mu ν` für **jedes** Anfangsgesetz anzuwenden — dafür ist sie in
+`nu` allgemein formuliert — und die bedingte Erwartung über
+`isMPSolution_iff_forall_fdd` durch endlichdimensionale Testfunktionen zu
+ersetzen; deren Hypothese ist überdies vorher auf die Gestalt `g ∘ X`
+abzuschwächen, wie es der neunzehnte Lauf schon festgehalten hat. Wer den Weg
+ändern will, sage zuerst, an welchem Schritt dieser bricht.
