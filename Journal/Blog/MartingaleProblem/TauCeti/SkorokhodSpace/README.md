@@ -1784,6 +1784,18 @@ over a shrinking family and is therefore an infimum.
   far outside the window — `IsSubdivision` only asks that it *cover* it — and
   those nodes are not counted, which is why the statement quantifies over two
   nodes known to lie inside.
+* `SkorokhodSpace.abs_sum_tent_sub_le`: **a sum of tents with separated centres
+  is `2 η / r`-Lipschitz, whatever their number.** Proved (2026-09-09). This is
+  *not* the estimate `exists_rat_nodes_perturbation` uses, and the difference is
+  the whole reason the converse needs its own lemma: that proof bounds the sum
+  term by term, `∑ᵢ |vᵢ| / r`, which grows with the number of tents, and it can
+  afford to because there the height is chosen **after** the number of nodes is
+  known. The converse cannot — its grid is fixed before the path is seen, so the
+  height is the grid spacing and the number of nodes is whatever the path's
+  subdivision has. What saves it is that the supports are disjoint: at any point
+  at most one tent is nonzero, so the difference has at most **two** nonzero
+  terms, one for each argument, however many tents there are. The `2` is the
+  price of not knowing which argument sits in which support.
 * The converse's proof is the finite net: for `ε` take `m` with `exp (-m) < ε`,
   then `δ` from the modulus condition, then for each path a `δ`-sparse based
   subdivision of oscillation below `ε`; its nodes are pushed onto a **finite

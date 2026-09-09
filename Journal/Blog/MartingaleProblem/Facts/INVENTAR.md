@@ -13342,7 +13342,7 @@ dann die Hinrichtung auf gestützten Unterteilungen, dann die Rückrichtung. Die
 ersten beiden sind getan.
 
 **Stand der Datei.** `SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry`
-statt zweien, und es ist die Rückrichtung des Kompaktheitskriteriums. Acht neue
+statt zweien, und es ist die Rückrichtung des Kompaktheitskriteriums. Neun neue
 Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
 `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Dieser Lauf hat
 nichts widerlegt und nichts umgestellt — der erste seit dem fünften Lauf dieses
@@ -13429,6 +13429,24 @@ quantifiziert die Aussage über zwei Knoten, von denen bekannt ist, daß sie dar
 liegen. Für die Rückrichtung genügt das, denn außerhalb des Fensters sieht die
 Metrik nichts, was der Schwanz `exp (-M)` nicht schon bezahlt.
 
+**Und ein Stück des Gitters ist noch mitgekommen, das neunte.**
+`SkorokhodSpace.abs_sum_tent_sub_le`: eine Summe von Zelten mit getrennten
+Mittelpunkten — Abstand mindestens `2 r`, Höhen höchstens `η` — ist
+`2 η / r`-Lipschitz, **gleichviel wie viele es sind**.
+
+*Das ist nicht die Schranke, die `exists_rat_nodes_perturbation` benutzt, und der
+Unterschied ist der Grund, warum die Rückrichtung eine eigene braucht.* Dort wird
+gliedweise abgeschätzt, `∑ᵢ |vᵢ| / r`, und das wächst mit der Zahl der Zelte; dort
+darf es das auch, weil die Höhe **nach** der Knotenzahl gewählt werden darf (so
+steht es seit dem zweiten Lauf dieses Tages in der Roadmap, und es war dort
+richtig). Die Rückrichtung kann es nicht: ihr Gitter steht fest, ehe der Pfad
+gesehen wird, die Höhe ist also die Gitterweite, und die Knotenzahl ist, was die
+Unterteilung des Pfades hergibt. Was sie rettet, ist die **Disjunktheit der
+Träger**: an jeder Stelle ist höchstens ein Zelt von Null verschieden, die
+Differenz hat also höchstens **zwei** nichtverschwindende Glieder, eines je
+Argument, und das unabhängig von der Zahl der Zelte. Die `2` ist der Preis dafür,
+nicht zu wissen, welches Argument in welchem Träger sitzt.
+
 **Das Manuskript ist nicht angefaßt.**
 
 **Was als Nächstes zu tun ist.** Das **Gitter samt dem Zeitwechsel darauf**, und
@@ -13441,7 +13459,13 @@ einen Punkt von `G` trägt. Die Anzahl der zu verschiebenden Knoten ist durch
 des Zeitwechsels ist `TimeChange.exists_real_of_perturbation` samt
 `SkorokhodSpace.tent` — dieselbe Störung `φ x = x + ψ x`, die
 `Real.instHasCountableCore` im zweiten Lauf dieses Tages trägt, nur mit einer
-endlichen Menge von Zelten statt einer abzählbaren Familie. Danach ist der
+endlichen Menge von Zelten statt einer abzählbaren Familie und mit
+`SkorokhodSpace.abs_sum_tent_sub_le` als Lipschitz-Schranke statt der groben.
+**Zu rechnen bleibt allein die Wahl der Konstanten**, und sie schließt sich:
+Gitter `ρ ℤ`, Zeltradius `r = δ / 4` (die Knoten sind `δ`-getrennt, die
+Gittermittelpunkte also mindestens `δ - ρ ≥ 2 r`), Höhe `η = ρ / 2` (der
+Abstand zum nächsten Gitterpunkt), also `K = 2 η / r = 2 ρ / δ` — und `ρ` wird
+zuletzt aus `K` und `δ` bestimmt, nicht umgekehrt. Danach ist der
 Zusammenbau `SkorokhodSpace.stepPath` als Approximant,
 `SkorokhodSpace.distWith_stepPath_le` als Schranke und
 `SkorokhodSpace.intWith_le_of_ae_distWith_le` als Buchführung, und alle drei

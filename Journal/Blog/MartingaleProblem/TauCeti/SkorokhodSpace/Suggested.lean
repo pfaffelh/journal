@@ -5684,6 +5684,95 @@ theorem SkorokhodSpace.abs_tent_sub_le {ρ : ℝ} (hρ : 0 < ρ) (c x y : ℝ) :
       _ = |x - y| := by rw [show (y - c) - (x - c) = -(x - y) by ring, abs_neg]
   gcongr
 
+/-- **A sum of tents with separated centres is Lipschitz with a constant that
+does not grow with their number.**  If the centres are `2 r` apart and the
+coefficients are bounded by `η`, the sum is `2 η / r`-Lipschitz, whatever the
+number of tents.
+
+*Why this is not the estimate `exists_rat_nodes_perturbation` uses, and why the
+converse of Milestone 7 needs it.*  That proof bounds the sum term by term,
+`∑ᵢ |vᵢ| / r`, which grows with the number of tents; it can afford to, because
+there the height `η` is chosen **after** the number of nodes is known.  The
+converse cannot: its grid has to be fixed before the path is seen, so `η` is the
+grid spacing and the number of nodes is whatever the path's subdivision has.
+What saves it is that the supports are disjoint, so at any point at most one tent
+is nonzero and the sum has at most **two** nonzero terms --- one for `x`, one for
+`y` --- however many tents there are.  The `2` is the price of not knowing which
+of the two points sits in which support, and it is not removable by this
+argument.
+
+Nothing is assumed about the coefficients beyond their bound, and nothing about
+the centres beyond their separation; in particular they need not be monotone. -/
+theorem SkorokhodSpace.abs_sum_tent_sub_le {n : ℕ} {c v : Fin n → ℝ} {r η : ℝ}
+    (hr : 0 < r) (hη : 0 ≤ η) (hsep : ∀ i j, i ≠ j → 2 * r ≤ |c i - c j|)
+    (hv : ∀ i, |v i| ≤ η) (x y : ℝ) :
+    |(∑ i, v i * SkorokhodSpace.tent r (c i) x)
+        - (∑ i, v i * SkorokhodSpace.tent r (c i) y)| ≤ (2 * η / r) * |x - y| := by
+  classical
+  have hne : ∀ (z : ℝ) (i : Fin n), SkorokhodSpace.tent r (c i) z ≠ 0 → |z - c i| < r := by
+    intro z i hi
+    by_contra h
+    exact hi (SkorokhodSpace.tent_eq_zero hr (not_lt.1 h))
+  have hone : ∀ z : ℝ,
+      (Finset.univ.filter fun i : Fin n => SkorokhodSpace.tent r (c i) z ≠ 0).card ≤ 1 := by
+    intro z
+    refine Finset.card_le_one.2 fun a ha b hb => ?_
+    by_contra hab
+    have h1 := hne z a (Finset.mem_filter.1 ha).2
+    have h2 := hne z b (Finset.mem_filter.1 hb).2
+    have h0 := hsep a b hab
+    have h3 : |c a - c b| ≤ |c a - z| + |z - c b| := abs_sub_le _ _ _
+    rw [abs_sub_comm (c a) z] at h3
+    linarith
+  set A : Finset (Fin n) :=
+    (Finset.univ.filter fun i : Fin n => SkorokhodSpace.tent r (c i) x ≠ 0) ∪
+      (Finset.univ.filter fun i : Fin n => SkorokhodSpace.tent r (c i) y ≠ 0) with hA
+  have hcard : A.card ≤ 2 := by
+    refine le_trans (Finset.card_union_le _ _) ?_
+    have h1 := hone x
+    have h2 := hone y
+    omega
+  have hsum : (∑ i, v i * SkorokhodSpace.tent r (c i) x)
+      - (∑ i, v i * SkorokhodSpace.tent r (c i) y)
+      = ∑ i ∈ A, v i * (SkorokhodSpace.tent r (c i) x - SkorokhodSpace.tent r (c i) y) := by
+    have h1 : (∑ i, v i * (SkorokhodSpace.tent r (c i) x - SkorokhodSpace.tent r (c i) y))
+        = ∑ i ∈ A, v i * (SkorokhodSpace.tent r (c i) x - SkorokhodSpace.tent r (c i) y) := by
+      refine (Finset.sum_subset (Finset.subset_univ A) ?_).symm
+      intro i _ hi
+      have hx : SkorokhodSpace.tent r (c i) x = 0 := by
+        by_contra h
+        exact hi (by
+          rw [hA]
+          exact Finset.mem_union_left _ (Finset.mem_filter.2 ⟨Finset.mem_univ _, h⟩))
+      have hy : SkorokhodSpace.tent r (c i) y = 0 := by
+        by_contra h
+        exact hi (by
+          rw [hA]
+          exact Finset.mem_union_right _ (Finset.mem_filter.2 ⟨Finset.mem_univ _, h⟩))
+      rw [hx, hy]
+      ring
+    rw [← h1, ← Finset.sum_sub_distrib]
+    exact Finset.sum_congr rfl fun i _ => by ring
+  rw [hsum]
+  have hnn : 0 ≤ η * (|x - y| / r) := mul_nonneg hη (div_nonneg (abs_nonneg _) hr.le)
+  have hterm : ∀ i : Fin n,
+      |v i * (SkorokhodSpace.tent r (c i) x - SkorokhodSpace.tent r (c i) y)|
+        ≤ η * (|x - y| / r) := by
+    intro i
+    rw [abs_mul]
+    exact mul_le_mul (hv i) (SkorokhodSpace.abs_tent_sub_le hr _ _ _) (abs_nonneg _) hη
+  calc |∑ i ∈ A, v i * (SkorokhodSpace.tent r (c i) x - SkorokhodSpace.tent r (c i) y)|
+      ≤ ∑ i ∈ A, |v i * (SkorokhodSpace.tent r (c i) x - SkorokhodSpace.tent r (c i) y)| :=
+        Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ _i ∈ A, η * (|x - y| / r) := Finset.sum_le_sum fun i _ => hterm i
+    _ = (A.card : ℝ) * (η * (|x - y| / r)) := by
+        rw [Finset.sum_const, nsmul_eq_mul]
+    _ ≤ 2 * (η * (|x - y| / r)) := by
+        refine mul_le_mul_of_nonneg_right ?_ hnn
+        exact_mod_cast hcard
+    _ = (2 * η / r) * |x - y| := by
+        field_simp
+
 /-- **The analytic half of `HasCountableCore ℝ`**: every finite strictly
 monotone tuple of reals is the image of a tuple of *rationals* under a map
 `x ↦ x + ψ x` whose perturbation `ψ` is `K`-Lipschitz for a prescribed `K > 0`

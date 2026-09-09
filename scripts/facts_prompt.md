@@ -442,7 +442,7 @@ Werkzeug als Eingabe), dann die Rückrichtung.
 
 **Zwischenstand Teil A (2026-09-09, zehnter Lauf des Tages).** Bericht in
 `Facts/INVENTAR.md`, Läufe, „2026-09-09, zehnter Lauf des Tages".
-`SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry` statt zweien. Acht
+`SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry` statt zweien. Neun
 neue Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
 `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Dieser Lauf hat
 nichts widerlegt und nichts umgestellt — der erste seit dem fünften dieses Tages.
@@ -474,15 +474,25 @@ Fensters, die Knoten dürfen beliebig weit darüber hinausragen, eine Schranke f
 `n` selbst gibt es also nicht. Gezählt werden können allein die Knoten **im**
 Fenster.
 
+*Und die zweite Hälfte des Gitters ist angefangen:*
+`SkorokhodSpace.abs_sum_tent_sub_le` — eine Summe von Zelten mit getrennten
+Mittelpunkten ist `2 η / r`-Lipschitz, **gleichviel wie viele es sind**. Die
+grobe Schranke von `exists_rat_nodes_perturbation` (`∑ᵢ |vᵢ| / r`) taugt hier
+nicht: dort darf die Höhe **nach** der Knotenzahl gewählt werden, hier steht das
+Gitter fest, ehe der Pfad gesehen wird. Es rettet die Disjunktheit der Träger —
+höchstens zwei Glieder sind von Null verschieden, eines je Argument.
+
 *Als Nächstes:* das **Gitter samt dem Zeitwechsel darauf**, das letzte neu zu
 bauende Stück von Meilenstein 7 — zu `m`, `δ` und `ρ` eine endliche Menge
 `G ⊆ ℝ` mit `0 ∈ G` und zu jedem gestützten `δ`-sparsamen Tupel ein Zeitwechsel
-kleiner Norm, der dessen Knoten nach `G` trägt. Die Knotenzahl ist beschränkt
-(siehe oben), die Konstruktion ist `TimeChange.exists_real_of_perturbation` samt
-`SkorokhodSpace.tent`, dieselbe Störung `φ x = x + ψ x` wie in
-`Real.instHasCountableCore`, nur endlich viele Zelte. Der Zusammenbau danach —
-`stepPath`, `distWith_stepPath_le`, `intWith_le_of_ae_distWith_le` — steht
-vollständig bewiesen da.
+kleiner Norm, der dessen Knoten nach `G` trägt. Knotenzahl und Lipschitz-Schranke
+stehen (siehe oben), die Konstruktion ist
+`TimeChange.exists_real_of_perturbation` samt `SkorokhodSpace.tent`, dieselbe
+Störung `φ x = x + ψ x` wie in `Real.instHasCountableCore`. Zu rechnen bleibt
+allein die Wahl der Konstanten, und sie schließt sich: Gitter `ρ ℤ`, Zeltradius
+`r = δ / 4`, Höhe `η = ρ / 2`, also `K = 2 ρ / δ`, und `ρ` wird zuletzt aus `K`
+und `δ` bestimmt. Der Zusammenbau danach — `stepPath`, `distWith_stepPath_le`,
+`intWith_le_of_ae_distWith_le` — steht vollständig bewiesen da.
 
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
