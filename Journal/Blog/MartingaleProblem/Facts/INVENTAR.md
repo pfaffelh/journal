@@ -13219,7 +13219,7 @@ Meilenstein 7 benannt und ihren Weg — endliches Gitter, endliches Netz,
 **Stand der Datei.** `SkorokhodSpace/Suggested.lean` steht bei **zwei** `sorry`
 statt einem. Der Lauf hat keines gestrichen, sondern die Aussage, der sie
 gehören, ein zweites Mal **berichtigt**; das eine `sorry` einer falschen Aussage
-ist zu zweien einer wahren geworden. Acht neue Deklarationen, alle durch
+ist zu zweien einer wahren geworden. Neun neue Deklarationen, alle durch
 `lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`,
 `Classical.choice`, `Quot.sound`.
 
@@ -13310,11 +13310,26 @@ Familie dieses Laufs; es steht jetzt dort.
 
 **Das Manuskript ist nicht angefaßt.**
 
-**Was als Nächstes zu tun ist.** `IsCadlag.exists_subdivision_through` — zu
-`a ≤ c ≤ b` und `ε > 0` eine Unterteilung von `Set.Icc a b` mit `c` unter ihren
-Knoten und Zellschwingung höchstens `ε`. Sie ruht auf
-`IsCadlag.exists_subdivision` zweimal und auf nichts sonst; die Arbeit ist das
-Aneinandersetzen zweier `Fin`-Tupel, und sie ist die Eingabe **beider** offenen
-`sorry` von Meilenstein 7. Danach `tendsto_modulusBased` (der Ersatz für
-`tendsto_modulus`, den die Berichtigung schuldet) und die Hinrichtung auf
-gestützten Unterteilungen, dann die Rückrichtung.
+**Und das Werkzeug dazu ist im selben Lauf noch gebaut.**
+`IsCadlag.exists_subdivision_through` — zu `a ≤ c ≤ b` und `ε > 0` eine
+Unterteilung von `Set.Icc a b` mit `c` unter ihren Knoten und Zellschwingung
+höchstens `ε` — ist die neunte Deklaration, durch `lake env lean` gegen v4.33.1
+geprüft und mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`.
+Sie ist `IsCadlag.exists_subdivision` zweimal, auf `Set.Icc a c` und auf
+`Set.Icc c b`, und die beiden `Fin`-Tupel an ihrem gemeinsamen Endpunkt
+zusammengesetzt: `t i = t₁ i` für `i ≤ n` und `t₂ (i - n)` sonst, über
+`Fin (n + p + 1)`. Der gemeinsame Endpunkt ist es, der die Strenge der
+Monotonie am Übergang trägt (`t₁ i ≤ t₁ (last n) = c = t₂ 0 < t₂ (j - n)`, und
+die zweite Ungleichung ist strikt, weil `j > n` ist), und er ist auch der Grund,
+daß die Zellen keine Fallunterscheidung brauchen: die Zelle bei `n` ist
+`[c, t₂ 1)` und damit die nullte Zelle von `t₂`. Die eine Fallunterscheidung, die
+bleibt, ist `p = 0` am rechten Ende.
+
+**Was als Nächstes zu tun ist.** `SkorokhodSpace.tendsto_modulusBased` — der
+Ersatz für `tendsto_modulus`, den die Berichtigung schuldet —, dann die
+Hinrichtung auf gestützten Unterteilungen
+(`tendsto_iSup_modulusBased_of_isCompact`), dann die Rückrichtung. Alle drei
+lesen jetzt ein fertiges Werkzeug: die Unterteilung durch den Basispunkt steht,
+`isSubdivision_comp` trägt einen Knoten bei `t₀` auf einen solchen, und der Rest
+des Beweises von `tendsto_iSup_modulus_of_isCompact` ist wörtlich zu
+wiederholen.

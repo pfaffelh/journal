@@ -429,12 +429,16 @@ gestützten Unterteilungen zu wiederholen. Jeder ihrer Schritte übersteht das �
 `isSubdivision_comp` trägt einen Knoten bei `t₀` auf einen solchen, die
 Zeitwechsel halten ihn fest — bis auf ihre Eingabe.
 
-*Als Nächstes, und es ist ein einziges benanntes Stück:*
+*Das Werkzeug für beide `sorry` ist im selben Lauf noch gebaut:*
 `IsCadlag.exists_subdivision_through`, eine càdlàg-Unterteilung von
-`Set.Icc a b` durch einen vorgeschriebenen inneren Punkt. Sie ruht zweimal auf
-`IsCadlag.exists_subdivision` und auf nichts sonst (die Arbeit ist das
-Aneinandersetzen zweier `Fin`-Tupel), und **beide** offenen `sorry` lesen sie.
-Danach `tendsto_modulusBased` und die Hinrichtung, dann die Rückrichtung.
+`Set.Icc a b` durch einen vorgeschriebenen inneren Punkt, geprüft und ohne
+`sorryAx` — `IsCadlag.exists_subdivision` zweimal, die beiden `Fin`-Tupel am
+gemeinsamen Endpunkt zusammengesetzt.
+
+*Als Nächstes:* `SkorokhodSpace.tendsto_modulusBased`, dann die Hinrichtung auf
+gestützten Unterteilungen (`tendsto_iSup_modulusBased_of_isCompact` — der Beweis
+von `tendsto_iSup_modulus_of_isCompact` wörtlich wiederholt, mit dem neuen
+Werkzeug als Eingabe), dann die Rückrichtung.
 
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:

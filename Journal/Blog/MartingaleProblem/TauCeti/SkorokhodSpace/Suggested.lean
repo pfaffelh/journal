@@ -1294,6 +1294,124 @@ theorem IsCadlag.exists_subdivision {f : ι → E} (hf : IsCadlag f) {a b : ι} 
     ⟨⟨le_trans hcIcc.1 hcz.le, min_le_right _ _⟩, n + 1, t', ht', h0', hlast', hcell'⟩
   exact absurd (hcS _ hzS) (not_le.2 hcz)
 
+/-- **A subdivision through a prescribed interior point.**  It is
+`IsCadlag.exists_subdivision` twice --- on `Set.Icc a c` and on `Set.Icc c b` ---
+and the two tuples concatenated at their common endpoint `c`, which is what makes
+the concatenation strictly monotone with no case distinction on which side the
+oscillation is measured.
+
+Both open commitments of Milestone 7 read it, and for the same reason: the
+compactness criterion is stated with `SkorokhodSpace.modulusBased`, whose
+subdivisions carry the base point among their nodes, and every argument that
+feeds a subdivision into it has to produce one that does.  Without the prescribed
+point the criterion is false, by
+`SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint`. -/
+theorem IsCadlag.exists_subdivision_through {f : ι → E} (hf : IsCadlag f) {a c b : ι}
+    (hac : a ≤ c) (hcb : c ≤ b) (hK : IsCompact (Set.Icc a b)) {ε : ℝ} (hε : 0 < ε) :
+    ∃ (n : ℕ) (t : Fin (n + 1) → ι), StrictMono t ∧ t 0 = a ∧ t (Fin.last n) = b ∧
+      c ∈ Set.range t ∧
+      ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
+        dist (f x) (f (t i.castSucc)) ≤ ε := by
+  classical
+  obtain ⟨n, t₁, hm₁, h₁0, h₁l, hc₁⟩ := hf.exists_subdivision hac
+    (hK.of_isClosed_subset isClosed_Icc (Set.Icc_subset_Icc le_rfl hcb)) hε
+  obtain ⟨p, t₂, hm₂, h₂0, h₂l, hc₂⟩ := hf.exists_subdivision hcb
+    (hK.of_isClosed_subset isClosed_Icc (Set.Icc_subset_Icc hac le_rfl)) hε
+  set t : Fin (n + p + 1) → ι := fun i => if h : (i : ℕ) ≤ n then
+      t₁ ⟨(i : ℕ), Nat.lt_succ_of_le h⟩
+    else t₂ ⟨(i : ℕ) - n, by have := i.isLt; omega⟩ with htdef
+  have hval1 : ∀ (i : Fin (n + p + 1)) (h : (i : ℕ) ≤ n),
+      t i = t₁ ⟨(i : ℕ), Nat.lt_succ_of_le h⟩ := by
+    intro i h
+    simp only [htdef]
+    rw [dif_pos h]
+  have hval2 : ∀ (i : Fin (n + p + 1)) (h : n ≤ (i : ℕ)) (hlt : (i : ℕ) - n < p + 1),
+      t i = t₂ ⟨(i : ℕ) - n, hlt⟩ := by
+    intro i h hlt
+    by_cases hi : (i : ℕ) ≤ n
+    · have hin : (i : ℕ) = n := le_antisymm hi h
+      rw [hval1 i hi]
+      have e1 : (⟨(i : ℕ), Nat.lt_succ_of_le hi⟩ : Fin (n + 1)) = Fin.last n :=
+        Fin.ext (by simpa using hin)
+      have e2 : (⟨(i : ℕ) - n, hlt⟩ : Fin (p + 1)) = 0 := Fin.ext (by simp [hin])
+      rw [e1, e2, h₁l, h₂0]
+    · simp only [htdef]
+      rw [dif_neg hi]
+  refine ⟨n + p, t, ?_, ?_, ?_, ?_, ?_⟩
+  · -- strict monotonicity
+    intro i j hij
+    have hij' : (i : ℕ) < (j : ℕ) := hij
+    have hi' := i.isLt
+    have hj' := j.isLt
+    by_cases hi : (i : ℕ) ≤ n
+    · by_cases hj : (j : ℕ) ≤ n
+      · rw [hval1 i hi, hval1 j hj]
+        exact hm₁ (show (⟨(i : ℕ), _⟩ : Fin (n + 1)) < ⟨(j : ℕ), _⟩ from hij')
+      · rw [hval1 i hi, hval2 j (by omega) (by omega)]
+        have hle : t₁ ⟨(i : ℕ), Nat.lt_succ_of_le hi⟩ ≤ t₁ (Fin.last n) :=
+          hm₁.monotone (show (⟨(i : ℕ), _⟩ : Fin (n + 1)) ≤ Fin.last n from by
+            simp only [Fin.le_def, Fin.val_last]; omega)
+        have hlt : t₂ 0 < t₂ ⟨(j : ℕ) - n, by omega⟩ :=
+          hm₂ (show (0 : Fin (p + 1)) < ⟨(j : ℕ) - n, by omega⟩ from by
+            simp only [Fin.lt_def, Fin.val_zero]; omega)
+        rw [h₁l] at hle
+        rw [h₂0] at hlt
+        exact lt_of_le_of_lt hle hlt
+    · have hjn : ¬ (j : ℕ) ≤ n := by omega
+      rw [hval2 i (by omega) (by omega), hval2 j (by omega) (by omega)]
+      exact hm₂ (show (⟨(i : ℕ) - n, _⟩ : Fin (p + 1)) < ⟨(j : ℕ) - n, _⟩ from by
+        simp only [Fin.lt_def]; omega)
+  · -- the left endpoint
+    rw [hval1 0 (by simp)]
+    rw [show (⟨((0 : Fin (n + p + 1)) : ℕ), Nat.lt_succ_of_le (by simp)⟩ : Fin (n + 1))
+      = 0 from Fin.ext (by simp)]
+    exact h₁0
+  · -- the right endpoint
+    by_cases hp : p = 0
+    · subst hp
+      rw [hval1 (Fin.last (n + 0)) (by simp)]
+      rw [show (⟨((Fin.last (n + 0) : Fin (n + 0 + 1)) : ℕ), Nat.lt_succ_of_le (by simp)⟩
+        : Fin (n + 1)) = Fin.last n from Fin.ext (by simp)]
+      rw [h₁l, ← h₂0, show (0 : Fin (0 + 1)) = Fin.last 0 from Fin.ext (by simp)]
+      exact h₂l
+    · rw [hval2 (Fin.last (n + p)) (by simp only [Fin.val_last]; omega)
+        (by simp only [Fin.val_last]; omega)]
+      rw [show (⟨((Fin.last (n + p) : Fin (n + p + 1)) : ℕ) - n,
+          by simp only [Fin.val_last]; omega⟩ : Fin (p + 1))
+        = Fin.last p from Fin.ext (by simp only [Fin.val_last]; omega)]
+      exact h₂l
+  · -- the prescribed point is a node
+    refine ⟨⟨n, by omega⟩, ?_⟩
+    rw [hval1 ⟨n, by omega⟩ (by simp)]
+    rw [show (⟨((⟨n, by omega⟩ : Fin (n + p + 1)) : ℕ), Nat.lt_succ_of_le (by simp)⟩
+      : Fin (n + 1)) = Fin.last n from Fin.ext (by simp)]
+    exact h₁l
+  · -- the cells
+    intro i x hx
+    have hi' := i.isLt
+    have hcs : ((i.castSucc : Fin (n + p + 1)) : ℕ) = (i : ℕ) := rfl
+    have hsu : ((i.succ : Fin (n + p + 1)) : ℕ) = (i : ℕ) + 1 := rfl
+    by_cases hi : (i : ℕ) < n
+    · rw [hval1 i.castSucc (by omega)] at hx ⊢
+      rw [hval1 i.succ (by omega)] at hx
+      have e1 : (⟨((i.castSucc : Fin (n + p + 1)) : ℕ), Nat.lt_succ_of_le (by omega)⟩
+          : Fin (n + 1)) = (⟨(i : ℕ), hi⟩ : Fin n).castSucc := Fin.ext (by simp [hcs])
+      have e2 : (⟨((i.succ : Fin (n + p + 1)) : ℕ), Nat.lt_succ_of_le (by omega)⟩
+          : Fin (n + 1)) = (⟨(i : ℕ), hi⟩ : Fin n).succ := Fin.ext (by simp [hsu])
+      rw [e1] at hx ⊢
+      rw [e2] at hx
+      exact hc₁ ⟨(i : ℕ), hi⟩ x hx
+    · rw [hval2 i.castSucc (by omega) (by omega)] at hx ⊢
+      rw [hval2 i.succ (by omega) (by omega)] at hx
+      have hip : (i : ℕ) - n < p := by omega
+      have e1 : (⟨((i.castSucc : Fin (n + p + 1)) : ℕ) - n, by omega⟩ : Fin (p + 1))
+          = (⟨(i : ℕ) - n, hip⟩ : Fin p).castSucc := Fin.ext (by simp [hcs])
+      have e2 : (⟨((i.succ : Fin (n + p + 1)) : ℕ) - n, by omega⟩ : Fin (p + 1))
+          = (⟨(i : ℕ) - n, hip⟩ : Fin p).succ := Fin.ext (by simp [hsu]; omega)
+      rw [e1] at hx ⊢
+      rw [e2] at hx
+      exact hc₂ ⟨(i : ℕ) - n, hip⟩ x hx
+
 /-! ### Step paths
 
 The approximating family of Milestone 5 consists of paths that are constant
