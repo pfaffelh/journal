@@ -13618,3 +13618,113 @@ umzuschreiben, daß `(n+1)` durch die Zahl der Knoten mit
 Schritt des nächsten Laufs, vor dem Zusammenbau und nicht in ihm. Die
 Reihenfolge der Wahlen ist dann `δ` zuerst, daraus `n₀`, dann `γ` und mit ihm
 `ρ`.
+
+### 2026-09-09, zwölfter Lauf des Tages — die Fensterrandbuchführung zählt jetzt nur noch die Knoten, die das Fenster sieht
+
+**Bearbeitet:** `TauCeti/SkorokhodSpace/Suggested.lean`, Meilenstein 7, die
+Rückrichtung von `SkorokhodSpace.isCompact_closure_iff`. Die Datei steht
+weiterhin bei **einem** `sorry`. Vierzehn Deklarationen sind neu oder
+umgeschrieben, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` —
+`SkorokhodSpace.instSeparableSpace`, der einzige Abnehmer des umgeschriebenen
+Satzes, eingeschlossen.
+
+**Der benannte Mangel des elften Laufs ist behoben, und die Reparatur ist
+genau die angesagte: dieselbe Rechnung, schärfer geführt.**
+
+`SkorokhodSpace.volume_inter_badRadii_le_of_sparse`: ist die Unterteilung `t`
+monoton und `δ`-sparsam und ist `n₀ δ ≥ 2 (M + γ + κ)`, so haben die schlechten
+Radien in `Set.Ioc 0 M` das Maß höchstens `(n₀ + 1) (2 γ + κ)` — **und `n` kommt
+darin nicht mehr vor**. Das ist es, was die Rückrichtung braucht und was
+`SkorokhodSpace.volume_badRadii_le`, die grobe Fassung, nicht gibt: über der
+Familie `A` wechselt die Unterteilung, die Schranke muß gleichmäßig gelten, und
+eine Länge hat `IsSubdivision` gar nicht — sie verlangt nur die Überdeckung, ein
+Knoten darf beliebig weit draußen sitzen.
+
+*Der Angelpunkt ist ein eigener Satz geworden, weil er die ganze Rechnung ist:*
+`SkorokhodSpace.dist_le_of_inter_badRadiiPiece_nonempty`. Trifft das
+Koordinatenintervall eines Knotens `Set.Ioc 0 M` überhaupt, so liegt der Knoten
+innerhalb `M + γ + κ` vom Basispunkt. Vier Ungleichungen, zwei je Intervall: ein
+Radius `≤ M` drückt die untere Koordinate des oberen Intervalls unter `M`, ein
+positiver hebt die obere über `0`, und beim gespiegelten unteren Intervall
+gerade umgekehrt gegen `-M` und `κ`. Die Lücke zwischen den beiden Koordinaten
+ist `dist (d i) (t i) ≤ γ`, also liegen beide und mit ihnen `t i` in einem
+Fenster vom Radius `M + γ + κ`; `lengthCoord` ist eine Isometrie und macht
+daraus `dist (t i) t₀`.
+
+*Die Vergrößerung um `γ + κ` ist kein Schlupf.* Ein Knoten dicht außerhalb des
+Fensters kann vom Zeitwechsel hineingetragen werden (das ist `γ`), und der
+untere Fensterrand selbst wandert um bis zu `κ` (das ist die dritte Klausel, die
+der dritte Lauf eingeführt hat). Beides ist in `badRadiiPiece` schon drin; der
+Satz liest es nur ab.
+
+*Und das Abzählen selbst ist `sub_mul_le_two_mul_of_isSubdivision` vom zehnten
+Lauf, auf dem vergrößerten Radius gelesen.* Die Indizes mit einem schlechten
+Radius im Fenster bilden eine Menge; ihre beiden äußersten haben Indexabstand
+höchstens `n₀`, weil ihre Knoten `2 (M + γ + κ)` weit auseinanderliegen und die
+Unterteilung `δ`-sparsam ist; und eine Menge natürlicher Zahlen zwischen zwei
+Extremen hat höchstens `n₀ + 1` Elemente. Das ist der ganze
+Kardinalitätsschritt, über `Finset.min'`/`Finset.max'` und `Nat.card_Icc`.
+
+**Dafür ist die Buchführung in benannte Stücke zerlegt, und das ist der Grund,
+warum die Separabilität nichts davon merkt.** `SkorokhodSpace.badRadiiPiece`
+und `SkorokhodSpace.badRadii` sind jetzt **Definitionen** statt anonymer Mengen
+in einem Beweis, samt `measurableSet_badRadiiPiece`,
+`mem_badRadiiPiece_of_exhaustionMax`, `mem_badRadiiPiece_of_exhaustionMin`,
+`volume_badRadiiPiece_le`, `measurableSet_badRadii` und `volume_badRadii_le`;
+die punktweise Aussage heißt
+`SkorokhodSpace.distWith_stepPath_le_of_notMem_badRadii`. Eine Menge zu benennen
+ist hier keine Kosmetik: **erst dadurch kann dieselbe Menge zwei Maßschranken
+tragen** — die grobe für die Separabilität, die scharfe für die Rückrichtung.
+Solange `B` existentiell gebunden war, war es für den zweiten Abnehmer opak, und
+die Ansage des elften Laufs, „`exists_bad_radii_set` ist umzuschreiben", war
+darum eine Ansage zu wenig.
+
+`SkorokhodSpace.exists_bad_radii_set` steht unverändert da, als Korollar der
+Stücke, und `instSeparableSpace` ist nicht angefaßt.
+
+**Ein Befund, der die Sackgassenmeldung des elften Laufs berichtigt — und er ist
+auf Papier und nicht in Lean.** Der elfte Lauf hat notiert, die Unterteilung zu
+**stutzen** sei verschlossen, weil der gestutzte erste und letzte Abstand
+beliebig klein werden können und die Sparsamkeit gerade das ist, was die Zelte
+des Gitters trennt. Das gilt für das Stutzen an den **Fensterenden** und nur
+dafür. Stutzt man statt dessen an festen Marken `± (M + 1)` — also einen vollen
+Schritt außerhalb des Fensters vom Radius `M` —, so bleibt die Sparsamkeit
+erhalten: der erste Knoten wird `max (t i₀) (-(M+1))` mit `i₀` dem größten Index
+unter `exhaustionMin`, und dann ist die Lücke zum nächsten Knoten entweder die
+alte (`≥ δ`, wenn `t i₀ > -(M+1)`) oder mindestens `1` (wenn `t i₀ ≤ -(M+1)`,
+denn der nächste Knoten liegt über `-M`). Die Schwingung übersteht es, weil
+`Set.Ico (max (t i₀) (-(M+1))) (t (i₀+1)) ⊆ Set.Ico (t i₀) (t (i₀+1))`, die
+Überdeckung ebenfalls, denn beide Marken liegen jenseits des Fensters. **Damit
+ist der Zusammenbau nicht mehr auf ein unbeschränkt langes Tupel angewiesen**,
+und `stepPathFamilyLe` bekommt das endliche Tupel, das es verlangt. Das ist
+nicht bewiesen; es ist die Konstruktion, die der nächste Lauf zu bauen hat, und
+sie steht hier, damit sie nicht ein zweites Mal als verschlossen abgelegt wird.
+
+**Mitgekommen sind die beiden Brücken, mit denen der Zusammenbau anfängt**, und
+beide sind kurz, weil sie nur auspacken, was die Definitionen schon sagen.
+`SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt` ist der `iInf`
+aufgelöst: ist `modulusBased t₀ u f δ < c`, so gibt es eine gestützte Unterteilung
+mit `subdivisionOsc f t < c`. Das ist die Richtung, die die Rückrichtung liest —
+die Hinrichtung liest eine Unterteilung *vom Pfad ab* und schätzt den Modul damit
+nach oben ab, hier wird umgekehrt aus der Schranke eine Unterteilung gewonnen.
+Und `SkorokhodSpace.dist_le_of_subdivisionOsc_le` ist der Übergang von `ℝ≥0∞` nach
+`ℝ`, also von `subdivisionOsc` zur Zellhypothese von `distWith_stepPath_le`; die
+beiden stehen auf verschiedenen Seiten von Meilenstein 7, weil der Modul einen
+Wert haben muß, wenn es gar keine `δ`-sparsame Unterteilung gibt, die gefensterte
+Schranke aber eine Ungleichung zwischen reellen Abständen ist.
+
+**Das Manuskript ist nicht angefaßt.**
+
+**Was als Nächstes zu tun ist**, und es ist ein benanntes Stück vor dem
+Zusammenbau, so wie dieser Lauf eines war: `SkorokhodSpace.IsSubdivision.trim`
+— zu einer gestützten `δ`-sparsamen Unterteilung des Fensters vom Radius `M`
+eine gestützte `min δ 1`-sparsame Unterteilung **desselben** Fensters, deren
+sämtliche Knoten in `Set.Icc (-(M+1)) (M+1)` liegen und deren Länge durch
+`2(M+1)/min δ 1` beschränkt ist, mit denselben Zellschwingungen. Der Beweis ist
+die Teiltupel-Konstruktion von `mul_le_dist_of_sparse` (dort schon einmal
+geführt) samt den beiden `max`/`min` an den Enden; der Basispunkt bleibt Knoten,
+weil er im Innern des Fensters liegt. Danach ist der Zusammenbau das, was der
+elfte Lauf aufgeschrieben hat, mit der Wahlreihenfolge `δ`, `n₀`, `γ`, `ρ` und
+`volume_inter_badRadii_le_of_sparse` an der Stelle, an der bisher die Länge `n`
+stand.

@@ -1860,17 +1860,42 @@ over a shrinking family and is therefore an infimum.
   that is what `le_intDist_stepAt_of_exp_mul_lt` shows to be necessary. What
   remains is the assembly, and in it the two window ends, which are
   `SkorokhodSpace.exists_bad_radii_set` and `intWith_le_of_ae_distWith_le`.
-* `SkorokhodSpace.exists_bad_radii_set` **with the nodes outside the window not
-  counted**: its measure bound is `(n + 1) (2 δ + (exp δ - 1) 2 M)` over the
-  whole length, and `n` is unbounded over a family — `IsSubdivision` asks only
-  that the subdivision cover the window, so a node may sit arbitrarily far
-  outside. The count has to run over the nodes whose coordinate interval meets
-  `Set.Ioc 0 M` instead, and those are bounded in number by
-  `sub_mul_le_two_mul_of_isSubdivision`, uniformly over the family, once `δ` is
-  fixed by the modulus condition. The far nodes contribute nothing: their
-  intervals sit around their own coordinate. This is what the converse needs
-  before the assembly, and the order of the choices is then `δ`, then the node
-  count, then the norm budget `γ` and with it the grid spacing `ρ`.
+* `SkorokhodSpace.badRadiiPiece` and `SkorokhodSpace.badRadii`: the bad radii of
+  a node and of a tuple, as **definitions** rather than as anonymous sets inside
+  a proof, with `measurableSet_badRadiiPiece`,
+  `mem_badRadiiPiece_of_exhaustionMax`, `mem_badRadiiPiece_of_exhaustionMin`,
+  `volume_badRadiiPiece_le`, `measurableSet_badRadii` and the pointwise estimate
+  `SkorokhodSpace.distWith_stepPath_le_of_notMem_badRadii`. Written and proved
+  (2026-09-09). Naming the set is what lets it carry two measure estimates;
+  `SkorokhodSpace.exists_bad_radii_set` is their packaging and is what Milestone
+  5 consumes.
+* `SkorokhodSpace.volume_badRadii_le`, the crude count `(n + 1) (2 γ + κ)`, and
+  `SkorokhodSpace.volume_inter_badRadii_le_of_sparse`, the sharp one
+  `(n₀ + 1) (2 γ + κ)` **free of `n`**. Both proved (2026-09-09). The sharp one
+  is what the converse needs: `n` is unbounded over a family, `IsSubdivision`
+  asking only that the subdivision cover the window, so a node may sit
+  arbitrarily far outside; the far nodes contribute nothing, their intervals
+  sitting around their own coordinate. Its pivot is
+  `SkorokhodSpace.dist_le_of_inter_badRadiiPiece_nonempty` — a node whose
+  interval meets `Set.Ioc 0 M` lies within `M + γ + κ` of the base point — and
+  the count is `sub_mul_le_two_mul_of_isSubdivision` on that enlarged radius.
+  The order of the choices is then `δ`, then `n₀`, then the norm budget `γ` and
+  with it the grid spacing `ρ`.
+* `SkorokhodSpace.exists_isSubdivisionBased_subdivisionOsc_lt` and
+  `SkorokhodSpace.dist_le_of_subdivisionOsc_le`: the two bridges the converse
+  begins with — the `iInf` unfolded, so that a bound on `modulusBased` produces a
+  subdivision, and the passage from `subdivisionOsc` in `ℝ≥0∞` to the cellwise
+  real estimate `distWith_stepPath_le` asks for. Both proved (2026-09-09).
+* `SkorokhodSpace.IsSubdivision.trim`: to a based `δ`-sparse subdivision of the
+  window of radius `M` a based `min δ 1`-sparse subdivision of the same window
+  with all nodes in `Set.Icc (-(M+1)) (M+1)`, length at most `2 (M+1) / min δ 1`
+  and the same cell oscillations. This is what hands `stepPathFamilyLe` a tuple
+  of bounded length. Trimming at the **window ends** is closed — the trimmed
+  extreme gaps can be arbitrarily small, and sparseness is what separates the
+  tents of `exists_finite_grid_timeChange` — but trimming at the fixed marks
+  `±(M+1)`, a full step outside the window, is not: the trimmed edge gap is
+  either the old one or at least `1`, the trimmed cell is contained in the old
+  one, and both marks lie beyond the window.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, over `ℝ`, where the first condition is replaced by the
   existence of a compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
