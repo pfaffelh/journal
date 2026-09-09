@@ -18,6 +18,7 @@ import Mathlib.Probability.CDF
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.MeasureTheory.Function.Floor
 import Mathlib.Analysis.Calculus.Deriv.Slope
+import Mathlib.Probability.Kernel.Composition.IntegralCompProd
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -2296,6 +2297,467 @@ theorem jumpMeasure_map_jumpProcess_zero {lam : E → ℝ} (hlam : ∀ x, 0 < la
     filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
     exact jumpProcess_zero (y := ω.1) (xi := ω.2) hω hlam
   rw [Measure.map_congr h, jumpMeasure_map_chain_zero]
+
+/-! ### The jump construction as a kernel in the initial state
+
+`jumpMeasure mu nu` fixes an initial law, and no statement about it says that the
+expectation of a bounded functional is measurable in the initial *state* -- which is what
+the Markov property at a fixed time needs, since there the initial state is itself random.
+The construction is a kernel, and `jumpKernel` is that kernel; over a bare
+`[MeasurableSpace E]` it is the only source of that measurability. -/
+
+section JumpKernel
+
+variable (mu : Kernel E E) [IsMarkovKernel mu]
+
+/-- **The jump construction as a kernel in the initial state.** -/
+noncomputable def jumpKernel : Kernel E ((ℕ → E) × (ℕ → ℝ)) :=
+  (chainKernel mu).prod (Kernel.const E waitingMeasure)
+
+instance instIsMarkovKernelJumpKernel : IsMarkovKernel (jumpKernel mu) := by
+  unfold jumpKernel; infer_instance
+
+theorem jumpKernel_apply (z : E) :
+    jumpKernel mu z = (chainKernel mu z).prod waitingMeasure := by
+  rw [jumpKernel, Kernel.prod_apply, Kernel.const_apply]
+
+/-- **The jump construction is the composition of its kernel with the initial law.** -/
+theorem jumpMeasure_eq_comp (nu : Measure E) [IsProbabilityMeasure nu] :
+    jumpMeasure mu nu = jumpKernel mu ∘ₘ nu := by
+  rw [jumpMeasure]
+  refine Measure.prod_eq fun s t hs ht ↦ ?_
+  rw [Measure.bind_apply (hs.prod ht) (Kernel.aemeasurable _)]
+  simp_rw [jumpKernel_apply, Measure.prod_prod]
+  rw [lintegral_mul_const' _ _ (measure_ne_top _ _),
+    Measure.bind_apply hs (Kernel.aemeasurable _)]
+
+
+/-- **Integration against the jump construction, disintegrated over the initial state.** -/
+theorem integral_jumpMeasure_eq_integral_jumpKernel (nu : Measure E) [IsProbabilityMeasure nu]
+    {F : (ℕ → E) × (ℕ → ℝ) → ℝ} (hF : Measurable F) {C : ℝ} (hC : ∀ ω, |F ω| ≤ C) :
+    ∫ ω, F ω ∂(jumpMeasure mu nu) = ∫ z, (∫ ω, F ω ∂(jumpKernel mu z)) ∂nu := by
+  rw [jumpMeasure_eq_comp, Measure.comp_eq_comp_const_apply,
+    Kernel.integral_comp (integrable_of_abs_le hF hC), Kernel.const_apply]
+
+/-- **The expectation of a bounded functional is measurable in the initial state.** -/
+theorem measurable_integral_jumpKernel {F : (ℕ → E) × (ℕ → ℝ) → ℝ} (hF : Measurable F) :
+    Measurable fun z ↦ ∫ ω, F ω ∂(jumpKernel mu z) :=
+  (StronglyMeasurable.integral_kernel_prod_right' (κ := jumpKernel mu)
+    (f := fun p : E × ((ℕ → E) × (ℕ → ℝ)) ↦ F p.2)
+    (hF.comp measurable_snd).stronglyMeasurable).measurable
+
+/-- **Under `jumpKernel mu z` the initial state of the chain may be replaced by `z`.**  Over a
+bare `[MeasurableSpace E]` the almost sure statement `ω.1 0 = z` is not available -- it would need
+`{z}` to be measurable -- so the substitution is stated for a bounded measurable functional and
+proved on the splitting of the chain at its first step. -/
+theorem integral_chainKernel_zero_eq {H : E × (ℕ → E) → ℝ} (hH : Measurable H) {C : ℝ}
+    (hC : ∀ p, |H p| ≤ C) (z : E) :
+    ∫ y, H (y 0, y) ∂(chainKernel mu z) = ∫ y, H (z, y) ∂(chainKernel mu z) := by
+  have hsplit : Measurable (fun x : ℕ → E ↦ (x 0, fun n ↦ x (n + 1))) :=
+    (measurable_pi_apply 0).prodMk (measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _)
+  have hnc : ∀ y : ℕ → E, natCons (y 0, fun n ↦ y (n + 1)) = y := by
+    intro y; funext n
+    by_cases h : n = 0
+    · simp [natCons, h]
+    · simp only [natCons, if_neg h]
+      congr 1
+      omega
+  have key : ∀ K : E × (ℕ → E) → ℝ, Measurable K → (∀ p, |K p| ≤ C) →
+      (∫ y, K (y 0, y) ∂(chainKernel mu z))
+        = ∫ tail, K (z, natCons (z, tail)) ∂(chainKernel mu ∘ₘ (mu z)) := by
+    intro K hK hKb
+    have hΨ : Measurable fun p : E × (ℕ → E) ↦ K (p.1, natCons p) :=
+      hK.comp (measurable_fst.prodMk measurable_natCons)
+    have h1 : (∫ y, K (y 0, y) ∂(chainKernel mu z))
+        = ∫ y, (fun p : E × (ℕ → E) ↦ K (p.1, natCons p))
+            ((fun x : ℕ → E ↦ (x 0, fun n ↦ x (n + 1))) y) ∂(chainKernel mu z) := by
+      refine integral_congr_ae (Filter.Eventually.of_forall fun y ↦ ?_)
+      simp only [hnc y]
+    rw [h1, ← integral_map hsplit.aemeasurable hΨ.aestronglyMeasurable, chainKernel_map_split,
+      integral_prod _ (integrable_of_abs_le hΨ fun p ↦ hKb _),
+      integral_dirac' _ z ((hΨ.stronglyMeasurable).integral_prod_right')]
+  rw [key H hH hC, key (fun p ↦ H (z, p.2)) (hH.comp (measurable_const.prodMk measurable_snd))
+    (fun p ↦ hC _)]
+
+
+/-- **The same substitution for the whole jump construction.** -/
+theorem integral_jumpKernel_zero_eq {F : E × ((ℕ → E) × (ℕ → ℝ)) → ℝ} (hF : Measurable F)
+    {C : ℝ} (hC : ∀ p, |F p| ≤ C) (z : E) :
+    ∫ ω, F (ω.1 0, ω) ∂(jumpKernel mu z) = ∫ ω, F (z, ω) ∂(jumpKernel mu z) := by
+  have hm1 : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ F (ω.1 0, ω) :=
+    hF.comp (((measurable_pi_apply 0).comp measurable_fst).prodMk measurable_id)
+  have hm2 : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ F (z, ω) :=
+    hF.comp (measurable_const.prodMk measurable_id)
+  have hG : Measurable fun q : (E × (ℕ → E)) × (ℕ → ℝ) ↦ F (q.1.1, (q.1.2, q.2)) :=
+    hF.comp ((measurable_fst.comp measurable_fst).prodMk
+      ((measurable_snd.comp measurable_fst).prodMk measurable_snd))
+  have hH : Measurable fun p : E × (ℕ → E) ↦ ∫ xi, F (p.1, (p.2, xi)) ∂waitingMeasure :=
+    (hG.stronglyMeasurable.integral_prod_right' (ν := waitingMeasure)).measurable
+  have hHb : ∀ p : E × (ℕ → E), |∫ xi, F (p.1, (p.2, xi)) ∂waitingMeasure| ≤ C :=
+    fun p ↦ abs_integral_le_of_abs_le fun xi ↦ hC _
+  rw [jumpKernel_apply, integral_prod _ (integrable_of_abs_le hm1 fun _ ↦ hC _),
+    integral_prod _ (integrable_of_abs_le hm2 fun _ ↦ hC _)]
+  exact integral_chainKernel_zero_eq mu hH hHb z
+
+/-! ### The transition semigroup -/
+
+/-- **The transition semigroup of the jump construction**, as a function of the initial state.
+This is the object that `jumpKernel` exists for: over a bare `[MeasurableSpace E]` the expectation
+of a bounded functional started at `z` is measurable in `z` because the construction is a kernel,
+and no statement about a fixed initial law delivers that. -/
+noncomputable def jumpSemigroup (lam : E → ℝ) (mu : Kernel E E) [IsMarkovKernel mu] (h : E → ℝ) (t : ℝ)
+    (z : E) : ℝ :=
+  ∫ ω, h (jumpProcess lam t ω) ∂(jumpKernel mu z)
+
+theorem measurable_uncurry_jumpSemigroup {lam : E → ℝ} (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) : Measurable fun p : ℝ × E ↦ jumpSemigroup lam mu h p.1 p.2 := by
+  have hf : Measurable fun q : (ℝ × E) × ((ℕ → E) × (ℕ → ℝ)) ↦ h (jumpProcess lam q.1.1 q.2) :=
+    hh.comp ((measurable_jumpProcess hlam).comp
+      ((measurable_fst.comp measurable_fst).prodMk measurable_snd))
+  have heq : ∀ p : ℝ × E, (Kernel.prodMkLeft ℝ (jumpKernel mu)) p = jumpKernel mu p.2 := by
+    rintro ⟨r, z⟩
+    rw [Kernel.prodMkLeft_apply]
+  have key : Measurable fun p : ℝ × E ↦ ∫ ω, (fun q : (ℝ × E) × ((ℕ → E) × (ℕ → ℝ)) ↦
+      h (jumpProcess lam q.1.1 q.2)) (p, ω) ∂(Kernel.prodMkLeft ℝ (jumpKernel mu) p) :=
+    (StronglyMeasurable.integral_kernel_prod_right'
+      (κ := Kernel.prodMkLeft ℝ (jumpKernel mu))
+      (f := fun q : (ℝ × E) × ((ℕ → E) × (ℕ → ℝ)) ↦ h (jumpProcess lam q.1.1 q.2))
+      hf.stronglyMeasurable).measurable
+  simp only [heq] at key
+  exact key
+
+theorem measurable_jumpSemigroup {lam : E → ℝ} (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) (t : ℝ) : Measurable (jumpSemigroup lam mu h t) := by
+  have key : Measurable fun z : E ↦
+      (fun p : ℝ × E ↦ jumpSemigroup lam mu h p.1 p.2) (t, z) :=
+    (measurable_uncurry_jumpSemigroup mu hlam hh).comp'
+      (measurable_const.prodMk measurable_id)
+  exact key
+
+theorem abs_jumpSemigroup_le {lam : E → ℝ} {h : E → ℝ} {C : ℝ} (hC : ∀ x, |h x| ≤ C) (t : ℝ)
+    (z : E) : |jumpSemigroup lam mu h t z| ≤ C :=
+  abs_integral_le_of_abs_le fun ω ↦ hC _
+
+theorem integral_jumpSemigroup_eq (nu : Measure E) [IsProbabilityMeasure nu] {lam : E → ℝ}
+    (hlam : Measurable lam) {h : E → ℝ} (hh : Measurable h) {C : ℝ} (hC : ∀ x, |h x| ≤ C)
+    (t : ℝ) :
+    ∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu) = ∫ z, jumpSemigroup lam mu h t z ∂nu :=
+  integral_jumpMeasure_eq_integral_jumpKernel mu nu
+    (hh.comp ((measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)))
+    (fun ω ↦ hC _)
+
+end JumpKernel
+
+/-! ### The shift of the clock before the first jump -/
+
+/-- **Advancing the clock by a fixed amount of the zeroth waiting time.**  The chain is untouched
+and only the zeroth waiting time is shortened; `jumpProcess_waitShift` says that this is exactly
+a shift of the time axis by `s` when `a = lam (ω.1 0) * s`. -/
+def waitShift (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : (ℕ → E) × (ℕ → ℝ) :=
+  (ω.1, fun n ↦ if n = 0 then ω.2 0 - a else ω.2 n)
+
+theorem measurable_waitShift (a : ℝ) : Measurable (waitShift (E := E) a) := by
+  refine measurable_fst.prodMk (measurable_pi_lambda _ fun n ↦ ?_)
+  by_cases h : n = 0
+  · simp only [waitShift, if_pos h]
+    exact ((measurable_pi_apply 0).comp measurable_snd).sub measurable_const
+  · simp only [waitShift, if_neg h]
+    exact (measurable_pi_apply n).comp measurable_snd
+
+/-- **The jump times of the shortened data**: every one of them, except the trivial `T 0`, is
+moved back by `a / lam (y 0)`.  Note that no positivity is used -- the identity is an identity of
+real numbers, and it holds also where the shortened waiting time has become negative. -/
+theorem jumpTime_waitShift (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (a : ℝ) (n : ℕ) :
+    jumpTime lam y (fun k ↦ if k = 0 then xi 0 - a else xi k) (n + 1)
+      = jumpTime lam y xi (n + 1) - a / lam (y 0) := by
+  induction n with
+  | zero =>
+      have h0 : jumpTime lam y (fun k ↦ if k = 0 then xi 0 - a else xi k) 1
+          = (xi 0 - a) / lam (y 0) := by simp [jumpTime]
+      have h1 : jumpTime lam y xi 1 = xi 0 / lam (y 0) := by simp [jumpTime]
+      rw [h0, h1, sub_div]
+  | succ n ih =>
+      rw [jumpTime_succ, ih, jumpTime_succ lam y xi (n + 1)]
+      simp only [if_neg (Nat.succ_ne_zero n)]
+      ring
+
+/-- **Shortening the zeroth waiting time by `lam (y 0) * s` is a shift of the time axis by `s`.**
+It needs nothing but `lam (ω.1 0) ≠ 0`: no monotonicity, no non explosion, and no sign of `s`.
+The chain is untouched, and every window of the shortened data is the corresponding window of the
+original moved back by `s`. -/
+theorem jumpProcess_waitShift {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)} (hlam : lam (ω.1 0) ≠ 0)
+    (s t : ℝ) :
+    jumpProcess lam t (waitShift (lam (ω.1 0) * s) ω) = jumpProcess lam (s + t) ω := by
+  have hdiv : lam (ω.1 0) * s / lam (ω.1 0) = s := by
+    field_simp
+  have hT : ∀ n : ℕ, jumpTime lam (waitShift (lam (ω.1 0) * s) ω).1
+      (waitShift (lam (ω.1 0) * s) ω).2 (n + 1) = jumpTime lam ω.1 ω.2 (n + 1) - s := by
+    intro n
+    rw [show (waitShift (lam (ω.1 0) * s) ω).1 = ω.1 from rfl]
+    rw [show (waitShift (lam (ω.1 0) * s) ω).2
+      = (fun k ↦ if k = 0 then ω.2 0 - lam (ω.1 0) * s else ω.2 k) from rfl,
+      jumpTime_waitShift, hdiv]
+  have hset : {n | t < jumpTime lam (waitShift (lam (ω.1 0) * s) ω).1
+        (waitShift (lam (ω.1 0) * s) ω).2 (n + 1)}
+      = {n | s + t < jumpTime lam ω.1 ω.2 (n + 1)} := by
+    ext n
+    simp only [Set.mem_setOf_eq, hT n]
+    constructor <;> intro h <;> linarith
+  simp only [jumpProcess, stepPath, stepIndex, hset]
+  rfl
+
+
+
+
+/-! ### The memorylessness of the waiting times -/
+
+/-- Prepending an independent standard exponential variable to the waiting times reproduces
+them.  This is `infinitePi_map_natCons` for the one product the construction uses. -/
+theorem waitingMeasure_map_natCons :
+    ((expMeasure 1).prod waitingMeasure).map natCons = waitingMeasure := by
+  unfold waitingMeasure
+  exact infinitePi_map_natCons (expMeasure 1)
+
+
+/-- **The memorylessness of the standard exponential law, in the form the restart at a fixed time
+needs.**  Cutting `a` off the zeroth waiting time and keeping only the paths on which it survives
+reproduces `waitingMeasure` itself, at the price of the factor `exp (-a)`.
+
+Mathlib has the distribution function of `expMeasure` but neither its tail nor this identity, and
+`expMeasure_Ioi_add` -- the multiplicative form of the tail -- is a statement about *sets*: it does
+not by itself say that the law of the residual waiting time is again exponential and independent
+of everything else.  That is what is proved here. -/
+theorem integral_waitingMeasure_waitShift {a : ℝ} (ha : 0 ≤ a) {F : (ℕ → ℝ) → ℝ}
+    (hF : Measurable F) {C : ℝ} (hC : ∀ x, |F x| ≤ C) :
+    (∫ xi in {xi : ℕ → ℝ | a < xi 0},
+        F (fun n ↦ if n = 0 then xi 0 - a else xi n) ∂waitingMeasure)
+      = Real.exp (-a) * ∫ xi, F xi ∂waitingMeasure := by
+  classical
+  have h0C : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hC (fun _ ↦ 0))
+  set Ψ : ℝ → ℝ := fun v ↦ ∫ tail, F (natCons (v, tail)) ∂waitingMeasure with hΨdef
+  set Φ : ℝ × (ℕ → ℝ) → ℝ := fun p ↦ if a < p.1 then F (natCons (p.1 - a, p.2)) else 0 with hΦdef
+  have hΦ : Measurable Φ := by
+    refine Measurable.ite (measurableSet_lt measurable_const measurable_fst) ?_ measurable_const
+    exact hF.comp (measurable_natCons.comp
+      ((measurable_fst.sub measurable_const).prodMk measurable_snd))
+  have hΦb : ∀ p, |Φ p| ≤ C := by
+    intro p
+    by_cases hp : a < p.1
+    · simpa [hΦdef, hp] using hC _
+    · simpa [hΦdef, hp] using h0C
+  have hsplitm : Measurable (fun x : ℕ → ℝ ↦ (x 0, fun n ↦ x (n + 1))) :=
+    (measurable_pi_apply 0).prodMk (measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _)
+  have hset : MeasurableSet {xi : ℕ → ℝ | a < xi 0} :=
+    measurableSet_lt measurable_const (measurable_pi_apply 0)
+  -- Step A: the integrand is a function of the zeroth coordinate and the tail.
+  have stepA : (∫ xi in {xi : ℕ → ℝ | a < xi 0},
+        F (fun n ↦ if n = 0 then xi 0 - a else xi n) ∂waitingMeasure)
+      = ∫ xi, Φ ((fun x : ℕ → ℝ ↦ (x 0, fun n ↦ x (n + 1))) xi) ∂waitingMeasure := by
+    rw [← integral_indicator hset]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun xi ↦ ?_)
+    by_cases hx : a < xi 0
+    · rw [Set.indicator_of_mem (show xi ∈ {xi : ℕ → ℝ | a < xi 0} from hx)]
+      simp only [hΦdef, if_pos hx]
+      congr 1
+      funext n
+      by_cases hn : n = 0
+      · simp [natCons, hn]
+      · simp only [natCons, if_neg hn]
+        congr 1
+        omega
+    · rw [Set.indicator_of_notMem (show xi ∉ {xi : ℕ → ℝ | a < xi 0} from hx)]
+      simp only [hΦdef, if_neg hx]
+  -- Step B: the zeroth coordinate is independent of the tail.
+  have stepB : (∫ xi, Φ ((fun x : ℕ → ℝ ↦ (x 0, fun n ↦ x (n + 1))) xi) ∂waitingMeasure)
+      = ∫ u, (∫ tail, Φ (u, tail) ∂waitingMeasure) ∂(expMeasure 1) := by
+    rw [← integral_map hsplitm.aemeasurable hΦ.aestronglyMeasurable, waitingMeasure_map_split,
+      integral_prod _ (integrable_of_abs_le hΦ hΦb)]
+  have hinner : ∀ u : ℝ, (∫ tail, Φ (u, tail) ∂waitingMeasure) = if a < u then Ψ (u - a) else 0 := by
+    intro u
+    by_cases hu : a < u
+    · simp only [hΦdef, if_pos hu, hΨdef]
+    · simp only [hΦdef, if_neg hu, integral_zero, if_neg hu]
+  -- Step C: the translation of the half line, which is where the factor `exp (-a)` appears.
+  have stepC : (∫ u, (if a < u then Ψ (u - a) else 0) ∂(expMeasure 1))
+      = Real.exp (-a) * ∫ v, Ψ v ∂(expMeasure 1) := by
+    rw [integral_expMeasure_one, integral_expMeasure_one, ← integral_indicator measurableSet_Ioi,
+      ← integral_indicator measurableSet_Ioi,
+      ← integral_add_right_eq_self (fun u ↦ (Set.Ioi (0 : ℝ)).indicator
+        (fun u ↦ Real.exp (-u) * (if a < u then Ψ (u - a) else 0)) u) a, ← integral_const_mul]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun v ↦ ?_)
+    show (Set.Ioi (0:ℝ)).indicator
+          (fun u ↦ Real.exp (-u) * (if a < u then Ψ (u - a) else 0)) (v + a)
+        = Real.exp (-a) * (Set.Ioi (0:ℝ)).indicator (fun s ↦ Real.exp (-s) * Ψ s) v
+    by_cases hv : (0 : ℝ) < v
+    · rw [Set.indicator_of_mem (Set.mem_Ioi.2 hv),
+        Set.indicator_of_mem (Set.mem_Ioi.2 (show (0:ℝ) < v + a by linarith)),
+        if_pos (show a < v + a by linarith)]
+      simp only [add_sub_cancel_right]
+      rw [show -(v + a) = -a + -v from by ring, Real.exp_add]
+      ring
+    · rw [Set.indicator_of_notMem (show v ∉ Set.Ioi (0:ℝ) from by simpa using hv), mul_zero]
+      by_cases hva : (0 : ℝ) < v + a
+      · rw [Set.indicator_of_mem (Set.mem_Ioi.2 hva),
+          if_neg (not_lt.2 (by simp only [not_lt] at hv; linarith)), mul_zero]
+      · rw [Set.indicator_of_notMem (show v + a ∉ Set.Ioi (0:ℝ) from by simpa using hva)]
+  -- Step D: prepending an independent exponential variable recovers `waitingMeasure`.
+  have stepD : (∫ v, Ψ v ∂(expMeasure 1)) = ∫ xi, F xi ∂waitingMeasure := by
+    have h1 : (∫ v, Ψ v ∂(expMeasure 1))
+        = ∫ p, F (natCons p) ∂((expMeasure 1).prod waitingMeasure) :=
+      (integral_prod _ (integrable_of_abs_le (hF.comp measurable_natCons) fun p ↦ hC _)).symm
+    rw [h1, ← integral_map measurable_natCons.aemeasurable hF.aestronglyMeasurable,
+      waitingMeasure_map_natCons]
+  rw [stepA, stepB]
+  simp_rw [hinner]
+  rw [stepC, stepD]
+
+
+
+/-! ### The restart at a fixed time, before the first jump -/
+
+section Restart
+
+variable (mu : Kernel E E) [IsMarkovKernel mu]
+
+/-- **The restart of the jump construction at a fixed time `s`, on the event that the first jump
+has not yet happened.**  This is the base case of the Markov property: given `{s < T 1}` the
+driving data restarted at `s` is again the driving data of a jump construction from the same
+initial state, and the price is the survival factor `exp (-(lam z * s))`.
+
+Both ingredients are used exactly once: `integral_waitingMeasure_waitShift` for the residual
+waiting time, and `integral_chainKernel_zero_eq` to turn `lam (ω.1 0)` into `lam z` -- the latter
+is needed because over a bare `[MeasurableSpace E]` the identity `ω.1 0 = z` is not available
+almost surely. -/
+theorem integral_jumpKernel_waitShift {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) (z : E) {F : (ℕ → E) × (ℕ → ℝ) → ℝ} (hF : Measurable F)
+    {C : ℝ} (hC : ∀ ω, |F ω| ≤ C) {s : ℝ} (hs : 0 ≤ s) :
+    (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+        F (waitShift (lam (ω.1 0) * s) ω) ∂(jumpKernel mu z))
+      = Real.exp (-(lam z * s)) * ∫ ω, F ω ∂(jumpKernel mu z) := by
+  classical
+  have hSeq : {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}
+      = {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0} := by
+    ext ω
+    simp only [Set.mem_setOf_eq, jumpTime_one]
+    rw [lt_div_iff₀ (hlam0 _), mul_comm s (lam (ω.1 0))]
+  have hS : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0} :=
+    measurableSet_lt ((hlam.comp ((measurable_pi_apply 0).comp measurable_fst)).mul
+      measurable_const) ((measurable_pi_apply 0).comp measurable_snd)
+  have hmap : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ F (waitShift (lam (ω.1 0) * s) ω) := by
+    refine hF.comp (measurable_fst.prodMk (measurable_pi_lambda _ fun n ↦ ?_))
+    by_cases hn : n = 0
+    · simp only [waitShift, if_pos hn]
+      exact ((measurable_pi_apply 0).comp measurable_snd).sub
+        ((hlam.comp ((measurable_pi_apply 0).comp measurable_fst)).mul measurable_const)
+    · simp only [waitShift, if_neg hn]
+      exact (measurable_pi_apply n).comp measurable_snd
+  -- The inner integral over the waiting times, for a fixed path of the chain.
+  have hG : Measurable fun p : (ℕ → E) × (ℕ → ℝ) ↦ F (p.1, p.2) := hF
+  have hGmeas : Measurable fun y : ℕ → E ↦ ∫ xi, F (y, xi) ∂waitingMeasure :=
+    (hG.stronglyMeasurable.integral_prod_right' (ν := waitingMeasure)).measurable
+  have hGb : ∀ y : ℕ → E, |∫ xi, F (y, xi) ∂waitingMeasure| ≤ C :=
+    fun y ↦ abs_integral_le_of_abs_le fun xi ↦ hC _
+  have hinner : ∀ y : ℕ → E,
+      (∫ xi in {xi : ℕ → ℝ | lam (y 0) * s < xi 0},
+          F (y, fun n ↦ if n = 0 then xi 0 - lam (y 0) * s else xi n) ∂waitingMeasure)
+        = Real.exp (-(lam (y 0) * s)) * ∫ xi, F (y, xi) ∂waitingMeasure :=
+    fun y ↦ integral_waitingMeasure_waitShift (mul_nonneg (hlam0 _).le hs)
+      (hF.comp (measurable_const.prodMk measurable_id)) (fun xi ↦ hC _)
+  -- Assemble: first the product structure, then the substitution of `z` for `ω.1 0`.
+  have hprod : (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0},
+        F (waitShift (lam (ω.1 0) * s) ω) ∂(jumpKernel mu z))
+      = ∫ y, Real.exp (-(lam (y 0) * s)) * (∫ xi, F (y, xi) ∂waitingMeasure)
+          ∂(chainKernel mu z) := by
+    rw [← integral_indicator hS, jumpKernel_apply,
+      integral_prod _ ((integrable_of_abs_le hmap (fun ω ↦ hC _)).indicator hS)]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun y ↦ ?_)
+    show (∫ xi, {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0}.indicator
+          (fun ω ↦ F (waitShift (lam (ω.1 0) * s) ω)) (y, xi) ∂waitingMeasure)
+        = Real.exp (-(lam (y 0) * s)) * ∫ xi, F (y, xi) ∂waitingMeasure
+    rw [← hinner y, ← integral_indicator (measurableSet_lt measurable_const
+      (measurable_pi_apply 0))]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun xi ↦ ?_)
+    show {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0}.indicator
+          (fun ω ↦ F (waitShift (lam (ω.1 0) * s) ω)) (y, xi)
+        = {xi : ℕ → ℝ | lam (y 0) * s < xi 0}.indicator
+            (fun xi ↦ F (y, fun n ↦ if n = 0 then xi 0 - lam (y 0) * s else xi n)) xi
+    by_cases hx : lam (y 0) * s < xi 0
+    · rw [Set.indicator_of_mem (show (y, xi) ∈ {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0}
+        from hx), Set.indicator_of_mem (show xi ∈ {xi : ℕ → ℝ | lam (y 0) * s < xi 0} from hx)]
+      rfl
+    · rw [Set.indicator_of_notMem (show (y, xi) ∉ {ω : (ℕ → E) × (ℕ → ℝ) | lam (ω.1 0) * s < ω.2 0}
+        from hx), Set.indicator_of_notMem (show xi ∉ {xi : ℕ → ℝ | lam (y 0) * s < xi 0} from hx)]
+  have hH : Measurable fun p : E × (ℕ → E) ↦
+      Real.exp (-(lam p.1 * s)) * ∫ xi, F (p.2, xi) ∂waitingMeasure :=
+    (Real.measurable_exp.comp (((hlam.comp measurable_fst).mul measurable_const).neg)).mul
+      (hGmeas.comp measurable_snd)
+  have hHb : ∀ p : E × (ℕ → E),
+      |Real.exp (-(lam p.1 * s)) * ∫ xi, F (p.2, xi) ∂waitingMeasure| ≤ C := by
+    intro p
+    rw [abs_mul, abs_of_nonneg (Real.exp_pos _).le]
+    have h1 : Real.exp (-(lam p.1 * s)) ≤ 1 :=
+      Real.exp_le_one_iff.2 (by nlinarith [(hlam0 p.1).le, hs])
+    calc Real.exp (-(lam p.1 * s)) * |∫ xi, F (p.2, xi) ∂waitingMeasure|
+        ≤ 1 * |∫ xi, F (p.2, xi) ∂waitingMeasure| :=
+          mul_le_mul_of_nonneg_right h1 (abs_nonneg _)
+      _ ≤ C := by rw [one_mul]; exact hGb _
+  rw [hSeq, hprod, integral_chainKernel_zero_eq mu hH hHb z]
+  show (∫ y, Real.exp (-(lam z * s)) * ∫ xi, F (y, xi) ∂waitingMeasure ∂(chainKernel mu z))
+      = Real.exp (-(lam z * s)) * ∫ ω, F ω ∂(jumpKernel mu z)
+  rw [integral_const_mul, jumpKernel_apply, integral_prod _ (integrable_of_abs_le hF hC)]
+
+/-- **The Markov property of the jump process at a fixed time, on the event that the first jump
+has not yet happened.**  Both sides are `exp (-(lam z * s)) * jumpSemigroup lam mu h t z`. -/
+theorem integral_jumpKernel_add_of_lt_jumpTime_one {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) (z : E) {h : E → ℝ} (hh : Measurable h) {C : ℝ}
+    (hC : ∀ x, |h x| ≤ C) {s t : ℝ} (hs : 0 ≤ s) :
+    (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+        h (jumpProcess lam (s + t) ω) ∂(jumpKernel mu z))
+      = ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+          jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z) := by
+  have hFmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ h (jumpProcess lam t ω) :=
+    hh.comp ((measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+  have hgmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpSemigroup lam mu h t (ω.1 0) :=
+    (measurable_jumpSemigroup mu hlam hh t).comp
+      ((measurable_pi_apply 0).comp measurable_fst)
+  have hS : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1} :=
+    measurableSet_lt measurable_const (measurable_jumpTime hlam 1)
+  -- the left hand side
+  have hleft : (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+        h (jumpProcess lam (s + t) ω) ∂(jumpKernel mu z))
+      = Real.exp (-(lam z * s)) * jumpSemigroup lam mu h t z := by
+    show (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+          h (jumpProcess lam (s + t) ω) ∂(jumpKernel mu z))
+        = Real.exp (-(lam z * s)) * ∫ ω, h (jumpProcess lam t ω) ∂(jumpKernel mu z)
+    rw [← integral_jumpKernel_waitShift mu hlam hlam0 z hFmeas (fun ω ↦ hC _) hs]
+    refine setIntegral_congr_fun hS (fun ω _ ↦ ?_)
+    rw [jumpProcess_waitShift (ne_of_gt (hlam0 _))]
+  -- the right hand side
+  have hright : (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+        jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z))
+      = Real.exp (-(lam z * s)) * jumpSemigroup lam mu h t z := by
+    have hcongr : (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+          jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z))
+        = ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+            jumpSemigroup lam mu h t ((waitShift (lam (ω.1 0) * s) ω).1 0) ∂(jumpKernel mu z) := by
+      refine setIntegral_congr_fun hS (fun ω hω ↦ ?_)
+      rw [jumpProcess_of_lt_jumpTime_one hω]
+      rfl
+    rw [hcongr, integral_jumpKernel_waitShift mu hlam hlam0 z hgmeas
+      (fun ω ↦ abs_jumpSemigroup_le mu hC t _) hs]
+    congr 1
+    have hsub := integral_jumpKernel_zero_eq mu
+      (F := fun p : E × ((ℕ → E) × (ℕ → ℝ)) ↦ jumpSemigroup lam mu h t p.1)
+      ((measurable_jumpSemigroup mu hlam hh t).comp measurable_fst)
+      (fun p ↦ abs_jumpSemigroup_le mu hC t _) z
+    rw [hsub]
+    show (∫ _ω : (ℕ → E) × (ℕ → ℝ), jumpSemigroup lam mu h t z ∂(jumpKernel mu z))
+        = jumpSemigroup lam mu h t z
+    rw [integral_const]
+    simp
+  rw [hleft, hright]
+
+end Restart
 
 /-! ### The first jump decomposition
 
