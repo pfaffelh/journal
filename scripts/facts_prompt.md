@@ -388,6 +388,112 @@ die Knoten, endliches Netz für die Werte, `stepPath` als Approximant,
 Buchführung. Neu zu bauen ist das Gitter samt dem Zeitwechsel darauf und die
 Schranke für die Anzahl der Knoten.
 
+**Zwischenstand Teil A (2026-09-09, neunter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, neunter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **zwei** `sorry` statt einem; der Lauf
+hat keines gestrichen, sondern die Aussage, der sie gehören, ein zweites Mal
+**berichtigt** — das eine `sorry` einer falschen Aussage ist zu zweien einer
+wahren geworden. Acht neue Deklarationen, alle durch `lake env lean` gegen
+v4.33.1 geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound`.
+
+*Der angesagte Weg ist nicht gegangen worden, weil er nicht geht: die
+Rückrichtung ist über `ℝ` genauso falsch wie über dem starren Index.*
+`SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint` sagt es in Lean und
+ohne jede Hypothese auf Papier — anders als der Cantor-Zeuge des achten Laufs.
+Die Familie ist `stepAt ((1/4)^(k+1)) a b`: ihre Sprungzeiten häufen sich am
+**Basispunkt**. Die rechte Seite gilt (zwei Werte; die Unterteilung
+`-(m+1) < (1/4)^(k+1) < m+1` ist für `δ < 3/4` zulässig und hat keine
+Schwingung), die linke nicht — die Metrik nimmt ihr Infimum über die
+Zeitwechsel, die den Basispunkt **festhalten**, und ein solcher bewegt einen
+Punkt um ein beschränktes **Verhältnis** seines Abstands zu `t₀`; die Familie ist
+`r`-getrennt mit `r = min (log 2) (exp (-1) · min 1 (dist a b))`. Das Mittel ist
+`SkorokhodSpace.le_intDist_stepAt_of_exp_mul_lt`, die Trennung **ohne**
+Starrheitshypothese, über `dist_le_distWith_stepAt_of_exp_norm_mul_lt` und
+`le_intWith_stepAt_of_exp_norm_mul_lt`.
+
+*Die Reparatur ist Ethier--Kurtz' eigene, zum zweiten Mal:* ihre Unterteilung von
+`[0,T]` beginnt bei `0`, und dort ist `0` zugleich Basispunkt, linkes Ende des
+Index und linkes Ende jedes Fensters. Auf einem zweiseitigen Index fallen die
+drei auseinander, und gebraucht wird der **Basispunkt als Knoten**.
+`SkorokhodSpace.IsSubdivisionBased`, `SkorokhodSpace.modulusBased` und
+`modulus_le_modulusBased` stehen; `isCompact_closure_iff` ist umgestellt. Die
+Bedingung scheidet beide Zeugen richtig: die Familie dieses Laufs wird verworfen
+(die Zelle bei `t₀` verschluckt den Sprung), die von
+`not_tendsto_iSup_modulusPinned` — Sprünge am **Fensterrand** — weiterhin
+angenommen.
+
+*Warum es zwei `sorry` sind:* `modulus ≤ modulusBased` läuft in die falsche
+Richtung, die bewiesene Hinrichtung überträgt sich also **nicht** und ist auf
+gestützten Unterteilungen zu wiederholen. Jeder ihrer Schritte übersteht das —
+`isSubdivision_comp` trägt einen Knoten bei `t₀` auf einen solchen, die
+Zeitwechsel halten ihn fest — bis auf ihre Eingabe.
+
+*Das Werkzeug für beide `sorry` ist im selben Lauf noch gebaut:*
+`IsCadlag.exists_subdivision_through`, eine càdlàg-Unterteilung von
+`Set.Icc a b` durch einen vorgeschriebenen inneren Punkt, geprüft und ohne
+`sorryAx` — `IsCadlag.exists_subdivision` zweimal, die beiden `Fin`-Tupel am
+gemeinsamen Endpunkt zusammengesetzt.
+
+*Als Nächstes:* `SkorokhodSpace.tendsto_modulusBased`, dann die Hinrichtung auf
+gestützten Unterteilungen (`tendsto_iSup_modulusBased_of_isCompact` — der Beweis
+von `tendsto_iSup_modulus_of_isCompact` wörtlich wiederholt, mit dem neuen
+Werkzeug als Eingabe), dann die Rückrichtung.
+
+**Zwischenstand Teil A (2026-09-09, zehnter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, zehnter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry` statt zweien. Neun
+neue Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`. Dieser Lauf hat
+nichts widerlegt und nichts umgestellt — der erste seit dem fünften dieses Tages.
+
+*Die beiden ersten der drei angesagten Schritte sind getan, und die Ansage hat
+Zeile für Zeile gehalten.* `SkorokhodSpace.tendsto_modulusBased` ist
+`tendsto_modulus` mit `IsCadlag.exists_subdivision_through` als Eingabe (der
+Basispunkt ist als vorgeschriebener Knoten zulässig, weil er nach
+`mem_exhaustion_self` in **jedem** Fenster liegt);
+`SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact` ist der Beweis von
+`tendsto_iSup_modulus_of_isCompact` an genau zwei Stellen geändert. Dazwischen
+stehen `SkorokhodSpace.isSubdivisionBased_comp` — `isSubdivision_comp` und **eine
+Zeile mehr**, und diese Zeile ist der Grund, daß die Berichtigung des neunten
+Laufs bezahlbar ist: die Zeitwechsel halten `t₀` fest, also geht ein Knoten dort
+auf einen Knoten dort — und `SkorokhodSpace.modulusBased_le_of_edist_le`.
+**Die Hinrichtung ist damit vollständig**, und der linke Zweig von
+`isCompact_closure_iff` trägt kein `sorry` mehr.
+
+*Und die Ansage des achten Laufs für die Rückrichtung ist zur Hälfte eingelöst:
+die Schranke für die Anzahl der Knoten steht.* `dist_first_last_eq_sum` (unter
+`AdditiveDist` teleskopieren die Lücken eines **monotonen** Tupels — die Strenge
+wird nicht gebraucht, die Monotonie schon, sonst ist `dist` nur subadditiv),
+`mul_le_dist_first_last`, `mul_le_dist_of_sparse` und
+`SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision`: liegen zwei Knoten einer
+`δ`-sparsamen Unterteilung im Fenster vom Radius `u`, so ist ihr Indexabstand
+höchstens `2u / δ`. **Die naive Fassung wäre falsch**, und der Grund ist die
+Berichtigung des sechsten Laufs: `IsSubdivision` verlangt nur die Überdeckung des
+Fensters, die Knoten dürfen beliebig weit darüber hinausragen, eine Schranke für
+`n` selbst gibt es also nicht. Gezählt werden können allein die Knoten **im**
+Fenster.
+
+*Und die zweite Hälfte des Gitters ist angefangen:*
+`SkorokhodSpace.abs_sum_tent_sub_le` — eine Summe von Zelten mit getrennten
+Mittelpunkten ist `2 η / r`-Lipschitz, **gleichviel wie viele es sind**. Die
+grobe Schranke von `exists_rat_nodes_perturbation` (`∑ᵢ |vᵢ| / r`) taugt hier
+nicht: dort darf die Höhe **nach** der Knotenzahl gewählt werden, hier steht das
+Gitter fest, ehe der Pfad gesehen wird. Es rettet die Disjunktheit der Träger —
+höchstens zwei Glieder sind von Null verschieden, eines je Argument.
+
+*Als Nächstes:* das **Gitter samt dem Zeitwechsel darauf**, das letzte neu zu
+bauende Stück von Meilenstein 7 — zu `m`, `δ` und `ρ` eine endliche Menge
+`G ⊆ ℝ` mit `0 ∈ G` und zu jedem gestützten `δ`-sparsamen Tupel ein Zeitwechsel
+kleiner Norm, der dessen Knoten nach `G` trägt. Knotenzahl und Lipschitz-Schranke
+stehen (siehe oben), die Konstruktion ist
+`TimeChange.exists_real_of_perturbation` samt `SkorokhodSpace.tent`, dieselbe
+Störung `φ x = x + ψ x` wie in `Real.instHasCountableCore`. Zu rechnen bleibt
+allein die Wahl der Konstanten, und sie schließt sich: Gitter `ρ ℤ`, Zeltradius
+`r = δ / 4`, Höhe `η = ρ / 2`, also `K = 2 ρ / δ`, und `ρ` wird zuletzt aus `K`
+und `δ` bestimmt. Der Zusammenbau danach — `stepPath`, `distWith_stepPath_le`,
+`intWith_le_of_ae_distWith_le` — steht vollständig bewiesen da.
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 
