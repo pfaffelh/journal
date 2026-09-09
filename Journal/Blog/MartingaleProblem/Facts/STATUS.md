@@ -1,8 +1,8 @@
 # Formalisierungs-Inventar — Status
 
 - **Letzter Lauf (UTC):** 20260909T182301Z
-- **Zustand:** laeuft
-- **Notiz:** Lauf gestartet
+- **Zustand:** limit-sitzung
+- **Notiz:** Sitzungsgrenze des Kontos erreicht; kein Ausweichmodell, es traefe dieselbe Grenze. Naechster Versuch ab 2026-09-09 22:20 CEST
 - **Host:** fisher
 - **Laeufe bisher:** 123
 
