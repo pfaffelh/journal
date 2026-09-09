@@ -14359,3 +14359,161 @@ eigentliche Ziel und ohne den konstruierten Prozeß nicht einmal formulierbar.
 Die Zusage, die Punkt 1 an Punkt 2 weiterreicht, ist genau `IsStepPath` für die
 Pfade; dafür ist das Prädikat gebaut worden, und daran ist es beim Schreiben von
 Punkt 1 zu messen.
+
+### 2026-09-09, siebzehnter Lauf des Tages — der Sprungprozeß steht, auf einem Raum, den man hinschreiben kann
+
+**Vorrangige Aufgabe, Teil C, Punkt 1: erledigt.** `jumpProcess lam mu nu` ist
+konstruiert, auf einem expliziten Wahrscheinlichkeitsraum, und seine Pfade sind
+als Treppenpfade und damit als càdlàg bewiesen. **Dreiunddreißig neue
+Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, Abschnitt
+`JumpConstruction`, alle durch `lake env lean` gegen v4.33.1 geprüft (die ganze
+Datei meldet keinen Fehler und nur die neun alten `sorry`, keines davon im neuen
+Block) und dreißig davon einzeln mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound`. Ungeprüft geblieben sind allein die drei
+`IsProbabilityMeasure`-Instanzen, zwei davon anonym; sie hängen an
+`Measure.infinitePi` und `Kernel.traj` und an nichts, was dieser Lauf geschrieben
+hat.
+
+#### Der Raum, und warum er keine Topologie braucht
+
+Ein Punkt ist ein Paar: die Bahn der eingebetteten Kette und die Folge ihrer
+Wartezeiten,
+
+```
+Ω = (ℕ → E) × (ℕ → ℝ),
+jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure.
+```
+
+`chainKernel mu` ist Mathlibs Ionescu--Tulcea-Kern `ProbabilityTheory.Kernel.traj`
+(`Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean:518`), angewandt auf die
+Familie `κ n z = mu (z n)`, die also die **letzte** Koordinate liest.
+
+**Das ist der Unterschied zu `exists_kernel_pi_of_markov`, und er ist der Grund,
+aus dem der vorhandene Baustein nicht taugte.** Der Satz des neunten Laufs vom
+2026-09-08 (`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`) ist die
+Spezialisierung von `traj` auf Kerne, die nur den **Basispunkt** lesen — also das
+Produkt, nicht die Kette —, und überdies gibt er allein die Randverteilungen
+heraus, nicht das gemeinsame Gesetz. Für die Kette ist `traj` unmittelbar zu
+nehmen; für die Wartezeiten ist es `MeasureTheory.Measure.infinitePi` über
+`ProbabilityTheory.expMeasure 1`, das die Unabhängigkeit mitliefert
+(`Mathlib/Probability/ProductMeasure.lean:358`, mit
+`instance : IsProbabilityMeasure (infinitePi μ)` auf `:381`).
+
+Keiner der beiden Bausteine verlangt eine Topologie auf `E`; `[MeasurableSpace E]`
+genügt für den ganzen Abschnitt `Space`. Erst die Pfadaussagen nehmen
+`[TopologicalSpace E]`, und zwar allein deshalb, weil `IsStepPath` und
+`IsCadlagPath` von Limiten reden.
+
+Bewiesen sind: `instIsMarkovKernelChainKernel`, `chainKernel_map_zero` (die Kette
+startet, wo man sie hinsetzt), die beiden `IsProbabilityMeasure`-Instanzen und
+`jumpMeasure_map_chain_zero` — **das Anfangsgesetz ist `nu`**. Letzteres ist die
+einzige Stelle, an der `nu` überhaupt eingeht, und ohne sie wäre die Konstruktion
+eine, die `nu` bloß mitschleppt, statt einer *von* `nu`.
+
+#### Der deterministische Kern, getrennt vom probabilistischen
+
+Das ist die Bauentscheidung des Laufs. Alles über die Pfade steht über einer
+Folge `T : ℕ → ℝ` von Sprungzeiten und einer Folge `y : ℕ → E` von Zuständen,
+unter genau **zwei** Hypothesen: `StrictMono T` und `∀ s, ∃ n, s < T (n+1)`. Die
+zweite ist die Nichtexplosion, ausgeschrieben.
+
+```
+stepIndex T t = sInf {n | t < T (n + 1)},   stepPath T y t = y (stepIndex T t)
+```
+
+**`sInf` und nicht `Nat.find`**, und das ist kein Geschmack: `Nat.find` verlangt
+an jeder Gebrauchsstelle einen Existenzbeweis, `sInf` auf `ℕ` ist dieselbe
+Funktion, total gemacht durch `sInf ∅ = 0`. Der Junk-Wert ist harmlos und sogar
+sprechend — er wird genau auf der **Explosionsmenge** zurückgegeben, wo kein
+Fenster die Zeit enthält. Und er ist der Grund, aus dem die gemeinsame
+Meßbarkeit in `(t, ω)` eine Beschreibung abzählbar vieler Urbilder ist und kein
+Grenzwertargument: `stepIndex_eq_iff` zerlegt `{stepIndex = n}` in das Ereignis
+„das `n`-te Fenster enthält `t`" und, für `n = 0`, die Explosionsmenge.
+`measurable_stepIndex` und `measurable_stepPath` folgen daraus in je zehn Zeilen.
+Das ist der erste der drei Punkte, die der Meilenstein sich vom Prädikat
+`IsStepPath` versprochen hat, und er hält.
+
+#### Zwei Befunde, die beim Ausschreiben herausgekommen sind
+
+**Erstens: `StrictMono` und nicht `Monotone`, und die Differenz ist ein Fall des
+Beweises.** Die linke Hälfte von `IsStepPath` an einem Punkt `x` zerfällt in drei
+Fälle, und nur der dritte braucht die Striktheit: ist `x = T (m+1)` selbst eine
+Sprungzeit, so ist die Konstante `y m` auf `Set.Ioo (T m) x`, und das ist eine
+linke Umgebung **nur weil** `T m < T (m+1)`. Unter bloßem `Monotone` muß man zum
+kleinsten `k` mit `T k = x` absteigen — eine zweite Induktion ohne Gewinn, denn
+die Konstruktion liefert Striktheit. Die beiden anderen Fälle sind `T n < x`, wo
+dasselbe Fenster dient, und `x ≤ T 0`, wo der Pfad auf ganz `Set.Iio x` konstant
+`y 0` ist. Die rechte Hälfte hat keine Fälle: das Fenster `Set.Ico x (T (n+1))`
+des Index von `x` selbst tut es, weil der Pfad den Wert `y n` **an** `x` annimmt
+— und das ist genau die Stelle, an der sich auszahlt, daß `IsStepPath` seine
+erste Bedingung auf der **abgeschlossenen** rechten Halbumgebung `𝓝[≥] x` und
+nicht auf `𝓝[>] x` stellt (Befund des sechzehnten Laufs).
+
+**Zweitens, und es ist eine echte Einschränkung der Signatur: die Positivität der
+Rate ist keine Bequemlichkeit.** In Lean ist `x / 0 = 0`. An einem Zustand mit
+`lam x = 0` — den das Modell als **absorbierend** meint, mit unendlicher
+Haltezeit — rechnet sich die Haltezeit also zu `0` aus, und der Pfad verläßt ihn
+sofort. `strictMono_jumpTime` trägt darum `∀ x, 0 < lam x`, und das steht
+begründet an der Deklaration. Den absorbierenden Fall mitzutragen hieße, die
+Sprungzeiten in `ℝ≥0∞` zu nehmen; der Meilenstein braucht ihn nicht, denn `lam`
+von `0` und von `∞` weg beschränkt ist genau die Hypothese von
+`jumpProcess_isMPSolution`. Der Befund gehört trotzdem hierher, weil eine spätere
+lokale Fassung (Punkt 5 des Meilensteins) ihn nicht wird umgehen können.
+
+#### Die Nichtexplosion, und wo sie hängt
+
+`tendsto_jumpTime_atTop` ist die einzige Stelle, an der eine Schranke an die Rate
+gebraucht wird, und sie geht über die eine Ungleichung
+
+```
+sum_div_le_jumpTime : (∑_{k<n} ξ k) / L ≤ jumpTime lam y ξ n     (für lam ≤ L)
+```
+
+und `Filter.Tendsto.atTop_div_const`. Was übrigbleibt, ist eine Aussage über die
+Wartezeiten allein: **die Teilsummen der `ξ n` divergieren `waitingMeasure`-fast
+sicher.** Sie ist als eigener Punkt in Meilenstein 4 eingetragen, mit dem Weg
+ausgeschrieben: zweites Borel--Cantelli
+(`ProbabilityTheory.measure_limsup_eq_one`,
+`Mathlib/Probability/BorelCantelli.lean:69`) auf den unabhängigen Ereignissen
+`{ξ n > 1}`, deren gemeinsame Wahrscheinlichkeit `exp (-1)` positiv ist; die
+Unabhängigkeit kommt aus `infinitePi` über
+`ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`
+(`Mathlib/Probability/Independence/InfinitePi.lean:103`). Zusammen mit
+`∀ n, 0 < ξ n` f.s. — die Exponentialverteilung hat kein Atom in `0` — löst sie
+**beide** Hypothesen von `isStepPath_jumpProcess` auf einmal ein und macht
+`isCadlagPath_jumpProcess` zu einer f.s.-Aussage über `jumpMeasure mu nu` statt
+zu einer bedingten.
+
+Das ist nicht geschmuggelt: die Pfadsätze stehen mit den Hypothesen da, die sie
+brauchen, und der fehlende Schritt ist benannt, nicht weggelassen.
+
+#### Was das für den Meilenstein heißt
+
+Punkt 0 und Punkt 1 sind durch. Punkt 2, `jumpProcess_isMPSolution` — das ist
+`thm:jumpMP`, und es ist das eigentliche Ziel —, ist jetzt überhaupt erst
+**formulierbar**: es gibt einen Prozeß `jumpProcess lam : ℝ → Ω → E`, ein Maß
+`jumpMeasure mu nu` auf `Ω`, und die Zusage `IsStepPath` für seine Pfade, für die
+das Prädikat gebaut worden war. `MartingaleProblems/README.md`, Meilenstein 4,
+ist nachgezogen: Punkt 1 trägt das Ergebnis samt den beiden Befunden, und die
+f.s.-Divergenz der Wartezeiten steht als eigener Punkt dahinter.
+
+#### Vorschlag für den nächsten Lauf
+
+**`tendsto_sum_waiting_atTop` und `ae_pos_waiting`**, die beiden f.s.-Aussagen
+über `waitingMeasure`, und daraus das Korollar
+
+```
+∀ᵐ ω ∂(jumpMeasure mu nu), IsStepPath (fun t ↦ jumpProcess lam t ω)
+```
+
+für `lam` mit `0 < lam ≤ L`. Worauf es ruht, steht vollständig und ist oben mit
+Datei und Zeile belegt (`measure_limsup_eq_one`,
+`iIndepFun_iff_map_fun_eq_infinitePi_map`, `infinitePi_map_eval`). Warum jetzt:
+es ist der letzte Schritt, der Punkt 1 von einer bedingten zu einer
+unbedingten Aussage über den konstruierten Prozeß macht, und er ist genau die
+Hypothese, die Punkt 2 an seiner ersten Zeile brauchen wird — der Beweis von
+`thm:jumpMP` rechnet über die Sprungzeiten, und er darf nicht mit „falls der
+Prozeß nicht explodiert" beginnen. Er ist überdies klein genug, um in einem Lauf
+zu fallen, und macht damit den Weg zu Punkt 2 frei, der lang ist.
+
+**Das Manuskript ist nicht angefaßt.**

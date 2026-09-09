@@ -216,13 +216,48 @@ danach.*
    sagt dasselbe für die **großen** Sprünge und ohne Zusatzvoraussetzung; hier
    sind es alle. Das Manuskript nennt die Menge dieser Pfade `F` in
    `set:pathjump`.
-1. `jumpProcess lam mu nu` als Konstruktion auf einem expliziten
-   Wahrscheinlichkeitsraum, mit càdlàg und stückweise konstanten Pfaden. Der
-   Unterbau ist da und braucht **keine Topologie**:
-   `ProbabilityTheory.exists_kernel_pi_of_markov`
-   (`TauCeti/KolmogorovExtension/scratch/TrajPi.lean`, aus Mathlibs
-   Ionescu--Tulcea `Kernel.traj`) für die Kette,
-   `ProbabilityTheory.exponentialPDF` für die Wartezeiten.
+1. ~~`jumpProcess lam mu nu` als Konstruktion auf einem expliziten
+   Wahrscheinlichkeitsraum, mit càdlàg und stückweise konstanten Pfaden.~~
+   *(erledigt 2026-09-09, siebzehnter Lauf des Tages)* Dreiunddreißig
+   Deklarationen im Abschnitt `JumpConstruction` von
+   `TauCeti/MartingaleProblems/Suggested.lean`, alle bewiesen und dreißig davon
+   einzeln mit `#print axioms` geprüft. Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-09, siebzehnter Lauf des Tages".
+
+   Der Raum ist `(ℕ → E) × (ℕ → ℝ)` mit
+   `jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure`;
+   `jumpMeasure_map_chain_zero` sagt, daß das Anfangsgesetz `nu` ist,
+   `measurable_jumpProcess` gibt die Meßbarkeit in `(t, ω)`, und
+   `isStepPath_jumpProcess`/`isCadlagPath_jumpProcess` die Pfade.
+
+   **Der angesagte Unterbau war zur Hälfte der falsche.**
+   `exists_kernel_pi_of_markov` ist das **Produkt** von Kernen (die Kerne lesen
+   nur den Basispunkt) und gibt überdies allein die Randverteilungen heraus,
+   nicht das gemeinsame Gesetz; für die Kette ist Mathlibs
+   `ProbabilityTheory.Kernel.traj` unmittelbar zu nehmen, mit der Familie, die
+   die **letzte** Koordinate liest. Für die Wartezeiten ist es nicht
+   `exponentialPDF`, sondern `MeasureTheory.Measure.infinitePi` über
+   `ProbabilityTheory.expMeasure 1`, weil dieses die Unabhängigkeit mitbringt.
+   Richtig war: keiner der beiden braucht eine Topologie auf `E`.
+
+   **Zwei Befunde für die weitere Arbeit.** (a) Die Pfadsätze stehen unter
+   `StrictMono T` und nicht `Monotone T`; die Differenz ist genau der Fall, in
+   dem `x` selbst eine Sprungzeit ist. (b) **Die Positivität der Rate ist eine
+   echte Einschränkung**: `x / 0 = 0` in Lean, also verläßt der Pfad einen
+   Zustand mit `lam x = 0` — den das Modell absorbierend meint — sofort. Der
+   absorbierende Fall verlangt Sprungzeiten in `ℝ≥0∞`; Punkt 2 braucht ihn
+   nicht, Punkt 5 (der lokale Fall) wird ihn nicht umgehen können.
+
+   **Was noch fehlt, und es ist klein:** `∀ᵐ ω, Tendsto (∑_{k<n} ξ k) atTop atTop`
+   und `∀ᵐ ω, ∀ n, 0 < ξ n` unter `waitingMeasure`. Das sind die beiden
+   Hypothesen, unter denen die Pfadsätze heute stehen; mit ihnen wird
+   `isCadlagPath_jumpProcess` eine f.s.-Aussage über `jumpMeasure mu nu`. Weg:
+   zweites Borel--Cantelli (`ProbabilityTheory.measure_limsup_eq_one`,
+   `Mathlib/Probability/BorelCantelli.lean:69`) auf `{ξ n > 1}`, Unabhängigkeit
+   aus `ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`
+   (`Mathlib/Probability/Independence/InfinitePi.lean:103`). Das ist der erste
+   Schritt des nächsten Laufs; Punkt 2 darf nicht mit „falls der Prozeß nicht
+   explodiert" beginnen.
 2. `jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`, und
    es ist **das eigentliche Ziel des Meilensteins**: die erste in Lean bewiesene
    Lösung eines Martingalproblems überhaupt.

@@ -496,7 +496,57 @@ A concrete family of solutions, built without any of the theory above. Index
   exponential time of rate `lam (X t)` and then jumps according to `mu`,
   constructed from a Markov chain with kernel `mu` and an independent sequence
   of exponential variables. Give the construction on an explicit probability
-  space and prove that its paths are càdlàg and piecewise constant.
+  space and prove that its paths are càdlàg and piecewise constant. **Proved**
+  on 2026-09-09, seventeenth run, in thirty three declarations of
+  `Suggested.lean`. The sample space is `(ℕ → E) × (ℕ → ℝ)` — the trajectory of
+  the embedded chain and the sequence of its waiting times — carrying
+  `jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure`, a probability
+  measure. `chainKernel` is `ProbabilityTheory.Kernel.traj`
+  (`IonescuTulcea/Traj.lean:518`) applied to the family that reads the **last**
+  coordinate, which is what makes it a chain rather than the product
+  `exists_kernel_pi_of_markov` of **KolmogorovExtension**; `waitingMeasure` is
+  `MeasureTheory.Measure.infinitePi` of `ProbabilityTheory.expMeasure 1`. Neither
+  needs a topology on `E`; only the path statements do.
+  `jumpMeasure_map_chain_zero` says the initial law is `nu`,
+  `measurable_jumpProcess` gives the joint measurability in `(t, ω)`, and
+  `isStepPath_jumpProcess`, `isCadlagPath_jumpProcess` give the paths.
+
+  **The deterministic core is separated from the probabilistic one, and the
+  separation is where the work is.** `stepIndex T t = sInf {n | t < T (n+1)}` is
+  the index of the window containing `t` — `Nat.find` made total by
+  `sInf ∅ = 0`, the junk value being returned exactly on the explosion set. All
+  path statements are about `stepPath T y` under two hypotheses,
+  `StrictMono T` and `∀ s, ∃ n, s < T (n+1)`, the second of which *is* non
+  explosion; `tendsto_jumpTime_atTop` is the only place a bound on the rate is
+  used, and it goes through the single inequality
+  `(∑_{k<n} ξ k) / L ≤ jumpTime lam y ξ n` (`sum_div_le_jumpTime`).
+
+  **`StrictMono` and not `Monotone`, and the difference is one case of the
+  proof.** The left hand conjunct of `IsStepPath` at a point `x = T (m+1)` that
+  is itself a jump time needs the constant `y m` on `Set.Ioo (T m) x`, which is
+  a left neighbourhood only because `T m < T (m+1)`. Under `Monotone` alone the
+  argument has to descend to the least `k` with `T k = x`, and that is a second
+  induction for no gain: the construction delivers strict monotonicity.
+
+  **The positivity of the rate is a restriction of the signature and not a
+  convenience.** `x / 0 = 0` in Lean, so at a state with `lam x = 0` — which the
+  model intends to be absorbing, with an infinite holding time — the holding time
+  computes to `0` and the path leaves at once. `strictMono_jumpTime` therefore
+  carries `∀ x, 0 < lam x`. Carrying the absorbing case means giving the jump
+  times values in `ℝ≥0∞`, and the milestone does not need it: `lam` bounded away
+  from `0` and from `∞` is exactly the hypothesis of `jumpProcess_isMPSolution`.
+* `tendsto_sum_waiting_atTop`: the partial sums of the waiting times diverge
+  `waitingMeasure`-almost surely. This is the one probabilistic input the path
+  statements above take as a hypothesis, and it is what makes
+  `isCadlagPath_jumpProcess` an almost sure statement about `jumpMeasure mu nu`
+  rather than a conditional one. It is the second Borel--Cantelli lemma,
+  `ProbabilityTheory.measure_limsup_eq_one`, on the independent events
+  `{ξ n > 1}`, whose common probability `expMeasure 1 (Set.Ioi 1) = exp (-1)` is
+  positive; the independence comes from
+  `MeasureTheory.Measure.infinitePi` through
+  `ProbabilityTheory.iIndepFun_iff_map_fun_eq_infinitePi_map`. Together with
+  `∀ n, 0 < ξ n` almost surely — the exponential law has no atom at `0` — it
+  discharges both hypotheses of `isStepPath_jumpProcess` at once.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a
