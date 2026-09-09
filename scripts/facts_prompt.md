@@ -450,13 +450,46 @@ danach.*
    `ae_exists_lt_jumpTime` steht über bloßem `[MeasurableSpace E]`, während
    `ae_isStepPath_jumpProcess` `[TopologicalSpace E]` trägt.
 
-   **Was jetzt noch fehlt**, und es ist der einzige Schritt mit Analysis: die
-   **Differentiation nach `t`**. Zunächst an der Stelle `t = 0`, wo der zweite
-   Term am einfachsten wird (der Bereich `Ioc 0 (lam z * t)` schrumpft auf die
-   leere Menge); die Klippe ist, daß der Integrand des zweiten Terms selbst von
-   `t` abhängt, seine Ableitung also nicht bloß die der Grenze ist. Das genaue
-   Ziel steht am Ende des Laufberichts als
-   `jumpMeasure_hasDerivAt_integral`.
+   ~~**Was jetzt noch fehlt**, und es ist der einzige Schritt mit Analysis: die
+   **Differentiation nach `t`**~~ *(an der Stelle `t = 0` erledigt 2026-09-09,
+   vierundzwanzigster Lauf des Tages)*.
+
+   **Zwischenstand 2026-09-09, vierundzwanzigster Lauf des Tages.** Die
+   **Rückwärtsgleichung in Differentialform an der Stelle `t = 0`** steht. Zwölf
+   neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, die ganze
+   Datei durch `lake env lean` gegen v4.33.1 ohne einen Fehler (unverändert zehn
+   `sorry`), alle zwölf mit `#print axioms` auf `propext`, `Classical.choice`,
+   `Quot.sound`. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09,
+   vierundzwanzigster Lauf des Tages".
+
+   **Die angesagte Aussage ist falsch, und das ist bewiesen.** `HasDerivAt` an
+   `0` gilt nicht: vor dem ersten Sprung hat sich der Pfad nicht bewegt, also ist
+   `t ↦ ∫ h (X t)` auf ganz `Set.Iic 0` konstant
+   (`integral_jumpProcess_of_nonpos`) und die linksseitige Ableitung ist `0`;
+   `eq_zero_of_hasDerivAt_integral_jumpProcess` macht daraus den Satz, daß eine
+   zweiseitige Ableitung `∫ A h ∂nu = 0` erzwänge. Der Satz heißt darum
+   `jumpMeasure_hasDerivWithinAt_integral` und trägt `(Set.Ici 0) 0`. Verloren
+   ist damit nichts: `mpFamily` indiziert über `ℝ≥0`.
+
+   **Zwei Befunde, die der nächste Lauf braucht.** (a) **Die
+   Erneuerungsgleichung wird nicht differenziert.** Ihre beiden Terme einzeln zu
+   behandeln verlangte die Meßbarkeit von
+   `z ↦ ∫ s in Ioc 0 (lam z * t), …`, die keine Aussage der Datei hergibt. Der
+   Weg geht einen Schritt zurück auf `integral_jumpMeasure_eq_of_split` und wendet
+   ihn auf die **Differenz** des wahren Integranden und seiner nullten Näherung
+   an; dann erzeugt der Satz selbst die äußere Integration und
+   `abs_integral_le_of_abs_le` braucht nur eine punktweise Schranke. (b) Der
+   Hauptsatz ist **quantitativ**: `abs_integral_jumpProcess_sub_sub_le` schätzt
+   den Rest zweiter Ordnung durch `4 * C * L^2 * t^2` ab, und **die Konstante
+   nennt `nu` nicht** — die allgemeine Zeit setzt dort das Gesetz zur Zeit `t`
+   ein, und eine von ihm abhängige Schranke wäre wertlos.
+
+   **Was jetzt noch fehlt**, ist die Verschiebung der Ableitung von `0` an jede
+   Stelle, und das genaue Ziel steht am Ende des Laufberichts als
+   `jumpMeasure_integral_jumpProcess_add`, die zeithomogene Markoveigenschaft in
+   integrierter Gestalt. Sie ist das einzige, was `expMeasure_Ioi_add` verbraucht,
+   und mit ihr folgt die Erwartungsidentität aus
+   `intervalIntegral.integral_eq_sub_of_hasDerivAt`.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 

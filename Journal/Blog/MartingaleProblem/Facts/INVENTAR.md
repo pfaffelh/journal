@@ -15298,3 +15298,157 @@ nennen können: der Beitrag der Grenze ist
 `lam z * (∫ h dmu z)` erst, nachdem `∫ ω' h (jumpProcess lam 0 ω') ∂(jumpMeasure mu (mu z))`
 durch `∫ h d(mu z)` ersetzt ist, und das ist `jumpMeasure_map_jumpProcess_zero`
 angewandt auf das Anfangsgesetz `mu z` — nicht auf `nu`.
+
+### 2026-09-09, vierundzwanzigster Lauf des Tages — die Rückwärtsgleichung in Differentialform, und die Ableitung ist einseitig
+
+Ein Ziel, das des Vorschlags vom dreiundzwanzigsten Lauf:
+`jumpMeasure_hasDerivAt_integral` an der Stelle `t = 0`. **Es steht** — aber
+**nicht in der angesagten Gestalt**, und die Abweichung ist kein Schönheitsfehler,
+sondern ein Satz. Zwölf neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 **ohne einen Fehler** (unverändert zehn `sorry`,
+keine neuen), und alle zwölf hängen mit `#print axioms` nur an `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**Die Berichtigung: `HasDerivAt` ist an `0` falsch, und das ist bewiesen.** Vor
+dem ersten Sprung hat sich der Pfad nicht bewegt — `jumpProcess_of_lt_jumpTime_one`
+verlangt allein `t < T 1` und kennt kein Vorzeichen von `t` —, also ist
+`t ↦ ∫ h (X t) ∂(jumpMeasure mu nu)` auf ganz `Set.Iic 0` **konstant**
+(`integral_jumpProcess_of_nonpos`), und ihre linksseitige Ableitung an `0` ist
+`0`. Damit erzwänge eine zweiseitige Ableitung `∫ A h ∂nu = 0`, und genau das
+sagt `eq_zero_of_hasDerivAt_integral_jumpProcess` — nicht als Bemerkung, sondern
+als Deklaration, über `hasDerivAt_iff_tendsto_slope` und die Eindeutigkeit des
+Limes längs `𝓝[<] 0`. Der Satz heißt darum
+
+```
+jumpMeasure_hasDerivWithinAt_integral :
+  HasDerivWithinAt (fun t ↦ ∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu))
+    (∫ z, jumpApply lam mu h z ∂nu) (Set.Ici 0) 0
+```
+
+und verliert dabei nichts: das Martingalproblem des Sprungprozesses ist über
+`ℝ≥0` indiziert, weil `mpFamily` `[OrderBot ι]` verlangt (achtzehnter Lauf), und
+eine einseitige Ableitung ist dort die einzige, die es gibt.
+
+**Der Hauptsatz ist quantitativ und nicht asymptotisch.**
+`abs_integral_jumpProcess_sub_sub_le`: unter `0 < lam ≤ L`, `|h| ≤ C`, `0 ≤ t`
+und `L * t ≤ 1`
+
+```
+|(∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)) - (∫ z, h z ∂nu)
+   - t * ∫ z, jumpApply lam mu h z ∂nu| ≤ 4 * C * L ^ 2 * t ^ 2.
+```
+
+Die Ableitung fällt daraus in zwölf Zeilen. Die Wahl ist Absicht: **die Konstante
+nennt `nu` nicht**, und die allgemeine Zeit wird genau das brauchen — dort steht
+statt `nu` das Gesetz zur Zeit `t`, und eine Schranke, die von ihm abhinge, wäre
+wertlos.
+
+**Der erste Befund, und er ist der wichtigste: die Erneuerungsgleichung wird
+*nicht* differenziert.** Der Vorschlag des dreiundzwanzigsten Laufs sah vor, an
+`jumpMeasure_integral_eq_renewal` anzusetzen. Das geht nicht, und der Grund ist
+eine fehlende Meßbarkeit: um ihre beiden Terme einzeln zu behandeln, müßte der
+innere Ausdruck `∫ s in Set.Ioc 0 (lam z * t), …` als Funktion von `z` meßbar
+sein, und das sagt keine Aussage der Datei. Über bloßem `[MeasurableSpace E]`
+wäre es von Hand zu bauen — `jumpMeasure mu (mu z)` als Kern in `z` —, und das
+ist teurer als der ganze Rest.
+
+**Der Ausweg ist ein Schritt zurück und ein Kunstgriff, der sich merken läßt:
+`integral_jumpMeasure_eq_of_split` auf die _Differenz_ anwenden.** Verglichen
+werden
+
+```
+G1 ((z,s), ω') = if s ≤ lam z * t then h (jumpProcess lam (t - s / lam z) ω') else 0
+G2 ((z,s), ω') = if s ≤ lam z * t then h (ω'.1 0)                             else 0,
+```
+
+also der wahre Integrand und seine nullte Näherung, die den Prozeß nach dem
+Sprung gar nicht erst laufen läßt. Für `G2` allein ist die rechte Seite in
+geschlossener Form auszurechnen — sie ist
+`∫ z, (1 - exp (-(lam z * t))) * (∫ y, h y ∂(mu z)) ∂nu` —, und für die
+**Differenz** liefert der Spaltungssatz die Schranke, ohne daß irgend etwas
+integrierbar sein müßte: die äußere Integration über `z` wird von ihm selbst
+erzeugt, und `abs_integral_le_of_abs_le` verlangt nur eine punktweise Schranke am
+Integranden. Hätte man die beiden Terme einzeln abgeschätzt und danach
+subtrahiert, so wäre für jeden die Integrierbarkeit fällig gewesen; so ist sie es
+für keinen. **Dieselbe Wendung wird die allgemeine Zeit brauchen**, und der
+Vorschlag unten setzt sie voraus.
+
+**Zweiter Befund: die Schranke wird auf sich selbst angewandt, und deshalb steht
+sie für beliebiges `nu`.** `abs_integral_jumpProcess_sub_le` sagt
+
+```
+|(∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)) - ∫ z, h z ∂nu| ≤ 2 * C * L * t,
+```
+
+die Lipschitzschranke in der Zeit; ihr Beweis ist die Zerlegung am ersten Sprung,
+in der beide Terme je einmal `measureReal_jumpTime_one_le` bezahlen
+(`P(T 1 ≤ t) = 1 - ∫ exp (-(lam z * t)) ∂nu ≤ L * t`). Gebraucht wird sie im
+Beweis des Hauptsatzes **an der neugestarteten Kette**, mit `nu := mu z` und der
+Restzeit `t - s / lam z`; wäre sie nur für ein festes Anfangsgesetz formuliert,
+so trüge sie dort nicht. Das ist der Grund, aus dem sie ein eigener Satz ist und
+nicht ein `have` im Innern.
+
+**Dritter Befund, ein Werkzeug: `norm_integral_le_of_norm_le` erspart die
+Meßbarkeit des Integranden.** Die entscheidende Abschätzung ist
+`‖∫ s, (∫ ω' D) ∂(expMeasure 1)‖ ≤ 2 * C * L * t * (1 - exp (-(lam z * t)))`, und
+die Funktion `s ↦ ∫ ω' D ((z,s), ω')` ist wieder eine, deren Meßbarkeit erst zu
+zeigen wäre. `integral_mono` verlangt sie von beiden Seiten;
+`norm_integral_le_of_norm_le` verlangt sie **nur von der Majorante**, und die ist
+hier eine Indikatorfunktion mal einer Konstanten. Der Faktor
+`1 - exp (-(lam z * t)) ≤ L * t` ist es, der die zweite Potenz erzeugt: ohne ihn
+bliebe `O(t)` stehen und die Ableitung wäre nicht zu gewinnen.
+
+**Vierter Befund, eine kleine Lücke in Mathlib.** `expMeasure` hat seine
+Verteilungsfunktion in `ℝ≥0∞` (`cdf_expMeasure_eq`), aber nicht in `ℝ`; jedes
+Gewicht der Sprungzerlegung ist aber eine reelle Zahl. Bewiesen ist hier
+`expMeasure_one_real_Iic : (expMeasure 1).real (Set.Iic a) = 1 - Real.exp (-a)`
+für `0 ≤ a`. Gesucht wurde nach der Aussage und nicht nach der Vokabel: nach
+`expMeasure` mit `real`, `toReal`, `Iic`, `cdf`, `measureReal`.
+
+**Die Deklarationen, in Abhängigkeitsordnung.** `expMeasure_one_real_Iic`,
+`integral_chain_zero_eq`, `one_sub_exp_neg_le_self`, `exp_neg_le_one_of_nonneg`
+(die vier Werkzeuge), `measureReal_jumpTime_one_le`,
+`abs_integral_jumpProcess_sub_le`, `measurable_integral_kernel_apply`,
+`jumpApply_eq`, `abs_integral_jumpProcess_sub_sub_le`,
+`integral_jumpProcess_of_nonpos`, `jumpMeasure_hasDerivWithinAt_integral`,
+`eq_zero_of_hasDerivAt_integral_jumpProcess`. Alle im Abschnitt
+„The backward equation" von `JumpConstruction`, vor `end Space`. Die Datei
+importiert dafür neu `Mathlib.Analysis.Calculus.Deriv.Slope`. Der
+Entwicklungsstand in `TauCeti/MartingaleProblems/scratch/Deriv.lean` ist durch
+einen Hinweis ersetzt, wie beim zweiundzwanzigsten und dreiundzwanzigsten Lauf —
+diesmal mit einem zusätzlichen Grund: das Gerüst benutzte `axiom` statt `sorry`,
+und ein `axiom` ist schlimmer, weil es keine Warnung trägt.
+
+**Zur Arbeitsweise, weil sie Zeit gespart hat und wiederholbar ist.** Das Gerüst
+hat die gebrauchten Voraussetzungen aus `Suggested.lean` **wörtlich als `axiom`**
+übernommen (`jumpProcess`, `jumpMeasure`,
+`jumpMeasure_integral_eq_of_firstJump`, `integral_jumpMeasure_eq_of_split`, …).
+Ein Durchlauf kostete damit Sekunden statt Minuten; die Übertragung in
+`Suggested.lean` am Ende war eine Umbenennung von drei Hilfssätzen und ein
+Import. Der ganze Lauf hat zwei volle Durchläufe der großen Datei gebraucht, den
+Prüflauf mit `#print axioms` eingeschlossen.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel:
+`jumpMeasure_integral_jumpProcess_add`, die **zeithomogene Markoveigenschaft in
+integrierter Gestalt**,
+```
+∫ ω, h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)
+  = ∫ ω, h (jumpProcess lam t ω)
+      ∂(jumpMeasure mu ((jumpMeasure mu nu).map (jumpProcess lam s))).
+```
+Sie ruht auf `expMeasure_Ioi_add` — der Gedächtnislosigkeit der
+Exponentialverteilung, die seit dem achtzehnten Lauf dasteht und **noch von
+keinem Satz benutzt wird** —, auf `jumpProcess_jumpShift` und auf
+`jumpMeasure_map_split`. Sie ist jetzt dran, weil sie das einzige Stück ist, das
+`jumpMeasure_hasDerivWithinAt_integral` von der Stelle `0` an jede Stelle `s`
+trägt: mit ihr ist die Ableitung bei `s` die Ableitung bei `0` des aus dem Gesetz
+zur Zeit `s` gestarteten Prozesses, und die Erwartungsidentität
+`E[h (X t)] - E[h (X 0)] = ∫_0^t E[A h (X r)] dr` folgt daraus mit
+`intervalIntegral.integral_eq_sub_of_hasDerivAt`. Der teure Punkt, und er ist zu
+benennen, bevor er überrascht: die Restwartezeit zur festen Zeit `s` ist **nicht**
+eine der Koordinaten `ξ n`, sondern `T (N+1) - s` mit dem zufälligen Index
+`N = stepIndex`; `expMeasure_Ioi_add` gibt ihre Verteilung, aber die
+Unabhängigkeit vom Vergangenen ist über den Spaltungssatz zu führen und nicht
+über eine Reindizierung. Wer den Weg ändern will, sage zuerst, an welchem
+Schritt dieser bricht.
