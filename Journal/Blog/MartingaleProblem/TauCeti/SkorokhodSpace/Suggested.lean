@@ -8563,6 +8563,261 @@ theorem SkorokhodSpace.not_isCompact_closure_of_jumps_at_basePoint
     exact Set.infinite_univ
       (Set.Finite.subset (hTfin.biUnion fun p _ => (hsingle p).finite) hcover)
 
+/-! ### The forward half again, on based subdivisions
+
+`SkorokhodSpace.modulus_le_modulusBased` runs the wrong way, so
+`SkorokhodSpace.tendsto_iSup_modulus_of_isCompact` says nothing about the modulus
+the criterion is stated with, and the argument has to be repeated.  Every step of
+it survives unchanged except its input: the subdivision is now produced by
+`IsCadlag.exists_subdivision_through` with the base point prescribed, and the
+transport carries that node along because the time changes of Milestone 4 fix
+`t₀`. -/
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The image of a based subdivision is a based subdivision.**  This is
+`SkorokhodSpace.isSubdivision_comp` and one line more, and that line is the whole
+reason the correction of 2026-09-09 is affordable: the time changes over which
+the metric of Milestone 4 takes its infimum fix the base point, so a node at `t₀`
+is carried to a node at `t₀`.  Had the metric been the unbased one, the based
+modulus would not be transportable at all. -/
+theorem SkorokhodSpace.isSubdivisionBased_comp (t₀ : ι) {u u' γ δ δ' : ℝ} (hu : 0 ≤ u)
+    (hu' : 0 ≤ u') {l : TimeChange ι} (h₀ : l.toOrderIso t₀ = t₀) (hnorm : l.norm ≤ γ)
+    (hcover : u + (Real.exp γ - 1) * (2 * u) ≤ u') (hδ : 0 ≤ δ)
+    (hδ' : δ' ≤ Real.exp (-γ) * δ) {n : ℕ} {t : Fin (n + 1) → ι}
+    (ht : SkorokhodSpace.IsSubdivisionBased t₀ u' δ t) :
+    SkorokhodSpace.IsSubdivisionBased t₀ u δ' (fun i => l.toOrderIso (t i)) := by
+  refine ⟨SkorokhodSpace.isSubdivision_comp t₀ hu hu' h₀ hnorm hcover hδ hδ' ht.1, ?_⟩
+  obtain ⟨i, hi⟩ := ht.2
+  refine ⟨i, ?_⟩
+  show l.toOrderIso (t i) = t₀
+  rw [hi]
+  exact h₀
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **The based modulus is carried along a time change**, and with the same two
+losses as `SkorokhodSpace.modulus_le_of_edist_le`: `2 η` in the oscillation and
+`exp (-γ)` in the sparseness.  One based subdivision of one nearby path bounds
+the based modulus of *every* path of its ball. -/
+theorem SkorokhodSpace.modulusBased_le_of_edist_le (t₀ : ι) {u u' w γ δ δ' : ℝ}
+    (hu : 0 ≤ u) (hu' : 0 ≤ u') (f g : D(ι, E)) {l : TimeChange ι}
+    (h₀ : l.toOrderIso t₀ = t₀) (hnorm : l.norm ≤ γ)
+    (hcover : u + (Real.exp γ - 1) * (2 * u) ≤ u') (hδ : 0 ≤ δ)
+    (hδ' : δ' ≤ Real.exp (-γ) * δ) {n : ℕ} {t : Fin (n + 1) → ι}
+    (ht : SkorokhodSpace.IsSubdivisionBased t₀ u' δ t) (hmem : ∀ i, t i ∈ exhaustion t₀ w)
+    {η : ℝ≥0∞}
+    (h : ∀ x ∈ exhaustion t₀ w, edist (f.toFun (l.toOrderIso x)) (g.toFun x) ≤ η) :
+    SkorokhodSpace.modulusBased t₀ u f δ' ≤ SkorokhodSpace.subdivisionOsc g t + 2 * η :=
+  le_trans
+    (iInf_le_of_le n (iInf_le_of_le (fun i => l.toOrderIso (t i))
+      (iInf_le_of_le
+        (SkorokhodSpace.isSubdivisionBased_comp t₀ hu hu' h₀ hnorm hcover hδ hδ' ht) le_rfl)))
+    (SkorokhodSpace.subdivisionOsc_comp_le t₀ w f g l hmem h)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **Billingsley's `w'(f, δ) → 0` for the based modulus.**  The pointwise half
+of Milestone 7 in the form the criterion needs, and the proof of
+`SkorokhodSpace.tendsto_modulus` with one substitution: `IsCadlag.exists_subdivision`
+is replaced by `IsCadlag.exists_subdivision_through`, prescribing `t₀` as an
+interior node.  The base point is admissible as that node because it lies in
+every window --- `mem_exhaustion_self` --- so nothing is assumed about the radius.
+
+The extra node costs nothing quantitatively: the gaps of the refined subdivision
+are still finitely many and still positive, so the same `δ₀` argument applies. -/
+theorem SkorokhodSpace.tendsto_modulusBased (t₀ : ι) (m : ℕ) (f : D(ι, E)) :
+    Tendsto (SkorokhodSpace.modulusBased t₀ m f) (𝓝[>] 0) (𝓝 0) := by
+  rw [ENNReal.tendsto_nhds_zero]
+  intro ε hε
+  obtain ⟨ε', hε', hle⟩ : ∃ ε' : ℝ, 0 < ε' ∧ ENNReal.ofReal ε' ≤ ε := by
+    rcases eq_or_ne ε ⊤ with rfl | hne
+    · exact ⟨1, one_pos, le_top⟩
+    · exact ⟨ε.toReal, ENNReal.toReal_pos hε.ne' hne, (ENNReal.ofReal_toReal hne).le⟩
+  have hmin := isLeast_exhaustionMin t₀ (m : ℝ)
+  have hmax := isGreatest_exhaustionMax t₀ (m : ℝ)
+  have hac : exhaustionMin t₀ (m : ℝ) ≤ t₀ := hmin.2 (mem_exhaustion_self t₀ (m : ℝ))
+  have hcb : t₀ ≤ exhaustionMax t₀ (m : ℝ) := hmax.2 (mem_exhaustion_self t₀ (m : ℝ))
+  have hK : IsCompact (Set.Icc (exhaustionMin t₀ (m : ℝ)) (exhaustionMax t₀ (m : ℝ))) :=
+    (isCompact_exhaustion t₀ (m : ℝ)).of_isClosed_subset isClosed_Icc
+      ((ordConnected_exhaustion t₀ (m : ℝ)).out hmin.1 hmax.1)
+  obtain ⟨n, t, ht, h0, hlast, hbase, hcell⟩ :=
+    f.isCadlag.exists_subdivision_through hac hcb hK hε'
+  obtain ⟨δ₀, hδ₀, hδ₀lt⟩ :
+      ∃ δ₀ : ℝ, 0 < δ₀ ∧ ∀ i : Fin n, δ₀ < dist (t i.castSucc) (t i.succ) := by
+    have hpos : ∀ i : Fin n, 0 < dist (t i.castSucc) (t i.succ) := fun i =>
+      dist_pos.2 (ht (Fin.castSucc_lt_succ (i := i))).ne
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · exact ⟨1, one_pos, fun i => i.elim0⟩
+    · have hne : (Finset.univ : Finset (Fin n)).Nonempty := ⟨⟨0, hn⟩, Finset.mem_univ _⟩
+      have hinf : 0 < Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ) := by
+        rw [Finset.lt_inf'_iff]
+        exact fun i _ => hpos i
+      refine ⟨(Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ)) / 2,
+        by linarith, fun i => ?_⟩
+      have h1 : (Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ))
+          ≤ dist (t i.castSucc) (t i.succ) := Finset.inf'_le _ (Finset.mem_univ i)
+      have h2 : 0 < dist (t i.castSucc) (t i.succ) := hpos i
+      linarith
+  have hev : ∀ᶠ δ : ℝ in 𝓝[>] 0, δ < δ₀ :=
+    (Filter.eventually_iff_exists_mem.2 ⟨Set.Iio δ₀, Iio_mem_nhds hδ₀, fun _ hx => hx⟩).filter_mono
+      nhdsWithin_le_nhds
+  filter_upwards [hev] with δ hδ
+  refine le_trans ?_ hle
+  refine iInf_le_of_le n (iInf_le_of_le t
+    (iInf_le_of_le ⟨⟨ht, h0.le, hlast.ge, fun i => hδ.trans (hδ₀lt i)⟩, hbase⟩ ?_))
+  refine iSup_le fun i => iSup_le fun s => iSup_le fun hs => ?_
+  rw [edist_dist]
+  exact ENNReal.ofReal_le_ofReal (hcell i s hs)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The forward half of the criterion, for the based modulus.**  This is
+`SkorokhodSpace.tendsto_iSup_modulus_of_isCompact` with
+`IsCadlag.exists_subdivision_through` in place of `IsCadlag.exists_subdivision`
+and `SkorokhodSpace.modulusBased_le_of_edist_le` in place of
+`SkorokhodSpace.modulus_le_of_edist_le`; the four nested radii, the choice of
+`γ`, and the finitely many centres are unchanged, because the base point is a
+node of the *centres'* subdivisions and the transport preserves it.
+
+It is the first of the two commitments the criterion owed, and the reason it had
+to be proved twice rather than deduced is
+`SkorokhodSpace.modulus_le_modulusBased`, whose direction is fixed by the
+infimum running over a smaller set. -/
+theorem SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact [SecondCountableTopology E]
+    {A : Set D(ι, E)} (hA : IsCompact (closure A)) (m : ℕ) :
+    Tendsto (fun δ : ℝ => ⨆ f ∈ A, SkorokhodSpace.modulusBased (basePoint : ι) (m : ℝ) f δ)
+      (𝓝[>] 0) (𝓝 0) := by
+  classical
+  rw [ENNReal.tendsto_nhds_zero]
+  intro ε hε
+  obtain ⟨ε', hε', hle⟩ : ∃ ε' : ℝ, 0 < ε' ∧ 3 * ENNReal.ofReal ε' ≤ ε := by
+    rcases eq_or_ne ε ⊤ with rfl | hne
+    · exact ⟨1, one_pos, le_top⟩
+    · have h0 : 0 < ε.toReal := ENNReal.toReal_pos hε.ne' hne
+      refine ⟨ε.toReal / 4, by linarith, ?_⟩
+      have hmul : (3 : ℝ≥0∞) * ENNReal.ofReal (ε.toReal / 4)
+          = ENNReal.ofReal (3 * (ε.toReal / 4)) := by
+        rw [ENNReal.ofReal_mul (by norm_num)]
+        norm_num
+      rw [hmul]
+      calc ENNReal.ofReal (3 * (ε.toReal / 4)) ≤ ENNReal.ofReal ε.toReal :=
+            ENNReal.ofReal_le_ofReal (by linarith)
+        _ = ε := ENNReal.ofReal_toReal hne
+  have hm0 : (0 : ℝ) ≤ (m : ℝ) := Nat.cast_nonneg m
+  have hw0 : (0 : ℝ) < (m : ℝ) + 1 := by linarith
+  obtain ⟨γ, hγ0, hγ⟩ : ∃ γ : ℝ, 0 < γ ∧ (Real.exp γ - 1) * (2 * ((m : ℝ) + 1)) ≤ 1 := by
+    refine ⟨Real.log (1 + 1 / (2 * ((m : ℝ) + 1))), Real.log_pos (by
+      have : 0 < 1 / (2 * ((m : ℝ) + 1)) := by positivity
+      linarith), ?_⟩
+    rw [Real.exp_log (by positivity)]
+    field_simp
+    linarith
+  have hγexp : (0 : ℝ) ≤ Real.exp γ - 1 := by
+    have := Real.one_le_exp hγ0.le
+    linarith
+  have hcover : (m : ℝ) + (Real.exp γ - 1) * (2 * (m : ℝ)) ≤ (m : ℝ) + 1 := by
+    have h1 : (Real.exp γ - 1) * (2 * (m : ℝ)) ≤ (Real.exp γ - 1) * (2 * ((m : ℝ) + 1)) :=
+      mul_le_mul_of_nonneg_left (by linarith) hγexp
+    linarith
+  have hM0 : (0 : ℝ) < (m : ℝ) + 2 := by linarith
+  obtain ⟨δ₀, hδ₀, hbridge⟩ :=
+    SkorokhodSpace.exists_timeChange_distWith_lt_of_intDist_lt (E := E) (basePoint : ι)
+      (M := (m : ℝ) + 2) (ε := min γ ε') hM0 (lt_min hγ0 hε')
+  -- a **based** subdivision of every path on the window of radius `m + 1`
+  have hsubd : ∀ g : D(ι, E), ∃ d : ℝ, 0 < d ∧ ∃ (n : ℕ) (t : Fin (n + 1) → ι),
+      SkorokhodSpace.IsSubdivisionBased (basePoint : ι) ((m : ℝ) + 1) d t ∧
+        (∀ i, t i ∈ exhaustion (basePoint : ι) ((m : ℝ) + 1)) ∧
+        SkorokhodSpace.subdivisionOsc g t ≤ ENNReal.ofReal ε' := by
+    intro g
+    have hmin := isLeast_exhaustionMin (basePoint : ι) ((m : ℝ) + 1)
+    have hmax := isGreatest_exhaustionMax (basePoint : ι) ((m : ℝ) + 1)
+    have hac : exhaustionMin (basePoint : ι) ((m : ℝ) + 1) ≤ (basePoint : ι) :=
+      hmin.2 (mem_exhaustion_self (basePoint : ι) ((m : ℝ) + 1))
+    have hcb : (basePoint : ι) ≤ exhaustionMax (basePoint : ι) ((m : ℝ) + 1) :=
+      hmax.2 (mem_exhaustion_self (basePoint : ι) ((m : ℝ) + 1))
+    have hK : IsCompact (Set.Icc (exhaustionMin (basePoint : ι) ((m : ℝ) + 1))
+        (exhaustionMax (basePoint : ι) ((m : ℝ) + 1))) :=
+      (isCompact_exhaustion (basePoint : ι) ((m : ℝ) + 1)).of_isClosed_subset isClosed_Icc
+        ((ordConnected_exhaustion (basePoint : ι) ((m : ℝ) + 1)).out hmin.1 hmax.1)
+    obtain ⟨n, t, ht, h0, hlast, hbase, hcell⟩ :=
+      g.isCadlag.exists_subdivision_through hac hcb hK hε'
+    obtain ⟨d, hd0, hdlt⟩ :
+        ∃ d : ℝ, 0 < d ∧ ∀ i : Fin n, d < dist (t i.castSucc) (t i.succ) := by
+      have hpos : ∀ i : Fin n, 0 < dist (t i.castSucc) (t i.succ) := fun i =>
+        dist_pos.2 (ht (Fin.castSucc_lt_succ (i := i))).ne
+      rcases Nat.eq_zero_or_pos n with rfl | hn
+      · exact ⟨1, one_pos, fun i => i.elim0⟩
+      · have hne : (Finset.univ : Finset (Fin n)).Nonempty := ⟨⟨0, hn⟩, Finset.mem_univ _⟩
+        have hinf : 0 < Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ) := by
+          rw [Finset.lt_inf'_iff]
+          exact fun i _ => hpos i
+        refine ⟨(Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ)) / 2,
+          by linarith, fun i => ?_⟩
+        have h1 : (Finset.univ.inf' hne fun i => dist (t i.castSucc) (t i.succ))
+            ≤ dist (t i.castSucc) (t i.succ) := Finset.inf'_le _ (Finset.mem_univ i)
+        have h2 : 0 < dist (t i.castSucc) (t i.succ) := hpos i
+        linarith
+    refine ⟨d, hd0, n, t, ⟨⟨ht, h0.le, hlast.ge, hdlt⟩, hbase⟩, fun i => ?_, ?_⟩
+    · refine (ordConnected_exhaustion (basePoint : ι) ((m : ℝ) + 1)).out hmin.1 hmax.1 ⟨?_, ?_⟩
+      · rw [← h0]; exact ht.monotone (Fin.zero_le i)
+      · rw [← hlast]; exact ht.monotone (Fin.le_last i)
+    · refine iSup_le fun i => iSup_le fun s => iSup_le fun hs => ?_
+      rw [edist_dist]
+      exact ENNReal.ofReal_le_ofReal (hcell i s hs)
+  choose dd hdd0 nn tt htt httmem httosc using hsubd
+  have htb : TotallyBounded A := TotallyBounded.subset subset_closure hA.totallyBounded
+  obtain ⟨T, hTfin, hTcov⟩ := (Metric.totallyBounded_iff.1 htb) δ₀ hδ₀
+  obtain ⟨δ₁, hδ₁0, hδ₁⟩ : ∃ δ₁ : ℝ, 0 < δ₁ ∧ ∀ g ∈ T, δ₁ ≤ dd g := by
+    rcases T.eq_empty_or_nonempty with rfl | hTne
+    · exact ⟨1, one_pos, by simp⟩
+    · have hnee : hTfin.toFinset.Nonempty := by
+        obtain ⟨g, hg⟩ := hTne
+        exact ⟨g, hTfin.mem_toFinset.2 hg⟩
+      refine ⟨hTfin.toFinset.inf' hnee dd, ?_,
+        fun g hg => Finset.inf'_le _ (hTfin.mem_toFinset.2 hg)⟩
+      rw [Finset.lt_inf'_iff]
+      exact fun g _ => hdd0 g
+  have hev : ∀ᶠ δ : ℝ in 𝓝[>] 0, δ < Real.exp (-γ) * δ₁ :=
+    (Filter.eventually_iff_exists_mem.2 ⟨Set.Iio (Real.exp (-γ) * δ₁),
+      Iio_mem_nhds (by positivity), fun _ hx => hx⟩).filter_mono nhdsWithin_le_nhds
+  filter_upwards [hev] with δ hδ
+  refine le_trans (iSup₂_le fun f hf => ?_) hle
+  obtain ⟨g, hgT, hfg⟩ : ∃ g ∈ T, f ∈ Metric.ball g δ₀ := by
+    have h := hTcov hf
+    simpa only [Set.mem_iUnion, exists_prop] using h
+  have hint : SkorokhodSpace.intDist (basePoint : ι) f g < δ₀ := by
+    rw [← SkorokhodSpace.dist_eq]
+    exact Metric.mem_ball.1 hfg
+  obtain ⟨l, hl0, hlnorm, u, hu, hdist⟩ := hbridge f g hint
+  have hmoved : ∀ x ∈ exhaustion (basePoint : ι) ((m : ℝ) + 1),
+      l.toOrderIso x ∈ exhaustion (basePoint : ι) u := by
+    intro x hx
+    have hmove : dist (l.toOrderIso x) x ≤ (Real.exp γ - 1) * (2 * ((m : ℝ) + 1)) :=
+      TimeChange.dist_le_of_norm_le (basePoint : ι) hw0.le hl0
+        (hlnorm.le.trans (min_le_left _ _)) hx
+    have hx' : dist x (basePoint : ι) ≤ (m : ℝ) + 1 := by
+      simpa only [exhaustion, Metric.mem_closedBall, max_eq_left hw0.le] using hx
+    have hutop : (m : ℝ) + 2 < u := hu.1
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left (by linarith : (0 : ℝ) ≤ u)]
+    calc dist (l.toOrderIso x) (basePoint : ι)
+        ≤ dist (l.toOrderIso x) x + dist x (basePoint : ι) := dist_triangle _ _ _
+      _ ≤ 1 + ((m : ℝ) + 1) := add_le_add (hmove.trans hγ) hx'
+      _ ≤ u := by linarith
+  have hηu : ∀ x ∈ exhaustion (basePoint : ι) ((m : ℝ) + 1),
+      edist (f.toFun (l.toOrderIso x)) (g.toFun x) ≤ ENNReal.ofReal ε' := by
+    intro x hx
+    have hxu : x ∈ exhaustion (basePoint : ι) u :=
+      exhaustion_subset_of_le (basePoint : ι) (by linarith [hu.1]) hx
+    refine le_trans (SkorokhodSpace.edist_le_ofReal_distWith (basePoint : ι) u l f g hxu
+      (hmoved x hx)) (ENNReal.ofReal_le_ofReal ?_)
+    exact (hdist.trans_le (min_le_right _ _)).le
+  have hkey := SkorokhodSpace.modulusBased_le_of_edist_le (basePoint : ι) hm0 hw0.le f g hl0
+    (hlnorm.le.trans (min_le_left _ _)) hcover (hdd0 g).le
+    (hδ.le.trans (mul_le_mul_of_nonneg_left (hδ₁ g hgT) (Real.exp_pos _).le))
+    (htt g) (httmem g) hηu
+  refine hkey.trans ?_
+  have h3 : (3 : ℝ≥0∞) * ENNReal.ofReal ε'
+      = ENNReal.ofReal ε' + 2 * ENNReal.ofReal ε' := by ring
+  rw [h3]
+  exact add_le_add (httosc g) le_rfl
+
 /-- **The compactness criterion, and it is stated over the index `ℝ`.**  The base
 point is the one of the instance and not a parameter: the left hand side speaks
 of the topology of `D(ℝ, E)`, which is `SkorokhodSpace.metricSpaceInt basePoint`,
@@ -8617,6 +8872,6 @@ theorem SkorokhodSpace.isCompact_closure_iff [CompleteSpace E] (A : Set D(ℝ, E
         (𝓝[>] 0) (𝓝 0) := by
   constructor
   · intro hA m
-    refine ⟨SkorokhodSpace.isCompact_closure_values_of_isCompact hA m, ?_⟩
-    sorry
+    exact ⟨SkorokhodSpace.isCompact_closure_values_of_isCompact hA m,
+      SkorokhodSpace.tendsto_iSup_modulusBased_of_isCompact hA m⟩
   · sorry
