@@ -484,12 +484,56 @@ danach.*
    nennt `nu` nicht** — die allgemeine Zeit setzt dort das Gesetz zur Zeit `t`
    ein, und eine von ihm abhängige Schranke wäre wertlos.
 
-   **Was jetzt noch fehlt**, ist die Verschiebung der Ableitung von `0` an jede
+   ~~**Was jetzt noch fehlt**, ist die Verschiebung der Ableitung von `0` an jede
    Stelle, und das genaue Ziel steht am Ende des Laufberichts als
    `jumpMeasure_integral_jumpProcess_add`, die zeithomogene Markoveigenschaft in
-   integrierter Gestalt. Sie ist das einzige, was `expMeasure_Ioi_add` verbraucht,
-   und mit ihr folgt die Erwartungsidentität aus
-   `intervalIntegral.integral_eq_sub_of_hasDerivAt`.
+   integrierter Gestalt.~~ *(erledigt 2026-09-09, fünfundzwanzigster und
+   sechsundzwanzigster Lauf des Tages.)*
+
+   **Zwischenstand 2026-09-09, fünfundzwanzigster und sechsundzwanzigster Lauf
+   des Tages.** Die **Markoveigenschaft zu einer festen Zeit** steht, als
+   `jumpMeasure_integral_jumpProcess_add`, und mit ihr die
+   **Erwartungsidentität** `jumpMeasure_integral_sub_eq_intervalIntegral`. Der
+   Träger ist `jumpKernel`, die Konstruktion als Kern im Anfangs*zustand*: die im
+   vierundzwanzigsten Lauf angesagte Gestalt nennt rechts ein Maß, das keine
+   Komposition ist, und die Induktion über die Zahl der Sprünge hätte daran
+   nichts zum Ansetzen. Der Hauptsatz ist überdies **einseitig** anzuwenden —
+   `intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le`, nicht
+   `…_of_hasDerivAt`, denn die zweiseitige Ableitung an `0` existiert nicht.
+   Berichte in `Facts/INVENTAR.md`, Läufe, „2026-09-09, fünfundzwanzigster" und
+   „sechsundzwanzigster Lauf des Tages".
+
+   **Zwischenstand 2026-09-09, siebenundzwanzigster Lauf des Tages.** Damit fehlt
+   an `jumpProcess_isMPSolution` genau noch der Übergang von der unbedingten
+   Erwartung zur **bedingten**, und dieser Lauf hat das Stück gebaut, das er
+   braucht: die **Gestalt der Vergangenheit**, `IsPastFunctional`, in
+   fünfundzwanzig Deklarationen, alle durch `lake env lean` gegen v4.33.1 und
+   alle mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`
+   geprüft; die Zahl der `sorry` ist unverändert zehn. Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-09, siebenundzwanzigster Lauf des Tages".
+
+   **Der im sechsundzwanzigsten Lauf angesagte Weg ist zweifach versperrt, und
+   das ist der Befund.** Er lief über `isMPSolution_iff_forall_fdd`. (a) Dieser
+   Satz trägt **selbst ein `sorry`** (`Suggested.lean:382`); ein darauf
+   gestütztes `jumpProcess_isMPSolution` hinge an `sorryAx`. (b) Seine
+   Voraussetzung ist `Clock.IsProgressive`, die der neunzehnte Lauf für den
+   Sprungprozeß schon als vermutlich **nicht beweisbar** notiert hat. Die
+   bedingte Erwartung wird darum direkt gerechnet, gegen die `𝓕 s`-meßbaren
+   beschränkten Funktionale.
+
+   **Und der Grund, aus dem die Meßbarkeit allein nicht die richtige Eigenschaft
+   ist.** Die Identität `X r (jumpPrepend x a ω) = X (r - a / lam x) ω` ist
+   jenseits der Explosionszeit von `ω` **falsch** — dort ist `stepIndex` der
+   Sperrwert `0`, links steht `x` und rechts `ω.1 0` —, also startet ein bloß
+   `𝓕 s`-meßbares Funktional nach dem ersten Sprung nicht wieder als eines.
+   `IsPastFunctional` schneidet darum die Explosionsmenge weg, was eine
+   Nullmenge kostet (`indicator_nonExplosive_ae_eq`) und was bei
+   `StronglyAdapted` gerade **nicht** erlaubt war (neunzehnter Lauf).
+
+   **Was jetzt noch fehlt**, ist die Induktion mit dem Faktor aus der
+   Vergangenheit, `abs_integral_jumpMeasure_add_sub_le_past`; sie steht
+   ausgeschrieben am Ende des Laufberichts, samt der Angabe, welcher vorhandene
+   Satz jeden ihrer Schritte trägt.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 

@@ -71,7 +71,15 @@ on the number of jumps in `[0, s]` (`abs_integral_jumpMeasure_add_sub_le`) whose
 the probability of `n` jumps before `s`, sent to zero by `tendsto_measureReal_jumpTime_le`; and
 `jumpMeasure_integral_sub_eq_intervalIntegral` is
 `E[h (X t)] - E[h (X 0)] = ∫_0^t E[A h (X r)] dr`, which the Markov property produces from the
-derivative at `0` by the one sided fundamental theorem of calculus.  The first
+derivative at `0` by the one sided fundamental theorem of calculus.  Twenty five more the same
+day are the **structure of the past**, which is what the conditional expectation of
+`jumpProcess_isMPSolution` needs and what the unconditional Markov property does not have:
+`eq_of_measurable_naturalFiltration` says that a `𝓕 s`-measurable real function does not separate
+two sample points whose paths agree below `s`, `NonExplosive` names the set on which the
+substitutions of the past are valid, `jumpConst` and `jumpPrepend` are those substitutions, and
+`IsPastFunctional` is the property of a functional that survives the restart --
+`IsPastFunctional.comp_jumpPrepend` -- and makes it a function of the initial state before the
+first jump -- `eq_jumpConst_of_isPastFunctional`.  The first
 proof of the
 file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
 corrected first: under `¬ IsMin t` alone it is false.  On 2026-09-07 twelve more
@@ -4127,6 +4135,218 @@ theorem jumpMeasure_integral_sub_eq_intervalIntegral {lam : E → ℝ} (hlam : M
   exact (intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le ht hcont
     (fun x hx ↦ (hderiv x (le_of_lt hx.1)).mono Set.Ioi_subset_Ici_self) hGint).symm
 
+/-! ## Non explosion as a set -/
+
+/-- **The non explosive sample points**, as a set rather than as an almost sure statement.  It is
+needed as a set because the identities that carry the past through the restart are *false* on the
+explosion set: there `stepIndex` is the junk value `0` and the path sits at the initial state of
+whatever data it is read from. -/
+def NonExplosive (lam : E → ℝ) : Set ((ℕ → E) × (ℕ → ℝ)) :=
+  {ω | ∀ t : ℝ, ∃ n, t < jumpTime lam ω.1 ω.2 (n + 1)}
+
+theorem measurableSet_nonExplosive {lam : E → ℝ} (hlam : Measurable lam) :
+    MeasurableSet (NonExplosive lam) := by
+  have hEq : NonExplosive lam
+      = ⋂ m : ℕ, ⋃ n : ℕ, {ω : (ℕ → E) × (ℕ → ℝ) | (m : ℝ) < jumpTime lam ω.1 ω.2 (n + 1)} := by
+    ext ω
+    simp only [NonExplosive, Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion]
+    refine ⟨fun h m ↦ h m, fun h t ↦ ?_⟩
+    obtain ⟨m, hm⟩ := exists_nat_gt t
+    obtain ⟨n, hn⟩ := h m
+    exact ⟨n, hm.trans hn⟩
+  rw [hEq]
+  exact MeasurableSet.iInter fun m ↦ MeasurableSet.iUnion fun n ↦
+    measurableSet_lt measurable_const (measurable_jumpTime hlam (n + 1))
+
+/-- **Almost every sample point is non explosive**, which is `ae_exists_lt_jumpTime` read as a
+statement about the set.  The set and the almost sure statement are both needed and they are not
+interchangeable: the identities of the past hold *pointwise* on the set, and it is the set that
+survives the restart. -/
+theorem ae_mem_nonExplosive {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L) (hlam0 : ∀ x, 0 < lam x)
+    (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosive lam :=
+  ae_exists_lt_jumpTime hL0 hlam0 hL mu nu
+
+/-- **Cutting a functional down to the non explosive sample points changes no integral.**  This is
+the price of `IsPastFunctional`, and it is nil. -/
+theorem indicator_nonExplosive_ae_eq {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L) (hlam0 : ∀ x, 0 < lam x)
+    (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (G : (ℕ → E) × (ℕ → ℝ) → ℝ) :
+    (NonExplosive lam).indicator G =ᵐ[jumpMeasure mu nu] G := by
+  filter_upwards [ae_mem_nonExplosive hL0 hlam0 hL mu nu] with ω hω
+  exact Set.indicator_of_mem hω G
+
+/-! ## The two canonical substitutions -/
+
+/-- **The datum that sits at `x` and does not jump before `s`.**  It is the canonical
+representative of the past on the event `{s < T 1}`, and it is what makes a functional of the past
+a function of the initial state there. -/
+def jumpConst (lam : E → ℝ) (s : ℝ) (x : E) : (ℕ → E) × (ℕ → ℝ) :=
+  (fun _ ↦ x, fun _ ↦ lam x * s + 1)
+
+theorem measurable_jumpConst {lam : E → ℝ} (hlam : Measurable lam) (s : ℝ) :
+    Measurable (jumpConst lam s : E → (ℕ → E) × (ℕ → ℝ)) :=
+  (measurable_pi_lambda _ fun _ ↦ measurable_id).prodMk
+    (measurable_pi_lambda _ fun _ ↦ (hlam.mul measurable_const).add measurable_const)
+
+omit [MeasurableSpace E] in
+theorem jumpTime_jumpConst (lam : E → ℝ) (s : ℝ) (x : E) (n : ℕ) :
+    jumpTime lam (jumpConst lam s x).1 (jumpConst lam s x).2 n
+      = n * ((lam x * s + 1) / lam x) := by
+  induction n with
+  | zero => simp [jumpTime_zero]
+  | succ n ih =>
+      rw [jumpTime_succ, ih]
+      show (n : ℝ) * ((lam x * s + 1) / lam x) + (lam x * s + 1) / lam x = _
+      push_cast
+      ring
+
+omit [MeasurableSpace E] in
+theorem lt_jumpTime_one_jumpConst {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) (s : ℝ)
+    (x : E) : s < jumpTime lam (jumpConst lam s x).1 (jumpConst lam s x).2 1 := by
+  rw [jumpTime_jumpConst lam s x 1, Nat.cast_one, one_mul, lt_div_iff₀ (hlam0 x)]
+  nlinarith [hlam0 x]
+
+omit [MeasurableSpace E] in
+theorem jumpConst_mem_nonExplosive {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) {s : ℝ} (hs : 0 ≤ s)
+    (x : E) : jumpConst lam s x ∈ NonExplosive lam := by
+  intro t
+  have hd : 0 < (lam x * s + 1) / lam x := div_pos (by nlinarith [hlam0 x]) (hlam0 x)
+  obtain ⟨n, hn⟩ := exists_nat_gt (t / ((lam x * s + 1) / lam x))
+  refine ⟨n, ?_⟩
+  rw [jumpTime_jumpConst lam s x (n + 1)]
+  have h1 : t < (n : ℝ) * ((lam x * s + 1) / lam x) := (div_lt_iff₀ hd).1 hn
+  push_cast
+  nlinarith
+
+theorem jumpProcess_jumpConst {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) {s r : ℝ}
+    (hr : r ≤ s) (x : E) : jumpProcess lam r (jumpConst lam s x) = x :=
+  jumpProcess_of_lt_jumpTime_one (lt_of_le_of_lt hr (lt_jumpTime_one_jumpConst hlam0 s x))
+
+/-- **Prepending a state and a waiting time to the driving data.**  It is the inverse of
+`jumpShift`, and it is the change of variables in which the splitting of `jumpMeasure` at the
+first jump reads the functionals of the past. -/
+def jumpPrepend (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : (ℕ → E) × (ℕ → ℝ) :=
+  (natCons (x, ω.1), natCons (a, ω.2))
+
+theorem measurable_jumpPrepend :
+    Measurable fun p : (E × ℝ) × ((ℕ → E) × (ℕ → ℝ)) ↦ jumpPrepend p.1.1 p.1.2 p.2 :=
+  (measurable_natCons.comp ((measurable_fst.comp measurable_fst).prodMk
+      (measurable_fst.comp measurable_snd))).prodMk
+    (measurable_natCons.comp ((measurable_snd.comp measurable_fst).prodMk
+      (measurable_snd.comp measurable_snd)))
+
+omit [MeasurableSpace E] in
+theorem jumpShift_jumpPrepend (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpShift (jumpPrepend x a ω) = ω := by
+  refine Prod.ext ?_ ?_ <;> funext n <;> simp [jumpShift, jumpPrepend, natCons]
+
+omit [MeasurableSpace E] in
+theorem jumpPrepend_self (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpPrepend (ω.1 0) (ω.2 0) (jumpShift ω) = ω := by
+  refine Prod.ext ?_ ?_ <;> funext n <;> rcases n with _ | n <;>
+    simp [jumpShift, jumpPrepend, natCons]
+
+omit [MeasurableSpace E] in
+theorem jumpTime_jumpPrepend (lam : E → ℝ) (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) (n : ℕ) :
+    jumpTime lam (jumpPrepend x a ω).1 (jumpPrepend x a ω).2 (n + 1)
+      = a / lam x + jumpTime lam ω.1 ω.2 n := by
+  induction n with
+  | zero =>
+      rw [jumpTime_succ, jumpTime_zero, jumpTime_zero, zero_add, add_zero]
+      rfl
+  | succ n ih =>
+      rw [jumpTime_succ, ih, jumpTime_succ lam ω.1 ω.2 n]
+      have h1 : (jumpPrepend x a ω).2 (n + 1) = ω.2 n := by simp [jumpPrepend, natCons]
+      have h2 : (jumpPrepend x a ω).1 (n + 1) = ω.1 n := by simp [jumpPrepend, natCons]
+      rw [h1, h2, add_assoc]
+
+omit [MeasurableSpace E] in
+theorem jumpTime_one_jumpPrepend (lam : E → ℝ) (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpTime lam (jumpPrepend x a ω).1 (jumpPrepend x a ω).2 1 = a / lam x := by
+  rw [show (1 : ℕ) = 0 + 1 from rfl, jumpTime_jumpPrepend, jumpTime_zero, add_zero]
+
+theorem jumpPrepend_mem_nonExplosive_iff {lam : E → ℝ} (x : E) (a : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpPrepend x a ω ∈ NonExplosive lam ↔ ω ∈ NonExplosive lam := by
+  constructor
+  · intro h t
+    obtain ⟨n, hn⟩ := h (a / lam x + max t 0)
+    rcases n with _ | n
+    · rw [jumpTime_one_jumpPrepend] at hn
+      exact absurd (le_max_right t 0) (by linarith)
+    · refine ⟨n, ?_⟩
+      rw [jumpTime_jumpPrepend] at hn
+      exact lt_of_le_of_lt (le_max_left t 0) (by linarith)
+  · intro h t
+    obtain ⟨n, hn⟩ := h (t - a / lam x)
+    refine ⟨n + 1, ?_⟩
+    rw [jumpTime_jumpPrepend]
+    linarith
+
+/-- **The path of the prepended datum**: before `a / lam x` it sits at `x`, and afterwards it is
+the path of `ω` moved forward by `a / lam x`.  Non explosion is not decoration -- past the
+explosion time the left hand side is `x` and the right hand side is `ω.1 0`. -/
+theorem jumpProcess_jumpPrepend {lam : E → ℝ} {x : E} {a : ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+    (hω : ω ∈ NonExplosive lam) (r : ℝ) :
+    jumpProcess lam r (jumpPrepend x a ω)
+      = if r < a / lam x then x else jumpProcess lam (r - a / lam x) ω := by
+  by_cases hr : r < a / lam x
+  · rw [if_pos hr, jumpProcess_of_lt_jumpTime_one (by rwa [jumpTime_one_jumpPrepend])]
+    rfl
+  · rw [if_neg hr]
+    have hex : ∃ n, r < jumpTime lam (jumpPrepend x a ω).1 (jumpPrepend x a ω).2 (n + 1) :=
+      (jumpPrepend_mem_nonExplosive_iff x a ω).2 hω r
+    rw [jumpProcess_jumpShift (by rw [jumpTime_one_jumpPrepend]; exact not_lt.1 hr) hex,
+      jumpTime_one_jumpPrepend, jumpShift_jumpPrepend]
+
+/-! ## Functionals of the past -/
+
+/-- **A functional of the past, in the form the induction of the Markov property preserves.**
+It is the conclusion of `eq_of_measurable_naturalFiltration` taken as a hypothesis, restricted to
+the non explosive sample points and vanishing off them.
+
+The restriction is what makes the notion survive the restart: `jumpProcess_jumpPrepend` -- the
+identity that turns a functional of the past of the prepended datum into one of the past of the
+datum itself -- is false on the explosion set. -/
+def IsPastFunctional (lam : E → ℝ) (s : ℝ) (G : (ℕ → E) × (ℕ → ℝ) → ℝ) : Prop :=
+  (∀ ω ∉ NonExplosive lam, G ω = 0) ∧
+    ∀ ω ∈ NonExplosive lam, ∀ ω' ∈ NonExplosive lam,
+      (∀ r, 0 ≤ r → r ≤ s → jumpProcess lam r ω = jumpProcess lam r ω') → G ω = G ω'
+
+/-- **On the event that the first jump has not happened, a functional of the past is a function of
+the initial state**, namely of its value at the canonical datum `jumpConst`. -/
+theorem eq_jumpConst_of_isPastFunctional {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) {s : ℝ}
+    (hs : 0 ≤ s) {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : IsPastFunctional lam s G)
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ NonExplosive lam)
+    (h1 : s < jumpTime lam ω.1 ω.2 1) :
+    G ω = G (jumpConst lam s (ω.1 0)) := by
+  refine hG.2 ω hω _ (jumpConst_mem_nonExplosive hlam0 hs _) fun r hr0 hr ↦ ?_
+  rw [jumpProcess_of_lt_jumpTime_one (lt_of_le_of_lt hr h1),
+    jumpProcess_jumpConst hlam0 hr]
+
+/-- **A functional of the past restarts as a functional of the past.**  The horizon drops by the
+first jump time, and this is the step that lets the induction of the Markov property be applied to
+the shifted data. -/
+theorem IsPastFunctional.comp_jumpPrepend {lam : E → ℝ} {s : ℝ}
+    {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : IsPastFunctional lam s G) (x : E) (a : ℝ) :
+    IsPastFunctional lam (s - a / lam x) fun ω ↦ G (jumpPrepend x a ω) := by
+  refine ⟨fun ω hω ↦ hG.1 _ fun hmem ↦ hω ((jumpPrepend_mem_nonExplosive_iff x a ω).1 hmem),
+    fun ω hω ω' hω' hpath ↦ ?_⟩
+  refine hG.2 _ ((jumpPrepend_mem_nonExplosive_iff x a ω).2 hω)
+    _ ((jumpPrepend_mem_nonExplosive_iff x a ω').2 hω') fun r hr0 hr ↦ ?_
+  rw [jumpProcess_jumpPrepend hω, jumpProcess_jumpPrepend hω']
+  by_cases hlt : r < a / lam x
+  · rw [if_pos hlt, if_pos hlt]
+  · rw [if_neg hlt, if_neg hlt]
+    exact hpath _ (by linarith [not_lt.1 hlt]) (by linarith)
+
+/-- **The canonical representative of the past is measurable in the initial state.** -/
+theorem measurable_comp_jumpConst {lam : E → ℝ} (hlam : Measurable lam) (s : ℝ)
+    {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : Measurable G) :
+    Measurable fun x : E ↦ G (jumpConst lam s x) :=
+  hG.comp (measurable_jumpConst hlam s)
+
 end Space
 
 /-! ### The natural filtration
@@ -4159,6 +4379,62 @@ theorem measurable_naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*}
     Measurable[naturalFiltration (m' := m') X hX i] (X j) :=
   Measurable.mono (comap_measurable (X j))
     (le_iSup₂ (f := fun j (_ : j ≤ i) ↦ MeasurableSpace.comap (X j) mF) j hji) le_rfl
+
+/-! ## What a functional of the past can see -/
+
+/-- **A functional of the past sees nothing but the path up to `s`.**  Two sample points whose
+paths agree below `s` are not separated by any `𝓕 s`-measurable real function.
+
+The proof needs no factorisation theorem: the sets that fail to separate a *fixed* pair form a
+σ-algebra, it contains every coordinate below `s`, hence the whole of `𝓕 s`, and a real function
+that took two values would separate the pair by a half line. -/
+theorem eq_of_measurable_naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*}
+    {m' : MeasurableSpace Ω'} {F : Type*} [mF : MeasurableSpace F] {X : ι' → Ω' → F}
+    (hX : ∀ i, Measurable (X i)) {s : ι'} {G : Ω' → ℝ}
+    (hG : Measurable[naturalFiltration (m' := m') X hX s] G) {ω ω' : Ω'}
+    (h : ∀ r ≤ s, X r ω = X r ω') : G ω = G ω' := by
+  set 𝓜 : MeasurableSpace Ω' :=
+    { MeasurableSet' := fun A ↦ (ω ∈ A ↔ ω' ∈ A)
+      measurableSet_empty := by simp
+      measurableSet_compl := fun A hA ↦ by
+        simp only [Set.mem_compl_iff, not_iff_not]
+        exact hA
+      measurableSet_iUnion := fun f hf ↦ by
+        simp only [Set.mem_iUnion]
+        exact exists_congr hf } with h𝓜
+  have hle : (naturalFiltration (m' := m') X hX s : MeasurableSpace Ω') ≤ 𝓜 := by
+    refine iSup₂_le ?_
+    rintro j hj A ⟨u, -, rfl⟩
+    show (ω ∈ X j ⁻¹' u ↔ ω' ∈ X j ⁻¹' u)
+    simp only [Set.mem_preimage, h j hj]
+  rcases lt_trichotomy (G ω) (G ω') with hlt | heq | hlt
+  · have hm := hle _ (hG (measurableSet_Iio (a := G ω')))
+    exact absurd (show G ω' < G ω' from hm.1 hlt) (lt_irrefl _)
+  · exact heq
+  · have hm := hle _ (hG (measurableSet_Ioi (a := G ω')))
+    exact absurd (show G ω' < G ω' from hm.1 hlt) (lt_irrefl _)
+
+/-- **Composing a functional of the past with a map that shifts the past.**  If every coordinate
+below `s` becomes, after the substitution, a coordinate measurable for a σ-algebra `n`, then so
+does every `𝓕 s`-measurable functional.  This is the step that carries the induction hypothesis
+of the Markov property through the restart. -/
+theorem measurable_comp_of_measurable_naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*}
+    {m' : MeasurableSpace Ω'} {F : Type*} [mF : MeasurableSpace F] {X : ι' → Ω' → F}
+    (hX : ∀ i, Measurable (X i)) {s : ι'} {𝕜 : Type*} [MeasurableSpace 𝕜] {G : Ω' → 𝕜}
+    (hG : Measurable[naturalFiltration (m' := m') X hX s] G)
+    {Ω'' : Type*} {n : MeasurableSpace Ω''} {P : Ω'' → Ω'}
+    (hP : ∀ r ≤ s, Measurable[n] fun w ↦ X r (P w)) :
+    Measurable[n] fun w ↦ G (P w) := by
+  have hPm : @Measurable _ _ n (naturalFiltration (m' := m') X hX s) P := by
+    rw [measurable_iff_comap_le]
+    show MeasurableSpace.comap P (⨆ j, ⨆ (_ : j ≤ s), MeasurableSpace.comap (X j) mF) ≤ n
+    rw [MeasurableSpace.comap_iSup]
+    refine iSup_le fun j ↦ ?_
+    rw [MeasurableSpace.comap_iSup]
+    refine iSup_le fun hj ↦ ?_
+    rw [MeasurableSpace.comap_comp]
+    exact measurable_iff_comap_le.1 (hP j hj)
+  exact hG.comp hPm
 
 /-! ### Right continuity, and progressive measurability
 
@@ -4305,6 +4581,16 @@ noncomputable def jumpFiltration (lam : E → ℝ) (hlam : Measurable lam) :
     Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
   naturalFiltration (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω)
     fun _ ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+
+/-- **Every bounded `𝓕 s`-measurable functional is one of the past**, after being cut down to the
+non explosive sample points -- which changes no integral, the explosion set being null. -/
+theorem isPastFunctional_indicator {lam : E → ℝ} (hlam : Measurable lam) {s : ℝ≥0}
+    {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : Measurable[jumpFiltration lam hlam s] G) :
+    IsPastFunctional lam (s : ℝ) ((NonExplosive lam).indicator G) := by
+  refine ⟨fun ω hω ↦ Set.indicator_of_notMem hω G, fun ω hω ω' hω' hpath ↦ ?_⟩
+  rw [Set.indicator_of_mem hω, Set.indicator_of_mem hω']
+  refine eq_of_measurable_naturalFiltration _ hG fun r hr ↦ ?_
+  exact hpath (r : ℝ) r.coe_nonneg (by exact_mod_cast hr)
 
 /-- The jump process is right continuous at every time and at every sample point, the explosion
 set included: `eventuallyEq_nhdsGE_stepPath` read through the definition. -/

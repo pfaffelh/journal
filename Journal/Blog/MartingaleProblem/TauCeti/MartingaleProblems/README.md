@@ -827,7 +827,9 @@ A concrete family of solutions, built without any of the theory above. Index
   proved on 2026-09-09, twenty sixth run. The identity itself follows from them
   and is `jumpMeasure_integral_sub_eq_intervalIntegral`, proved in the same run.
   **What remains of `jumpProcess_isMPSolution` is therefore only the passage from
-  the expectation identity to the conditional one**, `P[Y t | 𝓕 s] =ᵐ Y s`.
+  the expectation identity to the conditional one**, `P[Y t | 𝓕 s] =ᵐ Y s`, and
+  the structure of the past that this passage needs is the point below, proved on
+  2026-09-09, twenty seventh run.
 
   **The Markov property is a statement about the initial *state* and not about an
   initial law, and that is why `jumpKernel` exists.** The form announced on
@@ -847,6 +849,52 @@ A concrete family of solutions, built without any of the theory above. Index
     = ∫ ω, jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z),
   ```
   and the announced form follows from it by `integral_jumpSemigroup_eq`.
+* `IsPastFunctional lam s G`: **what a functional of the past is allowed to
+  depend on**, and the property the induction of the *conditional* Markov
+  property carries. **Proved** on 2026-09-09, twenty seventh run, in twenty five
+  declarations of `Suggested.lean`.
+
+  Two of them are about a natural filtration and nothing else.
+  `eq_of_measurable_naturalFiltration` says that a `𝓕 s`-measurable real function
+  takes the same value at two sample points whose coordinates agree below `s`,
+  and `measurable_comp_of_measurable_naturalFiltration` says that composing such
+  a function with a substitution that carries every coordinate below `s` into a
+  σ-algebra `n` lands in `n`. **Neither needs a factorisation theorem**, and none
+  is available: Doob--Dynkin factors through *one* comap, while `𝓕 s` is a
+  supremum of comaps, and over a bare `[MeasurableSpace F]` nothing turns the
+  supremum into the comap of a joint map. The proof of the first is that the sets
+  which fail to separate a *fixed* pair form a σ-algebra; the proof of the second
+  is `MeasurableSpace.comap_iSup` and `MeasurableSpace.comap_comp`.
+
+  The rest is the two substitutions. `jumpConst lam s x = (fun _ ↦ x,`
+  `fun _ ↦ lam x * s + 1)` is the datum that sits at `x` and whose first jump is
+  at `s + 1 / lam x`, hence after `s`; `jumpPrepend x a ω` puts a state and a
+  waiting time in front of `ω` and is the inverse of `jumpShift`
+  (`jumpShift_jumpPrepend`, `jumpPrepend_self`). With them
+  `eq_jumpConst_of_isPastFunctional` says that before the first jump a functional
+  of the past **is a function of the initial state**, `G ω = G (jumpConst lam s`
+  `(ω.1 0))`, and `IsPastFunctional.comp_jumpPrepend` says that after the first
+  jump it **restarts as one**, at the horizon `s - a / lam x`. Those are the two
+  branches of the induction, and they are the reason the property is stated as it
+  is rather than as `Measurable[jumpFiltration lam hlam s] G`.
+
+  **The definition carries `NonExplosive lam`, and that is forced by a
+  counterexample and not by convenience.** `jumpProcess_jumpPrepend` — the
+  identity `X r (jumpPrepend x a ω) = X (r - a / lam x) ω` for
+  `a / lam x ≤ r`, on which `IsPastFunctional.comp_jumpPrepend` rests — is
+  **false** past the explosion time of `ω`: there `stepIndex` is the junk value
+  `0`, so the left hand side is `x` and the right hand side is `ω.1 0`. A
+  functional of the past defined by measurability alone therefore does *not*
+  restart as one. `IsPastFunctional` asks instead that `G` vanish off
+  `NonExplosive lam` and be constant on the paths that agree below `s` *within*
+  that set; `jumpPrepend_mem_nonExplosive_iff` is what makes the set survive the
+  restart, and `indicator_nonExplosive_ae_eq` is what makes the restriction cost
+  nothing — `isPastFunctional_indicator` turns any bounded
+  `𝓕 s`-measurable `G` into one at the price of a null set. **`StronglyAdapted`
+  could not have been treated this way**: it is not an almost sure notion, which
+  is why `eventuallyEq_nhdsGE_stepPath` was proved without hypotheses. The
+  conditional expectation *is* an almost sure notion, and here the difference
+  pays.
 * `jumpKernel mu = (chainKernel mu).prod (Kernel.const E waitingMeasure)`: the
   jump construction as a **kernel in the initial state**, with
   `jumpMeasure_eq_comp : jumpMeasure mu nu = jumpKernel mu ∘ₘ nu`. **Proved** on

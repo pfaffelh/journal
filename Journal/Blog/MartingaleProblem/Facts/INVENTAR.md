@@ -15823,3 +15823,144 @@ bedingten Verteilung gegeben `𝓕 s`. Der Weg dorthin ist, sie auf das Gesetz
 ersetzen; deren Hypothese ist überdies vorher auf die Gestalt `g ∘ X`
 abzuschwächen, wie es der neunzehnte Lauf schon festgehalten hat. Wer den Weg
 ändern will, sage zuerst, an welchem Schritt dieser bricht.
+
+
+### 2026-09-09, siebenundzwanzigster Lauf des Tages — die Gestalt der Vergangenheit, und warum die Meßbarkeit allein sie nicht trägt
+
+Ein Ziel, das des Vorschlags vom sechsundzwanzigsten Lauf: `jumpProcess_isMPSolution`,
+die bedingte Erwartung. **Fünfundzwanzig neue Deklarationen** in
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 **ohne einen Fehler** (unverändert zehn `sorry`,
+keine neuen), und alle fünfundzwanzig hängen mit `#print axioms` nur an
+`propext`, `Classical.choice`, `Quot.sound`. Der Satz selbst trägt weiter sein
+`sorry`; gebaut ist das Stück, das ihm nach dem sechsundzwanzigsten Lauf noch
+fehlte, und der Lauf hat dabei den angesagten Weg als **zweifach versperrt**
+befunden.
+
+**Der angesagte Weg geht nicht, und beide Gründe sind zu nennen.** Der Vorschlag
+lautete, die bedingte Erwartung über `isMPSolution_iff_forall_fdd` durch
+endlichdimensionale Testfunktionen zu ersetzen. (a) Dieser Satz trägt **selbst
+ein `sorry`** (`Suggested.lean:382`); ein darauf gestütztes
+`jumpProcess_isMPSolution` hinge an `sorryAx` und wäre kein Ergebnis. (b) Seine
+Voraussetzung ist `Q.IsProgressive X 𝓕`, und der neunzehnte Lauf hat schon
+festgehalten, daß diese für den Sprungprozeß über bloßem `[MeasurableSpace E]`
+vermutlich **nicht beweisbar** ist — der Limes `E`-wertiger meßbarer Abbildungen
+ist nur meßbar, wenn die Diagonale von `E` es ist. Der Weg ist also nicht
+teurer als gedacht, sondern ein anderer: die bedingte Erwartung wird direkt
+gerechnet, gegen die Menge der `𝓕 s`-meßbaren beschränkten Funktionale, und
+dafür braucht es zuerst eine Antwort auf die Frage, **wovon ein solches
+Funktional abhängen darf**.
+
+**Zwei Sätze über eine natürliche Filtration und sonst nichts.**
+`eq_of_measurable_naturalFiltration`: stimmen die Koordinaten zweier Punkte
+unterhalb von `s` überein, so nimmt jede `𝓕 s`-meßbare **reelle** Funktion dort
+denselben Wert an. `measurable_comp_of_measurable_naturalFiltration`: wird jede
+Koordinate unterhalb von `s` durch eine Substitution `P` in eine σ-Algebra `n`
+getragen, so auch jedes `𝓕 s`-meßbare Funktional.
+
+**Keiner der beiden benutzt einen Faktorisierungssatz, und das ist kein Verzicht,
+sondern eine Notwendigkeit.** Doob--Dynkin faktorisiert über **eine** `comap`;
+`𝓕 s` ist ein **Supremum** von `comap`s, und über bloßem `[MeasurableSpace F]`
+macht nichts aus dem Supremum die `comap` einer gemeinsamen Abbildung in einen
+Produktraum. Der Beweis des ersten Satzes ist statt dessen elementar: die
+Mengen, die ein **festes** Paar nicht trennen, bilden eine σ-Algebra, sie
+enthält jede Koordinate unterhalb von `s`, also ganz `𝓕 s` — und eine reelle
+Funktion mit zwei Werten trennte das Paar durch eine Halbgerade. Der Beweis des
+zweiten ist `MeasurableSpace.comap_iSup` und `MeasurableSpace.comap_comp`, beide
+in `MeasurableSpace/Basic.lean` (`:134`, `:102`), über die Galoisverbindung
+`gc_comap_map` (`:109`).
+
+**Die beiden Substitutionen.** `jumpConst lam s x = (fun _ ↦ x,`
+`fun _ ↦ lam x * s + 1)` ist das Datum, das bei `x` sitzt und dessen erster
+Sprung bei `s + 1 / lam x` liegt, also **nach** `s`; die Konstante `+ 1` ist
+genau das, was es unabhängig von `lam x` hinter `s` schiebt.
+`jumpPrepend x a ω` stellt einen Zustand und eine Wartezeit voran und ist die
+Umkehrung von `jumpShift` (`jumpShift_jumpPrepend`, `jumpPrepend_self`, beide
+`rfl`-nah über `natCons`).
+
+Damit sind die beiden Zweige der Induktion benannt, die noch aussteht:
+`eq_jumpConst_of_isPastFunctional` sagt, daß ein Funktional der Vergangenheit
+**vor dem ersten Sprung eine Funktion des Anfangszustands ist**,
+`G ω = G (jumpConst lam s (ω.1 0))`, und `IsPastFunctional.comp_jumpPrepend`,
+daß es **nach dem ersten Sprung wieder eines ist**, am Horizont
+`s - a / lam x`.
+
+**Der Befund, um dessentwillen `IsPastFunctional` nicht `Measurable[𝓕 s]`
+heißt.** Die Identität, auf der der zweite Zweig ruht,
+```
+jumpProcess lam r (jumpPrepend x a ω) = jumpProcess lam (r - a / lam x) ω
+  für a / lam x ≤ r,
+```
+ist **jenseits der Explosionszeit von `ω` falsch**: dort ist `stepIndex` der
+Sperrwert `0`, die linke Seite also `x` und die rechte `ω.1 0`. Ein durch
+Meßbarkeit erklärtes Funktional der Vergangenheit startet daher **nicht** wieder
+als eines — die Eigenschaft, die die Induktion tragen soll, ist unter der
+Substitution nicht abgeschlossen. `IsPastFunctional lam s G` verlangt statt
+dessen, daß `G` außerhalb von `NonExplosive lam` verschwindet und **innerhalb**
+dieser Menge auf Punkten mit gleicher Bahn unterhalb `s` konstant ist;
+`jumpPrepend_mem_nonExplosive_iff` läßt die Menge die Substitution überleben,
+und `isPastFunctional_indicator` verwandelt jedes beschränkte `𝓕 s`-meßbare `G`
+in ein solches, zum Preis einer Nullmenge — `indicator_nonExplosive_ae_eq`.
+
+**Und die Stelle, an der derselbe Unterschied schon einmal in die andere
+Richtung gezeigt hat.** Der neunzehnte Lauf hat `eventuallyEq_nhdsGE_stepPath`
+**ohne jede Voraussetzung** bewiesen, weil `MeasureTheory.Martingale`
+`StronglyAdapted` verlangt und nicht dessen f.s.-Fassung: die Meßbarkeit des
+Kompensators muß an jedem Punkt gelten, die Explosionsmenge eingeschlossen. Die
+bedingte Erwartung ist umgekehrt eine f.s.-Aussage, und hier zahlt sich der
+Unterschied aus: die Explosionsmenge darf weggeschnitten werden, und der Preis
+ist die Buchführung über eine Menge statt über eine Nullaussage. Beide Hälften
+von `Martingale` fallen an derselben Menge auseinander, und die eine verträgt,
+was die andere verbietet.
+
+**Die Deklarationen, in Abhängigkeitsordnung.**
+`eq_of_measurable_naturalFiltration` und
+`measurable_comp_of_measurable_naturalFiltration` im Abschnitt der natürlichen
+Filtration; `NonExplosive`, `measurableSet_nonExplosive`, `ae_mem_nonExplosive`,
+`indicator_nonExplosive_ae_eq`, `jumpConst`, `measurable_jumpConst`,
+`jumpTime_jumpConst`, `lt_jumpTime_one_jumpConst`, `jumpConst_mem_nonExplosive`,
+`jumpProcess_jumpConst`, `jumpPrepend`, `measurable_jumpPrepend`,
+`jumpShift_jumpPrepend`, `jumpPrepend_self`, `jumpTime_jumpPrepend`,
+`jumpTime_one_jumpPrepend`, `jumpPrepend_mem_nonExplosive_iff`,
+`jumpProcess_jumpPrepend`, `IsPastFunctional`,
+`eq_jumpConst_of_isPastFunctional`, `IsPastFunctional.comp_jumpPrepend`,
+`measurable_comp_jumpConst` am Ende von `section Space`; und
+`isPastFunctional_indicator` in `section JumpFiltration`, wo `jumpFiltration`
+zur Verfügung steht. Der Entwicklungsstand in
+`TauCeti/MartingaleProblems/scratch/Past.lean` ist durch einen Hinweis ersetzt,
+wie beim zweiundzwanzigsten bis sechsundzwanzigsten Lauf.
+
+**Eine Kleinigkeit, die zweimal Zeit gekostet hat.** `NonExplosive` quantifiziert
+über **alle** reellen `t` und nicht nur über die nichtnegativen; in der
+Rückrichtung von `jumpPrepend_mem_nonExplosive_iff` ist darum nicht `t`,
+sondern `max t 0` in die Voraussetzung einzusetzen, weil der Zweig `n = 0` sonst
+nur `t < 0` liefert und das kein Widerspruch ist. Die Aussage über alle reellen
+`t` ist trotzdem die richtige: `jumpProcess` wird an negativen Zeiten
+ausgewertet, sobald ein Fenster über den Anfang hinausragt.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel:
+`abs_integral_jumpMeasure_add_sub_le_past`, die Induktion über die Zahl der
+Sprünge **mit einem Faktor aus der Vergangenheit**,
+```
+|∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)
+   - ∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)|
+  ≤ 2 * C * (jumpMeasure mu nu).real {ω | jumpTime lam ω.1 ω.2 n ≤ s},
+```
+für alle `nu`, alle `s ≥ 0` und alle `G` mit `Measurable G`, `|G| ≤ 1` und
+`IsPastFunctional lam s G`. Es ist jetzt dran, weil nach diesem Lauf jeder
+Schritt seines Beweises benannt dasteht: der Zweig `{s < T 1}` ist
+`integral_jumpKernel_add_of_lt_jumpTime_one` mit dem zusätzlichen Faktor
+`Ψ (ω.1 0)` aus `eq_jumpConst_of_isPastFunctional`, den
+`integral_jumpKernel_zero_eq` in `Ψ z` verwandelt; der Zweig `{T 1 ≤ s}` ist
+`integral_jumpMeasure_eq_of_split_prod` mit der Induktionsvoraussetzung, auf
+`IsPastFunctional.comp_jumpPrepend` angewandt; und der Rest ist wörtlich
+`abs_integral_jumpMeasure_add_sub_le`, dessen Beweis mitsamt der Inklusion
+`{T 1 ≤ s} ∩ {T (n+1) ≤ s} ⊆ {T (n+1) ≤ s}` übernommen wird. Daraus folgt mit
+`tendsto_measureReal_jumpTime_le` die **bedingte** Markoveigenschaft und aus ihr,
+zusammen mit `jumpMeasure_integral_sub_eq_intervalIntegral` und
+`MeasureTheory.ae_eq_condExp_of_forall_setIntegral_eq`, der Satz. Der Punkt, an
+dem es teuer wird, und er ist vorher zu benennen: die gemeinsame Meßbarkeit von
+`(z, σ, ω\') ↦ G (jumpPrepend z σ ω\')` im Zweig `{T 1 ≤ s}` — sie kommt aus
+`measurable_jumpPrepend` und der Meßbarkeit von `G`, nicht aus
+`IsPastFunctional`, das eine reine Invarianzaussage ist. Wer den Weg ändern
+will, sage zuerst, an welchem Schritt dieser bricht.
