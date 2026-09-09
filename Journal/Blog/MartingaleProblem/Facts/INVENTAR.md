@@ -96,7 +96,7 @@ unserer Konstruktion. Daher:
 | `fact:strookvaradhan` | 1 | Stroock--Varadhan; KA, Theorem 32.7 | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:yamadawatanabe` | 1 | Yamada--Watanabe | bewusst | SDE-Weg wird zitiert, nicht bewiesen (§7.5) |
 | `fact:doob` | 0 | Doob's inequalities; EK, Corollary 2.2.17; eqref{T2b} | Roadmap | MartingaleProblems M9, `maximal_ineq_of_rightContinuous` und `Submartingale.eLpNorm_iSup_le` — dort neu angelegt; Mathlibs `MeasureTheory.maximal_ineq` ist `Filtration ℕ`, die `Lᵖ`-Ungleichung fehlt ganz |
-| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte **trägt seit dem 2026-09-07, dreizehntem Lauf, einen Beweis**: `isSeparating_pi` steht bewiesen in `WeakConvergence/Suggested.lean` und geht durch `lake env lean` gegen v4.33.1 — trennende Klassen multiplizieren sich über einen beliebigen Indextyp, sofern ihre Mitglieder beschränkt und meßbar sind. Seit dem 2026-09-07, vierzehntem Lauf, trägt auch die **konvergenzbestimmende** Hälfte einen Beweis: `isConvergenceDetermining_pi`, für abzählbares `ι`, polnische `S i` und beschränkt-**stetige** Mitglieder, samt den drei Stücken, auf denen sie ruht — `IsTightMeasureSet.pi` (Straffheit abzählbarer Produkte; Mathlib hat nur den Zweifaktorfall `IsTightMeasureSet.prodMk`, `Measure/Tight.lean:144`), `isTightMeasureSet_of_tendsto` und `tendsto_of_isSeparating_of_isTightMeasureSet`. ~~die Produkthälfte trägt kein Beweis~~, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf) |
+| `fact:fdd` | 0 | EK, Proposition 3.4.6 and Proposition 3.7.1 | Roadmap | WeakConvergence M1 (Produktpunkt, am 2026-08-29 von endlichem auf beliebigen Index gebracht) und SkorokhodSpace M6, `borel_eq_iSup_comap_eval`; die Produkthälfte **trägt seit dem 2026-09-07, dreizehntem Lauf, einen Beweis**: `isSeparating_pi` steht bewiesen in `WeakConvergence/Suggested.lean` und geht durch `lake env lean` gegen v4.33.1 — trennende Klassen multiplizieren sich über einen beliebigen Indextyp, sofern ihre Mitglieder beschränkt und meßbar sind. Seit dem 2026-09-07, vierzehntem Lauf, trägt auch die **konvergenzbestimmende** Hälfte einen Beweis: `isConvergenceDetermining_pi`, für abzählbares `ι`, polnische `S i` und beschränkt-**stetige** Mitglieder, samt den drei Stücken, auf denen sie ruht — `IsTightMeasureSet.pi` (Straffheit abzählbarer Produkte; Mathlib hat nur den Zweifaktorfall `IsTightMeasureSet.prodMk`, `Measure/Tight.lean:144`), `isTightMeasureSet_of_tendsto` und `tendsto_of_isSeparating_of_isTightMeasureSet`. ~~die Produkthälfte trägt kein Beweis~~, §9 verlangt sie — Auffälligkeit vom 2026-08-31. Die Zuschreibung des Facts stimmt und teilt sich sauber: EK Prop. 3.4.6 ist die Produkthälfte, EK Prop. 3.7.1 die Pfadraumhälfte (am Scan geprüft, 2026-08-31, zweiter Lauf). **Die Pfadraumhälfte trägt seit dem 2026-09-09, fünftem Lauf, einen Beweis**: `SkorokhodSpace.borel_eq_iSup_comap_eval` und `SkorokhodSpace.measurableEmbedding_piDense` stehen bewiesen in `SkorokhodSpace/Suggested.lean`, auf `SkorokhodSpace.measurable_eval`; die Einbettung verlangt von `D` die Dichtheit **von rechts** und nicht bloß Dichtheit — unter der Dichtheit allein ist sie falsch, siehe die Auffälligkeit zu `thm:fdd` — und `exists_countable_rightDense` zeigt, daß es eine solche abzählbare Menge gibt |
 | `fact:portmanteau` | 0 | Portmanteau; EK, Theorem 3.3.1 | Mathlib | `MeasureTheory/Measure/Portmanteau.lean`; (a)⟺(b) ist `MeasureTheory.LevyProkhorov.probabilityMeasureHomeomorph` (`Measure/LevyProkhorovMetric.lean:676`). Kein Beweis benutzt (c)–(f) — Auffälligkeit vom 2026-08-31 |
 | `fact:stoppedlocalmg` | 0 | EK, Proposition 2.3.1 | Roadmap | MartingaleProblems M9, `isStable_martingale_rightContinuous` — dort neu angelegt; `ProbabilityTheory.Locally`, `IsStable` und `IsStable.locally` sind Mathlib (`Probability/Process/LocalProperty.lean:93,142,153`, Namensraum am 2026-09-01 berichtigt), der Martingalfall ist es nicht |
 
@@ -152,6 +152,18 @@ unserer Konstruktion. Daher:
   **SkorokhodSpace** trägt die Bedingung seit heute in Meilenstein 2, als
   Disjunktion „$t\in D$ oder $t$ ist Häufungspunkt von $D$ von rechts", und
   `IsCadlag.eq_of_eqOn_dense` ist unter ihr bewiesen.
+
+  **Nachtrag 2026-09-09, fünfter Lauf: die Bedingung fehlte drei Tage lang in
+  Meilenstein 6.** Sie stand seit dem 2026-09-06 in Meilenstein 2 und seit dem
+  2026-09-07 als acceptance example von Meilenstein 6, während
+  `SkorokhodSpace.measurableEmbedding_piDense` daneben `Dense D` verlangte — die
+  Lean-Fassung von `thm:fdd` also genau den Fehler wiederholte, den das
+  Inventar am Manuskript festgehalten hatte. Berichtigt: die Hypothese ist
+  `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`, und `exists_countable_rightDense`
+  zeigt, daß eine solche abzählbare Menge existiert. Die Lehre ist nicht neu,
+  aber sie hat jetzt zwei Belege: **ein Befund über das Manuskript trägt sich
+  nicht von selbst in die Roadmap desselben Satzes ein**, und ein acceptance
+  example, das gegen seine eigene Aussage nie gerechnet wird, verhindert nichts.
 
 * **„\eqref{T3p} implies \eqref{T2b}" stimmt wörtlich nicht; gefunden am
   2026-09-06, fünfter Lauf, neben der vorigen Auffälligkeit.** Der Absatz nach
@@ -12733,5 +12745,123 @@ Weges über die Stetigkeit. Der Weg ist, `π_t` als punktweisen Limes
 nennt, ist hier der zu nehmen, der `E` **keine lineare Struktur** aufzwingt: er
 benutzt nur `t ∈ D` und verbraucht die Rechtsstetigkeit. `E` ist in dieser Datei
 ein bloßer metrischer Raum, Mitteln über ein Fenster steht nicht zur Verfügung.
+
+**Das Manuskript ist nicht angefaßt.**
+
+### 2026-09-09, fünfter Lauf des Tages — Meilenstein 6 ist geschlossen, und eine Aussage war falsch
+
+**Vorrangige Aufgabe, Teil A, Punkt 2** (die meßbare Einbettung, `thm:fdd`).
+`SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry` statt drei; das
+verbleibende ist `SkorokhodSpace.isCompact_closure_iff`, das
+Kompaktheitskriterium von Meilenstein 7. Zehn neue Deklarationen, alle durch
+`lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound`.
+
+*Der Angelpunkt ist einer, und er heißt `SkorokhodSpace.measurable_eval`:* die
+Auswertung an einem Punkt des Index ist borelmeßbar. Sie ist **keine** Folge der
+Stetigkeit — `SkorokhodSpace.exists_jump_continuousAt_eval` zeigt seit dem
+2026-09-08 einen Pfad, an dem die Auswertung springt —, und sie ruht auf einer
+einzigen Aussage, die das Integralmaß an Stelle der verweigerten Stetigkeit
+hergibt: `SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt`. Zu `s` und `ε`
+gibt es ein `δ`, das von **keinem der beiden Pfade** abhängt, so daß
+`intDist t₀ f g < δ` einen Ordnungsisomorphismus `e` liefert mit
+`dist (e s) s < ε`, `dist (e.symm s) s < ε` und `dist (f s) (g (e.symm s)) < ε`.
+Die beiden Hälften des `max` in `intDist` zahlen die beiden Hälften des
+Schlusses: die Normschranke schiebt `e.symm s` über
+`TimeChange.dist_le_of_norm_le` zurück nach `s`, und die Integralschranke
+**erzeugt** einen Radius `u` im Einheitsintervall über `dist t₀ s + 1`, an dem
+das gefensterte Supremum klein ist.
+
+*Der Radius ist zu erzeugen und nicht zu wählen, und das ist die Stelle, an der
+dieser Lauf beinahe einen falschen Beweis geschrieben hätte.* `distWith` ist
+**nicht monoton im Radius** — genau deshalb integriert Meilenstein 4 —, und ein
+Zwischenschritt, der die Monotonie stillschweigend annimmt, beweist zu viel: er
+macht die Auswertung an jedem Fensterrand stetig, also gerade das, woran die
+summierte Metrik am 2026-09-08 gescheitert ist. Am Zeugen jenes Tages
+nachgerechnet (`x n = 1_{(-∞, 1+1/(n+1))}` gegen `w = 1_{(-∞,1)}` in `D(ℝ,ℝ)`):
+bei Radius `1` klemmt `clamp` den Zeitwechsel weg und `distOn 0 1 λ x_n w = 1`
+für **jedes** `λ`, während `distOn 0 u λ x_n w` für `u > 1 + 1/(n+1)` klein wird.
+Die Monotonie ist falsch, die schlechten Radien sind eine Nullmenge, und das
+Integral sieht sie nicht. Im Beweis steht darum die Schranke
+`exp (-(U+1)) * (c/2)` über dem ganzen Intervall `Set.Ioc U (U+1)` und nicht ein
+einzelner Radius.
+
+*Von da aus zerfällt die Meßbarkeit in zwei Fälle, und den zweiten erzwingt der
+Index von Meilenstein 1.* Ist `t` **nicht** rechts isoliert, so ist
+`edist (f t) y` das Infimum über schrumpfende punktierte Rechtsumgebungen der
+Suprema `⨆ s ∈ ball t ρ ∩ Ioi t, edist (f s) y`
+(`SkorokhodSpace.iInf_iSup_edist_eq`), und jedes dieser Suprema ist
+**unterhalbstetig** (`SkorokhodSpace.lowerSemicontinuous_iSup_edist`). Ist `t`
+rechts isoliert — `Set.Icc (0:ℝ) 1` bei `1`, `AddSubgroup.zmultiples (1:ℝ)`
+überall, zwei der vier laufenden Instanzen —, so sind die Fenster schließlich
+leer und das Infimum ist `0`; dort greift statt dessen
+`SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot`: **jeder Zeitwechsel kleiner
+Norm hält einen rechts isolierten Punkt fest**, denn `e t` und `e.symm t` liegen
+beide unter dem Isolationsradius, also unter `t`, und `e t ≤ t` gibt mit der
+Monotonie `t ≤ e.symm t`. Genau dafür legt die Approximationsaussage den
+Ordnungsisomorphismus **zweiseitig** offen; eine einseitige Fassung könnte diesen
+Fall nicht bedienen.
+
+*Und die Roadmap sagte den Weg falsch an.* Meilenstein 6 schrieb vor, `π_t` als
+punktweisen Limes **`d`-stetiger** Funktionale darzustellen. Stetig sind die
+Fenstersuprema nicht: am springenden Pfad ist das Supremum über die punktierte
+Rechtsumgebung der Wert *nach* dem Sprung, während eine Näherungsfolge, deren
+Sprung knapp rechts von `t` sitzt, den Wert *davor* im Fenster hat.
+Unterhalbstetig sind sie, mehr gibt die Approximationsaussage nicht her — sie
+verschiebt einen Zeugen des Supremums und ist damit einseitig —, und mehr wird
+nicht gebraucht, weil der Grenzwert über eine schrumpfende Familie läuft und
+darum ein Infimum ist. Der Absatz in `SkorokhodSpace/README.md` ist berichtigt.
+
+*Die zweite Aussage von Meilenstein 6 war falsch und ist berichtigt, nicht
+gestrichen.* `SkorokhodSpace.measurableEmbedding_piDense` verlangte von `D` nur
+abzählbar und **dicht**. Das genügt nicht, und der Grund stand seit dem
+2026-09-07 in der Datei selbst: der Docstring von `IsCadlag.eq_of_eqOn_dense`
+führt den Zeugen aus, und `eq_of_eqOn_dense` verlangt darum die Dichtheit **von
+rechts**, `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`. Auf
+`ι = Set.Icc (0:ℝ) 1` — einer laufenden Instanz — ist `D = Set.Ico 0 1 ∩ ℚ`
+abzählbar und dicht, `0` und `Set.indicator {1} 1` sind beide càdlàg (bei `1` ist
+`𝓝[>] 1 = ⊥`, die Rechtsstetigkeit sagt dort nichts), sie stimmen auf `D`
+überein und sind verschieden. Die Abbildung ist also nicht einmal injektiv. Die
+Hypothese heißt jetzt Rechtsdichtheit.
+
+*Das Bemerkenswerte daran ist, daß es dastand.* Das **zweite acceptance example**
+von Meilenstein 6 ist genau dieser Zeuge, wörtlich, samt der Feststellung
+„`measurableEmbedding_piDense` is false for that `D`" — geschrieben am
+2026-09-07, während die Lean-Aussage daneben `Dense D` verlangte. Es ist das
+zweite Mal (nach dem 2026-09-08 in Meilenstein 4), daß ein acceptance example
+eine falsche Zusage trägt und nie gegen sie gehalten wurde. Ein acceptance
+example, das nur dasteht, prüft nichts; es ist gegen die Aussage zu rechnen, die
+es prüfen soll, und das ist billig, sobald beide in derselben Datei stehen.
+
+*Damit die berichtigte Hypothese nicht leer ist, ist sie bewohnt worden:*
+`exists_countable_rightDense` — zu jedem Index von Meilenstein 1 gibt es eine
+abzählbare, von rechts dichte Menge. Die rechts isolierten Punkte sind
+abzählbar, denn jeder trägt eine Basismenge, deren größtes Element er ist, und
+zwei verschiedene können nicht dieselbe tragen; sie zu einer abzählbaren dichten
+Menge zu schlagen genügt. Über einem nicht rechts isolierten `t` ist das Mittel
+das Intervall `Set.Ioo t s`: es ist nichtleer — ein leeres machte `Set.Iio s` zu
+einer Umgebung von `t`, die `Set.Ioi t` verfehlt, also wäre `t` doch rechts
+isoliert —, offen, und es liegt in `Metric.ball t ε`, weil `AdditiveDist` die
+Strecke `dist t s` an jedem Zwischenpunkt zerlegt.
+
+*Der Rest ist Montage.* `SkorokhodSpace.measurableEmbedding_piDense` ist
+Lusin--Souslin (`Measurable.measurableEmbedding`,
+`Mathlib/MeasureTheory/Constructions/Polish/Basic.lean:881`) über
+`measurable_eval` koordinatenweise und `eq_of_eqOn_dense` für die Injektivität;
+es ist die einzige Stelle der Datei, an der `D(ι, E)` als **standard-borelscher**
+und nicht als metrischer Raum gebraucht wird, und darum reisen
+`HasCountableCore ι` und `CompleteSpace E` mit.
+`SkorokhodSpace.borel_eq_iSup_comap_eval` ist die eine Inklusion aus
+`measurable_eval` und die andere aus der Einbettung an einer abzählbaren
+rechtsdichten Menge.
+
+*Was als Nächstes zu tun ist.* Teil A hat noch **Punkt 3**, das
+Kompaktheitskriterium `SkorokhodSpace.isCompact_closure_iff`, und es ist das
+letzte `sorry` der Datei. `tendsto_modulus` steht seit dem 2026-09-08, die
+Ausschöpfung und `IsCadlag.exists_subdivision` ebenfalls; was fehlt, ist die
+Rückrichtung — aus der gleichmäßigen Kontrolle des Moduls einen Grenzpfad —, und
+sie liest `SkorokhodSpace.tendsto_of_partialComp` von Meilenstein 5. Danach ist
+`SkorokhodSpace` fertig und Teil B (`WeakConvergence`,
+`tendsto_integral_of_tendsto_of_isUniformlyIntegrableLaws`) ist dran.
 
 **Das Manuskript ist nicht angefaßt.**

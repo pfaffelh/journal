@@ -212,6 +212,40 @@ festhält.
 
 *Punkt 2 ist unberührt, und er ist als Nächstes dran.*
 
+**Zwischenstand Teil A (2026-09-09, fünfter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, fünfter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht bei **einem** `sorry` statt drei. Zehn neue
+Deklarationen, alle durch `lake env lean` gegen v4.33.1 geprüft und alle mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`.
+
+*Punkt 2 ist erledigt, und **Meilenstein 6 ist damit geschlossen**.* Der
+Angelpunkt ist `SkorokhodSpace.measurable_eval` — die Auswertung ist borelmeßbar
+—, und sie ruht auf `SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt`: zu
+`s` und `ε` ein `δ`, unabhängig von den Pfaden, so daß kleiner `intDist` einen
+Ordnungsisomorphismus `e` liefert mit `dist (e s) s < ε`, `dist (e.symm s) s < ε`
+und `dist (f s) (g (e.symm s)) < ε`. Das ist, was die Integralmetrik an Stelle
+der verweigerten Stetigkeit hergibt. Zwei Fälle: ist `t` nicht rechts isoliert,
+so ist der Wert das Infimum unterhalbstetiger Fenstersuprema; ist er es, so hält
+**jeder** Zeitwechsel kleiner Norm ihn fest und die Auswertung ist stetig. Daß
+der Ordnungsisomorphismus zweiseitig offengelegt ist, ist für den zweiten Fall
+nötig und nicht Zierat.
+
+*Zwei Berichtigungen sind mitgekommen.* Die Roadmap sagte „punktweiser Limes
+`d`-stetiger Funktionale" an; stetig sind die Fenstersuprema **nicht**, nur
+unterhalbstetig, und mehr wird nicht gebraucht, weil der Grenzwert über eine
+schrumpfende Familie läuft. Und `SkorokhodSpace.measurableEmbedding_piDense` war
+**falsch**: `Dense D` genügt nicht (Zeuge `ι = Set.Icc (0:ℝ) 1`,
+`D = Set.Ico 0 1 ∩ ℚ`, `0` gegen `Set.indicator {1} 1`), die Hypothese ist die
+Dichtheit von rechts, und `exists_countable_rightDense` zeigt, daß es eine solche
+abzählbare Menge gibt. Der Zeuge stand seit dem 2026-09-07 als **acceptance
+example neben der falschen Aussage** — das zweite Mal nach dem 2026-09-08, daß
+eines eine falsche Zusage trägt und nie gegen sie gehalten wurde.
+
+*Punkt 3, das Kompaktheitskriterium `SkorokhodSpace.isCompact_closure_iff`, ist
+das letzte `sorry` der Datei und als Nächstes dran.* `tendsto_modulus` steht,
+`IsCadlag.exists_subdivision` steht; was fehlt, ist die Rückrichtung, und sie
+liest `SkorokhodSpace.tendsto_of_partialComp` von Meilenstein 5.
+
 
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:

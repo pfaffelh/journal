@@ -6,6 +6,8 @@ Authors: Peter Pfaffelhuber
 import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Order
+import Mathlib.MeasureTheory.Constructions.Polish.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Real
@@ -20,10 +22,29 @@ empty proposition.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
 2026-09-09.  Every declaration elaborates; the `sorry`s are the statements' own
-proofs, which is what this file is for.  There are **four** of them since the
-twenty-fifth run of 2026-09-08, which proved `SkorokhodSpace.tendsto_modulus`:
-`SkorokhodSpace.instSeparableSpace`, the one commitment of Milestone 5 still
-open, the two of Milestone 6 and the compactness criterion of Milestone 7.
+proofs, which is what this file is for.  There is **one** of them since the
+fifth run of 2026-09-09, which closed Milestone 6: the compactness criterion
+`SkorokhodSpace.isCompact_closure_iff` of Milestone 7.
+
+**Milestone 6 is closed**, and the theorem that closes it is
+`SkorokhodSpace.measurable_eval`: evaluation at a point of the index is Borel
+measurable.  It is not a corollary of continuity --- evaluation is discontinuous
+at every jump, which `SkorokhodSpace.exists_jump_continuousAt_eval` exhibits ---
+and it splits in two.  At a point that is *not* right isolated the value is the
+infimum over shrinking punctured right neighbourhoods of the supremum of
+`edist`, each of which is lower semicontinuous
+(`SkorokhodSpace.lowerSemicontinuous_iSup_edist`); at a right isolated point
+every time change of small norm fixes the point and evaluation is continuous
+after all (`SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot`).  Both rest on
+`SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt`, which is what the
+integral metric gives in place of the continuity it denies.
+
+**One statement of Milestone 6 was false and has been corrected.**
+`SkorokhodSpace.measurableEmbedding_piDense` asked only that `D` be countable
+and dense; density does not suffice, for the reason recorded at
+`IsCadlag.eq_of_eqOn_dense`, and the map is then not injective.  It now asks for
+density **from the right**, and `exists_countable_rightDense` shows that a
+countable such set exists, so the hypothesis is not vacuous.
 `SkorokhodSpace.instCompleteSpace` was the other of Milestone 5, and it is
 **proved** since the twenty-third run of 2026-09-08;
 `exists_orderIso_isometry_real` closed Milestone 1 in the twenty-fourth.
@@ -6314,14 +6335,485 @@ variable [MeasurableSpace E] [BorelSpace E] [PolishSpace E]
 noncomputable instance : MeasurableSpace D(ι, E) := borel _
 instance : BorelSpace D(ι, E) := ⟨rfl⟩
 
-theorem SkorokhodSpace.measurableEmbedding_piDense {D : Set ι} (hD : D.Countable)
-    (hD' : Dense D) :
-    MeasurableEmbedding (fun f : D(ι, E) => fun t : D => f.toFun t) := sorry
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The approximation lemma of Milestone 6**, and the one statement that makes
+the coordinates measurable at all.
 
-theorem SkorokhodSpace.borel_eq_iSup_comap_eval :
+Evaluation at a fixed point of the index is *not* continuous --- that is the
+content of `SkorokhodSpace.exists_jump_continuousAt_eval`, and it is what makes
+Milestone 6 a theorem rather than a corollary.  What survives is this: paths
+close in `intDist` take close values at *nearby* points.  Given `s` and `ε`
+there is a `δ`, depending on `s` and `ε` and on nothing else --- not on the
+paths --- such that `intDist t₀ f g < δ` forces some `s'` within `ε` of `s` with
+`dist (f s) (g s') < ε`.
+
+The witness is `s' = λ⁻¹ s` for a time change `λ` almost realising the infimum,
+and the two halves of the `max` in `intDist` pay for the two halves of the
+conclusion: the norm bound moves `λ⁻¹ s` back to `s` through
+`TimeChange.dist_le_of_norm_le`, and the integral bound produces **one** radius
+`u` in the unit interval above `dist t₀ s + 1` at which the windowed supremum is
+small.  The radius has to be produced and cannot be chosen, because `distWith`
+is not monotone in it; that non-monotonicity is exactly why Milestone 4
+integrates over the radius instead of summing, and it is why the window
+`Set.Ioc U (U + 1)` and the factor `exp (-(U + 1))` appear in `δ`.
+
+The order isomorphism is **exposed** rather than existentially discharged into
+`s'`, and it is exposed on both sides.  One side is what
+`SkorokhodSpace.exists_dist_lt_of_intDist_lt` reads off: the witness `e.symm s`
+is near `s`.  The other side, `dist (e s) s < ε`, is what
+`SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot` reads off, and it is what a
+one-sided statement cannot give: at a right isolated point both inequalities
+together force `e.symm s = s`, and evaluation there is continuous after all. -/
+theorem SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt [SecondCountableTopology E]
+    (t₀ : ι) (s : ι) {ε : ℝ} (hε : 0 < ε) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ f g : D(ι, E), SkorokhodSpace.intDist t₀ f g < δ →
+      ∃ e : ι ≃o ι, dist (e s) s < ε ∧ dist (e.symm s) s < ε ∧
+        dist (f.toFun s) (g.toFun (e.symm s)) < ε := by
+  have hc0 : 0 < min ε 1 := lt_min hε one_pos
+  set c : ℝ := min ε 1 with hc
+  have hc1 : c ≤ 1 := min_le_right _ _
+  have hcε : c ≤ ε := min_le_left _ _
+  have hd0 : (0 : ℝ) ≤ dist t₀ s := dist_nonneg
+  set U : ℝ := dist t₀ s + 1 with hUdef
+  have hU0 : 0 < U := by rw [hUdef]; linarith
+  set δ₁ : ℝ := Real.log (1 + c / (4 * (U + 1))) with hδ₁
+  have hq0 : 0 < c / (4 * (U + 1)) := by positivity
+  have hδ₁0 : 0 < δ₁ := Real.log_pos (by linarith)
+  have hexp : Real.exp δ₁ = 1 + c / (4 * (U + 1)) := Real.exp_log (by linarith)
+  set δ₂ : ℝ := Real.exp (-(U + 1)) * (c / 2) with hδ₂
+  have hδ₂0 : 0 < δ₂ := by positivity
+  refine ⟨min δ₁ δ₂, lt_min hδ₁0 hδ₂0, fun f g hfg => ?_⟩
+  -- a time change almost realising the infimum
+  simp only [SkorokhodSpace.intDist] at hfg
+  obtain ⟨l, hl⟩ := exists_lt_of_ciInf_lt hfg
+  have hnorm : (l : TimeChange ι).norm ≤ δ₁ :=
+    le_trans ((le_max_left _ _).trans hl.le) (min_le_left _ _)
+  have hint : SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g < δ₂ :=
+    lt_of_le_of_lt (le_max_right _ _) (hl.trans_le (min_le_right _ _))
+  -- the good radius: it is produced, not chosen
+  have hgood : ∃ u : ℝ, u ∈ Set.Ioc U (U + 1) ∧
+      SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g < c / 2 := by
+    by_contra hcon
+    push_neg at hcon
+    have hnn : ∀ u : ℝ, (0 : ℝ) ≤ min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g) :=
+      fun u => le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u _ f g)
+    have hFint := SkorokhodSpace.integrableOn_intDist t₀ (l : TimeChange ι) f g
+    have hsub : Set.Ioc U (U + 1) ⊆ Set.Ioi (0 : ℝ) := fun x hx => hU0.trans hx.1
+    have h1 : ∫ u in Set.Ioc U (U + 1),
+        Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g)
+        ≤ SkorokhodSpace.intWith t₀ (l : TimeChange ι) f g :=
+      MeasureTheory.setIntegral_mono_set hFint
+        (Filter.Eventually.of_forall fun u => mul_nonneg (Real.exp_nonneg _) (hnn u))
+        hsub.eventuallyLE
+    have hvol : MeasureTheory.volume (Set.Ioc U (U + 1)) = 1 := by
+      rw [Real.volume_Ioc]; simp
+    have hconst : ∫ _u in Set.Ioc U (U + 1), Real.exp (-(U + 1)) * (c / 2)
+        = Real.exp (-(U + 1)) * (c / 2) := by
+      rw [MeasureTheory.setIntegral_const, MeasureTheory.measureReal_def, hvol]
+      simp
+    have h2 : Real.exp (-(U + 1)) * (c / 2)
+        ≤ ∫ u in Set.Ioc U (U + 1),
+            Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u (l : TimeChange ι) f g) := by
+      rw [← hconst]
+      refine MeasureTheory.setIntegral_mono_on
+        (MeasureTheory.integrableOn_const (by rw [hvol]; exact ENNReal.one_ne_top))
+        (hFint.mono_set hsub) measurableSet_Ioc fun u hu => ?_
+      refine mul_le_mul (Real.exp_le_exp.2 (by linarith [hu.2]))
+        (le_min (by linarith) (hcon u hu)) (by linarith) (Real.exp_nonneg _)
+    linarith
+  obtain ⟨u, hu, hdist⟩ := hgood
+  have hu0 : 0 < u := hU0.trans hu.1
+  -- the witness, and it is `λ⁻¹ s`
+  have hlfix : (l : TimeChange ι).toOrderIso t₀ = t₀ := l.2
+  have hinvfix : (l : TimeChange ι)⁻¹.toOrderIso t₀ = t₀ := by
+    show (l : TimeChange ι).toOrderIso.symm t₀ = t₀
+    exact (l : TimeChange ι).toOrderIso.symm_apply_eq.2 hlfix.symm
+  set s' : ι := (l : TimeChange ι).toOrderIso.symm s with hs'
+  have hsmem : s ∈ exhaustion t₀ (U + 1) := by
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left (by linarith), dist_comm, hUdef]
+    linarith
+  have hcalc : (Real.exp δ₁ - 1) * (2 * (U + 1)) = c / 2 := by
+    rw [hexp]
+    field_simp
+    ring
+  have hmove : dist s' s ≤ (Real.exp δ₁ - 1) * (2 * (U + 1)) :=
+    TimeChange.dist_le_of_norm_le (l := (l : TimeChange ι)⁻¹) (γ := δ₁) t₀ (by linarith)
+      hinvfix (by rwa [TimeChange.norm_inv]) hsmem
+  have hmoveFwd : dist ((l : TimeChange ι).toOrderIso s) s < c := by
+    have h := TimeChange.dist_le_of_norm_le (l := (l : TimeChange ι)) (γ := δ₁) t₀
+      (by linarith) hlfix hnorm hsmem
+    rw [hcalc] at h
+    linarith
+  have hmove' : dist s' s < c := by
+    rw [hcalc] at hmove
+    linarith
+  -- both points sit inside the window of radius `u`
+  have hsu : s ∈ exhaustion t₀ u := by
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hu0.le, dist_comm]
+    have := hu.1
+    rw [hUdef] at this
+    linarith
+  have hs'u : s' ∈ exhaustion t₀ u := by
+    rw [exhaustion, Metric.mem_closedBall, max_eq_left hu0.le, dist_comm]
+    have h1 : dist t₀ s' ≤ dist t₀ s + dist s s' := dist_triangle _ _ _
+    have h2 : dist s s' < c := by rwa [dist_comm] at hmove'
+    have := hu.1
+    rw [hUdef] at this
+    linarith
+  refine ⟨(l : TimeChange ι).toOrderIso, hmoveFwd.trans_le hcε, hmove'.trans_le hcε, ?_⟩
+  have hterm := SkorokhodSpace.dist_le_distWith t₀ u (l : TimeChange ι) f g s'
+  rw [clamp_eq_self hs'u] at hterm
+  have happ : (l : TimeChange ι).toOrderIso s' = s := by
+    rw [hs']; exact (l : TimeChange ι).toOrderIso.apply_symm_apply s
+  rw [happ, clamp_eq_self hsu] at hterm
+  have : dist (f.toFun s) (g.toFun s') < c := by linarith
+  exact this.trans_le hcε
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- The one-sided reading of `exists_orderIso_dist_lt_of_intDist_lt`: paths close
+in `intDist` take close values at nearby points.  This is the form the lower
+semicontinuity of the right hand window supremum consumes. -/
+theorem SkorokhodSpace.exists_dist_lt_of_intDist_lt [SecondCountableTopology E]
+    (t₀ : ι) (s : ι) {ε : ℝ} (hε : 0 < ε) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ f g : D(ι, E), SkorokhodSpace.intDist t₀ f g < δ →
+      ∃ s' : ι, dist s' s < ε ∧ dist (f.toFun s) (g.toFun s') < ε := by
+  obtain ⟨δ, hδ, h⟩ := SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt (E := E) t₀ s hε
+  exact ⟨δ, hδ, fun f g hfg => by
+    obtain ⟨e, -, h₁, h₂⟩ := h f g hfg
+    exact ⟨e.symm s, h₁, h₂⟩⟩
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **At a right isolated point evaluation is continuous.**  The index of
+Milestone 1 is a closed subset of a proper order and need not be an interval, so
+it may have points with nothing immediately above them; `Set.Icc (0:ℝ) 1` at `1`
+and `AddSubgroup.zmultiples (1:ℝ)` everywhere are two of the running instances.
+
+The proof is the second half of `exists_orderIso_dist_lt_of_intDist_lt`, and it
+is why that lemma exposes the order isomorphism on both sides: `e t` and
+`e.symm t` are both within `ε₀` of `t`, so neither can lie above `t`, and
+`e t ≤ t` gives `t ≤ e.symm t` by monotonicity.  The two together pin
+`e.symm t = t`, and the time change disappears from the estimate. -/
+theorem SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot [SecondCountableTopology E]
+    {t : ι} (ht : ¬ (𝓝[>] t).NeBot) :
+    Continuous fun f : D(ι, E) => f.toFun t := by
+  obtain ⟨ε₀, hε₀, hball⟩ : ∃ ε₀ : ℝ, 0 < ε₀ ∧ ∀ s : ι, dist s t < ε₀ → ¬ t < s := by
+    have hbot : 𝓝[>] t = ⊥ := not_neBot.1 ht
+    have hmem : (∅ : Set ι) ∈ 𝓝[>] t := hbot ▸ Filter.mem_bot
+    obtain ⟨V, hVopen, htV, hVsub⟩ := mem_nhdsWithin.1 hmem
+    obtain ⟨ε₀, hε₀, hsub⟩ := Metric.isOpen_iff.1 hVopen t htV
+    refine ⟨ε₀, hε₀, fun s hs hts => ?_⟩
+    exact hVsub ⟨hsub (by rwa [Metric.mem_ball]), hts⟩
+  rw [Metric.continuous_iff]
+  intro f ε hε
+  obtain ⟨δ, hδ, h⟩ := SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt (E := E)
+    (basePoint : ι) t (ε := min ε ε₀) (lt_min hε hε₀)
+  refine ⟨δ, hδ, fun g hg => ?_⟩
+  obtain ⟨e, h1, h2, h3⟩ := h g f (by rw [← SkorokhodSpace.dist_eq]; exact hg)
+  have hle1 : e t ≤ t := by
+    by_contra hcon
+    exact hball (e t) (lt_of_lt_of_le h1 (min_le_right _ _)) (not_le.1 hcon)
+  have hle2 : e.symm t ≤ t := by
+    by_contra hcon
+    exact hball (e.symm t) (lt_of_lt_of_le h2 (min_le_right _ _)) (not_le.1 hcon)
+  have hfix : e.symm t = t :=
+    le_antisymm hle2 (by simpa using e.symm.monotone hle1)
+  rw [hfix] at h3
+  exact lt_of_lt_of_le h3 (min_le_left _ _)
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The window supremum to the right of a point is lower semicontinuous.**
+This is the half of the evaluation that survives the discontinuity: the value at
+`t` is not a continuous function of the path, but the supremum of the values on
+a punctured right neighbourhood cannot drop in the limit.  It is
+`exists_dist_lt_of_intDist_lt` read at one point of the supremum: the witness
+`s` moves to a nearby `s'`, which the openness of `Metric.ball t ρ ∩ Set.Ioi t`
+keeps inside the same window, and the value moves by less than the same `ε`.
+
+The supremum is taken in `ℝ≥0∞`, as `SkorokhodSpace.modulus` is, and for the
+same reason: over the empty window --- which is what a right isolated `t` gives
+--- and over an unbounded family it is still the supremum and not a junk
+value. -/
+theorem SkorokhodSpace.lowerSemicontinuous_iSup_edist [SecondCountableTopology E]
+    (t : ι) (y : E) (ρ : ℝ) :
+    LowerSemicontinuous fun f : D(ι, E) =>
+      ⨆ s : ↥(Metric.ball t ρ ∩ Set.Ioi t), edist (f.toFun (s : ι)) y := by
+  intro f c hc
+  simp only [gt_iff_lt, lt_iSup_iff] at hc
+  obtain ⟨s, hs⟩ := hc
+  obtain ⟨r, hr0, hr⟩ := ENNReal.lt_iff_exists_add_pos_lt.1 hs
+  obtain ⟨η, hη0, hηsub⟩ := Metric.isOpen_iff.1
+    ((Metric.isOpen_ball).inter (isOpen_Ioi (a := t))) (s : ι) s.2
+  obtain ⟨δ, hδ, h⟩ := SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt (E := E)
+    (basePoint : ι) (s : ι) (ε := min (r : ℝ) η) (lt_min hr0 hη0)
+  filter_upwards [Metric.ball_mem_nhds f hδ] with g hg
+  obtain ⟨e, -, h2, h3⟩ := h f g (by rw [← SkorokhodSpace.dist_eq, dist_comm]; exact hg)
+  set s' : ι := e.symm (s : ι) with hs'
+  have hmem : s' ∈ Metric.ball t ρ ∩ Set.Ioi t :=
+    hηsub (by rw [Metric.mem_ball]; exact lt_of_lt_of_le h2 (min_le_right _ _))
+  have hstep : edist (f.toFun (s : ι)) y ≤ (r : ℝ≥0∞) + edist (g.toFun s') y := by
+    refine le_trans (edist_triangle _ (g.toFun s') _) (add_le_add ?_ le_rfl)
+    rw [edist_dist, ← ENNReal.ofReal_coe_nnreal]
+    exact ENNReal.ofReal_le_ofReal (le_of_lt (lt_of_lt_of_le h3 (min_le_left _ _)))
+  have hlt : c < edist (g.toFun s') y := by
+    have h4 : (r : ℝ≥0∞) + c < (r : ℝ≥0∞) + edist (g.toFun s') y := by
+      rw [add_comm (r : ℝ≥0∞) c]
+      exact lt_of_lt_of_le hr hstep
+    exact (ENNReal.add_lt_add_iff_left ENNReal.coe_ne_top).1 h4
+  show c < ⨆ s : ↥(Metric.ball t ρ ∩ Set.Ioi t), edist (g.toFun (s : ι)) y
+  exact lt_iSup_iff.2 ⟨⟨s', hmem⟩, hlt⟩
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] in
+/-- **The value at `t` is the limit of the window suprema to its right**, and
+the limit is an infimum because the windows shrink.  Right continuity is spent
+exactly here, and in both directions: it puts the value below every window
+supremum and it puts some window supremum below the value plus `η`.
+
+The hypothesis is that `t` is *not* right isolated; at a right isolated point
+the windows are eventually empty and the infimum is `0`, which is why
+`continuous_eval_of_nhdsGT_eq_bot` handles that case separately. -/
+theorem SkorokhodSpace.iInf_iSup_edist_eq [SecondCountableTopology E]
+    {t : ι} (ht : (𝓝[>] t).NeBot) (y : E) (f : D(ι, E)) :
+    ⨅ n : ℕ, ⨆ s : ↥(Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t),
+        edist (f.toFun (s : ι)) y
+      = edist (f.toFun t) y := by
+  have hrc := f.isCadlag.right_continuous t
+  have hcont : ∀ η : ℝ, 0 < η → ∃ ρ : ℝ, 0 < ρ ∧
+      ∀ s : ι, t < s → dist s t < ρ → dist (f.toFun s) (f.toFun t) < η := by
+    intro η hη
+    obtain ⟨ρ, hρ, hsub⟩ := Metric.tendsto_nhdsWithin_nhds.1 hrc η hη
+    exact ⟨ρ, hρ, fun s hs hd => hsub hs hd⟩
+  refine le_antisymm ?_ ?_
+  · refine ENNReal.le_of_forall_pos_le_add fun r hr0 _ => ?_
+    obtain ⟨ρ, hρ, hsub⟩ := hcont (r : ℝ) hr0
+    obtain ⟨n, hn⟩ := exists_nat_one_div_lt hρ
+    refine le_trans (iInf_le _ n) (iSup_le fun s => ?_)
+    have hs1 : dist (s : ι) t < ρ := lt_trans (Metric.mem_ball.1 s.2.1) hn
+    have hd := hsub (s : ι) s.2.2 hs1
+    have hA : edist (f.toFun (s : ι)) (f.toFun t) ≤ (r : ℝ≥0∞) := by
+      rw [edist_dist, ← ENNReal.ofReal_coe_nnreal]
+      exact ENNReal.ofReal_le_ofReal hd.le
+    refine le_trans (edist_triangle _ (f.toFun t) _) ?_
+    rw [add_comm (edist (f.toFun t) y) ((r : ℝ≥0∞))]
+    exact add_le_add hA le_rfl
+  · refine le_iInf fun n => ?_
+    rcases eq_top_or_lt_top (⨆ s : ↥(Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t),
+        edist (f.toFun (s : ι)) y) with htop | htop
+    · rw [htop]; exact le_top
+    refine ENNReal.le_of_forall_pos_le_add fun r hr0 _ => ?_
+    obtain ⟨ρ, hρ, hsub⟩ := hcont (r : ℝ) hr0
+    have hpos : 0 < min ρ (1 / (n + 1 : ℝ)) := lt_min hρ (by positivity)
+    haveI := ht
+    have hmem0 : Metric.ball t (min ρ (1 / (n + 1 : ℝ))) ∩ Set.Ioi t ∈ 𝓝[>] t :=
+      Filter.inter_mem (nhdsWithin_le_nhds (Metric.ball_mem_nhds t hpos)) self_mem_nhdsWithin
+    obtain ⟨s, hs1, hs2⟩ := Filter.nonempty_of_mem hmem0
+    have hd := hsub s hs2 (lt_of_lt_of_le (Metric.mem_ball.1 hs1) (min_le_left _ _))
+    have hmem : s ∈ Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t :=
+      ⟨Metric.mem_ball.2 (lt_of_lt_of_le (Metric.mem_ball.1 hs1) (min_le_right _ _)), hs2⟩
+    have hA : edist (f.toFun t) (f.toFun s) ≤ (r : ℝ≥0∞) := by
+      rw [edist_dist, dist_comm (f.toFun t) (f.toFun s), ← ENNReal.ofReal_coe_nnreal]
+      exact ENNReal.ofReal_le_ofReal hd.le
+    have hB : edist (f.toFun s) y
+        ≤ ⨆ s' : ↥(Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t), edist (f.toFun (s' : ι)) y :=
+      le_iSup (f := fun s' : ↥(Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t) =>
+        edist (f.toFun (s' : ι)) y) ⟨s, hmem⟩
+    refine le_trans (edist_triangle _ (f.toFun s) _) ?_
+    rw [add_comm (⨆ s' : ↥(Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t),
+      edist (f.toFun (s' : ι)) y) ((r : ℝ≥0∞))]
+    exact add_le_add hA hB
+
+omit [MeasurableSpace E] [BorelSpace E] in
+/-- **The coordinates are measurable.**  This is the theorem of Milestone 6 that
+carries the other two, and it is not a corollary of continuity: evaluation is
+discontinuous at every jump.  The two cases are the two lemmas above --- at a
+right isolated point evaluation is continuous, and everywhere else the value is
+a countable infimum of lower semicontinuous window suprema. -/
+theorem SkorokhodSpace.measurable_edist_eval (t : ι) (y : E) :
+    Measurable fun f : D(ι, E) => edist (f.toFun t) y := by
+  by_cases ht : (𝓝[>] t).NeBot
+  · have hEq : (fun f : D(ι, E) => edist (f.toFun t) y)
+        = fun f : D(ι, E) => ⨅ n : ℕ, ⨆ s : ↥(Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t),
+          edist (f.toFun (s : ι)) y :=
+      funext fun f => (SkorokhodSpace.iInf_iSup_edist_eq ht y f).symm
+    rw [hEq]
+    exact Measurable.iInf fun n =>
+      (SkorokhodSpace.lowerSemicontinuous_iSup_edist t y (1 / (n + 1 : ℝ))).measurable
+  · exact ((SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot (E := E) ht).edist
+      continuous_const).measurable
+
+/-- Evaluation at a point of the index is Borel measurable.  The passage from
+`measurable_edist_eval` is the one place where the separability of `E` is spent
+on the *target*: an open set of a separable metric space is a countable union of
+balls centred in a countable dense set, and each such ball is the preimage of an
+interval under one of the `edist`. -/
+theorem SkorokhodSpace.measurable_eval (t : ι) :
+    Measurable fun f : D(ι, E) => f.toFun t := by
+  refine measurable_of_isOpen fun U hU => ?_
+  obtain ⟨C, hCc, hCd⟩ := TopologicalSpace.exists_countable_dense E
+  have hCcount : Countable ↥C := hCc.to_subtype
+  have hset : (fun f : D(ι, E) => f.toFun t) ⁻¹' U =
+      ⋃ p : ↥C × ℚ, ⋃ _ : 0 < (p.2 : ℝ) ∧ Metric.ball ((p.1 : E)) (p.2 : ℝ) ⊆ U,
+        {f : D(ι, E) | edist (f.toFun t) ((p.1 : E)) < ENNReal.ofReal ((p.2 : ℝ))} := by
+    ext f
+    constructor
+    · intro hf
+      obtain ⟨ρ, hρ, hsub⟩ := Metric.isOpen_iff.1 hU _ hf
+      obtain ⟨z, hzC, hz⟩ := hCd.exists_dist_lt (f.toFun t) (show (0:ℝ) < ρ / 4 by linarith)
+      obtain ⟨q, hq1, hq2⟩ := exists_rat_btwn (show ρ / 4 < ρ / 2 by linarith)
+      refine Set.mem_iUnion.2 ⟨(⟨z, hzC⟩, q), Set.mem_iUnion.2 ⟨⟨by linarith, ?_⟩, ?_⟩⟩
+      · intro w hw
+        refine hsub ?_
+        rw [Metric.mem_ball] at hw ⊢
+        have := dist_triangle w z (f.toFun t)
+        rw [dist_comm z (f.toFun t)] at this
+        linarith
+      · rw [Set.mem_setOf_eq, edist_dist]
+        exact ENNReal.ofReal_lt_ofReal_iff_of_nonneg dist_nonneg |>.2 (lt_trans hz hq1)
+    · intro hf
+      obtain ⟨p, hp⟩ := Set.mem_iUnion.1 hf
+      obtain ⟨⟨hq0, hqsub⟩, hmem⟩ := Set.mem_iUnion.1 hp
+      refine hqsub ?_
+      rw [Set.mem_setOf_eq, edist_dist] at hmem
+      rw [Metric.mem_ball]
+      exact (ENNReal.ofReal_lt_ofReal_iff_of_nonneg dist_nonneg).1 hmem
+  rw [hset]
+  refine MeasurableSet.iUnion fun p => MeasurableSet.iUnion fun _ => ?_
+  exact SkorokhodSpace.measurable_edist_eval t ((p.1 : E)) measurableSet_Iio
+
+omit [MeasurableSpace E] [BorelSpace E] [PolishSpace E] [BasePoint ι] in
+/-- **A countable set that is dense from the right exists**, and this is what
+makes the hypothesis of `measurableEmbedding_piDense` more than a hypothesis.
+Plain density will not do --- see `IsCadlag.eq_of_eqOn_dense`, whose docstring
+carries the counterexample --- and the repair is to add the right isolated
+points to a countable dense set.  There are only countably many of them: each
+carries a basic open set of which it is the greatest element, and distinct such
+points cannot carry the same one.
+
+Above a point that is *not* right isolated the argument is the interval `Ioo t s`
+for a point `s` of the punctured neighbourhood.  It is nonempty --- an empty one
+would make `Set.Iio s` a neighbourhood of `t` missing `Set.Ioi t`, so `t` would
+be right isolated after all --- open, and inside `Metric.ball t ε` because
+`AdditiveDist` splits `dist t s` at any intermediate point.  So it meets the
+dense set. -/
+theorem exists_countable_rightDense :
+    ∃ D : Set ι, D.Countable ∧ ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot := by
+  classical
+  obtain ⟨C, hCc, hCd⟩ := TopologicalSpace.exists_countable_dense ι
+  obtain ⟨b, hbc, -, hb⟩ := TopologicalSpace.exists_countable_basis ι
+  set R : Set ι := {t : ι | ¬ (𝓝[>] t).NeBot} with hRdef
+  have hchoice : ∀ t : ι, ∃ B : Set ι,
+      t ∈ R → (B ∈ b ∧ t ∈ B ∧ B ∩ Set.Ioi t = ∅) := by
+    intro t
+    by_cases htR : t ∈ R
+    · have hmem : (∅ : Set ι) ∈ 𝓝[>] t := (not_neBot.1 htR) ▸ Filter.mem_bot
+      obtain ⟨V, hVopen, htV, hVsub⟩ := mem_nhdsWithin.1 hmem
+      obtain ⟨B, hBb, htB, hBV⟩ := hb.exists_subset_of_mem_open htV hVopen
+      exact ⟨B, fun _ => ⟨hBb, htB,
+        Set.eq_empty_iff_forall_notMem.2 fun x hx => hVsub ⟨hBV hx.1, hx.2⟩⟩⟩
+    · exact ⟨∅, fun h => absurd h htR⟩
+  choose F hF using hchoice
+  have hRc : R.Countable := by
+    refine Set.MapsTo.countable_of_injOn (fun t ht => (hF t ht).1) ?_ hbc
+    intro t ht t' ht' heq
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with hlt | hlt
+    · have hmem : t' ∈ F t ∩ Set.Ioi t := ⟨by rw [heq]; exact (hF t' ht').2.1, hlt⟩
+      rw [(hF t ht).2.2] at hmem
+      exact hmem.elim
+    · have hmem : t ∈ F t' ∩ Set.Ioi t' := ⟨by rw [← heq]; exact (hF t ht).2.1, hlt⟩
+      rw [(hF t' ht').2.2] at hmem
+      exact hmem.elim
+  refine ⟨C ∪ R, hCc.union hRc, fun t => ?_⟩
+  by_cases htR : t ∈ R
+  · exact Or.inl (Or.inr htR)
+  refine Or.inr ?_
+  have hne : (𝓝[>] t).NeBot := not_not.1 htR
+  rw [← mem_closure_iff_nhdsWithin_neBot, Metric.mem_closure_iff]
+  intro ε hε
+  obtain ⟨s, hs1, hs2⟩ : (Metric.ball t ε ∩ Set.Ioi t).Nonempty := by
+    haveI := hne
+    exact Filter.nonempty_of_mem
+      (Filter.inter_mem (nhdsWithin_le_nhds (Metric.ball_mem_nhds t hε)) self_mem_nhdsWithin)
+  have hIoo : (Set.Ioo t s).Nonempty := by
+    rw [Set.nonempty_iff_ne_empty]
+    intro hempty
+    refine htR ?_
+    have hmem : (∅ : Set ι) ∈ 𝓝[>] t := by
+      rw [← hempty]
+      exact mem_nhdsWithin.2 ⟨Set.Iio s, isOpen_Iio, hs2, fun x hx => ⟨hx.2, hx.1⟩⟩
+    exact fun hcon => hcon.ne (Filter.empty_mem_iff_bot.1 hmem)
+  obtain ⟨c, hc1, hc2⟩ := hCd.exists_mem_open isOpen_Ioo hIoo
+  refine ⟨c, ⟨Or.inl hc1, hc2.1⟩, ?_⟩
+  have hsplit : dist t s = dist t c + dist c s :=
+    AdditiveDist.dist_add hc2.1.le hc2.2.le
+  have h1 : dist t s < ε := by rw [dist_comm]; exact Metric.mem_ball.1 hs1
+  have h2 : (0 : ℝ) ≤ dist c s := dist_nonneg
+  linarith
+
+/-- **The finite dimensional distributions determine the Borel structure.**
+This is `thm:fdd` of the manuscript and what `MartingaleProblems` Milestone 11
+consumes.
+
+**The hypothesis is not the one this file carried until 2026-09-09, and the old
+one made the statement false.**  `Dense D` does not suffice: on
+`ι = Set.Icc (0:ℝ) 1`, a running instance of Milestone 1, the set
+`D = Set.Ico 0 1 ∩ ℚ` is countable and dense, the constant `0` and the indicator
+of `{1}` are both càdlàg --- at `1` the filter `𝓝[>] 1` is `⊥`, so right
+continuity says nothing there --- and they agree on `D`.  The map is then not
+even injective.  What the proof needs, and what `IsCadlag.eq_of_eqOn_dense`
+already asked for before this statement was written, is density **from the
+right**; `exists_countable_rightDense` shows that a countable such set exists,
+so the hypothesis is not vacuous.
+
+Injectivity is `IsCadlag.eq_of_eqOn_dense` and measurability is
+`SkorokhodSpace.measurable_eval` coordinatewise.  That the image of a measurable
+set is measurable is Lusin--Souslin, through `Measurable.measurableEmbedding`;
+it is the one place in the file where `D(ι, E)` is used as a *standard Borel*
+space rather than as a metric one, and it is why `HasCountableCore ι` and
+`CompleteSpace E` travel with the statement. -/
+theorem SkorokhodSpace.measurableEmbedding_piDense [CompleteSpace E]
+    [SkorokhodSpace.HasCountableCore ι] {D : Set ι} (hD : D.Countable)
+    (hD' : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot) :
+    MeasurableEmbedding (fun f : D(ι, E) => fun t : D => f.toFun t) := by
+  haveI := hD.to_subtype
+  refine Measurable.measurableEmbedding
+    (measurable_pi_lambda _ fun t => SkorokhodSpace.measurable_eval (t : ι)) ?_
+  rintro ⟨f, hf⟩ ⟨g, hg⟩ hfg
+  have hEq : f = g := hf.eq_of_eqOn_dense hg hD' fun t ht => congrFun hfg ⟨t, ht⟩
+  simp only [SkorokhodSpace.mk.injEq]
+  exact hEq
+
+/-- **The Borel structure of `D(ι, E)` is the one the coordinates generate.**
+One inclusion is `SkorokhodSpace.measurable_eval`; the other runs through
+`measurableEmbedding_piDense` at a countable right dense set, which
+`exists_countable_rightDense` supplies, and through the fact that the product
+`σ`-algebra of a countable power is generated by its own coordinates. -/
+theorem SkorokhodSpace.borel_eq_iSup_comap_eval [CompleteSpace E]
+    [SkorokhodSpace.HasCountableCore ι] :
     (borel D(ι, E)) =
-      ⨆ t : ι, MeasurableSpace.comap (fun f : D(ι, E) => f.toFun t) inferInstance :=
-  sorry
+      ⨆ t : ι, MeasurableSpace.comap (fun f : D(ι, E) => f.toFun t) inferInstance := by
+  refine le_antisymm ?_ ?_
+  · obtain ⟨D, hDc, hDr⟩ := exists_countable_rightDense (ι := ι)
+    haveI := hDc.to_subtype
+    have hemb := SkorokhodSpace.measurableEmbedding_piDense (E := E) hDc hDr
+    intro A hA
+    have hA' : MeasurableSet A := hA
+    have himg := hemb.measurableSet_image' hA'
+    have hpre : (fun f : D(ι, E) => fun t : D => f.toFun t) ⁻¹'
+        ((fun f : D(ι, E) => fun t : D => f.toFun t) '' A) = A :=
+      hemb.injective.preimage_image A
+    have hmem : MeasurableSet[MeasurableSpace.comap
+        (fun f : D(ι, E) => fun t : D => f.toFun t) inferInstance] A :=
+      ⟨_, himg, hpre⟩
+    obtain ⟨S, hS, hSA⟩ := hmem
+    have hle : MeasurableSpace.comap (fun f : D(ι, E) => fun t : D => f.toFun t) inferInstance
+        ≤ ⨆ t : ι, MeasurableSpace.comap (fun f : D(ι, E) => f.toFun t) inferInstance := by
+      rw [show (inferInstance : MeasurableSpace (↥D → E)) = ⨆ t : ↥D,
+          MeasurableSpace.comap (fun h : ↥D → E => h t) inferInstance from rfl,
+        MeasurableSpace.comap_iSup]
+      simp only [MeasurableSpace.comap_comp, Function.comp_def]
+      exact iSup_le fun t => le_iSup_of_le (t : ι) le_rfl
+    exact hle A ⟨S, hS, hSA⟩
+  · exact iSup_le fun t => (SkorokhodSpace.measurable_eval (E := E) t).comap_le
 
 /-! ## Milestone 7: the modulus and compactness
 

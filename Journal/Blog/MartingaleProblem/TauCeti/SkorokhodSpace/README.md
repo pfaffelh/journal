@@ -1428,30 +1428,69 @@ both 2026-09-09. What is left of the milestone is the third instance,
 
 ## Milestone 6: the Borel structure
 
-This is `thm:fdd`, and since 2026-09-09 it may take Milestone 5 for granted:
-`SkorokhodSpace.instPolishSpace` is proved under `HasCountableCore ι`, so
-`D ι E` is a standard Borel space and the second half of the embedding —
-a measurable injection between standard Borel spaces is a measurable embedding,
-`MeasurableEmbedding.of_measurable_inverse` over Lusin--Souslin — is available.
-That second half is the cheap one, and its injectivity is
+This is `thm:fdd`, and it is **closed since the fifth run of 2026-09-09.** It
+takes Milestone 5 for granted: `SkorokhodSpace.instPolishSpace` is proved under
+`HasCountableCore ι`, so `D ι E` is a standard Borel space and the second half
+of the embedding — a measurable injection between standard Borel spaces is a
+measurable embedding, `Measurable.measurableEmbedding` over Lusin--Souslin — is
+available. That second half is the cheap one, and its injectivity is
 `IsCadlag.eq_of_eqOn_dense` of Milestone 2.
 
 **The whole content is the first item, and the manuscript says so at
 `thm:fdd`:** `π_t` is *discontinuous* at every path with a jump at `t`, so the
 measurability of a coordinate is a theorem and not a remark, and the acceptance
-example below is the refutation of the route through continuity. The route is
-to exhibit `π_t` as a pointwise limit of `d`-continuous functionals; of the two
-the manuscript names, the one to take here is the one that **does not put a
-linear structure on `E`** — it uses `t ∈ D` only and spends right continuity,
-which is what the shape of the statement is arranged to allow. `E` is a bare
-metric space in this file and averaging over a window is not available.
+example below is the refutation of the route through continuity. The route
+avoids any linear structure on `E` — `E` is a bare metric space in this file and
+averaging over a window is not available — and it spends right continuity.
 
+**It is not, as this roadmap said until 2026-09-09, a pointwise limit of
+`d`-continuous functionals.** The functionals of the proof are the window
+suprema `⨆ s ∈ ball t ρ ∩ Ioi t, edist (f s) y`, and they are lower
+semicontinuous and *not* continuous: at the path that jumps at `t` the supremum
+over the punctured right neighbourhood is the value after the jump, and an
+approximating sequence whose jump sits just to the right of `t` has the value
+before it inside the window. Lower semicontinuity is all the approximation
+lemma gives — it moves a witness of the supremum to a nearby point, which is a
+one-sided statement — and it is all that is needed, because the limit is taken
+over a shrinking family and is therefore an infimum.
+
+* `SkorokhodSpace.exists_orderIso_dist_lt_of_intDist_lt`: given `s` and `ε`
+  there is a `δ`, depending on neither path, such that `intDist t₀ f g < δ`
+  produces an order isomorphism `e` with `dist (e s) s < ε`,
+  `dist (e.symm s) s < ε` and `dist (f s) (g (e.symm s)) < ε`. Proved
+  (2026-09-09). This is what the integral metric gives in place of the
+  continuity it denies, and both halves of `measurable_eval` read it. The radius
+  at which the windowed supremum is small has to be **produced** and cannot be
+  chosen, because `distWith` is not monotone in it; that is the same
+  non-monotonicity for which Milestone 4 integrates.
+* `SkorokhodSpace.continuous_eval_of_nhdsGT_eq_bot`: at a point with nothing
+  immediately above it, evaluation *is* continuous. Proved (2026-09-09). Both
+  displacements above are below the isolation radius, so `e t ≤ t` and
+  `e.symm t ≤ t`, and the second with monotonicity gives `e.symm t = t`.
+* `SkorokhodSpace.lowerSemicontinuous_iSup_edist`: `f ↦ ⨆ s ∈ ball t ρ ∩ Ioi t,
+  edist (f s) y` is lower semicontinuous. Proved (2026-09-09). The supremum is
+  `ℝ≥0∞` valued, as `modulus` is, so that the empty window and an unbounded
+  family are both the supremum and not a junk value.
+* `SkorokhodSpace.iInf_iSup_edist_eq`: at a point that is not right isolated,
+  the infimum of those suprema over shrinking windows is `edist (f t) y`. Proved
+  (2026-09-09). Right continuity is spent here and in both directions.
 * `SkorokhodSpace.measurable_eval`: `f ↦ f t` is Borel measurable for every `t`.
-* `SkorokhodSpace.measurableEmbedding_piDense`: for countable dense `D ⊆ ι`, the
-  map `f ↦ (fun t : D ↦ f t)` into `D → E` is a measurable embedding.
+  Proved (2026-09-09), by the two cases above.
+* `SkorokhodSpace.measurableEmbedding_piDense`: for countable `D ⊆ ι` that is
+  dense **from the right** — `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot` — the map
+  `f ↦ (fun t : D ↦ f t)` into `D → E` is a measurable embedding. Proved
+  (2026-09-09). Plain density is **not** enough, and the second acceptance
+  example below is the refutation; it stood here from 2026-09-07 while the Lean
+  statement asked for `Dense D`, and it is the second time an acceptance example
+  that was never run against its own statement caught a false commitment.
+* `exists_countable_rightDense`: a countable right dense set exists. Proved
+  (2026-09-09), so the hypothesis above is not vacuous. The right isolated
+  points are countable — each carries a basic open set of which it is the
+  greatest element — and adjoining them to a countable dense set is enough.
 * `SkorokhodSpace.borel_eq_iSup_comap_eval`:
-  `borel (D ι E) = ⨆ t, MeasurableSpace.comap (eval t) (borel E)`, and the same
-  with `t` ranging over a countable dense set only.
+  `borel (D ι E) = ⨆ t, MeasurableSpace.comap (eval t) (borel E)`. Proved
+  (2026-09-09), one inclusion from `measurable_eval` and the other from the
+  embedding at a countable right dense set.
 * Consequences, each stated separately: a Borel probability measure on `D ι E`
   is determined by its finite dimensional distributions along a countable dense
   set; a map into `D ι E` is measurable if and only if all its coordinates along
@@ -1471,7 +1510,11 @@ metric space in this file and averaging over a window is not available.
   `measurableEmbedding_piDense` is false for that `D`. With `D` replaced by
   `(Set.Ico (0:ℝ) 1 ∩ ℚ) ∪ {1}` it holds. This is Milestone 2's witness read as
   a statement about the σ-algebra, and it is the acceptance test for the
-  hypothesis on `D`.
+  hypothesis on `D`. **It caught one:** from 2026-09-07 to 2026-09-09 the Lean
+  statement asked for `Dense D` and was false, with this example standing
+  underneath it unread. The hypothesis is now right density,
+  `∀ t, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot`, which `(Set.Ico 0 1 ∩ ℚ) ∪ {1}`
+  satisfies and `Set.Ico 0 1 ∩ ℚ` does not.
 * **The law of a Poisson process is fixed by rational times.** `ι = Set.Ici (0:ℝ)`,
   `E = ℝ`, `D = ℚ ∩ ι`. Two laws on `D ι ℝ` whose finite dimensional
   distributions along `D` are those of a Poisson process of rate `1` are equal,
