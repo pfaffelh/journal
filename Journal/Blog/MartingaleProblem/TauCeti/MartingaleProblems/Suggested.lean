@@ -1514,6 +1514,67 @@ theorem jumpProcess_of_lt_jumpTime_one {t : ℝ} {ω : (ℕ → E) × (ℕ → �
   have h0 : stepIndex (jumpTime lam ω.1 ω.2) t = 0 := Nat.le_zero.1 (stepIndex_le h)
   simp [jumpProcess, stepPath, h0]
 
+/-! ### The shift at the first jump
+
+The combinatorial half of the Markov property: after the first jump the path is the path of the
+shifted data, restarted.  It is bookkeeping on `stepIndex` and it separates the combinatorics from
+the measure theory of the restart. -/
+
+/-- **The shift of the driving data**: forget the initial state and the zeroth waiting time. -/
+def jumpShift (ω : (ℕ → E) × (ℕ → ℝ)) : (ℕ → E) × (ℕ → ℝ) :=
+  (fun n ↦ ω.1 (n + 1), fun n ↦ ω.2 (n + 1))
+
+/-- **The jump times of the shifted data are the jump times of the original**, shifted by one and
+recentred at the first of them. -/
+theorem jumpTime_jumpShift (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTime lam (fun k ↦ y (k + 1)) (fun k ↦ xi (k + 1)) n
+      = jumpTime lam y xi (n + 1) - jumpTime lam y xi 1 := by
+  induction n with
+  | zero => simp [jumpTime]
+  | succ n ih =>
+      rw [jumpTime_succ, ih, jumpTime_succ lam y xi (n + 1)]
+      ring
+
+/-- **The step index after the first jump.**  Both hypotheses are needed and neither is
+monotonicity: `T 1 ≤ t` says that `0` is not a candidate index, and the existence says that the
+infimum is attained -- on the explosion set both sides are the junk value `0` and `0 + 1`, and the
+identity fails. -/
+theorem stepIndex_shift {T : ℕ → ℝ} {t : ℝ} (h1 : T 1 ≤ t) (hex : ∃ n, t < T (n + 1)) :
+    stepIndex T t = stepIndex (fun n ↦ T (n + 1) - T 1) (t - T 1) + 1 := by
+  set S := {n | t < T (n + 1)} with hS
+  set S' := {n | t - T 1 < T (n + 1 + 1) - T 1} with hS'
+  have hSne : S.Nonempty := hex
+  have hzero : 0 ∉ S := by simp [hS, not_lt, h1]
+  have hmem : ∀ m : ℕ, m ∈ S' ↔ m + 1 ∈ S := by
+    intro m
+    simp only [hS', hS, Set.mem_setOf_eq, sub_lt_sub_iff_right]
+  have hs'ne : S'.Nonempty := by
+    obtain ⟨n, hn⟩ := hSne
+    have hn0 : n ≠ 0 := by rintro rfl; exact hzero hn
+    obtain ⟨m, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hn0
+    exact ⟨m, (hmem m).2 hn⟩
+  have hinfS : sInf S ∈ S := Nat.sInf_mem hSne
+  have hinfS' : sInf S' ∈ S' := Nat.sInf_mem hs'ne
+  have h1' : sInf S ≠ 0 := fun h ↦ hzero (h ▸ hinfS)
+  obtain ⟨k, hk⟩ := Nat.exists_eq_succ_of_ne_zero h1'
+  have hkS : k + 1 ∈ S := by rw [← Nat.succ_eq_add_one, ← hk]; exact hinfS
+  have hle : sInf S' ≤ k := Nat.sInf_le ((hmem k).2 hkS)
+  have hge : sInf S ≤ sInf S' + 1 := Nat.sInf_le ((hmem _).1 hinfS')
+  have : stepIndex T t = sInf S := rfl
+  have : stepIndex (fun n ↦ T (n + 1) - T 1) (t - T 1) = sInf S' := rfl
+  omega
+
+/-- **After the first jump the path is the path of the shifted data, restarted.** -/
+theorem jumpProcess_jumpShift {lam : E → ℝ} {t : ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+    (h1 : jumpTime lam ω.1 ω.2 1 ≤ t) (hex : ∃ n, t < jumpTime lam ω.1 ω.2 (n + 1)) :
+    jumpProcess lam t ω = jumpProcess lam (t - jumpTime lam ω.1 ω.2 1) (jumpShift ω) := by
+  have hT : jumpTime lam (jumpShift ω).1 (jumpShift ω).2
+      = fun n ↦ jumpTime lam ω.1 ω.2 (n + 1) - jumpTime lam ω.1 ω.2 1 :=
+    funext fun n ↦ jumpTime_jumpShift lam ω.1 ω.2 n
+  simp only [jumpProcess, stepPath]
+  rw [hT, stepIndex_shift h1 hex]
+  rfl
+
 /-! ### The explicit probability space -/
 
 section Space
@@ -1525,10 +1586,14 @@ sequence of kernels each of which reads only the *last* coordinate.  Unlike the 
 `ProbabilityTheory.exists_kernel_pi_of_markov` of the roadmap **KolmogorovExtension**, whose
 kernels read only the base point, this is the Markov chain proper.  It carries no topology on
 `E`. -/
+noncomputable def chainFam (mu : Kernel E E) (n : ℕ) : Kernel ((i : Finset.Iic n) → E) E :=
+  mu.comap (fun x : (i : Finset.Iic n) → E ↦ x ⟨n, Finset.mem_Iic.2 le_rfl⟩) (measurable_pi_apply _)
+
+instance instIsMarkovKernelChainFam (mu : Kernel E E) [IsMarkovKernel mu] (n : ℕ) :
+    IsMarkovKernel (chainFam mu n) := by unfold chainFam; infer_instance
+
 noncomputable def chainKernel (mu : Kernel E E) [IsMarkovKernel mu] : Kernel E (ℕ → E) :=
-  (Kernel.traj (X := fun _ ↦ E)
-      (fun n ↦ mu.comap (fun x : (i : Finset.Iic n) → E ↦ x ⟨n, Finset.mem_Iic.2 le_rfl⟩)
-        (measurable_pi_apply _)) 0).comap
+  (Kernel.traj (X := fun _ ↦ E) (chainFam mu) 0).comap
     (fun z (_ : Finset.Iic 0) ↦ z) (measurable_pi_lambda _ fun _ ↦ measurable_id)
 
 instance instIsMarkovKernelChainKernel (mu : Kernel E E) [IsMarkovKernel mu] :
@@ -1567,6 +1632,27 @@ theorem waitingMeasure_eval_preimage {A : Set ℝ} (hA : MeasurableSet A) (n : �
   rw [h]
   unfold waitingMeasure
   rw [Measure.infinitePi_map_eval]
+
+/-- **The waiting times are invariant under the shift.**  This is the second of the two shift
+statements the Markov property at the first jump rests on; the first is `chainKernel_map_shift`. -/
+theorem waitingMeasure_map_shift :
+    waitingMeasure.map (fun xi : ℕ → ℝ ↦ fun n ↦ xi (n + 1)) = waitingMeasure := by
+  unfold waitingMeasure
+  refine Measure.eq_infinitePi (fun _ : ℕ ↦ expMeasure 1) fun s t ht ↦ ?_
+  classical
+  have hpre : (fun (xi : ℕ → ℝ) (n : ℕ) ↦ xi (n + 1)) ⁻¹' (Set.pi (↑s) t)
+      = Set.pi (↑(s.image Nat.succ)) (fun j ↦ t (j - 1)) := by
+    ext xi
+    simp only [Set.mem_preimage, Set.mem_pi, Finset.coe_image, Set.mem_image, Finset.mem_coe]
+    constructor
+    · rintro h j ⟨i, hi, rfl⟩
+      simpa using h i hi
+    · intro h i hi
+      simpa using h (i + 1) ⟨i, hi, rfl⟩
+  rw [Measure.map_apply (by fun_prop) (MeasurableSet.pi s.countable_toSet fun i _ ↦ ht i), hpre,
+    Measure.infinitePi_pi (μ := fun _ : ℕ ↦ expMeasure 1) (fun j _ ↦ ht (j - 1)),
+    Finset.prod_image (fun x _ y _ h ↦ Nat.succ_injective h)]
+  simp
 
 /-- The standard exponential law has no atom at `0` and no mass below it. -/
 theorem expMeasure_one_Iic_zero : expMeasure 1 (Set.Iic 0) = 0 := by
@@ -1683,6 +1769,173 @@ theorem comp_chainKernel_map_zero (mu : Kernel E E) [IsMarkovKernel mu] (nu : Me
     ext z s hs
     rw [Kernel.map_apply _ (measurable_pi_apply 0), chainKernel_map_zero, Kernel.id_apply]
   rw [hker, Measure.id_comp]
+
+/-! ### The Markov property of the embedded chain
+
+`ProbabilityTheory.Kernel.traj` is built for an arbitrary family of kernels and therefore carries
+no time homogeneity: neither v4.33.1 nor `upstream/master` has a statement saying that shifting a
+trajectory of a homogeneous chain gives a trajectory of the same chain.  That statement is proved
+here for `chainFam`, by induction on the finite dimensional distributions. -/
+
+/-- The shift on finite trajectories: forget the coordinate `0` and renumber. -/
+def shiftIic (b : ℕ) (w : (i : Finset.Iic (b + 1)) → E) : (i : Finset.Iic b) → E :=
+  fun i ↦ w ⟨i.1 + 1, Finset.mem_Iic.2 (Nat.succ_le_succ (Finset.mem_Iic.1 i.2))⟩
+
+theorem measurable_shiftIic (b : ℕ) : Measurable (shiftIic (E := E) b) :=
+  measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+
+theorem kernel_comp_comap {α β γ : Type*} {mα : MeasurableSpace α} {mβ : MeasurableSpace β}
+    {mγ : MeasurableSpace γ} (η : Kernel β γ) (ρ : Kernel α β) {δ : Type*}
+    {mδ : MeasurableSpace δ} {g : δ → α} (hg : Measurable g) :
+    η ∘ₖ (ρ.comap g hg) = (η ∘ₖ ρ).comap g hg := by
+  ext x s hs
+  rw [Kernel.comap_apply, Kernel.comp_apply' _ _ _ hs, Kernel.comp_apply' _ _ _ hs,
+    Kernel.comap_apply]
+
+theorem map_dirac_prod_left {α β γ : Type*} {mα : MeasurableSpace α} {mβ : MeasurableSpace β}
+    {mγ : MeasurableSpace γ} (x : α) (ν : Measure β) [SFinite ν] {f : α × β → γ}
+    (hf : Measurable f) : ((Measure.dirac x).prod ν).map f = ν.map (fun v ↦ f (x, v)) := by
+  rw [Measure.dirac_prod, Measure.map_map hf measurable_prodMk_left]
+  rfl
+
+/-- On a constant family of state spaces the identification of `{a + 1}` with `Ioc a (a + 1)`
+carries no information: it returns the value it was given. -/
+theorem piSingleton_apply_const (a : ℕ) (v : E) (j : ↥(Finset.Ioc a (a + 1))) :
+    (MeasurableEquiv.piSingleton (X := fun _ : ℕ ↦ E) a) v j = v := by
+  cases Nat.mem_Ioc_succ' j
+  rfl
+
+/-- **One step of the chain commutes with the shift.**  This is the whole of the time homogeneity:
+the kernel at time `b + 1` reads the last coordinate, which the shift carries to the last
+coordinate of the shifted tuple. -/
+theorem partialTraj_succ_map_shiftIic (mu : Kernel E E) [IsMarkovKernel mu] (b : ℕ) :
+    (Kernel.partialTraj (X := fun _ ↦ E) (chainFam mu) (b + 1) (b + 2)).map (shiftIic (b + 1))
+      = (Kernel.partialTraj (X := fun _ ↦ E) (chainFam mu) b (b + 1)).comap (shiftIic b)
+          (measurable_shiftIic b) := by
+  ext w : 1
+  rw [Kernel.map_apply _ (measurable_shiftIic _), Kernel.comap_apply,
+    Kernel.partialTraj_succ_self, Kernel.partialTraj_succ_self,
+    Kernel.map_apply _ (measurable_IicProdIoc (X := fun _ : ℕ ↦ E)),
+    Kernel.map_apply _ (measurable_IicProdIoc (X := fun _ : ℕ ↦ E)),
+    Kernel.prod_apply, Kernel.prod_apply, Kernel.id_apply, Kernel.id_apply,
+    Kernel.map_apply _ (MeasurableEquiv.piSingleton (X := fun _ : ℕ ↦ E) _).measurable,
+    Kernel.map_apply _ (MeasurableEquiv.piSingleton (X := fun _ : ℕ ↦ E) _).measurable,
+    map_dirac_prod_left _ _ (measurable_IicProdIoc (X := fun _ : ℕ ↦ E)),
+    map_dirac_prod_left _ _ (measurable_IicProdIoc (X := fun _ : ℕ ↦ E))]
+  have hf1 : Measurable (fun v : (i : Finset.Ioc (b + 1) (b + 1 + 1)) → E ↦
+      IicProdIoc (X := fun _ : ℕ ↦ E) (b + 1) (b + 1 + 1) (w, v)) :=
+    (measurable_IicProdIoc (X := fun _ : ℕ ↦ E)).comp measurable_prodMk_left
+  have hf2 : Measurable (fun v : (i : Finset.Ioc b (b + 1)) → E ↦
+      IicProdIoc (X := fun _ : ℕ ↦ E) b (b + 1) (shiftIic b w, v)) :=
+    (measurable_IicProdIoc (X := fun _ : ℕ ↦ E)).comp measurable_prodMk_left
+  have hrate : chainFam mu b (shiftIic b w) = chainFam mu (b + 1) w := rfl
+  rw [Measure.map_map (measurable_shiftIic (b + 1)) hf1,
+    Measure.map_map ((measurable_shiftIic (b + 1)).comp hf1)
+      (MeasurableEquiv.piSingleton (X := fun _ : ℕ ↦ E) (b + 1)).measurable,
+    Measure.map_map hf2 (MeasurableEquiv.piSingleton (X := fun _ : ℕ ↦ E) b).measurable, hrate]
+  congr 1
+  funext v
+  funext i
+  by_cases hi : i.1 ≤ b
+  · simp only [Function.comp_apply, shiftIic, IicProdIoc, dif_pos hi,
+      dif_pos (Nat.succ_le_succ hi)]
+  · have hib : i.1 = b + 1 := le_antisymm (Finset.mem_Iic.1 i.2) (Nat.succ_le_of_lt (not_le.1 hi))
+    simp only [Function.comp_apply, shiftIic, IicProdIoc, dif_neg hi,
+      dif_neg (fun h : i.1 + 1 ≤ b + 1 ↦ hi (Nat.succ_le_succ_iff.1 h))]
+    rw [piSingleton_apply_const, piSingleton_apply_const]
+
+/-- **The finite dimensional distributions of the chain commute with the shift.** -/
+theorem partialTraj_map_shiftIic (mu : Kernel E E) [IsMarkovKernel mu] (b : ℕ) :
+    (Kernel.partialTraj (X := fun _ ↦ E) (chainFam mu) 1 (b + 1)).map (shiftIic b)
+      = (Kernel.partialTraj (X := fun _ ↦ E) (chainFam mu) 0 b).comap (shiftIic 0)
+          (measurable_shiftIic 0) := by
+  induction b with
+  | zero =>
+      ext x : 1
+      rw [Kernel.map_apply _ (measurable_shiftIic _), Kernel.comap_apply,
+        Kernel.partialTraj_self, Kernel.partialTraj_self, Kernel.id_apply, Kernel.id_apply,
+        Measure.map_dirac' (measurable_shiftIic _)]
+  | succ b ih =>
+      rw [Kernel.partialTraj_succ_eq_comp (by omega), Kernel.map_comp,
+        partialTraj_succ_map_shiftIic mu b, ← Kernel.comp_map _ _ (measurable_shiftIic b), ih,
+        kernel_comp_comap, ← Kernel.partialTraj_succ_eq_comp (Nat.zero_le b)]
+
+/-- **Two probability measures on `ℕ → E` with the same finite dimensional distributions along the
+initial segments are equal.** -/
+theorem ext_of_map_frestrictLe {μ ν : Measure (ℕ → E)} [IsProbabilityMeasure ν]
+    (h : ∀ b, μ.map (Preorder.frestrictLe b) = ν.map (Preorder.frestrictLe b)) : μ = ν := by
+  set P : (I : Finset ℕ) → Measure ((i : I) → E) := fun I ↦ ν.map I.restrict with hP
+  have hproj : IsProjectiveMeasureFamily (α := fun _ : ℕ ↦ E) P := by
+    intro I J hJI
+    rw [hP]
+    simp only
+    rw [Measure.map_map (Finset.measurable_restrict₂ hJI) (Finset.measurable_restrict I),
+      Finset.restrict₂_comp_restrict]
+  have : ∀ I, IsProbabilityMeasure (P I) := fun I ↦
+    Measure.isProbabilityMeasure_map (Finset.measurable_restrict I).aemeasurable
+  have hν : IsProjectiveLimit (α := fun _ : ℕ ↦ E) ν P := fun I ↦ rfl
+  have hμ : IsProjectiveLimit (α := fun _ : ℕ ↦ E) μ P :=
+    (isProjectiveLimit_nat_iff (X := fun _ : ℕ ↦ E) hproj μ).2 fun n ↦ by rw [h n]; rfl
+  exact hμ.unique hν
+
+/-- **The trajectory of the chain from time one, shifted, is the trajectory from time zero started
+at the second coordinate.**  This is the time homogeneity of `Kernel.traj` for `chainFam`. -/
+theorem traj_map_shift (mu : Kernel E E) [IsMarkovKernel mu] (w : (i : Finset.Iic 1) → E) :
+    (Kernel.traj (X := fun _ ↦ E) (chainFam mu) 1 w).map (fun x : ℕ → E ↦ fun n ↦ x (n + 1))
+      = Kernel.traj (X := fun _ ↦ E) (chainFam mu) 0 (shiftIic 0 w) := by
+  have hmeas : Measurable (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  refine ext_of_map_frestrictLe fun b ↦ ?_
+  have hcomp : (Preorder.frestrictLe (π := fun _ : ℕ ↦ E) b) ∘ (fun x : ℕ → E ↦ fun n ↦ x (n + 1))
+      = (shiftIic b) ∘ (Preorder.frestrictLe (π := fun _ : ℕ ↦ E) (b + 1)) := rfl
+  have hstep := congrArg (fun κ ↦ κ w) (partialTraj_map_shiftIic mu b)
+  simp only [Kernel.map_apply _ (measurable_shiftIic b), Kernel.comap_apply] at hstep
+  rw [Measure.map_map (Preorder.measurable_frestrictLe b) hmeas, hcomp,
+    ← Measure.map_map (measurable_shiftIic b) (Preorder.measurable_frestrictLe (b + 1)),
+    Kernel.traj_map_frestrictLe_apply, hstep, Kernel.traj_map_frestrictLe_apply]
+
+theorem comap_comp_measure {α β γ : Type*} {mα : MeasurableSpace α} {mβ : MeasurableSpace β}
+    {mγ : MeasurableSpace γ} (η : Kernel α β) {g : γ → α} (hg : Measurable g) (μ : Measure γ)
+    [SFinite μ] [IsSFiniteKernel η] :
+    (η.comap g hg) ∘ₘ μ = η ∘ₘ (μ.map g) := by
+  ext s hs
+  rw [Measure.bind_apply hs (Kernel.aemeasurable _), Measure.bind_apply hs (Kernel.aemeasurable _),
+    lintegral_map (η.measurable_coe hs) hg]
+  simp_rw [Kernel.comap_apply]
+
+/-- **The Markov property of the embedded chain**: shifting the trajectory by one step gives the
+chain started from one step of `mu`.  With `waitingMeasure_map_shift` and `jumpProcess_jumpShift`
+this is what the second term of `jumpMeasure_integral_eq_of_firstJump` needs. -/
+theorem chainKernel_map_shift (mu : Kernel E E) [IsMarkovKernel mu] (z : E) :
+    (chainKernel mu z).map (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) = chainKernel mu ∘ₘ (mu z) := by
+  have hmeas : Measurable (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  have hconst : Measurable (fun y : E ↦ fun _ : Finset.Iic 0 ↦ y) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_id
+  have hker : (Kernel.traj (X := fun _ ↦ E) (chainFam mu) 1).map
+        (fun x : ℕ → E ↦ fun n ↦ x (n + 1))
+      = (Kernel.traj (X := fun _ ↦ E) (chainFam mu) 0).comap (shiftIic 0)
+          (measurable_shiftIic 0) := by
+    ext w : 1
+    rw [Kernel.map_apply _ hmeas, Kernel.comap_apply]
+    exact traj_map_shift mu w
+  have hshift0 : (shiftIic (E := E) 0)
+      = (fun y (_ : Finset.Iic 0) ↦ y) ∘
+        (fun x : (i : Finset.Iic 1) → E ↦ x ⟨1, Finset.mem_Iic.2 le_rfl⟩) := by
+    funext w i
+    simp only [shiftIic, Function.comp_apply]
+    congr 1
+    exact Subtype.ext (by simp [Nat.le_zero.1 (Finset.mem_Iic.1 i.2)])
+  have hone : (Kernel.partialTraj (X := fun _ ↦ E) (chainFam mu) 0 1 (fun _ ↦ z)).map (shiftIic 0)
+      = (mu z).map (fun y ↦ fun _ : Finset.Iic 0 ↦ y) := by
+    rw [hshift0, ← Measure.map_map hconst (measurable_pi_apply _),
+      ← Kernel.map_apply _ (measurable_pi_apply (⟨1, Finset.mem_Iic.2 le_rfl⟩ : Finset.Iic 1)),
+      Kernel.map_partialTraj_succ_self]
+    rfl
+  conv_lhs => rw [chainKernel, Kernel.comap_apply,
+    ← Kernel.traj_comp_partialTraj (Nat.zero_le 1), Kernel.comp_apply,
+    Measure.map_comp _ _ hmeas, hker, comap_comp_measure, hone]
+  rw [chainKernel, comap_comp_measure]
 
 /-- **The initial law is the one prescribed.**  This is the only place where `nu` enters, and it
 is what makes the construction one *of* `nu` and not merely one indexed by it. -/

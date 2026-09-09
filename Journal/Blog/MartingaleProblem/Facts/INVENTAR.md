@@ -14905,3 +14905,116 @@ Term. **Vorschlag:** die Verschiebung als *pfadweise* Identität —
 `jumpProcess lam t ω = jumpProcess lam (t - T₁) (ω.1 ∘ succ, ω.2 ∘ succ)` auf
 `{T₁ ≤ t}` —, denn sie ist Buchhaltung an `stepIndex` und trennt die Kombinatorik
 von der Maßtheorie des Neustarts.
+
+### 2026-09-09, einundzwanzigster Lauf des Tages — die Verschiebung am ersten Sprung, und Mathlibs `traj` hat keine Zeithomogenität
+
+Ein Ziel: Punkt (a) des Weges zur bedingten Erwartung, „die Markoveigenschaft
+des Sprungprozesses". Sie zerfällt in drei Verschiebungen, und **alle drei sind
+bewiesen**. Siebzehn neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 (unverändert zehn `sorry`, keine neuen), und alle
+siebzehn hängen mit `#print axioms` nur an `propext`, `Classical.choice`,
+`Quot.sound` — mitgeprüft `chainKernel`, `chainKernel_map_zero` und
+`comp_chainKernel_map_zero`, die von der Umstellung der Definition betroffen
+sind.
+
+**Erstens, pfadweise.** `jumpShift ω = (ω.1 ∘ succ, ω.2 ∘ succ)`, und
+`jumpProcess_jumpShift`: auf `{T₁ ≤ t}` und bei Nichtexplosion an `t` ist
+`jumpProcess lam t ω = jumpProcess lam (t - T₁) (jumpShift ω)`. Der Kern ist
+`stepIndex_shift`, reine Buchhaltung an `sInf`: ist `T 1 ≤ t`, so ist `0` kein
+Kandidat, also `sInf {n | t < T (n+1)} = sInf {m | t < T (m+2)} + 1`. Dazu
+`jumpTime_jumpShift`, die Sprungzeiten der verschobenen Daten sind die
+verschobenen, um `T₁` verkleinerten Sprungzeiten.
+
+**Beide Voraussetzungen von `stepIndex_shift` werden gebraucht, und keine ist
+die Monotonie.** `T 1 ≤ t` schließt den Index `0` aus; die Existenz sorgt dafür,
+daß das Infimum angenommen wird. Auf der Explosionsmenge sind beide Seiten `0`
+bzw. `0 + 1` — der Junk-Wert von `sInf ∅` — und die Identität ist dort
+**falsch**. Der Satz kann also nicht unbedingt gelten, anders als die
+Rechtsstetigkeit des neunzehnten Laufs.
+
+**Zweitens, die Wartezeiten.** `waitingMeasure_map_shift`: das unendliche
+Produkt ist unter der Verschiebung invariant. Der Beweis ist
+`Measure.eq_infinitePi` auf Quadern, das Urbild eines Quaders über `s` ist der
+Quader über `s.image Nat.succ`, und `Finset.prod_image` mit der Injektivität von
+`succ` schließt ab. Zwölf Zeilen.
+
+**Drittens, die Kette — und hier lag die Arbeit.**
+`chainKernel_map_shift (mu) (z) : (chainKernel mu z).map (· ∘ succ)
+= chainKernel mu ∘ₘ (mu z)`.
+
+**Der Befund, und er ist eine Lücke in Mathlib.**
+`ProbabilityTheory.Kernel.traj` ist für eine **beliebige** Familie `κ n` gebaut
+und trägt darum keine Zeithomogenität. Es gibt in v4.33.1 **und** auf
+`upstream/master` keine Aussage der Gestalt „die Verschiebung der Trajektorie
+einer homogenen Kette ist wieder eine Trajektorie derselben Kette";
+`git grep -n "shift\|homogeneous" upstream/master --
+Mathlib/Probability/Kernel/IonescuTulcea/` liefert nichts, und die einzigen
+drei Dateien, die `IonescuTulcea` überhaupt erwähnen, sind `PartialTraj.lean`,
+`Traj.lean` und `ProductMeasure.lean`. Gesucht wurde nach der **Aussage** und
+nicht nach der Vokabel: nach `map` einer Trajektorie längs einer Reindizierung,
+nach `traj_eq_prod`, nach `traj_map_updateFinset`, nach `trajMeasure`; alles,
+was dort steht, hält die Zeit fest. Das ist kein Versehen von Mathlib, sondern
+eine Folge der Allgemeinheit — ohne Homogenität ist die Aussage falsch.
+
+**Der Weg, der trägt**, in vier Stufen, und jede ist eine eigene Deklaration:
+
+1. `partialTraj_succ_map_shiftIic` — **der ganze Inhalt der Homogenität**, und
+   er ist ein einziger Schritt: `partialTraj_succ_self` schreibt einen Schritt
+   als `(id ×ₖ (κ b).map (piSingleton b)).map (IicProdIoc b (b+1))`, das erste
+   Faktor-Dirac fällt mit `map_dirac_prod_left` weg, und es bleibt auf beiden
+   Seiten ein `Measure.map` **derselben** Maßverteilung `mu (w b+1)` — denn
+   `chainFam mu b (shiftIic b w) = chainFam mu (b+1) w` gilt **`rfl`**, die
+   Kerne lesen die letzte Koordinate und die Verschiebung trägt sie auf die
+   letzte. Übrig bleibt die Gleichheit zweier Funktionen `E → (Iic (b+1) → E)`,
+   eine Fallunterscheidung nach `i ≤ b`.
+2. `partialTraj_map_shiftIic` — die Induktion über `b`, und sie ist nach 1 nur
+   noch Algebra: `partialTraj_succ_eq_comp`, `Kernel.map_comp`, Schritt 1,
+   `Kernel.comp_map` rückwärts, Induktionsvoraussetzung, `kernel_comp_comap`.
+   Vier Zeilen.
+3. `ext_of_map_frestrictLe` — zwei Wahrscheinlichkeitsmaße auf `ℕ → E` mit
+   denselben endlichdimensionalen Verteilungen längs der Anfangsstücke sind
+   gleich. Über `IsProjectiveLimit.unique` und `isProjectiveLimit_nat_iff`, mit
+   der Familie `I ↦ ν.map I.restrict` als Zeugen.
+4. `traj_map_shift` und `chainKernel_map_shift` — der Übergang zum unendlichen
+   Fall, und die Zerlegung `traj_comp_partialTraj (0 ≤ 1)` plus
+   `map_partialTraj_succ_self`.
+
+**Zwei technische Befunde, die der nächste Lauf braucht.**
+
+* **Die Instanzen müssen von Hand gesetzt werden.** `measurable_IicProdIoc` und
+  `MeasurableEquiv.piSingleton` sind über einem `LinearOrder ι` bzw. über `ℕ`
+  formuliert; schreibt man sie ohne `(X := fun _ : ℕ ↦ E)` in ein `rw`, so
+  elaboriert Lean andere `DecidableLE`/`MeasurableSpace`-Instanzen als die, die
+  `partialTraj` im Ziel stehen hat, und das Muster wird **nicht gefunden** —
+  mit der irreführenden Meldung „Did not find an occurrence of the pattern",
+  obwohl das Muster syntaktisch dasteht. Das hat zwei Durchläufe gekostet.
+* **`piSingleton` ist über einer konstanten Familie die Identität**, aber nicht
+  definitionell: sein Rumpf ist ein `▸`-Cast. `piSingleton_apply_const` macht
+  daraus einen `rfl` nach `cases Nat.mem_Ioc_succ' j`, und ohne diesen
+  Hilfssatz bleibt der letzte Fall der Fallunterscheidung von Schritt 1 offen.
+
+**Eine Definition ist umgestellt**, und zwar minimal: die Familie im Rumpf von
+`chainKernel` heißt jetzt `chainFam mu` und ist eine eigene Deklaration. Der
+Term ist derselbe; `chainKernel_map_zero` und `comp_chainKernel_map_zero` gehen
+unverändert durch, mitgeprüft mit `#print axioms`.
+
+**Was jetzt noch fehlt, und es ist die Zusammensetzung.** Die drei
+Verschiebungen sind einzeln bewiesen; der zweite Term von
+`jumpMeasure_integral_eq_of_firstJump` verlangt sie **gemeinsam**, als Aussage
+über das Produktmaß `jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod
+waitingMeasure`. Der nächste Schritt ist darum die Kernfassung
+`(chainKernel mu).map (· ∘ succ) = chainKernel mu ∘ₖ mu` — punktweise steht sie
+in `chainKernel_map_shift`, und `Kernel.ext` macht daraus die Kernidentität —
+und mit ihr die gemeinsame Verteilung von `(y₀, ξ₀, jumpShift ω)`. Erst danach
+ist (b), die Rückwärtsgleichung, an der Reihe.
+
+**Vorschlag für den nächsten Lauf**, als benanntes Ziel:
+`jumpMeasure_map_jumpShift`, die Aussage
+`(jumpMeasure mu nu).map (fun ω ↦ (ω.1 0, ω.2 0, jumpShift ω))
+= (nu ⊗ₘ ...) `, in der Gestalt, die den ersten Zustand und die nullte
+Wartezeit behält und den Rest als `jumpMeasure mu (mu (ω.1 0))` erkennt. Sie
+ruht auf `chainKernel_map_shift`, `waitingMeasure_map_shift` und
+`Measure.prod_map`; sie ist jetzt dran, weil sie das letzte Stück zwischen der
+Verschiebung und der Erneuerungsgleichung ist und weil ohne sie
+`jumpProcess_jumpShift` nichts trägt.

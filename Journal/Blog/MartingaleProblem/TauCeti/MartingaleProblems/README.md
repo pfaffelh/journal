@@ -668,6 +668,30 @@ A concrete family of solutions, built without any of the theory above. Index
   equation before the Markov property is used on its second term. **Proved** on
   2026-09-09, twentieth run, for a general initial law and over
   `[MeasurableSpace E]` alone.
+* `jumpShift`, `jumpTime_jumpShift`, `stepIndex_shift`, `jumpProcess_jumpShift`:
+  the shift at the first jump, pathwise. On `{T 1 ≤ t}` and at a time the path
+  reaches, `jumpProcess lam t ω = jumpProcess lam (t - T 1) (jumpShift ω)`.
+  **Proved** on 2026-09-09, twenty first run. Both hypotheses of
+  `stepIndex_shift` are needed: on the explosion set the two sides are the junk
+  values `0` and `0 + 1`, so the identity is false there.
+* `waitingMeasure_map_shift`: the law of the waiting times is invariant under
+  the shift. **Proved** on 2026-09-09, twenty first run, from
+  `Measure.eq_infinitePi` on boxes.
+* `chainFam`, `shiftIic`, `piSingleton_apply_const`,
+  `partialTraj_succ_map_shiftIic`, `partialTraj_map_shiftIic`,
+  `ext_of_map_frestrictLe`, `traj_map_shift`, `chainKernel_map_shift`: the
+  **Markov property of the embedded chain**,
+  `(chainKernel mu z).map (· ∘ Nat.succ) = chainKernel mu ∘ₘ mu z`.
+  **Proved** on 2026-09-09, twenty first run.
+  `ProbabilityTheory.Kernel.traj` is built for an arbitrary family of kernels
+  and therefore carries no time homogeneity; neither v4.33.1 nor
+  `upstream/master` has any statement saying that shifting a trajectory of a
+  homogeneous chain gives a trajectory of the same chain. The proof runs over
+  the finite dimensional distributions: the whole of the homogeneity is the one
+  step `partialTraj_succ_map_shiftIic`, where
+  `chainFam mu b (shiftIic b w) = chainFam mu (b + 1) w` holds by `rfl`, and the
+  passage from `partialTraj` to `traj` is the uniqueness of the projective
+  limit.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
