@@ -368,12 +368,48 @@ danach.*
    `partialTraj` zu `traj` ist die Eindeutigkeit des projektiven Limes
    (`ext_of_map_frestrictLe`).
 
-   **Was jetzt noch fehlt**, ist die Zusammensetzung: die drei Verschiebungen
+   ~~**Was jetzt noch fehlt**, ist die Zusammensetzung: die drei Verschiebungen
    sind einzeln bewiesen und müssen zur Erneuerungsgleichung zusammengeführt
-   werden — der zweite Term von `jumpMeasure_integral_eq_of_firstJump` als
-   Integral über `T₁` mit `E_y[h(X_{t-T₁})]` unter `y ~ mu (y₀)`. Dafür ist die
-   Fassung von `chainKernel_map_shift` als **Kernidentität** (nicht nur
-   punktweise) zu nehmen und mit `jumpMeasure` als Produkt zu verbinden.
+   werden.~~ *(erledigt 2026-09-09, zweiundzwanzigster Lauf des Tages)*
+
+   **Zwischenstand 2026-09-09, zweiundzwanzigster Lauf des Tages.** Die
+   **Zusammensetzung** steht: `jumpMeasure_map_split` gibt die gemeinsame
+   Verteilung von Anfangszustand, nullter Wartezeit und verschobenen Daten,
+   ```
+   (jumpMeasure mu nu).map (fun ω ↦ ((ω.1 0, ω.1 ∘ succ), (ω.2 0, ω.2 ∘ succ)))
+     = (nu ⊗ₘ (chainKernel mu ∘ₖ mu)).prod ((expMeasure 1).prod waitingMeasure),
+   ```
+   und `prod_comp_chainKernel_eq_jumpMeasure` erkennt den zweiten Faktor jeder
+   Hälfte als `jumpMeasure mu (mu z)` — die verschobenen Daten sind wieder eine
+   Sprungkonstruktion, gestartet aus einem Schritt von `mu`. Zwölf neue
+   Deklarationen, die ganze Datei durch `lake env lean` gegen v4.33.1
+   (unverändert zehn `sorry`), alle zwölf mit `#print axioms` auf `propext`,
+   `Classical.choice`, `Quot.sound`. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-09, zweiundzwanzigster Lauf des Tages".
+
+   **Zwei Befunde, die der nächste Lauf braucht.** (a) Die angesagte
+   **Kernidentität** von `chainKernel_map_shift` war nicht das fehlende Stück;
+   gebraucht wird die **gemeinsame** Verteilung von `y 0` und `y ∘ succ`, und die
+   folgt aus der Randverteilung nicht — über bloßem `[MeasurableSpace E]` ist aus
+   `μ.map f = dirac z` **nicht** `f =ᵐ[μ] z` zu gewinnen, weil `{z}` nicht meßbar
+   sein muß. Der Weg ist `map_prodMk_of_map_eq_dirac`, das auf meßbaren Rechtecken
+   rechnet und nur `μ (f ⁻¹' s) ∈ {0, 1}` benutzt. (b) **Mathlib hat die
+   Abspaltung einer Koordinate von ihrem Schwanz nicht.** Es hat die
+   Reindizierungen von `Measure.infinitePi` längs Injektionen
+   (`Measure.map_infinitePi_infinitePi_of_inj`) und die Unabhängigkeit der
+   Koordinaten (`iIndepFun_infinitePi`), aber `iIndepFun.indepFun_finset` trennt
+   nur **endliche** Indexmengen, und die Unabhängigkeit einer Koordinate vom
+   ganzen Schwanz ist keine Reindizierung. Bewiesen ist sie hier als
+   `infinitePi_map_natCons` über `Measure.eq_infinitePi`, mit dem Voranstellen
+   `natCons` als der Abbildung, die die Aussage auf Quader zurückführt.
+
+   **Was für den Satz jetzt noch fehlt**, und es ist Punkt (b) des Weges: die
+   **Rückwärtsgleichung** `E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`. Alle
+   maßtheoretischen Stücke sind da — `jumpMeasure_integral_eq_of_firstJump`
+   zerlegt am ersten Sprung, `jumpMeasure_map_split` benennt das Gesetz des
+   zweiten Terms, `jumpProcess_jumpShift` sagt, daß der Integrand dort eine
+   Funktion der verschobenen Daten ist. Was fehlt, ist die Analysis: die
+   Differentiation der Erneuerungsgleichung nach `t`.
 3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
    Roadmap „no analysis beyond `NormedSpace`".
 

@@ -168,10 +168,10 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Drei Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Vier Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle drei beim Beweisen aufgefallen, alle drei gegen `upstream/master` geprüft,
-und alle drei sind kleine, in sich abgeschlossene Beiträge. Sie gehören
+Alle vier beim Beweisen aufgefallen, alle vier gegen `upstream/master` geprüft,
+und alle vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
@@ -194,6 +194,19 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   Normgruppe, während der Grenzwert hier *erzeugt* und nicht wiedererkannt werden
   muß. Wir haben es am 2026-09-08 für $M_E$ als
   `exists_tendsto_distInMeasure_of_cauchy` nach Kurtz (4.2)--(4.4) bewiesen.
+
+* **Eine Koordinate gegen ihren Schwanz, im unendlichen Produkt.** Die Aussage
+  `(infinitePi μ).map (fun x ↦ (x 0, x ∘ Nat.succ)) = μ.prod (infinitePi μ)` fehlt,
+  und zwar dreimal knapp: `Measure.map_infinitePi_infinitePi_of_inj` gibt
+  Reindizierungen (rechts stünde wieder ein `infinitePi`, hier steht ein
+  Produkt), `Measure.infinitePi_map_eval_prod` gibt das Paar zweier Koordinaten,
+  und `iIndepFun.indepFun_finset` trennt aus der Unabhängigkeit der Koordinaten
+  nur **endliche** Indexmengen — der Schwanz ist unendlich. Wir haben es am
+  2026-09-09 als `infinitePi_map_natCons` bewiesen, in der
+  Zusammensetzungsrichtung, weil die eine Aussage über Quader ist und
+  `Measure.eq_infinitePi` gerade danach fragt. Für Mathlib wäre die richtige
+  Fassung die allgemeine Trennung `iIndepFun` gegen zwei disjunkte **beliebige**
+  Indexmengen; sie ist ein Dynkin-Argument und wäre mehr als unsere.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

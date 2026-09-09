@@ -692,18 +692,58 @@ A concrete family of solutions, built without any of the theory above. Index
   `chainFam mu b (shiftIic b w) = chainFam mu (b + 1) w` holds by `rfl`, and the
   passage from `partialTraj` to `traj` is the uniqueness of the projective
   limit.
+* `map_prodMk_of_map_eq_dirac`: if one marginal of a probability measure is a
+  Dirac measure, the joint law is the product of that Dirac measure and the
+  other marginal. **Proved** on 2026-09-09, twenty second run. Over a bare
+  `[MeasurableSpace E]` this cannot be had from `f =ᵐ[μ] z`, which needs `{z}`
+  to be measurable; the proof works on measurable rectangles and uses only
+  `μ (f ⁻¹' s) ∈ {0, 1}`.
+* `natCons`, `measurable_natCons`, `infinitePi_map_natCons`,
+  `infinitePi_map_split`: **the zeroth coordinate of an infinite product over
+  `ℕ` is independent of its tail**,
+  `(infinitePi μ).map (fun x ↦ (x 0, x ∘ Nat.succ)) = μ.prod (infinitePi μ)`.
+  **Proved** on 2026-09-09, twenty second run. Mathlib has the reindexings along
+  injections (`Measure.map_infinitePi_infinitePi_of_inj`), the law of a pair of
+  coordinates (`Measure.infinitePi_map_eval_prod`) and the independence of the
+  coordinates (`iIndepFun_infinitePi`), but `iIndepFun.indepFun_finset` splits
+  only two *finite* index sets, so none of them separates a coordinate from an
+  infinite tail. The proof goes in the composing direction, where the statement
+  is one about boxes and `Measure.eq_infinitePi` applies: the preimage of a box
+  under `natCons` is again a rectangle.
+* `chainKernel_map_split`, `comp_chainKernel_map_split`,
+  `waitingMeasure_map_split`, `jumpMeasure_map_split`,
+  `prod_comp_chainKernel_eq_jumpMeasure`, `jumpShift_eq_split`: **the splitting
+  of the driving data at the first jump**,
+  ```
+  (jumpMeasure mu nu).map (fun ω ↦ ((ω.1 0, ω.1 ∘ succ), (ω.2 0, ω.2 ∘ succ)))
+    = (nu ⊗ₘ (chainKernel mu ∘ₖ mu)).prod ((expMeasure 1).prod waitingMeasure),
+  ```
+  with `((chainKernel mu ∘ₖ mu) z).prod waitingMeasure = jumpMeasure mu (mu z)`.
+  **Proved** on 2026-09-09, twenty second run. The initial state has law `nu`,
+  the zeroth waiting time is an independent standard exponential — together they
+  carry the first jump time `T 1 = ξ 0 / lam (y 0)` — and given the initial
+  state the shifted data is again a jump construction, started from one step of
+  `mu`. The two shift statements alone do not give this: what the renewal
+  equation reads is the *joint* law of `y 0` and `y ∘ succ`, and marginals do
+  not determine it. The statement is in the unordered form, on
+  `(E × (ℕ → E)) × (ℝ × (ℕ → ℝ))`; collapsing the four integrals to
+  `∫ nu, ∫ expMeasure 1, ∫ jumpMeasure mu (mu z)` interchanges `y ∘ succ` with
+  `ξ 0` once by Fubini.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
   `Clock.Conv.optional (fun t ω ↦ jumpProcess lam (t : ℝ) ω))`
   `(jumpFiltration lam hlam) (jumpMeasure mu nu)`, **stated** on 2026-09-09,
   nineteenth run, with its adaptedness half proved. What remains is the
-  conditional expectation `P[Y t | 𝓕 s] =ᵐ Y s`, in three steps: the Markov
-  property of the process at a fixed time, out of `expMeasure_Ioi_add` and
-  `chainKernel`; the expectation identity
+  conditional expectation `P[Y t | 𝓕 s] =ᵐ Y s`. Of its three steps the first is
+  done: the Markov property of the process at a fixed time is
+  `jumpMeasure_integral_eq_of_firstJump` together with `jumpProcess_jumpShift`
+  and `jumpMeasure_map_split`, complete on 2026-09-09, twenty second run. What
+  remains is the expectation identity
   `E_x[f (X t)] - f x = ∫_0^t E_x[A f (X s)] ds`, which is the backward
-  equation and the only step needing analysis beyond bookkeeping; and their
-  combination.
+  equation and the only step needing analysis beyond bookkeeping — the renewal
+  equation differentiated in `t` — and its combination with the Markov
+  property.
 * `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
   **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a
