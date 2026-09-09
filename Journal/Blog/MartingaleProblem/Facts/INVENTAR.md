@@ -12428,3 +12428,185 @@ mit `t`. Warum jetzt: es ist die letzte offene Zusage von Meilenstein 5,
 sonst.
 
 **Das Manuskript ist nicht angefaßt.**
+
+### 2026-09-09, dritter Lauf des Tages — die Familie ist abzählbar, und der Fensterrand ist der offene Punkt
+
+**Vorrangige Aufgabe, Teil A, Punkt 1.** Der vorige Lauf hat die Klasse
+`SkorokhodSpace.HasCountableCore` bewohnt gemacht und den nächsten Schritt
+benannt: die Abzählbarkeit der Familie als Term, samt einer Signaturfrage.
+Dieser Lauf entscheidet die Signaturfrage, beweist die Abzählbarkeit — und
+findet, daß danach **nicht** die Separabilität dasteht, sondern eine Lücke, die
+Analysis ist und nicht Buchführung. `SkorokhodSpace/Suggested.lean` steht weiter
+bei **vier** `sorry`. Dreißig Deklarationen sind neu oder umgeschrieben,
+alle durch `lake env lean` gegen v4.33.1 geprüft (`rc=0`, nur Warnungen) und alle
+mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`.
+
+#### Die Signaturfrage: `stepIdx` tritt daneben, und `stepRetract` wird seine Komposition
+
+Der Auftrag verlangte, vor dem ersten Beweis zu entscheiden und die Wahl zu
+begründen. Sie ist die **zweite Deklaration**:
+
+```
+stepIdx t x : Fin (n+1)        -- der Index der Zelle, in die x fällt
+stepRetract t x = t (stepIdx t x)   -- ab jetzt die Definition, nicht ein Satz
+```
+
+Drei Gründe, und der dritte war nicht vorhergesehen.
+
+*Erstens* ist `stepRetract` `Fin (n+1)`-wertig zu machen kein billigerer Weg,
+sondern ein teurerer: fünf bewiesene Sätze über es und ihr bewiesener Abnehmer
+`exists_finite_range_distWith_le` reden von Pfadwerten und nicht von Indizes, und
+sie müßten alle angefaßt werden, um nichts zu gewinnen. *Zweitens* ist die
+Familie über die *Punkte* `t i` zu indizieren gar nicht möglich — genau deren
+Überabzählbarkeit ist das Problem, das die Klasse löst. *Drittens* wird die
+Buchführung **einfacher** und nicht bloß anders: `stepIdx_orderIso` sagt
+
+```
+stepIdx t (e x) = stepIdx d x        (für e (d i) = t i)
+```
+
+und trägt rechts keinen Ordnungsisomorphismus mehr, während
+`stepRetract_orderIso` — jetzt daraus abgeleitet — einen tragen muß. Das ist
+genau die Gestalt, in der die Separabilität sie braucht: die Werte bleiben
+dieselben, nur die Knoten ziehen um.
+
+*Und die Entscheidung hat drei Hypothesen abgetragen.* Die Lokalität des Index
+braucht **keine Monotonie** des Tupels: `stepIdx` liest ein Maximum aus einem
+`Finset`, und das ist von der Aufzählung unabhängig — Monotonie ist eine Aussage
+über die Aufzählung, Lokalität eine über den Wertebereich. Also stehen
+`eventually_stepRetract_eq_nhdsGT`, `exists_eventually_stepRetract_eq_nhdsLT` und
+`isCadlag_comp_stepRetract` jetzt ohne `StrictMono t` da, und ihre Beweise sind
+je zwei Zeilen statt zusammen sechzig. Das ist es, was `stepPath` **total** macht,
+und Totalität ist es, was die Abzählung braucht: die Familie ist das Bild einer
+Abbildung von `Σ n, (Fin (n+1) → C) × (Fin (n+1) → Q)`, ohne Nebenbedingung an
+die Daten, und mit Nebenbedingung wäre der Definitionsbereich ein Untertyp, dessen
+Abzählbarkeit eine Aufgabe mehr ist.
+
+#### Die Abzählbarkeit ist bewiesen
+
+`SkorokhodSpace.stepPath d v : D(ι, E)` zu beliebigen Knoten und Werten,
+`SkorokhodSpace.stepPathFamily C Q` die Familie,
+`SkorokhodSpace.countable_stepPathFamily` ihre Abzählbarkeit — ein abzählbares
+`C`, ein abzählbares `Q`, `Fin (n+1)` endlich, eine abzählbare Vereinigung über
+die Länge. `SkorokhodSpace.stepPath_mem_stepPathFamily` ist die Zugehörigkeit,
+`SkorokhodSpace.stepPath_comp_eq` sagt, daß der Approximant der analytischen
+Hälfte **derselbe Term** ist (`rfl`), und
+`SkorokhodSpace.distWith_one_stepPath_le` ist der Umzug der Werte, der nichts
+kostet.
+
+#### Der Befund: der Fensterrand, und er ist Analysis
+
+Der vorige Lauf hat angesagt, was bleibe, sei die Abzählbarkeit; das war zu
+wenig. Nach den beiden Umzügen steht **nicht** `distWith t₀ u l f g ≤ ε` da,
+sondern das für das Innere des Fensters. Am Rand gilt es nicht, und der
+Mechanismus ist der, der schon die summierte Metrik erledigt hat: für `x`
+jenseits von `B = exhaustionMax t₀ u` klemmen **beide** Seiten von `distWith` auf
+`B`, der Term ist `dist (f B) (g B)` — *ohne dazwischengeschalteten
+Zeitwechsel*, das ist `SkorokhodSpace.dist_exhaustionMax_le_distOn` —, und `g B`
+ist der Wert der Zelle von `B`, gezählt mit den **verschobenen** Knoten, also
+`stepIdx t (l B)` und nicht `stepIdx t B`. Die beiden weichen genau dann
+voneinander ab, wenn ein Knoten `B` von `l B` trennt, und dann ist der Term der
+**Sprung von `f` an diesem Knoten**; kein `ε` macht ihn klein.
+
+Die Richtung der Verschiebung hilft nicht: schiebt man die Knoten nach unten, so
+fällt `l B` unter `B`, `clamp (l x)` läuft über `[l B, B]`, und derselbe Term
+erscheint auf der anderen Seite. Das ist kein Beweisdetail, sondern eine
+Eigenschaft dieser Metrik, und es ist der Grund, warum Billingsley auf `[0,1]`
+arbeitet, wo der Zeitwechsel **beide Endpunkte festhält**, und warum
+Ethier--Kurtz über den Radius integrieren.
+
+#### Was daraus folgt, und was davon schon getan ist
+
+Die Reparatur ist zweiteilig, und der eine Teil steht.
+
+*Erstens*, und das ist neu in der Datei: `HasCountableCore` hat eine **dritte
+Klausel**, `dist (d i) (t i) ≤ δ`. Sie folgt **nicht** aus der Normschranke — auf
+einem Index mit Lücken hat die Identität die Norm `0`, und ein Zeitwechsel der
+Norm `0` trägt einen Punkt über eine ganze Lücke —, und sie ist genau das, was die
+schlechten Radien zählt. Beide Instanzen erfüllen sie:
+`SkorokhodSpace.exists_rat_nodes_perturbation` nimmt seine Rationalzahlen jetzt
+innerhalb eines vorgegebenen `ζ` der `t i` (die Höhe der Zelte stand dem Aufrufer
+ohnehin frei, es ist ein `min` mehr in `η`), und auf einem abzählbaren Index ist
+`d = t`.
+
+*Zweitens*, und das ist der neue Satz: `volume_radius_exhaustionMax_mem_Ico`
+schätzt
+
+```
+volume {u ≥ 0 : exhaustionMax t₀ u ∈ Set.Ico a b} ≤ ENNReal.ofReal (dist a b)
+```
+
+und braucht dafür **keine Fallunterscheidung**, weil `lengthCoord` alles erledigt:
+das Fenster ist das Urbild von `Set.Icc (-u) u` unter der Längenkoordinate, also
+liegt ein Radius, dessen Rand in `Set.Ico a b` fällt, selbst in
+`Set.Icc (lengthCoord t₀ a) (lengthCoord t₀ b)` — unten, weil der Rand über `a`
+liegt und seine Koordinate höchstens der Radius ist, oben, weil ein Radius
+jenseits von `lengthCoord t₀ b` schon `b` ins Fenster nimmt und den Rand auf `b`
+oder darüber schiebt. Die Länge dieses Intervalls ist `dist a b`
+(`sub_lengthCoord_of_le`). Damit haben die schlechten Radien eines Knotens das Maß
+`dist (d i) (t i)`, alle zusammen höchstens `(n+1) δ`, und da der Integrand von
+`intWith` durch `1` beschränkt ist, kosten sie in der Metrik nicht mehr als das.
+
+Daß die Schranke `dist a b` und nicht etwa `0` ist, ist der Punkt: für `ι = ℝ`
+ist die Menge der schlechten Radien ein Intervall der Länge `|t i - d i|` und
+nicht null, für `ι = ℤ` ist sie eine ganze Lücke lang — dort ist aber `d = t`, und
+das ist derselbe Sachverhalt von der anderen Seite.
+
+#### Die neuen Deklarationen
+
+* `stepIdx`, `stepIdx_eq_of_forall_le`, `stepIdx_eq_zero_of_lt`,
+  `stepIdx_orderIso` — der Index und seine drei Aussagen.
+* `eventually_stepIdx_eq_nhdsGT`, `exists_eventually_stepIdx_eq_nhdsLT`,
+  `isCadlag_comp_stepIdx` — die Lokalität, **ohne Monotonie**, und der Pfad
+  daraus.
+* `stepRetract` (Definition umgeschrieben zu `t ∘ stepIdx t`),
+  `stepRetract_eq_of_forall_le`, `stepRetract_eq_first`, `stepRetract_mem_range`,
+  `stepRetract_orderIso`, `eventually_stepRetract_eq_nhdsGT`,
+  `exists_eventually_stepRetract_eq_nhdsLT`, `isCadlag_comp_stepRetract` — alle
+  acht neu bewiesen, sechs davon in einer Zeile, drei mit schwächeren Hypothesen.
+* `SkorokhodSpace.stepPath`, `stepPath_apply`, `stepPath_comp_eq`,
+  `stepPath_apply_orderIso`, `stepPathFamily`, `stepPath_mem_stepPathFamily`,
+  `countable_stepPathFamily`, `distWith_one_stepPath_le` — die Familie.
+* `radius_exhaustionMax_mem_Ico_subset` und
+  `volume_radius_exhaustionMax_mem_Ico` — die Einschließung der schlechten Radien
+  in ein benanntes Koordinatenintervall und ihr Maß. Die Einschließung ist die
+  Form, die gebraucht wird, denn die Menge selbst ist nicht sichtbar meßbar:
+  `exhaustionMax` ist monoton und mehr nicht.
+* `SkorokhodSpace.intWith_le_of_ae_distWith_le` — **das erste der beiden Stücke,
+  die nach dem Befund noch fehlten**: `intWith_le_of_forall_distWith_le` mit der
+  gefensterten Schranke nur *außerhalb* einer meßbaren Radienmenge `B`, zum Preis
+  von deren Maß unterhalb `M`, also `ε + β + exp (-M)`. Der Beweis zerlegt
+  `Set.Ioc 0 M` in `\ B` und `∩ B` (`Set.diff_union_inter`), schätzt das erste
+  Stück wie bisher und das zweite durch `1`, weil `exp (-u) ≤ 1` für `u > 0` und
+  `min 1 _ ≤ 1`; `MeasureTheory.setIntegral_const` macht daraus das Maß.
+* `SkorokhodSpace.HasCountableCore` (dritte Klausel),
+  `SkorokhodSpace.exists_rat_nodes_perturbation` (mit `ζ`),
+  `Real.instHasCountableCore` und `SkorokhodSpace.hasCountableCore_of_countable`
+  (beide nachgezogen).
+
+#### Vorschlag für den nächsten Lauf
+
+**`SkorokhodSpace.instSeparableSpace`, und diesmal ist der Weg ganz
+ausgeschrieben.** Zwei Stücke fehlen, beide benannt:
+
+1. ~~Die f.ü.-Fassung von `intWith_le_of_forall_distWith_le`.~~ **In diesem Lauf
+   noch bewiesen**, als `SkorokhodSpace.intWith_le_of_ae_distWith_le`. Was an ihr
+   noch zu tun ist, ist sie einzusetzen: `B` ist
+   `⋃ i, Set.Icc (lengthCoord t₀ (d i)) (lengthCoord t₀ (t i))`, eine endliche
+   Vereinigung von Intervallen, also meßbar, und ihr Maß ist nach
+   `radius_exhaustionMax_mem_Ico_subset` höchstens `∑ᵢ dist (d i) (t i) ≤ (n+1) δ`
+   — das `δ` wird also nach `n` gewählt, und `n` kommt aus der Unterteilung.
+2. **Die Fallunterscheidung am Supremum.** Sie ist `min_max_pair_cases`, dasselbe
+   kombinatorische Lemma, das `SkorokhodSpace.distWith_le_of_oscillation` schon
+   führt: die beiden Klemmungen eines Punktes stimmen überein, oder beide liegen
+   zwischen den zwei oberen Fensterenden, oder beide zwischen den zwei unteren.
+   Im ersten Fall greift die Zelleigenschaft, in den beiden anderen ist der Radius
+   schlecht.
+
+Warum jetzt: es ist die letzte offene Zusage von Meilenstein 5, `instPolishSpace`
+ist danach `inferInstance`, und `fact:PSpolish` hängt an nichts sonst. Analysis,
+Buchführung, Abzählung, die Maßschranke und die f.ü.-Integralschranke sind alle
+fünf bezahlt; was bleibt, ist die Fallunterscheidung am Fensterrand und die
+Montage.
+
+**Das Manuskript ist nicht angefaßt.**

@@ -1181,9 +1181,21 @@ it. The class stands, and the first of its three instances,
 * `SkorokhodSpace.HasCountableCore ι`: the class the previous item forces. It
   asks for a countable `C ⊆ ι` together with, for every finite strictly monotone
   tuple `t : Fin (n+1) → ι` and every `δ > 0`, a tuple `d` in `C` and a time
-  change `l` fixing the base point with `‖l‖ ≤ δ` and `l (d i) = t i`. It is
-  the heavy half of separability isolated as a statement **about the index and
-  not about the paths**, and it is a hypothesis and not a theorem.
+  change `l` fixing the base point with `‖l‖ ≤ δ`, `l (d i) = t i` **and
+  `dist (d i) (t i) ≤ δ`**. It is the heavy half of separability isolated as a
+  statement **about the index and not about the paths**, and it is a hypothesis
+  and not a theorem.
+
+  The displacement clause is the third and it was added on 2026-09-09, for the
+  reason recorded at the separability below: it is the displacement and not the
+  norm that bounds the measure of the radii whose window edge separates a node
+  from its image, and at those radii the metric compares the two paths with no
+  time change interposed. It is **not implied** by the norm clause: on an index
+  with gaps the identity has norm `0` and a time change of norm `0` can carry a
+  point across a whole gap, so a small norm says nothing about how far a point
+  travels. Both proved instances satisfy it —
+  `SkorokhodSpace.exists_rat_nodes_perturbation` takes its rationals within a
+  prescribed `ζ` of the `t i`, and on a countable index `d` is `t` itself.
 
   **A countable dense subset of `ι` is not enough**, which is the finding of
   2026-09-08. On `ι = Set.Icc (0 : ℝ) 1` with base point `0` every time change
@@ -1251,15 +1263,61 @@ it. The class stands, and the first of its three instances,
   costs nothing beyond `‖l‖`; the values are moved into a countable dense subset
   of `E` for free, no time change being involved in that.
 
-  What is left is the countability of the family as such, which asks for the
-  step path as a **term**: `stepPath d v : D ι E` for `d` with values in `C` and
-  `v` with values in the countable dense subset, and a surjection onto the
-  family from a countable type. There is one signature question in it and it is
-  settled before the first proof: `stepRetract` returns the *point* `t i` and
-  not the *index* `i`, so the values do not hang on it directly. Either a
-  `stepIdx` stands beside it with `stepRetract t = t ∘ stepIdx t`, or
-  `stepRetract` becomes `Fin (n+1)`-valued and the present one is its
-  composition with `t`.
+  The countability of the family is proved too (2026-09-09).
+  `SkorokhodSpace.stepPath d v : D ι E` is the step path as a **term**, for
+  arbitrary nodes `d : Fin (n+1) → ι` and values `v : Fin (n+1) → E`;
+  `SkorokhodSpace.stepPathFamily C Q` is the set of those with `d` in `C` and `v`
+  in `Q`, and `SkorokhodSpace.countable_stepPathFamily` says it is countable.
+  The signature question is settled in favour of a second declaration:
+  `stepIdx t x` is the *index* the retraction reads and `stepRetract t = t ∘
+  stepIdx t` is now its definition, so the five theorems about `stepRetract` and
+  its consumer stay as they are, while the values hang on `stepIdx`. Three of
+  those five got **weaker hypotheses** out of the move —
+  `eventually_stepRetract_eq_nhdsGT`, `exists_eventually_stepRetract_eq_nhdsLT`
+  and `isCadlag_comp_stepRetract` no longer ask `StrictMono t`, since the
+  retraction reads a maximum out of a `Finset` and that is insensitive to the
+  enumeration — and that is what makes `stepPath` a **total** function, which the
+  counting needs: the family is the range of a map out of
+  `Σ n, (Fin (n+1) → C) × (Fin (n+1) → Q)` with no side condition on the data.
+  The two moves are `SkorokhodSpace.distWith_one_stepPath_le` for the values and
+  `SkorokhodSpace.stepPath_apply_orderIso` for the nodes.
+
+  **What is left is the window edge, and it is analysis and not bookkeeping**
+  (finding of 2026-09-09, third run). The two moves control
+  `distWith t₀ u l f g` in the interior of the window at every radius and do not
+  control it at the edge. For `x` beyond `B = exhaustionMax t₀ u` both readings of
+  `distWith` clamp to `B`, so the term is `dist (f B) (g B)` with **no time change
+  interposed** — that is `SkorokhodSpace.dist_exhaustionMax_le_distOn`, the fact
+  that killed the summed metric — while `g B` is the value of the cell of `B`
+  counted with the *moved* nodes, `stepIdx t (l B)` and not `stepIdx t B`. Those
+  differ exactly when a node separates `B` from `l B`, and then the term is the
+  jump of `f` at that node, which no `ε` makes small. There is no way round it by
+  choosing the direction of the displacement: moving the nodes down makes `l B`
+  fall below `B` and the same term reappears on the other side.
+
+  The repair is the displacement clause of `HasCountableCore` together with
+  `volume_radius_exhaustionMax_mem_Ico` (**proved 2026-09-09**), which bounds the
+  measure of the radii whose edge falls in `Set.Ico a b` by `dist a b`; the bad
+  radii for one node are those whose edge falls between `d i` and `t i`, so they
+  have measure at most `∑ᵢ dist (d i) (t i) ≤ (n+1) δ`, and the integrand of
+  `intWith` being bounded by `1` they cost no more than that.
+
+  The integral half of the repair is proved too (2026-09-09):
+  `SkorokhodSpace.intWith_le_of_ae_distWith_le` asks the windowed bound only *off*
+  a measurable set `B` of radii and pays `B`'s measure below `M`, so the estimate
+  reads `ε + β + exp (-M)`; the split of `Set.Ioc 0 M` is `Set.diff_union_inter`
+  and the bad piece is bounded by `1`, the integrand being `exp (-u) * min 1 _`.
+  `radius_exhaustionMax_mem_Ico_subset` is what supplies a *measurable* `B`: the
+  radius set itself is only visibly contained in
+  `Set.Icc (lengthCoord t₀ a) (lengthCoord t₀ b)`, `exhaustionMax` being monotone
+  and nothing more, so `B` is taken to be the finite union of those intervals over
+  the nodes and `δ` is chosen after the length `n` of the subdivision.
+
+  One item remains: the case distinction on the supremum itself, which is
+  `min_max_pair_cases` again, the same combinatorial lemma
+  `SkorokhodSpace.distWith_le_of_oscillation` runs — the two clamps of a point
+  either agree, and then the cell property of the subdivision applies, or they
+  straddle a window end, and then the radius is one of the bad ones.
 * `PolishSpace (D ι E)`, from the two above, and it costs nothing: Mathlib
   builds `PolishSpace` out of `SeparableSpace` and `IsCompletelyMetrizableSpace`
   (`Mathlib/Topology/MetricSpace/Polish.lean:66`), and the latter out of a

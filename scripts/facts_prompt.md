@@ -125,6 +125,55 @@ Entscheide das vor dem ersten Beweis und begründe die Wahl im Bericht. Offen
 bleibt außerdem die dritte Instanz der Klasse (`Set.Icc (0:ℝ) 1`); an ihr hängt
 nichts.
 
+**Zwischenstand Teil A (2026-09-09, dritter Lauf des Tages).** Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-09, dritter Lauf des Tages".
+`SkorokhodSpace/Suggested.lean` steht weiter bei **vier** `sorry`.
+Siebenundzwanzig Deklarationen neu oder umgeschrieben, alle durch `lake env lean`
+gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound`.
+
+*Die Signaturfrage ist entschieden, und zwar für die zweite Deklaration:*
+`stepIdx t x` ist der Index der Zelle, `stepRetract t x = t (stepIdx t x)` ist ab
+jetzt die **Definition**. Grund: `stepRetract` `Fin (n+1)`-wertig zu machen öffnet
+fünf bewiesene Sätze und ihren bewiesenen Abnehmer für nichts, über die *Punkte*
+`t i` zu indizieren ist gerade das, was nicht abzählbar ist, und
+`stepIdx_orderIso` (`stepIdx t (e x) = stepIdx d x`) trägt rechts keinen
+Ordnungsisomorphismus mehr, während `stepRetract_orderIso` einen tragen muß.
+Mitgekommen ist eine Abschwächung: die Lokalität braucht **keine Monotonie**, also
+stehen `eventually_stepRetract_eq_nhdsGT`,
+`exists_eventually_stepRetract_eq_nhdsLT` und `isCadlag_comp_stepRetract` jetzt
+ohne `StrictMono` da, und genau das macht `SkorokhodSpace.stepPath` total.
+
+*Die Abzählbarkeit ist bewiesen:* `SkorokhodSpace.stepPathFamily C Q` und
+`SkorokhodSpace.countable_stepPathFamily`, samt Zugehörigkeit, dem Umzug der
+Werte (`distWith_one_stepPath_le`) und der Identität `stepPath_comp_eq`, die den
+Approximanten der analytischen Hälfte als **denselben Term** ausweist.
+
+*Und ein Befund, der die Ansage des vorigen Laufs berichtigt: nach der Abzählung
+steht die Separabilität nicht da.* Am **Fensterrand** klemmen beide Seiten von
+`distWith` auf `B = exhaustionMax t₀ u`, der Term ist `dist (f B) (g B)` ohne
+dazwischengeschalteten Zeitwechsel (`dist_exhaustionMax_le_distOn`), und `g B`
+zählt die Zelle mit den verschobenen Knoten; trennt ein Knoten `B` von `l B`, so
+ist der Term der Sprung von `f` dort. Die Richtung der Verschiebung hilft nicht.
+*Die Reparatur ist zur Hälfte getan:* `HasCountableCore` hat eine **dritte
+Klausel** `dist (d i) (t i) ≤ δ` (aus der Norm folgt sie nicht — auf einem Index
+mit Lücken trägt ein Zeitwechsel der Norm `0` einen Punkt über eine Lücke), beide
+Instanzen sind nachgezogen, und `volume_radius_exhaustionMax_mem_Ico` schätzt das
+Maß der schlechten Radien durch `dist a b`.
+
+*Die Integralhälfte der Reparatur ist noch mitgekommen:*
+`SkorokhodSpace.intWith_le_of_ae_distWith_le` verlangt die gefensterte Schranke
+nur außerhalb einer meßbaren Radienmenge `B` und zahlt deren Maß, also
+`ε + β + exp (-M)`; `radius_exhaustionMax_mem_Ico_subset` liefert das meßbare `B`
+(die Radienmenge selbst ist nur sichtbar in einem Koordinatenintervall enthalten,
+denn `exhaustionMax` ist bloß monoton).
+
+*Was bleibt, ist ein benanntes Stück:* die Fallunterscheidung am Supremum, die
+`min_max_pair_cases` ist — die beiden Klemmungen eines Punktes stimmen überein,
+und dann greift die Zelleigenschaft, oder sie umgreifen ein Fensterende, und dann
+ist der Radius ein schlechter. Offen bleibt außerdem die dritte Instanz der Klasse
+(`Set.Icc (0:ℝ) 1`); an ihr hängt nichts.
+
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:
 

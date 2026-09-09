@@ -47,9 +47,17 @@ would be statements about a class no index was known to satisfy, which is the
 same trap as a hypothesis that cannot be met.
 `SkorokhodSpace.hasCountableCore_of_countable` is the second instance and costs
 nothing, the identity time change serving a countable index; and
-`stepRetract_orderIso` is the bookkeeping the separability still owes, proved
-ahead of it --- with `l (d i) = t i` the approximant at the subdivision `t`
-becomes, after the time change, the approximant at the subdivision `d`.
+`stepIdx_orderIso` is the bookkeeping the separability still owes, proved ahead
+of it --- with `l (d i) = t i` the approximant at the subdivision `t` becomes,
+after the time change, the approximant at the subdivision `d`.
+
+**The class grew a third clause on 2026-09-09**, `dist (d i) (t i) ≤ δ`, and it
+is not implied by the norm clause: on an index with gaps a time change of norm
+`0` carries a point across a whole gap.  What it is for is the *window edge*,
+where the metric compares two paths with no time change interposed, and
+`volume_radius_exhaustionMax_mem_Ico` is the estimate it feeds --- the radii
+whose edge falls in `Set.Ico a b` occupy at most `dist a b`.  Both instances
+satisfy it.
 
 **The subdivision of a càdlàg path is the rung Milestones 5 and 7 share**, and
 it is proved: `IsCadlag.exists_subdivision` cuts a compact window into finitely
@@ -62,10 +70,16 @@ Milestone 7 reads it as `SkorokhodSpace.tendsto_modulus`, a subdivision being
 `isCadlag_comp_stepRetract` says the step path is càdlàg for **every** path it
 is read off, `finite_range_comp_stepRetract` that it has finitely many values,
 and `SkorokhodSpace.exists_finite_range_distWith_le` that it is within `ε` of
-its path on every window, for the identity time change.  What separability still
-owes is the passage to a *countable* family, and the obstruction to drawing the
-jump times from an arbitrary countable dense subset of `ι` is recorded at
-`SkorokhodSpace.instSeparableSpace`.
+its path on every window, for the identity time change.
+
+**The countable family is a term since the third run of 2026-09-09.**
+`stepRetract t` is now `t ∘ stepIdx t`, where `stepIdx t x` is the *index* of the
+cell that `x` falls into, and `SkorokhodSpace.stepPath d v` hangs a tuple of
+values on it; `SkorokhodSpace.stepPathFamily C Q` is the family and
+`SkorokhodSpace.countable_stepPathFamily` is its countability.  Three theorems
+lost their `StrictMono` hypothesis in the move, `stepPath` is total, and what
+separability still owes is neither the analysis nor the counting but the *window
+edge*, recorded at `SkorokhodSpace.instSeparableSpace`.
 
 **The index is a closed subset of `ℝ`, and now by a named map.**
 `lengthCoord t₀` is the signed distance to the base point; it is a strictly
@@ -1279,15 +1293,158 @@ theorem IsCadlag.of_eventually_const {h : ι → E}
     exact ⟨c, Filter.Tendsto.congr' (by filter_upwards [hc] with y hy using hy.symm)
       tendsto_const_nhds⟩
 
+/-- **The index the step path reads at `x`**: the greatest `i` with `t i ≤ x`,
+and `0` when there is none.  `stepRetract` below is `t` composed with it.
+
+That both exist is the answer to a signature question, and it was settled on
+2026-09-09 in favour of a second declaration rather than of changing the first.
+The countable family of Milestone 5 has to hang a tuple of *values* on the cell
+that `x` falls into, and `stepRetract` returns the *point* `t i` rather than the
+index `i`, so nothing can be hung on it: `SkorokhodSpace.stepPath d v` reads
+`v (stepIdx d x)` for `v : Fin (n + 1) → E`, and there is no way to write that
+with `stepRetract` alone unless `d` is inverted, which needs it injective.  The
+two other options were to make `stepRetract` itself `Fin (n + 1)`-valued, which
+reopens the five proved theorems about it and its proved consumer
+`SkorokhodSpace.exists_finite_range_distWith_le` for no gain, and to index the
+family by the *points* `t i`, which is not countable.
+
+The index is also the form in which the bookkeeping is cleanest.
+`stepIdx_orderIso` carries no order isomorphism on its right-hand side at all,
+while `stepRetract_orderIso` --- now derived from it --- must. -/
+noncomputable def stepIdx {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) : Fin (n + 1) :=
+  if h : (Finset.univ.filter fun i => t i ≤ x).Nonempty then
+    (Finset.univ.filter fun i => t i ≤ x).max' h
+  else 0
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- The defining property of `stepIdx`: it is `i` at every `x` for which `i` is
+the greatest index below `x`. -/
+theorem stepIdx_eq_of_forall_le {n : ℕ} {t : Fin (n + 1) → ι} {x : ι} {i : Fin (n + 1)}
+    (hi : t i ≤ x) (hmax : ∀ j : Fin (n + 1), t j ≤ x → j ≤ i) :
+    stepIdx t x = i := by
+  have hmem : i ∈ Finset.univ.filter fun j => t j ≤ x :=
+    Finset.mem_filter.2 ⟨Finset.mem_univ _, hi⟩
+  rw [stepIdx, dif_pos ⟨i, hmem⟩]
+  exact le_antisymm (hmax _ (Finset.mem_filter.1 (Finset.max'_mem _ ⟨i, hmem⟩)).2)
+    (Finset.le_max' _ _ hmem)
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- Below the tuple the index is `0`. -/
+theorem stepIdx_eq_zero_of_lt {n : ℕ} {t : Fin (n + 1) → ι} (ht : StrictMono t) {x : ι}
+    (hx : x < t 0) : stepIdx t x = 0 := by
+  have hne : ¬ (Finset.univ.filter fun j => t j ≤ x).Nonempty := by
+    rintro ⟨j, hj⟩
+    exact absurd (le_trans (ht.monotone (Fin.zero_le j)) (Finset.mem_filter.1 hj).2)
+      (not_le.2 hx)
+  rw [stepIdx, dif_neg hne]
+
+omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
+/-- **The index is invariant under an order isomorphism carrying one tuple onto
+the other**, and this is the bookkeeping step of separability: with
+`l (d i) = t i` the step path with nodes `t` read after the time change is the
+step path with nodes `d`, *with the same values*, whose nodes lie in the
+countable set.  It is an equality and not an estimate, so it costs the metric
+nothing beyond `‖l‖`.
+
+The proof is one line of content: `e` being an order isomorphism, `t i ≤ e x`
+and `d i ≤ x` are the same condition, so the two `Finset.filter`s whose maximum
+is taken are the same finite set. -/
+theorem stepIdx_orderIso {n : ℕ} {d t : Fin (n + 1) → ι} (e : ι ≃o ι)
+    (he : ∀ i, e (d i) = t i) (x : ι) :
+    stepIdx t (e x) = stepIdx d x := by
+  classical
+  have hset : (Finset.univ.filter fun i : Fin (n + 1) => t i ≤ e x)
+      = (Finset.univ.filter fun i : Fin (n + 1) => d i ≤ x) := by
+    refine Finset.filter_congr fun i _ => ?_
+    rw [← he i, e.le_iff_le]
+  rw [stepIdx, stepIdx, hset]
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- **The index is constant on a right neighbourhood of every point, and the
+tuple need not be monotone.**  The hypothesis is absent because it is not used:
+the index is the greatest entry of a `Finset` below `x`, and moving `x` up by
+less than the distance to the next *value* of the tuple above it changes that
+`Finset` not at all.  Monotonicity is a statement about the enumeration, and
+this is a statement about the range. -/
+theorem eventually_stepIdx_eq_nhdsGT {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) :
+    ∀ᶠ y in 𝓝[>] x, stepIdx t y = stepIdx t x := by
+  classical
+  have key : ∀ y : ι, x < y → (∀ i : Fin (n + 1), x < t i → y < t i) →
+      stepIdx t y = stepIdx t x := by
+    intro y hxy hlt
+    have hset : (Finset.univ.filter fun i : Fin (n + 1) => t i ≤ y)
+        = (Finset.univ.filter fun i : Fin (n + 1) => t i ≤ x) := by
+      refine Finset.filter_congr fun i _ => ⟨fun hi => ?_, fun hi => hi.trans hxy.le⟩
+      by_contra hcon
+      exact absurd (hlt i (not_le.1 hcon)) (not_lt.2 hi)
+    rw [stepIdx, stepIdx, hset]
+  by_cases hT : (Finset.univ.filter fun i : Fin (n + 1) => x < t i).Nonempty
+  · obtain ⟨m, hxm, hmle⟩ : ∃ m : ι, x < m ∧ ∀ i : Fin (n + 1), x < t i → m ≤ t i := by
+      refine ⟨((Finset.univ.filter fun i : Fin (n + 1) => x < t i).image t).min'
+        (hT.image t), ?_, fun i hi => ?_⟩
+      · obtain ⟨i, hi, hie⟩ := Finset.mem_image.1 (Finset.min'_mem _ (hT.image t))
+        rw [← hie]
+        exact (Finset.mem_filter.1 hi).2
+      · exact Finset.min'_le _ _
+          (Finset.mem_image_of_mem t (Finset.mem_filter.2 ⟨Finset.mem_univ _, hi⟩))
+    filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds hxm), eventually_mem_nhdsWithin]
+      with y hy hy'
+    exact key y hy' fun i hi => lt_of_lt_of_le hy (hmle i hi)
+  · filter_upwards [eventually_mem_nhdsWithin] with y hy
+    refine key y hy fun i hi => absurd ?_ hT
+    exact ⟨i, Finset.mem_filter.2 ⟨Finset.mem_univ _, hi⟩⟩
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- And constant on a left neighbourhood of every point, by the same reading of
+the greatest index *strictly* below `x`, and again with no monotonicity. -/
+theorem exists_eventually_stepIdx_eq_nhdsLT {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) :
+    ∃ i : Fin (n + 1), ∀ᶠ y in 𝓝[<] x, stepIdx t y = i := by
+  classical
+  by_cases hS : (Finset.univ.filter fun i : Fin (n + 1) => t i < x).Nonempty
+  · refine ⟨(Finset.univ.filter fun i : Fin (n + 1) => t i < x).max' hS, ?_⟩
+    obtain ⟨M, hMx, hMge⟩ : ∃ M : ι, M < x ∧ ∀ i : Fin (n + 1), t i < x → t i ≤ M := by
+      refine ⟨((Finset.univ.filter fun i : Fin (n + 1) => t i < x).image t).max'
+        (hS.image t), ?_, fun i hi => ?_⟩
+      · obtain ⟨i, hi, hie⟩ := Finset.mem_image.1 (Finset.max'_mem _ (hS.image t))
+        rw [← hie]
+        exact (Finset.mem_filter.1 hi).2
+      · exact Finset.le_max' _ _
+          (Finset.mem_image_of_mem t (Finset.mem_filter.2 ⟨Finset.mem_univ _, hi⟩))
+    filter_upwards [nhdsWithin_le_nhds (Ioi_mem_nhds hMx), eventually_mem_nhdsWithin]
+      with y hy hy'
+    refine stepIdx_eq_of_forall_le ?_ fun j hj => ?_
+    · exact le_trans (hMge _ (Finset.mem_filter.1 (Finset.max'_mem _ hS)).2) hy.le
+    · exact Finset.le_max' (Finset.univ.filter fun i : Fin (n + 1) => t i < x) j
+        (Finset.mem_filter.2 ⟨Finset.mem_univ _, lt_of_le_of_lt hj hy'⟩)
+  · refine ⟨0, ?_⟩
+    filter_upwards [eventually_mem_nhdsWithin] with y hy
+    have hne : ¬ (Finset.univ.filter fun j : Fin (n + 1) => t j ≤ y).Nonempty := by
+      rintro ⟨j, hj⟩
+      exact hS ⟨j, Finset.mem_filter.2 ⟨Finset.mem_univ _,
+        lt_of_le_of_lt (Finset.mem_filter.1 hj).2 hy⟩⟩
+    rw [stepIdx, dif_neg hne]
+
+omit [AdditiveDist ι] [ProperSpace ι] in
+/-- **A tuple of values read through the index is a càdlàg path**, for any tuple
+of nodes whatever.  This is what makes `SkorokhodSpace.stepPath` a total
+function, and a total function is what the countable family of Milestone 5 needs:
+its index type must be `(Fin (n + 1) → C) × (Fin (n + 1) → Q)` with no side
+condition, or the family is not visibly the range of a map from a countable
+type. -/
+theorem isCadlag_comp_stepIdx {n : ℕ} (t : Fin (n + 1) → ι) (v : Fin (n + 1) → E) :
+    IsCadlag fun x => v (stepIdx t x) := by
+  refine IsCadlag.of_eventually_const (fun x => ?_) (fun x => ?_)
+  · filter_upwards [eventually_stepIdx_eq_nhdsGT t x] with y hy using by rw [hy]
+  · obtain ⟨i, hi⟩ := exists_eventually_stepIdx_eq_nhdsLT t x
+    exact ⟨v i, by filter_upwards [hi] with y hy using by rw [hy]⟩
+
 /-- The retraction of the index onto the range of a strictly monotone tuple:
 `x` goes to the greatest entry `t i` with `t i ≤ x`, and to `t 0` when there is
 none.  The junk branch is not junk: it is what makes the step path constant
 below the window instead of undefined there, exactly as `clamp` does for the
 window. -/
 noncomputable def stepRetract {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) : ι :=
-  if h : (Finset.univ.filter fun i => t i ≤ x).Nonempty then
-    t ((Finset.univ.filter fun i => t i ≤ x).max' h)
-  else t 0
+  t (stepIdx t x)
 
 omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The defining property of `stepRetract`: it is `t i` at every `x` for which
@@ -1295,128 +1452,61 @@ omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 theorem stepRetract_eq_of_forall_le {n : ℕ} {t : Fin (n + 1) → ι} {x : ι} {i : Fin (n + 1)}
     (hi : t i ≤ x) (hmax : ∀ j : Fin (n + 1), t j ≤ x → j ≤ i) :
     stepRetract t x = t i := by
-  have hmem : i ∈ Finset.univ.filter fun j => t j ≤ x :=
-    Finset.mem_filter.2 ⟨Finset.mem_univ _, hi⟩
-  rw [stepRetract, dif_pos ⟨i, hmem⟩]
-  congr 1
-  exact le_antisymm (hmax _ (Finset.mem_filter.1 (Finset.max'_mem _ ⟨i, hmem⟩)).2)
-    (Finset.le_max' _ _ hmem)
+  rw [stepRetract, stepIdx_eq_of_forall_le hi hmax]
 
 omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- Below the tuple the retraction is its first entry. -/
 theorem stepRetract_eq_first {n : ℕ} {t : Fin (n + 1) → ι} (ht : StrictMono t) {x : ι}
     (hx : x < t 0) : stepRetract t x = t 0 := by
-  have hne : ¬ (Finset.univ.filter fun j => t j ≤ x).Nonempty := by
-    rintro ⟨j, hj⟩
-    exact absurd (le_trans (ht.monotone (Fin.zero_le j)) (Finset.mem_filter.1 hj).2)
-      (not_le.2 hx)
-  rw [stepRetract, dif_neg hne]
+  rw [stepRetract, stepIdx_eq_zero_of_lt ht hx]
 
 omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- The retraction lands in the tuple, which is what makes the step path take
 finitely many values. -/
 theorem stepRetract_mem_range {n : ℕ} (t : Fin (n + 1) → ι) (x : ι) :
-    stepRetract t x ∈ Set.range t := by
-  rw [stepRetract]
-  split
-  · exact ⟨_, rfl⟩
-  · exact ⟨0, rfl⟩
+    stepRetract t x ∈ Set.range t :=
+  ⟨stepIdx t x, rfl⟩
 
 omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] in
 /-- **The retraction commutes with an order isomorphism that carries one tuple
-onto the other.**  This is the bookkeeping step of separability, and it is where
-the countable core is spent: with `l (d i) = t i` the approximant read at the
-subdivision `t` becomes, after the time change, the approximant read at the
-subdivision `d`, whose points lie in the countable set.  It is an *equality* of
-paths and not an estimate, so it costs the metric nothing beyond `‖l‖`.
-
-The proof is one line of content: `e` being an order isomorphism,
-`t i ≤ e x` and `d i ≤ x` are the same condition, so the two `Finset.filter`s
-whose maximum `stepRetract` takes are the same finite set, and both branches of
-the `dif` then agree entry by entry. -/
+onto the other.**  It is `stepIdx_orderIso` read through `stepRetract = t ∘
+stepIdx t`, and it is the form the *analytic* half of separability uses, where
+the values are those of a path and not a tuple. -/
 theorem stepRetract_orderIso {n : ℕ} {d t : Fin (n + 1) → ι} (e : ι ≃o ι)
     (he : ∀ i, e (d i) = t i) (x : ι) :
     stepRetract t (e x) = e (stepRetract d x) := by
-  classical
-  have hset : (Finset.univ.filter fun i : Fin (n + 1) => t i ≤ e x)
-      = (Finset.univ.filter fun i : Fin (n + 1) => d i ≤ x) := by
-    refine Finset.filter_congr fun i _ => ?_
-    rw [← he i, e.le_iff_le]
-  rw [stepRetract, stepRetract, hset]
-  split
-  · exact (he _).symm
-  · exact (he 0).symm
+  rw [stepRetract, stepRetract, stepIdx_orderIso e he]
+  exact (he _).symm
 
 omit [AdditiveDist ι] [ProperSpace ι] in
-/-- The retraction is constant on a right neighbourhood of every point: either
-`x` lies below the tuple, and the retraction is `t 0` up to `t 0`; or the
-greatest index below `x` is the last one, and the retraction is constant from
-`x` on; or it is `t i` up to the next entry. -/
-theorem eventually_stepRetract_eq_nhdsGT {n : ℕ} {t : Fin (n + 1) → ι} (ht : StrictMono t)
+/-- The retraction is constant on a right neighbourhood of every point.  It is
+`eventually_stepIdx_eq_nhdsGT` composed with `t`, and the `StrictMono t` that
+stood here until 2026-09-09 is gone with the duplicated proof: the retraction
+reads a maximum out of a `Finset`, and that `Finset` is insensitive to the
+enumeration. -/
+theorem eventually_stepRetract_eq_nhdsGT {n : ℕ} (t : Fin (n + 1) → ι)
     (x : ι) : ∀ᶠ y in 𝓝[>] x, stepRetract t y = stepRetract t x := by
-  by_cases hx : x < t 0
-  · filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds hx)] with y hy
-    rw [stepRetract_eq_first ht hy, stepRetract_eq_first ht hx]
-  · have hx' : t 0 ≤ x := not_lt.1 hx
-    have hne : (Finset.univ.filter fun j : Fin (n + 1) => t j ≤ x).Nonempty :=
-      ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ _, hx'⟩⟩
-    set i := (Finset.univ.filter fun j : Fin (n + 1) => t j ≤ x).max' hne with hidef
-    have hix : t i ≤ x := (Finset.mem_filter.1 (Finset.max'_mem _ hne)).2
-    have hmax : ∀ j : Fin (n + 1), t j ≤ x → j ≤ i := fun j hj =>
-      Finset.le_max' _ j (Finset.mem_filter.2 ⟨Finset.mem_univ _, hj⟩)
-    have hxeq : stepRetract t x = t i := stepRetract_eq_of_forall_le hix hmax
-    by_cases hlast : i = Fin.last n
-    · filter_upwards [eventually_mem_nhdsWithin] with y hy
-      rw [hxeq]
-      exact stepRetract_eq_of_forall_le (hix.trans (le_of_lt hy))
-        fun j _ => hlast ▸ Fin.le_last j
-    · obtain ⟨j, hj⟩ := Fin.eq_castSucc_of_ne_last hlast
-      have hxj : x < t j.succ := by
-        by_contra hcon
-        have hle := hmax _ (not_lt.1 hcon)
-        rw [← hj] at hle
-        exact absurd hle (not_le.2 (Fin.castSucc_lt_succ (i := j)))
-      filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds hxj), eventually_mem_nhdsWithin]
-        with y hy hy'
-      rw [hxeq]
-      refine stepRetract_eq_of_forall_le (hix.trans (le_of_lt hy')) fun k hk => ?_
-      by_contra hcon
-      have hjk : j.succ ≤ k := by
-        rw [← hj] at hcon
-        simp only [not_le, Fin.lt_def, Fin.le_def, Fin.coe_castSucc, Fin.val_succ] at hcon ⊢
-        omega
-      exact absurd (le_trans (ht.monotone hjk) hk) (not_le.2 hy)
+  filter_upwards [eventually_stepIdx_eq_nhdsGT t x] with y hy
+  rw [stepRetract, stepRetract, hy]
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- And constant on a left neighbourhood of every point, by the same reading of
 the greatest index *strictly* below `x`. -/
-theorem exists_eventually_stepRetract_eq_nhdsLT {n : ℕ} {t : Fin (n + 1) → ι}
-    (ht : StrictMono t) (x : ι) : ∃ c : ι, ∀ᶠ y in 𝓝[<] x, stepRetract t y = c := by
-  by_cases hx : t 0 < x
-  · have hne : (Finset.univ.filter fun j : Fin (n + 1) => t j < x).Nonempty :=
-      ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ _, hx⟩⟩
-    set i := (Finset.univ.filter fun j : Fin (n + 1) => t j < x).max' hne with hidef
-    have hix : t i < x := (Finset.mem_filter.1 (Finset.max'_mem _ hne)).2
-    have hmax : ∀ j : Fin (n + 1), t j < x → j ≤ i := fun j hj =>
-      Finset.le_max' _ j (Finset.mem_filter.2 ⟨Finset.mem_univ _, hj⟩)
-    refine ⟨t i, ?_⟩
-    filter_upwards [nhdsWithin_le_nhds (Ioi_mem_nhds hix), eventually_mem_nhdsWithin]
-      with y hy hy'
-    exact stepRetract_eq_of_forall_le (le_of_lt hy) fun k hk => hmax k (lt_of_le_of_lt hk hy')
-  · refine ⟨t 0, ?_⟩
-    filter_upwards [eventually_mem_nhdsWithin] with y hy
-    exact stepRetract_eq_first ht (lt_of_lt_of_le hy (not_lt.1 hx))
+theorem exists_eventually_stepRetract_eq_nhdsLT {n : ℕ} (t : Fin (n + 1) → ι)
+    (x : ι) : ∃ c : ι, ∀ᶠ y in 𝓝[<] x, stepRetract t y = c := by
+  obtain ⟨i, hi⟩ := exists_eventually_stepIdx_eq_nhdsLT t x
+  refine ⟨t i, ?_⟩
+  filter_upwards [hi] with y hy
+  rw [stepRetract, hy]
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- **The step path is càdlàg**, and `f` need not be: the retraction is locally
 constant, so the composite is locally constant, and a locally constant map is
-càdlàg by `IsCadlag.of_eventually_const`. -/
-theorem isCadlag_comp_stepRetract (f : ι → E) {n : ℕ} {t : Fin (n + 1) → ι}
-    (ht : StrictMono t) : IsCadlag fun x => f (stepRetract t x) := by
-  refine IsCadlag.of_eventually_const (fun x => ?_) (fun x => ?_)
-  · filter_upwards [eventually_stepRetract_eq_nhdsGT ht x] with y hy using by rw [hy]
-  · obtain ⟨c, hc⟩ := exists_eventually_stepRetract_eq_nhdsLT ht x
-    exact ⟨f c, by filter_upwards [hc] with y hy using by rw [hy]⟩
+càdlàg by `IsCadlag.of_eventually_const`.  It is `isCadlag_comp_stepIdx` for the
+values `f ∘ t`. -/
+theorem isCadlag_comp_stepRetract (f : ι → E) {n : ℕ} (t : Fin (n + 1) → ι) :
+    IsCadlag fun x => f (stepRetract t x) :=
+  isCadlag_comp_stepIdx t (fun i => f (t i))
 
 omit [MetricSpace ι] [OrderTopology ι] [AdditiveDist ι] [ProperSpace ι] [MetricSpace E] in
 /-- The step path takes finitely many values.  This is what makes the family of
@@ -4845,7 +4935,7 @@ theorem SkorokhodSpace.exists_finite_range_distWith_le (t₀ : ι) (f : D(ι, E)
       ((ordConnected_exhaustion t₀ M).out hmin.1 hmax.1)
   obtain ⟨n, t, ht, h0, hlast, hcell⟩ :=
     f.isCadlag.exists_subdivision (hmin.2 hmax.1) hK hε
-  refine ⟨⟨fun x => f.toFun (stepRetract t x), isCadlag_comp_stepRetract f.toFun ht⟩,
+  refine ⟨⟨fun x => f.toFun (stepRetract t x), isCadlag_comp_stepRetract f.toFun t⟩,
     finite_range_comp_stepRetract f.toFun t, fun u hu => ?_⟩
   rw [SkorokhodSpace.distWith]
   refine ciSup_le fun x => ?_
@@ -4898,6 +4988,95 @@ theorem SkorokhodSpace.intWith_le_of_forall_distWith_le [SecondCountableTopology
     calc ∫ u in Set.Ioi M, Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
         ≤ ∫ u in Set.Ioi M, Real.exp (-u) := by
           refine MeasureTheory.setIntegral_mono_on (hint.mono_set hsub2)
+            (integrableOn_exp_neg_Ioi M) measurableSet_Ioi fun u _ => ?_
+          calc Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+              ≤ Real.exp (-u) * 1 :=
+                mul_le_mul_of_nonneg_left (min_le_left _ _) (Real.exp_pos _).le
+            _ = Real.exp (-u) := mul_one _
+      _ = Real.exp (-M) := integral_exp_neg_Ioi M
+  linarith
+
+omit [BasePoint ι] in
+/-- **From the window to the metric, with a set of bad radii.**  This is
+`SkorokhodSpace.intWith_le_of_forall_distWith_le` with the windowed bound
+required only *off* a set `B` of radii, at the price of `B`'s measure below `M`.
+The separability needs exactly this: the two moves of the approximant control the
+windowed supremum at every radius whose window edge does not separate a moved
+node from its image, and `volume_radius_exhaustionMax_mem_Ico` says the radii
+that do are few.  `B` is a hypothesis and not a construction, and it is asked to
+be measurable, because the radius set of the application is only visibly
+contained in a measurable set of the same measure and not visibly measurable
+itself --- `exhaustionMax` is monotone and nothing more. -/
+theorem SkorokhodSpace.intWith_le_of_ae_distWith_le [SecondCountableTopology E]
+    (t₀ : ι) (l : TimeChange ι) (f g : D(ι, E)) {ε M β : ℝ} (hε : 0 ≤ ε) (hM : 0 ≤ M)
+    (hβ : 0 ≤ β) {B : Set ℝ} (hBmeas : MeasurableSet B)
+    (hBvol : MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B) ≤ ENNReal.ofReal β)
+    (h : ∀ u : ℝ, 0 < u → u ≤ M → u ∉ B → SkorokhodSpace.distWith t₀ u l f g ≤ ε) :
+    SkorokhodSpace.intWith t₀ l f g ≤ ε + β + Real.exp (-M) := by
+  have hint := SkorokhodSpace.integrableOn_intDist t₀ l f g
+  have hsubg : Set.Ioc (0 : ℝ) M \ B ⊆ Set.Ioi (0 : ℝ) := fun u hu => hu.1.1
+  have hsubb : Set.Ioc (0 : ℝ) M ∩ B ⊆ Set.Ioi (0 : ℝ) := fun u hu => hu.1.1
+  have hsubM : Set.Ioi M ⊆ Set.Ioi (0 : ℝ) := Set.Ioi_subset_Ioi hM
+  have hdecomp : (Set.Ioc (0 : ℝ) M \ B) ∪ (Set.Ioc (0 : ℝ) M ∩ B) = Set.Ioc (0 : ℝ) M :=
+    Set.diff_union_inter _ _
+  have hdisj1 : Disjoint (Set.Ioc (0 : ℝ) M \ B) (Set.Ioc (0 : ℝ) M ∩ B) :=
+    Set.disjoint_left.2 fun _ hx hx' => hx.2 hx'.2
+  have hdisj2 : Disjoint ((Set.Ioc (0 : ℝ) M \ B) ∪ (Set.Ioc (0 : ℝ) M ∩ B)) (Set.Ioi M) := by
+    rw [hdecomp]
+    exact Set.disjoint_left.2 fun _ hx hx' => absurd hx.2 (not_le.2 hx')
+  rw [SkorokhodSpace.intWith, ← Set.Ioc_union_Ioi_eq_Ioi hM, ← hdecomp,
+    MeasureTheory.setIntegral_union hdisj2 measurableSet_Ioi
+      (hint.mono_set (by rw [hdecomp]; exact Set.Ioc_subset_Ioi_self)) (hint.mono_set hsubM),
+    MeasureTheory.setIntegral_union hdisj1 (measurableSet_Ioc.inter hBmeas)
+      (hint.mono_set hsubg) (hint.mono_set hsubb)]
+  have hA : ∫ u in Set.Ioc (0 : ℝ) M \ B,
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g) ≤ ε := by
+    calc ∫ u in Set.Ioc (0 : ℝ) M \ B,
+          Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+        ≤ ∫ u in Set.Ioc (0 : ℝ) M \ B, Real.exp (-u) * ε := by
+          refine MeasureTheory.setIntegral_mono_on (hint.mono_set hsubg)
+            (((integrableOn_exp_neg_Ioi 0).mono_set hsubg).mul_const ε)
+            (measurableSet_Ioc.diff hBmeas) ?_
+          intro u hu
+          exact mul_le_mul_of_nonneg_left ((min_le_right _ _).trans
+            (h u hu.1.1 hu.1.2 hu.2)) (Real.exp_pos _).le
+      _ ≤ ∫ u in Set.Ioi (0 : ℝ), Real.exp (-u) * ε :=
+          MeasureTheory.setIntegral_mono_set ((integrableOn_exp_neg_Ioi 0).mul_const ε)
+            (Filter.Eventually.of_forall fun _ => mul_nonneg (Real.exp_pos _).le hε)
+            (Filter.Eventually.of_forall hsubg)
+      _ = ε := by
+          rw [MeasureTheory.integral_mul_const, integral_exp_neg_Ioi]
+          simp
+  have hvolfin : MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B) < ⊤ :=
+    lt_of_le_of_lt hBvol ENNReal.ofReal_lt_top
+  have hBd : ∫ u in Set.Ioc (0 : ℝ) M ∩ B,
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g) ≤ β := by
+    calc ∫ u in Set.Ioc (0 : ℝ) M ∩ B,
+          Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+        ≤ ∫ _u in Set.Ioc (0 : ℝ) M ∩ B, (1 : ℝ) := by
+          refine MeasureTheory.setIntegral_mono_on (hint.mono_set hsubb)
+            (MeasureTheory.integrableOn_const hvolfin.ne)
+            (measurableSet_Ioc.inter hBmeas) fun u hu => ?_
+          have h1 : Real.exp (-u) ≤ 1 := by
+            rw [Real.exp_le_one_iff]
+            simpa using hu.1.1.le
+          have h2 : min 1 (SkorokhodSpace.distWith t₀ u l f g) ≤ 1 := min_le_left _ _
+          have h3 : (0 : ℝ) ≤ min 1 (SkorokhodSpace.distWith t₀ u l f g) :=
+            le_min zero_le_one (SkorokhodSpace.distWith_nonneg t₀ u l f g)
+          calc Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+              ≤ 1 * 1 := mul_le_mul h1 h2 h3 zero_le_one
+            _ = 1 := one_mul 1
+      _ = (MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B)).toReal := by
+          rw [MeasureTheory.setIntegral_const, smul_eq_mul, mul_one]
+          first
+          | rfl
+          | simp [MeasureTheory.Measure.real]
+      _ ≤ β := ENNReal.toReal_le_of_le_ofReal hβ hBvol
+  have hC : ∫ u in Set.Ioi M,
+      Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g) ≤ Real.exp (-M) := by
+    calc ∫ u in Set.Ioi M, Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
+        ≤ ∫ u in Set.Ioi M, Real.exp (-u) := by
+          refine MeasureTheory.setIntegral_mono_on (hint.mono_set hsubM)
             (integrableOn_exp_neg_Ioi M) measurableSet_Ioi fun u _ => ?_
           calc Real.exp (-u) * min 1 (SkorokhodSpace.distWith t₀ u l f g)
               ≤ Real.exp (-u) * 1 :=
@@ -5143,11 +5322,19 @@ because the tuple `t` may be the one point `1` and only the identity carries
 anything onto it. -/
 class SkorokhodSpace.HasCountableCore : Prop where
   /-- A countable set of admissible jump times which every finite tuple can be
-  moved onto by a time change of arbitrarily small norm. -/
+  moved onto by a time change of arbitrarily small norm, **and moved only a
+  short way**.  The displacement clause `dist (d i) (t i) ≤ δ` is not implied by
+  the norm clause and is not decoration: on an index with gaps a time change of
+  norm zero can carry a point across a whole gap, and it is the displacement, not
+  the norm, that bounds the measure of the radii whose window edge separates a
+  node from its image (`volume_radius_exhaustionMax_mem_Ico`).  Those radii are
+  where the metric compares the two paths with no time change interposed, so they
+  have to be few. -/
   exists_core : ∃ C : Set ι, C.Countable ∧
     ∀ (n : ℕ) (t : Fin (n + 1) → ι), StrictMono t → ∀ δ : ℝ, 0 < δ →
       ∃ (d : Fin (n + 1) → ι) (l : TimeChange ι), (∀ i, d i ∈ C) ∧
         l.toOrderIso (basePoint : ι) = basePoint ∧ l.norm ≤ δ ∧
+        (∀ i, dist (d i) (t i) ≤ δ) ∧
         ∀ i, l.toOrderIso (d i) = t i
 
 /-! ### `HasCountableCore ℝ`
@@ -5243,12 +5430,15 @@ and vanishes at `0`.
 
 `K` is prescribed and not produced, which is what makes the statement usable:
 the norm of the resulting time change is bounded through `K`, so the caller
-fixes `K` from `δ` and reads the nodes off afterwards. -/
+fixes `K` from `δ` and reads the nodes off afterwards.  So is the **displacement**
+`ζ`, added on 2026-09-09: the third clause of `SkorokhodSpace.HasCountableCore`
+asks for `dist (d i) (t i) ≤ δ` and the construction gives it for nothing, the
+height of the tents being at the caller's disposal in the first place. -/
 theorem SkorokhodSpace.exists_rat_nodes_perturbation {n : ℕ} (t : Fin (n + 1) → ℝ)
-    (ht : StrictMono t) {K : ℝ} (hK : 0 < K) :
+    (ht : StrictMono t) {K : ℝ} (hK : 0 < K) {ζ : ℝ} (hζ : 0 < ζ) :
     ∃ (d : Fin (n + 1) → ℚ) (ψ : ℝ → ℝ), ψ 0 = 0 ∧
       (∀ x y : ℝ, |ψ x - ψ y| ≤ K * |x - y|) ∧
-      ∀ i, ((d i : ℝ) + ψ (d i)) = t i := by
+      (∀ i, ((d i : ℝ) + ψ (d i)) = t i) ∧ ∀ i, |(d i : ℝ) - t i| ≤ ζ := by
   classical
   obtain ⟨ε, hε, hsep⟩ :=
     exists_pos_forall_le_abs_sub (fun a : Option (Fin (n + 1)) => a.elim 0 t)
@@ -5262,13 +5452,16 @@ theorem SkorokhodSpace.exists_rat_nodes_perturbation {n : ℕ} (t : Fin (n + 1) 
     simpa using this
   set ρ : ℝ := ε / 4 with hρdef
   have hρ : 0 < ρ := by rw [hρdef]; linarith
-  set η : ℝ := min (ε / 8) (K * ε / (8 * ((n : ℝ) + 1))) with hηdef
+  set η : ℝ := min (min (ε / 8) (K * ε / (8 * ((n : ℝ) + 1)))) ζ with hηdef
   have hn : (0 : ℝ) < (n : ℝ) + 1 := by positivity
   have hηpos : 0 < η := by
     rw [hηdef]
-    exact lt_min (by linarith) (by positivity)
-  have hηε : η ≤ ε / 8 := by rw [hηdef]; exact min_le_left _ _
-  have hηK : η ≤ K * ε / (8 * ((n : ℝ) + 1)) := by rw [hηdef]; exact min_le_right _ _
+    exact lt_min (lt_min (by linarith) (by positivity)) hζ
+  have hηε : η ≤ ε / 8 := by
+    rw [hηdef]; exact (min_le_left _ _).trans (min_le_left _ _)
+  have hηK : η ≤ K * ε / (8 * ((n : ℝ) + 1)) := by
+    rw [hηdef]; exact (min_le_left _ _).trans (min_le_right _ _)
+  have hηζ : η ≤ ζ := by rw [hηdef]; exact min_le_right _ _
   have hd : ∀ i, ∃ q : ℚ, (t i = 0 → (q : ℝ) = 0) ∧ |(q : ℝ) - t i| ≤ η := by
     intro i
     by_cases h : t i = 0
@@ -5300,7 +5493,7 @@ theorem SkorokhodSpace.exists_rat_nodes_perturbation {n : ℕ} (t : Fin (n + 1) 
     rw [hρdef]
     linarith
   refine ⟨d, fun x => ∑ i : Fin (n + 1), (t i - (d i : ℝ)) * SkorokhodSpace.tent ρ (d i) x,
-    ?_, ?_, ?_⟩
+    ?_, ?_, ?_, fun i => (hdc i).trans hηζ⟩
   · refine Finset.sum_eq_zero fun i _ => ?_
     by_cases h : t i = 0
     · rw [hdz i h, h]; ring
@@ -5494,11 +5687,12 @@ instance Real.instHasCountableCore : SkorokhodSpace.HasCountableCore ℝ where
       have hinv : (Real.exp δ)⁻¹ * Real.exp δ = 1 := inv_mul_cancel₀ (ne_of_gt hexppos)
       rw [hKdef, hexp]
       nlinarith [sq_nonneg (Real.exp δ - 1), hinv, hexppos]
-    obtain ⟨d, ψ, hψ0, hψlip, hval⟩ :=
-      SkorokhodSpace.exists_rat_nodes_perturbation t ht hK0
+    obtain ⟨d, ψ, hψ0, hψlip, hval, hdisp⟩ :=
+      SkorokhodSpace.exists_rat_nodes_perturbation t ht hK0 hδ
     obtain ⟨l, hl0, hlnorm, hlapp⟩ :=
       TimeChange.exists_real_of_perturbation hK0.le hK1 hδ.le hψ0 hψlip h1 h2
     exact ⟨fun i => (d i : ℝ), l, fun i => ⟨d i, rfl⟩, hl0, hlnorm,
+      fun i => by rw [Real.dist_eq]; exact hdisp i,
       fun i => by rw [hlapp]; exact hval i⟩
 
 /-- **A countable index has a countable core**, and for nothing: take `C = ι`
@@ -5511,21 +5705,185 @@ instance SkorokhodSpace.hasCountableCore_of_countable [Countable ι] :
   exists_core :=
     ⟨Set.univ, Set.countable_univ, fun _ t _ δ hδ =>
       ⟨t, 1, fun _ => Set.mem_univ _, rfl,
-        by rw [TimeChange.norm_one]; exact hδ.le, fun _ => rfl⟩⟩
+        by rw [TimeChange.norm_one]; exact hδ.le,
+        fun i => by rw [dist_self]; exact hδ.le, fun _ => rfl⟩⟩
 
-/-- **Separability**: the step paths with finitely many jumps, the jump times in
-the countable set `C` of `SkorokhodSpace.HasCountableCore` and the values in a
-countable dense subset of `E`, are dense in `D(ι, E)`.  They are countable
-because `C` is and the values are drawn from a countable set.
+/-! ### The countable family, as a term
 
-The proof is `exists_finite_range_distWith_le` followed by two moves.  The values
-move first, and that is free: replacing each of the finitely many values of the
-approximant by a point of a countable dense subset of `E` costs `ε` in the
-windowed supremum and needs no time change.  The jump times move second, and that
-is what `HasCountableCore` buys: with `l (d i) = t i` the step path
-`f ∘ stepRetract t ∘ l` is `f ∘ l ∘ stepRetract d`, since `l` is an order
-isomorphism and so `t i ≤ l s` exactly when `d i ≤ s`; its jump times are the
-`d i ∈ C` and its values are the old ones.
+The analysis is paid for and so is the bookkeeping; what the separability still
+needs is the family itself, as a set of paths that is *visibly* countable.  This
+is that set.  It is the range of a map out of
+`Σ n, (Fin (n + 1) → C) × (Fin (n + 1) → Q)`, and the map is **total**: no
+monotonicity of the nodes and no distinctness is asked for, because a side
+condition would turn the domain into a subtype whose countability is one more
+thing to prove, and `isCadlag_comp_stepIdx` shows the condition buys nothing. -/
+
+/-- **A step path from its data**: nodes `d` and values `v`, the value `v i`
+being held from `d i` until the next node, and `v 0` below all of them. -/
+noncomputable def SkorokhodSpace.stepPath {n : ℕ} (d : Fin (n + 1) → ι)
+    (v : Fin (n + 1) → E) : D(ι, E) :=
+  ⟨fun x => v (stepIdx d x), isCadlag_comp_stepIdx d v⟩
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+@[simp]
+theorem SkorokhodSpace.stepPath_apply {n : ℕ} (d : Fin (n + 1) → ι) (v : Fin (n + 1) → E)
+    (x : ι) : (SkorokhodSpace.stepPath d v).toFun x = v (stepIdx d x) := rfl
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- The approximant of `SkorokhodSpace.exists_finite_range_distWith_le` **is** a
+step path in this sense, with the values `f (t i)`: the two constructions are the
+same term, not merely equal paths.  This is what makes the analytic half and the
+counting half speak of one object. -/
+theorem SkorokhodSpace.stepPath_comp_eq {n : ℕ} (t : Fin (n + 1) → ι) (f : ι → E) :
+    (SkorokhodSpace.stepPath t fun i => f (t i)).toFun = fun x => f (stepRetract t x) := rfl
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- **The time change moves the nodes and leaves the values alone.**  This is
+`stepIdx_orderIso` for a step path, and it is the identity the countable core is
+spent on: the step path with nodes `t`, read after `e`, is the step path with
+nodes `d`. -/
+theorem SkorokhodSpace.stepPath_apply_orderIso {n : ℕ} {d t : Fin (n + 1) → ι} (e : ι ≃o ι)
+    (he : ∀ i, e (d i) = t i) (v : Fin (n + 1) → E) (x : ι) :
+    (SkorokhodSpace.stepPath t v).toFun (e x) = (SkorokhodSpace.stepPath d v).toFun x := by
+  rw [SkorokhodSpace.stepPath_apply, SkorokhodSpace.stepPath_apply, stepIdx_orderIso e he]
+
+/-- The candidate dense family: the step paths whose nodes lie in `C` and whose
+values lie in `Q`. -/
+def SkorokhodSpace.stepPathFamily (C : Set ι) (Q : Set E) : Set D(ι, E) :=
+  ⋃ n : ℕ, Set.range fun p : (Fin (n + 1) → C) × (Fin (n + 1) → Q) =>
+    SkorokhodSpace.stepPath (fun i => (p.1 i : ι)) fun i => (p.2 i : E)
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+theorem SkorokhodSpace.stepPath_mem_stepPathFamily {C : Set ι} {Q : Set E} {n : ℕ}
+    {d : Fin (n + 1) → ι} {v : Fin (n + 1) → E} (hd : ∀ i, d i ∈ C) (hv : ∀ i, v i ∈ Q) :
+    SkorokhodSpace.stepPath d v ∈ SkorokhodSpace.stepPathFamily C Q :=
+  Set.mem_iUnion.2 ⟨n, ⟨fun i => ⟨d i, hd i⟩, fun i => ⟨v i, hv i⟩⟩, rfl⟩
+
+omit [AdditiveDist ι] [ProperSpace ι] [BasePoint ι] in
+/-- **The family is countable**, and this is the whole of the counting: a
+countable set of nodes and a countable set of values give a countable set of
+tuples of each, `Fin (n + 1)` being finite, and a countable union over the
+length. -/
+theorem SkorokhodSpace.countable_stepPathFamily {C : Set ι} {Q : Set E} (hC : C.Countable)
+    (hQ : Q.Countable) : (SkorokhodSpace.stepPathFamily C Q).Countable := by
+  have := hC.to_subtype
+  have := hQ.to_subtype
+  exact Set.countable_iUnion fun _ => Set.countable_range _
+
+omit [AdditiveDist ι] [BasePoint ι] in
+/-- **Moving the values is free.**  Two step paths on the same nodes whose values
+are pairwise within `ε` are within `ε` in every window, for the identity time
+change.  This is the first of the two moves the separability makes, and it is the
+one that costs nothing: it needs neither the subdivision nor the core. -/
+theorem SkorokhodSpace.distWith_one_stepPath_le (t₀ : ι) (u : ℝ) {n : ℕ}
+    {d : Fin (n + 1) → ι} {v w : Fin (n + 1) → E} {ε : ℝ}
+    (h : ∀ i, dist (v i) (w i) ≤ ε) :
+    SkorokhodSpace.distWith t₀ u 1 (SkorokhodSpace.stepPath d v)
+      (SkorokhodSpace.stepPath d w) ≤ ε := by
+  have : Nonempty ι := ⟨t₀⟩
+  rw [SkorokhodSpace.distWith]
+  refine ciSup_le fun x => ?_
+  simp only [SkorokhodSpace.restrictExhaustion_apply, TimeChange.one_toOrderIso_apply,
+    SkorokhodSpace.stepPath_apply]
+  exact h _
+
+omit [BasePoint ι] in
+/-- **How much of the radius the moved nodes can spoil.**  The radii at which the
+window edge falls into `Set.Ico a b` occupy at most `dist a b` of Lebesgue
+measure, and this is the estimate the separability needs about the *index* rather
+than about a path: the window edge is the one point at which the metric compares
+two paths with no time change allowed
+(`SkorokhodSpace.dist_exhaustionMax_le_distOn`), and after the nodes have been
+moved from `t i` to `d i` the comparison is wrong exactly at those radii whose
+edge separates a `d i` from its `t i`.
+
+The proof is `lengthCoord` and no case distinction at all: the window is the
+preimage of `Set.Icc (-u) u` under the length coordinate, so a radius whose edge
+lies in `Set.Ico a b` lies itself in `Set.Icc (lengthCoord t₀ a)
+(lengthCoord t₀ b)` --- below because the edge is above `a` and the edge's
+coordinate is at most the radius, above because a radius past `lengthCoord t₀ b`
+puts `b` into the window and pushes the edge to `b` or beyond.  That interval has
+length `dist a b` by `sub_lengthCoord_of_le`, and if `b < a` both sides of the
+conclusion are trivial. -/
+theorem radius_exhaustionMax_mem_Ico_subset (t₀ : ι) (a b : ι) :
+    {u : ℝ | 0 ≤ u ∧ exhaustionMax t₀ u ∈ Set.Ico a b}
+      ⊆ Set.Icc (lengthCoord t₀ a) (lengthCoord t₀ b) := by
+    rintro u ⟨hu0, hmem⟩
+    have h0 : t₀ ≤ exhaustionMax t₀ u :=
+      (isGreatest_exhaustionMax t₀ u).2 (mem_exhaustion_self t₀ u)
+    have hball : dist t₀ (exhaustionMax t₀ u) ≤ u := by
+      have h := (isGreatest_exhaustionMax t₀ u).1
+      rw [exhaustion_eq_closedBall t₀ hu0] at h
+      exact Metric.mem_closedBall'.1 h
+    have hL : lengthCoord t₀ (exhaustionMax t₀ u) ≤ u := by
+      have hsl := sub_lengthCoord_of_le t₀ h0
+      rw [lengthCoord_self] at hsl
+      linarith
+    refine ⟨le_trans ((strictMono_lengthCoord t₀).monotone hmem.1) hL, ?_⟩
+    by_contra hcon
+    have ht₀b : t₀ < b := lt_of_le_of_lt h0 hmem.2
+    have hdb : dist t₀ b = lengthCoord t₀ b := by
+      have hsl := sub_lengthCoord_of_le t₀ ht₀b.le
+      rw [lengthCoord_self] at hsl
+      linarith
+    have hbmem : b ∈ exhaustion t₀ u := by
+      rw [exhaustion_eq_closedBall t₀ hu0, Metric.mem_closedBall']
+      rw [hdb]
+      exact (not_le.1 hcon).le
+    exact absurd ((isGreatest_exhaustionMax t₀ u).2 hbmem) (not_le.2 hmem.2)
+
+omit [BasePoint ι] in
+/-- And so they occupy at most `dist a b` of Lebesgue measure, which is the form
+`SkorokhodSpace.intWith_le_of_ae_distWith_le` consumes. -/
+theorem volume_radius_exhaustionMax_mem_Ico (t₀ : ι) (a b : ι) :
+    MeasureTheory.volume {u : ℝ | 0 ≤ u ∧ exhaustionMax t₀ u ∈ Set.Ico a b}
+      ≤ ENNReal.ofReal (dist a b) := by
+  have hlen : lengthCoord t₀ b - lengthCoord t₀ a ≤ dist a b := by
+    rcases le_or_gt a b with hab | hab
+    · exact le_of_eq (sub_lengthCoord_of_le t₀ hab)
+    · have h1 := (strictMono_lengthCoord (ι := ι) t₀) hab
+      have h2 : (0 : ℝ) ≤ dist a b := dist_nonneg
+      linarith
+  calc MeasureTheory.volume {u : ℝ | 0 ≤ u ∧ exhaustionMax t₀ u ∈ Set.Ico a b}
+      ≤ MeasureTheory.volume (Set.Icc (lengthCoord t₀ a) (lengthCoord t₀ b)) :=
+        MeasureTheory.measure_mono (radius_exhaustionMax_mem_Ico_subset t₀ a b)
+    _ = ENNReal.ofReal (lengthCoord t₀ b - lengthCoord t₀ a) := Real.volume_Icc
+    _ ≤ ENNReal.ofReal (dist a b) := ENNReal.ofReal_le_ofReal hlen
+
+/-- **Separability**, and it is a commitment with a **gap that is named and not
+papered over**: what stands below is the statement, and the two halves of its
+proof that are paid for are `SkorokhodSpace.exists_finite_range_distWith_le`
+(the analysis) and `SkorokhodSpace.countable_stepPathFamily` (the counting).  The
+family is `SkorokhodSpace.stepPathFamily C Q` for `C` the countable core and `Q`
+a countable dense subset of `E`, and the two moves from `f` to a member of it
+are `SkorokhodSpace.distWith_one_stepPath_le` (the values, free) and
+`SkorokhodSpace.stepPath_apply_orderIso` (the nodes, at the price of `‖l‖`).
+
+**What is not paid for, found on 2026-09-09.**  The two moves control
+`distWith t₀ u l f g` for the *interior* of the window and for every radius, and
+they do **not** control it at the window edge.  For `x` beyond the edge
+`B = exhaustionMax t₀ u` both sides of `distWith` clamp to `B`, so the term is
+`dist (f B) (g B)` with **no time change interposed** --- which is
+`SkorokhodSpace.dist_exhaustionMax_le_distOn`, the very fact that killed the
+summed metric --- and `g B` is the value `v i` of the cell of `B` counted with
+the *moved* nodes, that is `stepIdx t (l B)` rather than `stepIdx t B`.  The two
+differ exactly when a node `t i` separates `B` from `l B`, and then the term is
+the *jump* of `f` at that node, which no choice of `ε` makes small.
+
+**Why this is not fatal, and what it costs.**  The bad radii are those whose edge
+falls between a `d i` and its image `t i`, and
+`volume_radius_exhaustionMax_mem_Ico` bounds their measure by
+`∑ᵢ dist (d i) (t i)`; since the integrand of `intWith` is bounded by `1`, they
+cost at most that much in the metric.  So the repair is a **third clause** in
+`SkorokhodSpace.HasCountableCore`, namely `∀ i, dist (d i) (t i) ≤ δ`, and both
+instances have it --- `Real.instHasCountableCore` because
+`SkorokhodSpace.exists_rat_nodes_perturbation` chooses its rationals within `η`
+of the `t i` and `η` may be shrunk, and
+`SkorokhodSpace.hasCountableCore_of_countable` because there `d = t`.  This is
+the one place where the countable core has to be more than "a countable set that
+can be moved anywhere cheaply": it has to be moved *a short way*, and the two
+are not the same condition on an index with gaps, where a cheap time change can
+carry a point across a long gap.
 
 `[SeparableSpace E]` is the hypothesis, not `[PolishSpace E]`: the approximation
 of a càdlàg path by a step path uses the right limits and the compactness of the
@@ -5719,4 +6077,3 @@ theorem SkorokhodSpace.isCompact_closure_iff (A : Set D(ι, E)) :
       IsCompact (closure {x | ∃ f ∈ A, ∃ t ∈ exhaustion (basePoint : ι) m, f.toFun t = x}) ∧
       Tendsto (fun δ => ⨆ f ∈ A, SkorokhodSpace.modulus (basePoint : ι) m f δ)
         (𝓝[>] 0) (𝓝 0) := sorry
-
