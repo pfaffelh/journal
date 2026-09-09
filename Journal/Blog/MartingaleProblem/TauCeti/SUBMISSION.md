@@ -123,3 +123,50 @@ which source states what, and the four remarks weighing weak-strong convergence
 against augmentation. Roadmaps state targets. The mathematics behind each
 milestone stays in `MartingaleProblem.tex`, which is the place to look when an
 implementer asks why a hypothesis is there.
+
+## Was das Zielprojekt inzwischen selbst hat (nachgesehen am 2026-09-09)
+
+Beide Repositorien geholt und gelesen: `TauCetiProject/TauCetiRoadmap` und die
+Bibliothek `TauCetiProject/TauCeti` darunter.
+
+**Die Halbgruppen sind dort weiter, als unser Punkt 2 im `TODO.md` annimmt.**
+`TauCetiRoadmap/OneParameterSemigroups/Suggested.lean` ist mit 141 Zeilen und
+fünf Sätzen schmal, weil sie **nachträglich** geschrieben wurde: Hille--Yosida
+(`hilleYosida_generation`) und Bernstein sind **bewiesen** und werden aus der
+Bibliothek zitiert; offen ist im Wesentlichen Lumer--Phillips in der
+Erzeugungsrichtung. Der zentrale Begriff ist
+
+```lean
+structure StronglyContinuousSemigroup (X) [Banach] where
+  toFun : ℝ≥0 → X →L[ℝ] X
+  map_zero' : toFun 0 = ContinuousLinearMap.id ℝ X
+  map_add'  : ∀ s t, toFun (s + t) = (toFun s).comp (toFun t)
+  continuousAt_zero' : ∀ x, ContinuousAt (fun t => toFun t x) 0
+```
+
+mit `LinearPMap` für den Erzeuger, Resolvente, Wachstumsschranke und
+Dissipativität daneben.
+
+*Für das Zulip-Anliegen heißt das:* EK Theorem 4.4.1 sitzt direkt auf
+Hille--Yosida, und Hille--Yosida ist dort nicht offen, sondern fertig. Wer den
+Satz aufnimmt, muß die Halbgruppentheorie nicht erst bauen — das Angebot ist
+konkreter als in `TODO.md` Punkt 2 beschrieben.
+
+*Für unsere eigenen Dateien heißt es nichts.* Unser `jumpSemigroup` ist
+`P_t h z = 𝔼_z[h (X t)]` auf den beschränkten meßbaren Funktionen; das ist zwar
+ein Banachraum, aber für beschränkte Raten ist die Halbgruppe nach unserer
+Lipschitzschranke `‖P_t h − h‖ ≤ 2 L t ‖h‖` sogar **gleichmäßig** stetig, also
+der triviale Fall mit beschränktem Erzeuger, für den die Picard-Iteration
+genügt. Der unbeschränkte Fall, für den ihr Apparat gebaut ist, ist durch
+`rem:noch1` bewußt ausgeschlossen. Eine Verzahnung bei den Sprungprozessen
+brächte also nichts.
+
+**Ein Unterschied in der Bauweise, der die Einreichung betrifft.** Ihre
+`lakefile.toml` sagt: *„Roadmap target signatures should consume existing Tau
+Ceti declarations directly rather than restating a Mathlib-only approximation of
+the implementation boundary."* Entsprechend importiert ihre `Suggested.lean`
+`TauCeti.Analysis.*` und nicht nur Mathlib. Unsere vier Dateien sind reine
+Mathlib-Dateien — für ein Gebiet, in dem dort noch nichts steht, ist das
+richtig und unvermeidlich, aber es ist eine Abweichung von der Hausregel und
+sollte in der PR-Beschreibung genannt werden, statt daß ein Reviewer sie
+bemerkt. Sobald etwas von uns dort liegt, gilt die Regel auch für uns.
