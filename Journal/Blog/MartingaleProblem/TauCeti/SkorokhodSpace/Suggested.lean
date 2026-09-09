@@ -6462,6 +6462,151 @@ theorem SkorokhodSpace.distWith_stepPath_le (t₀ : ι) (f : D(ι, E)) {n : ℕ}
       rw [hq, dist_self]
       linarith
 
+omit [BasePoint ι] in
+/-- **The bad radii, as a named set.**  Given a subdivision `t` of the window of
+radius `M` with cell oscillation at most `ε`, values `w` within `ε` of `f` at the
+nodes, and a time change `l` of norm at most `δ` fixing `t₀` and carrying a tuple
+`d` onto `t` with `dist (d i) (t i) ≤ δ`, there is a **measurable** set `B` of
+radii of measure at most `(n + 1) (2 δ + (exp δ - 1) 2 M)` outside which the
+windowed estimate `distWith t₀ u l f (stepPath d w) ≤ 6 ε` holds.
+
+This is the whole of Billingsley's window-edge bookkeeping, and it is stated
+separately because **both** halves of Milestone 5 and Milestone 7 spend it: the
+separability with `d` from `SkorokhodSpace.HasCountableCore`, the converse of the
+compactness criterion with `d` from
+`SkorokhodSpace.exists_finite_grid_timeChange`.  Nothing in it knows where `d`
+came from; what it needs of `d` is the displacement bound alone, and that is the
+third clause of `HasCountableCore` and the second conclusion of the grid.
+
+`B` is described through `lengthCoord` and not through the window ends: it is the
+union over the nodes of the two coordinate intervals of
+`radius_exhaustionMax_mem_Ico_subset` and `radius_exhaustionMin_mem_Ico_subset`,
+and going through the coordinate is what makes it visibly measurable --- the set
+of radii whose edge is caught between a node and its image is only *contained* in
+an interval, `exhaustionMax t₀` being merely monotone.  The two ends are not
+symmetric, and the lower one is allowed the second exit of
+`SkorokhodSpace.distWith_stepPath_le`; `κ = (exp δ - 1) (2 M)` is the price of
+that exit and the reason the bound is not simply `(n + 1) 2 δ`. -/
+theorem SkorokhodSpace.exists_bad_radii_set (t₀ : ι) (f : D(ι, E)) {n : ℕ}
+    {t d : Fin (n + 1) → ι} {w : Fin (n + 1) → E} {l : TimeChange ι} {ε δ M : ℝ}
+    (hε : 0 ≤ ε) (hδ0 : 0 < δ) (hM0 : 0 ≤ M) (hl0 : l.toOrderIso t₀ = t₀)
+    (hlnorm : l.norm ≤ δ) (hnodes : ∀ i, l.toOrderIso (d i) = t i)
+    (hdt : ∀ i, dist (d i) (t i) ≤ δ)
+    (hcell : ∀ i : Fin n, ∀ x ∈ Set.Ico (t i.castSucc) (t i.succ),
+      dist (f.toFun x) (f.toFun (t i.castSucc)) ≤ ε)
+    (ht0 : t 0 ≤ exhaustionMin t₀ M) (htlast : exhaustionMax t₀ M ≤ t (Fin.last n))
+    (hw : ∀ i, dist (f.toFun (t i)) (w i) ≤ ε) :
+    ∃ B : Set ℝ, MeasurableSet B ∧
+      MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B)
+        ≤ ENNReal.ofReal (((n : ℝ) + 1) * (2 * δ + (Real.exp δ - 1) * (2 * M))) ∧
+      ∀ u : ℝ, 0 < u → u ≤ M → u ∉ B →
+        SkorokhodSpace.distWith t₀ u l f (SkorokhodSpace.stepPath d w) ≤ 3 * (2 * ε) := by
+  classical
+  set κ : ℝ := (Real.exp δ - 1) * (2 * M) with hκdef
+  have hexp1 : (0 : ℝ) ≤ Real.exp δ - 1 := by linarith [Real.one_le_exp hδ0.le]
+  have hκ0 : (0 : ℝ) ≤ κ := mul_nonneg hexp1 (by linarith)
+  set B : Set ℝ := ⋃ i : Fin (n + 1),
+      (Set.Icc (lengthCoord t₀ (min (d i) (t i))) (lengthCoord t₀ (max (d i) (t i))) ∪
+        Set.Icc (-lengthCoord t₀ (max (d i) (t i)))
+          (κ - lengthCoord t₀ (min (d i) (t i)))) with hBdef
+  have hBmeas : MeasurableSet B := by
+    rw [hBdef]
+    exact MeasurableSet.iUnion fun _ => measurableSet_Icc.union measurableSet_Icc
+  have hdd : ∀ i, dist (min (d i) (t i)) (max (d i) (t i)) ≤ δ := by
+    intro i
+    rcases le_total (d i) (t i) with h | h
+    · rw [min_eq_left h, max_eq_right h]; exact hdt i
+    · rw [min_eq_right h, max_eq_left h, dist_comm]; exact hdt i
+  have hBvol : MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B)
+      ≤ ENNReal.ofReal (((n : ℝ) + 1) * (2 * δ + κ)) := by
+    have hpiece : ∀ i : Fin (n + 1),
+        MeasureTheory.volume
+          (Set.Icc (lengthCoord t₀ (min (d i) (t i))) (lengthCoord t₀ (max (d i) (t i))) ∪
+            Set.Icc (-lengthCoord t₀ (max (d i) (t i)))
+              (κ - lengthCoord t₀ (min (d i) (t i))))
+          ≤ ENNReal.ofReal (2 * δ + κ) := by
+      intro i
+      have hlen : lengthCoord t₀ (max (d i) (t i)) - lengthCoord t₀ (min (d i) (t i))
+          = dist (min (d i) (t i)) (max (d i) (t i)) :=
+        sub_lengthCoord_of_le t₀ min_le_max
+      have hi := hdd i
+      calc MeasureTheory.volume
+            (Set.Icc (lengthCoord t₀ (min (d i) (t i))) (lengthCoord t₀ (max (d i) (t i))) ∪
+              Set.Icc (-lengthCoord t₀ (max (d i) (t i)))
+                (κ - lengthCoord t₀ (min (d i) (t i))))
+          ≤ MeasureTheory.volume (Set.Icc (lengthCoord t₀ (min (d i) (t i)))
+                (lengthCoord t₀ (max (d i) (t i))))
+              + MeasureTheory.volume (Set.Icc (-lengthCoord t₀ (max (d i) (t i)))
+                (κ - lengthCoord t₀ (min (d i) (t i)))) :=
+            MeasureTheory.measure_union_le _ _
+        _ = ENNReal.ofReal (lengthCoord t₀ (max (d i) (t i))
+              - lengthCoord t₀ (min (d i) (t i)))
+            + ENNReal.ofReal (κ - lengthCoord t₀ (min (d i) (t i))
+              - -lengthCoord t₀ (max (d i) (t i))) := by
+            rw [Real.volume_Icc, Real.volume_Icc]
+        _ ≤ ENNReal.ofReal δ + ENNReal.ofReal (δ + κ) :=
+            add_le_add (ENNReal.ofReal_le_ofReal (by linarith))
+              (ENNReal.ofReal_le_ofReal (by linarith))
+        _ = ENNReal.ofReal (2 * δ + κ) := by
+            rw [← ENNReal.ofReal_add hδ0.le (by linarith)]
+            ring_nf
+    calc MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B)
+        ≤ MeasureTheory.volume B := MeasureTheory.measure_mono Set.inter_subset_right
+      _ ≤ ∑' i : Fin (n + 1), MeasureTheory.volume
+            (Set.Icc (lengthCoord t₀ (min (d i) (t i))) (lengthCoord t₀ (max (d i) (t i))) ∪
+              Set.Icc (-lengthCoord t₀ (max (d i) (t i)))
+                (κ - lengthCoord t₀ (min (d i) (t i)))) := by
+            rw [hBdef]; exact MeasureTheory.measure_iUnion_le _
+      _ ≤ ∑' _i : Fin (n + 1), ENNReal.ofReal (2 * δ + κ) := ENNReal.tsum_le_tsum hpiece
+      _ = ((n + 1 : ℕ) : ℝ≥0∞) * ENNReal.ofReal (2 * δ + κ) := by
+            rw [tsum_fintype, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
+              nsmul_eq_mul]
+      _ = ENNReal.ofReal (((n : ℝ) + 1) * (2 * δ + κ)) := by
+            rw [ENNReal.ofReal_mul (by positivity)]
+            congr 1
+            rw [show ((n : ℝ) + 1) = ((n + 1 : ℕ) : ℝ) by push_cast; ring]
+            exact (ENNReal.ofReal_natCast _).symm
+  refine ⟨B, hBmeas, hBvol, ?_⟩
+  intro u hu0 huM huB
+  have hu0' : (0 : ℝ) ≤ u := hu0.le
+  have hmaxgood : ∀ i, exhaustionMax t₀ u ∉ Set.Ico (min (d i) (t i)) (max (d i) (t i)) := by
+    intro i hcon
+    refine huB ?_
+    rw [hBdef]
+    exact Set.mem_iUnion.2 ⟨i, Or.inl
+      (radius_exhaustionMax_mem_Ico_subset t₀ _ _ ⟨hu0', hcon⟩)⟩
+  refine SkorokhodSpace.distWith_stepPath_le t₀ f hε huM hnodes hcell ht0 htlast hw
+    hmaxgood ?_
+  by_cases hfix : l.toOrderIso.symm (exhaustionMin t₀ u) = exhaustionMin t₀ u
+  · exact Or.inr hfix
+  refine Or.inl fun i hcon => ?_
+  have hAmem : exhaustionMin t₀ u ∈ exhaustion t₀ u := (isLeast_exhaustionMin t₀ u).1
+  have hbound : (Real.exp δ - 1) * (2 * u) ≤ κ :=
+    mul_le_mul_of_nonneg_left (by linarith) hexp1
+  have hd1 : dist (l.toOrderIso (exhaustionMin t₀ u)) (exhaustionMin t₀ u) ≤ κ :=
+    le_trans (TimeChange.dist_le_of_norm_le t₀ hu0' hl0 hlnorm hAmem) hbound
+  have hinvfix : (l⁻¹).toOrderIso t₀ = t₀ := by
+    show l.toOrderIso.symm t₀ = t₀
+    exact l.toOrderIso.symm_apply_eq.2 hl0.symm
+  have hd2 : dist (l.toOrderIso.symm (exhaustionMin t₀ u)) (exhaustionMin t₀ u) ≤ κ := by
+    have hnorm : (l⁻¹).norm ≤ δ := by rw [TimeChange.norm_inv]; exact hlnorm
+    have hbase := TimeChange.dist_le_of_norm_le t₀ hu0' hinvfix hnorm hAmem
+    have hinv : (l⁻¹).toOrderIso = l.toOrderIso.symm := rfl
+    rw [hinv] at hbase
+    exact le_trans hbase hbound
+  have hs : ∃ s : ι, s < exhaustionMin t₀ u ∧ dist (exhaustionMin t₀ u) s ≤ κ := by
+    rcases lt_trichotomy (l.toOrderIso.symm (exhaustionMin t₀ u)) (exhaustionMin t₀ u) with
+      hlt | heq | hgt
+    · exact ⟨_, hlt, by rw [dist_comm]; exact hd2⟩
+    · exact absurd heq hfix
+    · refine ⟨l.toOrderIso (exhaustionMin t₀ u), ?_, by rw [dist_comm]; exact hd1⟩
+      have hh := l.toOrderIso.strictMono hgt
+      rwa [OrderIso.apply_symm_apply] at hh
+  refine huB ?_
+  rw [hBdef]
+  exact Set.mem_iUnion.2 ⟨i, Or.inr
+    (radius_exhaustionMin_mem_Ico_subset t₀ _ _ κ ⟨hu0', hcon, hs⟩)⟩
+
 /-- **Separability**, and it is proved under the hypothesis
 `SkorokhodSpace.HasCountableCore ι` that Milestone 5 isolates: without some such
 hypothesis the statement is **false**, by
@@ -6552,135 +6697,24 @@ instance SkorokhodSpace.instSeparableSpace [SecondCountableTopology E]
     exact ⟨δ, h3, h1, h2⟩
   -- the countable core moves the nodes
   obtain ⟨d, l, hdC, hl0, hlnorm, hdt, hnodes⟩ := hcore n t ht δ hδ0
-  set κ : ℝ := (Real.exp δ - 1) * (2 * M) with hκdef
   have hexp1 : (0 : ℝ) ≤ Real.exp δ - 1 := by linarith [Real.one_le_exp hδ0.le]
-  have hκ0 : 0 ≤ κ := mul_nonneg hexp1 (by linarith)
   set w : Fin (n + 1) → E := fun i => qq (f.toFun (t i)) with hwdef
   -- the bad radii: those whose window edge is caught between a node and its image
-  set B : Set ℝ := ⋃ i : Fin (n + 1),
-      (Set.Icc (lengthCoord (basePoint : ι) (min (d i) (t i)))
-          (lengthCoord (basePoint : ι) (max (d i) (t i))) ∪
-        Set.Icc (-lengthCoord (basePoint : ι) (max (d i) (t i)))
-          (κ - lengthCoord (basePoint : ι) (min (d i) (t i)))) with hBdef
-  have hBmeas : MeasurableSet B := by
-    rw [hBdef]
-    exact MeasurableSet.iUnion fun _ => measurableSet_Icc.union measurableSet_Icc
-  have hdd : ∀ i, dist (min (d i) (t i)) (max (d i) (t i)) ≤ δ := by
-    intro i
-    rcases le_total (d i) (t i) with h | h
-    · rw [min_eq_left h, max_eq_right h]; exact hdt i
-    · rw [min_eq_right h, max_eq_left h, dist_comm]; exact hdt i
-  have hBvol : MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B)
-      ≤ ENNReal.ofReal (((n : ℝ) + 1) * (2 * δ + κ)) := by
-    have hpiece : ∀ i : Fin (n + 1),
-        MeasureTheory.volume
-          (Set.Icc (lengthCoord (basePoint : ι) (min (d i) (t i)))
-              (lengthCoord (basePoint : ι) (max (d i) (t i))) ∪
-            Set.Icc (-lengthCoord (basePoint : ι) (max (d i) (t i)))
-              (κ - lengthCoord (basePoint : ι) (min (d i) (t i))))
-          ≤ ENNReal.ofReal (2 * δ + κ) := by
-      intro i
-      have hlen : lengthCoord (basePoint : ι) (max (d i) (t i))
-          - lengthCoord (basePoint : ι) (min (d i) (t i))
-          = dist (min (d i) (t i)) (max (d i) (t i)) :=
-        sub_lengthCoord_of_le (basePoint : ι) min_le_max
-      have hi := hdd i
-      calc MeasureTheory.volume
-            (Set.Icc (lengthCoord (basePoint : ι) (min (d i) (t i)))
-                (lengthCoord (basePoint : ι) (max (d i) (t i))) ∪
-              Set.Icc (-lengthCoord (basePoint : ι) (max (d i) (t i)))
-                (κ - lengthCoord (basePoint : ι) (min (d i) (t i))))
-          ≤ MeasureTheory.volume (Set.Icc (lengthCoord (basePoint : ι) (min (d i) (t i)))
-                (lengthCoord (basePoint : ι) (max (d i) (t i))))
-              + MeasureTheory.volume (Set.Icc (-lengthCoord (basePoint : ι) (max (d i) (t i)))
-                (κ - lengthCoord (basePoint : ι) (min (d i) (t i)))) :=
-            MeasureTheory.measure_union_le _ _
-        _ = ENNReal.ofReal (lengthCoord (basePoint : ι) (max (d i) (t i))
-              - lengthCoord (basePoint : ι) (min (d i) (t i)))
-            + ENNReal.ofReal (κ - lengthCoord (basePoint : ι) (min (d i) (t i))
-              - -lengthCoord (basePoint : ι) (max (d i) (t i))) := by
-            rw [Real.volume_Icc, Real.volume_Icc]
-        _ ≤ ENNReal.ofReal δ + ENNReal.ofReal (δ + κ) :=
-            add_le_add (ENNReal.ofReal_le_ofReal (by linarith))
-              (ENNReal.ofReal_le_ofReal (by linarith))
-        _ = ENNReal.ofReal (2 * δ + κ) := by
-            rw [← ENNReal.ofReal_add hδ0.le (by linarith)]
-            ring_nf
-    calc MeasureTheory.volume (Set.Ioc (0 : ℝ) M ∩ B)
-        ≤ MeasureTheory.volume B := MeasureTheory.measure_mono Set.inter_subset_right
-      _ ≤ ∑' i : Fin (n + 1), MeasureTheory.volume
-            (Set.Icc (lengthCoord (basePoint : ι) (min (d i) (t i)))
-                (lengthCoord (basePoint : ι) (max (d i) (t i))) ∪
-              Set.Icc (-lengthCoord (basePoint : ι) (max (d i) (t i)))
-                (κ - lengthCoord (basePoint : ι) (min (d i) (t i)))) := by
-            rw [hBdef]; exact MeasureTheory.measure_iUnion_le _
-      _ ≤ ∑' _i : Fin (n + 1), ENNReal.ofReal (2 * δ + κ) := ENNReal.tsum_le_tsum hpiece
-      _ = ((n + 1 : ℕ) : ℝ≥0∞) * ENNReal.ofReal (2 * δ + κ) := by
-            rw [tsum_fintype, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
-              nsmul_eq_mul]
-      _ = ENNReal.ofReal (((n : ℝ) + 1) * (2 * δ + κ)) := by
-            rw [ENNReal.ofReal_mul (by positivity)]
-            congr 1
-            rw [show ((n : ℝ) + 1) = ((n + 1 : ℕ) : ℝ) by push_cast; ring]
-            exact (ENNReal.ofReal_natCast _).symm
-  -- the windowed estimate off the bad radii
-  have hgood : ∀ u : ℝ, 0 < u → u ≤ M → u ∉ B →
-      SkorokhodSpace.distWith (basePoint : ι) u l f (SkorokhodSpace.stepPath d w)
-        ≤ 3 * (2 * ε) := by
-    intro u hu0 huM huB
-    have hu0' : (0 : ℝ) ≤ u := hu0.le
-    have hmaxgood : ∀ i, exhaustionMax (basePoint : ι) u
-        ∉ Set.Ico (min (d i) (t i)) (max (d i) (t i)) := by
-      intro i hcon
-      refine huB ?_
-      rw [hBdef]
-      exact Set.mem_iUnion.2 ⟨i, Or.inl
-        (radius_exhaustionMax_mem_Ico_subset (basePoint : ι) _ _ ⟨hu0', hcon⟩)⟩
-    refine SkorokhodSpace.distWith_stepPath_le (basePoint : ι) f hε.le huM hnodes hcell
-      ht0.le htlast.ge (fun i => hqqd _) hmaxgood ?_
-    by_cases hfix : l.toOrderIso.symm (exhaustionMin (basePoint : ι) u)
-        = exhaustionMin (basePoint : ι) u
-    · exact Or.inr hfix
-    refine Or.inl fun i hcon => ?_
-    have hAmem : exhaustionMin (basePoint : ι) u ∈ exhaustion (basePoint : ι) u :=
-      (isLeast_exhaustionMin (basePoint : ι) u).1
-    have hbound : (Real.exp δ - 1) * (2 * u) ≤ κ :=
-      mul_le_mul_of_nonneg_left (by linarith) hexp1
-    have hd1 : dist (l.toOrderIso (exhaustionMin (basePoint : ι) u))
-        (exhaustionMin (basePoint : ι) u) ≤ κ :=
-      le_trans (TimeChange.dist_le_of_norm_le (basePoint : ι) hu0' hl0 hlnorm hAmem) hbound
-    have hinvfix : (l⁻¹).toOrderIso (basePoint : ι) = (basePoint : ι) := by
-      show l.toOrderIso.symm (basePoint : ι) = (basePoint : ι)
-      exact l.toOrderIso.symm_apply_eq.2 hl0.symm
-    have hd2 : dist (l.toOrderIso.symm (exhaustionMin (basePoint : ι) u))
-        (exhaustionMin (basePoint : ι) u) ≤ κ := by
-      have hnorm : (l⁻¹).norm ≤ δ := by rw [TimeChange.norm_inv]; exact hlnorm
-      have hbase := TimeChange.dist_le_of_norm_le (basePoint : ι) hu0' hinvfix hnorm hAmem
-      have hinv : (l⁻¹).toOrderIso = l.toOrderIso.symm := rfl
-      rw [hinv] at hbase
-      exact le_trans hbase hbound
-    have hs : ∃ s : ι, s < exhaustionMin (basePoint : ι) u ∧
-        dist (exhaustionMin (basePoint : ι) u) s ≤ κ := by
-      rcases lt_trichotomy (l.toOrderIso.symm (exhaustionMin (basePoint : ι) u))
-        (exhaustionMin (basePoint : ι) u) with hlt | heq | hgt
-      · exact ⟨_, hlt, by rw [dist_comm]; exact hd2⟩
-      · exact absurd heq hfix
-      · refine ⟨l.toOrderIso (exhaustionMin (basePoint : ι) u), ?_,
-          by rw [dist_comm]; exact hd1⟩
-        have hh := l.toOrderIso.strictMono hgt
-        rwa [OrderIso.apply_symm_apply] at hh
-    refine huB ?_
-    rw [hBdef]
-    exact Set.mem_iUnion.2 ⟨i, Or.inr
-      (radius_exhaustionMin_mem_Ico_subset (basePoint : ι) _ _ κ ⟨hu0', hcon, hs⟩)⟩
+  obtain ⟨B, hBmeas, hBvol, hgood⟩ :=
+    SkorokhodSpace.exists_bad_radii_set (basePoint : ι) f hε.le hδ0 hM0 hl0 hlnorm hnodes
+      hdt hcell ht0.le htlast.ge (fun i => hqqd _)
   -- and the assembly
   refine ⟨SkorokhodSpace.stepPath d w, ⟨?_,
     SkorokhodSpace.stepPath_mem_stepPathFamily hdC fun i => hqqQ _⟩⟩
   rw [Metric.mem_ball, dist_comm, SkorokhodSpace.dist_eq]
   have hint : SkorokhodSpace.intWith (basePoint : ι) l f (SkorokhodSpace.stepPath d w)
-      ≤ 3 * (2 * ε) + ((n : ℝ) + 1) * (2 * δ + κ) + Real.exp (-M) :=
+      ≤ 3 * (2 * ε) + ((n : ℝ) + 1) * (2 * δ + (Real.exp δ - 1) * (2 * M))
+        + Real.exp (-M) :=
     SkorokhodSpace.intWith_le_of_ae_distWith_le (basePoint : ι) l f
-      (SkorokhodSpace.stepPath d w) (by linarith) hM0 (mul_nonneg (by positivity) (by linarith)) hBmeas hBvol hgood
+      (SkorokhodSpace.stepPath d w) (by linarith) hM0
+      (mul_nonneg (by positivity)
+        (add_nonneg (by linarith) (mul_nonneg hexp1 (by linarith))))
+      hBmeas hBvol hgood
   have hfinal : SkorokhodSpace.intDist (basePoint : ι) f (SkorokhodSpace.stepPath d w)
       ≤ max (TimeChange.norm l)
         (SkorokhodSpace.intWith (basePoint : ι) l f (SkorokhodSpace.stepPath d w)) :=

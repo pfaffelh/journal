@@ -13479,7 +13479,7 @@ ist und nicht an einem absoluten Betrag.
 **Bearbeitet:** `TauCeti/SkorokhodSpace/Suggested.lean`, Meilenstein 7, die
 Rückrichtung von `SkorokhodSpace.isCompact_closure_iff`; dazu Meilenstein 5,
 `SkorokhodSpace.distWith_stepPath_le`. Die Datei steht weiterhin bei **einem**
-`sorry`. Sechs Deklarationen sind neu und zwei geändert, alle durch
+`sorry`. Sieben Deklarationen sind neu und zwei geändert, alle durch
 `lake env lean` gegen v4.33.1 geprüft und alle mit `#print axioms` auf `propext`,
 `Classical.choice`, `Quot.sound` — die beiden geänderten (`distWith_stepPath_le`
 und ihr Abnehmer `SkorokhodSpace.instSeparableSpace`) eingeschlossen, samt
@@ -13566,6 +13566,20 @@ die Länge ist die Familie auch über einer endlichen Knotenmenge eine unendlich
 Vereinigung; was die Schranke liefert, ist
 `SkorokhodSpace.sub_mul_le_two_mul_of_isSubdivision` vom zehnten Lauf.
 
+**Und die Fensterrandbuchführung ist herausgezogen, aus demselben Grund wie
+`exists_radius_distWith_lt` im siebten Lauf: zwei Abnehmer lesen sie.**
+`SkorokhodSpace.exists_bad_radii_set` liefert zu einer Unterteilung `t` des
+Fensters vom Radius `M`, einem Zeitwechsel `l` der Norm `≤ δ` und einem Tupel `d`
+mit `l (d i) = t i` und `dist (d i) (t i) ≤ δ` eine **meßbare** Radienmenge `B`
+vom Maß höchstens `(n+1) (2δ + (exp δ - 1) 2M)`, außerhalb deren die gefensterte
+Schranke `distWith t₀ u l f (stepPath d w) ≤ 6 ε` gilt. Sie stand seit dem
+vierten Lauf dieses Tages inline in `instSeparableSpace`; dort ist sie jetzt
+durch einen Aufruf ersetzt, und der Beweis der Separabilität ist um rund hundert
+Zeilen kürzer. **Sie weiß nichts davon, woher `d` kommt** — was sie von `d`
+braucht, ist die Verschiebungsschranke allein, und das ist die dritte Klausel von
+`HasCountableCore` genauso wie die zweite Aussage des Gitters. Genau darum lesen
+beide Abnehmer denselben Satz.
+
 **Das Manuskript ist nicht angefaßt.**
 
 **Was als Nächstes zu tun ist.** Der **Zusammenbau der Rückrichtung**, und alle
@@ -13576,14 +13590,31 @@ gestützte `δ`-sparsame Unterteilung mit Schwingung unter `ε`; aus
 `sub_mul_le_two_mul_of_isSubdivision` für die Länge; aus der Wertebedingung ein
 endliches Netz `Q`; `SkorokhodSpace.stepPath` als Approximant,
 `distWith_stepPath_le` als Schranke (jetzt anwendbar, siehe oben),
-`finite_stepPathFamilyLe` als Netz und `intWith_le_of_ae_distWith_le` als
-Buchführung. **Der eine Punkt, an dem er noch klemmen kann, ist der
-Fensterrand**, und er ist derselbe wie bei der Separabilität: die Radien, bei
-denen ein Fensterende zwischen einen Knoten und seinen Gitterpunkt gerät, sind
-durch `volume_radius_exhaustionMax_mem_Ico` und
-`volume_radius_exhaustionMin_mem_Ico` gemessen, und ihr Maß ist durch die
-Verschiebung `ρ/2` mal der Knotenzahl beschränkt — die Knotenzahl steht vor `ρ`
-fest, `ρ` darf also nach ihr gewählt werden, und das ist dieselbe Reihenfolge,
-die `instSeparableSpace` bereits geht. Diese Reihenfolge ist zu prüfen, bevor
-gerechnet wird: sie ist die einzige Stelle, an der die Rückrichtung noch brechen
-kann.
+`finite_stepPathFamilyLe` als Netz, `exists_bad_radii_set` für den Fensterrand
+und `intWith_le_of_ae_distWith_le` als Buchführung.
+
+**Und der Punkt, an dem er noch klemmt, ist benannt, und er ist eine
+Ungleichung im herausgezogenen Satz selbst.** `exists_bad_radii_set` schätzt das
+Maß der schlechten Radien durch `(n+1) (2δ' + κ)` ab, mit `n` der Länge der
+**ganzen** Unterteilung. Für die Separabilität genügt das, weil dort `n` bekannt
+ist, ehe `δ'` gewählt wird — die Unterteilung gehört *einem* Pfad. Für die
+Rückrichtung genügt es **nicht**: `δ'` muß für alle Pfade von `A` zugleich
+taugen, und `n` ist über `A` unbeschränkt. Der Grund ist die Berichtigung des
+sechsten Laufs, ein zweites Mal: `IsSubdivision` verlangt nur die Überdeckung,
+ein Knoten darf beliebig weit draußen sitzen, und
+`sub_mul_le_two_mul_of_isSubdivision` zählt darum allein die Knoten **im**
+Fenster.
+
+*Die Reparatur ist keine neue Idee, sondern eine schärfere Fassung derselben
+Rechnung, und sie ist wahr:* die Radienmengen der weit draußen liegenden Knoten
+sind Koordinatenintervalle um deren eigene Koordinate, treffen `Set.Ioc 0 M` also
+gar nicht, und das Maß von `Set.Ioc 0 M ∩ B` hängt allein an den Knoten, deren
+Intervall das Fenster trifft — und deren Zahl ist durch
+`sub_mul_le_two_mul_of_isSubdivision` beschränkt, gleichmäßig über `A`, sobald
+`δ` aus der Modulbedingung feststeht. `exists_bad_radii_set` ist also so
+umzuschreiben, daß `(n+1)` durch die Zahl der Knoten mit
+`lengthCoord t₀ (max (d i) (t i)) ≥ 0` und
+`lengthCoord t₀ (min (d i) (t i)) ≤ M + κ` ersetzt wird; das ist der erste
+Schritt des nächsten Laufs, vor dem Zusammenbau und nicht in ihm. Die
+Reihenfolge der Wahlen ist dann `δ` zuerst, daraus `n₀`, dann `γ` und mit ihm
+`ρ`.

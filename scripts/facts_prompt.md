@@ -496,7 +496,7 @@ und `δ` bestimmt. Der Zusammenbau danach — `stepPath`, `distWith_stepPath_le`
 
 **Zwischenstand Teil A (2026-09-09, elfter Lauf des Tages).** Bericht in
 `Facts/INVENTAR.md`, Läufe, „2026-09-09, elfter Lauf des Tages".
-`SkorokhodSpace/Suggested.lean` steht weiter bei **einem** `sorry`. Sechs neue
+`SkorokhodSpace/Suggested.lean` steht weiter bei **einem** `sorry`. Sieben neue
 Deklarationen und zwei geänderte, alle durch `lake env lean` gegen v4.33.1
 geprüft und alle mit `#print axioms` auf `propext`, `Classical.choice`,
 `Quot.sound`.
@@ -526,14 +526,26 @@ hätte der Zusammenbau die Unterteilung **stutzen** müssen, und das geht nicht:
 der gestutzte erste und letzte Abstand können beliebig klein werden, die
 Sparsamkeit ist aber genau das, was die Zelte des Gitters trennt.
 
-*Als Nächstes:* der **Zusammenbau der Rückrichtung**; alle Stücke stehen
-bewiesen da, der Weg steht am Ende des elften Laufberichts. Der eine Punkt, an
-dem er noch brechen kann, ist der **Fensterrand** — die Radien, bei denen ein
-Fensterende zwischen einen Knoten und seinen Gitterpunkt gerät
-(`volume_radius_exhaustionMax_mem_Ico`, `volume_radius_exhaustionMin_mem_Ico`) —,
-und dort ist zuerst die Reihenfolge der Wahlen zu prüfen: `δ` aus der
-Modulbedingung, dann die Knotenzahl aus
-`sub_mul_le_two_mul_of_isSubdivision`, dann erst `γ` und mit ihm `ρ`.
+*Mitgekommen ist die Fensterrandbuchführung als eigener Satz:*
+`SkorokhodSpace.exists_bad_radii_set` — die meßbare Radienmenge `B`, ihr Maß, und
+die gefensterte Schranke außerhalb —, herausgezogen aus `instSeparableSpace`, das
+dadurch um rund hundert Zeilen kürzer ist. Sie weiß nichts davon, woher das
+verschobene Tupel kommt; darum lesen die Separabilität (aus `HasCountableCore`)
+und die Rückrichtung (aus dem Gitter) denselben Satz.
+
+*Als Nächstes, und es ist **ein benannter Mangel im gerade herausgezogenen
+Satz** und nicht der Zusammenbau:* `exists_bad_radii_set` schätzt das Maß der
+schlechten Radien durch `(n+1) (2δ' + κ)` ab, mit `n` der Länge der **ganzen**
+Unterteilung, und `n` ist über `A` unbeschränkt — `IsSubdivision` verlangt nur
+die Überdeckung, ein Knoten darf beliebig weit draußen sitzen. Für die
+Separabilität genügt es (dort gehört die Unterteilung *einem* Pfad, `n` steht vor
+`δ'` fest), für die Rückrichtung nicht. Die Reparatur ist wahr und ist dieselbe
+Rechnung schärfer geführt: die Radienmengen weit draußen liegender Knoten treffen
+`Set.Ioc 0 M` gar nicht, gezählt gehören allein die Knoten, deren
+Koordinatenintervall das Fenster trifft, und deren Zahl beschränkt
+`sub_mul_le_two_mul_of_isSubdivision` gleichmäßig über `A`. Erst danach der
+Zusammenbau, dessen Weg am Ende des elften Laufberichts steht; die Reihenfolge
+der Wahlen ist dann `δ`, `n₀`, `γ`, `ρ`.
 
 **Teil B — `WeakConvergence` fertigmachen.** Erst wenn Teil A durch ist. Zwei
 offene Beweise, in dieser Reihenfolge:

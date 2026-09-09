@@ -1338,6 +1338,18 @@ both 2026-09-09. What is left of the milestone is the third instance,
   `stepIdx_congr_of_forall_notMem_Ioc`: the cell index only sees the nodes in
   `Set.Ioc` of the two points, half open on the same side `stepIdx` reads.
 
+  `SkorokhodSpace.exists_bad_radii_set` (2026-09-09) packages the whole of this
+  bookkeeping: it produces the measurable set `B` of bad radii, bounds
+  `volume (Set.Ioc 0 M ∩ B)` by `(n + 1) (2 δ + (exp δ - 1) 2 M)`, and gives the
+  windowed estimate off `B`. It knows nothing of where `d` came from — only the
+  displacement bound `dist (d i) (t i) ≤ δ` — which is why both the separability,
+  whose `d` comes from `HasCountableCore`, and the converse of Milestone 7, whose
+  `d` comes from `exists_finite_grid_timeChange`, read the same theorem. Its
+  measure bound counts **all** the nodes, and that is enough only where `n` is
+  known before `δ` is chosen, which is the separability's situation and not the
+  converse's; the sharper count, over the nodes whose coordinate interval meets
+  the window, is the first item of the converse and is stated with it.
+
   **The two window ends are not symmetric, and that is the last finding**
   (2026-09-09, fourth run). `exhaustionMax t₀` is monotone and
   `exhaustionMin t₀` is antitone, so `Set.Ico a b` excludes exactly the sticky
@@ -1846,10 +1858,19 @@ over a shrinking family and is therefore an infimum.
   grid holds the base point, and the displacement of a node is bounded by a
   fraction of its distance to the base point rather than by an absolute amount:
   that is what `le_intDist_stepAt_of_exp_mul_lt` shows to be necessary. What
-  remains is the assembly, and in it the two window ends: the set of radii at
-  which an end is caught between a node and its grid point is what
-  `volume_radius_exhaustionMax_mem_Ico` and `volume_radius_exhaustionMin_mem_Ico`
-  measure, and `intWith_le_of_ae_distWith_le` pays for it.
+  remains is the assembly, and in it the two window ends, which are
+  `SkorokhodSpace.exists_bad_radii_set` and `intWith_le_of_ae_distWith_le`.
+* `SkorokhodSpace.exists_bad_radii_set` **with the nodes outside the window not
+  counted**: its measure bound is `(n + 1) (2 δ + (exp δ - 1) 2 M)` over the
+  whole length, and `n` is unbounded over a family — `IsSubdivision` asks only
+  that the subdivision cover the window, so a node may sit arbitrarily far
+  outside. The count has to run over the nodes whose coordinate interval meets
+  `Set.Ioc 0 M` instead, and those are bounded in number by
+  `sub_mul_le_two_mul_of_isSubdivision`, uniformly over the family, once `δ` is
+  fixed by the modulus condition. The far nodes contribute nothing: their
+  intervals sit around their own coordinate. This is what the converse needs
+  before the assembly, and the order of the choices is then `δ`, then the node
+  count, then the norm budget `γ` and with it the grid spacing `ρ`.
 * `SkorokhodSpace.isCompact_closure_of_compactContainment`: the sufficient form
   used in practice, over `ℝ`, where the first condition is replaced by the
   existence of a compact `K ⊆ E` with `f t ∈ K` for all `f ∈ A` and `t ∈ B m`.
