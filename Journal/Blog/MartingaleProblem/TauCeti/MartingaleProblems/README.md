@@ -773,6 +773,40 @@ A concrete family of solutions, built without any of the theory above. Index
   state drawn by `mu` after a holding time `s / lam z`. Both halves stand as
   integrals against `nu` rather than combined under one, exactly as
   `jumpMeasure_integral_eq_of_firstJump` states them.
+* `abs_integral_jumpProcess_sub_le`: for `h` bounded by `C` and `0 < lam ≤ L`,
+  ```
+  |∫ h (X t) d(jumpMeasure mu nu) − ∫ h dnu| ≤ 2 * C * L * t   for 0 ≤ t.
+  ```
+  **Proved** on 2026-09-09, twenty fourth run. The state can only have moved if
+  the first jump has happened, and `measureReal_jumpTime_one_le` prices that at
+  `L * t`; the two terms of the first jump decomposition each pay it once. The
+  constant does not mention `nu`, and that is what lets the statement be applied
+  to the **restarted** law `mu z` inside the proof of the estimate below.
+* `abs_integral_jumpProcess_sub_sub_le`: **the backward equation at second
+  order**, for `h` bounded by `C`, `0 < lam ≤ L`, `0 ≤ t` and `L * t ≤ 1`,
+  ```
+  |∫ h (X t) d(jumpMeasure mu nu) − ∫ h dnu − t * ∫ A h dnu| ≤ 4 * C * L ^ 2 * t ^ 2.
+  ```
+  **Proved** on 2026-09-09, twenty fourth run. It is a quantitative statement and
+  not a limit, and its constant mentions only `C` and `L`.
+* `jumpMeasure_hasDerivWithinAt_integral`: **the backward equation in
+  differential form at time zero**,
+  ```
+  HasDerivWithinAt (fun t ↦ ∫ h (X t) d(jumpMeasure mu nu)) (∫ A h dnu) (Set.Ici 0) 0.
+  ```
+  **Proved** on 2026-09-09, twenty fourth run, from the estimate above.
+* `integral_jumpProcess_of_nonpos` and
+  `eq_zero_of_hasDerivAt_integral_jumpProcess`: **the derivative is one sided of
+  necessity.** Before the first jump the path sits at its initial state, so
+  `t ↦ ∫ h (X t) d(jumpMeasure mu nu)` is constant on `Set.Iic 0` and its left
+  derivative at `0` is `0`; a two sided `HasDerivAt` at `0` therefore forces
+  `∫ A h dnu = 0`. Both **proved** on 2026-09-09, twenty fourth run. Nothing is
+  lost by this: the martingale problem of the jump process is indexed by `ℝ≥0`,
+  because `mpFamily` needs `[OrderBot ι]`.
+* `expMeasure_one_real_Iic`: `(expMeasure 1).real (Set.Iic a) = 1 − exp (−a)` for
+  `0 ≤ a`. **Proved** on 2026-09-09, twenty fourth run. Mathlib has the
+  distribution function of `expMeasure` in `ℝ≥0∞` (`cdf_expMeasure_eq`) but not
+  in `ℝ`, and every weight of the first jump decomposition is a real number.
 * `jumpProcess_isMPSolution`: for `lam` bounded, `jumpProcess lam mu nu` solves
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
@@ -786,9 +820,18 @@ A concrete family of solutions, built without any of the theory above. Index
   assembled into `jumpMeasure_integral_eq_renewal` on the twenty third. What
   remains is the expectation identity
   `E_x[f (X t)] - f x = ∫_0^t E_x[A f (X s)] ds`, which is the backward
-  equation and the only step needing analysis beyond bookkeeping — the renewal
-  equation differentiated in `t` — and its combination with the Markov
-  property.
+  equation and the only step needing analysis beyond bookkeeping. Its value at
+  `t = 0` is `jumpMeasure_hasDerivWithinAt_integral`, proved on 2026-09-09,
+  twenty fourth run. What remains of it is the time homogeneous Markov property
+  in integrated form,
+  ```
+  ∫ h (X (s + t)) d(jumpMeasure mu nu)
+    = ∫ h (X t) d(jumpMeasure mu ((jumpMeasure mu nu).map (jumpProcess lam s))),
+  ```
+  which moves the derivative from `0` to every `s` and is the one statement that
+  consumes `expMeasure_Ioi_add`, the memorylessness of the exponential law: the
+  holding time still to run at the deterministic time `s` is exponential again.
+  With it the identity follows from `intervalIntegral.integral_eq_sub_of_hasDerivAt`.
 * `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
   **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a
