@@ -4373,6 +4373,67 @@ theorem eq_zero_of_hasDerivAt_integral_jumpProcess {lam : E → ℝ} (hlam0 : �
   exact tendsto_nhds_unique (hD.mono_left hsub)
     ((tendsto_congr' hzero).2 tendsto_const_nhds)
 
+/-- **The backward equation in differential form**, at every nonnegative time and from the right:
+`(d/dt) E[h (X t)] = E[(A h)(X t)]`.
+
+This is `jumpMeasure_hasDerivWithinAt_integral`, which lives at `0` only, moved to an arbitrary
+time by the Markov property: the derivative at `r` is the derivative at `0` of the construction
+restarted from the law at time `r` (`jumpMeasure_integral_jumpProcess_add'`), composed with the
+shift `x ↦ x - r`.  That composition is the whole content, and it is where the Markov property is
+spent.
+
+The derivative is one sided of necessity and not of convenience:
+`eq_zero_of_hasDerivAt_integral_jumpProcess` exhibits a time at which a two sided derivative does
+not exist. -/
+theorem jumpMeasure_hasDerivWithinAt_integral_Ici {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) {L : ℝ} (hL0 : 0 < L) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    {h : E → ℝ} (hh : Measurable h) {C : ℝ} (hC : ∀ z, |h z| ≤ C) {r : ℝ} (hr : 0 ≤ r) :
+    HasDerivWithinAt (fun t ↦ ∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu))
+      (∫ ω, jumpApply lam mu h (jumpProcess lam r ω) ∂(jumpMeasure mu nu)) (Set.Ici r) r := by
+  set F : ℝ → ℝ := fun s ↦ ∫ ω, h (jumpProcess lam s ω) ∂(jumpMeasure mu nu) with hFdef
+  set nuAt : ℝ → Measure E := fun s ↦ (jumpMeasure mu nu).map (jumpProcess lam s) with hnuAt
+  have hXm : ∀ s : ℝ, Measurable (jumpProcess lam s (E := E)) :=
+    fun s ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  have hprob : ∀ s : ℝ, IsProbabilityMeasure (nuAt s) :=
+    fun s ↦ Measure.isProbabilityMeasure_map (hXm s).aemeasurable
+  have hpush : ∀ (s : ℝ) (g : E → ℝ), Measurable g →
+      (∫ z, g z ∂(nuAt s)) = ∫ ω, g (jumpProcess lam s ω) ∂(jumpMeasure mu nu) := by
+    intro s g hg
+    rw [hnuAt]
+    exact integral_map (hXm s).aemeasurable hg.aestronglyMeasurable
+  have hshift : ∀ s u : ℝ, 0 ≤ s → 0 ≤ u →
+      F (s + u) = ∫ ω, h (jumpProcess lam u ω) ∂(jumpMeasure mu (nuAt s)) := by
+    intro s u hs hu
+    have := hprob s
+    exact jumpMeasure_integral_jumpProcess_add' mu hlam hlam0 hL0 hL nu hh hC hs hu
+  have hpr := hprob r
+  have hbase := jumpMeasure_hasDerivWithinAt_integral hlam hlam0 hL0 hL mu (nuAt r) hh hC
+  have hsub : HasDerivWithinAt (fun x : ℝ ↦ x - r) 1 (Set.Ici r) r :=
+    (hasDerivWithinAt_id r (Set.Ici r)).sub_const r
+  have hmaps : Set.MapsTo (fun x : ℝ ↦ x - r) (Set.Ici r) (Set.Ici 0) := by
+    intro x hx
+    simpa using sub_nonneg.2 (Set.mem_Ici.1 hx)
+  have hbase' : HasDerivWithinAt
+      (fun u ↦ ∫ ω, h (jumpProcess lam u ω) ∂(jumpMeasure mu (nuAt r)))
+      (∫ z, jumpApply lam mu h z ∂(nuAt r)) (Set.Ici 0) ((fun x : ℝ ↦ x - r) r) := by
+    simpa using hbase
+  have hcomp := HasDerivWithinAt.comp (h := fun x : ℝ ↦ x - r) r hbase' hsub hmaps
+  rw [mul_one] at hcomp
+  have hval : ∀ x ∈ Set.Ici r, F x = ((fun u ↦ ∫ ω, h (jumpProcess lam u ω)
+      ∂(jumpMeasure mu (nuAt r))) ∘ fun x : ℝ ↦ x - r) x := by
+    intro x hx
+    have hx' : 0 ≤ x - r := sub_nonneg.2 hx
+    show F x = ∫ ω, h (jumpProcess lam (x - r) ω) ∂(jumpMeasure mu (nuAt r))
+    rw [← hshift r (x - r) hr hx']
+    congr 1
+    ring
+  have hgoal := hcomp.congr hval (hval r (Set.mem_Ici.2 (le_refl r)))
+  have hGr : (∫ z, jumpApply lam mu h z ∂(nuAt r))
+      = ∫ ω, jumpApply lam mu h (jumpProcess lam r ω) ∂(jumpMeasure mu nu) :=
+    hpush r _ (measurable_jumpApply hlam hh hC)
+  rwa [hGr] at hgoal
+
 /-- **The expectation identity of the backward equation**,
 `E[h (X t)] - E[h (X 0)] = ∫_0^t E[A h (X r)] dr`.
 
@@ -4421,33 +4482,8 @@ theorem jumpMeasure_integral_sub_eq_intervalIntegral {lam : E → ℝ} (hlam : M
     have := hprob r
     exact jumpMeasure_integral_jumpProcess_add' mu hlam hlam0 hL0 hL nu hh hC hr hu
   -- the derivative from the right, at every nonnegative time
-  have hderiv : ∀ r : ℝ, 0 ≤ r → HasDerivWithinAt F (G r) (Set.Ici r) r := by
-    intro r hr
-    have hpr := hprob r
-    have hbase := jumpMeasure_hasDerivWithinAt_integral hlam hlam0 hL0 hL mu (nuAt r) hh hC
-    have hsub : HasDerivWithinAt (fun x : ℝ ↦ x - r) 1 (Set.Ici r) r :=
-      (hasDerivWithinAt_id r (Set.Ici r)).sub_const r
-    have hmaps : Set.MapsTo (fun x : ℝ ↦ x - r) (Set.Ici r) (Set.Ici 0) := by
-      intro x hx
-      simpa using sub_nonneg.2 (Set.mem_Ici.1 hx)
-    have hbase' : HasDerivWithinAt
-        (fun u ↦ ∫ ω, h (jumpProcess lam u ω) ∂(jumpMeasure mu (nuAt r)))
-        (∫ z, jumpApply lam mu h z ∂(nuAt r)) (Set.Ici 0) ((fun x : ℝ ↦ x - r) r) := by
-      simpa using hbase
-    have hcomp := HasDerivWithinAt.comp (h := fun x : ℝ ↦ x - r) r hbase' hsub hmaps
-    rw [mul_one] at hcomp
-    have hval : ∀ x ∈ Set.Ici r, F x = ((fun u ↦ ∫ ω, h (jumpProcess lam u ω)
-        ∂(jumpMeasure mu (nuAt r))) ∘ fun x : ℝ ↦ x - r) x := by
-      intro x hx
-      have hx' : 0 ≤ x - r := sub_nonneg.2 hx
-      show F x = ∫ ω, h (jumpProcess lam (x - r) ω) ∂(jumpMeasure mu (nuAt r))
-      rw [← hshift r (x - r) hr hx']
-      congr 1
-      ring
-    have hgoal := hcomp.congr hval (hval r (Set.mem_Ici.2 (le_refl r)))
-    have hGr : (∫ z, jumpApply lam mu h z ∂(nuAt r)) = G r :=
-      hpush r _ (measurable_jumpApply hlam hh hC)
-    rwa [hGr] at hgoal
+  have hderiv : ∀ r : ℝ, 0 ≤ r → HasDerivWithinAt F (G r) (Set.Ici r) r := fun r hr ↦
+    jumpMeasure_hasDerivWithinAt_integral_Ici hlam hlam0 hL0 hL mu nu hh hC hr
   -- the Lipschitz estimate, hence continuity
   have hlip : ∀ a b : ℝ, 0 ≤ a → a ≤ b → |F b - F a| ≤ 2 * C * L * (b - a) := by
     intro a b ha hab
@@ -11557,3 +11593,337 @@ theorem linearBirthDeath_isLocalMPSolution {β δ : ℝ} (hβδ : 0 ≤ β + δ)
     (ae_mem_nonExplosiveE_linearBirthDeath hβδ nu)
 
 end LinearBirthDeath
+
+section YuleProcess
+
+/-! ## The Yule process, and the master equation
+
+The Yule process is the linear birth and death chain with vanishing death rate, `b x = β * x` and
+`d ≡ 0`.  It is the cheapest instance of the local branch there is -- everything below the master
+equation is substitution into `section LinearBirthDeath` -- and it is here for a reason that is not
+the process: it is the one place where **three different routes to the same statement** can be run
+against each other and the cost read off.
+
+The statement is non explosion, `∀ᵐ ω, ω ∈ NonExplosiveE lam`.  The three routes:
+
+* **The series along the embedded chain.**  `ae_mem_nonExplosiveE_linearBirthDeath`, already
+  proved: the chain moves up by at most one step, so its reciprocal rates dominate a tail of the
+  harmonic series, and the extinction event falls in the absorbing branch.  For the Yule process
+  `ae_mem_nonExplosiveE_yule` is that statement with `δ = 0`.
+* **The master equation.**  Put the indicator `stateIndicator n` into the expectation identity
+  `jumpMeasure_integral_sub_eq_intervalIntegral`; since `jumpApply_yule_indicator` is
+  `A 1_{n+1} = β n 1_n - β (n+1) 1_{n+1}`, that identity is the master equation in integrated
+  form, `p n t = p n 0 + ∫_0^t (β (n-1) p (n-1) r - β n p n r) dr`.  Solving it by induction on
+  `n` with the integrating factor `exp (β n t)` gives `p n t = exp (-β t) (1 - exp (-β t))^(n-1)`,
+  and `∑ n, p n t = 1` -- a geometric series -- **is** non explosion.  This route yields the one
+  dimensional law and the non explosion at once.
+* **The coupling.**  Dominate the birth and death process pathwise by the Yule process and inherit
+  non explosion from it.
+
+**The circularity, which is the reason to run the comparison at all.**  "At a fixed time `X t` is
+geometric, hence almost surely finite, hence there is no explosion" is circular: to speak of `X t`
+the process has to be defined at `t` already.  What is not circular is `∑ k, p k t = 1` for the
+**minimal** process, and that identity *is* the non explosion.  The master equation route
+therefore does not presuppose what the coupling route needs before it may begin.
+
+The generator is `jumpApply_yule`, `A f x = β x (f (x + 1) - f x)`, and every hypothesis of the
+local theorem is discharged on the data by `yule_isLocalMPSolution`. -/
+
+variable {β : ℝ}
+
+/-! ### The Yule data -/
+
+/-- **The death rate of the linear chain vanishes identically at `δ = 0`.** -/
+theorem linearDeath_zero : linearDeath (0 : ℝ) = fun _ ↦ (0 : ℝ) := by
+  funext x
+  simp [linearDeath]
+
+/-- **The total rate of the Yule process is `β x`.** -/
+theorem birthDeathRate_yule_apply (x : ℕ) :
+    birthDeathRate (linearBirth β) (linearDeath 0) x = β * x := by
+  rw [birthDeathRate_linear_apply]
+  ring
+
+/-- **The jump kernel of the Yule process is a Markov kernel**, with no hypothesis but `0 ≤ β`.
+This is `isMarkovKernel_birthDeathKernel` on the data, and it is the instance that the statements
+of `section LinearBirthDeath` take as a hypothesis. -/
+theorem isMarkovKernel_yuleKernel (hβ : 0 ≤ β) :
+    IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0)) :=
+  isMarkovKernel_birthDeathKernel (fun x ↦ mul_nonneg hβ (Nat.cast_nonneg x))
+    (fun x ↦ by rw [linearDeath_zero])
+
+/-- **Away from the absorbing state the Yule chain is the shift.**  The mixture weights of
+`birthDeathKernel` are `1` and `0` there, and no probabilistic content is left in the kernel: the
+embedded chain of a pure birth process is deterministic. -/
+theorem yuleKernel_apply (hβ : 0 < β) {x : ℕ} (hx : x ≠ 0) :
+    birthDeathKernel (linearBirth β) (linearDeath 0) x = Measure.dirac (x + 1) := by
+  have hxpos : (0 : ℝ) < x := by exact_mod_cast Nat.pos_of_ne_zero hx
+  have hne : linearBirth β x + linearDeath 0 x ≠ 0 := by
+    simp only [linearBirth, linearDeath, zero_mul, add_zero]
+    positivity
+  rw [birthDeathKernel_apply, if_neg hne]
+  have hb : linearBirth β x / (linearBirth β x + linearDeath 0 x) = 1 := by
+    simp only [linearBirth, linearDeath, zero_mul, add_zero]
+    rw [div_self (by positivity)]
+  have hd : linearDeath 0 x / (linearBirth β x + linearDeath 0 x) = 0 := by
+    simp only [linearDeath, zero_mul, zero_div]
+  rw [hb, hd]
+  simp
+
+/-- **The generator of the Yule process**, `A f x = β x (f (x + 1) - f x)`.  It is
+`jumpApply_linearBirthDeath` at `δ = 0`, and nothing has to be recomputed. -/
+theorem jumpApply_yule (hβ : 0 ≤ β) (f : ℕ → ℝ) (x : ℕ) :
+    jumpApply (birthDeathRate (linearBirth β) (linearDeath 0))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) f x
+      = β * x * (f (x + 1) - f x) := by
+  rw [jumpApply_linearBirthDeath hβ le_rfl f x]
+  ring
+
+/-- **Almost every sample point of the Yule process is non explosive**, by the series along the
+embedded chain.  This is the **first** of the three routes named in the section doc, and on this
+data it costs one line: `ae_mem_nonExplosiveE_linearBirthDeath` at `δ = 0`. -/
+theorem ae_mem_nonExplosiveE_yule (hβ : 0 ≤ β) (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath 0)) :=
+  ae_mem_nonExplosiveE_linearBirthDeath (β := β) (δ := 0) (by simpa using hβ) nu
+
+/-- **The Yule process solves its martingale problem locally.**  Substitution into
+`linearBirthDeath_isLocalMPSolution`.  The Markov kernel instance appears in the *statement*, in
+`jumpMeasure`, so it cannot be discharged inside the proof and is an instance hypothesis here as it
+is there; `isMarkovKernel_yuleKernel` discharges it at the call site.  The rate is unbounded
+(`not_bddAbove_birthDeathRate_linear`) and vanishes at `0` (`birthDeathRate_linear_zero`), so this
+is the local branch and not the bounded one. -/
+theorem yule_isLocalMPSolution (hβ : 0 ≤ β) (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] :
+    IsLocalMPSolution (mpFamily (jumpOperator (birthDeathRate (linearBirth β) (linearDeath 0))
+        (birthDeathKernel (linearBirth β) (linearDeath 0))) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦
+          jumpProcessE (birthDeathRate (linearBirth β) (linearDeath 0)) (t : ℝ) ω))
+      (jumpFiltrationE (birthDeathRate (linearBirth β) (linearDeath 0))
+        (measurable_of_countable _))
+      (jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu) :=
+  linearBirthDeath_isLocalMPSolution (β := β) (δ := 0) (by simpa using hβ) nu
+
+/-! ### The master equation
+
+The expectation identity `jumpMeasure_integral_sub_eq_intervalIntegral` is stated for an arbitrary
+bounded measurable test function.  Put the **indicator of a single state** into it and it becomes
+the master equation of the chain in integrated form,
+
+`p n t = p n 0 + ∫_0^t (A 1_n) evaluated along the process, dr`,
+
+with `p n t = P (X t = n)`.  Nothing about the identity has to be reproved; what has to be
+computed is the right hand side, and that is `jumpApply_yule_indicator` -- and there the
+observation of `MartingaleProblems/README.md` about a domain with compact support shows itself
+concretely: **the generator carries an indicator to a finitely supported, hence bounded, function**
+even where `lam` is unbounded.
+
+`stateIndicator` is written as its own definition and not inlined because it appears in three
+places at once -- as the test function of the identity, as the integrand of `p`, and as the value
+of the generator -- and because the two facts a test function of `jumpOperator` has to have,
+measurability and a bound, are about it and not about the identity. -/
+
+/-- **The indicator of a single state**, as a real valued test function.  This is the test
+function of the master equation. -/
+noncomputable def stateIndicator {E : Type*} (n : E) : E → ℝ := Set.indicator {n} fun _ ↦ (1 : ℝ)
+
+theorem stateIndicator_apply {E : Type*} [DecidableEq E] (n x : E) :
+    stateIndicator n x = if x = n then 1 else 0 := by
+  rw [stateIndicator, Set.indicator_apply]
+  simp
+
+theorem measurable_stateIndicator {E : Type*} [MeasurableSpace E] [MeasurableSingletonClass E]
+    (n : E) : Measurable (stateIndicator n) :=
+  measurable_const.indicator (measurableSet_singleton n)
+
+theorem abs_stateIndicator_le_one {E : Type*} (n x : E) : |stateIndicator n x| ≤ 1 := by
+  classical
+  rw [stateIndicator, Set.indicator_apply]
+  split_ifs <;> simp
+
+/-- **The one dimensional law of the jump process**, read as a function of the state:
+`jumpLaw lam mu nu t n = P (X t = n)`.  It is written as an integral rather than as a measure
+because that is the shape the expectation identity delivers; `jumpLaw_eq_measureReal` says the two
+agree. -/
+noncomputable def jumpLaw {E : Type*} [MeasurableSpace E] (lam : E → ℝ) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) (t : ℝ) (n : E) : ℝ :=
+  ∫ ω, stateIndicator n (jumpProcess lam t ω) ∂(jumpMeasure mu nu)
+
+/-- **`jumpLaw` is the one dimensional law**, and not merely an integral that looks like one. -/
+theorem jumpLaw_eq_measureReal {E : Type*} [MeasurableSpace E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (t : ℝ) (n : E) :
+    jumpLaw lam mu nu t n = ((jumpMeasure mu nu).map (jumpProcess lam t)).real {n} := by
+  have hX : Measurable (jumpProcess lam t (E := E)) :=
+    (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  rw [jumpLaw, ← integral_map hX.aemeasurable (measurable_stateIndicator n).aestronglyMeasurable]
+  exact integral_indicator_one (measurableSet_singleton n)
+
+/-- **The initial value of the master equation** is the initial law.  Before the first jump the
+path has not moved, which is `integral_jumpProcess_of_nonpos`. -/
+theorem jumpLaw_zero {E : Type*} [MeasurableSpace E] [MeasurableSingletonClass E] {lam : E → ℝ}
+    (hlam0 : ∀ x, 0 < lam x) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (n : E) :
+    jumpLaw lam mu nu 0 n = nu.real {n} := by
+  rw [jumpLaw, integral_jumpProcess_of_nonpos hlam0 mu nu (measurable_stateIndicator n) le_rfl]
+  exact integral_indicator_one (measurableSet_singleton n)
+
+/-- **The master equation of a jump process in integrated form.**  It is the expectation identity
+at the test function `stateIndicator n`, and the two facts that identity asks of a test function --
+measurability and a bound -- are `measurable_stateIndicator` and `abs_stateIndicator_le_one`.
+
+The hypotheses are those of `jumpMeasure_integral_sub_eq_intervalIntegral` and no others: a
+measurable rate, **positive and bounded**.  The boundedness is what a rate like the Yule rate has
+not got, and it is the one thing between this statement and the second route to non explosion; see
+the section doc. -/
+theorem jumpMeasure_masterEquation {E : Type*} [MeasurableSpace E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x) {L : ℝ} (hL0 : 0 < L)
+    (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (n : E) {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw lam mu nu t n
+      = jumpLaw lam mu nu 0 n
+        + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply lam mu (stateIndicator n)
+            (jumpProcess lam r ω) ∂(jumpMeasure mu nu) := by
+  have hmain := jumpMeasure_integral_sub_eq_intervalIntegral hlam hlam0 hL0 hL mu nu
+    (measurable_stateIndicator n) (abs_stateIndicator_le_one n) ht
+  unfold jumpLaw
+  rw [integral_jumpProcess_of_nonpos hlam0 mu nu (measurable_stateIndicator n) le_rfl]
+  linarith [hmain]
+
+/-! ### The right hand side of the master equation of the Yule process -/
+
+/-- **The generator of the Yule process on the indicator of a positive state**,
+`A 1_{n+1} = β n 1_n - β (n+1) 1_{n+1}`.  This is the right hand side of the master equation, and
+it is the concrete case of the remark about a domain with compact support: the value is a
+**finitely supported**, hence bounded, function, although `lam` is unbounded. -/
+theorem jumpApply_yule_indicator (hβ : 0 ≤ β) (n x : ℕ) :
+    jumpApply (birthDeathRate (linearBirth β) (linearDeath 0))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator (n + 1)) x
+      = β * n * stateIndicator n x - β * (n + 1) * stateIndicator (n + 1) x := by
+  rw [jumpApply_yule hβ, stateIndicator_apply, stateIndicator_apply, stateIndicator_apply]
+  by_cases hxn : x = n
+  · subst hxn
+    simp
+  · by_cases hxn1 : x = n + 1
+    · subst hxn1
+      have h1 : ¬ (n + 1 + 1 = n + 1) := by omega
+      have h2 : ¬ (n + 1 = n) := by omega
+      rw [if_neg h1, if_neg h2, if_pos rfl]
+      push_cast
+      ring
+    · simp [hxn, hxn1]
+
+/-- **The generator of the Yule process annihilates the indicator of the absorbing state.**  The
+state `0` has rate `0`, so the value of the generator there is `0`, and no other state can leave
+towards `0`: `p 0 t` is constant in `t`, which is the base of the induction that solves the master
+equation. -/
+theorem jumpApply_yule_indicator_zero (hβ : 0 ≤ β) (x : ℕ) :
+    jumpApply (birthDeathRate (linearBirth β) (linearDeath 0))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator 0) x = 0 := by
+  rw [jumpApply_yule hβ, stateIndicator_apply, stateIndicator_apply]
+  rcases Nat.eq_zero_or_pos x with rfl | hx
+  · simp
+  · have h1 : ¬ (x + 1 = 0) := by omega
+    have h2 : ¬ (x = 0) := by omega
+    simp [h1, h2]
+
+/-- **The master equation in differential form**, `(d/dt) p n t = E[(A 1_n)(X t)]` from the right
+at every nonnegative time.  It is `jumpMeasure_hasDerivWithinAt_integral_Ici` at the test function
+`stateIndicator n`, and it is exactly the input that
+`eq_exp_add_integral_of_hasDerivWithinAt` asks for: the integrated form of the master equation is
+what the identity gives, the differential form is what the induction on `n` consumes. -/
+theorem hasDerivWithinAt_jumpLaw {E : Type*} [MeasurableSpace E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x) {L : ℝ} (hL0 : 0 < L)
+    (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (n : E) {r : ℝ} (hr : 0 ≤ r) :
+    HasDerivWithinAt (fun s ↦ jumpLaw lam mu nu s n)
+      (∫ ω, jumpApply lam mu (stateIndicator n) (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+      (Set.Ici r) r :=
+  jumpMeasure_hasDerivWithinAt_integral_Ici hlam hlam0 hL0 hL mu nu
+    (measurable_stateIndicator n) (abs_stateIndicator_le_one n) hr
+
+/-! ### The scalar linear equation, and what Mathlib has of it
+
+The master equation is solved by induction on `n`, and each step of that induction is one scalar
+linear equation of first order, `f' = g - c f`, whose inhomogeneity `g = β (n-1) p (n-1)` is known
+from the step before.  Mathlib has Grönwall (`Mathlib/Analysis/ODE/Gronwall.lean`) and the
+uniqueness statements built on it (`ODE_solution_unique_of_mem_Icc_right`,
+`Mathlib/Analysis/ODE/ExistUnique.lean`), but it has **no first order linear equation and no
+integrating factor**: the string `integrating factor` occurs in Mathlib nowhere, and
+`Mathlib/Analysis/ODE/` has six files, none of them about the linear case.  So the step is written
+here, and it is written in the shape the master equation delivers it: a derivative **from the
+right**, because `eq_zero_of_hasDerivAt_integral_jumpProcess` says a two sided derivative at `0`
+does not exist. -/
+
+/-- **The scalar linear equation of first order, solved by the integrating factor.**  From
+`f' = g - c f` from the right on `(0, t)` follows the variation of constants formula
+`f t = exp (-c t) f 0 + ∫_0^t exp (-c (t - r)) g r dr`.
+
+The proof multiplies by `exp (c ·)` and applies
+`intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le`, the same theorem of the calculus that
+carries `jumpMeasure_integral_sub_eq_intervalIntegral`, and for the same reason: nothing more than
+a right derivative is available.  The hypotheses are therefore the same three -- continuity on the
+closed interval, a right derivative on the open one, and the integrability of the derivative,
+which here is continuity again. -/
+theorem eq_exp_add_integral_of_hasDerivWithinAt {f g : ℝ → ℝ} {c t : ℝ} (ht : 0 ≤ t)
+    (hf : ContinuousOn f (Set.Icc 0 t)) (hg : ContinuousOn g (Set.Icc 0 t))
+    (hderiv : ∀ r ∈ Set.Ioo 0 t, HasDerivWithinAt f (g r - c * f r) (Set.Ioi r) r) :
+    f t = Real.exp (-(c * t)) * f 0
+      + ∫ r in (0:ℝ)..t, Real.exp (-(c * (t - r))) * g r := by
+  have hexpcont : ContinuousOn (fun x : ℝ ↦ Real.exp (c * x)) (Set.Icc 0 t) :=
+    (Real.continuous_exp.comp (continuous_const.mul continuous_id)).continuousOn
+  have hFcont : ContinuousOn (fun r ↦ Real.exp (c * r) * f r) (Set.Icc 0 t) := hexpcont.mul hf
+  have hFderiv : ∀ r ∈ Set.Ioo 0 t,
+      HasDerivWithinAt (fun r ↦ Real.exp (c * r) * f r) (Real.exp (c * r) * g r) (Set.Ioi r) r := by
+    intro r hr
+    have h1 : HasDerivAt (fun x : ℝ ↦ Real.exp (c * x)) (Real.exp (c * r) * c) r := by
+      simpa using ((hasDerivAt_id r).const_mul c).exp
+    have h2 := h1.hasDerivWithinAt.mul (hderiv r hr)
+    have heq : Real.exp (c * r) * c * f r + Real.exp (c * r) * (g r - c * f r)
+        = Real.exp (c * r) * g r := by ring
+    rw [heq] at h2
+    exact h2
+  have hint : IntervalIntegrable (fun r ↦ Real.exp (c * r) * g r) MeasureTheory.volume 0 t := by
+    refine ContinuousOn.intervalIntegrable ?_
+    rw [Set.uIcc_of_le ht]
+    exact hexpcont.mul hg
+  have hFTC : ∫ r in (0:ℝ)..t, Real.exp (c * r) * g r
+      = Real.exp (c * t) * f t - Real.exp (c * 0) * f 0 :=
+    intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le ht hFcont hFderiv hint
+  have hmove : ∫ r in (0:ℝ)..t, Real.exp (-(c * (t - r))) * g r
+      = Real.exp (-(c * t)) * ∫ r in (0:ℝ)..t, Real.exp (c * r) * g r := by
+    rw [← intervalIntegral.integral_const_mul]
+    refine intervalIntegral.integral_congr fun r _ ↦ ?_
+    have hsplit : -(c * (t - r)) = -(c * t) + c * r := by ring
+    rw [← mul_assoc, ← Real.exp_add, hsplit]
+  have hcancel : Real.exp (-(c * t)) * Real.exp (c * t) = 1 := by
+    rw [← Real.exp_add, neg_add_cancel, Real.exp_zero]
+  rw [hmove, hFTC, mul_zero, Real.exp_zero, one_mul, mul_sub, ← mul_assoc, hcancel]
+  ring
+
+/-! ### The emptiness probe of the master equation
+
+The master equation is stated for a positive bounded rate, and M/M/1 is a rate that is positive and
+bounded (`birthDeathRate_mm1_mem`).  This is the same kind of probe as
+`poissonProcess_isLocalMPSolution` for the local theorem: it discharges every hypothesis on data
+and no assumption is left standing.  What it does **not** exhibit is an unbounded rate, which is
+exactly the case the Yule process needs. -/
+
+/-- **The master equation holds for the M/M/1 queue.** -/
+theorem mm1_masterEquation {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ) (nu : Measure ℕ)
+    [IsProbabilityMeasure nu] [IsMarkovKernel (birthDeathKernel (mm1Birth β) (mm1Death δ))]
+    (n : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw (birthDeathRate (mm1Birth β) (mm1Death δ))
+        (birthDeathKernel (mm1Birth β) (mm1Death δ)) nu t n
+      = jumpLaw (birthDeathRate (mm1Birth β) (mm1Death δ))
+          (birthDeathKernel (mm1Birth β) (mm1Death δ)) nu 0 n
+        + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply (birthDeathRate (mm1Birth β) (mm1Death δ))
+            (birthDeathKernel (mm1Birth β) (mm1Death δ)) (stateIndicator n)
+            (jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) r ω)
+            ∂(jumpMeasure (birthDeathKernel (mm1Birth β) (mm1Death δ)) nu) :=
+  jumpMeasure_masterEquation (measurable_of_countable _)
+    (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).1) (by linarith : (0:ℝ) < β + δ)
+    (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).2) _ nu n ht
+
+end YuleProcess
