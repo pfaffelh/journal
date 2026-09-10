@@ -19,6 +19,8 @@ import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.MeasureTheory.Function.Floor
 import Mathlib.Analysis.Calculus.Deriv.Slope
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
+import Mathlib.Analysis.SpecialFunctions.Exponential
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -51,7 +53,12 @@ the generator of this data is the forward difference `f (x + 1) - f x`, and
 `poissonProcess_isMPSolution` discharges every hypothesis of `thm:jumpMP` on
 data, so that the theorem is shown to have an instance.
 `martingale_compensated_poisson` is a concrete martingale and not a solution
-predicate.
+predicate.  Fourteen more the same day are `section Uniqueness`, the Picard
+iteration: `expJumpApply` is the exponential series of the bounded generator,
+and `integral_eq_expJumpApply_of_isMPSolution` shows that **every** solution of
+the martingale problem has that series for its one dimensional distributions,
+`integral_eq_of_isMPSolution_of_map_eq` reading it as uniqueness across two
+different spaces.  Nothing in that section mentions `jumpProcess`.
 every one of those `sorry`s is a **proof**.  The last two blocks of the file are
 Milestone 4, and they carry **no** `sorry`.  The first, `IsStepPath`, was added on 2026-09-09:
 its three declarations are proved, and one of them,
@@ -5541,6 +5548,374 @@ theorem jumpProcess_isMPSolution {lam : E → ℝ} (hlam : Measurable lam) {L : 
 end JumpFiltration
 
 end JumpConstruction
+
+/-! ## Milestone 4, uniqueness: the Picard iteration
+
+The exponential series of the bounded generator, and the theorem that fixes the one dimensional
+distributions of **every** solution of the martingale problem to be that series applied to the
+initial law.  This is the uniqueness half of `exists_unique_of_bounded`; the existence half is
+`jumpProcess_isMPSolution` above.
+
+Three remarks on the shape of what follows.
+
+First, the abstract layer is kept: nothing here mentions `jumpProcess`, and the process `X` is
+an arbitrary family of maps `ℝ≥0 → Ω → E`.  That is what makes the statement a *uniqueness*
+statement -- it applies to any solution, not to the one that was constructed.
+
+Second, the only regularity asked of `X` is `hX`, the joint measurability in `(u, ω)` of the real
+functionals `h ∘ X`, and `hX0`, the measurability of the initial value.  Neither is the joint
+measurability of `X` itself, which is not available: a limit of `E` valued measurable maps is
+measurable only if the diagonal of `E` is, and the jump process supplies the real functional form
+(`measurable_uncurry_jumpProcess`) and not the `E` valued one.
+
+Third, the whole argument is the Picard iteration and uses no analysis beyond the Bochner
+integral: `integral_sub_eq_intervalIntegral_of_isMPSolution` turns the martingale property into
+the integral equation `u_f(t) = ν(f) + ∫_0^t u_{Af}(s) ds`, and
+`abs_integral_sub_sum_le_of_isMPSolution` iterates it, the remainder after `n` steps being
+`(2Lt)^n / n!` times the bound of `f`.
+-/
+
+section Uniqueness
+
+variable {lam : E → ℝ} {mu : Kernel E E} {f : E → ℝ} {L C : ℝ}
+
+/-- **The iterates of the generator are bounded by the powers of its bound.** -/
+theorem abs_iterate_jumpApply_le [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (n : ℕ) (x : E) :
+    |(jumpApply lam mu)^[n] f x| ≤ (2 * L) ^ n * C := by
+  induction n generalizing x with
+  | zero => simpa using hC x
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      calc |jumpApply lam mu ((jumpApply lam mu)^[n] f) x|
+          ≤ 2 * L * ((2 * L) ^ n * C) := abs_jumpApply_le hlam0 hL ih x
+        _ = (2 * L) ^ (n + 1) * C := by ring
+
+/-- The iterates of the generator are measurable. -/
+theorem measurable_iterate_jumpApply [IsMarkovKernel mu] (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) (hf : Measurable f) (hC : ∀ x, |f x| ≤ C)
+    (n : ℕ) : Measurable ((jumpApply lam mu)^[n] f) := by
+  induction n with
+  | zero => simpa using hf
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      exact measurable_jumpApply hlam ih (abs_iterate_jumpApply_le hlam0 hL hC n)
+
+/-- **The exponential series of the generator**, `exp (t • A) f`. -/
+noncomputable def expJumpApply (lam : E → ℝ) (mu : Kernel E E) (t : ℝ) (f : E → ℝ) (x : E) : ℝ :=
+  ∑' n : ℕ, (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x
+
+/-- A term of the exponential series, bounded by the corresponding term of the exponential
+series of `2 L |t|`.  Stated for a scalar, because it is used both pointwise and under an
+integral sign. -/
+theorem abs_series_term_le {a : ℝ} {n : ℕ} (h : |a| ≤ (2 * L) ^ n * C) (t : ℝ) :
+    |(t ^ n / n.factorial) * a| ≤ (2 * L * |t|) ^ n / n.factorial * C := by
+  rw [abs_mul, abs_div, abs_pow, Nat.abs_cast]
+  have h2 : (0:ℝ) ≤ |t| ^ n / n.factorial :=
+    div_nonneg (pow_nonneg (abs_nonneg t) n) (Nat.cast_nonneg _)
+  calc |t| ^ n / n.factorial * |a|
+      ≤ |t| ^ n / n.factorial * ((2 * L) ^ n * C) := mul_le_mul_of_nonneg_left h h2
+    _ = (2 * L * |t|) ^ n / n.factorial * C := by
+        rw [mul_pow, mul_comm (2*L) |t|]; ring
+
+/-- Each term of the exponential series is bounded by the corresponding term of the exponential
+series of `2 L |t|`. -/
+theorem abs_term_expJumpApply_le [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : E) (n : ℕ) :
+    |(t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x|
+      ≤ (2 * L * |t|) ^ n / n.factorial * C :=
+  abs_series_term_le (abs_iterate_jumpApply_le hlam0 hL hC n x) t
+
+/-- The exponential series converges absolutely at every point. -/
+theorem summable_expJumpApply [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : E) :
+    Summable fun n : ℕ ↦ (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x :=
+  Summable.of_norm_bounded ((Real.summable_pow_div_factorial (2 * L * |t|)).mul_right C)
+    fun n ↦ abs_term_expJumpApply_le hlam0 hL hC t x n
+
+/-- **The exponential series is bounded by `exp (2 L |t|) C`.** -/
+theorem abs_expJumpApply_le [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : E) :
+    |expJumpApply lam mu t f x| ≤ Real.exp (2 * L * |t|) * C := by
+  have hexp : Real.exp (2 * L * |t|) = ∑' n : ℕ, (2 * L * |t|) ^ n / n.factorial := by
+    rw [Real.exp_eq_exp_ℝ, NormedSpace.exp_eq_tsum_div]
+  have habs : Summable fun n : ℕ ↦ |(t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x| :=
+    Summable.of_nonneg_of_le (fun n ↦ abs_nonneg _)
+      (fun n ↦ abs_term_expJumpApply_le hlam0 hL hC t x n)
+      ((Real.summable_pow_div_factorial (2 * L * |t|)).mul_right C)
+  rw [expJumpApply, hexp, ← tsum_mul_right]
+  refine le_trans ?_ (habs.tsum_le_tsum (fun n ↦ abs_term_expJumpApply_le hlam0 hL hC t x n)
+    ((Real.summable_pow_div_factorial (2 * L * |t|)).mul_right C))
+  simpa only [Real.norm_eq_abs] using
+    norm_tsum_le_tsum_norm (f := fun n : ℕ ↦ (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x)
+      (by simpa only [Real.norm_eq_abs] using habs)
+
+/-- The exponential series is measurable in the state. -/
+theorem measurable_expJumpApply [IsMarkovKernel mu] (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) (hf : Measurable f) (hC : ∀ x, |f x| ≤ C)
+    (t : ℝ) : Measurable (expJumpApply lam mu t f) :=
+  measurable_of_tendsto_metrizable' atTop
+    (f := fun N x ↦ ∑ n ∈ Finset.range N, (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x)
+    (fun _ ↦ Finset.measurable_sum _ fun n _ ↦
+      measurable_const.mul (measurable_iterate_jumpApply hlam hlam0 hL hf hC n))
+    (tendsto_pi_nhds.mpr fun x ↦ (summable_expJumpApply hlam0 hL hC t x).hasSum.tendsto_sum_nat)
+
+variable {P : Measure Ω} {F : Filtration ℝ≥0 m} {X : ℝ≥0 → Ω → E}
+
+/-- **The martingale identity, integrated**: the expectation of a bounded functional of the
+state at time `t` is its initial expectation plus the time integral of the expectation of its
+image under the generator. -/
+theorem integral_sub_eq_intervalIntegral_of_isMPSolution [IsProbabilityMeasure P]
+    [IsMarkovKernel mu] (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    (∫ ω, f (X t ω) ∂P) - ∫ ω, f (X 0 ω) ∂P
+      = ∫ r in (0:ℝ)..(t:ℝ), ∫ ω, jumpApply lam mu f (X (Real.toNNReal r) ω) ∂P := by
+  set g := jumpApply lam mu f with hgdef
+  have hgm : Measurable g := measurable_jumpApply hlam hf hC
+  have hgb : ∀ x, |g x| ≤ 2 * L * C := fun x ↦ abs_jumpApply_le hlam0 hL hC x
+  set S : Set ℝ≥0 := lebesgueClock.interval Clock.Conv.optional ⊥ t with hSdef
+  have hSeq : S = Set.Ioc (⊥ : ℝ≥0) t := lebesgueClock_interval_optional_eq ⊥ t
+  haveI hfinS : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, hSeq, lebesgueClock_apply_Ioc]
+    exact ENNReal.ofReal_lt_top
+  have hsftest : SFinite (lebesgueClock.q.restrict S) := inferInstance
+  -- the compensated test process
+  set Y : ℝ≥0 → Ω → ℝ := fun s ω ↦ f (X s ω) -
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s, g (X u ω) ∂lebesgueClock.q with hYdef
+  have hmart : Martingale Y F P :=
+    hsol Y ⟨(f, g), mem_jumpOperator hf hC, fun s ω ↦ rfl⟩
+  -- the two integrability facts
+  have hintf : ∀ s : ℝ≥0, Integrable (fun ω ↦ f (X s ω)) P := fun s ↦
+    integrable_of_abs_le ((hX f hf).comp (measurable_const.prodMk measurable_id))
+      (fun ω ↦ hC (X s ω))
+  have hcompm : StronglyMeasurable fun ω ↦ ∫ u in S, g (X u ω) ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace Ω m ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) hsftest (fun u ω ↦ g (X u ω)) (hX g hgm) id measurable_id
+  have hStop : lebesgueClock.q S < ⊤ := by
+    rw [hSeq, lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
+  have hcompb : ∀ ω, |∫ u in S, g (X u ω) ∂lebesgueClock.q| ≤ 2 * L * C * (t : ℝ) := by
+    intro ω
+    have hmass : lebesgueClock.q.real S = (t : ℝ) := by
+      rw [measureReal_def, hSeq, lebesgueClock_apply_Ioc]
+      simp
+    have := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q) (s := S)
+      (f := fun u ↦ g (X u ω)) (C := 2 * L * C) hStop
+      (fun u _ ↦ by simpa only [Real.norm_eq_abs] using hgb (X u ω))
+    rw [Real.norm_eq_abs, hmass] at this
+    exact this
+  have hintc : Integrable (fun ω ↦ ∫ u in S, g (X u ω) ∂lebesgueClock.q) P :=
+    integrable_of_abs_le hcompm.measurable hcompb
+  -- the martingale has constant expectation
+  have hexp : ∫ ω, Y t ω ∂P = ∫ ω, Y 0 ω ∂P :=
+    calc ∫ ω, Y t ω ∂P = ∫ ω, (P[Y t | F 0]) ω ∂P := (integral_condExp (F.le 0)).symm
+      _ = ∫ ω, Y 0 ω ∂P := integral_congr_ae (hmart.2 0 t (by simp))
+  have hY0 : ∀ ω, Y 0 ω = f (X 0 ω) := by
+    intro ω
+    simp [hYdef, lebesgueClock_interval_optional_eq]
+  have hYt : ∫ ω, Y t ω ∂P
+      = (∫ ω, f (X t ω) ∂P) - ∫ ω, (∫ u in S, g (X u ω) ∂lebesgueClock.q) ∂P :=
+    integral_sub (hintf t) hintc
+  -- Fubini
+  have hswap : ∫ ω, (∫ u in S, g (X u ω) ∂lebesgueClock.q) ∂P
+      = ∫ u in S, (∫ ω, g (X u ω) ∂P) ∂lebesgueClock.q := by
+    haveI hprodfin : IsFiniteMeasure (P.prod (lebesgueClock.q.restrict S)) :=
+      @MeasureTheory.Measure.prod.instIsFiniteMeasure Ω ℝ≥0 m lebesgueClock.measurableSpace
+        P (lebesgueClock.q.restrict S) inferInstance hfinS
+    refine integral_integral_swap (μ := P) (ν := lebesgueClock.q.restrict S)
+      (f := fun (ω : Ω) (u : ℝ≥0) ↦ g (X u ω)) ?_
+    exact @integrable_of_abs_le _ _ _ hprodfin _ ((hX g hgm).comp measurable_swap) _
+      (fun p ↦ hgb (X p.2 p.1))
+  have hmeasF : Measurable fun u : ℝ≥0 ↦ ∫ ω, g (X u ω) ∂P :=
+    (stronglyMeasurable_integral_comp (α := Ω) (β := ℝ≥0) (γ := ℝ) (𝕜 := ℝ) P
+      (W := fun ω u ↦ g (X u ω)) ((hX g hgm).comp measurable_swap) measurable_id).measurable
+  have hclock : ∫ u in S, (∫ ω, g (X u ω) ∂P) ∂lebesgueClock.q
+      = ∫ r in (0:ℝ)..(t:ℝ), ∫ ω, g (X (Real.toNNReal r) ω) ∂P := by
+    rw [hSeq, integral_lebesgueClock_Ioc bot_le hmeasF]
+    norm_num
+  rw [← hclock, ← hswap]
+  have := hexp
+  rw [hYt] at this
+  rw [integral_congr_ae (Filter.Eventually.of_forall hY0)] at this
+  linarith [this]
+
+/-- A bounded measurable real function is interval integrable. -/
+theorem intervalIntegrable_of_abs_le {F : ℝ → ℝ} (hF : Measurable F) {b : ℝ}
+    (hb : ∀ x, |F x| ≤ b) (a c : ℝ) : IntervalIntegrable F volume a c :=
+  ⟨integrableOn_of_bounded _ (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top) hF
+      (fun x ↦ by simpa only [Real.norm_eq_abs] using hb x),
+   integrableOn_of_bounded _ (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top) hF
+      (fun x ↦ by simpa only [Real.norm_eq_abs] using hb x)⟩
+
+/-- The primitive of a monomial, in the shape the Picard iteration consumes. -/
+theorem intervalIntegral_pow_div_factorial (T : ℝ) (hT : 0 ≤ T) (k : ℕ) (a : ℝ) :
+    ∫ r in (0:ℝ)..T, (r ^ k / k.factorial) * a
+      = (T ^ (k + 1) / (k + 1).factorial) * a := by
+  have h1 : (fun r : ℝ ↦ (r ^ k / k.factorial) * a) = fun r : ℝ ↦ r ^ k * (a / k.factorial) := by
+    funext r; ring
+  have hk : (k.factorial : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (Nat.factorial_ne_zero k)
+  rw [h1, intervalIntegral.integral_mul_const, integral_pow]
+  rw [Nat.factorial_succ]
+  push_cast
+  field_simp
+  ring
+
+/-- **The Picard iteration.**  Any solution of the martingale problem has one dimensional
+expectations agreeing with the exponential series up to the `n`-th remainder. -/
+theorem abs_integral_sub_sum_le_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (n : ℕ) : ∀ (φ : E → ℝ) (D : ℝ), Measurable φ → (∀ x, |φ x| ≤ D) → ∀ t : ℝ≥0,
+      |(∫ ω, φ (X t ω) ∂P) - ∑ k ∈ Finset.range n,
+          ((t : ℝ) ^ k / k.factorial) * ∫ ω, ((jumpApply lam mu)^[k] φ) (X 0 ω) ∂P|
+        ≤ (2 * L * (t : ℝ)) ^ n / n.factorial * D := by
+  induction n with
+  | zero =>
+      intro φ D hφ hD t
+      simpa using abs_integral_le_of_abs_le (fun ω ↦ hD (X t ω))
+  | succ n ih =>
+      intro φ D hφ hD t
+      have hAm : Measurable (jumpApply lam mu φ) := measurable_jumpApply hlam hφ hD
+      have hAb : ∀ x, |jumpApply lam mu φ x| ≤ 2 * L * D := fun x ↦ abs_jumpApply_le hlam0 hL hD x
+      have hT : (0:ℝ) ≤ (t : ℝ) := t.coe_nonneg
+      -- the integrand of the remainder
+      set w : ℝ → ℝ := fun r ↦ ∫ ω, jumpApply lam mu φ (X (Real.toNNReal r) ω) ∂P with hwdef
+      set c : ℕ → ℝ := fun k ↦ ∫ ω, ((jumpApply lam mu)^[k] (jumpApply lam mu φ)) (X 0 ω) ∂P
+        with hcdef
+      have hwm : Measurable w := by
+        refine (stronglyMeasurable_integral_comp (α := Ω) (β := ℝ) (γ := ℝ) (𝕜 := ℝ) P
+          (W := fun ω r ↦ jumpApply lam mu φ (X (Real.toNNReal r) ω)) ?_ measurable_id).measurable
+        exact (hX _ hAm).comp
+          ((measurable_real_toNNReal.comp measurable_snd).prodMk measurable_fst)
+      have hwb : ∀ r, |w r| ≤ 2 * L * D := fun r ↦
+        abs_integral_le_of_abs_le (fun ω ↦ hAb (X (Real.toNNReal r) ω))
+      have hrec := integral_sub_eq_intervalIntegral_of_isMPSolution hlam hlam0 hL hX hsol hφ hD t
+      have hIH := ih (jumpApply lam mu φ) (2 * L * D) hAm hAb
+      have hwint : IntervalIntegrable w volume 0 (t : ℝ) := intervalIntegrable_of_abs_le hwm hwb _ _
+      have hpint : ∀ k : ℕ, IntervalIntegrable (fun r : ℝ ↦ (r ^ k / k.factorial) * c k)
+          volume 0 (t : ℝ) := fun k ↦ (by fun_prop : Continuous _).intervalIntegrable _ _
+      have hsint : IntervalIntegrable
+          (fun r : ℝ ↦ ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k) volume 0 (t : ℝ) :=
+        (continuous_finset_sum _ fun k _ ↦ (by fun_prop : Continuous _)).intervalIntegrable _ _
+      have hsplit : ∑ k ∈ Finset.range n, ((t : ℝ) ^ (k + 1) / (k + 1).factorial) * c k
+          = ∫ r in (0:ℝ)..(t : ℝ), ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k := by
+        rw [intervalIntegral.integral_finset_sum (fun k _ ↦ hpint k)]
+        exact Finset.sum_congr rfl fun k _ ↦ (intervalIntegral_pow_div_factorial _ hT k (c k)).symm
+      have hgoal : (∫ ω, φ (X t ω) ∂P) - ∑ k ∈ Finset.range (n + 1),
+            ((t : ℝ) ^ k / k.factorial) * ∫ ω, ((jumpApply lam mu)^[k] φ) (X 0 ω) ∂P
+          = ∫ r in (0:ℝ)..(t : ℝ), (w r - ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k) := by
+        rw [intervalIntegral.integral_sub hwint hsint, ← hsplit, Finset.sum_range_succ']
+        simp only [Function.iterate_succ_apply, Function.iterate_zero_apply, pow_zero,
+          Nat.factorial_zero, Nat.cast_one, div_one, one_mul, ← hcdef]
+        rw [show (∫ r in (0:ℝ)..(t : ℝ), w r) = (∫ ω, φ (X t ω) ∂P) - ∫ ω, φ (X 0 ω) ∂P from
+          hrec.symm]
+        ring
+      rw [hgoal]
+      have hdom : ∀ r ∈ Set.Ioc (0:ℝ) (t : ℝ),
+          |w r - ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k|
+            ≤ (r ^ n / n.factorial) * ((2 * L) ^ n * (2 * L * D)) := by
+        intro r hr
+        have hr0 : (0:ℝ) ≤ r := le_of_lt hr.1
+        have := hIH (Real.toNNReal r)
+        rw [Real.coe_toNNReal r hr0] at this
+        refine this.trans_eq ?_
+        rw [mul_pow]
+        ring
+      have hgint : IntervalIntegrable
+          (fun r : ℝ ↦ (r ^ n / n.factorial) * ((2 * L) ^ n * (2 * L * D))) volume 0 (t : ℝ) :=
+        (by fun_prop : Continuous _).intervalIntegrable _ _
+      have hle := intervalIntegral.norm_integral_le_of_norm_le (μ := volume) (a := (0:ℝ))
+        (b := (t : ℝ)) (f := fun r ↦ w r - ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k)
+        (g := fun r ↦ (r ^ n / n.factorial) * ((2 * L) ^ n * (2 * L * D))) hT
+        (Filter.Eventually.of_forall fun r hr ↦ by
+          simpa only [Real.norm_eq_abs] using hdom r hr) hgint
+      rw [Real.norm_eq_abs] at hle
+      refine hle.trans_eq ?_
+      rw [intervalIntegral_pow_div_factorial _ hT n ((2 * L) ^ n * (2 * L * D))]
+      rw [mul_pow]
+      ring
+
+/-- **The one dimensional distributions of any solution are the exponential series of the
+generator applied to the initial law.**  This is the uniqueness half of
+`exists_unique_of_bounded`: it fixes the law of `X t` for *every* solution of the martingale
+problem, and it exhibits it as `nu.map (exp (t • A))` in the concrete shape `expJumpApply`. -/
+theorem integral_eq_expJumpApply_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hX0 : Measurable (X 0))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    ∫ ω, f (X t ω) ∂P = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂(P.map (X 0)) := by
+  haveI : IsProbabilityMeasure (P.map (X 0)) := Measure.isProbabilityMeasure_map hX0.aemeasurable
+  set A := jumpApply lam mu with hA
+  set c : ℕ → ℝ := fun k ↦ ∫ ω, (A^[k] f) (X 0 ω) ∂P with hcdef
+  have hmk : ∀ k, Measurable (A^[k] f) := fun k ↦
+    measurable_iterate_jumpApply hlam hlam0 hL hf hC k
+  have hbk : ∀ k x, |(A^[k] f) x| ≤ (2 * L) ^ k * C := fun k x ↦
+    abs_iterate_jumpApply_le hlam0 hL hC k x
+  have hck : ∀ k, |c k| ≤ (2 * L) ^ k * C := fun k ↦
+    abs_integral_le_of_abs_le (fun ω ↦ hbk k (X 0 ω))
+  have habs : (2 * L * |(t : ℝ)|) = 2 * L * (t : ℝ) := by rw [abs_of_nonneg t.coe_nonneg]
+  -- the partial sums converge to the expectation
+  have hsummable : Summable fun k : ℕ ↦ ((t : ℝ) ^ k / k.factorial) * c k :=
+    Summable.of_norm_bounded ((Real.summable_pow_div_factorial (2 * L * |(t : ℝ)|)).mul_right C)
+      fun k ↦ abs_series_term_le (hck k) (t : ℝ)
+  have htends : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ((t : ℝ) ^ k / k.factorial) * c k)
+      atTop (𝓝 (∫ ω, f (X t ω) ∂P)) := by
+    rw [tendsto_iff_dist_tendsto_zero]
+    refine squeeze_zero (fun n ↦ dist_nonneg) (fun n ↦ ?_)
+      (by simpa using (Real.summable_pow_div_factorial (2 * L * (t : ℝ))).tendsto_atTop_zero.mul_const C)
+    rw [Real.dist_eq, abs_sub_comm]
+    exact abs_integral_sub_sum_le_of_isMPSolution hlam hlam0 hL hX hsol n f C hf hC t
+  have htsum : ∑' k : ℕ, ((t : ℝ) ^ k / k.factorial) * c k = ∫ ω, f (X t ω) ∂P :=
+    (hsummable.hasSum_iff_tendsto_nat.2 htends).tsum_eq
+  -- the initial law
+  have hmap : ∀ k, ∫ x, (A^[k] f) x ∂(P.map (X 0)) = c k := fun k ↦ by
+    rw [hcdef, integral_map hX0.aemeasurable (hmk k).aestronglyMeasurable]
+  -- the series may be integrated term by term
+  have hint : ∀ k : ℕ, Integrable (fun x ↦ ((t : ℝ) ^ k / k.factorial) * (A^[k] f) x)
+      (P.map (X 0)) := fun k ↦
+    integrable_of_abs_le (measurable_const.mul (hmk k))
+      (fun x ↦ abs_series_term_le (hbk k x) (t : ℝ))
+  have hnormsum : Summable fun k : ℕ ↦
+      ∫ x, ‖((t : ℝ) ^ k / k.factorial) * (A^[k] f) x‖ ∂(P.map (X 0)) := by
+    refine Summable.of_nonneg_of_le (fun k ↦ integral_nonneg fun x ↦ norm_nonneg _)
+      (fun k ↦ ?_) ((Real.summable_pow_div_factorial (2 * L * |(t : ℝ)|)).mul_right C)
+    refine (abs_integral_le_of_abs_le (C := (2 * L * |(t : ℝ)|) ^ k / k.factorial * C)
+      fun x ↦ ?_).trans' (le_abs_self _)
+    rw [abs_of_nonneg (norm_nonneg _), Real.norm_eq_abs]
+    exact abs_series_term_le (hbk k x) (t : ℝ)
+  have hswapint : ∑' k : ℕ, (∫ x, ((t : ℝ) ^ k / k.factorial) * (A^[k] f) x ∂(P.map (X 0)))
+      = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂(P.map (X 0)) :=
+    integral_tsum_of_summable_integral_norm hint hnormsum
+  rw [← htsum, ← hswapint]
+  exact tsum_congr fun k ↦ by rw [integral_const_mul, hmap k]
+
+/-- **Uniqueness in the one dimensional distributions.**  Two solutions of the martingale problem
+for the same bounded jump generator, with the same initial law, have the same law at every time.
+This is `exists_unique_of_bounded` read as a uniqueness statement; it does not mention the
+constructed process, and the two solutions may live on different spaces. -/
+theorem integral_eq_of_isMPSolution_of_map_eq [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    {Ω' : Type*} {m' : MeasurableSpace Ω'} {P' : Measure Ω'} [IsProbabilityMeasure P']
+    {F' : Filtration ℝ≥0 m'} {X' : ℝ≥0 → Ω' → E}
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hX0 : Measurable (X 0))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hX' : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω' ↦ h (X' p.1 p.2))
+    (hX0' : Measurable (X' 0))
+    (hsol' : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X')
+      F' P')
+    (hinit : P.map (X 0) = P'.map (X' 0))
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    ∫ ω, f (X t ω) ∂P = ∫ ω, f (X' t ω) ∂P' := by
+  rw [integral_eq_expJumpApply_of_isMPSolution hlam hlam0 hL hX hX0 hsol hf hC t,
+    integral_eq_expJumpApply_of_isMPSolution hlam hlam0 hL hX' hX0' hsol' hf hC t, hinit]
+
+end Uniqueness
 
 /-! ## Acceptance example for Milestone 4: the Poisson process
 

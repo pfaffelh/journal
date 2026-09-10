@@ -1077,6 +1077,38 @@ A concrete family of solutions, built without any of the theory above. Index
   `(A, nu)` has exactly one solution, and its one dimensional distributions are
   `nu.map (exp (t • A))` given by the exponential series of the bounded operator.
   This is the Picard iteration and needs no analysis beyond `NormedSpace`.
+  **The one dimensional half is proved** on 2026-09-10, fourth run, in fourteen
+  declarations of `Suggested.lean`, section `Uniqueness`.
+  `expJumpApply lam mu t f x = ∑' n, t^n/n! * (A^[n] f) x` is the exponential
+  series, defined pointwise and not on a normed space of bounded measurable
+  functions -- the same decision as for `abs_jumpApply_le`, and for the same
+  reason: `abs_series_term_le` dominates its `n`-th term by
+  `(2L|t|)^n/n! * C`, so `Real.summable_pow_div_factorial` gives summability,
+  `abs_expJumpApply_le` gives the bound `exp (2L|t|) * C`, and
+  `measurable_expJumpApply` gives measurability as a pointwise limit of partial
+  sums.  `integral_eq_expJumpApply_of_isMPSolution` is the theorem:
+  `∫ f (X t) dP = ∫ expJumpApply lam mu t f d(P.map (X 0))` for **every**
+  solution `P`, and `integral_eq_of_isMPSolution_of_map_eq` reads it as
+  uniqueness -- two solutions with the same initial law, on two different
+  spaces, agree at every time.  The two steps are
+  `integral_sub_eq_intervalIntegral_of_isMPSolution`, which turns the martingale
+  property into `u_f(t) = ν(f) + ∫_0^t u_{Af}(s) ds` (constant expectation plus
+  Fubini), and `abs_integral_sub_sum_le_of_isMPSolution`, which iterates it with
+  remainder `(2Lt)^n/n! * C`.  Over `E` nothing is assumed but
+  `[MeasurableSpace E]`.
+
+  Two hypotheses on the process, and neither is decoration.  `hX` is the joint
+  measurability in `(u, ω)` of the **real functionals** `h ∘ X`, not of `X`
+  itself -- the `E` valued form is not available and is not needed, exactly as
+  in `measurable_uncurry_jumpProcess`.  `hX0 : Measurable (X 0)` is what turns
+  `∫ · (X 0 ω) dP` into an integral against `P.map (X 0)`.
+
+  What is **not** proved is the passage from the one dimensional distributions
+  to the finite dimensional ones, which is what "exactly one solution" says.
+  It is the conditional form of the same argument: apply
+  `integral_eq_expJumpApply_of_isMPSolution` to the law of `X s` conditioned on
+  a set of the past, exactly as `setIntegral_jumpProcess_sub_eq_intervalIntegral`
+  does for the expectation identity, and induct on the number of coordinates.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved; and the explosion criterion
   in terms of the jump times.

@@ -16359,3 +16359,116 @@ Analysis-Induktion; sie vorzuziehen hieße, den teureren der beiden Wege zu
 gehen und den billigeren doch noch bauen zu müssen. Die Reihenfolge der Aufgabe
 — 3 vor dem Rest von 4 — ist also die richtige, und der erste Teil dieses
 Berichts lag darin falsch.
+
+### 2026-09-10, vierter Lauf des Tages — die Picard-Iteration, und die eindimensionalen Verteilungen jeder Lösung stehen fest
+
+**Punkt 3 der laufenden Aufgabe, `exists_unique_of_bounded`, ist zur Hälfte
+erledigt — und es ist die Hälfte, die den Namen trägt.** Vierzehn neue
+Deklarationen im Abschnitt `Uniqueness` von
+`TauCeti/MartingaleProblems/Suggested.lean`; die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 **ohne einen Fehler**, die Zahl der `sorry` bleibt
+bei neun (alle in den Meilensteinen 3, 5, 9 und 10), und **alle vierzehn** sind
+mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft.
+Über `E` steht nichts als `[MeasurableSpace E]`.
+
+**Was dasteht.**
+```
+theorem integral_eq_expJumpApply_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hX0 : Measurable (X 0))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    ∫ ω, f (X t ω) ∂P = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂(P.map (X 0))
+```
+und, als Lesart davon, `integral_eq_of_isMPSolution_of_map_eq`: zwei Lösungen
+desselben beschränkten Sprungerzeugers mit demselben Anfangsgesetz — **auf zwei
+verschiedenen Räumen** — haben zu jeder Zeit dasselbe Gesetz. Das ist die
+Eindeutigkeitsaussage, und sie nennt den konstruierten Prozeß nicht.
+
+**Die Reihe ist punktweise angeschrieben, und das ist eine Entscheidung.**
+`expJumpApply lam mu t f x = ∑' n, t^n/n! * (A^[n] f) x`, definiert als Funktion
+auf `E` und **nicht** auf einem normierten Raum beschränkter meßbarer
+Funktionen. Das ist dieselbe Wahl wie bei `abs_jumpApply_le` (achtzehnter
+Lauf des 2026-09-09) und aus demselben Grund: das einzige, was gebraucht wird,
+ist die Schranke des `n`-ten Gliedes, und die ist `abs_series_term_le`, ein Satz
+über **Skalare** — `|a| ≤ (2L)^n C → |t^n/n! * a| ≤ (2L|t|)^n/n! * C` —, der
+zweimal benutzt wird, punktweise und unter dem Integralzeichen. Daraus fällt
+alles Übrige: `summable_expJumpApply` aus `Real.summable_pow_div_factorial`,
+`abs_expJumpApply_le` (`≤ exp (2L|t|) * C`, mit `Real.exp_eq_exp_ℝ` und
+`NormedSpace.exp_eq_tsum_div`), und `measurable_expJumpApply` als punktweiser
+Limes der Teilsummen über `measurable_of_tendsto_metrizable'`. Ein Bündelraum
+`E →ᵇ ℝ` hätte an keiner Stelle etwas gespart und hätte `TopologicalSpace E`
+gekostet.
+
+**Der Beweis sind zwei Schritte, und keiner ist Wahrscheinlichkeitstheorie.**
+
+1. `integral_sub_eq_intervalIntegral_of_isMPSolution`:
+   `∫ f(X t) dP - ∫ f(X 0) dP = ∫_0^t ∫ (A f)(X r) dP dr`. Das ist die
+   Martingaleigenschaft, integriert: `∫ Y t = ∫ P[Y t | 𝓕 0] = ∫ Y 0` über
+   `integral_condExp`, dann `Y 0 ω = f (X 0 ω)`, weil das Fenster `Ioc ⊥ 0`
+   leer ist, dann `integral_integral_swap`.
+2. `abs_integral_sub_sum_le_of_isMPSolution`: die Iteration von 1, mit
+   `A f` an der Stelle von `f`. Die Induktion läuft über `n` und ist **über
+   `f` und seine Schranke generalisiert** — anders ginge es nicht, denn der
+   Induktionsschritt wendet die Voraussetzung auf `A f` mit der Schranke `2LC`
+   an. Der Rest nach `n` Schritten ist `(2Lt)^n/n! * C`, und die einzige
+   Rechnung darin ist `∫_0^t r^k/k! dr = t^{k+1}/(k+1)!`
+   (`intervalIntegral_pow_div_factorial`).
+
+Der Grenzübergang ist `Summable.hasSum_iff_tendsto_nat` zusammen mit
+`Summable.tendsto_atTop_zero` (statt `tendsto_pow_div_factorial_atTop`, das in
+`Mathlib/Topology/Algebra/Order/Floor.lean` liegt und einen Import mehr
+gekostet hätte, den die Summierbarkeit ohnehin hergibt), und die Vertauschung
+von Summe und Integral am Ende ist
+`MeasureTheory.integral_tsum_of_summable_integral_norm`.
+
+**Drei Befunde, die aufzuschreiben sich lohnt.**
+
+* **Die beiden Voraussetzungen an den Prozeß sind genau die, die der
+  Sprungprozeß hergibt, und keine mehr.** `hX` fragt nach der gemeinsamen
+  Meßbarkeit der **reellen Funktionale** `h ∘ X` in `(u, ω)` und nicht nach der
+  von `X` selbst; die `E`-wertige Fassung gibt es nicht (Befund des
+  siebenundzwanzigsten Laufs des 2026-09-09) und sie wird nicht gebraucht.
+  `hX0 : Measurable (X 0)` ist das, was `∫ · (X 0 ω) dP` in ein Integral gegen
+  `P.map (X 0)` verwandelt — ohne es steht das Anfangsgesetz nicht da.
+* **`Clock.measurableSpace` ist kein Instanzargument, und das kostet an jeder
+  Fuge einen `@`.** Dreimal in diesem Lauf hat die Instanzensuche
+  `NNReal.measurableSpace` synthetisiert, wo das Ziel
+  `lebesgueClock.measurableSpace` trug, und dann eine Instanz gesucht, die es
+  über dem anderen Meßraum nicht gibt — die Fehlermeldung nennt beide gleich,
+  weil `pp` die Instanzen verbirgt (`set_option pp.explicit true in trace_state`
+  zeigt es, und das war das Mittel, das den Fehler in zwei Minuten fand statt in
+  zwanzig). Die Abhilfen sind drei: die Anwendung ganz explizit machen (so macht
+  es `measurable_compensator` seit dem 2026-09-09), die Maße als benannte
+  Argumente `(μ := …) (ν := …)` vorgeben, damit die Unifikation vor der Suche
+  läuft, oder die Instanz selbst als Term durchreichen. Wer in dieser Datei
+  neben `lebesgueClock` arbeitet, wird das brauchen.
+* **`integral_condExp` verlangt keine Integrierbarkeit.**
+  `∫ P[Y t | 𝓕 0] = ∫ Y t` gilt unbedingt, weil beide Seiten `0` sind, wenn
+  `Y t` nicht integrierbar ist. Gebraucht wird die Integrierbarkeit trotzdem,
+  aber an anderer Stelle: um `∫ (f(X t) - Kompensator)` in die Differenz zweier
+  Integrale zu zerlegen.
+
+**Was fehlt, und es ist ehrlich zu nennen.** „Genau eine Lösung" ist eine
+Aussage über die **endlichdimensionalen** Verteilungen; bewiesen sind die
+eindimensionalen. Der Schritt dorthin ist die bedingte Fassung desselben
+Arguments — `integral_eq_expJumpApply_of_isMPSolution` auf das an einer Menge
+der Vergangenheit bedingte Gesetz von `X s` anwenden, so wie es
+`setIntegral_jumpProcess_sub_eq_intervalIntegral` für die Erwartungsidentität
+tut, und über die Zahl der Koordinaten induzieren. Das steht so in
+Meilenstein 4.
+
+**Vorschlag für den nächsten Lauf, und er ist klein und fällig.** Der
+Sprungprozeß erfüllt `hX` und `hX0` noch nicht *als Satz*: `hX0` ist
+`measurable_jumpProcess hlam` und damit da, und `hX` ist aus
+`measurable_uncurry_jumpProcess` zu gewinnen — dort steht die gemeinsame
+Meßbarkeit von `(u, ω) ↦ h (X (min u t) ω)` für die Vergangenheit bis `t`, und
+die globale Fassung ist ihr punktweiser Limes über `t = n → ∞`, weil
+`min u n = u` für `n ≥ u` ist; `measurable_of_tendsto_metrizable'` schließt es
+ab, genau wie bei `measurable_expJumpApply`. Damit fällt
+`jumpMeasure_integral_jumpProcess_eq_expJumpApply` als Korollar von
+`integral_eq_expJumpApply_of_isMPSolution` und `jumpProcess_isMPSolution`, und
+mit ihm die **eindimensionale Verteilung des Poissonprozesses**, die Punkt 4 der
+Aufgabe schuldet, über den Weg (b), den derselbe Punkt als den billigeren
+benannt hat. Das ist ein Lauf, vielleicht zwei.
