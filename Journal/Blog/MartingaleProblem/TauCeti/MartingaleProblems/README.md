@@ -1550,9 +1550,29 @@ A concrete family of solutions, built without any of the theory above. Index
   process is the process of `truncRate lam n`, which **is** of bounded rate; that
   process solves the bounded problem for its own filtration
   (`jumpProcessE_isMPSolution`); and before the hitting time that filtration is
-  the one asked for. The level `n = 0` is not a special case to be argued around:
-  `rateTime lam 0 = 0 = ⊥`, and `Locally` prefixes the stopped process with the
-  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`.
+  the one asked for. **In Lean** on 2026-09-10, eighteenth run, in
+  `section LocalSolution` of `Suggested.lean`, under `Measurable lam`,
+  `∀ x, 0 < lam x` and `∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam`; the
+  third of those is discharged at the data by `ae_mem_nonExplosiveE_jumpMeasure`.
+  The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`,
+  and the shift is not cosmetic: `truncRate lam 0` is the zero rate, at which no
+  bounded theorem applies, while `rateTime_zero` says the level `0` stops at once
+  in any case. A subsequence of a localizing sequence is one, so the shift costs
+  nothing.
+* `jumpProcessE_isMPSolution` under `0 ≤ lam ≤ L` rather than `0 < lam ≤ L`. The
+  hypothesis is inherited by `martingale_stoppedProcess_mpFamily_jumpProcessE` and
+  by `jumpProcess_isLocalMPSolution`, and it is exactly what keeps the linear
+  birth and death chain out of the local theorem: its rate `b x + d x` vanishes at
+  the absorbing state `0` (`birthDeathRate_linear_zero`), which is the defect
+  `jumpProcessE` exists to repair. The present proof does not reach it because it
+  transports the bounded theorem along `clipWait`
+  (`jumpProcessE_eq_jumpProcess_clipWait`), and that identification of the two
+  constructions holds only where the holding times are positive; at a state of
+  rate `0` the two part company, which is the whole point of the extended clock.
+  What has to be shown of `jumpProcessE` directly is the martingale identity of
+  `jumpProcess_isMPSolution`, and the one place the old proof spends positivity is
+  the renewal decomposition of the first jump, where `ENNReal.ofReal (xi 0) / 0`
+  is `⊤` rather than a finite time.
 * `martingale_stoppedProcess_mpFamily_jumpProcessE`: **the stopped test process of
   the local jump problem is a martingale**, at every stopping time of its natural
   filtration and under the hypotheses of `jumpProcessE_isMPSolution`. This is the
@@ -1617,8 +1637,8 @@ A concrete family of solutions, built without any of the theory above. Index
   is the fourth hypothesis on the jump construction.
 * `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE`: **the stopped test
   process of the local problem is adapted to the local filtration**, under
-  `Measurable lam` and nothing else about the rate. This is the one input the
-  assembly is still missing, and it is not
+  `Measurable lam` and nothing else about the rate. **In Lean** on 2026-09-10,
+  eighteenth run. It is not
   `IsStronglyProgressive.stronglyAdapted_stoppedProcess` applied to
   `isStronglyProgressive_mpFamily_jumpProcessE`: that statement carries a bound on
   the rate, and the bound is not a convenience there. For an unbounded rate the
@@ -1632,11 +1652,17 @@ A concrete family of solutions, built without any of the theory above. Index
   therefore about the stopped process and has to be proved of it. The route: the
   first summand `p.1 (X_{i∧τ})` is `stoppedProcess` of the state process and is
   reached by `measurable_uncurry_jumpProcessE`, which asks nothing of the rate; the
-  compensator is `∫_0^i g(u, ·) du` with
-  `g(u, ω) = {ofReal u < τ ω}.indicator (fun _ ↦ p.2 (X_u ω))`, an integrand
-  bounded by `2 n C` because `ofReal_lam_jumpProcessE_lt_of_lt_rateTime` bounds the
-  rate on the indicated set, and jointly measurable because
-  `IsStoppingTime.measurable_of_le` makes `min i τ` measurable for `𝓖 i`.
+  compensator is the **fixed** window `∫_{(⊥, i]} g(u, ·) dq` with
+  `g(u, ω) = {q | q.1 ≤ σ q.2}.indicator (fun q ↦ p.2 (X_{min q.1 i} q.2)) (u, ω)`
+  and `σ ω = (min i (τ ω)).untopA`, jointly measurable because
+  `IsStoppingTime.measurable_of_le` makes `min i τ`, unlike `τ`, measurable for
+  `𝓖 i`. A window whose *upper end* is random is a window of fixed length with a
+  cut off integrand, because `σ ≤ i`: that identity, `Set.Ioc_inter_Iic` and
+  `MeasureTheory.setIntegral_indicator` are the whole of the second summand. **No
+  bound on the integrand is spent**, and none is available: the cut off is what
+  replaces it, and the bound `2 n C` that the rate along the stopped path would
+  give is not needed, because measurability of a Bochner integral in a parameter
+  (`stronglyMeasurable_integral_comp`) asks for joint measurability alone.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for
@@ -1665,7 +1691,13 @@ A concrete family of solutions, built without any of the theory above. Index
   and `martingale_compensated_poisson` turns it into an actual
   `MeasureTheory.Martingale`: for every bounded `f : ℕ → ℝ` the compensated
   increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` is a martingale for the
-  natural filtration.
+  natural filtration. The same data are the emptiness probe of the **local**
+  theorem (`poissonProcess_isLocalMPSolution`, `ae_mem_nonExplosiveE_poisson`, in
+  Lean on 2026-09-10, eighteenth run): all three hypotheses of
+  `jumpProcess_isLocalMPSolution` discharged on data, the non explosion at *every*
+  chain because a constant rate turns the criterion into the divergence of `∑ 1`.
+  What that probe does **not** exhibit is an unbounded rate, which is the case the
+  local branch exists for; it is a witness against vacuity and not one of sharpness.
 
   **The one dimensional laws are Mathlib's Poisson laws**, in Lean on
   2026-09-10, fifth run, as `jumpMeasure_map_jumpProcess_poisson`:

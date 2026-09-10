@@ -1095,6 +1095,83 @@ danach.*
      nehmen ist `Clock.measurableSet_interval`, und das Fenster erst *danach* in
      ein `Set.Ioc` umzuschreiben.
 
+   **Zwischenstand 2026-09-10, achtzehnter Lauf des Tages.
+   `jumpProcess_isLocalMPSolution` steht** — die erste in Lean bewiesene
+   **lokale** Lösung eines Martingalproblems, und es ist Mathlibs `Locally` und
+   kein eigener Begriff. Vier Deklarationen im neuen Abschnitt `LocalSolution`
+   von `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen
+   Fehler durch `lake env lean` gegen v4.33.1, alle vier mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10,
+   achtzehnter Lauf des Tages"; die Punkte stehen berichtigt in
+   `MartingaleProblems/README.md`, Meilenstein 4. Voraussetzungen:
+   `Measurable lam`, `∀ x, 0 < lam x`, und f.s. Nichtexplosion unter
+   `jumpMeasure mu nu`; über `E` steht nichts als `[MeasurableSpace E]`.
+
+   **Drei Befunde.**
+
+   * **Die angesagte Schranke `2·n·C` wird nicht gebraucht, und das ist der
+     Grund, aus dem der Satz geht.** `stronglyMeasurable_integral_comp` fragt
+     nach **gemeinsamer Meßbarkeit** und nach nichts sonst. Zu leisten ist statt
+     dessen die Umschreibung „ein Fenster mit **zufälligem oberen Ende** ist ein
+     Fenster **fester Länge** mit abgeschnittenem Integranden": eine Zeile
+     Mengenalgebra (`Set.Ioc ⊥ i ∩ Set.Iic (σ ω) = Set.Ioc ⊥ (σ ω)` für
+     `σ ω = (min i (τ ω)).untopA ≤ i`) und `setIntegral_indicator`. Die
+     Abschneidemenge liegt in `Borel ℝ≥0 ⊗ 𝓕 i` genau deshalb, weil `min i τ` —
+     anders als `τ` — für die Vergangenheit bei `i` meßbar ist. Das ist die ganze
+     Rolle der Stoppzeit im Beweis, und deshalb steht über der Rate nichts als
+     ihre Meßbarkeit.
+   * **`ENNReal` und `WithTop ℝ≥0` sind für `rw` nicht dasselbe.**
+     `stoppedProcess` und `Locally` leben über `WithTop ι`; schreibt man
+     `(⊥ : ENNReal)`, so ist die Aussage definitionsgleich, aber `rw` und `simp`
+     finden das Muster nicht („not type-correct under the `implicit`
+     transparency level"). `exact` findet es. **Nicht am Ziel rewriten, sondern
+     das Ziel mit `exact` treffen**; hier fiel dabei
+     `stoppedProcess_indicator_comm` ganz weg, weil
+     `stoppedProcess (fun i ↦ S.indicator (Y i)) τ` und
+     `fun i ↦ S.indicator (stoppedProcess Y τ i)` definitionsgleich sind.
+   * **Die Stufe `n = 0` ist billiger zu umgehen als zu behandeln.** Genommen ist
+     die **verschobene** Folge `fun n ↦ rateTime lam (n + 1)`; eine Teilfolge
+     einer lokalisierenden Folge ist eine (drei Zeilen), und die Stufe, an der
+     `truncRate lam 0 = 0` jeden beschränkten Satz aussperrt, kommt nicht vor.
+
+   **Die Leerheitsprobe ist mitgemacht** (`poissonProcess_isLocalMPSolution`,
+   `ae_mem_nonExplosiveE_poisson`): jede der drei Voraussetzungen auf Daten
+   eingelöst, die Nichtexplosion an *jeder* Kette, weil die Rate konstant ist und
+   das Kriterium die Divergenz von `∑ 1` wird. Was sie **nicht** vorführt, ist
+   eine **unbeschränkte** Rate — der Fall, für den der lokale Zweig existiert.
+   Sie ist ein Beleg gegen Leerheit und keiner für Schärfe; das steht so an der
+   Deklaration.
+
+   **Was von Punkt 5 jetzt noch fehlt, und es ist eine einzige benannte Aussage:
+   `jumpProcessE_isMPSolution` unter `0 ≤ lam ≤ L` statt `0 < lam ≤ L`.** Die
+   **lineare Geburt-Tod-Kette**, das einzige Akzeptanzbeispiel, das den lokalen
+   Zweig prüft, wird von `jumpProcess_isLocalMPSolution` **nicht** erreicht: ihre
+   Rate `b x + d x` ist am absorbierenden Zustand `0` gleich `0`
+   (`birthDeathRate_linear_zero`), und der Satz verlangt `∀ x, 0 < lam x`. Das
+   ist genau der Defekt, für den `jumpProcessE` gebaut wurde; die Konstruktion
+   trägt ihn, der Satz noch nicht.
+
+   Die Voraussetzung wird **an einer einzigen Stelle** geerbt:
+   `jumpProcessE_isMPSolution` ist über `clipWait` vom alten Prozeß übertragen,
+   und `jumpProcessE_eq_jumpProcess_clipWait` identifiziert die beiden
+   Konstruktionen nur bei durchweg positiven Haltezeiten; über `truncRate_pos`
+   und `martingale_stoppedProcess_mpFamily_jumpProcessE` wandert `0 < lam` von
+   dort bis in den Zusammenbau. Alles andere — die Adaptiertheit, der
+   Turmschluß, `jumpFiltrationE_inter_lt_rateTime`,
+   `stoppedProcess_mpFamily_truncRate_eq`, `isLocalizingSequence_rateTime` —
+   verlangt sie **nicht**. Der neue Beweis ist darum von vorn zu führen und nicht
+   noch einmal zu übertragen: der absorbierende Zustand ist gerade der Punkt, an
+   dem die beiden Konstruktionen auseinandergehen. Die Stelle, an der der alte
+   Beweis seine Positivität verbraucht, ist die Erneuerungszerlegung am ersten
+   Sprung (`jumpMeasure_integral_eq_of_firstJump`): dort ist die erste Sprungzeit
+   `ofReal (xi 0) / ofReal (lam x)`, bei Rate `0` also `⊤` statt einer reellen
+   Zahl. Der Erzeuger ist dort ebenfalls `0`, die zu zeigende Martingalgleichung
+   an einem absorbierenden Zustand also `E[f (X t)] = f (X 0)` — richtig, aber
+   eigens zu zeigen. Danach fällt die lineare Kette durch Einsetzen:
+   `jumpApply_birthDeath`, `isMarkovKernel_birthDeathKernel` und
+   `ae_mem_nonExplosiveE_linear` stehen alle schon.
+
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:
 

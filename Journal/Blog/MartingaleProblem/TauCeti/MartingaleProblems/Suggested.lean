@@ -10465,3 +10465,279 @@ theorem martingale_of_martingale_of_stopped {𝓖 𝓗 : Filtration ℝ≥0 m} {
 end Tower
 
 end LocalAssembly
+
+section LocalSolution
+
+/-! ## Point 5 of Milestone 4: the local jump process solves the martingale problem locally
+
+The assembly.  Only one input was missing after the seventeenth run of the 2026-09-10, and it is
+the first theorem of this section: the adaptedness of the **stopped** test process to the
+**local** filtration.  It is not
+`IsStronglyProgressive.stronglyAdapted_stoppedProcess` applied to
+`isStronglyProgressive_mpFamily_jumpProcessE`, because that statement carries a bound on the rate
+and the local case has none; and the bound is not a convenience there.  For an unbounded rate the
+*unstopped* test process is not right continuous at an explosive sample point: the compensator
+over a window containing the explosion time integrates a function whose absolute value is
+`lam (X u)` times a constant, and `∫_0^{T_∞} lam (X u) du = ∑ ξ k` diverges, so Bochner returns
+the junk value `0`.  The proof below never mentions the unstopped process: it reads the window of
+the stopped one as a window of the *fixed* length `i` with the integrand cut off by the stopping
+time, and the cut off set `{(u, ω) | u ≤ (min i (τ ω)).untopA}` is measurable for the product
+σ-algebra precisely because `min i τ`, unlike `τ`, is measurable for the past at `i`. -/
+
+variable {E : Type*} [MeasurableSpace E] {mu : Kernel E E} [IsMarkovKernel mu]
+
+/-- **The stopped test process of the local jump martingale problem is adapted to the local
+filtration**, at every stopping time of that filtration and with no hypothesis on the rate beyond
+its measurability.
+
+The first summand is the stopped state process, and `measurable_uncurry_jumpProcessE` -- which
+asks nothing of the rate either -- reaches it.  The second is the compensating window, and the
+point of the proof is that a window whose *upper end* is random can be written as a window of
+fixed length with a cut off integrand:
+`∫_{(⊥, σ ω]} g u ω = ∫_{(⊥, i]} 1_{u ≤ σ ω} g u ω`, valid because `σ ω ≤ i`.  The cut off is a
+set of the product σ-algebra `Borel ℝ≥0 ⊗ 𝓕 i`, so the parametrised Bochner integral
+`stronglyMeasurable_integral_comp` applies. -/
+theorem stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ}
+    (hlam : Measurable lam) {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    {τ : ((ℕ → E) × (ℕ → ℝ)) → ENNReal}
+    (hτ : IsStoppingTime (jumpFiltrationE lam hlam) τ) :
+    StronglyAdapted (jumpFiltrationE lam hlam) (stoppedProcess Y τ) := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hp2m : Measurable p.2 := by rw [hp2]; exact measurable_jumpApply hlam hf hC
+  intro i
+  -- the stopped time, read in `ℝ≥0`, is measurable for the past at `i`
+  have hσmeas : Measurable[jumpFiltrationE lam hlam i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (i : ENNReal) (τ ω)).untopA := by
+    have h2 : Measurable[jumpFiltrationE lam hlam i]
+        fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (τ ω) (i : ENNReal)).untopA :=
+      ((hτ.min_const i).measurable_of_le fun ω ↦ min_le_right _ _).untopA
+    have h3 : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (τ ω) (i : ENNReal)).untopA)
+        = fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (i : ENNReal) (τ ω)).untopA :=
+      funext fun ω ↦ by rw [min_comm]
+    rwa [h3] at h2
+  have hσcoe : ∀ ω : (ℕ → E) × (ℕ → ℝ),
+      (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ENNReal) = min (i : ENNReal) (τ ω) := by
+    intro ω
+    have hmin : min (i : ENNReal) (τ ω) ≠ ⊤ :=
+      ne_top_of_le_ne_top ENNReal.coe_ne_top (min_le_left _ _)
+    obtain ⟨s, hs⟩ : ∃ s : ℝ≥0, ((s : ℝ≥0) : ENNReal) = min (i : ENNReal) (τ ω) :=
+      ⟨_, ENNReal.coe_toNNReal hmin⟩
+    rw [← hs]
+    rfl
+  have hσle : ∀ ω : (ℕ → E) × (ℕ → ℝ), (min (i : ENNReal) (τ ω)).untopA ≤ i := by
+    intro ω
+    have h : (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ENNReal) ≤ (i : ENNReal) :=
+      (hσcoe ω).le.trans (min_le_left _ _)
+    exact_mod_cast h
+  have hσlr : ∀ ω : (ℕ → E) × (ℕ → ℝ),
+      (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) ≤ (i : ℝ) := by
+    intro ω; exact_mod_cast hσle ω
+  -- the integrand of the fixed window, cut off at the stopping time
+  obtain ⟨W, hWdef⟩ : ∃ W : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ, W =
+      fun u ω ↦ Set.indicator {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+          q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA}
+        (fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+          p.2 (jumpProcessE lam (min ((q.1 : ℝ≥0) : ℝ) (i : ℝ)) q.2)) (u, ω) := ⟨_, rfl⟩
+  have hWm : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (jumpFiltrationE lam hlam i)]
+      (Function.uncurry W) := by
+    have huc : Function.uncurry W = Set.indicator {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+          q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA}
+        (fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+          p.2 (jumpProcessE lam (min ((q.1 : ℝ≥0) : ℝ) (i : ℝ)) q.2)) := by
+      funext q; rw [hWdef]; rfl
+    rw [huc]
+    exact Measurable.indicator (measurable_uncurry_jumpProcessE hlam hp2m i)
+      (measurableSet_le measurable_fst (hσmeas.comp measurable_snd))
+  haveI hfin : IsFiniteMeasure (lebesgueClock.q.restrict (Set.Ioc (⊥ : ℝ≥0) i)) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, lebesgueClock_apply_Ioc]
+    exact ENNReal.ofReal_lt_top
+  have hsm : StronglyMeasurable[jumpFiltrationE lam hlam i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace
+      ((ℕ → E) × (ℕ → ℝ)) (jumpFiltrationE lam hlam i) ℝ _ ℝ _
+      (lebesgueClock.q.restrict (Set.Ioc (⊥ : ℝ≥0) i)) _ W hWm id measurable_id
+  have h1 : Measurable[jumpFiltrationE lam hlam i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      p.1 (jumpProcessE lam (min (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) (i : ℝ)) ω) := by
+    have hpair : @Measurable ((ℕ → E) × (ℕ → ℝ)) (ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)))
+        (jumpFiltrationE lam hlam i)
+        ((inferInstance : MeasurableSpace ℝ≥0).prod (jumpFiltrationE lam hlam i))
+        (fun ω ↦ ((min (i : ENNReal) (τ ω)).untopA, ω)) :=
+      hσmeas.prodMk measurable_id
+    have hcomp := (measurable_uncurry_jumpProcessE hlam hf i).comp hpair
+    simpa only [Function.comp_def] using hcomp
+  -- the value of the stopped process, in the two summands just made measurable
+  have hval : ∀ ω : (ℕ → E) × (ℕ → ℝ), stoppedProcess Y τ i ω
+      = p.1 (jumpProcessE lam (min (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) (i : ℝ)) ω)
+        - ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q := by
+    intro ω
+    have hle := hσle ω
+    have hlr := hσlr ω
+    have hmIoc : ∀ a b : ℝ≥0, @MeasurableSet ℝ≥0 lebesgueClock.measurableSpace (Set.Ioc a b) := by
+      intro a b
+      rw [← lebesgueClock_interval_optional_eq]
+      exact lebesgueClock.measurableSet_interval _ _ _
+    have hstep : stoppedProcess Y τ i ω = Y ((min (i : ENNReal) (τ ω)).untopA) ω := rfl
+    rw [hstep, hYeq, min_eq_left hlr, lebesgueClock_interval_optional_eq]
+    congr 1
+    have hpt : ∀ u : ℝ≥0, W u ω
+        = Set.indicator (Set.Iic ((min (i : ENNReal) (τ ω)).untopA))
+            (fun u : ℝ≥0 ↦ p.2 (jumpProcessE lam (min ((u : ℝ≥0) : ℝ) (i : ℝ)) ω)) u := by
+      intro u
+      simp only [hWdef]
+      by_cases hu : u ≤ (min (i : ENNReal) (τ ω)).untopA
+      · rw [Set.indicator_of_mem (show (u, ω) ∈ {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+            q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA} from hu),
+          Set.indicator_of_mem (Set.mem_Iic.2 hu)]
+      · rw [Set.indicator_of_notMem (show (u, ω) ∉ {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+            q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA} from hu),
+          Set.indicator_of_notMem fun h ↦ hu (Set.mem_Iic.1 h)]
+    calc ∫ s in Set.Ioc (⊥ : ℝ≥0) ((min (i : ENNReal) (τ ω)).untopA),
+            p.2 (jumpProcessE lam (s : ℝ) ω) ∂lebesgueClock.q
+        = ∫ s in Set.Ioc (⊥ : ℝ≥0) ((min (i : ENNReal) (τ ω)).untopA),
+            p.2 (jumpProcessE lam (min ((s : ℝ≥0) : ℝ) (i : ℝ)) ω) ∂lebesgueClock.q := by
+          refine setIntegral_congr_fun (hmIoc _ _) fun s hs ↦ ?_
+          have hsi : ((s : ℝ≥0) : ℝ) ≤ (i : ℝ) := le_trans (by exact_mod_cast hs.2) hlr
+          rw [min_eq_left hsi]
+      _ = ∫ s in Set.Ioc (⊥ : ℝ≥0) i ∩ Set.Iic ((min (i : ENNReal) (τ ω)).untopA),
+            p.2 (jumpProcessE lam (min ((s : ℝ≥0) : ℝ) (i : ℝ)) ω) ∂lebesgueClock.q := by
+          rw [Set.Ioc_inter_Iic, min_eq_right hle]
+      _ = ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q := by
+          rw [show (fun u : ℝ≥0 ↦ W u ω) = fun u : ℝ≥0 ↦
+              Set.indicator (Set.Iic ((min (i : ENNReal) (τ ω)).untopA))
+                (fun u : ℝ≥0 ↦ p.2 (jumpProcessE lam (min ((u : ℝ≥0) : ℝ) (i : ℝ)) ω)) u from
+            funext hpt]
+          exact (setIntegral_indicator (lebesgueClock.measurableSet_Iic _)).symm
+  have hfun : stoppedProcess Y τ i = fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      p.1 (jumpProcessE lam (min (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) (i : ℝ)) ω)
+        - ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q := funext hval
+  rw [hfun]
+  exact h1.stronglyMeasurable.sub hsm
+
+/-- **The local jump process solves the martingale problem of its generator locally.**  This is
+the goal of Point 5 of Milestone 4, and the first solution in this file whose rate is neither
+bounded nor even locally bounded: what is asked of it is a positive measurable rate and almost
+sure non explosion, and `ae_mem_nonExplosiveE_jumpMeasure` discharges the second at the data
+(for the linear birth and death chain, `ae_mem_nonExplosiveE_linear`).
+
+Every input is a theorem and not a description.  The localizing sequence is the hitting times of
+the running supremum of the rate along the path -- the jump times themselves are not stopping
+times for any filtration of the process (`not_isStoppingTime_min_jumpTimeE`), and
+`isLocalizingSequence_rateTime` is what replaces them.  At the level `n` the stopped process is
+the stopped process of the **truncated** rate `truncRate lam n`, as a function and not merely
+almost surely (`stoppedProcess_mpFamily_truncRate_eq`); there the rate is bounded by `n`, so
+`martingale_stoppedProcess_mpFamily_jumpProcessE` applies and gives a martingale for the
+truncated filtration.  The passage back to the local filtration is the tower step
+`martingale_of_martingale_of_stopped`, whose cut hypothesis is
+`jumpFiltrationE_inter_lt_rateTime` and whose adaptedness hypothesis is the theorem above.
+
+The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`, and the shift is
+not cosmetic: `truncRate lam 0` is the zero rate, at which no bounded theorem applies, and
+`rateTime_zero` says the level `0` stops at once anyway.  A subsequence of a localizing sequence
+is one, so nothing is lost. -/
+theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    IsLocalMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  intro Y hY
+  have hloc : ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam)
+      (fun n ↦ rateTime lam (n + 1)) (jumpMeasure mu nu) := by
+    have h1 : ∀ n : ℕ, IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam (n + 1)) :=
+      fun n ↦ isStoppingTime_rateTime hlam (n + 1)
+    have h2 : ∀ᵐ ω ∂(jumpMeasure mu nu),
+        Filter.Tendsto (fun n : ℕ ↦ rateTime lam (n + 1) ω) Filter.atTop (𝓝 ⊤) := by
+      filter_upwards [hne] with ω hω
+      exact (tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω).comp
+        (Filter.tendsto_add_atTop_nat 1)
+    have h3 : ∀ᵐ ω ∂(jumpMeasure mu nu), Monotone fun n : ℕ ↦ rateTime lam (n + 1) ω :=
+      Filter.Eventually.of_forall fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab)
+    exact ⟨⟨h1, h2⟩, h3⟩
+  refine ⟨fun n ↦ rateTime lam (n + 1), hloc, fun n ↦ ?_⟩
+  obtain ⟨p, hpmem, hYeq⟩ := id hY
+  obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hpmem
+  have hY'mem : (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        p.1 (jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω)
+          - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+              jumpApply (truncRate lam (n + 1)) mu p.1
+                (jumpProcessE (truncRate lam (n + 1)) (s : ℝ) ω) ∂lebesgueClock.q)
+      ∈ mpFamily (jumpOperator (truncRate lam (n + 1)) mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω) :=
+    ⟨(p.1, jumpApply (truncRate lam (n + 1)) mu p.1), ⟨hf, ⟨C, hC⟩, rfl⟩, fun t ω ↦ rfl⟩
+  have hmartH := martingale_stoppedProcess_mpFamily_jumpProcessE
+    (measurable_truncRate hlam (n + 1)) (truncRate_pos hlam0 n.succ_pos)
+    (truncRate_le lam (n + 1)) nu hY'mem (isStoppingTime_rateTime_truncRate hlam (n + 1))
+  have hYfun : Y = fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      p.1 (jumpProcessE lam (t : ℝ) ω)
+        - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            jumpApply lam mu p.1 (jumpProcessE lam (s : ℝ) ω) ∂lebesgueClock.q := by
+    funext t ω; rw [hYeq t ω, hp2]
+  have heqZ : stoppedProcess (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        p.1 (jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω)
+          - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+              jumpApply (truncRate lam (n + 1)) mu p.1
+                (jumpProcessE (truncRate lam (n + 1)) (s : ℝ) ω) ∂lebesgueClock.q)
+        (rateTime lam (n + 1))
+      = stoppedProcess Y (rateTime lam (n + 1)) := by
+    rw [hYfun]
+    exact funext fun j ↦ funext fun ω ↦ stoppedProcess_mpFamily_truncRate_eq j ω
+  rw [heqZ] at hmartH
+  have hZad := stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE hlam hY
+    (isStoppingTime_rateTime hlam (n + 1))
+  have hmartG : Martingale (stoppedProcess Y (rateTime lam (n + 1)))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+    refine martingale_of_martingale_of_stopped hZad hmartH ?_
+      (isStoppingTime_rateTime hlam (n + 1))
+      fun j A hA ↦ jumpFiltrationE_inter_lt_rateTime hlam hA
+    intro j k hjk ω hstop
+    rw [stoppedProcess_eq_of_ge hstop,
+      stoppedProcess_eq_of_ge (hstop.trans (ENNReal.coe_le_coe.2 hjk))]
+  have hbot : MeasurableSet[jumpFiltrationE lam hlam ⊥]
+      {ω : (ℕ → E) × (ℕ → ℝ) | (⊥ : ENNReal) < rateTime lam (n + 1) ω} := by
+    refine MeasurableSet.congr ((isStoppingTime_rateTime hlam (n + 1)) ⊥).compl ?_
+    ext ω
+    simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+    exact not_le
+  exact martingale_indicator_bot hmartG hbot
+
+/-! ### The emptiness probe
+
+`jumpProcess_isLocalMPSolution` is worth nothing if its three hypotheses cannot be met at once,
+and the probe has to be a proof and not a description -- that is the standing rule of the
+inventory since 2026-09-07.  The Poisson data meet them, and there the process really moves; the
+non explosion is `ae_mem_nonExplosiveE_jumpMeasure` at a rate that is constant, so the reciprocal
+rates are the constant sequence `1` and the criterion is the divergence of `∑ 1`.
+
+What this probe does **not** exhibit is an *unbounded* rate, which is the case the local branch
+exists for.  The instance meant for that is the linear birth and death chain, and it is out of
+reach of this theorem for a named reason: its rate vanishes at the absorbing state `0`
+(`birthDeathRate_linear_zero`), while the theorem asks for `∀ x, 0 < lam x`. -/
+
+/-- **The Poisson data do not explode**, at almost every sample point of their own measure.  The
+rate is constant, so both hypotheses of the criterion hold at *every* chain. -/
+theorem ae_mem_nonExplosiveE_poisson :
+    ∀ᵐ ω ∂(jumpMeasure poissonKernel (Measure.dirac 0)), ω ∈ NonExplosiveE poissonRate := by
+  refine ae_mem_nonExplosiveE_jumpMeasure measurable_poissonRate poissonKernel (Measure.dirac 0)
+    (Filter.Eventually.of_forall fun y ↦ ⟨fun k ↦ poissonRate_pos _, fun hsum ↦ ?_⟩)
+  have h1 : Filter.Tendsto (fun k : ℕ ↦ (poissonRate (y k))⁻¹) Filter.atTop (𝓝 1) := by
+    simp only [poissonRate, inv_one]
+    exact tendsto_const_nhds
+  exact one_ne_zero (tendsto_nhds_unique h1 hsum.tendsto_atTop_zero)
+
+/-- **The Poisson process solves its martingale problem locally**, which is the probe that
+`jumpProcess_isLocalMPSolution` has an instance: every one of its hypotheses is discharged here
+on data.  It is of course also a solution outright (`poissonProcess_isMPSolution`), and that is
+the point of the probe -- a local solution that is a global one is the cheapest witness that the
+localizing machinery does not collapse. -/
+theorem poissonProcess_isLocalMPSolution :
+    IsLocalMPSolution (mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock
+        Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE poissonRate (t : ℝ) ω))
+      (jumpFiltrationE poissonRate measurable_poissonRate)
+      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+  jumpProcess_isLocalMPSolution measurable_poissonRate poissonRate_pos (Measure.dirac 0)
+    ae_mem_nonExplosiveE_poisson
+
+end LocalSolution
