@@ -144,7 +144,41 @@ globale Schranke an `lam`, die Yule nicht hat. Ob der Weg über den gestoppten
 Prozeß oder über `truncRate` und einen Grenzübergang geht, ist die erste
 Entscheidung — und sie ist zu begründen, nicht zu raten.
 
-Zu bauen, in dieser Reihenfolge — **Grönwall, dann Mastergleichung, dann Kopplung**:
+**Und der Satz, um den es dabei wirklich geht** *(Nutzer, 2026-09-11)*: nicht
+Yule, sondern das **Lyapunov-Kriterium**. Trage es als eigenen Punkt in
+Meilenstein 4 ein und beweise es *vor* den Instanzen:
+
+> `isNonExplosive_of_lyapunov` — gibt es `f : E → ℝ≥0` meßbar, deren
+> Subniveaumengen `{f ≤ N}` ausschöpfen, mit `A f ≤ C • f`, so explodiert der
+> Prozeß f.s. nicht.
+
+Der Beweis ist der oben beschriebene, aber **ohne Abschneiden von `f`**: mit
+`τ N` = Trefferzeit von `{f ≥ N}` ist `f (X (t ⊓ τ N)) * exp (−C * (t ⊓ τ N))`
+ein Supermartingal, also `𝔼[f (X (t ⊓ τ N))] ≤ f x₀ * exp (C t)`, und Markov gibt
+`N * P (τ N ≤ t) ≤ f x₀ * exp (C t)`. Das Abschneiden `f ⊓ N` ist eine Abkürzung,
+die nur bei **Nachbarschritten** trägt; bei weiten Sprüngen ist `f ⊓ N` nicht
+mehr kontrolliert, und dann braucht man den gestoppten Prozeß.
+
+**Die Instanzen fallen dann heraus**, jede in wenigen Zeilen:
+
+* **Allgemeiner Geburt-Tod-Prozeß:** mit `f x = x` ist
+  `A (f ⊓ N) x ≤ b x * 1_{x<N}`, denn der Todesterm ist **immer ≤ 0**. Die
+  Bedingung ist also `b x ≤ C * x` — *die Geburtsrate wächst höchstens linear,
+  die Sterberate ist frei*. Sie ist scharf: `b x = x^(1+ε)` explodiert.
+* **Yule** (`b x = β * x`, `d ≡ 0`) ist der schlechteste Fall dieser Klasse,
+  weil ohne Todesterm — und damit die richtige Probe.
+* **Linear** (`b x = β * x`, `d x = δ * x`) ebenso.
+* Und `rateSup`/`rateTime` aus dem lokalen Fall sind der Spezialfall `f = lam`;
+  prüfe, ob sie sich als Instanz lesen lassen oder ob die Trefferzeiten anders
+  gebildet sind.
+
+**Was das für den bestehenden Reihenweg heißt:** `ae_mem_nonExplosiveE` ruht
+darauf, daß die Kette Nachbarschritte macht. Er bleibt als Abkürzung stehen und
+ist nicht falsch — aber im Vergleich am Ende gehört gesagt, daß er ein
+Sonderfall des Lyapunov-Kriteriums ist und nicht ein gleichrangiger Weg.
+
+Zu bauen, in dieser Reihenfolge — **Lyapunov, dann die Instanzen, dann
+Mastergleichung, dann Kopplung**:
 
 1. **Yule als Instanz:** `b x = β * x`, `d ≡ 0`, mit `jumpApply_yule` und
    `yule_isLocalMPSolution` als Spezialfall des schon bewiesenen
