@@ -17049,3 +17049,189 @@ deterministischen Kriterien sind bewiesen, und beide Seiten des Prädikats haben
 eine Instanz. Sie ist die einzige Aussage zwischen dem heutigen Stand und dem
 linearen Geburt-Tod-Prozeß, dem einzigen der drei Akzeptanzbeispiele, das den
 lokalen Zweig prüft.
+
+### 2026-09-10, neunter Lauf des Tages
+
+**Auftrag:** Teil C, Punkt 5 des Meilensteins 4 von `MartingaleProblems` — der
+lokale Fall. Der achte Lauf hatte ihn auf **eine** benannte Aussage
+zusammengezogen, `ae_tendsto_sum_smul_waiting_atTop`; dieser Lauf beweist sie und
+zieht das Kriterium darüber.
+
+**Ergebnis.** **Das Nichtexplosionskriterium des lokalen Falls steht**, und es
+ist ein Kriterium an der **Kette allein**. Einundzwanzig Deklarationen (drei
+Definitionen, achtzehn Sätze) im Abschnitt `Absorbing` von
+`TauCeti/MartingaleProblems/Suggested.lean`; dazu, im zweiten Teil des Laufs,
+sechzehn weitere im neuen Abschnitt `BirthDeathExample` (sechs Definitionen, zehn
+Sätze). Die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1,
+**alle achtundzwanzig Sätze** mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt bei neun
+(Meilensteine 3, 5, 9, 10).
+
+Die Kette der neuen Aussagen, von unten nach oben:
+
+* `iIndepFun_waiting` — die Koordinaten von `waitingMeasure` sind unabhängige
+  **Funktionen**;
+* `waitBig`, `measurable_waitBig`, `waitBig_eq_ite`, `waitBig_mem_Icc`,
+  `waitBig_nonneg`, `integral_waitBig` — der Indikator von `{ξ n > 1}`, sein
+  Wertebereich `Set.Icc 0 1` und sein Mittel `exp (-1)`;
+* `memLp_mul_waitBig`, `iIndepFun_mul_waitBig`, `integral_sum_waitBig`,
+  `variance_sum_waitBig_le` — die drei Eingaben der Tschebyschew-Ungleichung für
+  die gewichtete Summe: `MemLp 2`, das Mittel `exp (-1) · B N`, die Varianz
+  `≤ B N / 4`;
+* `measure_sum_waitBig_lt_le` — Tschebyschew selbst, mit der Abweichung als
+  **halbem Mittel**, also der Schranke `1 / (exp (-1)² · B N)`;
+* `ae_tendsto_sum_smul_waiting_atTop` — die Aussage des Auftrags;
+* `mem_nonExplosiveE_of_tendsto_sum`, `ae_mem_nonExplosiveE`,
+  `ae_mem_nonExplosiveE_jumpMeasure` — das Kriterium, punktweise, unter
+  `waitingMeasure` und unter `jumpMeasure`;
+* `linearRate`, `linearChain`, `linearRate_pos`, `not_summable_linearRate`,
+  `ae_mem_nonExplosiveE_linear` — das Akzeptanzbeispiel.
+
+**Der angesagte Weg ist gegangen worden, mit einer Abweichung und einem Fund.**
+
+*Der Fund, und er berichtigt einen halben Negativbefund des achten Laufs.* Der
+dritte der drei angesagten Mathlib-Bausteine,
+`ProbabilityTheory.iIndepSet.iIndepFun_indicator`, ist **nicht gebraucht**
+worden, und zwar weil die Unabhängigkeit der Koordinaten von `waitingMeasure` als
+`iIndepFun` unmittelbar in Mathlib steht:
+`ProbabilityTheory.iIndepFun_infinitePi`
+(`Probability/Independence/InfinitePi.lean:127`), an der Identität gelesen, ist
+genau `iIndepFun (fun n ξ ↦ ξ n) (Measure.infinitePi P)`. Der Befund des
+achtzehnten Laufs des 2026-09-09 — „von `iIndepFun` der Koordinaten zu
+`iIndepSet` der Ereignisse hat Mathlib **kein** Lemma" — bleibt richtig, aber er
+ist **einseitig**: er betrifft die Richtung, die das zweite Borel--Cantelli
+verlangt. Wo der Verbraucher `iIndepFun` will, wie die Varianzformel es will,
+liefert das Produktmaß es **direkt**, und es braucht weder `iIndepSet_waiting`
+noch eine Brücke. Der Zusatz zur Suchregel: ein Negativbefund über zwei Begriffe
+ist ein Befund über eine **Richtung**, nicht über ein Paar; wer ihn zitiert, nennt
+die Richtung mit.
+
+*Die Abweichung ist die Varianzschranke, und sie ist eine Verschärfung.* Angesagt
+war „Varianz höchstens `B N`"; bewiesen ist `B N / 4`, und zwar ohne Mehrarbeit,
+weil `ProbabilityTheory.variance_le_sq_of_bounded` (Popoviciu,
+`Probability/Moments/Variance.lean:499`) für eine Variable mit Werten in
+`Set.Icc 0 1` unmittelbar `((1-0)/2)² = 1/4` gibt. Das ist billiger als der Weg
+über `variance_le_expectation_sq`, der die Quadratintegrierbarkeit eigens
+verlangt hätte.
+
+**Wo `b n ≤ 1` wirklich bezahlt wird, und es ist nicht die Integrierbarkeit.**
+`memLp_mul_waitBig` kommt ohne die obere Schranke aus — ein gewichteter Indikator
+ist durch sein Gewicht beschränkt, und das genügt für jedes `L^p`. Gebraucht wird
+`b n ≤ 1` an genau einer Stelle, nämlich in `variance_sum_waitBig_le` für
+`b n² ≤ b n`. Ohne die Abschneidung stünde dort `∑ b n²`, und **das ist der
+Punkt, an dem das Argument ohne sie zusammenbricht**: `∑ c n²` kann konvergieren,
+während `∑ c n` divergiert (Zeuge `c n = 1/n`), und dann sagt die
+Varianzschranke nichts mehr. Die Abschneidung ist also nicht eine Bequemlichkeit
+für die Schranke `Icc 0 1`, sondern der Grund, aus dem die Schranke überhaupt mit
+`B N` und nicht mit `∑ b n²` skaliert.
+
+**Das Kriterium ist echt schwächer als das deterministische.**
+`mem_nonExplosiveE_of_traj` verlangt `lam (y k) ≤ L` längs der Trajektorie;
+`mem_nonExplosiveE_of_tendsto_sum` verlangt nur, daß die Haltezeiten divergieren,
+und `ae_mem_nonExplosiveE` daß `∑ (lam (y k))⁻¹` divergiert. Der Unterschied ist
+genau der Fall, für den der lokale Zweig existiert: beim linearen Geburt-Tod ist
+`lam (y k) = β · k`, längs **jeder** Trajektorie unbeschränkt, und `∑ 1/(βk)`
+divergiert trotzdem.
+
+**Die `jumpMeasure`-Fassung ist zwei Zeilen, und der Grund ist die
+Produktstruktur.** `MeasureTheory.Measure.ae_prod_mem_iff_ae_ae_mem`
+(`MeasureTheory/Measure/Prod.lean:449`) spaltet die f.s.-Aussage über
+`(chainKernel mu ∘ₘ nu).prod waitingMeasure` in „für f.a. Kette, für f.a.
+Wartezeiten" auf; die eine Voraussetzung ist die Meßbarkeit von
+`NonExplosiveE lam`, und die steht seit dem achten Lauf
+(`measurableSet_nonExplosiveE`). Die Hypothese des Satzes ist damit genau, was
+sie sein soll: eine Aussage über die **Kette**.
+
+**Das Akzeptanzbeispiel schließt das Paar, das der Meilenstein verlangt, und es
+ist die Leerheitsprobe.** `notMem_nonExplosiveE_explode` (achter Lauf) ist ein
+Punkt **außerhalb** von `NonExplosiveE`, mit der Rate `2^n` längs `y n = n`;
+`ae_mem_nonExplosiveE_linear` ist f.a. Punkt **innerhalb**, mit der Rate `n` längs
+`y n = n+1`, und `not_summable_linearRate` ist die harmonische Reihe
+(`Real.not_summable_natCast_inv` über `summable_nat_add_iff`). Die beiden Daten
+unterscheiden sich in nichts als der Wachstumsgeschwindigkeit der Rate, und genau
+das muß ein Nichtexplosionskriterium sehen. **Der Verschiebung um eins bei
+`linearChain` liegt kein Trick zugrunde**: bei `y n = n` wäre `lam (y 0) = 0`, und
+das ist der absorbierende Fall, den `mem_nonExplosiveE_of_rate_zero` bereits
+erledigt — das Beispiel soll den **anderen** Defekt prüfen.
+
+#### Derselbe Lauf, zweiter Teil: der Erzeuger der Geburt-Tod-Kette
+
+Der Meilenstein verlangt für jedes der drei Akzeptanzbeispiele **zuerst den
+Erzeuger als Rechnung**, und zwar ausdrücklich als Prüfung der Form von
+`set:jumpdata`: „für Geburt-Tod kürzt sich `λ` heraus und es muß
+`A f x = b x * (f (x+1) - f x) + d x * (f (x-1) - f x)` herauskommen. Kommt dort
+etwas anderes heraus, ist die Form von `set:jumpdata` unhandlich und das ist der
+Befund." Das ist gerechnet, im neuen Abschnitt `BirthDeathExample`.
+
+**Es kommt heraus, wie es soll** (`jumpApply_birthDeath`), also gibt es keinen
+Befund gegen `set:jumpdata`. Die Daten sind `birthDeathRate b d = b + d` und
+`birthDeathKernel b d`, die Mischung mit den Gewichten `b/(b+d)` und `d/(b+d)`;
+die Gesamtrate kürzt sich, und das ist die ganze Behauptung.
+
+**Aber ein Befund ist doch angefallen, und er betrifft den absorbierenden
+Zustand.** Wo `b x + d x = 0` ist, sind die beiden Gewichte `0/0`, die Mischung
+ist das **Nullmaß** und kein Wahrscheinlichkeitsmaß: `IsMarkovKernel` scheitert,
+und zwar genau an dem Zustand, den das Modell absorbierend meint. **`jumpProcessE`
+behebt dort die Rate, aber es kann den Kern nicht beheben** — der Kern ist, woraus
+der nächste Zustand gelesen wird, und eine Sprungkette muß einen haben. Der
+absorbierende Fall verlangt also *zwei* Reparaturen und nicht eine: Sprungzeiten
+in `ℝ≥0∞` **und** eine Konvention im Kern. Die Konvention ist `Measure.dirac x`,
+und sie ist die einzige, die keinen Erzeuger ändert: sind beide Raten `0`, so ist
+der Operator an `x` gleich `0`, was der Kern auch sage. Mit ihr tragen
+`isMarkovKernel_birthDeathKernel` und `jumpApply_birthDeath` **keine
+Positivitätsvoraussetzung**, und erst das macht die lineare Geburt-Tod-Kette — bei
+`0` absorbiert — überhaupt hinschreibbar.
+
+**Die beiden Instanzen sind eingesetzt, jede an ihrem Zweig.** M/M/1
+(`mm1Birth`, `mm1Death`, `jumpApply_mm1`) hat nach `birthDeathRate_mm1_mem` eine
+Rate in `(0, β + δ]`, also genau die beiden Voraussetzungen, die
+`jumpProcess_isMPSolution` und `exists_unique_of_bounded` an die Rate stellen —
+und es ist nicht beim Erzeuger geblieben: `mm1_isMPSolution` löst jede
+Voraussetzung jenes Satzes auf den Daten ein, und
+`martingale_compensated_mm1` ist ein wirkliches `MeasureTheory.Martingale`,
+nämlich
+`f (X t) - ∫_0^t (β (f(X u +1) - f(X u)) + δ 1_{X u ≥ 1} (f(X u -1) - f(X u))) du`.
+**Es ist die erste Lösung in dieser Datei, deren Erzeuger zustandsabhängig ist**;
+beim Poissonprozeß ist die Rate konstant und der Kern eine Verschiebung, also
+sieht der Zustand dort gar nichts. Die einzige Voraussetzung, die nicht
+geschenkt ist, ist die Markoveigenschaft des Kerns — sie gilt unter einer
+Bedingung an die Daten und wird darum als Instanzhypothese mitgeführt und an der
+Gebrauchsstelle durch `isMarkovKernel_birthDeathKernel` eingelöst. Die
+lineare Kette (`linearBirth`, `linearDeath`, `jumpApply_linearBirthDeath`) bricht
+beide, und zwar **getrennt**: `birthDeathRate_linear_zero` ist der absorbierende
+Zustand, `not_bddAbove_birthDeathRate_linear` die Unbeschränktheit. Damit ist sie
+das einzige der drei Beispiele, das den lokalen Zweig prüft, und ihr
+Nichtexplosionsargument ist `ae_mem_nonExplosiveE` aus dem ersten Teil dieses
+Laufs.
+
+**Was von Punkt 5 noch fehlt.** Das Kriterium ist da, der Erzeuger ist gerechnet;
+was nicht da ist, ist `jumpProcess_isLocalMPSolution` selbst — die Aussage, daß
+der lokale Prozeß das **lokale** Martingalproblem löst. Dafür braucht es
+`IsLocalMPSolution` aus Meilenstein 2 an den Stoppzeiten `jumpTimeE ∧ n`, und das
+ist der nächste Schritt. Die pfadabhängige Variante (Hawkes) kommt danach. Von
+den drei Akzeptanzbeispielen ist M/M/1 damit **fertig** — Erzeuger, Lösung und
+Martingal —, die lineare Kette hat ihren Erzeuger und ihr
+Nichtexplosionsargument und wartet auf `jumpProcess_isLocalMPSolution`, und Hawkes
+wartet auf die pfadabhängige Variante.
+
+**Vorschlag für den nächsten Lauf: `jumpProcess_isLocalMPSolution`**, und zwar in
+der Gestalt
+
+```
+jumpProcess_isLocalMPSolution :
+  Measurable lam → (∀ y, ...) →
+  IsLocalMPSolution (mpFamily (jumpApply lam mu)) (jumpFiltration …)
+    (jumpMeasure mu nu)
+```
+
+mit der lokalisierenden Folge `τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n`. Sie ist
+jetzt dran, weil alle drei Zutaten stehen: der Prozeß ist ein Prozeß
+(`measurable_jumpProcessE`, achter Lauf), er explodiert f.s. nicht
+(`ae_mem_nonExplosiveE_jumpMeasure`, dieser Lauf), und unter der Stoppzeit `τ n`
+ist die Rate **beschränkt** — der Pfad besucht vor dem `n`-ten Sprung nur `n`
+Zustände —, so daß `jumpProcess_isMPSolution` auf dem gestoppten Prozeß greift.
+Der einzige Punkt, an dem sie brechen kann, ist die Form von `IsLocalMPSolution`:
+sie verlangt die Eigenschaft für den gestoppten Prozeß, und ob die gestoppte
+Konstruktion mit der Konstruktion zur beschränkten Rate **übereinstimmt** oder nur
+denselben Martingalen genügt, ist die eine offene Frage. Bricht es dort, so ist
+der Befund wertvoller als ein abgeschwächter Satz.

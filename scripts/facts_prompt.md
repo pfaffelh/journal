@@ -637,37 +637,98 @@ danach.*
    **Es ist der andere Defekt** — die Rate ist überall positiv, also nicht der
    Mangel, den `jumpProcessE` behebt.
 
-   **Was fehlt, und es ist eine einzige benannte Aussage:**
-   ```
-   ae_tendsto_sum_smul_waiting_atTop :
-     (∀ n, 0 ≤ c n) → ¬ Summable c →
-     ∀ᵐ ξ ∂waitingMeasure,
-       Tendsto (fun N ↦ ∑ n ∈ Finset.range N, c n * ξ n) atTop atTop
-   ```
-   Über Fubini an `jumpMeasure = (chainKernel mu ∘ₘ nu).prod waitingMeasure` wird
-   die Kette festgehalten, und was bleibt, ist dies mit `c n = (lam (y n))⁻¹`.
+   ~~**Was fehlt, und es ist eine einzige benannte Aussage:**
+   `ae_tendsto_sum_smul_waiting_atTop`.~~ *(erledigt 2026-09-10, neunter Lauf des
+   Tages.)*
 
-   **Und der Befund, damit der nächste Lauf nicht den bequemen Weg versucht:**
-   `tendsto_sum_waiting_atTop` ist der Fall `c ≡ 1` und **verallgemeinert
-   nicht**. Die Ereignisse `{c n · ξ n > ε}` haben Masse `exp (-ε / c n)`, und
-   die ist summierbar, sobald `c n → 0` (Zeuge `c n = 1/n`). **Die Divergenz
-   kommt aus der Anhäufung und nicht aus einzelnen großen Gliedern**, und
-   Borel--Cantelli sieht nur einzelne Glieder. Was trägt, ist Tschebyschew auf
-   der Abschneidung `b n = min (c n) 1`, mit den Indikatoren `1_{ξ n > 1}`:
-   Mittel `exp (-1) · B N`, Varianz höchstens `B N`, `B N → ∞`. Die drei
-   Mathlib-Bausteine sind an v4.33.1 belegt:
-   `ProbabilityTheory.meas_ge_le_variance_div_sq`
-   (`Probability/Moments/Variance.lean:397`),
-   `ProbabilityTheory.IndepFun.variance_sum` (`:422`) und
-   `ProbabilityTheory.iIndepSet.iIndepFun_indicator`
-   (`Probability/Independence/Basic.lean:1032`), das `iIndepSet_waiting` an die
-   Varianzformel anschließt. Erst danach die Beispiele.
+   **Zwischenstand 2026-09-10, neunter Lauf des Tages.** **Das
+   Nichtexplosionskriterium des lokalen Falls steht, und es ist ein Kriterium an
+   der Kette allein**; dazu ist der **Erzeuger der Geburt-Tod-Kette** gerechnet.
+   Siebenunddreißig Deklarationen (einundzwanzig im Abschnitt `Absorbing`,
+   sechzehn im neuen `BirthDeathExample`), die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1, alle achtundzwanzig Sätze mit
+   `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die
+   Zahl der `sorry` bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-10, neunter Lauf des Tages".
+
+   Bewiesen sind `ae_tendsto_sum_smul_waiting_atTop` samt seiner ganzen Mitte
+   (`iIndepFun_waiting`, `waitBig` mit `integral_waitBig`, die drei
+   Tschebyschew-Eingaben `memLp_mul_waitBig`, `integral_sum_waitBig`,
+   `variance_sum_waitBig_le`, und die Abschätzung `measure_sum_waitBig_lt_le`),
+   darauf das Kriterium in drei Gestalten — punktweise
+   (`mem_nonExplosiveE_of_tendsto_sum`), unter `waitingMeasure`
+   (`ae_mem_nonExplosiveE`) und unter `jumpMeasure`
+   (`ae_mem_nonExplosiveE_jumpMeasure`) —, und das Akzeptanzbeispiel
+   `ae_mem_nonExplosiveE_linear`.
+
+   **Vier Befunde für die weitere Arbeit.**
+
+   * **Der angesagte dritte Mathlib-Baustein war nicht nötig, und der
+     Negativbefund dahinter ist einseitig.**
+     `ProbabilityTheory.iIndepFun_infinitePi`
+     (`Probability/Independence/InfinitePi.lean:127`), an der Identität gelesen,
+     *ist* `iIndepFun` der Koordinaten von `waitingMeasure`; es braucht weder
+     `iIndepSet_waiting` noch `iIndepSet.iIndepFun_indicator`. Was Mathlib
+     wirklich fehlt, ist die **andere** Richtung, die das zweite Borel--Cantelli
+     verlangt. Ein Negativbefund über zwei Begriffe ist ein Befund über eine
+     **Richtung**; wer ihn zitiert, nennt die Richtung mit.
+   * **Die Abschneidung ist nicht eine Bequemlichkeit, sondern das Argument.**
+     Für die Integrierbarkeit braucht es `b n ≤ 1` nicht — ein gewichteter
+     Indikator ist durch sein Gewicht beschränkt —, sondern an genau einer
+     Stelle, nämlich `b n² ≤ b n` in der Varianz. Ohne sie stünde dort `∑ b n²`,
+     das konvergieren kann, während `∑ b n` divergiert (`c n = 1/n`), und die
+     Schranke sagte nichts.
+   * **Die Varianzschranke ist `B N / 4` und nicht `B N`**, ohne Mehrarbeit, weil
+     `ProbabilityTheory.variance_le_sq_of_bounded` (Popoviciu, `:499`) für Werte
+     in `Set.Icc 0 1` unmittelbar `1/4` gibt; der Weg über
+     `variance_le_expectation_sq` hätte die Quadratintegrierbarkeit eigens
+     verlangt.
+   * **Das Kriterium ist echt schwächer als das deterministische.**
+     `mem_nonExplosiveE_of_traj` verlangt `lam (y k) ≤ L`; das neue nur die
+     Divergenz von `∑ (lam (y k))⁻¹`. Der Unterschied ist genau der Fall, für den
+     der lokale Zweig existiert.
+   * **Der absorbierende Fall verlangt zwei Reparaturen und nicht eine.** Der
+     Erzeuger der Geburt-Tod-Kette kommt heraus, wie er soll
+     (`jumpApply_birthDeath`), also kein Befund gegen `set:jumpdata`. Aber wo
+     `b x + d x = 0` ist, ist die Mischung `0/0` das **Nullmaß**, und
+     `IsMarkovKernel` scheitert — an genau dem Zustand, den das Modell
+     absorbierend meint. `jumpProcessE` behebt dort die **Rate**, nicht den
+     **Kern**; der Kern braucht eine eigene Konvention, und `Measure.dirac x` ist
+     die einzige, die keinen Erzeuger ändert. Damit tragen
+     `isMarkovKernel_birthDeathKernel` und `jumpApply_birthDeath` **keine**
+     Positivitätsvoraussetzung, und erst das macht die lineare Kette
+     hinschreibbar. Die beiden Instanzen stehen, jede an ihrem Zweig: M/M/1 mit
+     Rate in `(0, β+δ]` (`birthDeathRate_mm1_mem`), die lineare Kette mit
+     `birthDeathRate_linear_zero` und `not_bddAbove_birthDeathRate_linear`.
+   * **M/M/1 ist fertig, und es ist die erste Lösung mit zustandsabhängigem
+     Erzeuger.** `mm1_isMPSolution` löst jede Voraussetzung von
+     `jumpProcess_isMPSolution` auf den Daten ein, `martingale_compensated_mm1`
+     ist ein wirkliches `MeasureTheory.Martingale`. Beim Poissonprozeß ist die
+     Rate konstant und der Kern eine Verschiebung, also sieht der Zustand dort
+     gar nichts; hier sieht er die Schranke `1 ≤ x`.
+
+   **Was von Punkt 5 noch fehlt**, und es ist der nächste Auftrag:
+   `jumpProcess_isLocalMPSolution` — daß der lokale Prozeß das **lokale**
+   Martingalproblem löst, mit der lokalisierenden Folge
+   `τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n`. Alle drei Zutaten stehen: der
+   Prozeß ist meßbar, er explodiert f.s. nicht, und vor dem `n`-ten Sprung
+   besucht der Pfad nur `n` Zustände, die Rate ist dort also **beschränkt**. Der
+   einzige Punkt, an dem es brechen kann, ist, ob die gestoppte Konstruktion mit
+   der Konstruktion zur beschränkten Rate übereinstimmt oder nur denselben
+   Martingalen genügt. Von den drei Akzeptanzbeispielen ist M/M/1 damit
+   **fertig** — Erzeuger, Lösung und Martingal —, die lineare Kette hat ihren
+   Erzeuger und ihr Nichtexplosionsargument und wartet auf
+   `jumpProcess_isLocalMPSolution`, und Hawkes wartet auf die pfadabhängige
+   Variante.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:
 
-* **M/M/1**, `b ≡ β`, `d x = δ * 1_{x ≥ 1}` auf `E = ℕ`. Beschränkt, also
-  greifen `thm:jumpMP` und `exists_unique_of_bounded` unmittelbar.
+* ~~**M/M/1**, `b ≡ β`, `d x = δ * 1_{x ≥ 1}` auf `E = ℕ`. Beschränkt, also
+  greifen `thm:jumpMP` und `exists_unique_of_bounded` unmittelbar.~~ *(erledigt
+  2026-09-10, neunter Lauf des Tages: `jumpApply_mm1`, `mm1_isMPSolution`,
+  `martingale_compensated_mm1` — die erste Lösung mit zustandsabhängigem
+  Erzeuger.)*
 * **Linearer Geburt-Tod**, `b x = β * x`, `d x = δ * x`. Hier ist
   `λ̄ = ∞`, der Satz greift **nicht**, und das Beispiel prüft als einziges den
   lokalen Zweig samt Nichtexplosionskriterium (`∑ 1/(β n)` divergiert). Der
@@ -678,10 +739,12 @@ danach.*
   nicht-markovsche Beispiel und die Instanz von `ex:hawkes`. Es gehört zur
   pfadabhängigen Variante und kommt zuletzt.
 
-In jedem Fall zuerst der Erzeuger als Rechnung: für Geburt-Tod kürzt sich `λ`
+~~In jedem Fall zuerst der Erzeuger als Rechnung: für Geburt-Tod kürzt sich `λ`
 heraus und es muß `A f x = b x * (f (x+1) - f x) + d x * (f (x-1) - f x)`
-herauskommen. Kommt dort etwas anderes heraus, ist die Form von `set:jumpdata`
-unhandlich und das ist der Befund.
+herauskommen.~~ *(gerechnet 2026-09-10, neunter Lauf des Tages,
+`jumpApply_birthDeath`: es kommt heraus, wie es soll, also kein Befund gegen
+`set:jumpdata` — wohl aber einer über den Kern am absorbierenden Zustand, siehe
+den Zwischenstand zu Punkt 5.)*
 
 **Was zählt:** eine in Lean bewiesene Lösung eines Martingalproblems. **Was nicht
 zählt:** ein Prädikat, das sagt, was eine Lösung wäre.
