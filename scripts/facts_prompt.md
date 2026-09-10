@@ -10,9 +10,14 @@ die Aktenlage. Die Ergebnisse stehen ohnehin in `Facts/INVENTAR.md`.*
 
 ### Aufgabe: `SkorokhodSpace` fertig, dann Meilenstein 4 von `MartingaleProblems` *(gestellt 2026-09-08 vom Nutzer)*
 
-Drei Teile, streng nacheinander. Ein Teil wird **nicht** angefangen, solange ein
-früherer offen ist. (Reihenfolge vom Nutzer am 2026-09-09 so festgelegt: erst
-der Pfadraum, dann die schwache Konvergenz fertig, dann die Prozesse.)
+**Reihenfolge, vom Nutzer am 2026-09-10 abends neu festgelegt:**
+
+> **D → F → C → E**
+
+Ein Teil wird **nicht** angefangen, solange ein früherer offen ist. Teil D ist
+ein einzelner Lauf und wird mit jedem Tag riskanter, deshalb steht er vorn; Teil
+C, die pfadabhängige Variante, ist eine Kette und läuft danach ungestört.
+(Die Teile A und B sind erledigt, siehe unten.)
 
 ~~**Teil B — `WeakConvergence` fertigmachen.**~~ *(erledigt 2026-09-09; die Datei
 trägt kein `sorry` mehr, nur noch die eine bewußt gegen `upstream/master`
@@ -68,16 +73,44 @@ zu fester Zeit geometrisch verteilt und damit f.s. endlich ist. Auf Papier ist
 das ein Einzeiler. Diese Aufgabe fragt, **was er in Lean kostet** — und sie fragt
 es, weil die Roadmap derzeit bloß *behauptet*, die Reihe sei billiger.
 
-Zu bauen, in dieser Reihenfolge:
+**Es sind drei Wege, nicht zwei** *(vom Nutzer am 2026-09-10 ergänzt)*, und der
+dritte ist vermutlich der beste:
+
+> **Die Mastergleichung.** Setzt man in der schon bewiesenen
+> Erwartungswertidentität
+> `jumpMeasure_integral_sub_eq_intervalIntegral` die Testfunktion
+> `h = indicator {n}`, so ist `p n t = 𝔼[h (X t)]` und
+> `A h x = β (n−1) · 1_{n−1} x − β n · 1_{n} x`, also steht dort die
+> Mastergleichung in integrierter Gestalt:
+> `p n t = p n 0 + ∫₀ᵗ (β (n−1) · p (n−1) r − β n · p n r) dr`.
+> Der Erzeuger bildet einen **Indikator auf eine endlich getragene und damit
+> beschränkte** Funktion ab, obwohl `lam` unbeschränkt ist — dieselbe
+> Beobachtung wie in der Bemerkung zur Domäne mit kompaktem Träger in
+> `MartingaleProblems/README.md`. Der vorhandene Satz verlangt noch global
+> beschränktes `lam`; die Abschwächung ist der erste Schritt und sollte über die
+> lokalisierende Folge und die Dominierung durch `1` gehen.
+>
+> Gelöst wird induktiv über `n` mit dem integrierenden Faktor `exp (β n t)` —
+> jeder Schritt eine skalare lineare ODE erster Ordnung — und heraus kommt
+> `p n t = exp (−β t) · (1 − exp (−β t))^(n−1)`.
+>
+> **Und hier verschwindet die Zirkularität:** `∑ n, p n t = 1` ist dann eine
+> geometrische Reihe, und *diese Gleichung ist die Nichtexplosion*. Man setzt sie
+> nicht voraus, man erhält sie. Dieser Weg liefert also Verteilung **und**
+> Nichtexplosion in einem, während der Kopplungsweg die Nichtexplosion braucht,
+> um überhaupt von `X t` sprechen zu dürfen.
+
+Zu bauen, in dieser Reihenfolge — **Mastergleichung vor Kopplung**:
 
 1. **Yule als Instanz:** `b x = β * x`, `d ≡ 0`, mit `jumpApply_yule` und
    `yule_isLocalMPSolution` als Spezialfall des schon bewiesenen
    `linearBirthDeath_isLocalMPSolution`. Das ist Buchhaltung und sollte billig
    sein; kostet es mehr als erwartet, ist das der erste Meßwert.
-2. **Die eindimensionale Verteilung** als Kontrolle gegen Bekanntes: von `1`
-   gestartet ist `X t` geometrisch mit Parameter `exp (−β t)`. Das ist der
-   Prüfstein wie `poissonMeasure` beim Poissonprozeß — ein Leser kann das
-   Ergebnis gegen etwas nachrechnen, das nicht aus unserer Konstruktion stammt.
+2. **Die Mastergleichung** wie oben, und daraus die eindimensionale Verteilung
+   als Kontrolle gegen Bekanntes: von `1` gestartet ist `X t` geometrisch mit
+   Parameter `exp (−β t)`. Das ist der Prüfstein wie `poissonMeasure` beim
+   Poissonprozeß — ein Leser rechnet das Ergebnis gegen etwas nach, das nicht aus
+   unserer Konstruktion stammt. Nimm die Nichtexplosion als Korollar mit.
 3. **Die Kopplung**: eine gemeinsame Konstruktion, unter der der
    Geburt-Tod-Prozeß pfadweise vom Yule-Prozeß dominiert wird, und daraus die
    Nichtexplosion des ersten aus der des zweiten.
@@ -93,7 +126,8 @@ Ergebnis, und es gehört so in den Bericht.
 **Was gemessen und berichtet wird** — das ist der Zweck der Aufgabe, nicht der
 Satz:
 
-* Deklarationen und Zeilen je Weg (Reihe gegen Kopplung), getrennt gezählt;
+* Deklarationen und Zeilen je Weg (Reihe / Mastergleichung / Kopplung),
+  getrennt gezählt;
 * welche Mathlib-Bausteine jeder Weg brauchte und welche fehlten;
 * an welcher Stelle der Kopplungsweg am teuersten war;
 * und ein Satz Urteil: welcher Weg ist für **eine allgemeinere** Ratenfunktion
