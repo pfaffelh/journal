@@ -17235,3 +17235,165 @@ sie verlangt die Eigenschaft für den gestoppten Prozeß, und ob die gestoppte
 Konstruktion mit der Konstruktion zur beschränkten Rate **übereinstimmt** oder nur
 denselben Martingalen genügt, ist die eine offene Frage. Bricht es dort, so ist
 der Befund wertvoller als ein abgeschwächter Satz.
+
+### 2026-09-10, zehnter Lauf des Tages
+
+**Auftrag:** Teil C, Punkt 5 des Meilensteins 4 von `MartingaleProblems` —
+`jumpProcess_isLocalMPSolution`, in der Gestalt, die der neunte Lauf vorgeschlagen
+hat: mit der lokalisierenden Folge `τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n`.
+
+**Ergebnis: es bricht, und zwar an der Stelle, die der neunte Lauf als die eine
+offene Frage benannt hat — nur eine Sprosse tiefer, als er vermutete.** Nicht der
+gestoppte Prozeß ist der Streitpunkt, sondern die **Stoppzeit**: die angesagte
+Folge ist **keine lokalisierende Folge**, weil ihre Glieder keine Stoppzeiten für
+die Filtration des Prozesses sind. Fünf Deklarationen im neuen Abschnitt
+`LocalFiltration` von `TauCeti/MartingaleProblems/Suggested.lean`, dazu eine
+sechste als Verschärfung; die ganze Datei ohne einen Fehler durch
+`lake env lean` gegen v4.33.1, alle sechs mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt bei neun
+(Meilensteine 3, 5, 9, 10).
+
+**Der Satz und sein Zeuge.**
+
+```
+not_isStoppingTime_min_jumpTimeE (hlam : Measurable lam) (hx₀ : 0 < lam x₀) :
+  ¬ IsStoppingTime (jumpFiltrationE lam hlam)
+      (fun ω ↦ min (jumpTimeE lam ω.1 ω.2 1) 1)
+```
+
+Der Zeuge ist die **konstante Kette** an `x₀` mit den beiden konstanten
+Wartezeiten `lam x₀ / 4` und `lam x₀`. Beide Punkte haben **echt positive**
+Haltezeiten, sind also keine entarteten Punkte des Stichprobenraums; ihre Pfade
+sind gleich — beide konstant `x₀` —, und ihre ersten Sprungzeiten sind `1/4` und
+`1`, die die Schwelle `1/2` trennt. Das Mittel ist
+`eq_of_measurable_naturalFiltration` aus dem fünften Lauf des 2026-09-09: zwei
+Punkte mit gleichen Pfaden werden von keiner `𝓕 t`-meßbaren reellen Funktion
+getrennt, und der Indikator von `{τ ≤ 1/2}` wäre eine.
+
+**Der Grund ist keine Feinheit des Beweises, sondern eine Eigenschaft der
+Konstruktion**, und er steht als eigene Aussage da (`jumpProcessE_const_chain`,
+ein `rfl`): `stepPath` liest die Kette **am Stufenindex**, also hinterläßt eine
+Kette, die sich nicht bewegt, keine Spur der Wartezeiten im Pfad. Ein Sprung von
+`x` nach `x` ist unsichtbar, und die Sprungzeiten lesen die treibende
+Zufälligkeit, die der Prozeß dann verbirgt. **Die Voraussetzung ist `0 < lam x₀`
+für einen einzigen Zustand** — der Zeuge steht also unter *jeder* Voraussetzung
+zur Verfügung, die `jumpProcess_isMPSolution` an die Rate stellt, und er ist keine
+Eigenheit der lokalen Erweiterung: an `jumpFiltration` und `jumpTime` gelesen tun
+dieselben zwei Punkte dasselbe.
+
+**Und es ist nicht durch Wegwerfen einer Nullmenge zu reparieren.** Das ist die
+zweite Hälfte des Befundes und die, die zählt, denn die konstante Kette *kann*
+unter `jumpMeasure` eine Nullmenge sein. `eq_of_measurable_jumpFiltrationE_of_subsingleton`
+sagt: über einem **einpunktigen** Zustandsraum trennt keine `𝓕 t`-meßbare reelle
+Funktion irgend zwei Stichprobenpunkte. Dort ist die versagende Menge der **ganze**
+Raum, die Rate `1` ist positiv und beschränkt und erfüllt jede Voraussetzung von
+`jumpProcess_isMPSolution` — und die Vervollständigung einer trivialen σ-Algebra
+für ein Maß fügt Nullmengen hinzu und niemals die Wartezeiten. Allgemeiner:
+sobald `mu x {x} > 0` ist, ist die unsichtbare Kette gar keine Nullmenge mehr;
+`mu = Kernel.id` ist der Fall, in dem sie f.s. eintritt.
+
+**Die Verschärfung, und sie schließt den letzten Ausweg.** Der übliche
+Reparaturweg für eine Anfangszeit ist der Übergang zur rechtsstetigen Filtration
+`⨅ s > t, 𝓕 s`; er hilft hier nicht, und das ist jetzt ein Satz und keine
+Erwägung. `eq_of_measurable_jumpFiltrationE_const_chain` sagt: **zwei konstante
+Ketten werden von keinem Funktional des Prozesses getrennt, zu keiner Zeit** —
+die Voraussetzung ist nicht `r ≤ s`, sondern gar keine, weil die beiden Pfade
+überall gleich sind. Da `⨅ s > t, 𝓕 s` unter `𝓕 s` für jedes `s > t` liegt und
+die Aussage an jedem einzelnen gilt, sieht auch sie die Wartezeiten nicht. Die
+Wartezeiten sind im Pfad nicht **spät**, sie sind **abwesend**.
+
+Dazu kommt, was ohnehin gebraucht wird: `jumpFiltrationE`, die natürliche
+Filtration des lokalen Prozesses, indiziert über `ℝ≥0`, weil `ℝ≥0∞` **ist**
+`WithTop ℝ≥0` und damit genau der Wertebereich, den
+`MeasureTheory.IsStoppingTime` verlangt — eine lokalisierende Folge aus
+`jumpTimeE` braucht dort keine Umrechnung. Und `jumpTimeE_const_chain`, die erste
+Sprungzeit der konstanten Kette in geschlossener Form.
+
+**`IsStoppingTime` ist keine f.s.-Aussage**, und das ist derselbe Punkt, an dem
+schon `StronglyAdapted` diese Datei zu einer voraussetzungsfreien
+Rechtsstetigkeit gezwungen hat (`eventuallyEq_nhdsGE_stepPath`, 2026-09-09).
+Mathlib hat keine f.ü.-Fassung von `IsStoppingTime`, und
+`ProbabilityTheory.IsLocalizingSequence` verlangt das Feld `isStoppingTime` exakt.
+Der Zeuge erledigt damit die angesagte Aussage wörtlich und nicht bloß ihren
+Beweisweg.
+
+**Die Reparatur, und sie ist die, die Meilenstein 7 längst vorschreibt.** Was
+lokalisieren darf, muß ein Funktional des **Pfades** sein, denn nur den sieht die
+Filtration. Also die Treffzeiten des **laufenden Supremums der Rate längs des
+Pfades**:
+
+```
+rateSup lam t ω  = ⨆ s ∈ Set.Icc 0 t, ENNReal.ofReal (lam (jumpProcessE lam s ω))
+rateTime lam n ω = sInf {t : ENNReal | (n : ENNReal) ≤ rateSup lam t ω}
+```
+
+Drei Dinge sind daran nachgerechnet und stehen als Punkte in
+`MartingaleProblems/README.md`, Meilenstein 4:
+
+* `{rateTime lam n ≤ t} = {n ≤ rateSup lam t}`, weil `rateSup` in `t` monoton
+  **und rechtsstetig** ist: auf `[t, t+δ)` ist der Pfad konstant, also ist
+  `rateSup` es auch. Dieselbe Rechtsstetigkeit macht aus dem überabzählbaren
+  Supremum ein abzählbares — über die Rationalen von `[0, t]` samt `t` selbst —,
+  und erst das ist die Meßbarkeit für `𝓕 t`.
+* `sInf` wird in `ENNReal` genommen und nicht in `ℝ≥0`: dort ist `sInf ∅ = ⊤`,
+  was die Stoppzeit ohne Fallunterscheidung total macht. In `ℝ≥0` wäre
+  `sInf ∅ = 0` — derselbe Müllwert, an dem der siebte Lauf des 2026-09-10 die
+  alte `stepIndex` scheitern sah.
+* `tendsto_top` ist die Nichtexplosion, gelesen über `exists_stepIndex_window`:
+  vor einer festen Zeit nimmt der Pfad endlich viele Werte an, also ist
+  `rateSup lam t ω` endlich und jedes Niveau wird schließlich überschritten. Die
+  f.s.-Aussage dafür ist `ae_mem_nonExplosiveE_jumpMeasure` aus dem neunten Lauf.
+
+**Der Befund gibt Meilenstein 7 einen zweiten Grund, den er selbst nicht nennt.**
+Dort steht das laufende Supremum wegen der **Striktheit** — die Treffzeiten von
+`‖Y‖` selbst sind nur für die rechtsstetige Filtration Stoppzeiten. Hier kommt
+die **Sichtbarkeit** hinzu, und sie ist der schärfere Grund: die Sprungzeiten sind
+für *keine* Filtration des Prozesses Stoppzeiten, auch nicht für die
+rechtsstetige, weil der Pfad sie überhaupt nicht enthält.
+
+**Was der neunte Lauf falsch veranschlagt hat, und warum.** Sein Vorschlag stützte
+sich darauf, daß „unter der Stoppzeit `τ n` die Rate beschränkt ist — der Pfad
+besucht vor dem `n`-ten Sprung nur `n` Zustände". Das ist richtig und bleibt
+richtig; es ist die Aussage, die `rateTime` weiterträgt. Der Fehler steckte in dem
+Wort **Stoppzeit**, das ungeprüft mitlief: von den drei Zutaten war „der Prozeß ist
+meßbar" und „er explodiert f.s. nicht" belegt, die dritte aber war eine
+Beschreibung und keine Voraussetzung — genau der Fehlertyp, den die Suchregel seit
+dem neunten Lauf des 2026-09-08 als „einen Kandidaten mit einer Beschreibung statt
+mit einer Voraussetzung verwerfen" führt, hier in der Gegenrichtung: einen
+Kandidaten mit einer Beschreibung statt mit einer Voraussetzung **annehmen**.
+
+**Zweiter Vorbehalt, an die eigene Werkzeugführung.** Der erste Durchlauf dieses
+Laufs meldete „keinen Fehler", weil die Ausgabe von `lake env lean` durch
+`head -60` lief und die Fehler am **Dateiende** standen — dort, wo neuer Code
+immer steht. `lake env lean` schreibt Warnungen vor Fehlern und in Dateireihenfolge;
+wer sie abschneidet, schneidet zuerst das ab, was er geschrieben hat. Die Regel
+für die Zukunft: auf `error` filtern, nicht auf die ersten Zeilen. Erst der
+`#print axioms`-Durchlauf hat es aufgedeckt, und zwar über `sorryAx` in einem
+Satz, der kein `sorry` trug — die Prüfung, die das Inventar seit dem 2026-09-07
+verlangt, hat hier zum zweiten Mal einen stillen Ausfall gefangen.
+
+**Und ein zweites acceptance example trug eine falsche Zusage.** Das erste
+Akzeptanzbeispiel von **Meilenstein 7**, „der explodierende Sprungprozeß"
+(`E = ℕ`, `lam n = 2^n`, `mu n = dirac (n+1)`), nannte als lokalisierende Folge
+ausdrücklich „`τ k` die `k`-te Sprungzeit". Das ist aus demselben Grund falsch,
+und es steht seit dem 2026-09-07 da. Berichtigt: die Zeiten sind `rateTime lam k`
+aus Meilenstein 4. Bemerkenswert ist, **warum** es so lange durchging: auf genau
+diesen Daten wächst die Kette bei jedem Sprung, also stimmen die beiden Folgen
+**f.ü.** überein — das Beispiel ist der Fall, in dem der Fehler unsichtbar ist,
+und es war zu ihm hingeschrieben. Das ist die dritte Stelle (nach den beiden vom
+2026-09-08 und 2026-09-09), an der ein acceptance example eine Zusage trug, gegen
+die es nie gehalten wurde. Damit ist auch das laufende Supremum von
+Meilenstein 7 zweifach begründet und nicht mehr nur über die Striktheit: eine
+Anfangszeit, die die Filtration gar nicht sieht, wird durch den Übergang zu
+`⨅ s > t, 𝓕 s` nicht sichtbar.
+
+**Vorschlag für den nächsten Lauf: `rateSup` samt `measurable_rateSup` und
+`rateSup_right_continuous`.** Und zwar in dieser Reihenfolge und **vor**
+`rateTime`, denn beide Eigenschaften der Stoppzeit hängen an ihnen und an nichts
+sonst: die Meßbarkeit für `𝓕 t` ist die Reduktion des Supremums auf die
+Rationalen, und die Gleichung `{rateTime ≤ t} = {n ≤ rateSup t}` ist die
+Rechtsstetigkeit. Beide Eingaben stehen: `eventuallyEq_nhdsGE_stepPath` ist
+voraussetzungsfrei bewiesen, und `measurable_jumpProcessE_apply` gibt die
+Meßbarkeit jeder einzelnen Auswertung. Sie ist jetzt dran, weil ohne sie Punkt 5
+keine lokalisierende Folge hat und die lineare Geburt-Tod-Kette — das einzige der
+drei Akzeptanzbeispiele, das den lokalen Zweig prüft — auf sie wartet.

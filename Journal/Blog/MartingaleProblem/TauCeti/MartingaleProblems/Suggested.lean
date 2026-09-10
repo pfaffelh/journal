@@ -227,6 +227,26 @@ file whose generator is **state dependent**; the linear chain
 (`jumpApply_linearBirthDeath`) fails both hypotheses separately
 (`birthDeathRate_linear_zero`, `not_bddAbove_birthDeathRate_linear`) and is the
 only one of the examples that exercises the local branch.
+
+`section LocalFiltration`, six declarations of 2026-09-10, is a **negative**
+result and the one the local case turned on.  `jumpFiltrationE` is the natural
+filtration of the local process; `not_isStoppingTime_min_jumpTimeE` says that the
+localizing sequence Milestone 4 announced, `min (jumpTimeE lam ω.1 ω.2 n) n`, is
+not one, because its members are not stopping times for that filtration.  The
+witness is the constant chain at a state of positive rate, with two constant
+waiting times: both have strictly positive holding times, their paths are equal,
+and their first jump times are separated by a threshold.  The mechanism is
+`jumpProcessE_const_chain`, a `rfl` -- `stepPath` reads the chain at the step
+index, so a chain that does not move leaves no trace of the waiting times in the
+path, and a jump from `x` to `x` is invisible.  Two statements close the escapes:
+`eq_of_measurable_jumpFiltrationE_const_chain` holds at *every* index, so the
+right continuous filtration `⨅ s > t, 𝓕 s` does not see the waiting times
+either, and `eq_of_measurable_jumpFiltrationE_of_subsingleton` makes the failing
+set the whole sample space on a one point state space, so no null set may be
+discarded -- `IsStoppingTime` is not an almost sure notion, for the same reason
+`StronglyAdapted` is not.  What localizes has to be a functional of the **path**;
+the running supremum of the rate along the path is the repair, and it is the one
+Milestone 7 already prescribes.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -8167,3 +8187,143 @@ theorem not_bddAbove_birthDeathRate_linear {β δ : ℝ} (hβ : 0 < β) (hδ : 0
   linarith
 
 end BirthDeathExample
+
+section LocalFiltration
+
+/-! ## The filtration of the local jump process, and what it cannot see
+
+Point 5 of this milestone asks for `jumpProcess_isLocalMPSolution`: the local construction
+solves the **local** martingale problem, with the localizing sequence
+`τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n`.  The filtration is `jumpFiltrationE`, the natural
+filtration of the local process and the counterpart of `jumpFiltration`; it is defined first
+because every statement of the local case is a statement about it.
+
+The announced localizing sequence is **not** one, and the obstruction is not a detail of some
+proof but a property of the construction.  `ProbabilityTheory.IsLocalizingSequence` asks each
+`τ n` to be a `MeasureTheory.IsStoppingTime` for the filtration; the jump times are read off the
+driving randomness `(y, ξ)`, and the process hides that randomness at every sample point whose
+chain does not move.  `not_isStoppingTime_min_jumpTimeE` is the witness, and it is available at
+every rate and at every state of positive rate: nothing about it is degenerate.
+
+`IsStoppingTime` is not an almost sure notion -- the same reason that made
+`eventuallyEq_nhdsGE_stepPath` be proved without hypotheses for `StronglyAdapted` -- so the
+witness disposes of the statement as announced.  It is not repairable by discarding a null set
+either: on a one point state space the natural filtration of the process is trivial at every
+time (`eq_of_measurable_jumpFiltrationE_of_subsingleton`), so *no* completion of it sees the
+jump times, while the rate `1` there is positive and bounded and every hypothesis of
+`jumpProcess_isMPSolution` holds. -/
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The natural filtration of the local jump process.**  Indexed by `ℝ≥0`, as `jumpFiltration`
+is, because `mpFamily` needs `[OrderBot ι]`; and that index is the one the local case wants
+anyway, since `ℝ≥0∞ = WithTop ℝ≥0` is exactly where a localizing sequence for it has to live and
+`jumpTimeE` already takes its values there. -/
+noncomputable def jumpFiltrationE (lam : E → ℝ) (hlam : Measurable lam) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  naturalFiltration (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)
+    fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)
+
+/-- **A constant chain gives a constant path**, whatever the waiting times are.  This is the
+whole mechanism of the witness: `stepPath` reads the chain at the step index, and a constant
+chain returns the same state at every index, so the waiting times leave no trace in the path. -/
+theorem jumpProcessE_const_chain (lam : E → ℝ) (x₀ : E) (xi : ℕ → ℝ) (t : ℝ) :
+    jumpProcessE lam t (fun _ ↦ x₀, xi) = x₀ := rfl
+
+/-- The first jump time of a constant chain with constant waiting times, in closed form. -/
+theorem jumpTimeE_const_chain (lam : E → ℝ) (x₀ : E) (c : ℝ) :
+    jumpTimeE lam (fun _ ↦ x₀) (fun _ ↦ c) 1
+      = ENNReal.ofReal c / ENNReal.ofReal (lam x₀) := by
+  rw [jumpTimeE_succ, jumpTimeE_zero, zero_add]
+
+/-- **The jump times are not stopping times for the filtration of the process.**  Stated for the
+localizing sequence that Milestone 4 announced, at its first index, and it disposes of that
+sequence: `isStoppingTime` is one of the three fields of
+`ProbabilityTheory.IsLocalizingSequence`, so `Locally` cannot be reached through it.
+
+The two sample points are the constant chain at `x₀` with the two constant waiting times
+`lam x₀ / 4` and `lam x₀`.  Both have **strictly positive** holding times, so neither is a
+degenerate point of the sample space; their paths are equal -- both are constantly `x₀` -- and
+their first jump times are `1/4` and `1`, which the threshold `1/2` separates.
+
+The hypothesis is only `0 < lam x₀` for **one** state.  In particular the witness is available
+under every hypothesis that `jumpProcess_isMPSolution` makes on the rate, and the failure is a
+property of the pair (process, filtration) and not of the local extension: read at
+`jumpFiltration` and `jumpTime` the same two points do the same thing. -/
+theorem not_isStoppingTime_min_jumpTimeE {lam : E → ℝ} (hlam : Measurable lam) {x₀ : E}
+    (hx₀ : 0 < lam x₀) :
+    ¬ IsStoppingTime (jumpFiltrationE lam hlam)
+      (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ min (jumpTimeE lam ω.1 ω.2 1) 1) := by
+  classical
+  intro hst
+  set t₀ : ℝ≥0 := Real.toNNReal (1 / 2) with ht₀
+  set S : Set ((ℕ → E) × (ℕ → ℝ)) :=
+    {ω | min (jumpTimeE lam ω.1 ω.2 1) 1 ≤ (t₀ : ENNReal)} with hS
+  have hSm : MeasurableSet[jumpFiltrationE lam hlam t₀] S := hst t₀
+  -- the coercion of the threshold is `ENNReal.ofReal (1/2)`, by definition of `ENNReal.ofReal`
+  have hcoe : ((t₀ : ℝ≥0) : ENNReal) = ENNReal.ofReal (1 / 2) := rfl
+  -- the two sample points, both with strictly positive holding times
+  set ω₁ : (ℕ → E) × (ℕ → ℝ) := (fun _ ↦ x₀, fun _ ↦ lam x₀ / 4) with hω₁
+  set ω₂ : (ℕ → E) × (ℕ → ℝ) := (fun _ ↦ x₀, fun _ ↦ lam x₀) with hω₂
+  have hne : ENNReal.ofReal (lam x₀) ≠ 0 := (ENNReal.ofReal_pos.2 hx₀).ne'
+  -- the first jump time of `ω₁` is `1/4`
+  have h₁ : jumpTimeE lam ω₁.1 ω₁.2 1 = ENNReal.ofReal (1 / 4) := by
+    rw [hω₁, jumpTimeE_const_chain, ← ENNReal.ofReal_div_of_pos hx₀]
+    congr 1
+    field_simp
+  -- the first jump time of `ω₂` is `1`
+  have h₂ : jumpTimeE lam ω₂.1 ω₂.2 1 = 1 := by
+    rw [hω₂, jumpTimeE_const_chain, ENNReal.div_self hne ENNReal.ofReal_ne_top]
+  have hmem₁ : ω₁ ∈ S := by
+    rw [hS, Set.mem_setOf_eq, h₁, hcoe]
+    exact le_trans (min_le_left _ _) (ENNReal.ofReal_le_ofReal (by norm_num))
+  have hmem₂ : ω₂ ∉ S := by
+    rw [hS, Set.mem_setOf_eq, h₂, min_self, hcoe, ← ENNReal.ofReal_one,
+      ENNReal.ofReal_le_ofReal_iff (by norm_num)]
+    norm_num
+  -- but no `𝓕 t₀`-measurable function separates two points with equal paths
+  have hpath : ∀ r : ℝ≥0, r ≤ t₀ →
+      (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (r : ℝ) ω) ω₁
+        = (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (r : ℝ) ω) ω₂ := by
+    intro r _
+    simp only [hω₁, hω₂, jumpProcessE_const_chain]
+  have hGm : Measurable[jumpFiltrationE lam hlam t₀] (S.indicator fun _ ↦ (1 : ℝ)) :=
+    measurable_const.indicator hSm
+  have hsep := eq_of_measurable_naturalFiltration
+    (X := fun t : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (t : ℝ) ω)
+    (fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)) hGm hpath
+  rw [Set.indicator_of_mem hmem₁, Set.indicator_of_notMem hmem₂] at hsep
+  exact one_ne_zero hsep
+
+/-- **Two constant chains are separated by no functional of the process, at any time.**  The
+sharp form of the obstruction: the hypothesis is not `r ≤ s` but nothing at all, because the two
+paths are equal at *every* time, so the conclusion holds for every index `s` of the filtration
+at once.
+
+That is what forbids the usual repair for a debut.  Passing to the right continuous filtration
+`⨅ s > t, 𝓕 s` cannot help, since that σ-algebra is below `𝓕 s` for every `s > t` and this
+statement holds at each of them; and neither can enlarging `t`.  The waiting times are not late
+in the path, they are absent from it. -/
+theorem eq_of_measurable_jumpFiltrationE_const_chain {lam : E → ℝ} (hlam : Measurable lam)
+    {s : ℝ≥0} {G : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hG : Measurable[jumpFiltrationE lam hlam s] G) (x₀ : E) (xi xi' : ℕ → ℝ) :
+    G (fun _ ↦ x₀, xi) = G (fun _ ↦ x₀, xi') :=
+  eq_of_measurable_naturalFiltration
+    (X := fun t : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (t : ℝ) ω)
+    (fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)) hG
+    fun _ _ ↦ by simp only [jumpProcessE_const_chain]
+
+/-- **On a one point state space the filtration of the process is trivial at every time**: no
+`𝓕 t`-measurable real function separates any two sample points.  This is the second half of the
+finding, and it is what rules out repairing `not_isStoppingTime_min_jumpTimeE` by completing the
+filtration or by discarding a null set: here the failing set is the *whole* sample space, and
+completing a trivial σ-algebra for a measure adds only null sets, never the waiting times. -/
+theorem eq_of_measurable_jumpFiltrationE_of_subsingleton [Subsingleton E] {lam : E → ℝ}
+    (hlam : Measurable lam) {t : ℝ≥0} {G : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hG : Measurable[jumpFiltrationE lam hlam t] G) (ω ω' : (ℕ → E) × (ℕ → ℝ)) :
+    G ω = G ω' :=
+  eq_of_measurable_naturalFiltration
+    (X := fun t : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (t : ℝ) ω)
+    (fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)) hG fun _ _ ↦ Subsingleton.elim _ _
+
+end LocalFiltration
