@@ -160,6 +160,51 @@ bleiben:
    will, sagt zuerst, welcher Schritt des jetzigen bricht, und rechnet ihn am
    Zeugen nach.
 
+**Teil D — die Roadmaps gegen Mathlib `master` prüfen.** Nach Teil C, vor allem
+anderen. Das ist Rückstaupunkt 5, vom Nutzer am 2026-09-10 vorgezogen.
+
+Unsere vier `README.md` und die drei `Suggested.lean` zitieren Mathlib-Namen mit
+**Datei und Zeile**. Die letzte Prüfung ist vom 2026-09-06; seither sind vier
+Tage vergangen, und die Bibliothek bewegt sich. Eine Roadmap, die auf einen
+Namen zeigt, den es nicht mehr gibt, ist schlimmer als eine, die schweigt.
+
+Zu tun, in dieser Reihenfolge:
+
+1. Frisches `upstream/master` holen und den Commit im Bericht **nennen**.
+2. Jeden zitierten Namen prüfen: existiert er noch, heißt er noch so, steht er
+   noch in der genannten Datei? Zeilennummern sind nachrangig — falsch ist ein
+   verschwundener oder umbenannter *Name*, nicht eine verschobene Zeile.
+3. Jede **Negativaussage** nachprüfen — „Mathlib hat X nicht". Davon stehen
+   inzwischen viele in den Roadmaps und in `TODO.md` Punkt 8, und jede ist ein
+   Versprechen an einen Leser. Ist eine inzwischen falsch, ist das der wertvollste
+   Fund des Laufs.
+4. Die drei `Suggested.lean` gegen v4.33.1 übersetzen (das ist unsere Bindung),
+   und **zusätzlich** melden, welche Deklarationen auf `master` brechen würden,
+   soweit das ohne Umbau erkennbar ist.
+
+Was **nicht** zu tun ist: auf `master` umstellen. Wir sind an v4.33.1 gebunden,
+und die eine bewußt gegen `master` geschriebene Aussage in
+`WeakConvergence/Suggested.lean` bleibt, wie sie ist.
+
+**Teil E — Meilenstein 6 von `MartingaleProblems`.** Nach Teil D.
+
+Der abstrakte Eindeutigkeitssatz `thm:absuniq`, und er hat in Lean **keine
+einzige Deklaration**, während sein Unterbau — Meilenstein 5, `restart` — bewiesen
+dasteht. Fünf Aussagen sind im `README.md` ausformuliert:
+`isMarkov_of_unique_onedim`, `subsingleton_mpSolutions_of_unique_onedim`,
+`eq_of_forall_onedim`, die klassische Fassung als Instanz, und `isStrongMarkov`.
+
+Zwei Dinge, die dabei nicht verlorengehen dürfen:
+
+* **Markov ist die Konklusion, nicht die Voraussetzung.** Ethier--Kurtz 4.4.1
+  läuft andersherum und sitzt auf Hille--Yosida; das ist ausdrücklich nicht
+  unsere Richtung (`rem:noch1`). Wer die Aussage so hinschreibt, daß sie Markov
+  voraussetzt, hat einen anderen Satz.
+* **Die Eindeutigkeit der eindimensionalen Verteilungen muß für *jeden* Shift
+  `r` gelten**, nicht nur bei `r = 0` — die endlichdimensionalen Verteilungen
+  werden über `restart` aus den geshifteten Problemen gebaut. Das
+  Akzeptanzbeispiel dazu steht im Meilenstein und ist der Prüfstein.
+
 **Teil C — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.** Teil A
 und Teil B sind beide durch (2026-09-09, dreizehnter und sechzehnter Lauf), also
 gilt dieser Teil. Er ist damit der laufende Auftrag.
@@ -537,14 +582,86 @@ danach.*
    Nichtexplosion **an dem einen Punkt** — an `⊤` ist sie falsch, sobald
    absorbiert wird.
 
-   **Was fehlt, in zwei Schritten** (ausgeschrieben im Laufbericht): erstens die
-   gemeinsame Meßbarkeit von `jumpProcessE` in `(t, ω)`, die billig ist, weil
-   `stepIndex_eq_iff` im Zuge der Verallgemeinerung schon allgemein bewiesen
-   wurde, und ohne die keine maßtheoretische Aussage über den lokalen Prozeß
-   formulierbar ist; zweitens das **Nichtexplosionskriterium** des lokalen Falls,
-   das die eigentliche Arbeit ist — `tendsto_jumpTime_atTop` benutzt eine
-   *gleichmäßige* Schranke `L` und ist für eine bloß lokal beschränkte Rate nicht
-   zu retten. Erst danach die Beispiele.
+   ~~**Was fehlt, in zwei Schritten**: erstens die gemeinsame Meßbarkeit von
+   `jumpProcessE` in `(t, ω)`; zweitens das Nichtexplosionskriterium.~~ *(der
+   erste Schritt ist erledigt, 2026-09-10, achter Lauf des Tages; der zweite ist
+   zerlegt.)*
+
+   **Zwischenstand 2026-09-10, achter Lauf des Tages.** Der lokale Prozeß **ist
+   ein Prozeß**, und Nichtexplosion ist **eine** Reihe. Zweiunddreißig
+   Deklarationen (vier Definitionen, achtundzwanzig Sätze), die ganze Datei ohne
+   einen Fehler durch `lake env lean` gegen v4.33.1, alle Sätze mit
+   `#print axioms` auf `propext`, `Classical.choice`,
+   `Quot.sound` geprüft, die Zahl der `sorry` bleibt bei neun. Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-10, achter Lauf des Tages"; die neuen
+   Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+   **Die Meßbarkeit ist als Verallgemeinerung gefallen und nicht als Kopie.**
+   `measurable_stepIndex_comp` und `measurable_stepPath_comp` führen die
+   **Zeitabbildung** `u : γ → α` mit; die gemeinsame Meßbarkeit in `(t, ω)` ist
+   der Fall `u = Prod.fst`, der lokale Fall der Fall
+   `u = ENNReal.ofReal ∘ Prod.fst`, und die alten `measurable_stepIndex`,
+   `measurable_stepPath` sind Zweizeiler geworden, ohne daß eine ihrer über
+   sechzig Gebrauchsstellen anzufassen war. Darauf `measurable_jumpTimeE`,
+   `measurable_jumpProcessE`, `measurable_jumpProcessE_apply`.
+
+   **Die Übertragung des Raums war billiger als gedacht, weil `jumpMeasure` die
+   Rate gar nicht nennt** — die treibenden Daten sind in beiden Konstruktionen
+   dieselben, nur die Uhr ist ausgetauscht. Dabei fiel eine echte Verschärfung
+   an: `jumpMeasure_map_jumpProcessE_zero` sagt „der Prozeß startet mit `nu`"
+   **ohne jede Voraussetzung an die Rate**, wo die alte Fassung `∀ x, 0 < lam x`
+   braucht.
+
+   **Der Fund, und er ist der Angelpunkt des lokalen Falls:**
+   ```
+   mem_nonExplosiveE_iff_tsum_eq_top :
+     (y, xi) ∈ NonExplosiveE lam
+       ↔ ∑' k, ENNReal.ofReal (xi k) / ENNReal.ofReal (lam (y k)) = ⊤
+   ```
+   In `ℝ` sind die beiden Weisen, nicht zu explodieren — divergente Haltezeiten,
+   und ein Zustand, den der Pfad nie verläßt — **verschiedene** Bedingungen und
+   verlangen überall eine Fallunterscheidung. In `ℝ≥0∞` sind sie **dieselbe**:
+   ein absorbierender Zustand steuert einen Summanden `⊤` bei, und `⊤` ist
+   gerade, wie eine divergente Reihe aufgeschrieben wird. Damit hat jedes
+   Kriterium **eine** Gestalt. Dazu `NonExplosiveE` als Menge samt
+   `measurableSet_nonExplosiveE`, `mem_nonExplosiveE_iff_of_pos` (der lokale Fall
+   ändert nicht, was Nichtexplosion heißt), und die beiden deterministischen
+   Kriterien `mem_nonExplosiveE_of_rate_zero` und `mem_nonExplosiveE_of_traj` —
+   letzteres beschränkt die Rate **längs der Trajektorie**, was kein
+   Schönheitsstrich ist: eine lokal beschränkte Rate ist auf `E` per definitionem
+   unbeschränkt.
+
+   **Beide Seiten des Prädikats haben eine Instanz**, sonst prüfte es nichts:
+   `mem_nonExplosiveE_absorb` ist drin, `notMem_nonExplosiveE_explode` draußen
+   (`lam n = 2^n` längs `y n = n`, Sprungzeiten `2 - 2/2^m`, erreichen `2` nie).
+   **Es ist der andere Defekt** — die Rate ist überall positiv, also nicht der
+   Mangel, den `jumpProcessE` behebt.
+
+   **Was fehlt, und es ist eine einzige benannte Aussage:**
+   ```
+   ae_tendsto_sum_smul_waiting_atTop :
+     (∀ n, 0 ≤ c n) → ¬ Summable c →
+     ∀ᵐ ξ ∂waitingMeasure,
+       Tendsto (fun N ↦ ∑ n ∈ Finset.range N, c n * ξ n) atTop atTop
+   ```
+   Über Fubini an `jumpMeasure = (chainKernel mu ∘ₘ nu).prod waitingMeasure` wird
+   die Kette festgehalten, und was bleibt, ist dies mit `c n = (lam (y n))⁻¹`.
+
+   **Und der Befund, damit der nächste Lauf nicht den bequemen Weg versucht:**
+   `tendsto_sum_waiting_atTop` ist der Fall `c ≡ 1` und **verallgemeinert
+   nicht**. Die Ereignisse `{c n · ξ n > ε}` haben Masse `exp (-ε / c n)`, und
+   die ist summierbar, sobald `c n → 0` (Zeuge `c n = 1/n`). **Die Divergenz
+   kommt aus der Anhäufung und nicht aus einzelnen großen Gliedern**, und
+   Borel--Cantelli sieht nur einzelne Glieder. Was trägt, ist Tschebyschew auf
+   der Abschneidung `b n = min (c n) 1`, mit den Indikatoren `1_{ξ n > 1}`:
+   Mittel `exp (-1) · B N`, Varianz höchstens `B N`, `B N → ∞`. Die drei
+   Mathlib-Bausteine sind an v4.33.1 belegt:
+   `ProbabilityTheory.meas_ge_le_variance_div_sq`
+   (`Probability/Moments/Variance.lean:397`),
+   `ProbabilityTheory.IndepFun.variance_sum` (`:422`) und
+   `ProbabilityTheory.iIndepSet.iIndepFun_indicator`
+   (`Probability/Independence/Basic.lean:1032`), das `iIndepSet_waiting` an die
+   Varianzformel anschließt. Erst danach die Beispiele.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:

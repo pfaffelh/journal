@@ -16889,3 +16889,163 @@ Verallgemeinerung schon allgemein bewiesen worden, und die Meßbarkeit von
 maßtheoretische Aussage über den lokalen Prozeß formulierbar ist. Punkt 2 ist der
 teurere und der interessantere, aber er setzt einen Prozeß voraus, über den man
 integrieren darf.
+
+### 2026-09-10, achter Lauf des Tages — der lokale Prozeß ist ein Prozeß, und Nichtexplosion ist **eine** Reihe
+
+**Punkt 1 des lokalen Falls ist erledigt, und Punkt 2 ist bis auf seinen
+probabilistischen Kern zerlegt.** Zweiunddreißig Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`, davon vier Definitionen
+(`NonExplosiveE` und die drei Daten des Explosionszeugen); von den
+achtundzwanzig Sätzen sind sechsundzwanzig neu und zwei umgeschriebene Fassungen
+des Bestands. Die ganze Datei geht durch `lake env lean` gegen v4.33.1 **ohne
+einen Fehler**, die Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5, 9, 10),
+und **alle achtundzwanzig Sätze** sind mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft.
+
+**Erstens, die Meßbarkeit, und sie ist als Verallgemeinerung gefallen und nicht
+als Kopie.** Der siebte Lauf hatte angesagt, `measurable_stepIndex` „umzuschreiben,
+nur `measurableSet_lt measurable_fst …` durch die Fassung mit
+`ENNReal.measurable_ofReal` zu ersetzen". Das wäre eine zweite Kopie desselben
+Beweises geworden. Genommen ist statt dessen die Fassung, die **die Zeitabbildung
+mitführt**:
+
+```
+theorem measurable_stepIndex_comp [TopologicalSpace α] [OrderClosedTopology α]
+    [SecondCountableTopology α] [MeasurableSpace α] [OpensMeasurableSpace α]
+    {γ : Type*} [MeasurableSpace γ] {u : γ → α} {T : γ → ℕ → α}
+    (hu : Measurable u) (hT : ∀ n, Measurable fun c ↦ T c n) :
+    Measurable fun c ↦ stepIndex (T c) (u c)
+```
+
+Die gemeinsame Meßbarkeit in `(t, ω)` ist der Fall `γ = ℝ × Ω`, `u = Prod.fst`,
+und die alten `measurable_stepIndex`, `measurable_stepPath` stehen unverändert
+da, jetzt als Zweizeiler; **keine** ihrer über sechzig Gebrauchsstellen mußte
+angefaßt werden. Der lokale Fall ist der Fall `u = ENNReal.ofReal ∘ Prod.fst`.
+Beide stehen im Abschnitt `OrderedTimes`, wo sie hingehören, denn der Beweis ist
+`stepIndex_eq_iff` und sonst nichts — die Beschreibung des Urbildes von `{n}`,
+ohne Grenzwert. Darauf `measurable_jumpTimeE`, `measurable_jumpProcessE` und
+`measurable_jumpProcessE_apply`.
+
+**Und die Übertragung des Wahrscheinlichkeitsraums war billiger als gedacht, weil
+`jumpMeasure` die Rate gar nicht nennt.** Die treibenden Daten — die eingebettete
+Kette und die Wartezeiten — sind in beiden Konstruktionen dieselben, nur die Uhr,
+die sie liest, ist ausgetauscht; also trägt der ganze Raum von
+`JumpConstruction` wörtlich herüber und neu zu beweisen ist allein, was die Uhr
+berührt. Dabei fiel eine echte Verschärfung an: `jumpProcessE_zero` und
+`jumpMeasure_map_jumpProcessE_zero` sagen „der Prozeß startet mit dem Gesetz
+`nu`" **ohne jede Voraussetzung an die Rate**, während
+`jumpMeasure_map_jumpProcess_zero` dafür `∀ x, 0 < lam x` braucht. Der Grund ist
+`jumpTimeE_increment_pos`, die voraussetzungsfrei ist. Dazu
+`ae_isStepPath_jumpProcessE` und `ae_isCadlagPath_jumpProcessE` im beschränkten
+Fall, über `jumpProcessE_eq_jumpProcess`.
+
+**Zweitens, und das ist der Fund des Laufs: Nichtexplosion ist im lokalen Fall
+eine einzige Reihenidentität, und sie trägt keine Voraussetzung.**
+
+```
+theorem mem_nonExplosiveE_iff_tsum_eq_top :
+    (y, xi) ∈ NonExplosiveE lam
+      ↔ ∑' k, ENNReal.ofReal (xi k) / ENNReal.ofReal (lam (y k)) = ⊤
+```
+
+In `ℝ` sind die beiden Weisen, nicht zu explodieren — die Haltezeiten summieren
+sich zu `∞`, oder der Pfad verläßt einen Zustand nie —, **verschiedene**
+Bedingungen und verlangen an jeder Gebrauchsstelle eine Fallunterscheidung. In
+`ℝ≥0∞` sind sie **dieselbe**: ein absorbierender Zustand steuert einen einzelnen
+Summanden `⊤` bei, und `⊤` ist gerade, wie eine divergente Reihe nichtnegativer
+Glieder aufgeschrieben wird. Damit hat jedes Nichtexplosionskriterium **eine**
+Gestalt, und der ganze probabilistische Inhalt des lokalen Falls ist die eine
+Frage, wann diese Reihe divergiert. Der Beweis ist `ENNReal.tsum_eq_iSup_nat`
+gegen `jumpTimeE_eq_sum`; der einzige Punkt, an dem etwas zu zeigen ist, ist,
+daß der Index `0` ausscheidet, weil `T 0 = 0` und `ofReal t ≥ 0` ist.
+
+Dazu `NonExplosiveE` als **Menge** samt `measurableSet_nonExplosiveE` — dieselbe
+Unterscheidung wie beim beschränkten Fall, und aus demselben Grund: die
+Identitäten der Vergangenheit gelten punktweise auf der Menge und nicht bloß
+fast sicher —, und `mem_nonExplosiveE_iff_of_pos`, das sagt, daß die Bedingung
+dort, wo beide Konstruktionen derselbe Prozeß sind, dieselbe ist. Der lokale
+Fall ändert also nicht heimlich, was Nichtexplosion heißt.
+
+**Drittens die beiden deterministischen Kriterien.**
+`mem_nonExplosiveE_of_rate_zero` ist die Absorption, ein Summand `⊤`.
+`mem_nonExplosiveE_of_traj` beschränkt die Rate **längs der Trajektorie** und
+nicht auf ganz `E`, und diese Abschwächung ist kein Schönheitsstrich: eine bloß
+lokal beschränkte Rate ist auf `E` per definitionem unbeschränkt, also ist die
+gleichmäßige Voraussetzung von `tendsto_jumpTime_atTop` im lokalen Fall gar nicht
+zu haben, während die Trajektorienschranke genau das ist, was ein Kriterium
+liefern muß. Die Sprungzeiten eines Punktes lesen die Rate an den Zuständen, die
+dieser Punkt besucht, und sonst nirgends. Mitgekommen sind
+`jumpTime_nonneg_of_traj`, `jumpTimeE_eq_ofReal_of_traj` und
+`sum_div_le_jumpTime_of_traj`, die drei Trajektorienfassungen des Bestands.
+
+**Viertens die Probe, ohne die `NonExplosiveE` eine Verzierung wäre.** Ein
+Prädikat, das alles erfüllt oder nichts, sagt über die Konstruktion nichts. Beide
+Seiten stehen: `mem_nonExplosiveE_absorb` ist drin, und zwar allein durch die
+Absorption, denn auf diesen Daten gibt es keine Schranke `L` an eine positive
+Rate. Und `notMem_nonExplosiveE_explode` ist draußen: auf
+`explodeRate n = 2 ^ n`, `explodeChain n = n`, `explodeWait ≡ 1` sind die
+Sprungzeiten `2 - 2 / 2 ^ m` (`jumpTime_explode`), erreichen also `2` nie. **Es
+ist der andere Defekt**, und das ist der Punkt der Probe: die Rate ist an jedem
+Zustand positiv, also ist es nicht der Mangel, den `jumpProcessE` beheben soll,
+sondern die echte Explosion; die einzige Voraussetzung von
+`mem_nonExplosiveE_of_traj`, die diese Daten verfehlen, ist die Schranke `L`.
+Das ist die deterministische Hälfte des Akzeptanzbeispiels, das im
+Meilenstein 4 seit dem 2026-09-07 als Prosa dastand.
+
+**Was fehlt, und es ist jetzt eine einzige benannte Aussage.** Der
+probabilistische Kern, als Punkt in `MartingaleProblems/README.md`,
+Meilenstein 4, eingetragen:
+
+```
+ae_tendsto_sum_smul_waiting_atTop :
+  (∀ n, 0 ≤ c n) → ¬ Summable c →
+  ∀ᵐ ξ ∂waitingMeasure, Tendsto (fun N ↦ ∑ n ∈ Finset.range N, c n * ξ n) atTop atTop
+```
+
+Über Fubini an `jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure`
+wird die Kette zuerst festgehalten, und was bleibt, ist diese Aussage mit
+`c n = (lam (y n))⁻¹`; über `mem_nonExplosiveE_iff_tsum_eq_top` ist sie dann das
+Kriterium.
+
+**Und ein Befund dazu, damit der nächste Lauf nicht den bequemen Weg versucht.**
+`tendsto_sum_waiting_atTop` ist der Fall `c ≡ 1`, und **er verallgemeinert
+nicht**. Sein Beweis ist, daß eine summierbare Folge gegen `0` geht, während
+unendlich viele `ξ n` die `1` überschreiten — also zweites Borel--Cantelli auf
+den Ereignissen `{ξ n > 1}`. Für gewichtete Glieder trägt das nicht: die
+Ereignisse `{c n · ξ n > ε}` haben die Masse `exp (-ε / c n)`, und die ist
+summierbar, sobald `c n → 0` (Zeuge `c n = 1/n`: `∑ exp (-εn) < ∞`). **Die
+Divergenz kommt hier aus der Anhäufung und nicht aus einzelnen großen Gliedern**,
+und ein Borel--Cantelli-Argument sieht nur einzelne Glieder. Der Weg, der trägt,
+ist Tschebyschew auf der Abschneidung `b n = min (c n) 1`: aus `¬ Summable c`
+folgt `¬ Summable b`, die Mittel der Teilsummen `∑_{n<N} b n · 1_{ξ n > 1}` sind
+`exp (-1) · B N` mit `B N → ∞`, ihre Varianzen höchstens `B N`, also geht die
+Wahrscheinlichkeit gegen `1`, und `c n · ξ n ≥ b n · 1_{ξ n > 1}` punktweise.
+Die drei Mathlib-Bausteine sind an v4.33.1 belegt und in diesem Lauf am Quelltext
+geprüft: `ProbabilityTheory.meas_ge_le_variance_div_sq`
+(`Probability/Moments/Variance.lean:397`),
+`ProbabilityTheory.IndepFun.variance_sum` (`:422`) und
+`ProbabilityTheory.iIndepSet.iIndepFun_indicator`
+(`Probability/Independence/Basic.lean:1032`), das die vorhandene
+`iIndepSet_waiting` an die Varianzformel anschließt.
+
+**Fünftens: die beiden Enden dieser Aussage, die nicht probabilistisch sind,
+sind schon bewiesen**, damit dem nächsten Lauf allein die Mitte bleibt.
+`not_summable_min_one` sagt, daß die Abschneidung die Divergenz nicht heilt, und
+es trägt **keine Vorzeichenvoraussetzung**: ist `min c 1` summierbar, so ist
+`min (c n) 1 < 1` schließlich, also `c n = min (c n) 1` schließlich, also `c`
+summierbar. `ae_tendsto_atTop_of_monotone` ist der Zusammenbau, und daß er nicht
+unmittelbar ist, liegt allein an der Reihenfolge der Quantoren: Tschebyschew
+liefert **je Niveau** eine Menge vollen Maßes, die Divergenz verlangt **eine**
+Menge für alle Niveaus. Abzählbar viele Niveaus genügen, weil die reellen Zahlen
+archimedisch sind, und das ist der ganze Inhalt.
+
+**Vorschlag für den nächsten Lauf: `ae_tendsto_sum_smul_waiting_atTop`**, und
+zwar in der eben ausgeschriebenen Gestalt und in dieser Reihenfolge — die
+Indikatoren und ihre `MemLp 2` und `iIndepFun`; Mittel und Varianz der endlichen
+Summe; Tschebyschew. Der erste Schritt (`not_summable_min_one`) und der letzte
+(`ae_tendsto_atTop_of_monotone`) stehen schon. Sie ist jetzt dran, weil alles um sie
+herum steht: der Prozeß ist meßbar, die Nichtexplosion ist eine Reihe, die
+deterministischen Kriterien sind bewiesen, und beide Seiten des Prädikats haben
+eine Instanz. Sie ist die einzige Aussage zwischen dem heutigen Stand und dem
+linearen Geburt-Tod-Prozeß, dem einzigen der drei Akzeptanzbeispiele, das den
+lokalen Zweig prüft.

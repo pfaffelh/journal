@@ -1508,40 +1508,65 @@ theorem stepIndex_eq_iff : stepIndex T t = n ↔
     · exact Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2
         fun k hk => absurd hk (not_lt.2 (h k))))
 
+/-- **The step index is measurable**, over an arbitrary measurable ordered time axis and along an
+arbitrary measurable time map `u`.
+
+The time map is carried rather than eliminated, and that is what makes the statement reach the
+local construction: there the jump times live in `ℝ≥0∞` while the process is read at *real* times,
+so `u` is `ENNReal.ofReal ∘ Prod.fst` and a statement about the identity alone would miss it.
+Joint measurability in `(t, ω)` is the case `γ = ℝ × Ω`, `u = Prod.fst`.
+
+The proof is `stepIndex_eq_iff` and nothing else -- a description of the preimage of `{n}`, with
+no limit: it is the set on which the `n`-th window contains the time, together, for `n = 0`, with
+the explosion set. -/
+theorem measurable_stepIndex_comp [TopologicalSpace α] [OrderClosedTopology α]
+    [SecondCountableTopology α] [MeasurableSpace α] [OpensMeasurableSpace α]
+    {γ : Type*} [MeasurableSpace γ] {u : γ → α} {T : γ → ℕ → α}
+    (hu : Measurable u) (hT : ∀ n, Measurable fun c ↦ T c n) :
+    Measurable fun c ↦ stepIndex (T c) (u c) := by
+  refine measurable_to_countable' fun n ↦ ?_
+  have hset : (fun c ↦ stepIndex (T c) (u c)) ⁻¹' {n} =
+      ({c | u c < T c (n + 1)} ∩ ⋂ m ∈ Set.Iio n, {c | T c (m + 1) ≤ u c})
+        ∪ {c | n = 0 ∧ ∀ k, T c (k + 1) ≤ u c} := by
+    ext c
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_inter_iff,
+      Set.mem_setOf_eq, Set.mem_iInter, Set.mem_Iio]
+    rw [stepIndex_eq_iff]
+  rw [hset]
+  refine MeasurableSet.union (MeasurableSet.inter ?_ ?_) ?_
+  · exact measurableSet_lt hu (hT (n + 1))
+  · exact MeasurableSet.biInter (Set.to_countable _) fun m _ ↦ measurableSet_le (hT (m + 1)) hu
+  · by_cases hn : n = 0
+    · have hrw : {c | n = 0 ∧ ∀ k, T c (k + 1) ≤ u c} = ⋂ k, {c | T c (k + 1) ≤ u c} := by
+        ext c; simp [hn]
+      rw [hrw]
+      exact MeasurableSet.iInter fun k ↦ measurableSet_le (hT (k + 1)) hu
+    · have hrw : {c | n = 0 ∧ ∀ k, T c (k + 1) ≤ u c} = (∅ : Set γ) := by ext c; simp [hn]
+      rw [hrw]
+      exact MeasurableSet.empty
+
+/-- **The step path is measurable**, in the same generality.  This is the first of the three
+places where step paths are easier than càdlàg paths: countably many pieces, and no limit. -/
+theorem measurable_stepPath_comp [TopologicalSpace α] [OrderClosedTopology α]
+    [SecondCountableTopology α] [MeasurableSpace α] [OpensMeasurableSpace α] [MeasurableSpace E]
+    {γ : Type*} [MeasurableSpace γ] {u : γ → α} {T : γ → ℕ → α} {y : γ → ℕ → E}
+    (hu : Measurable u) (hT : ∀ n, Measurable fun c ↦ T c n)
+    (hy : ∀ n, Measurable fun c ↦ y c n) :
+    Measurable fun c ↦ stepPath (T c) (y c) (u c) :=
+  (measurable_from_prod_countable_left (α := γ) (β := ℕ) (f := fun q ↦ y q.1 q.2) hy).comp
+    (measurable_id.prodMk (measurable_stepIndex_comp hu hT))
+
 end OrderedTimes
 
 variable {T : ℕ → ℝ} {t : ℝ} {n : ℕ}
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- **The step index is jointly measurable in the time and the sample point.**  The proof is a
-description of the preimage of `{n}` and needs no limit: it is the set on which the `n`-th
-window contains the time, together, for `n = 0`, with the explosion set. -/
+/-- **The step index is jointly measurable in the time and the sample point.**  The real time
+axis read by the identity, which is `measurable_stepIndex_comp` at `γ = ℝ × Ω`, `u = Prod.fst`. -/
 theorem measurable_stepIndex {T : Ω → ℕ → ℝ} (hT : ∀ n, Measurable fun ω => T ω n) :
-    Measurable fun p : ℝ × Ω => stepIndex (T p.2) p.1 := by
-  refine measurable_to_countable' fun n => ?_
-  have hset : (fun p : ℝ × Ω => stepIndex (T p.2) p.1) ⁻¹' {n} =
-      ({p : ℝ × Ω | p.1 < T p.2 (n + 1)} ∩ ⋂ m ∈ Set.Iio n, {p : ℝ × Ω | T p.2 (m + 1) ≤ p.1})
-        ∪ {p : ℝ × Ω | n = 0 ∧ ∀ k, T p.2 (k + 1) ≤ p.1} := by
-    ext p
-    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_inter_iff,
-      Set.mem_setOf_eq, Set.mem_iInter, Set.mem_Iio]
-    rw [stepIndex_eq_iff]
-  rw [hset]
-  refine MeasurableSet.union (MeasurableSet.inter ?_ ?_) ?_
-  · exact measurableSet_lt measurable_fst ((hT (n + 1)).comp measurable_snd)
-  · exact MeasurableSet.biInter (Set.to_countable _) fun m _ =>
-      measurableSet_le ((hT (m + 1)).comp measurable_snd) measurable_fst
-  · by_cases hn : n = 0
-    · have : {p : ℝ × Ω | n = 0 ∧ ∀ k, T p.2 (k + 1) ≤ p.1}
-          = ⋂ k, {p : ℝ × Ω | T p.2 (k + 1) ≤ p.1} := by ext p; simp [hn]
-      rw [this]
-      exact MeasurableSet.iInter fun k =>
-        measurableSet_le ((hT (k + 1)).comp measurable_snd) measurable_fst
-    · have : {p : ℝ × Ω | n = 0 ∧ ∀ k, T p.2 (k + 1) ≤ p.1} = (∅ : Set (ℝ × Ω)) := by
-        ext p; simp [hn]
-      rw [this]
-      exact MeasurableSet.empty
+    Measurable fun p : ℝ × Ω => stepIndex (T p.2) p.1 :=
+  measurable_stepIndex_comp measurable_fst fun n ↦ (hT n).comp measurable_snd
 
 /-- **The step path is jointly measurable in the time and the sample point.**  This is the first
 of the three steps the roadmap says are easy on step paths: countably many pieces, and no limit
@@ -1549,8 +1574,8 @@ argument. -/
 theorem measurable_stepPath [MeasurableSpace E] {T : Ω → ℕ → ℝ} {y : Ω → ℕ → E}
     (hT : ∀ n, Measurable fun ω => T ω n) (hy : ∀ n, Measurable fun ω => y ω n) :
     Measurable fun p : ℝ × Ω => stepPath (T p.2) (y p.2) p.1 :=
-  (measurable_from_prod_countable_left (α := Ω) (β := ℕ) (f := fun q => y q.1 q.2) hy).comp
-    (measurable_snd.prodMk (measurable_stepIndex hT))
+  measurable_stepPath_comp measurable_fst (fun n ↦ (hT n).comp measurable_snd)
+    fun n ↦ (hy n).comp measurable_snd
 
 /-! ### The jump times -/
 
@@ -7237,5 +7262,351 @@ theorem jumpProcess_ne_jumpProcessE_absorb :
       ≠ jumpProcessE absorbRate 1 (absorbChain, absorbWait) := by
   rw [jumpProcess_absorbing_const, jumpProcessE_absorb_of_one_le le_rfl]
   simp
+
+/-! ### The local construction is a process
+
+Without joint measurability in `(t, ω)` the local construction is a family of maps and not a
+process: no integral over it is defined, so no statement of Milestone 2 can even be written down
+for it.  It is bought by the generality of `measurable_stepPath_comp`, whose time map is exactly
+the `ENNReal.ofReal` that separates the two constructions. -/
+
+/-- **The jump times of the local construction are measurable.**  The recursion is the same as
+for `measurable_jumpTime`; the division is `ENNReal`'s, which is total, so the vanishing rate
+costs nothing here. -/
+theorem measurable_jumpTimeE [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ) :
+    Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeE lam ω.1 ω.2 n := by
+  induction n with
+  | zero => exact measurable_const
+  | succ n ih =>
+      simp only [jumpTimeE_succ, div_eq_mul_inv]
+      exact ih.add ((ENNReal.measurable_ofReal.comp
+          ((measurable_pi_apply n).comp measurable_snd)).mul
+        (ENNReal.measurable_ofReal.comp
+          (hlam.comp ((measurable_pi_apply n).comp measurable_fst))).inv)
+
+/-- **The local jump process is jointly measurable in `(t, ω)`.**  This is the counterpart of
+`measurable_jumpProcess`, and it is not a rewriting of it: the jump times are read in `ℝ≥0∞`
+while the time axis of the process is `ℝ`, so what is composed with the step index is the
+measurable map `ENNReal.ofReal` and not the identity. -/
+theorem measurable_jumpProcessE [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam) :
+    Measurable fun p : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦ jumpProcessE lam p.1 p.2 :=
+  measurable_stepPath_comp (ENNReal.measurable_ofReal.comp measurable_fst)
+    (fun n ↦ (measurable_jumpTimeE hlam n).comp measurable_snd)
+    fun n ↦ ((measurable_pi_apply n).comp measurable_fst).comp measurable_snd
+
+/-- The local jump process at a fixed time is measurable. -/
+theorem measurable_jumpProcessE_apply [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam)
+    (t : ℝ) : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam t ω :=
+  (measurable_jumpProcessE hlam).comp (measurable_const.prodMk measurable_id)
+
+/-! ### Non explosion in the local case -/
+
+/-- **The non explosive sample points of the local construction.**  Non explosion is asked at the
+**real** times only, and the restriction is not cosmetic: at `⊤` it is false as soon as the path
+is absorbed, which is the case the whole extension exists for.  `NonExplosive` is the same set for
+the real valued jump times, and the two agree wherever both constructions do
+(`mem_nonExplosiveE_iff_of_pos`). -/
+def NonExplosiveE (lam : E → ℝ) : Set ((ℕ → E) × (ℕ → ℝ)) :=
+  {ω | ∀ t : ℝ, ∃ n, ENNReal.ofReal t < jumpTimeE lam ω.1 ω.2 (n + 1)}
+
+theorem measurableSet_nonExplosiveE [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam) :
+    MeasurableSet (NonExplosiveE lam) := by
+  have hEq : NonExplosiveE lam = ⋂ m : ℕ, ⋃ n : ℕ,
+      {ω : (ℕ → E) × (ℕ → ℝ) | ENNReal.ofReal (m : ℝ) < jumpTimeE lam ω.1 ω.2 (n + 1)} := by
+    ext ω
+    simp only [NonExplosiveE, Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion]
+    refine ⟨fun h m ↦ h m, fun h t ↦ ?_⟩
+    obtain ⟨m, hm⟩ := exists_nat_gt t
+    obtain ⟨n, hn⟩ := h m
+    exact ⟨n, (ENNReal.ofReal_le_ofReal hm.le).trans_lt hn⟩
+  rw [hEq]
+  exact MeasurableSet.iInter fun m ↦ MeasurableSet.iUnion fun n ↦
+    measurableSet_lt measurable_const (measurable_jumpTimeE hlam (n + 1))
+
+/-- **Non explosion is the same condition in both constructions**, wherever both are the same
+process.  So the local case does not quietly change what non explosion means; it only extends the
+set of data on which the question can be asked. -/
+theorem mem_nonExplosiveE_iff_of_pos (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 < xi n) :
+    (y, xi) ∈ NonExplosiveE lam ↔ (y, xi) ∈ NonExplosive lam := by
+  have hpos : ∀ m : ℕ, 0 < jumpTime lam y xi (m + 1) := fun m ↦ by
+    simpa using strictMono_jumpTime hxi hlam (Nat.succ_pos m)
+  have key : ∀ (t : ℝ) (n : ℕ), (ENNReal.ofReal t < jumpTimeE lam y xi (n + 1))
+      ↔ (t < jumpTime lam y xi (n + 1)) := fun t n ↦ by
+    rw [jumpTimeE_eq_ofReal hlam fun k ↦ (hxi k).le, ENNReal.ofReal_lt_ofReal_iff (hpos n)]
+  constructor
+  · exact fun h t ↦ (h t).imp fun n hn ↦ (key t n).1 hn
+  · exact fun h t ↦ (h t).imp fun n hn ↦ (key t n).2 hn
+
+/-- **The jump times are the partial sums of the holding times.**  In `ℝ≥0∞` this is an identity
+and carries no hypothesis; in `ℝ` the corresponding statement would have to exclude a vanishing
+rate, and that exclusion is what the local case cannot afford. -/
+theorem jumpTimeE_eq_sum (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (m : ℕ) :
+    jumpTimeE lam y xi m
+      = ∑ k ∈ Finset.range m, ENNReal.ofReal (xi k) / ENNReal.ofReal (lam (y k)) := by
+  induction m with
+  | zero => simp
+  | succ m ih => rw [jumpTimeE_succ, ih, Finset.sum_range_succ]
+
+/-- **Non explosion is a single series identity in `ℝ≥0∞`**, with no hypothesis whatever on the
+rate or on the waiting times.
+
+This is what the change of codomain buys, and it is more than a convenience.  In `ℝ` the two ways
+a path can fail to explode -- the holding times summing to `∞`, and a state the path never leaves
+-- are different conditions and need a case distinction at every use.  Here they are the same
+condition: an absorbing state contributes a single term equal to `⊤`, and `⊤` is exactly how a
+divergent series of nonnegative terms is recorded.  Every criterion for non explosion therefore
+has this one form, and the probabilistic content of the local case is the single question when
+this series diverges. -/
+theorem mem_nonExplosiveE_iff_tsum_eq_top :
+    (y, xi) ∈ NonExplosiveE lam
+      ↔ ∑' k, ENNReal.ofReal (xi k) / ENNReal.ofReal (lam (y k)) = ⊤ := by
+  have hsup : ∑' k, ENNReal.ofReal (xi k) / ENNReal.ofReal (lam (y k))
+      = ⨆ m, jumpTimeE lam y xi m := by
+    rw [ENNReal.tsum_eq_iSup_nat]
+    exact iSup_congr fun m ↦ (jumpTimeE_eq_sum lam y xi m).symm
+  rw [hsup]
+  show (∀ t : ℝ, ∃ m, ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)) ↔ _
+  constructor
+  · intro h
+    by_contra hne
+    obtain ⟨m, hm⟩ := h (⨆ m, jumpTimeE lam y xi m).toReal
+    rw [ENNReal.ofReal_toReal hne] at hm
+    exact absurd (le_iSup (fun m ↦ jumpTimeE lam y xi m) (m + 1)) (not_le.2 hm)
+  · intro h t
+    have hlt : ENNReal.ofReal t < ⨆ m, jumpTimeE lam y xi m := by
+      rw [h]; exact ENNReal.ofReal_lt_top
+    obtain ⟨m, hm⟩ := lt_iSup_iff.1 hlt
+    match m, hm with
+    | 0, hm => exact absurd hm (by simp)
+    | (k + 1), hm => exact ⟨k, hm⟩
+
+/-- **An absorbing state is non explosion**, and the proof is the single term `⊤` of the series.
+The hypothesis is that the path really reaches the state -- a positive waiting time -- and nothing
+about the rate anywhere else. -/
+theorem mem_nonExplosiveE_of_rate_zero (hxi : 0 < xi n) (hlam : lam (y n) = 0) :
+    (y, xi) ∈ NonExplosiveE lam := fun t ↦
+  ⟨n, by rw [jumpTimeE_succ_eq_top hxi hlam]; exact ENNReal.ofReal_lt_top⟩
+
+/-! ### Non explosion under a bound along the trajectory
+
+`tendsto_jumpTime_atTop` bounds the rate on **all** of `E`, and that is more than the argument
+uses: the jump times of one sample point read the rate at the states that sample point visits and
+nowhere else.  Weakening the two hypotheses to the trajectory is not cosmetic here — a locally
+bounded rate is by definition unbounded on `E`, so the uniform form is unavailable in the local
+case, while the trajectory form is exactly what a non explosion criterion has to deliver. -/
+
+theorem jumpTime_nonneg_of_traj (hlam : ∀ k, 0 < lam (y k)) (hxi : ∀ k, 0 ≤ xi k) (m : ℕ) :
+    0 ≤ jumpTime lam y xi m := by
+  induction m with
+  | zero => simp
+  | succ m ih => rw [jumpTime_succ]; exact add_nonneg ih (div_nonneg (hxi m) (hlam m).le)
+
+/-- `jumpTimeE_eq_ofReal` with the positivity of the rate asked along the trajectory only. -/
+theorem jumpTimeE_eq_ofReal_of_traj (hlam : ∀ k, 0 < lam (y k)) (hxi : ∀ k, 0 ≤ xi k) (m : ℕ) :
+    jumpTimeE lam y xi m = ENNReal.ofReal (jumpTime lam y xi m) := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+      rw [jumpTimeE_succ, ih, jumpTime_succ,
+        ENNReal.ofReal_add (jumpTime_nonneg_of_traj hlam hxi m)
+          (div_nonneg (hxi m) (hlam m).le),
+        ENNReal.ofReal_div_of_pos (hlam m)]
+
+/-- `sum_div_le_jumpTime` with both hypotheses read along the trajectory. -/
+theorem sum_div_le_jumpTime_of_traj {L : ℝ} (hlam : ∀ k, 0 < lam (y k))
+    (hL : ∀ k, lam (y k) ≤ L) (hxi : ∀ k, 0 ≤ xi k) (m : ℕ) :
+    (∑ k ∈ Finset.range m, xi k) / L ≤ jumpTime lam y xi m := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+      rw [Finset.sum_range_succ, add_div, jumpTime_succ]
+      refine add_le_add ih ?_
+      gcongr
+      · exact hxi m
+      · exact hlam m
+      · exact hL m
+
+/-- **Non explosion under a bound along the trajectory**, as a membership in `NonExplosiveE`.
+This is the deterministic half of the local criterion: what is left to prove about a locally
+bounded rate is that the trajectory bound holds almost surely, and that is a statement about the
+embedded chain alone. -/
+theorem mem_nonExplosiveE_of_traj {L : ℝ} (hL0 : 0 < L) (hlam : ∀ k, 0 < lam (y k))
+    (hL : ∀ k, lam (y k) ≤ L) (hxi : ∀ k, 0 ≤ xi k)
+    (hsum : Tendsto (fun m ↦ ∑ k ∈ Finset.range m, xi k) atTop atTop) :
+    (y, xi) ∈ NonExplosiveE lam := by
+  have htend : Tendsto (jumpTime lam y xi) atTop atTop :=
+    tendsto_atTop_mono (fun m ↦ sum_div_le_jumpTime_of_traj hlam hL hxi m)
+      (hsum.atTop_div_const hL0)
+  intro t
+  obtain ⟨m, hm⟩ := exists_lt_succ_of_tendsto_atTop htend (max t 0)
+  refine ⟨m, ?_⟩
+  rw [jumpTimeE_eq_ofReal_of_traj hlam hxi]
+  exact (ENNReal.ofReal_lt_ofReal_iff ((le_max_right t 0).trans_lt hm)).2
+    ((le_max_left t 0).trans_lt hm)
+
+/-! ### The two sides of non explosion, as instances
+
+`NonExplosiveE` is worth nothing unless it separates: a predicate satisfied by everything, or by
+nothing, proves nothing about the construction it is attached to.  Both instances are written
+down, and the second is the one that costs something. -/
+
+/-- **The absorbing witness is non explosive**, and by absorption alone: no bound on the rate is
+available on this data, since the rate has a zero. -/
+theorem mem_nonExplosiveE_absorb : (absorbChain, absorbWait) ∈ NonExplosiveE absorbRate :=
+  mem_nonExplosiveE_of_rate_zero (n := 1) (absorbWait_pos 1) (by simp)
+
+/-- The rate of the explosion witness: at the state `n` it is `2 ^ n`, so the `n`-th holding time
+is `2 ^ (-n)`.  It is positive everywhere -- the hypothesis `JumpConstruction` carries -- and
+unbounded, which is the only thing that goes wrong. -/
+def explodeRate : ℕ → ℝ := fun n ↦ 2 ^ n
+
+/-- The chain of the explosion witness: it visits `n` at step `n`. -/
+def explodeChain : ℕ → ℕ := id
+
+/-- The waiting times of the explosion witness, all equal to `1`. -/
+def explodeWait : ℕ → ℝ := fun _ ↦ 1
+
+theorem explodeRate_pos (k : ℕ) : 0 < explodeRate (explodeChain k) := by
+  simp only [explodeRate, explodeChain, id_eq]
+  positivity
+
+/-- **The jump times of the explosion witness are the partial sums of a geometric series**, and
+they stay below `2` forever. -/
+theorem jumpTime_explode (m : ℕ) :
+    jumpTime explodeRate explodeChain explodeWait m = 2 - 2 / 2 ^ m := by
+  induction m with
+  | zero => norm_num
+  | succ m ih =>
+      rw [jumpTime_succ, ih]
+      simp only [explodeWait, explodeRate, explodeChain, id_eq, pow_succ]
+      have h : (2 : ℝ) ^ m ≠ 0 := by positivity
+      field_simp
+      ring
+
+theorem jumpTime_explode_le (m : ℕ) :
+    jumpTime explodeRate explodeChain explodeWait m ≤ 2 := by
+  rw [jumpTime_explode]
+  have h : (0 : ℝ) < 2 / 2 ^ m := by positivity
+  linarith
+
+/-- **The explosion witness explodes**: the path has passed through every state of the chain
+before time `2`, so no window contains the time `2` and `stepIndex` falls back on its junk value.
+
+This is the instance on the other side of `NonExplosiveE`, and it is what makes the predicate a
+hypothesis rather than a decoration.  Note what it does **not** need: the rate is positive at every
+state, so this is not the defect `jumpProcessE` was built to repair.  It is the genuine one, and
+the local case has to exclude it by an argument about the rate along the trajectory -- which is
+precisely `mem_nonExplosiveE_of_traj`, whose bound `L` this data has not got. -/
+theorem notMem_nonExplosiveE_explode :
+    (explodeChain, explodeWait) ∉ NonExplosiveE explodeRate := by
+  intro h
+  obtain ⟨m, hm⟩ := h 2
+  simp only at hm
+  rw [jumpTimeE_eq_ofReal_of_traj (xi := explodeWait) explodeRate_pos
+    fun _ ↦ zero_le_one] at hm
+  exact absurd ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg (by norm_num)).1 hm)
+    (not_lt.2 (jumpTime_explode_le (m + 1)))
+
+/-- **The paths are step paths exactly on the non explosive set**, which is `NonExplosiveE` read
+as what it is: the hypothesis of `isStepPath_jumpProcessE`, as a measurable set rather than as an
+almost sure statement.  It is needed as a set because in the local case the almost sure statement
+is not available from a bound on the rate -- there is none. -/
+theorem isStepPath_jumpProcessE_of_mem [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
+    (hω : (y, xi) ∈ NonExplosiveE lam) :
+    IsStepPath (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) :=
+  isStepPath_jumpProcessE hxi hω
+
+/-! ### The local process on the explicit probability space
+
+`jumpMeasure` does not mention the rate: the driving data -- the embedded chain and the waiting
+times -- are the same in both constructions, and only the clock that reads them changed.  So the
+whole probability space of `JumpConstruction` carries over verbatim, and what has to be proved
+again is only what the clock touches. -/
+
+/-- **The local process starts where the chain starts.**  Unlike `jumpProcess_zero` this asks
+nothing whatever of the rate: at `t = 0` the step index is `0` because the first holding time is
+strictly positive, and in `ℝ≥0∞` that is `jumpTimeE_increment_pos`, which is free. -/
+theorem jumpProcessE_zero (hxi : 0 < xi 0) : jumpProcessE lam 0 (y, xi) = y 0 := by
+  have h1 : (0 : ENNReal) < jumpTimeE lam y xi (0 + 1) := by
+    rw [jumpTimeE_succ, jumpTimeE_zero, zero_add]
+    exact jumpTimeE_increment_pos hxi
+  have h : stepIndex (jumpTimeE lam y xi) 0 = 0 := Nat.le_zero.1 (stepIndex_le h1)
+  simp [jumpProcessE, stepPath, h]
+
+/-- **The local process has the prescribed initial law**, under no hypothesis on the rate at all.
+`jumpMeasure_map_jumpProcess_zero` needs `∀ x, 0 < lam x` for the same statement, and that is
+precisely the hypothesis the local case must do without. -/
+theorem jumpMeasure_map_jumpProcessE_zero [MeasurableSpace E] (lam : E → ℝ) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    (jumpMeasure mu nu).map (jumpProcessE lam 0) = nu := by
+  have h : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam 0 ω)
+      =ᵐ[jumpMeasure mu nu] fun ω ↦ ω.1 0 := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+    exact jumpProcessE_zero (lam := lam) (y := ω.1) (xi := ω.2) (hω 0)
+  rw [Measure.map_congr h, jumpMeasure_map_chain_zero]
+
+/-- **Almost every path of the local process is a step path**, in the case where a uniform bound
+on a positive rate is available.  This is the extension read against `ae_isStepPath_jumpProcess`:
+where the old construction applies, the new one inherits its conclusions, and what it adds is the
+data the old one could not be run on. -/
+theorem ae_isStepPath_jumpProcessE [MeasurableSpace E] [TopologicalSpace E] {lam : E → ℝ} {L : ℝ}
+    (hL0 : 0 < L) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsStepPath (fun t ↦ jumpProcessE lam t ω) := by
+  filter_upwards [ae_isStepPath_jumpProcess hL0 hlam hL mu nu, ae_pos_snd_jumpMeasure mu nu]
+    with ω hstep hpos
+  have hEq : (fun t ↦ jumpProcessE lam t ω) = fun t ↦ jumpProcess lam t ω := by
+    funext t
+    exact jumpProcessE_eq_jumpProcess (y := ω.1) (xi := ω.2) hlam hpos t
+  rw [hEq]
+  exact hstep
+
+/-- Almost every path of the local process is càdlàg, in the same case. -/
+theorem ae_isCadlagPath_jumpProcessE [MeasurableSpace E] [TopologicalSpace E] {lam : E → ℝ}
+    {L : ℝ} (hL0 : 0 < L) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlagPath (fun t ↦ jumpProcessE lam t ω) := by
+  filter_upwards [ae_isStepPath_jumpProcessE hL0 hlam hL mu nu] with ω hω
+  exact hω.isCadlagPath
+
+/-! ### The two deterministic steps of the local non explosion criterion
+
+What is left of the local case is one probabilistic statement: for `0 ≤ c` not summable,
+`waitingMeasure`-almost every `ξ` has `∑ n, c n * ξ n` divergent.  Its two ends are not
+probabilistic and are proved here, so that what remains is the middle -- Chebyshev on the
+truncation, with the independence of the coordinates.  The truncation is needed because the
+variance bound wants bounded summands; the assembly is needed because Chebyshev delivers one
+level at a time and divergence is a statement about all of them at once. -/
+
+/-- **Truncating at `1` does not make a divergent series of nonnegative terms converge.**  This
+is the first step: the variance argument wants summands bounded by `1`, and this says the
+hypothesis survives the truncation. -/
+theorem not_summable_min_one {c : ℕ → ℝ} (hdiv : ¬ Summable c) :
+    ¬ Summable fun n ↦ min (c n) 1 := by
+  intro hb
+  refine hdiv ?_
+  have hev : ∀ᶠ n in atTop, min (c n) 1 < 1 :=
+    hb.tendsto_atTop_zero.eventually (gt_mem_nhds zero_lt_one)
+  obtain ⟨N, hN⟩ := eventually_atTop.1 hev
+  refine (summable_nat_add_iff N).1 ((summable_nat_add_iff N).2 hb |>.congr fun n ↦ ?_)
+  rcases min_cases (c (n + N)) 1 with ⟨h, _⟩ | ⟨h, _⟩
+  · exact h
+  · exact absurd (hN (n + N) (Nat.le_add_left N n)) (by rw [h]; exact lt_irrefl 1)
+
+/-- **Monotone partial sums that pass every level almost surely diverge almost surely.**  This is
+the second step, and the reason it is not immediate is the order of the quantifiers: Chebyshev
+gives, for each level separately, a set of full measure on which the level is passed, and
+divergence asks for one set of full measure serving all levels at once.  Countably many levels
+suffice because the reals are archimedean, and that is the whole of it. -/
+theorem ae_tendsto_atTop_of_monotone {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {f : ℕ → Ω → ℝ} (hmono : ∀ ω, Monotone fun N ↦ f N ω)
+    (h : ∀ K : ℕ, ∀ᵐ ω ∂μ, ∃ N, (K : ℝ) ≤ f N ω) :
+    ∀ᵐ ω ∂μ, Tendsto (fun N ↦ f N ω) atTop atTop := by
+  rw [← ae_all_iff] at h
+  filter_upwards [h] with ω hω
+  refine tendsto_atTop_atTop.2 fun r ↦ ?_
+  obtain ⟨K, hK⟩ := exists_nat_ge r
+  obtain ⟨N, hN⟩ := hω K
+  exact ⟨N, fun a ha ↦ (hK.trans hN).trans (hmono ω ha)⟩
 
 end Absorbing

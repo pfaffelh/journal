@@ -585,6 +585,87 @@ A concrete family of solutions, built without any of the theory above. Index
   `ConditionallyCompleteLinearOrder` for exactly this reason, and
   `exists_stepIndex_window` asks for non explosion at the single point it is
   applied to.
+* `measurable_stepIndex_comp`, `measurable_stepPath_comp`: the step index and
+  the step path are measurable over an arbitrary measurable ordered time axis
+  and along an arbitrary measurable time map `u`. **Proved** on 2026-09-10,
+  eighth run. The time map is carried rather than eliminated, and that is what
+  makes the statement reach the local construction: there the jump times live in
+  `ℝ≥0∞` while the process is read at real times, so `u` is
+  `ENNReal.ofReal ∘ Prod.fst`. Joint measurability in `(t, ω)` is the case
+  `γ = ℝ × Ω`, `u = Prod.fst`, and `measurable_stepIndex`, `measurable_stepPath`
+  are that corollary. The proof is `stepIndex_eq_iff` and nothing else: a
+  description of the preimage of `{n}`, with no limit.
+* `measurable_jumpTimeE`, `measurable_jumpProcessE`,
+  `measurable_jumpProcessE_apply`: the local construction is a process and not
+  merely a family of maps. **Proved** on 2026-09-10, eighth run. Without joint
+  measurability in `(t, ω)` no integral over the local process is defined and no
+  statement of Milestone 2 can be written down for it.
+* `jumpTimeE_eq_sum`, `NonExplosiveE`, `mem_nonExplosiveE_iff_tsum_eq_top`: **non
+  explosion of the local construction is a single series identity in `ℝ≥0∞`**,
+  `∑' k, ENNReal.ofReal (ξ k) / ENNReal.ofReal (lam (y k)) = ⊤`, with no
+  hypothesis whatever on the rate or on the waiting times. **Proved** on
+  2026-09-10, eighth run, together with `measurableSet_nonExplosiveE` and
+  `mem_nonExplosiveE_iff_of_pos`, which says the condition is the same one
+  `NonExplosive` states wherever both constructions are the same process.
+
+  This is more than a convenience. In `ℝ` the two ways a path can fail to
+  explode — the holding times summing to `∞`, and a state the path never leaves
+  — are different conditions and need a case distinction at every use. In
+  `ℝ≥0∞` they are the same condition: an absorbing state contributes a single
+  term equal to `⊤`, and `⊤` is how a divergent series of nonnegative terms is
+  recorded. Every criterion for non explosion therefore has one form, and the
+  probabilistic content of the local case is the single question when this
+  series diverges.
+* `mem_nonExplosiveE_of_rate_zero`, `mem_nonExplosiveE_of_traj`: the two
+  deterministic criteria. **Proved** on 2026-09-10, eighth run, with
+  `jumpTime_nonneg_of_traj`, `jumpTimeE_eq_ofReal_of_traj` and
+  `sum_div_le_jumpTime_of_traj`. The first is absorption, one term equal to `⊤`.
+  The second bounds the rate **along the trajectory** and not on all of `E`, and
+  that weakening is what the local case needs rather than a tidiness: a locally
+  bounded rate is by definition unbounded on `E`, so the uniform hypothesis of
+  `tendsto_jumpTime_atTop` is unavailable, while the trajectory bound is exactly
+  what a criterion has to deliver. The jump times of one sample point read the
+  rate at the states that sample point visits and nowhere else.
+* `ae_tendsto_sum_smul_waiting_atTop`: for `c : ℕ → ℝ` with `0 ≤ c n` and `c` not
+  summable, `waitingMeasure`-almost every `ξ` has
+  `Tendsto (fun N ↦ ∑ n ∈ Finset.range N, c n * ξ n) atTop atTop`. This is the
+  probabilistic core of the local case, and it is what turns
+  `mem_nonExplosiveE_iff_tsum_eq_top` into a criterion on the chain alone: by
+  Fubini on `jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure` the
+  chain is frozen first, and what remains is this statement with
+  `c n = (lam (y n))⁻¹`. `tendsto_sum_waiting_atTop` is the case `c ≡ 1`, and it
+  does not generalise: its proof is that a summable sequence tends to `0` while
+  infinitely many `ξ n` exceed `1`, and the events `{c n · ξ n > ε}` are
+  summable as soon as `c n → 0`, so the second Borel--Cantelli lemma alone does
+  not reach it. Divergence here comes from accumulation and not from single
+  large terms. The route is Chebyshev on the truncation `b n = min (c n) 1`:
+  `¬ Summable b` follows from `¬ Summable c`, and with
+  `X n = (Set.Ioi 1).indicator 1 ∘ eval n` the partial sums
+  `Y N = ∑ n < N, b n * X n` have mean `exp (-1) · B N` and variance at most
+  `B N`, where `B N = ∑ n < N, b n → ∞`, so
+  `ProbabilityTheory.meas_ge_le_variance_div_sq`
+  (`Probability/Moments/Variance.lean:397`) gives
+  `P (Y N ≥ exp (-1) · B N / 2) → 1`; `c n * ξ n ≥ b n * X n ξ` pointwise on
+  `{∀ n, 0 ≤ ξ n}`, and the partial sums are monotone. The independence enters
+  as `ProbabilityTheory.IndepFun.variance_sum` (`:422`) on the indicators, which
+  `iIndepSet_waiting` supplies through
+  `ProbabilityTheory.iIndepSet.iIndepFun_indicator`
+  (`Independence/Basic.lean:1032`).
+
+  Its two ends are not probabilistic and are **proved** on 2026-09-10, eighth
+  run. `not_summable_min_one` says the truncation preserves divergence, and it
+  carries no sign hypothesis: `Summable (min c 1)` forces `min (c n) 1 < 1`
+  eventually, hence `c n = min (c n) 1` eventually. `ae_tendsto_atTop_of_monotone`
+  is the assembly, and the reason it is not immediate is the order of the
+  quantifiers — Chebyshev gives one level at a time a set of full measure, while
+  divergence asks for one set serving all levels; countably many levels suffice
+  because the reals are archimedean.
+* `ae_mem_nonExplosiveE`: `waitingMeasure`-almost every sample point of a chain
+  along which `∑ (lam (y n))⁻¹` diverges is non explosive, and the
+  `jumpMeasure`-almost sure form of it. This is
+  `ae_tendsto_sum_smul_waiting_atTop` read through
+  `mem_nonExplosiveE_iff_tsum_eq_top`, and it is the hypothesis of the local
+  branch of Milestone 7.
 * `tendsto_sum_waiting_atTop`: the partial sums of the waiting times diverge
   `waitingMeasure`-almost surely. **Proved** on 2026-09-09, eighteenth run,
   together with `ae_pos_waiting`, `frequently_one_lt_waiting`,
@@ -1298,6 +1379,17 @@ A concrete family of solutions, built without any of the theory above. Index
   `jumpProcess_isLocalMPSolution` is what survives. With `lam n = n` instead the
   sum diverges, there is no explosion, and the global statement holds. This pair
   is the acceptance test for the explosion criterion.
+
+  The deterministic half of it is in the file since 2026-09-10, eighth run, and
+  it is what keeps `NonExplosiveE` from being a decoration: on `explodeRate`,
+  `explodeChain`, `explodeWait` — the rate `2 ^ n` read along `y n = n` with all
+  waiting times equal to `1` — the jump times are `2 - 2 / 2 ^ m`
+  (`jumpTime_explode`), so they never reach `2` and
+  `notMem_nonExplosiveE_explode` says the sample point is **not** in
+  `NonExplosiveE`. It is paired with `mem_nonExplosiveE_absorb`, which is in the
+  set. Note which defect this is **not**: the rate is positive at every state, so
+  it is not the one `jumpProcessE` was built to repair, and the only hypothesis
+  of `mem_nonExplosiveE_of_traj` this data fails is the bound `L`.
 * **The path dependent variant is not a state dependent one.** The Hawkes
   process of the manuscript's `ex:hawkes`: `E = ℕ`,
   `mu (t, ω, ·) = Measure.dirac (ω t⁻ + 1)` and the rate
