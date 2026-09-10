@@ -160,6 +160,40 @@ bleiben:
    will, sagt zuerst, welcher Schritt des jetzigen bricht, und rechnet ihn am
    Zeugen nach.
 
+**Hinweis zu `martingale_stoppedProcess` in stetiger Zeit** *(vom Nutzer,
+2026-09-10)*
+
+Der Beweis läuft über die **Approximation der Stoppzeit durch Stoppzeiten mit
+abzählbarem Wertebereich**, also die dyadische Diskretisierung
+
+$$\tau_n = 2^{-n}\lceil 2^n \tau\rceil,$$
+
+die selbst Stoppzeiten sind, von oben gegen `τ` fallen, und für die das optionale
+Sampling schon gilt (`Probability/Process/Stopping/OptionalSampling.lean:121`
+und `:90` — sie stehen über beliebigem `[LinearOrder ι] [OrderTopology ι]`, also
+über `ℝ≥0`). Dann Grenzübergang: die Rechtsstetigkeit der Pfade gibt
+`X (τ n) → X τ` punktweise, die gleichgradige Integrierbarkeit macht daraus
+$L^1$-Konvergenz, und die bedingten Erwartungen ziehen mit.
+
+**Zwei Fundstellen, die den Weg stützen** — im Repo `RemyDegenne/brownian-motion`
+(lokal unter `~/Code/lean/brownian-motion`, Lizenz geklärt, aber **kein Verweis
+darauf in einer Roadmap**; lies und schreibe eigenen Beweis):
+
+* `Martingale.ae_eq_condExp_of_isStoppingTime`
+  (`BrownianMotion/StochasticIntegral/UniformIntegrable.lean:121`) —
+  `stoppedValue X τ =ᵐ μ[X n | hτ.measurableSpace]` für `τ ≤ n`, über
+  `[LinearOrder ι] [OrderBot ι] [OrderTopology ι] [FirstCountableTopology ι]`.
+  Das ist der Baustein, aus dem die Stabilität folgt; dort ist er nicht
+  ausgewertet.
+* `Martingale.uniformIntegrable_stoppedValue_of_countable_range` (`:147`) mit
+  einem ausdrücklichen `omit [Countable ι]` davor — also **abzählbarer
+  Wertebereich der Stoppzeit** statt abzählbarem Index. Genau die Bauart, die
+  hier gebraucht wird, und der Beleg, daß der Weg gangbar ist.
+
+Die Aussage selbst — `Martingale (stoppedProcess X τ) 𝓕 P` in stetiger Zeit —
+steht dort in **keiner** Fassung; ich habe danach gesucht. Sie bleibt also unsere
+Arbeit und ist der fünfte Eintrag für `TODO.md` Punkt 8, sobald sie steht.
+
 **Teil D — die Roadmaps gegen Mathlib `master` prüfen.** Nach Teil C, vor allem
 anderen. Das ist Rückstaupunkt 5, vom Nutzer am 2026-09-10 vorgezogen.
 
