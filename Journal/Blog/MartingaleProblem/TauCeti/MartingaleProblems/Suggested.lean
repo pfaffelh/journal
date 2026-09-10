@@ -11109,19 +11109,23 @@ theorem chain_const_of_absorb {lam : E → ℝ} {y : ℕ → E} {N : ℕ}
     · rw [Nat.le_antisymm h hm]
 
 /-- **The lifted rate gives the same path**, at every time, on a sample point at which the waiting
-times are positive, the chain does not move at a state of vanishing rate, and the waiting times
-diverge.
+times are positive, the chain does not move at a state of vanishing rate, and the **lifted**
+construction does not explode.
 
 The two constructions part company only past the first absorbing index `N`, and there they agree
 for two different reasons: the original path stops because its `(N+1)`-st jump time is `⊤`
 (`jumpTimeE_succ_eq_top`), the lifted one keeps jumping but every state it jumps to is `y N`
-(`chain_const_of_absorb`).  The divergence of the waiting times is what makes the lifted step
+(`chain_const_of_absorb`).  The non explosion of the lifted construction is what makes its step
 index exist -- without it the junk value of `stepIndex` would be returned on the left and not on
-the right, and that is the one place where an almost sure hypothesis really is needed. -/
-theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x)
-    (hL : ∀ x, lam x ≤ L) {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ n, 0 < ω.2 n)
-    (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
-    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) (t : ℝ) :
+the right, and that is the one place where an almost sure hypothesis really is needed.
+
+`jumpProcessE_posRate_eq` is this statement with the non explosion produced from a bound on the
+rate, which is where `hlam0` and `hL` are spent and the only place they are spent.  An unbounded
+rate has no such bound -- the Yule rate `β x` is the case -- and reaches the conclusion through
+this form instead. -/
+theorem jumpProcessE_posRate_eq_of_mem {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+    (hxi : ∀ n, 0 < ω.2 n) (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
+    (hmem : ω ∈ NonExplosiveE (posRate lam)) (t : ℝ) :
     jumpProcessE (posRate lam) t ω = jumpProcessE lam t ω := by
   classical
   set y := ω.1 with hy1
@@ -11138,10 +11142,7 @@ theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 �
       jumpTimeE_succ_eq_top (hxi (Nat.find hex)) hN
     have hconst : ∀ m, Nat.find hex ≤ m → y m = y (Nat.find hex) :=
       chain_const_of_absorb hy hN
-    have hne : (y, xi) ∈ NonExplosiveE (posRate lam) :=
-      mem_nonExplosiveE_of_traj (lt_of_lt_of_le zero_lt_one (le_max_right L 1))
-        (fun k ↦ posRate_pos hlam0 (y k)) (fun k ↦ posRate_le hL (y k))
-        (fun k ↦ (hxi k).le) hsum
+    have hne : (y, xi) ∈ NonExplosiveE (posRate lam) := hmem
     have hjex : ∃ n, ENNReal.ofReal t < jumpTimeE lam y xi (n + 1) :=
       ⟨Nat.find hex, by rw [hTtop]; exact ENNReal.ofReal_lt_top⟩
     simp only [stepPath]
@@ -11168,6 +11169,21 @@ theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 �
     have hTeq : jumpTimeE (posRate lam) y xi = jumpTimeE lam y xi :=
       funext fun n ↦ jumpTimeE_congr_of_lt fun m _ ↦ posRate_of_ne (hex m)
     rw [hTeq]
+
+/-- **The lifted rate gives the same path**, with the non explosion of the lifted construction
+produced from a bound on the rate.  The lifted rate is bounded by `max L 1` and bounded below by a
+positive number at every state, so divergent waiting times make its jump times diverge
+(`mem_nonExplosiveE_of_traj`); that is the whole use of `hlam0` and `hL`, and
+`jumpProcessE_posRate_eq_of_mem` is the same conclusion without them. -/
+theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ n, 0 < ω.2 n)
+    (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) (t : ℝ) :
+    jumpProcessE (posRate lam) t ω = jumpProcessE lam t ω :=
+  jumpProcessE_posRate_eq_of_mem hxi hy
+    (mem_nonExplosiveE_of_traj (lt_of_lt_of_le zero_lt_one (le_max_right L 1))
+      (fun k ↦ posRate_pos hlam0 (ω.1 k)) (fun k ↦ posRate_le hL (ω.1 k))
+      (fun k ↦ (hxi k).le) hsum) t
 
 /-! ### The theorem -/
 
@@ -11614,17 +11630,24 @@ The statement is non explosion, `∀ᵐ ω, ω ∈ NonExplosiveE lam`.  The thre
   `jumpMeasure_integral_sub_eq_intervalIntegral`; since `jumpApply_yule_indicator` is
   `A 1_{n+1} = β n 1_n - β (n+1) 1_{n+1}`, that identity is the master equation in integrated
   form, `p n t = p n 0 + ∫_0^t (β (n-1) p (n-1) r - β n p n r) dr`.  Solving it by induction on
-  `n` with the integrating factor `exp (β n t)` gives `p n t = exp (-β t) (1 - exp (-β t))^(n-1)`,
-  and `∑ n, p n t = 1` -- a geometric series -- **is** non explosion.  This route yields the one
-  dimensional law and the non explosion at once.
+  `n` with the integrating factor `exp (β n t)` gives `p n t = exp (-β t) (1 - exp (-β t))^(n-1)`.
 * **The coupling.**  Dominate the birth and death process pathwise by the Yule process and inherit
   non explosion from it.
 
 **The circularity, which is the reason to run the comparison at all.**  "At a fixed time `X t` is
 geometric, hence almost surely finite, hence there is no explosion" is circular: to speak of `X t`
-the process has to be defined at `t` already.  What is not circular is `∑ k, p k t = 1` for the
-**minimal** process, and that identity *is* the non explosion.  The master equation route
-therefore does not presuppose what the coupling route needs before it may begin.
+the process has to be defined at `t` already.  On a state space with a **cemetery** the way out is
+`∑ k, p k t = 1` for the minimal process, an identity which does not presuppose what it proves.
+
+**This state space has no cemetery, and there the way out is closed.**  `tsum_jumpLaw_eq_one` says
+that `∑ k, p k t = 1` holds here with no hypothesis whatever, so it is not the non explosion and
+cannot become it: past an explosion time `stepIndex` returns the junk value `0` and the path sits
+at the initial state of its own chain, still a state of `E`.  It is at that same point that the
+master equation fails, since no equation generated by `A` describes a return from infinity, and
+that is why non explosion is a **hypothesis** of
+`jumpMeasure_masterEquation_of_ae_nonExplosive` rather than a conclusion of it.  What the second
+route yields on this construction is therefore the one dimensional law, and only that; the non
+explosion it needs is supplied by the first route.
 
 The generator is `jumpApply_yule`, `A f x = β x (f (x + 1) - f x)`, and every hypothesis of the
 local theorem is discharged on the data by `yule_isLocalMPSolution`. -/
@@ -11925,5 +11948,233 @@ theorem mm1_masterEquation {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ) (nu : M
   jumpMeasure_masterEquation (measurable_of_countable _)
     (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).1) (by linarith : (0:ℝ) < β + δ)
     (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).2) _ nu n ht
+
+/-! ### The master equation without a bound on the rate
+
+`jumpMeasure_masterEquation` inherits `∀ x, lam x ≤ L` from the expectation identity, and the Yule
+rate has no such `L` (`not_bddAbove_birthDeathRate_linear`).  The hypothesis is removed here.  What
+replaces it is not a weaker bound on the rate but two facts of a different kind:
+
+* almost sure **non explosion**, which is what makes the localising sequence `rateTime lam m`
+  exhaust the time axis (`tendsto_rateTime_atTop`); and
+* a bound on the **value of the generator** at the one test function, `|A 1_n| ≤ K`.  That is the
+  remark of `MartingaleProblems/README.md` about a domain with compact support turned into a
+  hypothesis, and `jumpApply_yule_indicator` discharges it on data at which `lam` itself is
+  unbounded.
+
+The proof is the truncation `truncRate lam m` and a passage to the limit, and the limit is
+dominated twice: the law by `1`, the compensator by `K`.  The second domination is
+`abs_jumpApply_truncRate_le`, and it is uniform in `m` although the bound `2 * m * C` of
+`abs_jumpApply_le` at the level `m` is not -- lowering the rate lowers the generator pointwise,
+because the rate enters `jumpApply` as a factor and in no other place.
+
+**Non explosion is a hypothesis of this theorem and not a conclusion of it**, and that is the
+finding of the comparison of the three routes rather than a defect of the proof.  `tsum_jumpLaw_eq_one`
+says why: `∑ k, p k t = 1` holds in this construction *unconditionally*, so it is not the non
+explosion and cannot become it.  The state space carries no cemetery, and past an explosion time
+`stepIndex` returns the junk value `0`, so the path sits at the initial state of its own chain and
+is still a state of `E`.  It is exactly there that the master equation itself fails, since no
+equation generated by `A` describes a return from infinity.  The route named for the Yule process --
+solve the equation, sum the solution, *obtain* non explosion -- therefore closes only over a state
+space with a cemetery, which this one is not. -/
+
+/-- **Lowering the rate lowers the generator pointwise.**  The rate enters `jumpApply` as a factor
+and in no other place, so the truncated generator is dominated by the untruncated one -- a bound
+that does not grow with the truncation level, which the bound `2 * m * C` of `abs_jumpApply_le` at
+the level `m` does.  This is what makes the passage to the limit a dominated one. -/
+theorem abs_jumpApply_truncRate_le {E : Type*} [MeasurableSpace E] {lam : E → ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (mu : Kernel E E) (f : E → ℝ) (m : ℕ) (x : E) :
+    |jumpApply (truncRate lam m) mu f x| ≤ |jumpApply lam mu f x| := by
+  have h0 : 0 ≤ truncRate lam m x := by
+    rw [truncRate_apply]
+    exact le_min (hlam0 x) (Nat.cast_nonneg m)
+  rw [jumpApply, jumpApply, abs_mul, abs_mul, abs_of_nonneg h0, abs_of_nonneg (hlam0 x)]
+  exact mul_le_mul_of_nonneg_right (truncRate_le_rate lam m x) (abs_nonneg _)
+
+/-- **The generator reads the rate at the state it is evaluated at and nowhere else.** -/
+theorem jumpApply_congr_rate {E : Type*} [MeasurableSpace E] {lam lam' : E → ℝ} {x : E}
+    (h : lam' x = lam x) (mu : Kernel E E) (f : E → ℝ) :
+    jumpApply lam' mu f x = jumpApply lam mu f x := by
+  rw [jumpApply, jumpApply, h]
+
+/-- **At a non explosive sample point the truncated process is eventually the process**, and the
+truncated rate is eventually the rate at the state it has reached.  Both halves are read off the
+localising sequence: `tendsto_rateTime_atTop` puts the fixed time below `rateTime lam m` from some
+level on, and there `jumpProcessE_eq_truncRate_of_le_rateTime` identifies the paths and
+`ofReal_lam_jumpProcessE_lt_of_lt_rateTime` bounds the rate along them.
+
+The statement is about `jumpProcess` and not about `jumpProcessE` because that is what the
+expectation identity is written in; the passage between the two is `jumpProcessE_eq_jumpProcess`,
+and it is where the positivity of the rate is spent. -/
+theorem eventually_jumpProcess_truncRate_eq {E : Type*} [MeasurableSpace E] {lam : E → ℝ}
+    (hlam0 : ∀ x, 0 < lam x) {y : ℕ → E} {xi : ℕ → ℝ} (hω : (y, xi) ∈ NonExplosiveE lam)
+    (hxi : ∀ k, 0 < xi k) {s : ℝ} (hs : 0 ≤ s) :
+    ∀ᶠ m : ℕ in Filter.atTop,
+      jumpProcess (truncRate lam m) s (y, xi) = jumpProcess lam s (y, xi)
+        ∧ truncRate lam m (jumpProcess lam s (y, xi)) = lam (jumpProcess lam s (y, xi)) := by
+  have hev := (ENNReal.tendsto_nhds_top_iff_nnreal.1
+    (tendsto_rateTime_atTop (lam := lam) hω)) (Real.toNNReal s)
+  filter_upwards [hev, Filter.eventually_gt_atTop 0] with m hm hm0
+  have hlt : ENNReal.ofReal s < rateTime lam m (y, xi) := hm
+  have hE : jumpProcessE (truncRate lam m) s (y, xi) = jumpProcessE lam s (y, xi) :=
+    jumpProcessE_eq_truncRate_of_le_rateTime hω hlt.le
+  have hrate : ENNReal.ofReal (lam (jumpProcessE lam s (y, xi))) < (m : ENNReal) :=
+    ofReal_lam_jumpProcessE_lt_of_lt_rateTime hs hlt
+  have hle : lam (jumpProcessE lam s (y, xi)) ≤ (m : ℝ) := by
+    by_contra hcon
+    push_neg at hcon
+    refine absurd hrate (not_lt.2 ?_)
+    rw [← ENNReal.ofReal_natCast m]
+    exact ENNReal.ofReal_le_ofReal hcon.le
+  have h1 : jumpProcessE lam s (y, xi) = jumpProcess lam s (y, xi) :=
+    jumpProcessE_eq_jumpProcess hlam0 hxi s
+  have h2 : jumpProcessE (truncRate lam m) s (y, xi) = jumpProcess (truncRate lam m) s (y, xi) :=
+    jumpProcessE_eq_jumpProcess (truncRate_pos hlam0 hm0) hxi s
+  refine ⟨by rw [← h2, ← h1, hE], ?_⟩
+  rw [← h1]
+  exact truncRate_eq_self hle
+
+/-- **The master equation at an unbounded rate.**  The hypothesis `∀ x, lam x ≤ L` of
+`jumpMeasure_masterEquation` is gone, and what stands in its place is almost sure non explosion
+together with a bound on the *value of the generator* at the single test function.
+
+The three limits are all dominated and all by a constant: the law of the truncated process by `1`
+(`abs_stateIndicator_le_one`), its compensator by `K` (`abs_jumpApply_truncRate_le`), and the time
+integral of the compensator by `K` again.  The identification of the truncated data with the data
+is `eventually_jumpProcess_truncRate_eq` at each fixed time.
+
+The truncation is taken along `m + 1` and not along `m`, because `truncRate lam 0` is the zero rate
+and no theorem about a positive rate applies to it. -/
+theorem jumpMeasure_masterEquation_of_ae_nonExplosive {E : Type*} [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) (n : E) {K : ℝ}
+    (hK : ∀ x, |jumpApply lam mu (stateIndicator n) x| ≤ K) {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw lam mu nu t n
+      = jumpLaw lam mu nu 0 n
+        + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply lam mu (stateIndicator n)
+            (jumpProcess lam r ω) ∂(jumpMeasure mu nu) := by
+  classical
+  have hgood : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam ∧ ∀ k, 0 < ω.2 k := by
+    filter_upwards [hne, ae_pos_snd_jumpMeasure mu nu] with ω h1 h2 using ⟨h1, h2⟩
+  have hXm : ∀ (l : E → ℝ), Measurable l → ∀ s : ℝ, Measurable (jumpProcess l s (E := E)) :=
+    fun l hl s ↦ (measurable_jumpProcess hl).comp (measurable_const.prodMk measurable_id)
+  have hAm : ∀ (l : E → ℝ), Measurable l → Measurable (jumpApply l mu (stateIndicator n)) :=
+    fun l hl ↦ measurable_jumpApply hl (measurable_stateIndicator n) (abs_stateIndicator_le_one n)
+  -- the master equation at the truncated rate, at every positive level
+  have key : ∀ m : ℕ,
+      (∫ ω, stateIndicator n (jumpProcess (truncRate lam (m + 1)) t ω) ∂(jumpMeasure mu nu))
+        = jumpLaw lam mu nu 0 n
+          + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+              (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu) := by
+    intro m
+    have hm : 0 < m + 1 := Nat.succ_pos m
+    have h := jumpMeasure_masterEquation (measurable_truncRate hlam (m + 1))
+      (truncRate_pos hlam0 hm) (L := ((m : ℝ) + 1)) (by positivity)
+      (fun x ↦ by simpa using truncRate_le lam (m + 1) x) mu nu n ht
+    rw [jumpLaw_zero (truncRate_pos hlam0 hm) mu nu n] at h
+    rw [jumpLaw_zero hlam0 mu nu n]
+    exact h
+  -- the law of the truncated process converges to the law
+  have hlhs : Tendsto (fun m : ℕ ↦ ∫ ω, stateIndicator n
+      (jumpProcess (truncRate lam (m + 1)) t ω) ∂(jumpMeasure mu nu)) atTop
+      (𝓝 (∫ ω, stateIndicator n (jumpProcess lam t ω) ∂(jumpMeasure mu nu))) := by
+    refine tendsto_integral_filter_of_dominated_convergence (fun _ ↦ (1:ℝ))
+      (Filter.Eventually.of_forall fun m ↦ ?_)
+      (Filter.Eventually.of_forall fun m ↦ Filter.Eventually.of_forall fun ω ↦ ?_)
+      (integrable_const _) ?_
+    · exact ((measurable_stateIndicator n).comp
+        (hXm _ (measurable_truncRate hlam (m + 1)) t)).aestronglyMeasurable
+    · simpa [Real.norm_eq_abs] using abs_stateIndicator_le_one n _
+    · filter_upwards [hgood] with ω hω
+      obtain ⟨y, xi⟩ := ω
+      refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [(tendsto_add_atTop_nat 1).eventually
+        (eventually_jumpProcess_truncRate_eq hlam0 hω.1 hω.2 ht)] with m hm
+      rw [hm.1]
+  -- the compensator of the truncated process converges, at every nonnegative time
+  have hinner : ∀ r : ℝ, 0 ≤ r → Tendsto (fun m : ℕ ↦ ∫ ω,
+      jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+        (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu)) atTop
+      (𝓝 (∫ ω, jumpApply lam mu (stateIndicator n)
+        (jumpProcess lam r ω) ∂(jumpMeasure mu nu))) := by
+    intro r hr
+    refine tendsto_integral_filter_of_dominated_convergence (fun _ ↦ K)
+      (Filter.Eventually.of_forall fun m ↦ ?_)
+      (Filter.Eventually.of_forall fun m ↦ Filter.Eventually.of_forall fun ω ↦ ?_)
+      (integrable_const _) ?_
+    · exact ((hAm _ (measurable_truncRate hlam (m + 1))).comp
+        (hXm _ (measurable_truncRate hlam (m + 1)) r)).aestronglyMeasurable
+    · simpa [Real.norm_eq_abs] using
+        (abs_jumpApply_truncRate_le (fun x ↦ (hlam0 x).le) mu (stateIndicator n) (m + 1) _).trans
+          (hK _)
+    · filter_upwards [hgood] with ω hω
+      obtain ⟨y, xi⟩ := ω
+      refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [(tendsto_add_atTop_nat 1).eventually
+        (eventually_jumpProcess_truncRate_eq hlam0 hω.1 hω.2 hr)] with m hm
+      rw [hm.1]
+      exact (jumpApply_congr_rate hm.2 mu (stateIndicator n)).symm
+  -- and so does its time integral
+  have hrhs : Tendsto (fun m : ℕ ↦ ∫ r in (0:ℝ)..t, ∫ ω,
+      jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+        (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu)) atTop
+      (𝓝 (∫ r in (0:ℝ)..t, ∫ ω, jumpApply lam mu (stateIndicator n)
+        (jumpProcess lam r ω) ∂(jumpMeasure mu nu))) := by
+    refine intervalIntegral.tendsto_integral_filter_of_dominated_convergence (fun _ ↦ K)
+      (Filter.Eventually.of_forall fun m ↦ ?_)
+      (Filter.Eventually.of_forall fun m ↦ Filter.Eventually.of_forall fun r _ ↦ ?_)
+      intervalIntegrable_const ?_
+    · have hf : Measurable fun p : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦
+          jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+            (jumpProcess (truncRate lam (m + 1)) p.1 p.2) :=
+        (hAm _ (measurable_truncRate hlam (m + 1))).comp
+          (measurable_jumpProcess (measurable_truncRate hlam (m + 1)))
+      exact ((hf.stronglyMeasurable.integral_prod_right'
+        (ν := jumpMeasure mu nu)).measurable).aestronglyMeasurable
+    · rw [Real.norm_eq_abs]
+      exact abs_integral_le_of_abs_le fun ω ↦
+        (abs_jumpApply_truncRate_le (fun x ↦ (hlam0 x).le) mu (stateIndicator n) (m + 1) _).trans
+          (hK _)
+    · refine Filter.Eventually.of_forall fun r hr ↦ hinner r ?_
+      rw [Set.uIoc_of_le ht] at hr
+      exact hr.1.le
+  have heq : (fun m : ℕ ↦ ∫ ω, stateIndicator n
+      (jumpProcess (truncRate lam (m + 1)) t ω) ∂(jumpMeasure mu nu))
+      = fun m : ℕ ↦ jumpLaw lam mu nu 0 n
+        + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+            (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu) := funext key
+  rw [heq] at hlhs
+  exact tendsto_nhds_unique hlhs (tendsto_const_nhds.add hrhs)
+
+/-- **The one dimensional laws sum to one, and they do so unconditionally.**  There is no
+hypothesis of non explosion here, and none is available to be dropped: `jumpProcess` takes its
+values in `E` at every time and at every sample point, so its law at a fixed time is a probability
+measure on `E` whatever the rate does.
+
+This is the finding of the comparison of the three routes to non explosion, and it is a negative
+one.  The route proposed for the Yule process solves the master equation, sums the solution, and
+reads `∑ k, p k t = 1` as the assertion that the process has not left the state space.  Over a
+state space with a cemetery that reading is right.  Here it is empty: past an explosion time
+`stepIndex` returns the junk value `0` and the path sits at the initial state of its own chain, so
+the mass that should have escaped is still counted.  The equation `∑ k, p k t = 1` is therefore a
+theorem about the construction and not a statement about explosion, and the route closes only
+after a cemetery has been added to `E`. -/
+theorem tsum_jumpLaw_eq_one {E : Type*} [MeasurableSpace E] [Countable E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (t : ℝ) :
+    ∑' k : E, jumpLaw lam mu nu t k = 1 := by
+  have hX : Measurable (jumpProcess lam t (E := E)) :=
+    (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  have hprob : IsProbabilityMeasure ((jumpMeasure mu nu).map (jumpProcess lam t)) :=
+    Measure.isProbabilityMeasure_map hX.aemeasurable
+  have hcover : (⋃ k : E, ({k} : Set E)) = Set.univ := by
+    ext x; simp
+  have hsum : ∑' k : E, ((jumpMeasure mu nu).map (jumpProcess lam t)) {k} = 1 := by
+    rw [← measure_iUnion (fun i j hij ↦ Set.disjoint_singleton.2 hij)
+      (fun k ↦ measurableSet_singleton k), hcover, measure_univ]
+  rw [tsum_congr fun k ↦ jumpLaw_eq_measureReal hlam mu nu t k]
+  simp only [measureReal_def]
+  rw [← ENNReal.tsum_toReal_eq (fun k ↦ measure_ne_top _ _), hsum, ENNReal.toReal_one]
 
 end YuleProcess

@@ -18950,3 +18950,160 @@ Warum sie jetzt dran ist: sie ist die **einzige** Aussage zwischen der Mastergle
 Yule-Prozeß, sie ist damit der ganze Rest des zweiten Weges, und sie ist der einzige Punkt dieses
 Laufs, an dem der Vergleich nicht weiterkam. Der Prüfstein ist derselbe wie immer: kein Fehler,
 kein neues `sorry`, und `∀ x, lam x ≤ L` kommt in der Signatur nicht mehr vor.
+
+### 2026-09-10, dreiundzwanzigster Lauf des Tages — die Mastergleichung ohne Schranke an die Rate; und die Schlußzeile des zweiten Weges ist leer
+
+**Bearbeitet:** Teil F des laufenden Auftrags, weitergeführt vom zweiundzwanzigsten Lauf, dessen
+Vorschlag der Ausgangspunkt war: `jumpMeasure_masterEquation` ohne die Voraussetzung
+`∀ x, lam x ≤ L`. Die Reihenfolge D → F → C → E ist eingehalten; Teil D war der einundzwanzigste
+Lauf.
+
+**Sechs Deklarationen** — fünf im neuen Abschnitt „The master equation without a bound on the rate"
+von `TauCeti/MartingaleProblems/Suggested.lean` und eine, `jumpProcessE_posRate_eq_of_mem`, in
+`section AbsorbingRate` —, die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen
+v4.33.1, die fünf des neuen Abschnitts mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft, die Zahl der `sorry` bleibt bei **neun** (Zeilen 616, 637, 684, 694, 773,
+884, 899, 1308, 1328). Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Satz: `jumpMeasure_masterEquation_of_ae_nonExplosive`
+
+Die Voraussetzung `∀ x, lam x ≤ L` ist weg. Was an ihre Stelle tritt, ist **keine schwächere
+Schranke an die Rate**, sondern zweierlei anderes:
+
+* f.s. **Nichtexplosion**, `∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam` — das, woraus
+  `tendsto_rateTime_atTop` macht, daß die lokalisierende Folge die Zeitachse ausschöpft;
+* eine Schranke `|A 1_n| ≤ K` am **Wert des Erzeugers** an der einen Testfunktion. Das ist die
+  Bemerkung über eine Domäne mit kompaktem Träger, in eine Voraussetzung übersetzt, und
+  `jumpApply_yule_indicator` löst sie an Daten ein, an denen `lam` selbst unbeschränkt ist.
+
+Übrig bleiben `Measurable lam` und `∀ x, 0 < lam x`.
+
+**Der Kern des Beweises, und er ist kürzer als angesagt.** Der Vorschlag des zweiundzwanzigsten
+Laufs nannte als Majorante die konstante `1`, die der Indikator liefert. Die trägt den Grenzübergang
+für die *Verteilung*, aber nicht den für den *Kompensator*: `abs_jumpApply_le` gibt an der Stufe `m`
+die Schranke `2 · m · C`, und die wächst mit der Stufe. Was statt dessen gebraucht wird, ist
+`abs_jumpApply_truncRate_le`:
+
+> `|jumpApply (truncRate lam m) mu f x| ≤ |jumpApply lam mu f x|`
+
+— die Rate geht in `jumpApply` als **Faktor** ein und an keiner anderen Stelle, also senkt das
+Stutzen den Erzeuger punktweise. Damit ist `K` die Majorante für *jede* Stufe, und alle drei
+Grenzübergänge (Verteilung, Kompensator, Zeitintegral des Kompensators) sind dominierte Konvergenz
+mit einer **Konstanten**. Der Beweis ist zwei Zeilen lang und ist die ganze Ersparnis.
+
+`eventually_jumpProcess_truncRate_eq` ist die Identifikation zu fester Zeit: an einem
+nichtexplosiven Stichprobenpunkt mit positiven Wartezeiten ist von einer Stufe an sowohl der Pfad
+des gestutzten Prozesses der Pfad des Prozesses als auch die gestutzte Rate die Rate am erreichten
+Zustand. Sie ist die einzige Stelle, an der die lokalisierende Folge verbraucht wird. Die Stutzung
+läuft über `m + 1`, weil `truncRate lam 0` die Nullrate ist — dieselbe Umgehung wie im achtzehnten
+Lauf.
+
+#### Der Befund, um dessentwillen der Lauf zählt: die Schlußzeile des zweiten Weges ist leer
+
+Der Auftrag beschreibt den Mastergleichungsweg so: Gleichung lösen, Lösung summieren,
+`∑ n, p n t = 1` ablesen — und *diese Gleichung ist die Nichtexplosion*, man setzt sie nicht voraus,
+man erhält sie. Über einem Zustandsraum **mit Friedhof** ist das richtig. Diese Konstruktion hat
+keinen, und darum ist es hier falsch:
+
+> **`tsum_jumpLaw_eq_one`:** `∑' k, jumpLaw lam mu nu t k = 1`, **ohne jede Voraussetzung** —
+> keine Nichtexplosion, keine Schranke, keine Positivität.
+
+Der Grund steht in der Konstruktion und nicht im Beweis: `stepIndex T t = sInf {n | t < T (n+1)}`,
+und jenseits einer Explosionszeit ist diese Menge leer, `sInf ∅ = 0`. Der Pfad sitzt dann am
+**Anfangszustand seiner eigenen Kette** und ist immer noch ein Zustand von `E`. `jumpProcess lam t`
+ist also zu jeder Zeit und an jedem Stichprobenpunkt `E`-wertig, sein Bildmaß ein
+Wahrscheinlichkeitsmaß auf `E`, und die Masse, die nach unendlich hätte entweichen sollen, wird
+mitgezählt. Die Gleichung `∑ k, p k t = 1` ist damit ein Satz über die Konstruktion und **nicht**
+eine Aussage über Explosion.
+
+**Und an derselben Stelle bricht die Mastergleichung selbst.** Der Pfad springt zur Explosionszeit
+an seinen Anfangszustand zurück; keine von `A` erzeugte Gleichung beschreibt eine Rückkehr aus dem
+Unendlichen. Die Nichtexplosion ist deshalb in
+`jumpMeasure_masterEquation_of_ae_nonExplosive` eine **Voraussetzung** und keine Folgerung, und das
+ist kein Artefakt des gewählten Beweisweges.
+
+**Die Zirkularität, nach der der Auftrag fragt, ist damit an einer anderen Stelle als vermutet.**
+Sie sitzt nicht im Kopplungsweg allein. Der zweite Weg liefert auf dieser Konstruktion die
+eindimensionale Verteilung und nur sie; die Nichtexplosion, die er dafür braucht, kommt vom ersten
+Weg (`ae_mem_nonExplosiveE_linearBirthDeath`). Das ist kein Scheitern — es ist die Antwort auf die
+gestellte Frage, und sie lautet: **die drei Wege sind nicht drei Wege zu einem Ziel.** Zwei führen
+zur Nichtexplosion, einer zur Verteilung.
+
+#### Der gemessene Vergleich, fortgeschrieben
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | **fertig** |
+| Mastergleichung | 18 (`section YuleProcess` ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 278 | **liefert die Verteilung, nicht die Nichtexplosion** |
+| Kopplung | 0 | 0 | nicht angefangen |
+
+Gezählt mit `scripts/_citations/count_yule.py`, unverändert und allein lauffähig. Der Zuwachs von
+126 auf 278 Zeilen ist genau der Wegfall der Ratenschranke.
+
+**Welche Mathlib-Bausteine der neue Schritt brauchte, und keiner fehlte:**
+`MeasureTheory.tendsto_integral_filter_of_dominated_convergence` und
+`intervalIntegral.tendsto_integral_filter_of_dominated_convergence`
+(`Mathlib/MeasureTheory/Integral/DominatedConvergence.lean:67` und `:170`),
+`ENNReal.tendsto_nhds_top_iff_nnreal`, `ENNReal.ofReal_natCast`
+(`Mathlib/Data/ENNReal/Basic.lean:504`), `ENNReal.tsum_toReal_eq`
+(`Mathlib/Topology/Algebra/InfiniteSum/ENNReal.lean:489`), `measure_iUnion`,
+`intervalIntegrable_const` (`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:174`),
+`tendsto_nhds_unique`. **Keine Negativaussage**, also nichts für
+`scripts/check_negatives.py` nachzutragen; die dortigen dreizehn Aussagen sind unberührt.
+
+#### Was offen blieb
+
+**Der Yule-Prozeß erreicht den neuen Satz noch nicht**, und die Bruchstelle ist wieder eine einzige
+und wieder eine benannte: seine Rate `β x` ist am absorbierenden Zustand `0` gleich `0`
+(`birthDeathRate_linear_zero`), der Satz verlangt `∀ x, 0 < lam x`. Das ist derselbe Defekt, den der
+neunzehnte Lauf für `jumpProcessE_isMPSolution` behoben hat, und der Weg dorthin ist in diesem Lauf
+um einen Schritt kürzer geworden.
+
+**Ein Hindernis auf diesem Weg ist mitgenommen: `jumpProcessE_posRate_eq_of_mem`.** Die
+Identifikation der gehobenen mit der ursprünglichen Konstruktion trug bisher die Schranke
+`∀ x, lam x ≤ L` — dieselbe, die die Yule-Rate nicht hat, so daß der Ausweg über `posRate` an
+derselben Stelle gescheitert wäre wie der direkte Weg. Die Schranke wird dort an **einer** Stelle
+verbraucht, der Nichtexplosion der gehobenen Konstruktion (`mem_nonExplosiveE_of_traj`), und ist
+durch diese ersetzt; `jumpProcessE_posRate_eq` ist jetzt die Folgerung daraus und kein eigener
+Beweis mehr. Gemeinsam mit `jumpApply_posRate`, das nie eine Schranke verlangte, ist damit die
+ganze Übertragung frei von Voraussetzungen an die Größe der Rate.
+
+**Was fehlt, ist genau eine Aussage:** `∀ᵐ ω, ω ∈ NonExplosiveE (posRate lam)`, wo
+`ae_mem_nonExplosiveE_linearBirthDeath` bisher `∀ᵐ ω, ω ∈ NonExplosiveE lam` gibt. Die gehobene Rate
+ist am absorbierenden Zustand `1` statt `0`, der absorbierende Zweig des Kriteriums also nicht mehr
+gangbar; zu führen ist statt dessen, daß die Kette hinter dem ersten absorbierenden Index stillsteht
+(`chain_const_of_absorb`) und die Wartezeiten allein divergieren
+(`ae_tendsto_sum_smul_waiting_atTop`). Der Punkt steht im Meilenstein 4.
+
+**Der Kopplungsweg ist weiterhin nicht angefangen**, und wieder nicht aus dem verbotenen Grund: die
+Reihenfolge des Auftrags ist Mastergleichung vor Kopplung, und die Mastergleichung ist an einer
+benannten Stelle stehengeblieben. Der dritte Meßwert fehlt also noch.
+
+**Eine Leerheitsprobe des neuen Satzes an einer *unbeschränkten* Rate fehlt ebenfalls.** Die
+Voraussetzungen sind an beschränkten positiven Raten (M/M/1, Poisson) offenkundig einlösbar, aber
+das ist keine Probe des Falles, für den der Satz gebaut ist. Die billigste unbeschränkte, überall
+positive Rate auf `ℕ` ist `β + δ x`, also `birthDeathRate (mm1Birth β) (linearDeath δ)`; sie ist
+nicht angefangen, weil `not_summable_inv_birthDeathRate_linear` in der vorliegenden Fassung die
+lineare Rate `(β + δ) x` verlangt und die Anpassung des Vergleichs mit der harmonischen Reihe im
+Zeitbudget dieses Laufs nicht mehr sicher abzuschließen war.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`ae_mem_nonExplosiveE_posRate`:** für eine meßbare nichtnegative Rate, deren Sprungkern an
+   jedem Zustand verschwindender Rate der Dirackern ist, gilt
+   `∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE (posRate lam)`. Worauf sie ruht:
+   `chain_const_of_absorb` — nach dem ersten absorbierenden Index steht die Kette still, die
+   gehobene Rate ist dort `1`, und die Wartezeiten summieren sich f.s. zu `⊤`
+   (`ae_tendsto_sum_smul_waiting_atTop`); wo die Kette keinen solchen Index hat, ist die gehobene
+   Rate längs der Kette die Rate und `ae_mem_nonExplosiveE_jumpMeasure` greift unverändert. Warum
+   jetzt: sie ist nach `jumpProcessE_posRate_eq_of_mem` dieses Laufs die **einzige** Aussage
+   zwischen dem neuen Satz und dem Yule-Prozeß, und mit ihr fallen die eindimensionalen
+   Verteilungen des Yule-Prozesses durch Einsetzen. Prüfstein: kein Fehler, kein neues `sorry`, und
+   `0 < lam` kommt in der Signatur der Yule-Instanz nicht mehr vor.
+2. **Der Friedhofszustand**, `Option E` mit Rate `0` und Dirackern am angehängten Punkt, und
+   `mem_nonExplosiveE_iff_tsum_jumpLawOption_eq_one`. Worauf er ruht: `tsum_jumpLaw_eq_one`, das
+   zeigt, daß die Aussage ohne ihn leer ist, und `jumpTimeE_succ_eq_top`, der Mechanismus, mit dem
+   ein Zustand verschwindender Rate einen Pfad für immer festhält — er ist schon da und muß nur an
+   den angehängten Punkt gesetzt werden. Warum jetzt: er ist das, was den Mastergleichungsweg
+   überhaupt erst zu einem Weg zur Nichtexplosion macht, und ohne ihn bleibt der Vergleich der drei
+   Wege ein Vergleich zweier Aussagen.
