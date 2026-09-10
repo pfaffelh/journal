@@ -989,24 +989,111 @@ danach.*
      (`MeasureTheory.IsStoppingTime.piecewise_of_le`) und die Identität
      `E[Y_ρ] = E[Y_j]`, gegen dieselbe für die konstante Zeit `i` gelesen.
 
-   **Was von Punkt 5 jetzt noch fehlt, und es ist der Zusammenbau
+   ~~**Was von Punkt 5 jetzt noch fehlt, und es ist der Zusammenbau
    `jumpProcess_isLocalMPSolution`**, der an genau drei Eingaben hängt, zwei davon
-   noch zu schreiben:
+   noch zu schreiben~~ *(alle drei Eingaben stehen, 2026-09-10, sechzehnter Lauf
+   des Tages; der Zusammenbau selbst steht noch aus und hängt jetzt an zwei
+   anderen Schritten.)*
 
-   1. **`IsStronglyProgressive` für die Testprozesse.** Die halbe Arbeit steht:
-      `measurable_uncurry_min_of_eventuallyEq` liefert die gemeinsame Meßbarkeit
-      für einen von rechts **lokal konstanten** Integranden, und das ist `h ∘ X`.
-      Der Kompensator ist es nicht — er ist in `t` stetig —, also ist jene Aussage
-      auf **Rechtsstetigkeit** zu verallgemeinern: ihr Beweis benutzt `hrc` nur,
-      um aus `tendsto_dyadicUp` eine *eventuelle Gleichheit* zu machen, und eine
-      Konvergenz genügt an derselben Stelle. Das ist billig, und es ist die
-      einzige der drei Eingaben, die eine bestehende Deklaration ändert. **Zuerst.**
-   2. **Rechtsstetigkeit der Pfade des kompensierten Prozesses**: für `h ∘ X` ist
-      sie `eventuallyEq_nhdsGE_stepPath_comp`, für den Kompensator die Stetigkeit
-      von `t ↦ ∫_0^t g(X_s) ds` bei beschränktem `g`.
-   3. Die Fensterschranke ist da, und der Transport der Konklusion von der
-      gestutzten Filtration auf `jumpFiltrationE lam` ist
-      `jumpFiltrationE_inter_lt_rateTime` aus dem dreizehnten Lauf.
+   **Zwischenstand 2026-09-10, sechzehnter Lauf des Tages. Die beiden offenen
+   Eingaben stehen, und sie sind gleich verbraucht worden.** Fünfzehn
+   Deklarationen im neuen Abschnitt `LocalProgressive` von
+   `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1, alle fünfzehn mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10,
+   sechzehnter Lauf des Tages"; die Punkte stehen in
+   `MartingaleProblems/README.md`, Meilenstein 4.
+
+   `martingale_stoppedProcess_mpFamily_jumpProcessE`: der gestoppte Testprozeß des
+   lokalen Sprungproblems ist ein Martingal, an **jeder** Stoppzeit seiner
+   natürlichen Filtration und unter den Voraussetzungen von
+   `jumpProcessE_isMPSolution`. Er ist für eine beliebige Stoppzeit ausgesprochen
+   und nicht für `rateTime`, weil das ist, was er beweist: die Lokalisierung geht
+   allein über die **Rate** ein, auf die er angewandt wird. Dazu
+   `isStoppingTime_rateTime_truncRate`, damit er auf `truncRate lam n` anwendbar
+   ist.
+
+   **Drei Befunde für den nächsten Lauf.**
+
+   * **Der Grund für die Verallgemeinerung ist schärfer als angesagt.** Der
+     Kompensator ist nicht bloß nicht lokal konstant von rechts, er ist
+     **stetig**; eine stetige Funktion ist auf keinem Intervall konstant, es sei
+     denn überall. Es gibt also keine Abschwächung der lokalen Konstanz, die ihn
+     noch einfinge — die Hypothese muß eine Konvergenz werden und nichts
+     Schwächeres. Die Kostenschätzung stimmte: eine Stelle im Beweis, ein
+     Dreizeiler als Korollar, keine der über zwanzig Gebrauchsstellen anzufassen.
+   * **Die Fensterschranke ist an *dieser* Stelle wirklich zu bezahlen**, und sie
+     gilt an **jedem** Stichprobenpunkt und nicht f.s.; sie ist `C + 2LC·j`, und
+     `0 ≤ C` ist kein Zusatz, sondern aus `[IsProbabilityMeasure nu]` abgeleitet
+     (`Nonempty E`, dort `0 ≤ |p.1 x| ≤ C`) — derselbe Schluß, mit dem
+     `jumpProcess_isMPSolution` sein `0 < L` gewinnt.
+   * **Was fehlt, ist nicht die Gleichheit der Pfade, sondern die der Erzeuger.**
+     Die Pfade des gestoppten lokalen und des gestutzten Prozesses sind über
+     `jumpProcessE_eq_truncRate_of_le_rateTime` gleich, einschließlich des
+     geschlossenen Endes. Die Testprozesse sind es noch nicht:
+     `jumpApply (truncRate lam n) mu f` stimmt mit `jumpApply lam mu f` genau an
+     den Zuständen der Rate `≤ n` überein, längs des gestoppten Pfades also an
+     jeder Zeit **echt** unterhalb der Trefferzeit und an ihr selbst womöglich
+     nicht — dort hat das laufende Supremum die Stufe erreicht. Das ist **ein**
+     Punkt des Fensters, eine Lebesgue-Nullmenge, und der Schritt geht über
+     `intervalIntegral.integral_congr_ae` und nicht über eine punktweise
+     Gleichheit.
+
+   ~~**Was von Punkt 5 jetzt noch fehlt, in zwei Schritten:** erstens
+   `stoppedProcess_mpFamily_truncRate_eq`, zweitens der Turmschluß.~~ *(beide
+   erledigt, 2026-09-10, siebzehnter Lauf des Tages; die dort mitgesagte Zusage
+   „die Adaptiertheit ist kein eigener Schritt" war falsch, siehe den
+   Zwischenstand darunter.)*
+
+   **Zwischenstand 2026-09-10, siebzehnter Lauf des Tages. Beide angesagten
+   Schritte stehen, und die Identifikation ist stärker als angesagt.** Acht
+   Deklarationen im neuen Abschnitt `LocalAssembly` von
+   `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1, alle acht mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10,
+   siebzehnter Lauf des Tages"; die Punkte stehen in
+   `MartingaleProblems/README.md`, Meilenstein 4.
+
+   `stoppedProcess_mpFamily_truncRate_eq` sagt, daß der gestoppte Testprozeß des
+   lokalen und der des gestutzten Problems **dieselbe Funktion** sind — an *jedem*
+   Stichprobenpunkt und nicht bloß fast sicher.
+   `martingale_of_martingale_of_stopped` ist der Turmschluß, ohne jeden Bezug auf
+   die Sprungkonstruktion, und `martingale_indicator_bot` zieht den Indikator, den
+   `Locally` verlangt, durch ein Martingal hindurch.
+
+   **Drei Befunde für den nächsten Lauf.**
+
+   * **Die Nichtexplosion in `jumpProcessE_eq_truncRate_of_le_rateTime` wird nicht
+     gebraucht** (`jumpProcessE_truncRate_eq_of_rate_le`,
+     `jumpProcessE_eq_truncRate_of_le_rateTime'`). Sie benannte nur ein Fenster;
+     wo es keines gibt, liegt jede Sprungzeit unter `t` und beide Stufenindizes
+     werden aus derselben Folge gerechnet. Das ist es, was die Identifikation der
+     gestoppten Testprozesse zu einer Gleichheit von **Funktionen** macht — und
+     `StronglyAdapted` wie `IsStoppingTime` sind keine f.s.-Aussagen.
+   * **Die Zusage „die Adaptiertheit ist kein eigener Schritt" ist falsch, und der
+     Grund ist kein Formfehler.**
+     `isStronglyProgressive_mpFamily_jumpProcessE` trägt die Schranke
+     `∀ x, lam x ≤ L`, die der lokale Fall nicht hat, und die Schranke ist dort
+     keine Bequemlichkeit: für unbeschränkte Rate ist der **ungestoppte**
+     Testprozeß an einem explosiven Stichprobenpunkt nicht rechtsstetig, weil
+     `∫_0^{T_∞} lam(X_u) du = ∑_k ξ_k = ∞` ist und Bochner den Müllwert `0`
+     zurückgibt. Der **gestoppte** hat den Defekt nicht — unter `rateTime lam n`
+     ist die Rate längs des Pfades unter `n` —, also ist die Aussage über ihn zu
+     führen: `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE`, und sie ist
+     die **einzige** noch fehlende Eingabe von `jumpProcess_isLocalMPSolution`.
+     Der Weg steht ausgeschrieben im Laufbericht und in
+     `MartingaleProblems/README.md`, Meilenstein 4: der erste Summand über
+     `measurable_uncurry_jumpProcessE` und `IsStoppingTime.measurable_of_le`, der
+     Kompensator über den abgeschnittenen Integranden
+     `g(u, ω) = {ofReal u < τ ω}.indicator (fun _ ↦ p.2 (X_u ω))`, der durch
+     `2·n·C` beschränkt ist.
+   * **`Clock` trägt seinen `MeasurableSpace` als Feld und nicht als Instanz.**
+     `measurableSet_Ioc` scheitert gegen `lebesgueClock.q` an
+     `OpensMeasurableSpace ℝ≥0`, weil die Instanzensuche syntaktisch ist; zu
+     nehmen ist `Clock.measurableSet_interval`, und das Fenster erst *danach* in
+     ein `Set.Ioc` umzuschreiben.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:

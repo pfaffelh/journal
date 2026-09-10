@@ -787,12 +787,29 @@ A concrete family of solutions, built without any of the theory above. Index
   of no use there. If some window contains `t` then the least such window is a
   right neighbourhood of `t` on which the index is constant; if none does, the
   index is the junk value `0` at `t` and at every later time as well.
-* `measurable_uncurry_min_of_eventuallyEq`: **a right continuous real process is
+* `measurable_uncurry_min_of_rightContinuous`: **a right continuous real process is
   jointly measurable in `(t, ω)` for the σ-algebra of the past.** **Proved** on
   2026-09-09, nineteenth run, with `dyadicUp`, `le_dyadicUp`, `dyadicUp_le_add`,
   `tendsto_dyadicUp` and `eventuallyEq_nhdsGE_comp_max`; the instances for the
   jump process are `measurable_uncurry_jumpProcess` and
   `measurable_compensator`.
+
+  The hypothesis is a **convergence** and not an eventual equality, and the
+  difference is not cosmetic: the state process is locally constant from the
+  right, but the *compensator* is continuous in `t` and therefore constant on no
+  interval, so the locally constant form does not reach the test process
+  `Y t = h (X t) − ∫₀ᵗ (A h)(X s) ds` as a whole. `measurable_uncurry_min_of_eventuallyEq`
+  is the locally constant case and is a three line corollary; the hypothesis was
+  used at exactly one place in the proof, to turn `tendsto_dyadicUp` into an
+  eventual equality, and a convergence does the same work there.
+* `isStronglyProgressive_of_measurable_uncurry_min`: the bridge from the
+  statement above to Mathlib's `MeasureTheory.IsStronglyProgressive`, which asks
+  for strong measurability on `Set.Iic i × Ω` where the dyadic argument gives
+  measurability on `ℝ≥0 × Ω` for the process cut down at `i`.
+* `continuous_intervalIntegral_of_bounded`: the primitive of a bounded measurable
+  real function is continuous, through `intervalIntegral.continuous_primitive`.
+  This is the right continuity of the compensator and the only place a hypothesis
+  on the integrand is spent.
 
   **This is not `Clock.IsProgressive` for the jump process, and the difference
   is a theorem that is false rather than a convenience.** The argument
@@ -1535,13 +1552,91 @@ A concrete family of solutions, built without any of the theory above. Index
   (`jumpProcessE_isMPSolution`); and before the hitting time that filtration is
   the one asked for. The level `n = 0` is not a special case to be argued around:
   `rateTime lam 0 = 0 = ⊥`, and `Locally` prefixes the stopped process with the
-  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`. Every input
-  of the assembly is now proved; what it owes is the joining, and the two hinges
-  are the three hypotheses of `martingale_stoppedProcess` for the test processes of
-  the truncated rate — `IsStronglyProgressive` of the compensated process, right
-  continuity of its paths, and its window bound — and the transport of the
-  conclusion from the truncated filtration to `jumpFiltrationE lam` through
-  `jumpFiltrationE_inter_lt_rateTime`.
+  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`.
+* `martingale_stoppedProcess_mpFamily_jumpProcessE`: **the stopped test process of
+  the local jump problem is a martingale**, at every stopping time of its natural
+  filtration and under the hypotheses of `jumpProcessE_isMPSolution`. This is the
+  first of the two hinges of the assembly, and it discharges all three hypotheses
+  of `martingale_stoppedProcess` on the jump construction:
+  `isStronglyProgressive_mpFamily_jumpProcessE`,
+  `tendsto_nhdsGE_mpFamily_jumpProcessE` and the window bound
+  `abs_setIntegral_compensatorE_le`. Uniform integrability does not occur: the
+  window bound is `C + 2LC·j`, a constant, so the passage to the limit inside
+  `martingale_stoppedProcess` is dominated convergence with a constant majorant.
+  It is stated for an arbitrary stopping time and not for `rateTime`, because that
+  is what it proves — the localization enters only through the *rate* it is
+  applied to; `isStoppingTime_rateTime_truncRate` says that `rateTime lam n` is a
+  stopping time of `jumpFiltrationE (truncRate lam n)`, which is the filtration
+  it is applied over.
+* `stronglyAdapted_mpFamily_jumpProcessE`, `measurable_uncurry_jumpProcessE`,
+  `measurable_compensatorE`, `compensatorE_eq_intervalIntegral`,
+  `tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE`, `mpFamily_jumpProcessE_eq`:
+  the counterparts for `jumpProcessE` of the corresponding statements for
+  `jumpProcess`, none of them carrying a hypothesis on the rate beyond its
+  measurability, and the passage from the compensating window of `lebesgueClock`
+  to a genuine `intervalIntegral` of `ℝ` — which both properties of the test
+  process are properties of, because both are properties of the *upper end* of
+  the window.
+* `jumpProcessE_truncRate_eq_of_rate_le` and
+  `jumpProcessE_eq_truncRate_of_le_rateTime'`: **the comparison with the truncated
+  rate needs no non explosion.** The window hypothesis of
+  `jumpProcessE_truncRate_eq` is discharged by the case distinction of
+  `jumpProcessE_eq_of_rate_eq_on_path`: where no window contains the time, every
+  jump time lies below it, `jumpTimeE_truncRate_eq` applies at every index at once,
+  and the two step indices are computed from one and the same sequence. What
+  remains is `ENNReal.ofReal t ≤ rateTime lam n ω`, at every sample point.
+  `stoppedProcess_jumpProcessE_truncRate'` reads it as an identity of stopped
+  processes. This is what lets the identification of the two stopped test
+  processes be an equality of **functions** rather than an almost sure one, which
+  is what `StronglyAdapted` and `IsStoppingTime` — neither an almost sure notion —
+  require of it.
+* `stoppedProcess_mpFamily_truncRate_eq`: **the two stopped test processes are the
+  same function**, with no hypothesis on the sample point and none on the rate.
+  The identity of the *paths* is the point above; what is added is the identity of
+  the *generators*: `jumpApply (truncRate lam n) mu f` and `jumpApply lam mu f`
+  agree at a state of rate below `n`, which along the stopped path holds at every
+  time **strictly** below the hitting time and may fail at the hitting time
+  itself, where the running supremum has already reached the level. That one time
+  is a single point of the compensating window, and
+  `lebesgueClock_apply_singleton` says it is a null set of the clock, so
+  `setIntegral_congr_ae` closes the gap.
+* `martingale_indicator_bot`: an event of `𝓕 ⊥` may be cut out of a martingale.
+  This is what `Locally` asks for and it is not cosmetic — its test object carries
+  the indicator of `{ω | ⊥ < τ n ω}`, and at the level `n = 0` of the localizing
+  sequence of the local jump problem that set is empty (`rateTime_zero`).
+* `martingale_of_martingale_of_stopped`: **the tower step**, with no reference to
+  the jump construction. A process that is a martingale for one filtration,
+  strongly adapted to a second, constant after a stopping time `τ` of the second,
+  and whose events of the second filtration cut down by `{i < τ}` are events of
+  the first, is a martingale for the second. The decomposition is
+  `S = (S ∩ {i < τ}) ∪ (S ∩ {τ ≤ i})`: on the second piece the process takes the
+  same value at `i` and at `j` pointwise, and the first piece is where the
+  martingale property of the first filtration is spent, through
+  `MeasureTheory.Martingale.setIntegral_eq` and
+  `ae_eq_condExp_of_forall_setIntegral_eq`. `jumpFiltrationE_inter_lt_rateTime`
+  is the fourth hypothesis on the jump construction.
+* `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE`: **the stopped test
+  process of the local problem is adapted to the local filtration**, under
+  `Measurable lam` and nothing else about the rate. This is the one input the
+  assembly is still missing, and it is not
+  `IsStronglyProgressive.stronglyAdapted_stoppedProcess` applied to
+  `isStronglyProgressive_mpFamily_jumpProcessE`: that statement carries a bound on
+  the rate, and the bound is not a convenience there. For an unbounded rate the
+  *unstopped* test process has no reason to be right continuous at an explosive
+  sample point: the compensator over a window containing the explosion time
+  integrates a function whose absolute value is `lam(X_u)` times a constant, and
+  the integral of `lam(X_u)` over `[0, T_∞)` is `∑ ξ_k`, which diverges at almost
+  every sample point of the explosion set, so Bochner returns the junk value `0`
+  there. The stopped process has no such defect, because
+  below `rateTime lam n` the rate along the path is below `n`; the statement is
+  therefore about the stopped process and has to be proved of it. The route: the
+  first summand `p.1 (X_{i∧τ})` is `stoppedProcess` of the state process and is
+  reached by `measurable_uncurry_jumpProcessE`, which asks nothing of the rate; the
+  compensator is `∫_0^i g(u, ·) du` with
+  `g(u, ω) = {ofReal u < τ ω}.indicator (fun _ ↦ p.2 (X_u ω))`, an integrand
+  bounded by `2 n C` because `ofReal_lam_jumpProcessE_lt_of_lt_rateTime` bounds the
+  rate on the indicated set, and jointly measurable because
+  `IsStoppingTime.measurable_of_le` makes `min i τ` measurable for `𝓖 i`.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for
