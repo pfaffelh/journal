@@ -19274,3 +19274,222 @@ nachzutragen; die dortigen dreizehn Aussagen sind unberührt. `python3 check.py`
    `MeasureTheory.lintegral_liminf_le`. Warum dann: es ist die Aussage, die die Roadmap heute
    verspricht und die pfadweise Form nicht hält, und die Geburt-Tod-Instanz fällt danach mit
    `b x ≤ C * x` und freier Sterberate heraus.
+
+### 2026-09-11, zweiter Lauf des Tages — die Erzeugerform des Lyapunov-Kriteriums steht, und sie brauchte weder Filtration noch bedingte Erwartung
+
+**Bearbeitet:** Teil F des laufenden Auftrags, Vorschlag 1 und 2 des ersten Laufs dieses Tages —
+`isNonExplosive_of_lyapunov`, der Satz, um den es dem Nutzer geht: *die Geburtsrate wächst höchstens
+linear, die Sterberate ist frei*. Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Elf Deklarationen** im Abschnitt `Lyapunov` von
+`TauCeti/MartingaleProblems/Suggested.lean`, neuer Unterabschnitt „The generator form of the
+criterion", die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1, alle elf mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt
+bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Satz
+
+> `ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le` — ist `f : E → ℝ` meßbar und nichtnegativ,
+> `C ≥ 0`, gilt `jumpApply lam mu f z ≤ C * f z` an jedem Zustand **positiver** Rate, ist `lam` auf
+> jeder Subniveaumenge `{f ≤ N}` beschränkt, ist `f` unter `nu` und unter jedem `mu z` integrierbar,
+> so ist `∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam`.
+
+Das ist die Bedingung der Literatur, `A f ≤ C • f`, und **nicht** die pfadweise Fassung des ersten
+Laufs. Der Unterschied ist an der Geburt-Tod-Kette genau der Todesterm, und der ist der ganze
+Zweck: in `A f x = b x − d x` hilft er, in `f z ≤ f x (1 + C/lam x)` hilft er nicht.
+
+#### Der erste Befund, und er ist der wertvollste: `condExp_traj` wird nicht gebraucht
+
+Der Vorschlag des ersten Laufs war ein **Supermartingal** über `MeasureTheory.Filtration.piLE`, mit
+`ProbabilityTheory.Kernel.condExp_traj` (`IonescuTulcea/Traj.lean:720`) als benanntem Eingang. Dieser
+Lauf hat den Eingang nicht benutzt, und der Grund ist, daß das Supermartingal nie gebraucht wird:
+
+`lintegral_chainKernel_lyapunov_le` sagt nur, was der Beweis verbraucht — `∫ M k ≤ ∫ f dnu` für
+**jedes** `k` — und beweist es durch **Induktion über `k`, in der die Anfangsverteilung mitwandert**.
+Das ist `ae_step_comp_chainKernel` mit einem Integral statt einer f.s.-Aussage, und
+`comp_chainKernel_map_shift` trägt einen Schritt der Kette in einen Schritt des Maßes. Keine
+Filtration, keine bedingte Erwartung, kein `Supermartingale`. Die Erzeugerungleichung wird **genau
+einmal** ausgegeben, am Kopf der Kette, und lautet dort `exp (−C/lam z) * (1 + C/lam z) ≤ 1`, also
+`1 + t ≤ exp t`.
+
+Das ist ein Befund über die Roadmap und nicht bloß über diesen Beweis: der Punkt in Meilenstein 4
+versprach ein Werkzeug, das der Satz nicht braucht. Er steht berichtigt.
+
+#### Der zweite Befund: alles in `ENNReal`, und das ist keine Bequemlichkeit
+
+Die Abschätzung ist eine Ungleichung zwischen Integralen nichtnegativer Funktionen und braucht
+deshalb **keine Integrierbarkeit**, und der Grenzübergang ist Fatou (`lintegral_liminf_le`), das in
+`ENNReal` voraussetzungslos ist. Die Integrierbarkeit wird an **einer** Stelle verlangt,
+`lintegral_ofReal_le_of_jumpApply_le`, und dort vom Kern und nicht von der Kette — weil der Bochner-
+Integralbegriff in `jumpApply` steckt und sonst nirgends.
+
+Der Schluß am Stichprobenpunkt ist eine einzige Implikation: wo die Uhr konvergiert, bleibt der
+Diskont über einer positiven Konstanten, ein endlicher `liminf` von `M` erzwingt also einen
+endlichen `liminf` von `f` längs der Kette, die Kette trifft eine Subniveaumenge unendlich oft, die
+Rate ist dort beschränkt — und reziproke Raten, die nicht gegen null gehen, sind nicht summierbar.
+
+#### Der dritte Befund: eine Voraussetzung, die die pfadweise Form nicht hat
+
+`hnu : Integrable f nu` — die Lyapunovfunktion hat unter der Anfangsverteilung einen endlichen
+Mittelwert. Ohne sie sagt die Fatou-Schranke nichts. Sie ist **nicht** durch eine schwächere
+Abschätzung wegzubekommen, sondern nur durch Bedingen auf den Startzustand, und das verlangt die
+Meßbarkeit des Explosionsereignisses als Teilmenge von `ℕ → E`, also die Meßbarkeit von
+`{y | Summable fun k ↦ (lam (y k))⁻¹}`. Das ist der Weg, den der zweite Teil dieses Laufs gegangen
+ist; die Voraussetzung steht am Ende nicht mehr da.
+
+#### Die Instanzen
+
+`ae_mem_nonExplosiveE_birthDeath_of_birth_le`: auf `ℕ` ist jede Subniveaumenge der Identität
+**endlich**, die Schranke an die Rate also frei, was immer die Sterberate tut
+(`exists_bound_of_le_nat`); und der Geburt-Tod-Kern ist eine endliche Kombination von Diracmaßen,
+also ist jede Funktion gegen ihn integrierbar (`integrable_birthDeathKernel`). Übrig bleibt die
+Erzeugerungleichung allein: `b x ≤ C * (x + 1)`, mit freiem `d`. Eine Sterberate `d x = 2 ^ x` ist
+hier erfaßt und von keiner pfadweisen Form.
+
+**Die Lyapunovfunktion ist `f x = x + 1` und nicht `f x = x`, und die Verschiebung ist kein
+Schönheitsfehler.** Am Zustand `0` ist der Erzeuger von `f x = x` gleich `b 0`, die Bedingung
+lautete also `b 0 ≤ 0`. Erst die Verschiebung läßt das Kriterium einen Zustand sehen, von dem die
+Kette nur nach oben kann. `ae_mem_nonExplosiveE_yule_of_jumpApply_le` ist danach die Konstante
+`C = β` und die Ungleichung `β x ≤ β (x+1)`.
+
+#### Der gemessene Vergleich, fortgeschrieben
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 + 1 | 236 Zeilen mit Dokumentation | fertig |
+| Mastergleichung | 18 + 1 | 278 | liefert die Verteilung, nicht die Nichtexplosion |
+| Lyapunov, pfadweise Form | 4 (Kriterium) + 3 (Instanzen) | 85 + 36 = **121** | fertig |
+| **Lyapunov, Erzeugerform** | **7 (Kriterium) + 4 (Instanzen)** | **196 + 55 = 251** | **fertig** |
+| Kopplung | 0 | 0 | nicht angefangen |
+
+Gezählt mit `scripts/_citations/count_lyapunov.py`, um die beiden neuen Gruppen erweitert und
+weiterhin allein lauffähig; die ganze `section Lyapunov` sind 374 Codezeilen, 574 mit Dokumentation.
+
+**Das Urteil, fortgeschrieben** (die Zahlen sind der Zwischenstand nach dem ersten Teil; die
+endgültigen stehen unten). Die Erzeugerform kostet **das Doppelte** der pfadweisen, 251 gegen
+121 Codezeilen. Das ist der Preis dafür, daß der Todesterm frei wird: die pfadweise Form ist eine
+Iteration an *einem* Pfad und braucht kein Maß, die Erzeugerform ist eine Integralabschätzung längs
+der Kette und ein Grenzübergang. Wer nur `b x + d x ≤ C * x` braucht, nimmt die pfadweise Form; wer
+eine Sterberate will, die schneller wächst als die Geburtsrate — der Normalfall eines rekurrenten
+Modells —, zahlt die 130 Zeilen. Für eine **allgemeinere** Ratenfunktion bleibt es dabei: Lyapunov,
+und jetzt in der Fassung, die die Literatur meint.
+
+**Welche Mathlib-Bausteine der Weg brauchte, und keiner fehlte:**
+`MeasureTheory.Measure.lintegral_bind`, `lintegral_map`, `lintegral_const_mul`, `lintegral_congr_ae`,
+`lintegral_liminf_le`, `MeasureTheory.ae_lt_top`, `Measurable.liminf`, `Finset.measurable_prod`,
+`Filter.frequently_lt_of_liminf_lt`, `Filter.liminf_le_liminf`, `Filter.liminf_const`,
+`ENNReal.le_div_iff_mul_le`, `ENNReal.div_ne_top`, `ENNReal.lt_add_right`,
+`ENNReal.ofReal_prod_of_nonneg`, `ENNReal.ofReal_le_one`, `ENNReal.ofReal_le_iff_le_toReal`,
+`MeasureTheory.ofReal_integral_eq_lintegral_ofReal`, `MeasureTheory.integrable_dirac`,
+`Real.add_one_le_exp`, `Real.exp_sum`, `Nat.ceil_mono`, `Finset.nonempty_range_add_one`,
+`Finset.le_sup'`. **Keine Negativaussage**, also nichts für `scripts/check_negatives.py`
+nachzutragen.
+
+**Drei Namensbefunde gegen v4.33.1**, hier festgehalten, damit sie kein zweites Mal Zeit kosten:
+
+* `ℝ≥0∞` ist in dieser Datei **nicht** verfügbar. Der Kopf hat `open scoped NNReal` und nicht
+  `open scoped ENNReal`; die Notation ist in `ENNReal` scoped und wird sonst als `ℝ≥0` plus ein
+  unerwartetes Zeichen gelesen. Im Code steht deshalb `ENNReal`, in der Dokumentation `ℝ≥0∞`.
+* **`mul_le_mul_left'` gibt es nicht mehr.** Was `a * b ≤ a * c` aus `b ≤ c` macht, heißt hier
+  `mul_le_mul_right (bc : b ≤ c) (a)`; genommen ist statt dessen `mul_le_mul'`, das beide Faktoren
+  nimmt und gegen die Umbenennung unempfindlich ist.
+* `Finset.nonempty_range_succ` heißt `Finset.nonempty_range_add_one`.
+
+Ein vierter Befund, der keine Namensfrage ist: `rw` findet ein Muster nicht, wenn der Integrand als
+`(fun y ↦ …) ∘ shift` und nicht beta-reduziert dasteht. `lintegral_const_mul` und `lintegral_map`
+sind deshalb an einer **beta-reduzierten** Zwischenaussage anzusetzen und der Rest mit `exact` zu
+treffen — dieselbe Lehre wie beim `ENNReal`/`WithTop`-Befund des achtzehnten Laufs des 2026-09-10.
+
+#### Was an dieser Stelle offen blieb
+
+Die Voraussetzung `hnu`. Sie ist im zweiten Teil desselben Laufs weggefallen; was hier steht, ist
+der Zwischenstand und nicht der Stand.
+
+### Derselbe Lauf, zweiter Teil — `hnu` fällt weg, und der Preis dafür ist die Meßbarkeit des Explosionsereignisses
+
+**Fünf weitere Deklarationen**, zusammen **sechzehn** im Abschnitt `Lyapunov`; die ganze Datei
+weiterhin **ohne einen Fehler** durch `lake env lean` gegen v4.33.1, alle sechzehn mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt
+bei **neun**.
+
+**Der Satz hat jetzt über der Anfangsverteilung nichts mehr stehen als die pfadweise Form.** Der
+Weg ist der im ersten Teil angesagte und er trägt: die Fatou-Schranke wird an *einem* Startzustand
+geführt, wo der Mittelwert der Wert ist, und mit `Measure.ae_comp_of_ae_ae` auf jede
+Anfangsverteilung zurückgetragen.
+
+**Was das kostet, ist genau eine Beobachtung:** `Summable` ist von sich aus **keine meßbare
+Eigenschaft** der Glieder. `summable_iff_tsum_ofReal_ne_top` liest sie für nichtnegative Glieder als
+die Endlichkeit der Reihe in `ENNReal`, wo die Summe ein Limes meßbarer Partialsummen ohne jede
+Konvergenzbedingung ist; `measurableSet_summable_inv_comp` ist das, angewandt auf
+`{y | Summable fun k ↦ (lam (y k))⁻¹}`, und `measurableSet_absorb_or_not_summable` setzt die
+Dichotomie daraus zusammen. Der Beweis von `summable_iff_tsum_ofReal_ne_top` ist
+`ENNReal.tsum_coe_ne_top_iff_summable` über `ℝ≥0` und `NNReal.summable_coe`, mit `Iff.rfl` am
+Schluß, weil `ENNReal.ofReal` definitionsgleich `↑(Real.toNNReal ·)` ist.
+
+**Und das ist der Grund, aus dem die Aussage auf der Ebene der Kette zu stehen hat.** Eine
+f.s.-Aussage über `chainKernel mu ∘ₘ nu` bedingt auf den Startzustand, eine über `jumpMeasure mu nu`
+nicht. `ae_absorb_or_not_summable_of_lintegral_le` ist deshalb der eigentliche Satz und
+`ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le` nur noch die Zeile, die
+`ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` davorsetzt. Der Zwischenstand des ersten Teils, der
+`hnu` für unentbehrlich hielt, war darin falsch und ist berichtigt.
+
+**Was dabei ebenfalls wegfällt:** die Integrierbarkeit der Lyapunovfunktion unter `nu` in
+`ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le` — ersatzlos, denn `ENNReal.ofReal (f x)` ist nie
+`⊤` —, und mit ihr die Voraussetzung an `nu` in beiden Geburt-Tod-Instanzen. Die Erzeugerform
+verlangt damit über der Anfangsverteilung **nichts**, so wenig wie die pfadweise.
+
+**Der gemessene Vergleich, endgültig für diesen Lauf:**
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 + 1 | 236 Zeilen mit Dokumentation | fertig |
+| Mastergleichung | 18 + 1 | 278 | liefert die Verteilung, nicht die Nichtexplosion |
+| Lyapunov, pfadweise Form | 4 (Kriterium) + 3 (Instanzen) | 85 + 36 = **121** | fertig |
+| **Lyapunov, Erzeugerform** | **12 (Kriterium) + 4 (Instanzen)** | **258 + 53 = 311** | **fertig** |
+| Kopplung | 0 | 0 | nicht angefangen |
+
+Von den 311 Zeilen sind **62** allein dafür da, `hnu` wieder loszuwerden. Sie sind gut angelegt:
+ohne sie stünde neben der stärkeren Aussage eine zusätzliche Voraussetzung, und ein Vergleich zweier
+Sätze, die nicht dasselbe voraussetzen, mißt nichts. Das Urteil bleibt: für eine **allgemeinere**
+Ratenfunktion ist Lyapunov der Weg, jetzt in der Fassung der Literatur und ohne Aufschlag an den
+Voraussetzungen.
+
+**Zusätzlich gebrauchte Mathlib-Bausteine, und keiner fehlte:**
+`ENNReal.tsum_coe_ne_top_iff_summable` (`Mathlib/Topology/Algebra/InfiniteSum/ENNReal.lean:64`),
+`NNReal.summable_coe`, `Real.coe_toNNReal`, `Measurable.ennreal_tsum`,
+`ProbabilityTheory.Measure.ae_comp_of_ae_ae`
+(`Mathlib/Probability/Kernel/Composition/MeasureComp.lean:58`),
+`MeasureTheory.Measure.dirac_bind` (`Mathlib/MeasureTheory/Measure/GiryMonad.lean:303`),
+`lintegral_dirac`, `measurableSet_lt`, `MeasurableSet.iUnion`, `MeasurableSet.iInter`.
+**Keine Negativaussage.** `python3 check.py` meldet weiterhin `clean` (133 Seiten),
+`scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` 0 Fehler, 0 Warnungen,
+9 `sorry`.
+
+#### Was offen blieb
+
+* **Die Nichtexplosion der gehobenen Rate**, `ae_mem_nonExplosiveE_posRate`, der Vorschlag des
+  dreiundzwanzigsten Laufs des 2026-09-10. Von diesem Lauf nicht berührt.
+* **Der Kopplungsweg** ist weiterhin nicht angefangen und weiterhin weniger wert als angenommen: was
+  er liefern soll, liefert das Kriterium in vier Zeilen und für eine ganze Klasse.
+* **Teil C**, die pfadabhängige Variante, ist der nächste Teil der vom Nutzer festgelegten
+  Reihenfolge, sobald Teil F abgeschlossen gilt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`ae_mem_nonExplosiveE_posRate`**, der liegengebliebene Vorschlag des dreiundzwanzigsten Laufs
+   des 2026-09-10: die Nichtexplosion überträgt sich von `lam` auf die gehobene Rate `max lam ε`.
+   Worauf sie ruht: `jumpMeasure_masterEquation_of_ae_nonExplosive` steht, und die gehobene Rate
+   erfüllt die Erzeugerungleichung mit demselben `C`, weil `max lam ε ≥ lam` den Faktor nur
+   vergrößert, wo er mit einer nichtpositiven Klammer multipliziert wird. Warum jetzt: sie ist die
+   **einzige** Aussage zwischen der Mastergleichung und den eindimensionalen Verteilungen des
+   Yule-Prozesses, und mit dem Kriterium in der Fassung ohne `hnu` ist sie ein Einsetzen von Daten.
+   Prüfstein: kein Fehler, kein neues `sorry`, und `jumpMeasure_masterEquation` wird an der
+   Yule-Rate anwendbar, ohne eine Schranke an sie zu verlangen.
+2. **`ae_mem_nonExplosiveE_of_jumpApply_le_on_countable`:** dieselbe Erzeugerform auf einem
+   **abzählbaren** Zustandsraum, mit der Beschränktheit auf Subniveaumengen ersetzt durch deren
+   Endlichkeit. Worauf sie ruht: `exists_bound_of_le_nat` ist genau dieser Schluß für `ℕ` und die
+   Identität, und er benutzt von `ℕ` nichts als die Endlichkeit von `{x | (x:ℝ) ≤ N}`. Warum dann:
+   die Voraussetzung `hbdd` ist die einzige des Kriteriums, die ein Leser an eigenen Daten
+   nachrechnen muß, und auf jedem abzählbaren Raum mit endlichen Subniveaumengen ist sie frei —
+   das nimmt dem Kriterium die letzte Handarbeit für die Klasse der Beispiele, um die es in
+   Meilenstein 4 geht.

@@ -1802,35 +1802,95 @@ A concrete family of solutions, built without any of the theory above. Index
   that set; that the sublevel sets exhaust `E` is neither used nor enough. The
   classical wording — sublevel sets compact — implies it through the continuity
   of the rate, and is therefore the stronger hypothesis.
-* `isNonExplosive_of_lyapunov`: **the same criterion under the generator
-  inequality** `jumpApply lam mu f x ≤ C * f x`, that is
+* `lyapunovWeight`, `measurable_lyapunovWeight`, `prod_lyapunovWeight_of_pos`,
+  `lintegral_chainKernel_lyapunov_le`,
+  `ae_absorb_or_not_summable_of_lintegral_le`,
+  `summable_iff_tsum_ofReal_ne_top`, `measurableSet_summable_inv_comp`,
+  `measurableSet_absorb_or_not_summable`,
+  `ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le`,
+  `ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le_of_ne_top`,
+  `lintegral_ofReal_le_of_jumpApply_le` and
+  `ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le`: **the same criterion under
+  the generator inequality** `jumpApply lam mu f x ≤ C * f x`, that is
   `lam x * (∫ f dmu x - f x) ≤ C * f x`, with the same bound on `lam` over the
-  sublevel sets. It rests on the pathwise form, which it does **not** follow
-  from: the pathwise inequality implies the generator inequality by integration
-  — that implication is `jumpApply_le_of_lyapunov`, proved, and it asks only
-  `0 < lam x` and `Integrable f (mu x)` — and is strictly stronger, since an
-  average below a bound says nothing about the values. What has to replace the
-  pointwise iteration is a
-  discrete time supermartingale on the embedded chain,
-  `M k = f (y k) * exp (-C ∑_{j<k} 1/lam (y j))`, whose one step estimate is the
-  generator inequality and whose divergence to `∞` on the explosion event is
-  contradicted by Fatou. The input it needs is the one step conditioning of
-  `chainKernel`, and **Mathlib has it**: `chainKernel mu` is `Kernel.traj` of the
-  constant family comapped along the initial state, and
-  `ProbabilityTheory.Kernel.condExp_traj`
-  (`Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean:720`) gives
-  `(traj κ a x₀)[f | piLE b] =ᵐ fun x ↦ ∫ y, f y ∂traj κ b (frestrictLe b x)`,
-  which is that statement for every `b` at once and over the filtration
-  `piLE` that Mathlib's `Supermartingale` asks for.
-  `ae_step_comp_chainKernel` is its almost sure shadow and carries no integral;
-  the generator form is therefore work and not a missing tool.
+  sublevel sets. **Proved** on 2026-09-11, second run.
 
-  **The difference is visible on a birth and death chain and is not a
-  technicality.** With `f x = x` the pathwise form asks `b x + d x ≤ C * x` and
-  the generator form asks `b x ≤ C * x` alone, the death term being `≤ 0` in
-  `A f x = b x - d x`. So the generator form is what carries the statement *the
-  birth rate grows at most linearly, the death rate is free*, and the pathwise
-  form does not.
+  It does **not** follow from the pathwise form: the pathwise inequality implies
+  the generator inequality by integration — that implication is
+  `jumpApply_le_of_lyapunov`, and it asks only `0 < lam x` and
+  `Integrable f (mu x)` — and is strictly stronger, since an average below a
+  bound says nothing about the values. What replaces the pointwise iteration is
+  the discounted Lyapunov function on the embedded chain,
+  `M k = f (y k) * exp (-C ∑_{j<k} 1/lam (y j))`, whose one step estimate is the
+  generator inequality; `lyapunovWeight` is its one step discount, `0` at a
+  state of vanishing rate, and killing the discount there is what frees the
+  criterion of every hypothesis at an absorbing state, exactly as in the
+  pathwise form.
+
+  **The supermartingale is never built, and that is the finding.**
+  `lintegral_chainKernel_lyapunov_le` states only what the argument uses —
+  `∫ M k ≤ ∫ f dnu` for every `k` — and proves it by induction on `k` in which
+  the initial law moves along, `comp_chainKernel_map_shift` carrying one step of
+  the chain into one step of the law. That is `ae_step_comp_chainKernel` with an
+  integral in place of an almost sure statement, and it needs neither a
+  filtration nor a conditional expectation: no `MeasureTheory.Filtration.piLE`,
+  no `ProbabilityTheory.Kernel.condExp_traj`, no `Supermartingale`. The
+  generator hypothesis is spent exactly once, at the head of the chain, where it
+  reads `exp (-C/lam z) * (1 + C/lam z) ≤ 1` — which is `1 + t ≤ exp t`.
+
+  The passage to the limit is Fatou (`lintegral_liminf_le`) and one implication
+  at a sample point: where the clock converges the discount stays above a
+  positive constant, so a finite `liminf` of `M` forces a finite `liminf` of `f`
+  along the chain, the chain meets a sublevel set of `f` infinitely often, the
+  rate is bounded there — and reciprocal rates that do not tend to zero are not
+  summable. Everything is carried in `ENNReal`, where the estimate needs no
+  integrability and Fatou is unconditional; the bridge to the real valued
+  generator is `lintegral_ofReal_le_of_jumpApply_le`, and integrability is asked
+  there and nowhere else, of the kernel and not of the chain.
+
+  **The hypothesis that `f` has a finite mean under the initial law is not
+  needed, and removing it is a statement about the explosion event.** The Fatou
+  bound does need it, so the estimate is proved one starting state at a time,
+  where the mean is the value, and carried back to an arbitrary initial law by
+  `Measure.ae_comp_of_ae_ae`. That passage needs the explosion event to be a
+  **measurable** subset of `ℕ → E`, and `Summable` is not by itself a measurable
+  property of the terms: `summable_iff_tsum_ofReal_ne_top` reads it as the
+  finiteness of the series in `ℝ≥0∞`, where the sum is a limit of measurable
+  partial sums with no convergence hypothesis to check, and
+  `measurableSet_summable_inv_comp` is that observation applied to
+  `{y | Summable fun k ↦ (lam (y k))⁻¹}`. This is why
+  `ae_absorb_or_not_summable_of_lintegral_le` is stated at the level of the
+  chain and not in terms of `jumpMeasure`: an almost sure statement about
+  `chainKernel mu ∘ₘ nu` conditions on the starting state, one about
+  `jumpMeasure mu nu` does not. What is left over `nu` is nothing at all, and
+  `ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le` therefore asks no more of
+  the initial law than the pathwise form does.
+
+  **The difference to the pathwise form is visible on a birth and death chain
+  and is not a technicality.** With `f x = x + 1` the pathwise form asks
+  `b x + d x ≤ C * (x+1)` and the generator form asks `b x ≤ C * (x+1)` alone,
+  the death term being `≤ 0` in `A f x = b x - d x`. So the generator form is
+  what carries the statement *the birth rate grows at most linearly, the death
+  rate is free*, and the pathwise form does not.
+* `exists_bound_of_le_nat`, `integrable_birthDeathKernel`,
+  `ae_mem_nonExplosiveE_birthDeath_of_birth_le` and
+  `ae_mem_nonExplosiveE_yule_of_jumpApply_le`: **the birth and death instances
+  of the generator form.** **Proved** on 2026-09-11, second run. On `ℕ` every
+  sublevel set of the identity is finite, so the bound on the rate is free
+  (`exists_bound_of_le_nat`) whatever the death rate is, and the birth and death
+  kernel is a finite combination of Dirac measures, so every function is
+  integrable against it (`integrable_birthDeathKernel`). What is left is the
+  generator inequality alone: `b x ≤ C * (x + 1)`, with `d` free — a death rate
+  `d x = 2 ^ x` is covered here and by no pathwise form.
+
+  **The Lyapunov function is `f x = x + 1` and not `f x = x`, and the shift is
+  not cosmetic.** At the state `0` the generator of `f x = x` is `b 0`, so the
+  condition would read `b 0 ≤ 0`; the shift is what lets the criterion see a
+  state from which the chain can only go up. The Yule process is then the
+  constant `C = β` and the inequality `β x ≤ β (x+1)`, and it is the probe of
+  the generator form for the same reason it is the probe of the pathwise form:
+  without a death term the two coincide on it, so what is gained here is gained
+  not on Yule but on its neighbours.
 * `ae_mem_nonExplosiveE_birthDeath_of_rate_le`,
   `ae_mem_nonExplosiveE_linearBirthDeath_of_lyapunov` and
   `ae_mem_nonExplosiveE_yule_of_lyapunov`: **the birth and death instances of the
@@ -2212,7 +2272,7 @@ Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Es gehört zu Punkt 5 u
 ist **nach** `jumpProcess_isLocalMPSolution` zu machen, nicht davor: es prüft
 die Konstruktion, es trägt sie nicht.
 
-**Der gemessene Vergleich, Stand 2026-09-11, erster Lauf.** Bis zum
+**Der gemessene Vergleich, Stand 2026-09-11, zweiter Lauf.** Bis zum
 zweiundzwanzigsten Lauf des 2026-09-10 stand hier die *Behauptung*, die Reihe sei
 der billigere Weg. Was davon gezählt ist (`scripts/_citations/count_yule.py` und
 `scripts/_citations/count_lyapunov.py`):
@@ -2221,10 +2281,13 @@ der billigere Weg. Was davon gezählt ist (`scripts/_citations/count_yule.py` un
 | --- | --- | --- | --- |
 | Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | **fertig** |
 | Mastergleichung | 18 (`section YuleProcess`, ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 278 | **liefert die Verteilung, nicht die Nichtexplosion** |
-| Lyapunov, pfadweise Form | 4 (Kriterium) + 3 (Geburt-Tod-Instanzen) | 85 + 37 = 122 Codezeilen, 224 mit Dokumentation | **fertig, in der pfadweisen Form** |
+| Lyapunov, pfadweise Form | 4 (Kriterium) + 3 (Geburt-Tod-Instanzen) | 85 + 36 = 121 Codezeilen | **fertig** |
+| Lyapunov, Erzeugerform | 12 (Kriterium) + 4 (Geburt-Tod-Instanzen) | 258 + 53 = 311 Codezeilen | **fertig** |
 | Kopplung | 0 | 0 | nicht angefangen |
 
-**Der vierte Weg ist der billigste, und er ist der einzige allgemeine.** 122
+(Die ganze `section Lyapunov` sind 434 Codezeilen, 663 mit Dokumentation.)
+
+**Der vierte Weg ist der billigste, und er ist der einzige allgemeine.** 121
 Codezeilen gegen 236 der Reihe, und was dabei herauskommt, ist nicht dasselbe:
 die Reihe beweist die Nichtexplosion **einer** Kette, das Kriterium die jeder
 Geburt-Tod-Kette mit `b x + d x ≤ C * x`, und der Beweis der linearen Instanz ist
@@ -2233,6 +2296,23 @@ angesagt, ein Sonderfall und kein gleichrangiger Weg — aber es ist der Sonderf
 des Kriteriums und nicht der der Nachbarschritte: die Nachbarschritte braucht das
 Kriterium auch, es liest sie nur an *einer* Stelle
 (`ae_le_succ_birthDeathKernel`) statt an dreien.
+
+**Und die Erzeugerform kostet das Zweieinhalbfache des pfadweisen Kriteriums,
+311 gegen 121 Codezeilen.** Das ist der Preis dafür, daß der Todesterm frei wird:
+die pfadweise Form ist eine Iteration an einem einzelnen Pfad und braucht kein
+Maß, die Erzeugerform ist eine Integralabschätzung längs der Kette und ein
+Grenzübergang. Wer nur `b x + d x ≤ C * x` braucht, nimmt die pfadweise Form; wer
+eine Sterberate will, die schneller wächst als die Geburtsrate — und das ist der
+Normalfall eines rekurrenten Modells —, zahlt die 190 Zeilen. Der Vergleich
+zwischen beiden ist damit dieselbe Frage wie der zwischen Reihe und Kriterium,
+eine Stufe höher: was zusätzlich bewiesen wird, ist nicht dieselbe Aussage.
+
+**Und die Voraussetzungen sind am Ende dieselben.** Von den 311 Zeilen sind 62
+allein dafür da, die Endlichkeit des Mittelwerts unter der Anfangsverteilung
+wieder loszuwerden — die Meßbarkeit des Explosionsereignisses und das Bedingen
+auf den Startzustand. Sie sind gut angelegt: ohne sie stünde neben der stärkeren
+Aussage eine zusätzliche Voraussetzung, und ein Vergleich zweier Sätze, die nicht
+dasselbe voraussetzen, mißt nichts.
 
 Der Zuwachs von 126 auf 278 Zeilen sind genau die fünf neuen Deklarationen, 152
 Codezeilen: der Wegfall der Schranke an die Rate

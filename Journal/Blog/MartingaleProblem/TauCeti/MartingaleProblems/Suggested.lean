@@ -12402,4 +12402,443 @@ theorem ae_mem_nonExplosiveE_yule_of_lyapunov {β : ℝ} (hβ : 0 ≤ β)
       ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath 0)) :=
   ae_mem_nonExplosiveE_linearBirthDeath_of_lyapunov (δ := 0) hβ le_rfl nu
 
+/-! ### The generator form of the criterion
+
+Everything above asks the Lyapunov inequality **pathwise**, at every state the kernel can reach.
+The condition of the literature is the inequality on the generator, `A f ≤ C • f`, an inequality
+between *averages*, and `jumpApply_le_of_lyapunov` shows it to be strictly weaker.  What follows is
+the criterion under that weaker hypothesis.
+
+The mechanism is no longer an iteration along one trajectory -- an average below a bound says
+nothing about the values, so there is nothing to iterate -- but a **supermartingale on the embedded
+chain**: the Lyapunov function discounted by the clock,
+
+`M k = f (y k) * exp (-C * ∑_{j < k} 1 / lam (y j))`,
+
+whose one step estimate is the generator inequality and whose integral therefore does not grow.
+Non explosion is then Fatou: on a sample point where the clock converges the discount stays above a
+positive constant, so a finite `liminf` of `M` forces a finite `liminf` of `f` along the chain, the
+chain returns infinitely often to a sublevel set of `f`, and the rate is bounded there -- which the
+convergence of the clock forbids.
+
+Everything is carried in `ℝ≥0∞`.  That is not a convenience.  The estimate is an inequality between
+integrals of nonnegative functions and so needs no integrability hypothesis at all, and the passage
+to the limit is Fatou, which in `ℝ≥0∞` is unconditional.  The bridge to the real valued generator
+is `lintegral_ofReal_le_of_jumpApply_le`, and integrability enters there and nowhere else. -/
+
+/-- **The one step discount of the Lyapunov supermartingale.**  At a state of positive rate it is
+`exp (-C / lam z)`, the factor by which the generator inequality allows the Lyapunov function to
+grow in one step, read backwards; at a state of vanishing rate it is `0`.
+
+Killing the supermartingale at a state of vanishing rate is what frees the criterion from every
+hypothesis there, exactly as in the pathwise form: the path is absorbed at such a state and non
+explosion is automatic, so nothing about the chain after it is needed. -/
+noncomputable def lyapunovWeight (lam : E → ℝ) (C : ℝ) (z : E) : ENNReal :=
+  if lam z ≤ 0 then 0 else ENNReal.ofReal (Real.exp (-(C / lam z)))
+
+theorem measurable_lyapunovWeight [MeasurableSpace E] {lam : E → ℝ} (hlamm : Measurable lam)
+    (C : ℝ) : Measurable (lyapunovWeight lam C) := by
+  unfold lyapunovWeight
+  exact Measurable.ite (measurableSet_le hlamm measurable_const) measurable_const
+    (ENNReal.measurable_ofReal.comp (Real.measurable_exp.comp (measurable_const.div hlamm).neg))
+
+/-- **Along a chain of positive rates the discount is the exponential of the clock**, and that is
+the only shape of it the limit argument uses. -/
+theorem prod_lyapunovWeight_of_pos {lam : E → ℝ} {C : ℝ} {y : ℕ → E} (hpos : ∀ k, 0 < lam (y k))
+    (k : ℕ) :
+    ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)
+      = ENNReal.ofReal (Real.exp (-(C * ∑ j ∈ Finset.range k, (lam (y j))⁻¹))) := by
+  have h1 : ∀ j ∈ Finset.range k, lyapunovWeight lam C (y j)
+      = ENNReal.ofReal (Real.exp (-(C / lam (y j)))) := by
+    intro j _
+    simp only [lyapunovWeight, if_neg (not_le.2 (hpos j))]
+  rw [Finset.prod_congr rfl h1, ← ENNReal.ofReal_prod_of_nonneg fun j _ ↦ (Real.exp_nonneg _),
+    ← Real.exp_sum]
+  congr 1
+  simp [Finset.mul_sum, div_eq_mul_inv]
+
+/-- **The discounted Lyapunov function is a supermartingale along the embedded chain**, in the only
+sense the criterion uses: its integral does not grow.  The induction is on the index and carries the
+initial law with it, so `comp_chainKernel_map_shift` is what moves one step of the chain into one
+step of the law -- the same device as in `ae_step_comp_chainKernel`, with an integral in place of an
+almost sure statement.
+
+The generator hypothesis is spent exactly once, at the head of the chain, and there it reads
+`exp (-C / lam z) * (1 + C / lam z) ≤ 1`, which is `1 + t ≤ exp t`.  At a state of vanishing rate
+the discount is `0` and nothing is asked. -/
+theorem lintegral_chainKernel_lyapunov_le [MeasurableSpace E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hFm : Measurable F) (hlamm : Measurable lam)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z))
+    (k : ℕ) :
+    ∀ (nu : Measure E), IsProbabilityMeasure nu →
+      ∫⁻ y, F (y k) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) ∂(chainKernel mu ∘ₘ nu)
+        ≤ ∫⁻ z, F z ∂nu := by
+  have hwm := measurable_lyapunovWeight hlamm C
+  have hshift : Measurable (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  have hMm : ∀ n : ℕ, Measurable fun y : ℕ → E ↦
+      F (y n) * ∏ j ∈ Finset.range n, lyapunovWeight lam C (y j) := fun n ↦
+    (hFm.comp (measurable_pi_apply n)).mul
+      (Finset.measurable_prod _ fun j _ ↦ hwm.comp (measurable_pi_apply j))
+  induction k with
+  | zero =>
+    intro nu hnu
+    simp only [Finset.range_zero, Finset.prod_empty, mul_one]
+    have h : ∫⁻ z, F z ∂nu = ∫⁻ y, F (y 0) ∂(chainKernel mu ∘ₘ nu) := by
+      conv_lhs => rw [← comp_chainKernel_map_zero mu nu]
+      rw [lintegral_map hFm (measurable_pi_apply 0)]
+    exact h.ge
+  | succ k ih =>
+    intro nu hnu
+    rw [Measure.lintegral_bind (Kernel.aemeasurable _) (hMm (k + 1)).aemeasurable]
+    refine lintegral_mono fun z ↦ ?_
+    have h0 : ∀ᵐ y ∂(chainKernel mu z), y 0 = z :=
+      ae_eq_of_map_eq_dirac (measurable_pi_apply 0) (chainKernel_map_zero mu z)
+    have hcomp : Measurable fun y : ℕ → E ↦
+        F (y (k + 1)) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y (j + 1)) :=
+      (hFm.comp (measurable_pi_apply (k + 1))).mul
+        (Finset.measurable_prod _ fun j _ ↦ hwm.comp (measurable_pi_apply (j + 1)))
+    have hcongr : ∫⁻ y, F (y (k + 1)) * ∏ j ∈ Finset.range (k + 1), lyapunovWeight lam C (y j)
+          ∂(chainKernel mu z)
+        = ∫⁻ y, lyapunovWeight lam C z *
+            (F (y (k + 1)) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y (j + 1)))
+          ∂(chainKernel mu z) := by
+      refine lintegral_congr_ae ?_
+      filter_upwards [h0] with y hy
+      rw [Finset.prod_range_succ', hy]
+      ring
+    rw [hcongr, lintegral_const_mul _ hcomp]
+    have hmap : ∫⁻ y, F (y (k + 1)) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y (j + 1))
+          ∂(chainKernel mu z)
+        = ∫⁻ y, F (y k) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)
+          ∂(chainKernel mu ∘ₘ (mu z)) := by
+      rw [← chainKernel_map_shift mu z]
+      exact (lintegral_map (hMm k) hshift).symm
+    rw [hmap]
+    refine le_trans (mul_le_mul' (le_refl (lyapunovWeight lam C z)) (ih (mu z) inferInstance)) ?_
+    by_cases hz : lam z ≤ 0
+    · simp [lyapunovWeight, if_pos hz]
+    · rw [not_le] at hz
+      have hone : ENNReal.ofReal (Real.exp (-(C / lam z))) * ENNReal.ofReal (1 + C / lam z)
+          ≤ 1 := by
+        rw [← ENNReal.ofReal_mul (Real.exp_nonneg _)]
+        refine ENNReal.ofReal_le_one.2 ?_
+        have h := Real.add_one_le_exp (C / lam z)
+        calc Real.exp (-(C / lam z)) * (1 + C / lam z)
+            ≤ Real.exp (-(C / lam z)) * Real.exp (C / lam z) :=
+              mul_le_mul_of_nonneg_left (by linarith) (Real.exp_pos _).le
+          _ = 1 := by rw [← Real.exp_add]; simp
+      calc lyapunovWeight lam C z * ∫⁻ x, F x ∂(mu z)
+          ≤ ENNReal.ofReal (Real.exp (-(C / lam z))) * (F z * ENNReal.ofReal (1 + C / lam z)) := by
+            rw [lyapunovWeight, if_neg (not_le.2 hz)]
+            exact mul_le_mul' (le_refl _) (hstep z hz)
+        _ = F z * (ENNReal.ofReal (Real.exp (-(C / lam z))) * ENNReal.ofReal (1 + C / lam z)) := by
+            ring
+        _ ≤ F z * 1 := mul_le_mul' (le_refl (F z)) hone
+        _ = F z := mul_one _
+
+/-- **The Lyapunov criterion in its generator form, at the level of the embedded chain.**  The
+hypothesis `hstep` is the generator inequality `A F ≤ C • F` written without a subtraction, so that
+no integrability is needed; `hbdd` is the boundedness of the rate on the sublevel sets, unchanged
+from the pathwise form; and `hnu` says that the Lyapunov function has a finite mean under the
+initial law, which is what makes the Fatou argument say anything.
+
+The conclusion is the dichotomy `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` asks for, and it is
+stated here rather than in terms of `jumpMeasure` because it is the form that survives conditioning
+on the starting state -- which is how `hnu` is removed again in
+`ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le_of_ne_top`.
+
+The proof is the supermartingale estimate, Fatou, and then one implication on a sample point: a
+finite `liminf` of the discounted Lyapunov function forces the chain into a sublevel set of `F`
+infinitely often, where the rate is bounded and the reciprocal rates therefore do not tend to
+zero. -/
+theorem ae_absorb_or_not_summable_of_lintegral_le [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hC : 0 ≤ C)
+    (hFm : Measurable F) (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ENNReal, N ≠ ⊤ → ∃ B : ℝ, ∀ x, F x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hnu : ∫⁻ z, F z ∂nu ≠ ⊤)
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z)) :
+    ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), (∃ m, lam (y m) = 0) ∨
+      ((∀ k, 0 < lam (y k)) ∧ ¬ Summable fun k ↦ (lam (y k))⁻¹) := by
+  classical
+  have hwm := measurable_lyapunovWeight hlamm C
+  have hMm : ∀ n : ℕ, Measurable fun y : ℕ → E ↦
+      F (y n) * ∏ j ∈ Finset.range n, lyapunovWeight lam C (y j) := fun n ↦
+    (hFm.comp (measurable_pi_apply n)).mul
+      (Finset.measurable_prod _ fun j _ ↦ hwm.comp (measurable_pi_apply j))
+  have hfat : ∫⁻ y, Filter.liminf (fun k ↦ F (y k) *
+        ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)) Filter.atTop
+      ∂(chainKernel mu ∘ₘ nu) ≤ ∫⁻ z, F z ∂nu := by
+    refine (lintegral_liminf_le hMm).trans ?_
+    calc Filter.liminf (fun k ↦ ∫⁻ y, F (y k) *
+            ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) ∂(chainKernel mu ∘ₘ nu))
+          Filter.atTop
+        ≤ Filter.liminf (fun _ : ℕ ↦ ∫⁻ z, F z ∂nu) Filter.atTop :=
+          Filter.liminf_le_liminf (Filter.Eventually.of_forall fun k ↦
+            lintegral_chainKernel_lyapunov_le hFm hlamm mu hstep k nu inferInstance)
+      _ = ∫⁻ z, F z ∂nu := Filter.liminf_const _
+  have hlt : ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), Filter.liminf (fun k ↦ F (y k) *
+      ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)) Filter.atTop < ⊤ :=
+    ae_lt_top (Measurable.liminf hMm) (ne_top_of_le_ne_top hnu hfat)
+  filter_upwards [hlt] with y hy
+  by_cases hex : ∃ m, lam (y m) = 0
+  · exact Or.inl hex
+  · push_neg at hex
+    have hpos : ∀ k, 0 < lam (y k) := fun k ↦ lt_of_le_of_ne (hlam0 _) (Ne.symm (hex k))
+    refine Or.inr ⟨hpos, fun hsum ↦ ?_⟩
+    set L := Filter.liminf (fun k ↦ F (y k) *
+      ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)) Filter.atTop with hL
+    set c := ENNReal.ofReal (Real.exp (-(C * ∑' j, (lam (y j))⁻¹))) with hc
+    have hc0 : c ≠ 0 := (ENNReal.ofReal_pos.2 (Real.exp_pos _)).ne'
+    have hcle : ∀ k, c ≤ ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) := by
+      intro k
+      rw [prod_lyapunovWeight_of_pos hpos k, hc]
+      refine ENNReal.ofReal_le_ofReal (Real.exp_le_exp.2 (neg_le_neg ?_))
+      exact mul_le_mul_of_nonneg_left
+        (hsum.sum_le_tsum _ fun i _ ↦ inv_nonneg.2 (hpos i).le) hC
+    have hlow : ∀ k, c * F (y k) ≤ F (y k) *
+        ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) := by
+      intro k
+      rw [mul_comm]
+      exact mul_le_mul' (le_refl (F (y k))) (hcle k)
+    have hfreq : ∃ᶠ k in Filter.atTop, F (y k) *
+        ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) < L + 1 :=
+      Filter.frequently_lt_of_liminf_lt (h := ENNReal.lt_add_right hy.ne one_ne_zero)
+    obtain ⟨B, hB⟩ := hbdd ((L + 1) / c)
+      (ENNReal.div_ne_top (ENNReal.add_ne_top.2 ⟨hy.ne, ENNReal.one_ne_top⟩) hc0)
+    have hstep' : ∀ k, F (y k) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) < L + 1 →
+        lam (y k) ≤ B := by
+      intro k hk
+      refine hB _ ((ENNReal.le_div_iff_mul_le (Or.inl hc0) (Or.inl ENNReal.ofReal_ne_top)).2 ?_)
+      rw [mul_comm]
+      exact ((hlow k).trans_lt hk).le
+    have hfrB : ∃ᶠ k in Filter.atTop, lam (y k) ≤ B := hfreq.mono hstep'
+    obtain ⟨k₀, hk₀⟩ := hfrB.exists
+    have hB0 : 0 < B := (hpos k₀).trans_le hk₀
+    have hfrinv : ∃ᶠ k in Filter.atTop, B⁻¹ ≤ (lam (y k))⁻¹ :=
+      hfrB.mono fun k hk ↦ inv_anti₀ (hpos k) hk
+    obtain ⟨k, hk1, hk2⟩ :=
+      (hfrinv.and_eventually
+        (hsum.tendsto_atTop_zero.eventually (gt_mem_nhds (inv_pos.2 hB0)))).exists
+    exact absurd hk2 (not_lt.2 hk1)
+
+/-- **Summability of a nonnegative real series is the finiteness of the `ℝ≥0∞` series**, and that is
+what makes summability a *measurable* property of the terms: in `ℝ≥0∞` the sum is a limit of
+measurable partial sums with no convergence hypothesis to check. -/
+theorem summable_iff_tsum_ofReal_ne_top {g : ℕ → ℝ} (hg : ∀ k, 0 ≤ g k) :
+    Summable g ↔ (∑' k, ENNReal.ofReal (g k)) ≠ ⊤ := by
+  have hfun : Summable (fun k ↦ (g k).toNNReal) ↔ Summable g := by
+    rw [← NNReal.summable_coe]
+    exact summable_congr fun k ↦ Real.coe_toNNReal _ (hg k)
+  rw [← hfun, ← ENNReal.tsum_coe_ne_top_iff_summable]
+  rfl
+
+/-- **The explosion event of the embedded chain is measurable.**  It is the only measurability the
+conditioning on the starting state needs, and it is not free: `Summable` is not by itself a
+measurable property, and the passage through `ℝ≥0∞` is what makes it one. -/
+theorem measurableSet_summable_inv_comp [MeasurableSpace E] {lam : E → ℝ}
+    (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) :
+    MeasurableSet {y : ℕ → E | Summable fun k ↦ (lam (y k))⁻¹} := by
+  have hmeas : Measurable fun y : ℕ → E ↦ ∑' k, ENNReal.ofReal ((lam (y k))⁻¹) :=
+    Measurable.ennreal_tsum fun k ↦
+      ENNReal.measurable_ofReal.comp ((hlamm.comp (measurable_pi_apply k)).inv)
+  have hset : {y : ℕ → E | Summable fun k ↦ (lam (y k))⁻¹}
+      = (fun y : ℕ → E ↦ ∑' k, ENNReal.ofReal ((lam (y k))⁻¹)) ⁻¹' {⊤}ᶜ := by
+    ext y
+    exact summable_iff_tsum_ofReal_ne_top fun k ↦ inv_nonneg.2 (hlam0 _)
+  rw [hset]
+  exact hmeas (measurableSet_singleton ⊤).compl
+
+/-- **The dichotomy of `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` is a measurable set**, which
+is what lets an almost sure statement about it be proved one starting state at a time. -/
+theorem measurableSet_absorb_or_not_summable [MeasurableSpace E] {lam : E → ℝ}
+    (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) :
+    MeasurableSet {y : ℕ → E | (∃ m, lam (y m) = 0) ∨
+      ((∀ k, 0 < lam (y k)) ∧ ¬ Summable fun k ↦ (lam (y k))⁻¹)} := by
+  have h1 : MeasurableSet {y : ℕ → E | ∃ m, lam (y m) = 0} := by
+    have : {y : ℕ → E | ∃ m, lam (y m) = 0} = ⋃ m, {y : ℕ → E | lam (y m) = 0} := by
+      ext y; simp
+    rw [this]
+    exact MeasurableSet.iUnion fun m ↦
+      (hlamm.comp (measurable_pi_apply m)) (measurableSet_singleton (0 : ℝ))
+  have h2 : MeasurableSet {y : ℕ → E | ∀ k, 0 < lam (y k)} := by
+    have : {y : ℕ → E | ∀ k, 0 < lam (y k)} = ⋂ k, {y : ℕ → E | 0 < lam (y k)} := by
+      ext y; simp
+    rw [this]
+    exact MeasurableSet.iInter fun k ↦
+      measurableSet_lt measurable_const (hlamm.comp (measurable_pi_apply k))
+  exact h1.union (h2.inter (measurableSet_summable_inv_comp hlamm hlam0).compl)
+
+/-- **The Lyapunov criterion in its generator form**, for an initial law under which the Lyapunov
+function has a finite mean. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hC : 0 ≤ C)
+    (hFm : Measurable F) (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ENNReal, N ≠ ⊤ → ∃ B : ℝ, ∀ x, F x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hnu : ∫⁻ z, F z ∂nu ≠ ⊤)
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z)) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam :=
+  ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or hlamm mu nu
+    (ae_absorb_or_not_summable_of_lintegral_le hC hFm hlamm hlam0 hbdd mu nu hnu hstep)
+
+/-- **The Lyapunov criterion in its generator form, with no hypothesis on the initial law.**  The
+finite mean is not needed, only the finiteness of the Lyapunov function at each point: the statement
+is proved one starting state at a time, where the mean is the value, and carried back by
+`Measure.ae_comp_of_ae_ae`.
+
+That passage is what `measurableSet_absorb_or_not_summable` is for, and it is the whole reason the
+criterion above is stated at the level of the chain: an almost sure statement about `jumpMeasure`
+does not condition on the starting state, an almost sure statement about `chainKernel mu ∘ₘ nu`
+does. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le_of_ne_top [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hC : 0 ≤ C)
+    (hFm : Measurable F) (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hF : ∀ x, F x ≠ ⊤)
+    (hbdd : ∀ N : ENNReal, N ≠ ⊤ → ∃ B : ℝ, ∀ x, F x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z)) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or hlamm mu nu ?_
+  refine Measure.ae_comp_of_ae_ae (measurableSet_absorb_or_not_summable hlamm hlam0)
+    (Filter.Eventually.of_forall fun z ↦ ?_)
+  have hdirac : ∫⁻ x, F x ∂(Measure.dirac z) ≠ ⊤ := by
+    rw [lintegral_dirac]
+    exact hF z
+  have h := ae_absorb_or_not_summable_of_lintegral_le hC hFm hlamm hlam0 hbdd mu
+    (Measure.dirac z) hdirac hstep
+  rwa [Measure.dirac_bind (Kernel.measurable _)] at h
+
+/-- **From the generator inequality to the one step inequality in `ℝ≥0∞`.**  This is the only place
+where integrability is asked, and it is asked of the kernel and not of the chain: the Bochner
+integral of `f` against `mu x` has to be the `ℝ≥0∞` integral of `ofReal ∘ f`, which is
+`ofReal_integral_eq_lintegral_ofReal`. -/
+theorem lintegral_ofReal_le_of_jumpApply_le [MeasurableSpace E] {lam f : E → ℝ} {C : ℝ}
+    {mu : Kernel E E} [IsMarkovKernel mu] {x : E} (hf : ∀ z, 0 ≤ f z) (hlam : 0 < lam x)
+    (hint : Integrable f (mu x)) (h : jumpApply lam mu f x ≤ C * f x) :
+    ∫⁻ z, ENNReal.ofReal (f z) ∂(mu x)
+      ≤ ENNReal.ofReal (f x) * ENNReal.ofReal (1 + C / lam x) := by
+  have hsub : ∫ z, (f z - f x) ∂(mu x) = (∫ z, f z ∂(mu x)) - f x := by
+    rw [integral_sub hint (integrable_const _)]
+    simp
+  have hle : ∫ z, f z ∂(mu x) ≤ f x * (1 + C / lam x) := by
+    rw [jumpApply, hsub] at h
+    have h' : (∫ z, f z ∂(mu x)) - f x ≤ C * f x / lam x := by
+      rw [le_div_iff₀ hlam, mul_comm]
+      linarith
+    have hring : f x * (1 + C / lam x) = f x + C * f x / lam x := by
+      field_simp
+    rw [hring]
+    linarith
+  rw [← ofReal_integral_eq_lintegral_ofReal hint (Filter.Eventually.of_forall hf),
+    ← ENNReal.ofReal_mul (hf x)]
+  exact ENNReal.ofReal_le_ofReal hle
+
+/-- **The Lyapunov criterion for a real valued Lyapunov function**, and this is the statement the
+milestone carries: if `f ≥ 0` is measurable, the rate is bounded on every sublevel set of `f`, and
+the generator satisfies `A f ≤ C * f` at every state of positive rate, then the process does not
+explode.
+
+It is strictly stronger than `ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov`, whose hypothesis
+implies this one by `jumpApply_le_of_lyapunov`, and on a birth and death chain the difference is
+the death term: here it helps and there it does not. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam f : E → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hlamm : Measurable lam) (hfm : Measurable f) (hf : ∀ x, 0 ≤ f x) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ x, f x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hint : ∀ z, Integrable f (mu z))
+    (hstep : ∀ z, 0 < lam z → jumpApply lam mu f z ≤ C * f z) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le_of_ne_top
+    (F := fun x ↦ ENNReal.ofReal (f x)) hC
+    (ENNReal.measurable_ofReal.comp hfm) hlamm hlam0 (fun x ↦ ENNReal.ofReal_ne_top) ?_ mu nu
+    fun z hz ↦ lintegral_ofReal_le_of_jumpApply_le hf hz (hint z) (hstep z hz)
+  intro N hN
+  obtain ⟨B, hB⟩ := hbdd N.toReal
+  exact ⟨B, fun x hx ↦ hB x ((ENNReal.ofReal_le_iff_le_toReal hN).1 hx)⟩
+
+/-! ### The birth and death instance of the generator form
+
+On `ℕ` every sublevel set of `f x = x + 1` is **finite**, so the boundedness of the rate is free and
+the only hypothesis left is the generator inequality.  With `A f x = b x - d x` away from the
+absorbing state that inequality is `b x - d x ≤ C * (x + 1)`, and the death term is on the useful
+side: *the birth rate grows at most linearly, the death rate is free*.  That is the statement the
+pathwise form cannot reach, since there the hypothesis is `b x + d x ≤ C * x`. -/
+
+/-- **Every function on `ℕ` is bounded on a sublevel set of the identity**, because the set is
+finite.  This is what makes the second hypothesis of the criterion free on `ℕ`. -/
+theorem exists_bound_of_le_nat (lam : ℕ → ℝ) (N : ℝ) :
+    ∃ B : ℝ, ∀ x : ℕ, (x : ℝ) ≤ N → lam x ≤ B := by
+  classical
+  refine ⟨(Finset.range (⌈N⌉₊ + 1)).sup' Finset.nonempty_range_add_one lam, fun x hx ↦ ?_⟩
+  refine Finset.le_sup' lam (Finset.mem_range.2 (Nat.lt_succ_of_le ?_))
+  have : (⌈(x : ℝ)⌉₊ : ℕ) ≤ ⌈N⌉₊ := Nat.ceil_mono hx
+  rwa [Nat.ceil_natCast] at this
+
+/-- **Any function is integrable against a birth and death kernel**, the kernel being a finite
+combination of Dirac measures.  It is the hypothesis `hint` of the criterion on this data. -/
+theorem integrable_birthDeathKernel {b d : ℕ → ℝ} (f : ℕ → ℝ) (z : ℕ) :
+    Integrable f (birthDeathKernel b d z) := by
+  have hdirac : ∀ (c : ENNReal) (a : ℕ), c ≠ ⊤ → Integrable f (c • Measure.dirac a) :=
+    fun c a hc ↦ (integrable_dirac (by simp [enorm_eq_nnnorm])).smul_measure hc
+  rw [birthDeathKernel_apply]
+  split_ifs
+  · simpa using hdirac 1 z ENNReal.one_ne_top
+  · exact (hdirac _ _ ENNReal.ofReal_ne_top).add_measure (hdirac _ _ ENNReal.ofReal_ne_top)
+
+/-- **A birth and death chain whose birth rate grows at most linearly does not explode, whatever
+its death rate.**  The Lyapunov function is `f x = x + 1` and not `f x = x`: at the state `0` the
+generator is `b 0` and the constraint would read `b 0 ≤ 0`, so the shift is not cosmetic -- it is
+what lets the criterion see a state from which the chain can only go up.
+
+This is the statement the milestone names, and the measured difference to
+`ae_mem_nonExplosiveE_birthDeath_of_rate_le` is exactly the death term: there the hypothesis is
+`b x + d x ≤ C * x`, here it is `b x ≤ C * (x + 1)` and `d` is free.  A rate `d x = 2 ^ x` is
+covered here and by no pathwise form. -/
+theorem ae_mem_nonExplosiveE_birthDeath_of_birth_le {b d : ℕ → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x) (hble : ∀ x : ℕ, b x ≤ C * (x + 1))
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel b d)] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel b d) nu),
+      ω ∈ NonExplosiveE (birthDeathRate b d) := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le (lam := birthDeathRate b d)
+    (f := fun x : ℕ ↦ (x : ℝ) + 1) hC
+    (measurable_of_countable _) (measurable_of_countable _)
+    (fun x ↦ by positivity) (fun x ↦ add_nonneg (hb x) (hd x)) ?_
+    (birthDeathKernel b d) nu (fun z ↦ integrable_birthDeathKernel _ z) ?_
+  · intro N
+    obtain ⟨B, hB⟩ := exists_bound_of_le_nat (birthDeathRate b d) N
+    exact ⟨B, fun x hx ↦ hB x (by linarith)⟩
+  · intro z _
+    rw [jumpApply_birthDeath hb hd]
+    have hup : ((z + 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1) = 1 := by push_cast; ring
+    have hdown : ((z - 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1) ≤ 0 := by
+      have : ((z - 1 : ℕ) : ℝ) ≤ (z : ℝ) := Nat.cast_le.2 (Nat.sub_le z 1)
+      linarith
+    have h1 : b z * (((z + 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1)) = b z := by rw [hup]; ring
+    have h2 : d z * (((z - 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1)) ≤ 0 :=
+      mul_nonpos_of_nonneg_of_nonpos (hd z) hdown
+    have h3 : C * ((z : ℝ) + 1) = C * (z + 1) := by ring
+    rw [h1]
+    linarith [hble z]
+
+/-- **The Yule process from the generator form.**  The birth rate is `β * x ≤ β * (x + 1)` and there
+is no death rate, so the constant is `β` and the whole proof is that inequality.  It is the probe of
+the generator form for the same reason it is the probe of the pathwise form: without a death term
+the two coincide on it, so what is gained here is not gained on Yule but on its neighbours. -/
+theorem ae_mem_nonExplosiveE_yule_of_jumpApply_le {β : ℝ} (hβ : 0 ≤ β)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath 0)) := by
+  refine ae_mem_nonExplosiveE_birthDeath_of_birth_le (C := β) (b := linearBirth β)
+    (d := linearDeath 0) hβ
+    (fun x ↦ mul_nonneg hβ (Nat.cast_nonneg x)) (fun x ↦ by simp [linearDeath]) ?_ nu
+  intro x
+  have : (x : ℝ) ≤ (x : ℝ) + 1 := by linarith
+  exact mul_le_mul_of_nonneg_left this hβ
+
 end Lyapunov
