@@ -8027,6 +8027,53 @@ theorem ae_mem_nonExplosiveE_jumpMeasure [MeasurableSpace E] {lam : E → ℝ}
   filter_upwards [hdiv] with y hy
   exact ae_mem_nonExplosiveE hy.1 hy.2
 
+/-! ### Non explosion at a rate with zeros
+
+`ae_mem_nonExplosiveE` and `ae_mem_nonExplosiveE_jumpMeasure` both ask `∀ k, 0 < lam (y k)` along
+the chain, and that is more than the local case can promise: the linear birth and death chain
+fails it on the extinction event, which has positive probability.  What holds instead is a
+**disjunction**, and its two branches are the two ways a path can fail to explode -- it is
+absorbed, or its holding times add up.  Both branches are already proved,
+`mem_nonExplosiveE_of_rate_zero` and `mem_nonExplosiveE_of_tendsto_sum`; what the statement adds is
+that they exhaust the cases the local branch has to cover, and that the first of them needs no
+series to diverge at all. -/
+
+/-- **Non explosion at a rate with zeros.**  Either the chain reaches a state of vanishing rate,
+where the next jump time is `⊤`, or the rate is positive along the whole chain and the holding
+times diverge.  The positivity of the waiting times is what the absorbing branch consumes: a state
+is only reached if the path spends time there. -/
+theorem mem_nonExplosiveE_of_absorb_or_tendsto_sum (hxi : ∀ k, 0 < xi k)
+    (h : (∃ m, lam (y m) = 0) ∨ ((∀ k, 0 < lam (y k)) ∧
+      Tendsto (fun m ↦ ∑ k ∈ Finset.range m, (lam (y k))⁻¹ * xi k) atTop atTop)) :
+    (y, xi) ∈ NonExplosiveE lam := by
+  rcases h with ⟨m, hm⟩ | ⟨hpos, hsum⟩
+  · exact mem_nonExplosiveE_of_rate_zero (hxi m) hm
+  · exact mem_nonExplosiveE_of_tendsto_sum hpos (fun k ↦ (hxi k).le) hsum
+
+/-- **Almost every sample point of a chain with a rate with zeros is non explosive.**  The
+disjunction is a statement about the chain alone; the waiting times supply the positivity the
+absorbing branch needs (`ae_pos_waiting`) and, through `ae_mem_nonExplosiveE`, the divergence the
+other branch needs. -/
+theorem ae_mem_nonExplosiveE_of_absorb_or
+    (h : (∃ m, lam (y m) = 0) ∨ ((∀ k, 0 < lam (y k)) ∧ ¬ Summable fun k ↦ (lam (y k))⁻¹)) :
+    ∀ᵐ xi ∂waitingMeasure, (y, xi) ∈ NonExplosiveE lam := by
+  rcases h with ⟨m, hm⟩ | ⟨hpos, hdiv⟩
+  · filter_upwards [ae_pos_waiting] with xi hxi
+    exact mem_nonExplosiveE_of_rate_zero (hxi m) hm
+  · exact ae_mem_nonExplosiveE hpos hdiv
+
+/-- **The `jumpMeasure` form of the criterion at a rate with zeros**, word for word
+`ae_mem_nonExplosiveE_jumpMeasure` with the disjunction in place of the positivity. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or [MeasurableSpace E] {lam : E → ℝ}
+    (hlamm : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu]
+    (hy : ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), (∃ m, lam (y m) = 0) ∨ ((∀ k, 0 < lam (y k)) ∧
+      ¬ Summable fun k ↦ (lam (y k))⁻¹)) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  rw [jumpMeasure, Measure.ae_prod_mem_iff_ae_ae_mem (measurableSet_nonExplosiveE hlamm)]
+  filter_upwards [hy] with y hy'
+  exact ae_mem_nonExplosiveE_of_absorb_or hy'
+
 /-! ### The second half of the acceptance pair of the explosion criterion
 
 `notMem_nonExplosiveE_explode` exhibits a sample point **outside** `NonExplosiveE`, with the rate
@@ -11273,3 +11320,240 @@ theorem jumpProcess_isLocalMPSolution_of_nonneg [MeasurableEq E] {lam : E → �
   exact martingale_indicator_bot hmartG hbot
 
 end AbsorbingRate
+
+section LinearBirthDeath
+
+/-! ## The linear birth and death chain as a local solution
+
+This is the one acceptance example of Milestone 4 that exercises the **local** branch, and it
+exercises it on both counts at once: the rate `birthDeathRate (linearBirth β) (linearDeath δ)`
+vanishes at `0` (`birthDeathRate_linear_zero`) and is unbounded above
+(`not_bddAbove_birthDeathRate_linear`), so neither `jumpProcess_isMPSolution` nor
+`exists_unique_of_bounded` reaches it, and `jumpProcess_isLocalMPSolution` does not either, its
+hypothesis being `∀ x, 0 < lam x`.  What reaches it is
+`jumpProcess_isLocalMPSolution_of_nonneg`, and the one hypothesis of that theorem which is not
+immediate on this data is non explosion.
+
+**Non explosion here is not `ae_mem_nonExplosiveE`.**  That criterion asks `∀ k, 0 < lam (y k)`
+along the chain, and the extinction event -- which has positive probability -- violates it.  The
+criterion that does reach it is `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or`, and the branch
+the extinction event falls in is the absorbing one, where the next jump time is `⊤` and nothing
+has to diverge.
+
+**On the other branch the divergence is deterministic, and that is the surprise of this
+example.**  Away from the extinction event no probabilistic estimate is needed at all: a birth and
+death chain moves up by at most one step, so `y k ≤ y 0 + k`, so the reciprocal rates dominate a
+tail of the harmonic series.  The chain of `ae_mem_nonExplosiveE_linear` -- the abstract witness --
+had its trajectory prescribed by hand; here the same bound is a property of the *kernel*, and what
+carries it from the kernel to the trajectory is `ae_forall_step_comp_chainKernel`, the general form
+of `ae_absorb_comp_chainKernel`. -/
+
+/-! ### A property of consecutive states, carried from the kernel to the chain
+
+`ae_absorb_chainKernel` and `ae_absorb_comp_chainKernel` prove one such property, that the chain
+does not move at a state of vanishing rate.  The argument uses nothing about that property, and is
+written here once and for all.  Both statements below ask **less** than their absorbing
+predecessors: `MeasurableSingletonClass E` instead of `MeasurableEq E`, which is what identifies
+the starting state of the chain, and no measurability of `S` at all in the one step form. -/
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **A property of consecutive states holds after the first step**, from a fixed start.  The
+starting state is read off by `chainKernel_map_zero` and the state after it by
+`chainKernel_map_one`; the property itself is never opened. -/
+theorem ae_step_chainKernel [MeasurableSingletonClass E] (mu : Kernel E E) [IsMarkovKernel mu]
+    {S : Set (E × E)} (h : ∀ z, ∀ᵐ x ∂(mu z), (z, x) ∈ S) (z : E) :
+    ∀ᵐ y ∂(chainKernel mu z), (y 0, y 1) ∈ S := by
+  have h0 : ∀ᵐ y ∂(chainKernel mu z), y 0 = z :=
+    ae_eq_of_map_eq_dirac (measurable_pi_apply 0) (chainKernel_map_zero mu z)
+  have h1 : ∀ᵐ y ∂(chainKernel mu z), (z, y 1) ∈ S :=
+    ae_of_ae_map (μ := chainKernel mu z) (f := fun y : ℕ → E ↦ y 1)
+      (measurable_pi_apply 1).aemeasurable (p := fun x ↦ (z, x) ∈ S)
+      (by rw [chainKernel_map_one mu z]; exact h z)
+  filter_upwards [h0, h1] with y hy0 hy1
+  rwa [hy0]
+
+/-- **A property of consecutive states holds at every index of the chain**, from any initial law.
+The induction is on the index and the initial law moves with it, which is what
+`comp_chainKernel_map_shift` is for; the measurability of `S` enters only here, to split the
+composition into its two integrations. -/
+theorem ae_step_comp_chainKernel [MeasurableSingletonClass E] (mu : Kernel E E)
+    [IsMarkovKernel mu] {S : Set (E × E)} (hS : MeasurableSet S)
+    (h : ∀ z, ∀ᵐ x ∂(mu z), (z, x) ∈ S) (n : ℕ) :
+    ∀ (nu : Measure E), IsProbabilityMeasure nu →
+      ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), (y n, y (n + 1)) ∈ S := by
+  have hmeas : Measurable (fun x : ℕ → E ↦ fun k ↦ x (k + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  induction n with
+  | zero =>
+    intro nu hnu
+    have hSet : MeasurableSet {y : ℕ → E | (y 0, y 1) ∈ S} :=
+      hS.preimage ((measurable_pi_apply 0).prodMk (measurable_pi_apply 1))
+    exact Measure.ae_comp_of_ae_ae hSet
+      (Filter.Eventually.of_forall fun z ↦ ae_step_chainKernel mu h z)
+  | succ n ih =>
+    intro nu hnu
+    have hstep := ih (mu ∘ₘ nu) inferInstance
+    rw [← comp_chainKernel_map_shift mu nu] at hstep
+    exact ae_of_ae_map hmeas.aemeasurable hstep
+
+/-- **A property of consecutive states holds at every index at once.**  Countably many indices, so
+`ae_all_iff` is the whole of the passage. -/
+theorem ae_forall_step_comp_chainKernel [MeasurableSingletonClass E] (mu : Kernel E E)
+    [IsMarkovKernel mu] {S : Set (E × E)} (hS : MeasurableSet S)
+    (h : ∀ z, ∀ᵐ x ∂(mu z), (z, x) ∈ S) (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), ∀ n, (y n, y (n + 1)) ∈ S :=
+  ae_all_iff.2 fun n ↦ ae_step_comp_chainKernel mu hS h n nu inferInstance
+
+/-! ### The nearest neighbour bound of a birth and death chain -/
+
+/-- **A birth and death chain moves up by at most one step.**  Where the two rates do not both
+vanish the jump kernel is carried by `{x + 1, x - 1}`; where they do, it is the Dirac measure at
+`x`.  In either case the next state is at most `x + 1`, and no positivity of the rates is used. -/
+theorem ae_le_succ_birthDeathKernel (b d : ℕ → ℝ) (z : ℕ) :
+    ∀ᵐ x ∂(birthDeathKernel b d z), x ≤ z + 1 := by
+  have hdirac : ∀ a : ℕ, a ≤ z + 1 → ∀ᵐ x ∂(Measure.dirac a), x ≤ z + 1 := fun a ha ↦
+    (ae_dirac_iff (p := fun x : ℕ ↦ x ≤ z + 1) MeasurableSet.of_discrete).2 ha
+  rw [birthDeathKernel_apply]
+  split_ifs with h0
+  · exact hdirac z (Nat.le_succ z)
+  · rw [ae_add_measure_iff]
+    refine ⟨?_, ?_⟩
+    · exact Measure.ae_smul_measure (R := ENNReal) (hdirac (z + 1) le_rfl)
+        (ENNReal.ofReal (b z / (b z + d z)))
+    · exact Measure.ae_smul_measure (R := ENNReal)
+        (hdirac (z - 1) ((Nat.sub_le z 1).trans (Nat.le_succ z)))
+        (ENNReal.ofReal (d z / (b z + d z)))
+
+/-- **The set of admissible steps of a birth and death chain is measurable**, which
+`ae_forall_step_comp_chainKernel` asks for.  Over `ℕ × ℕ` every set is. -/
+theorem measurableSet_stepLE : MeasurableSet {p : ℕ × ℕ | p.2 ≤ p.1 + 1} :=
+  MeasurableSet.of_discrete
+
+/-- **A chain that moves up by at most one step is bounded by its start plus the index.**  This is
+the whole of the divergence on the non extinction branch: no probabilistic estimate enters it. -/
+theorem le_add_of_step_le_succ {y : ℕ → ℕ} (h : ∀ k, y (k + 1) ≤ y k + 1) (k : ℕ) :
+    y k ≤ y 0 + k := by
+  induction k with
+  | zero => simp
+  | succ k ih => have := h k; omega
+
+/-! ### The reciprocal rates of the linear chain, and the harmonic series -/
+
+/-- **The rate of the linear birth and death chain is `(β + δ) * x`.** -/
+theorem birthDeathRate_linear_apply {β δ : ℝ} (x : ℕ) :
+    birthDeathRate (linearBirth β) (linearDeath δ) x = (β + δ) * x := by
+  simp only [birthDeathRate, linearBirth, linearDeath]
+  ring
+
+/-- **The rate of the linear chain is nonnegative**, which is the hypothesis
+`jumpProcess_isLocalMPSolution_of_nonneg` puts on a rate.  Only the sum of the two rates has to be
+nonnegative, because only the sum ever appears: `birthDeathRate_linear_apply`.  Separate
+nonnegativity of `β` and of `δ` is what `isMarkovKernel_birthDeathKernel` asks for, and it is asked
+there and not here. -/
+theorem birthDeathRate_linear_nonneg {β δ : ℝ} (hβδ : 0 ≤ β + δ) (x : ℕ) :
+    0 ≤ birthDeathRate (linearBirth β) (linearDeath δ) x := by
+  rw [birthDeathRate_linear_apply]
+  positivity
+
+/-- **The rate of the linear chain vanishes only at `0`.**  One direction is
+`birthDeathRate_linear_zero`; this is the other, and it is what turns "the chain avoids `0`" into
+the positivity `ae_mem_nonExplosiveE_of_absorb_or` asks for on its second branch. -/
+theorem birthDeathRate_linear_pos {β δ : ℝ} (hβδ : 0 < β + δ) {x : ℕ} (hx : x ≠ 0) :
+    0 < birthDeathRate (linearBirth β) (linearDeath δ) x := by
+  rw [birthDeathRate_linear_apply]
+  have hxpos : (0 : ℝ) < x := by exact_mod_cast Nat.pos_of_ne_zero hx
+  positivity
+
+/-- **The reciprocal rates along a nearest neighbour chain that avoids `0` are not summable.**  The
+comparison is with a tail of the harmonic series: the chain grows by at most one per step, so its
+rate at the index `k` is at most `(β + δ) * (y 0 + k)`.  This is where the local branch of
+Milestone 4 pays for the unboundedness of the rate, and it pays deterministically. -/
+theorem not_summable_inv_birthDeathRate_linear {β δ : ℝ} (hβδ : 0 < β + δ) {y : ℕ → ℕ}
+    (hstep : ∀ k, y (k + 1) ≤ y k + 1) (hne : ∀ k, y k ≠ 0) :
+    ¬ Summable fun k ↦ (birthDeathRate (linearBirth β) (linearDeath δ) (y k))⁻¹ := by
+  intro hsum
+  have hharm : ¬ Summable fun k : ℕ ↦ ((β + δ) * ((y 0 : ℝ) + k))⁻¹ := by
+    intro hg
+    have h1 : Summable fun k : ℕ ↦ ((y 0 : ℝ) + k)⁻¹ := by
+      refine (hg.mul_left (β + δ)).congr fun k ↦ ?_
+      rw [mul_inv, ← mul_assoc, mul_inv_cancel₀ hβδ.ne', one_mul]
+    have h2 : Summable fun k : ℕ ↦ (((k + y 0 : ℕ) : ℝ))⁻¹ := by
+      refine h1.congr fun k ↦ ?_
+      push_cast
+      rw [add_comm]
+    exact Real.not_summable_natCast_inv ((summable_nat_add_iff (y 0)).1 h2)
+  refine hharm (Summable.of_nonneg_of_le (fun k ↦ ?_) (fun k ↦ ?_) hsum)
+  · exact inv_nonneg.2 (mul_nonneg hβδ.le (by positivity))
+  · refine inv_anti₀ (birthDeathRate_linear_pos hβδ (hne k)) ?_
+    rw [birthDeathRate_linear_apply]
+    have hk : (y k : ℝ) ≤ (y 0 : ℝ) + k := by
+      have hle := le_add_of_step_le_succ hstep k
+      have hcast : ((y k : ℕ) : ℝ) ≤ ((y 0 + k : ℕ) : ℝ) := Nat.cast_le.2 hle
+      push_cast at hcast
+      exact hcast
+    exact mul_le_mul_of_nonneg_left hk hβδ.le
+
+/-! ### The linear chain does not explode, and it solves its martingale problem locally -/
+
+/-- **Almost every sample point of the linear birth and death chain is non explosive.**  The two
+branches of `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` are the two fates of the chain: it hits
+`0` and is absorbed there, or it never does and its reciprocal rates dominate the harmonic series.
+`ae_mem_nonExplosiveE` alone does **not** reach this statement, since the extinction event has
+positive probability and violates the positivity of the rate along the chain.
+
+The hypothesis is `0 ≤ β + δ` and not `0 ≤ β` together with `0 ≤ δ`: only the sum of the two rates
+ever appears here.  The degenerate case `β + δ = 0` is the process that never moves, and it falls
+in the absorbing branch at the index `0`. -/
+theorem ae_mem_nonExplosiveE_linearBirthDeath {β δ : ℝ} (hβδ0 : 0 ≤ β + δ) (nu : Measure ℕ)
+    [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath δ)) := by
+  rcases eq_or_lt_of_le hβδ0 with h0 | hβδ
+  · refine ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or (measurable_of_countable _) _ nu ?_
+    refine Filter.Eventually.of_forall fun y ↦ Or.inl ⟨0, ?_⟩
+    rw [birthDeathRate_linear_apply, ← h0, zero_mul]
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or (measurable_of_countable _) _ nu ?_
+  filter_upwards [ae_forall_step_comp_chainKernel
+    (birthDeathKernel (linearBirth β) (linearDeath δ)) measurableSet_stepLE
+    (fun z ↦ ae_le_succ_birthDeathKernel (linearBirth β) (linearDeath δ) z) nu] with y hy
+  by_cases hex : ∃ m, y m = 0
+  · obtain ⟨m, hm⟩ := hex
+    exact Or.inl ⟨m, by rw [hm]; exact birthDeathRate_linear_zero⟩
+  · push_neg at hex
+    exact Or.inr ⟨fun k ↦ birthDeathRate_linear_pos hβδ (hex k),
+      not_summable_inv_birthDeathRate_linear hβδ (fun k ↦ hy k) hex⟩
+
+/-- **The linear birth and death chain solves its martingale problem locally.**  Every hypothesis
+of `jumpProcess_isLocalMPSolution_of_nonneg` is discharged on the data: the rate is measurable
+because `ℕ` is discrete, nonnegative by `birthDeathRate_linear_nonneg`, and the normalisation of
+the jump kernel at the absorbing state is the fallback branch of `birthDeathKernel_apply`, taken by
+construction.  Non explosion is `ae_mem_nonExplosiveE_linearBirthDeath`.
+
+This is the first acceptance example of Milestone 4 for which the **bounded** theorem is
+unavailable, and it is unavailable for both of the reasons the local case exists:
+`not_bddAbove_birthDeathRate_linear` and `birthDeathRate_linear_zero`.  The generator is
+`jumpApply_linearBirthDeath`, `A f x = β x (f (x+1) - f x) + δ x (f (x-1) - f x)`.
+
+The hypothesis is `0 ≤ β + δ` alone.  The separate nonnegativity of the two rates is what
+`isMarkovKernel_birthDeathKernel` asks for, and it is asked at the call site, where the instance
+`IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))` is discharged. -/
+theorem linearBirthDeath_isLocalMPSolution {β δ : ℝ} (hβδ : 0 ≤ β + δ)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))] :
+    IsLocalMPSolution (mpFamily (jumpOperator (birthDeathRate (linearBirth β) (linearDeath δ))
+        (birthDeathKernel (linearBirth β) (linearDeath δ))) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦
+          jumpProcessE (birthDeathRate (linearBirth β) (linearDeath δ)) (t : ℝ) ω))
+      (jumpFiltrationE (birthDeathRate (linearBirth β) (linearDeath δ))
+        (measurable_of_countable _))
+      (jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu) :=
+  jumpProcess_isLocalMPSolution_of_nonneg (measurable_of_countable _)
+    (birthDeathRate_linear_nonneg hβδ)
+    (fun x hx ↦ by
+      rw [birthDeathRate] at hx
+      rw [birthDeathKernel_apply, if_pos hx]) nu
+    (ae_mem_nonExplosiveE_linearBirthDeath hβδ nu)
+
+end LinearBirthDeath
