@@ -187,12 +187,16 @@ done
 MODEL="${FACTS_MODEL:-claude-opus-5}"
 FALLBACK="${FACTS_FALLBACK_MODEL:-sonnet}"
 
-timeout "${TIMEOUT_MIN}m" claude -p "$PROMPT" \
+# Der Prompt geht ueber stdin, nicht als Argument: Linux begrenzt ein einzelnes
+# Argument auf MAX_ARG_STRLEN = 128 KiB, und am 2026-09-10 ist der Prompt mit
+# 131923 Bytes darueber gewachsen -- zwei Laeufe starben mit "Argumentliste zu
+# lang" (Code 126), ohne dass claude auch nur aufgerufen wurde.
+timeout "${TIMEOUT_MIN}m" claude -p \
     --model "$MODEL" \
     --fallback-model "$FALLBACK" \
     --allowedTools "${ALLOWED[@]}" \
     "${ADDDIRS[@]}" \
-    >> "$RUNLOG" 2>&1
+    >> "$RUNLOG" 2>&1 <<< "$PROMPT"
 RC=$?
 
 case "$RC" in
@@ -213,11 +217,11 @@ case "$RC" in
          # Diese Grenzen sind modellspezifisch.  Statt den Slot zu verlieren,
          # sofort mit dem Ausweichmodell nachsetzen -- es hat ein eigenes Kontingent.
          echo "$(date -u +%FT%TZ) Kontingent fuer $MODEL erschoepft, zweiter Versuch mit $FALLBACK" >> "$RUNLOG"
-         timeout "${TIMEOUT_MIN}m" claude -p "$PROMPT" \
+         timeout "${TIMEOUT_MIN}m" claude -p \
              --model "$FALLBACK" \
              --allowedTools "${ALLOWED[@]}" \
              "${ADDDIRS[@]}" \
-             >> "$RUNLOG" 2>&1
+             >> "$RUNLOG" 2>&1 <<< "$PROMPT"
          RC2=$?
          if [ "$RC2" = 0 ]; then
            status "ok" "Kontingent fuer $MODEL erschoepft; mit $FALLBACK regulaer beendet"

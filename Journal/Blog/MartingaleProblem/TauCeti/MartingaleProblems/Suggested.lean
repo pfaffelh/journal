@@ -10465,3 +10465,811 @@ theorem martingale_of_martingale_of_stopped {𝓖 𝓗 : Filtration ℝ≥0 m} {
 end Tower
 
 end LocalAssembly
+
+section LocalSolution
+
+/-! ## Point 5 of Milestone 4: the local jump process solves the martingale problem locally
+
+The assembly.  Only one input was missing after the seventeenth run of the 2026-09-10, and it is
+the first theorem of this section: the adaptedness of the **stopped** test process to the
+**local** filtration.  It is not
+`IsStronglyProgressive.stronglyAdapted_stoppedProcess` applied to
+`isStronglyProgressive_mpFamily_jumpProcessE`, because that statement carries a bound on the rate
+and the local case has none; and the bound is not a convenience there.  For an unbounded rate the
+*unstopped* test process is not right continuous at an explosive sample point: the compensator
+over a window containing the explosion time integrates a function whose absolute value is
+`lam (X u)` times a constant, and `∫_0^{T_∞} lam (X u) du = ∑ ξ k` diverges, so Bochner returns
+the junk value `0`.  The proof below never mentions the unstopped process: it reads the window of
+the stopped one as a window of the *fixed* length `i` with the integrand cut off by the stopping
+time, and the cut off set `{(u, ω) | u ≤ (min i (τ ω)).untopA}` is measurable for the product
+σ-algebra precisely because `min i τ`, unlike `τ`, is measurable for the past at `i`. -/
+
+variable {E : Type*} [MeasurableSpace E] {mu : Kernel E E} [IsMarkovKernel mu]
+
+/-- **The stopped test process of the local jump martingale problem is adapted to the local
+filtration**, at every stopping time of that filtration and with no hypothesis on the rate beyond
+its measurability.
+
+The first summand is the stopped state process, and `measurable_uncurry_jumpProcessE` -- which
+asks nothing of the rate either -- reaches it.  The second is the compensating window, and the
+point of the proof is that a window whose *upper end* is random can be written as a window of
+fixed length with a cut off integrand:
+`∫_{(⊥, σ ω]} g u ω = ∫_{(⊥, i]} 1_{u ≤ σ ω} g u ω`, valid because `σ ω ≤ i`.  The cut off is a
+set of the product σ-algebra `Borel ℝ≥0 ⊗ 𝓕 i`, so the parametrised Bochner integral
+`stronglyMeasurable_integral_comp` applies. -/
+theorem stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ}
+    (hlam : Measurable lam) {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    {τ : ((ℕ → E) × (ℕ → ℝ)) → ENNReal}
+    (hτ : IsStoppingTime (jumpFiltrationE lam hlam) τ) :
+    StronglyAdapted (jumpFiltrationE lam hlam) (stoppedProcess Y τ) := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hp2m : Measurable p.2 := by rw [hp2]; exact measurable_jumpApply hlam hf hC
+  intro i
+  -- the stopped time, read in `ℝ≥0`, is measurable for the past at `i`
+  have hσmeas : Measurable[jumpFiltrationE lam hlam i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (i : ENNReal) (τ ω)).untopA := by
+    have h2 : Measurable[jumpFiltrationE lam hlam i]
+        fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (τ ω) (i : ENNReal)).untopA :=
+      ((hτ.min_const i).measurable_of_le fun ω ↦ min_le_right _ _).untopA
+    have h3 : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (τ ω) (i : ENNReal)).untopA)
+        = fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (min (i : ENNReal) (τ ω)).untopA :=
+      funext fun ω ↦ by rw [min_comm]
+    rwa [h3] at h2
+  have hσcoe : ∀ ω : (ℕ → E) × (ℕ → ℝ),
+      (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ENNReal) = min (i : ENNReal) (τ ω) := by
+    intro ω
+    have hmin : min (i : ENNReal) (τ ω) ≠ ⊤ :=
+      ne_top_of_le_ne_top ENNReal.coe_ne_top (min_le_left _ _)
+    obtain ⟨s, hs⟩ : ∃ s : ℝ≥0, ((s : ℝ≥0) : ENNReal) = min (i : ENNReal) (τ ω) :=
+      ⟨_, ENNReal.coe_toNNReal hmin⟩
+    rw [← hs]
+    rfl
+  have hσle : ∀ ω : (ℕ → E) × (ℕ → ℝ), (min (i : ENNReal) (τ ω)).untopA ≤ i := by
+    intro ω
+    have h : (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ENNReal) ≤ (i : ENNReal) :=
+      (hσcoe ω).le.trans (min_le_left _ _)
+    exact_mod_cast h
+  have hσlr : ∀ ω : (ℕ → E) × (ℕ → ℝ),
+      (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) ≤ (i : ℝ) := by
+    intro ω; exact_mod_cast hσle ω
+  -- the integrand of the fixed window, cut off at the stopping time
+  obtain ⟨W, hWdef⟩ : ∃ W : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ, W =
+      fun u ω ↦ Set.indicator {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+          q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA}
+        (fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+          p.2 (jumpProcessE lam (min ((q.1 : ℝ≥0) : ℝ) (i : ℝ)) q.2)) (u, ω) := ⟨_, rfl⟩
+  have hWm : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (jumpFiltrationE lam hlam i)]
+      (Function.uncurry W) := by
+    have huc : Function.uncurry W = Set.indicator {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+          q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA}
+        (fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+          p.2 (jumpProcessE lam (min ((q.1 : ℝ≥0) : ℝ) (i : ℝ)) q.2)) := by
+      funext q; rw [hWdef]; rfl
+    rw [huc]
+    exact Measurable.indicator (measurable_uncurry_jumpProcessE hlam hp2m i)
+      (measurableSet_le measurable_fst (hσmeas.comp measurable_snd))
+  haveI hfin : IsFiniteMeasure (lebesgueClock.q.restrict (Set.Ioc (⊥ : ℝ≥0) i)) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, lebesgueClock_apply_Ioc]
+    exact ENNReal.ofReal_lt_top
+  have hsm : StronglyMeasurable[jumpFiltrationE lam hlam i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace
+      ((ℕ → E) × (ℕ → ℝ)) (jumpFiltrationE lam hlam i) ℝ _ ℝ _
+      (lebesgueClock.q.restrict (Set.Ioc (⊥ : ℝ≥0) i)) _ W hWm id measurable_id
+  have h1 : Measurable[jumpFiltrationE lam hlam i] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      p.1 (jumpProcessE lam (min (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) (i : ℝ)) ω) := by
+    have hpair : @Measurable ((ℕ → E) × (ℕ → ℝ)) (ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)))
+        (jumpFiltrationE lam hlam i)
+        ((inferInstance : MeasurableSpace ℝ≥0).prod (jumpFiltrationE lam hlam i))
+        (fun ω ↦ ((min (i : ENNReal) (τ ω)).untopA, ω)) :=
+      hσmeas.prodMk measurable_id
+    have hcomp := (measurable_uncurry_jumpProcessE hlam hf i).comp hpair
+    simpa only [Function.comp_def] using hcomp
+  -- the value of the stopped process, in the two summands just made measurable
+  have hval : ∀ ω : (ℕ → E) × (ℕ → ℝ), stoppedProcess Y τ i ω
+      = p.1 (jumpProcessE lam (min (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) (i : ℝ)) ω)
+        - ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q := by
+    intro ω
+    have hle := hσle ω
+    have hlr := hσlr ω
+    have hmIoc : ∀ a b : ℝ≥0, @MeasurableSet ℝ≥0 lebesgueClock.measurableSpace (Set.Ioc a b) := by
+      intro a b
+      rw [← lebesgueClock_interval_optional_eq]
+      exact lebesgueClock.measurableSet_interval _ _ _
+    have hstep : stoppedProcess Y τ i ω = Y ((min (i : ENNReal) (τ ω)).untopA) ω := rfl
+    rw [hstep, hYeq, min_eq_left hlr, lebesgueClock_interval_optional_eq]
+    congr 1
+    have hpt : ∀ u : ℝ≥0, W u ω
+        = Set.indicator (Set.Iic ((min (i : ENNReal) (τ ω)).untopA))
+            (fun u : ℝ≥0 ↦ p.2 (jumpProcessE lam (min ((u : ℝ≥0) : ℝ) (i : ℝ)) ω)) u := by
+      intro u
+      simp only [hWdef]
+      by_cases hu : u ≤ (min (i : ENNReal) (τ ω)).untopA
+      · rw [Set.indicator_of_mem (show (u, ω) ∈ {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+            q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA} from hu),
+          Set.indicator_of_mem (Set.mem_Iic.2 hu)]
+      · rw [Set.indicator_of_notMem (show (u, ω) ∉ {q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) |
+            q.1 ≤ (min (i : ENNReal) (τ q.2)).untopA} from hu),
+          Set.indicator_of_notMem fun h ↦ hu (Set.mem_Iic.1 h)]
+    calc ∫ s in Set.Ioc (⊥ : ℝ≥0) ((min (i : ENNReal) (τ ω)).untopA),
+            p.2 (jumpProcessE lam (s : ℝ) ω) ∂lebesgueClock.q
+        = ∫ s in Set.Ioc (⊥ : ℝ≥0) ((min (i : ENNReal) (τ ω)).untopA),
+            p.2 (jumpProcessE lam (min ((s : ℝ≥0) : ℝ) (i : ℝ)) ω) ∂lebesgueClock.q := by
+          refine setIntegral_congr_fun (hmIoc _ _) fun s hs ↦ ?_
+          have hsi : ((s : ℝ≥0) : ℝ) ≤ (i : ℝ) := le_trans (by exact_mod_cast hs.2) hlr
+          rw [min_eq_left hsi]
+      _ = ∫ s in Set.Ioc (⊥ : ℝ≥0) i ∩ Set.Iic ((min (i : ENNReal) (τ ω)).untopA),
+            p.2 (jumpProcessE lam (min ((s : ℝ≥0) : ℝ) (i : ℝ)) ω) ∂lebesgueClock.q := by
+          rw [Set.Ioc_inter_Iic, min_eq_right hle]
+      _ = ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q := by
+          rw [show (fun u : ℝ≥0 ↦ W u ω) = fun u : ℝ≥0 ↦
+              Set.indicator (Set.Iic ((min (i : ENNReal) (τ ω)).untopA))
+                (fun u : ℝ≥0 ↦ p.2 (jumpProcessE lam (min ((u : ℝ≥0) : ℝ) (i : ℝ)) ω)) u from
+            funext hpt]
+          exact (setIntegral_indicator (lebesgueClock.measurableSet_Iic _)).symm
+  have hfun : stoppedProcess Y τ i = fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      p.1 (jumpProcessE lam (min (((min (i : ENNReal) (τ ω)).untopA : ℝ≥0) : ℝ) (i : ℝ)) ω)
+        - ∫ u in Set.Ioc (⊥ : ℝ≥0) i, W u ω ∂lebesgueClock.q := funext hval
+  rw [hfun]
+  exact h1.stronglyMeasurable.sub hsm
+
+/-- **The local jump process solves the martingale problem of its generator locally.**  This is
+the goal of Point 5 of Milestone 4, and the first solution in this file whose rate is neither
+bounded nor even locally bounded: what is asked of it is a positive measurable rate and almost
+sure non explosion, and `ae_mem_nonExplosiveE_jumpMeasure` discharges the second at the data
+(for the linear birth and death chain, `ae_mem_nonExplosiveE_linear`).
+
+Every input is a theorem and not a description.  The localizing sequence is the hitting times of
+the running supremum of the rate along the path -- the jump times themselves are not stopping
+times for any filtration of the process (`not_isStoppingTime_min_jumpTimeE`), and
+`isLocalizingSequence_rateTime` is what replaces them.  At the level `n` the stopped process is
+the stopped process of the **truncated** rate `truncRate lam n`, as a function and not merely
+almost surely (`stoppedProcess_mpFamily_truncRate_eq`); there the rate is bounded by `n`, so
+`martingale_stoppedProcess_mpFamily_jumpProcessE` applies and gives a martingale for the
+truncated filtration.  The passage back to the local filtration is the tower step
+`martingale_of_martingale_of_stopped`, whose cut hypothesis is
+`jumpFiltrationE_inter_lt_rateTime` and whose adaptedness hypothesis is the theorem above.
+
+The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`, and the shift is
+not cosmetic: `truncRate lam 0` is the zero rate, at which no bounded theorem applies, and
+`rateTime_zero` says the level `0` stops at once anyway.  A subsequence of a localizing sequence
+is one, so nothing is lost. -/
+theorem jumpProcess_isLocalMPSolution {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    IsLocalMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  intro Y hY
+  have hloc : ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam)
+      (fun n ↦ rateTime lam (n + 1)) (jumpMeasure mu nu) := by
+    have h1 : ∀ n : ℕ, IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam (n + 1)) :=
+      fun n ↦ isStoppingTime_rateTime hlam (n + 1)
+    have h2 : ∀ᵐ ω ∂(jumpMeasure mu nu),
+        Filter.Tendsto (fun n : ℕ ↦ rateTime lam (n + 1) ω) Filter.atTop (𝓝 ⊤) := by
+      filter_upwards [hne] with ω hω
+      exact (tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω).comp
+        (Filter.tendsto_add_atTop_nat 1)
+    have h3 : ∀ᵐ ω ∂(jumpMeasure mu nu), Monotone fun n : ℕ ↦ rateTime lam (n + 1) ω :=
+      Filter.Eventually.of_forall fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab)
+    exact ⟨⟨h1, h2⟩, h3⟩
+  refine ⟨fun n ↦ rateTime lam (n + 1), hloc, fun n ↦ ?_⟩
+  obtain ⟨p, hpmem, hYeq⟩ := id hY
+  obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hpmem
+  have hY'mem : (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        p.1 (jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω)
+          - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+              jumpApply (truncRate lam (n + 1)) mu p.1
+                (jumpProcessE (truncRate lam (n + 1)) (s : ℝ) ω) ∂lebesgueClock.q)
+      ∈ mpFamily (jumpOperator (truncRate lam (n + 1)) mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω) :=
+    ⟨(p.1, jumpApply (truncRate lam (n + 1)) mu p.1), ⟨hf, ⟨C, hC⟩, rfl⟩, fun t ω ↦ rfl⟩
+  have hmartH := martingale_stoppedProcess_mpFamily_jumpProcessE
+    (measurable_truncRate hlam (n + 1)) (truncRate_pos hlam0 n.succ_pos)
+    (truncRate_le lam (n + 1)) nu hY'mem (isStoppingTime_rateTime_truncRate hlam (n + 1))
+  have hYfun : Y = fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      p.1 (jumpProcessE lam (t : ℝ) ω)
+        - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            jumpApply lam mu p.1 (jumpProcessE lam (s : ℝ) ω) ∂lebesgueClock.q := by
+    funext t ω; rw [hYeq t ω, hp2]
+  have heqZ : stoppedProcess (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        p.1 (jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω)
+          - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+              jumpApply (truncRate lam (n + 1)) mu p.1
+                (jumpProcessE (truncRate lam (n + 1)) (s : ℝ) ω) ∂lebesgueClock.q)
+        (rateTime lam (n + 1))
+      = stoppedProcess Y (rateTime lam (n + 1)) := by
+    rw [hYfun]
+    exact funext fun j ↦ funext fun ω ↦ stoppedProcess_mpFamily_truncRate_eq j ω
+  rw [heqZ] at hmartH
+  have hZad := stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE hlam hY
+    (isStoppingTime_rateTime hlam (n + 1))
+  have hmartG : Martingale (stoppedProcess Y (rateTime lam (n + 1)))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+    refine martingale_of_martingale_of_stopped hZad hmartH ?_
+      (isStoppingTime_rateTime hlam (n + 1))
+      fun j A hA ↦ jumpFiltrationE_inter_lt_rateTime hlam hA
+    intro j k hjk ω hstop
+    rw [stoppedProcess_eq_of_ge hstop,
+      stoppedProcess_eq_of_ge (hstop.trans (ENNReal.coe_le_coe.2 hjk))]
+  have hbot : MeasurableSet[jumpFiltrationE lam hlam ⊥]
+      {ω : (ℕ → E) × (ℕ → ℝ) | (⊥ : ENNReal) < rateTime lam (n + 1) ω} := by
+    refine MeasurableSet.congr ((isStoppingTime_rateTime hlam (n + 1)) ⊥).compl ?_
+    ext ω
+    simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+    exact not_le
+  exact martingale_indicator_bot hmartG hbot
+
+/-! ### The emptiness probe
+
+`jumpProcess_isLocalMPSolution` is worth nothing if its three hypotheses cannot be met at once,
+and the probe has to be a proof and not a description -- that is the standing rule of the
+inventory since 2026-09-07.  The Poisson data meet them, and there the process really moves; the
+non explosion is `ae_mem_nonExplosiveE_jumpMeasure` at a rate that is constant, so the reciprocal
+rates are the constant sequence `1` and the criterion is the divergence of `∑ 1`.
+
+What this probe does **not** exhibit is an *unbounded* rate, which is the case the local branch
+exists for.  The instance meant for that is the linear birth and death chain, and it is out of
+reach of this theorem for a named reason: its rate vanishes at the absorbing state `0`
+(`birthDeathRate_linear_zero`), while the theorem asks for `∀ x, 0 < lam x`. -/
+
+/-- **The Poisson data do not explode**, at almost every sample point of their own measure.  The
+rate is constant, so both hypotheses of the criterion hold at *every* chain. -/
+theorem ae_mem_nonExplosiveE_poisson :
+    ∀ᵐ ω ∂(jumpMeasure poissonKernel (Measure.dirac 0)), ω ∈ NonExplosiveE poissonRate := by
+  refine ae_mem_nonExplosiveE_jumpMeasure measurable_poissonRate poissonKernel (Measure.dirac 0)
+    (Filter.Eventually.of_forall fun y ↦ ⟨fun k ↦ poissonRate_pos _, fun hsum ↦ ?_⟩)
+  have h1 : Filter.Tendsto (fun k : ℕ ↦ (poissonRate (y k))⁻¹) Filter.atTop (𝓝 1) := by
+    simp only [poissonRate, inv_one]
+    exact tendsto_const_nhds
+  exact one_ne_zero (tendsto_nhds_unique h1 hsum.tendsto_atTop_zero)
+
+/-- **The Poisson process solves its martingale problem locally**, which is the probe that
+`jumpProcess_isLocalMPSolution` has an instance: every one of its hypotheses is discharged here
+on data.  It is of course also a solution outright (`poissonProcess_isMPSolution`), and that is
+the point of the probe -- a local solution that is a global one is the cheapest witness that the
+localizing machinery does not collapse. -/
+theorem poissonProcess_isLocalMPSolution :
+    IsLocalMPSolution (mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock
+        Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE poissonRate (t : ℝ) ω))
+      (jumpFiltrationE poissonRate measurable_poissonRate)
+      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+  jumpProcess_isLocalMPSolution measurable_poissonRate poissonRate_pos (Measure.dirac 0)
+    ae_mem_nonExplosiveE_poisson
+
+end LocalSolution
+
+section AbsorbingRate
+
+/-! ## The bounded theorem at a rate with zeros
+
+`jumpProcessE_isMPSolution` asks `∀ x, 0 < lam x`, and the linear birth and death chain -- the one
+acceptance example of Point 5 that probes the local branch -- does not have it: its rate is
+`b x + d x`, which vanishes at the absorbing state (`birthDeathRate_linear_zero`).  The defect is
+exactly the one `jumpProcessE` was built for, and the construction carries it
+(`jumpProcessE_of_absorbing`); what the theorem inherits from `jumpProcess_isMPSolution` through
+`jumpProcessE_eq_jumpProcess_clipWait` is the positivity, and it is inherited at a single place.
+
+The repair does not go through `clipWait` a second time.  It replaces the rate by
+
+```
+posRate lam = lam + {x | lam x = 0}.indicator 1,
+```
+
+which is positive everywhere, bounded by `max L 1`, and -- **this is the point** -- has the *same
+generator*, provided the jump kernel of an absorbing state is the Dirac measure at that state.
+That proviso is not a restriction on the model but a normalisation of data the generator cannot
+see: `jumpApply lam mu f x = lam x * ∫ (f y - f x) ∂(mu x)` is `0` at `lam x = 0` whatever `mu x`
+is, so the kernel there is free, and `birthDeathKernel` already chooses the Dirac measure
+("that last clause is forced and costs nothing").
+
+The two constructions then agree **almost surely** -- at an absorbing state the chain does not
+move (`ae_absorb_jumpMeasure`, which is where `mu x = Measure.dirac x` is spent), so the path of
+the positive rate revisits the same state at every later jump, while the path of the original rate
+sits there because its next jump time is `⊤`.  Almost sure equality is *not* enough for a natural
+filtration, and the thirteenth run of 2026-09-10 said so; what makes it enough here is that the
+martingale property is an identity between **integrals**.  The sets that agree with a set of `𝓖`
+up to a null set form a σ-algebra (`aeCompletion`), the natural filtration of a process lands in
+it as soon as the process agrees almost surely with the generator of `𝓖`
+(`naturalFiltration_le_aeCompletion`), and over such a filtration an almost surely equal process
+is again a martingale (`martingale_of_ae_eq_of_le_aeCompletion`).  None of those three mentions
+the jump construction. -/
+
+/-! ### The almost sure completion of a σ-algebra -/
+
+/-- **The sets that agree with a set of `m` up to a `P`-null set.**  A σ-algebra, and the reason a
+natural filtration -- which is not an almost sure notion -- can still be compared across two
+processes that agree almost surely. -/
+def aeCompletion {Ω : Type*} {m0 : MeasurableSpace Ω} (m : MeasurableSpace Ω)
+    (P : @Measure Ω m0) : MeasurableSpace Ω where
+  MeasurableSet' A := ∃ B, MeasurableSet[m] B ∧ A =ᵐ[P] B
+  measurableSet_empty := ⟨∅, MeasurableSet.empty, EventuallyEq.refl _ _⟩
+  measurableSet_compl := fun _ ⟨B, hB, hAB⟩ ↦ ⟨Bᶜ, hB.compl, hAB.compl⟩
+  measurableSet_iUnion := fun f hf ↦ by
+    choose B hB hfB using hf
+    refine ⟨⋃ i, B i, MeasurableSet.iUnion hB, ?_⟩
+    filter_upwards [ae_all_iff.2 hfB] with ω hω
+    show (ω ∈ ⋃ i, f i) = (ω ∈ ⋃ i, B i)
+    simp only [Set.mem_iUnion]
+    exact propext (exists_congr fun i ↦ Eq.to_iff (hω i))
+
+theorem le_aeCompletion {Ω : Type*} {m0 : MeasurableSpace Ω} (m : MeasurableSpace Ω)
+    (P : @Measure Ω m0) : m ≤ aeCompletion m P :=
+  fun _ hA ↦ ⟨_, hA, EventuallyEq.refl _ _⟩
+
+/-- **A martingale transfers to an almost surely equal process over a filtration that is almost
+surely smaller.**  The hypothesis on the filtration is not an inclusion: it says that every set of
+the past of `𝓕` agrees with a set of the past of `𝓖` up to a null set, which is all an identity
+between integrals can use. -/
+theorem martingale_of_ae_eq_of_le_aeCompletion {Ω ι' : Type*} [Preorder ι']
+    {m0 : MeasurableSpace Ω} {P : Measure Ω} [IsFiniteMeasure P] {𝓕 𝓖 : Filtration ι' m0}
+    (hle : ∀ i, (𝓕 i : MeasurableSpace Ω) ≤ aeCompletion (𝓖 i) P)
+    {Y Z : ι' → Ω → ℝ} (hZ : Martingale Z 𝓖 P) (hYZ : ∀ i, Y i =ᵐ[P] Z i)
+    (hadp : ∀ i, StronglyMeasurable[𝓕 i] (Y i)) :
+    Martingale Y 𝓕 P := by
+  have hint : ∀ i, Integrable (Y i) P := fun i ↦ (hZ.integrable i).congr (hYZ i).symm
+  refine ⟨hadp, fun i j hij ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j)
+    (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+  intro S hS _
+  obtain ⟨B, hB, hSB⟩ := hle i S hS
+  have e1 : ∀ k, ∫ ω in S, Y k ω ∂P = ∫ ω in B, Z k ω ∂P := fun k ↦ by
+    rw [setIntegral_congr_set hSB]
+    exact integral_congr_ae (ae_restrict_of_ae (hYZ k))
+  rw [e1 i, e1 j]
+  exact hZ.setIntegral_eq hij hB
+
+/-- **Two processes that agree almost surely have natural filtrations that agree up to null
+sets.** -/
+theorem naturalFiltration_le_aeCompletion {ι' : Type*} [Preorder ι'] {Ω : Type*}
+    {m0 : MeasurableSpace Ω} {F : Type*} [mF : MeasurableSpace F] {X Z : ι' → Ω → F}
+    (hX : ∀ i, Measurable (X i)) (hZ : ∀ i, Measurable (Z i)) {P : Measure Ω}
+    (h : ∀ i, X i =ᵐ[P] Z i) (i : ι') :
+    (naturalFiltration (m' := m0) X hX i : MeasurableSpace Ω)
+      ≤ aeCompletion (naturalFiltration (m' := m0) Z hZ i) P := by
+  show (⨆ j, ⨆ _ : j ≤ i, MeasurableSpace.comap (X j) mF) ≤ _
+  refine iSup₂_le fun j hji ↦ ?_
+  rintro A ⟨u, hu, rfl⟩
+  refine ⟨Z j ⁻¹' u, measurable_naturalFiltration hZ hji hu, ?_⟩
+  filter_upwards [h j] with ω hω
+  show (X j ω ∈ u) = (Z j ω ∈ u)
+  rw [hω]
+
+/-! ### The rate made positive -/
+
+variable {E : Type*}
+
+/-- **The rate lifted to `1` at its zeros.**  Positive everywhere, bounded by `max L 1`, and with
+the same generator as `lam` whenever the jump kernel of an absorbing state is the Dirac measure
+there (`jumpApply_posRate`). -/
+noncomputable def posRate (lam : E → ℝ) : E → ℝ :=
+  lam + {x | lam x = 0}.indicator fun _ ↦ (1 : ℝ)
+
+theorem posRate_of_ne {lam : E → ℝ} {x : E} (h : lam x ≠ 0) : posRate lam x = lam x := by
+  simp [posRate, Set.indicator_of_notMem (show x ∉ {x | lam x = 0} from h)]
+
+theorem posRate_of_eq {lam : E → ℝ} {x : E} (h : lam x = 0) : posRate lam x = 1 := by
+  simp [posRate, Set.indicator_of_mem (show x ∈ {x | lam x = 0} from h), h]
+
+theorem posRate_pos {lam : E → ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (x : E) : 0 < posRate lam x := by
+  by_cases h : lam x = 0
+  · rw [posRate_of_eq h]; exact one_pos
+  · rw [posRate_of_ne h]; exact lt_of_le_of_ne (hlam0 x) (Ne.symm h)
+
+theorem posRate_le {lam : E → ℝ} {L : ℝ} (hL : ∀ x, lam x ≤ L) (x : E) :
+    posRate lam x ≤ max L 1 := by
+  by_cases h : lam x = 0
+  · rw [posRate_of_eq h]; exact le_max_right _ _
+  · rw [posRate_of_ne h]; exact (hL x).trans (le_max_left _ _)
+
+theorem measurable_posRate [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam) :
+    Measurable (posRate lam) :=
+  hlam.add (measurable_const.indicator (hlam (measurableSet_singleton 0)))
+
+/-- **The generator does not see the lift.**  At a state of vanishing rate the generator is `0`
+whatever the jump kernel is, so prescribing the Dirac measure there costs nothing and makes the
+lifted rate reproduce it. -/
+theorem jumpApply_posRate [MeasurableSpace E] [MeasurableEq E] {lam : E → ℝ} {mu : Kernel E E}
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x) (f : E → ℝ) :
+    jumpApply (posRate lam) mu f = jumpApply lam mu f := by
+  funext x
+  by_cases h : lam x = 0
+  · rw [jumpApply, jumpApply, habs x h, integral_dirac (fun y ↦ f y - f x) x, sub_self,
+      mul_zero, mul_zero]
+  · rw [jumpApply, jumpApply, posRate_of_ne h]
+
+theorem jumpOperator_posRate [MeasurableSpace E] [MeasurableEq E] {lam : E → ℝ} {mu : Kernel E E}
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x) :
+    jumpOperator (posRate lam) mu = jumpOperator lam mu := by
+  ext p
+  simp only [jumpOperator, Set.mem_setOf_eq, jumpApply_posRate habs]
+
+/-! ### The chain does not move at an absorbing state -/
+
+variable [MeasurableSpace E]
+
+/-- A measure whose push forward is a Dirac measure is carried by the point. -/
+theorem ae_eq_of_map_eq_dirac {Ω' : Type*} [MeasurableSpace Ω'] [MeasurableSingletonClass E]
+    {P : Measure Ω'} {f : Ω' → E} (hf : Measurable f) {z : E} (h : P.map f = Measure.dirac z) :
+    ∀ᵐ ω ∂P, f ω = z := by
+  rw [ae_iff]
+  have hset : {ω | ¬ f ω = z} = f ⁻¹' ({z}ᶜ) := by ext ω; simp
+  rw [hset, ← Measure.map_apply hf (measurableSet_singleton z).compl, h]
+  simp
+
+/-- **The law of the first step of the chain.**  A corollary of the Markov property
+`chainKernel_map_shift` and of `comp_chainKernel_map_zero`. -/
+theorem chainKernel_map_one (mu : Kernel E E) [IsMarkovKernel mu] (z : E) :
+    (chainKernel mu z).map (fun x : ℕ → E ↦ x 1) = mu z := by
+  have hmeas : Measurable (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  have hcomp : (fun x : ℕ → E ↦ x 1)
+      = (fun x : ℕ → E ↦ x 0) ∘ (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) := rfl
+  rw [hcomp, ← Measure.map_map (measurable_pi_apply 0) hmeas, chainKernel_map_shift,
+    comp_chainKernel_map_zero]
+
+/-- **At a state of vanishing rate the chain does not move**, in one step and from a fixed start.
+This is the only place where the hypothesis on the jump kernel is spent. -/
+theorem ae_absorb_chainKernel [MeasurableEq E] (mu : Kernel E E) [IsMarkovKernel mu]
+    {lam : E → ℝ} (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x) (z : E) :
+    ∀ᵐ y ∂(chainKernel mu z), lam (y 0) = 0 → y 1 = y 0 := by
+  have h0 : ∀ᵐ y ∂(chainKernel mu z), y 0 = z :=
+    ae_eq_of_map_eq_dirac (measurable_pi_apply 0) (chainKernel_map_zero mu z)
+  by_cases hz : lam z = 0
+  · have h1 : ∀ᵐ y ∂(chainKernel mu z), y 1 = z :=
+      ae_eq_of_map_eq_dirac (measurable_pi_apply 1)
+        (by rw [chainKernel_map_one mu z, habs z hz])
+    filter_upwards [h0, h1] with y hy0 hy1 _
+    rw [hy0, hy1]
+  · filter_upwards [h0] with y hy0 hy
+    rw [hy0] at hy
+    exact absurd hy hz
+
+/-- **The Markov property of the chain, started from a measure.** -/
+theorem comp_chainKernel_map_shift (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] :
+    (chainKernel mu ∘ₘ nu).map (fun x : ℕ → E ↦ fun n ↦ x (n + 1))
+      = chainKernel mu ∘ₘ (mu ∘ₘ nu) := by
+  have hmeas : Measurable (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  have hker : (chainKernel mu).map (fun x : ℕ → E ↦ fun n ↦ x (n + 1))
+      = (chainKernel mu) ∘ₖ mu := by
+    ext z : 1
+    rw [Kernel.map_apply _ hmeas, chainKernel_map_shift, Kernel.comp_apply]
+  rw [Measure.map_comp _ _ hmeas, hker, ← Measure.comp_assoc]
+
+/-- **At a state of vanishing rate the chain does not move**, at every index and from any initial
+law.  The induction is on the index and the initial law moves with it, which is what
+`comp_chainKernel_map_shift` is for. -/
+theorem ae_absorb_comp_chainKernel [MeasurableEq E] (mu : Kernel E E) [IsMarkovKernel mu]
+    {lam : E → ℝ} (hlam : Measurable lam)
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x) (n : ℕ) :
+    ∀ (nu : Measure E), IsProbabilityMeasure nu →
+      ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), lam (y n) = 0 → y (n + 1) = y n := by
+  have hmeas : Measurable (fun x : ℕ → E ↦ fun k ↦ x (k + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  induction n with
+  | zero =>
+    intro nu hnu
+    have hS : MeasurableSet {y : ℕ → E | lam (y 0) = 0 → y 1 = y 0} := by
+      have h1 : MeasurableSet {y : ℕ → E | lam (y 0) = 0} :=
+        (hlam.comp (measurable_pi_apply 0)) (measurableSet_singleton 0)
+      have h2 : MeasurableSet {y : ℕ → E | y 1 = y 0} :=
+        measurableSet_eq_fun (measurable_pi_apply 1) (measurable_pi_apply 0)
+      have hsplit : {y : ℕ → E | lam (y 0) = 0 → y 1 = y 0}
+          = {y : ℕ → E | lam (y 0) = 0}ᶜ ∪ {y : ℕ → E | y 1 = y 0} := by
+        ext y; simp [imp_iff_not_or]
+      rw [hsplit]
+      exact h1.compl.union h2
+    exact Measure.ae_comp_of_ae_ae hS
+      (Filter.Eventually.of_forall fun z ↦ ae_absorb_chainKernel mu habs z)
+  | succ n ih =>
+    intro nu hnu
+    have hstep := ih (mu ∘ₘ nu) inferInstance
+    rw [← comp_chainKernel_map_shift mu nu] at hstep
+    exact ae_of_ae_map hmeas.aemeasurable hstep
+
+theorem jumpMeasure_map_fst (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] : (jumpMeasure mu nu).map Prod.fst = chainKernel mu ∘ₘ nu := by
+  rw [jumpMeasure, Measure.map_fst_prod, measure_univ, one_smul]
+
+/-- **At a state of vanishing rate the chain does not move**, under the driving measure of the
+jump construction. -/
+theorem ae_absorb_jumpMeasure [MeasurableEq E] (mu : Kernel E E) [IsMarkovKernel mu]
+    {lam : E → ℝ} (hlam : Measurable lam)
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x) (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n := by
+  refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.1)
+    (p := fun y : ℕ → E ↦ ∀ n, lam (y n) = 0 → y (n + 1) = y n) measurable_fst.aemeasurable ?_
+  rw [jumpMeasure_map_fst]
+  exact ae_all_iff.2 fun n ↦ ae_absorb_comp_chainKernel mu hlam habs n nu inferInstance
+
+/-- **The waiting times of the jump construction diverge**, almost surely. -/
+theorem ae_tendsto_sum_snd_jumpMeasure (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu),
+      Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop := by
+  refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2)
+    (p := fun xi : ℕ → ℝ ↦ Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop)
+    measurable_snd.aemeasurable ?_
+  rw [jumpMeasure_map_snd]
+  exact tendsto_sum_waiting_atTop
+
+/-! ### The two constructions agree at almost every sample point -/
+
+/-- **The jump times read the rate only at the states already visited.** -/
+theorem jumpTimeE_congr_of_lt {lam lam' : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ} {n : ℕ}
+    (h : ∀ m, m < n → lam' (y m) = lam (y m)) :
+    jumpTimeE lam' y xi n = jumpTimeE lam y xi n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    rw [jumpTimeE_succ, jumpTimeE_succ, ih fun m hm ↦ h m (hm.trans (Nat.lt_succ_self n)),
+      h n (Nat.lt_succ_self n)]
+
+/-- **Once the chain is at a state of vanishing rate it stays there.** -/
+theorem chain_const_of_absorb {lam : E → ℝ} {y : ℕ → E} {N : ℕ}
+    (hy : ∀ n, lam (y n) = 0 → y (n + 1) = y n) (hN : lam (y N) = 0) :
+    ∀ m, N ≤ m → y m = y N := by
+  intro m
+  induction m with
+  | zero => intro hm; rw [Nat.le_zero.1 hm]
+  | succ m ih =>
+    intro hm
+    rcases Nat.lt_or_ge N (m + 1) with h | h
+    · have hym := ih (Nat.lt_succ_iff.1 h)
+      have hzero : lam (y m) = 0 := by rw [hym]; exact hN
+      rw [hy m hzero, hym]
+    · rw [Nat.le_antisymm h hm]
+
+/-- **The lifted rate gives the same path**, at every time, on a sample point at which the waiting
+times are positive, the chain does not move at a state of vanishing rate, and the waiting times
+diverge.
+
+The two constructions part company only past the first absorbing index `N`, and there they agree
+for two different reasons: the original path stops because its `(N+1)`-st jump time is `⊤`
+(`jumpTimeE_succ_eq_top`), the lifted one keeps jumping but every state it jumps to is `y N`
+(`chain_const_of_absorb`).  The divergence of the waiting times is what makes the lifted step
+index exist -- without it the junk value of `stepIndex` would be returned on the left and not on
+the right, and that is the one place where an almost sure hypothesis really is needed. -/
+theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ n, 0 < ω.2 n)
+    (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) (t : ℝ) :
+    jumpProcessE (posRate lam) t ω = jumpProcessE lam t ω := by
+  classical
+  set y := ω.1 with hy1
+  set xi := ω.2 with hxi2
+  show stepPath (jumpTimeE (posRate lam) y xi) y (ENNReal.ofReal t)
+      = stepPath (jumpTimeE lam y xi) y (ENNReal.ofReal t)
+  by_cases hex : ∃ n, lam (y n) = 0
+  · have hN : lam (y (Nat.find hex)) = 0 := Nat.find_spec hex
+    have hlt : ∀ m, m < Nat.find hex → lam (y m) ≠ 0 := fun m hm ↦ Nat.find_min hex hm
+    have hTeq : ∀ n, n ≤ Nat.find hex →
+        jumpTimeE (posRate lam) y xi n = jumpTimeE lam y xi n := fun n hn ↦
+      jumpTimeE_congr_of_lt fun m hm ↦ posRate_of_ne (hlt m (hm.trans_le hn))
+    have hTtop : jumpTimeE lam y xi (Nat.find hex + 1) = ⊤ :=
+      jumpTimeE_succ_eq_top (hxi (Nat.find hex)) hN
+    have hconst : ∀ m, Nat.find hex ≤ m → y m = y (Nat.find hex) :=
+      chain_const_of_absorb hy hN
+    have hne : (y, xi) ∈ NonExplosiveE (posRate lam) :=
+      mem_nonExplosiveE_of_traj (lt_of_lt_of_le zero_lt_one (le_max_right L 1))
+        (fun k ↦ posRate_pos hlam0 (y k)) (fun k ↦ posRate_le hL (y k))
+        (fun k ↦ (hxi k).le) hsum
+    have hjex : ∃ n, ENNReal.ofReal t < jumpTimeE lam y xi (n + 1) :=
+      ⟨Nat.find hex, by rw [hTtop]; exact ENNReal.ofReal_lt_top⟩
+    simp only [stepPath]
+    set j := stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) with hjdef
+    set k := stepIndex (jumpTimeE (posRate lam) y xi) (ENNReal.ofReal t) with hkdef
+    have hjN : j ≤ Nat.find hex := stepIndex_le (by rw [hTtop]; exact ENNReal.ofReal_lt_top)
+    have hjs : ENNReal.ofReal t < jumpTimeE lam y xi (j + 1) := lt_stepIndex_succ hjex
+    have hks : ENNReal.ofReal t < jumpTimeE (posRate lam) y xi (k + 1) :=
+      lt_stepIndex_succ (hne t)
+    have hkj : k < Nat.find hex → j ≤ k := fun hkN ↦
+      stepIndex_le (by rw [← hTeq (k + 1) (Nat.succ_le_of_lt hkN)]; exact hks)
+    rcases Nat.lt_or_ge j (Nat.find hex) with hjlt | hjge
+    · have hjk : k ≤ j := stepIndex_le (by rw [hTeq (j + 1) (Nat.succ_le_of_lt hjlt)]; exact hjs)
+      rw [le_antisymm hjk (hkj (lt_of_le_of_lt hjk hjlt))]
+    · have hjN' : j = Nat.find hex := le_antisymm hjN hjge
+      have hkN : Nat.find hex ≤ k := by
+        by_contra hcon
+        push_neg at hcon
+        have h1 : j ≤ k := hkj hcon
+        rw [hjN'] at h1
+        exact absurd hcon (not_lt.2 h1)
+      rw [hconst k hkN, hjN']
+  · push_neg at hex
+    have hTeq : jumpTimeE (posRate lam) y xi = jumpTimeE lam y xi :=
+      funext fun n ↦ jumpTimeE_congr_of_lt fun m _ ↦ posRate_of_ne (hex m)
+    rw [hTeq]
+
+/-! ### The theorem -/
+
+/-- **`thm:jumpMP` for the local construction at a rate with zeros.**  The same conclusion as
+`jumpProcessE_isMPSolution`, with `0 < lam` weakened to `0 ≤ lam` and the jump kernel of an
+absorbing state prescribed to be the Dirac measure there -- data the generator cannot see, and
+data `birthDeathKernel` already carries.
+
+`[MeasurableEq E]` -- Mathlib's class for a measurable diagonal, implied by `[StandardBorelSpace]`
+and by `[Countable] [MeasurableSingletonClass]` -- is what makes "the chain does not move" a
+measurable statement; it is used nowhere else. -/
+theorem jumpProcessE_isMPSolution_of_nonneg [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  have hlamP : Measurable (posRate lam) := measurable_posRate hlam
+  have hae : ∀ᵐ ω ∂(jumpMeasure mu nu), ∀ t : ℝ,
+      jumpProcessE (posRate lam) t ω = jumpProcessE lam t ω := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu, ae_absorb_jumpMeasure mu hlam habs nu,
+      ae_tendsto_sum_snd_jumpMeasure mu nu] with ω h1 h2 h3 t
+    exact jumpProcessE_posRate_eq hlam0 hL h1 h2 h3 t
+  intro Y hY
+  obtain ⟨p, hp, hYeq⟩ := hY
+  have hpP : p ∈ jumpOperator (posRate lam) mu := by rw [jumpOperator_posRate habs]; exact hp
+  obtain ⟨Z, hZmem, hZeq⟩ : ∃ Z : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ,
+      Z ∈ mpFamily (jumpOperator (posRate lam) mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE (posRate lam) (t : ℝ) ω) ∧
+      ∀ t ω, Z t ω = p.1 (jumpProcessE (posRate lam) (t : ℝ) ω)
+        - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            p.2 (jumpProcessE (posRate lam) (s : ℝ) ω) ∂lebesgueClock.q :=
+    ⟨_, ⟨p, hpP, fun _ _ ↦ rfl⟩, fun _ _ ↦ rfl⟩
+  have hmart : Martingale Z (jumpFiltrationE (posRate lam) hlamP) (jumpMeasure mu nu) :=
+    jumpProcessE_isMPSolution hlamP (posRate_pos hlam0) (fun x ↦ posRate_le hL x) mu nu Z hZmem
+  refine martingale_of_ae_eq_of_le_aeCompletion ?_ hmart ?_
+    (stronglyAdapted_mpFamily_jumpProcessE hlam Clock.Conv.optional ⟨p, hp, hYeq⟩)
+  · intro i
+    refine naturalFiltration_le_aeCompletion _ _ (fun s ↦ ?_) i
+    filter_upwards [hae] with ω hω
+    exact (hω (s : ℝ)).symm
+  · intro i
+    filter_upwards [hae] with ω hω
+    rw [hYeq i ω, hZeq i ω]
+    simp only [← hω]
+
+/-! ### The local solution at a rate with zeros -/
+
+variable {mu : Kernel E E} [IsMarkovKernel mu]
+
+/-- **The stopped martingale theorem at a rate with zeros.**  Word for word
+`martingale_stoppedProcess_mpFamily_jumpProcessE`, with the positivity of the rate replaced by its
+nonnegativity together with the normalisation of the jump kernel at the absorbing states; the
+positivity was spent only in `jumpProcessE_isMPSolution`, and the three inputs of
+`martingale_stoppedProcess` never asked for more than `0 ≤ lam`. -/
+theorem martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg [MeasurableEq E]
+    {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    {τ : ((ℕ → E) × (ℕ → ℝ)) → ENNReal}
+    (hτ : IsStoppingTime (jumpFiltrationE lam hlam) τ) :
+    Martingale (stoppedProcess Y τ) (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  have hmart := jumpProcessE_isMPSolution_of_nonneg hlam hlam0 hL mu habs nu Y hY
+  have hprog := isStronglyProgressive_mpFamily_jumpProcessE hlam hlam0 hL hY
+  have hrcY := tendsto_nhdsGE_mpFamily_jumpProcessE hlam hlam0 hL hY
+  have hnem : Nonempty E := by
+    by_contra hcon
+    rw [not_nonempty_iff] at hcon
+    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
+    rw [measure_univ] at h0
+    exact one_ne_zero h0
+  obtain ⟨x0⟩ := hnem
+  have hL0 : (0 : ℝ) ≤ L := (hlam0 x0).trans (hL x0)
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hC0 : (0 : ℝ) ≤ C := (abs_nonneg _).trans (hC x0)
+  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
+    rw [hp2]; exact fun x ↦ abs_jumpApply_le hlam0 hL hC x
+  have hcoef : (0 : ℝ) ≤ 2 * L * C := mul_nonneg (mul_nonneg (by norm_num) hL0) hC0
+  have hbdd : ∀ j : ℝ≥0, ∃ C', ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C' := by
+    intro j
+    refine ⟨C + 2 * L * C * (j : ℝ), fun s hs ω ↦ ?_⟩
+    have hb := abs_setIntegral_compensatorE_le (lam := lam) hgb s ω
+    have h1 := hC (jumpProcessE lam (s : ℝ) ω)
+    have h2 := abs_sub (p.1 (jumpProcessE lam (s : ℝ) ω))
+      (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
+        p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)
+    have hsj : ((s : ℝ)) ≤ (j : ℝ) := by exact_mod_cast hs
+    have hmul : 2 * L * C * (s : ℝ) ≤ 2 * L * C * (j : ℝ) :=
+      mul_le_mul_of_nonneg_left hsj hcoef
+    rw [hYeq s ω]
+    linarith
+  exact martingale_stoppedProcess hmart hprog hrcY hbdd hτ
+
+/-- **The truncated rate has the same zeros as the rate**, from the level `1` on: the truncation
+is a minimum with a positive number. -/
+theorem truncRate_eq_zero_iff {lam : E → ℝ} (hlam0 : ∀ x, 0 ≤ lam x) {n : ℕ} (hn : 0 < n)
+    (x : E) : truncRate lam n x = 0 ↔ lam x = 0 := by
+  have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  constructor
+  · intro h
+    rcases min_choice (lam x) ((n : ℝ)) with h1 | h1
+    · rw [truncRate, h1] at h; exact h
+    · rw [truncRate, h1] at h; exact absurd h hnpos.ne'
+  · intro h
+    rw [truncRate, h, min_eq_left hnpos.le]
+
+/-- **The jump process solves its martingale problem locally at a rate with zeros.**  Word for
+word `jumpProcess_isLocalMPSolution`, with `∀ x, 0 < lam x` replaced by `∀ x, 0 ≤ lam x` and the
+normalisation of the jump kernel at the absorbing states.  The truncated rate inherits both
+(`truncRate_eq_zero_iff`), so the only line of the old proof that changes is the one that calls
+the bounded theorem. -/
+theorem jumpProcess_isLocalMPSolution_of_nonneg [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x)
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    IsLocalMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  intro Y hY
+  have hloc : ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam)
+      (fun n ↦ rateTime lam (n + 1)) (jumpMeasure mu nu) := by
+    have h1 : ∀ n : ℕ, IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam (n + 1)) :=
+      fun n ↦ isStoppingTime_rateTime hlam (n + 1)
+    have h2 : ∀ᵐ ω ∂(jumpMeasure mu nu),
+        Filter.Tendsto (fun n : ℕ ↦ rateTime lam (n + 1) ω) Filter.atTop (𝓝 ⊤) := by
+      filter_upwards [hne] with ω hω
+      exact (tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω).comp
+        (Filter.tendsto_add_atTop_nat 1)
+    have h3 : ∀ᵐ ω ∂(jumpMeasure mu nu), Monotone fun n : ℕ ↦ rateTime lam (n + 1) ω :=
+      Filter.Eventually.of_forall fun ω a b hab ↦ monotone_rateTime lam ω (Nat.succ_le_succ hab)
+    exact ⟨⟨h1, h2⟩, h3⟩
+  refine ⟨fun n ↦ rateTime lam (n + 1), hloc, fun n ↦ ?_⟩
+  obtain ⟨p, hpmem, hYeq⟩ := id hY
+  obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hpmem
+  have hY'mem : (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        p.1 (jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω)
+          - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+              jumpApply (truncRate lam (n + 1)) mu p.1
+                (jumpProcessE (truncRate lam (n + 1)) (s : ℝ) ω) ∂lebesgueClock.q)
+      ∈ mpFamily (jumpOperator (truncRate lam (n + 1)) mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω) :=
+    ⟨(p.1, jumpApply (truncRate lam (n + 1)) mu p.1), ⟨hf, ⟨C, hC⟩, rfl⟩, fun t ω ↦ rfl⟩
+  have habs' : ∀ x, truncRate lam (n + 1) x = 0 → mu x = Measure.dirac x := fun x hx ↦
+    habs x ((truncRate_eq_zero_iff hlam0 n.succ_pos x).1 hx)
+  have hmartH := martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg
+    (measurable_truncRate hlam (n + 1))
+    (fun x ↦ le_min (hlam0 x) (Nat.cast_nonneg _)) (truncRate_le lam (n + 1)) habs'
+    nu hY'mem (isStoppingTime_rateTime_truncRate hlam (n + 1))
+  have hYfun : Y = fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      p.1 (jumpProcessE lam (t : ℝ) ω)
+        - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            jumpApply lam mu p.1 (jumpProcessE lam (s : ℝ) ω) ∂lebesgueClock.q := by
+    funext t ω; rw [hYeq t ω, hp2]
+  have heqZ : stoppedProcess (fun (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        p.1 (jumpProcessE (truncRate lam (n + 1)) (t : ℝ) ω)
+          - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+              jumpApply (truncRate lam (n + 1)) mu p.1
+                (jumpProcessE (truncRate lam (n + 1)) (s : ℝ) ω) ∂lebesgueClock.q)
+        (rateTime lam (n + 1))
+      = stoppedProcess Y (rateTime lam (n + 1)) := by
+    rw [hYfun]
+    exact funext fun j ↦ funext fun ω ↦ stoppedProcess_mpFamily_truncRate_eq j ω
+  rw [heqZ] at hmartH
+  have hZad := stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE hlam hY
+    (isStoppingTime_rateTime hlam (n + 1))
+  have hmartG : Martingale (stoppedProcess Y (rateTime lam (n + 1)))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+    refine martingale_of_martingale_of_stopped hZad hmartH ?_
+      (isStoppingTime_rateTime hlam (n + 1))
+      fun j A hA ↦ jumpFiltrationE_inter_lt_rateTime hlam hA
+    intro j k hjk ω hstop
+    rw [stoppedProcess_eq_of_ge hstop,
+      stoppedProcess_eq_of_ge (hstop.trans (ENNReal.coe_le_coe.2 hjk))]
+  have hbot : MeasurableSet[jumpFiltrationE lam hlam ⊥]
+      {ω : (ℕ → E) × (ℕ → ℝ) | (⊥ : ENNReal) < rateTime lam (n + 1) ω} := by
+    refine MeasurableSet.congr ((isStoppingTime_rateTime hlam (n + 1)) ⊥).compl ?_
+    ext ω
+    simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+    exact not_le
+  exact martingale_indicator_bot hmartG hbot
+
+end AbsorbingRate

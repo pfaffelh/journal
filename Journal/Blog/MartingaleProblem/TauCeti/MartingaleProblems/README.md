@@ -1550,9 +1550,87 @@ A concrete family of solutions, built without any of the theory above. Index
   process is the process of `truncRate lam n`, which **is** of bounded rate; that
   process solves the bounded problem for its own filtration
   (`jumpProcessE_isMPSolution`); and before the hitting time that filtration is
-  the one asked for. The level `n = 0` is not a special case to be argued around:
-  `rateTime lam 0 = 0 = ⊥`, and `Locally` prefixes the stopped process with the
-  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`.
+  the one asked for. **In Lean** on 2026-09-10, eighteenth run, in
+  `section LocalSolution` of `Suggested.lean`, under `Measurable lam`,
+  `∀ x, 0 < lam x` and `∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam`; the
+  third of those is discharged at the data by `ae_mem_nonExplosiveE_jumpMeasure`.
+  The localizing sequence is `fun n ↦ rateTime lam (n + 1)` and not `rateTime lam`,
+  and the shift is not cosmetic: `truncRate lam 0` is the zero rate, at which no
+  bounded theorem applies, while `rateTime_zero` says the level `0` stops at once
+  in any case. A subsequence of a localizing sequence is one, so the shift costs
+  nothing.
+* `jumpProcessE_isMPSolution_of_nonneg`: **`thm:jumpMP` for the local construction
+  at a rate with zeros**, that is under `0 ≤ lam ≤ L` in place of `0 < lam ≤ L`,
+  together with `∀ x, lam x = 0 → mu x = Measure.dirac x` and `[MeasurableEq E]`.
+  **Proved** on 2026-09-10, nineteenth run. The positivity was inherited at a
+  single place — the transport of `jumpProcess_isMPSolution` along `clipWait`
+  (`jumpProcessE_eq_jumpProcess_clipWait`), which identifies the two constructions
+  only where the holding times are positive — and it is exactly what kept the
+  linear birth and death chain out of the local theorem, its rate `b x + d x`
+  vanishing at the absorbing state `0` (`birthDeathRate_linear_zero`).
+
+  The proof replaces the rate rather than the transport. `posRate lam` is
+  `lam + {x | lam x = 0}.indicator 1`: positive everywhere, bounded by `max L 1`,
+  and with the **same generator** (`jumpApply_posRate`, `jumpOperator_posRate`),
+  because `jumpApply lam mu f x = lam x * ∫ (f y - f x) ∂(mu x)` vanishes at
+  `lam x = 0` whatever `mu x` is. The jump kernel at an absorbing state is
+  therefore data the generator cannot see, and prescribing it to be the Dirac
+  measure there is a normalisation and not a restriction — `birthDeathKernel`
+  already makes that choice. It is spent in exactly one lemma,
+  `ae_absorb_jumpMeasure`.
+* `aeCompletion`, `martingale_of_ae_eq_of_le_aeCompletion`,
+  `naturalFiltration_le_aeCompletion`: **the almost sure comparison of two natural
+  filtrations**, none of them mentioning the jump construction. The sets that agree
+  with a set of `m` up to a `P`-null set form a σ-algebra; the natural filtration
+  of a process lands in the one built over a second process as soon as the two
+  agree almost surely at every index; and over a filtration that is almost surely
+  smaller in that sense an almost surely equal process is again a martingale,
+  because the martingale property is an identity between **integrals**. This is
+  what makes an almost sure identity of processes usable where a natural
+  filtration — which is not an almost sure notion — is the conclusion.
+* `ae_absorb_jumpMeasure`: **at a state of vanishing rate the embedded chain does
+  not move**, `jumpMeasure mu nu`-almost surely, under
+  `∀ x, lam x = 0 → mu x = Measure.dirac x`. It rests on `chainKernel_map_one` —
+  the law of the first step, a corollary of `chainKernel_map_shift` and
+  `comp_chainKernel_map_zero` — and on `comp_chainKernel_map_shift`, which carries
+  the induction on the index by moving the initial law. `[MeasurableEq E]`,
+  Mathlib's class for a measurable diagonal, is what makes "the chain does not
+  move" a measurable statement, and it is used nowhere else.
+* `jumpProcessE_posRate_eq`: **the lifted rate gives the same path**, at every
+  time and at every sample point at which the waiting times are positive, the
+  chain does not move at a state of vanishing rate, and the waiting times diverge.
+  Past the first absorbing index `N` the two constructions agree for two different
+  reasons: the original path stops because its `(N+1)`-st jump time is `⊤`
+  (`jumpTimeE_succ_eq_top`), the lifted one keeps jumping but every state it jumps
+  to is `y N` (`chain_const_of_absorb`). The divergence of the waiting times is
+  what makes the lifted step index exist; without it `stepIndex` returns its junk
+  value on one side and not on the other.
+* `martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg` and
+  `jumpProcess_isLocalMPSolution_of_nonneg`: the two theorems above under
+  `0 ≤ lam` and the same normalisation of the jump kernel. **Proved** on
+  2026-09-10, nineteenth run. The truncated rate has the same zeros as the rate
+  from the level `1` on (`truncRate_eq_zero_iff`), so the normalisation is
+  inherited by every level of the localization and the only line of either proof
+  that changes is the one calling the bounded theorem.
+* `mem_nonExplosiveE_of_absorb_or_tendsto_sum`: **non explosion at a rate with
+  zeros**, that is at a sample point whose chain either reaches a state of
+  vanishing rate — where `mem_nonExplosiveE_of_rate_zero` already applies, the
+  next jump time being `⊤` — or has non summable reciprocal rates, where
+  `mem_nonExplosiveE_of_tendsto_sum` applies. The disjunction is not a convenience:
+  `ae_mem_nonExplosiveE` and `ae_mem_nonExplosiveE_jumpMeasure` both ask
+  `∀ k, 0 < lam (y k)` along the chain, and the linear birth and death chain
+  fails that hypothesis on the extinction event, which has positive probability.
+  It rests on `chain_const_of_absorb` for the first branch and on nothing new for
+  the second.
+* `ae_mem_nonExplosiveE_linearBirthDeath` and
+  `linearBirthDeath_isLocalMPSolution`: the linear birth and death chain as an
+  instance of `jumpProcess_isLocalMPSolution_of_nonneg`. Its rate is
+  `birthDeathRate (fun x ↦ β * x) (fun x ↦ δ * x)`, unbounded
+  (`not_bddAbove_birthDeathRate_linear`) and vanishing at `0`
+  (`birthDeathRate_linear_zero`), so it is the one acceptance example of this
+  milestone that exercises the local branch on both counts. The normalisation of
+  the jump kernel at the absorbing state is `birthDeathKernel_apply` read at
+  `b x + d x = 0`, where the kernel is the Dirac measure by construction.
 * `martingale_stoppedProcess_mpFamily_jumpProcessE`: **the stopped test process of
   the local jump problem is a martingale**, at every stopping time of its natural
   filtration and under the hypotheses of `jumpProcessE_isMPSolution`. This is the
@@ -1617,8 +1695,8 @@ A concrete family of solutions, built without any of the theory above. Index
   is the fourth hypothesis on the jump construction.
 * `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE`: **the stopped test
   process of the local problem is adapted to the local filtration**, under
-  `Measurable lam` and nothing else about the rate. This is the one input the
-  assembly is still missing, and it is not
+  `Measurable lam` and nothing else about the rate. **In Lean** on 2026-09-10,
+  eighteenth run. It is not
   `IsStronglyProgressive.stronglyAdapted_stoppedProcess` applied to
   `isStronglyProgressive_mpFamily_jumpProcessE`: that statement carries a bound on
   the rate, and the bound is not a convenience there. For an unbounded rate the
@@ -1632,11 +1710,17 @@ A concrete family of solutions, built without any of the theory above. Index
   therefore about the stopped process and has to be proved of it. The route: the
   first summand `p.1 (X_{i∧τ})` is `stoppedProcess` of the state process and is
   reached by `measurable_uncurry_jumpProcessE`, which asks nothing of the rate; the
-  compensator is `∫_0^i g(u, ·) du` with
-  `g(u, ω) = {ofReal u < τ ω}.indicator (fun _ ↦ p.2 (X_u ω))`, an integrand
-  bounded by `2 n C` because `ofReal_lam_jumpProcessE_lt_of_lt_rateTime` bounds the
-  rate on the indicated set, and jointly measurable because
-  `IsStoppingTime.measurable_of_le` makes `min i τ` measurable for `𝓖 i`.
+  compensator is the **fixed** window `∫_{(⊥, i]} g(u, ·) dq` with
+  `g(u, ω) = {q | q.1 ≤ σ q.2}.indicator (fun q ↦ p.2 (X_{min q.1 i} q.2)) (u, ω)`
+  and `σ ω = (min i (τ ω)).untopA`, jointly measurable because
+  `IsStoppingTime.measurable_of_le` makes `min i τ`, unlike `τ`, measurable for
+  `𝓖 i`. A window whose *upper end* is random is a window of fixed length with a
+  cut off integrand, because `σ ≤ i`: that identity, `Set.Ioc_inter_Iic` and
+  `MeasureTheory.setIntegral_indicator` are the whole of the second summand. **No
+  bound on the integrand is spent**, and none is available: the cut off is what
+  replaces it, and the bound `2 n C` that the rate along the stopped path would
+  give is not needed, because measurability of a Bochner integral in a parameter
+  (`stronglyMeasurable_integral_comp`) asks for joint measurability alone.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for
@@ -1665,7 +1749,13 @@ A concrete family of solutions, built without any of the theory above. Index
   and `martingale_compensated_poisson` turns it into an actual
   `MeasureTheory.Martingale`: for every bounded `f : ℕ → ℝ` the compensated
   increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` is a martingale for the
-  natural filtration.
+  natural filtration. The same data are the emptiness probe of the **local**
+  theorem (`poissonProcess_isLocalMPSolution`, `ae_mem_nonExplosiveE_poisson`, in
+  Lean on 2026-09-10, eighteenth run): all three hypotheses of
+  `jumpProcess_isLocalMPSolution` discharged on data, the non explosion at *every*
+  chain because a constant rate turns the criterion into the divergence of `∑ 1`.
+  What that probe does **not** exhibit is an unbounded rate, which is the case the
+  local branch exists for; it is a witness against vacuity and not one of sharpness.
 
   **The one dimensional laws are Mathlib's Poisson laws**, in Lean on
   2026-09-10, fifth run, as `jumpMeasure_map_jumpProcess_poisson`:
@@ -1798,7 +1888,12 @@ A concrete family of solutions, built without any of the theory above. Index
   separately: `birthDeathRate_linear_zero` is the absorbing state and
   `not_bddAbove_birthDeathRate_linear` the unboundedness. It is therefore the only
   one of the three examples that exercises the local branch, and its non explosion
-  is `ae_mem_nonExplosiveE`.
+  is `mem_nonExplosiveE_of_absorb_or_tendsto_sum`. `ae_mem_nonExplosiveE` alone
+  does not reach it: that criterion asks `∀ k, 0 < lam (y k)` along the chain, and
+  the extinction event — which has positive probability — violates it. What the
+  disjunctive criterion adds is the branch the extinction event falls in, where
+  the next jump time is `⊤` (`mem_nonExplosiveE_of_rate_zero`) and no series has
+  to diverge at all.
 * **The path dependent variant is not a state dependent one.** The Hawkes
   process of the manuscript's `ex:hawkes`: `E = ℕ`,
   `mu (t, ω, ·) = Measure.dirac (ω t⁻ + 1)` and the rate
@@ -1808,6 +1903,79 @@ A concrete family of solutions, built without any of the theory above. Index
   why the variant is stated separately; and it never explodes, whatever the mass
   of `φ`, so it is an instance of the **global** statement and not only of the
   local one.
+
+### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
+
+*(Frage des Nutzers, 2026-09-10.)* Der Vorschlag war, den linearen
+Geburt-Tod-Prozeß **nach oben durch einen reinen Geburtsprozeß** abzuschätzen,
+dessen Wert zu fester Zeit geometrisch verteilt und damit f.s. endlich ist.
+
+**Das Argument stimmt, ist aber der teurere Weg.** Es verlangt eine *Kopplung*
+zweier Sprungprozesse — in Lean eine gemeinsame Konstruktion auf einem Raum samt
+pfadweisem Vergleich — und die geometrische Verteilung des Yule-Prozesses zur
+festen Zeit, die selbst erst zu beweisen wäre.
+
+**Was statt dessen genügt und seit dem 2026-09-10 bewiesen dasteht:**
+`ae_mem_nonExplosiveE` — divergiert `∑ k, (lam (y k))⁻¹` längs der *eingebetteten
+Kette*, so explodiert der Prozeß f.s. nicht. Für `lam (y k) = (β + δ) * y k`
+divergiert die Reihe in beiden Regimen: bei `δ ≥ β` ist die eingebettete
+Irrfahrt rekurrent oder abwärtsdriftend und besucht kleine Werte unendlich oft;
+bei `β > δ` wächst `y k` linear, also `∑ 1 / y k ~ ∑ 1 / ((p−q) k) = ∞`. Der
+Nachweis ist damit eine Aussage über eine **Irrfahrt**, nicht über einen
+stetigzeitigen Prozeß.
+
+**Eine Falle, die auf Papier unsichtbar ist.** „Zu fester Zeit geometrisch
+verteilt, also f.s. endlich, also keine Explosion" ist so **zirkulär**: um von
+`X t` zu sprechen, muß der Prozeß bei `t` bereits definiert sein. Sauber ist erst
+`∑ k, P (X t = k) = 1` für den *minimalen* Prozeß, also „es entweicht keine Masse
+nach unendlich" — und das **ist** die Nichtexplosion, nicht eine Folgerung
+daraus. In Lean bricht ein Beweis genau daran.
+
+**Als Akzeptanzbeispiel ist die Rechnung dennoch wertvoll.** Der Yule-Prozeß
+(`b x = β * x`, `d ≡ 0`) hat eine geschlossene eindimensionale Verteilung — von
+`1` gestartet ist `X t` geometrisch mit Parameter `exp (−β t)` —, und ein Leser
+kann das Ergebnis der Konstruktion gegen etwas Bekanntes prüfen, so wie beim
+Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Es gehört zu Punkt 5 und
+ist **nach** `jumpProcess_isLocalMPSolution` zu machen, nicht davor: es prüft
+die Konstruktion, es trägt sie nicht.
+
+### Bemerkung: was eine Domäne mit kompaktem Träger ändern würde
+
+*(Frage des Nutzers, 2026-09-10. Sie ist hier festgehalten, weil sie erklärt,
+wozu die Lokalisierung überhaupt da ist — nicht, weil dieser Weg gegangen werden
+soll.)*
+
+Ließe man in `A` nur Funktionen mit kompaktem Träger zu — auf `E = ℕ` also
+endlichem Träger —, so kehrte sich der Aufwand um.
+
+**Die Existenz würde billig.** Für `f` mit endlichem Träger ist `A f` außerhalb
+von `supp f ∪ (supp f ± 1)` gleich null, also selbst endlich getragen und damit
+**beschränkt**, obwohl `lam` es nicht ist. Dann ist
+`f (X t) − ∫₀ᵗ A f (X s) ds` auf beschränkten Intervallen beschränkt, und der
+ganze Lokalisierungsapparat — `rateSup`, `rateTime`,
+`isLocalizingSequence_rateTime`, `martingale_stoppedProcess` — entfiele.
+
+**Die Eindeutigkeit würde schwer**, und zwar aus zwei Gründen. Erstens ist `A`
+auf dieser Domäne **unbeschränkt**: für `f = indicator {n}` ist
+`‖A f‖ = max (β n) (δ n) → ∞`, also trägt die Picard-Iteration von
+`exists_unique_of_bounded` nicht mehr und man wäre bei Hille--Yosida, was
+`rem:noch1` des Manuskripts ausschließt. Zweitens, und das ist keine technische
+Hürde: bei einem **explodierenden** Prozeß hat das Martingalproblem über dieser
+Domäne *mehrere* Lösungen — nach der Explosionszeit darf man neu starten, und
+Testfunktionen mit endlichem Träger sehen das nicht. Eindeutigkeit über der
+Domäne mit kompaktem Träger ist daher gleichwertig zur **Nichtexplosion**, der
+klassische Punkt bei minimalen Ketten. Für den linearen Geburt-Tod-Prozeß mit
+`β, δ > 0` ist sie erfüllt (`∑ 1/(β n)` divergiert), aber ihr Beweis wäre dann
+der Kern der Sache statt eines Nebenprodukts.
+
+**Warum dieser Weg nicht gegangen wird.** Das Manuskript hält bei `:333` fest,
+daß es auf einem allgemeinen polnischen Raum **kein `C_c(E)`** gibt; die ganze
+Konstruktion hier steht über bloßem `[MeasurableSpace E]`. Die Domäne mit
+kompaktem Träger wäre ein Rückschritt in der Allgemeinheit für einen Gewinn, der
+nur bei diskretem `E` eintritt. Wer sie dennoch untersuchen will, hat mit
+`mem_nonExplosiveE_iff_tsum_eq_top` und `ae_mem_nonExplosiveE` (2026-09-10) die
+Nichtexplosion schon bewiesen daliegen — es wäre eine zweite, unabhängige Route
+zum selben Beispiel, und der Vergleich beider wäre für sich lehrreich.
 
 ## Milestone 5: mixtures, shifts and the restart lemma
 
