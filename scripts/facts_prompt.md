@@ -14,51 +14,9 @@ Drei Teile, streng nacheinander. Ein Teil wird **nicht** angefangen, solange ein
 früherer offen ist. (Reihenfolge vom Nutzer am 2026-09-09 so festgelegt: erst
 der Pfadraum, dann die schwache Konvergenz fertig, dann die Prozesse.)
 
-2. `exists_ae_tendsto_of_tendsto` — die Skorohod-Darstellung, der Zusammenbau.
-   Alle Bausteine stehen.
-
-   **Zwischenstand 2026-09-09, fünfzehnter Lauf des Tages.** Das letzte Stück vor
-   dem Zusammenbau ist bewiesen: `exists_measurable_pair_of_partition_subset`,
-   alle Stufen auf **einem** Raum (`stagesMeasure` auf `(E × ℝ) × (ℕ × ℕ → E)`),
-   mit einer allen Stufen gemeinsamen gleichverteilten Variablen und der
-   Stufenschranke als **Inklusion**. Dazu `sum_prod_slice_eq` und je ein Zusatz
-   an `exists_coupling_tsum_offDiag_le` (`min (p i) (q i) ≤ π i i`) und an
-   `exists_finite_partition_diam_le_null_frontier`
-   (`∀ i ∈ K, Bornology.IsBounded (A i)`). Alle durch `lake env lean` gegen
-   v4.33.1 und mit `#print axioms` geprüft. Bericht in `Facts/INVENTAR.md`,
-   Läufe, „2026-09-09, fünfzehnter Lauf des Tages".
-
-   **Zwei Berichtigungen daraus, die der nächste Lauf braucht.** Der zweite
-   Disjunkt heißt `1 - t n < ξ` und nicht `ξ ≤ t` — der Diagonalzweig legt die
-   Diagonale auf das *erste* Teilsummenintervall, also liegt die Uneinigkeit der
-   Indizes **oberhalb** einer Schwelle nahe `1`. Und die Aussage des Zusammenbaus
-   selbst stand im falschen Universum: `∃ (Ω : Type)` ist nicht der Satz, weil
-   der Raum in `Type u` liegt und ein `Type 0`-Raum den Borelschen
-   Isomorphiesatz erzwänge; sie heißt jetzt
-   `exists_ae_tendsto_of_tendsto.{u} {F : Type u}` und trägt weiter ihr `sorry`.
-   *(Nachtrag: das `sorry` ist im sechzehnten Lauf gefallen; beide
-   Berichtigungen haben sich beim Ausschreiben als richtig erwiesen.)*
-
-   **Was noch fehlt, in vier Schritten** (ausgeschrieben im Laufbericht und in
-   `WeakConvergence/README.md`, Meilenstein 3): die Stufen `A^{(k)}` mit
-   `ε = η = 2⁻ᵏ`; die Niveauwahl
-   `kn n = max ((Finset.Icc 1 (n+1)).filter (Q · n))` zum Prädikat
-   `Q k n : ∀ i ∈ K k, ofReal (1 - 1/k) * ν (A^{(k)} i) ≤ μ n (A^{(k)} i)`, die
-   total ist, weil `Q 1 n` immer gilt; die Anwendung des Stufensatzes; und die
-   einzige noch ungeschriebene Rechnung
-   `P (⋃ m ≥ K, B m) ≤ ∑_{m ≥ K} 2⁻ᵐ + 1/K → 0` mit
-   `B k = {z | z.1.1 ∈ A^{(k)} 0} ∪ {z | 1 - 1/k < z.1.2}`.
-
-   **Zur Vorgeschichte, damit sie sich nicht wiederholt:** der Bauplan ist
-   zweimal verworfen worden — das Verkleben einstufiger Kopplungen zugunsten des
-   Alles-auf-einmal-Raums `(E × ℝ) × (ℕ × ℕ → E)`, und danach der Schluß über
-   Borel--Cantelli, den es nicht gibt (die Schranke einer Stufe darf beliebig
-   langsam fallen; Zeuge `ν = δ₀`, `μ n = (1-1/log n)·δ₀ + (1/log n)·δ₁`). Was
-   trägt, ist EK Thm. 3.1.8, Buchseiten 102--103: **eine** allen Stufen
-   gemeinsame gleichverteilte Variable, eine **Inklusion** statt einer Zahl,
-   endlich viele Stücke positiver Masse. Wer den Plan ein drittes Mal ändern
-   will, sagt zuerst, welcher Schritt des jetzigen bricht, und rechnet ihn am
-   Zeugen nach.
+~~**Teil B — `WeakConvergence` fertigmachen.**~~ *(erledigt 2026-09-09; die Datei
+trägt kein `sorry` mehr, nur noch die eine bewußt gegen `upstream/master`
+geschriebene Aussage. Einzelheiten im Archiv.)*
 
 ~~**Hinweis zu `martingale_stoppedProcess` in stetiger Zeit**~~ *(vom Nutzer,
 2026-09-10; **eingelöst 2026-09-10, fünfzehnter Lauf des Tages** — der Satz steht,
