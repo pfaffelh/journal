@@ -17789,3 +17789,126 @@ tut. Bricht es, so ist zu sagen, welcher Schritt von `jumpProcess_isMPSolution` 
 Positivität der Rate wirklich braucht — der Kompensator, die bedingte Erwartung
 oder die Adaptiertheit —, denn das ist die Auskunft, die der Zusammenbau danach
 ohnehin verlangt.
+
+### 2026-09-10, vierzehnter Lauf des Tages
+
+**Auftrag:** der Vorschlag des dreizehnten Laufs, wörtlich — `jumpProcessE_isMPSolution`,
+und zwar vor dem Zusammenbau, mit der Auflage, bei einem Bruch zu sagen, welcher Schritt
+von `jumpProcess_isMPSolution` die Positivität der Rate wirklich braucht.
+
+**Ergebnis: der Satz steht, unter `0 < lam ≤ L`, und er ist nicht von vorn bewiesen,
+sondern übertragen.** Zehn Deklarationen im neuen Abschnitt `LocalBounded` von
+`TauCeti/MartingaleProblems/Suggested.lean` (eine Definition, neun Sätze), die ganze Datei
+ohne einen Fehler durch `lake env lean` gegen v4.33.1 (Toolchain und `inputRev` beide
+`v4.33.1`, am Hauptcheckout nachgesehen), alle zehn mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt bei neun
+(Meilensteine 3, 5, 9, 10). Die neuen Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+```
+jumpProcessE_isMPSolution (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x)
+    (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+  IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    (jumpFiltrationE lam hlam) (jumpMeasure mu nu)
+```
+
+**Der Auftrag sagte „von vorn", und das war der teurere Weg.** Der dreizehnte Lauf hatte
+die Übertragung verworfen, weil `jumpProcessE_eq_jumpProcess` die beiden Konstruktionen
+nur bei durchweg positiven Wartezeiten identifiziert — fast überall, aber nicht überall,
+und eine natürliche Filtration ist keine f.s.-Aussage. Das stimmt, und es ist trotzdem
+kein Hindernis, denn die **Ausnahmemenge ist keine**: die lokale Konstruktion liest das
+Vorzeichen einer Wartezeit gar nicht. `jumpTimeE` liest `ENNReal.ofReal (xi n)`, und
+`ENNReal.ofReal` hat schon abgeschnitten. Mit
+
+```
+clipWait ω = (ω.1, fun k ↦ max (ω.2 k) 0)
+```
+
+gilt darum `jumpProcessE lam t ω = jumpProcess lam t (clipWait ω)` an **jedem**
+Stichprobenpunkt und für jedes `0 ≤ t`, ohne jede Voraussetzung außer der Positivität der
+Rate (`jumpProcessE_eq_jumpProcess_clipWait`). Der lokale Prozeß ist also der alte,
+zusammengesetzt mit einer meßbaren Abbildung, und dann überträgt sich alles.
+
+**Die beiden Übertragungssätze sind allgemein, und keiner nennt die Sprungkonstruktion.**
+
+* `naturalFiltration_comp`: die natürliche Filtration eines Prozesses, der über eine
+  Abbildung faktorisiert, ist die Zurückziehung der natürlichen Filtration des Faktors.
+  Der Beweis ist zweimal die Vertauschung von `MeasurableSpace.comap` mit `⨆`
+  (`MeasurableSpace.comap_iSup`, `MeasurableSpace.comap_comp`); über die Abbildung steht
+  nichts, nicht einmal ihre Meßbarkeit — die steckt schon in der des Zusammengesetzten.
+* `martingale_comp_of_map_eq`: ein Martingal zieht sich längs jeder Abbildung zurück, die
+  das Maß auf das Maß schiebt, sofern die Filtration unten die Zurückziehung der
+  Filtration oben ist. Eine Menge der Vergangenheit unten ist dann ein Urbild,
+  `MeasureTheory.setIntegral_map` ist der Variablenwechsel, und
+  `MeasureTheory.Martingale.setIntegral_eq` ist die Identität oben. Keine Topologie am
+  Index; die Voraussetzung `[SigmaFiniteFiltration]` des letzteren kommt aus
+  `IsFiniteMeasure` (`Probability/Process/Filtration.lean:209`).
+
+Hier schiebt die Abbildung das Maß sogar auf die Nase auf sich selbst
+(`map_clipWait_jumpMeasure`), weil sie f.s. die Identität ist — die Wartezeiten sind f.s.
+positiv. **Das ist die Stelle, an der das Maß und die Filtration verschieden bedient
+werden, und sie ist der Punkt des Laufs:** die f.s.-Aussage bezahlt das *Maß*, die
+punktweise Identität bezahlt die *σ-Algebra*, und beide gehen in denselben Satz ein.
+
+**Zur Auflage des Auftrags: kein Schritt ist gebrochen, aber die Positivität ist nicht
+weggefallen.** Der Satz steht unter `0 < lam ≤ L` und nicht unter `0 ≤ lam ≤ L`, und der
+Grund ist benennbar. An einem verschwindenden Zustand ist die erweiterte Sprungzeit `⊤`;
+kein Abschneiden der Wartezeiten bringt die beiden Konstruktionen dort zur Deckung, denn
+die alte verläßt den Zustand sofort (`x / 0 = 0`) und die neue nie. Der naheliegende
+Ersatz — die Kette am ersten absorbierenden Zustand **einfrieren** und den Kern dort auf
+`Measure.dirac` setzen — trifft zwar das Gesetz (das ist die Konvention, die schon
+`isMarkovKernel_birthDeathKernel` trägt), aber er trifft es **nur** als Gesetz: an
+Stichprobenpunkten, an denen die eingefrorenen Daten explodieren, liefert `stepIndex` den
+Müllwert `0` und damit `y 0` statt `y m`. Das ist eine Nullmenge, und eine natürliche
+Filtration ist keine f.s.-Aussage — derselbe Punkt, den dieser Lauf für die Wartezeiten
+geräumt hat, an einer Stelle, an der er sich nicht räumen läßt.
+
+**Zwei Befunde für die weitere Arbeit.**
+
+* **Der absorbierende Fall ist für den Zusammenbau vorerst nicht nötig.** Was der
+  Zusammenbau braucht, ist `jumpProcessE_isMPSolution` für `truncRate lam n = min lam n`,
+  und `truncRate_pos` sagt, daß diese Rate bei positivem `lam` von der Stufe `1` an positiv
+  ist. Die Stufe `0` ist auch kein Sonderfall, um den herumzuargumentieren wäre:
+  `rateTime lam 0 = 0 = ⊥`, und `ProbabilityTheory.Locally` stellt dem gestoppten Prozeß
+  den Indikator von `{ω | ⊥ < τ n ω}` voran, also ist der Prozeß dort `0` und
+  `MeasureTheory.martingale_zero` erledigt ihn. Der Fall `lam x = 0` wird erst vom
+  linearen Geburt-Tod-Beispiel wirklich verlangt.
+* **Und die eigentliche verbleibende Lücke ist eine andere, als der dreizehnte Lauf
+  annahm, und sie liegt in Mathlib.** Der dort ausgeschriebene Zusammenbau
+  („die Zerlegung `∫_A M_t = ∫_{A ∩ {τ ≤ s}} + ∫_{A ∩ {s < τ}}`") läßt auf dem Stück
+  `{s < τ ≤ t}` den Wert des gestutzten Martingals **an** `τ` stehen, und das ist
+  optionales Stoppen in stetiger Zeit, keine Mengenidentität.
+  **Mathlib hat den gestoppten Martingalsatz nur diskret**: die ganze Datei
+  `Probability/Martingale/OptionalStopping.lean` steht unter
+  `{𝒢 : Filtration ℕ m0} {f : ℕ → Ω → ℝ}` (master `403547feec1`, `:38`), also auch
+  `Submartingale.stoppedProcess` (`:95` auf master, `:104` in v4.33.1), und ein
+  `IsStable 𝓕 (fun Y ↦ Martingale Y 𝓕 P)` gibt es in keiner der beiden Fassungen.
+  Was es **gibt**, und das ist der Anschluß: das optionale Sampling für Stoppzeiten
+  **abzählbaren Wertebereichs**, über beliebigem
+  `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]` und damit über `ℝ≥0` —
+  `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le_of_countable_range` und
+  `…_of_le_const_of_countable_range`
+  (`Probability/Martingale/OptionalSampling.lean:121` und `:90`, dieselben Zeilen in
+  v4.33.1 und auf master, keines `deprecated`). Der Übergang von den dyadischen Näherungen
+  der Stoppzeit zur Stoppzeit selbst ist damit das einzige, was eigens zu schreiben ist,
+  und die Rechtsstetigkeit, die er verlangt, ist für Treppenpfade
+  `eventuallyEq_nhdsGE_stepPath_comp` und kein Grenzwertsatz.
+
+Der Negativbefund ist in beiden Richtungen gesucht worden, wie es die Suchregel verlangt:
+nach der Vokabel (`stoppedProcess`, `IsStable`) **und** nach der Aussage (ein Martingal,
+das unter Stoppen erhalten bleibt, über einem Index, der nicht `ℕ` ist), in v4.33.1 und
+gegen `upstream/master` `403547feec1`, frisch geholt.
+
+**Vorschlag für den nächsten Lauf: `martingale_stoppedProcess`**, die stetige Fassung, in
+der Gestalt, die der Zusammenbau wirklich verlangt — für eine Stoppzeit `τ` mit Werten in
+`WithTop ℝ≥0`, ein Martingal mit rechtsstetigen Pfaden und einen Index `ℝ≥0`. Sie ist
+dran, weil sie jetzt die **einzige** offene Eingabe von Punkt 5 ist: die lokalisierende
+Folge ist bewiesen eine, der gestoppte Prozeß ist bewiesen der eines beschränkten
+Erzeugers, dieser löst bewiesen sein Martingalproblem, und die beiden Filtrationen stimmen
+bewiesen vor der Trefferzeit überein. Bricht sie, so ist zu sagen, ob es an der
+Approximation der Stoppzeit liegt oder an der gleichgradigen Integrierbarkeit beim
+Grenzübergang — denn das entscheidet, ob die Beschränktheit des Erzeugers (die hier zur
+Verfügung steht und eine gleichmäßige Schranke `C + 2LC·t` an das Testprozeß liefert,
+`integrable_mpFamily_jumpProcess`) den Grenzübergang schon bezahlt.

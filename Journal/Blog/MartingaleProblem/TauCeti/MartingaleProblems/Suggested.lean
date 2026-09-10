@@ -9241,3 +9241,196 @@ theorem jumpFiltrationE_truncRate_inter_lt_rateTime {lam : E → ℝ} (hlam : Me
   exact jumpProcessE_truncRate_eq_of_rateSup_lt r.coe_nonneg h1
 
 end Truncation
+
+section LocalBounded
+
+/-! ## The bounded theorem for the local construction
+
+`jumpProcess_isMPSolution` is written for `jumpProcess` and `jumpFiltration`.  The assembly of
+Point 5 needs the same statement for `jumpProcessE` and `jumpFiltrationE`, because those are the
+process and the filtration that the localizing sequence `rateTime` lives on.
+
+The thirteenth run of 2026-09-10 named the difficulty: `jumpProcessE_eq_jumpProcess` identifies
+the two constructions only where **all** waiting times are positive, that is at almost every
+sample point but not at every one, and a natural filtration is not an almost sure notion.  What
+resolves it is that the exceptional set is not exceptional in the right way.  The local process
+does not read the sign of a waiting time at all -- `jumpTimeE` reads `ENNReal.ofReal (xi n)`, and
+`ENNReal.ofReal` has already clipped -- so
+
+```
+jumpProcessE lam t ω = jumpProcess lam t (clipWait ω),   clipWait ω = (ω.1, fun k ↦ max (ω.2 k) 0)
+```
+
+holds at **every** sample point and at every nonnegative time, with no hypothesis beyond the
+positivity of the rate.  The local process is therefore the old one composed with a measurable
+map, and the whole statement transfers along that map: the natural filtration of a composite is
+the pull back of the natural filtration (`naturalFiltration_comp`), and a martingale pulls back to
+a martingale along any map that pushes the measure forward to the measure
+(`martingale_comp_of_map_eq`).  Here the map even preserves the measure on the nose, because it is
+almost surely the identity.
+
+Both transfer lemmas are general: neither mentions the jump construction, and
+`martingale_comp_of_map_eq` mentions no topology on the index. -/
+
+/-- **The natural filtration of a process that factors through a map is the pull back of the
+natural filtration of the factor.**  The proof is the commutation of `MeasurableSpace.comap` with
+`⨆`, twice, and it needs nothing about the map beyond the factorisation -- not even its
+measurability, which is already carried by the measurability of the composite. -/
+theorem naturalFiltration_comp {ι' : Type*} [Preorder ι'] {Ω' Ω'' : Type*}
+    {m' : MeasurableSpace Ω'} {m'' : MeasurableSpace Ω''} {F : Type*} [mF : MeasurableSpace F]
+    {X : ι' → Ω' → F} (hX : ∀ i, Measurable (X i)) {Z : ι' → Ω'' → F}
+    (hZ : ∀ i, Measurable (Z i)) {θ : Ω'' → Ω'} (hZX : ∀ i ω, Z i ω = X i (θ ω)) (i : ι') :
+    (naturalFiltration (m' := m'') Z hZ i : MeasurableSpace Ω'')
+      = MeasurableSpace.comap θ (naturalFiltration (m' := m') X hX i) := by
+  show (⨆ j, ⨆ _ : j ≤ i, MeasurableSpace.comap (Z j) mF)
+      = MeasurableSpace.comap θ (⨆ j, ⨆ _ : j ≤ i, MeasurableSpace.comap (X j) mF)
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_congr fun j ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_congr fun _ ↦ ?_
+  rw [MeasurableSpace.comap_comp]
+  congr 1
+  exact funext (hZX j)
+
+/-- **A martingale pulls back along a map that carries the measure to the measure.**  The
+filtration downstairs is the pull back of the filtration upstairs, so a set of the past downstairs
+is a preimage, and on preimages the change of variables `MeasureTheory.setIntegral_map` turns the
+martingale identity upstairs into the one downstairs.  No topology on the index, and the
+conclusion is `MeasureTheory.Martingale` and not a family of identities. -/
+theorem martingale_comp_of_map_eq {Ω' Ω'' : Type*} {m' : MeasurableSpace Ω'}
+    {m'' : MeasurableSpace Ω''} {ι' : Type*} [Preorder ι'] {θ : Ω'' → Ω'}
+    (hθ : Measurable θ) {P : Measure Ω''} [IsFiniteMeasure P] {Q : Measure Ω'}
+    [IsFiniteMeasure Q] (hmap : P.map θ = Q) {𝓕 : Filtration ι' m'} {𝓖 : Filtration ι' m''}
+    (h𝓖 : ∀ i, (𝓖 i : MeasurableSpace Ω'') = MeasurableSpace.comap θ (𝓕 i))
+    {Y : ι' → Ω' → ℝ} (hY : Martingale Y 𝓕 Q) :
+    Martingale (fun i ω ↦ Y i (θ ω)) 𝓖 P := by
+  have hθi : ∀ i, @Measurable Ω'' Ω' (𝓖 i) (𝓕 i) θ := fun i ↦ by
+    rw [measurable_iff_comap_le]
+    exact (h𝓖 i).ge
+  have hadp : ∀ i, StronglyMeasurable[𝓖 i] fun ω ↦ Y i (θ ω) := fun i ↦
+    (((hY.stronglyMeasurable i).measurable).comp (hθi i)).stronglyMeasurable
+  have haes : ∀ k, AEStronglyMeasurable (Y k) (P.map θ) := fun k ↦ by
+    rw [hmap]; exact ((hY.stronglyMeasurable k).mono (𝓕.le k)).aestronglyMeasurable
+  have hint : ∀ k, Integrable (fun ω ↦ Y k (θ ω)) P := fun k ↦ by
+    have h1 : Integrable (Y k) (P.map θ) := by rw [hmap]; exact hY.integrable k
+    exact (integrable_map_measure (haes k) hθ.aemeasurable).1 h1
+  refine ⟨hadp, fun i j hij ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓖.le i) (hint j)
+    (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+  intro S hS _
+  rw [h𝓖 i] at hS
+  obtain ⟨A, hA, rfl⟩ := hS
+  have hAm : MeasurableSet A := 𝓕.le i A hA
+  have hswap : ∀ k, ∫ ω in θ ⁻¹' A, Y k (θ ω) ∂P = ∫ y in A, Y k y ∂Q := fun k ↦ by
+    rw [← hmap, ← setIntegral_map hAm (haes k) hθ.aemeasurable]
+  rw [hswap i, hswap j]
+  exact hY.setIntegral_eq hij hA
+
+variable {E : Type*}
+
+/-- **Clipping the waiting times at zero.**  The map along which the local construction factors
+through the old one. -/
+def clipWait (ω : (ℕ → E) × (ℕ → ℝ)) : (ℕ → E) × (ℕ → ℝ) := (ω.1, fun k ↦ max (ω.2 k) 0)
+
+theorem measurable_clipWait [MeasurableSpace E] : Measurable (clipWait (E := E)) :=
+  measurable_fst.prodMk (measurable_pi_lambda _ fun k ↦
+    (((measurable_pi_apply k).comp measurable_snd).max measurable_const))
+
+/-- `ENNReal.ofReal` has already clipped: this is the reason the local construction does not read
+the sign of a waiting time. -/
+theorem ofReal_max_zero (a : ℝ) : ENNReal.ofReal (max a 0) = ENNReal.ofReal a := by
+  rcases le_total 0 a with h | h
+  · rw [max_eq_left h]
+  · rw [max_eq_right h, ENNReal.ofReal_zero, ENNReal.ofReal_eq_zero.2 h]
+
+theorem jumpTimeE_clipWait (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTimeE lam y (fun k ↦ max (xi k) 0) n = jumpTimeE lam y xi n := by
+  induction n with
+  | zero => rfl
+  | succ n ih => rw [jumpTimeE_succ, jumpTimeE_succ, ih, ofReal_max_zero]
+
+/-- **The local process does not see the clipping**, at every rate and at every sample point. -/
+theorem jumpProcessE_clipWait (lam : E → ℝ) (t : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcessE lam t (clipWait ω) = jumpProcessE lam t ω := by
+  have h : jumpTimeE lam ω.1 (fun k ↦ max (ω.2 k) 0) = jumpTimeE lam ω.1 ω.2 :=
+    funext (jumpTimeE_clipWait lam ω.1 ω.2)
+  show stepPath (jumpTimeE lam ω.1 (fun k ↦ max (ω.2 k) 0)) ω.1 (ENNReal.ofReal t)
+      = stepPath (jumpTimeE lam ω.1 ω.2) ω.1 (ENNReal.ofReal t)
+  rw [h]
+
+/-- **The two constructions agree at a positive rate and nonnegative waiting times**, at every
+nonnegative time.  `jumpProcessE_eq_jumpProcess` asks for *strictly* positive waiting times,
+because it compares the two step indices through `ENNReal.ofReal_lt_ofReal_iff`, which needs a
+positive right hand side.  Restricting the time to `0 ≤ t` replaces that by
+`ENNReal.ofReal_lt_ofReal_iff_of_nonneg`, and nonnegativity of the waiting times is all that is
+left -- which is exactly what the clipping provides. -/
+theorem jumpProcessE_eq_jumpProcess_of_nonneg {lam : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ}
+    (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 ≤ xi n) {t : ℝ} (ht : 0 ≤ t) :
+    jumpProcessE lam t (y, xi) = jumpProcess lam t (y, xi) := by
+  have hset : {m | ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)}
+      = {m | t < jumpTime lam y xi (m + 1)} := by
+    ext m
+    rw [Set.mem_setOf_eq, Set.mem_setOf_eq, jumpTimeE_eq_ofReal hlam hxi,
+      ENNReal.ofReal_lt_ofReal_iff_of_nonneg ht]
+  simp only [jumpProcessE, jumpProcess, stepPath, stepIndex, hset]
+
+/-- **The local process is the old one read after the clipping**, at a positive rate, at every
+nonnegative time and at **every** sample point.  This is the identity that carries the whole
+bounded theory across, and it is an identity of terms and not of laws. -/
+theorem jumpProcessE_eq_jumpProcess_clipWait {lam : E → ℝ} (hlam : ∀ x, 0 < lam x) {t : ℝ}
+    (ht : 0 ≤ t) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcessE lam t ω = jumpProcess lam t (clipWait ω) := by
+  rw [← jumpProcessE_clipWait lam t ω]
+  exact jumpProcessE_eq_jumpProcess_of_nonneg hlam (fun n ↦ le_max_right _ _) ht
+
+/-- **The clipping preserves the driving measure**, because it is almost surely the identity: the
+waiting times are almost surely positive. -/
+theorem map_clipWait_jumpMeasure [MeasurableSpace E] (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    (jumpMeasure mu nu).map clipWait = jumpMeasure mu nu := by
+  have h : clipWait =ᵐ[jumpMeasure mu nu] (id : (ℕ → E) × (ℕ → ℝ) → (ℕ → E) × (ℕ → ℝ)) := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+    have hxi : (fun k ↦ max (ω.2 k) 0) = ω.2 := funext fun k ↦ max_eq_left (hω k).le
+    show ((ω.1, fun k ↦ max (ω.2 k) 0) : (ℕ → E) × (ℕ → ℝ)) = ω
+    rw [hxi]
+  rw [Measure.map_congr h, Measure.map_id]
+
+/-- **`thm:jumpMP` for the local construction.**  The same conclusion as
+`jumpProcess_isMPSolution`, for `jumpProcessE` and its natural filtration, under the same
+hypotheses.
+
+This is the last input the assembly of Point 5 was missing: the stopped local process is the local
+process of the truncated rate (`stoppedProcess_jumpProcessE_truncRate`), the truncated rate is
+positive from the level `1` on and bounded by the level (`truncRate_pos`, `truncRate_le`), and
+this theorem says that such data give a martingale problem solution *for the local construction*
+and hence for the filtration in which `rateTime` is a stopping time. -/
+theorem jumpProcessE_isMPSolution [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  have hproc : ∀ (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)),
+      jumpProcessE lam (t : ℝ) ω = jumpProcess lam (t : ℝ) (clipWait ω) :=
+    fun t ω ↦ jumpProcessE_eq_jumpProcess_clipWait hlam0 t.coe_nonneg ω
+  intro Y hY
+  obtain ⟨p, hp, hYeq⟩ := hY
+  obtain ⟨Y', hY'mem, hYY'⟩ :
+      ∃ Y' : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ,
+        Y' ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+          (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω) ∧
+        ∀ t ω, Y t ω = Y' t (clipWait ω) := by
+    refine ⟨fun t ω ↦ p.1 (jumpProcess lam (t : ℝ) ω)
+        - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            p.2 (jumpProcess lam (s : ℝ) ω) ∂lebesgueClock.q,
+      ⟨p, hp, fun t ω ↦ rfl⟩, fun t ω ↦ ?_⟩
+    rw [hYeq t ω]
+    simp only [hproc]
+  have hmart : Martingale Y' (jumpFiltration lam hlam) (jumpMeasure mu nu) :=
+    jumpProcess_isMPSolution hlam hlam0 hL mu nu Y' hY'mem
+  have hfun : Y = fun t ω ↦ Y' t (clipWait ω) := funext fun t ↦ funext fun ω ↦ hYY' t ω
+  rw [hfun]
+  exact martingale_comp_of_map_eq measurable_clipWait (map_clipWait_jumpMeasure mu nu)
+    (fun i ↦ naturalFiltration_comp _ _ (fun j ω ↦ hproc j ω) i) hmart
+
+end LocalBounded

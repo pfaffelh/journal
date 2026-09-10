@@ -1451,13 +1451,54 @@ A concrete family of solutions, built without any of the theory above. Index
   formality: before the hitting time the truncated filtration sees no more than
   the local one, and after it the two paths part company, so the inclusion holds
   in this cut down form and in no other.
+* `clipWait`, `jumpProcessE_eq_jumpProcess_clipWait`: **the local construction is
+  the old one composed with a measurable map.** `clipWait ω = (ω.1, fun k ↦ max (ω.2 k) 0)`
+  clips the waiting times at zero, and at a positive rate
+  `jumpProcessE lam t ω = jumpProcess lam t (clipWait ω)` at **every** sample point
+  and every `0 ≤ t`. **Proved** on 2026-09-10, fourteenth run. The reason there is
+  no exceptional set is that `jumpTimeE` reads `ENNReal.ofReal (xi n)`, and
+  `ENNReal.ofReal` has already clipped (`jumpTimeE_clipWait`); the only thing the
+  restriction to `0 ≤ t` buys is
+  `ENNReal.ofReal_lt_ofReal_iff_of_nonneg` in place of
+  `ENNReal.ofReal_lt_ofReal_iff`, which is what lets the waiting times be merely
+  nonnegative (`jumpProcessE_eq_jumpProcess_of_nonneg`).
+* `naturalFiltration_comp`: **the natural filtration of a process that factors
+  through a map is the pull back of the natural filtration of the factor.**
+  **Proved** on 2026-09-10, fourteenth run; it is the commutation of
+  `MeasurableSpace.comap` with `⨆`, twice, and needs nothing about the map beyond
+  the factorisation.
+* `martingale_comp_of_map_eq`: **a martingale pulls back along a map that carries
+  the measure to the measure**, the filtration downstairs being the pull back of
+  the one upstairs. **Proved** on 2026-09-10, fourteenth run. A set of the past
+  downstairs is then a preimage, `MeasureTheory.setIntegral_map` is the change of
+  variables, and `MeasureTheory.Martingale.setIntegral_eq` is the identity
+  upstairs. No topology on the index.
 * `jumpProcessE_isMPSolution`: `jumpProcess_isMPSolution` for the **local**
-  construction, under `0 ≤ lam ≤ L` rather than `0 < lam ≤ L`. The bounded theorem
-  is stated for `jumpProcess` and for `jumpFiltration`, and
-  `jumpProcessE_eq_jumpProcess` identifies the two constructions only where the
-  waiting times are all positive — which is almost every sample point but not
-  every one, and a natural filtration is not an almost sure notion. So the
-  transfer is a statement about the local construction and has to be made there.
+  construction. **Proved** on 2026-09-10, fourteenth run, under `0 < lam ≤ L`, by
+  the three points above: the test process of the local family is the test process
+  of the old family composed with `clipWait`, `clipWait` preserves `jumpMeasure`
+  because it is almost surely the identity (`map_clipWait_jumpMeasure`), and
+  `jumpFiltrationE` is the pull back of `jumpFiltration` along it.
+  **Under `0 ≤ lam ≤ L` it is open**, and the route above does not reach it: at a
+  vanishing rate the extended jump times are `⊤`, so no clipping of the waiting
+  times makes the two constructions agree, and freezing the chain instead — which
+  does match the laws — fails at the sample points where the frozen data explode,
+  a null set, and a natural filtration is not an almost sure notion.
+* `martingale_stoppedProcess`: **the stopped process of a martingale is a
+  martingale**, for an index that is not `ℕ`, under right continuity of the paths.
+  Mathlib has the discrete case only: `MeasureTheory.Submartingale.stoppedProcess`
+  (`Probability/Martingale/OptionalStopping.lean:95` on master `403547feec1`,
+  `:104` in v4.33.1) is stated in a section with `{𝒢 : Filtration ℕ m0}`, and there
+  is no `IsStable 𝓕 (fun Y ↦ Martingale Y 𝓕 P)` anywhere in either version. What
+  *is* available for a general `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]`
+  is the optional sampling theorem for stopping times of **countable range**,
+  `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le_of_countable_range`
+  and `…_of_le_const_of_countable_range`
+  (`Probability/Martingale/OptionalSampling.lean:121` and `:90`, the same lines in
+  v4.33.1 and on master), so what this point owes is the passage from the dyadic
+  approximations of the stopping time to the stopping time itself, and the paths of
+  the jump process are step paths, so the right continuity it needs is
+  `eventuallyEq_nhdsGE_stepPath_comp` and not a limit theorem.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved, with `rateTime` as the
   localizing sequence; and the explosion criterion in terms of the jump times.
@@ -1467,8 +1508,15 @@ A concrete family of solutions, built without any of the theory above. Index
   bound on `lam`, so the global theorem does not apply to the stopped process by
   substitution. The route around that is the three points above: the stopped
   process is the process of `truncRate lam n`, which **is** of bounded rate; that
-  process solves the bounded problem for its own filtration; and before the
-  hitting time that filtration is the one asked for.
+  process solves the bounded problem for its own filtration
+  (`jumpProcessE_isMPSolution`); and before the hitting time that filtration is
+  the one asked for. The level `n = 0` is not a special case to be argued around:
+  `rateTime lam 0 = 0 = ⊥`, and `Locally` prefixes the stopped process with the
+  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`. What the
+  assembly still owes is `martingale_stoppedProcess`: the decomposition
+  `∫_A M_t = ∫_{A ∩ {τ ≤ s}} + ∫_{A ∩ {s < τ}}` leaves, on `{s < τ ≤ t}`, the
+  value of the truncated martingale **at** `τ`, which is optional stopping in
+  continuous time and not a set identity.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for
