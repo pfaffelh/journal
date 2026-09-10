@@ -56,6 +56,53 @@ Die Aussage selbst — `Martingale (stoppedProcess X τ) 𝓕 P` in stetiger Zei
 steht dort in **keiner** Fassung; ich habe danach gesucht. Sie bleibt also unsere
 Arbeit und ist der fünfte Eintrag für `TODO.md` Punkt 8, sobald sie steht.
 
+**Teil F — der Yule-Prozeß, und ein gemessener Vergleich zweier Wege.** Nach
+Teil E. *(Vom Nutzer am 2026-09-10 vorgeschlagen; er darf vorgezogen werden, wenn
+ein Lauf an Teil D oder E nicht weiterkommt.)*
+
+Der lineare Geburt-Tod-Prozeß ist am 2026-09-10 über die **Reihe längs der
+eingebetteten Kette** erledigt (`ae_mem_nonExplosiveE`,
+`ae_mem_nonExplosiveE_linear`). Der Nutzer hatte einen anderen Weg genannt: nach
+oben abschätzen durch den **reinen Geburtsprozeß** (Yule, `d ≡ 0`), dessen Wert
+zu fester Zeit geometrisch verteilt und damit f.s. endlich ist. Auf Papier ist
+das ein Einzeiler. Diese Aufgabe fragt, **was er in Lean kostet** — und sie fragt
+es, weil die Roadmap derzeit bloß *behauptet*, die Reihe sei billiger.
+
+Zu bauen, in dieser Reihenfolge:
+
+1. **Yule als Instanz:** `b x = β * x`, `d ≡ 0`, mit `jumpApply_yule` und
+   `yule_isLocalMPSolution` als Spezialfall des schon bewiesenen
+   `linearBirthDeath_isLocalMPSolution`. Das ist Buchhaltung und sollte billig
+   sein; kostet es mehr als erwartet, ist das der erste Meßwert.
+2. **Die eindimensionale Verteilung** als Kontrolle gegen Bekanntes: von `1`
+   gestartet ist `X t` geometrisch mit Parameter `exp (−β t)`. Das ist der
+   Prüfstein wie `poissonMeasure` beim Poissonprozeß — ein Leser kann das
+   Ergebnis gegen etwas nachrechnen, das nicht aus unserer Konstruktion stammt.
+3. **Die Kopplung**: eine gemeinsame Konstruktion, unter der der
+   Geburt-Tod-Prozeß pfadweise vom Yule-Prozeß dominiert wird, und daraus die
+   Nichtexplosion des ersten aus der des zweiten.
+
+**Die Falle, und sie ist der Grund, warum das interessant ist.** „Zu fester Zeit
+geometrisch verteilt, also f.s. endlich, also keine Explosion" ist **zirkulär**:
+um von `X t` zu sprechen, muß der Prozeß bei `t` schon definiert sein. Sauber ist
+erst `∑ k, P (X t = k) = 1` für den *minimalen* Prozeß — und das **ist** die
+Nichtexplosion. Auf Papier sieht man das kaum; hier bricht ein Beweis genau
+daran. Wenn Du auf die Zirkularität stößt, ist das kein Scheitern, sondern ein
+Ergebnis, und es gehört so in den Bericht.
+
+**Was gemessen und berichtet wird** — das ist der Zweck der Aufgabe, nicht der
+Satz:
+
+* Deklarationen und Zeilen je Weg (Reihe gegen Kopplung), getrennt gezählt;
+* welche Mathlib-Bausteine jeder Weg brauchte und welche fehlten;
+* an welcher Stelle der Kopplungsweg am teuersten war;
+* und ein Satz Urteil: welcher Weg ist für **eine allgemeinere** Ratenfunktion
+  der bessere, nicht nur für diese eine.
+
+**Was nicht zählt:** den Kopplungsweg abzubrechen, weil der Reihenweg schon
+dasteht. Der Vergleich ist die Aufgabe. Bleibt er stecken, dann mit benannter
+Bruchstelle.
+
 **Teil D — die Roadmaps gegen Mathlib `master` prüfen.** Nach Teil C, vor allem
 anderen. Das ist Rückstaupunkt 5, vom Nutzer am 2026-09-10 vorgezogen.
 
