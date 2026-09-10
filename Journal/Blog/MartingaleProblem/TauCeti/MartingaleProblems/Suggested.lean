@@ -227,6 +227,43 @@ file whose generator is **state dependent**; the linear chain
 (`jumpApply_linearBirthDeath`) fails both hypotheses separately
 (`birthDeathRate_linear_zero`, `not_bddAbove_birthDeathRate_linear`) and is the
 only one of the examples that exercises the local branch.
+
+`section LocalFiltration`, six declarations of 2026-09-10, is a **negative**
+result and the one the local case turned on.  `jumpFiltrationE` is the natural
+filtration of the local process; `not_isStoppingTime_min_jumpTimeE` says that the
+localizing sequence Milestone 4 announced, `min (jumpTimeE lam ω.1 ω.2 n) n`, is
+not one, because its members are not stopping times for that filtration.  The
+witness is the constant chain at a state of positive rate, with two constant
+waiting times: both have strictly positive holding times, their paths are equal,
+and their first jump times are separated by a threshold.  The mechanism is
+`jumpProcessE_const_chain`, a `rfl` -- `stepPath` reads the chain at the step
+index, so a chain that does not move leaves no trace of the waiting times in the
+path, and a jump from `x` to `x` is invisible.  Two statements close the escapes:
+`eq_of_measurable_jumpFiltrationE_const_chain` holds at *every* index, so the
+right continuous filtration `⨅ s > t, 𝓕 s` does not see the waiting times
+either, and `eq_of_measurable_jumpFiltrationE_of_subsingleton` makes the failing
+set the whole sample space on a one point state space, so no null set may be
+discarded -- `IsStoppingTime` is not an almost sure notion, for the same reason
+`StronglyAdapted` is not.  What localizes has to be a functional of the **path**;
+the running supremum of the rate along the path is the repair, and it is the one
+Milestone 7 already prescribes.
+
+Seventeen declarations of 2026-09-10 carry that repair out.  `rateSup lam t ω` is
+the running supremum of the rate over `[0, t]`, taken in `ℝ≥0∞`, and
+`rateTime lam n ω` the infimum of the times at which it reaches the level `n`,
+taken **in `ℝ≥0∞`** over an index ranging in `ℝ≥0` so that a path that never
+reaches the level receives `⊤` rather than the junk value `0`.  Everything rests
+on one hypothesis free statement, `eventuallyEq_nhdsGE_stepPath_comp`: a step path
+is locally constant to the right at every time, whatever the jump times do and
+along any monotone continuous time map.  From it, `rateSup_eq_sup_rat` reduces the
+uncountable supremum to a supremum over `ℚ`, which is `measurable_rateSup`, the
+measurability for the σ-algebra of the time itself; and `eventuallyEq_nhdsGE_rateSup`
+makes the running supremum locally constant to the right, which is `rateTime_le_iff`
+and hence `isStoppingTime_rateTime`.  Non explosion enters once and only once, in
+`rateSup_lt_top_of_mem_nonExplosiveE`: before a fixed time the path visits finitely
+many states of the chain, so the running supremum is a finite sum of finite terms.
+`isLocalizingSequence_rateTime` assembles the three fields under
+`∀ᵐ ω ∂P, ω ∈ NonExplosiveE lam` and nothing else.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -1546,6 +1583,42 @@ theorem stepIndex_eq_iff : stepIndex T t = n ↔
       exact absurd (lt_stepIndex_succ ⟨n, h1⟩) (not_lt.2 (h2 _ hc))
     · exact Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2
         fun k hk => absurd hk (not_lt.2 (h k))))
+
+/-- **A step path is locally constant to the right, at every time, with no hypothesis at all**,
+and along an arbitrary monotone continuous time map `u`.
+
+Neither monotonicity of `T` nor non explosion is needed: if some window contains `u t`, the least
+such window is a right neighbourhood of `t` on which the index is constant, and if none does, the
+index is the junk value `0` at `t` and, by monotonicity of `u`, at every later time as well.
+
+The time map is carried for the same reason as in `measurable_stepIndex_comp`: the local
+construction reads jump times in `ℝ≥0∞` at *real* times, so `u` is `ENNReal.ofReal` there, and
+`eventuallyEq_nhdsGE_stepPath` is the case `u = id`. -/
+theorem eventuallyEq_nhdsGE_stepPath_comp [TopologicalSpace α] [OrderTopology α]
+    {γ : Type*} [LinearOrder γ] [TopologicalSpace γ] [OrderTopology γ]
+    (T : ℕ → α) (y : ℕ → E) {u : γ → α} (hcont : Continuous u) (hmono : Monotone u) (t : γ) :
+    ∀ᶠ r in 𝓝[≥] t, stepPath T y (u r) = stepPath T y (u t) := by
+  by_cases hex : ∃ n, u t < T (n + 1)
+  · have hlt : u t < T (stepIndex T (u t) + 1) := lt_stepIndex_succ hex
+    have hmem : {r | u r < T (stepIndex T (u t) + 1)} ∩ Set.Ici t ∈ 𝓝[≥] t :=
+      Filter.inter_mem (mem_nhdsWithin_of_mem_nhds
+        ((isOpen_Iio.preimage hcont).mem_nhds hlt)) self_mem_nhdsWithin
+    filter_upwards [hmem] with r hr
+    have hut : u t ≤ u r := hmono hr.2
+    have h1 : stepIndex T (u r) ≤ stepIndex T (u t) := stepIndex_le hr.1
+    have h2 : stepIndex T (u t) ≤ stepIndex T (u r) := by
+      by_contra hc
+      push_neg at hc
+      have h3 : T (stepIndex T (u r) + 1) ≤ u t := le_of_lt_stepIndex hc
+      have h4 : u r < T (stepIndex T (u r) + 1) := lt_stepIndex_succ ⟨stepIndex T (u t), hr.1⟩
+      exact absurd (h4.trans_le (h3.trans hut)) (lt_irrefl _)
+    simp only [stepPath, le_antisymm h1 h2]
+  · push_neg at hex
+    filter_upwards [self_mem_nhdsWithin] with r (hr : t ≤ r)
+    have ht0 : stepIndex T (u t) = 0 := stepIndex_eq_iff.2 (Or.inr ⟨rfl, hex⟩)
+    have hr0 : stepIndex T (u r) = 0 :=
+      stepIndex_eq_iff.2 (Or.inr ⟨rfl, fun k ↦ (hex k).trans (hmono hr)⟩)
+    simp only [stepPath, ht0, hr0]
 
 /-- **The step index is measurable**, over an arbitrary measurable ordered time axis and along an
 arbitrary measurable time map `u`.
@@ -5214,27 +5287,8 @@ then the index is the junk value `0` at `t` and at every later time as well.
 This is the half of `IsStepPath` that survives on the explosion set, and it is the half the
 progressive measurability below consumes. -/
 theorem eventuallyEq_nhdsGE_stepPath {E : Type*} (T : ℕ → ℝ) (y : ℕ → E) (t : ℝ) :
-    ∀ᶠ r in 𝓝[≥] t, stepPath T y r = stepPath T y t := by
-  by_cases hex : ∃ n, t < T (n + 1)
-  · have hlt : t < T (stepIndex T t + 1) := lt_stepIndex_succ hex
-    have hmem : Set.Ico t (T (stepIndex T t + 1)) ∈ 𝓝[≥] t :=
-      mem_nhdsWithin.2 ⟨Set.Iio (T (stepIndex T t + 1)), isOpen_Iio, hlt,
-        fun z hz ↦ ⟨hz.2, hz.1⟩⟩
-    filter_upwards [hmem] with r hr
-    have h1 : stepIndex T r ≤ stepIndex T t := stepIndex_le hr.2
-    have h2 : stepIndex T t ≤ stepIndex T r := by
-      by_contra hc
-      push_neg at hc
-      have h3 : T (stepIndex T r + 1) ≤ t := le_of_lt_stepIndex hc
-      have h4 : r < T (stepIndex T r + 1) := lt_stepIndex_succ ⟨stepIndex T t, hr.2⟩
-      exact absurd (h4.trans_le (h3.trans hr.1)) (lt_irrefl r)
-    simp only [stepPath, le_antisymm h1 h2]
-  · push_neg at hex
-    filter_upwards [self_mem_nhdsWithin] with r (hr : t ≤ r)
-    have ht0 : stepIndex T t = 0 := stepIndex_eq_iff.2 (Or.inr ⟨rfl, hex⟩)
-    have hr0 : stepIndex T r = 0 :=
-      stepIndex_eq_iff.2 (Or.inr ⟨rfl, fun k ↦ (hex k).trans hr⟩)
-    simp only [stepPath, ht0, hr0]
+    ∀ᶠ r in 𝓝[≥] t, stepPath T y r = stepPath T y t :=
+  eventuallyEq_nhdsGE_stepPath_comp T y continuous_id monotone_id t
 
 /-- Right continuity is preserved by clamping the time at `0` from below.  The clamp is what
 makes the index of the martingale problem — which is `ℝ≥0` — reach the process, which is defined
@@ -8167,3 +8221,353 @@ theorem not_bddAbove_birthDeathRate_linear {β δ : ℝ} (hβ : 0 < β) (hδ : 0
   linarith
 
 end BirthDeathExample
+
+section LocalFiltration
+
+/-! ## The filtration of the local jump process, and what it cannot see
+
+Point 5 of this milestone asks for `jumpProcess_isLocalMPSolution`: the local construction
+solves the **local** martingale problem, with the localizing sequence
+`τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n`.  The filtration is `jumpFiltrationE`, the natural
+filtration of the local process and the counterpart of `jumpFiltration`; it is defined first
+because every statement of the local case is a statement about it.
+
+The announced localizing sequence is **not** one, and the obstruction is not a detail of some
+proof but a property of the construction.  `ProbabilityTheory.IsLocalizingSequence` asks each
+`τ n` to be a `MeasureTheory.IsStoppingTime` for the filtration; the jump times are read off the
+driving randomness `(y, ξ)`, and the process hides that randomness at every sample point whose
+chain does not move.  `not_isStoppingTime_min_jumpTimeE` is the witness, and it is available at
+every rate and at every state of positive rate: nothing about it is degenerate.
+
+`IsStoppingTime` is not an almost sure notion -- the same reason that made
+`eventuallyEq_nhdsGE_stepPath` be proved without hypotheses for `StronglyAdapted` -- so the
+witness disposes of the statement as announced.  It is not repairable by discarding a null set
+either: on a one point state space the natural filtration of the process is trivial at every
+time (`eq_of_measurable_jumpFiltrationE_of_subsingleton`), so *no* completion of it sees the
+jump times, while the rate `1` there is positive and bounded and every hypothesis of
+`jumpProcess_isMPSolution` holds. -/
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The natural filtration of the local jump process.**  Indexed by `ℝ≥0`, as `jumpFiltration`
+is, because `mpFamily` needs `[OrderBot ι]`; and that index is the one the local case wants
+anyway, since `ℝ≥0∞ = WithTop ℝ≥0` is exactly where a localizing sequence for it has to live and
+`jumpTimeE` already takes its values there. -/
+noncomputable def jumpFiltrationE (lam : E → ℝ) (hlam : Measurable lam) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  naturalFiltration (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)
+    fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)
+
+/-- **A constant chain gives a constant path**, whatever the waiting times are.  This is the
+whole mechanism of the witness: `stepPath` reads the chain at the step index, and a constant
+chain returns the same state at every index, so the waiting times leave no trace in the path. -/
+theorem jumpProcessE_const_chain (lam : E → ℝ) (x₀ : E) (xi : ℕ → ℝ) (t : ℝ) :
+    jumpProcessE lam t (fun _ ↦ x₀, xi) = x₀ := rfl
+
+/-- The first jump time of a constant chain with constant waiting times, in closed form. -/
+theorem jumpTimeE_const_chain (lam : E → ℝ) (x₀ : E) (c : ℝ) :
+    jumpTimeE lam (fun _ ↦ x₀) (fun _ ↦ c) 1
+      = ENNReal.ofReal c / ENNReal.ofReal (lam x₀) := by
+  rw [jumpTimeE_succ, jumpTimeE_zero, zero_add]
+
+/-- **The jump times are not stopping times for the filtration of the process.**  Stated for the
+localizing sequence that Milestone 4 announced, at its first index, and it disposes of that
+sequence: `isStoppingTime` is one of the three fields of
+`ProbabilityTheory.IsLocalizingSequence`, so `Locally` cannot be reached through it.
+
+The two sample points are the constant chain at `x₀` with the two constant waiting times
+`lam x₀ / 4` and `lam x₀`.  Both have **strictly positive** holding times, so neither is a
+degenerate point of the sample space; their paths are equal -- both are constantly `x₀` -- and
+their first jump times are `1/4` and `1`, which the threshold `1/2` separates.
+
+The hypothesis is only `0 < lam x₀` for **one** state.  In particular the witness is available
+under every hypothesis that `jumpProcess_isMPSolution` makes on the rate, and the failure is a
+property of the pair (process, filtration) and not of the local extension: read at
+`jumpFiltration` and `jumpTime` the same two points do the same thing. -/
+theorem not_isStoppingTime_min_jumpTimeE {lam : E → ℝ} (hlam : Measurable lam) {x₀ : E}
+    (hx₀ : 0 < lam x₀) :
+    ¬ IsStoppingTime (jumpFiltrationE lam hlam)
+      (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ min (jumpTimeE lam ω.1 ω.2 1) 1) := by
+  classical
+  intro hst
+  set t₀ : ℝ≥0 := Real.toNNReal (1 / 2) with ht₀
+  set S : Set ((ℕ → E) × (ℕ → ℝ)) :=
+    {ω | min (jumpTimeE lam ω.1 ω.2 1) 1 ≤ (t₀ : ENNReal)} with hS
+  have hSm : MeasurableSet[jumpFiltrationE lam hlam t₀] S := hst t₀
+  -- the coercion of the threshold is `ENNReal.ofReal (1/2)`, by definition of `ENNReal.ofReal`
+  have hcoe : ((t₀ : ℝ≥0) : ENNReal) = ENNReal.ofReal (1 / 2) := rfl
+  -- the two sample points, both with strictly positive holding times
+  set ω₁ : (ℕ → E) × (ℕ → ℝ) := (fun _ ↦ x₀, fun _ ↦ lam x₀ / 4) with hω₁
+  set ω₂ : (ℕ → E) × (ℕ → ℝ) := (fun _ ↦ x₀, fun _ ↦ lam x₀) with hω₂
+  have hne : ENNReal.ofReal (lam x₀) ≠ 0 := (ENNReal.ofReal_pos.2 hx₀).ne'
+  -- the first jump time of `ω₁` is `1/4`
+  have h₁ : jumpTimeE lam ω₁.1 ω₁.2 1 = ENNReal.ofReal (1 / 4) := by
+    rw [hω₁, jumpTimeE_const_chain, ← ENNReal.ofReal_div_of_pos hx₀]
+    congr 1
+    field_simp
+  -- the first jump time of `ω₂` is `1`
+  have h₂ : jumpTimeE lam ω₂.1 ω₂.2 1 = 1 := by
+    rw [hω₂, jumpTimeE_const_chain, ENNReal.div_self hne ENNReal.ofReal_ne_top]
+  have hmem₁ : ω₁ ∈ S := by
+    rw [hS, Set.mem_setOf_eq, h₁, hcoe]
+    exact le_trans (min_le_left _ _) (ENNReal.ofReal_le_ofReal (by norm_num))
+  have hmem₂ : ω₂ ∉ S := by
+    rw [hS, Set.mem_setOf_eq, h₂, min_self, hcoe, ← ENNReal.ofReal_one,
+      ENNReal.ofReal_le_ofReal_iff (by norm_num)]
+    norm_num
+  -- but no `𝓕 t₀`-measurable function separates two points with equal paths
+  have hpath : ∀ r : ℝ≥0, r ≤ t₀ →
+      (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (r : ℝ) ω) ω₁
+        = (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (r : ℝ) ω) ω₂ := by
+    intro r _
+    simp only [hω₁, hω₂, jumpProcessE_const_chain]
+  have hGm : Measurable[jumpFiltrationE lam hlam t₀] (S.indicator fun _ ↦ (1 : ℝ)) :=
+    measurable_const.indicator hSm
+  have hsep := eq_of_measurable_naturalFiltration
+    (X := fun t : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (t : ℝ) ω)
+    (fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)) hGm hpath
+  rw [Set.indicator_of_mem hmem₁, Set.indicator_of_notMem hmem₂] at hsep
+  exact one_ne_zero hsep
+
+/-- **Two constant chains are separated by no functional of the process, at any time.**  The
+sharp form of the obstruction: the hypothesis is not `r ≤ s` but nothing at all, because the two
+paths are equal at *every* time, so the conclusion holds for every index `s` of the filtration
+at once.
+
+That is what forbids the usual repair for a debut.  Passing to the right continuous filtration
+`⨅ s > t, 𝓕 s` cannot help, since that σ-algebra is below `𝓕 s` for every `s > t` and this
+statement holds at each of them; and neither can enlarging `t`.  The waiting times are not late
+in the path, they are absent from it. -/
+theorem eq_of_measurable_jumpFiltrationE_const_chain {lam : E → ℝ} (hlam : Measurable lam)
+    {s : ℝ≥0} {G : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hG : Measurable[jumpFiltrationE lam hlam s] G) (x₀ : E) (xi xi' : ℕ → ℝ) :
+    G (fun _ ↦ x₀, xi) = G (fun _ ↦ x₀, xi') :=
+  eq_of_measurable_naturalFiltration
+    (X := fun t : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (t : ℝ) ω)
+    (fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)) hG
+    fun _ _ ↦ by simp only [jumpProcessE_const_chain]
+
+/-- **On a one point state space the filtration of the process is trivial at every time**: no
+`𝓕 t`-measurable real function separates any two sample points.  This is the second half of the
+finding, and it is what rules out repairing `not_isStoppingTime_min_jumpTimeE` by completing the
+filtration or by discarding a null set: here the failing set is the *whole* sample space, and
+completing a trivial σ-algebra for a measure adds only null sets, never the waiting times. -/
+theorem eq_of_measurable_jumpFiltrationE_of_subsingleton [Subsingleton E] {lam : E → ℝ}
+    (hlam : Measurable lam) {t : ℝ≥0} {G : (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hG : Measurable[jumpFiltrationE lam hlam t] G) (ω ω' : (ℕ → E) × (ℕ → ℝ)) :
+    G ω = G ω' :=
+  eq_of_measurable_naturalFiltration
+    (X := fun t : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (t : ℝ) ω)
+    (fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)) hG fun _ _ ↦ Subsingleton.elim _ _
+
+/-! ## The running supremum of the rate, and the times at which it passes a level
+
+The repair that `not_isStoppingTime_min_jumpTimeE` forces.  What is allowed to localize has to be
+a functional of the **path**, because that is all the filtration sees; the jump times are not.
+The running supremum of the rate along the path is such a functional, and its hitting times are
+the localizing sequence Milestone 7 prescribes for the same construction on other grounds.
+
+Everything about the hitting time reduces to two properties of `rateSup` and to nothing else:
+it is measurable for `𝓕 t` — which is the reduction of an uncountable supremum to a countable
+one — and it is **locally constant to the right**, which is what turns `{rateTime ≤ t}` into
+`{n ≤ rateSup t}`.  Both come from `eventuallyEq_nhdsGE_jumpProcessE`, and that statement carries
+no hypothesis whatever, as `StronglyAdapted` and `IsStoppingTime` both demand. -/
+
+/-- **The local jump process is locally constant to the right at every time**, with no
+hypothesis: neither positivity of the rate nor non explosion.  On the explosion set the step
+index is the junk value `0` from `t` on, and the statement still holds. -/
+theorem eventuallyEq_nhdsGE_jumpProcessE (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) (t : ℝ) :
+    ∀ᶠ r in 𝓝[≥] t, jumpProcessE lam r ω = jumpProcessE lam t ω :=
+  eventuallyEq_nhdsGE_stepPath_comp _ _ ENNReal.continuous_ofReal
+    (fun _ _ h ↦ ENNReal.ofReal_le_ofReal h) t
+
+/-- Read as a right neighbourhood: the path is constant on some `[t, u)`. -/
+theorem exists_Ico_jumpProcessE_eq (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) (t : ℝ) :
+    ∃ u, t < u ∧ ∀ r ∈ Set.Ico t u, jumpProcessE lam r ω = jumpProcessE lam t ω := by
+  obtain ⟨u, hu, hsub⟩ := mem_nhdsGE_iff_exists_Ico_subset.1 (eventuallyEq_nhdsGE_jumpProcessE
+    lam ω t)
+  exact ⟨u, hu, fun r hr ↦ hsub hr⟩
+
+/-- **The running supremum of the rate along the path.**  The supremum is taken in `ℝ≥0∞`, where
+it is total: at a state of vanishing rate the term is `0`, and on the explosion set the value may
+be `⊤`, which is exactly the sample points a localizing sequence has to discard. -/
+noncomputable def rateSup (lam : E → ℝ) (t : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : ENNReal :=
+  ⨆ s ∈ Set.Icc (0 : ℝ) t, ENNReal.ofReal (lam (jumpProcessE lam s ω))
+
+variable {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)} {t : ℝ}
+
+theorem le_rateSup {s : ℝ} (hs : s ∈ Set.Icc (0 : ℝ) t) :
+    ENNReal.ofReal (lam (jumpProcessE lam s ω)) ≤ rateSup lam t ω :=
+  le_iSup₂ (f := fun s (_ : s ∈ Set.Icc (0 : ℝ) t) ↦
+    ENNReal.ofReal (lam (jumpProcessE lam s ω))) s hs
+
+theorem rateSup_le {c : ENNReal} (h : ∀ s ∈ Set.Icc (0 : ℝ) t, ENNReal.ofReal
+    (lam (jumpProcessE lam s ω)) ≤ c) : rateSup lam t ω ≤ c := iSup₂_le h
+
+/-- The running supremum is monotone in the time, since the windows nest. -/
+theorem monotone_rateSup (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    Monotone fun t : ℝ ↦ rateSup lam t ω := fun _ _ h ↦
+  rateSup_le fun _ hs ↦ le_rateSup ⟨hs.1, hs.2.trans h⟩
+
+/-- **The uncountable supremum is a countable one.**  Every time of `[0, t]` other than `t`
+itself is followed by a rational of `[0, t]` at which the path takes the same value, by right
+local constancy; and `t` is added by hand.  The rationals are clamped into `[0, t]` rather than
+carried with a side condition, so that the right hand side is a supremum over `ℚ` outright --
+which is what makes it measurable without a decidability argument. -/
+theorem rateSup_eq_sup_rat (ht : 0 ≤ t) :
+    rateSup lam t ω
+      = (⨆ q : ℚ, ENNReal.ofReal (lam (jumpProcessE lam (max 0 (min t (q : ℝ))) ω)))
+          ⊔ ENNReal.ofReal (lam (jumpProcessE lam t ω)) := by
+  refine le_antisymm (rateSup_le fun s hs ↦ ?_) ?_
+  · rcases eq_or_lt_of_le hs.2 with rfl | hlt
+    · exact le_sup_right
+    · obtain ⟨u, hu, hconst⟩ := exists_Ico_jumpProcessE_eq lam ω s
+      obtain ⟨q, hq1, hq2⟩ := exists_rat_btwn (lt_min hu hlt)
+      have hq0 : (0 : ℝ) ≤ (q : ℝ) := hs.1.trans hq1.le
+      have hclamp : max 0 (min t (q : ℝ)) = (q : ℝ) := by
+        rw [min_eq_right (le_of_lt ((lt_min_iff.1 hq2).2)), max_eq_right hq0]
+      refine le_trans (le_of_eq ?_) (le_sup_of_le_left (le_iSup _ q))
+      rw [hclamp, hconst _ ⟨hq1.le, (lt_min_iff.1 hq2).1⟩]
+  · refine sup_le (iSup_le fun q ↦ le_rateSup ⟨le_max_left _ _, ?_⟩) (le_rateSup ⟨ht, le_rfl⟩)
+    exact max_le ht (min_le_left _ _)
+
+/-- **The running supremum is measurable for the σ-algebra of its own time.**  This is the
+statement a stopping time needs, and it is where the countable reduction is spent: each of the
+countably many terms is the rate at a time `≤ t`, hence `𝓕 t`-measurable through
+`measurable_naturalFiltration`. -/
+theorem measurable_rateSup {lam : E → ℝ} (hlam : Measurable lam) (t : ℝ≥0) :
+    Measurable[jumpFiltrationE lam hlam t] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ rateSup lam (t : ℝ) ω := by
+  have key : ∀ s : ℝ, 0 ≤ s → s ≤ (t : ℝ) →
+      Measurable[jumpFiltrationE lam hlam t] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        ENNReal.ofReal (lam (jumpProcessE lam s ω)) := by
+    intro s hs0 hst
+    have hj : Real.toNNReal s ≤ t := Real.toNNReal_le_iff_le_coe.2 hst
+    have hX := measurable_naturalFiltration
+      (X := fun r : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (r : ℝ) ω)
+      (fun r ↦ measurable_jumpProcessE_apply hlam (r : ℝ)) hj
+    rw [Real.coe_toNNReal s hs0] at hX
+    exact (ENNReal.measurable_ofReal.comp hlam).comp hX
+  have hEq : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ rateSup lam (t : ℝ) ω) =
+      fun ω ↦ (⨆ q : ℚ, ENNReal.ofReal
+            (lam (jumpProcessE lam (max 0 (min (t : ℝ) (q : ℝ))) ω)))
+          ⊔ ENNReal.ofReal (lam (jumpProcessE lam (t : ℝ) ω)) :=
+    funext fun ω ↦ rateSup_eq_sup_rat t.coe_nonneg
+  rw [hEq]
+  refine Measurable.max (Measurable.iSup fun q ↦ key _ (le_max_left _ _) ?_)
+    (key _ t.coe_nonneg le_rfl)
+  exact max_le t.coe_nonneg (min_le_left _ _)
+
+/-- **The running supremum is locally constant to the right.**  On `[t, u)` the path does not
+move, so the supremum acquires no value it did not already have at `t`.  This is the property
+that turns the hitting time into a stopping time, and it is the reason the level set of
+`rateTime` is a level set of `rateSup` on the nose rather than up to a limit. -/
+theorem eventuallyEq_nhdsGE_rateSup (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) (ht : 0 ≤ t) :
+    ∃ u, t < u ∧ ∀ r ∈ Set.Ico t u, rateSup lam r ω = rateSup lam t ω := by
+  obtain ⟨u, hu, hconst⟩ := exists_Ico_jumpProcessE_eq lam ω t
+  refine ⟨u, hu, fun r hr ↦ le_antisymm (rateSup_le fun s hs ↦ ?_) (monotone_rateSup lam ω hr.1)⟩
+  rcases le_or_gt s t with hst | hts
+  · exact le_rateSup ⟨hs.1, hst⟩
+  · rw [hconst s ⟨hts.le, hs.2.trans_lt hr.2⟩]
+    exact le_rateSup ⟨ht, le_rfl⟩
+
+/-! ### The hitting times of the running supremum -/
+
+/-- **The time at which the rate along the path first reaches the level `n`.**
+
+The infimum is taken in `ℝ≥0∞` over an index ranging in `ℝ≥0`, so that `sInf ∅ = ⊤`: a path
+whose rate never reaches `n` is never stopped, and the hitting time is total without a case
+distinction.  In `ℝ≥0` the same infimum would return the junk value `0`, which is the defect that
+`jumpProcess_absorbing_const` exhibits for the old step index. -/
+noncomputable def rateTime (lam : E → ℝ) (n : ℕ) (ω : (ℕ → E) × (ℕ → ℝ)) : ENNReal :=
+  ⨅ t : ℝ≥0, ⨅ _ : (n : ENNReal) ≤ rateSup lam (t : ℝ) ω, (t : ENNReal)
+
+/-- **The level set of the hitting time is the level set of the running supremum.**  The forward
+direction is the right local constancy and nothing else: an infimum below `t` produces a time
+below `t + δ`, and on `[t, t + δ)` the running supremum has not changed. -/
+theorem rateTime_le_iff {n : ℕ} (t : ℝ≥0) :
+    rateTime lam n ω ≤ (t : ENNReal) ↔ (n : ENNReal) ≤ rateSup lam (t : ℝ) ω := by
+  refine ⟨fun h ↦ ?_, fun h ↦ iInf₂_le (f := fun (s : ℝ≥0) (_ : _) ↦ (s : ENNReal)) t h⟩
+  obtain ⟨u, hu, hconst⟩ := eventuallyEq_nhdsGE_rateSup lam ω t.coe_nonneg
+  -- some time below `u` already reaches the level, or the infimum would be at least `u`
+  by_contra hcon
+  have hnot : ∀ s : ℝ≥0, (n : ENNReal) ≤ rateSup lam (s : ℝ) ω → (Real.toNNReal u : ENNReal) ≤ s := by
+    intro s hs
+    rcases le_or_gt (s : ℝ) (t : ℝ) with hst | hts
+    · exact absurd ((monotone_rateSup lam ω hst).trans' hs) hcon
+    · rcases le_or_gt u (s : ℝ) with hus | hsu
+      · exact_mod_cast Real.toNNReal_le_iff_le_coe.2 hus
+      · exact absurd ((hconst (s : ℝ) ⟨hts.le, hsu⟩) ▸ hs) hcon
+  have hge : (Real.toNNReal u : ENNReal) ≤ rateTime lam n ω := le_iInf₂ hnot
+  have hlt : (t : ENNReal) < (Real.toNNReal u : ENNReal) := by
+    have : (t : ℝ≥0) < Real.toNNReal u := Real.lt_toNNReal_iff_coe_lt.2 hu
+    exact_mod_cast this
+  exact absurd (hge.trans h) (not_le.2 hlt)
+
+/-- **The hitting times of the running supremum are stopping times.**  This is the statement that
+`not_isStoppingTime_min_jumpTimeE` denies for the jump times, and the difference is visibility:
+`rateSup` is built from the path alone, so `𝓕 t` sees it, while the waiting times leave no trace
+in the path at all. -/
+theorem isStoppingTime_rateTime {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ) :
+    IsStoppingTime (jumpFiltrationE lam hlam) (rateTime lam n) := by
+  intro t
+  refine MeasurableSet.congr
+    (s := {ω : (ℕ → E) × (ℕ → ℝ) | (n : ENNReal) ≤ rateSup lam (t : ℝ) ω})
+    (measurableSet_le measurable_const (measurable_rateSup hlam t)) ?_
+  ext ω
+  exact (rateTime_le_iff t).symm
+
+/-- The hitting times increase with the level. -/
+theorem monotone_rateTime (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    Monotone fun n : ℕ ↦ rateTime lam n ω := by
+  intro m n hmn
+  refine le_iInf₂ fun s hs ↦ iInf₂_le (f := fun (s : ℝ≥0) (_ : _) ↦ (s : ENNReal)) s ?_
+  exact le_trans (by exact_mod_cast Nat.cast_le.2 hmn) hs
+
+/-- **Before a fixed time a non explosive path has visited finitely many states**, so the running
+supremum of the rate along it is finite.  This is the whole of the non explosion input: the
+supremum is over a window of the *chain*, and a finite supremum in `ℝ≥0∞` of finite terms is
+finite. -/
+theorem rateSup_lt_top_of_mem_nonExplosiveE {y : ℕ → E} {xi : ℕ → ℝ}
+    (hω : (y, xi) ∈ NonExplosiveE lam) : rateSup lam t (y, xi) < ⊤ := by
+  set k := stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) with hk
+  have htop : ENNReal.ofReal t < jumpTimeE lam y xi (k + 1) := lt_stepIndex_succ (hω t)
+  have hle : rateSup lam t (y, xi)
+      ≤ ∑ i ∈ Finset.range (k + 1), ENNReal.ofReal (lam (y i)) := by
+    refine rateSup_le fun s hs ↦ ?_
+    have hsk : stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s) ≤ k :=
+      stepIndex_le ((ENNReal.ofReal_le_ofReal hs.2).trans_lt htop)
+    have : jumpProcessE lam s (y, xi)
+        = y (stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal s)) := rfl
+    rw [this]
+    exact Finset.single_le_sum (f := fun i ↦ ENNReal.ofReal (lam (y i)))
+      (fun i _ ↦ zero_le) (Finset.mem_range.2 (Nat.lt_succ_of_le hsk))
+  refine hle.trans_lt (ENNReal.sum_lt_top.2 fun i _ ↦ ENNReal.ofReal_lt_top)
+
+/-- **The hitting times exhaust the time axis on the non explosive set.**  Every level is passed,
+because the running supremum at each fixed time is finite; and since the hitting times increase
+with the level, that is convergence to `⊤`. -/
+theorem tendsto_rateTime_atTop {y : ℕ → E} {xi : ℕ → ℝ}
+    (hω : (y, xi) ∈ NonExplosiveE lam) :
+    Filter.Tendsto (fun n : ℕ ↦ rateTime lam n (y, xi)) Filter.atTop (𝓝 ⊤) := by
+  refine ENNReal.tendsto_nhds_top_iff_nnreal.2 fun s ↦ ?_
+  obtain ⟨n, hn⟩ := ENNReal.exists_nat_gt
+    (rateSup_lt_top_of_mem_nonExplosiveE (t := (s : ℝ)) hω).ne
+  refine Filter.eventually_atTop.2 ⟨n, fun m hm ↦ lt_of_not_ge fun hcon ↦ ?_⟩
+  have h := (rateTime_le_iff (n := m) s).1 hcon
+  exact absurd (h.trans' (by exact_mod_cast Nat.cast_le.2 hm)) (not_le.2 hn)
+
+/-- **The hitting times of the running supremum are a localizing sequence** for the local jump
+process, under non explosion alone.  This is the repair of Point 5 of this milestone: the
+sequence announced there is not one (`not_isStoppingTime_min_jumpTimeE`), this one is, and the
+two hypotheses it needs are exactly the two facts the construction supplies -- measurability of
+the process and almost sure non explosion. -/
+theorem isLocalizingSequence_rateTime {lam : E → ℝ} (hlam : Measurable lam)
+    {P : Measure ((ℕ → E) × (ℕ → ℝ))} (hP : ∀ᵐ ω ∂P, ω ∈ NonExplosiveE lam) :
+    ProbabilityTheory.IsLocalizingSequence (jumpFiltrationE lam hlam) (rateTime lam) P where
+  isStoppingTime n := isStoppingTime_rateTime hlam n
+  tendsto_top := by
+    filter_upwards [hP] with ω hω
+    exact tendsto_rateTime_atTop (y := ω.1) (xi := ω.2) hω
+  mono := Filter.Eventually.of_forall fun ω ↦ monotone_rateTime lam ω
+
+end LocalFiltration

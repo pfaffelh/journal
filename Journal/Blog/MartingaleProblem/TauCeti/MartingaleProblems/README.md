@@ -1312,9 +1312,76 @@ A concrete family of solutions, built without any of the theory above. Index
   is about the *compensated* processes.  For the constructed process it is
   `stronglyMeasurable_jumpFiltration`, one line from
   `measurable_naturalFiltration` read at `j = i`.
+* `jumpFiltrationE`: the natural filtration of the local process, the
+  counterpart of `jumpFiltration`, indexed by `ℝ≥0` so that a localizing
+  sequence drawn from `jumpTimeE` needs no coercion — `ℝ≥0∞` *is* `WithTop ℝ≥0`,
+  which is where `MeasureTheory.IsStoppingTime` takes its values. **Proved** on
+  2026-09-10, tenth run.
+* `not_isStoppingTime_min_jumpTimeE`: **the jump times are not stopping times
+  for the filtration of the process.** Stated at the first index of the sequence
+  `τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n`, under the single hypothesis
+  `0 < lam x₀` for one state `x₀`. **Proved** on 2026-09-10, tenth run, together
+  with `jumpProcessE_const_chain` and `jumpTimeE_const_chain`.
+  The witness is the constant chain at `x₀`
+  with the two constant waiting times `lam x₀ / 4` and `lam x₀`: both have
+  strictly positive holding times, their paths are equal — both constantly `x₀`
+  — and their first jump times, `1/4` and `1`, are separated by the threshold
+  `1/2`. The mechanism is `jumpProcessE_const_chain`: `stepPath` reads the chain
+  at the step index, so a chain that does not move leaves no trace of the
+  waiting times in the path.
+* `eq_of_measurable_jumpFiltrationE_const_chain`: two constant chains are
+  separated by **no** functional of the process, at **any** time — the hypothesis
+  is not `r ≤ s` but nothing at all, the two paths being equal everywhere.
+  **Proved** on 2026-09-10, tenth run. This is what forbids the usual repair for
+  a debut: the right continuous filtration `⨅ s > t, 𝓕 s` lies below `𝓕 s` for
+  every `s > t`, and the statement holds at each of them. The waiting times are
+  not late in the path, they are absent from it.
+* `eq_of_measurable_jumpFiltrationE_of_subsingleton`: on a one point state space
+  no `𝓕 t`-measurable real function separates any two sample points. This is
+  what forbids repairing the previous point by completing the filtration or by
+  discarding a null set: the failing set is then the whole sample space, while
+  the rate `1` there satisfies every hypothesis of `jumpProcess_isMPSolution`.
+  `IsStoppingTime` is not an almost sure notion, for the same reason
+  `StronglyAdapted` is not. **Proved** on 2026-09-10, tenth run.
+* `rateSup`, `rateTime`: the repair, and it is the one Milestone 7 already
+  prescribes. **Proved** on 2026-09-10, eleventh run. `rateSup lam t ω` is the
+  running supremum
+  `⨆ s ∈ Set.Icc 0 t, ENNReal.ofReal (lam (jumpProcessE lam s ω))`, and
+  `rateTime lam n ω = ⨅ t : ℝ≥0, ⨅ _ : (n : ℝ≥0∞) ≤ rateSup lam t ω, (t : ℝ≥0∞)`
+  — the infimum is taken **in `ℝ≥0∞`** over an index ranging in `ℝ≥0`, so that a
+  path whose rate never reaches `n` gets `⊤` and not the junk value `0` that
+  `sInf ∅` would give in `ℝ≥0`. These are functionals of the **path**, so they
+  are visible to `jumpFiltrationE` (`measurable_rateSup`, `isStoppingTime_rateTime`),
+  and `rateTime_le_iff` says `{rateTime lam n ≤ t} = {n ≤ rateSup lam t}`. Both
+  properties rest on `eventuallyEq_nhdsGE_jumpProcessE`, right local constancy of
+  the path, which carries **no hypothesis at all**: it turns the uncountable
+  supremum into a countable one over the rationals of `[0, t]` together with `t`
+  itself (`rateSup_eq_sup_rat`), and it makes the running supremum locally
+  constant to the right (`eventuallyEq_nhdsGE_rateSup`).
+* `isLocalizingSequence_rateTime`: the three fields, under almost sure non
+  explosion. **Proved** on 2026-09-10, eleventh run. `isStoppingTime` is the
+  previous point; `mono` is `monotone_rateTime`, monotonicity in the **level**;
+  `tendsto_top` is non explosion read through `exists_stepIndex_window` — before a
+  fixed time the path takes finitely many values, so the running supremum of the
+  rate is finite there (`rateSup_lt_top_of_mem_nonExplosiveE`) and every level is
+  eventually exceeded (`tendsto_rateTime_atTop`). The hypothesis is
+  `∀ᵐ ω ∂P, ω ∈ NonExplosiveE lam` and nothing else, so
+  `ae_mem_nonExplosiveE_jumpMeasure` discharges it for the constructed process.
+* `eventuallyEq_nhdsGE_stepPath_comp`: a step path is locally constant to the
+  right at **every** time, with no hypothesis on the jump times whatever, and
+  along an arbitrary monotone continuous time map. **Proved** on 2026-09-10,
+  eleventh run. The time map is carried for the reason it is carried in
+  `measurable_stepIndex_comp`: the local construction reads jump times in `ℝ≥0∞`
+  at real times, so it is `ENNReal.ofReal` there, and `eventuallyEq_nhdsGE_stepPath`
+  is the case of the identity — which is how the old declaration is now proved.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
-  exploding, the local martingale problem is solved; and the explosion criterion
-  in terms of the jump times.
+  exploding, the local martingale problem is solved, with `rateTime` as the
+  localizing sequence; and the explosion criterion in terms of the jump times.
+  Note what the localization buys and what it does not: on `{t < rateTime lam n}`
+  the rate along the path is at most `n`, which is a bound of the same kind
+  `jumpProcess_isMPSolution` asks for, but it is a bound along the path and not a
+  bound on `lam`, so the global theorem does not apply to the stopped process by
+  substitution.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for
@@ -1641,10 +1708,22 @@ this milestone speaks about `Locally`, which is declared under it.
 **Acceptance examples.**
 
 * **The exploding jump process.** `E = ℕ`, `lam n = 2 ^ n`,
-  `mu n = Measure.dirac (n + 1)`, and `τ k` the `k`-th jump time. This is the
-  instance for which `IsLocalMPSolution` holds and `IsMPSolution` does not, so
-  the two predicates of Milestone 2 are genuinely different here, and
+  `mu n = Measure.dirac (n + 1)`. This is the instance for which
+  `IsLocalMPSolution` holds and `IsMPSolution` does not, so the two predicates of
+  Milestone 2 are genuinely different here, and
   `localizingSystem_of_boundedJumps` applies with jump size `1`.
+
+  The localizing times are `rateTime lam k` of Milestone 4 — the hitting times of
+  the running supremum of the rate along the path — and **not** the jump times.
+  The jump times are not stopping times for the natural filtration of the
+  process, on this instance or on any other: `not_isStoppingTime_min_jumpTimeE`
+  is the witness, the constant chain, at which the waiting times leave no trace
+  in the path. On these data the chain increases at every jump *almost surely*,
+  so the two sequences agree almost everywhere; `IsStoppingTime` is not an almost
+  sure notion, and that is exactly the distinction this milestone exists to make.
+  This is a second reason for the running supremum, independent of the strictness
+  named in the point above and sharper than it — a debut that the filtration
+  cannot see is not repaired by passing to `⨅ s > t, 𝓕 s`.
 * **The running supremum is not a convenience.** For a càdlàg `Y` with
   `Y 0 = 0`, the hitting time `inf {t | n ≤ ‖Y t‖}` of the norm is not a
   stopping time for `𝓕` itself — it is the debut of the open set

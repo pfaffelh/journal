@@ -707,19 +707,119 @@ danach.*
      Rate konstant und der Kern eine Verschiebung, also sieht der Zustand dort
      gar nichts; hier sieht er die Schranke `1 ≤ x`.
 
-   **Was von Punkt 5 noch fehlt**, und es ist der nächste Auftrag:
-   `jumpProcess_isLocalMPSolution` — daß der lokale Prozeß das **lokale**
-   Martingalproblem löst, mit der lokalisierenden Folge
-   `τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n`. Alle drei Zutaten stehen: der
-   Prozeß ist meßbar, er explodiert f.s. nicht, und vor dem `n`-ten Sprung
-   besucht der Pfad nur `n` Zustände, die Rate ist dort also **beschränkt**. Der
-   einzige Punkt, an dem es brechen kann, ist, ob die gestoppte Konstruktion mit
-   der Konstruktion zur beschränkten Rate übereinstimmt oder nur denselben
-   Martingalen genügt. Von den drei Akzeptanzbeispielen ist M/M/1 damit
-   **fertig** — Erzeuger, Lösung und Martingal —, die lineare Kette hat ihren
-   Erzeuger und ihr Nichtexplosionsargument und wartet auf
-   `jumpProcess_isLocalMPSolution`, und Hawkes wartet auf die pfadabhängige
-   Variante.
+   **Zwischenstand 2026-09-10, zehnter Lauf des Tages. Die angesagte
+   lokalisierende Folge ist keine, und das ist das Ergebnis des Laufs.** Sechs
+   Deklarationen im neuen Abschnitt `LocalFiltration`, die ganze Datei ohne einen
+   Fehler durch `lake env lean` gegen v4.33.1, alle sechs mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10, zehnter
+   Lauf des Tages".
+
+   `not_isStoppingTime_min_jumpTimeE`: die Glieder von
+   `τ n ω = min (jumpTimeE lam ω.1 ω.2 n) n` sind **keine Stoppzeiten** für
+   `jumpFiltrationE`, die natürliche Filtration des Prozesses, und
+   `ProbabilityTheory.IsLocalizingSequence` verlangt das Feld `isStoppingTime`
+   exakt. Der Zeuge ist die **konstante Kette** an einem Zustand `x₀` mit
+   `0 < lam x₀`, mit den beiden konstanten Wartezeiten `lam x₀ / 4` und `lam x₀`:
+   beide haben echt positive Haltezeiten, ihre Pfade sind gleich, ihre ersten
+   Sprungzeiten `1/4` und `1` trennt die Schwelle `1/2`. Der Grund ist
+   `jumpProcessE_const_chain`, ein `rfl`: `stepPath` liest die Kette am
+   Stufenindex, also hinterläßt eine Kette, die sich nicht bewegt, keine Spur der
+   Wartezeiten im Pfad — ein Sprung von `x` nach `x` ist unsichtbar.
+
+   **Drei Dinge daran, die der nächste Lauf braucht.**
+
+   * **Es ist nicht durch Wegwerfen einer Nullmenge zu reparieren.**
+     `eq_of_measurable_jumpFiltrationE_of_subsingleton`: über einem einpunktigen
+     Zustandsraum trennt keine `𝓕 t`-meßbare reelle Funktion zwei
+     Stichprobenpunkte, die versagende Menge ist also der **ganze** Raum, während
+     die Rate `1` jede Voraussetzung von `jumpProcess_isMPSolution` erfüllt.
+     Allgemein: sobald `mu x {x} > 0` ist, ist die unsichtbare Kette keine
+     Nullmenge. `IsStoppingTime` ist überdies keine f.s.-Aussage — derselbe
+     Punkt, an dem `StronglyAdapted` diese Datei schon einmal zu einer
+     voraussetzungsfreien Rechtsstetigkeit gezwungen hat. **Und auch der Übergang
+     zur rechtsstetigen Filtration hilft nicht**, der übliche Reparaturweg für
+     eine Anfangszeit: `eq_of_measurable_jumpFiltrationE_const_chain` trennt die
+     beiden konstanten Ketten zu **keiner** Zeit, und `⨅ s > t, 𝓕 s` liegt unter
+     `𝓕 s` für jedes `s > t`. Die Wartezeiten sind im Pfad nicht spät, sie sind
+     abwesend.
+   * **Die Reparatur ist die, die Meilenstein 7 längst vorschreibt**, und sie
+     steht als Punkte in `MartingaleProblems/README.md`, Meilenstein 4: die
+     Treffzeiten des **laufenden Supremums der Rate längs des Pfades**,
+     `rateSup lam t ω = ⨆ s ∈ Set.Icc 0 t, ENNReal.ofReal (lam (jumpProcessE lam s ω))`
+     und `rateTime lam n ω = sInf {t : ENNReal | (n : ENNReal) ≤ rateSup lam t ω}`.
+     Was lokalisieren darf, muß ein Funktional des **Pfades** sein, denn nur den
+     sieht die Filtration. Meilenstein 7 nennt für das laufende Supremum die
+     Striktheit als Grund; die **Sichtbarkeit** ist der schärfere, denn die
+     Sprungzeiten sind für *keine* Filtration des Prozesses Stoppzeiten, auch
+     nicht für die rechtsstetige.
+   * **Der `sInf` gehört nach `ENNReal` und nicht nach `ℝ≥0`**: dort ist
+     `sInf ∅ = ⊤`, was die Stoppzeit ohne Fallunterscheidung total macht, während
+     `ℝ≥0` denselben Müllwert `0` gäbe, an dem der siebte Lauf die alte
+     `stepIndex` scheitern sah.
+
+   ~~**Was von Punkt 5 noch fehlt**, und es ist der nächste Auftrag: `rateSup`
+   samt `measurable_rateSup` und `rateSup_right_continuous`, **vor** `rateTime`~~
+   *(erledigt 2026-09-10, elfter Lauf des Tages, und über den Auftrag hinaus:
+   `rateTime` samt `isStoppingTime_rateTime` und `isLocalizingSequence_rateTime`
+   stehen ebenfalls.)*
+
+   **Zwischenstand 2026-09-10, elfter Lauf des Tages. Die lokalisierende Folge
+   steht, und sie ist eine.** Siebzehn Deklarationen (zwei Definitionen, fünfzehn
+   Sätze), die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1,
+   alle siebzehn mit `#print axioms` auf `propext`, `Classical.choice`,
+   `Quot.sound` geprüft, die Zahl der `sorry` bleibt bei neun. Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-10, elfter Lauf des Tages"; die Punkte
+   stehen berichtigt in `MartingaleProblems/README.md`, Meilenstein 4.
+
+   **Alles hängt an einer einzigen voraussetzungsfreien Aussage, und sie ist
+   allgemeiner geworden als ihr Anlaß.** `eventuallyEq_nhdsGE_stepPath_comp` sagt,
+   daß ein Treppenpfad an **jeder** Zeit von rechts lokal konstant ist — ohne
+   Monotonie der Sprungzeiten, ohne Nichtexplosion — und führt die Zeitabbildung
+   mit, wie `measurable_stepIndex_comp` es tut; der lokale Fall ist
+   `ENNReal.ofReal`, das alte `eventuallyEq_nhdsGE_stepPath` der Fall `u = id`
+   und auf drei Zeilen zusammengeschrumpft. Daraus die Meßbarkeit
+   (`rateSup_eq_sup_rat`, die Reduktion auf ein Supremum über `ℚ`) **und** die
+   Rechtsstetigkeit (`eventuallyEq_nhdsGE_rateSup`, in Wahrheit lokale
+   Konstanz), und aus diesen beiden `rateTime_le_iff` und
+   `isStoppingTime_rateTime`.
+
+   **Drei Befunde für den nächsten Lauf.** (a) Die angesagte Gestalt des `sInf`
+   war an einer halben Zeile falsch: `sInf {t : ℝ≥0 | …}` nimmt das Infimum in
+   `ℝ≥0` und liefert gerade den Müllwert `0`, vor dem der Punkt darüber warnt. Es
+   heißt `⨅ t : ℝ≥0, ⨅ _ : (n:ℝ≥0∞) ≤ rateSup lam t ω, (t : ℝ≥0∞)` — Index in
+   `ℝ≥0`, Infimum in `ℝ≥0∞`. (b) Die Rechtsstetigkeit ist als **Intervall**
+   `[t, u)` zu formulieren und nicht als Filteraussage: `rateTime_le_iff` braucht
+   das Intervall und nicht bloß `∀ᶠ … 𝓝[≥]`. (c) Die Datei hat **kein**
+   `open scoped ENNReal` — `ℝ≥0∞` steht dort nur in Kommentaren, im Code steht
+   `ENNReal` ausgeschrieben. Wer die Notation benutzt, erntet zwanzig
+   Folgefehler an Stellen, die in Ordnung sind.
+
+   **Was von Punkt 5 jetzt noch fehlt, und es ist eine einzige benannte
+   Aussage:** `jumpProcess_isLocalMPSolution`. Alle Eingaben stehen jetzt
+   wirklich und nicht als Beschreibung: die lokalisierende Folge ist bewiesen
+   eine (`isLocalizingSequence_rateTime`), der Prozeß ist meßbar
+   (`measurable_jumpProcessE`), und `ae_mem_nonExplosiveE_jumpMeasure` löst die
+   einzige Voraussetzung jener Folge unter `jumpMeasure mu nu` ein. Dabei ist im
+   Auge zu behalten, was die Lokalisierung liefert und was nicht — es ist der
+   Punkt, an dem der Satz brechen kann: auf `{t < rateTime lam n}` ist die Rate
+   **längs des Pfades** durch `n` beschränkt, was keine Schranke an `lam` ist, so
+   daß `jumpProcess_isMPSolution` auf dem gestoppten Prozeß **nicht** durch
+   Einsetzen greift. Von den drei Akzeptanzbeispielen ist M/M/1 **fertig** —
+   Erzeuger, Lösung und Martingal —, die lineare Kette hat ihren Erzeuger und ihr
+   Nichtexplosionsargument und wartet auf `jumpProcess_isLocalMPSolution`, und
+   Hawkes wartet auf die pfadabhängige Variante.
+
+   *Der ursprüngliche Wortlaut dieses Zwischenstands, und er ist an einem Wort
+   falsch:* „Alle drei Zutaten stehen: der Prozeß ist meßbar, er explodiert f.s.
+   nicht, und vor dem `n`-ten Sprung besucht der Pfad nur `n` Zustände, die Rate
+   ist dort also beschränkt. Der einzige Punkt, an dem es brechen kann, ist, ob
+   die gestoppte Konstruktion mit der Konstruktion zur beschränkten Rate
+   übereinstimmt oder nur denselben Martingalen genügt." Die dritte Zutat war
+   eine **Beschreibung** und keine Voraussetzung: daß `τ n` eine Stoppzeit sei,
+   ist nie geprüft worden. Das ist der Fehlertyp der Suchregel vom neunten Lauf
+   des 2026-09-08, hier in der Gegenrichtung — einen Kandidaten mit einer
+   Beschreibung statt mit einer Voraussetzung **annehmen**.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:
