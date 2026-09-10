@@ -1398,16 +1398,59 @@ A concrete family of solutions, built without any of the theory above. Index
   `exists_jumpProcessE_truncRate_ne` is the witness that the hitting time
   hypothesis cannot be dropped, and `rateTime_zero` says why its level is `0`
   there.
+* `jumpProcessE_eq_of_rate_eq_on_path`: **two rates that agree at every state the
+  path has visited give the same process**, at every sample point and with no non
+  explosion hypothesis, no positivity, no bound, no measurability and no
+  comparison between the two rates. **Proved** on 2026-09-10, thirteenth run,
+  with `jumpTimeE_eq_of_rate_eq_on_path` and `jumpProcessE_toReal_jumpTimeE`. It
+  is the hypothesis free form of `jumpProcessE_eq_truncRate_of_le_rateTime`, and
+  the filtrations need it in that form: a natural filtration is not an almost
+  sure notion, so a comparison that discards the explosion set cannot compare
+  σ-algebras. Non explosion was needed to *name* a window, and where there is no
+  window every jump time lies below the time, so the two sequences of jump times
+  are equal outright and the two step indices are the same junk value. The
+  monotonicity `jumpTimeE_le_of_rate_le` is not needed either once the hypothesis
+  is read at the closed end `s = t`: the state the path occupies **at** `t` is
+  visited at `t`. The one hypothesis is `0 ≤ t`, and it is not cosmetic — below
+  `0` the hypothesis is vacuous while the conclusion still claims something.
+* `rateSup_truncRate_lt_iff`: **the level is passed by the running supremum of
+  the rate exactly when it is passed by that of the truncated rate**. **Proved**
+  on 2026-09-10, thirteenth run, from the comparison read from each of the two
+  sides in turn (`jumpProcessE_truncRate_eq_of_rateSup_lt`,
+  `jumpProcessE_eq_truncRate_of_rateSup_truncRate_lt`, and the two identities of
+  the suprema `rateSup_truncRate_eq_of_lt`, `rateSup_eq_of_rateSup_truncRate_lt`
+  behind them). Neither direction is free; each is the comparison of the paths
+  read from its own side, and the second is the only place in the milestone where
+  the truncated path is the given one. With `lt_rateTime_iff_rateSup_lt` it gives
+  `setOf_lt_rateTime_eq`, the identity
+  `{s < rateTime lam n} = {rateSup (truncRate lam n) s < n}`, and hence
+  `measurableSet_lt_rateTime_truncRate`: the set on which the local process has
+  not yet reached the level is an event of the **truncated** filtration, which is
+  what the σ-algebra argument below needs and what a comparison of paths alone
+  does not give.
+* `naturalFiltration_inter_le`: **the trace of one natural filtration on a set
+  where the two processes agree is seen by the other**, with no topology, no
+  measure and no relation between the two processes beyond that agreement.
+  **Proved** on 2026-09-10, thirteenth run. The set has to belong to the *target*
+  σ-algebra and not merely be measurable: the family `{A | A ∩ N ∈ 𝓖}` is closed
+  under complements because `Aᶜ ∩ N = N \ (A ∩ N)`, and that is where the
+  membership is spent. It is the general form of the passage from the generating
+  evaluations to the whole σ-algebra.
 * `jumpFiltrationE_inter_lt_rateTime`: **the two natural filtrations agree before
   the hitting time**: for `A ∈ jumpFiltrationE lam s`, the set
   `A ∩ {ω | (s : ℝ≥0∞) < rateTime lam n ω}` lies in
-  `jumpFiltrationE (truncRate lam n) s`, and conversely. This is what
+  `jumpFiltrationE (truncRate lam n) s`, and conversely
+  (`jumpFiltrationE_truncRate_inter_lt_rateTime`). **Proved** on 2026-09-10,
+  thirteenth run, from the three points above. This is what
   `jumpProcessE_eq_truncRate_of_le_rateTime` does **not** give: a process identity
   before a time is not an identity of the σ-algebras of that time, and the two
   differ after it. It is the step that lets the conditional expectation of the
   bounded problem be read as one of the local filtration, on the set where the
   stopping has not yet happened; off that set the increment of the stopped process
-  vanishes and there is nothing to prove.
+  vanishes and there is nothing to prove. The second inclusion is not a
+  formality: before the hitting time the truncated filtration sees no more than
+  the local one, and after it the two paths part company, so the inclusion holds
+  in this cut down form and in no other.
 * `jumpProcessE_isMPSolution`: `jumpProcess_isMPSolution` for the **local**
   construction, under `0 ≤ lam ≤ L` rather than `0 < lam ≤ L`. The bounded theorem
   is stated for `jumpProcess` and for `jumpFiltration`, and
