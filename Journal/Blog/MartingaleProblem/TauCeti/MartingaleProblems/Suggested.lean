@@ -1374,14 +1374,25 @@ variable {E : Type*}
 
 /-! ### The step index -/
 
+/-! The jump times are read in an arbitrary linearly ordered time axis and not in `ℝ`.
+
+Nothing in this block uses more than the order, and the generality is paid for at once by the
+**local case**: a rate with a zero has an infinite holding time, so its jump times live in
+`ℝ≥0∞` and not in `ℝ` (`jumpTimeE` below, and `jumpProcess_absorbing_const` for what goes wrong
+without it).  Both instantiations are used. -/
+
+section OrderedTimes
+
+variable {α : Type*} [ConditionallyCompleteLinearOrder α]
+
 /-- The index of the window a time belongs to: the least `n` with `t < T (n + 1)`.
 
 `Nat.find` would need a proof of existence at every call.  `sInf` on `ℕ` is the same function
 made total by `sInf ∅ = 0`, and the junk value is harmless: it is returned exactly on the
 explosion set, where no window contains `t`. -/
-noncomputable def stepIndex (T : ℕ → ℝ) (t : ℝ) : ℕ := sInf {n | t < T (n + 1)}
+noncomputable def stepIndex (T : ℕ → α) (t : α) : ℕ := sInf {n | t < T (n + 1)}
 
-variable {T : ℕ → ℝ} {t : ℝ} {n : ℕ}
+variable {T : ℕ → α} {t : α} {n : ℕ}
 
 theorem lt_stepIndex_succ (hex : ∃ n, t < T (n + 1)) : t < T (stepIndex T t + 1) :=
   Nat.sInf_mem hex
@@ -1411,13 +1422,18 @@ theorem T_stepIndex_le (h : stepIndex T t ≠ 0) : T (stepIndex T t) ≤ t := by
 /-! ### The step path -/
 
 /-- The path that takes the value `y n` on `[T n, T (n + 1))`. -/
-noncomputable def stepPath (T : ℕ → ℝ) (y : ℕ → E) (t : ℝ) : E := y (stepIndex T t)
+noncomputable def stepPath (T : ℕ → α) (y : ℕ → E) (t : α) : E := y (stepIndex T t)
 
 /-- Every time lies in a window: the index it receives has its left endpoint below it (or is
-`0`) and its right endpoint above it. -/
-theorem exists_stepIndex_window (hex : ∀ s : ℝ, ∃ n, s < T (n + 1)) (x : ℝ) :
+`0`) and its right endpoint above it.
+
+The hypothesis is non explosion **at the single point `x`** and not everywhere.  The
+distinction is not pedantry: the local construction has jump times in `ℝ≥0∞`, where non
+explosion at `⊤` is false whenever the path is absorbed, and only the real times are ever
+looked at (`isStepPath_stepPath_ofReal`). -/
+theorem exists_stepIndex_window {x : α} (hex : ∃ n, x < T (n + 1)) :
     ∃ n, (n = 0 ∨ T n ≤ x) ∧ x < T (n + 1) := by
-  refine ⟨stepIndex T x, ?_, lt_stepIndex_succ (hex x)⟩
+  refine ⟨stepIndex T x, ?_, lt_stepIndex_succ hex⟩
   by_cases h : stepIndex T x = 0
   · exact Or.inl h
   · exact Or.inr (T_stepIndex_le h)
@@ -1432,15 +1448,16 @@ uses `StrictMono` rather than `Monotone`: when `x = T (m + 1)` is itself a jump 
 constant is `y m` and the neighbourhood is `Set.Ioo (T m) x`, which is a neighbourhood only
 because `T m < T (m + 1)`.  The other two are `T n < x`, where the same window serves, and
 `x ≤ T 0`, where the path is constant `y 0` on all of `Set.Iio x`. -/
-theorem isStepPath_stepPath [TopologicalSpace E] (hT : StrictMono T)
-    (hex : ∀ s : ℝ, ∃ n, s < T (n + 1)) (y : ℕ → E) : IsStepPath (stepPath T y) := by
+theorem isStepPath_stepPath [TopologicalSpace α] [OrderTopology α] [TopologicalSpace E]
+    (hT : StrictMono T)
+    (hex : ∀ s : α, ∃ n, s < T (n + 1)) (y : ℕ → E) : IsStepPath (stepPath T y) := by
   have hmono : Monotone T := hT.monotone
-  have key : ∀ (s : ℝ) (m : ℕ), (m = 0 ∨ T m ≤ s) → s < T (m + 1) → stepPath T y s = y m := by
+  have key : ∀ (s : α) (m : ℕ), (m = 0 ∨ T m ≤ s) → s < T (m + 1) → stepPath T y s = y m := by
     intro s m h1 h2
     simp only [stepPath, stepIndex_eq_of h1 h2 hmono]
   constructor
   · intro x
-    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window hex x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
     have hmem : Set.Ico x (T (n + 1)) ∈ 𝓝[≥] x := by
       refine mem_nhdsWithin.2 ⟨Set.Iio (T (n + 1)), isOpen_Iio, hx2, ?_⟩
       rintro z ⟨hz1, hz2⟩
@@ -1448,7 +1465,7 @@ theorem isStepPath_stepPath [TopologicalSpace E] (hT : StrictMono T)
     filter_upwards [hmem] with z hz
     rw [key z n (hx1.imp id (fun h => h.trans hz.1)) hz.2, key x n hx1 hx2]
   · intro x
-    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window hex x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
     by_cases hlt : T n < x
     · refine ⟨y n, ?_⟩
       have hmem : Set.Ioo (T n) x ∈ 𝓝[<] x :=
@@ -1490,6 +1507,10 @@ theorem stepIndex_eq_iff : stepIndex T t = n ↔
       exact absurd (lt_stepIndex_succ ⟨n, h1⟩) (not_lt.2 (h2 _ hc))
     · exact Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2
         fun k hk => absurd hk (not_lt.2 (h k))))
+
+end OrderedTimes
+
+variable {T : ℕ → ℝ} {t : ℝ} {n : ℕ}
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
@@ -6882,3 +6903,339 @@ example (u : ℝ≥0) : ∫ ω, fddProd (fun s : ℝ≥0 ↦ fun ω ↦ jumpProc
   norm_num
 
 end TwoStateExample
+
+/-! ## Milestone 4, the local case: the jump times belong in `ENNReal`
+
+The construction of `JumpConstruction` carries `∀ x, 0 < lam x` throughout, and the reason is a
+defect and not a convenience: `x / 0 = 0` in Lean, so at a state with `lam x = 0` -- which the
+model intends to be **absorbing**, with an infinite holding time -- the holding time computes to
+`0`, the jump time does not advance, and the path never enters the state at all.
+
+The local case cannot avoid this.  A rate that is only *locally* bounded is allowed zeros, and
+the absorbing state is the simplest witness that the present `jumpTime` does the wrong thing
+there.  The witness is written down first, as Lean and not as prose
+(`jumpProcess_absorbing_const`), and the repair follows it: the jump times take values in
+`ENNReal`, where `a / 0 = ⊤` for `a ≠ 0` is already the intended convention
+(`ENNReal.div_zero`), so that an absorbing state sends every later jump time to `⊤` and the
+step index stops advancing of its own accord.
+
+Nothing else changes.  `stepIndex` and `stepPath` were generalised above to an arbitrary
+linearly ordered time axis for exactly this reason, and the repaired process is the same
+`stepPath`, read at `ENNReal.ofReal t`. -/
+
+section Absorbing
+
+/-! ### The witness: the present construction never enters an absorbing state -/
+
+/-- The rate of the witness: the state `true` jumps at rate `1`, the state `false` is absorbing
+and its rate is `0`.  It is bounded, measurable and nonnegative -- everything
+`jumpProcess_isMPSolution` asks of a rate except the positivity, which is precisely the
+hypothesis under examination. -/
+def absorbRate : Bool → ℝ := fun b ↦ if b then 1 else 0
+
+/-- The trajectory of the embedded chain of the witness: it starts at `true` and is absorbed at
+`false` from the first jump on. -/
+def absorbChain : ℕ → Bool
+  | 0 => true
+  | _ + 1 => false
+
+/-- The waiting times of the witness: all equal to `1`, so every holding time the model intends
+is either `1` (at `true`) or `∞` (at `false`). -/
+def absorbWait : ℕ → ℝ := fun _ ↦ 1
+
+@[simp] theorem absorbChain_zero : absorbChain 0 = true := rfl
+
+@[simp] theorem absorbChain_succ (n : ℕ) : absorbChain (n + 1) = false := rfl
+
+@[simp] theorem absorbRate_true : absorbRate true = 1 := rfl
+
+@[simp] theorem absorbRate_false : absorbRate false = 0 := rfl
+
+@[simp] theorem absorbWait_apply (n : ℕ) : absorbWait n = 1 := rfl
+
+theorem measurable_absorbRate : Measurable absorbRate := measurable_from_top
+
+theorem absorbRate_nonneg (x : Bool) : 0 ≤ absorbRate x := by
+  cases x <;> simp [absorbRate]
+
+theorem absorbRate_le_one (x : Bool) : absorbRate x ≤ 1 := by
+  cases x <;> simp [absorbRate]
+
+theorem absorbWait_pos (n : ℕ) : 0 < absorbWait n := zero_lt_one
+
+/-- **The jump times of the witness stagnate at `1`.**  The zeroth holding time is
+`1 / 1 = 1`, and every later one is `1 / 0`, which is `0` in `ℝ` -- so the jump times never pass
+`1` and no window past the first is ever opened. -/
+theorem jumpTime_absorb (n : ℕ) : jumpTime absorbRate absorbChain absorbWait (n + 1) = 1 := by
+  induction n with
+  | zero => simp [jumpTime_succ]
+  | succ n ih => rw [jumpTime_succ, ih]; simp
+
+/-- **The witness.**  The path of `jumpProcess` on this data is constantly `true`: at no time
+whatever does it take the absorbing value `false`, although the embedded chain sits in `false`
+from index `1` on and the first holding time is `1`, a perfectly finite number.
+
+This is what the positivity hypothesis of `JumpConstruction` buys, stated as the fact it is:
+without it `jumpProcess` is not merely unproved at an absorbing state, it is **wrong** there. -/
+theorem jumpProcess_absorbing_const (t : ℝ) :
+    jumpProcess absorbRate t (absorbChain, absorbWait) = true := by
+  have h0 : stepIndex (jumpTime absorbRate absorbChain absorbWait) t = 0 := by
+    by_cases ht : t < 1
+    · exact Nat.le_zero.1 (stepIndex_le (by rw [jumpTime_absorb 0]; exact ht))
+    · refine Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2 fun k hk => ?_))
+      rw [Set.mem_setOf_eq, jumpTime_absorb k] at hk
+      exact ht hk
+  simp [jumpProcess, stepPath, h0, absorbChain]
+
+/-- The witness read against the chain: at no time does the path agree with the state the chain
+is actually in after its first jump. -/
+theorem jumpProcess_absorbing_ne (t : ℝ) {n : ℕ} (hn : n ≠ 0) :
+    jumpProcess absorbRate t (absorbChain, absorbWait) ≠ absorbChain n := by
+  obtain ⟨m, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hn
+  simp [jumpProcess_absorbing_const, absorbChain]
+
+/-! ### The repair: jump times in `ENNReal` -/
+
+variable {E : Type*}
+
+/-- **The jump times of the local construction.**  The same recursion as `jumpTime`, read in
+`ENNReal`, where the quotient by a vanishing rate is `⊤` (`ENNReal.div_zero`) rather than `0`: an
+absorbing state has an infinite holding time, which is what the model says. -/
+noncomputable def jumpTimeE (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) : ℕ → ENNReal
+  | 0 => 0
+  | (n + 1) => jumpTimeE lam y xi n + ENNReal.ofReal (xi n) / ENNReal.ofReal (lam (y n))
+
+@[simp] theorem jumpTimeE_zero (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) :
+    jumpTimeE lam y xi 0 = 0 := rfl
+
+theorem jumpTimeE_succ (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTimeE lam y xi (n + 1)
+      = jumpTimeE lam y xi n + ENNReal.ofReal (xi n) / ENNReal.ofReal (lam (y n)) := rfl
+
+variable {lam : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ} {n : ℕ}
+
+/-- The jump times increase.  No hypothesis at all: the increments are elements of `ENNReal`. -/
+theorem monotone_jumpTimeE : Monotone (jumpTimeE lam y xi) :=
+  monotone_nat_of_le_succ fun n => by rw [jumpTimeE_succ]; exact le_self_add
+
+/-- **Every holding time is strictly positive**, with no hypothesis on the rate whatever.  This
+is the point of the change of codomain: at a positive rate the increment is a positive real, and
+at a vanishing rate it is `⊤`, and both are `> 0`.  In `ℝ` the second was `0`. -/
+theorem jumpTimeE_increment_pos (hxi : 0 < xi n) :
+    0 < ENNReal.ofReal (xi n) / ENNReal.ofReal (lam (y n)) :=
+  ENNReal.div_pos (ENNReal.ofReal_pos.2 hxi).ne' ENNReal.ofReal_ne_top
+
+/-- The jump times increase **strictly** as long as they are finite, and that is all the
+strictness there can be: past an absorbing state they are all `⊤`. -/
+theorem lt_jumpTimeE_succ (hxi : 0 < xi n) (hfin : jumpTimeE lam y xi n ≠ ⊤) :
+    jumpTimeE lam y xi n < jumpTimeE lam y xi (n + 1) := by
+  rw [jumpTimeE_succ]
+  exact ENNReal.lt_add_right hfin (jumpTimeE_increment_pos hxi).ne'
+
+/-- **An absorbing state sends the next jump time to `⊤`.**  This is the whole of the repair:
+`ENNReal.div_zero` gives the infinite holding time, and `⊤` absorbs the sum. -/
+theorem jumpTimeE_succ_eq_top (hxi : 0 < xi n) (hlam : lam (y n) = 0) :
+    jumpTimeE lam y xi (n + 1) = ⊤ := by
+  rw [jumpTimeE_succ, hlam, ENNReal.ofReal_zero,
+    ENNReal.div_zero (ENNReal.ofReal_pos.2 hxi).ne', add_top]
+
+/-- **The jump process of the local construction**: the same step path as before, read at
+`ENNReal.ofReal t`.  The time axis of the process is still `ℝ`; only the jump times moved. -/
+noncomputable def jumpProcessE (lam : E → ℝ) (t : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : E :=
+  stepPath (jumpTimeE lam ω.1 ω.2) ω.1 (ENNReal.ofReal t)
+
+/-- **The path stays in an absorbing state, for all time.**  Once the `n`-th jump time has
+passed and the `n`-th state of the chain has rate `0`, the process reads `y n` at every later
+time -- because the `(n+1)`-st jump time is `⊤`, so the window of index `n` is `[T n, ∞)` and
+the step index stops advancing.
+
+This is the statement `jumpProcess_absorbing_const` shows to be false for `jumpTime`. -/
+theorem jumpProcessE_of_absorbing (hxi : 0 < xi n) (hlam : lam (y n) = 0) {t : ℝ}
+    (ht : jumpTimeE lam y xi n ≤ ENNReal.ofReal t) :
+    jumpProcessE lam t (y, xi) = y n := by
+  have h : stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) = n :=
+    stepIndex_eq_of (Or.inr ht)
+      (by rw [jumpTimeE_succ_eq_top hxi hlam]; exact ENNReal.ofReal_lt_top) monotone_jumpTimeE
+  simp [jumpProcessE, stepPath, h]
+
+/-! ### The repaired construction extends the old one
+
+A new definition that merely behaves better at an absorbing state would be a *different*
+process, and none of `JumpConstruction` would transfer to it.  It is not: at a rate that is
+positive everywhere -- the standing hypothesis of everything proved so far -- the two agree,
+term for term. -/
+
+theorem jumpTime_nonneg (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 ≤ xi n) (n : ℕ) :
+    0 ≤ jumpTime lam y xi n := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [jumpTime_succ]; exact add_nonneg ih (div_nonneg (hxi n) (hlam _).le)
+
+/-- **At a positive rate the extended jump times are the old ones.**  Both halves of the
+recursion commute with `ENNReal.ofReal`: the sum because both summands are nonnegative
+(`ENNReal.ofReal_add`), the quotient because the divisor is positive
+(`ENNReal.ofReal_div_of_pos`).  It is exactly the second that fails at a vanishing rate, and
+that failure is the whole content of `jumpProcess_absorbing_const`. -/
+theorem jumpTimeE_eq_ofReal (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 ≤ xi n) (n : ℕ) :
+    jumpTimeE lam y xi n = ENNReal.ofReal (jumpTime lam y xi n) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [jumpTimeE_succ, ih, jumpTime_succ,
+        ENNReal.ofReal_add (jumpTime_nonneg hlam hxi n) (div_nonneg (hxi n) (hlam _).le),
+        ENNReal.ofReal_div_of_pos (hlam _)]
+
+/-- **The two processes agree at a positive rate.**  So `jumpProcessE` is an extension of
+`jumpProcess` and not a competitor to it: every statement of `JumpConstruction` is a statement
+about `jumpProcessE` on the domain where its hypotheses hold, and what the extension adds is
+exactly the behaviour at a zero of the rate. -/
+theorem jumpProcessE_eq_jumpProcess (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 < xi n) (t : ℝ) :
+    jumpProcessE lam t (y, xi) = jumpProcess lam t (y, xi) := by
+  have hpos : ∀ m : ℕ, 0 < jumpTime lam y xi (m + 1) := fun m => by
+    simpa using strictMono_jumpTime hxi hlam (Nat.succ_pos m)
+  have hset : {m | ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)}
+      = {m | t < jumpTime lam y xi (m + 1)} := by
+    ext m
+    rw [Set.mem_setOf_eq, Set.mem_setOf_eq,
+      jumpTimeE_eq_ofReal hlam (fun k => (hxi k).le),
+      ENNReal.ofReal_lt_ofReal_iff (hpos m)]
+  simp only [jumpProcessE, jumpProcess, stepPath, stepIndex, hset]
+
+/-! ### The paths of the local construction are still step paths
+
+`isStepPath_stepPath` asks for `StrictMono T`, and past an absorbing state the extended jump
+times are all `⊤`, so it does not apply and cannot be made to: the sequence really is not
+strictly increasing.  What survives of strictness is **downward propagation** -- if the window
+of index `n + 1` is nonempty then so is the window of index `n` -- and that is all the proof
+ever used.  In `ℝ≥0∞` it is free: `T (n+1) < T (n+2)` forces `T (n+1) ≠ ⊤`, hence `T n ≠ ⊤`,
+hence `lt_jumpTimeE_succ` applies. -/
+
+/-- **The step path of jump times in `ℝ≥0∞`, read at real times, is a step path.**
+
+Two things are weakened against `isStepPath_stepPath` and both are needed here.  Strict
+monotonicity becomes `hlt`, downward propagation of strictness, because absorption makes the
+tail constant equal to `⊤`.  And non explosion is asked for at **real** times only, because at
+`⊤` it is false as soon as the path is absorbed -- which is the entire purpose of the
+construction. -/
+theorem isStepPath_stepPath_ofReal [TopologicalSpace E] {T : ℕ → ENNReal} {y : ℕ → E}
+    (hmono : Monotone T) (hlt : ∀ n, T (n + 1) < T (n + 2) → T n < T (n + 1))
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < T (n + 1)) :
+    IsStepPath (fun t : ℝ ↦ stepPath T y (ENNReal.ofReal t)) := by
+  have key : ∀ (s : ℝ) (m : ℕ), (m = 0 ∨ T m ≤ ENNReal.ofReal s) →
+      ENNReal.ofReal s < T (m + 1) → stepPath T y (ENNReal.ofReal s) = y m := by
+    intro s m h1 h2
+    simp only [stepPath, stepIndex_eq_of h1 h2 hmono]
+  constructor
+  · -- On the right, the open set of times whose image still lies in the window of `x` serves.
+    intro x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
+    have hopen : IsOpen {z : ℝ | ENNReal.ofReal z < T (n + 1)} :=
+      isOpen_Iio.preimage ENNReal.continuous_ofReal
+    have hmem : {z : ℝ | ENNReal.ofReal z < T (n + 1)} ∩ Set.Ici x ∈ 𝓝[≥] x :=
+      Filter.inter_mem (mem_nhdsWithin_of_mem_nhds (hopen.mem_nhds hx2)) self_mem_nhdsWithin
+    filter_upwards [hmem] with z hz
+    rw [key z n (hx1.imp id fun h ↦ h.trans (ENNReal.ofReal_le_ofReal hz.2)) hz.1,
+      key x n hx1 hx2]
+  · intro x
+    rcases le_or_gt x 0 with hx0 | hx0
+    · -- Left of a nonpositive time every image is `0`, so the path is constant there outright.
+      refine ⟨stepPath T y 0, ?_⟩
+      filter_upwards [self_mem_nhdsWithin] with z (hz : z < x)
+      rw [ENNReal.ofReal_eq_zero.2 (hz.le.trans hx0)]
+    · -- The window of index `m` serves on the left as soon as its left endpoint is *strictly*
+      -- below `x`; that is the only place where any strictness is used at all.
+      have wnd : ∀ m : ℕ, T m < ENNReal.ofReal x → ENNReal.ofReal x ≤ T (m + 1) →
+          ∀ᶠ z in 𝓝[<] x, stepPath T y (ENNReal.ofReal z) = y m := by
+        intro m hm1 hm2
+        have hopen : IsOpen {z : ℝ | T m < ENNReal.ofReal z} :=
+          isOpen_Ioi.preimage ENNReal.continuous_ofReal
+        have hmem : {z : ℝ | T m < ENNReal.ofReal z} ∩ Set.Iio x ∈ 𝓝[<] x :=
+          Filter.inter_mem (mem_nhdsWithin_of_mem_nhds (hopen.mem_nhds hm1)) self_mem_nhdsWithin
+        filter_upwards [hmem] with z hz
+        exact key z m (Or.inr hz.1.le)
+          (((ENNReal.ofReal_lt_ofReal_iff hx0).2 hz.2).trans_le hm2)
+      obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
+      rcases lt_or_ge (T n) (ENNReal.ofReal x) with h | h
+      · exact ⟨y n, wnd n h hx2.le⟩
+      · rcases Nat.eq_zero_or_pos n with rfl | hpos
+        · -- Nothing has happened yet: the path is constantly `y 0` to the left of `x`.
+          refine ⟨y 0, ?_⟩
+          filter_upwards [self_mem_nhdsWithin] with z (hz : z < x)
+          exact key z 0 (Or.inl rfl) ((ENNReal.ofReal_le_ofReal hz.le).trans_lt hx2)
+        · -- `x` is itself a jump time, and `hlt` pushes the strictness one index down.
+          obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, (Nat.succ_pred_eq_of_pos hpos).symm⟩
+          have hxeq : T (m + 1) = ENNReal.ofReal x :=
+            le_antisymm (hx1.resolve_left (Nat.succ_ne_zero m)) h
+          exact ⟨y m, wnd m ((hlt m (by rw [hxeq]; exact hx2)).trans_eq hxeq) hxeq.ge⟩
+
+/-- **The paths of the local jump process are step paths**, hence càdlàg.  The hypothesis is
+non explosion at real times, which absorption supplies for free and a bounded rate supplies by
+`tendsto_jumpTime_atTop`. -/
+theorem isStepPath_jumpProcessE [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < jumpTimeE lam y xi (n + 1)) :
+    IsStepPath (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) :=
+  isStepPath_stepPath_ofReal monotone_jumpTimeE
+    (fun n h ↦ lt_jumpTimeE_succ (hxi n)
+      (fun htop ↦ (h.trans_le le_top).ne (by
+        simpa [htop] using (monotone_jumpTimeE (Nat.le_succ n) : jumpTimeE lam y xi n ≤ _))))
+    hex
+
+/-- The paths of the local jump process are càdlàg. -/
+theorem isCadlagPath_jumpProcessE [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < jumpTimeE lam y xi (n + 1)) :
+    IsCadlagPath (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) :=
+  (isStepPath_jumpProcessE hxi hex).isCadlagPath
+
+/-! ### The acceptance example of the local case: the absorbing state, done right
+
+The same data that defeats `jumpProcess` in `jumpProcess_absorbing_const`, run through
+`jumpProcessE`.  The path is `true` on `[0, 1)` and `false` on `[1, ∞)` -- it jumps once, at
+time `1`, and then stays where the model says it stays.  Both halves are needed: a construction
+that answered `false` at every time would also "stay absorbed", and it would be just as
+wrong. -/
+
+theorem jumpTimeE_absorb_one : jumpTimeE absorbRate absorbChain absorbWait 1 = 1 := by
+  simp [jumpTimeE_succ]
+
+theorem jumpTimeE_absorb_top (n : ℕ) :
+    jumpTimeE absorbRate absorbChain absorbWait (n + 2) = ⊤ :=
+  jumpTimeE_succ_eq_top (absorbWait_pos (n + 1)) (by simp)
+
+/-- Before the jump the repaired path still reads the initial state. -/
+theorem jumpProcessE_absorb_of_lt_one {t : ℝ} (ht : t < 1) :
+    jumpProcessE absorbRate t (absorbChain, absorbWait) = true := by
+  have h0 : stepIndex (jumpTimeE absorbRate absorbChain absorbWait) (ENNReal.ofReal t) = 0 := by
+    refine Nat.le_zero.1 (stepIndex_le ?_)
+    rw [jumpTimeE_absorb_one, ← ENNReal.ofReal_one]
+    exact ENNReal.ofReal_lt_ofReal_iff one_pos |>.2 ht
+  simp [jumpProcessE, stepPath, h0]
+
+/-- **After the jump the repaired path stays in the absorbing state, at every later time.**
+This is what `jumpProcess_absorbing_const` denies for the real valued jump times. -/
+theorem jumpProcessE_absorb_of_one_le {t : ℝ} (ht : 1 ≤ t) :
+    jumpProcessE absorbRate t (absorbChain, absorbWait) = false := by
+  have h : jumpProcessE absorbRate t (absorbChain, absorbWait) = absorbChain 1 := by
+    refine jumpProcessE_of_absorbing (absorbWait_pos 1) (by simp) ?_
+    rw [jumpTimeE_absorb_one, ← ENNReal.ofReal_one]
+    exact ENNReal.ofReal_le_ofReal ht
+  simpa using h
+
+/-- **The path statement of the local construction has an instance.**  Non explosion at real
+times is here supplied by absorption alone -- the second jump time is `⊤` -- and not by any
+bound on the rate, which is the case `isStepPath_jumpProcess` could not reach.  A theorem whose
+hypotheses are never jointly satisfiable proves nothing, and this is the check. -/
+theorem isStepPath_jumpProcessE_absorb :
+    IsStepPath (fun t : ℝ ↦ jumpProcessE absorbRate t (absorbChain, absorbWait)) :=
+  isStepPath_jumpProcessE absorbWait_pos fun _ ↦
+    ⟨1, by rw [show (1 : ℕ) + 1 = 0 + 2 from rfl, jumpTimeE_absorb_top 0]; exact ENNReal.ofReal_lt_top⟩
+
+/-- The two constructions disagree on the witness, and the disagreement is the point of the
+whole block: at time `1` the chain has been absorbed at `false`, `jumpProcessE` says so and
+`jumpProcess` says `true`. -/
+theorem jumpProcess_ne_jumpProcessE_absorb :
+    jumpProcess absorbRate 1 (absorbChain, absorbWait)
+      ≠ jumpProcessE absorbRate 1 (absorbChain, absorbWait) := by
+  rw [jumpProcess_absorbing_const, jumpProcessE_absorb_of_one_le le_rfl]
+  simp
+
+end Absorbing

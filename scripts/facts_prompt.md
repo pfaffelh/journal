@@ -497,12 +497,54 @@ danach.*
 5. Der lokale Fall und die pfadabhängige Variante zuletzt; sie liefern die
    Beispiele für die Meilensteine 7 und 9. **Die Punkte 0 bis 4 sind durch, also
    ist dies der laufende Auftrag** (seit dem sechsten Lauf des 2026-09-10).
-   Der Befund des siebzehnten Laufs des 2026-09-09 gilt weiter und ist die erste
-   Hürde: `x / 0 = 0` in Lean, also verläßt der Pfad einen Zustand mit
-   `lam x = 0` sofort; der absorbierende Fall verlangt Sprungzeiten in `ℝ≥0∞`.
+   ~~Der Befund des siebzehnten Laufs des 2026-09-09 gilt weiter und ist die
+   erste Hürde: `x / 0 = 0` in Lean, also verläßt der Pfad einen Zustand mit
+   `lam x = 0` sofort; der absorbierende Fall verlangt Sprungzeiten in
+   `ℝ≥0∞`.~~ *(die Hürde ist genommen, 2026-09-10, siebter Lauf des Tages.)*
    Die drei Akzeptanzbeispiele darunter — M/M/1, linearer Geburt-Tod, Hawkes —
    gehören zu diesem Punkt, und der lineare Geburt-Tod ist das einzige, das den
    lokalen Zweig prüft.
+
+   **Zwischenstand 2026-09-10, siebter Lauf des Tages.** Die Sprungzeiten in
+   `ℝ≥0∞` stehen, samt Pfaden und Akzeptanzbeispiel: `jumpTimeE`,
+   `jumpProcessE`, `jumpProcessE_of_absorbing` (der Pfad bleibt für alle Zeiten
+   im absorbierenden Zustand), `isStepPath_jumpProcessE`,
+   `isCadlagPath_jumpProcessE` und `jumpProcessE_eq_jumpProcess` (bei positiver
+   Rate stimmen alte und neue Konstruktion überein — es ist eine Fortsetzung und
+   kein Konkurrent). Zweiundvierzig Deklarationen, die ganze Datei ohne einen
+   Fehler durch `lake env lean` gegen v4.33.1, alle mit `#print axioms` geprüft,
+   die Zahl der `sorry` bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-10, siebter Lauf des Tages".
+
+   **Der Zeuge stand vor dem Satz, wie verlangt, und er ist schärfer als
+   angesagt.** `jumpProcess_absorbing_const`: auf den Daten `E = Bool`,
+   `lam false = 0`, `lam true = 1` ist der Pfad der alten Konstruktion
+   **konstant `true`** — er nimmt den absorbierenden Wert nicht zu spät an,
+   sondern nie. Der Grund ist, daß `T n = 1` für alle `n ≥ 1` und danach
+   `{n | t < T (n+1)}` leer ist: **der absorbierende Zustand und die Explosion
+   sind für die alte `stepIndex` dasselbe Ereignis**, und der Müllwert `sInf ∅ =
+   0`, der auf der Explosionsmenge harmlos ist, ist hier die Antwort auf jede
+   Frage.
+
+   **Drei Befunde für den nächsten Lauf.** (a) Die Positivität der Haltezeit ist
+   im erweiterten Modell **voraussetzungsfrei** (`jumpTimeE_increment_pos`), also
+   ist `∀ x, 0 < lam x` nicht abgeschwächt, sondern überflüssig geworden.
+   (b) `StrictMono` ist im lokalen Fall nicht bloß unbewiesen, sondern **falsch**;
+   was der Pfadbeweis wirklich benutzt, ist die Fortpflanzung der Strengheit
+   **nach unten**, und die ist in `ℝ≥0∞` geschenkt. (c) Deshalb stehen
+   `stepIndex` und `stepPath` jetzt über einer beliebigen
+   `ConditionallyCompleteLinearOrder`, und `exists_stepIndex_window` fragt nach
+   Nichtexplosion **an dem einen Punkt** — an `⊤` ist sie falsch, sobald
+   absorbiert wird.
+
+   **Was fehlt, in zwei Schritten** (ausgeschrieben im Laufbericht): erstens die
+   gemeinsame Meßbarkeit von `jumpProcessE` in `(t, ω)`, die billig ist, weil
+   `stepIndex_eq_iff` im Zuge der Verallgemeinerung schon allgemein bewiesen
+   wurde, und ohne die keine maßtheoretische Aussage über den lokalen Prozeß
+   formulierbar ist; zweitens das **Nichtexplosionskriterium** des lokalen Falls,
+   das die eigentliche Arbeit ist — `tendsto_jumpTime_atTop` benutzt eine
+   *gleichmäßige* Schranke `L` und ist für eine bloß lokal beschränkte Rate nicht
+   zu retten. Erst danach die Beispiele.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:

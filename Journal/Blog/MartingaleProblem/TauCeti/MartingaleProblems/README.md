@@ -548,8 +548,43 @@ A concrete family of solutions, built without any of the theory above. Index
   model intends to be absorbing, with an infinite holding time — the holding time
   computes to `0` and the path leaves at once. `strictMono_jumpTime` therefore
   carries `∀ x, 0 < lam x`. Carrying the absorbing case means giving the jump
-  times values in `ℝ≥0∞`, and the milestone does not need it: `lam` bounded away
-  from `0` and from `∞` is exactly the hypothesis of `jumpProcess_isMPSolution`.
+  times values in `ℝ≥0∞`; the bounded case does not need it, since `lam` bounded
+  away from `0` and from `∞` is exactly the hypothesis of
+  `jumpProcess_isMPSolution`, and the local case does.
+* `jumpTimeE`, `jumpProcessE`: the same construction with jump times in `ℝ≥0∞`,
+  where `a / 0 = ⊤` for `a ≠ 0` (`ENNReal.div_zero`) is already the intended
+  convention, so that an absorbing state has an infinite holding time and the
+  step index stops advancing of its own accord. **Proved** on 2026-09-10,
+  seventh run, in forty two declarations. `jumpProcessE_of_absorbing` says the
+  path stays at `y n` for all time once `lam (y n) = 0`,
+  `isStepPath_jumpProcessE` and `isCadlagPath_jumpProcessE` give the paths, and
+  `jumpProcessE_eq_jumpProcess` says the two constructions agree wherever the
+  rate is positive — so this is an extension of the bounded construction and not
+  a competitor to it.
+
+  **The witness comes before the theorem, and it is sharper than "unproved".**
+  `jumpProcess_absorbing_const` exhibits `E = Bool` with `lam false = 0`,
+  `lam true = 1`, a chain absorbed at `false` from index `1` and waiting times
+  all equal to `1`, and proves that the path of `jumpProcess` on that data is
+  **constantly `true`**: it never takes the absorbing value at any time
+  whatever. The reason is that `T n = 1` for every `n ≥ 1`, so past the radius
+  `1` the set `{n | t < T (n+1)}` is empty and `sInf ∅ = 0` returns the junk
+  index. **For the real valued jump times the absorbing state and the explosion
+  set are the same event**, and the junk value that is harmless on a null set is
+  the answer to every question on the other.
+
+  **`StrictMono` is not merely unproved in the local case but false**, since
+  after absorption every jump time is `⊤`. What the proof of
+  `isStepPath_stepPath` actually used is downward propagation of strictness,
+  `T (n+1) < T (n+2) → T n < T (n+1)`, and in `ℝ≥0∞` that is free:
+  `T (n+1) < T (n+2)` forces `T (n+1) ≠ ⊤`, hence `T n ≠ ⊤`, hence
+  `lt_jumpTimeE_succ`. `isStepPath_stepPath_ofReal` carries that hypothesis, and
+  it asks for non explosion at **real** times only — at `⊤` it is false as soon
+  as the path is absorbed, which is the whole purpose of the construction.
+  `stepIndex` and `stepPath` are stated over an arbitrary
+  `ConditionallyCompleteLinearOrder` for exactly this reason, and
+  `exists_stepIndex_window` asks for non explosion at the single point it is
+  applied to.
 * `tendsto_sum_waiting_atTop`: the partial sums of the waiting times diverge
   `waitingMeasure`-almost surely. **Proved** on 2026-09-09, eighteenth run,
   together with `ae_pos_waiting`, `frequently_one_lt_waiting`,

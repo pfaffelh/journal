@@ -16732,3 +16732,160 @@ und benannt: der **absorbierende Zustand**, `E = Bool`, `lam false = 0`,
 `lam true = 1`, `mu true = dirac false` — der Pfad muß nach dem ersten Sprung für
 alle Zeiten in `false` bleiben, und mit der heutigen `jumpTime` tut er es nicht.
 Das ist der Zeuge, der vor dem Satz zu schreiben ist.
+
+### 2026-09-10, siebter Lauf des Tages — der lokale Fall fängt beim absorbierenden Zustand an, und der Zeuge steht vor dem Satz
+
+**Punkt 5 der laufenden Aufgabe ist begonnen, und zwar an der Stelle, an der der
+sechste Lauf ihn angesagt hat: die Sprungzeiten in `ℝ≥0∞`.** Zweiundvierzig
+Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, davon
+sechsunddreißig neu und sechs umgeschriebene; die ganze Datei geht durch
+`lake env lean` gegen v4.33.1 **ohne einen Fehler**, die Zahl der `sorry` bleibt
+bei neun (Meilensteine 3, 5, 9, 10), und **alle zweiundvierzig** sind mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Über `E`
+steht nichts als der Typ selbst; die Pfadsätze nehmen `[TopologicalSpace E]`.
+
+**Zuerst der Zeuge, wie verlangt, und er ist schärfer als erwartet.** Der sechste
+Lauf hat ihn benannt — `E = Bool`, `lam false = 0`, `lam true = 1`,
+`mu true = dirac false` — und gesagt, „der Pfad muß nach dem ersten Sprung für
+alle Zeiten in `false` bleiben, und mit der heutigen `jumpTime` tut er es
+nicht". Er tut noch weniger als das:
+
+```
+theorem jumpProcess_absorbing_const (t : ℝ) :
+    jumpProcess absorbRate t (absorbChain, absorbWait) = true
+```
+
+Der Pfad ist **konstant `true`, zu jeder Zeit überhaupt** — er nimmt den
+absorbierenden Wert nicht etwa zu früh oder zu spät an, sondern nie. Der Grund
+steht in `jumpTime_absorb`: die Sprungzeiten sind `T 0 = 0` und `T n = 1` für
+alle `n ≥ 1`, weil jede Haltezeit nach der ersten `1 / 0 = 0` ist. Ab dem Radius
+`1` ist die Menge `{n | t < T (n+1)}` **leer**, `sInf ∅ = 0`, und der
+Schrittindex fällt auf seinen Müllwert zurück — auf denselben Wert, den er auf
+der Explosionsmenge trägt. Der absorbierende Zustand und die Explosion sind für
+die jetzige `stepIndex` **dasselbe Ereignis**, und das ist der eigentliche
+Befund: der Müllwert `0` ist an der einen Stelle harmlos (dort ist es eine
+Nullmenge) und an der anderen die Antwort auf jede Frage.
+`jumpProcess_absorbing_ne` sagt es gegen die Kette: zu keiner Zeit stimmt der
+Pfad mit dem Zustand überein, in dem die Kette nach ihrem ersten Sprung wirklich
+sitzt.
+
+**Die Reparatur ist die angesagte, und sie kostet keine eigene Konvention.**
+
+```
+noncomputable def jumpTimeE (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) : ℕ → ENNReal
+  | 0 => 0
+  | (n + 1) => jumpTimeE lam y xi n + ENNReal.ofReal (xi n) / ENNReal.ofReal (lam (y n))
+```
+
+`ENNReal.div_zero` (`Data/ENNReal/Inv.lean:86`) sagt `a / 0 = ∞` für `a ≠ 0`, und
+`add_top` erledigt den Rest: `jumpTimeE_succ_eq_top` gibt `T (n+1) = ⊤`, sobald
+`lam (y n) = 0` und `0 < xi n`. Damit wird das Fenster des Index `n` zu
+`[T n, ∞)` und der Schrittindex hört von selbst auf zu wachsen —
+`jumpProcessE_of_absorbing` ist vier Zeilen und braucht `stepIndex_eq_of` und
+sonst nichts.
+
+**Zwei Befunde, die zu behalten sind.**
+
+* **Die Positivität der Haltezeit ist im erweiterten Modell voraussetzungsfrei.**
+  `jumpTimeE_increment_pos` sagt `0 < ofReal (xi n) / ofReal (lam (y n))` unter
+  `0 < xi n` **allein**, ohne ein Wort über `lam`: bei positiver Rate ist es eine
+  positive reelle Zahl, bei verschwindender ist es `⊤`, und beides ist `> 0`. In
+  `ℝ` war der zweite Fall `0`, und genau daher kam die Voraussetzung
+  `∀ x, 0 < lam x` der ganzen `JumpConstruction`. Sie ist damit nicht
+  abgeschwächt, sondern **überflüssig geworden**.
+* **`StrictMono` ist im lokalen Fall nicht bloß unbewiesen, sondern falsch**, und
+  die Ersatzhypothese ist eine Abschwächung nach unten und keine nach oben. Nach
+  der Absorption sind alle Sprungzeiten `⊤`, die Folge ist wirklich nicht streng
+  monoton. Der Beweis von `isStepPath_stepPath` benutzt die Strengheit an
+  **einer** Stelle — wenn `x = T (m+1)` selbst eine Sprungzeit ist, braucht der
+  linksseitige Limes `T m < T (m+1)` —, und was dort wirklich gebraucht wird, ist
+  die **Fortpflanzung nach unten**: `T (n+1) < T (n+2) → T n < T (n+1)`. In
+  `ℝ≥0∞` ist sie geschenkt, denn `T (n+1) < T (n+2)` erzwingt `T (n+1) ≠ ⊤`, also
+  `T n ≠ ⊤`, also greift `lt_jumpTimeE_succ`.
+
+**Damit war `stepIndex` zu verallgemeinern, und das war die einzige Änderung am
+Bestand.** `stepIndex` und `stepPath` stehen jetzt über einer beliebigen
+`ConditionallyCompleteLinearOrder α` statt über `ℝ` (Abschnitt `OrderedTimes`);
+die zehn Aussagen darüber gingen wörtlich mit, `isStepPath_stepPath`
+eingeschlossen, und **keine einzige** der Gebrauchsstellen weiter unten mußte
+angefaßt werden. Mitgekommen ist eine Abschwächung, die für sich steht:
+`exists_stepIndex_window` fragt jetzt nach Nichtexplosion **an dem einen Punkt**
+und nicht überall. Das ist kein Schönheitsstrich, sondern die Voraussetzung
+dafür, daß der lokale Fall überhaupt formulierbar ist — in `ℝ≥0∞` ist
+Nichtexplosion an `⊤` falsch, sobald der Pfad absorbiert wird, und angesehen
+werden nur die reellen Zeiten.
+
+**Die Pfade stehen auch im lokalen Fall.** `isStepPath_stepPath_ofReal` beweist
+`IsStepPath (fun t : ℝ ↦ stepPath T y (ENNReal.ofReal t))` für Sprungzeiten in
+`ℝ≥0∞` unter `Monotone T`, der Fortpflanzung nach unten und Nichtexplosion an
+**reellen** Zeiten; `isStepPath_jumpProcessE` und `isCadlagPath_jumpProcessE`
+sind die Korollare. Der Übergang von `ℝ≥0∞` auf `ℝ` ist nicht über einen
+Transportsatz gegangen, sondern direkt, und das war die richtige Wahl: ein
+Transportsatz `IsStepPath g → IsStepPath (g ∘ ofReal)` verlangte `IsStepPath` auf
+**ganz** `ℝ≥0∞`, also auch an `⊤`, und dort ist die Voraussetzung falsch. Was
+statt dessen trägt, sind zwei offene Mengen — `ofReal ⁻¹' (Iio (T (n+1)))` nach
+rechts und `ofReal ⁻¹' (Ioi (T m))` nach links, beide offen, weil
+`ENNReal.continuous_ofReal` (`Topology/Instances/ENNReal/Lemmas.lean:70`) es
+sagt. Die einzige Fallunterscheidung, die dazukommt, ist `x ≤ 0`, wo `ofReal`
+nicht injektiv ist; dort ist der Pfad links von `x` ohnehin konstant.
+
+**Und die Verträglichkeit, ohne die das Ganze ein anderer Prozeß wäre.**
+`jumpProcessE_eq_jumpProcess`: bei durchweg positiver Rate stimmen die beiden
+Konstruktionen überein, Term für Term. Der Beweis ist `jumpTimeE_eq_ofReal` —
+beide Hälften der Rekursion vertauschen mit `ENNReal.ofReal`, die Summe nach
+`ENNReal.ofReal_add` (beide Summanden nichtnegativ, dafür `jumpTime_nonneg`), der
+Quotient nach `ENNReal.ofReal_div_of_pos` — und dann die Gleichheit der beiden
+Mengen `{n | ofReal t < T (n+1)}` und `{n | t < T (n+1)}` unter
+`ENNReal.ofReal_lt_ofReal_iff`. **Es ist der zweite Schritt, der bei
+verschwindender Rate bricht**, und das ist genau der Inhalt des Zeugen. Damit ist
+`jumpProcessE` eine Fortsetzung von `jumpProcess` und kein Konkurrent: jede
+Aussage der `JumpConstruction` ist eine Aussage über `jumpProcessE` auf dem
+Gebiet, auf dem ihre Voraussetzungen gelten.
+
+**Das Akzeptanzbeispiel, beide Hälften.** Dieselben Daten, durch `jumpProcessE`
+gelesen: `jumpProcessE_absorb_of_lt_one` gibt `true` auf `[0, 1)` und
+`jumpProcessE_absorb_of_one_le` gibt `false` auf `[1, ∞)`. **Beide Hälften sind
+nötig** — eine Konstruktion, die zu jeder Zeit `false` antwortete, „bliebe" auch
+absorbiert und wäre ebenso falsch; das ist dieselbe Lehre wie beim
+Poissonprozeß, wo der Erzeuger eine Verschiebung ist und ein Vorzeichenfehler
+unbemerkt in eine Poissonverteilung anderen Mittelwerts liefe.
+`jumpProcess_ne_jumpProcessE_absorb` stellt die beiden bei `t = 1` nebeneinander.
+Dazu die Leerheitsprobe, die das Inventar seit dem 2026-09-07 verlangt:
+`isStepPath_jumpProcessE_absorb` löst die Voraussetzungen des Pfadsatzes auf
+diesen Daten ein, und die Nichtexplosion kommt dort **allein aus der Absorption**
+und nicht aus einer Schranke an die Rate — das ist der Fall, den
+`isStepPath_jumpProcess` nicht erreichen konnte.
+
+**Was offen bleibt, und in welcher Reihenfolge.** Der lokale Fall hat jetzt
+seinen Pfadraum; was fehlt, ist die Maßtheorie darauf und das
+Nichtexplosionskriterium.
+
+1. **Die gemeinsame Meßbarkeit in `(t, ω)` für `jumpProcessE`.** Das Gegenstück
+   zu `measurable_stepIndex`, und es ist kein Umschreiben: `stepIndex_eq_iff` ist
+   schon allgemein bewiesen (es steht im Abschnitt `OrderedTimes`), also ist die
+   Beschreibung der Urbilder wörtlich dieselbe; zu ersetzen ist nur
+   `measurableSet_lt measurable_fst …` durch die Fassung mit
+   `ENNReal.measurable_ofReal`. Ohne sie ist `jumpProcessE` kein Prozeß im Sinne
+   von Meilenstein 2, und alles Weitere hängt daran.
+2. **Das Nichtexplosionskriterium des lokalen Falls**, `∑ 1/(lam (y n)) = ∞`
+   f.s. Das ist die Aussage, die der lineare Geburt-Tod-Prozeß als einziges der
+   drei Akzeptanzbeispiele prüft, und sie ist die eigentliche Arbeit des Punktes:
+   `tendsto_jumpTime_atTop` benutzt eine **gleichmäßige** Schranke `L` und ist
+   für eine bloß lokal beschränkte Rate nicht zu retten. Der Ersatz ist die
+   Reihe `∑ ξ n / lam (y n)` selbst, mit den `ξ n` unabhängig exponentiell — also
+   Kolmogorovs Drei-Reihen-Satz oder, billiger, die Divergenz einer Reihe
+   nichtnegativer unabhängiger Glieder mit divergenter Erwartungssumme.
+3. **Erst danach die Beispiele.** M/M/1 ist reines Einsetzen und greift schon in
+   der beschränkten Fassung; der lineare Geburt-Tod ist der einzige Prüfstein des
+   lokalen Zweiges und braucht Punkt 2; Hawkes gehört zur pfadabhängigen Variante
+   und kommt zuletzt.
+
+**Vorschlag für den nächsten Lauf: Punkt 1**, die gemeinsame Meßbarkeit von
+`jumpProcessE` in `(t, ω)`, samt der Übertragung von `jumpMeasure` auf den
+lokalen Fall (`jumpMeasureE_map_chain_zero`, das Anfangsgesetz). Sie ist jetzt
+dran, weil sie billig ist — `stepIndex_eq_iff` ist im Zuge der
+Verallgemeinerung schon allgemein bewiesen worden, und die Meßbarkeit von
+`ENNReal.ofReal` ist ein Mathlib-Einzeiler — und weil ohne sie keine einzige
+maßtheoretische Aussage über den lokalen Prozeß formulierbar ist. Punkt 2 ist der
+teurere und der interessantere, aber er setzt einen Prozeß voraus, über den man
+integrieren darf.
