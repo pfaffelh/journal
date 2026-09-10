@@ -18024,3 +18024,112 @@ hängt jetzt an genau drei benannten Eingaben, von denen zwei noch zu schreiben 
    `jumpFiltrationE_inter_lt_rateTime` aus dem dreizehnten Lauf.
 
 Punkt 1 zuerst, denn er ist die einzige der drei Eingaben, die eine bestehende Deklaration ändert.
+
+
+### 2026-09-10, sechzehnter Lauf des Tages — die beiden Eingaben des Zusammenbaus, und die erste Hälfte des Zusammenbaus selbst
+
+**Auftrag:** der Vorschlag des fünfzehnten Laufs, wörtlich — die drei Eingaben von
+`jumpProcess_isLocalMPSolution`, mit der ausdrücklichen Reihenfolge „Punkt 1 zuerst, denn er ist
+die einzige der drei Eingaben, die eine bestehende Deklaration ändert".
+
+**Ergebnis: beide offenen Eingaben stehen, und sie sind gleich verbraucht worden.** Fünfzehn
+Deklarationen im neuen Abschnitt `LocalProgressive` von
+`TauCeti/MartingaleProblems/Suggested.lean` (davon eine, `measurable_uncurry_min_of_eventuallyEq`,
+umgeschrieben und an ihren alten Ort in `section Progressive` gestellt), die ganze Datei ohne
+einen Fehler durch `lake env lean` gegen v4.33.1, alle fünfzehn mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5,
+9, 10). Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+Der Ertrag ist nicht bloß die Liste der Eingaben, sondern der Satz, in dem sie zusammengehen:
+
+```
+martingale_stoppedProcess_mpFamily_jumpProcessE
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    (hτ : IsStoppingTime (jumpFiltrationE lam hlam) τ) :
+  Martingale (stoppedProcess Y τ) (jumpFiltrationE lam hlam) (jumpMeasure mu nu)
+```
+
+**Er ist für eine beliebige Stoppzeit ausgesprochen und nicht für `rateTime`, und das ist keine
+Verallgemeinerung um ihrer selbst willen, sondern das, was er beweist:** die Lokalisierung geht
+allein über die **Rate** ein, auf die er angewandt wird. Angewandt auf `truncRate lam n` — deren
+Trefferzeit `rateTime lam n` nach `isStoppingTime_rateTime_truncRate` eine Stoppzeit der
+zugehörigen Filtration ist — gibt er das Martingal der `n`-ten Stufe. Die drei Voraussetzungen von
+`martingale_stoppedProcess` sind auf den Sprungprozeß eingelöst und nicht beschrieben:
+`isStronglyProgressive_mpFamily_jumpProcessE`, `tendsto_nhdsGE_mpFamily_jumpProcessE` und die
+Fensterschranke `abs_setIntegral_compensatorE_le`.
+
+**Erster Befund: die angesagte Verallgemeinerung war die richtige, und ihr Grund ist schärfer als
+angesagt.** Der fünfzehnte Lauf sagte, `measurable_uncurry_min_of_eventuallyEq` sei auf
+Rechtsstetigkeit zu verallgemeinern, weil der Kompensator nicht von rechts lokal konstant sei. Das
+ist wahr, und der Grund ist, daß er **stetig** ist: eine stetige Funktion ist auf keinem Intervall
+konstant, es sei denn, sie ist es überall. Es gibt also keine Abschwächung der lokalen Konstanz,
+die den Kompensator noch einfinge — die Hypothese muß durch eine Konvergenz ersetzt werden, und
+durch nichts Schwächeres. Die Voraussagen des fünfzehnten Laufs über die Kosten haben gestimmt:
+die alte Hypothese wurde im Beweis an **einer** Stelle verbraucht, um aus `tendsto_dyadicUp` eine
+eventuelle Gleichheit zu machen, eine Konvergenz leistet dort dasselbe, und der lokal konstante
+Fall ist ein Dreizeiler geworden. Keine der über zwanzig Gebrauchsstellen war anzufassen.
+
+**Zweiter Befund: die Fensterschranke ist keine Bequemlichkeit, sondern das, was die gleichgradige
+Integrierbarkeit ersetzt — und sie ist an *dieser* Stelle, nicht an der des fünfzehnten Laufs,
+wirklich zu bezahlen.** `martingale_stoppedProcess` verlangt `∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C`,
+also eine Schranke an **jedem** Stichprobenpunkt und nicht f.s.; sie kommt aus `|p.1| ≤ C` und
+`abs_setIntegral_compensatorE_le` als `C + 2LC·j`. Dabei ist `0 ≤ C` kein Zusatz, sondern
+abgeleitet — aus `[IsProbabilityMeasure nu]` folgt `Nonempty E`, und dort ist `0 ≤ |p.1 x| ≤ C`;
+derselbe Schluß, mit dem `jumpProcess_isMPSolution` sein `0 < L` gewinnt.
+
+**Dritter Befund, und er ist der, an dem der Zusammenbau jetzt hängt: was noch fehlt, ist nicht
+die Gleichheit der *Pfade*, sondern die der *Erzeuger*.** Der gestoppte Prozeß des lokalen
+Problems und der des gestutzten sind über `jumpProcessE_eq_truncRate_of_le_rateTime` als Pfade
+gleich, und zwar **einschließlich** des geschlossenen Endes `t = rateTime`. Die Testprozesse sind
+es damit noch nicht: `mpFamily (jumpOperator lam mu)` und `mpFamily (jumpOperator (truncRate lam n) mu)`
+tragen verschiedene Kompensatoren, und `jumpApply (truncRate lam n) mu f` stimmt mit
+`jumpApply lam mu f` genau an den Zuständen der Rate `≤ n` überein. Längs des gestoppten Pfades
+gilt das an jeder Zeit **echt** unterhalb der Trefferzeit (`ofReal_lam_jumpProcessE_lt_of_lt_rateTime`
+gibt dort die strikte Ungleichung), und an der Trefferzeit selbst darf es scheitern — dort hat das
+laufende Supremum die Stufe erreicht, und es erreicht sie, weil die Rate am dort eingenommenen
+Zustand es tut. Das ist **ein** Punkt des Kompensationsfensters, also eine Lebesgue-Nullmenge, und
+die beiden Kompensatoren stimmen dennoch überein. Der Unterschied zum Pfadvergleich ist der Grund,
+aus dem dieser Schritt nicht schon mit dem zwölften Lauf abgetan ist: dort war die Gleichheit
+punktweise und an jedem Punkt zu haben, hier ist sie es nicht und muß über
+`intervalIntegral.integral_congr_ae` gehen.
+
+**Zur Buchführung der neuen Deklarationen.** Sechs von ihnen sind Gegenstücke für `jumpProcessE`
+zu vorhandenen Aussagen über `jumpProcess` (`measurable_uncurry_jumpProcessE`,
+`measurable_compensatorE`, `stronglyAdapted_mpFamily_jumpProcessE`,
+`abs_setIntegral_compensatorE_le`, dazu `compensatorE_eq_intervalIntegral` und
+`mpFamily_jumpProcessE_eq`), und **keine von ihnen trägt eine Voraussetzung an die Rate außer
+ihrer Meßbarkeit** — die Positivität und die Schranke kommen erst im Martingalsatz herein. Der
+Übergang vom Kompensationsfenster von `lebesgueClock` zu einem echten `intervalIntegral` von `ℝ`
+(`compensatorE_eq_intervalIntegral`) steht vor beiden Eigenschaften, weil beide Eigenschaften des
+**oberen Endes** des Fensters sind und Mathlibs Aussage darüber,
+`intervalIntegral.continuous_primitive`, für `intervalIntegral` formuliert ist.
+
+**Zur Werkzeugreibung, damit sie nicht noch einmal Zeit kostet.** `Measurable.comp` hinterläßt in
+diesem Zusammenhang ein `∘` im Ziel, das `rw` nicht durchdringt; es braucht ein
+`simp only [Function.comp_def]` davor. Das war der einzige Fehler des ganzen Laufs — die übrigen
+vierzehn Deklarationen gingen beim ersten Durchlauf durch.
+
+**Vorschlag für den nächsten Lauf: `jumpProcess_isLocalMPSolution`, der Zusammenbau**, und er
+hängt jetzt an genau zwei benannten Schritten, beide neu und beide klein gegen das, was schon
+steht:
+
+1. **`stoppedProcess_mpFamily_truncRate_eq`** — die Identifikation der beiden gestoppten
+   Testprozesse an jedem nichtexplosiven Stichprobenpunkt. Die Pfade sind gleich; für die
+   Kompensatoren ist `intervalIntegral.integral_congr_ae` gegen die Nullmenge `{rateTime}` zu
+   führen, wie im dritten Befund ausgeschrieben. **Zuerst**, denn ohne sie hat der Turmschluß nichts
+   zu vergleichen.
+2. **Der Turmschluß selbst.** Für `A ∈ jumpFiltrationE lam hlam i` zerlege
+   `A = (A ∩ {i < rateTime lam n}) ∪ (A ∩ {rateTime lam n ≤ i})`. Auf dem zweiten Stück stimmen
+   die gestoppten Prozesse an `i` und an `j` **punktweise** überein, dort ist nichts zu zeigen; das
+   erste Stück ist nach `jumpFiltrationE_inter_lt_rateTime` ein Ereignis der gestutzten Filtration
+   bei `i`, und dort greift `martingale_stoppedProcess_mpFamily_jumpProcessE` aus diesem Lauf. Die
+   Adaptiertheit an `jumpFiltrationE lam hlam` selbst ist kein eigener Schritt: sie ist
+   `(isStronglyProgressive_mpFamily_jumpProcessE …).stronglyAdapted_stoppedProcess` samt der
+   Meßbarkeit der Menge `{ω | ⊥ < rateTime lam n ω}` für `𝓕 ⊥`, die `isStoppingTime_rateTime`
+   liefert.
+
+Die Stufe `n = 0` bleibt der Sonderfall, der keiner ist: `rateTime_zero` macht den Prozeß dort zu
+`0`, und `MeasureTheory.martingale_zero` erledigt ihn.

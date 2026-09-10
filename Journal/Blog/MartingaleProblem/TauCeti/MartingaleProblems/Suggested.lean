@@ -302,6 +302,31 @@ filtration, which is what a comparison of paths alone does not give.  And
 `naturalFiltration_inter_le` is the passage from the generating evaluations to the
 whole σ-algebra, stated for arbitrary natural filtrations: the sets whose trace on
 `N` the second filtration sees form a σ-algebra as soon as `N` is one of its sets.
+
+`section LocalProgressive`, fifteen declarations of 2026-09-10, supplies the two
+properties `martingale_stoppedProcess` asks of a process and spends them.  Both
+rest on one generalisation: `measurable_uncurry_min_of_rightContinuous` replaces
+the eventual equality of `measurable_uncurry_min_of_eventuallyEq` by a
+**convergence**, because the compensator of a test process is continuous in `t`
+and a continuous function is constant on no interval unless it is constant, so no
+weakening of local constancy reaches it.  The old statement used its hypothesis at
+exactly one place, to turn `tendsto_dyadicUp` into an eventual equality, and is now
+a three line corollary.  On top of it,
+`isStronglyProgressive_of_measurable_uncurry_min` is the bridge to Mathlib's
+`IsStronglyProgressive`, `continuous_intervalIntegral_of_bounded` the right
+continuity of the compensator, and `compensatorE_eq_intervalIntegral` the passage
+from the compensating window of `lebesgueClock` to a genuine `intervalIntegral` of
+`ℝ` -- which both properties are properties of, both being properties of the
+*upper end* of the window.  `isStronglyProgressive_mpFamily_jumpProcessE` and
+`tendsto_nhdsGE_mpFamily_jumpProcessE` are the two properties for the test
+processes of the local jump problem, and
+`martingale_stoppedProcess_mpFamily_jumpProcessE` is where they go: the stopped
+test process is a martingale at **every** stopping time of the natural filtration,
+under the hypotheses of `jumpProcessE_isMPSolution`.  It is stated for an arbitrary
+stopping time and not for `rateTime` because that is what it proves -- the
+localization enters only through the *rate* it is applied to, and
+`isStoppingTime_rateTime_truncRate` makes it applicable to `truncRate lam n`.
+Uniform integrability does not occur: the window bound is `C + 2LC·j`, a constant.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -5397,10 +5422,10 @@ diagonal of `E` is, which for an arbitrary σ-algebra it is not.  Every *real* f
 `h ∘ X` of it is jointly measurable, by the same argument run in `ℝ`, and the compensator of
 `mpFamily` is such a functional.  Hence this statement and not a `Clock.IsProgressive` for the
 jump process itself. -/
-theorem measurable_uncurry_min_of_eventuallyEq {ι' : Type*} [MeasurableSpace ι'] {φ : ι' → ℝ}
+theorem measurable_uncurry_min_of_rightContinuous {ι' : Type*} [MeasurableSpace ι'] {φ : ι' → ℝ}
     (hφ : Measurable φ) {G : ℝ → Ω → ℝ} {t : ℝ}
     {𝓖 : MeasurableSpace Ω} (hmeas : ∀ r, r ≤ t → Measurable[𝓖] (G r))
-    (hrc : ∀ (ω : Ω) (s : ℝ), ∀ᶠ r in 𝓝[≥] s, G r ω = G s ω) :
+    (hrc : ∀ (ω : Ω) (s : ℝ), Tendsto (fun r ↦ G r ω) (𝓝[≥] s) (𝓝 (G s ω))) :
     Measurable[(inferInstance : MeasurableSpace ι').prod 𝓖]
       fun p : ι' × Ω ↦ G (min (φ p.1) t) p.2 := by
   let _ : MeasurableSpace Ω := 𝓖
@@ -5411,11 +5436,20 @@ theorem measurable_uncurry_min_of_eventuallyEq {ι' : Type*} [MeasurableSpace ι
     exact hF.comp (measurable_snd.prodMk
       (Int.measurable_floor.comp ((hφ.comp measurable_fst).mul_const _)))
   refine measurable_of_tendsto_metrizable hstep (tendsto_pi_nhds.2 fun p ↦ ?_)
-  have hev : ∀ᶠ n in atTop, G (dyadicUp t n ⌊φ p.1 * 2 ^ n⌋) p.2 = G (min (φ p.1) t) p.2 :=
-    (tendsto_dyadicUp t (φ p.1)).eventually (hrc p.2 (min (φ p.1) t))
-  refine tendsto_const_nhds.congr' ?_
-  filter_upwards [hev] with n hn
-  exact hn.symm
+  exact (hrc p.2 (min (φ p.1) t)).comp (tendsto_dyadicUp t (φ p.1))
+
+/-- **The locally constant case**, which is the one the *state* process of the jump construction
+falls under: a step path is not merely right continuous, it is constant on a right neighbourhood
+of every time (`eventuallyEq_nhdsGE_stepPath_comp`).  It is a corollary of the right continuous
+statement and no longer a separate argument. -/
+theorem measurable_uncurry_min_of_eventuallyEq {ι' : Type*} [MeasurableSpace ι'] {φ : ι' → ℝ}
+    (hφ : Measurable φ) {G : ℝ → Ω → ℝ} {t : ℝ}
+    {𝓖 : MeasurableSpace Ω} (hmeas : ∀ r, r ≤ t → Measurable[𝓖] (G r))
+    (hrc : ∀ (ω : Ω) (s : ℝ), ∀ᶠ r in 𝓝[≥] s, G r ω = G s ω) :
+    Measurable[(inferInstance : MeasurableSpace ι').prod 𝓖]
+      fun p : ι' × Ω ↦ G (min (φ p.1) t) p.2 :=
+  measurable_uncurry_min_of_rightContinuous hφ hmeas fun ω s ↦
+    tendsto_const_nhds.congr' ((hrc ω s).mono fun _ hr ↦ hr.symm)
 
 end Progressive
 
@@ -9787,3 +9821,370 @@ theorem martingale_of_martingale_stoppedProcess_top (hY : Martingale Y 𝓕 P)
   rwa [stoppedProcess_const_top] at h
 
 end StoppedMartingale
+
+section LocalProgressive
+
+/-! ## Progressive measurability and right continuity for the local jump problem
+
+The two inputs that `martingale_stoppedProcess` asks of a process, and that
+`jumpProcess_isLocalMPSolution` therefore has to supply for the test processes of the **local**
+construction: `IsStronglyProgressive` and right continuity of the paths.  Neither is a statement
+about a martingale, and neither mentions the measure; both are properties of the pair (process,
+filtration), and neither needs positivity of the rate or non explosion.
+
+The whole of it rests on the generalisation of `measurable_uncurry_min_of_rightContinuous`.  The
+state process is locally constant from the right, so the older
+`measurable_uncurry_min_of_eventuallyEq` reached `h ∘ X`; the compensator is not -- it is
+continuous in `t`, and a continuous function is constant on no interval unless it is constant --
+so the whole test process `Y t = h (X t) - ∫_0^t (A h)(X s) ds` needs the right continuous form.
+The proof of the older statement used its hypothesis at exactly one place, to turn
+`tendsto_dyadicUp` into an eventual equality; a convergence does the same work there, and the
+locally constant case is now a three line corollary.
+
+The compensating window is turned into a genuine interval integral of `ℝ`
+(`compensatorE_eq_intervalIntegral`) before either property is proved, because both are
+properties of the *upper end* of the window and `intervalIntegral.continuous_primitive` is
+Mathlib's statement about it. -/
+
+variable {Ω : Type*} {m : MeasurableSpace Ω}
+
+/-- **The bridge from a jointly measurable truncation to Mathlib's `IsStronglyProgressive`.**
+`IsStronglyProgressive` asks for strong measurability on `Set.Iic i × Ω`; what the dyadic
+argument produces is measurability on all of `ℝ≥0 × Ω` for the process cut down at `i`.  The two
+agree because on `Set.Iic i` the cut does nothing, and the inclusion `Set.Iic i → ℝ≥0` is
+measurable. -/
+theorem isStronglyProgressive_of_measurable_uncurry_min {𝓕 : Filtration ℝ≥0 m}
+    {G : ℝ≥0 → Ω → ℝ}
+    (h : ∀ t : ℝ≥0, Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (𝓕 t)]
+      fun p : ℝ≥0 × Ω ↦ G (min p.1 t) p.2) :
+    IsStronglyProgressive 𝓕 G := by
+  intro i
+  have hmap : @Measurable (Set.Iic i × Ω) (ℝ≥0 × Ω)
+      (Subtype.instMeasurableSpace.prod (𝓕 i))
+      ((inferInstance : MeasurableSpace ℝ≥0).prod (𝓕 i))
+      (fun p ↦ ((p.1 : ℝ≥0), p.2)) :=
+    (measurable_subtype_coe.comp measurable_fst).prodMk measurable_snd
+  have hcomp := (h i).comp hmap
+  simp only [Function.comp_def] at hcomp
+  have heq : (fun p : Set.Iic i × Ω ↦ G (min (p.1 : ℝ≥0) i) p.2)
+      = fun p : Set.Iic i × Ω ↦ G (p.1 : ℝ≥0) p.2 :=
+    funext fun p ↦ by rw [min_eq_left (Set.mem_Iic.1 p.1.2)]
+  rw [heq] at hcomp
+  exact hcomp.stronglyMeasurable
+
+/-- **The primitive of a bounded measurable real function is continuous.**  This is the right
+continuity -- indeed the continuity -- of the compensator, and the only place a hypothesis on the
+integrand is spent. -/
+theorem continuous_intervalIntegral_of_bounded {g : ℝ → ℝ} (hg : Measurable g) {D : ℝ}
+    (hD : ∀ x, |g x| ≤ D) : Continuous fun b : ℝ ↦ ∫ x in (0 : ℝ)..b, g x := by
+  have hb : ∀ x, ‖g x‖ ≤ D := fun x ↦ by simpa [Real.norm_eq_abs] using hD x
+  have hfin : ∀ c d : ℝ, (volume (Set.Ioc c d)) ≠ ⊤ := fun c d ↦ by
+    rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top
+  exact intervalIntegral.continuous_primitive
+    (fun a b ↦ ⟨integrableOn_of_bounded volume (hfin a b) hg hb,
+      integrableOn_of_bounded volume (hfin b a) hg hb⟩) 0
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **Every real functional of the local jump process is jointly measurable in `(u, ω)` for the
+σ-algebra of the past up to `t`.**  The counterpart of `measurable_uncurry_jumpProcess`, and the
+proof is the same: the paths are locally constant from the right at every sample point
+(`eventuallyEq_nhdsGE_jumpProcessE`), with no hypothesis on the rate. -/
+theorem measurable_uncurry_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) (t : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (jumpFiltrationE lam hlam t)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+        h (jumpProcessE lam (min (p.1 : ℝ) (t : ℝ)) p.2) := by
+  have hmeas : ∀ r, r ≤ (t : ℝ) →
+      Measurable[jumpFiltrationE lam hlam t] fun ω ↦ h (jumpProcessE lam (max r 0) ω) := by
+    intro r hr
+    have hu : Real.toNNReal r ≤ t := Real.toNNReal_le_iff_le_coe.2 hr
+    have hX := measurable_naturalFiltration
+      (X := fun s : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (s : ℝ) ω)
+      (fun s ↦ measurable_jumpProcessE_apply hlam (s : ℝ)) hu
+    rw [Real.coe_toNNReal'] at hX
+    exact hh.comp hX
+  have hrc : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ),
+      ∀ᶠ r in 𝓝[≥] s, h (jumpProcessE lam (max r 0) ω) = h (jumpProcessE lam (max s 0) ω) :=
+    fun ω s ↦ eventuallyEq_nhdsGE_comp_max (g := fun r ↦ h (jumpProcessE lam r ω))
+      (fun s' ↦ (eventuallyEq_nhdsGE_jumpProcessE lam ω s').mono fun r hr ↦ by rw [hr]) s
+  have key := measurable_uncurry_min_of_eventuallyEq (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+    measurable_coe_nnreal_real hmeas hrc
+  have heq : ∀ p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)),
+      h (jumpProcessE lam (max (min (p.1 : ℝ) (t : ℝ)) 0) p.2)
+        = h (jumpProcessE lam (min (p.1 : ℝ) (t : ℝ)) p.2) := fun p ↦ by
+    rw [max_eq_left (le_min p.1.coe_nonneg t.coe_nonneg)]
+  simpa only [heq] using key
+
+/-- **The compensator of the local jump problem is measurable for the past.**  The counterpart of
+`measurable_compensator`, and like it a statement that has to hold at *every* sample point, the
+explosion set included. -/
+theorem measurable_compensatorE {lam : E → ℝ} (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) (c : Clock.Conv) (t : ℝ≥0) :
+    Measurable[jumpFiltrationE lam hlam t] fun ω ↦
+      ∫ u in lebesgueClock.interval c ⊥ t, h (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q := by
+  set S := lebesgueClock.interval c ⊥ t with hS
+  haveI hfin : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ]
+    exact lt_top_iff_ne_top.2 (ne_top_of_le_ne_top (lebesgueClock.measure_Iic_ne_top t)
+      (measure_mono (lebesgueClock.interval_subset_Iic c ⊥ t)))
+  have hW := measurable_uncurry_jumpProcessE hlam hh t
+  have hsm : StronglyMeasurable[jumpFiltrationE lam hlam t] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      ∫ u in S, h (jumpProcessE lam (min (u : ℝ) (t : ℝ)) ω) ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace
+      ((ℕ → E) × (ℕ → ℝ)) (jumpFiltrationE lam hlam t) ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) _
+      (fun u ω ↦ h (jumpProcessE lam (min (u : ℝ) (t : ℝ)) ω)) hW id measurable_id
+  have hcongr : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        ∫ u in S, h (jumpProcessE lam (min (u : ℝ) (t : ℝ)) ω) ∂lebesgueClock.q)
+      = fun ω ↦ ∫ u in S, h (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q := by
+    funext ω
+    refine setIntegral_congr_fun (lebesgueClock.measurableSet_interval c ⊥ t) fun u hu ↦ ?_
+    rw [min_eq_left]
+    exact_mod_cast lebesgueClock.interval_subset_Iic c ⊥ t hu
+  rw [← hcongr]
+  exact hsm.measurable
+
+/-- **The compensating window of the local process is an interval integral of `ℝ`.**  Both
+properties this section proves are properties of the upper end of the window, and Mathlib's
+statement about it, `intervalIntegral.continuous_primitive`, is stated for `intervalIntegral`. -/
+theorem compensatorE_eq_intervalIntegral {lam : E → ℝ} (hlam : Measurable lam) {g : E → ℝ}
+    (hg : Measurable g) (b : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ b, g (jumpProcessE lam (u : ℝ) ω)
+        ∂lebesgueClock.q
+      = ∫ x in (0 : ℝ)..(b : ℝ), g (jumpProcessE lam x ω) := by
+  have hF : Measurable fun u : ℝ≥0 ↦ g (jumpProcessE lam (u : ℝ) ω) :=
+    hg.comp ((measurable_jumpProcessE hlam).comp
+      (measurable_coe_nnreal_real.prodMk measurable_const))
+  rw [lebesgueClock_interval_optional_eq, integral_lebesgueClock_Ioc bot_le hF,
+    show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero]
+  refine intervalIntegral.integral_congr fun r hr ↦ ?_
+  rw [Set.uIcc_of_le b.coe_nonneg] at hr
+  rw [zero_add, Real.coe_toNNReal r hr.1]
+
+/-- **The path of a test process of the local jump problem is right continuous**, read along the
+real line and through the extension `r ↦ max r 0` that `measurable_uncurry_min_of_rightContinuous`
+works with.  The first summand is locally constant from the right
+(`eventuallyEq_nhdsGE_jumpProcessE`) and the second is continuous
+(`continuous_intervalIntegral_of_bounded`); there is no hypothesis on the rate but its
+measurability, and none on the sample point. -/
+theorem tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
+    {f g : E → ℝ} (hg : Measurable g) {D : ℝ} (hD : ∀ x, |g x| ≤ D)
+    (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ) :
+    Tendsto (fun r : ℝ ↦ f (jumpProcessE lam (max r 0) ω)
+        - ∫ x in (0 : ℝ)..(max r 0), g (jumpProcessE lam x ω)) (𝓝[≥] s)
+      (𝓝 (f (jumpProcessE lam (max s 0) ω)
+        - ∫ x in (0 : ℝ)..(max s 0), g (jumpProcessE lam x ω))) := by
+  have h1 : Tendsto (fun r : ℝ ↦ f (jumpProcessE lam (max r 0) ω)) (𝓝[≥] s)
+      (𝓝 (f (jumpProcessE lam (max s 0) ω))) := by
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [eventuallyEq_nhdsGE_comp_max (g := fun r ↦ f (jumpProcessE lam r ω))
+      (fun s' ↦ (eventuallyEq_nhdsGE_jumpProcessE lam ω s').mono fun r hr ↦ by rw [hr]) s]
+      with r hr using hr.symm
+  have hcont : Continuous fun b : ℝ ↦ ∫ x in (0 : ℝ)..b, g (jumpProcessE lam x ω) :=
+    continuous_intervalIntegral_of_bounded
+      (hg.comp ((measurable_jumpProcessE hlam).comp (measurable_id.prodMk measurable_const)))
+      (fun x ↦ hD _)
+  have h2 : Tendsto (fun r : ℝ ↦ ∫ x in (0 : ℝ)..(max r 0), g (jumpProcessE lam x ω)) (𝓝[≥] s)
+      (𝓝 (∫ x in (0 : ℝ)..(max s 0), g (jumpProcessE lam x ω))) :=
+    ((hcont.comp (continuous_id.max continuous_const)).tendsto s).mono_left nhdsWithin_le_nhds
+  exact h1.sub h2
+
+variable {mu : Kernel E E} [IsMarkovKernel mu]
+
+/-- **The test processes of the local jump martingale problem are adapted to the natural
+filtration of the local process.**  The counterpart of `stronglyAdapted_mpFamily_jumpProcess`,
+with no hypothesis on the rate beyond its measurability. -/
+theorem stronglyAdapted_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
+    (c : Clock.Conv) {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock c
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)) :
+    StronglyAdapted (jumpFiltrationE lam hlam) Y := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  intro t
+  have h1 : Measurable[jumpFiltrationE lam hlam t] fun ω ↦ p.1 (jumpProcessE lam (t : ℝ) ω) :=
+    hf.comp (measurable_naturalFiltration
+      (X := fun s : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (s : ℝ) ω)
+      (fun s ↦ measurable_jumpProcessE_apply hlam (s : ℝ)) (le_refl t))
+  have h2 : Measurable[jumpFiltrationE lam hlam t] fun ω ↦
+      ∫ u in lebesgueClock.interval c ⊥ t, p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q := by
+    rw [hp2]
+    exact measurable_compensatorE hlam (measurable_jumpApply hlam hf hC) c t
+  have hYt : Y t = fun ω ↦ p.1 (jumpProcessE lam (t : ℝ) ω) -
+      ∫ u in lebesgueClock.interval c ⊥ t, p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q :=
+    funext fun ω ↦ hYeq t ω
+  rw [hYt]
+  exact (h1.sub h2).stronglyMeasurable
+
+/-- **A test process of the local jump problem, read on `ℝ` through `max · 0`.**  Every statement
+below is proved for this real form first, because the dyadic approximation of
+`measurable_uncurry_min_of_rightContinuous` runs on `ℝ` and reaches negative times. -/
+theorem mpFamily_jumpProcessE_eq {lam : E → ℝ} (hlam : Measurable lam)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ} {p : (E → ℝ) × (E → ℝ)} (hp2 : Measurable p.2)
+    (hYeq : ∀ t ω, Y t ω = p.1 (jumpProcessE lam (t : ℝ) ω)
+      - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+          p.2 (jumpProcessE lam (s : ℝ) ω) ∂lebesgueClock.q)
+    (u : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    Y u ω = p.1 (jumpProcessE lam (max (u : ℝ) 0) ω)
+      - ∫ x in (0 : ℝ)..(max (u : ℝ) 0), p.2 (jumpProcessE lam x ω) := by
+  rw [hYeq u ω, compensatorE_eq_intervalIntegral hlam hp2 u ω, max_eq_left u.coe_nonneg]
+
+/-- **The test processes of the local jump martingale problem are strongly progressive.**  The
+first of the two inputs `martingale_stoppedProcess` asks for, and the one that made
+`measurable_uncurry_min_of_rightContinuous` necessary: the compensator is continuous in `t`, so
+the locally constant form of that statement does not reach it. -/
+theorem isStronglyProgressive_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)) :
+    IsStronglyProgressive (jumpFiltrationE lam hlam) Y := by
+  have hadp := stronglyAdapted_mpFamily_jumpProcessE hlam Clock.Conv.optional hY
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hgm : Measurable p.2 := by rw [hp2]; exact measurable_jumpApply hlam hf hC
+  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
+    rw [hp2]; exact fun x ↦ abs_jumpApply_le hlam0 hL hC x
+  have hreal := mpFamily_jumpProcessE_eq hlam hgm hYeq
+  refine isStronglyProgressive_of_measurable_uncurry_min fun t ↦ ?_
+  obtain ⟨G, hG⟩ : ∃ G : ℝ → ((ℕ → E) × (ℕ → ℝ)) → ℝ, ∀ r ω, G r ω =
+      p.1 (jumpProcessE lam (max r 0) ω)
+        - ∫ x in (0 : ℝ)..(max r 0), p.2 (jumpProcessE lam x ω) := ⟨_, fun _ _ ↦ rfl⟩
+  have hGY : ∀ (r : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)), G r ω = Y (Real.toNNReal r) ω := by
+    intro r ω
+    rw [hG, hreal (Real.toNNReal r) ω, Real.coe_toNNReal', max_eq_left (le_max_right r 0)]
+  have hmeas : ∀ r, r ≤ (t : ℝ) → Measurable[jumpFiltrationE lam hlam t] (G r) := by
+    intro r hr
+    have hu : Real.toNNReal r ≤ t := Real.toNNReal_le_iff_le_coe.2 hr
+    have hfun : G r = Y (Real.toNNReal r) := funext fun ω ↦ hGY r ω
+    rw [hfun]
+    exact ((hadp _).mono ((jumpFiltrationE lam hlam).mono hu)).measurable
+  have hrc : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ), Tendsto (fun r ↦ G r ω) (𝓝[≥] s)
+      (𝓝 (G s ω)) := by
+    intro ω s
+    simp only [hG]
+    exact tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE hlam hgm hgb ω s
+  have key := measurable_uncurry_min_of_rightContinuous (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+    measurable_coe_nnreal_real hmeas hrc
+  have heq : (fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ Y (min q.1 t) q.2)
+      = fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ G (min (q.1 : ℝ) (t : ℝ)) q.2 := by
+    funext q
+    rw [hGY, ← NNReal.coe_min, Real.toNNReal_coe]
+  rw [heq]
+  exact key
+
+/-- **The paths of the test processes of the local jump martingale problem are right
+continuous**, in the shape `martingale_stoppedProcess` asks for: over the index `ℝ≥0`, at every
+time and at every sample point.  This is the second of its two inputs. -/
+theorem tendsto_nhdsGE_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ≥0) :
+    Tendsto (fun r : ℝ≥0 ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)) := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hgm : Measurable p.2 := by rw [hp2]; exact measurable_jumpApply hlam hf hC
+  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
+    rw [hp2]; exact fun x ↦ abs_jumpApply_le hlam0 hL hC x
+  have hreal := mpFamily_jumpProcessE_eq hlam hgm hYeq
+  have hcoe : Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[≥] s) (𝓝[≥] ((s : ℝ))) :=
+    tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+      ((NNReal.continuous_coe.tendsto s).mono_left nhdsWithin_le_nhds)
+      (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_le_coe.2 hr)
+  have hR := tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE (f := p.1) hlam hgm hgb ω (s : ℝ)
+  have := hR.comp hcoe
+  simp only [Function.comp_def] at this
+  simpa only [← hreal] using this
+
+/-- **A compensating window of the local process is bounded by the bound of its integrand times
+the length of the window.**  The counterpart of `abs_setIntegral_compensator_le`, and the third
+hypothesis of `martingale_stoppedProcess` -- the one that replaces uniform integrability. -/
+theorem abs_setIntegral_compensatorE_le {lam : E → ℝ} {g : E → ℝ} {D : ℝ} (hD : ∀ x, |g x| ≤ D)
+    (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ D * (t : ℝ) := by
+  rw [lebesgueClock_interval_optional_eq]
+  have hlt : lebesgueClock.q (Set.Ioc (⊥ : ℝ≥0) t) < ⊤ := by
+    rw [lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
+  have hle := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q)
+    (s := Set.Ioc (⊥ : ℝ≥0) t) (f := fun u : ℝ≥0 => g (jumpProcessE lam (u : ℝ) ω)) (C := D) hlt
+    (fun u _ => by simpa using hD (jumpProcessE lam (u : ℝ) ω))
+  rwa [Real.norm_eq_abs, measureReal_def, lebesgueClock_apply_Ioc,
+    show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
+    ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
+
+/-- **The stopped test process of the local jump martingale problem is a martingale**, at every
+stopping time of its natural filtration and under the hypotheses of `jumpProcessE_isMPSolution`.
+
+This is where the two properties of this section are spent, and it is the shape the assembly of
+Point 5 of Milestone 4 consumes.  It is stated for an arbitrary stopping time and not for
+`rateTime`, because that is what it proves: the localization enters only through the *rate* the
+theorem is applied to.  Applied to the truncated rate `truncRate lam n`, whose hitting time
+`rateTime lam n` is a stopping time of the truncated filtration
+(`measurableSet_lt_rateTime_truncRate`), it gives the martingale of the `n`-th level of the local
+problem.
+
+The three hypotheses of `martingale_stoppedProcess` are exactly the three statements of this
+section: `isStronglyProgressive_mpFamily_jumpProcessE`,
+`tendsto_nhdsGE_mpFamily_jumpProcessE` and the window bound
+`abs_setIntegral_compensatorE_le`.  Uniform integrability does not occur -- the window bound is
+`C + 2LC·j`, a constant, so the passage to the limit inside `martingale_stoppedProcess` is
+dominated convergence with a constant majorant. -/
+theorem martingale_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    {τ : ((ℕ → E) × (ℕ → ℝ)) → ENNReal}
+    (hτ : IsStoppingTime (jumpFiltrationE lam hlam) τ) :
+    Martingale (stoppedProcess Y τ) (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  have hmart := jumpProcessE_isMPSolution hlam hlam0 hL mu nu Y hY
+  have hprog := isStronglyProgressive_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
+  have hrcY := tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
+  have hne : Nonempty E := by
+    by_contra hcon
+    rw [not_nonempty_iff] at hcon
+    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
+    rw [measure_univ] at h0
+    exact one_ne_zero h0
+  obtain ⟨x0⟩ := hne
+  have hL0 : (0 : ℝ) ≤ L := (hlam0 x0).le.trans (hL x0)
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hC0 : (0 : ℝ) ≤ C := (abs_nonneg _).trans (hC x0)
+  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
+    rw [hp2]; exact fun x ↦ abs_jumpApply_le (fun y ↦ (hlam0 y).le) hL hC x
+  have hcoef : (0 : ℝ) ≤ 2 * L * C := mul_nonneg (mul_nonneg (by norm_num) hL0) hC0
+  have hbdd : ∀ j : ℝ≥0, ∃ C', ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C' := by
+    intro j
+    refine ⟨C + 2 * L * C * (j : ℝ), fun s hs ω ↦ ?_⟩
+    have hb := abs_setIntegral_compensatorE_le (lam := lam) hgb s ω
+    have h1 := hC (jumpProcessE lam (s : ℝ) ω)
+    have h2 := abs_sub (p.1 (jumpProcessE lam (s : ℝ) ω))
+      (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
+        p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)
+    have hsj : ((s : ℝ)) ≤ (j : ℝ) := by exact_mod_cast hs
+    have hmul : 2 * L * C * (s : ℝ) ≤ 2 * L * C * (j : ℝ) :=
+      mul_le_mul_of_nonneg_left hsj hcoef
+    rw [hYeq s ω]
+    linarith
+  exact martingale_stoppedProcess hmart hprog hrcY hbdd hτ
+
+/-- **The hitting time of the running supremum is a stopping time of the *truncated*
+filtration** as well as of the local one.  `isStoppingTime_rateTime` says it for
+`jumpFiltrationE lam`; this says it for `jumpFiltrationE (truncRate lam n)`, which is the
+filtration `martingale_stoppedProcess_mpFamily_jumpProcessE` is applied over, and it is the
+complement of `measurableSet_lt_rateTime_truncRate`. -/
+theorem isStoppingTime_rateTime_truncRate {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ) :
+    IsStoppingTime (jumpFiltrationE (truncRate lam n) (measurable_truncRate hlam n))
+      (rateTime lam n) := by
+  intro s
+  have hc := (measurableSet_lt_rateTime_truncRate hlam n s).compl
+  have heq : {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω}ᶜ
+      = {ω : (ℕ → E) × (ℕ → ℝ) | rateTime lam n ω ≤ ((s : ℝ≥0) : ENNReal)} := by
+    ext ω; simp [not_lt]
+  rwa [heq] at hc
+
+end LocalProgressive
+
