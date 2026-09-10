@@ -17912,3 +17912,115 @@ Approximation der Stoppzeit liegt oder an der gleichgradigen Integrierbarkeit be
 Grenzübergang — denn das entscheidet, ob die Beschränktheit des Erzeugers (die hier zur
 Verfügung steht und eine gleichmäßige Schranke `C + 2LC·t` an das Testprozeß liefert,
 `integrable_mpFamily_jumpProcess`) den Grenzübergang schon bezahlt.
+
+### 2026-09-10, fünfzehnter Lauf des Tages — der gestoppte Martingalsatz in stetiger Zeit
+
+**Auftrag:** der Vorschlag des vierzehnten Laufs, wörtlich — `martingale_stoppedProcess`, die
+stetige Fassung, samt der Auflage, bei einem Bruch zu sagen, ob es an der Approximation der
+Stoppzeit liegt oder an der gleichgradigen Integrierbarkeit beim Grenzübergang. Dazu der Hinweis
+des Nutzers vom selben Tag, der den Weg über die dyadische Diskretisierung der Stoppzeit
+vorzeichnet und zwei Fundstellen in `RemyDegenne/brownian-motion` nennt.
+
+**Ergebnis: der Satz steht.** Zwanzig Deklarationen im neuen Abschnitt `StoppedMartingale` von
+`TauCeti/MartingaleProblems/Suggested.lean` (drei Definitionen, siebzehn Sätze), die ganze Datei
+ohne einen Fehler durch `lake env lean` gegen v4.33.1, alle zwanzig mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt bei neun
+(Meilensteine 3, 5, 9, 10). Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+```
+martingale_stoppedProcess (hY : Martingale Y 𝓕 P) (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C)
+    {τ : Ω → ENNReal} (hτ : IsStoppingTime 𝓕 τ) :
+  Martingale (stoppedProcess Y τ) 𝓕 P
+```
+
+**Zur Auflage: es hat nicht gebrochen, und die gleichgradige Integrierbarkeit kommt gar nicht
+vor.** Der klassische Beweis braucht sie, weil er den Grenzübergang für ein beliebiges Martingal
+führen will; hier steht die **Fensterschranke** zur Verfügung — `hbdd` —, und damit ist die
+dominierende Funktion eine Konstante und der Grenzübergang
+`MeasureTheory.tendsto_integral_of_dominated_convergence`. Das ist keine Bequemlichkeit, sondern
+paßt auf die Gebrauchsstelle: `integrable_mpFamily_jumpProcess` schätzt die Testprozesse des
+Sprungproblems durch `C + 2LC·t` ab, also ist die Schranke auf jedem Fenster schon bezahlt. Die
+Approximation der Stoppzeit war ebenfalls kein Bruchpunkt, aber sie hat eine Wahl erzwungen, und
+die ist der erste Befund.
+
+**Erster Befund: die Aufrundung muß die *Deckenfunktion* sein und nicht das nächstgrößere echte
+Dyadische.** Beides approximiert von oben, beides hat abzählbaren Wertebereich, und der
+Unterschied zeigt sich erst an der Stoppzeiteigenschaft. Mit der Decke ist
+`{dyadStop ≤ t} = {ρ ≤ ⌊t·2ⁿ⌋/2ⁿ}` — eine **nicht strikte** Bedingung an einem dyadischen Niveau
+unterhalb von `t`, und die sieht die Filtration über `hρ.measurableSet_le` allein. Mit dem echt
+größeren Dyadischen `(⌊s·2ⁿ⌋+1)/2ⁿ` — der Fassung, die `dyadicUp` in dieser Datei seit dem
+neunzehnten Lauf des 2026-09-09 benutzt, und die für die progressive Meßbarkeit die richtige ist —
+käme dort `{ρ < ⌊t·2ⁿ⌋/2ⁿ}` heraus, also `IsStoppingTime.measurableSet_lt`, das
+`[FirstCountableTopology ι]` und ein Erstabzählbarkeitsargument mitbringt. Dieselbe Rundung, zwei
+Zwecke, zwei verschiedene richtige Antworten.
+
+**Zweiter Befund, und er ist der eigentliche Punkt des Laufs: die Martingalgleichung ist ohne
+jede σ-Algebra einer Stoppzeit bewiesen.** Der naheliegende Weg ist das optionale Sampling für
+`min i τ` und `min j τ` und danach ein Turmschluß; er schließt **nicht**, und der Grund ist eine
+Zeile: `𝓕 i` liegt nicht in der σ-Algebra von `min i τ`. Ein Ereignis `A ∈ 𝓕 i` verlangt für
+jedes `t` die Meßbarkeit von `A ∩ {min i τ ≤ t}`, und für `t < i` ist das `A ∩ {τ ≤ t}` — der
+zweite Faktor ist `𝓕 t`-meßbar, der erste nicht. Was schließt, ist **eine einzige** Hilfsstoppzeit
+
+```
+ρ = (A ∩ {i < τ}).piecewise (fun ω ↦ max (min (τ ω) j) i) (fun _ ↦ i)
+```
+
+(`MeasureTheory.IsStoppingTime.piecewise_of_le`, `Process/Stopping.lean:1380`, das genau
+verlangt, daß beide Zweige von unten durch `i` beschränkt sind und die Menge in `𝓕 i` liegt).
+Für sie sagt `integral_stoppedValue_eq` schlicht `E[Y_ρ] = E[Y_j]`, und dieselbe Aussage für die
+**konstante** Zeit `i` gibt `E[Y_i] = E[Y_j]`; die Differenz der beiden ist die Mengenidentität
+auf `A ∩ {i < τ}`, und auf `A ∩ {τ ≤ i}` stimmen die beiden gestoppten Prozesse punktweise
+überein. Kein `IsStoppingTime.measurableSpace`, kein `condExp_condExp_of_le`. Das `max i` im
+ersten Zweig ist nicht Kosmetik: `piecewise_of_le` prüft die untere Schranke an **jedem**
+Stichprobenpunkt und nicht nur auf der Menge, auf der der Zweig gilt, und auf `A ∩ {i < τ}` ist
+`max i (min τ j) = min τ j`, weil dort `i < τ` und `i ≤ j` ist.
+
+**Dritter Befund, und er hat zweimal Zeit gekostet: `ENNReal` ist ein `def` auf `WithTop ℝ≥0`
+und kein `abbrev`.** `IsStoppingTime 𝓕 τ` ist über `Ω → WithTop ι` erklärt; schreibt man die
+Stoppzeit als `Ω → ENNReal`, so sind Ziel und Aussage zwar definitionsgleich, aber `rw` arbeitet
+bei `instances`-Transparenz und findet das Muster nicht. Zweimal getroffen — bei
+`isStoppingTime_dyadStop` (behoben durch ein `show` mit der `ENNReal`-Schreibweise, das die
+Gleichheit einmal bei voller Transparenz erzwingt) und bei `stoppedProcess_const_top`, wo das
+`⊤` der `ENNReal`-Instanz nicht auf das `⊤` der `WithTop`-Instanz paßt (behoben, indem die
+Stoppzeit als `fun _ ↦ (⊤ : WithTop ℝ≥0)` eingesetzt wird). Wer in dieser Datei eine
+Mathlib-Aussage über Stoppzeiten anwendet, rechnet mit dieser Reibung.
+
+**Die beiden Proben stehen bei der Aussage**, wie es das Inventar seit dem 2026-09-07 verlangt:
+`martingale_stoppedProcess_zero` löst alle vier Voraussetzungen auf dem Nullprozeß ein (die
+Aussage ist also nicht leer), und `martingale_of_martingale_stoppedProcess_top` gewinnt aus dem
+Satz bei `τ = ⊤` die Voraussetzung zurück — das ist die Stelle, an der ein vertauschtes `min`
+oder ein falsch gelesenes `untopA` in der Buchführung sichtbar geworden wäre. Die erste Probe ist
+zugestandenermaßen schwach; die wirkliche Probe ist die Anwendung auf den Sprungprozeß, und die
+ist der nächste Lauf.
+
+**Zu den beiden Fundstellen im Hinweis des Nutzers.** `~/Code/lean/brownian-motion` ist gelesen
+worden; gebraucht wurde daraus nichts, und der eigene Beweis geht einen anderen Weg als der dort
+angelegte. `Martingale.ae_eq_condExp_of_isStoppingTime`
+(`BrownianMotion/StochasticIntegral/UniformIntegrable.lean:121`) ist die Aussage über
+`hτ.measurableSpace`, also gerade die Bauform, die der zweite Befund umgeht;
+`Martingale.uniformIntegrable_stoppedValue_of_countable_range` (`:147`) baut die gleichgradige
+Integrierbarkeit auf, die die Fensterschranke hier überflüssig macht. Beides bestätigt, daß der
+Weg gangbar ist, und beides ist teurer als nötig, sobald der Erzeuger beschränkt ist. Die Aussage
+selbst steht dort in keiner Fassung — die Suche des vierzehnten Laufs ist damit bestätigt.
+
+**Vorschlag für den nächsten Lauf: `jumpProcess_isLocalMPSolution`, der Zusammenbau**, und er
+hängt jetzt an genau drei benannten Eingaben, von denen zwei noch zu schreiben sind:
+
+1. **`IsStronglyProgressive (jumpFiltrationE (truncRate lam n)) Y` für die Testprozesse**, also
+   Mathlibs progressive Meßbarkeit für den kompensierten Prozeß. Die halbe Arbeit steht:
+   `measurable_uncurry_min_of_eventuallyEq` liefert die gemeinsame Meßbarkeit für einen von
+   rechts **lokal konstanten** Integranden, und das ist `h ∘ X`. Der Kompensator ist es nicht —
+   er ist in `t` stetig und nicht lokal konstant —, also ist jene Aussage auf **Rechtsstetigkeit**
+   zu verallgemeinern: im Beweis wird `hrc` nur benutzt, um aus `tendsto_dyadicUp` eine
+   *eventuelle Gleichheit* zu machen, und eine Konvergenz genügt an derselben Stelle. Das ist der
+   erste Punkt, und er ist billig.
+2. **Rechtsstetigkeit der Pfade des kompensierten Prozesses**, die zweite Voraussetzung von
+   `martingale_stoppedProcess`. Für `h ∘ X` ist sie `eventuallyEq_nhdsGE_stepPath_comp`, für den
+   Kompensator die Stetigkeit von `t ↦ ∫_0^t g(X_s) ds` bei beschränktem `g`.
+3. Die Fensterschranke ist da (`integrable_mpFamily_jumpProcess`), und der Transport der
+   Konklusion von der gestutzten Filtration auf `jumpFiltrationE lam` ist
+   `jumpFiltrationE_inter_lt_rateTime` aus dem dreizehnten Lauf.
+
+Punkt 1 zuerst, denn er ist die einzige der drei Eingaben, die eine bestehende Deklaration ändert.

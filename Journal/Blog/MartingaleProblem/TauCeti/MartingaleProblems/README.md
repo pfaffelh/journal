@@ -1485,8 +1485,12 @@ A concrete family of solutions, built without any of the theory above. Index
   does match the laws — fails at the sample points where the frozen data explode,
   a null set, and a natural filtration is not an almost sure notion.
 * `martingale_stoppedProcess`: **the stopped process of a martingale is a
-  martingale**, for an index that is not `ℕ`, under right continuity of the paths.
-  Mathlib has the discrete case only: `MeasureTheory.Submartingale.stoppedProcess`
+  martingale**, for an index that is not `ℕ`. **Proved** on 2026-09-10, in
+  `section StoppedMartingale`, over `ℝ≥0` and for a stopping time with values in
+  `ℝ≥0∞`, under three hypotheses on the process: `IsStronglyProgressive`, right
+  continuity of the paths at every time, and boundedness on each window
+  `[0, j]`. Mathlib has the discrete case only:
+  `MeasureTheory.Submartingale.stoppedProcess`
   (`Probability/Martingale/OptionalStopping.lean:95` on master `403547feec1`,
   `:104` in v4.33.1) is stated in a section with `{𝒢 : Filtration ℕ m0}`, and there
   is no `IsStable 𝓕 (fun Y ↦ Martingale Y 𝓕 P)` anywhere in either version. What
@@ -1495,10 +1499,29 @@ A concrete family of solutions, built without any of the theory above. Index
   `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le_of_countable_range`
   and `…_of_le_const_of_countable_range`
   (`Probability/Martingale/OptionalSampling.lean:121` and `:90`, the same lines in
-  v4.33.1 and on master), so what this point owes is the passage from the dyadic
-  approximations of the stopping time to the stopping time itself, and the paths of
-  the jump process are step paths, so the right continuity it needs is
-  `eventuallyEq_nhdsGE_stepPath_comp` and not a limit theorem.
+  v4.33.1 and on master); the passage from there to an arbitrary stopping time is
+  what this section supplies.
+* `dyadStop`, `isStoppingTime_dyadStop`, `countable_range_dyadStop`,
+  `tendsto_dyadStop`: the dyadic approximation **from above** of a stopping time
+  capped at `j`, `min j (⌈ρ·2ⁿ⌉/2ⁿ)`. The ceiling and not the strict upper dyadic:
+  with the ceiling `{dyadStop ≤ t}` is `{ρ ≤ ⌊t·2ⁿ⌋/2ⁿ}`, a **non strict**
+  condition at a dyadic level below `t`, and that is what the filtration sees
+  through `hρ.measurableSet_le` alone; the strict upper dyadic would give
+  `{ρ < ⌊t·2ⁿ⌋/2ⁿ}` and demand `measurableSet_lt`, which carries
+  `[FirstCountableTopology]` and a first countability argument that is not needed.
+* `integral_stoppedValue_eq_of_countable_range`, `integral_stoppedValue_eq`:
+  `E[Y_ρ] = E[Y_j]` for a bounded stopping time `ρ ≤ j`, first for countable range
+  (optional sampling plus `MeasureTheory.integral_condExp`), then in general by
+  dominated convergence along `dyadStop`. **Boundedness on the window, and not
+  uniform integrability**, is what pays the limit: the classical hypothesis is
+  uniform integrability of `{Y_ρ}`, but the test processes of the jump
+  construction are bounded by `C + 2LC·t` on `[0, t]`
+  (`integrable_mpFamily_jumpProcess`), so the dominating function is a constant.
+* `martingale_stoppedProcess_zero` and
+  `martingale_of_martingale_stoppedProcess_top`: the two probes on the statement —
+  the hypotheses are jointly satisfiable, and at `τ = ⊤` the conclusion is the
+  hypothesis again, which is where an inverted `min` in the `stoppedProcess`
+  bookkeeping would show.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved, with `rateTime` as the
   localizing sequence; and the explosion criterion in terms of the jump times.
@@ -1512,11 +1535,13 @@ A concrete family of solutions, built without any of the theory above. Index
   (`jumpProcessE_isMPSolution`); and before the hitting time that filtration is
   the one asked for. The level `n = 0` is not a special case to be argued around:
   `rateTime lam 0 = 0 = ⊥`, and `Locally` prefixes the stopped process with the
-  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`. What the
-  assembly still owes is `martingale_stoppedProcess`: the decomposition
-  `∫_A M_t = ∫_{A ∩ {τ ≤ s}} + ∫_{A ∩ {s < τ}}` leaves, on `{s < τ ≤ t}`, the
-  value of the truncated martingale **at** `τ`, which is optional stopping in
-  continuous time and not a set identity.
+  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`. Every input
+  of the assembly is now proved; what it owes is the joining, and the two hinges
+  are the three hypotheses of `martingale_stoppedProcess` for the test processes of
+  the truncated rate — `IsStronglyProgressive` of the compensated process, right
+  continuity of its paths, and its window bound — and the transport of the
+  conclusion from the truncated filtration to `jumpFiltrationE lam` through
+  `jumpFiltrationE_inter_lt_rateTime`.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for
