@@ -642,15 +642,16 @@ A concrete family of solutions, built without any of the theory above. Index
   `¬ Summable b` follows from `¬ Summable c`, and with
   `X n = (Set.Ioi 1).indicator 1 ∘ eval n` the partial sums
   `Y N = ∑ n < N, b n * X n` have mean `exp (-1) · B N` and variance at most
-  `B N`, where `B N = ∑ n < N, b n → ∞`, so
+  `B N / 4`, where `B N = ∑ n < N, b n → ∞`, so
   `ProbabilityTheory.meas_ge_le_variance_div_sq`
   (`Probability/Moments/Variance.lean:397`) gives
-  `P (Y N ≥ exp (-1) · B N / 2) → 1`; `c n * ξ n ≥ b n * X n ξ` pointwise on
+  `P (Y N < exp (-1) · B N / 2) ≤ 1 / (exp (-1) ^ 2 · B N) → 0`;
+  `c n * ξ n ≥ b n * X n ξ` pointwise on
   `{∀ n, 0 ≤ ξ n}`, and the partial sums are monotone. The independence enters
-  as `ProbabilityTheory.IndepFun.variance_sum` (`:422`) on the indicators, which
-  `iIndepSet_waiting` supplies through
-  `ProbabilityTheory.iIndepSet.iIndepFun_indicator`
-  (`Independence/Basic.lean:1032`).
+  as `ProbabilityTheory.IndepFun.variance_sum` (`:422`) on the indicators, and
+  that is `iIndepFun` of the coordinates, which
+  `ProbabilityTheory.iIndepFun_infinitePi`
+  (`Independence/InfinitePi.lean:127`) supplies at the identity.
 
   Its two ends are not probabilistic and are **proved** on 2026-09-10, eighth
   run. `not_summable_min_one` says the truncation preserves divergence, and it
@@ -660,12 +661,46 @@ A concrete family of solutions, built without any of the theory above. Index
   quantifiers — Chebyshev gives one level at a time a set of full measure, while
   divergence asks for one set serving all levels; countably many levels suffice
   because the reals are archimedean.
+
+  **Proved** on 2026-09-10, ninth run, together with its whole middle:
+  `iIndepFun_waiting`, the indicator `waitBig` with its bounds and its mean
+  `integral_waitBig`, the three inputs of Chebyshev (`memLp_mul_waitBig`,
+  `integral_sum_waitBig`, `variance_sum_waitBig_le`) and the estimate
+  `measure_sum_waitBig_lt_le`.
+
+  **The truncation is not a convenience of the variance bound, it is the
+  argument.** Integrability needs no upper bound on `b n` — a weighted indicator
+  is bounded by its weight — and `b n ≤ 1` is spent at exactly one place,
+  `b n ^ 2 ≤ b n` in `variance_sum_waitBig_le`. Without it the bound would read
+  `∑ b n ^ 2`, which can converge while `∑ b n` diverges (`c n = 1 / n`), and the
+  estimate would say nothing.
+
+  **The route to the independence was shorter than announced, and the earlier
+  negative finding is one directional.** `iIndepSet.iIndepFun_indicator` is not
+  needed: `iIndepFun_infinitePi` at the identity *is* the independence of the
+  coordinates as functions. What Mathlib lacks — the passage from `iIndepFun` of
+  the coordinates to `iIndepSet` of events about them, which the second
+  Borel--Cantelli lemma at `tendsto_sum_waiting_atTop` wants — is the other
+  direction. A negative finding about two notions is a finding about a
+  *direction*.
 * `ae_mem_nonExplosiveE`: `waitingMeasure`-almost every sample point of a chain
   along which `∑ (lam (y n))⁻¹` diverges is non explosive, and the
   `jumpMeasure`-almost sure form of it. This is
   `ae_tendsto_sum_smul_waiting_atTop` read through
   `mem_nonExplosiveE_iff_tsum_eq_top`, and it is the hypothesis of the local
-  branch of Milestone 7.
+  branch of Milestone 7. **Proved** on 2026-09-10, ninth run, with the pointwise
+  `mem_nonExplosiveE_of_tendsto_sum` below it and
+  `ae_mem_nonExplosiveE_jumpMeasure` above it. The last is two lines:
+  `MeasureTheory.Measure.ae_prod_mem_iff_ae_ae_mem`
+  (`MeasureTheory/Measure/Prod.lean:449`) splits the almost sure statement over
+  `(chainKernel mu ∘ₘ nu).prod waitingMeasure` into one about the chain and one
+  about the waiting times, and its only hypothesis is that `NonExplosiveE lam`
+  be measurable.
+
+  **It is strictly weaker than `mem_nonExplosiveE_of_traj`**, and the gap is the
+  case the local branch exists for: the linear birth and death chain has
+  `lam (y k) = β · k`, unbounded along *every* trajectory, so no bound `L` is
+  available, while `∑ 1 / (β k)` diverges all the same.
 * `tendsto_sum_waiting_atTop`: the partial sums of the waiting times diverge
   `waitingMeasure`-almost surely. **Proved** on 2026-09-09, eighteenth run,
   together with `ae_pos_waiting`, `frequently_one_lt_waiting`,
@@ -1390,6 +1425,58 @@ A concrete family of solutions, built without any of the theory above. Index
   set. Note which defect this is **not**: the rate is positive at every state, so
   it is not the one `jumpProcessE` was built to repair, and the only hypothesis
   of `mem_nonExplosiveE_of_traj` this data fails is the bound `L`.
+
+  **The other half of the pair is in the file since 2026-09-10, ninth run**, and
+  it is what keeps the criterion from being one that only ever refuses:
+  `ae_mem_nonExplosiveE_linear`, on `linearRate n = n` read along
+  `linearChain n = n + 1`. Almost every sample point **is** in `NonExplosiveE`,
+  because `not_summable_linearRate` is the harmonic series. The two data differ
+  in nothing but the growth of the rate, `2 ^ n` against `n`, which is exactly
+  what a criterion for non explosion has to see; and the linear one is reachable
+  only through `ae_mem_nonExplosiveE`, since its rate is unbounded along the
+  trajectory and `mem_nonExplosiveE_of_traj` does not apply. The shift by one in
+  `linearChain` is not a trick: at `y n = n` the rate vanishes at the state `0`,
+  which is the absorbing case `mem_nonExplosiveE_of_rate_zero` already settles,
+  and this example is about the other defect.
+* **The generator of a birth and death chain, and the two branches it splits
+  into.** `b, d : ℕ → ℝ`, total rate `b + d`, jump kernel the mixture with
+  weights `b / (b + d)` and `d / (b + d)`. **In Lean** on 2026-09-10, ninth run,
+  as `section BirthDeathExample`, in fourteen declarations. The computation the
+  milestone asks for first comes out as it should: `jumpApply_birthDeath` is
+  `A f x = b x * (f (x + 1) - f x) + d x * (f (x - 1) - f x)`, the total rate
+  cancelling, so the form of `set:jumpdata` — one rate and one kernel — carries
+  two competing rates without distortion and there is no finding against it.
+
+  **There is a finding, and it is about the absorbing state.** Where
+  `b x + d x = 0` the two weights are `0 / 0`, the mixture is the *zero measure*,
+  and `IsMarkovKernel` fails — at the state the model means to be absorbing.
+  `jumpProcessE` repairs the *rate* there, but it cannot repair the *kernel*,
+  because the kernel is what the next state is read from and a jump chain has to
+  have one. So the absorbing case needs **two** repairs and not one: jump times
+  in `ℝ≥0∞` and a convention in the kernel. The convention is `Measure.dirac x`,
+  and it is the only one that changes no generator: with both rates `0` the
+  operator is `0` at `x` whatever the kernel says. With it,
+  `isMarkovKernel_birthDeathKernel` and `jumpApply_birthDeath` carry **no**
+  positivity hypothesis, and only that makes the linear chain writable at all.
+
+  The two instances are in the file, each at its own branch. **M/M/1**
+  (`mm1Birth`, `mm1Death`, `jumpApply_mm1`) has, by `birthDeathRate_mm1_mem`, a
+  rate in `(0, β + δ]`, which is exactly what `jumpProcess_isMPSolution` and
+  `exists_unique_of_bounded` ask of a rate — and it does not stop at the
+  generator: `mm1_isMPSolution` discharges every hypothesis of that theorem on the
+  data and `martingale_compensated_mm1` is an actual `MeasureTheory.Martingale`,
+  `f (X t) - ∫_0^t (β (f(X u +1) - f(X u)) + δ 1_{X u ≥ 1} (f(X u -1) - f(X u))) du`.
+  **It is the first solution in the file whose generator is state dependent**: the
+  Poisson process has a constant rate and a shift for a kernel, so the state sees
+  nothing there. The one hypothesis that is not free is the Markov property of the
+  kernel, which holds under a condition on the data and is therefore carried as an
+  instance hypothesis and discharged by `isMarkovKernel_birthDeathKernel` at the
+  call site. **The linear chain** (`linearBirth`,
+  `linearDeath`, `jumpApply_linearBirthDeath`) breaks both, and breaks them
+  separately: `birthDeathRate_linear_zero` is the absorbing state and
+  `not_bddAbove_birthDeathRate_linear` the unboundedness. It is therefore the only
+  one of the three examples that exercises the local branch, and its non explosion
+  is `ae_mem_nonExplosiveE`.
 * **The path dependent variant is not a state dependent one.** The Hawkes
   process of the manuscript's `ex:hawkes`: `E = ℕ`,
   `mu (t, ω, ·) = Measure.dirac (ω t⁻ + 1)` and the rate

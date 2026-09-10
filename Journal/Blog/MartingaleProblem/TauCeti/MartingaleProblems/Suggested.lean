@@ -24,6 +24,9 @@ import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Algebra.Group.ForwardDiff
 import Mathlib.Analysis.Normed.Ring.InfiniteSum
 import Mathlib.Probability.Distributions.Poisson.Basic
+import Mathlib.Probability.Moments.Variance
+import Mathlib.Probability.Independence.InfinitePi
+import Mathlib.Analysis.PSeries
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -188,6 +191,42 @@ The tenth run of 2026-09-07 added the clock's interval calculus
 increment identity `mpFamily_sub_of_measurable_path`, all proved; and it
 corrected both forms of `isMPSolution_iff_forall_fdd`, which were **not
 provable** as they stood.  They now carry `Clock.IsProgressive Q X 𝓕`.
+
+The ninth run of 2026-09-10 added eighteen declarations to `section Absorbing`,
+the **non explosion criterion of the local case**, and it is a criterion on the
+embedded chain alone: `ae_tendsto_sum_smul_waiting_atTop` says that a divergent
+series of nonnegative weights tested against the waiting times diverges almost
+surely, and `ae_mem_nonExplosiveE` reads it through
+`mem_nonExplosiveE_iff_tsum_eq_top` at `c n = (lam (y n))⁻¹`.  Its middle is
+Chebyshev's inequality on the truncation `min (c n) 1` applied to the indicators
+`waitBig n` of `{ξ n > 1}`, and the one place the truncation is spent is
+`b n ^ 2 ≤ b n` in `variance_sum_waitBig_le` -- without it the variance bound
+would read `∑ b n ^ 2`, which can converge while `∑ b n` diverges.  The
+independence is `iIndepFun_waiting`, which is
+`ProbabilityTheory.iIndepFun_infinitePi` at the identity and needs no bridge from
+`iIndepSet_waiting`.  `ae_mem_nonExplosiveE_linear` is the half of the acceptance
+pair that lies *inside* `NonExplosiveE`: the rate `n` along the chain `n + 1`, non
+explosive because the harmonic series diverges, and out of reach of
+`mem_nonExplosiveE_of_traj` because that rate is unbounded along the trajectory.
+
+The same run added `section BirthDeathExample`, sixteen declarations, which is
+the generator of a birth and death chain as a **computation**: with the total rate
+`b + d` and the mixture kernel, `jumpApply_birthDeath` is
+`A f x = b x * (f (x+1) - f x) + d x * (f (x-1) - f x)`, the total rate
+cancelling, so the shape of `set:jumpdata` carries two competing rates without
+distortion.  What the computation does show is that **the absorbing state needs a
+convention in the kernel and not only in the rate**: where `b x + d x = 0` the two
+weights are `0 / 0` and the mixture is the zero measure, so `IsMarkovKernel` fails
+at exactly the state the model means to absorb.  `birthDeathKernel` falls back to
+`Measure.dirac x`, the only choice that changes no generator, and with it neither
+`isMarkovKernel_birthDeathKernel` nor `jumpApply_birthDeath` needs any positivity.
+M/M/1 (`jumpApply_mm1`, `birthDeathRate_mm1_mem`) then has a rate in `(0, β + δ]`
+and is an instance of the bounded theorems -- `mm1_isMPSolution` and
+`martingale_compensated_mm1` write it out, and it is the first solution in the
+file whose generator is **state dependent**; the linear chain
+(`jumpApply_linearBirthDeath`) fails both hypotheses separately
+(`birthDeathRate_linear_zero`, `not_bddAbove_birthDeathRate_linear`) and is the
+only one of the examples that exercises the local branch.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -7609,4 +7648,522 @@ theorem ae_tendsto_atTop_of_monotone {Ω : Type*} [MeasurableSpace Ω] {μ : Mea
   obtain ⟨N, hN⟩ := hω K
   exact ⟨N, fun a ha ↦ (hK.trans hN).trans (hmono ω ha)⟩
 
+/-! ### The probabilistic step: a divergent weight series against the waiting times
+
+The remaining content of the local case is one statement, and `tendsto_sum_waiting_atTop` is its
+case `c ≡ 1`.  It does **not** generalise from there: that proof is that a summable sequence tends
+to `0` while infinitely many `ξ n` exceed `1`, and the events `{c n * ξ n > ε}` are summable as
+soon as `c n → 0` (witness `c n = 1 / n`), so the second Borel--Cantelli lemma alone does not
+reach it.  Divergence here comes from the accumulation of many small terms and not from single
+large ones, and Borel--Cantelli sees only single terms.
+
+What carries is Chebyshev's inequality on the truncation `min (c n) 1`, applied to the indicators
+of `{ξ n > 1}`: their weighted partial sums have mean `exp (-1) * B N` and variance at most
+`B N / 4`, where `B N = ∑ n < N, min (c n) 1` tends to `∞`.  The independence enters as
+`ProbabilityTheory.IndepFun.variance_sum` on those indicators, and it comes from
+`iIndepFun_waiting`. -/
+
+/-- **The coordinates of `waitingMeasure` are independent functions.**  This is the companion of
+`iIndepSet_waiting`, and unlike that one it is immediate from Mathlib:
+`ProbabilityTheory.iIndepFun_infinitePi` at the identity is the statement.  The note at
+`iIndepSet_waiting` -- that Mathlib has no lemma from `iIndepFun` of the coordinates to
+`iIndepSet` of events about them -- is about the other direction; where `iIndepFun` is what the
+consumer wants, as the variance formula wants it, the product measure supplies it directly. -/
+theorem iIndepFun_waiting :
+    iIndepFun (fun (n : ℕ) (ξ : ℕ → ℝ) ↦ ξ n) waitingMeasure := by
+  unfold waitingMeasure
+  exact iIndepFun_infinitePi (X := fun (_ : ℕ) (x : ℝ) ↦ x) fun _ ↦ measurable_id
+
+/-- The indicator of the event that the `n`-th waiting time exceeds `1`.  Bounding the summands by
+indicators is what makes the variance computable: it replaces an exponential variable, whose
+square has to be integrated, by a Bernoulli one, whose variance is at most `1 / 4` for free. -/
+noncomputable def waitBig (n : ℕ) (ξ : ℕ → ℝ) : ℝ :=
+  (Set.Ioi (1 : ℝ)).indicator (fun _ ↦ (1 : ℝ)) (ξ n)
+
+theorem measurable_waitBig (n : ℕ) : Measurable (waitBig n) :=
+  (measurable_const.indicator measurableSet_Ioi).comp (measurable_pi_apply n)
+
+theorem waitBig_eq_ite (n : ℕ) (ξ : ℕ → ℝ) :
+    waitBig n ξ = if 1 < ξ n then 1 else 0 := by
+  simp [waitBig, Set.indicator_apply]
+
+theorem waitBig_mem_Icc (n : ℕ) (ξ : ℕ → ℝ) : waitBig n ξ ∈ Set.Icc (0 : ℝ) 1 := by
+  rw [waitBig_eq_ite]; split_ifs <;> simp
+
+theorem waitBig_nonneg (n : ℕ) (ξ : ℕ → ℝ) : 0 ≤ waitBig n ξ := (waitBig_mem_Icc n ξ).1
+
+/-- **The mean of one indicator is `exp (-1)`.**  Only its positivity is used; the value is what
+makes the Chebyshev bound `1 / (exp (-1) ^ 2 * B N)` explicit. -/
+theorem integral_waitBig (n : ℕ) :
+    ∫ ξ, waitBig n ξ ∂waitingMeasure = Real.exp (-1) := by
+  have hmeas : MeasurableSet {ξ : ℕ → ℝ | ξ n ∈ Set.Ioi (1 : ℝ)} :=
+    measurableSet_Ioi.preimage (measurable_pi_apply n)
+  have hset : (fun ξ : ℕ → ℝ ↦ waitBig n ξ)
+      = {ξ : ℕ → ℝ | ξ n ∈ Set.Ioi (1 : ℝ)}.indicator 1 := by
+    funext ξ
+    rw [waitBig_eq_ite, Set.indicator_apply]
+    simp
+  rw [hset, integral_indicator_one (s := {ξ : ℕ → ℝ | ξ n ∈ Set.Ioi (1 : ℝ)}) hmeas,
+    Measure.real, waitingMeasure_eval_preimage measurableSet_Ioi n,
+    expMeasure_Ioi one_pos zero_le_one, ENNReal.toReal_ofReal (Real.exp_pos _).le]
+  norm_num
+
+/-- A weighted indicator is bounded by its weight, hence in every `L^p`.  The bound is `b n` and
+not `1`: no hypothesis `b n ≤ 1` is needed for integrability, only for the variance. -/
+theorem memLp_mul_waitBig {b : ℕ → ℝ} (hb0 : ∀ n, 0 ≤ b n) (n : ℕ) (p : ENNReal) :
+    MemLp (fun ξ ↦ b n * waitBig n ξ) p waitingMeasure :=
+  memLp_of_bounded (ae_of_all _ fun ξ ↦ ⟨mul_nonneg (hb0 n) (waitBig_nonneg n ξ),
+      by nlinarith [(waitBig_mem_Icc n ξ).2, hb0 n]⟩)
+    ((measurable_waitBig n).const_mul (b n)).aestronglyMeasurable p
+
+/-- The weighted indicators are independent, because they are measurable functions of distinct
+coordinates. -/
+theorem iIndepFun_mul_waitBig (b : ℕ → ℝ) :
+    iIndepFun (fun (n : ℕ) (ξ : ℕ → ℝ) ↦ b n * waitBig n ξ) waitingMeasure :=
+  iIndepFun_waiting.comp (fun n x ↦ b n * (Set.Ioi (1 : ℝ)).indicator (fun _ ↦ (1 : ℝ)) x)
+    fun n ↦ (measurable_const.indicator measurableSet_Ioi).const_mul (b n)
+
+theorem integral_sum_waitBig {b : ℕ → ℝ} (hb0 : ∀ n, 0 ≤ b n) (N : ℕ) :
+    ∫ ξ, ∑ n ∈ Finset.range N, b n * waitBig n ξ ∂waitingMeasure
+      = Real.exp (-1) * ∑ n ∈ Finset.range N, b n := by
+  rw [MeasureTheory.integral_finsetSum _ fun n _ ↦
+      memLp_one_iff_integrable.1 (memLp_mul_waitBig hb0 n 1), Finset.mul_sum]
+  refine Finset.sum_congr rfl fun n _ ↦ ?_
+  rw [integral_const_mul, integral_waitBig, mul_comm]
+
+/-- **The variance of the weighted indicator sum is at most `B N / 4`.**  Two facts meet here:
+independence turns the variance of the sum into the sum of the variances, and a variable with
+values in `Set.Icc 0 1` has variance at most `((1 - 0) / 2) ^ 2`, which is Popoviciu's inequality
+`ProbabilityTheory.variance_le_sq_of_bounded`.  The weight then enters squared, and `b n ^ 2 ≤ b n`
+is where `b n ≤ 1` is spent: without the truncation the bound would be `∑ b n ^ 2`, which can
+converge while `∑ b n` diverges, and the argument would collapse. -/
+theorem variance_sum_waitBig_le {b : ℕ → ℝ} (hb0 : ∀ n, 0 ≤ b n) (hb1 : ∀ n, b n ≤ 1) (N : ℕ) :
+    variance (fun ξ ↦ ∑ n ∈ Finset.range N, b n * waitBig n ξ) waitingMeasure
+      ≤ (∑ n ∈ Finset.range N, b n) / 4 := by
+  have hfun : (fun ξ ↦ ∑ n ∈ Finset.range N, b n * waitBig n ξ)
+      = ∑ n ∈ Finset.range N, fun ξ ↦ b n * waitBig n ξ := by
+    funext ξ; simp
+  rw [hfun, IndepFun.variance_sum (fun n _ ↦ memLp_mul_waitBig hb0 n 2)
+    (fun i _ j _ hij ↦ (iIndepFun_mul_waitBig b).indepFun hij), Finset.sum_div]
+  refine Finset.sum_le_sum fun n _ ↦ ?_
+  have hvar : variance (waitBig n) waitingMeasure ≤ 1 / 4 := by
+    have := variance_le_sq_of_bounded (μ := waitingMeasure) (a := (0 : ℝ)) (b := (1 : ℝ))
+      (ae_of_all _ fun ξ ↦ waitBig_mem_Icc n ξ) (measurable_waitBig n).aemeasurable
+    norm_num at this
+    linarith
+  have hsq : b n ^ 2 ≤ b n := by nlinarith [hb0 n, hb1 n]
+  calc variance (fun ξ ↦ b n * waitBig n ξ) waitingMeasure
+      = b n ^ 2 * variance (waitBig n) waitingMeasure := variance_const_mul _ _ _
+    _ ≤ b n ^ 2 * (1 / 4) := mul_le_mul_of_nonneg_left hvar (sq_nonneg _)
+    _ ≤ b n / 4 := by nlinarith [hsq]
+
+/-- **Chebyshev's inequality for the weighted indicator sum.**  The deviation is taken to be half
+the mean, so that the bound `1 / (exp (-1) ^ 2 * B N)` tends to `0` with a single hypothesis on the
+weights, namely that `B N` tends to `∞`.  This is the one place where a probabilistic inequality is
+used, and everything above it is bookkeeping for its three inputs: `MemLp`, the mean, the
+variance. -/
+theorem measure_sum_waitBig_lt_le {b : ℕ → ℝ} (hb0 : ∀ n, 0 ≤ b n) (hb1 : ∀ n, b n ≤ 1) {N : ℕ}
+    (hB : 0 < ∑ n ∈ Finset.range N, b n) :
+    waitingMeasure {ξ | ∑ n ∈ Finset.range N, b n * waitBig n ξ
+        < Real.exp (-1) * (∑ n ∈ Finset.range N, b n) / 2}
+      ≤ ENNReal.ofReal (1 / (Real.exp (-1) ^ 2 * ∑ n ∈ Finset.range N, b n)) := by
+  have he : (0 : ℝ) < Real.exp (-1) := Real.exp_pos _
+  set B := ∑ n ∈ Finset.range N, b n with hBdef
+  set Y : (ℕ → ℝ) → ℝ := fun ξ ↦ ∑ n ∈ Finset.range N, b n * waitBig n ξ with hYdef
+  have hmem : MemLp Y 2 waitingMeasure := by
+    rw [hYdef]
+    have hfun : (fun ξ ↦ ∑ n ∈ Finset.range N, b n * waitBig n ξ)
+        = ∑ n ∈ Finset.range N, fun ξ ↦ b n * waitBig n ξ := by funext ξ; simp
+    rw [hfun]
+    exact memLp_finsetSum' _ fun n _ ↦ memLp_mul_waitBig hb0 n 2
+  have hmean : ∫ ξ, Y ξ ∂waitingMeasure = Real.exp (-1) * B := integral_sum_waitBig hb0 N
+  have hc : 0 < Real.exp (-1) * B / 2 := by positivity
+  have hvar : variance Y waitingMeasure ≤ B / 4 := variance_sum_waitBig_le hb0 hb1 N
+  refine le_trans (measure_mono ?_)
+    (le_trans (meas_ge_le_variance_div_sq hmem hc) (ENNReal.ofReal_le_ofReal ?_))
+  · intro ξ hξ
+    simp only [Set.mem_setOf_eq] at hξ ⊢
+    rw [hmean, abs_sub_comm, abs_of_nonneg (by linarith)]
+    linarith
+  · calc variance Y waitingMeasure / (Real.exp (-1) * B / 2) ^ 2
+        ≤ (B / 4) / (Real.exp (-1) * B / 2) ^ 2 :=
+          div_le_div_of_nonneg_right hvar (sq_nonneg _)
+      _ = 1 / (Real.exp (-1) ^ 2 * B) := by
+          field_simp
+          ring
+
+/-- **A divergent series of nonnegative weights against the waiting times diverges almost
+surely.**  This is the probabilistic core of the local case: read through
+`mem_nonExplosiveE_iff_tsum_eq_top` with `c n = (lam (y n))⁻¹` it says that a chain along which
+the reciprocal rates are not summable does not explode, and that is a condition on the **chain
+alone**.
+
+The truncation `min (c n) 1` is `not_summable_min_one`, the Chebyshev estimate at one level is
+`measure_sum_waitBig_lt_le`, and the passage from one level at a time to all levels at once is
+`ae_tendsto_atTop_of_monotone`.  The comparison that ties the two sums together is pointwise and
+costs nothing: where `ξ n > 1` the weighted indicator is `min (c n) 1 ≤ c n ≤ c n * ξ n`, and
+where it is not, it is `0 ≤ c n * ξ n`. -/
+theorem ae_tendsto_sum_smul_waiting_atTop {c : ℕ → ℝ} (hc : ∀ n, 0 ≤ c n) (hdiv : ¬ Summable c) :
+    ∀ᵐ ξ ∂waitingMeasure,
+      Tendsto (fun N ↦ ∑ n ∈ Finset.range N, c n * ξ n) atTop atTop := by
+  have he : (0 : ℝ) < Real.exp (-1) := Real.exp_pos _
+  have hb0 : ∀ n, 0 ≤ min (c n) 1 := fun n ↦ le_min (hc n) zero_le_one
+  have hb1 : ∀ n, min (c n) 1 ≤ 1 := fun n ↦ min_le_right _ _
+  have hBtop : Tendsto (fun N ↦ ∑ n ∈ Finset.range N, min (c n) 1) atTop atTop :=
+    (not_summable_iff_tendsto_nat_atTop_of_nonneg hb0).1 (not_summable_min_one hdiv)
+  have step1 : ∀ᵐ ξ ∂waitingMeasure,
+      Tendsto (fun N ↦ ∑ n ∈ Finset.range N, min (c n) 1 * waitBig n ξ) atTop atTop := by
+    refine ae_tendsto_atTop_of_monotone (fun ξ N M hNM ↦ ?_) fun K ↦ ?_
+    · exact Finset.sum_le_sum_of_subset_of_nonneg
+        (fun x hx ↦ Finset.mem_range.2 ((Finset.mem_range.1 hx).trans_le hNM))
+        fun n _ _ ↦ mul_nonneg (hb0 n) (waitBig_nonneg n ξ)
+    · rw [ae_iff]
+      have htend : Tendsto
+          (fun N ↦ ENNReal.ofReal
+            (1 / (Real.exp (-1) ^ 2 * ∑ n ∈ Finset.range N, min (c n) 1))) atTop (𝓝 0) := by
+        have h1 : Tendsto
+            (fun N ↦ Real.exp (-1) ^ 2 * ∑ n ∈ Finset.range N, min (c n) 1) atTop atTop :=
+          hBtop.const_mul_atTop (by positivity)
+        simpa [one_div] using ENNReal.tendsto_ofReal h1.inv_tendsto_atTop
+      refine le_antisymm (ge_of_tendsto htend ?_) zero_le
+      have hev : ∀ᶠ N in atTop,
+          (K : ℝ) ≤ Real.exp (-1) * (∑ n ∈ Finset.range N, min (c n) 1) / 2
+            ∧ 0 < ∑ n ∈ Finset.range N, min (c n) 1 :=
+        (((hBtop.const_mul_atTop he).atTop_div_const two_pos).eventually_ge_atTop
+          (K : ℝ)).and (hBtop.eventually_gt_atTop 0)
+      filter_upwards [hev] with N hN
+      refine le_trans (measure_mono ?_) (measure_sum_waitBig_lt_le hb0 hb1 hN.2)
+      intro ξ hξ
+      simp only [Set.mem_setOf_eq, not_exists, not_le] at hξ ⊢
+      exact lt_of_lt_of_le (hξ N) hN.1
+  filter_upwards [step1, ae_pos_waiting] with ξ hξ hpos
+  refine tendsto_atTop_mono (fun N ↦ Finset.sum_le_sum fun n _ ↦ ?_) hξ
+  rw [waitBig_eq_ite]
+  split_ifs with h
+  · calc min (c n) 1 * 1 = min (c n) 1 := mul_one _
+      _ ≤ c n := min_le_left _ _
+      _ ≤ c n * ξ n := le_mul_of_one_le_right (hc n) h.le
+  · simpa using mul_nonneg (hc n) (hpos n).le
+
+/-! ### The local non explosion criterion
+
+With the series identity `mem_nonExplosiveE_iff_tsum_eq_top` and the divergence above, the local
+criterion is a criterion on the embedded chain: the reciprocal rates along the trajectory are not
+summable.  It is strictly weaker than the trajectory bound of `mem_nonExplosiveE_of_traj`, which
+asks `lam (y k) ≤ L`: the linear birth and death chain has `lam (y k) = β * k`, unbounded along
+every trajectory, while `∑ 1 / (β * k)` diverges. -/
+
+/-- **Non explosion from the divergence of the holding times along one sample point**, written so
+that the rate appears as the reciprocal weights the probabilistic statement consumes.  Compared
+with `mem_nonExplosiveE_of_traj` the uniform bound `L` is gone, and what replaces it is the
+divergence itself. -/
+theorem mem_nonExplosiveE_of_tendsto_sum (hlam : ∀ k, 0 < lam (y k)) (hxi : ∀ k, 0 ≤ xi k)
+    (hsum : Tendsto (fun m ↦ ∑ k ∈ Finset.range m, (lam (y k))⁻¹ * xi k) atTop atTop) :
+    (y, xi) ∈ NonExplosiveE lam := by
+  have hmono : ∀ m, 0 ≤ ∑ k ∈ Finset.range m, (lam (y k))⁻¹ * xi k := fun m ↦
+    Finset.sum_nonneg fun k _ ↦ mul_nonneg (inv_nonneg.2 (hlam k).le) (hxi k)
+  intro t
+  obtain ⟨m, hm⟩ :=
+    (((hsum.comp (tendsto_add_atTop_nat 1)).eventually_gt_atTop (max t 0))).exists
+  refine ⟨m, ?_⟩
+  have hEq : jumpTimeE lam y xi (m + 1)
+      = ENNReal.ofReal (∑ k ∈ Finset.range (m + 1), (lam (y k))⁻¹ * xi k) := by
+    rw [jumpTimeE_eq_sum, ENNReal.ofReal_sum_of_nonneg
+      fun k _ ↦ mul_nonneg (inv_nonneg.2 (hlam k).le) (hxi k)]
+    refine Finset.sum_congr rfl fun k _ ↦ ?_
+    rw [← ENNReal.ofReal_div_of_pos (hlam k), div_eq_inv_mul]
+  rw [hEq]
+  exact (ENNReal.ofReal_lt_ofReal_iff ((le_max_right t 0).trans_lt hm)).2
+    ((le_max_left t 0).trans_lt hm)
+
+/-- **Almost every sample point of a chain with non summable reciprocal rates is non explosive.**
+This is `ae_tendsto_sum_smul_waiting_atTop` read through `mem_nonExplosiveE_of_tendsto_sum`, and it
+is the hypothesis of the local branch of Milestone 7.  The chain is fixed: the statement is about
+the waiting times alone, which is what makes the Fubini form below a two line consequence. -/
+theorem ae_mem_nonExplosiveE (hlam : ∀ k, 0 < lam (y k))
+    (hdiv : ¬ Summable fun k ↦ (lam (y k))⁻¹) :
+    ∀ᵐ xi ∂waitingMeasure, (y, xi) ∈ NonExplosiveE lam := by
+  filter_upwards [ae_tendsto_sum_smul_waiting_atTop
+    (fun k ↦ inv_nonneg.2 (hlam k).le) hdiv, ae_pos_waiting] with xi hsum hpos
+  exact mem_nonExplosiveE_of_tendsto_sum hlam (fun k ↦ (hpos k).le) hsum
+
+/-- **The `jumpMeasure` form of the local non explosion criterion.**  The chain and the waiting
+times are independent, so the criterion is asked of the chain and the divergence is delivered by
+the waiting times; `Measure.ae_prod_mem_iff_ae_ae_mem` is exactly that split, and it needs
+`NonExplosiveE lam` to be measurable, which is `measurableSet_nonExplosiveE`. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure [MeasurableSpace E] {lam : E → ℝ}
+    (hlamm : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu]
+    (hdiv : ∀ᵐ y ∂(chainKernel mu ∘ₘ nu),
+      (∀ k, 0 < lam (y k)) ∧ ¬ Summable fun k ↦ (lam (y k))⁻¹) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  rw [jumpMeasure, Measure.ae_prod_mem_iff_ae_ae_mem (measurableSet_nonExplosiveE hlamm)]
+  filter_upwards [hdiv] with y hy
+  exact ae_mem_nonExplosiveE hy.1 hy.2
+
+/-! ### The second half of the acceptance pair of the explosion criterion
+
+`notMem_nonExplosiveE_explode` exhibits a sample point **outside** `NonExplosiveE`, with the rate
+`2 ^ n` read along the trajectory.  A criterion is worth nothing if it only ever refuses, so the
+companion is the rate that grows just slowly enough: `lam n = n`.  The two data differ by nothing
+but the growth of the rate, and that is exactly what the criterion has to see.  Note that
+`mem_nonExplosiveE_of_traj` does **not** apply here -- the rate is unbounded along the trajectory --
+so this instance is reachable only through `ae_mem_nonExplosiveE`. -/
+
+/-- The rate of the linear witness: at the state `n` it is `n`.  This is the rate of the pure birth
+chain of the linear birth and death process, whose non explosion is the acceptance example of the
+local branch of this milestone. -/
+def linearRate : ℕ → ℝ := fun n ↦ (n : ℝ)
+
+/-- The chain of the linear witness: it visits `n + 1` at step `n`.  The shift by one is what makes
+the rate positive along the trajectory; at the state `0` the rate vanishes, which is the absorbing
+case `mem_nonExplosiveE_of_rate_zero` covers and which this example is not about. -/
+def linearChain : ℕ → ℕ := fun n ↦ n + 1
+
+theorem linearRate_pos (k : ℕ) : 0 < linearRate (linearChain k) := by
+  simp only [linearRate, linearChain]
+  exact_mod_cast Nat.succ_pos k
+
+/-- **The reciprocal rates of the linear witness are the harmonic series**, which diverges. -/
+theorem not_summable_linearRate : ¬ Summable fun k ↦ (linearRate (linearChain k))⁻¹ :=
+  mt (summable_nat_add_iff (f := fun n : ℕ ↦ ((n : ℝ))⁻¹) 1).1 Real.not_summable_natCast_inv
+
+/-- **Almost every sample point of the linear witness is non explosive.**  Together with
+`notMem_nonExplosiveE_explode` this is the acceptance pair of the local criterion, and it is also
+the probe that `ae_mem_nonExplosiveE` is not vacuous: its two hypotheses are jointly satisfiable on
+data whose rate is unbounded, which is the only case the local branch exists for. -/
+theorem ae_mem_nonExplosiveE_linear :
+    ∀ᵐ xi ∂waitingMeasure, (linearChain, xi) ∈ NonExplosiveE linearRate :=
+  ae_mem_nonExplosiveE linearRate_pos not_summable_linearRate
+
 end Absorbing
+
+section BirthDeathExample
+
+/-! ## The generator of a birth and death chain
+
+Before any birth and death process can be an instance of this milestone, its generator has to come
+out right, and that is a computation and not a definition.  The data of `set:jumpdata` is a
+**total rate** together with a **jump kernel**; a birth and death process is given by two
+**competing rates** `b` and `d`.  The passage is forced: the total rate is `b + d`, and the kernel
+is the mixture with weights `b / (b + d)` and `d / (b + d)`.  The question the milestone asks is
+whether the total rate then cancels, and `jumpApply_birthDeath` answers it:
+
+`A f x = b x * (f (x + 1) - f x) + d x * (f (x - 1) - f x)`,
+
+which is the operator of the manuscript on the nose.  Had anything else come out, the form of
+`set:jumpdata` would be the finding and this section would be the place it showed.
+
+**The absorbing state forces a convention in the kernel and not only in the rate**, and that is
+the one thing the computation does show.  Where `b x + d x = 0` the two weights are `0 / 0`, so the
+mixture is the zero measure and not a probability measure: `IsMarkovKernel` fails, and it fails at
+the state the model means to be absorbing.  `jumpProcessE` repairs the *rate* there -- the holding
+time is `⊤` -- but it cannot repair the *kernel*, because the kernel is what the next state is read
+from and a jump chain has to have one.  So `birthDeathKernel` falls back to `Measure.dirac x`,
+which is the only choice that changes no generator: with `b x + d x = 0` and both nonnegative, both
+rates vanish, and the operator is `0` at `x` whatever the kernel says.  With that fallback
+`isMarkovKernel_birthDeathKernel` and `jumpApply_birthDeath` need **no positivity hypothesis at
+all**, which is what makes the linear birth and death chain -- absorbed at `0` -- expressible.
+
+This is the shared half of two of the three acceptance examples of this milestone.  M/M/1 is
+`b ≡ β`, `d x = δ * 1_{x ≥ 1}`: its total rate is bounded and positive, so
+`jumpProcess_isMPSolution` and the uniqueness apply unchanged.  The linear birth and death chain is
+`b x = β * x`, `d x = δ * x`: its total rate vanishes at `0` and is unbounded above, so it is an
+instance of the local branch and of `ae_mem_nonExplosiveE` alone.  The two together are what makes
+the pair a test: the same operator, read once where the milestone's main theorem applies and once
+where only its local form does.
+
+The truncated subtraction of `ℕ` is harmless, and for a reason worth recording: at `x = 0` the
+manuscript's data has `d 0 = 0`, and `0 - 1 = 0` makes the second difference vanish there in any
+case, so the identity below needs no hypothesis at `0` either. -/
+
+variable {b d : ℕ → ℝ}
+
+/-- The total rate of a birth and death chain: the rate at which *something* happens. -/
+def birthDeathRate (b d : ℕ → ℝ) : ℕ → ℝ := fun x ↦ b x + d x
+
+/-- The embedded jump chain of a birth and death process: from `x` it goes up with probability
+`b x / (b x + d x)` and down with the complementary probability, and it stays where it is when both
+rates vanish.  That last clause is forced and costs nothing; see the section doc.  No measurability
+has to be checked, because `ℕ` is countable and discrete and every function into measures is a
+kernel there (`ProbabilityTheory.Kernel.ofFunOfCountable`). -/
+noncomputable def birthDeathKernel (b d : ℕ → ℝ) : Kernel ℕ ℕ :=
+  Kernel.ofFunOfCountable fun x ↦
+    if b x + d x = 0 then Measure.dirac x
+    else ENNReal.ofReal (b x / (b x + d x)) • Measure.dirac (x + 1)
+      + ENNReal.ofReal (d x / (b x + d x)) • Measure.dirac (x - 1)
+
+theorem birthDeathKernel_apply (x : ℕ) :
+    birthDeathKernel b d x
+      = if b x + d x = 0 then Measure.dirac x
+        else ENNReal.ofReal (b x / (b x + d x)) • Measure.dirac (x + 1)
+          + ENNReal.ofReal (d x / (b x + d x)) • Measure.dirac (x - 1) := rfl
+
+/-- **The mixture is a probability measure**, with no hypothesis but the nonnegativity of the two
+rates: where their sum is positive the two weights are the two summands of
+`(b x + d x) / (b x + d x)`, and where it vanishes the fallback is a Dirac measure. -/
+theorem isMarkovKernel_birthDeathKernel (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x) :
+    IsMarkovKernel (birthDeathKernel b d) := by
+  refine ⟨fun x ↦ ⟨?_⟩⟩
+  rw [birthDeathKernel_apply]
+  by_cases h0 : b x + d x = 0
+  · rw [if_pos h0]; simp
+  · have hpos : 0 < b x + d x := lt_of_le_of_ne (by linarith [hb x, hd x]) (Ne.symm h0)
+    have hmass : (ENNReal.ofReal (b x / (b x + d x)) • Measure.dirac (x + 1)
+          + ENNReal.ofReal (d x / (b x + d x)) • Measure.dirac (x - 1) : Measure ℕ) Set.univ
+        = ENNReal.ofReal (b x / (b x + d x)) + ENNReal.ofReal (d x / (b x + d x)) := by simp
+    rw [if_neg h0, hmass, ← ENNReal.ofReal_add (div_nonneg (hb x) hpos.le)
+      (div_nonneg (hd x) hpos.le),
+      show b x / (b x + d x) + d x / (b x + d x) = 1 from by
+        rw [← add_div, div_self hpos.ne'],
+      ENNReal.ofReal_one]
+
+/-- **The generator of the birth and death data is the birth and death operator.**  The total rate
+cancels, which is the whole point of the computation: the form of `set:jumpdata` -- one rate and one
+kernel -- carries two competing rates without distortion.  No positivity is needed: at an absorbing
+state both sides are `0`. -/
+theorem jumpApply_birthDeath (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x) (f : ℕ → ℝ) (x : ℕ) :
+    jumpApply (birthDeathRate b d) (birthDeathKernel b d) f x
+      = b x * (f (x + 1) - f x) + d x * (f (x - 1) - f x) := by
+  rw [jumpApply, birthDeathKernel_apply]
+  by_cases h0 : b x + d x = 0
+  · have hb0 : b x = 0 := le_antisymm (by linarith [hd x]) (hb x)
+    have hd0 : d x = 0 := le_antisymm (by linarith [hb x]) (hd x)
+    rw [if_pos h0, birthDeathRate, h0, hb0, hd0]
+    simp
+  · have hpos : 0 < b x + d x := lt_of_le_of_ne (by linarith [hb x, hd x]) (Ne.symm h0)
+    have hb' : 0 ≤ b x / (b x + d x) := div_nonneg (hb x) hpos.le
+    have hd' : 0 ≤ d x / (b x + d x) := div_nonneg (hd x) hpos.le
+    have hint : ∀ (c : ENNReal) (a : ℕ), c ≠ ⊤ →
+        Integrable (fun y ↦ f y - f x) (c • Measure.dirac a) := fun c a hc ↦
+      (integrable_dirac (by simp [enorm_eq_nnnorm])).smul_measure hc
+    rw [if_neg h0,
+      integral_add_measure (hint _ _ ENNReal.ofReal_ne_top) (hint _ _ ENNReal.ofReal_ne_top),
+      integral_smul_measure, integral_smul_measure, integral_dirac, integral_dirac,
+      ENNReal.toReal_ofReal hb', ENNReal.toReal_ofReal hd', birthDeathRate, smul_eq_mul,
+      smul_eq_mul]
+    field_simp
+
+/-! ### M/M/1: the bounded branch
+
+`b ≡ β`, `d x = δ * 1_{x ≥ 1}`.  The total rate is between `β` and `β + δ`, so it is positive and
+bounded and `jumpProcess_isMPSolution` together with the uniqueness of Milestone 4 applies to this
+data verbatim, with `L = β + δ`. -/
+
+/-- The birth rate of an M/M/1 queue: arrivals come at the constant rate `β`. -/
+def mm1Birth (β : ℝ) : ℕ → ℝ := fun _ ↦ β
+
+/-- The death rate of an M/M/1 queue: the single server works at the rate `δ` while the queue is
+not empty. -/
+def mm1Death (δ : ℝ) : ℕ → ℝ := fun x ↦ if 1 ≤ x then δ else 0
+
+theorem jumpApply_mm1 {β δ : ℝ} (hβ : 0 ≤ β) (hδ : 0 ≤ δ) (f : ℕ → ℝ) (x : ℕ) :
+    jumpApply (birthDeathRate (mm1Birth β) (mm1Death δ)) (birthDeathKernel (mm1Birth β)
+        (mm1Death δ)) f x
+      = β * (f (x + 1) - f x) + (if 1 ≤ x then δ else 0) * (f (x - 1) - f x) :=
+  jumpApply_birthDeath (fun _ ↦ hβ) (fun y ↦ by unfold mm1Death; split_ifs <;> simpa) f x
+
+/-- **The total rate of M/M/1 is positive and bounded**, which are exactly the two hypotheses
+`jumpProcess_isMPSolution` and `exists_unique_of_bounded` place on the rate. -/
+theorem birthDeathRate_mm1_mem {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ) (x : ℕ) :
+    0 < birthDeathRate (mm1Birth β) (mm1Death δ) x
+      ∧ birthDeathRate (mm1Birth β) (mm1Death δ) x ≤ β + δ := by
+  unfold birthDeathRate mm1Birth mm1Death
+  split_ifs <;> constructor <;> linarith
+
+/-! ### M/M/1 as a solution, and not only as a generator
+
+Everything above about M/M/1 is the operator.  What follows is the process: every hypothesis of
+`jumpProcess_isMPSolution` is discharged on this data, so the queue is a martingale problem
+solution in Lean and not a description of one.  It is the first such instance whose generator is
+**state dependent** -- the Poisson process has a constant rate and a shift for its kernel, and a
+sign error there would not be seen by the state -- and the hypothesis that is not free is the
+Markov property of the kernel: it holds under a condition on the data, so it is carried as an
+instance hypothesis and discharged by `isMarkovKernel_birthDeathKernel` at the call site. -/
+
+/-- **The M/M/1 queue solves the martingale problem of its generator.**  The rate is measurable
+because `ℕ` is discrete, positive because `0 < β`, and bounded by `β + δ`; those are the three
+hypotheses `jumpProcess_isMPSolution` places on a rate, and `birthDeathRate_mm1_mem` supplies the
+last two at once. -/
+theorem mm1_isMPSolution {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ)
+    [IsMarkovKernel (birthDeathKernel (mm1Birth β) (mm1Death δ))] :
+    IsMPSolution (mpFamily (jumpOperator (birthDeathRate (mm1Birth β) (mm1Death δ))
+        (birthDeathKernel (mm1Birth β) (mm1Death δ))) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦
+          jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) (t : ℝ) ω))
+      (jumpFiltration (birthDeathRate (mm1Birth β) (mm1Death δ)) (measurable_of_countable _))
+      (jumpMeasure (birthDeathKernel (mm1Birth β) (mm1Death δ)) (Measure.dirac 0)) :=
+  jumpProcess_isMPSolution (measurable_of_countable _)
+    (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).1) (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).2)
+    _ (Measure.dirac 0)
+
+/-- **A concrete martingale for the queue**, and not a solution predicate: for every bounded
+`f : ℕ → ℝ` the compensated increment
+
+`f (X t) - ∫_0^t (β * (f (X u + 1) - f (X u)) + δ 1_{X u ≥ 1} * (f (X u - 1) - f (X u))) du`
+
+is a martingale for the natural filtration of the queue length.  The integrand is the birth and
+death operator written out, and it is what `jumpApply_birthDeath` computed; nothing of the
+construction of the process appears in it. -/
+theorem martingale_compensated_mm1 {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ)
+    [IsMarkovKernel (birthDeathKernel (mm1Birth β) (mm1Death δ))] {f : ℕ → ℝ} {C : ℝ}
+    (hC : ∀ x, |f x| ≤ C) :
+    Martingale (fun (t : ℝ≥0) (ω : (ℕ → ℕ) × (ℕ → ℝ)) ↦
+        f (jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) (t : ℝ) ω)
+          - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+              (β * (f (jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) (u : ℝ) ω + 1)
+                    - f (jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) (u : ℝ) ω))
+                + (if 1 ≤ jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) (u : ℝ) ω
+                    then δ else 0)
+                  * (f (jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) (u : ℝ) ω - 1)
+                    - f (jumpProcess (birthDeathRate (mm1Birth β) (mm1Death δ)) (u : ℝ) ω)))
+              ∂lebesgueClock.q)
+      (jumpFiltration (birthDeathRate (mm1Birth β) (mm1Death δ)) (measurable_of_countable _))
+      (jumpMeasure (birthDeathKernel (mm1Birth β) (mm1Death δ)) (Measure.dirac 0)) := by
+  refine mm1_isMPSolution hβ hδ _ ⟨(f, jumpApply (birthDeathRate (mm1Birth β) (mm1Death δ))
+      (birthDeathKernel (mm1Birth β) (mm1Death δ)) f),
+    mem_jumpOperator (measurable_of_countable f) hC, fun t ω ↦ ?_⟩
+  simp only [jumpApply_mm1 hβ.le hδ]
+
+/-! ### The linear birth and death chain: the local branch
+
+`b x = β * x`, `d x = δ * x`.  Two things go wrong with it at once, and each picks out one of the
+two repairs of the local case.  The total rate **vanishes at `0`**, so the state `0` is absorbing:
+that is `mem_nonExplosiveE_of_rate_zero`, and it is why the jump times have to live in `ℝ≥0∞`.  And
+the total rate is **unbounded**, so no `L` exists and `jumpProcess_isMPSolution` does not apply:
+that is what `ae_mem_nonExplosiveE` is for, and `∑ 1 / ((β + δ) * k)` diverges, so the chain does
+not explode.  `ae_mem_nonExplosiveE_linear` is that statement at `β + δ = 1`. -/
+
+/-- The birth rate of the linear birth and death chain. -/
+def linearBirth (β : ℝ) : ℕ → ℝ := fun x ↦ β * x
+
+/-- The death rate of the linear birth and death chain. -/
+def linearDeath (δ : ℝ) : ℕ → ℝ := fun x ↦ δ * x
+
+theorem jumpApply_linearBirthDeath {β δ : ℝ} (hβ : 0 ≤ β) (hδ : 0 ≤ δ) (f : ℕ → ℝ) (x : ℕ) :
+    jumpApply (birthDeathRate (linearBirth β) (linearDeath δ))
+        (birthDeathKernel (linearBirth β) (linearDeath δ)) f x
+      = β * x * (f (x + 1) - f x) + δ * x * (f (x - 1) - f x) :=
+  jumpApply_birthDeath (fun y ↦ mul_nonneg hβ (Nat.cast_nonneg y))
+    (fun y ↦ mul_nonneg hδ (Nat.cast_nonneg y)) f x
+
+/-- **The state `0` is absorbing for the linear chain**, which is the defect `jumpProcessE` exists
+for: the total rate vanishes there. -/
+theorem birthDeathRate_linear_zero {β δ : ℝ} :
+    birthDeathRate (linearBirth β) (linearDeath δ) 0 = 0 := by
+  simp [birthDeathRate, linearBirth, linearDeath]
+
+/-- **The total rate of the linear chain is unbounded**, which is the defect the local branch
+exists for: no hypothesis `lam x ≤ L` of `jumpProcess_isMPSolution` can be met. -/
+theorem not_bddAbove_birthDeathRate_linear {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ) (L : ℝ) :
+    ∃ x, L < birthDeathRate (linearBirth β) (linearDeath δ) x := by
+  obtain ⟨n, hn⟩ := exists_nat_gt (L / β)
+  refine ⟨n, ?_⟩
+  have hx : L < β * n := by
+    rw [div_lt_iff₀ hβ] at hn
+    linarith
+  have : 0 ≤ δ * n := by positivity
+  simp only [birthDeathRate, linearBirth, linearDeath]
+  linarith
+
+end BirthDeathExample
