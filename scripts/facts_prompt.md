@@ -1040,22 +1040,60 @@ danach.*
      `intervalIntegral.integral_congr_ae` und nicht über eine punktweise
      Gleichheit.
 
-   **Was von Punkt 5 jetzt noch fehlt, in zwei Schritten:**
+   ~~**Was von Punkt 5 jetzt noch fehlt, in zwei Schritten:** erstens
+   `stoppedProcess_mpFamily_truncRate_eq`, zweitens der Turmschluß.~~ *(beide
+   erledigt, 2026-09-10, siebzehnter Lauf des Tages; die dort mitgesagte Zusage
+   „die Adaptiertheit ist kein eigener Schritt" war falsch, siehe den
+   Zwischenstand darunter.)*
 
-   1. **`stoppedProcess_mpFamily_truncRate_eq`** — die Identifikation der beiden
-      gestoppten Testprozesse an jedem nichtexplosiven Stichprobenpunkt, mit der
-      Nullmenge `{rateTime}` wie im dritten Befund. **Zuerst**, denn ohne sie hat
-      der Turmschluß nichts zu vergleichen.
-   2. **Der Turmschluß.** Für `A ∈ jumpFiltrationE lam hlam i` zerlege
-      `A = (A ∩ {i < rateTime lam n}) ∪ (A ∩ {rateTime lam n ≤ i})`; auf dem
-      zweiten Stück stimmen die gestoppten Prozesse an `i` und an `j` punktweise
-      überein, das erste ist nach `jumpFiltrationE_inter_lt_rateTime` ein Ereignis
-      der gestutzten Filtration bei `i`, und dort greift
-      `martingale_stoppedProcess_mpFamily_jumpProcessE`. Die Adaptiertheit an
-      `jumpFiltrationE lam hlam` ist kein eigener Schritt
-      (`IsStronglyProgressive.stronglyAdapted_stoppedProcess` samt
-      `isStoppingTime_rateTime`), und die Stufe `n = 0` ist keiner
-      (`rateTime_zero`, `MeasureTheory.martingale_zero`).
+   **Zwischenstand 2026-09-10, siebzehnter Lauf des Tages. Beide angesagten
+   Schritte stehen, und die Identifikation ist stärker als angesagt.** Acht
+   Deklarationen im neuen Abschnitt `LocalAssembly` von
+   `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1, alle acht mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10,
+   siebzehnter Lauf des Tages"; die Punkte stehen in
+   `MartingaleProblems/README.md`, Meilenstein 4.
+
+   `stoppedProcess_mpFamily_truncRate_eq` sagt, daß der gestoppte Testprozeß des
+   lokalen und der des gestutzten Problems **dieselbe Funktion** sind — an *jedem*
+   Stichprobenpunkt und nicht bloß fast sicher.
+   `martingale_of_martingale_of_stopped` ist der Turmschluß, ohne jeden Bezug auf
+   die Sprungkonstruktion, und `martingale_indicator_bot` zieht den Indikator, den
+   `Locally` verlangt, durch ein Martingal hindurch.
+
+   **Drei Befunde für den nächsten Lauf.**
+
+   * **Die Nichtexplosion in `jumpProcessE_eq_truncRate_of_le_rateTime` wird nicht
+     gebraucht** (`jumpProcessE_truncRate_eq_of_rate_le`,
+     `jumpProcessE_eq_truncRate_of_le_rateTime'`). Sie benannte nur ein Fenster;
+     wo es keines gibt, liegt jede Sprungzeit unter `t` und beide Stufenindizes
+     werden aus derselben Folge gerechnet. Das ist es, was die Identifikation der
+     gestoppten Testprozesse zu einer Gleichheit von **Funktionen** macht — und
+     `StronglyAdapted` wie `IsStoppingTime` sind keine f.s.-Aussagen.
+   * **Die Zusage „die Adaptiertheit ist kein eigener Schritt" ist falsch, und der
+     Grund ist kein Formfehler.**
+     `isStronglyProgressive_mpFamily_jumpProcessE` trägt die Schranke
+     `∀ x, lam x ≤ L`, die der lokale Fall nicht hat, und die Schranke ist dort
+     keine Bequemlichkeit: für unbeschränkte Rate ist der **ungestoppte**
+     Testprozeß an einem explosiven Stichprobenpunkt nicht rechtsstetig, weil
+     `∫_0^{T_∞} lam(X_u) du = ∑_k ξ_k = ∞` ist und Bochner den Müllwert `0`
+     zurückgibt. Der **gestoppte** hat den Defekt nicht — unter `rateTime lam n`
+     ist die Rate längs des Pfades unter `n` —, also ist die Aussage über ihn zu
+     führen: `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE`, und sie ist
+     die **einzige** noch fehlende Eingabe von `jumpProcess_isLocalMPSolution`.
+     Der Weg steht ausgeschrieben im Laufbericht und in
+     `MartingaleProblems/README.md`, Meilenstein 4: der erste Summand über
+     `measurable_uncurry_jumpProcessE` und `IsStoppingTime.measurable_of_le`, der
+     Kompensator über den abgeschnittenen Integranden
+     `g(u, ω) = {ofReal u < τ ω}.indicator (fun _ ↦ p.2 (X_u ω))`, der durch
+     `2·n·C` beschränkt ist.
+   * **`Clock` trägt seinen `MeasurableSpace` als Feld und nicht als Instanz.**
+     `measurableSet_Ioc` scheitert gegen `lebesgueClock.q` an
+     `OpensMeasurableSpace ℝ≥0`, weil die Instanzensuche syntaktisch ist; zu
+     nehmen ist `Clock.measurableSet_interval`, und das Fenster erst *danach* in
+     ein `Set.Ioc` umzuschreiben.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:
