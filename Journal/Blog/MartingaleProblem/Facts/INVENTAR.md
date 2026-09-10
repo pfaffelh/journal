@@ -17397,3 +17397,125 @@ voraussetzungsfrei bewiesen, und `measurable_jumpProcessE_apply` gibt die
 Meßbarkeit jeder einzelnen Auswertung. Sie ist jetzt dran, weil ohne sie Punkt 5
 keine lokalisierende Folge hat und die lineare Geburt-Tod-Kette — das einzige der
 drei Akzeptanzbeispiele, das den lokalen Zweig prüft — auf sie wartet.
+
+### 2026-09-10, elfter Lauf des Tages
+
+**Auftrag:** Teil C, Punkt 5 des Meilensteins 4 von `MartingaleProblems`, in der
+Gestalt, die der zehnte Lauf vorgeschlagen hat: `rateSup` samt
+`measurable_rateSup` und `rateSup_right_continuous`, **vor** `rateTime`.
+
+**Ergebnis: die lokalisierende Folge steht, und sie ist eine.** Der zehnte Lauf
+hatte bewiesen, daß die angesagte Folge `min (jumpTimeE ...) n` **keine**
+lokalisierende Folge ist; dieser Lauf schreibt die Reparatur aus und führt sie bis
+`isLocalizingSequence_rateTime` durch -- alle drei Felder von
+`ProbabilityTheory.IsLocalizingSequence`, unter der einen Voraussetzung
+`∀ᵐ ω ∂P, ω ∈ NonExplosiveE lam`. Siebzehn Deklarationen (zwei Definitionen,
+fünfzehn Sätze), die ganze Datei ohne einen Fehler durch `lake env lean` gegen
+v4.33.1, **alle siebzehn** mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft; die Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5, 9,
+10). Der Auftrag ist über sein Wort hinaus erledigt: verlangt waren `rateSup` und
+zwei seiner Eigenschaften, geliefert sind sie **und** `rateTime` samt Stoppzeit
+und lokalisierender Folge.
+
+**Der Angelpunkt ist eine einzige voraussetzungsfreie Aussage, und sie ist
+allgemeiner geworden als der Anlaß.**
+
+```
+eventuallyEq_nhdsGE_stepPath_comp (T : ℕ → α) (y : ℕ → E)
+    (hcont : Continuous u) (hmono : Monotone u) (t : γ) :
+  ∀ᶠ r in 𝓝[≥] t, stepPath T y (u r) = stepPath T y (u t)
+```
+
+Weder Monotonie von `T` noch Nichtexplosion: enthält irgendein Fenster `u t`, so
+ist das kleinste solche eine rechte Umgebung, und enthält keines es, so ist der
+Index der Müllwert `0` an `t` und, weil `u` monoton ist, an jeder späteren Zeit
+auch. Die **Zeitabbildung** wird mitgeführt, aus demselben Grund wie in
+`measurable_stepIndex_comp` des achten Laufs: die lokale Konstruktion liest
+Sprungzeiten in `ℝ≥0∞` an **reellen** Zeiten, also ist `u` dort
+`ENNReal.ofReal`, und eine Aussage über die Identität allein erreichte sie nicht.
+Das alte `eventuallyEq_nhdsGE_stepPath` ist damit der Fall `u = id` und **auf drei
+Zeilen zusammengeschrumpft**; keine seiner Gebrauchsstellen war anzufassen. Für
+den lokalen Prozeß fällt `eventuallyEq_nhdsGE_jumpProcessE` als Einzeiler ab.
+
+**Beide Eigenschaften der Stoppzeit kommen aus dieser einen Aussage, und aus
+nichts sonst.**
+
+* **Meßbarkeit** (`measurable_rateSup`) ist die Reduktion des überabzählbaren
+  Supremums auf ein abzählbares, `rateSup_eq_sup_rat`: zu jedem `s ∈ [0, t)` gibt
+  es eine Rationale `q ∈ [s, t)`, an der der Pfad denselben Wert hat, und `t`
+  selbst wird von Hand hinzugenommen. Die Rationalen werden dabei nach `[0, t]`
+  **geklemmt** (`max 0 (min t q)`) statt mit einer Nebenbedingung geführt; das ist
+  kein Schönheitsstrich, sondern der Grund, aus dem die rechte Seite ein Supremum
+  über `ℚ` schlechthin ist und `Measurable.iSup` ohne ein Entscheidbarkeitsargument
+  greift. Jeder Summand ist der Wert an einer Zeit `≤ t`, also `𝓕 t`-meßbar über
+  `measurable_naturalFiltration`.
+* **Rechtsstetigkeit** (`eventuallyEq_nhdsGE_rateSup`) ist stärker als
+  Rechtsstetigkeit: `rateSup` ist auf `[t, u)` **konstant**, weil der Pfad es ist
+  und das Supremum auf `(t, r]` darum keinen Wert hinzufügt, den es bei `t` nicht
+  schon hätte. Sie ist als Existenz eines `u > t` formuliert und nicht als
+  `∀ᶠ ... 𝓝[≥]`, weil der Beweis von `rateTime_le_iff` das Intervall braucht und
+  nicht bloß den Filter.
+
+**Zwei Entscheidungen an der Signatur, beide gegen die Fassung der Roadmap.**
+
+* `rateTime` ist **nicht** `sInf {t : ℝ≥0 | n ≤ rateSup lam t ω}`, wie der zehnte
+  Lauf und `README.md` es hinschrieben, sondern
+  `⨅ t : ℝ≥0, ⨅ _ : (n:ℝ≥0∞) ≤ rateSup lam t ω, (t : ℝ≥0∞)` -- das Infimum wird
+  **in `ℝ≥0∞`** genommen, über einen in `ℝ≥0` laufenden Index. Die
+  Roadmap-Fassung nimmt es in `ℝ≥0` und liefert damit gerade den Müllwert `0`,
+  vor dem derselbe Punkt warnt. Der Fehler war eine halbe Zeile und wäre erst am
+  Gebrauch aufgefallen; die Roadmap ist berichtigt.
+* `rateSup_lt_top_of_mem_nonExplosiveE` traegt **keine** Voraussetzung `0 ≤ t`.
+  Für `t < 0` ist `Set.Icc 0 t` leer und das Supremum `0`, also gilt die Aussage
+  ohnehin -- die Voraussetzung stand im Entwurf und ist beim Übersetzen als
+  ungenutzt gemeldet und gestrichen worden.
+
+**Was der Beweis von `rateTime_le_iff` wirklich benutzt.** Die Rückrichtung ist
+`iInf₂_le`. Die Hinrichtung ist die Rechtsstetigkeit, und sie braucht **keine
+Folgen**: liegt das Infimum unter `t`, so gibt es -- sonst wäre das Infimum
+mindestens `u` -- eine Zeit `s` mit `n ≤ rateSup s` und `s < u`; ist `s ≤ t`, so
+gibt die Monotonie das Ergebnis, und sonst ist `s ∈ [t, u)` und `rateSup s` ist
+`rateSup t`. Das ist die Stelle, an der die **lokale Konstanz** und nicht bloß die
+Stetigkeit von rechts bezahlt wird.
+
+**Nichtexplosion kommt genau einmal vor, und in der billigsten Gestalt.**
+`rateSup_lt_top_of_mem_nonExplosiveE`: vor einer festen Zeit liegt der Stufenindex
+unter dem Stufenindex von `t`, der Pfad besucht also nur `y 0, ..., y k`, und das
+Supremum ist durch die **Summe** `∑_{i ≤ k} ofReal (lam (y i))` beschränkt -- eine
+endliche Summe endlicher Glieder. Darauf ist `tendsto_rateTime_atTop` ein
+Dreizeiler über `ENNReal.tendsto_nhds_top_iff_nnreal` und `ENNReal.exists_nat_gt`,
+und `monotone_rateTime` (Monotonie im **Niveau**, nicht in der Zeit) schließt
+`mono`.
+
+**Ein Vorbehalt an die Werkzeugführung, und er hat diesen Lauf Zeit gekostet.**
+Die Datei hat **kein** `open scoped ENNReal`; sie schreibt `ENNReal` aus und
+benutzt `ℝ≥0∞` nur in Kommentaren. Der erste Entwurf benutzte die Notation,
+`ℝ≥0∞` parste als `ℝ≥0` gefolgt von einem unbekannten Token, und der Übersetzer
+meldete daraufhin zwanzig Folgefehler an Stellen, die alle in Ordnung waren --
+Typfehler `ℝ≥0` gegen `ENNReal`, fehlende `Top`-Instanzen, unbekannte Bezeichner.
+Wer in eine fremde Datei schreibt, prüft ihre `open`-Zeilen, bevor er ihre
+Fehlermeldungen liest.
+
+**Was von Punkt 5 noch fehlt, und es ist wieder eine benannte Aussage:**
+`jumpProcess_isLocalMPSolution`. Alle Eingaben stehen jetzt wirklich und nicht als
+Beschreibung: die lokalisierende Folge ist bewiesen eine, der Prozeß ist meßbar,
+und `ae_mem_nonExplosiveE_jumpMeasure` löst ihre einzige Voraussetzung unter
+`jumpMeasure mu nu` ein. Der Punkt, an dem es brechen kann, ist der, den schon der
+zehnte Lauf benannt hat und den die Lokalisierung **nicht** von selbst behebt: auf
+`{t < rateTime lam n}` ist die Rate **längs des Pfades** durch `n` beschränkt,
+was keine Schranke an `lam` ist, so daß `jumpProcess_isMPSolution` auf dem
+gestoppten Prozeß nicht durch Einsetzen greift. Von den drei
+Akzeptanzbeispielen ist M/M/1 fertig, die lineare Geburt-Tod-Kette hat Erzeuger
+und Nichtexplosionsargument und wartet allein auf diesen Satz, und Hawkes wartet
+auf die pfadabhängige Variante.
+
+**Vorschlag für den nächsten Lauf: `jumpProcess_isLocalMPSolution`**, mit
+`rateTime` als lokalisierender Folge. Sie ist jetzt dran, weil der zehnte Lauf ihr
+Hindernis benannt und dieser Lauf es geräumt hat -- und weil sie die einzige
+Aussage des Meilensteins ist, an der die lineare Kette hängt, das einzige der drei
+Akzeptanzbeispiele, das den lokalen Zweig prüft. Zuerst zu klären, und es ist die
+eine offene Frage: ob der bei `rateTime lam n` gestoppte Prozeß mit einer
+Konstruktion zu beschränkter Rate **übereinstimmt** oder nur denselben
+Martingalen genügt. Bricht es dort, so ist der Befund wertvoller als ein
+abgeschwächter Satz -- und er ist dann an genau der Stelle zu suchen, an der die
+Schranke längs des Pfades und die Schranke an `lam` auseinandertreten.

@@ -758,19 +758,51 @@ danach.*
      `ℝ≥0` denselben Müllwert `0` gäbe, an dem der siebte Lauf die alte
      `stepIndex` scheitern sah.
 
-   **Was von Punkt 5 noch fehlt**, und es ist der nächste Auftrag: `rateSup`
-   samt `measurable_rateSup` und `rateSup_right_continuous`, **vor** `rateTime`
-   — beide Eigenschaften der Stoppzeit hängen an ihnen und an nichts sonst. Die
-   Meßbarkeit für `𝓕 t` ist die Reduktion des überabzählbaren Supremums auf die
-   Rationalen von `[0, t]` samt `t` selbst, und `{rateTime ≤ t} = {n ≤ rateSup t}`
-   ist die Rechtsstetigkeit; beide Eingaben stehen
-   (`eventuallyEq_nhdsGE_stepPath` ist voraussetzungsfrei bewiesen,
-   `measurable_jumpProcessE_apply` gibt jede einzelne Auswertung). Darauf
-   `isLocalizingSequence_rateTime` — `tendsto_top` ist die Nichtexplosion über
-   `exists_stepIndex_window`, f.s. gesichert durch
-   `ae_mem_nonExplosiveE_jumpMeasure` — und erst dann
-   `jumpProcess_isLocalMPSolution`. Dabei ist im Auge zu behalten, was die
-   Lokalisierung liefert und was nicht: auf `{t < rateTime lam n}` ist die Rate
+   ~~**Was von Punkt 5 noch fehlt**, und es ist der nächste Auftrag: `rateSup`
+   samt `measurable_rateSup` und `rateSup_right_continuous`, **vor** `rateTime`~~
+   *(erledigt 2026-09-10, elfter Lauf des Tages, und über den Auftrag hinaus:
+   `rateTime` samt `isStoppingTime_rateTime` und `isLocalizingSequence_rateTime`
+   stehen ebenfalls.)*
+
+   **Zwischenstand 2026-09-10, elfter Lauf des Tages. Die lokalisierende Folge
+   steht, und sie ist eine.** Siebzehn Deklarationen (zwei Definitionen, fünfzehn
+   Sätze), die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1,
+   alle siebzehn mit `#print axioms` auf `propext`, `Classical.choice`,
+   `Quot.sound` geprüft, die Zahl der `sorry` bleibt bei neun. Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-10, elfter Lauf des Tages"; die Punkte
+   stehen berichtigt in `MartingaleProblems/README.md`, Meilenstein 4.
+
+   **Alles hängt an einer einzigen voraussetzungsfreien Aussage, und sie ist
+   allgemeiner geworden als ihr Anlaß.** `eventuallyEq_nhdsGE_stepPath_comp` sagt,
+   daß ein Treppenpfad an **jeder** Zeit von rechts lokal konstant ist — ohne
+   Monotonie der Sprungzeiten, ohne Nichtexplosion — und führt die Zeitabbildung
+   mit, wie `measurable_stepIndex_comp` es tut; der lokale Fall ist
+   `ENNReal.ofReal`, das alte `eventuallyEq_nhdsGE_stepPath` der Fall `u = id`
+   und auf drei Zeilen zusammengeschrumpft. Daraus die Meßbarkeit
+   (`rateSup_eq_sup_rat`, die Reduktion auf ein Supremum über `ℚ`) **und** die
+   Rechtsstetigkeit (`eventuallyEq_nhdsGE_rateSup`, in Wahrheit lokale
+   Konstanz), und aus diesen beiden `rateTime_le_iff` und
+   `isStoppingTime_rateTime`.
+
+   **Drei Befunde für den nächsten Lauf.** (a) Die angesagte Gestalt des `sInf`
+   war an einer halben Zeile falsch: `sInf {t : ℝ≥0 | …}` nimmt das Infimum in
+   `ℝ≥0` und liefert gerade den Müllwert `0`, vor dem der Punkt darüber warnt. Es
+   heißt `⨅ t : ℝ≥0, ⨅ _ : (n:ℝ≥0∞) ≤ rateSup lam t ω, (t : ℝ≥0∞)` — Index in
+   `ℝ≥0`, Infimum in `ℝ≥0∞`. (b) Die Rechtsstetigkeit ist als **Intervall**
+   `[t, u)` zu formulieren und nicht als Filteraussage: `rateTime_le_iff` braucht
+   das Intervall und nicht bloß `∀ᶠ … 𝓝[≥]`. (c) Die Datei hat **kein**
+   `open scoped ENNReal` — `ℝ≥0∞` steht dort nur in Kommentaren, im Code steht
+   `ENNReal` ausgeschrieben. Wer die Notation benutzt, erntet zwanzig
+   Folgefehler an Stellen, die in Ordnung sind.
+
+   **Was von Punkt 5 jetzt noch fehlt, und es ist eine einzige benannte
+   Aussage:** `jumpProcess_isLocalMPSolution`. Alle Eingaben stehen jetzt
+   wirklich und nicht als Beschreibung: die lokalisierende Folge ist bewiesen
+   eine (`isLocalizingSequence_rateTime`), der Prozeß ist meßbar
+   (`measurable_jumpProcessE`), und `ae_mem_nonExplosiveE_jumpMeasure` löst die
+   einzige Voraussetzung jener Folge unter `jumpMeasure mu nu` ein. Dabei ist im
+   Auge zu behalten, was die Lokalisierung liefert und was nicht — es ist der
+   Punkt, an dem der Satz brechen kann: auf `{t < rateTime lam n}` ist die Rate
    **längs des Pfades** durch `n` beschränkt, was keine Schranke an `lam` ist, so
    daß `jumpProcess_isMPSolution` auf dem gestoppten Prozeß **nicht** durch
    Einsetzen greift. Von den drei Akzeptanzbeispielen ist M/M/1 **fertig** —

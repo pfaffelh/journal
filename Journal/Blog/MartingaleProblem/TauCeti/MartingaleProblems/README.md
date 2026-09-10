@@ -1344,20 +1344,36 @@ A concrete family of solutions, built without any of the theory above. Index
   `IsStoppingTime` is not an almost sure notion, for the same reason
   `StronglyAdapted` is not. **Proved** on 2026-09-10, tenth run.
 * `rateSup`, `rateTime`: the repair, and it is the one Milestone 7 already
-  prescribes. `rateSup lam t ω` is the running supremum
+  prescribes. **Proved** on 2026-09-10, eleventh run. `rateSup lam t ω` is the
+  running supremum
   `⨆ s ∈ Set.Icc 0 t, ENNReal.ofReal (lam (jumpProcessE lam s ω))`, and
-  `rateTime lam n ω = sInf {t : ℝ≥0 | (n : ℝ≥0∞) ≤ rateSup lam t ω}`. These are
-  functionals of the **path**, so they are visible to `jumpFiltrationE`, and
-  `{rateTime lam n ≤ t} = {n ≤ rateSup lam t}` because the running supremum of a
-  step path is right continuous and non-decreasing — which is also what turns the
-  uncountable supremum into a countable one, over the rationals of `[0, t]`
-  together with `t` itself.
+  `rateTime lam n ω = ⨅ t : ℝ≥0, ⨅ _ : (n : ℝ≥0∞) ≤ rateSup lam t ω, (t : ℝ≥0∞)`
+  — the infimum is taken **in `ℝ≥0∞`** over an index ranging in `ℝ≥0`, so that a
+  path whose rate never reaches `n` gets `⊤` and not the junk value `0` that
+  `sInf ∅` would give in `ℝ≥0`. These are functionals of the **path**, so they
+  are visible to `jumpFiltrationE` (`measurable_rateSup`, `isStoppingTime_rateTime`),
+  and `rateTime_le_iff` says `{rateTime lam n ≤ t} = {n ≤ rateSup lam t}`. Both
+  properties rest on `eventuallyEq_nhdsGE_jumpProcessE`, right local constancy of
+  the path, which carries **no hypothesis at all**: it turns the uncountable
+  supremum into a countable one over the rationals of `[0, t]` together with `t`
+  itself (`rateSup_eq_sup_rat`), and it makes the running supremum locally
+  constant to the right (`eventuallyEq_nhdsGE_rateSup`).
 * `isLocalizingSequence_rateTime`: the three fields, under almost sure non
-  explosion. `isStoppingTime` is the previous point; `mono` is the monotonicity
-  of `rateSup` in `t`; `tendsto_top` is non explosion read through
-  `exists_stepIndex_window` — before a fixed time the path takes finitely many
-  values, so the running supremum of the rate is finite there and every level is
-  eventually exceeded.
+  explosion. **Proved** on 2026-09-10, eleventh run. `isStoppingTime` is the
+  previous point; `mono` is `monotone_rateTime`, monotonicity in the **level**;
+  `tendsto_top` is non explosion read through `exists_stepIndex_window` — before a
+  fixed time the path takes finitely many values, so the running supremum of the
+  rate is finite there (`rateSup_lt_top_of_mem_nonExplosiveE`) and every level is
+  eventually exceeded (`tendsto_rateTime_atTop`). The hypothesis is
+  `∀ᵐ ω ∂P, ω ∈ NonExplosiveE lam` and nothing else, so
+  `ae_mem_nonExplosiveE_jumpMeasure` discharges it for the constructed process.
+* `eventuallyEq_nhdsGE_stepPath_comp`: a step path is locally constant to the
+  right at **every** time, with no hypothesis on the jump times whatever, and
+  along an arbitrary monotone continuous time map. **Proved** on 2026-09-10,
+  eleventh run. The time map is carried for the reason it is carried in
+  `measurable_stepIndex_comp`: the local construction reads jump times in `ℝ≥0∞`
+  at real times, so it is `ENNReal.ofReal` there, and `eventuallyEq_nhdsGE_stepPath`
+  is the case of the identity — which is how the old declaration is now proved.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved, with `rateTime` as the
   localizing sequence; and the explosion criterion in terms of the jump times.
