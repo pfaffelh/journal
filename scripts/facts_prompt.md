@@ -160,6 +160,51 @@ bleiben:
    will, sagt zuerst, welcher Schritt des jetzigen bricht, und rechnet ihn am
    Zeugen nach.
 
+**Teil D — die Roadmaps gegen Mathlib `master` prüfen.** Nach Teil C, vor allem
+anderen. Das ist Rückstaupunkt 5, vom Nutzer am 2026-09-10 vorgezogen.
+
+Unsere vier `README.md` und die drei `Suggested.lean` zitieren Mathlib-Namen mit
+**Datei und Zeile**. Die letzte Prüfung ist vom 2026-09-06; seither sind vier
+Tage vergangen, und die Bibliothek bewegt sich. Eine Roadmap, die auf einen
+Namen zeigt, den es nicht mehr gibt, ist schlimmer als eine, die schweigt.
+
+Zu tun, in dieser Reihenfolge:
+
+1. Frisches `upstream/master` holen und den Commit im Bericht **nennen**.
+2. Jeden zitierten Namen prüfen: existiert er noch, heißt er noch so, steht er
+   noch in der genannten Datei? Zeilennummern sind nachrangig — falsch ist ein
+   verschwundener oder umbenannter *Name*, nicht eine verschobene Zeile.
+3. Jede **Negativaussage** nachprüfen — „Mathlib hat X nicht". Davon stehen
+   inzwischen viele in den Roadmaps und in `TODO.md` Punkt 8, und jede ist ein
+   Versprechen an einen Leser. Ist eine inzwischen falsch, ist das der wertvollste
+   Fund des Laufs.
+4. Die drei `Suggested.lean` gegen v4.33.1 übersetzen (das ist unsere Bindung),
+   und **zusätzlich** melden, welche Deklarationen auf `master` brechen würden,
+   soweit das ohne Umbau erkennbar ist.
+
+Was **nicht** zu tun ist: auf `master` umstellen. Wir sind an v4.33.1 gebunden,
+und die eine bewußt gegen `master` geschriebene Aussage in
+`WeakConvergence/Suggested.lean` bleibt, wie sie ist.
+
+**Teil E — Meilenstein 6 von `MartingaleProblems`.** Nach Teil D.
+
+Der abstrakte Eindeutigkeitssatz `thm:absuniq`, und er hat in Lean **keine
+einzige Deklaration**, während sein Unterbau — Meilenstein 5, `restart` — bewiesen
+dasteht. Fünf Aussagen sind im `README.md` ausformuliert:
+`isMarkov_of_unique_onedim`, `subsingleton_mpSolutions_of_unique_onedim`,
+`eq_of_forall_onedim`, die klassische Fassung als Instanz, und `isStrongMarkov`.
+
+Zwei Dinge, die dabei nicht verlorengehen dürfen:
+
+* **Markov ist die Konklusion, nicht die Voraussetzung.** Ethier--Kurtz 4.4.1
+  läuft andersherum und sitzt auf Hille--Yosida; das ist ausdrücklich nicht
+  unsere Richtung (`rem:noch1`). Wer die Aussage so hinschreibt, daß sie Markov
+  voraussetzt, hat einen anderen Satz.
+* **Die Eindeutigkeit der eindimensionalen Verteilungen muß für *jeden* Shift
+  `r` gelten**, nicht nur bei `r = 0` — die endlichdimensionalen Verteilungen
+  werden über `restart` aus den geshifteten Problemen gebaut. Das
+  Akzeptanzbeispiel dazu steht im Meilenstein und ist der Prüfstein.
+
 **Teil C — Meilenstein 4 von `MartingaleProblems`, die Sprungprozesse.** Teil A
 und Teil B sind beide durch (2026-09-09, dreizehnter und sechzehnter Lauf), also
 gilt dieser Teil. Er ist damit der laufende Auftrag.
