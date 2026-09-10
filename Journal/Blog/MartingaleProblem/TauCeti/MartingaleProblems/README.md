@@ -1612,25 +1612,52 @@ A concrete family of solutions, built without any of the theory above. Index
   from the level `1` on (`truncRate_eq_zero_iff`), so the normalisation is
   inherited by every level of the localization and the only line of either proof
   that changes is the one calling the bounded theorem.
-* `mem_nonExplosiveE_of_absorb_or_tendsto_sum`: **non explosion at a rate with
-  zeros**, that is at a sample point whose chain either reaches a state of
-  vanishing rate — where `mem_nonExplosiveE_of_rate_zero` already applies, the
-  next jump time being `⊤` — or has non summable reciprocal rates, where
-  `mem_nonExplosiveE_of_tendsto_sum` applies. The disjunction is not a convenience:
-  `ae_mem_nonExplosiveE` and `ae_mem_nonExplosiveE_jumpMeasure` both ask
-  `∀ k, 0 < lam (y k)` along the chain, and the linear birth and death chain
-  fails that hypothesis on the extinction event, which has positive probability.
-  It rests on `chain_const_of_absorb` for the first branch and on nothing new for
-  the second.
+* `mem_nonExplosiveE_of_absorb_or_tendsto_sum`, `ae_mem_nonExplosiveE_of_absorb_or`
+  and `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or`: **non explosion at a rate
+  with zeros**, that is at a sample point whose chain either reaches a state of
+  vanishing rate — where `mem_nonExplosiveE_of_rate_zero` applies, the next jump
+  time being `⊤` — or has non summable reciprocal rates, where
+  `mem_nonExplosiveE_of_tendsto_sum` applies. **Proved** on 2026-09-10, twentieth
+  run. The disjunction is not a convenience: `ae_mem_nonExplosiveE` and
+  `ae_mem_nonExplosiveE_jumpMeasure` both ask `∀ k, 0 < lam (y k)` along the
+  chain, and the linear birth and death chain fails that hypothesis on the
+  extinction event, which has positive probability. The first branch rests on
+  nothing but the positivity of the waiting time at the absorbing index — a state
+  is only reached if the path spends time there — and the second on nothing new;
+  `chain_const_of_absorb` does not enter, because the criterion asks for one
+  absorbing index and not for the path beyond it.
 * `ae_mem_nonExplosiveE_linearBirthDeath` and
   `linearBirthDeath_isLocalMPSolution`: the linear birth and death chain as an
-  instance of `jumpProcess_isLocalMPSolution_of_nonneg`. Its rate is
+  instance of `jumpProcess_isLocalMPSolution_of_nonneg`. **Proved** on 2026-09-10,
+  twentieth run. Its rate is
   `birthDeathRate (fun x ↦ β * x) (fun x ↦ δ * x)`, unbounded
   (`not_bddAbove_birthDeathRate_linear`) and vanishing at `0`
   (`birthDeathRate_linear_zero`), so it is the one acceptance example of this
   milestone that exercises the local branch on both counts. The normalisation of
   the jump kernel at the absorbing state is `birthDeathKernel_apply` read at
-  `b x + d x = 0`, where the kernel is the Dirac measure by construction.
+  `b x + d x = 0`, where the kernel is the Dirac measure by construction. **Away
+  from the extinction event the divergence is deterministic**, and no
+  probabilistic estimate enters: a birth and death chain moves up by at most one
+  step, so `y k ≤ y 0 + k` (`le_add_of_step_le_succ`) and the reciprocal rates
+  dominate a tail of the harmonic series
+  (`not_summable_inv_birthDeathRate_linear`). The hypothesis is `0 ≤ β + δ` and
+  an arbitrary initial law on `ℕ` — only the sum of the two rates ever appears,
+  the separate nonnegativity being what `isMarkovKernel_birthDeathKernel` asks
+  for and therefore asked at the call site. The degenerate case `β + δ = 0` is
+  the process that never moves and falls in the absorbing branch at the index
+  `0`; the case `δ = 0` is the Yule process.
+* `ae_step_chainKernel`, `ae_step_comp_chainKernel` and
+  `ae_forall_step_comp_chainKernel`: **a property of consecutive states of the
+  chain, carried from the kernel to the trajectory**. **Proved** on 2026-09-10,
+  twentieth run. They are the general form of `ae_absorb_chainKernel` and
+  `ae_absorb_comp_chainKernel`, whose argument — the law of the first step, then
+  an induction on the index in which the initial law moves along
+  (`comp_chainKernel_map_shift`) — uses nothing about the property. They ask less
+  than their absorbing predecessors: `MeasurableSingletonClass E` in place of
+  `MeasurableEq E`, and no measurability of the step relation at all in the one
+  step form. `ae_le_succ_birthDeathKernel` is the birth and death instance, and
+  it needs no positivity of the two rates: where their sum vanishes the kernel is
+  the Dirac measure, and where it does not the kernel is carried by `{x+1, x-1}`.
 * `martingale_stoppedProcess_mpFamily_jumpProcessE`: **the stopped test process of
   the local jump problem is a martingale**, at every stopping time of its natural
   filtration and under the hypotheses of `jumpProcessE_isMPSolution`. This is the
@@ -1724,7 +1751,20 @@ A concrete family of solutions, built without any of the theory above. Index
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for
-  Milestones 7 and 9.
+  Milestones 7 and 9. Its ground is the construction of the jump times, and that
+  is where it differs from everything above: at a state dependent rate the
+  `(n+1)`-st jump time is `T n + ξ n / lam (y n)`, a division, while at a path
+  dependent rate `Λ` it is the solution `s` of
+  `∫ u in Set.Ioc (T n) (T n + s), Λ u ω = ξ n`, an inverse.
+  * `cumulativeRateF Λ ω t = ∫ u in Set.Ioc 0 t, Λ u ω` and
+    `strictMono_cumulativeRateF`: the cumulated compensator along one sample
+    point, strictly monotone and continuous where `Λ` is positive and locally
+    integrable, hence invertible.
+  * `jumpTimeF_succ_spec`: the defining equation of the `(n+1)`-st jump time as
+    that inverse point. Everything the state dependent case builds on the jump
+    times — the renewal decomposition, the progressive measurability, the tower
+    argument — reads from them only that they increase and are measurable, so
+    this equation is what the whole variant rests on.
 
 **Acceptance examples.**
 
@@ -1893,7 +1933,11 @@ A concrete family of solutions, built without any of the theory above. Index
   the extinction event — which has positive probability — violates it. What the
   disjunctive criterion adds is the branch the extinction event falls in, where
   the next jump time is `⊤` (`mem_nonExplosiveE_of_rate_zero`) and no series has
-  to diverge at all.
+  to diverge at all. **In the file since 2026-09-10, twentieth run**, and it does
+  not stop at non explosion: `linearBirthDeath_isLocalMPSolution` discharges every
+  hypothesis of `jumpProcess_isLocalMPSolution_of_nonneg` on this data, so the
+  linear chain is a **local** solution in Lean and not a description of one. It is
+  the first instance in the file for which the bounded theorem is unavailable.
 * **The path dependent variant is not a state dependent one.** The Hawkes
   process of the manuscript's `ex:hawkes`: `E = ℕ`,
   `mu (t, ω, ·) = Measure.dirac (ω t⁻ + 1)` and the rate
@@ -1915,14 +1959,27 @@ zweier Sprungprozesse — in Lean eine gemeinsame Konstruktion auf einem Raum sa
 pfadweisem Vergleich — und die geometrische Verteilung des Yule-Prozesses zur
 festen Zeit, die selbst erst zu beweisen wäre.
 
-**Was statt dessen genügt und seit dem 2026-09-10 bewiesen dasteht:**
-`ae_mem_nonExplosiveE` — divergiert `∑ k, (lam (y k))⁻¹` längs der *eingebetteten
-Kette*, so explodiert der Prozeß f.s. nicht. Für `lam (y k) = (β + δ) * y k`
-divergiert die Reihe in beiden Regimen: bei `δ ≥ β` ist die eingebettete
-Irrfahrt rekurrent oder abwärtsdriftend und besucht kleine Werte unendlich oft;
-bei `β > δ` wächst `y k` linear, also `∑ 1 / y k ~ ∑ 1 / ((p−q) k) = ∞`. Der
-Nachweis ist damit eine Aussage über eine **Irrfahrt**, nicht über einen
-stetigzeitigen Prozeß.
+**Was statt dessen genügt und seit dem 2026-09-10, zwanzigster Lauf, bewiesen
+dasteht:** `ae_mem_nonExplosiveE_linearBirthDeath`, und der Weg dorthin ist noch
+kürzer als hier zunächst angesagt. Zwei Berichtigungen an diesem Absatz, beide am
+fertigen Beweis abgelesen:
+
+* **`ae_mem_nonExplosiveE` allein reicht nicht.** Dieses Kriterium verlangt
+  `∀ k, 0 < lam (y k)` **längs der Kette**, und das Aussterbeereignis — positiver
+  Wahrscheinlichkeit — verletzt es. Zu nehmen ist die disjunktive Fassung
+  `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or`; auf dem Aussterbeereignis
+  greift der absorbierende Zweig, wo die nächste Sprungzeit `⊤` ist und gar keine
+  Reihe zu divergieren braucht.
+* **Eine Fallunterscheidung nach den Regimen `δ ≥ β` und `β > δ` gibt es
+  nicht.** Sie wäre eine Aussage über die Rekurrenz beziehungsweise die Drift der
+  eingebetteten Irrfahrt und damit selbst ein Stück Wahrscheinlichkeitstheorie.
+  Gebraucht wird nur, daß die Kette **Nachbarschritte** macht: `y k ≤ y 0 + k`
+  (`le_add_of_step_le_succ`), also dominieren die reziproken Raten einen Schwanz
+  der harmonischen Reihe (`not_summable_inv_birthDeathRate_linear`). Auf dem
+  Zweig, auf dem etwas zu divergieren hat, ist der Nachweis damit
+  **deterministisch**; probabilistisch ist allein die Aussage, daß die Kette
+  Nachbarschritte macht, und die kommt aus dem Kern
+  (`ae_le_succ_birthDeathKernel`, `ae_forall_step_comp_chainKernel`).
 
 **Eine Falle, die auf Papier unsichtbar ist.** „Zu fester Zeit geometrisch
 verteilt, also f.s. endlich, also keine Explosion" ist so **zirkulär**: um von

@@ -18462,3 +18462,127 @@ nicht, so wächst `y k` und `∑ 1/((β+δ) y k)` divergiert. Das ist eine Aussa
 auf `ℕ` und über keinen stetigzeitigen Prozeß — genau die Reduktion, die die Bemerkung vom
 2026-09-10 zur Nichtexplosion des linearen Geburt-Tod-Prozesses als den billigeren Weg benannt
 hat.
+
+### 2026-09-10, zwanzigster Lauf des Tages — `linearBirthDeath_isLocalMPSolution` steht; das Akzeptanzbeispiel des lokalen Zweigs, und seine Divergenz ist deterministisch
+
+**Bearbeitet:** Teil C, Punkt 5 des laufenden Auftrags — genau die drei Aussagen, die der
+neunzehnte Lauf als Vorschlag hinterlassen hat.
+
+**Ergebnis in Zahlen.** 15 Deklarationen: drei im neuen Abschnitt „Non explosion at a rate with
+zeros" der Sektion `Absorbing`, zwölf im neuen Abschnitt `LinearBirthDeath` am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die ganze Datei ohne einen Fehler durch
+`lake env lean` gegen v4.33.1, alle 15 mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft (`le_add_of_step_le_succ` kommt sogar ohne `Classical.choice` aus); die Zahl
+der `sorry` bleibt bei neun. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+**Die drei Ergebnisse selbst.**
+
+```
+mem_nonExplosiveE_of_absorb_or_tendsto_sum :
+  (∀ k, 0 < xi k) →
+  ((∃ m, lam (y m) = 0) ∨ ((∀ k, 0 < lam (y k)) ∧ Tendsto (∑ k < m, (lam (y k))⁻¹ * xi k) atTop atTop)) →
+  (y, xi) ∈ NonExplosiveE lam
+
+ae_mem_nonExplosiveE_linearBirthDeath :
+  0 ≤ β + δ → (nu : Measure ℕ) → [IsProbabilityMeasure nu] →
+  [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))] →
+  ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu),
+    ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath δ))
+
+linearBirthDeath_isLocalMPSolution :   -- dieselben Voraussetzungen
+  IsLocalMPSolution (mpFamily (jumpOperator (birthDeathRate (linearBirth β) (linearDeath δ))
+      (birthDeathKernel (linearBirth β) (linearDeath δ))) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE (birthDeathRate (linearBirth β) (linearDeath δ)) t ω))
+    (jumpFiltrationE (birthDeathRate (linearBirth β) (linearDeath δ)) (measurable_of_countable _))
+    (jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu)
+```
+
+Damit ist **jedes der drei zustandsabhängigen Akzeptanzbeispiele des Meilensteins 4 eine in Lean
+bewiesene Lösung**: der Poissonprozeß und M/M/1 global (`jumpProcess_isMPSolution`), die lineare
+Geburt-Tod-Kette lokal. Sie ist die erste und einzige, für die der beschränkte Satz **nicht**
+gilt, und sie fällt aus beiden Gründen aus ihm heraus, aus denen es den lokalen Fall überhaupt
+gibt: `not_bddAbove_birthDeathRate_linear` und `birthDeathRate_linear_zero`.
+
+**Der wichtigste Befund: auf dem Zweig, auf dem etwas divergieren muß, divergiert es
+deterministisch.** Der neunzehnte Lauf hat als noch zu leistendes Stück „die f.s. Aussage über die
+eingebettete Irrfahrt" angesagt, und die Bemerkung vom 2026-09-10 in
+`MartingaleProblems/README.md` hatte dafür eine Fallunterscheidung nach den Regimen `δ ≥ β`
+(Rekurrenz) und `β > δ` (lineares Wachstum) vorgesehen. **Beides wird nicht gebraucht.** Was
+gebraucht wird, ist allein, daß eine Geburt-Tod-Kette **Nachbarschritte** macht: dann ist
+`y k ≤ y 0 + k` (`le_add_of_step_le_succ`, drei Zeilen `omega`), also
+`(lam (y k))⁻¹ ≥ ((β+δ)(y 0 + k))⁻¹`, und das ist ein Schwanz der harmonischen Reihe
+(`not_summable_inv_birthDeathRate_linear`). Weder `ae_tendsto_sum_smul_waiting_atTop` noch die
+Tschebyschew-Abschätzung des neunten Laufs kommen darin vor. Probabilistisch ist an diesem Zweig
+**eine einzige** Aussage, und sie ist eine Aussage über den *Kern* und nicht über die Kette:
+`ae_le_succ_birthDeathKernel`. Die Bemerkung im README ist entsprechend berichtigt.
+
+**Der zweite Befund: der Schritt vom Kern zur Trajektorie ist ein Lemma und kein Argument.**
+`ae_absorb_chainKernel` und `ae_absorb_comp_chainKernel` (achtzehnter/neunzehnter Lauf) beweisen
+eine solche Aussage — daß die Kette an einem Zustand mit Rate `0` stehenbleibt —, und ihr Beweis
+benutzt von dieser Aussage nichts: das Gesetz des ersten Schritts (`chainKernel_map_one`), dann
+eine Induktion über den Index, in der die Anfangslage mitwandert (`comp_chainKernel_map_shift`).
+Herausgezogen sind daraus `ae_step_chainKernel`, `ae_step_comp_chainKernel` und
+`ae_forall_step_comp_chainKernel`, für eine beliebige Menge `S ⊆ E × E` von zulässigen Schritten.
+Sie verlangen **weniger** als ihre absorbierenden Vorläufer: `MeasurableSingletonClass E` statt
+`MeasurableEq E`, und in der Einschrittfassung gar keine Meßbarkeit von `S` — die wird erst
+gebraucht, um die Komposition in ihre zwei Integrationen zu zerlegen. Wer künftig eine f.s.
+Eigenschaft aufeinanderfolgender Zustände braucht, schreibt sie als `S` hin und liefert sie am
+Kern ab.
+
+**Der dritte Befund ist eine Berichtigung an der eigenen Roadmap.**
+`MartingaleProblems/README.md` hat den absorbierenden Zweig des Kriteriums auf
+`chain_const_of_absorb` gestützt — „einmal absorbiert, immer absorbiert". Das ist zuviel
+verlangt: `mem_nonExplosiveE_of_rate_zero` fragt nach **einem** Index mit verschwindender Rate und
+nach dem Pfad jenseits davon überhaupt nicht, denn die Sprungzeit dort ist schon `⊤`. Verbraucht
+wird statt dessen die **Positivität der Wartezeit** an genau diesem Index — ein Zustand wird nur
+erreicht, wenn der Pfad Zeit in ihm verbringt —, und die liefert `ae_pos_waiting`. Die Roadmap ist
+berichtigt.
+
+**Minimale Voraussetzungen, nachgeschärft.** `ae_mem_nonExplosiveE_linearBirthDeath` und
+`linearBirthDeath_isLocalMPSolution` tragen `0 ≤ β + δ` und **nicht** `0 ≤ β` samt `0 ≤ δ`: in
+beiden Beweisen erscheint nur die Summe (`birthDeathRate_linear_apply`, `lam x = (β+δ) x`). Die
+getrennte Nichtnegativität ist das, was `isMarkovKernel_birthDeathKernel` verlangt, und sie wird
+dort verlangt — an der Aufrufstelle, an der die Instanz eingelöst wird. Der Grenzfall
+`β + δ = 0` ist der Prozeß, der sich nie bewegt; er fällt in den absorbierenden Zweig beim Index
+`0` und ist damit mitbewiesen statt ausgeschlossen.
+
+**Zwei Elaborationsfallen, beide teuer und beide klein.**
+
+* `MeasureTheory.Measure.ae_smul_measure` ist über einem Skalarring `R` mit
+  `[SMul R ℝ≥0∞] [IsScalarTower R ℝ≥0∞ ℝ≥0∞]` geschrieben, und die Instanzensuche wählt bei
+  offenem `R` **`ℝ≥0`** und nicht `ℝ≥0∞`. Gegen ein `ENNReal.ofReal c • Measure.dirac a` läuft
+  daraus zuerst ein `isDefEq`-Timeout (200000 heartbeats) und danach ein Typfehler. `(R := ENNReal)`
+  ist die ganze Reparatur; `(R := ℝ≥0∞)` **nicht**, denn diese Notation ist in dieser Datei nicht
+  geöffnet und scheitert am Parser.
+* `if_pos hx` findet die Bedingung nicht, wenn `hx : birthDeathRate b d x = 0` lautet und im Ziel
+  `if b x + d x = 0 then _ else _` steht. Die beiden sind definitionsgleich, aber `rw` sieht das
+  nicht; `rw [birthDeathRate] at hx` davor genügt. Dieselbe Bauart wie der Befund des achtzehnten
+  Laufs zu `ENNReal` gegen `WithTop ℝ≥0`: **nicht am Ziel rewriten, sondern die Hypothese in die
+  Form bringen, die das Ziel schon hat.**
+
+**Was von Punkt 5 noch fehlt: die pfadabhängige Variante samt Hawkes.** Die drei
+zustandsabhängigen Akzeptanzbeispiele sind durch; offen ist der letzte Spiegelstrich des
+Meilensteins, „the path dependent variant, where the rate at time `t` is a predictable functional
+of the path rather than a function of the current state, with the same two statements". Er hat in
+Lean **keine einzige Deklaration**.
+
+**Vorschlag für den nächsten Lauf: `cumulativeRateF` und `strictMono_cumulativeRateF`, dann
+`jumpTimeF_succ_spec`.** Das ist der Boden der pfadabhängigen Variante, und er ist jetzt dran,
+weil alles, was auf ihm stehen soll, im zustandsabhängigen Fall bewiesen dasteht und nur die
+*Konstruktion der Sprungzeiten* auszutauschen ist.
+
+Worauf er ruht, und warum er der erste Schritt ist: bei zustandsabhängiger Rate ist die `(n+1)`-te
+Sprungzeit `T n + ξ n / lam (y n)`, eine Division. Bei pfadabhängiger Rate `Λ` ist sie die Lösung
+`s` von `∫_{T n}^{T n + s} Λ(u, ω) du = ξ n`, also der **Umkehrpunkt des kumulierten Kompensators**.
+`cumulativeRateF Λ ω t = ∫_0^t Λ(u, ω) du` ist bei positiver Rate stetig und streng monoton, also
+invertierbar; `jumpTimeF_succ_spec` ist die definierende Gleichung, die dieser Umkehrpunkt erfüllt.
+Alles Weitere — die Erneuerungszerlegung, die Progressivität, der Turmschluß — ist im
+zustandsabhängigen Fall bereits über `jumpTimeE` geführt und liest von den Sprungzeiten nur, daß
+sie wachsen und meßbar sind. Die Hawkes-Rate `Λ t ω = μ₀ + ∑_{k : T k < t} φ(t - T k)` ist dann
+Einsetzen von Daten, und sie ist als einzige der drei Beispiele **nicht** markovsch, was der
+Grund ist, aus dem die Variante überhaupt getrennt geführt wird.
+
+Und danach, unmittelbar: **Teil D**, die Prüfung der vier `README.md` und der drei
+`Suggested.lean` gegen frisches `upstream/master`. Die letzte solche Prüfung ist vom 2026-09-06,
+also inzwischen vier Tage alt; jede Negativaussage in den Roadmaps ist ein Versprechen an einen
+Leser, und die Zahl dieser Aussagen ist seither gewachsen.
