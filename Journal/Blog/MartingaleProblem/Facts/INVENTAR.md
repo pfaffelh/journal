@@ -19107,3 +19107,170 @@ Zeitbudget dieses Laufs nicht mehr sicher abzuschließen war.
    den angehängten Punkt gesetzt werden. Warum jetzt: er ist das, was den Mastergleichungsweg
    überhaupt erst zu einem Weg zur Nichtexplosion macht, und ohne ihn bleibt der Vergleich der drei
    Wege ein Vergleich zweier Aussagen.
+
+### 2026-09-11, erster Lauf des Tages — das Lyapunov-Kriterium steht in seiner pfadweisen Form, und der Baustein für die Erwartungswertform liegt in Mathlib
+
+**Bearbeitet:** Teil F des laufenden Auftrags, in der am 2026-09-11 vom Nutzer festgelegten
+Fassung: nicht der Yule-Prozeß, sondern das **Lyapunov-Kriterium**, als eigener Punkt in
+Meilenstein 4 und **vor** den Instanzen. Die Reihenfolge D → F → C → E ist eingehalten; Teil D war
+der einundzwanzigste Lauf des 2026-09-10.
+
+**Sieben Deklarationen** im neuen Abschnitt `Lyapunov` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne einen Fehler** durch
+`lake env lean` gegen v4.33.1, alle sieben mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft, die Zahl der `sorry` bleibt bei **neun** (Zeilen 616, 637, 684, 694, 773,
+884, 899, 1308, 1328). Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Satz: `ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov`
+
+> Ist `f : E → ℝ` meßbar und nichtnegativ, `C ≥ 0`, gilt an jedem Zustand **positiver** Rate
+> `f z ≤ f x * (1 + C / lam x)` für `mu x`-fast jedes `z`, und ist `lam` auf jeder Subniveaumenge
+> `{f ≤ N}` beschränkt, so ist `∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam`.
+
+Der ganze Mechanismus ist eine Abschätzung (`le_mul_exp_sum_of_lyapunov`): iteriert man die
+Wachstumsbedingung und `1 + t ≤ exp t`, so steht da
+
+`f (y k) ≤ f (y 0) * exp (C * ∑_{j<k} 1 / lam (y j))`,
+
+also **die Lyapunovfunktion wächst höchstens so schnell, wie die Uhr der Kette läuft**. Wären die
+reziproken Raten summierbar, so bliebe `f` längs der ganzen Kette unter einer *Konstanten*, die
+Kette bliebe in **einer** Subniveaumenge, die Rate dort unter deren Schranke `B`, und die
+reziproken Raten über `B⁻¹` — was keine summierbare Reihe nichtnegativer Glieder tut. Der
+Widerspruch ist dieser letzte Schritt und sonst nichts (`not_summable_inv_of_lyapunov`).
+
+An einem Zustand **verschwindender** Rate wird nichts verlangt: dort ist der Pfad absorbiert und
+die Nichtexplosion frei. Das ist der Zweig, den `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or`
+liefert, und er ist der Grund, weshalb das Kriterium die Geburt-Tod-Ketten überhaupt erreicht,
+deren Rate am Zustand `0` verschwindet. Der Übergang vom Kern zur Kette ist
+`ae_forall_step_comp_chainKernel`, angewandt auf die Schrittmenge
+`{p | lam p.1 ≤ 0 ∨ f p.2 ≤ f p.1 * (1 + C / lam p.1)}`.
+
+#### Der erste Befund: die zweite Voraussetzung ist eine Beschränktheit und keine Ausschöpfung
+
+Der Auftrag nennt als Voraussetzung, daß die Subniveaumengen `{f ≤ N}` **ausschöpfen**. Das ist
+nicht, was der Beweis verbraucht, und es reicht auch nicht: verbraucht wird, daß `lam` auf
+`{f ≤ N}` **beschränkt** ist, und über diese Mengen sonst nichts. Die klassische Formulierung —
+Subniveaumengen kompakt — liefert das über die Stetigkeit der Rate mit und ist damit die stärkere
+Voraussetzung. Nach der stehenden Regel über minimale Voraussetzungen steht in der Roadmap die
+Beschränktheit.
+
+Sie ist auch die Stelle, an der das Kriterium die **Wachstumsordnung** der Rate sieht. Am
+Geburt-Tod-Prozeß mit `b x = x^(1+ε)` — der explodiert — versagt nicht die pfadweise Ungleichung,
+die dort für gar kein `C` versagt, weil die Kette immer noch Nachbarschritte macht, sondern die
+Schranke auf der Subniveaumenge: `C * N` ist keine Schranke für `x^(1+ε)` bei `x ≤ N`. Die beiden
+Voraussetzungen sind also nicht austauschbar, und die zweite ist die inhaltliche.
+
+#### Der zweite Befund, und er ist der wertvollere: die Erwartungswertform ist Arbeit und kein fehlendes Werkzeug
+
+Bewiesen ist die **pfadweise** Form. Die Lyapunov-Bedingung der Literatur und des Auftrags ist die
+Ungleichung am Erzeuger, `A f ≤ C • f`, also `lam x * (∫ f dmu x − f x) ≤ C * f x`. Die pfadweise
+Form impliziert sie durch Integration — das ist `jumpApply_le_of_lyapunov`, bewiesen, und es
+verlangt nichts als `0 < lam x` und `Integrable f (mu x)` — und ist **echt stärker**, denn ein
+Mittelwert unter einer Schranke sagt nichts über die Werte. Der Unterschied ist an der
+Geburt-Tod-Kette sichtbar und keine Formsache:
+
+| Form | Bedingung mit `f x = x` |
+| --- | --- |
+| pfadweise | `b x + d x ≤ C * x` |
+| Erzeuger | `b x ≤ C * x` |
+
+denn in `A f x = b x − d x` hilft der Todesterm, und in der pfadweisen Form hilft er nicht. Der
+Satz, um den es dem Nutzer geht — *die Geburtsrate wächst höchstens linear, die Sterberate ist
+frei* — ist damit die Erzeugerform und nicht die bewiesene.
+
+Was zwischen beiden liegt, ist ein Supermartingal in **diskreter** Zeit auf der eingebetteten
+Kette, `M k = f (y k) * exp (−C * ∑_{j<k} 1 / lam (y j))`, dessen Einschrittabschätzung die
+Erzeugerungleichung ist und dessen Divergenz gegen `∞` auf dem Explosionsereignis Fatou
+widerspricht. Der Eingang, den das braucht, ist die **Einschrittbedingung** von `chainKernel` —
+und die steht in Mathlib:
+
+> `chainKernel mu` ist `Kernel.traj (chainFam mu) 0`, längs des Anfangszustands comapped
+> (Suggested.lean:1940), und
+> `ProbabilityTheory.Kernel.condExp_traj`
+> (`Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean:720`, v4.33.1, nicht `deprecated`) gibt
+> `(traj κ a x₀)[f | piLE b] =ᵐ fun x ↦ ∫ y, f y ∂traj κ b (frestrictLe b x)`.
+
+Das ist die Einschrittbedingung für **jedes** `b` auf einmal, und sie ist über der Filtration
+`MeasureTheory.Filtration.piLE` (`Mathlib/Probability/Process/Filtration.lean:492`) formuliert —
+genau der Filtrationstyp, den Mathlibs `Supermartingale` verlangt. Die Erzeugerform ist deshalb
+Arbeit und kein fehlendes Werkzeug, und der Punkt steht so in Meilenstein 4.
+
+#### Die Instanzen fallen heraus, und die allgemeine ist darunter
+
+`ae_mem_nonExplosiveE_birthDeath_of_rate_le` ist die Geburt-Tod-Instanz, mit `f x = x`. Beide
+Voraussetzungen sind je eine Zeile: der Kern hebt die Kette um höchstens eins
+(`ae_le_succ_birthDeathKernel`), also ist die pfadweise Ungleichung `x + 1 ≤ x * (1 + C / lam x)`
+genau `lam x ≤ C * x`, und die Rate auf `{f ≤ N}` ist aus demselben Grund unter `C * N`.
+
+Das ist **die allgemeine Aussage** und nicht noch eine Instanz: jede Gesamtrate mit
+`b x + d x ≤ C * x` ist erfaßt. `ae_mem_nonExplosiveE_linearBirthDeath_of_lyapunov` und
+`ae_mem_nonExplosiveE_yule_of_lyapunov` sind danach die Konstante `C = β + δ` und sonst nichts —
+je vier Zeilen.
+
+#### Der gemessene Vergleich, fortgeschrieben
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | fertig |
+| Mastergleichung | 18 (`section YuleProcess` ohne die Yule-Instanz) + 1 | 278 | liefert die Verteilung, nicht die Nichtexplosion |
+| **Lyapunov, pfadweise Form** | **4 (Kriterium) + 3 (Instanzen)** | **85 + 37 = 122 Codezeilen, 224 mit Dokumentation** | **fertig in der pfadweisen Form** |
+| Kopplung | 0 | 0 | nicht angefangen |
+
+Gezählt mit `scripts/_citations/count_lyapunov.py`, neu und allein lauffähig, nach dem Muster von
+`count_yule.py`.
+
+**Das Urteil, nach dem der Auftrag fragt** — welcher Weg für eine **allgemeinere** Ratenfunktion
+der bessere ist —, ist damit gemessen und nicht behauptet: **Lyapunov**. 122 Codezeilen gegen 236,
+und was herauskommt, ist nicht dasselbe. Die Reihe beweist die Nichtexplosion **einer** Kette, das
+Kriterium die jeder Geburt-Tod-Kette mit `b x + d x ≤ C * x`. Der Reihenweg ist, wie der Nutzer
+ansagte, ein Sonderfall — aber der des Kriteriums und nicht der der Nachbarschritte: die
+Nachbarschritte braucht das Kriterium auch, es liest sie nur an *einer* Stelle
+(`ae_le_succ_birthDeathKernel`) statt an dreien (dazu `measurableSet_stepLE` und
+`le_add_of_step_le_succ`).
+
+**Welche Mathlib-Bausteine der Weg brauchte, und keiner fehlte:** `Real.add_one_le_exp`,
+`Real.exp_le_exp`, `Real.exp_add`, `Summable.sum_le_tsum`
+(`Mathlib/Topology/Algebra/InfiniteSum/Order.lean`, als `Summable`-Methode und **nicht** als
+freies `sum_le_tsum`, was der erste Durchlauf als einzigen Namensfehler meldete),
+`Summable.tendsto_atTop_zero`, `gt_mem_nhds`, `inv_anti₀`, `one_le_div`, `measurableSet_le`,
+`measurable_of_countable`, `integral_sub`, `integral_mono_ae`, `integrable_const`. Eine
+Kleinigkeit, die Zeit kostete und hier steht, damit sie es kein zweites Mal tut: `integral_const`
+liefert auf v4.33.1 `(μ).real univ • c` und nicht mehr `(μ univ).toReal • c`, also greift
+`rw [integral_const, measure_univ]` nicht mehr und `simp` ist zu nehmen. **Keine Negativaussage**,
+also nichts für `scripts/check_negatives.py`
+nachzutragen; die dortigen dreizehn Aussagen sind unberührt. `python3 check.py` meldet weiterhin
+`clean` (133 Seiten).
+
+#### Was offen blieb
+
+* **Die Erzeugerform `isNonExplosive_of_lyapunov`** — der Satz, um den es dem Nutzer geht. Sie
+  steht als benannter Punkt in Meilenstein 4, mit dem Beweisweg und mit `condExp_traj` als
+  benanntem Eingang.
+* **Die Nichtexplosion der gehobenen Rate**, `ae_mem_nonExplosiveE_posRate`, der Vorschlag des
+  dreiundzwanzigsten Laufs. Sie ist von diesem Lauf nicht berührt und bleibt die einzige Aussage
+  zwischen `jumpMeasure_masterEquation_of_ae_nonExplosive` und den eindimensionalen Verteilungen
+  des Yule-Prozesses.
+* **Der Kopplungsweg** ist weiterhin nicht angefangen, und nach dem Befund dieses Laufs ist er
+  auch weniger wert als angenommen: was er liefern soll — die Nichtexplosion des Geburt-Tod-
+  Prozesses aus der des Yule-Prozesses — liefert das Kriterium in einer Zeile und für eine ganze
+  Klasse, ohne eine gemeinsame Konstruktion zu bauen.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`supermartingale_lyapunov_chainKernel`:** für `f : E → ℝ` nichtnegativ und meßbar mit
+   `jumpApply lam mu f x ≤ C * f x` ist `M k ω = f (ω k) * exp (−C * ∑_{j<k} 1 / lam (ω j))` ein
+   Supermartingal über `chainKernel mu ∘ₘ nu` für die Filtration
+   `MeasureTheory.Filtration.piLE`. Worauf sie ruht:
+   `ProbabilityTheory.Kernel.condExp_traj` (`IonescuTulcea/Traj.lean:720`), das die bedingte
+   Erwartung an den Koordinaten bis `b` als Integral gegen `traj κ b` schreibt, und darauf, daß
+   `chainKernel mu` genau dieses `traj` ist (Suggested.lean:1940). Warum jetzt: sie ist der
+   **einzige** Schritt zwischen der bewiesenen pfadweisen Form und der Erzeugerform, und der
+   Baustein, an dem sie hängt, ist in diesem Lauf am Quelltext belegt worden. Prüfstein: kein
+   Fehler, kein neues `sorry`, und `f x = x` an der Geburt-Tod-Kette liefert die
+   Einschrittabschätzung mit `C` aus `b x ≤ C * x` **allein**, ohne den Todesterm.
+2. **`isNonExplosive_of_lyapunov`** darauf: aus dem Supermartingal `𝔼[M k] ≤ 𝔼[f (y 0)]`, auf dem
+   Ereignis `{∑ 1/lam (y k) ≤ R}` also `𝔼[f (y k) · 1_{…}] ≤ exp (C R) · 𝔼[f (y 0)]`, und Fatou
+   gegen `f (y k) → ∞` dort. Worauf es ruht: Punkt 1 und
+   `MeasureTheory.lintegral_liminf_le`. Warum dann: es ist die Aussage, die die Roadmap heute
+   verspricht und die pfadweise Form nicht hält, und die Geburt-Tod-Instanz fällt danach mit
+   `b x ≤ C * x` und freier Sterberate heraus.

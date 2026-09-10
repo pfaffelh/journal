@@ -36,7 +36,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-10.  Every declaration elaborates; 9 declarations carry `sorry`, and
+2026-09-11.  Every declaration elaborates; 9 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -12178,3 +12178,228 @@ theorem tsum_jumpLaw_eq_one {E : Type*} [MeasurableSpace E] [Countable E]
   rw [← ENNReal.tsum_toReal_eq (fun k ↦ measure_ne_top _ _), hsum, ENNReal.toReal_one]
 
 end YuleProcess
+
+section Lyapunov
+
+/-!
+## A Lyapunov criterion for non explosion
+
+`ae_mem_nonExplosiveE_jumpMeasure` asks the divergence of `∑ 1 / lam (y k)` **along the realised
+chain**, and that is a statement about a trajectory and not about the data.  Every instance so far
+had to supply it by hand, and each did so by an argument of its own: the linear chain compares its
+reciprocal rates with the harmonic series, using that a birth and death chain moves by one step
+(`not_summable_inv_birthDeathRate_linear`).  The criterion below replaces all of them by one
+condition on the **data**: a function `f` that the jump kernel does not increase by more than a
+factor, and whose sublevel sets carry a bounded rate.
+
+**What the criterion is, and what it is not.**  The Lyapunov condition of the literature is the
+inequality on the generator, `A f ≤ C • f`, that is `lam x * (∫ f dmu x - f x) ≤ C * f x`.  What is
+proved here is the **pathwise** form, `f z ≤ f x * (1 + C / lam x)` for `mu x`-almost every `z`,
+which implies it by integration and is strictly stronger.  The gap between the two is a discrete
+time supermartingale argument and is named as an open point of Milestone 4; on a birth and death
+chain it is the difference between asking `b x + d x ≤ C * x` and asking `b x ≤ C * x` alone, since
+in the expectation form the death term helps and in the pathwise form it does not.
+
+**The second hypothesis is a boundedness and not an exhaustion.**  What the proof consumes is that
+`lam` is bounded on every sublevel set `{f ≤ N}`, and nothing else about those sets; that they
+exhaust `E` is neither used nor enough.  In the classical setting the two coincide, the sublevel
+sets being compact and the rate continuous, and it is there that the usual wording comes from. -/
+
+variable {E : Type*}
+
+/-- **The Lyapunov estimate along one trajectory.**  Iterating `f (y (k+1)) ≤ f (y k) (1 + C/λ)`
+and `1 + t ≤ exp t` turns the product into the exponential of the partial sums of the reciprocal
+rates -- the sums whose divergence *is* non explosion.  This is the whole mechanism of the
+criterion: a Lyapunov function grows at most as fast as the clock of the chain runs. -/
+theorem le_mul_exp_sum_of_lyapunov {lam f : E → ℝ} {y : ℕ → E} {C : ℝ}
+    (hf : ∀ k, 0 ≤ f (y k))
+    (hstep : ∀ k, f (y (k + 1)) ≤ f (y k) * (1 + C / lam (y k))) (k : ℕ) :
+    f (y k) ≤ f (y 0) * Real.exp (C * ∑ j ∈ Finset.range k, (lam (y j))⁻¹) := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    have hexp : (1 : ℝ) + C / lam (y k) ≤ Real.exp (C * (lam (y k))⁻¹) := by
+      have h := Real.add_one_le_exp (C * (lam (y k))⁻¹)
+      rw [div_eq_mul_inv]
+      linarith
+    have h1 : f (y (k + 1)) ≤ f (y k) * Real.exp (C * (lam (y k))⁻¹) :=
+      (hstep k).trans (mul_le_mul_of_nonneg_left hexp (hf k))
+    refine h1.trans ?_
+    rw [Finset.sum_range_succ, mul_add, Real.exp_add, ← mul_assoc]
+    exact mul_le_mul_of_nonneg_right ih (Real.exp_nonneg _)
+
+/-- **The Lyapunov criterion, along one trajectory.**  If the reciprocal rates were summable, the
+estimate above would bound `f` along the whole chain by a **constant**, the chain would stay in one
+sublevel set of `f`, the rate would stay below the bound `B` that set carries, and the reciprocal
+rates would stay above `B⁻¹` -- which no summable series of nonnegative terms does.  The
+contradiction is that last step and nothing more.
+
+Note where the two hypotheses are spent: the growth condition bounds `f`, and the boundedness on
+sublevel sets is what turns a bound on `f` into a bound on `lam`.  Neither alone suffices, and it
+is the second that a rate growing faster than `f` fails. -/
+theorem not_summable_inv_of_lyapunov {lam f : E → ℝ} {y : ℕ → E} {C : ℝ} (hC : 0 ≤ C)
+    (hlam : ∀ k, 0 < lam (y k)) (hf : ∀ k, 0 ≤ f (y k))
+    (hstep : ∀ k, f (y (k + 1)) ≤ f (y k) * (1 + C / lam (y k)))
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ k, f (y k) ≤ N → lam (y k) ≤ B) :
+    ¬ Summable fun k ↦ (lam (y k))⁻¹ := by
+  intro hsum
+  have hnn : ∀ k, 0 ≤ (lam (y k))⁻¹ := fun k ↦ inv_nonneg.2 (hlam k).le
+  have hpart : ∀ m : ℕ, ∑ j ∈ Finset.range m, (lam (y j))⁻¹ ≤ ∑' j, (lam (y j))⁻¹ :=
+    fun m ↦ hsum.sum_le_tsum _ (fun i _ ↦ hnn i)
+  have hle : ∀ k, f (y k) ≤ f (y 0) * Real.exp (C * ∑' j, (lam (y j))⁻¹) := fun k ↦
+    (le_mul_exp_sum_of_lyapunov hf hstep k).trans
+      (mul_le_mul_of_nonneg_left
+        (Real.exp_le_exp.2 (mul_le_mul_of_nonneg_left (hpart k) hC)) (hf 0))
+  obtain ⟨B, hB⟩ := hbdd (f (y 0) * Real.exp (C * ∑' j, (lam (y j))⁻¹))
+  have hB0 : 0 < B := (hlam 0).trans_le (hB 0 (hle 0))
+  have hlow : ∀ k, B⁻¹ ≤ (lam (y k))⁻¹ := fun k ↦ inv_anti₀ (hlam k) (hB k (hle k))
+  obtain ⟨k, hk⟩ :=
+    (hsum.tendsto_atTop_zero.eventually (gt_mem_nhds (inv_pos.2 hB0))).exists
+  exact absurd hk (not_lt.2 (hlow k))
+
+/-- **The Lyapunov criterion for the jump construction.**  Almost every sample point is non
+explosive as soon as the jump kernel satisfies the pathwise Lyapunov inequality at every state of
+positive rate, and the rate is bounded on every sublevel set of `f`.
+
+Nothing is asked at a state of **vanishing** rate: there the path is absorbed and non explosion is
+free, which is the branch `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` supplies and the reason
+the hypothesis carries `lam z ≠ 0`.  That is what lets the criterion reach the birth and death
+chains, whose rate vanishes at the absorbing state `0`.
+
+The passage from the kernel to the chain is `ae_forall_step_comp_chainKernel`, applied to the set
+of admissible steps `{p | lam p.1 ≤ 0 ∨ f p.2 ≤ f p.1 * (1 + C / lam p.1)}`; the first disjunct is
+written as an inequality rather than an equation only so that its measurability is
+`measurableSet_le`. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam f : E → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hlamm : Measurable lam) (hfm : Measurable f) (hf : ∀ x, 0 ≤ f x)
+    (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ x, f x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hstep : ∀ z, lam z ≠ 0 → ∀ᵐ x ∂(mu z), f x ≤ f z * (1 + C / lam z)) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  classical
+  have hSm : MeasurableSet {p : E × E | lam p.1 ≤ 0 ∨ f p.2 ≤ f p.1 * (1 + C / lam p.1)} :=
+    (measurableSet_le (hlamm.comp measurable_fst) measurable_const).union
+      (measurableSet_le (hfm.comp measurable_snd)
+        ((hfm.comp measurable_fst).mul
+          (measurable_const.add (measurable_const.div (hlamm.comp measurable_fst)))))
+  have hker : ∀ z, ∀ᵐ x ∂(mu z),
+      (z, x) ∈ {p : E × E | lam p.1 ≤ 0 ∨ f p.2 ≤ f p.1 * (1 + C / lam p.1)} := by
+    intro z
+    by_cases hz : lam z = 0
+    · exact Filter.Eventually.of_forall fun x ↦ Or.inl hz.le
+    · filter_upwards [hstep z hz] with x hx using Or.inr hx
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or hlamm mu nu ?_
+  filter_upwards [ae_forall_step_comp_chainKernel mu hSm hker nu] with y hy
+  by_cases hex : ∃ m, lam (y m) = 0
+  · exact Or.inl hex
+  · push_neg at hex
+    have hpos : ∀ k, 0 < lam (y k) := fun k ↦ lt_of_le_of_ne (hlam0 _) (Ne.symm (hex k))
+    refine Or.inr ⟨hpos, not_summable_inv_of_lyapunov hC hpos (fun k ↦ hf _) (fun k ↦ ?_)
+      fun N ↦ (hbdd N).imp fun B hB k hk ↦ hB _ hk⟩
+    rcases hy k with h | h
+    · exact absurd (le_antisymm h (hlam0 _)) (hex k)
+    · exact h
+
+/-- **The pathwise Lyapunov inequality implies the one on the generator**, and this is what makes
+the criterion above a *strengthening* of the Lyapunov condition of the literature and not another
+condition.  The proof is `integral_mono_ae` against the constant `f x * (1 + C / lam x)`, which is
+integrable because `mu x` is a probability measure, and the rate then cancels.
+
+The converse is **false** as a pointwise statement -- an average below a bound says nothing about
+the values -- and that is the whole content of the gap: recovering non explosion from the generator
+inequality alone needs a supermartingale on the embedded chain, not a pointwise iteration.  On a
+birth and death chain the difference is `b x + d x ≤ C * x` here against `b x ≤ C * x` there, since
+`jumpApply_birthDeath` gives `A f x = b x - d x` at `f x = x` and the death term helps. -/
+theorem jumpApply_le_of_lyapunov [MeasurableSpace E] {lam f : E → ℝ} {C : ℝ}
+    {mu : Kernel E E} [IsMarkovKernel mu] {x : E} (hlam : 0 < lam x)
+    (hint : Integrable f (mu x))
+    (hstep : ∀ᵐ z ∂(mu x), f z ≤ f x * (1 + C / lam x)) :
+    jumpApply lam mu f x ≤ C * f x := by
+  have hne : lam x ≠ 0 := hlam.ne'
+  have hsub : ∫ y, (f y - f x) ∂(mu x) = (∫ y, f y ∂(mu x)) - f x := by
+    rw [integral_sub hint (integrable_const _)]
+    simp
+  have hle : ∫ y, f y ∂(mu x) ≤ f x * (1 + C / lam x) := by
+    have h := integral_mono_ae hint (integrable_const (f x * (1 + C / lam x))) hstep
+    simpa using h
+  have hEq : f x * (1 + C / lam x) = f x + f x * C / lam x := by ring
+  rw [hEq] at hle
+  have hkey : (∫ y, f y ∂(mu x)) - f x ≤ f x * C / lam x := by linarith
+  calc jumpApply lam mu f x = lam x * ((∫ y, f y ∂(mu x)) - f x) := by
+        rw [jumpApply, hsub]
+    _ ≤ lam x * (f x * C / lam x) := mul_le_mul_of_nonneg_left hkey hlam.le
+    _ = C * f x := by field_simp
+
+/-! ### The birth and death instance
+
+The Lyapunov function of a birth and death chain on `ℕ` is the state itself, `f x = x`.  Both
+hypotheses of the criterion are then read off the data in one line each, and the condition on the
+rate is the one the criterion is named for: the total rate grows **at most linearly**. -/
+
+/-- **A birth and death chain with an at most linearly growing total rate does not explode.**
+The Lyapunov function is `f x = x`: the kernel moves the chain up by at most one
+(`ae_le_succ_birthDeathKernel`), so the pathwise inequality `x + 1 ≤ x (1 + C / lam x)` is exactly
+`lam x ≤ C * x`, and the rate on the sublevel set `{f ≤ N}` is bounded by `C * N` for the same
+reason.
+
+The hypothesis is **sharp in its order of growth**: at `b x = x ^ (1 + ε)` the chain explodes, and
+what fails here is not the pathwise inequality -- which holds with no `C` at all -- but the bound
+on the sublevel set, since `C * N` is then no bound on `x ^ (1 + ε)` for `x ≤ N`.  That is the
+place the criterion sees the growth of the rate, and it is why the two hypotheses are not
+interchangeable. -/
+theorem ae_mem_nonExplosiveE_birthDeath_of_rate_le {b d : ℕ → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x)
+    (hle : ∀ x : ℕ, birthDeathRate b d x ≤ C * x)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu] [IsMarkovKernel (birthDeathKernel b d)] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel b d) nu),
+      ω ∈ NonExplosiveE (birthDeathRate b d) := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov hC (measurable_of_countable _)
+    (measurable_of_countable (fun x : ℕ ↦ (x : ℝ))) (fun x ↦ Nat.cast_nonneg x)
+    (fun x ↦ add_nonneg (hb x) (hd x))
+    (fun N ↦ ⟨C * N, fun x hx ↦ (hle x).trans (mul_le_mul_of_nonneg_left hx hC)⟩)
+    (birthDeathKernel b d) nu ?_
+  intro z hz
+  have hpos : (0 : ℝ) < b z + d z :=
+    lt_of_le_of_ne (add_nonneg (hb z) (hd z)) (Ne.symm hz)
+  have h1 : (1 : ℝ) ≤ C * z / (b z + d z) := (one_le_div hpos).2 (hle z)
+  filter_upwards [ae_le_succ_birthDeathKernel b d z] with x hx
+  have hx' : (x : ℝ) ≤ (z : ℝ) + 1 := by exact_mod_cast hx
+  have hring : (z : ℝ) * (1 + C / (b z + d z))
+      = (z : ℝ) + C * z / (b z + d z) := by ring
+  rw [hring]
+  linarith
+
+/-- **The linear birth and death chain, as an instance of the Lyapunov criterion.**  This is
+`ae_mem_nonExplosiveE_linearBirthDeath` again, proved from the data instead of from the trajectory,
+and the whole proof is the constant `C = β + δ`.  The two statements are the measured comparison
+the milestone asks for: the trajectory route needs `not_summable_inv_birthDeathRate_linear` and the
+step bound `le_add_of_step_le_succ` -- an argument that uses that the chain moves by one step -- and
+the criterion route needs neither, at the price of the hypothesis `b + d ≤ C x` in place of
+`b ≤ C x`.
+
+It asks `0 ≤ β` and `0 ≤ δ` where the trajectory route asks only `0 ≤ β + δ`, and the reason is
+that the criterion is stated for a general pair of rates and reads them separately. -/
+theorem ae_mem_nonExplosiveE_linearBirthDeath_of_lyapunov {β δ : ℝ} (hβ : 0 ≤ β) (hδ : 0 ≤ δ)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath δ)) :=
+  ae_mem_nonExplosiveE_birthDeath_of_rate_le (b := linearBirth β) (d := linearDeath δ)
+    (add_nonneg hβ hδ)
+    (fun x ↦ mul_nonneg hβ (Nat.cast_nonneg x)) (fun x ↦ mul_nonneg hδ (Nat.cast_nonneg x))
+    (fun x ↦ le_of_eq (birthDeathRate_linear_apply x)) nu
+
+/-- **The Yule process, as an instance of the Lyapunov criterion.**  It is the linear chain with
+`δ = 0`, and it is the worst case of the class: without a death term the Lyapunov function has no
+help at all, so the pathwise form and the expectation form of the criterion coincide on it.  That
+is what makes it the right probe of the criterion and not merely a corollary of the linear case. -/
+theorem ae_mem_nonExplosiveE_yule_of_lyapunov {β : ℝ} (hβ : 0 ≤ β)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath 0)) :=
+  ae_mem_nonExplosiveE_linearBirthDeath_of_lyapunov (δ := 0) hβ le_rfl nu
+
+end Lyapunov
