@@ -1,8 +1,8 @@
 # Formalisierungs-Inventar — Status
 
 - **Letzter Lauf (UTC):** 20260910T162301Z
-- **Zustand:** laeuft
-- **Notiz:** Lauf gestartet
+- **Zustand:** fehler
+- **Notiz:** claude endete mit Code 126 (siehe logs/run_20260910T162301Z.log)
 - **Host:** fisher
 - **Laeufe bisher:** 144
 
