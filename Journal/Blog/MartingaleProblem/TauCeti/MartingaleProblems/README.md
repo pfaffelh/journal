@@ -1809,6 +1809,44 @@ A concrete family of solutions, built without any of the theory above. Index
   of `φ`, so it is an instance of the **global** statement and not only of the
   local one.
 
+### Bemerkung: was eine Domäne mit kompaktem Träger ändern würde
+
+*(Frage des Nutzers, 2026-09-10. Sie ist hier festgehalten, weil sie erklärt,
+wozu die Lokalisierung überhaupt da ist — nicht, weil dieser Weg gegangen werden
+soll.)*
+
+Ließe man in `A` nur Funktionen mit kompaktem Träger zu — auf `E = ℕ` also
+endlichem Träger —, so kehrte sich der Aufwand um.
+
+**Die Existenz würde billig.** Für `f` mit endlichem Träger ist `A f` außerhalb
+von `supp f ∪ (supp f ± 1)` gleich null, also selbst endlich getragen und damit
+**beschränkt**, obwohl `lam` es nicht ist. Dann ist
+`f (X t) − ∫₀ᵗ A f (X s) ds` auf beschränkten Intervallen beschränkt, und der
+ganze Lokalisierungsapparat — `rateSup`, `rateTime`,
+`isLocalizingSequence_rateTime`, `martingale_stoppedProcess` — entfiele.
+
+**Die Eindeutigkeit würde schwer**, und zwar aus zwei Gründen. Erstens ist `A`
+auf dieser Domäne **unbeschränkt**: für `f = indicator {n}` ist
+`‖A f‖ = max (β n) (δ n) → ∞`, also trägt die Picard-Iteration von
+`exists_unique_of_bounded` nicht mehr und man wäre bei Hille--Yosida, was
+`rem:noch1` des Manuskripts ausschließt. Zweitens, und das ist keine technische
+Hürde: bei einem **explodierenden** Prozeß hat das Martingalproblem über dieser
+Domäne *mehrere* Lösungen — nach der Explosionszeit darf man neu starten, und
+Testfunktionen mit endlichem Träger sehen das nicht. Eindeutigkeit über der
+Domäne mit kompaktem Träger ist daher gleichwertig zur **Nichtexplosion**, der
+klassische Punkt bei minimalen Ketten. Für den linearen Geburt-Tod-Prozeß mit
+`β, δ > 0` ist sie erfüllt (`∑ 1/(β n)` divergiert), aber ihr Beweis wäre dann
+der Kern der Sache statt eines Nebenprodukts.
+
+**Warum dieser Weg nicht gegangen wird.** Das Manuskript hält bei `:333` fest,
+daß es auf einem allgemeinen polnischen Raum **kein `C_c(E)`** gibt; die ganze
+Konstruktion hier steht über bloßem `[MeasurableSpace E]`. Die Domäne mit
+kompaktem Träger wäre ein Rückschritt in der Allgemeinheit für einen Gewinn, der
+nur bei diskretem `E` eintritt. Wer sie dennoch untersuchen will, hat mit
+`mem_nonExplosiveE_iff_tsum_eq_top` und `ae_mem_nonExplosiveE` (2026-09-10) die
+Nichtexplosion schon bewiesen daliegen — es wäre eine zweite, unabhängige Route
+zum selben Beispiel, und der Vergleich beider wäre für sich lehrreich.
+
 ## Milestone 5: mixtures, shifts and the restart lemma
 
 * `MPSolutions.isConvex` and, more generally,
