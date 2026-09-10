@@ -1809,6 +1809,41 @@ A concrete family of solutions, built without any of the theory above. Index
   of `φ`, so it is an instance of the **global** statement and not only of the
   local one.
 
+### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
+
+*(Frage des Nutzers, 2026-09-10.)* Der Vorschlag war, den linearen
+Geburt-Tod-Prozeß **nach oben durch einen reinen Geburtsprozeß** abzuschätzen,
+dessen Wert zu fester Zeit geometrisch verteilt und damit f.s. endlich ist.
+
+**Das Argument stimmt, ist aber der teurere Weg.** Es verlangt eine *Kopplung*
+zweier Sprungprozesse — in Lean eine gemeinsame Konstruktion auf einem Raum samt
+pfadweisem Vergleich — und die geometrische Verteilung des Yule-Prozesses zur
+festen Zeit, die selbst erst zu beweisen wäre.
+
+**Was statt dessen genügt und seit dem 2026-09-10 bewiesen dasteht:**
+`ae_mem_nonExplosiveE` — divergiert `∑ k, (lam (y k))⁻¹` längs der *eingebetteten
+Kette*, so explodiert der Prozeß f.s. nicht. Für `lam (y k) = (β + δ) * y k`
+divergiert die Reihe in beiden Regimen: bei `δ ≥ β` ist die eingebettete
+Irrfahrt rekurrent oder abwärtsdriftend und besucht kleine Werte unendlich oft;
+bei `β > δ` wächst `y k` linear, also `∑ 1 / y k ~ ∑ 1 / ((p−q) k) = ∞`. Der
+Nachweis ist damit eine Aussage über eine **Irrfahrt**, nicht über einen
+stetigzeitigen Prozeß.
+
+**Eine Falle, die auf Papier unsichtbar ist.** „Zu fester Zeit geometrisch
+verteilt, also f.s. endlich, also keine Explosion" ist so **zirkulär**: um von
+`X t` zu sprechen, muß der Prozeß bei `t` bereits definiert sein. Sauber ist erst
+`∑ k, P (X t = k) = 1` für den *minimalen* Prozeß, also „es entweicht keine Masse
+nach unendlich" — und das **ist** die Nichtexplosion, nicht eine Folgerung
+daraus. In Lean bricht ein Beweis genau daran.
+
+**Als Akzeptanzbeispiel ist die Rechnung dennoch wertvoll.** Der Yule-Prozeß
+(`b x = β * x`, `d ≡ 0`) hat eine geschlossene eindimensionale Verteilung — von
+`1` gestartet ist `X t` geometrisch mit Parameter `exp (−β t)` —, und ein Leser
+kann das Ergebnis der Konstruktion gegen etwas Bekanntes prüfen, so wie beim
+Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Es gehört zu Punkt 5 und
+ist **nach** `jumpProcess_isLocalMPSolution` zu machen, nicht davor: es prüft
+die Konstruktion, es trägt sie nicht.
+
 ### Bemerkung: was eine Domäne mit kompaktem Träger ändern würde
 
 *(Frage des Nutzers, 2026-09-10. Sie ist hier festgehalten, weil sie erklärt,
