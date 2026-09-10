@@ -276,238 +276,275 @@ danach.*
    Produktformel für endliche Durchschnitte ist* — und die ist für
    Koordinatenereignisse `MeasureTheory.Measure.infinitePi_pi`. Sieben Zeilen
    statt eines eigenen Bausteins.
-2. `jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`, und
+2. ~~`jumpProcess_isMPSolution` für beschränktes `lam` — das ist `thm:jumpMP`, und
    es ist **das eigentliche Ziel des Meilensteins**: die erste in Lean bewiesene
-   Lösung eines Martingalproblems überhaupt.
+   Lösung eines Martingalproblems überhaupt.~~ *(erledigt 2026-09-10, dritter
+   Lauf des Tages)*
 
-   **Zwischenstand 2026-09-09, achtzehnter Lauf des Tages.** Der Satz ist noch
-   nicht hingeschrieben; von seiner *Aussage* stehen jetzt aber alle Stücke bis
-   auf zwei. Gebaut und geprüft sind der Erzeuger `jumpApply`, die Uhr
-   `lebesgueClock : Clock ℝ≥0` — **der Index ist `ℝ≥0` und nicht `ℝ`**, weil
-   `mpFamily` `[OrderBot ι]` verlangt —, das Anfangsgesetz des Prozesses
-   (`jumpMeasure_map_jumpProcess_zero`, nicht dasselbe wie das der Kette) und
-   die Gedächtnislosigkeit der Exponentialverteilung (`expMeasure_Ioi_add`, die
-   Mathlib nicht hat und die der einzige nicht buchhalterische Schritt des
-   Beweises sein wird).
+   **Ergebnis.** `jumpProcess_isMPSolution` ist bewiesen, und Meilenstein 4 von
+   `MartingaleProblems` trägt in `Suggested.lean` **kein `sorry`** mehr (die
+   Datei steht bei neun, alle in den Meilensteinen 3, 5, 9 und 10). Der
+   Abschluß kostete drei Deklarationen — `abs_setIntegral_compensator_le`,
+   `integrable_mpFamily_jumpProcess` und den Satz selbst —, die ganze Datei
+   geht durch `lake env lean` gegen v4.33.1 ohne einen Fehler, und alle drei
+   sind mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`
+   geprüft. Über `E` steht nichts als `[MeasurableSpace E]`.
 
-   ~~**Es fehlen zwei Stücke, und das zweite ist das riskante:** der Erzeuger als
-   *Menge* `jumpOperator lam mu : Set ((E → ℝ) × (E → ℝ))`, und die
-   **Filtration**.~~ *(beide erledigt 2026-09-09, neunzehnter Lauf des Tages)*
+   Die neun Zwischenstände der Läufe achtzehn bis siebenundzwanzig des
+   2026-09-09 und der Läufe eins bis drei des 2026-09-10 standen bis zum
+   dritten Lauf des 2026-09-10 hier und sind herausgestrichen; sie stehen
+   vollständig in `Facts/INVENTAR.md` unter „Läufe". Fünf Befunde daraus sind
+   für die weitere Arbeit wichtig genug, um hier zu bleiben:
 
-   **Zwischenstand 2026-09-09, neunzehnter Lauf des Tages.** Die beiden fehlenden
-   Stücke stehen, und mit ihnen die **erste Hälfte des Satzes**: achtzehn neue
-   Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, alle durch
-   `lake env lean` gegen v4.33.1 und alle mit `#print axioms` auf `propext`,
-   `Classical.choice`, `Quot.sound` geprüft. `jumpProcess_isMPSolution` ist
-   hingeschrieben und trägt sein `sorry`; was ihm fehlt, ist allein die bedingte
-   Erwartung. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09, neunzehnter
-   Lauf des Tages".
+   * **`Clock.IsProgressive` ist für den Sprungprozeß vermutlich nicht
+     beweisbar** und wird nicht gebraucht. Ein Limes `E`-wertiger meßbarer
+     Abbildungen ist nur meßbar, wenn die Diagonale von `E` es ist. Der
+     Kompensator wird statt dessen über
+     `measurable_uncurry_min_of_eventuallyEq` in `ℝ` behandelt, für jedes
+     reelle Funktional `h ∘ X`. Wer `isMPSolution_iff_forall_fdd` benutzen
+     will, stößt außerdem darauf, daß **dieser Satz selbst ein `sorry` trägt**
+     (`Suggested.lean:382`).
+   * **Die Positivität der Rate ist eine echte Einschränkung**: `x / 0 = 0` in
+     Lean, also verläßt der Pfad einen Zustand mit `lam x = 0` sofort. Der
+     absorbierende Fall verlangt Sprungzeiten in `ℝ≥0∞`; Punkt 5 wird ihn nicht
+     umgehen können.
+   * **Die Explosionsmenge ist eine Nullmenge, aber nicht die leere Menge, und
+     die beiden Hälften von `Martingale` gehen verschieden mit ihr um.**
+     `StronglyAdapted` ist keine f.s.-Aussage, also muß die Meßbarkeit des
+     Kompensators an *jedem* Punkt gelten (darum ist
+     `eventuallyEq_nhdsGE_stepPath` ohne jede Hypothese bewiesen); die bedingte
+     Erwartung dagegen darf schneiden, und `IsPastFunctional` tut es.
+   * **`0 < L` ist kein Zusatz, sondern abgeleitet**: aus
+     `[IsProbabilityMeasure nu]` folgt `Nonempty E`, und dort ist
+     `0 < lam x ≤ L`.
+   * **Zwei Lücken in Mathlib, die dabei geschlossen wurden und die auch sonst
+     brauchbar sind**: `expMeasure_Ioi_add`, die Gedächtnislosigkeit der
+     Exponentialverteilung, und `integral_expMeasure_one`,
+     `∫ F d(expMeasure 1) = ∫_{Ioi 0} exp(-s) F s`, ohne jede Voraussetzung an
+     `F`. Ebenso fehlt Mathlib die Zeithomogenität von
+     `ProbabilityTheory.Kernel.traj` (hier `chainKernel_map_shift`) und die
+     Abspaltung einer Koordinate von ihrem Schwanz bei `Measure.infinitePi`
+     (hier `infinitePi_map_natCons`).
+3. ~~`norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
+   Roadmap „no analysis beyond `NormedSpace`".~~ *(erledigt 2026-09-10, sechster
+   Lauf des Tages)*
 
-   **Der angesagte Grund gegen `Filtration.natural` war der falsche, und der
-   richtige ist billiger.** Nicht `StronglyMeasurable` über einem topologischen
-   `E` ist das Hindernis: die Deklaration
-   (`Probability/Process/Filtration.lean:395`) trägt
-   `[TopologicalSpace (β i)] [MetrizableSpace (β i)] [BorelSpace (β i)]`, also
-   ist sie über einem bloßen `[MeasurableSpace E]` **nicht einmal
-   hinschreibbar**. Gebraucht wird von alledem nichts — das Feld `le'` verlangt
-   Meßbarkeit und sonst nichts —, also steht jetzt `naturalFiltration` mit
-   `Measurable` und ohne Topologie da. Kein Beweis über Treppenpfade, sieben
-   Zeilen.
+   **Ergebnis.** `exists_unique_of_bounded` steht ganz, endlichdimensionale
+   Verteilungen eingeschlossen; damit trägt Meilenstein 4 von
+   `MartingaleProblems` keine offene Zusage mehr außer den Punkten 5 (lokaler
+   Fall) und der pfadabhängigen Variante. Siebzehn neue Deklarationen, die ganze
+   Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1, alle siebzehn mit
+   `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft; die
+   Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5, 9, 10). Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-10, sechster Lauf des Tages".
 
-   **Was wirklich riskant war, ist die Progressivität, und sie ist nicht
-   `Clock.IsProgressive`.** Für `StronglyAdapted` muß der Kompensator
-   `ω ↦ ∫_0^t Af(X_s ω) ds` meßbar für `𝓕 t` sein, also `(s, ω) ↦ Af(X_s ω)`
-   gemeinsam meßbar. Der Beweis nähert `X_s` durch `X_r` mit `r` etwas oberhalb
-   von `s` und geht zum Limes — und ein Limes **`E`-wertiger** meßbarer
-   Abbildungen ist nur meßbar, wenn die Diagonale von `E` es ist, was für eine
-   beliebige σ-Algebra falsch ist. Die Aussage `Clock.IsProgressive` für den
-   Sprungprozeß ist über bloßem `[MeasurableSpace E]` also vermutlich **nicht
-   beweisbar**. Sie wird auch nicht gebraucht: `measurable_uncurry_min_of_eventuallyEq`
-   führt dasselbe Argument in `ℝ` für jedes reelle Funktional `h ∘ X`, und der
-   Kompensator ist eines. Wer `isMPSolution_iff_forall_fdd` auf den Sprungprozeß
-   anwenden will, muß dessen Hypothese vorher auf diese Gestalt abschwächen —
-   `mpFamily_sub_of_measurable_path` nimmt ohnehin schon `g ∘ X` und nicht `X`.
+   Der Schlußstein ist
+   `integral_fddProd_eq_of_isMPSolution_of_map_eq`: zwei Lösungen desselben
+   beschränkten Sprungerzeugers mit demselben Anfangsgesetz, auf zwei
+   verschiedenen Räumen, haben dieselben **endlichdimensionalen** Verteilungen.
+   `jumpMeasure_integral_fddProd_eq_fddExp` sagt dasselbe vom konstruierten
+   Prozeß gegen `nu`.
 
-   **Und die Rechtfertigung dafür, daß die Rechtsstetigkeit ohne jede Hypothese
-   bewiesen ist** (`eventuallyEq_nhdsGE_stepPath`, weder `Monotone T` noch
-   Nichtexplosion): `MeasureTheory.Martingale` verlangt `StronglyAdapted` und
-   nicht dessen f.s.-Fassung, also muß die Meßbarkeit des Kompensators an
-   **jedem** Punkt gelten, die Explosionsmenge eingeschlossen. Die ist eine
-   Nullmenge, aber nicht die leere Menge, und `ae_isStepPath_jumpProcess` hilft
-   hier darum nicht.
+   **Vier Befunde, die zu behalten sind.**
 
-   **Was für den Satz jetzt noch fehlt, ist genau ein Stück:** die bedingte
-   Erwartung `P[Y t | 𝓕 s] =ᵐ Y s`. Der Weg dorthin, in der Reihenfolge:
-   (a) die Markoveigenschaft des Sprungprozesses an einer festen Zeit, aus
-   `expMeasure_Ioi_add` und `chainKernel`; (b) die Erwartungsidentität
-   `E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`; (c) die Kombination beider. Der
-   Punkt, an dem es teuer wird, ist (b) — es ist die Rückwärtsgleichung, und sie
-   ist der einzige Schritt, der Analysis jenseits der Buchhaltung braucht.
+   * **Der Faktor der Vergangenheit muß eine beschränkte Funktion sein und darf
+     keine Indikatorfunktion bleiben.** Der Vorschlag des fünften Laufs lautete
+     `∫_S f (X (s+t)) dP` über Mengen `S ∈ 𝓕 s`; das trägt die Induktion
+     **nicht**, denn beim Abschälen des ersten Faktors entsteht `K ω · g (X (s+t) ω)`,
+     und `g` ist keine Indikatorfunktion. Die Fassung mit dem Faktor kostet
+     nichts mehr: `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound` zieht
+     ihn aus der bedingten Erwartung, `integral_condExp` setzt die Erwartung
+     zurück (`integral_mul_eq_of_martingale`).
+   * **Die Picard-Iteration ist einmal geschrieben, nicht zweimal.**
+     `abs_sub_sum_le_of_recursion` läuft über ein abstraktes Funktional
+     `I : ℝ≥0 → (E → ℝ) → ℝ` mit drei Voraussetzungen — Schranke, gemeinsame
+     Meßbarkeit in der Zeit, Rekursion —, und die unbedingte wie die bedingte
+     Fassung sind Korollare. Die alte `abs_integral_sub_sum_le_of_isMPSolution`
+     ist auf sechs Zeilen zusammengeschrumpft.
+   * **Die endlichdimensionale Testvariable ist eine Liste von Zuwächsen**
+     (`fddProd`, `fddExp`) und keine `Fin n`-indizierte Familie. Der Grund ist
+     die Induktion: das Abschälen des ersten Faktors läßt eine Liste derselben
+     Gestalt stehen, von der späteren Zeit aus gelesen, während eine
+     `Fin n`-Familie bei jedem Schritt umindiziert werden müßte.
+   * **`IsMPSolution` liefert die Adaptiertheit von `X` nicht.** Das
+     `StronglyAdapted`, das `Martingale` trägt, betrifft die **kompensierten**
+     Prozesse, nicht `h ∘ X`. Der endlichdimensionale Satz führt darum die
+     Voraussetzung `hXad` mit; ohne sie ist der abgeschälte Faktor
+     `g (X (s+t))` nicht meßbar für `𝓕 (s+t)` und damit im nächsten Schritt gar
+     kein Faktor der Vergangenheit. Für den konstruierten Prozeß ist sie eine
+     Zeile (`stronglyMeasurable_jumpFiltration`).
+   * **Eine Koordinate prüft die Schachtelungsreihenfolge nicht, zwei prüfen
+     sie.** `jumpMeasure_integral_fddProd_flip` rechnet an der Zweizustandskette
+     „bei `t` in `true` und bei `t + u` in `true`" = `(1-e^{-2t})/2 ·
+     (1+e^{-2u})/2` aus; eine umgekehrt geschachtelte `fddExp` gäbe
+     `(1-e^{-2u})/2 · (1+e^{-2t})/2`, eine andere Zahl für `t ≠ u`. Sie ging
+     beim ersten Durchlauf durch.
 
-   **Zwischenstand 2026-09-09, einundzwanzigster Lauf des Tages.** Die
-   **Verschiebung** steht, in allen drei Stücken, aus denen sie besteht:
-   pfadweise (`jumpProcess_jumpShift`), auf den Wartezeiten
-   (`waitingMeasure_map_shift`) und auf der Kette (`chainKernel_map_shift`).
-   Siebzehn neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`,
-   alle durch `lake env lean` gegen v4.33.1 und alle mit `#print axioms` auf
-   `propext`, `Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` ist
-   unverändert zehn. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09,
-   einundzwanzigster Lauf des Tages".
-
-   **Der teure Teil war die Kette, und der Grund ist eine Lücke in Mathlib.**
-   `ProbabilityTheory.Kernel.traj` ist für eine **beliebige** Kernfamilie gebaut
-   und trägt darum keine Zeithomogenität; weder v4.33.1 noch `upstream/master`
-   sagt, daß die Verschiebung einer homogenen Kette wieder dieselbe Kette ist
-   (`git grep shift upstream/master -- .../IonescuTulcea/` ist leer). Der Beweis
-   geht darum über die endlichdimensionalen Verteilungen: eine Induktion über
-   `Kernel.partialTraj`, deren ganzer Inhalt der **eine** Schritt
-   `partialTraj_succ_map_shiftIic` ist — der Kern zur Zeit `b+1` liest die
-   letzte Koordinate, und die Verschiebung trägt sie auf die letzte Koordinate
-   des verschobenen Tupels. Die Induktion selbst ist dann vier Umformungen
-   (`map_comp`, `comp_map`, IH, `kernel_comp_comap`), und der Übergang von
-   `partialTraj` zu `traj` ist die Eindeutigkeit des projektiven Limes
-   (`ext_of_map_frestrictLe`).
-
-   ~~**Was jetzt noch fehlt**, ist die Zusammensetzung: die drei Verschiebungen
-   sind einzeln bewiesen und müssen zur Erneuerungsgleichung zusammengeführt
-   werden.~~ *(erledigt 2026-09-09, zweiundzwanzigster Lauf des Tages)*
-
-   **Zwischenstand 2026-09-09, zweiundzwanzigster Lauf des Tages.** Die
-   **Zusammensetzung** steht: `jumpMeasure_map_split` gibt die gemeinsame
-   Verteilung von Anfangszustand, nullter Wartezeit und verschobenen Daten,
-   ```
-   (jumpMeasure mu nu).map (fun ω ↦ ((ω.1 0, ω.1 ∘ succ), (ω.2 0, ω.2 ∘ succ)))
-     = (nu ⊗ₘ (chainKernel mu ∘ₖ mu)).prod ((expMeasure 1).prod waitingMeasure),
-   ```
-   und `prod_comp_chainKernel_eq_jumpMeasure` erkennt den zweiten Faktor jeder
-   Hälfte als `jumpMeasure mu (mu z)` — die verschobenen Daten sind wieder eine
-   Sprungkonstruktion, gestartet aus einem Schritt von `mu`. Zwölf neue
-   Deklarationen, die ganze Datei durch `lake env lean` gegen v4.33.1
-   (unverändert zehn `sorry`), alle zwölf mit `#print axioms` auf `propext`,
-   `Classical.choice`, `Quot.sound`. Bericht in `Facts/INVENTAR.md`, Läufe,
-   „2026-09-09, zweiundzwanzigster Lauf des Tages".
-
-   **Zwei Befunde, die der nächste Lauf braucht.** (a) Die angesagte
-   **Kernidentität** von `chainKernel_map_shift` war nicht das fehlende Stück;
-   gebraucht wird die **gemeinsame** Verteilung von `y 0` und `y ∘ succ`, und die
-   folgt aus der Randverteilung nicht — über bloßem `[MeasurableSpace E]` ist aus
-   `μ.map f = dirac z` **nicht** `f =ᵐ[μ] z` zu gewinnen, weil `{z}` nicht meßbar
-   sein muß. Der Weg ist `map_prodMk_of_map_eq_dirac`, das auf meßbaren Rechtecken
-   rechnet und nur `μ (f ⁻¹' s) ∈ {0, 1}` benutzt. (b) **Mathlib hat die
-   Abspaltung einer Koordinate von ihrem Schwanz nicht.** Es hat die
-   Reindizierungen von `Measure.infinitePi` längs Injektionen
-   (`Measure.map_infinitePi_infinitePi_of_inj`) und die Unabhängigkeit der
-   Koordinaten (`iIndepFun_infinitePi`), aber `iIndepFun.indepFun_finset` trennt
-   nur **endliche** Indexmengen, und die Unabhängigkeit einer Koordinate vom
-   ganzen Schwanz ist keine Reindizierung. Bewiesen ist sie hier als
-   `infinitePi_map_natCons` über `Measure.eq_infinitePi`, mit dem Voranstellen
-   `natCons` als der Abbildung, die die Aussage auf Quader zurückführt.
-
-   ~~**Was für den Satz jetzt noch fehlt**, und es ist Punkt (b) des Weges: die
-   **Rückwärtsgleichung** `E_x[f(X_t)] - f x = ∫_0^t E_x[Af(X_s)] ds`. Alle
-   maßtheoretischen Stücke sind da — `jumpMeasure_integral_eq_of_firstJump`
-   zerlegt am ersten Sprung, `jumpMeasure_map_split` benennt das Gesetz des
-   zweiten Terms, `jumpProcess_jumpShift` sagt, daß der Integrand dort eine
-   Funktion der verschobenen Daten ist. Was fehlt, ist die Analysis: die
-   Differentiation der Erneuerungsgleichung nach `t`.~~ *(die
-   Erneuerungsgleichung selbst ist erledigt 2026-09-09, dreiundzwanzigster Lauf
-   des Tages; es fehlt allein noch die Differentiation.)*
-
-   **Zwischenstand 2026-09-09, dreiundzwanzigster Lauf des Tages.** Die
-   **Erneuerungsgleichung** steht, als `jumpMeasure_integral_eq_renewal`:
-   ```
-   ∫ ω, h (jumpProcess lam t ω) ∂(jumpMeasure mu nu)
-     = (∫ z, exp (-(lam z * t)) * h z ∂nu)
-       + ∫ z, (∫ s in Ioc 0 (lam z * t), exp (-s) *
-           ∫ ω', h (jumpProcess lam (t - s / lam z) ω') ∂(jumpMeasure mu (mu z))) ∂nu.
-   ```
-   Acht neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, die
-   ganze Datei durch `lake env lean` gegen v4.33.1 **ohne einen Fehler**
-   (unverändert zehn `sorry`), alle acht mit `#print axioms` auf `propext`,
-   `Classical.choice`, `Quot.sound`. Bericht in `Facts/INVENTAR.md`, Läufe,
-   „2026-09-09, dreiundzwanzigster Lauf des Tages". **Damit ist an Punkt 2 nichts
-   Maßtheoretisches mehr offen.**
-
-   **Vier Befunde, die der nächste Lauf braucht.** (a) Die Bündelung der beiden
-   Schwänze `y ∘ succ` und `ξ ∘ succ` zu einem Punkt von `(ℕ → E) × (ℕ → ℝ)`
-   *ist* die Fubini-Vertauschung von `y ∘ succ` gegen `ξ 0`, und nicht etwas
-   daneben: `jumpMeasure_map_split` liefert die Koordinaten in der Reihenfolge
-   `z, yc, s, xt`, gebraucht wird `z, s, (yc, xt)`, und benachbart werden `yc`
-   und `xt` genau dadurch, daß `s` über `yc` hinauswandert. Bezahlt ist das
-   einmal und für immer in `integral_jumpMeasure_eq_of_split`; eine geordnete
-   Fassung von `jumpMeasure_map_split` hätte nichts gespart. (b) Die
-   Beschränktheit des Integranden ist die einzige Voraussetzung und **fünffach**
-   nötig — drei Sorten von Integrierbarkeitspflicht (Produkt, Komposition,
-   vertauschtes Produkt) —, und was die Schranke nach innen durch die
-   Schachtelung trägt, ist `abs_integral_le_of_abs_le`. (c) **Mathlib hat
-   `expMeasure` als Dichte, aber nicht als Integralformel**: `expMeasure r` ist
-   per `rfl` ein `volume.withDensity`, doch
-   `∫ s, F s ∂(expMeasure 1) = ∫ s in Ioi 0, exp (-s) * F s` steht nirgends und
-   heißt hier `integral_expMeasure_one`, **ohne jede Voraussetzung an `F`**. Die
-   Gestalt ist gewählt, weil `t` dann in der *Grenze* des Integrationsbereichs
-   steht und nicht im Integranden — das ist es, worauf die Differentiation
-   ansetzt. (d) Die Nichtexplosion braucht **keine Topologie**:
-   `ae_exists_lt_jumpTime` steht über bloßem `[MeasurableSpace E]`, während
-   `ae_isStepPath_jumpProcess` `[TopologicalSpace E]` trägt.
-
-   ~~**Was jetzt noch fehlt**, und es ist der einzige Schritt mit Analysis: die
-   **Differentiation nach `t`**~~ *(an der Stelle `t = 0` erledigt 2026-09-09,
-   vierundzwanzigster Lauf des Tages)*.
-
-   **Zwischenstand 2026-09-09, vierundzwanzigster Lauf des Tages.** Die
-   **Rückwärtsgleichung in Differentialform an der Stelle `t = 0`** steht. Zwölf
-   neue Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, die ganze
-   Datei durch `lake env lean` gegen v4.33.1 ohne einen Fehler (unverändert zehn
-   `sorry`), alle zwölf mit `#print axioms` auf `propext`, `Classical.choice`,
-   `Quot.sound`. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-09,
-   vierundzwanzigster Lauf des Tages".
-
-   **Die angesagte Aussage ist falsch, und das ist bewiesen.** `HasDerivAt` an
-   `0` gilt nicht: vor dem ersten Sprung hat sich der Pfad nicht bewegt, also ist
-   `t ↦ ∫ h (X t)` auf ganz `Set.Iic 0` konstant
-   (`integral_jumpProcess_of_nonpos`) und die linksseitige Ableitung ist `0`;
-   `eq_zero_of_hasDerivAt_integral_jumpProcess` macht daraus den Satz, daß eine
-   zweiseitige Ableitung `∫ A h ∂nu = 0` erzwänge. Der Satz heißt darum
-   `jumpMeasure_hasDerivWithinAt_integral` und trägt `(Set.Ici 0) 0`. Verloren
-   ist damit nichts: `mpFamily` indiziert über `ℝ≥0`.
-
-   **Zwei Befunde, die der nächste Lauf braucht.** (a) **Die
-   Erneuerungsgleichung wird nicht differenziert.** Ihre beiden Terme einzeln zu
-   behandeln verlangte die Meßbarkeit von
-   `z ↦ ∫ s in Ioc 0 (lam z * t), …`, die keine Aussage der Datei hergibt. Der
-   Weg geht einen Schritt zurück auf `integral_jumpMeasure_eq_of_split` und wendet
-   ihn auf die **Differenz** des wahren Integranden und seiner nullten Näherung
-   an; dann erzeugt der Satz selbst die äußere Integration und
-   `abs_integral_le_of_abs_le` braucht nur eine punktweise Schranke. (b) Der
-   Hauptsatz ist **quantitativ**: `abs_integral_jumpProcess_sub_sub_le` schätzt
-   den Rest zweiter Ordnung durch `4 * C * L^2 * t^2` ab, und **die Konstante
-   nennt `nu` nicht** — die allgemeine Zeit setzt dort das Gesetz zur Zeit `t`
-   ein, und eine von ihm abhängige Schranke wäre wertlos.
-
-   **Was jetzt noch fehlt**, ist die Verschiebung der Ableitung von `0` an jede
-   Stelle, und das genaue Ziel steht am Ende des Laufberichts als
-   `jumpMeasure_integral_jumpProcess_add`, die zeithomogene Markoveigenschaft in
-   integrierter Gestalt. Sie ist das einzige, was `expMeasure_Ioi_add` verbraucht,
-   und mit ihr folgt die Erwartungsidentität aus
-   `intervalIntegral.integral_eq_sub_of_hasDerivAt`.
-3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
-   Roadmap „no analysis beyond `NormedSpace`".
+   *Der ursprüngliche Wortlaut des Punktes und seine Zwischenstände:*
 
    **`norm_apply_le` ist erledigt** (2026-09-09, achtzehnter Lauf des Tages), als
    `abs_jumpApply_le` in punktweiser Gestalt
    `(∀ x, |f x| ≤ C) → |jumpApply lam mu f x| ≤ 2 * L * C`. Es ist außer der
    Reihe gefallen, weil es beim Hinschreiben des Erzeugers ohnehin anfiel und
-   vier Zeilen kostete; `exists_unique_of_bounded` steht unverändert offen und
-   bleibt hinter Punkt 2.
-4. **Erst danach das Akzeptanzbeispiel**, und dann wirklich als Beweis: `E = ℕ`,
+   vier Zeilen kostete. **Punkt 2 ist durch, also ist dies der laufende
+   Auftrag.**
+
+   **Zwischenstand 2026-09-10, vierter Lauf des Tages.** Die
+   **eindimensionale Hälfte** von `exists_unique_of_bounded` steht:
+   `integral_eq_expJumpApply_of_isMPSolution` und, als Lesart davon,
+   `integral_eq_of_isMPSolution_of_map_eq`. Vierzehn Deklarationen, Abschnitt
+   `Uniqueness`; Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10, vierter
+   Lauf des Tages".
+
+   **Zwischenstand 2026-09-10, fünfter Lauf des Tages.** Der **konstruierte**
+   Prozeß erfüllt jetzt beide Voraussetzungen jenes Satzes, und damit ist die
+   zweite Zusage des Punktes — „die eindimensionalen Verteilungen sind
+   `nu.map (exp (t • A))`" — für einen benannten Prozeß bewiesen:
+   `jumpMeasure_integral_jumpProcess_eq_expJumpApply`. Die dabei verlangte
+   gemeinsame Meßbarkeit ist die für die **volle** σ-Algebra
+   (`measurable_uncurry_comp_jumpProcess`, zwei Zeilen aus
+   `measurable_jumpProcess`) und **nicht** das gefilterte
+   `measurable_uncurry_jumpProcess`, das der Kompensator braucht; der Vorschlag
+   des vierten Laufs, sie als punktweisen Limes über `min u n` zu gewinnen, war
+   ein Umweg um eine Aussage, die schwerer ist als die gebrauchte. Damit fiel
+   auch Punkt 4 ganz.
+
+   ~~**Was offen bleibt, und nur das:** der Schritt von den eindimensionalen zu
+   den **endlichdimensionalen** Verteilungen, den „genau eine Lösung" meint.~~
+   *(erledigt im sechsten Lauf; der dort angesagte Weg über Mengen der
+   Vergangenheit trug nicht, siehe den ersten Befund oben.)*
+4. ~~**Erst danach das Akzeptanzbeispiel**, und dann wirklich als Beweis: `E = ℕ`,
    `lam ≡ 1`, `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x` — der
    Poissonprozeß, mit den eindimensionalen Verteilungen gegen
-   `ProbabilityTheory.poissonMeasure` geprüft. Es instanziiert jede Einzelheit
-   des Meilensteins auf einmal; steht es nur als Prosa da, prüft es nichts (die
-   Lehre des 2026-09-08). Bricht es, so ist der Befund wertvoller als der Satz
-   darüber, und er gehört in den Bericht statt in eine Abschwächung.
+   `ProbabilityTheory.poissonMeasure` geprüft.~~ *(erledigt 2026-09-10, fünfter
+   Lauf des Tages)*
+
+   **Ergebnis.** `jumpMeasure_map_jumpProcess_poisson`:
+   `(jumpMeasure poissonKernel (dirac 0)).map (jumpProcess poissonRate t)`
+   `= poissonMeasure t`, mit `poissonMeasure` aus Mathlib. **Es kommt heraus,
+   wie es soll**, also gibt es keinen Befund gegen `jumpTime`, `stepIndex` oder
+   `waitingMeasure` — und das ist die einzige Stelle, an der sich einer gezeigt
+   hätte. Acht Deklarationen, alle mit `#print axioms` auf `propext`,
+   `Classical.choice`, `Quot.sound` geprüft, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-10, fünfter Lauf des Tages".
+
+   **Der Weg ist der angesagte billigere, die Eindeutigkeit**, und der
+   Negativbefund zur Erlangverteilung unten bleibt stehen — er ist nicht
+   ausgeräumt, sondern umgangen. Was ihn umgeht, ist ein Fund: der Erzeuger
+   dieser Daten **ist** Mathlibs `fwdDiff 1`
+   (`Mathlib/Algebra/Group/ForwardDiff.lean`), also greift dort
+   `shift_eq_sum_fwdDiff_iter`, die Gregory--Newton-Formel; ein einziges
+   Cauchyprodukt mit `exp t = ∑ t^m/m!`
+   (`tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm`) macht daraus die
+   Poissonsumme (`tsum_fwdDiff_iter_eq`, für **jedes** reelle `t` und jedes
+   beschränkte `f`). Der Vergleich der Maße selbst ist dann
+   `Measure.ext_of_singleton` auf `ℕ` gegen `poissonMeasure_real_singleton`.
+
+   **Und das zweite Akzeptanzbeispiel gleich mit** (derselbe Lauf, zweiter
+   Teil): die **Zweizustandskette** `E = Bool`, `lam ≡ 1`, `mu x = dirac (!x)`,
+   sieben Deklarationen in `section TwoStateExample`. Sie prüft, was der
+   Poissonprozeß nicht prüfen kann — dort ist der Erzeuger eine Verschiebung,
+   also liefe ein Vorzeichenfehler unbemerkt in eine Poissonverteilung anderen
+   Mittelwerts; hier zyklen die Iterierten mit dem Faktor `-2`
+   (`iterate_jumpApply_flip`), und das Gesetz ist eine Zahl,
+   `(1 - e^{-2t})/2`, die bei `t = 0` gleich `0` sein muß und gegen `1/2` gehen
+   muß und nicht gegen `1`.
+
+   *Der ursprüngliche Wortlaut, und der Zwischenstand des dritten Laufs:* Es
+   instanziiert jede Einzelheit des Meilensteins auf einmal; steht es nur als
+   Prosa da, prüft es nichts (die Lehre des 2026-09-08). Bricht es, so ist der
+   Befund wertvoller als der Satz darüber, und er gehört in den Bericht statt in
+   eine Abschwächung.
+
+   **Zwischenstand 2026-09-10, dritter Lauf des Tages.** Vorgezogen, weil es die
+   einzige Probe darauf ist, daß die sechs Voraussetzungen von
+   `jumpProcess_isMPSolution` gemeinsam erfüllbar sind — die Leerheitsprobe, die
+   das Inventar seit dem 2026-09-07 verlangt, und sie gehört an den Satz, den
+   derselbe Lauf bewiesen hat. Sieben Deklarationen in `section PoissonExample`
+   von `TauCeti/MartingaleProblems/Suggested.lean`, ohne einen Fehler beim
+   ersten Durchlauf, die vier tragenden mit `#print axioms` geprüft. **Der
+   Erzeuger kommt heraus, wie er soll** (`jumpApply_poisson`), also gibt es
+   keinen Befund gegen die Form von `set:jumpdata`;
+   `poissonProcess_isMPSolution` löst jede Voraussetzung auf Daten ein, und
+   `martingale_compensated_poisson` ist ein wirkliches
+   `MeasureTheory.Martingale` und kein Prädikat. Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-10, dritter Lauf des Tages", zweiter
+   Teil.
+
+   ~~**Was fehlt, und es ist die eigentliche Kontrolle:** die
+   **eindimensionalen Verteilungen** gegen `ProbabilityTheory.poissonMeasure`
+   (`Probability/Distributions/Poisson/Basic.lean:41`), also
+   `(jumpMeasure poissonKernel (dirac 0)).map (jumpProcess poissonRate t)`
+   `= poissonMeasure (Real.toNNReal t)`.~~ *(erledigt im fünften Lauf; der
+   Zeitindex ist `ℝ≥0`, also steht dort `poissonMeasure t` ohne
+   `Real.toNNReal`.)* Das ist ein eigener Beweis und kein Einsetzen von Daten,
+   und es ist die einzige Stelle, an der sich ein Fehler in `jumpTime`,
+   `stepIndex` oder `waitingMeasure` überhaupt zeigen würde.
+
+   **Der Negativbefund zur klassischen Route bleibt gültig.** Der klassische
+   Weg ginge über die Erlangverteilung von `T n`; **Mathlib trägt ihn nicht**:
+   `gammaMeasure` (`Distributions/Gamma.lean:128`) und `expMeasure` stehen als
+   Dichten da, aber weder v4.33.1 noch `upstream/master` hat ihre **Faltung** —
+   in beiden Dateien kommt `conv`, `HasLaw`, `IndepFun` überhaupt nicht vor
+   (anders als auf der Poissonseite, die `poissonMeasure_conv_poissonMeasure`
+   und `IndepFun.hasLaw_add_poissonMeasure` hat). Es bleiben zwei Wege, beide
+   eigene Arbeit: die **Erneuerungsinduktion** über das schon bewiesene
+   `jumpMeasure_integral_eq_renewal` (`p 0 t = e^{-t}`,
+   `p n t = ∫_0^t e^{-s} p (n-1) (t-s) ds`), oder die **Eindeutigkeit**, unter
+   der es ein Korollar von Punkt 3 ist — so führt es Meilenstein 4 selbst.
+   Punkt 3 zuerst ist darum der billigere Weg.
 5. Der lokale Fall und die pfadabhängige Variante zuletzt; sie liefern die
-   Beispiele für die Meilensteine 7 und 9.
+   Beispiele für die Meilensteine 7 und 9. **Die Punkte 0 bis 4 sind durch, also
+   ist dies der laufende Auftrag** (seit dem sechsten Lauf des 2026-09-10).
+   ~~Der Befund des siebzehnten Laufs des 2026-09-09 gilt weiter und ist die
+   erste Hürde: `x / 0 = 0` in Lean, also verläßt der Pfad einen Zustand mit
+   `lam x = 0` sofort; der absorbierende Fall verlangt Sprungzeiten in
+   `ℝ≥0∞`.~~ *(die Hürde ist genommen, 2026-09-10, siebter Lauf des Tages.)*
+   Die drei Akzeptanzbeispiele darunter — M/M/1, linearer Geburt-Tod, Hawkes —
+   gehören zu diesem Punkt, und der lineare Geburt-Tod ist das einzige, das den
+   lokalen Zweig prüft.
+
+   **Zwischenstand 2026-09-10, siebter Lauf des Tages.** Die Sprungzeiten in
+   `ℝ≥0∞` stehen, samt Pfaden und Akzeptanzbeispiel: `jumpTimeE`,
+   `jumpProcessE`, `jumpProcessE_of_absorbing` (der Pfad bleibt für alle Zeiten
+   im absorbierenden Zustand), `isStepPath_jumpProcessE`,
+   `isCadlagPath_jumpProcessE` und `jumpProcessE_eq_jumpProcess` (bei positiver
+   Rate stimmen alte und neue Konstruktion überein — es ist eine Fortsetzung und
+   kein Konkurrent). Zweiundvierzig Deklarationen, die ganze Datei ohne einen
+   Fehler durch `lake env lean` gegen v4.33.1, alle mit `#print axioms` geprüft,
+   die Zahl der `sorry` bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-10, siebter Lauf des Tages".
+
+   **Der Zeuge stand vor dem Satz, wie verlangt, und er ist schärfer als
+   angesagt.** `jumpProcess_absorbing_const`: auf den Daten `E = Bool`,
+   `lam false = 0`, `lam true = 1` ist der Pfad der alten Konstruktion
+   **konstant `true`** — er nimmt den absorbierenden Wert nicht zu spät an,
+   sondern nie. Der Grund ist, daß `T n = 1` für alle `n ≥ 1` und danach
+   `{n | t < T (n+1)}` leer ist: **der absorbierende Zustand und die Explosion
+   sind für die alte `stepIndex` dasselbe Ereignis**, und der Müllwert `sInf ∅ =
+   0`, der auf der Explosionsmenge harmlos ist, ist hier die Antwort auf jede
+   Frage.
+
+   **Drei Befunde für den nächsten Lauf.** (a) Die Positivität der Haltezeit ist
+   im erweiterten Modell **voraussetzungsfrei** (`jumpTimeE_increment_pos`), also
+   ist `∀ x, 0 < lam x` nicht abgeschwächt, sondern überflüssig geworden.
+   (b) `StrictMono` ist im lokalen Fall nicht bloß unbewiesen, sondern **falsch**;
+   was der Pfadbeweis wirklich benutzt, ist die Fortpflanzung der Strengheit
+   **nach unten**, und die ist in `ℝ≥0∞` geschenkt. (c) Deshalb stehen
+   `stepIndex` und `stepPath` jetzt über einer beliebigen
+   `ConditionallyCompleteLinearOrder`, und `exists_stepIndex_window` fragt nach
+   Nichtexplosion **an dem einen Punkt** — an `⊤` ist sie falsch, sobald
+   absorbiert wird.
+
+   **Was fehlt, in zwei Schritten** (ausgeschrieben im Laufbericht): erstens die
+   gemeinsame Meßbarkeit von `jumpProcessE` in `(t, ω)`, die billig ist, weil
+   `stepIndex_eq_iff` im Zuge der Verallgemeinerung schon allgemein bewiesen
+   wurde, und ohne die keine maßtheoretische Aussage über den lokalen Prozeß
+   formulierbar ist; zweitens das **Nichtexplosionskriterium** des lokalen Falls,
+   das die eigentliche Arbeit ist — `tendsto_jumpTime_atTop` benutzt eine
+   *gleichmäßige* Schranke `L` und ist für eine bloß lokal beschränkte Rate nicht
+   zu retten. Erst danach die Beispiele.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:

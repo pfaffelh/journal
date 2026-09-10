@@ -19,6 +19,11 @@ import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.MeasureTheory.Function.Floor
 import Mathlib.Analysis.Calculus.Deriv.Slope
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
+import Mathlib.Analysis.SpecialFunctions.Exponential
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
+import Mathlib.Algebra.Group.ForwardDiff
+import Mathlib.Analysis.Normed.Ring.InfiniteSum
+import Mathlib.Probability.Distributions.Poisson.Basic
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -27,10 +32,69 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-09.  Every declaration elaborates; 10 declarations carry `sorry`, and
+2026-09-10.  Every declaration elaborates; 9 declarations carry `sorry`, and
+Five more the same day, in `section JumpFiltration`, are the four bookkeeping
+facts about `lebesgueClock` that the conditional expectation of
+`jumpProcess_isMPSolution` still needed, plus their assembly:
+`lebesgueClock_interval_optional_eq` identifies the compensating window with
+`Set.Ioc`, `lebesgueClock_apply_Ioc` gives its exact mass (via
+`lebesgueClock_preimage_Ioc`), `integral_lebesgueClock_Ioc` reindexes a
+compensating integral as a genuine `ℝ`-interval integral starting at `0`, and
+`setIntegral_compensator_sub_eq_intervalIntegral` assembles all of it with
+`Clock.interval_union` and `intervalIntegral_integral_swap` into: the
+difference of two nested compensating windows, integrated over a set of paths,
+equals the interval integral of the set integral of the shifted process. That
+is steps two through four of the four steps `jumpProcess_isMPSolution` names at
+the end of its docstring.  Three more the same day close it: the bound
+`abs_setIntegral_compensator_le` on a compensating window, the integrability
+`integrable_mpFamily_jumpProcess` of a test process, and
+`jumpProcess_isMPSolution` itself -- **`thm:jumpMP`, the first solution of a
+martingale problem in this file that is a solution and not a counterexample**.
+Seven more the same day are the acceptance example of Milestone 4, the Poisson
+process (`section PoissonExample`): `jumpApply_poisson` is the computation that
+the generator of this data is the forward difference `f (x + 1) - f x`, and
+`poissonProcess_isMPSolution` discharges every hypothesis of `thm:jumpMP` on
+data, so that the theorem is shown to have an instance.
+`martingale_compensated_poisson` is a concrete martingale and not a solution
+predicate.  Fourteen more the same day are `section Uniqueness`, the Picard
+iteration: `expJumpApply` is the exponential series of the bounded generator,
+and `integral_eq_expJumpApply_of_isMPSolution` shows that **every** solution of
+the martingale problem has that series for its one dimensional distributions,
+`integral_eq_of_isMPSolution_of_map_eq` reading it as uniqueness across two
+different spaces.  Nothing in that section mentions `jumpProcess`.
+Eight more the same day join the two halves and check them against Mathlib:
+`jumpMeasure_integral_jumpProcess_eq_expJumpApply` computes the one dimensional
+distributions of the *constructed* process from `nu` alone (its second
+hypothesis is `measurable_uncurry_comp_jumpProcess`, joint measurability for the
+full σ-algebra, which is not the filtered `measurable_uncurry_jumpProcess`), and
+`jumpMeasure_map_jumpProcess_poisson` identifies them, on the Poisson data, with
+`ProbabilityTheory.poissonMeasure`.  That identification rests on
+`tsum_fwdDiff_iter_eq`, the Gregory--Newton summation of the exponential series
+of Mathlib's forward difference operator, which is a statement about `ℝ` alone.
+Seven more the same day are the **second** acceptance example of Milestone 4,
+the two state chain on `Bool` (`section TwoStateExample`): the iterates of its
+generator cycle with the factor `-2` (`iterate_jumpApply_flip`), so the series
+has a closed form (`expJumpApply_flip`) and the law is a number,
+`jumpMeasure_map_jumpProcess_flip : … .real {true} = (1 - exp (-2t))/2`.  The
+two examples check different things: the Poisson one against Mathlib, the two
+state one against a value a reader can compute, and a sign error in `jumpApply`
+survives neither.
+Sixteen more the same day carry the uniqueness from one coordinate to finitely
+many, which is what "exactly one solution" says.
+`integral_mul_sub_eq_intervalIntegral_of_isMPSolution` is the martingale
+identity tested against a bounded `𝓕 s`-measurable factor and read from an
+arbitrary starting time; `abs_sub_sum_le_of_recursion` is the Picard iteration
+written once, over an abstract functional, with the unconditional and the
+conditional forms as corollaries; and `integral_mul_fddProd_eq_of_isMPSolution`
+inducts over a finite dimensional test variable recorded as a **list of
+increments** (`fddProd`, `fddExp`), peeling the first factor into the past
+factor.  `integral_fddProd_eq_of_isMPSolution_of_map_eq` is the uniqueness, and
+`jumpMeasure_integral_fddProd_eq_fddExp` the same statement for the constructed
+process.  That induction is the one place that needs `X` itself to be adapted --
+the `StronglyAdapted` of `Martingale` is about the *compensated* processes --
+which for the construction is `stronglyMeasurable_jumpFiltration`.
 every one of those `sorry`s is a **proof**.  The last two blocks of the file are
-Milestone 4; the only `sorry` in them is the conditional expectation of
-`jumpProcess_isMPSolution`, whose adaptedness half is proved.  The first, `IsStepPath`, was added on 2026-09-09:
+Milestone 4, and they carry **no** `sorry`.  The first, `IsStepPath`, was added on 2026-09-09:
 its three declarations are proved, and one of them,
 `exists_finite_setOf_leftLim_ne_not_isCadlagPath`, is the witness that the
 roadmap's first proposal for that predicate -- local finiteness of the jump set
@@ -71,7 +135,25 @@ on the number of jumps in `[0, s]` (`abs_integral_jumpMeasure_add_sub_le`) whose
 the probability of `n` jumps before `s`, sent to zero by `tendsto_measureReal_jumpTime_le`; and
 `jumpMeasure_integral_sub_eq_intervalIntegral` is
 `E[h (X t)] - E[h (X 0)] = ∫_0^t E[A h (X r)] dr`, which the Markov property produces from the
-derivative at `0` by the one sided fundamental theorem of calculus.  The first
+derivative at `0` by the one sided fundamental theorem of calculus.  Twenty five more the same
+day are the **structure of the past**, which is what the conditional expectation of
+`jumpProcess_isMPSolution` needs and what the unconditional Markov property does not have:
+`eq_of_measurable_naturalFiltration` says that a `𝓕 s`-measurable real function does not separate
+two sample points whose paths agree below `s`, `NonExplosive` names the set on which the
+substitutions of the past are valid, `jumpConst` and `jumpPrepend` are those substitutions, and
+`IsPastFunctional` is the property of a functional that survives the restart --
+`IsPastFunctional.comp_jumpPrepend` -- and makes it a function of the initial state before the
+first jump -- `eq_jumpConst_of_isPastFunctional`.  Five more, on 2026-09-10, are the **Markov
+property with a factor from the past**, in `section ConditionalMarkov`:
+`abs_integral_jumpMeasure_add_sub_le_past` is the induction of
+`abs_integral_jumpMeasure_add_sub_le` carrying a bounded functional of the past along, and
+`jumpMeasure_integral_jumpProcess_add_past` is its limit,
+`E[G · h (X (s + t))] = E[G · (P t h) (X s)]` for every `G` with `|G| ≤ 1` that is a functional of
+the past up to `s`.  With them `jumpKernel_map_snd` and `ae_mem_nonExplosive_jumpKernel`, the two
+statements about the kernel that the branch `{s < T 1}` of that induction is run under, and
+`setIntegral_jumpProcess_sub_eq_intervalIntegral`, the expectation identity tested against a set
+of the past -- the shape the conditional expectation of `jumpProcess_isMPSolution` consumes.  The
+first
 proof of the
 file is `IsQuasiLeftContinuous.ae_eq_leftLim`, and it needed the statement
 corrected first: under `¬ IsMin t` alone it is false.  On 2026-09-07 twelve more
@@ -1292,14 +1374,25 @@ variable {E : Type*}
 
 /-! ### The step index -/
 
+/-! The jump times are read in an arbitrary linearly ordered time axis and not in `ℝ`.
+
+Nothing in this block uses more than the order, and the generality is paid for at once by the
+**local case**: a rate with a zero has an infinite holding time, so its jump times live in
+`ℝ≥0∞` and not in `ℝ` (`jumpTimeE` below, and `jumpProcess_absorbing_const` for what goes wrong
+without it).  Both instantiations are used. -/
+
+section OrderedTimes
+
+variable {α : Type*} [ConditionallyCompleteLinearOrder α]
+
 /-- The index of the window a time belongs to: the least `n` with `t < T (n + 1)`.
 
 `Nat.find` would need a proof of existence at every call.  `sInf` on `ℕ` is the same function
 made total by `sInf ∅ = 0`, and the junk value is harmless: it is returned exactly on the
 explosion set, where no window contains `t`. -/
-noncomputable def stepIndex (T : ℕ → ℝ) (t : ℝ) : ℕ := sInf {n | t < T (n + 1)}
+noncomputable def stepIndex (T : ℕ → α) (t : α) : ℕ := sInf {n | t < T (n + 1)}
 
-variable {T : ℕ → ℝ} {t : ℝ} {n : ℕ}
+variable {T : ℕ → α} {t : α} {n : ℕ}
 
 theorem lt_stepIndex_succ (hex : ∃ n, t < T (n + 1)) : t < T (stepIndex T t + 1) :=
   Nat.sInf_mem hex
@@ -1329,13 +1422,18 @@ theorem T_stepIndex_le (h : stepIndex T t ≠ 0) : T (stepIndex T t) ≤ t := by
 /-! ### The step path -/
 
 /-- The path that takes the value `y n` on `[T n, T (n + 1))`. -/
-noncomputable def stepPath (T : ℕ → ℝ) (y : ℕ → E) (t : ℝ) : E := y (stepIndex T t)
+noncomputable def stepPath (T : ℕ → α) (y : ℕ → E) (t : α) : E := y (stepIndex T t)
 
 /-- Every time lies in a window: the index it receives has its left endpoint below it (or is
-`0`) and its right endpoint above it. -/
-theorem exists_stepIndex_window (hex : ∀ s : ℝ, ∃ n, s < T (n + 1)) (x : ℝ) :
+`0`) and its right endpoint above it.
+
+The hypothesis is non explosion **at the single point `x`** and not everywhere.  The
+distinction is not pedantry: the local construction has jump times in `ℝ≥0∞`, where non
+explosion at `⊤` is false whenever the path is absorbed, and only the real times are ever
+looked at (`isStepPath_stepPath_ofReal`). -/
+theorem exists_stepIndex_window {x : α} (hex : ∃ n, x < T (n + 1)) :
     ∃ n, (n = 0 ∨ T n ≤ x) ∧ x < T (n + 1) := by
-  refine ⟨stepIndex T x, ?_, lt_stepIndex_succ (hex x)⟩
+  refine ⟨stepIndex T x, ?_, lt_stepIndex_succ hex⟩
   by_cases h : stepIndex T x = 0
   · exact Or.inl h
   · exact Or.inr (T_stepIndex_le h)
@@ -1350,15 +1448,16 @@ uses `StrictMono` rather than `Monotone`: when `x = T (m + 1)` is itself a jump 
 constant is `y m` and the neighbourhood is `Set.Ioo (T m) x`, which is a neighbourhood only
 because `T m < T (m + 1)`.  The other two are `T n < x`, where the same window serves, and
 `x ≤ T 0`, where the path is constant `y 0` on all of `Set.Iio x`. -/
-theorem isStepPath_stepPath [TopologicalSpace E] (hT : StrictMono T)
-    (hex : ∀ s : ℝ, ∃ n, s < T (n + 1)) (y : ℕ → E) : IsStepPath (stepPath T y) := by
+theorem isStepPath_stepPath [TopologicalSpace α] [OrderTopology α] [TopologicalSpace E]
+    (hT : StrictMono T)
+    (hex : ∀ s : α, ∃ n, s < T (n + 1)) (y : ℕ → E) : IsStepPath (stepPath T y) := by
   have hmono : Monotone T := hT.monotone
-  have key : ∀ (s : ℝ) (m : ℕ), (m = 0 ∨ T m ≤ s) → s < T (m + 1) → stepPath T y s = y m := by
+  have key : ∀ (s : α) (m : ℕ), (m = 0 ∨ T m ≤ s) → s < T (m + 1) → stepPath T y s = y m := by
     intro s m h1 h2
     simp only [stepPath, stepIndex_eq_of h1 h2 hmono]
   constructor
   · intro x
-    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window hex x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
     have hmem : Set.Ico x (T (n + 1)) ∈ 𝓝[≥] x := by
       refine mem_nhdsWithin.2 ⟨Set.Iio (T (n + 1)), isOpen_Iio, hx2, ?_⟩
       rintro z ⟨hz1, hz2⟩
@@ -1366,7 +1465,7 @@ theorem isStepPath_stepPath [TopologicalSpace E] (hT : StrictMono T)
     filter_upwards [hmem] with z hz
     rw [key z n (hx1.imp id (fun h => h.trans hz.1)) hz.2, key x n hx1 hx2]
   · intro x
-    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window hex x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
     by_cases hlt : T n < x
     · refine ⟨y n, ?_⟩
       have hmem : Set.Ioo (T n) x ∈ 𝓝[<] x :=
@@ -1408,6 +1507,10 @@ theorem stepIndex_eq_iff : stepIndex T t = n ↔
       exact absurd (lt_stepIndex_succ ⟨n, h1⟩) (not_lt.2 (h2 _ hc))
     · exact Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2
         fun k hk => absurd hk (not_lt.2 (h k))))
+
+end OrderedTimes
+
+variable {T : ℕ → ℝ} {t : ℝ} {n : ℕ}
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
@@ -3461,6 +3564,74 @@ noncomputable def lebesgueClock : Clock ℝ≥0 where
     · rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
     · rintro x ⟨hx1, hx2⟩; exact ⟨hx2, hx1⟩
 
+/-- **The compensating interval of `lebesgueClock` under the optional convention is an honest
+half open interval of `ℝ≥0`.** This is what lets the four bookkeeping facts below speak of
+`Set.Ioc` instead of unfolding `Clock.interval` at every step. -/
+theorem lebesgueClock_interval_optional_eq (a b : ℝ≥0) :
+    lebesgueClock.interval Clock.Conv.optional a b = Set.Ioc a b := by
+  ext x
+  simp [Clock.interval, Set.mem_diff, Set.mem_Iic, Set.mem_Ioc, not_le]
+
+/-- The preimage of an `ℝ≥0` window under `Real.toNNReal`, intersected with the nonnegative reals
+that `lebesgueClock.q` restricts to, is the corresponding real window: the fact that makes the
+pushforward defining `lebesgueClock.q` computable on `Set.Ioc`. -/
+theorem lebesgueClock_preimage_Ioc (a b : ℝ≥0) :
+    (Real.toNNReal ⁻¹' Set.Ioc a b) ∩ Set.Ici (0 : ℝ) = Set.Ioc (a : ℝ) (b : ℝ) := by
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_Ici, Set.mem_preimage, Set.mem_Ioc,
+    Real.lt_toNNReal_iff_coe_lt, Real.toNNReal_le_iff_le_coe]
+  constructor
+  · rintro ⟨⟨h1, h2⟩, -⟩; exact ⟨h1, h2⟩
+  · rintro ⟨h1, h2⟩; exact ⟨⟨h1, h2⟩, a.coe_nonneg.trans h1.le⟩
+
+/-- **The exact mass of a window under `lebesgueClock`.**  Unlike `measure_Iic_ne_top`, which only
+bounds it, the compensator's difference over two nested windows needs the precise value. -/
+theorem lebesgueClock_apply_Ioc (a b : ℝ≥0) :
+    lebesgueClock.q (Set.Ioc a b) = ENNReal.ofReal ((b : ℝ) - (a : ℝ)) := by
+  show ((volume : Measure ℝ).restrict (Set.Ici (0 : ℝ))).map Real.toNNReal (Set.Ioc a b)
+      = ENNReal.ofReal ((b : ℝ) - (a : ℝ))
+  rw [Measure.map_apply measurable_real_toNNReal measurableSet_Ioc,
+    Measure.restrict_apply (measurable_real_toNNReal measurableSet_Ioc),
+    lebesgueClock_preimage_Ioc, Real.volume_Ioc]
+
+/-- **A compensating integral over `lebesgueClock` is a genuine interval integral of `ℝ`, shifted
+to start at `0`.**  This is the fourth of the four bookkeeping steps `jumpProcess_isMPSolution`
+needs: it turns the outer integral of the martingale identity, which lives on `ℝ≥0` because
+`mpFamily` needs `[OrderBot ι]`, into something `intervalIntegral_integral_swap` and the
+fundamental theorem of calculus can consume. -/
+theorem integral_lebesgueClock_Ioc {a b : ℝ≥0} (hab : a ≤ b) {F : ℝ≥0 → ℝ} (hF : Measurable F) :
+    ∫ u in Set.Ioc a b, F u ∂lebesgueClock.q
+      = ∫ r in (0 : ℝ)..((b : ℝ) - (a : ℝ)), F (Real.toNNReal ((a : ℝ) + r)) := by
+  have hset : Set.Ici (0 : ℝ) ∩ (Real.toNNReal ⁻¹' Set.Ioc a b) = Set.Ioc (a : ℝ) (b : ℝ) := by
+    rw [Set.inter_comm]; exact lebesgueClock_preimage_Ioc a b
+  have h1 : ∫ u in Set.Ioc a b, F u ∂lebesgueClock.q
+      = ∫ x in Set.Ici (0 : ℝ), (Set.Ioc a b).indicator F (Real.toNNReal x) ∂volume := by
+    show ∫ u in Set.Ioc a b, F u
+        ∂(((volume : Measure ℝ).restrict (Set.Ici (0 : ℝ))).map Real.toNNReal)
+      = ∫ x in Set.Ici (0 : ℝ), (Set.Ioc a b).indicator F (Real.toNNReal x) ∂volume
+    rw [← integral_indicator measurableSet_Ioc,
+      integral_map measurable_real_toNNReal.aemeasurable
+        (hF.indicator measurableSet_Ioc).aestronglyMeasurable]
+  have h2 : (Set.Ici (0 : ℝ)).indicator (fun x => (Set.Ioc a b).indicator F (Real.toNNReal x))
+      = Set.indicator (Set.Ioc (a : ℝ) (b : ℝ)) (fun x => F (Real.toNNReal x)) := by
+    funext x
+    by_cases hmem : x ∈ Set.Ioc (a : ℝ) (b : ℝ)
+    · have hx0 : x ∈ Set.Ici (0 : ℝ) := a.coe_nonneg.trans hmem.1.le
+      have hxIoc : Real.toNNReal x ∈ Set.Ioc a b := by rw [← hset] at hmem; exact hmem.2
+      rw [Set.indicator_of_mem hx0, Set.indicator_of_mem hxIoc, Set.indicator_of_mem hmem]
+    · rw [Set.indicator_of_notMem hmem]
+      by_cases hx0 : x ∈ Set.Ici (0 : ℝ)
+      · have hxIoc : Real.toNNReal x ∉ Set.Ioc a b := by
+          intro hc; exact hmem (by rw [← hset]; exact ⟨hx0, hc⟩)
+        rw [Set.indicator_of_mem hx0, Set.indicator_of_notMem hxIoc]
+      · rw [Set.indicator_of_notMem hx0]
+  rw [h1, ← integral_indicator measurableSet_Ici, h2, integral_indicator measurableSet_Ioc,
+    ← intervalIntegral.integral_of_le (by exact_mod_cast hab : (a : ℝ) ≤ (b : ℝ))]
+  have hcomp := intervalIntegral.integral_comp_add_left (a := (0 : ℝ)) (b := (b : ℝ) - (a : ℝ))
+    (fun x => F (Real.toNNReal x)) (a : ℝ)
+  simp only [add_zero, add_sub_cancel] at hcomp
+  rw [← hcomp]
+
 /-! ### The generator -/
 
 /-- **The generator of the jump process**, `A f x = lam x * ∫ y, (f y - f x) ∂(mu x)`.  It is
@@ -4127,6 +4298,749 @@ theorem jumpMeasure_integral_sub_eq_intervalIntegral {lam : E → ℝ} (hlam : M
   exact (intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le ht hcont
     (fun x hx ↦ (hderiv x (le_of_lt hx.1)).mono Set.Ioi_subset_Ici_self) hGint).symm
 
+/-! ## Non explosion as a set -/
+
+/-- **The non explosive sample points**, as a set rather than as an almost sure statement.  It is
+needed as a set because the identities that carry the past through the restart are *false* on the
+explosion set: there `stepIndex` is the junk value `0` and the path sits at the initial state of
+whatever data it is read from. -/
+def NonExplosive (lam : E → ℝ) : Set ((ℕ → E) × (ℕ → ℝ)) :=
+  {ω | ∀ t : ℝ, ∃ n, t < jumpTime lam ω.1 ω.2 (n + 1)}
+
+theorem measurableSet_nonExplosive {lam : E → ℝ} (hlam : Measurable lam) :
+    MeasurableSet (NonExplosive lam) := by
+  have hEq : NonExplosive lam
+      = ⋂ m : ℕ, ⋃ n : ℕ, {ω : (ℕ → E) × (ℕ → ℝ) | (m : ℝ) < jumpTime lam ω.1 ω.2 (n + 1)} := by
+    ext ω
+    simp only [NonExplosive, Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion]
+    refine ⟨fun h m ↦ h m, fun h t ↦ ?_⟩
+    obtain ⟨m, hm⟩ := exists_nat_gt t
+    obtain ⟨n, hn⟩ := h m
+    exact ⟨n, hm.trans hn⟩
+  rw [hEq]
+  exact MeasurableSet.iInter fun m ↦ MeasurableSet.iUnion fun n ↦
+    measurableSet_lt measurable_const (measurable_jumpTime hlam (n + 1))
+
+/-- **Almost every sample point is non explosive**, which is `ae_exists_lt_jumpTime` read as a
+statement about the set.  The set and the almost sure statement are both needed and they are not
+interchangeable: the identities of the past hold *pointwise* on the set, and it is the set that
+survives the restart. -/
+theorem ae_mem_nonExplosive {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L) (hlam0 : ∀ x, 0 < lam x)
+    (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosive lam :=
+  ae_exists_lt_jumpTime hL0 hlam0 hL mu nu
+
+/-- **Cutting a functional down to the non explosive sample points changes no integral.**  This is
+the price of `IsPastFunctional`, and it is nil. -/
+theorem indicator_nonExplosive_ae_eq {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L) (hlam0 : ∀ x, 0 < lam x)
+    (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (G : (ℕ → E) × (ℕ → ℝ) → ℝ) :
+    (NonExplosive lam).indicator G =ᵐ[jumpMeasure mu nu] G := by
+  filter_upwards [ae_mem_nonExplosive hL0 hlam0 hL mu nu] with ω hω
+  exact Set.indicator_of_mem hω G
+
+/-! ## The two canonical substitutions -/
+
+/-- **The datum that sits at `x` and does not jump before `s`.**  It is the canonical
+representative of the past on the event `{s < T 1}`, and it is what makes a functional of the past
+a function of the initial state there. -/
+def jumpConst (lam : E → ℝ) (s : ℝ) (x : E) : (ℕ → E) × (ℕ → ℝ) :=
+  (fun _ ↦ x, fun _ ↦ lam x * s + 1)
+
+theorem measurable_jumpConst {lam : E → ℝ} (hlam : Measurable lam) (s : ℝ) :
+    Measurable (jumpConst lam s : E → (ℕ → E) × (ℕ → ℝ)) :=
+  (measurable_pi_lambda _ fun _ ↦ measurable_id).prodMk
+    (measurable_pi_lambda _ fun _ ↦ (hlam.mul measurable_const).add measurable_const)
+
+omit [MeasurableSpace E] in
+theorem jumpTime_jumpConst (lam : E → ℝ) (s : ℝ) (x : E) (n : ℕ) :
+    jumpTime lam (jumpConst lam s x).1 (jumpConst lam s x).2 n
+      = n * ((lam x * s + 1) / lam x) := by
+  induction n with
+  | zero => simp [jumpTime_zero]
+  | succ n ih =>
+      rw [jumpTime_succ, ih]
+      show (n : ℝ) * ((lam x * s + 1) / lam x) + (lam x * s + 1) / lam x = _
+      push_cast
+      ring
+
+omit [MeasurableSpace E] in
+theorem lt_jumpTime_one_jumpConst {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) (s : ℝ)
+    (x : E) : s < jumpTime lam (jumpConst lam s x).1 (jumpConst lam s x).2 1 := by
+  rw [jumpTime_jumpConst lam s x 1, Nat.cast_one, one_mul, lt_div_iff₀ (hlam0 x)]
+  nlinarith [hlam0 x]
+
+omit [MeasurableSpace E] in
+theorem jumpConst_mem_nonExplosive {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) {s : ℝ} (hs : 0 ≤ s)
+    (x : E) : jumpConst lam s x ∈ NonExplosive lam := by
+  intro t
+  have hd : 0 < (lam x * s + 1) / lam x := div_pos (by nlinarith [hlam0 x]) (hlam0 x)
+  obtain ⟨n, hn⟩ := exists_nat_gt (t / ((lam x * s + 1) / lam x))
+  refine ⟨n, ?_⟩
+  rw [jumpTime_jumpConst lam s x (n + 1)]
+  have h1 : t < (n : ℝ) * ((lam x * s + 1) / lam x) := (div_lt_iff₀ hd).1 hn
+  push_cast
+  nlinarith
+
+theorem jumpProcess_jumpConst {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) {s r : ℝ}
+    (hr : r ≤ s) (x : E) : jumpProcess lam r (jumpConst lam s x) = x :=
+  jumpProcess_of_lt_jumpTime_one (lt_of_le_of_lt hr (lt_jumpTime_one_jumpConst hlam0 s x))
+
+/-- **Prepending a state and a waiting time to the driving data.**  It is the inverse of
+`jumpShift`, and it is the change of variables in which the splitting of `jumpMeasure` at the
+first jump reads the functionals of the past. -/
+def jumpPrepend (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : (ℕ → E) × (ℕ → ℝ) :=
+  (natCons (x, ω.1), natCons (a, ω.2))
+
+theorem measurable_jumpPrepend :
+    Measurable fun p : (E × ℝ) × ((ℕ → E) × (ℕ → ℝ)) ↦ jumpPrepend p.1.1 p.1.2 p.2 :=
+  (measurable_natCons.comp ((measurable_fst.comp measurable_fst).prodMk
+      (measurable_fst.comp measurable_snd))).prodMk
+    (measurable_natCons.comp ((measurable_snd.comp measurable_fst).prodMk
+      (measurable_snd.comp measurable_snd)))
+
+omit [MeasurableSpace E] in
+theorem jumpShift_jumpPrepend (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpShift (jumpPrepend x a ω) = ω := by
+  refine Prod.ext ?_ ?_ <;> funext n <;> simp [jumpShift, jumpPrepend, natCons]
+
+omit [MeasurableSpace E] in
+theorem jumpPrepend_self (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpPrepend (ω.1 0) (ω.2 0) (jumpShift ω) = ω := by
+  refine Prod.ext ?_ ?_ <;> funext n <;> rcases n with _ | n <;>
+    simp [jumpShift, jumpPrepend, natCons]
+
+omit [MeasurableSpace E] in
+theorem jumpTime_jumpPrepend (lam : E → ℝ) (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) (n : ℕ) :
+    jumpTime lam (jumpPrepend x a ω).1 (jumpPrepend x a ω).2 (n + 1)
+      = a / lam x + jumpTime lam ω.1 ω.2 n := by
+  induction n with
+  | zero =>
+      rw [jumpTime_succ, jumpTime_zero, jumpTime_zero, zero_add, add_zero]
+      rfl
+  | succ n ih =>
+      rw [jumpTime_succ, ih, jumpTime_succ lam ω.1 ω.2 n]
+      have h1 : (jumpPrepend x a ω).2 (n + 1) = ω.2 n := by simp [jumpPrepend, natCons]
+      have h2 : (jumpPrepend x a ω).1 (n + 1) = ω.1 n := by simp [jumpPrepend, natCons]
+      rw [h1, h2, add_assoc]
+
+omit [MeasurableSpace E] in
+theorem jumpTime_one_jumpPrepend (lam : E → ℝ) (x : E) (a : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpTime lam (jumpPrepend x a ω).1 (jumpPrepend x a ω).2 1 = a / lam x := by
+  rw [show (1 : ℕ) = 0 + 1 from rfl, jumpTime_jumpPrepend, jumpTime_zero, add_zero]
+
+theorem jumpPrepend_mem_nonExplosive_iff {lam : E → ℝ} (x : E) (a : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpPrepend x a ω ∈ NonExplosive lam ↔ ω ∈ NonExplosive lam := by
+  constructor
+  · intro h t
+    obtain ⟨n, hn⟩ := h (a / lam x + max t 0)
+    rcases n with _ | n
+    · rw [jumpTime_one_jumpPrepend] at hn
+      exact absurd (le_max_right t 0) (by linarith)
+    · refine ⟨n, ?_⟩
+      rw [jumpTime_jumpPrepend] at hn
+      exact lt_of_le_of_lt (le_max_left t 0) (by linarith)
+  · intro h t
+    obtain ⟨n, hn⟩ := h (t - a / lam x)
+    refine ⟨n + 1, ?_⟩
+    rw [jumpTime_jumpPrepend]
+    linarith
+
+/-- **The path of the prepended datum**: before `a / lam x` it sits at `x`, and afterwards it is
+the path of `ω` moved forward by `a / lam x`.  Non explosion is not decoration -- past the
+explosion time the left hand side is `x` and the right hand side is `ω.1 0`. -/
+theorem jumpProcess_jumpPrepend {lam : E → ℝ} {x : E} {a : ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+    (hω : ω ∈ NonExplosive lam) (r : ℝ) :
+    jumpProcess lam r (jumpPrepend x a ω)
+      = if r < a / lam x then x else jumpProcess lam (r - a / lam x) ω := by
+  by_cases hr : r < a / lam x
+  · rw [if_pos hr, jumpProcess_of_lt_jumpTime_one (by rwa [jumpTime_one_jumpPrepend])]
+    rfl
+  · rw [if_neg hr]
+    have hex : ∃ n, r < jumpTime lam (jumpPrepend x a ω).1 (jumpPrepend x a ω).2 (n + 1) :=
+      (jumpPrepend_mem_nonExplosive_iff x a ω).2 hω r
+    rw [jumpProcess_jumpShift (by rw [jumpTime_one_jumpPrepend]; exact not_lt.1 hr) hex,
+      jumpTime_one_jumpPrepend, jumpShift_jumpPrepend]
+
+/-! ## Functionals of the past -/
+
+/-- **A functional of the past, in the form the induction of the Markov property preserves.**
+It is the conclusion of `eq_of_measurable_naturalFiltration` taken as a hypothesis, restricted to
+the non explosive sample points and vanishing off them.
+
+The restriction is what makes the notion survive the restart: `jumpProcess_jumpPrepend` -- the
+identity that turns a functional of the past of the prepended datum into one of the past of the
+datum itself -- is false on the explosion set. -/
+def IsPastFunctional (lam : E → ℝ) (s : ℝ) (G : (ℕ → E) × (ℕ → ℝ) → ℝ) : Prop :=
+  (∀ ω ∉ NonExplosive lam, G ω = 0) ∧
+    ∀ ω ∈ NonExplosive lam, ∀ ω' ∈ NonExplosive lam,
+      (∀ r, 0 ≤ r → r ≤ s → jumpProcess lam r ω = jumpProcess lam r ω') → G ω = G ω'
+
+/-- **On the event that the first jump has not happened, a functional of the past is a function of
+the initial state**, namely of its value at the canonical datum `jumpConst`. -/
+theorem eq_jumpConst_of_isPastFunctional {lam : E → ℝ} (hlam0 : ∀ x, 0 < lam x) {s : ℝ}
+    (hs : 0 ≤ s) {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : IsPastFunctional lam s G)
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ NonExplosive lam)
+    (h1 : s < jumpTime lam ω.1 ω.2 1) :
+    G ω = G (jumpConst lam s (ω.1 0)) := by
+  refine hG.2 ω hω _ (jumpConst_mem_nonExplosive hlam0 hs _) fun r hr0 hr ↦ ?_
+  rw [jumpProcess_of_lt_jumpTime_one (lt_of_le_of_lt hr h1),
+    jumpProcess_jumpConst hlam0 hr]
+
+/-- **A functional of the past restarts as a functional of the past.**  The horizon drops by the
+first jump time, and this is the step that lets the induction of the Markov property be applied to
+the shifted data. -/
+theorem IsPastFunctional.comp_jumpPrepend {lam : E → ℝ} {s : ℝ}
+    {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : IsPastFunctional lam s G) (x : E) (a : ℝ) :
+    IsPastFunctional lam (s - a / lam x) fun ω ↦ G (jumpPrepend x a ω) := by
+  refine ⟨fun ω hω ↦ hG.1 _ fun hmem ↦ hω ((jumpPrepend_mem_nonExplosive_iff x a ω).1 hmem),
+    fun ω hω ω' hω' hpath ↦ ?_⟩
+  refine hG.2 _ ((jumpPrepend_mem_nonExplosive_iff x a ω).2 hω)
+    _ ((jumpPrepend_mem_nonExplosive_iff x a ω').2 hω') fun r hr0 hr ↦ ?_
+  rw [jumpProcess_jumpPrepend hω, jumpProcess_jumpPrepend hω']
+  by_cases hlt : r < a / lam x
+  · rw [if_pos hlt, if_pos hlt]
+  · rw [if_neg hlt, if_neg hlt]
+    exact hpath _ (by linarith [not_lt.1 hlt]) (by linarith)
+
+/-- **The canonical representative of the past is measurable in the initial state.** -/
+theorem measurable_comp_jumpConst {lam : E → ℝ} (hlam : Measurable lam) (s : ℝ)
+    {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : Measurable G) :
+    Measurable fun x : E ↦ G (jumpConst lam s x) :=
+  hG.comp (measurable_jumpConst hlam s)
+
+
+/-! ## The Markov property with a factor from the past
+
+The conditional expectation of the jump martingale problem is an identity between integrals
+against the bounded `𝓕 s`-measurable functionals, and the induction that proves it is
+`abs_integral_jumpMeasure_add_sub_le` carrying such a functional along.  Two of its steps are new
+and neither of them is bookkeeping: on `{s < T 1}` the functional is a function of the initial
+state (`eq_jumpConst_of_isPastFunctional`), which is what lets `integral_jumpKernel_zero_eq` pull
+it out of the integral against `jumpKernel mu z`; and on `{T 1 ≤ s}` it restarts as a functional of
+the past of the shifted data (`IsPastFunctional.comp_jumpPrepend`), which is what the induction
+hypothesis is applied to. -/
+
+section ConditionalMarkov
+
+variable (mu : Kernel E E) [IsMarkovKernel mu]
+
+/-- The waiting times of the construction started at a fixed state have the law `waitingMeasure`;
+the kernel counterpart of `jumpMeasure_map_snd`. -/
+theorem jumpKernel_map_snd (z : E) : (jumpKernel mu z).map Prod.snd = waitingMeasure := by
+  rw [jumpKernel_apply mu z, Measure.map_snd_prod, measure_univ, one_smul]
+
+/-- **Almost every sample point of `jumpKernel mu z` is non explosive.**  The kernel counterpart of
+`ae_mem_nonExplosive`, and it is the form the first branch of the induction needs: the
+identification of a functional of the past with a function of the initial state holds only off the
+explosion set, and that branch is run under the kernel and not under a fixed initial law. -/
+theorem ae_mem_nonExplosive_jumpKernel {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L)
+    (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (z : E) :
+    ∀ᵐ ω ∂(jumpKernel mu z), ω ∈ NonExplosive lam := by
+  have h : ∀ᵐ ω ∂(jumpKernel mu z), (∀ n, 0 < ω.2 n) ∧
+      Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop := by
+    refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2)
+      (p := fun xi : ℕ → ℝ ↦ (∀ n, 0 < xi n) ∧
+        Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop)
+      measurable_snd.aemeasurable ?_
+    rw [jumpKernel_map_snd mu z]
+    exact ae_pos_waiting.and tendsto_sum_waiting_atTop
+  filter_upwards [h] with ω hω
+  show ∀ t : ℝ, ∃ n, t < jumpTime lam ω.1 ω.2 (n + 1)
+  exact fun s ↦ exists_lt_succ_of_tendsto_atTop
+    (tendsto_jumpTime_atTop (y := ω.1) (xi := ω.2) hL0 hlam hL (fun n ↦ (hω.1 n).le) hω.2) s
+
+/-- **The Markov property at a fixed time with a factor from the past.** -/
+theorem abs_integral_jumpMeasure_add_sub_le_past {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) {L : ℝ} (hL0 : 0 < L) (hL : ∀ x, lam x ≤ L)
+    {h : E → ℝ} (hh : Measurable h) {C : ℝ} (hC : ∀ x, |h x| ≤ C) {t : ℝ} (ht : 0 ≤ t) (n : ℕ) :
+    ∀ nu : Measure E, IsProbabilityMeasure nu → ∀ s : ℝ, 0 ≤ s →
+      ∀ G : (ℕ → E) × (ℕ → ℝ) → ℝ, Measurable G → (∀ ω, |G ω| ≤ 1) →
+        IsPastFunctional lam s G →
+      |(∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+          - ∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)|
+        ≤ 2 * C * (jumpMeasure mu nu).real {ω | jumpTime lam ω.1 ω.2 n ≤ s} := by
+  classical
+  have hCnonneg : ∀ nu : Measure E, IsProbabilityMeasure nu → 0 ≤ C := by
+    intro nu hnu
+    have := hnu
+    rcases isEmpty_or_nonempty E with hE | hne
+    · exact absurd (measure_univ (μ := nu)) (by simp [Set.univ_eq_empty_iff.2 hE])
+    · exact (abs_nonneg (h (Classical.arbitrary E))).trans (hC _)
+  induction n with
+  | zero =>
+      intro nu hnu s hs G hGm hGb hGp
+      have := hnu
+      have h0C : 0 ≤ C := hCnonneg nu hnu
+      have hset : {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 0 ≤ s} = Set.univ := by
+        ext ω
+        simp [jumpTime_zero, hs]
+      rw [hset, probReal_univ, mul_one]
+      calc |(∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+              - ∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)|
+          ≤ |∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)|
+              + |∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω)
+                  ∂(jumpMeasure mu nu)| := abs_sub _ _
+        _ ≤ C + C := by
+            refine add_le_add (abs_integral_le_of_abs_le fun ω ↦ ?_)
+              (abs_integral_le_of_abs_le fun ω ↦ ?_)
+            · rw [abs_mul]
+              calc |G ω| * |h (jumpProcess lam (s + t) ω)|
+                  ≤ 1 * C := mul_le_mul (hGb ω) (hC _) (abs_nonneg _) zero_le_one
+                _ = C := one_mul C
+            · rw [abs_mul]
+              calc |G ω| * |jumpSemigroup lam mu h t (jumpProcess lam s ω)|
+                  ≤ 1 * C := mul_le_mul (hGb ω) (abs_jumpSemigroup_le mu hC t _)
+                    (abs_nonneg _) zero_le_one
+                _ = C := one_mul C
+        _ = 2 * C := by ring
+  | succ n ih =>
+      intro nu hnu s hs G hGm hGb hGp
+      have := hnu
+      have h0C : 0 ≤ C := hCnonneg nu hnu
+      have hS : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1} :=
+        measurableSet_lt measurable_const (measurable_jumpTime hlam 1)
+      have hAm : ∀ r : ℝ, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ h (jumpProcess lam r ω) :=
+        fun r ↦ hh.comp ((measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+      have hBm : ∀ r : ℝ, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          jumpSemigroup lam mu h t (jumpProcess lam r ω) :=
+        fun r ↦ (measurable_jumpSemigroup mu hlam hh t).comp
+          ((measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+      have hGAm : ∀ r : ℝ, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          G ω * h (jumpProcess lam r ω) := fun r ↦ hGm.mul (hAm r)
+      have hGBm : ∀ r : ℝ, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          G ω * jumpSemigroup lam mu h t (jumpProcess lam r ω) := fun r ↦ hGm.mul (hBm r)
+      -- the two integrands, with the factor from the past
+      have hAb : ∀ (K : (ℕ → E) × (ℕ → ℝ) → ℝ), (∀ ω, |K ω| ≤ 1) → ∀ (f : (ℕ → E) × (ℕ → ℝ) → ℝ),
+          (∀ ω, |f ω| ≤ C) → ∀ ω, |K ω * f ω| ≤ C := by
+        intro K hK f hf ω
+        rw [abs_mul]
+        calc |K ω| * |f ω| ≤ 1 * C := mul_le_mul (hK ω) (hf ω) (abs_nonneg _) zero_le_one
+          _ = C := one_mul C
+      have hAi : ∀ (r : ℝ) (nu' : Measure E) (_ : IsProbabilityMeasure nu')
+          (K : (ℕ → E) × (ℕ → ℝ) → ℝ), Measurable K → (∀ ω, |K ω| ≤ 1) →
+          Integrable (fun ω ↦ K ω * h (jumpProcess lam r ω)) (jumpMeasure mu nu') := by
+        intro r nu' hnu' K hKm hKb
+        have := hnu'
+        exact integrable_of_abs_le (hKm.mul (hAm r)) (hAb K hKb _ (fun ω ↦ hC _))
+      have hBi : ∀ (r : ℝ) (nu' : Measure E) (_ : IsProbabilityMeasure nu')
+          (K : (ℕ → E) × (ℕ → ℝ) → ℝ), Measurable K → (∀ ω, |K ω| ≤ 1) →
+          Integrable (fun ω ↦ K ω * jumpSemigroup lam mu h t (jumpProcess lam r ω))
+            (jumpMeasure mu nu') := by
+        intro r nu' hnu' K hKm hKb
+        have := hnu'
+        exact integrable_of_abs_le (hKm.mul (hBm r))
+          (hAb K hKb _ (fun ω ↦ abs_jumpSemigroup_le mu hC t _))
+      -- On `{s < T 1}` the past functional is a function of the initial state, and the two
+      -- sides of the Markov property agree there.
+      set Ψ : E → ℝ := fun x ↦ G (jumpConst lam s x) with hΨdef
+      have hΨm : Measurable Ψ := hGm.comp (measurable_jumpConst hlam s)
+      have hΨb : ∀ x, |Ψ x| ≤ 1 := fun x ↦ hGb _
+      have hpull : ∀ (z : E) (f : (ℕ → E) × (ℕ → ℝ) → ℝ), Measurable f → (∀ ω, |f ω| ≤ C) →
+          (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}, G ω * f ω
+              ∂(jumpKernel mu z))
+            = Ψ z * ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}, f ω
+                ∂(jumpKernel mu z) := by
+        intro z f hfm hfb
+        have hstep1 : (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}, G ω * f ω
+              ∂(jumpKernel mu z))
+            = ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}, Ψ (ω.1 0) * f ω
+                ∂(jumpKernel mu z) := by
+          refine setIntegral_congr_ae hS ?_
+          filter_upwards [ae_mem_nonExplosive_jumpKernel mu hL0 hlam0 hL z] with ω hω hmem
+          rw [eq_jumpConst_of_isPastFunctional hlam0 hs hGp hω hmem]
+        set F : E × ((ℕ → E) × (ℕ → ℝ)) → ℝ := fun p ↦ Ψ p.1 *
+          ({ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}.indicator f p.2) with hFdef
+        have hFm : Measurable F :=
+          (hΨm.comp measurable_fst).mul ((hfm.indicator hS).comp measurable_snd)
+        have hindb : ∀ ω : (ℕ → E) × (ℕ → ℝ),
+            |{ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}.indicator f ω| ≤ C := by
+          intro ω
+          by_cases hmem : ω ∈ {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}
+          · rw [Set.indicator_of_mem hmem]; exact hfb ω
+          · rw [Set.indicator_of_notMem hmem, abs_zero]; exact h0C
+        have hFb : ∀ p, |F p| ≤ C := by
+          intro p
+          have hFp : F p = Ψ p.1 *
+              {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}.indicator f p.2 := by
+            rw [hFdef]
+          rw [hFp, abs_mul]
+          calc |Ψ p.1| * |{ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}.indicator f p.2|
+              ≤ 1 * C := mul_le_mul (hΨb _) (hindb _) (abs_nonneg _) zero_le_one
+            _ = C := one_mul C
+        have hFapp : ∀ (x : E) (ω : (ℕ → E) × (ℕ → ℝ)), F (x, ω) = Ψ x *
+            {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}.indicator f ω := by
+          intro x ω
+          rw [hFdef]
+        have hind : ∀ (x : E) (ω : (ℕ → E) × (ℕ → ℝ)),
+            {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}.indicator
+              (fun ω ↦ Ψ x * f ω) ω = F (x, ω) := by
+          intro x ω
+          rw [hFapp]
+          by_cases hmem : ω ∈ {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}
+          · rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmem]
+          · rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmem, mul_zero]
+        have hstep2 : (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+              Ψ (ω.1 0) * f ω ∂(jumpKernel mu z))
+            = ∫ ω, F (ω.1 0, ω) ∂(jumpKernel mu z) := by
+          rw [← integral_indicator hS]
+          exact integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ hind (ω.1 0) ω)
+        have hstep3 : (∫ ω, F (z, ω) ∂(jumpKernel mu z))
+            = Ψ z * ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}, f ω
+                ∂(jumpKernel mu z) := by
+          simp only [hFapp]
+          rw [integral_const_mul, integral_indicator hS]
+        rw [hstep1, hstep2, integral_jumpKernel_zero_eq mu hFm hFb z, hstep3]
+      have hSeq : (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+            G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+          = ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+              G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu) := by
+        rw [setIntegral_jumpMeasure_eq_integral_jumpKernel mu nu hS (hGAm (s + t)) h0C
+            (hAb G hGb _ fun ω ↦ hC _),
+          setIntegral_jumpMeasure_eq_integral_jumpKernel mu nu hS (hGBm s) h0C
+            (hAb G hGb _ fun ω ↦ abs_jumpSemigroup_le mu hC t _)]
+        refine integral_congr_ae (Filter.Eventually.of_forall fun z ↦ ?_)
+        show (∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+              G ω * h (jumpProcess lam (s + t) ω) ∂(jumpKernel mu z))
+            = ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1},
+                G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z)
+        rw [hpull z _ (hAm (s + t)) (fun ω ↦ hC _),
+          hpull z _ (hBm s) (fun ω ↦ abs_jumpSemigroup_le mu hC t _),
+          integral_jumpKernel_add_of_lt_jumpTime_one mu hlam hlam0 z hh hC hs]
+      have hred : (∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+            - ∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)
+          = ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}ᶜ,
+              (G ω * h (jumpProcess lam (s + t) ω)
+                - G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω)) ∂(jumpMeasure mu nu) := by
+        rw [integral_sub (hAi (s + t) nu hnu G hGm hGb).restrict
+            (hBi s nu hnu G hGm hGb).restrict,
+          ← integral_add_compl hS (hAi (s + t) nu hnu G hGm hGb),
+          ← integral_add_compl hS (hBi s nu hnu G hGm hGb), hSeq]
+        ring
+      -- The functional of the split data, and its majorant.
+      set K : (E × ℝ) × ((ℕ → E) × (ℕ → ℝ)) → ℝ := fun q ↦
+        if q.1.2 ≤ lam q.1.1 * s then
+          G (jumpPrepend q.1.1 q.1.2 q.2) *
+            (h (jumpProcess lam ((s - q.1.2 / lam q.1.1) + t) q.2)
+              - jumpSemigroup lam mu h t (jumpProcess lam (s - q.1.2 / lam q.1.1) q.2))
+        else 0 with hKdef
+      set K' : (E × ℝ) × ((ℕ → E) × (ℕ → ℝ)) → ℝ := fun q ↦
+        if q.1.2 ≤ lam q.1.1 * s then
+          (if jumpTime lam q.2.1 q.2.2 n ≤ s - q.1.2 / lam q.1.1 then 2 * C else 0)
+        else 0 with hK'def
+      have hcondm : MeasurableSet
+          {q : (E × ℝ) × ((ℕ → E) × (ℕ → ℝ)) | q.1.2 ≤ lam q.1.1 * s} :=
+        measurableSet_le (measurable_snd.comp measurable_fst)
+          ((hlam.comp (measurable_fst.comp measurable_fst)).mul measurable_const)
+      have htimem : Measurable fun q : (E × ℝ) × ((ℕ → E) × (ℕ → ℝ)) ↦ s - q.1.2 / lam q.1.1 :=
+        measurable_const.sub ((measurable_snd.comp measurable_fst).div
+          (hlam.comp (measurable_fst.comp measurable_fst)))
+      have hKm : Measurable K := by
+        rw [hKdef]
+        refine Measurable.ite hcondm ?_ measurable_const
+        refine (hGm.comp measurable_jumpPrepend).mul ?_
+        exact (hh.comp ((measurable_jumpProcess hlam).comp
+            ((htimem.add measurable_const).prodMk measurable_snd))).sub
+          ((measurable_jumpSemigroup mu hlam hh t).comp
+            ((measurable_jumpProcess hlam).comp (htimem.prodMk measurable_snd)))
+      have hK'm : Measurable K' := by
+        rw [hK'def]
+        refine Measurable.ite hcondm ?_ measurable_const
+        exact Measurable.ite (measurableSet_le
+          ((measurable_jumpTime hlam n).comp measurable_snd) htimem)
+          measurable_const measurable_const
+      have hKb : ∀ q, |K q| ≤ 2 * C := by
+        intro q
+        by_cases hq : q.1.2 ≤ lam q.1.1 * s
+        · simp only [hKdef, if_pos hq]
+          rw [abs_mul]
+          have hb2 : |h (jumpProcess lam ((s - q.1.2 / lam q.1.1) + t) q.2)
+                  - jumpSemigroup lam mu h t (jumpProcess lam (s - q.1.2 / lam q.1.1) q.2)|
+              ≤ 2 * C := by
+            calc |h (jumpProcess lam ((s - q.1.2 / lam q.1.1) + t) q.2)
+                    - jumpSemigroup lam mu h t (jumpProcess lam (s - q.1.2 / lam q.1.1) q.2)|
+                ≤ |h (jumpProcess lam ((s - q.1.2 / lam q.1.1) + t) q.2)|
+                  + |jumpSemigroup lam mu h t (jumpProcess lam (s - q.1.2 / lam q.1.1) q.2)| :=
+                  abs_sub _ _
+              _ ≤ C + C := add_le_add (hC _) (abs_jumpSemigroup_le mu hC t _)
+              _ = 2 * C := by ring
+          calc |G (jumpPrepend q.1.1 q.1.2 q.2)| * _
+              ≤ 1 * (2 * C) := mul_le_mul (hGb _) hb2 (abs_nonneg _) zero_le_one
+            _ = 2 * C := one_mul _
+        · simp only [hKdef, if_neg hq, abs_zero]
+          linarith
+      have hK'b : ∀ q, |K' q| ≤ 2 * C := by
+        intro q
+        by_cases hq : q.1.2 ≤ lam q.1.1 * s
+        · by_cases hq2 : jumpTime lam q.2.1 q.2.2 n ≤ s - q.1.2 / lam q.1.1
+          · simp only [hK'def, if_pos hq, if_pos hq2]
+            rw [abs_of_nonneg (by linarith : (0:ℝ) ≤ 2 * C)]
+          · simp only [hK'def, if_pos hq, if_neg hq2, abs_zero]
+            linarith
+        · simp only [hK'def, if_neg hq, abs_zero]
+          linarith
+      -- The first identification: the shifted functional is the integrand on `{T 1 ≤ s}`.
+      have hKeq : (∫ ω, K ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu))
+          = ∫ ω in {ω : (ℕ → E) × (ℕ → ℝ) | s < jumpTime lam ω.1 ω.2 1}ᶜ,
+              (G ω * h (jumpProcess lam (s + t) ω)
+                - G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω))
+                ∂(jumpMeasure mu nu) := by
+        rw [← integral_indicator hS.compl]
+        refine integral_congr_ae ?_
+        filter_upwards [ae_exists_lt_jumpTime hL0 hlam0 hL mu nu] with ω hω
+        have hiff : ω.2 0 ≤ lam (ω.1 0) * s ↔ jumpTime lam ω.1 ω.2 1 ≤ s := by
+          rw [jumpTime_one, div_le_iff₀ (hlam0 _), mul_comm s (lam (ω.1 0))]
+        by_cases hωS : s < jumpTime lam ω.1 ω.2 1
+        · rw [Set.indicator_of_notMem (by simpa using hωS)]
+          simp only [hKdef, if_neg (fun hq ↦ absurd (hiff.1 hq) (not_le.2 hωS))]
+        · have hT1 : jumpTime lam ω.1 ω.2 1 ≤ s := not_lt.1 hωS
+          rw [Set.indicator_of_mem (by simpa using hωS)]
+          have e1 : jumpProcess lam (s + t) ω
+              = jumpProcess lam ((s - ω.2 0 / lam (ω.1 0)) + t) (jumpShift ω) := by
+            rw [jumpProcess_jumpShift (by linarith) (hω (s + t))]
+            congr 1
+            rw [jumpTime_one]
+            ring
+          have e2 : jumpProcess lam s ω
+              = jumpProcess lam (s - ω.2 0 / lam (ω.1 0)) (jumpShift ω) := by
+            rw [jumpProcess_jumpShift hT1 (hω s)]
+            congr 1
+            rw [jumpTime_one]
+          rw [e1, e2]
+          simp only [hKdef, if_pos (hiff.2 hT1), jumpPrepend_self]
+          ring
+      -- The second identification: the majorant is the indicator of two jump time conditions.
+      have hK'eq : (∫ ω, K' ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu))
+          ≤ 2 * C * (jumpMeasure mu nu).real
+              {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 (n + 1) ≤ s} := by
+        have hWm : MeasurableSet ({ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ s}
+            ∩ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 (n + 1) ≤ s}) :=
+          (measurableSet_le (measurable_jumpTime hlam 1) measurable_const).inter
+            (measurableSet_le (measurable_jumpTime hlam (n + 1)) measurable_const)
+        have hW : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ K' ((ω.1 0, ω.2 0), jumpShift ω))
+            = ({ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 1 ≤ s}
+                ∩ {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 (n + 1) ≤ s}).indicator
+                (fun _ ↦ 2 * C) := by
+          funext ω
+          have hiff : ω.2 0 ≤ lam (ω.1 0) * s ↔ jumpTime lam ω.1 ω.2 1 ≤ s := by
+            rw [jumpTime_one, div_le_iff₀ (hlam0 _), mul_comm s (lam (ω.1 0))]
+          have hiff2 : jumpTime lam (jumpShift ω).1 (jumpShift ω).2 n
+                ≤ s - ω.2 0 / lam (ω.1 0)
+              ↔ jumpTime lam ω.1 ω.2 (n + 1) ≤ s := by
+            rw [show (jumpShift ω).1 = fun k ↦ ω.1 (k + 1) from rfl,
+              show (jumpShift ω).2 = fun k ↦ ω.2 (k + 1) from rfl, jumpTime_jumpShift,
+              ← jumpTime_one lam ω.1 ω.2, sub_le_sub_iff_right]
+          by_cases h1 : jumpTime lam ω.1 ω.2 1 ≤ s
+          · by_cases h2 : jumpTime lam ω.1 ω.2 (n + 1) ≤ s
+            · rw [Set.indicator_of_mem (show ω ∈ {ω : (ℕ → E) × (ℕ → ℝ) |
+                  jumpTime lam ω.1 ω.2 1 ≤ s} ∩ {ω : (ℕ → E) × (ℕ → ℝ) |
+                    jumpTime lam ω.1 ω.2 (n + 1) ≤ s} from ⟨h1, h2⟩)]
+              simp only [hK'def, if_pos (hiff.2 h1), if_pos (hiff2.2 h2)]
+            · rw [Set.indicator_of_notMem (fun hmem ↦ h2 hmem.2)]
+              simp only [hK'def, if_pos (hiff.2 h1), if_neg (fun hq ↦ h2 (hiff2.1 hq))]
+          · rw [Set.indicator_of_notMem (fun hmem ↦ h1 hmem.1)]
+            simp only [hK'def, if_neg (fun hq ↦ h1 (hiff.1 hq))]
+        rw [hW, integral_indicator_const (2 * C) hWm, smul_eq_mul, mul_comm]
+        exact mul_le_mul_of_nonneg_left (measureReal_mono Set.inter_subset_right)
+          (by linarith)
+      -- The estimate, on the product of the initial law and the holding time.
+      have hcmp : ∀ p : E × ℝ, |∫ ω', K (p, ω') ∂(jumpMeasure mu (mu p.1))|
+          ≤ ∫ ω', K' (p, ω') ∂(jumpMeasure mu (mu p.1)) := by
+        intro p
+        by_cases hp : p.2 ≤ lam p.1 * s
+        · have hs' : 0 ≤ s - p.2 / lam p.1 := by
+            have h1 : p.2 / lam p.1 ≤ s :=
+              (div_le_iff₀ (hlam0 p.1)).2 (by rw [mul_comm] at hp; exact hp)
+            linarith
+          set Gp : (ℕ → E) × (ℕ → ℝ) → ℝ := fun ω' ↦ G (jumpPrepend p.1 p.2 ω') with hGpdef
+          have hGpm : Measurable Gp :=
+            hGm.comp (measurable_jumpPrepend.comp (measurable_const.prodMk measurable_id))
+          have hGpb : ∀ ω', |Gp ω'| ≤ 1 := fun ω' ↦ hGb _
+          have hGpp : IsPastFunctional lam (s - p.2 / lam p.1) Gp :=
+            hGp.comp_jumpPrepend p.1 p.2
+          have hL' : (∫ ω', K (p, ω') ∂(jumpMeasure mu (mu p.1)))
+              = (∫ ω', Gp ω' * h (jumpProcess lam ((s - p.2 / lam p.1) + t) ω')
+                    ∂(jumpMeasure mu (mu p.1)))
+                - ∫ ω', Gp ω' * jumpSemigroup lam mu h t (jumpProcess lam (s - p.2 / lam p.1) ω')
+                    ∂(jumpMeasure mu (mu p.1)) := by
+            rw [← integral_sub (hAi _ (mu p.1) inferInstance Gp hGpm hGpb)
+              (hBi _ (mu p.1) inferInstance Gp hGpm hGpb)]
+            refine integral_congr_ae (Filter.Eventually.of_forall fun ω' ↦ ?_)
+            simp only [hKdef, if_pos hp, hGpdef]
+            ring
+          have hR' : (∫ ω', K' (p, ω') ∂(jumpMeasure mu (mu p.1)))
+              = 2 * C * (jumpMeasure mu (mu p.1)).real
+                  {ω' : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} := by
+            have hfun : (fun ω' : (ℕ → E) × (ℕ → ℝ) ↦ K' (p, ω'))
+                = {ω' : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω'.1 ω'.2 n
+                    ≤ s - p.2 / lam p.1}.indicator (fun _ ↦ 2 * C) := by
+              funext ω'
+              by_cases hq : jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1
+              · rw [Set.indicator_of_mem (show ω' ∈ {ω' : (ℕ → E) × (ℕ → ℝ) |
+                    jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} from hq)]
+                simp only [hK'def, if_pos hp, if_pos hq]
+              · rw [Set.indicator_of_notMem (show ω' ∉ {ω' : (ℕ → E) × (ℕ → ℝ) |
+                    jumpTime lam ω'.1 ω'.2 n ≤ s - p.2 / lam p.1} from hq)]
+                simp only [hK'def, if_pos hp, if_neg hq]
+            rw [hfun, integral_indicator_const (2 * C)
+              (measurableSet_le (measurable_jumpTime hlam n) measurable_const), smul_eq_mul,
+              mul_comm]
+          rw [hL', hR']
+          exact ih (mu p.1) inferInstance _ hs' Gp hGpm hGpb hGpp
+        · have h0 : ∀ ω' : (ℕ → E) × (ℕ → ℝ), K (p, ω') = 0 := by
+            intro ω'
+            simp only [hKdef, if_neg hp]
+          have h0' : ∀ ω' : (ℕ → E) × (ℕ → ℝ), K' (p, ω') = 0 := by
+            intro ω'
+            simp only [hK'def, if_neg hp]
+          simp only [h0, h0', integral_zero, abs_zero, le_refl]
+      have hfinal : |∫ ω, K ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu)|
+          ≤ ∫ ω, K' ((ω.1 0, ω.2 0), jumpShift ω) ∂(jumpMeasure mu nu) := by
+        rw [integral_jumpMeasure_eq_of_split_prod mu nu hKm hKb,
+          integral_jumpMeasure_eq_of_split_prod mu nu hK'm hK'b]
+        calc |∫ p, (∫ ω', K (p, ω') ∂(jumpMeasure mu (mu p.1))) ∂(nu.prod (expMeasure 1))|
+            ≤ ∫ p, |∫ ω', K (p, ω') ∂(jumpMeasure mu (mu p.1))| ∂(nu.prod (expMeasure 1)) :=
+              abs_integral_le_integral_abs
+          _ ≤ ∫ p, (∫ ω', K' (p, ω') ∂(jumpMeasure mu (mu p.1))) ∂(nu.prod (expMeasure 1)) :=
+              integral_mono
+                (integrable_of_abs_le (measurable_integral_jumpMeasure_step mu hKm)
+                  (fun p ↦ abs_integral_le_of_abs_le fun ω' ↦ hKb _)).abs
+                (integrable_of_abs_le (measurable_integral_jumpMeasure_step mu hK'm)
+                  (fun p ↦ abs_integral_le_of_abs_le fun ω' ↦ hK'b _)) hcmp
+      rw [hred, ← hKeq]
+      exact hfinal.trans hK'eq
+
+/-- **The Markov property of the jump process at a fixed time, tested against a factor from the
+past.** -/
+theorem jumpMeasure_integral_jumpProcess_add_past {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) {L : ℝ} (hL0 : 0 < L) (hL : ∀ x, lam x ≤ L) (nu : Measure E)
+    [IsProbabilityMeasure nu] {h : E → ℝ} (hh : Measurable h) {C : ℝ} (hC : ∀ x, |h x| ≤ C)
+    {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hGm : Measurable G)
+    (hGb : ∀ ω, |G ω| ≤ 1) (hGp : IsPastFunctional lam s G) :
+    ∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu)
+      = ∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu) := by
+  have hlim : Tendsto (fun n ↦ 2 * C * (jumpMeasure mu nu).real
+      {ω : (ℕ → E) × (ℕ → ℝ) | jumpTime lam ω.1 ω.2 n ≤ s}) atTop (𝓝 0) := by
+    simpa using (tendsto_measureReal_jumpTime_le mu hlam hlam0 hL0 hL nu s).const_mul (2 * C)
+  have hzero : |(∫ ω, G ω * h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+      - ∫ ω, G ω * jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpMeasure mu nu)| ≤ 0 :=
+    ge_of_tendsto hlim (Filter.Eventually.of_forall fun n ↦
+      abs_integral_jumpMeasure_add_sub_le_past mu hlam hlam0 hL0 hL hh hC ht n nu inferInstance s
+        hs G hGm hGb hGp)
+  exact sub_eq_zero.1 (abs_nonpos_iff.1 hzero)
+
+/-- **The expectation identity tested against a set of the past**, which is the shape the
+conditional expectation of the martingale problem consumes:
+```
+∫_S h (X (s + t)) dP - ∫_S h (X s) dP = ∫_0^t ∫_S (A h) (X (s + r)) dP dr.
+```
+It is **not** a new statement about the process.  With
+`jumpMeasure_integral_jumpProcess_add_past` the left hand side is an expectation of the semigroup
+at time `s`, and the semigroup at time `s` is an expectation under the construction restarted from
+the law of `X s` conditioned on `S` -- the measure `ν` below.  On that law the identity is
+literally `jumpMeasure_integral_sub_eq_intervalIntegral`, and the two normalising factors `c` and
+`c⁻¹` cancel.
+
+The functional of the past is an **indicator** and not a general bounded one, and that is what
+makes `ν` a measure: for a general `G` the density would have to be built with `withDensity`, and
+for a signed `G` there is no measure at all.  The conditional expectation asks only for sets, so
+the restriction costs nothing. -/
+theorem setIntegral_jumpProcess_sub_eq_intervalIntegral {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 < lam x) {L : ℝ} (hL0 : 0 < L) (hL : ∀ x, lam x ≤ L) (nu : Measure E)
+    [IsProbabilityMeasure nu] {h : E → ℝ} (hh : Measurable h) {C : ℝ} (hC : ∀ x, |h x| ≤ C)
+    {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) {S : Set ((ℕ → E) × (ℕ → ℝ))} (hSm : MeasurableSet S)
+    (hSp : IsPastFunctional lam s (S.indicator (fun _ ↦ (1 : ℝ)))) :
+    (∫ ω in S, h (jumpProcess lam (s + t) ω) ∂(jumpMeasure mu nu))
+        - ∫ ω in S, h (jumpProcess lam s ω) ∂(jumpMeasure mu nu)
+      = ∫ r in (0:ℝ)..t, ∫ ω in S, jumpApply lam mu h (jumpProcess lam (s + r) ω)
+          ∂(jumpMeasure mu nu) := by
+  classical
+  set P : Measure ((ℕ → E) × (ℕ → ℝ)) := jumpMeasure mu nu with hPdef
+  set G : (ℕ → E) × (ℕ → ℝ) → ℝ := S.indicator (fun _ ↦ (1 : ℝ)) with hGdef
+  have hGm : Measurable G := measurable_const.indicator hSm
+  have hGb : ∀ ω, |G ω| ≤ 1 := by
+    intro ω
+    by_cases hω : ω ∈ S
+    · rw [hGdef, Set.indicator_of_mem hω]; norm_num
+    · rw [hGdef, Set.indicator_of_notMem hω, abs_zero]; norm_num
+  have hXm : ∀ r : ℝ, Measurable (jumpProcess lam r (E := E)) :=
+    fun r ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  have hgXm : ∀ (g : E → ℝ), Measurable g → ∀ r : ℝ,
+      Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ g (jumpProcess lam r ω) :=
+    fun g hg r ↦ hg.comp (hXm r)
+  -- the bridge between a set integral and the factor from the past
+  have hbridge : ∀ g : (ℕ → E) × (ℕ → ℝ) → ℝ, Measurable g →
+      (∫ ω in S, g ω ∂P) = ∫ ω, G ω * g ω ∂P := by
+    intro g hg
+    rw [← integral_indicator hSm]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    by_cases hω : ω ∈ S
+    · simp only [hGdef, Set.indicator_of_mem hω, one_mul]
+    · simp only [hGdef, Set.indicator_of_notMem hω, zero_mul]
+  -- the Markov property on the set
+  have hmark : ∀ (g : E → ℝ), Measurable g → ∀ D : ℝ, (∀ x, |g x| ≤ D) → ∀ u : ℝ, 0 ≤ u →
+      (∫ ω in S, g (jumpProcess lam (s + u) ω) ∂P)
+        = ∫ ω in S, jumpSemigroup lam mu g u (jumpProcess lam s ω) ∂P := by
+    intro g hg D hD u hu
+    rw [hbridge _ (hgXm g hg (s + u)),
+      hbridge _ (hgXm _ (measurable_jumpSemigroup mu hlam hg u) s),
+      jumpMeasure_integral_jumpProcess_add_past mu hlam hlam0 hL0 hL nu hg hD hs hu hGm hGb hSp]
+  by_cases hzero : P S = 0
+  · have hnull : ∀ g : (ℕ → E) × (ℕ → ℝ) → ℝ, (∫ ω in S, g ω ∂P) = 0 := by
+      intro g
+      rw [Measure.restrict_eq_zero.2 hzero, integral_zero_measure]
+    simp only [hnull, sub_zero, sub_self, intervalIntegral.integral_zero]
+  · have hSlt : P S ≠ ⊤ := measure_ne_top P S
+    have hc0 : P.real S ≠ 0 := by
+      rw [measureReal_def]
+      exact ENNReal.toReal_ne_zero.2 ⟨hzero, hSlt⟩
+    set c : ℝ := P.real S with hcdef
+    set ν : Measure E := (P S)⁻¹ • ((P.restrict S).map (jumpProcess lam s)) with hνdef
+    have hνuniv : ν Set.univ = 1 := by
+      rw [hνdef, Measure.smul_apply, Measure.map_apply (hXm s) MeasurableSet.univ,
+        Set.preimage_univ, Measure.restrict_apply_univ, smul_eq_mul,
+        ENNReal.inv_mul_cancel hzero hSlt]
+    haveI hνprob : IsProbabilityMeasure ν := ⟨hνuniv⟩
+    have hnu : ∀ (g : E → ℝ), Measurable g → ∀ D : ℝ, (∀ x, |g x| ≤ D) →
+        (∫ z, g z ∂ν) = c⁻¹ * ∫ ω in S, g (jumpProcess lam s ω) ∂P := by
+      intro g hg D hD
+      rw [hνdef, integral_smul_measure,
+        integral_map (hXm s).aemeasurable hg.aestronglyMeasurable, smul_eq_mul,
+        ENNReal.toReal_inv, hcdef, measureReal_def]
+    have hsemi : ∀ (g : E → ℝ), Measurable g → ∀ D : ℝ, (∀ x, |g x| ≤ D) → ∀ u : ℝ, 0 ≤ u →
+        (∫ ω, g (jumpProcess lam u ω) ∂(jumpMeasure mu ν))
+          = c⁻¹ * ∫ ω in S, g (jumpProcess lam (s + u) ω) ∂P := by
+      intro g hg D hD u hu
+      rw [integral_jumpSemigroup_eq mu ν hlam hg hD u,
+        hnu _ (measurable_jumpSemigroup mu hlam hg u) D
+          (fun x ↦ abs_jumpSemigroup_le mu hD u x),
+        hmark g hg D hD u hu]
+    have hAm : Measurable (jumpApply lam mu h) := measurable_jumpApply hlam hh hC
+    have hAb : ∀ x, |jumpApply lam mu h x| ≤ 2 * L * C :=
+      fun x ↦ abs_jumpApply_le (fun y ↦ (hlam0 y).le) hL hC x
+    have hmain := jumpMeasure_integral_sub_eq_intervalIntegral hlam hlam0 hL0 hL mu ν hh hC ht
+    rw [hsemi h hh C hC t ht, hnu h hh C hC] at hmain
+    have hrhs : (∫ r in (0:ℝ)..t, ∫ ω, jumpApply lam mu h (jumpProcess lam r ω)
+          ∂(jumpMeasure mu ν))
+        = ∫ r in (0:ℝ)..t, c⁻¹ * ∫ ω in S, jumpApply lam mu h (jumpProcess lam (s + r) ω) ∂P := by
+      refine intervalIntegral.integral_congr fun r hr ↦ ?_
+      have hr0 : 0 ≤ r := by
+        rw [Set.uIcc_of_le ht] at hr
+        exact hr.1
+      exact hsemi _ hAm (2 * L * C) hAb r hr0
+    rw [hrhs, intervalIntegral.integral_const_mul] at hmain
+    have hfin : c * (c⁻¹ * (∫ ω in S, h (jumpProcess lam (s + t) ω) ∂P)
+          - c⁻¹ * ∫ ω in S, h (jumpProcess lam s ω) ∂P)
+        = c * (c⁻¹ * ∫ r in (0:ℝ)..t,
+            ∫ ω in S, jumpApply lam mu h (jumpProcess lam (s + r) ω) ∂P) := by
+      rw [← mul_sub] at hmain ⊢
+      rw [hmain]
+    field_simp at hfin
+    linarith [hfin]
+
+end ConditionalMarkov
+
 end Space
 
 /-! ### The natural filtration
@@ -4159,6 +5073,62 @@ theorem measurable_naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*}
     Measurable[naturalFiltration (m' := m') X hX i] (X j) :=
   Measurable.mono (comap_measurable (X j))
     (le_iSup₂ (f := fun j (_ : j ≤ i) ↦ MeasurableSpace.comap (X j) mF) j hji) le_rfl
+
+/-! ## What a functional of the past can see -/
+
+/-- **A functional of the past sees nothing but the path up to `s`.**  Two sample points whose
+paths agree below `s` are not separated by any `𝓕 s`-measurable real function.
+
+The proof needs no factorisation theorem: the sets that fail to separate a *fixed* pair form a
+σ-algebra, it contains every coordinate below `s`, hence the whole of `𝓕 s`, and a real function
+that took two values would separate the pair by a half line. -/
+theorem eq_of_measurable_naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*}
+    {m' : MeasurableSpace Ω'} {F : Type*} [mF : MeasurableSpace F] {X : ι' → Ω' → F}
+    (hX : ∀ i, Measurable (X i)) {s : ι'} {G : Ω' → ℝ}
+    (hG : Measurable[naturalFiltration (m' := m') X hX s] G) {ω ω' : Ω'}
+    (h : ∀ r ≤ s, X r ω = X r ω') : G ω = G ω' := by
+  set 𝓜 : MeasurableSpace Ω' :=
+    { MeasurableSet' := fun A ↦ (ω ∈ A ↔ ω' ∈ A)
+      measurableSet_empty := by simp
+      measurableSet_compl := fun A hA ↦ by
+        simp only [Set.mem_compl_iff, not_iff_not]
+        exact hA
+      measurableSet_iUnion := fun f hf ↦ by
+        simp only [Set.mem_iUnion]
+        exact exists_congr hf } with h𝓜
+  have hle : (naturalFiltration (m' := m') X hX s : MeasurableSpace Ω') ≤ 𝓜 := by
+    refine iSup₂_le ?_
+    rintro j hj A ⟨u, -, rfl⟩
+    show (ω ∈ X j ⁻¹' u ↔ ω' ∈ X j ⁻¹' u)
+    simp only [Set.mem_preimage, h j hj]
+  rcases lt_trichotomy (G ω) (G ω') with hlt | heq | hlt
+  · have hm := hle _ (hG (measurableSet_Iio (a := G ω')))
+    exact absurd (show G ω' < G ω' from hm.1 hlt) (lt_irrefl _)
+  · exact heq
+  · have hm := hle _ (hG (measurableSet_Ioi (a := G ω')))
+    exact absurd (show G ω' < G ω' from hm.1 hlt) (lt_irrefl _)
+
+/-- **Composing a functional of the past with a map that shifts the past.**  If every coordinate
+below `s` becomes, after the substitution, a coordinate measurable for a σ-algebra `n`, then so
+does every `𝓕 s`-measurable functional.  This is the step that carries the induction hypothesis
+of the Markov property through the restart. -/
+theorem measurable_comp_of_measurable_naturalFiltration {ι' : Type*} [Preorder ι'] {Ω' : Type*}
+    {m' : MeasurableSpace Ω'} {F : Type*} [mF : MeasurableSpace F] {X : ι' → Ω' → F}
+    (hX : ∀ i, Measurable (X i)) {s : ι'} {𝕜 : Type*} [MeasurableSpace 𝕜] {G : Ω' → 𝕜}
+    (hG : Measurable[naturalFiltration (m' := m') X hX s] G)
+    {Ω'' : Type*} {n : MeasurableSpace Ω''} {P : Ω'' → Ω'}
+    (hP : ∀ r ≤ s, Measurable[n] fun w ↦ X r (P w)) :
+    Measurable[n] fun w ↦ G (P w) := by
+  have hPm : @Measurable _ _ n (naturalFiltration (m' := m') X hX s) P := by
+    rw [measurable_iff_comap_le]
+    show MeasurableSpace.comap P (⨆ j, ⨆ (_ : j ≤ s), MeasurableSpace.comap (X j) mF) ≤ n
+    rw [MeasurableSpace.comap_iSup]
+    refine iSup_le fun j ↦ ?_
+    rw [MeasurableSpace.comap_iSup]
+    refine iSup_le fun hj ↦ ?_
+    rw [MeasurableSpace.comap_comp]
+    exact measurable_iff_comap_le.1 (hP j hj)
+  exact hG.comp hPm
 
 /-! ### Right continuity, and progressive measurability
 
@@ -4306,6 +5276,16 @@ noncomputable def jumpFiltration (lam : E → ℝ) (hlam : Measurable lam) :
   naturalFiltration (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω)
     fun _ ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
 
+/-- **Every bounded `𝓕 s`-measurable functional is one of the past**, after being cut down to the
+non explosive sample points -- which changes no integral, the explosion set being null. -/
+theorem isPastFunctional_indicator {lam : E → ℝ} (hlam : Measurable lam) {s : ℝ≥0}
+    {G : (ℕ → E) × (ℕ → ℝ) → ℝ} (hG : Measurable[jumpFiltration lam hlam s] G) :
+    IsPastFunctional lam (s : ℝ) ((NonExplosive lam).indicator G) := by
+  refine ⟨fun ω hω ↦ Set.indicator_of_notMem hω G, fun ω hω ω' hω' hpath ↦ ?_⟩
+  rw [Set.indicator_of_mem hω, Set.indicator_of_mem hω']
+  refine eq_of_measurable_naturalFiltration _ hG fun r hr ↦ ?_
+  exact hpath (r : ℝ) r.coe_nonneg (by exact_mod_cast hr)
+
 /-- The jump process is right continuous at every time and at every sample point, the explosion
 set included: `eventuallyEq_nhdsGE_stepPath` read through the definition. -/
 theorem eventuallyEq_nhdsGE_jumpProcess {lam : E → ℝ} (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ) :
@@ -4372,6 +5352,106 @@ theorem measurable_compensator {lam : E → ℝ} (hlam : Measurable lam) {h : E 
   rw [← hcongr]
   exact hsm.measurable
 
+/-- **A compensating window is bounded by the bound of its integrand times the length of the
+window.**  The clock is Lebesgue measure, so the length is `t` itself; the exact mass
+`lebesgueClock_apply_Ioc` and not a mere finiteness bound is what makes the constant explicit,
+and the explicit constant is what `integrable_mpFamily_jumpProcess` needs. -/
+theorem abs_setIntegral_compensator_le {lam : E → ℝ} {g : E → ℝ} {D : ℝ} (hD : ∀ x, |g x| ≤ D)
+    (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ D * (t : ℝ) := by
+  rw [lebesgueClock_interval_optional_eq]
+  have hlt : lebesgueClock.q (Set.Ioc (⊥ : ℝ≥0) t) < ⊤ := by
+    rw [lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
+  have hle := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q)
+    (s := Set.Ioc (⊥ : ℝ≥0) t) (f := fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω)) (C := D) hlt
+    (fun u _ => by simpa using hD (jumpProcess lam (u : ℝ) ω))
+  rwa [Real.norm_eq_abs, measureReal_def, lebesgueClock_apply_Ioc,
+    show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
+    ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
+
+/-- **The difference of two nested compensating windows is the compensating integral of what lies
+between them, turned into a genuine interval integral of the shifted process with the set
+integral moved to the outside.**  This assembles the second, third and fourth of the four
+bookkeeping steps `jumpProcess_isMPSolution` needs: `Clock.interval_union` splits the windows,
+`integral_lebesgueClock_Ioc` reindexes the remainder as a real interval integral, and
+`intervalIntegral_integral_swap` is Fubini between that interval integral and the set integral. -/
+theorem setIntegral_compensator_sub_eq_intervalIntegral {lam : E → ℝ} (hlam : Measurable lam)
+    {i j : ℝ≥0} (hij : i ≤ j) {g : E → ℝ} (hg : Measurable g) {D : ℝ} (hD : ∀ x, |g x| ≤ D)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    {S : Set ((ℕ → E) × (ℕ → ℝ))} (hSm : MeasurableSet S) :
+    (∫ ω in S, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j,
+          g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) ∂(jumpMeasure mu nu))
+      - ∫ ω in S, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+          g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) ∂(jumpMeasure mu nu)
+    = ∫ r in (0 : ℝ)..((j : ℝ) - (i : ℝ)), ∫ ω in S, g (jumpProcess lam ((i : ℝ) + r) ω)
+        ∂(jumpMeasure mu nu) := by
+  set μ0 := jumpMeasure mu nu with hμ0def
+  have hWm : Measurable fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) => jumpProcess lam (p.1 : ℝ) p.2 :=
+    (measurable_jumpProcess hlam).comp
+      ((measurable_coe_nnreal_real.comp measurable_fst).prodMk measurable_snd)
+  have hgXu : ∀ ω, Measurable fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω) := fun ω =>
+    hg.comp (hWm.comp (measurable_id.prodMk measurable_const))
+  have hmeas_win : ∀ t : ℝ≥0, Measurable fun ω =>
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q := fun t =>
+    Measurable.mono (measurable_compensator hlam hg Clock.Conv.optional t)
+      ((jumpFiltration lam hlam).le' t) le_rfl
+  have houterbound : ∀ (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)),
+      |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ D * (t : ℝ) :=
+    abs_setIntegral_compensator_le hD
+  have hInt_i : IntegrableOn (fun ω => ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+      g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) S μ0 :=
+    integrableOn_of_bounded μ0 (measure_ne_top μ0 S) (hmeas_win i) (houterbound i)
+  have hInt_j : IntegrableOn (fun ω => ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j,
+      g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) S μ0 :=
+    integrableOn_of_bounded μ0 (measure_ne_top μ0 S) (hmeas_win j) (houterbound j)
+  rw [← integral_sub hInt_j hInt_i]
+  have habij : (0 : ℝ) ≤ (j : ℝ) - (i : ℝ) := by
+    have := (NNReal.coe_le_coe).2 hij; linarith
+  have hpt : ∀ ω, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+      - (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+      = ∫ r in (0 : ℝ)..((j : ℝ) - (i : ℝ)), g (jumpProcess lam ((i : ℝ) + r) ω) := by
+    intro ω
+    obtain ⟨hunion, hdisj⟩ := lebesgueClock.interval_union Clock.Conv.optional
+      (bot_le : (⊥ : ℝ≥0) ≤ i) hij
+    have hIa : IntegrableOn (fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω))
+        (lebesgueClock.interval Clock.Conv.optional ⊥ i) lebesgueClock.q :=
+      integrableOn_of_bounded lebesgueClock.q
+        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional ⊥ i) (hgXu ω) (fun u => hD _)
+    have hIb : IntegrableOn (fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω))
+        (lebesgueClock.interval Clock.Conv.optional i j) lebesgueClock.q :=
+      integrableOn_of_bounded lebesgueClock.q
+        (lebesgueClock.measure_interval_ne_top Clock.Conv.optional i j) (hgXu ω) (fun u => hD _)
+    rw [hunion,
+      setIntegral_union hdisj (lebesgueClock.measurableSet_interval Clock.Conv.optional i j)
+        hIa hIb]
+    rw [show (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+          + (∫ u in lebesgueClock.interval Clock.Conv.optional i j,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+        - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q
+        = ∫ u in lebesgueClock.interval Clock.Conv.optional i j,
+            g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q from by ring,
+      lebesgueClock_interval_optional_eq, integral_lebesgueClock_Ioc hij (hgXu ω)]
+    refine intervalIntegral.integral_congr fun r hr => ?_
+    rw [Set.uIcc_of_le habij] at hr
+    rw [Real.coe_toNNReal ((i : ℝ) + r) (by linarith [hr.1, NNReal.coe_nonneg i])]
+  simp_rw [hpt]
+  haveI : IsFiniteMeasure (volume.restrict (Set.uIoc (0 : ℝ) ((j : ℝ) - (i : ℝ)))) := by
+    rw [Set.uIoc_of_le habij]; infer_instance
+  have hIntSwap : Integrable (Function.uncurry fun (r : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) =>
+      g (jumpProcess lam ((i : ℝ) + r) ω))
+      ((volume.restrict (Set.uIoc (0 : ℝ) ((j : ℝ) - (i : ℝ)))).prod (μ0.restrict S)) := by
+    refine integrable_of_abs_le ?_ (fun p => hD _)
+    exact hg.comp ((measurable_jumpProcess hlam).comp
+      ((measurable_const.add measurable_fst).prodMk measurable_snd))
+  exact (intervalIntegral_integral_swap hIntSwap).symm
+
 /-- **The test processes of the jump martingale problem are adapted to the natural filtration of
 the jump process.**  This is the first of the two conjuncts of `MeasureTheory.Martingale`, and it
 is the one that does not mention the measure at all. -/
@@ -4398,20 +5478,1764 @@ theorem stronglyAdapted_mpFamily_jumpProcess {lam : E → ℝ} (hlam : Measurabl
   rw [hYt]
   exact (h1.sub h2).stronglyMeasurable
 
-/-- **`thm:jumpMP`: the jump process solves the martingale problem of its generator.**  This is
-the goal of Milestone 4 and the first solution of a martingale problem in this file that is a
-solution and not a counterexample.
+/-- **The test processes of the jump martingale problem are integrable**, which is the hypothesis
+`ae_eq_condExp_of_forall_setIntegral_eq` asks of the later time.  The bound is `C + 2LC·t`: the
+first summand is the bound on `p.1`, the second is `abs_setIntegral_compensator_le` applied to
+`abs_jumpApply_le`.  The bound grows with `t`, but it is finite at every `t`, and that is all a
+martingale needs. -/
+theorem integrable_mpFamily_jumpProcess {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω)) (t : ℝ≥0) :
+    Integrable (Y t) (jumpMeasure mu nu) := by
+  have hadp := stronglyAdapted_mpFamily_jumpProcess hlam Clock.Conv.optional hY
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hYm : Measurable (Y t) := ((hadp t).mono ((jumpFiltration lam hlam).le t)).measurable
+  refine integrable_of_abs_le hYm (C := C + 2 * L * C * (t : ℝ)) fun ω ↦ ?_
+  have hb : |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+      p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ 2 * L * C * (t : ℝ) := by
+    rw [hp2]
+    exact abs_setIntegral_compensator_le (fun x ↦ abs_jumpApply_le hlam0 hL hC x) t ω
+  have h1 := hC (jumpProcess lam (t : ℝ) ω)
+  have h2 := abs_sub (p.1 (jumpProcess lam (t : ℝ) ω))
+    (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+      p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+  rw [hYeq t ω]
+  linarith
 
-Everything except the conditional expectation is in place: `stronglyAdapted_mpFamily_jumpProcess`
-is the adaptedness, `jumpMeasure_map_jumpProcess_zero` the initial law, and `expMeasure_Ioi_add`
-the memorylessness on which the conditional expectation will rest. -/
+/-- **`thm:jumpMP`: the jump process solves the martingale problem of its generator.**  This is
+the goal of Milestone 4, and it is the first solution of a martingale problem in this file that
+is a solution and not a counterexample.
+
+The proof is the assembly of the two expectation identities, and nothing probabilistic is left in
+it.  `stronglyAdapted_mpFamily_jumpProcess` is the adaptedness;
+`setIntegral_jumpProcess_sub_eq_intervalIntegral` turns the increment of `p.1 ∘ X` over a set of
+the past into the interval integral of `A p.1 ∘ X`, and
+`setIntegral_compensator_sub_eq_intervalIntegral` turns the increment of the compensator into the
+same interval integral, so the two cancel and the increment of `Y` integrates to zero over every
+set of the past.  `ae_eq_condExp_of_forall_setIntegral_eq` then names that the conditional
+expectation.
+
+Two hypotheses of the two identities are supplied here and are not in the statement.  The set of
+the past is cut down to `NonExplosive lam ∩ S`, because `isPastFunctional_indicator` produces a
+functional of the past only after that cut; the cut changes no integral
+(`indicator_nonExplosive_ae_eq`).  And `0 < L` is not assumed but derived: `nu` is a probability
+measure, so `E` is nonempty, and `0 < lam x ≤ L` at any of its points. -/
 theorem jumpProcess_isMPSolution {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
     (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
     (nu : Measure E) [IsProbabilityMeasure nu] :
     IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
         (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω))
-      (jumpFiltration lam hlam) (jumpMeasure mu nu) := sorry
+      (jumpFiltration lam hlam) (jumpMeasure mu nu) := by
+  classical
+  -- the state space is nonempty, because `nu` is a probability measure; hence `0 < L`
+  have hne : Nonempty E := by
+    by_contra hcon
+    rw [not_nonempty_iff] at hcon
+    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
+    rw [measure_univ] at h0
+    exact one_ne_zero h0
+  obtain ⟨x0⟩ := hne
+  have hL0 : 0 < L := lt_of_lt_of_le (hlam0 x0) (hL x0)
+  intro Y hY
+  refine ⟨stronglyAdapted_mpFamily_jumpProcess hlam Clock.Conv.optional hY, ?_⟩
+  have hadp := stronglyAdapted_mpFamily_jumpProcess hlam Clock.Conv.optional hY
+  have hint := integrable_mpFamily_jumpProcess hlam (fun x ↦ (hlam0 x).le) hL nu hY
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hgm : Measurable p.2 := by rw [hp2]; exact measurable_jumpApply hlam hf hC
+  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
+    rw [hp2]; exact fun x ↦ abs_jumpApply_le (fun y ↦ (hlam0 y).le) hL hC x
+  have hwin : ∀ t : ℝ≥0, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q := fun t ↦
+    Measurable.mono (measurable_compensator hlam hgm Clock.Conv.optional t)
+      ((jumpFiltration lam hlam).le' t) le_rfl
+  have hXm : ∀ r : ℝ, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ p.1 (jumpProcess lam r ω) := fun r ↦
+    hf.comp ((measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+  intro i j hij
+  refine (ae_eq_condExp_of_forall_setIntegral_eq ((jumpFiltration lam hlam).le i) (hint j)
+    (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+  intro S hS _
+  -- the non explosive part of `S`, on which the indicator is a functional of the past
+  have hSm : MeasurableSet S := (jumpFiltration lam hlam).le i S hS
+  have hSm' : MeasurableSet (NonExplosive lam ∩ S) :=
+    (measurableSet_nonExplosive hlam).inter hSm
+  have hrestrict : (jumpMeasure mu nu).restrict (NonExplosive lam ∩ S)
+      = (jumpMeasure mu nu).restrict S := by
+    refine Measure.restrict_congr_set ?_
+    filter_upwards [ae_mem_nonExplosive hL0 hlam0 hL mu nu] with ω hω
+    exact propext ⟨fun h ↦ h.2, fun h ↦ ⟨hω, h⟩⟩
+  have hSp : IsPastFunctional lam (i : ℝ)
+      ((NonExplosive lam ∩ S).indicator fun _ ↦ (1 : ℝ)) := by
+    have hGm : Measurable[jumpFiltration lam hlam i] (S.indicator fun _ ↦ (1 : ℝ)) :=
+      measurable_const.indicator hS
+    have h := isPastFunctional_indicator hlam hGm
+    rwa [Set.indicator_indicator] at h
+  -- the two expectation identities, whose right hand sides are the same interval integral
+  have hji : (0 : ℝ) ≤ (j : ℝ) - (i : ℝ) := by
+    have := (NNReal.coe_le_coe).2 hij; linarith
+  have h1 := setIntegral_jumpProcess_sub_eq_intervalIntegral mu hlam hlam0 hL0 hL nu hf hC
+    (s := (i : ℝ)) (t := (j : ℝ) - (i : ℝ)) i.coe_nonneg hji hSm' hSp
+  rw [show (i : ℝ) + ((j : ℝ) - (i : ℝ)) = (j : ℝ) by ring] at h1
+  have h2 := setIntegral_compensator_sub_eq_intervalIntegral hlam hij hgm hgb mu nu hSm'
+  rw [hp2] at h2
+  -- the increment of `Y` over the set is the difference of the two
+  have hsplit : ∀ t : ℝ≥0, (∫ ω in NonExplosive lam ∩ S, Y t ω ∂(jumpMeasure mu nu))
+      = (∫ ω in NonExplosive lam ∩ S, p.1 (jumpProcess lam (t : ℝ) ω) ∂(jumpMeasure mu nu))
+        - ∫ ω in NonExplosive lam ∩ S, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) ∂(jumpMeasure mu nu) := by
+    intro t
+    have hIa : IntegrableOn (fun ω ↦ p.1 (jumpProcess lam (t : ℝ) ω))
+        (NonExplosive lam ∩ S) (jumpMeasure mu nu) :=
+      integrableOn_of_bounded _ (measure_ne_top _ _) (hXm (t : ℝ)) fun ω ↦ hC _
+    have hIb : IntegrableOn (fun ω ↦ ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+        (NonExplosive lam ∩ S) (jumpMeasure mu nu) :=
+      integrableOn_of_bounded _ (measure_ne_top _ _) (hwin t)
+        (abs_setIntegral_compensator_le hgb t)
+    simp only [hYeq t]
+    exact integral_sub hIa hIb
+  simp only [hp2] at hsplit
+  rw [← hrestrict, hsplit i, hsplit j]
+  linarith
 
 end JumpFiltration
 
 end JumpConstruction
+
+/-! ## Milestone 4, uniqueness: the Picard iteration
+
+The exponential series of the bounded generator, and the theorem that fixes the one dimensional
+distributions of **every** solution of the martingale problem to be that series applied to the
+initial law.  This is the uniqueness half of `exists_unique_of_bounded`; the existence half is
+`jumpProcess_isMPSolution` above.
+
+Three remarks on the shape of what follows.
+
+First, the abstract layer is kept: nothing here mentions `jumpProcess`, and the process `X` is
+an arbitrary family of maps `ℝ≥0 → Ω → E`.  That is what makes the statement a *uniqueness*
+statement -- it applies to any solution, not to the one that was constructed.
+
+Second, the only regularity asked of `X` is `hX`, the joint measurability in `(u, ω)` of the real
+functionals `h ∘ X`, and `hX0`, the measurability of the initial value.  Neither is the joint
+measurability of `X` itself, which is not available: a limit of `E` valued measurable maps is
+measurable only if the diagonal of `E` is, and the jump process supplies the real functional form
+(`measurable_uncurry_jumpProcess`) and not the `E` valued one.
+
+Third, the whole argument is the Picard iteration and uses no analysis beyond the Bochner
+integral: `integral_sub_eq_intervalIntegral_of_isMPSolution` turns the martingale property into
+the integral equation `u_f(t) = ν(f) + ∫_0^t u_{Af}(s) ds`, and
+`abs_integral_sub_sum_le_of_isMPSolution` iterates it, the remainder after `n` steps being
+`(2Lt)^n / n!` times the bound of `f`.
+-/
+
+section Uniqueness
+
+variable {lam : E → ℝ} {mu : Kernel E E} {f : E → ℝ} {L C : ℝ}
+
+/-- **The iterates of the generator are bounded by the powers of its bound.** -/
+theorem abs_iterate_jumpApply_le [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (n : ℕ) (x : E) :
+    |(jumpApply lam mu)^[n] f x| ≤ (2 * L) ^ n * C := by
+  induction n generalizing x with
+  | zero => simpa using hC x
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      calc |jumpApply lam mu ((jumpApply lam mu)^[n] f) x|
+          ≤ 2 * L * ((2 * L) ^ n * C) := abs_jumpApply_le hlam0 hL ih x
+        _ = (2 * L) ^ (n + 1) * C := by ring
+
+/-- The iterates of the generator are measurable. -/
+theorem measurable_iterate_jumpApply [IsMarkovKernel mu] (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) (hf : Measurable f) (hC : ∀ x, |f x| ≤ C)
+    (n : ℕ) : Measurable ((jumpApply lam mu)^[n] f) := by
+  induction n with
+  | zero => simpa using hf
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      exact measurable_jumpApply hlam ih (abs_iterate_jumpApply_le hlam0 hL hC n)
+
+/-- **The exponential series of the generator**, `exp (t • A) f`. -/
+noncomputable def expJumpApply (lam : E → ℝ) (mu : Kernel E E) (t : ℝ) (f : E → ℝ) (x : E) : ℝ :=
+  ∑' n : ℕ, (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x
+
+/-- A term of the exponential series, bounded by the corresponding term of the exponential
+series of `2 L |t|`.  Stated for a scalar, because it is used both pointwise and under an
+integral sign. -/
+theorem abs_series_term_le {a : ℝ} {n : ℕ} (h : |a| ≤ (2 * L) ^ n * C) (t : ℝ) :
+    |(t ^ n / n.factorial) * a| ≤ (2 * L * |t|) ^ n / n.factorial * C := by
+  rw [abs_mul, abs_div, abs_pow, Nat.abs_cast]
+  have h2 : (0:ℝ) ≤ |t| ^ n / n.factorial :=
+    div_nonneg (pow_nonneg (abs_nonneg t) n) (Nat.cast_nonneg _)
+  calc |t| ^ n / n.factorial * |a|
+      ≤ |t| ^ n / n.factorial * ((2 * L) ^ n * C) := mul_le_mul_of_nonneg_left h h2
+    _ = (2 * L * |t|) ^ n / n.factorial * C := by
+        rw [mul_pow, mul_comm (2*L) |t|]; ring
+
+/-- Each term of the exponential series is bounded by the corresponding term of the exponential
+series of `2 L |t|`. -/
+theorem abs_term_expJumpApply_le [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : E) (n : ℕ) :
+    |(t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x|
+      ≤ (2 * L * |t|) ^ n / n.factorial * C :=
+  abs_series_term_le (abs_iterate_jumpApply_le hlam0 hL hC n x) t
+
+/-- The exponential series converges absolutely at every point. -/
+theorem summable_expJumpApply [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : E) :
+    Summable fun n : ℕ ↦ (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x :=
+  Summable.of_norm_bounded ((Real.summable_pow_div_factorial (2 * L * |t|)).mul_right C)
+    fun n ↦ abs_term_expJumpApply_le hlam0 hL hC t x n
+
+/-- **The exponential series is bounded by `exp (2 L |t|) C`.** -/
+theorem abs_expJumpApply_le [IsMarkovKernel mu] (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : E) :
+    |expJumpApply lam mu t f x| ≤ Real.exp (2 * L * |t|) * C := by
+  have hexp : Real.exp (2 * L * |t|) = ∑' n : ℕ, (2 * L * |t|) ^ n / n.factorial := by
+    rw [Real.exp_eq_exp_ℝ, NormedSpace.exp_eq_tsum_div]
+  have habs : Summable fun n : ℕ ↦ |(t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x| :=
+    Summable.of_nonneg_of_le (fun n ↦ abs_nonneg _)
+      (fun n ↦ abs_term_expJumpApply_le hlam0 hL hC t x n)
+      ((Real.summable_pow_div_factorial (2 * L * |t|)).mul_right C)
+  rw [expJumpApply, hexp, ← tsum_mul_right]
+  refine le_trans ?_ (habs.tsum_le_tsum (fun n ↦ abs_term_expJumpApply_le hlam0 hL hC t x n)
+    ((Real.summable_pow_div_factorial (2 * L * |t|)).mul_right C))
+  simpa only [Real.norm_eq_abs] using
+    norm_tsum_le_tsum_norm (f := fun n : ℕ ↦ (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x)
+      (by simpa only [Real.norm_eq_abs] using habs)
+
+/-- The exponential series is measurable in the state. -/
+theorem measurable_expJumpApply [IsMarkovKernel mu] (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) (hf : Measurable f) (hC : ∀ x, |f x| ≤ C)
+    (t : ℝ) : Measurable (expJumpApply lam mu t f) :=
+  measurable_of_tendsto_metrizable' atTop
+    (f := fun N x ↦ ∑ n ∈ Finset.range N, (t ^ n / n.factorial) * (jumpApply lam mu)^[n] f x)
+    (fun _ ↦ Finset.measurable_sum _ fun n _ ↦
+      measurable_const.mul (measurable_iterate_jumpApply hlam hlam0 hL hf hC n))
+    (tendsto_pi_nhds.mpr fun x ↦ (summable_expJumpApply hlam0 hL hC t x).hasSum.tendsto_sum_nat)
+
+variable {P : Measure Ω} {F : Filtration ℝ≥0 m} {X : ℝ≥0 → Ω → E}
+
+/-- **The martingale identity, integrated**: the expectation of a bounded functional of the
+state at time `t` is its initial expectation plus the time integral of the expectation of its
+image under the generator. -/
+theorem integral_sub_eq_intervalIntegral_of_isMPSolution [IsProbabilityMeasure P]
+    [IsMarkovKernel mu] (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    (∫ ω, f (X t ω) ∂P) - ∫ ω, f (X 0 ω) ∂P
+      = ∫ r in (0:ℝ)..(t:ℝ), ∫ ω, jumpApply lam mu f (X (Real.toNNReal r) ω) ∂P := by
+  set g := jumpApply lam mu f with hgdef
+  have hgm : Measurable g := measurable_jumpApply hlam hf hC
+  have hgb : ∀ x, |g x| ≤ 2 * L * C := fun x ↦ abs_jumpApply_le hlam0 hL hC x
+  set S : Set ℝ≥0 := lebesgueClock.interval Clock.Conv.optional ⊥ t with hSdef
+  have hSeq : S = Set.Ioc (⊥ : ℝ≥0) t := lebesgueClock_interval_optional_eq ⊥ t
+  haveI hfinS : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ, hSeq, lebesgueClock_apply_Ioc]
+    exact ENNReal.ofReal_lt_top
+  have hsftest : SFinite (lebesgueClock.q.restrict S) := inferInstance
+  -- the compensated test process
+  set Y : ℝ≥0 → Ω → ℝ := fun s ω ↦ f (X s ω) -
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s, g (X u ω) ∂lebesgueClock.q with hYdef
+  have hmart : Martingale Y F P :=
+    hsol Y ⟨(f, g), mem_jumpOperator hf hC, fun s ω ↦ rfl⟩
+  -- the two integrability facts
+  have hintf : ∀ s : ℝ≥0, Integrable (fun ω ↦ f (X s ω)) P := fun s ↦
+    integrable_of_abs_le ((hX f hf).comp (measurable_const.prodMk measurable_id))
+      (fun ω ↦ hC (X s ω))
+  have hcompm : StronglyMeasurable fun ω ↦ ∫ u in S, g (X u ω) ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace Ω m ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) hsftest (fun u ω ↦ g (X u ω)) (hX g hgm) id measurable_id
+  have hStop : lebesgueClock.q S < ⊤ := by
+    rw [hSeq, lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
+  have hcompb : ∀ ω, |∫ u in S, g (X u ω) ∂lebesgueClock.q| ≤ 2 * L * C * (t : ℝ) := by
+    intro ω
+    have hmass : lebesgueClock.q.real S = (t : ℝ) := by
+      rw [measureReal_def, hSeq, lebesgueClock_apply_Ioc]
+      simp
+    have := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q) (s := S)
+      (f := fun u ↦ g (X u ω)) (C := 2 * L * C) hStop
+      (fun u _ ↦ by simpa only [Real.norm_eq_abs] using hgb (X u ω))
+    rw [Real.norm_eq_abs, hmass] at this
+    exact this
+  have hintc : Integrable (fun ω ↦ ∫ u in S, g (X u ω) ∂lebesgueClock.q) P :=
+    integrable_of_abs_le hcompm.measurable hcompb
+  -- the martingale has constant expectation
+  have hexp : ∫ ω, Y t ω ∂P = ∫ ω, Y 0 ω ∂P :=
+    calc ∫ ω, Y t ω ∂P = ∫ ω, (P[Y t | F 0]) ω ∂P := (integral_condExp (F.le 0)).symm
+      _ = ∫ ω, Y 0 ω ∂P := integral_congr_ae (hmart.2 0 t (by simp))
+  have hY0 : ∀ ω, Y 0 ω = f (X 0 ω) := by
+    intro ω
+    simp [hYdef, lebesgueClock_interval_optional_eq]
+  have hYt : ∫ ω, Y t ω ∂P
+      = (∫ ω, f (X t ω) ∂P) - ∫ ω, (∫ u in S, g (X u ω) ∂lebesgueClock.q) ∂P :=
+    integral_sub (hintf t) hintc
+  -- Fubini
+  have hswap : ∫ ω, (∫ u in S, g (X u ω) ∂lebesgueClock.q) ∂P
+      = ∫ u in S, (∫ ω, g (X u ω) ∂P) ∂lebesgueClock.q := by
+    haveI hprodfin : IsFiniteMeasure (P.prod (lebesgueClock.q.restrict S)) :=
+      @MeasureTheory.Measure.prod.instIsFiniteMeasure Ω ℝ≥0 m lebesgueClock.measurableSpace
+        P (lebesgueClock.q.restrict S) inferInstance hfinS
+    refine integral_integral_swap (μ := P) (ν := lebesgueClock.q.restrict S)
+      (f := fun (ω : Ω) (u : ℝ≥0) ↦ g (X u ω)) ?_
+    exact @integrable_of_abs_le _ _ _ hprodfin _ ((hX g hgm).comp measurable_swap) _
+      (fun p ↦ hgb (X p.2 p.1))
+  have hmeasF : Measurable fun u : ℝ≥0 ↦ ∫ ω, g (X u ω) ∂P :=
+    (stronglyMeasurable_integral_comp (α := Ω) (β := ℝ≥0) (γ := ℝ) (𝕜 := ℝ) P
+      (W := fun ω u ↦ g (X u ω)) ((hX g hgm).comp measurable_swap) measurable_id).measurable
+  have hclock : ∫ u in S, (∫ ω, g (X u ω) ∂P) ∂lebesgueClock.q
+      = ∫ r in (0:ℝ)..(t:ℝ), ∫ ω, g (X (Real.toNNReal r) ω) ∂P := by
+    rw [hSeq, integral_lebesgueClock_Ioc bot_le hmeasF]
+    norm_num
+  rw [← hclock, ← hswap]
+  have := hexp
+  rw [hYt] at this
+  rw [integral_congr_ae (Filter.Eventually.of_forall hY0)] at this
+  linarith [this]
+
+/-- **A bounded factor of the past passes through a martingale increment.**  This is the only
+step of the conditional argument that is not bookkeeping:
+`condExp_stronglyMeasurable_mul_of_bound` pulls the factor out of the conditional expectation,
+and `integral_condExp` -- which asks for no integrability, both sides being `0` when there is
+none -- puts the expectation back. -/
+theorem integral_mul_eq_of_martingale [IsFiniteMeasure P] {Y : ℝ≥0 → Ω → ℝ}
+    (hmart : Martingale Y F P) {s u : ℝ≥0} (hsu : s ≤ u) (hint : Integrable (Y u) P)
+    {K : Ω → ℝ} {B : ℝ} (hK : StronglyMeasurable[F s] K) (hKb : ∀ ω, |K ω| ≤ B) :
+    ∫ ω, K ω * Y u ω ∂P = ∫ ω, K ω * Y s ω ∂P := by
+  have hpull : P[(K * Y u : Ω → ℝ) | F s] =ᵐ[P] K * P[Y u | F s] :=
+    condExp_stronglyMeasurable_mul_of_bound (F.le s) hK hint B
+      (Filter.Eventually.of_forall fun ω ↦ by simpa only [Real.norm_eq_abs] using hKb ω)
+  calc ∫ ω, K ω * Y u ω ∂P
+      = ∫ ω, (P[(K * Y u : Ω → ℝ) | F s]) ω ∂P := (integral_condExp (F.le s)).symm
+    _ = ∫ ω, K ω * (P[Y u | F s]) ω ∂P := integral_congr_ae hpull
+    _ = ∫ ω, K ω * Y s ω ∂P :=
+        integral_congr_ae ((hmart.2 s u hsu).mono fun ω hω ↦ by simp only [hω])
+
+/-- **The martingale identity against a bounded factor of the past, read from an arbitrary
+starting time.**  This is the conditional form of
+`integral_sub_eq_intervalIntegral_of_isMPSolution`, and it is what carries the Picard iteration
+from the one dimensional distributions to the finite dimensional ones: `K` is any bounded
+`𝓕 s`-measurable functional, and the increment is read from `s` onwards.  The unconditional
+statement is the case `K = 1`, `s = 0`. -/
+theorem integral_mul_sub_eq_intervalIntegral_of_isMPSolution [IsProbabilityMeasure P]
+    [IsMarkovKernel mu] (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) {s : ℝ≥0} {K : Ω → ℝ} {B : ℝ}
+    (hK : StronglyMeasurable[F s] K) (hKb : ∀ ω, |K ω| ≤ B) (t : ℝ≥0) :
+    (∫ ω, K ω * f (X (s + t) ω) ∂P) - ∫ ω, K ω * f (X s ω) ∂P
+      = ∫ r in (0:ℝ)..(t:ℝ), ∫ ω, K ω * jumpApply lam mu f (X (s + Real.toNNReal r) ω) ∂P := by
+  have hKm : Measurable K := (hK.mono (F.le s)).measurable
+  set g := jumpApply lam mu f with hgdef
+  have hgm : Measurable g := measurable_jumpApply hlam hf hC
+  have hgb : ∀ x, |g x| ≤ 2 * L * C := fun x ↦ abs_jumpApply_le hlam0 hL hC x
+  -- the compensating windows, measurable and bounded by the length of the window
+  have hfin : ∀ a b : ℝ≥0, IsFiniteMeasure
+      (lebesgueClock.q.restrict (lebesgueClock.interval Clock.Conv.optional a b)) := fun a b ↦
+    ⟨by rw [Measure.restrict_apply_univ]
+        exact lt_top_iff_ne_top.2 (lebesgueClock.measure_interval_ne_top _ _ _)⟩
+  have hwinm : ∀ a b : ℝ≥0, Measurable fun ω ↦
+      ∫ u in lebesgueClock.interval Clock.Conv.optional a b, g (X u ω) ∂lebesgueClock.q := by
+    intro a b
+    haveI := hfin a b
+    exact (@stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace Ω m ℝ _ ℝ _
+      (lebesgueClock.q.restrict (lebesgueClock.interval Clock.Conv.optional a b)) inferInstance
+      (fun u ω ↦ g (X u ω)) (hX g hgm) id measurable_id).measurable
+  have hwinb : ∀ (a b : ℝ≥0), a ≤ b → ∀ ω : Ω,
+      |∫ u in lebesgueClock.interval Clock.Conv.optional a b,
+        g (X u ω) ∂lebesgueClock.q| ≤ 2 * L * C * ((b : ℝ) - (a : ℝ)) := by
+    intro a b hab ω
+    have hab' : (0:ℝ) ≤ (b : ℝ) - (a : ℝ) := by
+      have := (NNReal.coe_le_coe).2 hab; linarith
+    have hlt : lebesgueClock.q (lebesgueClock.interval Clock.Conv.optional a b) < ⊤ :=
+      lt_top_iff_ne_top.2 (lebesgueClock.measure_interval_ne_top _ _ _)
+    have hmass : lebesgueClock.q.real (lebesgueClock.interval Clock.Conv.optional a b)
+        = (b : ℝ) - (a : ℝ) := by
+      rw [measureReal_def, lebesgueClock_interval_optional_eq, lebesgueClock_apply_Ioc,
+        ENNReal.toReal_ofReal hab']
+    have hle := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q)
+      (s := lebesgueClock.interval Clock.Conv.optional a b) (f := fun u ↦ g (X u ω))
+      (C := 2 * L * C) hlt (fun u _ ↦ by simpa only [Real.norm_eq_abs] using hgb (X u ω))
+    rwa [Real.norm_eq_abs, hmass] at hle
+  -- the compensated test process
+  set Y : ℝ≥0 → Ω → ℝ := fun j ω ↦ f (X j ω) -
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j, g (X u ω) ∂lebesgueClock.q with hYdef
+  have hmart : Martingale Y F P := hsol Y ⟨(f, g), mem_jumpOperator hf hC, fun j ω ↦ rfl⟩
+  set V : Ω → ℝ := fun ω ↦
+    ∫ u in lebesgueClock.interval Clock.Conv.optional s (s + t), g (X u ω) ∂lebesgueClock.q
+    with hVdef
+  have hVm : Measurable V := hwinm s (s + t)
+  have hVb : ∀ ω, |V ω| ≤ 2 * L * C * (t : ℝ) := fun ω ↦
+    (hwinb s (s + t) le_self_add ω).trans_eq (by push_cast; ring)
+  -- the integrability bookkeeping
+  have hintf : ∀ j : ℝ≥0, Integrable (fun ω ↦ f (X j ω)) P := fun j ↦
+    integrable_of_abs_le ((hX f hf).comp (measurable_const.prodMk measurable_id))
+      (fun ω ↦ hC (X j ω))
+  have hintw : ∀ j : ℝ≥0, Integrable (fun ω ↦
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j, g (X u ω) ∂lebesgueClock.q) P :=
+    fun j ↦ integrable_of_abs_le (hwinm ⊥ j) (hwinb ⊥ j bot_le)
+  have hintY : ∀ j : ℝ≥0, Integrable (Y j) P := fun j ↦ (hintf j).sub (hintw j)
+  have hmulb : ∀ (a b : ℝ) (u v : ℝ), |u| ≤ a → |v| ≤ b → 0 ≤ a → |u * v| ≤ a * b := by
+    intro a b u v hu hv ha
+    rw [abs_mul]; exact mul_le_mul hu hv (abs_nonneg _) ha
+  have hintKf : ∀ j : ℝ≥0, Integrable (fun ω ↦ K ω * f (X j ω)) P := fun j ↦
+    integrable_of_abs_le (hKm.mul ((hX f hf).comp (measurable_const.prodMk measurable_id)))
+      (fun ω ↦ hmulb B C _ _ (hKb ω) (hC _) ((abs_nonneg _).trans (hKb ω)))
+  have hintKw : ∀ j : ℝ≥0, Integrable (fun ω ↦ K ω *
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j, g (X u ω) ∂lebesgueClock.q) P :=
+    fun j ↦ integrable_of_abs_le (hKm.mul (hwinm ⊥ j))
+      (fun ω ↦ hmulb B _ _ _ (hKb ω) (hwinb ⊥ j bot_le ω) ((abs_nonneg _).trans (hKb ω)))
+  have hintKV : Integrable (fun ω ↦ K ω * V ω) P :=
+    integrable_of_abs_le (hKm.mul hVm) (fun ω ↦ hmulb B _ _ _ (hKb ω) (hVb ω) ((abs_nonneg _).trans (hKb ω)))
+  have hintKY : ∀ j : ℝ≥0, Integrable (fun ω ↦ K ω * Y j ω) P := fun j ↦ by
+    have hrw : (fun ω ↦ K ω * Y j ω) = fun ω ↦ K ω * f (X j ω) - K ω *
+        ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ j, g (X u ω) ∂lebesgueClock.q := by
+      funext ω; simp only [hYdef]; ring
+    rw [hrw]; exact (hintKf j).sub (hintKw j)
+  -- the increment of the test process, at every sample point
+  have hZ : ∀ ω : Ω, Measurable[lebesgueClock.measurableSpace] fun u ↦ g (X u ω) := fun ω ↦
+    (hX g hgm).comp (measurable_id.prodMk measurable_const)
+  have hpt : ∀ ω : Ω, Y (s + t) ω - Y s ω = f (X (s + t) ω) - f (X s ω) - V ω := fun ω ↦
+    mpFamily_sub_of_measurable_path (Q := lebesgueClock) (fun j ω ↦ rfl)
+      (fun x ↦ by simpa only [Real.norm_eq_abs] using hgb x) le_self_add (hZ ω)
+  -- the martingale property, tested against `K`
+  have hkey : ∫ ω, K ω * Y (s + t) ω ∂P = ∫ ω, K ω * Y s ω ∂P :=
+    integral_mul_eq_of_martingale hmart le_self_add (hintY (s + t)) hK hKb
+  have hcalc : (∫ ω, K ω * f (X (s + t) ω) ∂P) - (∫ ω, K ω * f (X s ω) ∂P)
+      = ∫ ω, K ω * V ω ∂P := by
+    have h1 : ∫ ω, (K ω * Y (s + t) ω - K ω * Y s ω) ∂P = 0 := by
+      rw [integral_sub (hintKY (s + t)) (hintKY s), hkey, sub_self]
+    have h2 : ∀ ω, K ω * Y (s + t) ω - K ω * Y s ω
+        = (K ω * f (X (s + t) ω) - K ω * f (X s ω)) - K ω * V ω := fun ω ↦ by
+      calc K ω * Y (s + t) ω - K ω * Y s ω = K ω * (Y (s + t) ω - Y s ω) := by ring
+        _ = K ω * (f (X (s + t) ω) - f (X s ω) - V ω) := by rw [hpt ω]
+        _ = (K ω * f (X (s + t) ω) - K ω * f (X s ω)) - K ω * V ω := by ring
+    have hI1 : Integrable (fun ω ↦ K ω * f (X (s + t) ω) - K ω * f (X s ω)) P :=
+      (hintKf (s + t)).sub (hintKf s)
+    rw [integral_congr_ae (Filter.Eventually.of_forall h2), integral_sub hI1 hintKV,
+      integral_sub (hintKf (s + t)) (hintKf s)] at h1
+    linarith
+  -- the remainder, as a genuine interval integral
+  have hΦm : Measurable fun u : ℝ≥0 ↦ ∫ ω, K ω * g (X u ω) ∂P :=
+    (stronglyMeasurable_integral_comp (α := Ω) (β := ℝ≥0) (γ := ℝ) (𝕜 := ℝ) P
+      (W := fun ω u ↦ K ω * g (X u ω))
+      ((hKm.comp measurable_fst).mul ((hX g hgm).comp measurable_swap)) measurable_id).measurable
+  have hVfub : ∫ ω, K ω * V ω ∂P
+      = ∫ r in (0:ℝ)..(t:ℝ), ∫ ω, K ω * g (X (s + Real.toNNReal r) ω) ∂P := by
+    haveI := hfin s (s + t)
+    haveI hprodfin : IsFiniteMeasure (P.prod (lebesgueClock.q.restrict
+        (lebesgueClock.interval Clock.Conv.optional s (s + t)))) :=
+      @MeasureTheory.Measure.prod.instIsFiniteMeasure Ω ℝ≥0 m lebesgueClock.measurableSpace
+        P _ inferInstance (hfin s (s + t))
+    have hin : ∀ ω, K ω * V ω
+        = ∫ u in lebesgueClock.interval Clock.Conv.optional s (s + t), K ω * g (X u ω)
+            ∂lebesgueClock.q := fun ω ↦ (integral_const_mul _ _).symm
+    rw [integral_congr_ae (Filter.Eventually.of_forall hin)]
+    have hswap : ∫ ω, (∫ u in lebesgueClock.interval Clock.Conv.optional s (s + t),
+          K ω * g (X u ω) ∂lebesgueClock.q) ∂P
+        = ∫ u in lebesgueClock.interval Clock.Conv.optional s (s + t),
+          (∫ ω, K ω * g (X u ω) ∂P) ∂lebesgueClock.q := by
+      refine integral_integral_swap (μ := P)
+        (ν := lebesgueClock.q.restrict (lebesgueClock.interval Clock.Conv.optional s (s + t)))
+        (f := fun (ω : Ω) (u : ℝ≥0) ↦ K ω * g (X u ω)) ?_
+      exact @integrable_of_abs_le _ _ _ hprodfin _
+        ((hKm.comp measurable_fst).mul ((hX g hgm).comp measurable_swap)) (B * (2 * L * C))
+        (fun p ↦ hmulb B _ _ _ (hKb p.1) (hgb _) ((abs_nonneg _).trans (hKb p.1)))
+    rw [hswap, lebesgueClock_interval_optional_eq, integral_lebesgueClock_Ioc le_self_add hΦm,
+      show ((s + t : ℝ≥0) : ℝ) - (s : ℝ) = (t : ℝ) by push_cast; ring]
+    refine intervalIntegral.integral_congr fun r hr ↦ ?_
+    rw [Set.uIcc_of_le t.coe_nonneg] at hr
+    rw [Real.toNNReal_add s.coe_nonneg hr.1, Real.toNNReal_coe]
+  rw [hcalc, hVfub]
+
+/-- A bounded measurable real function is interval integrable. -/
+theorem intervalIntegrable_of_abs_le {F : ℝ → ℝ} (hF : Measurable F) {b : ℝ}
+    (hb : ∀ x, |F x| ≤ b) (a c : ℝ) : IntervalIntegrable F volume a c :=
+  ⟨integrableOn_of_bounded _ (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top) hF
+      (fun x ↦ by simpa only [Real.norm_eq_abs] using hb x),
+   integrableOn_of_bounded _ (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top) hF
+      (fun x ↦ by simpa only [Real.norm_eq_abs] using hb x)⟩
+
+/-- The primitive of a monomial, in the shape the Picard iteration consumes. -/
+theorem intervalIntegral_pow_div_factorial (T : ℝ) (hT : 0 ≤ T) (k : ℕ) (a : ℝ) :
+    ∫ r in (0:ℝ)..T, (r ^ k / k.factorial) * a
+      = (T ^ (k + 1) / (k + 1).factorial) * a := by
+  have h1 : (fun r : ℝ ↦ (r ^ k / k.factorial) * a) = fun r : ℝ ↦ r ^ k * (a / k.factorial) := by
+    funext r; ring
+  have hk : (k.factorial : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (Nat.factorial_ne_zero k)
+  rw [h1, intervalIntegral.integral_mul_const, integral_pow]
+  rw [Nat.factorial_succ]
+  push_cast
+  field_simp
+  ring
+
+/-- **The Picard iteration, in the abstract.**  The functional `I` stands for
+`φ ↦ ∫ K · φ (X (s + ·))`, the expectation of a bounded functional of the state tested against a
+bounded factor of the past; the three hypotheses are the bound, the joint measurability in the
+time, and the recursion of the martingale identity.  Isolating them is what lets the *same*
+induction serve the one dimensional distributions (`K = 1`, `s = 0`) and the conditional ones,
+which is the whole of the step from one dimension to finitely many.
+
+The induction runs over `n` and is generalised over `φ` and its bound, because its step applies
+the hypothesis to `A φ` with the bound `2 L D`. -/
+theorem abs_sub_sum_le_of_recursion [IsMarkovKernel mu] (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {I : ℝ≥0 → (E → ℝ) → ℝ} {M : ℝ}
+    (hIb : ∀ (φ : E → ℝ) (D : ℝ), (∀ x, |φ x| ≤ D) → ∀ t : ℝ≥0, |I t φ| ≤ M * D)
+    (hIm : ∀ φ : E → ℝ, Measurable φ → Measurable fun r : ℝ ↦ I (Real.toNNReal r) φ)
+    (hIrec : ∀ (φ : E → ℝ) (D : ℝ), Measurable φ → (∀ x, |φ x| ≤ D) → ∀ t : ℝ≥0,
+      I t φ - I 0 φ = ∫ r in (0:ℝ)..(t:ℝ), I (Real.toNNReal r) (jumpApply lam mu φ))
+    (n : ℕ) : ∀ (φ : E → ℝ) (D : ℝ), Measurable φ → (∀ x, |φ x| ≤ D) → ∀ t : ℝ≥0,
+      |I t φ - ∑ k ∈ Finset.range n,
+          ((t : ℝ) ^ k / k.factorial) * I 0 ((jumpApply lam mu)^[k] φ)|
+        ≤ (2 * L * (t : ℝ)) ^ n / n.factorial * (M * D) := by
+  induction n with
+  | zero =>
+      intro φ D hφ hD t
+      simpa using hIb φ D hD t
+  | succ n ih =>
+      intro φ D hφ hD t
+      have hAm : Measurable (jumpApply lam mu φ) := measurable_jumpApply hlam hφ hD
+      have hAb : ∀ x, |jumpApply lam mu φ x| ≤ 2 * L * D := fun x ↦ abs_jumpApply_le hlam0 hL hD x
+      have hT : (0:ℝ) ≤ (t : ℝ) := t.coe_nonneg
+      -- the integrand of the remainder
+      set w : ℝ → ℝ := fun r ↦ I (Real.toNNReal r) (jumpApply lam mu φ) with hwdef
+      set c : ℕ → ℝ := fun k ↦ I 0 ((jumpApply lam mu)^[k] (jumpApply lam mu φ)) with hcdef
+      have hwm : Measurable w := hIm _ hAm
+      have hwb : ∀ r, |w r| ≤ M * (2 * L * D) := fun r ↦ hIb _ _ hAb _
+      have hrec := hIrec φ D hφ hD t
+      have hIH := ih (jumpApply lam mu φ) (2 * L * D) hAm hAb
+      have hwint : IntervalIntegrable w volume 0 (t : ℝ) := intervalIntegrable_of_abs_le hwm hwb _ _
+      have hpint : ∀ k : ℕ, IntervalIntegrable (fun r : ℝ ↦ (r ^ k / k.factorial) * c k)
+          volume 0 (t : ℝ) := fun k ↦ (by fun_prop : Continuous _).intervalIntegrable _ _
+      have hsint : IntervalIntegrable
+          (fun r : ℝ ↦ ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k) volume 0 (t : ℝ) :=
+        (continuous_finset_sum _ fun k _ ↦ (by fun_prop : Continuous _)).intervalIntegrable _ _
+      have hsplit : ∑ k ∈ Finset.range n, ((t : ℝ) ^ (k + 1) / (k + 1).factorial) * c k
+          = ∫ r in (0:ℝ)..(t : ℝ), ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k := by
+        rw [intervalIntegral.integral_finset_sum (fun k _ ↦ hpint k)]
+        exact Finset.sum_congr rfl fun k _ ↦ (intervalIntegral_pow_div_factorial _ hT k (c k)).symm
+      have hgoal : I t φ - ∑ k ∈ Finset.range (n + 1),
+            ((t : ℝ) ^ k / k.factorial) * I 0 ((jumpApply lam mu)^[k] φ)
+          = ∫ r in (0:ℝ)..(t : ℝ), (w r - ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k) := by
+        rw [intervalIntegral.integral_sub hwint hsint, ← hsplit, Finset.sum_range_succ']
+        simp only [Function.iterate_succ_apply, Function.iterate_zero_apply, pow_zero,
+          Nat.factorial_zero, Nat.cast_one, div_one, one_mul, ← hcdef]
+        rw [show (∫ r in (0:ℝ)..(t : ℝ), w r) = I t φ - I 0 φ from hrec.symm]
+        ring
+      rw [hgoal]
+      have hdom : ∀ r ∈ Set.Ioc (0:ℝ) (t : ℝ),
+          |w r - ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k|
+            ≤ (r ^ n / n.factorial) * ((2 * L) ^ n * (M * (2 * L * D))) := by
+        intro r hr
+        have hr0 : (0:ℝ) ≤ r := le_of_lt hr.1
+        have := hIH (Real.toNNReal r)
+        rw [Real.coe_toNNReal r hr0] at this
+        refine this.trans_eq ?_
+        rw [mul_pow]
+        ring
+      have hgint : IntervalIntegrable
+          (fun r : ℝ ↦ (r ^ n / n.factorial) * ((2 * L) ^ n * (M * (2 * L * D)))) volume
+          0 (t : ℝ) := (by fun_prop : Continuous _).intervalIntegrable _ _
+      have hle := intervalIntegral.norm_integral_le_of_norm_le (μ := volume) (a := (0:ℝ))
+        (b := (t : ℝ)) (f := fun r ↦ w r - ∑ k ∈ Finset.range n, (r ^ k / k.factorial) * c k)
+        (g := fun r ↦ (r ^ n / n.factorial) * ((2 * L) ^ n * (M * (2 * L * D)))) hT
+        (Filter.Eventually.of_forall fun r hr ↦ by
+          simpa only [Real.norm_eq_abs] using hdom r hr) hgint
+      rw [Real.norm_eq_abs] at hle
+      refine hle.trans_eq ?_
+      rw [intervalIntegral_pow_div_factorial _ hT n ((2 * L) ^ n * (M * (2 * L * D)))]
+      rw [mul_pow]
+      ring
+
+/-- **The Picard iteration.**  Any solution of the martingale problem has one dimensional
+expectations agreeing with the exponential series up to the `n`-th remainder.  This is
+`abs_sub_sum_le_of_recursion` for `K = 1` and `s = 0`. -/
+theorem abs_integral_sub_sum_le_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (n : ℕ) : ∀ (φ : E → ℝ) (D : ℝ), Measurable φ → (∀ x, |φ x| ≤ D) → ∀ t : ℝ≥0,
+      |(∫ ω, φ (X t ω) ∂P) - ∑ k ∈ Finset.range n,
+          ((t : ℝ) ^ k / k.factorial) * ∫ ω, ((jumpApply lam mu)^[k] φ) (X 0 ω) ∂P|
+        ≤ (2 * L * (t : ℝ)) ^ n / n.factorial * D := by
+  have key := abs_sub_sum_le_of_recursion (I := fun j ψ ↦ ∫ ω, ψ (X j ω) ∂P) (M := 1)
+    hlam hlam0 hL
+    (fun φ D hD j ↦ by simpa using abs_integral_le_of_abs_le (fun ω ↦ hD (X j ω)))
+    (fun φ hφ ↦ (stronglyMeasurable_integral_comp (α := Ω) (β := ℝ) (γ := ℝ) (𝕜 := ℝ) P
+        (W := fun ω r ↦ φ (X (Real.toNNReal r) ω))
+        ((hX _ hφ).comp ((measurable_real_toNNReal.comp measurable_snd).prodMk measurable_fst))
+        measurable_id).measurable)
+    (fun φ D hφ hD j ↦
+      integral_sub_eq_intervalIntegral_of_isMPSolution hlam hlam0 hL hX hsol hφ hD j) n
+  simpa only [one_mul] using key
+
+/-- **The Picard iteration, tested against a bounded factor of the past.**  This is
+`abs_sub_sum_le_of_recursion` for the functional `φ ↦ ∫ K · φ (X (s + ·))`; the recursion it
+consumes is `integral_mul_sub_eq_intervalIntegral_of_isMPSolution`. -/
+theorem abs_integral_mul_sub_sum_le_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    {s : ℝ≥0} {K : Ω → ℝ} {B : ℝ} (hK : StronglyMeasurable[F s] K) (hKb : ∀ ω, |K ω| ≤ B)
+    (n : ℕ) : ∀ (φ : E → ℝ) (D : ℝ), Measurable φ → (∀ x, |φ x| ≤ D) → ∀ t : ℝ≥0,
+      |(∫ ω, K ω * φ (X (s + t) ω) ∂P) - ∑ k ∈ Finset.range n,
+          ((t : ℝ) ^ k / k.factorial) * ∫ ω, K ω * ((jumpApply lam mu)^[k] φ) (X s ω) ∂P|
+        ≤ (2 * L * (t : ℝ)) ^ n / n.factorial * (B * D) := by
+  have hKm : Measurable K := (hK.mono (F.le s)).measurable
+  have key := abs_sub_sum_le_of_recursion
+    (I := fun j ψ ↦ ∫ ω, K ω * ψ (X (s + j) ω) ∂P) (M := B) hlam hlam0 hL
+    (fun φ D hD j ↦ abs_integral_le_of_abs_le fun ω ↦ by
+      rw [abs_mul]
+      exact mul_le_mul (hKb ω) (hD _) (abs_nonneg _) ((abs_nonneg _).trans (hKb ω)))
+    (fun φ hφ ↦ (stronglyMeasurable_integral_comp (α := Ω) (β := ℝ) (γ := ℝ) (𝕜 := ℝ) P
+        (W := fun ω r ↦ K ω * φ (X (s + Real.toNNReal r) ω))
+        ((hKm.comp measurable_fst).mul ((hX _ hφ).comp
+          (((measurable_real_toNNReal.comp measurable_snd).const_add s).prodMk measurable_fst)))
+        measurable_id).measurable)
+    (fun φ D hφ hD j ↦ by
+      simpa only [add_zero] using integral_mul_sub_eq_intervalIntegral_of_isMPSolution
+        hlam hlam0 hL hX hsol hφ hD hK hKb j) n
+  simpa only [add_zero] using key
+
+/-- **The one dimensional distributions of any solution are the exponential series of the
+generator applied to the initial law.**  This is the uniqueness half of
+`exists_unique_of_bounded`: it fixes the law of `X t` for *every* solution of the martingale
+problem, and it exhibits it as `nu.map (exp (t • A))` in the concrete shape `expJumpApply`. -/
+theorem integral_eq_expJumpApply_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hX0 : Measurable (X 0))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    ∫ ω, f (X t ω) ∂P = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂(P.map (X 0)) := by
+  haveI : IsProbabilityMeasure (P.map (X 0)) := Measure.isProbabilityMeasure_map hX0.aemeasurable
+  set A := jumpApply lam mu with hA
+  set c : ℕ → ℝ := fun k ↦ ∫ ω, (A^[k] f) (X 0 ω) ∂P with hcdef
+  have hmk : ∀ k, Measurable (A^[k] f) := fun k ↦
+    measurable_iterate_jumpApply hlam hlam0 hL hf hC k
+  have hbk : ∀ k x, |(A^[k] f) x| ≤ (2 * L) ^ k * C := fun k x ↦
+    abs_iterate_jumpApply_le hlam0 hL hC k x
+  have hck : ∀ k, |c k| ≤ (2 * L) ^ k * C := fun k ↦
+    abs_integral_le_of_abs_le (fun ω ↦ hbk k (X 0 ω))
+  have habs : (2 * L * |(t : ℝ)|) = 2 * L * (t : ℝ) := by rw [abs_of_nonneg t.coe_nonneg]
+  -- the partial sums converge to the expectation
+  have hsummable : Summable fun k : ℕ ↦ ((t : ℝ) ^ k / k.factorial) * c k :=
+    Summable.of_norm_bounded ((Real.summable_pow_div_factorial (2 * L * |(t : ℝ)|)).mul_right C)
+      fun k ↦ abs_series_term_le (hck k) (t : ℝ)
+  have htends : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ((t : ℝ) ^ k / k.factorial) * c k)
+      atTop (𝓝 (∫ ω, f (X t ω) ∂P)) := by
+    rw [tendsto_iff_dist_tendsto_zero]
+    refine squeeze_zero (fun n ↦ dist_nonneg) (fun n ↦ ?_)
+      (by simpa using (Real.summable_pow_div_factorial (2 * L * (t : ℝ))).tendsto_atTop_zero.mul_const C)
+    rw [Real.dist_eq, abs_sub_comm]
+    exact abs_integral_sub_sum_le_of_isMPSolution hlam hlam0 hL hX hsol n f C hf hC t
+  have htsum : ∑' k : ℕ, ((t : ℝ) ^ k / k.factorial) * c k = ∫ ω, f (X t ω) ∂P :=
+    (hsummable.hasSum_iff_tendsto_nat.2 htends).tsum_eq
+  -- the initial law
+  have hmap : ∀ k, ∫ x, (A^[k] f) x ∂(P.map (X 0)) = c k := fun k ↦ by
+    rw [hcdef, integral_map hX0.aemeasurable (hmk k).aestronglyMeasurable]
+  -- the series may be integrated term by term
+  have hint : ∀ k : ℕ, Integrable (fun x ↦ ((t : ℝ) ^ k / k.factorial) * (A^[k] f) x)
+      (P.map (X 0)) := fun k ↦
+    integrable_of_abs_le (measurable_const.mul (hmk k))
+      (fun x ↦ abs_series_term_le (hbk k x) (t : ℝ))
+  have hnormsum : Summable fun k : ℕ ↦
+      ∫ x, ‖((t : ℝ) ^ k / k.factorial) * (A^[k] f) x‖ ∂(P.map (X 0)) := by
+    refine Summable.of_nonneg_of_le (fun k ↦ integral_nonneg fun x ↦ norm_nonneg _)
+      (fun k ↦ ?_) ((Real.summable_pow_div_factorial (2 * L * |(t : ℝ)|)).mul_right C)
+    refine (abs_integral_le_of_abs_le (C := (2 * L * |(t : ℝ)|) ^ k / k.factorial * C)
+      fun x ↦ ?_).trans' (le_abs_self _)
+    rw [abs_of_nonneg (norm_nonneg _), Real.norm_eq_abs]
+    exact abs_series_term_le (hbk k x) (t : ℝ)
+  have hswapint : ∑' k : ℕ, (∫ x, ((t : ℝ) ^ k / k.factorial) * (A^[k] f) x ∂(P.map (X 0)))
+      = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂(P.map (X 0)) :=
+    integral_tsum_of_summable_integral_norm hint hnormsum
+  rw [← htsum, ← hswapint]
+  exact tsum_congr fun k ↦ by rw [integral_const_mul, hmap k]
+
+/-- **Uniqueness in the one dimensional distributions.**  Two solutions of the martingale problem
+for the same bounded jump generator, with the same initial law, have the same law at every time.
+This is `exists_unique_of_bounded` read as a uniqueness statement; it does not mention the
+constructed process, and the two solutions may live on different spaces. -/
+theorem integral_eq_of_isMPSolution_of_map_eq [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    {Ω' : Type*} {m' : MeasurableSpace Ω'} {P' : Measure Ω'} [IsProbabilityMeasure P']
+    {F' : Filtration ℝ≥0 m'} {X' : ℝ≥0 → Ω' → E}
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hX0 : Measurable (X 0))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    (hX' : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω' ↦ h (X' p.1 p.2))
+    (hX0' : Measurable (X' 0))
+    (hsol' : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X')
+      F' P')
+    (hinit : P.map (X 0) = P'.map (X' 0))
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    ∫ ω, f (X t ω) ∂P = ∫ ω, f (X' t ω) ∂P' := by
+  rw [integral_eq_expJumpApply_of_isMPSolution hlam hlam0 hL hX hX0 hsol hf hC t,
+    integral_eq_expJumpApply_of_isMPSolution hlam hlam0 hL hX' hX0' hsol' hf hC t, hinit]
+
+/-- **The conditional one dimensional distributions of any solution.**  Tested against an
+arbitrary bounded `𝓕 s`-measurable factor `K`, the expectation of `f (X (s + t))` is the
+expectation of the exponential series of the generator evaluated at the state at time `s`.  This
+is the Markov property of *every* solution of the martingale problem, and it is the step that
+carries the uniqueness from the one dimensional distributions to the finite dimensional ones:
+`K` may be a product of test functions of finitely many earlier coordinates. -/
+theorem integral_mul_eq_expJumpApply_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X) F P)
+    {s : ℝ≥0} {K : Ω → ℝ} {B : ℝ} (hK : StronglyMeasurable[F s] K) (hKb : ∀ ω, |K ω| ≤ B)
+    (hf : Measurable f) (hC : ∀ x, |f x| ≤ C) (t : ℝ≥0) :
+    ∫ ω, K ω * f (X (s + t) ω) ∂P = ∫ ω, K ω * expJumpApply lam mu (t : ℝ) f (X s ω) ∂P := by
+  have hKm : Measurable K := (hK.mono (F.le s)).measurable
+  set A := jumpApply lam mu with hA
+  set c : ℕ → ℝ := fun k ↦ ∫ ω, K ω * (A^[k] f) (X s ω) ∂P with hcdef
+  have hmk : ∀ k, Measurable (A^[k] f) := fun k ↦
+    measurable_iterate_jumpApply hlam hlam0 hL hf hC k
+  have hbk : ∀ k x, |(A^[k] f) x| ≤ (2 * L) ^ k * C := fun k x ↦
+    abs_iterate_jumpApply_le hlam0 hL hC k x
+  have hmXs : ∀ k, Measurable fun ω ↦ (A^[k] f) (X s ω) := fun k ↦
+    (hX _ (hmk k)).comp (measurable_const.prodMk measurable_id)
+  have hbKk : ∀ (k : ℕ) (ω : Ω), |K ω * (A^[k] f) (X s ω)| ≤ (2 * L) ^ k * (B * C) := by
+    intro k ω
+    rw [abs_mul]
+    calc |K ω| * |(A^[k] f) (X s ω)| ≤ B * ((2 * L) ^ k * C) :=
+          mul_le_mul (hKb ω) (hbk k _) (abs_nonneg _) ((abs_nonneg _).trans (hKb ω))
+      _ = (2 * L) ^ k * (B * C) := by ring
+  have hck : ∀ k, |c k| ≤ (2 * L) ^ k * (B * C) := fun k ↦
+    abs_integral_le_of_abs_le (fun ω ↦ hbKk k ω)
+  have hsummable : Summable fun k : ℕ ↦ ((t : ℝ) ^ k / k.factorial) * c k :=
+    Summable.of_norm_bounded
+      ((Real.summable_pow_div_factorial (2 * L * |(t : ℝ)|)).mul_right (B * C))
+      fun k ↦ abs_series_term_le (hck k) (t : ℝ)
+  have htends : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ((t : ℝ) ^ k / k.factorial) * c k)
+      atTop (𝓝 (∫ ω, K ω * f (X (s + t) ω) ∂P)) := by
+    rw [tendsto_iff_dist_tendsto_zero]
+    refine squeeze_zero (fun n ↦ dist_nonneg) (fun n ↦ ?_)
+      (by simpa using (Real.summable_pow_div_factorial
+        (2 * L * (t : ℝ))).tendsto_atTop_zero.mul_const (B * C))
+    rw [Real.dist_eq, abs_sub_comm]
+    exact abs_integral_mul_sub_sum_le_of_isMPSolution hlam hlam0 hL hX hsol hK hKb n f C hf hC t
+  have htsum : ∑' k : ℕ, ((t : ℝ) ^ k / k.factorial) * c k = ∫ ω, K ω * f (X (s + t) ω) ∂P :=
+    (hsummable.hasSum_iff_tendsto_nat.2 htends).tsum_eq
+  -- the series may be integrated term by term
+  have hint : ∀ k : ℕ,
+      Integrable (fun ω ↦ ((t : ℝ) ^ k / k.factorial) * (K ω * (A^[k] f) (X s ω))) P := fun k ↦
+    integrable_of_abs_le (measurable_const.mul (hKm.mul (hmXs k)))
+      (fun ω ↦ abs_series_term_le (hbKk k ω) (t : ℝ))
+  have hnormsum : Summable fun k : ℕ ↦
+      ∫ ω, ‖((t : ℝ) ^ k / k.factorial) * (K ω * (A^[k] f) (X s ω))‖ ∂P := by
+    refine Summable.of_nonneg_of_le (fun k ↦ integral_nonneg fun ω ↦ norm_nonneg _)
+      (fun k ↦ ?_) ((Real.summable_pow_div_factorial (2 * L * |(t : ℝ)|)).mul_right (B * C))
+    refine (abs_integral_le_of_abs_le (C := (2 * L * |(t : ℝ)|) ^ k / k.factorial * (B * C))
+      fun ω ↦ ?_).trans' (le_abs_self _)
+    rw [abs_of_nonneg (norm_nonneg _), Real.norm_eq_abs]
+    exact abs_series_term_le (hbKk k ω) (t : ℝ)
+  have hswapint : ∑' k : ℕ, (∫ ω, ((t : ℝ) ^ k / k.factorial) * (K ω * (A^[k] f) (X s ω)) ∂P)
+      = ∫ ω, ∑' k : ℕ, ((t : ℝ) ^ k / k.factorial) * (K ω * (A^[k] f) (X s ω)) ∂P :=
+    integral_tsum_of_summable_integral_norm hint hnormsum
+  have hptw : ∀ ω, ∑' k : ℕ, ((t : ℝ) ^ k / k.factorial) * (K ω * (A^[k] f) (X s ω))
+      = K ω * expJumpApply lam mu (t : ℝ) f (X s ω) := by
+    intro ω
+    rw [expJumpApply, ← tsum_mul_left]
+    exact tsum_congr fun k ↦ by ring
+  rw [← htsum]
+  calc ∑' k : ℕ, ((t : ℝ) ^ k / k.factorial) * c k
+      = ∑' k : ℕ, ∫ ω, ((t : ℝ) ^ k / k.factorial) * (K ω * (A^[k] f) (X s ω)) ∂P :=
+        tsum_congr fun k ↦ by simp only [hcdef]; exact (integral_const_mul _ _).symm
+    _ = ∫ ω, ∑' k : ℕ, ((t : ℝ) ^ k / k.factorial) * (K ω * (A^[k] f) (X s ω)) ∂P := hswapint
+    _ = ∫ ω, K ω * expJumpApply lam mu (t : ℝ) f (X s ω) ∂P :=
+        integral_congr_ae (Filter.Eventually.of_forall hptw)
+
+/-! ### From one coordinate to finitely many
+
+A finite dimensional test variable is a product `∏ᵢ gᵢ (X sᵢ)` with `s₀ < s₁ < …`.  It is
+recorded here as a **list of increments** `[(t₀, g₀), (t₁, g₁), …]`, read from a starting time:
+that shape is what the induction of the Markov property consumes, because peeling the first
+factor leaves a list of the same kind read from the later time.  A `Fin n`-indexed family would
+have to reindex at every step. -/
+
+/-- **The finite dimensional test variable along a list of time increments**, read from `s`. -/
+def fddProd (Z : ℝ≥0 → Ω → E) : List (ℝ≥0 × (E → ℝ)) → ℝ≥0 → Ω → ℝ
+  | [], _, _ => 1
+  | (t, g) :: l, s, ω => g (Z (s + t) ω) * fddProd Z l (s + t) ω
+
+/-- **The value the semigroup gives that test variable**: the exponential series of the generator,
+nested along the list.  For a single pair this is `expJumpApply`; for a list it is the iterated
+semigroup that the Markov property produces. -/
+noncomputable def fddExp (lam : E → ℝ) (mu : Kernel E E) :
+    List (ℝ≥0 × (E → ℝ)) → E → ℝ
+  | [] => fun _ ↦ 1
+  | (t, g) :: l => expJumpApply lam mu (t : ℝ) (fun y ↦ g y * fddExp lam mu l y)
+
+/-- The nested semigroup value of a bounded measurable list is bounded and measurable.  Both
+halves are proved at once because the induction step needs both of them for the tail. -/
+theorem measurable_and_bdd_fddExp [IsMarkovKernel mu] (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) :
+    ∀ l : List (ℝ≥0 × (E → ℝ)), (∀ p ∈ l, Measurable p.2) →
+      (∀ p ∈ l, ∃ D : ℝ, ∀ x, |p.2 x| ≤ D) →
+      Measurable (fddExp lam mu l) ∧ ∃ D : ℝ, ∀ x, |fddExp lam mu l x| ≤ D := by
+  intro l
+  induction l with
+  | nil => intro _ _; exact ⟨measurable_const, 1, fun x ↦ by simp [fddExp]⟩
+  | cons p l ih =>
+      intro hm hb
+      obtain ⟨t, g⟩ := p
+      have hgm : Measurable g := hm _ List.mem_cons_self
+      obtain ⟨Dg, hgb⟩ := hb _ List.mem_cons_self
+      obtain ⟨hEm, DE, hEb⟩ := ih (fun q hq ↦ hm q (List.mem_cons_of_mem _ hq))
+        (fun q hq ↦ hb q (List.mem_cons_of_mem _ hq))
+      have hhm : Measurable fun y ↦ g y * fddExp lam mu l y := hgm.mul hEm
+      have hhb : ∀ y, |g y * fddExp lam mu l y| ≤ Dg * DE := fun y ↦ by
+        rw [abs_mul]
+        exact mul_le_mul (hgb y) (hEb y) (abs_nonneg _) ((abs_nonneg _).trans (hgb y))
+      refine ⟨measurable_expJumpApply hlam hlam0 hL hhm hhb _,
+        Real.exp (2 * L * |(t : ℝ)|) * (Dg * DE), fun x ↦ ?_⟩
+      exact abs_expJumpApply_le hlam0 hL hhb (t : ℝ) x
+
+/-- **The finite dimensional distributions of any solution, tested against a factor of the past.**
+This is the induction over the number of coordinates: peeling the first factor turns the test
+variable into one of the same kind read from the later time, with the peeled factor absorbed into
+the past factor `K`, and `integral_mul_eq_expJumpApply_of_isMPSolution` then replaces the whole
+tail by the nested semigroup value at the earlier time. -/
+theorem integral_mul_fddProd_eq_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hXad : ∀ h : E → ℝ, Measurable h → ∀ u : ℝ≥0, StronglyMeasurable[F u] fun ω ↦ h (X u ω))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X)
+      F P) :
+    ∀ l : List (ℝ≥0 × (E → ℝ)), (∀ p ∈ l, Measurable p.2) →
+      (∀ p ∈ l, ∃ D : ℝ, ∀ x, |p.2 x| ≤ D) →
+      ∀ (s : ℝ≥0) (K : Ω → ℝ) (B : ℝ), StronglyMeasurable[F s] K → (∀ ω, |K ω| ≤ B) →
+        ∫ ω, K ω * fddProd X l s ω ∂P = ∫ ω, K ω * fddExp lam mu l (X s ω) ∂P := by
+  intro l
+  induction l with
+  | nil => intro _ _ s K B _ _; simp [fddProd, fddExp]
+  | cons p l ih =>
+      intro hm hb s K B hK hKb
+      obtain ⟨t, g⟩ := p
+      have hgm : Measurable g := hm _ List.mem_cons_self
+      obtain ⟨Dg, hgb⟩ := hb _ List.mem_cons_self
+      have hml : ∀ q ∈ l, Measurable q.2 := fun q hq ↦ hm q (List.mem_cons_of_mem _ hq)
+      have hbl : ∀ q ∈ l, ∃ D : ℝ, ∀ x, |q.2 x| ≤ D := fun q hq ↦ hb q (List.mem_cons_of_mem _ hq)
+      obtain ⟨hEm, DE, hEb⟩ := measurable_and_bdd_fddExp (mu := mu) hlam hlam0 hL l hml hbl
+      -- the first factor joins the past factor
+      have hKgm : StronglyMeasurable[F (s + t)] fun ω ↦ K ω * g (X (s + t) ω) :=
+        (hK.mono (F.mono le_self_add)).mul (hXad g hgm (s + t))
+      have hKgb : ∀ ω, |K ω * g (X (s + t) ω)| ≤ B * Dg := fun ω ↦ by
+        rw [abs_mul]
+        exact mul_le_mul (hKb ω) (hgb _) (abs_nonneg _) ((abs_nonneg _).trans (hKb ω))
+      have hstep := ih hml hbl (s + t) (fun ω ↦ K ω * g (X (s + t) ω)) (B * Dg) hKgm hKgb
+      -- the tail is replaced by the nested semigroup value at the earlier time
+      have hhm : Measurable fun y ↦ g y * fddExp lam mu l y := hgm.mul hEm
+      have hhb : ∀ y, |g y * fddExp lam mu l y| ≤ Dg * DE := fun y ↦ by
+        rw [abs_mul]
+        exact mul_le_mul (hgb y) (hEb y) (abs_nonneg _) ((abs_nonneg _).trans (hgb y))
+      have hkey := integral_mul_eq_expJumpApply_of_isMPSolution (f := fun y ↦
+        g y * fddExp lam mu l y) hlam hlam0 hL hX hsol hK hKb hhm hhb t
+      calc ∫ ω, K ω * fddProd X ((t, g) :: l) s ω ∂P
+          = ∫ ω, (K ω * g (X (s + t) ω)) * fddProd X l (s + t) ω ∂P := by
+            refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+            simp only [fddProd]; ring
+        _ = ∫ ω, (K ω * g (X (s + t) ω)) * fddExp lam mu l (X (s + t) ω) ∂P := hstep
+        _ = ∫ ω, K ω * (fun y ↦ g y * fddExp lam mu l y) (X (s + t) ω) ∂P := by
+            refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+            simp only []; ring
+        _ = ∫ ω, K ω * expJumpApply lam mu (t : ℝ)
+              (fun y ↦ g y * fddExp lam mu l y) (X s ω) ∂P := hkey
+        _ = ∫ ω, K ω * fddExp lam mu ((t, g) :: l) (X s ω) ∂P := by simp only [fddExp]
+
+/-- **The finite dimensional distributions of any solution are fixed by the initial law.**  This
+is `exists_unique_of_bounded` in full: "exactly one solution" is a statement about the finite
+dimensional distributions, and here they are computed from `nu` alone. -/
+theorem integral_fddProd_eq_of_isMPSolution [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hXad : ∀ h : E → ℝ, Measurable h → ∀ u : ℝ≥0, StronglyMeasurable[F u] fun ω ↦ h (X u ω))
+    (hX0 : Measurable (X 0))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X)
+      F P)
+    (l : List (ℝ≥0 × (E → ℝ))) (hm : ∀ p ∈ l, Measurable p.2)
+    (hb : ∀ p ∈ l, ∃ D : ℝ, ∀ x, |p.2 x| ≤ D) :
+    ∫ ω, fddProd X l 0 ω ∂P = ∫ x, fddExp lam mu l x ∂(P.map (X 0)) := by
+  obtain ⟨hEm, DE, hEb⟩ := measurable_and_bdd_fddExp (mu := mu) hlam hlam0 hL l hm hb
+  have key := integral_mul_fddProd_eq_of_isMPSolution hlam hlam0 hL hX hXad hsol l hm hb 0
+    (fun _ ↦ (1 : ℝ)) 1 stronglyMeasurable_const (fun _ ↦ by norm_num)
+  simp only [one_mul] at key
+  rw [key, integral_map hX0.aemeasurable hEm.aestronglyMeasurable]
+
+/-- **Uniqueness.**  Two solutions of the martingale problem for the same bounded jump generator,
+with the same initial law, have the same finite dimensional distributions -- on two different
+probability spaces.  This is the uniqueness half of `exists_unique_of_bounded`, and unlike
+`integral_eq_of_isMPSolution_of_map_eq` it is not restricted to a single coordinate. -/
+theorem integral_fddProd_eq_of_isMPSolution_of_map_eq [IsProbabilityMeasure P] [IsMarkovKernel mu]
+    {Ω' : Type*} {m' : MeasurableSpace Ω'} {P' : Measure Ω'} [IsProbabilityMeasure P']
+    {F' : Filtration ℝ≥0 m'} {X' : ℝ≥0 → Ω' → E}
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2))
+    (hXad : ∀ h : E → ℝ, Measurable h → ∀ u : ℝ≥0, StronglyMeasurable[F u] fun ω ↦ h (X u ω))
+    (hX0 : Measurable (X 0))
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X)
+      F P)
+    (hX' : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω' ↦ h (X' p.1 p.2))
+    (hXad' : ∀ h : E → ℝ, Measurable h → ∀ u : ℝ≥0, StronglyMeasurable[F' u] fun ω ↦ h (X' u ω))
+    (hX0' : Measurable (X' 0))
+    (hsol' : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional X')
+      F' P')
+    (hinit : P.map (X 0) = P'.map (X' 0))
+    (l : List (ℝ≥0 × (E → ℝ))) (hm : ∀ p ∈ l, Measurable p.2)
+    (hb : ∀ p ∈ l, ∃ D : ℝ, ∀ x, |p.2 x| ≤ D) :
+    ∫ ω, fddProd X l 0 ω ∂P = ∫ ω, fddProd X' l 0 ω ∂P' := by
+  rw [integral_fddProd_eq_of_isMPSolution hlam hlam0 hL hX hXad hX0 hsol l hm hb,
+    integral_fddProd_eq_of_isMPSolution hlam hlam0 hL hX' hXad' hX0' hsol' l hm hb, hinit]
+
+/-- **The two hypotheses on the process are met by the constructed one, and are met globally.**
+The joint measurability asked for by the uniqueness theorem is the one for the *full* σ-algebra,
+not for the past, so it is `measurable_jumpProcess` composed with the coercion `ℝ≥0 → ℝ` and needs
+none of `measurable_uncurry_jumpProcess`; the filtered version is what the compensator consumes
+and is a different statement. -/
+theorem measurable_uncurry_comp_jumpProcess (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) :
+    Measurable fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ h (jumpProcess lam (p.1 : ℝ) p.2) :=
+  hh.comp ((measurable_jumpProcess hlam).comp
+    ((measurable_coe_nnreal_real.comp measurable_fst).prodMk measurable_snd))
+
+/-- **The one dimensional distributions of the constructed jump process are the exponential
+series applied to the initial law.**  This is the half of `exists_unique_of_bounded` that names
+the process: `integral_eq_expJumpApply_of_isMPSolution` applies to *every* solution, and
+`jumpProcess_isMPSolution` says the construction is one, so the two together compute the law of
+`X t` from `nu` alone.  The initial law is `jumpMeasure_map_jumpProcess_zero`. -/
+theorem jumpMeasure_integral_jumpProcess_eq_expJumpApply [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (nu : Measure E) [IsProbabilityMeasure nu] (hf : Measurable f) (hC : ∀ x, |f x| ≤ C)
+    (t : ℝ≥0) :
+    ∫ ω, f (jumpProcess lam (t : ℝ) ω) ∂(jumpMeasure mu nu)
+      = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂nu := by
+  have hX0 : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcess lam (((0 : ℝ≥0) : ℝ)) ω :=
+    (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  have hmap : (jumpMeasure mu nu).map (fun ω ↦ jumpProcess lam (((0 : ℝ≥0) : ℝ)) ω) = nu := by
+    simpa only [NNReal.coe_zero] using jumpMeasure_map_jumpProcess_zero hlam0 mu nu
+  have key := integral_eq_expJumpApply_of_isMPSolution (P := jumpMeasure mu nu)
+    (X := fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (s : ℝ) ω) (F := jumpFiltration lam hlam)
+    hlam (fun x ↦ (hlam0 x).le) hL
+    (fun h hh ↦ measurable_uncurry_comp_jumpProcess hlam hh) hX0
+    (jumpProcess_isMPSolution hlam hlam0 hL mu nu) hf hC t
+  rw [key, hmap]
+
+/-- **One coordinate of the nested semigroup is the exponential series**, so the finite
+dimensional statements extend the one dimensional ones and do not merely sit beside them. -/
+theorem fddExp_singleton (lam : E → ℝ) (mu : Kernel E E) (t : ℝ≥0) (g : E → ℝ) :
+    fddExp lam mu [(t, g)] = expJumpApply lam mu (t : ℝ) g := by
+  simp [fddExp]
+
+omit [MeasurableSpace E] in
+/-- One coordinate of the test variable is the test function at the single time. -/
+theorem fddProd_singleton (Z : ℝ≥0 → Ω → E) (t : ℝ≥0) (g : E → ℝ) (s : ℝ≥0) (ω : Ω) :
+    fddProd Z [(t, g)] s ω = g (Z (s + t) ω) := by
+  simp [fddProd]
+
+/-- **Every bounded functional of the current state of the jump process is adapted.**  This is the
+hypothesis `hXad` of the finite dimensional uniqueness; for the constructed process it is
+`measurable_naturalFiltration` read at `j = i`, the filtration being the natural one. -/
+theorem stronglyMeasurable_jumpFiltration (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) (u : ℝ≥0) :
+    StronglyMeasurable[jumpFiltration lam hlam u] fun ω ↦ h (jumpProcess lam (u : ℝ) ω) :=
+  (hh.comp (measurable_naturalFiltration
+    (fun _ ↦ (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+    (le_refl u))).stronglyMeasurable
+
+/-- **The finite dimensional distributions of the constructed jump process.**  Together with
+`integral_fddProd_eq_of_isMPSolution_of_map_eq` this is `exists_unique_of_bounded` entire: the
+constructed process is a solution, and every solution with the same initial law has these same
+finite dimensional distributions. -/
+theorem jumpMeasure_integral_fddProd_eq_fddExp [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (l : List (ℝ≥0 × (E → ℝ))) (hm : ∀ p ∈ l, Measurable p.2)
+    (hb : ∀ p ∈ l, ∃ D : ℝ, ∀ x, |p.2 x| ≤ D) :
+    ∫ ω, fddProd (fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (s : ℝ) ω) l 0 ω ∂(jumpMeasure mu nu)
+      = ∫ x, fddExp lam mu l x ∂nu := by
+  have hX0 : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcess lam (((0 : ℝ≥0) : ℝ)) ω :=
+    (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  have hmap : (jumpMeasure mu nu).map (fun ω ↦ jumpProcess lam (((0 : ℝ≥0) : ℝ)) ω) = nu := by
+    simpa only [NNReal.coe_zero] using jumpMeasure_map_jumpProcess_zero hlam0 mu nu
+  have key := integral_fddProd_eq_of_isMPSolution (P := jumpMeasure mu nu)
+    (X := fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (s : ℝ) ω) (F := jumpFiltration lam hlam)
+    hlam (fun x ↦ (hlam0 x).le) hL
+    (fun h hh ↦ measurable_uncurry_comp_jumpProcess hlam hh)
+    (fun h hh u ↦ stronglyMeasurable_jumpFiltration hlam hh u) hX0
+    (jumpProcess_isMPSolution hlam hlam0 hL mu nu) l hm hb
+  rw [key, hmap]
+
+end Uniqueness
+
+/-! ## Acceptance example for Milestone 4: the Poisson process
+
+`E = ℕ`, `lam ≡ 1`, `mu x = δ_{x+1}`.  This is the instance that checks Milestone 4, and it
+checks two different things.  First, that the generator of `set:jumpdata` really *is* the forward
+difference on this data: `jumpApply_poisson` is the computation the roadmap asks for before the
+example is admitted, and if it came out as anything but `f (x + 1) - f x` the shape of
+`set:jumpdata` would be the finding.  Second -- and this is what a milestone that only *names*
+its example does not check -- that the six hypotheses of `jumpProcess_isMPSolution`
+(`Measurable lam`, `0 < lam`, `lam ≤ L`, `IsMarkovKernel mu`, `IsProbabilityMeasure nu`,
+`[MeasurableSpace E]`) are jointly satisfiable, so that the theorem is not vacuous.
+`martingale_compensated_poisson` exhibits an actual martingale and not merely a solution
+predicate.  Third, that the process the construction produces is the one it is named after:
+`jumpMeasure_map_jumpProcess_poisson` identifies its one dimensional laws with Mathlib's
+`ProbabilityTheory.poissonMeasure`, and that is the only statement here that could have come
+out false. -/
+
+section PoissonExample
+
+/-- **The rate of the Poisson process**, constant `1`. -/
+def poissonRate : ℕ → ℝ := fun _ ↦ 1
+
+/-- **The jump kernel of the Poisson process**, the deterministic step `x ↦ x + 1`. -/
+noncomputable def poissonKernel : Kernel ℕ ℕ :=
+  Kernel.deterministic (fun x ↦ x + 1) (measurable_of_countable _)
+
+instance : IsMarkovKernel poissonKernel :=
+  Kernel.isMarkovKernel_deterministic (measurable_of_countable _)
+
+theorem measurable_poissonRate : Measurable poissonRate := measurable_const
+
+theorem poissonRate_pos (x : ℕ) : 0 < poissonRate x := zero_lt_one
+
+theorem poissonRate_le_one (x : ℕ) : poissonRate x ≤ 1 := le_rfl
+
+/-- **The generator of the Poisson jump data is the forward difference**,
+`A f x = f (x + 1) - f x`.  The rate cancels because it is `1`, and the integral against the
+kernel is an evaluation because the kernel is a Dirac measure. -/
+theorem jumpApply_poisson (f : ℕ → ℝ) (x : ℕ) :
+    jumpApply poissonRate poissonKernel f x = f (x + 1) - f x := by
+  rw [jumpApply, poissonKernel, Kernel.deterministic_apply,
+    integral_dirac (fun y ↦ f y - f x) (x + 1), poissonRate, one_mul]
+
+/-- **The compensated increment of a bounded function along the Poisson process belongs to the
+family of test processes.**  Written out, it is
+`f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du`, and no boundedness of `f` beyond the one the
+operator itself carries is needed. -/
+theorem mem_mpFamily_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
+    (fun (t : ℝ≥0) (ω : (ℕ → ℕ) × (ℕ → ℝ)) ↦ f (jumpProcess poissonRate (t : ℝ) ω)
+        - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            (f (jumpProcess poissonRate (u : ℝ) ω + 1)
+              - f (jumpProcess poissonRate (u : ℝ) ω)) ∂lebesgueClock.q)
+      ∈ mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω) := by
+  refine ⟨(f, jumpApply poissonRate poissonKernel f),
+    mem_jumpOperator (measurable_of_countable f) hC, fun t ω ↦ ?_⟩
+  simp only [jumpApply_poisson]
+
+/-- **The Poisson process solves the martingale problem of the forward difference operator.**
+This is `jumpProcess_isMPSolution` with `lam ≡ 1`, `mu x = δ_{x+1}` and `nu = δ_0`, and the
+point of writing it out is that every hypothesis of that theorem is discharged here on data,
+so that the theorem is shown to have an instance. -/
+theorem poissonProcess_isMPSolution :
+    IsMPSolution (mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock
+        Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω))
+      (jumpFiltration poissonRate measurable_poissonRate)
+      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+  jumpProcess_isMPSolution measurable_poissonRate poissonRate_pos poissonRate_le_one
+    poissonKernel (Measure.dirac 0)
+
+/-- **A concrete martingale**, and not a solution predicate: for every bounded `f : ℕ → ℝ`, the
+compensated increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` of the Poisson process is a
+martingale for its natural filtration. -/
+theorem martingale_compensated_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
+    Martingale (fun (t : ℝ≥0) (ω : (ℕ → ℕ) × (ℕ → ℝ)) ↦ f (jumpProcess poissonRate (t : ℝ) ω)
+        - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            (f (jumpProcess poissonRate (u : ℝ) ω + 1)
+              - f (jumpProcess poissonRate (u : ℝ) ω)) ∂lebesgueClock.q)
+      (jumpFiltration poissonRate measurable_poissonRate)
+      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+  poissonProcess_isMPSolution _ (mem_mpFamily_poisson hC)
+
+/-! ### The independent control: the one dimensional laws are Mathlib's Poisson laws
+
+Everything above instantiates the milestone on data.  What follows does not: it computes the law
+of `X t` and compares it with `ProbabilityTheory.poissonMeasure`, into whose definition nothing
+of `jumpTime`, `stepIndex` or `waitingMeasure` enters.  It is the only place where an error in
+the construction would show.
+
+The route is the one Milestone 4 names as the cheaper of the two, and it goes through
+uniqueness rather than through the Erlang law of the `n`-th jump time -- Mathlib has the
+densities of `expMeasure` and `gammaMeasure` but not their convolution.  So the law is read off
+the exponential series, and the series is summed by the **Gregory--Newton formula**: the
+generator here is Mathlib's forward difference operator `fwdDiff 1`, and
+`shift_eq_sum_fwdDiff_iter` expands `f (x + k)` in its iterated differences.  What turns that
+finite expansion into the Poisson sum is one Cauchy product with the exponential series. -/
+
+/-- The iterated forward difference of a bounded function is bounded by `2 ^ n` times the bound.
+Stated for `fwdDiff` and not for `jumpApply`, because it is `fwdDiff` that Mathlib's
+Gregory--Newton formula is about; the induction is over the *pair* `(f, C)`, since the step
+replaces `f` by `Δ f` and `C` by `2 * C`. -/
+theorem abs_fwdDiff_iter_le {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (n : ℕ) (x : ℕ) :
+    |(fwdDiff 1)^[n] f x| ≤ 2 ^ n * C := by
+  induction n generalizing f C with
+  | zero => simpa using hC x
+  | succ n ih =>
+      rw [Function.iterate_succ_apply]
+      have hstep : ∀ y, |fwdDiff 1 f y| ≤ 2 * C := by
+        intro y
+        rw [fwdDiff]
+        calc |f (y + 1) - f y| ≤ |f (y + 1)| + |f y| := abs_sub _ _
+          _ ≤ C + C := add_le_add (hC _) (hC _)
+          _ = 2 * C := by ring
+      calc |(fwdDiff 1)^[n] (fwdDiff 1 f) x| ≤ 2 ^ n * (2 * C) := ih hstep
+        _ = 2 ^ (n + 1) * C := by ring
+
+/-- **The exponential series of the forward difference is the Poisson sum.**  For bounded `f`
+and every real `t`,
+`∑' n, t^n/n! * (Δ^[n] f) x = ∑' k, exp (-t) * t^k/k! * f (x + k)`.
+
+The proof is the Cauchy product of the series with `exp t = ∑' m, t^m/m!`: the `k`-th
+antidiagonal sum is `t^k/k!` times `∑_{i ≤ k} C(k,i) * (Δ^[i] f) x`, which is `f (x + k)` by
+`shift_eq_sum_fwdDiff_iter`.  No probability enters, and no restriction on the sign of `t`. -/
+theorem tsum_fwdDiff_iter_eq {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : ℕ) :
+    ∑' n : ℕ, (t ^ n / n.factorial) * (fwdDiff 1)^[n] f x
+      = ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k) := by
+  set D : ℕ → ℝ := fun n ↦ (fwdDiff 1)^[n] f x with hDdef
+  have hD : ∀ n, |D n| ≤ 2 ^ n * C := fun n ↦ abs_fwdDiff_iter_le hC n x
+  -- the two series are absolutely summable
+  have hsA : Summable fun n : ℕ ↦ ‖(t ^ n / n.factorial) * D n‖ := by
+    refine Summable.of_nonneg_of_le (fun n ↦ norm_nonneg _) (fun n ↦ ?_)
+      ((Real.summable_pow_div_factorial (2 * |t|)).mul_right C)
+    rw [Real.norm_eq_abs, abs_mul, abs_div, abs_pow, Nat.abs_cast]
+    have hnn : (0:ℝ) ≤ |t| ^ n / n.factorial :=
+      div_nonneg (pow_nonneg (abs_nonneg t) n) (Nat.cast_nonneg _)
+    calc |t| ^ n / n.factorial * |D n| ≤ |t| ^ n / n.factorial * (2 ^ n * C) :=
+          mul_le_mul_of_nonneg_left (hD n) hnn
+      _ = (2 * |t|) ^ n / n.factorial * C := by rw [mul_pow]; ring
+  have hsB : Summable fun m : ℕ ↦ ‖t ^ m / (m.factorial : ℝ)‖ := by
+    refine Summable.of_nonneg_of_le (fun m ↦ norm_nonneg _) (fun m ↦ ?_)
+      (Real.summable_pow_div_factorial |t|)
+    rw [Real.norm_eq_abs, abs_div, abs_pow, Nat.abs_cast]
+  -- the Cauchy product with the exponential series
+  have hcauchy := tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm hsB hsA
+  have hexp : Real.exp t = ∑' m : ℕ, t ^ m / (m.factorial : ℝ) := by
+    rw [Real.exp_eq_exp_ℝ, NormedSpace.exp_eq_tsum_div]
+  -- each antidiagonal sum is the Gregory--Newton formula
+  have hterm : ∀ k : ℕ, ∑ p ∈ Finset.antidiagonal k,
+      (t ^ p.1 / (p.1.factorial : ℝ)) * ((t ^ p.2 / (p.2.factorial : ℝ)) * D p.2)
+      = (t ^ k / (k.factorial : ℝ)) * f (x + k) := by
+    intro k
+    have hnewton : f (x + k) = ∑ i ∈ Finset.range (k + 1), (k.choose i : ℝ) * D i := by
+      have h := shift_eq_sum_fwdDiff_iter (M := ℕ) (G := ℝ) 1 f k x
+      simp only [smul_eq_mul, mul_one, nsmul_eq_mul] at h
+      exact h
+    rw [Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk, hnewton, Finset.mul_sum,
+      ← Finset.sum_range_reflect]
+    refine Finset.sum_congr rfl fun i hi ↦ ?_
+    have hik : i ≤ k := Nat.lt_succ_iff.1 (Finset.mem_range.1 hi)
+    have hsub : k - (k - i) = i := Nat.sub_sub_self hik
+    have hfac : (k.factorial : ℝ)
+        = (k.choose i : ℝ) * (i.factorial : ℝ) * ((k - i).factorial : ℝ) := by
+      exact_mod_cast congrArg (fun n : ℕ ↦ (n : ℝ))
+        (Nat.choose_mul_factorial_mul_factorial hik).symm
+    have hi0 : ((i.factorial : ℝ)) ≠ 0 := Nat.cast_ne_zero.2 (Nat.factorial_ne_zero i)
+    have hk0 : (((k - i).factorial : ℝ)) ≠ 0 := Nat.cast_ne_zero.2 (Nat.factorial_ne_zero (k - i))
+    have hc0 : ((k.choose i : ℝ)) ≠ 0 := Nat.cast_ne_zero.2 (Nat.choose_pos hik).ne'
+    have hpow : t ^ (k - i) * t ^ i = t ^ k := by
+      rw [← pow_add, Nat.sub_add_cancel hik]
+    simp only [Nat.succ_sub_one, hsub]
+    have hgroup : t ^ (k - i) / ((k - i).factorial : ℝ) * ((t ^ i / (i.factorial : ℝ)) * D i)
+        = (t ^ (k - i) * t ^ i) * D i / (((k - i).factorial : ℝ) * (i.factorial : ℝ)) := by ring
+    rw [hgroup, hpow, hfac]
+    field_simp
+  -- assemble
+  rw [tsum_congr hterm, ← hexp] at hcauchy
+  refine (?_ : ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k) = _).symm
+  calc ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k)
+      = Real.exp (-t) * ∑' k : ℕ, (t ^ k / (k.factorial : ℝ)) * f (x + k) := by
+        rw [← tsum_mul_left]; exact tsum_congr fun k ↦ by ring
+    _ = Real.exp (-t) * (Real.exp t * ∑' n : ℕ, (t ^ n / (n.factorial : ℝ)) * D n) := by
+        rw [hcauchy]
+    _ = ∑' n : ℕ, (t ^ n / (n.factorial : ℝ)) * D n := by
+        rw [← mul_assoc, ← Real.exp_add, neg_add_cancel, Real.exp_zero, one_mul]
+
+/-- **The generator of the Poisson jump data is Mathlib's forward difference operator.** -/
+theorem jumpApply_poisson_eq_fwdDiff (f : ℕ → ℝ) :
+    jumpApply poissonRate poissonKernel f = fwdDiff 1 f := by
+  funext x
+  rw [jumpApply_poisson]
+  rfl
+
+/-- The iterates agree, which is what carries the Gregory--Newton formula into `expJumpApply`. -/
+theorem iterate_jumpApply_poisson (f : ℕ → ℝ) (n : ℕ) :
+    (jumpApply poissonRate poissonKernel)^[n] f = (fwdDiff 1)^[n] f := by
+  induction n generalizing f with
+  | zero => rfl
+  | succ n ih =>
+      rw [Function.iterate_succ_apply, Function.iterate_succ_apply,
+        jumpApply_poisson_eq_fwdDiff, ih]
+
+/-- **The exponential series of the Poisson generator is the Poisson sum.** -/
+theorem expJumpApply_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : ℕ) :
+    expJumpApply poissonRate poissonKernel t f x
+      = ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k) := by
+  rw [expJumpApply]
+  simp only [iterate_jumpApply_poisson]
+  exact tsum_fwdDiff_iter_eq hC t x
+
+/-- **The one dimensional distributions of the constructed process are the Poisson laws.**
+`(jumpMeasure poissonKernel δ_0).map (X t) = Po(t)`, with `Po` Mathlib's
+`ProbabilityTheory.poissonMeasure`.  This is the independent control that the milestone asks
+for: it compares the construction with a measure defined without any reference to it. -/
+theorem jumpMeasure_map_jumpProcess_poisson (t : ℝ≥0) :
+    (jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpProcess poissonRate (t : ℝ))
+      = poissonMeasure t := by
+  have hXm : Measurable (jumpProcess poissonRate ((t : ℝ))) :=
+    (measurable_jumpProcess measurable_poissonRate).comp (measurable_const.prodMk measurable_id)
+  haveI : IsProbabilityMeasure ((jumpMeasure poissonKernel (Measure.dirac 0)).map
+      (jumpProcess poissonRate (t : ℝ))) := Measure.isProbabilityMeasure_map hXm.aemeasurable
+  refine ext_iff_measureReal_singleton.2 fun n ↦ ?_
+  have hgm : Measurable (({n} : Set ℕ).indicator (1 : ℕ → ℝ)) := measurable_of_countable _
+  have hgC : ∀ x : ℕ, |({n} : Set ℕ).indicator (1 : ℕ → ℝ) x| ≤ 1 := by
+    intro x
+    by_cases hx : x = n
+    · simp [Set.indicator_apply, hx]
+    · simp [Set.indicator_apply, hx]
+  rw [← integral_indicator_one (measurableSet_singleton n),
+    integral_map hXm.aemeasurable hgm.aestronglyMeasurable,
+    jumpMeasure_integral_jumpProcess_eq_expJumpApply measurable_poissonRate poissonRate_pos
+      poissonRate_le_one (Measure.dirac 0) hgm hgC t,
+    integral_dirac _ 0, expJumpApply_poisson hgC (t : ℝ) 0, poissonMeasure_real_singleton,
+    tsum_eq_single n (fun k hk ↦ by simp [Set.indicator_apply, hk])]
+  simp
+
+/-- **The finite dimensional machinery is not empty on this example, and it agrees with the one
+dimensional answer already proved.**  Read on the one coordinate list,
+`jumpMeasure_integral_fddProd_eq_fddExp` is `jumpMeasure_integral_jumpProcess_eq_expJumpApply`,
+whose value at the Poisson data is `poissonMeasure t` by
+`jumpMeasure_map_jumpProcess_poisson`. -/
+example (t : ℝ≥0) (f : ℕ → ℝ) (C : ℝ) (hC : ∀ x, |f x| ≤ C) :
+    ∫ ω, fddProd (fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (s : ℝ) ω) [(t, f)] 0 ω
+        ∂(jumpMeasure poissonKernel (Measure.dirac 0))
+      = ∫ x, expJumpApply poissonRate poissonKernel (t : ℝ) f x ∂(Measure.dirac (0 : ℕ)) := by
+  rw [jumpMeasure_integral_fddProd_eq_fddExp (L := 1) measurable_poissonRate poissonRate_pos
+      poissonRate_le_one (Measure.dirac 0) [(t, f)]
+      (by intro p hp; rw [List.mem_singleton] at hp; subst hp; exact measurable_of_countable _)
+      (by intro p hp; rw [List.mem_singleton] at hp; subst hp; exact ⟨C, hC⟩),
+    fddExp_singleton]
+
+end PoissonExample
+
+/-! ## Second acceptance example for Milestone 4: the two state chain
+
+`E = Bool`, `lam ≡ 1`, `mu x = δ_{!x}`, so that `A f x = f (!x) - f x` -- the matrix
+`!![-1, 1; 1, -1]` on `Bool → ℝ`.  This is the smallest instance on which the exponential series
+of Milestone 4 produces a **number**: started at `false`, the law at time `t` is
+`((1 + exp (-2t))/2, (1 - exp (-2t))/2)`.
+
+It checks something the Poisson example cannot.  There the generator is a *shift*, so every
+iterate `A^[n] f` is again a difference of values of `f` and a sign error inside `A` would
+propagate invisibly into a Poisson law of another mean; here the state space has two points,
+the iterates cycle, and the answer `(1 - exp (-2t))/2` is one that no sign error in `jumpApply`
+and no factor in `expJumpApply` leaves standing -- at `t = 0` it must be `0`, and as `t → ∞` it
+must be `1/2` and not `1`. -/
+
+section TwoStateExample
+
+/-- **The rate of the two state chain**, constant `1`. -/
+def flipRate : Bool → ℝ := fun _ ↦ 1
+
+/-- **The jump kernel of the two state chain**, the deterministic flip. -/
+noncomputable def flipKernel : Kernel Bool Bool :=
+  Kernel.deterministic (fun x ↦ !x) (measurable_of_countable _)
+
+instance : IsMarkovKernel flipKernel :=
+  Kernel.isMarkovKernel_deterministic (measurable_of_countable _)
+
+theorem measurable_flipRate : Measurable flipRate := measurable_const
+
+theorem flipRate_pos (x : Bool) : 0 < flipRate x := zero_lt_one
+
+theorem flipRate_le_one (x : Bool) : flipRate x ≤ 1 := le_rfl
+
+/-- **The generator of the two state chain is the flip difference**, `A f x = f (!x) - f x`. -/
+theorem jumpApply_flip (f : Bool → ℝ) (x : Bool) :
+    jumpApply flipRate flipKernel f x = f (!x) - f x := by
+  rw [jumpApply, flipKernel, Kernel.deterministic_apply,
+    integral_dirac (fun y ↦ f y - f x) (!x), flipRate, one_mul]
+
+/-- **The iterates cycle with a factor `-2`.**  This is the eigenvalue of
+`!![-1, 1; 1, -1]` on the antisymmetric part, and it is what makes the answer below `exp (-2t)`
+and not `exp (-t)`. -/
+theorem iterate_jumpApply_flip (f : Bool → ℝ) (n : ℕ) (x : Bool) :
+    (jumpApply flipRate flipKernel)^[n + 1] f x = (-2) ^ n * (f (!x) - f x) := by
+  induction n generalizing x with
+  | zero => simpa using jumpApply_flip f x
+  | succ n ih =>
+      rw [Function.iterate_succ_apply', jumpApply_flip, ih (!x), ih x]
+      simp only [Bool.not_not]
+      ring
+
+/-- **The exponential series of the two state generator, in closed form.** -/
+theorem expJumpApply_flip {f : Bool → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : Bool) :
+    expJumpApply flipRate flipKernel t f x
+      = f x + (1 - Real.exp (-2 * t)) / 2 * (f (!x) - f x) := by
+  have hsum : Summable fun n : ℕ ↦
+      (t ^ n / n.factorial) * (jumpApply flipRate flipKernel)^[n] f x :=
+    summable_expJumpApply (L := 1) (fun y ↦ (flipRate_pos y).le) flipRate_le_one hC t x
+  have hsumA : Summable fun m : ℕ ↦ (-2 * t) ^ m / (m.factorial : ℝ) :=
+    Real.summable_pow_div_factorial (-2 * t)
+  have hexpa : Real.exp (-2 * t) = ∑' m : ℕ, (-2 * t) ^ m / (m.factorial : ℝ) := by
+    rw [Real.exp_eq_exp_ℝ, NormedSpace.exp_eq_tsum_div]
+  have htail : ∑' n : ℕ, (-2 * t) ^ (n + 1) / (((n + 1).factorial : ℕ) : ℝ)
+      = Real.exp (-2 * t) - 1 := by
+    have h := hsumA.tsum_eq_zero_add
+    rw [← hexpa] at h
+    simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one] at h
+    linarith
+  have hiter : ∀ n : ℕ, (t ^ (n + 1) / ((n + 1).factorial : ℝ))
+        * (jumpApply flipRate flipKernel)^[n + 1] f x
+      = (-(1 : ℝ) / 2 * (f (!x) - f x)) * ((-2 * t) ^ (n + 1) / (((n + 1).factorial : ℕ) : ℝ)) := by
+    intro n
+    rw [iterate_jumpApply_flip f n x, mul_pow]
+    ring
+  rw [expJumpApply, hsum.tsum_eq_zero_add]
+  simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one, one_mul,
+    Function.iterate_zero_apply]
+  rw [tsum_congr hiter, tsum_mul_left, htail]
+  ring
+
+/-- **The one dimensional law of the two state chain, as a number.**  Started at `false`, the
+probability of being at `true` at time `t` is `(1 - exp (-2t))/2`.  It is `0` at `t = 0` and
+tends to `1/2`, which is what the acceptance example of Milestone 4 asks a reader to check; the
+complementary value `(1 + exp (-2t))/2` is the mass of `{false}`, the measure being a
+probability measure. -/
+theorem jumpMeasure_map_jumpProcess_flip (t : ℝ≥0) :
+    ((jumpMeasure flipKernel (Measure.dirac false)).map
+        (jumpProcess flipRate (t : ℝ))).real {true}
+      = (1 - Real.exp (-2 * (t : ℝ))) / 2 := by
+  have hXm : Measurable (jumpProcess flipRate ((t : ℝ))) :=
+    (measurable_jumpProcess measurable_flipRate).comp (measurable_const.prodMk measurable_id)
+  have hgm : Measurable (({true} : Set Bool).indicator (1 : Bool → ℝ)) :=
+    measurable_of_countable _
+  have hgC : ∀ x : Bool, |({true} : Set Bool).indicator (1 : Bool → ℝ) x| ≤ 1 := by
+    intro x
+    by_cases hx : x = true
+    · simp [Set.indicator_apply, hx]
+    · simp [Set.indicator_apply, hx]
+  rw [← integral_indicator_one (measurableSet_singleton true),
+    integral_map hXm.aemeasurable hgm.aestronglyMeasurable,
+    jumpMeasure_integral_jumpProcess_eq_expJumpApply measurable_flipRate flipRate_pos
+      flipRate_le_one (Measure.dirac false) hgm hgC t,
+    integral_dirac _ false, expJumpApply_flip hgC (t : ℝ) false]
+  simp
+
+/-- The chain starts where it is started: at `t = 0` the closed form above is `0`.  This is the
+cheapest probe there is on a formula with an exponential in it, and it is written down because a
+formula that is only *stated* is not checked. -/
+example : ((jumpMeasure flipKernel (Measure.dirac false)).map
+    (jumpProcess flipRate ((0 : ℝ≥0) : ℝ))).real {true} = 0 := by
+  rw [jumpMeasure_map_jumpProcess_flip 0]
+  norm_num
+
+/-- **The two coordinate law of the two state chain, as a number.**  Started at `false`, the
+probability of being at `true` at time `t` *and* at time `t + u` is
+`(1 - exp (-2t))/2 · (1 + exp (-2u))/2`: the one dimensional law at `t` times the probability of
+staying put over the increment `u`.
+
+This is the only probe in the file on the **order** in which `fddExp` nests the semigroup, and it
+is the reason it is written down: `fddExp_singleton` cannot see that order, and a `fddExp` that
+nested the other way round would give `(1 - exp (-2u))/2 · (1 + exp (-2t))/2` here, which is a
+different number as soon as `t ≠ u`.  The two degenerations check the two ends: at `u = 0` the
+value is `(1 - exp (-2t))/2`, the one dimensional law, and at `t = 0` it is `0`. -/
+theorem jumpMeasure_integral_fddProd_flip (t u : ℝ≥0) :
+    ∫ ω, fddProd (fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess flipRate (s : ℝ) ω)
+        [(t, ({true} : Set Bool).indicator (1 : Bool → ℝ)),
+          (u, ({true} : Set Bool).indicator (1 : Bool → ℝ))] 0 ω
+        ∂(jumpMeasure flipKernel (Measure.dirac false))
+      = (1 - Real.exp (-2 * (t : ℝ))) / 2 * ((1 + Real.exp (-2 * (u : ℝ))) / 2) := by
+  set g : Bool → ℝ := ({true} : Set Bool).indicator (1 : Bool → ℝ) with hgdef
+  have hgm : Measurable g := measurable_of_countable _
+  have hgt : g true = 1 := by simp [hgdef]
+  have hgf : g false = 0 := by simp [hgdef]
+  have hgC : ∀ x : Bool, |g x| ≤ 1 := by
+    intro x; cases x <;> simp [hgt, hgf]
+  set a : ℝ := (1 - Real.exp (-2 * (u : ℝ))) / 2 with hadef
+  set h : Bool → ℝ := fun y ↦ g y * (g y + a * (g (!y) - g y)) with hhdef
+  have hht : h true = 1 - a := by simp only [hhdef, hgt, hgf, Bool.not_true]; ring
+  have hhf : h false = 0 := by simp only [hhdef, hgf]; ring
+  have hhC : ∀ y : Bool, |h y| ≤ |1 - a| := by
+    intro y
+    cases y
+    · rw [hhf, abs_zero]; exact abs_nonneg _
+    · rw [hht]
+  have hexpu : expJumpApply flipRate flipKernel (u : ℝ) g
+      = fun y ↦ g y + a * (g (!y) - g y) := by
+    funext y; exact expJumpApply_flip hgC (u : ℝ) y
+  have hfdd : fddExp flipRate flipKernel [(t, g), (u, g)]
+      = expJumpApply flipRate flipKernel (t : ℝ) h := by
+    show expJumpApply flipRate flipKernel (t : ℝ)
+      (fun y ↦ g y * fddExp flipRate flipKernel [(u, g)] y) = _
+    rw [fddExp_singleton, hexpu, hhdef]
+  rw [jumpMeasure_integral_fddProd_eq_fddExp (L := 1) measurable_flipRate flipRate_pos
+      flipRate_le_one (Measure.dirac false) [(t, g), (u, g)]
+      (by intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp
+          rcases hp with rfl | rfl <;> exact hgm)
+      (by intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp
+          rcases hp with rfl | rfl <;> exact ⟨1, hgC⟩),
+    integral_dirac _ false, hfdd, expJumpApply_flip hhC (t : ℝ) false, hhf, Bool.not_false, hht,
+    hadef]
+  ring
+
+/-- The two degenerations of the two coordinate law, written down because a formula that is only
+*stated* is not checked: at `u = 0` it collapses to the one dimensional law, and at `t = 0` the
+chain has not moved. -/
+example (t : ℝ≥0) : ∫ ω, fddProd (fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess flipRate (s : ℝ) ω)
+    [(t, ({true} : Set Bool).indicator (1 : Bool → ℝ)),
+      (0, ({true} : Set Bool).indicator (1 : Bool → ℝ))] 0 ω
+    ∂(jumpMeasure flipKernel (Measure.dirac false))
+      = (1 - Real.exp (-2 * (t : ℝ))) / 2 := by
+  rw [jumpMeasure_integral_fddProd_flip t 0]
+  norm_num
+
+example (u : ℝ≥0) : ∫ ω, fddProd (fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess flipRate (s : ℝ) ω)
+    [(0, ({true} : Set Bool).indicator (1 : Bool → ℝ)),
+      (u, ({true} : Set Bool).indicator (1 : Bool → ℝ))] 0 ω
+    ∂(jumpMeasure flipKernel (Measure.dirac false)) = 0 := by
+  rw [jumpMeasure_integral_fddProd_flip 0 u]
+  norm_num
+
+end TwoStateExample
+
+/-! ## Milestone 4, the local case: the jump times belong in `ENNReal`
+
+The construction of `JumpConstruction` carries `∀ x, 0 < lam x` throughout, and the reason is a
+defect and not a convenience: `x / 0 = 0` in Lean, so at a state with `lam x = 0` -- which the
+model intends to be **absorbing**, with an infinite holding time -- the holding time computes to
+`0`, the jump time does not advance, and the path never enters the state at all.
+
+The local case cannot avoid this.  A rate that is only *locally* bounded is allowed zeros, and
+the absorbing state is the simplest witness that the present `jumpTime` does the wrong thing
+there.  The witness is written down first, as Lean and not as prose
+(`jumpProcess_absorbing_const`), and the repair follows it: the jump times take values in
+`ENNReal`, where `a / 0 = ⊤` for `a ≠ 0` is already the intended convention
+(`ENNReal.div_zero`), so that an absorbing state sends every later jump time to `⊤` and the
+step index stops advancing of its own accord.
+
+Nothing else changes.  `stepIndex` and `stepPath` were generalised above to an arbitrary
+linearly ordered time axis for exactly this reason, and the repaired process is the same
+`stepPath`, read at `ENNReal.ofReal t`. -/
+
+section Absorbing
+
+/-! ### The witness: the present construction never enters an absorbing state -/
+
+/-- The rate of the witness: the state `true` jumps at rate `1`, the state `false` is absorbing
+and its rate is `0`.  It is bounded, measurable and nonnegative -- everything
+`jumpProcess_isMPSolution` asks of a rate except the positivity, which is precisely the
+hypothesis under examination. -/
+def absorbRate : Bool → ℝ := fun b ↦ if b then 1 else 0
+
+/-- The trajectory of the embedded chain of the witness: it starts at `true` and is absorbed at
+`false` from the first jump on. -/
+def absorbChain : ℕ → Bool
+  | 0 => true
+  | _ + 1 => false
+
+/-- The waiting times of the witness: all equal to `1`, so every holding time the model intends
+is either `1` (at `true`) or `∞` (at `false`). -/
+def absorbWait : ℕ → ℝ := fun _ ↦ 1
+
+@[simp] theorem absorbChain_zero : absorbChain 0 = true := rfl
+
+@[simp] theorem absorbChain_succ (n : ℕ) : absorbChain (n + 1) = false := rfl
+
+@[simp] theorem absorbRate_true : absorbRate true = 1 := rfl
+
+@[simp] theorem absorbRate_false : absorbRate false = 0 := rfl
+
+@[simp] theorem absorbWait_apply (n : ℕ) : absorbWait n = 1 := rfl
+
+theorem measurable_absorbRate : Measurable absorbRate := measurable_from_top
+
+theorem absorbRate_nonneg (x : Bool) : 0 ≤ absorbRate x := by
+  cases x <;> simp [absorbRate]
+
+theorem absorbRate_le_one (x : Bool) : absorbRate x ≤ 1 := by
+  cases x <;> simp [absorbRate]
+
+theorem absorbWait_pos (n : ℕ) : 0 < absorbWait n := zero_lt_one
+
+/-- **The jump times of the witness stagnate at `1`.**  The zeroth holding time is
+`1 / 1 = 1`, and every later one is `1 / 0`, which is `0` in `ℝ` -- so the jump times never pass
+`1` and no window past the first is ever opened. -/
+theorem jumpTime_absorb (n : ℕ) : jumpTime absorbRate absorbChain absorbWait (n + 1) = 1 := by
+  induction n with
+  | zero => simp [jumpTime_succ]
+  | succ n ih => rw [jumpTime_succ, ih]; simp
+
+/-- **The witness.**  The path of `jumpProcess` on this data is constantly `true`: at no time
+whatever does it take the absorbing value `false`, although the embedded chain sits in `false`
+from index `1` on and the first holding time is `1`, a perfectly finite number.
+
+This is what the positivity hypothesis of `JumpConstruction` buys, stated as the fact it is:
+without it `jumpProcess` is not merely unproved at an absorbing state, it is **wrong** there. -/
+theorem jumpProcess_absorbing_const (t : ℝ) :
+    jumpProcess absorbRate t (absorbChain, absorbWait) = true := by
+  have h0 : stepIndex (jumpTime absorbRate absorbChain absorbWait) t = 0 := by
+    by_cases ht : t < 1
+    · exact Nat.le_zero.1 (stepIndex_le (by rw [jumpTime_absorb 0]; exact ht))
+    · refine Nat.sInf_eq_zero.2 (Or.inr (Set.eq_empty_iff_forall_notMem.2 fun k hk => ?_))
+      rw [Set.mem_setOf_eq, jumpTime_absorb k] at hk
+      exact ht hk
+  simp [jumpProcess, stepPath, h0, absorbChain]
+
+/-- The witness read against the chain: at no time does the path agree with the state the chain
+is actually in after its first jump. -/
+theorem jumpProcess_absorbing_ne (t : ℝ) {n : ℕ} (hn : n ≠ 0) :
+    jumpProcess absorbRate t (absorbChain, absorbWait) ≠ absorbChain n := by
+  obtain ⟨m, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hn
+  simp [jumpProcess_absorbing_const, absorbChain]
+
+/-! ### The repair: jump times in `ENNReal` -/
+
+variable {E : Type*}
+
+/-- **The jump times of the local construction.**  The same recursion as `jumpTime`, read in
+`ENNReal`, where the quotient by a vanishing rate is `⊤` (`ENNReal.div_zero`) rather than `0`: an
+absorbing state has an infinite holding time, which is what the model says. -/
+noncomputable def jumpTimeE (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) : ℕ → ENNReal
+  | 0 => 0
+  | (n + 1) => jumpTimeE lam y xi n + ENNReal.ofReal (xi n) / ENNReal.ofReal (lam (y n))
+
+@[simp] theorem jumpTimeE_zero (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) :
+    jumpTimeE lam y xi 0 = 0 := rfl
+
+theorem jumpTimeE_succ (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTimeE lam y xi (n + 1)
+      = jumpTimeE lam y xi n + ENNReal.ofReal (xi n) / ENNReal.ofReal (lam (y n)) := rfl
+
+variable {lam : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ} {n : ℕ}
+
+/-- The jump times increase.  No hypothesis at all: the increments are elements of `ENNReal`. -/
+theorem monotone_jumpTimeE : Monotone (jumpTimeE lam y xi) :=
+  monotone_nat_of_le_succ fun n => by rw [jumpTimeE_succ]; exact le_self_add
+
+/-- **Every holding time is strictly positive**, with no hypothesis on the rate whatever.  This
+is the point of the change of codomain: at a positive rate the increment is a positive real, and
+at a vanishing rate it is `⊤`, and both are `> 0`.  In `ℝ` the second was `0`. -/
+theorem jumpTimeE_increment_pos (hxi : 0 < xi n) :
+    0 < ENNReal.ofReal (xi n) / ENNReal.ofReal (lam (y n)) :=
+  ENNReal.div_pos (ENNReal.ofReal_pos.2 hxi).ne' ENNReal.ofReal_ne_top
+
+/-- The jump times increase **strictly** as long as they are finite, and that is all the
+strictness there can be: past an absorbing state they are all `⊤`. -/
+theorem lt_jumpTimeE_succ (hxi : 0 < xi n) (hfin : jumpTimeE lam y xi n ≠ ⊤) :
+    jumpTimeE lam y xi n < jumpTimeE lam y xi (n + 1) := by
+  rw [jumpTimeE_succ]
+  exact ENNReal.lt_add_right hfin (jumpTimeE_increment_pos hxi).ne'
+
+/-- **An absorbing state sends the next jump time to `⊤`.**  This is the whole of the repair:
+`ENNReal.div_zero` gives the infinite holding time, and `⊤` absorbs the sum. -/
+theorem jumpTimeE_succ_eq_top (hxi : 0 < xi n) (hlam : lam (y n) = 0) :
+    jumpTimeE lam y xi (n + 1) = ⊤ := by
+  rw [jumpTimeE_succ, hlam, ENNReal.ofReal_zero,
+    ENNReal.div_zero (ENNReal.ofReal_pos.2 hxi).ne', add_top]
+
+/-- **The jump process of the local construction**: the same step path as before, read at
+`ENNReal.ofReal t`.  The time axis of the process is still `ℝ`; only the jump times moved. -/
+noncomputable def jumpProcessE (lam : E → ℝ) (t : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : E :=
+  stepPath (jumpTimeE lam ω.1 ω.2) ω.1 (ENNReal.ofReal t)
+
+/-- **The path stays in an absorbing state, for all time.**  Once the `n`-th jump time has
+passed and the `n`-th state of the chain has rate `0`, the process reads `y n` at every later
+time -- because the `(n+1)`-st jump time is `⊤`, so the window of index `n` is `[T n, ∞)` and
+the step index stops advancing.
+
+This is the statement `jumpProcess_absorbing_const` shows to be false for `jumpTime`. -/
+theorem jumpProcessE_of_absorbing (hxi : 0 < xi n) (hlam : lam (y n) = 0) {t : ℝ}
+    (ht : jumpTimeE lam y xi n ≤ ENNReal.ofReal t) :
+    jumpProcessE lam t (y, xi) = y n := by
+  have h : stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) = n :=
+    stepIndex_eq_of (Or.inr ht)
+      (by rw [jumpTimeE_succ_eq_top hxi hlam]; exact ENNReal.ofReal_lt_top) monotone_jumpTimeE
+  simp [jumpProcessE, stepPath, h]
+
+/-! ### The repaired construction extends the old one
+
+A new definition that merely behaves better at an absorbing state would be a *different*
+process, and none of `JumpConstruction` would transfer to it.  It is not: at a rate that is
+positive everywhere -- the standing hypothesis of everything proved so far -- the two agree,
+term for term. -/
+
+theorem jumpTime_nonneg (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 ≤ xi n) (n : ℕ) :
+    0 ≤ jumpTime lam y xi n := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [jumpTime_succ]; exact add_nonneg ih (div_nonneg (hxi n) (hlam _).le)
+
+/-- **At a positive rate the extended jump times are the old ones.**  Both halves of the
+recursion commute with `ENNReal.ofReal`: the sum because both summands are nonnegative
+(`ENNReal.ofReal_add`), the quotient because the divisor is positive
+(`ENNReal.ofReal_div_of_pos`).  It is exactly the second that fails at a vanishing rate, and
+that failure is the whole content of `jumpProcess_absorbing_const`. -/
+theorem jumpTimeE_eq_ofReal (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 ≤ xi n) (n : ℕ) :
+    jumpTimeE lam y xi n = ENNReal.ofReal (jumpTime lam y xi n) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [jumpTimeE_succ, ih, jumpTime_succ,
+        ENNReal.ofReal_add (jumpTime_nonneg hlam hxi n) (div_nonneg (hxi n) (hlam _).le),
+        ENNReal.ofReal_div_of_pos (hlam _)]
+
+/-- **The two processes agree at a positive rate.**  So `jumpProcessE` is an extension of
+`jumpProcess` and not a competitor to it: every statement of `JumpConstruction` is a statement
+about `jumpProcessE` on the domain where its hypotheses hold, and what the extension adds is
+exactly the behaviour at a zero of the rate. -/
+theorem jumpProcessE_eq_jumpProcess (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 < xi n) (t : ℝ) :
+    jumpProcessE lam t (y, xi) = jumpProcess lam t (y, xi) := by
+  have hpos : ∀ m : ℕ, 0 < jumpTime lam y xi (m + 1) := fun m => by
+    simpa using strictMono_jumpTime hxi hlam (Nat.succ_pos m)
+  have hset : {m | ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)}
+      = {m | t < jumpTime lam y xi (m + 1)} := by
+    ext m
+    rw [Set.mem_setOf_eq, Set.mem_setOf_eq,
+      jumpTimeE_eq_ofReal hlam (fun k => (hxi k).le),
+      ENNReal.ofReal_lt_ofReal_iff (hpos m)]
+  simp only [jumpProcessE, jumpProcess, stepPath, stepIndex, hset]
+
+/-! ### The paths of the local construction are still step paths
+
+`isStepPath_stepPath` asks for `StrictMono T`, and past an absorbing state the extended jump
+times are all `⊤`, so it does not apply and cannot be made to: the sequence really is not
+strictly increasing.  What survives of strictness is **downward propagation** -- if the window
+of index `n + 1` is nonempty then so is the window of index `n` -- and that is all the proof
+ever used.  In `ℝ≥0∞` it is free: `T (n+1) < T (n+2)` forces `T (n+1) ≠ ⊤`, hence `T n ≠ ⊤`,
+hence `lt_jumpTimeE_succ` applies. -/
+
+/-- **The step path of jump times in `ℝ≥0∞`, read at real times, is a step path.**
+
+Two things are weakened against `isStepPath_stepPath` and both are needed here.  Strict
+monotonicity becomes `hlt`, downward propagation of strictness, because absorption makes the
+tail constant equal to `⊤`.  And non explosion is asked for at **real** times only, because at
+`⊤` it is false as soon as the path is absorbed -- which is the entire purpose of the
+construction. -/
+theorem isStepPath_stepPath_ofReal [TopologicalSpace E] {T : ℕ → ENNReal} {y : ℕ → E}
+    (hmono : Monotone T) (hlt : ∀ n, T (n + 1) < T (n + 2) → T n < T (n + 1))
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < T (n + 1)) :
+    IsStepPath (fun t : ℝ ↦ stepPath T y (ENNReal.ofReal t)) := by
+  have key : ∀ (s : ℝ) (m : ℕ), (m = 0 ∨ T m ≤ ENNReal.ofReal s) →
+      ENNReal.ofReal s < T (m + 1) → stepPath T y (ENNReal.ofReal s) = y m := by
+    intro s m h1 h2
+    simp only [stepPath, stepIndex_eq_of h1 h2 hmono]
+  constructor
+  · -- On the right, the open set of times whose image still lies in the window of `x` serves.
+    intro x
+    obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
+    have hopen : IsOpen {z : ℝ | ENNReal.ofReal z < T (n + 1)} :=
+      isOpen_Iio.preimage ENNReal.continuous_ofReal
+    have hmem : {z : ℝ | ENNReal.ofReal z < T (n + 1)} ∩ Set.Ici x ∈ 𝓝[≥] x :=
+      Filter.inter_mem (mem_nhdsWithin_of_mem_nhds (hopen.mem_nhds hx2)) self_mem_nhdsWithin
+    filter_upwards [hmem] with z hz
+    rw [key z n (hx1.imp id fun h ↦ h.trans (ENNReal.ofReal_le_ofReal hz.2)) hz.1,
+      key x n hx1 hx2]
+  · intro x
+    rcases le_or_gt x 0 with hx0 | hx0
+    · -- Left of a nonpositive time every image is `0`, so the path is constant there outright.
+      refine ⟨stepPath T y 0, ?_⟩
+      filter_upwards [self_mem_nhdsWithin] with z (hz : z < x)
+      rw [ENNReal.ofReal_eq_zero.2 (hz.le.trans hx0)]
+    · -- The window of index `m` serves on the left as soon as its left endpoint is *strictly*
+      -- below `x`; that is the only place where any strictness is used at all.
+      have wnd : ∀ m : ℕ, T m < ENNReal.ofReal x → ENNReal.ofReal x ≤ T (m + 1) →
+          ∀ᶠ z in 𝓝[<] x, stepPath T y (ENNReal.ofReal z) = y m := by
+        intro m hm1 hm2
+        have hopen : IsOpen {z : ℝ | T m < ENNReal.ofReal z} :=
+          isOpen_Ioi.preimage ENNReal.continuous_ofReal
+        have hmem : {z : ℝ | T m < ENNReal.ofReal z} ∩ Set.Iio x ∈ 𝓝[<] x :=
+          Filter.inter_mem (mem_nhdsWithin_of_mem_nhds (hopen.mem_nhds hm1)) self_mem_nhdsWithin
+        filter_upwards [hmem] with z hz
+        exact key z m (Or.inr hz.1.le)
+          (((ENNReal.ofReal_lt_ofReal_iff hx0).2 hz.2).trans_le hm2)
+      obtain ⟨n, hx1, hx2⟩ := exists_stepIndex_window (hex x)
+      rcases lt_or_ge (T n) (ENNReal.ofReal x) with h | h
+      · exact ⟨y n, wnd n h hx2.le⟩
+      · rcases Nat.eq_zero_or_pos n with rfl | hpos
+        · -- Nothing has happened yet: the path is constantly `y 0` to the left of `x`.
+          refine ⟨y 0, ?_⟩
+          filter_upwards [self_mem_nhdsWithin] with z (hz : z < x)
+          exact key z 0 (Or.inl rfl) ((ENNReal.ofReal_le_ofReal hz.le).trans_lt hx2)
+        · -- `x` is itself a jump time, and `hlt` pushes the strictness one index down.
+          obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, (Nat.succ_pred_eq_of_pos hpos).symm⟩
+          have hxeq : T (m + 1) = ENNReal.ofReal x :=
+            le_antisymm (hx1.resolve_left (Nat.succ_ne_zero m)) h
+          exact ⟨y m, wnd m ((hlt m (by rw [hxeq]; exact hx2)).trans_eq hxeq) hxeq.ge⟩
+
+/-- **The paths of the local jump process are step paths**, hence càdlàg.  The hypothesis is
+non explosion at real times, which absorption supplies for free and a bounded rate supplies by
+`tendsto_jumpTime_atTop`. -/
+theorem isStepPath_jumpProcessE [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < jumpTimeE lam y xi (n + 1)) :
+    IsStepPath (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) :=
+  isStepPath_stepPath_ofReal monotone_jumpTimeE
+    (fun n h ↦ lt_jumpTimeE_succ (hxi n)
+      (fun htop ↦ (h.trans_le le_top).ne (by
+        simpa [htop] using (monotone_jumpTimeE (Nat.le_succ n) : jumpTimeE lam y xi n ≤ _))))
+    hex
+
+/-- The paths of the local jump process are càdlàg. -/
+theorem isCadlagPath_jumpProcessE [TopologicalSpace E] (hxi : ∀ n, 0 < xi n)
+    (hex : ∀ s : ℝ, ∃ n, ENNReal.ofReal s < jumpTimeE lam y xi (n + 1)) :
+    IsCadlagPath (fun t : ℝ ↦ jumpProcessE lam t (y, xi)) :=
+  (isStepPath_jumpProcessE hxi hex).isCadlagPath
+
+/-! ### The acceptance example of the local case: the absorbing state, done right
+
+The same data that defeats `jumpProcess` in `jumpProcess_absorbing_const`, run through
+`jumpProcessE`.  The path is `true` on `[0, 1)` and `false` on `[1, ∞)` -- it jumps once, at
+time `1`, and then stays where the model says it stays.  Both halves are needed: a construction
+that answered `false` at every time would also "stay absorbed", and it would be just as
+wrong. -/
+
+theorem jumpTimeE_absorb_one : jumpTimeE absorbRate absorbChain absorbWait 1 = 1 := by
+  simp [jumpTimeE_succ]
+
+theorem jumpTimeE_absorb_top (n : ℕ) :
+    jumpTimeE absorbRate absorbChain absorbWait (n + 2) = ⊤ :=
+  jumpTimeE_succ_eq_top (absorbWait_pos (n + 1)) (by simp)
+
+/-- Before the jump the repaired path still reads the initial state. -/
+theorem jumpProcessE_absorb_of_lt_one {t : ℝ} (ht : t < 1) :
+    jumpProcessE absorbRate t (absorbChain, absorbWait) = true := by
+  have h0 : stepIndex (jumpTimeE absorbRate absorbChain absorbWait) (ENNReal.ofReal t) = 0 := by
+    refine Nat.le_zero.1 (stepIndex_le ?_)
+    rw [jumpTimeE_absorb_one, ← ENNReal.ofReal_one]
+    exact ENNReal.ofReal_lt_ofReal_iff one_pos |>.2 ht
+  simp [jumpProcessE, stepPath, h0]
+
+/-- **After the jump the repaired path stays in the absorbing state, at every later time.**
+This is what `jumpProcess_absorbing_const` denies for the real valued jump times. -/
+theorem jumpProcessE_absorb_of_one_le {t : ℝ} (ht : 1 ≤ t) :
+    jumpProcessE absorbRate t (absorbChain, absorbWait) = false := by
+  have h : jumpProcessE absorbRate t (absorbChain, absorbWait) = absorbChain 1 := by
+    refine jumpProcessE_of_absorbing (absorbWait_pos 1) (by simp) ?_
+    rw [jumpTimeE_absorb_one, ← ENNReal.ofReal_one]
+    exact ENNReal.ofReal_le_ofReal ht
+  simpa using h
+
+/-- **The path statement of the local construction has an instance.**  Non explosion at real
+times is here supplied by absorption alone -- the second jump time is `⊤` -- and not by any
+bound on the rate, which is the case `isStepPath_jumpProcess` could not reach.  A theorem whose
+hypotheses are never jointly satisfiable proves nothing, and this is the check. -/
+theorem isStepPath_jumpProcessE_absorb :
+    IsStepPath (fun t : ℝ ↦ jumpProcessE absorbRate t (absorbChain, absorbWait)) :=
+  isStepPath_jumpProcessE absorbWait_pos fun _ ↦
+    ⟨1, by rw [show (1 : ℕ) + 1 = 0 + 2 from rfl, jumpTimeE_absorb_top 0]; exact ENNReal.ofReal_lt_top⟩
+
+/-- The two constructions disagree on the witness, and the disagreement is the point of the
+whole block: at time `1` the chain has been absorbed at `false`, `jumpProcessE` says so and
+`jumpProcess` says `true`. -/
+theorem jumpProcess_ne_jumpProcessE_absorb :
+    jumpProcess absorbRate 1 (absorbChain, absorbWait)
+      ≠ jumpProcessE absorbRate 1 (absorbChain, absorbWait) := by
+  rw [jumpProcess_absorbing_const, jumpProcessE_absorb_of_one_le le_rfl]
+  simp
+
+end Absorbing

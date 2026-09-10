@@ -548,8 +548,43 @@ A concrete family of solutions, built without any of the theory above. Index
   model intends to be absorbing, with an infinite holding time — the holding time
   computes to `0` and the path leaves at once. `strictMono_jumpTime` therefore
   carries `∀ x, 0 < lam x`. Carrying the absorbing case means giving the jump
-  times values in `ℝ≥0∞`, and the milestone does not need it: `lam` bounded away
-  from `0` and from `∞` is exactly the hypothesis of `jumpProcess_isMPSolution`.
+  times values in `ℝ≥0∞`; the bounded case does not need it, since `lam` bounded
+  away from `0` and from `∞` is exactly the hypothesis of
+  `jumpProcess_isMPSolution`, and the local case does.
+* `jumpTimeE`, `jumpProcessE`: the same construction with jump times in `ℝ≥0∞`,
+  where `a / 0 = ⊤` for `a ≠ 0` (`ENNReal.div_zero`) is already the intended
+  convention, so that an absorbing state has an infinite holding time and the
+  step index stops advancing of its own accord. **Proved** on 2026-09-10,
+  seventh run, in forty two declarations. `jumpProcessE_of_absorbing` says the
+  path stays at `y n` for all time once `lam (y n) = 0`,
+  `isStepPath_jumpProcessE` and `isCadlagPath_jumpProcessE` give the paths, and
+  `jumpProcessE_eq_jumpProcess` says the two constructions agree wherever the
+  rate is positive — so this is an extension of the bounded construction and not
+  a competitor to it.
+
+  **The witness comes before the theorem, and it is sharper than "unproved".**
+  `jumpProcess_absorbing_const` exhibits `E = Bool` with `lam false = 0`,
+  `lam true = 1`, a chain absorbed at `false` from index `1` and waiting times
+  all equal to `1`, and proves that the path of `jumpProcess` on that data is
+  **constantly `true`**: it never takes the absorbing value at any time
+  whatever. The reason is that `T n = 1` for every `n ≥ 1`, so past the radius
+  `1` the set `{n | t < T (n+1)}` is empty and `sInf ∅ = 0` returns the junk
+  index. **For the real valued jump times the absorbing state and the explosion
+  set are the same event**, and the junk value that is harmless on a null set is
+  the answer to every question on the other.
+
+  **`StrictMono` is not merely unproved in the local case but false**, since
+  after absorption every jump time is `⊤`. What the proof of
+  `isStepPath_stepPath` actually used is downward propagation of strictness,
+  `T (n+1) < T (n+2) → T n < T (n+1)`, and in `ℝ≥0∞` that is free:
+  `T (n+1) < T (n+2)` forces `T (n+1) ≠ ⊤`, hence `T n ≠ ⊤`, hence
+  `lt_jumpTimeE_succ`. `isStepPath_stepPath_ofReal` carries that hypothesis, and
+  it asks for non explosion at **real** times only — at `⊤` it is false as soon
+  as the path is absorbed, which is the whole purpose of the construction.
+  `stepIndex` and `stepPath` are stated over an arbitrary
+  `ConditionallyCompleteLinearOrder` for exactly this reason, and
+  `exists_stepIndex_window` asks for non explosion at the single point it is
+  applied to.
 * `tendsto_sum_waiting_atTop`: the partial sums of the waiting times diverge
   `waitingMeasure`-almost surely. **Proved** on 2026-09-09, eighteenth run,
   together with `ae_pos_waiting`, `frequently_one_lt_waiting`,
@@ -811,10 +846,13 @@ A concrete family of solutions, built without any of the theory above. Index
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
   `Clock.Conv.optional (fun t ω ↦ jumpProcess lam (t : ℝ) ω))`
-  `(jumpFiltration lam hlam) (jumpMeasure mu nu)`, **stated** on 2026-09-09,
-  nineteenth run, with its adaptedness half proved. What remains is the
-  conditional expectation `P[Y t | 𝓕 s] =ᵐ Y s`. Of its three steps the first is
-  done: the Markov property of the process at a fixed time is
+  `(jumpFiltration lam hlam) (jumpMeasure mu nu)`, **proved** on 2026-09-10,
+  third run; it is the first solution of a martingale problem in this file that
+  is a solution and not a counterexample. It was stated on 2026-09-09,
+  nineteenth run, with its adaptedness half proved, and the conditional
+  expectation `P[Y t | 𝓕 s] =ᵐ Y s` took the eight runs between. Of its three
+  steps the first is
+  the Markov property of the process at a fixed time,
   `jumpMeasure_integral_eq_of_firstJump` together with `jumpProcess_jumpShift`
   and `jumpMeasure_map_split`, complete on 2026-09-09, twenty second run, and
   assembled into `jumpMeasure_integral_eq_renewal` on the twenty third. What
@@ -826,8 +864,34 @@ A concrete family of solutions, built without any of the theory above. Index
   derivative from `0` to every `s` is `jumpMeasure_integral_jumpProcess_add`,
   proved on 2026-09-09, twenty sixth run. The identity itself follows from them
   and is `jumpMeasure_integral_sub_eq_intervalIntegral`, proved in the same run.
-  **What remains of `jumpProcess_isMPSolution` is therefore only the passage from
-  the expectation identity to the conditional one**, `P[Y t | 𝓕 s] =ᵐ Y s`.
+  Its conditional form on a set of the past is
+  `setIntegral_jumpProcess_sub_eq_intervalIntegral` (2026-09-10, first run), and
+  the matching identity for the compensator term is
+  `setIntegral_compensator_sub_eq_intervalIntegral` (2026-09-10, second run);
+  the two have the **same** interval integral on the right, so the increment of
+  `Y` integrates to zero over every set of the past and
+  `ae_eq_condExp_of_forall_setIntegral_eq` names that the conditional
+  expectation.
+
+  **Two hypotheses of the assembly are supplied inside the proof and are not in
+  the statement.** The set of the past is cut down to `NonExplosive lam ∩ S`,
+  because `isPastFunctional_indicator` produces a functional of the past only
+  after that cut; the cut changes no integral (`indicator_nonExplosive_ae_eq`),
+  and `Measure.restrict_congr_set` carries the result back to `S`. And `0 < L`
+  is **derived, not assumed**: `nu` is a probability measure, so `E` is nonempty
+  — were it empty, `nu Set.univ` would be both `0` and `1` — and `0 < lam x ≤ L`
+  at any of its points. Adding `0 < L` to the statement would have been a
+  hypothesis that no instance has to check separately, and that is the reason it
+  is not there.
+
+  The integrability that `ae_eq_condExp_of_forall_setIntegral_eq` asks of the
+  later time is `integrable_mpFamily_jumpProcess`, with the explicit bound
+  `|Y t ω| ≤ C + 2 L C · t`: `C` from the member of the operator, `2 L C` from
+  `abs_jumpApply_le`, and the factor `t` from
+  `abs_setIntegral_compensator_le`, which is the exact mass
+  `lebesgueClock_apply_Ioc` of the compensating window and not a mere finiteness
+  bound. The bound grows with `t` and that is harmless: a martingale needs
+  finiteness at each `t`, not uniformity.
 
   **The Markov property is a statement about the initial *state* and not about an
   initial law, and that is why `jumpKernel` exists.** The form announced on
@@ -847,6 +911,52 @@ A concrete family of solutions, built without any of the theory above. Index
     = ∫ ω, jumpSemigroup lam mu h t (jumpProcess lam s ω) ∂(jumpKernel mu z),
   ```
   and the announced form follows from it by `integral_jumpSemigroup_eq`.
+* `IsPastFunctional lam s G`: **what a functional of the past is allowed to
+  depend on**, and the property the induction of the *conditional* Markov
+  property carries. **Proved** on 2026-09-09, twenty seventh run, in twenty five
+  declarations of `Suggested.lean`.
+
+  Two of them are about a natural filtration and nothing else.
+  `eq_of_measurable_naturalFiltration` says that a `𝓕 s`-measurable real function
+  takes the same value at two sample points whose coordinates agree below `s`,
+  and `measurable_comp_of_measurable_naturalFiltration` says that composing such
+  a function with a substitution that carries every coordinate below `s` into a
+  σ-algebra `n` lands in `n`. **Neither needs a factorisation theorem**, and none
+  is available: Doob--Dynkin factors through *one* comap, while `𝓕 s` is a
+  supremum of comaps, and over a bare `[MeasurableSpace F]` nothing turns the
+  supremum into the comap of a joint map. The proof of the first is that the sets
+  which fail to separate a *fixed* pair form a σ-algebra; the proof of the second
+  is `MeasurableSpace.comap_iSup` and `MeasurableSpace.comap_comp`.
+
+  The rest is the two substitutions. `jumpConst lam s x = (fun _ ↦ x,`
+  `fun _ ↦ lam x * s + 1)` is the datum that sits at `x` and whose first jump is
+  at `s + 1 / lam x`, hence after `s`; `jumpPrepend x a ω` puts a state and a
+  waiting time in front of `ω` and is the inverse of `jumpShift`
+  (`jumpShift_jumpPrepend`, `jumpPrepend_self`). With them
+  `eq_jumpConst_of_isPastFunctional` says that before the first jump a functional
+  of the past **is a function of the initial state**, `G ω = G (jumpConst lam s`
+  `(ω.1 0))`, and `IsPastFunctional.comp_jumpPrepend` says that after the first
+  jump it **restarts as one**, at the horizon `s - a / lam x`. Those are the two
+  branches of the induction, and they are the reason the property is stated as it
+  is rather than as `Measurable[jumpFiltration lam hlam s] G`.
+
+  **The definition carries `NonExplosive lam`, and that is forced by a
+  counterexample and not by convenience.** `jumpProcess_jumpPrepend` — the
+  identity `X r (jumpPrepend x a ω) = X (r - a / lam x) ω` for
+  `a / lam x ≤ r`, on which `IsPastFunctional.comp_jumpPrepend` rests — is
+  **false** past the explosion time of `ω`: there `stepIndex` is the junk value
+  `0`, so the left hand side is `x` and the right hand side is `ω.1 0`. A
+  functional of the past defined by measurability alone therefore does *not*
+  restart as one. `IsPastFunctional` asks instead that `G` vanish off
+  `NonExplosive lam` and be constant on the paths that agree below `s` *within*
+  that set; `jumpPrepend_mem_nonExplosive_iff` is what makes the set survive the
+  restart, and `indicator_nonExplosive_ae_eq` is what makes the restriction cost
+  nothing — `isPastFunctional_indicator` turns any bounded
+  `𝓕 s`-measurable `G` into one at the price of a null set. **`StronglyAdapted`
+  could not have been treated this way**: it is not an almost sure notion, which
+  is why `eventuallyEq_nhdsGE_stepPath` was proved without hypotheses. The
+  conditional expectation *is* an almost sure notion, and here the difference
+  pays.
 * `jumpKernel mu = (chainKernel mu).prod (Kernel.const E waitingMeasure)`: the
   jump construction as a **kernel in the initial state**, with
   `jumpMeasure_eq_comp : jumpMeasure mu nu = jumpKernel mu ∘ₘ nu`. **Proved** on
@@ -947,6 +1057,45 @@ A concrete family of solutions, built without any of the theory above. Index
   `abs_integral_jumpProcess_sub_le`, read from the law at time `a` instead of
   from `nu`; and the integrability of the compensator is `abs_jumpApply_le`
   together with the joint measurability of `(r, ω) ↦ jumpProcess lam r ω`.
+* `abs_integral_jumpMeasure_add_sub_le_past` and
+  `jumpMeasure_integral_jumpProcess_add_past`: the **Markov property tested
+  against the past**,
+  ```
+  ∫ G · h (X (s + t)) d(jumpMeasure mu nu) = ∫ G · (P t h) (X s) d(jumpMeasure mu nu)
+  ```
+  for every `G` with `Measurable G`, `|G| ≤ 1` and `IsPastFunctional lam s G`.
+  **Proved** on 2026-09-10, first run, as the induction over the number of jumps
+  carrying the factor along and its limit. The initial law, the horizon **and the
+  functional** are quantified inside the induction, because the branch
+  `{T 1 ≤ s}` applies the inductive hypothesis to `mu z`, to `s - σ / lam z` and
+  to the restarted functional at once. Two steps are new and both are the two
+  theorems of `IsPastFunctional`: on `{s < T 1}` the factor leaves the integral
+  because it is a function of the initial state there
+  (`eq_jumpConst_of_isPastFunctional`, then `integral_jumpKernel_zero_eq`), and
+  on `{T 1 ≤ s}` it restarts as a functional of the past
+  (`IsPastFunctional.comp_jumpPrepend`), the identification `G ω = G (jumpPrepend
+  (ω.1 0) (ω.2 0) (jumpShift ω))` being `jumpPrepend_self` and hence pointwise.
+  The first branch runs under `jumpKernel mu z` and not under `jumpMeasure`, so
+  non explosion is needed there in its kernel form
+  (`ae_mem_nonExplosive_jumpKernel`, from `jumpKernel_map_snd`): non explosion is
+  a statement about the waiting times alone, and they are the second marginal of
+  the kernel just as they are of the measure.
+* `setIntegral_jumpProcess_sub_eq_intervalIntegral`: the **expectation identity
+  tested against a set of the past**,
+  ```
+  ∫_S h (X (s + t)) dP - ∫_S h (X s) dP = ∫_0^t ∫_S (A h) (X (s + r)) dP dr
+  ```
+  for every measurable `S` whose indicator is a functional of the past up to `s`.
+  **Proved** on 2026-09-10, first run. It is not a new statement about the
+  process: with the item above the left hand side is an expectation of the
+  semigroup at time `s`, and the semigroup at time `s` is an expectation under
+  the construction restarted from the law of `X s` conditioned on `S`, that is
+  from `ν = (P S)⁻¹ • ((P.restrict S).map (X s))`; on `ν` the identity is
+  literally `jumpMeasure_integral_sub_eq_intervalIntegral`, and the normalising
+  factors cancel. The functional is an **indicator** and not a general bounded
+  one, because that is what makes `ν` a measure -- for a general one the density
+  would need `withDensity`, and a signed one gives no measure at all. The
+  conditional expectation asks only for sets, so this costs nothing.
 * `jumpApply lam mu f x = lam x * ∫ y, (f y - f x) ∂(mu x)`: the operator `A`,
   **defined** on 2026-09-09, eighteenth run, over `[MeasurableSpace E]` alone.
 * `norm_apply_le`: for `lam` bounded by `L`, `‖A f‖ ≤ 2 * L * ‖f‖`, so `A` is a
@@ -963,6 +1112,90 @@ A concrete family of solutions, built without any of the theory above. Index
   `(A, nu)` has exactly one solution, and its one dimensional distributions are
   `nu.map (exp (t • A))` given by the exponential series of the bounded operator.
   This is the Picard iteration and needs no analysis beyond `NormedSpace`.
+  **The one dimensional half is proved** on 2026-09-10, fourth run, in fourteen
+  declarations of `Suggested.lean`, section `Uniqueness`.
+  `expJumpApply lam mu t f x = ∑' n, t^n/n! * (A^[n] f) x` is the exponential
+  series, defined pointwise and not on a normed space of bounded measurable
+  functions -- the same decision as for `abs_jumpApply_le`, and for the same
+  reason: `abs_series_term_le` dominates its `n`-th term by
+  `(2L|t|)^n/n! * C`, so `Real.summable_pow_div_factorial` gives summability,
+  `abs_expJumpApply_le` gives the bound `exp (2L|t|) * C`, and
+  `measurable_expJumpApply` gives measurability as a pointwise limit of partial
+  sums.  `integral_eq_expJumpApply_of_isMPSolution` is the theorem:
+  `∫ f (X t) dP = ∫ expJumpApply lam mu t f d(P.map (X 0))` for **every**
+  solution `P`, and `integral_eq_of_isMPSolution_of_map_eq` reads it as
+  uniqueness -- two solutions with the same initial law, on two different
+  spaces, agree at every time.  The two steps are
+  `integral_sub_eq_intervalIntegral_of_isMPSolution`, which turns the martingale
+  property into `u_f(t) = ν(f) + ∫_0^t u_{Af}(s) ds` (constant expectation plus
+  Fubini), and `abs_integral_sub_sum_le_of_isMPSolution`, which iterates it with
+  remainder `(2Lt)^n/n! * C`.  Over `E` nothing is assumed but
+  `[MeasurableSpace E]`.
+
+  Two hypotheses on the process, and neither is decoration.  `hX` is the joint
+  measurability in `(u, ω)` of the **real functionals** `h ∘ X`, not of `X`
+  itself -- the `E` valued form is not available and is not needed, exactly as
+  in `measurable_uncurry_jumpProcess`.  `hX0 : Measurable (X 0)` is what turns
+  `∫ · (X 0 ω) dP` into an integral against `P.map (X 0)`.
+
+  **The constructed process meets both**, and the law of the construction is
+  therefore the series: `jumpMeasure_integral_jumpProcess_eq_expJumpApply`
+  (2026-09-10, fifth run) says
+  `∫ f (X t) d(jumpMeasure mu nu) = ∫ expJumpApply lam mu t f dnu`, which is the
+  clause "its one dimensional distributions are `nu.map (exp (t • A))`" of this
+  item, now about a named process.  It costs two lines: the initial law is
+  `jumpMeasure_map_jumpProcess_zero`, and `hX` is
+  `measurable_uncurry_comp_jumpProcess`, which is `measurable_jumpProcess`
+  composed with the coercion `ℝ≥0 → ℝ` -- the uniqueness theorem asks for joint
+  measurability for the **full** σ-algebra, and the filtered
+  `measurable_uncurry_jumpProcess`, which the compensator consumes, is a
+  different and strictly harder statement that is not needed here.
+
+  **The finite dimensional distributions are proved** on 2026-09-10, sixth run,
+  in sixteen further declarations, and with them the clause "exactly one
+  solution".  The chain is three steps.
+
+  First, `integral_mul_sub_eq_intervalIntegral_of_isMPSolution`: the martingale
+  identity tested against a bounded `𝓕 s`-measurable factor `K` and read from an
+  arbitrary starting time,
+  `∫ K · f(X (s+t)) - ∫ K · f(X s) = ∫_0^t ∫ K · (A f)(X (s+r)) dr`.  Its one
+  step that is not bookkeeping is `integral_mul_eq_of_martingale`, which carries
+  `K` across a martingale increment through
+  `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound` and
+  `MeasureTheory.integral_condExp`.
+
+  Second, `abs_sub_sum_le_of_recursion`: the Picard iteration in the abstract,
+  over a functional `I : ℝ≥0 → (E → ℝ) → ℝ` with a bound, a joint measurability
+  in the time, and that recursion.  Both the unconditional
+  `abs_integral_sub_sum_le_of_isMPSolution` (the case `K = 1`, `s = 0`) and the
+  conditional `abs_integral_mul_sub_sum_le_of_isMPSolution` are corollaries of
+  it, so the induction is written once.  Summing the series gives
+  `integral_mul_eq_expJumpApply_of_isMPSolution`:
+  `∫ K · f(X (s+t)) dP = ∫ K · (exp (t • A) f)(X s) dP`, which is the Markov
+  property of *every* solution.
+
+  Third, the induction over the number of coordinates.  A finite dimensional
+  test variable is recorded as a **list of increments**
+  `[(t₀, g₀), (t₁, g₁), …]` read from a starting time -- `fddProd` for the
+  variable on `Ω`, `fddExp` for the nested semigroup value on `E` -- because
+  peeling the first factor leaves a list of the same kind read from the later
+  time, whereas a `Fin n`-indexed family would have to reindex at every step.
+  `integral_mul_fddProd_eq_of_isMPSolution` is the induction; the peeled factor
+  is absorbed into `K`, which is where the conditional form is spent.
+  `integral_fddProd_eq_of_isMPSolution` reads it at `K = 1`, `s = 0`, and
+  `integral_fddProd_eq_of_isMPSolution_of_map_eq` is uniqueness: two solutions
+  with the same initial law, on two different spaces, have the same finite
+  dimensional distributions.  `jumpMeasure_integral_fddProd_eq_fddExp` says the
+  same of the constructed process against `nu`.
+
+  The induction needs one hypothesis the one dimensional statement did not:
+  `hXad`, that every bounded measurable functional of the current state is
+  adapted.  It is not decoration -- the peeled factor `g (X (s+t))` has to be
+  `𝓕 (s+t)`-measurable for the next step to be a factor of the past at all --
+  and `IsMPSolution` does not supply it, since the `StronglyAdapted` it carries
+  is about the *compensated* processes.  For the constructed process it is
+  `stronglyMeasurable_jumpFiltration`, one line from
+  `measurable_naturalFiltration` read at `j = i`.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved; and the explosion criterion
   in terms of the jump times.
@@ -983,22 +1216,81 @@ A concrete family of solutions, built without any of the theory above. Index
   definition, and it is in Lean as
   `exists_finite_setOf_leftLim_ne_not_isCadlagPath`.
 * **The Poisson process as the degenerate jump process.** `E = ℕ`,
-  `lam x = 1`, `mu x = Measure.dirac (x + 1)`. Then
-  `A f x = f (x+1) - f x`, `jumpProcess lam mu (Measure.dirac 0)` is the Poisson
-  process of rate `1`, and `exists_unique_of_bounded` must return uniqueness
-  with one dimensional distributions `Measure.dirac 0 |>.map (exp (t • A))`,
-  which is the Poisson law of mean `t` because `exp (t • A)` is the Poisson
-  semigroup on `ℕ`. Every item of the milestone is instantiated at once, and the
-  answer is one a reader can check against
-  `ProbabilityTheory.poissonMeasure`
-  (`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`).
+  `lam x = 1`, `mu x = Measure.dirac (x + 1)`. **In Lean** on 2026-09-10, third
+  run, as `section PoissonExample` of `Suggested.lean`, in seven declarations.
+  `jumpApply_poisson` is the computation the milestone asks for first, and it
+  comes out as it should: `A f x = f (x + 1) - f x`, the rate cancelling
+  because it is `1` and the integral against the kernel being an evaluation
+  because the kernel is a Dirac measure. `poissonProcess_isMPSolution`
+  discharges **every** hypothesis of `jumpProcess_isMPSolution` on this data —
+  which is what shows that theorem to have an instance and not to be vacuous —
+  and `martingale_compensated_poisson` turns it into an actual
+  `MeasureTheory.Martingale`: for every bounded `f : ℕ → ℝ` the compensated
+  increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` is a martingale for the
+  natural filtration.
+
+  **The one dimensional laws are Mathlib's Poisson laws**, in Lean on
+  2026-09-10, fifth run, as `jumpMeasure_map_jumpProcess_poisson`:
+  `(jumpMeasure poissonKernel δ₀).map (jumpProcess poissonRate t) = Po(t)`, with
+  `Po` the `ProbabilityTheory.poissonMeasure`
+  (`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`) into whose
+  definition nothing of `jumpTime`, `stepIndex` or `waitingMeasure` enters.
+  This is the independent control on the construction, and it is the only place
+  where an error in those three would show; it comes out right.
+
+  It goes by **uniqueness** and not by the Erlang law, and the route is the one
+  named below as the cheaper of the two. Written out: the law is read off
+  `jumpMeasure_integral_jumpProcess_eq_expJumpApply`, and the exponential series
+  is summed by the **Gregory--Newton formula**. The generator here *is* Mathlib's
+  forward difference operator (`jumpApply_poisson_eq_fwdDiff`,
+  `iterate_jumpApply_poisson`), so `Algebra/Group/ForwardDiff.lean` applies:
+  `shift_eq_sum_fwdDiff_iter` expands `f (x + k)` in the iterated differences,
+  and one Cauchy product with `exp t = ∑ t^m/m!`
+  (`tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm`) turns the finite
+  expansion into the Poisson sum: `tsum_fwdDiff_iter_eq`,
+  `∑' n, t^n/n! * (Δ^[n] f) x = ∑' k, exp (-t) * t^k/k! * f (x + k)`, for every
+  real `t` and every bounded `f`. Comparing with `poissonMeasure_real_singleton`
+  on the indicator of `{n}` and `Measure.ext_of_singleton` closes it.
+
+  **The classical route is not available in Mathlib, and it was not needed.**
+  It would go through the Erlang law of the `n`-th jump time: `T n` is a sum of
+  `n` independent `Exp(1)`, hence `Gamma(n, 1)`, and
+  `{X t = n} = {T n ≤ t < T (n+1)}`. But `ProbabilityTheory.gammaMeasure`
+  (`Probability/Distributions/Gamma.lean:128`) and `expMeasure` are densities
+  and distribution functions only: neither `v4.33.1` nor `upstream/master`
+  has their **convolution**, and neither file mentions `conv`, `HasLaw` or
+  `IndepFun` at all — in contrast to the Poisson side, which has
+  `poissonMeasure_conv_poissonMeasure` and `IndepFun.hasLaw_add_poissonMeasure`.
+  The other route that remains open is the **renewal induction** on
+  `jumpMeasure_integral_eq_renewal`, giving `p 0 t = exp (-t)` and
+  `p n t = ∫_0^t exp (-s) * p (n-1) (t-s) ds` hence `p n t = exp (-t) * t^n/n!`;
+  it is not needed either, and it would prove the same thing.
 * **A two state chain, where the exponential series is a matrix exponential.**
-  `E = {0,1}`, `lam ≡ 1`, `mu x = Measure.dirac (1 - x)`. Then `A` is the matrix
+  `E = Bool`, `lam ≡ 1`, `mu x = Measure.dirac (!x)`. Then `A` is the matrix
   `!![-1, 1; 1, -1]` on `E → ℝ`, `‖A f‖ ≤ 2 * ‖f‖` is `norm_apply_le` at
-  `L = 1`, and the one dimensional law from `0` is
+  `L = 1`, and the one dimensional law from `false` is
   `((1 + exp (-2*t))/2, (1 - exp (-2*t))/2)`. This is the smallest instance on
   which `exists_unique_of_bounded` produces a number, and a sign error in the
-  operator is visible in it.
+  operator is visible in it. **In Lean** on 2026-09-10, fifth run, as
+  `section TwoStateExample` of `Suggested.lean`, in seven declarations:
+  `jumpApply_flip` is the generator, `iterate_jumpApply_flip` says the iterates
+  cycle with the factor `-2` -- the eigenvalue on the antisymmetric part, and
+  the reason the answer carries `exp (-2t)` and not `exp (-t)` --,
+  `expJumpApply_flip` sums the series in closed form, and
+  `jumpMeasure_map_jumpProcess_flip` is the number:
+  `((jumpMeasure flipKernel δ_false).map (X t)).real {true} = (1 - exp (-2t))/2`.
+  It checks what the Poisson example cannot: there the generator is a shift and
+  a sign error would propagate into a Poisson law of another mean, here the
+  state space has two points and the value must be `0` at `t = 0` and tend to
+  `1/2` rather than to `1`. The `t = 0` probe is in the file as an `example`.
+  The same instance carries the **two coordinate** probe, added on 2026-09-10,
+  sixth run: `jumpMeasure_integral_fddProd_flip` gives
+  `(1 - exp (-2t))/2 · (1 + exp (-2u))/2` for being at `true` at `t` and again
+  at `t + u`. It is the only check on the *order* in which `fddExp` nests the
+  semigroup -- one coordinate cannot see it, and the reversed nesting would give
+  `(1 - exp (-2u))/2 · (1 + exp (-2t))/2`, a different number as soon as
+  `t ≠ u`. Its two degenerations, `u = 0` back to the one dimensional law and
+  `t = 0` to `0`, are in the file as `example`s.
 * **Explosion, which is what the unbounded case is about.** `E = ℕ`,
   `lam n = 2 ^ n`, `mu n = Measure.dirac (n + 1)`. The jump times have
   `∑ n, 2 ^ (-n) < ∞` in expectation, so the process explodes almost surely, the
