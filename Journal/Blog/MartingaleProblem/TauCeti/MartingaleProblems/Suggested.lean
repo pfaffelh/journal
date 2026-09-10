@@ -27,7 +27,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-10.  Every declaration elaborates; 10 declarations carry `sorry`, and
+2026-09-10.  Every declaration elaborates; 9 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -40,11 +40,20 @@ compensating integral as a genuine `ℝ`-interval integral starting at `0`, and
 difference of two nested compensating windows, integrated over a set of paths,
 equals the interval integral of the set integral of the shifted process. That
 is steps two through four of the four steps `jumpProcess_isMPSolution` names at
-the end of its docstring; what remains is step one (the indicator of the past)
-and the final assembly into `ae_eq_condExp_of_forall_setIntegral_eq`.
+the end of its docstring.  Three more the same day close it: the bound
+`abs_setIntegral_compensator_le` on a compensating window, the integrability
+`integrable_mpFamily_jumpProcess` of a test process, and
+`jumpProcess_isMPSolution` itself -- **`thm:jumpMP`, the first solution of a
+martingale problem in this file that is a solution and not a counterexample**.
+Seven more the same day are the acceptance example of Milestone 4, the Poisson
+process (`section PoissonExample`): `jumpApply_poisson` is the computation that
+the generator of this data is the forward difference `f (x + 1) - f x`, and
+`poissonProcess_isMPSolution` discharges every hypothesis of `thm:jumpMP` on
+data, so that the theorem is shown to have an instance.
+`martingale_compensated_poisson` is a concrete martingale and not a solution
+predicate.
 every one of those `sorry`s is a **proof**.  The last two blocks of the file are
-Milestone 4; the only `sorry` in them is the conditional expectation of
-`jumpProcess_isMPSolution`, whose adaptedness half is proved.  The first, `IsStepPath`, was added on 2026-09-09:
+Milestone 4, and they carry **no** `sorry`.  The first, `IsStepPath`, was added on 2026-09-09:
 its three declarations are proved, and one of them,
 `exists_finite_setOf_leftLim_ne_not_isCadlagPath`, is the witness that the
 roadmap's first proposal for that predicate -- local finiteness of the jump set
@@ -5281,6 +5290,24 @@ theorem measurable_compensator {lam : E → ℝ} (hlam : Measurable lam) {h : E 
   rw [← hcongr]
   exact hsm.measurable
 
+/-- **A compensating window is bounded by the bound of its integrand times the length of the
+window.**  The clock is Lebesgue measure, so the length is `t` itself; the exact mass
+`lebesgueClock_apply_Ioc` and not a mere finiteness bound is what makes the constant explicit,
+and the explicit constant is what `integrable_mpFamily_jumpProcess` needs. -/
+theorem abs_setIntegral_compensator_le {lam : E → ℝ} {g : E → ℝ} {D : ℝ} (hD : ∀ x, |g x| ≤ D)
+    (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ D * (t : ℝ) := by
+  rw [lebesgueClock_interval_optional_eq]
+  have hlt : lebesgueClock.q (Set.Ioc (⊥ : ℝ≥0) t) < ⊤ := by
+    rw [lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
+  have hle := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q)
+    (s := Set.Ioc (⊥ : ℝ≥0) t) (f := fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω)) (C := D) hlt
+    (fun u _ => by simpa using hD (jumpProcess lam (u : ℝ) ω))
+  rwa [Real.norm_eq_abs, measureReal_def, lebesgueClock_apply_Ioc,
+    show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
+    ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
+
 /-- **The difference of two nested compensating windows is the compensating integral of what lies
 between them, turned into a genuine interval integral of the shifted process with the set
 integral moved to the outside.**  This assembles the second, third and fourth of the four
@@ -5310,17 +5337,8 @@ theorem setIntegral_compensator_sub_eq_intervalIntegral {lam : E → ℝ} (hlam 
       ((jumpFiltration lam hlam).le' t) le_rfl
   have houterbound : ∀ (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)),
       |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
-        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ D * (t : ℝ) := by
-    intro t ω
-    rw [lebesgueClock_interval_optional_eq]
-    have hlt : lebesgueClock.q (Set.Ioc (⊥ : ℝ≥0) t) < ⊤ := by
-      rw [lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
-    have hle := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q)
-      (s := Set.Ioc (⊥ : ℝ≥0) t) (f := fun u : ℝ≥0 => g (jumpProcess lam (u : ℝ) ω)) (C := D) hlt
-      (fun u _ => by simpa using hD (jumpProcess lam (u : ℝ) ω))
-    rwa [Real.norm_eq_abs, measureReal_def, lebesgueClock_apply_Ioc,
-      show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
-      ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
+        g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ D * (t : ℝ) :=
+    abs_setIntegral_compensator_le hD
   have hInt_i : IntegrableOn (fun ω => ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ i,
       g (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) S μ0 :=
     integrableOn_of_bounded μ0 (measure_ne_top μ0 S) (hmeas_win i) (houterbound i)
@@ -5398,20 +5416,208 @@ theorem stronglyAdapted_mpFamily_jumpProcess {lam : E → ℝ} (hlam : Measurabl
   rw [hYt]
   exact (h1.sub h2).stronglyMeasurable
 
-/-- **`thm:jumpMP`: the jump process solves the martingale problem of its generator.**  This is
-the goal of Milestone 4 and the first solution of a martingale problem in this file that is a
-solution and not a counterexample.
+/-- **The test processes of the jump martingale problem are integrable**, which is the hypothesis
+`ae_eq_condExp_of_forall_setIntegral_eq` asks of the later time.  The bound is `C + 2LC·t`: the
+first summand is the bound on `p.1`, the second is `abs_setIntegral_compensator_le` applied to
+`abs_jumpApply_le`.  The bound grows with `t`, but it is finite at every `t`, and that is all a
+martingale needs. -/
+theorem integrable_mpFamily_jumpProcess {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω)) (t : ℝ≥0) :
+    Integrable (Y t) (jumpMeasure mu nu) := by
+  have hadp := stronglyAdapted_mpFamily_jumpProcess hlam Clock.Conv.optional hY
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hYm : Measurable (Y t) := ((hadp t).mono ((jumpFiltration lam hlam).le t)).measurable
+  refine integrable_of_abs_le hYm (C := C + 2 * L * C * (t : ℝ)) fun ω ↦ ?_
+  have hb : |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+      p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q| ≤ 2 * L * C * (t : ℝ) := by
+    rw [hp2]
+    exact abs_setIntegral_compensator_le (fun x ↦ abs_jumpApply_le hlam0 hL hC x) t ω
+  have h1 := hC (jumpProcess lam (t : ℝ) ω)
+  have h2 := abs_sub (p.1 (jumpProcess lam (t : ℝ) ω))
+    (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+      p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+  rw [hYeq t ω]
+  linarith
 
-Everything except the conditional expectation is in place: `stronglyAdapted_mpFamily_jumpProcess`
-is the adaptedness, `jumpMeasure_map_jumpProcess_zero` the initial law, and `expMeasure_Ioi_add`
-the memorylessness on which the conditional expectation will rest. -/
+/-- **`thm:jumpMP`: the jump process solves the martingale problem of its generator.**  This is
+the goal of Milestone 4, and it is the first solution of a martingale problem in this file that
+is a solution and not a counterexample.
+
+The proof is the assembly of the two expectation identities, and nothing probabilistic is left in
+it.  `stronglyAdapted_mpFamily_jumpProcess` is the adaptedness;
+`setIntegral_jumpProcess_sub_eq_intervalIntegral` turns the increment of `p.1 ∘ X` over a set of
+the past into the interval integral of `A p.1 ∘ X`, and
+`setIntegral_compensator_sub_eq_intervalIntegral` turns the increment of the compensator into the
+same interval integral, so the two cancel and the increment of `Y` integrates to zero over every
+set of the past.  `ae_eq_condExp_of_forall_setIntegral_eq` then names that the conditional
+expectation.
+
+Two hypotheses of the two identities are supplied here and are not in the statement.  The set of
+the past is cut down to `NonExplosive lam ∩ S`, because `isPastFunctional_indicator` produces a
+functional of the past only after that cut; the cut changes no integral
+(`indicator_nonExplosive_ae_eq`).  And `0 < L` is not assumed but derived: `nu` is a probability
+measure, so `E` is nonempty, and `0 < lam x ≤ L` at any of its points. -/
 theorem jumpProcess_isMPSolution {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
     (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
     (nu : Measure E) [IsProbabilityMeasure nu] :
     IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
         (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω))
-      (jumpFiltration lam hlam) (jumpMeasure mu nu) := sorry
+      (jumpFiltration lam hlam) (jumpMeasure mu nu) := by
+  classical
+  -- the state space is nonempty, because `nu` is a probability measure; hence `0 < L`
+  have hne : Nonempty E := by
+    by_contra hcon
+    rw [not_nonempty_iff] at hcon
+    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
+    rw [measure_univ] at h0
+    exact one_ne_zero h0
+  obtain ⟨x0⟩ := hne
+  have hL0 : 0 < L := lt_of_lt_of_le (hlam0 x0) (hL x0)
+  intro Y hY
+  refine ⟨stronglyAdapted_mpFamily_jumpProcess hlam Clock.Conv.optional hY, ?_⟩
+  have hadp := stronglyAdapted_mpFamily_jumpProcess hlam Clock.Conv.optional hY
+  have hint := integrable_mpFamily_jumpProcess hlam (fun x ↦ (hlam0 x).le) hL nu hY
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hgm : Measurable p.2 := by rw [hp2]; exact measurable_jumpApply hlam hf hC
+  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
+    rw [hp2]; exact fun x ↦ abs_jumpApply_le (fun y ↦ (hlam0 y).le) hL hC x
+  have hwin : ∀ t : ℝ≥0, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q := fun t ↦
+    Measurable.mono (measurable_compensator hlam hgm Clock.Conv.optional t)
+      ((jumpFiltration lam hlam).le' t) le_rfl
+  have hXm : ∀ r : ℝ, Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ p.1 (jumpProcess lam r ω) := fun r ↦
+    hf.comp ((measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id))
+  intro i j hij
+  refine (ae_eq_condExp_of_forall_setIntegral_eq ((jumpFiltration lam hlam).le i) (hint j)
+    (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+  intro S hS _
+  -- the non explosive part of `S`, on which the indicator is a functional of the past
+  have hSm : MeasurableSet S := (jumpFiltration lam hlam).le i S hS
+  have hSm' : MeasurableSet (NonExplosive lam ∩ S) :=
+    (measurableSet_nonExplosive hlam).inter hSm
+  have hrestrict : (jumpMeasure mu nu).restrict (NonExplosive lam ∩ S)
+      = (jumpMeasure mu nu).restrict S := by
+    refine Measure.restrict_congr_set ?_
+    filter_upwards [ae_mem_nonExplosive hL0 hlam0 hL mu nu] with ω hω
+    exact propext ⟨fun h ↦ h.2, fun h ↦ ⟨hω, h⟩⟩
+  have hSp : IsPastFunctional lam (i : ℝ)
+      ((NonExplosive lam ∩ S).indicator fun _ ↦ (1 : ℝ)) := by
+    have hGm : Measurable[jumpFiltration lam hlam i] (S.indicator fun _ ↦ (1 : ℝ)) :=
+      measurable_const.indicator hS
+    have h := isPastFunctional_indicator hlam hGm
+    rwa [Set.indicator_indicator] at h
+  -- the two expectation identities, whose right hand sides are the same interval integral
+  have hji : (0 : ℝ) ≤ (j : ℝ) - (i : ℝ) := by
+    have := (NNReal.coe_le_coe).2 hij; linarith
+  have h1 := setIntegral_jumpProcess_sub_eq_intervalIntegral mu hlam hlam0 hL0 hL nu hf hC
+    (s := (i : ℝ)) (t := (j : ℝ) - (i : ℝ)) i.coe_nonneg hji hSm' hSp
+  rw [show (i : ℝ) + ((j : ℝ) - (i : ℝ)) = (j : ℝ) by ring] at h1
+  have h2 := setIntegral_compensator_sub_eq_intervalIntegral hlam hij hgm hgb mu nu hSm'
+  rw [hp2] at h2
+  -- the increment of `Y` over the set is the difference of the two
+  have hsplit : ∀ t : ℝ≥0, (∫ ω in NonExplosive lam ∩ S, Y t ω ∂(jumpMeasure mu nu))
+      = (∫ ω in NonExplosive lam ∩ S, p.1 (jumpProcess lam (t : ℝ) ω) ∂(jumpMeasure mu nu))
+        - ∫ ω in NonExplosive lam ∩ S, (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q) ∂(jumpMeasure mu nu) := by
+    intro t
+    have hIa : IntegrableOn (fun ω ↦ p.1 (jumpProcess lam (t : ℝ) ω))
+        (NonExplosive lam ∩ S) (jumpMeasure mu nu) :=
+      integrableOn_of_bounded _ (measure_ne_top _ _) (hXm (t : ℝ)) fun ω ↦ hC _
+    have hIb : IntegrableOn (fun ω ↦ ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        p.2 (jumpProcess lam (u : ℝ) ω) ∂lebesgueClock.q)
+        (NonExplosive lam ∩ S) (jumpMeasure mu nu) :=
+      integrableOn_of_bounded _ (measure_ne_top _ _) (hwin t)
+        (abs_setIntegral_compensator_le hgb t)
+    simp only [hYeq t]
+    exact integral_sub hIa hIb
+  simp only [hp2] at hsplit
+  rw [← hrestrict, hsplit i, hsplit j]
+  linarith
 
 end JumpFiltration
 
 end JumpConstruction
+
+/-! ## Acceptance example for Milestone 4: the Poisson process
+
+`E = ℕ`, `lam ≡ 1`, `mu x = δ_{x+1}`.  This is the instance that checks Milestone 4, and it
+checks two different things.  First, that the generator of `set:jumpdata` really *is* the forward
+difference on this data: `jumpApply_poisson` is the computation the roadmap asks for before the
+example is admitted, and if it came out as anything but `f (x + 1) - f x` the shape of
+`set:jumpdata` would be the finding.  Second -- and this is what a milestone that only *names*
+its example does not check -- that the six hypotheses of `jumpProcess_isMPSolution`
+(`Measurable lam`, `0 < lam`, `lam ≤ L`, `IsMarkovKernel mu`, `IsProbabilityMeasure nu`,
+`[MeasurableSpace E]`) are jointly satisfiable, so that the theorem is not vacuous.
+`martingale_compensated_poisson` exhibits an actual martingale and not merely a solution
+predicate. -/
+
+section PoissonExample
+
+/-- **The rate of the Poisson process**, constant `1`. -/
+def poissonRate : ℕ → ℝ := fun _ ↦ 1
+
+/-- **The jump kernel of the Poisson process**, the deterministic step `x ↦ x + 1`. -/
+noncomputable def poissonKernel : Kernel ℕ ℕ :=
+  Kernel.deterministic (fun x ↦ x + 1) (measurable_of_countable _)
+
+instance : IsMarkovKernel poissonKernel :=
+  Kernel.isMarkovKernel_deterministic (measurable_of_countable _)
+
+theorem measurable_poissonRate : Measurable poissonRate := measurable_const
+
+theorem poissonRate_pos (x : ℕ) : 0 < poissonRate x := zero_lt_one
+
+theorem poissonRate_le_one (x : ℕ) : poissonRate x ≤ 1 := le_rfl
+
+/-- **The generator of the Poisson jump data is the forward difference**,
+`A f x = f (x + 1) - f x`.  The rate cancels because it is `1`, and the integral against the
+kernel is an evaluation because the kernel is a Dirac measure. -/
+theorem jumpApply_poisson (f : ℕ → ℝ) (x : ℕ) :
+    jumpApply poissonRate poissonKernel f x = f (x + 1) - f x := by
+  rw [jumpApply, poissonKernel, Kernel.deterministic_apply,
+    integral_dirac (fun y ↦ f y - f x) (x + 1), poissonRate, one_mul]
+
+/-- **The compensated increment of a bounded function along the Poisson process belongs to the
+family of test processes.**  Written out, it is
+`f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du`, and no boundedness of `f` beyond the one the
+operator itself carries is needed. -/
+theorem mem_mpFamily_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
+    (fun (t : ℝ≥0) (ω : (ℕ → ℕ) × (ℕ → ℝ)) ↦ f (jumpProcess poissonRate (t : ℝ) ω)
+        - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            (f (jumpProcess poissonRate (u : ℝ) ω + 1)
+              - f (jumpProcess poissonRate (u : ℝ) ω)) ∂lebesgueClock.q)
+      ∈ mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω) := by
+  refine ⟨(f, jumpApply poissonRate poissonKernel f),
+    mem_jumpOperator (measurable_of_countable f) hC, fun t ω ↦ ?_⟩
+  simp only [jumpApply_poisson]
+
+/-- **The Poisson process solves the martingale problem of the forward difference operator.**
+This is `jumpProcess_isMPSolution` with `lam ≡ 1`, `mu x = δ_{x+1}` and `nu = δ_0`, and the
+point of writing it out is that every hypothesis of that theorem is discharged here on data,
+so that the theorem is shown to have an instance. -/
+theorem poissonProcess_isMPSolution :
+    IsMPSolution (mpFamily (jumpOperator poissonRate poissonKernel) lebesgueClock
+        Clock.Conv.optional (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess poissonRate (t : ℝ) ω))
+      (jumpFiltration poissonRate measurable_poissonRate)
+      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+  jumpProcess_isMPSolution measurable_poissonRate poissonRate_pos poissonRate_le_one
+    poissonKernel (Measure.dirac 0)
+
+/-- **A concrete martingale**, and not a solution predicate: for every bounded `f : ℕ → ℝ`, the
+compensated increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` of the Poisson process is a
+martingale for its natural filtration. -/
+theorem martingale_compensated_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
+    Martingale (fun (t : ℝ≥0) (ω : (ℕ → ℕ) × (ℕ → ℝ)) ↦ f (jumpProcess poissonRate (t : ℝ) ω)
+        - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            (f (jumpProcess poissonRate (u : ℝ) ω + 1)
+              - f (jumpProcess poissonRate (u : ℝ) ω)) ∂lebesgueClock.q)
+      (jumpFiltration poissonRate measurable_poissonRate)
+      (jumpMeasure poissonKernel (Measure.dirac 0)) :=
+  poissonProcess_isMPSolution _ (mem_mpFamily_poisson hC)
+
+end PoissonExample

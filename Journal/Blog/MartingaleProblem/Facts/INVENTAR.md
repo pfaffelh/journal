@@ -16187,3 +16187,175 @@ Vorschlag für den nächsten Lauf: genau diese vier Punkte, in dieser Reihenfolg
 und damit `jumpProcess_isMPSolution` fertig — der eigentliche Abschluß von
 Meilenstein 4 und der gesamten `SkorokhodSpace`/`WeakConvergence`/
 `MartingaleProblems`-Aufgabe vom 2026-09-08.
+
+### 2026-09-10, dritter Lauf des Tages — `jumpProcess_isMPSolution`, und damit die erste in Lean bewiesene Lösung eines Martingalproblems
+
+**`TauCeti/MartingaleProblems/Suggested.lean` trägt in Meilenstein 4 kein
+`sorry` mehr.** Drei neue Deklarationen, `abs_setIntegral_compensator_le`,
+`integrable_mpFamily_jumpProcess` und `jumpProcess_isMPSolution`; die ganze
+Datei geht durch `lake env lean` gegen v4.33.1 **ohne einen Fehler**, die Zahl
+der `sorry` fällt von zehn auf **neun**, und alle drei hängen mit
+`#print axioms` nur an `propext`, `Classical.choice`, `Quot.sound`
+(mitgeprüft: `setIntegral_compensator_sub_eq_intervalIntegral`, dessen
+Binnenrechnung `houterbound` durch den neuen Satz ersetzt ist).
+
+**Was dasteht.**
+```
+theorem jumpProcess_isMPSolution {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω))
+      (jumpFiltration lam hlam) (jumpMeasure mu nu)
+```
+Das ist `thm:jumpMP` des Manuskripts und das eigentliche Ziel des Meilensteins.
+Über `E` steht nichts als `[MeasurableSpace E]` — keine Topologie, keine
+Standard-Borel-Eigenschaft, keine Abzählbarkeit.
+
+**Der Beweis ist der Zusammenbau, und daran war nichts
+Wahrscheinlichkeitstheoretisches mehr offen.** Für `Y ∈ mpFamily` mit
+`Y t ω = p.1 (X t ω) - ∫_{(⊥,t]} p.2 (X u ω)` und `i ≤ j` treffen die beiden
+Erwartungsidentitäten der beiden vorigen Läufe auf **dasselbe**
+Intervallintegral: `setIntegral_jumpProcess_sub_eq_intervalIntegral` gibt
+`∫_S p.1(X j) - ∫_S p.1(X i) = ∫_0^{j-i} ∫_S (A p.1)(X (i+r)) dr`, und
+`setIntegral_compensator_sub_eq_intervalIntegral` gibt für `g = p.2 = A p.1`
+`∫_S comp_j - ∫_S comp_i = ∫_0^{j-i} ∫_S p.2 (X (i+r)) dr`. Die Differenz ist
+also null, `ae_eq_condExp_of_forall_setIntegral_eq` nennt das die bedingte
+Erwartung, und `stronglyAdapted_mpFamily_jumpProcess` ist die andere Hälfte von
+`MeasureTheory.Martingale`.
+
+**Vier Bindeglieder, die der zweite Lauf des Tages benannt hatte, und was aus
+jedem geworden ist.**
+
+1. *Der Indikator und die Explosionsmenge.* `isPastFunctional_indicator` liefert
+   `IsPastFunctional lam i ((NonExplosive lam).indicator G)`, also für
+   `G = S.indicator 1` und über `Set.indicator_indicator` den Indikator von
+   `NonExplosive lam ∩ S`. Alle Mengenintegrale laufen darum über diesen
+   Schnitt, und `Measure.restrict_congr_set` holt sie ans Ende auf `S` zurück —
+   die Voraussetzung dafür ist `ae_mem_nonExplosive`, und sie kostet nichts.
+2. *Die Integrierbarkeit* ist `integrable_mpFamily_jumpProcess`, mit der
+   **expliziten** Schranke `|Y t ω| ≤ C + 2 L C · t`. Der Faktor `t` kommt aus
+   `abs_setIntegral_compensator_le`, das die Fenstermasse
+   `lebesgueClock_apply_Ioc` exakt und nicht nur als endlich benutzt; das war
+   bisher als `houterbound` in einem Beweis eingeschlossen und ist jetzt ein
+   eigener Satz. Die Schranke wächst mit `t`, und das ist harmlos: ein Martingal
+   verlangt Endlichkeit an jeder Zeit, nicht Gleichmäßigkeit.
+3. *`0 < L` ist abgeleitet und nicht vorausgesetzt.* Aus
+   `[IsProbabilityMeasure nu]` folgt `Nonempty E` — wäre `E` leer, so wäre
+   `nu Set.univ` zugleich `0` und `1` —, und an irgendeinem seiner Punkte ist
+   `0 < lam x ≤ L`. Ein zusätzliches `hL0` in der Signatur wäre eine
+   Voraussetzung, die keine Instanz je gesondert zu prüfen hätte; sie steht
+   darum nicht da.
+4. *Der Aufruf selbst.* `SigmaFinite ((jumpMeasure mu nu).trim _)` kommt
+   automatisch: `isFiniteMeasure_trim` (`MeasureTheory/Measure/Trim.lean:124`)
+   ist eine **Instanz**, und `jumpMeasure` trägt `IsProbabilityMeasure`.
+
+**Drei Befunde, die aufzuschreiben sich lohnt.**
+
+* **Die Gestalt der beiden Identitäten muß bis auf Syntax übereinstimmen, nicht
+  bis auf Definitionsgleichheit.** Der Abschluß ist `linarith` über fünf
+  Integralatome; `p.2` und `jumpApply lam mu p.1` sind zwar durch `hp2` gleich,
+  aber `linarith` sieht sie als verschiedene Atome. Erst `simp only [hp2]` an
+  *beiden* Stellen — an der Zerlegung `hsplit` und an der
+  Kompensatoridentität — bringt die Rechnung zum Stehen. Dasselbe gilt für
+  `(i:ℝ) + ((j:ℝ) - (i:ℝ))` gegen `(j:ℝ)`.
+* **`Set.EventuallyEq` von Mengen ist eine Gleichheit von Propositionen und
+  keine Äquivalenz.** Nach `filter_upwards` steht `(A ∩ S) ω = S ω` da, und der
+  anonyme Konstruktor `⟨_, _⟩` scheitert an `Eq.refl`; gebraucht wird
+  `propext ⟨…, …⟩`. `simp` verdeckt den Unterschied, indem es zu `↔` umformt,
+  und schließt das Ziel dann doch nicht.
+* **Der Name des Kompensatorfensters ist über `Clock.interval` und nicht über
+  `Set.Ioc` zu führen**, solange man in `mpFamily`s eigener Gestalt bleibt: die
+  Umschreibung zu `Set.Ioc` (durch `lebesgueClock_interval_optional_eq`) ist im
+  Innern der Abschätzung billig, aber an der Schnittstelle zu `mpFamily` würde
+  sie jedes `rw` gegen `hYeq` verfehlen.
+
+**Was das für die Aufgabe vom 2026-09-08 heißt.** Teil A (`SkorokhodSpace`) ist
+seit dem dreizehnten Lauf des 2026-09-09 durch, Teil B (`WeakConvergence`) seit
+dem sechzehnten, und von Teil C sind jetzt die Punkte 0, 1 und 2 durch — Punkt 2
+war das ausdrücklich benannte „eigentliche Ziel des Meilensteins". Damit ist zum
+ersten Mal in einer der drei Dateien ein Prozeß da, von dem **in Lean bewiesen**
+ist, daß er ein Martingalproblem *löst*, und nicht bloß ein Prädikat, das sagt,
+was eine Lösung wäre. Die Münze aus `AtomWitness` bleibt, was sie war: ein
+Gegenbeispiel.
+
+### Derselbe Lauf, zweiter Teil — das Akzeptanzbeispiel, und warum es vorgezogen wurde
+
+**Die Aufgabe numeriert das Akzeptanzbeispiel als Punkt 4, hinter
+`exists_unique_of_bounded`; dieser Lauf hat es vorgezogen, und der Grund ist
+kein Zeitgewinn.** `jumpProcess_isMPSolution` trägt sechs Voraussetzungen
+(`Measurable lam`, `0 < lam`, `lam ≤ L`, `IsMarkovKernel mu`,
+`IsProbabilityMeasure nu`, `[MeasurableSpace E]`), und ob sie **gemeinsam
+erfüllbar** sind, war bis zu diesem Lauf nirgends nachgerechnet. Das ist genau
+die Prüfung, die das Inventar seit dem 2026-09-07 als Punkt 2 seiner Aufgabe
+„das Erreichte prüfen" verlangt, und sie gehört an den Satz, den derselbe Lauf
+bewiesen hat, und nicht drei Läufe später. Punkt 3 ist damit unverändert offen
+und ist der nächste Auftrag.
+
+**Sieben Deklarationen in `section PoissonExample` von
+`TauCeti/MartingaleProblems/Suggested.lean`**, alle durch `lake env lean` gegen
+v4.33.1 **ohne einen Fehler beim ersten Durchlauf**, und die vier tragenden mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die
+Daten sind `E = ℕ`, `poissonRate ≡ 1`,
+`poissonKernel = Kernel.deterministic (· + 1)`, `nu = Measure.dirac 0`.
+
+* **Der Erzeuger kommt heraus, wie er soll**, und das war die erste Frage:
+  `jumpApply_poisson : jumpApply poissonRate poissonKernel f x = f (x + 1) - f x`.
+  Die Rate kürzt sich, weil sie `1` ist, und das Integral gegen den Kern ist
+  eine Auswertung, weil der Kern ein Dirac-Maß ist (`Kernel.deterministic_apply`
+  plus `integral_dirac`). **Die Form von `set:jumpdata` ist also handlich**, und
+  es gibt an dieser Stelle keinen Befund gegen sie.
+* **`poissonProcess_isMPSolution`** löst jede Voraussetzung des Satzes auf
+  Daten ein. Damit ist `jumpProcess_isMPSolution` als **nicht leer** erwiesen.
+* **`martingale_compensated_poisson`** ist ein wirkliches
+  `MeasureTheory.Martingale` und kein Lösungsprädikat: für jedes beschränkte
+  `f : ℕ → ℝ` ist `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` ein Martingal für
+  die natürliche Filtration des Poissonprozesses. Der Weg dahin ist
+  `mem_mpFamily_poisson`, das zeigt, daß `mpFamily` für diese Daten nicht leer
+  ist — auch das eine Leerheitsprobe, und eine andere als die erste.
+
+**Was am Beispiel offen bleibt, und es ist ehrlich zu nennen:** die
+**eindimensionalen Verteilungen** sind *nicht* gegen
+`ProbabilityTheory.poissonMeasure`
+(`Probability/Distributions/Poisson/Basic.lean:41`) geprüft. Das ist die
+unabhängige Kontrolle der Konstruktion — der Satz, daß
+`(jumpMeasure poissonKernel (dirac 0)).map (jumpProcess poissonRate t)`
+gleich `poissonMeasure (Real.toNNReal t)` ist —, und sie ist ein eigener Beweis
+und kein Einsetzen von Daten. Sie steht als nächster Schritt des Beispiels in
+Meilenstein 4.
+
+**Und ein Negativbefund dazu, gesucht wie die Suchregel es verlangt.** Der
+klassische Weg zu ihr ist die Erlangverteilung der `n`-ten Sprungzeit: `T n` ist
+die Summe von `n` unabhängigen `Exp(1)`, also `Gamma(n, 1)`, und
+`{X t = n} = {T n ≤ t < T (n+1)}`. **Mathlib trägt diesen Weg nicht.**
+`ProbabilityTheory.gammaMeasure` (`Distributions/Gamma.lean:128`) und
+`expMeasure` (`Distributions/Exponential.lean`) stehen als Dichten samt
+Verteilungsfunktion da, aber **weder v4.33.1 noch `upstream/master` hat die
+Faltung** — kein `gammaMeasure_conv_gammaMeasure`, kein `HasLaw`-Satz über die
+Summe zweier unabhängiger, überhaupt kein Vorkommen von `conv`, `HasLaw` oder
+`IndepFun` in beiden Dateien (`git grep` auf `upstream/master` über
+`Mathlib/Probability/Distributions/{Gamma,Exponential}.lean`: nur ein
+`convert!` in einem Beweis). Der Gegensatz zur Poissonseite ist auffällig:
+dort *gibt* es `poissonMeasure_conv_poissonMeasure` und
+`IndepFun.hasLaw_add_poissonMeasure`.
+
+**Damit gibt es zwei Wege zur eindimensionalen Verteilung, und beide sind
+eigene Arbeit.** (a) Die **Erneuerungsinduktion**: `p n t = P(X t = n)` erfüllt
+nach `jumpMeasure_integral_eq_renewal` — schon bewiesen —
+`p 0 t = e^{-t}` und `p n t = ∫_0^t e^{-s} p (n-1) (t-s) ds`, woraus
+`p n t = e^{-t} tⁿ/n!` durch Induktion folgt; sie braucht keine neue Theorie,
+nur Analysis. (b) Die **Eindeutigkeit**: `exists_unique_of_bounded` — Punkt 3
+der Aufgabe — liefert sie als Korollar, und genau so führt sie Meilenstein 4 in
+seinem eigenen Text.
+
+**Vorschlag für den nächsten Lauf, und er berichtigt die Reihenfolge, die der
+erste Teil dieses Berichts vorgeschlagen hatte.** Zuerst **Punkt 3**,
+`exists_unique_of_bounded`, die Picard-Iteration; `norm_apply_le` liegt seit dem
+achtzehnten Lauf des 2026-09-09 als `abs_jumpApply_le` bereit, und die Roadmap
+sagt „no analysis beyond `NormedSpace`". Der Grund für die Berichtigung ist der
+Negativbefund oben: die eindimensionale Verteilung des Poissonbeispiels ist
+über Weg (b) ein Korollar von Punkt 3 und über Weg (a) eine eigene
+Analysis-Induktion; sie vorzuziehen hieße, den teureren der beiden Wege zu
+gehen und den billigeren doch noch bauen zu müssen. Die Reihenfolge der Aufgabe
+— 3 vor dem Rest von 4 — ist also die richtige, und der erste Teil dieses
+Berichts lag darin falsch.

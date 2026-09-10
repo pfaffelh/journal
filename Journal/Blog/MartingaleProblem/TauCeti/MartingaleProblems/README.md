@@ -811,10 +811,13 @@ A concrete family of solutions, built without any of the theory above. Index
   the martingale problem for `(A, nu)` with respect to its natural filtration.
   This is `IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock`
   `Clock.Conv.optional (fun t ω ↦ jumpProcess lam (t : ℝ) ω))`
-  `(jumpFiltration lam hlam) (jumpMeasure mu nu)`, **stated** on 2026-09-09,
-  nineteenth run, with its adaptedness half proved. What remains is the
-  conditional expectation `P[Y t | 𝓕 s] =ᵐ Y s`. Of its three steps the first is
-  done: the Markov property of the process at a fixed time is
+  `(jumpFiltration lam hlam) (jumpMeasure mu nu)`, **proved** on 2026-09-10,
+  third run; it is the first solution of a martingale problem in this file that
+  is a solution and not a counterexample. It was stated on 2026-09-09,
+  nineteenth run, with its adaptedness half proved, and the conditional
+  expectation `P[Y t | 𝓕 s] =ᵐ Y s` took the eight runs between. Of its three
+  steps the first is
+  the Markov property of the process at a fixed time,
   `jumpMeasure_integral_eq_of_firstJump` together with `jumpProcess_jumpShift`
   and `jumpMeasure_map_split`, complete on 2026-09-09, twenty second run, and
   assembled into `jumpMeasure_integral_eq_renewal` on the twenty third. What
@@ -826,10 +829,34 @@ A concrete family of solutions, built without any of the theory above. Index
   derivative from `0` to every `s` is `jumpMeasure_integral_jumpProcess_add`,
   proved on 2026-09-09, twenty sixth run. The identity itself follows from them
   and is `jumpMeasure_integral_sub_eq_intervalIntegral`, proved in the same run.
-  **What remains of `jumpProcess_isMPSolution` is therefore only the passage from
-  the expectation identity to the conditional one**, `P[Y t | 𝓕 s] =ᵐ Y s`, and
-  the structure of the past that this passage needs is the point below, proved on
-  2026-09-09, twenty seventh run.
+  Its conditional form on a set of the past is
+  `setIntegral_jumpProcess_sub_eq_intervalIntegral` (2026-09-10, first run), and
+  the matching identity for the compensator term is
+  `setIntegral_compensator_sub_eq_intervalIntegral` (2026-09-10, second run);
+  the two have the **same** interval integral on the right, so the increment of
+  `Y` integrates to zero over every set of the past and
+  `ae_eq_condExp_of_forall_setIntegral_eq` names that the conditional
+  expectation.
+
+  **Two hypotheses of the assembly are supplied inside the proof and are not in
+  the statement.** The set of the past is cut down to `NonExplosive lam ∩ S`,
+  because `isPastFunctional_indicator` produces a functional of the past only
+  after that cut; the cut changes no integral (`indicator_nonExplosive_ae_eq`),
+  and `Measure.restrict_congr_set` carries the result back to `S`. And `0 < L`
+  is **derived, not assumed**: `nu` is a probability measure, so `E` is nonempty
+  — were it empty, `nu Set.univ` would be both `0` and `1` — and `0 < lam x ≤ L`
+  at any of its points. Adding `0 < L` to the statement would have been a
+  hypothesis that no instance has to check separately, and that is the reason it
+  is not there.
+
+  The integrability that `ae_eq_condExp_of_forall_setIntegral_eq` asks of the
+  later time is `integrable_mpFamily_jumpProcess`, with the explicit bound
+  `|Y t ω| ≤ C + 2 L C · t`: `C` from the member of the operator, `2 L C` from
+  `abs_jumpApply_le`, and the factor `t` from
+  `abs_setIntegral_compensator_le`, which is the exact mass
+  `lebesgueClock_apply_Ioc` of the compensating window and not a mere finiteness
+  bound. The bound grows with `t` and that is harmless: a martingale needs
+  finiteness at each `t`, not uniformity.
 
   **The Markov property is a statement about the initial *state* and not about an
   initial law, and that is why `jumpKernel` exists.** The form announced on
@@ -1070,9 +1097,37 @@ A concrete family of solutions, built without any of the theory above. Index
   definition, and it is in Lean as
   `exists_finite_setOf_leftLim_ne_not_isCadlagPath`.
 * **The Poisson process as the degenerate jump process.** `E = ℕ`,
-  `lam x = 1`, `mu x = Measure.dirac (x + 1)`. Then
-  `A f x = f (x+1) - f x`, `jumpProcess lam mu (Measure.dirac 0)` is the Poisson
-  process of rate `1`, and `exists_unique_of_bounded` must return uniqueness
+  `lam x = 1`, `mu x = Measure.dirac (x + 1)`. **In Lean** on 2026-09-10, third
+  run, as `section PoissonExample` of `Suggested.lean`, in seven declarations.
+  `jumpApply_poisson` is the computation the milestone asks for first, and it
+  comes out as it should: `A f x = f (x + 1) - f x`, the rate cancelling
+  because it is `1` and the integral against the kernel being an evaluation
+  because the kernel is a Dirac measure. `poissonProcess_isMPSolution`
+  discharges **every** hypothesis of `jumpProcess_isMPSolution` on this data —
+  which is what shows that theorem to have an instance and not to be vacuous —
+  and `martingale_compensated_poisson` turns it into an actual
+  `MeasureTheory.Martingale`: for every bounded `f : ℕ → ℝ` the compensated
+  increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` is a martingale for the
+  natural filtration. What is **not** yet in Lean is the comparison of the one
+  dimensional laws with `ProbabilityTheory.poissonMeasure`; that is the
+  independent control on the construction and it is the next step of this
+  example, **after** `exists_unique_of_bounded`.
+
+  **The classical route to that comparison is not available in Mathlib, and
+  that is why it waits.** It would go through the Erlang law of the `n`-th jump
+  time: `T n` is a sum of `n` independent `Exp(1)`, hence `Gamma(n, 1)`, and
+  `{X t = n} = {T n ≤ t < T (n+1)}`. But `ProbabilityTheory.gammaMeasure`
+  (`Probability/Distributions/Gamma.lean:128`) and `expMeasure` are densities
+  and distribution functions only: neither `v4.33.1` nor `upstream/master`
+  has their **convolution**, and neither file mentions `conv`, `HasLaw` or
+  `IndepFun` at all — in contrast to the Poisson side, which has
+  `poissonMeasure_conv_poissonMeasure` and `IndepFun.hasLaw_add_poissonMeasure`.
+  Two routes remain, both of them work of their own: the **renewal induction**
+  on `jumpMeasure_integral_eq_renewal`, giving `p 0 t = exp (-t)` and
+  `p n t = ∫_0^t exp (-s) * p (n-1) (t-s) ds` hence `p n t = exp (-t) * t^n/n!`;
+  and **uniqueness**, under which the law is a corollary of
+  `exists_unique_of_bounded`, which is how this milestone states it below.
+  `exists_unique_of_bounded` must return uniqueness
   with one dimensional distributions `Measure.dirac 0 |>.map (exp (t • A))`,
   which is the Poisson law of mean `t` because `exp (t • A)` is the Poisson
   semigroup on `ℕ`. Every item of the milestone is instantiated at once, and the
