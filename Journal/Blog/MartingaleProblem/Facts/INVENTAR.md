@@ -18802,3 +18802,151 @@ reproduziert: `MartingaleProblems` 0 Fehler und 9 `sorry`, `SkorokhodSpace` 0 un
 Umbenennung, `WeakConvergence` die zwei Fehler an der einen bewußten Stelle. Die 17 Namen, die der
 Bericht jetzt als „nur auf master" führt, sind genau die, die dieser Lauf als bewußte
 Master-Zitate in die Skorokhod-Roadmap eingetragen hat, jeder einzeln am Quelltext belegt.
+
+### 2026-09-10, zweiundzwanzigster Lauf des Tages — Teil F: der Yule-Prozeß steht, die Mastergleichung steht für beschränkte Rate, und die Bruchstelle ist eine einzige benannte Aussage
+
+**Bearbeitet:** Teil F des laufenden Auftrags, der Yule-Prozeß und der gemessene Vergleich der
+drei Wege zur Nichtexplosion. Teil D war der einundzwanzigste Lauf, also ist die Reihenfolge
+D → F → C → E eingehalten.
+
+**Einundzwanzig Deklarationen** — zwanzig im neuen Abschnitt `YuleProcess` von
+`TauCeti/MartingaleProblems/Suggested.lean` und eine, `jumpMeasure_hasDerivWithinAt_integral_Ici`,
+aus dem Beweis der Erwartungswertidentität herausgelöst —, die ganze Datei **ohne einen Fehler**
+durch `lake env lean` gegen v4.33.1, alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft, die Zahl der `sorry` bleibt bei **neun**. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+**Eine Herauslösung, kein Zuwachs.** `jumpMeasure_hasDerivWithinAt_integral_Ici` — die
+Rückwärtsgleichung in Differentialform, `(d/dt) E[h (X t)] = E[(A h)(X t)]` von rechts — stand als
+Block **im** Beweis von `jumpMeasure_integral_sub_eq_intervalIntegral` und ist jetzt ein eigener
+Satz; jener Beweis benutzt ihn und ist siebenundzwanzig Zeilen kürzer. `hasDerivWithinAt_jumpLaw`
+ist er an der Testfunktion `stateIndicator n`, also die **Mastergleichung in Differentialform**,
+und damit genau die Eingabe, die `eq_exp_add_integral_of_hasDerivWithinAt` verlangt: die
+integrierte Form ist, was die Identität liefert, die differentielle ist, was die Induktion über `n`
+verbraucht. Beide Enden des Induktionsschritts stehen damit; was zwischen ihnen fehlt, ist allein
+die Beschränktheit der Rate.
+
+#### Was gemessen wurde — das ist der Zweck der Aufgabe und nicht der Satz
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | **fertig** |
+| Mastergleichung | 13 (`section YuleProcess` ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 126 | **eine benannte Aussage fehlt** |
+| Kopplung | 0 | 0 | nicht angefangen |
+
+Gezählt mit `scripts/_citations/count_yule.py`, das allein lauffähig ist und seine Pfade an der
+Wurzel des Worktrees verankert.
+
+**Schritt 1, die Yule-Instanz, war so billig wie angesagt: sieben Deklarationen, 46 Codezeilen**,
+und sechs davon eine Zeile Einsetzen. Das ist der erste Meßwert, und er bestätigt die Erwartung.
+
+**Der eine Meßwert, der sie nicht bestätigt: die `IsMarkovKernel`-Instanz läßt sich nicht im
+Beweis erledigen.** Der erste Versuch schrieb `yule_isLocalMPSolution` mit `haveI` im Beweis und
+scheiterte, weil die Instanz in der **Aussage** vorkommt — `jumpMeasure` verlangt sie. Sie bleibt
+also Instanzhypothese wie beim linearen Fall, und `isMarkovKernel_yuleKernel` (unter `0 ≤ β`
+allein) löst sie an der Aufrufstelle ein. Kein Formfehler, sondern eine Eigenschaft der Aussage.
+
+**`yuleKernel_apply` ist die einzige der sieben mit eigenem Inhalt**: abseits des absorbierenden
+Zustands sind die beiden Mischungsgewichte von `birthDeathKernel` gleich `1` und `0`, die
+eingebettete Kette eines reinen Geburtsprozesses ist also **deterministisch**.
+
+#### Schritt 2, die Mastergleichung: sie steht, für beschränkte Rate
+
+`jumpMeasure_masterEquation` ist `jumpMeasure_integral_sub_eq_intervalIntegral` an der Testfunktion
+`stateIndicator n`, und **nichts an der Erwartungswertidentität wurde neu bewiesen**. Die zwei
+Eigenschaften, die sie von einer Testfunktion verlangt, sind `measurable_stateIndicator` und
+`abs_stateIndicator_le_one`. Dazu `jumpLaw` als die eindimensionale Verteilung —
+`jumpLaw_eq_measureReal` sagt, daß es wirklich `P (X t = n)` ist und nicht bloß ein Integral, das
+so aussieht — und `jumpLaw_zero` als Anfangswert.
+
+`jumpApply_yule_indicator` rechnet die rechte Seite aus: `A 1_{n+1} = β n 1_n − β (n+1) 1_{n+1}`,
+und `jumpApply_yule_indicator_zero` gibt `A 1_0 = 0`, **aus zwei Gründen zugleich**, die beide
+gebraucht werden: der Zustand `0` hat Rate `0`, und kein anderer Zustand kann nach `0` hin
+verlassen werden. Das ist der Induktionsanfang.
+
+`mm1_masterEquation` ist die Leerheitsprobe: M/M/1 hat eine positive beschränkte Rate
+(`birthDeathRate_mm1_mem`), also ist jede Voraussetzung auf Daten eingelöst. Was sie **nicht**
+vorführt, ist eine unbeschränkte Rate — und das ist gerade der Fall, den der Yule-Prozeß braucht.
+
+#### Der Fund, um dessentwillen der Vergleich gefahren wurde: Mathlib hat die lineare Differentialgleichung erster Ordnung nicht
+
+Der Induktionsschritt der Mastergleichung ist je eine skalare lineare Gleichung erster Ordnung mit
+integrierendem Faktor. **Mathlib hat sie nicht.** Gegen frisches `upstream/master`
+`1192d6246b462d5d423cccde4066d15b18718ca9` liefert die Suche nach
+`integrating factor|integratingFactor|linear_ODE|linearODE|variation of constants` unter `Mathlib/`
+**null Treffer**; `Mathlib/Analysis/ODE/` hat sechs Dateien — `Basic`, `DiscreteGronwall`,
+`ExistUnique`, `Gronwall`, `PicardLindelof`, `Transform` —, keine davon über den linearen Fall.
+Vorhanden ist Grönwall und die Eindeutigkeit darauf (`ODE_solution_unique_of_mem_Icc_right`,
+`Mathlib/Analysis/ODE/ExistUnique.lean:194`), also die *Eindeutigkeit* und nicht die *Lösung*.
+
+Die Aussage ist deshalb hier bewiesen, `eq_exp_add_integral_of_hasDerivWithinAt`, und in der
+Gestalt, in der die Mastergleichung sie liefert: **Ableitung von rechts**, weil
+`eq_zero_of_hasDerivAt_integral_jumpProcess` sagt, daß eine zweiseitige bei `0` nicht existiert.
+Das Werkzeug ist `intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le` — dasselbe, das schon
+die Erwartungswertidentität trägt.
+
+**Die Negativaussage ist in `scripts/check_negatives.py` nachgetragen**, wie es die stehende Regel
+des einundzwanzigsten Laufs verlangt: wer eine solche Aussage in eine Roadmap schreibt, trägt sie
+dort nach, sonst wird sie nie wieder geprüft. Der Durchlauf des Skripts nach dem Nachtrag meldet
+für alle dreizehn Aussagen dieselben Trefferzahlen wie im einundzwanzigsten Lauf, für die neue
+null.
+
+#### Die Bruchstelle, benannt
+
+**`jumpMeasure_masterEquation` verlangt `∀ x, lam x ≤ L`, und die Yule-Rate `β x` hat kein solches
+`L`** (`not_bddAbove_birthDeathRate_linear`). Das ist die *einzige* Stelle, an der der
+Mastergleichungsweg auf diesem Datum steht: die Rate ist meßbar, sie ist positiv abseits von `0`,
+die Testfunktion ist beschränkt, und `jumpApply_yule_indicator` zeigt, daß auch die **rechte
+Seite** beschränkt ist, obwohl `lam` es nicht ist — der Erzeuger bildet einen Indikator auf eine
+endlich getragene Funktion ab. Es ist also die *Hypothese der Identität*, die zu bewegen ist, und
+nicht das Datum. Der Punkt steht als benannte Aussage im Meilenstein 4.
+
+#### Das Urteil, das die Aufgabe verlangt: welcher Weg ist für eine allgemeinere Ratenfunktion der bessere
+
+**Die Mastergleichung.** Die Reihe ist für *diese* Rate billiger, aber nicht aus dem Grund, den man
+vermutet: ihr Beweis ist auf dem Zweig, auf dem etwas zu divergieren hat, **deterministisch**, weil
+die Kette Nachbarschritte macht (`le_add_of_step_le_succ`,
+`not_summable_inv_birthDeathRate_linear`). Genau diese Eigenschaft hat eine allgemeinere Rate
+nicht; sobald die Kette Sprünge beliebiger Weite macht, ist der Vergleich mit der harmonischen
+Reihe weg und der ganze Weg neu zu führen. Die Mastergleichung benutzt von der Rate nur, daß der
+Erzeuger einen Indikator auf eine endlich getragene Funktion abbildet, und das gilt für jeden
+Sprungkern mit endlichem Träger. Sie liefert außerdem die Verteilung **mit**, während die Reihe nur
+die Nichtexplosion gibt.
+
+**Die Zirkularität, nach der der Auftrag ausdrücklich fragt, ist an der Aussage von
+`jumpLaw` abzulesen und nicht erst am Beweis.** `jumpLaw lam mu nu t n` ist als Integral über
+`jumpMeasure mu nu` definiert, also über einen Raum, auf dem der *minimale* Prozeß schon lebt;
+`jumpLaw_eq_measureReal` macht daraus `P (X t = n)`. Die Gleichung `∑ n, jumpLaw … t n = 1` ist
+deshalb **keine Voraussetzung**, sondern eine Aussage über dieses Maß — und sie **ist** die
+Nichtexplosion. Der Kopplungsweg dagegen braucht `X t` des dominierten Prozesses, bevor er
+anfangen darf. Das ist kein Scheitern, sondern das Ergebnis, nach dem gefragt war.
+
+#### Was offen blieb
+
+Der **Kopplungsweg ist nicht angefangen**, und das ist ausdrücklich kein Abbruch aus dem verbotenen
+Grund („der Reihenweg steht schon"): die Reihenfolge des Auftrags ist *Mastergleichung vor
+Kopplung*, und die Mastergleichung ist an ihrer benannten Bruchstelle stehengeblieben. Der dritte
+Meßwert fehlt also noch. Ebenfalls offen: die Lösung der Mastergleichung durch Induktion über `n`.
+Beide Enden des Induktionsschritts stehen — `hasDerivWithinAt_jumpLaw` liefert die Ableitung von
+rechts, `eq_exp_add_integral_of_hasDerivWithinAt` löst damit die skalare Gleichung —, und was
+zwischen ihnen fehlt, ist allein die Beschränktheit der Rate. Die zuerst befürchtete Hürde, die
+Stetigkeit von `r ↦ E[(A 1_n)(X r)]`, wird **nicht** gebraucht: die Ableitung ist nicht aus der
+integrierten Form zurückzugewinnen, sondern steht schon vor ihr, weil sie aus der Markoveigenschaft
+kommt und nicht aus dem Hauptsatz.
+
+#### Vorschlag für den nächsten Lauf: `jumpMeasure_masterEquation` unter einer lokal beschränkten Rate
+
+Die Aussage: dieselbe Identität für ein `lam`, das meßbar und positiv ist und längs der
+lokalisierenden Folge `rateTime lam n` beschränkt bleibt, statt global beschränkt zu sein.
+
+Worauf sie ruht: `isLocalizingSequence_rateTime` und `truncRate`, beide bewiesen; die gestutzte
+Identität ist `jumpMeasure_integral_sub_eq_intervalIntegral` an `truncRate lam n`, also
+unverändert; der Grenzübergang ist dominierte Konvergenz mit der **konstanten Majorante `1`**, die
+der Indikator liefert (`abs_stateIndicator_le_one`) — dieselbe Bauart wie beim
+Grenzübergang in `martingale_stoppedProcess`, wo die Fensterschranke des beschränkten Erzeugers
+die konstante Majorante war.
+
+Warum sie jetzt dran ist: sie ist die **einzige** Aussage zwischen der Mastergleichung und dem
+Yule-Prozeß, sie ist damit der ganze Rest des zweiten Weges, und sie ist der einzige Punkt dieses
+Laufs, an dem der Vergleich nicht weiterkam. Der Prüfstein ist derselbe wie immer: kein Fehler,
+kein neues `sorry`, und `∀ x, lam x ≤ L` kommt in der Signatur nicht mehr vor.

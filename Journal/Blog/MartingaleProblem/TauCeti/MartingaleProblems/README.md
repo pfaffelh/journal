@@ -1646,6 +1646,85 @@ A concrete family of solutions, built without any of the theory above. Index
   for and therefore asked at the call site. The degenerate case `β + δ = 0` is
   the process that never moves and falls in the absorbing branch at the index
   `0`; the case `δ = 0` is the Yule process.
+* `linearDeath_zero`, `birthDeathRate_yule_apply`, `isMarkovKernel_yuleKernel`,
+  `yuleKernel_apply`, `jumpApply_yule`, `ae_mem_nonExplosiveE_yule` and
+  `yule_isLocalMPSolution`: **the Yule process**, the linear birth and death
+  chain at `δ = 0`, as a local solution. **Proved** on 2026-09-10, twenty second
+  run, in seven declarations and forty six lines of code. Six of the seven are
+  substitution into `section LinearBirthDeath` and cost one line each; the
+  seventh, `yuleKernel_apply`, is the only statement with content of its own, and
+  it says that away from the absorbing state the embedded chain of a pure birth
+  process is **deterministic**, the two mixture weights of `birthDeathKernel`
+  being `1` and `0` there. The one thing that is not free is the
+  `IsMarkovKernel` instance: it occurs in the *statement*, inside `jumpMeasure`,
+  so it cannot be discharged inside a proof and is an instance hypothesis here as
+  it is for the linear chain; `isMarkovKernel_yuleKernel` discharges it at the
+  call site under `0 ≤ β` alone.
+* `stateIndicator`, `stateIndicator_apply`, `measurable_stateIndicator`,
+  `abs_stateIndicator_le_one`, `jumpLaw`, `jumpLaw_eq_measureReal`,
+  `jumpLaw_zero` and `jumpMeasure_masterEquation`: **the master equation of a
+  jump process in integrated form**, `p n t = p n 0 + ∫_0^t E[(A 1_n)(X r)] dr`
+  with `p n t = P (X t = n)`. **Proved** on 2026-09-10, twenty second run. It is
+  `jumpMeasure_integral_sub_eq_intervalIntegral` at the test function
+  `stateIndicator n`, and the two properties that identity asks of a test
+  function are `measurable_stateIndicator` and `abs_stateIndicator_le_one`;
+  nothing about the identity is reproved. `jumpLaw_eq_measureReal` says that
+  `jumpLaw` is the one dimensional law and not merely an integral shaped like
+  one, and `jumpLaw_zero` is the initial value, which is the initial law because
+  the path has not moved before the first jump
+  (`integral_jumpProcess_of_nonpos`). The hypotheses are those of the expectation
+  identity and no others: a measurable rate, positive and **bounded**.
+* `jumpApply_yule_indicator` and `jumpApply_yule_indicator_zero`: **the generator
+  of the Yule process on an indicator**, `A 1_{n+1} = β n 1_n - β (n+1) 1_{n+1}`
+  and `A 1_0 = 0`. **Proved** on 2026-09-10, twenty second run. This is the right
+  hand side of the master equation of that process, and it is the concrete case
+  of the remark on a domain with compact support below: the generator carries an
+  indicator to a **finitely supported**, hence bounded, function although `lam`
+  is unbounded. `A 1_0 = 0` for two reasons at once, and both are needed: the
+  state `0` has rate `0`, and no other state can leave towards `0`.
+* `jumpMeasure_hasDerivWithinAt_integral_Ici` and `hasDerivWithinAt_jumpLaw`:
+  **the backward equation and the master equation in differential form**,
+  `(d/dt) E[h (X t)] = E[(A h)(X t)]` and `(d/dt) p n t = E[(A 1_n)(X t)]`, from
+  the right at every nonnegative time. **Proved** on 2026-09-10, twenty second
+  run. The first is the block that was buried inside the proof of
+  `jumpMeasure_integral_sub_eq_intervalIntegral`, lifted out: the derivative at
+  `r` is the derivative at `0` of the construction restarted from the law at time
+  `r` (`jumpMeasure_integral_jumpProcess_add'`), composed with the shift
+  `x ↦ x - r`, and that composition is where the Markov property is spent. The
+  identity now *uses* it instead of reproving it, and is twenty seven lines
+  shorter. The second is the first at the test function `stateIndicator n`, and
+  it is the input `eq_exp_add_integral_of_hasDerivWithinAt` asks for: the
+  integrated form is what the identity gives, the differential form is what the
+  induction on `n` consumes.
+* `eq_exp_add_integral_of_hasDerivWithinAt`: **the scalar linear equation of
+  first order, solved by the integrating factor**. From `f' = g - c f` from the
+  right on `(0, t)` follows `f t = exp (-c t) f 0 + ∫_0^t exp (-c (t - r)) g r dr`.
+  **Proved** on 2026-09-10, twenty second run. It is the step of the induction on
+  `n` that solves the master equation, and it is written here because **Mathlib
+  has no first order linear equation and no integrating factor**: the string
+  `integrating factor` occurs in Mathlib nowhere, and `Mathlib/Analysis/ODE/` has
+  six files — `Basic`, `DiscreteGronwall`, `ExistUnique`, `Gronwall`,
+  `PicardLindelof`, `Transform` — none of them about the linear case. What
+  Mathlib does have and this proof uses is
+  `intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le`, the same theorem of
+  the calculus that carries `jumpMeasure_integral_sub_eq_intervalIntegral`. The
+  derivative is one sided of necessity, since
+  `eq_zero_of_hasDerivAt_integral_jumpProcess` says a two sided derivative at `0`
+  does not exist.
+* `mm1_masterEquation`: **the emptiness probe of the master equation**. **Proved**
+  on 2026-09-10, twenty second run. The M/M/1 rate is positive and bounded
+  (`birthDeathRate_mm1_mem`), so every hypothesis of `jumpMeasure_masterEquation`
+  is discharged on data and no assumption is left standing. What the probe does
+  **not** exhibit is an unbounded rate, which is the case the Yule process needs.
+* `jumpMeasure_masterEquation` under a **locally bounded** rate in place of a
+  bounded one: the same identity for a rate that is measurable, positive and
+  bounded along the localizing sequence `rateTime lam n`, obtained by dominated
+  convergence from the truncated problems with the constant majorant `1`, which
+  the indicator supplies. It is the one statement between the master equation and
+  the Yule process, and hence between the second route to non explosion and its
+  conclusion: `jumpApply_yule_indicator` shows that the *right hand side* is
+  bounded on this data although `lam` is not, so what has to move is the
+  hypothesis of the identity and not the data.
 * `ae_step_chainKernel`, `ae_step_comp_chainKernel` and
   `ae_forall_step_comp_chainKernel`: **a property of consecutive states of the
   chain, carried from the kernel to the trajectory**. **Proved** on 2026-09-10,
@@ -1995,6 +2074,42 @@ kann das Ergebnis der Konstruktion gegen etwas Bekanntes prüfen, so wie beim
 Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Es gehört zu Punkt 5 und
 ist **nach** `jumpProcess_isLocalMPSolution` zu machen, nicht davor: es prüft
 die Konstruktion, es trägt sie nicht.
+
+**Der gemessene Vergleich, Stand 2026-09-10, zweiundzwanzigster Lauf.** Bis zu
+diesem Lauf stand hier die *Behauptung*, die Reihe sei der billigere Weg. Was
+davon gezählt ist:
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | **fertig** |
+| Mastergleichung | 13 (`section YuleProcess`, ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 126 | **eine benannte Aussage fehlt** |
+| Kopplung | 0 | 0 | nicht angefangen |
+
+Dazu kommen für jeden Weg die Voraussetzungen, die er teilt: die Reihe ruht auf
+`ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` und dem Divergenzkriterium
+darunter, die Mastergleichung auf `jumpMeasure_integral_sub_eq_intervalIntegral`
+und damit auf der ganzen Rückwärtsgleichung.
+
+**Was die Zahlen bisher sagen, und was sie nicht sagen.** Die Reihe ist für
+*diese* Rate billiger, aber nicht aus dem Grund, den man vermutet: ihr Beweis ist
+auf dem Zweig, auf dem etwas zu divergieren hat, **deterministisch**, weil die
+Kette Nachbarschritte macht. Genau diese Eigenschaft hat eine allgemeinere Rate
+nicht. Die Mastergleichung dagegen benutzt von der Rate nur, daß der Erzeuger
+einen Indikator auf eine endlich getragene Funktion abbildet
+(`jumpApply_yule_indicator`), und das gilt für jede Sprungrate mit
+Nachbarschaftskern. **Für eine allgemeinere Ratenfunktion ist daher die
+Mastergleichung der bessere Weg**, und die Reihe ist der billigere für
+Ratenfunktionen mit einer Wachstumsschranke längs der Kette.
+
+**Was Mathlib jedem Weg gab und was fehlte.** Der Reihe: `Real.not_summable_natCast_inv`,
+`summable_nat_add_iff` und `Summable.of_nonneg_of_le` — die harmonische Reihe und
+der Vergleichssatz, alles vorhanden (`not_summable_inv_birthDeathRate_linear`).
+Der Mastergleichung:
+`intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le`, `HasDerivAt.exp`,
+`integral_indicator_one` — vorhanden; **nicht** vorhanden ist die lineare
+Differentialgleichung erster Ordnung, siehe
+`eq_exp_add_integral_of_hasDerivWithinAt` oben. Der Kopplung: nichts geprüft, weil
+sie nicht angefangen ist.
 
 ### Bemerkung: was eine Domäne mit kompaktem Träger ändern würde
 

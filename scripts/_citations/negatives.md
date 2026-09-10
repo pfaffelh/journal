@@ -92,3 +92,10 @@ Suche `Skorokhod|Skorohod` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
 Suche `condExp_ae_eq_condExp_of` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
 
 
+## `integrating-factor` — MartingaleProblems/Suggested.lean, section YuleProcess
+
+> Mathlib hat keine lineare Differentialgleichung erster Ordnung und keinen integrierenden Faktor; `Mathlib/Analysis/ODE/` hat sechs Dateien, keine davon über den linearen Fall.
+
+Suche `integrating factor|integratingFactor|linear_ODE|linearODE|variation of constants` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
+
+

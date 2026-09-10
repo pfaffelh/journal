@@ -58,6 +58,12 @@ CLAIMS = [
     ('conditional-expectation-functional', 'WeakConvergence/Suggested.lean:5213',
      'Die funktionale Form ist abwesend.',
      'condExp_ae_eq_condExp_of', 'Mathlib/'),
+    ('integrating-factor', 'MartingaleProblems/Suggested.lean, section YuleProcess',
+     'Mathlib hat keine lineare Differentialgleichung erster Ordnung und keinen '
+     'integrierenden Faktor; `Mathlib/Analysis/ODE/` hat sechs Dateien, keine '
+     'davon über den linearen Fall.',
+     'integrating factor|integratingFactor|linear_ODE|linearODE'
+     '|variation of constants', 'Mathlib/'),
 ]
 
 
