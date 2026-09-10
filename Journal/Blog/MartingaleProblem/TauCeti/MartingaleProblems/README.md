@@ -1374,6 +1374,47 @@ A concrete family of solutions, built without any of the theory above. Index
   `measurable_stepIndex_comp`: the local construction reads jump times in `ℝ≥0∞`
   at real times, so it is `ENNReal.ofReal` there, and `eventuallyEq_nhdsGE_stepPath`
   is the case of the identity — which is how the old declaration is now proved.
+* `truncRate lam n = min lam n`, the rate truncated at a level, with
+  `truncRate_le` (bounded by `n` on all of `E`), `truncRate_pos` (positive from
+  the level `1` on, at a positive rate) and `measurable_truncRate`. **Proved** on
+  2026-09-10, twelfth run. It is the data of the bounded case, manufactured out of
+  the data of the local one.
+* `jumpTimeE_le_of_rate_le`: lowering the rate delays every jump time, at every
+  sample point and under no hypothesis. **Proved** on 2026-09-10, twelfth run.
+* `jumpProcessE_eq_truncRate_of_le_rateTime`: **up to the hitting time of the
+  level `n`, the local jump process is the jump process of the truncated rate.**
+  **Proved** on 2026-09-10, twelfth run, together with
+  `stoppedProcess_jumpProcessE_truncRate`, the same identity read as an identity
+  of stopped processes. The hypotheses are non explosion at the sample point and
+  `ENNReal.ofReal t ≤ rateTime lam n ω`, and nothing else; in particular no
+  positivity and no bound on `lam`. This answers what Point 5 of this milestone
+  was left with: the stopped process does not merely satisfy the same martingale
+  identities as a process of bounded rate — it **is** one, term for term, driven
+  by the same chain and the same waiting times on the same space. The two steps
+  are `jumpTimeE_truncRate_eq`, an induction over the index in which the truncated
+  rate is only ever read at a state the path has already **left** (so the state at
+  the time itself, where the rate may exceed the level, never enters), and
+  `jumpTimeE_le_of_rate_le`, which carries the right endpoint of the window.
+  `exists_jumpProcessE_truncRate_ne` is the witness that the hitting time
+  hypothesis cannot be dropped, and `rateTime_zero` says why its level is `0`
+  there.
+* `jumpFiltrationE_inter_lt_rateTime`: **the two natural filtrations agree before
+  the hitting time**: for `A ∈ jumpFiltrationE lam s`, the set
+  `A ∩ {ω | (s : ℝ≥0∞) < rateTime lam n ω}` lies in
+  `jumpFiltrationE (truncRate lam n) s`, and conversely. This is what
+  `jumpProcessE_eq_truncRate_of_le_rateTime` does **not** give: a process identity
+  before a time is not an identity of the σ-algebras of that time, and the two
+  differ after it. It is the step that lets the conditional expectation of the
+  bounded problem be read as one of the local filtration, on the set where the
+  stopping has not yet happened; off that set the increment of the stopped process
+  vanishes and there is nothing to prove.
+* `jumpProcessE_isMPSolution`: `jumpProcess_isMPSolution` for the **local**
+  construction, under `0 ≤ lam ≤ L` rather than `0 < lam ≤ L`. The bounded theorem
+  is stated for `jumpProcess` and for `jumpFiltration`, and
+  `jumpProcessE_eq_jumpProcess` identifies the two constructions only where the
+  waiting times are all positive — which is almost every sample point but not
+  every one, and a natural filtration is not an almost sure notion. So the
+  transfer is a statement about the local construction and has to be made there.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved, with `rateTime` as the
   localizing sequence; and the explosion criterion in terms of the jump times.
@@ -1381,7 +1422,10 @@ A concrete family of solutions, built without any of the theory above. Index
   the rate along the path is at most `n`, which is a bound of the same kind
   `jumpProcess_isMPSolution` asks for, but it is a bound along the path and not a
   bound on `lam`, so the global theorem does not apply to the stopped process by
-  substitution.
+  substitution. The route around that is the three points above: the stopped
+  process is the process of `truncRate lam n`, which **is** of bounded rate; that
+  process solves the bounded problem for its own filtration; and before the
+  hitting time that filtration is the one asked for.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for

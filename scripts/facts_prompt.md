@@ -795,10 +795,12 @@ danach.*
    `ENNReal` ausgeschrieben. Wer die Notation benutzt, erntet zwanzig
    Folgefehler an Stellen, die in Ordnung sind.
 
-   **Was von Punkt 5 jetzt noch fehlt, und es ist eine einzige benannte
-   Aussage:** `jumpProcess_isLocalMPSolution`. Alle Eingaben stehen jetzt
-   wirklich und nicht als Beschreibung: die lokalisierende Folge ist bewiesen
-   eine (`isLocalizingSequence_rateTime`), der Prozeß ist meßbar
+   ~~**Was von Punkt 5 jetzt noch fehlt, und es ist eine einzige benannte
+   Aussage:** `jumpProcess_isLocalMPSolution`.~~ *(die dort zuerst zu klärende
+   Frage ist beantwortet, 2026-09-10, zwölfter Lauf des Tages; der Satz selbst
+   steht noch aus und hängt jetzt an zwei anderen Aussagen.)* Alle Eingaben
+   stehen wirklich und nicht als Beschreibung: die lokalisierende Folge ist
+   bewiesen eine (`isLocalizingSequence_rateTime`), der Prozeß ist meßbar
    (`measurable_jumpProcessE`), und `ae_mem_nonExplosiveE_jumpMeasure` löst die
    einzige Voraussetzung jener Folge unter `jumpMeasure mu nu` ein. Dabei ist im
    Auge zu behalten, was die Lokalisierung liefert und was nicht — es ist der
@@ -809,6 +811,50 @@ danach.*
    Erzeuger, Lösung und Martingal —, die lineare Kette hat ihren Erzeuger und ihr
    Nichtexplosionsargument und wartet auf `jumpProcess_isLocalMPSolution`, und
    Hawkes wartet auf die pfadabhängige Variante.
+
+   **Zwischenstand 2026-09-10, zwölfter Lauf des Tages. Der gestoppte Prozeß
+   *ist* einer von beschränkter Rate, und nicht bloß einer mit denselben
+   Martingalen.** Sechzehn Deklarationen im neuen Abschnitt `Truncation` von
+   `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1, alle sechzehn mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10, zwölfter
+   Lauf des Tages"; die neuen Punkte stehen in
+   `MartingaleProblems/README.md`, Meilenstein 4.
+
+   `jumpProcessE_eq_truncRate_of_le_rateTime`: unter Nichtexplosion und
+   `ENNReal.ofReal t ≤ rateTime lam n ω` ist
+   `jumpProcessE (truncRate lam n) t ω = jumpProcessE lam t ω`, mit
+   `truncRate lam n = min lam n`, das auf **ganz `E`** durch `n` beschränkt ist.
+   Über `lam` steht nichts — keine Positivität, keine Schranke, keine
+   Meßbarkeit. `stoppedProcess_jumpProcessE_truncRate` liest dasselbe als
+   Gleichheit der gestoppten Prozesse.
+
+   **Drei Befunde für den nächsten Lauf.**
+
+   * **Der Beweis lebt davon, welche Indizes er *nicht* liest.** Ein leeres
+     Fenster braucht gar nichts (`xi m ≤ 0` macht beide Zuwächse `0`, auch bei
+     `0 / 0`), und der Zustand, den der Pfad zur fraglichen Zeit einnimmt, wird
+     nie gelesen — die Induktion verbraucht die Rate an `y m` allein, um von
+     `T m` nach `T (m+1)` zu kommen. Genau deshalb darf die Voraussetzung
+     `≤ rateTime` mit Gleichheit stehen, obwohl an der Trefferzeit die Rate
+     schon `≥ n` ist.
+   * **`rateTime lam 0 ω = 0`, immer** (`rateTime_zero`): das erste Glied der
+     lokalisierenden Folge stoppt sofort. Dazu der Zeuge
+     `exists_jumpProcessE_truncRate_ne`, daß die Voraussetzung nicht
+     wegzulassen ist.
+   * **Was jetzt fehlt, ist nicht mehr die Prozeßidentität, sondern die der
+     σ-Algebren.** Der Turmschluß „der gestutzte Prozeß ist ein Martingal, also
+     ist es der gestoppte auch" bräuchte
+     `jumpFiltrationE lam s ≤ jumpFiltrationE (truncRate lam n) s`, und der
+     Einschluß fehlt. Zwei benannte Aussagen stehen dafür in der Roadmap:
+     `jumpFiltrationE_inter_lt_rateTime` (die beiden Filtrationen stimmen **vor**
+     der Trefferzeit überein; die Eingabe dafür ist
+     `jumpProcessE_eq_truncRate_of_le_of_le_rateTime` aus diesem Lauf) und
+     `jumpProcessE_isMPSolution` (der beschränkte Satz für die **lokale**
+     Konstruktion, unter `0 ≤ lam ≤ L`, weil `jumpProcessE_eq_jumpProcess` die
+     beiden Konstruktionen nur bei durchweg positiven Wartezeiten identifiziert
+     und eine natürliche Filtration keine f.s.-Aussage ist). Die erste zuerst.
 
    *Der ursprüngliche Wortlaut dieses Zwischenstands, und er ist an einem Wort
    falsch:* „Alle drei Zutaten stehen: der Prozeß ist meßbar, er explodiert f.s.

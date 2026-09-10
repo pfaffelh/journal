@@ -17519,3 +17519,131 @@ Konstruktion zu beschränkter Rate **übereinstimmt** oder nur denselben
 Martingalen genügt. Bricht es dort, so ist der Befund wertvoller als ein
 abgeschwächter Satz -- und er ist dann an genau der Stelle zu suchen, an der die
 Schranke längs des Pfades und die Schranke an `lam` auseinandertreten.
+
+### 2026-09-10, zwölfter Lauf des Tages
+
+**Auftrag:** Teil C, Punkt 5 des Meilensteins 4 von `MartingaleProblems`, in der
+Gestalt, die der elfte Lauf hinterlassen hat: `jumpProcess_isLocalMPSolution`, und
+davor die eine Frage, die er ausdrücklich zuerst geklärt haben wollte — „ob der bei
+`rateTime lam n` gestoppte Prozeß mit einer Konstruktion zu beschränkter Rate
+**übereinstimmt** oder nur denselben Martingalen genügt".
+
+**Ergebnis: er stimmt überein, und zwar Glied für Glied.** Nicht nur dieselben
+Martingale, nicht nur dasselbe Gesetz — derselbe Punkt des Stichprobenraums,
+dieselbe Kette, dieselben Wartezeiten, ein anderer Takt. Sechzehn Deklarationen
+im neuen Abschnitt `Truncation` von
+`TauCeti/MartingaleProblems/Suggested.lean` (eine Definition und fünfzehn
+Sätze), die ganze Datei ohne einen Fehler durch
+`lake env lean` gegen v4.33.1, **alle sechzehn** mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft; die Zahl der `sorry` bleibt
+bei neun (Meilensteine 3, 5, 9, 10). Die neuen Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+**Der Satz.**
+
+```
+jumpProcessE_eq_truncRate_of_le_rateTime
+    (hω : ω ∈ NonExplosiveE lam) (hle : ENNReal.ofReal t ≤ rateTime lam n ω) :
+  jumpProcessE (truncRate lam n) t ω = jumpProcessE lam t ω
+```
+
+mit `truncRate lam n = fun x ↦ min (lam x) n`, und
+`stoppedProcess_jumpProcessE_truncRate` liest dasselbe als Gleichheit der
+**gestoppten** Prozesse, für jedes `i : ℝ≥0` und jeden nichtexplodierenden Punkt.
+Über `lam` steht **nichts** — keine Positivität, keine Schranke, keine Meßbarkeit;
+`truncRate lam n` ist nach `truncRate_le` auf **ganz `E`** durch `n` beschränkt,
+also Datum des beschränkten Falls, und nach `truncRate_pos` bei positivem `lam`
+vom Niveau `1` an positiv, also Datum von `jumpProcess_isMPSolution`.
+
+**Zwei Indizes brauchen eigene Sorgfalt, und der Beweis lebt davon, welche es
+nicht sind.**
+
+* **Ein leeres Fenster braucht gar nichts.** Ist `xi m ≤ 0`, so sind beide
+  Zuwächse `0` — `ofReal (xi m) = 0`, und `0 / x = 0` für jedes `x`, auch für
+  `x = 0`. Die Rate an `y m` darf dort beliebig groß sein. Das ist der Grund, aus
+  dem die Voraussetzung nur die **besuchten** Zustände betrifft und nicht die
+  Zustände der Kette.
+* **Der Zustand, den der Pfad zur fraglichen Zeit einnimmt, wird nie gelesen.**
+  Die Induktion verbraucht die Rate an `y m` allein, um von `T m` zu `T (m+1)` zu
+  kommen; es gehen also nur Zustände ein, die der Pfad schon **verlassen** hat,
+  und die hat er strikt früher verlassen. Genau deshalb darf die Voraussetzung
+  `≤ rateTime` mit Gleichheit stehen und nicht bloß `<`: an der Trefferzeit selbst
+  ist die Rate typischerweise `≥ n`, und das schadet nicht.
+
+Der Schritt der Induktion ist ein **Besuch**: eine endliche Sprungzeit mit echt
+späterem Nachfolger ist eine reelle Zeit, an der der Pfad den Wert `y m` hat
+(`stepIndex_eq_of` an `ENNReal.ofReal (T m).toReal`), also greift die Schranke an
+`lam (y m)` unmittelbar. Die andere Hälfte, das rechte Fensterende, ist
+`jumpTimeE_le_of_rate_le` — **eine kleinere Rate verspätet jede Sprungzeit**, an
+jedem Stichprobenpunkt und voraussetzungsfrei, weil `ENNReal.div_le_div_left` den
+Quotienten auch bei verschwindendem Divisor antiton im Divisor macht.
+
+**Drei Befunde, die der nächste Lauf braucht.**
+
+* **`rateTime lam 0 ω = 0`, immer** (`rateTime_zero`). Das laufende Supremum ist
+  nichtnegativ, also ist das Niveau `0` überschritten, bevor irgend etwas geschieht;
+  das erste Glied der lokalisierenden Folge stoppt sofort. Es ist kein Mangel —
+  `Locally` fragt nach der ganzen Folge, und `monotone_rateTime` liefert die
+  späteren Glieder —, aber es ist der Grund, aus dem der Vergleich mit der
+  Trefferzeit und nicht mit einer Schranke an `lam` formuliert ist.
+* **Die Voraussetzung ist nicht wegzulassen**, und der Zeuge steht
+  (`exists_jumpProcessE_truncRate_ne`): auf `E = Bool` mit Rate `1`, Wartezeiten
+  `1` und einer Kette, die ihren Anfangszustand sofort verläßt, ist die auf
+  `0` gestutzte Rate identisch `0`, die gestutzte erste Sprungzeit also `⊤`, und
+  der gestutzte Pfad steht bei der Zeit `1` noch bei `y 0`, während der Pfad
+  selbst bei `y 1` ist. `rateTime_zero` sagt, daß der Vergleich für diese Daten
+  auch nichts behauptet — der Zeuge macht aus dieser Einschränkung eine wirkliche
+  und keine des Beweises.
+* **`0 ≤ t` ist keine Voraussetzung**, sondern beim Übersetzen als ungenutzt
+  gemeldet und gestrichen worden: bei negativer Zeit ist `ENNReal.ofReal t = 0`
+  und beide Prozesse lesen ihre Kette am Index `0`.
+
+**Was `jumpProcess_isLocalMPSolution` jetzt noch fehlt, und es ist nicht mehr die
+Prozeßidentität, sondern die der σ-Algebren.** Der abstrakte Schluß „der gestutzte
+Prozeß ist ein Martingal, also ist es der gestoppte auch" trägt **nicht**, und der
+Grund ist benennbar: `Locally` verlangt das Martingal für `jumpFiltrationE lam`,
+`jumpProcess_isMPSolution` liefert es für die natürliche Filtration des
+**gestutzten** Prozesses, und der Turmschluß bräuchte dafür
+`jumpFiltrationE lam s ≤ jumpFiltrationE (truncRate lam n) s`. Dieser Einschluß
+ist nicht bewiesen und nach der Trefferzeit auch nicht zu erwarten, denn dort
+laufen die beiden Pfade auseinander. (Als **Zeuge** steht er nicht da — dieser Lauf
+hat ihn nicht widerlegt, sondern nur festgestellt, daß er fehlt; wer ihn braucht,
+schuldet den Beweis oder den Zeugen.) Eine Prozeßgleichheit vor einer Zeit ist
+jedenfalls keine Gleichheit der σ-Algebren dieser Zeit.
+
+Was fehlt, sind zwei benannte Aussagen, und beide stehen jetzt als Punkte in
+`MartingaleProblems/README.md`, Meilenstein 4:
+
+1. `jumpFiltrationE_inter_lt_rateTime` — **die beiden Filtrationen stimmen vor der
+   Trefferzeit überein**: `A ∈ jumpFiltrationE lam s` impliziert
+   `A ∩ {ω | (s : ℝ≥0∞) < rateTime lam n ω} ∈ jumpFiltrationE (truncRate lam n) s`,
+   und umgekehrt. Das ist die Stelle, an der die bedingte Erwartung des
+   beschränkten Problems als eine der lokalen Filtration gelesen werden darf;
+   außerhalb dieser Menge ist der Zuwachs des gestoppten Prozesses `0` und nichts
+   zu zeigen. Der Vergleich dieses Laufs ist genau die Eingabe dafür, und er
+   steht schon in der dafür gebrauchten Gestalt da:
+   `jumpProcessE_eq_truncRate_of_le_of_le_rateTime` gibt die Gleichheit der Pfade
+   auf **ganz** `[0, s]` und nicht nur an `s`, also stimmen die erzeugenden
+   Auswertungsfamilien der beiden natürlichen Filtrationen dort Glied für Glied
+   überein.
+2. `jumpProcessE_isMPSolution` — `jumpProcess_isMPSolution` für die **lokale**
+   Konstruktion, unter `0 ≤ lam ≤ L` statt `0 < lam ≤ L`. Der beschränkte Satz ist
+   für `jumpProcess` und `jumpFiltration` geschrieben, und
+   `jumpProcessE_eq_jumpProcess` identifiziert die beiden Konstruktionen nur dort,
+   wo **alle** Wartezeiten positiv sind — das ist fast jeder Stichprobenpunkt, aber
+   nicht jeder, und eine natürliche Filtration ist keine f.s.-Aussage. Es ist
+   derselbe Punkt, an dem `StronglyAdapted` und `IsStoppingTime` diese Datei schon
+   zweimal zu voraussetzungsfreien Aussagen gezwungen haben.
+
+**Vorschlag für den nächsten Lauf: `jumpFiltrationE_inter_lt_rateTime`**, und
+zwar vor Punkt 2. Sie ist dran, weil dieser Lauf ihre einzige mathematische
+Eingabe geliefert hat und weil sie die Aussage ist, an der der abstrakte Schluß
+bricht — ohne sie hilft es nichts, den gestutzten Prozeß als Lösung des
+beschränkten Problems zu kennen. Die Gestalt, in der sie zu suchen ist, steht
+schon in der Datei: `eq_of_measurable_naturalFiltration` ist das Werkzeug, mit dem
+`isPastFunctional_indicator` dieselbe Art von Aussage über `jumpFiltration`
+gewinnt, und es fragt nach der Gleichheit der Pfade auf `[0, s]` — was der
+Vergleich dieses Laufs für `s < rateTime lam n ω` liefert. Bricht es, so ist zu
+sagen, an welchem der beiden Einschlüsse, denn die beiden sind nicht symmetrisch:
+die gestutzte Filtration kann vor der Trefferzeit nicht mehr sehen als die
+ungestutzte, wohl aber danach weniger.
