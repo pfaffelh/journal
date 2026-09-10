@@ -1,0 +1,10 @@
+# Die beiden Deklarationsindizes sind je rund 20 MB und werden von
+# `scripts/mathlib_index.py` in wenigen Minuten neu gebaut; sie gehören nicht
+# ins Repository.  Die Berichte daneben (`report.md`, `negatives.md`) schon:
+# auf sie verweist der Laufbericht in `Facts/INVENTAR.md`.
+index_master.json
+index_v4331.json
+cands.json
+own.json
+paths.json
+lauf21.md

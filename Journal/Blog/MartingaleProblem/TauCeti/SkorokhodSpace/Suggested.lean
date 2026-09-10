@@ -337,13 +337,20 @@ without importing it, and Milestone 6 spoke of measurable maps out of `D(ι, E)`
 with no measurable structure on it.  The last is now declared, as the Borel
 structure of the metric.
 
-`Function.RightContinuous` and `IsCadlag` are **not** in Mathlib — a search of
-`upstream/master` for `IsCadlag` returns nothing — so the earlier version of this
-file, which used them without defining them, could not be elaborated at all.
-They are restated here, verbatim from Milestone 2 of the roadmap, so that the
-file stands against Mathlib alone; the intended source is
-`RemyDegenne/brownian-motion`, `BrownianMotion/StochasticIntegral/Cadlag.lean`
-(Apache 2.0), and that file is what should be reused.
+`IsRightContinuous` and `IsCadlag` are restated here because v4.33.1, to
+which this file is pinned, does not have them; the earlier version of the file,
+which used them without defining them, could not be elaborated at all.
+
+Mathlib has them since #43352, in `Mathlib/Topology/Order/Cadlag.lean`, under the
+names `IsRightContinuous` and `IsCadlag` and with the fields `isRightContinuous`
+and `tendsto_nhdsLT`.  The two definitions agree term for term, including the
+instance bundle `[TopologicalSpace X] [Preorder X] [TopologicalSpace Y]`, so the
+`IsCadlag` below collides with the library one by name and not merely by subject.
+Against a toolchain that carries that file, the two definitions below are to be
+deleted and nothing else changed; the field names used throughout this file are
+already Mathlib's, so that the deletion is the whole of the transition.  The
+source the library drew on is `RemyDegenne/brownian-motion`,
+`BrownianMotion/StochasticIntegral/Cadlag.lean` (Apache 2.0).
 -/
 
 open Filter Topology Set MeasureTheory
@@ -700,21 +707,27 @@ theorem exists_orderIso_isometry_real :
 
 /-! ## Milestone 2: càdlàg functions
 
-Neither predicate is in Mathlib. `Function.leftLim` and `Function.rightLim` are
+Neither predicate is in v4.33.1, to which this file is pinned; both are in
+`Mathlib/Topology/Order/Cadlag.lean` since #43352, and the two definitions below
+agree with the library ones term for term, including the names of the fields and
+the instance bundle.  Against a toolchain that carries that file the two are to
+be deleted and nothing else changed.
+
+`Function.leftLim` and `Function.rightLim` are in v4.33.1
 (`Mathlib/Topology/Order/LeftRightLim.lean:50` and `:59`), and the two lemmas
 that connect the structure to them, `tendsto_leftLim_of_tendsto` and
 `ContinuousWithinAt.rightLim_eq`, live in the same file. -/
 
 /-- Right continuity at every point. -/
-def Function.RightContinuous {α β : Type*} [TopologicalSpace α] [Preorder α]
+def IsRightContinuous {α β : Type*} [TopologicalSpace α] [Preorder α]
     [TopologicalSpace β] (f : α → β) : Prop :=
   ∀ a, ContinuousWithinAt f (Set.Ioi a) a
 
 /-- Right continuous with left limits. -/
 structure IsCadlag {α β : Type*} [TopologicalSpace α] [Preorder α]
     [TopologicalSpace β] (f : α → β) : Prop where
-  right_continuous : Function.RightContinuous f
-  left_limit : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)
+  isRightContinuous : IsRightContinuous f
+  tendsto_nhdsLT : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)
 
 variable {E : Type*} [MetricSpace E]
 
@@ -726,13 +739,13 @@ def largeLeftJumpSet (f : ι → E) (ε : ℝ) : Set ι :=
   {x | ε ≤ dist (Function.leftLim f x) (f x)}
 
 omit [AdditiveDist ι] [ProperSpace ι] in
-/-- The `left_limit` field, read through `Function.leftLim`.  This is what makes
+/-- The `tendsto_nhdsLT` field, read through `Function.leftLim`.  This is what makes
 the existing API of `Mathlib/Topology/Order/LeftRightLim.lean` apply, and it is
 unconditional: `tendsto_leftLim_of_tendsto` covers the degenerate case
 `𝓝[<] x = ⊥` itself. -/
 theorem IsCadlag.tendsto_leftLim {f : ι → E} (hf : IsCadlag f) (x : ι) :
     Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x)) :=
-  tendsto_leftLim_of_tendsto (hf.left_limit x)
+  tendsto_leftLim_of_tendsto (hf.tendsto_nhdsLT x)
 
 omit [AdditiveDist ι] [ProperSpace ι] in
 /-- **The uniform limit of càdlàg paths is càdlàg.**  This is the step at which
@@ -752,10 +765,10 @@ sequence first.  Their limit is `⊥`-safe: when `𝓝[<] x` is the bottom filte
 witness is arbitrary, and the argument is skipped rather than repaired. -/
 theorem IsCadlag.of_tendstoUniformly [CompleteSpace E] {F : ℕ → ι → E} {f : ι → E}
     (hF : ∀ n, IsCadlag (F n)) (h : TendstoUniformly F f atTop) : IsCadlag f where
-  right_continuous a :=
+  isRightContinuous a :=
     h.tendsto_of_eventually_tendsto
-      (Eventually.of_forall fun n => (hF n).right_continuous a) (h.tendsto_at a)
-  left_limit x := by
+      (Eventually.of_forall fun n => (hF n).isRightContinuous a) (h.tendsto_at a)
+  tendsto_nhdsLT x := by
     rcases eq_or_neBot (𝓝[<] x) with hx | hx
     · exact ⟨f x, by simp [hx]⟩
     · -- the uniform estimate, in the form the two limits below consume
@@ -796,15 +809,15 @@ window --- as `f ∘ clamp t₀ m`, which *is* a global uniform limit --- and th
 assembled here, every point lying in the interior of a window. -/
 theorem IsCadlag.of_forall_eventuallyEq {f : ι → E}
     (h : ∀ x : ι, ∃ g : ι → E, IsCadlag g ∧ f =ᶠ[𝓝 x] g) : IsCadlag f where
-  right_continuous a := by
+  isRightContinuous a := by
     obtain ⟨g, hg, hfg⟩ := h a
     have hev : f =ᶠ[𝓝[>] a] g := hfg.filter_mono nhdsWithin_le_nhds
     show Tendsto f (𝓝[Set.Ioi a] a) (𝓝 (f a))
     rw [hfg.eq_of_nhds]
-    exact Filter.Tendsto.congr' hev.symm (hg.right_continuous a)
-  left_limit x := by
+    exact Filter.Tendsto.congr' hev.symm (hg.isRightContinuous a)
+  tendsto_nhdsLT x := by
     obtain ⟨g, hg, hfg⟩ := h x
-    obtain ⟨l, hl⟩ := hg.left_limit x
+    obtain ⟨l, hl⟩ := hg.tendsto_nhdsLT x
     exact ⟨l, Filter.Tendsto.congr' (hfg.filter_mono nhdsWithin_le_nhds).symm hl⟩
 
 omit [AdditiveDist ι] [ProperSpace ι] in
@@ -879,7 +892,7 @@ theorem IsCadlag.eventually_dist_leftLim_lt {f : ι → E} (hf : IsCadlag f) (x 
     · obtain ⟨u', hu'⟩ := hgt
       have hB : {z | dist (f z) (f x) ≤ ε / 4} ∈ 𝓝[≥] x := by
         have h2 : Tendsto f (𝓝[≥] x) (𝓝 (f x)) :=
-          continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous x)
+          continuousWithinAt_Ioi_iff_Ici.1 (hf.isRightContinuous x)
         filter_upwards [Metric.tendsto_nhds.1 h2 (ε / 4) (by positivity)] with z hz using hz.le
       obtain ⟨u, hu, hsub⟩ := (mem_nhdsGE_iff_exists_Ico_subset' hu').1 hB
       filter_upwards [(mem_nhdsGE_iff_exists_Ico_subset' hu').2 ⟨u, hu, subset_rfl⟩]
@@ -957,7 +970,7 @@ theorem IsCadlag.continuousAt_iff_notMem_leftJumpSet {f : ι → E} (hf : IsCadl
     have hx' : Function.leftLim f x = f x := by simpa [leftJumpSet] using hx
     have h1 : Tendsto f (𝓝[<] x) (𝓝 (f x)) := hx' ▸ hf.tendsto_leftLim x
     have h2 : Tendsto f (𝓝[≥] x) (𝓝 (f x)) :=
-      continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous x)
+      continuousWithinAt_Ioi_iff_Ici.1 (hf.isRightContinuous x)
     have := h1.sup h2
     rwa [nhdsLT_sup_nhdsGE] at this
 
@@ -979,16 +992,16 @@ This replaces the classical route to that separation, which agrees on the
 continuity points and then invokes their density.  Density is a statement about
 the index, and it fails for an index of Milestone 1 whose jump points are not
 right isolated; the right hand approximation here uses only the two
-`right_continuous` fields, and nothing about the index at all. -/
+`isRightContinuous` fields, and nothing about the index at all. -/
 theorem IsCadlag.eq_of_forall_exists_dist_le {F G : ι → E} (hF : IsCadlag F) (hG : IsCadlag G)
     {t : ι} (h : ∀ ρ > 0, ∀ η > 0, ∃ s, t ≤ s ∧ dist s t < ρ ∧
       (dist (F s) (G t) ≤ η ∨ dist (F t) (G s) ≤ η)) :
     F t = G t := by
   refine eq_of_forall_dist_le fun η hη => ?_
   have hFc : Tendsto F (𝓝[≥] t) (𝓝 (F t)) :=
-    continuousWithinAt_Ioi_iff_Ici.1 (hF.right_continuous t)
+    continuousWithinAt_Ioi_iff_Ici.1 (hF.isRightContinuous t)
   have hGc : Tendsto G (𝓝[≥] t) (𝓝 (G t)) :=
-    continuousWithinAt_Ioi_iff_Ici.1 (hG.right_continuous t)
+    continuousWithinAt_Ioi_iff_Ici.1 (hG.isRightContinuous t)
   obtain ⟨ρ₁, hρ₁, h₁⟩ := Metric.tendsto_nhdsWithin_nhds.1 hFc (η / 2) (by positivity)
   obtain ⟨ρ₂, hρ₂, h₂⟩ := Metric.tendsto_nhdsWithin_nhds.1 hGc (η / 2) (by positivity)
   obtain ⟨s, hts, hsρ, hcase⟩ := h (min ρ₁ ρ₂) (lt_min hρ₁ hρ₂) (η / 2) (by positivity)
@@ -1049,9 +1062,9 @@ theorem IsCadlag.eq_of_eqOn_dense {f g : ι → E} (hf : IsCadlag f) (hg : IsCad
   · exact h ht
   · have := ht
     have hf' : ContinuousWithinAt f (D ∩ Set.Ioi t) t :=
-      (hf.right_continuous t).mono Set.inter_subset_right
+      (hf.isRightContinuous t).mono Set.inter_subset_right
     have hg' : ContinuousWithinAt g (D ∩ Set.Ioi t) t :=
-      (hg.right_continuous t).mono Set.inter_subset_right
+      (hg.isRightContinuous t).mono Set.inter_subset_right
     have hfg : g =ᶠ[𝓝[D ∩ Set.Ioi t] t] f := by
       filter_upwards [self_mem_nhdsWithin] with x hx using (h hx.1).symm
     exact tendsto_nhds_unique hf' (Filter.Tendsto.congr' hfg hg')
@@ -1070,11 +1083,11 @@ values --- or `g y < g x` for every `y < x`, and then `g` tends to `g x` from
 below, so the left limit of `f` at `g x` is the left limit of `f ∘ g` at `x`. -/
 theorem IsCadlag.comp_monotone_continuous {f : ι → E} (hf : IsCadlag f) {g : ι → ι}
     (hgm : Monotone g) (hgc : Continuous g) : IsCadlag (f ∘ g) where
-  right_continuous a := by
+  isRightContinuous a := by
     have h₁ : ContinuousWithinAt f (Set.Ici (g a)) (g a) :=
-      continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous (g a))
+      continuousWithinAt_Ioi_iff_Ici.1 (hf.isRightContinuous (g a))
     exact h₁.comp hgc.continuousWithinAt fun x hx => hgm (le_of_lt hx)
-  left_limit x := by
+  tendsto_nhdsLT x := by
     by_cases hconst : ∃ b, b < x ∧ g b = g x
     · obtain ⟨b, hbx, hgb⟩ := hconst
       refine ⟨f (g x), Filter.Tendsto.congr' ?_ tendsto_const_nhds⟩
@@ -1082,7 +1095,7 @@ theorem IsCadlag.comp_monotone_continuous {f : ι → E} (hf : IsCadlag f) {g : 
       have : g y = g x := le_antisymm (hgm hy.2.le) (hgb ▸ hgm hy.1.le)
       simp [Function.comp_apply, this]
     · simp only [not_exists, not_and] at hconst
-      obtain ⟨l, hl⟩ := hf.left_limit (g x)
+      obtain ⟨l, hl⟩ := hf.tendsto_nhdsLT (g x)
       refine ⟨l, hl.comp ?_⟩
       refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
         hgc.continuousWithinAt ?_
@@ -1129,7 +1142,7 @@ theorem IsCadlag.isBounded_image_of_isCompact {f : ι → E} (hf : IsCadlag f)
     {K : Set ι} (hK : IsCompact K) : Bornology.IsBounded (f '' K) := by
   have key : ∀ x : ι, ∃ r : ℝ, {y | dist (f y) (f x) ≤ r} ∈ 𝓝 x := by
     intro x
-    obtain ⟨l, hl⟩ := hf.left_limit x
+    obtain ⟨l, hl⟩ := hf.tendsto_nhdsLT x
     refine ⟨1 + dist l (f x), ?_⟩
     rw [← nhdsLT_sup_nhdsGE x, Filter.mem_sup]
     constructor
@@ -1137,7 +1150,7 @@ theorem IsCadlag.isBounded_image_of_isCompact {f : ι → E} (hf : IsCadlag f)
       calc dist (f y) (f x) ≤ dist (f y) l + dist l (f x) := dist_triangle _ _ _
         _ ≤ 1 + dist l (f x) := by linarith
     · have h2 : Tendsto f (𝓝[≥] x) (𝓝 (f x)) :=
-        continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous x)
+        continuousWithinAt_Ioi_iff_Ici.1 (hf.isRightContinuous x)
       filter_upwards [Metric.tendsto_nhds.1 h2 1 one_pos] with y hy
       have hd : (0 : ℝ) ≤ dist l (f x) := dist_nonneg
       linarith
@@ -1286,7 +1299,7 @@ theorem IsCadlag.exists_subdivision {f : ι → E} (hf : IsCadlag f) {a b : ι} 
   obtain ⟨u, hu, hsubu⟩ : ∃ u, c < u ∧ ∀ z ∈ Set.Ico c u, dist (f z) (f c) ≤ ε := by
     have hB : {z | dist (f z) (f c) ≤ ε} ∈ 𝓝[≥] c := by
       have h2 : Tendsto f (𝓝[≥] c) (𝓝 (f c)) :=
-        continuousWithinAt_Ioi_iff_Ici.1 (hf.right_continuous c)
+        continuousWithinAt_Ioi_iff_Ici.1 (hf.isRightContinuous c)
       filter_upwards [Metric.tendsto_nhds.1 h2 ε hε] with z hz using hz.le
     obtain ⟨u, hu, hsub⟩ := (mem_nhdsGE_iff_exists_Ico_subset' hcb).1 hB
     exact ⟨u, hu, fun z hz => hsub hz⟩
@@ -1788,7 +1801,7 @@ supremum-approximating sequence would depend on it, and a different countable
 set for every radius computes nothing. -/
 theorem exists_countable_ciSup_eq [Nonempty ι] :
     ∃ C : Set ι, C.Countable ∧ C.Nonempty ∧
-      ∀ h : ι → ℝ, Function.RightContinuous h → BddAbove (Set.range h) →
+      ∀ h : ι → ℝ, IsRightContinuous h → BddAbove (Set.range h) →
         ⨆ t : ι, h t = ⨆ t : C, h (t : ι) := by
   obtain ⟨D, hDc, hDd⟩ := TopologicalSpace.exists_countable_dense ι
   refine ⟨D ∪ rightIsolated ι, hDc.union countable_rightIsolated,
@@ -3514,15 +3527,15 @@ because a càdlàg path composed with an order isomorphism is càdlàg
 in the order topology, continuous). -/
 theorem SkorokhodSpace.rightContinuous_dist_restrictExhaustion (t₀ : ι) (u : ℝ)
     (l : TimeChange ι) (f g : D(ι, E)) :
-    Function.RightContinuous fun t : ι =>
+    IsRightContinuous fun t : ι =>
       dist ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun (l.toOrderIso t))
         ((SkorokhodSpace.restrictExhaustion t₀ u g).toFun t) := by
   have hcomp : IsCadlag ((SkorokhodSpace.restrictExhaustion t₀ u f).toFun ∘ l.toOrderIso) :=
     (SkorokhodSpace.restrictExhaustion t₀ u f).isCadlag.comp_monotone_continuous
       l.toOrderIso.monotone l.toOrderIso.continuous
   intro a
-  exact (hcomp.right_continuous a).dist
-    ((SkorokhodSpace.restrictExhaustion t₀ u g).isCadlag.right_continuous a)
+  exact (hcomp.isRightContinuous a).dist
+    ((SkorokhodSpace.restrictExhaustion t₀ u g).isCadlag.isRightContinuous a)
 
 omit [AdditiveDist ι] [BasePoint ι] in
 /-- The greatest point of the window grows with the radius. -/
@@ -7081,7 +7094,7 @@ theorem SkorokhodSpace.iInf_iSup_edist_eq [SecondCountableTopology E]
     ⨅ n : ℕ, ⨆ s : ↥(Metric.ball t (1 / (n + 1 : ℝ)) ∩ Set.Ioi t),
         edist (f.toFun (s : ι)) y
       = edist (f.toFun t) y := by
-  have hrc := f.isCadlag.right_continuous t
+  have hrc := f.isCadlag.isRightContinuous t
   have hcont : ∀ η : ℝ, 0 < η → ∃ ρ : ℝ, 0 < ρ ∧
       ∀ s : ι, t < s → dist s t < ρ → dist (f.toFun s) (f.toFun t) < η := by
     intro η hη

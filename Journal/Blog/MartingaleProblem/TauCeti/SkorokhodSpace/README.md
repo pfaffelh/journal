@@ -1,8 +1,28 @@
 # The Skorokhod space
 
-The space of càdlàg paths with the `J₁` topology. The string `cadlag` does not occur in
-Mathlib, and neither does the space. What Mathlib does have, and what is **not**
-to be rebuilt:
+The space of càdlàg paths with the `J₁` topology. The space does not occur in
+Mathlib. The *predicate* does: since #43352 the library carries
+`Mathlib/Topology/Order/Cadlag.lean`, and Milestone 2 below is written against
+it. What Mathlib does have, and what is **not** to be rebuilt:
+
+* `Mathlib/Topology/Order/Cadlag.lean`: `IsRightContinuous` and `IsLeftContinuous`
+  in the root namespace, defined as `∀ a, ContinuousWithinAt f (Set.Ioi a) a` and
+  its mirror image; the structures `IsCadlag` and `IsCaglad`, whose fields are
+  `isRightContinuous` and `tendsto_nhdsLT`; and the closure properties
+  `Continuous.isCadlag`, `IsCadlag.const`, `IsCadlag.continuous_comp`,
+  `IsCadlag.continuous_comp₂`, `IsCadlag.mul`, `IsCadlag.div'`,
+  `IsCadlag.const_smul` with the corresponding `IsRightContinuous` lemmas. The
+  basic section asks `[TopologicalSpace X] [Preorder X] [TopologicalSpace Y]` and
+  nothing more, which is bundle (A) of Milestone 2 below. Under `[LinearOrder X]`
+  and `[OrderTopology X]` come `IsCadlag.tendsto_nhdsLT_leftLim` and
+  `IsCaglad.tendsto_nhdsGT_rightLim`; under `[LinearOrder X]` and
+  `[PseudoMetricSpace Y]`, `IsCadlag.isLocallyBounded` and
+  `isBounded_image_of_isCadlag_of_isCompact`.
+
+  `MeasureTheory.Filtration.IsRightContinuous`
+  (`Mathlib/Probability/Process/Filtration.lean:373`) is a different predicate,
+  about a filtration rather than a function, and is older; the two share a name
+  and nothing else.
 
 * `Mathlib/Topology/Order/LeftRightLim.lean`: `Function.leftLim` and
   `Function.rightLim`, defined for `f : α → β` with `[LinearOrder α]` and
@@ -11,7 +31,7 @@ to be rebuilt:
   limits below is to be phrased through, and it is exactly:
   `tendsto_leftLim_of_tendsto` and `tendsto_rightLim_of_tendsto`, whose
   hypothesis is `∃ y, Tendsto f (𝓝[<] a) (𝓝 y)` and hence literally the
-  `left_limit` field of `IsCadlag`; `ContinuousWithinAt.leftLim_eq` and
+  `tendsto_nhdsLT` field of `IsCadlag`; `ContinuousWithinAt.leftLim_eq` and
   `ContinuousWithinAt.rightLim_eq`, which give `leftLim f a = f a` from
   one-sided continuity; `leftLim_eq_of_tendsto`, `rightLim_eq_of_tendsto`,
   `leftLim_eq_of_eq_bot`, `leftLim_eq_of_not_tendsto`, `leftLim_eq_of_isBot`,
@@ -35,17 +55,22 @@ to be rebuilt:
 * `MeasureTheory.StieltjesFunction` in
   `Mathlib/MeasureTheory/Measure/Stieltjes.lean`: a bundled monotone right
   continuous function, with `right_continuous` and `rightLim_eq`. It is the
-  precedent for how a right continuity condition is bundled in Mathlib, and
-  `IsCadlag` below should read like it. Its field states right continuity as
-  `ContinuousWithinAt f (Ici x) x`; `Function.RightContinuous` below uses `Ioi`,
-  and `continuousWithinAt_Ioi_iff_Ici` is the bridge, the same one the proof of
-  `StieltjesFunction.rightLim_eq` takes.
+  precedent for how a right continuity condition is bundled in Mathlib. Its
+  field states right continuity as `ContinuousWithinAt f (Ici x) x`;
+  `IsRightContinuous` uses `Ioi`, and `continuousWithinAt_Ioi_iff_Ici` is the
+  bridge, the same one the proof of `StieltjesFunction.rightLim_eq` takes.
 * Prokhorov's theorem, tightness and the Lévy–Prokhorov metric in
   `Mathlib/MeasureTheory/Measure/`, used in Milestone 8.
 * `orderTopology_of_ordConnected` in `Mathlib/Topology/Order/Basic.lean`,
-  `ProperSpace.of_isClosed`, and `Subgroup.isClosed_of_discrete` in
-  `Mathlib/Topology/Algebra/IsUniformGroup/Basic.lean`, whose additive form is
-  what the lattice instance of Milestone 1 needs.
+  `ProperSpace.of_isClosed`, and the instance that a discrete subgroup is
+  closed, whose additive form is what the lattice instance of Milestone 1 needs.
+  That instance carries two names: `Subgroup.isClosed_of_discrete` under
+  `[T2Space G]` in `Mathlib/Topology/Algebra/IsUniformGroup/Basic.lean` on
+  v4.33.1, and `Subgroup.isClosed_of_discreteTopology` under the weaker
+  `[T1Space G]` in `Mathlib/Topology/Algebra/OpenSubgroup.lean` afterwards, with
+  the old name a deprecated alias beside it and the still more general
+  `Subgroup.isClosed_of_isDiscrete` above it. The additive form is what is used
+  here, and `T1` is all it consumes.
 
 This roadmap depends on the roadmap **WeakConvergence** for separating and
 convergence determining classes (Milestone 1 there) and for the Skorokhod
@@ -60,13 +85,19 @@ instances of one development.
 
 **Prior art, cited and not presupposed.** The repository
 `RemyDegenne/brownian-motion` (Apache-2.0) contains a development of càdlàg
-paths in `BrownianMotion/StochasticIntegral/Cadlag.lean`. It is named here as a
-source that an implementer may consult and, the licence permitting, draw on with
-its copyright header preserved — **not** as the specification. Every milestone
-below states what is wanted in full and is to be reviewed on its own terms; a
-declaration that agrees with that file is welcome, and one that improves on it
-is more welcome. Nothing here should be accepted merely because it matches the
-external material.
+paths in `BrownianMotion/StochasticIntegral/Cadlag.lean`, and its predicate is
+the one that went upstream as `Mathlib/Topology/Order/Cadlag.lean` (#43352). It
+is named here as a source that an implementer may consult and, the licence
+permitting, draw on with its copyright header preserved — **not** as the
+specification. Every milestone below states what is wanted in full and is to be
+reviewed on its own terms; a declaration that agrees with that file is welcome,
+and one that improves on it is more welcome. Nothing here should be accepted
+merely because it matches the external material.
+
+The same repository is the reason Milestone 2 splits into what the library
+carries and what it does not: the predicate and its closure properties are
+upstream, the jump theory and the structure theorem are not, and the milestone
+says of each item which side it is on.
 
 ## Milestone 1: the index typeclass
 
@@ -268,8 +299,19 @@ it. The predicate, its connection to `Function.leftLim`, and the jump theory
 live at three different strengths, and each item below names its own, so that a
 later reader can tell which instances a statement actually consumes.
 
+**The predicate itself is Mathlib's**, `IsCadlag` in
+`Mathlib/Topology/Order/Cadlag.lean`, with fields `isRightContinuous` and
+`tendsto_nhdsLT` and with `IsRightContinuous` in the root namespace under it. So
+is every closure property listed under (A) below, and so are
+`IsCadlag.tendsto_nhdsLT_leftLim` under (A′) and
+`isBounded_image_of_isCadlag_of_isCompact` under a metric codomain. What this
+milestone owes is the jump theory, the two determination theorems, the three
+stability theorems under uniform convergence, and the structure theorem — none
+of which the library has. The items below are marked accordingly; an item marked
+**upstream** is to be used and not restated.
+
 * **(A)** `[Preorder ι] [TopologicalSpace ι] [TopologicalSpace E]`. This is what
-  `RemyDegenne/brownian-motion` uses for `IsCadlag`, and it carries the
+  `Mathlib/Topology/Order/Cadlag.lean` uses for `IsCadlag`, and it carries the
   predicate together with all of its closure properties. It does **not** carry
   `Function.leftLim`, which is defined only for a `LinearOrder`.
 * **(A′)** `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]`. This is the
@@ -304,20 +346,27 @@ statement of this milestone uses it: `largeLeftJumpSet` measures with `dist` on
 
 Under (A), for `f : ι → E`:
 
-* `Function.RightContinuous f`, defined as `∀ a, ContinuousWithinAt f (Set.Ioi a) a`.
-* `IsCadlag f`, a structure with fields `right_continuous` and
-  `left_limit : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)`.
-* Basic closure properties: constants, compositions with continuous maps, sums
-  and products in a topological ring, pointwise limits that are uniform on
-  compacts, and the restriction of a càdlàg function to a subinterval.
-* `IsCadlag` for a continuous map.
+* **upstream** `IsRightContinuous f`, defined as
+  `∀ a, ContinuousWithinAt f (Set.Ioi a) a`, and its mirror `IsLeftContinuous`.
+* **upstream** `IsCadlag f`, a structure with fields `isRightContinuous` and
+  `tendsto_nhdsLT : ∀ x, ∃ l, Tendsto f (𝓝[<] x) (𝓝 l)`, and `IsCaglad` beside
+  it.
+* **upstream** the closure properties: `IsCadlag.const`,
+  `IsCadlag.continuous_comp`, `IsCadlag.continuous_comp₂`, `IsCadlag.mul`,
+  `IsCadlag.div'`, `IsCadlag.const_smul`, with the corresponding
+  `IsRightContinuous` lemmas and `Continuous.isCadlag` for a continuous map.
+* The two closure properties the library does not carry: pointwise limits that
+  are uniform on compacts, which is `IsCadlag.of_tendstoUniformly` and
+  `IsCadlag.of_tendstoUniformlyOn_exhaustion` below, and the restriction of a
+  càdlàg function to a subinterval.
 
 Under (A′):
 
-* `IsCadlag.tendsto_leftLim`, `Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x))`,
-  which is `tendsto_leftLim_of_tendsto` applied to the `left_limit` field, and
+* **upstream as `IsCadlag.tendsto_nhdsLT_leftLim`**
+  `IsCadlag.tendsto_leftLim`, `Tendsto f (𝓝[<] x) (𝓝 (Function.leftLim f x))`,
+  which is `tendsto_leftLim_of_tendsto` applied to the `tendsto_nhdsLT` field, and
   `IsCadlag.rightLim_eq`, `Function.rightLim f x = f x`, which is
-  `ContinuousWithinAt.rightLim_eq` applied to the `right_continuous` field
+  `ContinuousWithinAt.rightLim_eq` applied to the `isRightContinuous` field
   through `continuousWithinAt_Ioi_iff_Ici`; the second adds `[T2Space E]`. These
   connect the structure to `Function.leftLim` and `Function.rightLim` so that
   the existing API applies; every later statement about left limits uses those
@@ -347,6 +396,18 @@ Under (A′):
   `nhdsLT_sup_nhdsGE`, `𝓝[<] x ⊔ 𝓝[≥] x = 𝓝 x`, which is `Iio x ∪ Ici x = univ`
   and holds under `[TopologicalSpace ι] [LinearOrder ι]` alone; the two fields
   of `IsCadlag` then bound `f` on each half.
+
+  **Upstream as `isBounded_image_of_isCadlag_of_isCompact`**, and there under
+  `[PseudoMetricSpace E]` rather than `[MetricSpace E]`, which is what the
+  statement consumes: the proof goes through `IsCadlag.isLocallyBounded` and
+  `isBounded_image_of_isLocallyBounded_of_isCompact`
+  (`Mathlib/Topology/Compactness/Compact.lean:696`), with
+  `Metric.exists_isBounded_image_of_tendsto`
+  (`Mathlib/Topology/MetricSpace/Bounded.lean:274`) supplying the bound on each
+  half. Both of those are older than the càdlàg file, so the weakening is
+  available wherever `IsCadlag` is stated by hand. The local form
+  `IsCadlag.isLocallyBounded` --- every point has a neighbourhood with bounded
+  image --- is the statement to keep, the compact one being its corollary.
 
   Under (A) the statement is **false**, so this item cannot stay there. Take
   `ι = ℕ ∪ {ω}` with the one point compactification of the discrete topology on
@@ -387,7 +448,7 @@ need (B), and this is a correction of 2026-09-07, found by writing the proofs:
   the global form `IsCadlag.continuous_iff_leftJumpSet_eq_empty`. Forwards it is
   `ContinuousWithinAt.leftLim_eq` on the restriction of continuity to
   `Set.Iic x`; backwards `IsCadlag.tendsto_leftLim` rewritten along `f⁻ x = f x`
-  gives convergence along `𝓝[<] x`, which together with the `right_continuous`
+  gives convergence along `𝓝[<] x`, which together with the `isRightContinuous`
   field and `nhdsLT_sup_nhdsGE` is continuity at `x`.
 * `leftJumpSet f` is countable. This adds **σ-compactness of `ι`** to (A′), to
   turn local finiteness into countability along a countable exhaustion; every
@@ -429,7 +490,7 @@ Under (B), with `E` a pseudometric space:
   them may be evaluated against the other's value at `t` with arbitrarily small
   error --- formally, for all `ρ, η > 0` there is an `s ≥ t` with
   `dist s t < ρ` and `dist (F s) (G t) ≤ η` or `dist (F t) (G s) ≤ η`. Proved
-  (2026-09-07); it uses the two `right_continuous` fields and nothing else, not
+  (2026-09-07); it uses the two `isRightContinuous` fields and nothing else, not
   even the order topology. The disjunction is not a weakening for convenience:
   it is exactly what the separation of `SkorokhodSpace.distOn` in Milestone 4
   delivers, and it is what lets that separation avoid the density of the
@@ -534,7 +595,7 @@ Under (B), with `E` a pseudometric space:
   `largeLeftJumpSet f ε = {1}` for `ε ≤ 1` and `∅` beyond. The mirror
   `g = Set.indicator (Set.Iic 1) 1` must **not** satisfy `IsCadlag`: it is left
   continuous with right limits. A predicate that swapped `Set.Ioi` for
-  `Set.Iio` in `Function.RightContinuous`, or that asked for right limits
+  `Set.Iio` in `IsRightContinuous`, or that asked for right limits
   instead of left ones, accepts `g` and rejects `f`, so this pair pins the
   orientation of the whole milestone.
 * **Jumps accumulating from the right.** `ι = ℝ`, `E = ℝ`,

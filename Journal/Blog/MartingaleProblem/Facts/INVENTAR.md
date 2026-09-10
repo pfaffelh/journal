@@ -18586,3 +18586,219 @@ Und danach, unmittelbar: **Teil D**, die Prüfung der vier `README.md` und der d
 `Suggested.lean` gegen frisches `upstream/master`. Die letzte solche Prüfung ist vom 2026-09-06,
 also inzwischen vier Tage alt; jede Negativaussage in den Roadmaps ist ein Versprechen an einen
 Leser, und die Zahl dieser Aussagen ist seither gewachsen.
+
+### 2026-09-10, einundzwanzigster Lauf des Tages — Teil D: Mathlib hat den càdlàg-Begriff jetzt selbst, und damit ist die erste Zeile der Skorokhod-Roadmap falsch
+
+**Bearbeitet:** Teil D des laufenden Auftrags, die Prüfung der vier `README.md` und der drei
+`Suggested.lean` gegen frisches `upstream/master`. Die letzte solche Prüfung war vom 2026-09-06.
+
+**Der Commit, gegen den geprüft wurde**, wie verlangt genannt:
+
+```
+1192d6246b462d5d423cccde4066d15b18718ca9
+Thu Sep 10 16:50:31 2026 +0000
+refactor: make several definitions take concrete morphism classes (#43596)
+```
+
+**Wie geprüft wurde, und warum das Verfahren im Repo steht.** Vier Skripte unter `scripts/`, alle
+allein lauffähig und alle nur nach `scripts/_citations/` schreibend:
+
+* `extract_citations.py` — zieht aus den sieben Dateien alle zitierten `Mathlib/…lean`-Pfade und
+  alle in Backticks stehenden Bezeichner, abzüglich der 1385 Namen, die die `Suggested.lean` selbst
+  deklarieren. Ergebnis: 70 Pfade, 1053 Namen, davon 1045 nach Abzug von Tastikwörtern geprüft.
+* `mathlib_index.py` — baut aus `git grep upstream/master` (ohne auszuchecken) und aus dem
+  v4.33.1-Release je einen Index **aller** Deklarationsnamen mitsamt Namespace: 230660 gegen 228151.
+* `check_citations.py` — schlägt jeden Namen in beiden Indizes nach.
+* `check_negatives.py` — sucht zu jeder Negativaussage der Roadmaps das Muster, das sie widerlegen
+  würde.
+
+Zwei Fallen im Verfahren, beide beim ersten Durchlauf zugeschlagen und beide behoben, weil sie
+sonst falsche Funde erzeugen:
+
+* **`git grep -E` ist POSIX-ERE und kennt weder `\s` noch `(?:`.** Der erste Aufruf brach mit
+  „Der vorherige reguläre Ausdruck ist nicht korrekt" ab und lieferte einen **leeren** Master-Index
+  — also 0 Deklarationen und, wäre es unbemerkt geblieben, die Meldung „alles verschwunden".
+  Zu nehmen ist `[[:space:]]*` und eine gewöhnliche Gruppe.
+* **`@[deprecated …] alias foo := bar` gilt dem Alias und nicht der nächsten Deklaration.** Die
+  naive Buchführung meldete zehn Namen als `deprecated`, darunter `IsMarkovKernel` und
+  `lintegral_tsum`; **alle zehn waren falsch**, am Quelltext nachgesehen. Ebenso müssen die von
+  `@[to_dual foo]`, `@[to_additive foo]` und `@[to_fun foo]` erzeugten Namen mitgezählt werden — sie
+  stehen in keiner Quellzeile als `theorem`. Ohne sie meldete der Lauf `exists_lt_of_ciInf_lt`
+  fälschlich als von master verschwunden; er wird dort aus `exists_lt_of_lt_ciSup` erzeugt
+  (`Mathlib/Order/ConditionallyCompleteLattice/Indexed.lean:342`).
+
+**Ergebnis in Zahlen.** 70 zitierte Dateipfade, **alle 70 auf master wie auf v4.33.1 vorhanden**.
+1045 geprüfte Namen: 706 auf beiden, 0 auf v4.33.1 und nicht mehr auf master, 3 nur auf master,
+**genau ein Name deprecated**. Der Rest sind Prosa-Vokabeln und Notation, keine Zitate.
+
+**Der Fund, um dessentwillen Teil D existiert: zwei Negativaussagen sind falsch geworden, und es
+ist dieselbe.**
+
+`SkorokhodSpace/README.md:3` sagt
+
+> The space of càdlàg paths with the `J₁` topology. The string `cadlag` does not occur in
+> Mathlib, and neither does the space.
+
+und `SkorokhodSpace/Suggested.lean:341` sagt
+
+> `Function.RightContinuous` and `IsCadlag` are **not** in Mathlib — a search of `upstream/master`
+> for `IsCadlag` returns nothing.
+
+**Beides gilt nicht mehr.** Seit `4b4d786c6a5` („feat: define càdlàg functions", #43352) steht auf
+master `Mathlib/Topology/Order/Cadlag.lean`, 196 Zeilen, von Rémy Degenne, Nick Kuhn, Yongxi Lin,
+Rohit Manokaran, Etienne Marion und Kexing Ying — also ist die Entwicklung aus
+`RemyDegenne/brownian-motion`, die unsere Roadmap ausdrücklich als *Vorbild und nicht als
+Spezifikation* nennt, inzwischen **oben angekommen**. Der String `cadlag` steht in 23 Zeilen.
+
+**Die Kollision ist buchstäblich und nicht bloß thematisch.**
+
+| unsere Roadmap | master |
+| --- | --- |
+| `Function.RightContinuous f := ∀ a, ContinuousWithinAt f (Set.Ioi a) a`, unter `[TopologicalSpace α] [Preorder α] [TopologicalSpace β]` | `IsRightContinuous f := ∀ a, ContinuousWithinAt f (Set.Ioi a) a`, unter `[TopologicalSpace X] [Preorder X] [TopologicalSpace Y]` |
+| `structure IsCadlag`, Felder `right_continuous`, `left_limit` | `structure IsCadlag`, Felder `isRightContinuous`, `tendsto_nhdsLT` |
+
+Die beiden Definitionen sind **wörtlich dieselben**, bis auf die Feldnamen und darauf, daß master
+die Rechtsstetigkeit nicht in `Function` legt. `IsCadlag` steht bei uns wie dort im Wurzel-Namespace;
+das ist ein echter Namenskonflikt und keine Geschmacksfrage. Dazu kommt `IsCaglad`, das duale
+Gegenstück, das master über `@[to_dual]` gratis mitnimmt und das wir nicht haben.
+
+Nicht zu verwechseln damit ist `MeasureTheory.Filtration.IsRightContinuous`: das ist die
+Rechtsstetigkeit einer **Filtration**, steht in `Mathlib/Probability/Process/Filtration.lean:373`
+und stand dort schon in v4.33.1. Neu ist allein der Wurzel-Namespace.
+
+**Was master von unserem Meilenstein 2 schon hat**, und was also nicht mehr zu bauen ist:
+`Continuous.isCadlag`, `IsCadlag.const`, `IsCadlag.continuous_comp`, `IsCadlag.continuous_comp₂`,
+`IsCadlag.mul`, `IsCadlag.div'`, `IsCadlag.const_smul`, die ganze `IsRightContinuous`-Algebra,
+`IsCadlag.tendsto_nhdsLT_leftLim` (unser `IsCadlag.tendsto_leftLim`),
+`IsCadlag.isLocallyBounded` und `isBounded_image_of_isCadlag_of_isCompact` (unser
+`IsCadlag.isBounded_image_of_isCompact`).
+
+**Was master nicht hat, und was der Meilenstein also bleibt:** die ganze Sprungtheorie
+(`leftJumpSet`, `countable_leftJumpSet`, `IsCadlag.eventually_dist_leftLim_lt`,
+`IsCadlag.finite_largeLeftJumpSet_inter`, `IsCadlag.dist_leftLim_le_of_Ioo_subset`,
+`IsCadlag.continuousAt_iff_notMem_leftJumpSet`), `IsCadlag.rightLim_eq`,
+`IsCadlag.comp_monotone_continuous`, `IsCadlag.measurable`, die
+Bestimmtheitssätze (`eq_of_eqOn_dense`, `eq_of_forall_exists_dist_le`), die drei
+Stabilitätssätze unter gleichmäßiger Konvergenz, `IsCadlag.exists_subdivision` samt
+`isCadlag_comp_stepRetract` — und selbstredend der Raum `D(ι, E)` mit allem, was auf ihm steht.
+Es fällt also **nicht** die Substanz des Meilensteins weg, sondern seine Vorhalle.
+
+**Ein Nebenfund, und er spricht für die Roadmap.** Der vierte Lauf des 2026-09-07 hat
+`IsCadlag.isBounded_image_of_isCompact` unter dem Bündel (A), dem bloßen Preorder, **widerlegt** und
+mit Zeugen auf die lineare Ordnung korrigiert. Master stellt genau dieselbe Aussage unter
+`[LinearOrder X]` — die Korrektur ist unabhängig bestätigt. Master ist dabei in einem Punkt noch
+schwächer als wir: es verlangt vom Wertebereich `[PseudoMetricSpace Y]`, wo unsere Fassung
+`[MetricSpace E]` trägt, und es faktorisiert über `IsCadlag.isLocallyBounded` und
+`isBounded_image_of_isLocallyBounded_of_isCompact`. **Beide Bausteine gibt es schon in v4.33.1**
+(`Mathlib/Topology/Compactness/Compact.lean:696` und `Metric.exists_isBounded_image_of_tendsto`,
+`Mathlib/Topology/MetricSpace/Bounded.lean:274`), die Abschwächung ist also auch für uns
+erreichbar und ist als Punkt in den Meilenstein eingetragen.
+
+**Der eine deprecated gewordene Name.** `Subgroup.isClosed_of_discrete`
+(`SkorokhodSpace/README.md:46`) heißt auf master `Subgroup.isClosed_of_discreteTopology` und steht
+in `Mathlib/Topology/Algebra/OpenSubgroup.lean:378`, nicht mehr in
+`Mathlib/Topology/Algebra/IsUniformGroup/Basic.lean`; der alte Name lebt dort als
+`@[deprecated (since := "2026-09-01")] alias` weiter (`:384`). Die Voraussetzung ist dabei
+**abgeschwächt** worden, von `[T2Space G]` auf `[T1Space G]`, und darüber steht noch allgemeiner
+`Subgroup.isClosed_of_isDiscrete` (`:373`). Für v4.33.1 bleibt unser Zitat richtig; die Roadmap
+nennt jetzt beide Namen.
+
+**Die drei nur auf master vorhandenen Namen, einzeln geklärt.**
+
+* `isCadlag` — der Fund oben.
+* `isLeast` (`SkorokhodSpace/README.md:149`) — Prosa über `IsLeast`, kein Zitat, kein Befund.
+* `tendstoInDistribution_iff_forall_integral_rclike_tendsto`
+  (`WeakConvergence/README.md:74`) — gehört zu der bewußt gegen master geschriebenen Stelle.
+
+**Alle übrigen zehn geprüften Negativaussagen gelten weiter**, jede einzeln gegen master gesucht,
+Trefferzahl in `scripts/_citations/negatives.md`: `memoryless` (0), `dissipative` (0), eine
+Operatorhalbgruppe unter irgendeinem der geläufigen Namen (0), `QuasiLeftContinuous` und
+`quasi-left` (0), Submartingal-Regularisierung (0 in `Probability/Martingale/`), der Schluß von
+`iIndepFun` der Koordinaten auf `iIndepSet` der Ereignisse (0), die `IsProbabilityMeasure`-Instanz
+für `volume` auf `(0,1]` (0), die Skorohod-Darstellung (0 — der String `Skorokhod` kommt in
+Mathlib nach wie vor **nirgends** vor), die funktionale Form der bedingten Erwartung (0). Doobs
+`Lᵖ`-Ungleichung fehlt weiterhin; die zwei Treffer sind `maximal_ineq` in
+`Probability/Martingale/OptionalStopping.lean`, und die Roadmap nennt es selbst als **Eingabe** und
+nicht als die Aussage.
+
+**Punkt 4 des Auftrags, die Übersetzung der drei `Suggested.lean` gegen v4.33.1.** Alle drei über
+`lake --dir=/home/pfaffelh/Code/lean/journal env lean` gegen das fertig gebaute Mathlib des
+Hauptcheckouts; im Hauptcheckout wurde nichts geschrieben.
+
+| Datei | Fehler | `sorry` |
+| --- | --- | --- |
+| `MartingaleProblems/Suggested.lean` | 0 | 9 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 |
+| `WeakConvergence/Suggested.lean` | **2**, beide in Zeile 2181 | 0 |
+
+Die zwei Fehler sind die **eine** bewußt gegen master geschriebene Aussage,
+`tendsto_map_of_measure_setOf_continuousAt_eq_one`, und sie sind es aus dem Grund, den die Datei
+selbst nennt: `ProbabilityMeasure.map` nimmt auf v4.33.1 noch ein `AEMeasurable`-Argument
+(`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean:608`), auf master nicht mehr
+(`:627`, `noncomputable def map (ν : ProbabilityMeasure Ω) (f : Ω → Ω')`). **Die Ausnahme ist
+nachgeprüft und bleibt genau eine**: die Signatur auf master ist noch die, gegen die die Aussage
+geschrieben ist. Sie bleibt, wie sie ist.
+
+**Was auf master brechen würde, soweit ohne Umbau erkennbar** — die geforderte Zusatzmeldung:
+
+* `SkorokhodSpace/Suggested.lean:709` und `:714`: `Function.RightContinuous` und `IsCadlag`. Das
+  zweite bricht **hart**, weil master denselben Namen im selben Namespace vergibt.
+* `WeakConvergence/Suggested.lean:2181` bricht dort **nicht** mehr, sondern gerade dort allein.
+* Ein Dutzend Zitate zeigt auf `Mathlib/Data/ENNReal/…` und `Mathlib/Data/NNReal/…`. Diese Dateien
+  existieren auf master noch, sind aber seit dem 2026-08-27 **`deprecated_module`**: sie enthalten
+  nur `public import Mathlib.Basic.ENNReal.…` und die Deklarationen sind nach `Mathlib/Basic/`
+  gewandert. Die Namen sind unverändert, es bricht also nichts; die Pfadangaben altern.
+
+**Was offen blieb.** Die 335 Backtick-Vokabeln, die in keinem der beiden Indizes stehen, sind nicht
+einzeln durchgesehen worden — es sind ganz überwiegend Prosa (`if`, `def`, `rfl`), unsere eigenen
+Vokabeln und Notation. Eine Stichprobe zeigte keinen verlorenen Mathlib-Namen; der Rest steht als
+Datei da (`scripts/_citations/report.md`) und kann jederzeit durchgegangen werden. Ebenso nicht
+geprüft: die Zeilennummern, ausdrücklich als nachrangig bezeichnet, mit **einer** Ausnahme — die
+vierzehn Zitate aus `Mathlib/MeasureTheory/Function/ConvergenceInDistribution.lean` in
+`WeakConvergence/README.md:67–90` tragen alle eine Zeilennummer, und **alle vierzehn stimmen auf
+master noch auf die Zeile**.
+
+**Was der Lauf daraufhin selbst getan hat.** Die Umbenennung ist nicht als Vorschlag stehen
+geblieben, sondern durchgeführt: in `SkorokhodSpace/Suggested.lean` heißt das Feld
+`right_continuous` jetzt `isRightContinuous`, `left_limit` heißt `tendsto_nhdsLT`, und
+`Function.RightContinuous` heißt `IsRightContinuous` — fünf, neunzehn und neun Stellen. Damit sind
+die beiden Deklarationen der Datei (`:716` und `:721`) **wörtlich** Mathlibs, bis auf die
+Schreibweise der impliziten Variablen. Die Datei geht danach ohne einen Fehler durch
+`lake env lean` gegen v4.33.1, und die Zahl der `sorry` bleibt bei null.
+
+Der Grund, es sofort zu tun und nicht zu verschieben: solange die Datei eigene Feldnamen trägt, ist
+beim Sprung auf einen Toolchain mit `Mathlib.Topology.Order.Cadlag` nicht die Definition zu
+streichen, sondern jede der dreiunddreißig Verwendungen anzufassen — und die Sprungtheorie, die
+darauf steht, wächst mit jedem Lauf. Jetzt ist der Tausch das Löschen zweier Deklarationen und
+sonst nichts. Streichen lassen sie sich noch nicht: wir sind an v4.33.1 gebunden, und dort gibt es
+die Datei nicht.
+
+**Vorschlag für den nächsten Lauf: `IsCadlag.isLocallyBounded`, und daraus
+`IsCadlag.isBounded_image_of_isCompact` unter `[PseudoMetricSpace E]` statt `[MetricSpace E]`.**
+
+Worauf er ruht: `Metric.exists_isBounded_image_of_tendsto`
+(`Mathlib/Topology/MetricSpace/Bounded.lean:274`) und
+`isBounded_image_of_isLocallyBounded_of_isCompact`
+(`Mathlib/Topology/Compactness/Compact.lean:696`), **beide in v4.33.1 vorhanden**, beide über
+`[PseudoMetricSpace]`. Warum er jetzt dran ist: er ist die einzige Stelle, an der der Vergleich mit
+master eine Aussage unserer Datei als **stärker als nötig** ausweist, und er ist der zweite Schritt
+derselben Angleichung wie die Umbenennung — nach ihm stimmt nicht nur der Name, sondern auch die
+Voraussetzung mit dem überein, was oben steht. Der vorhandene Beweis über `nhdsLT_sup_nhdsGE`
+bleibt als lokale Fassung erhalten und wird die Hälfte des neuen; die kompakte Fassung wird sein
+Korollar. Der Prüfstein ist derselbe: kein Fehler, kein `sorry`, und `[MetricSpace E]` kommt in der
+Signatur nicht mehr vor.
+
+**Das Werkzeug bleibt liegen, und zwar lauffähig.** Die fünf Skripte stehen unter `scripts/` mit
+einer `README.md`, die den Durchgang in sechs Zeilen angibt; jedes verankert seine Pfade an der
+Wurzel des Worktrees und läuft aus jedem Verzeichnis. `check_negatives.py` trägt die
+Negativaussagen als Liste — **wer künftig eine solche Aussage in eine Roadmap schreibt, trägt sie
+dort nach**, sonst wird sie nie wieder geprüft, und genau das ist der Fund dieses Laufs.
+`check_suggested.py` ersetzt die zuerst geschriebene Fassung in `sh`, die in dieser Umgebung nicht
+startete; sie benutzt `lake --dir=…` statt einer Unterschale und ist die Form, die geht. Die beiden
+Deklarationsindizes von je zwanzig Megabyte hält `_citations/.gitignore` aus dem Repository.
+
+Der ganze Durchgang wurde nach allen Änderungen dieses Laufs noch einmal gefahren, und er
+reproduziert: `MartingaleProblems` 0 Fehler und 9 `sorry`, `SkorokhodSpace` 0 und 0 **nach** der
+Umbenennung, `WeakConvergence` die zwei Fehler an der einen bewußten Stelle. Die 17 Namen, die der
+Bericht jetzt als „nur auf master" führt, sind genau die, die dieser Lauf als bewußte
+Master-Zitate in die Skorokhod-Roadmap eingetragen hat, jeder einzeln am Quelltext belegt.
