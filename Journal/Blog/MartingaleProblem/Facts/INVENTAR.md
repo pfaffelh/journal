@@ -18339,3 +18339,126 @@ sondern ein Punktmaß bei `⊤`. Der Erzeuger ist dort ebenfalls `0` (`jumpApply
 `E[f (X t)] = f (X 0)` — richtig, aber eben eigens zu zeigen. Danach fällt das Beispiel der
 linearen Kette durch Einsetzen: `jumpApply_birthDeath`, `isMarkovKernel_birthDeathKernel` und
 `ae_mem_nonExplosiveE_linear` stehen alle schon.
+
+### 2026-09-10, neunzehnter Lauf des Tages — `jumpProcessE_isMPSolution` fällt unter `0 ≤ lam ≤ L`, und mit ihm der lokale Satz
+
+**Bearbeitet:** Teil C, Punkt 5 des laufenden Auftrags — genau die eine benannte Aussage, die der
+achtzehnte Lauf als letzte Hürde vor dem lokalen Akzeptanzbeispiel stehen ließ.
+
+**Ergebnis in Zahlen.** 27 Deklarationen im neuen Abschnitt `AbsorbingRate` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler durch
+`lake env lean` gegen v4.33.1, alle 27 mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft; die Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5, 9, 10). Die Punkte
+stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+**Die drei Ergebnisse selbst.**
+
+```
+jumpProcessE_isMPSolution_of_nonneg :
+  [MeasurableEq E] → Measurable lam → (∀ x, 0 ≤ lam x) → (∀ x, lam x ≤ L) →
+  (mu : Kernel E E) → [IsMarkovKernel mu] →
+  (∀ x, lam x = 0 → mu x = Measure.dirac x) →
+  (nu : Measure E) → [IsProbabilityMeasure nu] →
+  IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    (jumpFiltrationE lam hlam) (jumpMeasure mu nu)
+
+martingale_stoppedProcess_mpFamily_jumpProcessE_of_nonneg   -- dieselben Hypothesen
+jumpProcess_isLocalMPSolution_of_nonneg                     -- dieselben, ohne die Schranke L
+```
+
+**Der Weg war nicht der angesagte, und der Unterschied ist der Ertrag des Laufs.** Der achtzehnte
+Lauf hat den Beweis „von vorn" angesagt: die Erneuerungszerlegung am ersten Sprung
+(`jumpMeasure_integral_eq_of_firstJump`) noch einmal, diesmal mit `⊤` als erster Sprungzeit am
+absorbierenden Zustand. Das wäre der Nachbau von rund zweitausend Zeilen Rückwärtsgleichung
+gewesen. Statt dessen wird **die Rate ersetzt und nicht der Transport**:
+
+```
+posRate lam = lam + {x | lam x = 0}.indicator 1.
+```
+
+Sie ist überall positiv, durch `max L 1` beschränkt — und sie hat **denselben Erzeuger**
+(`jumpApply_posRate`, `jumpOperator_posRate`), weil `jumpApply lam mu f x = lam x * ∫ (f y - f x)`
+am Zustand mit `lam x = 0` gleich `0` ist, was immer `mu x` dort sei. Der Sprungkern eines
+absorbierenden Zustands ist damit **Datum, das der Erzeuger nicht sieht**; ihn dort auf die
+Diracmasse festzulegen ist eine Normierung und keine Einschränkung, und `birthDeathKernel` trifft
+diese Wahl längst („that last clause is forced and costs nothing"). Die Voraussetzung
+`∀ x, lam x = 0 → mu x = Measure.dirac x` wird in **einer einzigen** Aussage verbraucht,
+`ae_absorb_jumpMeasure`.
+
+**Die Hürde, an der der Weg fast gescheitert wäre, und wie sie fällt.** Die beiden Konstruktionen
+`jumpProcessE lam` und `jumpProcessE (posRate lam)` stimmen **nur fast sicher** überein: am
+absorbierenden Zustand steht der erste, weil seine nächste Sprungzeit `⊤` ist, und der zweite
+springt weiter, aber jedesmal auf denselben Zustand — und das letzte gilt nur, wo die Kette den
+absorbierenden Zustand nicht verläßt, also f.s. und nicht überall. Der dreizehnte Lauf des
+2026-09-10 hat genau hier den Riegel benannt: **eine natürliche Filtration ist keine f.s.
+Größe**, und deshalb ist damals `clipWait` gebaut worden, eine *punktweise* Identifikation.
+
+Hier gibt es keine punktweise. Was statt dessen trägt, ist die Beobachtung, daß die
+Martingaleigenschaft eine Gleichheit von **Integralen** ist. Drei Aussagen, keine davon mit einem
+Wort über die Sprungkonstruktion:
+
+* `aeCompletion m P` — die Mengen, die mit einer Menge von `m` bis auf eine `P`-Nullmenge
+  übereinstimmen, bilden eine σ-Algebra.
+* `naturalFiltration_le_aeCompletion` — stimmen zwei Prozesse an jedem Index f.s. überein, so
+  liegt die natürliche Filtration des einen in der `aeCompletion` der natürlichen Filtration des
+  anderen.
+* `martingale_of_ae_eq_of_le_aeCompletion` — über einer so gelegenen Filtration ist ein f.s.
+  gleicher Prozeß wieder ein Martingal.
+
+Das ist der allgemeine Ersatz für `martingale_comp_of_map_eq` (dem Werkzeug des dreizehnten
+Laufs), und er verlangt keine Abbildung, die die Prozesse punktweise ineinander überführt.
+**Befund für spätere Läufe:** wo eine punktweise Identifikation zweier Prozesse teuer oder
+unmöglich ist, kostet die f.s. Identifikation dieselben drei Zeilen — die natürliche Filtration
+ist der einzige Ort, an dem die f.s. Aussage nicht reicht, und dieser Ort ist jetzt ein Lemma.
+
+**Was am Sprungprozeß selbst zu zeigen war.**
+
+* `ae_absorb_jumpMeasure`: f.s. bewegt sich die eingebettete Kette an einem Zustand mit Rate `0`
+  nicht. Der Beweis ruht auf `chainKernel_map_one` — dem Gesetz des ersten Schritts, eine
+  Folgerung aus `chainKernel_map_shift` und `comp_chainKernel_map_zero` — und auf
+  `comp_chainKernel_map_shift`, das die Induktion über den Index trägt, indem es die Anfangslage
+  mitwandern läßt. `[MeasurableEq E]`, Mathlibs Klasse für die meßbare Diagonale (Instanz bei
+  `[StandardBorelSpace]` und bei `[Countable] [MeasurableSingletonClass]`, also insbesondere über
+  `ℕ`), ist das, was „die Kette bewegt sich nicht" zu einer **meßbaren** Aussage macht; sie wird
+  sonst nirgends gebraucht.
+* `jumpProcessE_posRate_eq`: die punktweise Identität an jedem Stichprobenpunkt, an dem die
+  Haltezeiten positiv sind, die Kette am absorbierenden Zustand stehenbleibt und die Haltezeiten
+  divergieren. Jenseits des ersten absorbierenden Index `N` stimmen beide Pfade aus **zwei
+  verschiedenen Gründen** überein: links, weil die `(N+1)`-te Sprungzeit `⊤` ist
+  (`jumpTimeE_succ_eq_top`), rechts, weil jeder Zustand, auf den gesprungen wird, `y N` ist
+  (`chain_const_of_absorb`).
+* **Die Divergenz der Haltezeiten ist keine Bequemlichkeit.** Sie ist die einzige der drei
+  f.s. Voraussetzungen, die im Beweis der punktweisen Identität wirklich gebraucht wird, und sie
+  wird an einer Stelle gebraucht: ohne sie kann der **gelifteten** Konstruktion die Stufe
+  ausgehen, `stepIndex` gibt seinen Müllwert `0` zurück, und die beiden Seiten unterscheiden sich
+  an einem Punkt, an dem gar nichts Absorbierendes passiert ist. Das ist der Grund, aus dem der
+  ganze Satz eine f.s. und keine punktweise Aussage ist, und nicht die Absorption.
+
+**Der lokale Satz fällt danach fast von selbst.** `truncRate lam (n+1)` hat von der Stufe `1` an
+**dieselben Nullstellen** wie `lam` (`truncRate_eq_zero_iff`, ein Minimum mit einer positiven
+Zahl), also erbt jede Stufe der Lokalisierung die Normierung des Kerns, und die einzige Zeile,
+die sich in beiden alten Beweisen ändert, ist der Aufruf des beschränkten Satzes. Weder
+`stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE` noch der Turmschluß noch
+`isLocalizingSequence_rateTime` verlangen etwas über die Positivität.
+
+**Ein Befund gegen die Roadmap, und er ist der wertvollste des Laufs.** `MartingaleProblems/README.md`
+hat bis heute behauptet, die Nichtexplosion der linearen Geburt-Tod-Kette sei
+`ae_mem_nonExplosiveE`. **Das ist falsch, und zwar nicht knapp.** Dieses Kriterium — wie auch
+`ae_mem_nonExplosiveE_jumpMeasure` — verlangt `∀ k, 0 < lam (y k)` **längs der Kette**, und die
+lineare Kette verletzt das auf dem Aussterbeereignis, das positive Wahrscheinlichkeit hat. Auf
+diesem Ereignis divergiert keine Reihe; der Prozeß explodiert dort nicht, weil er **absorbiert**
+ist, und das ist der andere Zweig. Die Roadmap ist berichtigt, und der fehlende Punkt steht als
+`mem_nonExplosiveE_of_absorb_or_tendsto_sum` benannt darin.
+
+**Vorschlag für den nächsten Lauf: `mem_nonExplosiveE_of_absorb_or_tendsto_sum`, dann
+`ae_mem_nonExplosiveE_linearBirthDeath` und `linearBirthDeath_isLocalMPSolution`.** Es ist das,
+was zwischen dem heutigen Satz und dem einzigen Akzeptanzbeispiel des lokalen Zweigs steht, und es
+ist jetzt dran, weil beide Zweige der Fallunterscheidung schon dastehen: der absorbierende ist
+`mem_nonExplosiveE_of_rate_zero` (die nächste Sprungzeit ist `⊤`, und es muß gar nichts
+divergieren), der andere `mem_nonExplosiveE_of_tendsto_sum`. Was neu zu leisten ist, ist die
+f.s. Aussage über die **eingebettete Irrfahrt** der linearen Kette: erreicht sie den Zustand `0`
+nicht, so wächst `y k` und `∑ 1/((β+δ) y k)` divergiert. Das ist eine Aussage über eine Irrfahrt
+auf `ℕ` und über keinen stetigzeitigen Prozeß — genau die Reduktion, die die Bemerkung vom
+2026-09-10 zur Nichtexplosion des linearen Geburt-Tod-Prozesses als den billigeren Weg benannt
+hat.
