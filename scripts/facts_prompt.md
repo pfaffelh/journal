@@ -325,8 +325,62 @@ danach.*
      `ProbabilityTheory.Kernel.traj` (hier `chainKernel_map_shift`) und die
      Abspaltung einer Koordinate von ihrem Schwanz bei `Measure.infinitePi`
      (hier `infinitePi_map_natCons`).
-3. `norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
-   Roadmap „no analysis beyond `NormedSpace`".
+3. ~~`norm_apply_le` und `exists_unique_of_bounded`, die Picard-Iteration; nach der
+   Roadmap „no analysis beyond `NormedSpace`".~~ *(erledigt 2026-09-10, sechster
+   Lauf des Tages)*
+
+   **Ergebnis.** `exists_unique_of_bounded` steht ganz, endlichdimensionale
+   Verteilungen eingeschlossen; damit trägt Meilenstein 4 von
+   `MartingaleProblems` keine offene Zusage mehr außer den Punkten 5 (lokaler
+   Fall) und der pfadabhängigen Variante. Siebzehn neue Deklarationen, die ganze
+   Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1, alle siebzehn mit
+   `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft; die
+   Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5, 9, 10). Bericht in
+   `Facts/INVENTAR.md`, Läufe, „2026-09-10, sechster Lauf des Tages".
+
+   Der Schlußstein ist
+   `integral_fddProd_eq_of_isMPSolution_of_map_eq`: zwei Lösungen desselben
+   beschränkten Sprungerzeugers mit demselben Anfangsgesetz, auf zwei
+   verschiedenen Räumen, haben dieselben **endlichdimensionalen** Verteilungen.
+   `jumpMeasure_integral_fddProd_eq_fddExp` sagt dasselbe vom konstruierten
+   Prozeß gegen `nu`.
+
+   **Vier Befunde, die zu behalten sind.**
+
+   * **Der Faktor der Vergangenheit muß eine beschränkte Funktion sein und darf
+     keine Indikatorfunktion bleiben.** Der Vorschlag des fünften Laufs lautete
+     `∫_S f (X (s+t)) dP` über Mengen `S ∈ 𝓕 s`; das trägt die Induktion
+     **nicht**, denn beim Abschälen des ersten Faktors entsteht `K ω · g (X (s+t) ω)`,
+     und `g` ist keine Indikatorfunktion. Die Fassung mit dem Faktor kostet
+     nichts mehr: `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound` zieht
+     ihn aus der bedingten Erwartung, `integral_condExp` setzt die Erwartung
+     zurück (`integral_mul_eq_of_martingale`).
+   * **Die Picard-Iteration ist einmal geschrieben, nicht zweimal.**
+     `abs_sub_sum_le_of_recursion` läuft über ein abstraktes Funktional
+     `I : ℝ≥0 → (E → ℝ) → ℝ` mit drei Voraussetzungen — Schranke, gemeinsame
+     Meßbarkeit in der Zeit, Rekursion —, und die unbedingte wie die bedingte
+     Fassung sind Korollare. Die alte `abs_integral_sub_sum_le_of_isMPSolution`
+     ist auf sechs Zeilen zusammengeschrumpft.
+   * **Die endlichdimensionale Testvariable ist eine Liste von Zuwächsen**
+     (`fddProd`, `fddExp`) und keine `Fin n`-indizierte Familie. Der Grund ist
+     die Induktion: das Abschälen des ersten Faktors läßt eine Liste derselben
+     Gestalt stehen, von der späteren Zeit aus gelesen, während eine
+     `Fin n`-Familie bei jedem Schritt umindiziert werden müßte.
+   * **`IsMPSolution` liefert die Adaptiertheit von `X` nicht.** Das
+     `StronglyAdapted`, das `Martingale` trägt, betrifft die **kompensierten**
+     Prozesse, nicht `h ∘ X`. Der endlichdimensionale Satz führt darum die
+     Voraussetzung `hXad` mit; ohne sie ist der abgeschälte Faktor
+     `g (X (s+t))` nicht meßbar für `𝓕 (s+t)` und damit im nächsten Schritt gar
+     kein Faktor der Vergangenheit. Für den konstruierten Prozeß ist sie eine
+     Zeile (`stronglyMeasurable_jumpFiltration`).
+   * **Eine Koordinate prüft die Schachtelungsreihenfolge nicht, zwei prüfen
+     sie.** `jumpMeasure_integral_fddProd_flip` rechnet an der Zweizustandskette
+     „bei `t` in `true` und bei `t + u` in `true`" = `(1-e^{-2t})/2 ·
+     (1+e^{-2u})/2` aus; eine umgekehrt geschachtelte `fddExp` gäbe
+     `(1-e^{-2u})/2 · (1+e^{-2t})/2`, eine andere Zahl für `t ≠ u`. Sie ging
+     beim ersten Durchlauf durch.
+
+   *Der ursprüngliche Wortlaut des Punktes und seine Zwischenstände:*
 
    **`norm_apply_le` ist erledigt** (2026-09-09, achtzehnter Lauf des Tages), als
    `abs_jumpApply_le` in punktweiser Gestalt
@@ -355,13 +409,10 @@ danach.*
    ein Umweg um eine Aussage, die schwerer ist als die gebrauchte. Damit fiel
    auch Punkt 4 ganz.
 
-   **Was offen bleibt, und nur das:** der Schritt von den eindimensionalen zu
-   den **endlichdimensionalen** Verteilungen, den „genau eine Lösung" meint. Er
-   ist die bedingte Fassung desselben Arguments —
-   `integral_eq_expJumpApply_of_isMPSolution` auf das an einer Menge der
-   Vergangenheit bedingte Gesetz von `X s` anwenden, wie es
-   `setIntegral_jumpProcess_sub_eq_intervalIntegral` für die
-   Erwartungsidentität tut, und über die Zahl der Koordinaten induzieren.
+   ~~**Was offen bleibt, und nur das:** der Schritt von den eindimensionalen zu
+   den **endlichdimensionalen** Verteilungen, den „genau eine Lösung" meint.~~
+   *(erledigt im sechsten Lauf; der dort angesagte Weg über Mengen der
+   Vergangenheit trug nicht, siehe den ersten Befund oben.)*
 4. ~~**Erst danach das Akzeptanzbeispiel**, und dann wirklich als Beweis: `E = ℕ`,
    `lam ≡ 1`, `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x` — der
    Poissonprozeß, mit den eindimensionalen Verteilungen gegen
@@ -444,7 +495,14 @@ danach.*
    der es ein Korollar von Punkt 3 ist — so führt es Meilenstein 4 selbst.
    Punkt 3 zuerst ist darum der billigere Weg.
 5. Der lokale Fall und die pfadabhängige Variante zuletzt; sie liefern die
-   Beispiele für die Meilensteine 7 und 9.
+   Beispiele für die Meilensteine 7 und 9. **Die Punkte 0 bis 4 sind durch, also
+   ist dies der laufende Auftrag** (seit dem sechsten Lauf des 2026-09-10).
+   Der Befund des siebzehnten Laufs des 2026-09-09 gilt weiter und ist die erste
+   Hürde: `x / 0 = 0` in Lean, also verläßt der Pfad einen Zustand mit
+   `lam x = 0` sofort; der absorbierende Fall verlangt Sprungzeiten in `ℝ≥0∞`.
+   Die drei Akzeptanzbeispiele darunter — M/M/1, linearer Geburt-Tod, Hawkes —
+   gehören zu diesem Punkt, und der lineare Geburt-Tod ist das einzige, das den
+   lokalen Zweig prüft.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:

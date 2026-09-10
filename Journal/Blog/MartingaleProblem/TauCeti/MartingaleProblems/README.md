@@ -1116,12 +1116,51 @@ A concrete family of solutions, built without any of the theory above. Index
   `measurable_uncurry_jumpProcess`, which the compensator consumes, is a
   different and strictly harder statement that is not needed here.
 
-  What is **not** proved is the passage from the one dimensional distributions
-  to the finite dimensional ones, which is what "exactly one solution" says.
-  It is the conditional form of the same argument: apply
-  `integral_eq_expJumpApply_of_isMPSolution` to the law of `X s` conditioned on
-  a set of the past, exactly as `setIntegral_jumpProcess_sub_eq_intervalIntegral`
-  does for the expectation identity, and induct on the number of coordinates.
+  **The finite dimensional distributions are proved** on 2026-09-10, sixth run,
+  in sixteen further declarations, and with them the clause "exactly one
+  solution".  The chain is three steps.
+
+  First, `integral_mul_sub_eq_intervalIntegral_of_isMPSolution`: the martingale
+  identity tested against a bounded `𝓕 s`-measurable factor `K` and read from an
+  arbitrary starting time,
+  `∫ K · f(X (s+t)) - ∫ K · f(X s) = ∫_0^t ∫ K · (A f)(X (s+r)) dr`.  Its one
+  step that is not bookkeeping is `integral_mul_eq_of_martingale`, which carries
+  `K` across a martingale increment through
+  `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound` and
+  `MeasureTheory.integral_condExp`.
+
+  Second, `abs_sub_sum_le_of_recursion`: the Picard iteration in the abstract,
+  over a functional `I : ℝ≥0 → (E → ℝ) → ℝ` with a bound, a joint measurability
+  in the time, and that recursion.  Both the unconditional
+  `abs_integral_sub_sum_le_of_isMPSolution` (the case `K = 1`, `s = 0`) and the
+  conditional `abs_integral_mul_sub_sum_le_of_isMPSolution` are corollaries of
+  it, so the induction is written once.  Summing the series gives
+  `integral_mul_eq_expJumpApply_of_isMPSolution`:
+  `∫ K · f(X (s+t)) dP = ∫ K · (exp (t • A) f)(X s) dP`, which is the Markov
+  property of *every* solution.
+
+  Third, the induction over the number of coordinates.  A finite dimensional
+  test variable is recorded as a **list of increments**
+  `[(t₀, g₀), (t₁, g₁), …]` read from a starting time -- `fddProd` for the
+  variable on `Ω`, `fddExp` for the nested semigroup value on `E` -- because
+  peeling the first factor leaves a list of the same kind read from the later
+  time, whereas a `Fin n`-indexed family would have to reindex at every step.
+  `integral_mul_fddProd_eq_of_isMPSolution` is the induction; the peeled factor
+  is absorbed into `K`, which is where the conditional form is spent.
+  `integral_fddProd_eq_of_isMPSolution` reads it at `K = 1`, `s = 0`, and
+  `integral_fddProd_eq_of_isMPSolution_of_map_eq` is uniqueness: two solutions
+  with the same initial law, on two different spaces, have the same finite
+  dimensional distributions.  `jumpMeasure_integral_fddProd_eq_fddExp` says the
+  same of the constructed process against `nu`.
+
+  The induction needs one hypothesis the one dimensional statement did not:
+  `hXad`, that every bounded measurable functional of the current state is
+  adapted.  It is not decoration -- the peeled factor `g (X (s+t))` has to be
+  `𝓕 (s+t)`-measurable for the next step to be a factor of the past at all --
+  and `IsMPSolution` does not supply it, since the `StronglyAdapted` it carries
+  is about the *compensated* processes.  For the constructed process it is
+  `stronglyMeasurable_jumpFiltration`, one line from
+  `measurable_naturalFiltration` read at `j = i`.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved; and the explosion criterion
   in terms of the jump times.
@@ -1209,6 +1248,14 @@ A concrete family of solutions, built without any of the theory above. Index
   a sign error would propagate into a Poisson law of another mean, here the
   state space has two points and the value must be `0` at `t = 0` and tend to
   `1/2` rather than to `1`. The `t = 0` probe is in the file as an `example`.
+  The same instance carries the **two coordinate** probe, added on 2026-09-10,
+  sixth run: `jumpMeasure_integral_fddProd_flip` gives
+  `(1 - exp (-2t))/2 · (1 + exp (-2u))/2` for being at `true` at `t` and again
+  at `t + u`. It is the only check on the *order* in which `fddExp` nests the
+  semigroup -- one coordinate cannot see it, and the reversed nesting would give
+  `(1 - exp (-2u))/2 · (1 + exp (-2t))/2`, a different number as soon as
+  `t ≠ u`. Its two degenerations, `u = 0` back to the one dimensional law and
+  `t = 0` to `0`, are in the file as `example`s.
 * **Explosion, which is what the unbounded case is about.** `E = ℕ`,
   `lam n = 2 ^ n`, `mu n = Measure.dirac (n + 1)`. The jump times have
   `∑ n, 2 ^ (-n) < ∞` in expectation, so the process explodes almost surely, the

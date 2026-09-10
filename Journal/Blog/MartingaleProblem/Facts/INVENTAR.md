@@ -16600,3 +16600,135 @@ endlichdimensionalen Verteilungen zweier Lösungen mit demselben Anfangsgesetz �
 und das ist „genau eine Lösung". Der Umweg über
 `isMPSolution_iff_forall_fdd` ist **nicht** zu nehmen: dieser Satz trägt selbst
 ein `sorry` (`Suggested.lean:442`, mit dem `sorry` in `:455`).
+
+
+### 2026-09-10, sechster Lauf des Tages — die endlichdimensionalen Verteilungen, und damit `exists_unique_of_bounded` ganz
+
+**Punkt 3 der laufenden Aufgabe ist erledigt, und mit ihm die letzte offene
+Zusage von Meilenstein 4 außer dem lokalen Fall.** Siebzehn neue Deklarationen in
+`TauCeti/MartingaleProblems/Suggested.lean`, dreizehn davon im Abschnitt
+`Uniqueness`; die ganze Datei geht durch `lake env lean` gegen v4.33.1 **ohne
+einen Fehler**, die Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5, 9, 10),
+und **alle siebzehn** sind mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft. Über `E` steht nichts als `[MeasurableSpace E]`.
+
+**Was dasteht.**
+```
+theorem integral_fddProd_eq_of_isMPSolution_of_map_eq … (hinit : P.map (X 0) = P'.map (X' 0))
+    (l : List (ℝ≥0 × (E → ℝ))) (hm : ∀ p ∈ l, Measurable p.2)
+    (hb : ∀ p ∈ l, ∃ D : ℝ, ∀ x, |p.2 x| ≤ D) :
+    ∫ ω, fddProd X l 0 ω ∂P = ∫ ω, fddProd X' l 0 ω ∂P'
+```
+Zwei Lösungen desselben beschränkten Sprungerzeugers mit demselben Anfangsgesetz,
+**auf zwei verschiedenen Räumen**, haben dieselben endlichdimensionalen
+Verteilungen. Das ist „genau eine Lösung", und es nennt den konstruierten Prozeß
+nicht. `integral_fddProd_eq_of_isMPSolution` ist die Fassung, die sie ausrechnet
+(`= ∫ fddExp lam mu l d(P.map (X 0))`), und
+`jumpMeasure_integral_fddProd_eq_fddExp` sagt dasselbe vom konstruierten Prozeß
+gegen `nu`.
+
+**Der Beweis sind drei Stücke, und keines ist neu an Mathematik.**
+
+1. `integral_mul_sub_eq_intervalIntegral_of_isMPSolution` — die Martingalidentität
+   gegen einen beschränkten `𝓕 s`-meßbaren Faktor `K` und von einer beliebigen
+   Anfangszeit aus:
+   `∫ K·f(X (s+t)) - ∫ K·f(X s) = ∫_0^t ∫ K·(A f)(X (s+r)) dr`. Der einzige
+   Schritt darin, der nicht Buchführung ist, ist `integral_mul_eq_of_martingale`.
+2. `abs_sub_sum_le_of_recursion` — die Picard-Iteration über einem abstrakten
+   Funktional `I : ℝ≥0 → (E → ℝ) → ℝ`. Daraus fallen die unbedingte Fassung
+   (`K = 1`, `s = 0`) und die bedingte als Korollare, und die Summation der Reihe
+   gibt `integral_mul_eq_expJumpApply_of_isMPSolution`,
+   `∫ K·f(X (s+t)) dP = ∫ K·(exp (t•A) f)(X s) dP` — die Markoveigenschaft
+   **jeder** Lösung.
+3. Die Induktion über die Zahl der Koordinaten,
+   `integral_mul_fddProd_eq_of_isMPSolution`. Der abgeschälte Faktor wird in `K`
+   aufgenommen; genau dafür ist die bedingte Fassung da.
+
+**Vier Befunde, und der erste berichtigt den Vorschlag des fünften Laufs.**
+
+* **Der Faktor der Vergangenheit muß eine beschränkte Funktion sein und darf
+  keine Menge bleiben.** Angesagt war
+  `setIntegral_eq_expJumpApply_of_isMPSolution`, „für `S ∈ 𝓕 s` gilt
+  `∫_S f (X (s+t)) dP = …`". Das trägt die Induktion **nicht**: beim Abschälen
+  des ersten Faktors entsteht `K ω · g (X (s+t) ω)`, und `g` ist eine beliebige
+  beschränkte Testfunktion und keine Indikatorfunktion; über Mengen käme man
+  nur mit einem Aufbau über einfache Funktionen weiter. Die Fassung mit dem
+  Faktor kostet dagegen nichts mehr, weil Mathlib sie schon hat:
+  `MeasureTheory.condExp_stronglyMeasurable_mul_of_bound`
+  (`ConditionalExpectation/PullOut.lean:260`) zieht den beschränkten
+  `m`-meßbaren Faktor aus der bedingten Erwartung, und `integral_condExp` setzt
+  die Erwartung zurück. Das ist `integral_mul_eq_of_martingale`, zehn Zeilen.
+  *Wer eine Aussage bedingt fassen will, sieht zuerst nach, was die Induktion
+  darüber wirklich einsetzt.*
+* **Die Picard-Iteration ist einmal geschrieben, nicht zweimal.**
+  `abs_sub_sum_le_of_recursion` fragt nach drei Dingen und sonst nichts: einer
+  Schranke `|I t φ| ≤ M · D`, der Meßbarkeit von `r ↦ I (toNNReal r) φ`, und der
+  Rekursion `I t φ - I 0 φ = ∫_0^t I r (A φ)`. Die alte
+  `abs_integral_sub_sum_le_of_isMPSolution` ist damit auf sechs Zeilen
+  zusammengeschrumpft und die bedingte Fassung
+  `abs_integral_mul_sub_sum_le_of_isMPSolution` kostet acht. Der Faktor `M` ist
+  nicht Zierrat — für die bedingte Fassung ist er die Schranke `B` von `K`.
+* **Die endlichdimensionale Testvariable ist eine Liste von Zuwächsen und keine
+  `Fin n`-indizierte Familie.** `fddProd Z ((t,g) :: l) s ω = g (Z (s+t) ω) ·
+  fddProd Z l (s+t) ω` und `fddExp lam mu ((t,g) :: l) =
+  expJumpApply lam mu t (g · fddExp lam mu l)`. Der Grund ist die Induktion: das
+  Abschälen des ersten Faktors läßt eine Liste **derselben Gestalt** stehen, von
+  der späteren Zeit aus gelesen, während eine `Fin n`-Familie bei jedem Schritt
+  umindiziert werden müßte und die Monotonie der Zeiten als eigene Hypothese
+  mitschleppte. Die Zuwachsdarstellung erzwingt sie umsonst. Daß die eine
+  Koordinate mit dem eindimensionalen Satz zusammenfällt, ist bewiesen und nicht
+  behauptet: `fddExp_singleton`, `fddProd_singleton`, und ein `example` am
+  Poissonprozeß, das
+  `jumpMeasure_integral_fddProd_eq_fddExp` auf die einelementige Liste
+  zurückführt.
+* **`IsMPSolution` liefert die Adaptiertheit von `X` nicht, und der
+  endlichdimensionale Satz braucht sie.** Das `StronglyAdapted`, das
+  `MeasureTheory.Martingale` trägt, ist eine Aussage über die **kompensierten**
+  Prozesse `f(X t) - ∫ (A f)(X u) du`, nicht über `h ∘ X`. Der Satz führt darum
+  die Voraussetzung
+  `hXad : ∀ h, Measurable h → ∀ u, StronglyMeasurable[F u] (h ∘ X u)` mit; ohne
+  sie ist der abgeschälte Faktor `g (X (s+t))` nicht `𝓕 (s+t)`-meßbar und im
+  nächsten Schritt gar kein Faktor der Vergangenheit. Für den konstruierten
+  Prozeß ist sie eine Zeile — `stronglyMeasurable_jumpFiltration`, weil
+  `jumpFiltration` die natürliche Filtration ist und
+  `measurable_naturalFiltration` bei `j = i` gelesen wird.
+
+**Und die Probe, die die Reihenfolge prüft** (`jumpMeasure_integral_fddProd_flip`,
+`section TwoStateExample`, mit `#print axioms` geprüft; die Zahl der neuen
+Deklarationen steigt damit auf siebzehn). `fddExp_singleton` sieht die
+Schachtelungsreihenfolge **nicht**, also ist eine einzelne Koordinate keine Probe
+auf sie. Zwei Koordinaten sind eine: die Zweizustandskette, bei `false`
+gestartet, gibt für „bei `t` in `true` **und** bei `t + u` in `true`" die Zahl
+`(1 - e^{-2t})/2 · (1 + e^{-2u})/2` — das eindimensionale Gesetz bei `t` mal der
+Wahrscheinlichkeit, über den Zuwachs `u` zu bleiben. Eine umgekehrt geschachtelte
+`fddExp` gäbe `(1 - e^{-2u})/2 · (1 + e^{-2t})/2`, und das ist eine andere Zahl,
+sobald `t ≠ u`. Die beiden Entartungen stehen als `example` daneben: bei `u = 0`
+fällt die Formel auf das eindimensionale Gesetz zurück, bei `t = 0` auf `0`. Sie
+ging beim ersten Durchlauf durch, also gibt es keinen Befund gegen `fddProd` oder
+`fddExp`.
+
+**Am Werkzeug, weil es diesen Lauf getragen hat.** Ein Durchlauf von
+`Suggested.lean` (6800 Zeilen) durch `lake env lean` dauert **elf Sekunden**,
+nicht Minuten — die früheren Läufe haben das zu pessimistisch notiert. Damit ist
+die Schleife „schreiben, übersetzen, berichtigen" so billig, daß sich das
+Ausweichen auf eine freistehende Datei nur für Rechnungen lohnt, die Mathlib
+allein braucht (wie `scratch/PoissonSemigroup.lean` im fünften Lauf), nicht für
+Beweise, die den Bestand der Datei benutzen.
+
+**Vorschlag für den nächsten Lauf.** Punkt 5 der laufenden Aufgabe, der **lokale
+Fall**, und darin zuerst der Punkt, an dem er sich entscheidet: **die Sprungzeiten
+in `ℝ≥0∞`**. Der Befund des siebzehnten Laufs des 2026-09-09 steht seither
+unangetastet da — `x / 0 = 0` in Lean, also verläßt der konstruierte Pfad einen
+Zustand mit `lam x = 0` sofort, statt in ihm zu bleiben, und die ganze
+`JumpConstruction` trägt deshalb `0 < lam x` als Voraussetzung. Der lokale Fall
+kann das nicht umgehen: eine Rate, die *lokal* beschränkt ist, darf Nullstellen
+haben, und der absorbierende Zustand ist der einfachste Zeuge dafür, daß die
+jetzige `jumpTime` dort das Falsche tut. Zu bauen ist also
+`jumpTimeE : (ℕ → E) → (ℕ → ℝ) → ℕ → ℝ≥0∞` mit
+`jumpTimeE … (n+1) = jumpTimeE … n + ENNReal.ofReal (w n) / ENNReal.ofReal (lam (x n))`
+und der Konvention `a / 0 = ⊤` in `ℝ≥0∞`, dazu `jumpProcess` als der Wert an der
+letzten Sprungzeit unterhalb von `t`. Die Probe, die den Bau abnimmt, ist klein
+und benannt: der **absorbierende Zustand**, `E = Bool`, `lam false = 0`,
+`lam true = 1`, `mu true = dirac false` — der Pfad muß nach dem ersten Sprung für
+alle Zeiten in `false` bleiben, und mit der heutigen `jumpTime` tut er es nicht.
+Das ist der Zeuge, der vor dem Satz zu schreiben ist.
