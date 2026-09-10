@@ -1103,6 +1103,19 @@ A concrete family of solutions, built without any of the theory above. Index
   in `measurable_uncurry_jumpProcess`.  `hX0 : Measurable (X 0)` is what turns
   `∫ · (X 0 ω) dP` into an integral against `P.map (X 0)`.
 
+  **The constructed process meets both**, and the law of the construction is
+  therefore the series: `jumpMeasure_integral_jumpProcess_eq_expJumpApply`
+  (2026-09-10, fifth run) says
+  `∫ f (X t) d(jumpMeasure mu nu) = ∫ expJumpApply lam mu t f dnu`, which is the
+  clause "its one dimensional distributions are `nu.map (exp (t • A))`" of this
+  item, now about a named process.  It costs two lines: the initial law is
+  `jumpMeasure_map_jumpProcess_zero`, and `hX` is
+  `measurable_uncurry_comp_jumpProcess`, which is `measurable_jumpProcess`
+  composed with the coercion `ℝ≥0 → ℝ` -- the uniqueness theorem asks for joint
+  measurability for the **full** σ-algebra, and the filtered
+  `measurable_uncurry_jumpProcess`, which the compensator consumes, is a
+  different and strictly harder statement that is not needed here.
+
   What is **not** proved is the passage from the one dimensional distributions
   to the finite dimensional ones, which is what "exactly one solution" says.
   It is the conditional form of the same argument: apply
@@ -1140,39 +1153,62 @@ A concrete family of solutions, built without any of the theory above. Index
   and `martingale_compensated_poisson` turns it into an actual
   `MeasureTheory.Martingale`: for every bounded `f : ℕ → ℝ` the compensated
   increment `f (X t) - ∫_0^t (f (X u + 1) - f (X u)) du` is a martingale for the
-  natural filtration. What is **not** yet in Lean is the comparison of the one
-  dimensional laws with `ProbabilityTheory.poissonMeasure`; that is the
-  independent control on the construction and it is the next step of this
-  example, **after** `exists_unique_of_bounded`.
+  natural filtration.
 
-  **The classical route to that comparison is not available in Mathlib, and
-  that is why it waits.** It would go through the Erlang law of the `n`-th jump
-  time: `T n` is a sum of `n` independent `Exp(1)`, hence `Gamma(n, 1)`, and
+  **The one dimensional laws are Mathlib's Poisson laws**, in Lean on
+  2026-09-10, fifth run, as `jumpMeasure_map_jumpProcess_poisson`:
+  `(jumpMeasure poissonKernel δ₀).map (jumpProcess poissonRate t) = Po(t)`, with
+  `Po` the `ProbabilityTheory.poissonMeasure`
+  (`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`) into whose
+  definition nothing of `jumpTime`, `stepIndex` or `waitingMeasure` enters.
+  This is the independent control on the construction, and it is the only place
+  where an error in those three would show; it comes out right.
+
+  It goes by **uniqueness** and not by the Erlang law, and the route is the one
+  named below as the cheaper of the two. Written out: the law is read off
+  `jumpMeasure_integral_jumpProcess_eq_expJumpApply`, and the exponential series
+  is summed by the **Gregory--Newton formula**. The generator here *is* Mathlib's
+  forward difference operator (`jumpApply_poisson_eq_fwdDiff`,
+  `iterate_jumpApply_poisson`), so `Algebra/Group/ForwardDiff.lean` applies:
+  `shift_eq_sum_fwdDiff_iter` expands `f (x + k)` in the iterated differences,
+  and one Cauchy product with `exp t = ∑ t^m/m!`
+  (`tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm`) turns the finite
+  expansion into the Poisson sum: `tsum_fwdDiff_iter_eq`,
+  `∑' n, t^n/n! * (Δ^[n] f) x = ∑' k, exp (-t) * t^k/k! * f (x + k)`, for every
+  real `t` and every bounded `f`. Comparing with `poissonMeasure_real_singleton`
+  on the indicator of `{n}` and `Measure.ext_of_singleton` closes it.
+
+  **The classical route is not available in Mathlib, and it was not needed.**
+  It would go through the Erlang law of the `n`-th jump time: `T n` is a sum of
+  `n` independent `Exp(1)`, hence `Gamma(n, 1)`, and
   `{X t = n} = {T n ≤ t < T (n+1)}`. But `ProbabilityTheory.gammaMeasure`
   (`Probability/Distributions/Gamma.lean:128`) and `expMeasure` are densities
   and distribution functions only: neither `v4.33.1` nor `upstream/master`
   has their **convolution**, and neither file mentions `conv`, `HasLaw` or
   `IndepFun` at all — in contrast to the Poisson side, which has
   `poissonMeasure_conv_poissonMeasure` and `IndepFun.hasLaw_add_poissonMeasure`.
-  Two routes remain, both of them work of their own: the **renewal induction**
-  on `jumpMeasure_integral_eq_renewal`, giving `p 0 t = exp (-t)` and
+  The other route that remains open is the **renewal induction** on
+  `jumpMeasure_integral_eq_renewal`, giving `p 0 t = exp (-t)` and
   `p n t = ∫_0^t exp (-s) * p (n-1) (t-s) ds` hence `p n t = exp (-t) * t^n/n!`;
-  and **uniqueness**, under which the law is a corollary of
-  `exists_unique_of_bounded`, which is how this milestone states it below.
-  `exists_unique_of_bounded` must return uniqueness
-  with one dimensional distributions `Measure.dirac 0 |>.map (exp (t • A))`,
-  which is the Poisson law of mean `t` because `exp (t • A)` is the Poisson
-  semigroup on `ℕ`. Every item of the milestone is instantiated at once, and the
-  answer is one a reader can check against
-  `ProbabilityTheory.poissonMeasure`
-  (`Mathlib/Probability/Distributions/Poisson/Basic.lean:41`).
+  it is not needed either, and it would prove the same thing.
 * **A two state chain, where the exponential series is a matrix exponential.**
-  `E = {0,1}`, `lam ≡ 1`, `mu x = Measure.dirac (1 - x)`. Then `A` is the matrix
+  `E = Bool`, `lam ≡ 1`, `mu x = Measure.dirac (!x)`. Then `A` is the matrix
   `!![-1, 1; 1, -1]` on `E → ℝ`, `‖A f‖ ≤ 2 * ‖f‖` is `norm_apply_le` at
-  `L = 1`, and the one dimensional law from `0` is
+  `L = 1`, and the one dimensional law from `false` is
   `((1 + exp (-2*t))/2, (1 - exp (-2*t))/2)`. This is the smallest instance on
   which `exists_unique_of_bounded` produces a number, and a sign error in the
-  operator is visible in it.
+  operator is visible in it. **In Lean** on 2026-09-10, fifth run, as
+  `section TwoStateExample` of `Suggested.lean`, in seven declarations:
+  `jumpApply_flip` is the generator, `iterate_jumpApply_flip` says the iterates
+  cycle with the factor `-2` -- the eigenvalue on the antisymmetric part, and
+  the reason the answer carries `exp (-2t)` and not `exp (-t)` --,
+  `expJumpApply_flip` sums the series in closed form, and
+  `jumpMeasure_map_jumpProcess_flip` is the number:
+  `((jumpMeasure flipKernel δ_false).map (X t)).real {true} = (1 - exp (-2t))/2`.
+  It checks what the Poisson example cannot: there the generator is a shift and
+  a sign error would propagate into a Poisson law of another mean, here the
+  state space has two points and the value must be `0` at `t = 0` and tend to
+  `1/2` rather than to `1`. The `t = 0` probe is in the file as an `example`.
 * **Explosion, which is what the unbounded case is about.** `E = ℕ`,
   `lam n = 2 ^ n`, `mu n = Measure.dirac (n + 1)`. The jump times have
   `∑ n, 2 ^ (-n) < ∞` in expectation, so the process explodes almost surely, the

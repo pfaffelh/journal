@@ -332,17 +332,79 @@ danach.*
    `abs_jumpApply_le` in punktweiser Gestalt
    `(∀ x, |f x| ≤ C) → |jumpApply lam mu f x| ≤ 2 * L * C`. Es ist außer der
    Reihe gefallen, weil es beim Hinschreiben des Erzeugers ohnehin anfiel und
-   vier Zeilen kostete; `exists_unique_of_bounded` steht unverändert offen.
-   **Punkt 2 ist durch, also ist dies der laufende Auftrag** — und auch vor dem
-   Rest von Punkt 4, aus dem dort genannten Grund.
+   vier Zeilen kostete. **Punkt 2 ist durch, also ist dies der laufende
+   Auftrag.**
+
+   **Zwischenstand 2026-09-10, vierter Lauf des Tages.** Die
+   **eindimensionale Hälfte** von `exists_unique_of_bounded` steht:
+   `integral_eq_expJumpApply_of_isMPSolution` und, als Lesart davon,
+   `integral_eq_of_isMPSolution_of_map_eq`. Vierzehn Deklarationen, Abschnitt
+   `Uniqueness`; Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10, vierter
+   Lauf des Tages".
+
+   **Zwischenstand 2026-09-10, fünfter Lauf des Tages.** Der **konstruierte**
+   Prozeß erfüllt jetzt beide Voraussetzungen jenes Satzes, und damit ist die
+   zweite Zusage des Punktes — „die eindimensionalen Verteilungen sind
+   `nu.map (exp (t • A))`" — für einen benannten Prozeß bewiesen:
+   `jumpMeasure_integral_jumpProcess_eq_expJumpApply`. Die dabei verlangte
+   gemeinsame Meßbarkeit ist die für die **volle** σ-Algebra
+   (`measurable_uncurry_comp_jumpProcess`, zwei Zeilen aus
+   `measurable_jumpProcess`) und **nicht** das gefilterte
+   `measurable_uncurry_jumpProcess`, das der Kompensator braucht; der Vorschlag
+   des vierten Laufs, sie als punktweisen Limes über `min u n` zu gewinnen, war
+   ein Umweg um eine Aussage, die schwerer ist als die gebrauchte. Damit fiel
+   auch Punkt 4 ganz.
+
+   **Was offen bleibt, und nur das:** der Schritt von den eindimensionalen zu
+   den **endlichdimensionalen** Verteilungen, den „genau eine Lösung" meint. Er
+   ist die bedingte Fassung desselben Arguments —
+   `integral_eq_expJumpApply_of_isMPSolution` auf das an einer Menge der
+   Vergangenheit bedingte Gesetz von `X s` anwenden, wie es
+   `setIntegral_jumpProcess_sub_eq_intervalIntegral` für die
+   Erwartungsidentität tut, und über die Zahl der Koordinaten induzieren.
 4. ~~**Erst danach das Akzeptanzbeispiel**, und dann wirklich als Beweis: `E = ℕ`,
    `lam ≡ 1`, `mu x = dirac (x+1)`, also `A f x = f (x+1) - f x` — der
-   Poissonprozeß~~ *(zur Hälfte erledigt 2026-09-10, dritter Lauf des Tages)*,
-   mit den eindimensionalen Verteilungen gegen
-   `ProbabilityTheory.poissonMeasure` geprüft. Es instanziiert jede Einzelheit
-   des Meilensteins auf einmal; steht es nur als Prosa da, prüft es nichts (die
-   Lehre des 2026-09-08). Bricht es, so ist der Befund wertvoller als der Satz
-   darüber, und er gehört in den Bericht statt in eine Abschwächung.
+   Poissonprozeß, mit den eindimensionalen Verteilungen gegen
+   `ProbabilityTheory.poissonMeasure` geprüft.~~ *(erledigt 2026-09-10, fünfter
+   Lauf des Tages)*
+
+   **Ergebnis.** `jumpMeasure_map_jumpProcess_poisson`:
+   `(jumpMeasure poissonKernel (dirac 0)).map (jumpProcess poissonRate t)`
+   `= poissonMeasure t`, mit `poissonMeasure` aus Mathlib. **Es kommt heraus,
+   wie es soll**, also gibt es keinen Befund gegen `jumpTime`, `stepIndex` oder
+   `waitingMeasure` — und das ist die einzige Stelle, an der sich einer gezeigt
+   hätte. Acht Deklarationen, alle mit `#print axioms` auf `propext`,
+   `Classical.choice`, `Quot.sound` geprüft, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1. Bericht in `Facts/INVENTAR.md`, Läufe,
+   „2026-09-10, fünfter Lauf des Tages".
+
+   **Der Weg ist der angesagte billigere, die Eindeutigkeit**, und der
+   Negativbefund zur Erlangverteilung unten bleibt stehen — er ist nicht
+   ausgeräumt, sondern umgangen. Was ihn umgeht, ist ein Fund: der Erzeuger
+   dieser Daten **ist** Mathlibs `fwdDiff 1`
+   (`Mathlib/Algebra/Group/ForwardDiff.lean`), also greift dort
+   `shift_eq_sum_fwdDiff_iter`, die Gregory--Newton-Formel; ein einziges
+   Cauchyprodukt mit `exp t = ∑ t^m/m!`
+   (`tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm`) macht daraus die
+   Poissonsumme (`tsum_fwdDiff_iter_eq`, für **jedes** reelle `t` und jedes
+   beschränkte `f`). Der Vergleich der Maße selbst ist dann
+   `Measure.ext_of_singleton` auf `ℕ` gegen `poissonMeasure_real_singleton`.
+
+   **Und das zweite Akzeptanzbeispiel gleich mit** (derselbe Lauf, zweiter
+   Teil): die **Zweizustandskette** `E = Bool`, `lam ≡ 1`, `mu x = dirac (!x)`,
+   sieben Deklarationen in `section TwoStateExample`. Sie prüft, was der
+   Poissonprozeß nicht prüfen kann — dort ist der Erzeuger eine Verschiebung,
+   also liefe ein Vorzeichenfehler unbemerkt in eine Poissonverteilung anderen
+   Mittelwerts; hier zyklen die Iterierten mit dem Faktor `-2`
+   (`iterate_jumpApply_flip`), und das Gesetz ist eine Zahl,
+   `(1 - e^{-2t})/2`, die bei `t = 0` gleich `0` sein muß und gegen `1/2` gehen
+   muß und nicht gegen `1`.
+
+   *Der ursprüngliche Wortlaut, und der Zwischenstand des dritten Laufs:* Es
+   instanziiert jede Einzelheit des Meilensteins auf einmal; steht es nur als
+   Prosa da, prüft es nichts (die Lehre des 2026-09-08). Bricht es, so ist der
+   Befund wertvoller als der Satz darüber, und er gehört in den Bericht statt in
+   eine Abschwächung.
 
    **Zwischenstand 2026-09-10, dritter Lauf des Tages.** Vorgezogen, weil es die
    einzige Probe darauf ist, daß die sechs Voraussetzungen von
@@ -359,15 +421,17 @@ danach.*
    `Facts/INVENTAR.md`, Läufe, „2026-09-10, dritter Lauf des Tages", zweiter
    Teil.
 
-   **Was fehlt, und es ist die eigentliche Kontrolle:** die **eindimensionalen
-   Verteilungen** gegen `ProbabilityTheory.poissonMeasure`
+   ~~**Was fehlt, und es ist die eigentliche Kontrolle:** die
+   **eindimensionalen Verteilungen** gegen `ProbabilityTheory.poissonMeasure`
    (`Probability/Distributions/Poisson/Basic.lean:41`), also
    `(jumpMeasure poissonKernel (dirac 0)).map (jumpProcess poissonRate t)`
-   `= poissonMeasure (Real.toNNReal t)`. Das ist ein eigener Beweis und kein
-   Einsetzen von Daten, und es ist die einzige Stelle, an der sich ein Fehler in
-   `jumpTime`, `stepIndex` oder `waitingMeasure` überhaupt zeigen würde.
+   `= poissonMeasure (Real.toNNReal t)`.~~ *(erledigt im fünften Lauf; der
+   Zeitindex ist `ℝ≥0`, also steht dort `poissonMeasure t` ohne
+   `Real.toNNReal`.)* Das ist ein eigener Beweis und kein Einsetzen von Daten,
+   und es ist die einzige Stelle, an der sich ein Fehler in `jumpTime`,
+   `stepIndex` oder `waitingMeasure` überhaupt zeigen würde.
 
-   **Aber es kommt nach Punkt 3, und dazu ein Negativbefund.** Der klassische
+   **Der Negativbefund zur klassischen Route bleibt gültig.** Der klassische
    Weg ginge über die Erlangverteilung von `T n`; **Mathlib trägt ihn nicht**:
    `gammaMeasure` (`Distributions/Gamma.lean:128`) und `expMeasure` stehen als
    Dichten da, aber weder v4.33.1 noch `upstream/master` hat ihre **Faltung** —

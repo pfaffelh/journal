@@ -21,6 +21,9 @@ import Mathlib.Analysis.Calculus.Deriv.Slope
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
 import Mathlib.Analysis.SpecialFunctions.Exponential
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
+import Mathlib.Algebra.Group.ForwardDiff
+import Mathlib.Analysis.Normed.Ring.InfiniteSum
+import Mathlib.Probability.Distributions.Poisson.Basic
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -59,6 +62,23 @@ and `integral_eq_expJumpApply_of_isMPSolution` shows that **every** solution of
 the martingale problem has that series for its one dimensional distributions,
 `integral_eq_of_isMPSolution_of_map_eq` reading it as uniqueness across two
 different spaces.  Nothing in that section mentions `jumpProcess`.
+Eight more the same day join the two halves and check them against Mathlib:
+`jumpMeasure_integral_jumpProcess_eq_expJumpApply` computes the one dimensional
+distributions of the *constructed* process from `nu` alone (its second
+hypothesis is `measurable_uncurry_comp_jumpProcess`, joint measurability for the
+full σ-algebra, which is not the filtered `measurable_uncurry_jumpProcess`), and
+`jumpMeasure_map_jumpProcess_poisson` identifies them, on the Poisson data, with
+`ProbabilityTheory.poissonMeasure`.  That identification rests on
+`tsum_fwdDiff_iter_eq`, the Gregory--Newton summation of the exponential series
+of Mathlib's forward difference operator, which is a statement about `ℝ` alone.
+Seven more the same day are the **second** acceptance example of Milestone 4,
+the two state chain on `Bool` (`section TwoStateExample`): the iterates of its
+generator cycle with the factor `-2` (`iterate_jumpApply_flip`), so the series
+has a closed form (`expJumpApply_flip`) and the law is a number,
+`jumpMeasure_map_jumpProcess_flip : … .real {true} = (1 - exp (-2t))/2`.  The
+two examples check different things: the Poisson one against Mathlib, the two
+state one against a value a reader can compute, and a sign error in `jumpApply`
+survives neither.
 every one of those `sorry`s is a **proof**.  The last two blocks of the file are
 Milestone 4, and they carry **no** `sorry`.  The first, `IsStepPath`, was added on 2026-09-09:
 its three declarations are proved, and one of them,
@@ -5915,6 +5935,39 @@ theorem integral_eq_of_isMPSolution_of_map_eq [IsProbabilityMeasure P] [IsMarkov
   rw [integral_eq_expJumpApply_of_isMPSolution hlam hlam0 hL hX hX0 hsol hf hC t,
     integral_eq_expJumpApply_of_isMPSolution hlam hlam0 hL hX' hX0' hsol' hf hC t, hinit]
 
+/-- **The two hypotheses on the process are met by the constructed one, and are met globally.**
+The joint measurability asked for by the uniqueness theorem is the one for the *full* σ-algebra,
+not for the past, so it is `measurable_jumpProcess` composed with the coercion `ℝ≥0 → ℝ` and needs
+none of `measurable_uncurry_jumpProcess`; the filtered version is what the compensator consumes
+and is a different statement. -/
+theorem measurable_uncurry_comp_jumpProcess (hlam : Measurable lam) {h : E → ℝ}
+    (hh : Measurable h) :
+    Measurable fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ h (jumpProcess lam (p.1 : ℝ) p.2) :=
+  hh.comp ((measurable_jumpProcess hlam).comp
+    ((measurable_coe_nnreal_real.comp measurable_fst).prodMk measurable_snd))
+
+/-- **The one dimensional distributions of the constructed jump process are the exponential
+series applied to the initial law.**  This is the half of `exists_unique_of_bounded` that names
+the process: `integral_eq_expJumpApply_of_isMPSolution` applies to *every* solution, and
+`jumpProcess_isMPSolution` says the construction is one, so the two together compute the law of
+`X t` from `nu` alone.  The initial law is `jumpMeasure_map_jumpProcess_zero`. -/
+theorem jumpMeasure_integral_jumpProcess_eq_expJumpApply [IsMarkovKernel mu]
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (nu : Measure E) [IsProbabilityMeasure nu] (hf : Measurable f) (hC : ∀ x, |f x| ≤ C)
+    (t : ℝ≥0) :
+    ∫ ω, f (jumpProcess lam (t : ℝ) ω) ∂(jumpMeasure mu nu)
+      = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂nu := by
+  have hX0 : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcess lam (((0 : ℝ≥0) : ℝ)) ω :=
+    (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  have hmap : (jumpMeasure mu nu).map (fun ω ↦ jumpProcess lam (((0 : ℝ≥0) : ℝ)) ω) = nu := by
+    simpa only [NNReal.coe_zero] using jumpMeasure_map_jumpProcess_zero hlam0 mu nu
+  have key := integral_eq_expJumpApply_of_isMPSolution (P := jumpMeasure mu nu)
+    (X := fun s : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (s : ℝ) ω) (F := jumpFiltration lam hlam)
+    hlam (fun x ↦ (hlam0 x).le) hL
+    (fun h hh ↦ measurable_uncurry_comp_jumpProcess hlam hh) hX0
+    (jumpProcess_isMPSolution hlam hlam0 hL mu nu) hf hC t
+  rw [key, hmap]
+
 end Uniqueness
 
 /-! ## Acceptance example for Milestone 4: the Poisson process
@@ -5928,7 +5981,10 @@ its example does not check -- that the six hypotheses of `jumpProcess_isMPSoluti
 (`Measurable lam`, `0 < lam`, `lam ≤ L`, `IsMarkovKernel mu`, `IsProbabilityMeasure nu`,
 `[MeasurableSpace E]`) are jointly satisfiable, so that the theorem is not vacuous.
 `martingale_compensated_poisson` exhibits an actual martingale and not merely a solution
-predicate. -/
+predicate.  Third, that the process the construction produces is the one it is named after:
+`jumpMeasure_map_jumpProcess_poisson` identifies its one dimensional laws with Mathlib's
+`ProbabilityTheory.poissonMeasure`, and that is the only statement here that could have come
+out false. -/
 
 section PoissonExample
 
@@ -5995,4 +6051,271 @@ theorem martingale_compensated_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, 
       (jumpMeasure poissonKernel (Measure.dirac 0)) :=
   poissonProcess_isMPSolution _ (mem_mpFamily_poisson hC)
 
+/-! ### The independent control: the one dimensional laws are Mathlib's Poisson laws
+
+Everything above instantiates the milestone on data.  What follows does not: it computes the law
+of `X t` and compares it with `ProbabilityTheory.poissonMeasure`, into whose definition nothing
+of `jumpTime`, `stepIndex` or `waitingMeasure` enters.  It is the only place where an error in
+the construction would show.
+
+The route is the one Milestone 4 names as the cheaper of the two, and it goes through
+uniqueness rather than through the Erlang law of the `n`-th jump time -- Mathlib has the
+densities of `expMeasure` and `gammaMeasure` but not their convolution.  So the law is read off
+the exponential series, and the series is summed by the **Gregory--Newton formula**: the
+generator here is Mathlib's forward difference operator `fwdDiff 1`, and
+`shift_eq_sum_fwdDiff_iter` expands `f (x + k)` in its iterated differences.  What turns that
+finite expansion into the Poisson sum is one Cauchy product with the exponential series. -/
+
+/-- The iterated forward difference of a bounded function is bounded by `2 ^ n` times the bound.
+Stated for `fwdDiff` and not for `jumpApply`, because it is `fwdDiff` that Mathlib's
+Gregory--Newton formula is about; the induction is over the *pair* `(f, C)`, since the step
+replaces `f` by `Δ f` and `C` by `2 * C`. -/
+theorem abs_fwdDiff_iter_le {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (n : ℕ) (x : ℕ) :
+    |(fwdDiff 1)^[n] f x| ≤ 2 ^ n * C := by
+  induction n generalizing f C with
+  | zero => simpa using hC x
+  | succ n ih =>
+      rw [Function.iterate_succ_apply]
+      have hstep : ∀ y, |fwdDiff 1 f y| ≤ 2 * C := by
+        intro y
+        rw [fwdDiff]
+        calc |f (y + 1) - f y| ≤ |f (y + 1)| + |f y| := abs_sub _ _
+          _ ≤ C + C := add_le_add (hC _) (hC _)
+          _ = 2 * C := by ring
+      calc |(fwdDiff 1)^[n] (fwdDiff 1 f) x| ≤ 2 ^ n * (2 * C) := ih hstep
+        _ = 2 ^ (n + 1) * C := by ring
+
+/-- **The exponential series of the forward difference is the Poisson sum.**  For bounded `f`
+and every real `t`,
+`∑' n, t^n/n! * (Δ^[n] f) x = ∑' k, exp (-t) * t^k/k! * f (x + k)`.
+
+The proof is the Cauchy product of the series with `exp t = ∑' m, t^m/m!`: the `k`-th
+antidiagonal sum is `t^k/k!` times `∑_{i ≤ k} C(k,i) * (Δ^[i] f) x`, which is `f (x + k)` by
+`shift_eq_sum_fwdDiff_iter`.  No probability enters, and no restriction on the sign of `t`. -/
+theorem tsum_fwdDiff_iter_eq {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : ℕ) :
+    ∑' n : ℕ, (t ^ n / n.factorial) * (fwdDiff 1)^[n] f x
+      = ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k) := by
+  set D : ℕ → ℝ := fun n ↦ (fwdDiff 1)^[n] f x with hDdef
+  have hD : ∀ n, |D n| ≤ 2 ^ n * C := fun n ↦ abs_fwdDiff_iter_le hC n x
+  -- the two series are absolutely summable
+  have hsA : Summable fun n : ℕ ↦ ‖(t ^ n / n.factorial) * D n‖ := by
+    refine Summable.of_nonneg_of_le (fun n ↦ norm_nonneg _) (fun n ↦ ?_)
+      ((Real.summable_pow_div_factorial (2 * |t|)).mul_right C)
+    rw [Real.norm_eq_abs, abs_mul, abs_div, abs_pow, Nat.abs_cast]
+    have hnn : (0:ℝ) ≤ |t| ^ n / n.factorial :=
+      div_nonneg (pow_nonneg (abs_nonneg t) n) (Nat.cast_nonneg _)
+    calc |t| ^ n / n.factorial * |D n| ≤ |t| ^ n / n.factorial * (2 ^ n * C) :=
+          mul_le_mul_of_nonneg_left (hD n) hnn
+      _ = (2 * |t|) ^ n / n.factorial * C := by rw [mul_pow]; ring
+  have hsB : Summable fun m : ℕ ↦ ‖t ^ m / (m.factorial : ℝ)‖ := by
+    refine Summable.of_nonneg_of_le (fun m ↦ norm_nonneg _) (fun m ↦ ?_)
+      (Real.summable_pow_div_factorial |t|)
+    rw [Real.norm_eq_abs, abs_div, abs_pow, Nat.abs_cast]
+  -- the Cauchy product with the exponential series
+  have hcauchy := tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm hsB hsA
+  have hexp : Real.exp t = ∑' m : ℕ, t ^ m / (m.factorial : ℝ) := by
+    rw [Real.exp_eq_exp_ℝ, NormedSpace.exp_eq_tsum_div]
+  -- each antidiagonal sum is the Gregory--Newton formula
+  have hterm : ∀ k : ℕ, ∑ p ∈ Finset.antidiagonal k,
+      (t ^ p.1 / (p.1.factorial : ℝ)) * ((t ^ p.2 / (p.2.factorial : ℝ)) * D p.2)
+      = (t ^ k / (k.factorial : ℝ)) * f (x + k) := by
+    intro k
+    have hnewton : f (x + k) = ∑ i ∈ Finset.range (k + 1), (k.choose i : ℝ) * D i := by
+      have h := shift_eq_sum_fwdDiff_iter (M := ℕ) (G := ℝ) 1 f k x
+      simp only [smul_eq_mul, mul_one, nsmul_eq_mul] at h
+      exact h
+    rw [Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk, hnewton, Finset.mul_sum,
+      ← Finset.sum_range_reflect]
+    refine Finset.sum_congr rfl fun i hi ↦ ?_
+    have hik : i ≤ k := Nat.lt_succ_iff.1 (Finset.mem_range.1 hi)
+    have hsub : k - (k - i) = i := Nat.sub_sub_self hik
+    have hfac : (k.factorial : ℝ)
+        = (k.choose i : ℝ) * (i.factorial : ℝ) * ((k - i).factorial : ℝ) := by
+      exact_mod_cast congrArg (fun n : ℕ ↦ (n : ℝ))
+        (Nat.choose_mul_factorial_mul_factorial hik).symm
+    have hi0 : ((i.factorial : ℝ)) ≠ 0 := Nat.cast_ne_zero.2 (Nat.factorial_ne_zero i)
+    have hk0 : (((k - i).factorial : ℝ)) ≠ 0 := Nat.cast_ne_zero.2 (Nat.factorial_ne_zero (k - i))
+    have hc0 : ((k.choose i : ℝ)) ≠ 0 := Nat.cast_ne_zero.2 (Nat.choose_pos hik).ne'
+    have hpow : t ^ (k - i) * t ^ i = t ^ k := by
+      rw [← pow_add, Nat.sub_add_cancel hik]
+    simp only [Nat.succ_sub_one, hsub]
+    have hgroup : t ^ (k - i) / ((k - i).factorial : ℝ) * ((t ^ i / (i.factorial : ℝ)) * D i)
+        = (t ^ (k - i) * t ^ i) * D i / (((k - i).factorial : ℝ) * (i.factorial : ℝ)) := by ring
+    rw [hgroup, hpow, hfac]
+    field_simp
+  -- assemble
+  rw [tsum_congr hterm, ← hexp] at hcauchy
+  refine (?_ : ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k) = _).symm
+  calc ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k)
+      = Real.exp (-t) * ∑' k : ℕ, (t ^ k / (k.factorial : ℝ)) * f (x + k) := by
+        rw [← tsum_mul_left]; exact tsum_congr fun k ↦ by ring
+    _ = Real.exp (-t) * (Real.exp t * ∑' n : ℕ, (t ^ n / (n.factorial : ℝ)) * D n) := by
+        rw [hcauchy]
+    _ = ∑' n : ℕ, (t ^ n / (n.factorial : ℝ)) * D n := by
+        rw [← mul_assoc, ← Real.exp_add, neg_add_cancel, Real.exp_zero, one_mul]
+
+/-- **The generator of the Poisson jump data is Mathlib's forward difference operator.** -/
+theorem jumpApply_poisson_eq_fwdDiff (f : ℕ → ℝ) :
+    jumpApply poissonRate poissonKernel f = fwdDiff 1 f := by
+  funext x
+  rw [jumpApply_poisson]
+  rfl
+
+/-- The iterates agree, which is what carries the Gregory--Newton formula into `expJumpApply`. -/
+theorem iterate_jumpApply_poisson (f : ℕ → ℝ) (n : ℕ) :
+    (jumpApply poissonRate poissonKernel)^[n] f = (fwdDiff 1)^[n] f := by
+  induction n generalizing f with
+  | zero => rfl
+  | succ n ih =>
+      rw [Function.iterate_succ_apply, Function.iterate_succ_apply,
+        jumpApply_poisson_eq_fwdDiff, ih]
+
+/-- **The exponential series of the Poisson generator is the Poisson sum.** -/
+theorem expJumpApply_poisson {f : ℕ → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : ℕ) :
+    expJumpApply poissonRate poissonKernel t f x
+      = ∑' k : ℕ, (Real.exp (-t) * t ^ k / k.factorial) * f (x + k) := by
+  rw [expJumpApply]
+  simp only [iterate_jumpApply_poisson]
+  exact tsum_fwdDiff_iter_eq hC t x
+
+/-- **The one dimensional distributions of the constructed process are the Poisson laws.**
+`(jumpMeasure poissonKernel δ_0).map (X t) = Po(t)`, with `Po` Mathlib's
+`ProbabilityTheory.poissonMeasure`.  This is the independent control that the milestone asks
+for: it compares the construction with a measure defined without any reference to it. -/
+theorem jumpMeasure_map_jumpProcess_poisson (t : ℝ≥0) :
+    (jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpProcess poissonRate (t : ℝ))
+      = poissonMeasure t := by
+  have hXm : Measurable (jumpProcess poissonRate ((t : ℝ))) :=
+    (measurable_jumpProcess measurable_poissonRate).comp (measurable_const.prodMk measurable_id)
+  haveI : IsProbabilityMeasure ((jumpMeasure poissonKernel (Measure.dirac 0)).map
+      (jumpProcess poissonRate (t : ℝ))) := Measure.isProbabilityMeasure_map hXm.aemeasurable
+  refine ext_iff_measureReal_singleton.2 fun n ↦ ?_
+  have hgm : Measurable (({n} : Set ℕ).indicator (1 : ℕ → ℝ)) := measurable_of_countable _
+  have hgC : ∀ x : ℕ, |({n} : Set ℕ).indicator (1 : ℕ → ℝ) x| ≤ 1 := by
+    intro x
+    by_cases hx : x = n
+    · simp [Set.indicator_apply, hx]
+    · simp [Set.indicator_apply, hx]
+  rw [← integral_indicator_one (measurableSet_singleton n),
+    integral_map hXm.aemeasurable hgm.aestronglyMeasurable,
+    jumpMeasure_integral_jumpProcess_eq_expJumpApply measurable_poissonRate poissonRate_pos
+      poissonRate_le_one (Measure.dirac 0) hgm hgC t,
+    integral_dirac _ 0, expJumpApply_poisson hgC (t : ℝ) 0, poissonMeasure_real_singleton,
+    tsum_eq_single n (fun k hk ↦ by simp [Set.indicator_apply, hk])]
+  simp
+
 end PoissonExample
+
+/-! ## Second acceptance example for Milestone 4: the two state chain
+
+`E = Bool`, `lam ≡ 1`, `mu x = δ_{!x}`, so that `A f x = f (!x) - f x` -- the matrix
+`!![-1, 1; 1, -1]` on `Bool → ℝ`.  This is the smallest instance on which the exponential series
+of Milestone 4 produces a **number**: started at `false`, the law at time `t` is
+`((1 + exp (-2t))/2, (1 - exp (-2t))/2)`.
+
+It checks something the Poisson example cannot.  There the generator is a *shift*, so every
+iterate `A^[n] f` is again a difference of values of `f` and a sign error inside `A` would
+propagate invisibly into a Poisson law of another mean; here the state space has two points,
+the iterates cycle, and the answer `(1 - exp (-2t))/2` is one that no sign error in `jumpApply`
+and no factor in `expJumpApply` leaves standing -- at `t = 0` it must be `0`, and as `t → ∞` it
+must be `1/2` and not `1`. -/
+
+section TwoStateExample
+
+/-- **The rate of the two state chain**, constant `1`. -/
+def flipRate : Bool → ℝ := fun _ ↦ 1
+
+/-- **The jump kernel of the two state chain**, the deterministic flip. -/
+noncomputable def flipKernel : Kernel Bool Bool :=
+  Kernel.deterministic (fun x ↦ !x) (measurable_of_countable _)
+
+instance : IsMarkovKernel flipKernel :=
+  Kernel.isMarkovKernel_deterministic (measurable_of_countable _)
+
+theorem measurable_flipRate : Measurable flipRate := measurable_const
+
+theorem flipRate_pos (x : Bool) : 0 < flipRate x := zero_lt_one
+
+theorem flipRate_le_one (x : Bool) : flipRate x ≤ 1 := le_rfl
+
+/-- **The generator of the two state chain is the flip difference**, `A f x = f (!x) - f x`. -/
+theorem jumpApply_flip (f : Bool → ℝ) (x : Bool) :
+    jumpApply flipRate flipKernel f x = f (!x) - f x := by
+  rw [jumpApply, flipKernel, Kernel.deterministic_apply,
+    integral_dirac (fun y ↦ f y - f x) (!x), flipRate, one_mul]
+
+/-- **The iterates cycle with a factor `-2`.**  This is the eigenvalue of
+`!![-1, 1; 1, -1]` on the antisymmetric part, and it is what makes the answer below `exp (-2t)`
+and not `exp (-t)`. -/
+theorem iterate_jumpApply_flip (f : Bool → ℝ) (n : ℕ) (x : Bool) :
+    (jumpApply flipRate flipKernel)^[n + 1] f x = (-2) ^ n * (f (!x) - f x) := by
+  induction n generalizing x with
+  | zero => simpa using jumpApply_flip f x
+  | succ n ih =>
+      rw [Function.iterate_succ_apply', jumpApply_flip, ih (!x), ih x]
+      simp only [Bool.not_not]
+      ring
+
+/-- **The exponential series of the two state generator, in closed form.** -/
+theorem expJumpApply_flip {f : Bool → ℝ} {C : ℝ} (hC : ∀ x, |f x| ≤ C) (t : ℝ) (x : Bool) :
+    expJumpApply flipRate flipKernel t f x
+      = f x + (1 - Real.exp (-2 * t)) / 2 * (f (!x) - f x) := by
+  have hsum : Summable fun n : ℕ ↦
+      (t ^ n / n.factorial) * (jumpApply flipRate flipKernel)^[n] f x :=
+    summable_expJumpApply (L := 1) (fun y ↦ (flipRate_pos y).le) flipRate_le_one hC t x
+  have hsumA : Summable fun m : ℕ ↦ (-2 * t) ^ m / (m.factorial : ℝ) :=
+    Real.summable_pow_div_factorial (-2 * t)
+  have hexpa : Real.exp (-2 * t) = ∑' m : ℕ, (-2 * t) ^ m / (m.factorial : ℝ) := by
+    rw [Real.exp_eq_exp_ℝ, NormedSpace.exp_eq_tsum_div]
+  have htail : ∑' n : ℕ, (-2 * t) ^ (n + 1) / (((n + 1).factorial : ℕ) : ℝ)
+      = Real.exp (-2 * t) - 1 := by
+    have h := hsumA.tsum_eq_zero_add
+    rw [← hexpa] at h
+    simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one] at h
+    linarith
+  have hiter : ∀ n : ℕ, (t ^ (n + 1) / ((n + 1).factorial : ℝ))
+        * (jumpApply flipRate flipKernel)^[n + 1] f x
+      = (-(1 : ℝ) / 2 * (f (!x) - f x)) * ((-2 * t) ^ (n + 1) / (((n + 1).factorial : ℕ) : ℝ)) := by
+    intro n
+    rw [iterate_jumpApply_flip f n x, mul_pow]
+    ring
+  rw [expJumpApply, hsum.tsum_eq_zero_add]
+  simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one, one_mul,
+    Function.iterate_zero_apply]
+  rw [tsum_congr hiter, tsum_mul_left, htail]
+  ring
+
+/-- **The one dimensional law of the two state chain, as a number.**  Started at `false`, the
+probability of being at `true` at time `t` is `(1 - exp (-2t))/2`.  It is `0` at `t = 0` and
+tends to `1/2`, which is what the acceptance example of Milestone 4 asks a reader to check; the
+complementary value `(1 + exp (-2t))/2` is the mass of `{false}`, the measure being a
+probability measure. -/
+theorem jumpMeasure_map_jumpProcess_flip (t : ℝ≥0) :
+    ((jumpMeasure flipKernel (Measure.dirac false)).map
+        (jumpProcess flipRate (t : ℝ))).real {true}
+      = (1 - Real.exp (-2 * (t : ℝ))) / 2 := by
+  have hXm : Measurable (jumpProcess flipRate ((t : ℝ))) :=
+    (measurable_jumpProcess measurable_flipRate).comp (measurable_const.prodMk measurable_id)
+  have hgm : Measurable (({true} : Set Bool).indicator (1 : Bool → ℝ)) :=
+    measurable_of_countable _
+  have hgC : ∀ x : Bool, |({true} : Set Bool).indicator (1 : Bool → ℝ) x| ≤ 1 := by
+    intro x
+    by_cases hx : x = true
+    · simp [Set.indicator_apply, hx]
+    · simp [Set.indicator_apply, hx]
+  rw [← integral_indicator_one (measurableSet_singleton true),
+    integral_map hXm.aemeasurable hgm.aestronglyMeasurable,
+    jumpMeasure_integral_jumpProcess_eq_expJumpApply measurable_flipRate flipRate_pos
+      flipRate_le_one (Measure.dirac false) hgm hgC t,
+    integral_dirac _ false, expJumpApply_flip hgC (t : ℝ) false]
+  simp
+
+/-- The chain starts where it is started: at `t = 0` the closed form above is `0`.  This is the
+cheapest probe there is on a formula with an exponential in it, and it is written down because a
+formula that is only *stated* is not checked. -/
+example : ((jumpMeasure flipKernel (Measure.dirac false)).map
+    (jumpProcess flipRate ((0 : ℝ≥0) : ℝ))).real {true} = 0 := by
+  rw [jumpMeasure_map_jumpProcess_flip 0]
+  norm_num
+
+end TwoStateExample

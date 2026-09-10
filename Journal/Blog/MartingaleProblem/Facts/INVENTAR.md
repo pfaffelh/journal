@@ -16472,3 +16472,131 @@ ab, genau wie bei `measurable_expJumpApply`. Damit fällt
 mit ihm die **eindimensionale Verteilung des Poissonprozesses**, die Punkt 4 der
 Aufgabe schuldet, über den Weg (b), den derselbe Punkt als den billigeren
 benannt hat. Das ist ein Lauf, vielleicht zwei.
+
+### 2026-09-10, fünfter Lauf des Tages — der Poissonprozeß ist der Poissonprozeß
+
+**Punkt 4 der laufenden Aufgabe ist erledigt, und mit ihm die einzige
+unabhängige Kontrolle, die die Sprungkonstruktion hat.** Fünfzehn neue
+Deklarationen in `TauCeti/MartingaleProblems/Suggested.lean`, acht in diesem
+Teil (zwei am Ende von `section Uniqueness`, sechs in `section PoissonExample`)
+und sieben im zweiten Teil dieses Berichts; die ganze Datei geht
+durch `lake env lean` gegen v4.33.1 **ohne einen Fehler** — beim ersten
+Durchlauf —, die Zahl der `sorry` bleibt bei neun (Meilensteine 3, 5, 9, 10),
+und **alle acht** sind mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft.
+
+**Was dasteht.**
+```
+theorem jumpMeasure_map_jumpProcess_poisson (t : ℝ≥0) :
+    (jumpMeasure poissonKernel (Measure.dirac 0)).map (jumpProcess poissonRate (t : ℝ))
+      = poissonMeasure t
+```
+Rechts steht Mathlibs `ProbabilityTheory.poissonMeasure`
+(`Probability/Distributions/Poisson/Basic.lean:41`), in deren Definition weder
+`jumpTime` noch `stepIndex` noch `waitingMeasure` vorkommt. Das ist die Probe,
+die das Inventar seit dem 2026-09-07 an jedem Beispiel verlangt, und sie ist
+hier nicht die Erfüllbarkeit der Voraussetzungen (die stand seit dem dritten
+Lauf), sondern die **Identität des Ergebnisses**: dies ist die einzige Stelle
+des ganzen Meilensteins, an der ein Fehler in den drei genannten Definitionen
+sich überhaupt hätte zeigen können. Er zeigt sich nicht.
+
+**Und der Schritt davor, der den Satz trägt.**
+```
+theorem jumpMeasure_integral_jumpProcess_eq_expJumpApply … :
+    ∫ ω, f (jumpProcess lam (t : ℝ) ω) ∂(jumpMeasure mu nu)
+      = ∫ x, expJumpApply lam mu (t : ℝ) f x ∂nu
+```
+Das ist die zweite Zusage von `exists_unique_of_bounded` — „die eindimensionalen
+Verteilungen sind `nu.map (exp (t • A))`" — für einen **benannten** Prozeß statt
+für jede Lösung. Es ist ein Korollar aus dem vierten Lauf
+(`integral_eq_expJumpApply_of_isMPSolution`) und dem dritten
+(`jumpProcess_isMPSolution`) und kostet vier Zeilen.
+
+**Drei Befunde, und der erste berichtigt den Vorschlag des vierten Laufs.**
+
+* **Die gemeinsame Meßbarkeit, die die Eindeutigkeit verlangt, ist die für die
+  volle σ-Algebra und nicht die gefilterte.** Der vierte Lauf hatte
+  vorgeschlagen, `hX` aus `measurable_uncurry_jumpProcess` durch einen
+  punktweisen Limes über `min u n` zu gewinnen. Das ist ein Umweg um eine
+  Aussage, die schwerer ist als die gebrauchte: `hX` fragt nach
+  `Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2)` **ohne** Filtration, und das ist
+  `measurable_jumpProcess`, komponiert mit der Coercion `ℝ≥0 → ℝ` — zwei Zeilen,
+  jetzt `measurable_uncurry_comp_jumpProcess`. Die gefilterte Fassung ist der
+  Kompensator seine, nicht diese. *Wer eine Voraussetzung erfüllen will, liest
+  zuerst, welche σ-Algebra sie nennt.*
+* **Der Erzeuger dieser Daten ist Mathlibs `fwdDiff 1`**, und das ist der Fund,
+  der die Rechnung billig macht. `Mathlib/Algebra/Group/ForwardDiff.lean` hat
+  die **Gregory--Newton-Formel** `shift_eq_sum_fwdDiff_iter`,
+  `f (y + n • h) = ∑_{k ≤ n} C(n,k) • Δ_[h]^[k] f y`; mit
+  `jumpApply_poisson_eq_fwdDiff` und `iterate_jumpApply_poisson` steht sie über
+  `expJumpApply` zur Verfügung. Was die endliche Entwicklung in die Poissonsumme
+  verwandelt, ist **ein** Cauchyprodukt mit `exp t = ∑ t^m/m!`
+  (`tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm`): das `k`-te
+  Antidiagonalglied ist `t^k/k!` mal `∑_{i ≤ k} C(k,i) (Δ^[i] f) x`, und das ist
+  `f (x + k)`. Das Ergebnis, `tsum_fwdDiff_iter_eq`, ist eine Aussage über `ℝ`
+  allein, gilt für **jedes** reelle `t` (auch negatives) und jedes beschränkte
+  `f`, und ist der einzige Teil des Laufs, der keine Wahrscheinlichkeitstheorie
+  enthält.
+* **Der Negativbefund zur klassischen Route bleibt stehen und ist nicht
+  ausgeräumt, sondern umgangen.** Über die Erlangverteilung von `T n` ginge es
+  nicht: `gammaMeasure` und `expMeasure` stehen in Mathlib als Dichten da, ihre
+  **Faltung** gibt es weder in v4.33.1 noch auf `upstream/master`. Der Weg über
+  die Eindeutigkeit braucht sie nicht. Der dritte Weg, die Erneuerungsinduktion
+  über `jumpMeasure_integral_eq_renewal`, bleibt ungegangen und würde dasselbe
+  beweisen.
+
+**Zum Werkzeug, weil es Zeit gespart hat.** Der analytische Kern ist in einer
+freistehenden Datei über Mathlib allein entwickelt worden
+(`scratch/PoissonSemigroup.lean`, jetzt bis auf den Hinweis geleert): dort
+kostet ein Durchlauf **drei Sekunden**, in `Suggested.lean` einige Minuten. Die
+Antidiagonal-Buchführung — `Finset.sum_range_reflect` läßt `k.succ - 1 - i`
+stehen und nicht `k - i` — wäre am großen Stück teuer gewesen.
+
+### Derselbe Lauf, zweiter Teil — das zweite Akzeptanzbeispiel, die Zweizustandskette
+
+Weil das erste Beispiel eine Schwäche hat, die es selbst nicht sieht: der
+Erzeuger des Poissonprozesses ist eine **Verschiebung**, also ist jede Iterierte
+wieder eine Differenz von Werten von `f`, und ein Vorzeichenfehler in
+`jumpApply` liefe unbemerkt in eine Poissonverteilung anderen Mittelwerts. Die
+Roadmap führt darum als zweites Beispiel die **Zweizustandskette**, „the
+smallest instance on which `exists_unique_of_bounded` produces a number, and a
+sign error in the operator is visible in it" — sie stand seit dem 2026-09-07 als
+Prosa da. Jetzt steht sie in Lean: sieben Deklarationen in
+`section TwoStateExample`, alle bewiesen, die vier tragenden mit
+`#print axioms` geprüft, ohne einen Fehler beim ersten Durchlauf.
+
+`E = Bool`, `lam ≡ 1`, `mu x = dirac (!x)`. Der Erzeuger ist `jumpApply_flip`,
+`A f x = f (!x) - f x`. Der Punkt, an dem sich diese Kette von der ersten
+unterscheidet, ist `iterate_jumpApply_flip`: **die Iterierten zyklen mit dem
+Faktor `-2`**, `A^[n+1] f x = (-2)^n * (f (!x) - f x)` — der Eigenwert von
+`!![-1, 1; 1, -1]` auf dem antisymmetrischen Teil, und der Grund, aus dem in der
+Antwort `exp (-2t)` steht und nicht `exp (-t)`. Damit hat die Reihe eine
+geschlossene Form (`expJumpApply_flip`,
+`exp(tA) f x = f x + (1 - e^{-2t})/2 * (f (!x) - f x)`, bewiesen durch Abspalten
+des nullten Gliedes mit `Summable.tsum_eq_zero_add` und Vergleich des Restes mit
+der Exponentialreihe von `-2t`), und das Gesetz ist eine **Zahl**:
+```
+theorem jumpMeasure_map_jumpProcess_flip (t : ℝ≥0) :
+    ((jumpMeasure flipKernel (Measure.dirac false)).map
+        (jumpProcess flipRate (t : ℝ))).real {true} = (1 - Real.exp (-2 * (t : ℝ))) / 2
+```
+Sie ist `0` bei `t = 0` und geht gegen `1/2` und nicht gegen `1`; die erste
+Hälfte davon steht als `example` in der Datei, weil eine Formel, die nur
+dasteht, nicht geprüft ist — dieselbe Lehre wie beim acceptance example des
+2026-09-08.
+
+**Vorschlag für den nächsten Lauf, und er ist der letzte Punkt, den
+`exists_unique_of_bounded` noch schuldet.** Die **endlichdimensionalen**
+Verteilungen. Zu beweisen ist zuerst die bedingte Fassung des vierten Laufs,
+`setIntegral_eq_expJumpApply_of_isMPSolution`: für `S ∈ F s` gilt
+`∫_S f (X (s + t)) dP = ∫ expJumpApply lam mu t f d((P.restrict S).map (X s))`.
+Sie ruht auf nichts Neuem — `integral_sub_eq_intervalIntegral_of_isMPSolution`
+ist gegen die bedingte Erwartung schon in der Form bewiesen, die man braucht,
+und die Iteration `abs_integral_sub_sum_le_of_isMPSolution` ist über `f` und
+seine Schranke generalisiert, also greift sie unverändert. Daraus folgt durch
+Induktion über die Zahl der Koordinaten
+`integral_prod_eq_of_isMPSolution_of_map_eq`, die Gleichheit der
+endlichdimensionalen Verteilungen zweier Lösungen mit demselben Anfangsgesetz —
+und das ist „genau eine Lösung". Der Umweg über
+`isMPSolution_iff_forall_fdd` ist **nicht** zu nehmen: dieser Satz trägt selbst
+ein `sorry` (`Suggested.lean:442`, mit dem `sorry` in `:455`).
