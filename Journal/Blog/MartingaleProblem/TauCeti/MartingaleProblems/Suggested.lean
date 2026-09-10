@@ -264,6 +264,43 @@ and hence `isStoppingTime_rateTime`.  Non explosion enters once and only once, i
 many states of the chain, so the running supremum is a finite sum of finite terms.
 `isLocalizingSequence_rateTime` assembles the three fields under
 `∀ᵐ ω ∂P, ω ∈ NonExplosiveE lam` and nothing else.
+
+`section Truncation`, sixteen declarations of 2026-09-10, answers the one question
+the localizing sequence left open.  On `{t < rateTime lam n}` the rate is bounded
+by `n` **along the path**, which is no bound on `lam`, so the bounded theorem does
+not reach the stopped process by substitution; the question was whether the stopped
+process merely satisfies the same martingale identities as a process of bounded
+rate.  It does not merely satisfy them: it **is** one.
+`jumpProcessE_eq_truncRate_of_le_rateTime` says that up to the hitting time the
+local process is, term for term, the process of the truncated rate
+`truncRate lam n = min lam n`, and `stoppedProcess_jumpProcessE_truncRate` reads
+that as an identity of stopped processes.  The truncated rate is bounded by `n` on
+all of `E` (`truncRate_le`), so it is data of the bounded case.  Two indices need
+separate care and get it: an **empty** window carries a vanishing waiting time, so
+both increments are `0` whatever the rate does, and the state occupied **at** the
+time is never read -- the induction consumes the rate at `y m` only in order to
+pass from `T m` to `T (m + 1)`, so only states the path has already left enter, and
+those it left strictly earlier.  `exists_jumpProcessE_truncRate_ne` is the witness
+that the hypothesis cannot be dropped, and `rateTime_zero` says why the level there
+is `0`.
+
+Seventeen more declarations of 2026-09-10 close the same section with the comparison
+of the two **filtrations**, which the comparison of the processes is not.
+`jumpFiltrationE_inter_lt_rateTime` and `jumpFiltrationE_truncRate_inter_lt_rateTime`
+say that an event of either natural filtration at `s`, cut down to
+`{s < rateTime lam n}`, is an event of the other.  Three things carry it, and the
+first of them removes a hypothesis rather than adding one:
+`jumpProcessE_eq_of_rate_eq_on_path` is the comparison of the paths for **two
+arbitrary rates that agree at every visited state**, at every sample point and
+without non explosion, without positivity and without the two rates being
+comparable -- a natural filtration is not an almost sure notion, so a comparison
+that discards the explosion set cannot compare σ-algebras.  `rateSup_truncRate_lt_iff`
+is the same comparison read from the truncated side, and through
+`setOf_lt_rateTime_eq` it makes the cutting set an event of the *truncated*
+filtration, which is what a comparison of paths alone does not give.  And
+`naturalFiltration_inter_le` is the passage from the generating evaluations to the
+whole σ-algebra, stated for arbitrary natural filtrations: the sets whose trace on
+`N` the second filtration sees form a σ-algebra as soon as `N` is one of its sets.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -8571,3 +8608,829 @@ theorem isLocalizingSequence_rateTime {lam : E → ℝ} (hlam : Measurable lam)
   mono := Filter.Eventually.of_forall fun ω ↦ monotone_rateTime lam ω
 
 end LocalFiltration
+
+section Truncation
+
+/-! ## What the stopping at `rateTime` really delivers
+
+Point 5 of this milestone is left with one question, and the tenth and the eleventh run both
+named it: on `{t < rateTime lam n}` the rate is bounded by `n` **along the path**, which is no
+bound on `lam`, so `jumpProcess_isMPSolution` does not reach the stopped process by substitution.
+The question is whether the stopped process merely satisfies the same martingale identities as a
+process of bounded rate, or whether it **is** one.
+
+It is one, and the identity is of sample points and not of laws: up to the hitting time of the
+level `n` the local process is, term for term, the process of the truncated rate `min lam n` --
+driven by the same chain and the same waiting times, on the same space.  The truncated rate is
+measurable and bounded by `n` on all of `E`, so it is data of the bounded case.
+
+The mechanism is that the truncation is invisible where it is not needed.  Two indices need
+separate care and get it.  A state whose window is **empty** carries a vanishing waiting time, and
+then both increments are `0` whatever the rate does, so nothing has to be known about it; that is
+the reason the comparison asks for a bound on the rate at the *visited* states only.  And the
+state the path occupies **at** the time under consideration is never used: the induction consumes
+the rate at `y m` only in order to pass from the jump time `T m` to `T (m + 1)`, so only the
+states the path has already left enter, and those were left strictly before the time. -/
+
+variable {E : Type*}
+
+/-- **The rate truncated at a level.**  Bounded by the level on all of `E` by construction, which
+is what the bounded theorems ask, and equal to the rate at every state the running supremum has
+not yet passed, which is what the comparison delivers. -/
+noncomputable def truncRate (lam : E → ℝ) (n : ℕ) : E → ℝ := fun x ↦ min (lam x) (n : ℝ)
+
+theorem truncRate_apply (lam : E → ℝ) (n : ℕ) (x : E) :
+    truncRate lam n x = min (lam x) (n : ℝ) := rfl
+
+theorem truncRate_le_rate (lam : E → ℝ) (n : ℕ) (x : E) : truncRate lam n x ≤ lam x :=
+  min_le_left _ _
+
+/-- The truncated rate is bounded, and by a bound that does not read the state: this is the
+hypothesis `hL` of `jumpProcess_isMPSolution` and of `exists_unique_of_bounded`. -/
+theorem truncRate_le (lam : E → ℝ) (n : ℕ) (x : E) : truncRate lam n x ≤ (n : ℝ) :=
+  min_le_right _ _
+
+/-- The truncated rate stays positive at a positive level, so the bounded theorems -- which ask
+for `0 < lam` and not for `0 ≤ lam` -- apply to it from the level `1` on. -/
+theorem truncRate_pos {lam : E → ℝ} {n : ℕ} (h : ∀ x, 0 < lam x) (hn : 0 < n) (x : E) :
+    0 < truncRate lam n x :=
+  lt_min (h x) (by exact_mod_cast hn)
+
+theorem measurable_truncRate [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ) :
+    Measurable (truncRate lam n) := hlam.min measurable_const
+
+theorem truncRate_eq_self {lam : E → ℝ} {n : ℕ} {x : E} (h : lam x ≤ (n : ℝ)) :
+    truncRate lam n x = lam x := min_eq_left h
+
+/-- **Lowering the rate delays the jump times**, at every sample point and under no hypothesis:
+the holding time is the waiting time divided by the rate, and in `ℝ≥0∞` that quotient is antitone
+in its divisor at a vanishing divisor as well.  This is the half of the comparison that needs no
+information about the path at all, and it is what carries the *right* endpoint of the window. -/
+theorem jumpTimeE_le_of_rate_le {lam lam' : E → ℝ} (h : ∀ x, lam' x ≤ lam x)
+    (y : ℕ → E) (xi : ℕ → ℝ) (m : ℕ) :
+    jumpTimeE lam y xi m ≤ jumpTimeE lam' y xi m := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+      rw [jumpTimeE_succ, jumpTimeE_succ]
+      exact add_le_add ih (ENNReal.div_le_div_left (ENNReal.ofReal_le_ofReal (h (y m))) _)
+
+/-- **Up to a time before which the rate along the path stays at the level, the jump times of the
+truncated rate are the jump times themselves.**
+
+The one step of the induction is a *visit*: a jump time that is finite and strictly below its
+successor is a real time at which the path takes the value `y m`, so the hypothesis applies to
+`y m` on the nose and the truncation leaves it alone.  An empty window is the other case and it
+needs nothing: there the waiting time is not positive, so both increments are `0` however the two
+rates differ. -/
+theorem jumpTimeE_truncRate_eq {lam : E → ℝ} {n : ℕ} {y : ℕ → E} {xi : ℕ → ℝ} {t : ℝ}
+    (hrate : ∀ s : ℝ, 0 ≤ s → s < t →
+      ENNReal.ofReal (lam (jumpProcessE lam s (y, xi))) ≤ (n : ENNReal)) :
+    ∀ m : ℕ, jumpTimeE lam y xi m ≤ ENNReal.ofReal t →
+      jumpTimeE (truncRate lam n) y xi m = jumpTimeE lam y xi m := by
+  intro m
+  induction m with
+  | zero => intro _; simp
+  | succ m ih =>
+      intro hm
+      have hmle : jumpTimeE lam y xi m ≤ ENNReal.ofReal t :=
+        (monotone_jumpTimeE (Nat.le_succ m)).trans hm
+      rw [jumpTimeE_succ, jumpTimeE_succ, ih hmle]
+      rcases le_or_gt (xi m) 0 with hx | hx
+      · simp [ENNReal.ofReal_eq_zero.2 hx]
+      · have hfin : jumpTimeE lam y xi m ≠ ⊤ := ne_top_of_le_ne_top ENNReal.ofReal_ne_top hmle
+        have hlt : jumpTimeE lam y xi m < jumpTimeE lam y xi (m + 1) := lt_jumpTimeE_succ hx hfin
+        have hofs : ENNReal.ofReal (jumpTimeE lam y xi m).toReal = jumpTimeE lam y xi m :=
+          ENNReal.ofReal_toReal hfin
+        have hst : (jumpTimeE lam y xi m).toReal < t := by
+          refine (ENNReal.ofReal_lt_ofReal_iff_of_nonneg ENNReal.toReal_nonneg).1 ?_
+          rw [hofs]
+          exact hlt.trans_le hm
+        have hvis : jumpProcessE lam (jumpTimeE lam y xi m).toReal (y, xi) = y m := by
+          have hidx : stepIndex (jumpTimeE lam y xi)
+              (ENNReal.ofReal (jumpTimeE lam y xi m).toReal) = m :=
+            stepIndex_eq_of (Or.inr hofs.ge) (by rw [hofs]; exact hlt) monotone_jumpTimeE
+          simp [jumpProcessE, stepPath, hidx]
+        have hle : lam (y m) ≤ (n : ℝ) := by
+          have hb := hrate _ ENNReal.toReal_nonneg hst
+          rw [hvis, ← ENNReal.ofReal_natCast n] at hb
+          exact (ENNReal.ofReal_le_ofReal_iff (Nat.cast_nonneg n)).1 hb
+        rw [truncRate_eq_self hle]
+
+/-- **Under the same hypothesis the two processes agree at the time itself.**  Non explosion is
+used once, to name the window of `t`; its left endpoint is transported by the induction and its
+right endpoint by `jumpTimeE_le_of_rate_le`, which needs no hypothesis. -/
+theorem jumpProcessE_truncRate_eq {lam : E → ℝ} {n : ℕ} {y : ℕ → E} {xi : ℕ → ℝ} {t : ℝ}
+    (hex : ∃ m, ENNReal.ofReal t < jumpTimeE lam y xi (m + 1))
+    (hrate : ∀ s : ℝ, 0 ≤ s → s < t →
+      ENNReal.ofReal (lam (jumpProcessE lam s (y, xi))) ≤ (n : ENNReal)) :
+    jumpProcessE (truncRate lam n) t (y, xi) = jumpProcessE lam t (y, xi) := by
+  obtain ⟨k, hk1, hk2⟩ := exists_stepIndex_window hex
+  have hTk : jumpTimeE lam y xi k ≤ ENNReal.ofReal t := by
+    rcases hk1 with rfl | h
+    · simp
+    · exact h
+  have heqk : jumpTimeE (truncRate lam n) y xi k = jumpTimeE lam y xi k :=
+    jumpTimeE_truncRate_eq hrate k hTk
+  have hge : jumpTimeE lam y xi (k + 1) ≤ jumpTimeE (truncRate lam n) y xi (k + 1) :=
+    jumpTimeE_le_of_rate_le (truncRate_le_rate lam n) y xi (k + 1)
+  have h1 : stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) = k :=
+    stepIndex_eq_of hk1 hk2 monotone_jumpTimeE
+  have h2 : stepIndex (jumpTimeE (truncRate lam n) y xi) (ENNReal.ofReal t) = k :=
+    stepIndex_eq_of (Or.inr (heqk.trans_le hTk)) (hk2.trans_le hge) monotone_jumpTimeE
+  simp [jumpProcessE, stepPath, h1, h2]
+
+/-! ### The comparison without non explosion, and in both directions
+
+The comparison above reads the path of `lam` and concludes about the path of `truncRate lam n`.
+The agreement of the two **filtrations** needs it in the other direction as well, and it needs it
+at sample points about which nothing is assumed -- a natural filtration is not an almost sure
+notion, the point at which `StronglyAdapted` and `IsStoppingTime` have already forced this file
+into hypothesis free statements twice.
+
+Both are delivered at once by dropping `truncRate` from the statement: what the induction uses is
+that the two rates **agree at every state the path has visited**, and that hypothesis is symmetric
+in the two rates.  Non explosion then costs a case distinction and nothing more: where no window
+contains the time, *every* jump time lies below it, so the two sequences of jump times are equal
+outright and the two step indices are the same junk value.  Where the hypothesis is read at the
+closed end `s = t` it also disposes of `jumpTimeE_le_of_rate_le`, so the comparison no longer
+needs the two rates to be comparable either. -/
+
+/-- **The path visits the state of a jump time whose window is not empty.**  A finite jump time
+strictly below its successor is a real time at which the path takes the value `y m`.  This is the
+one step at which a hypothesis about the *path* becomes a hypothesis about the *chain*. -/
+theorem jumpProcessE_toReal_jumpTimeE {lam : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ} {m : ℕ}
+    (hfin : jumpTimeE lam y xi m ≠ ⊤)
+    (hlt : jumpTimeE lam y xi m < jumpTimeE lam y xi (m + 1)) :
+    jumpProcessE lam (jumpTimeE lam y xi m).toReal (y, xi) = y m := by
+  have hofs : ENNReal.ofReal (jumpTimeE lam y xi m).toReal = jumpTimeE lam y xi m :=
+    ENNReal.ofReal_toReal hfin
+  have hidx : stepIndex (jumpTimeE lam y xi)
+      (ENNReal.ofReal (jumpTimeE lam y xi m).toReal) = m :=
+    stepIndex_eq_of (Or.inr hofs.ge) (by rw [hofs]; exact hlt) monotone_jumpTimeE
+  simp [jumpProcessE, stepPath, hidx]
+
+/-- **Two rates that agree at every state the path has visited have the same jump times**, up to
+the time in question and under no further hypothesis.
+
+The induction has two cases and neither reads the rate at an unvisited state.  An empty window
+needs nothing: a vanishing waiting time makes both increments `0` whatever the two rates do there,
+since `ENNReal.ofReal (xi m) = 0` and `0 / x = 0` holds in `ℝ≥0∞` for `x = 0` as well.  A non
+empty window is a *visit*, and the hypothesis reaches it through
+`jumpProcessE_toReal_jumpTimeE`.
+
+The statement is not symmetric in the two rates -- it reads the path of `lam` -- but nothing in it
+distinguishes them otherwise, so applying it with the two exchanged gives the converse
+comparison. -/
+theorem jumpTimeE_eq_of_rate_eq_on_path {lam lam' : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ} {t : ℝ}
+    (hrate : ∀ s : ℝ, 0 ≤ s → s ≤ t →
+      lam' (jumpProcessE lam s (y, xi)) = lam (jumpProcessE lam s (y, xi))) :
+    ∀ m : ℕ, jumpTimeE lam y xi m ≤ ENNReal.ofReal t →
+      jumpTimeE lam' y xi m = jumpTimeE lam y xi m := by
+  intro m
+  induction m with
+  | zero => intro _; simp
+  | succ m ih =>
+      intro hm
+      have hmle : jumpTimeE lam y xi m ≤ ENNReal.ofReal t :=
+        (monotone_jumpTimeE (Nat.le_succ m)).trans hm
+      rw [jumpTimeE_succ, jumpTimeE_succ, ih hmle]
+      rcases le_or_gt (xi m) 0 with hx | hx
+      · simp [ENNReal.ofReal_eq_zero.2 hx]
+      · have hfin : jumpTimeE lam y xi m ≠ ⊤ := ne_top_of_le_ne_top ENNReal.ofReal_ne_top hmle
+        have hlt : jumpTimeE lam y xi m < jumpTimeE lam y xi (m + 1) := lt_jumpTimeE_succ hx hfin
+        have hofs : ENNReal.ofReal (jumpTimeE lam y xi m).toReal = jumpTimeE lam y xi m :=
+          ENNReal.ofReal_toReal hfin
+        have ht0 : 0 < t := by
+          rcases le_or_gt t 0 with hle0 | hpos
+          · exfalso
+            rw [ENNReal.ofReal_eq_zero.2 hle0] at hm
+            have hcon := hlt.trans_le hm
+            simp at hcon
+          · exact hpos
+        have hst : (jumpTimeE lam y xi m).toReal ≤ t := by
+          refine (ENNReal.ofReal_le_ofReal_iff ht0.le).1 ?_
+          rw [hofs]
+          exact hmle
+        have hvis : lam' (y m) = lam (y m) := by
+          have h := hrate _ ENNReal.toReal_nonneg hst
+          rwa [jumpProcessE_toReal_jumpTimeE hfin hlt] at h
+        rw [hvis]
+
+/-- **Two rates that agree along the path give the same process**, with no hypothesis on either
+rate, none on the sample point, and no comparison between the two rates.
+
+This is the removal of the non explosion hypothesis of
+`jumpProcessE_eq_truncRate_of_le_rateTime`, and of the monotonicity that carried the right
+endpoint of the window there.  Non explosion was needed to *name* a window; where there is no
+window there is nothing left to compare, since then every jump time lies below the time and the
+two sequences of jump times are equal outright.  The monotonicity was needed because the state the
+path occupies **at** `t` is not among the states it has left; reading the hypothesis at the closed
+end `s = t` supplies it directly, and that state is visited at `t`.
+
+The hypothesis `0 ≤ t` is not cosmetic: for `t < 0` the hypothesis is vacuous while the conclusion
+is still a claim about the value at `ENNReal.ofReal t = 0`. -/
+theorem jumpProcessE_eq_of_rate_eq_on_path {lam lam' : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ} {t : ℝ}
+    (ht : 0 ≤ t)
+    (hrate : ∀ s : ℝ, 0 ≤ s → s ≤ t →
+      lam' (jumpProcessE lam s (y, xi)) = lam (jumpProcessE lam s (y, xi))) :
+    jumpProcessE lam' t (y, xi) = jumpProcessE lam t (y, xi) := by
+  by_cases hex : ∃ m, ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)
+  · obtain ⟨k, hk1, hk2⟩ := exists_stepIndex_window hex
+    have hTk : jumpTimeE lam y xi k ≤ ENNReal.ofReal t := by
+      rcases hk1 with rfl | h
+      · simp
+      · exact h
+    have heqk : jumpTimeE lam' y xi k = jumpTimeE lam y xi k :=
+      jumpTimeE_eq_of_rate_eq_on_path hrate k hTk
+    have h1 : stepIndex (jumpTimeE lam y xi) (ENNReal.ofReal t) = k :=
+      stepIndex_eq_of hk1 hk2 monotone_jumpTimeE
+    have hyk : jumpProcessE lam t (y, xi) = y k := by simp [jumpProcessE, stepPath, h1]
+    have hlamk : lam' (y k) = lam (y k) := by
+      have h := hrate t ht le_rfl
+      rwa [hyk] at h
+    have hTk1 : jumpTimeE lam' y xi (k + 1) = jumpTimeE lam y xi (k + 1) := by
+      rw [jumpTimeE_succ, jumpTimeE_succ, heqk, hlamk]
+    have h2 : stepIndex (jumpTimeE lam' y xi) (ENNReal.ofReal t) = k := by
+      refine stepIndex_eq_of ?_ ?_ monotone_jumpTimeE
+      · rcases hk1 with rfl | h
+        · exact Or.inl rfl
+        · exact Or.inr (heqk.trans_le h)
+      · rw [hTk1]; exact hk2
+    simp [jumpProcessE, stepPath, h1, h2]
+  · push_neg at hex
+    have hall : ∀ m, jumpTimeE lam y xi m ≤ ENNReal.ofReal t := by
+      intro m
+      cases m with
+      | zero => simp
+      | succ m => exact hex m
+    have hseq : jumpTimeE lam' y xi = jumpTimeE lam y xi :=
+      funext fun m ↦ jumpTimeE_eq_of_rate_eq_on_path hrate m (hall m)
+    simp [jumpProcessE, stepPath, hseq]
+
+/-- The truncation is invisible at a state whose rate is below the level. -/
+theorem truncRate_eq_of_ofReal_lt {lam : E → ℝ} {n : ℕ} {x : E}
+    (h : ENNReal.ofReal (lam x) < (n : ENNReal)) : truncRate lam n x = lam x := by
+  refine truncRate_eq_self (not_lt.1 fun hlt ↦ absurd h (not_lt.2 ?_))
+  calc (n : ENNReal) = ENNReal.ofReal (n : ℝ) := (ENNReal.ofReal_natCast n).symm
+    _ ≤ ENNReal.ofReal (lam x) := ENNReal.ofReal_le_ofReal hlt.le
+
+/-- The truncation is invisible wherever the **truncated** rate is below the level, which is the
+form the converse comparison reads: there the truncated path is what is given. -/
+theorem truncRate_eq_of_ofReal_truncRate_lt {lam : E → ℝ} {n : ℕ} {x : E}
+    (h : ENNReal.ofReal (truncRate lam n x) < (n : ENNReal)) : truncRate lam n x = lam x := by
+  refine truncRate_eq_self (not_lt.1 fun hlt ↦ absurd h (not_lt.2 ?_))
+  rw [truncRate_apply, min_eq_right hlt.le, ENNReal.ofReal_natCast]
+
+/-! From here on the running supremum and its hitting times are used, and they are declarations
+of `section LocalFiltration`, which carries `[MeasurableSpace E]`; nothing above needed it. -/
+
+variable [MeasurableSpace E]
+
+/-- **The hitting time of the level `0` is `0`.**  The running supremum is nonnegative, so the
+level `0` is passed before anything happens; the first member of the localizing sequence stops at
+once.  This is not a defect -- `Locally` is a statement about the whole sequence and
+`monotone_rateTime` supplies the later members -- but it is the reason the comparison below is
+stated with the hitting time and not with a bound on `lam`. -/
+theorem rateTime_zero (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : rateTime lam 0 ω = 0 := by
+  refine le_antisymm ?_ (zero_le)
+  simpa using (rateTime_le_iff (lam := lam) (ω := ω) (n := 0) 0).2 (by simp)
+
+/-- **Before the hitting time the rate along the path is strictly below the level.**  This is
+`rateTime_le_iff` read backwards, and it is the only place at which the hitting time enters the
+comparison. -/
+theorem ofReal_lam_jumpProcessE_lt_of_lt_rateTime {lam : E → ℝ} {n : ℕ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} {s : ℝ} (hs : 0 ≤ s)
+    (h : ENNReal.ofReal s < rateTime lam n ω) :
+    ENNReal.ofReal (lam (jumpProcessE lam s ω)) < (n : ENNReal) := by
+  refine lt_of_le_of_lt (le_rateSup (t := s) ⟨hs, le_rfl⟩) ?_
+  by_contra hcon
+  push_neg at hcon
+  have hs' : ((Real.toNNReal s : ℝ≥0) : ℝ) = s := Real.coe_toNNReal s hs
+  have h2 : rateTime lam n ω ≤ ((Real.toNNReal s : ℝ≥0) : ENNReal) :=
+    (rateTime_le_iff (Real.toNNReal s)).2 (by rwa [hs'])
+  have h3 : ((Real.toNNReal s : ℝ≥0) : ENNReal) = ENNReal.ofReal s := rfl
+  rw [h3] at h2
+  exact absurd h2 (not_le.2 h)
+
+/-- **Up to the hitting time of the level `n`, the local jump process is the jump process of the
+truncated rate.**  This is the answer to the question Point 5 of this milestone was left with:
+the stopped process is not merely a process with the same martingales as one of bounded rate --
+it is, at every non explosive sample point, the process of the rate `min lam n`, which is bounded
+by `n` on all of `E`.
+
+There is no hypothesis `0 ≤ t`: for a negative time `ENNReal.ofReal t` is `0`, and both processes
+read their chain at the index `0` there. -/
+theorem jumpProcessE_eq_truncRate_of_le_rateTime {lam : E → ℝ} {n : ℕ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ NonExplosiveE lam) {t : ℝ}
+    (hle : ENNReal.ofReal t ≤ rateTime lam n ω) :
+    jumpProcessE (truncRate lam n) t ω = jumpProcessE lam t ω := by
+  obtain ⟨y, xi⟩ := ω
+  refine jumpProcessE_truncRate_eq (hω t) fun s hs hst ↦ ?_
+  refine (ofReal_lam_jumpProcessE_lt_of_lt_rateTime hs ?_).le
+  exact lt_of_lt_of_le ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hs).2 hst) hle
+
+/-- **The comparison on a whole window**, in the shape `eq_of_measurable_naturalFiltration` asks
+for: the two processes have the *same path* on `[0, s]` whenever `s` is below the hitting time.
+This is the input of the next step, the agreement of the two natural filtrations before that
+time -- what generates `jumpFiltrationE` is the family of evaluations, and here they agree one by
+one. -/
+theorem jumpProcessE_eq_truncRate_of_le_of_le_rateTime {lam : E → ℝ} {n : ℕ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ NonExplosiveE lam) {s : ℝ≥0}
+    (hs : ((s : ℝ≥0) : ENNReal) ≤ rateTime lam n ω) {r : ℝ≥0} (hr : r ≤ s) :
+    jumpProcessE (truncRate lam n) (r : ℝ) ω = jumpProcessE lam (r : ℝ) ω := by
+  refine jumpProcessE_eq_truncRate_of_le_rateTime hω ?_
+  rw [ENNReal.ofReal_coe_nnreal]
+  exact (ENNReal.coe_le_coe.2 hr).trans hs
+
+/-- **The stopped processes agree, at every non explosive sample point and at every time.**  The
+stopping time is finite wherever it is looked at -- `min i (rateTime lam n ω)` lies below `i` --
+so the comparison applies to it directly, without a case distinction on explosion. -/
+theorem stoppedProcess_jumpProcessE_truncRate {lam : E → ℝ} {n : ℕ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hω : ω ∈ NonExplosiveE lam) (i : ℝ≥0) :
+    stoppedProcess (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE (truncRate lam n) (t : ℝ) ω)
+        (rateTime lam n) i ω
+      = stoppedProcess (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)
+        (rateTime lam n) i ω := by
+  have hmin : min (i : ENNReal) (rateTime lam n ω) ≠ ⊤ :=
+    ne_top_of_le_ne_top ENNReal.coe_ne_top (min_le_left _ _)
+  obtain ⟨s, hs⟩ : ∃ s : ℝ≥0, ((s : ℝ≥0) : ENNReal) = min (i : ENNReal) (rateTime lam n ω) :=
+    ⟨_, ENNReal.coe_toNNReal hmin⟩
+  have hst : ENNReal.ofReal ((s : ℝ≥0) : ℝ) ≤ rateTime lam n ω := by
+    rw [ENNReal.ofReal_coe_nnreal, hs]
+    exact min_le_right _ _
+  have huntop : (min (i : ENNReal) (rateTime lam n ω)).untopA = s := by
+    rw [← hs]; rfl
+  have hstep : ∀ lam' : E → ℝ,
+      stoppedProcess (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam' (t : ℝ) ω) (rateTime lam n) i ω
+        = jumpProcessE lam' ((s : ℝ≥0) : ℝ) ω := fun lam' => by
+    simp only [stoppedProcess]
+    exact congrArg (fun r : ℝ≥0 ↦ jumpProcessE lam' (r : ℝ) ω) huntop
+  rw [hstep, hstep]
+  exact jumpProcessE_eq_truncRate_of_le_rateTime hω hst
+
+/-- **The hypothesis of the comparison cannot be dropped**, and the witness is the level `0`:
+there the truncated rate vanishes identically, so the truncated path never leaves its initial
+state while the path itself has moved on.  `rateTime_zero` says the hitting time of that level is
+`0`, so the comparison claims nothing about this time -- the witness is what makes that
+restriction real rather than an artefact of the proof.
+
+The data are `E = Bool`, the rate `1`, unit waiting times and the chain that leaves its initial
+state at once; at the time `1` the first jump has happened and the truncated process is still at
+`y 0`. -/
+theorem exists_jumpProcessE_truncRate_ne :
+    ∃ (lam : Bool → ℝ) (n : ℕ) (ω : (ℕ → Bool) × (ℕ → ℝ)) (t : ℝ), 0 ≤ t ∧
+      jumpProcessE (truncRate lam n) t ω ≠ jumpProcessE lam t ω := by
+  classical
+  refine ⟨fun _ ↦ 1, 0, (fun k ↦ decide (k ≠ 0), fun _ ↦ 1), 1, zero_le_one, ?_⟩
+  have hT1 : jumpTimeE (fun _ : Bool ↦ (1 : ℝ)) (fun k ↦ decide (k ≠ 0)) (fun _ ↦ (1 : ℝ)) 1
+      = 1 := by
+    rw [jumpTimeE_succ, jumpTimeE_zero, zero_add]
+    simp
+  have hT2 : jumpTimeE (fun _ : Bool ↦ (1 : ℝ)) (fun k ↦ decide (k ≠ 0)) (fun _ ↦ (1 : ℝ)) 2
+      = 2 := by
+    rw [jumpTimeE_succ, hT1]
+    norm_num
+  have hidx : stepIndex
+      (jumpTimeE (fun _ : Bool ↦ (1 : ℝ)) (fun k ↦ decide (k ≠ 0)) (fun _ ↦ (1 : ℝ)))
+      (ENNReal.ofReal 1) = 1 := by
+    refine stepIndex_eq_of (Or.inr ?_) ?_ monotone_jumpTimeE
+    · rw [hT1, ENNReal.ofReal_one]
+    · rw [hT2, ENNReal.ofReal_one]
+      norm_num
+  have hzero : truncRate (fun _ : Bool ↦ (1 : ℝ)) 0 = fun _ ↦ 0 := by
+    funext x
+    rw [truncRate_apply]
+    norm_num
+  have hT1' : jumpTimeE (truncRate (fun _ : Bool ↦ (1 : ℝ)) 0) (fun k ↦ decide (k ≠ 0))
+      (fun _ ↦ (1 : ℝ)) 1 = ⊤ := by
+    rw [jumpTimeE_succ, jumpTimeE_zero, zero_add, hzero]
+    simp
+  have hidx' : stepIndex
+      (jumpTimeE (truncRate (fun _ : Bool ↦ (1 : ℝ)) 0) (fun k ↦ decide (k ≠ 0))
+        (fun _ ↦ (1 : ℝ))) (ENNReal.ofReal 1) = 0 := by
+    refine stepIndex_eq_of (Or.inl rfl) ?_ monotone_jumpTimeE
+    rw [hT1']
+    exact ENNReal.ofReal_lt_top
+  simp only [jumpProcessE, stepPath, hidx, hidx']
+  simp
+
+/-! ## The two filtrations before the hitting time
+
+The comparison of the processes is not yet a comparison of the σ-algebras, and the twelfth run of
+the 2026-09-10 stopped exactly there: the tower argument "the truncated process is a martingale,
+hence so is the stopped one" needs `A ∩ {s < rateTime lam n}` to be an event of the *truncated*
+filtration whenever `A` is one of the local filtration, and outside that set the increment of the
+stopped process is `0` and there is nothing to show.
+
+Three things make it go through, and only the first was in hand.
+
+* The paths agree on `[0, s]` there, which is the comparison above -- but it has to hold at
+  **every** sample point of the set and not almost everywhere, so the non explosion hypothesis had
+  to go first.
+* The set itself has to be an event of the truncated filtration, and that is the converse
+  comparison: `{s < rateTime lam n}` is `{rateSup lam s < n}` by `rateTime_le_iff`, and the two
+  running suprema agree below the level, so it is `{rateSup (truncRate lam n) s < n}` -- a set the
+  truncated filtration sees by `measurable_rateSup`.
+* The passage from the generators to the whole σ-algebra is `naturalFiltration_inter_le`, and it
+  is a general statement: the sets whose trace on `N` the second filtration sees form a σ-algebra
+  as soon as `N` itself is one of its sets.
+
+The two inclusions are therefore *both* available, and the second is not a formality: the
+truncated filtration cannot see more than the local one before the hitting time, and after it the
+two paths part company. -/
+
+/-- **The trace of one natural filtration on a set where the two processes agree is seen by the
+other.**  No topology, no measure, and no relation between the two processes beyond their
+agreement on `N` below `s`.
+
+The set `N` has to belong to the target σ-algebra and not merely be measurable: the family
+`{A | A ∩ N ∈ 𝓖}` is closed under complements because `Aᶜ ∩ N = N \ (A ∩ N)`, and that is where
+`N ∈ 𝓖` is spent. -/
+theorem naturalFiltration_inter_le {ι' : Type*} [Preorder ι'] {Ω' : Type*}
+    {m' : MeasurableSpace Ω'} {F : Type*} [mF : MeasurableSpace F] {X X' : ι' → Ω' → F}
+    (hX : ∀ i, Measurable (X i)) (hX' : ∀ i, Measurable (X' i)) {s : ι'} {N : Set Ω'}
+    (hN : MeasurableSet[naturalFiltration (m' := m') X' hX' s] N)
+    (hagree : ∀ ω ∈ N, ∀ r ≤ s, X r ω = X' r ω)
+    {A : Set Ω'} (hA : MeasurableSet[naturalFiltration (m' := m') X hX s] A) :
+    MeasurableSet[naturalFiltration (m' := m') X' hX' s] (A ∩ N) := by
+  set 𝓜 : MeasurableSpace Ω' :=
+    { MeasurableSet' := fun B ↦ MeasurableSet[naturalFiltration (m' := m') X' hX' s] (B ∩ N)
+      measurableSet_empty := by
+        rw [Set.empty_inter]
+        exact @MeasurableSet.empty _ (naturalFiltration (m' := m') X' hX' s)
+      measurableSet_compl := fun B hB ↦ by
+        have hset : Bᶜ ∩ N = N \ (B ∩ N) := by
+          ext ω
+          simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_diff]
+          tauto
+        rw [hset]
+        exact hN.diff hB
+      measurableSet_iUnion := fun f hf ↦ by
+        rw [Set.iUnion_inter]
+        exact MeasurableSet.iUnion hf } with h𝓜
+  have hle : (naturalFiltration (m' := m') X hX s : MeasurableSpace Ω') ≤ 𝓜 := by
+    refine iSup₂_le ?_
+    rintro j hj B ⟨u, hu, rfl⟩
+    show MeasurableSet[naturalFiltration (m' := m') X' hX' s] ((X j ⁻¹' u) ∩ N)
+    have hset : (X j ⁻¹' u) ∩ N = (X' j ⁻¹' u) ∩ N := by
+      ext ω
+      simp only [Set.mem_inter_iff, Set.mem_preimage]
+      constructor
+      · rintro ⟨h1, h2⟩
+        exact ⟨by rw [← hagree ω h2 j hj]; exact h1, h2⟩
+      · rintro ⟨h1, h2⟩
+        exact ⟨by rw [hagree ω h2 j hj]; exact h1, h2⟩
+    rw [hset]
+    exact ((measurable_naturalFiltration hX' hj) hu).inter hN
+  exact hle A hA
+
+/-- **Below the level the truncated process is the process**, at every sample point and with no
+non explosion hypothesis: this is `jumpProcessE_eq_of_rate_eq_on_path` read for the truncation,
+the running supremum supplying the bound at every visited state at once. -/
+theorem jumpProcessE_truncRate_eq_of_rateSup_lt {lam : E → ℝ} {n : ℕ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} {t : ℝ} (ht : 0 ≤ t) (h : rateSup lam t ω < (n : ENNReal)) :
+    jumpProcessE (truncRate lam n) t ω = jumpProcessE lam t ω := by
+  obtain ⟨y, xi⟩ := ω
+  refine jumpProcessE_eq_of_rate_eq_on_path ht fun s hs hst ↦ ?_
+  exact truncRate_eq_of_ofReal_lt (lt_of_le_of_lt (le_rateSup ⟨hs, hst⟩) h)
+
+/-- **The converse comparison**, read from the truncated path.  It is the same theorem with the
+two rates exchanged, and it is what the agreement of the two filtrations needs in the direction
+the tower argument does not supply. -/
+theorem jumpProcessE_eq_truncRate_of_rateSup_truncRate_lt {lam : E → ℝ} {n : ℕ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} {t : ℝ} (ht : 0 ≤ t)
+    (h : rateSup (truncRate lam n) t ω < (n : ENNReal)) :
+    jumpProcessE lam t ω = jumpProcessE (truncRate lam n) t ω := by
+  obtain ⟨y, xi⟩ := ω
+  refine jumpProcessE_eq_of_rate_eq_on_path ht fun s hs hst ↦ ?_
+  exact (truncRate_eq_of_ofReal_truncRate_lt (lt_of_le_of_lt (le_rateSup ⟨hs, hst⟩) h)).symm
+
+/-- Below the level the two running suprema agree, read from the untruncated one. -/
+theorem rateSup_truncRate_eq_of_lt {lam : E → ℝ} {n : ℕ} {ω : (ℕ → E) × (ℕ → ℝ)} {t : ℝ}
+    (ht : 0 ≤ t) (h : rateSup lam t ω < (n : ENNReal)) :
+    rateSup (truncRate lam n) t ω = rateSup lam t ω := by
+  refine le_antisymm (rateSup_le fun s hs ↦ ?_) (rateSup_le fun s hs ↦ ?_)
+  · have hlt0 : ENNReal.ofReal (lam (jumpProcessE lam s ω)) < (n : ENNReal) :=
+      lt_of_le_of_lt (le_rateSup hs) h
+    have hpath : jumpProcessE (truncRate lam n) s ω = jumpProcessE lam s ω :=
+      jumpProcessE_truncRate_eq_of_rateSup_lt hs.1
+        (lt_of_le_of_lt (monotone_rateSup lam ω hs.2) h)
+    rw [hpath, truncRate_eq_of_ofReal_lt hlt0]
+    exact le_rateSup hs
+  · have hlt0 : ENNReal.ofReal (lam (jumpProcessE lam s ω)) < (n : ENNReal) :=
+      lt_of_le_of_lt (le_rateSup hs) h
+    have hpath : jumpProcessE (truncRate lam n) s ω = jumpProcessE lam s ω :=
+      jumpProcessE_truncRate_eq_of_rateSup_lt hs.1
+        (lt_of_le_of_lt (monotone_rateSup lam ω hs.2) h)
+    calc ENNReal.ofReal (lam (jumpProcessE lam s ω))
+        = ENNReal.ofReal (truncRate lam n (jumpProcessE (truncRate lam n) s ω)) := by
+          rw [hpath, truncRate_eq_of_ofReal_lt hlt0]
+      _ ≤ rateSup (truncRate lam n) t ω := le_rateSup hs
+
+/-- Below the level the two running suprema agree, read from the truncated one. -/
+theorem rateSup_eq_of_rateSup_truncRate_lt {lam : E → ℝ} {n : ℕ} {ω : (ℕ → E) × (ℕ → ℝ)} {t : ℝ}
+    (ht : 0 ≤ t) (h : rateSup (truncRate lam n) t ω < (n : ENNReal)) :
+    rateSup lam t ω = rateSup (truncRate lam n) t ω := by
+  refine le_antisymm (rateSup_le fun s hs ↦ ?_) (rateSup_le fun s hs ↦ ?_)
+  · have hlt0 : ENNReal.ofReal (truncRate lam n (jumpProcessE (truncRate lam n) s ω))
+        < (n : ENNReal) := lt_of_le_of_lt (le_rateSup hs) h
+    have hpath : jumpProcessE lam s ω = jumpProcessE (truncRate lam n) s ω :=
+      jumpProcessE_eq_truncRate_of_rateSup_truncRate_lt hs.1
+        (lt_of_le_of_lt (monotone_rateSup (truncRate lam n) ω hs.2) h)
+    rw [hpath, ← truncRate_eq_of_ofReal_truncRate_lt hlt0]
+    exact le_rateSup hs
+  · have hlt0 : ENNReal.ofReal (truncRate lam n (jumpProcessE (truncRate lam n) s ω))
+        < (n : ENNReal) := lt_of_le_of_lt (le_rateSup hs) h
+    have hpath : jumpProcessE lam s ω = jumpProcessE (truncRate lam n) s ω :=
+      jumpProcessE_eq_truncRate_of_rateSup_truncRate_lt hs.1
+        (lt_of_le_of_lt (monotone_rateSup (truncRate lam n) ω hs.2) h)
+    calc ENNReal.ofReal (truncRate lam n (jumpProcessE (truncRate lam n) s ω))
+        = ENNReal.ofReal (lam (jumpProcessE lam s ω)) := by
+          rw [hpath, truncRate_eq_of_ofReal_truncRate_lt hlt0]
+      _ ≤ rateSup lam t ω := le_rateSup hs
+
+/-- **The level is passed by the one supremum exactly when it is passed by the other.**  Neither
+direction is free: each is the comparison of the paths read from its own side. -/
+theorem rateSup_truncRate_lt_iff {lam : E → ℝ} {n : ℕ} {ω : (ℕ → E) × (ℕ → ℝ)} {t : ℝ}
+    (ht : 0 ≤ t) :
+    rateSup (truncRate lam n) t ω < (n : ENNReal) ↔ rateSup lam t ω < (n : ENNReal) := by
+  constructor
+  · intro h
+    rw [rateSup_eq_of_rateSup_truncRate_lt ht h]
+    exact h
+  · intro h
+    rw [rateSup_truncRate_eq_of_lt ht h]
+    exact h
+
+/-- **The hitting time is above a time exactly when the running supremum is below the level
+there.**  `rateTime_le_iff` read through the linear order of `ℝ≥0∞`. -/
+theorem lt_rateTime_iff_rateSup_lt {lam : E → ℝ} {n : ℕ} {ω : (ℕ → E) × (ℕ → ℝ)} (s : ℝ≥0) :
+    ((s : ℝ≥0) : ENNReal) < rateTime lam n ω ↔ rateSup lam (s : ℝ) ω < (n : ENNReal) := by
+  constructor
+  · intro h
+    by_contra hcon
+    push_neg at hcon
+    exact absurd ((rateTime_le_iff s).2 hcon) (not_le.2 h)
+  · intro h
+    by_contra hcon
+    push_neg at hcon
+    exact absurd ((rateTime_le_iff s).1 hcon) (not_le.2 h)
+
+/-- **The set on which the local process has not yet reached the level is a set of the truncated
+process.**  This is the step that the twelfth run of the 2026-09-10 left open, and it is where the
+converse comparison is spent. -/
+theorem setOf_lt_rateTime_eq {lam : E → ℝ} {n : ℕ} (s : ℝ≥0) :
+    {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω}
+      = {ω : (ℕ → E) × (ℕ → ℝ) | rateSup (truncRate lam n) (s : ℝ) ω < (n : ENNReal)} := by
+  ext ω
+  rw [Set.mem_setOf_eq, Set.mem_setOf_eq, lt_rateTime_iff_rateSup_lt,
+    ← rateSup_truncRate_lt_iff s.coe_nonneg]
+
+/-- The set is an event of the local filtration, since `rateTime` is a stopping time for it. -/
+theorem measurableSet_lt_rateTime {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ) (s : ℝ≥0) :
+    MeasurableSet[jumpFiltrationE lam hlam s]
+      {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω} := by
+  refine MeasurableSet.congr (isStoppingTime_rateTime hlam n s).compl ?_
+  ext ω
+  simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+  exact not_le
+
+/-- And it is an event of the truncated filtration, by `setOf_lt_rateTime_eq`. -/
+theorem measurableSet_lt_rateTime_truncRate {lam : E → ℝ} (hlam : Measurable lam) (n : ℕ)
+    (s : ℝ≥0) :
+    MeasurableSet[jumpFiltrationE (truncRate lam n) (measurable_truncRate hlam n) s]
+      {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω} := by
+  rw [setOf_lt_rateTime_eq]
+  exact measurableSet_lt (measurable_rateSup (measurable_truncRate hlam n) s) measurable_const
+
+/-- **The two filtrations agree before the hitting time**, first inclusion: an event of the local
+filtration at `s`, cut down to the sample points that have not yet reached the level, is an event
+of the truncated filtration at `s`.
+
+This is the statement the tower argument for `jumpProcess_isLocalMPSolution` needs.  Outside the
+set the increment of the stopped process vanishes, so the martingale identity for the truncated
+problem is enough there; inside it, this is what lets the conditional expectation of the bounded
+problem be read as one of the local filtration. -/
+theorem jumpFiltrationE_inter_lt_rateTime {lam : E → ℝ} (hlam : Measurable lam) {n : ℕ}
+    {s : ℝ≥0} {A : Set ((ℕ → E) × (ℕ → ℝ))}
+    (hA : MeasurableSet[jumpFiltrationE lam hlam s] A) :
+    MeasurableSet[jumpFiltrationE (truncRate lam n) (measurable_truncRate hlam n) s]
+      (A ∩ {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω}) := by
+  refine naturalFiltration_inter_le _ _ (measurableSet_lt_rateTime_truncRate hlam n s)
+    (fun ω hω r hr ↦ ?_) hA
+  have hrs : ((r : ℝ≥0) : ℝ) ≤ ((s : ℝ≥0) : ℝ) := by exact_mod_cast hr
+  have h1 : rateSup lam ((r : ℝ≥0) : ℝ) ω < (n : ENNReal) :=
+    lt_of_le_of_lt (monotone_rateSup lam ω hrs) ((lt_rateTime_iff_rateSup_lt s).1 hω)
+  exact (jumpProcessE_truncRate_eq_of_rateSup_lt r.coe_nonneg h1).symm
+
+/-- **The two filtrations agree before the hitting time**, second inclusion.  It is not a
+formality: before the hitting time the truncated filtration sees no more than the local one, and
+after it the two paths part company, so the inclusion holds in this cut down form and in no
+other. -/
+theorem jumpFiltrationE_truncRate_inter_lt_rateTime {lam : E → ℝ} (hlam : Measurable lam) {n : ℕ}
+    {s : ℝ≥0} {A : Set ((ℕ → E) × (ℕ → ℝ))}
+    (hA : MeasurableSet[jumpFiltrationE (truncRate lam n) (measurable_truncRate hlam n) s] A) :
+    MeasurableSet[jumpFiltrationE lam hlam s]
+      (A ∩ {ω : (ℕ → E) × (ℕ → ℝ) | ((s : ℝ≥0) : ENNReal) < rateTime lam n ω}) := by
+  refine naturalFiltration_inter_le _ _ (measurableSet_lt_rateTime hlam n s)
+    (fun ω hω r hr ↦ ?_) hA
+  have hrs : ((r : ℝ≥0) : ℝ) ≤ ((s : ℝ≥0) : ℝ) := by exact_mod_cast hr
+  have h1 : rateSup lam ((r : ℝ≥0) : ℝ) ω < (n : ENNReal) :=
+    lt_of_le_of_lt (monotone_rateSup lam ω hrs) ((lt_rateTime_iff_rateSup_lt s).1 hω)
+  exact jumpProcessE_truncRate_eq_of_rateSup_lt r.coe_nonneg h1
+
+end Truncation
+
+section LocalBounded
+
+/-! ## The bounded theorem for the local construction
+
+`jumpProcess_isMPSolution` is written for `jumpProcess` and `jumpFiltration`.  The assembly of
+Point 5 needs the same statement for `jumpProcessE` and `jumpFiltrationE`, because those are the
+process and the filtration that the localizing sequence `rateTime` lives on.
+
+The thirteenth run of 2026-09-10 named the difficulty: `jumpProcessE_eq_jumpProcess` identifies
+the two constructions only where **all** waiting times are positive, that is at almost every
+sample point but not at every one, and a natural filtration is not an almost sure notion.  What
+resolves it is that the exceptional set is not exceptional in the right way.  The local process
+does not read the sign of a waiting time at all -- `jumpTimeE` reads `ENNReal.ofReal (xi n)`, and
+`ENNReal.ofReal` has already clipped -- so
+
+```
+jumpProcessE lam t ω = jumpProcess lam t (clipWait ω),   clipWait ω = (ω.1, fun k ↦ max (ω.2 k) 0)
+```
+
+holds at **every** sample point and at every nonnegative time, with no hypothesis beyond the
+positivity of the rate.  The local process is therefore the old one composed with a measurable
+map, and the whole statement transfers along that map: the natural filtration of a composite is
+the pull back of the natural filtration (`naturalFiltration_comp`), and a martingale pulls back to
+a martingale along any map that pushes the measure forward to the measure
+(`martingale_comp_of_map_eq`).  Here the map even preserves the measure on the nose, because it is
+almost surely the identity.
+
+Both transfer lemmas are general: neither mentions the jump construction, and
+`martingale_comp_of_map_eq` mentions no topology on the index. -/
+
+/-- **The natural filtration of a process that factors through a map is the pull back of the
+natural filtration of the factor.**  The proof is the commutation of `MeasurableSpace.comap` with
+`⨆`, twice, and it needs nothing about the map beyond the factorisation -- not even its
+measurability, which is already carried by the measurability of the composite. -/
+theorem naturalFiltration_comp {ι' : Type*} [Preorder ι'] {Ω' Ω'' : Type*}
+    {m' : MeasurableSpace Ω'} {m'' : MeasurableSpace Ω''} {F : Type*} [mF : MeasurableSpace F]
+    {X : ι' → Ω' → F} (hX : ∀ i, Measurable (X i)) {Z : ι' → Ω'' → F}
+    (hZ : ∀ i, Measurable (Z i)) {θ : Ω'' → Ω'} (hZX : ∀ i ω, Z i ω = X i (θ ω)) (i : ι') :
+    (naturalFiltration (m' := m'') Z hZ i : MeasurableSpace Ω'')
+      = MeasurableSpace.comap θ (naturalFiltration (m' := m') X hX i) := by
+  show (⨆ j, ⨆ _ : j ≤ i, MeasurableSpace.comap (Z j) mF)
+      = MeasurableSpace.comap θ (⨆ j, ⨆ _ : j ≤ i, MeasurableSpace.comap (X j) mF)
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_congr fun j ↦ ?_
+  rw [MeasurableSpace.comap_iSup]
+  refine iSup_congr fun _ ↦ ?_
+  rw [MeasurableSpace.comap_comp]
+  congr 1
+  exact funext (hZX j)
+
+/-- **A martingale pulls back along a map that carries the measure to the measure.**  The
+filtration downstairs is the pull back of the filtration upstairs, so a set of the past downstairs
+is a preimage, and on preimages the change of variables `MeasureTheory.setIntegral_map` turns the
+martingale identity upstairs into the one downstairs.  No topology on the index, and the
+conclusion is `MeasureTheory.Martingale` and not a family of identities. -/
+theorem martingale_comp_of_map_eq {Ω' Ω'' : Type*} {m' : MeasurableSpace Ω'}
+    {m'' : MeasurableSpace Ω''} {ι' : Type*} [Preorder ι'] {θ : Ω'' → Ω'}
+    (hθ : Measurable θ) {P : Measure Ω''} [IsFiniteMeasure P] {Q : Measure Ω'}
+    [IsFiniteMeasure Q] (hmap : P.map θ = Q) {𝓕 : Filtration ι' m'} {𝓖 : Filtration ι' m''}
+    (h𝓖 : ∀ i, (𝓖 i : MeasurableSpace Ω'') = MeasurableSpace.comap θ (𝓕 i))
+    {Y : ι' → Ω' → ℝ} (hY : Martingale Y 𝓕 Q) :
+    Martingale (fun i ω ↦ Y i (θ ω)) 𝓖 P := by
+  have hθi : ∀ i, @Measurable Ω'' Ω' (𝓖 i) (𝓕 i) θ := fun i ↦ by
+    rw [measurable_iff_comap_le]
+    exact (h𝓖 i).ge
+  have hadp : ∀ i, StronglyMeasurable[𝓖 i] fun ω ↦ Y i (θ ω) := fun i ↦
+    (((hY.stronglyMeasurable i).measurable).comp (hθi i)).stronglyMeasurable
+  have haes : ∀ k, AEStronglyMeasurable (Y k) (P.map θ) := fun k ↦ by
+    rw [hmap]; exact ((hY.stronglyMeasurable k).mono (𝓕.le k)).aestronglyMeasurable
+  have hint : ∀ k, Integrable (fun ω ↦ Y k (θ ω)) P := fun k ↦ by
+    have h1 : Integrable (Y k) (P.map θ) := by rw [hmap]; exact hY.integrable k
+    exact (integrable_map_measure (haes k) hθ.aemeasurable).1 h1
+  refine ⟨hadp, fun i j hij ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓖.le i) (hint j)
+    (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+  intro S hS _
+  rw [h𝓖 i] at hS
+  obtain ⟨A, hA, rfl⟩ := hS
+  have hAm : MeasurableSet A := 𝓕.le i A hA
+  have hswap : ∀ k, ∫ ω in θ ⁻¹' A, Y k (θ ω) ∂P = ∫ y in A, Y k y ∂Q := fun k ↦ by
+    rw [← hmap, ← setIntegral_map hAm (haes k) hθ.aemeasurable]
+  rw [hswap i, hswap j]
+  exact hY.setIntegral_eq hij hA
+
+variable {E : Type*}
+
+/-- **Clipping the waiting times at zero.**  The map along which the local construction factors
+through the old one. -/
+def clipWait (ω : (ℕ → E) × (ℕ → ℝ)) : (ℕ → E) × (ℕ → ℝ) := (ω.1, fun k ↦ max (ω.2 k) 0)
+
+theorem measurable_clipWait [MeasurableSpace E] : Measurable (clipWait (E := E)) :=
+  measurable_fst.prodMk (measurable_pi_lambda _ fun k ↦
+    (((measurable_pi_apply k).comp measurable_snd).max measurable_const))
+
+/-- `ENNReal.ofReal` has already clipped: this is the reason the local construction does not read
+the sign of a waiting time. -/
+theorem ofReal_max_zero (a : ℝ) : ENNReal.ofReal (max a 0) = ENNReal.ofReal a := by
+  rcases le_total 0 a with h | h
+  · rw [max_eq_left h]
+  · rw [max_eq_right h, ENNReal.ofReal_zero, ENNReal.ofReal_eq_zero.2 h]
+
+theorem jumpTimeE_clipWait (lam : E → ℝ) (y : ℕ → E) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTimeE lam y (fun k ↦ max (xi k) 0) n = jumpTimeE lam y xi n := by
+  induction n with
+  | zero => rfl
+  | succ n ih => rw [jumpTimeE_succ, jumpTimeE_succ, ih, ofReal_max_zero]
+
+/-- **The local process does not see the clipping**, at every rate and at every sample point. -/
+theorem jumpProcessE_clipWait (lam : E → ℝ) (t : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcessE lam t (clipWait ω) = jumpProcessE lam t ω := by
+  have h : jumpTimeE lam ω.1 (fun k ↦ max (ω.2 k) 0) = jumpTimeE lam ω.1 ω.2 :=
+    funext (jumpTimeE_clipWait lam ω.1 ω.2)
+  show stepPath (jumpTimeE lam ω.1 (fun k ↦ max (ω.2 k) 0)) ω.1 (ENNReal.ofReal t)
+      = stepPath (jumpTimeE lam ω.1 ω.2) ω.1 (ENNReal.ofReal t)
+  rw [h]
+
+/-- **The two constructions agree at a positive rate and nonnegative waiting times**, at every
+nonnegative time.  `jumpProcessE_eq_jumpProcess` asks for *strictly* positive waiting times,
+because it compares the two step indices through `ENNReal.ofReal_lt_ofReal_iff`, which needs a
+positive right hand side.  Restricting the time to `0 ≤ t` replaces that by
+`ENNReal.ofReal_lt_ofReal_iff_of_nonneg`, and nonnegativity of the waiting times is all that is
+left -- which is exactly what the clipping provides. -/
+theorem jumpProcessE_eq_jumpProcess_of_nonneg {lam : E → ℝ} {y : ℕ → E} {xi : ℕ → ℝ}
+    (hlam : ∀ x, 0 < lam x) (hxi : ∀ n, 0 ≤ xi n) {t : ℝ} (ht : 0 ≤ t) :
+    jumpProcessE lam t (y, xi) = jumpProcess lam t (y, xi) := by
+  have hset : {m | ENNReal.ofReal t < jumpTimeE lam y xi (m + 1)}
+      = {m | t < jumpTime lam y xi (m + 1)} := by
+    ext m
+    rw [Set.mem_setOf_eq, Set.mem_setOf_eq, jumpTimeE_eq_ofReal hlam hxi,
+      ENNReal.ofReal_lt_ofReal_iff_of_nonneg ht]
+  simp only [jumpProcessE, jumpProcess, stepPath, stepIndex, hset]
+
+/-- **The local process is the old one read after the clipping**, at a positive rate, at every
+nonnegative time and at **every** sample point.  This is the identity that carries the whole
+bounded theory across, and it is an identity of terms and not of laws. -/
+theorem jumpProcessE_eq_jumpProcess_clipWait {lam : E → ℝ} (hlam : ∀ x, 0 < lam x) {t : ℝ}
+    (ht : 0 ≤ t) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    jumpProcessE lam t ω = jumpProcess lam t (clipWait ω) := by
+  rw [← jumpProcessE_clipWait lam t ω]
+  exact jumpProcessE_eq_jumpProcess_of_nonneg hlam (fun n ↦ le_max_right _ _) ht
+
+/-- **The clipping preserves the driving measure**, because it is almost surely the identity: the
+waiting times are almost surely positive. -/
+theorem map_clipWait_jumpMeasure [MeasurableSpace E] (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    (jumpMeasure mu nu).map clipWait = jumpMeasure mu nu := by
+  have h : clipWait =ᵐ[jumpMeasure mu nu] (id : (ℕ → E) × (ℕ → ℝ) → (ℕ → E) × (ℕ → ℝ)) := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+    have hxi : (fun k ↦ max (ω.2 k) 0) = ω.2 := funext fun k ↦ max_eq_left (hω k).le
+    show ((ω.1, fun k ↦ max (ω.2 k) 0) : (ℕ → E) × (ℕ → ℝ)) = ω
+    rw [hxi]
+  rw [Measure.map_congr h, Measure.map_id]
+
+/-- **`thm:jumpMP` for the local construction.**  The same conclusion as
+`jumpProcess_isMPSolution`, for `jumpProcessE` and its natural filtration, under the same
+hypotheses.
+
+This is the last input the assembly of Point 5 was missing: the stopped local process is the local
+process of the truncated rate (`stoppedProcess_jumpProcessE_truncRate`), the truncated rate is
+positive from the level `1` on and bounded by the level (`truncRate_pos`, `truncRate_le`), and
+this theorem says that such data give a martingale problem solution *for the local construction*
+and hence for the filtration in which `rateTime` is a stopping time. -/
+theorem jumpProcessE_isMPSolution [MeasurableSpace E] {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  have hproc : ∀ (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)),
+      jumpProcessE lam (t : ℝ) ω = jumpProcess lam (t : ℝ) (clipWait ω) :=
+    fun t ω ↦ jumpProcessE_eq_jumpProcess_clipWait hlam0 t.coe_nonneg ω
+  intro Y hY
+  obtain ⟨p, hp, hYeq⟩ := hY
+  obtain ⟨Y', hY'mem, hYY'⟩ :
+      ∃ Y' : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ,
+        Y' ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+          (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcess lam (t : ℝ) ω) ∧
+        ∀ t ω, Y t ω = Y' t (clipWait ω) := by
+    refine ⟨fun t ω ↦ p.1 (jumpProcess lam (t : ℝ) ω)
+        - ∫ s in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+            p.2 (jumpProcess lam (s : ℝ) ω) ∂lebesgueClock.q,
+      ⟨p, hp, fun t ω ↦ rfl⟩, fun t ω ↦ ?_⟩
+    rw [hYeq t ω]
+    simp only [hproc]
+  have hmart : Martingale Y' (jumpFiltration lam hlam) (jumpMeasure mu nu) :=
+    jumpProcess_isMPSolution hlam hlam0 hL mu nu Y' hY'mem
+  have hfun : Y = fun t ω ↦ Y' t (clipWait ω) := funext fun t ↦ funext fun ω ↦ hYY' t ω
+  rw [hfun]
+  exact martingale_comp_of_map_eq measurable_clipWait (map_clipWait_jumpMeasure mu nu)
+    (fun i ↦ naturalFiltration_comp _ _ (fun j ω ↦ hproc j ω) i) hmart
+
+end LocalBounded

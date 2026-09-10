@@ -1374,6 +1374,131 @@ A concrete family of solutions, built without any of the theory above. Index
   `measurable_stepIndex_comp`: the local construction reads jump times in `ℝ≥0∞`
   at real times, so it is `ENNReal.ofReal` there, and `eventuallyEq_nhdsGE_stepPath`
   is the case of the identity — which is how the old declaration is now proved.
+* `truncRate lam n = min lam n`, the rate truncated at a level, with
+  `truncRate_le` (bounded by `n` on all of `E`), `truncRate_pos` (positive from
+  the level `1` on, at a positive rate) and `measurable_truncRate`. **Proved** on
+  2026-09-10, twelfth run. It is the data of the bounded case, manufactured out of
+  the data of the local one.
+* `jumpTimeE_le_of_rate_le`: lowering the rate delays every jump time, at every
+  sample point and under no hypothesis. **Proved** on 2026-09-10, twelfth run.
+* `jumpProcessE_eq_truncRate_of_le_rateTime`: **up to the hitting time of the
+  level `n`, the local jump process is the jump process of the truncated rate.**
+  **Proved** on 2026-09-10, twelfth run, together with
+  `stoppedProcess_jumpProcessE_truncRate`, the same identity read as an identity
+  of stopped processes. The hypotheses are non explosion at the sample point and
+  `ENNReal.ofReal t ≤ rateTime lam n ω`, and nothing else; in particular no
+  positivity and no bound on `lam`. This answers what Point 5 of this milestone
+  was left with: the stopped process does not merely satisfy the same martingale
+  identities as a process of bounded rate — it **is** one, term for term, driven
+  by the same chain and the same waiting times on the same space. The two steps
+  are `jumpTimeE_truncRate_eq`, an induction over the index in which the truncated
+  rate is only ever read at a state the path has already **left** (so the state at
+  the time itself, where the rate may exceed the level, never enters), and
+  `jumpTimeE_le_of_rate_le`, which carries the right endpoint of the window.
+  `exists_jumpProcessE_truncRate_ne` is the witness that the hitting time
+  hypothesis cannot be dropped, and `rateTime_zero` says why its level is `0`
+  there.
+* `jumpProcessE_eq_of_rate_eq_on_path`: **two rates that agree at every state the
+  path has visited give the same process**, at every sample point and with no non
+  explosion hypothesis, no positivity, no bound, no measurability and no
+  comparison between the two rates. **Proved** on 2026-09-10, thirteenth run,
+  with `jumpTimeE_eq_of_rate_eq_on_path` and `jumpProcessE_toReal_jumpTimeE`. It
+  is the hypothesis free form of `jumpProcessE_eq_truncRate_of_le_rateTime`, and
+  the filtrations need it in that form: a natural filtration is not an almost
+  sure notion, so a comparison that discards the explosion set cannot compare
+  σ-algebras. Non explosion was needed to *name* a window, and where there is no
+  window every jump time lies below the time, so the two sequences of jump times
+  are equal outright and the two step indices are the same junk value. The
+  monotonicity `jumpTimeE_le_of_rate_le` is not needed either once the hypothesis
+  is read at the closed end `s = t`: the state the path occupies **at** `t` is
+  visited at `t`. The one hypothesis is `0 ≤ t`, and it is not cosmetic — below
+  `0` the hypothesis is vacuous while the conclusion still claims something.
+* `rateSup_truncRate_lt_iff`: **the level is passed by the running supremum of
+  the rate exactly when it is passed by that of the truncated rate**. **Proved**
+  on 2026-09-10, thirteenth run, from the comparison read from each of the two
+  sides in turn (`jumpProcessE_truncRate_eq_of_rateSup_lt`,
+  `jumpProcessE_eq_truncRate_of_rateSup_truncRate_lt`, and the two identities of
+  the suprema `rateSup_truncRate_eq_of_lt`, `rateSup_eq_of_rateSup_truncRate_lt`
+  behind them). Neither direction is free; each is the comparison of the paths
+  read from its own side, and the second is the only place in the milestone where
+  the truncated path is the given one. With `lt_rateTime_iff_rateSup_lt` it gives
+  `setOf_lt_rateTime_eq`, the identity
+  `{s < rateTime lam n} = {rateSup (truncRate lam n) s < n}`, and hence
+  `measurableSet_lt_rateTime_truncRate`: the set on which the local process has
+  not yet reached the level is an event of the **truncated** filtration, which is
+  what the σ-algebra argument below needs and what a comparison of paths alone
+  does not give.
+* `naturalFiltration_inter_le`: **the trace of one natural filtration on a set
+  where the two processes agree is seen by the other**, with no topology, no
+  measure and no relation between the two processes beyond that agreement.
+  **Proved** on 2026-09-10, thirteenth run. The set has to belong to the *target*
+  σ-algebra and not merely be measurable: the family `{A | A ∩ N ∈ 𝓖}` is closed
+  under complements because `Aᶜ ∩ N = N \ (A ∩ N)`, and that is where the
+  membership is spent. It is the general form of the passage from the generating
+  evaluations to the whole σ-algebra.
+* `jumpFiltrationE_inter_lt_rateTime`: **the two natural filtrations agree before
+  the hitting time**: for `A ∈ jumpFiltrationE lam s`, the set
+  `A ∩ {ω | (s : ℝ≥0∞) < rateTime lam n ω}` lies in
+  `jumpFiltrationE (truncRate lam n) s`, and conversely
+  (`jumpFiltrationE_truncRate_inter_lt_rateTime`). **Proved** on 2026-09-10,
+  thirteenth run, from the three points above. This is what
+  `jumpProcessE_eq_truncRate_of_le_rateTime` does **not** give: a process identity
+  before a time is not an identity of the σ-algebras of that time, and the two
+  differ after it. It is the step that lets the conditional expectation of the
+  bounded problem be read as one of the local filtration, on the set where the
+  stopping has not yet happened; off that set the increment of the stopped process
+  vanishes and there is nothing to prove. The second inclusion is not a
+  formality: before the hitting time the truncated filtration sees no more than
+  the local one, and after it the two paths part company, so the inclusion holds
+  in this cut down form and in no other.
+* `clipWait`, `jumpProcessE_eq_jumpProcess_clipWait`: **the local construction is
+  the old one composed with a measurable map.** `clipWait ω = (ω.1, fun k ↦ max (ω.2 k) 0)`
+  clips the waiting times at zero, and at a positive rate
+  `jumpProcessE lam t ω = jumpProcess lam t (clipWait ω)` at **every** sample point
+  and every `0 ≤ t`. **Proved** on 2026-09-10, fourteenth run. The reason there is
+  no exceptional set is that `jumpTimeE` reads `ENNReal.ofReal (xi n)`, and
+  `ENNReal.ofReal` has already clipped (`jumpTimeE_clipWait`); the only thing the
+  restriction to `0 ≤ t` buys is
+  `ENNReal.ofReal_lt_ofReal_iff_of_nonneg` in place of
+  `ENNReal.ofReal_lt_ofReal_iff`, which is what lets the waiting times be merely
+  nonnegative (`jumpProcessE_eq_jumpProcess_of_nonneg`).
+* `naturalFiltration_comp`: **the natural filtration of a process that factors
+  through a map is the pull back of the natural filtration of the factor.**
+  **Proved** on 2026-09-10, fourteenth run; it is the commutation of
+  `MeasurableSpace.comap` with `⨆`, twice, and needs nothing about the map beyond
+  the factorisation.
+* `martingale_comp_of_map_eq`: **a martingale pulls back along a map that carries
+  the measure to the measure**, the filtration downstairs being the pull back of
+  the one upstairs. **Proved** on 2026-09-10, fourteenth run. A set of the past
+  downstairs is then a preimage, `MeasureTheory.setIntegral_map` is the change of
+  variables, and `MeasureTheory.Martingale.setIntegral_eq` is the identity
+  upstairs. No topology on the index.
+* `jumpProcessE_isMPSolution`: `jumpProcess_isMPSolution` for the **local**
+  construction. **Proved** on 2026-09-10, fourteenth run, under `0 < lam ≤ L`, by
+  the three points above: the test process of the local family is the test process
+  of the old family composed with `clipWait`, `clipWait` preserves `jumpMeasure`
+  because it is almost surely the identity (`map_clipWait_jumpMeasure`), and
+  `jumpFiltrationE` is the pull back of `jumpFiltration` along it.
+  **Under `0 ≤ lam ≤ L` it is open**, and the route above does not reach it: at a
+  vanishing rate the extended jump times are `⊤`, so no clipping of the waiting
+  times makes the two constructions agree, and freezing the chain instead — which
+  does match the laws — fails at the sample points where the frozen data explode,
+  a null set, and a natural filtration is not an almost sure notion.
+* `martingale_stoppedProcess`: **the stopped process of a martingale is a
+  martingale**, for an index that is not `ℕ`, under right continuity of the paths.
+  Mathlib has the discrete case only: `MeasureTheory.Submartingale.stoppedProcess`
+  (`Probability/Martingale/OptionalStopping.lean:95` on master `403547feec1`,
+  `:104` in v4.33.1) is stated in a section with `{𝒢 : Filtration ℕ m0}`, and there
+  is no `IsStable 𝓕 (fun Y ↦ Martingale Y 𝓕 P)` anywhere in either version. What
+  *is* available for a general `[LinearOrder ι] [TopologicalSpace ι] [OrderTopology ι]`
+  is the optional sampling theorem for stopping times of **countable range**,
+  `MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_le_of_countable_range`
+  and `…_of_le_const_of_countable_range`
+  (`Probability/Martingale/OptionalSampling.lean:121` and `:90`, the same lines in
+  v4.33.1 and on master), so what this point owes is the passage from the dyadic
+  approximations of the stopping time to the stopping time itself, and the paths of
+  the jump process are step paths, so the right continuity it needs is
+  `eventuallyEq_nhdsGE_stepPath_comp` and not a limit theorem.
 * `jumpProcess_isLocalMPSolution`: for `lam` unbounded but with the process not
   exploding, the local martingale problem is solved, with `rateTime` as the
   localizing sequence; and the explosion criterion in terms of the jump times.
@@ -1381,7 +1506,17 @@ A concrete family of solutions, built without any of the theory above. Index
   the rate along the path is at most `n`, which is a bound of the same kind
   `jumpProcess_isMPSolution` asks for, but it is a bound along the path and not a
   bound on `lam`, so the global theorem does not apply to the stopped process by
-  substitution.
+  substitution. The route around that is the three points above: the stopped
+  process is the process of `truncRate lam n`, which **is** of bounded rate; that
+  process solves the bounded problem for its own filtration
+  (`jumpProcessE_isMPSolution`); and before the hitting time that filtration is
+  the one asked for. The level `n = 0` is not a special case to be argued around:
+  `rateTime lam 0 = 0 = ⊥`, and `Locally` prefixes the stopped process with the
+  indicator of `{ω | ⊥ < τ n ω}`, so the process at that level is `0`. What the
+  assembly still owes is `martingale_stoppedProcess`: the decomposition
+  `∫_A M_t = ∫_{A ∩ {τ ≤ s}} + ∫_{A ∩ {s < τ}}` leaves, on `{s < τ ≤ t}`, the
+  value of the truncated martingale **at** `τ`, which is optional stopping in
+  continuous time and not a set identity.
 * The path dependent variant, where the rate at time `t` is a predictable
   functional of the path rather than a function of the current state, with the
   same two statements. This is the family that supplies the examples for

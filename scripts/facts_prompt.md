@@ -795,10 +795,12 @@ danach.*
    `ENNReal` ausgeschrieben. Wer die Notation benutzt, erntet zwanzig
    Folgefehler an Stellen, die in Ordnung sind.
 
-   **Was von Punkt 5 jetzt noch fehlt, und es ist eine einzige benannte
-   Aussage:** `jumpProcess_isLocalMPSolution`. Alle Eingaben stehen jetzt
-   wirklich und nicht als Beschreibung: die lokalisierende Folge ist bewiesen
-   eine (`isLocalizingSequence_rateTime`), der Prozeß ist meßbar
+   ~~**Was von Punkt 5 jetzt noch fehlt, und es ist eine einzige benannte
+   Aussage:** `jumpProcess_isLocalMPSolution`.~~ *(die dort zuerst zu klärende
+   Frage ist beantwortet, 2026-09-10, zwölfter Lauf des Tages; der Satz selbst
+   steht noch aus und hängt jetzt an zwei anderen Aussagen.)* Alle Eingaben
+   stehen wirklich und nicht als Beschreibung: die lokalisierende Folge ist
+   bewiesen eine (`isLocalizingSequence_rateTime`), der Prozeß ist meßbar
    (`measurable_jumpProcessE`), und `ae_mem_nonExplosiveE_jumpMeasure` löst die
    einzige Voraussetzung jener Folge unter `jumpMeasure mu nu` ein. Dabei ist im
    Auge zu behalten, was die Lokalisierung liefert und was nicht — es ist der
@@ -809,6 +811,90 @@ danach.*
    Erzeuger, Lösung und Martingal —, die lineare Kette hat ihren Erzeuger und ihr
    Nichtexplosionsargument und wartet auf `jumpProcess_isLocalMPSolution`, und
    Hawkes wartet auf die pfadabhängige Variante.
+
+   **Zwischenstand 2026-09-10, zwölfter Lauf des Tages. Der gestoppte Prozeß
+   *ist* einer von beschränkter Rate, und nicht bloß einer mit denselben
+   Martingalen.** Sechzehn Deklarationen im neuen Abschnitt `Truncation` von
+   `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1, alle sechzehn mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10, zwölfter
+   Lauf des Tages"; die neuen Punkte stehen in
+   `MartingaleProblems/README.md`, Meilenstein 4.
+
+   `jumpProcessE_eq_truncRate_of_le_rateTime`: unter Nichtexplosion und
+   `ENNReal.ofReal t ≤ rateTime lam n ω` ist
+   `jumpProcessE (truncRate lam n) t ω = jumpProcessE lam t ω`, mit
+   `truncRate lam n = min lam n`, das auf **ganz `E`** durch `n` beschränkt ist.
+   Über `lam` steht nichts — keine Positivität, keine Schranke, keine
+   Meßbarkeit. `stoppedProcess_jumpProcessE_truncRate` liest dasselbe als
+   Gleichheit der gestoppten Prozesse.
+
+   **Drei Befunde für den nächsten Lauf.**
+
+   * **Der Beweis lebt davon, welche Indizes er *nicht* liest.** Ein leeres
+     Fenster braucht gar nichts (`xi m ≤ 0` macht beide Zuwächse `0`, auch bei
+     `0 / 0`), und der Zustand, den der Pfad zur fraglichen Zeit einnimmt, wird
+     nie gelesen — die Induktion verbraucht die Rate an `y m` allein, um von
+     `T m` nach `T (m+1)` zu kommen. Genau deshalb darf die Voraussetzung
+     `≤ rateTime` mit Gleichheit stehen, obwohl an der Trefferzeit die Rate
+     schon `≥ n` ist.
+   * **`rateTime lam 0 ω = 0`, immer** (`rateTime_zero`): das erste Glied der
+     lokalisierenden Folge stoppt sofort. Dazu der Zeuge
+     `exists_jumpProcessE_truncRate_ne`, daß die Voraussetzung nicht
+     wegzulassen ist.
+   * **Was jetzt fehlt, ist nicht mehr die Prozeßidentität, sondern die der
+     σ-Algebren.** Der Turmschluß „der gestutzte Prozeß ist ein Martingal, also
+     ist es der gestoppte auch" bräuchte
+     `jumpFiltrationE lam s ≤ jumpFiltrationE (truncRate lam n) s`, und der
+     Einschluß fehlt. Zwei benannte Aussagen stehen dafür in der Roadmap:
+     `jumpFiltrationE_inter_lt_rateTime` (die beiden Filtrationen stimmen **vor**
+     der Trefferzeit überein; die Eingabe dafür ist
+     `jumpProcessE_eq_truncRate_of_le_of_le_rateTime` aus diesem Lauf) und
+     `jumpProcessE_isMPSolution` (der beschränkte Satz für die **lokale**
+     Konstruktion, unter `0 ≤ lam ≤ L`, weil `jumpProcessE_eq_jumpProcess` die
+     beiden Konstruktionen nur bei durchweg positiven Wartezeiten identifiziert
+     und eine natürliche Filtration keine f.s.-Aussage ist). ~~Die erste
+     zuerst.~~ *(die erste ist erledigt, 2026-09-10, dreizehnter Lauf des Tages.)*
+
+   **Zwischenstand 2026-09-10, dreizehnter Lauf des Tages. Die beiden
+   Filtrationen stimmen vor der Trefferzeit überein, in beiden Richtungen.**
+   Siebzehn Deklarationen im Abschnitt `Truncation` von
+   `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+   durch `lake env lean` gegen v4.33.1, alle siebzehn mit `#print axioms` auf
+   `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+   bleibt bei neun. Bericht in `Facts/INVENTAR.md`, Läufe, „2026-09-10,
+   dreizehnter Lauf des Tages"; die Punkte stehen in
+   `MartingaleProblems/README.md`, Meilenstein 4.
+
+   `jumpFiltrationE_inter_lt_rateTime` und
+   `jumpFiltrationE_truncRate_inter_lt_rateTime`: ein Ereignis der einen
+   natürlichen Filtration bei `s`, geschnitten mit `{s < rateTime lam n}`, ist
+   eines der anderen. Über `lam` steht nichts als `Measurable lam`.
+
+   **Drei Befunde für den nächsten Lauf.**
+
+   * **Der Lauf hat eine Voraussetzung gestrichen, statt eine hinzuzufügen, und
+     das war der Angelpunkt.** Die Prozeßidentität des zwölften Laufs stand unter
+     **Nichtexplosion**, und für σ-Algebren nützt das nichts — eine natürliche
+     Filtration ist keine f.s.-Aussage. `jumpProcessE_eq_of_rate_eq_on_path`
+     vergleicht statt dessen **zwei beliebige Raten, die an jedem besuchten
+     Zustand übereinstimmen**, an jedem Stichprobenpunkt, ohne Positivität, ohne
+     Schranke und **ohne Vergleichbarkeit der beiden Raten**. Nichtexplosion war
+     nötig, um ein Fenster zu *benennen*; wo es keines gibt, liegt jede Sprungzeit
+     unter `t`, die beiden Sprungzeitfolgen sind gleich, und die Stufenindizes
+     sind derselbe Müllwert. Die Monotonie fiel mit, sobald die Hypothese am
+     **geschlossenen** Ende `s = t` gelesen wird. Der Preis ist `0 ≤ t`.
+   * **Ein Vergleich der Pfade ist nicht die halbe Miete, sondern die halbe
+     Arbeit.** Das σ-Algebren-Argument braucht die Schnittmenge selbst als
+     Ereignis der **gestutzten** Filtration (`{A | A ∩ N ∈ 𝓖}` ist unter
+     Komplementen abgeschlossen, weil `Aᶜ ∩ N = N \ (A ∩ N)` ist — dort wird
+     `N ∈ 𝓖` verbraucht). Das liefert erst der **umgekehrte** Vergleich, über
+     `rateSup_truncRate_lt_iff` und `setOf_lt_rateTime_eq`. Ohne ihn bleibt nur
+     die Spurgleichheit, und die trägt den Turmschluß nicht.
+   * **Der Rückgabewert einer Pipe ist der ihrer letzten Stufe.** Ein erster
+     Durchlauf `lake env lean … | head -120` verschluckte fünf Fehler und meldete
+     `rc=0`. Wer `lake env lean` filtert, filtert mit `grep` und nicht mit `head`.
 
    *Der ursprüngliche Wortlaut dieses Zwischenstands, und er ist an einem Wort
    falsch:* „Alle drei Zutaten stehen: der Prozeß ist meßbar, er explodiert f.s.
