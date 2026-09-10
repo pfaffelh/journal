@@ -160,8 +160,12 @@ bleiben:
    will, sagt zuerst, welcher Schritt des jetzigen bricht, und rechnet ihn am
    Zeugen nach.
 
-**Hinweis zu `martingale_stoppedProcess` in stetiger Zeit** *(vom Nutzer,
-2026-09-10)*
+~~**Hinweis zu `martingale_stoppedProcess` in stetiger Zeit**~~ *(vom Nutzer,
+2026-09-10; **eingelöst 2026-09-10, fünfzehnter Lauf des Tages** — der Satz steht,
+über die dyadische Diskretisierung wie angesagt, aber **ohne** gleichgradige
+Integrierbarkeit: die Fensterschranke des beschränkten Erzeugers macht den
+Grenzübergang zu einer dominierten Konvergenz mit konstanter Majorante. Bericht in
+`Facts/INVENTAR.md`, Läufe, „2026-09-10, fünfzehnter Lauf des Tages".)*
 
 Der Beweis läuft über die **Approximation der Stoppzeit durch Stoppzeiten mit
 abzählbarem Wertebereich**, also die dyadische Diskretisierung
@@ -940,6 +944,69 @@ danach.*
    ist nie geprüft worden. Das ist der Fehlertyp der Suchregel vom neunten Lauf
    des 2026-09-08, hier in der Gegenrichtung — einen Kandidaten mit einer
    Beschreibung statt mit einer Voraussetzung **annehmen**.
+
+   **Zwischenstand 2026-09-10, vierzehnter Lauf des Tages.**
+   `jumpProcessE_isMPSolution` steht, unter `0 < lam ≤ L`, und ist nicht von vorn
+   bewiesen, sondern über `clipWait` vom alten Prozeß übertragen (zehn
+   Deklarationen, Abschnitt `LocalBounded`). Der Lauf hat außerdem die letzte
+   Lücke benannt und sie liegt in Mathlib: **den gestoppten Martingalsatz gibt es
+   dort nur diskret.**
+
+   **Zwischenstand 2026-09-10, fünfzehnter Lauf des Tages. Der gestoppte
+   Martingalsatz in stetiger Zeit steht.** Zwanzig Deklarationen im neuen
+   Abschnitt `StoppedMartingale` von `TauCeti/MartingaleProblems/Suggested.lean`,
+   die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1, alle
+   zwanzig mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`
+   geprüft, die Zahl der `sorry` bleibt bei neun. Bericht in `Facts/INVENTAR.md`,
+   Läufe, „2026-09-10, fünfzehnter Lauf des Tages"; die Punkte stehen in
+   `MartingaleProblems/README.md`, Meilenstein 4.
+
+   `martingale_stoppedProcess` steht über dem Index `ℝ≥0` und für Stoppzeiten mit
+   Werten in `ℝ≥0∞`, unter drei Voraussetzungen an den Prozeß:
+   `IsStronglyProgressive`, Rechtsstetigkeit der Pfade an jeder Zeit, und
+   Beschränktheit auf jedem Fenster `[0, j]`.
+
+   **Drei Befunde für den nächsten Lauf.**
+
+   * **Die gleichgradige Integrierbarkeit kommt nicht vor.** Der klassische Beweis
+     braucht sie, weil er für ein beliebiges Martingal geführt wird; hier ist die
+     **Fensterschranke** da (`integrable_mpFamily_jumpProcess`: `C + 2LC·t`), also
+     ist die Majorante eine Konstante und der Grenzübergang
+     `tendsto_integral_of_dominated_convergence`.
+   * **Die Aufrundung muß die Deckenfunktion sein und nicht das nächstgrößere
+     echte Dyadische.** Mit der Decke ist `{dyadStop ≤ t} = {ρ ≤ ⌊t·2ⁿ⌋/2ⁿ}`, eine
+     **nicht strikte** Bedingung, die `hρ.measurableSet_le` allein sieht; mit dem
+     echt größeren Dyadischen — der Fassung, die `dyadicUp` in dieser Datei für die
+     progressive Meßbarkeit benutzt — käme `{ρ < …}` heraus und verlangte
+     `measurableSet_lt` samt `[FirstCountableTopology]`. Dieselbe Rundung, zwei
+     Zwecke, zwei verschiedene richtige Antworten.
+   * **Die Martingalgleichung ist ohne jede σ-Algebra einer Stoppzeit bewiesen**,
+     und das mußte sie sein: `𝓕 i` liegt **nicht** in der σ-Algebra von `min i τ`
+     (für `t < i` ist `A ∩ {min i τ ≤ t} = A ∩ {τ ≤ t}`, und `A` ist nicht
+     `𝓕 t`-meßbar), also schließt der naheliegende Turmschluß nicht. Was schließt,
+     ist **eine** Hilfsstoppzeit
+     `ρ = (A ∩ {i < τ}).piecewise (max (min τ j) i) i`
+     (`MeasureTheory.IsStoppingTime.piecewise_of_le`) und die Identität
+     `E[Y_ρ] = E[Y_j]`, gegen dieselbe für die konstante Zeit `i` gelesen.
+
+   **Was von Punkt 5 jetzt noch fehlt, und es ist der Zusammenbau
+   `jumpProcess_isLocalMPSolution`**, der an genau drei Eingaben hängt, zwei davon
+   noch zu schreiben:
+
+   1. **`IsStronglyProgressive` für die Testprozesse.** Die halbe Arbeit steht:
+      `measurable_uncurry_min_of_eventuallyEq` liefert die gemeinsame Meßbarkeit
+      für einen von rechts **lokal konstanten** Integranden, und das ist `h ∘ X`.
+      Der Kompensator ist es nicht — er ist in `t` stetig —, also ist jene Aussage
+      auf **Rechtsstetigkeit** zu verallgemeinern: ihr Beweis benutzt `hrc` nur,
+      um aus `tendsto_dyadicUp` eine *eventuelle Gleichheit* zu machen, und eine
+      Konvergenz genügt an derselben Stelle. Das ist billig, und es ist die
+      einzige der drei Eingaben, die eine bestehende Deklaration ändert. **Zuerst.**
+   2. **Rechtsstetigkeit der Pfade des kompensierten Prozesses**: für `h ∘ X` ist
+      sie `eventuallyEq_nhdsGE_stepPath_comp`, für den Kompensator die Stetigkeit
+      von `t ↦ ∫_0^t g(X_s) ds` bei beschränktem `g`.
+   3. Die Fensterschranke ist da, und der Transport der Konklusion von der
+      gestutzten Filtration auf `jumpFiltrationE lam` ist
+      `jumpFiltrationE_inter_lt_rateTime` aus dem dreizehnten Lauf.
 
 **Weitere Akzeptanzbeispiele, wenn die Konstruktion steht.** Alle drei sind
 *Einsetzen von Daten*, kein neuer Beweis, und jedes prüft einen anderen Zweig:

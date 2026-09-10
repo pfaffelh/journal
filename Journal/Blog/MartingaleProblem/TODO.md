@@ -168,10 +168,10 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Vier Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Fünf Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle vier beim Beweisen aufgefallen, alle vier gegen `upstream/master` geprüft,
-und alle vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
+Alle fünf beim Beweisen aufgefallen, alle fünf gegen `upstream/master` geprüft,
+und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
@@ -207,6 +207,25 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `Measure.eq_infinitePi` gerade danach fragt. Für Mathlib wäre die richtige
   Fassung die allgemeine Trennung `iIndepFun` gegen zwei disjunkte **beliebige**
   Indexmengen; sie ist ein Dynkin-Argument und wäre mehr als unsere.
+
+* **Der gestoppte Martingalsatz in stetiger Zeit.** Der fünfte, und der einzige
+  große: `Probability/Martingale/OptionalStopping.lean` steht in ganzer Länge
+  unter `{𝒢 : Filtration ℕ m0} {f : ℕ → Ω → ℝ}` (master `403547feec1`, `:38`),
+  also auch `Submartingale.stoppedProcess`, und ein
+  `IsStable 𝓕 (fun Y ↦ Martingale Y 𝓕 P)` gibt es in keiner der beiden Fassungen.
+  Was da ist, ist das optionale Sampling für Stoppzeiten **abzählbaren
+  Wertebereichs**, über beliebigem `[LinearOrder ι] [TopologicalSpace ι]
+  [OrderTopology ι]` (`OptionalSampling.lean:90` und `:121`). Wir haben den
+  Übergang am 2026-09-10 als `martingale_stoppedProcess` bewiesen, über `ℝ≥0`,
+  durch dyadische Approximation der Stoppzeit von oben, und mit **Beschränktheit
+  auf jedem Fenster** statt der klassischen gleichgradigen Integrierbarkeit — die
+  Fassung, die der beschränkte Erzeuger geschenkt liefert. Für Mathlib wäre die
+  richtige Fassung die mit gleichgradiger Integrierbarkeit und über einem
+  allgemeineren Index als `ℝ≥0`; sie ist mehr als unsere, und
+  `RemyDegenne/brownian-motion` hat mit
+  `Martingale.uniformIntegrable_stoppedValue_of_countable_range`
+  (`StochasticIntegral/UniformIntegrable.lean:147`) schon das Stück davon, das
+  uns fehlt.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
