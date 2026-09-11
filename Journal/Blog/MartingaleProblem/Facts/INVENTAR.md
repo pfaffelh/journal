@@ -22214,3 +22214,229 @@ braucht (dieser Lauf). Was zwischen ihr und dem Hawkes-Martingalproblem steht, i
    `Set.sdiff_eq_empty`, `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch
    `push Not`, dort wo v4.33.1 es meldet. Der neue Abschnitt `PathInverseE` hält die Regel schon
    ein und meldet keine einzige Warnung.
+
+### 2026-09-11, siebzehnter Lauf des Tages — die Lokalisierung der pfadabhängigen Variante steht, und sie kostet keine Nichtexplosion: der Prüfstein des sechzehnten Laufs fällt zugunsten der Inversen in `ℝ≥0∞`
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des sechzehnten Laufs
+(`isStoppingTime_rateInverse`). Die Reihenfolge D → F → C → E ist eingehalten; Teil D war der
+einundzwanzigste Lauf des 2026-09-10, Teil F der zweiundzwanzigste und dreiundzwanzigste.
+
+**Dreizehn Deklarationen** im neuen Abschnitt `PathStopping` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne einen Fehler und ohne eine
+einzige Warnung im neuen Bereich** durch `lake env lean` gegen v4.33.1, alle dreizehn mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl
+der `sorry` bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`,
+Meilenstein 4.
+
+`monotoneOn_cumulativeRateF_of_nonneg`, `continuousOn_cumulativeRateF_Ici`,
+`isClosed_setOf_le_cumulativeRateF`, `rateInverse_le_iff_of_nonneg`,
+`rateInverseE_le_ofReal_iff`, `rateInverseE_le_coe_iff`,
+`measurable_cumulativeRateF_of_uncurry_min`, `isStoppingTime_rateInverseE`,
+`isStoppingTime_rateInverseE_of_uncurry_min`, `isStoppingTime_rateInverseE_hawkesSelfRate`,
+`tendsto_rateInverseE_atTop`, `isLocalizingSequence_rateInverseE`,
+`isLocalizingSequence_rateInverseE_hawkesSelfRate`.
+
+#### Der Prüfstein des sechzehnten Laufs, und er fällt zur Hälfte
+
+Der sechzehnte Lauf hatte den Vorschlag mit einem Prüfstein versehen: „ob `setOf_rateInverse_le`
+dabei seine drei Voraussetzungen behält — zu erwarten ist, daß auch dort nur die **Erreichbarkeit
+bei `c`** gebraucht wird und nicht die globale Divergenz. Fällt sie nicht, so ist die Stoppzeit
+statt dessen an `rateInverseE` zu führen, und das ist zu messen."
+
+**Beides ist eingetreten, und das ist kein Widerspruch.** Die Erwartung war richtig:
+`rateInverse_le_iff_of_nonneg` ersetzt `htop` durch die Erreichbarkeit des einen Pegels `a`.
+**Nur trägt die abgeschwächte Aussage die Stoppzeit trotzdem nicht**, und der Grund ist
+nicht die Stärke der Voraussetzung, sondern ihre Gestalt:
+
+> Eine Stoppzeit verlangt, daß `{ω | τ ω ≤ c}` für **jeden** Stichprobenpunkt die richtige Menge
+> ist. Die Erreichbarkeit des Pegels ist eine Aussage **über den Stichprobenpunkt**; sie als
+> Voraussetzung zu führen heißt, die Aussage auf einer Teilmenge von `Ω` zu machen, und
+> `IsStoppingTime` ist keine Aussage auf einer Teilmenge — so wenig wie eine f.s.-Aussage.
+
+Wo der Pegel nicht erreicht wird, ist `rateInverse Λ ω a = sInf ∅ = 0`, also `≤ c` für **jedes**
+`c ≥ 0`, während `a ≤ cumulativeRateF Λ ω c` dort für **kein** `c` gilt. Die Äquivalenz ist an
+diesen Punkten schlicht falsch, und keine Abschwächung der Voraussetzungen heilt das, weil der
+Defekt im Wert und nicht im Beweis sitzt. Also die Stoppzeit an `rateInverseE`, wie der sechzehnte
+Lauf es als Ausweichweg benannt hatte.
+
+#### Und dort fällt die Voraussetzung ganz weg
+
+`rateInverseE_le_ofReal_iff` sagt für `0 ≤ c` und **jeden** Stichprobenpunkt
+
+> `rateInverseE Λ ω a ≤ ENNReal.ofReal c ↔ a ≤ cumulativeRateF Λ ω c`
+
+und fragt **weder nach der Divergenz noch nach der Erreichbarkeit**. Am unerreichten Pegel steht
+links `⊤ ≤ ofReal c`, was falsch ist, und rechts `a ≤ cumulativeRateF Λ ω c`, was ebenfalls falsch
+ist: die Äquivalenz gilt, weil beide Seiten scheitern. Das ist dieselbe Beobachtung wie die des
+sechzehnten Laufs bei `monotone_rateInverseE` — der Müllwert `0` liegt *unterhalb* jeder Zeit, der
+Wert `⊤` *oberhalb* —, aber sie ist hier nicht bloß eine ersparte Hypothese, sondern der Unterschied
+zwischen einer wahren und einer falschen Aussage.
+
+**Warum das nicht Buchhaltung ist:** die Divergenz ist für `truncRateF Λ a` oberhalb des Pegels `a`
+**falsch**, und `truncRateF` ist gerade die Rate, auf der ein lokalisiertes Problem läuft. Ein
+Lokalisierungssatz, der die Divergenz verlangt, erreicht das lokalisierte Problem nicht.
+
+Die Rückrichtung ist `sInf_le` am Zeugen `c` und verlangt überhaupt nichts — auch keine
+Integrierbarkeit. `hint` und `hpos` gehen allein in die Hinrichtung ein, und dort allein über
+`cumulativeRateF_rateInverse_of_exists`.
+
+#### Der zweite Befund, und er ist der größere: **die Lokalisierung kostet keine Nichtexplosion**
+
+`isLocalizingSequence_rateTime`, das zustandsabhängige Gegenstück, trägt
+`hP : ∀ᵐ ω ∂P, ω ∈ NonExplosiveE lam`, und es muß sie tragen: sein lokalisierendes Funktional ist
+das laufende Supremum der Rate **längs des Pfades**, und an einem explosiven Stichprobenpunkt ist
+das schon vor der festen Zeit unendlich, also bleiben die Trefferzeiten darunter stehen.
+
+`isLocalizingSequence_rateInverseE` trägt sie **nicht**, und zwar in keiner Gestalt:
+
+| Feld | zustandsabhängig | pfadabhängig |
+| --- | --- | --- |
+| `isStoppingTime` | `isStoppingTime_rateTime`, aus `measurable_rateSup` | `isStoppingTime_rateInverseE`, aus der Meßbarkeit der kumulierten Rate |
+| `tendsto_top` | `filter_upwards` über `NonExplosiveE lam` | `Filter.Eventually.of_forall`, **ohne Menge** |
+| `mono` | `monotone_rateTime` | `monotone_rateInverseE`, **ohne Voraussetzung** |
+
+Alle drei Felder gelten an **jedem** Stichprobenpunkt und nicht fast überall. Der ganze Beweis der
+Ausschöpfung ist `exists_nat_gt`:
+
+> `cumulativeRateF Λ ω t` ist ein Integral über das beschränkte Fenster `(0, t]` einer lokal
+> integrierbaren Funktion, also eine reelle Zahl. Wähle `n` darüber; dann ist
+> `t < rateInverseE Λ ω n` nach `rateInverseE_le_coe_iff`.
+
+Gegen `tendsto_rateTime_atTop`, das `rateSup_lt_top_of_mem_nonExplosiveE` braucht und dafür die
+Endlichkeit der Zustandsmenge vor `t`. **Der Unterschied ist, welches Funktional lokalisiert:** das
+laufende Supremum liest den Pfad, die kumulierte Rate liest ihn nicht — sie ist ein Integral über
+die Rate, und die Rate ist nach Voraussetzung lokal integrierbar. Wo der zustandsabhängige Fall die
+Nichtexplosion braucht, um von einer Schranke *längs des Pfades* reden zu dürfen, hat der
+pfadabhängige die Schranke aus der Integrierbarkeit umsonst.
+
+Das ist die Umkehrung des Preises, den der sechste bis zehnte Lauf für die pfadabhängige Variante
+gezahlt hat (die Inverse statt der Division, die Filtration des Punktprozesses statt der des
+Pfades): an dieser Stelle ist die pfadabhängige Variante die **billigere**.
+
+#### Die Brücke zur Meßbarkeitsschicht, und daß sie eine Deklaration ist
+
+`isStoppingTime_rateInverseE` fragt die Filtration nach **einem** Ding:
+`∀ t : ℝ≥0, Measurable[𝓕 t] fun ω ↦ cumulativeRateF Λ ω t`. Keine Sprungzeiten, kein Prozeß, keine
+Nichtexplosion. `measurable_cumulativeRateF_of_uncurry_min` löst das aus der gemeinsamen
+Meßbarkeit `Measurable[ℝ≥0 ⊗ 𝓕 t] fun p ↦ Λ (min p.1 t) p.2` ein — genau der Gestalt, in der
+`Clock.IsProgressive` sie ohnehin liefert und in der der elfte Lauf sie für den Kompensator bewiesen
+hat.
+
+Die einzige Arbeit darin ist ein Registerwechsel: das Fenster `(0, t]` liegt in `ℝ`, die gemeinsame
+Meßbarkeit ist über `ℝ≥0` formuliert, und `Real.toNNReal` vermittelt, weil es auf dem Fenster die
+Identität ist. Danach ist es `measurable_cumulativeRateF` (Gruppe G14) mit `γ := Ω` und der
+σ-Algebra `𝓕 t` statt der Instanz.
+
+**Die Hawkes-Instanzen sind je ein Term**: `isStoppingTime_rateInverseE_hawkesSelfRate` und
+`isLocalizingSequence_rateInverseE_hawkesSelfRate` setzen `hawkesSelfRate_pos` (achter Lauf) und
+`measurable_uncurry_hawkesSelfRate_hawkesFiltration` (elfter Lauf) ein und nichts sonst. Weder der
+Fixpunkt noch die Nichtexplosion noch eine Bedingung an die Masse von `φ` geht ein — insbesondere
+**nicht** `∫ φ < 1`, die Bedingung, an der die globale Fassung hängt.
+
+#### Die Abweichung vom Manuskript, und sie ist jetzt vermerkt
+
+`thm:pathjumpMP`(a) nennt die **Sprungzeiten** `(τ n)` als lokalisierendes System. Sie sind für
+`hawkesFiltration` Stoppzeiten (`isStoppingTime_jumpTime`), taugen aber nicht: auf `[0, τ n]` ist
+die kumulierte Rate `∑_{k<n} ξ k`, in `ω` unbeschränkt, also gibt es keine Fensterschranke der
+Gestalt, die `martingale_stoppedProcess` verlangt. Auf `[0, rateInverseE Λ · N]` ist sie an jedem
+Stichprobenpunkt höchstens `N`, und das ist genau die Eingabe von
+`abs_setIntegral_compensatorF_le_of_cumulated` und `bdd_mpFamilyF_of_cumulated` (fünfzehnter Lauf).
+Die Formalisierung nimmt also `σ N` und nicht `τ n`; der Vermerk steht in
+`MartingaleProblems/README.md`, Meilenstein 4, an der Stelle des neuen Punktes. Das Manuskript ist
+nicht geändert.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py` (unverändert lauffähig, um die Gruppe `G27` erweitert):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G26 die Inverse in `ℝ≥0∞`, und der Prozeß, den die Stutzung braucht | 25 | 191 |
+| G27 das lokalisierende System: die Trefferzeiten der kumulierten Rate | 13 | 141 |
+| `section PathDependent` gesamt | — | 1905 Codezeilen, 3373 mit Dokumentation |
+
+**Gebrauchte Mathlib-Bausteine, und keiner fehlte:** `ProbabilityTheory.IsLocalizingSequence`
+(`Mathlib/Probability/Process/LocalProperty.lean:64`, die Felder `isStoppingTime`, `tendsto_top`,
+`mono`), `MeasureTheory.IsStoppingTime`
+(`Mathlib/Probability/Process/Stopping.lean:75`, über `τ : Ω → WithTop ι`),
+`ENNReal.tendsto_nhds_top_iff_nnreal`, `ENNReal.ofReal_coe_nnreal`, `ENNReal.ofReal_le_ofReal_iff`,
+`ENNReal.ofReal_lt_top`, `top_le_iff`, `exists_nat_gt`, `measurable_real_toNNReal`
+(`Mathlib/MeasureTheory/Constructions/BorelSpace/Real.lean:143`), `Real.coe_toNNReal'`,
+`measurableSet_le`, `sInf_le`, `csInf_le`, `setIntegral_congr_fun`, `measurableSet_Ioc`,
+`IsClosed.csInf_mem` (`Mathlib/Topology/Order/Monotone.lean:428`),
+`ContinuousOn.preimage_isClosed_of_isClosed` (`Mathlib/Topology/ContinuousOn.lean:197`),
+`ContinuousWithinAt.mono_of_mem_nhdsWithin` (ebenda:240), `mem_nhdsWithin`, `isOpen_Iio`,
+`isClosed_Ici`, `setIntegral_nonneg`.
+
+**Keine Negativaussage über Mathlib**, also nichts für `scripts/check_negatives.py` nachzutragen.
+
+#### Der dritte Befund: die **strikte** Positivität der Rate wird nirgends gebraucht, und das ist es, was den Satz bis an die gestutzte Rate heranträgt
+
+Der erste Entwurf dieses Laufs trug `hpos : ∀ u, 0 < u → 0 < Λ u ω` — die Voraussetzung, die jede
+Aussage dieses Abschnitts seit dem sechsten Lauf trägt — und verbrauchte sie an **einer** Stelle,
+`cumulativeRateF_rateInverse_of_exists`, und dort über `strictMonoOn_cumulativeRateF`. Was die
+strikte Monotonie dort leistet, ist die **Eindeutigkeit** der Zeit, an der der Pegel erreicht wird:
+sie identifiziert das Infimum mit dem Punkt, den der Zwischenwertsatz liefert.
+
+Die Hinrichtung braucht die Eindeutigkeit nicht. Sie braucht, daß das Infimum **selbst** eine
+zulässige Zeit ist, und das ist eine Aussage über die Abgeschlossenheit und nicht über die
+Injektivität:
+
+> `isClosed_setOf_le_cumulativeRateF`: `{r | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r}` ist
+> `Set.Ici 0 ∩ cumulativeRateF Λ ω ⁻¹' Set.Ici a`, also abgeschlossen, sobald die kumulierte Rate
+> auf der Halbachse stetig ist. Nach unten beschränkt ist sie durch `0`, nach Voraussetzung nicht
+> leer, also liegt ihr Infimum in ihr (`IsClosed.csInf_mem`). Zusammen mit der Monotonie ist das die
+> Hinrichtung, in zwei Zeilen.
+
+Gebraucht wird dafür `Λ ≥ 0` statt `Λ > 0`, und zwei Bausteine, die vorher nicht dastanden:
+`monotoneOn_cumulativeRateF_of_nonneg` (die Monotonie aus `setIntegral_nonneg` statt aus der
+strikten Monotonie) und `continuousOn_cumulativeRateF_Ici` (die Stetigkeit auf **ganz** `Set.Ici 0`
+statt auf jedem `Set.Icc 0 b`; der Übergang ist lokal, weil `Set.Icc 0 (x+1)` eine Umgebung von `x`
+in `Set.Ici 0` ist). Zusammen sechsundzwanzig Codezeilen, drei Deklarationen.
+
+**Warum das mehr als Hygiene ist:** `truncRateF Λ a` ist oberhalb des Pegels `a` gleich `0`, also
+**nicht** strikt positiv. Ein Satz mit `hpos` erreicht die gestutzte Rate nicht — und die gestutzte
+Rate ist gerade die, auf der ein lokalisiertes Problem läuft. Mit `hnn` sind auch die Trefferzeiten
+des **gestutzten** Problems Stoppzeiten. Dieselbe Beobachtung wie beim Wegfall der Divergenz, an
+einer anderen Voraussetzung: beide waren da, um einen Zusammenbruch auszuschließen, den es an dieser
+Stelle nicht gibt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Der gestutzte Prozeß und seine Identifikation mit dem ungestutzten unterhalb der
+   Trefferzeit** — Vorschlag 2 des sechzehnten Laufs, jetzt der erste. Aussage: das pfadabhängige
+   Gegenstück zu `stoppedProcess_mpFamily_truncRate_eq` (siebzehnter Lauf des 2026-09-10), zu führen
+   an `jumpProcessFE (truncRateF Λ a)` gegen `jumpProcessFE Λ`, gestoppt bei `rateInverseE Λ · a`.
+
+   **Warum jetzt:** mit diesem Lauf stehen **beide** Eingaben von `martingale_stoppedProcess` für
+   das gestutzte pfadabhängige Problem — die Fensterschranke aus der Massenschranke (fünfzehnter
+   Lauf, `abs_setIntegral_compensatorF_le_of_cumulated`, `bdd_mpFamilyF_of_cumulated`) und das
+   lokalisierende System (dieser Lauf). Was zwischen ihnen und `hawkes_isLocalMPSolution` steht, ist
+   der Turmschluß, und dessen erster Schritt ist diese Identifikation — genau wie im
+   zustandsabhängigen Fall, wo sie der siebzehnte Lauf des 2026-09-10 war.
+
+   **Worauf sie ruht:** `rateInverse_truncRateF_of_le` (fünfzehnter Lauf) für die Sprungzeiten
+   unterhalb der Stufe, `jumpTimeFE_truncRateF_eq_top` (sechzehnter Lauf) darüber,
+   `rateInverseE_eq_ofReal_of_exists` (sechzehnter Lauf) für den Übergang zwischen beiden Registern.
+   **Prüfstein:** ob die Identifikation wie im zustandsabhängigen Fall eine Gleichheit von
+   **Funktionen** wird und nicht bloß eine f.s.-Aussage; sie muß es, weil `StronglyAdapted` und
+   `IsStoppingTime` keine f.s.-Begriffe sind.
+2. **`martingale_of_martingale_of_stopped` auf die pfadabhängige Variante anwenden** — der
+   Turmschluß steht seit dem siebzehnten Lauf des 2026-09-10 **ohne jeden Bezug auf die
+   Sprungkonstruktion** da und ist also unverändert brauchbar. Damit ist
+   `hawkes_isLocalMPSolution` erreichbar, sobald Vorschlag 1 steht. Die globale Fassung wird nach
+   der Festlegung des Nutzers vom 2026-09-11 mit `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**
+   hingeschrieben und nicht bewiesen; im Doc-Kommentar steht, daß sie für den linearen Fall wahr
+   ist und an der Volterra-Resolvente hängt, die Mathlib nicht hat.
+3. **Die übrigen Aussagen des Abschnitts auf `Λ ≥ 0` umstellen** — dieser Lauf hat es für
+   `PathStopping` getan, aber `cumulativeRateF_rateInverse_of_exists`,
+   `rateInverse_lt_rateInverse`, `monotone_jumpTimeF` und `rateInverse_truncRateF_of_le` tragen
+   `hpos` weiter. **Prüfstein:** welche von ihnen die Eindeutigkeit der Zeit wirklich brauchen —
+   `rateInverse_lt_rateInverse`, das strikte Wachstum, vermutlich schon, denn ohne strikte
+   Positivität ist es falsch (eine Rate, die auf einem Intervall verschwindet, hat dort ein ganzes
+   Plateau von Urbildern). Das ist der Unterschied zwischen einer entbehrlichen und einer
+   unentbehrlichen Voraussetzung, und er ist an dieser Liste abzulesen und nicht zu raten.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten
+   Laufs, unverändert: `Set.diff_eq_empty` durch `Set.sdiff_eq_empty`, `Set.mem_setOf_eq` durch
+   `Set.mem_ofPred_eq`, `push_neg` durch `push Not`, dort wo v4.33.1 es meldet. Die neuen Abschnitte
+   `PathInverseE` und `PathStopping` halten die Regel schon ein und melden keine einzige Warnung.

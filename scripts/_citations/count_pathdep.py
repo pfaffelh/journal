@@ -267,6 +267,21 @@ GROUPS = {
         "jumpTimeFE_truncRateF_eq_top",
         "jumpTimeFE_expRate_eq_top",
     },
+    "G27 the localizing system: the hitting times of the cumulated rate": {
+        "monotoneOn_cumulativeRateF_of_nonneg",
+        "continuousOn_cumulativeRateF_Ici",
+        "isClosed_setOf_le_cumulativeRateF",
+        "rateInverse_le_iff_of_nonneg",
+        "rateInverseE_le_ofReal_iff",
+        "rateInverseE_le_coe_iff",
+        "measurable_cumulativeRateF_of_uncurry_min",
+        "isStoppingTime_rateInverseE",
+        "isStoppingTime_rateInverseE_of_uncurry_min",
+        "isStoppingTime_rateInverseE_hawkesSelfRate",
+        "tendsto_rateInverseE_atTop",
+        "isLocalizingSequence_rateInverseE",
+        "isLocalizingSequence_rateInverseE_hawkesSelfRate",
+    },
 }
 
 

@@ -17087,5 +17087,284 @@ theorem jumpTimeFE_expRate_eq_top (ω : Ω) (xi : ℕ → ℝ) (n : ℕ)
 
 end PathInverseE
 
+/-! ### The hitting time of the cumulated rate is a stopping time
+
+This is the step that turns the truncation of `section PathTruncation` into a **localization**, and
+it is the path dependent counterpart of `isStoppingTime_rateTime`.  The state dependent case
+localizes at the hitting time of the running *supremum* of the rate; here the rate is a functional
+of the path and has no running supremum that a filtration can see, and the localizing time is the
+hitting time of the **cumulated** rate.
+
+**The statement is at `rateInverseE` and not at `rateInverse`, and that is not a preference.**  The
+real inverse of an unattained level is `0`, and `0` lies below every time, so
+`{ω | rateInverse Λ ω a ≤ c}` contains every sample point at which the level is never reached -- the
+set is right for the wrong reason and the equivalence with `{a ≤ cumulativeRateF Λ ω c}` is simply
+false there.  In `ℝ≥0∞` the unattained level is inverted to `⊤`, which lies above every real time,
+and the equivalence holds at **every** sample point.
+
+**And with it the divergence hypothesis disappears.**  `setOf_rateInverse_le`, the real statement,
+carries `htop : Tendsto (cumulativeRateF Λ ω) atTop atTop`; `rateInverseE_le_ofReal_iff` carries
+neither it nor the attainment of the level that the sixteenth run isolated out of it
+(`cumulativeRateF_rateInverse_of_exists`).  The reason is the one above: the hypothesis was there to
+rule out the collapse to the junk value, and there is no collapse to rule out.  This matters and is
+not bookkeeping -- the divergence is **false** for `truncRateF Λ a` above the level `a`, which is
+exactly the rate a localized problem runs on.
+
+`isStoppingTime_rateInverseE` asks of the filtration one thing and nothing else: that the cumulated
+rate up to `t` be measurable for the past at `t`.  No jump times, no non explosion, no process.
+`measurable_cumulativeRateF_of_uncurry_min` discharges it from the joint measurability of the rate,
+which is what `Clock.IsProgressive` supplies anyway, and
+`isStoppingTime_rateInverseE_hawkesSelfRate` is the instance on the data of `ex:hawkes`. -/
+
+section PathStopping
+
+/-- **The cumulated rate is monotone on the half line from the non negativity of the rate alone.**
+`monotoneOn_cumulativeRateF` reaches the same conclusion through `strictMonoOn_cumulativeRateF` and
+therefore through the strict positivity, which is more than the conclusion needs: the increment over
+`(s, t]` is an integral of a non negative function (`cumulativeRateF_sub`, `setIntegral_nonneg`).
+
+The distinction is not hygiene.  The truncated rate `truncRateF Λ a` is `0` above the level it was
+truncated at, so the strictly positive version does not reach it, and it is the rate a localized
+problem runs on. -/
+theorem monotoneOn_cumulativeRateF_of_nonneg
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) :
+    MonotoneOn (cumulativeRateF Λ ω) (Set.Ici 0) := by
+  intro s hs t _ hst
+  have hs0 : (0 : ℝ) ≤ s := hs
+  have hsub := cumulativeRateF_sub hint hs0 hst
+  have hnonneg : 0 ≤ ∫ u in Set.Ioc s t, Λ u ω :=
+    setIntegral_nonneg measurableSet_Ioc fun u hu ↦ hnn u (lt_of_le_of_lt hs0 hu.1)
+  linarith
+
+/-- **The cumulated rate is continuous on the whole half line**, and not only on a bounded window of
+it.  `continuousOn_cumulativeRateF` gives `Set.Icc 0 b` for every `b`, which is what
+`intervalIntegral.continuousOn_primitive` delivers; the passage to `Set.Ici 0` is local, because
+`Set.Icc 0 (x + 1)` is a neighbourhood of `x` within `Set.Ici 0`. -/
+theorem continuousOn_cumulativeRateF_Ici
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r) :
+    ContinuousOn (cumulativeRateF Λ ω) (Set.Ici 0) := by
+  intro x hx
+  have hx0 : (0 : ℝ) ≤ x := hx
+  have hmem : Set.Icc (0 : ℝ) (x + 1) ∈ 𝓝[Set.Ici (0 : ℝ)] x := by
+    refine mem_nhdsWithin.2 ⟨Set.Iio (x + 1), isOpen_Iio, by simp, ?_⟩
+    rintro y ⟨hy1, hy2⟩
+    exact ⟨hy2, (Set.mem_Iio.1 hy1).le⟩
+  exact ((continuousOn_cumulativeRateF hint (x + 1) (by linarith)) x
+    ⟨hx0, by linarith⟩).mono_of_mem_nhdsWithin hmem
+
+/-- **The set of times at which the level is already passed is closed**, from local integrability
+alone.  This is what replaces the strict monotonicity in `rateInverse_le_iff_of_nonneg`: a closed
+set that is non empty and bounded below **contains** its infimum (`IsClosed.csInf_mem`), so the
+inverse is a time at which the level is passed and not merely a limit of such times.
+
+The strictly monotone route identifies the infimum with the point the intermediate value theorem
+produces; this one does not need the point to be unique, and uniqueness is the only thing the strict
+positivity was ever buying. -/
+theorem isClosed_setOf_le_cumulativeRateF
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r) (a : ℝ) :
+    IsClosed {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} := by
+  have hset : {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r}
+      = Set.Ici (0 : ℝ) ∩ cumulativeRateF Λ ω ⁻¹' Set.Ici a := Set.ext fun _ ↦ Iff.rfl
+  rw [hset]
+  exact (continuousOn_cumulativeRateF_Ici hint).preimage_isClosed_of_isClosed
+    isClosed_Ici isClosed_Ici
+
+/-- **The defining property of the inverse, at an attained level and at a merely non negative
+rate.**  `rateInverse_le_iff` asks for the divergence of the cumulated rate at every level and for
+the strict positivity of the rate; this asks for the attainment of the one level in question and for
+non negativity, and both weakenings are used below -- the first because the divergence is false for
+a truncated rate, the second because a truncated rate is not strictly positive.
+
+The reverse implication uses neither: the time `c` is then itself a witness. -/
+theorem rateInverse_le_iff_of_nonneg
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω)
+    (hex : ∃ r : ℝ, 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r) {c : ℝ} (hc : 0 ≤ c) :
+    rateInverse Λ ω a ≤ c ↔ a ≤ cumulativeRateF Λ ω c := by
+  constructor
+  · intro h
+    have hmem : rateInverse Λ ω a ∈ {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} :=
+      (isClosed_setOf_le_cumulativeRateF hint a).csInf_mem hex ⟨0, fun r hr ↦ hr.1⟩
+    exact hmem.2.trans (monotoneOn_cumulativeRateF_of_nonneg hint hnn hmem.1 hc h)
+  · exact fun h ↦ csInf_le ⟨0, fun r hr ↦ hr.1⟩ ⟨hc, h⟩
+
+/-- **The sublevel sets of the repaired inverse are sublevel sets of the cumulated rate, with no
+hypothesis on the level at all.**  Against `setOf_rateInverse_le`, which carries the divergence: the
+unattained level is the only case in which the two inverses differ, and it is precisely the case in
+which the real statement is false.  Here it is the case in which the left side is `⊤ ≤ ofReal c`,
+which is false, and the right side is `a ≤ cumulativeRateF Λ ω c`, which is false as well, so the
+equivalence holds by both sides failing.
+
+The reverse implication is `sInf_le` at the witness `c` and asks for nothing whatever. -/
+theorem rateInverseE_le_ofReal_iff
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) {c : ℝ} (hc : 0 ≤ c) :
+    rateInverseE Λ ω a ≤ ENNReal.ofReal c ↔ a ≤ cumulativeRateF Λ ω c := by
+  constructor
+  · intro h
+    have hne : rateInverseE Λ ω a ≠ ⊤ := by
+      intro htop
+      rw [htop] at h
+      exact absurd (top_le_iff.1 h) ENNReal.ofReal_lt_top.ne
+    have hex := rateInverseE_ne_top_iff.1 hne
+    rw [rateInverseE_eq_ofReal_of_exists hex, ENNReal.ofReal_le_ofReal_iff hc] at h
+    exact (rateInverse_le_iff_of_nonneg hint hnn hex hc).1 h
+  · exact fun h ↦ sInf_le ⟨c, ⟨hc, h⟩, rfl⟩
+
+/-- The same statement at a level of `ℝ≥0`, which is the index of the filtration and therefore the
+form `IsStoppingTime` unfolds to. -/
+theorem rateInverseE_le_coe_iff
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (t : ℝ≥0) :
+    rateInverseE Λ ω a ≤ (t : ENNReal) ↔ a ≤ cumulativeRateF Λ ω (t : ℝ) := by
+  rw [← ENNReal.ofReal_coe_nnreal]
+  exact rateInverseE_le_ofReal_iff hint hnn t.coe_nonneg
+
+/-- **The cumulated rate up to `t` is measurable for the past at `t`** as soon as the rate is
+jointly measurable there, and this is the hypothesis in the form every other statement of the
+measurability layer already supplies it: the cut `min u t` is free on the window `(0, t]`, and it is
+what turns a statement about `Λ` into a statement `Clock.IsProgressive` can discharge.
+
+`measurable_cumulativeRateF` is the same passage over an arbitrary parameter space; the only work
+here is that the window lives in `ℝ` while the joint measurability is asked over `ℝ≥0`, and the two
+are matched by `Real.toNNReal`, which is the identity on the window. -/
+theorem measurable_cumulativeRateF_of_uncurry_min {mΩ : MeasurableSpace Ω} (t : ℝ≥0)
+    (hΛ : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod mΩ]
+      fun p : ℝ≥0 × Ω ↦ Λ (min (p.1 : ℝ) (t : ℝ)) p.2) :
+    Measurable[mΩ] fun w : Ω ↦ cumulativeRateF Λ w (t : ℝ) := by
+  have hjoint : Measurable[mΩ.prod (inferInstance : MeasurableSpace ℝ)]
+      fun q : Ω × ℝ ↦ Λ (min ((Real.toNNReal q.2 : ℝ≥0) : ℝ) (t : ℝ)) q.1 :=
+    hΛ.comp ((measurable_real_toNNReal.comp measurable_snd).prodMk measurable_fst)
+  have key := @measurable_cumulativeRateF Ω Ω mΩ
+    (fun (_ : Ω) (u : ℝ) (w : Ω) ↦ Λ (min ((Real.toNNReal u : ℝ≥0) : ℝ) (t : ℝ)) w)
+    id hjoint (t : ℝ)
+  have heq : ∀ w : Ω, cumulativeRateF
+      (fun (u : ℝ) (w' : Ω) ↦ Λ (min ((Real.toNNReal u : ℝ≥0) : ℝ) (t : ℝ)) w') w (t : ℝ)
+      = cumulativeRateF Λ w (t : ℝ) := by
+    intro w
+    refine setIntegral_congr_fun measurableSet_Ioc fun u hu ↦ ?_
+    show Λ (min ((Real.toNNReal u : ℝ≥0) : ℝ) (t : ℝ)) w = Λ u w
+    rw [Real.coe_toNNReal' u, max_eq_left hu.1.le, min_eq_left hu.2]
+  simpa only [id_eq, heq] using key
+
+/-- **The hitting time of the cumulated rate is a stopping time.**  The statement
+`section PathTruncation` was built towards: it is what makes `truncRateF Λ a` a *localization* of
+the path dependent problem and not merely a truncation of it.
+
+The filtration is asked for one thing, and it is the one thing the measurability layer of the path
+dependent variant already delivers.  **No jump times enter, no non explosion, no process** -- the
+localizing time is a functional of the rate alone, which is the whole reason it is visible where the
+jump times are not (`not_isStoppingTime_hawkesJumpTime_pathFiltration`). -/
+theorem isStoppingTime_rateInverseE {mΩ : MeasurableSpace Ω} {𝓕 : Filtration ℝ≥0 mΩ}
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hnn : ∀ (w : Ω) (u : ℝ), 0 < u → 0 ≤ Λ u w)
+    (hcum : ∀ t : ℝ≥0, Measurable[𝓕 t] fun w : Ω ↦ cumulativeRateF Λ w (t : ℝ)) :
+    IsStoppingTime 𝓕 fun w : Ω ↦ rateInverseE Λ w a := by
+  intro t
+  refine MeasurableSet.congr (s := {w : Ω | a ≤ cumulativeRateF Λ w (t : ℝ)})
+    (measurableSet_le measurable_const (hcum t)) ?_
+  ext w
+  exact (rateInverseE_le_coe_iff (hint w) (hnn w) t).symm
+
+/-- The two hypotheses on the rate, packaged for the statement above from the joint measurability
+the filtration supplies. -/
+theorem isStoppingTime_rateInverseE_of_uncurry_min {mΩ : MeasurableSpace Ω}
+    {𝓕 : Filtration ℝ≥0 mΩ}
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hnn : ∀ (w : Ω) (u : ℝ), 0 < u → 0 ≤ Λ u w)
+    (hΛ : ∀ t : ℝ≥0, Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (𝓕 t)]
+      fun p : ℝ≥0 × Ω ↦ Λ (min (p.1 : ℝ) (t : ℝ)) p.2) :
+    IsStoppingTime 𝓕 fun w : Ω ↦ rateInverseE Λ w a :=
+  isStoppingTime_rateInverseE hint hnn
+    fun t ↦ measurable_cumulativeRateF_of_uncurry_min t (hΛ t)
+
+/-- **The localizing time of the Hawkes martingale problem is a stopping time for the Hawkes
+filtration.**  The instance on the data of `ex:hawkes`, and it is one term: the positivity of the
+rate is its constant term (`hawkesSelfRate_pos`) and the joint measurability is
+`measurable_uncurry_hawkesSelfRate_hawkesFiltration`, which the measurability layer proved for the
+compensating integrand and which is asked here of the rate alone.
+
+**Nothing about the fixed point enters and nothing about the non explosion**, and the contrast with
+`not_isStoppingTime_hawkesJumpTime_pathFiltration` is the content: the *jump* times are invisible to
+the filtration of the path, and the hitting times of the *cumulated rate* are visible to the
+filtration of the point process.  This is the localizing system the Hawkes assembly runs on, and
+`thm:pathjumpMP`(a) names the jump times instead -- see the note in
+`MartingaleProblems/README.md`, Milestone 4. -/
+theorem isStoppingTime_rateInverseE_hawkesSelfRate {E : Type*} [MeasurableSpace E] {ν : ℝ}
+    {φ : ℝ → ℝ} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) :
+    IsStoppingTime (hawkesFiltration (E := E) hν hφ hφm hφint)
+      fun w : (ℕ → E) × (ℕ → ℝ) ↦ rateInverseE (hawkesSelfRate ν φ) w a :=
+  isStoppingTime_rateInverseE_of_uncurry_min hint
+    (fun w u _ ↦ (hawkesSelfRate_pos hν hφ u w).le)
+    fun i ↦ measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i
+
+/-! #### And they are a localizing sequence, at **every** sample point -/
+
+/-- **The hitting times exhaust the half line, and the reason is that the cumulated rate at a fixed
+time is a real number.**
+
+Compare `tendsto_rateTime_atTop`, the state dependent statement: it carries
+`hω : (y, xi) ∈ NonExplosiveE lam`, and it has to, because at an explosive sample point the running
+supremum of the rate along the path is already infinite before the fixed time and the hitting times
+stop below it.  Here the localizing functional is the **cumulated** rate, and
+`cumulativeRateF Λ ω t` is an integral over the bounded window `(0, t]` of a locally integrable
+function: it is finite at every sample point, and `exists_nat_gt` is the whole proof.
+
+**So the localization of the path dependent problem costs no non explosion at all.**  That is not a
+weaker hypothesis on the same statement, it is the absence of the hypothesis: the state dependent
+case needs non explosion because its localizing functional reads the path, and this one does not
+read the path. -/
+theorem tendsto_rateInverseE_atTop
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) :
+    Filter.Tendsto (fun n : ℕ ↦ rateInverseE Λ ω (n : ℝ)) Filter.atTop (𝓝 ⊤) := by
+  refine ENNReal.tendsto_nhds_top_iff_nnreal.2 fun s ↦ ?_
+  obtain ⟨n, hn⟩ := exists_nat_gt (cumulativeRateF Λ ω (s : ℝ))
+  refine Filter.eventually_atTop.2 ⟨n, fun m hm ↦ lt_of_not_ge fun hcon ↦ ?_⟩
+  have h := (rateInverseE_le_coe_iff hint hnn s).1 hcon
+  exact absurd (h.trans' (by exact_mod_cast Nat.cast_le.2 hm)) (not_le.2 hn)
+
+/-- **The hitting times of the cumulated rate are a localizing sequence.**  The path dependent
+counterpart of `isLocalizingSequence_rateTime`, and the difference between the two is one
+hypothesis: that one asks for almost sure non explosion, this one asks for nothing beyond what makes
+the hitting times stopping times, and all three fields hold at **every** sample point rather than
+almost everywhere.
+
+The monotonicity is `monotone_rateInverseE`, which carries no hypothesis whatever -- a higher level
+admits fewer times, so its infimum is larger -- and that is the second payoff of the change of
+codomain that the sixteenth run recorded. -/
+theorem isLocalizingSequence_rateInverseE {mΩ : MeasurableSpace Ω} {𝓕 : Filtration ℝ≥0 mΩ}
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hnn : ∀ (w : Ω) (u : ℝ), 0 < u → 0 ≤ Λ u w)
+    (hcum : ∀ t : ℝ≥0, Measurable[𝓕 t] fun w : Ω ↦ cumulativeRateF Λ w (t : ℝ))
+    (P : Measure Ω) :
+    ProbabilityTheory.IsLocalizingSequence 𝓕
+      (fun (n : ℕ) (w : Ω) ↦ rateInverseE Λ w (n : ℝ)) P where
+  isStoppingTime _ := isStoppingTime_rateInverseE hint hnn hcum
+  tendsto_top :=
+    Filter.Eventually.of_forall fun w ↦ tendsto_rateInverseE_atTop (hint w) (hnn w)
+  mono := Filter.Eventually.of_forall fun w _ _ h ↦
+    monotone_rateInverseE Λ w (by exact_mod_cast h)
+
+/-- **The localizing sequence of the Hawkes martingale problem**, on the data of `ex:hawkes` and
+under no further hypothesis -- in particular under no non explosion and no condition on the mass of
+`φ`.  This is the localizing system `hawkes_isLocalMPSolution` runs on. -/
+theorem isLocalizingSequence_rateInverseE_hawkesSelfRate {E : Type*} [MeasurableSpace E] {ν : ℝ}
+    {φ : ℝ → ℝ} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r)
+    (P : Measure ((ℕ → E) × (ℕ → ℝ))) :
+    ProbabilityTheory.IsLocalizingSequence (hawkesFiltration (E := E) hν hφ hφm hφint)
+      (fun (n : ℕ) (w : (ℕ → E) × (ℕ → ℝ)) ↦ rateInverseE (hawkesSelfRate ν φ) w (n : ℝ)) P :=
+  isLocalizingSequence_rateInverseE hint (fun w u _ ↦ (hawkesSelfRate_pos hν hφ u w).le)
+    (fun i ↦ measurable_cumulativeRateF_of_uncurry_min i
+      (measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i)) P
+
+end PathStopping
 
 end PathDependent
