@@ -23451,3 +23451,150 @@ nach dem Befund oben nicht ineinander zu überführen.
    Vorschlag 2 nicht vorgezogen wird.
 4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
    zweiundzwanzigsten Laufs, unverändert.
+
+### 2026-09-12, erster Lauf des Tages — der Vorschlag des Vorlaufs ist nicht bloß offen, er ist **falsch**: die kumulierte Masse ist kein Funktional des Protokolls, und der Beleg ist ein Gegenbeispiel
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des dreiundzwanzigsten Laufs
+(`measurable_cumulativeRateF_jumpFiltrationFE`). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Fünfundzwanzig neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, neuer
+Abschnitt `PathCutObstruction` — vier Definitionen und einundzwanzig Sätze. Die ganze Datei **ohne
+einen Fehler** durch `lake env lean` gegen v4.33.1, alle einundzwanzig Sätze mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl
+der `sorry` bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+Neu: `eq_of_measurable_jumpFiltrationFE`, `constRateF`, `intervalIntegrable_constRateF`,
+`cumulativeRateF_constRateF`, `tendsto_cumulativeRateF_constRateF`, `rateInverse_constRateF`,
+`rateInverseE_constRateF`, `jumpTimeFE_constRateF`, `measurable_rateInverse_constRateF`,
+`hiddenWait`, `hiddenWait_nonneg`, `sum_hiddenWait_one`, `sum_hiddenWait_add_two`,
+`sum_hiddenWait_le`, `two_le_sum_hiddenWait`, `hiddenPoint`, `hiddenScale`, `one_le_hiddenScale`,
+`hiddenScale_pos`, `measurable_hiddenScale`, `hiddenScale_hiddenPoint`,
+`measurable_jumpTimeFE_truncRateF_hiddenRate`, `lt_jumpTimeFE_hiddenPoint`,
+`cumulativeRateF_truncRateF_hiddenPoint`, `not_measurable_cumulativeRateF_jumpFiltrationFE`.
+
+#### Der Befund: der Vorschlag war zu widerlegen und nicht zu beweisen
+
+Der dreiundzwanzigste Lauf hat `measurable_cumulativeRateF_jumpFiltrationFE` als **einzige** noch
+offene Eingabe von `jumpFiltrationFE_hcut` benannt und dazu selbst den Prüfstein gestellt: „*Ob das
+die Meßbarkeit **des Wertes** und nicht bloß der Sprungzeiten gibt, ist die erste Frage und ist zu
+begründen, nicht zu raten — die Masse zwischen zwei Sprüngen ist nicht durch das Protokoll
+bestimmt.*" Der Prüfstein trägt, und er trägt gegen den Vorschlag.
+
+`not_measurable_cumulativeRateF_jumpFiltrationFE` ist der Beleg. Die Sprungzeiten **sind** die
+Inverse der kumulierten Masse, und darum sieht es so aus, als müßte das Protokoll — welche von ihnen
+bis `i` stattgefunden haben — die Masse bei `i` festlegen. Das tut es nicht. Das Protokoll meldet die
+Zeitpunkte, an denen die Masse die Stufen `∑_{k<n} ξ_k` überschreitet; *zwischen* zwei Überschreitungen
+meldet es nichts, und `i` liegt im allgemeinen echt zwischen zweien. Eine Rate, die eine Wartezeit
+liest, die keine Überschreitung vor `i` verbraucht hat, verschiebt die Masse bei `i` und läßt jede
+Überschreitung vor `i` an ihrem Platz.
+
+#### Das Gegenbeispiel, und woran es liegt
+
+Der Zeuge ist `constRateF hiddenScale`: eine in der Zeit **konstante** Rate, deren Wert
+`1 + (ξ₁ ⊔ 0)` die **zweite** Wartezeit liest. Genommen an den zwei Stichprobenpunkten
+`hiddenPoint x₀ 0` und `hiddenPoint x₀ 1` mit den Wartezeiten `(2, d, 0, 0, …)`:
+
+| | Rate | erste Sprungzeit | Protokoll unter `1/2` | Masse bei `1/2` |
+|---|---|---|---|---|
+| `d = 0` | `1` | `2` | leer | `1/2` |
+| `d = 1` | `2` | `1` | leer | `1` |
+
+Jede spätere Sprungzeit liegt über der ersten (`monotone_jumpTimeFE`, die Wartezeiten sind
+nichtnegativ), die Kette ist konstant, also trägt die Pfadkomponente von `jumpStateE` nichts. Das
+ganze Protokoll unter `1/2` stimmt also überein, die Masse bei `1/2` nicht.
+
+**Was dabei *nicht* die Arbeit tut**, und beides ist eigens eingerichtet:
+
+* **der Zustandsraum** — `E` ist beliebig und der Satz ist über jedem bewohnten `E` bewiesen; die
+  Kette ist konstant, nicht der Raum trivial. Das unterscheidet den Zeugen von
+  `eq_of_measurable_jumpFiltrationE_of_subsingleton` und macht ihn zum Gegenstück von
+  `eq_of_measurable_jumpFiltrationE_const_chain`, demselben Mechanismus eine Konstruktion früher;
+* **die Stutzung** — die Stufe ist `4`, die Masse erreicht sie nie
+  (`cumulativeRateF_truncRateF_hiddenPoint` rechnet `min (c/2) 4 = c/2`), und die gestutzten
+  Sprungzeiten sind die ungestutzten (`jumpTimeFE_truncRateF_eq_of_le`, weil jede Teilsumme unter
+  `2 + d ≤ 3` bleibt). Die Aussage gilt für die gestutzte Filtration, also für genau die, an der
+  `jumpFiltrationFE_hcut` die Voraussetzung liest.
+
+Was die Arbeit tut, ist allein, daß die Rate eine **Wartezeit** liest — und das ist genau, was eine
+*pfadabhängige* Rate darf und eine zustandsabhängige nicht.
+
+#### Das Werkzeug, und es steht für sich
+
+`eq_of_measurable_jumpFiltrationFE` ist `eq_of_measurable_naturalFiltration`, gelesen für
+`jumpFiltrationFE`: zwei Stichprobenpunkte, deren **Protokolle** unter `i` übereinstimmen und deren
+**Pfade** unter `i` übereinstimmen, werden von keiner `jumpFiltrationFE Λ hT i`-meßbaren reellen
+Funktion getrennt. Über die Rate, die Wartezeiten und die Nichtexplosion wird nichts verlangt; es ist
+eine Aussage über eine von zwei Abbildungen erzeugte σ-Algebra und über nichts sonst. Das ist der
+Satz, den der dreiundzwanzigste Lauf als „*ein eigener Satz von der Bauart
+`eq_of_measurable_jumpFiltrationE_of_subsingleton`*" angekündigt hat, und er kostet elf Zeilen.
+
+`constRateF` und die sieben Sätze darüber sind der zweite Ertrag und sind allgemeiner als der Zeuge:
+eine in der Zeit konstante, vom Stichprobenpunkt abhängige Rate ist das Objekt, das
+`section ConstantRate` nicht ausdrücken konnte — dort war die Rate eine **Konstante**, hier ist sie
+ein Funktional des ganzen treibenden Datums, das in der Zeit flach ist. Jeder der sieben Sätze ist
+`section ConstantRate` durch `cumulativeRateF_congr` hindurchgereicht, und daß der Transport
+umsonst ist, ist die Probe darauf, daß „die kumulierte Rate liest die Rate an *einem*
+Stichprobenpunkt" die richtige Schnittstelle war.
+
+#### Was das für den Zusammenbau heißt, und es ist keine Sackgasse
+
+**`hcum` wird je Rate bewiesen, aus der Gestalt der Rate.** Für `hawkesSelfRate` ist die Masse bis
+`i` gleich `ν·i + ∑_k Φ(i − T_k)·1_{T_k ≤ i}` mit `Φ` einer Stammfunktion von `φ` — ein Funktional
+**der Sprungzeiten allein** und damit des Protokolls. Dort ist `hcum` wahr und beweisbar; es gibt
+nur keinen Satz über `jumpFiltrationFE`, aus dem es folgte.
+
+Das ist dieselbe Arbeitsteilung wie bei `hN` in `jumpFiltrationFE_inter_lt_rateInverseE`, das aus
+demselben Grund getragen und nicht bewiesen wird, und es ist das, was der zustandsabhängige Fall
+umsonst bekommt, weil `rateSup lam` ein Funktional des **Pfades** ist.
+
+**Zwei Stellen sind daraufhin berichtigt worden**, beide zu stark formuliert:
+
+* der Prosablock vor `section PathCutInstance` in `Suggested.lean` sagte, `hcum` sei „keine zweite
+  Pflicht: **eine Instanz, die überhaupt lokalisiert hat, hat es schon erfüllt**". Die Reduktion
+  `measurable_cumulativeRateF_truncRateF` ist eine Aussage über eine **gegebene** σ-Algebra; an der
+  natürlichen Filtration der gestutzten Sprungzeiten ist die Voraussetzung im allgemeinen falsch.
+* der gleichlautende Satz im `README.md`, Meilenstein 4, sowie die Überschrift „und das ist alles,
+  was `hcum` je war".
+
+#### Und ein zweiter Befund, der beim Aufschreiben des nächsten Schrittes herauskam: `hcum` auf den Hawkes-Daten ist über `hawkesJumpFiltration` nicht so zu haben, wie es aussieht
+
+Der naheliegende nächste Schritt wäre: die Hawkes-Masse bis `i` ist
+`ν·i + ∑_k Φ(i − τ_k)·1_{0 ≤ τ_k < i}` mit `Φ` einer Stammfunktion von `φ`, also ein Funktional
+**der Sprungzeiten allein**, also vom Protokoll gesehen. **Das ist so nicht richtig, und der Grund
+steht in der Definition.** `hawkesSelfRate` ist über `hawkesJumpTime ν φ ω.2 ω` gebaut — die Zeiten
+der **Rekursion** —, während `hawkesJumpFiltration` die Zeiten `jumpTimeFE (hawkesSelfRate ν φ)` der
+**Inversen** liest. Die beiden Familien werden von `jumpTimeF_hawkesSelfRate` identifiziert, und
+diese Aussage trägt `hxi : ∀ k, 0 ≤ ω.2 k` — genau die Hypothese, die der zweiundzwanzigste Lauf als
+über `(ℕ → E) × (ℕ → ℝ)` unerfüllbar gestrichen hat, und die der dreiundzwanzigste bereits an
+`isStoppingTime_jumpTimeFE_hawkesSelfRate` vorgefunden hat.
+
+Für `hawkesFiltration`, die Filtration der Rekursionszeiten, ist `hcum` seit dem einundzwanzigsten
+Lauf bewiesen (`measurable_cumulativeRateF_truncRateF_hawkesSelfRate`); es ist die **falsche**
+Filtration für `jumpFiltrationFE_hcut`, und der Weg über eine allgemeine Zielfiltration
+(`pointFiltrationE_inter_le_of_measurable`) ist nach dem Befund des dreiundzwanzigsten Laufs zu.
+Damit ist an dieser Stelle **dieselbe** Trennlinie erreicht wie schon zweimal zuvor, und zum dritten
+Mal an derselben Hypothese.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Entscheiden, ob `hcum` auf den Hawkes-Daten über `hawkesJumpFiltration` wahr ist** — und die
+   Vermutung ist **nein**, aus demselben Mechanismus wie heute. **Warum jetzt:** es ist die letzte
+   offene Eingabe von `jumpFiltrationFE_hcut`, also der vierten Eingabe von
+   `martingale_of_martingale_of_stopped`, und nach dem zweiten Befund oben ist sie nicht durch
+   Einsetzen zu haben. **Die Gestalt einer Widerlegung** liegt bereit: zwei Stichprobenpunkte, deren
+   Protokoll der Zeiten `jumpTimeFE (truncRateF (hawkesSelfRate ν φ) a)` unter `i` übereinstimmt,
+   deren `hawkesJumpTime` unter `i` aber nicht — erreichbar, weil eine **negative** Wartezeit die
+   Teilsummen `S_n`, an denen die Inverse abliest, nicht monoton macht, während die Rekursion
+   `hawkesStep` fortschreitet. `eq_of_measurable_jumpFiltrationFE` ist das Werkzeug dafür und steht
+   seit heute. **Prüfstein, und er entscheidet die Wegwahl:** trägt die Widerlegung, so ist der
+   Zusammenbau des Hawkes-Falls über `jumpFiltrationFE` **nicht** zu führen, und die Wahl ist dann
+   zwischen (a) einer Fassung von `jumpFiltrationFE_hcut` mit zwei getrennt getragenen
+   Filtrationen — der der Rekursion für die Rate, der der Inversen für die Sprungzeiten — und (b)
+   einem Stichprobenraum mit nichtnegativen Wartezeiten, `(ℕ → E) × (ℕ → ℝ≥0)`, auf dem die
+   gestrichene Hypothese keine Hypothese mehr ist, sondern der Typ. (b) ist der Eingriff in die
+   Konstruktion, (a) der in den Satz; welcher billiger ist, ist am Umfang der betroffenen
+   Deklarationen zu messen und nicht zu raten.
+2. **`hawkes_isLocalMPSolution`** als Zusammenbau, sobald 1 entschieden ist; die globale Fassung mit
+   `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
+3. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   dreiundzwanzigsten Laufs, unverändert.

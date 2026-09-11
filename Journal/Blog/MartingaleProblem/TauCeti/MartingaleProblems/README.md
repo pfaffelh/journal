@@ -3095,6 +3095,58 @@ A concrete family of solutions, built without any of the theory above. Index
     `isStoppingTime_rateInverseE` and `isLocalizingSequence_rateInverseE`, and the one that makes
     `measurable_jumpTimeFE` available for a **truncated** rate, whose cumulated mass does not
     diverge.
+  * `eq_of_measurable_jumpFiltrationFE`, `constRateF` and
+    `not_measurable_cumulativeRateF_jumpFiltrationFE`: **the cumulated mass is not a functional of
+    the record of the jump times, so `hcum` cannot be proved at the level of `jumpFiltrationFE`.**
+    **In Lean** on 2026-09-12, first run, with `cumulativeRateF_constRateF`,
+    `rateInverseE_constRateF`, `jumpTimeFE_constRateF`, `measurable_rateInverse_constRateF`,
+    `hiddenWait`, `hiddenPoint`, `hiddenScale`, `measurable_jumpTimeFE_truncRateF_hiddenRate`,
+    `lt_jumpTimeFE_hiddenPoint` and `cumulativeRateF_truncRateF_hiddenPoint`.
+
+    The jump times are the inverse of the cumulated mass, so the record of which of them have
+    happened by `i` looks as though it ought to determine the mass at `i`, and `hcum` as though it
+    ought to be a theorem about the construction rather than an obligation of each instance. It is
+    not. The record reports the times at which the mass crosses the levels `∑_{k < n} ξ_k`; between
+    two consecutive crossings it reports nothing, and `i` lies in general strictly between two
+    crossings. A rate that reads a waiting time which no crossing before `i` has spent moves the
+    mass at `i` and leaves every crossing before `i` where it was.
+
+    The witness is `constRateF hiddenScale`, a rate constant in time whose value `1 + (ξ₁ ⊔ 0)`
+    reads the **second** waiting time, on the two sample points `hiddenPoint x₀ 0` and
+    `hiddenPoint x₀ 1`. Their first jump times are `2` and `1`, both above `1/2`, and by
+    `monotone_jumpTimeFE` every later one is above them; the chain is constant, so the path
+    component of `jumpStateE` carries nothing. The whole record below `1/2` therefore agrees, while
+    the mass at `1/2` is `1/2` at one point and `1` at the other. The state space is arbitrary and
+    the truncation level `4` is never reached, so neither a degenerate `E` nor the truncation is
+    doing the work: what does it is that the rate reads a waiting time, which is exactly what a
+    *path dependent* rate may do and a state dependent one may not. Compare
+    `eq_of_measurable_jumpFiltrationE_const_chain`, the same mechanism one construction earlier and
+    over the same sample space.
+
+    `eq_of_measurable_jumpFiltrationFE` is the tool and is worth having on its own:
+    `eq_of_measurable_naturalFiltration` read for `jumpFiltrationFE`, with the two hypotheses being
+    the two components of `jumpStateE` — the records agree below `i`, and the paths agree below
+    `i`. Nothing is asked of the rate, of the waiting times, or of non explosion.
+
+    **What this does not say.** It does not say `hcum` is out of reach for a given rate and a given
+    filtration. The Hawkes mass up to `i` is `ν·i + ∑_k Φ (i - τ_k) · 1_{0 ≤ τ_k < i}` with `Φ` a
+    primitive of `φ`, a functional of the times `τ = hawkesJumpTime` alone, and
+    `measurable_cumulativeRateF_truncRateF_hawkesSelfRate` is `hcum` for `hawkesFiltration`, the
+    filtration those times generate. What the witness fixes is where such a proof has to come from:
+    from the shape of the rate, not from the construction. It is the same division of labour as `hN`
+    in `jumpFiltrationFE_inter_lt_rateInverseE`, which is carried and not proved for the same
+    reason, and it is what the state dependent case gets for free because `rateSup lam` is a
+    functional of the path.
+
+    **And the Hawkes instance of `jumpFiltrationFE_hcut` stays open.** That statement reads `hcum`
+    at `jumpFiltrationFE (truncRateF (hawkesSelfRate ν φ) a)`, the filtration of the times the
+    *inverse* returns, while `hawkesSelfRate` is built from the times the *recursion* returns.
+    `jumpTimeF_hawkesSelfRate` identifies the two only at a sample point with non negative waiting
+    times — the hypothesis struck out of `jumpFiltrationFE_hcut` as unsatisfiable, and the same one
+    that keeps `isStoppingTime_jumpTimeFE_hawkesSelfRate` off `hawkesFiltration`. This is the third
+    statement of the path dependent variant to meet that line, and the mechanism of the witness is
+    the reason to expect `hcum` to be **false** there: a negative waiting time makes the partial
+    sums the inverse reads non monotone while the recursion goes on.
   * `measurableSet_lt_rateInverseE_of_adapted` and `jumpFiltrationFE_hcut`: **the cutting set is an
     event of the truncated filtration, and with it the cut stands in the shape the tower consumes.**
     **In Lean** on 2026-09-11, twentieth run. The whole content of the first is that the level `a`
@@ -3108,9 +3160,12 @@ A concrete family of solutions, built without any of the theory above. Index
     `jumpFiltrationFE_hcut` is `hcut` at every index and every event at once, which is the form
     `martingale_of_martingale_of_stopped` consumes, and it leaves exactly one hypothesis to an
     instance: `hcum`, the measurability of the **truncated** cumulated rate up to `i` for the
-    truncated filtration at `i`. That is the same thing `isLocalizingSequence_rateInverseE` asks of
-    the untruncated filtration, so an instance that has localized at all has already met its
-    untruncated half.
+    truncated filtration at `i`. `measurable_cumulativeRateF_truncRateF` reduces it, for a *given*
+    σ-algebra, to the untruncated mass, which is the same thing `isLocalizingSequence_rateInverseE`
+    asks. It does not reduce it to nothing: read at the natural filtration of the truncated jump
+    times, which is where `jumpFiltrationFE_hcut` reads it, the hypothesis is in general **false**,
+    by `not_measurable_cumulativeRateF_jumpFiltrationFE`. It is an obligation of each instance and
+    is met from the shape of the rate.
 
     In the state dependent case the step is free, because `rateSup lam` is a functional of the
     **path** and `measurableSet_lt_rateTime_truncRate` is three lines. Here the localizing
@@ -3129,7 +3184,8 @@ A concrete family of solutions, built without any of the theory above. Index
     such a hypothesis, and that is the comparison that shows it was an accident of the proof.
   * `cumulativeRateF_truncRateF_eq_min`, `measurable_cumulativeRateF_truncRateF` and
     `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`: **the truncated cumulated mass is the
-    untruncated one capped at the level, and that is all `hcum` ever was.** **In Lean** on
+    untruncated one capped at the level, so `hcum` is a statement about the untruncated mass.**
+    **In Lean** on
     2026-09-11, twenty first run. `cumulativeRateF_truncRateF` writes the truncated mass as the
     untruncated one **stopped** at the hitting time, an expression in which the hitting time still
     occurs; `cumulativeRateF_truncRateF_eq_min` writes it as the untruncated one **capped** at `a`,
