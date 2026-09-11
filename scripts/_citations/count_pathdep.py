@@ -194,6 +194,52 @@ GROUPS = {
         "jumpOperatorF_state",
         "mpFamilyF_jumpOperatorF_state",
     },
+    "G20 the rate that reads its own past, and its measurability": {
+        "countingMeasure_eq_map_count",
+        "integral_countingMeasure_eq_integral_count",
+        "indicator_Ico_min_right",
+        "measurable_min_jumpTime_pointFiltration",
+        "measurable_uncurry_pointRate_pointFiltration",
+        "measurable_uncurry_hawkesSelfRate_hawkesFiltration",
+        "measurable_uncurry_hawkesJumpApplyF_hawkesFiltration",
+        "measurable_compensator_of_uncurry_min",
+        "measurable_compensator_hawkesJumpApplyF_hawkesFiltration",
+    },
+    "G21 the test process is progressively measurable": {
+        "measurable_uncurry_compensator_of_uncurry_min",
+        "isStronglyProgressive_of_measurable_uncurry_mpFamilyF",
+        "isStronglyProgressive_mpFamilyF_hawkesStepPath",
+    },
+    "G22 the paths of the test process are right continuous": {
+        "measurable_pointRate",
+        "measurable_hawkesSelfRate_time",
+        "compensator_eq_intervalIntegral",
+        "intervalIntegrable_mul_bdd",
+        "tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF",
+        "tendsto_nhdsGE_mpFamilyF_hawkesStepPath",
+    },
+    "G23 the window bound, and the third input it does not reach": {
+        "abs_setIntegral_compensatorF_le",
+        "bdd_mpFamilyF_of_bdd",
+    },
+    "G24 the truncated rate, and the mass it may still spend": {
+        "truncRateF",
+        "truncRateF_eq_indicator",
+        "truncRateF_apply",
+        "truncRateF_of_lt",
+        "truncRateF_of_le",
+        "truncRateF_nonneg",
+        "intervalIntegrable_truncRateF",
+        "cumulativeRateF_truncRateF",
+        "cumulativeRateF_truncRateF_of_le",
+        "cumulativeRateF_truncRateF_le",
+        "rateInverse_truncRateF_of_le",
+        "rateInverse_truncRateF_eq_zero_of_lt",
+    },
+    "G25 the window bound from a bound on the mass": {
+        "abs_setIntegral_compensatorF_le_of_cumulated",
+        "bdd_mpFamilyF_of_cumulated",
+    },
 }
 
 

@@ -241,6 +241,49 @@ Was **nicht** zu tun ist: auf `master` umstellen. Wir sind an v4.33.1 gebunden,
 und die eine bewußt gegen `master` geschriebene Aussage in
 `WeakConvergence/Suggested.lean` bleibt, wie sie ist.
 
+**Zum Abschluß von Teil C — was bewiesen wird und was Voraussetzung bleibt**
+*(vom Nutzer am 2026-09-11 festgelegt)*
+
+Ziel ist `thm:pathjumpMP`**(a)**, der **lokale** Satz: der Prozeß löst das lokale
+Martingalproblem auf `[0, ζ)`. Das Manuskript sagt dazu „No hypothesis beyond
+Setting~\ref{set:pathjump} is needed", und das ist der billigere der beiden
+Teile.
+
+Teil **(b)**, der globale Satz, verlangt `𝔼[N t] < ∞`. **Diese Bedingung wird
+getragen, nicht bewiesen** — als Hypothese der Aussage. Der Grund ist geprüft:
+das Manuskript beweist sie für den linearen Hawkes-Prozeß über die
+Erneuerungsgleichung `m = μ₀ + φ * m` und die **Volterra-Resolvente** eines
+Kerns in `L¹_loc`, und davon hat Mathlib nichts — „volterra", „renewal",
+„resolvent kernel", „Neumann series" geben **null Treffer**. Vorhanden ist die
+Faltung (`Analysis/Convolution.lean`, 65 Sätze) und die Neumann-Reihe in einer
+**normierten Algebra** (`NormedRing.inverse_one_sub`), die `‖φ‖ < 1` verlangt.
+Der Volterra-Trick braucht das gerade nicht: man arbeitet auf `[0,δ]` kurz genug,
+daß `∫₀^δ φ < 1`, und schreitet fort. Das ist eine Aussage über die
+**Kausalität** des Kerns, nicht über eine Banachalgebra, und die Faltungsalgebra
+der kausalen Kerne auf `[0,∞)` gibt es in Mathlib nicht.
+
+**Also:** `hawkes_isLocalMPSolution` beweisen; die globale Fassung mit
+`(hN : ∀ t, 𝔼[N t] < ∞)` als Hypothese hinschreiben und dabei im Doc-Kommentar
+sagen, daß diese Hypothese für den linearen Fall wahr ist und woran ihr Beweis
+hängt. **Keine** Volterra-Theorie anfangen — das wäre ein eigener Meilenstein.
+
+**Und die Lokalisierung geht an der kumulierten Rate**, nicht an der Rate: mit
+`σ N = rateInverse N` ist `{σ N ≤ t} = {Λ t ≥ N}` (`setOf_rateInverse_le`, schon
+bewiesen), also eine Stoppzeit, und auf `[0, σ N]` ist
+`|∫₀^(t ⊓ σ N) 𝒜ₛ f ds| ≤ 2‖f‖ N` **gleichmäßig in ω** — genau die Schranke,
+die `martingale_stoppedProcess` verlangt und die die Rate selbst nicht hergibt,
+weil `φ` nur lokal integrierbar und nicht beschränkt ist. Die Rate springt, die
+kumulierte Rate ist stetig; deshalb trägt `rateTime` nicht und `rateInverse`
+schon.
+
+*Vermerke dabei die Abweichung:* `thm:pathjumpMP`(a) nennt die **Sprungzeiten**
+`(τ n)` als lokalisierendes System. Die geben keine gleichmäßige Schranke — auf
+`[0, τ n]` ist die kumulierte Rate `∑_{k<n} ξ k`, in `ω` unbeschränkt. Entweder
+weicht die Formalisierung hier ab und nimmt `σ N`, oder es braucht eine Fassung
+des gestoppten Martingalsatzes mit **gleichgradiger Integrierbarkeit** statt
+gleichmäßiger Beschränktheit. Ersteres ist billiger und liegt fertig da; sag im
+Bericht, was Du genommen hast.
+
 **Teil E — Meilenstein 6 von `MartingaleProblems`.** Nach Teil D.
 
 Der abstrakte Eindeutigkeitssatz `thm:absuniq`, und er hat in Lean **keine
