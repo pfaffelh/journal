@@ -22440,3 +22440,274 @@ Stelle nicht gibt.
    Laufs, unverändert: `Set.diff_eq_empty` durch `Set.sdiff_eq_empty`, `Set.mem_setOf_eq` durch
    `Set.mem_ofPred_eq`, `push_neg` durch `push Not`, dort wo v4.33.1 es meldet. Die neuen Abschnitte
    `PathInverseE` und `PathStopping` halten die Regel schon ein und melden keine einzige Warnung.
+
+### 2026-09-11, achtzehnter Lauf des Tages — der gestutzte pfadabhängige Prozeß ist der pfadabhängige Prozeß, unterhalb der Trefferzeit; und die beiden Inversen sind Infima **derselben Menge**
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des siebzehnten Laufs
+(die Identifikation des gestutzten mit dem ungestutzten Problem unterhalb der Trefferzeit). Die
+Reihenfolge D → F → C → E ist eingehalten.
+
+**Acht Deklarationen** in diesem Teil (vier weitere im zweiten Teil des Laufs, siehe unten), davon
+sieben im neuen Abschnitt `PathLocalIdentification` von
+`TauCeti/MartingaleProblems/Suggested.lean` und eine — `setOf_le_cumulativeRateF_truncRateF` — im
+schon bestehenden `PathTruncation`, wohin sie gehört. Die ganze Datei **ohne einen Fehler und ohne
+eine einzige Warnung im neuen Bereich** durch `lake env lean` gegen v4.33.1, alle acht mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl
+der `sorry` bleibt bei **neun**. Der Punkt steht in `MartingaleProblems/README.md`, Meilenstein 4.
+
+`setOf_le_cumulativeRateF_truncRateF`, `rateInverseE_truncRateF_of_le`,
+`jumpTimeFE_truncRateF_eq_of_le`, `lt_jumpTimeFE_of_lt_of_le_rateInverseE`,
+`jumpProcessFE_truncRateF_eq_of_le_rateInverseE`, `setIntegral_compensatorF_truncRateF_eq`,
+`stoppedProcess_mpFamilyF_truncRateF_eq`, `stoppedProcess_mpFamilyF_truncRateF_eq'`.
+
+#### Der Prüfstein des siebzehnten Laufs, und er fällt
+
+Der Vorschlag trug ihn: „ob die Identifikation wie im zustandsabhängigen Fall eine Gleichheit von
+**Funktionen** wird und nicht bloß eine f.s.-Aussage; sie muß es, weil `StronglyAdapted` und
+`IsStoppingTime` keine f.s.-Begriffe sind."
+
+Sie wird eine. `stoppedProcess_mpFamilyF_truncRateF_eq` gilt an **jedem** Stichprobenpunkt und zu
+jeder Zeit, und `stoppedProcess_mpFamilyF_truncRateF_eq'` ist dieselbe Aussage als Gleichheit der
+beiden gestoppten Prozesse — die Gestalt, in der `martingale_of_martingale_of_stopped` sie
+verbraucht. Der Grund ist die **Bauart der Stutzung**: `truncRateF Λ a` ist ein *Schalter* und kein
+Deckel, also sind die beiden Raten unterhalb von `rateInverse Λ ω a` nicht bloß fast überall
+gleich, sondern dieselbe Funktion der Zeit (`truncRateF_of_lt`). Beide Konstruktionen verbrauchen
+dieselben Wartezeiten zu denselben Zeitpunkten.
+
+#### Der Befund, und er ist eine Ersparnis im schon Dastehenden: **die beiden Inversen sind Infima derselben Menge**
+
+Der Entwurf führte den Beweis von `rateInverseE_truncRateF_of_le` neu, wie der von
+`rateInverse_truncRateF_of_le` (siebter Lauf) geführt war: die zulässige Menge mit einem
+`Set.Ici` identifizieren und `csInf_Ici` anwenden. Das ist zweimal derselbe Beweis für dasselbe
+Infimum in zwei Verbänden — und es ist gar keiner nötig. `setOf_le_cumulativeRateF_truncRateF` sagt
+
+> `{r | 0 ≤ r ∧ b ≤ cumulativeRateF (truncRateF Λ a) ω r} = {r | 0 ≤ r ∧ b ≤ cumulativeRateF Λ ω r}`
+> für `0 ≤ b ≤ a`,
+
+und beide Inversen sind das Infimum dieser Menge — die reelle in `ℝ`, die andere nach Bildübertrag
+in `ℝ≥0∞`. Der Beweis ist `cumulativeRateF_truncRateF` und eine Fallunterscheidung an
+`r ≤ rateInverse Λ ω a`: darunter ist nichts gestoppt, darüber ist der gestoppte Wert `a` selbst und
+also schon `≥ b`.
+
+**Gemessen:** die Mengengleichheit kostet 22 Codezeilen, davon 16 Beweis; der Beweis von
+`rateInverse_truncRateF_of_le` schrumpft dafür von 19 Zeilen auf **eine**, und der von
+`rateInverseE_truncRateF_of_le` ist dieselbe eine. Die beiden Inversen zusammen kosten damit 34
+Zeilen statt der 48, die zwei getrennt geführte Beweise gekostet hätten — und die Fassung in
+`ℝ≥0∞` ist die, die der gestutzte **Prozeß** braucht, weil
+die reelle oberhalb von `a` den Müllwert `0` liefert. Die Ersparnis ist in `PathTruncation`
+eingetragen, nicht bloß behauptet; der Satz steht dort, wo er hingehört, und nicht im neuen
+Abschnitt.
+
+#### Die eine strikte Ungleichung, und sie ist die einzige Stelle, an der die strikte Positivität der Rate wirklich gebraucht wird
+
+Der siebzehnte Lauf hatte `hpos` aus der ganzen Lokalisierungsschicht herausgenommen und zu Recht
+notiert, die Voraussetzung sei dort nur gegen einen Zusammenbruch da, den es nicht gibt. **Hier
+gibt es ihn.**
+
+Oberhalb des Pegels sind die gestutzten Sprungzeiten `⊤` (`jumpTimeFE_truncRateF_eq_top`), die
+ungestutzten endlich. Die beiden Stufenindizes stimmen also nur überein, wenn die ungestutzte
+Sprungzeit **echt** über der Trefferzeit liegt — sonst springt der ungestutzte Prozeß genau dort,
+wo der gestutzte schon abgeschaltet ist, und zwar an dem einen Zeitpunkt, den der gestoppte Prozeß
+tatsächlich liest. `lt_jumpTimeFE_of_lt_of_le_rateInverseE` leistet das über
+`rateInverse_lt_rateInverse`: bei strikt positiver Rate wird ein Pegel oberhalb von `a` echt später
+erreicht als `a` selbst.
+
+**Ohne strikte Positivität ist die Aussage falsch**, und zwar nicht knapp: eine Rate, die auf einem
+Intervall verschwindet, hat dort ein ganzes Plateau von Urbildern, `rateInverse Λ ω a` und
+`rateInverse Λ ω (a + ε)` fallen zusammen, und der ungestutzte Prozeß springt in der Trefferzeit.
+Das ist genau der Fall, den der dritte Vorschlag des siebzehnten Laufs als Prüfstein benannt hatte
+(„`rateInverse_lt_rateInverse`, das strikte Wachstum, vermutlich schon"), und er ist damit
+entschieden: `hpos` ist an dieser Aussage **unentbehrlich**, und die Liste der entbehrlichen
+Voraussetzungen endet hier.
+
+#### Was nicht eingeht, und beides ist der Bericht wert
+
+* **Die Nichtexplosion, in keiner Gestalt** — wie schon bei `isLocalizingSequence_rateInverseE`.
+  Keine der acht Aussagen trägt sie, weder als Voraussetzung noch als f.s.-Menge.
+* **Nichts über den Sprungkern.** `mu : ℝ → (ℕ → E) × (ℕ → ℝ) → Measure E` wird unverändert
+  durchgereicht; er darf die Vergangenheit lesen, wie `set:pathjump` es zuläßt. Der Kompensator
+  wird nur an zwei Stellen angefaßt — die Rate und der Pfad —, und beide sind unterhalb der
+  Trefferzeit dieselben.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py`, um die Gruppe `G28` erweitert:
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G26 die Inverse in `ℝ≥0∞`, und der Prozeß, den die Stutzung braucht | 25 | 191 |
+| G27 das lokalisierende System: die Trefferzeiten der kumulierten Rate | 13 | 142 |
+| G28 unterhalb der Trefferzeit ist das gestutzte Problem das Problem | 8 | 171 |
+| G29 der Kompensator zwischen zwei Sprungzeiten ist die Wartezeit | 4 | 31 |
+| G30 die Zeitverwandlung: die Konstruktion auf der Uhr der kumulierten Rate | 3 | 29 |
+| `section PathDependent` gesamt | — | 2119 Codezeilen, 3768 mit Dokumentation |
+
+**Gebrauchte Mathlib-Bausteine, und keiner fehlte:** `MeasureTheory.stoppedProcess`
+(`Mathlib/Probability/Process/Stopping.lean`, über `τ : Ω → WithTop ι`), `setIntegral_congr_ae`,
+`ENNReal.coe_toNNReal`, `ENNReal.coe_ne_top`, `ne_top_of_le_ne_top`, `ENNReal.ofReal_coe_nnreal`,
+`ENNReal.ofReal_lt_ofReal_iff_of_nonneg`, `ENNReal.ofReal_lt_top`, `Finset.sum_nonneg`,
+`min_eq_left`, `min_eq_right`, `le_min`, `le_total`, `le_or_gt`, `congrArg`, `funext`,
+`filter_upwards`, `ae_iff`. Dazu aus dem eigenen Bestand `lebesgueClock_apply_singleton`
+(2026-09-10, siebzehnter Lauf) und `lebesgueClock_interval_optional_eq`, beide unverändert
+brauchbar — das erste war für den zustandsabhängigen Fall bewiesen und trägt hier ohne eine
+Änderung, weil es eine Aussage über die Uhr ist und nicht über den Prozeß.
+
+**Keine Negativaussage über Mathlib**, also nichts für `scripts/check_negatives.py` nachzutragen.
+
+### Derselbe Lauf, zweiter Teil — `eq:compensatorexp` steht, und beim Hinschreiben zeigte sich, daß der Turmschluß **nicht** die nächste Aussage ist: es fehlt das Martingal, nicht seine Fortsetzung
+
+Der erste Entwurf der Vorschläge dieses Laufs lautete „`martingale_stoppedProcess` auf das gestutzte
+pfadabhängige Problem anwenden". **Das ist ein Lesefehler, und er ist hier berichtigt.**
+`martingale_stoppedProcess (hY : Martingale Y 𝓕 P) … : Martingale (stoppedProcess Y τ) 𝓕 P` **setzt
+das Martingal voraus** und stellt es nicht her; seine drei weiteren Eingaben — progressive
+Meßbarkeit, Rechtsstetigkeit, Fensterschranke — dienen dem Übergang zum gestoppten Prozeß und nicht
+der Martingaleigenschaft selbst.
+
+Im zustandsabhängigen Fall kommt die Martingaleigenschaft aus `jumpProcessE_isMPSolution`, und das
+ist der Satz, der die Erneuerungszerlegung am ersten Sprung
+(`jumpMeasure_integral_eq_of_firstJump`), die Erneuerungsgleichung und die Erwartungswertidentität
+verbraucht — mehrere Läufe Arbeit. **Ein pfadabhängiges Gegenstück davon gibt es nicht**, und beim
+Nachsehen zeigte sich der Grund, aus dem es keines als Übertragung geben kann:
+
+> In `section PathDependent` kommt **kein Maß vor**. `P : Measure Ω` steht dort an genau einer
+> Stelle, als freie Variable von `isLocalizingSequence_rateInverseE`. Die ganze bisher gebaute
+> Schicht — Konstruktion, Sprungzeiten, Filtration, Meßbarkeit, Rechtsstetigkeit,
+> Fensterschranke, Lokalisierung, und mit diesem Lauf die Identifikation — ist **pfadweise und
+> meßbarkeitstheoretisch**. Die Wahrscheinlichkeitsaussage fehlt vollständig.
+
+Das Maß selbst ist da und muß nicht gebaut werden: `jumpMeasure mu nu` legt die Marken über den
+Kettenkern und die Wartezeiten als u.i.v. Exp(1) fest, und die pfadabhängige Konstruktion liest
+genau diese Daten — sie unterscheidet sich von der zustandsabhängigen nur in der Abbildung von
+`(y, ξ)` auf den Pfad, nicht im Maß. Was fehlt, ist die Aussage.
+
+**Der Kern des Manuskriptbeweises ist eine Rechnung, keine Erneuerung.** `thm:pathjumpMP` zeigt
+`E[D_n | ℋ_n] = 0` mit
+`D_n = (f(Y_{n+1}) − f(Y_n)) 1_{τ_{n+1} ≤ t} − ∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds`, und die beiden
+Erwartungswerte sind dasselbe Integral `∫_{τ_n}^t Λ_u e^{−A_n(u)} (μ_u f − f(Y_n)) du` — der erste,
+weil die Sprungzeit diese Dichte hat, der zweite durch Fubini und
+`P(τ_{n+1} > s | ℋ_n) = e^{−A_n(s)}`. **Das ist nicht die Erneuerungszerlegung des
+zustandsabhängigen Falls**, die nach dem ersten Sprung dasselbe Problem neu anfängt; hier ist die
+Rate nach dem Sprung eine andere, und der Beweis kommt ohne Neustart aus. Für die Formalisierung
+heißt das: `jumpProcessE_isMPSolution` ist kein Vorbild, sondern nur eine Warnung über den Preis.
+
+#### Was dazu steht, und es ist die Identität, auf der der lokale Satz ruht
+
+Vier Deklarationen im neuen Abschnitt `PathCompensatorExp`, ebenfalls fehlerfrei durch
+`lake env lean` und mit `scripts/check_axioms.py` geprüft (rc 0):
+`cumulativeRateF_jumpTimeF`, `cumulativeRateF_jumpTimeF_sub`, `cumulativeRateF_min_jumpTimeF_le`,
+`rateInverse_sum_eq_jumpTimeF`.
+
+`cumulativeRateF_jumpTimeF_sub` ist `eq:compensatorexp` aus `rem:pathjumpprimary`:
+
+> `∫_{τ_n}^{τ_{n+1}} Λ(u, ω) du = ξ n`.
+
+Das Manuskript nennt sie wahr „by the very definition of `τ_{k+1}`", und in dieser Formalisierung
+ist sie es wörtlich: `jumpTimeF Λ ω ξ n` **ist** `rateInverse Λ ω (∑_{k<n} ξ k)`, die kumulierte
+Rate dort ist der invertierte Pegel (`cumulativeRateF_rateInverse`), und die Differenz zweier
+aufeinanderfolgender Pegel ist eine Wartezeit. Zwei Zeilen.
+
+#### Und damit ist die Abweichung vom Manuskript genauer benannt, als der siebzehnte Lauf sie benennen konnte
+
+Der siebzehnte Lauf hatte vermerkt, die Sprungzeiten taugten als lokalisierendes System nicht, weil
+die kumulierte Rate auf `[0, τ n]` „in `ω` unbeschränkt" sei. Das ist richtig und war unvollständig.
+`cumulativeRateF_min_jumpTimeF_le` gibt die Schranke `∑_{k<n} ξ k` — **an jedem Stichprobenpunkt**,
+und sie ist integrierbar. Die Bruchstelle liegt also nicht daran, daß es keine Schranke gäbe,
+sondern an **einer** Deklaration:
+
+| Aussage | fragt die Massenschranke | erreicht von den Sprungzeiten |
+| --- | --- | --- |
+| `abs_setIntegral_compensatorF_le_of_cumulated` | an **einem** Stichprobenpunkt | **ja** |
+| `bdd_mpFamilyF_of_cumulated` | an **jedem**, mit **einer** Konstante | nein |
+
+`martingale_stoppedProcess` verbraucht die zweite, weil sein Grenzübergang eine dominierte
+Konvergenz mit konstanter Majorante ist. Die Alternative zum Ausweichen auf `rateInverseE Λ · N`
+ist also nicht ein anderer Beweis derselben Schranke, sondern eine Fassung des gestoppten
+Martingalsatzes mit **gleichgradiger Integrierbarkeit** — und `∑_{k<n} ξ k` ist genau die
+integrierbare Majorante, die eine solche Fassung geliefert bekäme. Das ist die Wahl, die der Auftrag
+zu treffen und zu begründen verlangt, und sie ist damit begründet.
+
+`rateInverse_sum_eq_jumpTimeF` sagt schließlich, daß die beiden Lokalisierungen **dieselbe
+Konstruktion** sind: die bei `τ n` abgeschaltete Rate ist `truncRateF Λ (∑_{k<n} ξ k)`, die bei
+`σ N` abgeschaltete ist `truncRateF Λ N`, und der einzige Unterschied ist, ob der Pegel ein
+Funktional des Stichprobenpunkts oder eine Konstante ist. Der Beweis ist `rfl`. Genau dort geht die
+Gleichmäßigkeit verloren, und nirgends sonst.
+
+### Derselbe Lauf, dritter Teil — der Prüfstein des eigenen Vorschlags, sofort eingelöst: die pfadabhängige Konstruktion **ist** die Konstruktion mit Rate `1`, auf der Uhr der kumulierten Rate
+
+Der Vorschlag des zweiten Teils trug einen Prüfstein: „ob die erste Gleichheit ohne Divergenz und
+ohne Erreichbarkeit auskommt, wie `rateInverseE_le_ofReal_iff` es tut; sie sollte, und wenn sie es
+tut, ist die Überlebensfunktion eine Zeile." Sie tut es, und sie gibt mehr als die eine Gleichheit
+her. Drei Deklarationen im neuen Unterabschnitt, fehlerfrei durch `lake env lean`, mit
+`scripts/check_axioms.py` geprüft (rc 0): `lt_jumpTimeFE_iff`, `stepIndex_jumpTimeFE`,
+`jumpProcessFE_eq_stepPath_cumulativeRateF`.
+
+> `jumpProcessFE Λ t ω = stepPath (fun n ↦ ∑_{k<n} ω.2 k) ω.1 (cumulativeRateF Λ ω t)`
+> für `0 ≤ t`, an **jedem** Stichprobenpunkt.
+
+Rechts steht der Stufenpfad über den **Partialsummen der Wartezeiten selbst** — also die
+Konstruktion mit Rate `1`, ohne jede Spur der Rate —, gelesen an der Stelle `cumulativeRateF Λ ω t`.
+**Die ganze Pfadabhängigkeit sitzt in der Uhr und in nichts sonst.**
+
+Der Weg dorthin ist eine Zeile Mengenlehre:
+`ofReal t < jumpTimeFE Λ ω ξ n ↔ cumulativeRateF Λ ω t < ∑_{k<n} ξ k` ist die Kontraposition von
+`rateInverseE_le_ofReal_iff`, also **ohne Divergenz, ohne Erreichbarkeit, ohne strikte
+Positivität** — nur lokale Integrierbarkeit und `Λ ≥ 0`. Damit stimmen die beiden Stufenindizes
+überein, und damit die beiden Pfade.
+
+**Warum das die Wahrscheinlichkeitsaussage in Reichweite bringt.** Unter `jumpMeasure mu nu` sind
+die `ξ k` u.i.v. Exp(1) und von den Marken unabhängig. Eine Aussage über `{t < τ n}` ist nach
+`lt_jumpTimeFE_iff` eine Aussage über `{cumulativeRateF Λ ω t < ∑_{k<n} ξ k}` — und die kumulierte
+Rate liest den Stichprobenpunkt, also ist das noch keine Aussage über eine Summe von Exponentialen
+an einem festen Pegel. **Genau hier, und nur hier, wird bedingt**: gegeben die Vergangenheit ist der
+Pegel fest, und das Manuskript bedingt an derselben Stelle auf `ℋ_n`. Die Zeitverwandlung sagt also
+nicht, daß die Bedingung entbehrlich wäre; sie sagt, worauf bedingt werden muß und daß danach
+nichts Pfadabhängiges mehr übrig ist.
+
+**Und sie steht nur in `ℝ≥0∞`.** Über `rateInverse` ist `lt_jumpTimeFE_iff` **falsch** — an einem
+nie erreichten Pegel ist die reelle Inverse `0`, also liegt keine Zeit darunter, während die
+kumulierte Rate den Pegel nie erreicht und die rechte Seite an jeder Zeit gilt. Das ist kein neuer
+Befund, sondern derselbe wie der des siebzehnten Laufs: `lt_jumpTimeFE_iff` **ist** die
+Kontraposition von `rateInverseE_le_ofReal_iff`. Neu ist, was daran hängt — die Zeitverwandlung des
+Prozesses ist damit eine Aussage, die es über der reellen Inversen nicht bloß teurer, sondern gar
+nicht gibt. Gegen `monotone_rateInverseE`, wo die reelle Fassung `rateInverse_mono` wahr ist und
+nur drei Voraussetzungen mehr trägt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Überlebensfunktion der ersten Sprungzeit unter `jumpMeasure mu nu`**, jetzt auf der
+   Zeitverwandlung des dritten Teils. Die Aussage, gegeben die Marken:
+
+   > `jumpMeasure mu nu {ω | ofReal t < jumpTimeFE Λ ω ω.2 n} = P(∑_{k<n} ξ k > c)` mit
+   > `c = cumulativeRateF Λ ω t` — für `n = 1` also `exp (−c)`.
+
+   **Warum jetzt:** `lt_jumpTimeFE_iff` hat das Ereignis schon in die Gestalt gebracht, in der es
+   nur noch von den Wartezeiten abhängt; was bleibt, ist die Verteilungsfunktion von
+   `expMeasure 1` und, für `n > 1`, die Gammaverteilung der Partialsumme. Es ist die erste Stelle,
+   an der ein Maß in die pfadabhängige Variante eintritt.
+
+   **Worauf sie ruht:** `lt_jumpTimeFE_iff` (dieser Lauf) und die schon vorhandenen Aussagen über
+   `expMeasure` aus dem zustandsabhängigen Teil. **Prüfstein, und er ist für die Hawkes-Instanz
+   vermutlich schon entschieden:** der neunte Lauf hat gezeigt, daß `hawkesJumpTime` den
+   Stichprobenpunkt gar nicht liest (`hawkesJumpTime_sample_congr`), die Rate dort also eine
+   Funktion der **Wartezeiten allein** ist. Dann ist `cumulativeRateF` an `ω` ebenfalls eine
+   Funktion von `ω.2`, der Pegel in `lt_jumpTimeFE_iff` hängt nicht von den Marken ab, und die
+   Überlebensfunktion ist **unbedingt** — keine bedingte Erwartung, nur die Produktgestalt von
+   `jumpMeasure`. Zu prüfen ist, ob das an der Konstruktion allgemein gilt oder eine Eigenheit von
+   `ex:hawkes` ist; im ersten Fall ist die Aussage billig, im zweiten ist die Allgemeinfassung die
+   teure und die Instanz die billige, und der Unterschied gehört gemessen.
+2. **`hawkes_isLocalMPSolution`**, und erst danach — es ist nicht die nächste Aussage, sondern die
+   übernächste nach Vorschlag 1 und der Rechnung des Manuskripts. Der Turmschluß
+   `martingale_of_martingale_of_stopped` steht seit dem achtzehnten Lauf des 2026-09-10 ohne Bezug
+   auf die Sprungkonstruktion da und ist unverändert brauchbar; seine vierte Voraussetzung `hcut`
+   ist die einzige, die im pfadabhängigen Fall noch niemand hingeschrieben hat — ein
+   `hawkesFiltration`-Ereignis bei `i`, mit `{i < rateInverseE Λ · a}` geschnitten, soll ein
+   Ereignis der Filtration des **gestutzten** Problems bei `i` sein. Gegenstück zu
+   `jumpFiltrationE_inter_lt_rateTime`.
+3. Die globale Fassung mit `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese** hinschreiben, nach der
+   Festlegung des Nutzers vom 2026-09-11, und im Doc-Kommentar sagen, daß sie für den linearen Fall
+   wahr ist und an der Volterra-Resolvente hängt, die Mathlib nicht hat.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten und
+   siebzehnten Laufs, unverändert: `Set.diff_eq_empty` durch `Set.sdiff_eq_empty`,
+   `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch `push Not`, dort wo v4.33.1 es
+   meldet. `PathInverseE`, `PathStopping` und `PathLocalIdentification` halten die Regel ein und
+   melden keine einzige Warnung.

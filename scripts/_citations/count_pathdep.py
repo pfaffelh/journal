@@ -282,6 +282,27 @@ GROUPS = {
         "isLocalizingSequence_rateInverseE",
         "isLocalizingSequence_rateInverseE_hawkesSelfRate",
     },
+    "G28 below the hitting time the truncated problem is the problem": {
+        "setOf_le_cumulativeRateF_truncRateF",
+        "rateInverseE_truncRateF_of_le",
+        "jumpTimeFE_truncRateF_eq_of_le",
+        "lt_jumpTimeFE_of_lt_of_le_rateInverseE",
+        "jumpProcessFE_truncRateF_eq_of_le_rateInverseE",
+        "setIntegral_compensatorF_truncRateF_eq",
+        "stoppedProcess_mpFamilyF_truncRateF_eq",
+        "stoppedProcess_mpFamilyF_truncRateF_eq'",
+    },
+    "G29 the compensator between two jump times is the waiting time": {
+        "cumulativeRateF_jumpTimeF",
+        "cumulativeRateF_jumpTimeF_sub",
+        "cumulativeRateF_min_jumpTimeF_le",
+        "rateInverse_sum_eq_jumpTimeF",
+    },
+    "G30 the time change: the construction on the clock of the cumulated rate": {
+        "lt_jumpTimeFE_iff",
+        "stepIndex_jumpTimeFE",
+        "jumpProcessFE_eq_stepPath_cumulativeRateF",
+    },
 }
 
 

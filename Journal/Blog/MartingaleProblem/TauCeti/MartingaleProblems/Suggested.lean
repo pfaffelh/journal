@@ -16641,35 +16641,51 @@ theorem cumulativeRateF_truncRateF_le
     rw [hz]
     exact ha
 
+/-- **Up to the level it was truncated at, the two rates admit the same times.**  The set whose
+infimum both inverses are, and the statement the identification of the two problems is read off:
+the cumulated mass of the truncated rate is that of the original one stopped at the hitting time
+(`cumulativeRateF_truncRateF`), and stopping it changes no membership at a level `b ≤ a` -- below
+the hitting time because nothing was stopped, above it because the stopped value is `a` itself,
+which is already at least `b`. -/
+theorem setOf_le_cumulativeRateF_truncRateF
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hb : 0 ≤ b) (hba : b ≤ a) :
+    {r : ℝ | 0 ≤ r ∧ b ≤ cumulativeRateF (truncRateF Λ a) ω r}
+      = {r : ℝ | 0 ≤ r ∧ b ≤ cumulativeRateF Λ ω r} := by
+  have ha : (0 : ℝ) ≤ a := hb.trans hba
+  have hR : cumulativeRateF Λ ω (rateInverse Λ ω a) = a :=
+    cumulativeRateF_rateInverse hint hpos htop ha
+  ext r
+  simp only [Set.mem_ofPred_eq, cumulativeRateF_truncRateF]
+  constructor
+  · rintro ⟨hr0, hle⟩
+    refine ⟨hr0, hle.trans ?_⟩
+    exact monotoneOn_cumulativeRateF hint hpos
+      (le_min hr0 (rateInverse_nonneg Λ ω a)) hr0 (min_le_left _ _)
+  · rintro ⟨hr0, hle⟩
+    refine ⟨hr0, ?_⟩
+    rcases le_total r (rateInverse Λ ω a) with h | h
+    · rwa [min_eq_left h]
+    · rw [min_eq_right h, hR]
+      exact hba
+
 /-- **The inverse is unchanged at every level up to the one truncated at.**  This is the
 identification of the jump times of the truncated problem with those of the original one: below the
 level `a` the two constructions consume the same waiting times at the same instants, so the two
 processes agree up to `rateInverse Λ ω a`.  It is the path dependent counterpart of
-`jumpProcessE_eq_truncRate_of_le_rateTime`. -/
+`jumpProcessE_eq_truncRate_of_le_rateTime`.
+
+It is read off `setOf_le_cumulativeRateF_truncRateF`, which says the same thing one floor lower --
+the two inverses are infima of the **same set** -- and therefore says it for the `ℝ≥0∞` valued
+inverse as well (`rateInverseE_truncRateF_of_le`), which the real statement cannot: past the level
+`a` the real inverse of the truncated rate is the junk value `0`. -/
 theorem rateInverse_truncRateF_of_le
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
     (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hb : 0 ≤ b) (hba : b ≤ a) :
     rateInverse (truncRateF Λ a) ω b = rateInverse Λ ω b := by
-  have hRb : rateInverse Λ ω b ≤ rateInverse Λ ω a := rateInverse_mono hint hpos htop hb hba
-  have hset : {r : ℝ | 0 ≤ r ∧ b ≤ cumulativeRateF (truncRateF Λ a) ω r}
-      = Set.Ici (rateInverse Λ ω b) := by
-    ext r
-    simp only [Set.mem_ofPred_eq, Set.mem_Ici, cumulativeRateF_truncRateF]
-    constructor
-    · rintro ⟨hr0, hle⟩
-      have h1 : rateInverse Λ ω b ≤ min r (rateInverse Λ ω a) :=
-        (rateInverse_le_iff (a := b) hint hpos htop
-          (le_min hr0 (rateInverse_nonneg Λ ω a))).2 hle
-      exact h1.trans (min_le_left _ _)
-    · intro hr
-      refine ⟨(rateInverse_nonneg Λ ω b).trans hr, ?_⟩
-      have hmin : rateInverse Λ ω b ≤ min r (rateInverse Λ ω a) := le_min hr hRb
-      have h := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω b)
-        ((rateInverse_nonneg Λ ω b).trans hmin) hmin
-      rwa [cumulativeRateF_rateInverse hint hpos htop hb] at h
-  rw [rateInverse, hset]
-  exact csInf_Ici
+  simp only [rateInverse, setOf_le_cumulativeRateF_truncRateF hint hpos htop hb hba]
 
 /-- **And above that level the inverse collapses to its junk value.**  The truncated rate cumulates
 to at most `a`, so no level beyond `a` is ever reached and `rateInverse` returns the infimum of the
@@ -17366,5 +17382,384 @@ theorem isLocalizingSequence_rateInverseE_hawkesSelfRate {E : Type*} [Measurable
       (measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i)) P
 
 end PathStopping
+
+/-! ### Below the hitting time the truncated problem **is** the problem
+
+The first step of the tower, and the path dependent counterpart of
+`stoppedProcess_mpFamily_truncRate_eq`.  `martingale_of_martingale_of_stopped` asks that the test
+process of the local problem be a martingale for one filtration; what
+`martingale_stoppedProcess` delivers is that statement for the **truncated** problem, whose window
+bound `bdd_mpFamilyF_of_cumulated` supplies and whose localizing system
+`isLocalizingSequence_rateInverseE` supplies.  Between the two stands the identification of the two
+stopped test processes, and that is this section.
+
+**It is an equality of functions and not an almost sure one**, at every sample point and every
+time, exactly as in the state dependent case -- and it must be, because `StronglyAdapted` and
+`IsStoppingTime` are not almost sure notions.  What makes it one is that the truncation
+`truncRateF Λ a` is a *switch* and not a cap: strictly below `rateInverse Λ ω a` the two rates are
+literally the same function of the time (`truncRateF_of_lt`), so the two constructions consume the
+same waiting times at the same instants.
+
+**The one place where a strict inequality is needed** is the level the truncation cuts at.  Above
+it the truncated jump times are `⊤` (`jumpTimeFE_truncRateF_eq_top`) while the untruncated ones are
+finite, so the two step indices could part company at a time at which the untruncated process jumps
+*exactly* at the hitting time.  They do not, and the reason is
+`rateInverse_lt_rateInverse`: at a strictly positive rate a level above `a` is reached strictly
+later than `a` itself, so the untruncated jump time lies strictly above the hitting time and hence
+strictly above the stopped time.  This is the only use of the strict positivity in the section; the
+non explosion does not enter anywhere, in keeping with `isLocalizingSequence_rateInverseE`. -/
+
+section PathLocalIdentification
+
+variable {b : ℝ}
+
+/-- **The inverse in `ℝ≥0∞` is unchanged at every level up to the one truncated at.**  The
+counterpart of `rateInverse_truncRateF_of_le` in the codomain the truncated problem needs, and it
+is the same one line: `setOf_le_cumulativeRateF_truncRateF` says the two inverses are infima of the
+same set, and which lattice the infimum is taken in does not enter. -/
+theorem rateInverseE_truncRateF_of_le
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hb : 0 ≤ b) (hba : b ≤ a) :
+    rateInverseE (truncRateF Λ a) ω b = rateInverseE Λ ω b := by
+  simp only [rateInverseE, setOf_le_cumulativeRateF_truncRateF hint hpos htop hb hba]
+
+/-- **And so are the jump times, as long as the waiting times have not consumed the level.**  The
+complement of `jumpTimeFE_truncRateF_eq_top`, which says that past the level they are all `⊤`. -/
+theorem jumpTimeFE_truncRateF_eq_of_le
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ k, 0 ≤ xi k)
+    (hn : ∑ k ∈ Finset.range n, xi k ≤ a) :
+    jumpTimeFE (truncRateF Λ a) ω xi n = jumpTimeFE Λ ω xi n :=
+  rateInverseE_truncRateF_of_le hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k) hn
+
+/-- **A jump time above the level lies strictly above the hitting time**, and hence strictly above
+every time the localization stops at.  This is the one strict inequality of the section and the one
+use of the strict positivity of the rate: without it the cumulated rate may have a plateau, the
+level `a` and a level above it are reached at the same instant, and the untruncated process jumps
+exactly where the truncated one has been switched off. -/
+theorem lt_jumpTimeFE_of_lt_of_le_rateInverseE
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a)
+    (hn : a < ∑ k ∈ Finset.range n, xi k)
+    (hle : ENNReal.ofReal t ≤ rateInverseE Λ ω a) :
+    ENNReal.ofReal t < jumpTimeFE Λ ω xi n := by
+  have hlt : rateInverse Λ ω a < rateInverse Λ ω (∑ k ∈ Finset.range n, xi k) :=
+    rateInverse_lt_rateInverse hint hpos ha hn (exists_le_cumulativeRateF_of_tendsto htop _)
+  calc ENNReal.ofReal t
+      ≤ rateInverseE Λ ω a := hle
+    _ = ENNReal.ofReal (rateInverse Λ ω a) := rateInverseE_eq_ofReal htop a
+    _ < ENNReal.ofReal (rateInverse Λ ω (∑ k ∈ Finset.range n, xi k)) :=
+        (ENNReal.ofReal_lt_ofReal_iff_of_nonneg (rateInverse_nonneg Λ ω a)).2 hlt
+    _ = jumpTimeFE Λ ω xi n := (jumpTimeFE_eq_ofReal htop n).symm
+
+section PathProcessLocal
+
+variable {E : Type*} {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **Up to the hitting time of the level the truncated process is the process, at every sample
+point.**  The path dependent counterpart of `jumpProcessE_eq_truncRate_of_le_rateTime'`, and like
+it an equality of *functions*: no non explosion, no almost everywhere.
+
+The two step indices are infima of the same shape, and the sets they are taken over agree index by
+index.  Below the level the two jump times are equal (`jumpTimeFE_truncRateF_eq_of_le`); above it
+the truncated one is `⊤`, which is above the stopped time for the trivial reason, and the
+untruncated one is above it by `lt_jumpTimeFE_of_lt_of_le_rateInverseE`.  So both sides of the
+membership hold for both indices, and the infima agree. -/
+theorem jumpProcessFE_truncRateF_eq_of_le_rateInverseE
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop)
+    (hxi : ∀ k, 0 ≤ ω.2 k) (ha : 0 ≤ a)
+    (hle : ENNReal.ofReal t ≤ rateInverseE Λ ω a) :
+    jumpProcessFE (truncRateF Λ a) t ω = jumpProcessFE Λ t ω := by
+  have hset : {m | ENNReal.ofReal t < jumpTimeFE (truncRateF Λ a) ω ω.2 (m + 1)}
+      = {m | ENNReal.ofReal t < jumpTimeFE Λ ω ω.2 (m + 1)} := by
+    ext m
+    simp only [Set.mem_ofPred_eq]
+    rcases le_or_gt (∑ k ∈ Finset.range (m + 1), ω.2 k) a with h | h
+    · rw [jumpTimeFE_truncRateF_eq_of_le hint hpos htop hxi h]
+    · constructor
+      · exact fun _ ↦ lt_jumpTimeFE_of_lt_of_le_rateInverseE hint hpos htop ha h hle
+      · intro _
+        rw [jumpTimeFE_truncRateF_eq_top hint hpos htop ha h]
+        exact ENNReal.ofReal_lt_top
+  simp only [jumpProcessFE, stepPath, stepIndex, hset]
+
+variable [MeasurableSpace E]
+
+/-- **The two compensating windows agree below the hitting time.**  The integrands agree at every
+time *strictly* below it -- there the path is the same by
+`jumpProcessFE_truncRateF_eq_of_le_rateInverseE` and the truncation is invisible by
+`truncRateF_of_lt` -- and the one time that is left over is the upper end of the window, a null set
+of the clock (`lebesgueClock_apply_singleton`).
+
+Nothing is asked of the jump kernel: it is carried through untouched, and in particular it may read
+the past, as `set:pathjump` allows. -/
+theorem setIntegral_compensatorF_truncRateF_eq
+    {mu : ℝ → (ℕ → E) × (ℕ → ℝ) → Measure E} {f : E → ℝ} {s : ℝ≥0}
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop)
+    (hxi : ∀ k, 0 ≤ ω.2 k) (ha : 0 ≤ a)
+    (hs : ENNReal.ofReal ((s : ℝ≥0) : ℝ) ≤ rateInverseE Λ ω a) :
+    ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
+        jumpApplyF (truncRateF Λ a) mu
+          (fun r w ↦ jumpProcessFE (truncRateF Λ a) r w) f (u : ℝ) ω ∂lebesgueClock.q
+      = ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
+        jumpApplyF Λ mu (fun r w ↦ jumpProcessFE Λ r w) f (u : ℝ) ω ∂lebesgueClock.q := by
+  refine setIntegral_congr_ae (lebesgueClock.measurableSet_interval Clock.Conv.optional ⊥ s) ?_
+  have hae : ∀ᵐ u ∂lebesgueClock.q, u ≠ s := by
+    rw [ae_iff]
+    have hset : {u : ℝ≥0 | ¬ u ≠ s} = {s} := by ext u; simp
+    rw [hset]
+    exact lebesgueClock_apply_singleton s
+  filter_upwards [hae] with u hune hmem
+  rw [lebesgueClock_interval_optional_eq] at hmem
+  have hlt : ((u : ℝ≥0) : ℝ) < ((s : ℝ≥0) : ℝ) := by
+    exact_mod_cast lt_of_le_of_ne hmem.2 hune
+  have hult : ENNReal.ofReal ((u : ℝ≥0) : ℝ) < rateInverseE Λ ω a :=
+    lt_of_lt_of_le ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg u.coe_nonneg).2 hlt) hs
+  have hpath : jumpProcessFE (truncRateF Λ a) ((u : ℝ≥0) : ℝ) ω
+      = jumpProcessFE Λ ((u : ℝ≥0) : ℝ) ω :=
+    jumpProcessFE_truncRateF_eq_of_le_rateInverseE hint hpos htop hxi ha hult.le
+  have hrate : truncRateF Λ a ((u : ℝ≥0) : ℝ) ω = Λ ((u : ℝ≥0) : ℝ) ω := by
+    refine truncRateF_of_lt ?_
+    rw [rateInverseE_eq_ofReal htop] at hult
+    exact (ENNReal.ofReal_lt_ofReal_iff_of_nonneg u.coe_nonneg).1 hult
+  simp only [jumpApplyF, hpath, hrate]
+
+/-- **The two stopped test processes are the same function.**  The path dependent counterpart of
+`stoppedProcess_mpFamily_truncRate_eq`, and the first of the two steps that separate
+`martingale_stoppedProcess` for the truncated problem from `hawkes_isLocalMPSolution`; the second
+is `martingale_of_martingale_of_stopped`, which stands with no reference to the jump construction
+and is therefore usable unchanged.
+
+The stopped time is `(min i (rateInverseE Λ ω a)).untopA`, a real time below the hitting time, and
+at that time the two processes and the two windows agree by the two statements above. -/
+theorem stoppedProcess_mpFamilyF_truncRateF_eq
+    {mu : ℝ → (ℕ → E) × (ℕ → ℝ) → Measure E} {f : E → ℝ}
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop)
+    (hxi : ∀ k, 0 ≤ ω.2 k) (ha : 0 ≤ a) (i : ℝ≥0) :
+    stoppedProcess (fun r : ℝ≥0 ↦ fun w ↦
+        f (jumpProcessFE (truncRateF Λ a) (r : ℝ) w)
+          - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
+              jumpApplyF (truncRateF Λ a) mu
+                (fun v w' ↦ jumpProcessFE (truncRateF Λ a) v w') f (u : ℝ) w ∂lebesgueClock.q)
+        (fun w ↦ rateInverseE Λ w a) i ω
+      = stoppedProcess (fun r : ℝ≥0 ↦ fun w ↦
+        f (jumpProcessFE Λ (r : ℝ) w)
+          - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
+              jumpApplyF Λ mu (fun v w' ↦ jumpProcessFE Λ v w') f (u : ℝ) w ∂lebesgueClock.q)
+        (fun w ↦ rateInverseE Λ w a) i ω := by
+  have hmin : min (i : ENNReal) (rateInverseE Λ ω a) ≠ ⊤ :=
+    ne_top_of_le_ne_top ENNReal.coe_ne_top (min_le_left _ _)
+  obtain ⟨s, hs⟩ : ∃ s : ℝ≥0, ((s : ℝ≥0) : ENNReal) = min (i : ENNReal) (rateInverseE Λ ω a) :=
+    ⟨_, ENNReal.coe_toNNReal hmin⟩
+  have hst : ENNReal.ofReal ((s : ℝ≥0) : ℝ) ≤ rateInverseE Λ ω a := by
+    rw [ENNReal.ofReal_coe_nnreal, hs]
+    exact min_le_right _ _
+  have huntop : (min (i : ENNReal) (rateInverseE Λ ω a)).untopA = s := by
+    rw [← hs]; rfl
+  have hstep : ∀ Λ' : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ,
+      stoppedProcess (fun r : ℝ≥0 ↦ fun w ↦
+          f (jumpProcessFE Λ' (r : ℝ) w)
+            - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
+                jumpApplyF Λ' mu (fun v w' ↦ jumpProcessFE Λ' v w') f (u : ℝ) w ∂lebesgueClock.q)
+          (fun w ↦ rateInverseE Λ w a) i ω
+        = f (jumpProcessFE Λ' ((s : ℝ≥0) : ℝ) ω)
+            - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
+                jumpApplyF Λ' mu (fun v w' ↦ jumpProcessFE Λ' v w') f (u : ℝ) ω
+                ∂lebesgueClock.q :=
+    fun Λ' => by
+      simp only [stoppedProcess]
+      exact congrArg (fun r : ℝ≥0 ↦ f (jumpProcessFE Λ' (r : ℝ) ω)
+        - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
+            jumpApplyF Λ' mu (fun v w' ↦ jumpProcessFE Λ' v w') f (u : ℝ) ω ∂lebesgueClock.q)
+        huntop
+  rw [hstep, hstep,
+    jumpProcessFE_truncRateF_eq_of_le_rateInverseE hint hpos htop hxi ha hst,
+    setIntegral_compensatorF_truncRateF_eq hint hpos htop hxi ha hst]
+
+/-- **The same statement as an equality of functions**, which is the form
+`martingale_of_martingale_of_stopped` consumes: its hypothesis `hstop` and the strong adaptedness
+of the stopped process are statements about the process and not about one sample point. -/
+theorem stoppedProcess_mpFamilyF_truncRateF_eq'
+    {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ} {mu : ℝ → (ℕ → E) × (ℕ → ℝ) → Measure E} {f : E → ℝ}
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hpos : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (u : ℝ), 0 < u → 0 < Λ u w)
+    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop)
+    (hxi : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (k : ℕ), 0 ≤ w.2 k) (ha : 0 ≤ a) :
+    stoppedProcess (fun r : ℝ≥0 ↦ fun w ↦
+        f (jumpProcessFE (truncRateF Λ a) (r : ℝ) w)
+          - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
+              jumpApplyF (truncRateF Λ a) mu
+                (fun v w' ↦ jumpProcessFE (truncRateF Λ a) v w') f (u : ℝ) w ∂lebesgueClock.q)
+        (fun w ↦ rateInverseE Λ w a)
+      = stoppedProcess (fun r : ℝ≥0 ↦ fun w ↦
+        f (jumpProcessFE Λ (r : ℝ) w)
+          - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
+              jumpApplyF Λ mu (fun v w' ↦ jumpProcessFE Λ v w') f (u : ℝ) w ∂lebesgueClock.q)
+        (fun w ↦ rateInverseE Λ w a) :=
+  funext fun i ↦ funext fun w ↦
+    stoppedProcess_mpFamilyF_truncRateF_eq (hint w) (hpos w) (htop w) (hxi w) ha i
+
+end PathProcessLocal
+
+end PathLocalIdentification
+
+/-! ### The compensator between two jump times is the waiting time
+
+`eq:compensatorexp` of `rem:pathjumpprimary`, and the identity the *local* statement of
+`thm:pathjumpMP` rests on:
+
+`∫_{τ_k}^{τ_{k+1}} Λ(u, ω) du = ε_{k+1}`.
+
+The manuscript calls it true "by the very definition of `τ_{k+1}`", and in this formalization that
+is literally so: `jumpTimeF Λ ω ξ n` is `rateInverse Λ ω (∑_{k<n} ξ k)`, the cumulated rate at it
+is the level it inverts (`cumulativeRateF_rateInverse`), and the difference of two consecutive
+levels is one waiting time.  No property of the rate beyond what that lemma already asks enters.
+
+**What the identity buys, and what it does not.**  It says that on `[0, τ n]` the compensator is at
+most `ξ 0 + … + ξ (n-1)` -- a bound at every sample point, and an *integrable* one, which is why
+`rem:pathjumpprimary` can call the repair unconditional.  It does **not** say the bound is uniform
+in the sample point, and that is the whole distinction this section records:
+`abs_setIntegral_compensatorF_le_of_cumulated` asks its mass bound at one sample point and is
+therefore reached by the jump times, while `bdd_mpFamilyF_of_cumulated` asks it at **every** sample
+point with one constant and is not.  `martingale_stoppedProcess` consumes the second, which is why
+the formalization localizes at `rateInverseE Λ · N` and not at `τ n`; the alternative is a version
+of the stopped martingale theorem with uniform integrability in place of uniform boundedness, and
+`∑_{k<n} ξ k` is exactly the integrable dominating function such a version would be given.
+
+**And the two localizations are the same truncation at different levels.**  `jumpTimeF Λ ω ξ n` is
+`rateInverse Λ ω (∑_{k<n} ξ k)` by definition, so the rate switched off at the `n`-th jump time is
+`truncRateF Λ (∑_{k<n} ξ k)` -- the same construction as `truncRateF Λ N`, at a level that is a
+functional of the sample point instead of a constant.  That is where the uniformity is lost and
+nowhere else. -/
+
+section PathCompensatorExp
+
+/-- **The cumulated rate at the `n`-th jump time is the `n`-th partial sum of the waiting times.**
+The defining equation of the jump times, read forwards. -/
+theorem cumulativeRateF_jumpTimeF
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ k, 0 ≤ xi k) (n : ℕ) :
+    cumulativeRateF Λ ω (jumpTimeF Λ ω xi n) = ∑ k ∈ Finset.range n, xi k :=
+  cumulativeRateF_rateInverse hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k)
+
+/-- **`eq:compensatorexp`**: the compensator accumulated between two consecutive jump times is the
+waiting time that produced the second of them. -/
+theorem cumulativeRateF_jumpTimeF_sub
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ k, 0 ≤ xi k) (n : ℕ) :
+    cumulativeRateF Λ ω (jumpTimeF Λ ω xi (n + 1)) - cumulativeRateF Λ ω (jumpTimeF Λ ω xi n)
+      = xi n := by
+  rw [cumulativeRateF_jumpTimeF hint hpos htop hxi, cumulativeRateF_jumpTimeF hint hpos htop hxi,
+    Finset.sum_range_succ]
+  ring
+
+/-- **The compensator up to a time stopped at the `n`-th jump time is bounded by the `n`-th partial
+sum**, at every sample point.  This is the statement `rem:pathjumpprimary` calls an unconditional
+repair: the bound is a random variable and not a constant, but it is integrable, which is what a
+localizing system has to supply. -/
+theorem cumulativeRateF_min_jumpTimeF_le
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ k, 0 ≤ xi k) (n : ℕ) (t : ℝ) :
+    cumulativeRateF Λ ω (min t (jumpTimeF Λ ω xi n)) ≤ ∑ k ∈ Finset.range n, xi k := by
+  have hsum : (0 : ℝ) ≤ ∑ k ∈ Finset.range n, xi k := Finset.sum_nonneg fun k _ ↦ hxi k
+  rcases le_total (0 : ℝ) (min t (jumpTimeF Λ ω xi n)) with hm | hm
+  · have h := monotoneOn_cumulativeRateF hint hpos hm
+      (rateInverse_nonneg Λ ω (∑ k ∈ Finset.range n, xi k)) (min_le_right _ _)
+    rwa [cumulativeRateF_rateInverse hint hpos htop hsum] at h
+  · have hz : cumulativeRateF Λ ω (min t (jumpTimeF Λ ω xi n)) = 0 := by
+      simp [cumulativeRateF, Set.Ioc_eq_empty (not_lt.2 hm)]
+    rw [hz]
+    exact hsum
+
+/-- **The rate switched off at the `n`-th jump time is the truncated rate at the `n`-th partial
+sum**, by definition and not up to anything.  The manuscript localizes at the jump times and this
+formalization at `rateInverseE Λ · N`; the statement says the two are the same construction, and
+the only difference between them is that the level of the first is a functional of the sample point
+and the level of the second is a constant.  That difference is where a bound uniform in the sample
+point is lost, and it is the whole of the deviation recorded in
+`MartingaleProblems/README.md`, Milestone 4. -/
+theorem rateInverse_sum_eq_jumpTimeF (Λ : ℝ → Ω → ℝ) (ω : Ω) (xi : ℕ → ℝ) (n : ℕ) :
+    rateInverse Λ ω (∑ k ∈ Finset.range n, xi k) = jumpTimeF Λ ω xi n := rfl
+
+/-! #### The time change: the path dependent construction is the constant rate one, on the clock of
+the cumulated rate
+
+The three statements below say that the whole path dependence of the construction sits in **one**
+place, the clock, and nowhere in the combinatorics: a time `u` has been passed by fewer than `n`
+jumps exactly when the cumulated rate at `u` has not yet reached the `n`-th partial sum of the
+waiting times, and therefore the path at `u` is the step path over the *partial sums themselves*,
+read at `cumulativeRateF Λ ω u`.
+
+It is what makes the law of the jump times computable under `jumpMeasure mu nu` without a renewal
+argument: on the clock of the cumulated rate the waiting times are the unmodified `ξ k`, whose law
+is `expMeasure 1` by construction, so a statement about `{u < τ n}` becomes a statement about a sum
+of exponentials at a deterministic level -- deterministic once the sample point is fixed, which is
+what the conditional statement of `thm:pathjumpMP` asks for.
+
+**No hypothesis on the rate beyond its non negativity and local integrability enters**, and in
+particular neither the divergence nor the attainment of the level, because
+`rateInverseE_le_ofReal_iff` needs neither.  That is the second payoff of the `ℝ≥0∞` valued inverse
+recorded in `section PathInverseE`: over `rateInverse` the same statement would be false at a level
+the cumulated rate never reaches. -/
+
+/-- **A time lies below the `n`-th jump time exactly when the cumulated rate there lies below the
+`n`-th partial sum.**  The defining equation of the jump times, read as an equality of events. -/
+theorem lt_jumpTimeFE_iff
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 ≤ t) (n : ℕ) :
+    ENNReal.ofReal t < jumpTimeFE Λ ω xi n
+      ↔ cumulativeRateF Λ ω t < ∑ k ∈ Finset.range n, xi k := by
+  rw [jumpTimeFE, ← not_le, ← not_le, not_iff_not]
+  exact rateInverseE_le_ofReal_iff hint hnn ht
+
+/-- **The step index of the jump times is the step index of the partial sums, read on the clock of
+the cumulated rate.**  The jump counter of the path dependent construction is the jump counter of a
+constant rate construction, time changed. -/
+theorem stepIndex_jumpTimeFE
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 ≤ t) :
+    stepIndex (jumpTimeFE Λ ω xi) (ENNReal.ofReal t)
+      = stepIndex (fun n ↦ ∑ k ∈ Finset.range n, xi k) (cumulativeRateF Λ ω t) := by
+  simp only [stepIndex]
+  congr 1
+  ext n
+  simp only [Set.mem_ofPred_eq]
+  exact lt_jumpTimeFE_iff hint hnn ht (n + 1)
+
+section PathTimeChange
+
+variable {E : Type*} {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **The time change, at the level of the process.**  At every non negative time and every sample
+point the path dependent jump process is the step path over the **partial sums of the waiting
+times**, evaluated at the cumulated rate.
+
+This is the statement the whole of `section PathDependent` has been circling: the rate enters the
+construction only through the clock `t ↦ cumulativeRateF Λ ω t`, and the marks are read off by a
+step index that knows nothing about it.  Neither non explosion nor positivity nor divergence
+enters, only what `lt_jumpTimeFE_iff` asks. -/
+theorem jumpProcessFE_eq_stepPath_cumulativeRateF
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 ≤ t) :
+    jumpProcessFE Λ t ω
+      = stepPath (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) ω.1 (cumulativeRateF Λ ω t) := by
+  simp only [jumpProcessFE, stepPath]
+  exact congrArg ω.1 (stepIndex_jumpTimeFE hint hnn ht)
+
+end PathTimeChange
+
+end PathCompensatorExp
 
 end PathDependent
