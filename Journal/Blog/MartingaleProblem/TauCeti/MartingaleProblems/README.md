@@ -1829,6 +1829,82 @@ A concrete family of solutions, built without any of the theory above. Index
   `jumpApply_yule_indicator_zero` says the generator annihilates `stateIndicator 0`,
   so the equation at `0` is `p 0 t = p 0 0` and carries no integral.
   It does **not** yield non explosion, and `tsum_jumpLaw_eq_one` says why.
+* `measurable_jumpLaw`, `abs_jumpLaw_le_one`, `intervalIntegrable_jumpLaw` and
+  `abs_sub_mul_jumpLaw_le`: **the one dimensional law as a function of time.**
+  **Proved** on 2026-09-11, fourth run. The law is measurable in the time
+  argument, it is bounded by `1`, and a difference of two multiples of laws is
+  bounded by the sum of the absolute values of the coefficients; a bounded
+  measurable function of time is interval integrable. These four are what the
+  passage from the *integrated* master equation to the *differential* one
+  consumes, and `measurable_jumpLaw` is the only one of them that touches the
+  jump construction — it is the joint measurability `measurable_jumpProcess`
+  pushed through the integral over the sample point.
+* `eq_of_masterEquation`: **an integrated first order linear equation determines
+  its solution.** **Proved** on 2026-09-11, fourth run. If `f` satisfies
+  `f s = f 0 + ∫_0^s (g - c f)` for every `s ≥ 0` with a measurable and bounded
+  right hand side, `g` is continuous on `[0, ∞)`, and `F` satisfies the same
+  equation in differential form with `F 0 = f 0`, then `f t = F t` for every
+  `t ≥ 0`. It is `eq_exp_add_integral_of_hasDerivWithinAt` applied **twice and
+  never evaluated**: both functions equal the same variation of constants
+  expression, which therefore does not have to be computed.
+  The bootstrap is the content: the right hand side is bounded and measurable,
+  so it is interval integrable and its primitive is continuous
+  (`intervalIntegral.continuous_primitive`), so `f` is continuous, so the right
+  hand side is continuous at every positive time, and only then does the
+  fundamental theorem of calculus (`intervalIntegral.integral_hasDerivAt_right`)
+  turn the equation into a derivative. This is why the hypothesis on the right
+  hand side is measurability and a bound and not continuity: continuity of the
+  right hand side is a *conclusion*, since the right hand side contains the
+  unknown.
+* `hasDerivAt_expNeg` and `hasDerivAt_yuleDensity_succ`: **the candidate solves
+  the equation.** **Proved** on 2026-09-11, fourth run. With
+  `e s = exp (-(β s))` the function `F n s = e s * (1 - e s) ^ n` satisfies
+  `(F (n+1))' r = β (n+1) F n r - β (n+2) F (n+1) r`, which is one step of the
+  induction over the level. One differentiation and one `ring`; no measure and
+  no process occur.
+* `eq_yuleDensity_of_masterEquation`: **the master equation of the Yule process
+  started at one has exactly one solution.** **Proved** on 2026-09-11, fourth
+  run. For any family `p : ℕ → ℝ → ℝ` that is measurable in time, bounded by
+  `1`, has `p k 0 = δ_{k,1}`, and satisfies
+  `p (m+1) s = p (m+1) 0 + ∫_0^s (β m p m r - β (m+1) p (m+1) r) dr` for every
+  `m` and every `s ≥ 0`, one has
+  `p (n+1) t = exp (-β t) (1 - exp (-β t))^n` for every `n` and every `t ≥ 0`.
+  The statement names no jump process: what is proved is that the *equation*
+  determines the law, and the construction enters only at `jumpLaw_yule_succ`.
+  The induction is over the level; at the level `0` the inhomogeneity carries
+  the factor `β * 0` and vanishes, at every further level it is the level below.
+* `yule_masterEquation_zero`, `jumpLaw_yule_init`, `jumpLaw_yule_zero`,
+  `jumpLaw_yule_succ` and `tsum_jumpLaw_yule_succ`: **the one dimensional law of
+  the Yule process is geometric.** **Proved** on 2026-09-11, fourth run. Started
+  at one individual, `P (X t = n + 1) = exp (-β t) (1 - exp (-β t))^n` and
+  `P (X t = 0) = 0`, for every `t ≥ 0`. This is the independent control the
+  construction is measured against, as `poissonMeasure` is for the Poisson
+  process: the geometric distribution does not come out of this construction.
+  `yule_masterEquation_zero` is the equation at the absorbing state, where the
+  compensator vanishes identically (`jumpApply_yule_indicator_zero`) and a pure
+  birth process never returns to `0`; `jumpLaw_yule_init` is `jumpLaw_zero` on
+  `ν = δ₁`. `tsum_jumpLaw_yule_succ` sums the solution to `1` as a geometric
+  series, and it is a **check of the formula and not a non explosion
+  statement** — `tsum_jumpLaw_eq_one` proves the same total mass without any
+  hypothesis whatever.
+* `mem_nonExplosiveE_of_rate_le`, `nonExplosiveE_subset_of_rate_le` and
+  `mem_nonExplosiveE_yule_of_linearBirthDeath`: **non explosion is antitone in
+  the rate.** **Proved** on 2026-09-11, fourth run. If `lam ≤ lam'` pointwise
+  then `NonExplosiveE lam' ⊆ NonExplosiveE lam`, at **every** sample point and
+  not almost everywhere: `mem_nonExplosiveE_iff_tsum_eq_top` makes non explosion
+  the single identity `∑ k, ofReal (ξ k) / ofReal (lam (y k)) = ⊤`, the series
+  is antitone in the rate term by term, and a divergent series of nonnegative
+  terms keeps diverging when its terms grow. The chain and the waiting times are
+  the same on both sides; only the rate changes.
+  `mem_nonExplosiveE_yule_of_linearBirthDeath` is what that gives on the linear
+  data, and it gives it **in the direction nobody needs**: the Yule rate `β x`
+  is below the total rate `(β + δ) x` of the linear chain, so the non explosion
+  of the linear chain implies that of the Yule process and not conversely,
+  because a death raises the total rate. The domination the coupling route means
+  is between the **states** and not between the rates, and two processes whose
+  states are compared do not share an embedded chain — a coupling is a measure
+  on a common space, not a rate inequality. That is the cost of the coupling
+  route, and it is named here rather than discovered halfway through it.
 * `le_mul_exp_sum_of_lyapunov`, `not_summable_inv_of_lyapunov`,
   `ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov` and `jumpApply_le_of_lyapunov`:
   **the Lyapunov criterion for non explosion, in its pathwise form.** **Proved**
@@ -2313,32 +2389,61 @@ sie; die Nichtexplosion, die er braucht, kommt vom ersten. Was ihn zu einem
 eigenen Weg zur Nichtexplosion machen würde, ist der Friedhofszustand, und der
 steht als benannter Punkt oben in Meilenstein 4.
 
-**Als Akzeptanzbeispiel ist die Rechnung dennoch wertvoll.** Der Yule-Prozeß
-(`b x = β * x`, `d ≡ 0`) hat eine geschlossene eindimensionale Verteilung — von
-`1` gestartet ist `X t` geometrisch mit Parameter `exp (−β t)` —, und ein Leser
-kann das Ergebnis der Konstruktion gegen etwas Bekanntes prüfen, so wie beim
-Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Es gehört zu Punkt 5 und
-ist **nach** `jumpProcess_isLocalMPSolution` zu machen, nicht davor: es prüft
-die Konstruktion, es trägt sie nicht.
+**Als Akzeptanzbeispiel ist die Rechnung dennoch wertvoll, und sie steht.** Der
+Yule-Prozeß (`b x = β * x`, `d ≡ 0`) hat eine geschlossene eindimensionale
+Verteilung — von `1` gestartet ist `X t` geometrisch mit Parameter `exp (−β t)` —,
+und ein Leser prüft das Ergebnis der Konstruktion gegen etwas Bekanntes, so wie
+beim Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Das ist
+`jumpLaw_yule_succ` und `jumpLaw_yule_zero` (2026-09-11, vierter Lauf). Die
+Rechnung gehört zu Punkt 5 und steht **nach** `jumpProcess_isLocalMPSolution`:
+sie prüft die Konstruktion, sie trägt sie nicht.
 
-**Der gemessene Vergleich, Stand 2026-09-11, dritter Lauf.** Bis zum
+**Der gemessene Vergleich, Stand 2026-09-11, vierter Lauf.** Bis zum
 zweiundzwanzigsten Lauf des 2026-09-10 stand hier die *Behauptung*, die Reihe sei
 der billigere Weg. Was davon gezählt ist (`scripts/_citations/count_yule.py`,
-`scripts/_citations/count_lyapunov.py` und
-`scripts/_citations/count_yule_master.py`):
+`scripts/_citations/count_lyapunov.py`,
+`scripts/_citations/count_yule_master.py`, `scripts/_citations/count_yule_law.py`
+und `scripts/_citations/count_coupling.py`):
 
 | Weg | Deklarationen | Codezeilen | Stand |
 | --- | --- | --- | --- |
 | Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | **fertig** |
 | Mastergleichung, allgemein | 18 (`section YuleProcess`, ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 278 | **liefert die Verteilung, nicht die Nichtexplosion** |
 | Mastergleichung, auf der Yule-Rate | 3 (Brücke) + 1 (`yule_masterEquation`) | 42 + 61 = 103 Codezeilen | **fertig** |
+| Lösung der Mastergleichung, bis zur Verteilung | 8 (Analysis) + 5 (Yule-Instanz) | 182 + 71 = 253 Codezeilen | **fertig** |
 | Lyapunov, pfadweise Form | 4 (Kriterium) + 3 (Geburt-Tod-Instanzen) | 85 + 36 = 121 Codezeilen | **fertig** |
 | Lyapunov, Erzeugerform | 12 (Kriterium) + 4 (Geburt-Tod-Instanzen) | 258 + 52 = 310 Codezeilen | **fertig** |
 | Lyapunov über die gehobene Rate | 3 | 67 Codezeilen | **fertig** |
-| Kopplung | 0 | 0 | nicht angefangen |
+| Kopplung, Ratendominierung | 2 + 1 | 13 + 8 = 21 Codezeilen | **die Dominierung steht, sie zeigt in die andere Richtung** |
 
 (Die ganze `section Lyapunov` sind 500 Codezeilen, 761 mit Dokumentation; die
-ganze `section YuleMasterEquation` 105 Codezeilen, 175 mit Dokumentation.)
+ganze `section YuleMasterEquation` 105 Codezeilen, 175 mit Dokumentation; die
+ganze `section YuleLaw` 255 Codezeilen, 395 mit Dokumentation; die ganze
+`section RateMonotone` 23 Codezeilen, 82 mit Dokumentation.)
+
+**Der Kopplungsweg kostet 21 Zeilen und kommt damit nicht an.** Die Dominierung,
+die diese Konstruktion trägt, ist die in der *Rate* an festem Stichprobenpunkt,
+und sie ist billig — `mem_nonExplosiveE_of_rate_le`, 13 Codezeilen. Sie
+dominiert aber die falsche Größe: die Gesamtrate des Geburt-Tod-Prozesses ist
+`(β + δ) x` und damit **größer** als die Yule-Rate `β x`, weil ein Sterbeschritt
+die Gesamtrate hebt. Was der Weg meint, ist die Dominierung der *Zustände*, und
+zwei Prozesse, deren Zustände verglichen werden, teilen sich keine eingebettete
+Kette. Die Kopplung ist damit ein **neues Maß auf einem gemeinsamen Raum** und
+keine Ungleichung zwischen Raten — das ist die benannte Bruchstelle, und sie
+steht fest, bevor Zeilen dafür ausgegeben sind.
+
+**Was die Lösung der Gleichung kostet, und wo das Geld hingeht.** Die
+Mastergleichung *aufzustellen* kostet 103 Codezeilen, sie zu *lösen* noch einmal
+253 — die Gleichung ist also die kleinere Hälfte. Von den 253 sind 182 frei von
+der Sprungkonstruktion: die Eindeutigkeit der skalaren linearen Gleichung (30),
+die Ableitung der geschlossenen Formel (34) und die Induktion über die Stufe
+(84). Nur 34 Zeilen sind über `jumpLaw` und 71 sind Einsetzen der Yule-Daten.
+Der teuerste Einzelposten ist der **Aufstieg von der integrierten zur
+differentiellen Form**: die rechte Seite enthält die Unbekannte, ihre Stetigkeit
+ist also nicht vorauszusetzen, sondern über Meßbarkeit und Beschränktheit erst zu
+erschließen. Das ist der Grund, aus dem `eq_of_masterEquation` eine meßbare und
+beschränkte rechte Seite verlangt und keine stetige, und es ist derselbe Grund,
+aus dem `measurable_jumpLaw` überhaupt gebraucht wird.
 
 **Der vierte Weg ist der billigste, und er ist der einzige allgemeine.** 121
 Codezeilen gegen 236 der Reihe, und was dabei herauskommt, ist nicht dasselbe:

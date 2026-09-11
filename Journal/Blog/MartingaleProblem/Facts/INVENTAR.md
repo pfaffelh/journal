@@ -19651,3 +19651,234 @@ ganze `section Lyapunov` sind 500 Codezeilen, 761 mit Dokumentation; die ganze
    das, was dem Reihenweg fehlt, um dieselbe Reichweite zu haben wie das Kriterium, und ohne sie ist
    der gemessene Vergleich in einem Punkt unfair — er vergleicht zwei Wege, von denen nur einer
    ankommt.
+
+### 2026-09-11, vierter Lauf des Tages — die eindimensionale Verteilung des Yule-Prozesses ist geometrisch; die Gleichung zu lösen kostet mehr als sie aufzustellen; und der Kopplungsweg bricht an der ersten Stelle, mit Angabe wo
+
+**Bearbeitet:** Teil F des laufenden Auftrags, Punkt 2 der vom Nutzer am 2026-09-10 gesetzten
+Reihenfolge (*Lyapunov, dann die Instanzen, dann Mastergleichung, dann Kopplung*) — und zwar der
+Teil von Punkt 2, den der dritte Lauf offengelassen hatte: nicht die Gleichung, sondern **ihre
+Lösung**. Das ist der Vorschlag 1 des dritten Laufs, unverändert ausgeführt. Die Reihenfolge
+D → F → C → E ist eingehalten.
+
+**Sechzehn Deklarationen** — dreizehn im neuen Abschnitt `YuleLaw` und drei im neuen Abschnitt
+`RateMonotone` von `TauCeti/MartingaleProblems/Suggested.lean` —, die ganze Datei **ohne einen
+Fehler** durch `lake env lean` gegen v4.33.1 (Lean 4.33.1, commit `819816b2`), alle sechzehn mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt
+bei **neun**.
+`scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` rc 0, 0 Fehler,
+9 `sorry`; für `SkorokhodSpace/Suggested.lean` rc 0, 0 Fehler; für `WeakConvergence/Suggested.lean`
+weiterhin die zwei bewußt gegen `master` geschriebenen Fehler. `python3 check.py` meldet `clean`
+(133 Seiten). `scripts/check_citations.py` meldet unverändert dieselben zwei Auffälligkeiten wie
+nach Teil D (der `Cadlag`-Pfad und `Subgroup.isClosed_of_discrete`), also **keinen neuen Fund und
+keinen Rückschritt**. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Satz
+
+> `jumpLaw_yule_succ` — von einem Individuum gestartet (`nu = Measure.dirac 1`) ist für jedes `n`
+> und jedes `t ≥ 0`
+>
+> `P (X t = n + 1) = exp (−β t) · (1 − exp (−β t))^n`,
+>
+> und `jumpLaw_yule_zero` sagt `P (X t = 0) = 0`.
+
+Das ist die **geometrische Verteilung auf `{1, 2, …}` mit Parameter `exp (−β t)`**, und sie ist der
+Prüfstein, um den es dem Auftrag geht: ein Leser rechnet das Ergebnis der Konstruktion gegen etwas
+nach, das nicht aus ihr stammt, so wie `poissonMeasure` beim Poissonprozeß. Alle vier
+Voraussetzungen sind auf Daten eingelöst — Meßbarkeit in der Zeit (`measurable_jumpLaw`), die
+Schranke `1` (`abs_jumpLaw_le_one`), der Anfangswert (`jumpLaw_yule_init`) und die Gleichung selbst
+(`yule_masterEquation`, und damit über `ae_mem_nonExplosiveE_posRate_yule` auf dem
+Lyapunov-Kriterium). Es bleibt nichts stehen.
+
+#### Der erste Befund, und er ist der Grund, aus dem kein Integral ausgerechnet wird
+
+`eq_exp_add_integral_of_hasDerivWithinAt`, die Variation der Konstanten, ist eine **Formel** und kein
+Eindeutigkeitssatz. Zweimal angewandt ist sie einer, und das ist hier der ganze Trick: die gesuchte
+Verteilung und die geschlossene Formel lösen dieselbe Gleichung mit derselben Inhomogenität und
+demselben Anfangswert, sind also **beide gleich demselben Ausdruck** — und dieser Ausdruck wird nie
+angesehen. Zu zeigen ist an der Kandidatin eine *Ableitung*, nicht ein Integral. Das ist
+`eq_of_masterEquation`, 30 Codezeilen, und es ist die einzige Stelle des Abschnitts, an der
+irgendetwas über die Lösungsformel gesagt wird.
+
+Die Alternative — das Integral `∫_0^t exp(−β(n+1)(t−r)) · β n · exp(−βr)(1−exp(−βr))^(n−1) dr`
+wirklich auszuwerten — wäre je Stufe eine Substitution und eine partielle Integration gewesen. Sie
+kommt nicht vor.
+
+#### Der zweite Befund, und er ist der teuerste Posten des Laufs: der Aufstieg von der integrierten zur differentiellen Form
+
+Die Mastergleichung kommt **integriert** aus `jumpMeasure_masterEquation_of_ae_nonExplosive`. Der
+Hauptsatz der Differential- und Integralrechnung macht daraus eine Ableitung, aber nur an einer
+Stelle, an der der Integrand **stetig** ist — und der Integrand enthält die Unbekannte `p (n+1)`
+selbst. Die Stetigkeit von `p (n+1)` ist also nicht vorauszusetzen, sie ist zu erschließen.
+
+Der Aufstieg geht über drei Aussagen, und keine davon ist Beiwerk:
+
+* `measurable_jumpLaw` — die eindimensionale Verteilung ist im **Zeitargument** meßbar. Das ist die
+  gemeinsame Meßbarkeit `measurable_jumpProcess` durch das Integral über den Stichprobenpunkt
+  geschoben (`StronglyMeasurable.integral_prod_right'`), und es ist die **einzige** Stelle des
+  ganzen Abschnitts, an der die Sprungkonstruktion überhaupt vorkommt.
+* `abs_jumpLaw_le_one` — sie ist durch `1` beschränkt, weil sie ein Integral eines Indikators unter
+  einem Wahrscheinlichkeitsmaß ist.
+* Beides zusammen macht die rechte Seite intervallintegrierbar, also ihre Stammfunktion stetig
+  (`intervalIntegral.continuous_primitive`), also `p (n+1)` stetig, also die rechte Seite stetig an
+  jeder positiven Zeit — und **erst jetzt** greift
+  `intervalIntegral.integral_hasDerivAt_right`.
+
+Deshalb verlangt `eq_of_masterEquation` eine **meßbare und beschränkte** rechte Seite und keine
+stetige. Eine stetige rechte Seite zu verlangen hieße, das Ergebnis vorauszusetzen.
+
+Die vorhandene `hasDerivWithinAt_jumpLaw` hilft hier nicht: sie trägt die globale Schranke
+`∀ x, lam x ≤ L`, die die Yule-Rate nicht hat. Die differentielle Form wird deshalb nicht aus dem
+allgemeinen Satz genommen, sondern aus der integrierten Gleichung zurückgewonnen — und das ist
+billiger, weil dabei nur die *eine* Testfunktion vorkommt, an der die Gleichung schon steht.
+
+#### Der dritte Befund: die Lösung ist von der Konstruktion abtrennbar, und zwar zu vier Fünfteln
+
+`eq_yuleDensity_of_masterEquation` ist über eine **beliebige** Familie `p : ℕ → ℝ → ℝ` formuliert,
+die meßbar, durch `1` beschränkt, bei `0` gleich `δ_{k,1}` ist und die Gleichung erfüllt. Kein
+Sprungprozeß, kein Maß, kein Kern kommt in der Aussage vor. Was bewiesen wird, ist, daß **die
+Gleichung die Verteilung festlegt**; die Konstruktion tritt erst in `jumpLaw_yule_succ` ein, und
+dort als reines Einsetzen.
+
+Gezählt (`scripts/_citations/count_yule_law.py`, neu, nach dem Muster von `count_yule_master.py`
+und allein lauffähig):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G1 die Verteilung als Funktion der Zeit | 4 | 34 |
+| G2 Eindeutigkeit der skalaren linearen Gleichung | 1 | 30 |
+| G3 die Kandidatin und ihre Ableitung | 2 | 34 |
+| G4 die Lösung der Gleichung, frei von der Konstruktion | 1 | 84 |
+| G5 die Yule-Instanz | 5 | 71 |
+
+255 Codezeilen im ganzen Abschnitt, 395 mit Dokumentation. Davon sind **182 frei von der
+Sprungkonstruktion** (G2 + G3 + G4), 34 sind über `jumpLaw`, und 71 sind Einsetzen der Yule-Daten.
+
+#### Der gemessene Vergleich, fortgeschrieben
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 + 1 | 236 Zeilen mit Dokumentation | fertig, **erreicht die Mastergleichung nicht** |
+| Mastergleichung, allgemein | 18 + 1 | 278 | liefert die Verteilung, nicht die Nichtexplosion |
+| Mastergleichung, auf der Yule-Rate | 3 + 1 | 103 | fertig |
+| **Lösung der Mastergleichung, bis zur Verteilung** | **8 + 5** | **182 + 71 = 253** | **fertig** |
+| Lyapunov, pfadweise Form | 4 + 3 | 121 | fertig |
+| Lyapunov, Erzeugerform | 12 + 4 | 310 | fertig |
+| Lyapunov über die gehobene Rate | 3 | 67 | fertig |
+| **Kopplung, Ratendominierung** | **2 + 1** | **13 + 8 = 21** | **steht, zeigt in die andere Richtung** |
+
+**Das Urteil, um das der Auftrag bittet, in einem Satz:** die Mastergleichung *aufzustellen* kostet
+103 Codezeilen, sie zu *lösen* noch einmal 253 — der zweite Weg ist damit zu insgesamt 356 Zeilen
+der **teuerste** der bisher gegangenen, und er liefert dafür etwas, das keiner der anderen liefert,
+nämlich die Verteilung. Für eine *allgemeinere* Ratenfunktion ist er trotzdem der schlechtere: von
+den 253 Zeilen der Lösung sind zwar 182 allgemein, aber die Induktion über die Stufe ruht darauf,
+daß der Erzeuger an einem Zustandsindikator **nur zwei** Zustände sieht, also auf Nachbarschritten —
+genau die Voraussetzung, deren Fehlen das Lyapunov-Kriterium überflüssig macht. Bei weiten Sprüngen
+ist die Mastergleichung ein unendliches System und keine Kette skalarer Gleichungen mehr. Das
+Kriterium bleibt der allgemeine Weg; die Mastergleichung ist der Weg, wenn man die Verteilung will.
+
+**Welche Mathlib-Bausteine der Weg brauchte, und keiner fehlte:**
+`MeasureTheory.StronglyMeasurable.integral_prod_right'`, `MeasureTheory.StronglyMeasurable.measurable`,
+`intervalIntegral.continuous_primitive`, `intervalIntegral.integral_hasDerivAt_right`,
+`HasDerivAt.congr_of_eventuallyEq`, `HasDerivAt.const_sub`, `HasDerivAt.fun_pow`,
+`HasDerivAt.fun_mul`, `HasDerivAt.exp`, `HasDerivAt.const_mul`, `hasDerivAt_id`,
+`ContinuousOn.congr`, `ContinuousOn.continuousAt`, `ContinuousOn.mono`, `Ici_mem_nhds`,
+`Set.Icc_subset_Ici_self`, `Measure.dirac_apply`, `tsum_mul_left`, `tsum_geometric_of_lt_one`,
+`mul_inv_cancel₀`, `sub_sub_cancel`, `Real.exp_le_exp`, `abs_add_le`, `Measurable.const_mul`,
+`Measurable.sub`; für `section RateMonotone` zusätzlich `ENNReal.tsum_le_tsum`,
+`ENNReal.div_le_div_left`, `ENNReal.ofReal_le_ofReal`, `top_le_iff` und `Nat.cast_nonneg`. Jeder am
+Quelltext belegt, keiner `deprecated`. **Keine neue Negativaussage**,
+also nichts für `scripts/check_negatives.py` nachzutragen; die dortigen dreizehn Aussagen sind
+unberührt. Insbesondere bleibt die Negativaussage des dritten Laufs stehen und wurde gebraucht:
+Mathlib hat **keine** lineare Differentialgleichung erster Ordnung und keinen integrierenden
+Faktor, weshalb `eq_exp_add_integral_of_hasDerivWithinAt` im Repo steht.
+
+#### Der vierte Befund: der Kopplungsweg ist angefangen, und er ist an der ersten Stelle gebrochen — mit Angabe, wo
+
+Der Auftrag verlangt ausdrücklich, den Kopplungsweg nicht abzubrechen, sondern ihn, wenn er
+steckenbleibt, **mit benannter Bruchstelle** liegenzulassen. Er ist hier angefangen, und die
+Bruchstelle steht als Satz da und nicht als Vermutung.
+
+Die Dominierung, die diese Konstruktion **wirklich** trägt, kostet 13 Codezeilen:
+
+> `mem_nonExplosiveE_of_rate_le` — ist `lam x ≤ lam' x` für jedes `x`, so ist
+> `NonExplosiveE lam' ⊆ NonExplosiveE lam`, an **jedem** Stichprobenpunkt und nicht bloß fast
+> sicher.
+
+Sie ist billig, weil `mem_nonExplosiveE_iff_tsum_eq_top` die Nichtexplosion auf die eine
+Reihenidentität `∑ k, ofReal (ξ k) / ofReal (lam (y k)) = ⊤` in `ℝ≥0∞` zurückführt: die Reihe ist
+in der Rate gliedweise antiton (`ENNReal.div_le_div_left`), und eine schon divergente Reihe
+nichtnegativer Glieder bleibt divergent, wenn die Glieder wachsen. Kette und Wartezeiten sind auf
+beiden Seiten **dieselben**; nur die Rate ändert sich. Nichts Probabilistisches kommt vor.
+
+**Und genau deshalb erreicht sie den Geburt-Tod-Prozeß nicht.** Was auf den Daten herauskommt, ist
+`mem_nonExplosiveE_yule_of_linearBirthDeath`, und es zeigt in die Richtung, die niemand braucht: die
+Yule-Rate `β x` ist **kleiner** als die Gesamtrate `(β + δ) x` der linearen Kette, also folgt die
+Nichtexplosion des Yule-Prozesses aus der der Kette und nicht umgekehrt. Der Grund ist elementar und
+auf Papier unsichtbar: **ein Sterbeschritt hebt die Gesamtrate**, obwohl er den Zustand senkt. Die
+Dominierung, die der Kopplungsweg meint, ist die der **Zustände**; zwei Prozesse, deren Zustände
+verglichen werden, teilen sich aber keine eingebettete Kette, und dann ist eine Kopplung ein
+**neues Maß auf einem gemeinsamen Raum** und keine Ungleichung zwischen Raten. Das ist die
+Bruchstelle, sie ist benannt, und sie ist benannt, bevor Zeilen für den Umbau ausgegeben sind.
+
+Gezählt mit `scripts/_citations/count_coupling.py` (neu, nach demselben Muster und allein
+lauffähig): 2 Deklarationen und 13 Codezeilen für die Dominierung, 1 Deklaration und 8 Codezeilen
+für die Instanz; die ganze `section RateMonotone` 23 Codezeilen, 82 mit Dokumentation.
+
+#### Zwei Stolperstellen, die festzuhalten sind, weil sie wiederkommen
+
+* **`convert ... using 1` an `HasDerivAt` erzeugt Instanzengleichungen.** Stammt der eine Term aus
+  einem Mathlib-Lemma und der andere aus dem Ziel, so sind die `AddCommGroup`- und `Module`-Instanzen
+  über verschiedene Pfade gefunden (`Real.instAddCommGroup` gegen
+  `Real.normedAddCommGroup.toAddCommGroup`), und `convert` legt sie als eigene Ziele vor; `ring`
+  läuft dann auf das erste davon und meldet „made no progress". Der Ausweg ist, dem Zwischenschritt
+  per `have` **die Typannotation zu geben** und danach nur noch den Ableitungswert mit
+  `rw ... at h` zu berichtigen. Steht der Typ einmal annotiert da, so trifft `convert ... using 1`
+  wieder nur den Wert.
+* **`simpa` kann das Ziel wegvereinfachen, bevor der Term hinkommt.**
+  `HasDerivAt (fun u ↦ c + F u) d r` wird von `simp` über
+  `hasDerivAt_const_add_iff` auf `HasDerivAt F d r` zurückgeführt; der mühsam mit `.add`
+  konstruierte Term paßt dann *nicht* mehr. Richtig ist hier `simpa using hFTC` — der kürzere Term,
+  nicht der längere.
+
+#### Was offen blieb
+
+* **Der Kopplungsweg ist angefangen und nicht fertig.** Die Ratendominierung steht; die
+  Zustandsdominierung, die er braucht, verlangt ein gemeinsames Maß und ist nicht gebaut. Siehe
+  Vorschlag 1.
+* **`ae_mem_nonExplosiveE_posRate`**, die *Übertragung* der Nichtexplosion von `lam` auf
+  `posRate lam`. Unverändert offen seit dem dritten Lauf; sie bleibt der Punkt, den der Reihenweg
+  braucht, um an der Mastergleichung anzukommen, und steht als benannter Punkt in Meilenstein 4.
+* **Teil C**, die pfadabhängige Variante, ist der nächste Teil der vom Nutzer festgelegten
+  Reihenfolge, sobald Teil F abgeschlossen gilt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`ae_mem_nonExplosiveE_posRate`**, in der Fassung, die Meilenstein 4 nennt, unverändert vom
+   dritten Lauf. Aussage: explodiert `lam` f.s. nicht, so auch `posRate lam` nicht. Worauf sie ruht:
+   `ae_absorb_jumpMeasure` (die Kette steht am absorbierenden Zustand still),
+   `ae_tendsto_sum_snd_jumpMeasure` (die Wartezeiten divergieren) und
+   `mem_nonExplosiveE_iff_tsum_eq_top` (Nichtexplosion ist eine einzige Reihenidentität in `ℝ≥0∞`);
+   die Fallunterscheidung ist die von `jumpProcessE_posRate_eq_of_mem` — ohne absorbierenden Index
+   sind die beiden Reihen gleich, mit einem ist der Schwanz `∑ ξ_k` und divergiert. Warum jetzt: sie
+   ist das **einzige**, was dem Reihenweg fehlt, um dieselbe Reichweite zu haben wie das
+   Kriterium, und ohne sie ist der gemessene Vergleich in einem Punkt unfair — er vergleicht zwei
+   Wege, von denen nur einer an der Mastergleichung ankommt. Der Vergleich ist der Zweck von Teil F,
+   also ist das der letzte Posten, der ihn noch bewegt. Prüfstein: kein Fehler, kein neues `sorry`,
+   und die Zeile „erreicht die Mastergleichung nicht" fällt aus der Vergleichstabelle.
+2. **Teil C, die pfadabhängige Variante**, sobald Punkt 1 steht. Teil F ist mit diesem Lauf in dem
+   Sinn abgeschlossen, den der Auftrag verlangt: alle drei benannten Wege sind gemessen, der vierte
+   (Lyapunov) ebenfalls, und der Kopplungsweg liegt **mit benannter Bruchstelle** und nicht
+   abgebrochen da. Was an ihm noch fehlt, ist keine Lücke im Vergleich, sondern eine neue
+   Konstruktion — siehe Punkt 3.
+3. **Und wenn der Kopplungsweg doch zu Ende gegangen werden soll, dann hier:
+   `jumpProcessE_eq_thinning`.** Aussage: für eine durch `L` beschränkte Rate ist der Sprungprozeß
+   f.s. gleich dem Prozeß, den man erhält, wenn man einen homogenen Sprungstrom der festen Rate `L`
+   **ausdünnt** und jeden Sprung mit Wahrscheinlichkeit `lam x / L` annimmt. Worauf sie ruht:
+   `jumpMeasure` ist ein Produkt aus Kette und Wartezeiten, und die Ausdünnung ist die
+   Umschreibung dieses Produkts über einen gemeinsamen Strom. Warum sie der Kopplungsweg ist: zwei
+   Prozesse mit **verschiedenen** Raten haben unter `jumpMeasure` keine gemeinsamen Sprungzeiten,
+   und `mem_nonExplosiveE_of_rate_le` ist genau deshalb eine Aussage über die Rate und nicht über
+   den Zustand. Ein gemeinsamer Strom gibt ihnen welche, und erst dann läßt sich `X_t ≤ Y_t`
+   pfadweise überhaupt hinschreiben. Warum zuletzt: es ist eine **neue Konstruktion** und keine
+   Folgerung aus der vorhandenen; sie ist mit den 21 Zeilen der Ratendominierung nicht zu
+   verwechseln und nach dem Befund dieses Laufs auch nicht daraus zu gewinnen.
