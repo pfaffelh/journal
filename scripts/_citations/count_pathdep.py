@@ -210,6 +210,18 @@ GROUPS = {
         "isStronglyProgressive_of_measurable_uncurry_mpFamilyF",
         "isStronglyProgressive_mpFamilyF_hawkesStepPath",
     },
+    "G22 the paths of the test process are right continuous": {
+        "measurable_pointRate",
+        "measurable_hawkesSelfRate_time",
+        "compensator_eq_intervalIntegral",
+        "intervalIntegrable_mul_bdd",
+        "tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF",
+        "tendsto_nhdsGE_mpFamilyF_hawkesStepPath",
+    },
+    "G23 the window bound, and the third input it does not reach": {
+        "abs_setIntegral_compensatorF_le",
+        "bdd_mpFamilyF_of_bdd",
+    },
 }
 
 

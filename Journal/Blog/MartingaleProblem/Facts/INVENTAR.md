@@ -21556,3 +21556,185 @@ die Nichtexplosion voraussichtlich nicht mehr zu umgehen ist, und sie ist damit 
    Voraussetzung von `hawkesProcess_eq_stepPath`.
 2. **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, unverändert übernommen.
 3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
+
+### 2026-09-11, vierzehnter Lauf des Tages — die Pfade des Hawkes-Testprozesses sind rechtsstetig, und das ist die erste Stelle der pfadabhängigen Variante, an der die Nichtexplosion nicht mehr zu umgehen ist
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des dreizehnten Laufs
+(`tendsto_nhdsGE_mpFamilyF_hawkesStepPath`). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Neun Deklarationen**, die ganze Datei `TauCeti/MartingaleProblems/Suggested.lean` **ohne einen
+Fehler** durch `lake env lean` gegen v4.33.1, alle neun mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt bei **neun**. Die Punkte
+stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+* `abs_integral_sub_kernel_le` (im Abschnitt zum Erzeuger, aus `abs_jumpApply_le` herausgezogen,
+  das jetzt an dieser Stelle eine Zeile ist — dieselbe Zerlegung wie beim dreizehnten Lauf mit
+  `measurable_integral_sub_kernel`);
+* im neuen `section PathRightContinuous`: `measurable_pointRate`,
+  `measurable_hawkesSelfRate_time`, `compensator_eq_intervalIntegral`,
+  `intervalIntegrable_mul_bdd`, `tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF`,
+  `tendsto_nhdsGE_mpFamilyF_hawkesStepPath`;
+* im neuen `section PathWindowBound`: `abs_setIntegral_compensatorF_le`, `bdd_mpFamilyF_of_bdd`.
+
+#### Der Satz
+
+Für eine Zerlegung `Y s ω = f (X s ω) − ∫ u in Q.interval optional ⊥ s, W u ω` **an einem
+Stichprobenpunkt** `ω` folgt die Rechtsstetigkeit aus zweierlei und sonst nichts: der erste Summand
+ist von rechts lokal konstant, und der Integrand `W (·) ω` ist meßbar und auf jedem Fenster
+intervallintegrierbar. Der zweite Summand ist dann nicht bloß rechts-, sondern ganz stetig
+(`intervalIntegral.continuous_primitive`); einseitig bleibt die Aussage allein wegen des ersten.
+
+Die Hawkes-Instanz löst jede Voraussetzung auf Daten ein, bis auf eine: `hint`, die
+Intervallintegrierbarkeit der selbstbezüglichen Rate. Mit
+`isStronglyProgressive_mpFamilyF_hawkesStepPath` des dreizehnten Laufs sind damit **beide**
+Eingaben von `martingale_stoppedProcess` für den Hawkes-Testprozeß gestellt.
+
+#### Der Befund, und er ist der angesagte Prüfstein: hier und erst hier kommt die Nichtexplosion
+
+Der dreizehnte Lauf hatte diese Aussage als „die Stelle, an der sich entscheidet, ob die
+pfadabhängige Variante die Nichtexplosion wirklich erst hier braucht" benannt. Sie braucht sie, und
+der Grund ist genau benennbar.
+
+Die ganze Meßbarkeitsschicht darüber — `measurable_uncurry_pointRate_pointFiltration`,
+`measurable_compensator_of_uncurry_min`, `isStronglyProgressive_mpFamilyF_hawkesStepPath` — trägt
+über die Rate nichts als ihre Meßbarkeit, und zwar weil ein Integral, das nicht existiert, den
+**Bochnerschen Müllwert** `0` hat und ein Müllwert so meßbar ist wie alles andere. Stetigkeit im
+**oberen Ende des Fensters** ist etwas anderes: dort ist der Müllwert eine echte Hürde, denn ein
+Fenster mit nichtintegrierbarem Integranden hat keinen Grund, stetig von seinem Ende abzuhängen.
+
+Die Voraussetzung steht deshalb hier, und sie steht in der schärfsten verfügbaren Gestalt: **an
+einem einzelnen Stichprobenpunkt** und nicht als f.s.-Aussage. Es ist dieselbe Voraussetzung, die
+`hawkesProcess_eq_stepPath` trägt, und `ex:hawkes` beweist sie für f.a. Stichprobenpunkte unter dem
+treibenden Gesetz.
+
+#### Zwei Schritte, die der zustandsabhängige Fall nicht brauchte
+
+* **Die Rate muß in der Zeit meßbar sein.** `measurable_uncurry_pointRate_pointFiltration` gibt die
+  gemeinsame Meßbarkeit gegen die Vergangenheit; die Intervallintegrierbarkeit fragt zuerst nach
+  Meßbarkeit in der **Zeit allein**, an festem `ω`. Das ist `measurable_pointRate`, und es ist
+  derselbe Beweis ohne die Filtration: die Fensterintegration wird über
+  `integral_countingMeasure_eq_integral_count` zu einer Integration über die **Stufen** gegen ein
+  stillstehendes Maß, jede Stufe ist ein Indikator auf `{t | T (k+1) ∈ Set.Ico 0 t}` (also auf `∅`
+  oder `Set.Ioi (T (k+1))`), und `measurable_from_prod_countable_right` setzt sie zusammen. Über
+  `T` steht nichts: weder Monotonie noch Nichtexplosion.
+* **Der Integrand ist ein Produkt aus unbeschränkt und beschränkt.** `intervalIntegrable_mul_bdd`
+  ist das, was ihn zerlegt: die **unbeschränkte** Rate trägt die Integrierbarkeit, der mittlere
+  Zuwachs der beschränkten Testfunktion trägt die Schranke. Dafür ist
+  `abs_integral_sub_kernel_le` aus `abs_jumpApply_le` herauszuziehen — der Faktor von `jumpApply`,
+  der die Rate **nicht** trägt, aus demselben Grund wie `measurable_integral_sub_kernel` beim
+  dreizehnten Lauf: `jumpApplyF` multipliziert ihn mit einer Rate, die keine Funktion des Zustands
+  mehr ist, also ist die zustandsabhängige Produktaussage dort unbrauchbar.
+
+Wo der zustandsabhängige Fall eine beschränkte Rate hat und die Integrierbarkeit geschenkt bekommt
+(`continuous_intervalIntegral_of_bounded`), ist die Hawkes-Rate konstruktionsgemäß unbeschränkt —
+sie ist die Erregung ihrer eigenen Vergangenheit —, und die Integrierbarkeit ist die Voraussetzung.
+**Das ist der Preis der pfadabhängigen Variante an genau der Stelle, an der der dreizehnte Lauf
+ihren Ertrag gemessen hat**, und die beiden gehören im Vergleich am Ende des Meilensteins
+nebeneinander: billiger bei der Meßbarkeit, teurer bei der Regularität, und beides aus demselben
+Grund — die Voraussetzungen von `mpFamilyF` sitzen am Integranden und nicht am Prozeß.
+
+#### Drei Kleinigkeiten, die Zeit gekostet haben
+
+* `integral_lebesgueClock_Ioc` findet `fun u : ℝ≥0 ↦ W (u : ℝ)` nicht von selbst: die
+  Höherordnungs-Unifikation setzt `F := W ∘ NNReal.toReal`, und `rw` findet dieses Muster im Ziel
+  dann nicht mehr. `(F := fun u : ℝ≥0 ↦ W (u : ℝ))` ist auszuschreiben.
+* `Tendsto.mono_left nhdsWithin_le_nhds` läßt den Filter `𝓝[?] s` als Metavariable stehen, wenn das
+  Ergebnis nur mit `have h := …` aufgefangen wird; die Zwischenaussage ist zu **annotieren**, nicht
+  zu erschließen.
+* `Tendsto.eventually` läßt sein Prädikat offen, wenn es aus dem Ziel kommen soll.
+  `filter_upwards [hcoe.eventually h] with r hr` bestimmt es aus `h` statt aus dem Ziel und geht
+  deshalb.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py` (unverändert lauffähig, um die Gruppe `G22` erweitert):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G21 der Testprozeß ist progressiv meßbar | 3 | 125 |
+| G22 die Pfade des Testprozesses sind rechtsstetig | 6 | 114 |
+| G23 die Fensterschranke, und die dritte Eingabe, die sie nicht erreicht | 2 | 27 |
+| `section PathDependent` gesamt | — | 1436 Codezeilen, 2522 mit Dokumentation |
+
+`abs_integral_sub_kernel_le` steht außerhalb des Abschnitts und wird von diesem Skript nicht
+gezählt, wie schon `measurable_integral_sub_kernel`.
+
+**Gebrauchte Mathlib-Bausteine, und keiner fehlte:** `intervalIntegral.continuous_primitive`
+(`Mathlib/MeasureTheory/Integral/DominatedConvergence.lean:479`, in der Form mit
+`∀ a b, IntervalIntegrable f μ a b`), `MeasureTheory.Integrable.mul_bdd`
+(`Mathlib/MeasureTheory/Function/L1Space/Integrable.lean:1072`),
+`measurable_from_prod_countable_right`
+(`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:511`), `IntervalIntegrable.symm`,
+`IntervalIntegrable.trans`, `MeasurableSet.const`, `measurableSet_lt`.
+**Keine Negativaussage**, also nichts für `scripts/check_negatives.py` nachzutragen.
+
+#### Der dritte Befund: die dritte Eingabe von `martingale_stoppedProcess` ist für Hawkes **nicht** zu haben, und das ist kein Mangel des Beweises
+
+Beide Regularitätseingaben stehen jetzt. Die dritte Voraussetzung des Satzes ist
+
+> `hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C`
+
+— **eine** Konstante, die an **jedem** Stichprobenpunkt gilt. Sie ist es, die in
+`martingale_stoppedProcess` die gleichgradige Integrierbarkeit ersetzt: der Grenzübergang im Innern
+ist dominierte Konvergenz mit konstanter Majorante.
+
+`bdd_mpFamilyF_of_bdd` stellt sie aus einer Schranke an den Integranden her, und **für den
+Hawkes-Prozeß gibt es diese Schranke nicht**: `jumpApplyF` trägt die Rate selbst, und
+`∫₀ᵗ (ν + ∑_{T k < u} φ (u − T k)) du` ist an **jedem festen** `t`, so klein es sei, im
+Stichprobenpunkt unbeschränkt — ein Pfad, dessen erste Sprünge früh und dicht liegen, hat ein großes
+Fensterintegral. Keine Voraussetzung an `φ` repariert das; es ist **nicht** die Nichtexplosion,
+sondern die Unbeschränktheit der Rate.
+
+Die dritte Eingabe ist also in dieser Gestalt nicht zu beschaffen, und der Ausweg ist derselbe, den
+der zustandsabhängige Fall an genau dieser Stelle genommen hat: **Rate stutzen und lokalisieren.**
+Dort ist `jumpProcessE_isMPSolution` unter `lam ≤ L` bewiesen, `truncRate lam n` macht diese
+Voraussetzung auf jeder Stufe wahr, `rateTime lam n` ist die lokalisierende Folge, und
+`stoppedProcess_mpFamily_truncRate_eq` identifiziert die gestoppten Testprozesse der beiden
+Probleme. Was fehlt, ist das pfadabhängige Gegenstück zu `truncRate` und zu `rateTime`.
+
+**Das berichtigt zugleich die naheliegende Vermutung**, man müsse `martingale_stoppedProcess` auf
+eine zufällige, aber integrierbare Majorante verallgemeinern. Man muß es nicht, und man sollte es
+nicht zuerst versuchen: die Lokalisierung ist der Weg, den die Konstruktion ohnehin gehen muß, und
+sie macht die Majorante wieder konstant.
+
+#### Was offen blieb
+
+Das pfadabhängige `truncRateF` samt seiner Trefferzeit, und damit der Zusammenbau des
+Hawkes-Martingalproblems. Das ist der erste Vorschlag.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`truncRateF` und `cumulativeRateF_truncRateF_le`: die pfadabhängige Rate, abgeschnitten an
+   der Trefferzeit der *kumulierten* Rate.** Aussage:
+   `truncRateF Lam n s ω = Set.indicator (Set.Iio (rateInverse Lam ω n)) (fun u ↦ Lam u ω) s`
+   stimmt unterhalb von `rateInverse Lam ω n` mit `Lam` überein, und ihre kumulierte Rate ist an
+   **jeder** Zeit und **jedem** Stichprobenpunkt höchstens `n`. Daraus die Fensterschranke
+   `2·C·n` über `bdd_mpFamilyF_of_bdd`, und damit alle drei Eingaben von
+   `martingale_stoppedProcess` für das gestutzte Problem.
+
+   **Warum die Abschneidung an der kumulierten und nicht an der Rate selbst ansetzt, und das ist
+   der Befund, der diesem Vorschlag vorausgeht.** Der zustandsabhängige Fall nimmt `truncRate lam
+   n x = min (lam x) n` und lokalisiert an der Trefferzeit `rateTime lam n` des **laufenden
+   Ratensupremums** `rateSup`. Der Kopf des Abschnitts `LocalFiltration` sagt selbst, worauf das
+   ruht: „Everything about the hitting time reduces to two properties of `rateSup` … it is
+   measurable for `𝓕 t` … and it is **locally constant to the right** … Both come from
+   `eventuallyEq_nhdsGE_jumpProcessE`." Die rechte lokale Konstanz ist eine Eigenschaft des
+   **Treppenpfads**, und die pfadabhängige Rate hat sie nicht: `hawkesSelfRate` springt unmittelbar
+   **nach** jeder Sprungzeit um `φ(0⁺)` nach oben, weil das Fenster `Set.Ico 0 u` halboffen ist und
+   `hφ0` nur `φ x = 0` für `x ≤ 0` verlangt, über `φ(0⁺)` aber nichts. Also ist `rateSup` in der
+   pfadabhängigen Variante rechts nicht lokal konstant und `rateTime_le_iff` nicht zu übertragen.
+
+   Die **kumulierte** Rate hat den Defekt nicht: `continuousOn_cumulativeRateF` ist bewiesen, sie
+   ist **stetig**, und ihre Umkehrung samt Niveaumengenidentifikation steht schon da —
+   `rateInverse`, `rateInverse_le_iff`, `setOf_rateInverse_le`, alle mit Beweis. Das ist der
+   sachliche Grund, hier abzuschneiden, und nicht bloß die Bequemlichkeit: die Schranke, die
+   `bdd_mpFamilyF_of_bdd` fordert, ist ohnehin eine Schranke an das **Fensterintegral** und damit
+   an die kumulierte Rate, nicht an die Rate.
+
+   Prüfstein: ob `rateInverse Lam ω n` eine Stoppzeit der pfadabhängigen Filtration ist.
+   `setOf_rateInverse_le` gibt `{rateInverse ≤ c} = {0 ≤ c ∧ n ≤ cumulativeRateF Lam ω c}`, und
+   die rechte Seite liest den Pfad nur bis `c` — es fehlt allein die Meßbarkeit von
+   `ω ↦ cumulativeRateF Lam ω c` gegen `𝓕 c`, und die ist
+   `measurable_compensator_of_uncurry_min` des zwölften Laufs am Integranden `Lam`.
+2. **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, unverändert übernommen.
+3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.

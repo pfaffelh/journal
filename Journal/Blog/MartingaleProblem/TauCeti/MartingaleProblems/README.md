@@ -2716,6 +2716,90 @@ A concrete family of solutions, built without any of the theory above. Index
     wants, while a hypothesis about the process has to be turned into one about the integrand
     first — and that turning is the whole of the dyadic argument. No bound, no continuity of any
     path, no non explosion.
+  * `measurable_pointRate`, `measurable_hawkesSelfRate_time`,
+    `compensator_eq_intervalIntegral`, `intervalIntegrable_mul_bdd`,
+    `tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF` and
+    `tendsto_nhdsGE_mpFamilyF_hawkesStepPath`, with `abs_integral_sub_kernel_le`: **the paths of
+    the test processes of the path dependent martingale problem are right continuous, and the
+    Hawkes ones are.** **In Lean** on 2026-09-11, fourteenth run. For a decomposition
+    `Y s ω = f (X s ω) − ∫ u in Q.interval optional ⊥ s, W u ω` at one sample point `ω`, right
+    continuity follows from two things and nothing else: the first summand is locally constant
+    from the right, and the integrand `W (·) ω` is measurable and interval integrable on every
+    window. The second summand is then not merely right continuous but continuous
+    (`intervalIntegral.continuous_primitive`).
+
+    **This is the first statement of the path dependent variant that carries the non explosion**,
+    and it carries it in the sharpest shape available: as interval integrability of the self
+    referential rate **at the single sample point** `ω`, which is the hypothesis
+    `hawkesProcess_eq_stepPath` carries and which `ex:hawkes` proves for almost every sample point
+    under the driving law. The whole measurability layer above does without it, because an
+    integral that does not exist is the Bochner junk value and a junk value is as measurable as
+    anything else; continuity in the **upper end of the window** is where that stops working.
+
+    Two steps that the state dependent case did not need.
+    `measurable_hawkesSelfRate_time` is measurability of the rate **in the time** at a fixed
+    sample point — the counterpart of `measurable_uncurry_pointRate_pointFiltration`, and the
+    first thing interval integrability asks for; it rests on `measurable_pointRate`, which is that
+    statement for an arbitrary family of jump times and asks neither monotonicity nor non
+    explosion of it. And `intervalIntegrable_mul_bdd` is what splits the compensating integrand:
+    the **unbounded** rate carries the integrability, the mean increment of the bounded test
+    function carries the bound (`abs_integral_sub_kernel_le`, the factor of `jumpApply` that does
+    not carry the rate, extracted from `abs_jumpApply_le` for the same reason as
+    `measurable_integral_sub_kernel`). Where the state dependent case has a bounded rate and gets
+    the integrability for free (`continuous_intervalIntegral_of_bounded`), the Hawkes rate is
+    unbounded by construction — it is the excitation of its own past — and integrability is the
+    hypothesis.
+  * `abs_setIntegral_compensatorF_le` and `bdd_mpFamilyF_of_bdd`: **the window bound of a path
+    dependent test process, and the third input of `martingale_stoppedProcess`.** **In Lean** on
+    2026-09-11, fourteenth run. A compensating window is bounded by the bound of its integrand
+    times the length of the window, and a test process whose test function is bounded by `C` and
+    whose compensating integrand is bounded by `D` satisfies `|Y s ω| ≤ C + D · j` for every
+    `s ≤ j`, uniformly in the sample point.
+
+    **For the Hawkes process this third input does not exist, and that is a statement about the
+    process and not about the proof.** `martingale_stoppedProcess` asks for *one constant that
+    works at every sample point* — that is what replaces uniform integrability there, the passage
+    to the limit inside it being dominated convergence with a constant majorant. The Hawkes
+    compensating integrand carries the rate itself, and `∫₀ᵗ (ν + ∑_{T k < u} φ (u − T k)) du` is
+    unbounded in the sample point at *every* fixed `t`, however small: a path whose first jumps are
+    early and crowded has a large window integral. No hypothesis on `φ` repairs this; it is not the
+    non explosion but the unboundedness of the rate.
+
+    The way out is the one the state dependent case took at exactly this point — **truncate and
+    localize**, as `jumpProcessE_isMPSolution` under `lam ≤ L`, `truncRate lam n`, `rateTime lam n`
+    and `stoppedProcess_mpFamily_truncRate_eq` do there. The path dependent truncation is the next
+    item, and it truncates something else; see there.
+  * `truncRateF`, `truncRateF_eq_of_lt` and `cumulativeRateF_truncRateF_le`: **the path dependent
+    rate, cut off at the hitting time of its own cumulated rate.**
+    `truncRateF Lam n s ω = Set.indicator (Set.Iio (rateInverse Lam ω n)) (fun u ↦ Lam u ω) s`
+    agrees with `Lam` below `rateInverse Lam ω n`, and its cumulated rate is at most `n` at every
+    time and at every sample point. With it `bdd_mpFamilyF_of_bdd` holds at every level with the
+    constant `C + 2 C n`, and all three inputs of `martingale_stoppedProcess` are supplied for the
+    path dependent test processes; the Hawkes martingale problem is then the assembly of Point 5
+    read once more, with `isStronglyProgressive_mpFamilyF_hawkesStepPath` and
+    `tendsto_nhdsGE_mpFamilyF_hawkesStepPath` in place of their state dependent counterparts.
+
+    **The truncation is of the cumulated rate and not of the rate, and that is forced.** The state
+    dependent case cuts the rate itself, `truncRate lam n x = min (lam x) n`, and localizes at the
+    hitting time of the running supremum `rateSup`; everything about that hitting time reduces to
+    two properties of `rateSup`, its measurability and its **right local constancy**, and the
+    second is a property of a **step path** — it comes from `eventuallyEq_nhdsGE_jumpProcessE`. A
+    path dependent rate has no such property: `hawkesSelfRate` jumps *up* by `φ(0⁺)` immediately
+    after each jump time, the window `Set.Ico 0 u` of the rate being half open while `hφ0` asks
+    `φ x = 0` for `x ≤ 0` only. So `rateSup` is not right locally constant there and
+    `rateTime_le_iff` does not transfer.
+
+    The **cumulated** rate has no such defect: it is continuous (`continuousOn_cumulativeRateF`),
+    and its inverse together with the level set identification is already proved —
+    `rateInverse`, `rateInverse_le_iff`, `setOf_rateInverse_le`. It is also what the bound is
+    about: `bdd_mpFamilyF_of_bdd` asks for a bound on the compensating **window**, which is a
+    bound on the cumulated rate and not on the rate.
+  * `isStoppingTime_rateInverse`: **the hitting time of the cumulated path dependent rate is a
+    stopping time of the path dependent filtration.** `setOf_rateInverse_le` reduces
+    `{rateInverse Lam · n ≤ c}` to `{0 ≤ c ∧ n ≤ cumulativeRateF Lam · c}`, which reads the path up
+    to `c` and no further, and the measurability of `ω ↦ cumulativeRateF Lam ω c` for `𝓕 c` is
+    `measurable_compensator_of_uncurry_min` at the integrand `Lam`. This is what makes the
+    truncation above a localization.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,

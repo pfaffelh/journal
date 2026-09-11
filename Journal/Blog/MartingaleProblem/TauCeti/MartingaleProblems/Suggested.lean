@@ -3875,10 +3875,28 @@ in the statements about it. -/
 noncomputable def jumpApply (lam : E → ℝ) (mu : Kernel E E) (f : E → ℝ) (x : E) : ℝ :=
   lam x * ∫ y, (f y - f x) ∂(mu x)
 
+/-- **The mean increment of a function bounded by `C` is bounded by `2 C`**, under any Markov
+kernel and with no integrability of `f`: `norm_integral_le_of_norm_le` dominates by a constant,
+which is integrable for a probability measure whether `f` is or not.
+
+This is the factor of `jumpApply` that does *not* carry the rate, and it is stated on its own for
+the same reason as `measurable_integral_sub_kernel`: `jumpApplyF` multiplies it by a rate that is a
+functional of `(s, ω)` and no longer a function of the state, so the state dependent bound
+`abs_jumpApply_le` is of no use there. -/
+theorem abs_integral_sub_kernel_le {mu : Kernel E E} [IsMarkovKernel mu] {f : E → ℝ} {C : ℝ}
+    (hf : ∀ x, |f x| ≤ C) (x : E) : |∫ y, (f y - f x) ∂(mu x)| ≤ 2 * C := by
+  rw [← Real.norm_eq_abs]
+  refine (norm_integral_le_of_norm_le (μ := mu x) (f := fun y ↦ f y - f x)
+    (g := fun _ ↦ 2 * C) (integrable_const _)
+    (Filter.Eventually.of_forall fun y ↦ ?_)).trans ?_
+  · calc ‖f y - f x‖ ≤ |f y| + |f x| := (abs_sub _ _).trans_eq rfl
+      _ ≤ 2 * C := by have := hf y; have := hf x; linarith
+  · simp
+
 /-- **The generator is bounded by `2 L` on the functions bounded by `C`.**  This is
 `norm_apply_le` of the milestone, in the shape that avoids introducing a normed space of bounded
 measurable functions: the hypothesis and the conclusion are pointwise bounds, and no
-integrability of `f` is needed, because `norm_integral_le_of_norm_le` dominates by a constant
+integrability of `f` is needed, because `abs_integral_sub_kernel_le` dominates by a constant
 which is integrable for a probability measure whether `f` is or not. -/
 theorem abs_jumpApply_le {lam : E → ℝ} {mu : Kernel E E} [IsMarkovKernel mu] {f : E → ℝ}
     {L C : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) (hf : ∀ x, |f x| ≤ C) (x : E) :
@@ -3886,12 +3904,7 @@ theorem abs_jumpApply_le {lam : E → ℝ} {mu : Kernel E E} [IsMarkovKernel mu]
   have hC : 0 ≤ C := (abs_nonneg _).trans (hf x)
   have hL0 : 0 ≤ L := (hlam0 x).trans (hL x)
   have hint : ‖∫ y, (f y - f x) ∂(mu x)‖ ≤ 2 * C := by
-    refine (norm_integral_le_of_norm_le (μ := mu x) (f := fun y ↦ f y - f x)
-      (g := fun _ ↦ 2 * C) (integrable_const _)
-      (Filter.Eventually.of_forall fun y ↦ ?_)).trans ?_
-    · calc ‖f y - f x‖ ≤ |f y| + |f x| := (abs_sub _ _).trans_eq rfl
-        _ ≤ 2 * C := by have := hf y; have := hf x; linarith
-    · simp
+    rw [Real.norm_eq_abs]; exact abs_integral_sub_kernel_le hf x
   calc |jumpApply lam mu f x| = |lam x| * ‖∫ y, (f y - f x) ∂(mu x)‖ := abs_mul _ _
     _ ≤ L * (2 * C) := by
         rw [abs_of_nonneg (hlam0 x)]
@@ -16255,5 +16268,252 @@ theorem isStronglyProgressive_mpFamilyF_hawkesStepPath [MeasurableSpace E] (hν 
   · exact measurable_uncurry_hawkesJumpApplyF_hawkesFiltration hν hφ hφm hφint hg t
 
 end HawkesRate
+
+/-! ### The paths of the test processes are right continuous
+
+This is the **second** of the two inputs `martingale_stoppedProcess` asks of a test process, and it
+is the first place in the path dependent variant at which the non explosion is not avoidable.  The
+whole measurability layer above -- `measurable_uncurry_pointRate_pointFiltration`,
+`measurable_compensator_of_uncurry_min`, `isStronglyProgressive_mpFamilyF_hawkesStepPath` -- carries
+no hypothesis on the rate beyond its measurability, because an integral that does not exist is the
+Bochner junk value `0` and a junk value is as measurable as anything else.  Continuity in the
+**upper end of the window** is a different matter: there the junk value is a genuine obstruction,
+since a window whose integrand is not integrable has no reason to depend continuously on its end.
+
+So the hypothesis appears here, and it appears in the sharpest shape available: as interval
+integrability of the self referential rate **at a single sample point** and not as an almost sure
+statement.  It is the same hypothesis `hawkesProcess_eq_stepPath` carries, and `ex:hawkes` proves it
+for almost every sample point under the driving law.
+
+The difference to the state dependent case is the same as everywhere in this variant.  There
+(`tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE`) the rate is bounded, so
+`continuous_intervalIntegral_of_bounded` applies and the integrability is free; here the rate is
+unbounded by construction -- it is the excitation of its own past -- and integrability is the
+hypothesis. -/
+
+section PathRightContinuous
+
+/-- **A rate that reads its own past is measurable in the time.**  The counterpart of
+`measurable_uncurry_pointRate_pointFiltration` at a **fixed** sample point, and the first thing
+interval integrability asks for.
+
+The family `T` is arbitrary: no monotonicity, no non explosion.  Beyond a time at which the jumps
+accumulate the integral is the Bochner junk value, and
+`integral_countingMeasure_eq_integral_count` carries it across rather than avoiding it. -/
+theorem measurable_pointRate (T : ℕ → ℝ) {ψ : ℝ → ℝ} (hψ : Measurable ψ) :
+    Measurable fun t : ℝ ↦ ∫ u in Set.Ico (0 : ℝ) t, ψ (t - u) ∂(countingMeasure T) := by
+  have hstage : (fun t : ℝ ↦ ∫ u in Set.Ico (0 : ℝ) t, ψ (t - u) ∂(countingMeasure T))
+      = fun t : ℝ ↦ ∫ k, Set.indicator (Set.Ico (0 : ℝ) t) (fun u ↦ ψ (t - u)) (T (k + 1))
+          ∂(Measure.count : Measure ℕ) :=
+    funext fun t ↦ integral_countingMeasure_eq_integral_count T
+      (hψ.comp (measurable_const.sub measurable_id)) measurableSet_Ico
+  rw [hstage]
+  have hslice : ∀ k : ℕ, Measurable fun t : ℝ ↦
+      Set.indicator (Set.Ico (0 : ℝ) t) (fun u ↦ ψ (t - u)) (T (k + 1)) := by
+    intro k
+    have hset : MeasurableSet {t : ℝ | T (k + 1) ∈ Set.Ico (0 : ℝ) t} := by
+      have hsplit : {t : ℝ | T (k + 1) ∈ Set.Ico (0 : ℝ) t}
+          = {_t : ℝ | (0 : ℝ) ≤ T (k + 1)} ∩ {t : ℝ | T (k + 1) < t} := by
+        ext t
+        simp [Set.mem_Ico]
+      rw [hsplit]
+      exact (MeasurableSet.const _).inter (measurableSet_lt measurable_const measurable_id)
+    have hfun : (fun t : ℝ ↦ Set.indicator (Set.Ico (0 : ℝ) t) (fun u ↦ ψ (t - u)) (T (k + 1)))
+        = Set.indicator {t : ℝ | T (k + 1) ∈ Set.Ico (0 : ℝ) t}
+            (fun t ↦ ψ (t - T (k + 1))) := by
+      funext t
+      simp only [Set.indicator_apply, Set.mem_ofPred_eq]
+    rw [hfun]
+    exact (hψ.comp (measurable_id.sub measurable_const)).indicator hset
+  exact (stronglyMeasurable_integral_comp (Measure.count : Measure ℕ)
+    (W := fun (k : ℕ) (t : ℝ) ↦
+      Set.indicator (Set.Ico (0 : ℝ) t) (fun u ↦ ψ (t - u)) (T (k + 1)))
+    (measurable_from_prod_countable_right hslice) (g := id) measurable_id).measurable
+
+/-- **The self exciting Hawkes rate is measurable in the time, at every sample point.**  The
+instance of `measurable_pointRate`, and nothing beyond the measurability of `φ` enters. -/
+theorem measurable_hawkesSelfRate_time {E : Type*} {ν : ℝ} {φ : ℝ → ℝ} (hφm : Measurable φ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    Measurable fun u : ℝ ↦ hawkesSelfRate ν φ u ω :=
+  measurable_const.add (measurable_pointRate _ hφm)
+
+/-- **A compensating window of `lebesgueClock` under the optional convention is a genuine interval
+integral of `ℝ`.**  This is `compensatorE_eq_intervalIntegral` with the integrand freed from the
+process: right continuity, like progressive measurability, is a property of the **upper end** of the
+window, and Mathlib states it for `intervalIntegral`. -/
+theorem compensator_eq_intervalIntegral {W : ℝ → ℝ} (hW : Measurable W) (b : ℝ≥0) :
+    ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ b, W (u : ℝ) ∂lebesgueClock.q
+      = ∫ x in (0 : ℝ)..(b : ℝ), W x := by
+  rw [lebesgueClock_interval_optional_eq,
+    integral_lebesgueClock_Ioc bot_le (F := fun u : ℝ≥0 ↦ W (u : ℝ))
+      (hW.comp measurable_coe_nnreal_real),
+    show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero]
+  refine intervalIntegral.integral_congr fun r hr ↦ ?_
+  rw [Set.uIcc_of_le b.coe_nonneg] at hr
+  rw [zero_add, Real.coe_toNNReal r hr.1]
+
+/-- **A bounded measurable factor does not spoil interval integrability.**  The compensating
+integrand of `mpFamilyF` is a product of exactly this shape: an unbounded rate, which carries the
+integrability, times the mean increment of a bounded test function, which carries the bound
+(`abs_integral_sub_kernel_le`). -/
+theorem intervalIntegrable_mul_bdd {f g : ℝ → ℝ} {a b c : ℝ}
+    (hf : IntervalIntegrable f volume a b) (hg : Measurable g) (hgb : ∀ x, |g x| ≤ c) :
+    IntervalIntegrable (fun x ↦ f x * g x) volume a b :=
+  ⟨hf.1.mul_bdd hg.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hgb x),
+   hf.2.mul_bdd hg.aestronglyMeasurable
+      (Filter.Eventually.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hgb x)⟩
+
+/-- **The paths of the test processes of a path dependent martingale problem are right
+continuous**, as soon as the process is locally constant from the right and the compensating
+integrand is measurable and locally integrable along the path.
+
+Every hypothesis is a hypothesis **at the one sample point** `ω`, and that is the point of the
+statement: the non explosion of the path dependent construction is a statement about a single
+sample point, and it enters here as `hWi` and nowhere else.
+
+Nothing is asked of a **bound** on the integrand, and that is the difference to
+`tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE`, where the rate is bounded and the integrability
+comes for free.  The compensator is then not merely right continuous but continuous, which is what
+`intervalIntegral.continuous_primitive` gives; the right continuity of the first summand is all
+that keeps the conclusion one sided. -/
+theorem tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF {Ω : Type*} {E : Type*} {f : E → ℝ}
+    {X : ℝ≥0 → Ω → E} {W : ℝ → Ω → ℝ} {Y : ℝ≥0 → Ω → ℝ} (ω : Ω)
+    (hYeq : ∀ (s : ℝ≥0) (ω : Ω), Y s ω = f (X s ω)
+      - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s, W (u : ℝ) ω ∂lebesgueClock.q)
+    (hXrc : ∀ s : ℝ≥0, ∀ᶠ r in 𝓝[≥] s, f (X r ω) = f (X s ω))
+    (hWm : Measurable fun u : ℝ ↦ W u ω)
+    (hWi : ∀ r : ℝ, IntervalIntegrable (fun u ↦ W u ω) volume 0 r) (s : ℝ≥0) :
+    Tendsto (fun r : ℝ≥0 ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)) := by
+  have hreal : ∀ r : ℝ≥0, Y r ω = f (X r ω) - ∫ x in (0 : ℝ)..(r : ℝ), W x ω := fun r ↦ by
+    rw [hYeq r ω, compensator_eq_intervalIntegral hWm r]
+  have h1 : Tendsto (fun r : ℝ≥0 ↦ f (X r ω)) (𝓝[≥] s) (𝓝 (f (X s ω))) :=
+    tendsto_const_nhds.congr' ((hXrc s).mono fun r hr ↦ hr.symm)
+  have hcont : Continuous fun b : ℝ ↦ ∫ x in (0 : ℝ)..b, W x ω :=
+    intervalIntegral.continuous_primitive (fun a b ↦ (hWi a).symm.trans (hWi b)) 0
+  have hco : Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[≥] s) (𝓝 ((s : ℝ))) :=
+    (NNReal.continuous_coe.tendsto s).mono_left nhdsWithin_le_nhds
+  have h2 := (hcont.tendsto (s : ℝ)).comp hco
+  simp only [Function.comp_def] at h2
+  simp only [hreal]
+  exact h1.sub h2
+
+/-- **The paths of the test processes of the Hawkes martingale problem are right continuous**, and
+with `isStronglyProgressive_mpFamilyF_hawkesStepPath` this is everything
+`martingale_stoppedProcess` asks of them.
+
+`hint` is the non explosion, at the one sample point `ω` and in the very form
+`hawkesProcess_eq_stepPath` asks for it: the self referential rate is interval integrable on every
+window, which says that the jumps do not accumulate below any finite time.  It is the **only**
+hypothesis of the path dependent variant that is not regularity of the data, and this is the first
+statement of the variant that needs it -- the whole measurability layer above does not. -/
+theorem tendsto_nhdsGE_mpFamilyF_hawkesStepPath {E : Type*} [MeasurableSpace E] {ν : ℝ} {φ : ℝ → ℝ}
+    (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRate ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock Clock.Conv.optional
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s : ℝ)))
+    (ω : (ℕ → E) × (ℕ → ℝ))
+    (hint : ∀ r : ℝ, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u ω) volume 0 r) (s : ℝ≥0) :
+    Tendsto (fun r : ℝ≥0 ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)) := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hstep : Measurable fun u : ℝ ↦ stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 u :=
+    (measurable_uncurry_hawkesStepPath hν hφ hφm hφint).comp
+      (measurable_id.prodMk measurable_const)
+  have hg : Measurable fun x : E ↦ ∫ y, (p.1 y - p.1 x) ∂(mu x) :=
+    measurable_integral_sub_kernel hf hC
+  refine tendsto_nhdsGE_of_intervalIntegrable_mpFamilyF (f := p.1)
+    (X := fun (r : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (r : ℝ))
+    (W := fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRate ν φ u ω
+      * ∫ y, (p.1 y - p.1 (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 u))
+          ∂(mu (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 u)))
+    ω (fun r ω' ↦ ?_) (fun s' ↦ ?_) ?_ ?_ s
+  · rw [hYeq r ω', hp2]
+    rfl
+  · have hcoe : Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[≥] s') (𝓝[≥] ((s' : ℝ))) :=
+      tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+        ((NNReal.continuous_coe.tendsto s').mono_left nhdsWithin_le_nhds)
+        (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_le_coe.2 hr)
+    filter_upwards [hcoe.eventually
+      (eventuallyEq_nhdsGE_stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s' : ℝ))] with r hr
+    rw [hr]
+  · exact (measurable_hawkesSelfRate_time hφm ω).mul (hg.comp hstep)
+  · exact fun r ↦ intervalIntegrable_mul_bdd (hint r) (hg.comp hstep)
+      (fun x ↦ abs_integral_sub_kernel_le hC _)
+
+end PathRightContinuous
+
+/-! ### The window bound, and where the Hawkes assembly stands
+
+`martingale_stoppedProcess` asks for three things, and the two above are the first two.  The third
+is `hbdd : ∀ j, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C` -- **one constant that works at every sample
+point**, and it is what replaces uniform integrability in that theorem: the passage to the limit
+inside it is dominated convergence with a constant majorant.
+
+`bdd_mpFamilyF_of_bdd` supplies it from a bound on the compensating integrand, and for the Hawkes
+process **that bound does not exist**: `jumpApplyF` carries the rate itself, and
+`∫₀ᵗ (ν + ∑_{T k < u} φ (u − T k)) du` is unbounded in the sample point at every fixed `t`, however
+small `t` is -- a sample point whose first jumps are early and crowded has a large window integral.
+No hypothesis on `φ` repairs this; it is not the non explosion but the unboundedness of the rate.
+
+So the third input is not to be obtained in this shape, and the way out is the one the state
+dependent case took at exactly this point: **truncate the rate and localize**.  There
+`jumpProcessE_isMPSolution` is proved under `lam ≤ L`, `truncRate lam n` makes that hypothesis true
+at every level, `rateTime lam n` is the localizing sequence, and
+`stoppedProcess_mpFamily_truncRate_eq` identifies the stopped test processes of the two problems.
+The path dependent counterpart of `truncRate` and of `rateTime` is what the assembly needs, and it
+is the next item of this section. -/
+
+section PathWindowBound
+
+/-- **A compensating window of the path dependent problem is bounded by the bound of its integrand
+times the length of the window.**  `abs_setIntegral_compensatorE_le` with the integrand freed from
+the process: the clock is Lebesgue measure, so the length is `t` itself, and
+`lebesgueClock_apply_Ioc` is what makes the constant explicit. -/
+theorem abs_setIntegral_compensatorF_le {Ω : Type*} {W : ℝ → Ω → ℝ} {D : ℝ}
+    (hD : ∀ (u : ℝ) (ω : Ω), |W u ω| ≤ D) (t : ℝ≥0) (ω : Ω) :
+    |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t, W (u : ℝ) ω ∂lebesgueClock.q|
+      ≤ D * (t : ℝ) := by
+  rw [lebesgueClock_interval_optional_eq]
+  have hlt : lebesgueClock.q (Set.Ioc (⊥ : ℝ≥0) t) < ⊤ := by
+    rw [lebesgueClock_apply_Ioc]; exact ENNReal.ofReal_lt_top
+  have hle := norm_setIntegral_le_of_norm_le_const (μ := lebesgueClock.q)
+    (s := Set.Ioc (⊥ : ℝ≥0) t) (f := fun u : ℝ≥0 ↦ W (u : ℝ) ω) (C := D) hlt
+    (fun u _ ↦ by simpa using hD (u : ℝ) ω)
+  rwa [Real.norm_eq_abs, measureReal_def, lebesgueClock_apply_Ioc,
+    show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
+    ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
+
+/-- **The third input of `martingale_stoppedProcess` for a path dependent test process**: at a
+**uniformly** bounded compensating integrand the test process is bounded by `C + D · j` on every
+time window `[0, j]`, uniformly in the sample point.
+
+The hypothesis is a bound in `(u, ω)` together, and that is where the Hawkes case fails; see the
+paragraph above.  The statement is stated all the same, because it is what the *truncated* path
+dependent problem will supply, exactly as `abs_setIntegral_compensatorE_le` supplies it for
+`truncRate` in the state dependent case. -/
+theorem bdd_mpFamilyF_of_bdd {Ω : Type*} {E : Type*} {f : E → ℝ} {X : ℝ≥0 → Ω → E}
+    {W : ℝ → Ω → ℝ} {Y : ℝ≥0 → Ω → ℝ} {C D : ℝ}
+    (hYeq : ∀ (s : ℝ≥0) (ω : Ω), Y s ω = f (X s ω)
+      - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s, W (u : ℝ) ω ∂lebesgueClock.q)
+    (hC : ∀ x, |f x| ≤ C) (hD : ∀ (u : ℝ) (ω : Ω), |W u ω| ≤ D) (j : ℝ≥0) :
+    ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C + D * (j : ℝ) := by
+  intro s hs ω
+  have hD0 : 0 ≤ D := (abs_nonneg _).trans (hD 0 ω)
+  rw [hYeq s ω]
+  refine (abs_sub _ _).trans (add_le_add (hC _) ?_)
+  exact (abs_setIntegral_compensatorF_le hD s ω).trans
+    (mul_le_mul_of_nonneg_left (by exact_mod_cast hs) hD0)
+
+end PathWindowBound
 
 end PathDependent
