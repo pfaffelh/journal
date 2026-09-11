@@ -19882,3 +19882,254 @@ für die Instanz; die ganze `section RateMonotone` 23 Codezeilen, 82 mit Dokumen
    pfadweise überhaupt hinschreiben. Warum zuletzt: es ist eine **neue Konstruktion** und keine
    Folgerung aus der vorhandenen; sie ist mit den 21 Zeilen der Ratendominierung nicht zu
    verwechseln und nach dem Befund dieses Laufs auch nicht daraus zu gewinnen.
+
+### 2026-09-11, fünfter Lauf des Tages — der Reihenweg kommt an der Mastergleichung an und geht auch durch sie hindurch: der Übergang über die gehobene Rate kostet 57 Zeilen, die Geburt-Tod-Gleichung 149, und ihre Lösung bricht an einem Werkzeug, das Mathlib nicht hat
+
+**Bearbeitet:** Teil F des laufenden Auftrags, und zwar der Vorschlag 1 des vierten Laufs,
+unverändert ausgeführt: `ae_mem_nonExplosiveE_posRate`, der letzte Posten, der den gemessenen
+Vergleich noch bewegt. Die Reihenfolge D → F → C → E ist eingehalten.
+
+Der Lauf hat den Vorschlag erledigt **und** den Vorschlag, den er dabei erzeugt hätte, gleich
+mitgenommen: die Mastergleichung der linearen Geburt-Tod-Kette, die erste Aussage, die den Übergang
+**benutzt** statt ihn nur bereitzustellen. Der zweite Teil steht weiter unten.
+
+**Acht Deklarationen** — `mem_nonExplosiveE_posRate_of_mem` und `ae_mem_nonExplosiveE_posRate` im
+Abschnitt `AbsorbingRate`, `ae_mem_nonExplosiveE_posRate_linearBirthDeath` im Abschnitt
+`LinearBirthDeath`, und fünf im neuen Abschnitt `LinearBirthDeathMasterEquation` von
+`TauCeti/MartingaleProblems/Suggested.lean` —, die ganze Datei **ohne einen
+Fehler** durch `lake env lean` gegen v4.33.1 (Lean 4.33.1, commit `819816b2`), alle acht mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+bleibt bei **neun**.
+`scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` rc 0, 0 Fehler,
+9 `sorry`; für `SkorokhodSpace/Suggested.lean` rc 0, 0 Fehler; für `WeakConvergence/Suggested.lean`
+weiterhin die zwei bewußt gegen `master` geschriebenen Fehler. `python3 check.py` meldet `clean`
+(133 Seiten). `scripts/check_citations.py` meldet unverändert dieselben zwei Auffälligkeiten
+(der `Cadlag`-Pfad und `Subgroup.isClosed_of_discrete`), also **keinen neuen Fund und keinen
+Rückschritt**. Die Punkte stehen berichtigt in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Satz
+
+> `ae_mem_nonExplosiveE_posRate` — für eine meßbare nichtnegative Rate, deren Sprungkern an jedem
+> Zustand verschwindender Rate die Diracsche Masse dort ist, folgt aus
+> `∀ᵐ ω, ω ∈ NonExplosiveE lam` die Aussage `∀ᵐ ω, ω ∈ NonExplosiveE (posRate lam)`.
+
+Damit steht die gehobene Rate dem **Reihenweg** offen, und das ist es, was Teil F noch fehlte:
+`jumpLaw_posRate_eq` und `jumpMeasure_masterEquation_of_ae_nonExplosive` sind beide in der
+gehobenen Rate geschrieben, und der Reihenweg hatte bisher keinen Zugang zu ihr.
+`ae_mem_nonExplosiveE_posRate_linearBirthDeath` ist die Instanz auf den Daten des einzigen
+Akzeptanzbeispiels, das den lokalen Zweig prüft.
+
+#### Der erste Befund, und er ist der Grund, aus dem der Übergang überhaupt etwas kostet
+
+Die Voraussetzung `ω ∈ NonExplosiveE lam` wird in **genau einem** der beiden Zweige gebraucht, und
+im anderen ist sie wertlos — nicht bloß entbehrlich, sondern wertlos aus demselben Grund, aus dem
+der Übergang nötig ist. In der Reihe `∑ ξ_k / lam (y k)` von
+`mem_nonExplosiveE_iff_tsum_eq_top` trägt ein Zustand verschwindender Rate **einen** Term `⊤` bei;
+die Reihe divergiert dort umsonst, und die Hebung ersetzt genau diesen Term durch das endliche
+`ξ_k`. Was der Übergang statt dessen bezahlt, ist `chain_const_of_absorb`: hinter dem ersten
+absorbierenden Index steht die Kette still, also ist die gehobene Rate an **jedem** Zustand, den der
+Pfad von da an sieht, gleich `1`, und die Wartezeiten allein tragen die Divergenz.
+
+Im anderen Zweig — die Kette trifft nie einen absorbierenden Zustand — wird **gar nichts** bezahlt:
+die beiden Raten stimmen an jedem besuchten Zustand überein, `jumpTimeE_congr_of_lt` macht die
+beiden Familien von Sprungzeiten zur **selben Funktion**, und die Voraussetzung geht unverändert
+durch. Der ganze Inhalt des Beweises ist die Fallunterscheidung.
+
+#### Der zweite Befund: eine Aussage in der Datei war falsch geworden, und zwar durch diesen Lauf
+
+Der Kopf des Abschnitts `YuleMasterEquation` sagte:
+
+> „Deshalb ruht die Mastergleichung bei einer Rate mit Nullstellen hier auf dem
+> Lyapunov-Kriterium, das die Hebung überquert, ohne einen Pfad anzusehen, und nicht auf der Reihe
+> längs der Kette, **die sie von sich aus nicht überquert**."
+
+Der zweite Halbsatz ist mit `ae_mem_nonExplosiveE_posRate` nicht mehr wahr, und er ist berichtigt:
+**beide** Wege überqueren die Hebung, und sie bezahlen verschieden. Das Lyapunov-Kriterium
+überquert sie, ohne einen Pfad anzusehen, weil beide seiner Voraussetzungen gegen die Hebung
+unempfindlich sind; der Reihenweg überquert sie durch Übertragung und bezahlt mit der Divergenz der
+Wartezeiten — mit genau dem also, was der absorbierende Zweig der ungehobenen Aussage nie
+gebraucht hatte. Das ist die Art Aussage, die der Auftrag als Negativaussage zählt: sie ist ein
+Versprechen an einen Leser, und sie war seit diesem Lauf gebrochen.
+
+#### Der dritte Befund, und er ist eine Warnung gegen eine Überinterpretation
+
+`ae_mem_nonExplosiveE_posRate_linearBirthDeath` ist **kein** neues mathematisches Gebiet. Dieselbe
+Aussage ist über `ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le` mit `C = β` in wenigen Zeilen
+zu haben; der Lyapunov-Weg war schon dort. Was die Instanz leistet, ist die **Fairneß des
+Vergleichs**: der Reihenweg steht jetzt an derselben Stelle, und die Zeile „erreicht die
+Mastergleichung nicht" fällt damit aus der Vergleichstabelle.
+
+Auch der formale Unterschied der Voraussetzungen ist kein Gewinn: der Reihenweg verlangt `0 ≤ β + δ`
+und der Lyapunov-Weg `0 ≤ β` und `0 ≤ δ` getrennt, aber die getrennte Nichtnegativität steckt
+ohnehin in der Instanz `IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))`, die
+beide an der Aufrufstelle verlangen. Der Unterschied ist also buchhalterisch und nicht sachlich; er
+steht hier, damit ihn niemand später für einen sachlichen hält.
+
+#### Gezählt
+
+`scripts/_citations/count_posrate_transfer.py` (neu, nach dem Muster von `count_coupling.py` und
+allein lauffähig; die drei Deklarationen bilden **keinen** eigenen Abschnitt, sie stehen bei den
+Aussagen, von denen sie handeln, und werden deshalb über den Namen gesucht — ein nicht gefundener
+Name wird gemeldet und nicht als Null gezählt):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G1 der Übergang an einem Stichprobenpunkt | 1 | 37 |
+| G2 die fast sichere Fassung | 1 | 9 |
+| G3 die lineare Geburt-Tod-Instanz | 1 | 11 |
+
+57 Codezeilen im ganzen. Der teuerste Posten ist der absorbierende Zweig von G1: die Umschreibung
+`∑_{k<m} w_k ξ_k ≥ ∑_{k<m} ξ_k − ∑_{k<N} ξ_k` für `m ≥ N`, also eine endliche Änderung einer
+divergenten Reihe, kostet mit `Finset.sum_Ico_eq_sub`, `Finset.sum_le_sum_of_subset_of_nonneg`,
+`tendsto_atTop_mono'` und `tendsto_atTop_add_const_right` zwanzig Zeilen; der nicht absorbierende
+Zweig kostet vier.
+
+**Welche Mathlib-Bausteine der Übergang brauchte, und keiner fehlte:**
+`Finset.sum_Ico_eq_sub`, `Finset.sum_le_sum_of_subset_of_nonneg`, `Finset.mem_Ico`,
+`Finset.mem_range`, `Finset.sum_congr`, `tendsto_atTop_mono'`, `tendsto_atTop_add_const_right`,
+`Filter.eventually_ge_atTop`, `inv_nonneg`, `inv_one`, `mul_nonneg`, `one_mul`. Jeder am Quelltext
+belegt (`~/Code/lean/journal/.lake/packages/mathlib`, v4.33.1), keiner `deprecated`. Für den
+Übergang **keine neue Negativaussage**; die eine neue kommt aus dem zweiten Teil des Laufs und steht
+dort.
+
+#### Der gemessene Vergleich, fortgeschrieben — und die Zeile fällt
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 + 1 | 236 Zeilen mit Dokumentation | fertig |
+| **der Übergang über die gehobene Rate** | **3** | **57** | **fertig** |
+| Mastergleichung, allgemein | 18 + 1 | 278 | liefert die Verteilung, nicht die Nichtexplosion |
+| Mastergleichung, auf der Yule-Rate | 3 + 1 | 103 | fertig |
+| **Mastergleichung, auf der linearen Geburt-Tod-Rate** | **3 + 1 + 1** | **48 + 26 + 75 = 149** | **fertig** |
+| Lösung der Mastergleichung, bis zur Verteilung | 8 + 5 | 182 + 71 = 253 | fertig, **nur im reinen Geburtsfall** |
+| Lyapunov, pfadweise Form | 4 + 3 | 121 | fertig |
+| Lyapunov, Erzeugerform | 12 + 4 | 310 | fertig |
+| Lyapunov über die gehobene Rate | 3 | 67 | fertig |
+| Kopplung, Ratendominierung | 2 + 1 | 13 + 8 = 21 | steht, zeigt in die andere Richtung |
+
+Der Reihenweg kostet damit **236 + 57 Zeilen**, um dort zu stehen, wo der Lyapunov-Weg mit
+`121 + 310 + 67` steht — er ist also der billigere, und er bleibt trotzdem der engere: er ruht
+darauf, daß die Kette Nachbarschritte macht, und der Übergang, der hier gebaut wurde, ruht
+zusätzlich darauf, daß die Kette hinter einem absorbierenden Zustand **stillsteht**. Beides sind
+Eigenschaften dieser Konstruktion und keine des Kriteriums. **Das Urteil des vierten Laufs steht
+also unverändert**: für eine allgemeinere Ratenfunktion ist das Lyapunov-Kriterium der bessere Weg,
+und der Reihenweg ist ein Sonderfall davon, kein gleichrangiger Weg.
+
+#### Der zweite Teil des Laufs: die Mastergleichung der linearen Geburt-Tod-Kette
+
+> `linearBirthDeath_masterEquation` — mit
+> `p k r = jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ))) mu nu r k` ist für
+> `0 ≤ β`, `0 ≤ δ`, jedes `n` und jedes `t ≥ 0`
+>
+> `p (n+1) t = p (n+1) 0 + ∫₀ᵗ (β n · p n r + δ (n+2) · p (n+2) r − (β+δ)(n+1) · p (n+1) r) dr`.
+
+Fünf Deklarationen im neuen Abschnitt `LinearBirthDeathMasterEquation`, gezählt mit
+`scripts/_citations/count_bd_master.py` (neu, nach dem Muster von `count_yule_master.py` und allein
+lauffähig):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G1 der Erzeuger an einem Zustandsindikator | 3 | 48 |
+| G2 der Integrationsschritt, frei von den Daten | 1 | 26 |
+| G3 die Gleichung | 1 | 75 |
+
+149 Codezeilen, der ganze Abschnitt 151 Codezeilen und 220 mit Dokumentation — gegen 103
+(42 + 61) des reinen Geburtsfalls.
+
+**Der vierte Befund: der Zuwachs sitzt im Erzeuger, und er ist nicht kosmetisch.** Der Erzeuger an
+`stateIndicator (n+1)` hat **drei** Terme statt zweier, einen für jeden Weg, auf dem der Zustand
+`n+1` betreten oder verlassen wird: eine Geburt aus `n`, ein Sterbeschritt aus `n+2`, und der
+Abgang aus `n+1` zur Gesamtrate. Dadurch sieht die Gleichung den Zustand **über** sich, und das ist
+der Grund, aus dem die **Lösung** des vierten Laufs nicht mitkommt: mit dem dritten Term ist das
+System ein unendliches gekoppeltes System und keine Kette skalarer Gleichungen, so daß die
+Induktion über die Stufe in `eq_yuleDensity_of_masterEquation` keine Entsprechung hat. Die 253
+Zeilen der Lösung stehen damit weiter **nur** für den reinen Geburtsfall, und das ist in der
+Vergleichstabelle so vermerkt.
+
+**Der fünfte Befund: die Gleichung am absorbierenden Zustand ist nicht leer.**
+`jumpApply_linearBirthDeath_indicator_zero` sagt `A 1₀ x = δ · 1₁ x` — ein Term bleibt, der
+Sterbeschritt aus `1`. Beim reinen Geburtsprozeß ist der Erzeuger dort `0`
+(`jumpApply_yule_indicator_zero`), und die Differenz ist genau die Masse, die das Aussterben
+ansammelt. Wer die Geburt-Tod-Gleichung aus der Yule-Gleichung durch Hinschreiben eines zusätzlichen
+Terms zu erhalten glaubt, übersieht diesen.
+
+**Die Probe, daß die Verallgemeinerung nicht schief ist**, ist mitgemacht:
+`jumpApply_yule_indicator_of_linearBirthDeath` gewinnt `jumpApply_yule_indicator` bei `δ = 0` aus
+dem allgemeinen Erzeuger zurück, und der Term, der dabei verschwindet, ist der, der den Zustand
+über sich liest. Eine Verallgemeinerung, die sich nicht zurückspezialisiert, ist eine andere
+Aussage und keine weitere.
+
+**Der einzige neue allgemeine Baustein** ist `integral_comp_jumpProcess_eq_add_sub`, die Fassung von
+`integral_comp_jumpProcess_eq_sub` mit einem dritten Indikator, 26 Codezeilen und frei von den
+Geburt-Tod-Daten. Was sonst gebraucht wurde, stand: `jumpMeasure_masterEquation_of_ae_nonExplosive`,
+`jumpApply_posRate`, `jumpApply_linearBirthDeath`, `integrable_stateIndicator_jumpProcess` und —
+neu aus dem ersten Teil dieses Laufs — `ae_mem_nonExplosiveE_posRate_linearBirthDeath`. Die
+Schranke an den Erzeuger ist `β n + δ (n+2) + (β+δ)(n+1)` und eine Rechnung von zehn Zeilen: der
+Erzeuger bildet einen Indikator auf eine **endlich getragene** Funktion ab, obwohl die Rate
+unbeschränkt ist. Aus Mathlib kamen dafür nur `abs_add_le`, `abs_mul`, `abs_of_nonneg`,
+`mul_le_mul_of_nonneg_left`, `integral_add`, `integral_sub` und `integral_const_mul`; keiner fehlte,
+keiner ist `deprecated`.
+
+**Der sechste Befund, und er ist die eine neue Negativaussage des Laufs: für die Lösung fehlt
+Mathlib das Werkzeug.** Was an die Stelle der Induktion über die Stufe tritt, ist die **erzeugende
+Funktion** `G s t = ∑' n, p n t · sⁿ`, und ihre Gleichung
+`∂_t G = (β s − δ)(s − 1) · ∂_s G` ist eine **partielle Differentialgleichung erster Ordnung**.
+Mathlib hat davon nichts: die Suche nach `partial differential equation`,
+`method of characteristics`, `characteristicCurve` und `characteristic curve` über `Mathlib/` von
+frischem `upstream/master` (`1192d6246b462d5d423cccde4066d15b18718ca9`, 2026-09-10) liefert
+**zwei** Treffer, und beide sind Literaturangaben —
+`Mathlib/Analysis/Distribution/Sobolev.lean:47` und
+`Mathlib/Analysis/InnerProductSpace/LaxMilgram.lean:25`. Keine Deklaration, kein Begriff. Die
+Aussage ist als `first-order-pde` in `scripts/check_negatives.py` nachgetragen (dort jetzt vierzehn
+Aussagen) und steht als benannter Punkt
+`hasDerivAt_generatingFunction_linearBirthDeath` / `jumpLaw_linearBirthDeath` in
+`MartingaleProblems/README.md`, Meilenstein 4. Das ist dieselbe Lage wie beim integrierenden Faktor
+im dritten Lauf: die Charakteristikenmethode für eine skalare lineare Gleichung in zwei
+Veränderlichen wird hier geschrieben oder gar nicht.
+
+**Und damit erreicht der Reihenweg die Mastergleichung nicht nur formal.** `yule_masterEquation`
+ruht auf dem Lyapunov-Kriterium, `linearBirthDeath_masterEquation` auf der Reihe — die beiden Wege
+stehen jetzt nebeneinander an derselben Art Aussage, auf verschiedenen Daten und mit verschiedener
+Zulieferung. Das ist der Vergleich, um den Teil F bittet, und er ist an der Stelle geschlossen, an
+der er unfair war.
+
+#### Was offen blieb
+
+* **Die Lösung der Geburt-Tod-Gleichung** ist nicht gebaut und ist nach dem vierten Befund auch
+  keine Fleißaufgabe: sie verlangt etwas anderes als die Induktion über die Stufe. Siehe
+  Vorschlag 1.
+* **Der Kopplungsweg** ist unverändert angefangen und nicht fertig, mit der Bruchstelle des vierten
+  Laufs: die Zustandsdominierung verlangt ein gemeinsames Maß, und die Ratendominierung
+  `mem_nonExplosiveE_of_rate_le` zeigt in die andere Richtung. Vorschlag 3 des vierten Laufs
+  (`jumpProcessE_eq_thinning`) steht unverändert.
+* **Teil C**, die pfadabhängige Variante, ist der nächste Teil der vom Nutzer festgelegten
+  Reihenfolge. Teil F gilt mit diesem Lauf als abgeschlossen: alle vier benannten Wege sind
+  gemessen, der Vergleich ist an der Stelle geschlossen, an der er unfair war, und der Kopplungsweg
+  liegt mit benannter Bruchstelle und nicht abgebrochen da.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Teil C, die pfadabhängige Variante.** Sie ist der nächste Teil der vom Nutzer festgelegten
+   Reihenfolge D → F → C → E, und **Teil F ist mit diesem Lauf geschlossen**: alle vier benannten
+   Wege sind gemessen, beide Wege zur Nichtexplosion erreichen eine Mastergleichung — der
+   Lyapunov-Weg die des Yule-Prozesses, der Reihenweg die der linearen Geburt-Tod-Kette —, und der
+   Kopplungsweg liegt mit benannter Bruchstelle und nicht abgebrochen da. Was an Teil F noch
+   offensteht, ist keine Lücke im Vergleich, sondern neue Mathematik (Punkte 2 und 3).
+2. **`sum_jumpLaw_le_one_of_extinction`, oder wie immer die Aussage am Ende heißt: die
+   Geburt-Tod-Gleichung am absorbierenden Zustand.** Aussage:
+   `p 0 t = p 0 0 + ∫₀ᵗ δ · p 1 r dr`, also die Aussterbewahrscheinlichkeit als Integral über die
+   Aufenthaltswahrscheinlichkeit in `1`. Worauf sie ruht:
+   `jumpApply_linearBirthDeath_indicator_zero` (steht seit diesem Lauf, und sagt `A 1₀ x = δ · 1₁ x`),
+   `jumpMeasure_masterEquation_of_ae_nonExplosive` und `integral_comp_jumpProcess_eq_sub` in der
+   **zweistelligen** Fassung mit `a = δ`, `c = 0` — also nichts Neues. Warum sie lohnt: sie ist der
+   erste Punkt, an dem die Geburt-Tod-Kette etwas sagt, das der reine Geburtsprozeß nicht sagen
+   kann, und sie ist die Aussage, die ein Leser gegen das Bekannte nachrechnet, so wie die
+   geometrische Verteilung beim Yule-Prozeß. Prüfstein: kein Fehler, kein neues `sorry`, und bei
+   `δ = 0` fällt `p 0 t = p 0 0` heraus.
+3. **Die Lösung der Geburt-Tod-Gleichung**, und sie ist ausdrücklich **kein** kleiner Schritt. Nach
+   dem vierten Befund dieses Laufs ist das System mit dem Sterbeterm ein unendliches gekoppeltes
+   System; die Induktion über die Stufe, die den Yule-Fall löst, hat keine Entsprechung. Wer sie
+   angeht, sagt vorher, welches Werkzeug an ihre Stelle tritt — erzeugende Funktion, also eine
+   partielle Differentialgleichung erster Ordnung in zwei Veränderlichen, die Mathlib in dieser
+   Form nicht hat. Das ist der Grund, warum sie hier als Punkt steht und nicht als Vorschlag für
+   den nächsten Lauf.

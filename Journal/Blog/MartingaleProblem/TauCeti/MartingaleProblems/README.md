@@ -1767,25 +1767,40 @@ A concrete family of solutions, built without any of the theory above. Index
   already the mechanism by which a state of vanishing rate absorbs a path forever.
   It is what turns the master equation into a route to non explosion rather than a
   consequence of one.
-* `ae_mem_nonExplosiveE_posRate`: **the lifted construction does not explode
-  either**, for a measurable nonnegative rate whose jump kernel is the Dirac
-  measure at every state of vanishing rate. It rests on `chain_const_of_absorb` —
-  past the first absorbing index the chain stands still, so the lifted rate is `1`
-  from there on and the waiting times alone have to diverge, which is
-  `ae_tendsto_sum_smul_waiting_atTop` — and on `ae_mem_nonExplosiveE_jumpMeasure`
-  where they do not. It is the **one** statement between
-  `jumpMeasure_masterEquation_of_ae_nonExplosive` and the Yule process, whose rate
-  `β x` vanishes at the absorbing state `0` (`birthDeathRate_linear_zero`) and
-  which therefore fails the hypothesis `0 < lam` on the nose. With it the
-  identification is free: `jumpProcessE_posRate_eq_of_mem` says the two
-  constructions have the same path and `jumpApply_posRate` says they have the same
-  generator, and neither asks for a bound on the rate any more.
+* `mem_nonExplosiveE_posRate_of_mem`, `ae_mem_nonExplosiveE_posRate` and
+  `ae_mem_nonExplosiveE_posRate_linearBirthDeath`: **the lifted construction does
+  not explode either**, for a measurable nonnegative rate whose jump kernel is the
+  Dirac measure at every state of vanishing rate. **Proved** on 2026-09-11, fifth
+  run. It is the transfer of non explosion **from a proof about `lam`**, and as
+  such it is what the series route needs; the Lyapunov criterion proves non
+  explosion of `posRate lam` outright
+  (`ae_mem_nonExplosiveE_posRate_of_jumpApply_le`) and does not use it.
 
-  It is the transfer of non explosion **from a proof about `lam`**, and as such it
-  is what the series route needs. The Lyapunov criterion does not need it: it
-  proves non explosion of `posRate lam` outright
-  (`ae_mem_nonExplosiveE_posRate_of_jumpApply_le`), and the Yule process reaches
-  the master equation that way.
+  Non explosion of `lam` is worthless in exactly the branch where the conclusion
+  is not free. In the series `∑ ξ_k / lam (y k)` of
+  `mem_nonExplosiveE_iff_tsum_eq_top` a state of vanishing rate contributes a
+  single term `⊤`, so the series diverges for nothing, and the lift replaces that
+  term by the finite `ξ_k`. What the transfer pays with instead is
+  `chain_const_of_absorb`: past the first absorbing index the chain stands still,
+  so the lifted rate is `1` at every state the path visits from there on and the
+  waiting times alone carry the divergence — `ae_tendsto_sum_snd_jumpMeasure`
+  through `mem_nonExplosiveE_of_tendsto_sum`. Where the chain never meets an
+  absorbing state nothing is spent at all: the two rates agree along the
+  trajectory, so `jumpTimeE_congr_of_lt` makes the two families of jump times the
+  **same function** and the hypothesis passes through unchanged. The almost sure
+  form adds the three standing facts of the construction,
+  `ae_pos_snd_jumpMeasure`, `ae_tendsto_sum_snd_jumpMeasure` and
+  `ae_absorb_jumpMeasure`, the last being the only place the hypothesis on the
+  jump kernel is spent.
+
+  With it the identification is free: `jumpProcessE_posRate_eq_of_mem` says the
+  two constructions have the same path, `jumpApply_posRate` says they have the
+  same generator, `jumpLaw_posRate_eq` says they have the same one dimensional
+  laws, and none of them asks for a bound on the rate.
+  `ae_mem_nonExplosiveE_posRate_linearBirthDeath` is the instance on the data of
+  the one acceptance example that probes the local branch, and it is the series
+  route standing where `ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le` puts
+  the Lyapunov route.
 * `ae_mem_nonExplosiveE_posRate_of_jumpApply_le`,
   `ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le` and
   `ae_mem_nonExplosiveE_posRate_yule`: **the Lyapunov criterion across the lift of
@@ -1829,6 +1844,72 @@ A concrete family of solutions, built without any of the theory above. Index
   `jumpApply_yule_indicator_zero` says the generator annihilates `stateIndicator 0`,
   so the equation at `0` is `p 0 t = p 0 0` and carries no integral.
   It does **not** yield non explosion, and `tsum_jumpLaw_eq_one` says why.
+* `jumpApply_linearBirthDeath_indicator`,
+  `jumpApply_linearBirthDeath_indicator_zero`,
+  `jumpApply_yule_indicator_of_linearBirthDeath`,
+  `integral_comp_jumpProcess_eq_add_sub` and `linearBirthDeath_masterEquation`:
+  **the master equation of the linear birth and death chain.** **Proved** on
+  2026-09-11, fifth run. With
+  `p k r = jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ))) mu nu r k`
+  it reads
+  `p (n+1) t = p (n+1) 0 + ∫_0^t (β n · p n r + δ (n+2) · p (n+2) r − (β+δ)(n+1) · p (n+1) r) dr`,
+  for every `t ≥ 0` and every `n`, under `0 ≤ β` and `0 ≤ δ`.
+
+  The generator at a state indicator has **three** terms and not two, one for
+  each way the state `n+1` is entered or left: a birth from `n`, a death from
+  `n+2`, and the departure at the total rate. That is not a cosmetic
+  generalisation of `yule_masterEquation` — it is why the system is an infinite
+  coupled system and not a chain of scalar equations, so
+  `eq_yuleDensity_of_masterEquation` does not carry over and the closed form does
+  not follow. What does carry over is the whole supply: the generator is a finite
+  combination of state indicators and therefore bounded although the rate is not,
+  `jumpApply_posRate` says the lift is invisible to it, and non explosion of the
+  lifted rate is `ae_mem_nonExplosiveE_posRate_linearBirthDeath` — the **series**
+  route, where `yule_masterEquation` takes the Lyapunov route.
+
+  `integral_comp_jumpProcess_eq_add_sub` is `integral_comp_jumpProcess_eq_sub`
+  with a third indicator and is free of the birth and death data.
+  `jumpApply_linearBirthDeath_indicator_zero` is the equation at the absorbing
+  state, where a single term remains, the death from `1` — the mass extinction
+  accumulates, which the pure birth chain does not have
+  (`jumpApply_yule_indicator_zero`).
+  `jumpApply_yule_indicator_of_linearBirthDeath` derives
+  `jumpApply_yule_indicator` back out at `δ = 0`, and the term that vanishes is
+  the one that reads the state above.
+* `linearBirthDeath_masterEquation_zero`: **the equation at the absorbing
+  state**, `p 0 t = p 0 0 + ∫_0^t δ · p 1 r dr`, the extinction probability as an
+  integral over the probability of sitting at `1`. It rests on
+  `jumpApply_linearBirthDeath_indicator_zero`, which leaves a single term there,
+  and on `integral_comp_jumpProcess_eq_sub` in its two term form. It is the first
+  statement of this branch the pure birth chain cannot make: there the generator
+  annihilates `stateIndicator 0` and `p 0` is constant.
+* `hasDerivAt_generatingFunction_linearBirthDeath` and `jumpLaw_linearBirthDeath`:
+  **the generating function of the linear birth and death chain, and the one
+  dimensional law it yields.** With `G s t = ∑' n, p n t * s ^ n` for `|s| ≤ 1`,
+  `∂_t G s t = (β s − δ) (s − 1) · ∂_s G s t` and `G s 0 = s` from a start at `1`;
+  the solution gives the law, an atom at `0` with a geometric tail above it. It
+  rests on `linearBirthDeath_masterEquation` and
+  `linearBirthDeath_masterEquation_zero` — multiply by `s ^ n` and sum — on
+  `abs_jumpLaw_le_one` for the convergence of the series on the closed unit disc,
+  and on `tsum_jumpLaw_eq_one`.
+
+  This is the point at which the birth and death case parts from the pure birth
+  case. `eq_yuleDensity_of_masterEquation` solves a **chain** of scalar linear
+  equations there, because the generator at a state indicator sees the state
+  below and the state itself; the death term adds the state above, the system is
+  coupled, and the induction on the level has no counterpart. The generating
+  function is the tool that replaces it, and its equation is a **first order
+  partial differential equation**. Mathlib has nothing of it: a search for
+  `partial differential equation`, `method of characteristics`,
+  `characteristicCurve` and `characteristic curve` over `Mathlib/` of
+  `upstream/master` `1192d624` returns two hits, and both are bibliography
+  entries (`Mathlib/Analysis/Distribution/Sobolev.lean:47`,
+  `Mathlib/Analysis/InnerProductSpace/LaxMilgram.lean:25`). The method of
+  characteristics for a scalar linear equation in two variables therefore belongs
+  to this point and is written here, as
+  `eq_exp_add_integral_of_hasDerivWithinAt` is written here for the ordinary
+  linear case. `scripts/check_negatives.py` carries the statement under
+  `first-order-pde`.
 * `measurable_jumpLaw`, `abs_jumpLaw_le_one`, `intervalIntegrable_jumpLaw` and
   `abs_sub_mul_jumpLaw_le`: **the one dimensional law as a function of time.**
   **Proved** on 2026-09-11, fourth run. The law is measurable in the time
@@ -2398,19 +2479,23 @@ beim Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Das ist
 Rechnung gehört zu Punkt 5 und steht **nach** `jumpProcess_isLocalMPSolution`:
 sie prüft die Konstruktion, sie trägt sie nicht.
 
-**Der gemessene Vergleich, Stand 2026-09-11, vierter Lauf.** Bis zum
+**Der gemessene Vergleich, Stand 2026-09-11, fünfter Lauf.** Bis zum
 zweiundzwanzigsten Lauf des 2026-09-10 stand hier die *Behauptung*, die Reihe sei
 der billigere Weg. Was davon gezählt ist (`scripts/_citations/count_yule.py`,
 `scripts/_citations/count_lyapunov.py`,
-`scripts/_citations/count_yule_master.py`, `scripts/_citations/count_yule_law.py`
-und `scripts/_citations/count_coupling.py`):
+`scripts/_citations/count_yule_master.py`, `scripts/_citations/count_yule_law.py`,
+`scripts/_citations/count_coupling.py`,
+`scripts/_citations/count_posrate_transfer.py` und
+`scripts/_citations/count_bd_master.py`):
 
 | Weg | Deklarationen | Codezeilen | Stand |
 | --- | --- | --- | --- |
 | Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | **fertig** |
+| Übergang über die gehobene Rate | 3 | 57 Codezeilen | **fertig** |
 | Mastergleichung, allgemein | 18 (`section YuleProcess`, ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 278 | **liefert die Verteilung, nicht die Nichtexplosion** |
 | Mastergleichung, auf der Yule-Rate | 3 (Brücke) + 1 (`yule_masterEquation`) | 42 + 61 = 103 Codezeilen | **fertig** |
-| Lösung der Mastergleichung, bis zur Verteilung | 8 (Analysis) + 5 (Yule-Instanz) | 182 + 71 = 253 Codezeilen | **fertig** |
+| Mastergleichung, auf der linearen Geburt-Tod-Rate | 3 (Erzeuger) + 1 (Integrationsschritt) + 1 (`linearBirthDeath_masterEquation`) | 48 + 26 + 75 = 149 Codezeilen | **fertig** |
+| Lösung der Mastergleichung, bis zur Verteilung | 8 (Analysis) + 5 (Yule-Instanz) | 182 + 71 = 253 Codezeilen | **fertig, nur im reinen Geburtsfall** |
 | Lyapunov, pfadweise Form | 4 (Kriterium) + 3 (Geburt-Tod-Instanzen) | 85 + 36 = 121 Codezeilen | **fertig** |
 | Lyapunov, Erzeugerform | 12 (Kriterium) + 4 (Geburt-Tod-Instanzen) | 258 + 52 = 310 Codezeilen | **fertig** |
 | Lyapunov über die gehobene Rate | 3 | 67 Codezeilen | **fertig** |
@@ -2419,7 +2504,33 @@ und `scripts/_citations/count_coupling.py`):
 (Die ganze `section Lyapunov` sind 500 Codezeilen, 761 mit Dokumentation; die
 ganze `section YuleMasterEquation` 105 Codezeilen, 175 mit Dokumentation; die
 ganze `section YuleLaw` 255 Codezeilen, 395 mit Dokumentation; die ganze
-`section RateMonotone` 23 Codezeilen, 82 mit Dokumentation.)
+`section RateMonotone` 23 Codezeilen, 82 mit Dokumentation; die ganze
+`section LinearBirthDeathMasterEquation` 151 Codezeilen, 220 mit Dokumentation.
+Die drei Deklarationen des Übergangs bilden keinen eigenen Abschnitt und stehen
+bei den Aussagen, von denen sie handeln.)
+
+**Der Reihenweg kommt an der Mastergleichung an, und der Übergang kostet 57
+Zeilen.** Bis zum vierten Lauf des 2026-09-11 stand in dieser Tabelle, der
+Reihenweg erreiche sie nicht: die Gleichung ist in der *gehobenen* Rate
+geschrieben, und die Nichtexplosion der gehobenen Rate folgt nicht formal aus
+der der Rate selbst. `ae_mem_nonExplosiveE_posRate` schließt die Lücke. Die
+Voraussetzung wird dabei in **einem** der beiden Zweige gebraucht und ist im
+anderen wertlos, und zwar aus demselben Grund, aus dem der Übergang nötig ist:
+an einem absorbierenden Zustand divergiert die Reihe `∑ ξ_k / lam (y k)` wegen
+eines einzigen Terms `⊤`, und die Hebung ersetzt genau diesen Term durch das
+endliche `ξ_k`. Bezahlt wird statt dessen mit `chain_const_of_absorb` — hinter
+dem ersten absorbierenden Index steht die Kette still, die gehobene Rate ist
+dort `1`, und die Wartezeiten allein tragen die Divergenz.
+
+**Und die Mastergleichung trägt den Todesterm, aber nicht ihre Lösung.**
+`linearBirthDeath_masterEquation` kostet 149 Codezeilen gegen die 103 des reinen
+Geburtsfalls, und der Zuwachs sitzt im Erzeuger: drei Terme statt zweier, weil
+der Zustand `n+1` auch von `n+2` aus durch einen Sterbeschritt betreten wird. Die
+**Lösung** aber überträgt sich nicht, und das ist keine Frage des Aufwands: mit
+dem dritten Term ist das System ein unendliches gekoppeltes System und keine
+Kette skalarer Gleichungen mehr, so daß die Induktion über die Stufe in
+`eq_yuleDensity_of_masterEquation` keine Entsprechung hat. Die 253 Zeilen der
+Lösung stehen damit weiter nur für den reinen Geburtsfall.
 
 **Der Kopplungsweg kostet 21 Zeilen und kommt damit nicht an.** Die Dominierung,
 die diese Konstruktion trägt, ist die in der *Rate* an festem Stichprobenpunkt,

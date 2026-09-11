@@ -64,6 +64,12 @@ CLAIMS = [
      'davon über den linearen Fall.',
      'integrating factor|integratingFactor|linear_ODE|linearODE'
      '|variation of constants', 'Mathlib/'),
+    ('first-order-pde', 'MartingaleProblems/README.md, Meilenstein 4',
+     'Mathlib hat keine partielle Differentialgleichung erster Ordnung und keine '
+     'Charakteristikenmethode, also kein Werkzeug für die erzeugende Funktion '
+     'eines Geburt-Tod-Prozesses.',
+     'method of characteristics|partial differential equation|characteristicCurve'
+     '|characteristic curve', 'Mathlib/'),
 ]
 
 
