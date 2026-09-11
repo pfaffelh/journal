@@ -3911,9 +3911,14 @@ theorem mem_jumpOperator {lam : E → ℝ} {mu : Kernel E E} {f : E → ℝ} (hf
     {C : ℝ} (hC : ∀ x, |f x| ≤ C) : (f, jumpApply lam mu f) ∈ jumpOperator lam mu :=
   ⟨hf, ⟨C, hC⟩, rfl⟩
 
-theorem measurable_jumpApply {lam : E → ℝ} (hlam : Measurable lam) {mu : Kernel E E}
-    [IsMarkovKernel mu] {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
-    Measurable (jumpApply lam mu f) := by
+/-- **The mean increment of a bounded measurable function under a Markov kernel is measurable in
+the base point.**  This is the factor of `jumpApply` that does *not* carry the rate, and it is
+stated on its own because the path dependent generator needs it on its own: `jumpApplyF`
+multiplies it by a rate that is a functional of `(s, ω)` and no longer a function of the state, so
+the state dependent product `measurable_jumpApply` is of no use there. -/
+theorem measurable_integral_sub_kernel {mu : Kernel E E} [IsMarkovKernel mu] {f : E → ℝ}
+    (hf : Measurable f) {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
+    Measurable fun x ↦ ∫ y, (f y - f x) ∂(mu x) := by
   have hb : ∀ x, ‖f x‖ ≤ C := fun x ↦ hC x
   have h1 : Measurable fun x ↦ ∫ y, f y ∂(mu x) :=
     (StronglyMeasurable.integral_kernel_prod_right'
@@ -3923,8 +3928,13 @@ theorem measurable_jumpApply {lam : E → ℝ} (hlam : Measurable lam) {mu : Ker
     rw [integral_sub (Integrable.mono' (integrable_const C) hf.aestronglyMeasurable
       (Filter.Eventually.of_forall hb)) (integrable_const _), integral_const]
     simp
-  have h3 : Measurable fun x ↦ ∫ y, (f y - f x) ∂(mu x) := by rw [h2]; exact h1.sub hf
-  exact hlam.mul h3
+  rw [h2]
+  exact h1.sub hf
+
+theorem measurable_jumpApply {lam : E → ℝ} (hlam : Measurable lam) {mu : Kernel E E}
+    [IsMarkovKernel mu] {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hC : ∀ x, |f x| ≤ C) :
+    Measurable (jumpApply lam mu f) :=
+  hlam.mul (measurable_integral_sub_kernel hf hC)
 
 /-! ### The backward equation
 
@@ -15990,7 +16000,141 @@ theorem measurable_compensator_of_uncurry_min {mΩ : MeasurableSpace Ω} {W : �
   rw [← hcongr]
   exact hsm.measurable
 
+/-- **A compensating window whose upper end *is* the time parameter is jointly measurable**, as
+soon as its integrand is.  `measurable_compensator_of_uncurry_min` is the same statement at a
+*fixed* window and gives measurability in the sample point alone; a test process is progressively
+measurable only when the window moves with the time, and that is this.
+
+The proof is the piece of set algebra the assembly of the state dependent case already used: a
+window with a **variable** upper end is a window of **fixed** length with a cut integrand, and the
+cut set `{(u, p) | u ∈ Q.interval c ⊥ (min p.1 t)}` is measurable because it constrains the
+integration variable and the time parameter only -- never the sample point.
+
+**No continuity of the primitive and no bound on the integrand enter**, and that is the whole
+difference to `isStronglyProgressive_mpFamily_jumpProcessE`, which had to reach the same conclusion
+through the right continuity of the compensator and the dyadic approximation of
+`measurable_uncurry_min_of_rightContinuous`. -/
+theorem measurable_uncurry_compensator_of_uncurry_min {mΩ : MeasurableSpace Ω} {W : ℝ → Ω → ℝ}
+    (c : Clock.Conv) (t : ℝ≥0)
+    (hW : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod mΩ]
+      fun p : ℝ≥0 × Ω ↦ W (min (p.1 : ℝ) (t : ℝ)) p.2) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod mΩ]
+      fun p : ℝ≥0 × Ω ↦ ∫ u in lebesgueClock.interval c ⊥ (min p.1 t),
+        W (u : ℝ) p.2 ∂lebesgueClock.q := by
+  set m : MeasurableSpace (ℝ≥0 × Ω) := (inferInstance : MeasurableSpace ℝ≥0).prod mΩ with hm
+  set S := lebesgueClock.interval c ⊥ t with hS
+  have hfin : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ]
+    exact lt_top_iff_ne_top.2 (ne_top_of_le_ne_top (lebesgueClock.measure_Iic_ne_top t)
+      (measure_mono (lebesgueClock.interval_subset_Iic c ⊥ t)))
+  -- a shorter window sits inside the fixed one
+  have hsub : ∀ p : ℝ≥0 × Ω, lebesgueClock.interval c ⊥ (min p.1 t) ⊆ S := by
+    intro p
+    rw [hS, (lebesgueClock.interval_union c (bot_le : (⊥ : ℝ≥0) ≤ min p.1 t)
+      (min_le_right p.1 t)).1]
+    exact Set.subset_union_left
+  -- a variable upper end is a fixed window with a cut integrand
+  have hrw : (fun p : ℝ≥0 × Ω ↦ ∫ u in lebesgueClock.interval c ⊥ (min p.1 t),
+        W (u : ℝ) p.2 ∂lebesgueClock.q)
+      = fun p : ℝ≥0 × Ω ↦ ∫ u in S, Set.indicator (lebesgueClock.interval c ⊥ (min p.1 t))
+          (fun v : ℝ≥0 ↦ W (min (v : ℝ) (t : ℝ)) p.2) u ∂lebesgueClock.q := by
+    funext p
+    rw [setIntegral_indicator (lebesgueClock.measurableSet_interval c ⊥ (min p.1 t)),
+      Set.inter_eq_self_of_subset_right (hsub p)]
+    refine setIntegral_congr_fun (lebesgueClock.measurableSet_interval c ⊥ (min p.1 t))
+      fun u hu ↦ ?_
+    have hut : u ≤ t :=
+      (lebesgueClock.interval_subset_Iic c ⊥ (min p.1 t) hu).trans (min_le_right p.1 t)
+    have hmin : min (u : ℝ) (t : ℝ) = (u : ℝ) := min_eq_left (by exact_mod_cast hut)
+    rw [hmin]
+  have hjoint : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod m]
+      (Function.uncurry fun (u : ℝ≥0) (p : ℝ≥0 × Ω) ↦
+        Set.indicator (lebesgueClock.interval c ⊥ (min p.1 t))
+          (fun v : ℝ≥0 ↦ W (min (v : ℝ) (t : ℝ)) p.2) u) := by
+    letI : MeasurableSpace (ℝ≥0 × Ω) := m
+    have h1 : Measurable fun q : ℝ≥0 × (ℝ≥0 × Ω) ↦ q.1 := measurable_fst
+    have h2 : Measurable fun q : ℝ≥0 × (ℝ≥0 × Ω) ↦ min q.2.1 t :=
+      (measurable_fst.comp measurable_snd).min measurable_const
+    have hD : MeasurableSet
+        {q : ℝ≥0 × (ℝ≥0 × Ω) | q.1 ∈ lebesgueClock.interval c ⊥ (min q.2.1 t)} := by
+      cases c with
+      | optional => exact (measurableSet_le h1 h2).diff (measurableSet_le h1 measurable_const)
+      | predictable => exact (measurableSet_lt h1 h2).diff (measurableSet_lt h1 measurable_const)
+    have hfun : (Function.uncurry fun (u : ℝ≥0) (p : ℝ≥0 × Ω) ↦
+          Set.indicator (lebesgueClock.interval c ⊥ (min p.1 t))
+            (fun v : ℝ≥0 ↦ W (min (v : ℝ) (t : ℝ)) p.2) u)
+        = Set.indicator {q : ℝ≥0 × (ℝ≥0 × Ω) | q.1 ∈ lebesgueClock.interval c ⊥ (min q.2.1 t)}
+            (fun q : ℝ≥0 × (ℝ≥0 × Ω) ↦ W (min (q.1 : ℝ) (t : ℝ)) q.2.2) := by
+      funext q
+      by_cases hq : q.1 ∈ lebesgueClock.interval c ⊥ (min q.2.1 t)
+      · rw [Set.indicator_of_mem (show q ∈ {q : ℝ≥0 × (ℝ≥0 × Ω) |
+          q.1 ∈ lebesgueClock.interval c ⊥ (min q.2.1 t)} from hq)]
+        exact Set.indicator_of_mem hq (fun v : ℝ≥0 ↦ W (min (v : ℝ) (t : ℝ)) q.2.2)
+      · rw [Set.indicator_of_notMem (show q ∉ {q : ℝ≥0 × (ℝ≥0 × Ω) |
+          q.1 ∈ lebesgueClock.interval c ⊥ (min q.2.1 t)} from hq)]
+        exact Set.indicator_of_notMem hq (fun v : ℝ≥0 ↦ W (min (v : ℝ) (t : ℝ)) q.2.2)
+    rw [hfun]
+    exact (hW.comp (measurable_fst.prodMk (measurable_snd.comp measurable_snd))).indicator hD
+  have hsm : StronglyMeasurable[m] fun p : ℝ≥0 × Ω ↦
+      ∫ u in S, Set.indicator (lebesgueClock.interval c ⊥ (min p.1 t))
+        (fun v : ℝ≥0 ↦ W (min (v : ℝ) (t : ℝ)) p.2) u ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace (ℝ≥0 × Ω) m ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) _
+      (fun (u : ℝ≥0) (p : ℝ≥0 × Ω) ↦
+        Set.indicator (lebesgueClock.interval c ⊥ (min p.1 t))
+          (fun v : ℝ≥0 ↦ W (min (v : ℝ) (t : ℝ)) p.2) u) hjoint id measurable_id
+  rw [hrw]
+  exact hsm.measurable
+
 end PointRate
+
+/-! ### The test processes of the path dependent problem are progressively measurable
+
+The one statement that turns the measurability layer into a statement about a *process*, and the
+place where the path dependent variant turns out to be **cheaper** than the state dependent one.
+`isStronglyProgressive_mpFamily_jumpProcessE` had to spend the right continuity of the compensator
+and the dyadic approximation on it, and it had to carry a bound on the rate for that; here the
+joint measurability of the integrand is the hypothesis, and the step from it to the moving window
+is `measurable_uncurry_compensator_of_uncurry_min`, which is set algebra.
+
+The reason for the difference is not a better proof.  It is that `mpFamilyF` asks its hypotheses of
+the **integrand** and `mpFamily` asks them of the **process**: a hypothesis about the integrand is
+already the joint measurability the parametrised Bochner integral wants, while a hypothesis about
+the process has to be turned into one about the integrand first, and that turning is the dyadic
+argument. -/
+
+section PathProgressive
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {E : Type*} [MeasurableSpace E]
+
+omit [MeasurableSpace E] in
+/-- **The test processes of a path dependent martingale problem are strongly progressive**, as soon
+as the process and the compensating integrand are jointly measurable for the filtration in the
+truncated form `Clock.IsProgressive` supplies.
+
+Nothing is asked of the rate, of the kernel, or of the sample space: the statement is about an
+arbitrary decomposition `Y s ω = f (X s ω) - ∫ u in Q.interval c ⊥ s, W u ω`, which is what
+membership in `mpFamilyF` gives.  In particular **no bound, no continuity and no non explosion**
+enter. -/
+theorem isStronglyProgressive_of_measurable_uncurry_mpFamilyF {𝓕 : Filtration ℝ≥0 mΩ}
+    {c : Clock.Conv} {f : E → ℝ} {X : ℝ≥0 → Ω → E} {W : ℝ → Ω → ℝ} {Y : ℝ≥0 → Ω → ℝ}
+    (hYeq : ∀ s ω, Y s ω
+      = f (X s ω) - ∫ u in lebesgueClock.interval c ⊥ s, W (u : ℝ) ω ∂lebesgueClock.q)
+    (hX : ∀ t : ℝ≥0, Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (𝓕 t)]
+      fun p : ℝ≥0 × Ω ↦ f (X (min p.1 t) p.2))
+    (hW : ∀ t : ℝ≥0, Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (𝓕 t)]
+      fun p : ℝ≥0 × Ω ↦ W (min (p.1 : ℝ) (t : ℝ)) p.2) :
+    IsStronglyProgressive 𝓕 Y := by
+  refine isStronglyProgressive_of_measurable_uncurry_min fun t ↦ ?_
+  have heq : (fun p : ℝ≥0 × Ω ↦ Y (min p.1 t) p.2)
+      = fun p : ℝ≥0 × Ω ↦ f (X (min p.1 t) p.2)
+        - ∫ u in lebesgueClock.interval c ⊥ (min p.1 t), W (u : ℝ) p.2 ∂lebesgueClock.q :=
+    funext fun p ↦ hYeq _ _
+  rw [heq]
+  exact (hX t).sub (measurable_uncurry_compensator_of_uncurry_min c t (hW t))
+
+end PathProgressive
 
 /-! ### The Hawkes rate, as its own martingale problem needs it
 
@@ -16063,6 +16207,52 @@ theorem measurable_compensator_hawkesJumpApplyF_hawkesFiltration [MeasurableSpac
     (W := fun u ω ↦ hawkesSelfRate ν φ u ω
       * g (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 u)) c i
     (measurable_uncurry_hawkesJumpApplyF_hawkesFiltration hν hφ hφm hφint hg i)
+
+/-- **The test processes of the Hawkes martingale problem are strongly progressive.**  The first of
+the two inputs `martingale_stoppedProcess` asks of a test process, and the statement the whole
+measurability layer of the path dependent variant was built for.
+
+The process is the **step path over the Hawkes jump times** and not `hawkesProcess`, and that is
+deliberate: `hawkesProcess_eq_stepPath` identifies the two exactly where the construction is valid,
+and every hypothesis it carries -- the non negativity of the waiting times, the interval
+integrability of the frozen and of the self referential rate -- is a hypothesis this statement does
+not need.  Nothing beyond the data of `ex:hawkes` and the Markov property of the jump kernel
+enters, **and in particular not the non explosion**.
+
+The jump kernel is a `Kernel E E` and reads the state alone, which is the case of `ex:hawkes`:
+there only the *rate* is self exciting.  A kernel that reads the past as well is a further
+generalisation of `jumpApplyF`, and it would need its own joint measurability in place of
+`measurable_integral_sub_kernel`; nothing else in the proof would change. -/
+theorem isStronglyProgressive_mpFamilyF_hawkesStepPath [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (mu : Kernel E E) [IsMarkovKernel mu] (c : Clock.Conv)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamilyF
+      (jumpOperatorF (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRate ν φ (s : ℝ) ω)
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          mu (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s : ℝ)))
+        (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+          stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s : ℝ)))
+      lebesgueClock c
+      (fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s : ℝ))) :
+    IsStronglyProgressive (hawkesFiltration (E := E) hν hφ hφm hφint) Y := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hg : Measurable fun x ↦ ∫ y, (p.1 y - p.1 x) ∂(mu x) :=
+    measurable_integral_sub_kernel hf hC
+  refine isStronglyProgressive_of_measurable_uncurry_mpFamilyF (c := c) (f := p.1)
+    (X := fun (s : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (s : ℝ))
+    (W := fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRate ν φ u ω
+      * ∫ y, (p.1 y - p.1 (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 u))
+          ∂(mu (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 u)))
+    (fun s ω ↦ ?_) (fun t ↦ ?_) (fun t ↦ ?_)
+  · rw [hYeq s ω, hp2]
+    rfl
+  · have h := measurable_uncurry_hawkesStepPath_hawkesFiltration hν hφ hφm hφint hf t
+    simpa only [NNReal.coe_min] using h
+  · exact measurable_uncurry_hawkesJumpApplyF_hawkesFiltration hν hφ hφm hφint hg t
 
 end HawkesRate
 

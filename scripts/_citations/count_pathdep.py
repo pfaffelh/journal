@@ -205,6 +205,11 @@ GROUPS = {
         "measurable_compensator_of_uncurry_min",
         "measurable_compensator_hawkesJumpApplyF_hawkesFiltration",
     },
+    "G21 the test process is progressively measurable": {
+        "measurable_uncurry_compensator_of_uncurry_min",
+        "isStronglyProgressive_of_measurable_uncurry_mpFamilyF",
+        "isStronglyProgressive_mpFamilyF_hawkesStepPath",
+    },
 }
 
 

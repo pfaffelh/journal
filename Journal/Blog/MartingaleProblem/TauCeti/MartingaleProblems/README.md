@@ -2683,6 +2683,39 @@ A concrete family of solutions, built without any of the theory above. Index
     `jumpApplyF` is that product. The third is `measurable_compensator_of_uncurry_min` applied to
     it, and with it every ingredient of `mpFamilyF (jumpOperatorF (hawkesSelfRate ν φ) …) …` for the
     Hawkes process is measurable for `hawkesFiltration`.
+  * `measurable_uncurry_compensator_of_uncurry_min`,
+    `isStronglyProgressive_of_measurable_uncurry_mpFamilyF` and
+    `isStronglyProgressive_mpFamilyF_hawkesStepPath`, with
+    `measurable_integral_sub_kernel`: **the test processes of the path dependent martingale
+    problem are progressively measurable, and the Hawkes ones are.** **In Lean** on 2026-09-11,
+    thirteenth run. For a decomposition `Y s ω = f (X s ω) − ∫ u in Q.interval c ⊥ s, W u ω`,
+    which is what membership in `mpFamilyF` gives, joint measurability of
+    `(s, ω) ↦ f (X (min s t) ω)` and of `(s, ω) ↦ W (min s t) ω` for `Borel ℝ≥0 ⊗ 𝓕 t` implies
+    `IsStronglyProgressive 𝓕 Y`. The Hawkes instance carries nothing beyond the data of
+    `ex:hawkes`, the measurability of the test function and the Markov property of the jump
+    kernel; in particular it does not carry the non explosion, and it is a statement about the
+    **step path over the Hawkes jump times**, which `hawkesProcess_eq_stepPath` identifies with
+    the process exactly where the construction is valid.
+
+    The step that was missing is `measurable_uncurry_compensator_of_uncurry_min`, and it is the
+    one that lets the **upper end of the window move with the time**:
+    `measurable_compensator_of_uncurry_min` keeps the window fixed and gives measurability in the
+    sample point alone, which is adaptedness and not progressivity. A window with a variable upper
+    end is a window of fixed length with a cut integrand, and the cut set
+    `{(u, p) | u ∈ Q.interval c ⊥ (min p.1 t)}` constrains the integration variable and the time
+    parameter and never the sample point, so it is measurable for `Borel ℝ≥0 ⊗ Borel ℝ≥0 ⊗ 𝓕 t`
+    by two applications of `measurableSet_le` — one for each of the two conventions.
+
+    **The path dependent variant is cheaper here than the state dependent one, and the reason is
+    where the hypotheses sit.** `isStronglyProgressive_mpFamily_jumpProcessE` reaches the same
+    conclusion through the right continuity of the compensator
+    (`tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE`) and the dyadic approximation of
+    `measurable_uncurry_min_of_rightContinuous`, and it carries a bound on the rate for that.
+    Neither occurs here: `mpFamilyF` asks its hypotheses of the **integrand**, and a hypothesis
+    about the integrand already *is* the joint measurability the parametrised Bochner integral
+    wants, while a hypothesis about the process has to be turned into one about the integrand
+    first — and that turning is the whole of the dyadic argument. No bound, no continuity of any
+    path, no non explosion.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,
