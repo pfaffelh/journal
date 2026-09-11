@@ -146,6 +146,22 @@ GROUPS = {
         "hawkesProcess_eq_stepPath",
         "hawkesProcess_of_lt_first",
     },
+    "G13 the integrability of the frozen rate, discharged on the kernel": {
+        "intervalIntegrable_hawkesFrozen",
+        "strictMono_hawkesJumpTime_of_kernel",
+    },
+    "G14 the inverse is measurable in a parameter": {
+        "cumulativeRateF_nonneg",
+        "measurable_cumulativeRateF",
+        "measurable_rateInverse",
+    },
+    "G15 the Hawkes jump times are measurable": {
+        "rateInverse_hawkesFrozen_sample",
+        "hawkesStep_sample_congr",
+        "hawkesJumpTime_sample_congr",
+        "measurable_hawkesJumpTime",
+        "measurable_uncurry_hawkesStepPath",
+    },
 }
 
 

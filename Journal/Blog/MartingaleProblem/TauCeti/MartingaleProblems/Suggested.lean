@@ -14161,22 +14161,40 @@ theorem rateInverse_eq_of_cumulativeRateF
   rw [h] at hlt
   exact absurd hr.2 (not_le.2 hlt)
 
+/-- **The cumulated rate is non negative**, from the positivity of the rate alone and at *every*
+argument: below the origin the window is empty.  This is what removes the hypothesis `0 ≤ a` from
+`rateInverse_le_iff`, and removing it is not cosmetic -- a measurability statement quantifies over
+a whole parameter space, on which the level is a function and cannot be assumed non negative
+pointwise. -/
+theorem cumulativeRateF_nonneg (hpos : ∀ u, 0 < u → 0 < Λ u ω) (c : ℝ) :
+    0 ≤ cumulativeRateF Λ ω c :=
+  setIntegral_nonneg measurableSet_Ioc fun u hu ↦ (hpos u hu.1).le
+
 /-- **The defining property of a generalised inverse**: `rateInverse` sits below a point of the half
 line exactly when the cumulated rate has passed the level there.  Mathlib has no generalised inverse
 of a monotone function, so this is ours; it is the form in which the inverse is used where an
 inequality rather than a value is wanted, and in particular it is what turns a statement about
 `rateInverse` into a statement about `cumulativeRateF`, which is an integral and therefore reachable
-by the measurability of the rate. -/
+by the measurability of the rate.
+
+**Nothing is asked of the level.**  At a negative level the inverse is `0` -- the origin already
+lies in the set whose infimum it is -- and the cumulated rate is non negative there, so both sides
+are true; the hypothesis `0 ≤ a` that the first version carried was spent on
+`cumulativeRateF_rateInverse` and is needed only in that branch. -/
 theorem rateInverse_le_iff
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) {c : ℝ} (hc : 0 ≤ c) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) {c : ℝ} (hc : 0 ≤ c) :
     rateInverse Λ ω a ≤ c ↔ a ≤ cumulativeRateF Λ ω c := by
-  constructor
-  · intro h
-    have := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω a) hc h
-    rwa [cumulativeRateF_rateInverse hint hpos htop ha] at this
-  · exact fun h ↦ csInf_le ⟨0, fun r hr ↦ hr.1⟩ ⟨hc, h⟩
+  rcases le_or_gt 0 a with ha | ha
+  · constructor
+    · intro h
+      have := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω a) hc h
+      rwa [cumulativeRateF_rateInverse hint hpos htop ha] at this
+    · exact fun h ↦ csInf_le ⟨0, fun r hr ↦ hr.1⟩ ⟨hc, h⟩
+  · exact iff_of_true (le_trans (csInf_le ⟨0, fun r hr ↦ hr.1⟩
+      ⟨le_rfl, by simpa using ha.le⟩) hc)
+      (ha.le.trans (cumulativeRateF_nonneg hpos c))
 
 /-- The complementary half of `rateInverse_le_iff`, in the form a measurability argument reads: the
 sublevel set of the inverse is a sublevel set of the cumulated rate, and below the origin it is
@@ -14184,13 +14202,62 @@ empty. -/
 theorem setOf_rateInverse_le
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (c : ℝ) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (a c : ℝ) :
     (rateInverse Λ ω a ≤ c) ↔ (0 ≤ c ∧ a ≤ cumulativeRateF Λ ω c) := by
   by_cases hc : 0 ≤ c
   · simp only [hc, true_and]
-    exact rateInverse_le_iff hint hpos htop ha hc
+    exact rateInverse_le_iff hint hpos htop hc
   · simp only [hc, false_and, iff_false, not_le]
     exact lt_of_lt_of_le (not_le.1 hc) (rateInverse_nonneg Λ ω a)
+
+/-! ### The inverse is measurable in a parameter
+
+The inverse is a definition by `sInf` and therefore reaches nothing directly.  What reaches it is
+`setOf_rateInverse_le`: its sublevel sets are sublevel sets of the **cumulated rate**, and the
+cumulated rate is an integral, so a parameter enters it through the integrand alone.  These two
+statements are the whole measurability theory of the path dependent construction, and note what
+they do *not* mention -- no filtration, no probability, no jump times: the parameter space is an
+arbitrary measurable space and the sample point is a function of it. -/
+
+/-- **The cumulated rate is measurable in a parameter**, from the joint measurability of the rate in
+the parameter and the time and from nothing else.  It is Fubini's measurability half
+(`StronglyMeasurable.integral_prod_right'`) against the finite measure `volume.restrict (0, c]`. -/
+theorem measurable_cumulativeRateF {γ : Type*} [MeasurableSpace γ] {Λ : γ → ℝ → Ω → ℝ}
+    {p : γ → Ω} (h : Measurable fun q : γ × ℝ ↦ Λ q.1 q.2 (p q.1)) (c : ℝ) :
+    Measurable fun g ↦ cumulativeRateF (Λ g) (p g) c :=
+  (h.stronglyMeasurable.integral_prod_right'
+    (ν := (volume.restrict (Set.Ioc (0 : ℝ) c)))).measurable
+
+/-- **The generalised inverse is measurable in a parameter.**  The level is itself a measurable
+function of the parameter, which is what the jump times need: the `(n+1)`-st of them is the inverse
+at the level `ξ 0 + ⋯ + ξ n`.
+
+The three hypotheses of the inversion are asked at every parameter value, and the fourth is the
+joint measurability that `measurable_cumulativeRateF` consumes.  **The level is not asked to be non
+negative**, and that is the point of the generalisation of `rateInverse_le_iff`: over a parameter
+space the level is a function, and the partial sums of waiting times are non negative only on the
+set where the waiting times are, which is not all of the space. -/
+theorem measurable_rateInverse {γ : Type*} [MeasurableSpace γ] {Λ : γ → ℝ → Ω → ℝ}
+    {p : γ → Ω} {a : γ → ℝ}
+    (hint : ∀ g r, IntervalIntegrable (fun u ↦ Λ g u (p g)) volume 0 r)
+    (hpos : ∀ g u, 0 < u → 0 < Λ g u (p g))
+    (htop : ∀ g, Tendsto (cumulativeRateF (Λ g) (p g)) atTop atTop)
+    (hmeas : Measurable fun q : γ × ℝ ↦ Λ q.1 q.2 (p q.1)) (ha : Measurable a) :
+    Measurable fun g ↦ rateInverse (Λ g) (p g) (a g) := by
+  refine measurable_of_Iic fun c ↦ ?_
+  by_cases hc : (0 : ℝ) ≤ c
+  · have hset : (fun g ↦ rateInverse (Λ g) (p g) (a g)) ⁻¹' Set.Iic c
+        = {g | a g ≤ cumulativeRateF (Λ g) (p g) c} := by
+      ext g
+      simpa [hc] using setOf_rateInverse_le (hint g) (hpos g) (htop g) (a g) c
+    rw [hset]
+    exact measurableSet_le ha (measurable_cumulativeRateF hmeas c)
+  · have hset : (fun g ↦ rateInverse (Λ g) (p g) (a g)) ⁻¹' Set.Iic c = (∅ : Set γ) := by
+      ext g
+      simp only [Set.mem_preimage, Set.mem_Iic, Set.mem_empty_iff_false, iff_false, not_le]
+      exact lt_of_lt_of_le (not_le.1 hc) (rateInverse_nonneg _ _ _)
+    rw [hset]
+    exact MeasurableSet.empty
 
 theorem rateInverse_mono
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
@@ -14659,6 +14726,33 @@ theorem le_hawkesFrozen (hφ : ∀ x, 0 ≤ φ x) (T : ℕ → ℝ) (n : ℕ) (u
   have : 0 ≤ ∑ k ∈ Finset.Ico 1 n, φ (u - T k) := Finset.sum_nonneg fun k _ ↦ hφ _
   simpa [hawkesFrozen] using this
 
+/-- **The frozen rate is locally integrable, and this discharges the hypothesis the whole recursion
+carried.**  Every statement about the Hawkes jump times above and below asks for
+`∀ m r, IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T m u ω) volume 0 r`, and it is asked of a
+family `T` that the recursion itself produces, so at first sight it is circular.  It is not: the
+frozen rate is a constant plus a **finite** sum of translates of `φ`, so local integrability of
+every translate of `φ` gives it outright, whatever the family.
+
+**Which hypothesis on `φ` this is, and which it is not.**  It is local integrability of `φ`
+*carried along the translation*, and for the kernel of `ex:hawkes` -- supported on the half line,
+non negative, of finite mass on every window -- it is what "locally integrable kernel" says.  It is
+**not** the non explosion: that is the local integrability of the **self referential** rate
+`hawkesSelfRate`, which asks the jump times to exhaust the half line, and no bound on `φ` alone
+gives it. -/
+theorem intervalIntegrable_hawkesFrozen
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (T : ℕ → ℝ) (n : ℕ) (ω : Ω) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T n u ω) volume 0 r := by
+  have hsum : IntervalIntegrable (fun u ↦ ∑ k ∈ Finset.Ico 1 n, φ (u - T k)) volume 0 r := by
+    have h := IntervalIntegrable.sum (μ := volume) (a := 0) (b := r) (Finset.Ico 1 n)
+      (f := fun k u ↦ φ (u - T k)) fun k _ ↦ hφint (T k) r
+    have heq : (∑ k ∈ Finset.Ico 1 n, fun u ↦ φ (u - T k))
+        = fun u ↦ ∑ k ∈ Finset.Ico 1 n, φ (u - T k) := by
+      funext u
+      simp
+    rwa [heq] at h
+  simpa [hawkesFrozen] using intervalIntegrable_const.add hsum
+
 /-- **Before the first jump the frozen rate is the baseline.**  With the sum starting at `1` the
 empty stage and the first stage carry no term at all, which is the statement that the history of the
 process is empty until it jumps. -/
@@ -14759,6 +14853,96 @@ theorem cumulativeRateF_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
     fun u _ ↦ le_hawkesFrozen hφ (hawkesJumpTime ν φ xi ω) (n + 1) u ω
   rw [hawkesJumpTime_succ]
   exact cumulativeRateF_rateInverse hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k)
+
+/-! #### The jump times do not read the sample point, and are measurable in the waiting times
+
+`hawkesJumpTime` carries a sample point `ω` because `rateInverse` does, and `rateInverse` carries
+one because a path dependent rate is a functional of it.  The Hawkes rate, however, is a functional
+of the **event times** and not of the marks, and the event times are built from the waiting times
+alone -- so the argument `ω` of `hawkesFrozen` is a dummy, and `hawkesJumpTime ν φ xi ω n` does not
+depend on `ω` in any way.  `hawkesJumpTime_sample_congr` says so across *different* sample spaces,
+which is the form the measurability uses: the jump times of the process on `(ℕ → E) × (ℕ → ℝ)`
+factor through `Prod.snd`.
+
+**That is what makes the measurability of this construction cheap, and it is a statement about
+Hawkes and not about path dependence.**  A rate that read the marks of the chain -- a marked Hawkes
+process, where the excitation depends on what kind of event occurred -- would have jump times that
+genuinely depend on the first coordinate, and the recursion would have to be carried through it.
+The present measurability proof would still go through, because `measurable_rateInverse` asks
+nothing about which coordinates the rate reads; what would change is the joint measurability that
+has to be fed to it. -/
+
+/-- The inverse of a frozen rate does not depend on the sample point, because the frozen rate does
+not: `hawkesFrozen` discards its last argument.  The two sample spaces need not even be the same
+type. -/
+theorem rateInverse_hawkesFrozen_sample {Ω' : Type*} (ν : ℝ) (φ : ℝ → ℝ) (T : ℕ → ℝ) (m : ℕ)
+    (ω : Ω) (ω' : Ω') (a : ℝ) :
+    rateInverse (hawkesFrozen ν φ T m) ω a = rateInverse (hawkesFrozen ν φ T m) ω' a := rfl
+
+theorem hawkesStep_sample_congr {Ω' : Type*} (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ)
+    (ω : Ω) (ω' : Ω') (n : ℕ) : hawkesStep ν φ xi ω n = hawkesStep ν φ xi ω' n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      funext m
+      simp only [hawkesStep, ih]
+      split
+      · rfl
+      · exact rateInverse_hawkesFrozen_sample ν φ _ (n + 1) ω ω' _
+
+/-- **The Hawkes jump times are a function of the waiting times alone.** -/
+theorem hawkesJumpTime_sample_congr {Ω' : Type*} (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ)
+    (ω : Ω) (ω' : Ω') (n : ℕ) :
+    hawkesJumpTime ν φ xi ω n = hawkesJumpTime ν φ xi ω' n := by
+  rw [hawkesJumpTime, hawkesJumpTime, hawkesStep_sample_congr ν φ xi ω ω' n]
+
+/-- **The Hawkes jump times are measurable in the waiting times**, every stage of them, and the
+induction is the recursion that defined them.
+
+The statement is the one an induction can carry: at the stage `n + 1` the frozen rate reads the
+jump times at the indices `1, …, n`, so what is needed is the measurability of *all* earlier stages
+and not only of the immediately preceding one.
+
+**No hypothesis beyond the three that the inverse needs, and the measurability of `φ`.**  In
+particular there is no bound on `φ` and no condition on its mass -- the same shape as
+`jumpProcess_isLocalMPSolution`, which asks nothing of `lam` but its measurability.  Nor is the
+positivity of the waiting times asked: a parameter space cannot carry it, and
+`measurable_rateInverse` was generalised precisely so that it need not. -/
+theorem measurable_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (ω : Ω) :
+    ∀ n, ∀ m ≤ n, Measurable fun xi : ℕ → ℝ ↦ hawkesJumpTime ν φ xi ω m := by
+  intro n
+  induction n with
+  | zero =>
+      intro m hm
+      rw [Nat.le_zero.1 hm]
+      simp
+  | succ n ih =>
+      intro m hm
+      rcases Nat.lt_succ_iff_lt_or_eq.1 (Nat.lt_succ_of_le hm) with h | h
+      · exact ih m (Nat.lt_succ_iff.1 h)
+      · subst h
+        have hrw : (fun xi : ℕ → ℝ ↦ hawkesJumpTime ν φ xi ω (n + 1))
+            = fun xi : ℕ → ℝ ↦ rateInverse
+              (hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1)) ω
+              (∑ k ∈ Finset.range (n + 1), xi k) :=
+          funext fun xi ↦ hawkesJumpTime_succ ν φ xi ω n
+        rw [hrw]
+        refine measurable_rateInverse
+          (Λ := fun xi ↦ hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1))
+          (p := fun _ ↦ ω)
+          (fun g r ↦ intervalIntegrable_hawkesFrozen hφint _ _ _ r)
+          (fun g u _ ↦ hν.trans_le (le_hawkesFrozen hφ _ _ u ω))
+          (fun g ↦ tendsto_cumulativeRateF_atTop_of_le
+            (fun r ↦ intervalIntegrable_hawkesFrozen hφint _ _ _ r) hν
+            (fun u _ ↦ le_hawkesFrozen hφ _ _ u ω)) ?_ ?_
+        · have hjoint : Measurable fun q : (ℕ → ℝ) × ℝ ↦
+              ν + ∑ k ∈ Finset.Ico 1 (n + 1), φ (q.2 - hawkesJumpTime ν φ q.1 ω k) := by
+            refine measurable_const.add (Finset.measurable_sum _ fun k hk ↦ ?_)
+            refine hφm.comp (measurable_snd.sub ?_)
+            exact (ih k (Nat.lt_succ_iff.1 (Finset.mem_Ico.1 hk).2)).comp measurable_fst
+          simpa [hawkesFrozen] using hjoint
+        · exact Finset.measurable_sum _ fun k _ ↦ measurable_pi_apply k
 
 /-! #### The identification: the frozen rate is the Hawkes rate of its own counting measure
 
@@ -14945,6 +15129,19 @@ theorem strictMono_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0
   rw [hA, hB, Finset.sum_range_succ] at hmon
   linarith [hxi (m + 1)]
 
+/-- **The jump times increase strictly, with the carried hypothesis discharged.**  This is
+`strictMono_hawkesJumpTime` with `intervalIntegrable_hawkesFrozen` substituted for its integrability
+hypothesis, and it is the form in which the statement should be read: what the increase of the jump
+times rests on is `0 < ν`, `0 ≤ φ`, the predictability `φ = 0` on the closed negative half line, and
+the local integrability of `φ` -- all four conditions on the **data** of `ex:hawkes`, none on the
+family the recursion produces. -/
+theorem strictMono_hawkesJumpTime_of_kernel (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (hxi : ∀ k, 0 < xi k) :
+    StrictMono (hawkesJumpTime ν φ xi ω) :=
+  strictMono_hawkesJumpTime hν hφ hφ0 hxi fun m r ↦
+    intervalIntegrable_hawkesFrozen hφint _ m ω r
+
 /-! #### The fixed point is closed: the jump times are the jump times of their own Hawkes rate
 
 Everything above computes with the frozen rates, which are auxiliary.  This is the statement the
@@ -15103,6 +15300,45 @@ theorem hawkesProcess_of_lt_first (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0
   refine jumpProcessF_of_lt_jumpTimeF_one ?_
   rw [jumpTimeF_hawkesSelfRate hν hφ hφ0 hxi hintF hint 1, hawkesJumpTime_one hν (hxi 0)]
   exact ht
+
+/-! #### Joint measurability
+
+`measurable_stepPath_comp` asks of a step path exactly two things -- that the jump times be
+measurable in the parameter and that the values be -- and `measurable_hawkesJumpTime` is the first
+of them.  Joint measurability in `(t, ω)` is its case `γ = ℝ × Ω`, `u = Prod.fst`, exactly as in the
+state dependent construction.
+
+**Which process is measurable, and why the distinction is not pedantry.**  The statement below is
+about `stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1`, and `hawkesProcess_eq_stepPath` says that
+`hawkesProcess` *is* that step path -- but only at a sample point at which the waiting times are non
+negative and the self referential rate is locally integrable, that is, at a sample point at which
+the construction is valid.  Off that set `hawkesProcess` unfolds to `rateInverse` of a rate that is
+not locally integrable, and there is no reason for it to be measurable there; the set itself is of
+full measure under the driving law, by the non explosion that `ex:hawkes` proves and that this
+development carries.
+
+So the honest division is: the **step path over the Hawkes jump times** is measurable outright, with
+no hypothesis beyond the data, and the **process** agrees with it exactly where it is the process.
+That is the same division as in the state dependent local construction, where
+`stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE` is stated about the *stopped* process because
+the unstopped one is not right continuous at an explosive sample point. -/
+
+/-- **The step path over the Hawkes jump times is jointly measurable in the time and the sample
+point.**  Nothing beyond the data of `ex:hawkes` is asked: `0 < ν`, `0 ≤ φ`, `φ` measurable, and
+every translate of `φ` locally integrable. -/
+theorem measurable_uncurry_hawkesStepPath [MeasurableSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) :
+    Measurable fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTime ν φ q.2.2 q.2) q.2.1 q.1 := by
+  refine measurable_stepPath_comp measurable_fst (fun n ↦ ?_) (fun n ↦ ?_)
+  · have hrw : (fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦ hawkesJumpTime ν φ q.2.2 q.2 n)
+        = (fun xi : ℕ → ℝ ↦ hawkesJumpTime ν φ xi (0 : ℕ → ℝ) n) ∘ fun q ↦ q.2.2 :=
+      funext fun q ↦ hawkesJumpTime_sample_congr ν φ q.2.2 q.2 (0 : ℕ → ℝ) n
+    rw [hrw]
+    exact (measurable_hawkesJumpTime hν hφ hφm hφint (0 : ℕ → ℝ) n n le_rfl).comp
+      (measurable_snd.comp measurable_snd)
+  · exact (measurable_pi_apply n).comp (measurable_fst.comp measurable_snd)
 
 end HawkesProcess
 

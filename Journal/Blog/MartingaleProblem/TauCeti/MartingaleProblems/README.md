@@ -2456,12 +2456,69 @@ A concrete family of solutions, built without any of the theory above. Index
     needs neither the divergence at infinity nor the continuity, only the strict
     monotonicity.
   * `rateInverse_le_iff` and `setOf_rateInverse_le`: **the defining property of a generalised
-    inverse.** **In Lean** on 2026-09-11, eighth run. `rateInverse Λ ω a ≤ c` holds exactly when
-    `0 ≤ c` and `a ≤ cumulativeRateF Λ ω c`. Mathlib has no generalised inverse of a monotone
-    function, so this is ours. It is the form in which the inverse is used where an inequality
-    rather than a value is wanted, and it turns every statement about `rateInverse` into a statement
-    about `cumulativeRateF` — which is an integral, and therefore reachable from the measurability
-    of the rate.
+    inverse.** **In Lean** on 2026-09-11, eighth run, with `cumulativeRateF_nonneg` from the ninth.
+    `rateInverse Λ ω a ≤ c` holds exactly when `0 ≤ c` and `a ≤ cumulativeRateF Λ ω c`, **at every
+    level `a` whatever its sign**. Mathlib has no generalised inverse of a monotone function, so
+    this is ours. It is the form in which the inverse is used where an inequality rather than a
+    value is wanted, and it turns every statement about `rateInverse` into a statement about
+    `cumulativeRateF` — which is an integral, and therefore reachable from the measurability of the
+    rate.
+
+    That the level is unrestricted is what a measurability statement needs, and it is not a
+    convenience: over a parameter space the level is a *function* of the parameter, and the partial
+    sums of waiting times are non negative only on the set where the waiting times are, which is not
+    the whole space. At a negative level both sides are true — the origin already lies in the set
+    whose infimum the inverse is, and `cumulativeRateF_nonneg` says the cumulated rate never falls
+    below zero.
+  * `intervalIntegrable_hawkesFrozen`: **the integrability hypothesis the recursion carried is
+    discharged on the kernel.** **In Lean** on 2026-09-11, ninth run, with
+    `strictMono_hawkesJumpTime_of_kernel`. Every statement about the Hawkes jump times asks for
+    `∀ m r, IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T m u ω) volume 0 r`, of a family `T` that
+    the recursion itself produces, which looks circular. It is not: the frozen rate is a constant
+    plus a **finite** sum of translates of `φ`, so the local integrability of every translate of `φ`
+    gives it outright, whatever the family. `strictMono_hawkesJumpTime_of_kernel` is the same
+    statement read on the data: the increase of the jump times rests on `0 < ν`, `0 ≤ φ`, `φ = 0` on
+    the closed negative half line, and the local integrability of `φ` — four conditions on the data
+    of `ex:hawkes` and none on what the recursion returns.
+
+    What this does **not** discharge is the non explosion: that is the local integrability of the
+    **self referential** rate `hawkesSelfRate`, which asks the jump times to exhaust the half line,
+    and no condition on `φ` alone gives it.
+  * `measurable_cumulativeRateF` and `measurable_rateInverse`: **the generalised inverse is
+    measurable in a parameter.** **In Lean** on 2026-09-11, ninth run. Over an arbitrary measurable
+    parameter space, with the sample point and the level themselves functions of the parameter, the
+    inverse is measurable as soon as the rate is **jointly** measurable in the parameter and the
+    time and the level is measurable. The proof is `setOf_rateInverse_le` and Fubini's measurability
+    half (`MeasureTheory.StronglyMeasurable.integral_prod_right'` against the finite measure
+    `volume.restrict (Set.Ioc 0 c)`) and nothing else. These two statements are the whole
+    measurability theory of the path dependent construction, and they mention no filtration, no
+    probability measure and no jump times.
+  * `measurable_hawkesJumpTime` and `measurable_uncurry_hawkesStepPath`: **the Hawkes jump times are
+    measurable in the waiting times, and the step path over them is jointly measurable in the time
+    and the sample point.** **In Lean** on 2026-09-11, ninth run, with
+    `rateInverse_hawkesFrozen_sample`, `hawkesStep_sample_congr` and `hawkesJumpTime_sample_congr`.
+    Nothing beyond the data of `ex:hawkes` is asked: `0 < ν`, `0 ≤ φ`, `φ` measurable, every
+    translate of `φ` locally integrable. No bound on `φ`, no condition on its mass, and no
+    positivity of the waiting times — the same shape as `jumpProcess_isLocalMPSolution`, which asks
+    nothing of `lam` but its measurability.
+
+    `hawkesJumpTime_sample_congr` is the statement that makes this cheap, and it is a statement
+    about Hawkes and not about path dependence: the Hawkes rate is a functional of the **event
+    times** and not of the marks, and the event times are built from the waiting times alone, so the
+    sample point of `hawkesJumpTime` is a dummy — the equality holds across *different* sample
+    spaces. A marked Hawkes process, whose excitation depends on which kind of event occurred, would
+    have jump times that genuinely read the first coordinate; `measurable_rateInverse` would still
+    apply, since it asks nothing about which coordinates the rate reads, and what would change is
+    the joint measurability fed to it.
+
+    The statement is about `stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1` and not about `hawkesProcess`,
+    and the distinction is the honest one. `hawkesProcess_eq_stepPath` identifies the two exactly at
+    a sample point at which the construction is valid — non negative waiting times and a locally
+    integrable self referential rate; off that set `hawkesProcess` unfolds to the inverse of a rate
+    that is not locally integrable and there is no reason for it to be measurable. That is the same
+    division as in the state dependent local construction, where
+    `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE` is stated about the *stopped* process
+    because the unstopped one is not right continuous at an explosive sample point.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,

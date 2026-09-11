@@ -20837,3 +20837,183 @@ Hauptcheckout, und die Regel lautet, dort nur zu lesen. **`lake env lean` ist im
    Sprungzeit als endliche Summe, und eine endliche Summe von Translaten von `φ` ist meßbar, sobald
    `φ` es ist. Die Aussage in voller Allgemeinheit — beliebiges maßwertiges `N` — bleibt, was sie
    war.
+
+### 2026-09-11, neunter Lauf des Tages — die Meßbarkeit der pfadabhängigen Sprungzeiten steht, und der Weg dorthin geht nicht durch die Konstruktion, sondern an ihr vorbei: die Hawkes-Sprungzeiten lesen den Stichprobenpunkt überhaupt nicht
+
+**Bearbeitet:** Teil C, die **pfadabhängige Variante**, Vorschlag 1 des achten Laufs — die
+Meßbarkeit der pfadabhängigen Sprungzeiten und die Adaptiertheit des Prozesses. Der erste Teil
+steht, der zweite ist in der Gestalt, in der er zu haben ist, ebenfalls erledigt; welche Gestalt das
+ist und warum es nicht die angesagte ist, ist der Befund des Laufs. Vorschlag 2 (`rateInverseE`) und
+Vorschlag 3 (`hawkesRate_measurable`) bleiben offen und stehen unverändert.
+
+**Zehn neue Deklarationen** und **zwei verallgemeinerte** in den Abschnitten `PathDependent`,
+`Hawkes` und `HawkesProcess` von `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne
+einen Fehler** durch `lake env lean` gegen v4.33.1 (Lean 4.33.1, commit `819816b2`), alle zwölf mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt
+bei **neun**. `scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` rc 0,
+0 Fehler, 9 `sorry`; für `SkorokhodSpace/Suggested.lean` rc 0, 0 Fehler; für
+`WeakConvergence/Suggested.lean` weiterhin die zwei bewußt gegen `master` geschriebenen Fehler —
+also **kein Rückschritt**. `scripts/check_citations.py` meldet unverändert dieselben zwei
+Auffälligkeiten. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Befund des Laufs: die Hawkes-Sprungzeiten sind eine Funktion der Wartezeiten allein
+
+`hawkesJumpTime ν φ xi ω n` trägt einen Stichprobenpunkt `ω`, weil `rateInverse` einen trägt, und
+`rateInverse` trägt einen, weil eine pfadabhängige Rate ein Funktional davon ist. Beim Hinschreiben
+der Meßbarkeit fiel auf, daß dieses Argument **nirgends gelesen wird**: `hawkesFrozen` verwirft sein
+letztes Argument (`(_ : Ω)` steht so in der Definition), also ist
+
+`rateInverse (hawkesFrozen ν φ T m) ω a = rateInverse (hawkesFrozen ν φ T m) ω' a`
+
+ein `rfl` — und zwar über **verschiedenen Typen** `Ω` und `Ω'`. Daraus per Induktion über die Stufe
+`hawkesStep_sample_congr` und `hawkesJumpTime_sample_congr`.
+
+**Das ist eine Aussage über Hawkes und nicht über Pfadabhängigkeit**, und darin liegt ihr Wert. Die
+Hawkes-Rate ist ein Funktional der **Ereigniszeiten** und nicht der Marken, und die Ereigniszeiten
+sind aus den Wartezeiten allein gebaut; die Kette `ω.1` kommt in ihnen nicht vor. Ein *markierter*
+Hawkes-Prozeß, dessen Anregung davon abhängt, welche Art Ereignis eintrat, hätte Sprungzeiten, die
+die erste Koordinate wirklich lesen. Der hier geführte Meßbarkeitsbeweis ginge auch dann durch —
+`measurable_rateInverse` fragt nicht, welche Koordinaten die Rate liest —, und was sich änderte,
+wäre die gemeinsame Meßbarkeit, die man ihm vorlegt.
+
+**Der Preis der Beobachtung ist, daß sie die Arbeit nicht wegnimmt.** Die Sprungzeiten hängen sehr
+wohl von `xi` ab, und zwar über die Stufen: die Stufe `n+1` ist die Inverse einer Rate, die die
+Sprungzeiten `1, …, n` liest. Die Induktion muß deshalb `∀ m ≤ n` tragen und nicht bloß `n`.
+
+#### Die Meßbarkeit der verallgemeinerten Inversen, und was sie kostet
+
+`measurable_cumulativeRateF` und `measurable_rateInverse`. Über einem **beliebigen** meßbaren
+Parameterraum, mit Stichprobenpunkt *und* Niveau als Funktionen des Parameters, ist die Inverse
+meßbar, sobald die Rate in Parameter und Zeit **gemeinsam** meßbar ist und das Niveau meßbar. Der
+Beweis ist `setOf_rateInverse_le` und die Meßbarkeitshälfte von Fubini
+(`MeasureTheory.StronglyMeasurable.integral_prod_right'` gegen das endliche Maß
+`volume.restrict (Set.Ioc 0 c)`) und sonst nichts. Weder Filtration noch Wahrscheinlichkeitsmaß noch
+Sprungzeiten kommen vor.
+
+**Eine Hypothese mußte dafür fallen, und das ist der zweite Befund.** `rateInverse_le_iff` und
+`setOf_rateInverse_le` trugen seit dem achten Lauf die Voraussetzung `0 ≤ a`. Über einem
+Parameterraum ist das Niveau eine **Funktion**, und die Partialsummen der Wartezeiten sind nur dort
+nichtnegativ, wo die Wartezeiten es sind — nicht auf dem ganzen Raum. Die Voraussetzung ist
+entbehrlich: bei negativem Niveau liegt der Ursprung schon in der Menge, deren Infimum die Inverse
+ist, also ist die Inverse `0`, und die kumulierte Rate ist nie negativ
+(`cumulativeRateF_nonneg`, aus der Positivität der Rate allein und an **jedem** Argument, weil
+unterhalb des Ursprungs das Fenster leer ist). Beide Seiten sind dann wahr. Die alte Voraussetzung
+war in genau einem Zweig verbraucht, dem über `cumulativeRateF_rateInverse`.
+
+#### Die getragene Integrierbarkeit war gar nicht getragen
+
+`intervalIntegrable_hawkesFrozen`. Jede Aussage über die Hawkes-Sprungzeiten verlangt
+`∀ m r, IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T m u ω) volume 0 r`, und zwar von einer
+Familie `T`, die die Rekursion selbst erzeugt — was zirkulär aussieht und es nicht ist: die
+eingefrorene Rate ist eine Konstante plus eine **endliche** Summe von Translaten von `φ`, also gibt
+die lokale Integrierbarkeit jedes Translats von `φ` sie unmittelbar, welche Familie auch immer
+dasteht. `strictMono_hawkesJumpTime_of_kernel` ist dieselbe Aussage auf den Daten gelesen: das
+Wachsen der Sprungzeiten ruht auf `0 < ν`, `0 ≤ φ`, `φ = 0` auf der abgeschlossenen negativen
+Halbachse und der lokalen Integrierbarkeit von `φ` — vier Bedingungen an die Daten von `ex:hawkes`
+und keine an das, was die Rekursion zurückgibt.
+
+**Was das nicht einlöst, ist die Nichtexplosion**, und die Grenze ist scharf zu ziehen: sie ist die
+lokale Integrierbarkeit der **selbstbezüglichen** Rate `hawkesSelfRate`, die verlangt, daß die
+Sprungzeiten die Halbachse ausschöpfen, und dafür gibt keine Bedingung an `φ` allein etwas her. Der
+Befund des siebten Laufs steht also unverändert; was sich geändert hat, ist, daß er jetzt die
+**einzige** getragene Voraussetzung dieses Zweiges ist.
+
+#### Die Adaptiertheit: welcher Prozeß meßbar ist, und warum das keine Spitzfindigkeit ist
+
+`measurable_uncurry_hawkesStepPath` sagt, daß
+`fun (t, ω) ↦ stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 t` meßbar ist, über
+`measurable_stepPath_comp` mit `γ = ℝ × Ω` und `u = Prod.fst` — genau der Bauart des
+zustandsabhängigen Falls. Die Aussage ist **nicht** über `hawkesProcess` geführt, und das ist die
+ehrliche Teilung.
+
+`hawkesProcess_eq_stepPath` identifiziert die beiden an einem Stichprobenpunkt, an dem die
+Konstruktion gilt — nichtnegative Wartezeiten und lokal integrable selbstbezügliche Rate. Außerhalb
+entfaltet sich `hawkesProcess` zur Inversen einer Rate, die nicht lokal integrabel ist, und es gibt
+keinen Grund, daß sie dort meßbar wäre. Dieselbe Teilung wie im lokalen zustandsabhängigen Fall, wo
+`stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE` über den **gestoppten** Prozeß geht, weil der
+ungestoppte an einem explosiven Stichprobenpunkt nicht rechtsstetig ist. Eine Adaptiertheit an eine
+Filtration ist damit **nicht** bewiesen: die pfadabhängige Variante hat noch keine Filtration, und
+das ist der nächste Schritt (Vorschlag 1).
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py`, um drei Gruppen ergänzt:
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G13 Integrierbarkeit der eingefrorenen Rate, auf dem Kern eingelöst | 2 | 19 |
+| G14 die Inverse ist in einem Parameter meßbar | 3 | 29 |
+| G15 die Hawkes-Sprungzeiten sind meßbar | 5 | 67 |
+
+Der Abschnitt `PathDependent` steht jetzt bei **779 Codezeilen in 104 Deklarationen** (vorher 662 in
+94), 1406 Zeilen mit Dokumentation. G2 (die Inversion) ist von 68 auf 85 Codezeilen gewachsen, weil
+`rateInverse_le_iff` den zusätzlichen Zweig für negative Niveaus trägt.
+
+**Neu gebraucht aus Mathlib, jeder am Quelltext belegt** (v4.33.1) **und keiner `deprecated`:**
+`MeasureTheory.StronglyMeasurable.integral_prod_right'`
+(`Mathlib/MeasureTheory/Integral/Prod.lean:77`), `measurable_of_Iic`
+(`Mathlib/MeasureTheory/Constructions/BorelSpace/Order.lean:689`), `IntervalIntegrable.sum`
+(`Mathlib/MeasureTheory/Integral/IntervalIntegral/Basic.lean:331`), `intervalIntegrable_const`
+(ebenda `:174`), `Finset.measurable_sum`, `measurable_pi_apply`, `measurableSet_le`,
+`setIntegral_nonneg`, `Nat.lt_succ_iff_lt_or_eq`, `iff_of_true`.
+
+Der `SFinite`-Instanz für `volume.restrict s` wegen ging nichts verloren: sie steht als Instanz in
+`Mathlib/MeasureTheory/Measure/Typeclasses/SFinite.lean:75` und wird von der Instanzensuche
+gefunden.
+
+#### Zwei Fallen, und beide kosteten wenig, weil sie im Testrahmen auffielen
+
+* **`IntervalIntegrable.sum` liefert die Summe der *Funktionen*, nicht die Funktion der Summe.**
+  `IntervalIntegrable (∑ i ∈ s, f i)` gegen das gewollte
+  `IntervalIntegrable (fun u ↦ ∑ i ∈ s, f i u)`: die beiden sind definitionsgleich und für `simpa`
+  dennoch verschieden — `simp [Finset.sum_apply]` findet das Muster nicht. Zu nehmen ist ein
+  ausgeschriebenes `funext` und ein `rwa`. Dieselbe Gestalt wie die drei früheren Fälle
+  (`ENNReal`/`WithTop`, `simp only`/`rw`, `hawkesSelfRate_apply`): **was syntaktisch nicht dasteht,
+  ist nicht billig.**
+* **`cumulativeRateF_nonneg` braucht `0 ≤ c` nicht**, und der Linter hat es gesagt: die Bindung `hc`
+  war unreferenziert. Unterhalb des Ursprungs ist `Set.Ioc 0 c` leer und das Integral `0`. Die
+  Voraussetzung wegzulassen ist nicht Kosmetik — sie fiele sonst in `rateInverse_le_iff` als
+  Fallunterscheidung an, die man nicht führen kann, wenn `c` ein Parameter ist.
+
+#### Wie gearbeitet wurde, und daß es sich gelohnt hat
+
+Der Durchlauf von `MartingaleProblems/Suggested.lean` dauert Minuten, weil Mathlib geladen wird.
+Entwickelt wurde daher in einer **Testdatei** von 215 Zeilen, die `import Mathlib.…` und die sechs
+gebrauchten Definitionen wörtlich kopiert und **alle schon bewiesenen Lemmata als `sorry`** führt —
+nur die neuen Beweise stehen darin wirklich. Ein Durchlauf davon kostet den Bruchteil. Die zehn
+neuen Deklarationen gingen dort im zweiten Anlauf durch (ein Fehler: `Finset.sum_apply`) und danach
+in der großen Datei ohne weitere Änderung. **Das ist die Arbeitsweise für jede weitere Schicht
+dieses Abschnitts.** Die Testdatei ist nicht abgelegt: sie verweist auf `sorry`-Rümpfe und wäre ein
+Artefakt, das auf Ungeschriebenes zeigt.
+
+#### Was offen blieb
+
+* **Die Filtration der pfadabhängigen Variante**, und damit die Adaptiertheit im eigentlichen Sinn
+  und die Martingaleigenschaft. Die gemeinsame Meßbarkeit steht jetzt; was fehlt, ist eine
+  Filtration, an der sie etwas bedeutet. Siehe Vorschlag 1.
+* **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, unverändert.
+* **Die lokale Integrierbarkeit der Hawkes-Rate längs des konstruierten Pfades** — die
+  Nichtexplosion. Unverändert, und nach diesem Lauf die **einzige** noch getragene Voraussetzung
+  des Zweiges. Sie einzulösen verlangt den Resolventen eines Volterra-Kerns, und den hat Mathlib
+  nicht.
+* **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert. Er ist durch diesen Lauf
+  **nicht** erledigt: `measurable_hawkesJumpTime` geht über die eingefrorenen Raten, die endliche
+  Summen sind, und umgeht die Rate als Funktional eines beliebigen maßwertigen `N` gerade.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`hawkesFiltration` und `isStoppingTime_hawkesJumpTime`: die Filtration der pfadabhängigen
+   Variante und die Sprungzeiten als Stoppzeiten.** Aussage: die von den Wartezeiten erzeugte
+   Filtration macht jede `hawkesJumpTime ν φ ω.2 ω n` zu einer Stoppzeit und den Prozeß stark
+   progressiv. Worauf sie ruht: `measurable_hawkesJumpTime` gibt die Meßbarkeit,
+   `measurable_uncurry_hawkesStepPath` die gemeinsame, und `jumpFiltrationE` samt
+   `jumpFiltrationE_inter_lt_rateTime` hat die Bauart im zustandsabhängigen Fall schon vorgeführt.
+   Warum jetzt: **jede** weitere Aussage über den Hawkes-Prozeß — Martingaleigenschaft, lokale
+   Lösung, `ex:hawkes` als Instanz von Meilenstein 9 — liest eine Filtration, und es gibt noch
+   keine. Prüfstein: die Sprungzeiten sind Stoppzeiten **ohne** Bedingung an `φ` über die vier
+   Datenbedingungen hinaus, so wie `measurable_hawkesJumpTime` ohne eine auskommt.
+2. **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, unverändert übernommen. Er
+   ist nach diesem Lauf zusätzlich dadurch gestützt, daß `setOf_rateInverse_le` jetzt ohne
+   Vorzeichenbedingung an das Niveau dasteht: die Fallunterscheidung, die `rateInverseE` beim
+   Übergang zu `⊤` ohnehin führen muß, hat damit ihre Entsprechung schon in der reellen Fassung.
+3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
