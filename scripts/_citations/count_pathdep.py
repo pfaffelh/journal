@@ -181,6 +181,19 @@ GROUPS = {
         "hawkesPathFiltration_le_hawkesFiltration",
         "not_isStoppingTime_hawkesJumpTime_pathFiltration",
     },
+    "G18 progressive measurability, and the compensating window": {
+        "measurable_uncurry_stepPath_pointFiltration",
+        "measurable_compensator_pointFiltration",
+        "measurable_uncurry_hawkesStepPath_hawkesFiltration",
+        "measurable_compensator_hawkesFiltration",
+    },
+    "G19 the generator of eq:pathgen, and the probe that it generalises": {
+        "jumpApplyF",
+        "jumpOperatorF",
+        "jumpApplyF_state",
+        "jumpOperatorF_state",
+        "mpFamilyF_jumpOperatorF_state",
+    },
 }
 
 

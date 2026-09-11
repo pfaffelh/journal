@@ -47,6 +47,16 @@ Laufbericht.
 * **`check_suggested.py`** typprüft die drei `Suggested.lean` gegen das fertig
   gebaute Mathlib des Hauptcheckouts und zählt Fehler und `sorry`. Es benutzt
   `lake --dir=…` statt `cd`.
+* **`check_axioms.py`** gibt die Axiomabhängigkeiten benannter Deklarationen
+  einer `Suggested.lean` aus. Jeder Lauf prüft seine neuen Deklarationen mit
+  `#print axioms`; bisher geschah das von Hand, indem die Zeilen an die Datei
+  angehängt und wieder entfernt wurden — ein Abbruch dazwischen hinterläßt die
+  Quelle verändert. Das Skript arbeitet auf einer Kopie neben der Quelle und
+  räumt sie in einem `finally` weg.
+
+  ```
+  python3 scripts/check_axioms.py MartingaleProblems isStoppingTime_jumpTime
+  ```
 
 `show_master.py` daneben zeigt Kontextzeilen aus `upstream/master` oder aus
 v4.33.1, ohne etwas auszuchecken:
