@@ -9261,6 +9261,55 @@ theorem naturalFiltration_inter_le {ι' : Type*} [Preorder ι'] {Ω' : Type*}
     exact ((measurable_naturalFiltration hX' hj) hu).inter hN
   exact hle A hA
 
+/-- **The same, over an arbitrary target σ-algebra**, and this is the form
+`martingale_of_martingale_of_stopped` actually consumes.  That theorem takes its two filtrations as
+*data* and asks of the second only that the process be a martingale for it; the second therefore
+need not be the natural filtration of the second process, and in an instance it usually is not --
+the stopped problem is solved on whatever filtration the unstopped one was built over.
+
+`naturalFiltration_inter_le` is this with `𝓗 = naturalFiltration X' hX' s`, by
+`measurable_naturalFiltration`.  Only two things are asked of `𝓗`: it contains `N`, and it makes
+every coordinate of `X'` below `s` measurable -- which is exactly "`X'` is adapted, read at the
+single index `s`".  Note that `X'` is *not* asked to be measurable for the ambient σ-algebra at
+all. -/
+theorem naturalFiltration_inter_le_of_measurable {ι' : Type*} [Preorder ι'] {Ω' : Type*}
+    {m' : MeasurableSpace Ω'} {F : Type*} [mF : MeasurableSpace F] {X : ι' → Ω' → F}
+    (hX : ∀ i, Measurable (X i)) {X' : ι' → Ω' → F} {𝓗 : MeasurableSpace Ω'} {s : ι'}
+    (hX'𝓗 : ∀ r ≤ s, Measurable[𝓗] (X' r)) {N : Set Ω'} (hN : MeasurableSet[𝓗] N)
+    (hagree : ∀ ω ∈ N, ∀ r ≤ s, X r ω = X' r ω)
+    {A : Set Ω'} (hA : MeasurableSet[naturalFiltration (m' := m') X hX s] A) :
+    MeasurableSet[𝓗] (A ∩ N) := by
+  set 𝓜 : MeasurableSpace Ω' :=
+    { MeasurableSet' := fun B ↦ MeasurableSet[𝓗] (B ∩ N)
+      measurableSet_empty := by
+        rw [Set.empty_inter]
+        exact @MeasurableSet.empty _ 𝓗
+      measurableSet_compl := fun B hB ↦ by
+        have hset : Bᶜ ∩ N = N \ (B ∩ N) := by
+          ext ω
+          simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_diff]
+          tauto
+        rw [hset]
+        exact hN.diff hB
+      measurableSet_iUnion := fun f hf ↦ by
+        rw [Set.iUnion_inter]
+        exact MeasurableSet.iUnion hf } with h𝓜
+  have hle : (naturalFiltration (m' := m') X hX s : MeasurableSpace Ω') ≤ 𝓜 := by
+    refine iSup₂_le ?_
+    rintro j hj B ⟨u, hu, rfl⟩
+    show MeasurableSet[𝓗] ((X j ⁻¹' u) ∩ N)
+    have hset : (X j ⁻¹' u) ∩ N = (X' j ⁻¹' u) ∩ N := by
+      ext ω
+      simp only [Set.mem_inter_iff, Set.mem_preimage]
+      constructor
+      · rintro ⟨h1, h2⟩
+        exact ⟨by rw [← hagree ω h2 j hj]; exact h1, h2⟩
+      · rintro ⟨h1, h2⟩
+        exact ⟨by rw [hagree ω h2 j hj]; exact h1, h2⟩
+    rw [hset]
+    exact ((hX'𝓗 j hj) hu).inter hN
+  exact hle A hA
+
 /-- **Below the level the truncated process is the process**, at every sample point and with no
 non explosion hypothesis: this is `jumpProcessE_eq_of_rate_eq_on_path` read for the truncation,
 the running supremum supplying the bound at every visited state at once. -/
@@ -16641,6 +16690,37 @@ theorem cumulativeRateF_truncRateF_le
     rw [hz]
     exact ha
 
+/-- **The cumulated mass of the truncated rate is the untruncated one capped at the level**, at
+every time and every sample point.  `cumulativeRateF_truncRateF_le` is the half of this that reads
+off `min_le_right`, and `cumulativeRateF_truncRateF_of_le` the half that reads off `min_eq_left`;
+the identity says there is nothing else.
+
+Where `cumulativeRateF_truncRateF` writes the truncated mass as the untruncated one **stopped** --
+an expression in which the hitting time still occurs -- this writes it as the untruncated one
+**capped**, and the hitting time has disappeared.  That is what makes it the statement `hcum` is
+really about: the truncated filtration cannot see `cumulativeRateF Λ · i`, because above the hitting
+time it is blind, but it need not -- above the hitting time the capped value is the constant `a`,
+and a constant is visible to every σ-algebra. -/
+theorem cumulativeRateF_truncRateF_eq_min
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (t : ℝ) :
+    cumulativeRateF (truncRateF Λ a) ω t = min (cumulativeRateF Λ ω t) a := by
+  rw [cumulativeRateF_truncRateF]
+  rcases le_total t (rateInverse Λ ω a) with h | h
+  · rw [min_eq_left h, eq_comm, min_eq_left_iff]
+    rcases le_total (0 : ℝ) t with ht | ht
+    · have hm := monotoneOn_cumulativeRateF hint hpos ht (rateInverse_nonneg Λ ω a) h
+      rwa [cumulativeRateF_rateInverse hint hpos htop ha] at hm
+    · have hz : cumulativeRateF Λ ω t = 0 := by
+        simp [cumulativeRateF, Set.Ioc_eq_empty (not_lt.2 ht)]
+      rw [hz]
+      exact ha
+  · rw [min_eq_right h, cumulativeRateF_rateInverse hint hpos htop ha, eq_comm, min_eq_right_iff]
+    have hm := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω a)
+      ((rateInverse_nonneg Λ ω a).trans h) h
+    rwa [cumulativeRateF_rateInverse hint hpos htop ha] at hm
+
 /-- **Up to the level it was truncated at, the two rates admit the same times.**  The set whose
 infimum both inverses are, and the statement the identification of the two problems is read off:
 the cumulated mass of the truncated rate is that of the original one stopped at the hitting time
@@ -18212,6 +18292,35 @@ theorem pointFiltrationE_inter_le {T T' : Ω → ℕ → ENNReal} {y : Ω → �
   simp only [jumpStateE]
   rw [hrecr, hpath ω hω r hr]
 
+/-- **The same, over an arbitrary target σ-algebra.**  `pointFiltrationE_inter_le` is this with
+`𝓗 = pointFiltrationE T' y hT' hy i`; the generalisation is
+`naturalFiltration_inter_le_of_measurable`, and what it asks of `𝓗` is that the **second** point
+process be adapted to it: `hstate`, its record and its path together.
+
+The point of the generalisation is that `martingale_of_martingale_of_stopped` takes the second
+filtration as data.  An instance solves the truncated problem over the filtration it already has,
+not over the natural filtration of the truncated jump times, and `T'` is then not even asked to be
+measurable for the ambient σ-algebra. -/
+theorem pointFiltrationE_inter_le_of_measurable {T T' : Ω → ℕ → ENNReal} {y : Ω → ℕ → E}
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    {𝓗 : Filtration ℝ≥0 (inferInstance : MeasurableSpace Ω)} {i : ℝ≥0}
+    (hstate : ∀ r ≤ i, Measurable[𝓗 i] (jumpStateE T' y r))
+    {N : Set Ω} (hN : MeasurableSet[𝓗 i] N)
+    (hrec : ∀ ω ∈ N, ∀ r ≤ i, ∀ n : ℕ,
+      (T ω n ≤ ((r : ℝ≥0) : ENNReal) ↔ T' ω n ≤ ((r : ℝ≥0) : ENNReal)))
+    (hpath : ∀ ω ∈ N, ∀ r ≤ i,
+      stepPath (T ω) (y ω) ((r : ℝ≥0) : ENNReal) = stepPath (T' ω) (y ω) ((r : ℝ≥0) : ENNReal))
+    {A : Set Ω} (hA : MeasurableSet[pointFiltrationE T y hT hy i] A) :
+    MeasurableSet[𝓗 i] (A ∩ N) := by
+  refine naturalFiltration_inter_le_of_measurable (measurable_jumpStateE hT hy)
+    (X' := fun r : ℝ≥0 ↦ jumpStateE T' y r) hstate hN (fun ω hω r hr ↦ ?_) hA
+  have hrecr : jumpRecordE T r ω = jumpRecordE T' r ω := by
+    funext n
+    simp only [jumpRecordE, decide_eq_decide]
+    exact hrec ω hω r hr n
+  simp only [jumpStateE]
+  rw [hrecr, hpath ω hω r hr]
+
 end PointFiltrationE
 
 section PathCut
@@ -18297,5 +18406,69 @@ theorem jumpFiltrationFE_hcut
     (measurableSet_lt_rateInverseE_of_adapted hint hpos htop ha (hcum i)) hA
 
 end PathCut
+
+/-!
+### `hcum`: what the truncated cumulated mass asks of a filtration
+
+`jumpFiltrationFE_hcut` leaves exactly one hypothesis to an instance: the cumulated mass of the
+**truncated** rate up to `i` is measurable for the past at `i`.  It looks like a statement about the
+truncated rate, and the truncated rate is a bad object -- it reads the hitting time, so it is not a
+measurable functional of anything the untruncated rate was, and `truncRateF_apply` carries an `if`
+whose condition compares the time to a hitting time that is not `𝓕 i`-measurable.
+
+`cumulativeRateF_truncRateF_eq_min` removes the object from the statement.  The truncated mass is
+the untruncated mass **capped at `a`**, and the hitting time has vanished from the expression; what
+is left is that the past sees `cumulativeRateF Λ · i`, which is the very hypothesis
+`isLocalizingSequence_rateInverseE` already asks of the untruncated problem.  So `hcum` is not a
+second obligation: **an instance that has localized at all has already met it**, up to the one point
+recorded below.
+-/
+
+section PathCutInstance
+
+/-- **A filtration that sees the cumulated rate sees the truncated one.**  `hcum` as a statement
+about rates, and the proof is one rewriting: `cumulativeRateF_truncRateF_eq_min` turns the truncated
+mass into the untruncated one capped at `a`, and capping a measurable function keeps it measurable.
+
+Nothing is carried through the integral.  The truncated rate is *not* measurable for the past at `i`
+-- its switch reads the hitting time of the level, which is a stopping time and not `𝓕 i`-measurable
+-- and no argument that truncates inside the window can work.  The identity works because above the
+hitting time the capped mass is the **constant** `a`, and a constant is visible to every
+σ-algebra. -/
+theorem measurable_cumulativeRateF_truncRateF {m : MeasurableSpace Ω} (c : ℝ)
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hpos : ∀ (w : Ω) (u : ℝ), 0 < u → 0 < Λ u w)
+    (htop : ∀ w : Ω, Tendsto (cumulativeRateF Λ w) atTop atTop) (ha : 0 ≤ a)
+    (hcum : Measurable[m] fun w : Ω ↦ cumulativeRateF Λ w c) :
+    Measurable[m] fun w : Ω ↦ cumulativeRateF (truncRateF Λ a) w c := by
+  have hrw : (fun w : Ω ↦ cumulativeRateF (truncRateF Λ a) w c)
+      = fun w : Ω ↦ min (cumulativeRateF Λ w c) a :=
+    funext fun w ↦ cumulativeRateF_truncRateF_eq_min (hint w) (hpos w) (htop w) ha c
+  rw [hrw]
+  exact hcum.min measurable_const
+
+/-- **`hcum` on the data of `ex:hawkes`, for the Hawkes filtration.**  The cumulated mass of the
+truncated Hawkes rate up to `i` is measurable for `hawkesFiltration i`, under nothing beyond the
+data and the local integrability of the self referential rate that every statement of the Hawkes
+assembly carries.
+
+It is the same term as `isLocalizingSequence_rateInverseE_hawkesSelfRate` runs on, with
+`measurable_cumulativeRateF_truncRateF` in front: the localization and the cut ask the filtration
+for **one** thing, not two. -/
+theorem measurable_cumulativeRateF_truncRateF_hawkesSelfRate {E : Type*} [MeasurableSpace E]
+    {ν : ℝ} {φ : ℝ → ℝ} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r)
+    (ha : 0 ≤ a) (i : ℝ≥0) :
+    Measurable[hawkesFiltration (E := E) hν hφ hφm hφint i]
+      fun w : (ℕ → E) × (ℕ → ℝ) ↦
+        cumulativeRateF (truncRateF (hawkesSelfRate ν φ) a) w ((i : ℝ≥0) : ℝ) :=
+  measurable_cumulativeRateF_truncRateF _ hint (fun w u _ ↦ hawkesSelfRate_pos hν hφ u w)
+    (fun w ↦ tendsto_cumulativeRateF_hawkesSelfRate (ω := w) hν hφ (hint w)) ha
+    (measurable_cumulativeRateF_of_uncurry_min i
+      (measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i))
+
+end PathCutInstance
 
 end PathDependent

@@ -3117,6 +3117,35 @@ A concrete family of solutions, built without any of the theory above. Index
     functional is the cumulated rate, and a path dependent rate is an arbitrary predictable
     functional with nothing tying it to the record and the path of the point process, so the
     adaptedness is a hypothesis of the statement and an obligation of each instance.
+  * `cumulativeRateF_truncRateF_eq_min`, `measurable_cumulativeRateF_truncRateF` and
+    `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`: **the truncated cumulated mass is the
+    untruncated one capped at the level, and that is all `hcum` ever was.** **In Lean** on
+    2026-09-11, twenty first run. `cumulativeRateF_truncRateF` writes the truncated mass as the
+    untruncated one **stopped** at the hitting time, an expression in which the hitting time still
+    occurs; `cumulativeRateF_truncRateF_eq_min` writes it as the untruncated one **capped** at `a`,
+    and the hitting time has vanished. Below the hitting time nothing was truncated, above it the
+    value is the constant `a`, and `cumulativeRateF_truncRateF_le` is the half of the identity that
+    reads off `min_le_right`.
+
+    What that buys is `measurable_cumulativeRateF_truncRateF`: a σ-algebra that sees
+    `cumulativeRateF Lam · i` sees `cumulativeRateF (truncRateF Lam a) · i`, by capping. The
+    truncated rate itself is *not* measurable for the past at `i` — its switch reads the hitting
+    time of the level, which is a stopping time and not `𝓕 i`-measurable — so no argument that
+    truncates inside the window can work; the identity works because a constant is visible to every
+    σ-algebra. `measurable_cumulativeRateF_truncRateF_hawkesSelfRate` is the instance on the data of
+    `ex:hawkes`, and it is the same term
+    `isLocalizingSequence_rateInverseE_hawkesSelfRate` runs on with the capping in front: **the
+    localization and the cut ask the filtration for one thing, not two.**
+  * `naturalFiltration_inter_le_of_measurable` and `pointFiltrationE_inter_le_of_measurable`: **the
+    cut over an arbitrary target filtration.** **In Lean** on 2026-09-11, twenty first run.
+    `martingale_of_martingale_of_stopped` takes its two filtrations as *data* and asks of the second
+    only the martingale property, so the second need not be the natural filtration of the truncated
+    jump times — an instance solves the truncated problem over the filtration it already has. What
+    the generalised statements ask of the target `𝓗` is that the **second** point process be
+    adapted to it — `hstate`, its record and its path together; `T'` is then not even asked to be
+    measurable for the ambient σ-algebra. The
+    unprimed statements are the special case `𝓗 = pointFiltrationE T' y hT' hy i`, by
+    `measurable_naturalFiltration`.
   * `hawkesFiltration_eq_jumpFiltrationFE` and `hawkes_isLocalMPSolution`: **the Hawkes process
     solves its martingale problem locally.** `hawkesFiltration` is built over the jump times the
     **recursion** returns and `jumpFiltrationFE` over the jump times the martingale problem
@@ -3125,10 +3154,19 @@ A concrete family of solutions, built without any of the theory above. Index
     A filtration is not an almost sure notion, so the identification is an equality at every sample
     point and the hypothesis is carried at every sample point; this is the same gap
     `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` records for the law of the first jump time, one
-    floor up. With it and `measurable_cumulativeRateF_truncRateF_hawkes` — the `hcum` of
-    `jumpFiltrationFE_hcut` on the Hawkes data, whose untruncated half is
-    `measurable_uncurry_hawkesSelfRate_hawkesFiltration` — the four inputs of
-    `martingale_of_martingale_of_stopped` are complete.
+    floor up.
+
+    The cut runs over `pointFiltrationE_inter_le_of_measurable` with `𝓗 = hawkesFiltration`, not
+    over the natural filtration of the truncated jump times, and it has three inputs. Two stand:
+    `hrec` and `hpath` are `jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE` and
+    `jumpProcessFE_truncRateF_eq_of_le_rateInverseE`, and `hN` is
+    `measurableSet_lt_rateInverseE_of_adapted` fed by
+    `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`. The third is
+    `measurable_jumpStateE_truncRateF_hawkesFiltration`: **the truncated Hawkes point process is
+    adapted to the Hawkes filtration.** It is read off `{T'_n ≤ r} = {T_n ≤ r} ∩ {T_n ≤ R}`, where
+    `R` is the hitting time of the level, `min r R` is measurable for the past at `r`
+    (`isStoppingTime_rateInverseE_hawkesSelfRate`) and `T_n` is a stopping time. With it the four
+    inputs of `martingale_of_martingale_of_stopped` are complete.
 
     The global statement carries `(hN : ∀ t, 𝔼[N t] < ∞)` as a **hypothesis** and does not prove
     it. For the linear Hawkes process it is true, by the renewal equation `m = μ₀ + φ * m` and the

@@ -23055,3 +23055,116 @@ Filtrationen und Schrittpfade sind und über keine Konstruktion.
    `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch `push Not`, dort wo v4.33.1 es
    meldet. `PathInverseMeasurable`, `PointFiltrationE` und `PathCut` halten die Regel ein und melden
    keine einzige Warnung.
+
+### 2026-09-11, einundzwanzigster Lauf des Tages — `hcum` ist keine zweite Pflicht: die gestutzte kumulierte Masse ist die ungestutzte, gedeckelt; und der Schnitt läuft über eine beliebige Zielfiltration
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des zwanzigsten Laufs
+(`measurable_cumulativeRateF_truncRateF_hawkes` — das `hcum` von `jumpFiltrationFE_hcut` auf den
+Hawkes-Daten). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Fünf Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, zwei davon in einem neuen
+Abschnitt `PathCutInstance`. Die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen
+v4.33.1, alle fünf mit `scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound`
+geprüft (rc 0), die Zahl der `sorry` bleibt bei **neun**. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+`cumulativeRateF_truncRateF_eq_min`, `measurable_cumulativeRateF_truncRateF`,
+`measurable_cumulativeRateF_truncRateF_hawkesSelfRate`, `naturalFiltration_inter_le_of_measurable`,
+`pointFiltrationE_inter_le_of_measurable`.
+
+#### Der Befund des Laufs: die gestutzte kumulierte Masse ist die ungestutzte, **gedeckelt**
+
+`cumulativeRateF_truncRateF`, seit dem fünfzehnten Lauf, schreibt die gestutzte Masse als die
+ungestutzte, **gestoppt** an der Trefferzeit — ein Ausdruck, in dem die Trefferzeit noch vorkommt.
+`cumulativeRateF_truncRateF_eq_min` schreibt sie als die ungestutzte, **gedeckelt** bei `a`:
+
+> `cumulativeRateF (truncRateF Λ a) ω t = min (cumulativeRateF Λ ω t) a`
+
+und die Trefferzeit ist aus dem Ausdruck verschwunden. Unterhalb der Trefferzeit wurde nichts
+gestutzt, oberhalb ist der Wert die Konstante `a`; `cumulativeRateF_truncRateF_le` ist die Hälfte
+der Identität, die man an `min_le_right` abliest, `cumulativeRateF_truncRateF_of_le` die an
+`min_eq_left`.
+
+**Damit ist `hcum` keine zweite Verpflichtung.** `measurable_cumulativeRateF_truncRateF` sagt: eine
+σ-Algebra, die `cumulativeRateF Λ · i` sieht, sieht `cumulativeRateF (truncRateF Λ a) · i` — durch
+Deckeln. Das ist genau die Voraussetzung, die `isLocalizingSequence_rateInverseE` der *ungestutzten*
+Filtration ohnehin abverlangt; wer lokalisiert hat, hat `hcum` schon.
+
+**Warum kein Beweis im Fenster geht, und das ist der eigentliche Inhalt.** Die gestutzte Rate selbst
+ist für die Vergangenheit bei `i` **nicht** meßbar: ihr Schalter liest die Trefferzeit des Pegels,
+und die ist eine Stoppzeit und nicht `𝓕 i`-meßbar. Der naheliegende Weg — `truncRateF Λ a` in die
+gemeinsame Meßbarkeit von `measurable_cumulativeRateF_of_uncurry_min` einsetzen — scheitert an
+dieser Stelle und nicht an einer Beweistechnik. Die Identität trägt, weil oberhalb der Trefferzeit
+der gedeckelte Wert eine **Konstante** ist, und eine Konstante sieht jede σ-Algebra. Der Prüfstein
+des zwanzigsten Laufs („die gestutzte Rate liest die Sprungzeiten des ungestutzten Prozesses — ist
+das ein Zirkel?") fällt damit zugunsten der Identität aus: die Sprungzeiten kommen gar nicht vor.
+
+`measurable_cumulativeRateF_truncRateF_hawkesSelfRate` ist die Instanz auf den Daten von
+`ex:hawkes` und derselbe Term, auf dem `isLocalizingSequence_rateInverseE_hawkesSelfRate` läuft, mit
+dem Deckeln davor — `measurable_uncurry_hawkesSelfRate_hawkesFiltration` und
+`measurable_cumulativeRateF_of_uncurry_min`. Nichts über den Fixpunkt, nichts über die
+Nichtexplosion.
+
+#### Der zweite Befund, und er ist eine Berichtigung an der eigenen Aussage
+
+**Die so bewiesene Instanz erfüllt `jumpFiltrationFE_hcut` noch nicht**, und der Grund ist nicht
+technisch. `jumpFiltrationFE_hcut` verlangt `hcum` für `jumpFiltrationFE (truncRateF Λ a) hT'` — die
+Punktfiltration der **gestutzten** Sprungzeiten —, bewiesen ist es für `hawkesFiltration`. Die
+beiden sind **unvergleichbar**, in beide Richtungen:
+
+* Die gestutzte Filtration ist oberhalb der Trefferzeit blind — alle gestutzten Sprungzeiten sind
+  dort `⊤` (`jumpTimeFE_truncRateF_eq_top`) —, also sieht sie die Sprungzeiten des ungestutzten
+  Prozesses oberhalb der Trefferzeit nicht, und damit `cumulativeRateF Λ · i` nicht.
+* Umgekehrt ist `{T'_n ≤ r}` gleich `{T_n ≤ r} ∩ {T_n < R}`, und das zweite Ereignis liest die
+  ungestutzte Punktfiltration nicht ab.
+
+Der Ausweg ist nicht, die eine Filtration in die andere zu zwingen, sondern hinzusehen, was
+`martingale_of_martingale_of_stopped` wirklich verlangt: **es nimmt seine beiden Filtrationen als
+Daten** (`{𝓖 𝓗 : Filtration ℝ≥0 m}`, `Suggested.lean:10559`) und fragt von der zweiten nur die
+Martingaleigenschaft. Die zweite muß also gar nicht die natürliche Filtration der gestutzten
+Sprungzeiten sein — eine Instanz löst das gestutzte Problem über der Filtration, die sie ohnehin hat.
+
+`naturalFiltration_inter_le_of_measurable` und `pointFiltrationE_inter_le_of_measurable` sind die
+Verallgemeinerung. Der Beweis ist der alte, Zeile für Zeile: die Familie `{A | A ∩ N ∈ 𝓗}` ist eine
+σ-Algebra, sobald `N ∈ 𝓗`, und die Erzeuger gehen hinein, sobald jede Koordinate von `X'` unterhalb
+von `s` für `𝓗` meßbar ist. Verlangt wird von `𝓗` also genau **die Adaptiertheit des zweiten
+Prozesses** und sonst nichts; `X'` wird nicht einmal für die Umgebungs-σ-Algebra meßbar verlangt.
+Die alten Fassungen sind der Sonderfall `𝓗 = naturalFiltration X' hX' s`.
+
+Damit steht die Hawkes-Instanz auf **drei** Eingaben, und zwei davon sind fertig: `hrec`/`hpath`
+(achtzehnter und zwanzigster Lauf) und `hN` — das ist `measurableSet_lt_rateInverseE_of_adapted`
+mit `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`, also seit heute. Offen ist `hstate`.
+
+#### Eine Einzelheit, die einen Lauf kosten kann
+
+**Ein freier Term vom Typ `MeasurableSpace Ω` im Kontext wird von der Instanzensuche gefunden**, ob
+er als Instanz gebunden ist oder nicht. Eine Aussage über eine Ziel-σ-Algebra
+`{𝓗 : MeasurableSpace Ω}` neben dem Abschnitts-`[MeasurableSpace Ω]` läßt jedes `Measurable`-Lemma
+im Beweis auf `𝓗` elaborieren („synthesized type class instance is not definitionally equal to
+expression inferred by typing rules"). Der Ausweg ist, die Ziel-σ-Algebra als
+`{𝓗 : Filtration ℝ≥0 _}` zu führen und `𝓗 i` zu schreiben: eine `Filtration` ist kein Klassentyp,
+also tritt sie nicht in die Instanzensuche ein. Der zweite Teil desselben Auswegs ist, die
+Adaptiertheit als **eine** Hypothese `hstate` zu verlangen statt sie im Beweis aus
+`measurable_pi_lambda` und `measurable_to_bool` zusammenzusetzen — dort schlägt dieselbe Suche noch
+einmal zu, und zwar auf der Domäne.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`measurable_jumpStateE_truncRateF_hawkesFiltration`** — die Adaptiertheit des gestutzten
+   Hawkes-Punktprozesses an `hawkesFiltration`, also das `hstate` von
+   `pointFiltrationE_inter_le_of_measurable`. **Warum jetzt:** es ist nach diesem Lauf die
+   **einzige** noch offene Eingabe des Schnitts. **Worauf sie ruht:**
+   `jumpTimeFE_truncRateF_eq_of_le` und `jumpTimeFE_truncRateF_eq_top` geben
+   `{T'_n ≤ r} = {T_n ≤ r} ∩ {T_n ≤ R}`, und beide Seiten sind für `hawkesFiltration r` meßbar,
+   weil `min r R` es ist (`isStoppingTime_rateInverseE_hawkesSelfRate` samt
+   `IsStoppingTime.min_const` und `measurable_of_le`, so wie
+   `measurable_min_jumpTime_pointFiltration` es für die Sprungzeit tut) und `T_n` eine Stoppzeit
+   ist. **Prüfstein:** `T_n ≤ min r R` ist *nicht* dasselbe wie `min T_n r ≤ min r R` — bei
+   `T_n > r` und `r ≤ R` ist die zweite wahr und die erste falsch; der Schnitt mit `{T_n ≤ r}` ist
+   zu führen und nicht wegzulassen.
+2. **`hawkesFiltration_eq_jumpFiltrationFE`**, unverändert aus dem zwanzigsten Lauf, mit der
+   Voraussetzung, die der Fixpunkt trägt, ausdrücklich im Doc-Kommentar.
+3. **`hawkes_isLocalMPSolution`** als Zusammenbau, und die globale Fassung mit
+   `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   zwanzigsten Laufs, unverändert.
