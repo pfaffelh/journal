@@ -162,6 +162,25 @@ GROUPS = {
         "measurable_hawkesJumpTime",
         "measurable_uncurry_hawkesStepPath",
     },
+    "G16 the filtration of a point process": {
+        "jumpRecord",
+        "measurable_jumpRecord",
+        "jumpState",
+        "measurable_jumpState",
+        "pointFiltration",
+        "measurableSet_record",
+        "isStoppingTime_jumpTime",
+        "measurable_stepPath_pointFiltration",
+    },
+    "G17 the Hawkes filtration, and the path filtration it replaces": {
+        "measurable_hawkesJumpTime_apply",
+        "hawkesFiltration",
+        "isStoppingTime_hawkesJumpTime",
+        "measurable_hawkesStepPath_hawkesFiltration",
+        "hawkesPathFiltration",
+        "hawkesPathFiltration_le_hawkesFiltration",
+        "not_isStoppingTime_hawkesJumpTime_pathFiltration",
+    },
 }
 
 

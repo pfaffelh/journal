@@ -2519,6 +2519,55 @@ A concrete family of solutions, built without any of the theory above. Index
     division as in the state dependent local construction, where
     `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE` is stated about the *stopped* process
     because the unstopped one is not right continuous at an explosive sample point.
+  * `pointFiltration` and `isStoppingTime_jumpTime`: **the natural filtration of a point process,
+    and its jump times are stopping times for it.** **In Lean** on 2026-09-11, tenth run, with
+    `jumpRecord`, `measurable_jumpRecord`, `jumpState`, `measurable_jumpState` and
+    `measurableSet_record`. `jumpRecord T i ω n` says whether the `n`-th jump has happened by the
+    time `i`; that boolean family is the counting process of `T` in the form `naturalFiltration`
+    accepts, and `jumpState` pairs it with the path, because the record alone does not see the
+    marks. The level set `{ofReal (T n) ≤ i}` is the `n`-th coordinate of the record read back, so
+    the stopping time property is the definition and nothing more. Nothing is asked of the family
+    `T` beyond the measurability of each `T n`: not monotonicity, not non explosion, and not
+    positivity — a negative jump time is sent to `0` by `ENNReal.ofReal` and lies below every
+    `i : ℝ≥0` in the real order as well, so the two descriptions agree there too.
+  * `hawkesFiltration`, `isStoppingTime_hawkesJumpTime` and
+    `not_isStoppingTime_hawkesJumpTime_pathFiltration`: **the filtration of the Hawkes process is
+    the one its own counting measure generates, and the filtration of the path will not do.** **In
+    Lean** on 2026-09-11, tenth run, with `measurable_hawkesJumpTime_apply`,
+    `measurable_hawkesStepPath_hawkesFiltration`, `hawkesPathFiltration` and
+    `hawkesPathFiltration_le_hawkesFiltration`.
+
+    `not_isStoppingTime_min_jumpTimeE` is the obstruction of the state dependent case, and it is not
+    an artefact of that case: a constant chain gives a constant path, so the waiting times leave no
+    trace in the filtration the path generates, while the jump times read them. The state dependent
+    repair was to localize with `rateSup`, a functional of the path; the path dependent case cannot
+    do that and has to **count**, which is what `ex:hawkes` prescribes anyway — its rate is written
+    against the counting measure of the past events, so that is the filtration it is predictable
+    for.
+
+    The two statements that make this a finding and not a definition:
+    `hawkesPathFiltration_le_hawkesFiltration` says the filtration of the path sits inside the new
+    one at every index, so the enlargement loses nothing; and
+    `not_isStoppingTime_hawkesJumpTime_pathFiltration` says the inclusion is strict where it
+    matters, the first jump time not being a stopping time for the smaller one. The witness is the
+    one of `not_isStoppingTime_min_jumpTimeE` and it is **cheaper** here, because
+    `hawkesJumpTime_one` is unconditional in `φ`: the constant chain at `x₀` with constant waiting
+    times `ν / 4` and `ν` has first jump times `1 / 4` and `1`, separated by the threshold `1 / 2`,
+    while both paths are constantly `x₀` at *every* time. Both waiting times are strictly positive,
+    so neither sample point is degenerate, and nothing about `φ` enters.
+
+    Non explosion does not enter either, and that is the second half of the finding: the record
+    counts the jumps whether or not they accumulate, so the stopping time property is free of the
+    one hypothesis this whole branch carries.
+  * `measurable_uncurry_hawkesStepPath_hawkesFiltration`: **the step path over the Hawkes jump times
+    is progressively measurable for the Hawkes filtration.** For every measurable `h : E → ℝ` and
+    every `i : ℝ≥0`, the map `(r, ω) ↦ h (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (min r i))` is
+    measurable for the product of the Borel σ-algebra of `ℝ≥0` with `hawkesFiltration … i`. It rests
+    on `measurable_stepPath_pointFiltration`, which is the same statement at a single time, and on
+    the right continuity of step paths, which reduces the time variable to the rationals — the route
+    `measurable_uncurry_jumpProcess` takes in the state dependent case. This is the input `mpFamily`
+    asks of a process, and the compensator of the path dependent variant is written with it. It
+    carries no condition on `φ` beyond the four conditions on the data of `ex:hawkes`.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,

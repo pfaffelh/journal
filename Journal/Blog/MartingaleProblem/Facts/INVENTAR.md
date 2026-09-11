@@ -21017,3 +21017,146 @@ Artefakt, das auf Ungeschriebenes zeigt.
    Vorzeichenbedingung an das Niveau dasteht: die Fallunterscheidung, die `rateInverseE` beim
    Übergang zu `⊤` ohnehin führen muß, hat damit ihre Entsprechung schon in der reellen Fassung.
 3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
+
+### 2026-09-11, zehnter Lauf des Tages — die Filtration der pfadabhängigen Variante steht, und sie kann nicht die des Pfades sein: der Hawkes-Prozeß muß zählen, wo der zustandsabhängige sein Ratensupremum lesen konnte
+
+**Bearbeitet:** Teil C, die **pfadabhängige Variante**, Vorschlag 1 des neunten Laufs — die
+Filtration und die Sprungzeiten als Stoppzeiten. Beides steht. Vorschlag 2 (`rateInverseE`) und
+Vorschlag 3 (`hawkesRate_measurable`) bleiben offen und stehen unverändert.
+
+**Fünfzehn neue Deklarationen** im neuen Abschnitt `PointFiltration` und im Abschnitt
+`HawkesProcess` von `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne einen
+Fehler** durch `lake env lean` gegen v4.33.1 (Lean 4.33.1, commit `819816b2`), alle fünfzehn mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt
+bei **neun**. `scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` rc 0,
+0 Fehler, 9 `sorry`; für `SkorokhodSpace/Suggested.lean` rc 0, 0 Fehler; für
+`WeakConvergence/Suggested.lean` weiterhin die zwei bewußt gegen `master` geschriebenen Fehler —
+also **kein Rückschritt**. `scripts/check_citations.py` meldet unverändert dieselben zwei
+Auffälligkeiten. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Befund des Laufs: der zustandsabhängige Ausweg steht der pfadabhängigen Variante nicht offen
+
+Der siebzehnte Lauf des 2026-09-09 hatte mit `not_isStoppingTime_min_jumpTimeE` festgehalten, daß
+die Sprungzeiten **keine** Stoppzeiten für die natürliche Filtration des Prozesses sind: eine
+konstante Kette gibt einen konstanten Pfad, und die Wartezeiten hinterlassen in ihm keine Spur. Die
+Reparatur war dort `rateSup`, das laufende Ratensupremum — ein **Funktional des Pfades**, und darum
+für die Filtration sichtbar.
+
+**Dieser Ausweg steht hier nicht offen, und das ist kein Zufall.** `rateSup` ist sichtbar, weil die
+Rate eine Funktion des *Zustands* ist; der Pfad trägt den Zustand, also trägt er die Rate. Die
+Hawkes-Rate ist ein Funktional der **Ereigniszeiten**, und die stehen im Pfad genau dann, wenn der
+Pfad bei jedem Sprung den Wert wechselt — was er bei konstanter Kette nicht tut.
+
+Der Ausweg ist statt dessen der, den `ex:hawkes` ohnehin vorschreibt: die Rate ist gegen das
+**Zählmaß der vergangenen Ereignisse** geschrieben, also ist die Filtration, für die sie prädiktabel
+ist, die von diesem Zählmaß erzeugte. `jumpRecord T i ω n` ist dieses Zählmaß in der Gestalt, die
+`naturalFiltration` annimmt: die boolesche Familie „der `n`-te Sprung ist bis `i` geschehen".
+`jumpState` paart sie mit dem Pfad, denn das Protokoll allein sieht die Marken nicht.
+
+**Zwei Aussagen machen daraus einen Befund und nicht eine Definition.**
+`hawkesPathFiltration_le_hawkesFiltration` sagt, daß die Filtration des Pfades an **jedem** Index in
+der neuen liegt — die Vergrößerung verliert also nichts —, und
+`not_isStoppingTime_hawkesJumpTime_pathFiltration` sagt, daß sie an der einzigen Stelle, an der es
+darauf ankommt, echt ist. Der Zeuge ist der von `not_isStoppingTime_min_jumpTimeE` und hier
+**billiger**, weil `hawkesJumpTime_one` von `φ` gar nichts verlangt: die konstante Kette bei `x₀`
+mit den konstanten Wartezeiten `ν / 4` und `ν` hat die ersten Sprungzeiten `1 / 4` und `1`, die die
+Schwelle `1 / 2` trennt, während beide Pfade zu **jeder** Zeit konstant `x₀` sind. Beide Wartezeiten
+sind echt positiv, also ist kein Stichprobenpunkt entartet.
+
+#### Was die neue Filtration nicht verlangt, und das ist die zweite Hälfte
+
+**Die Nichtexplosion kommt nicht vor.** Das Protokoll zählt die Sprünge, ob sie sich häufen oder
+nicht; `isStoppingTime_jumpTime` verlangt von der Familie `T` nichts als die Meßbarkeit jedes
+`T n` — keine Monotonie, keine Nichtexplosion, keine Positivität. Die Positivität fällt weg, weil
+`ENNReal.ofReal` eine negative Sprungzeit auf `0` schickt und eine negative Sprungzeit auch in der
+reellen Ordnung unter jedem `i : ℝ≥0` liegt; beide Beschreibungen stimmen dort also ebenfalls
+überein. Das ist bemerkenswert, weil die lokale Integrierbarkeit der selbstbezüglichen Rate die
+**einzige** getragene Voraussetzung dieses Zweiges ist (neunter Lauf) — und dieser Schritt kommt
+ohne sie aus.
+
+Der Grund, und er ist derselbe wie beim Zählmaß: `stepIndex` gibt jenseits der Explosion den
+Müllwert `0`, das Protokoll aber nicht — es liest jede Sprungzeit einzeln und nicht ihr Supremum.
+Ein Protokoll über den `stepIndex` hätte die Voraussetzung gebraucht.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py`, um zwei Gruppen ergänzt:
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G16 die Filtration eines Punktprozesses | 8 | 50 |
+| G17 die Hawkes-Filtration, und die Pfadfiltration, die sie ersetzt | 7 | 86 |
+
+Der Abschnitt `PathDependent` steht jetzt bei **914 Codezeilen in 119 Deklarationen** (vorher 779 in
+104), 1645 Zeilen mit Dokumentation. Der Preis der **negativen** Hälfte ist ablesbar: mehr als die
+Hälfte der 86 Zeilen von G17 geht auf `hawkesPathFiltration` und
+`not_isStoppingTime_hawkesJumpTime_pathFiltration` — also darauf, zu zeigen, daß die **andere**
+Filtration es nicht tut.
+
+**Neu gebraucht aus Mathlib, jeder am Quelltext belegt** (v4.33.1) **und keiner `deprecated`:**
+`measurable_to_bool` (`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:86`),
+`Bool.instMeasurableSpace` (`Mathlib/MeasureTheory/MeasurableSpace/Instances.lean:26`, das `⊤`),
+`ENNReal.ofReal_coe_nnreal`, `measurable_pi_lambda`, `MeasurableSet.congr`,
+`measurableSet_singleton`, `Set.mem_ofPred_eq`.
+
+#### Drei Fallen, und die dritte ist ein Befund über unser eigenes Werkzeug
+
+* **`ℝ≥0∞` ist in dieser Datei keine Schreibweise.** `Suggested.lean` öffnet `NNReal` und **nicht**
+  `ENNReal`, also ist `ℝ≥0∞` im Quelltext ein Parserfehler („expected token"), obwohl der ganze
+  Prosateil der Datei so schreibt. Zu schreiben ist `ENNReal`. Im kleinen Testrahmen fiel das nicht
+  auf, weil der `open scoped NNReal ENNReal` hatte — **der Testrahmen muß die `open`-Zeilen der
+  Zieldatei übernehmen und nicht die bequemen.**
+* **`decide (x ≤ y)` über `ℝ` ist nicht berechenbar.** `jumpRecord` braucht `noncomputable`, weil
+  `Real.decidableLE` es ist. Auch das fiel im Testrahmen nicht auf, weil dort ein
+  `noncomputable section` stand.
+* **`scripts/check_suggested.py` hat diesen Fehler nicht gesehen**, und das ist der Befund. Lean
+  meldet ihn als `error(lean.dependsOnNoncomputable):`, das Skript filterte auf `error:` mit
+  Doppelpunkt — der getaggte Fehler fiel durch, das Skript meldete **0 Fehler bei rc 1**. Berichtigt:
+  der Filter nimmt jetzt `error:` **oder** `error(`. Ein Prüfskript, das rc und Fehlerzahl
+  widersprechen läßt, ist schlimmer als keines; daß rc 1 bei 0 Fehlern auffiel, war Glück und keine
+  Prüfung.
+
+#### Eine Auffälligkeit für Teil D: in unseren eigenen Lean-Dateien stehen `deprecated`-Namen
+
+Beim Durchlauf fielen Verfallswarnungen an, die nicht von Mathlib kommen, sondern von uns.
+`scripts/check_citations.py` sieht sie nicht: es prüft die **zitierten** Namen der Roadmaps, nicht
+die in den Beweisen benutzten.
+
+| Name | Ersatz | Vorkommen in `MartingaleProblems` / `SkorokhodSpace` / `WeakConvergence` |
+| --- | --- | --- |
+| `Set.mem_setOf_eq` (`deprecated` seit 2026-07-09, `Mathlib/Data/Set/Operations.lean:82`) | `Set.mem_ofPred_eq` | 23 / 2 / 4 |
+| `push_neg` (Taktik) | `push Not` | 17 / 12 / 1 |
+| `Measurable.comp'` | `Measurable.fun_comp` | 1 / 0 / 0 |
+
+Das ist kein Fehler — die Aliase gelten —, aber es ist genau die Sorte Bindung an einen
+verschwindenden Namen, die Teil D an den **Zitaten** prüft und an den **Beweisen** bisher nicht. Die
+neuen Deklarationen dieses Laufs benutzen `Set.mem_ofPred_eq`. Der Rest ist nicht umgeschrieben
+worden: das wären 59 Stellen in Beweisen, die heute durchgehen, und ein Lauf, der sie anfaßt, sollte
+nichts anderes tun.
+
+#### Was offen blieb
+
+* **Die Martingaleigenschaft des Hawkes-Prozesses.** Die Filtration steht jetzt, und mit ihr das
+  erste Objekt, an dem `mpFamily` für die pfadabhängige Variante überhaupt gelesen werden kann. Was
+  fehlt, ist die gemeinsame Meßbarkeit gegen `𝓕 i` — nicht gegen `m` —, also das Gegenstück zu
+  `measurable_uncurry_jumpProcess`. Siehe Vorschlag 1.
+* **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, unverändert.
+* **Die lokale Integrierbarkeit der Hawkes-Rate längs des konstruierten Pfades** — die
+  Nichtexplosion. Unverändert. Sie einzulösen verlangt den Resolventen eines Volterra-Kerns, und den
+  hat Mathlib nicht.
+* **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`measurable_uncurry_hawkesStepPath_hawkesFiltration`: die progressive Meßbarkeit des
+   Hawkes-Prozesses.** Aussage: `fun (r, ω) ↦ h (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1
+   (min r i))` ist meßbar für `Borel ℝ≥0 ⊗ 𝓕 i`, mit `𝓕 = hawkesFiltration`. Worauf sie ruht:
+   `measurable_stepPath_pointFiltration` gibt die Meßbarkeit zu **einer** Zeit gegen `𝓕 i`, und
+   `measurable_uncurry_jumpProcess` hat die Bauart im zustandsabhängigen Fall vorgeführt — dort über
+   die Rechtsstetigkeit der Pfade und die Reduktion auf rationale Zeiten. Warum jetzt: das ist die
+   **einzige** Eingabe, die `mpFamily` von einem Prozeß verlangt und die die pfadabhängige Variante
+   noch nicht hat; ohne sie ist der Kompensator nicht einmal hinschreibbar. Prüfstein: die Aussage
+   trägt keine Bedingung an `φ` über die vier Datenbedingungen hinaus, so wie
+   `measurable_stepPath_pointFiltration` keine trägt.
+2. **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, unverändert übernommen.
+3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
