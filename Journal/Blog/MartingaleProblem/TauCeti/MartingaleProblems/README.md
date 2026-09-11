@@ -2625,6 +2625,64 @@ A concrete family of solutions, built without any of the theory above. Index
     compensating *integrals* agree and every statement about a test process is unaffected; but the
     integrands are different functions, and `jumpApplyF` is not literally `eq:pathgen`. Which of the
     two a proof needs is a question about the compensator, not about the generator.
+  * `countingMeasure_eq_map_count`, `integral_countingMeasure_eq_integral_count`,
+    `indicator_Ico_min_right`, `measurable_min_jumpTime_pointFiltration` and
+    `measurable_uncurry_pointRate_pointFiltration`: **a rate that reads the past of a point process
+    is jointly measurable for that past.** **In Lean** on 2026-09-11, twelfth run. For every
+    measurable `ψ : ℝ → ℝ` and every `i : ℝ≥0`, the map
+    `(s, ω) ↦ ∫ u in Set.Ico 0 (min s i), ψ (min s i − u) ∂(countingMeasure (T ω))` is measurable
+    for the product of the Borel σ-algebra of `ℝ≥0` with `pointFiltration T y … i`. This is the
+    input `mpFamilyF` asks and `mpFamily` never had to ask, because the compensating integrand of
+    `mpFamilyF` carries the rate itself.
+
+    Two obstructions, and they are independent of each other. The **integrating measure moves with
+    the sample point**, so `stronglyMeasurable_integral_comp`, which asks for one fixed measure,
+    does not reach it: `countingMeasure_eq_map_count` writes `countingMeasure T` as the pushforward
+    of the counting measure of `ℕ` along `k ↦ T (k + 1)`, and
+    `integral_countingMeasure_eq_integral_count` turns the window integral into an integral over the
+    **stages**, against a measure that does not move. And the **past at `i` may not be read beyond
+    `i`**: `T ω n` is not measurable for `pointFiltration T y … i`, only `min (T ω n) i` is, which
+    is `measurable_min_jumpTime_pointFiltration` out of `isStoppingTime_jumpTime`,
+    `IsStoppingTime.min_const` and `IsStoppingTime.measurable_of_le`; and
+    `indicator_Ico_min_right` says that the window integrand cannot tell the two apart, because a
+    time above `i` lies outside every `Set.Ico 0 u` with `u ≤ i`, and so does `i` itself.
+
+    **The stagewise rewriting costs no integrability hypothesis at all**, and that is what makes the
+    statement hold at an explosive sample point: `integral_map` is an identity between two Bochner
+    integrals, so it carries the junk value `0` of a non integrable integrand across as faithfully
+    as it carries a genuine integral. At a sample point at which the jumps accumulate below `i` the
+    window really does contain infinitely many of them and the integral really is that junk value,
+    and the statement holds there as well. Neither monotonicity of `T` nor non explosion enters.
+
+    **One hypothesis beyond those of `isStoppingTime_jumpTime`, and it is not cosmetic:**
+    `0 ≤ T ω (n + 1)`, the non negativity of the jumps. The filtration cannot see the negative half
+    line at all — `ENNReal.ofReal` collapses it to `0` — while `0` is **inside** every window
+    `Set.Ico 0 u` with `u > 0`. A point process with a jump strictly before the origin has a rate
+    that is not adapted to its own record. It is asked of the jumps `T 1, T 2, …` only: `T 0` is
+    where the path starts and not a jump of it, and `countingMeasure` does not carry it.
+  * `measurable_compensator_of_uncurry_min`: **a compensating window is measurable for the past as
+    soon as its integrand is.** **In Lean** on 2026-09-11, twelfth run. For every `W : ℝ → Ω → ℝ`
+    whose truncation `(s, ω) ↦ W (min s t) ω` is measurable for `Borel ℝ≥0 ⊗ 𝓕 t`, the map
+    `ω ↦ ∫ u in Q.interval c ⊥ t, W u ω ∂Q.q` is measurable for `𝓕 t`. It is
+    `measurable_compensator_pointFiltration` with the step path replaced by an arbitrary integrand,
+    and that replacement is what `mpFamilyF` forces: the integrand of `mpFamily` is a function of
+    the state, the integrand of `mpFamilyF` is not, so the statement has to be made about the
+    integrand and not about the process. The truncation is free on the window, because the window
+    ends at `t` (`Clock.interval_subset_Iic`), and it is exactly what `Clock.IsProgressive`
+    supplies.
+  * `measurable_uncurry_hawkesSelfRate_hawkesFiltration`,
+    `measurable_uncurry_hawkesJumpApplyF_hawkesFiltration` and
+    `measurable_compensator_hawkesJumpApplyF_hawkesFiltration`: **the Hawkes instance of the two
+    previous points, and the two inputs a test process of `mpFamilyF` is built from.** **In Lean**
+    on 2026-09-11, twelfth run. The first is `measurable_uncurry_pointRate_pointFiltration` at the
+    Hawkes jump times, which are measurable by `measurable_hawkesJumpTime_apply` and non negative by
+    `hawkesJumpTime_nonneg`; it is one term and carries nothing beyond the four conditions on the
+    data of `ex:hawkes`, in particular neither the fixed point nor the non explosion. The second
+    multiplies it by `measurable_uncurry_hawkesStepPath_hawkesFiltration`: at a jump kernel that
+    does not read the past — the case of `ex:hawkes`, where only the *rate* is self exciting —
+    `jumpApplyF` is that product. The third is `measurable_compensator_of_uncurry_min` applied to
+    it, and with it every ingredient of `mpFamilyF (jumpOperatorF (hawkesSelfRate ν φ) …) …` for the
+    Hawkes process is measurable for `hawkesFiltration`.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,

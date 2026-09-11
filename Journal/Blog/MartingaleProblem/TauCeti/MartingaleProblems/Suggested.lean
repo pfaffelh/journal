@@ -15795,4 +15795,275 @@ theorem mpFamilyF_jumpOperatorF_state [Preorder ι] [OrderBot ι]
 
 end PathGenerator
 
+/-! ### The self exciting rate is measurable for the past it reads
+
+`measurable_uncurry_stepPath_pointFiltration` and `measurable_compensator_pointFiltration` give the
+two inputs a test process is built from **when the compensating integrand is a function of the
+state**.  `mpFamilyF` is the family a path dependent operator generates, and its integrand
+`jumpApplyF Lam mu X f` carries the rate itself.  So the Hawkes instance needs one measurability
+more, and it is the one about the rate: `hawkesSelfRate` is an integral against the counting measure
+of the jump times, and those are read off the sample point.
+
+Two obstructions, and they are independent of each other.
+
+* **The integrating measure moves with the sample point.**  `countingMeasure (T ω)` does, so the
+  parametrised Bochner integral of `stronglyMeasurable_integral_comp`, which asks for one fixed
+  measure, does not apply to it as it stands.  `countingMeasure_eq_map_count` rewrites it as the
+  pushforward of the counting measure of `ℕ` along the stage-to-time map, and
+  `integral_countingMeasure_eq_integral_count` turns the window integral into an integral over the
+  **stages**, against a measure that does not move.  This costs no integrability hypothesis at all:
+  `integral_map` is an identity between two Bochner integrals, and it therefore transports the junk
+  value `0` of a non integrable integrand as faithfully as it transports a genuine integral.  That
+  is what makes the statement usable at an explosive sample point, where the window really does
+  contain infinitely many jumps and the integral really is the junk value.
+* **The past at `i` may not be read beyond `i`.**  `T ω n` is not measurable for
+  `pointFiltration T y … i`; only `min (T ω n) i` is, and that is `isStoppingTime_jumpTime`
+  together with `IsStoppingTime.min_const` and `IsStoppingTime.measurable_of_le`.
+  `indicator_Ico_min_right` is the one line that says the window integrand cannot tell the
+  difference: a jump time above `i` lies outside every window `Set.Ico 0 u` with `u ≤ i`, and so
+  does `i` itself.
+
+The second is where `hT0` enters, and it is the only hypothesis of this paragraph that
+`isStoppingTime_jumpTime` does not already carry.  It is not cosmetic.  The filtration cannot see
+the negative half line at all -- `ENNReal.ofReal` collapses it to `0` -- while `0` is **inside**
+every window `Set.Ico 0 u` with `u > 0`.  A point process with a jump strictly before the origin
+would have a rate that is not adapted to its own record, and that is a statement about the
+construction and not about the proof.  It is asked of the jumps `T 1, T 2, …` only: `T 0` is where
+the path starts and not a jump of it, and `countingMeasure` does not carry it. -/
+
+section PointRate
+
+variable [MeasurableSpace Ω] {E : Type*} [MeasurableSpace E]
+variable {T : Ω → ℕ → ℝ} {y : Ω → ℕ → E}
+
+/-- **The counting measure of a family of times is the pushforward of the counting measure of the
+stages.**  The whole point of the rewriting is that the measure on the right does **not** move with
+the family, so a parametrised integral against it is a parametrised integral against a fixed
+measure. -/
+theorem countingMeasure_eq_map_count (T : ℕ → ℝ) :
+    countingMeasure T = (Measure.count : Measure ℕ).map fun k ↦ T (k + 1) := by
+  have hcount : (Measure.count : Measure ℕ) = Measure.sum Measure.dirac := rfl
+  have hmd : ∀ k : ℕ,
+      (Measure.dirac k).map (fun j : ℕ ↦ T (j + 1)) = Measure.dirac (T (k + 1)) :=
+    fun k ↦ Measure.map_dirac' Measurable.of_discrete k
+  rw [hcount, Measure.map_sum
+    (Measurable.of_discrete (f := fun k : ℕ ↦ T (k + 1))).aemeasurable, countingMeasure]
+  simp only [hmd]
+
+/-- **A window integral against the counting measure of a family is an integral over the stages.**
+No integrability whatever is asked: `integral_map` is an identity between two Bochner integrals, so
+it carries the junk value of a non integrable integrand across as faithfully as it carries a genuine
+integral.  This is what makes the statement usable at an explosive sample point. -/
+theorem integral_countingMeasure_eq_integral_count (T : ℕ → ℝ) {f : ℝ → ℝ} (hf : Measurable f)
+    {S : Set ℝ} (hS : MeasurableSet S) :
+    ∫ s in S, f s ∂(countingMeasure T)
+      = ∫ k, Set.indicator S f (T (k + 1)) ∂(Measure.count : Measure ℕ) := by
+  rw [← integral_indicator hS, countingMeasure_eq_map_count,
+    integral_map (Measurable.of_discrete (f := fun k : ℕ ↦ T (k + 1))).aemeasurable
+      (hf.indicator hS).aestronglyMeasurable]
+
+/-- **A window that ends at or before `i` cannot tell a time from that time capped at `i`.**  Both
+a time above `i` and `i` itself lie outside every `Set.Ico 0 u` with `u ≤ i`. -/
+theorem indicator_Ico_min_right {u i a : ℝ} (hu : u ≤ i) (g : ℝ → ℝ) :
+    Set.indicator (Set.Ico 0 u) g (min a i) = Set.indicator (Set.Ico 0 u) g a := by
+  rcases le_or_gt a i with h | h
+  · rw [min_eq_left h]
+  · rw [min_eq_right h.le,
+      Set.indicator_of_notMem (fun hm ↦ absurd (lt_of_lt_of_le hm.2 hu) (lt_irrefl i)),
+      Set.indicator_of_notMem (fun hm ↦ absurd ((lt_of_lt_of_le hm.2 hu).trans h) (lt_irrefl a))]
+
+/-- **A jump time capped at `i` is measurable for the past at `i`**, which the jump time itself is
+not.  This is `isStoppingTime_jumpTime` in the form a rate that reads the past needs, and it is the
+one place where the non negativity of the jump times is spent; see the paragraph above. -/
+theorem measurable_min_jumpTime_pointFiltration (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) {n : ℕ} (hT0 : ∀ ω, 0 ≤ T ω n) (i : ℝ≥0) :
+    Measurable[pointFiltration T y hT hy i] fun ω ↦ min (T ω n) (i : ℝ) := by
+  have hmeas : Measurable[pointFiltration T y hT hy i]
+      fun ω ↦ min (ENNReal.ofReal (T ω n)) ((i : ℝ≥0) : ENNReal) :=
+    ((isStoppingTime_jumpTime hT hy n).min_const i).measurable_of_le fun _ ↦ min_le_right _ _
+  have hrw : (fun ω ↦ min (T ω n) (i : ℝ))
+      = fun ω ↦ (min (ENNReal.ofReal (T ω n)) ((i : ℝ≥0) : ENNReal)).toReal := by
+    funext ω
+    rw [← ENNReal.ofReal_coe_nnreal, ← ENNReal.ofReal_min,
+      ENNReal.toReal_ofReal (le_min (hT0 ω) i.coe_nonneg)]
+  rw [hrw]
+  exact hmeas.ennreal_toReal
+
+/-- **A rate that reads its own past is jointly measurable for that past.**  The statement is about
+the truncated time parameter `min s i`, which is the form `Clock.IsProgressive` and `mpFamilyF`
+consume, and it is the missing input of the path dependent martingale problem.
+
+Nothing is asked of the family `T` beyond the measurability of each `T n` and the non negativity of
+the jumps `T 1, T 2, …` -- **in particular no monotonicity and no non explosion**.  At a sample
+point at which the jumps accumulate below `i` the window carries infinitely many of them and the
+integral is the Bochner junk value; the statement holds there too, because
+`integral_countingMeasure_eq_integral_count` transports the junk value and does not avoid it. -/
+theorem measurable_uncurry_pointRate_pointFiltration (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) (hT0 : ∀ ω n, 0 ≤ T ω (n + 1))
+    {ψ : ℝ → ℝ} (hψ : Measurable ψ) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (pointFiltration T y hT hy i)]
+      fun p : ℝ≥0 × Ω ↦ ∫ u in Set.Ico (0 : ℝ) (min (p.1 : ℝ) (i : ℝ)),
+        ψ (min (p.1 : ℝ) (i : ℝ) - u) ∂(countingMeasure (T p.2)) := by
+  set m : MeasurableSpace (ℝ≥0 × Ω) :=
+    (inferInstance : MeasurableSpace ℝ≥0).prod (pointFiltration T y hT hy i) with hm
+  -- the window integral, over the stages and against a measure that does not move
+  have hstage : (fun p : ℝ≥0 × Ω ↦ ∫ u in Set.Ico (0 : ℝ) (min (p.1 : ℝ) (i : ℝ)),
+        ψ (min (p.1 : ℝ) (i : ℝ) - u) ∂(countingMeasure (T p.2)))
+      = fun p : ℝ≥0 × Ω ↦ ∫ k, Set.indicator (Set.Ico (0 : ℝ) (min (p.1 : ℝ) (i : ℝ)))
+          (fun u ↦ ψ (min (p.1 : ℝ) (i : ℝ) - u)) (min (T p.2 (k + 1)) (i : ℝ))
+          ∂(Measure.count : Measure ℕ) := by
+    funext p
+    rw [integral_countingMeasure_eq_integral_count (T p.2)
+      (f := fun u ↦ ψ (min (p.1 : ℝ) (i : ℝ) - u))
+      (hψ.comp (measurable_const.sub measurable_id)) measurableSet_Ico]
+    exact congrArg (fun F : ℕ → ℝ ↦ ∫ k, F k ∂(Measure.count : Measure ℕ))
+      (funext fun k ↦ (indicator_Ico_min_right (min_le_right (p.1 : ℝ) (i : ℝ)) _).symm)
+  rw [hstage]
+  -- each stage is measurable for the past, and there are countably many of them
+  have hslice : ∀ k : ℕ, Measurable[m] fun p : ℝ≥0 × Ω ↦
+      Set.indicator (Set.Ico (0 : ℝ) (min (p.1 : ℝ) (i : ℝ)))
+        (fun u ↦ ψ (min (p.1 : ℝ) (i : ℝ) - u)) (min (T p.2 (k + 1)) (i : ℝ)) := by
+    intro k
+    have ha : Measurable[m] fun p : ℝ≥0 × Ω ↦ min (T p.2 (k + 1)) (i : ℝ) :=
+      (measurable_min_jumpTime_pointFiltration hT hy (fun ω ↦ hT0 ω k) i).comp measurable_snd
+    have hb : Measurable[m] fun p : ℝ≥0 × Ω ↦ min (p.1 : ℝ) (i : ℝ) :=
+      (measurable_coe_nnreal_real.comp measurable_fst).min measurable_const
+    have hset : MeasurableSet[m] {q : ℝ≥0 × Ω |
+        min (T q.2 (k + 1)) (i : ℝ) ∈ Set.Ico (0 : ℝ) (min (q.1 : ℝ) (i : ℝ))} := by
+      have hsplit : {q : ℝ≥0 × Ω |
+            min (T q.2 (k + 1)) (i : ℝ) ∈ Set.Ico (0 : ℝ) (min (q.1 : ℝ) (i : ℝ))}
+          = {q : ℝ≥0 × Ω | (0 : ℝ) ≤ min (T q.2 (k + 1)) (i : ℝ)}
+              ∩ {q : ℝ≥0 × Ω | min (T q.2 (k + 1)) (i : ℝ) < min (q.1 : ℝ) (i : ℝ)} := by
+        ext q
+        simp [Set.mem_Ico]
+      rw [hsplit]
+      exact (measurableSet_le measurable_const ha).inter (measurableSet_lt ha hb)
+    have hfun : (fun p : ℝ≥0 × Ω ↦ Set.indicator (Set.Ico (0 : ℝ) (min (p.1 : ℝ) (i : ℝ)))
+          (fun u ↦ ψ (min (p.1 : ℝ) (i : ℝ) - u)) (min (T p.2 (k + 1)) (i : ℝ)))
+        = Set.indicator {q : ℝ≥0 × Ω |
+              min (T q.2 (k + 1)) (i : ℝ) ∈ Set.Ico (0 : ℝ) (min (q.1 : ℝ) (i : ℝ))}
+            (fun q ↦ ψ (min (q.1 : ℝ) (i : ℝ) - min (T q.2 (k + 1)) (i : ℝ))) := by
+      funext p
+      simp only [Set.indicator_apply, Set.mem_ofPred_eq]
+    rw [hfun]
+    exact (hψ.comp (hb.sub ha)).indicator hset
+  have hjoint : Measurable[(inferInstance : MeasurableSpace ℕ).prod m]
+      (Function.uncurry fun (k : ℕ) (p : ℝ≥0 × Ω) ↦
+        Set.indicator (Set.Ico (0 : ℝ) (min (p.1 : ℝ) (i : ℝ)))
+          (fun u ↦ ψ (min (p.1 : ℝ) (i : ℝ) - u)) (min (T p.2 (k + 1)) (i : ℝ))) := by
+    letI : MeasurableSpace (ℝ≥0 × Ω) := m
+    exact measurable_from_prod_countable_right hslice
+  exact (@stronglyMeasurable_integral_comp ℕ _ (ℝ≥0 × Ω) m ℝ _ ℝ _
+    (Measure.count : Measure ℕ) _ _ hjoint id measurable_id).measurable
+
+/-- **A compensating window is measurable for the past as soon as its integrand is**, with no
+condition on the integrand beyond that joint measurability.  This is
+`measurable_compensator_pointFiltration` with the step path replaced by an arbitrary integrand: the
+integrand there is a function of the state, and the integrand of `mpFamilyF` is not, so the
+statement has to be made about the integrand and not about the process.
+
+The truncation `min u t` is free on the window, because the window ends at `t`
+(`Clock.interval_subset_Iic`), and it is what makes the hypothesis the one that
+`Clock.IsProgressive` supplies. -/
+theorem measurable_compensator_of_uncurry_min {mΩ : MeasurableSpace Ω} {W : ℝ → Ω → ℝ}
+    (c : Clock.Conv) (t : ℝ≥0)
+    (hW : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod mΩ]
+      fun p : ℝ≥0 × Ω ↦ W (min (p.1 : ℝ) (t : ℝ)) p.2) :
+    Measurable[mΩ] fun ω : Ω ↦ ∫ u in lebesgueClock.interval c ⊥ t,
+      W (u : ℝ) ω ∂lebesgueClock.q := by
+  set S := lebesgueClock.interval c ⊥ t with hS
+  have hfin : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ]
+    exact lt_top_iff_ne_top.2 (ne_top_of_le_ne_top (lebesgueClock.measure_Iic_ne_top t)
+      (measure_mono (lebesgueClock.interval_subset_Iic c ⊥ t)))
+  have hsm : StronglyMeasurable[mΩ] fun ω : Ω ↦
+      ∫ u in S, W (min (u : ℝ) (t : ℝ)) ω ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace Ω mΩ ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) _ (fun u ω ↦ W (min (u : ℝ) (t : ℝ)) ω) hW id measurable_id
+  have hcongr : (fun ω : Ω ↦ ∫ u in S, W (min (u : ℝ) (t : ℝ)) ω ∂lebesgueClock.q)
+      = fun ω : Ω ↦ ∫ u in S, W (u : ℝ) ω ∂lebesgueClock.q := by
+    funext ω
+    refine setIntegral_congr_fun (lebesgueClock.measurableSet_interval c ⊥ t) fun u hu ↦ ?_
+    rw [min_eq_left]
+    exact_mod_cast lebesgueClock.interval_subset_Iic c ⊥ t hu
+  rw [← hcongr]
+  exact hsm.measurable
+
+end PointRate
+
+/-! ### The Hawkes rate, as its own martingale problem needs it
+
+The two statements below are the instance of the paragraph above, and they are one term each: the
+Hawkes jump times are measurable (`measurable_hawkesJumpTime_apply`) and non negative
+(`hawkesJumpTime_nonneg`, unconditionally), and that is everything
+`measurable_uncurry_pointRate_pointFiltration` asks.  Nothing about `φ` beyond its measurability
+enters, and neither the fixed point nor the non explosion does.
+
+With these, every ingredient of `mpFamilyF (jumpOperatorF …) …` for the Hawkes process is
+measurable for `hawkesFiltration`: the process by
+`measurable_uncurry_hawkesStepPath_hawkesFiltration`, the rate by
+`measurable_uncurry_hawkesSelfRate_hawkesFiltration`, and their product -- which is the integrand of
+`jumpApplyF` at a jump kernel that does not read the past -- by
+`measurable_uncurry_hawkesJumpApplyF_hawkesFiltration`. -/
+
+section HawkesRate
+
+variable {E : Type*} {ν : ℝ} {φ : ℝ → ℝ}
+
+/-- **The self exciting Hawkes rate is jointly measurable for the Hawkes filtration.**  The instance
+of `measurable_uncurry_pointRate_pointFiltration`, and the input that `mpFamilyF` asks of a path
+dependent generator and `mpFamily` never had to ask.  Nothing beyond the data of `ex:hawkes`, and in
+particular not the non explosion: at an explosive sample point the window carries infinitely many
+jumps and the integral is the junk value, and the statement holds there as well. -/
+theorem measurable_uncurry_hawkesSelfRate_hawkesFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod
+        (hawkesFiltration (E := E) hν hφ hφm hφint i)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRate ν φ (min (p.1 : ℝ) (i : ℝ)) p.2 :=
+  measurable_const.add
+    (measurable_uncurry_pointRate_pointFiltration
+      (measurable_hawkesJumpTime_apply hν hφ hφm hφint)
+      (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
+      (fun ω n ↦ hawkesJumpTime_nonneg ν φ ω.2 ω (n + 1)) hφm i)
+
+/-- **The integrand of the path dependent generator of the Hawkes process is jointly measurable for
+the Hawkes filtration.**  At a jump kernel that does not read the past -- which is the case of
+`ex:hawkes`, where only the *rate* is self exciting -- `jumpApplyF` is the product of the rate and a
+function of the state, and both factors are now measurable for the past.  This is the input
+`Clock.IsProgressive` asks of the compensating integrand of `mpFamilyF`. -/
+theorem measurable_uncurry_hawkesJumpApplyF_hawkesFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    {g : E → ℝ} (hg : Measurable g) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod
+        (hawkesFiltration (E := E) hν hφ hφm hφint i)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+        hawkesSelfRate ν φ (min (p.1 : ℝ) (i : ℝ)) p.2
+          * g (stepPath (hawkesJumpTime ν φ p.2.2 p.2) p.2.1 (min (p.1 : ℝ) (i : ℝ))) :=
+  (measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i).mul
+    (measurable_uncurry_hawkesStepPath_hawkesFiltration hν hφ hφm hφint hg i)
+
+/-- **The compensating window of the path dependent Hawkes generator is measurable for the past.**
+The second of the two inputs a test process of `mpFamilyF` is built from, the first being
+`measurable_uncurry_hawkesJumpApplyF_hawkesFiltration`.  With the two of them every ingredient of
+`mpFamilyF (jumpOperatorF (hawkesSelfRate ν φ) …) …` for the Hawkes process is measurable for
+`hawkesFiltration`, and nothing beyond the data of `ex:hawkes` and the measurability of `g`
+enters -- in particular not the non explosion. -/
+theorem measurable_compensator_hawkesJumpApplyF_hawkesFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    {g : E → ℝ} (hg : Measurable g) (c : Clock.Conv) (i : ℝ≥0) :
+    Measurable[hawkesFiltration (E := E) hν hφ hφm hφint i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in lebesgueClock.interval c ⊥ i,
+        hawkesSelfRate ν φ (u : ℝ) ω
+          * g (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (u : ℝ)) ∂lebesgueClock.q :=
+  measurable_compensator_of_uncurry_min
+    (W := fun u ω ↦ hawkesSelfRate ν φ u ω
+      * g (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 u)) c i
+    (measurable_uncurry_hawkesJumpApplyF_hawkesFiltration hν hφ hφm hφint hg i)
+
+end HawkesRate
+
 end PathDependent

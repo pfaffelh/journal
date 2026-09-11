@@ -194,6 +194,17 @@ GROUPS = {
         "jumpOperatorF_state",
         "mpFamilyF_jumpOperatorF_state",
     },
+    "G20 the rate that reads its own past, and its measurability": {
+        "countingMeasure_eq_map_count",
+        "integral_countingMeasure_eq_integral_count",
+        "indicator_Ico_min_right",
+        "measurable_min_jumpTime_pointFiltration",
+        "measurable_uncurry_pointRate_pointFiltration",
+        "measurable_uncurry_hawkesSelfRate_hawkesFiltration",
+        "measurable_uncurry_hawkesJumpApplyF_hawkesFiltration",
+        "measurable_compensator_of_uncurry_min",
+        "measurable_compensator_hawkesJumpApplyF_hawkesFiltration",
+    },
 }
 
 
