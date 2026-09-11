@@ -2394,7 +2394,9 @@ A concrete family of solutions, built without any of the theory above. Index
     which is what makes this the definition of one family and not of a sequence of
     families. `φ` is asked to vanish on the negative half line — the Lean form of
     `φ : Rp → [0, ∞)` in `eq:hawkesrate`, and the whole of the predictability —
-    and `hawkesFrozen_succ_of_lt` is the single place where that is spent.
+    and `hawkesFrozen_succ_of_lt` is the single place where that is spent in the
+    recursion; `hawkesFrozen_succ_of_le` is the same statement on the closed half
+    line, which is what the cumulated rate reads.
     `cumulativeRateF_hawkesJumpTime` is the payoff: under the rate frozen at its
     own stage the `(n+1)`-st jump time is where the cumulated rate has consumed
     `ξ 0 + ⋯ + ξ n`. Two of the three hypotheses of the inversion fall out of
@@ -2402,12 +2404,84 @@ A concrete family of solutions, built without any of the theory above. Index
     integrability, is carried — and by the reading above it **is** the non
     explosion.
 
-    What is left between this and a Hawkes process one can write down is a single
-    identification: `hawkesFrozen ν φ T n u` is `hawkesRate ν φ N u` for
-    `N ω = ∑ k, Measure.dirac (T k)`, that is
-    `∫ s in Set.Ico 0 u, φ (u - s) ∂(∑ k, Measure.dirac (T k)) = ∑ k ∈ Finset.range n, φ (u - T k)`
-    whenever `T` is increasing and `T n ≥ u`. It is an integral against a sum of
-    Dirac measures and nothing more.
+    `hawkesFrozen` sums over `Finset.Ico 1 n` and not over `Finset.range n`:
+    `T 0 = 0` is where the path **starts** and not a jump of it, so the events
+    are `T 1, T 2, …`, exactly as in `stepPath`. Summing from `0` puts a phantom
+    event at the origin and gives the first interval the rate `ν + φ (u - 0)`
+    instead of `ν`, which is a different process from the one `eq:hawkesrate`
+    describes: there the measure integrated against is `dω`, the jump measure of
+    the path, and a càdlàg path has no jump where it starts.
+    `hawkesFrozen_one` and `hawkesJumpTime_one` are where this is visible — the
+    first jump comes after `ξ 0 / ν`, the waiting time of the baseline clock.
+  * `countingMeasure`, `hawkesRate_countingMeasure_of_lt` and
+    `hawkesRate_countingMeasure`: **the frozen rate is the Hawkes rate of the
+    counting measure of the frozen jumps.** **In Lean** on 2026-09-11, eighth
+    run, with `restrict_countingMeasure`, `integral_countingMeasure_Ico` and
+    `hawkesFrozen_succ_eq_sum_range`. `countingMeasure T = Measure.sum (fun k ↦
+    Measure.dirac (T (k+1)))`, and below a jump time its restriction to
+    `Set.Ico 0 u` is a **finite** sum of Dirac masses, so the integral of
+    `eq:hawkesrate` is a finite sum of translates of `φ` and nothing else. No
+    measurability of `φ` is needed: an integral against a Dirac mass is an
+    evaluation.
+
+    The two forms differ exactly by the upper limit `t-` of `eq:hawkesrate`.
+    `hawkesRate_countingMeasure_of_lt` asks **nothing** of `φ` and holds on the
+    window `T n < u ≤ T (n+1)` in which the stage is the current one;
+    `hawkesRate_countingMeasure` holds at **every** `u ≤ T (n+1)` and pays for it
+    with `φ = 0` on the **closed** negative half line. The strengthening is not
+    cosmetic: at a jump time `u = T k` the frozen sum carries the term `φ 0` that
+    the half open window of the rate has dropped, and it is the closed form that
+    the cumulated rate — which integrates over all earlier windows at once —
+    requires. `hawkesFrozen_succ_of_le` carries it.
+  * `monotone_hawkesJumpTime` and `strictMono_hawkesJumpTime`: **the Hawkes jump
+    times increase.** **In Lean** on 2026-09-11, eighth run, with
+    `hawkesJumpTime_nonneg`, `hawkesJumpTime_one`,
+    `cumulativeRateF_hawkesFrozen_succ_of_le` and `hawkesJumpTime_le_succ`. This
+    is **not** an instance of `rateInverse_mono`: consecutive jump times are
+    inverses of **different** rates, so nothing about a single monotone inverse
+    applies. Predictability supplies the argument: stage `n+2` agrees with stage
+    `n+1` below `T (n+1)`, so a jump time that fell short would make the larger
+    partial sum the smaller cumulated rate. `strictMono_hawkesJumpTime` is what
+    `isStepPath_stepPath` asks of a family of jump times.
+  * `jumpTimeF_hawkesRate_eq_hawkesJumpTime`: **the fixed point closed.** **In
+    Lean** on 2026-09-11, eighth run, with
+    `hawkesJumpTime_succ_eq_rateInverse_hawkesRate` and
+    `rateInverse_eq_of_cumulativeRateF`. The stagewise family is `jumpTimeF` of
+    the **genuine** Hawkes rate of `eq:hawkesrate`, read against the counting
+    measure of that very family; the frozen rates are auxiliary and disappear
+    from the statement. `rateInverse_eq_of_cumulativeRateF` is the step that
+    makes this possible and it is of independent use: it reads the inverse off a
+    point at which the level is known, so two rates whose cumulated integrals
+    agree up to a point have the same inverse at the level attained there. It
+    needs neither the divergence at infinity nor the continuity, only the strict
+    monotonicity.
+  * `rateInverse_le_iff` and `setOf_rateInverse_le`: **the defining property of a generalised
+    inverse.** **In Lean** on 2026-09-11, eighth run. `rateInverse Λ ω a ≤ c` holds exactly when
+    `0 ≤ c` and `a ≤ cumulativeRateF Λ ω c`. Mathlib has no generalised inverse of a monotone
+    function, so this is ours. It is the form in which the inverse is used where an inequality
+    rather than a value is wanted, and it turns every statement about `rateInverse` into a statement
+    about `cumulativeRateF` — which is an integral, and therefore reachable from the measurability
+    of the rate.
+  * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
+    **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
+    `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,
+    `hawkesSelfRate_pos`, `tendsto_cumulativeRateF_hawkesSelfRate`,
+    `isCadlagPath_hawkesProcess`, `jumpTimeF_hawkesSelfRate`,
+    `hawkesProcess_of_lt_first`, and `cumulativeRateF_congr` and
+    `rateInverse_congr`. `hawkesSelfRate` is a rate of the type `jumpProcessF`
+    accepts, `ℝ → Ω → ℝ`, whose value at `ω` is the Hawkes rate of the counting
+    measure of the jump times built from `ω`; `hawkesProcess` is the process it
+    drives. This is the non Markovian example of `ex:hawkes` written down.
+
+    Which statement needs which is itself the finding. The paths are step paths
+    and càdlàg **without any of the fixed point material**: `jumpProcessF` is
+    built from `rateInverse`, and `rateInverse` asks only that the rate be
+    positive, locally integrable and of divergent cumulated mass, all of which
+    the baseline `ν` gives. The fixed point is what says that the jump times are
+    *these* jump times — `hawkesProcess_eq_stepPath` — and that is what the
+    martingale property will read. `cumulativeRateF_congr` is the lemma that
+    lets a rate defined as a functional of the whole sample point be replaced, at
+    a fixed `ω`, by the constant functional returning its value.
   * `jumpTimeF_const_eq_jumpTime`: **the probe against emptiness.** **In Lean** on
     2026-09-11, sixth run. At `Λ ≡ c` the inverse is the division `a / c`, and
     `jumpTimeF` is literally the `jumpTime` of the state dependent construction
