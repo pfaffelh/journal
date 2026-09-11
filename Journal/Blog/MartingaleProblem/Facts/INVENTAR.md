@@ -20133,3 +20133,246 @@ der er unfair war.
    partielle Differentialgleichung erster Ordnung in zwei Veränderlichen, die Mathlib in dieser
    Form nicht hat. Das ist der Grund, warum sie hier als Punkt steht und nicht als Vorschlag für
    den nächsten Lauf.
+
+### 2026-09-11, sechster Lauf des Tages — Teil C fängt an, und der Boden der pfadabhängigen Variante steht: die Sprungzeiten sind eine Inverse, und die Inverse gibt es in Mathlib nicht
+
+**Bearbeitet:** Teil C des laufenden Auftrags, die **pfadabhängige Variante** — der letzte Punkt
+von Meilenstein 4 und der, der die Beispiele für die Meilensteine 7 und 9 liefert. Die Reihenfolge
+D → F → C → E ist eingehalten: Teil F ist mit dem fünften Lauf geschlossen, und dieser Lauf führt
+den Vorschlag 1 jenes Laufs unverändert aus.
+
+**27 Deklarationen** im neuen Abschnitt `PathDependent` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne einen Fehler** durch
+`lake env lean` gegen v4.33.1 (Lean 4.33.1, commit `819816b2`), alle 27 mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt bei **neun**.
+`scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` rc 0, 0 Fehler,
+9 `sorry`; für `SkorokhodSpace/Suggested.lean` rc 0, 0 Fehler; für `WeakConvergence/Suggested.lean`
+weiterhin die zwei bewußt gegen `master` geschriebenen Fehler. `python3 check.py` meldet `clean`
+(133 Seiten). `scripts/check_citations.py` meldet unverändert dieselben zwei Auffälligkeiten
+(der `Cadlag`-Pfad und `Subgroup.isClosed_of_discrete`), also **keinen Rückschritt**. Die Punkte
+stehen in `MartingaleProblems/README.md`, Meilenstein 4, beim letzten Posten der Liste.
+
+#### Worum es geht, in einem Satz
+
+Der Unterschied zwischen dem zustandsabhängigen und dem pfadabhängigen Fall sitzt im Erdgeschoß der
+Konstruktion und nirgends sonst: die `(n+1)`-te Sprungzeit ist dort `T n + ξ n / lam (y n)`, eine
+**Division**, und hier die Lösung `s` von `∫ u in Set.Ioc (T n) (T n + s), Λ u ω = ξ n`, eine
+**Inverse**. Alles, was der zustandsabhängige Fall auf den Sprungzeiten aufbaut — die
+Erneuerungszerlegung, die progressive Meßbarkeit, der Turmschluß —, liest von ihnen nur, daß sie
+wachsen und meßbar sind. Dieser Lauf baut die Inverse und beweist die definierende Gleichung
+(`jumpTimeF_succ_spec`); damit steht der Boden, auf dem der Rest der Variante wörtlich derselbe
+Beweis ist wie im zustandsabhängigen Fall.
+
+#### Die Sätze
+
+> `cumulativeRateF Λ ω t = ∫ u in Set.Ioc 0 t, Λ u ω` — die kumulierte Rate längs **eines**
+> Stichprobenpunktes, mit `strictMonoOn_cumulativeRateF` (streng wachsend auf `Set.Ici 0`),
+> `continuousOn_cumulativeRateF` (stetig) und `tendsto_cumulativeRateF_atTop_of_le` (divergent,
+> sobald die Rate von Null weg beschränkt ist).
+>
+> `rateInverse Λ ω a = sInf {r | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r}` mit
+> `cumulativeRateF_rateInverse : cumulativeRateF Λ ω (rateInverse Λ ω a) = a` für `0 ≤ a`.
+>
+> `jumpTimeF Λ ω xi n = rateInverse Λ ω (∑ k ∈ Finset.range n, xi k)` mit
+> `jumpTimeF_succ_spec : ∫ u in Set.Ioc (jumpTimeF Λ ω xi n) (jumpTimeF Λ ω xi (n+1)), Λ u ω = xi n`
+> und `strictMono_jumpTimeF`.
+>
+> `jumpTimeF_const_eq_jumpTime : jumpTimeF (fun _ _ ↦ c) ω xi n = jumpTime (fun _ : E ↦ c) y xi n`
+> — die Leerheitsprobe.
+
+Voraussetzungen: `∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r`, `∀ u, 0 < u → 0 < Λ u ω`,
+`Tendsto (cumulativeRateF Λ ω) atTop atTop`, und für die Sprungzeiten `∀ n, 0 ≤ xi n` beziehungsweise
+`0 < xi n`. Über `ω` steht **nichts** — keine Meßbarkeit, keine Filtration, kein Wahrscheinlichkeits-
+maß. Das ist dieselbe Arbeitsteilung wie in `section JumpConstruction`, wo `jumpTime` ebenfalls
+pfadweise definiert ist und die Wahrscheinlichkeit erst mit `waitingMeasure` eintritt.
+
+#### Der erste Befund, und er ist der wichtigste: der absorbierende Defekt verschwindet nicht, er zieht um
+
+Der zustandsabhängige Fall hat eine Reparatur, die ihn quer durch die Datei begleitet — Sprungzeiten
+in `ℝ≥0∞`, `jumpProcessE`, `clipWait`, `posRate` —, und ihr Anlaß ist eine einzige Konvention:
+`x / 0 = 0`, also verläßt der Pfad einen Zustand mit `lam x = 0` sofort. Eine Inverse hat **keinen
+Nenner**, und deshalb hat diese Reparatur hier keine Entsprechung: eine Rate, die auf einem Fenster
+verschwindet, macht die kumulierte Rate dort bloß flach, und die Inverse steigt über das Fenster
+hinweg zur nächsten Stelle, an der die Rate lebt. `strictMono_jumpTimeF` verlangt entsprechend
+**nicht** `0 < lam x` an jedem Zustand, sondern nur `0 < xi n` — die Voraussetzung, die
+`strictMono_jumpTime` **zusätzlich** trägt, fällt weg.
+
+Was statt dessen bricht, ist `tendsto_cumulativeRateF_atTop_of_le`. Eine Rate, die so schnell
+ausstirbt, daß `∫ u in Set.Ioi 0, Λ u ω < ∞` ist, läßt Niveaus übrig, die die Inverse nicht erreicht,
+und dort gibt `rateInverse` den Müllwert von `sInf ∅`. Der Defekt ist also derselbe Defekt, aber er
+sitzt an einer anderen Stelle, und die Voraussetzung, die ihn ausschließt, ist eine **Divergenz des
+Kompensators** und keine Positivität an einem Punkt.
+
+**Und das ist der Gewinn, nicht bloß eine Beobachtung.** Im zustandsabhängigen Fall stehen
+Nichtexplosion (`NonExplosiveE`, die Divergenz von `∑ ξ_k / lam (y k)`) und absorbierender Zustand
+(`lam x = 0`, der Müllwert der Division) als **zwei** Defekte nebeneinander und verlangen **zwei**
+Reparaturen; das ist der ganze Inhalt des Vermerks bei `jumpApply_birthDeath` im README. Hier sind
+sie **eine**: beide sagen, daß der kumulierte Kompensator endlich bleibt. Der pfadabhängige Fall ist
+in diesem Punkt also nicht schwerer als der zustandsabhängige, sondern **einfacher**, und das ist
+das Gegenteil dessen, was die Reihenfolge der Meilensteine nahelegt.
+
+#### Der zweite Befund: jede der drei analytischen Eigenschaften wird für genau eine Sache ausgegeben
+
+Der Beweis von `cumulativeRateF_rateInverse` ist die Stelle, an der sich entscheidet, welche
+Voraussetzung wofür da ist, und die Antwort ist sauber getrennt:
+
+* die **Divergenz** liefert eine Zeit `b`, an der das Niveau überschritten ist — ohne sie ist die
+  Menge, deren Infimum genommen wird, leer;
+* die **Stetigkeit** macht daraus über `intermediate_value_Icc` eine Zeit, an der das Niveau
+  **angenommen** wird — ohne sie wird es nur approximiert, und `sInf` träfe einen Sprungpunkt;
+* die **strenge Monotonie** identifiziert das Infimum mit dieser Zeit — ohne sie ist die Menge ein
+  Intervall und das Infimum sein linker Rand, an dem der Wert kleiner sein kann.
+
+Keine der drei ist entbehrlich, und keine leistet die Arbeit einer anderen. Das ist der Grund, aus
+dem der Abschnitt sie als drei benannte Sätze führt und nicht als eine Voraussetzung an `Λ`.
+
+#### Der dritte Befund, und er ist die Negativaussage des Laufs: die verallgemeinerte Inverse gibt es in Mathlib nicht
+
+`rateInverse` ist von Hand gebaut, und das ist kein Versäumnis. Die Suche nach
+`quantile`, `generalized inverse`, `generalised inverse`, `rightContinuousInverse` und
+`monotoneInverse` über `Mathlib/` von frischem `upstream/master`
+(`04c9bc87f8880b19bef96e4c7642d591f14495f4`, 2026-09-11) liefert **null Treffer**: Mathlib hat weder
+eine verallgemeinerte Inverse einer monotonen Funktion noch eine Quantilfunktion. Was es hat, ist
+`StrictMono.orderIsoOfSurjective` (`Mathlib/Order/Hom/Set.lean:152`, auf beiden Ständen), und das
+ist ein Ordnungsisomorphismus des **ganzen Typs**: es verlangt strenge Monotonie und Surjektivität
+überall, während `cumulativeRateF` auf `Set.Iic 0` konstant ist und erst darüber streng wächst. Es
+trägt hier also nicht, und zwar nicht wegen einer Formalie, sondern weil die Aussage eine andere
+ist.
+
+Die Aussage ist als `generalised-inverse` in `scripts/check_negatives.py` nachgetragen (dort jetzt
+fünfzehn Aussagen) und steht als benannter Punkt in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der vierte Befund, und er ist ein Glücksfall mit einer Lehre
+
+`intervalIntegral.continuousOn_primitive` (`Mathlib/MeasureTheory/Integral/DominatedConvergence.lean:440`)
+steht in **genau** der `Set.Ioc`-Gestalt, die die Definition benutzt:
+
+`IntegrableOn f (Icc a b) μ → ContinuousOn (fun x ↦ ∫ t in Ioc a x, f t ∂μ) (Icc a b)`
+
+und nicht in der Gestalt `∫ t in a..x`. Hätte `cumulativeRateF` das Intervallintegral genommen —
+die naheliegende Wahl, weil das Manuskript `∫_0^t` schreibt —, so stünde vor jeder Anwendung eine
+Umschreibung, und vor allem wäre die Funktion für `t < 0` nicht `0`, sondern das negative Integral,
+so daß die Monotonie auf `Set.Ici 0` nicht mehr aus der Definition, sondern aus einer
+Fallunterscheidung käme. Die Lehre ist die alte: **die Gestalt der Definition wird nach dem Satz
+gewählt, der sie tragen soll**, und nicht nach der Notation des Manuskripts.
+`cumulativeRateF_eq_intervalIntegral` stellt die Verbindung zur Manuskriptnotation für `0 ≤ t` her
+und wird genau einmal gebraucht.
+
+#### Die Leerheitsprobe ist mitgemacht
+
+`jumpTimeF_const_eq_jumpTime`: bei `Λ ≡ c` ist die Inverse die Division `a / c`, und `jumpTimeF` ist
+**wörtlich** die `jumpTime` der zustandsabhängigen Konstruktion für `lam ≡ c`, an **jeder** Kette
+`y` — was der Punkt ist, denn bei konstanter Rate lesen die Sprungzeiten die Kette nicht. Eine
+Definition der pfadabhängigen Sprungzeiten durch eine Inverse, die sich bei konstanter Rate nicht
+auf die Division zurückspezialisiert, wäre eine andere Konstruktion und keine allgemeinere. Was die
+Probe **nicht** vorführt, ist eine Rate, die die Vergangenheit wirklich liest — der Hawkes-Fall; sie
+ist ein Beleg gegen Leerheit und keiner für Schärfe, und das steht so an der Deklaration.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py` (neu, nach dem Muster von `count_bd_master.py` und allein
+lauffähig; die Attributvorsilbe `@[simp]` ist im Muster berücksichtigt, weil dieser Abschnitt als
+erster `@[simp]`-Deklarationen enthält):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G1 die kumulierte Rate und ihre drei Eigenschaften | 9 | 68 |
+| G2 die Inversion | 5 | 43 |
+| G3 die Sprungzeiten und ihre definierende Gleichung | 7 | 69 |
+| G4 die Leerheitsprobe, konstante Rate | 6 | 30 |
+
+212 Codezeilen im ganzen, 345 mit Dokumentation. **Der Vergleich, um den es geht:** die
+zustandsabhängigen Sprungzeiten kosten **drei** Deklarationen und **sieben** Codezeilen
+(`jumpTime`, `jumpTime_zero`, `jumpTime_succ`, `Suggested.lean:1759`) und keinerlei Analysis — eine
+rekursive Definition und zwei `rfl`. Die pfadabhängigen kosten 212 Zeilen, und der Aufschlag sitzt
+**ganz** in G1 und G2, also in der Existenz der Inversen. G3, die eigentliche Definition der
+Sprungzeiten samt ihrer Gleichung, kostet 69 Zeilen, und davon trägt `jumpTimeF_succ_spec` allein
+ein Drittel. Der Preis von „Inverse statt Division" ist also **dreißigfach**, und er ist
+einmalig: er fällt im Erdgeschoß an und nicht in jedem Satz darüber — was oben unter dem ersten
+Befund steht, ist die Rechtfertigung dieser Bemerkung und keine Hoffnung.
+
+**Welche Mathlib-Bausteine gebraucht wurden, und keiner fehlte** (außer dem, der als Negativaussage
+oben steht): `intervalIntegral.continuousOn_primitive`,
+`intervalIntegral.intervalIntegral_pos_of_pos_on`, `intervalIntegral.integral_of_le`,
+`intervalIntegrable_iff_integrableOn_Ioc_of_le`, `integrableOn_Icc_iff_integrableOn_Ioc`,
+`MeasureTheory.setIntegral_union`, `MeasureTheory.setIntegral_mono_on`,
+`MeasureTheory.setIntegral_const`, `MeasureTheory.integrableOn_const`, `Set.Ioc_union_Ioc_eq_Ioc`,
+`Set.Ioc_disjoint_Ioc_of_le`, `Set.Ioc_subset_Ioc_left`, `intermediate_value_Icc`,
+`exists_lt_of_csInf_lt`, `csInf_le`, `le_csInf`, `Real.sInf_empty`, `Real.volume_Ioc`,
+`Filter.Tendsto.const_mul_atTop`, `tendsto_atTop_mono'`, `Filter.eventually_ge_atTop`,
+`monotone_nat_of_le_succ`, `strictMono_nat_of_lt_succ`, `Finset.sum_nonneg`,
+`Finset.sum_range_succ`. Jeder am Quelltext belegt
+(`~/Code/lean/journal/.lake/packages/mathlib`, v4.33.1), keiner `deprecated`.
+
+#### Was offen blieb
+
+* **Der pfadabhängige Prozeß selbst.** `jumpTimeF` gibt die Sprungzeiten; der Prozeß verlangt
+  zusätzlich eine Kette, deren Übergangskern die **ganze Vergangenheit** liest, und das ist keine
+  Produktkonstruktion mehr, sondern Ionescu--Tulcea längs des Pfades. Der Abschnitt hält hier
+  bewußt an: die Sprungzeiten sind der Boden, und sie stehen. Siehe Vorschlag 1.
+* **Der Hawkes-Prozeß** als Instanz — `Λ t ω = ν + ∫ s in Set.Ico 0 t, φ (t - s) ∂ω` — ist nicht
+  gebaut. Was von ihm schon eingelöst **werden kann**, ist die Divergenzvoraussetzung:
+  `tendsto_cumulativeRateF_atTop_of_le` nimmt sie mit `c = ν` entgegen, gleichgültig wie groß die
+  Masse von `φ` ist. Siehe Vorschlag 2.
+* **Teil E**, Meilenstein 6, ist der nächste Teil der vom Nutzer festgelegten Reihenfolge, sobald
+  Teil C durch ist.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`jumpProcessF` und `stepPath_jumpTimeF`: der pfadabhängige Prozeß als Stufenpfad.**
+   Aussage: mit `jumpProcessF Λ t ω = stepPath (jumpTimeF Λ ω.2 ω.2) ω.1 t` (oder der Gestalt, die
+   die Kette verlangt) ist der Pfad ein `IsStepPath`, und die Sprungzeiten sind die von
+   `jumpTimeF`. Worauf sie ruht: `isStepPath_stepPath` und `exists_lt_succ_of_tendsto_atTop`
+   stehen beide schon und verlangen von den Sprungzeiten nur `StrictMono` und die Ausschöpfung —
+   also `strictMono_jumpTimeF` und `tendsto_jumpTimeF_atTop`, und **beide stehen seit diesem Lauf**
+   (der zweite als Nachtrag, siehe unten). Die Eingaben sind damit vollständig, und der Satz ist
+   reine Buchführung. Warum sie jetzt dran ist: sie ist der erste Satz, der die Sprungzeiten
+   **benutzt** statt sie bereitzustellen, und sie ist der Prüfstein dafür, daß die Ausbeute dieses
+   Laufs die richtige Schnittstelle hat — die Aussage darf **kein** Wort über `Λ` verlieren außer
+   den drei Voraussetzungen. Prüfstein: kein Fehler, kein neues `sorry`.
+2. **`hawkesRate` und `tendsto_cumulativeRateF_hawkes`: die Divergenz auf den Daten des einzigen
+   nicht-markovschen Beispiels.** Aussage: für `hawkesRate ν φ t ω = ν + ∫ s in Set.Ico 0 t,`
+   `φ (t - s) ∂ω` mit `0 < ν` und `0 ≤ φ` ist `Tendsto (cumulativeRateF (hawkesRate ν φ) ω) atTop
+   atTop`. Worauf sie ruht: `tendsto_cumulativeRateF_atTop_of_le` mit `c = ν`, und die
+   Nichtnegativität des Integrals. Warum sie lohnt: sie löst die **einzige** Voraussetzung des
+   Abschnitts ein, die nicht automatisch ist, und sie löst sie auf genau den Daten, für die die
+   ganze Variante existiert — und sie tut es **ohne** eine Bedingung an die Masse von `φ`, was der
+   Punkt von `ex:hawkes` ist. Prüfstein: die Deklaration verlangt nichts über `∫ φ`.
+3. **`jumpTimeF_of_not_tendsto`: der Müllwert, benannt.** Aussage: ist
+   `∫ u in Set.Ioi 0, Λ u ω < ∞`, so ist `rateInverse Λ ω a = 0` für jedes `a` oberhalb des
+   Gesamtintegrals. Warum sie lohnt: sie ist das Gegenstück zu `notMem_nonExplosiveE_explode` und
+   macht aus dem ersten Befund dieses Laufs eine geprüfte Aussage statt einer Beobachtung im
+   Fließtext. Sie ist billig und sie ist der Beleg dafür, daß die Divergenzvoraussetzung nicht
+   Bequemlichkeit ist.
+
+#### Nachtrag desselben Laufs: `tendsto_jumpTimeF_atTop`
+
+Die siebenundzwanzigste Deklaration, angehängt, nachdem die obigen Zahlen schon standen und in
+ihnen berichtigt: **die pfadabhängigen Sprungzeiten schöpfen die Halbgerade aus**, sobald die
+Teilsummen der Wartezeiten divergieren.
+
+> `tendsto_jumpTimeF_atTop` — unter den drei Voraussetzungen des Abschnitts und
+> `Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop` gilt
+> `Tendsto (jumpTimeF Λ ω xi) atTop atTop`.
+
+Sie ist hier, weil sie zusammen mit `strictMono_jumpTimeF` **alles** ist, was `isStepPath_stepPath`
+von einer Familie von Sprungzeiten verlangt, und damit die Eingabe des Vorschlags 1 vollständig
+macht — ein Vorschlag, dessen Eingaben noch fehlen, ist eine Absichtserklärung.
+
+**Und sie trägt den ersten Befund ein zweites Mal.** Ihr zustandsabhängiges Gegenstück
+`tendsto_jumpTime_atTop` verlangt eine **gleichmäßige Schranke** `lam ≤ L` an die Rate und schätzt
+`jumpTime n ≥ (∑_{k<n} ξ_k) / L` ab — die Schranke ist dort nicht Bequemlichkeit, sondern der
+einzige Weg, von der Summe der Wartezeiten auf die Zeit zu kommen, weil jede Wartezeit durch ihre
+**eigene** Rate geteilt wird. Hier gibt es nichts zu teilen: `cumulativeRateF_rateInverse` sagt
+schon, daß die kumulierte Rate an `jumpTimeF n` **genau** die Teilsumme ist, und die Monotonie
+`monotoneOn_cumulativeRateF` dreht das in die Aussage über die Zeit um. Die Voraussetzung `lam ≤ L`
+fällt also **ersatzlos** weg. Das ist derselbe Befund wie oben, an einer zweiten Aussage: was im
+zustandsabhängigen Fall an der Division hängt — der Müllwert bei Rate `0` *und* die gleichmäßige
+Schranke bei unbeschränkter Rate —, hängt hier an nichts, und der ganze Inhalt der Nichtexplosion
+ist die Divergenz des Kompensators.
+
+Geprüft wie die übrigen: die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1,
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`, die Zahl der `sorry` unverändert
+bei neun, `scripts/_citations/count_pathdep.py` um den Namen ergänzt. Neu gebraucht aus Mathlib:
+`Filter.tendsto_atTop`, `Filter.Tendsto.eventually_gt_atTop`, `le_max_left`, `le_max_right`; keiner
+`deprecated`.

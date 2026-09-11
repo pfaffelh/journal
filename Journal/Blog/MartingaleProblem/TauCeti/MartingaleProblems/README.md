@@ -2225,14 +2225,81 @@ A concrete family of solutions, built without any of the theory above. Index
   dependent rate `Λ` it is the solution `s` of
   `∫ u in Set.Ioc (T n) (T n + s), Λ u ω = ξ n`, an inverse.
   * `cumulativeRateF Λ ω t = ∫ u in Set.Ioc 0 t, Λ u ω` and
-    `strictMono_cumulativeRateF`: the cumulated compensator along one sample
+    `strictMonoOn_cumulativeRateF`: the cumulated compensator along one sample
     point, strictly monotone and continuous where `Λ` is positive and locally
-    integrable, hence invertible.
+    integrable, hence invertible. **In Lean** on 2026-09-11, sixth run, as
+    `section PathDependent`. The monotonicity is stated on `Set.Ici 0` and not on
+    all of `ℝ`, because the window `Set.Ioc 0 t` is empty below the origin and the
+    function is constant there; and the positivity of `Λ` is asked on `Set.Ioi 0`
+    and not on `Set.Ici 0`, because a single point carries no Lebesgue mass and
+    `intervalIntegral.intervalIntegral_pos_of_pos_on` asks for it only on the
+    interior. The continuity is `intervalIntegral.continuousOn_primitive`, which
+    is stated in the `Set.Ioc` form this definition uses, so no passage through an
+    interval integral is spent on it.
+  * `tendsto_cumulativeRateF_atTop_of_le`: **the cumulated rate diverges as soon
+    as the rate is bounded away from zero.** **In Lean** on 2026-09-11, sixth run.
+    This is the one hypothesis of the inversion that is not automatic — a rate
+    that decays fast enough cumulates to a finite total, and then there is a level
+    the inverse cannot reach — and it is discharged on the Hawkes rate by its
+    constant term `ν` alone, whatever the mass of `φ`.
+  * `rateInverse Λ ω a = sInf {r | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r}` and
+    `cumulativeRateF_rateInverse`: **the inverse hits the level exactly.** **In
+    Lean** on 2026-09-11, sixth run. The three properties of the cumulated rate
+    are spent here, each on its own job: the divergence produces a time at which
+    the level is passed, the continuity turns that into a time at which it is
+    *attained* (`intermediate_value_Icc`), and the strict monotonicity identifies
+    the infimum with it. `sInf` is used rather than a choice of a solution for the
+    same reason `stepIndex` uses it — it is a total function, and its junk value
+    is returned exactly where no solution exists.
+
+    **The inverse is built here because Mathlib has none to take.** There is no
+    generalised inverse of a monotone function and no quantile function in
+    Mathlib; `StrictMono.orderIsoOfSurjective`
+    (`Mathlib/Order/Hom/Set.lean:152`) is an order isomorphism of the *whole
+    type* and asks for strict monotonicity and surjectivity everywhere, while
+    `cumulativeRateF` is constant on `Set.Iic 0` and strictly increasing only
+    above it. The claim is `generalised-inverse` in
+    `scripts/check_negatives.py`.
   * `jumpTimeF_succ_spec`: the defining equation of the `(n+1)`-st jump time as
     that inverse point. Everything the state dependent case builds on the jump
     times — the renewal decomposition, the progressive measurability, the tower
     argument — reads from them only that they increase and are measurable, so
-    this equation is what the whole variant rests on.
+    this equation is what the whole variant rests on. **In Lean** on 2026-09-11,
+    sixth run, together with `monotone_jumpTimeF`, `strictMono_jumpTimeF` and
+    `tendsto_jumpTimeF_atTop` — which two are exactly what `isStepPath_stepPath`
+    asks of a family of jump times, so the step path over these times needs
+    nothing further. `tendsto_jumpTimeF_atTop` carries **no** bound `lam ≤ L`,
+    unlike its state dependent counterpart `tendsto_jumpTime_atTop`: there the
+    bound is the only way from the sum of the waiting times to the time, because
+    each waiting time is divided by its *own* rate, while here
+    `cumulativeRateF_rateInverse` already says that the cumulated rate at the
+    `n`-th jump time **is** the `n`-th partial sum.
+    Note which hypothesis is **gone** against `strictMono_jumpTime`: the state
+    dependent statement needs `0 < lam x` at every state because `x / 0 = 0` makes
+    the holding time at an absorbing state vanish, while here the positivity of
+    the rate is already spent in the existence of the inverse and the strict
+    increase comes from the waiting time alone.
+
+    **The absorbing defect does not disappear here, it moves**, and where it moves
+    to decides the shape of the local case. An inverse has no denominator, so
+    there is no `x / 0 = 0` and no zero holding time: a rate that vanishes on a
+    window only makes the cumulated rate flat there, and the inverse steps over
+    the window to the next place where the rate lives. What breaks instead is
+    `tendsto_cumulativeRateF_atTop_of_le`: a rate that dies out so fast that
+    `∫ u in Set.Ioi 0, Λ u ω < ∞` leaves levels the inverse cannot reach, and
+    there `rateInverse` returns the junk value of `sInf ∅`. So the state
+    dependent repair — jump times in `ℝ≥0∞`, `jumpProcessE`, `clipWait`,
+    `posRate` — has no counterpart, and the hypothesis that replaces it is a
+    **divergence of the compensator** and not a positivity at a point. That is
+    also the right statement of non explosion for this variant, and it is the
+    same condition in both: the total compensated time is infinite.
+  * `jumpTimeF_const_eq_jumpTime`: **the probe against emptiness.** **In Lean** on
+    2026-09-11, sixth run. At `Λ ≡ c` the inverse is the division `a / c`, and
+    `jumpTimeF` is literally the `jumpTime` of the state dependent construction
+    for `lam ≡ c`, at every chain `y` — which is the point, since at a constant
+    rate the jump times do not read the chain. A definition of the path dependent
+    jump times by an inverse that did not specialise back to the division at a
+    constant rate would be a different construction and not a more general one.
 
 **Acceptance examples.**
 
