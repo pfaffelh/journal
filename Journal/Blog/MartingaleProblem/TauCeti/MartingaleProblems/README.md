@@ -2456,12 +2456,175 @@ A concrete family of solutions, built without any of the theory above. Index
     needs neither the divergence at infinity nor the continuity, only the strict
     monotonicity.
   * `rateInverse_le_iff` and `setOf_rateInverse_le`: **the defining property of a generalised
-    inverse.** **In Lean** on 2026-09-11, eighth run. `rateInverse Λ ω a ≤ c` holds exactly when
-    `0 ≤ c` and `a ≤ cumulativeRateF Λ ω c`. Mathlib has no generalised inverse of a monotone
-    function, so this is ours. It is the form in which the inverse is used where an inequality
-    rather than a value is wanted, and it turns every statement about `rateInverse` into a statement
-    about `cumulativeRateF` — which is an integral, and therefore reachable from the measurability
-    of the rate.
+    inverse.** **In Lean** on 2026-09-11, eighth run, with `cumulativeRateF_nonneg` from the ninth.
+    `rateInverse Λ ω a ≤ c` holds exactly when `0 ≤ c` and `a ≤ cumulativeRateF Λ ω c`, **at every
+    level `a` whatever its sign**. Mathlib has no generalised inverse of a monotone function, so
+    this is ours. It is the form in which the inverse is used where an inequality rather than a
+    value is wanted, and it turns every statement about `rateInverse` into a statement about
+    `cumulativeRateF` — which is an integral, and therefore reachable from the measurability of the
+    rate.
+
+    That the level is unrestricted is what a measurability statement needs, and it is not a
+    convenience: over a parameter space the level is a *function* of the parameter, and the partial
+    sums of waiting times are non negative only on the set where the waiting times are, which is not
+    the whole space. At a negative level both sides are true — the origin already lies in the set
+    whose infimum the inverse is, and `cumulativeRateF_nonneg` says the cumulated rate never falls
+    below zero.
+  * `intervalIntegrable_hawkesFrozen`: **the integrability hypothesis the recursion carried is
+    discharged on the kernel.** **In Lean** on 2026-09-11, ninth run, with
+    `strictMono_hawkesJumpTime_of_kernel`. Every statement about the Hawkes jump times asks for
+    `∀ m r, IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T m u ω) volume 0 r`, of a family `T` that
+    the recursion itself produces, which looks circular. It is not: the frozen rate is a constant
+    plus a **finite** sum of translates of `φ`, so the local integrability of every translate of `φ`
+    gives it outright, whatever the family. `strictMono_hawkesJumpTime_of_kernel` is the same
+    statement read on the data: the increase of the jump times rests on `0 < ν`, `0 ≤ φ`, `φ = 0` on
+    the closed negative half line, and the local integrability of `φ` — four conditions on the data
+    of `ex:hawkes` and none on what the recursion returns.
+
+    What this does **not** discharge is the non explosion: that is the local integrability of the
+    **self referential** rate `hawkesSelfRate`, which asks the jump times to exhaust the half line,
+    and no condition on `φ` alone gives it.
+  * `measurable_cumulativeRateF` and `measurable_rateInverse`: **the generalised inverse is
+    measurable in a parameter.** **In Lean** on 2026-09-11, ninth run. Over an arbitrary measurable
+    parameter space, with the sample point and the level themselves functions of the parameter, the
+    inverse is measurable as soon as the rate is **jointly** measurable in the parameter and the
+    time and the level is measurable. The proof is `setOf_rateInverse_le` and Fubini's measurability
+    half (`MeasureTheory.StronglyMeasurable.integral_prod_right'` against the finite measure
+    `volume.restrict (Set.Ioc 0 c)`) and nothing else. These two statements are the whole
+    measurability theory of the path dependent construction, and they mention no filtration, no
+    probability measure and no jump times.
+  * `measurable_hawkesJumpTime` and `measurable_uncurry_hawkesStepPath`: **the Hawkes jump times are
+    measurable in the waiting times, and the step path over them is jointly measurable in the time
+    and the sample point.** **In Lean** on 2026-09-11, ninth run, with
+    `rateInverse_hawkesFrozen_sample`, `hawkesStep_sample_congr` and `hawkesJumpTime_sample_congr`.
+    Nothing beyond the data of `ex:hawkes` is asked: `0 < ν`, `0 ≤ φ`, `φ` measurable, every
+    translate of `φ` locally integrable. No bound on `φ`, no condition on its mass, and no
+    positivity of the waiting times — the same shape as `jumpProcess_isLocalMPSolution`, which asks
+    nothing of `lam` but its measurability.
+
+    `hawkesJumpTime_sample_congr` is the statement that makes this cheap, and it is a statement
+    about Hawkes and not about path dependence: the Hawkes rate is a functional of the **event
+    times** and not of the marks, and the event times are built from the waiting times alone, so the
+    sample point of `hawkesJumpTime` is a dummy — the equality holds across *different* sample
+    spaces. A marked Hawkes process, whose excitation depends on which kind of event occurred, would
+    have jump times that genuinely read the first coordinate; `measurable_rateInverse` would still
+    apply, since it asks nothing about which coordinates the rate reads, and what would change is
+    the joint measurability fed to it.
+
+    The statement is about `stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1` and not about `hawkesProcess`,
+    and the distinction is the honest one. `hawkesProcess_eq_stepPath` identifies the two exactly at
+    a sample point at which the construction is valid — non negative waiting times and a locally
+    integrable self referential rate; off that set `hawkesProcess` unfolds to the inverse of a rate
+    that is not locally integrable and there is no reason for it to be measurable. That is the same
+    division as in the state dependent local construction, where
+    `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE` is stated about the *stopped* process
+    because the unstopped one is not right continuous at an explosive sample point.
+  * `pointFiltration` and `isStoppingTime_jumpTime`: **the natural filtration of a point process,
+    and its jump times are stopping times for it.** **In Lean** on 2026-09-11, tenth run, with
+    `jumpRecord`, `measurable_jumpRecord`, `jumpState`, `measurable_jumpState` and
+    `measurableSet_record`. `jumpRecord T i ω n` says whether the `n`-th jump has happened by the
+    time `i`; that boolean family is the counting process of `T` in the form `naturalFiltration`
+    accepts, and `jumpState` pairs it with the path, because the record alone does not see the
+    marks. The level set `{ofReal (T n) ≤ i}` is the `n`-th coordinate of the record read back, so
+    the stopping time property is the definition and nothing more. Nothing is asked of the family
+    `T` beyond the measurability of each `T n`: not monotonicity, not non explosion, and not
+    positivity — a negative jump time is sent to `0` by `ENNReal.ofReal` and lies below every
+    `i : ℝ≥0` in the real order as well, so the two descriptions agree there too.
+  * `hawkesFiltration`, `isStoppingTime_hawkesJumpTime` and
+    `not_isStoppingTime_hawkesJumpTime_pathFiltration`: **the filtration of the Hawkes process is
+    the one its own counting measure generates, and the filtration of the path will not do.** **In
+    Lean** on 2026-09-11, tenth run, with `measurable_hawkesJumpTime_apply`,
+    `measurable_hawkesStepPath_hawkesFiltration`, `hawkesPathFiltration` and
+    `hawkesPathFiltration_le_hawkesFiltration`.
+
+    `not_isStoppingTime_min_jumpTimeE` is the obstruction of the state dependent case, and it is not
+    an artefact of that case: a constant chain gives a constant path, so the waiting times leave no
+    trace in the filtration the path generates, while the jump times read them. The state dependent
+    repair was to localize with `rateSup`, a functional of the path; the path dependent case cannot
+    do that and has to **count**, which is what `ex:hawkes` prescribes anyway — its rate is written
+    against the counting measure of the past events, so that is the filtration it is predictable
+    for.
+
+    The two statements that make this a finding and not a definition:
+    `hawkesPathFiltration_le_hawkesFiltration` says the filtration of the path sits inside the new
+    one at every index, so the enlargement loses nothing; and
+    `not_isStoppingTime_hawkesJumpTime_pathFiltration` says the inclusion is strict where it
+    matters, the first jump time not being a stopping time for the smaller one. The witness is the
+    one of `not_isStoppingTime_min_jumpTimeE` and it is **cheaper** here, because
+    `hawkesJumpTime_one` is unconditional in `φ`: the constant chain at `x₀` with constant waiting
+    times `ν / 4` and `ν` has first jump times `1 / 4` and `1`, separated by the threshold `1 / 2`,
+    while both paths are constantly `x₀` at *every* time. Both waiting times are strictly positive,
+    so neither sample point is degenerate, and nothing about `φ` enters.
+
+    Non explosion does not enter either, and that is the second half of the finding: the record
+    counts the jumps whether or not they accumulate, so the stopping time property is free of the
+    one hypothesis this whole branch carries.
+  * `measurable_uncurry_stepPath_pointFiltration` and `measurable_compensator_pointFiltration`:
+    **the path of a point process is progressively measurable for its own filtration, and its
+    compensating window is measurable for the past.** **In Lean** on 2026-09-11, eleventh run. For
+    every measurable `h : E → ℝ` and every `t : ℝ≥0`, the map
+    `(r, ω) ↦ h (stepPath (T ω) (y ω) (min r t))` is measurable for the product of the Borel
+    σ-algebra of `ℝ≥0` with `pointFiltration T y … t`, and the parametrised Bochner integral
+    `ω ↦ ∫ u in lebesgueClock.interval c ⊥ t, h (stepPath (T ω) (y ω) u)` is measurable for
+    `pointFiltration T y … t`. These are the two inputs a test process of `mpFamily` is built from
+    — of `mpFamily`, whose compensating integrand is a function of the **state**. The path dependent
+    test family is `mpFamilyF`, whose integrand is not, and the second statement therefore reaches
+    only the part of it that is; see `jumpOperatorF` below.
+
+    Both rest on `measurable_stepPath_pointFiltration`, which is the same statement at a single
+    time, and on `eventuallyEq_nhdsGE_stepPath`, the right continuity of a step path, which lets
+    `measurable_uncurry_min_of_eventuallyEq` approximate the time variable by dyadic times from the
+    right — the route `measurable_uncurry_jumpProcessE` takes in the state dependent case. The
+    compensator is then `stronglyMeasurable_integral_comp` on the fixed window, verbatim as in
+    `measurable_compensatorE`.
+
+    **Nothing is asked of the family `T` beyond the measurability of each `T n`**, the same
+    hypothesis as for `isStoppingTime_jumpTime`: neither monotonicity nor non explosion. Right
+    continuity of `stepPath` is unconditional, because at a sample point at which no window contains
+    the time the step index is the junk value `0` there and at every later time as well — so the
+    junk value is right continuous too, and that is the half of `IsStepPath` which survives on the
+    explosion set.
+  * `measurable_uncurry_hawkesStepPath_hawkesFiltration` and
+    `measurable_compensator_hawkesFiltration`: **the Hawkes instance of the previous point.** **In
+    Lean** on 2026-09-11, eleventh run. Both are the general statement applied to
+    `hawkesFiltration`, and both carry no condition on `φ` beyond the four conditions on the data of
+    `ex:hawkes`; in particular neither the fixed point nor the local integrability of the self
+    referential rate — which is the non explosion — enters. `hawkesProcess_eq_stepPath` is what
+    turns them into statements about the *process*, exactly at the sample points at which the
+    process is that step path.
+  * `mpFamilyF`, `stateOperator` and `mpFamilyF_stateOperator`: **the test processes of a path
+    dependent operator, and that they specialise back.** **In Lean** on 2026-09-11, eleventh run.
+    `mpFamilyF A Q c X` is `{Y | ∃ p ∈ A, Y t ω = p.1 (X t ω) − ∫ s in Q.interval c ⊥ t, p.2 s ω}`,
+    with `p.2 : ι → Ω → 𝕂` and not `E → 𝕂`.
+
+    **`mpFamily` cannot express `set:pathjump`**, and that is a statement about the definition and
+    not about the proofs: the generator `𝒜_t f (ω) = Λ(t, ω) ∫ (f y − f (ω t⁻)) μ(t, ω, dy)` reads
+    the past of `ω` through `Λ` and is therefore no function of `X t ω`. `stateOperator A X` is the
+    one map by which the state dependent operators sit inside the path dependent ones, and
+    `mpFamilyF_stateOperator` says that the embedding changes no test process at all —
+    `mpFamilyF (stateOperator A X) Q c X = mpFamily A Q c X`, an equality of sets.
+  * `jumpApplyF`, `jumpOperatorF`, `jumpApplyF_state`, `jumpOperatorF_state` and
+    `mpFamilyF_jumpOperatorF_state`: **the generator of `eq:pathgen`, and the probe that it is a
+    generalisation.** **In Lean** on 2026-09-11, eleventh run.
+    `jumpApplyF Λ μ X f s ω = Λ s ω * ∫ y, (f y − f (X s ω)) ∂(μ s ω)`, with both the rate and the
+    kernel functionals of `(s, ω)` as the manuscript has them; `jumpOperatorF` pairs it with the
+    same measurability and boundedness of the test function that `jumpOperator` asks. The
+    predictability of `set:pathjump` is a property of the data and not part of the definition, in
+    the same way as `jumpApply` carries no hypothesis on `lam`.
+
+    The probe is `jumpOperatorF_state`: at `Λ s ω = lam (X s ω)` and `μ s ω = mu (X s ω)` the new
+    operator **is** `stateOperator (jumpOperator lam mu) X`, and `mpFamilyF_jumpOperatorF_state` is
+    that together with the previous point — the path dependent martingale problem of state
+    dependent data is the state dependent one, as a set of processes. A definition failing this
+    would be a different construction and not a wider one, the same standard
+    `jumpTimeF_const_eq_jumpTime` holds the path dependent jump times to.
+
+    **One deliberate difference to the manuscript, and it is a real one.** `eq:pathgen` reads the
+    increment at the **left limit** `ω t⁻`, `jumpApplyF` at `X t ω`. For a step path the two
+    integrands differ only at the jump times, a countable and hence Lebesgue null set, so the
+    compensating *integrals* agree and every statement about a test process is unaffected; but the
+    integrands are different functions, and `jumpApplyF` is not literally `eq:pathgen`. Which of the
+    two a proof needs is a question about the compensator, not about the generator.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,

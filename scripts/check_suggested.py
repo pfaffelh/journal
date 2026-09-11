@@ -26,7 +26,9 @@ for f in FILES:
     r = subprocess.run(['lake', f'--dir={JOURNAL}', 'env', 'lean', path],
                        capture_output=True, text=True)
     out = r.stdout + r.stderr
-    errs = [l for l in out.splitlines() if 'error:' in l]
+    # Lean meldet auch getaggte Fehler, `error(lean.dependsOnNoncomputable):`
+    # etwa; ein Filter auf `error:` allein übersieht sie.
+    errs = [l for l in out.splitlines() if 'error:' in l or 'error(' in l]
     sorries = [l for l in out.splitlines() if 'declaration uses' in l and 'sorry' in l]
     rows.append(f'| `{f}/Suggested.lean` | {r.returncode} | {len(errs)} | {len(sorries)} |')
     if errs:

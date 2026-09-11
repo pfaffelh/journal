@@ -471,6 +471,41 @@ def mpFamily [OrderBot ι] (A : Set ((E → 𝕂) × (E → 𝕂))) (Q : Clock �
   {Y | ∃ p ∈ A, ∀ t ω, Y t ω =
     p.1 (X t ω) - ∫ s in Q.interval c ⊥ t, p.2 (X s ω) ∂Q.q}
 
+/-- **The test processes attached to a *path dependent* operator.**  The second component of an
+element of the operator is a functional of the time and the sample point, `ι → Ω → 𝕂`, and not a
+function `E → 𝕂` of the state.
+
+`mpFamily` is not general enough for `set:pathjump` of the manuscript, and the reason is the whole
+point of the path dependent variant: the generator there is
+`𝒜_t f (ω) = Λ(t, ω) ∫ (f y - f (ω t⁻)) μ(t, ω, dy)`, whose rate reads the **past** of `ω` and is
+therefore no function of `X t ω`.  This is the family that expresses it, and
+`mpFamilyF_stateOperator` is the statement that nothing is lost on the way: at a state dependent
+integrand it is `mpFamily` again, as a set and not up to a null set. -/
+def mpFamilyF [OrderBot ι] (A : Set ((E → 𝕂) × (ι → Ω → 𝕂))) (Q : Clock ι) (c : Clock.Conv)
+    (X : ι → Ω → E) : Set (ι → Ω → 𝕂) :=
+  {Y | ∃ p ∈ A, ∀ t ω, Y t ω =
+    p.1 (X t ω) - ∫ s in Q.interval c ⊥ t, p.2 s ω ∂Q.q}
+
+/-- **A state dependent operator, read along a process as a path dependent one.**  The one map by
+which `mpFamily` embeds into `mpFamilyF`. -/
+def stateOperator (A : Set ((E → 𝕂) × (E → 𝕂))) (X : ι → Ω → E) :
+    Set ((E → 𝕂) × (ι → Ω → 𝕂)) :=
+  (fun p : (E → 𝕂) × (E → 𝕂) ↦ (p.1, fun (s : ι) (ω : Ω) ↦ p.2 (X s ω))) '' A
+
+/-- **The probe against emptiness of the path dependent family**: along the process a state
+dependent operator generates the same test processes as before.  A generalisation that failed this
+would be a different definition and not a wider one -- the same standard `jumpTimeF_const_eq_jumpTime`
+holds the path dependent jump times to. -/
+theorem mpFamilyF_stateOperator [OrderBot ι] (A : Set ((E → 𝕂) × (E → 𝕂))) (Q : Clock ι)
+    (c : Clock.Conv) (X : ι → Ω → E) :
+    mpFamilyF (stateOperator A X) Q c X = mpFamily A Q c X := by
+  ext Y
+  constructor
+  · rintro ⟨p, ⟨q, hq, rfl⟩, hY⟩
+    exact ⟨q, hq, hY⟩
+  · rintro ⟨q, hq, hY⟩
+    exact ⟨_, ⟨q, hq, rfl⟩, hY⟩
+
 /-! ## Milestone 3: canonical families, determining sets and the finite
 dimensional criterion -/
 
@@ -14161,22 +14196,40 @@ theorem rateInverse_eq_of_cumulativeRateF
   rw [h] at hlt
   exact absurd hr.2 (not_le.2 hlt)
 
+/-- **The cumulated rate is non negative**, from the positivity of the rate alone and at *every*
+argument: below the origin the window is empty.  This is what removes the hypothesis `0 ≤ a` from
+`rateInverse_le_iff`, and removing it is not cosmetic -- a measurability statement quantifies over
+a whole parameter space, on which the level is a function and cannot be assumed non negative
+pointwise. -/
+theorem cumulativeRateF_nonneg (hpos : ∀ u, 0 < u → 0 < Λ u ω) (c : ℝ) :
+    0 ≤ cumulativeRateF Λ ω c :=
+  setIntegral_nonneg measurableSet_Ioc fun u hu ↦ (hpos u hu.1).le
+
 /-- **The defining property of a generalised inverse**: `rateInverse` sits below a point of the half
 line exactly when the cumulated rate has passed the level there.  Mathlib has no generalised inverse
 of a monotone function, so this is ours; it is the form in which the inverse is used where an
 inequality rather than a value is wanted, and in particular it is what turns a statement about
 `rateInverse` into a statement about `cumulativeRateF`, which is an integral and therefore reachable
-by the measurability of the rate. -/
+by the measurability of the rate.
+
+**Nothing is asked of the level.**  At a negative level the inverse is `0` -- the origin already
+lies in the set whose infimum it is -- and the cumulated rate is non negative there, so both sides
+are true; the hypothesis `0 ≤ a` that the first version carried was spent on
+`cumulativeRateF_rateInverse` and is needed only in that branch. -/
 theorem rateInverse_le_iff
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) {c : ℝ} (hc : 0 ≤ c) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) {c : ℝ} (hc : 0 ≤ c) :
     rateInverse Λ ω a ≤ c ↔ a ≤ cumulativeRateF Λ ω c := by
-  constructor
-  · intro h
-    have := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω a) hc h
-    rwa [cumulativeRateF_rateInverse hint hpos htop ha] at this
-  · exact fun h ↦ csInf_le ⟨0, fun r hr ↦ hr.1⟩ ⟨hc, h⟩
+  rcases le_or_gt 0 a with ha | ha
+  · constructor
+    · intro h
+      have := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω a) hc h
+      rwa [cumulativeRateF_rateInverse hint hpos htop ha] at this
+    · exact fun h ↦ csInf_le ⟨0, fun r hr ↦ hr.1⟩ ⟨hc, h⟩
+  · exact iff_of_true (le_trans (csInf_le ⟨0, fun r hr ↦ hr.1⟩
+      ⟨le_rfl, by simpa using ha.le⟩) hc)
+      (ha.le.trans (cumulativeRateF_nonneg hpos c))
 
 /-- The complementary half of `rateInverse_le_iff`, in the form a measurability argument reads: the
 sublevel set of the inverse is a sublevel set of the cumulated rate, and below the origin it is
@@ -14184,13 +14237,62 @@ empty. -/
 theorem setOf_rateInverse_le
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (c : ℝ) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (a c : ℝ) :
     (rateInverse Λ ω a ≤ c) ↔ (0 ≤ c ∧ a ≤ cumulativeRateF Λ ω c) := by
   by_cases hc : 0 ≤ c
   · simp only [hc, true_and]
-    exact rateInverse_le_iff hint hpos htop ha hc
+    exact rateInverse_le_iff hint hpos htop hc
   · simp only [hc, false_and, iff_false, not_le]
     exact lt_of_lt_of_le (not_le.1 hc) (rateInverse_nonneg Λ ω a)
+
+/-! ### The inverse is measurable in a parameter
+
+The inverse is a definition by `sInf` and therefore reaches nothing directly.  What reaches it is
+`setOf_rateInverse_le`: its sublevel sets are sublevel sets of the **cumulated rate**, and the
+cumulated rate is an integral, so a parameter enters it through the integrand alone.  These two
+statements are the whole measurability theory of the path dependent construction, and note what
+they do *not* mention -- no filtration, no probability, no jump times: the parameter space is an
+arbitrary measurable space and the sample point is a function of it. -/
+
+/-- **The cumulated rate is measurable in a parameter**, from the joint measurability of the rate in
+the parameter and the time and from nothing else.  It is Fubini's measurability half
+(`StronglyMeasurable.integral_prod_right'`) against the finite measure `volume.restrict (0, c]`. -/
+theorem measurable_cumulativeRateF {γ : Type*} [MeasurableSpace γ] {Λ : γ → ℝ → Ω → ℝ}
+    {p : γ → Ω} (h : Measurable fun q : γ × ℝ ↦ Λ q.1 q.2 (p q.1)) (c : ℝ) :
+    Measurable fun g ↦ cumulativeRateF (Λ g) (p g) c :=
+  (h.stronglyMeasurable.integral_prod_right'
+    (ν := (volume.restrict (Set.Ioc (0 : ℝ) c)))).measurable
+
+/-- **The generalised inverse is measurable in a parameter.**  The level is itself a measurable
+function of the parameter, which is what the jump times need: the `(n+1)`-st of them is the inverse
+at the level `ξ 0 + ⋯ + ξ n`.
+
+The three hypotheses of the inversion are asked at every parameter value, and the fourth is the
+joint measurability that `measurable_cumulativeRateF` consumes.  **The level is not asked to be non
+negative**, and that is the point of the generalisation of `rateInverse_le_iff`: over a parameter
+space the level is a function, and the partial sums of waiting times are non negative only on the
+set where the waiting times are, which is not all of the space. -/
+theorem measurable_rateInverse {γ : Type*} [MeasurableSpace γ] {Λ : γ → ℝ → Ω → ℝ}
+    {p : γ → Ω} {a : γ → ℝ}
+    (hint : ∀ g r, IntervalIntegrable (fun u ↦ Λ g u (p g)) volume 0 r)
+    (hpos : ∀ g u, 0 < u → 0 < Λ g u (p g))
+    (htop : ∀ g, Tendsto (cumulativeRateF (Λ g) (p g)) atTop atTop)
+    (hmeas : Measurable fun q : γ × ℝ ↦ Λ q.1 q.2 (p q.1)) (ha : Measurable a) :
+    Measurable fun g ↦ rateInverse (Λ g) (p g) (a g) := by
+  refine measurable_of_Iic fun c ↦ ?_
+  by_cases hc : (0 : ℝ) ≤ c
+  · have hset : (fun g ↦ rateInverse (Λ g) (p g) (a g)) ⁻¹' Set.Iic c
+        = {g | a g ≤ cumulativeRateF (Λ g) (p g) c} := by
+      ext g
+      simpa [hc] using setOf_rateInverse_le (hint g) (hpos g) (htop g) (a g) c
+    rw [hset]
+    exact measurableSet_le ha (measurable_cumulativeRateF hmeas c)
+  · have hset : (fun g ↦ rateInverse (Λ g) (p g) (a g)) ⁻¹' Set.Iic c = (∅ : Set γ) := by
+      ext g
+      simp only [Set.mem_preimage, Set.mem_Iic, Set.mem_empty_iff_false, iff_false, not_le]
+      exact lt_of_lt_of_le (not_le.1 hc) (rateInverse_nonneg _ _ _)
+    rw [hset]
+    exact MeasurableSet.empty
 
 theorem rateInverse_mono
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
@@ -14551,6 +14653,178 @@ theorem jumpProcessF_const_eq_jumpProcess {c : ℝ} (hc : 0 < c) (hxi : ∀ n, 0
 
 end PathProcess
 
+/-! ### The filtration of a point process, and why it cannot be the filtration of the path
+
+`not_isStoppingTime_min_jumpTimeE` is the obstruction of the state dependent case, and it is not an
+artefact of that case: the jump times are **not** stopping times for the natural filtration of the
+process, because a constant chain gives a constant path and the waiting times leave no trace in it.
+The repair there was to localize with `rateTime`, a functional of the path.  Here the repair is a
+different one, and it is the one `ex:hawkes` prescribes itself: the Hawkes rate reads the **counting
+measure** of the past events, so the filtration it is predictable for is the one that counting
+measure generates, and a counting process sees its own jump times by construction.
+
+`jumpRecord` is that counting process in the form `naturalFiltration` accepts -- the boolean family
+`n ↦ (T n ≤ t)`, which is the counting measure of `T` on `[0, t]` read off one jump at a time.
+Nothing whatever is asked of the family `T` but the measurability of each `T n`: not monotonicity,
+not non explosion, not positivity.  The filtration is generated by the record **and** the path
+(`jumpState`), because the record alone does not see the marks.
+
+At this level `isStoppingTime_jumpTime` is bookkeeping; what it is worth is said in the Hawkes
+instance below, where `hawkesPathFiltration_le_hawkesFiltration` and
+`not_isStoppingTime_hawkesJumpTime_pathFiltration` together say that the enlargement is **needed**
+and not merely convenient. -/
+
+section PointFiltration
+
+variable [MeasurableSpace Ω] {E : Type*} [MeasurableSpace E]
+variable {T : Ω → ℕ → ℝ} {y : Ω → ℕ → E}
+
+/-- **The record of which jumps have happened by the time `i`.**  This is the counting process of
+the family `T`, coordinatewise: the `n`-th entry says whether the `n`-th jump has already
+occurred. -/
+noncomputable def jumpRecord (T : Ω → ℕ → ℝ) (i : ℝ≥0) (ω : Ω) : ℕ → Bool :=
+  fun n ↦ decide (T ω n ≤ (i : ℝ))
+
+theorem measurable_jumpRecord (hT : ∀ n, Measurable fun ω ↦ T ω n) (i : ℝ≥0) :
+    Measurable (jumpRecord T i) := by
+  refine measurable_pi_lambda _ fun n ↦ measurable_to_bool ?_
+  have hset : (fun ω ↦ jumpRecord T i ω n) ⁻¹' {true} = {ω | T ω n ≤ (i : ℝ)} := by
+    ext ω
+    simp [jumpRecord]
+  rw [hset]
+  exact measurableSet_le (hT n) measurable_const
+
+/-- **The state of a point process at the time `i`**: which jumps have happened, and where the path
+is.  The second component is what the state dependent construction calls the process; the first is
+what it is missing. -/
+noncomputable def jumpState (T : Ω → ℕ → ℝ) (y : Ω → ℕ → E) (i : ℝ≥0) (ω : Ω) :
+    (ℕ → Bool) × E :=
+  (jumpRecord T i ω, stepPath (T ω) (y ω) (i : ℝ))
+
+theorem measurable_jumpState (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) (i : ℝ≥0) :
+    Measurable (jumpState T y i) :=
+  (measurable_jumpRecord hT i).prodMk
+    (measurable_stepPath_comp (u := fun _ : Ω ↦ (i : ℝ)) measurable_const hT hy)
+
+/-- **The natural filtration of a point process**, indexed by `ℝ≥0` as `jumpFiltration` and
+`jumpFiltrationE` are, because `mpFamily` needs `[OrderBot ι]`. -/
+noncomputable def pointFiltration (T : Ω → ℕ → ℝ) (y : Ω → ℕ → E)
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace Ω) :=
+  naturalFiltration (fun i : ℝ≥0 ↦ jumpState T y i) (measurable_jumpState hT hy)
+
+/-- The set on which the `n`-th jump has happened, read in the state space of the record. -/
+theorem measurableSet_record (n : ℕ) :
+    MeasurableSet {p : (ℕ → Bool) × E | p.1 n = true} := by
+  have hpre : {p : (ℕ → Bool) × E | p.1 n = true}
+      = (fun p : (ℕ → Bool) × E ↦ p.1 n) ⁻¹' {true} := rfl
+  rw [hpre]
+  exact ((measurable_pi_apply n).comp measurable_fst) (measurableSet_singleton true)
+
+/-- **The jump times of a point process are stopping times for its own filtration.**
+
+The level set `{ofReal (T n) ≤ i}` is the `n`-th coordinate of the record at `i` and nothing else,
+so the statement is the definition of `jumpRecord` read back.  **No hypothesis on the family beyond
+measurability**, and in particular none of positivity: `ENNReal.ofReal` sends a negative jump time
+to `0`, and a negative jump time is below every `i : ℝ≥0` in the real order as well, so the two
+sides agree there too. -/
+theorem isStoppingTime_jumpTime (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) (n : ℕ) :
+    IsStoppingTime (pointFiltration T y hT hy) fun ω ↦ ENNReal.ofReal (T ω n) := by
+  intro i
+  have key : ∀ ω : Ω, ENNReal.ofReal (T ω n) ≤ ((i : ℝ≥0) : ENNReal) ↔ T ω n ≤ (i : ℝ) := by
+    intro ω
+    rw [← ENNReal.ofReal_coe_nnreal, ENNReal.ofReal_le_ofReal_iff i.coe_nonneg]
+  refine MeasurableSet.congr
+    (s := jumpState T y i ⁻¹' {p : (ℕ → Bool) × E | p.1 n = true})
+    ((measurable_naturalFiltration (X := fun i : ℝ≥0 ↦ jumpState T y i)
+      (measurable_jumpState hT hy) le_rfl) (measurableSet_record n)) ?_
+  ext ω
+  simp only [Set.mem_preimage, Set.mem_ofPred_eq, jumpState, jumpRecord, decide_eq_true_eq]
+  exact (key ω).symm
+
+/-- **The path of a point process is adapted to its own filtration**, the second component of the
+state being the path.  Stated as measurability and not as `Adapted`, because `Adapted` asks for
+`StronglyMeasurable`, which over a bare `[MeasurableSpace E]` cannot be stated -- the same reason
+`naturalFiltration` exists at all. -/
+theorem measurable_stepPath_pointFiltration (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) (i : ℝ≥0) :
+    Measurable[pointFiltration T y hT hy i] fun ω ↦ stepPath (T ω) (y ω) (i : ℝ) :=
+  measurable_snd.comp (measurable_naturalFiltration (X := fun i : ℝ≥0 ↦ jumpState T y i)
+    (measurable_jumpState hT hy) le_rfl)
+
+/-- **Every real functional of the path of a point process is jointly measurable in `(u, ω)` for
+the σ-algebra of the past up to `t`.**  The counterpart of `measurable_uncurry_jumpProcessE`, and
+the proof is the same one: the path is locally constant from the right at every sample point
+(`eventuallyEq_nhdsGE_stepPath`), and that is all `measurable_uncurry_min_of_eventuallyEq` asks.
+
+**Nothing is required of the family `T` beyond the measurability of each `T n`** -- not
+monotonicity, not non explosion.  The right continuity of `stepPath` is unconditional, and at a
+sample point where no window contains the time the index is the junk value `0` there and at every
+later time as well, so the junk value is right continuous too.  This is the input `mpFamily` asks
+of a process, and the path dependent variant now has it. -/
+theorem measurable_uncurry_stepPath_pointFiltration (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) {h : E → ℝ} (hh : Measurable h) (t : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (pointFiltration T y hT hy t)]
+      fun p : ℝ≥0 × Ω ↦ h (stepPath (T p.2) (y p.2) (min (p.1 : ℝ) (t : ℝ))) := by
+  have hmeas : ∀ r : ℝ, r ≤ (t : ℝ) →
+      Measurable[pointFiltration T y hT hy t] fun ω ↦ h (stepPath (T ω) (y ω) (max r 0)) := by
+    intro r hr
+    have hu : Real.toNNReal r ≤ t := Real.toNNReal_le_iff_le_coe.2 hr
+    have hstep : Measurable[pointFiltration T y hT hy t]
+        fun ω ↦ stepPath (T ω) (y ω) ((Real.toNNReal r : ℝ≥0) : ℝ) :=
+      (measurable_stepPath_pointFiltration hT hy (Real.toNNReal r)).mono
+        ((pointFiltration T y hT hy).mono hu) le_rfl
+    rw [Real.coe_toNNReal'] at hstep
+    exact hh.comp hstep
+  have hrc : ∀ (ω : Ω) (s : ℝ),
+      ∀ᶠ r in 𝓝[≥] s, h (stepPath (T ω) (y ω) (max r 0)) = h (stepPath (T ω) (y ω) (max s 0)) :=
+    fun ω s ↦ eventuallyEq_nhdsGE_comp_max (g := fun r ↦ h (stepPath (T ω) (y ω) r))
+      (fun s' ↦ (eventuallyEq_nhdsGE_stepPath (T ω) (y ω) s').mono fun r hr ↦ by rw [hr]) s
+  have key := measurable_uncurry_min_of_eventuallyEq (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+    measurable_coe_nnreal_real hmeas hrc
+  have heq : ∀ p : ℝ≥0 × Ω,
+      h (stepPath (T p.2) (y p.2) (max (min (p.1 : ℝ) (t : ℝ)) 0))
+        = h (stepPath (T p.2) (y p.2) (min (p.1 : ℝ) (t : ℝ))) := fun p ↦ by
+    rw [max_eq_left (le_min p.1.coe_nonneg t.coe_nonneg)]
+  simpa only [heq] using key
+
+/-- **The compensating window of a point process is measurable for the past.**  The counterpart of
+`measurable_compensatorE`, and like it a statement that holds at *every* sample point, with no
+hypothesis on the family beyond measurability.  Together with
+`measurable_uncurry_stepPath_pointFiltration` these are the two inputs a test process of
+`mpFamily` is built from. -/
+theorem measurable_compensator_pointFiltration (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) {h : E → ℝ} (hh : Measurable h) (c : Clock.Conv)
+    (t : ℝ≥0) :
+    Measurable[pointFiltration T y hT hy t] fun ω ↦
+      ∫ u in lebesgueClock.interval c ⊥ t, h (stepPath (T ω) (y ω) (u : ℝ)) ∂lebesgueClock.q := by
+  set S := lebesgueClock.interval c ⊥ t with hS
+  haveI hfin : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ]
+    exact lt_top_iff_ne_top.2 (ne_top_of_le_ne_top (lebesgueClock.measure_Iic_ne_top t)
+      (measure_mono (lebesgueClock.interval_subset_Iic c ⊥ t)))
+  have hW := measurable_uncurry_stepPath_pointFiltration hT hy hh t
+  have hsm : StronglyMeasurable[pointFiltration T y hT hy t] fun ω : Ω ↦
+      ∫ u in S, h (stepPath (T ω) (y ω) (min (u : ℝ) (t : ℝ))) ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace
+      Ω (pointFiltration T y hT hy t) ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) _
+      (fun u ω ↦ h (stepPath (T ω) (y ω) (min (u : ℝ) (t : ℝ)))) hW id measurable_id
+  have hcongr : (fun ω : Ω ↦
+        ∫ u in S, h (stepPath (T ω) (y ω) (min (u : ℝ) (t : ℝ))) ∂lebesgueClock.q)
+      = fun ω ↦ ∫ u in S, h (stepPath (T ω) (y ω) (u : ℝ)) ∂lebesgueClock.q := by
+    funext ω
+    refine setIntegral_congr_fun (lebesgueClock.measurableSet_interval c ⊥ t) fun u hu ↦ ?_
+    rw [min_eq_left]
+    exact_mod_cast lebesgueClock.interval_subset_Iic c ⊥ t hu
+  rw [← hcongr]
+  exact hsm.measurable
+
+end PointFiltration
+
 /-! ### The Hawkes rate: the one hypothesis that is not automatic, discharged on the data of
 `ex:hawkes`
 
@@ -14659,6 +14933,33 @@ theorem le_hawkesFrozen (hφ : ∀ x, 0 ≤ φ x) (T : ℕ → ℝ) (n : ℕ) (u
   have : 0 ≤ ∑ k ∈ Finset.Ico 1 n, φ (u - T k) := Finset.sum_nonneg fun k _ ↦ hφ _
   simpa [hawkesFrozen] using this
 
+/-- **The frozen rate is locally integrable, and this discharges the hypothesis the whole recursion
+carried.**  Every statement about the Hawkes jump times above and below asks for
+`∀ m r, IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T m u ω) volume 0 r`, and it is asked of a
+family `T` that the recursion itself produces, so at first sight it is circular.  It is not: the
+frozen rate is a constant plus a **finite** sum of translates of `φ`, so local integrability of
+every translate of `φ` gives it outright, whatever the family.
+
+**Which hypothesis on `φ` this is, and which it is not.**  It is local integrability of `φ`
+*carried along the translation*, and for the kernel of `ex:hawkes` -- supported on the half line,
+non negative, of finite mass on every window -- it is what "locally integrable kernel" says.  It is
+**not** the non explosion: that is the local integrability of the **self referential** rate
+`hawkesSelfRate`, which asks the jump times to exhaust the half line, and no bound on `φ` alone
+gives it. -/
+theorem intervalIntegrable_hawkesFrozen
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (T : ℕ → ℝ) (n : ℕ) (ω : Ω) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T n u ω) volume 0 r := by
+  have hsum : IntervalIntegrable (fun u ↦ ∑ k ∈ Finset.Ico 1 n, φ (u - T k)) volume 0 r := by
+    have h := IntervalIntegrable.sum (μ := volume) (a := 0) (b := r) (Finset.Ico 1 n)
+      (f := fun k u ↦ φ (u - T k)) fun k _ ↦ hφint (T k) r
+    have heq : (∑ k ∈ Finset.Ico 1 n, fun u ↦ φ (u - T k))
+        = fun u ↦ ∑ k ∈ Finset.Ico 1 n, φ (u - T k) := by
+      funext u
+      simp
+    rwa [heq] at h
+  simpa [hawkesFrozen] using intervalIntegrable_const.add hsum
+
 /-- **Before the first jump the frozen rate is the baseline.**  With the sum starting at `1` the
 empty stage and the first stage carry no term at all, which is the statement that the history of the
 process is empty until it jumps. -/
@@ -14759,6 +15060,96 @@ theorem cumulativeRateF_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
     fun u _ ↦ le_hawkesFrozen hφ (hawkesJumpTime ν φ xi ω) (n + 1) u ω
   rw [hawkesJumpTime_succ]
   exact cumulativeRateF_rateInverse hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k)
+
+/-! #### The jump times do not read the sample point, and are measurable in the waiting times
+
+`hawkesJumpTime` carries a sample point `ω` because `rateInverse` does, and `rateInverse` carries
+one because a path dependent rate is a functional of it.  The Hawkes rate, however, is a functional
+of the **event times** and not of the marks, and the event times are built from the waiting times
+alone -- so the argument `ω` of `hawkesFrozen` is a dummy, and `hawkesJumpTime ν φ xi ω n` does not
+depend on `ω` in any way.  `hawkesJumpTime_sample_congr` says so across *different* sample spaces,
+which is the form the measurability uses: the jump times of the process on `(ℕ → E) × (ℕ → ℝ)`
+factor through `Prod.snd`.
+
+**That is what makes the measurability of this construction cheap, and it is a statement about
+Hawkes and not about path dependence.**  A rate that read the marks of the chain -- a marked Hawkes
+process, where the excitation depends on what kind of event occurred -- would have jump times that
+genuinely depend on the first coordinate, and the recursion would have to be carried through it.
+The present measurability proof would still go through, because `measurable_rateInverse` asks
+nothing about which coordinates the rate reads; what would change is the joint measurability that
+has to be fed to it. -/
+
+/-- The inverse of a frozen rate does not depend on the sample point, because the frozen rate does
+not: `hawkesFrozen` discards its last argument.  The two sample spaces need not even be the same
+type. -/
+theorem rateInverse_hawkesFrozen_sample {Ω' : Type*} (ν : ℝ) (φ : ℝ → ℝ) (T : ℕ → ℝ) (m : ℕ)
+    (ω : Ω) (ω' : Ω') (a : ℝ) :
+    rateInverse (hawkesFrozen ν φ T m) ω a = rateInverse (hawkesFrozen ν φ T m) ω' a := rfl
+
+theorem hawkesStep_sample_congr {Ω' : Type*} (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ)
+    (ω : Ω) (ω' : Ω') (n : ℕ) : hawkesStep ν φ xi ω n = hawkesStep ν φ xi ω' n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      funext m
+      simp only [hawkesStep, ih]
+      split
+      · rfl
+      · exact rateInverse_hawkesFrozen_sample ν φ _ (n + 1) ω ω' _
+
+/-- **The Hawkes jump times are a function of the waiting times alone.** -/
+theorem hawkesJumpTime_sample_congr {Ω' : Type*} (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ)
+    (ω : Ω) (ω' : Ω') (n : ℕ) :
+    hawkesJumpTime ν φ xi ω n = hawkesJumpTime ν φ xi ω' n := by
+  rw [hawkesJumpTime, hawkesJumpTime, hawkesStep_sample_congr ν φ xi ω ω' n]
+
+/-- **The Hawkes jump times are measurable in the waiting times**, every stage of them, and the
+induction is the recursion that defined them.
+
+The statement is the one an induction can carry: at the stage `n + 1` the frozen rate reads the
+jump times at the indices `1, …, n`, so what is needed is the measurability of *all* earlier stages
+and not only of the immediately preceding one.
+
+**No hypothesis beyond the three that the inverse needs, and the measurability of `φ`.**  In
+particular there is no bound on `φ` and no condition on its mass -- the same shape as
+`jumpProcess_isLocalMPSolution`, which asks nothing of `lam` but its measurability.  Nor is the
+positivity of the waiting times asked: a parameter space cannot carry it, and
+`measurable_rateInverse` was generalised precisely so that it need not. -/
+theorem measurable_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (ω : Ω) :
+    ∀ n, ∀ m ≤ n, Measurable fun xi : ℕ → ℝ ↦ hawkesJumpTime ν φ xi ω m := by
+  intro n
+  induction n with
+  | zero =>
+      intro m hm
+      rw [Nat.le_zero.1 hm]
+      simp
+  | succ n ih =>
+      intro m hm
+      rcases Nat.lt_succ_iff_lt_or_eq.1 (Nat.lt_succ_of_le hm) with h | h
+      · exact ih m (Nat.lt_succ_iff.1 h)
+      · subst h
+        have hrw : (fun xi : ℕ → ℝ ↦ hawkesJumpTime ν φ xi ω (n + 1))
+            = fun xi : ℕ → ℝ ↦ rateInverse
+              (hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1)) ω
+              (∑ k ∈ Finset.range (n + 1), xi k) :=
+          funext fun xi ↦ hawkesJumpTime_succ ν φ xi ω n
+        rw [hrw]
+        refine measurable_rateInverse
+          (Λ := fun xi ↦ hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1))
+          (p := fun _ ↦ ω)
+          (fun g r ↦ intervalIntegrable_hawkesFrozen hφint _ _ _ r)
+          (fun g u _ ↦ hν.trans_le (le_hawkesFrozen hφ _ _ u ω))
+          (fun g ↦ tendsto_cumulativeRateF_atTop_of_le
+            (fun r ↦ intervalIntegrable_hawkesFrozen hφint _ _ _ r) hν
+            (fun u _ ↦ le_hawkesFrozen hφ _ _ u ω)) ?_ ?_
+        · have hjoint : Measurable fun q : (ℕ → ℝ) × ℝ ↦
+              ν + ∑ k ∈ Finset.Ico 1 (n + 1), φ (q.2 - hawkesJumpTime ν φ q.1 ω k) := by
+            refine measurable_const.add (Finset.measurable_sum _ fun k hk ↦ ?_)
+            refine hφm.comp (measurable_snd.sub ?_)
+            exact (ih k (Nat.lt_succ_iff.1 (Finset.mem_Ico.1 hk).2)).comp measurable_fst
+          simpa [hawkesFrozen] using hjoint
+        · exact Finset.measurable_sum _ fun k _ ↦ measurable_pi_apply k
 
 /-! #### The identification: the frozen rate is the Hawkes rate of its own counting measure
 
@@ -14945,6 +15336,19 @@ theorem strictMono_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0
   rw [hA, hB, Finset.sum_range_succ] at hmon
   linarith [hxi (m + 1)]
 
+/-- **The jump times increase strictly, with the carried hypothesis discharged.**  This is
+`strictMono_hawkesJumpTime` with `intervalIntegrable_hawkesFrozen` substituted for its integrability
+hypothesis, and it is the form in which the statement should be read: what the increase of the jump
+times rests on is `0 < ν`, `0 ≤ φ`, the predictability `φ = 0` on the closed negative half line, and
+the local integrability of `φ` -- all four conditions on the **data** of `ex:hawkes`, none on the
+family the recursion produces. -/
+theorem strictMono_hawkesJumpTime_of_kernel (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (hxi : ∀ k, 0 < xi k) :
+    StrictMono (hawkesJumpTime ν φ xi ω) :=
+  strictMono_hawkesJumpTime hν hφ hφ0 hxi fun m r ↦
+    intervalIntegrable_hawkesFrozen hφint _ m ω r
+
 /-! #### The fixed point is closed: the jump times are the jump times of their own Hawkes rate
 
 Everything above computes with the frozen rates, which are auxiliary.  This is the statement the
@@ -15104,6 +15508,291 @@ theorem hawkesProcess_of_lt_first (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0
   rw [jumpTimeF_hawkesSelfRate hν hφ hφ0 hxi hintF hint 1, hawkesJumpTime_one hν (hxi 0)]
   exact ht
 
+/-! #### Joint measurability
+
+`measurable_stepPath_comp` asks of a step path exactly two things -- that the jump times be
+measurable in the parameter and that the values be -- and `measurable_hawkesJumpTime` is the first
+of them.  Joint measurability in `(t, ω)` is its case `γ = ℝ × Ω`, `u = Prod.fst`, exactly as in the
+state dependent construction.
+
+**Which process is measurable, and why the distinction is not pedantry.**  The statement below is
+about `stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1`, and `hawkesProcess_eq_stepPath` says that
+`hawkesProcess` *is* that step path -- but only at a sample point at which the waiting times are non
+negative and the self referential rate is locally integrable, that is, at a sample point at which
+the construction is valid.  Off that set `hawkesProcess` unfolds to `rateInverse` of a rate that is
+not locally integrable, and there is no reason for it to be measurable there; the set itself is of
+full measure under the driving law, by the non explosion that `ex:hawkes` proves and that this
+development carries.
+
+So the honest division is: the **step path over the Hawkes jump times** is measurable outright, with
+no hypothesis beyond the data, and the **process** agrees with it exactly where it is the process.
+That is the same division as in the state dependent local construction, where
+`stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE` is stated about the *stopped* process because
+the unstopped one is not right continuous at an explosive sample point. -/
+
+/-- **The step path over the Hawkes jump times is jointly measurable in the time and the sample
+point.**  Nothing beyond the data of `ex:hawkes` is asked: `0 < ν`, `0 ≤ φ`, `φ` measurable, and
+every translate of `φ` locally integrable. -/
+theorem measurable_uncurry_hawkesStepPath [MeasurableSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) :
+    Measurable fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦
+      stepPath (hawkesJumpTime ν φ q.2.2 q.2) q.2.1 q.1 := by
+  refine measurable_stepPath_comp measurable_fst (fun n ↦ ?_) (fun n ↦ ?_)
+  · have hrw : (fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦ hawkesJumpTime ν φ q.2.2 q.2 n)
+        = (fun xi : ℕ → ℝ ↦ hawkesJumpTime ν φ xi (0 : ℕ → ℝ) n) ∘ fun q ↦ q.2.2 :=
+      funext fun q ↦ hawkesJumpTime_sample_congr ν φ q.2.2 q.2 (0 : ℕ → ℝ) n
+    rw [hrw]
+    exact (measurable_hawkesJumpTime hν hφ hφm hφint (0 : ℕ → ℝ) n n le_rfl).comp
+      (measurable_snd.comp measurable_snd)
+  · exact (measurable_pi_apply n).comp (measurable_fst.comp measurable_snd)
+
+/-! #### The filtration of the Hawkes process, and the two statements that make it the right one
+
+`ex:hawkes` writes its rate against the counting measure of the past events, so the filtration it is
+predictable for is the one that counting measure generates.  That is `hawkesFiltration`, the
+`pointFiltration` of the Hawkes jump times and the chain, and `isStoppingTime_hawkesJumpTime` says
+what a point process filtration is for.
+
+**What makes this a finding and not a definition** are the two statements after it.
+`hawkesPathFiltration_le_hawkesFiltration` says that the natural filtration of the *path* -- the
+one the state dependent construction uses, and the only one available before this paragraph -- sits
+**inside** the new one; and `not_isStoppingTime_hawkesJumpTime_pathFiltration` says that the
+inclusion is strict where it matters: the first jump time is not a stopping time for the smaller
+one.  The witness is the one of `not_isStoppingTime_min_jumpTimeE`, transferred and made cheaper --
+a constant chain gives a constant path at every time, while `hawkesJumpTime_one` puts the first jump
+at `ξ 0 / ν`, which the waiting times move.  Nothing about `φ` enters it at all.
+
+So the enlargement is forced, and the two constructions part company exactly here: the state
+dependent case could repair the defect **inside** the filtration of the path, because `rateSup` is a
+functional of the path; the path dependent case cannot, and has to count. -/
+
+/-- **The Hawkes jump times are measurable functions of the sample point.**  This is
+`measurable_hawkesJumpTime` with the sample point erased by `hawkesJumpTime_sample_congr`, exactly
+as in `measurable_uncurry_hawkesStepPath`. -/
+theorem measurable_hawkesJumpTime_apply [MeasurableSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (n : ℕ) :
+    Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ hawkesJumpTime ν φ ω.2 ω n := by
+  have hrw : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ hawkesJumpTime ν φ ω.2 ω n)
+      = (fun xi : ℕ → ℝ ↦ hawkesJumpTime ν φ xi (0 : ℕ → ℝ) n) ∘ fun ω ↦ ω.2 :=
+    funext fun ω ↦ hawkesJumpTime_sample_congr ν φ ω.2 ω (0 : ℕ → ℝ) n
+  rw [hrw]
+  exact (measurable_hawkesJumpTime hν hφ hφm hφint (0 : ℕ → ℝ) n n le_rfl).comp measurable_snd
+
+/-- **The filtration of the Hawkes process**: the one generated by the counting record of its jumps
+together with the path.  Nothing beyond the data of `ex:hawkes` is asked. -/
+noncomputable def hawkesFiltration [MeasurableSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  pointFiltration (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ hawkesJumpTime ν φ ω.2 ω) (fun ω ↦ ω.1)
+    (measurable_hawkesJumpTime_apply hν hφ hφm hφint)
+    fun n ↦ (measurable_pi_apply n).comp measurable_fst
+
+/-- **The Hawkes jump times are stopping times.**  No condition on `φ` beyond the data, and none of
+non explosion: the record counts the jumps whether or not they accumulate. -/
+theorem isStoppingTime_hawkesJumpTime [MeasurableSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (n : ℕ) :
+    IsStoppingTime (hawkesFiltration (E := E) hν hφ hφm hφint)
+      fun ω ↦ ENNReal.ofReal (hawkesJumpTime ν φ ω.2 ω n) :=
+  isStoppingTime_jumpTime _ _ n
+
+/-- **The step path over the Hawkes jump times is adapted to the Hawkes filtration.**  Together with
+`hawkesProcess_eq_stepPath` this is the adaptedness of the process at every sample point at which
+the construction is valid; the division is the one explained at
+`measurable_uncurry_hawkesStepPath`. -/
+theorem measurable_hawkesStepPath_hawkesFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (i : ℝ≥0) :
+    Measurable[hawkesFiltration (E := E) hν hφ hφm hφint i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (i : ℝ) :=
+  measurable_stepPath_pointFiltration _ _ i
+
+/-- **The step path over the Hawkes jump times is progressively measurable for the Hawkes
+filtration.**  This is the input `mpFamily` asks of a process, in the form
+`Clock.IsProgressive` consumes it, and the path dependent variant now has it.  Nothing beyond the
+data of `ex:hawkes` enters -- in particular neither the fixed point nor the local integrability of
+the self referential rate, which is the non explosion: the statement is about the step path over
+the Hawkes jump times, and `hawkesProcess_eq_stepPath` is what turns it into a statement about the
+process, exactly where the process is that step path. -/
+theorem measurable_uncurry_hawkesStepPath_hawkesFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    {h : E → ℝ} (hh : Measurable h) (i : ℝ≥0) :
+    Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod
+        (hawkesFiltration (E := E) hν hφ hφm hφint i)]
+      fun p : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+        h (stepPath (hawkesJumpTime ν φ p.2.2 p.2) p.2.1 (min (p.1 : ℝ) (i : ℝ))) :=
+  measurable_uncurry_stepPath_pointFiltration _ _ hh i
+
+/-- **The compensating window of the Hawkes process is measurable for the past.**  The second of
+the two inputs a test process of `mpFamily` is built from, the first being
+`measurable_uncurry_hawkesStepPath_hawkesFiltration`. -/
+theorem measurable_compensator_hawkesFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    {h : E → ℝ} (hh : Measurable h) (c : Clock.Conv) (i : ℝ≥0) :
+    Measurable[hawkesFiltration (E := E) hν hφ hφm hφint i]
+      fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in lebesgueClock.interval c ⊥ i,
+        h (stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (u : ℝ)) ∂lebesgueClock.q :=
+  measurable_compensator_pointFiltration _ _ hh c i
+
+/-- **The natural filtration of the Hawkes path**, the counterpart of `jumpFiltrationE` and the
+filtration the path dependent variant would have if it followed the state dependent one. -/
+noncomputable def hawkesPathFiltration [MeasurableSpace E] (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  naturalFiltration
+    (fun i : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (i : ℝ))
+    fun i ↦ measurable_stepPath_comp (u := fun _ : (ℕ → E) × (ℕ → ℝ) ↦ (i : ℝ)) measurable_const
+      (measurable_hawkesJumpTime_apply hν hφ hφm hφint)
+      fun n ↦ (measurable_pi_apply n).comp measurable_fst
+
+/-- **The filtration of the path sits inside the filtration of the point process**, at every index.
+The enlargement therefore loses nothing: everything adapted to the path is adapted to the record as
+well. -/
+theorem hawkesPathFiltration_le_hawkesFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (i : ℝ≥0) :
+    hawkesPathFiltration (E := E) hν hφ hφm hφint i ≤ hawkesFiltration hν hφ hφm hφint i := by
+  refine iSup₂_le fun j hj ↦ ?_
+  rintro A ⟨u, hu, rfl⟩
+  exact (measurable_hawkesStepPath_hawkesFiltration hν hφ hφm hφint j).mono
+    ((hawkesFiltration (E := E) hν hφ hφm hφint).mono hj) le_rfl hu
+
+/-- **The Hawkes jump times are not stopping times for the filtration of the path.**  The inclusion
+of `hawkesPathFiltration_le_hawkesFiltration` is therefore strict at the only place that matters,
+and the counting record is not a convenience.
+
+The witness is the one of `not_isStoppingTime_min_jumpTimeE` and it is cheaper here, because
+`hawkesJumpTime_one` is unconditional in `φ`: the constant chain at `x₀` with the constant waiting
+times `ν / 4` and `ν` has first jump times `1 / 4` and `1`, which the threshold `1 / 2` separates,
+while both paths are constantly `x₀` at **every** time.  Both waiting times are strictly positive,
+so neither sample point is degenerate.  Nothing about `φ` enters. -/
+theorem not_isStoppingTime_hawkesJumpTime_pathFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (x₀ : E) :
+    ¬ IsStoppingTime (hawkesPathFiltration (E := E) hν hφ hφm hφint)
+      fun ω ↦ ENNReal.ofReal (hawkesJumpTime ν φ ω.2 ω 1) := by
+  classical
+  intro hst
+  set i₀ : ℝ≥0 := Real.toNNReal (1 / 2) with hi₀
+  set S : Set ((ℕ → E) × (ℕ → ℝ)) :=
+    {ω | ENNReal.ofReal (hawkesJumpTime ν φ ω.2 ω 1) ≤ ((i₀ : ℝ≥0) : ENNReal)} with hS
+  have hSm : MeasurableSet[hawkesPathFiltration hν hφ hφm hφint i₀] S := hst i₀
+  have hcoe : ((i₀ : ℝ≥0) : ENNReal) = ENNReal.ofReal (1 / 2) := rfl
+  set ω₁ : (ℕ → E) × (ℕ → ℝ) := (fun _ ↦ x₀, fun _ ↦ ν / 4) with hω₁
+  set ω₂ : (ℕ → E) × (ℕ → ℝ) := (fun _ ↦ x₀, fun _ ↦ ν) with hω₂
+  have h₁ : hawkesJumpTime ν φ ω₁.2 ω₁ 1 = 1 / 4 := by
+    rw [hω₁, hawkesJumpTime_one hν (by positivity)]
+    field_simp
+  have h₂ : hawkesJumpTime ν φ ω₂.2 ω₂ 1 = 1 := by
+    rw [hω₂, hawkesJumpTime_one hν hν.le]
+    exact div_self hν.ne'
+  have hmem₁ : ω₁ ∈ S := by
+    rw [hS, Set.mem_ofPred_eq, h₁, hcoe]
+    exact ENNReal.ofReal_le_ofReal (by norm_num)
+  have hmem₂ : ω₂ ∉ S := by
+    rw [hS, Set.mem_ofPred_eq, h₂, hcoe,
+      ENNReal.ofReal_le_ofReal_iff (by norm_num : (0 : ℝ) ≤ 1 / 2)]
+    norm_num
+  have hpath : ∀ r : ℝ≥0, r ≤ i₀ →
+      (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (r : ℝ)) ω₁
+        = (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (r : ℝ)) ω₂ :=
+    fun r _ ↦ rfl
+  have hGm : Measurable[hawkesPathFiltration hν hφ hφm hφint i₀] (S.indicator fun _ ↦ (1 : ℝ)) :=
+    measurable_const.indicator hSm
+  have hsep := eq_of_measurable_naturalFiltration
+    (X := fun i : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1 (i : ℝ)) _ hGm hpath
+  rw [Set.indicator_of_mem hmem₁, Set.indicator_of_notMem hmem₂] at hsep
+  exact one_ne_zero hsep
+
 end HawkesProcess
+
+/-! ### The generator of a path dependent jump process, and the family it generates
+
+`set:pathjump` of the manuscript writes its generator as
+
+`𝒜_t f (ω) = Λ(t, ω) ∫_E (f y - f (ω t⁻)) μ(t, ω, dy)`,
+
+and lets `𝓧°` be the processes `f (π_t) - ∫_0^t 𝒜_s f ds`.  **`mpFamily` cannot express that**, and
+the obstruction is the whole point of this variant: the second component of an element of
+`jumpOperator lam mu` is a function `E → ℝ` of the *state*, while `𝒜_s f` is a functional of the
+*time and the sample point*.  `mpFamilyF` is the family that expresses it and `jumpOperatorF` is the
+operator of `eq:pathgen` inside it.
+
+`mpFamilyF_stateOperator` and `jumpOperatorF_state` are the two probes against emptiness, in exactly
+the sense in which `jumpTimeF_const_eq_jumpTime` is one for the jump times: at a state dependent rate
+and kernel the new family and the new operator **are** the old ones, as sets and not up to a null
+set.  `mpFamilyF_jumpOperatorF_state` is the two of them together.
+
+**One deliberate difference to the manuscript.**  `eq:pathgen` reads the increment at the **left
+limit** `ω t⁻`; `jumpApplyF` reads it at `X t ω`.  For a step path the two differ only at the jump
+times, a countable and hence Lebesgue null set, so the compensating *integrals* agree -- but the
+integrands are different functions, and `jumpApplyF` is therefore not literally `eq:pathgen`.  Which
+of the two a proof needs is a question about the compensator and not about the generator, and it is
+recorded in the inventory rather than smoothed over here. -/
+
+section PathGenerator
+
+variable {ι : Type*} {Ω' : Type*} {E : Type*} [MeasurableSpace E]
+
+/-- **The generator of a path dependent jump process**, `eq:pathgen` of `set:pathjump`: the rate
+read at the time and the sample point, times the mean increment of `f` under the jump kernel read
+there.  Both the rate and the kernel are functionals of `(s, ω)`, as the manuscript has them; the
+predictability of `set:pathjump` is a property of the data and not a part of this definition, in the
+same way as `jumpApply` carries no hypothesis on `lam`. -/
+noncomputable def jumpApplyF (Lam : ι → Ω' → ℝ) (mu : ι → Ω' → Measure E) (X : ι → Ω' → E)
+    (f : E → ℝ) : ι → Ω' → ℝ :=
+  fun s ω ↦ Lam s ω * ∫ y, (f y - f (X s ω)) ∂(mu s ω)
+
+/-- **The operator of the path dependent jump problem**, the counterpart of `jumpOperator`: the same
+measurability and boundedness of the test function, and `jumpApplyF` in the second component. -/
+def jumpOperatorF (Lam : ι → Ω' → ℝ) (mu : ι → Ω' → Measure E)
+    (X : ι → Ω' → E) : Set ((E → ℝ) × (ι → Ω' → ℝ)) :=
+  {p | Measurable p.1 ∧ (∃ C, ∀ x, |p.1 x| ≤ C) ∧ p.2 = jumpApplyF Lam mu X p.1}
+
+/-- At a state dependent rate and kernel the path dependent generator is the state dependent one,
+read along the process -- pointwise, and by `rfl`. -/
+theorem jumpApplyF_state (lam : E → ℝ) (mu : Kernel E E) (X : ι → Ω' → E) (f : E → ℝ)
+    (s : ι) (ω : Ω') :
+    jumpApplyF (fun s ω ↦ lam (X s ω)) (fun s ω ↦ mu (X s ω)) X f s ω
+      = jumpApply lam mu f (X s ω) := rfl
+
+/-- **The probe against emptiness for the operator**: at a state dependent rate and kernel
+`jumpOperatorF` is `jumpOperator` read along the process. -/
+theorem jumpOperatorF_state (lam : E → ℝ) (mu : Kernel E E)
+    (X : ι → Ω' → E) :
+    jumpOperatorF (fun s ω ↦ lam (X s ω)) (fun s ω ↦ mu (X s ω)) X
+      = stateOperator (jumpOperator lam mu) X := by
+  ext ⟨f, g⟩
+  constructor
+  · rintro ⟨hm, ⟨C, hC⟩, hg⟩
+    refine ⟨(f, jumpApply lam mu f), ⟨hm, ⟨C, hC⟩, rfl⟩, ?_⟩
+    show (f, fun s ω ↦ jumpApply lam mu f (X s ω)) = (f, g)
+    simp only [Prod.mk.injEq, true_and]
+    exact hg.symm
+  · rintro ⟨⟨q1, q2⟩, ⟨hm, ⟨C, hC⟩, hq2⟩, heq⟩
+    simp only [Prod.mk.injEq] at heq hq2
+    obtain ⟨rfl, rfl⟩ := heq
+    subst hq2
+    refine ⟨hm, ⟨C, hC⟩, ?_⟩
+    funext s ω
+    rfl
+
+/-- **The two probes together**: along the process, the path dependent martingale problem of a state
+dependent rate and kernel is the state dependent one. -/
+theorem mpFamilyF_jumpOperatorF_state [Preorder ι] [OrderBot ι]
+    (lam : E → ℝ) (mu : Kernel E E) (Q : Clock ι) (c : Clock.Conv) (X : ι → Ω' → E) :
+    mpFamilyF (jumpOperatorF (fun s ω ↦ lam (X s ω)) (fun s ω ↦ mu (X s ω)) X) Q c X
+      = mpFamily (jumpOperator lam mu) Q c X := by
+  rw [jumpOperatorF_state, mpFamilyF_stateOperator]
+
+end PathGenerator
 
 end PathDependent

@@ -146,6 +146,54 @@ GROUPS = {
         "hawkesProcess_eq_stepPath",
         "hawkesProcess_of_lt_first",
     },
+    "G13 the integrability of the frozen rate, discharged on the kernel": {
+        "intervalIntegrable_hawkesFrozen",
+        "strictMono_hawkesJumpTime_of_kernel",
+    },
+    "G14 the inverse is measurable in a parameter": {
+        "cumulativeRateF_nonneg",
+        "measurable_cumulativeRateF",
+        "measurable_rateInverse",
+    },
+    "G15 the Hawkes jump times are measurable": {
+        "rateInverse_hawkesFrozen_sample",
+        "hawkesStep_sample_congr",
+        "hawkesJumpTime_sample_congr",
+        "measurable_hawkesJumpTime",
+        "measurable_uncurry_hawkesStepPath",
+    },
+    "G16 the filtration of a point process": {
+        "jumpRecord",
+        "measurable_jumpRecord",
+        "jumpState",
+        "measurable_jumpState",
+        "pointFiltration",
+        "measurableSet_record",
+        "isStoppingTime_jumpTime",
+        "measurable_stepPath_pointFiltration",
+    },
+    "G17 the Hawkes filtration, and the path filtration it replaces": {
+        "measurable_hawkesJumpTime_apply",
+        "hawkesFiltration",
+        "isStoppingTime_hawkesJumpTime",
+        "measurable_hawkesStepPath_hawkesFiltration",
+        "hawkesPathFiltration",
+        "hawkesPathFiltration_le_hawkesFiltration",
+        "not_isStoppingTime_hawkesJumpTime_pathFiltration",
+    },
+    "G18 progressive measurability, and the compensating window": {
+        "measurable_uncurry_stepPath_pointFiltration",
+        "measurable_compensator_pointFiltration",
+        "measurable_uncurry_hawkesStepPath_hawkesFiltration",
+        "measurable_compensator_hawkesFiltration",
+    },
+    "G19 the generator of eq:pathgen, and the probe that it generalises": {
+        "jumpApplyF",
+        "jumpOperatorF",
+        "jumpApplyF_state",
+        "jumpOperatorF_state",
+        "mpFamilyF_jumpOperatorF_state",
+    },
 }
 
 
