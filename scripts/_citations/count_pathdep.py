@@ -303,6 +303,16 @@ GROUPS = {
         "stepIndex_jumpTimeFE",
         "jumpProcessFE_eq_stepPath_cumulativeRateF",
     },
+    "G31 the law of the jump times: the measure enters": {
+        "jumpMeasure_snd_eval_preimage",
+        "setOf_lt_jumpTimeFE_eq",
+        "jumpMeasure_map_cumulativeRateF_jumpTimeF",
+        "jumpMeasure_lt_jumpTimeFE_one",
+        "jumpMeasure_lt_jumpTimeFE",
+        "jumpMeasure_lt_jumpTimeFE_one_const",
+        "jumpMeasure_lt_hawkesJumpTime_one",
+        "jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one",
+    },
 }
 
 

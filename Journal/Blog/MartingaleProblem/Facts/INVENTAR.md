@@ -22711,3 +22711,175 @@ nur drei Voraussetzungen mehr trägt.
    `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch `push Not`, dort wo v4.33.1 es
    meldet. `PathInverseE`, `PathStopping` und `PathLocalIdentification` halten die Regel ein und
    melden keine einzige Warnung.
+
+### 2026-09-11, neunzehnter Lauf des Tages — das Maß tritt in die pfadabhängige Variante ein, und es tritt zweimal ein: die Zeitverwandlung gibt das Gesetz voraussetzungslos, die erste Sprungzeit des Hawkes-Prozesses gibt es der Fixpunkt
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des achtzehnten Laufs (die
+Überlebensfunktion der ersten Sprungzeit unter `jumpMeasure mu nu`, auf der Zeitverwandlung des
+dritten Teils). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Acht Deklarationen** im neuen Abschnitt `PathLaw` von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die ganze Datei **ohne einen Fehler und ohne eine
+einzige Warnung im neuen Bereich** durch `lake env lean` gegen v4.33.1, alle acht mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl
+der `sorry` bleibt bei **neun**. Der Punkt steht in `MartingaleProblems/README.md`, Meilenstein 4.
+
+`jumpMeasure_snd_eval_preimage`, `setOf_lt_jumpTimeFE_eq`,
+`jumpMeasure_map_cumulativeRateF_jumpTimeF`, `jumpMeasure_lt_jumpTimeFE_one`,
+`jumpMeasure_lt_jumpTimeFE`, `jumpMeasure_lt_jumpTimeFE_one_const`,
+`jumpMeasure_lt_hawkesJumpTime_one`, `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one`.
+
+#### Das Maß mußte nicht gebaut werden, und die Schicht darunter hat es nie gesehen
+
+Der achtzehnte Lauf hatte festgestellt, daß in `section PathDependent` **kein Maß vorkommt** —
+`P : Measure Ω` steht dort an genau einer Stelle, als freie Variable von
+`isLocalizingSequence_rateInverseE`. Das ändert sich hier, und es ändert sich billig:
+`jumpMeasure mu nu` legt die Marken über den Kettenkern und die Wartezeiten als u.i.v.
+`expMeasure 1` fest, und die pfadabhängige Konstruktion liest genau diese Daten. Die einzige
+Eigenschaft des Maßes, die in diesem Lauf verbraucht wird, ist `jumpMeasure_snd_eval_preimage`:
+die zweite Randverteilung ist `waitingMeasure` (`jumpMeasure_map_snd`), deren Koordinaten
+standardexponentiell sind (`waitingMeasure_eval_preimage`). Beides steht seit dem
+zustandsabhängigen Teil und ist unverändert brauchbar.
+
+#### Der Prüfstein des Vorschlags, und er fällt zur Hälfte — das ist der Befund des Laufs
+
+Der Vorschlag trug ihn: der neunte Lauf hatte gezeigt, daß `hawkesJumpTime` den Stichprobenpunkt
+gar nicht liest (`hawkesJumpTime_sample_congr`), die Rate dort also eine Funktion der **Wartezeiten
+allein** ist; „dann ist der Pegel in `lt_jumpTimeFE_iff` von den Marken unabhängig, und die
+Überlebensfunktion ist **unbedingt**."
+
+**Von den Marken unabhängig ist der Pegel, und das genügt nicht.** `lt_jumpTimeFE_iff` bringt
+`{t < τ n}` in die Gestalt `{cumulativeRateF Λ ω t < ∑_{k<n} ξ k}` — ein Ereignis in den
+Wartezeiten, aber an einem Pegel, der selbst ein Funktional **derselben Wartezeiten** ist. Bei
+einer selbsterregenden Rate liest die kumulierte Masse bei `t` die Sprünge vor `t`, und die sind
+aus den `ξ k` gebaut. Die rechte Seite ist also gerade nicht der Schwanz einer Exponentialverteilung
+an einem festen Pegel, und genau an dieser Stelle bedingt das Manuskript auf `ℋ_n`.
+
+`jumpMeasure_lt_jumpTimeFE_one` schreibt die Voraussetzung hin, unter der die Reduktion trägt, und
+sie ist die des **inhomogenen Poissonprozesses**: `∀ ω, cumulativeRateF Λ ω t = c`, die Rate liest
+den Stichprobenpunkt nicht. Dann ist der Pegel deterministisch und die Überlebensfunktion
+`exp (−∫₀ᵗ Λ)`. Die Nichtnegativität von `c` wird nicht vorausgesetzt, sondern aus `hpos` und der
+Nichtleerheit von `E` gezogen, die `IsProbabilityMeasure nu` schon erzwingt
+(`nonempty_of_measure_ne_zero`).
+
+`jumpMeasure_lt_jumpTimeFE` ist dieselbe Aussage für die `n`-te Sprungzeit, und sie bleibt **ohne
+geschlossene Form** stehen: der Schwanz einer Summe von `n` Standardexponentialverteilungen ist ein
+Gammaschwanz, und den hat Mathlib nicht — die Aussage ist darum das Bildmaß der Partialsumme unter
+`waitingMeasure`, also das, was sie ist. `jumpMeasure_lt_jumpTimeFE_one_const` ist die Probe, daß
+die Voraussetzung eine nichtleere Klasse beschreibt: bei konstanter Rate `c > 0` kommt der
+Poissonwert `exp (−c t)` heraus, und zwar in der pfadabhängigen Variante gerechnet — dieselbe
+Rolle, die `jumpTimeF_const_eq_jumpTime` für die Konstruktion selbst spielt.
+
+**Und die Hawkes-Instanz ist keine Instanz davon.** `jumpMeasure_lt_hawkesJumpTime_one` —
+`P (τ₁ > t) = exp (−ν t)` — geht nicht über die Zeitverwandlung, sondern über
+`hawkesJumpTime_one`: `τ₁ = ξ₀ / ν` an jedem Stichprobenpunkt mit `0 ≤ ξ₀`, weil die erste Stufe
+der Rekursion **eine leere Vergangenheit hat** und die Erregung dort nichts zu lesen findet. Danach
+bleibt der Schwanz einer einzigen Standardexponentialverteilung, und `expMeasure_Ioi` gibt ihn.
+Der Fixpunkt und nicht die Zeitverwandlung ist es, der die erste Sprungzeit explizit macht.
+
+#### Was die Zeitverwandlung dafür **voraussetzungslos** hergibt, und es ist mehr als der Vorschlag verlangt hat
+
+`jumpMeasure_map_cumulativeRateF_jumpTimeF` ist die **Zeitverwandlung im Gesetz**:
+
+> Das Bildmaß von `ω ↦ cumulativeRateF Λ ω (jumpTimeF Λ ω ω.2 n)` unter `jumpMeasure mu nu` ist das
+> Bildmaß von `ξ ↦ ∑_{k<n} ξ k` unter `waitingMeasure` — für **jede** Rate.
+
+Also: die kumulierte Rate an der `n`-ten Sprungzeit ist Gamma(`n`,1)-verteilt, und der
+zeitverwandelte Punktprozeß ist der Standard-Poissonprozeß. Das ist der probabilistische Inhalt von
+`eq:compensatorexp`, und er kostet **kein Unabhängigkeitsargument, keine Bedingung, keine
+Erneuerung**: `cumulativeRateF_jumpTimeF` ist eine Gleichheit an jedem Stichprobenpunkt, die
+Partialsumme liest nur die zweite Koordinate, und der Beweis ist `Measure.map_congr` gegen
+`ae_pos_snd_jumpMeasure` plus `Measure.map_map`. Vier Zeilen.
+
+**Der Gegensatz ist der Bericht.** Über den *kompensierten* Sprungzeiten ist das Gesetz
+unbedingt und für jede Rate dasselbe; über den Sprungzeiten selbst ist es ohne Bedingung nur im
+Poissonfall zu haben. Die Zeitverwandlung nimmt die Pfadabhängigkeit nicht weg, sie schiebt sie
+vollständig in die Uhr — und ein Gesetz über die Uhr ist ein Gesetz über die Wartezeiten, ein
+Gesetz über die Zeit nicht.
+
+#### Die erste Stelle der pfadabhängigen Variante, an der die Nichtexplosion nicht zu umgehen ist, und sie liegt nicht, wo der vierzehnte Lauf sie vermutet hat
+
+`jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` ist derselbe Wert für die Sprungzeit, die der
+**Prozeß** aus der selbstbezüglichen Rate rechnet, statt für die Stufe der Rekursion. Die
+Übertragung ist `jumpTimeF_hawkesSelfRate`, und sie kostet die beiden Integrierbarkeits-
+voraussetzungen, die der Fixpunkt trägt — nach der Lesart von `tendsto_cumulativeRateF_hawkes`
+**ist** die lokale Integrierbarkeit der Hawkes-Rate längs des konstruierten Pfades die
+Nichtexplosion.
+
+Damit steht der Unterschied scharf da: **das Gesetz der ersten Sprungzeit der Rekursion ist
+voraussetzungslos, das Gesetz der ersten Sprungzeit des Prozesses ist es nicht.** Beide Objekte
+werden gebraucht — `hawkesJumpTime` ist, was die Rekursion zurückgibt, `jumpTimeF` ist, was das
+Martingalproblem liest —, und zwischen ihnen liegt genau eine Voraussetzung.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py`, um die Gruppe `G31` erweitert:
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G28 unterhalb der Trefferzeit ist das gestutzte Problem das Problem | 8 | 171 |
+| G29 der Kompensator zwischen zwei Sprungzeiten ist die Wartezeit | 4 | 31 |
+| G30 die Zeitverwandlung: die Konstruktion auf der Uhr der kumulierten Rate | 3 | 30 |
+| G31 das Gesetz der Sprungzeiten: das Maß tritt ein | 8 | 107 |
+| `section PathDependent` gesamt | — | 2227 Codezeilen, 3989 mit Dokumentation |
+
+**Gebrauchte Mathlib-Bausteine, und keiner fehlte:** `MeasureTheory.Measure.map_apply`,
+`MeasureTheory.Measure.map_map`, `MeasureTheory.Measure.map_congr`
+(`Mathlib/MeasureTheory/Measure/Map.lean:118`), `MeasureTheory.measure_congr`
+(`Mathlib/MeasureTheory/OuterMeasure/AE.lean:278`), `MeasureTheory.nonempty_of_measure_ne_zero`
+(`Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean:189`), `MeasurableSet.preimage`
+(`Mathlib/MeasureTheory/MeasurableSpace/Basic.lean:310`), `measurable_pi_apply`,
+`measurable_snd`, `Finset.measurable_sum`, `Set.nonempty_iff_univ_nonempty`, `lt_div_iff₀`,
+`eq_iff_iff`, `filter_upwards`. Dazu aus dem eigenen Bestand `expMeasure_Ioi`,
+`waitingMeasure_eval_preimage`, `jumpMeasure_map_snd`, `ae_pos_snd_jumpMeasure`,
+`cumulativeRateF_jumpTimeF`, `cumulativeRateF_nonneg`, `lt_jumpTimeFE_iff`, `hawkesJumpTime_one`,
+`jumpTimeF_hawkesSelfRate` — alle unverändert brauchbar, und alle bis auf die letzten drei aus dem
+**zustandsabhängigen** Teil, weil sie Aussagen über das Maß sind und nicht über den Prozeß.
+
+**Keine Negativaussage über Mathlib**, also nichts für `scripts/check_negatives.py` nachzutragen.
+`expMeasure_Ioi` trägt die schon eingetragene: Mathlib hat die Verteilungsfunktion der
+Exponentialverteilung (`cdf_expMeasure_eq`), aber nicht ihren Schwanz.
+
+#### Zwei Einzelheiten, die einen Lauf kosten können
+
+* **`Measure.map_apply` als `rw`-Regel schlägt fehl, wenn die Menge als `Set.preimage` elaboriert
+  wird.** `hA.preimage (measurable_pi_apply n)` bestimmt `s := (fun f ↦ f n) ⁻¹' A`, und dieses
+  Muster steht im Ziel nicht, wo `{xi | xi n ∈ A}` steht — definitionsgleich, aber nicht
+  syntaktisch. Der Ausweg ist derselbe wie der des achtzehnten Laufs des 2026-09-10: **nicht am
+  Ziel rewriten, sondern das Ziel mit `exact` treffen**; die Gleichung als `have` aufstellen, in
+  ihr rewriten, und mit `exact h.symm` schließen.
+* **`omit [MeasurableSpace E] in` steht vor dem Doc-Kommentar, nicht zwischen ihm und der
+  Deklaration.** Dazwischen meldet der Parser `unexpected token 'omit'; expected 'lemma'`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`hawkesFiltration_inter_lt_rateInverseE`**, das Gegenstück zu
+   `jumpFiltrationE_inter_lt_rateTime`: ein `hawkesFiltration`-Ereignis bei `i`, mit
+   `{i < rateInverseE Λ · a}` geschnitten, ist ein Ereignis der Filtration des **gestutzten**
+   Problems bei `i`. **Warum jetzt:** es ist die vierte und einzige noch fehlende Eingabe von
+   `martingale_of_martingale_of_stopped` im pfadabhängigen Fall — der Turmschluß selbst steht seit
+   dem achtzehnten Lauf des 2026-09-10 ohne Bezug auf die Sprungkonstruktion da, die
+   Identifikation der gestoppten Testprozesse seit dem achtzehnten Lauf dieses Tages. **Worauf sie
+   ruht:** `jumpProcessFE_truncRateF_eq_of_le_rateInverseE` (achtzehnter Lauf) und
+   `setOf_le_cumulativeRateF_truncRateF`. **Prüfstein:** ob das Ereignis
+   `{i < rateInverseE Λ · a}` in `hawkesFiltration i` liegt — im zustandsabhängigen Fall war das
+   die Stelle, an der die Trefferzeit als Stoppzeit verbraucht wurde, und `setOf_rateInverse_le`
+   steht dafür schon bereit.
+2. **Die Martingaleigenschaft selbst**, und sie ist nach dem Befund des achtzehnten Laufs **nicht**
+   durch Übertragung zu haben: der Kern des Manuskriptbeweises von `thm:pathjumpMP` ist die
+   Rechnung `E[D_n | ℋ_n] = 0` mit der Dichte der Sprungzeit und der Überlebensfunktion
+   `P(τ_{n+1} > s | ℋ_n) = e^{−A_n(s)}`, nicht die Erneuerungszerlegung. Der nächste Baustein
+   dafür ist die **bedingte** Fassung von `jumpMeasure_lt_jumpTimeFE_one`: gegeben die ersten `n`
+   Wartezeiten ist der Pegel fest, und `lt_jumpTimeFE_iff` macht daraus den Schwanz von `ξ n`.
+   Mathlib hat dafür `ProbabilityTheory.condExp` und die Produktgestalt von `Measure.infinitePi`;
+   zu prüfen ist, ob die Bedingung über `waitingMeasure_map_shift` als Neustart oder über die
+   Unabhängigkeit der Koordinaten (`iIndepSet_waiting`) billiger wird, und der Unterschied gehört
+   gemessen.
+3. Die globale Fassung mit `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese** hinschreiben, nach der
+   Festlegung des Nutzers vom 2026-09-11, und im Doc-Kommentar sagen, daß sie für den linearen Fall
+   wahr ist und an der Volterra-Resolvente hängt, die Mathlib nicht hat.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   achtzehnten Laufs, unverändert: `Set.diff_eq_empty` durch `Set.sdiff_eq_empty`,
+   `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch `push Not`, dort wo v4.33.1 es
+   meldet. `PathInverseE`, `PathStopping`, `PathLocalIdentification`, `PathCompensatorExp` und
+   `PathLaw` halten die Regel ein und melden keine einzige Warnung.

@@ -17762,4 +17762,225 @@ end PathTimeChange
 
 end PathCompensatorExp
 
+/-! ### The law of the jump times: the first measure statement of the path dependent variant
+
+Everything `section PathDependent` has built so far is pathwise: `P : Measure Ω` occurs in it at a
+single place, as a free variable of `isLocalizingSequence_rateInverseE`, and every other statement
+-- construction, jump times, filtration, measurability, right continuity, window bound,
+localization, identification -- holds at **every** sample point.  Here the measure of the
+construction enters.
+
+It does not have to be built.  `jumpMeasure mu nu` lays the marks down along the chain kernel and
+the waiting times as an i.i.d. sequence of standard exponentials, and the path dependent
+construction reads exactly those data; it differs from the state dependent one only in how it turns
+`(y, ξ)` into a path, not in the measure it turns them under.
+
+**The time change is what makes the law computable.**
+`jumpProcessFE_eq_stepPath_cumulativeRateF` says the whole path dependence sits in the clock, and
+`lt_jumpTimeFE_iff` says the event `{t < τ n}` is the event `{Λ_t < ξ_0 + … + ξ_{n-1}}` -- an event
+in the waiting times at a level which is itself a functional of the sample point.  Two statements
+follow at once and a third does not:
+
+* `jumpMeasure_map_cumulativeRateF_jumpTimeF` is the **time change theorem in law**: whatever the
+  rate, the cumulated rate at the `n`-th jump time **is** the `n`-th partial sum of the waiting
+  times (`cumulativeRateF_jumpTimeF`), so its law is the law of that partial sum, a sum of `n`
+  independent standard exponentials.  This is the probabilistic content of `eq:compensatorexp`,
+  and it is unconditional: no independence argument, no conditioning, no renewal enters, because
+  the underlying identity holds at every sample point.
+* `jumpMeasure_lt_jumpTimeFE_one` is the survival function of the first jump time, and it asks the
+  cumulated mass at `t` **not to read the sample point** -- the inhomogeneous Poisson case, where
+  the rate is a function of the time alone.  Then the level is deterministic and the survival
+  function is `exp (-∫_0^t Λ)`.
+* What does **not** follow is the same statement for a genuinely path dependent rate, and the
+  reason is the level: `cumulativeRateF Λ ω t` reads the jumps before `t`, so `{Λ_t < ξ_0}` is not
+  a tail event of one exponential at a fixed level.  The manuscript conditions on `ℋ_n` at exactly
+  this place.  For the Hawkes rate the first jump time is nevertheless explicit, and it is the
+  **recursion** and not the general reduction that makes it so: `hawkesJumpTime_one` says
+  `τ_1 = ξ_0 / ν` because stage one of the recursion has an empty history by construction, and
+  `jumpMeasure_lt_hawkesJumpTime_one` is the exponential tail of `ξ_0` read at the level `ν t`.
+  The general machinery is not what settles the Hawkes case; the fixed point is.
+-/
+
+section PathLaw
+
+variable {E : Type*} [MeasurableSpace E] {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ}
+
+/-- **The law of a single waiting time under the jump measure.**  The second marginal of
+`jumpMeasure mu nu` is `waitingMeasure` (`jumpMeasure_map_snd`), whose coordinates are standard
+exponential (`waitingMeasure_eval_preimage`); this is the composition of the two, and it is the
+only property of the measure that the law of the first jump time uses. -/
+theorem jumpMeasure_snd_eval_preimage (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] {A : Set ℝ} (hA : MeasurableSet A) (n : ℕ) :
+    jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | ω.2 n ∈ A} = expMeasure 1 A := by
+  have hs : MeasurableSet {xi : ℕ → ℝ | xi n ∈ A} := hA.preimage (measurable_pi_apply n)
+  have h := Measure.map_apply (μ := jumpMeasure mu nu) measurable_snd hs
+  rw [jumpMeasure_map_snd, waitingMeasure_eval_preimage hA] at h
+  exact h.symm
+
+omit [MeasurableSpace E] in
+/-- **The event that the `n`-th jump time lies above `t`, read on the clock of the cumulated
+rate.**  `lt_jumpTimeFE_iff` at every sample point at once: this is the form in which the event
+enters a measure, and it is an event in the waiting times and the clock and in nothing else.
+
+Neither the divergence of the cumulated rate nor the attainment of the level enters, because
+`rateInverseE_le_ofReal_iff` needs neither; over `rateInverse` the statement would be false. -/
+theorem setOf_lt_jumpTimeFE_eq
+    (hint : ∀ ω : (ℕ → E) × (ℕ → ℝ), ∀ r,
+      IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) u, 0 < u → 0 ≤ Λ u ω) (ht : 0 ≤ t) (n : ℕ) :
+    {ω : (ℕ → E) × (ℕ → ℝ) | ENNReal.ofReal t < jumpTimeFE Λ ω ω.2 n}
+      = {ω : (ℕ → E) × (ℕ → ℝ) | cumulativeRateF Λ ω t < ∑ k ∈ Finset.range n, ω.2 k} :=
+  Set.ext fun ω ↦ lt_jumpTimeFE_iff (hint ω) (hnn ω) ht n
+
+/-- **The time change theorem, in law.**  The law of the cumulated rate at the `n`-th jump time is
+the law of the `n`-th partial sum of the waiting times -- for **every** rate, path dependent or
+not, and without any independence or conditioning argument, because `cumulativeRateF_jumpTimeF` is
+an identity at every sample point and the partial sum reads only the second coordinate.
+
+Under `jumpMeasure mu nu` that law is the law of a sum of `n` independent standard exponentials,
+so the point process of the `cumulativeRateF Λ ω (τ n)` is the standard Poisson process on the half
+line: the statement that the compensator is the time change taking the process to constant rate
+one.  It is `eq:compensatorexp` of `rem:pathjumpprimary` read under the measure. -/
+theorem jumpMeasure_map_cumulativeRateF_jumpTimeF
+    (hint : ∀ ω : (ℕ → E) × (ℕ → ℝ), ∀ r,
+      IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) u, 0 < u → 0 < Λ u ω)
+    (htop : ∀ ω : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ ω) atTop atTop)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    (jumpMeasure mu nu).map (fun ω ↦ cumulativeRateF Λ ω (jumpTimeF Λ ω ω.2 n))
+      = waitingMeasure.map (fun xi ↦ ∑ k ∈ Finset.range n, xi k) := by
+  have h1 : (jumpMeasure mu nu).map (fun ω ↦ cumulativeRateF Λ ω (jumpTimeF Λ ω ω.2 n))
+      = (jumpMeasure mu nu).map (fun ω ↦ ∑ k ∈ Finset.range n, ω.2 k) := by
+    refine Measure.map_congr ?_
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+    exact cumulativeRateF_jumpTimeF (hint ω) (hpos ω) (htop ω) (fun k ↦ (hω k).le) n
+  have hmeas : Measurable fun xi : ℕ → ℝ ↦ ∑ k ∈ Finset.range n, xi k :=
+    Finset.measurable_sum _ fun k _ ↦ measurable_pi_apply k
+  rw [h1, ← jumpMeasure_map_snd mu nu, Measure.map_map hmeas measurable_snd]
+  rfl
+
+/-- **The survival function of the first jump time, at a rate whose cumulated mass does not read the
+sample point.**  This is the inhomogeneous Poisson case of `set:pathjump`: the level at which the
+first waiting time is consumed is then deterministic, and the survival function is the exponential
+tail at that level.
+
+The hypothesis is exactly what a genuinely path dependent rate fails, and failing it is not a
+technicality -- for the Hawkes rate the cumulated mass at `t` reads the jumps before `t`, so the
+level is a functional of the very waiting times whose law is being computed.  See
+`jumpMeasure_lt_hawkesJumpTime_one` for what replaces it there. -/
+theorem jumpMeasure_lt_jumpTimeFE_one {c : ℝ}
+    (hint : ∀ ω : (ℕ → E) × (ℕ → ℝ), ∀ r,
+      IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) u, 0 < u → 0 < Λ u ω)
+    (hc : ∀ ω : (ℕ → E) × (ℕ → ℝ), cumulativeRateF Λ ω t = c)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (ht : 0 ≤ t) :
+    jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | ENNReal.ofReal t < jumpTimeFE Λ ω ω.2 1}
+      = ENNReal.ofReal (Real.exp (-c)) := by
+  have hne : Nonempty E :=
+    Set.nonempty_iff_univ_nonempty.2 (nonempty_of_measure_ne_zero (μ := nu) (by simp))
+  have hc0 : 0 ≤ c := by
+    rw [← hc ⟨fun _ ↦ Classical.arbitrary E, fun _ ↦ 0⟩]
+    exact cumulativeRateF_nonneg (hpos _) t
+  have hset : {ω : (ℕ → E) × (ℕ → ℝ) | ENNReal.ofReal t < jumpTimeFE Λ ω ω.2 1}
+      = {ω : (ℕ → E) × (ℕ → ℝ) | ω.2 0 ∈ Set.Ioi c} := by
+    rw [setOf_lt_jumpTimeFE_eq hint (fun ω u hu ↦ (hpos ω u hu).le) ht 1]
+    exact Set.ext fun ω ↦ by simp [hc ω, Set.mem_Ioi]
+  rw [hset, jumpMeasure_snd_eval_preimage mu nu measurableSet_Ioi 0, expMeasure_Ioi one_pos hc0,
+    one_mul]
+
+/-- **The survival function of the `n`-th jump time, at a rate whose cumulated mass does not read
+the sample point.**  The same hypothesis as `jumpMeasure_lt_jumpTimeFE_one` and the same content,
+without the closed form: for `n` beyond one the tail of a sum of `n` standard exponentials is a
+Gamma tail, which Mathlib does not carry, so the statement is left as the law of the partial sum
+under `waitingMeasure` -- which is what it is, and which the closed form would only name. -/
+theorem jumpMeasure_lt_jumpTimeFE {c : ℝ}
+    (hint : ∀ ω : (ℕ → E) × (ℕ → ℝ), ∀ r,
+      IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) u, 0 < u → 0 < Λ u ω)
+    (hc : ∀ ω : (ℕ → E) × (ℕ → ℝ), cumulativeRateF Λ ω t = c)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (ht : 0 ≤ t)
+    (n : ℕ) :
+    jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | ENNReal.ofReal t < jumpTimeFE Λ ω ω.2 n}
+      = waitingMeasure {xi : ℕ → ℝ | c < ∑ k ∈ Finset.range n, xi k} := by
+  have hs : MeasurableSet {xi : ℕ → ℝ | c < ∑ k ∈ Finset.range n, xi k} :=
+    measurableSet_lt measurable_const (Finset.measurable_sum _ fun k _ ↦ measurable_pi_apply k)
+  have h := Measure.map_apply (μ := jumpMeasure mu nu) measurable_snd hs
+  rw [jumpMeasure_map_snd] at h
+  rw [setOf_lt_jumpTimeFE_eq hint (fun ω u hu ↦ (hpos ω u hu).le) ht n,
+    show {ω : (ℕ → E) × (ℕ → ℝ) | cumulativeRateF Λ ω t < ∑ k ∈ Finset.range n, ω.2 k}
+        = {ω : (ℕ → E) × (ℕ → ℝ) | c < ∑ k ∈ Finset.range n, ω.2 k} from
+      Set.ext fun ω ↦ by simp [hc ω]]
+  exact h.symm
+
+/-- **The probe against emptiness of the hypothesis.**  A rate that does not read the sample point
+exists, and the smallest of them is the constant one: at rate `c > 0` the first jump time of the
+path dependent construction has the exponential tail `exp (-(c t))`.
+
+This is the Poisson process, computed inside the path dependent variant, and it is the same value
+that `jumpMeasure_map_jumpProcess_poisson` gives for the state dependent one -- the check that
+`jumpMeasure_lt_jumpTimeFE_one` is a statement about a nonempty class of rates, in the manner of
+`jumpTimeF_const_eq_jumpTime` for the construction itself. -/
+theorem jumpMeasure_lt_jumpTimeFE_one_const {c : ℝ} (hc : 0 < c)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (ht : 0 ≤ t) :
+    jumpMeasure mu nu
+        {ω : (ℕ → E) × (ℕ → ℝ) | ENNReal.ofReal t < jumpTimeFE (fun _ _ ↦ c) ω ω.2 1}
+      = ENNReal.ofReal (Real.exp (-(c * t))) :=
+  jumpMeasure_lt_jumpTimeFE_one (fun ω r ↦ intervalIntegrable_const_rate ω c r)
+    (fun _ _ _ ↦ hc) (fun ω ↦ cumulativeRateF_const ω c ht) mu nu ht
+
+/-- **The survival function of the first Hawkes jump time.**  `P (τ_1 > t) = exp (-ν t)`: the first
+jump of `ex:hawkes` comes from the baseline clock, because at stage one the excitation has nothing
+to read.
+
+This is **not** an instance of `jumpMeasure_lt_jumpTimeFE_one`, and the difference is the whole
+point of the entry.  The general reduction turns `{t < τ_1}` into `{Λ_t < ξ_0}`, whose level is a
+functional of the sample point for a self exciting rate; what settles the Hawkes case instead is
+`hawkesJumpTime_one`, an identity of the **recursion** -- `τ_1 = ξ_0 / ν` at every sample point with
+`0 ≤ ξ_0` -- after which only the tail of one standard exponential is left.  The fixed point, and
+not the time change, is what makes the first jump time explicit. -/
+theorem jumpMeasure_lt_hawkesJumpTime_one {ν : ℝ} {φ : ℝ → ℝ} (hν : 0 < ν)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (ht : 0 ≤ t) :
+    jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | t < hawkesJumpTime ν φ ω.2 ω 1}
+      = ENNReal.ofReal (Real.exp (-(ν * t))) := by
+  have hset : jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | t < hawkesJumpTime ν φ ω.2 ω 1}
+      = jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | ω.2 0 ∈ Set.Ioi (ν * t)} := by
+    refine measure_congr ?_
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+    rw [eq_iff_iff]
+    show t < hawkesJumpTime ν φ ω.2 ω 1 ↔ ν * t < ω.2 0
+    rw [show hawkesJumpTime ν φ ω.2 ω 1 = ω.2 0 / ν from hawkesJumpTime_one hν (hω 0).le,
+      lt_div_iff₀ hν, mul_comm t ν]
+  rw [hset, jumpMeasure_snd_eval_preimage mu nu measurableSet_Ioi 0,
+    expMeasure_Ioi one_pos (by positivity), one_mul]
+
+/-- **The survival function of the first jump time of the Hawkes *process*.**  The same value as
+`jumpMeasure_lt_hawkesJumpTime_one`, for the jump time the path dependent construction computes
+from the self referential rate rather than for the stage of the recursion.
+
+The transfer is `jumpTimeF_hawkesSelfRate`, and it costs the two integrability hypotheses that the
+fixed point carries: by the reading of `tendsto_cumulativeRateF_hawkes` the local integrability of
+the Hawkes rate along the constructed path **is** the non explosion.  So the law of the first jump
+time of the recursion is unconditional, and the law of the first jump time of the process is not --
+the first statement of `section PathDependent` at which non explosion cannot be avoided, and it is
+avoided in neither direction: `hawkesJumpTime` is the object the recursion returns, `jumpTimeF` the
+object the martingale problem reads. -/
+theorem jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one {ν : ℝ} {φ : ℝ → ℝ} (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hintF : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) (m : ℕ) (r : ℝ), IntervalIntegrable
+      (fun u ↦ hawkesFrozen ν φ (hawkesJumpTime ν φ ω.2 ω) m u ω) volume 0 r)
+    (hint : ∀ ω : (ℕ → E) × (ℕ → ℝ), ∀ r,
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u ω) volume 0 r)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (ht : 0 ≤ t) :
+    jumpMeasure mu nu {ω : (ℕ → E) × (ℕ → ℝ) | t < jumpTimeF (hawkesSelfRate ν φ) ω ω.2 1}
+      = ENNReal.ofReal (Real.exp (-(ν * t))) := by
+  rw [← jumpMeasure_lt_hawkesJumpTime_one (φ := φ) hν mu nu ht]
+  refine measure_congr ?_
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+  rw [eq_iff_iff]
+  show t < jumpTimeF (hawkesSelfRate ν φ) ω ω.2 1 ↔ t < hawkesJumpTime ν φ ω.2 ω 1
+  rw [jumpTimeF_hawkesSelfRate hν hφ hφ0 (fun k ↦ (hω k).le) (hintF ω) (hint ω) 1]
+
+end PathLaw
+
+
 end PathDependent

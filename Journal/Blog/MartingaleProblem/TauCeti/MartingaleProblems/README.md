@@ -3008,6 +3008,54 @@ A concrete family of solutions, built without any of the theory above. Index
     That level still reads the sample point, and that — and nothing else — is what the manuscript's
     conditioning on `ℋ_n` is for. The time change does not remove the conditioning; it says what
     must be conditioned on and that nothing path dependent survives it.
+  * `jumpMeasure_map_cumulativeRateF_jumpTimeF` and `jumpMeasure_lt_hawkesJumpTime_one`:
+    **the law of the jump times of the path dependent construction.** **In Lean** on 2026-09-11,
+    nineteenth run, with `jumpMeasure_snd_eval_preimage`, `setOf_lt_jumpTimeFE_eq`,
+    `jumpMeasure_lt_jumpTimeFE`, `jumpMeasure_lt_jumpTimeFE_one`,
+    `jumpMeasure_lt_jumpTimeFE_one_const` and `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one`. This is the
+    first place at which the measure of the construction enters the path dependent variant; up to
+    it `P : Measure Ω` occurred in `section PathDependent` at the single place
+    `isLocalizingSequence_rateInverseE`, and every other statement held at every sample point. The
+    measure does not have to be built: `jumpMeasure mu nu` lays the marks down along the chain
+    kernel and the waiting times as i.i.d. `expMeasure 1`, and the path dependent construction
+    reads exactly those data, differing from the state dependent one only in how it turns `(y, ξ)`
+    into a path.
+
+    `jumpMeasure_map_cumulativeRateF_jumpTimeF` is the **time change theorem in law**: the law of
+    `cumulativeRateF Lam ω (τ n)` is the law of `∑_{k<n} ξ k`, a sum of `n` independent standard
+    exponentials — for **every** rate, path dependent or not, and with no independence argument, no
+    conditioning and no renewal, because `cumulativeRateF_jumpTimeF` is an identity at every sample
+    point and the partial sum reads only the second coordinate. It is `eq:compensatorexp` read
+    under the measure, and it says that the compensator is the time change that carries the process
+    to constant rate one.
+
+    `jumpMeasure_lt_jumpTimeFE_one` is the survival function of the first jump time, and it asks
+    the cumulated mass at `t` **not to read the sample point** — the inhomogeneous Poisson case,
+    where the rate is a function of the time alone. Then the level is deterministic and the
+    survival function is `exp (-∫_0^t Lam)`. `jumpMeasure_lt_jumpTimeFE` is the same statement for
+    the `n`-th jump time, left as the law of the partial sum under `waitingMeasure` because the
+    tail of a sum of `n` standard exponentials is a Gamma tail, which Mathlib does not carry;
+    `jumpMeasure_lt_jumpTimeFE_one_const` is the probe that the hypothesis is satisfiable, and it
+    returns the Poisson value `exp (-(c t))` at the constant rate `c`, as
+    `jumpTimeF_const_eq_jumpTime` does for the construction itself.
+
+    **What does not follow from the time change is the same statement for a self exciting rate**,
+    and the reason is the level: `cumulativeRateF Lam ω t` reads the jumps before `t`, so
+    `{Lam_t < ξ 0}` is not the tail of one exponential at a fixed level. The manuscript conditions
+    on `ℋ_n` at exactly this place. For the Hawkes rate the first jump time is nevertheless
+    explicit, and it is the **recursion** and not the general reduction that makes it so:
+    `hawkesJumpTime_one` gives `τ_1 = ξ 0 / ν` at every sample point with `0 ≤ ξ 0`, because stage
+    one of the recursion has an empty history by construction, and
+    `jumpMeasure_lt_hawkesJumpTime_one` is the exponential tail of `ξ 0` read at the level `ν t`:
+    `P (τ_1 > t) = exp (-ν t)`.
+
+    `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` is the same value for the jump time the
+    **process** computes from the self referential rate, and the transfer `jumpTimeF_hawkesSelfRate`
+    costs the two integrability hypotheses the fixed point carries — by the reading of
+    `tendsto_cumulativeRateF_hawkes` the local integrability of the Hawkes rate along the
+    constructed path **is** the non explosion. So the law of the first jump time of the recursion
+    is unconditional and the law of the first jump time of the process is not, and that is the
+    first statement of the path dependent variant at which the non explosion cannot be avoided.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,
