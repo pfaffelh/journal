@@ -2824,9 +2824,20 @@ A concrete family of solutions, built without any of the theory above. Index
     `rateInverse`, `rateInverse_le_iff`, `setOf_rateInverse_le`. It is also what the bound is
     about: the window bound asks for a bound on the compensating **window**, which is a bound on
     the cumulated rate and not on the rate.
-  * `rateInverseE` and `jumpTimeFE`: **the inverse of the cumulated rate with values in `ℝ≥0∞`,
-    and the jump times built from it.** `rateInverseE Lam ω a = ⊤` where the level `a` is never
-    reached, and `rateInverse` is its real part where it is finite. This is what the truncated
+  * `rateInverseE`, `jumpTimeFE` and `jumpProcessFE`: **the inverse of the cumulated rate with
+    values in `ℝ≥0∞`, the jump times built from it, and the process they drive.** **In Lean** on
+    2026-09-11, sixteenth run, with `rateInverseE_congr`, `rateInverseE_eq_top_of_forall_lt`,
+    `rateInverseE_eq_ofReal_of_exists`, `rateInverseE_ne_top_iff`, `rateInverseE_zero`,
+    `monotone_rateInverseE`, `exists_le_cumulativeRateF_of_tendsto`, `rateInverseE_eq_ofReal`,
+    `cumulativeRateF_rateInverse_of_exists`, `rateInverse_lt_rateInverse`, `jumpTimeFE_zero`,
+    `monotone_jumpTimeFE`, `jumpTimeFE_eq_ofReal`, `lt_jumpTimeFE_succ`,
+    `jumpTimeFE_lt_succ_of_lt_succ`, `exists_ofReal_lt_jumpTimeFE`, `isStepPath_jumpProcessFE`,
+    `isCadlagPath_jumpProcessFE`, `jumpProcessFE_eq_jumpProcessF`,
+    `rateInverseE_truncRateF_eq_top_of_lt`, `jumpTimeFE_truncRateF_eq_top` and
+    `jumpTimeFE_expRate_eq_top`.
+
+    `rateInverseE Lam ω a = ⊤` where the level `a` is never reached, and `rateInverse` is its real
+    part where it is finite (`rateInverseE_eq_ofReal_of_exists`). This is what the truncated
     problem needs, and `rateInverse_truncRateF_eq_zero_of_lt` says why in one line: the truncated
     rate cumulates to at most `a`, so no level beyond `a` is ever reached and `rateInverse` returns
     the infimum of the empty set, `0`. Jump times all equal to `0` are not absorption but junk, and
@@ -2834,12 +2845,76 @@ A concrete family of solutions, built without any of the theory above. Index
     passage as `jumpProcess` to `jumpProcessE` at an absorbing state, and it is here that the path
     dependent variant pays for the generality of the inverse the state dependent one got from a
     division.
-  * `isStoppingTime_rateInverse`: **the hitting time of the cumulated path dependent rate is a
-    stopping time of the path dependent filtration.** `setOf_rateInverse_le` reduces
-    `{rateInverse Lam · n ≤ c}` to `{0 ≤ c ∧ n ≤ cumulativeRateF Lam · c}`, which reads the path up
-    to `c` and no further, and the measurability of `ω ↦ cumulativeRateF Lam ω c` for `𝓕 c` is
-    `measurable_compensator_of_uncurry_min` at the integrand `Lam`. This is what makes the
-    truncation above a localization.
+
+    **The change of codomain buys hypotheses back, and that is the finding.** `monotone_jumpTimeFE`
+    carries no hypothesis on the rate at all, where `monotone_jumpTimeF` carries integrability,
+    positivity and the divergence of the cumulated mass; and `exists_ofReal_lt_jumpTimeFE` — the
+    exhaustion of the half line that `isStepPath_stepPath_ofReal` asks for — carries no divergence
+    either, so `isStepPath_jumpProcessFE` holds at a rate that spends its whole mass in finite time
+    and `isStepPath_jumpProcessF` does not. The reason is one line: the real inverse collapses to
+    the junk value `0`, which lies **below** every later time, while the `ℝ≥0∞` inverse collapses
+    to `⊤`, which lies above every real time.
+
+    **What the divergence hypothesis is spent on is a single time**, and separating that out is
+    what makes the two statements above possible: `cumulativeRateF_rateInverse_of_exists` proves
+    the defining equation of the inverse from the attainment of the one level in question, where
+    `cumulativeRateF_rateInverse` asks for the divergence at every level. At a truncated rate the
+    divergence is false above the truncation and true below it, so a statement that asks for it
+    globally reaches no level at all.
+  * `isStoppingTime_rateInverseE` and `isLocalizingSequence_rateInverseE`: **the hitting times of
+    the cumulated path dependent rate are stopping times of the path dependent filtration, and they
+    are a localizing sequence.** **In Lean** on 2026-09-11, seventeenth run, with
+    `monotoneOn_cumulativeRateF_of_nonneg`, `continuousOn_cumulativeRateF_Ici`,
+    `isClosed_setOf_le_cumulativeRateF`, `rateInverse_le_iff_of_nonneg`,
+    `rateInverseE_le_ofReal_iff`, `rateInverseE_le_coe_iff`,
+    `measurable_cumulativeRateF_of_uncurry_min`, `isStoppingTime_rateInverseE_of_uncurry_min`,
+    `isStoppingTime_rateInverseE_hawkesSelfRate`, `tendsto_rateInverseE_atTop` and
+    `isLocalizingSequence_rateInverseE_hawkesSelfRate`. This is what makes the truncation above a
+    localization.
+
+    **The rate is asked to be non negative and not to be positive**, and that too is chosen for
+    `truncRateF Λ a`, which is `0` above the level it was truncated at. `rateInverse_le_iff`
+    identifies the infimum with the point the intermediate value theorem produces and needs the
+    strict monotonicity of the cumulated rate for it; `rateInverse_le_iff_of_nonneg` does not need
+    the point to be unique, and takes instead that a closed, non empty, bounded below set contains
+    its infimum (`isClosed_setOf_le_cumulativeRateF`, `IsClosed.csInf_mem`). Uniqueness is the only
+    thing the strict positivity was buying.
+
+    **The statement is at `rateInverseE` and not at `rateInverse`.** `setOf_rateInverse_le` reduces
+    `{rateInverse Lam · a ≤ c}` to `{0 ≤ c ∧ a ≤ cumulativeRateF Lam · c}` only where the level `a`
+    is attained; at a sample point where it is not, the real inverse is the junk value `0`, which
+    lies below every `c`, while the cumulated rate never reaches `a`, so the two sides disagree and
+    the level set is not the one a filtration can see. In `ℝ≥0∞` the unattained level is inverted to
+    `⊤`, which lies above every real time, and `rateInverseE_le_coe_iff` holds at **every** sample
+    point with no hypothesis on the level at all — neither the divergence
+    `Tendsto (cumulativeRateF Lam ω) atTop atTop` that `setOf_rateInverse_le` carries nor the
+    attainment that `cumulativeRateF_rateInverse_of_exists` isolated out of it. That matters and is
+    not bookkeeping: the divergence is **false** for `truncRateF Lam a` above the level `a`, which
+    is the rate a localized problem runs on.
+
+    The filtration is asked for one thing: that `ω ↦ cumulativeRateF Lam ω t` be measurable for the
+    past at `t`. `measurable_cumulativeRateF_of_uncurry_min` discharges it from the joint
+    measurability of the rate that `Clock.IsProgressive` supplies anyway, and
+    `measurable_uncurry_hawkesSelfRate_hawkesFiltration` is that joint measurability on the data of
+    `ex:hawkes`.
+
+    **The localization costs no non explosion.** `isLocalizingSequence_rateTime`, the state
+    dependent counterpart, asks for almost sure non explosion, because its localizing functional is
+    the running supremum of the rate **along the path** and that is already infinite before a fixed
+    time at an explosive sample point. The cumulated rate at a fixed time is an integral over a
+    bounded window of a locally integrable function, hence a real number at every sample point, so
+    `tendsto_rateInverseE_atTop` is `exists_nat_gt` and all three fields of
+    `ProbabilityTheory.IsLocalizingSequence` hold everywhere and not almost everywhere. The
+    monotonicity is `monotone_rateInverseE`, which carries no hypothesis whatever.
+
+    **The localizing system deviates from the one the manuscript names, and the reason is the
+    window bound.** `thm:pathjumpMP`(a) names the **jump times** `(τ n)`. On `[0, τ n]` the
+    cumulated rate is `∑_{k<n} ξ k`, which is unbounded in the sample point, so the jump times give
+    no bound of the form `martingale_stoppedProcess` asks for; on `[0, rateInverseE Lam · N]` the
+    cumulated rate is at most `N` at every sample point, hence the window bound
+    `|∫_0^{t ⊓ σ N} 𝒜ₛ f ds| ≤ 2‖f‖ N` of `abs_setIntegral_compensatorF_le_of_cumulated` and `bdd_mpFamilyF_of_cumulated`. The rate jumps
+    and the cumulated rate is continuous, which is the same sentence read twice: `rateTime` does not
+    transfer to the path dependent variant and `rateInverseE` does.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,

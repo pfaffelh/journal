@@ -16757,4 +16757,614 @@ theorem bdd_mpFamilyF_of_cumulated {E : Type*} {f : E → ℝ} {X : ℝ≥0 → 
 
 end PathWindowBoundCumulated
 
+/-! ### The inverse in `ℝ≥0∞`, and the jump times that a truncated problem needs
+
+`rateInverse_truncRateF_eq_zero_of_lt` is the reason this section exists.  The truncated rate
+`truncRateF Λ a` cumulates to at most `a`, so above that level no time attains it, `sInf ∅ = 0`,
+and the jump times of the truncated problem would all be `0` -- which a step path reads not as
+absorption but as a jump at the origin.  The repair is the one `jumpProcessE` made in the state
+dependent construction at an absorbing state, one floor lower: the inverse takes its values in
+`ℝ≥0∞`, and the level that is never attained is inverted to `⊤`.
+
+**It is a generalisation and not a second construction**, and that is the statement to check, not
+to assume.  `rateInverseE_eq_ofReal_of_exists` says that wherever the level *is* attained the new
+inverse is `ENNReal.ofReal` of the old one, and `jumpProcessFE_eq_jumpProcessF` carries that up to
+the process.  What the change of codomain adds is exactly the behaviour at an unattained level,
+and nothing else.
+
+**And the change of codomain buys a hypothesis back.**  Everything about `jumpTimeF` -- its
+monotonicity, its strict increase, the exhaustion of the half line that `isStepPath_stepPath`
+asks for -- carries the divergence hypothesis `htop : Tendsto (cumulativeRateF Λ ω) atTop atTop`,
+because without it the real inverse collapses to `0` and the times stop increasing.  In `ℝ≥0∞`
+they do not collapse, they become `⊤`, and `⊤` is above every real time: so
+`monotone_jumpTimeFE` needs no hypothesis on the rate at all, and
+`exists_ofReal_lt_jumpTimeFE` -- the exhaustion -- needs only that the waiting times sum to
+infinity.  This is why the truncated problem has step paths although its rate is switched off
+after a finite time, and it is the payoff of the repair, not a side effect of it. -/
+
+section PathInverseE
+
+variable {b : ℝ}
+
+/-- **The generalised inverse of the cumulated rate, with values in `ℝ≥0∞`.**  The same infimum as
+`rateInverse`, taken after the set of admissible times has been carried into `ℝ≥0∞`: where that set
+is empty the infimum is `⊤` and not `0`, which is the whole of the repair. -/
+noncomputable def rateInverseE (Λ : ℝ → Ω → ℝ) (ω : Ω) (a : ℝ) : ENNReal :=
+  sInf (ENNReal.ofReal '' {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r})
+
+/-- The inverse, like the cumulated rate, reads the rate at one sample point only. -/
+theorem rateInverseE_congr {Λ Λ' : ℝ → Ω → ℝ} {ω : Ω} (h : ∀ u, Λ u ω = Λ' u ω) (a : ℝ) :
+    rateInverseE Λ ω a = rateInverseE Λ' ω a := by
+  simp only [rateInverseE, cumulativeRateF_congr h]
+
+/-- **An unattained level is inverted to `⊤`.**  Compare `rateInverse_eq_zero_of_forall_lt`, which
+is the same hypothesis with the value `0`: this is the one statement in which the two inverses
+disagree, and it is the one the truncated problem needs. -/
+theorem rateInverseE_eq_top_of_forall_lt (h : ∀ r : ℝ, 0 ≤ r → cumulativeRateF Λ ω r < a) :
+    rateInverseE Λ ω a = ⊤ := by
+  have hempty : {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} = ∅ := by
+    ext r
+    simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_and, not_le]
+    exact fun hr ↦ h r hr
+  rw [rateInverseE, hempty, Set.image_empty, sInf_empty]
+
+/-- **At an attained level the new inverse is the old one.**  This is the statement that makes
+`rateInverseE` a generalisation of `rateInverse` rather than a competitor to it, and note that it
+asks for nothing but the attainment: no integrability, no positivity, no divergence.
+
+Mathlib carries the whole content, in the indexed form `ENNReal.ofReal_iInf`
+(`Mathlib/Data/ENNReal/Operations.lean:526`), and it carries it **without a hypothesis on the
+family**: below the origin both sides collapse to `0`, on the left because `ENNReal.ofReal` does
+and on the right because the infimum of the reals does.  The only work left is the passage from an
+image to an indexed infimum in both directions, `sInf_image'` on one side and the definition of
+`iInf` with `Subtype.range_coe` on the other, and the attainment enters only as the non emptiness
+that `ofReal_iInf` asks for. -/
+theorem rateInverseE_eq_ofReal_of_exists (h : ∃ r : ℝ, 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r) :
+    rateInverseE Λ ω a = ENNReal.ofReal (rateInverse Λ ω a) := by
+  obtain ⟨r₀, hr₀⟩ := h
+  have hne : Nonempty {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} := ⟨r₀, hr₀⟩
+  rw [rateInverseE, sInf_image', ← ENNReal.ofReal_iInf, rateInverse, iInf, Subtype.range_coe]
+
+/-- **The inverse is finite exactly where the level is attained.** -/
+theorem rateInverseE_ne_top_iff :
+    rateInverseE Λ ω a ≠ ⊤ ↔ ∃ r : ℝ, 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r := by
+  constructor
+  · intro h
+    by_contra hcon
+    push Not at hcon
+    exact h (rateInverseE_eq_top_of_forall_lt hcon)
+  · intro h
+    rw [rateInverseE_eq_ofReal_of_exists h]
+    exact ENNReal.ofReal_lt_top.ne
+
+@[simp] theorem rateInverseE_zero (Λ : ℝ → Ω → ℝ) (ω : Ω) : rateInverseE Λ ω 0 = 0 := by
+  refine le_antisymm ?_ (by simp)
+  have hmem : (0 : ENNReal) ∈ ENNReal.ofReal '' {r : ℝ | 0 ≤ r ∧ (0 : ℝ) ≤ cumulativeRateF Λ ω r} :=
+    ⟨0, ⟨le_rfl, by simp⟩, ENNReal.ofReal_zero⟩
+  exact sInf_le hmem
+
+/-- **The inverse increases in the level, and here with no hypothesis whatever.**  Against
+`rateInverse_mono`, which carries integrability, positivity and divergence: the real statement
+needs them because it has to rule out the collapse to the junk value `0`, and there is no collapse
+to rule out here.  A higher level admits fewer times, so its infimum is larger, and that is the
+whole proof. -/
+theorem monotone_rateInverseE (Λ : ℝ → Ω → ℝ) (ω : Ω) : Monotone (rateInverseE Λ ω) := by
+  intro a b hab
+  exact sInf_le_sInf (Set.image_mono fun r hr ↦ ⟨hr.1, hab.trans hr.2⟩)
+
+/-- **The level is attained at every height as soon as the cumulated rate diverges.**  This is the
+content of the divergence hypothesis, isolated: every statement below that carries `htop` carries
+it only through this. -/
+theorem exists_le_cumulativeRateF_of_tendsto
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (a : ℝ) :
+    ∃ b : ℝ, 0 ≤ b ∧ a ≤ cumulativeRateF Λ ω b := by
+  obtain ⟨b, hb⟩ := ((htop.eventually_ge_atTop a).and (eventually_ge_atTop (0 : ℝ))).exists
+  exact ⟨b, hb.2, hb.1⟩
+
+theorem rateInverseE_eq_ofReal (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (a : ℝ) :
+    rateInverseE Λ ω a = ENNReal.ofReal (rateInverse Λ ω a) :=
+  rateInverseE_eq_ofReal_of_exists (exists_le_cumulativeRateF_of_tendsto htop a)
+
+/-- **The inverse hits the level exactly, from the attainment alone.**  This is
+`cumulativeRateF_rateInverse` with the divergence hypothesis replaced by what that hypothesis is
+spent on -- a single time at which the level is passed.  The strengthening is not cosmetic: at a
+truncated rate the divergence is false at every level above the truncation and true below it, so a
+statement that asks for it globally reaches no level at all. -/
+theorem cumulativeRateF_rateInverse_of_exists
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω) (ha : 0 ≤ a)
+    (hex : ∃ r : ℝ, 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r) :
+    cumulativeRateF Λ ω (rateInverse Λ ω a) = a := by
+  obtain ⟨c, hc0, hac⟩ := hex
+  have hIVT : a ∈ cumulativeRateF Λ ω '' Set.Icc 0 c :=
+    intermediate_value_Icc hc0 (continuousOn_cumulativeRateF hint c hc0)
+      ⟨by simpa using ha, hac⟩
+  obtain ⟨t₀, ht₀mem, ht₀⟩ := hIVT
+  have hSne : {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r}.Nonempty := ⟨t₀, ht₀mem.1, ht₀.ge⟩
+  have hbdd : BddBelow {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} := ⟨0, fun r hr ↦ hr.1⟩
+  have hle : rateInverse Λ ω a ≤ t₀ := csInf_le hbdd ⟨ht₀mem.1, ht₀.ge⟩
+  have hge : t₀ ≤ rateInverse Λ ω a := by
+    by_contra hcon
+    obtain ⟨r, hr, hrlt⟩ := exists_lt_of_csInf_lt hSne (not_le.1 hcon)
+    have hlt : cumulativeRateF Λ ω r < cumulativeRateF Λ ω t₀ :=
+      strictMonoOn_cumulativeRateF hint hpos hr.1 ht₀mem.1 hrlt
+    rw [ht₀] at hlt
+    exact absurd hr.2 (not_le.2 hlt)
+  rw [le_antisymm hle hge, ht₀]
+
+/-- **The inverse increases strictly between two attained levels.**  It is what turns the
+monotonicity of the jump times into strict increase, and it is again stated at the attainment and
+not at the divergence: the higher level is attained, hence so is the lower one. -/
+theorem rateInverse_lt_rateInverse
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω) (ha : 0 ≤ a) (hab : a < b)
+    (hex : ∃ r : ℝ, 0 ≤ r ∧ b ≤ cumulativeRateF Λ ω r) :
+    rateInverse Λ ω a < rateInverse Λ ω b := by
+  obtain ⟨r, hr0, hrb⟩ := hex
+  have h1 := cumulativeRateF_rateInverse_of_exists hint hpos ha ⟨r, hr0, hab.le.trans hrb⟩
+  have h2 := cumulativeRateF_rateInverse_of_exists hint hpos (ha.trans hab.le) ⟨r, hr0, hrb⟩
+  by_contra hcon
+  have hmon := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω b)
+    (rateInverse_nonneg Λ ω a) (not_lt.1 hcon)
+  rw [h1, h2] at hmon
+  exact absurd hab (not_lt.2 hmon)
+
+/-! #### The jump times of the repaired construction -/
+
+/-- **The jump times of the path dependent construction, in `ℝ≥0∞`.**  The same levels as
+`jumpTimeF`, inverted in `ℝ≥0∞`: a level that the cumulated rate never reaches gives the jump time
+`⊤`, which is absorption, where the real inverse gave `0`, which is junk. -/
+noncomputable def jumpTimeFE (Λ : ℝ → Ω → ℝ) (ω : Ω) (xi : ℕ → ℝ) (n : ℕ) : ENNReal :=
+  rateInverseE Λ ω (∑ k ∈ Finset.range n, xi k)
+
+@[simp] theorem jumpTimeFE_zero (Λ : ℝ → Ω → ℝ) (ω : Ω) (xi : ℕ → ℝ) :
+    jumpTimeFE Λ ω xi 0 = 0 := by
+  simp [jumpTimeFE]
+
+/-- **The jump times increase**, from the positivity of the waiting times alone -- no integrability,
+no positivity of the rate, no divergence.  Compare `monotone_jumpTimeF`, which carries all three. -/
+theorem monotone_jumpTimeFE (hxi : ∀ n, 0 ≤ xi n) : Monotone (jumpTimeFE Λ ω xi) := by
+  refine monotone_nat_of_le_succ fun n ↦ ?_
+  refine monotone_rateInverseE Λ ω ?_
+  rw [Finset.sum_range_succ]
+  linarith [hxi n]
+
+/-- **At a divergent cumulated rate the new jump times are the old ones.** -/
+theorem jumpTimeFE_eq_ofReal (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (n : ℕ) :
+    jumpTimeFE Λ ω xi n = ENNReal.ofReal (jumpTimeF Λ ω xi n) :=
+  rateInverseE_eq_ofReal htop _
+
+/-- **The jump times increase strictly as long as they are finite**, and that is all the strictness
+there can be: past the time at which the rate has spent its mass they are all `⊤`.  This is the
+exact counterpart of `lt_jumpTimeE_succ` in the state dependent construction, and the hypothesis it
+replaces is the same one: there `0 < lam (y n)`, here the attainment of the level. -/
+theorem lt_jumpTimeFE_succ
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω) (hxi : ∀ k, 0 ≤ xi k) (hxin : 0 < xi n)
+    (hfin : jumpTimeFE Λ ω xi (n + 1) ≠ ⊤) :
+    jumpTimeFE Λ ω xi n < jumpTimeFE Λ ω xi (n + 1) := by
+  obtain ⟨r, hr0, hr⟩ := rateInverseE_ne_top_iff.1 hfin
+  have hs0 : (0 : ℝ) ≤ ∑ k ∈ Finset.range n, xi k := Finset.sum_nonneg fun k _ ↦ hxi k
+  have hlt : (∑ k ∈ Finset.range n, xi k) < ∑ k ∈ Finset.range (n + 1), xi k := by
+    rw [Finset.sum_range_succ]; linarith
+  have hexa : ∃ r : ℝ, 0 ≤ r ∧ (∑ k ∈ Finset.range n, xi k) ≤ cumulativeRateF Λ ω r :=
+    ⟨r, hr0, hlt.le.trans hr⟩
+  rw [jumpTimeFE, jumpTimeFE, rateInverseE_eq_ofReal_of_exists hexa,
+    rateInverseE_eq_ofReal_of_exists ⟨r, hr0, hr⟩,
+    ENNReal.ofReal_lt_ofReal_iff_of_nonneg (rateInverse_nonneg Λ ω _)]
+  exact rateInverse_lt_rateInverse hint hpos hs0 hlt ⟨r, hr0, hr⟩
+
+/-- **Downward propagation of strictness**, the hypothesis `isStepPath_stepPath_ofReal` asks for in
+place of strict monotonicity. -/
+theorem jumpTimeFE_lt_succ_of_lt_succ
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω) (hxi : ∀ k, 0 < xi k) (n : ℕ)
+    (h : jumpTimeFE Λ ω xi (n + 1) < jumpTimeFE Λ ω xi (n + 2)) :
+    jumpTimeFE Λ ω xi n < jumpTimeFE Λ ω xi (n + 1) :=
+  lt_jumpTimeFE_succ hint hpos (fun k ↦ (hxi k).le) (hxi n) h.ne_top
+
+/-- **The jump times exhaust the half line, and the divergence of the cumulated rate is not needed
+for it.**  This is the second place where the change of codomain pays: `tendsto_jumpTimeF_atTop`
+carries `htop`, because without it the real jump times collapse to `0` and stay there; here they
+collapse to `⊤`, which is above every real time, so the statement holds for both reasons at once
+and asks only that the waiting times sum to infinity.
+
+It is `isStepPath_stepPath_ofReal`'s non explosion hypothesis, asked -- as there -- at real times
+only. -/
+theorem exists_ofReal_lt_jumpTimeFE
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω) (hxi : ∀ n, 0 ≤ xi n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop) (s : ℝ) :
+    ∃ n, ENNReal.ofReal s < jumpTimeFE Λ ω xi (n + 1) := by
+  set M : ℝ := max s 0 with hM
+  have hM0 : (0 : ℝ) ≤ M := le_max_right _ _
+  obtain ⟨n, hn⟩ := (hsum.eventually_gt_atTop (cumulativeRateF Λ ω M)).exists_forall_of_atTop
+  refine ⟨n, ?_⟩
+  have hgt : cumulativeRateF Λ ω M < ∑ k ∈ Finset.range (n + 1), xi k := hn (n + 1) (Nat.le_succ n)
+  by_contra hcon
+  push Not at hcon
+  have hfin : jumpTimeFE Λ ω xi (n + 1) ≠ ⊤ :=
+    (hcon.trans_lt ENNReal.ofReal_lt_top).ne
+  obtain ⟨r, hr0, hr⟩ := rateInverseE_ne_top_iff.1 hfin
+  have hs0 : (0 : ℝ) ≤ ∑ k ∈ Finset.range (n + 1), xi k := Finset.sum_nonneg fun k _ ↦ hxi k
+  rw [jumpTimeFE, rateInverseE_eq_ofReal_of_exists ⟨r, hr0, hr⟩] at hcon
+  have hle : rateInverse Λ ω (∑ k ∈ Finset.range (n + 1), xi k) ≤ M := by
+    have h1 := (ENNReal.ofReal_le_ofReal_iff hM0).1
+      (hcon.trans (ENNReal.ofReal_le_ofReal (le_max_left s 0)))
+    exact h1
+  have hval := cumulativeRateF_rateInverse_of_exists hint hpos hs0 ⟨r, hr0, hr⟩
+  have hmon := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω _) hM0 hle
+  rw [hval] at hmon
+  exact absurd hmon (not_le.2 hgt)
+
+/-! #### The repaired process, and that it extends the old one -/
+
+section PathProcessE
+
+variable {E : Type*} {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **The path dependent jump process of the repaired construction**: the same step path, read over
+jump times in `ℝ≥0∞`.  The time axis of the process is still `ℝ`; only the jump times moved. -/
+noncomputable def jumpProcessFE (Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) : E :=
+  stepPath (jumpTimeFE Λ ω ω.2) ω.1 (ENNReal.ofReal t)
+
+/-- **The paths of the repaired process are step paths**, and note which hypothesis is gone against
+`isStepPath_jumpProcessF`: the divergence of the cumulated rate.  A rate that spends its mass in
+finite time gives a path that makes finitely many jumps and then stays where it is, and that is a
+step path -- it was not one over `jumpTimeF`, where the remaining jump times were `0`. -/
+theorem isStepPath_jumpProcessFE [TopologicalSpace E]
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω) (hxi : ∀ n, 0 < ω.2 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) :
+    IsStepPath (fun t ↦ jumpProcessFE Λ t ω) :=
+  isStepPath_stepPath_ofReal (monotone_jumpTimeFE fun n ↦ (hxi n).le)
+    (fun n h ↦ jumpTimeFE_lt_succ_of_lt_succ hint hpos hxi n h)
+    (exists_ofReal_lt_jumpTimeFE hint hpos (fun n ↦ (hxi n).le) hsum)
+
+theorem isCadlagPath_jumpProcessFE [TopologicalSpace E]
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω) (hxi : ∀ n, 0 < ω.2 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) :
+    IsCadlagPath (fun t ↦ jumpProcessFE Λ t ω) :=
+  (isStepPath_jumpProcessFE hint hpos hxi hsum).isCadlagPath
+
+/-- **The repaired process extends the old one.**  At a divergent cumulated rate -- the standing
+hypothesis of everything the path dependent variant has proved so far -- the two agree at every
+time and every sample point, not almost surely.  So `jumpProcessFE` is not a competitor to
+`jumpProcessF`: every statement of `section PathProcess` is a statement about it on the domain
+where its hypotheses hold, and what the extension adds is exactly the behaviour at a level the
+cumulated rate never reaches. -/
+theorem jumpProcessFE_eq_jumpProcessF
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ n, 0 < ω.2 n) (t : ℝ) :
+    jumpProcessFE Λ t ω = jumpProcessF Λ t ω := by
+  have hposT : ∀ m : ℕ, 0 < jumpTimeF Λ ω ω.2 (m + 1) := fun m ↦ by
+    simpa using strictMono_jumpTimeF hint hpos htop hxi (Nat.succ_pos m)
+  have hset : {m | ENNReal.ofReal t < jumpTimeFE Λ ω ω.2 (m + 1)}
+      = {m | t < jumpTimeF Λ ω ω.2 (m + 1)} := by
+    ext m
+    rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, jumpTimeFE_eq_ofReal htop,
+      ENNReal.ofReal_lt_ofReal_iff (hposT m)]
+  simp only [jumpProcessFE, jumpProcessF, stepPath, stepIndex, hset]
+
+end PathProcessE
+
+/-! #### What the repair was for: the truncated problem, and a rate that dies out -/
+
+/-- **Above the level it was truncated at, the repaired inverse is `⊤`.**  This is
+`rateInverse_truncRateF_eq_zero_of_lt` with the junk value replaced by absorption, and it is the
+statement that lets the truncated problem have a process at all: its jump times past the level are
+infinite, so the path stays where it was, which is what a truncated problem is supposed to do. -/
+theorem rateInverseE_truncRateF_eq_top_of_lt
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (hab : a < b) :
+    rateInverseE (truncRateF Λ a) ω b = ⊤ :=
+  rateInverseE_eq_top_of_forall_lt fun r _ ↦
+    lt_of_le_of_lt (cumulativeRateF_truncRateF_le hint hpos htop ha r) hab
+
+/-- **And so are its jump times, past the index at which the waiting times have consumed the
+level.** -/
+theorem jumpTimeFE_truncRateF_eq_top
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a)
+    (hn : a < ∑ k ∈ Finset.range n, xi k) :
+    jumpTimeFE (truncRateF Λ a) ω xi n = ⊤ :=
+  rateInverseE_truncRateF_eq_top_of_lt hint hpos htop ha hn
+
+/-- **The witness of `section FiniteMass`, read again.**  `expRate` has total mass `1`, and above
+that level the real inverse returned `0`; the repaired one returns `⊤`.  The two statements stand
+side by side, and they are the whole difference between the two constructions. -/
+theorem jumpTimeFE_expRate_eq_top (ω : Ω) (xi : ℕ → ℝ) (n : ℕ)
+    (hn : 1 < ∑ k ∈ Finset.range n, xi k) : jumpTimeFE expRate ω xi n = ⊤ := by
+  refine rateInverseE_eq_top_of_forall_lt fun r _ ↦ lt_of_le_of_lt ?_ hn
+  have h := cumulativeRateF_le_of_integrableOn (integrableOn_expRate ω)
+    (fun u _ ↦ (expRate_pos ω u).le) r
+  rwa [integral_expRate ω] at h
+
+end PathInverseE
+
+/-! ### The hitting time of the cumulated rate is a stopping time
+
+This is the step that turns the truncation of `section PathTruncation` into a **localization**, and
+it is the path dependent counterpart of `isStoppingTime_rateTime`.  The state dependent case
+localizes at the hitting time of the running *supremum* of the rate; here the rate is a functional
+of the path and has no running supremum that a filtration can see, and the localizing time is the
+hitting time of the **cumulated** rate.
+
+**The statement is at `rateInverseE` and not at `rateInverse`, and that is not a preference.**  The
+real inverse of an unattained level is `0`, and `0` lies below every time, so
+`{ω | rateInverse Λ ω a ≤ c}` contains every sample point at which the level is never reached -- the
+set is right for the wrong reason and the equivalence with `{a ≤ cumulativeRateF Λ ω c}` is simply
+false there.  In `ℝ≥0∞` the unattained level is inverted to `⊤`, which lies above every real time,
+and the equivalence holds at **every** sample point.
+
+**And with it the divergence hypothesis disappears.**  `setOf_rateInverse_le`, the real statement,
+carries `htop : Tendsto (cumulativeRateF Λ ω) atTop atTop`; `rateInverseE_le_ofReal_iff` carries
+neither it nor the attainment of the level that the sixteenth run isolated out of it
+(`cumulativeRateF_rateInverse_of_exists`).  The reason is the one above: the hypothesis was there to
+rule out the collapse to the junk value, and there is no collapse to rule out.  This matters and is
+not bookkeeping -- the divergence is **false** for `truncRateF Λ a` above the level `a`, which is
+exactly the rate a localized problem runs on.
+
+`isStoppingTime_rateInverseE` asks of the filtration one thing and nothing else: that the cumulated
+rate up to `t` be measurable for the past at `t`.  No jump times, no non explosion, no process.
+`measurable_cumulativeRateF_of_uncurry_min` discharges it from the joint measurability of the rate,
+which is what `Clock.IsProgressive` supplies anyway, and
+`isStoppingTime_rateInverseE_hawkesSelfRate` is the instance on the data of `ex:hawkes`. -/
+
+section PathStopping
+
+/-- **The cumulated rate is monotone on the half line from the non negativity of the rate alone.**
+`monotoneOn_cumulativeRateF` reaches the same conclusion through `strictMonoOn_cumulativeRateF` and
+therefore through the strict positivity, which is more than the conclusion needs: the increment over
+`(s, t]` is an integral of a non negative function (`cumulativeRateF_sub`, `setIntegral_nonneg`).
+
+The distinction is not hygiene.  The truncated rate `truncRateF Λ a` is `0` above the level it was
+truncated at, so the strictly positive version does not reach it, and it is the rate a localized
+problem runs on. -/
+theorem monotoneOn_cumulativeRateF_of_nonneg
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) :
+    MonotoneOn (cumulativeRateF Λ ω) (Set.Ici 0) := by
+  intro s hs t _ hst
+  have hs0 : (0 : ℝ) ≤ s := hs
+  have hsub := cumulativeRateF_sub hint hs0 hst
+  have hnonneg : 0 ≤ ∫ u in Set.Ioc s t, Λ u ω :=
+    setIntegral_nonneg measurableSet_Ioc fun u hu ↦ hnn u (lt_of_le_of_lt hs0 hu.1)
+  linarith
+
+/-- **The cumulated rate is continuous on the whole half line**, and not only on a bounded window of
+it.  `continuousOn_cumulativeRateF` gives `Set.Icc 0 b` for every `b`, which is what
+`intervalIntegral.continuousOn_primitive` delivers; the passage to `Set.Ici 0` is local, because
+`Set.Icc 0 (x + 1)` is a neighbourhood of `x` within `Set.Ici 0`. -/
+theorem continuousOn_cumulativeRateF_Ici
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r) :
+    ContinuousOn (cumulativeRateF Λ ω) (Set.Ici 0) := by
+  intro x hx
+  have hx0 : (0 : ℝ) ≤ x := hx
+  have hmem : Set.Icc (0 : ℝ) (x + 1) ∈ 𝓝[Set.Ici (0 : ℝ)] x := by
+    refine mem_nhdsWithin.2 ⟨Set.Iio (x + 1), isOpen_Iio, by simp, ?_⟩
+    rintro y ⟨hy1, hy2⟩
+    exact ⟨hy2, (Set.mem_Iio.1 hy1).le⟩
+  exact ((continuousOn_cumulativeRateF hint (x + 1) (by linarith)) x
+    ⟨hx0, by linarith⟩).mono_of_mem_nhdsWithin hmem
+
+/-- **The set of times at which the level is already passed is closed**, from local integrability
+alone.  This is what replaces the strict monotonicity in `rateInverse_le_iff_of_nonneg`: a closed
+set that is non empty and bounded below **contains** its infimum (`IsClosed.csInf_mem`), so the
+inverse is a time at which the level is passed and not merely a limit of such times.
+
+The strictly monotone route identifies the infimum with the point the intermediate value theorem
+produces; this one does not need the point to be unique, and uniqueness is the only thing the strict
+positivity was ever buying. -/
+theorem isClosed_setOf_le_cumulativeRateF
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r) (a : ℝ) :
+    IsClosed {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} := by
+  have hset : {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r}
+      = Set.Ici (0 : ℝ) ∩ cumulativeRateF Λ ω ⁻¹' Set.Ici a := Set.ext fun _ ↦ Iff.rfl
+  rw [hset]
+  exact (continuousOn_cumulativeRateF_Ici hint).preimage_isClosed_of_isClosed
+    isClosed_Ici isClosed_Ici
+
+/-- **The defining property of the inverse, at an attained level and at a merely non negative
+rate.**  `rateInverse_le_iff` asks for the divergence of the cumulated rate at every level and for
+the strict positivity of the rate; this asks for the attainment of the one level in question and for
+non negativity, and both weakenings are used below -- the first because the divergence is false for
+a truncated rate, the second because a truncated rate is not strictly positive.
+
+The reverse implication uses neither: the time `c` is then itself a witness. -/
+theorem rateInverse_le_iff_of_nonneg
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω)
+    (hex : ∃ r : ℝ, 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r) {c : ℝ} (hc : 0 ≤ c) :
+    rateInverse Λ ω a ≤ c ↔ a ≤ cumulativeRateF Λ ω c := by
+  constructor
+  · intro h
+    have hmem : rateInverse Λ ω a ∈ {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} :=
+      (isClosed_setOf_le_cumulativeRateF hint a).csInf_mem hex ⟨0, fun r hr ↦ hr.1⟩
+    exact hmem.2.trans (monotoneOn_cumulativeRateF_of_nonneg hint hnn hmem.1 hc h)
+  · exact fun h ↦ csInf_le ⟨0, fun r hr ↦ hr.1⟩ ⟨hc, h⟩
+
+/-- **The sublevel sets of the repaired inverse are sublevel sets of the cumulated rate, with no
+hypothesis on the level at all.**  Against `setOf_rateInverse_le`, which carries the divergence: the
+unattained level is the only case in which the two inverses differ, and it is precisely the case in
+which the real statement is false.  Here it is the case in which the left side is `⊤ ≤ ofReal c`,
+which is false, and the right side is `a ≤ cumulativeRateF Λ ω c`, which is false as well, so the
+equivalence holds by both sides failing.
+
+The reverse implication is `sInf_le` at the witness `c` and asks for nothing whatever. -/
+theorem rateInverseE_le_ofReal_iff
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) {c : ℝ} (hc : 0 ≤ c) :
+    rateInverseE Λ ω a ≤ ENNReal.ofReal c ↔ a ≤ cumulativeRateF Λ ω c := by
+  constructor
+  · intro h
+    have hne : rateInverseE Λ ω a ≠ ⊤ := by
+      intro htop
+      rw [htop] at h
+      exact absurd (top_le_iff.1 h) ENNReal.ofReal_lt_top.ne
+    have hex := rateInverseE_ne_top_iff.1 hne
+    rw [rateInverseE_eq_ofReal_of_exists hex, ENNReal.ofReal_le_ofReal_iff hc] at h
+    exact (rateInverse_le_iff_of_nonneg hint hnn hex hc).1 h
+  · exact fun h ↦ sInf_le ⟨c, ⟨hc, h⟩, rfl⟩
+
+/-- The same statement at a level of `ℝ≥0`, which is the index of the filtration and therefore the
+form `IsStoppingTime` unfolds to. -/
+theorem rateInverseE_le_coe_iff
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (t : ℝ≥0) :
+    rateInverseE Λ ω a ≤ (t : ENNReal) ↔ a ≤ cumulativeRateF Λ ω (t : ℝ) := by
+  rw [← ENNReal.ofReal_coe_nnreal]
+  exact rateInverseE_le_ofReal_iff hint hnn t.coe_nonneg
+
+/-- **The cumulated rate up to `t` is measurable for the past at `t`** as soon as the rate is
+jointly measurable there, and this is the hypothesis in the form every other statement of the
+measurability layer already supplies it: the cut `min u t` is free on the window `(0, t]`, and it is
+what turns a statement about `Λ` into a statement `Clock.IsProgressive` can discharge.
+
+`measurable_cumulativeRateF` is the same passage over an arbitrary parameter space; the only work
+here is that the window lives in `ℝ` while the joint measurability is asked over `ℝ≥0`, and the two
+are matched by `Real.toNNReal`, which is the identity on the window. -/
+theorem measurable_cumulativeRateF_of_uncurry_min {mΩ : MeasurableSpace Ω} (t : ℝ≥0)
+    (hΛ : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod mΩ]
+      fun p : ℝ≥0 × Ω ↦ Λ (min (p.1 : ℝ) (t : ℝ)) p.2) :
+    Measurable[mΩ] fun w : Ω ↦ cumulativeRateF Λ w (t : ℝ) := by
+  have hjoint : Measurable[mΩ.prod (inferInstance : MeasurableSpace ℝ)]
+      fun q : Ω × ℝ ↦ Λ (min ((Real.toNNReal q.2 : ℝ≥0) : ℝ) (t : ℝ)) q.1 :=
+    hΛ.comp ((measurable_real_toNNReal.comp measurable_snd).prodMk measurable_fst)
+  have key := @measurable_cumulativeRateF Ω Ω mΩ
+    (fun (_ : Ω) (u : ℝ) (w : Ω) ↦ Λ (min ((Real.toNNReal u : ℝ≥0) : ℝ) (t : ℝ)) w)
+    id hjoint (t : ℝ)
+  have heq : ∀ w : Ω, cumulativeRateF
+      (fun (u : ℝ) (w' : Ω) ↦ Λ (min ((Real.toNNReal u : ℝ≥0) : ℝ) (t : ℝ)) w') w (t : ℝ)
+      = cumulativeRateF Λ w (t : ℝ) := by
+    intro w
+    refine setIntegral_congr_fun measurableSet_Ioc fun u hu ↦ ?_
+    show Λ (min ((Real.toNNReal u : ℝ≥0) : ℝ) (t : ℝ)) w = Λ u w
+    rw [Real.coe_toNNReal' u, max_eq_left hu.1.le, min_eq_left hu.2]
+  simpa only [id_eq, heq] using key
+
+/-- **The hitting time of the cumulated rate is a stopping time.**  The statement
+`section PathTruncation` was built towards: it is what makes `truncRateF Λ a` a *localization* of
+the path dependent problem and not merely a truncation of it.
+
+The filtration is asked for one thing, and it is the one thing the measurability layer of the path
+dependent variant already delivers.  **No jump times enter, no non explosion, no process** -- the
+localizing time is a functional of the rate alone, which is the whole reason it is visible where the
+jump times are not (`not_isStoppingTime_hawkesJumpTime_pathFiltration`). -/
+theorem isStoppingTime_rateInverseE {mΩ : MeasurableSpace Ω} {𝓕 : Filtration ℝ≥0 mΩ}
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hnn : ∀ (w : Ω) (u : ℝ), 0 < u → 0 ≤ Λ u w)
+    (hcum : ∀ t : ℝ≥0, Measurable[𝓕 t] fun w : Ω ↦ cumulativeRateF Λ w (t : ℝ)) :
+    IsStoppingTime 𝓕 fun w : Ω ↦ rateInverseE Λ w a := by
+  intro t
+  refine MeasurableSet.congr (s := {w : Ω | a ≤ cumulativeRateF Λ w (t : ℝ)})
+    (measurableSet_le measurable_const (hcum t)) ?_
+  ext w
+  exact (rateInverseE_le_coe_iff (hint w) (hnn w) t).symm
+
+/-- The two hypotheses on the rate, packaged for the statement above from the joint measurability
+the filtration supplies. -/
+theorem isStoppingTime_rateInverseE_of_uncurry_min {mΩ : MeasurableSpace Ω}
+    {𝓕 : Filtration ℝ≥0 mΩ}
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hnn : ∀ (w : Ω) (u : ℝ), 0 < u → 0 ≤ Λ u w)
+    (hΛ : ∀ t : ℝ≥0, Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (𝓕 t)]
+      fun p : ℝ≥0 × Ω ↦ Λ (min (p.1 : ℝ) (t : ℝ)) p.2) :
+    IsStoppingTime 𝓕 fun w : Ω ↦ rateInverseE Λ w a :=
+  isStoppingTime_rateInverseE hint hnn
+    fun t ↦ measurable_cumulativeRateF_of_uncurry_min t (hΛ t)
+
+/-- **The localizing time of the Hawkes martingale problem is a stopping time for the Hawkes
+filtration.**  The instance on the data of `ex:hawkes`, and it is one term: the positivity of the
+rate is its constant term (`hawkesSelfRate_pos`) and the joint measurability is
+`measurable_uncurry_hawkesSelfRate_hawkesFiltration`, which the measurability layer proved for the
+compensating integrand and which is asked here of the rate alone.
+
+**Nothing about the fixed point enters and nothing about the non explosion**, and the contrast with
+`not_isStoppingTime_hawkesJumpTime_pathFiltration` is the content: the *jump* times are invisible to
+the filtration of the path, and the hitting times of the *cumulated rate* are visible to the
+filtration of the point process.  This is the localizing system the Hawkes assembly runs on, and
+`thm:pathjumpMP`(a) names the jump times instead -- see the note in
+`MartingaleProblems/README.md`, Milestone 4. -/
+theorem isStoppingTime_rateInverseE_hawkesSelfRate {E : Type*} [MeasurableSpace E] {ν : ℝ}
+    {φ : ℝ → ℝ} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) :
+    IsStoppingTime (hawkesFiltration (E := E) hν hφ hφm hφint)
+      fun w : (ℕ → E) × (ℕ → ℝ) ↦ rateInverseE (hawkesSelfRate ν φ) w a :=
+  isStoppingTime_rateInverseE_of_uncurry_min hint
+    (fun w u _ ↦ (hawkesSelfRate_pos hν hφ u w).le)
+    fun i ↦ measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i
+
+/-! #### And they are a localizing sequence, at **every** sample point -/
+
+/-- **The hitting times exhaust the half line, and the reason is that the cumulated rate at a fixed
+time is a real number.**
+
+Compare `tendsto_rateTime_atTop`, the state dependent statement: it carries
+`hω : (y, xi) ∈ NonExplosiveE lam`, and it has to, because at an explosive sample point the running
+supremum of the rate along the path is already infinite before the fixed time and the hitting times
+stop below it.  Here the localizing functional is the **cumulated** rate, and
+`cumulativeRateF Λ ω t` is an integral over the bounded window `(0, t]` of a locally integrable
+function: it is finite at every sample point, and `exists_nat_gt` is the whole proof.
+
+**So the localization of the path dependent problem costs no non explosion at all.**  That is not a
+weaker hypothesis on the same statement, it is the absence of the hypothesis: the state dependent
+case needs non explosion because its localizing functional reads the path, and this one does not
+read the path. -/
+theorem tendsto_rateInverseE_atTop
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) :
+    Filter.Tendsto (fun n : ℕ ↦ rateInverseE Λ ω (n : ℝ)) Filter.atTop (𝓝 ⊤) := by
+  refine ENNReal.tendsto_nhds_top_iff_nnreal.2 fun s ↦ ?_
+  obtain ⟨n, hn⟩ := exists_nat_gt (cumulativeRateF Λ ω (s : ℝ))
+  refine Filter.eventually_atTop.2 ⟨n, fun m hm ↦ lt_of_not_ge fun hcon ↦ ?_⟩
+  have h := (rateInverseE_le_coe_iff hint hnn s).1 hcon
+  exact absurd (h.trans' (by exact_mod_cast Nat.cast_le.2 hm)) (not_le.2 hn)
+
+/-- **The hitting times of the cumulated rate are a localizing sequence.**  The path dependent
+counterpart of `isLocalizingSequence_rateTime`, and the difference between the two is one
+hypothesis: that one asks for almost sure non explosion, this one asks for nothing beyond what makes
+the hitting times stopping times, and all three fields hold at **every** sample point rather than
+almost everywhere.
+
+The monotonicity is `monotone_rateInverseE`, which carries no hypothesis whatever -- a higher level
+admits fewer times, so its infimum is larger -- and that is the second payoff of the change of
+codomain that the sixteenth run recorded. -/
+theorem isLocalizingSequence_rateInverseE {mΩ : MeasurableSpace Ω} {𝓕 : Filtration ℝ≥0 mΩ}
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hnn : ∀ (w : Ω) (u : ℝ), 0 < u → 0 ≤ Λ u w)
+    (hcum : ∀ t : ℝ≥0, Measurable[𝓕 t] fun w : Ω ↦ cumulativeRateF Λ w (t : ℝ))
+    (P : Measure Ω) :
+    ProbabilityTheory.IsLocalizingSequence 𝓕
+      (fun (n : ℕ) (w : Ω) ↦ rateInverseE Λ w (n : ℝ)) P where
+  isStoppingTime _ := isStoppingTime_rateInverseE hint hnn hcum
+  tendsto_top :=
+    Filter.Eventually.of_forall fun w ↦ tendsto_rateInverseE_atTop (hint w) (hnn w)
+  mono := Filter.Eventually.of_forall fun w _ _ h ↦
+    monotone_rateInverseE Λ w (by exact_mod_cast h)
+
+/-- **The localizing sequence of the Hawkes martingale problem**, on the data of `ex:hawkes` and
+under no further hypothesis -- in particular under no non explosion and no condition on the mass of
+`φ`.  This is the localizing system `hawkes_isLocalMPSolution` runs on. -/
+theorem isLocalizingSequence_rateInverseE_hawkesSelfRate {E : Type*} [MeasurableSpace E] {ν : ℝ}
+    {φ : ℝ → ℝ} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r)
+    (P : Measure ((ℕ → E) × (ℕ → ℝ))) :
+    ProbabilityTheory.IsLocalizingSequence (hawkesFiltration (E := E) hν hφ hφm hφint)
+      (fun (n : ℕ) (w : (ℕ → E) × (ℕ → ℝ)) ↦ rateInverseE (hawkesSelfRate ν φ) w (n : ℝ)) P :=
+  isLocalizingSequence_rateInverseE hint (fun w u _ ↦ (hawkesSelfRate_pos hν hφ u w).le)
+    (fun i ↦ measurable_cumulativeRateF_of_uncurry_min i
+      (measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i)) P
+
+end PathStopping
+
 end PathDependent
