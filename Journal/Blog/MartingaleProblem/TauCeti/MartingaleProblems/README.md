@@ -2824,9 +2824,20 @@ A concrete family of solutions, built without any of the theory above. Index
     `rateInverse`, `rateInverse_le_iff`, `setOf_rateInverse_le`. It is also what the bound is
     about: the window bound asks for a bound on the compensating **window**, which is a bound on
     the cumulated rate and not on the rate.
-  * `rateInverseE` and `jumpTimeFE`: **the inverse of the cumulated rate with values in `ℝ≥0∞`,
-    and the jump times built from it.** `rateInverseE Lam ω a = ⊤` where the level `a` is never
-    reached, and `rateInverse` is its real part where it is finite. This is what the truncated
+  * `rateInverseE`, `jumpTimeFE` and `jumpProcessFE`: **the inverse of the cumulated rate with
+    values in `ℝ≥0∞`, the jump times built from it, and the process they drive.** **In Lean** on
+    2026-09-11, sixteenth run, with `rateInverseE_congr`, `rateInverseE_eq_top_of_forall_lt`,
+    `rateInverseE_eq_ofReal_of_exists`, `rateInverseE_ne_top_iff`, `rateInverseE_zero`,
+    `monotone_rateInverseE`, `exists_le_cumulativeRateF_of_tendsto`, `rateInverseE_eq_ofReal`,
+    `cumulativeRateF_rateInverse_of_exists`, `rateInverse_lt_rateInverse`, `jumpTimeFE_zero`,
+    `monotone_jumpTimeFE`, `jumpTimeFE_eq_ofReal`, `lt_jumpTimeFE_succ`,
+    `jumpTimeFE_lt_succ_of_lt_succ`, `exists_ofReal_lt_jumpTimeFE`, `isStepPath_jumpProcessFE`,
+    `isCadlagPath_jumpProcessFE`, `jumpProcessFE_eq_jumpProcessF`,
+    `rateInverseE_truncRateF_eq_top_of_lt`, `jumpTimeFE_truncRateF_eq_top` and
+    `jumpTimeFE_expRate_eq_top`.
+
+    `rateInverseE Lam ω a = ⊤` where the level `a` is never reached, and `rateInverse` is its real
+    part where it is finite (`rateInverseE_eq_ofReal_of_exists`). This is what the truncated
     problem needs, and `rateInverse_truncRateF_eq_zero_of_lt` says why in one line: the truncated
     rate cumulates to at most `a`, so no level beyond `a` is ever reached and `rateInverse` returns
     the infimum of the empty set, `0`. Jump times all equal to `0` are not absorption but junk, and
@@ -2834,6 +2845,22 @@ A concrete family of solutions, built without any of the theory above. Index
     passage as `jumpProcess` to `jumpProcessE` at an absorbing state, and it is here that the path
     dependent variant pays for the generality of the inverse the state dependent one got from a
     division.
+
+    **The change of codomain buys hypotheses back, and that is the finding.** `monotone_jumpTimeFE`
+    carries no hypothesis on the rate at all, where `monotone_jumpTimeF` carries integrability,
+    positivity and the divergence of the cumulated mass; and `exists_ofReal_lt_jumpTimeFE` — the
+    exhaustion of the half line that `isStepPath_stepPath_ofReal` asks for — carries no divergence
+    either, so `isStepPath_jumpProcessFE` holds at a rate that spends its whole mass in finite time
+    and `isStepPath_jumpProcessF` does not. The reason is one line: the real inverse collapses to
+    the junk value `0`, which lies **below** every later time, while the `ℝ≥0∞` inverse collapses
+    to `⊤`, which lies above every real time.
+
+    **What the divergence hypothesis is spent on is a single time**, and separating that out is
+    what makes the two statements above possible: `cumulativeRateF_rateInverse_of_exists` proves
+    the defining equation of the inverse from the attainment of the one level in question, where
+    `cumulativeRateF_rateInverse` asks for the divergence at every level. At a truncated rate the
+    divergence is false above the truncation and true below it, so a statement that asks for it
+    globally reaches no level at all.
   * `isStoppingTime_rateInverse`: **the hitting time of the cumulated path dependent rate is a
     stopping time of the path dependent filtration.** `setOf_rateInverse_le` reduces
     `{rateInverse Lam · n ≤ c}` to `{0 ≤ c ∧ n ≤ cumulativeRateF Lam · c}`, which reads the path up

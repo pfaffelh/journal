@@ -21997,3 +21997,220 @@ selbst, und damit `rateInverseE`.
 4. **Die veralteten Namen in `section PathDependent` ersetzen** — `Set.diff_eq_empty` durch
    `Set.sdiff_eq_empty`, `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch
    `push Not`, dort wo v4.33.1 es meldet.
+
+### 2026-09-11, sechzehnter Lauf des Tages — die Inverse in `ℝ≥0∞` steht, und sie ist keine zweite Konstruktion, sondern eine, die dem alten Satz drei Voraussetzungen abnimmt
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des fünfzehnten Laufs (`rateInverseE`
+und `jumpTimeFE`). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Fünfundzwanzig Deklarationen** im neuen Abschnitt `PathInverseE` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne einen Fehler und ohne eine
+einzige Warnung im neuen Bereich** durch `lake env lean` gegen v4.33.1, alle fünfundzwanzig mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der
+`sorry` bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+`rateInverseE`, `rateInverseE_congr`, `rateInverseE_eq_top_of_forall_lt`,
+`rateInverseE_eq_ofReal_of_exists`, `rateInverseE_ne_top_iff`, `rateInverseE_zero`,
+`monotone_rateInverseE`, `exists_le_cumulativeRateF_of_tendsto`, `rateInverseE_eq_ofReal`,
+`cumulativeRateF_rateInverse_of_exists`, `rateInverse_lt_rateInverse`, `jumpTimeFE`,
+`jumpTimeFE_zero`, `monotone_jumpTimeFE`, `jumpTimeFE_eq_ofReal`, `lt_jumpTimeFE_succ`,
+`jumpTimeFE_lt_succ_of_lt_succ`, `exists_ofReal_lt_jumpTimeFE`, `jumpProcessFE`,
+`isStepPath_jumpProcessFE`, `isCadlagPath_jumpProcessFE`, `jumpProcessFE_eq_jumpProcessF`,
+`rateInverseE_truncRateF_eq_top_of_lt`, `jumpTimeFE_truncRateF_eq_top`,
+`jumpTimeFE_expRate_eq_top`.
+
+#### Die Definition, und daß sie dieselbe ist und nur eine Etage höher
+
+> `rateInverseE Λ ω a = sInf (ENNReal.ofReal '' {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r})`
+
+Dasselbe Infimum wie `rateInverse`, genommen **nachdem** die Menge der zulässigen Zeiten nach
+`ℝ≥0∞` getragen ist. Der ganze Unterschied steht in einer Zeile: in `ℝ` ist `sInf ∅ = 0`, in
+`ℝ≥0∞` ist `sInf ∅ = ⊤`. Der Müllwert des einen ist der richtige Wert des anderen.
+
+#### Der Prüfstein des Vorschlags ist bestanden, und zwar ohne eine einzige Voraussetzung
+
+Der fünfzehnte Lauf hatte als Prüfstein benannt: „ob `rateInverse` sich als Realteil von
+`rateInverseE` wiederfindet, wo dieser endlich ist — sonst ist es eine zweite Konstruktion und
+keine Verallgemeinerung, und dann ist der Aufschlag der Inversen ein zweites Mal zu zahlen."
+
+`rateInverseE_eq_ofReal_of_exists`: wird der Pegel `a` überhaupt erreicht, so ist
+`rateInverseE Λ ω a = ENNReal.ofReal (rateInverse Λ ω a)` — und die Aussage fragt nach **nichts
+sonst**: keine Integrierbarkeit, keine Positivität, keine Divergenz. `jumpProcessFE_eq_jumpProcessF`
+trägt das bis zum Prozeß hinauf, an **jedem** Stichprobenpunkt und jeder Zeit. Der Aufschlag wird
+also **nicht** ein zweites Mal gezahlt; die 191 Codezeilen dieses Laufs sind kein zweiter Preis für
+die Inverse, sondern der Preis für den Müllwert, und sie sind auf der anderen Seite mehr als
+zurückgezahlt (siehe den nächsten Abschnitt).
+
+**Und der Beweis ist eine Zeile, weil Mathlib die Aussage hat — was dieser Lauf zuerst bestritten
+hatte.** Der erste Entwurf führte ihn von Hand über `ENNReal.toReal`, zweimal `le_antisymm` und
+zwanzig Zeilen, mit der Bemerkung, Mathlib habe nichts über `sInf` unter `ENNReal.ofReal`. Die
+Nachprüfung der Negativaussage — sie ist Pflicht, und hier hat sie sich bezahlt gemacht — gab
+**`ENNReal.ofReal_iInf`** (`Mathlib/Data/ENNReal/Operations.lean:526`, ein `@[simp]`-Lemma):
+
+> `ENNReal.ofReal (⨅ i, f i) = ⨅ i, ENNReal.ofReal (f i)` für `[Nonempty ι]` und **jede** reelle
+> Familie.
+
+Es trägt ohne Beschränkung der Familie nach unten, weil unterhalb des Ursprungs **beide** Seiten
+auf `0` fallen — links, weil `ENNReal.ofReal` es tut, rechts, weil das reelle Infimum seinen
+Müllwert gibt. Genau die Bedingung, die der Entwurf für unentbehrlich hielt, ist entbehrlich. Übrig
+bleibt der Übergang von einem Bild zu einem indizierten Infimum, auf der einen Seite `sInf_image'`
+und auf der anderen die Definition von `iInf` mit `Subtype.range_coe`:
+
+> `rw [rateInverseE, sInf_image', ← ENNReal.ofReal_iInf, rateInverse, iInf, Subtype.range_coe]`
+
+Zwanzig Zeilen auf eine. Die Erreichbarkeit geht nur noch als die Nichtleerheit ein, die
+`ofReal_iInf` verlangt. **Die Negativaussage steht also nicht im Bericht, sondern ihre
+Widerlegung**, und sie ist der Beleg dafür, daß die Regel „jede Negativaussage nachprüfen" nicht
+Buchhaltung ist: hier war der Unterschied zwischen einer Zeile und einer Seite.
+
+Was benachbart auch dasteht und hier nicht gebraucht wurde: `ENNReal.toReal_sInf`
+(`ebenda:522`) — dieselbe Gleichung in der `toReal`-Richtung, mit der Voraussetzung
+`∀ r ∈ s, r ≠ ∞`. Es hätte den ersten Entwurf ebenfalls getragen und wäre dort der richtige Name
+gewesen; der `ofReal`-Weg ist kürzer, weil er die Endlichkeit gar nicht erst braucht.
+
+#### Der Befund, und er ist größer als der Vorschlag versprochen hat: der Wechsel des Wertebereichs **kauft drei Voraussetzungen zurück**
+
+Der Vorschlag hat `rateInverseE` als *Reparatur* eines Defekts angekündigt. Sie ist aber nicht nur
+das. Drei Aussagen dieses Laufs sind **stärker** als ihre reellen Gegenstücke, und in allen dreien
+fällt dieselbe Voraussetzung weg, `htop : Tendsto (cumulativeRateF Λ ω) atTop atTop`:
+
+| reell | `ℝ≥0∞` | was wegfällt |
+| --- | --- | --- |
+| `rateInverse_mono` | `monotone_rateInverseE` | `hint`, `hpos`, `htop` — **alle drei** |
+| `monotone_jumpTimeF` | `monotone_jumpTimeFE` | `hint`, `hpos`, `htop` — **alle drei** |
+| `tendsto_jumpTimeF_atTop` | `exists_ofReal_lt_jumpTimeFE` | `htop` |
+
+Der Grund ist eine Zeile, und er ist derselbe in allen drei Fällen: **die reelle Inverse fällt auf
+`0`, und `0` liegt *unterhalb* jeder späteren Zeit; die `ℝ≥0∞`-Inverse fällt auf `⊤`, und `⊤` liegt
+*oberhalb* jeder reellen Zeit.** Eine Folge, die auf `0` zusammenfällt, hört auf zu wachsen und
+erschöpft die Halbachse nicht; eine, die auf `⊤` zusammenfällt, tut beides weiter. Die drei reellen
+Sätze brauchen ihre Voraussetzungen also **nicht für ihre Aussage, sondern um den Zusammenbruch
+auszuschließen** — und wo es keinen Zusammenbruch gibt, ist nichts auszuschließen.
+
+Für `monotone_rateInverseE` ist der Beweis danach `sInf_le_sInf (Set.image_mono …)`, zwei Zeilen:
+ein höherer Pegel läßt weniger Zeiten zu, also ist sein Infimum größer. Das ist die Aussage, die
+eine verallgemeinerte Inverse haben *soll*; daß ihr reelles Gegenstück drei Analysis-Hypothesen
+trägt, ist der Preis des Müllwerts und war bisher nicht als solcher sichtbar.
+
+**Die sichtbare Folge:** `isStepPath_jumpProcessFE` gilt an einer Rate, die ihre ganze Masse in
+endlicher Zeit ausgibt, und `isStepPath_jumpProcessF` gilt dort nicht. Der Pfad macht dann endlich
+viele Sprünge und bleibt, wo er ist — ein Treppenpfad. Über `jumpTimeF` war er keiner, weil die
+restlichen Sprungzeiten `0` waren und im Ursprung übereinanderlagen. Genau das brauchte das
+gestutzte Problem, und genau das ist `jumpTimeFE_truncRateF_eq_top`.
+
+#### Der zweite Befund: wofür die Divergenz wirklich ausgegeben wird, und daß es **eine einzige Zeit** ist
+
+`cumulativeRateF_rateInverse` — die definierende Gleichung `cum (rateInverse a) = a` — trägt seit
+dem sechsten Lauf `htop`. Der Beweis gibt aber aus `htop` nur **einen Punkt** aus: eine Zeit `b ≥ 0`
+mit `a ≤ cum b`. Das ist herausgezogen:
+
+> `cumulativeRateF_rateInverse_of_exists`: aus `hint`, `hpos`, `0 ≤ a` und
+> `∃ r, 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r` folgt `cumulativeRateF Λ ω (rateInverse Λ ω a) = a`.
+
+Die Abschwächung ist nicht kosmetisch, und sie ist der Grund, aus dem dieser Lauf überhaupt
+durchgeht: **an einer gestutzten Rate ist die Divergenz oberhalb der Stutzung falsch und unterhalb
+wahr.** Ein Satz, der sie global verlangt, erreicht dort *keinen einzigen* Pegel — auch nicht die,
+die erreicht werden. Dasselbe gilt für `rateInverse_lt_rateInverse`, das strikte Wachstum zwischen
+zwei erreichten Pegeln, und beide zusammen tragen `lt_jumpTimeFE_succ`.
+
+Damit ist die Buchführung der Voraussetzungen für die pfadabhängige Variante an der richtigen
+Stelle: `hint` und `hpos` sind **Aussagen über die Rate**, `htop` ist eine Aussage über die
+**Erreichbarkeit eines Pegels**, und nur die letztere hängt vom Pegel ab. Die drei wurden bisher
+als ein Bündel weitergereicht.
+
+#### Was `⊤` heißt, dreimal derselbe Satz an drei Daten
+
+Der fünfzehnte Lauf hat die Bruchstelle an der Stutzung gezeigt; hier stehen alle drei Fälle, in
+denen sie auftritt, nebeneinander, und sie sind derselbe Satz:
+
+* `rateInverseE_truncRateF_eq_top_of_lt` und `jumpTimeFE_truncRateF_eq_top` — das gestutzte
+  Problem, jenseits seiner Stufe. Das ist der Fall, für den der Abschnitt gebaut ist.
+* `jumpTimeFE_expRate_eq_top` — der Zeuge aus `section FiniteMass`, noch einmal gelesen: `expRate`
+  hat Gesamtmasse `1`, oberhalb davon gab die reelle Inverse `0` und gibt die reparierte `⊤`. Die
+  beiden Aussagen stehen jetzt nebeneinander in der Datei (`jumpTimeF_expRate_eq_zero` gegen
+  `jumpTimeFE_expRate_eq_top`), und sie sind der ganze Unterschied zwischen den beiden
+  Konstruktionen an einem Datum, das man hinschreiben kann.
+* `rateInverseE_ne_top_iff` — und dies ist die Aussage, die die beiden vorigen zu Instanzen macht:
+  die Inverse ist genau dort endlich, wo der Pegel erreicht wird. Der Müllwert ist damit nicht mehr
+  bloß benannt (so stand er seit dem siebten Lauf), sondern **charakterisiert**.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py` (unverändert lauffähig, um die Gruppe `G26` erweitert):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G24 die gestutzte Rate, und die Masse, die sie noch ausgeben darf | 12 | 100 |
+| G25 die Fensterschranke aus der Massenschranke | 2 | 36 |
+| G26 die Inverse in `ENNReal`, und der Prozeß, den die Stutzung braucht | 25 | 191 |
+| `section PathDependent` gesamt | — | 1764 Codezeilen, 3094 mit Dokumentation |
+
+**Gebrauchte Mathlib-Bausteine, und keiner fehlte:** `ENNReal.ofReal_iInf`
+(`Mathlib/Data/ENNReal/Operations.lean:526`), `sInf_image'`, `Subtype.range_coe`, `sInf_le`,
+`le_sInf`, `sInf_le_sInf`, `sInf_empty`, `Set.image_mono`, `Set.image_empty`
+(`Mathlib/Data/Set/Image.lean:251`), `ENNReal.ofReal_le_ofReal_iff`
+(`Mathlib/Data/ENNReal/Real.lean:147`), `ENNReal.ofReal_lt_ofReal_iff_of_nonneg` (ebenda:171),
+`ENNReal.ofReal_lt_ofReal_iff`, `ENNReal.ofReal_lt_top`
+(`Mathlib/Data/ENNReal/Basic.lean:346`), `Filter.Eventually.exists_forall_of_atTop`
+(`Mathlib/Order/Filter/AtTopBot/Basic.lean:86`, ein `alias` von `eventually_atTop`),
+`intermediate_value_Icc`, `le_csInf`, `csInf_le`, `exists_lt_of_csInf_lt`.
+Aus dem eigenen Bestand: `isStepPath_stepPath_ofReal` — der Satz, den der zustandsabhängige
+lokale Fall für `jumpTimeE` gebaut hat, trägt hier **unverändert**, und daß er es tut, ist der
+Beleg, daß die beiden Reparaturen wirklich dieselbe sind.
+
+**Keine Negativaussage über Mathlib**, also nichts für `scripts/check_negatives.py` nachzutragen —
+und die eine, die dieser Lauf zunächst aufschreiben wollte, ist widerlegt worden; siehe oben,
+`ENNReal.ofReal_iInf`.
+
+#### Zwei Kleinigkeiten, die Zeit gekostet haben, und beide gehören in die Datei und nicht ins Gedächtnis
+
+* **`ℝ≥0∞` ist in dieser Datei keine Notation.** `Suggested.lean` öffnet in Zeile 334 nur
+  `open scoped NNReal`, nicht `ENNReal`; also ist `ℝ≥0` da und `ℝ≥0∞` nicht. Wer es trotzdem
+  schreibt, bekommt keinen Parserfehler, sondern `ℝ≥0` — und danach Fehlermeldungen wie
+  „failed to synthesize `Top ℝ≥0`" und stillschweigende Aufwärtsverwandlungen `↑(…)`, die weit von
+  der Ursache entfernt auftauchen. **Im Code steht `ENNReal` ausgeschrieben**, so wie es der
+  zustandsabhängige lokale Fall seit dem siebten Lauf des 2026-09-10 tut; in der Dokumentation darf
+  `ℝ≥0∞` stehen, dort ist es Text.
+* **`by … using <Term>` bricht an der Einrückung.** Steht der Term nach `using` auf einer
+  Folgezeile, die **weniger weit eingerückt ist als das `by`**, so endet der Taktikblock vorher und
+  der Term wird als weiteres Argument der äußeren Anwendung gelesen; die Meldung ist dann ein
+  Parserfehler („unexpected token '('") an einer Stelle, an der syntaktisch nichts falsch ist. Der
+  Ausweg ist nicht mehr Einrückung, sondern ein `have` im Taktikbeweis.
+
+#### Was damit steht und was jetzt fehlt
+
+Die pfadabhängige Variante hat jetzt **alle Bausteine des gestutzten Problems**: die gestutzte Rate
+(fünfzehnter Lauf), ihre Massenschranke (fünfzehnter Lauf), die Fensterschranke daraus
+(fünfzehnter Lauf, zweiter Teil), und die Sprungzeiten und den Prozeß, die sie jenseits der Stufe
+braucht (dieser Lauf). Was zwischen ihr und dem Hawkes-Martingalproblem steht, ist der Zusammenbau
+— und dessen erster Schritt ist die Lokalisierung, also `isStoppingTime_rateInverse`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isStoppingTime_rateInverse`** — Vorschlag 2 des fünfzehnten Laufs, jetzt der erste. Aussage:
+   `rateInverse Λ · a` ist eine Stoppzeit der pfadabhängigen Filtration.
+
+   **Warum jetzt:** sie ist es, die aus der Stutzung eine **Lokalisierung** macht, und sie ist der
+   letzte Regularitätsschritt vor dem Zusammenbau; alle drei Eingaben von
+   `martingale_stoppedProcess` für das gestutzte Problem stehen seit dem fünfzehnten Lauf, und die
+   Sprungzeiten des gestutzten Problems seit diesem.
+
+   **Worauf sie ruht:** `setOf_rateInverse_le` (sechster Lauf) reduziert
+   `{ω | rateInverse Λ ω a ≤ c}` auf `{0 ≤ c ∧ a ≤ cumulativeRateF Λ ω c}`, und die Meßbarkeit von
+   `ω ↦ cumulativeRateF Λ ω c` für `𝓕 c` ist `measurable_compensator_of_uncurry_min` am Integranden
+   `Λ`. Prüfstein: ob `setOf_rateInverse_le` dabei seine drei Voraussetzungen behält — nach dem
+   zweiten Befund oben ist zu erwarten, daß auch dort nur die **Erreichbarkeit bei `c`** gebraucht
+   wird und nicht die globale Divergenz, und dann ist die Stoppzeiteigenschaft auch für die
+   gestutzte Rate zu haben, wo die Divergenz falsch ist. Fällt sie nicht, so ist die Stoppzeit
+   statt dessen an `rateInverseE` zu führen, und das ist zu messen.
+2. **Der gestutzte Prozeß und seine Identifikation mit dem ungestutzten unterhalb der
+   Trefferzeit** — das pfadabhängige Gegenstück zu `stoppedProcess_mpFamily_truncRate_eq`
+   (siebzehnter Lauf des 2026-09-10), zu führen an `jumpProcessFE (truncRateF Λ a)`. Worauf es
+   ruht: `rateInverse_truncRateF_of_le` (fünfzehnter Lauf) für die Sprungzeiten unterhalb der
+   Stufe, `jumpTimeFE_truncRateF_eq_top` (dieser Lauf) darüber und
+   `rateInverseE_eq_ofReal_of_exists` (dieser Lauf) für den Übergang zwischen beiden Registern.
+3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — `Set.diff_eq_empty` durch
+   `Set.sdiff_eq_empty`, `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch
+   `push Not`, dort wo v4.33.1 es meldet. Der neue Abschnitt `PathInverseE` hält die Regel schon
+   ein und meldet keine einzige Warnung.
