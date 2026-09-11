@@ -227,6 +227,25 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   (`StochasticIntegral/UniformIntegrable.lean:147`) schon das Stück davon, das
   uns fehlt.
 
+* **Die Volterra-Resolvente, und die Faltungsalgebra der kausalen Kerne.** Der
+  achte, und der einzige, der eine kleine Theorie und nicht ein Lemma wäre.
+  Mathlib hat `volterra`, `renewal`, `resolvent kernel` und `Neumann series` mit
+  **null Treffern** (geprüft am 2026-09-11). Vorhanden ist die Faltung
+  (`Analysis/Convolution.lean`, 65 Sätze) und die Neumann-Reihe in einer
+  *normierten Algebra* (`NormedRing.inverse_one_sub`), die `‖φ‖ < 1` verlangt.
+  Der Volterra-Trick braucht das gerade **nicht**: auf `[0,δ]` mit
+  `∫₀^δ φ < 1` konvergiert die Reihe, und man schreitet fort — eine Aussage über
+  die **Kausalität** des Kerns (`φ * m` bei `t` hängt nur von `m` auf `[0,t]` ab),
+  nicht über eine Banachalgebra. Die Algebra der kausalen Kerne auf `[0,∞)`, in
+  der jedes Element quasinilpotent ist, fehlt.
+
+  *Woran es bei uns hängt:* das Manuskript beweist damit, daß ein linearer
+  Hawkes-Prozeß **nie explodiert** (`ex:hawkes`, über `m = μ₀ + φ * m`), und das
+  ist genau die Voraussetzung `𝔼[N_t] < ∞` von `thm:pathjumpMP`(b). Die
+  Formalisierung trägt sie deshalb als Hypothese, statt sie zu beweisen — so am
+  2026-09-11 entschieden. Wer die Theorie baut, schließt damit die letzte Lücke
+  im Hawkes-Beispiel.
+
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
 lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festliegt.
