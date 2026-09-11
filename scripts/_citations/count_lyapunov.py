@@ -50,6 +50,11 @@ GROUPS = {
         "ae_mem_nonExplosiveE_birthDeath_of_birth_le",
         "ae_mem_nonExplosiveE_yule_of_jumpApply_le",
     },
+    "G5 the criterion across the lift of the rate": {
+        "ae_mem_nonExplosiveE_posRate_of_jumpApply_le",
+        "ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le",
+        "ae_mem_nonExplosiveE_posRate_yule",
+    },
 }
 
 

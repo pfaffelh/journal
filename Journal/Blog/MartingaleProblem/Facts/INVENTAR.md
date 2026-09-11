@@ -19493,3 +19493,161 @@ Voraussetzungen.
    nachrechnen muß, und auf jedem abzählbaren Raum mit endlichen Subniveaumengen ist sie frei —
    das nimmt dem Kriterium die letzte Handarbeit für die Klasse der Beispiele, um die es in
    Meilenstein 4 geht.
+
+### 2026-09-11, dritter Lauf des Tages — die Mastergleichung des Yule-Prozesses steht, und der Weg dorthin geht nicht über die Reihe, sondern über das Kriterium
+
+**Bearbeitet:** Teil F des laufenden Auftrags, Punkt 2 der vom Nutzer am 2026-09-10 gesetzten
+Reihenfolge (*Lyapunov, dann die Instanzen, dann Mastergleichung, dann Kopplung*) — die
+Mastergleichung auf der Yule-Rate, die als einzige Aussage des Vergleichs noch fehlte. Die
+Reihenfolge D → F → C → E ist eingehalten.
+
+**Sieben Deklarationen**: drei im Abschnitt `Lyapunov` (neuer Unterabschnitt „The criterion survives
+the lift of the rate") und vier im neuen Abschnitt `YuleMasterEquation`. Die ganze Datei **ohne einen
+Fehler** durch `lake env lean` gegen v4.33.1, alle sieben mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt bei **neun**.
+`scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` rc 0, 0 Fehler,
+9 `sorry`; `python3 check.py` meldet weiterhin `clean` (133 Seiten). Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Der Satz
+
+> `yule_masterEquation` — für `p k r = jumpLaw (posRate (birthDeathRate (linearBirth β)
+> (linearDeath 0))) (birthDeathKernel …) nu r k`, jedes `n` und jedes `t ≥ 0`:
+>
+> `p (n+1) t = p (n+1) 0 + ∫_0^t (β n * p n r − β (n+1) * p (n+1) r) dr`.
+
+Das ist die **erste Mastergleichung dieser Datei an einer unbeschränkten Rate**. Beide
+Voraussetzungen von `jumpMeasure_masterEquation_of_ae_nonExplosive` sind auf Daten eingelöst: die
+Schranke wird vom **Erzeuger an der Testfunktion** verlangt und nicht von der Rate, und
+`jumpApply_yule_indicator` liefert sie als `β n + β (n+1)`; die Nichtexplosion ist
+`ae_mem_nonExplosiveE_posRate_yule`. Der Index `n + 1` ist keine Bequemlichkeit:
+`jumpApply_yule_indicator_zero` sagt, daß der Erzeuger `stateIndicator 0` annulliert, die Gleichung
+an `0` lautet also `p 0 t = p 0 0` und hat kein Integral.
+
+#### Der Befund, um den es geht: die Hebung der Rate ist der ganze Schritt, und sie kostet nicht dort, wo der dreiundzwanzigste Lauf des 2026-09-10 sie veranschlagt hat
+
+Die Mastergleichung verlangt `∀ x, 0 < lam x`, und die Yule-Rate `β x` hat es nicht: `β * 0 = 0`.
+`posRate` hebt die Rate an ihren Nullstellen auf `1`. Drei Aussagen sagen, daß dabei nichts verändert
+wird — der Erzeuger sieht die Hebung nicht (`jumpApply_posRate`), die Pfade sehen sie nicht
+(`jumpProcessE_posRate_eq_of_mem`), und darum auch die eindimensionalen Verteilungen nicht
+(`jumpLaw_posRate_eq`, neu).
+
+Die **Nichtexplosion** sieht sie sehr wohl, und in der teuren Richtung: an einem absorbierenden
+Zustand ist ein Glied der Reihe `∑ ξ_k / lam (y k)` gleich `⊤` und die Nichtexplosion von `lam`
+geschenkt; die Hebung ersetzt genau dieses Glied durch das endliche `ξ_k`. Die Nichtexplosion von
+`lam` ist deshalb **nicht formal** die von `posRate lam`, und der Übergang ist zu leisten.
+
+Der Vorschlag des dreiundzwanzigsten Laufs, `ae_mem_nonExplosiveE_posRate`, führt ihn als
+Übertragung: die Kette steht jenseits des ersten absorbierenden Index still, die gehobene Rate ist
+dort `1`, also müssen die Wartezeiten allein divergieren. Das ist richtig und steht weiter als
+benannter Punkt in Meilenstein 4 — dieser Lauf hat es **nicht** bewiesen.
+
+**Gebraucht wird es auch nicht.** `ae_mem_nonExplosiveE_posRate_of_jumpApply_le` beweist die
+Nichtexplosion der gehobenen Rate **unmittelbar**, aus denselben Daten wie die der Rate selbst, und
+der Grund ist, daß **beide** Voraussetzungen des Lyapunov-Kriteriums gegen die Hebung unempfindlich
+sind, jede auf ihre Weise:
+
+* die Erzeugerungleichung `A f ≤ C * f` ist dieselbe (`jumpApply_posRate`), und an einem Zustand
+  verschwindender Rate ist der Erzeuger `0`, die Ungleichung dort also **gratis** — über die
+  Zustände, die das Kriterium vorher gar nicht ansah, ist nichts vorauszusetzen;
+* eine Schranke `B` für `lam` auf `{f ≤ N}` ist die Schranke `max B 1` für `posRate lam` auf
+  derselben Menge.
+
+Kein Pfad wird angesehen, keine Divergenz der Wartezeiten benutzt. Das allgemeine Kriterium sind
+**26 Codezeilen, davon 16 Beweis**; die Geburt-Tod-Instanz und die Yule-Instanz sind die vorhandenen,
+mit der einen zusätzlichen Voraussetzung aus `birthDeathKernel_apply` (wo die Gesamtrate
+verschwindet, ist der Kern der Rückfallzweig, das Diracmaß am Zustand).
+
+**Das ist ein Befund über den Vergleich der Wege und nicht bloß über diesen Beweis.** Der Reihenweg
+beweist die Nichtexplosion von `lam` und kommt damit an der Mastergleichung **nicht** an; er braucht
+dafür `ae_mem_nonExplosiveE_posRate` zusätzlich. Das Kriterium kommt an. Zu den 121 gegen 236
+Codezeilen des zweiten Laufs kommt also, daß die beiden Wege nicht dieselbe Reichweite haben: der
+eine endet vor der Hebung, der andere geht durch sie hindurch.
+
+#### Der zweite Befund: die Brücke von der gehobenen Rate zum Prozeß ist eigene Arbeit
+
+`jumpLaw` ist über `jumpProcess` geschrieben und verlangt darum eine positive Rate; der Prozeß, um
+den es geht, ist `jumpProcessE lam` und verlangt sie nicht. `jumpLaw_posRate_eq` identifiziert die
+beiden: `jumpLaw (posRate lam) mu nu t k` **ist** die Verteilung von `jumpProcessE lam t` unter
+`jumpMeasure mu nu`. Ohne diese Zeile wäre `yule_masterEquation` eine Aussage über ein gehobenes
+Hilfsobjekt und nicht über den Prozeß aus `yule_isLocalMPSolution`. Sie ruht auf
+`jumpProcessE_posRate_eq_of_mem` und auf `jumpProcessE_eq_jumpProcess` für die **gehobene** Rate, die
+die Positivität hat, die `lam` fehlt — beide f.s. und aus keinem anderen Grund als dem, daß die
+Wartezeiten f.s. positiv sind und die Kette an einem absorbierenden Zustand f.s. stehenbleibt.
+
+`integral_comp_jumpProcess_eq_sub` ist die andere Hälfte der Brücke und trägt nichts von der
+Sprungkonstruktion: ein Erzeuger, der eine Kombination zweier Zustandsindikatoren ist, integriert
+längs des Prozesses zu derselben Kombination eindimensionaler Verteilungen. Das ist es, was den
+Kompensator der Mastergleichung — ein Integral von `A f` längs des Prozesses — in die rechte Seite
+einer Mastergleichung verwandelt.
+
+#### Der dritte Befund, und er ist eine Korrektur an einem früheren Lauf
+
+`Measurable.ennreal_tsum` ist auf v4.33.1 **`deprecated`** („Use `Measurable.tsum` from
+`Mathlib.MeasureTheory.Constructions.Polish.Basic` instead",
+`Mathlib/MeasureTheory/Constructions/BorelSpace/Real.lean:352`). Der zweite Lauf dieses Tages hat den
+Namen in seiner Liste der gebrauchten Bausteine geführt, ohne die Prüfung auf `deprecated`, die die
+stehende Regel verlangt. In `measurableSet_summable_inv_comp` steht jetzt `Measurable.tsum`; die
+Datei übersetzt unverändert ohne Fehler. Weiter ist `abs_add` auf v4.33.1 **kein gültiger Name** —
+die Dreiecksungleichung heißt `abs_add_le`; das war der einzige Fehler des ersten Durchlaufs dieses
+Laufs.
+
+#### Der gemessene Vergleich, fortgeschrieben
+
+| Weg | Deklarationen | Codezeilen | Stand |
+| --- | --- | --- | --- |
+| Reihe längs der eingebetteten Kette | 12 + 1 | 236 Zeilen mit Dokumentation | fertig, **erreicht die Mastergleichung nicht** |
+| Mastergleichung, allgemein | 18 + 1 | 278 | liefert die Verteilung, nicht die Nichtexplosion |
+| **Mastergleichung, auf der Yule-Rate** | **3 (Brücke) + 1** | **42 + 61 = 103** | **fertig** |
+| Lyapunov, pfadweise Form | 4 + 3 | 85 + 36 = 121 | fertig |
+| Lyapunov, Erzeugerform | 12 + 4 | 258 + 52 = 310 | fertig |
+| **Lyapunov über die gehobene Rate** | **3** | **67** | **fertig** |
+| Kopplung | 0 | 0 | nicht angefangen |
+
+Gezählt mit `scripts/_citations/count_lyapunov.py` (um die Gruppe G5 erweitert) und
+`scripts/_citations/count_yule_master.py` (neu, nach demselben Muster und allein lauffähig). Die
+ganze `section Lyapunov` sind 500 Codezeilen, 761 mit Dokumentation; die ganze
+`section YuleMasterEquation` 105 Codezeilen, 175 mit Dokumentation.
+
+**Welche Mathlib-Bausteine der Weg brauchte, und keiner fehlte:** `MeasureTheory.Integrable.mono'`,
+`MeasureTheory.integrable_const`, `MeasureTheory.Integrable.const_mul`, `MeasureTheory.integral_sub`,
+`MeasureTheory.integral_const_mul`, `MeasureTheory.integral_congr_ae`, `abs_add_le`, `abs_neg`,
+`abs_mul`, `abs_of_nonneg`, `mul_le_mul_of_nonneg_left`, `mul_one`, `Nat.cast_nonneg`,
+`measurable_of_countable`, `Measurable.tsum`. **Keine Negativaussage**, also nichts für
+`scripts/check_negatives.py` nachzutragen; die dortigen dreizehn Aussagen sind unberührt.
+
+#### Was offen blieb
+
+* **Die eindimensionale Verteilung selbst.** `yule_masterEquation` ist die *Gleichung*; die Lösung
+  `p n t = exp (−β t) (1 − exp (−β t))^(n−1)` von `1` gestartet ist nicht gezogen. Sie ist der
+  Prüfstein, um den es dem Nutzer geht, und sie ist jetzt eine reine ODE-Rechnung — siehe
+  Vorschlag 1.
+* **`ae_mem_nonExplosiveE_posRate`**, die *Übertragung* der Nichtexplosion von `lam` auf
+  `posRate lam`. Dieser Lauf hat sie nicht bewiesen und nicht gebraucht; sie bleibt der Punkt, den
+  der Reihenweg braucht, um an der Mastergleichung anzukommen, und steht als solcher berichtigt in
+  Meilenstein 4.
+* **Der Kopplungsweg** ist weiterhin nicht angefangen.
+* **Teil C**, die pfadabhängige Variante, ist der nächste Teil der vom Nutzer festgelegten
+  Reihenfolge, sobald Teil F abgeschlossen gilt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`jumpLaw_yule_zero` und `jumpLaw_yule_succ`:** die Lösung der Mastergleichung, von `1` gestartet
+   (`nu = Measure.dirac 1`), induktiv über `n` mit dem integrierenden Faktor `exp (β n t)`. Worauf sie
+   ruht: `yule_masterEquation` steht; die Stufe `n = 0` ist `jumpApply_yule_indicator_zero` und gibt
+   `p 0 t = p 0 0 = 0`, jede weitere Stufe ist eine skalare lineare ODE erster Ordnung, und
+   `eq_exp_add_integral_of_hasDerivWithinAt` (`MartingaleProblems/Suggested.lean`, schon bewiesen) ist
+   genau ihre Lösungsformel. Warum jetzt: es ist der **Prüfstein**, den der Auftrag nennt — ein Leser
+   rechnet `p n t = exp (−β t) (1 − exp (−β t))^(n−1)` gegen die geometrische Verteilung nach, die
+   nicht aus unserer Konstruktion stammt, so wie `poissonMeasure` beim Poissonprozeß. Prüfstein: kein
+   Fehler, kein neues `sorry`, und `∑' n, p n t = 1` fällt als geometrische Reihe ab — wobei
+   `tsum_jumpLaw_eq_one` weiterhin sagt, daß **diese** Gleichung hier nicht die Nichtexplosion ist.
+2. **`ae_mem_nonExplosiveE_posRate`**, in der Fassung, die Meilenstein 4 nennt. Worauf sie ruht:
+   `ae_absorb_jumpMeasure` (die Kette steht am absorbierenden Zustand still),
+   `ae_tendsto_sum_snd_jumpMeasure` (die Wartezeiten divergieren) und
+   `mem_nonExplosiveE_iff_tsum_eq_top` (Nichtexplosion ist eine einzige Reihenidentität in `ℝ≥0∞`).
+   Die Fallunterscheidung ist die von `jumpProcessE_posRate_eq_of_mem`: ohne absorbierenden Index sind
+   die beiden Reihen **gleich**, mit einem ist der Schwanz `∑ ξ_k` und divergiert. Warum dann: sie ist
+   das, was dem Reihenweg fehlt, um dieselbe Reichweite zu haben wie das Kriterium, und ohne sie ist
+   der gemessene Vergleich in einem Punkt unfair — er vergleicht zwei Wege, von denen nur einer
+   ankommt.

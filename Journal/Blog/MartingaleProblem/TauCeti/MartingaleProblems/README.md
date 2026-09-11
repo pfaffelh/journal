@@ -1780,6 +1780,55 @@ A concrete family of solutions, built without any of the theory above. Index
   identification is free: `jumpProcessE_posRate_eq_of_mem` says the two
   constructions have the same path and `jumpApply_posRate` says they have the same
   generator, and neither asks for a bound on the rate any more.
+
+  It is the transfer of non explosion **from a proof about `lam`**, and as such it
+  is what the series route needs. The Lyapunov criterion does not need it: it
+  proves non explosion of `posRate lam` outright
+  (`ae_mem_nonExplosiveE_posRate_of_jumpApply_le`), and the Yule process reaches
+  the master equation that way.
+* `ae_mem_nonExplosiveE_posRate_of_jumpApply_le`,
+  `ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le` and
+  `ae_mem_nonExplosiveE_posRate_yule`: **the Lyapunov criterion across the lift of
+  the rate.** **Proved** on 2026-09-11, third run. Same hypotheses as
+  `ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le` together with the jump kernel
+  of an absorbing state being the Dirac measure there, and the conclusion is non
+  explosion of `posRate lam`. Both hypotheses of the criterion are insensitive to
+  the lift and in different ways: the generator is unchanged by it
+  (`jumpApply_posRate`), and a bound `B` for `lam` on a sublevel set is the bound
+  `max B 1` for `posRate lam` on the same set. At a state of vanishing rate the
+  generator is `0`, so the inequality `A f ≤ C * f` holds there for free and
+  nothing has to be assumed about the states the criterion did not see before.
+  No trajectory is looked at and no divergence of the waiting times is used, which
+  is what distinguishes this from `ae_mem_nonExplosiveE_posRate`.
+* `integrable_stateIndicator_jumpProcess`, `integral_comp_jumpProcess_eq_sub` and
+  `jumpLaw_posRate_eq`: **the bridge from the lifted rate to the process.**
+  **Proved** on 2026-09-11, third run. The master equation is written in `jumpLaw`,
+  which reads `jumpProcess` and therefore asks a positive rate, while the process
+  the statement is about is `jumpProcessE lam`, which does not.
+  `jumpLaw_posRate_eq` identifies the two: `jumpLaw (posRate lam) mu nu t k` is the
+  law of `jumpProcessE lam t` under `jumpMeasure mu nu`, for a measurable
+  nonnegative rate whose jump kernel is the Dirac measure at every state of
+  vanishing rate and whose lift does not explode. It rests on
+  `jumpProcessE_posRate_eq_of_mem` and on `jumpProcessE_eq_jumpProcess` for the
+  lifted rate, which has the positivity that `lam` lacks.
+  `integral_comp_jumpProcess_eq_sub` is the other half of the bridge: a generator
+  that is a combination of two state indicators integrates along the process to
+  that combination of one dimensional laws, which is what turns the compensator of
+  `jumpMeasure_masterEquation_of_ae_nonExplosive` into the right hand side of a
+  master equation.
+* `yule_masterEquation`: **the master equation of the Yule process.** **Proved** on
+  2026-09-11, third run. With `p k r = jumpLaw (posRate lam) mu nu r k` for the
+  Yule data it reads
+  `p (n+1) t = p (n+1) 0 + ∫_0^t (β n p n r - β (n+1) p (n+1) r) dr`, for every
+  `t ≥ 0` and every `n`. It is the **first** master equation in this file at a rate
+  that is not bounded, and it discharges each of the two hypotheses of
+  `jumpMeasure_masterEquation_of_ae_nonExplosive` on the data: the bound is asked
+  of the generator at the test function and not of the rate, and
+  `jumpApply_yule_indicator` gives it as `β n + β (n+1)`; the non explosion is
+  `ae_mem_nonExplosiveE_posRate_yule`. The index `n + 1` is not a convenience —
+  `jumpApply_yule_indicator_zero` says the generator annihilates `stateIndicator 0`,
+  so the equation at `0` is `p 0 t = p 0 0` and carries no integral.
+  It does **not** yield non explosion, and `tsum_jumpLaw_eq_one` says why.
 * `le_mul_exp_sum_of_lyapunov`, `not_summable_inv_of_lyapunov`,
   `ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov` and `jumpApply_le_of_lyapunov`:
   **the Lyapunov criterion for non explosion, in its pathwise form.** **Proved**
@@ -2272,20 +2321,24 @@ Poissonprozeß gegen `ProbabilityTheory.poissonMeasure`. Es gehört zu Punkt 5 u
 ist **nach** `jumpProcess_isLocalMPSolution` zu machen, nicht davor: es prüft
 die Konstruktion, es trägt sie nicht.
 
-**Der gemessene Vergleich, Stand 2026-09-11, zweiter Lauf.** Bis zum
+**Der gemessene Vergleich, Stand 2026-09-11, dritter Lauf.** Bis zum
 zweiundzwanzigsten Lauf des 2026-09-10 stand hier die *Behauptung*, die Reihe sei
-der billigere Weg. Was davon gezählt ist (`scripts/_citations/count_yule.py` und
-`scripts/_citations/count_lyapunov.py`):
+der billigere Weg. Was davon gezählt ist (`scripts/_citations/count_yule.py`,
+`scripts/_citations/count_lyapunov.py` und
+`scripts/_citations/count_yule_master.py`):
 
 | Weg | Deklarationen | Codezeilen | Stand |
 | --- | --- | --- | --- |
 | Reihe längs der eingebetteten Kette | 12 (`section LinearBirthDeath`) + 1 (`ae_mem_nonExplosiveE_yule`) | 236 Zeilen mit Dokumentation | **fertig** |
-| Mastergleichung | 18 (`section YuleProcess`, ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 278 | **liefert die Verteilung, nicht die Nichtexplosion** |
+| Mastergleichung, allgemein | 18 (`section YuleProcess`, ohne die Yule-Instanz) + 1 (`jumpMeasure_hasDerivWithinAt_integral_Ici`) | 278 | **liefert die Verteilung, nicht die Nichtexplosion** |
+| Mastergleichung, auf der Yule-Rate | 3 (Brücke) + 1 (`yule_masterEquation`) | 42 + 61 = 103 Codezeilen | **fertig** |
 | Lyapunov, pfadweise Form | 4 (Kriterium) + 3 (Geburt-Tod-Instanzen) | 85 + 36 = 121 Codezeilen | **fertig** |
-| Lyapunov, Erzeugerform | 12 (Kriterium) + 4 (Geburt-Tod-Instanzen) | 258 + 53 = 311 Codezeilen | **fertig** |
+| Lyapunov, Erzeugerform | 12 (Kriterium) + 4 (Geburt-Tod-Instanzen) | 258 + 52 = 310 Codezeilen | **fertig** |
+| Lyapunov über die gehobene Rate | 3 | 67 Codezeilen | **fertig** |
 | Kopplung | 0 | 0 | nicht angefangen |
 
-(Die ganze `section Lyapunov` sind 434 Codezeilen, 663 mit Dokumentation.)
+(Die ganze `section Lyapunov` sind 500 Codezeilen, 761 mit Dokumentation; die
+ganze `section YuleMasterEquation` 105 Codezeilen, 175 mit Dokumentation.)
 
 **Der vierte Weg ist der billigste, und er ist der einzige allgemeine.** 121
 Codezeilen gegen 236 der Reihe, und was dabei herauskommt, ist nicht dasselbe:
