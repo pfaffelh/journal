@@ -3056,6 +3056,126 @@ A concrete family of solutions, built without any of the theory above. Index
     constructed path **is** the non explosion. So the law of the first jump time of the recursion
     is unconditional and the law of the first jump time of the process is not, and that is the
     first statement of the path dependent variant at which the non explosion cannot be avoided.
+  * `pointFiltrationE` and `jumpFiltrationFE_inter_lt_rateInverseE`: **the two filtrations of the
+    path dependent variant agree before the hitting time of the level.** **In Lean** on
+    2026-09-11, twentieth run, with `measurable_rateInverseE`, `measurable_jumpTimeFE`,
+    `jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE`, `jumpRecordE`, `measurable_jumpRecordE`,
+    `jumpStateE`, `measurable_jumpStateE`, `isStoppingTime_jumpTimeE`, `pointFiltrationE_inter_le`
+    and `jumpFiltrationFE`. This is the path dependent counterpart of
+    `jumpFiltrationE_inter_lt_rateTime` and the fourth input of
+    `martingale_of_martingale_of_stopped`: an event of the filtration of the local problem at `i`,
+    cut down by `{i < rateInverseE Lam · a}`, is an event of the filtration of the truncated
+    problem at `i`.
+
+    **The filtration has to be taken over jump times in `ℝ≥0∞`, and that is not bookkeeping.**
+    `pointFiltration` reads real jump times, and above the level the jump times of the truncated
+    problem are `⊤` (`jumpTimeFE_truncRateF_eq_top`); in `ℝ` the inverse of an unattained level
+    collapses to the junk value `0`, so a record built from `jumpTimeF (truncRateF Lam a)` would
+    report every jump above the level as having happened **at the origin**, the two records would
+    disagree at every time, and the cut would be false — not hard to prove, false. The change of
+    codomain that `rateInverseE` made for the construction is forced again one floor up, for the
+    filtration. `pointFiltrationE` is that filtration, over the same state space `(ℕ → Bool) × E`
+    as `pointFiltration`, and `isStoppingTime_jumpTimeE` is the statement that makes it the right
+    one, now without an `ENNReal.ofReal` in the way.
+
+    **The two halves of the cut are the two components of the state**, and both are equalities at
+    *every* sample point of the cutting set: the record by
+    `jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE`, the path by
+    `jumpProcessFE_truncRateF_eq_of_le_rateInverseE`. Neither uses non explosion, in keeping with
+    `isLocalizingSequence_rateInverseE`; the strict positivity of the rate is spent in exactly one
+    place, the plateau argument inside `lt_jumpTimeFE_of_lt_of_le_rateInverseE`.
+
+    `measurable_rateInverseE` asks **two hypotheses fewer than `measurable_rateInverse`**: neither
+    the strict positivity of the rate nor the divergence of its cumulated mass enters, only local
+    integrability, non negativity and joint measurability. The reason is the one `rateInverseE` was
+    introduced for — over `ℝ` the sublevel set of an unattained level is the whole space because
+    `sInf ∅ = 0` lies below every time, and `setOf_rateInverse_le` has to rule that out by
+    hypothesis; over `ℝ≥0∞` the unattained level is inverted to `⊤` and there is nothing to rule
+    out. It is the third statement the change of codomain has freed of hypotheses, after
+    `isStoppingTime_rateInverseE` and `isLocalizingSequence_rateInverseE`, and the one that makes
+    `measurable_jumpTimeFE` available for a **truncated** rate, whose cumulated mass does not
+    diverge.
+  * `measurableSet_lt_rateInverseE_of_adapted` and `jumpFiltrationFE_hcut`: **the cutting set is an
+    event of the truncated filtration, and with it the cut stands in the shape the tower consumes.**
+    **In Lean** on 2026-09-11, twentieth run. The whole content of the first is that the level `a`
+    is reached at the same instant by the two rates — the truncation switches the rate off *at* the
+    hitting time of `a`, so the mass consumed before it is untouched
+    (`rateInverseE_truncRateF_of_le` at the level `a` itself) — and `rateInverseE_le_coe_iff` then
+    reads `{i < rateInverseE Lam · a}` as the complement of
+    `{a ≤ cumulativeRateF (truncRateF Lam a) · i}`, a sublevel set of a function the filtration is
+    asked to see. Nothing else is asked of the rate and nothing at all of the process.
+
+    `jumpFiltrationFE_hcut` is `hcut` at every index and every event at once, which is the form
+    `martingale_of_martingale_of_stopped` consumes, and it leaves exactly one hypothesis to an
+    instance: `hcum`, the measurability of the **truncated** cumulated rate up to `i` for the
+    truncated filtration at `i`. That is the same thing `isLocalizingSequence_rateInverseE` asks of
+    the untruncated filtration, so an instance that has localized at all has already met its
+    untruncated half.
+
+    In the state dependent case the step is free, because `rateSup lam` is a functional of the
+    **path** and `measurableSet_lt_rateTime_truncRate` is three lines. Here the localizing
+    functional is the cumulated rate, and a path dependent rate is an arbitrary predictable
+    functional with nothing tying it to the record and the path of the point process, so the
+    adaptedness is a hypothesis of the statement and an obligation of each instance.
+  * `cumulativeRateF_truncRateF_eq_min`, `measurable_cumulativeRateF_truncRateF` and
+    `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`: **the truncated cumulated mass is the
+    untruncated one capped at the level, and that is all `hcum` ever was.** **In Lean** on
+    2026-09-11, twenty first run. `cumulativeRateF_truncRateF` writes the truncated mass as the
+    untruncated one **stopped** at the hitting time, an expression in which the hitting time still
+    occurs; `cumulativeRateF_truncRateF_eq_min` writes it as the untruncated one **capped** at `a`,
+    and the hitting time has vanished. Below the hitting time nothing was truncated, above it the
+    value is the constant `a`, and `cumulativeRateF_truncRateF_le` is the half of the identity that
+    reads off `min_le_right`.
+
+    What that buys is `measurable_cumulativeRateF_truncRateF`: a σ-algebra that sees
+    `cumulativeRateF Lam · i` sees `cumulativeRateF (truncRateF Lam a) · i`, by capping. The
+    truncated rate itself is *not* measurable for the past at `i` — its switch reads the hitting
+    time of the level, which is a stopping time and not `𝓕 i`-measurable — so no argument that
+    truncates inside the window can work; the identity works because a constant is visible to every
+    σ-algebra. `measurable_cumulativeRateF_truncRateF_hawkesSelfRate` is the instance on the data of
+    `ex:hawkes`, and it is the same term
+    `isLocalizingSequence_rateInverseE_hawkesSelfRate` runs on with the capping in front: **the
+    localization and the cut ask the filtration for one thing, not two.**
+  * `naturalFiltration_inter_le_of_measurable` and `pointFiltrationE_inter_le_of_measurable`: **the
+    cut over an arbitrary target filtration.** **In Lean** on 2026-09-11, twenty first run.
+    `martingale_of_martingale_of_stopped` takes its two filtrations as *data* and asks of the second
+    only the martingale property, so the second need not be the natural filtration of the truncated
+    jump times — an instance solves the truncated problem over the filtration it already has. What
+    the generalised statements ask of the target `𝓗` is that the **second** point process be
+    adapted to it — `hstate`, its record and its path together; `T'` is then not even asked to be
+    measurable for the ambient σ-algebra. The
+    unprimed statements are the special case `𝓗 = pointFiltrationE T' y hT' hy i`, by
+    `measurable_naturalFiltration`.
+  * `hawkesFiltration_eq_jumpFiltrationFE` and `hawkes_isLocalMPSolution`: **the Hawkes process
+    solves its martingale problem locally.** `hawkesFiltration` is built over the jump times the
+    **recursion** returns and `jumpFiltrationFE` over the jump times the martingale problem
+    **reads**, and `jumpTimeF_hawkesSelfRate` identifies the two under the integrability the fixed
+    point carries — which by the reading of `tendsto_cumulativeRateF_hawkes` is the non explosion.
+    A filtration is not an almost sure notion, so the identification is an equality at every sample
+    point and the hypothesis is carried at every sample point; this is the same gap
+    `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` records for the law of the first jump time, one
+    floor up.
+
+    The cut runs over `pointFiltrationE_inter_le_of_measurable` with `𝓗 = hawkesFiltration`, not
+    over the natural filtration of the truncated jump times, and it has three inputs. Two stand:
+    `hrec` and `hpath` are `jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE` and
+    `jumpProcessFE_truncRateF_eq_of_le_rateInverseE`, and `hN` is
+    `measurableSet_lt_rateInverseE_of_adapted` fed by
+    `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`. The third is
+    `measurable_jumpStateE_truncRateF_hawkesFiltration`: **the truncated Hawkes point process is
+    adapted to the Hawkes filtration.** It is read off `{T'_n ≤ r} = {T_n ≤ r} ∩ {T_n ≤ R}`, where
+    `R` is the hitting time of the level, `min r R` is measurable for the past at `r`
+    (`isStoppingTime_rateInverseE_hawkesSelfRate`) and `T_n` is a stopping time. With it the four
+    inputs of `martingale_of_martingale_of_stopped` are complete.
+
+    The global statement carries `(hN : ∀ t, 𝔼[N t] < ∞)` as a **hypothesis** and does not prove
+    it. For the linear Hawkes process it is true, by the renewal equation `m = μ₀ + φ * m` and the
+    **Volterra resolvent** of a kernel in `L¹_loc`; Mathlib carries the convolution
+    (`Analysis/Convolution.lean`) and the Neumann series in a normed algebra
+    (`NormedRing.inverse_one_sub`, which asks `‖φ‖ < 1`), and the Volterra argument asks instead
+    for causality — one works on `[0, δ]` short enough that `∫_0^δ φ < 1` and steps forward. The
+    convolution algebra of causal kernels on `[0, ∞)` is a milestone of its own and is named in
+    `TODO.md`, Point 8.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,

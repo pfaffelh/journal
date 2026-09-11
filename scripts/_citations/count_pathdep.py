@@ -313,6 +313,22 @@ GROUPS = {
         "jumpMeasure_lt_hawkesJumpTime_one",
         "jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one",
     },
+    "G32 the cut the tower needs: the filtration over jump times in ENNReal": {
+        "measurable_rateInverseE",
+        "measurable_jumpTimeFE",
+        "jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE",
+        "jumpRecordE",
+        "measurable_jumpRecordE",
+        "jumpStateE",
+        "measurable_jumpStateE",
+        "pointFiltrationE",
+        "isStoppingTime_jumpTimeE",
+        "pointFiltrationE_inter_le",
+        "jumpFiltrationFE",
+        "jumpFiltrationFE_inter_lt_rateInverseE",
+        "measurableSet_lt_rateInverseE_of_adapted",
+        "jumpFiltrationFE_hcut",
+    },
 }
 
 
