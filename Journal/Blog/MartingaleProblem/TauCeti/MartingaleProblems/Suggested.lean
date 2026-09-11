@@ -16516,4 +16516,245 @@ theorem bdd_mpFamilyF_of_bdd {Ω : Type*} {E : Type*} {f : E → ℝ} {X : ℝ�
 
 end PathWindowBound
 
+/-! ### The truncated path dependent rate
+
+The window bound above is to be supplied by a **truncated** problem, exactly as
+`abs_setIntegral_compensatorE_le` supplies it for `truncRate lam n` in the state dependent case.
+The shape of the truncation is not free, and the reason is worth stating, because the obvious
+transcription of `truncRate` is wrong here.
+
+**The truncation has to match the localizing time.**  The state dependent case truncates by a cap,
+`truncRate lam n x = min (lam x) n`, and localizes at `rateTime lam n`, the hitting time of the
+running **supremum** of the rate along the path.  Cap and running supremum belong together: below
+that hitting time the rate has never exceeded `n`, so the cap has changed nothing, which is what
+`jumpProcessE_eq_truncRate_of_le_rateTime` says.  In the path dependent variant the running
+supremum is not available -- it is not locally constant to the right, because the rate is a
+functional of the path and jumps immediately *after* each jump time, so `rateTime_le_iff` has no
+counterpart -- and the localizing time is the hitting time of the **cumulated** rate,
+`rateInverse Λ ω a`, whose sublevel sets `setOf_rateInverse_le` already identifies.  A cap does not
+match that time: wherever `Λ` exceeds the cap before `rateInverse Λ ω a`, the capped rate and `Λ`
+differ, and the two processes part company inside the window that was supposed to identify them.
+
+The truncation that matches `rateInverse Λ ω a` is the rate **switched off** there.  It agrees with
+`Λ` strictly below the hitting time (`truncRateF_of_lt`), its cumulated mass is bounded by `a` at
+**every** time and **every** sample point (`cumulativeRateF_truncRateF_le`), and the inverse is
+unchanged at every level up to `a` (`rateInverse_truncRateF_of_le`), so the jump times of the
+truncated problem are those of the original as long as they lie below the hitting time.  The bound
+`a` is uniform in the time, which is sharper than the state dependent `n · t`; it is bought by the
+hitting time and not by the truncation. -/
+
+section PathTruncation
+
+variable {b : ℝ}
+
+/-- **The path dependent rate switched off at the time its cumulated mass reaches `a`.**  The
+counterpart of `truncRate` for the path dependent variant; see the paragraph above for why it is a
+switch and not a cap. -/
+noncomputable def truncRateF (Λ : ℝ → Ω → ℝ) (a : ℝ) : ℝ → Ω → ℝ :=
+  fun u w ↦ Set.indicator (Set.Iio (rateInverse Λ w a)) (fun r ↦ Λ r w) u
+
+theorem truncRateF_eq_indicator (Λ : ℝ → Ω → ℝ) (a : ℝ) (w : Ω) :
+    (fun u ↦ truncRateF Λ a u w)
+      = Set.indicator (Set.Iio (rateInverse Λ w a)) (fun r ↦ Λ r w) := rfl
+
+theorem truncRateF_apply (Λ : ℝ → Ω → ℝ) (a : ℝ) (u : ℝ) (w : Ω) :
+    truncRateF Λ a u w = if u < rateInverse Λ w a then Λ u w else 0 := by
+  simp only [truncRateF, Set.indicator_apply, Set.mem_Iio]
+
+/-- **Below the hitting time nothing has changed**, and this is an equality at the point, not an
+almost everywhere statement: it is the input of an identification of two processes, and a process
+is compared at sample points. -/
+theorem truncRateF_of_lt (h : t < rateInverse Λ ω a) : truncRateF Λ a t ω = Λ t ω := by
+  rw [truncRateF_apply, if_pos h]
+
+theorem truncRateF_of_le (h : rateInverse Λ ω a ≤ t) : truncRateF Λ a t ω = 0 := by
+  rw [truncRateF_apply, if_neg (not_lt.2 h)]
+
+theorem truncRateF_nonneg (h : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 < t) :
+    0 ≤ truncRateF Λ a t ω := by
+  rw [truncRateF_apply]
+  split_ifs with _
+  · exact h t ht
+  · exact le_rfl
+
+/-- Switching a rate off preserves local integrability, because an indicator of a measurable set
+does. -/
+theorem intervalIntegrable_truncRateF
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ truncRateF Λ a u ω) volume 0 r := by
+  rw [truncRateF_eq_indicator]
+  exact ⟨(hint r).1.indicator measurableSet_Iio, (hint r).2.indicator measurableSet_Iio⟩
+
+/-- **The cumulated mass of the truncated rate is that of the original one, stopped at the hitting
+time.**  No hypothesis at all: the window `(0, t]` intersected with `(-∞, R)` differs from
+`(0, t ⊓ R]` by at most the single point `R`, and a point carries no Lebesgue mass.  It is this
+lemma that makes everything below a one line consequence. -/
+theorem cumulativeRateF_truncRateF (Λ : ℝ → Ω → ℝ) (a : ℝ) (ω : Ω) (t : ℝ) :
+    cumulativeRateF (truncRateF Λ a) ω t
+      = cumulativeRateF Λ ω (min t (rateInverse Λ ω a)) := by
+  have hsub : Set.Ioc (0 : ℝ) t ∩ Set.Iio (rateInverse Λ ω a)
+      ⊆ Set.Ioc (0 : ℝ) (min t (rateInverse Λ ω a)) := by
+    rintro u ⟨⟨hu0, hut⟩, huR⟩
+    exact ⟨hu0, le_min hut huR.le⟩
+  have hdiff : Set.Ioc (0 : ℝ) (min t (rateInverse Λ ω a))
+      \ (Set.Ioc (0 : ℝ) t ∩ Set.Iio (rateInverse Λ ω a)) ⊆ {rateInverse Λ ω a} := by
+    rintro u ⟨⟨hu0, hu⟩, hne⟩
+    have hut : u ≤ t := hu.trans (min_le_left _ _)
+    have huR : u ≤ rateInverse Λ ω a := hu.trans (min_le_right _ _)
+    have hnlt : ¬ u < rateInverse Λ ω a := fun h ↦ hne ⟨⟨hu0, hut⟩, h⟩
+    exact le_antisymm huR (not_lt.1 hnlt)
+  have hae : (Set.Ioc (0 : ℝ) t ∩ Set.Iio (rateInverse Λ ω a) : Set ℝ)
+      =ᵐ[volume] (Set.Ioc (0 : ℝ) (min t (rateInverse Λ ω a)) : Set ℝ) := by
+    refine ae_eq_set.2 ⟨?_, ?_⟩
+    · rw [Set.sdiff_eq_empty.2 hsub]
+      exact measure_empty
+    · exact measure_mono_null hdiff Real.volume_singleton
+  have h1 : ∫ u in Set.Ioc (0 : ℝ) t, truncRateF Λ a u ω
+      = ∫ u in Set.Ioc (0 : ℝ) t ∩ Set.Iio (rateInverse Λ ω a), Λ u ω :=
+    setIntegral_indicator measurableSet_Iio
+  show (∫ u in Set.Ioc (0 : ℝ) t, truncRateF Λ a u ω)
+      = ∫ u in Set.Ioc (0 : ℝ) (min t (rateInverse Λ ω a)), Λ u ω
+  rw [h1]
+  exact setIntegral_congr_set hae
+
+/-- Below the hitting time the two cumulated rates agree. -/
+theorem cumulativeRateF_truncRateF_of_le (h : t ≤ rateInverse Λ ω a) :
+    cumulativeRateF (truncRateF Λ a) ω t = cumulativeRateF Λ ω t := by
+  rw [cumulativeRateF_truncRateF, min_eq_left h]
+
+/-- **The cumulated mass of the truncated rate never exceeds the level**, at every time and every
+sample point.  This is the statement the window bound of `martingale_stoppedProcess` needs, and it
+is uniform in the time -- the truncated problem carries no more mass after the hitting time,
+whereas the state dependent cap keeps accumulating at rate `n`. -/
+theorem cumulativeRateF_truncRateF_le
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (t : ℝ) :
+    cumulativeRateF (truncRateF Λ a) ω t ≤ a := by
+  rw [cumulativeRateF_truncRateF]
+  rcases le_total (0 : ℝ) (min t (rateInverse Λ ω a)) with hm | hm
+  · have h := monotoneOn_cumulativeRateF hint hpos hm (rateInverse_nonneg Λ ω a)
+      (min_le_right t (rateInverse Λ ω a))
+    rwa [cumulativeRateF_rateInverse hint hpos htop ha] at h
+  · have hz : cumulativeRateF Λ ω (min t (rateInverse Λ ω a)) = 0 := by
+      simp [cumulativeRateF, Set.Ioc_eq_empty (not_lt.2 hm)]
+    rw [hz]
+    exact ha
+
+/-- **The inverse is unchanged at every level up to the one truncated at.**  This is the
+identification of the jump times of the truncated problem with those of the original one: below the
+level `a` the two constructions consume the same waiting times at the same instants, so the two
+processes agree up to `rateInverse Λ ω a`.  It is the path dependent counterpart of
+`jumpProcessE_eq_truncRate_of_le_rateTime`. -/
+theorem rateInverse_truncRateF_of_le
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hb : 0 ≤ b) (hba : b ≤ a) :
+    rateInverse (truncRateF Λ a) ω b = rateInverse Λ ω b := by
+  have hRb : rateInverse Λ ω b ≤ rateInverse Λ ω a := rateInverse_mono hint hpos htop hb hba
+  have hset : {r : ℝ | 0 ≤ r ∧ b ≤ cumulativeRateF (truncRateF Λ a) ω r}
+      = Set.Ici (rateInverse Λ ω b) := by
+    ext r
+    simp only [Set.mem_ofPred_eq, Set.mem_Ici, cumulativeRateF_truncRateF]
+    constructor
+    · rintro ⟨hr0, hle⟩
+      have h1 : rateInverse Λ ω b ≤ min r (rateInverse Λ ω a) :=
+        (rateInverse_le_iff (a := b) hint hpos htop
+          (le_min hr0 (rateInverse_nonneg Λ ω a))).2 hle
+      exact h1.trans (min_le_left _ _)
+    · intro hr
+      refine ⟨(rateInverse_nonneg Λ ω b).trans hr, ?_⟩
+      have hmin : rateInverse Λ ω b ≤ min r (rateInverse Λ ω a) := le_min hr hRb
+      have h := monotoneOn_cumulativeRateF hint hpos (rateInverse_nonneg Λ ω b)
+        ((rateInverse_nonneg Λ ω b).trans hmin) hmin
+      rwa [cumulativeRateF_rateInverse hint hpos htop hb] at h
+  rw [rateInverse, hset]
+  exact csInf_Ici
+
+/-- **And above that level the inverse collapses to its junk value.**  The truncated rate cumulates
+to at most `a`, so no level beyond `a` is ever reached and `rateInverse` returns the infimum of the
+empty set.
+
+This is not a defect of the truncation but the precise statement of what a real valued inverse can
+and cannot carry, and it is the reason the truncated **process** is not to be built from
+`jumpTimeF`: past the level `a` its jump times would all be `0`, which is not absorption but junk,
+and the step path would read it as such.  The truncated problem needs the jump times to be `⊤`
+there, that is it needs an `ℝ≥0∞` valued inverse `rateInverseE`, exactly as the state dependent
+construction needed `jumpProcessE` over `jumpProcess` at an absorbing state. -/
+theorem rateInverse_truncRateF_eq_zero_of_lt
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (hab : a < b) :
+    rateInverse (truncRateF Λ a) ω b = 0 :=
+  rateInverse_eq_zero_of_forall_lt fun r _ ↦
+    lt_of_le_of_lt (cumulativeRateF_truncRateF_le hint hpos htop ha r) hab
+
+end PathTruncation
+
+/-! ### The window bound from a bound on the mass
+
+`bdd_mpFamilyF_of_bdd` asks for a bound on the compensating integrand **pointwise**, and the
+truncation above does not give one: below the hitting time the truncated rate *is* `Λ`, which is
+unbounded in the sample point.  What it gives is a bound on the **mass**, and the compensating
+window is an integral, so a bound on the mass is what it consumes.
+
+The state dependent case never meets the distinction, because its truncation is a cap and a cap
+bounds both.  Here the two come apart, and the pair below is the form of the window bound that the
+path dependent truncation actually supplies.  Its constant `C + D · B` is uniform in the length of
+the window as well as in the sample point, which is sharper than the `C + D · j` of
+`bdd_mpFamilyF_of_bdd`: after the hitting time the truncated problem spends no further mass. -/
+
+section PathWindowBoundCumulated
+
+/-- **A compensating window is bounded by the mass its integrand may spend.**  At
+`|W u ω| ≤ D · Λ u ω` the window over `(0, t]` is bounded by `D` times the cumulated rate there,
+and hence by `D · B` at every `t` as soon as the cumulated rate is bounded by `B`.
+
+The bound is in the **sample point that is fixed**, not quantified over all of them: it is
+`cumulativeRateF_truncRateF_le` that makes it hold at every sample point, and that lemma carries
+its hypotheses at one sample point too. -/
+theorem abs_setIntegral_compensatorF_le_of_cumulated {W : ℝ → Ω → ℝ} {D B : ℝ}
+    (hWm : Measurable fun u ↦ W u ω) (hD : 0 ≤ D)
+    (hWΛ : ∀ u, |W u ω| ≤ D * Λ u ω)
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hB : ∀ r, cumulativeRateF Λ ω r ≤ B) (t : ℝ≥0) :
+    |∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t, W (u : ℝ) ω ∂lebesgueClock.q|
+      ≤ D * B := by
+  rw [compensator_eq_intervalIntegral hWm t, intervalIntegral.integral_of_le t.coe_nonneg]
+  have hup : IntegrableOn (fun u ↦ D * Λ u ω) (Set.Ioc (0 : ℝ) (t : ℝ)) volume :=
+    (integrableOn_Ioc_of_rate hint le_rfl t.coe_nonneg).const_mul D
+  have h1 : |∫ u in Set.Ioc (0 : ℝ) (t : ℝ), W u ω| ≤ ∫ u in Set.Ioc (0 : ℝ) (t : ℝ), D * Λ u ω := by
+    simpa [Real.norm_eq_abs] using
+      norm_integral_le_of_norm_le (μ := volume.restrict (Set.Ioc (0 : ℝ) (t : ℝ)))
+        (f := fun u ↦ W u ω) hup
+        (Filter.Eventually.of_forall fun u ↦ by simpa [Real.norm_eq_abs] using hWΛ u)
+  refine h1.trans ?_
+  rw [integral_const_mul]
+  exact mul_le_mul_of_nonneg_left (hB (t : ℝ)) hD
+
+/-- **The third input of `martingale_stoppedProcess` for a path dependent test process, from a
+bound on the mass.**  The counterpart of `bdd_mpFamilyF_of_bdd` at a compensating integrand
+dominated by the rate: the test process is bounded by `C + D · B` on **every** time window, not
+only on `[0, j]` with a constant that grows with `j`.
+
+With `truncRateF Λ a` this is `C + 2 C a`, by `cumulativeRateF_truncRateF_le` for the mass and
+`abs_integral_sub_kernel_le` for the factor of `jumpApplyF` that does not carry the rate. -/
+theorem bdd_mpFamilyF_of_cumulated {E : Type*} {f : E → ℝ} {X : ℝ≥0 → Ω → E}
+    {W : ℝ → Ω → ℝ} {Y : ℝ≥0 → Ω → ℝ} {C D B : ℝ}
+    (hYeq : ∀ (s : ℝ≥0) (w : Ω), Y s w = f (X s w)
+      - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s, W (u : ℝ) w ∂lebesgueClock.q)
+    (hC : ∀ x, |f x| ≤ C) (hD : 0 ≤ D)
+    (hWm : ∀ w, Measurable fun u ↦ W u w)
+    (hWΛ : ∀ (u : ℝ) (w : Ω), |W u w| ≤ D * Λ u w)
+    (hint : ∀ (w : Ω) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
+    (hB : ∀ (w : Ω) (r : ℝ), cumulativeRateF Λ w r ≤ B) (j : ℝ≥0) :
+    ∀ s ≤ j, ∀ w, |Y s w| ≤ C + D * B := by
+  intro s _ w
+  rw [hYeq s w]
+  exact (abs_sub _ _).trans (add_le_add (hC _)
+    (abs_setIntegral_compensatorF_le_of_cumulated (ω := w) (hWm w) hD
+      (fun u ↦ hWΛ u w) (hint w) (hB w) s))
+
+end PathWindowBoundCumulated
+
 end PathDependent

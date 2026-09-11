@@ -21738,3 +21738,262 @@ Hawkes-Martingalproblems. Das ist der erste Vorschlag.
    `measurable_compensator_of_uncurry_min` des zwölften Laufs am Integranden `Lam`.
 2. **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, unverändert übernommen.
 3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
+
+### 2026-09-11, fünfzehnter Lauf des Tages — die gestutzte pfadabhängige Rate steht, und sie stutzt die Masse und nicht die Rate: `bdd_mpFamilyF_of_bdd` erreicht sie deshalb nicht, und oberhalb der Stufe verlangt sie eine Inverse mit Werten in `ℝ≥0∞`
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des vierzehnten Laufs (`truncRateF` und
+`cumulativeRateF_truncRateF_le`). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Zwölf Deklarationen** im neuen Abschnitt `PathTruncation` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne einen Fehler und ohne eine
+einzige Warnung im neuen Bereich** durch `lake env lean` gegen v4.33.1, alle zwölf mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry`
+bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+`truncRateF`, `truncRateF_eq_indicator`, `truncRateF_apply`, `truncRateF_of_lt`,
+`truncRateF_of_le`, `truncRateF_nonneg`, `intervalIntegrable_truncRateF`,
+`cumulativeRateF_truncRateF`, `cumulativeRateF_truncRateF_of_le`, `cumulativeRateF_truncRateF_le`,
+`rateInverse_truncRateF_of_le`, `rateInverse_truncRateF_eq_zero_of_lt`.
+
+#### Der Satz, und daß er drei Aussagen ist und nicht eine
+
+`truncRateF Λ a u ω = Set.indicator (Set.Iio (rateInverse Λ ω a)) (fun r ↦ Λ r ω) u` — die Rate,
+**abgeschaltet** an der Trefferzeit ihrer eigenen kumulierten Masse. Drei Aussagen tragen sie:
+
+* `truncRateF_of_lt`: unterhalb der Trefferzeit ist nichts geschehen, und zwar **am Punkt** und
+  nicht fast überall. Das ist die Eingabe einer Prozeßidentifikation, und ein Prozeß wird an
+  Stichprobenpunkten verglichen.
+* `cumulativeRateF_truncRateF_le`: die kumulierte Masse ist an **jeder** Zeit und **jedem**
+  Stichprobenpunkt höchstens `a`. Sie ist **gleichmäßig in der Zeit**, wo der zustandsabhängige
+  Deckel `n · t` gibt — gekauft wird das von der Trefferzeit und nicht von der Stutzung.
+* `rateInverse_truncRateF_of_le`: die Inverse ist an jeder Stufe `b ≤ a` unverändert. Das sind die
+  Sprungzeiten des gestutzten Problems, und es ist das pfadabhängige Gegenstück zu
+  `jumpProcessE_eq_truncRate_of_le_rateTime`.
+
+Alles drei fällt aus **einer** Gleichung, und die trägt **keine einzige Voraussetzung**:
+
+> `cumulativeRateF_truncRateF`:
+> `cumulativeRateF (truncRateF Λ a) ω t = cumulativeRateF Λ ω (min t (rateInverse Λ ω a))`.
+
+Weder Integrierbarkeit noch Positivität noch Divergenz. Der Grund ist Mengenalgebra und ein Punkt:
+`Set.Ioc 0 t ∩ Set.Iio R` liegt in `Set.Ioc 0 (min t R)`, und die Differenz liegt in `{R}`. Das ist
+`ae_eq_set` mit `Real.volume_singleton`, und dann `setIntegral_indicator` und
+`setIntegral_congr_set`. Jede der drei Folgerungen ist danach eine bis vier Zeilen.
+
+#### Der erste Befund, und er berichtigt Vorschlag 1: `bdd_mpFamilyF_of_bdd` erreicht diese Stutzung nicht
+
+Vorschlag 1 des vierzehnten Laufs sagte: „Daraus die Fensterschranke `2·C·n` über
+`bdd_mpFamilyF_of_bdd`." Die Konstante stimmt, der Weg nicht.
+
+`bdd_mpFamilyF_of_bdd` verlangt `hD : ∀ u ω, |W u ω| ≤ D` — eine Schranke **punktweise**. Die
+abgeschaltete Rate gibt keine: **unterhalb** der Trefferzeit *ist* die gestutzte Rate `Λ`, und die
+ist im Stichprobenpunkt unbeschränkt. Gestutzt wird die **Masse**, nicht die Rate.
+
+Der zustandsabhängige Fall stößt nicht darauf, und das ist kein Zufall: sein
+`truncRate lam n = min lam n` ist ein **Deckel**, und ein Deckel beschränkt beides — die Rate
+punktweise und damit auch die Masse. Die pfadabhängige Stutzung muß die Trefferzeit treffen (siehe
+den zweiten Befund), und eine Stutzung, die eine Trefferzeit der kumulierten Rate trifft,
+beschränkt eben nur die kumulierte Rate.
+
+Gebraucht wird also ein Fenstersatz, der eine **Massenschranke** frißt statt einer punktweisen:
+`abs_setIntegral_compensatorF_le_of_cumulated` und `bdd_mpFamilyF_of_cumulated`, aus
+`|W u ω| ≤ D · Λ u ω` und `cumulativeRateF Λ ω t ≤ B` die Schranke `D · B` am Fenster und
+`C + D · B` am Testprozeß. Sie stehen als benannter Punkt in `MartingaleProblems/README.md`,
+Meilenstein 4, und sind der erste Vorschlag unten. Die Schranke ist dann **gleichmäßig auch in
+`j`** und nicht bloß im Stichprobenpunkt — besser als das, was `bdd_mpFamilyF_of_bdd` im
+zustandsabhängigen Fall liefert.
+
+#### Der zweite Befund: die Stutzung muß die lokalisierende Zeit treffen, und das entscheidet ihre Gestalt
+
+Der vierzehnte Lauf hat begründet, warum die **lokalisierende Zeit** die Trefferzeit der
+kumulierten und nicht der punktweisen Rate ist (`rateSup` ist pfadabhängig rechts nicht lokal
+konstant). Daraus folgt die Gestalt der **Stutzung**, und das war noch nicht gesagt:
+
+> Deckel und laufendes Supremum gehören zusammen; Abschalten und kumulierte Rate gehören zusammen.
+> Gemischt geht es nicht.
+
+Ein Deckel `min (Λ u ω) K` stimmt **nicht** mit `Λ` unterhalb von `rateInverse Λ ω a` überein — wo
+immer `Λ` den Deckel vor dieser Zeit überschreitet, gehen die beiden Prozesse auseinander, und zwar
+*innerhalb* des Fensters, das sie identifizieren sollte. Umgekehrt stimmt die abgeschaltete Rate
+nicht mit `Λ` unterhalb von `rateTime` überein. Die Wahl ist also nicht Geschmack, sondern von der
+lokalisierenden Zeit erzwungen, und die war im vorigen Lauf erzwungen. Der Absatz steht so im Kopf
+des Abschnitts `PathTruncation`.
+
+#### Der dritte Befund, und er macht Vorschlag 2 zur Voraussetzung von Vorschlag 1: oberhalb der Stufe verfällt die Inverse auf ihren Müllwert
+
+`rateInverse_truncRateF_eq_zero_of_lt`: für `a < b` ist `rateInverse (truncRateF Λ a) ω b = 0`. Die
+gestutzte Rate kumuliert auf höchstens `a`, also wird keine Stufe jenseits von `a` je erreicht, und
+`rateInverse` gibt das Infimum der leeren Menge zurück, `0`.
+
+Das ist **kein Mangel der Stutzung**, sondern die genaue Aussage darüber, was eine reellwertige
+Inverse tragen kann. Es heißt aber, daß der gestutzte **Prozeß** nicht aus `jumpTimeF` zu bauen
+ist: jenseits der Stufe wären alle Sprungzeiten `0`, und das ist keine Absorption, sondern Müll —
+ein Treppenpfad liest ihn als solchen. Verlangt sind dort Sprungzeiten `⊤`, also eine Inverse mit
+Werten in `ℝ≥0∞`.
+
+Damit ist **`rateInverseE` nicht mehr ein danebenstehender Vorschlag, sondern eine Voraussetzung**
+des gestutzten Problems. Es ist derselbe Übergang wie `jumpProcess` → `jumpProcessE` am
+absorbierenden Zustand, und es ist die Stelle, an der die pfadabhängige Variante für die
+Allgemeinheit der Inversen bezahlt, die die zustandsabhängige aus einer Division geschenkt bekam.
+Der siebte Lauf hatte den Aufschlag der Inversen mit „einmalig, 31 gegen 25 Zeilen" beziffert; hier
+kommt eine zweite Rate hinzu, und sie ist zu messen, wenn `rateInverseE` steht.
+
+#### Ein viertes, kleineres: der abgeschaltete Weg ist nicht der einzige, und warum er trotzdem der richtige ist
+
+Die Alternative wäre, nach der Trefferzeit **mit einer positiven Konstanten weiterzulaufen** statt
+abzuschalten. Sie hält Positivität und Divergenz der kumulierten Rate und braucht `rateInverseE`
+nicht; sie kostet dafür die Schärfe — die kumulierte Masse ist dann `a + c · t` statt `a`, also
+nicht mehr gleichmäßig in der Zeit — und sie setzt dem gestutzten Prozeß Sprünge an, die der
+ursprüngliche nicht hat. Beides ist für den Turmschluß unschädlich. Genommen ist trotzdem das
+Abschalten, weil es die Aussage ist, die etwas über den Prozeß sagt, und nicht bloß eine, die
+durchgeht: die gestutzte Rate ist der ursprüngliche Prozeß, angehalten, und nicht ein anderer
+Prozeß, der zufällig bis zur Trefferzeit derselbe ist.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py` (unverändert lauffähig, um die Gruppe `G24` erweitert):
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G22 die Pfade des Testprozesses sind rechtsstetig | 6 | 114 |
+| G23 die Fensterschranke, und die dritte Eingabe, die sie nicht erreicht | 2 | 28 |
+| G24 die gestutzte Rate, und die Masse, die sie noch ausgeben darf | 12 | 100 |
+| `section PathDependent` gesamt | — | 1537 Codezeilen, 2697 mit Dokumentation |
+
+**Gebrauchte Mathlib-Bausteine, und keiner fehlte:** `MeasureTheory.setIntegral_indicator`
+(`Mathlib/MeasureTheory/Integral/Bochner/Set.lean:196`), `MeasureTheory.setIntegral_congr_set`
+(ebenda:77), `MeasureTheory.ae_eq_set` (`Mathlib/MeasureTheory/OuterMeasure/AE.lean:180`),
+`measure_mono_null` (`Mathlib/MeasureTheory/OuterMeasure/Basic.lean:54`), `Real.volume_singleton`
+(`Mathlib/MeasureTheory/Measure/Lebesgue/Basic.lean:123`), `MeasureTheory.Integrable.indicator`
+(`Mathlib/MeasureTheory/Integral/IntegrableOn.lean:351`), `csInf_Ici`
+(`Mathlib/Order/ConditionallyCompletePartialOrder/Basic.lean:124`), `Set.sdiff_eq_empty`
+(`Mathlib/Order/BooleanAlgebra/Set.lean:347`), `Set.mem_ofPred_eq`
+(`Mathlib/Data/Set/Operations.lean:80`), `Set.Ioc_eq_empty`, `measure_empty`.
+**Keine Negativaussage über Mathlib**, also nichts für `scripts/check_negatives.py` nachzutragen.
+
+Zwei der neuen Namen ersetzen ausdrücklich veraltete: `Set.sdiff_eq_empty` statt
+`Set.diff_eq_empty` und `Set.mem_ofPred_eq` statt `Set.mem_setOf_eq`, beide von v4.33.1 als
+`deprecated` gemeldet. Die älteren Stellen der Datei (etwa Zeile 14461) tragen die Warnung noch;
+das ist eine eigene, billige Aufräumarbeit und steht als dritter Vorschlag.
+
+#### Eine Kleinigkeit, die Zeit gekostet hat
+
+`s =ᵐ[μ] t` für **Mengen** elaboriert die linke Seite gegen den erwarteten Typ `α → Prop`, nicht
+gegen `Set α`; ein `∩` darin scheitert dann an `Inter (ℝ → Prop)`. Die Typannotation
+`(… : Set ℝ) =ᵐ[volume] (… : Set ℝ)` ist auszuschreiben, und zwar auf **beiden** Seiten.
+
+#### Was offen blieb
+
+Der Fenstersatz aus der Massenschranke, und damit die dritte Eingabe von
+`martingale_stoppedProcess` für das gestutzte pfadabhängige Problem. Das ist der erste Vorschlag.
+*(Er ist im zweiten Teil desselben Laufs eingelöst; die Vorschlagsliste unten ist dort neu
+geordnet.)*
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`abs_setIntegral_compensatorF_le_of_cumulated` und `bdd_mpFamilyF_of_cumulated`: die
+   Fensterschranke aus einer Schranke an die kumulierte Rate.** Aussage: ist
+   `|W u ω| ≤ D · Λ u ω` mit `0 ≤ D` und `cumulativeRateF Λ ω t ≤ B` an jeder Zeit und jedem
+   Stichprobenpunkt, so ist das kompensierende Fenster durch `D · B` und der Testprozeß durch
+   `C + D · B` beschränkt, gleichmäßig in `j` wie im Stichprobenpunkt. Mit `truncRateF Λ a` und
+   `abs_integral_sub_kernel_le` ist die Konstante `C + 2 C a`.
+
+   **Warum jetzt:** es ist die einzige noch fehlende der drei Eingaben von
+   `martingale_stoppedProcess` für das gestutzte pfadabhängige Problem; die beiden anderen stehen
+   seit dem dreizehnten und vierzehnten Lauf (`isStronglyProgressive_mpFamilyF_hawkesStepPath`,
+   `tendsto_nhdsGE_mpFamilyF_hawkesStepPath`), und der erste Befund oben sagt genau, warum der
+   vorhandene Satz sie nicht liefert.
+
+   **Worauf sie ruht:** `cumulativeRateF_truncRateF_le` dieses Laufs für die Massenschranke,
+   `integral_lebesgueClock_Ioc` für den Übergang vom Uhrintegral über `ℝ≥0` zum reellen Fenster,
+   `norm_integral_le_integral_norm` und `MeasureTheory.integral_mono_of_nonneg` (das nur die
+   **obere** Funktion integrierbar verlangt, was `intervalIntegrable_truncRateF` liefert) für die
+   Dominierung. Prüfstein: ob der Übergang über die Uhr ohne eine eigene Integrierbarkeitsaussage
+   auf `lebesgueClock.q` auskommt; `integral_lebesgueClock_Ioc` gibt nur den **Wert**, nicht die
+   Integrierbarkeit, und das ist die zu erwartende Bruchstelle.
+2. **`rateInverseE` und `jumpTimeFE`** — Vorschlag 2 des siebten Laufs, jetzt **nicht mehr
+   danebenstehend, sondern Voraussetzung**: der dritte Befund oben zeigt am gestutzten Problem,
+   wofür die `ℝ≥0∞`-wertige Inverse gebraucht wird, und liefert mit
+   `rateInverse_truncRateF_eq_zero_of_lt` den Zeugen dafür in einer Zeile.
+3. **Die veralteten Namen in `section PathDependent` ersetzen** — `Set.diff_eq_empty` durch
+   `Set.sdiff_eq_empty`, `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, dort wo v4.33.1 es meldet.
+   Billig, und es hält die stehende Regel ein, daß kein zitierter Name `deprecated` ist.
+
+### Derselbe Lauf, zweiter Teil — die Fensterschranke aus der Massenschranke steht auch, und die angesagte Bruchstelle gab es nicht: der Übergang über die Uhr trägt keine Integrierbarkeit
+
+Der erste Vorschlag oben ist im selben Lauf eingelöst. **Zwei Deklarationen** im neuen Abschnitt
+`PathWindowBoundCumulated` von `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne
+einen Fehler und ohne eine Warnung im neuen Bereich durch `lake env lean` gegen v4.33.1, beide mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der
+`sorry` bleibt bei **neun**.
+
+* `abs_setIntegral_compensatorF_le_of_cumulated`: ist `|W u ω| ≤ D · Λ u ω` und die kumulierte
+  Rate durch `B` beschränkt, so ist das kompensierende Fenster durch `D · B` beschränkt.
+* `bdd_mpFamilyF_of_cumulated`: daraus `|Y s ω| ≤ C + D · B` — und zwar auf **jedem** Fenster
+  `[0, j]` mit **derselben** Konstanten, nicht mit einer, die mit `j` wächst. Das ist die dritte
+  Eingabe von `martingale_stoppedProcess`, und mit ihr sind **alle drei** Eingaben für den
+  gestutzten pfadabhängigen Testprozeß gestellt.
+
+#### Der Befund: die angesagte Bruchstelle war keine, und der Grund ist die Reihenfolge
+
+Der Vorschlag oben hatte als Prüfstein benannt, „ob der Übergang über die Uhr ohne eine eigene
+Integrierbarkeitsaussage auf `lebesgueClock.q` auskommt; `integral_lebesgueClock_Ioc` gibt nur den
+**Wert**, nicht die Integrierbarkeit". Er kommt aus, und zwar deshalb, weil die Abschätzung **nach**
+dem Übergang geführt wird und nicht davor:
+
+1. `compensator_eq_intervalIntegral` (vierzehnter Lauf) macht aus dem Uhrintegral ein reelles
+   Intervallintegral und verlangt dafür **nichts als die Meßbarkeit des Integranden in der Zeit**.
+   Über `lebesgueClock.q` ist damit nichts mehr zu sagen.
+2. Auf dem reellen Fenster ist `norm_integral_le_of_norm_le`
+   (`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:947`) das ganze Argument: es verlangt die
+   Integrierbarkeit der **Majorante** und nicht die des Integranden. Die Majorante ist `D · Λ`,
+   und ihre Integrierbarkeit ist `integrableOn_Ioc_of_rate` aus `hint` — für `truncRateF` also
+   `intervalIntegrable_truncRateF` dieses Laufs.
+
+Das ist der Grund, warum die beiden Sätze zusammen fünfunddreißig Codezeilen kosten und nicht das
+Vielfache: es wird
+**nie** behauptet, daß `W` integrierbar ist. Wäre `integral_mono` genommen worden statt
+`norm_integral_le_of_norm_le`, so wäre die Integrierbarkeit des Integranden zu zeigen gewesen, und
+die ist an einer pfadabhängigen Rate nicht geschenkt.
+
+#### Gezählt, ergänzt
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G24 die gestutzte Rate, und die Masse, die sie noch ausgeben darf | 12 | 100 |
+| G25 die Fensterschranke aus der Massenschranke | 2 | 35 |
+| `section PathDependent` gesamt | — | 1572 Codezeilen, 2763 mit Dokumentation |
+
+**Gebrauchte Mathlib-Bausteine, und keiner fehlte:** `MeasureTheory.norm_integral_le_of_norm_le`
+(`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:947`), `MeasureTheory.integral_const_mul`
+(`ebenda:288`), `MeasureTheory.Integrable.const_mul`
+(`Mathlib/MeasureTheory/Function/L1Space/Integrable.lean:1039`),
+`intervalIntegral.integral_of_le`, `abs_sub`, `mul_le_mul_of_nonneg_left`.
+
+#### Was damit steht und was jetzt fehlt
+
+Für das **gestutzte** pfadabhängige Problem sind alle drei Eingaben von
+`martingale_stoppedProcess` gestellt: progressive Meßbarkeit (dreizehnter Lauf), Rechtsstetigkeit
+der Pfade (vierzehnter Lauf), Fensterschranke (dieser Lauf). Was zwischen dem gestutzten Problem
+und dem Hawkes-Martingalproblem noch steht, ist **kein** Regularitätsschritt mehr, sondern der
+Zusammenbau, und er hat genau eine noch nicht gelegte Voraussetzung: den gestutzten **Prozeß**
+selbst, und damit `rateInverseE`.
+
+#### Die Vorschläge, neu geordnet
+
+1. **`rateInverseE` und `jumpTimeFE`** — jetzt der erste. Der dritte Befund des ersten Teils zeigt,
+   daß der gestutzte Prozeß ohne eine `ℝ≥0∞`-wertige Inverse nicht zu bauen ist, und dieser zweite
+   Teil zeigt, daß er das einzige ist, was noch fehlt. Worauf es ruht: `rateInverse`,
+   `setOf_rateInverse_le`, `rateInverse_truncRateF_eq_zero_of_lt`, und für die Meßbarkeit
+   `measurable_rateInverse`. Prüfstein: ob `rateInverse` sich als Realteil von `rateInverseE`
+   wiederfindet, wo dieser endlich ist — sonst ist es eine zweite Konstruktion und keine
+   Verallgemeinerung, und dann ist der Aufschlag der Inversen ein zweites Mal zu zahlen und zu
+   messen.
+2. **`isStoppingTime_rateInverse`** — die Trefferzeit der kumulierten Rate als Stoppzeit der
+   pfadabhängigen Filtration, über `setOf_rateInverse_le` und
+   `measurable_compensator_of_uncurry_min`. Sie ist es, die aus der Stutzung eine **Lokalisierung**
+   macht, und sie ist unabhängig von Vorschlag 1 zu haben.
+3. **`hawkesRate_measurable`** — Vorschlag 3 des siebten Laufs, unverändert.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — `Set.diff_eq_empty` durch
+   `Set.sdiff_eq_empty`, `Set.mem_setOf_eq` durch `Set.mem_ofPred_eq`, `push_neg` durch
+   `push Not`, dort wo v4.33.1 es meldet.

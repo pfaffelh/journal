@@ -2769,15 +2769,45 @@ A concrete family of solutions, built without any of the theory above. Index
     localize**, as `jumpProcessE_isMPSolution` under `lam ≤ L`, `truncRate lam n`, `rateTime lam n`
     and `stoppedProcess_mpFamily_truncRate_eq` do there. The path dependent truncation is the next
     item, and it truncates something else; see there.
-  * `truncRateF`, `truncRateF_eq_of_lt` and `cumulativeRateF_truncRateF_le`: **the path dependent
-    rate, cut off at the hitting time of its own cumulated rate.**
-    `truncRateF Lam n s ω = Set.indicator (Set.Iio (rateInverse Lam ω n)) (fun u ↦ Lam u ω) s`
-    agrees with `Lam` below `rateInverse Lam ω n`, and its cumulated rate is at most `n` at every
-    time and at every sample point. With it `bdd_mpFamilyF_of_bdd` holds at every level with the
-    constant `C + 2 C n`, and all three inputs of `martingale_stoppedProcess` are supplied for the
-    path dependent test processes; the Hawkes martingale problem is then the assembly of Point 5
-    read once more, with `isStronglyProgressive_mpFamilyF_hawkesStepPath` and
+  * `truncRateF`, `truncRateF_of_lt`, `cumulativeRateF_truncRateF`,
+    `cumulativeRateF_truncRateF_le` and `rateInverse_truncRateF_of_le`: **the path dependent rate,
+    switched off at the hitting time of its own cumulated rate.** **In Lean** on 2026-09-11,
+    fifteenth run, with `truncRateF_eq_indicator`, `truncRateF_apply`, `truncRateF_of_le`,
+    `truncRateF_nonneg`, `intervalIntegrable_truncRateF`, `cumulativeRateF_truncRateF_of_le` and
+    `rateInverse_truncRateF_eq_zero_of_lt`.
+    `truncRateF Lam a u ω = Set.indicator (Set.Iio (rateInverse Lam ω a)) (fun r ↦ Lam r ω) u`
+    agrees with `Lam` below `rateInverse Lam ω a` at the point and not merely almost everywhere,
+    its cumulated rate is at most `a` at every time and at every sample point, and its inverse is
+    unchanged at every level up to `a`, so the jump times of the truncated problem are those of the
+    original as long as they lie below the hitting time. The bound `a` is uniform in the time,
+    where the state dependent cap gives `n · t`; it is bought by the hitting time and not by the
+    truncation. `cumulativeRateF_truncRateF`, from which the rest is one line each, carries **no
+    hypothesis at all**: the window `(0, t]` cut at `(-∞, R)` differs from `(0, t ⊓ R]` by the
+    single point `R`.
+
+  * `abs_setIntegral_compensatorF_le_of_cumulated` and `bdd_mpFamilyF_of_cumulated`: **the window
+    bound of a path dependent test process from a bound on the cumulated rate.** **In Lean** on
+    2026-09-11, fifteenth run. At `|W u ω| ≤ D · Lam u ω` with `cumulativeRateF Lam ω t ≤ B` at
+    every time and sample point, the compensating window is bounded by `D · B` and the test
+    process by `C + D · B` on every window `[0, j]`, uniformly in `j` as well as in the sample
+    point. With `truncRateF Lam a` and `abs_integral_sub_kernel_le` the constant is `C + 2 C a`,
+    and all three inputs of `martingale_stoppedProcess` are supplied for the truncated path
+    dependent test process; the Hawkes martingale problem is then the assembly of Point 5 read
+    once more, with `isStronglyProgressive_mpFamilyF_hawkesStepPath` and
     `tendsto_nhdsGE_mpFamilyF_hawkesStepPath` in place of their state dependent counterparts.
+
+    The passage over the clock is `compensator_eq_intervalIntegral`, and it asks for nothing but
+    the measurability of the integrand in the time; there is no integrability statement on
+    `lebesgueClock.q` to be made, because the bound is established on the **real** window after
+    the passage and not before it. `norm_integral_le_of_norm_le` then asks for integrability of
+    the **majorant** only, which `intervalIntegrable_truncRateF` gives.
+
+    **`bdd_mpFamilyF_of_bdd` does not reach this, and the reason is the shape of its hypothesis.**
+    It asks for a bound on the integrand **pointwise**, `∀ u ω, |W u ω| ≤ D`, and switching the
+    rate off at the hitting time does not bound it pointwise: below the hitting time the truncated
+    rate *is* `Lam`, which is unbounded in the sample point. What the truncation bounds is the
+    **mass**, and a bound on the mass is what the window integral consumes. The state dependent
+    case does not meet this because its truncation is a cap and therefore bounds both.
 
     **The truncation is of the cumulated rate and not of the rate, and that is forced.** The state
     dependent case cuts the rate itself, `truncRate lam n x = min (lam x) n`, and localizes at the
@@ -2792,8 +2822,18 @@ A concrete family of solutions, built without any of the theory above. Index
     The **cumulated** rate has no such defect: it is continuous (`continuousOn_cumulativeRateF`),
     and its inverse together with the level set identification is already proved —
     `rateInverse`, `rateInverse_le_iff`, `setOf_rateInverse_le`. It is also what the bound is
-    about: `bdd_mpFamilyF_of_bdd` asks for a bound on the compensating **window**, which is a
-    bound on the cumulated rate and not on the rate.
+    about: the window bound asks for a bound on the compensating **window**, which is a bound on
+    the cumulated rate and not on the rate.
+  * `rateInverseE` and `jumpTimeFE`: **the inverse of the cumulated rate with values in `ℝ≥0∞`,
+    and the jump times built from it.** `rateInverseE Lam ω a = ⊤` where the level `a` is never
+    reached, and `rateInverse` is its real part where it is finite. This is what the truncated
+    problem needs, and `rateInverse_truncRateF_eq_zero_of_lt` says why in one line: the truncated
+    rate cumulates to at most `a`, so no level beyond `a` is ever reached and `rateInverse` returns
+    the infimum of the empty set, `0`. Jump times all equal to `0` are not absorption but junk, and
+    a step path reads them as such; the truncated problem asks for them to be `⊤`. It is the same
+    passage as `jumpProcess` to `jumpProcessE` at an absorbing state, and it is here that the path
+    dependent variant pays for the generality of the inverse the state dependent one got from a
+    division.
   * `isStoppingTime_rateInverse`: **the hitting time of the cumulated path dependent rate is a
     stopping time of the path dependent filtration.** `setOf_rateInverse_le` reduces
     `{rateInverse Lam · n ≤ c}` to `{0 ≤ c ∧ n ≤ cumulativeRateF Lam · c}`, which reads the path up

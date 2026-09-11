@@ -222,6 +222,24 @@ GROUPS = {
         "abs_setIntegral_compensatorF_le",
         "bdd_mpFamilyF_of_bdd",
     },
+    "G24 the truncated rate, and the mass it may still spend": {
+        "truncRateF",
+        "truncRateF_eq_indicator",
+        "truncRateF_apply",
+        "truncRateF_of_lt",
+        "truncRateF_of_le",
+        "truncRateF_nonneg",
+        "intervalIntegrable_truncRateF",
+        "cumulativeRateF_truncRateF",
+        "cumulativeRateF_truncRateF_of_le",
+        "cumulativeRateF_truncRateF_le",
+        "rateInverse_truncRateF_of_le",
+        "rateInverse_truncRateF_eq_zero_of_lt",
+    },
+    "G25 the window bound from a bound on the mass": {
+        "abs_setIntegral_compensatorF_le_of_cumulated",
+        "bdd_mpFamilyF_of_cumulated",
+    },
 }
 
 
