@@ -14234,6 +14234,132 @@ theorem tendsto_jumpTimeF_atTop
   rw [hval] at hmon
   linarith
 
+/-! ### The junk value of the inverse, named
+
+The divergence hypothesis of `cumulativeRateF_rateInverse` is not a convenience.  A rate whose
+cumulated mass stays finite leaves levels that the inverse never reaches, and there `rateInverse`
+returns the junk value `0` of `sInf ∅` -- the same device as in `stepIndex`, and the same duty to
+name where it is returned.  These statements are the counterpart of `notMem_nonExplosiveE_explode`
+in the state dependent construction.
+
+**And naming it corrects the shape of the two defects.**  The state dependent construction has
+*two* -- an absorbing state, where `x / 0 = 0` makes the path leave at once, and explosion, where
+the jump times accumulate -- and this variant has the same two, at opposite ends of the time axis:
+
+* **absorption** is a jump that should happen at time `∞`.  A rate that vanishes on a *window* is
+  *not* the case: there the cumulated rate is merely flat and the inverse steps across to the next
+  place where the rate lives, which is a genuine difference from `lam x = 0`.  The case is a rate of
+  finite total mass, `∫ u in Set.Ioi 0, Λ u ω < ∞`: above that mass no level is ever reached, the
+  next jump time should be `∞`, and `sInf ∅` returns `0` -- the *same* junk value as `ξ / 0`, for
+  the same reason, and it wants the same repair, jump times in `ℝ≥0∞`.  What has changed is that
+  absorption is no longer readable off a single state: it is a statement about the tail of the rate
+  along the whole path.
+* **explosion** is infinitely many jumps before a finite time.  Here that is
+  `∫ u in Set.Ioc 0 t, Λ u ω = ∞` for some finite `t`, which is the failure of the local
+  integrability `hint` that stands in front of every statement of this section and is never
+  discharged in it.
+
+So the two conditions sit at the two ends and they point in opposite directions: non explosion is
+the **finiteness** of the compensator on every window, and absence of absorption is its
+**divergence** at infinity. -/
+
+/-- **Below an unattained level the inverse is junk.**  The set whose infimum is taken is empty and
+`sInf ∅ = 0`, so the value is `0` and carries no information about `a`. -/
+theorem rateInverse_eq_zero_of_forall_lt (h : ∀ r : ℝ, 0 ≤ r → cumulativeRateF Λ ω r < a) :
+    rateInverse Λ ω a = 0 := by
+  have hempty : {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} = ∅ := by
+    ext r
+    simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and, not_le]
+    exact fun hr ↦ h r hr
+  rw [rateInverse, hempty]
+  exact Real.sInf_empty
+
+/-- **A rate integrable on the half line cumulates to at most its total mass.**  This is the
+hypothesis under which the previous statement bites, and it is the negation of
+`tendsto_cumulativeRateF_atTop_of_le`: the cumulated rate is bounded. -/
+theorem cumulativeRateF_le_of_integrableOn
+    (hint : IntegrableOn (fun u ↦ Λ u ω) (Set.Ioi 0) volume)
+    (hpos : ∀ u, 0 < u → 0 ≤ Λ u ω) (r : ℝ) :
+    cumulativeRateF Λ ω r ≤ ∫ u in Set.Ioi (0 : ℝ), Λ u ω := by
+  refine setIntegral_mono_set hint ?_ (LE.le.eventuallyLE Set.Ioc_subset_Ioi_self)
+  filter_upwards [ae_restrict_mem measurableSet_Ioi] with u hu using hpos u hu
+
+/-- **A rate of finite total mass returns the junk value at every level above that mass**, and in
+particular the equation `cumulativeRateF_rateInverse` fails there.  This is the statement that makes
+the divergence hypothesis of that theorem a necessity rather than a convenience. -/
+theorem rateInverse_eq_zero_of_integrableOn
+    (hint : IntegrableOn (fun u ↦ Λ u ω) (Set.Ioi 0) volume)
+    (hpos : ∀ u, 0 < u → 0 ≤ Λ u ω) (ha : ∫ u in Set.Ioi (0 : ℝ), Λ u ω < a) :
+    rateInverse Λ ω a = 0 :=
+  rateInverse_eq_zero_of_forall_lt fun r hr ↦
+    lt_of_le_of_lt (cumulativeRateF_le_of_integrableOn hint hpos r) ha
+
+theorem cumulativeRateF_rateInverse_ne
+    (hint : IntegrableOn (fun u ↦ Λ u ω) (Set.Ioi 0) volume)
+    (hpos : ∀ u, 0 < u → 0 ≤ Λ u ω) (ha : ∫ u in Set.Ioi (0 : ℝ), Λ u ω < a) (h0 : 0 < a) :
+    cumulativeRateF Λ ω (rateInverse Λ ω a) ≠ a := by
+  rw [rateInverse_eq_zero_of_integrableOn hint hpos ha, cumulativeRateF_zero]
+  exact h0.ne
+
+/-- **A rate of finite total mass collapses the jump times**: past the index at which the partial
+sums of the waiting times exceed the total mass, every jump time is `0`.  This is what explosion
+looks like in the path dependent construction, and it is visible on the jump times themselves --
+unlike in the state dependent case, where the collapse is at the level of the chain. -/
+theorem jumpTimeF_eq_zero_of_integrableOn
+    (hint : IntegrableOn (fun u ↦ Λ u ω) (Set.Ioi 0) volume)
+    (hpos : ∀ u, 0 < u → 0 ≤ Λ u ω)
+    (hn : ∫ u in Set.Ioi (0 : ℝ), Λ u ω < ∑ k ∈ Finset.range n, xi k) :
+    jumpTimeF Λ ω xi n = 0 :=
+  rateInverse_eq_zero_of_integrableOn hint hpos hn
+
+/-! ### The junk value is not hypothetical: a rate that dies out
+
+`expRate u ω = Real.exp (-u)` satisfies *every* hypothesis of this section except the divergence:
+it is positive at every time and integrable on every window, and its total mass is `1`.  Above the
+level `1` the inverse is junk, and the jump times collapse to `0` as soon as the partial sums of
+the waiting times pass `1`.  This is the witness that the divergence hypothesis excludes something,
+and it is the path dependent picture of an absorbing state: after finitely many jumps the rate has
+spent itself and no further jump ever happens. -/
+
+section FiniteMass
+
+/-- A rate that does not read the sample point and dies out exponentially. -/
+noncomputable def expRate (u : ℝ) (_ : Ω) : ℝ := Real.exp (-u)
+
+theorem expRate_pos (ω : Ω) (u : ℝ) : 0 < expRate u ω := Real.exp_pos _
+
+theorem intervalIntegrable_expRate (ω : Ω) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ expRate u ω) volume 0 r :=
+  (Real.continuous_exp.comp continuous_neg).intervalIntegrable 0 r
+
+theorem integrableOn_expRate (ω : Ω) :
+    IntegrableOn (fun u ↦ expRate u ω) (Set.Ioi 0) volume :=
+  integrableOn_exp_neg_Ioi 0
+
+theorem integral_expRate (ω : Ω) : ∫ u in Set.Ioi (0 : ℝ), expRate u ω = 1 :=
+  integral_exp_neg_Ioi_zero
+
+/-- **The cumulated rate of a dying rate does not diverge**, so the hypothesis that the whole
+inversion rests on genuinely fails here. -/
+theorem not_tendsto_cumulativeRateF_expRate (ω : Ω) :
+    ¬ Tendsto (cumulativeRateF expRate ω) atTop atTop := by
+  intro h
+  obtain ⟨r, hr⟩ := (h.eventually_ge_atTop (2 : ℝ)).exists
+  have hle : cumulativeRateF expRate ω r ≤ 1 := by
+    simpa [integral_expRate ω] using
+      cumulativeRateF_le_of_integrableOn (integrableOn_expRate ω)
+        (fun u _ ↦ (expRate_pos ω u).le) r
+  linarith
+
+/-- **And the jump times collapse**, at every index whose partial sum of waiting times exceeds the
+total mass. -/
+theorem jumpTimeF_expRate_eq_zero (ω : Ω) (xi : ℕ → ℝ) (n : ℕ)
+    (hn : 1 < ∑ k ∈ Finset.range n, xi k) : jumpTimeF expRate ω xi n = 0 :=
+  jumpTimeF_eq_zero_of_integrableOn (integrableOn_expRate ω)
+    (fun u _ ↦ (expRate_pos ω u).le) (by rwa [integral_expRate ω])
+
+end FiniteMass
+
 /-! ### The probe against emptiness: a constant rate -/
 
 section ConstantRate
@@ -14280,5 +14406,261 @@ theorem jumpTimeF_const_eq_jumpTime {E : Type*} (ω : Ω) (y : ℕ → E) (xi : 
       rw [Finset.sum_range_succ, jumpTime_succ, ← ih, add_div]
 
 end ConstantRate
+
+/-! ### The path dependent jump process
+
+The jump times are the ground floor; this is the first statement that **uses** them rather than
+supplying them.  It is deliberately thin: `isStepPath_stepPath` asks of a family of jump times
+exactly two things -- that it increase strictly and that it exhaust the half line -- and
+`strictMono_jumpTimeF` and `tendsto_jumpTimeF_atTop` are exactly those two.  Nothing below says a
+word about `Λ` beyond the three hypotheses that the inverse needs, which is the test that the
+interface of this section is the right one.
+
+The sample space is the one of the state dependent construction, `(ℕ → E) × (ℕ → ℝ)`: a chain and a
+sequence of waiting times.  What changes is that the rate is a functional of **the whole driving
+datum** and not of the current state, so that `Λ` may read the past -- which is what the Hawkes rate
+of `ex:hawkes` does.  Compare `jumpProcess lam t ω = stepPath (jumpTime lam ω.1 ω.2) ω.1 t`: the
+chain still supplies the values, and only the times change. -/
+
+section PathProcess
+
+variable {E : Type*} {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **The jump process at a path dependent rate**, in the roadmap's convention `ι → Ω → E`. -/
+noncomputable def jumpProcessF (Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) : E :=
+  stepPath (jumpTimeF Λ ω ω.2) ω.1 t
+
+/-- **The paths of the path dependent jump process are step paths.**  Note which hypothesis is
+*absent* against `isStepPath_jumpProcess`: there is no bound `lam ≤ L` on the rate.  The state
+dependent statement needs one because it passes from the sum of the waiting times to the time by a
+division through the rate at each state; here `cumulativeRateF_rateInverse` says that the cumulated
+rate at the `n`-th jump time *is* the `n`-th partial sum, and there is nothing to divide. -/
+theorem isStepPath_jumpProcessF [TopologicalSpace E]
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ n, 0 < ω.2 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) :
+    IsStepPath (fun t ↦ jumpProcessF Λ t ω) :=
+  isStepPath_stepPath (strictMono_jumpTimeF hint hpos htop hxi)
+    (exists_lt_succ_of_tendsto_atTop
+      (tendsto_jumpTimeF_atTop hint hpos htop (fun n ↦ (hxi n).le) hsum)) ω.1
+
+/-- **The paths of the path dependent jump process are càdlàg.** -/
+theorem isCadlagPath_jumpProcessF [TopologicalSpace E]
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ n, 0 < ω.2 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) :
+    IsCadlagPath (fun t ↦ jumpProcessF Λ t ω) :=
+  (isStepPath_jumpProcessF hint hpos htop hxi hsum).isCadlagPath
+
+/-- **Before the first jump the path sits at the initial state of the chain.**  No hypothesis on the
+rate at all: `t < T 1` bounds the step index by `0` outright. -/
+theorem jumpProcessF_of_lt_jumpTimeF_one {t : ℝ} (h : t < jumpTimeF Λ ω ω.2 1) :
+    jumpProcessF Λ t ω = ω.1 0 := by
+  have h0 : stepIndex (jumpTimeF Λ ω ω.2) t = 0 := Nat.le_zero.1 (stepIndex_le h)
+  simp [jumpProcessF, stepPath, h0]
+
+/-- **The path dependent jump process starts at the initial state of the chain.** -/
+theorem jumpProcessF_zero
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ n, 0 < ω.2 n) :
+    jumpProcessF Λ 0 ω = ω.1 0 := by
+  have h1 : (0 : ℝ) < jumpTimeF Λ ω ω.2 1 := by
+    simpa using strictMono_jumpTimeF hint hpos htop hxi Nat.zero_lt_one
+  exact jumpProcessF_of_lt_jumpTimeF_one h1
+
+/-- **The path dependent jump process reduces to the state dependent one at a constant rate**, at
+*every* time and every sample point, not almost surely.  This is the probe against emptiness of the
+construction: the jump times were already shown to specialise (`jumpTimeF_const_eq_jumpTime`), and
+this carries the specialisation up to the process, which is where it is wanted.
+
+What the probe does **not** exhibit is a rate that really reads the past -- the Hawkes case.  It is
+evidence against emptiness and none for sharpness. -/
+theorem jumpProcessF_const_eq_jumpProcess {c : ℝ} (hc : 0 < c) (hxi : ∀ n, 0 ≤ ω.2 n) (t : ℝ) :
+    jumpProcessF (fun _ _ ↦ c) t ω = jumpProcess (fun _ : E ↦ c) t ω := by
+  have hT : jumpTimeF (fun _ _ ↦ c) ω ω.2 = jumpTime (fun _ : E ↦ c) ω.1 ω.2 :=
+    funext fun n ↦ jumpTimeF_const_eq_jumpTime ω ω.1 ω.2 hc hxi n
+  simp only [jumpProcessF, jumpProcess, hT]
+
+end PathProcess
+
+/-! ### The Hawkes rate: the one hypothesis that is not automatic, discharged on the data of
+`ex:hawkes`
+
+The Hawkes rate is the reason the path dependent variant exists: it is the non Markovian example of
+the manuscript, and its rate
+
+`Λ t ω = ν + ∫ s in Set.Ico 0 t, φ (t - s) ∂(N ω)`
+
+reads the whole past through the counting measure `N ω` of the events before `t`.  Of the three
+hypotheses that the inverse needs, two are regularity in the time variable and one -- the divergence
+of the cumulated rate -- is a genuine condition on the size of the rate.  That one is discharged
+here, and it is discharged by the constant term `ν` **alone**, whatever the mass of `φ`.  That is
+the point of `ex:hawkes`: no subcriticality condition `∫ φ < 1` is needed for the process to be
+defined; subcriticality is about stationarity, not about existence.
+
+The counting measure enters as an arbitrary measure valued function `N` of the sample point, which
+is all any statement here uses.
+
+**And here is where non explosion actually sits in this construction.**  The divergence is free: it
+follows from `ν` alone, and it follows *uniformly over every candidate past*, so no fixed point
+argument is needed for it.  What is not free is the other hypothesis, the local integrability
+`∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r` -- and that hypothesis **is** non explosion.
+The jump times are `rateInverse` of the partial sums, so they accumulate at a finite time exactly
+when the cumulated rate is already infinite there, that is exactly when local integrability fails
+along the constructed path.  The manuscript's `ex:hawkes` argues precisely this and nothing else:
+the mean intensity solves the renewal equation `m = μ₀ + φ * m`, a locally integrable Volterra
+kernel has a locally integrable resolvent whatever its mass, hence `E[N_t] < ∞` for every `t`.  So
+the division of labour is the opposite of what the shape of the hypotheses suggests -- the condition
+at infinity is bookkeeping and the condition on every finite window is the theorem. -/
+
+section Hawkes
+
+variable {ν : ℝ} {φ : ℝ → ℝ} {N : Ω → Measure ℝ}
+
+/-- **The Hawkes rate**: a constant baseline plus the past events, weighted by the kernel `φ`. -/
+noncomputable def hawkesRate (ν : ℝ) (φ : ℝ → ℝ) (N : Ω → Measure ℝ) (t : ℝ) (ω : Ω) : ℝ :=
+  ν + ∫ s in Set.Ico 0 t, φ (t - s) ∂(N ω)
+
+/-- **The Hawkes rate is at least its baseline.**  The self exciting term is an integral of a non
+negative function and is therefore non negative, whatever the measure and whatever its mass. -/
+theorem le_hawkesRate (hφ : ∀ x, 0 ≤ φ x) (N : Ω → Measure ℝ) (t : ℝ) (ω : Ω) :
+    ν ≤ hawkesRate ν φ N t ω := by
+  have h : 0 ≤ ∫ s in Set.Ico 0 t, φ (t - s) ∂(N ω) :=
+    setIntegral_nonneg measurableSet_Ico fun s _ ↦ hφ _
+  simpa [hawkesRate] using h
+
+theorem hawkesRate_pos (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (N : Ω → Measure ℝ) (t : ℝ) (ω : Ω) :
+    0 < hawkesRate ν φ N t ω :=
+  hν.trans_le (le_hawkesRate hφ N t ω)
+
+/-- **The cumulated Hawkes rate diverges**, by the baseline alone.  This is the one hypothesis of
+the path dependent construction that is not regularity, discharged on the data of `ex:hawkes` -- and
+note that the statement says nothing about `∫ φ`.  Local integrability in time is carried as a
+hypothesis and not discharged. -/
+theorem tendsto_cumulativeRateF_hawkes {ω : Ω} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesRate ν φ N u ω) volume 0 r) :
+    Tendsto (cumulativeRateF (hawkesRate ν φ N) ω) atTop atTop :=
+  tendsto_cumulativeRateF_atTop_of_le hint hν fun u _ ↦ le_hawkesRate hφ N u ω
+
+/-- **At a vanishing kernel the Hawkes rate is the constant rate.**  The probe against emptiness of
+the definition: a self exciting rate that did not reduce to its baseline when the excitation is
+switched off would be a different object.  Through `jumpProcessF_const_eq_jumpProcess` this ties the
+Hawkes data back to the state dependent construction at `φ = 0`. -/
+theorem hawkesRate_zero_kernel (ν : ℝ) (N : Ω → Measure ℝ) :
+    hawkesRate ν (fun _ ↦ 0) N = fun _ _ ↦ ν := by
+  funext t ω
+  simp [hawkesRate]
+
+/-! #### The fixed point, resolved by recursion
+
+`jumpProcessF` takes `Λ` as a **given** function of the driving datum, and the Hawkes rate is not
+given: it reads the jumps of the very path that it defines.  That is a recursion and not a
+definition, and it is resolvable for one reason, which is the reason the manuscript calls the rate
+*predictable*: the rate at time `t` reads only the **strictly earlier** jumps, so the `(n+1)`-st
+jump time depends on `T 0, …, T n` alone.
+
+The recursion is carried out on the stage, not on the time: `hawkesStep … n` is the family of jump
+times as it stands after `n` steps, `hawkesJumpTime … n` reads the `n`-th entry off the `n`-th
+stage, and `hawkesStep_eq_of_le` says that later stages do not revise earlier entries.  `φ` is asked
+to vanish on the negative half line, which is the Lean form of `φ : Rp → [0, ∞)` in
+`eq:hawkesrate` and the whole of the predictability. -/
+
+/-- **The Hawkes rate frozen after the first `n` jumps.**  It is an ordinary function of time and
+carries no recursion; the recursion is in which family `T` is handed to it. -/
+noncomputable def hawkesFrozen (ν : ℝ) (φ : ℝ → ℝ) (T : ℕ → ℝ) (n : ℕ) (u : ℝ) (_ : Ω) : ℝ :=
+  ν + ∑ k ∈ Finset.range n, φ (u - T k)
+
+theorem hawkesFrozen_congr {T S : ℕ → ℝ} {n : ℕ} (h : ∀ k, k < n → T k = S k) :
+    hawkesFrozen (Ω := Ω) ν φ T n = hawkesFrozen ν φ S n := by
+  funext u ω
+  refine congrArg (ν + ·) (Finset.sum_congr rfl fun k hk ↦ ?_)
+  rw [h k (Finset.mem_range.1 hk)]
+
+theorem le_hawkesFrozen (hφ : ∀ x, 0 ≤ φ x) (T : ℕ → ℝ) (n : ℕ) (u : ℝ) (ω : Ω) :
+    ν ≤ hawkesFrozen ν φ T n u ω := by
+  have : 0 ≤ ∑ k ∈ Finset.range n, φ (u - T k) := Finset.sum_nonneg fun k _ ↦ hφ _
+  simpa [hawkesFrozen] using this
+
+/-- **The frozen rate does not change below the jump that was added.**  This is predictability, and
+it is where `φ = 0` on the negative half line is spent: the term `φ (u - T n)` that stage `n + 1`
+adds vanishes for `u < T n`. -/
+theorem hawkesFrozen_succ_of_lt (hφ0 : ∀ x, x < 0 → φ x = 0) (T : ℕ → ℝ) (n : ℕ) {u : ℝ}
+    (hu : u < T n) (ω : Ω) :
+    hawkesFrozen ν φ T (n + 1) u ω = hawkesFrozen ν φ T n u ω := by
+  rw [hawkesFrozen, hawkesFrozen, Finset.sum_range_succ, hφ0 _ (sub_neg.2 hu), add_zero]
+
+/-- **The jump times of the Hawkes process, stage by stage.**  Stage `n + 1` keeps the first `n + 1`
+entries of stage `n` and appends the inverse of the rate frozen after those. -/
+noncomputable def hawkesStep (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) : ℕ → ℕ → ℝ
+  | 0 => fun _ ↦ 0
+  | n + 1 => fun m ↦
+      if m ≤ n then hawkesStep ν φ xi ω n m
+      else rateInverse (hawkesFrozen ν φ (hawkesStep ν φ xi ω n) (n + 1)) ω
+        (∑ k ∈ Finset.range (n + 1), xi k)
+
+/-- **The jump times of the Hawkes process**: the `n`-th entry of the `n`-th stage. -/
+noncomputable def hawkesJumpTime (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (n : ℕ) : ℝ :=
+  hawkesStep ν φ xi ω n n
+
+@[simp] theorem hawkesJumpTime_zero (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) :
+    hawkesJumpTime ν φ xi ω 0 = 0 := rfl
+
+theorem hawkesStep_succ_of_le (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m n : ℕ} (h : m ≤ n) :
+    hawkesStep ν φ xi ω (n + 1) m = hawkesStep ν φ xi ω n m := by
+  simp only [hawkesStep]
+  rw [if_pos h]
+
+/-- **A later stage does not revise an earlier entry.**  This is what makes the stagewise recursion
+a definition of a single family and not of a sequence of families. -/
+theorem hawkesStep_eq_of_le (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m n p : ℕ} (hmn : m ≤ n)
+    (hnp : n ≤ p) : hawkesStep ν φ xi ω p m = hawkesStep ν φ xi ω n m := by
+  induction p, hnp using Nat.le_induction with
+  | base => rfl
+  | succ p hp ih => rw [hawkesStep_succ_of_le ν φ xi ω (hmn.trans hp), ih]
+
+theorem hawkesStep_eq_hawkesJumpTime (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m n : ℕ}
+    (h : m ≤ n) : hawkesStep ν φ xi ω n m = hawkesJumpTime ν φ xi ω m :=
+  hawkesStep_eq_of_le ν φ xi ω le_rfl h
+
+/-- **The recursion, read off the jump times themselves**: the `(n+1)`-st jump time is the inverse
+of the rate frozen after the first `n + 1` of them, at the level `ξ 0 + ⋯ + ξ n`.  This is the
+statement that makes the fixed point a definition: the right hand side mentions the jump times only
+at indices `≤ n`. -/
+theorem hawkesJumpTime_succ (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (n : ℕ) :
+    hawkesJumpTime ν φ xi ω (n + 1)
+      = rateInverse (hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1)) ω
+        (∑ k ∈ Finset.range (n + 1), xi k) := by
+  have hfr : hawkesFrozen (Ω := Ω) ν φ (hawkesStep ν φ xi ω n) (n + 1)
+      = hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1) :=
+    hawkesFrozen_congr fun k hk ↦
+      hawkesStep_eq_hawkesJumpTime ν φ xi ω (Nat.lt_succ_iff.1 hk)
+  rw [hawkesJumpTime]
+  simp only [hawkesStep]
+  rw [if_neg (by omega : ¬ n + 1 ≤ n), hfr]
+
+/-- **The defining equation of the Hawkes jump times.**  Under the rate frozen at its own stage, the
+`(n+1)`-st jump time is exactly where the cumulated rate has consumed the first `n + 1` waiting
+times.  Two of the three hypotheses of the inversion are discharged from `0 < ν` and `0 ≤ φ` alone,
+by `le_hawkesFrozen`; the third, the local integrability, is a condition on `φ` and is carried --
+which is the same division of labour as in `tendsto_cumulativeRateF_hawkes`, and by the same
+reading it is the non explosion of the process. -/
+theorem cumulativeRateF_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hint : ∀ r : ℝ, IntervalIntegrable
+      (fun u ↦ hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1) u ω) volume 0 r)
+    (hxi : ∀ k, 0 ≤ xi k) :
+    cumulativeRateF (hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1)) ω
+        (hawkesJumpTime ν φ xi ω (n + 1)) = ∑ k ∈ Finset.range (n + 1), xi k := by
+  have hpos : ∀ u : ℝ, 0 < u → 0 < hawkesFrozen ν φ (hawkesJumpTime ν φ xi ω) (n + 1) u ω :=
+    fun u _ ↦ hν.trans_le (le_hawkesFrozen hφ _ _ u ω)
+  have htop := tendsto_cumulativeRateF_atTop_of_le hint hν
+    fun u _ ↦ le_hawkesFrozen hφ (hawkesJumpTime ν φ xi ω) (n + 1) u ω
+  rw [hawkesJumpTime_succ]
+  exact cumulativeRateF_rateInverse hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k)
+
+end Hawkes
 
 end PathDependent

@@ -115,3 +115,10 @@ Suche `method of characteristics|partial differential equation|characteristicCur
 Suche `quantile|generalized inverse|generalised inverse|rightContinuousInverse|monotoneInverse` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
 
 
+## `point-process` — MartingaleProblems/README.md, Meilenstein 4
+
+> Mathlib hat keinen Punktprozeß, keinen Zählprozeß, keinen Kompensator und keinen Hawkes-Prozeß; die pfadabhängige Variante hat daher auch für ihr Beispiel nichts zu übernehmen.
+
+Suche `hawkes|selfExciting|self-exciting|PointProcess|pointProcess|countingProcess|compensator` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
+
+

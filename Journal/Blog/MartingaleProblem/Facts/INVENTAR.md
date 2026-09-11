@@ -20376,3 +20376,246 @@ Geprüft wie die übrigen: die ganze Datei ohne einen Fehler durch `lake env lea
 bei neun, `scripts/_citations/count_pathdep.py` um den Namen ergänzt. Neu gebraucht aus Mathlib:
 `Filter.tendsto_atTop`, `Filter.Tendsto.eventually_gt_atTop`, `le_max_left`, `le_max_right`; keiner
 `deprecated`.
+
+### 2026-09-11, siebter Lauf des Tages — der pfadabhängige Prozeß steht, der Aufschlag der Inversen ist einmalig (31 gegen 25 Zeilen), und der Müllwert heißt Absorption und nicht Explosion
+
+**Bearbeitet:** Teil C, die **pfadabhängige Variante**. Die drei Vorschläge des sechsten Laufs sind
+alle drei ausgeführt — der Prozeß (Vorschlag 1), die Hawkes-Rate (Vorschlag 2), der Müllwert
+(Vorschlag 3) —, und der dritte hat einen Befund des sechsten Laufs **berichtigt**.
+
+**23 Deklarationen** in den neuen Abschnitten `FiniteMass`, `PathProcess` und `Hawkes` von
+`TauCeti/MartingaleProblems/Suggested.lean` sowie im neuen Block zum Müllwert, die ganze Datei
+**ohne einen Fehler** durch `lake env lean` gegen v4.33.1 (Lean 4.33.1, commit `819816b2`), alle mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt
+bei **neun**. `scripts/check_suggested.py` meldet für `MartingaleProblems/Suggested.lean` rc 0,
+0 Fehler, 9 `sorry`; für `SkorokhodSpace/Suggested.lean` rc 0, 0 Fehler; für
+`WeakConvergence/Suggested.lean` weiterhin die zwei bewußt gegen `master` geschriebenen Fehler —
+also **kein Rückschritt**. `scripts/check_citations.py` meldet unverändert dieselben zwei
+Auffälligkeiten (der `Cadlag`-Pfad und `Subgroup.isClosed_of_discrete`). Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Die Sätze
+
+> **Der Prozeß.** `jumpProcessF Λ t ω = stepPath (jumpTimeF Λ ω ω.2) ω.1 t` mit
+> `isStepPath_jumpProcessF`, `isCadlagPath_jumpProcessF`, `jumpProcessF_zero`,
+> `jumpProcessF_of_lt_jumpTimeF_one` und der Probe `jumpProcessF_const_eq_jumpProcess`.
+>
+> **Der Müllwert.** `rateInverse_eq_zero_of_forall_lt`, `cumulativeRateF_le_of_integrableOn`,
+> `rateInverse_eq_zero_of_integrableOn`, `cumulativeRateF_rateInverse_ne`,
+> `jumpTimeF_eq_zero_of_integrableOn`.
+>
+> **Der Zeuge.** `expRate u ω = Real.exp (-u)` mit `not_tendsto_cumulativeRateF_expRate` und
+> `jumpTimeF_expRate_eq_zero`.
+>
+> **Die Hawkes-Rate.** `hawkesRate ν φ N t ω = ν + ∫ s in Set.Ico 0 t, φ (t - s) ∂(N ω)` mit
+> `le_hawkesRate`, `hawkesRate_pos`, `tendsto_cumulativeRateF_hawkes` und der Probe
+> `hawkesRate_zero_kernel`.
+
+Der Stichprobenraum des Prozesses ist der des zustandsabhängigen Falles, `(ℕ → E) × (ℕ → ℝ)`; was
+sich ändert, ist allein, daß `Λ` ein Funktional des **ganzen** Datums ist und nicht des laufenden
+Zustandes. Die Kette liefert weiter die Werte, nur die Zeiten sind andere.
+
+#### Der erste Befund: der Aufschlag der Inversen ist einmalig, und er ist jetzt gemessen
+
+Der sechste Lauf hat gemessen, daß die pfadabhängigen Sprungzeiten **dreißigmal** so viel kosten wie
+die zustandsabhängigen (212 gegen 7 Codezeilen), und er hat **behauptet**, der Aufschlag falle nur
+im Erdgeschoß an. Diese Behauptung ist jetzt geprüft. `scripts/_citations/count_stepproc.py` (neu,
+allein lauffähig) zählt dieselben fünf Aussagen zweimal — die Definition, die Treppenpfad- und die
+càdlàg-Eigenschaft, den Wert vor dem ersten Sprung, den Wert im Ursprung:
+
+| | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| der zustandsabhängige Prozeß (eine Division) | 5 | 25 |
+| der pfadabhängige Prozeß (eine Inverse) | 5 | 31 |
+
+**Faktor 1,24 gegen Faktor 30.** Und die sechs Zeilen Unterschied sind **keine Beweiszeilen**,
+sondern die Hypothesenliste: `isStepPath_jumpProcess` trägt `0 < L`, `0 < lam`, `lam ≤ L`, der
+pfadabhängige Satz trägt statt dessen die drei Voraussetzungen der Inversen. Die Beweise sind beide
+eine einzige Anwendung von `isStepPath_stepPath`. Damit ist die Schnittstelle, die der sechste Lauf
+gebaut hat, die richtige: `isStepPath_stepPath` fragt eine Familie von Sprungzeiten nach genau zwei
+Dingen, und `strictMono_jumpTimeF` und `tendsto_jumpTimeF_atTop` sind genau diese zwei.
+
+#### Der zweite Befund, und er berichtigt den sechsten Lauf: der Müllwert heißt Absorption
+
+Der sechste Lauf hat den Müllwert richtig lokalisiert — eine Rate mit endlicher Gesamtmasse läßt
+Niveaus übrig, und `sInf ∅` gibt `0` — und daraus zwei Sätze gefolgert, die beide nicht stimmen:
+„die zustandsabhängige Reparatur hat **keine** Entsprechung" und „das ist die richtige Fassung der
+**Nichtexplosion** für diese Variante". Beides ist falsch, und der Grund ist derselbe.
+
+**Es sind auch hier zwei Defekte, und sie sitzen an den beiden Enden der Zeitachse.**
+
+* **Absorption** ist ein Sprung, der zur Zeit `∞` stattfinden soll. Eine Rate, die auf einem
+  **Fenster** verschwindet, ist *nicht* dieser Fall — dort ist die kumulierte Rate bloß flach und
+  die Inverse steigt darüber hinweg, und **das** ist der echte Unterschied zu `lam x = 0`. Der Fall
+  ist eine Rate **endlicher Gesamtmasse**: oberhalb dieser Masse wird kein Niveau mehr erreicht, die
+  nächste Sprungzeit müßte `∞` sein, und `sInf ∅` gibt `0` — **derselbe Müllwert wie `ξ / 0`**, aus
+  demselben Grund, und er will **dieselbe** Reparatur, Sprungzeiten in `ℝ≥0∞`. Was sich wirklich
+  geändert hat, ist, daß Absorption nicht mehr an einem Zustand abzulesen ist: sie ist eine Aussage
+  über den **Schwanz** der Rate längs des ganzen Pfades. *Das* ist der Grund, aus dem hier kein
+  `posRate` und kein `clipWait` vorkommt — nicht, daß der Defekt fehlte.
+* **Explosion** ist unendlich viele Sprünge vor einer endlichen Zeit, also
+  `∫ u in Set.Ioc 0 t, Λ u ω = ∞` an einem endlichen `t`. Das ist das Versagen der **lokalen
+  Integrierbarkeit**, und die steht als Voraussetzung `hint` vor jeder Aussage des Abschnitts und
+  wird in keiner eingelöst.
+
+Also: **Nichtexplosion ist die Endlichkeit des Kompensators auf jedem Fenster, Abwesenheit von
+Absorption seine Divergenz im Unendlichen.** Die beiden zeigen in entgegengesetzte Richtungen, und
+der sechste Lauf hat sie in eine einzige Bedingung zusammengezogen.
+
+**Der Zeuge macht das prüfbar.** `expRate u ω = Real.exp (-u)` erfüllt jede Voraussetzung des
+Abschnitts außer der Divergenz — positiv zu jeder Zeit, integrierbar auf jedem Fenster, Gesamtmasse
+`1` (`integrableOn_exp_neg_Ioi`, `integral_exp_neg_Ioi_zero`) —, und
+`not_tendsto_cumulativeRateF_expRate` beweist, daß die Divergenz wirklich versagt. Der Pfad, der
+dabei herauskommt, macht endlich viele Sprünge und dann keinen mehr: er ist **absorbiert** und nicht
+explosiv.
+
+#### Der dritte Befund: bei Hawkes ist die Divergenz gratis, und die Nichtexplosion sitzt in der Voraussetzung, die dasteht
+
+`tendsto_cumulativeRateF_hawkes` löst die Divergenz auf den Daten von `ex:hawkes` ein, und sie löst
+sie aus dem Grundterm `ν` **allein**: der selbsterregende Term ist das Integral einer nichtnegativen
+Funktion, also nichtnegativ, gleichgültig wie groß die Masse von `φ` ist. **Keine
+Subkritikalitätsbedingung `∫ φ < 1`** kommt irgendwo vor. Das Manuskript sagt genau dasselbe
+(Zeilen 9692–9708) und sagt dazu, daß eine frühere Fassung das Gegenteil behauptet habe — „that was
+a confusion of exponential growth with explosion". Also **keine Auffälligkeit gegen das Manuskript,
+sondern Übereinstimmung**, und zwar an einer Stelle, an der es sich selbst schon einmal korrigiert
+hat.
+
+**Und die Arbeitsteilung der beiden übrigen Voraussetzungen ist die umgekehrte, als ihre Gestalt
+nahelegt.** Der sechste Lauf hat die Divergenz „die einzige Voraussetzung des Abschnitts, die nicht
+automatisch ist" genannt. Für Hawkes ist sie die **automatische**: sie folgt aus `ν` und sie folgt
+**gleichmäßig über jede denkbare Vergangenheit**, also ist für sie kein Fixpunktargument zu führen.
+Nicht automatisch ist die lokale Integrierbarkeit — und die **ist** die Nichtexplosion, nach dem
+zweiten Befund. Was `ex:hawkes` beweist — die mittlere Intensität löst `m = μ₀ + φ * m`, ein lokal
+integrierbarer Volterra-Kern hat einen lokal integrierbaren Resolventen gleich welcher Masse, also
+`E[N_t] < ∞` für jedes `t` — ist genau diese Voraussetzung und sonst nichts. Die Bedingung im
+Unendlichen ist Buchführung, die Bedingung auf jedem endlichen Fenster ist der Satz.
+
+#### Die Negativaussage des Laufs
+
+**Mathlib hat keinen Punktprozeß.** Eine Suche über `Mathlib/` von frischem `upstream/master`
+(`04c9bc87f8880b19bef96e4c7642d591f14495f4`, 2026-09-11 01:27 UTC, in diesem Lauf mit
+`git fetch upstream master` nachgezogen) nach `hawkes`, `selfExciting`, `self-exciting`,
+`PointProcess`, `pointProcess`, `countingProcess` und `compensator` liefert **null Treffer**: weder
+Zählprozeß noch Kompensator noch Intensität. Deshalb tritt die Zählmaße der Vergangenheit hier als
+beliebiges maßwertiges `N : Ω → Measure ℝ` auf — es ist nichts zu übernehmen. Die Aussage steht als
+`point-process` in `scripts/check_negatives.py` (dort jetzt sechzehn Aussagen) und in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+#### Gezählt
+
+`scripts/_citations/count_pathdep.py`, um drei Gruppen ergänzt:
+
+| Gruppe | Deklarationen | Codezeilen |
+| --- | --- | --- |
+| G5 der Müllwert der Inversen | 5 | 33 |
+| G5' der Zeuge endlicher Gesamtmasse | 7 | 26 |
+| G6 der pfadabhängige Prozeß | 6 | 39 |
+| G7 die Hawkes-Rate | 5 | 20 |
+
+Der Abschnitt `PathDependent` steht jetzt bei **329 Codezeilen** in **50 Deklarationen**, 621 Zeilen
+mit Dokumentation.
+
+**Neu gebraucht aus Mathlib, jeder am Quelltext belegt** (v4.33.1) **und keiner `deprecated`:**
+`MeasureTheory.setIntegral_mono_set`, `MeasureTheory.setIntegral_nonneg`,
+`MeasureTheory.ae_restrict_mem`, `LE.le.eventuallyLE`, `Set.Ioc_subset_Ioi_self`,
+`Real.sInf_empty`, `integrableOn_exp_neg_Ioi`, `integral_exp_neg_Ioi_zero`,
+`Continuous.intervalIntegrable`, `Real.exp_pos`, `Real.continuous_exp`. **Eine Falle dabei:**
+`HasSubset.Subset.eventuallyLE` ist schon in v4.33.1 ein `deprecated alias` auf
+`LE.le.eventuallyLE` (`Mathlib/Order/Filter/Basic.lean:1281,1284`); der naheliegende Name ist der
+falsche.
+
+#### Was offen blieb, und es ist eine einzige benannte Hürde
+
+**Der Fixpunkt.** `jumpProcessF` nimmt `Λ` als **gegebene** Funktion des Antriebsdatums entgegen.
+Die Hawkes-Rate liest aber die Zählmaße des **konstruierten** Pfades, und der Pfad ist über `Λ`
+definiert — das ist eine Rekursion und keine Definition. Sie ist auflösbar, und der Grund ist die
+Prädiktabilität: die Rate zur Zeit `t` liest nur die **echt früheren** Sprünge, also hängt die
+`(n+1)`-te Sprungzeit nur von `T 0, …, T n` ab. Die Rekursion ist zu führen, nicht zu umgehen.
+Siehe Vorschlag 1.
+
+Ferner offen: die Filtration und die progressive Meßbarkeit des pfadabhängigen Prozesses, und damit
+die Martingaleigenschaft; sie sind nach dem ersten Befund dieses Laufs voraussichtlich billig, weil
+der zustandsabhängige Beweis von den Sprungzeiten nur `StrictMono` und Meßbarkeit liest — aber
+„voraussichtlich billig" ist eine Vermutung und kein Ergebnis, und sie ist erst durch den Fixpunkt
+hindurch zu haben.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`hawkesJumpTime` und `hawkesRate_eq_of_le_jumpTime`: der Fixpunkt, aufgelöst durch Rekursion
+   über `n`.** Aussage: die Sprungzeiten des Hawkes-Prozesses sind rekursiv definierbar durch
+   `T (n+1) = rateInverse (fun u _ ↦ ν + ∑ k ∈ Finset.range (n+1), φ (u - T k)) ω (∑ k ∈ range (n+1), ξ k)`,
+   und für `t ≤ T (n+1)` stimmt die so gebaute Rate mit `hawkesRate ν φ N t ω` überein, wo `N ω` das
+   Zählmaß von `T 0, …, T n` ist. Worauf sie ruht: `rateInverse` und `cumulativeRateF_rateInverse`
+   stehen, die Summe ist endlich, und die Prädiktabilität — `φ (u - T k)` liest nur `T k < u` — ist
+   der ganze Inhalt. Warum jetzt: es ist die **einzige** Hürde zwischen dem Stand dieses Laufs und
+   einem Hawkes-Prozeß, den man hinschreiben kann, und sie ist benannt statt umgangen. Prüfstein:
+   die Definition kommt ohne `Classical.choice` über einen Fixpunktsatz aus, also ohne
+   `Nat.rec` auf einem Funktionenraum — eine gewöhnliche Rekursion über `ℕ`.
+2. **`jumpTimeFE` und `rateInverseE`: die Sprungzeiten der pfadabhängigen Variante in `ℝ≥0∞`.**
+   Aussage: `rateInverseE Λ ω a = ⊤`, sobald `a` über der Gesamtmasse liegt, und `= rateInverse Λ ω a`
+   sonst; `jumpTimeFE` entsprechend. Worauf sie ruht: der zweite Befund dieses Laufs — der Müllwert
+   ist Absorption und will dieselbe Reparatur wie im zustandsabhängigen Fall — und auf
+   `jumpTimeE`, das als Muster dasteht. Warum sie lohnt: sie macht aus dem Befund eine Konstruktion
+   und nimmt der Divergenzvoraussetzung ihre Rolle als Ausschlußbedingung, genau wie `jumpProcessE`
+   es dem `0 < lam` genommen hat. Prüfstein: `jumpTimeFE` verlangt **keine** Divergenz mehr.
+3. **`hawkesRate_measurable`: die gemeinsame Meßbarkeit der Hawkes-Rate in `(t, ω)`.** Worauf sie
+   ruht: `MeasureTheory.StronglyMeasurable` der Abbildung `ω ↦ N ω` in die Maße und der
+   Satz von Fubini für Kerne, beides in Mathlib. Warum sie lohnt: sie ist die erste der beiden
+   Voraussetzungen von `hint`, und anders als die Integrierbarkeit ist sie keine Aussage über den
+   Fixpunkt, sondern reine Buchführung — also der Teil, der **vor** dem Fixpunkt zu haben ist.
+
+#### Nachtrag desselben Laufs: der Fixpunkt der Hawkes-Rate ist aufgelöst
+
+Zwölf weitere Deklarationen, angehängt, nachdem die obigen Zahlen schon standen, und in ihnen
+berichtigt: **der Lauf hat 35 Deklarationen und nicht 23**, und der eigene Vorschlag 1 ist im selben
+Lauf ausgeführt statt weitergereicht. Alle fünfunddreißig durch `lake env lean` gegen v4.33.1 ohne
+einen Fehler und mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`; die Zahl der
+`sorry` bleibt bei neun.
+
+> `hawkesFrozen ν φ T n u ω = ν + ∑ k ∈ Finset.range n, φ (u - T k)` — die nach `n` Sprüngen
+> **eingefrorene** Rate, eine gewöhnliche Funktion der Zeit ohne jede Rekursion.
+>
+> `hawkesStep ν φ xi ω : ℕ → ℕ → ℝ` — die Sprungzeiten stufenweise: Stufe `n+1` behält die ersten
+> `n+1` Einträge der Stufe `n` und hängt die Inverse der danach eingefrorenen Rate an.
+> `hawkesJumpTime ν φ xi ω n = hawkesStep ν φ xi ω n n`.
+>
+> `hawkesStep_eq_of_le` — **eine spätere Stufe berichtigt keinen früheren Eintrag.**
+>
+> `hawkesJumpTime_succ` — die Rekursion, an den Sprungzeiten selbst abgelesen: die `(n+1)`-te ist
+> die Inverse der nach den ersten `n+1` eingefrorenen Rate, und die rechte Seite nennt die
+> Sprungzeiten nur an Stellen `≤ n`.
+>
+> `cumulativeRateF_hawkesJumpTime` — unter der Rate ihrer eigenen Stufe hat die kumulierte Rate an
+> der `(n+1)`-ten Sprungzeit genau `ξ 0 + ⋯ + ξ n` verbraucht.
+
+**Warum die Rekursion aufgeht, und es ist genau der Grund, aus dem das Manuskript die Rate
+*prädiktabel* nennt.** Die Rate zur Zeit `t` liest nur die **echt früheren** Sprünge, also hängt die
+`(n+1)`-te Sprungzeit allein von `T 0, …, T n` ab. In Lean ist das die Voraussetzung
+`∀ x, x < 0 → φ x = 0` — die Übersetzung von `φ : Rp → [0,∞)` in `eq:hawkesrate` —, und sie wird an
+**einer einzigen Stelle** ausgegeben, `hawkesFrozen_succ_of_lt`. Die Rekursion läuft über die
+**Stufe** und nicht über die Zeit; das ist der Kunstgriff, der sie zu einer gewöhnlichen
+strukturellen Rekursion über `ℕ` macht, und `hawkesStep_eq_of_le` ist die Aussage, die daraus die
+Definition **einer** Familie macht statt einer Folge von Familien.
+
+**Gemessen:** 12 Deklarationen, 62 Codezeilen (`scripts/_citations/count_pathdep.py`, Gruppe G8).
+Der Abschnitt `PathDependent` steht damit bei **389 Codezeilen in 62 Deklarationen**, 727 Zeilen mit
+Dokumentation.
+
+**Was zwischen diesem Stand und einem Hawkes-Prozeß liegt, den man hinschreiben kann, ist eine
+einzige Identifikation** — und sie ersetzt den Vorschlag 1 oben, der hiermit erledigt ist:
+`hawkesFrozen ν φ T n u` ist `hawkesRate ν φ N u` für `N ω = ∑ k, Measure.dirac (T k)`, also
+
+`∫ s in Set.Ico 0 u, φ (u - s) ∂(∑ k, Measure.dirac (T k)) = ∑ k ∈ Finset.range n, φ (u - T k)`
+
+für wachsendes `T` mit `u ≤ T n`. Das ist ein Integral gegen eine Summe von Diracmaßen und sonst
+nichts; `MeasureTheory.integral_dirac` und die Summierbarkeit über `Measure.sum` sind die Bausteine.
+**Das ist der Vorschlag 1 für den nächsten Lauf**, an die Stelle des oben genannten; die Vorschläge
+2 und 3 bleiben, wie sie stehen.
+
+**Neu gebraucht aus Mathlib:** `Nat.le_induction`, `Finset.sum_congr`, `Finset.sum_range_succ`,
+`Finset.sum_nonneg`, `sub_neg`, `if_pos`, `if_neg`. **Eine Falle, und sie kostete den einzigen
+Fehlschlag des Laufs:** eine Definition durch Fallunterscheidung über `ℕ` (`| 0 => …`,
+`| n + 1 => …`) wird von `rw [hawkesStep]` **nicht** entfaltet — die Gleichungslemmata sind für
+`rw` nicht auffindbar, für `simp only [hawkesStep]` schon. Zwei Beweise sind daran gescheitert und
+mit `simp only` statt `rw` durchgegangen. Derselbe Befund wie beim `ENNReal`/`WithTop`-Muster des
+achtzehnten Laufs des 2026-09-10: **nicht am Ziel rewriten, wo das Muster syntaktisch nicht
+dasteht.**

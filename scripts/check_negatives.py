@@ -77,6 +77,12 @@ CLAIMS = [
      'streng monotone Funktion nicht.',
      'quantile|generalized inverse|generalised inverse|rightContinuousInverse'
      '|monotoneInverse', 'Mathlib/'),
+    ('point-process', 'MartingaleProblems/README.md, Meilenstein 4',
+     'Mathlib hat keinen Punktprozeß, keinen Zählprozeß, keinen Kompensator '
+     'und keinen Hawkes-Prozeß; die pfadabhängige Variante hat daher auch für '
+     'ihr Beispiel nichts zu übernehmen.',
+     'hawkes|selfExciting|self-exciting|PointProcess|pointProcess'
+     '|countingProcess|compensator', 'Mathlib/'),
 ]
 
 
