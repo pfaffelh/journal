@@ -70,6 +70,19 @@ CLAIMS = [
      'eines Geburt-Tod-Prozesses.',
      'method of characteristics|partial differential equation|characteristicCurve'
      '|characteristic curve', 'Mathlib/'),
+    ('generalised-inverse', 'MartingaleProblems/README.md, Meilenstein 4',
+     'Mathlib hat keine verallgemeinerte Inverse einer monotonen Funktion und '
+     'keine Quantilfunktion; `StrictMono.orderIsoOfSurjective` verlangt '
+     'Bijektivität auf dem ganzen Typ und trägt eine auf einer Halbgeraden '
+     'streng monotone Funktion nicht.',
+     'quantile|generalized inverse|generalised inverse|rightContinuousInverse'
+     '|monotoneInverse', 'Mathlib/'),
+    ('point-process', 'MartingaleProblems/README.md, Meilenstein 4',
+     'Mathlib hat keinen Punktprozeß, keinen Zählprozeß, keinen Kompensator '
+     'und keinen Hawkes-Prozeß; die pfadabhängige Variante hat daher auch für '
+     'ihr Beispiel nichts zu übernehmen.',
+     'hawkes|selfExciting|self-exciting|PointProcess|pointProcess'
+     '|countingProcess|compensator', 'Mathlib/'),
 ]
 
 

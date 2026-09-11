@@ -2225,14 +2225,270 @@ A concrete family of solutions, built without any of the theory above. Index
   dependent rate `Λ` it is the solution `s` of
   `∫ u in Set.Ioc (T n) (T n + s), Λ u ω = ξ n`, an inverse.
   * `cumulativeRateF Λ ω t = ∫ u in Set.Ioc 0 t, Λ u ω` and
-    `strictMono_cumulativeRateF`: the cumulated compensator along one sample
+    `strictMonoOn_cumulativeRateF`: the cumulated compensator along one sample
     point, strictly monotone and continuous where `Λ` is positive and locally
-    integrable, hence invertible.
+    integrable, hence invertible. **In Lean** on 2026-09-11, sixth run, as
+    `section PathDependent`. The monotonicity is stated on `Set.Ici 0` and not on
+    all of `ℝ`, because the window `Set.Ioc 0 t` is empty below the origin and the
+    function is constant there; and the positivity of `Λ` is asked on `Set.Ioi 0`
+    and not on `Set.Ici 0`, because a single point carries no Lebesgue mass and
+    `intervalIntegral.intervalIntegral_pos_of_pos_on` asks for it only on the
+    interior. The continuity is `intervalIntegral.continuousOn_primitive`, which
+    is stated in the `Set.Ioc` form this definition uses, so no passage through an
+    interval integral is spent on it.
+  * `tendsto_cumulativeRateF_atTop_of_le`: **the cumulated rate diverges as soon
+    as the rate is bounded away from zero.** **In Lean** on 2026-09-11, sixth run.
+    This is the one hypothesis of the inversion that is not automatic — a rate
+    that decays fast enough cumulates to a finite total, and then there is a level
+    the inverse cannot reach — and it is discharged on the Hawkes rate by its
+    constant term `ν` alone, whatever the mass of `φ`.
+  * `rateInverse Λ ω a = sInf {r | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r}` and
+    `cumulativeRateF_rateInverse`: **the inverse hits the level exactly.** **In
+    Lean** on 2026-09-11, sixth run. The three properties of the cumulated rate
+    are spent here, each on its own job: the divergence produces a time at which
+    the level is passed, the continuity turns that into a time at which it is
+    *attained* (`intermediate_value_Icc`), and the strict monotonicity identifies
+    the infimum with it. `sInf` is used rather than a choice of a solution for the
+    same reason `stepIndex` uses it — it is a total function, and its junk value
+    is returned exactly where no solution exists.
+
+    **The inverse is built here because Mathlib has none to take.** There is no
+    generalised inverse of a monotone function and no quantile function in
+    Mathlib; `StrictMono.orderIsoOfSurjective`
+    (`Mathlib/Order/Hom/Set.lean:152`) is an order isomorphism of the *whole
+    type* and asks for strict monotonicity and surjectivity everywhere, while
+    `cumulativeRateF` is constant on `Set.Iic 0` and strictly increasing only
+    above it. The claim is `generalised-inverse` in
+    `scripts/check_negatives.py`.
   * `jumpTimeF_succ_spec`: the defining equation of the `(n+1)`-st jump time as
     that inverse point. Everything the state dependent case builds on the jump
     times — the renewal decomposition, the progressive measurability, the tower
     argument — reads from them only that they increase and are measurable, so
-    this equation is what the whole variant rests on.
+    this equation is what the whole variant rests on. **In Lean** on 2026-09-11,
+    sixth run, together with `monotone_jumpTimeF`, `strictMono_jumpTimeF` and
+    `tendsto_jumpTimeF_atTop` — which two are exactly what `isStepPath_stepPath`
+    asks of a family of jump times, so the step path over these times needs
+    nothing further. `tendsto_jumpTimeF_atTop` carries **no** bound `lam ≤ L`,
+    unlike its state dependent counterpart `tendsto_jumpTime_atTop`: there the
+    bound is the only way from the sum of the waiting times to the time, because
+    each waiting time is divided by its *own* rate, while here
+    `cumulativeRateF_rateInverse` already says that the cumulated rate at the
+    `n`-th jump time **is** the `n`-th partial sum.
+    Note which hypothesis is **gone** against `strictMono_jumpTime`: the state
+    dependent statement needs `0 < lam x` at every state because `x / 0 = 0` makes
+    the holding time at an absorbing state vanish, while here the positivity of
+    the rate is already spent in the existence of the inverse and the strict
+    increase comes from the waiting time alone.
+
+    **The absorbing defect does not disappear here, it moves**, and where it moves
+    to decides the shape of the local case. An inverse has no denominator, so
+    there is no `x / 0 = 0` and no zero holding time: a rate that vanishes on a
+    window only makes the cumulated rate flat there, and the inverse steps over
+    the window to the next place where the rate lives. What breaks instead is
+    `tendsto_cumulativeRateF_atTop_of_le`: a rate that dies out so fast that
+    `∫ u in Set.Ioi 0, Λ u ω < ∞` leaves levels the inverse cannot reach, and
+    there `rateInverse` returns the junk value of `sInf ∅`.
+
+    **Which of the two defects that is, is settled by naming the junk value**, and
+    the seventh run of 2026-09-11 named it: it is **absorption** and not
+    explosion, and the state dependent repair does have a counterpart. Above the
+    total mass the next jump should happen at time `∞`, and `sInf ∅` returns `0`
+    — the same junk value as `ξ / 0`, for the same reason, wanting the same
+    repair, jump times in `ℝ≥0∞`. What has genuinely changed is that absorption is
+    no longer readable off a single state: it is a statement about the tail of the
+    rate along the whole path, and *that* is why no `posRate` and no `clipWait`
+    appear. Explosion is the other end: infinitely many jumps before a finite time
+    is `∫ u in Set.Ioc 0 t, Λ u ω = ∞` at some finite `t`, that is the failure of
+    the local integrability that stands in front of every statement of the section
+    and is discharged in none of them. The two conditions sit at the two ends of
+    the time axis and point in opposite directions: non explosion is the
+    **finiteness** of the compensator on every window, absence of absorption is
+    its **divergence** at infinity.
+  * `rateInverse_eq_zero_of_integrableOn` and `cumulativeRateF_rateInverse_ne`:
+    **where the junk value is returned, named.** **In Lean** on 2026-09-11,
+    seventh run. A rate integrable on `Set.Ioi 0` cumulates to at most its total
+    mass (`cumulativeRateF_le_of_integrableOn`), so above that mass the set whose
+    infimum `rateInverse` takes is empty and the value is the `0` of `sInf ∅`;
+    `cumulativeRateF_rateInverse_ne` reads that back as the failure of the
+    defining equation, which is what makes the divergence hypothesis of
+    `cumulativeRateF_rateInverse` a necessity and not a convenience.
+    `jumpTimeF_eq_zero_of_integrableOn` carries it to the jump times: past the
+    index at which the partial sums of the waiting times exceed the total mass,
+    every jump time is `0`. This is the counterpart of
+    `notMem_nonExplosiveE_explode`, and the collapse is visible on the jump times
+    themselves.
+
+    **And the case is not hypothetical.** `expRate u ω = Real.exp (-u)` satisfies
+    every hypothesis of the section except the divergence — positive at every
+    time, integrable on every window, total mass `1` — and
+    `not_tendsto_cumulativeRateF_expRate` proves that the divergence genuinely
+    fails, `jumpTimeF_expRate_eq_zero` that the jump times collapse past the index
+    at which the partial sums pass `1`. **In Lean** on 2026-09-11, seventh run.
+    What the witness *is*, read correctly, is an **absorbed** path and not an
+    explosive one: after finitely many jumps the rate has spent itself and no
+    further jump ever happens.
+  * `jumpProcessF Λ t ω = stepPath (jumpTimeF Λ ω ω.2) ω.1 t`,
+    `isStepPath_jumpProcessF` and `isCadlagPath_jumpProcessF`: **the path
+    dependent jump process and its paths.** **In Lean** on 2026-09-11, seventh
+    run, together with `jumpProcessF_zero` and
+    `jumpProcessF_of_lt_jumpTimeF_one`. The sample space is the one of the state
+    dependent construction, `(ℕ → E) × (ℕ → ℝ)`; what changes is that `Λ` is a
+    functional of the whole driving datum and not of the current state, and only
+    the times change, since the chain still supplies the values. The proof is one
+    application of `isStepPath_stepPath`, which asks of a family of jump times
+    exactly `strictMono_jumpTimeF` and `tendsto_jumpTimeF_atTop` and nothing else
+    — so the statement says no word about `Λ` beyond the three hypotheses of the
+    inverse, and in particular **no** bound `lam ≤ L`, which
+    `isStepPath_jumpProcess` carries.
+  * `jumpProcessF_const_eq_jumpProcess`: **the probe against emptiness, carried up
+    to the process.** **In Lean** on 2026-09-11, seventh run. At `Λ ≡ c` the path
+    dependent process is the state dependent one for `lam ≡ c`, at *every* time
+    and every sample point and not almost surely.
+  * `hawkesRate ν φ N t ω = ν + ∫ s in Set.Ico 0 t, φ (t - s) ∂(N ω)` and
+    `tendsto_cumulativeRateF_hawkes`: **the one hypothesis that is not
+    regularity, discharged on the data of `ex:hawkes`.** **In Lean** on
+    2026-09-11, seventh run, with `le_hawkesRate`, `hawkesRate_pos` and the probe
+    `hawkesRate_zero_kernel`. The counting measure of the past enters as an
+    arbitrary measure valued `N : Ω → Measure ℝ`, which is all the statements
+    use — and it enters that way because **Mathlib has no point process to
+    take**: a search over `Mathlib/` of `upstream/master`
+    (`04c9bc87f8880b19bef96e4c7642d591f14495f4`, 2026-09-11) for `hawkes`,
+    `selfExciting`, `PointProcess`, `countingProcess` and `compensator` gives **no
+    hit at all**, so there is neither a counting process nor a compensator nor an
+    intensity to build on. The claim is `point-process` in
+    `scripts/check_negatives.py`.
+    The divergence of the cumulated rate comes from the baseline `ν` **alone**:
+    the self exciting term is an integral of a non negative function and is non
+    negative whatever the mass of `φ`, so **no subcriticality condition
+    `∫ φ < 1`** appears anywhere. That is the point of `ex:hawkes` —
+    subcriticality is about stationarity, not about the process being defined,
+    and the manuscript's `ex:hawkes` says so in those words.
+
+    **And the division of labour between the two remaining hypotheses is the
+    opposite of what their shape suggests.** The divergence at infinity is free
+    — it comes from `ν` alone and it comes *uniformly over every candidate past*,
+    so no fixed point argument is spent on it. The local integrability
+    `∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r` is not free, and it
+    **is** non explosion: the jump times are `rateInverse` of the partial sums,
+    so they accumulate at a finite time exactly when the cumulated rate is
+    already infinite there, which is exactly the failure of local integrability
+    along the constructed path. What `ex:hawkes` proves — the mean intensity
+    solves `m = μ₀ + φ * m`, a locally integrable Volterra kernel has a locally
+    integrable resolvent whatever its mass, hence `E[N_t] < ∞` for every `t` — is
+    precisely this hypothesis and nothing else. The condition at infinity is
+    bookkeeping; the condition on every finite window is the theorem.
+  * `hawkesStep`, `hawkesJumpTime`, `hawkesJumpTime_succ` and
+    `cumulativeRateF_hawkesJumpTime`: **the fixed point of the Hawkes rate,
+    resolved by recursion.** **In Lean** on 2026-09-11, seventh run, with
+    `hawkesFrozen`, `hawkesFrozen_congr`, `le_hawkesFrozen`,
+    `hawkesFrozen_succ_of_lt`, `hawkesStep_eq_of_le` and
+    `hawkesStep_eq_hawkesJumpTime`. `jumpProcessF` takes `Λ` as a **given**
+    function of the driving datum, and the Hawkes rate is not given: it reads the
+    jumps of the very path it defines, which is a recursion and not a definition.
+    It resolves for the reason the manuscript calls the rate *predictable* — the
+    rate at `t` reads only the **strictly earlier** jumps, so the `(n+1)`-st jump
+    time depends on `T 0, …, T n` alone. The recursion runs on the **stage** and
+    not on the time: `hawkesStep … n` is the family of jump times as it stands
+    after `n` steps, `hawkesJumpTime … n` reads its `n`-th entry, and
+    `hawkesStep_eq_of_le` says that later stages do not revise earlier entries,
+    which is what makes this the definition of one family and not of a sequence of
+    families. `φ` is asked to vanish on the negative half line — the Lean form of
+    `φ : Rp → [0, ∞)` in `eq:hawkesrate`, and the whole of the predictability —
+    and `hawkesFrozen_succ_of_lt` is the single place where that is spent in the
+    recursion; `hawkesFrozen_succ_of_le` is the same statement on the closed half
+    line, which is what the cumulated rate reads.
+    `cumulativeRateF_hawkesJumpTime` is the payoff: under the rate frozen at its
+    own stage the `(n+1)`-st jump time is where the cumulated rate has consumed
+    `ξ 0 + ⋯ + ξ n`. Two of the three hypotheses of the inversion fall out of
+    `0 < ν` and `0 ≤ φ` through `le_hawkesFrozen`; the third, the local
+    integrability, is carried — and by the reading above it **is** the non
+    explosion.
+
+    `hawkesFrozen` sums over `Finset.Ico 1 n` and not over `Finset.range n`:
+    `T 0 = 0` is where the path **starts** and not a jump of it, so the events
+    are `T 1, T 2, …`, exactly as in `stepPath`. Summing from `0` puts a phantom
+    event at the origin and gives the first interval the rate `ν + φ (u - 0)`
+    instead of `ν`, which is a different process from the one `eq:hawkesrate`
+    describes: there the measure integrated against is `dω`, the jump measure of
+    the path, and a càdlàg path has no jump where it starts.
+    `hawkesFrozen_one` and `hawkesJumpTime_one` are where this is visible — the
+    first jump comes after `ξ 0 / ν`, the waiting time of the baseline clock.
+  * `countingMeasure`, `hawkesRate_countingMeasure_of_lt` and
+    `hawkesRate_countingMeasure`: **the frozen rate is the Hawkes rate of the
+    counting measure of the frozen jumps.** **In Lean** on 2026-09-11, eighth
+    run, with `restrict_countingMeasure`, `integral_countingMeasure_Ico` and
+    `hawkesFrozen_succ_eq_sum_range`. `countingMeasure T = Measure.sum (fun k ↦
+    Measure.dirac (T (k+1)))`, and below a jump time its restriction to
+    `Set.Ico 0 u` is a **finite** sum of Dirac masses, so the integral of
+    `eq:hawkesrate` is a finite sum of translates of `φ` and nothing else. No
+    measurability of `φ` is needed: an integral against a Dirac mass is an
+    evaluation.
+
+    The two forms differ exactly by the upper limit `t-` of `eq:hawkesrate`.
+    `hawkesRate_countingMeasure_of_lt` asks **nothing** of `φ` and holds on the
+    window `T n < u ≤ T (n+1)` in which the stage is the current one;
+    `hawkesRate_countingMeasure` holds at **every** `u ≤ T (n+1)` and pays for it
+    with `φ = 0` on the **closed** negative half line. The strengthening is not
+    cosmetic: at a jump time `u = T k` the frozen sum carries the term `φ 0` that
+    the half open window of the rate has dropped, and it is the closed form that
+    the cumulated rate — which integrates over all earlier windows at once —
+    requires. `hawkesFrozen_succ_of_le` carries it.
+  * `monotone_hawkesJumpTime` and `strictMono_hawkesJumpTime`: **the Hawkes jump
+    times increase.** **In Lean** on 2026-09-11, eighth run, with
+    `hawkesJumpTime_nonneg`, `hawkesJumpTime_one`,
+    `cumulativeRateF_hawkesFrozen_succ_of_le` and `hawkesJumpTime_le_succ`. This
+    is **not** an instance of `rateInverse_mono`: consecutive jump times are
+    inverses of **different** rates, so nothing about a single monotone inverse
+    applies. Predictability supplies the argument: stage `n+2` agrees with stage
+    `n+1` below `T (n+1)`, so a jump time that fell short would make the larger
+    partial sum the smaller cumulated rate. `strictMono_hawkesJumpTime` is what
+    `isStepPath_stepPath` asks of a family of jump times.
+  * `jumpTimeF_hawkesRate_eq_hawkesJumpTime`: **the fixed point closed.** **In
+    Lean** on 2026-09-11, eighth run, with
+    `hawkesJumpTime_succ_eq_rateInverse_hawkesRate` and
+    `rateInverse_eq_of_cumulativeRateF`. The stagewise family is `jumpTimeF` of
+    the **genuine** Hawkes rate of `eq:hawkesrate`, read against the counting
+    measure of that very family; the frozen rates are auxiliary and disappear
+    from the statement. `rateInverse_eq_of_cumulativeRateF` is the step that
+    makes this possible and it is of independent use: it reads the inverse off a
+    point at which the level is known, so two rates whose cumulated integrals
+    agree up to a point have the same inverse at the level attained there. It
+    needs neither the divergence at infinity nor the continuity, only the strict
+    monotonicity.
+  * `rateInverse_le_iff` and `setOf_rateInverse_le`: **the defining property of a generalised
+    inverse.** **In Lean** on 2026-09-11, eighth run. `rateInverse Λ ω a ≤ c` holds exactly when
+    `0 ≤ c` and `a ≤ cumulativeRateF Λ ω c`. Mathlib has no generalised inverse of a monotone
+    function, so this is ours. It is the form in which the inverse is used where an inequality
+    rather than a value is wanted, and it turns every statement about `rateInverse` into a statement
+    about `cumulativeRateF` — which is an integral, and therefore reachable from the measurability
+    of the rate.
+  * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
+    **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
+    `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,
+    `hawkesSelfRate_pos`, `tendsto_cumulativeRateF_hawkesSelfRate`,
+    `isCadlagPath_hawkesProcess`, `jumpTimeF_hawkesSelfRate`,
+    `hawkesProcess_of_lt_first`, and `cumulativeRateF_congr` and
+    `rateInverse_congr`. `hawkesSelfRate` is a rate of the type `jumpProcessF`
+    accepts, `ℝ → Ω → ℝ`, whose value at `ω` is the Hawkes rate of the counting
+    measure of the jump times built from `ω`; `hawkesProcess` is the process it
+    drives. This is the non Markovian example of `ex:hawkes` written down.
+
+    Which statement needs which is itself the finding. The paths are step paths
+    and càdlàg **without any of the fixed point material**: `jumpProcessF` is
+    built from `rateInverse`, and `rateInverse` asks only that the rate be
+    positive, locally integrable and of divergent cumulated mass, all of which
+    the baseline `ν` gives. The fixed point is what says that the jump times are
+    *these* jump times — `hawkesProcess_eq_stepPath` — and that is what the
+    martingale property will read. `cumulativeRateF_congr` is the lemma that
+    lets a rate defined as a functional of the whole sample point be replaced, at
+    a fixed `ω`, by the constant functional returning its value.
+  * `jumpTimeF_const_eq_jumpTime`: **the probe against emptiness.** **In Lean** on
+    2026-09-11, sixth run. At `Λ ≡ c` the inverse is the division `a / c`, and
+    `jumpTimeF` is literally the `jumpTime` of the state dependent construction
+    for `lam ≡ c`, at every chain `y` — which is the point, since at a constant
+    rate the jump times do not read the chain. A definition of the path dependent
+    jump times by an inverse that did not specialise back to the division at a
+    constant rate would be a different construction and not a more general one.
 
 **Acceptance examples.**
 

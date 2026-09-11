@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `1192d6246b462d5d423cccde4066d15b18718ca9`
+# Negativaussagen gegen `upstream/master` `04c9bc87f8880b19bef96e4c7642d591f14495f4`
 
 ## `cadlag` — SkorokhodSpace/README.md:3
 
@@ -107,4 +107,18 @@ Suche `method of characteristics|partial differential equation|characteristicCur
 
 * `Mathlib/Analysis/Distribution/Sobolev.lean`
 * `Mathlib/Analysis/InnerProductSpace/LaxMilgram.lean`
+
+## `generalised-inverse` — MartingaleProblems/README.md, Meilenstein 4
+
+> Mathlib hat keine verallgemeinerte Inverse einer monotonen Funktion und keine Quantilfunktion; `StrictMono.orderIsoOfSurjective` verlangt Bijektivität auf dem ganzen Typ und trägt eine auf einer Halbgeraden streng monotone Funktion nicht.
+
+Suche `quantile|generalized inverse|generalised inverse|rightContinuousInverse|monotoneInverse` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
+
+
+## `point-process` — MartingaleProblems/README.md, Meilenstein 4
+
+> Mathlib hat keinen Punktprozeß, keinen Zählprozeß, keinen Kompensator und keinen Hawkes-Prozeß; die pfadabhängige Variante hat daher auch für ihr Beispiel nichts zu übernehmen.
+
+Suche `hawkes|selfExciting|self-exciting|PointProcess|pointProcess|countingProcess|compensator` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
+
 
