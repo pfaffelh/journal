@@ -1766,6 +1766,49 @@ theorem measurable_stepPath_comp [TopologicalSpace α] [OrderClosedTopology α]
   (measurable_from_prod_countable_left (α := γ) (β := ℕ) (f := fun q ↦ y q.1 q.2) hy).comp
     (measurable_id.prodMk (measurable_stepIndex_comp hu hT))
 
+/-- **The step index is measurable as soon as the events `{T n ≤ u}` are**, and the time axis needs
+no measurable structure at all.
+
+`measurable_stepIndex_comp` is this with those events produced from the joint measurability of `u`
+and of every `T n`.  The hypothesis here is strictly weaker, and the weakening is the one a
+*filtration* can meet: a jump time is not measurable for the past at `i` -- that is what makes it a
+stopping time and not an adapted function -- while the event `{T n ≤ u}` is, whenever `T n` is a
+stopping time and `u` lies below `i`.
+
+The proof is `stepIndex_eq_iff` and the one fact that in a linear order `u < T n` is the complement
+of `T n ≤ u`, so a single family of events carries both inequalities the description needs. -/
+theorem measurable_stepIndex_of_measurableSet {γ : Type*} [MeasurableSpace γ]
+    {u : γ → α} {T : γ → ℕ → α} (h : ∀ n, MeasurableSet {c | T c n ≤ u c}) :
+    Measurable fun c ↦ stepIndex (T c) (u c) := by
+  refine measurable_to_countable' fun n ↦ ?_
+  have hset : (fun c ↦ stepIndex (T c) (u c)) ⁻¹' {n} =
+      ({c | T c (n + 1) ≤ u c}ᶜ ∩ ⋂ m ∈ Set.Iio n, {c | T c (m + 1) ≤ u c})
+        ∪ {c | n = 0 ∧ ∀ k, T c (k + 1) ≤ u c} := by
+    ext c
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_inter_iff,
+      Set.mem_compl_iff, Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_Iio, not_le]
+    rw [stepIndex_eq_iff]
+  rw [hset]
+  refine MeasurableSet.union (MeasurableSet.inter (h (n + 1)).compl ?_) ?_
+  · exact MeasurableSet.biInter (Set.to_countable _) fun m _ ↦ h (m + 1)
+  · by_cases hn : n = 0
+    · have hrw : {c | n = 0 ∧ ∀ k, T c (k + 1) ≤ u c} = ⋂ k, {c | T c (k + 1) ≤ u c} := by
+        ext c; simp [hn]
+      rw [hrw]
+      exact MeasurableSet.iInter fun k ↦ h (k + 1)
+    · have hrw : {c | n = 0 ∧ ∀ k, T c (k + 1) ≤ u c} = (∅ : Set γ) := by ext c; simp [hn]
+      rw [hrw]
+      exact MeasurableSet.empty
+
+/-- **The step path in the same generality.**  The chain is asked to be measurable and the jump
+times are not: only their level sets against the time. -/
+theorem measurable_stepPath_of_measurableSet [MeasurableSpace E] {γ : Type*} [MeasurableSpace γ]
+    {u : γ → α} {T : γ → ℕ → α} {y : γ → ℕ → E}
+    (h : ∀ n, MeasurableSet {c | T c n ≤ u c}) (hy : ∀ n, Measurable fun c ↦ y c n) :
+    Measurable fun c ↦ stepPath (T c) (y c) (u c) :=
+  (measurable_from_prod_countable_left (α := γ) (β := ℕ) (f := fun q ↦ y q.1 q.2) hy).comp
+    (measurable_id.prodMk (measurable_stepIndex_of_measurableSet h))
+
 end OrderedTimes
 
 variable {T : ℕ → ℝ} {t : ℝ} {n : ℕ}
@@ -16726,14 +16769,19 @@ infimum both inverses are, and the statement the identification of the two probl
 the cumulated mass of the truncated rate is that of the original one stopped at the hitting time
 (`cumulativeRateF_truncRateF`), and stopping it changes no membership at a level `b ≤ a` -- below
 the hitting time because nothing was stopped, above it because the stopped value is `a` itself,
-which is already at least `b`. -/
+which is already at least `b`.
+
+**The level `b` is not asked to be non negative**, and that is not a cosmetic weakening: the levels
+this is read at are the partial sums `∑_{k < n} ξ_k` of the waiting times, and a hypothesis that
+makes *every* sample point of `(ℕ → E) × (ℕ → ℝ)` carry non negative waiting times is unsatisfiable
+as soon as `E` is inhabited.  Neither direction of the proof uses a sign of `b`: the forward one is
+the monotonicity of the cumulated mass, the backward one is the value `a` at the hitting time. -/
 theorem setOf_le_cumulativeRateF_truncRateF
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hb : 0 ≤ b) (hba : b ≤ a) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (hba : b ≤ a) :
     {r : ℝ | 0 ≤ r ∧ b ≤ cumulativeRateF (truncRateF Λ a) ω r}
       = {r : ℝ | 0 ≤ r ∧ b ≤ cumulativeRateF Λ ω r} := by
-  have ha : (0 : ℝ) ≤ a := hb.trans hba
   have hR : cumulativeRateF Λ ω (rateInverse Λ ω a) = a :=
     cumulativeRateF_rateInverse hint hpos htop ha
   ext r
@@ -16763,9 +16811,9 @@ inverse as well (`rateInverseE_truncRateF_of_le`), which the real statement cann
 theorem rateInverse_truncRateF_of_le
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hb : 0 ≤ b) (hba : b ≤ a) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (hba : b ≤ a) :
     rateInverse (truncRateF Λ a) ω b = rateInverse Λ ω b := by
-  simp only [rateInverse, setOf_le_cumulativeRateF_truncRateF hint hpos htop hb hba]
+  simp only [rateInverse, setOf_le_cumulativeRateF_truncRateF hint hpos htop ha hba]
 
 /-- **And above that level the inverse collapses to its junk value.**  The truncated rate cumulates
 to at most `a`, so no level beyond `a` is ever reached and `rateInverse` returns the infimum of the
@@ -17500,19 +17548,24 @@ same set, and which lattice the infimum is taken in does not enter. -/
 theorem rateInverseE_truncRateF_of_le
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hb : 0 ≤ b) (hba : b ≤ a) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (hba : b ≤ a) :
     rateInverseE (truncRateF Λ a) ω b = rateInverseE Λ ω b := by
-  simp only [rateInverseE, setOf_le_cumulativeRateF_truncRateF hint hpos htop hb hba]
+  simp only [rateInverseE, setOf_le_cumulativeRateF_truncRateF hint hpos htop ha hba]
 
 /-- **And so are the jump times, as long as the waiting times have not consumed the level.**  The
-complement of `jumpTimeFE_truncRateF_eq_top`, which says that past the level they are all `⊤`. -/
+complement of `jumpTimeFE_truncRateF_eq_top`, which says that past the level they are all `⊤`.
+
+**No sign is asked of the waiting times.**  The earlier form carried `∀ k, 0 ≤ xi k`, spent on the
+single step `0 ≤ ∑_{k < n} xi k`, and that step is not needed: `setOf_le_cumulativeRateF_truncRateF`
+holds at every level below `a`.  The distinction decides whether the statements built on this one
+are usable at all -- see the note at `jumpFiltrationFE_hcut`. -/
 theorem jumpTimeFE_truncRateF_eq_of_le
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ k, 0 ≤ xi k)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a)
     (hn : ∑ k ∈ Finset.range n, xi k ≤ a) :
     jumpTimeFE (truncRateF Λ a) ω xi n = jumpTimeFE Λ ω xi n :=
-  rateInverseE_truncRateF_of_le hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k) hn
+  rateInverseE_truncRateF_of_le hint hpos htop ha hn
 
 /-- **A jump time above the level lies strictly above the hitting time**, and hence strictly above
 every time the localization stops at.  This is the one strict inequality of the section and the one
@@ -17551,8 +17604,7 @@ membership hold for both indices, and the infima agree. -/
 theorem jumpProcessFE_truncRateF_eq_of_le_rateInverseE
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop)
-    (hxi : ∀ k, 0 ≤ ω.2 k) (ha : 0 ≤ a)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a)
     (hle : ENNReal.ofReal t ≤ rateInverseE Λ ω a) :
     jumpProcessFE (truncRateF Λ a) t ω = jumpProcessFE Λ t ω := by
   have hset : {m | ENNReal.ofReal t < jumpTimeFE (truncRateF Λ a) ω ω.2 (m + 1)}
@@ -17560,7 +17612,7 @@ theorem jumpProcessFE_truncRateF_eq_of_le_rateInverseE
     ext m
     simp only [Set.mem_ofPred_eq]
     rcases le_or_gt (∑ k ∈ Finset.range (m + 1), ω.2 k) a with h | h
-    · rw [jumpTimeFE_truncRateF_eq_of_le hint hpos htop hxi h]
+    · rw [jumpTimeFE_truncRateF_eq_of_le hint hpos htop ha h]
     · constructor
       · exact fun _ ↦ lt_jumpTimeFE_of_lt_of_le_rateInverseE hint hpos htop ha h hle
       · intro _
@@ -17582,8 +17634,7 @@ theorem setIntegral_compensatorF_truncRateF_eq
     {mu : ℝ → (ℕ → E) × (ℕ → ℝ) → Measure E} {f : E → ℝ} {s : ℝ≥0}
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop)
-    (hxi : ∀ k, 0 ≤ ω.2 k) (ha : 0 ≤ a)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a)
     (hs : ENNReal.ofReal ((s : ℝ≥0) : ℝ) ≤ rateInverseE Λ ω a) :
     ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
         jumpApplyF (truncRateF Λ a) mu
@@ -17604,7 +17655,7 @@ theorem setIntegral_compensatorF_truncRateF_eq
     lt_of_lt_of_le ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg u.coe_nonneg).2 hlt) hs
   have hpath : jumpProcessFE (truncRateF Λ a) ((u : ℝ≥0) : ℝ) ω
       = jumpProcessFE Λ ((u : ℝ≥0) : ℝ) ω :=
-    jumpProcessFE_truncRateF_eq_of_le_rateInverseE hint hpos htop hxi ha hult.le
+    jumpProcessFE_truncRateF_eq_of_le_rateInverseE hint hpos htop ha hult.le
   have hrate : truncRateF Λ a ((u : ℝ≥0) : ℝ) ω = Λ ((u : ℝ≥0) : ℝ) ω := by
     refine truncRateF_of_lt ?_
     rw [rateInverseE_eq_ofReal htop] at hult
@@ -17623,8 +17674,7 @@ theorem stoppedProcess_mpFamilyF_truncRateF_eq
     {mu : ℝ → (ℕ → E) × (ℕ → ℝ) → Measure E} {f : E → ℝ}
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop)
-    (hxi : ∀ k, 0 ≤ ω.2 k) (ha : 0 ≤ a) (i : ℝ≥0) :
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) (i : ℝ≥0) :
     stoppedProcess (fun r : ℝ≥0 ↦ fun w ↦
         f (jumpProcessFE (truncRateF Λ a) (r : ℝ) w)
           - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
@@ -17662,8 +17712,8 @@ theorem stoppedProcess_mpFamilyF_truncRateF_eq
             jumpApplyF Λ' mu (fun v w' ↦ jumpProcessFE Λ' v w') f (u : ℝ) ω ∂lebesgueClock.q)
         huntop
   rw [hstep, hstep,
-    jumpProcessFE_truncRateF_eq_of_le_rateInverseE hint hpos htop hxi ha hst,
-    setIntegral_compensatorF_truncRateF_eq hint hpos htop hxi ha hst]
+    jumpProcessFE_truncRateF_eq_of_le_rateInverseE hint hpos htop ha hst,
+    setIntegral_compensatorF_truncRateF_eq hint hpos htop ha hst]
 
 /-- **The same statement as an equality of functions**, which is the form
 `martingale_of_martingale_of_stopped` consumes: its hypothesis `hstop` and the strong adaptedness
@@ -17672,8 +17722,7 @@ theorem stoppedProcess_mpFamilyF_truncRateF_eq'
     {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ} {mu : ℝ → (ℕ → E) × (ℕ → ℝ) → Measure E} {f : E → ℝ}
     (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
     (hpos : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (u : ℝ), 0 < u → 0 < Λ u w)
-    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop)
-    (hxi : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (k : ℕ), 0 ≤ w.2 k) (ha : 0 ≤ a) :
+    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop) (ha : 0 ≤ a) :
     stoppedProcess (fun r : ℝ≥0 ↦ fun w ↦
         f (jumpProcessFE (truncRateF Λ a) (r : ℝ) w)
           - ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ r,
@@ -17686,7 +17735,7 @@ theorem stoppedProcess_mpFamilyF_truncRateF_eq'
               jumpApplyF Λ mu (fun v w' ↦ jumpProcessFE Λ v w') f (u : ℝ) w ∂lebesgueClock.q)
         (fun w ↦ rateInverseE Λ w a) :=
   funext fun i ↦ funext fun w ↦
-    stoppedProcess_mpFamilyF_truncRateF_eq (hint w) (hpos w) (htop w) (hxi w) ha i
+    stoppedProcess_mpFamilyF_truncRateF_eq (hint w) (hpos w) (htop w) ha i
 
 end PathProcessLocal
 
@@ -18162,16 +18211,47 @@ below no real time, and the untruncated one lies strictly above the stopped time
 theorem jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE
     (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
     (hpos : ∀ u, 0 < u → 0 < Λ u ω)
-    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop)
-    (hxi : ∀ k, 0 ≤ xi k) (ha : 0 ≤ a)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a)
     (hle : ENNReal.ofReal t ≤ rateInverseE Λ ω a) :
     jumpTimeFE (truncRateF Λ a) ω xi n ≤ ENNReal.ofReal t
       ↔ jumpTimeFE Λ ω xi n ≤ ENNReal.ofReal t := by
   rcases le_or_gt (∑ k ∈ Finset.range n, xi k) a with h | h
-  · rw [jumpTimeFE_truncRateF_eq_of_le hint hpos htop hxi h]
+  · rw [jumpTimeFE_truncRateF_eq_of_le hint hpos htop ha h]
   · rw [jumpTimeFE_truncRateF_eq_top hint hpos htop ha h]
     exact iff_of_false (fun hcon ↦ ENNReal.ofReal_ne_top (top_le_iff.1 hcon))
       (not_le.2 (lt_jumpTimeFE_of_lt_of_le_rateInverseE hint hpos htop ha h hle))
+
+/-- **A truncated jump time is below a time exactly when the untruncated one is below that time and
+below the hitting time**, and this holds at *every* time, not only below the hitting time.
+
+`jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE` is the same statement restricted to times below
+the hitting time, where the second conjunct is free; that restriction is what the identification of
+the two processes needs and it is not what a *filtration* needs.  Here the hitting time appears in
+the statement, and the gain is that the right hand side is an intersection of two events each of
+which a filtration can see: the first because the jump times are stopping times, the second because
+the hitting time is one (`isStoppingTime_rateInverseE`).
+
+The two cases are the two of the whole section.  Below the level the two jump times are equal and
+the untruncated one lies below the hitting time by the monotonicity of the inverse in the level, so
+the second conjunct is automatic.  Above the level the truncated one is `⊤`, which is below no real
+time, and the untruncated one lies *strictly* above the hitting time by
+`lt_jumpTimeFE_of_lt_of_le_rateInverseE`, so the second conjunct fails.  No sign is asked of the
+waiting times. -/
+theorem jumpTimeFE_truncRateF_le_iff
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (ha : 0 ≤ a) :
+    jumpTimeFE (truncRateF Λ a) ω xi n ≤ ENNReal.ofReal t
+      ↔ jumpTimeFE Λ ω xi n ≤ ENNReal.ofReal t ∧ jumpTimeFE Λ ω xi n ≤ rateInverseE Λ ω a := by
+  rcases le_or_gt (∑ k ∈ Finset.range n, xi k) a with h | h
+  · rw [jumpTimeFE_truncRateF_eq_of_le hint hpos htop ha h]
+    exact ⟨fun hc ↦ ⟨hc, monotone_rateInverseE Λ ω h⟩, fun hc ↦ hc.1⟩
+  · rw [jumpTimeFE_truncRateF_eq_top hint hpos htop ha h]
+    refine iff_of_false (fun hcon ↦ ENNReal.ofReal_ne_top (top_le_iff.1 hcon)) ?_
+    refine fun hcon ↦ absurd hcon.2 (not_le.2 ?_)
+    rw [rateInverseE_eq_ofReal htop a]
+    exact lt_jumpTimeFE_of_lt_of_le_rateInverseE (t := rateInverse Λ ω a) hint hpos htop ha h
+      (rateInverseE_eq_ofReal htop a).ge
 
 /-- **The cutting set is an event of the truncated filtration**, for a rate whose *truncated*
 cumulated mass up to `i` is measurable for the truncated filtration at `i`.  This is the hypothesis
@@ -18243,6 +18323,35 @@ theorem measurable_jumpStateE (hT : ∀ n, Measurable fun ω ↦ T ω n)
     Measurable (jumpStateE T y i) :=
   (measurable_jumpRecordE hT i).prodMk
     (measurable_stepPath_comp (u := fun _ : Ω ↦ ((i : ℝ≥0) : ENNReal)) measurable_const hT hy)
+
+/-- **The state of a point process is measurable for a σ-algebra that sees the events `{T n ≤ r}`**,
+and that is all it is asked to see of the jump times.
+
+This is the hypothesis `hstate` of `pointFiltrationE_inter_le_of_measurable` reduced to events, and
+the reduction is what makes it provable for a *truncated* family of jump times: those are `⊤` above
+the hitting time of the level and therefore not measurable for any past, while
+`{T' n ≤ r} = {T n ≤ r} ∩ {T n ≤ R}` is an intersection of two events of the past whenever `T n`
+and the hitting time `R` are stopping times.
+
+Both components run off the same family: the record is the family read back as booleans, the path
+is `measurable_stepPath_of_measurableSet` at the constant time map. -/
+theorem measurable_jumpStateE_of_measurableSet
+    {𝓗 : Filtration ℝ≥0 (inferInstance : MeasurableSpace Ω)} {i r : ℝ≥0}
+    (hle : ∀ n, MeasurableSet[𝓗 i] {ω | T ω n ≤ ((r : ℝ≥0) : ENNReal)})
+    (hy : ∀ n, Measurable[𝓗 i] fun ω ↦ y ω n) :
+    Measurable[𝓗 i] (jumpStateE T y r) := by
+  letI : MeasurableSpace Ω := 𝓗 i
+  have hset : ∀ n, MeasurableSet[𝓗 i]
+      {ω | (fun _ : Ω ↦ ((r : ℝ≥0) : ENNReal)) ω ≥ T ω n} := hle
+  refine Measurable.prodMk ?_ ?_
+  · refine measurable_pi_lambda _ fun n ↦ measurable_to_bool ?_
+    have hpre : (fun ω ↦ jumpRecordE T r ω n) ⁻¹' {true}
+        = {ω | T ω n ≤ ((r : ℝ≥0) : ENNReal)} := by
+      ext ω
+      simp [jumpRecordE]
+    rw [hpre]
+    exact hle n
+  · exact measurable_stepPath_of_measurableSet (u := fun _ : Ω ↦ ((r : ℝ≥0) : ENNReal)) hset hy
 
 /-- **The natural filtration of a point process with jump times in `ℝ≥0∞`**, indexed by `ℝ≥0` as
 `pointFiltration` is.  The state space is the same `(ℕ → Bool) × E`, so the two filtrations are
@@ -18357,8 +18466,7 @@ theorem jumpFiltrationFE_inter_lt_rateInverseE
     (hT' : ∀ n, Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFE (truncRateF Λ a) w w.2 n)
     (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
     (hpos : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (u : ℝ), 0 < u → 0 < Λ u w)
-    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop)
-    (hxi : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (k : ℕ), 0 ≤ w.2 k) (ha : 0 ≤ a)
+    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop) (ha : 0 ≤ a)
     (hN : MeasurableSet[jumpFiltrationFE (truncRateF Λ a) hT' i]
       {w : (ℕ → E) × (ℕ → ℝ) | ((i : ℝ≥0) : ENNReal) < rateInverseE Λ w a})
     {A : Set ((ℕ → E) × (ℕ → ℝ))} (hA : MeasurableSet[jumpFiltrationFE Λ hT i] A) :
@@ -18372,11 +18480,11 @@ theorem jumpFiltrationFE_inter_lt_rateInverseE
     exact le_of_lt (lt_of_le_of_lt (ENNReal.coe_le_coe.2 hr) hw)
   refine pointFiltrationE_inter_le _ _ _ hN (fun w hw r hr n ↦ ?_) (fun w hw r hr ↦ ?_) hA
   · have key := jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE (hint w) (hpos w) (htop w)
-      (hxi w) ha (hbound w hw r hr) (xi := w.2) (n := n)
+      ha (hbound w hw r hr) (xi := w.2) (n := n)
     rw [ENNReal.ofReal_coe_nnreal] at key
     exact key.symm
   · have key := jumpProcessFE_truncRateF_eq_of_le_rateInverseE (hint w) (hpos w) (htop w)
-      (hxi w) ha (hbound w hw r hr)
+      ha (hbound w hw r hr)
     simp only [jumpProcessFE, ENNReal.ofReal_coe_nnreal] at key
     exact key.symm
 
@@ -18387,23 +18495,91 @@ every index and every event at once, and the cutting set is discharged by
 What is left to an instance is the single hypothesis `hcum`: the truncated cumulated rate up to `i`
 is measurable for the truncated filtration at `i`.  It is the same thing
 `isLocalizingSequence_rateInverseE` asks of the *untruncated* filtration, so an instance that has
-localized at all has already met its untruncated half. -/
+localized at all has already met its untruncated half.
+
+**The hypothesis that is no longer here.**  This statement and the two it is read off used to carry
+`hxi : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (k : ℕ), 0 ≤ w.2 k` -- every waiting time of *every* sample point
+non negative.  On this sample space that is not a hypothesis an instance can meet: the second factor
+is `ℕ → ℝ` and carries the constant `-1`, so the hypothesis is false as soon as `E` is inhabited,
+and a statement under it says nothing about any Hawkes process.  It was spent on the single step
+`0 ≤ ∑_{k < n} w.2 k` inside `jumpTimeFE_truncRateF_eq_of_le`, and
+`setOf_le_cumulativeRateF_truncRateF` does not need it: the two inverses are infima of the same set
+at **every** level below `a`, whatever its sign.  The state dependent counterpart
+`jumpFiltrationE_inter_lt_rateTime` never had such a hypothesis, and that is the comparison that
+shows it was an accident of the proof and not a feature of the path dependent case. -/
 theorem jumpFiltrationFE_hcut
     {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ}
     (hT : ∀ n, Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFE Λ w w.2 n)
     (hT' : ∀ n, Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFE (truncRateF Λ a) w w.2 n)
     (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 r)
     (hpos : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (u : ℝ), 0 < u → 0 < Λ u w)
-    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop)
-    (hxi : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (k : ℕ), 0 ≤ w.2 k) (ha : 0 ≤ a)
+    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop) (ha : 0 ≤ a)
     (hcum : ∀ i : ℝ≥0, Measurable[jumpFiltrationFE (truncRateF Λ a) hT' i]
       fun w : (ℕ → E) × (ℕ → ℝ) ↦ cumulativeRateF (truncRateF Λ a) w ((i : ℝ≥0) : ℝ))
     (i : ℝ≥0) (A : Set ((ℕ → E) × (ℕ → ℝ)))
     (hA : MeasurableSet[jumpFiltrationFE Λ hT i] A) :
     MeasurableSet[jumpFiltrationFE (truncRateF Λ a) hT' i]
       (A ∩ {w : (ℕ → E) × (ℕ → ℝ) | ((i : ℝ≥0) : ENNReal) < rateInverseE Λ w a}) :=
-  jumpFiltrationFE_inter_lt_rateInverseE hT hT' hint hpos htop hxi ha
+  jumpFiltrationFE_inter_lt_rateInverseE hT hT' hint hpos htop ha
     (measurableSet_lt_rateInverseE_of_adapted hint hpos htop ha (hcum i)) hA
+
+/-- **The truncated point process is adapted to any filtration for which the untruncated jump times
+and the hitting time of the level are stopping times**, and that is the hypothesis `hstate` of
+`pointFiltrationE_inter_le_of_measurable` on the data a localized problem already has.
+
+It is the last of the three inputs of the cut over a filtration that is *not* the natural filtration
+of the truncated jump times.  The two filtrations are incomparable -- above the hitting time every
+truncated jump time is `⊤` (`jumpTimeFE_truncRateF_eq_top`), so the truncated filtration is blind
+there, while `{T' n ≤ r}` reads the event `{T n ≤ R}`, which the untruncated point filtration does
+not see either -- so neither can be forced into the other and the target filtration has to be
+carried as data.  `martingale_of_martingale_of_stopped` does carry it as data, which is why this is
+the right shape.
+
+**The proof is one identity of events and the rest is bookkeeping.**
+`jumpTimeFE_truncRateF_le_iff` reads `{T' n ≤ r}` as `{T n ≤ r} ∩ {T n ≤ R}`, and the second factor
+is turned into an event of the past at `r` by capping *both* times:
+
+> `{T n ≤ r} ∩ {T n ≤ R} = {T n ≤ r} ∩ {min (T n) r ≤ min R r}`
+
+and both capped times are measurable for `𝓗 r` by `IsStoppingTime.min_const` and
+`IsStoppingTime.measurable_of_le`.  The intersection with `{T n ≤ r}` is not decoration: at a sample
+point with `T n > r ≤ R` the capped inequality holds and `T n ≤ R` may fail, so the second factor
+alone is the wrong event.
+
+Nothing is asked about non explosion, and nothing about the jump kernel. -/
+theorem measurable_jumpStateE_truncRateF
+    {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ}
+    {𝓗 : Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ)))} {i r : ℝ≥0}
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (q : ℝ), IntervalIntegrable (fun u ↦ Λ u w) volume 0 q)
+    (hpos : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (u : ℝ), 0 < u → 0 < Λ u w)
+    (htop : ∀ w : (ℕ → E) × (ℕ → ℝ), Tendsto (cumulativeRateF Λ w) atTop atTop) (ha : 0 ≤ a)
+    (hjump : ∀ n, IsStoppingTime 𝓗 fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFE Λ w w.2 n)
+    (hR : IsStoppingTime 𝓗 fun w : (ℕ → E) × (ℕ → ℝ) ↦ rateInverseE Λ w a)
+    (hy : ∀ n, Measurable[𝓗 i] fun w : (ℕ → E) × (ℕ → ℝ) ↦ w.1 n) (hr : r ≤ i) :
+    Measurable[𝓗 i]
+      (jumpStateE (fun w ↦ jumpTimeFE (truncRateF Λ a) w w.2) (fun w ↦ w.1) r) := by
+  refine measurable_jumpStateE_of_measurableSet (fun n ↦ ?_) hy
+  have hEq : {w : (ℕ → E) × (ℕ → ℝ) |
+        jumpTimeFE (truncRateF Λ a) w w.2 n ≤ ((r : ℝ≥0) : ENNReal)}
+      = {w : (ℕ → E) × (ℕ → ℝ) | jumpTimeFE Λ w w.2 n ≤ ((r : ℝ≥0) : ENNReal)}
+        ∩ {w : (ℕ → E) × (ℕ → ℝ) | min (jumpTimeFE Λ w w.2 n) ((r : ℝ≥0) : ENNReal)
+            ≤ min (rateInverseE Λ w a) ((r : ℝ≥0) : ENNReal)} := by
+    ext w
+    have hiff := jumpTimeFE_truncRateF_le_iff (t := ((r : ℝ≥0) : ℝ)) (xi := w.2) (n := n)
+      (hint w) (hpos w) (htop w) ha
+    rw [ENNReal.ofReal_coe_nnreal] at hiff
+    rw [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_ofPred_eq, Set.mem_ofPred_eq, hiff]
+    constructor
+    · rintro ⟨h1, h2⟩
+      exact ⟨h1, by rw [min_eq_left h1]; exact le_min h2 h1⟩
+    · rintro ⟨h1, h2⟩
+      rw [min_eq_left h1] at h2
+      exact ⟨h1, h2.trans (min_le_left _ _)⟩
+  rw [hEq]
+  refine MeasurableSet.inter (𝓗.mono hr _ (hjump n r)) (measurableSet_le ?_ ?_)
+  · exact (((hjump n).min_const r).measurable_of_le fun _ ↦ min_le_right _ _).mono
+      (𝓗.mono hr) le_rfl
+  · exact ((hR.min_const r).measurable_of_le fun _ ↦ min_le_right _ _).mono (𝓗.mono hr) le_rfl
 
 end PathCut
 
@@ -18470,5 +18646,220 @@ theorem measurable_cumulativeRateF_truncRateF_hawkesSelfRate {E : Type*} [Measur
       (measurable_uncurry_hawkesSelfRate_hawkesFiltration hν hφ hφm hφint i))
 
 end PathCutInstance
+
+/-!
+### The two Hawkes filtrations, and which of them the jump times of the martingale problem are
+stopping times for
+
+The martingale problem reads `jumpTimeFE (hawkesSelfRate ν φ) w w.2`, the inverse of the cumulated
+self referential rate.  `hawkesFiltration` is generated by `hawkesJumpTime`, the stagewise
+recursion.  `jumpTimeF_hawkesSelfRate` says the two agree -- but only at a sample point whose
+waiting times are non negative, and `IsStoppingTime` is a statement about **every** sample point, so
+the identity cannot be transported.  The hypothesis it would need, `∀ w k, 0 ≤ w.2 k`, is the one
+the run of 2026-09-11 struck out of the cut: on `(ℕ → E) × (ℕ → ℝ)` it is false as soon as `E` is
+inhabited.
+
+So the statement is proved over the filtration the times themselves generate,
+`hawkesJumpFiltration`, where `isStoppingTime_jumpTimeE` gives it with no hypothesis at all; and
+`jumpTimeFE_hawkesSelfRate` records the identity in the only form it has, pointwise and conditional.
+
+**The contrast is the finding.**  `hawkesFiltration` is defined from `measurable_hawkesJumpTime_apply`
+and asks nothing beyond the data; `hawkesJumpFiltration` cannot even be *written down* without
+`hint`, the local integrability of the self referential rate at every sample point, because
+`measurable_jumpTimeFE` runs on it.  By the reading of `tendsto_cumulativeRateF_hawkes` that
+hypothesis is the non explosion.  The record filtration sees the jumps whether or not they
+accumulate; the filtration of the inverse exists only where they do not.
+-/
+
+section HawkesJumpFiltration
+
+variable {E : Type*} [MeasurableSpace E] {ν : ℝ} {φ : ℝ → ℝ}
+
+/-- **A rate that reads its own past is jointly measurable in the sample point and the time**, over
+the ambient σ-algebra and with no truncation of either argument.  The counterpart of
+`measurable_uncurry_pointRate_pointFiltration`, which states the same thing for the past at `i` and
+therefore only for the window `min s i`; this is the form `measurable_rateInverseE` asks for, since
+the inverse ranges over the whole half line.
+
+The proof is `measurable_pointRate` with the sample point carried along: the window integral is a
+sum over the stages against the counting measure, and each stage is an indicator of the jointly
+measurable set `{(w, u) | 0 ≤ T w (k+1) < u}`.  Nothing is asked of the family beyond the
+measurability of each `T n` -- not monotonicity, not non explosion. -/
+theorem measurable_uncurry_pointRate {Ω : Type*} [MeasurableSpace Ω] {T : Ω → ℕ → ℝ}
+    (hT : ∀ n, Measurable fun w ↦ T w n) {ψ : ℝ → ℝ} (hψ : Measurable ψ) :
+    Measurable fun q : Ω × ℝ ↦
+      ∫ u in Set.Ico (0 : ℝ) q.2, ψ (q.2 - u) ∂(countingMeasure (T q.1)) := by
+  have hstage : (fun q : Ω × ℝ ↦
+        ∫ u in Set.Ico (0 : ℝ) q.2, ψ (q.2 - u) ∂(countingMeasure (T q.1)))
+      = fun q : Ω × ℝ ↦ ∫ k, Set.indicator (Set.Ico (0 : ℝ) q.2)
+          (fun u ↦ ψ (q.2 - u)) (T q.1 (k + 1)) ∂(Measure.count : Measure ℕ) :=
+    funext fun q ↦ integral_countingMeasure_eq_integral_count (T q.1)
+      (hψ.comp (measurable_const.sub measurable_id)) measurableSet_Ico
+  rw [hstage]
+  have hslice : ∀ k : ℕ, Measurable fun q : Ω × ℝ ↦
+      Set.indicator (Set.Ico (0 : ℝ) q.2) (fun u ↦ ψ (q.2 - u)) (T q.1 (k + 1)) := by
+    intro k
+    have hTk : Measurable fun q : Ω × ℝ ↦ T q.1 (k + 1) := (hT (k + 1)).comp measurable_fst
+    have hset : MeasurableSet {q : Ω × ℝ | T q.1 (k + 1) ∈ Set.Ico (0 : ℝ) q.2} := by
+      have hsplit : {q : Ω × ℝ | T q.1 (k + 1) ∈ Set.Ico (0 : ℝ) q.2}
+          = {q : Ω × ℝ | (0 : ℝ) ≤ T q.1 (k + 1)} ∩ {q : Ω × ℝ | T q.1 (k + 1) < q.2} := by
+        ext q
+        simp [Set.mem_Ico]
+      rw [hsplit]
+      exact (measurableSet_le measurable_const hTk).inter (measurableSet_lt hTk measurable_snd)
+    have hfun : (fun q : Ω × ℝ ↦
+          Set.indicator (Set.Ico (0 : ℝ) q.2) (fun u ↦ ψ (q.2 - u)) (T q.1 (k + 1)))
+        = Set.indicator {q : Ω × ℝ | T q.1 (k + 1) ∈ Set.Ico (0 : ℝ) q.2}
+            (fun q ↦ ψ (q.2 - T q.1 (k + 1))) := by
+      funext q
+      simp only [Set.indicator_apply, Set.mem_ofPred_eq]
+    rw [hfun]
+    exact (hψ.comp (measurable_snd.sub hTk)).indicator hset
+  exact (stronglyMeasurable_integral_comp (Measure.count : Measure ℕ)
+    (W := fun (k : ℕ) (q : Ω × ℝ) ↦
+      Set.indicator (Set.Ico (0 : ℝ) q.2) (fun u ↦ ψ (q.2 - u)) (T q.1 (k + 1)))
+    (measurable_from_prod_countable_right hslice) (g := id) measurable_id).measurable
+
+/-- **The self exciting Hawkes rate is jointly measurable**, over the ambient σ-algebra and in the
+argument order `measurable_jumpTimeFE` consumes.  The instance of `measurable_uncurry_pointRate`,
+and nothing beyond the measurability of `φ` enters -- in particular neither the fixed point nor the
+non explosion. -/
+theorem measurable_uncurry_hawkesSelfRate (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r) :
+    Measurable fun q : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦ hawkesSelfRate ν φ q.2 q.1 :=
+  measurable_const.add
+    (measurable_uncurry_pointRate
+      (T := fun w : (ℕ → E) × (ℕ → ℝ) ↦ hawkesJumpTime ν φ w.2 w)
+      (measurable_hawkesJumpTime_apply hν hφ hφm hφint) hφm)
+
+/-- **The jump times the path dependent martingale problem reads are measurable.**  The instance of
+`measurable_jumpTimeFE` on the data of `ex:hawkes`, and the input the filtration of those times
+needs.
+
+Two of the three hypotheses are free: the non negativity of the rate is its baseline, and the joint
+measurability is `measurable_uncurry_hawkesSelfRate`.  The third, `hint`, is carried -- and it is
+carried at **every** sample point, which is what a σ-algebra asks and what an almost sure statement
+cannot give. -/
+theorem measurable_jumpTimeFE_hawkesSelfRate (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) (n : ℕ) :
+    Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFE (hawkesSelfRate ν φ) w w.2 n :=
+  measurable_jumpTimeFE hint (fun w u _ ↦ (hawkesSelfRate_pos hν hφ u w).le)
+    (measurable_uncurry_hawkesSelfRate hν hφ hφm hφint) n
+
+/-- **The filtration of the jump times the path dependent martingale problem reads.**  Against
+`hawkesFiltration`, which is generated by the stagewise recursion `hawkesJumpTime`: the two families
+agree wherever the construction is valid (`jumpTimeFE_hawkesSelfRate`), and only there.
+
+It is the natural filtration `jumpFiltrationFE_hcut` runs over, so the cut of the path dependent
+variant is available for it without the general target σ-algebra of
+`pointFiltrationE_inter_le_of_measurable`. -/
+noncomputable def hawkesJumpFiltration (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  jumpFiltrationFE (hawkesSelfRate ν φ) (measurable_jumpTimeFE_hawkesSelfRate hν hφ hφm hφint hint)
+
+/-- **The jump times of the path dependent Hawkes construction are stopping times for the filtration
+they generate**, with `⊤` allowed and nothing asked beyond the measurability that defines the
+filtration -- no monotonicity of the waiting times, no positivity, no fixed point.
+
+This is the input `hjump` of `measurable_jumpStateE_truncRateF` and the one
+`jumpFiltrationFE_inter_lt_rateInverseE` uses implicitly.  Over `hawkesFiltration` it is **not**
+available; see the paragraph heading this section. -/
+theorem isStoppingTime_jumpTimeFE_hawkesSelfRate (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) (n : ℕ) :
+    IsStoppingTime (hawkesJumpFiltration (E := E) hν hφ hφm hφint hint)
+      fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFE (hawkesSelfRate ν φ) w w.2 n :=
+  isStoppingTime_jumpTimeE (measurable_jumpTimeFE_hawkesSelfRate hν hφ hφm hφint hint)
+    (fun m ↦ (measurable_pi_apply m).comp measurable_fst) n
+
+omit [MeasurableSpace E] in
+/-- **The fixed point, in `ℝ≥0∞`**: the jump times the martingale problem reads are the Hawkes jump
+times of the stagewise recursion, at a sample point at which the construction is valid.
+
+`jumpTimeF_hawkesSelfRate` says it over `ℝ`; the passage to `ℝ≥0∞` is
+`tendsto_cumulativeRateF_hawkesSelfRate`, the divergence of the cumulated rate, which comes from the
+baseline `ν` alone and needs no non explosion beyond the `hint` already present.  The hypothesis
+`hintF` of the real statement is discharged from the data by `intervalIntegrable_hawkesFrozen`.
+
+**What the remaining hypotheses cost.**  `hxi` is a statement about the sample point `ω`, and there
+is no version of it over the whole space: the waiting times of `(ℕ → E) × (ℕ → ℝ)` include the
+constant `-1`.  So this identity transports almost sure statements and not σ-algebras, which is why
+`isStoppingTime_jumpTimeFE_hawkesSelfRate` is stated over `hawkesJumpFiltration` and not over
+`hawkesFiltration`. -/
+theorem jumpTimeFE_hawkesSelfRate {ω : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hxi : ∀ k, 0 ≤ ω.2 k)
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u ω) volume 0 r) (n : ℕ) :
+    jumpTimeFE (hawkesSelfRate ν φ) ω ω.2 n = ENNReal.ofReal (hawkesJumpTime ν φ ω.2 ω n) := by
+  rw [jumpTimeFE_eq_ofReal (tendsto_cumulativeRateF_hawkesSelfRate hν hφ hint) n,
+    jumpTimeF_hawkesSelfRate hν hφ hφ0 hxi
+      (fun m r ↦ intervalIntegrable_hawkesFrozen hφint _ m ω r) hint n]
+
+/-- **The switched off rate is jointly measurable**, over the ambient σ-algebra.  The switch reads
+the hitting time of the level, so this is exactly as measurable as that hitting time is and no
+more -- which is the whole content, and the reason the statement is *not* about a past: for a
+filtration the hitting time is a stopping time and not an adapted function, and
+`measurable_cumulativeRateF_truncRateF` has to go around the object rather than through it.
+
+For the ambient σ-algebra there is nothing to go around: `measurable_rateInverse` gives the switch
+and `Set.indicator` does the rest. -/
+theorem measurable_uncurry_truncRateF {Ω : Type*} [MeasurableSpace Ω] {Λ : ℝ → Ω → ℝ} {c : ℝ}
+    (hmeas : Measurable fun q : Ω × ℝ ↦ Λ q.2 q.1)
+    (hR : Measurable fun w : Ω ↦ rateInverse Λ w c) :
+    Measurable fun q : Ω × ℝ ↦ truncRateF Λ c q.2 q.1 := by
+  have hrw : (fun q : Ω × ℝ ↦ truncRateF Λ c q.2 q.1)
+      = Set.indicator {q : Ω × ℝ | q.2 < rateInverse Λ q.1 c} (fun q ↦ Λ q.2 q.1) := by
+    funext q
+    rw [truncRateF_apply]
+    simp only [Set.indicator_apply, Set.mem_ofPred_eq]
+  rw [hrw]
+  exact hmeas.indicator (measurableSet_lt measurable_snd (hR.comp measurable_fst))
+
+/-- **The hitting time of a level by the cumulated Hawkes rate is measurable.**  The instance of
+`measurable_rateInverse` on the data of `ex:hawkes`; the divergence it asks for comes from the
+baseline, the strict positivity likewise, and the joint measurability is
+`measurable_uncurry_hawkesSelfRate`. -/
+theorem measurable_rateInverse_hawkesSelfRate (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) (c : ℝ) :
+    Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦ rateInverse (hawkesSelfRate ν φ) w c :=
+  measurable_rateInverse
+    (Λ := fun (_ : (ℕ → E) × (ℕ → ℝ)) (u : ℝ) (w : (ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRate ν φ u w)
+    (p := id) (a := fun _ ↦ c) hint (fun w u _ ↦ hawkesSelfRate_pos hν hφ u w)
+    (fun w ↦ tendsto_cumulativeRateF_hawkesSelfRate hν hφ (hint w))
+    (measurable_uncurry_hawkesSelfRate hν hφ hφm hφint) measurable_const
+
+/-- **The jump times of the truncated Hawkes problem are measurable**, which is `hT'`, the second
+input of `jumpFiltrationFE_hcut`.  With `measurable_jumpTimeFE_hawkesSelfRate` it is the pair of
+measurability hypotheses that the cut of the path dependent variant asks of the data, and both are
+now discharged on the data of `ex:hawkes` together with `hint`.
+
+Every ingredient is inherited rather than reproved: the integrability by
+`intervalIntegrable_truncRateF`, the non negativity by `truncRateF_nonneg`, the joint measurability
+by `measurable_uncurry_truncRateF`.  **No divergence of the cumulated rate is asked**, and none is
+available -- the truncated rate has spent its mass -- which is the point recorded at
+`measurable_jumpTimeFE`. -/
+theorem measurable_jumpTimeFE_truncRateF_hawkesSelfRate (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (r : ℝ),
+      IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) (c : ℝ) (n : ℕ) :
+    Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦
+      jumpTimeFE (truncRateF (hawkesSelfRate ν φ) c) w w.2 n :=
+  measurable_jumpTimeFE (fun w r ↦ intervalIntegrable_truncRateF (hint w) r)
+    (fun w u hu ↦ truncRateF_nonneg (fun v hv ↦ (hawkesSelfRate_pos hν hφ v w).le) hu)
+    (measurable_uncurry_truncRateF (measurable_uncurry_hawkesSelfRate hν hφ hφm hφint)
+      (measurable_rateInverse_hawkesSelfRate hν hφ hφm hφint hint c)) n
+
+end HawkesJumpFiltration
 
 end PathDependent
