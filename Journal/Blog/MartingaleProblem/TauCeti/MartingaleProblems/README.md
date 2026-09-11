@@ -2915,6 +2915,147 @@ A concrete family of solutions, built without any of the theory above. Index
     `|∫_0^{t ⊓ σ N} 𝒜ₛ f ds| ≤ 2‖f‖ N` of `abs_setIntegral_compensatorF_le_of_cumulated` and `bdd_mpFamilyF_of_cumulated`. The rate jumps
     and the cumulated rate is continuous, which is the same sentence read twice: `rateTime` does not
     transfer to the path dependent variant and `rateInverseE` does.
+  * `jumpProcessFE_truncRateF_eq_of_le_rateInverseE` and
+    `stoppedProcess_mpFamilyF_truncRateF_eq`: **below the hitting time of the level the truncated
+    path dependent problem is the path dependent problem, and its stopped test processes are the
+    same function.** **In Lean** on 2026-09-11, eighteenth run, with
+    `setOf_le_cumulativeRateF_truncRateF`, `rateInverseE_truncRateF_of_le`,
+    `jumpTimeFE_truncRateF_eq_of_le`, `lt_jumpTimeFE_of_lt_of_le_rateInverseE`,
+    `setIntegral_compensatorF_truncRateF_eq` and `stoppedProcess_mpFamilyF_truncRateF_eq'`. This is
+    the path dependent counterpart of `stoppedProcess_mpFamily_truncRate_eq`, and the first of the
+    two steps between `martingale_stoppedProcess` for the truncated problem and
+    `hawkes_isLocalMPSolution`; the second is `martingale_of_martingale_of_stopped`, which stands
+    with no reference to the jump construction and is therefore used unchanged.
+
+    **It is an equality of functions and not an almost sure one.** `StronglyAdapted` and
+    `IsStoppingTime` are not almost sure notions, so an identification that held only almost
+    everywhere would not be an input of the tower step. What makes it one is that `truncRateF Λ a`
+    is a **switch** and not a cap: strictly below `rateInverse Λ ω a` the two rates are the same
+    function of the time (`truncRateF_of_lt`), so the two constructions consume the same waiting
+    times at the same instants.
+
+    **The two inverses are infima of the same set**, and that is the whole content:
+    `setOf_le_cumulativeRateF_truncRateF` says that at a level `b ≤ a` the admissible times of the
+    truncated rate are those of the original one — below the hitting time because nothing was
+    stopped, above it because the stopped value is `a` itself and already at least `b`. Which
+    lattice the infimum is taken in does not enter, so the same lemma gives the real statement
+    `rateInverse_truncRateF_of_le` and the `ℝ≥0∞` statement `rateInverseE_truncRateF_of_le` that
+    the truncated **process** needs.
+
+    **One strict inequality is needed, and it is where the strict positivity of the rate is
+    spent.** Above the level the truncated jump times are `⊤` (`jumpTimeFE_truncRateF_eq_top`)
+    while the untruncated ones are finite, so the two step indices would part company at a sample
+    point at which the untruncated process jumps *exactly* at the hitting time. They do not:
+    `rateInverse_lt_rateInverse` says that at a strictly positive rate a level above `a` is reached
+    strictly later than `a` itself. Without the strict positivity the cumulated rate may have a
+    plateau and the identification is false, so this hypothesis is not removable in the way the
+    divergence and the attainment were.
+
+    **The non explosion does not enter anywhere**, in keeping with
+    `isLocalizingSequence_rateInverseE`. Nothing is asked of the jump kernel either: it is carried
+    through untouched and may read the past, as `set:pathjump` allows.
+  * `cumulativeRateF_jumpTimeF_sub` and `cumulativeRateF_min_jumpTimeF_le`: **the compensator
+    accumulated between two consecutive jump times is the waiting time that produced the second of
+    them, so the compensator up to the `n`-th jump time is at most `ξ 0 + … + ξ (n-1)`.**
+    **In Lean** on 2026-09-11, eighteenth run, with `cumulativeRateF_jumpTimeF` and
+    `rateInverse_sum_eq_jumpTimeF`. This is `eq:compensatorexp` of `rem:pathjumpprimary`, and it is
+    what makes stopping at the jump times an unconditional repair: the bound is a random variable,
+    but it is integrable, and a localizing system asks for nothing more.
+
+    The manuscript calls the identity true by the definition of the jump times, and here it is
+    literally so: `jumpTimeF Lam ω ξ n` **is** `rateInverse Lam ω (∑_{k<n} ξ k)`, the cumulated
+    rate at it is the level it inverts (`cumulativeRateF_rateInverse`), and the difference of two
+    consecutive levels is one waiting time.
+
+    **It names the deviation from the manuscript's localizing system exactly.**
+    `abs_setIntegral_compensatorF_le_of_cumulated` asks its mass bound at **one** sample point and
+    is therefore reached by the jump times; `bdd_mpFamilyF_of_cumulated` asks it at **every**
+    sample point with **one** constant and is not, and `martingale_stoppedProcess` consumes the
+    second, because its passage to the limit is dominated convergence with a constant majorant. So
+    the alternative to localizing at `rateInverseE Lam · N` is not another proof of the same bound
+    but a version of the stopped martingale theorem with **uniform integrability** in place of
+    uniform boundedness, and `∑_{k<n} ξ k` is precisely the integrable majorant such a version
+    would be handed.
+
+    `rateInverse_sum_eq_jumpTimeF` adds that the two localizations are the **same construction**:
+    the rate switched off at `τ n` is `truncRateF Lam (∑_{k<n} ξ k)` and the rate switched off at
+    `σ N` is `truncRateF Lam N`, the only difference being whether the level is a functional of the
+    sample point or a constant. The proof is `rfl`, and that is where the uniformity is lost and
+    nowhere else.
+  * `jumpProcessFE_eq_stepPath_cumulativeRateF`: **the path dependent jump process is the constant
+    rate one, read on the clock of the cumulated rate.** **In Lean** on 2026-09-11, eighteenth run,
+    with `lt_jumpTimeFE_iff` and `stepIndex_jumpTimeFE`. At every non negative time and every
+    sample point the process is the step path over the **partial sums of the waiting times
+    themselves** — the construction with rate `1`, carrying no trace of the rate — evaluated at
+    `cumulativeRateF Lam ω t`. The whole path dependence of the construction sits in the clock and
+    nowhere in the combinatorics.
+
+    `lt_jumpTimeFE_iff` is the content and it is the contraposition of `rateInverseE_le_ofReal_iff`:
+    a time lies below the `n`-th jump time exactly when the cumulated rate there lies below the
+    `n`-th partial sum. **Neither the divergence nor the attainment of the level nor the strict
+    positivity enters** — only the local integrability and `Lam ≥ 0`.
+
+    **Over `rateInverse` the statement is false**, and it inherits that from
+    `rateInverseE_le_ofReal_iff`, of which it is the contraposition: at a level the cumulated rate
+    never reaches the real inverse is `0`, so no time lies below it, while the right hand side
+    holds at every time. So the time change is a statement that exists only in `ℝ≥0∞`, and not one
+    that is merely cheaper there — unlike `monotone_rateInverseE`, where the real statement
+    `rateInverse_mono` is true and only carries three hypotheses more.
+
+    **What it buys for the probabilistic half.** Under `jumpMeasure mu nu` the waiting times are
+    i.i.d. `expMeasure 1` and independent of the marks, so after the time change a statement about
+    `{t < τ n}` is a statement about a sum of exponentials at the level `cumulativeRateF Lam ω t`.
+    That level still reads the sample point, and that — and nothing else — is what the manuscript's
+    conditioning on `ℋ_n` is for. The time change does not remove the conditioning; it says what
+    must be conditioned on and that nothing path dependent survives it.
+  * `jumpMeasure_map_cumulativeRateF_jumpTimeF` and `jumpMeasure_lt_hawkesJumpTime_one`:
+    **the law of the jump times of the path dependent construction.** **In Lean** on 2026-09-11,
+    nineteenth run, with `jumpMeasure_snd_eval_preimage`, `setOf_lt_jumpTimeFE_eq`,
+    `jumpMeasure_lt_jumpTimeFE`, `jumpMeasure_lt_jumpTimeFE_one`,
+    `jumpMeasure_lt_jumpTimeFE_one_const` and `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one`. This is the
+    first place at which the measure of the construction enters the path dependent variant; up to
+    it `P : Measure Ω` occurred in `section PathDependent` at the single place
+    `isLocalizingSequence_rateInverseE`, and every other statement held at every sample point. The
+    measure does not have to be built: `jumpMeasure mu nu` lays the marks down along the chain
+    kernel and the waiting times as i.i.d. `expMeasure 1`, and the path dependent construction
+    reads exactly those data, differing from the state dependent one only in how it turns `(y, ξ)`
+    into a path.
+
+    `jumpMeasure_map_cumulativeRateF_jumpTimeF` is the **time change theorem in law**: the law of
+    `cumulativeRateF Lam ω (τ n)` is the law of `∑_{k<n} ξ k`, a sum of `n` independent standard
+    exponentials — for **every** rate, path dependent or not, and with no independence argument, no
+    conditioning and no renewal, because `cumulativeRateF_jumpTimeF` is an identity at every sample
+    point and the partial sum reads only the second coordinate. It is `eq:compensatorexp` read
+    under the measure, and it says that the compensator is the time change that carries the process
+    to constant rate one.
+
+    `jumpMeasure_lt_jumpTimeFE_one` is the survival function of the first jump time, and it asks
+    the cumulated mass at `t` **not to read the sample point** — the inhomogeneous Poisson case,
+    where the rate is a function of the time alone. Then the level is deterministic and the
+    survival function is `exp (-∫_0^t Lam)`. `jumpMeasure_lt_jumpTimeFE` is the same statement for
+    the `n`-th jump time, left as the law of the partial sum under `waitingMeasure` because the
+    tail of a sum of `n` standard exponentials is a Gamma tail, which Mathlib does not carry;
+    `jumpMeasure_lt_jumpTimeFE_one_const` is the probe that the hypothesis is satisfiable, and it
+    returns the Poisson value `exp (-(c t))` at the constant rate `c`, as
+    `jumpTimeF_const_eq_jumpTime` does for the construction itself.
+
+    **What does not follow from the time change is the same statement for a self exciting rate**,
+    and the reason is the level: `cumulativeRateF Lam ω t` reads the jumps before `t`, so
+    `{Lam_t < ξ 0}` is not the tail of one exponential at a fixed level. The manuscript conditions
+    on `ℋ_n` at exactly this place. For the Hawkes rate the first jump time is nevertheless
+    explicit, and it is the **recursion** and not the general reduction that makes it so:
+    `hawkesJumpTime_one` gives `τ_1 = ξ 0 / ν` at every sample point with `0 ≤ ξ 0`, because stage
+    one of the recursion has an empty history by construction, and
+    `jumpMeasure_lt_hawkesJumpTime_one` is the exponential tail of `ξ 0` read at the level `ν t`:
+    `P (τ_1 > t) = exp (-ν t)`.
+
+    `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` is the same value for the jump time the
+    **process** computes from the self referential rate, and the transfer `jumpTimeF_hawkesSelfRate`
+    costs the two integrability hypotheses the fixed point carries — by the reading of
+    `tendsto_cumulativeRateF_hawkes` the local integrability of the Hawkes rate along the
+    constructed path **is** the non explosion. So the law of the first jump time of the recursion
+    is unconditional and the law of the first jump time of the process is not, and that is the
+    first statement of the path dependent variant at which the non explosion cannot be avoided.
   * `hawkesProcess`, `hawkesProcess_eq_stepPath` and `isStepPath_hawkesProcess`:
     **the Hawkes process.** **In Lean** on 2026-09-11, eighth run, with
     `hawkesSelfRate`, `hawkesSelfRate_apply`, `le_hawkesSelfRate`,
