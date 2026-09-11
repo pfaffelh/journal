@@ -36,7 +36,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-10.  Every declaration elaborates; 9 declarations carry `sorry`, and
+2026-09-11.  Every declaration elaborates; 9 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -11109,19 +11109,23 @@ theorem chain_const_of_absorb {lam : E → ℝ} {y : ℕ → E} {N : ℕ}
     · rw [Nat.le_antisymm h hm]
 
 /-- **The lifted rate gives the same path**, at every time, on a sample point at which the waiting
-times are positive, the chain does not move at a state of vanishing rate, and the waiting times
-diverge.
+times are positive, the chain does not move at a state of vanishing rate, and the **lifted**
+construction does not explode.
 
 The two constructions part company only past the first absorbing index `N`, and there they agree
 for two different reasons: the original path stops because its `(N+1)`-st jump time is `⊤`
 (`jumpTimeE_succ_eq_top`), the lifted one keeps jumping but every state it jumps to is `y N`
-(`chain_const_of_absorb`).  The divergence of the waiting times is what makes the lifted step
+(`chain_const_of_absorb`).  The non explosion of the lifted construction is what makes its step
 index exist -- without it the junk value of `stepIndex` would be returned on the left and not on
-the right, and that is the one place where an almost sure hypothesis really is needed. -/
-theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x)
-    (hL : ∀ x, lam x ≤ L) {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ n, 0 < ω.2 n)
-    (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
-    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) (t : ℝ) :
+the right, and that is the one place where an almost sure hypothesis really is needed.
+
+`jumpProcessE_posRate_eq` is this statement with the non explosion produced from a bound on the
+rate, which is where `hlam0` and `hL` are spent and the only place they are spent.  An unbounded
+rate has no such bound -- the Yule rate `β x` is the case -- and reaches the conclusion through
+this form instead. -/
+theorem jumpProcessE_posRate_eq_of_mem {lam : E → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+    (hxi : ∀ n, 0 < ω.2 n) (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
+    (hmem : ω ∈ NonExplosiveE (posRate lam)) (t : ℝ) :
     jumpProcessE (posRate lam) t ω = jumpProcessE lam t ω := by
   classical
   set y := ω.1 with hy1
@@ -11138,10 +11142,7 @@ theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 �
       jumpTimeE_succ_eq_top (hxi (Nat.find hex)) hN
     have hconst : ∀ m, Nat.find hex ≤ m → y m = y (Nat.find hex) :=
       chain_const_of_absorb hy hN
-    have hne : (y, xi) ∈ NonExplosiveE (posRate lam) :=
-      mem_nonExplosiveE_of_traj (lt_of_lt_of_le zero_lt_one (le_max_right L 1))
-        (fun k ↦ posRate_pos hlam0 (y k)) (fun k ↦ posRate_le hL (y k))
-        (fun k ↦ (hxi k).le) hsum
+    have hne : (y, xi) ∈ NonExplosiveE (posRate lam) := hmem
     have hjex : ∃ n, ENNReal.ofReal t < jumpTimeE lam y xi (n + 1) :=
       ⟨Nat.find hex, by rw [hTtop]; exact ENNReal.ofReal_lt_top⟩
     simp only [stepPath]
@@ -11168,6 +11169,111 @@ theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 �
     have hTeq : jumpTimeE (posRate lam) y xi = jumpTimeE lam y xi :=
       funext fun n ↦ jumpTimeE_congr_of_lt fun m _ ↦ posRate_of_ne (hex m)
     rw [hTeq]
+
+/-- **The lifted rate gives the same path**, with the non explosion of the lifted construction
+produced from a bound on the rate.  The lifted rate is bounded by `max L 1` and bounded below by a
+positive number at every state, so divergent waiting times make its jump times diverge
+(`mem_nonExplosiveE_of_traj`); that is the whole use of `hlam0` and `hL`, and
+`jumpProcessE_posRate_eq_of_mem` is the same conclusion without them. -/
+theorem jumpProcessE_posRate_eq {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ n, 0 < ω.2 n)
+    (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop) (t : ℝ) :
+    jumpProcessE (posRate lam) t ω = jumpProcessE lam t ω :=
+  jumpProcessE_posRate_eq_of_mem hxi hy
+    (mem_nonExplosiveE_of_traj (lt_of_lt_of_le zero_lt_one (le_max_right L 1))
+      (fun k ↦ posRate_pos hlam0 (ω.1 k)) (fun k ↦ posRate_le hL (ω.1 k))
+      (fun k ↦ (hxi k).le) hsum) t
+
+/-! ### The transfer of non explosion across the lift
+
+Non explosion of `lam` is **not** formally non explosion of `posRate lam`, and the series
+`∑ ξ_k / lam (y k)` of `mem_nonExplosiveE_iff_tsum_eq_top` shows where the two part company: at a
+state of vanishing rate one term of it is `⊤`, so the series diverges for free, and the lift
+replaces exactly that term by the finite `ξ_k`.  The hypothesis on `lam` is therefore worthless in
+precisely the branch where the conclusion is not free, and the transfer has to pay for that branch
+out of its own pocket.
+
+What it pays with is that the chain **stands still** past the first absorbing index
+(`chain_const_of_absorb`): from there on every state the path visits has vanishing rate, the lifted
+rate is `1` at all of them, and the jump times grow by the waiting times themselves.  So the
+divergence of the waiting times -- which `ae_tendsto_sum_snd_jumpMeasure` supplies and which the
+absorbing branch of `lam` never needed -- is the whole content.
+
+Away from an absorbing state nothing is spent at all: the two rates agree at every state the chain
+visits, so the two families of jump times are the **same function** (`jumpTimeE_congr_of_lt`) and
+the transfer is an identity.
+
+This is the form the **series** route needs.  The Lyapunov criterion does not need it: it proves
+non explosion of `posRate lam` outright (`ae_mem_nonExplosiveE_posRate_of_jumpApply_le`), looking at
+no trajectory and using no divergence. -/
+
+/-- **The lifted construction does not explode either**, at a sample point whose waiting times are
+nonnegative and have divergent partial sums and whose chain does not move at a state of vanishing
+rate.
+
+The hypothesis `hmem` is used in **one** of the two branches, the one in which the chain never
+meets an absorbing state; there the two rates agree along the trajectory.  In the absorbing branch
+it is not used, because what it says there is only that a single term of the series is `⊤`, and
+that is the term the lift removes. -/
+theorem mem_nonExplosiveE_posRate_of_mem {lam : E → ℝ} (hlam0 : ∀ x, 0 ≤ lam x)
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ k, 0 ≤ ω.2 k)
+    (hy : ∀ n, lam (ω.1 n) = 0 → ω.1 (n + 1) = ω.1 n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, ω.2 k) atTop atTop)
+    (hmem : ω ∈ NonExplosiveE lam) :
+    ω ∈ NonExplosiveE (posRate lam) := by
+  classical
+  by_cases hex : ∃ N, lam (ω.1 N) = 0
+  · obtain ⟨N, hN⟩ := hex
+    have hconst : ∀ m, N ≤ m → ω.1 m = ω.1 N := chain_const_of_absorb hy hN
+    have hone : ∀ k, N ≤ k → (posRate lam (ω.1 k))⁻¹ = 1 := fun k hk ↦ by
+      rw [hconst k hk, posRate_of_eq hN, inv_one]
+    have hnonneg : ∀ k, 0 ≤ (posRate lam (ω.1 k))⁻¹ * ω.2 k := fun k ↦
+      mul_nonneg (inv_nonneg.2 (posRate_pos hlam0 (ω.1 k)).le) (hxi k)
+    have hev : ∀ᶠ m in atTop,
+        (∑ k ∈ Finset.range m, ω.2 k) + -(∑ k ∈ Finset.range N, ω.2 k)
+          ≤ ∑ k ∈ Finset.range m, (posRate lam (ω.1 k))⁻¹ * ω.2 k := by
+      filter_upwards [eventually_ge_atTop N] with m hm
+      have h1 : (∑ k ∈ Finset.range m, ω.2 k) + -(∑ k ∈ Finset.range N, ω.2 k)
+          = ∑ k ∈ Finset.Ico N m, ω.2 k := by
+        rw [Finset.sum_Ico_eq_sub _ hm]; ring
+      have h2 : ∑ k ∈ Finset.Ico N m, ω.2 k
+          = ∑ k ∈ Finset.Ico N m, (posRate lam (ω.1 k))⁻¹ * ω.2 k :=
+        Finset.sum_congr rfl fun k hk ↦ by
+          rw [hone k (Finset.mem_Ico.1 hk).1, one_mul]
+      rw [h1, h2]
+      exact Finset.sum_le_sum_of_subset_of_nonneg
+        (fun k hk ↦ Finset.mem_range.2 (Finset.mem_Ico.1 hk).2) (fun k _ _ ↦ hnonneg k)
+    exact mem_nonExplosiveE_of_tendsto_sum (fun k ↦ posRate_pos hlam0 (ω.1 k)) hxi
+      (tendsto_atTop_mono' atTop hev
+        (tendsto_atTop_add_const_right atTop (-(∑ k ∈ Finset.range N, ω.2 k)) hsum))
+  · push_neg at hex
+    have hTeq : jumpTimeE (posRate lam) ω.1 ω.2 = jumpTimeE lam ω.1 ω.2 :=
+      funext fun n ↦ jumpTimeE_congr_of_lt fun m _ ↦ posRate_of_ne (hex m)
+    intro t
+    obtain ⟨n, hn⟩ := hmem t
+    exact ⟨n, by rw [hTeq]; exact hn⟩
+
+/-- **The lifted construction does not explode either**, almost surely, and transferred from a
+proof about `lam` itself.  The three sample point hypotheses of
+`mem_nonExplosiveE_posRate_of_mem` are the three standing almost sure facts of the jump
+construction: the waiting times are positive (`ae_pos_snd_jumpMeasure`), their partial sums diverge
+(`ae_tendsto_sum_snd_jumpMeasure`), and the chain does not move at a state of vanishing rate
+(`ae_absorb_jumpMeasure`, which is where `habs` is spent and the only place it is spent).
+
+With it the series route reaches the master equation: `jumpLaw_posRate_eq` identifies the law of
+`jumpProcessE lam` with `jumpLaw (posRate lam)`, and
+`jumpMeasure_masterEquation_of_ae_nonExplosive` asks for non explosion of the rate it is written
+in, which is the lifted one. -/
+theorem ae_mem_nonExplosiveE_posRate [MeasurableEq E] {lam : E → ℝ} (hlam : Measurable lam)
+    (hlam0 : ∀ x, 0 ≤ lam x) (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE (posRate lam) := by
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu, ae_absorb_jumpMeasure mu hlam habs nu,
+    ae_tendsto_sum_snd_jumpMeasure mu nu, hne] with ω hxi hy hsum hmem
+  exact mem_nonExplosiveE_posRate_of_mem hlam0 (fun k ↦ (hxi k).le) hy hsum hmem
 
 /-! ### The theorem -/
 
@@ -11561,6 +11667,29 @@ theorem ae_mem_nonExplosiveE_linearBirthDeath {β δ : ℝ} (hβδ0 : 0 ≤ β +
     exact Or.inr ⟨fun k ↦ birthDeathRate_linear_pos hβδ (hex k),
       not_summable_inv_birthDeathRate_linear hβδ (fun k ↦ hy k) hex⟩
 
+/-- **The lifted rate of the linear birth and death chain does not explode**, by the series route.
+
+This is the series route arriving where the Lyapunov route arrives in
+`ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le`, and the two do not arrive by the same means:
+there the criterion never looks at a trajectory, here the transfer spends the divergence of the
+waiting times on the extinction event.  The hypothesis is the same `0 ≤ β + δ` that
+`ae_mem_nonExplosiveE_linearBirthDeath` carries; the kernel of the absorbing state is the fallback
+branch of `birthDeathKernel_apply`, which the construction chooses anyway.
+
+It is what makes the master equation available to the series route, since `jumpLaw_posRate_eq` and
+`jumpMeasure_masterEquation_of_ae_nonExplosive` are both written in the lifted rate. -/
+theorem ae_mem_nonExplosiveE_posRate_linearBirthDeath {β δ : ℝ} (hβδ : 0 ≤ β + δ)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu),
+      ω ∈ NonExplosiveE (posRate (birthDeathRate (linearBirth β) (linearDeath δ))) :=
+  ae_mem_nonExplosiveE_posRate (measurable_of_countable _)
+    (birthDeathRate_linear_nonneg hβδ) _
+    (fun x hx ↦ by
+      rw [birthDeathRate] at hx
+      rw [birthDeathKernel_apply, if_pos hx]) nu
+    (ae_mem_nonExplosiveE_linearBirthDeath hβδ nu)
+
 /-- **The linear birth and death chain solves its martingale problem locally.**  Every hypothesis
 of `jumpProcess_isLocalMPSolution_of_nonneg` is discharged on the data: the rate is measurable
 because `ℕ` is discrete, nonnegative by `birthDeathRate_linear_nonneg`, and the normalisation of
@@ -11614,17 +11743,24 @@ The statement is non explosion, `∀ᵐ ω, ω ∈ NonExplosiveE lam`.  The thre
   `jumpMeasure_integral_sub_eq_intervalIntegral`; since `jumpApply_yule_indicator` is
   `A 1_{n+1} = β n 1_n - β (n+1) 1_{n+1}`, that identity is the master equation in integrated
   form, `p n t = p n 0 + ∫_0^t (β (n-1) p (n-1) r - β n p n r) dr`.  Solving it by induction on
-  `n` with the integrating factor `exp (β n t)` gives `p n t = exp (-β t) (1 - exp (-β t))^(n-1)`,
-  and `∑ n, p n t = 1` -- a geometric series -- **is** non explosion.  This route yields the one
-  dimensional law and the non explosion at once.
+  `n` with the integrating factor `exp (β n t)` gives `p n t = exp (-β t) (1 - exp (-β t))^(n-1)`.
 * **The coupling.**  Dominate the birth and death process pathwise by the Yule process and inherit
   non explosion from it.
 
 **The circularity, which is the reason to run the comparison at all.**  "At a fixed time `X t` is
 geometric, hence almost surely finite, hence there is no explosion" is circular: to speak of `X t`
-the process has to be defined at `t` already.  What is not circular is `∑ k, p k t = 1` for the
-**minimal** process, and that identity *is* the non explosion.  The master equation route
-therefore does not presuppose what the coupling route needs before it may begin.
+the process has to be defined at `t` already.  On a state space with a **cemetery** the way out is
+`∑ k, p k t = 1` for the minimal process, an identity which does not presuppose what it proves.
+
+**This state space has no cemetery, and there the way out is closed.**  `tsum_jumpLaw_eq_one` says
+that `∑ k, p k t = 1` holds here with no hypothesis whatever, so it is not the non explosion and
+cannot become it: past an explosion time `stepIndex` returns the junk value `0` and the path sits
+at the initial state of its own chain, still a state of `E`.  It is at that same point that the
+master equation fails, since no equation generated by `A` describes a return from infinity, and
+that is why non explosion is a **hypothesis** of
+`jumpMeasure_masterEquation_of_ae_nonExplosive` rather than a conclusion of it.  What the second
+route yields on this construction is therefore the one dimensional law, and only that; the non
+explosion it needs is supplied by the first route.
 
 The generator is `jumpApply_yule`, `A f x = β x (f (x + 1) - f x)`, and every hypothesis of the
 local theorem is discharged on the data by `yule_isLocalMPSolution`. -/
@@ -11926,4 +12062,1877 @@ theorem mm1_masterEquation {β δ : ℝ} (hβ : 0 < β) (hδ : 0 ≤ δ) (nu : M
     (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).1) (by linarith : (0:ℝ) < β + δ)
     (fun x ↦ (birthDeathRate_mm1_mem hβ hδ x).2) _ nu n ht
 
+/-! ### The master equation without a bound on the rate
+
+`jumpMeasure_masterEquation` inherits `∀ x, lam x ≤ L` from the expectation identity, and the Yule
+rate has no such `L` (`not_bddAbove_birthDeathRate_linear`).  The hypothesis is removed here.  What
+replaces it is not a weaker bound on the rate but two facts of a different kind:
+
+* almost sure **non explosion**, which is what makes the localising sequence `rateTime lam m`
+  exhaust the time axis (`tendsto_rateTime_atTop`); and
+* a bound on the **value of the generator** at the one test function, `|A 1_n| ≤ K`.  That is the
+  remark of `MartingaleProblems/README.md` about a domain with compact support turned into a
+  hypothesis, and `jumpApply_yule_indicator` discharges it on data at which `lam` itself is
+  unbounded.
+
+The proof is the truncation `truncRate lam m` and a passage to the limit, and the limit is
+dominated twice: the law by `1`, the compensator by `K`.  The second domination is
+`abs_jumpApply_truncRate_le`, and it is uniform in `m` although the bound `2 * m * C` of
+`abs_jumpApply_le` at the level `m` is not -- lowering the rate lowers the generator pointwise,
+because the rate enters `jumpApply` as a factor and in no other place.
+
+**Non explosion is a hypothesis of this theorem and not a conclusion of it**, and that is the
+finding of the comparison of the three routes rather than a defect of the proof.  `tsum_jumpLaw_eq_one`
+says why: `∑ k, p k t = 1` holds in this construction *unconditionally*, so it is not the non
+explosion and cannot become it.  The state space carries no cemetery, and past an explosion time
+`stepIndex` returns the junk value `0`, so the path sits at the initial state of its own chain and
+is still a state of `E`.  It is exactly there that the master equation itself fails, since no
+equation generated by `A` describes a return from infinity.  The route named for the Yule process --
+solve the equation, sum the solution, *obtain* non explosion -- therefore closes only over a state
+space with a cemetery, which this one is not. -/
+
+/-- **Lowering the rate lowers the generator pointwise.**  The rate enters `jumpApply` as a factor
+and in no other place, so the truncated generator is dominated by the untruncated one -- a bound
+that does not grow with the truncation level, which the bound `2 * m * C` of `abs_jumpApply_le` at
+the level `m` does.  This is what makes the passage to the limit a dominated one. -/
+theorem abs_jumpApply_truncRate_le {E : Type*} [MeasurableSpace E] {lam : E → ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (mu : Kernel E E) (f : E → ℝ) (m : ℕ) (x : E) :
+    |jumpApply (truncRate lam m) mu f x| ≤ |jumpApply lam mu f x| := by
+  have h0 : 0 ≤ truncRate lam m x := by
+    rw [truncRate_apply]
+    exact le_min (hlam0 x) (Nat.cast_nonneg m)
+  rw [jumpApply, jumpApply, abs_mul, abs_mul, abs_of_nonneg h0, abs_of_nonneg (hlam0 x)]
+  exact mul_le_mul_of_nonneg_right (truncRate_le_rate lam m x) (abs_nonneg _)
+
+/-- **The generator reads the rate at the state it is evaluated at and nowhere else.** -/
+theorem jumpApply_congr_rate {E : Type*} [MeasurableSpace E] {lam lam' : E → ℝ} {x : E}
+    (h : lam' x = lam x) (mu : Kernel E E) (f : E → ℝ) :
+    jumpApply lam' mu f x = jumpApply lam mu f x := by
+  rw [jumpApply, jumpApply, h]
+
+/-- **At a non explosive sample point the truncated process is eventually the process**, and the
+truncated rate is eventually the rate at the state it has reached.  Both halves are read off the
+localising sequence: `tendsto_rateTime_atTop` puts the fixed time below `rateTime lam m` from some
+level on, and there `jumpProcessE_eq_truncRate_of_le_rateTime` identifies the paths and
+`ofReal_lam_jumpProcessE_lt_of_lt_rateTime` bounds the rate along them.
+
+The statement is about `jumpProcess` and not about `jumpProcessE` because that is what the
+expectation identity is written in; the passage between the two is `jumpProcessE_eq_jumpProcess`,
+and it is where the positivity of the rate is spent. -/
+theorem eventually_jumpProcess_truncRate_eq {E : Type*} [MeasurableSpace E] {lam : E → ℝ}
+    (hlam0 : ∀ x, 0 < lam x) {y : ℕ → E} {xi : ℕ → ℝ} (hω : (y, xi) ∈ NonExplosiveE lam)
+    (hxi : ∀ k, 0 < xi k) {s : ℝ} (hs : 0 ≤ s) :
+    ∀ᶠ m : ℕ in Filter.atTop,
+      jumpProcess (truncRate lam m) s (y, xi) = jumpProcess lam s (y, xi)
+        ∧ truncRate lam m (jumpProcess lam s (y, xi)) = lam (jumpProcess lam s (y, xi)) := by
+  have hev := (ENNReal.tendsto_nhds_top_iff_nnreal.1
+    (tendsto_rateTime_atTop (lam := lam) hω)) (Real.toNNReal s)
+  filter_upwards [hev, Filter.eventually_gt_atTop 0] with m hm hm0
+  have hlt : ENNReal.ofReal s < rateTime lam m (y, xi) := hm
+  have hE : jumpProcessE (truncRate lam m) s (y, xi) = jumpProcessE lam s (y, xi) :=
+    jumpProcessE_eq_truncRate_of_le_rateTime hω hlt.le
+  have hrate : ENNReal.ofReal (lam (jumpProcessE lam s (y, xi))) < (m : ENNReal) :=
+    ofReal_lam_jumpProcessE_lt_of_lt_rateTime hs hlt
+  have hle : lam (jumpProcessE lam s (y, xi)) ≤ (m : ℝ) := by
+    by_contra hcon
+    push_neg at hcon
+    refine absurd hrate (not_lt.2 ?_)
+    rw [← ENNReal.ofReal_natCast m]
+    exact ENNReal.ofReal_le_ofReal hcon.le
+  have h1 : jumpProcessE lam s (y, xi) = jumpProcess lam s (y, xi) :=
+    jumpProcessE_eq_jumpProcess hlam0 hxi s
+  have h2 : jumpProcessE (truncRate lam m) s (y, xi) = jumpProcess (truncRate lam m) s (y, xi) :=
+    jumpProcessE_eq_jumpProcess (truncRate_pos hlam0 hm0) hxi s
+  refine ⟨by rw [← h2, ← h1, hE], ?_⟩
+  rw [← h1]
+  exact truncRate_eq_self hle
+
+/-- **The master equation at an unbounded rate.**  The hypothesis `∀ x, lam x ≤ L` of
+`jumpMeasure_masterEquation` is gone, and what stands in its place is almost sure non explosion
+together with a bound on the *value of the generator* at the single test function.
+
+The three limits are all dominated and all by a constant: the law of the truncated process by `1`
+(`abs_stateIndicator_le_one`), its compensator by `K` (`abs_jumpApply_truncRate_le`), and the time
+integral of the compensator by `K` again.  The identification of the truncated data with the data
+is `eventually_jumpProcess_truncRate_eq` at each fixed time.
+
+The truncation is taken along `m + 1` and not along `m`, because `truncRate lam 0` is the zero rate
+and no theorem about a positive rate applies to it. -/
+theorem jumpMeasure_masterEquation_of_ae_nonExplosive {E : Type*} [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} (hlam : Measurable lam) (hlam0 : ∀ x, 0 < lam x)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam) (n : E) {K : ℝ}
+    (hK : ∀ x, |jumpApply lam mu (stateIndicator n) x| ≤ K) {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw lam mu nu t n
+      = jumpLaw lam mu nu 0 n
+        + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply lam mu (stateIndicator n)
+            (jumpProcess lam r ω) ∂(jumpMeasure mu nu) := by
+  classical
+  have hgood : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam ∧ ∀ k, 0 < ω.2 k := by
+    filter_upwards [hne, ae_pos_snd_jumpMeasure mu nu] with ω h1 h2 using ⟨h1, h2⟩
+  have hXm : ∀ (l : E → ℝ), Measurable l → ∀ s : ℝ, Measurable (jumpProcess l s (E := E)) :=
+    fun l hl s ↦ (measurable_jumpProcess hl).comp (measurable_const.prodMk measurable_id)
+  have hAm : ∀ (l : E → ℝ), Measurable l → Measurable (jumpApply l mu (stateIndicator n)) :=
+    fun l hl ↦ measurable_jumpApply hl (measurable_stateIndicator n) (abs_stateIndicator_le_one n)
+  -- the master equation at the truncated rate, at every positive level
+  have key : ∀ m : ℕ,
+      (∫ ω, stateIndicator n (jumpProcess (truncRate lam (m + 1)) t ω) ∂(jumpMeasure mu nu))
+        = jumpLaw lam mu nu 0 n
+          + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+              (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu) := by
+    intro m
+    have hm : 0 < m + 1 := Nat.succ_pos m
+    have h := jumpMeasure_masterEquation (measurable_truncRate hlam (m + 1))
+      (truncRate_pos hlam0 hm) (L := ((m : ℝ) + 1)) (by positivity)
+      (fun x ↦ by simpa using truncRate_le lam (m + 1) x) mu nu n ht
+    rw [jumpLaw_zero (truncRate_pos hlam0 hm) mu nu n] at h
+    rw [jumpLaw_zero hlam0 mu nu n]
+    exact h
+  -- the law of the truncated process converges to the law
+  have hlhs : Tendsto (fun m : ℕ ↦ ∫ ω, stateIndicator n
+      (jumpProcess (truncRate lam (m + 1)) t ω) ∂(jumpMeasure mu nu)) atTop
+      (𝓝 (∫ ω, stateIndicator n (jumpProcess lam t ω) ∂(jumpMeasure mu nu))) := by
+    refine tendsto_integral_filter_of_dominated_convergence (fun _ ↦ (1:ℝ))
+      (Filter.Eventually.of_forall fun m ↦ ?_)
+      (Filter.Eventually.of_forall fun m ↦ Filter.Eventually.of_forall fun ω ↦ ?_)
+      (integrable_const _) ?_
+    · exact ((measurable_stateIndicator n).comp
+        (hXm _ (measurable_truncRate hlam (m + 1)) t)).aestronglyMeasurable
+    · simpa [Real.norm_eq_abs] using abs_stateIndicator_le_one n _
+    · filter_upwards [hgood] with ω hω
+      obtain ⟨y, xi⟩ := ω
+      refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [(tendsto_add_atTop_nat 1).eventually
+        (eventually_jumpProcess_truncRate_eq hlam0 hω.1 hω.2 ht)] with m hm
+      rw [hm.1]
+  -- the compensator of the truncated process converges, at every nonnegative time
+  have hinner : ∀ r : ℝ, 0 ≤ r → Tendsto (fun m : ℕ ↦ ∫ ω,
+      jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+        (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu)) atTop
+      (𝓝 (∫ ω, jumpApply lam mu (stateIndicator n)
+        (jumpProcess lam r ω) ∂(jumpMeasure mu nu))) := by
+    intro r hr
+    refine tendsto_integral_filter_of_dominated_convergence (fun _ ↦ K)
+      (Filter.Eventually.of_forall fun m ↦ ?_)
+      (Filter.Eventually.of_forall fun m ↦ Filter.Eventually.of_forall fun ω ↦ ?_)
+      (integrable_const _) ?_
+    · exact ((hAm _ (measurable_truncRate hlam (m + 1))).comp
+        (hXm _ (measurable_truncRate hlam (m + 1)) r)).aestronglyMeasurable
+    · simpa [Real.norm_eq_abs] using
+        (abs_jumpApply_truncRate_le (fun x ↦ (hlam0 x).le) mu (stateIndicator n) (m + 1) _).trans
+          (hK _)
+    · filter_upwards [hgood] with ω hω
+      obtain ⟨y, xi⟩ := ω
+      refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [(tendsto_add_atTop_nat 1).eventually
+        (eventually_jumpProcess_truncRate_eq hlam0 hω.1 hω.2 hr)] with m hm
+      rw [hm.1]
+      exact (jumpApply_congr_rate hm.2 mu (stateIndicator n)).symm
+  -- and so does its time integral
+  have hrhs : Tendsto (fun m : ℕ ↦ ∫ r in (0:ℝ)..t, ∫ ω,
+      jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+        (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu)) atTop
+      (𝓝 (∫ r in (0:ℝ)..t, ∫ ω, jumpApply lam mu (stateIndicator n)
+        (jumpProcess lam r ω) ∂(jumpMeasure mu nu))) := by
+    refine intervalIntegral.tendsto_integral_filter_of_dominated_convergence (fun _ ↦ K)
+      (Filter.Eventually.of_forall fun m ↦ ?_)
+      (Filter.Eventually.of_forall fun m ↦ Filter.Eventually.of_forall fun r _ ↦ ?_)
+      intervalIntegrable_const ?_
+    · have hf : Measurable fun p : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦
+          jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+            (jumpProcess (truncRate lam (m + 1)) p.1 p.2) :=
+        (hAm _ (measurable_truncRate hlam (m + 1))).comp
+          (measurable_jumpProcess (measurable_truncRate hlam (m + 1)))
+      exact ((hf.stronglyMeasurable.integral_prod_right'
+        (ν := jumpMeasure mu nu)).measurable).aestronglyMeasurable
+    · rw [Real.norm_eq_abs]
+      exact abs_integral_le_of_abs_le fun ω ↦
+        (abs_jumpApply_truncRate_le (fun x ↦ (hlam0 x).le) mu (stateIndicator n) (m + 1) _).trans
+          (hK _)
+    · refine Filter.Eventually.of_forall fun r hr ↦ hinner r ?_
+      rw [Set.uIoc_of_le ht] at hr
+      exact hr.1.le
+  have heq : (fun m : ℕ ↦ ∫ ω, stateIndicator n
+      (jumpProcess (truncRate lam (m + 1)) t ω) ∂(jumpMeasure mu nu))
+      = fun m : ℕ ↦ jumpLaw lam mu nu 0 n
+        + ∫ r in (0:ℝ)..t, ∫ ω, jumpApply (truncRate lam (m + 1)) mu (stateIndicator n)
+            (jumpProcess (truncRate lam (m + 1)) r ω) ∂(jumpMeasure mu nu) := funext key
+  rw [heq] at hlhs
+  exact tendsto_nhds_unique hlhs (tendsto_const_nhds.add hrhs)
+
+/-- **The one dimensional laws sum to one, and they do so unconditionally.**  There is no
+hypothesis of non explosion here, and none is available to be dropped: `jumpProcess` takes its
+values in `E` at every time and at every sample point, so its law at a fixed time is a probability
+measure on `E` whatever the rate does.
+
+This is the finding of the comparison of the three routes to non explosion, and it is a negative
+one.  The route proposed for the Yule process solves the master equation, sums the solution, and
+reads `∑ k, p k t = 1` as the assertion that the process has not left the state space.  Over a
+state space with a cemetery that reading is right.  Here it is empty: past an explosion time
+`stepIndex` returns the junk value `0` and the path sits at the initial state of its own chain, so
+the mass that should have escaped is still counted.  The equation `∑ k, p k t = 1` is therefore a
+theorem about the construction and not a statement about explosion, and the route closes only
+after a cemetery has been added to `E`. -/
+theorem tsum_jumpLaw_eq_one {E : Type*} [MeasurableSpace E] [Countable E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (t : ℝ) :
+    ∑' k : E, jumpLaw lam mu nu t k = 1 := by
+  have hX : Measurable (jumpProcess lam t (E := E)) :=
+    (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  have hprob : IsProbabilityMeasure ((jumpMeasure mu nu).map (jumpProcess lam t)) :=
+    Measure.isProbabilityMeasure_map hX.aemeasurable
+  have hcover : (⋃ k : E, ({k} : Set E)) = Set.univ := by
+    ext x; simp
+  have hsum : ∑' k : E, ((jumpMeasure mu nu).map (jumpProcess lam t)) {k} = 1 := by
+    rw [← measure_iUnion (fun i j hij ↦ Set.disjoint_singleton.2 hij)
+      (fun k ↦ measurableSet_singleton k), hcover, measure_univ]
+  rw [tsum_congr fun k ↦ jumpLaw_eq_measureReal hlam mu nu t k]
+  simp only [measureReal_def]
+  rw [← ENNReal.tsum_toReal_eq (fun k ↦ measure_ne_top _ _), hsum, ENNReal.toReal_one]
+
 end YuleProcess
+
+section Lyapunov
+
+/-!
+## A Lyapunov criterion for non explosion
+
+`ae_mem_nonExplosiveE_jumpMeasure` asks the divergence of `∑ 1 / lam (y k)` **along the realised
+chain**, and that is a statement about a trajectory and not about the data.  Every instance so far
+had to supply it by hand, and each did so by an argument of its own: the linear chain compares its
+reciprocal rates with the harmonic series, using that a birth and death chain moves by one step
+(`not_summable_inv_birthDeathRate_linear`).  The criterion below replaces all of them by one
+condition on the **data**: a function `f` that the jump kernel does not increase by more than a
+factor, and whose sublevel sets carry a bounded rate.
+
+**What the criterion is, and what it is not.**  The Lyapunov condition of the literature is the
+inequality on the generator, `A f ≤ C • f`, that is `lam x * (∫ f dmu x - f x) ≤ C * f x`.  What is
+proved here is the **pathwise** form, `f z ≤ f x * (1 + C / lam x)` for `mu x`-almost every `z`,
+which implies it by integration and is strictly stronger.  The gap between the two is a discrete
+time supermartingale argument and is named as an open point of Milestone 4; on a birth and death
+chain it is the difference between asking `b x + d x ≤ C * x` and asking `b x ≤ C * x` alone, since
+in the expectation form the death term helps and in the pathwise form it does not.
+
+**The second hypothesis is a boundedness and not an exhaustion.**  What the proof consumes is that
+`lam` is bounded on every sublevel set `{f ≤ N}`, and nothing else about those sets; that they
+exhaust `E` is neither used nor enough.  In the classical setting the two coincide, the sublevel
+sets being compact and the rate continuous, and it is there that the usual wording comes from. -/
+
+variable {E : Type*}
+
+/-- **The Lyapunov estimate along one trajectory.**  Iterating `f (y (k+1)) ≤ f (y k) (1 + C/λ)`
+and `1 + t ≤ exp t` turns the product into the exponential of the partial sums of the reciprocal
+rates -- the sums whose divergence *is* non explosion.  This is the whole mechanism of the
+criterion: a Lyapunov function grows at most as fast as the clock of the chain runs. -/
+theorem le_mul_exp_sum_of_lyapunov {lam f : E → ℝ} {y : ℕ → E} {C : ℝ}
+    (hf : ∀ k, 0 ≤ f (y k))
+    (hstep : ∀ k, f (y (k + 1)) ≤ f (y k) * (1 + C / lam (y k))) (k : ℕ) :
+    f (y k) ≤ f (y 0) * Real.exp (C * ∑ j ∈ Finset.range k, (lam (y j))⁻¹) := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    have hexp : (1 : ℝ) + C / lam (y k) ≤ Real.exp (C * (lam (y k))⁻¹) := by
+      have h := Real.add_one_le_exp (C * (lam (y k))⁻¹)
+      rw [div_eq_mul_inv]
+      linarith
+    have h1 : f (y (k + 1)) ≤ f (y k) * Real.exp (C * (lam (y k))⁻¹) :=
+      (hstep k).trans (mul_le_mul_of_nonneg_left hexp (hf k))
+    refine h1.trans ?_
+    rw [Finset.sum_range_succ, mul_add, Real.exp_add, ← mul_assoc]
+    exact mul_le_mul_of_nonneg_right ih (Real.exp_nonneg _)
+
+/-- **The Lyapunov criterion, along one trajectory.**  If the reciprocal rates were summable, the
+estimate above would bound `f` along the whole chain by a **constant**, the chain would stay in one
+sublevel set of `f`, the rate would stay below the bound `B` that set carries, and the reciprocal
+rates would stay above `B⁻¹` -- which no summable series of nonnegative terms does.  The
+contradiction is that last step and nothing more.
+
+Note where the two hypotheses are spent: the growth condition bounds `f`, and the boundedness on
+sublevel sets is what turns a bound on `f` into a bound on `lam`.  Neither alone suffices, and it
+is the second that a rate growing faster than `f` fails. -/
+theorem not_summable_inv_of_lyapunov {lam f : E → ℝ} {y : ℕ → E} {C : ℝ} (hC : 0 ≤ C)
+    (hlam : ∀ k, 0 < lam (y k)) (hf : ∀ k, 0 ≤ f (y k))
+    (hstep : ∀ k, f (y (k + 1)) ≤ f (y k) * (1 + C / lam (y k)))
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ k, f (y k) ≤ N → lam (y k) ≤ B) :
+    ¬ Summable fun k ↦ (lam (y k))⁻¹ := by
+  intro hsum
+  have hnn : ∀ k, 0 ≤ (lam (y k))⁻¹ := fun k ↦ inv_nonneg.2 (hlam k).le
+  have hpart : ∀ m : ℕ, ∑ j ∈ Finset.range m, (lam (y j))⁻¹ ≤ ∑' j, (lam (y j))⁻¹ :=
+    fun m ↦ hsum.sum_le_tsum _ (fun i _ ↦ hnn i)
+  have hle : ∀ k, f (y k) ≤ f (y 0) * Real.exp (C * ∑' j, (lam (y j))⁻¹) := fun k ↦
+    (le_mul_exp_sum_of_lyapunov hf hstep k).trans
+      (mul_le_mul_of_nonneg_left
+        (Real.exp_le_exp.2 (mul_le_mul_of_nonneg_left (hpart k) hC)) (hf 0))
+  obtain ⟨B, hB⟩ := hbdd (f (y 0) * Real.exp (C * ∑' j, (lam (y j))⁻¹))
+  have hB0 : 0 < B := (hlam 0).trans_le (hB 0 (hle 0))
+  have hlow : ∀ k, B⁻¹ ≤ (lam (y k))⁻¹ := fun k ↦ inv_anti₀ (hlam k) (hB k (hle k))
+  obtain ⟨k, hk⟩ :=
+    (hsum.tendsto_atTop_zero.eventually (gt_mem_nhds (inv_pos.2 hB0))).exists
+  exact absurd hk (not_lt.2 (hlow k))
+
+/-- **The Lyapunov criterion for the jump construction.**  Almost every sample point is non
+explosive as soon as the jump kernel satisfies the pathwise Lyapunov inequality at every state of
+positive rate, and the rate is bounded on every sublevel set of `f`.
+
+Nothing is asked at a state of **vanishing** rate: there the path is absorbed and non explosion is
+free, which is the branch `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` supplies and the reason
+the hypothesis carries `lam z ≠ 0`.  That is what lets the criterion reach the birth and death
+chains, whose rate vanishes at the absorbing state `0`.
+
+The passage from the kernel to the chain is `ae_forall_step_comp_chainKernel`, applied to the set
+of admissible steps `{p | lam p.1 ≤ 0 ∨ f p.2 ≤ f p.1 * (1 + C / lam p.1)}`; the first disjunct is
+written as an inequality rather than an equation only so that its measurability is
+`measurableSet_le`. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam f : E → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hlamm : Measurable lam) (hfm : Measurable f) (hf : ∀ x, 0 ≤ f x)
+    (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ x, f x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hstep : ∀ z, lam z ≠ 0 → ∀ᵐ x ∂(mu z), f x ≤ f z * (1 + C / lam z)) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  classical
+  have hSm : MeasurableSet {p : E × E | lam p.1 ≤ 0 ∨ f p.2 ≤ f p.1 * (1 + C / lam p.1)} :=
+    (measurableSet_le (hlamm.comp measurable_fst) measurable_const).union
+      (measurableSet_le (hfm.comp measurable_snd)
+        ((hfm.comp measurable_fst).mul
+          (measurable_const.add (measurable_const.div (hlamm.comp measurable_fst)))))
+  have hker : ∀ z, ∀ᵐ x ∂(mu z),
+      (z, x) ∈ {p : E × E | lam p.1 ≤ 0 ∨ f p.2 ≤ f p.1 * (1 + C / lam p.1)} := by
+    intro z
+    by_cases hz : lam z = 0
+    · exact Filter.Eventually.of_forall fun x ↦ Or.inl hz.le
+    · filter_upwards [hstep z hz] with x hx using Or.inr hx
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or hlamm mu nu ?_
+  filter_upwards [ae_forall_step_comp_chainKernel mu hSm hker nu] with y hy
+  by_cases hex : ∃ m, lam (y m) = 0
+  · exact Or.inl hex
+  · push_neg at hex
+    have hpos : ∀ k, 0 < lam (y k) := fun k ↦ lt_of_le_of_ne (hlam0 _) (Ne.symm (hex k))
+    refine Or.inr ⟨hpos, not_summable_inv_of_lyapunov hC hpos (fun k ↦ hf _) (fun k ↦ ?_)
+      fun N ↦ (hbdd N).imp fun B hB k hk ↦ hB _ hk⟩
+    rcases hy k with h | h
+    · exact absurd (le_antisymm h (hlam0 _)) (hex k)
+    · exact h
+
+/-- **The pathwise Lyapunov inequality implies the one on the generator**, and this is what makes
+the criterion above a *strengthening* of the Lyapunov condition of the literature and not another
+condition.  The proof is `integral_mono_ae` against the constant `f x * (1 + C / lam x)`, which is
+integrable because `mu x` is a probability measure, and the rate then cancels.
+
+The converse is **false** as a pointwise statement -- an average below a bound says nothing about
+the values -- and that is the whole content of the gap: recovering non explosion from the generator
+inequality alone needs a supermartingale on the embedded chain, not a pointwise iteration.  On a
+birth and death chain the difference is `b x + d x ≤ C * x` here against `b x ≤ C * x` there, since
+`jumpApply_birthDeath` gives `A f x = b x - d x` at `f x = x` and the death term helps. -/
+theorem jumpApply_le_of_lyapunov [MeasurableSpace E] {lam f : E → ℝ} {C : ℝ}
+    {mu : Kernel E E} [IsMarkovKernel mu] {x : E} (hlam : 0 < lam x)
+    (hint : Integrable f (mu x))
+    (hstep : ∀ᵐ z ∂(mu x), f z ≤ f x * (1 + C / lam x)) :
+    jumpApply lam mu f x ≤ C * f x := by
+  have hne : lam x ≠ 0 := hlam.ne'
+  have hsub : ∫ y, (f y - f x) ∂(mu x) = (∫ y, f y ∂(mu x)) - f x := by
+    rw [integral_sub hint (integrable_const _)]
+    simp
+  have hle : ∫ y, f y ∂(mu x) ≤ f x * (1 + C / lam x) := by
+    have h := integral_mono_ae hint (integrable_const (f x * (1 + C / lam x))) hstep
+    simpa using h
+  have hEq : f x * (1 + C / lam x) = f x + f x * C / lam x := by ring
+  rw [hEq] at hle
+  have hkey : (∫ y, f y ∂(mu x)) - f x ≤ f x * C / lam x := by linarith
+  calc jumpApply lam mu f x = lam x * ((∫ y, f y ∂(mu x)) - f x) := by
+        rw [jumpApply, hsub]
+    _ ≤ lam x * (f x * C / lam x) := mul_le_mul_of_nonneg_left hkey hlam.le
+    _ = C * f x := by field_simp
+
+/-! ### The birth and death instance
+
+The Lyapunov function of a birth and death chain on `ℕ` is the state itself, `f x = x`.  Both
+hypotheses of the criterion are then read off the data in one line each, and the condition on the
+rate is the one the criterion is named for: the total rate grows **at most linearly**. -/
+
+/-- **A birth and death chain with an at most linearly growing total rate does not explode.**
+The Lyapunov function is `f x = x`: the kernel moves the chain up by at most one
+(`ae_le_succ_birthDeathKernel`), so the pathwise inequality `x + 1 ≤ x (1 + C / lam x)` is exactly
+`lam x ≤ C * x`, and the rate on the sublevel set `{f ≤ N}` is bounded by `C * N` for the same
+reason.
+
+The hypothesis is **sharp in its order of growth**: at `b x = x ^ (1 + ε)` the chain explodes, and
+what fails here is not the pathwise inequality -- which holds with no `C` at all -- but the bound
+on the sublevel set, since `C * N` is then no bound on `x ^ (1 + ε)` for `x ≤ N`.  That is the
+place the criterion sees the growth of the rate, and it is why the two hypotheses are not
+interchangeable. -/
+theorem ae_mem_nonExplosiveE_birthDeath_of_rate_le {b d : ℕ → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x)
+    (hle : ∀ x : ℕ, birthDeathRate b d x ≤ C * x)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu] [IsMarkovKernel (birthDeathKernel b d)] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel b d) nu),
+      ω ∈ NonExplosiveE (birthDeathRate b d) := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov hC (measurable_of_countable _)
+    (measurable_of_countable (fun x : ℕ ↦ (x : ℝ))) (fun x ↦ Nat.cast_nonneg x)
+    (fun x ↦ add_nonneg (hb x) (hd x))
+    (fun N ↦ ⟨C * N, fun x hx ↦ (hle x).trans (mul_le_mul_of_nonneg_left hx hC)⟩)
+    (birthDeathKernel b d) nu ?_
+  intro z hz
+  have hpos : (0 : ℝ) < b z + d z :=
+    lt_of_le_of_ne (add_nonneg (hb z) (hd z)) (Ne.symm hz)
+  have h1 : (1 : ℝ) ≤ C * z / (b z + d z) := (one_le_div hpos).2 (hle z)
+  filter_upwards [ae_le_succ_birthDeathKernel b d z] with x hx
+  have hx' : (x : ℝ) ≤ (z : ℝ) + 1 := by exact_mod_cast hx
+  have hring : (z : ℝ) * (1 + C / (b z + d z))
+      = (z : ℝ) + C * z / (b z + d z) := by ring
+  rw [hring]
+  linarith
+
+/-- **The linear birth and death chain, as an instance of the Lyapunov criterion.**  This is
+`ae_mem_nonExplosiveE_linearBirthDeath` again, proved from the data instead of from the trajectory,
+and the whole proof is the constant `C = β + δ`.  The two statements are the measured comparison
+the milestone asks for: the trajectory route needs `not_summable_inv_birthDeathRate_linear` and the
+step bound `le_add_of_step_le_succ` -- an argument that uses that the chain moves by one step -- and
+the criterion route needs neither, at the price of the hypothesis `b + d ≤ C x` in place of
+`b ≤ C x`.
+
+It asks `0 ≤ β` and `0 ≤ δ` where the trajectory route asks only `0 ≤ β + δ`, and the reason is
+that the criterion is stated for a general pair of rates and reads them separately. -/
+theorem ae_mem_nonExplosiveE_linearBirthDeath_of_lyapunov {β δ : ℝ} (hβ : 0 ≤ β) (hδ : 0 ≤ δ)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath δ)) :=
+  ae_mem_nonExplosiveE_birthDeath_of_rate_le (b := linearBirth β) (d := linearDeath δ)
+    (add_nonneg hβ hδ)
+    (fun x ↦ mul_nonneg hβ (Nat.cast_nonneg x)) (fun x ↦ mul_nonneg hδ (Nat.cast_nonneg x))
+    (fun x ↦ le_of_eq (birthDeathRate_linear_apply x)) nu
+
+/-- **The Yule process, as an instance of the Lyapunov criterion.**  It is the linear chain with
+`δ = 0`, and it is the worst case of the class: without a death term the Lyapunov function has no
+help at all, so the pathwise form and the expectation form of the criterion coincide on it.  That
+is what makes it the right probe of the criterion and not merely a corollary of the linear case. -/
+theorem ae_mem_nonExplosiveE_yule_of_lyapunov {β : ℝ} (hβ : 0 ≤ β)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath 0)) :=
+  ae_mem_nonExplosiveE_linearBirthDeath_of_lyapunov (δ := 0) hβ le_rfl nu
+
+/-! ### The generator form of the criterion
+
+Everything above asks the Lyapunov inequality **pathwise**, at every state the kernel can reach.
+The condition of the literature is the inequality on the generator, `A f ≤ C • f`, an inequality
+between *averages*, and `jumpApply_le_of_lyapunov` shows it to be strictly weaker.  What follows is
+the criterion under that weaker hypothesis.
+
+The mechanism is no longer an iteration along one trajectory -- an average below a bound says
+nothing about the values, so there is nothing to iterate -- but a **supermartingale on the embedded
+chain**: the Lyapunov function discounted by the clock,
+
+`M k = f (y k) * exp (-C * ∑_{j < k} 1 / lam (y j))`,
+
+whose one step estimate is the generator inequality and whose integral therefore does not grow.
+Non explosion is then Fatou: on a sample point where the clock converges the discount stays above a
+positive constant, so a finite `liminf` of `M` forces a finite `liminf` of `f` along the chain, the
+chain returns infinitely often to a sublevel set of `f`, and the rate is bounded there -- which the
+convergence of the clock forbids.
+
+Everything is carried in `ℝ≥0∞`.  That is not a convenience.  The estimate is an inequality between
+integrals of nonnegative functions and so needs no integrability hypothesis at all, and the passage
+to the limit is Fatou, which in `ℝ≥0∞` is unconditional.  The bridge to the real valued generator
+is `lintegral_ofReal_le_of_jumpApply_le`, and integrability enters there and nowhere else. -/
+
+/-- **The one step discount of the Lyapunov supermartingale.**  At a state of positive rate it is
+`exp (-C / lam z)`, the factor by which the generator inequality allows the Lyapunov function to
+grow in one step, read backwards; at a state of vanishing rate it is `0`.
+
+Killing the supermartingale at a state of vanishing rate is what frees the criterion from every
+hypothesis there, exactly as in the pathwise form: the path is absorbed at such a state and non
+explosion is automatic, so nothing about the chain after it is needed. -/
+noncomputable def lyapunovWeight (lam : E → ℝ) (C : ℝ) (z : E) : ENNReal :=
+  if lam z ≤ 0 then 0 else ENNReal.ofReal (Real.exp (-(C / lam z)))
+
+theorem measurable_lyapunovWeight [MeasurableSpace E] {lam : E → ℝ} (hlamm : Measurable lam)
+    (C : ℝ) : Measurable (lyapunovWeight lam C) := by
+  unfold lyapunovWeight
+  exact Measurable.ite (measurableSet_le hlamm measurable_const) measurable_const
+    (ENNReal.measurable_ofReal.comp (Real.measurable_exp.comp (measurable_const.div hlamm).neg))
+
+/-- **Along a chain of positive rates the discount is the exponential of the clock**, and that is
+the only shape of it the limit argument uses. -/
+theorem prod_lyapunovWeight_of_pos {lam : E → ℝ} {C : ℝ} {y : ℕ → E} (hpos : ∀ k, 0 < lam (y k))
+    (k : ℕ) :
+    ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)
+      = ENNReal.ofReal (Real.exp (-(C * ∑ j ∈ Finset.range k, (lam (y j))⁻¹))) := by
+  have h1 : ∀ j ∈ Finset.range k, lyapunovWeight lam C (y j)
+      = ENNReal.ofReal (Real.exp (-(C / lam (y j)))) := by
+    intro j _
+    simp only [lyapunovWeight, if_neg (not_le.2 (hpos j))]
+  rw [Finset.prod_congr rfl h1, ← ENNReal.ofReal_prod_of_nonneg fun j _ ↦ (Real.exp_nonneg _),
+    ← Real.exp_sum]
+  congr 1
+  simp [Finset.mul_sum, div_eq_mul_inv]
+
+/-- **The discounted Lyapunov function is a supermartingale along the embedded chain**, in the only
+sense the criterion uses: its integral does not grow.  The induction is on the index and carries the
+initial law with it, so `comp_chainKernel_map_shift` is what moves one step of the chain into one
+step of the law -- the same device as in `ae_step_comp_chainKernel`, with an integral in place of an
+almost sure statement.
+
+The generator hypothesis is spent exactly once, at the head of the chain, and there it reads
+`exp (-C / lam z) * (1 + C / lam z) ≤ 1`, which is `1 + t ≤ exp t`.  At a state of vanishing rate
+the discount is `0` and nothing is asked. -/
+theorem lintegral_chainKernel_lyapunov_le [MeasurableSpace E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hFm : Measurable F) (hlamm : Measurable lam)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z))
+    (k : ℕ) :
+    ∀ (nu : Measure E), IsProbabilityMeasure nu →
+      ∫⁻ y, F (y k) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) ∂(chainKernel mu ∘ₘ nu)
+        ≤ ∫⁻ z, F z ∂nu := by
+  have hwm := measurable_lyapunovWeight hlamm C
+  have hshift : Measurable (fun x : ℕ → E ↦ fun n ↦ x (n + 1)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  have hMm : ∀ n : ℕ, Measurable fun y : ℕ → E ↦
+      F (y n) * ∏ j ∈ Finset.range n, lyapunovWeight lam C (y j) := fun n ↦
+    (hFm.comp (measurable_pi_apply n)).mul
+      (Finset.measurable_prod _ fun j _ ↦ hwm.comp (measurable_pi_apply j))
+  induction k with
+  | zero =>
+    intro nu hnu
+    simp only [Finset.range_zero, Finset.prod_empty, mul_one]
+    have h : ∫⁻ z, F z ∂nu = ∫⁻ y, F (y 0) ∂(chainKernel mu ∘ₘ nu) := by
+      conv_lhs => rw [← comp_chainKernel_map_zero mu nu]
+      rw [lintegral_map hFm (measurable_pi_apply 0)]
+    exact h.ge
+  | succ k ih =>
+    intro nu hnu
+    rw [Measure.lintegral_bind (Kernel.aemeasurable _) (hMm (k + 1)).aemeasurable]
+    refine lintegral_mono fun z ↦ ?_
+    have h0 : ∀ᵐ y ∂(chainKernel mu z), y 0 = z :=
+      ae_eq_of_map_eq_dirac (measurable_pi_apply 0) (chainKernel_map_zero mu z)
+    have hcomp : Measurable fun y : ℕ → E ↦
+        F (y (k + 1)) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y (j + 1)) :=
+      (hFm.comp (measurable_pi_apply (k + 1))).mul
+        (Finset.measurable_prod _ fun j _ ↦ hwm.comp (measurable_pi_apply (j + 1)))
+    have hcongr : ∫⁻ y, F (y (k + 1)) * ∏ j ∈ Finset.range (k + 1), lyapunovWeight lam C (y j)
+          ∂(chainKernel mu z)
+        = ∫⁻ y, lyapunovWeight lam C z *
+            (F (y (k + 1)) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y (j + 1)))
+          ∂(chainKernel mu z) := by
+      refine lintegral_congr_ae ?_
+      filter_upwards [h0] with y hy
+      rw [Finset.prod_range_succ', hy]
+      ring
+    rw [hcongr, lintegral_const_mul _ hcomp]
+    have hmap : ∫⁻ y, F (y (k + 1)) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y (j + 1))
+          ∂(chainKernel mu z)
+        = ∫⁻ y, F (y k) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)
+          ∂(chainKernel mu ∘ₘ (mu z)) := by
+      rw [← chainKernel_map_shift mu z]
+      exact (lintegral_map (hMm k) hshift).symm
+    rw [hmap]
+    refine le_trans (mul_le_mul' (le_refl (lyapunovWeight lam C z)) (ih (mu z) inferInstance)) ?_
+    by_cases hz : lam z ≤ 0
+    · simp [lyapunovWeight, if_pos hz]
+    · rw [not_le] at hz
+      have hone : ENNReal.ofReal (Real.exp (-(C / lam z))) * ENNReal.ofReal (1 + C / lam z)
+          ≤ 1 := by
+        rw [← ENNReal.ofReal_mul (Real.exp_nonneg _)]
+        refine ENNReal.ofReal_le_one.2 ?_
+        have h := Real.add_one_le_exp (C / lam z)
+        calc Real.exp (-(C / lam z)) * (1 + C / lam z)
+            ≤ Real.exp (-(C / lam z)) * Real.exp (C / lam z) :=
+              mul_le_mul_of_nonneg_left (by linarith) (Real.exp_pos _).le
+          _ = 1 := by rw [← Real.exp_add]; simp
+      calc lyapunovWeight lam C z * ∫⁻ x, F x ∂(mu z)
+          ≤ ENNReal.ofReal (Real.exp (-(C / lam z))) * (F z * ENNReal.ofReal (1 + C / lam z)) := by
+            rw [lyapunovWeight, if_neg (not_le.2 hz)]
+            exact mul_le_mul' (le_refl _) (hstep z hz)
+        _ = F z * (ENNReal.ofReal (Real.exp (-(C / lam z))) * ENNReal.ofReal (1 + C / lam z)) := by
+            ring
+        _ ≤ F z * 1 := mul_le_mul' (le_refl (F z)) hone
+        _ = F z := mul_one _
+
+/-- **The Lyapunov criterion in its generator form, at the level of the embedded chain.**  The
+hypothesis `hstep` is the generator inequality `A F ≤ C • F` written without a subtraction, so that
+no integrability is needed; `hbdd` is the boundedness of the rate on the sublevel sets, unchanged
+from the pathwise form; and `hnu` says that the Lyapunov function has a finite mean under the
+initial law, which is what makes the Fatou argument say anything.
+
+The conclusion is the dichotomy `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` asks for, and it is
+stated here rather than in terms of `jumpMeasure` because it is the form that survives conditioning
+on the starting state -- which is how `hnu` is removed again in
+`ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le_of_ne_top`.
+
+The proof is the supermartingale estimate, Fatou, and then one implication on a sample point: a
+finite `liminf` of the discounted Lyapunov function forces the chain into a sublevel set of `F`
+infinitely often, where the rate is bounded and the reciprocal rates therefore do not tend to
+zero. -/
+theorem ae_absorb_or_not_summable_of_lintegral_le [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hC : 0 ≤ C)
+    (hFm : Measurable F) (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ENNReal, N ≠ ⊤ → ∃ B : ℝ, ∀ x, F x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hnu : ∫⁻ z, F z ∂nu ≠ ⊤)
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z)) :
+    ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), (∃ m, lam (y m) = 0) ∨
+      ((∀ k, 0 < lam (y k)) ∧ ¬ Summable fun k ↦ (lam (y k))⁻¹) := by
+  classical
+  have hwm := measurable_lyapunovWeight hlamm C
+  have hMm : ∀ n : ℕ, Measurable fun y : ℕ → E ↦
+      F (y n) * ∏ j ∈ Finset.range n, lyapunovWeight lam C (y j) := fun n ↦
+    (hFm.comp (measurable_pi_apply n)).mul
+      (Finset.measurable_prod _ fun j _ ↦ hwm.comp (measurable_pi_apply j))
+  have hfat : ∫⁻ y, Filter.liminf (fun k ↦ F (y k) *
+        ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)) Filter.atTop
+      ∂(chainKernel mu ∘ₘ nu) ≤ ∫⁻ z, F z ∂nu := by
+    refine (lintegral_liminf_le hMm).trans ?_
+    calc Filter.liminf (fun k ↦ ∫⁻ y, F (y k) *
+            ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) ∂(chainKernel mu ∘ₘ nu))
+          Filter.atTop
+        ≤ Filter.liminf (fun _ : ℕ ↦ ∫⁻ z, F z ∂nu) Filter.atTop :=
+          Filter.liminf_le_liminf (Filter.Eventually.of_forall fun k ↦
+            lintegral_chainKernel_lyapunov_le hFm hlamm mu hstep k nu inferInstance)
+      _ = ∫⁻ z, F z ∂nu := Filter.liminf_const _
+  have hlt : ∀ᵐ y ∂(chainKernel mu ∘ₘ nu), Filter.liminf (fun k ↦ F (y k) *
+      ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)) Filter.atTop < ⊤ :=
+    ae_lt_top (Measurable.liminf hMm) (ne_top_of_le_ne_top hnu hfat)
+  filter_upwards [hlt] with y hy
+  by_cases hex : ∃ m, lam (y m) = 0
+  · exact Or.inl hex
+  · push_neg at hex
+    have hpos : ∀ k, 0 < lam (y k) := fun k ↦ lt_of_le_of_ne (hlam0 _) (Ne.symm (hex k))
+    refine Or.inr ⟨hpos, fun hsum ↦ ?_⟩
+    set L := Filter.liminf (fun k ↦ F (y k) *
+      ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j)) Filter.atTop with hL
+    set c := ENNReal.ofReal (Real.exp (-(C * ∑' j, (lam (y j))⁻¹))) with hc
+    have hc0 : c ≠ 0 := (ENNReal.ofReal_pos.2 (Real.exp_pos _)).ne'
+    have hcle : ∀ k, c ≤ ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) := by
+      intro k
+      rw [prod_lyapunovWeight_of_pos hpos k, hc]
+      refine ENNReal.ofReal_le_ofReal (Real.exp_le_exp.2 (neg_le_neg ?_))
+      exact mul_le_mul_of_nonneg_left
+        (hsum.sum_le_tsum _ fun i _ ↦ inv_nonneg.2 (hpos i).le) hC
+    have hlow : ∀ k, c * F (y k) ≤ F (y k) *
+        ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) := by
+      intro k
+      rw [mul_comm]
+      exact mul_le_mul' (le_refl (F (y k))) (hcle k)
+    have hfreq : ∃ᶠ k in Filter.atTop, F (y k) *
+        ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) < L + 1 :=
+      Filter.frequently_lt_of_liminf_lt (h := ENNReal.lt_add_right hy.ne one_ne_zero)
+    obtain ⟨B, hB⟩ := hbdd ((L + 1) / c)
+      (ENNReal.div_ne_top (ENNReal.add_ne_top.2 ⟨hy.ne, ENNReal.one_ne_top⟩) hc0)
+    have hstep' : ∀ k, F (y k) * ∏ j ∈ Finset.range k, lyapunovWeight lam C (y j) < L + 1 →
+        lam (y k) ≤ B := by
+      intro k hk
+      refine hB _ ((ENNReal.le_div_iff_mul_le (Or.inl hc0) (Or.inl ENNReal.ofReal_ne_top)).2 ?_)
+      rw [mul_comm]
+      exact ((hlow k).trans_lt hk).le
+    have hfrB : ∃ᶠ k in Filter.atTop, lam (y k) ≤ B := hfreq.mono hstep'
+    obtain ⟨k₀, hk₀⟩ := hfrB.exists
+    have hB0 : 0 < B := (hpos k₀).trans_le hk₀
+    have hfrinv : ∃ᶠ k in Filter.atTop, B⁻¹ ≤ (lam (y k))⁻¹ :=
+      hfrB.mono fun k hk ↦ inv_anti₀ (hpos k) hk
+    obtain ⟨k, hk1, hk2⟩ :=
+      (hfrinv.and_eventually
+        (hsum.tendsto_atTop_zero.eventually (gt_mem_nhds (inv_pos.2 hB0)))).exists
+    exact absurd hk2 (not_lt.2 hk1)
+
+/-- **Summability of a nonnegative real series is the finiteness of the `ℝ≥0∞` series**, and that is
+what makes summability a *measurable* property of the terms: in `ℝ≥0∞` the sum is a limit of
+measurable partial sums with no convergence hypothesis to check. -/
+theorem summable_iff_tsum_ofReal_ne_top {g : ℕ → ℝ} (hg : ∀ k, 0 ≤ g k) :
+    Summable g ↔ (∑' k, ENNReal.ofReal (g k)) ≠ ⊤ := by
+  have hfun : Summable (fun k ↦ (g k).toNNReal) ↔ Summable g := by
+    rw [← NNReal.summable_coe]
+    exact summable_congr fun k ↦ Real.coe_toNNReal _ (hg k)
+  rw [← hfun, ← ENNReal.tsum_coe_ne_top_iff_summable]
+  rfl
+
+/-- **The explosion event of the embedded chain is measurable.**  It is the only measurability the
+conditioning on the starting state needs, and it is not free: `Summable` is not by itself a
+measurable property, and the passage through `ℝ≥0∞` is what makes it one. -/
+theorem measurableSet_summable_inv_comp [MeasurableSpace E] {lam : E → ℝ}
+    (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) :
+    MeasurableSet {y : ℕ → E | Summable fun k ↦ (lam (y k))⁻¹} := by
+  have hmeas : Measurable fun y : ℕ → E ↦ ∑' k, ENNReal.ofReal ((lam (y k))⁻¹) :=
+    Measurable.tsum fun k ↦
+      ENNReal.measurable_ofReal.comp ((hlamm.comp (measurable_pi_apply k)).inv)
+  have hset : {y : ℕ → E | Summable fun k ↦ (lam (y k))⁻¹}
+      = (fun y : ℕ → E ↦ ∑' k, ENNReal.ofReal ((lam (y k))⁻¹)) ⁻¹' {⊤}ᶜ := by
+    ext y
+    exact summable_iff_tsum_ofReal_ne_top fun k ↦ inv_nonneg.2 (hlam0 _)
+  rw [hset]
+  exact hmeas (measurableSet_singleton ⊤).compl
+
+/-- **The dichotomy of `ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or` is a measurable set**, which
+is what lets an almost sure statement about it be proved one starting state at a time. -/
+theorem measurableSet_absorb_or_not_summable [MeasurableSpace E] {lam : E → ℝ}
+    (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) :
+    MeasurableSet {y : ℕ → E | (∃ m, lam (y m) = 0) ∨
+      ((∀ k, 0 < lam (y k)) ∧ ¬ Summable fun k ↦ (lam (y k))⁻¹)} := by
+  have h1 : MeasurableSet {y : ℕ → E | ∃ m, lam (y m) = 0} := by
+    have : {y : ℕ → E | ∃ m, lam (y m) = 0} = ⋃ m, {y : ℕ → E | lam (y m) = 0} := by
+      ext y; simp
+    rw [this]
+    exact MeasurableSet.iUnion fun m ↦
+      (hlamm.comp (measurable_pi_apply m)) (measurableSet_singleton (0 : ℝ))
+  have h2 : MeasurableSet {y : ℕ → E | ∀ k, 0 < lam (y k)} := by
+    have : {y : ℕ → E | ∀ k, 0 < lam (y k)} = ⋂ k, {y : ℕ → E | 0 < lam (y k)} := by
+      ext y; simp
+    rw [this]
+    exact MeasurableSet.iInter fun k ↦
+      measurableSet_lt measurable_const (hlamm.comp (measurable_pi_apply k))
+  exact h1.union (h2.inter (measurableSet_summable_inv_comp hlamm hlam0).compl)
+
+/-- **The Lyapunov criterion in its generator form**, for an initial law under which the Lyapunov
+function has a finite mean. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hC : 0 ≤ C)
+    (hFm : Measurable F) (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ENNReal, N ≠ ⊤ → ∃ B : ℝ, ∀ x, F x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hnu : ∫⁻ z, F z ∂nu ≠ ⊤)
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z)) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam :=
+  ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or hlamm mu nu
+    (ae_absorb_or_not_summable_of_lintegral_le hC hFm hlamm hlam0 hbdd mu nu hnu hstep)
+
+/-- **The Lyapunov criterion in its generator form, with no hypothesis on the initial law.**  The
+finite mean is not needed, only the finiteness of the Lyapunov function at each point: the statement
+is proved one starting state at a time, where the mean is the value, and carried back by
+`Measure.ae_comp_of_ae_ae`.
+
+That passage is what `measurableSet_absorb_or_not_summable` is for, and it is the whole reason the
+criterion above is stated at the level of the chain: an almost sure statement about `jumpMeasure`
+does not condition on the starting state, an almost sure statement about `chainKernel mu ∘ₘ nu`
+does. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le_of_ne_top [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} {C : ℝ} {F : E → ENNReal} (hC : 0 ≤ C)
+    (hFm : Measurable F) (hlamm : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hF : ∀ x, F x ≠ ⊤)
+    (hbdd : ∀ N : ENNReal, N ≠ ⊤ → ∃ B : ℝ, ∀ x, F x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hstep : ∀ z, 0 < lam z → ∫⁻ x, F x ∂(mu z) ≤ F z * ENNReal.ofReal (1 + C / lam z)) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_absorb_or hlamm mu nu ?_
+  refine Measure.ae_comp_of_ae_ae (measurableSet_absorb_or_not_summable hlamm hlam0)
+    (Filter.Eventually.of_forall fun z ↦ ?_)
+  have hdirac : ∫⁻ x, F x ∂(Measure.dirac z) ≠ ⊤ := by
+    rw [lintegral_dirac]
+    exact hF z
+  have h := ae_absorb_or_not_summable_of_lintegral_le hC hFm hlamm hlam0 hbdd mu
+    (Measure.dirac z) hdirac hstep
+  rwa [Measure.dirac_bind (Kernel.measurable _)] at h
+
+/-- **From the generator inequality to the one step inequality in `ℝ≥0∞`.**  This is the only place
+where integrability is asked, and it is asked of the kernel and not of the chain: the Bochner
+integral of `f` against `mu x` has to be the `ℝ≥0∞` integral of `ofReal ∘ f`, which is
+`ofReal_integral_eq_lintegral_ofReal`. -/
+theorem lintegral_ofReal_le_of_jumpApply_le [MeasurableSpace E] {lam f : E → ℝ} {C : ℝ}
+    {mu : Kernel E E} [IsMarkovKernel mu] {x : E} (hf : ∀ z, 0 ≤ f z) (hlam : 0 < lam x)
+    (hint : Integrable f (mu x)) (h : jumpApply lam mu f x ≤ C * f x) :
+    ∫⁻ z, ENNReal.ofReal (f z) ∂(mu x)
+      ≤ ENNReal.ofReal (f x) * ENNReal.ofReal (1 + C / lam x) := by
+  have hsub : ∫ z, (f z - f x) ∂(mu x) = (∫ z, f z ∂(mu x)) - f x := by
+    rw [integral_sub hint (integrable_const _)]
+    simp
+  have hle : ∫ z, f z ∂(mu x) ≤ f x * (1 + C / lam x) := by
+    rw [jumpApply, hsub] at h
+    have h' : (∫ z, f z ∂(mu x)) - f x ≤ C * f x / lam x := by
+      rw [le_div_iff₀ hlam, mul_comm]
+      linarith
+    have hring : f x * (1 + C / lam x) = f x + C * f x / lam x := by
+      field_simp
+    rw [hring]
+    linarith
+  rw [← ofReal_integral_eq_lintegral_ofReal hint (Filter.Eventually.of_forall hf),
+    ← ENNReal.ofReal_mul (hf x)]
+  exact ENNReal.ofReal_le_ofReal hle
+
+/-- **The Lyapunov criterion for a real valued Lyapunov function**, and this is the statement the
+milestone carries: if `f ≥ 0` is measurable, the rate is bounded on every sublevel set of `f`, and
+the generator satisfies `A f ≤ C * f` at every state of positive rate, then the process does not
+explode.
+
+It is strictly stronger than `ae_mem_nonExplosiveE_jumpMeasure_of_lyapunov`, whose hypothesis
+implies this one by `jumpApply_le_of_lyapunov`, and on a birth and death chain the difference is
+the death term: here it helps and there it does not. -/
+theorem ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam f : E → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hlamm : Measurable lam) (hfm : Measurable f) (hf : ∀ x, 0 ≤ f x) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ x, f x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu]
+    (hint : ∀ z, Integrable f (mu z))
+    (hstep : ∀ z, 0 < lam z → jumpApply lam mu f z ≤ C * f z) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE lam := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_lintegral_le_of_ne_top
+    (F := fun x ↦ ENNReal.ofReal (f x)) hC
+    (ENNReal.measurable_ofReal.comp hfm) hlamm hlam0 (fun x ↦ ENNReal.ofReal_ne_top) ?_ mu nu
+    fun z hz ↦ lintegral_ofReal_le_of_jumpApply_le hf hz (hint z) (hstep z hz)
+  intro N hN
+  obtain ⟨B, hB⟩ := hbdd N.toReal
+  exact ⟨B, fun x hx ↦ hB x ((ENNReal.ofReal_le_iff_le_toReal hN).1 hx)⟩
+
+/-! ### The birth and death instance of the generator form
+
+On `ℕ` every sublevel set of `f x = x + 1` is **finite**, so the boundedness of the rate is free and
+the only hypothesis left is the generator inequality.  With `A f x = b x - d x` away from the
+absorbing state that inequality is `b x - d x ≤ C * (x + 1)`, and the death term is on the useful
+side: *the birth rate grows at most linearly, the death rate is free*.  That is the statement the
+pathwise form cannot reach, since there the hypothesis is `b x + d x ≤ C * x`. -/
+
+/-- **Every function on `ℕ` is bounded on a sublevel set of the identity**, because the set is
+finite.  This is what makes the second hypothesis of the criterion free on `ℕ`. -/
+theorem exists_bound_of_le_nat (lam : ℕ → ℝ) (N : ℝ) :
+    ∃ B : ℝ, ∀ x : ℕ, (x : ℝ) ≤ N → lam x ≤ B := by
+  classical
+  refine ⟨(Finset.range (⌈N⌉₊ + 1)).sup' Finset.nonempty_range_add_one lam, fun x hx ↦ ?_⟩
+  refine Finset.le_sup' lam (Finset.mem_range.2 (Nat.lt_succ_of_le ?_))
+  have : (⌈(x : ℝ)⌉₊ : ℕ) ≤ ⌈N⌉₊ := Nat.ceil_mono hx
+  rwa [Nat.ceil_natCast] at this
+
+/-- **Any function is integrable against a birth and death kernel**, the kernel being a finite
+combination of Dirac measures.  It is the hypothesis `hint` of the criterion on this data. -/
+theorem integrable_birthDeathKernel {b d : ℕ → ℝ} (f : ℕ → ℝ) (z : ℕ) :
+    Integrable f (birthDeathKernel b d z) := by
+  have hdirac : ∀ (c : ENNReal) (a : ℕ), c ≠ ⊤ → Integrable f (c • Measure.dirac a) :=
+    fun c a hc ↦ (integrable_dirac (by simp [enorm_eq_nnnorm])).smul_measure hc
+  rw [birthDeathKernel_apply]
+  split_ifs
+  · simpa using hdirac 1 z ENNReal.one_ne_top
+  · exact (hdirac _ _ ENNReal.ofReal_ne_top).add_measure (hdirac _ _ ENNReal.ofReal_ne_top)
+
+/-- **A birth and death chain whose birth rate grows at most linearly does not explode, whatever
+its death rate.**  The Lyapunov function is `f x = x + 1` and not `f x = x`: at the state `0` the
+generator is `b 0` and the constraint would read `b 0 ≤ 0`, so the shift is not cosmetic -- it is
+what lets the criterion see a state from which the chain can only go up.
+
+This is the statement the milestone names, and the measured difference to
+`ae_mem_nonExplosiveE_birthDeath_of_rate_le` is exactly the death term: there the hypothesis is
+`b x + d x ≤ C * x`, here it is `b x ≤ C * (x + 1)` and `d` is free.  A rate `d x = 2 ^ x` is
+covered here and by no pathwise form. -/
+theorem ae_mem_nonExplosiveE_birthDeath_of_birth_le {b d : ℕ → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x) (hble : ∀ x : ℕ, b x ≤ C * (x + 1))
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel b d)] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel b d) nu),
+      ω ∈ NonExplosiveE (birthDeathRate b d) := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le (lam := birthDeathRate b d)
+    (f := fun x : ℕ ↦ (x : ℝ) + 1) hC
+    (measurable_of_countable _) (measurable_of_countable _)
+    (fun x ↦ by positivity) (fun x ↦ add_nonneg (hb x) (hd x)) ?_
+    (birthDeathKernel b d) nu (fun z ↦ integrable_birthDeathKernel _ z) ?_
+  · intro N
+    obtain ⟨B, hB⟩ := exists_bound_of_le_nat (birthDeathRate b d) N
+    exact ⟨B, fun x hx ↦ hB x (by linarith)⟩
+  · intro z _
+    rw [jumpApply_birthDeath hb hd]
+    have hup : ((z + 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1) = 1 := by push_cast; ring
+    have hdown : ((z - 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1) ≤ 0 := by
+      have : ((z - 1 : ℕ) : ℝ) ≤ (z : ℝ) := Nat.cast_le.2 (Nat.sub_le z 1)
+      linarith
+    have h1 : b z * (((z + 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1)) = b z := by rw [hup]; ring
+    have h2 : d z * (((z - 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1)) ≤ 0 :=
+      mul_nonpos_of_nonneg_of_nonpos (hd z) hdown
+    have h3 : C * ((z : ℝ) + 1) = C * (z + 1) := by ring
+    rw [h1]
+    linarith [hble z]
+
+/-- **The Yule process from the generator form.**  The birth rate is `β * x ≤ β * (x + 1)` and there
+is no death rate, so the constant is `β` and the whole proof is that inequality.  It is the probe of
+the generator form for the same reason it is the probe of the pathwise form: without a death term
+the two coincide on it, so what is gained here is not gained on Yule but on its neighbours. -/
+theorem ae_mem_nonExplosiveE_yule_of_jumpApply_le {β : ℝ} (hβ : 0 ≤ β)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu),
+      ω ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath 0)) := by
+  refine ae_mem_nonExplosiveE_birthDeath_of_birth_le (C := β) (b := linearBirth β)
+    (d := linearDeath 0) hβ
+    (fun x ↦ mul_nonneg hβ (Nat.cast_nonneg x)) (fun x ↦ by simp [linearDeath]) ?_ nu
+  intro x
+  have : (x : ℝ) ≤ (x : ℝ) + 1 := by linarith
+  exact mul_le_mul_of_nonneg_left this hβ
+
+/-! ### The criterion survives the lift of the rate
+
+The master equation asks a **positive** rate, and the rate of a birth and death chain vanishes at
+the absorbing state.  `posRate` is the lift that repairs this, and it is data the generator cannot
+see (`jumpApply_posRate`).  Non explosion, however, it *can* see, and in the direction that costs:
+at an absorbing state non explosion of `lam` is free, one term of the series `∑ ξ_k / lam (y k)`
+being `⊤`, and the lift replaces exactly that term by the finite `ξ_k`.  So non explosion of `lam`
+is not *formally* non explosion of `posRate lam`, and the transfer has to be made -- either by the
+argument that the chain stands still past an absorbing state, which is the open roadmap point
+`ae_mem_nonExplosiveE_posRate`, or as here.
+
+Here the criterion crosses the lift directly, and it does so because **both** of its hypotheses are
+insensitive to the lift: the generator is unchanged, and a bound `B` on a sublevel set becomes
+`max B 1`.  Nothing about the trajectory is looked at, and no divergence of the waiting times is
+used.  That is the whole content of the proof below. -/
+
+/-- **The generator form of the Lyapunov criterion, for the lifted rate.**  Same hypotheses as
+`ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le` together with `habs`, the jump kernel of an
+absorbing state being the Dirac measure there -- data `birthDeathKernel` already carries, and the
+same hypothesis `jumpProcessE_isMPSolution_of_nonneg` takes.
+
+At a state of vanishing rate the generator is `0` and the inequality `A f ≤ C * f` holds there for
+free, so nothing at all has to be assumed about the states the criterion did not see before. -/
+theorem ae_mem_nonExplosiveE_posRate_of_jumpApply_le [MeasurableSpace E] [MeasurableEq E]
+    [MeasurableSingletonClass E] {lam f : E → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hlamm : Measurable lam) (hfm : Measurable f) (hf : ∀ x, 0 ≤ f x) (hlam0 : ∀ x, 0 ≤ lam x)
+    (hbdd : ∀ N : ℝ, ∃ B : ℝ, ∀ x, f x ≤ N → lam x ≤ B)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    (hint : ∀ z, Integrable f (mu z))
+    (hstep : ∀ z, 0 < lam z → jumpApply lam mu f z ≤ C * f z) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE (posRate lam) := by
+  refine ae_mem_nonExplosiveE_jumpMeasure_of_jumpApply_le hC (measurable_posRate hlamm) hfm hf
+    (fun x ↦ (posRate_pos hlam0 x).le) ?_ mu nu hint ?_
+  · intro N
+    obtain ⟨B, hB⟩ := hbdd N
+    refine ⟨max B 1, fun x hx ↦ ?_⟩
+    by_cases h : lam x = 0
+    · rw [posRate_of_eq h]
+      exact le_max_right _ _
+    · rw [posRate_of_ne h]
+      exact (hB x hx).trans (le_max_left _ _)
+  · intro z _
+    rw [jumpApply_posRate habs]
+    rcases (hlam0 z).lt_or_eq with h | h
+    · exact hstep z h
+    · rw [jumpApply, ← h, zero_mul]
+      exact mul_nonneg hC (hf z)
+
+/-- **The birth and death instance of the lifted criterion.**  Word for word the proof of
+`ae_mem_nonExplosiveE_birthDeath_of_birth_le`, with the one extra hypothesis read off
+`birthDeathKernel_apply`: where the total rate vanishes the kernel is the fallback branch, the
+Dirac measure at the state.  The conclusion is non explosion of the **lifted** rate, and it is the
+form the master equation needs. -/
+theorem ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le {b d : ℕ → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hb : ∀ x, 0 ≤ b x) (hd : ∀ x, 0 ≤ d x) (hble : ∀ x : ℕ, b x ≤ C * (x + 1))
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel b d)] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel b d) nu),
+      ω ∈ NonExplosiveE (posRate (birthDeathRate b d)) := by
+  refine ae_mem_nonExplosiveE_posRate_of_jumpApply_le (lam := birthDeathRate b d)
+    (f := fun x : ℕ ↦ (x : ℝ) + 1) hC
+    (measurable_of_countable _) (measurable_of_countable _)
+    (fun x ↦ by positivity) (fun x ↦ add_nonneg (hb x) (hd x)) ?_
+    (birthDeathKernel b d) ?_ nu (fun z ↦ integrable_birthDeathKernel _ z) ?_
+  · intro N
+    obtain ⟨B, hB⟩ := exists_bound_of_le_nat (birthDeathRate b d) N
+    exact ⟨B, fun x hx ↦ hB x (by linarith)⟩
+  · intro x hx
+    rw [birthDeathRate] at hx
+    rw [birthDeathKernel_apply, if_pos hx]
+  · intro z _
+    rw [jumpApply_birthDeath hb hd]
+    have hup : ((z + 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1) = 1 := by push_cast; ring
+    have hdown : ((z - 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1) ≤ 0 := by
+      have : ((z - 1 : ℕ) : ℝ) ≤ (z : ℝ) := Nat.cast_le.2 (Nat.sub_le z 1)
+      linarith
+    have h1 : b z * (((z + 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1)) = b z := by rw [hup]; ring
+    have h2 : d z * (((z - 1 : ℕ) : ℝ) + 1 - ((z : ℝ) + 1)) ≤ 0 :=
+      mul_nonpos_of_nonneg_of_nonpos (hd z) hdown
+    have h3 : C * ((z : ℝ) + 1) = C * (z + 1) := by ring
+    rw [h1]
+    linarith [hble z]
+
+/-- **The Yule process does not explode at its lifted rate.**  The constant is `β`, as for the rate
+itself, and the whole proof is `β x ≤ β (x + 1)`. -/
+theorem ae_mem_nonExplosiveE_posRate_yule {β : ℝ} (hβ : 0 ≤ β)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] :
+    ∀ᵐ ω ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu),
+      ω ∈ NonExplosiveE (posRate (birthDeathRate (linearBirth β) (linearDeath 0))) := by
+  refine ae_mem_nonExplosiveE_posRate_birthDeath_of_birth_le (C := β) (b := linearBirth β)
+    (d := linearDeath 0) hβ
+    (fun x ↦ mul_nonneg hβ (Nat.cast_nonneg x)) (fun x ↦ by simp [linearDeath]) ?_ nu
+  intro x
+  have : (x : ℝ) ≤ (x : ℝ) + 1 := by linarith
+  exact mul_le_mul_of_nonneg_left this hβ
+
+end Lyapunov
+
+section YuleMasterEquation
+
+/-!
+## The master equation of the Yule process
+
+`jumpMeasure_masterEquation_of_ae_nonExplosive` removed the bound on the rate and kept two
+hypotheses: almost sure non explosion, and a bound on the **value of the generator** at the one
+test function.  The Yule rate `β x` discharges the second on the nose
+(`jumpApply_yule_indicator`), and the first is now available for its lift
+(`ae_mem_nonExplosiveE_posRate_yule`).  What is left standing is `∀ x, 0 < lam x`, and the Yule
+rate does not have it: `β * 0 = 0`.
+
+**The lift is the whole step, and it is not a trick.**  `posRate lam` raises the rate to `1` at its
+zeros.  Three statements say that nothing is thereby changed:
+
+* the generator does not see it, `jumpApply_posRate`, because at a state of vanishing rate the
+  generator is `0` whatever the kernel is, and the kernel of an absorbing state is prescribed to be
+  the Dirac measure there -- data `birthDeathKernel` already carries;
+* the paths do not see it, `jumpProcessE_posRate_eq_of_mem`, because every state the lifted chain
+  jumps into from an absorbing state is that same state; and
+* consequently the one dimensional laws do not see it either, `jumpLaw_posRate_eq`, which reads
+  `jumpLaw (posRate lam)` as the law of `jumpProcessE lam` -- the local process of the rate itself,
+  the one `yule_isLocalMPSolution` is about.
+
+Non explosion, by contrast, **does** see the lift: at an absorbing state it is free for `lam` and
+has to be earned for `posRate lam`.  Both routes cross it, and they pay differently.  The Lyapunov
+criterion crosses it without looking at a trajectory at all
+(`ae_mem_nonExplosiveE_posRate_of_jumpApply_le`), because both of its hypotheses are insensitive to
+the lift.  The series along the chain crosses it by transfer
+(`ae_mem_nonExplosiveE_posRate`), and pays with the divergence of the waiting times, which is
+exactly what the absorbing branch of the unlifted statement never needed.  The Yule process reaches
+the equation below by the first route; `ae_mem_nonExplosiveE_posRate_linearBirthDeath` is the
+second route arriving at the same place.
+
+**What the equation is.**  With `p k r = jumpLaw (posRate lam) mu nu r k` the theorem reads
+
+`p (n+1) t = p (n+1) 0 + ∫_0^t (β n * p n r - β (n+1) * p (n+1) r) dr`,
+
+the master equation of the Yule process in integrated form.  The index `n + 1` is not a convenience:
+`jumpApply_yule_indicator_zero` says the generator annihilates `stateIndicator 0`, so the equation at
+`0` is `p 0 t = p 0 0` and carries no integral. -/
+
+variable {E : Type*}
+
+/-- **The indicator of a state is integrable along the process.**  The process takes its values in
+`E` at every time and the indicator is bounded by `1`, so this is the constant `1` dominating a
+measurable function under a probability measure.  It is what turns the compensator of the master
+equation into a linear combination of one dimensional laws. -/
+theorem integrable_stateIndicator_jumpProcess [MeasurableSpace E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (r : ℝ) (k : E) :
+    Integrable (fun ω ↦ stateIndicator k (jumpProcess lam r ω)) (jumpMeasure mu nu) := by
+  have hX : Measurable (jumpProcess lam r (E := E)) :=
+    (measurable_jumpProcess hlam).comp (measurable_const.prodMk measurable_id)
+  refine Integrable.mono' (integrable_const (1 : ℝ))
+    ((measurable_stateIndicator k).comp hX).aestronglyMeasurable
+    (Filter.Eventually.of_forall fun ω ↦ ?_)
+  simpa [Real.norm_eq_abs] using abs_stateIndicator_le_one k _
+
+/-- **A generator that is a combination of two state indicators integrates to that combination of
+one dimensional laws.**  This is the step from the compensator of
+`jumpMeasure_masterEquation_of_ae_nonExplosive`, an integral of `A f` along the process, to the
+right hand side of the master equation, which is an expression in the laws themselves.  Nothing
+about the jump construction enters; only the integrability of the two indicators does. -/
+theorem integral_comp_jumpProcess_eq_sub [MeasurableSpace E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} (hlam : Measurable lam) {mu : Kernel E E} [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] {g : E → ℝ} {a c : ℝ} {j k : E}
+    (hg : ∀ x, g x = a * stateIndicator j x - c * stateIndicator k x) (r : ℝ) :
+    (∫ ω, g (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+      = a * jumpLaw lam mu nu r j - c * jumpLaw lam mu nu r k := by
+  have hj := integrable_stateIndicator_jumpProcess hlam mu nu r j
+  have hk := integrable_stateIndicator_jumpProcess hlam mu nu r k
+  calc (∫ ω, g (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+      = ∫ ω, (a * stateIndicator j (jumpProcess lam r ω)
+          - c * stateIndicator k (jumpProcess lam r ω)) ∂(jumpMeasure mu nu) :=
+        integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ hg _)
+    _ = (∫ ω, a * stateIndicator j (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+          - ∫ ω, c * stateIndicator k (jumpProcess lam r ω) ∂(jumpMeasure mu nu) :=
+        integral_sub (hj.const_mul a) (hk.const_mul c)
+    _ = a * jumpLaw lam mu nu r j - c * jumpLaw lam mu nu r k := by
+        rw [integral_const_mul, integral_const_mul, jumpLaw, jumpLaw]
+
+/-- **The one dimensional law of the lifted rate is the law of the local process.**  The master
+equation is written in `jumpLaw`, which reads `jumpProcess` and therefore asks a positive rate; the
+process the statement is about is `jumpProcessE lam`, which does not.  This identifies the two, and
+with it `jumpLaw (posRate lam)` is not an object of its own but the law of the process of
+`yule_isLocalMPSolution`.
+
+The proof is `jumpProcessE_posRate_eq_of_mem` between the two local processes and
+`jumpProcessE_eq_jumpProcess` for the lifted rate, which has the positivity that `lam` lacks.  Both
+hold almost surely and for no other reason than that the waiting times are almost surely positive
+and the chain almost surely does not move at an absorbing state. -/
+theorem jumpLaw_posRate_eq [MeasurableSpace E] [MeasurableEq E] [MeasurableSingletonClass E]
+    {lam : E → ℝ} (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (mu : Kernel E E)
+    [IsMarkovKernel mu] (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x) (nu : Measure E)
+    [IsProbabilityMeasure nu]
+    (hne : ∀ᵐ ω ∂(jumpMeasure mu nu), ω ∈ NonExplosiveE (posRate lam)) (t : ℝ) (k : E) :
+    jumpLaw (posRate lam) mu nu t k
+      = ∫ ω, stateIndicator k (jumpProcessE lam t ω) ∂(jumpMeasure mu nu) := by
+  rw [jumpLaw]
+  refine integral_congr_ae ?_
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu, ae_absorb_jumpMeasure mu hlam habs nu, hne]
+    with ω h1 h2 h3
+  obtain ⟨y, xi⟩ := ω
+  have e1 : jumpProcessE (posRate lam) t (y, xi) = jumpProcess (posRate lam) t (y, xi) :=
+    jumpProcessE_eq_jumpProcess (posRate_pos hlam0) h1 t
+  rw [← e1, jumpProcessE_posRate_eq_of_mem h1 h2 h3 t]
+
+/-- **The master equation of the Yule process.**  The rate `β x` is unbounded and vanishes at the
+absorbing state, the two defects that kept `jumpMeasure_masterEquation` away from it, and both are
+gone: the bound is asked of the generator at the test function and not of the rate
+(`jumpApply_yule_indicator`), and the positivity is supplied by the lift, whose non explosion is
+`ae_mem_nonExplosiveE_posRate_yule` and whose law is the law of the local process
+(`jumpLaw_posRate_eq`).
+
+This is the first master equation in this file at a rate that is not bounded, and it is the
+statement the second of the three routes to non explosion was to rest on.  It does **not** yield
+non explosion, and `tsum_jumpLaw_eq_one` says why; non explosion is a hypothesis here, discharged
+by the Lyapunov criterion. -/
+theorem yule_masterEquation {β : ℝ} (hβ : 0 ≤ β) (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))]
+    (n : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) nu t (n + 1)
+      = jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+          (birthDeathKernel (linearBirth β) (linearDeath 0)) nu 0 (n + 1)
+        + ∫ r in (0:ℝ)..t,
+            (β * (n : ℝ) * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+                (birthDeathKernel (linearBirth β) (linearDeath 0)) nu r n
+              - β * ((n : ℝ) + 1)
+                * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+                    (birthDeathKernel (linearBirth β) (linearDeath 0)) nu r (n + 1)) := by
+  have hlam0 : ∀ x : ℕ, 0 ≤ birthDeathRate (linearBirth β) (linearDeath 0) x :=
+    birthDeathRate_linear_nonneg (by simpa using hβ)
+  have habs : ∀ x : ℕ, birthDeathRate (linearBirth β) (linearDeath 0) x = 0 →
+      birthDeathKernel (linearBirth β) (linearDeath 0) x = Measure.dirac x := by
+    intro x hx
+    rw [birthDeathRate] at hx
+    rw [birthDeathKernel_apply, if_pos hx]
+  have hA : ∀ x : ℕ, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+      (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator (n + 1)) x
+      = β * (n : ℝ) * stateIndicator n x - β * ((n : ℝ) + 1) * stateIndicator (n + 1) x := by
+    intro x
+    rw [jumpApply_posRate habs]
+    exact jumpApply_yule_indicator hβ n x
+  have hsub : ∀ A B : ℝ, |A - B| ≤ |A| + |B| := fun A B ↦ by
+    rw [sub_eq_add_neg, ← abs_neg B]
+    exact abs_add_le _ _
+  have hbd : ∀ (c : ℝ) (k x : ℕ), 0 ≤ c → |c * stateIndicator k x| ≤ c := by
+    intro c k x hc
+    rw [abs_mul, abs_of_nonneg hc]
+    calc c * |stateIndicator k x| ≤ c * 1 :=
+          mul_le_mul_of_nonneg_left (abs_stateIndicator_le_one k x) hc
+      _ = c := mul_one c
+  have hK : ∀ x : ℕ, |jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+      (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator (n + 1)) x|
+      ≤ β * (n : ℝ) + β * ((n : ℝ) + 1) := by
+    intro x
+    rw [hA x]
+    refine (hsub _ _).trans (add_le_add ?_ ?_)
+    · exact hbd _ _ _ (mul_nonneg hβ (Nat.cast_nonneg n))
+    · exact hbd _ _ _ (mul_nonneg hβ (by positivity))
+  have hcomp : ∀ r : ℝ,
+      (∫ ω, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+          (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator (n + 1))
+          (jumpProcess (posRate (birthDeathRate (linearBirth β) (linearDeath 0))) r ω)
+          ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath 0)) nu))
+        = β * (n : ℝ) * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+            (birthDeathKernel (linearBirth β) (linearDeath 0)) nu r n
+          - β * ((n : ℝ) + 1)
+            * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+                (birthDeathKernel (linearBirth β) (linearDeath 0)) nu r (n + 1) :=
+    fun r ↦ integral_comp_jumpProcess_eq_sub (measurable_of_countable _) nu hA r
+  rw [jumpMeasure_masterEquation_of_ae_nonExplosive
+    (lam := posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+    (measurable_of_countable _) (posRate_pos hlam0)
+    (birthDeathKernel (linearBirth β) (linearDeath 0)) nu
+    (ae_mem_nonExplosiveE_posRate_yule hβ nu) (n + 1) hK ht]
+  simp only [hcomp]
+
+end YuleMasterEquation
+
+section YuleLaw
+
+/-!
+## The solution of the master equation, and the one dimensional law of the Yule process
+
+`yule_masterEquation` is the *equation*.  This section solves it and reads off the law: started at
+the single individual `1`, the Yule process at time `t` is **geometric with parameter
+`exp (-β t)`**,
+
+`p (n + 1) t = exp (-β t) * (1 - exp (-β t)) ^ n`,   `p 0 t = 0`.
+
+That is the control the section doc of `section YuleProcess` asks for, and it is the same kind of
+control that `poissonMeasure` is for the Poisson process: the reader checks the result against a
+distribution that does **not** come out of this construction.
+
+**How the equation is solved, and why no integral has to be computed.**  Each step of the induction
+on the level is one scalar linear equation of first order, and
+`eq_exp_add_integral_of_hasDerivWithinAt` is its variation of constants formula.  It is used
+**twice per step and never evaluated**: the law and the candidate satisfy the same equation with the
+same inhomogeneity and the same initial value, so both equal the same right hand side, and that
+right hand side never has to be looked at.  What has to be shown of the candidate is that it solves
+the equation -- a derivative, not an integral.
+
+**The one step that is not formal.**  The integrated equation yields a derivative only after the
+integrand is known to be continuous, and the integrand contains the unknown `p (n + 1)` itself.  The
+bootstrap is `measurable_jumpLaw` together with `abs_jumpLaw_le_one`: a bounded measurable function
+of time is interval integrable, hence its primitive is continuous, hence `p (n + 1)` is continuous,
+hence the integrand is, and only then does the fundamental theorem of calculus apply.  This is the
+whole reason `eq_of_masterEquation` asks for a measurable and bounded right hand side and not for a
+continuous one.
+
+**Non explosion is not obtained here.**  `tsum_jumpLaw_yule_succ` sums the solution to `1`, and
+`tsum_jumpLaw_eq_one` says that this identity holds in this construction unconditionally and is
+therefore not the non explosion.  The non explosion of the Yule process is
+`ae_mem_nonExplosiveE_posRate_yule`, from the Lyapunov criterion, and it is a **hypothesis** of the
+master equation, not a consequence of its solution. -/
+
+variable {E : Type*}
+
+/-! ### The one dimensional law as a function of time
+
+Three facts, and they are what turns the integrated master equation into a differential one: the law
+is measurable in time, it is bounded by `1`, and a right hand side built from two laws is bounded. -/
+
+/-- **The one dimensional law is measurable in time.**  This is the joint measurability of the jump
+process (`measurable_jumpProcess`) pushed through the integral over the sample point, and it is the
+only place in this section where anything about the construction is used. -/
+theorem measurable_jumpLaw [MeasurableSpace E] [MeasurableSingletonClass E] {lam : E → ℝ}
+    (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (k : E) :
+    Measurable fun r : ℝ ↦ jumpLaw lam mu nu r k := by
+  have hf : Measurable fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦
+      stateIndicator k (jumpProcess lam q.1 q.2) :=
+    (measurable_stateIndicator k).comp (measurable_jumpProcess hlam)
+  unfold jumpLaw
+  exact (hf.stronglyMeasurable.integral_prod_right' (ν := jumpMeasure mu nu)).measurable
+
+/-- **A one dimensional law is bounded by one**, because it is the integral of an indicator under a
+probability measure. -/
+theorem abs_jumpLaw_le_one [MeasurableSpace E] {lam : E → ℝ} (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (r : ℝ) (k : E) :
+    |jumpLaw lam mu nu r k| ≤ 1 :=
+  abs_integral_le_of_abs_le fun _ ↦ abs_stateIndicator_le_one k _
+
+/-- **The one dimensional law is interval integrable in time**, which is what makes its primitive
+continuous and the passage from the integrated master equation to the differential one possible. -/
+theorem intervalIntegrable_jumpLaw [MeasurableSpace E] [MeasurableSingletonClass E] {lam : E → ℝ}
+    (hlam : Measurable lam) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (k : E) (a b : ℝ) :
+    IntervalIntegrable (fun r ↦ jumpLaw lam mu nu r k) volume a b :=
+  intervalIntegrable_of_abs_le (measurable_jumpLaw hlam mu nu k)
+    (fun r ↦ abs_jumpLaw_le_one mu nu r k) a b
+
+/-- **A bound for the right hand side of a master equation.**  No sign is asked of the two
+coefficients; the bound is the sum of their absolute values. -/
+theorem abs_sub_mul_jumpLaw_le [MeasurableSpace E] {lam : E → ℝ} (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (a c : ℝ) (j k : E) (r : ℝ) :
+    |a * jumpLaw lam mu nu r j - c * jumpLaw lam mu nu r k| ≤ |a| + |c| := by
+  have key : ∀ (b : ℝ) (l : E), |b * jumpLaw lam mu nu r l| ≤ |b| := by
+    intro b l
+    rw [abs_mul]
+    calc |b| * |jumpLaw lam mu nu r l| ≤ |b| * 1 :=
+          mul_le_mul_of_nonneg_left (abs_jumpLaw_le_one mu nu r l) (abs_nonneg b)
+      _ = |b| := mul_one _
+  have hsplit : |a * jumpLaw lam mu nu r j - c * jumpLaw lam mu nu r k|
+      ≤ |a * jumpLaw lam mu nu r j| + |c * jumpLaw lam mu nu r k| := by
+    have h := abs_add_le (a * jumpLaw lam mu nu r j) (-(c * jumpLaw lam mu nu r k))
+    rw [← sub_eq_add_neg, abs_neg] at h
+    exact h
+  exact hsplit.trans (add_le_add (key a j) (key c k))
+
+/-! ### The uniqueness of the solution of a scalar linear equation
+
+`eq_exp_add_integral_of_hasDerivWithinAt` is a formula and not a uniqueness statement.  Used twice
+it becomes one, and that is all that is needed here: the unknown law and the known candidate are
+both equal to the same expression, and the expression is never evaluated. -/
+
+/-- **A function given by an integrated first order linear equation is determined by its initial
+value.**  If `f` satisfies `f s = f 0 + ∫_0^s (g - c f)` for every `s ≥ 0` with a measurable and
+bounded right hand side, and `F` satisfies the same equation in differential form with the same
+initial value, then `f t = F t` for every `t ≥ 0`.
+
+The proof is in three moves, and the first two are the content.  The right hand side is bounded and
+measurable, so it is interval integrable and its primitive is continuous, which makes `f` continuous
+(`intervalIntegral.continuous_primitive`).  The right hand side is therefore continuous at every
+positive time, and the fundamental theorem of calculus turns the integrated equation into a
+derivative (`intervalIntegral.integral_hasDerivAt_right`).  Only then is
+`eq_exp_add_integral_of_hasDerivWithinAt` applied, to `f` and to `F`, with the same `g`, the same
+`c` and the same initial value.
+
+The derivative of `F` is asked at every positive time and not on a bounded interval, because that is
+how the candidate is delivered: as a closed formula differentiable on the whole line. -/
+theorem eq_of_masterEquation {f F g : ℝ → ℝ} {b c t : ℝ} (ht : 0 ≤ t)
+    (hmeas : Measurable fun r ↦ g r - c * f r) (hbd : ∀ r, |g r - c * f r| ≤ b)
+    (heq : ∀ s : ℝ, 0 ≤ s → f s = f 0 + ∫ r in (0:ℝ)..s, (g r - c * f r))
+    (hg : ContinuousOn g (Set.Ici 0)) (hF0 : F 0 = f 0)
+    (hFcont : ContinuousOn F (Set.Ici 0))
+    (hFderiv : ∀ r : ℝ, 0 < r → HasDerivAt F (g r - c * F r) r) :
+    f t = F t := by
+  have hint : ∀ u v : ℝ, IntervalIntegrable (fun r ↦ g r - c * f r) volume u v :=
+    fun u v ↦ intervalIntegrable_of_abs_le hmeas hbd u v
+  have hfcont : ContinuousOn f (Set.Ici 0) := by
+    have hcont : Continuous fun s : ℝ ↦ f 0 + ∫ r in (0:ℝ)..s, (g r - c * f r) :=
+      continuous_const.add (intervalIntegral.continuous_primitive hint 0)
+    exact hcont.continuousOn.congr fun s hs ↦ heq s hs
+  have hfderiv : ∀ r : ℝ, 0 < r → HasDerivAt f (g r - c * f r) r := by
+    intro r hr
+    have hca : ContinuousAt (fun r ↦ g r - c * f r) r :=
+      (hg.continuousAt (Ici_mem_nhds hr)).sub
+        (continuousAt_const.mul (hfcont.continuousAt (Ici_mem_nhds hr)))
+    have hFTC : HasDerivAt (fun u ↦ ∫ x in (0:ℝ)..u, (g x - c * f x)) (g r - c * f r) r :=
+      intervalIntegral.integral_hasDerivAt_right (hint 0 r)
+        ⟨Set.univ, Filter.univ_mem, hmeas.aestronglyMeasurable⟩ hca
+    have h2 : HasDerivAt (fun u ↦ f 0 + ∫ x in (0:ℝ)..u, (g x - c * f x)) (g r - c * f r) r := by
+      simpa using hFTC
+    refine h2.congr_of_eventuallyEq ?_
+    filter_upwards [Ici_mem_nhds hr] with s hs
+    exact heq s hs
+  rw [eq_exp_add_integral_of_hasDerivWithinAt ht (hfcont.mono Set.Icc_subset_Ici_self)
+      (hg.mono Set.Icc_subset_Ici_self) (fun r hr ↦ (hfderiv r hr.1).hasDerivWithinAt),
+    eq_exp_add_integral_of_hasDerivWithinAt ht (hFcont.mono Set.Icc_subset_Ici_self)
+      (hg.mono Set.Icc_subset_Ici_self) (fun r hr ↦ (hFderiv r hr.1).hasDerivWithinAt), hF0]
+
+/-! ### The candidate, and that it solves the equation -/
+
+/-- **The derivative of the exponential factor.** -/
+theorem hasDerivAt_expNeg (β r : ℝ) :
+    HasDerivAt (fun s : ℝ ↦ Real.exp (-(β * s))) (-β * Real.exp (-(β * r))) r := by
+  have h0 : HasDerivAt (fun s : ℝ ↦ -(β * s)) (-β) r := by
+    have h := (hasDerivAt_id r).const_mul (-β)
+    simpa [neg_mul] using h
+  convert h0.exp using 1
+  ring
+
+/-- **The candidate solves the master equation.**  With `e s = exp (-(β s))` the function
+`F n s = e s * (1 - e s) ^ n` satisfies
+
+`(F (n + 1))' r = β (n + 1) * F n r - β (n + 2) * F (n + 1) r`,
+
+which is the step of the induction from the level `n + 1` to the level `n + 2`, the level below
+being known.  It is one differentiation and one `ring`; nothing about the jump process enters. -/
+theorem hasDerivAt_yuleDensity_succ (β : ℝ) (n : ℕ) (r : ℝ) :
+    HasDerivAt (fun s : ℝ ↦ Real.exp (-(β * s)) * (1 - Real.exp (-(β * s))) ^ (n + 1))
+      (β * ((n : ℝ) + 1) * (Real.exp (-(β * r)) * (1 - Real.exp (-(β * r))) ^ n)
+        - β * ((n : ℝ) + 2)
+          * (Real.exp (-(β * r)) * (1 - Real.exp (-(β * r))) ^ (n + 1))) r := by
+  have he := hasDerivAt_expNeg β r
+  have h1 : HasDerivAt (fun s : ℝ ↦ 1 - Real.exp (-(β * s))) (β * Real.exp (-(β * r))) r := by
+    have h : HasDerivAt (fun s : ℝ ↦ 1 - Real.exp (-(β * s)))
+        (-(-β * Real.exp (-(β * r)))) r := he.const_sub (1 : ℝ)
+    have hval : -(-β * Real.exp (-(β * r))) = β * Real.exp (-(β * r)) := by ring
+    rwa [hval] at h
+  have h2 : HasDerivAt (fun s : ℝ ↦ (1 - Real.exp (-(β * s))) ^ (n + 1))
+      (((n : ℝ) + 1) * (1 - Real.exp (-(β * r))) ^ n * (β * Real.exp (-(β * r)))) r := by
+    have h : HasDerivAt (fun s : ℝ ↦ (1 - Real.exp (-(β * s))) ^ (n + 1))
+        (((n + 1 : ℕ) : ℝ) * (1 - Real.exp (-(β * r))) ^ (n + 1 - 1)
+          * (β * Real.exp (-(β * r)))) r := h1.fun_pow (n + 1)
+    have hsub : n + 1 - 1 = n := by omega
+    have hval : ((n + 1 : ℕ) : ℝ) = (n : ℝ) + 1 := by push_cast; ring
+    rw [hsub, hval] at h
+    exact h
+  have h3 : HasDerivAt (fun s : ℝ ↦ Real.exp (-(β * s)) * (1 - Real.exp (-(β * s))) ^ (n + 1))
+      (-β * Real.exp (-(β * r)) * (1 - Real.exp (-(β * r))) ^ (n + 1)
+        + Real.exp (-(β * r))
+          * (((n : ℝ) + 1) * (1 - Real.exp (-(β * r))) ^ n * (β * Real.exp (-(β * r))))) r :=
+    he.fun_mul h2
+  convert h3 using 1
+  ring
+
+/-! ### The master equation determines the law
+
+The statement is about an arbitrary family `p : ℕ → ℝ → ℝ` satisfying the master equation of the
+Yule process, with no reference to the jump construction.  That is deliberate: what is proved here
+is that **the equation has exactly one solution with the given initial value**, and the jump process
+enters only at `jumpLaw_yule_succ`, which discharges the four hypotheses on the data. -/
+
+/-- **The master equation of the Yule process started at one has the geometric law as its unique
+solution.**  The hypotheses are the four things the law of a jump process supplies: measurability in
+time, the bound `1`, the initial value `δ₁`, and the equation itself.
+
+The induction is on the level.  At the level `0` the inhomogeneity carries the factor `β * 0` and
+vanishes, so the equation is `(p 1)' = -β * p 1` and the solution is `exp (-β t)`; at the level
+`n + 1` the inhomogeneity is the level below, known by the induction hypothesis, and the step is
+`hasDerivAt_yuleDensity_succ`.  In both cases the two solutions are identified by
+`eq_of_masterEquation`, and no integral is evaluated. -/
+theorem eq_yuleDensity_of_masterEquation {β : ℝ} {p : ℕ → ℝ → ℝ}
+    (hmeas : ∀ k, Measurable (p k)) (hbdp : ∀ k r, |p k r| ≤ 1)
+    (hp0 : ∀ k : ℕ, p k 0 = if k = 1 then 1 else 0)
+    (hmaster : ∀ (m : ℕ) (s : ℝ), 0 ≤ s →
+      p (m + 1) s = p (m + 1) 0
+        + ∫ r in (0:ℝ)..s, (β * (m : ℝ) * p m r - β * ((m : ℝ) + 1) * p (m + 1) r))
+    (n : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    p (n + 1) t = Real.exp (-(β * t)) * (1 - Real.exp (-(β * t))) ^ n := by
+  have habs : ∀ (a : ℝ) (k : ℕ) (r : ℝ), |a * p k r| ≤ |a| := by
+    intro a k r
+    rw [abs_mul]
+    calc |a| * |p k r| ≤ |a| * 1 := mul_le_mul_of_nonneg_left (hbdp k r) (abs_nonneg a)
+      _ = |a| := mul_one _
+  have hrmeas : ∀ m : ℕ,
+      Measurable fun r ↦ β * (m : ℝ) * p m r - β * ((m : ℝ) + 1) * p (m + 1) r :=
+    fun m ↦ ((hmeas m).const_mul _).sub ((hmeas (m + 1)).const_mul _)
+  have hrbd : ∀ (m : ℕ) (r : ℝ),
+      |β * (m : ℝ) * p m r - β * ((m : ℝ) + 1) * p (m + 1) r|
+        ≤ |β * (m : ℝ)| + |β * ((m : ℝ) + 1)| := by
+    intro m r
+    have h := abs_add_le (β * (m : ℝ) * p m r) (-(β * ((m : ℝ) + 1) * p (m + 1) r))
+    rw [← sub_eq_add_neg, abs_neg] at h
+    exact h.trans (add_le_add (habs _ _ _) (habs _ _ _))
+  have hFcont : ∀ m : ℕ,
+      Continuous fun s : ℝ ↦ Real.exp (-(β * s)) * (1 - Real.exp (-(β * s))) ^ m := by
+    intro m
+    have h1 : Continuous fun s : ℝ ↦ Real.exp (-(β * s)) :=
+      Real.continuous_exp.comp ((continuous_const.mul continuous_id).neg)
+    exact h1.mul ((continuous_const.sub h1).pow m)
+  suffices h : ∀ m : ℕ, ∀ s : ℝ, 0 ≤ s →
+      p (m + 1) s = Real.exp (-(β * s)) * (1 - Real.exp (-(β * s))) ^ m from h n t ht
+  intro m
+  induction m with
+  | zero =>
+      intro s hs
+      refine eq_of_masterEquation (f := p (0 + 1))
+        (F := fun u : ℝ ↦ Real.exp (-(β * u)) * (1 - Real.exp (-(β * u))) ^ (0 : ℕ))
+        (g := fun r : ℝ ↦ β * ((0 : ℕ) : ℝ) * p 0 r)
+        hs (hrmeas 0) (hrbd 0) (hmaster 0) ?_ ?_ ?_ ?_
+      · have hz : ContinuousOn (fun _ : ℝ ↦ (0 : ℝ)) (Set.Ici 0) := continuousOn_const
+        exact hz.congr fun u _ ↦ by simp
+      · rw [hp0 (0 + 1), if_pos (by omega : (0 : ℕ) + 1 = 1)]
+        simp
+      · exact (hFcont 0).continuousOn
+      · intro r hr
+        show HasDerivAt (fun u : ℝ ↦ Real.exp (-(β * u)) * (1 - Real.exp (-(β * u))) ^ (0 : ℕ))
+          (β * ((0 : ℕ) : ℝ) * p 0 r
+            - β * (((0 : ℕ) : ℝ) + 1)
+              * (Real.exp (-(β * r)) * (1 - Real.exp (-(β * r))) ^ (0 : ℕ))) r
+        have hf : (fun u : ℝ ↦ Real.exp (-(β * u)) * (1 - Real.exp (-(β * u))) ^ (0 : ℕ))
+            = fun u : ℝ ↦ Real.exp (-(β * u)) := by
+          funext u
+          rw [pow_zero, mul_one]
+        rw [hf]
+        convert hasDerivAt_expNeg β r using 1
+        push_cast
+        ring
+  | succ k ih =>
+      intro s hs
+      refine eq_of_masterEquation (f := p (k + 1 + 1))
+        (F := fun u : ℝ ↦ Real.exp (-(β * u)) * (1 - Real.exp (-(β * u))) ^ (k + 1))
+        (g := fun r : ℝ ↦ β * ((k + 1 : ℕ) : ℝ) * p (k + 1) r)
+        hs (hrmeas (k + 1)) (hrbd (k + 1)) (hmaster (k + 1)) ?_ ?_ ?_ ?_
+      · refine ContinuousOn.congr
+          (f := fun r : ℝ ↦ β * ((k + 1 : ℕ) : ℝ)
+            * (Real.exp (-(β * r)) * (1 - Real.exp (-(β * r))) ^ k))
+          ((continuous_const.mul (hFcont k)).continuousOn) ?_
+        intro u hu
+        show β * ((k + 1 : ℕ) : ℝ) * p (k + 1) u
+          = β * ((k + 1 : ℕ) : ℝ)
+            * (Real.exp (-(β * u)) * (1 - Real.exp (-(β * u))) ^ k)
+        rw [ih u (Set.mem_Ici.mp hu)]
+      · rw [hp0 (k + 1 + 1), if_neg (by omega : ¬ (k + 1 + 1 = 1))]
+        simp
+      · exact (hFcont (k + 1)).continuousOn
+      · intro r hr
+        show HasDerivAt (fun u : ℝ ↦ Real.exp (-(β * u)) * (1 - Real.exp (-(β * u))) ^ (k + 1))
+          (β * ((k + 1 : ℕ) : ℝ) * p (k + 1) r
+            - β * (((k + 1 : ℕ) : ℝ) + 1)
+              * (Real.exp (-(β * r)) * (1 - Real.exp (-(β * r))) ^ (k + 1))) r
+        rw [ih r hr.le]
+        convert hasDerivAt_yuleDensity_succ β k r using 1
+        push_cast
+        ring
+
+/-! ### The Yule process: the equation at the absorbing state, the initial law, and the solution -/
+
+/-- **The master equation of the Yule process at the absorbing state** is `p 0 t = p 0 0`: the
+generator annihilates `stateIndicator 0` (`jumpApply_yule_indicator_zero`), so the compensator
+vanishes identically and the equation carries no integral.  A pure birth process never returns to
+`0`, and this is that sentence in Lean. -/
+theorem yule_masterEquation_zero {β : ℝ} (hβ : 0 ≤ β) (nu : Measure ℕ) [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) nu t 0
+      = jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+          (birthDeathKernel (linearBirth β) (linearDeath 0)) nu 0 0 := by
+  have hlam0 : ∀ x : ℕ, 0 ≤ birthDeathRate (linearBirth β) (linearDeath 0) x :=
+    birthDeathRate_linear_nonneg (by simpa using hβ)
+  have habs : ∀ x : ℕ, birthDeathRate (linearBirth β) (linearDeath 0) x = 0 →
+      birthDeathKernel (linearBirth β) (linearDeath 0) x = Measure.dirac x := by
+    intro x hx
+    rw [birthDeathRate] at hx
+    rw [birthDeathKernel_apply, if_pos hx]
+  have hA : ∀ x : ℕ, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+      (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator 0) x = 0 := by
+    intro x
+    rw [jumpApply_posRate habs]
+    exact jumpApply_yule_indicator_zero hβ x
+  have hK : ∀ x : ℕ, |jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+      (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator 0) x| ≤ 0 := by
+    intro x
+    rw [hA x, abs_zero]
+  rw [jumpMeasure_masterEquation_of_ae_nonExplosive
+    (lam := posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+    (measurable_of_countable _) (posRate_pos hlam0)
+    (birthDeathKernel (linearBirth β) (linearDeath 0)) nu
+    (ae_mem_nonExplosiveE_posRate_yule hβ nu) 0 hK ht]
+  simp [hA]
+
+/-- **The initial law of the Yule process started at one individual.**  It is `jumpLaw_zero` on the
+data: before the first jump the path has not moved, so the law at time `0` is `ν = δ₁`. -/
+theorem jumpLaw_yule_init {β : ℝ} (hβ : 0 ≤ β)
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] (k : ℕ) :
+    jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) (Measure.dirac 1) 0 k
+      = if k = 1 then 1 else 0 := by
+  have hlam0 : ∀ x : ℕ, 0 ≤ birthDeathRate (linearBirth β) (linearDeath 0) x :=
+    birthDeathRate_linear_nonneg (by simpa using hβ)
+  rw [jumpLaw_zero (posRate_pos hlam0) _ _ k]
+  by_cases hk : k = 1
+  · subst hk
+    simp [measureReal_def]
+  · have hk' : (1 : ℕ) ≠ k := fun h ↦ hk h.symm
+    simp [measureReal_def, hk, hk']
+
+/-- **The Yule process started at one never visits the absorbing state.**  `p 0 t = 0` for every
+`t ≥ 0`, and the proof is the master equation at the level `0` together with the initial law. -/
+theorem jumpLaw_yule_zero {β : ℝ} (hβ : 0 ≤ β)
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) (Measure.dirac 1) t 0 = 0 := by
+  rw [yule_masterEquation_zero hβ (Measure.dirac 1) ht, jumpLaw_yule_init hβ 0]
+  norm_num
+
+/-- **The one dimensional law of the Yule process started at one individual is geometric**,
+
+`P (X t = n + 1) = exp (-β t) * (1 - exp (-β t)) ^ n`.
+
+This is the control the comparison of the routes asks for: the right hand side is the probability
+mass function of the geometric distribution on `{1, 2, …}` with success parameter `exp (-β t)`, and
+nothing of it comes out of the jump construction.  It is to the Yule process what `poissonMeasure`
+is to the Poisson process.
+
+Every hypothesis is discharged on the data.  The law is measurable in time (`measurable_jumpLaw`)
+and bounded by `1` (`abs_jumpLaw_le_one`); its initial value is `jumpLaw_yule_init`; and the
+equation is `yule_masterEquation`, which rests in turn on the non explosion of the lifted rate
+(`ae_mem_nonExplosiveE_posRate_yule`) and therefore on the Lyapunov criterion.  Nothing is left
+standing. -/
+theorem jumpLaw_yule_succ {β : ℝ} (hβ : 0 ≤ β)
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] (n : ℕ) {t : ℝ}
+    (ht : 0 ≤ t) :
+    jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) (Measure.dirac 1) t (n + 1)
+      = Real.exp (-(β * t)) * (1 - Real.exp (-(β * t))) ^ n :=
+  eq_yuleDensity_of_masterEquation
+    (p := fun k r ↦ jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+      (birthDeathKernel (linearBirth β) (linearDeath 0)) (Measure.dirac 1) r k)
+    (fun k ↦ measurable_jumpLaw (measurable_of_countable _) _ _ k)
+    (fun k r ↦ abs_jumpLaw_le_one _ _ r k) (fun k ↦ jumpLaw_yule_init hβ k)
+    (fun m s hs ↦ yule_masterEquation hβ (Measure.dirac 1) m hs) n ht
+
+/-- **The geometric law sums to one.**  Together with `jumpLaw_yule_zero` this says that the
+solution of the master equation carries all the mass, and it is a **consistency check and not a non
+explosion statement**: `tsum_jumpLaw_eq_one` proves the same total mass `1` in this construction
+without any hypothesis whatever, so the identity cannot distinguish an explosive path from a
+non explosive one.  What it does check is the closed formula, against a geometric series. -/
+theorem tsum_jumpLaw_yule_succ {β : ℝ} (hβ : 0 ≤ β)
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath 0))] {t : ℝ} (ht : 0 ≤ t) :
+    ∑' n : ℕ, jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath 0)))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) (Measure.dirac 1) t (n + 1) = 1 := by
+  have h1 : (0 : ℝ) < Real.exp (-(β * t)) := Real.exp_pos _
+  have h2 : Real.exp (-(β * t)) ≤ 1 := by
+    rw [← Real.exp_zero]
+    exact Real.exp_le_exp.2 (by linarith [mul_nonneg hβ ht])
+  rw [tsum_congr fun n ↦ jumpLaw_yule_succ hβ n ht, tsum_mul_left,
+    tsum_geometric_of_lt_one (by linarith) (by linarith), sub_sub_cancel]
+  exact mul_inv_cancel₀ (ne_of_gt h1)
+
+end YuleLaw
+
+section RateMonotone
+
+/-!
+## Non explosion is antitone in the rate, and where the coupling route becomes expensive
+
+This is the first brick of the third route to non explosion, the **coupling**: dominate the process
+one is interested in by one whose non explosion is known.  In this construction the domination that
+is available costs almost nothing, and it is this one:
+
+`lam ≤ lam'` pointwise implies `NonExplosiveE lam' ⊆ NonExplosiveE lam`,
+
+at **every** sample point and not almost everywhere.  The reason is
+`mem_nonExplosiveE_iff_tsum_eq_top`: non explosion is the single identity
+`∑ k, ofReal (ξ k) / ofReal (lam (y k)) = ⊤`, the series is antitone in the rate term by term, and a
+series that already diverges keeps diverging when its terms grow.  The chain and the waiting times
+are the *same* on both sides; only the rate changes.
+
+**And that is exactly why this brick does not reach the birth and death chain.**  The coupling the
+task asks for is to dominate the linear birth and death process by the Yule process, and the
+domination of the *total rates* runs the other way: `birthDeathRate` is `(β + δ) x` and the Yule
+rate is `β x`, so the Yule rate is the **smaller** one, and
+`mem_nonExplosiveE_yule_of_linearBirthDeath` gives the non explosion of the Yule process from that
+of the birth and death chain — the direction nobody needs, since the Yule process is the one whose
+non explosion is known.
+
+The coupling that is wanted is not a comparison of rates at a fixed sample point at all.  A death
+makes the total rate *larger* and the state *smaller*, and the two effects pull against each other;
+what dominates is the *state*, not the rate, and the two processes then do not share an embedded
+chain.  A coupling therefore has to be a **new measure on a common space** carrying both chains, not
+a statement about one `jumpMeasure`.  That is the named cost of the third route, and it is named
+here before a line is spent on it. -/
+
+variable {E : Type*}
+
+/-- **Non explosion is antitone in the rate, at a fixed sample point.**  Raising the rate shortens
+every holding time `ξ k / lam (y k)` and therefore the explosion time; a rate whose explosion time
+is already infinite keeps it when the rate is lowered.
+
+The statement is pointwise in the sample point and not almost sure, because nothing probabilistic
+enters: `mem_nonExplosiveE_iff_tsum_eq_top` turns non explosion into a series identity in `ℝ≥0∞` and
+`ENNReal.tsum_le_tsum` compares the two series term by term. -/
+theorem mem_nonExplosiveE_of_rate_le {lam lam' : E → ℝ} (h : ∀ x, lam x ≤ lam' x) {y : ℕ → E}
+    {xi : ℕ → ℝ} (hω : (y, xi) ∈ NonExplosiveE lam') : (y, xi) ∈ NonExplosiveE lam := by
+  rw [mem_nonExplosiveE_iff_tsum_eq_top] at hω ⊢
+  have hle : ∑' k, ENNReal.ofReal (xi k) / ENNReal.ofReal (lam' (y k))
+      ≤ ∑' k, ENNReal.ofReal (xi k) / ENNReal.ofReal (lam (y k)) :=
+    ENNReal.tsum_le_tsum fun k ↦
+      ENNReal.div_le_div_left (ENNReal.ofReal_le_ofReal (h (y k))) _
+  rw [hω] at hle
+  exact top_le_iff.mp hle
+
+/-- **The same statement as an inclusion of sets.**  It is the shape a localising argument consumes,
+and it is an inclusion and not an almost sure inclusion. -/
+theorem nonExplosiveE_subset_of_rate_le {lam lam' : E → ℝ} (h : ∀ x, lam x ≤ lam' x) :
+    NonExplosiveE lam' ⊆ NonExplosiveE lam := by
+  rintro ⟨y, xi⟩ hω
+  exact mem_nonExplosiveE_of_rate_le h hω
+
+/-- **The rate domination between the linear birth and death chain and the Yule process, in the
+direction it actually has.**  The Yule rate `β x` is below the total rate `(β + δ) x` of the linear
+chain, so the non explosion of the *linear* chain implies that of the *Yule* process at the same
+sample point — and not the other way round.
+
+That is the finding this declaration exists for.  The coupling route was proposed as: the birth and
+death process is dominated by the Yule process, so it does not explode either.  As a comparison of
+**rates** at a fixed sample point that sentence is false, and here it is false in a precise way: the
+inequality between the total rates points the other way, because a death raises the total rate.  The
+domination the route means is between the **states**, and two processes whose states are compared do
+not share an embedded chain -- a coupling is a measure on a common space and not a rate inequality.
+
+The Yule process does not need this: `ae_mem_nonExplosiveE_yule` proves its non explosion outright,
+by the series along the chain, and `ae_mem_nonExplosiveE_posRate_yule` proves it for the lifted rate
+by the Lyapunov criterion. -/
+theorem mem_nonExplosiveE_yule_of_linearBirthDeath {β δ : ℝ} (hδ : 0 ≤ δ) {y : ℕ → ℕ} {xi : ℕ → ℝ}
+    (hω : (y, xi) ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath δ))) :
+    (y, xi) ∈ NonExplosiveE (birthDeathRate (linearBirth β) (linearDeath 0)) := by
+  refine mem_nonExplosiveE_of_rate_le (fun x ↦ ?_) hω
+  rw [birthDeathRate_yule_apply, birthDeathRate_linear_apply]
+  have hx : (0 : ℝ) ≤ (x : ℝ) := Nat.cast_nonneg x
+  nlinarith
+
+end RateMonotone
+
+section LinearBirthDeathMasterEquation
+
+/-!
+## The master equation of the linear birth and death chain
+
+`yule_masterEquation` is the pure birth case, and the pure birth case is the one in which the
+equation is a **chain**: the generator at a state indicator sees the state below and the state
+itself, so the induction on `n` of `eq_yuleDensity_of_masterEquation` can run.  With a death rate
+the generator sees the state **above** as well, and the third term is not a cosmetic
+generalisation -- it is the reason the system is an infinite coupled system and not a chain of
+scalar equations, and the reason the solution of the fourth run of 2026-09-11 does not carry over.
+
+Everything before the solution does carry over, and it carries over on the same three legs:
+
+* the generator at a state indicator is a **finite** combination of state indicators and therefore
+  bounded, although the rate `(β + δ) x` is not (`jumpApply_linearBirthDeath_indicator`);
+* the lift `posRate` supplies the positivity the rate lacks at the absorbing state `0`
+  (`birthDeathRate_linear_zero`), and the generator does not see the lift (`jumpApply_posRate`);
+* non explosion of the lifted rate is `ae_mem_nonExplosiveE_posRate_linearBirthDeath`.
+
+The third leg is where this statement differs in its **supply** from `yule_masterEquation`: there
+the Lyapunov criterion crosses the lift, here the series along the embedded chain does, through
+`ae_mem_nonExplosiveE_posRate`.  The two routes therefore both reach a master equation, which is
+what the measured comparison of Part F asks.
+
+`jumpApply_yule_indicator_of_linearBirthDeath` is the probe that the generalisation is not skew:
+at `δ = 0` the term that reads the state above is the one that vanishes, and what is left is
+`jumpApply_yule_indicator` on the nose.
+-/
+
+variable {β δ : ℝ}
+
+/-- **The generator of the linear birth and death chain at a state indicator.**  Three terms, and
+each of them is one way the state `n + 1` can be entered or left: a birth from `n`, a death from
+`n + 2`, and the departure from `n + 1` itself at the total rate.
+
+The index `n + 1` and not `n`: at the absorbing state `0` the generator is not of this shape, since
+`0` cannot be entered from below and cannot be left at all.  There
+`jumpApply_linearBirthDeath_indicator_zero` gives the one remaining term, the death from `1`. -/
+theorem jumpApply_linearBirthDeath_indicator (hβ : 0 ≤ β) (hδ : 0 ≤ δ) (n x : ℕ) :
+    jumpApply (birthDeathRate (linearBirth β) (linearDeath δ))
+        (birthDeathKernel (linearBirth β) (linearDeath δ)) (stateIndicator (n + 1)) x
+      = β * (n : ℝ) * stateIndicator n x + δ * ((n : ℝ) + 2) * stateIndicator (n + 2) x
+        - (β + δ) * ((n : ℝ) + 1) * stateIndicator (n + 1) x := by
+  rw [jumpApply_linearBirthDeath hβ hδ]
+  simp only [stateIndicator_apply]
+  by_cases h1 : x = n
+  · rw [h1, if_pos (rfl : n + 1 = n + 1), if_neg (by omega : ¬ (n = n + 1)),
+      if_neg (by omega : ¬ (n - 1 = n + 1)), if_pos (rfl : n = n),
+      if_neg (by omega : ¬ (n = n + 2))]
+    ring
+  · by_cases h2 : x = n + 1
+    · rw [h2, if_neg (by omega : ¬ (n + 1 + 1 = n + 1)), if_pos (rfl : n + 1 = n + 1),
+        if_neg (by omega : ¬ (n + 1 - 1 = n + 1)), if_neg (by omega : ¬ (n + 1 = n)),
+        if_neg (by omega : ¬ (n + 1 = n + 2))]
+      push_cast
+      ring
+    · by_cases h3 : x = n + 2
+      · rw [h3, if_neg (by omega : ¬ (n + 2 + 1 = n + 1)), if_neg (by omega : ¬ (n + 2 = n + 1)),
+          if_pos (by omega : n + 2 - 1 = n + 1), if_neg (by omega : ¬ (n + 2 = n)),
+          if_pos (rfl : n + 2 = n + 2)]
+        push_cast
+        ring
+      · rw [if_neg (by omega : ¬ (x + 1 = n + 1)), if_neg h2,
+          if_neg (by omega : ¬ (x - 1 = n + 1)), if_neg h1, if_neg h3]
+        ring
+
+/-- **The generator of the linear birth and death chain at the indicator of the absorbing state.**
+One term, the death from `1`: the state `0` cannot be entered from below and cannot be left.  For
+the pure birth chain this is `0` (`jumpApply_yule_indicator_zero`), and the difference is exactly
+the mass that extinction accumulates. -/
+theorem jumpApply_linearBirthDeath_indicator_zero (hβ : 0 ≤ β) (hδ : 0 ≤ δ) (x : ℕ) :
+    jumpApply (birthDeathRate (linearBirth β) (linearDeath δ))
+        (birthDeathKernel (linearBirth β) (linearDeath δ)) (stateIndicator 0) x
+      = δ * stateIndicator 1 x := by
+  rw [jumpApply_linearBirthDeath hβ hδ]
+  simp only [stateIndicator_apply]
+  by_cases h0 : x = 0
+  · rw [h0]
+    norm_num
+  · by_cases h1 : x = 1
+    · rw [h1]
+      norm_num
+    · rw [if_neg (by omega : ¬ (x + 1 = 0)), if_neg h0, if_neg (by omega : ¬ (x - 1 = 0)),
+        if_neg h1]
+      ring
+
+/-- **The pure birth generator is the case `δ = 0`**, and the term that vanishes is the one that
+reads the state **above**.  This is `jumpApply_yule_indicator` re-derived from the general
+generator, and it is the probe that the generalisation is not skew: a generalisation that does not
+specialise back is a different statement, not a wider one. -/
+theorem jumpApply_yule_indicator_of_linearBirthDeath (hβ : 0 ≤ β) (n x : ℕ) :
+    jumpApply (birthDeathRate (linearBirth β) (linearDeath 0))
+        (birthDeathKernel (linearBirth β) (linearDeath 0)) (stateIndicator (n + 1)) x
+      = β * (n : ℝ) * stateIndicator n x - β * ((n : ℝ) + 1) * stateIndicator (n + 1) x := by
+  rw [jumpApply_linearBirthDeath_indicator hβ le_rfl n x]
+  ring
+
+/-- **A generator that is a combination of three state indicators integrates to that combination of
+one dimensional laws.**  `integral_comp_jumpProcess_eq_sub` with a third indicator, and nothing
+else changes: only the integrability of the three indicators enters, which is
+`integrable_stateIndicator_jumpProcess`.  The birth and death equation has three terms and the pure
+birth equation two, and this is the whole difference at this step. -/
+theorem integral_comp_jumpProcess_eq_add_sub {E : Type*} [MeasurableSpace E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} (hlam : Measurable lam) {mu : Kernel E E}
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] {g : E → ℝ} {a b c : ℝ}
+    {i j k : E}
+    (hg : ∀ x, g x = a * stateIndicator i x + b * stateIndicator j x - c * stateIndicator k x)
+    (r : ℝ) :
+    (∫ ω, g (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+      = a * jumpLaw lam mu nu r i + b * jumpLaw lam mu nu r j - c * jumpLaw lam mu nu r k := by
+  have hi := (integrable_stateIndicator_jumpProcess hlam mu nu r i).const_mul a
+  have hj := (integrable_stateIndicator_jumpProcess hlam mu nu r j).const_mul b
+  have hk := (integrable_stateIndicator_jumpProcess hlam mu nu r k).const_mul c
+  calc (∫ ω, g (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+      = ∫ ω, (a * stateIndicator i (jumpProcess lam r ω)
+            + b * stateIndicator j (jumpProcess lam r ω)
+            - c * stateIndicator k (jumpProcess lam r ω)) ∂(jumpMeasure mu nu) :=
+        integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ hg _)
+    _ = (∫ ω, (a * stateIndicator i (jumpProcess lam r ω)
+            + b * stateIndicator j (jumpProcess lam r ω)) ∂(jumpMeasure mu nu))
+          - ∫ ω, c * stateIndicator k (jumpProcess lam r ω) ∂(jumpMeasure mu nu) :=
+        integral_sub (hi.add hj) hk
+    _ = ((∫ ω, a * stateIndicator i (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+            + ∫ ω, b * stateIndicator j (jumpProcess lam r ω) ∂(jumpMeasure mu nu))
+          - ∫ ω, c * stateIndicator k (jumpProcess lam r ω) ∂(jumpMeasure mu nu) := by
+        rw [integral_add hi hj]
+    _ = a * jumpLaw lam mu nu r i + b * jumpLaw lam mu nu r j - c * jumpLaw lam mu nu r k := by
+        rw [integral_const_mul, integral_const_mul, integral_const_mul, jumpLaw, jumpLaw, jumpLaw]
+
+/-- **The master equation of the linear birth and death chain.**  With
+`p k r = jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ))) mu nu r k` the statement
+reads
+
+`p (n+1) t = p (n+1) 0 + ∫_0^t (β n · p n r + δ (n+2) · p (n+2) r − (β+δ)(n+1) · p (n+1) r) dr`,
+
+the master equation in integrated form.  It is `yule_masterEquation` with the death rate carried
+along, and the two differ in more than the extra term: the non explosion it rests on is supplied by
+the **series** along the embedded chain (`ae_mem_nonExplosiveE_posRate_linearBirthDeath`) and not by
+the Lyapunov criterion.
+
+Like `yule_masterEquation` it does **not** yield non explosion, and `tsum_jumpLaw_eq_one` says why:
+on this construction the one dimensional laws sum to one without any hypothesis whatever, so the
+total mass cannot tell an explosive path from a non explosive one. -/
+theorem linearBirthDeath_masterEquation (hβ : 0 ≤ β) (hδ : 0 ≤ δ) (nu : Measure ℕ)
+    [IsProbabilityMeasure nu]
+    [IsMarkovKernel (birthDeathKernel (linearBirth β) (linearDeath δ))]
+    (n : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+        (birthDeathKernel (linearBirth β) (linearDeath δ)) nu t (n + 1)
+      = jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+          (birthDeathKernel (linearBirth β) (linearDeath δ)) nu 0 (n + 1)
+        + ∫ r in (0:ℝ)..t,
+            (β * (n : ℝ) * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+                (birthDeathKernel (linearBirth β) (linearDeath δ)) nu r n
+              + δ * ((n : ℝ) + 2)
+                * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+                    (birthDeathKernel (linearBirth β) (linearDeath δ)) nu r (n + 2)
+              - (β + δ) * ((n : ℝ) + 1)
+                * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+                    (birthDeathKernel (linearBirth β) (linearDeath δ)) nu r (n + 1)) := by
+  have hβδ : (0 : ℝ) ≤ β + δ := by linarith
+  have hlam0 : ∀ x : ℕ, 0 ≤ birthDeathRate (linearBirth β) (linearDeath δ) x :=
+    birthDeathRate_linear_nonneg hβδ
+  have habs : ∀ x : ℕ, birthDeathRate (linearBirth β) (linearDeath δ) x = 0 →
+      birthDeathKernel (linearBirth β) (linearDeath δ) x = Measure.dirac x := by
+    intro x hx
+    rw [birthDeathRate] at hx
+    rw [birthDeathKernel_apply, if_pos hx]
+  have hA : ∀ x : ℕ, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+      (birthDeathKernel (linearBirth β) (linearDeath δ)) (stateIndicator (n + 1)) x
+      = β * (n : ℝ) * stateIndicator n x + δ * ((n : ℝ) + 2) * stateIndicator (n + 2) x
+        - (β + δ) * ((n : ℝ) + 1) * stateIndicator (n + 1) x := by
+    intro x
+    rw [jumpApply_posRate habs]
+    exact jumpApply_linearBirthDeath_indicator hβ hδ n x
+  have habs3 : ∀ A B C : ℝ, |A + B - C| ≤ |A| + |B| + |C| := by
+    intro A B C
+    have h1 : |A + B - C| ≤ |A + B| + |C| := by
+      rw [sub_eq_add_neg, ← abs_neg C]
+      exact abs_add_le _ _
+    have h2 : |A + B| ≤ |A| + |B| := abs_add_le _ _
+    linarith
+  have hbd : ∀ (c : ℝ) (k x : ℕ), 0 ≤ c → |c * stateIndicator k x| ≤ c := by
+    intro c k x hc
+    rw [abs_mul, abs_of_nonneg hc]
+    calc c * |stateIndicator k x| ≤ c * 1 :=
+          mul_le_mul_of_nonneg_left (abs_stateIndicator_le_one k x) hc
+      _ = c := mul_one c
+  have hK : ∀ x : ℕ, |jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+      (birthDeathKernel (linearBirth β) (linearDeath δ)) (stateIndicator (n + 1)) x|
+      ≤ β * (n : ℝ) + δ * ((n : ℝ) + 2) + (β + δ) * ((n : ℝ) + 1) := by
+    intro x
+    rw [hA x]
+    refine (habs3 _ _ _).trans (add_le_add (add_le_add ?_ ?_) ?_)
+    · exact hbd _ _ _ (mul_nonneg hβ (Nat.cast_nonneg n))
+    · exact hbd _ _ _ (mul_nonneg hδ (by positivity))
+    · exact hbd _ _ _ (mul_nonneg hβδ (by positivity))
+  have hcomp : ∀ r : ℝ,
+      (∫ ω, jumpApply (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+          (birthDeathKernel (linearBirth β) (linearDeath δ)) (stateIndicator (n + 1))
+          (jumpProcess (posRate (birthDeathRate (linearBirth β) (linearDeath δ))) r ω)
+          ∂(jumpMeasure (birthDeathKernel (linearBirth β) (linearDeath δ)) nu))
+        = β * (n : ℝ) * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+              (birthDeathKernel (linearBirth β) (linearDeath δ)) nu r n
+          + δ * ((n : ℝ) + 2)
+            * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+                (birthDeathKernel (linearBirth β) (linearDeath δ)) nu r (n + 2)
+          - (β + δ) * ((n : ℝ) + 1)
+            * jumpLaw (posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+                (birthDeathKernel (linearBirth β) (linearDeath δ)) nu r (n + 1) :=
+    fun r ↦ integral_comp_jumpProcess_eq_add_sub (measurable_of_countable _) nu hA r
+  rw [jumpMeasure_masterEquation_of_ae_nonExplosive
+    (lam := posRate (birthDeathRate (linearBirth β) (linearDeath δ)))
+    (measurable_of_countable _) (posRate_pos hlam0)
+    (birthDeathKernel (linearBirth β) (linearDeath δ)) nu
+    (ae_mem_nonExplosiveE_posRate_linearBirthDeath hβδ nu) (n + 1) hK ht]
+  simp only [hcomp]
+
+end LinearBirthDeathMasterEquation

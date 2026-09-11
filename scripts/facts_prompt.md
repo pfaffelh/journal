@@ -100,7 +100,85 @@ dritte ist vermutlich der beste:
 > Nichtexplosion in einem, während der Kopplungsweg die Nichtexplosion braucht,
 > um überhaupt von `X t` sprechen zu dürfen.
 
-Zu bauen, in dieser Reihenfolge — **Mastergleichung vor Kopplung**:
+**Ein vierter Weg, und nach dem Befund des 150. Laufs der aussichtsreichste**
+*(vom Nutzer am 2026-09-11 vorgeschlagen)*: **Momentenschranke und Grönwall.**
+
+Der 150. Lauf hat gezeigt, daß `∑ k, p k t = 1` auf dieser Konstruktion
+**voraussetzungslos** gilt — jenseits der Explosionszeit gibt `stepIndex` den
+Müllwert, der Pfad sitzt an einem Zustand von `E`, und die entweichende Masse
+wird mitgezählt. Jede Aussage über `X t` *selbst* ist deshalb blind für die
+Explosion. Der Ausweg ist, nicht über `X t` zu reden, sondern über die
+**Stoppzeiten**, die aus dem Pfad *vor* der Explosion gebildet sind — und die
+gibt es schon: `rateTime lam n`, die Trefferzeiten des laufenden
+Ratensupremums.
+
+Der Weg, für den Yule-Prozeß `lam x = β * x`:
+
+1. **Abschneiden der Testfunktion**, nicht der Rate: `h N x = min x N` ist
+   **beschränkt**, also greift die vorhandene Erwartungswertidentität.
+2. **Die Lyapunov-Ungleichung** `A (h N) x ≤ β * h N x` — nachrechnen, sie ist
+   der ganze Inhalt: `β x (h N (x+1) − h N x) ≤ β x · 1_{x<N} ≤ β · h N x`.
+3. **Grönwall** auf `m N t = 𝔼[h N (X t)]` gibt `m N t ≤ exp (β t)`,
+   **gleichmäßig in `N`**. Mathlib hat es als `gronwallBound` und
+   `norm_le_gronwallBound_of_norm_deriv_right_le`
+   (`Analysis/ODE/Gronwall.lean`), also in der Ableitungsform — die
+   Differentialform der Mastergleichung (`hasDerivWithinAt_jumpLaw`) ist damit
+   der Anschluß.
+4. **Markov auf dem gestoppten Prozeß** — und *das* ist der Schritt, der dem
+   Müllwert entkommt:
+   `P (rateTime lam N ≤ t) ≤ 𝔼[X (t ⊓ rateTime lam N)] / N ≤ exp (β t) / N → 0`.
+   Weil `rateTime lam N` aus dem Pfad **vor** der Explosion gebildet ist, sieht
+   diese Aussage die Explosion, anders als `tsum_jumpLaw_eq_one`.
+   `mul_meas_ge_le_lintegral` steht in
+   `MeasureTheory/Integral/Lebesgue/Markov.lean:50`.
+5. Also `rateTime lam N → ∞` f.s., und das **ist** die Nichtexplosion.
+
+**Warum das mehr ist als ein vierter Meßwert.** Der Reihenweg ruht darauf, daß
+die Kette Nachbarschritte macht; dieser hier ruht auf `A f ≤ C · f` für *eine*
+geeignete Funktion `f`, also auf einer Lyapunov-Bedingung. Das ist das
+allgemeine Nichtexplosionskriterium und überlebt beliebige Sprungkerne. Wenn er
+trägt, gehört er in den Meilenstein, nicht nur in den Vergleich.
+
+**Zu prüfen, ehe gebaut wird:** die Erwartungswertidentität verlangt derzeit eine
+globale Schranke an `lam`, die Yule nicht hat. Ob der Weg über den gestoppten
+Prozeß oder über `truncRate` und einen Grenzübergang geht, ist die erste
+Entscheidung — und sie ist zu begründen, nicht zu raten.
+
+**Und der Satz, um den es dabei wirklich geht** *(Nutzer, 2026-09-11)*: nicht
+Yule, sondern das **Lyapunov-Kriterium**. Trage es als eigenen Punkt in
+Meilenstein 4 ein und beweise es *vor* den Instanzen:
+
+> `isNonExplosive_of_lyapunov` — gibt es `f : E → ℝ≥0` meßbar, deren
+> Subniveaumengen `{f ≤ N}` ausschöpfen, mit `A f ≤ C • f`, so explodiert der
+> Prozeß f.s. nicht.
+
+Der Beweis ist der oben beschriebene, aber **ohne Abschneiden von `f`**: mit
+`τ N` = Trefferzeit von `{f ≥ N}` ist `f (X (t ⊓ τ N)) * exp (−C * (t ⊓ τ N))`
+ein Supermartingal, also `𝔼[f (X (t ⊓ τ N))] ≤ f x₀ * exp (C t)`, und Markov gibt
+`N * P (τ N ≤ t) ≤ f x₀ * exp (C t)`. Das Abschneiden `f ⊓ N` ist eine Abkürzung,
+die nur bei **Nachbarschritten** trägt; bei weiten Sprüngen ist `f ⊓ N` nicht
+mehr kontrolliert, und dann braucht man den gestoppten Prozeß.
+
+**Die Instanzen fallen dann heraus**, jede in wenigen Zeilen:
+
+* **Allgemeiner Geburt-Tod-Prozeß:** mit `f x = x` ist
+  `A (f ⊓ N) x ≤ b x * 1_{x<N}`, denn der Todesterm ist **immer ≤ 0**. Die
+  Bedingung ist also `b x ≤ C * x` — *die Geburtsrate wächst höchstens linear,
+  die Sterberate ist frei*. Sie ist scharf: `b x = x^(1+ε)` explodiert.
+* **Yule** (`b x = β * x`, `d ≡ 0`) ist der schlechteste Fall dieser Klasse,
+  weil ohne Todesterm — und damit die richtige Probe.
+* **Linear** (`b x = β * x`, `d x = δ * x`) ebenso.
+* Und `rateSup`/`rateTime` aus dem lokalen Fall sind der Spezialfall `f = lam`;
+  prüfe, ob sie sich als Instanz lesen lassen oder ob die Trefferzeiten anders
+  gebildet sind.
+
+**Was das für den bestehenden Reihenweg heißt:** `ae_mem_nonExplosiveE` ruht
+darauf, daß die Kette Nachbarschritte macht. Er bleibt als Abkürzung stehen und
+ist nicht falsch — aber im Vergleich am Ende gehört gesagt, daß er ein
+Sonderfall des Lyapunov-Kriteriums ist und nicht ein gleichrangiger Weg.
+
+Zu bauen, in dieser Reihenfolge — **Lyapunov, dann die Instanzen, dann
+Mastergleichung, dann Kopplung**:
 
 1. **Yule als Instanz:** `b x = β * x`, `d ≡ 0`, mit `jumpApply_yule` und
    `yule_isLocalMPSolution` als Spezialfall des schon bewiesenen

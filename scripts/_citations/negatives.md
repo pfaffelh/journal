@@ -99,3 +99,12 @@ Suche `condExp_ae_eq_condExp_of` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
 Suche `integrating factor|integratingFactor|linear_ODE|linearODE|variation of constants` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
 
 
+## `first-order-pde` — MartingaleProblems/README.md, Meilenstein 4
+
+> Mathlib hat keine partielle Differentialgleichung erster Ordnung und keine Charakteristikenmethode, also kein Werkzeug für die erzeugende Funktion eines Geburt-Tod-Prozesses.
+
+Suche `method of characteristics|partial differential equation|characteristicCurve|characteristic curve` unter `Mathlib/`: **2 Treffer** in 2 Dateien.
+
+* `Mathlib/Analysis/Distribution/Sobolev.lean`
+* `Mathlib/Analysis/InnerProductSpace/LaxMilgram.lean`
+
