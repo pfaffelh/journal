@@ -23168,3 +23168,140 @@ einmal zu, und zwar auf der Domäne.
    `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
 4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
    zwanzigsten Laufs, unverändert.
+
+### 2026-09-11, zweiundzwanzigster Lauf des Tages — der Schnitt der pfadabhängigen Variante trug eine Voraussetzung, die keine Instanz erfüllen kann; sie ist ersatzlos gefallen, und die Adaptiertheit des gestutzten Punktprozesses steht in der allgemeinen Form
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des einundzwanzigsten Laufs
+(`measurable_jumpStateE_truncRateF_hawkesFiltration`, das `hstate` von
+`pointFiltrationE_inter_le_of_measurable`). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Fünf neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, und **elf berichtigte**.
+Die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1, alle sechzehn mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl
+der `sorry` bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+Neu: `measurable_stepIndex_of_measurableSet`, `measurable_stepPath_of_measurableSet`,
+`measurable_jumpStateE_of_measurableSet`, `jumpTimeFE_truncRateF_le_iff`,
+`measurable_jumpStateE_truncRateF`.
+
+#### Der Befund des Laufs, und er ist ein Fehler in einer Aussage und nicht in einem Beweis
+
+`jumpFiltrationFE_hcut` — der Schnitt, auf dem der ganze pfadabhängige Zweig sitzt — trug die
+Voraussetzung
+
+> `hxi : ∀ (w : (ℕ → E) × (ℕ → ℝ)) (k : ℕ), 0 ≤ w.2 k`
+
+und **keine Instanz kann sie erfüllen.** Der Stichprobenraum ist `(ℕ → E) × (ℕ → ℝ)`, der zweite
+Faktor sind die Wartezeiten, und `fun _ ↦ -1` liegt darin; die Voraussetzung ist falsch, sobald `E`
+bewohnt ist, und wahr nur, wenn `(ℕ → E)` leer ist. Eine Aussage unter ihr sagt über keinen
+Hawkes-Prozeß etwas. Sie stand in drei Deklarationen als Aussage über den ganzen Raum
+(`stoppedProcess_mpFamilyF_truncRateF_eq'`, `jumpFiltrationFE_inter_lt_rateInverseE`,
+`jumpFiltrationFE_hcut`) und in fünf weiteren in der punktweisen Fassung `∀ k, 0 ≤ xi k`, über die
+sie dorthin geerbt wurde.
+
+**Sie ist ersatzlos gefallen, und zwar an ihrer Wurzel.** `setOf_le_cumulativeRateF_truncRateF`
+verlangte `0 ≤ b` am Pegel, und der einzige Gebrauch im Beweis war die Zeile
+`have ha : 0 ≤ a := hb.trans hba` — das Vorzeichen von `b` kommt in keiner der beiden Richtungen
+vor. Die Hinrichtung ist die Monotonie der kumulierten Masse, die Rückrichtung der Wert `a` an der
+Trefferzeit. Ersetzt man `hb : 0 ≤ b` durch `ha : 0 ≤ a`, so gilt die Aussage an **jedem** Pegel
+unterhalb von `a`, und mit ihr fällt die Nichtnegativität aus `rateInverse_truncRateF_of_le`,
+`rateInverseE_truncRateF_of_le`, `jumpTimeFE_truncRateF_eq_of_le`,
+`jumpProcessFE_truncRateF_eq_of_le_rateInverseE`, `setIntegral_compensatorF_truncRateF_eq`,
+`stoppedProcess_mpFamilyF_truncRateF_eq`, `stoppedProcess_mpFamilyF_truncRateF_eq'`,
+`jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE`, `jumpFiltrationFE_inter_lt_rateInverseE` und
+`jumpFiltrationFE_hcut`. Elf Deklarationen, ein Wort im Beweis, und kein Schritt sonst geändert.
+
+**Was der Fund wert ist, sieht man am Vergleich:** der zustandsabhängige Gegenpart
+`jumpFiltrationE_inter_lt_rateTime` hat nie eine solche Voraussetzung getragen. Die Bedingung war
+also kein Zug der pfadabhängigen Lage, sondern ein Unfall des Beweises — der bequemste Weg zu
+`0 ≤ ∑_{k<n} ξ_k`, an einer Stelle, an der die Summe gar kein Vorzeichen braucht. Die stehende
+Regel des Auftrags („eine Roadmap-Aussage trägt die schwächsten Hypothesen, unter denen sie gilt")
+greift hier in ihrer schärfsten Form: die Hypothese war nicht bloß zu stark, sie war unerfüllbar.
+
+#### Die Aussage des Laufs: `{T'_n ≤ r}` ist `{T_n ≤ r}` geschnitten mit `{T_n ≤ R}`, an jedem Zeitpunkt
+
+`jumpTimeFE_truncRateF_le_iff_of_le_rateInverseE`, seit dem achtzehnten Lauf, vergleicht die beiden
+Sprungzeiten **unterhalb** der Trefferzeit `R`; dort ist der zweite Faktor umsonst. Das ist, was die
+Identifikation der beiden Prozesse braucht, und es ist nicht, was eine **Filtration** braucht.
+`jumpTimeFE_truncRateF_le_iff` führt die Trefferzeit in die Aussage ein und gilt dafür an *jedem*
+Zeitpunkt:
+
+> `T'_n ≤ ofReal t ↔ (T_n ≤ ofReal t ∧ T_n ≤ rateInverseE Λ ω a)`
+
+Unterhalb des Pegels sind die beiden Sprungzeiten gleich und `T_n ≤ R` ist die Monotonie von
+`rateInverseE` im Pegel; oberhalb ist `T'_n = ⊤`, und `T_n` liegt **echt** über `R`
+(`lt_jumpTimeFE_of_lt_of_le_rateInverseE`, die eine Stelle, an der die strikte Positivität der Rate
+verbraucht wird — ohne sie hat die kumulierte Masse ein Plateau und beide Pegel werden im selben
+Augenblick erreicht).
+
+Der Gewinn ist, daß die rechte Seite ein Schnitt zweier Ereignisse der Vergangenheit ist. Die
+Deckelung macht das zweite sichtbar: der Schnitt von `{T_n ≤ r}` mit `{T_n ≤ R}` ist der Schnitt von
+`{T_n ≤ r}` mit `{min (T_n) r ≤ min R r}`, und beide gedeckelten Zeiten sind für `𝓗 r` meßbar
+(`IsStoppingTime.min_const`, `IsStoppingTime.measurable_of_le`). **Der Schnitt mit `{T_n ≤ r}` ist
+kein Schmuck**, und das war der Prüfstein des einundzwanzigsten Laufs: an einem Stichprobenpunkt mit
+`T_n > r ≤ R` gilt die gedeckelte Ungleichung, während `T_n ≤ R` falsch sein kann.
+
+#### Der Unterbau, und er ist allgemeiner als die Anwendung
+
+`measurable_jumpStateE_truncRateF` braucht, daß der **gestutzte** Punktprozeß an `𝓗` adaptiert ist,
+und die gestutzten Sprungzeiten sind für keine Vergangenheit meßbar — sie sind oberhalb der
+Trefferzeit `⊤`. Der vorhandene Weg über `measurable_stepPath_comp` verlangt die Meßbarkeit jedes
+`T n` und ist damit zu. Der Ausweg ist eine Abschwächung des Meßbarkeitssatzes für den Stufenindex:
+
+> `measurable_stepIndex_of_measurableSet` — der Stufenindex ist meßbar, sobald die Ereignisse
+> `{T n ≤ u}` es sind, und die **Zeitachse braucht überhaupt keine meßbare Struktur**.
+
+`measurable_stepIndex_comp` erzeugt diese Ereignisse aus der gemeinsamen Meßbarkeit von `u` und
+jedem `T n`; die schwächere Voraussetzung ist genau die, die eine Filtration erfüllen kann, denn
+eine Sprungzeit ist eine **Stoppzeit** und keine adaptierte Funktion. Der Beweis ist derselbe —
+`stepIndex_eq_iff` und sonst nichts —, und er kommt mit **einer** Familie von Ereignissen aus, weil
+in einer linearen Ordnung `u < T n` das Komplement von `T n ≤ u` ist. Damit fallen
+`measurable_stepPath_of_measurableSet` und `measurable_jumpStateE_of_measurableSet` ab, und der
+Aufwand, der im gestutzten Fall neu zu leisten war, ist **null**: beide Komponenten des Zustands —
+das Protokoll und der Pfad — laufen über dieselbe Familie `{T'_n ≤ r}`.
+
+#### Eine Einzelheit, die den Lauf zweimal aufgehalten hat
+
+Der Hinweis des einundzwanzigsten Laufs (ein freier Term vom Typ `MeasurableSpace Ω` tritt in die
+Instanzensuche ein) reicht nicht, wenn die Ziel-σ-Algebra `𝓗 i` neben dem Abschnitts-
+`[MeasurableSpace Ω]` steht: die Aussage über `𝓗 i` läßt sich hinschreiben, aber **im Beweis**
+elaboriert jedes `Measurable`-Lemma gegen die Abschnittsinstanz („synthesized type class instance
+is not definitionally equal"). Der billige Ausweg ist eine Zeile am Beweisanfang,
+`letI : MeasurableSpace Ω := 𝓗 i`: eine lokale Instanz hat Vorrang, und danach trifft die Suche von
+selbst das Richtige. Das ist weniger als die `@`-Schreibweise an jeder Anwendung und war in beiden
+betroffenen Beweisen die ganze Berichtigung.
+
+Die zweite: `rateInverseE Λ ω a` und `ENNReal.ofReal (rateInverse Λ ω a)` sind unter `htop` gleich,
+aber ein `exact` mit der einen Seite trifft ein Ziel mit der anderen nicht — hier ist **am Ziel zu
+rewriten** und nicht der Term zu treffen, also die Umkehrung des Befundes des achtzehnten Laufs vom
+2026-09-10. Die Regel dahinter ist dieselbe: welche der beiden Richtungen geht, entscheidet, ob die
+Gleichheit definitionsgleich (dann `exact`) oder durch einen Satz vermittelt ist (dann `rw`).
+
+#### Was von Punkt 5 jetzt noch fehlt
+
+Die Hawkes-Instanz `measurable_jumpStateE_truncRateF_hawkesFiltration` ist nach diesem Lauf
+**Einsetzen von Daten bis auf eine benannte Aussage**: `hint`, `hpos`, `htop` und `ha` stehen, `hR`
+ist `isStoppingTime_rateInverseE_hawkesSelfRate`, `hy` ist `measurable_pi_apply` — offen ist allein
+`hjump`, daß die Sprungzeiten `jumpTimeFE (hawkesSelfRate ν φ) w w.2 n`, die das Martingalproblem
+**liest**, Stoppzeiten für `hawkesFiltration` sind, die über die Sprungzeiten gebaut ist, die die
+**Rekursion** zurückgibt. Das ist dieselbe Lücke, die `hawkesFiltration_eq_jumpFiltrationFE`
+schließen soll, an einer Stelle, an der sie billiger sein könnte: gebraucht wird nur ein Ereignis
+und keine Gleichheit von Filtrationen.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isStoppingTime_jumpTimeFE_hawkesSelfRate`** — die Sprungzeiten, die das Martingalproblem
+   liest, sind Stoppzeiten für `hawkesFiltration`. **Warum jetzt:** es ist nach diesem Lauf die
+   **einzige** noch offene Eingabe von `measurable_jumpStateE_truncRateF` auf den Hawkes-Daten, und
+   damit die einzige des Schnitts. **Worauf sie ruht:** `isStoppingTime_hawkesJumpTime` gibt sie für
+   `ENNReal.ofReal (hawkesJumpTime ν φ w.2 w n)`, und `jumpTimeF_hawkesSelfRate` identifiziert die
+   beiden — unter der Integrierbarkeit, die der Fixpunkt trägt, und an *jedem* Stichprobenpunkt,
+   weil eine Stoppzeit keine f.s.-Größe ist. **Prüfstein:** die Identifikation läuft über
+   `jumpTimeF` und nicht über `jumpTimeFE`; ob der Übergang die Nichtexplosion braucht
+   (`jumpTimeFE_eq_ofReal` verlangt `htop`) oder ob das Ereignis `{T_n ≤ r}` ohne sie auskommt, ist
+   die erste Frage und ist zu begründen, nicht zu raten.
+2. **`measurable_jumpStateE_truncRateF_hawkesFiltration`** als Einsetzen, sobald 1 steht.
+3. **`hawkes_isLocalMPSolution`** als Zusammenbau, und die globale Fassung mit
+   `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   einundzwanzigsten Laufs, unverändert.

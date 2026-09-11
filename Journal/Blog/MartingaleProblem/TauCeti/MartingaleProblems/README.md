@@ -3117,6 +3117,16 @@ A concrete family of solutions, built without any of the theory above. Index
     functional is the cumulated rate, and a path dependent rate is an arbitrary predictable
     functional with nothing tying it to the record and the path of the point process, so the
     adaptedness is a hypothesis of the statement and an obligation of each instance.
+
+    Neither statement asks a sign of the waiting times. `jumpTimeFE_truncRateF_eq_of_le` and the
+    five statements read off it carried `∀ w k, 0 ≤ w.2 k` until 2026-09-11, twenty second run, and
+    on this sample space that is not a hypothesis an instance can meet: the second factor is
+    `ℕ → ℝ`, it carries the constant `-1`, and the hypothesis is false as soon as `E` is inhabited.
+    It was spent on the single step `0 ≤ ∑_{k < n} w.2 k`, and
+    `setOf_le_cumulativeRateF_truncRateF` holds at **every** level below `a` whatever its sign: the
+    forward direction is the monotonicity of the cumulated mass, the backward one the value `a` at
+    the hitting time. The state dependent counterpart `jumpFiltrationE_inter_lt_rateTime` never had
+    such a hypothesis, and that is the comparison that shows it was an accident of the proof.
   * `cumulativeRateF_truncRateF_eq_min`, `measurable_cumulativeRateF_truncRateF` and
     `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`: **the truncated cumulated mass is the
     untruncated one capped at the level, and that is all `hcum` ever was.** **In Lean** on
@@ -3163,10 +3173,30 @@ A concrete family of solutions, built without any of the theory above. Index
     `measurableSet_lt_rateInverseE_of_adapted` fed by
     `measurable_cumulativeRateF_truncRateF_hawkesSelfRate`. The third is
     `measurable_jumpStateE_truncRateF_hawkesFiltration`: **the truncated Hawkes point process is
-    adapted to the Hawkes filtration.** It is read off `{T'_n ≤ r} = {T_n ≤ r} ∩ {T_n ≤ R}`, where
-    `R` is the hitting time of the level, `min r R` is measurable for the past at `r`
-    (`isStoppingTime_rateInverseE_hawkesSelfRate`) and `T_n` is a stopping time. With it the four
-    inputs of `martingale_of_martingale_of_stopped` are complete.
+    adapted to the Hawkes filtration.** It is `measurable_jumpStateE_truncRateF` on the data of
+    `ex:hawkes`, and what it still needs is `isStoppingTime_jumpTimeFE_hawkesSelfRate` — the jump
+    times the martingale problem *reads* are stopping times for `hawkesFiltration`, which is built
+    over the jump times the recursion *returns*. With it the four inputs of
+    `martingale_of_martingale_of_stopped` are complete.
+  * `jumpTimeFE_truncRateF_le_iff` and `measurable_jumpStateE_truncRateF`: **the truncated point
+    process is adapted to any filtration that makes the untruncated jump times and the hitting time
+    of the level stopping times.** **In Lean** on 2026-09-11, twenty second run, with no hypothesis
+    of non explosion and none on the jump kernel. The event identity is
+    `{T'_n ≤ r} = {T_n ≤ r} ∩ {T_n ≤ R}` at *every* time and not only below `R`, where `R` is the
+    hitting time of the level; the second factor becomes an event of the past at `r` by capping
+    both times, `{T_n ≤ r} ∩ {min (T_n) r ≤ min R r}`, and the intersection with `{T_n ≤ r}` is
+    not decoration — at `T_n > r ≤ R` the capped inequality holds while `T_n ≤ R` may fail. This is
+    `hstate` of `pointFiltrationE_inter_le_of_measurable` in the form an instance can meet: the
+    truncated filtration and the untruncated one are incomparable, so the target filtration is
+    carried as data.
+  * `measurable_stepIndex_of_measurableSet`, `measurable_stepPath_of_measurableSet` and
+    `measurable_jumpStateE_of_measurableSet`: **a step path is measurable for a σ-algebra that sees
+    the events `{T n ≤ u}`**, and the time axis needs no measurable structure at all. **In Lean** on
+    2026-09-11, twenty second run. `measurable_stepIndex_comp` produces those events from the joint
+    measurability of the time map and of every `T n`; the weaker hypothesis is the one a
+    **filtration** can meet, because a jump time is a stopping time and not an adapted function.
+    The proof is `stepIndex_eq_iff` and the fact that in a linear order `u < T n` is the complement
+    of `T n ≤ u`, so one family of events carries both inequalities of the description.
 
     The global statement carries `(hN : ∀ t, 𝔼[N t] < ∞)` as a **hypothesis** and does not prove
     it. For the linear Hawkes process it is true, by the renewal equation `m = μ₀ + φ * m` and the
