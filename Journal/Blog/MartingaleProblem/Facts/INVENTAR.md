@@ -23305,3 +23305,149 @@ und keine Gleichheit von Filtrationen.
    `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
 4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
    einundzwanzigsten Laufs, unverändert.
+
+### 2026-09-11, dreiundzwanzigster Lauf des Tages — der Vorschlag des Vorlaufs ist über `hawkesFiltration` nicht beweisbar, und der Grund ist derselbe Unfall wie im Vorlauf; über der Filtration der gelesenen Sprungzeiten ist er umsonst
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des zweiundzwanzigsten Laufs
+(`isStoppingTime_jumpTimeFE_hawkesSelfRate`). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Neun neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, neuer Abschnitt
+`HawkesJumpFiltration`. Die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1,
+alle neun mit `scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft
+(rc 0), die Zahl der `sorry` bleibt bei **neun**. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+Neu: `measurable_uncurry_pointRate`, `measurable_uncurry_hawkesSelfRate`,
+`measurable_jumpTimeFE_hawkesSelfRate`, `hawkesJumpFiltration`,
+`isStoppingTime_jumpTimeFE_hawkesSelfRate`, `jumpTimeFE_hawkesSelfRate`,
+`measurable_uncurry_truncRateF`, `measurable_rateInverse_hawkesSelfRate`,
+`measurable_jumpTimeFE_truncRateF_hawkesSelfRate`.
+
+#### Der Befund des Laufs: der Vorschlag war so nicht zu haben, und zwar aus demselben Grund, den der Vorlauf selbst aufgedeckt hat
+
+Der zweiundzwanzigste Lauf hat verlangt: *„die Sprungzeiten `jumpTimeFE (hawkesSelfRate ν φ) w w.2 n`,
+die das Martingalproblem **liest**, sind Stoppzeiten für `hawkesFiltration`, die über die
+Sprungzeiten gebaut ist, die die **Rekursion** zurückgibt"* — und als Prüfstein hat er die Frage
+gestellt, ob der Übergang die Nichtexplosion braucht. Die Antwort ist eine andere, als die Frage
+erwartet hat.
+
+**Der Übergang braucht die Nichtexplosion nicht.** `jumpTimeFE_eq_ofReal` verlangt
+`Tendsto (cumulativeRateF Λ ω) atTop atTop`, und das gibt für den Hawkes-Fall
+`tendsto_cumulativeRateF_hawkesSelfRate` aus dem **Grundpegel `ν` allein**. Auch `hintF` ist auf den
+Daten frei (`intervalIntegrable_hawkesFrozen hφint`). So weit ging die Vermutung auf.
+
+**Die Identifikation scheitert an einer anderen Voraussetzung, und es ist die des Vorlaufs.**
+`jumpTimeF_hawkesSelfRate` trägt `hxi : ∀ k, 0 ≤ ω.2 k`. Das ist eine Aussage über den
+Stichprobenpunkt; `IsStoppingTime` ist eine Aussage über **jeden** Stichprobenpunkt, also müßte sie
+zu `∀ w k, 0 ≤ w.2 k` verstärkt werden — genau die Hypothese, die der zweiundzwanzigste Lauf als
+**unerfüllbar** aus `jumpFiltrationFE_hcut` gestrichen hat: der zweite Faktor von
+`(ℕ → E) × (ℕ → ℝ)` enthält die Konstante `-1`, und die Hypothese ist falsch, sobald `E` bewohnt
+ist. Der Vorschlag hätte den Fund des eigenen Vorlaufs rückgängig gemacht.
+
+Und `hxi` ist im Beweis kein Unfall, anders als dort: sie geht in `monotone_hawkesJumpTime` und in
+`cumulativeRateF_hawkesJumpTime` ein, und bei Wartezeiten wechselnden Vorzeichens ist die Familie
+`hawkesJumpTime` nicht monoton, also ist `hawkesRate_countingMeasure` — der Übergang von der
+eingefrorenen Rate zur echten — nicht mehr anwendbar. Die Identifikation ist an solchen Punkten
+nicht bloß unbewiesen; es gibt keinen Grund, sie für wahr zu halten.
+
+`jumpTimeFE_hawkesSelfRate` hält sie in der einzigen Form fest, die sie hat: punktweise, unter
+`hxi` und `hint` am Punkt. Sie transportiert **fast sichere** Aussagen und keine σ-Algebren. Das ist
+dieselbe Trennlinie, die `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` ein Stockwerk höher zieht.
+
+#### Die Aussage des Laufs: über der Filtration der gelesenen Sprungzeiten kostet sie nichts
+
+`hawkesJumpFiltration` ist `jumpFiltrationFE (hawkesSelfRate ν φ)`, die natürliche Filtration der
+Sprungzeiten, die das Martingalproblem **liest**, und
+`isStoppingTime_jumpTimeFE_hawkesSelfRate` ist `isStoppingTime_jumpTimeE` darauf: **ohne jede
+Voraussetzung** über die Rekursion, die Wartezeiten oder den Fixpunkt.
+
+**Der Preis steht in der Definition und nicht im Satz, und das ist der eigentliche Ertrag.**
+`hawkesFiltration` ist aus `measurable_hawkesJumpTime_apply` gebaut und verlangt nichts über die
+Daten von `ex:hawkes` hinaus. `hawkesJumpFiltration` läßt sich ohne `hint` — die lokale
+Integrierbarkeit der selbstbezüglichen Rate an **jedem** Stichprobenpunkt — nicht einmal
+**hinschreiben**, weil `measurable_jumpTimeFE` darauf läuft. Nach der Lesart von
+`tendsto_cumulativeRateF_hawkes` ist diese Hypothese die Nichtexplosion. Die Protokollfiltration
+zählt die Sprünge, ob sie sich häufen oder nicht; die Filtration der Inversen gibt es nur dort, wo
+sie es nicht tun.
+
+#### Der Unterbau: die gemeinsame Meßbarkeit ohne Fenster
+
+`measurable_jumpTimeFE` fragt nach `Measurable fun q : Ω × ℝ ↦ Λ q.2 q.1` über der **Umgebungs**-
+σ-Algebra und über der **ganzen** Halbachse. Die Meßbarkeitsschicht hatte nur
+`measurable_uncurry_pointRate_pointFiltration`, und die ist über `min s i` geschrieben, weil sie für
+die Vergangenheit bei `i` gilt; `measurable_rateInverseE` invertiert aber über die ganze Halbachse,
+und ein abgeschnittenes Zeitargument trägt dort nicht.
+
+`measurable_uncurry_pointRate` ist die fehlende Form, und der Beweis ist `measurable_pointRate` mit
+mitgeführtem Stichprobenpunkt: das Fensterintegral ist eine Summe über die Stufen gegen das
+Zählmaß, und jede Stufe ist ein Indikator der gemeinsam meßbaren Menge
+`{(w, u) | 0 ≤ T w (k+1) < u}`. Über die Familie `T` wird nichts verlangt als die Meßbarkeit jedes
+`T n` — keine Monotonie, keine Nichtexplosion.
+
+`measurable_uncurry_truncRateF` ist das Gegenstück für die abgeschaltete Rate, und dort ist der
+Kontrast zum Vorlauf lehrreich: `measurable_cumulativeRateF_truncRateF` mußte um die gestutzte Rate
+**herum** arbeiten, weil ihr Schalter die Trefferzeit liest und die für die Vergangenheit bei `i`
+nicht meßbar ist. Über der Umgebungs-σ-Algebra gibt es nichts zu umgehen: `measurable_rateInverse`
+gibt den Schalter, `Set.indicator` den Rest. Damit fällt
+`measurable_jumpTimeFE_truncRateF_hawkesSelfRate` ab — `hT'`, die zweite Meßbarkeitseingabe von
+`jumpFiltrationFE_hcut` — und **keine Divergenz der kumulierten Rate** wird dabei verlangt, was gut
+ist, denn die gestutzte Rate hat ihre Masse verbraucht.
+
+#### Ein zweiter Befund, und er berichtigt Vorschlag 2 des Vorlaufs
+
+Der Vorlauf hat notiert, die Hawkes-Instanz
+`measurable_jumpStateE_truncRateF_hawkesFiltration` sei „Einsetzen von Daten bis auf eine benannte
+Aussage", und `hy` sei `measurable_pi_apply`. **Das ist nicht so.** `hy` verlangt
+`Measurable[𝓗 i] fun w ↦ w.1 n` für **jedes** `n`; `measurable_pi_apply` beweist die Meßbarkeit für
+die **Umgebungs**-σ-Algebra, nicht für die Filtration.
+
+Und die Voraussetzung ist für eine Punktfiltration auch nicht zu haben. `pointFiltration` bei `i`
+ist von `jumpState` an den Zeiten `r ≤ i` erzeugt, dessen zweite Komponente `stepPath` ist, und ein
+Stufenpfad liest **eine** Koordinate der Kette. Zwei Stichprobenpunkte mit denselben Wartezeiten,
+ohne Sprung vor `i` und mit Ketten, die sich nur an einem vom Stufenpfad nicht erreichten Index
+unterscheiden, haben an jedem `r ≤ i` denselben Zustand und werden von `w ↦ w.1 n` getrennt.
+*(Am Quelltext der Definitionen begründet, nicht in Lean geführt — das wäre ein eigener Satz von der
+Bauart `eq_of_measurable_jumpFiltrationE_of_subsingleton`.)*
+
+**Was daraus folgt**, und es ist die Wegwahl für den nächsten Lauf: der Schnitt über eine
+**allgemeine** Zielfiltration (`pointFiltrationE_inter_le_of_measurable`,
+`measurable_jumpStateE_truncRateF`) ist für den Hawkes-Fall zu. Der Schnitt über die **natürliche**
+Filtration der gestutzten Sprungzeiten (`jumpFiltrationFE_hcut`) ist offen, und seine beiden
+Meßbarkeitseingaben stehen seit diesem Lauf. `measurable_jumpStateE_truncRateF` bleibt richtig und
+bleibt stehen; es ist die Instanz, die es nicht gibt, nicht der Satz.
+
+#### Was von Punkt 5 jetzt noch fehlt
+
+`jumpFiltrationFE_hcut` auf den Hawkes-Daten hat noch **eine** offene Eingabe: `hcum`, die
+Meßbarkeit von `w ↦ cumulativeRateF (truncRateF (hawkesSelfRate ν φ) a) w i` für die **gestutzte**
+natürliche Filtration `jumpFiltrationFE (truncRateF (hawkesSelfRate ν φ) a) hT' i`.
+`measurable_cumulativeRateF_truncRateF_hawkesSelfRate` beweist dieselbe Meßbarkeit für
+`hawkesFiltration i` und ist deshalb **nicht** die Instanz; die Filtrationen sind verschieden und
+nach dem Befund oben nicht ineinander zu überführen.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`measurable_cumulativeRateF_jumpFiltrationFE`** — die kumulierte Masse bis `i` ist meßbar für
+   die natürliche Filtration der Sprungzeiten, die die Inverse dieser Masse sind. **Warum jetzt:**
+   es ist nach diesem Lauf die **einzige** noch offene Eingabe von `jumpFiltrationFE_hcut` auf den
+   Hawkes-Daten, und der Schnitt ist die vierte Eingabe von `martingale_of_martingale_of_stopped`.
+   **Worauf sie ruht:** `cumulativeRateF_truncRateF_eq_min` macht daraus die ungestutzte Masse,
+   gedeckelt bei `a`, und `measurable_cumulativeRateF_truncRateF` zieht die Deckelung heraus; zu
+   zeigen bleibt, daß die ungestutzte Masse bis `i` von der gestutzten Filtration bei `i` gesehen
+   wird. **Prüfstein:** oberhalb der Trefferzeit ist die gedeckelte Masse die **Konstante** `a` und
+   jede σ-Algebra sieht eine Konstante; unterhalb ist sie durch die Sprungzeiten bestimmt, weil
+   `cumulativeRateF Λ w (T_n w) = ∑_{k<n} w.2 k` ist. Ob das die Meßbarkeit **des Wertes** und nicht
+   bloß der Sprungzeiten gibt, ist die erste Frage und ist zu begründen, nicht zu raten — die Masse
+   zwischen zwei Sprüngen ist nicht durch das Protokoll bestimmt.
+2. **`hawkes_isLocalMPSolution`** als Zusammenbau über `hawkesJumpFiltration`, sobald 1 steht; die
+   globale Fassung mit `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers
+   vom 2026-09-11.
+3. **Die Adaptiertheit des Testprozesses über `hawkesJumpFiltration`.** Die ganze
+   Meßbarkeitsschicht des Hawkes-Falls — `measurable_uncurry_hawkesSelfRate_hawkesFiltration`,
+   `measurable_uncurry_hawkesStepPath_hawkesFiltration`,
+   `isStronglyProgressive_mpFamilyF_hawkes` — ist über `hawkesFiltration` geschrieben. Ob sie über
+   `hawkesJumpFiltration` genauso läuft oder ob die beiden Filtrationen im Zusammenbau
+   **nebeneinander** stehen müssen, ist vor dem Zusammenbau zu klären und ist der Grund, warum
+   Vorschlag 2 nicht vorgezogen wird.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   zweiundzwanzigsten Laufs, unverändert.
