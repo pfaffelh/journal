@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Zehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Elf Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle zehn beim Beweisen aufgefallen, alle zehn gegen `upstream/master` geprüft,
+Alle elf beim Beweisen aufgefallen, alle elf gegen `upstream/master` geprüft,
 und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -319,6 +319,39 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   ist — ist der Grund, aus dem die Aussage sich lohnt: sie ist es, die jede
   Zeitverwandlung meßbar macht, und sie steht in keiner Bibliothek, obwohl jedes
   Lehrbuch sie benutzt.
+
+* **Das Einfrieren, und es ist der Kern jeder bedingten Sprungzeitrechnung.**
+  Der elfte. Mathlib hat den **einen** Satz, der eine bedingte Erwartung mit
+  Unabhängigkeit ausrechnet, nur im entarteten Fall:
+  `MeasureTheory.condExp_indep_eq`
+  (`Probability/ConditionalExpectation.lean:42`) sagt, daß `P[f | m₂]` die
+  **Konstante** `∫ f` ist, wenn `f` für eine von `m₂` unabhängige σ-Algebra
+  meßbar ist. Gebraucht wird die Fassung, in der der Integrand beide Seiten
+  liest:
+
+  > `P[F (Z, Y) | σ(Z)] (ω) = ∫ F (Z ω, y) dμ_Y(y)`, für `Y` unabhängig von `Z`.
+
+  Das ist das **Einfrieren** (englisch *freezing lemma*). Gesucht am 2026-09-13
+  an `upstream/master` `7d32461a` und in v4.33.1 nach `freezing`,
+  `condExp_indep`, `IndepFun.condExp`, `condExp_comp`: **null** Treffer über
+  `condExp_indep_eq` und seine einzige Verwendung in
+  `Probability/BorelCantelli.lean:50` hinaus.
+
+  *Woran es bei uns hängt:* die bedingte Überlebensfunktion
+  `P (τ_{n+1} > t | ℋ_n) = exp (−(Λ_t − Λ_{τ_n}))`, der Rumpf des Beweises von
+  `thm:pathjumpMP`. Das Ereignis ist `{Λ_t < ξ_n}`, und es mischt die beiden
+  Seiten — der **Pegel** wird aus der Vergangenheit gelesen, die **Wartezeit**
+  ist frisch. `condExp_indep_eq` reicht deshalb an keiner Stelle heran.
+
+  Wir haben es am 2026-09-13 für Indikatoren bewiesen
+  (`MartingaleProblems/Suggested.lean`, `section Freezing`:
+  `setIntegral_indicator_of_map_prod`, `condExp_indicator_of_map_prod`,
+  `setIntegral_indicator_lt_of_map_prod`), was alles ist, was ein
+  Martingalproblem braucht und was die Integrierbarkeitsbuchhaltung eines
+  allgemeinen `F` erspart: die Antwort ist dann eine Wahrscheinlichkeit und von
+  selbst durch `1` beschränkt. Für Mathlib wäre die richtige Fassung die für
+  integrierbares `F : γ × β → ℝ`, über `Measure.prod` und Fubini, und sie ist
+  mehr als unsere.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

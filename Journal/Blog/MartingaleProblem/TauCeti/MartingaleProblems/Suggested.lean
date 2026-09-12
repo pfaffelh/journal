@@ -22407,3 +22407,259 @@ theorem stepIndex_hawkesJumpTimeH_le (hhm : Measurable h) (hφm : Measurable φ)
   exact stepIndex_le (hmem.trans_le (hSle _))
 
 end BoundedHawkesCounting
+
+/-! ## The freezing lemma, and the level at which a waiting time is consumed
+
+The conditional survival function `P (τ_{n+1} > t | ℋ_n) = exp (-(Λ_t - Λ_{τ_n}))` of
+`thm:pathjumpMP` is an instance of one measure theoretic statement, and Mathlib does not have that
+statement: **the freezing lemma**.  What it says is that a conditional expectation of
+`F (Z ω, Y ω)`, with `Z` generating the conditioning σ-algebra and `Y` independent of it, is the
+integral over `Y` alone with `Z` held fixed.
+
+Mathlib carries only the degenerate case, `MeasureTheory.condExp_indep_eq`
+(`Mathlib/Probability/ConditionalExpectation.lean:42`): if the integrand is measurable for a
+σ-algebra **independent** of the conditioning one, the conditional expectation is the constant
+`∫ f`.  That does not reach here, because `{Λ_t < ξ_n}` mixes the two -- the level is read from the
+past and the waiting time is fresh.  Searched on `upstream/master` `7d32461a` and in v4.33.1 for
+`freezing`, `condExp_indep`, `IndepFun.condExp`: nothing beyond `condExp_indep_eq` and its one use
+in `Mathlib/Probability/BorelCantelli.lean:50`.
+
+The statements below are formulated for an indicator of a measurable set `S ⊆ γ × ℝ`, which is all
+the martingale problem needs and which avoids the integrability bookkeeping a general `F` would
+carry: the answer `μY (Prod.mk (Z ω) ⁻¹' S)` is then a probability and bounded by `1` for free.
+The set integral form is the workhorse -- it is what `ae_eq_condExp_of_forall_setIntegral_eq` asks
+for -- and the conditional expectation form is its three line corollary.
+
+**What the hypothesis is, and why it is stated as an identity of measures.**  `hjoint` says the
+joint law of `(Z, Y)` is the product of the marginals, which is the independence of `Z` and `Y`;
+`ProbabilityTheory.indepFun_iff_map_prod_eq_prod_map_map` turns one into the other.  It is stated
+as the identity rather than as `IndepFun` because the two applications below -- the product
+structure of `jumpMeasure` and the product structure of `Measure.infinitePi` -- both deliver the
+identity directly, and going through `IndepFun` would only be a detour. -/
+
+section Freezing
+
+variable {Ω' γ : Type*} [MeasurableSpace Ω'] [MeasurableSpace γ]
+
+/-- **The freezing lemma, in the set integral form.**  For `B` measurable in the conditioning
+variable `Z`,
+
+`∫_{Z ∈ B} 1_S (Z, Y) dP = ∫_{Z ∈ B} μY (S_Z) dP`,
+
+where `S_z = Prod.mk z ⁻¹' S` is the section of `S` at `z` and `μY` is the law of `Y`.  The whole
+content is Fubini for the product law: the left side is the measure of a rectangle read under
+`(P.map Z).prod μY`, the right side is the same iterated integral read back on `Ω'`. -/
+theorem setIntegral_indicator_of_map_prod
+    {P : Measure Ω'} [IsProbabilityMeasure P] {Z : Ω' → γ} (hZ : Measurable Z)
+    {Y : Ω' → ℝ} (hY : Measurable Y) {μY : Measure ℝ} [IsProbabilityMeasure μY]
+    (hjoint : P.map (fun ω ↦ (Z ω, Y ω)) = (P.map Z).prod μY)
+    {S : Set (γ × ℝ)} (hS : MeasurableSet S)
+    {B : Set γ} (hB : MeasurableSet B) :
+    ∫ ω in Z ⁻¹' B, S.indicator (fun _ ↦ (1 : ℝ)) (Z ω, Y ω) ∂P
+      = ∫ ω in Z ⁻¹' B, (μY (Prod.mk (Z ω) ⁻¹' S)).toReal ∂P := by
+  have hZY : Measurable fun ω ↦ (Z ω, Y ω) := hZ.prodMk hY
+  set A : Set Ω' := Z ⁻¹' B with hA
+  have hAm : MeasurableSet A := hZ hB
+  set T : Set Ω' := (fun ω ↦ (Z ω, Y ω)) ⁻¹' S with hT
+  have hTm : MeasurableSet T := hZY hS
+  -- the left hand side is the measure of an intersection
+  have hleft : ∫ ω in A, S.indicator (fun _ ↦ (1 : ℝ)) (Z ω, Y ω) ∂P = (P (A ∩ T)).toReal := by
+    have hfun : (fun ω ↦ S.indicator (fun _ ↦ (1 : ℝ)) (Z ω, Y ω))
+        = T.indicator (fun _ ↦ (1 : ℝ)) := by
+      funext ω
+      by_cases hω : (Z ω, Y ω) ∈ S
+      · simp [hT, Set.indicator_of_mem, hω]
+      · simp [hT, Set.indicator_of_notMem, hω]
+    rw [hfun, setIntegral_indicator hTm, setIntegral_const, smul_eq_mul, mul_one, measureReal_def]
+  -- the measure of the intersection, computed under the product law
+  have hinter : A ∩ T = (fun ω ↦ (Z ω, Y ω)) ⁻¹' ((B ×ˢ (Set.univ : Set ℝ)) ∩ S) := by
+    ext ω; simp [hA, hT, and_comm]
+  have hsm : MeasurableSet ((B ×ˢ (Set.univ : Set ℝ)) ∩ S) :=
+    (hB.prod MeasurableSet.univ).inter hS
+  have hmeas : P (A ∩ T) = ∫⁻ z in B, μY (Prod.mk z ⁻¹' S) ∂(P.map Z) := by
+    rw [hinter, ← Measure.map_apply hZY hsm, hjoint, Measure.prod_apply hsm]
+    calc ∫⁻ z, μY (Prod.mk z ⁻¹' ((B ×ˢ (Set.univ : Set ℝ)) ∩ S)) ∂(P.map Z)
+        = ∫⁻ z, B.indicator (fun z ↦ μY (Prod.mk z ⁻¹' S)) z ∂(P.map Z) := by
+          refine lintegral_congr fun z ↦ ?_
+          by_cases hz : z ∈ B
+          · rw [Set.indicator_of_mem hz]
+            congr 1
+            ext y; simp [hz]
+          · rw [Set.indicator_of_notMem hz,
+              show Prod.mk z ⁻¹' ((B ×ˢ (Set.univ : Set ℝ)) ∩ S) = ∅ from by ext y; simp [hz],
+              measure_empty]
+      _ = ∫⁻ z in B, μY (Prod.mk z ⁻¹' S) ∂(P.map Z) := lintegral_indicator hB _
+  -- the right hand side is the same lintegral, read back through `Z`
+  have hgmeas : Measurable fun z : γ ↦ μY (Prod.mk z ⁻¹' S) :=
+    measurable_measure_prodMk_left hS
+  have hright : ∫ ω in A, (μY (Prod.mk (Z ω) ⁻¹' S)).toReal ∂P
+      = (∫⁻ z in B, μY (Prod.mk z ⁻¹' S) ∂(P.map Z)).toReal := by
+    rw [integral_toReal (μ := P.restrict A) (f := fun ω ↦ μY (Prod.mk (Z ω) ⁻¹' S))
+      ((hgmeas.comp hZ).aemeasurable) (.of_forall fun ω ↦ measure_lt_top μY _)]
+    congr 1
+    rw [← lintegral_map hgmeas hZ, Measure.restrict_map hZ hB]
+  rw [hleft, hright, hmeas]
+
+/-- **The freezing lemma, in the conditional expectation form.**  `P[1_S (Z, Y) | σ(Z)]` is the
+section measure `μY (S_Z)`, and the conditioning σ-algebra is `MeasurableSpace.comap Z`, whose
+sets are exactly the `Z ⁻¹' B`.  That is why the set integral form is the input and not a
+corollary: `ae_eq_condExp_of_forall_setIntegral_eq` asks for the integrals over those sets and for
+nothing else.
+
+The two integrability side conditions are free here and would not be for a general integrand: the
+integrand is an indicator, the answer is a probability, and both are bounded by `1` on a
+probability space. -/
+theorem condExp_indicator_of_map_prod
+    {P : Measure Ω'} [IsProbabilityMeasure P] {Z : Ω' → γ} (hZ : Measurable Z)
+    {Y : Ω' → ℝ} (hY : Measurable Y) {μY : Measure ℝ} [IsProbabilityMeasure μY]
+    (hjoint : P.map (fun ω ↦ (Z ω, Y ω)) = (P.map Z).prod μY)
+    {S : Set (γ × ℝ)} (hS : MeasurableSet S) :
+    P[fun ω ↦ S.indicator (fun _ ↦ (1 : ℝ)) (Z ω, Y ω) | MeasurableSpace.comap Z inferInstance]
+      =ᵐ[P] fun ω ↦ (μY (Prod.mk (Z ω) ⁻¹' S)).toReal := by
+  have hm : MeasurableSpace.comap Z inferInstance ≤ (inferInstance : MeasurableSpace Ω') :=
+    hZ.comap_le
+  have hZ' : Measurable[MeasurableSpace.comap Z inferInstance] Z := fun _ hs ↦ ⟨_, hs, rfl⟩
+  have hgmeas : Measurable fun z : γ ↦ μY (Prod.mk z ⁻¹' S) :=
+    measurable_measure_prodMk_left hS
+  have hTm : MeasurableSet ((fun ω ↦ (Z ω, Y ω)) ⁻¹' S) := (hZ.prodMk hY) hS
+  have hfun : (fun ω ↦ S.indicator (fun _ ↦ (1 : ℝ)) (Z ω, Y ω))
+      = ((fun ω ↦ (Z ω, Y ω)) ⁻¹' S).indicator (fun _ ↦ (1 : ℝ)) := by
+    funext ω
+    by_cases hω : (Z ω, Y ω) ∈ S
+    · simp [Set.indicator_of_mem, hω]
+    · simp [Set.indicator_of_notMem, hω]
+  have hf : Integrable (fun ω ↦ S.indicator (fun _ ↦ (1 : ℝ)) (Z ω, Y ω)) P := by
+    rw [hfun]; exact (integrable_const (1 : ℝ)).indicator hTm
+  have hg : Integrable (fun ω ↦ (μY (Prod.mk (Z ω) ⁻¹' S)).toReal) P := by
+    refine Integrable.mono' (integrable_const (1 : ℝ))
+      (hgmeas.comp hZ).ennreal_toReal.aestronglyMeasurable (.of_forall fun ω ↦ ?_)
+    rw [Real.norm_eq_abs, abs_of_nonneg ENNReal.toReal_nonneg,
+      show (1 : ℝ) = (1 : ENNReal).toReal from by simp]
+    exact ENNReal.toReal_mono ENNReal.one_ne_top prob_le_one
+  refine (ae_eq_condExp_of_forall_setIntegral_eq hm hf (fun s _ _ ↦ hg.integrableOn)
+    ?_ ((hgmeas.ennreal_toReal.comp hZ').stronglyMeasurable.aestronglyMeasurable)).symm
+  rintro s ⟨B, hB, rfl⟩ -
+  exact (setIntegral_indicator_of_map_prod hZ hY hjoint hS hB).symm
+
+/-- **The freezing lemma at a threshold**, which is the shape the jump construction reads: the
+event is `{G (Z ω) < Y ω}`, a fresh waiting time exceeding a level computed from the past, and the
+answer is the tail of `μY` at that level.  `setOf_lt_jumpTimeFE_eq` produces exactly this event,
+with `G` the cumulated rate and `Y` the next waiting time. -/
+theorem setIntegral_indicator_lt_of_map_prod
+    {P : Measure Ω'} [IsProbabilityMeasure P] {Z : Ω' → γ} (hZ : Measurable Z)
+    {Y : Ω' → ℝ} (hY : Measurable Y) {μY : Measure ℝ} [IsProbabilityMeasure μY]
+    (hjoint : P.map (fun ω ↦ (Z ω, Y ω)) = (P.map Z).prod μY)
+    {G : γ → ℝ} (hG : Measurable G) {B : Set γ} (hB : MeasurableSet B) :
+    ∫ ω in Z ⁻¹' B, {ω | G (Z ω) < Y ω}.indicator (fun _ ↦ (1 : ℝ)) ω ∂P
+      = ∫ ω in Z ⁻¹' B, (μY (Set.Ioi (G (Z ω)))).toReal ∂P := by
+  have hS : MeasurableSet {p : γ × ℝ | G p.1 < p.2} :=
+    measurableSet_lt (hG.comp measurable_fst) measurable_snd
+  have h1 : ∀ ω : Ω', {ω | G (Z ω) < Y ω}.indicator (fun _ ↦ (1 : ℝ)) ω
+      = {p : γ × ℝ | G p.1 < p.2}.indicator (fun _ ↦ (1 : ℝ)) (Z ω, Y ω) := by
+    intro ω; by_cases hω : G (Z ω) < Y ω <;> simp [hω]
+  have h2 : ∀ z : γ, Prod.mk z ⁻¹' {p : γ × ℝ | G p.1 < p.2} = Set.Ioi (G z) := fun _ ↦ rfl
+  simp_rw [h1]
+  rw [setIntegral_indicator_of_map_prod hZ hY hjoint hS hB]
+  simp_rw [h2]
+
+end Freezing
+
+/-! ### The hypothesis of the freezing lemma, for the jump construction
+
+`jumpMeasure` is a product of the law of the chain with the waiting times, and the waiting times
+are a product of standard exponentials.  Two steps then discharge `hjoint`: the coordinate `n` is
+independent of the coordinates below it under `Measure.infinitePi`, and independence in the second
+factor of a product measure survives adding the first factor to the conditioning variable.
+
+The second step is stated for a general product because nothing in it is about waiting times: it
+is the associativity of the product of measures, read through the map that moves the first factor
+across.  Mathlib has `MeasureTheory.Measure.prodAssoc_prod` and `MeasureTheory.Measure.map_prod_map`;
+the composite is not there. -/
+
+section FreezingJoint
+
+variable {α β γ' δ : Type*} [MeasurableSpace α] [MeasurableSpace β] [MeasurableSpace γ']
+  [MeasurableSpace δ]
+
+/-- **Independence in the second factor survives adding the first factor.**  If `R` and `V` are
+independent under `W`, then `(·.1, R ·.2)` and `V ·.2` are independent under `κ.prod W` -- the
+first factor `κ` may be carried into the conditioning variable at no cost, because it sits in a
+product with everything on the other side. -/
+theorem map_prodMk_prod_of_map_prodMk
+    (κ : Measure α) [SFinite κ] (W : Measure β) [SFinite W]
+    {R : β → γ'} (hR : Measurable R) {V : β → δ} (hV : Measurable V)
+    {ρ : Measure δ} [SFinite ρ]
+    (hW : W.map (fun b ↦ (R b, V b)) = (W.map R).prod ρ) :
+    (κ.prod W).map (fun p ↦ ((p.1, R p.2), V p.2))
+      = ((κ.prod W).map (fun p ↦ (p.1, R p.2))).prod ρ := by
+  have h1 : (κ.prod W).map (fun p : α × β ↦ (p.1, R p.2)) = κ.prod (W.map R) := by
+    rw [show (fun p : α × β ↦ (p.1, R p.2)) = Prod.map id R from rfl,
+      ← Measure.map_prod_map κ W measurable_id hR, Measure.map_id]
+  have h2 : (κ.prod W).map (fun p : α × β ↦ (p.1, (R p.2, V p.2)))
+      = κ.prod ((W.map R).prod ρ) := by
+    rw [show (fun p : α × β ↦ (p.1, (R p.2, V p.2))) = Prod.map id (fun b ↦ (R b, V b)) from rfl,
+      ← Measure.map_prod_map κ W measurable_id (hR.prodMk hV), Measure.map_id, hW]
+  have hmeas : Measurable fun p : α × β ↦ (p.1, (R p.2, V p.2)) :=
+    measurable_fst.prodMk ((hR.comp measurable_snd).prodMk (hV.comp measurable_snd))
+  have hassoc : (fun p : α × β ↦ ((p.1, R p.2), V p.2))
+      = (MeasurableEquiv.prodAssoc (α := α) (β := γ') (γ := δ)).symm
+        ∘ fun p : α × β ↦ (p.1, (R p.2, V p.2)) := rfl
+  rw [hassoc, ← Measure.map_map (MeasurableEquiv.prodAssoc).symm.measurable hmeas, h2, h1,
+    ← Measure.prodAssoc_prod (μ := κ) (ν := W.map R) (τ := ρ),
+    MeasurableEquiv.map_symm_map]
+
+end FreezingJoint
+
+/-- **A coordinate of an infinite product is independent of the coordinates below it.**
+`ProbabilityTheory.iIndepFun_infinitePi` gives the mutual independence of all coordinates and
+`ProbabilityTheory.iIndepFun.indepFun_finset` the independence of two disjoint blocks; this is
+that at `Finset.range n` against `{n}`, written as the identity of joint law and product of
+marginals that the freezing lemma takes as its hypothesis. -/
+theorem infinitePi_map_prodMk_range {X : Type*} [MeasurableSpace X] (μ : Measure X)
+    [IsProbabilityMeasure μ] (n : ℕ) :
+    (Measure.infinitePi fun _ : ℕ ↦ μ).map
+        (fun x : ℕ → X ↦ ((fun i : Finset.range n ↦ x i), x n))
+      = ((Measure.infinitePi fun _ : ℕ ↦ μ).map
+          (fun x : ℕ → X ↦ fun i : Finset.range n ↦ x i)).prod μ := by
+  have hdisj : Disjoint (Finset.range n) ({n} : Finset ℕ) := by
+    simp [Finset.disjoint_right]
+  have hiid : iIndepFun (fun (k : ℕ) (x : ℕ → X) ↦ x k) (Measure.infinitePi fun _ : ℕ ↦ μ) :=
+    iIndepFun_infinitePi (X := fun (_ : ℕ) (x : X) ↦ x) fun _ ↦ measurable_id
+  have hfin := hiid.indepFun_finset (Finset.range n) ({n} : Finset ℕ) hdisj
+    fun i ↦ measurable_pi_apply i
+  have hind : IndepFun (fun x : ℕ → X ↦ fun i : Finset.range n ↦ x i) (fun x : ℕ → X ↦ x n)
+      (Measure.infinitePi fun _ : ℕ ↦ μ) :=
+    hfin.comp measurable_id
+      (measurable_pi_apply (⟨n, Finset.mem_singleton_self n⟩ : ({n} : Finset ℕ)))
+  have hRm : Measurable fun x : ℕ → X ↦ fun i : Finset.range n ↦ x i :=
+    measurable_pi_lambda _ fun i ↦ measurable_pi_apply (i : ℕ)
+  rw [(indepFun_iff_map_prod_eq_prod_map_map hRm.aemeasurable
+    (measurable_pi_apply n).aemeasurable).1 hind, Measure.infinitePi_map_eval]
+
+section FreezingJump
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The freezing hypothesis, discharged for the jump construction.**  Under `jumpMeasure mu nu`
+the pair *(whole chain, first `n` waiting times)* is independent of the waiting time `ξ n`, whose
+law is the standard exponential.
+
+Read against the martingale problem: the conditioning variable carries the **whole** trajectory of
+the embedded chain and not merely its first `n` states.  That costs nothing here, because the chain
+sits in the first factor of a product with the waiting times, and it is more than `ℋ_n` needs --
+any conditional statement proved from this one holds a fortiori for the smaller σ-algebra once the
+tower property is applied. -/
+theorem jumpMeasure_map_prodMk_range (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (n : ℕ) :
+    (jumpMeasure mu nu).map
+        (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ((ω.1, fun i : Finset.range n ↦ ω.2 i), ω.2 n))
+      = ((jumpMeasure mu nu).map
+          (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (ω.1, fun i : Finset.range n ↦ ω.2 i))).prod
+            (expMeasure 1) := by
+  unfold jumpMeasure waitingMeasure
+  exact map_prodMk_prod_of_map_prodMk (ρ := expMeasure 1)
+    (R := fun ξ : ℕ → ℝ ↦ fun i : Finset.range n ↦ ξ i) (V := fun ξ : ℕ → ℝ ↦ ξ n) _ _
+    (measurable_pi_lambda _ fun i ↦ measurable_pi_apply (i : ℕ)) (measurable_pi_apply n)
+    (infinitePi_map_prodMk_range (expMeasure 1) n)
+
+end FreezingJump

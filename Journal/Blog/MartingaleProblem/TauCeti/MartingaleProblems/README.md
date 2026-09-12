@@ -4821,6 +4821,80 @@ sechs Aussagen, der Rumpf des Satzes. Nach diesem Lauf ist sie die einzige offen
 Gruppe des beschränkten Falls, für die noch eine Entscheidung aussteht: die
 Filtration ist gewählt, die Zeugen stehen, und das erste Maßresultat ist da.
 
+### Das Einfrieren: die bedingte Erwartung eines Ereignisses, das Vergangenheit und frische Wartezeit mischt
+
+Gruppe A — `E[D_n | ℋ_n] = 0` — ruht auf **einer** maßtheoretischen Aussage, und
+Mathlib hat sie nicht. Das Ereignis, um das es geht, ist
+`{t < τ_{n+1}} = {Λ_t < ξ_0 + ⋯ + ξ_n}` (`setOf_lt_jumpTimeFE_eq`): der
+**Pegel** links wird aus der Vergangenheit gelesen, die **Wartezeit** rechts ist
+frisch. Eine bedingte Erwartung eines solchen Ereignisses rechnet man aus, indem
+man die Vergangenheit einfriert und allein über die frische Koordinate
+integriert.
+
+Was Mathlib dazu hat, ist der entartete Fall: `MeasureTheory.condExp_indep_eq`
+(`Probability/ConditionalExpectation.lean:42`) gibt die **Konstante** `∫ f`,
+wenn der Integrand für eine von der Bedingung unabhängige σ-Algebra meßbar ist.
+Das trifft hier auf keine Stelle zu. Gesucht am 2026-09-13 an `upstream/master`
+`7d32461a` und in v4.33.1 nach `freezing`, `condExp_indep`, `IndepFun.condExp`,
+`condExp_comp`: keine weitere Aussage.
+
+**`setIntegral_indicator_of_map_prod` — das Einfrieren in der Form, die die
+bedingte Erwartung verlangt.** Für `Z : Ω → γ` die Bedingungsgröße, `Y : Ω → ℝ`
+mit Gesetz `μY`, gemeinsames Gesetz das Produkt der Ränder, `S ⊆ γ × ℝ` meßbar
+und `B ⊆ γ` meßbar:
+
+```
+∫ ω in Z ⁻¹' B, S.indicator 1 (Z ω, Y ω) ∂P
+  = ∫ ω in Z ⁻¹' B, (μY (Prod.mk (Z ω) ⁻¹' S)).toReal ∂P
+```
+
+Der ganze Inhalt ist Fubini für das Produktgesetz. Die **Mengenintegralform** ist
+die tragende, nicht die bedingte: `ae_eq_condExp_of_forall_setIntegral_eq` fragt
+nach genau diesen Integralen und nach nichts sonst.
+
+**`condExp_indicator_of_map_prod` — dieselbe Aussage als bedingte Erwartung**,
+über `MeasurableSpace.comap Z`, deren Mengen gerade die `Z ⁻¹' B` sind. Sie ist
+das Korollar der vorigen und keine eigene Arbeit.
+
+**`setIntegral_indicator_lt_of_map_prod` — die Gestalt, die die Konstruktion
+liest.** Das Ereignis ist `{G (Z ω) < Y ω}` — eine frische Wartezeit über einem
+aus der Vergangenheit gerechneten Pegel —, und die Antwort ist der Schwanz
+`μY (Ioi (G (Z ω)))`.
+
+**Warum für Indikatoren und nicht für allgemeines `F`.** Es ist alles, was ein
+Martingalproblem braucht, und es erspart die Integrierbarkeitsbuchhaltung: die
+Antwort ist dann eine Wahrscheinlichkeit und von selbst durch `1` beschränkt, in
+beiden Richtungen. Die allgemeine Fassung für integrierbares `F : γ × ℝ → ℝ` ist
+dieselbe Rechnung mit `Measure.prod` und Fubini und wäre mehr als diese.
+
+**Die Voraussetzung, und sie ist für die Sprungkonstruktion eingelöst.** Verlangt
+wird, daß das gemeinsame Gesetz von `(Z, Y)` das Produkt der Ränder ist — die
+Unabhängigkeit, über
+`ProbabilityTheory.indepFun_iff_map_prod_eq_prod_map_map`. Zwei Schritte lösen
+sie ein, und beide sind allgemein:
+
+* **`infinitePi_map_prodMk_range`** — eine Koordinate eines unendlichen Produkts
+  ist unabhängig von den Koordinaten unter ihr. Das ist
+  `ProbabilityTheory.iIndepFun_infinitePi` zusammen mit
+  `iIndepFun.indepFun_finset` an `Finset.range n` gegen `{n}`, geschrieben als
+  Identität von Gesetz und Produkt der Ränder.
+* **`map_prodMk_prod_of_map_prodMk`** — die Unabhängigkeit im zweiten Faktor
+  eines Produktmaßes überlebt, wenn man den ersten Faktor in die
+  Bedingungsgröße aufnimmt. Nichts daran ist über Wartezeiten: es ist die
+  Assoziativität des Maßprodukts (`MeasureTheory.Measure.prodAssoc_prod`),
+  gelesen durch die Abbildung, die den ersten Faktor hinüberträgt. Mathlib hat
+  beide Bausteine und nicht die Zusammensetzung.
+
+**`jumpMeasure_map_prodMk_range`** ist daraus die Instanz: unter
+`jumpMeasure mu nu` ist das Paar *(ganze Kette, erste `n` Wartezeiten)*
+unabhängig von `ξ n`, und `ξ n` ist standard-exponentiell.
+
+*Und es ist mehr, als `ℋ_n` braucht:* die Bedingungsgröße trägt die **ganze**
+Trajektorie der eingebetteten Kette und nicht bloß ihre ersten `n` Zustände. Das
+kostet hier nichts, weil die Kette im ersten Faktor eines Produkts mit den
+Wartezeiten sitzt; und jede daraus bewiesene bedingte Aussage gilt erst recht
+für die kleinere σ-Algebra, sobald der Turmschluß angewandt ist.
+
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
 *(Frage des Nutzers, 2026-09-10.)* Der Vorschlag war, den linearen
