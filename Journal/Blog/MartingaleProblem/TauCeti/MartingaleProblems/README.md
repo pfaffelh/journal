@@ -4562,6 +4562,117 @@ keine. Die übrigen Müllwerte der Arbeit — `sInf ∅ = 0` in `rateInverse`,
 berührt; `rateInverseE` und `rateInverseEE` haben den ersten von ihnen schon
 ersetzt.
 
+### Der beschränkte nichtlineare Hawkes-Prozeß, und warum er die Nichtexplosion nicht braucht
+
+*(2026-09-12; Teil C.5a der Anordnung des Nutzers vom selben Abend, und der
+letzte Punkt von Teil C.)*
+
+Die Rate von `ex:hawkes` ist **linear**, und alles Teure der pfadabhängigen
+Variante kommt aus diesem einen Umstand. Die selbstbezügliche Rate ist von
+Konstruktion wegen unbeschränkt — sie ist die Erregung ihrer eigenen
+Vergangenheit —, also ist ihre lokale Integrierbarkeit längs des konstruierten
+Pfades keine Regularität, sondern die **Nichtexplosion** selbst
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`), sie wird an *jedem*
+Stichprobenpunkt verlangt, und bis zur Hebung der kumulierten Rate nach `ℝ≥0∞`
+saß sie im Argument von Definitionen.
+
+Setzt man eine **beschränkte** Nichtlinearität davor,
+
+```
+Λ (t, ω) = h (ν + ∫_{[0,t)} φ (t − s) ∂N_s),     0 < c ≤ h ≤ L  auf  [ν, ∞),
+```
+
+so fällt jede dieser Schwierigkeiten auf einmal weg.
+
+**Die Punkte, die dieser Meilenstein damit bekommt** — alle in
+`MartingaleProblems/Suggested.lean`, Abschnitte `BoundedRate`, `BoundedHawkes`,
+`BoundedHawkesFixed`, `BoundedHawkesProcess`:
+
+* `intervalIntegrable_of_bdd` — eine meßbare, in der Norm beschränkte Funktion ist
+  intervallintegrierbar. Der elementare Schritt, auf dem alles ruht.
+* `cumulativeRateF_le_of_bdd` — `Λ ≤ L` gibt `cumulativeRateF Λ ω t ≤ L * t`.
+* `le_jumpTimeF_of_bdd` — und daraus
+  `(ξ₀ + ⋯ + ξ_{n−1}) / L ≤ jumpTimeF Λ ω ξ n`. **Das ist die Dominierung durch
+  einen Poissonprozeß der Rate `L`**, in der einzigen Gestalt, die die
+  Konstruktion braucht, und sie gilt **pfadweise**.
+* `tendsto_jumpTimeF_atTop_of_bdd` — die Sprungzeiten schöpfen die Halbachse aus,
+  und beide Voraussetzungen, die die Umkehrung nicht abwerfen konnte, sind aus
+  den zwei Schranken abgeworfen.
+* `hawkesFrozenH`, `hawkesStepH`, `hawkesJumpTimeH` — die Rekursion mit der
+  Nichtlinearität davor, samt `hawkesJumpTimeH_succ`,
+  `cumulativeRateF_hawkesJumpTimeH`, `hawkesJumpTimeH_one` (die erste Sprungzeit
+  ist `ξ₀ / h ν` und nicht `ξ₀ / ν`), `strictMono_hawkesJumpTimeH`,
+  `monotone_hawkesJumpTimeH`.
+* `intervalIntegrable_hawkesFrozenH` — die eingefrorene Rate ist
+  intervallintegrierbar, und der Kern `φ` wird dabei um **nichts** gebeten als
+  Meßbarkeit und Nichtnegativität.
+* `hawkesRateH`, `hawkesRateH_countingMeasure`,
+  `hawkesJumpTimeH_succ_eq_rateInverse_hawkesRateH`,
+  `jumpTimeF_hawkesRateH_eq_hawkesJumpTimeH` — der Fixpunkt, geschlossen.
+* `hawkesSelfRateH`, `hawkesProcessH`, `intervalIntegrable_hawkesSelfRateH`,
+  `jumpTimeF_hawkesSelfRateH`, `le_hawkesJumpTimeH`,
+  `tendsto_hawkesJumpTimeH_atTop`, `isStepPath_hawkesProcessH`,
+  `isCadlagPath_hawkesProcessH`, `hawkesProcessH_eq_stepPath`,
+  `hawkesProcessH_of_lt_first` — der Prozeß.
+* `hawkesRateH_id`, `hawkesFrozenH_id`, `hawkesStepH_id`, `hawkesJumpTimeH_id` —
+  die Probe gegen Leerheit: bei `h = id` ist die nichtlineare Schicht die lineare
+  Konstruktion, Deklaration für Deklaration, und zwar **definitionsgleich**.
+
+**Die drei Befunde, und der erste ist der Punkt der Aufgabe.**
+
+1. **`hint` wird nicht abgeschwächt, sondern erledigt.**
+   `intervalIntegrable_hawkesSelfRateH` gilt an **jedem** Stichprobenpunkt, ohne
+   eine einzige Voraussetzung an die Sprungzeiten, und seine Voraussetzungen sind
+   `Measurable h`, `Measurable φ`, `0 ≤ φ` und die beiden Schranken. Damit fällt
+   Punkt 0 des Abhängigkeitsbaums weg, und mit ihm der Grund, aus dem er eine
+   Vorfrage war: die Rechtsstetigkeitsvoraussetzung von
+   `martingale_stoppedProcess` unter einem `∀ ω` ist erfüllbar, weil die Aussage,
+   die sie braucht, unter einem `∀ ω` gilt.
+2. **Der Kern `φ` verliert eine Voraussetzung, und es ist keine Kleinigkeit.**
+   Die lineare Konstruktion verlangt `hφint` — jede Verschiebung von `φ` lokal
+   integrierbar — in `intervalIntegrable_hawkesFrozen` und trägt sie von dort in
+   `measurable_hawkesJumpTime`, `hawkesFiltration`, `hawkesJumpFiltrationE` und
+   jede Aussage darüber. Der beschränkte Fall braucht sie **nirgends**: sie wurde
+   nur gebraucht, um die eingefrorenen Raten integrierbar zu machen, und eine
+   beschränkte Funktion ist integrierbar, gleichgültig was in ihr steht. Dafür
+   wird `Measurable φ` nun auch für die Integrierbarkeit gebraucht und nicht mehr
+   bloß für die Meßbarkeit in `ω` — das ist der Tausch, und er ist günstig.
+3. **Die Nichtexplosion wechselt die Art.** Im zustandsabhängigen Fall ist sie
+   eine Aussage über das **Gesetz** (`ae_mem_nonExplosiveE`, eine divergente Reihe
+   längs der eingebetteten Kette), im linearen pfadabhängigen eine, die man nicht
+   hinschreiben kann, ohne ein Maß zu haben. Hier ist sie **pfadweise**
+   (`le_hawkesJumpTimeH`, `tendsto_hawkesJumpTimeH_atTop`), gilt an jedem
+   Stichprobenpunkt mit divergenter Wartezeitsumme und braucht überhaupt kein Maß.
+
+**Und es ist kein Umweg vom linearen Fall weg, sondern der erste Schritt hinein.**
+Bei `h = fun x ↦ min x L` ist die beschränkte nichtlineare Rate die bei `L`
+abgeschnittene lineare, und unterhalb der Trefferzeit dieses Pegels stimmen beide
+überein; der lineare Fall ist der Grenzübergang `L → ∞` längs der lokalisierenden
+Folge.
+
+**Zur Frage des Nutzers, ob `truncRateF` und die Minimum-Fassung zusammenfallen:
+sie tun es nicht, und der Unterschied ist benennbar.** `truncRateF` schneidet die
+**Masse** ab — es multipliziert die Rate mit dem Indikator `{cumulativeRateF < a}`
+und läßt sie unterhalb des Pegels unangetastet; `min · L` schneidet die **Rate**
+ab und läßt die Masse unterhalb des Pegels unangetastet. Für eine in `ω`
+gleichmäßige Schranke an ein Kompensationsfenster ist die Massenabschneidung die
+richtige, und deshalb ist `bdd_mpFamilyF_of_cumulated` über sie formuliert; damit
+die Konstruktion selbst nicht explodiert, ist es die Ratenabschneidung, und die
+ist es, die dieser Abschnitt benutzt. Beide sind Abschneidungen desselben
+Objekts, keine ist die andere.
+
+**Was damit noch nicht dasteht.** Der Martingalsatz selbst — Gruppe A des
+Abhängigkeitsbaums, `E[D_n | ℋ_n] = 0` — ist von dieser Arbeit unberührt. Sie ist
+der Rumpf des Satzes und keine seiner Eingaben, und keine Entscheidung über Raten
+oder Filtrationen macht sie billiger.
+
+Erledigt sind Punkt 0 des Baums und die Identifikation von Prozeß und Stufenpfad
+(`hawkesProcessH_eq_stepPath`, an jedem Stichprobenpunkt mit positiven
+Wartezeiten). **Nicht** erledigt, sondern bloß von der Lokalisierung befreit, sind
+die Gruppen B, C und D: sie betreffen sämtlich den *gestutzten* Testprozeß, und
+bei global beschränkter Rate ist nichts zu stutzen. Welche Filtration der
+beschränkte Fall bekommt, ist offen.
+
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
 *(Frage des Nutzers, 2026-09-10.)* Der Vorschlag war, den linearen

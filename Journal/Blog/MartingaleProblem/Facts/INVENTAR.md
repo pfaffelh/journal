@@ -24971,3 +24971,184 @@ selbst „der neunte" nennt.
    vor. Nach diesem Lauf ist auch die Entscheidung, was `ℋ_n` ist, keine mehr:
    es ist `(hawkesJumpFiltrationE …).stoppedσ` an `jumpTimeFEE`, und das Objekt
    existiert jetzt.
+
+### 2026-09-12, elfter Lauf des Tages — Teil C.5a: der beschränkte nichtlineare Hawkes-Prozeß steht, und mit ihm der erste pfadabhängige Prozeß, dessen Nichtexplosion **pfadweise** gilt und kein Maß braucht
+
+**Bearbeitet:** Teil C.5a der Anordnung des Nutzers vom 2026-09-12 abends
+(„C.5a → E → G"): der beschränkte nichtlineare Hawkes-Prozeß
+`Λ (t, ω) = h (ν + ∫_{[0,t)} φ (t−s) dN_s)` mit beschränktem `h`.
+
+**Zweiundfünfzig Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+in den vier neuen Abschnitten `BoundedRate`, `BoundedHawkes`,
+`BoundedHawkesFixed` und `BoundedHawkesProcess` am Ende der Datei; 553 Zeilen.
+Die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1 (0 Fehler,
+Rückgabewert 0), alle zweiundfünfzig mit `#print axioms` geprüft und jede auf
+`propext`, `Classical.choice`, `Quot.sound` — mehr nicht. Die Zahl der `sorry`
+bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`,
+Meilenstein 4, im neuen Abschnitt „Der beschränkte nichtlineare Hawkes-Prozeß,
+und warum er die Nichtexplosion nicht braucht".
+
+`upstream/master` frisch geholt: `7d32461ad224e921eb05ead7ac02156702f4aa59`
+(2026-09-12 17:51 UTC) — die Bibliothek hat sich seit `141f6b64` bewegt, für
+diesen Lauf ohne Folgen (siehe unten).
+
+#### Der Befund, und er ist der Zweck der Aufgabe
+
+> **`hint` wird nicht abgeschwächt, sondern erledigt.**
+
+```
+intervalIntegrable_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hc : ∀ x, ν ≤ x → c ≤ h x) (hcnn : 0 ≤ c)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (ω : (ℕ → E) × (ℕ → ℝ)) (r : ℝ) :
+  IntervalIntegrable (fun u ↦ hawkesSelfRateH h ν φ u ω) volume 0 r
+```
+
+Keine Voraussetzung an die Sprungzeiten, keine an den Stichprobenpunkt, kein Maß.
+Im linearen Fall ist genau dieselbe Aussage die **Nichtexplosion**
+(`not_intervalIntegrable_hawkesSelfRate_of_not_summable`, 26. Lauf), und sie war
+nach dem Zeugen des 24. Laufs an einem Stichprobenpunkt sogar unerfüllbar. Damit
+ist **Punkt 0 des Abhängigkeitsbaums erledigt** — nicht umgangen, sondern
+gegenstandslos —, und mit ihm der Grund, aus dem er eine Vorfrage war: die
+Rechtsstetigkeitsvoraussetzung von `martingale_stoppedProcess` wird unter einem
+`∀ ω` gefragt, und was hier gebraucht wird, gilt unter einem `∀ ω`.
+
+#### Die Nichtexplosion, und sie ist eine Ungleichung und keine Reihe
+
+```
+le_jumpTimeF_of_bdd : (∑ k ∈ Finset.range n, xi k) / L ≤ jumpTimeF Λ ω xi n
+```
+
+für jede Rate mit `Λ ≤ L`, und daraus `le_hawkesJumpTimeH` und
+`tendsto_hawkesJumpTimeH_atTop` für den Prozeß. **Das ist die vom Nutzer genannte
+Dominierung durch einen Poissonprozeß der Rate `L`**, in der einzigen Gestalt, die
+die Konstruktion braucht, und sie kostete drei Zeilen: die kumulierte Rate wächst
+höchstens linear (`cumulativeRateF_le_of_bdd`), und bei der `n`-ten Sprungzeit hat
+sie die `n`-te Teilsumme verbraucht.
+
+Der Vergleich der drei Arten, in denen die Nichtexplosion in dieser Arbeit
+auftritt, ist damit vollständig:
+
+| Fall | Gestalt | braucht ein Maß |
+|---|---|---|
+| zustandsabhängig | `ae_mem_nonExplosiveE`, divergente Reihe längs der Kette | ja, f.s. |
+| linear pfadabhängig | `hint`, an *jedem* Stichprobenpunkt, im Argument von Definitionen | nein, aber unerfüllbar |
+| beschränkt nichtlinear | `le_hawkesJumpTimeH`, eine Ungleichung | **nein** |
+
+#### Der zweite Befund, und er war nicht angesagt: der Kern verliert eine Voraussetzung
+
+Die lineare Konstruktion verlangt `hφint` — *jede Verschiebung von `φ` lokal
+integrierbar* — in `intervalIntegrable_hawkesFrozen` und trägt sie von dort in
+`measurable_hawkesJumpTime`, `hawkesFiltration`, `hawkesJumpFiltrationE` und jede
+Aussage darüber. Der beschränkte Fall braucht sie **an keiner einzigen Stelle**.
+Der Grund ist derselbe wie oben und doch eine andere Stelle: `hφint` wurde nur
+gebraucht, um die eingefrorenen Raten integrierbar zu machen, und eine beschränkte
+Funktion ist integrierbar, gleichgültig was in ihr steht
+(`intervalIntegrable_hawkesFrozenH`). Bezahlt wird mit `Measurable φ`, das nun
+auch die Integrierbarkeit trägt und nicht mehr bloß die Meßbarkeit in `ω` — und
+dafür mußte `measurable_hawkesFrozen_time` erst bewiesen werden, eine Aussage über
+die **lineare** eingefrorene Rate, die im linearen Bestand fehlte, weil dort die
+Integrierbarkeit gereicht wurde statt bewiesen.
+
+#### Die Probe gegen Leerheit, und sie ist definitionsgleich
+
+`hawkesRateH_id`, `hawkesFrozenH_id`, `hawkesStepH_id`, `hawkesJumpTimeH_id`: bei
+`h = id` ist die nichtlineare Schicht die lineare Konstruktion, und die ersten
+beiden sind `rfl`. Die Schicht ist also eine Erweiterung und keine zweite
+Konstruktion; nichts an der Rekursion ist umgestellt worden. (Bei `h = id` sind
+die Schranken natürlich nicht erfüllbar — die Probe betrifft die Reduktion der
+Definitionen, nicht die Sätze, und sagt das an der Deklaration.)
+
+#### Die Frage des Nutzers nach `truncRateF`, beantwortet
+
+Der Auftrag fragte, „ob die beiden Lesarten zusammenfallen oder ob die
+Minimum-Fassung die bessere ist". **Sie fallen nicht zusammen**, und der
+Unterschied ist benennbar: `truncRateF` schneidet die **Masse** ab — es
+multipliziert die Rate mit dem Indikator `{cumulativeRateF < a}` und läßt sie
+unterhalb des Pegels unangetastet; `min · L` schneidet die **Rate** ab und läßt
+die Masse unterhalb des Pegels unangetastet. Keine ist besser als die andere; sie
+leisten Verschiedenes. Für eine in `ω` gleichmäßige Schranke an ein
+Kompensationsfenster ist die Massenabschneidung die richtige, und deshalb ist
+`bdd_mpFamilyF_of_cumulated` über sie formuliert; damit die Konstruktion selbst
+nicht explodiert, ist es die Ratenabschneidung, und die benutzt dieser Abschnitt.
+
+#### Was der Lauf **nicht** getan hat, und es ist der ehrliche Teil
+
+`hawkes_isLocalMPSolution` ist nicht bewiesen, und die Anordnung des Nutzers
+(„Damit hat `thm:pathjumpMP` seinen ersten nicht-markovschen Zeugen, und zwar in
+der globalen Fassung") ist mit diesem Lauf **noch nicht** eingelöst. Was dasteht,
+ist der Boden: Konstruktion, Fixpunkt, Regularität der Pfade, Nichtexplosion. Was
+fehlt, ist **Gruppe A** des Abhängigkeitsbaums — `E[D_n | ℋ_n] = 0`, sechs
+Aussagen —, und sie ist von dieser Arbeit unberührt, weil sie der *Rumpf* des
+Satzes ist und keine seiner Eingaben. Der fünfte Lauf dieses Tages hat genau das
+festgehalten, und es gilt weiter: keine Entscheidung über Raten oder Filtrationen
+macht Gruppe A billiger.
+
+**Und hier ist genau zu unterscheiden, was bewiesen ist und was bloß erreichbar
+wurde.** Bewiesen sind Punkt 0 (er ist gegenstandslos, s.o.) und die Hälfte von
+Gruppe E, die den **Prozeß** betrifft: `hawkesProcessH_eq_stepPath` gilt an jedem
+Stichprobenpunkt mit positiven Wartezeiten, während die lineare Fassung dafür
+`hint` trägt. Die Gruppen B (zwei Aussagen), C (drei) und D (eine) sind **nicht**
+bewiesen; was sich geändert hat, ist, daß sie im beschränkten Fall keine
+Lokalisierung mehr brauchen — sie betreffen sämtlich den *gestutzten* Testprozeß,
+und bei global beschränkter Rate ist nichts zu stutzen, so daß die vorhandenen
+Aussagen über beschränkte Raten unmittelbar greifen sollten. Das ist eine
+Einschätzung und kein Beweis, und sie ist als solche zu lesen. Die zweite Hälfte
+von Gruppe E — welche Filtration — ist offen und steht als Vorschlag 2 unten.
+Gruppe A (sechs Aussagen) ist unberührt. Für den **linearen** Fall, der nach der
+Anordnung des Nutzers als Teil G nach Meilenstein 6 kommt, bleiben die Gruppen B
+bis E in ihrer alten Gestalt stehen.
+
+#### Was an Mathlib nachgeprüft wurde
+
+Alle neu benutzten Deklarationen existieren unter diesen Namen sowohl in v4.33.1
+als auch auf `upstream/master` `7d32461a`:
+`IntervalIntegrable.mono_fun'` (`Integral/IntervalIntegral/Basic.lean:290` in
+v4.33.1, `:292` auf master), `intervalIntegrable_const` (`:176` auf master),
+`setIntegral_mono_on` (`Integral/Bochner/Set.lean:764` bzw. `:763`),
+`setIntegral_congr_fun` (`:73`), `integrableOn_const`
+(`Integral/IntegrableOn.lean:119`), `measure_Ioc_lt_top`
+(`Measure/Typeclasses/Finite.lean:655`), `div_le_iff₀`
+(`Algebra/Order/GroupWithZero/Basic.lean:1138` bzw. `:1133`),
+`strictMono_nat_of_lt_succ` (`Order/Monotone/Basic.lean:570`),
+`Measurable.aestronglyMeasurable`, `Finset.measurable_sum` (von `to_additive` aus
+`Finset.measurable_prod` erzeugt, `MeasureTheory/Group/Arithmetic.lean:834`).
+Keine `deprecated`.
+
+**Eine Stolperstelle, die festzuhalten ist:** `integrableOn_const` trägt seine
+Endlichkeitsvoraussetzung als `autoParam` (`:= by finiteness`), und der
+automatische Beweis scheitert an `volume (Set.Ioc 0 t) ≠ ⊤` mit einer
+`aesop`-Tiefenüberschreitung. Zu schreiben ist
+`integrableOn_const measure_Ioc_lt_top.ne`. Das war der einzige Fehler des ersten
+Durchlaufs.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`condExp_mpFamilyF_increment_eq_zero` — Gruppe A, und zwar der Anfang.**
+   **Worauf es ruht:** `jumpMeasure`, das Gesetz der ersten Sprungzeit
+   (`section PathLaw`, steht), `eq:compensatorexp` (steht, 18. Lauf des
+   2026-09-11), und jetzt zusätzlich die beschränkte Rate, die jede
+   Integrierbarkeit umsonst gibt. **Warum jetzt:** Gruppe A ist nach diesem Lauf
+   die **einzige** offene Gruppe des beschränkten Falls, und sie ist der Rumpf des
+   Satzes. In `section PathDependent` kommt bis heute keine einzige bedingte
+   Erwartung vor; das ist die Lücke, und sie wird von keiner weiteren Konstruktion
+   kleiner. **Prüfstein:** die Aussage ist über `hawkesSelfRateH` zu führen und
+   darf die Nichtexplosion nirgends nennen — täte sie es, wäre der beschränkte
+   Fall umsonst gebaut.
+2. **`hawkesJumpFiltrationH` und die Adaptiertheit** — die Filtration des
+   beschränkten Falls, über `pointFiltration` der `hawkesJumpTimeH`. **Worauf sie
+   ruht:** `measurable_hawkesJumpTime_apply` in der Fassung für `hawkesJumpTimeH`,
+   die noch fehlt und die einzige Meßbarkeitsarbeit dieses Punktes ist (die
+   Induktion von `measurable_hawkesJumpTime` überträgt sich, weil `h` meßbar ist).
+   **Warum jetzt:** nach `pointFiltrationE_eq_stepPathFiltrationE` und der
+   augmentierten Identität (9. Lauf) ist im beschränkten Fall **keine** zweite
+   Filtration mehr nötig — die vier Voraussetzungen jener Identität sind hier
+   sämtlich erfüllbar, weil die Sprungzeiten f.s. echt wachsen und nicht
+   akkumulieren. Das ist die Stelle, an der die Vorgabe des Nutzers („ein so
+   elementarer Prozeß braucht genau *eine* Filtration") für den beschränkten Fall
+   tatsächlich einlösbar wird.
+3. **Der Zeuge, daß die Klasse nicht leer ist**, und er kostet fast nichts:
+   `h = fun x ↦ min x L` mit `c = min ν L`, als Instanz der sechs Voraussetzungen.
+   **Warum:** die zweiundfünfzig Deklarationen dieses Laufs stehen sämtlich unter
+   `0 < c ≤ h ≤ L` auf `[ν, ∞)`, und bis eine Instanz dasteht, ist das eine
+   unbelegte Voraussetzungsfläche — dieselbe Probe, die
+   `poissonProcess_isLocalMPSolution` für den lokalen Zweig ist.

@@ -21300,3 +21300,557 @@ theorem cumulativeRateFE_hawkesSelfRate_eq_top_iff {w : (ℕ → E) × (ℕ → 
     (fun u _ ↦ (hawkesSelfRate_pos hν hφ u w).le) ht
 
 end HawkesJumpFiltrationE
+
+/-! ## The bounded nonlinear Hawkes process: the first path dependent rate that cannot explode
+
+The rate of `ex:hawkes` is linear, and everything expensive in the path dependent variant comes from
+that one feature.  The self referential rate is unbounded by construction -- it is the excitation of
+its own past -- so its local integrability along the constructed path is not regularity but the
+**non explosion** itself (`not_intervalIntegrable_hawkesSelfRate_of_not_summable`), it is asked at
+*every* sample point, and until the lift of the cumulated rate to `ℝ≥0∞` it sat in the argument of
+definitions.
+
+Put a **bounded** nonlinearity in front of it,
+
+`Λ (t, ω) = h (ν + ∫_{[0,t)} φ (t - s) ∂N_s)`,   `0 < c ≤ h ≤ L` on `[ν, ∞)`,
+
+and every one of those difficulties disappears at once:
+
+* the rate lies in `[c, L]` at every sample point, so it is interval integrable there **with no
+  hypothesis at all** (`intervalIntegrable_hawkesSelfRateH`).  `hint` is not weakened and not
+  carried; it is discharged;
+* the cumulated rate is at most `L * t`, so the `n`-th jump time is at least
+  `(ξ₀ + ⋯ + ξ_{n-1}) / L` (`le_jumpTimeF_of_bdd`) and the jump times exhaust the half line.  That
+  is the domination by a Poisson process of rate `L`, in the only form the construction needs, and
+  it holds **pathwise** rather than almost surely;
+* and the kernel `φ` is asked for nothing but non negativity, measurability, and the predictability
+  `φ = 0` on the closed negative half line.  The local integrability of its translates, which the
+  linear construction spends in `intervalIntegrable_hawkesFrozen` and carries from there into every
+  statement, was only ever used to make the frozen rates integrable -- and a bounded function is
+  integrable whatever is inside it.
+
+**Which theorem this is a witness for.**  `thm:pathjumpMP`(b), the global statement, asks
+`E[N_t] < ∞`, and the manuscript discharges it for the linear rate through the Volterra resolvent of
+the renewal equation, of which Mathlib has nothing.  Here the counting process is dominated by that
+of a Poisson process of rate `L`, so the hypothesis is free.
+
+**And it is not a detour away from the linear case but the first step into it.**  At
+`h = fun x ↦ min x L` the bounded nonlinear rate is the linear rate truncated at the level `L`, and
+below the hitting time of that level the two agree; the linear case is the limit `L → ∞` along the
+localizing sequence.  `truncRateF` performs a truncation of the same object by a different cut: it
+cuts the **mass**, by an indicator of the cumulated rate, and leaves the rate itself alone below the
+level, while `min · L` cuts the **rate** and leaves the mass alone below the level.  For a bound
+uniform in `ω` on a compensating window the mass truncation is the right one, which is why
+`bdd_mpFamilyF_of_cumulated` is stated for it; for making the construction itself non explosive the
+rate truncation is, which is what this section uses.
+-/
+
+section BoundedRate
+
+variable {Ω : Type*} {Λ : ℝ → Ω → ℝ} {ω : Ω} {xi : ℕ → ℝ} {c L : ℝ}
+
+/-- **A measurable function bounded in norm is interval integrable.**  The elementary step the whole
+section rests on, and the reason a bounded rate needs no hypothesis on the kernel inside it. -/
+theorem intervalIntegrable_of_bdd {f : ℝ → ℝ} (hfm : Measurable f) {M : ℝ}
+    (hle : ∀ u, ‖f u‖ ≤ M) (a b : ℝ) : IntervalIntegrable f volume a b :=
+  (intervalIntegrable_const (c := M)).mono_fun' hfm.aestronglyMeasurable
+    (Eventually.of_forall hle)
+
+/-- **The cumulated rate of a bounded rate grows at most linearly.**  This is the whole of the
+domination by a Poisson process of rate `L`, and it is a statement about the *cumulated* rate, so it
+survives the inversion. -/
+theorem cumulativeRateF_le_of_bdd (hm : Measurable fun u ↦ Λ u ω) (hnn : ∀ u, 0 ≤ Λ u ω)
+    (hle : ∀ u, Λ u ω ≤ L) {t : ℝ} (ht : 0 ≤ t) : cumulativeRateF Λ ω t ≤ L * t := by
+  have hbdd : ∀ u, ‖Λ u ω‖ ≤ L := fun u ↦ by
+    rw [Real.norm_eq_abs, abs_of_nonneg (hnn u)]
+    exact hle u
+  have hint : IntegrableOn (fun u ↦ Λ u ω) (Set.Ioc 0 t) volume :=
+    (intervalIntegrable_of_bdd hm hbdd 0 t).1
+  have hmono : ∫ u in Set.Ioc (0 : ℝ) t, Λ u ω ≤ ∫ _u in Set.Ioc (0 : ℝ) t, L :=
+    setIntegral_mono_on hint (integrableOn_const measure_Ioc_lt_top.ne) measurableSet_Ioc
+      fun u _ ↦ hle u
+  have hconst : ∫ _u in Set.Ioc (0 : ℝ) t, L = L * t := cumulativeRateF_const (Ω := Ω) ω L ht
+  rw [cumulativeRateF]
+  exact hmono.trans hconst.le
+
+/-- **A bounded rate cannot explode, and the bound on the jump times is explicit.**  The `n`-th jump
+time is at least the `n`-th partial sum of the waiting times divided by the bound: by then the
+cumulated rate has consumed the partial sum, and it grows at most linearly.
+
+Read against the state dependent case: there the non explosion is a statement about the *law*
+(`ae_mem_nonExplosiveE`, a divergent series along the embedded chain); here it is pathwise, holds at
+**every** sample point at which the waiting times diverge, and needs no measure at all. -/
+theorem le_jumpTimeF_of_bdd (hm : Measurable fun u ↦ Λ u ω) (hnn : ∀ u, 0 ≤ Λ u ω)
+    (hle : ∀ u, Λ u ω ≤ L) (hLpos : 0 < L) (hpos : ∀ u, 0 < u → 0 < Λ u ω)
+    (htop : Tendsto (cumulativeRateF Λ ω) atTop atTop) (hxi : ∀ n, 0 ≤ xi n) (n : ℕ) :
+    (∑ k ∈ Finset.range n, xi k) / L ≤ jumpTimeF Λ ω xi n := by
+  have hbdd : ∀ u, ‖Λ u ω‖ ≤ L := fun u ↦ by
+    rw [Real.norm_eq_abs, abs_of_nonneg (hnn u)]
+    exact hle u
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r := fun r ↦
+    intervalIntegrable_of_bdd hm hbdd 0 r
+  have hcum : cumulativeRateF Λ ω (jumpTimeF Λ ω xi n) = ∑ k ∈ Finset.range n, xi k :=
+    cumulativeRateF_rateInverse hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k)
+  have hb := cumulativeRateF_le_of_bdd hm hnn hle (jumpTimeF_nonneg Λ ω xi n)
+  rw [hcum] at hb
+  rw [div_le_iff₀ hLpos]
+  linarith
+
+/-- **The jump times of a rate bounded above and below exhaust the half line**, with both hypotheses
+that the inversion could not discharge now discharged from the two bounds. -/
+theorem tendsto_jumpTimeF_atTop_of_bdd (hm : Measurable fun u ↦ Λ u ω) (hcpos : 0 < c)
+    (hc : ∀ u, c ≤ Λ u ω) (hle : ∀ u, Λ u ω ≤ L) (hxi : ∀ n, 0 ≤ xi n)
+    (hsum : Tendsto (fun n ↦ ∑ k ∈ Finset.range n, xi k) atTop atTop) :
+    Tendsto (jumpTimeF Λ ω xi) atTop atTop := by
+  have hnn : ∀ u, 0 ≤ Λ u ω := fun u ↦ hcpos.le.trans (hc u)
+  have hbdd : ∀ u, ‖Λ u ω‖ ≤ L := fun u ↦ by
+    rw [Real.norm_eq_abs, abs_of_nonneg (hnn u)]
+    exact hle u
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r := fun r ↦
+    intervalIntegrable_of_bdd hm hbdd 0 r
+  exact tendsto_jumpTimeF_atTop hint (fun u _ ↦ hcpos.trans_le (hc u))
+    (tendsto_cumulativeRateF_atTop_of_le hint hcpos fun u _ ↦ hc u) hxi hsum
+
+end BoundedRate
+
+/-! ### The bounded nonlinear Hawkes rate, frozen and self referential
+
+The layer mirrors `section Hawkes` with `h` in front of the rate, and the mirror is cheap for one
+reason: the nonlinearity is applied **outermost**, so every identity about the linear rate
+transports through `congrArg h`, and the two bounds replace the hypotheses that the linear
+identities carried. -/
+
+section BoundedHawkes
+
+variable {Ω : Type*} {ν c L : ℝ} {φ h : ℝ → ℝ} {xi : ℕ → ℝ} {ω : Ω} {n : ℕ}
+
+/-- **The frozen rate of the bounded nonlinear Hawkes process**: the linear frozen rate with the
+nonlinearity in front. -/
+noncomputable def hawkesFrozenH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (T : ℕ → ℝ) (n : ℕ) (u : ℝ)
+    (ω : Ω) : ℝ := h (hawkesFrozen ν φ T n u ω)
+
+theorem hawkesFrozenH_congr {T S : ℕ → ℝ} (hTS : ∀ k, k < n → T k = S k) :
+    hawkesFrozenH (Ω := Ω) h ν φ T n = hawkesFrozenH h ν φ S n := by
+  funext u ω
+  simp only [hawkesFrozenH, hawkesFrozen_congr hTS]
+
+theorem le_hawkesFrozenH (hφ : ∀ x, 0 ≤ φ x) (hc : ∀ x, ν ≤ x → c ≤ h x) (T : ℕ → ℝ) (m : ℕ)
+    (u : ℝ) (ω : Ω) : c ≤ hawkesFrozenH h ν φ T m u ω :=
+  hc _ (le_hawkesFrozen hφ T m u ω)
+
+theorem hawkesFrozenH_le (hφ : ∀ x, 0 ≤ φ x) (hL : ∀ x, ν ≤ x → h x ≤ L) (T : ℕ → ℝ) (m : ℕ)
+    (u : ℝ) (ω : Ω) : hawkesFrozenH h ν φ T m u ω ≤ L :=
+  hL _ (le_hawkesFrozen hφ T m u ω)
+
+/-- **The linear frozen rate is measurable in the time**, from the measurability of the kernel
+alone.  The linear construction never needed this -- it had the local integrability of the
+translates handed to it -- and the bounded one does, because integrability is now to be *proved*
+rather than assumed. -/
+theorem measurable_hawkesFrozen_time (hφm : Measurable φ) (T : ℕ → ℝ) (m : ℕ) (ω : Ω) :
+    Measurable fun u ↦ hawkesFrozen (Ω := Ω) ν φ T m u ω := by
+  simp only [hawkesFrozen]
+  exact measurable_const.add
+    (Finset.measurable_sum _ fun k _ ↦ hφm.comp (measurable_id.sub measurable_const))
+
+theorem measurable_hawkesFrozenH_time (hhm : Measurable h) (hφm : Measurable φ) (T : ℕ → ℝ)
+    (m : ℕ) (ω : Ω) : Measurable fun u ↦ hawkesFrozenH (Ω := Ω) h ν φ T m u ω :=
+  hhm.comp (measurable_hawkesFrozen_time hφm T m ω)
+
+/-- **The frozen rate of a bounded nonlinearity is interval integrable**, and the kernel is asked
+for nothing but measurability and non negativity.  Against `intervalIntegrable_hawkesFrozen`, which
+asks every translate of `φ` to be locally integrable, this is the first place where the bound pays
+for itself. -/
+theorem intervalIntegrable_hawkesFrozenH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hc : ∀ x, ν ≤ x → c ≤ h x) (hcnn : 0 ≤ c)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (T : ℕ → ℝ) (m : ℕ) (ω : Ω) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ hawkesFrozenH (Ω := Ω) h ν φ T m u ω) volume 0 r :=
+  intervalIntegrable_of_bdd (measurable_hawkesFrozenH_time hhm hφm T m ω)
+    (fun u ↦ by
+      rw [Real.norm_eq_abs,
+        abs_of_nonneg (hcnn.trans (le_hawkesFrozenH (c := c) hφ hc T m u ω))]
+      exact hawkesFrozenH_le hφ hL T m u ω) 0 r
+
+@[simp] theorem hawkesFrozenH_one (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (T : ℕ → ℝ) :
+    hawkesFrozenH (Ω := Ω) h ν φ T 1 = fun _ _ ↦ h ν := by
+  funext u ω
+  simp only [hawkesFrozenH, hawkesFrozen_one]
+
+theorem hawkesFrozenH_succ_of_le (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (T : ℕ → ℝ) (m : ℕ) {u : ℝ}
+    (hu : u ≤ T m) (ω : Ω) :
+    hawkesFrozenH h ν φ T (m + 1) u ω = hawkesFrozenH h ν φ T m u ω :=
+  congrArg h (hawkesFrozen_succ_of_le hφ0 T m hu ω)
+
+/-- **The jump times of the bounded nonlinear Hawkes process, stage by stage.**  The recursion of
+`hawkesStep` with the nonlinearity in front of the frozen rate. -/
+noncomputable def hawkesStepH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) : ℕ → ℕ → ℝ
+  | 0 => fun _ ↦ 0
+  | n + 1 => fun m ↦
+      if m ≤ n then hawkesStepH h ν φ xi ω n m
+      else rateInverse (hawkesFrozenH h ν φ (hawkesStepH h ν φ xi ω n) (n + 1)) ω
+        (∑ k ∈ Finset.range (n + 1), xi k)
+
+/-- **The jump times of the bounded nonlinear Hawkes process.** -/
+noncomputable def hawkesJumpTimeH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (n : ℕ) :
+    ℝ := hawkesStepH h ν φ xi ω n n
+
+@[simp] theorem hawkesJumpTimeH_zero (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) :
+    hawkesJumpTimeH h ν φ xi ω 0 = 0 := rfl
+
+theorem hawkesStepH_succ_of_le (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m p : ℕ}
+    (hmp : m ≤ p) : hawkesStepH h ν φ xi ω (p + 1) m = hawkesStepH h ν φ xi ω p m := by
+  simp only [hawkesStepH]
+  rw [if_pos hmp]
+
+theorem hawkesStepH_eq_of_le (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) {m p q : ℕ}
+    (hmp : m ≤ p) (hpq : p ≤ q) : hawkesStepH h ν φ xi ω q m = hawkesStepH h ν φ xi ω p m := by
+  induction q, hpq using Nat.le_induction with
+  | base => rfl
+  | succ q hq ih => rw [hawkesStepH_succ_of_le h ν φ xi ω (hmp.trans hq), ih]
+
+theorem hawkesStepH_eq_hawkesJumpTimeH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω)
+    {m p : ℕ} (hmp : m ≤ p) : hawkesStepH h ν φ xi ω p m = hawkesJumpTimeH h ν φ xi ω m :=
+  hawkesStepH_eq_of_le h ν φ xi ω le_rfl hmp
+
+theorem hawkesJumpTimeH_succ (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (p : ℕ) :
+    hawkesJumpTimeH h ν φ xi ω (p + 1)
+      = rateInverse (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (p + 1)) ω
+        (∑ k ∈ Finset.range (p + 1), xi k) := by
+  have hfr : hawkesFrozenH (Ω := Ω) h ν φ (hawkesStepH h ν φ xi ω p) (p + 1)
+      = hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (p + 1) :=
+    hawkesFrozenH_congr fun k hk ↦
+      hawkesStepH_eq_hawkesJumpTimeH h ν φ xi ω (Nat.lt_succ_iff.1 hk)
+  rw [hawkesJumpTimeH]
+  simp only [hawkesStepH]
+  rw [if_neg (by omega : ¬ p + 1 ≤ p), hfr]
+
+theorem hawkesJumpTimeH_nonneg (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (p : ℕ) :
+    0 ≤ hawkesJumpTimeH h ν φ xi ω p := by
+  rcases p with _ | q
+  · simp
+  · rw [hawkesJumpTimeH_succ]
+    exact rateInverse_nonneg _ _ _
+
+/-- **The defining equation of the bounded nonlinear Hawkes jump times**, with all three hypotheses
+of the inversion discharged from the two bounds on the nonlinearity. -/
+theorem cumulativeRateF_hawkesJumpTimeH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 ≤ xi k) :
+    cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (n + 1)) ω
+        (hawkesJumpTimeH h ν φ xi ω (n + 1)) = ∑ k ∈ Finset.range (n + 1), xi k := by
+  have hint : ∀ r, IntervalIntegrable
+      (fun u ↦ hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (n + 1) u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesFrozenH hhm hφm hφ hc hcpos.le hL _ _ ω r
+  have hpos : ∀ u : ℝ, 0 < u →
+      0 < hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (n + 1) u ω :=
+    fun u _ ↦ hcpos.trans_le (le_hawkesFrozenH hφ hc _ _ u ω)
+  have htop := tendsto_cumulativeRateF_atTop_of_le hint hcpos
+    fun u _ ↦ le_hawkesFrozenH (c := c) hφ hc (hawkesJumpTimeH h ν φ xi ω) (n + 1) u ω
+  rw [hawkesJumpTimeH_succ]
+  exact cumulativeRateF_rateInverse hint hpos htop (Finset.sum_nonneg fun k _ ↦ hxi k)
+
+/-- **The first jump time is the waiting time of the clock at rate `h ν`.**  With an empty history
+the nonlinear Hawkes rate is `h ν`, not `ν`: the nonlinearity acts on the baseline as well. -/
+theorem hawkesJumpTimeH_one (hhν : 0 < h ν) (hxi : 0 ≤ xi 0) :
+    hawkesJumpTimeH h ν φ xi ω 1 = xi 0 / h ν := by
+  rw [hawkesJumpTimeH_succ h ν φ xi ω 0, hawkesFrozenH_one]
+  simpa using rateInverse_const ω hhν (by simpa using hxi)
+
+theorem cumulativeRateF_hawkesFrozenH_succ_of_le (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (T : ℕ → ℝ) (m : ℕ)
+    {t : ℝ} (ht : t ≤ T m) (ω : Ω) :
+    cumulativeRateF (hawkesFrozenH h ν φ T (m + 1)) ω t
+      = cumulativeRateF (hawkesFrozenH h ν φ T m) ω t :=
+  setIntegral_congr_fun measurableSet_Ioc fun u hu ↦
+    hawkesFrozenH_succ_of_le hφ0 T m (hu.2.trans ht) ω
+
+/-- **The bounded nonlinear Hawkes jump times increase strictly**, as soon as the waiting times are
+positive.  Every hypothesis is on the data, and none on the family the recursion produces. -/
+theorem strictMono_hawkesJumpTimeH (hhm : Measurable h) (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < xi k) :
+    StrictMono (hawkesJumpTimeH h ν φ xi ω) := by
+  refine strictMono_nat_of_lt_succ fun m ↦ ?_
+  rcases m with _ | m
+  · rw [hawkesJumpTimeH_one (hcpos.trans_le (hc ν le_rfl)) (hxi 0).le]
+    simpa using div_pos (hxi 0) (hcpos.trans_le (hc ν le_rfl))
+  set T := hawkesJumpTimeH h ν φ xi ω with hT
+  have hint : ∀ p : ℕ, ∀ r, IntervalIntegrable
+      (fun u ↦ hawkesFrozenH h ν φ T p u ω) volume 0 r :=
+    fun p r ↦ intervalIntegrable_hawkesFrozenH hhm hφm hφ hc hcpos.le hL _ _ ω r
+  have hpos : ∀ u : ℝ, 0 < u → 0 < hawkesFrozenH h ν φ T (m + 1) u ω :=
+    fun u _ ↦ hcpos.trans_le (le_hawkesFrozenH hφ hc _ _ u ω)
+  have hA : cumulativeRateF (hawkesFrozenH h ν φ T (m + 1)) ω (T (m + 1))
+      = ∑ k ∈ Finset.range (m + 1), xi k :=
+    cumulativeRateF_hawkesJumpTimeH (n := m) hhm hφm hφ hcpos hc hL fun k ↦ (hxi k).le
+  have hB : cumulativeRateF (hawkesFrozenH h ν φ T (m + 2)) ω (T (m + 2))
+      = ∑ k ∈ Finset.range (m + 2), xi k :=
+    cumulativeRateF_hawkesJumpTimeH (n := m + 1) hhm hφm hφ hcpos hc hL fun k ↦ (hxi k).le
+  by_contra hcon
+  have hle : T (m + 2) ≤ T (m + 1) := not_lt.1 hcon
+  rw [cumulativeRateF_hawkesFrozenH_succ_of_le hφ0 T (m + 1) hle ω] at hB
+  have hmon : cumulativeRateF (hawkesFrozenH h ν φ T (m + 1)) ω (T (m + 2))
+      ≤ cumulativeRateF (hawkesFrozenH h ν φ T (m + 1)) ω (T (m + 1)) :=
+    monotoneOn_cumulativeRateF (hint (m + 1)) hpos
+      (hawkesJumpTimeH_nonneg h ν φ xi ω (m + 2)) (hawkesJumpTimeH_nonneg h ν φ xi ω (m + 1)) hle
+  rw [hA, hB, Finset.sum_range_succ] at hmon
+  linarith [hxi (m + 1)]
+
+theorem monotone_hawkesJumpTimeH (hhm : Measurable h) (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < xi k) :
+    Monotone (hawkesJumpTimeH h ν φ xi ω) :=
+  (strictMono_hawkesJumpTimeH hhm hφm hφ hφ0 hcpos hc hL hxi).monotone
+
+end BoundedHawkes
+
+/-! ### The fixed point, and the process
+
+The recursion closes exactly as the linear one does, and for the same reason: the nonlinearity sits
+outside, so `hawkesRateH_countingMeasure` is `congrArg` of `hawkesRate_countingMeasure` and nothing
+else has to be redone.  What *is* different is the hypothesis list: where the linear fixed point
+carries `hintF` and `hintH` -- the local integrability of the frozen rates and of the self
+referential rate, the second of which is the non explosion -- the bounded one carries neither. -/
+
+section BoundedHawkesFixed
+
+variable {Ω : Type*} {ν c L : ℝ} {φ h : ℝ → ℝ} {xi : ℕ → ℝ} {n : ℕ}
+
+/-- **The bounded nonlinear Hawkes rate against a given counting record.** -/
+noncomputable def hawkesRateH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (N : Ω → Measure ℝ) (u : ℝ)
+    (ω : Ω) : ℝ := h (hawkesRate ν φ N u ω)
+
+/-- **At the identity the nonlinear rate is the linear rate.**  The first of the two probes against
+emptiness; the second is `hawkesJumpTimeH_id`. -/
+theorem hawkesRateH_id (ν : ℝ) (φ : ℝ → ℝ) (N : Ω → Measure ℝ) :
+    hawkesRateH id ν φ N = hawkesRate ν φ N := rfl
+
+theorem hawkesFrozenH_id (ν : ℝ) (φ : ℝ → ℝ) (T : ℕ → ℝ) (m : ℕ) :
+    hawkesFrozenH (Ω := Ω) id ν φ T m = hawkesFrozen ν φ T m := rfl
+
+/-- **At the identity the nonlinear recursion is the linear one.**  The probe that says the layer
+is an extension and not a different construction: nothing in `hawkesStepH` has been rearranged. -/
+theorem hawkesStepH_id (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (m : ℕ) :
+    hawkesStepH id ν φ xi ω m = hawkesStep ν φ xi ω m := by
+  induction m with
+  | zero => rfl
+  | succ p ih =>
+      funext j
+      simp only [hawkesStepH, hawkesStep, ih, hawkesFrozenH_id]
+
+theorem hawkesJumpTimeH_id (ν : ℝ) (φ : ℝ → ℝ) (xi : ℕ → ℝ) (ω : Ω) (m : ℕ) :
+    hawkesJumpTimeH id ν φ xi ω m = hawkesJumpTime ν φ xi ω m := by
+  rw [hawkesJumpTimeH, hawkesJumpTime, hawkesStepH_id]
+
+theorem le_hawkesRateH (hφ : ∀ x, 0 ≤ φ x) (hc : ∀ x, ν ≤ x → c ≤ h x) (N : Ω → Measure ℝ)
+    (u : ℝ) (ω : Ω) : c ≤ hawkesRateH h ν φ N u ω :=
+  hc _ (le_hawkesRate hφ N u ω)
+
+theorem hawkesRateH_le (hφ : ∀ x, 0 ≤ φ x) (hL : ∀ x, ν ≤ x → h x ≤ L) (N : Ω → Measure ℝ)
+    (u : ℝ) (ω : Ω) : hawkesRateH h ν φ N u ω ≤ L :=
+  hL _ (le_hawkesRate hφ N u ω)
+
+/-- **The nonlinear rate of a counting record is measurable in the time**, at every sample point and
+whatever the record.  The instance of `measurable_pointRate`. -/
+theorem measurable_hawkesRateH_time (hhm : Measurable h) (hφm : Measurable φ) (T : ℕ → ℝ)
+    (ω : Ω) :
+    Measurable fun u ↦ hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure T) u ω := by
+  simp only [hawkesRateH, hawkesRate]
+  exact hhm.comp (measurable_const.add (measurable_pointRate T hφm))
+
+/-- **And therefore interval integrable, with no hypothesis on the record at all.**  This is the
+statement the whole section exists for: in the linear case the same hypothesis is
+`not_intervalIntegrable_hawkesSelfRate_of_not_summable`, that is, the non explosion. -/
+theorem intervalIntegrable_hawkesRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hc : ∀ x, ν ≤ x → c ≤ h x) (hcnn : 0 ≤ c)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (T : ℕ → ℝ) (ω : Ω) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure T) u ω)
+      volume 0 r :=
+  intervalIntegrable_of_bdd (measurable_hawkesRateH_time hhm hφm T ω)
+    (fun u ↦ by
+      rw [Real.norm_eq_abs,
+        abs_of_nonneg (hcnn.trans (le_hawkesRateH (c := c) hφ hc _ u ω))]
+      exact hawkesRateH_le hφ hL _ u ω) 0 r
+
+/-- **The nonlinear frozen rate is the nonlinear rate of the counting measure**, on the window in
+which the stage is right.  `congrArg` of `hawkesRate_countingMeasure`, and the only place where the
+outermost position of the nonlinearity is used. -/
+theorem hawkesRateH_countingMeasure (hφ0 : ∀ x, x ≤ 0 → φ x = 0) {T : ℕ → ℝ} (hT : Monotone T)
+    (hT0 : 0 ≤ T 0) {u : ℝ} (hu : u ≤ T (n + 1)) (ω : Ω) :
+    hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure T) u ω = hawkesFrozenH h ν φ T (n + 1) u ω :=
+  congrArg h (hawkesRate_countingMeasure hφ0 hT hT0 hu ω)
+
+/-- **The recursion, in the genuine nonlinear Hawkes rate.** -/
+theorem hawkesJumpTimeH_succ_eq_rateInverse_hawkesRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < xi k) (ω : Ω) :
+    hawkesJumpTimeH h ν φ xi ω (n + 1)
+      = rateInverse
+          (hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure (hawkesJumpTimeH h ν φ xi ω))) ω
+          (∑ k ∈ Finset.range (n + 1), xi k) := by
+  set T := hawkesJumpTimeH h ν φ xi ω with hT
+  have hmono : Monotone T := monotone_hawkesJumpTimeH hhm hφm hφ hφ0 hcpos hc hL hxi
+  have hT0 : (0 : ℝ) ≤ T 0 := le_of_eq (hawkesJumpTimeH_zero h ν φ xi ω).symm
+  have hintH : ∀ r, IntervalIntegrable
+      (fun u ↦ hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure T) u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesRateH hhm hφm hφ hc hcpos.le hL T ω r
+  have hcum : cumulativeRateF (hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure T)) ω (T (n + 1))
+      = ∑ k ∈ Finset.range (n + 1), xi k := by
+    rw [show cumulativeRateF (hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure T)) ω (T (n + 1))
+          = cumulativeRateF (hawkesFrozenH h ν φ T (n + 1)) ω (T (n + 1)) from
+        setIntegral_congr_fun measurableSet_Ioc fun u hu ↦
+          hawkesRateH_countingMeasure hφ0 hmono hT0 hu.2 ω]
+    exact cumulativeRateF_hawkesJumpTimeH hhm hφm hφ hcpos hc hL fun k ↦ (hxi k).le
+  exact (rateInverse_eq_of_cumulativeRateF hintH
+    (fun u _ ↦ hcpos.trans_le (le_hawkesRateH (c := c) hφ hc _ u ω))
+    (hawkesJumpTimeH_nonneg h ν φ xi ω (n + 1)) hcum).symm
+
+/-- **The fixed point, closed**: the family the recursion produces is `jumpTimeF` of the genuine
+nonlinear Hawkes rate read against the counting measure of that very family.  Against
+`jumpTimeF_hawkesRate_eq_hawkesJumpTime` two hypotheses have gone, and the second of them was the
+non explosion. -/
+theorem jumpTimeF_hawkesRateH_eq_hawkesJumpTimeH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < xi k) (ω : Ω)
+    (m : ℕ) :
+    jumpTimeF (hawkesRateH h ν φ (fun _ : Ω ↦ countingMeasure (hawkesJumpTimeH h ν φ xi ω)))
+        ω xi m = hawkesJumpTimeH h ν φ xi ω m := by
+  rcases m with _ | p
+  · simp [jumpTimeF]
+  · exact (hawkesJumpTimeH_succ_eq_rateInverse_hawkesRateH hhm hφm hφ hφ0 hcpos hc hL hxi ω).symm
+
+end BoundedHawkesFixed
+
+/-! ### The bounded nonlinear Hawkes process
+
+`thm:pathjumpMP` asks three things of the data: that the rate be positive, locally integrable along
+the path, and of divergent cumulated mass.  For the bounded nonlinearity all three come from the two
+bounds, so the process exists at **every** sample point with strictly positive and divergent waiting
+times -- a set of full measure under the driving law for a reason that has nothing to do with the
+rate. -/
+
+section BoundedHawkesProcess
+
+variable {E : Type*} {ν c L : ℝ} {φ h : ℝ → ℝ} {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **The bounded nonlinear Hawkes rate of the process's own past.** -/
+noncomputable def hawkesSelfRateH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (u : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) : ℝ :=
+  hawkesRateH h ν φ
+    (fun _ : (ℕ → E) × (ℕ → ℝ) ↦ countingMeasure (hawkesJumpTimeH h ν φ ω.2 ω)) u ω
+
+theorem hawkesSelfRateH_apply (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (u : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    hawkesSelfRateH h ν φ u ω
+      = hawkesRateH h ν φ
+          (fun _ ↦ countingMeasure (hawkesJumpTimeH h ν φ ω.2 ω)) u ω := rfl
+
+/-- **The bounded nonlinear Hawkes process.** -/
+noncomputable def hawkesProcessH (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) : E := jumpProcessF (hawkesSelfRateH h ν φ) t ω
+
+theorem le_hawkesSelfRateH (hφ : ∀ x, 0 ≤ φ x) (hc : ∀ x, ν ≤ x → c ≤ h x) (u : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) : c ≤ hawkesSelfRateH h ν φ u ω :=
+  le_hawkesRateH hφ hc _ u ω
+
+theorem hawkesSelfRateH_le (hφ : ∀ x, 0 ≤ φ x) (hL : ∀ x, ν ≤ x → h x ≤ L) (u : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) : hawkesSelfRateH h ν φ u ω ≤ L :=
+  hawkesRateH_le hφ hL _ u ω
+
+theorem measurable_hawkesSelfRateH_time (hhm : Measurable h) (hφm : Measurable φ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) : Measurable fun u ↦ hawkesSelfRateH h ν φ u ω :=
+  measurable_hawkesRateH_time hhm hφm _ ω
+
+/-- **`hint` discharged.**  The local integrability of the self referential rate -- the hypothesis
+that the linear construction carries into six separate places, that sits under a `∀ ω` in
+`martingale_stoppedProcess`, and that is the non explosion -- holds here at every sample point, from
+the measurability of the two data and the two bounds. -/
+theorem intervalIntegrable_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hc : ∀ x, ν ≤ x → c ≤ h x) (hcnn : 0 ≤ c)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (ω : (ℕ → E) × (ℕ → ℝ)) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ hawkesSelfRateH h ν φ u ω) volume 0 r :=
+  intervalIntegrable_hawkesRateH hhm hφm hφ hc hcnn hL _ ω r
+
+/-- **The jump times of the bounded nonlinear Hawkes process are the ones the recursion
+produced.** -/
+theorem jumpTimeF_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) (m : ℕ) :
+    jumpTimeF (hawkesSelfRateH h ν φ) ω ω.2 m = hawkesJumpTimeH h ν φ ω.2 ω m := by
+  have hfix := jumpTimeF_hawkesRateH_eq_hawkesJumpTimeH (xi := ω.2) hhm hφm hφ hφ0
+    hcpos hc hL hxi ω m
+  rw [jumpTimeF] at hfix ⊢
+  rwa [rateInverse_congr (fun u ↦ hawkesSelfRateH_apply h ν φ u ω)]
+
+/-- **The bounded nonlinear Hawkes process does not explode, pathwise.**  The jump times are at
+least the partial sums of the waiting times divided by the bound, so a divergent waiting time
+sequence pushes them to infinity.  This is the domination by a Poisson process of rate `L`, and it
+replaces the whole non explosion apparatus of the linear case. -/
+theorem le_hawkesJumpTimeH (hhm : Measurable h) (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hLpos : 0 < L) (hxi : ∀ k, 0 < ω.2 k) (m : ℕ) :
+    (∑ k ∈ Finset.range m, ω.2 k) / L ≤ hawkesJumpTimeH h ν φ ω.2 ω m := by
+  have hnn : ∀ u, 0 ≤ hawkesSelfRateH h ν φ u ω := fun u ↦
+    hcpos.le.trans (le_hawkesSelfRateH hφ hc u ω)
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRateH h ν φ u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL ω r
+  have htop : Tendsto (cumulativeRateF (hawkesSelfRateH h ν φ) ω) atTop atTop :=
+    tendsto_cumulativeRateF_atTop_of_le hint hcpos fun u _ ↦ le_hawkesSelfRateH hφ hc u ω
+  have hbase := le_jumpTimeF_of_bdd (Λ := hawkesSelfRateH h ν φ) (ω := ω) (xi := ω.2)
+    (measurable_hawkesSelfRateH_time hhm hφm ω) hnn (fun u ↦ hawkesSelfRateH_le hφ hL u ω)
+    hLpos (fun u _ ↦ hcpos.trans_le (le_hawkesSelfRateH hφ hc u ω)) htop
+    (fun k ↦ (hxi k).le) m
+  rwa [jumpTimeF_hawkesSelfRateH hhm hφm hφ hφ0 hcpos hc hL hxi m] at hbase
+
+theorem tendsto_hawkesJumpTimeH_atTop (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k)
+    (hsum : Tendsto (fun m ↦ ∑ k ∈ Finset.range m, ω.2 k) atTop atTop) :
+    Tendsto (hawkesJumpTimeH h ν φ ω.2 ω) atTop atTop := by
+  have hbase := tendsto_jumpTimeF_atTop_of_bdd (Λ := hawkesSelfRateH h ν φ) (ω := ω) (xi := ω.2)
+    (measurable_hawkesSelfRateH_time hhm hφm ω) hcpos (fun u ↦ le_hawkesSelfRateH hφ hc u ω)
+    (fun u ↦ hawkesSelfRateH_le hφ hL u ω) (fun k ↦ (hxi k).le) hsum
+  refine hbase.congr fun m ↦ ?_
+  exact jumpTimeF_hawkesSelfRateH hhm hφm hφ hφ0 hcpos hc hL hxi m
+
+/-- **The paths of the bounded nonlinear Hawkes process are step paths**, at every sample point with
+strictly positive and divergent waiting times and with no hypothesis on the rate beyond the two
+bounds. -/
+theorem isStepPath_hawkesProcessH [TopologicalSpace E] (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k)
+    (hsum : Tendsto (fun m ↦ ∑ k ∈ Finset.range m, ω.2 k) atTop atTop) :
+    IsStepPath (fun t ↦ hawkesProcessH h ν φ t ω) := by
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRateH h ν φ u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL ω r
+  exact isStepPath_jumpProcessF hint (fun u _ ↦ hcpos.trans_le (le_hawkesSelfRateH hφ hc u ω))
+    (tendsto_cumulativeRateF_atTop_of_le hint hcpos fun u _ ↦ le_hawkesSelfRateH hφ hc u ω)
+    hxi hsum
+
+theorem isCadlagPath_hawkesProcessH [TopologicalSpace E] (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k)
+    (hsum : Tendsto (fun m ↦ ∑ k ∈ Finset.range m, ω.2 k) atTop atTop) :
+    IsCadlagPath (fun t ↦ hawkesProcessH h ν φ t ω) :=
+  (isStepPath_hawkesProcessH hhm hφm hφ hcpos hc hL hxi hsum).isCadlagPath
+
+/-- **The bounded nonlinear Hawkes process is the step path of its own jump times**, and unlike
+`hawkesProcess_eq_stepPath` this holds at every sample point with positive waiting times: the
+hypothesis that separated the process from its step path was the non explosion. -/
+theorem hawkesProcessH_eq_stepPath (hhm : Measurable h) (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) (t : ℝ) :
+    hawkesProcessH h ν φ t ω = stepPath (hawkesJumpTimeH h ν φ ω.2 ω) ω.1 t := by
+  rw [hawkesProcessH, jumpProcessF,
+    funext (jumpTimeF_hawkesSelfRateH hhm hφm hφ hφ0 hcpos hc hL hxi)]
+
+/-- **The process starts at the initial state of the chain and sits there until the clock at rate
+`h ν` rings.** -/
+theorem hawkesProcessH_of_lt_first (hhm : Measurable h) (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) {t : ℝ} (ht : t < ω.2 0 / h ν) :
+    hawkesProcessH h ν φ t ω = ω.1 0 := by
+  refine jumpProcessF_of_lt_jumpTimeF_one ?_
+  rw [jumpTimeF_hawkesSelfRateH hhm hφm hφ hφ0 hcpos hc hL hxi 1,
+    hawkesJumpTimeH_one (hcpos.trans_le (hc ν le_rfl)) (hxi 0).le]
+  exact ht
+
+end BoundedHawkesProcess
