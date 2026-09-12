@@ -3951,6 +3951,20 @@ angewandt und braucht sie dort.
     sondern in der Wahl der Filtration, und sie ist nicht durch eine weitere
     Eingabe zu schließen.
 
+    **Nachtrag 2026-09-12: die Entscheidung ist entschärft, nicht getroffen.**
+    Die Hebung der kumulierten Rate nach `ℝ≥0∞` gibt mit `hawkesJumpFiltrationE`
+    eine Filtration derselben Bauart wie `hawkesJumpFiltration` — erzeugt von den
+    Sprungzeiten, die die Inverse der kumulierten Rate zurückgibt —, die `hint`
+    **nicht** im Argument ihrer Definition trägt. Damit ist die Alternative nicht
+    mehr „eine instantiierbare gegen eine nicht instantiierbare", sondern eine
+    gewöhnliche Wahl zwischen zwei überall erklärten σ-Algebren. Was noch offen
+    ist, ist der Nachweis, daß die Aussagen, die bisher über `hawkesFiltration`
+    laufen — `isLocalizingSequence_rateInverseE_hawkesSelfRate` und
+    `isStronglyProgressive_mpFamilyF_hawkesStepPath` —, auch über
+    `hawkesJumpFiltrationE` laufen; `jumpTimeFEE_hawkesSelfRate_eq` ist die
+    Brücke, und sie gilt an jedem Stichprobenpunkt, an dem `hint` steht, also
+    f.s.
+
     **Der dritte Ausweg — die Filtration des Pfades — ist geschlossen, und in
     Lean:** `not_hawkesFiltration_le_hawkesPathFiltration`. Die Kette ist die
     erste Koordinate des Stichprobenraums, also ist die konstante Kette ein
@@ -3974,7 +3988,9 @@ Sie tritt an **sechs** Stellen auf, nicht an vier:
 2. **Übertragung des ersten Sprungzeitgesetzes** —
    `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one`.
 3. **Formulierbarkeit von `hawkesJumpFiltration`** — `hint` steht im Argument der
-   **Definition**.
+   **Definition**. ~~Offen.~~ *(Geschlossen am 2026-09-12 durch die Hebung nach
+   `ℝ≥0∞`: `hawkesJumpFiltrationE` trägt nur die Daten von `ex:hawkes`. Siehe den
+   Abschnitt „Die Hebung der kumulierten Rate nach `ℝ≥0∞`" unten.)*
 4. **Gültigkeitsbereich der Formel für die kumulierte Rate** —
    `cumulativeRateF_hawkesSelfRate_eq_sum` gilt für `r ≤ T (n+1)`, und daß das
    jedes `r` ist, ist die Nichtexplosion (offener Punkt 10).
@@ -3995,7 +4011,11 @@ teurer ist als die zustandsabhängige, und sie ist damit benannt.
 
 #### Die Zahl
 
-**Fünfzehn.** Offene Punkte 0 bis 14. Die Meldung „es fehlt genau eine Eingabe"
+**Fünfzehn.** Offene Punkte 0 bis 14. *(Stand 2026-09-12 nach der Hebung nach
+`ℝ≥0∞`: unverändert fünfzehn. Bewiesen wurde keine von ihnen; geändert hat sich,
+daß die **Zielaussage** jetzt ohne `hint` in der Signatur hinschreibbar ist, weil
+`hawkesJumpFiltrationE` es nicht verlangt. Das nimmt dem Punkt 13 seine Schärfe
+und der Stelle 3 der Nichtexplosionsliste ihren Ort, beweist aber nichts.)* Die Meldung „es fehlt genau eine Eingabe"
 war in jedem der fünf Läufe für die **jeweils oberste** Schicht richtig und für
 den Baum falsch: der Baum ist von oben abgearbeitet worden, und Gruppe A, die
 sechs Aussagen der Wahrscheinlichkeitsschicht, ist in keiner dieser Meldungen
@@ -4414,6 +4434,133 @@ Prozeß an sie adaptiert ist — eines über der anderen selbst. Dasselbe für
 `IsStoppingTime.augment` und `Locally.augment`. Der Prozeß dieser Konstruktion
 hat also, wie der Nutzer es verlangt hat, **eine** Filtration; der Preis ist das
 Maß, und er ist im Abschnitt zuvor benannt.
+
+### Die Hebung der kumulierten Rate nach `ℝ≥0∞`, und eine Filtration ohne Nichtexplosion
+
+*(2026-09-12; der erste der drei Umbauten, die der Nutzer nach dem 26. Lauf
+angeordnet hat.)*
+
+Der Umbau ist eine einzige Ersetzung: `cumulativeRateF`, ein **Bochner**-Integral
+mit Werten in `ℝ`, wird ergänzt durch `cumulativeRateFE`, das Unterintegral
+
+```
+cumulativeRateFE Λ ω t = ∫⁻ u in Set.Ioc 0 t, ENNReal.ofReal (Λ u ω)
+```
+
+mit Werten in `ℝ≥0∞`. Und der Grund ist der Müllwert: ein Bochner-Integral über
+einen nichtintegrierbaren Integranden ist `0`. An einem Stichprobenpunkt, an dem
+die selbstbezügliche Rate nicht lokal integrierbar ist, **fällt** die kumulierte
+Rate also von einem positiven Wert auf `0` — und damit sind beide Tatsachen
+falsch, auf denen jede Aussage über die Inverse ruht: daß die kumulierte Rate
+wächst, und daß ein Pegel genau dort unter ihr liegt, wo die Inverse unter der
+Zeit liegt.
+
+Das ist der ganze Grund, aus dem `rateInverseE_le_ofReal_iff` `hint` trägt, aus
+dem `measurable_jumpTimeFE` es trägt, und aus dem `hawkesJumpFiltration` es im
+Argument seiner **Definition** trägt.
+
+`cumulativeRateFE` antwortet statt dessen `⊤`, und zwar genau dort, wo die Rate
+nicht lokal integrierbar ist (`cumulativeRateFE_eq_top_iff`). `⊤` ist die wahre
+Masse des Fensters und kein Müllwert. Die Folge ist unmittelbar und trägt den
+ganzen Abschnitt:
+
+> **`monotone_cumulativeRateFE` gilt ohne jede Voraussetzung.** Es ist die
+> Monotonie eines Unterintegrals in seinem Integrationsbereich, eine Zeile.
+
+**Was dafür zu zahlen ist, und es ist nicht nichts.** Die gehobene kumulierte
+Rate ist monoton, aber **nicht rechtsstetig**: ist die Rate bis `c` integrierbar
+und auf keinem Fenster darüber hinaus, so springt die Masse bei `c` von einem
+endlichen Wert auf `⊤`. Die Identität der Subniveaumengen kann darum nicht
+`a ≤ cumulativeRateFE Λ ω c` lauten, sondern liest den **rechten Grenzwert**:
+
+```
+rateInverseEE_le_ofReal_iff (hc : 0 ≤ c) :
+  rateInverseEE Λ ω a ≤ ENNReal.ofReal c ↔ ∀ ε : ℝ, 0 < ε → a ≤ cumulativeRateFE Λ ω (c + ε)
+```
+
+**voraussetzungsfrei**, gegen `rateInverseE_le_ofReal_iff`, das lokale
+Integrierbarkeit und Nichtnegativität trägt. Und der Preis kostet an der Stelle,
+an der er anfällt, nichts: die Bedingung ist in `ε` monoton, wird also von den
+**Rationalen** entschieden (`rateInverseEE_le_ofReal_iff_rat`), ist damit ein
+abzählbarer Durchschnitt meßbarer Mengen, und die Meßbarkeit der Inversen folgt,
+ohne daß über die Rate mehr verlangt würde als ihre gemeinsame Meßbarkeit.
+
+**Die Punkte, achtundzwanzig Deklarationen, alle durch `lake env lean` gegen
+v4.33.1 und alle mit `#print axioms` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft:**
+
+* `cumulativeRateFE`, `cumulativeRateFE_zero`, `cumulativeRateFE_of_nonpos`,
+  `cumulativeRateFE_congr` — die Hebung und ihre Randwerte.
+* `monotone_cumulativeRateFE` — die Monotonie, ohne Voraussetzung.
+* `cumulativeRateFE_eq_ofReal` — wo die alte kumulierte Rate ehrlich war, stimmen
+  die beiden überein; das macht die Hebung zu einer Verallgemeinerung und nicht
+  zu einer zweiten Konstruktion.
+* `cumulativeRateFE_eq_top_iff` — und wo sie nicht ehrlich war, sagt die Hebung
+  es: `⊤` genau auf den Fenstern, auf denen die Rate nicht integrierbar ist, also
+  genau dort, wo `cumulativeRateF` mangels Antwort `0` zurückgibt. Das ist die
+  Aussage, in der die Hebung *die* Reparatur ist und nicht bloß eine.
+* `measurable_cumulativeRateFE` — `measurable_cumulativeRateF` mit Tonelli statt
+  Fubini, und ohne Integrierbarkeit irgendwo.
+* `rateInverseEE`, `monotone_rateInverseEE`, `rateInverseEE_zero` — die
+  verallgemeinerte Inverse, mit Pegel in `ℝ≥0∞`.
+* `rateInverseEE_le_ofReal_iff`, `rateInverseEE_le_ofReal_iff_rat` — die
+  Subniveaumengen, voraussetzungsfrei, im rechten Grenzwert und längs der
+  Rationalen.
+* `measurable_rateInverseEE` — die Meßbarkeit der Inversen in einem Parameter,
+  und `hint` ist fort.
+* `rateInverseEE_eq_rateInverseE` — die Brücke: unter den Voraussetzungen, die
+  die alte Aussage trug, sind die beiden Zulässigkeitsmengen dieselbe Menge.
+* `jumpTimeFEE`, `jumpTimeFEE_zero`, `monotone_jumpTimeFEE`,
+  `jumpTimeFEE_eq_jumpTimeFE` — die Sprungzeiten des umgebauten Prozesses und ihr
+  Anschluß an die alten.
+* `measurable_jumpTimeFEE`, `jumpFiltrationFEE`, `isStoppingTime_jumpTimeFEE` —
+  die Meßbarkeitsschicht und die Filtration, beide ohne Voraussetzung an die Rate
+  außer ihrer gemeinsamen Meßbarkeit.
+* `hawkesJumpFiltrationE`, `isStoppingTime_jumpTimeFEE_hawkesSelfRate`,
+  `jumpTimeFEE_hawkesSelfRate_eq`, `cumulativeRateFE_hawkesSelfRate_eq_top_iff` —
+  die Hawkes-Instanz.
+
+**Die Zielaussage des Abschnitts:**
+
+```
+hawkesJumpFiltrationE (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r) :
+  Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ)))
+```
+
+Das ist `hawkesJumpFiltration` **ohne `hint`**. Die Voraussetzungen sind die Daten
+von `ex:hawkes` und nichts sonst.
+
+**Warum das mehr ist als eine Voraussetzung weniger.**
+`hawkesJumpFiltration hν hφ hφm hφint hint` ist ein Term, der sich nicht
+hinschreiben läßt, solange `hint` nicht bewohnt ist, und `hint` ist nach
+`not_intervalIntegrable_hawkesSelfRate_of_not_summable` die Nichtexplosion an
+**jedem** Stichprobenpunkt. Eine σ-Algebra ist kein fast-sicherer Begriff; es gibt
+also keine Abschwächung von `hint`, die die Definition stehen läßt. Der einzige
+Ausweg ist, daß das Objekt sie nicht verlangt — und das ist es, was die Hebung
+kauft. Die dritte der sechs Stellen, an denen die Nichtexplosion in die
+pfadabhängige Variante eintritt, ist damit geschlossen, und es ist die, die in
+einer *Definition* saß, wo eine fast sichere Aussage nie hinreicht.
+
+**Was der Umbau *nicht* tut, und es gehört gesagt.** Keine der fünfzehn offenen
+Aussagen des Abhängigkeitsbaums ist damit bewiesen; die Zahl bleibt bei
+**fünfzehn**. Was sich geändert hat, ist die **Formulierbarkeit** der Zielaussage:
+`hawkes_isLocalMPSolution` läßt sich jetzt über `hawkesJumpFiltrationE`
+hinschreiben, ohne `hint` in der Signatur, und die Nichtexplosion kann dort als
+fast sichere Aussage unter `jumpMeasure mu nu` auftreten, wie
+`ae_mem_nonExplosiveE` es im zustandsabhängigen Fall tut. Die restlichen fünf
+Stellen der Nichtexplosion bleiben, und die schärfste von ihnen — die
+Rechtsstetigkeitsvoraussetzung von `martingale_stoppedProcess` unter einem `∀ ω` —
+ist von diesem Umbau unberührt.
+
+**Und der Punkt, auf den der Nutzer hingewiesen hat** („auf die Müllwerte muß man
+schon aufpassen"): die Stelle, an der bisher `0` für „undefiniert" stand, ist hier
+benannt und ersetzt, und `cumulativeRateFE_eq_top_iff` ist der Beleg, daß sie
+genau dort und nur dort ersetzt wurde. Stillschweigend bleibt in dieser Schicht
+keine. Die übrigen Müllwerte der Arbeit — `sInf ∅ = 0` in `rateInverse`,
+`x / 0 = 0`, `stepIndex = 0` jenseits der Explosion — sind von diesem Umbau nicht
+berührt; `rateInverseE` und `rateInverseEE` haben den ersten von ihnen schon
+ersetzt.
 
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 

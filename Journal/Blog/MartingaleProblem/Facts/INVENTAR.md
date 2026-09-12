@@ -24750,3 +24750,224 @@ Hälfte, die bleibt, ist die teurere.
    und hat **keine einzige Anwendung**.
 3. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes; in
    `section PathDependent` kommt bis heute keine einzige bedingte Erwartung vor.
+
+### 2026-09-12, zehnter Lauf des Tages — der erste der drei Umbauten steht: die kumulierte Rate ist nach `ℝ≥0∞` gehoben, und `hint` ist aus der Definition der Filtration verschwunden
+
+**Bearbeitet:** Umbau 1 der Anordnung des Nutzers vom 2026-09-12 („Heben nach
+`ℝ≥0∞`. `cumulativeRateF` wird `ℝ≥0∞`-wertig, so daß `Λ = ⊤` an einem explosiven
+Stichprobenpunkt zulässig ist und **`hint` aus jeder Definition verschwindet**").
+
+**Achtundzwanzig Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, in
+den drei neuen Abschnitten `section CumulativeRateFE`, `section JumpFiltrationFEE`
+und `section HawkesJumpFiltrationE` am Ende der Datei; die ganze Datei ohne einen
+Fehler durch `lake env lean` gegen v4.33.1 (0 Fehler), alle achtundzwanzig mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl
+der `sorry` bleibt bei **neun**. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4, im neuen Abschnitt „Die Hebung der
+kumulierten Rate nach `ℝ≥0∞`, und eine Filtration ohne Nichtexplosion".
+
+`upstream/master` frisch geholt: `141f6b6455959bfeb0b2a6b04118031191d62683`
+(2026-09-12 07:43 UTC) — **derselbe Commit wie im achten und neunten Lauf**, die
+Bibliothek hat sich seither nicht bewegt.
+
+#### Die Zielaussage
+
+```
+hawkesJumpFiltrationE (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r) :
+  Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ)))
+```
+
+Das ist `hawkesJumpFiltration` **ohne `hint`**: die Voraussetzungen sind die Daten
+von `ex:hawkes` und nichts sonst. Darunter die allgemeine Fassung
+`jumpFiltrationFEE`, die über die Rate nichts verlangt als ihre gemeinsame
+Meßbarkeit, und darunter die Schicht, die das trägt:
+
+```
+measurable_rateInverseEE {γ : Type*} [MeasurableSpace γ] {Λ : γ → ℝ → Ω → ℝ}
+    {p : γ → Ω} {a : γ → ENNReal}
+    (hmeas : Measurable fun q : γ × ℝ ↦ Λ q.1 q.2 (p q.1)) (ha : Measurable a) :
+  Measurable fun g ↦ rateInverseEE (Λ g) (p g) (a g)
+```
+
+gegen `measurable_rateInverseE`, das lokale Integrierbarkeit **an jedem
+Parameterwert** und Nichtnegativität trägt.
+
+#### Der Befund, und er ist der Grund, aus dem der Umbau trägt
+
+> **Der Müllwert des Bochner-Integrals macht die kumulierte Rate nicht
+> monoton**, und Monotonie ist die einzige Eigenschaft, die die Umkehrung
+> braucht.
+
+`cumulativeRateF Λ ω t = ∫ u in Ioc 0 t, Λ u ω` ist ein Bochner-Integral, und ein
+Bochner-Integral über einen nichtintegrierbaren Integranden ist `0`. An einem
+Stichprobenpunkt, an dem die selbstbezügliche Rate nicht lokal integrierbar ist,
+**fällt** die kumulierte Rate also von einem positiven Wert auf `0`. Damit sind
+beide Tatsachen falsch, auf denen jede Aussage über `rateInverse` und
+`rateInverseE` ruht: daß die kumulierte Rate wächst
+(`monotoneOn_cumulativeRateF`, trägt `hint`), und daß ein Pegel genau dort unter
+ihr liegt, wo die Inverse unter der Zeit liegt (`rateInverseE_le_ofReal_iff`,
+trägt `hint`). Über `measurable_rateInverseE` und `measurable_jumpTimeFE` wandert
+`hint` von dort bis in das Argument der **Definition** von
+`hawkesJumpFiltration`.
+
+Die Hebung ersetzt das Bochner-Integral durch das Unterintegral
+
+```
+cumulativeRateFE Λ ω t = ∫⁻ u in Set.Ioc 0 t, ENNReal.ofReal (Λ u ω)
+```
+
+und `monotone_cumulativeRateFE` ist danach **eine Zeile ohne Voraussetzung**:
+`lintegral_mono_set (Set.Ioc_subset_Ioc_right hst)`. Das ist der ganze Umbau; der
+Rest ist Buchhaltung.
+
+Daß die Hebung genau die unehrliche Stelle trifft und keine andere, steht als
+eigene Aussage da:
+
+```
+cumulativeRateFE_eq_top_iff (hm : Measurable fun u ↦ Λ u ω)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 ≤ t) :
+  cumulativeRateFE Λ ω t = ⊤ ↔ ¬ IntervalIntegrable (fun u ↦ Λ u ω) volume 0 t
+```
+
+— `⊤` genau auf den Fenstern, auf denen die Rate nicht integrierbar ist, also
+genau dort, wo `cumulativeRateF` mangels Antwort `0` zurückgibt. Und
+`cumulativeRateFE_eq_ofReal` sagt, daß sonst nichts passiert. Der Nutzer hatte
+verlangt, beim Heben **jede** Stelle zu prüfen, an der bisher `0` für
+„undefiniert" stand; diese beiden Aussagen zusammen sind die Prüfung für diese
+Schicht, und sie ist damit erledigt und nicht bloß behauptet.
+
+#### Der zweite Befund, und er war nicht angesagt: die gehobene kumulierte Rate ist **nicht rechtsstetig**
+
+Das ist der Preis der Hebung, und er ist zu benennen, weil er beinahe ein
+falscher Satz geworden wäre. Ist die Rate bis `c` integrierbar und auf **keinem**
+Fenster darüber hinaus, so ist `cumulativeRateFE Λ ω c` endlich und
+`cumulativeRateFE Λ ω (c + ε) = ⊤` für jedes `ε > 0`: die Masse springt bei `c`.
+Ein Unterintegral über eine fallende Mengenfolge konvergiert nur unter
+Endlichkeit gegen das Integral über den Durchschnitt, und hier ist sie verletzt.
+
+Die naheliegende Fassung der Subniveauidentität —
+`rateInverseEE Λ ω a ≤ ofReal c ↔ a ≤ cumulativeRateFE Λ ω c` — ist daher nicht
+beweisbar: an einem solchen Stichprobenpunkt enthält die Zulässigkeitsmenge alle
+`r > c`, ihr Infimum ist `ofReal c`, und die rechte Seite kann scheitern. **Das
+ist eine Papierrechnung und kein Lean-Beweis** — die Rechnung ist der Grund, aus
+dem die Aussage in der schwächeren Gestalt formuliert wurde, und nicht ein
+formalisierter Gegenzeuge; ein solcher wäre eine eigene Aussage, und er steht
+nicht da. Bewiesen ist der **rechte Grenzwert**:
+
+```
+rateInverseEE_le_ofReal_iff (hc : 0 ≤ c) :
+  rateInverseEE Λ ω a ≤ ENNReal.ofReal c
+    ↔ ∀ ε : ℝ, 0 < ε → a ≤ cumulativeRateFE Λ ω (c + ε)
+```
+
+und das **ohne jede Voraussetzung an die Rate**. Der Beweis sind die beiden
+Hälften eines Infimums: unterhalb von `ofReal c` liegt echt unterhalb von
+`ofReal (c + ε)`, also liegt eine zulässige Zeit unter `c + ε`, und die
+Zulässigkeitsmenge ist nach oben abgeschlossen, weil die kumulierte Rate monoton
+ist; zurück ist `c + ε` selbst zulässig, und `ENNReal.le_of_forall_pos_le_add`
+sammelt die Schranken ein.
+
+**Und an der Stelle, an der er anfällt, kostet der Preis nichts.** Die Bedingung
+ist in `ε` monoton, wird also von den **Rationalen** entschieden
+(`rateInverseEE_le_ofReal_iff_rat`), und ein abzählbarer Durchschnitt meßbarer
+Mengen ist meßbar. Genau das ist der Beweis von `measurable_rateInverseEE`, und
+genau deshalb geht die Meßbarkeit ohne Integrierbarkeit durch.
+
+#### Was der Umbau *nicht* tut
+
+Keine der fünfzehn offenen Aussagen des Abhängigkeitsbaums ist bewiesen; die Zahl
+bleibt bei **fünfzehn**, und das steht so im Baum. Geändert hat sich die
+**Formulierbarkeit** der Zielaussage: `hawkes_isLocalMPSolution` läßt sich jetzt
+über `hawkesJumpFiltrationE` hinschreiben, ohne `hint` in der Signatur, und die
+Nichtexplosion darf dort als fast sichere Aussage unter `jumpMeasure mu nu`
+auftreten, wie `ae_mem_nonExplosiveE` es im zustandsabhängigen Fall tut.
+
+Von den **sechs** Stellen, an denen die Nichtexplosion in die pfadabhängige
+Variante eintritt, ist damit die dritte geschlossen — die, die im Argument einer
+**Definition** saß und die deshalb von keiner Abschwächung erreichbar war. Die
+fünf übrigen bleiben, und die schärfste von ihnen ist unberührt: die
+Rechtsstetigkeitsvoraussetzung von `martingale_stoppedProcess` wird unter einem
+`∀ ω` gefragt.
+
+Ebensowenig ist damit der Zeuge zu Punkt 0 gerechnet. Er bleibt offen, hat aber
+an Gewicht verloren: er entschied, ob `hawkesJumpFiltration` je eine Instanz
+bekommt, und diese Frage ist jetzt gegenstandslos, weil die Filtration, über der
+gearbeitet wird, keine braucht.
+
+#### Was an Mathlib nachgeprüft wurde
+
+Alle neu benutzten Deklarationen existieren unter diesen Namen sowohl in v4.33.1
+als auch auf `upstream/master` `141f6b64`, keine `deprecated`:
+`lintegral_mono_set` (`MeasureTheory/Integral/Lebesgue/Basic.lean:98`),
+`ofReal_integral_eq_lintegral_ofReal` (`Integral/Bochner/Basic.lean:702` in
+v4.33.1, `:734` auf master), `hasFiniteIntegral_iff_ofReal`
+(`Function/L1Space/HasFiniteIntegral.lean:99` bzw. `:101`),
+`Measurable.lintegral_prod_right'` (`Measure/Prod.lean:123`, beide),
+`ENNReal.le_of_forall_pos_le_add`, `ENNReal.ofReal_coe_nnreal`,
+`ENNReal.ofReal_lt_ofReal_iff_of_nonneg`, `ENNReal.measurable_ofReal`
+(`Constructions/BorelSpace/Real.lean:242`, beide), `measurable_of_Iic`
+(`Constructions/BorelSpace/Order.lean:689` bzw. `:690`), `exists_rat_btwn`,
+`sInf_lt_iff`.
+
+**Bestätigung eines bekannten Teil-D-Befunds, kein neuer:** die drei
+`ENNReal`-Deklarationen, die dieser Lauf benutzt, liegen auf `master` unter
+`Mathlib/Basic/ENNReal/Basic.lean` und `Mathlib/Basic/ENNReal/Real.lean`, in
+v4.33.1 unter `Mathlib/Data/ENNReal/…`. Das ist genau die Wanderung, die der
+einundzwanzigste Lauf des 2026-09-10 (Teil D) schon festgehalten hat — die alten
+Dateien sind auf master `deprecated_module`, die Namen unverändert, es bricht
+nichts, die Pfadangaben altern. Die Zitate in unserem Bestand, die davon betroffen
+sind, sind zwölf im Inventar und **eines** in einer Roadmapdatei
+(`MartingaleProblems/Suggested.lean:17019`, `Mathlib/Data/ENNReal/Operations.lean:526`
+für `ENNReal.ofReal_iInf`); der Name stimmt, der Pfad ist der von v4.33.1, an das
+wir gebunden sind. Es ist also nichts zu korrigieren, nur zu wissen.
+
+#### Ein neuer Negativbefund, und er ist die zehnte Lücke für `TODO.md` Punkt 8
+
+**Mathlib hat die verallgemeinerte Inverse einer monotonen Funktion nicht.**
+`quantile`, `generalized inverse` und `generalised inverse` geben in ganz
+`Mathlib/` **null** Treffer an `upstream/master` `141f6b64`; gesucht wurde, der
+Regel für den Negativbefund folgend, nach der Aussage und nicht nach unserer
+Vokabel, also auch nach `rightInverse` in Verbindung mit `Monotone` — das trifft
+allein `Mathlib/Data/Set/Monotone.lean`, wo es um die Monotonie von Bildmengen
+geht und nicht um eine Inverse. Vorhanden sind die Bausteine: `StieltjesFunction`
+(`MeasureTheory/Measure/Stieltjes.lean:112`) und `leftLim`/`rightLim`. Der Begriff
+selbst fehlt, und mit ihm die beiden Aussagen, die ihn ausmachen — die
+Galois-Verbindung `f⁻(a) ≤ c ↔ a ≤ f(c⁺)` mit dem **rechten Grenzwert**, und die
+Meßbarkeit von `f⁻` aus der Meßbarkeit von `f` über den abzählbaren Durchschnitt
+längs der positiven Rationalen.
+
+Das ist genau, was dieser Lauf für den einen Fall bewiesen hat, den die
+Konstruktion braucht (`rateInverseEE_le_ofReal_iff`,
+`rateInverseEE_le_ofReal_iff_rat`, `measurable_rateInverseEE`); die allgemeine
+Fassung ist dieselbe Rechnung ohne die kumulierte Rate darin. Der Punkt steht als
+zehnter in `TODO.md` Punkt 8; bei der Gelegenheit ist dort auch die Überschrift
+berichtigt worden, die noch „Fünf Lücken" sagte, während der letzte Eintrag sich
+selbst „der neunte" nennt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`isLocalizingSequence_rateInverseEE_hawkesSelfRate`** — das lokalisierende
+   System über der *neuen* Filtration. **Worauf es ruht:**
+   `isLocalizingSequence_rateInverseE_hawkesSelfRate` (steht, über
+   `hawkesFiltration`), `isStoppingTime_jumpTimeFEE_hawkesSelfRate` (steht,
+   voraussetzungsfrei) und die Brücke `rateInverseEE_eq_rateInverseE`. **Warum
+   jetzt:** die Hebung hat eine Filtration geliefert, über der noch **keine
+   einzige** der bisherigen Aussagen steht; ein Turm ohne Last ist kein Ergebnis,
+   und dies ist die erste Last, die er tragen muß. **Prüfstein:** die
+   Lokalisierung darf `hint` höchstens fast sicher tragen, nicht unter einem
+   `∀ w` — sonst hat die Hebung nichts gekauft, sondern die Voraussetzung nur
+   verschoben.
+2. **Umbau 3 hinschreiben, ohne ihn zu beweisen:** die Signatur von
+   `hawkes_isLocalMPSolution` über `hawkesJumpFiltrationE`, mit der Nichtexplosion
+   als `∀ᵐ w ∂(jumpMeasure mu nu)` und mit `sorry`. **Warum jetzt:** der Baum ist
+   fünf Läufe lang von oben abgearbeitet worden, weil die Zielaussage nie
+   dastand; jetzt ist sie hinschreibbar, und ein `sorry` an der Zielaussage ist
+   erlaubt („`sorry` ist erlaubt, wo die Aussage die Arbeit ist"). **Prüfstein:**
+   in der Signatur darf `hint` nicht vorkommen.
+3. **Gruppe A**, unverändert aus den beiden Vorläufen: `E[D_n | ℋ_n] = 0` ist der
+   Rumpf des Satzes und wird von keiner Entscheidung über Filtrationen billiger.
+   In `section PathDependent` kommt bis heute keine einzige bedingte Erwartung
+   vor. Nach diesem Lauf ist auch die Entscheidung, was `ℋ_n` ist, keine mehr:
+   es ist `(hawkesJumpFiltrationE …).stoppedσ` an `jumpTimeFEE`, und das Objekt
+   existiert jetzt.

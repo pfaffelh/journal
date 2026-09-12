@@ -20960,3 +20960,343 @@ theorem not_intervalIntegrable_hawkesSelfRate_of_not_summable {E : Type*}
   hns (summable_waiting_of_intervalIntegrable_hawkesSelfRate hν hφ hφ0 hφint hxi hint hB)
 
 end HintIsNonExplosion
+
+/-! ## The cumulated rate in `ℝ≥0∞`, and a filtration that does not carry the non explosion
+
+*(2026-09-12.)*  The first of the three rebuilds: lift the cumulated rate of the path dependent
+construction from `ℝ` to `ℝ≥0∞`, so that an explosive sample point is answered by `⊤` and not by a
+junk value, and `hint` disappears from the **definitions** it now sits in.
+
+**The junk value it removes, and why it was not harmless.**  `cumulativeRateF` is a Bochner
+integral, and a Bochner integral of a non integrable function is `0`.  At a sample point at which
+the self referential rate is not locally integrable the cumulated rate therefore *decreases* from a
+positive value to `0`, and the two facts every statement about the inverse rests on -- that the
+cumulated rate is monotone, and that a level is below it exactly where the inverse is below the
+time -- are both false there.  That is the whole reason `rateInverseE_le_ofReal_iff` carries
+`hint`, and the reason `measurable_jumpTimeFE` carries it, and the reason `hawkesJumpFiltration`
+carries it in the argument of its **definition**.
+
+`cumulativeRateFE` is the lower integral of `ENNReal.ofReal ∘ Λ`.  It answers `⊤` exactly where the
+rate is not locally integrable (`cumulativeRateFE_eq_top_iff`), and `⊤` is not a junk value: it is
+the true mass of the window.  The consequence is immediate and is the point of the section --
+`monotone_cumulativeRateFE` holds **with no hypothesis at all**, being the monotonicity of a lower
+integral in its domain.
+
+**What has to be paid for it.**  The lifted cumulated rate is *not* right continuous: if the rate is
+integrable up to `c` and on no window beyond it, the mass jumps from a finite value to `⊤` at `c`.
+So the sublevel identity cannot read `a ≤ cumulativeRateFE Λ ω c`; it reads
+`∀ ε > 0, a ≤ cumulativeRateFE Λ ω (c + ε)`, the right limit, and that is
+`rateInverseEE_le_ofReal_iff`.  This costs nothing where it is used: the condition is monotone in
+`ε`, hence decided by the rationals (`rateInverseEE_le_ofReal_iff_rat`), hence a **countable**
+intersection of measurable sets, and the measurability of the inverse follows with no hypothesis on
+the rate beyond its joint measurability.
+
+**The payoff, stated once.**  `measurable_jumpTimeFEE` and `hawkesJumpFiltrationE` carry the data of
+`ex:hawkes` and nothing else.  Against `measurable_jumpTimeFE_hawkesSelfRate` and
+`hawkesJumpFiltration`, which carry `hint` at every sample point, this is the removal of the third
+of the six places at which the non explosion enters the path dependent variant -- and it is the one
+that sat in a *definition*, where an almost sure statement can never reach.
+-/
+
+section CumulativeRateFE
+
+variable {Ω : Type*} {Λ : ℝ → Ω → ℝ} {ω : Ω} {s t a c : ℝ}
+
+/-- **The cumulated rate along one sample point, with values in `ℝ≥0∞`.**  The same window as
+`cumulativeRateF`, integrated in `ℝ≥0∞`: where the rate is not integrable the value is `⊤`, the
+true mass of the window, and not the `0` a Bochner integral returns. -/
+noncomputable def cumulativeRateFE (Λ : ℝ → Ω → ℝ) (ω : Ω) (t : ℝ) : ENNReal :=
+  ∫⁻ u in Set.Ioc (0 : ℝ) t, ENNReal.ofReal (Λ u ω)
+
+@[simp] theorem cumulativeRateFE_zero (Λ : ℝ → Ω → ℝ) (ω : Ω) :
+    cumulativeRateFE Λ ω 0 = 0 := by
+  simp [cumulativeRateFE]
+
+theorem cumulativeRateFE_of_nonpos (Λ : ℝ → Ω → ℝ) (ω : Ω) (ht : t ≤ 0) :
+    cumulativeRateFE Λ ω t = 0 := by
+  rw [cumulativeRateFE, Set.Ioc_eq_empty (not_lt.2 ht)]
+  simp
+
+/-- **The cumulated rate is monotone, and here with no hypothesis whatever.**  Against
+`monotoneOn_cumulativeRateF`, which carries local integrability and positivity: the real statement
+needs them because it has to rule out the collapse to the junk value `0`, and there is no collapse
+to rule out here.  A larger window carries at least the mass of a smaller one, and that is the whole
+proof.
+
+This one line is what the rest of the section rests on. -/
+theorem monotone_cumulativeRateFE (Λ : ℝ → Ω → ℝ) (ω : Ω) :
+    Monotone (cumulativeRateFE Λ ω) := fun _ _ hst ↦
+  lintegral_mono_set (Set.Ioc_subset_Ioc_right hst)
+
+/-- The lifted cumulated rate, like the real one, reads the rate at one sample point only. -/
+theorem cumulativeRateFE_congr {Λ Λ' : ℝ → Ω → ℝ} {ω : Ω} (h : ∀ u, Λ u ω = Λ' u ω) (t : ℝ) :
+    cumulativeRateFE Λ ω t = cumulativeRateFE Λ' ω t := by
+  simp only [cumulativeRateFE, h]
+
+/-- `cumulativeRateF_nonneg` at the weaker hypothesis the lifted statements carry: the rate is only
+asked to be non negative, not positive. -/
+theorem cumulativeRateF_nonneg_of_nonneg (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (t : ℝ) :
+    0 ≤ cumulativeRateF Λ ω t :=
+  setIntegral_nonneg measurableSet_Ioc fun u hu ↦ hnn u hu.1
+
+theorem ae_nonneg_restrict_Ioc (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (t : ℝ) :
+    0 ≤ᵐ[volume.restrict (Set.Ioc (0 : ℝ) t)] fun u ↦ Λ u ω := by
+  filter_upwards [ae_restrict_mem measurableSet_Ioc] with u hu using hnn u hu.1
+
+/-- **Where the old cumulated rate is honest, the two agree.**  This is what makes the lift a
+generalisation and not a competitor: under the hypothesis the old statements carried, nothing
+changes. -/
+theorem cumulativeRateFE_eq_ofReal (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 ≤ t) :
+    cumulativeRateFE Λ ω t = ENNReal.ofReal (cumulativeRateF Λ ω t) :=
+  (ofReal_integral_eq_lintegral_ofReal (integrableOn_Ioc_of_rate hint le_rfl ht)
+    (ae_nonneg_restrict_Ioc hnn t)).symm
+
+/-- **And where it is not honest, the lift says so.**  The value `⊤` is attained at exactly the
+windows on which the rate fails to be integrable -- that is, at exactly the sample points and times
+at which `cumulativeRateF` returns `0` for want of an answer.  This is the statement in which the
+lift is *the* repair and not merely one: the two functions differ on precisely the set on which the
+real one lies. -/
+theorem cumulativeRateFE_eq_top_iff (hm : Measurable fun u ↦ Λ u ω)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (ht : 0 ≤ t) :
+    cumulativeRateFE Λ ω t = ⊤ ↔ ¬ IntervalIntegrable (fun u ↦ Λ u ω) volume 0 t := by
+  rw [intervalIntegrable_iff_integrableOn_Ioc_of_le ht]
+  constructor
+  · intro htop hI
+    have hfin := (hasFiniteIntegral_iff_ofReal (ae_nonneg_restrict_Ioc hnn t)).1 hI.2
+    rw [← cumulativeRateFE, htop] at hfin
+    exact absurd hfin (lt_irrefl _)
+  · intro hI
+    by_contra hne
+    exact hI ⟨hm.aestronglyMeasurable,
+      (hasFiniteIntegral_iff_ofReal (ae_nonneg_restrict_Ioc hnn t)).2 (lt_top_iff_ne_top.2 hne)⟩
+
+/-- **The lifted cumulated rate is measurable in a parameter**, from the joint measurability of the
+rate alone.  This is `measurable_cumulativeRateF` with Tonelli in place of Fubini, and it asks
+strictly less: no integrability anywhere. -/
+theorem measurable_cumulativeRateFE {γ : Type*} [MeasurableSpace γ] {Λ : γ → ℝ → Ω → ℝ}
+    {p : γ → Ω} (h : Measurable fun q : γ × ℝ ↦ Λ q.1 q.2 (p q.1)) (c : ℝ) :
+    Measurable fun g ↦ cumulativeRateFE (Λ g) (p g) c :=
+  (ENNReal.measurable_ofReal.comp h).lintegral_prod_right'
+    (ν := volume.restrict (Set.Ioc (0 : ℝ) c))
+
+/-! ### The inverse of the lifted cumulated rate -/
+
+/-- **The generalised inverse of the lifted cumulated rate.**  The level is now in `ℝ≥0∞` as well,
+because the mass it is compared against is; the infimum is taken in `ℝ≥0∞`, so an unattained level
+is inverted to `⊤`, as in `rateInverseE`. -/
+noncomputable def rateInverseEE (Λ : ℝ → Ω → ℝ) (ω : Ω) (a : ENNReal) : ENNReal :=
+  sInf (ENNReal.ofReal '' {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateFE Λ ω r})
+
+theorem monotone_rateInverseEE (Λ : ℝ → Ω → ℝ) (ω : Ω) : Monotone (rateInverseEE Λ ω) :=
+  fun _ _ hab ↦ sInf_le_sInf (Set.image_mono fun _ hr ↦ ⟨hr.1, hab.trans hr.2⟩)
+
+@[simp] theorem rateInverseEE_zero (Λ : ℝ → Ω → ℝ) (ω : Ω) : rateInverseEE Λ ω 0 = 0 :=
+  le_antisymm (sInf_le ⟨0, ⟨le_rfl, by simp⟩, ENNReal.ofReal_zero⟩) (by simp)
+
+/-- **The sublevel sets of the inverse, with no hypothesis whatever -- and the right limit is what
+stands there.**
+
+Against `rateInverseE_le_ofReal_iff`, which carries local integrability and non negativity: both
+were spent on the monotonicity of the real cumulated rate, and the lifted one is monotone for
+nothing.  What is *not* free is the passage from the right limit to the value: the lifted cumulated
+rate is monotone but **not right continuous**, since a rate integrable up to `c` and on no window
+beyond it makes the mass jump from a finite value to `⊤` at `c`.  The infimum defining the inverse
+therefore sees `c` from above, and the statement says so.
+
+The proof is the two halves of an infimum.  Forward: below `ofReal c` is strictly below
+`ofReal (c + ε)`, so some admissible time lies below `c + ε`, and the set of admissible times is
+upward closed by the monotonicity above.  Backward: `c + ε` is itself admissible for every `ε`, and
+`ENNReal.le_of_forall_pos_le_add` collects the bounds. -/
+theorem rateInverseEE_le_ofReal_iff {a : ENNReal} (hc : 0 ≤ c) :
+    rateInverseEE Λ ω a ≤ ENNReal.ofReal c
+      ↔ ∀ ε : ℝ, 0 < ε → a ≤ cumulativeRateFE Λ ω (c + ε) := by
+  constructor
+  · intro h ε hε
+    have hlt : rateInverseEE Λ ω a < ENNReal.ofReal (c + ε) :=
+      h.trans_lt ((ENNReal.ofReal_lt_ofReal_iff_of_nonneg hc).2 (by linarith))
+    obtain ⟨y, hy, hylt⟩ := sInf_lt_iff.1 hlt
+    obtain ⟨r, hr, rfl⟩ := hy
+    have hrlt : r < c + ε := (ENNReal.ofReal_lt_ofReal_iff (by linarith)).1 hylt
+    exact hr.2.trans (monotone_cumulativeRateFE Λ ω hrlt.le)
+  · intro h
+    refine ENNReal.le_of_forall_pos_le_add fun ε hε _ ↦ ?_
+    have hεR : (0 : ℝ) < (ε : ℝ) := by exact_mod_cast hε
+    have h1 : rateInverseEE Λ ω a ≤ ENNReal.ofReal (c + (ε : ℝ)) :=
+      sInf_le ⟨c + (ε : ℝ), ⟨by linarith, h (ε : ℝ) hεR⟩, rfl⟩
+    rwa [ENNReal.ofReal_add hc hεR.le, ENNReal.ofReal_coe_nnreal] at h1
+
+/-- **The same statement along the rationals.**  The condition of `rateInverseEE_le_ofReal_iff` is
+monotone in `ε`, so a countable cofinal family of `ε` decides it -- and that is what makes the
+inverse measurable without a hypothesis on the rate. -/
+theorem rateInverseEE_le_ofReal_iff_rat {a : ENNReal} (hc : 0 ≤ c) :
+    rateInverseEE Λ ω a ≤ ENNReal.ofReal c
+      ↔ ∀ q : ℚ, 0 < q → a ≤ cumulativeRateFE Λ ω (c + (q : ℝ)) := by
+  rw [rateInverseEE_le_ofReal_iff hc]
+  refine ⟨fun h q hq ↦ h (q : ℝ) (by exact_mod_cast hq), fun h ε hε ↦ ?_⟩
+  obtain ⟨q, hq0, hqε⟩ := exists_rat_btwn hε
+  exact (h q (by exact_mod_cast hq0)).trans (monotone_cumulativeRateFE Λ ω (by linarith))
+
+/-- **The inverse is measurable in a parameter, and `hint` is gone.**
+
+This is `measurable_rateInverseE` with its two remaining hypotheses removed.  Nothing is asked of
+the rate but joint measurability; in particular nothing that an explosive sample point could fail.
+The sublevel set is a countable intersection, one member per positive rational, and each member is a
+sublevel set of `cumulativeRateFE`, which `measurable_cumulativeRateFE` sees. -/
+theorem measurable_rateInverseEE {γ : Type*} [MeasurableSpace γ] {Λ : γ → ℝ → Ω → ℝ}
+    {p : γ → Ω} {a : γ → ENNReal}
+    (hmeas : Measurable fun q : γ × ℝ ↦ Λ q.1 q.2 (p q.1)) (ha : Measurable a) :
+    Measurable fun g ↦ rateInverseEE (Λ g) (p g) (a g) := by
+  refine measurable_of_Iic fun c ↦ ?_
+  rcases eq_or_ne c ⊤ with rfl | hc
+  · have hset : (fun g ↦ rateInverseEE (Λ g) (p g) (a g)) ⁻¹' Set.Iic (⊤ : ENNReal)
+        = (Set.univ : Set γ) := by ext g; simp
+    rw [hset]; exact MeasurableSet.univ
+  · have hcc : ENNReal.ofReal c.toReal = c := ENNReal.ofReal_toReal hc
+    have hset : (fun g ↦ rateInverseEE (Λ g) (p g) (a g)) ⁻¹' Set.Iic c
+        = ⋂ q : {q : ℚ // 0 < q},
+            {g | a g ≤ cumulativeRateFE (Λ g) (p g) (c.toReal + ((q : ℚ) : ℝ))} := by
+      ext g
+      simp only [Set.mem_preimage, Set.mem_Iic, Set.mem_iInter, Set.mem_ofPred_eq]
+      have key := rateInverseEE_le_ofReal_iff_rat (Λ := Λ g) (ω := p g) (a := a g)
+        (c := c.toReal) ENNReal.toReal_nonneg
+      rw [hcc] at key
+      rw [key]
+      exact ⟨fun h q ↦ h (q : ℚ) q.2, fun h q hq ↦ h ⟨q, hq⟩⟩
+    rw [hset]
+    exact MeasurableSet.iInter fun q ↦ measurableSet_le ha (measurable_cumulativeRateFE hmeas _)
+
+/-- **Where the old inverse was honest, the two agree.**  Under the hypotheses
+`rateInverseE_le_ofReal_iff` carried, the two admissible sets are the same set, so the two infima
+are the same number.  This is the statement that lets every result proved about `rateInverseE`
+transfer, and it is the reason the lift is a rebuild and not a fork. -/
+theorem rateInverseEE_eq_rateInverseE
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (a : ℝ) :
+    rateInverseEE Λ ω (ENNReal.ofReal a) = rateInverseE Λ ω a := by
+  have hS : {r : ℝ | 0 ≤ r ∧ ENNReal.ofReal a ≤ cumulativeRateFE Λ ω r}
+      = {r : ℝ | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r} := by
+    ext r
+    simp only [Set.mem_ofPred_eq, and_congr_right_iff]
+    intro hr
+    rw [cumulativeRateFE_eq_ofReal hint hnn hr,
+      ENNReal.ofReal_le_ofReal_iff (cumulativeRateF_nonneg_of_nonneg hnn r)]
+  rw [rateInverseEE, rateInverseE, hS]
+
+/-! ### The jump times, and a filtration that carries only the data -/
+
+/-- **The jump times of the rebuilt path dependent construction.**  The same levels as `jumpTimeFE`,
+inverted through the lifted cumulated rate. -/
+noncomputable def jumpTimeFEE (Λ : ℝ → Ω → ℝ) (ω : Ω) (xi : ℕ → ℝ) (n : ℕ) : ENNReal :=
+  rateInverseEE Λ ω (ENNReal.ofReal (∑ k ∈ Finset.range n, xi k))
+
+@[simp] theorem jumpTimeFEE_zero (Λ : ℝ → Ω → ℝ) (ω : Ω) (xi : ℕ → ℝ) :
+    jumpTimeFEE Λ ω xi 0 = 0 := by
+  simp [jumpTimeFEE]
+
+/-- **The jump times increase**, from the non negativity of the waiting times alone. -/
+theorem monotone_jumpTimeFEE {xi : ℕ → ℝ} (hxi : ∀ n, 0 ≤ xi n) :
+    Monotone (jumpTimeFEE Λ ω xi) := by
+  refine monotone_nat_of_le_succ fun n ↦ ?_
+  refine monotone_rateInverseEE Λ ω (ENNReal.ofReal_le_ofReal ?_)
+  rw [Finset.sum_range_succ]
+  linarith [hxi n]
+
+/-- **Where the old jump times were honest, the two agree.** -/
+theorem jumpTimeFEE_eq_jumpTimeFE
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r)
+    (hnn : ∀ u, 0 < u → 0 ≤ Λ u ω) (xi : ℕ → ℝ) (n : ℕ) :
+    jumpTimeFEE Λ ω xi n = jumpTimeFE Λ ω xi n :=
+  rateInverseEE_eq_rateInverseE hint hnn _
+
+end CumulativeRateFE
+
+section JumpFiltrationFEE
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The jump times of the rebuilt construction are measurable, and `hint` is gone.**  Against
+`measurable_jumpTimeFE`, which carries local integrability at every sample point: here the rate is
+asked for nothing but joint measurability.  This is the statement the filtration below needs, and
+the reason it needs no non explosion. -/
+theorem measurable_jumpTimeFEE {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hmeas : Measurable fun q : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦ Λ q.2 q.1) (m : ℕ) :
+    Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFEE Λ w w.2 m :=
+  measurable_rateInverseEE
+    (Λ := fun (_ : (ℕ → E) × (ℕ → ℝ)) (u : ℝ) (w : (ℕ → E) × (ℕ → ℝ)) ↦ Λ u w) (p := id)
+    hmeas (ENNReal.measurable_ofReal.comp
+      (Finset.measurable_sum _ fun k _ ↦ (measurable_pi_apply k).comp measurable_snd))
+
+/-- **The filtration of the jump times of the rebuilt construction**, and it carries no hypothesis
+on the rate beyond joint measurability.  Against `jumpFiltrationFE`, whose measurability input is
+`measurable_jumpTimeFE` and therefore `hint`. -/
+noncomputable def jumpFiltrationFEE (Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ)
+    (hmeas : Measurable fun q : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦ Λ q.2 q.1) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  pointFiltrationE (fun w ↦ jumpTimeFEE Λ w w.2) (fun w ↦ w.1) (measurable_jumpTimeFEE hmeas)
+    fun n ↦ (measurable_pi_apply n).comp measurable_fst
+
+/-- **The jump times are stopping times for the filtration they generate**, hypothesis free. -/
+theorem isStoppingTime_jumpTimeFEE {Λ : ℝ → (ℕ → E) × (ℕ → ℝ) → ℝ}
+    (hmeas : Measurable fun q : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦ Λ q.2 q.1) (n : ℕ) :
+    IsStoppingTime (jumpFiltrationFEE Λ hmeas)
+      fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFEE Λ w w.2 n :=
+  isStoppingTime_jumpTimeE (measurable_jumpTimeFEE hmeas)
+    (fun m ↦ (measurable_pi_apply m).comp measurable_fst) n
+
+end JumpFiltrationFEE
+
+section HawkesJumpFiltrationE
+
+variable {E : Type*} [MeasurableSpace E] {ν : ℝ} {φ : ℝ → ℝ}
+
+/-- **The filtration the path dependent Hawkes martingale problem reads, without the non
+explosion.**
+
+This is `hawkesJumpFiltration` with `hint` removed from the argument list of its *definition*.  The
+hypotheses are the data of `ex:hawkes` and nothing else: the baseline is positive, the kernel is non
+negative, measurable and locally integrable.
+
+**Why this matters more than one hypothesis less.**  `hawkesJumpFiltration hν hφ hφm hφint hint` is
+a term that cannot be written down unless `hint` is inhabited, and `hint` is the non explosion at
+**every** sample point (`not_intervalIntegrable_hawkesSelfRate_of_not_summable`).  A σ-algebra is
+not an almost sure notion, so there is no weakening of `hint` that keeps the definition; the only
+way out is that the object does not ask for it.  That is what the lift buys. -/
+noncomputable def hawkesJumpFiltrationE (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace ((ℕ → E) × (ℕ → ℝ))) :=
+  jumpFiltrationFEE (hawkesSelfRate ν φ) (measurable_uncurry_hawkesSelfRate hν hφ hφm hφint)
+
+/-- **The jump times of the rebuilt Hawkes construction are stopping times for it**, and again with
+no non explosion. -/
+theorem isStoppingTime_jumpTimeFEE_hawkesSelfRate (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφm : Measurable φ)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r) (n : ℕ) :
+    IsStoppingTime (hawkesJumpFiltrationE (E := E) hν hφ hφm hφint)
+      fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFEE (hawkesSelfRate ν φ) w w.2 n :=
+  isStoppingTime_jumpTimeFEE _ n
+
+/-- **At a sample point at which the old construction was valid, the two jump time families agree.**
+The transfer statement: everything proved about `jumpTimeFE (hawkesSelfRate ν φ)` under `hint` holds
+for the rebuilt times there, and the rebuilt ones exist everywhere else as well.
+
+The non negativity of the Hawkes rate is its baseline `ν > 0`, so the only hypothesis that remains
+is the one the old construction could not do without. -/
+theorem jumpTimeFEE_hawkesSelfRate_eq {w : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r) (n : ℕ) :
+    jumpTimeFEE (hawkesSelfRate ν φ) w w.2 n = jumpTimeFE (hawkesSelfRate ν φ) w w.2 n :=
+  jumpTimeFEE_eq_jumpTimeFE hint (fun u _ ↦ (hawkesSelfRate_pos hν hφ u w).le) w.2 n
+
+/-- **And where it was not valid, the rebuilt cumulated rate says `⊤`.**  The junk value of the old
+construction is exactly the set on which the two differ, and on it the new value is the true mass of
+the window.  Read with `not_intervalIntegrable_hawkesSelfRate_of_not_summable`: an explosive sample
+point with bounded jump times is a sample point at which the lifted cumulated rate is infinite from
+some time on, which is what an explosion is. -/
+theorem cumulativeRateFE_hawkesSelfRate_eq_top_iff {w : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ) {t : ℝ} (ht : 0 ≤ t) :
+    cumulativeRateFE (hawkesSelfRate ν φ) w t = ⊤
+      ↔ ¬ IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 t :=
+  cumulativeRateFE_eq_top_iff (measurable_hawkesSelfRate_time hφm w)
+    (fun u _ ↦ (hawkesSelfRate_pos hν hφ u w).le) ht
+
+end HawkesJumpFiltrationE

@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Fünf Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Zehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle fünf beim Beweisen aufgefallen, alle fünf gegen `upstream/master` geprüft,
+Alle zehn beim Beweisen aufgefallen, alle zehn gegen `upstream/master` geprüft,
 und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -296,6 +296,29 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   Das ist der kleinste der neun Punkte und zugleich der, der am breitesten
   nützt: die üblichen Bedingungen stehen in jedem Lehrbuch der stetigen
   Martingaltheorie am Anfang.
+
+* **Die verallgemeinerte Inverse einer monotonen Funktion.** Der zehnte, und
+  der kleinste von allen. Mathlib hat sie nicht: `quantile`,
+  `generalized inverse` und `generalised inverse` geben in ganz `Mathlib/` **null**
+  Treffer (geprüft am 2026-09-12 an `upstream/master` `141f6b64`; gesucht wurde
+  nach der Aussage und nicht nach unserer Vokabel, also auch nach
+  `rightInverse` in Verbindung mit `Monotone`, was nur `Data/Set/Monotone.lean`
+  trifft, wo es um etwas anderes geht). Vorhanden sind `StieltjesFunction` und
+  `leftLim`/`rightLim` — die Bausteine —, aber kein `f⁻(a) = sInf {r | a ≤ f r}`
+  und keine der beiden Aussagen, die den Begriff ausmachen.
+
+  *Was zu formulieren wäre, und es ist eine Galois-Verbindung mit einem Haken:*
+  für monotones `f : ℝ → ℝ≥0∞` gilt `f⁻(a) ≤ c ↔ a ≤ f(c⁺)` mit dem **rechten
+  Grenzwert**, und die Gestalt mit `f c` statt `f(c⁺)` verlangt die
+  Rechtsstetigkeit von `f`. Wir haben beide Hälften am 2026-09-12 als
+  `rateInverseEE_le_ofReal_iff` und `rateInverseEE_le_ofReal_iff_rat` bewiesen,
+  für den einen Fall, den wir brauchen; die allgemeine Fassung ist dieselbe
+  Rechnung ohne die kumulierte Rate darin. Und die zweite Hälfte —
+  `f⁻` ist meßbar, sobald `f` in einem Parameter meßbar ist, weil die
+  Subniveaumenge ein **abzählbarer** Durchschnitt längs der positiven Rationalen
+  ist — ist der Grund, aus dem die Aussage sich lohnt: sie ist es, die jede
+  Zeitverwandlung meßbar macht, und sie steht in keiner Bibliothek, obwohl jedes
+  Lehrbuch sie benutzt.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
