@@ -24387,3 +24387,125 @@ steht als Vorschlag 1.
    offene Aussage des Abhängigkeitsbaums, unverändert gültig.
 4. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes und wird
    von keiner Entscheidung über Filtrationen billiger.
+
+### 2026-09-12, achter Lauf des Tages — `pointFiltrationE_eq_stepPathFiltrationE` steht; die Aufzeichnung eines Treppenpfadprozesses trägt nicht mehr als sein Pfad, und die vierte Voraussetzung ist über den **Zustandsraum**
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs, und er war der, ohne den alles Weitere
+leer ist — die vom Nutzer am 2026-09-12 als eigener Punkt des Meilensteins
+angeordnete Aussage „`naturalFiltration (stepPath T y) = pointFiltration T y` für
+beliebige meßbare `T` und `y`", in der Gestalt, in der sie nach der dreifachen
+Widerlegung des sechsten Laufs übrigbleibt.
+
+**Sieben Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, im neuen
+Abschnitt `section StepPathFiltrationIdentity` am Ende der Datei; die ganze Datei
+ohne einen Fehler durch `lake env lean` gegen v4.33.1 (0 Fehler), alle sieben mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl
+der `sorry` bleibt bei **neun**. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4, im Abschnitt „Die Filtration eines
+Treppenpfadprozesses".
+
+`upstream/master` frisch geholt und daran geprüft:
+`141f6b6455959bfeb0b2a6b04118031191d62683` (2026-09-12 07:43 UTC).
+
+#### Die Aussage
+
+```
+pointFiltrationE_eq_stepPathFiltrationE [MeasurableEq E]
+    (hT) (hy) (hmono : ∀ ω, StrictMono (T ω)) (hzero : ∀ ω, T ω 0 = 0)
+    (hmove : ∀ ω n, y ω n ≠ y ω (n + 1)) (i : ℝ≥0) :
+  pointFiltrationE T y hT hy i = stepPathFiltrationE T y hT hy i
+```
+
+Über `Ω` steht nichts als `[MeasurableSpace Ω]`, über den Sprungzeiten nichts als
+Meßbarkeit und strenge Monotonie, und **die Nichtexplosion kommt nicht vor**. Das
+war die Zusage des Meilensteins, und sie ist eingehalten: explodiert `T` unterhalb
+`i`, so führt der Beweis diesen Fall getrennt und fragt dort nach gar keinem
+Gitter.
+
+Der Weg ist die Abtastung: `{T n ≤ i}` ist die Menge der Stichprobenpunkte, an
+denen es ein endliches wachsendes Gitter unterhalb `i` gibt, längs dessen der Pfad
+`n`-mal den Wert wechselt — eine abzählbare Vereinigung abzählbarer Durchschnitte
+von Urbildern unter Auswertungen bei Indizes `≤ i`.
+
+#### Der Befund: es sind **vier** notwendige Voraussetzungen und nicht drei, und die vierte ist über den Zustandsraum
+
+Die drei Zeugen des sechsten Laufs benennen Voraussetzungen an die *Daten*: die
+Kette bewegt sich, die Sprungzeiten wachsen streng, `T 0` ist fest. Beim Beweisen
+trat eine vierte hervor, die keiner von ihnen sieht und die über `E` geht:
+
+> „Der Pfad hat den Wert gewechselt" ist das Urbild des **Komplements der
+> Diagonale** von `E × E`. Über einer bloßen `[MeasurableSpace E]` ist die
+> Diagonale nicht meßbar, und dann ist das Ereignis nicht in der Pfadfiltration —
+> gleichgültig, wie gut das Abtastargument ist.
+
+Mathlib hat genau diesen Begriff, und er heißt nicht so, wie man ihn sucht:
+**`MeasurableEq`** (`MeasureTheory/MeasurableSpace/Constructions.lean:1083` in
+v4.33.1, `:1084` auf `master` `141f6b64`), eine Klasse mit dem einen Feld
+`measurableSet_diagonal`, dem Werkzeug `measurableSet_eq_fun` und drei Instanzen:
+`Countable` + `MeasurableSingletonClass` (`:1104`), `StandardBorelSpace`
+(`Constructions/Polish/Basic.lean:157`), `SecondCountableTopology` + `T2Space`
+(`BorelSpace/Basic.lean:620`). Das ist wieder der Fall, vor dem der Auftrag warnt
+— nach der Aussage suchen, nicht nach der eigenen Vokabel.
+
+**Die Notwendigkeit ist belegt, nicht vermutet:**
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq`. Die
+Sprungzeiten des Zeugen beginnen an **jedem** Stichprobenpunkt bei `0` und wachsen
+streng, die Kette springt bei **jedem** Schritt — alle drei alten Voraussetzungen
+sind erfüllt —, und trotzdem ist die Pfadfiltration die triviale σ-Algebra, weil
+der Zustandsraum (`IndiscreteBool`, zwei Punkte mit `⊥`) seine beiden Punkte
+meßbar nicht auseinanderhält. Es scheitert also nicht das Argument, sondern der
+Zustandsraum; das ist der vierte Zeuge des Abschnitts.
+
+#### Drei Einzelheiten, die der Beweis erzwungen hat und die auf Papier nicht stehen
+
+1. **Die Rationalzahlen reichen als Gitter nicht; `i` muß dazu.** Ist `T ω n = i`,
+   so trifft das `n`-te Fenster `[T ω n, T ω (n+1))` das Intervall `[0, i]` im
+   **einzigen** Punkt `i`. Die Abtastung wäre genau an den Stichprobenpunkten
+   falsch, an denen der `n`-te Sprung am Ende des Intervalls liegt. Daher
+   `gridPoints i = insert i (Rationalzahlen)` und `exists_mem_gridPoints` als
+   Fallunterscheidung. Der Baustein ist
+   `ENNReal.lt_iff_exists_rat_btwn` (`Data/ENNReal/Basic.lean:579`).
+2. **Das Gitter läuft über `Fin (n+1)` und nicht über `ℕ`.** Gebraucht wird eine
+   **abzählbare** Vereinigung; `ℕ → gridPoints i` ist nicht abzählbar,
+   `Fin (n+1) → gridPoints i` ist es (`Data/Countable/Basic.lean:146`, die
+   Pi-Instanz bei endlichem Definitionsbereich). Die Zählung läuft dann über
+   `Fin.induction`.
+3. **`q₀ = 0` wird nicht gebraucht, und `hzero` wird an einer einzigen Stelle
+   gebraucht.** Die im Meilenstein ausgeschriebene Fassung verlangt `0 = q₀`; die
+   Rückrichtung beginnt aber mit `0 ≤ stepIndex (q₀)`, und das ist umsonst.
+   `measurableSet_le_stepPathFiltrationE` trägt `hzero` deshalb **nicht**. Was
+   `hzero` leistet, ist allein der Fall `n = 0`: der Pfad liest `T 0` überhaupt
+   nicht (`stepPath_update_zero`), also muß `{T 0 ≤ i}` von selbst trivial sein,
+   und `T 0 = 0` macht es zum ganzen Raum. Damit ist die Rolle der dritten
+   Voraussetzung auf **einen Index** eingegrenzt, und der Zeuge
+   `stepPath_update_zero` sagt genau das.
+
+#### Die Leerheitsprobe
+
+`pointFiltrationE_eq_stepPathFiltrationE_counting` — die Aussage für den reinen
+Zählprozeß `y ω n = n` über `E = ℕ`, den `ex:hawkes` selbst vorschreibt. `hmove`
+ist `Nat.succ_ne_self`, `MeasurableEq ℕ` ist die Instanz aus `Countable` und
+`MeasurableSingletonClass`, und übrig bleiben allein die beiden Voraussetzungen
+über die Sprungzeiten. Auf einem Stichprobenraum, auf dem die Kette **keine freie
+Koordinate** ist, sind also alle vier Voraussetzungen eingelöst.
+
+Was sie **nicht** vorführt, ist die Hawkes-Instanz selbst: dort ist die Kette
+`ω.1`, also frei, und der Weg dorthin bleibt der über die Abänderung auf einer
+Nullmenge (`naturalFiltration_augment_eq_of_ae_eq`, siebter Lauf). Das steht so an
+der Deklaration und im Meilenstein.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`hawkesPathFiltration_augment_eq_hawkesFiltration_augment`** — Vorschlag 2 des
+   Vorlaufs, und er ist jetzt zum ersten Mal fällig, weil seine beiden Eingaben
+   dastehen: `naturalFiltration_augment_eq_of_ae_eq` (siebter Lauf) und
+   `pointFiltrationE_eq_stepPathFiltrationE_counting` (dieser Lauf). **Worauf sie
+   ruht:** eine Abänderung der Hawkes-Daten auf einer Nullmenge, die `hmono` und
+   `hmove` **überall** wahr macht — Wartezeiten `1` statt `≤ 0`, Kette
+   `fun n ↦ n` statt `ω.1`. **Prüfstein, unverändert:** sie darf die Identität nur
+   an den *abgeänderten* Daten benutzen; an den ursprünglichen sind die
+   Voraussetzungen nachweislich verletzt.
+2. **`summable_waiting_of_intervalIntegrable_hawkesSelfRate`** — die billigste
+   offene Aussage des Abhängigkeitsbaums, unverändert gültig.
+3. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes und wird
+   von keiner Entscheidung über Filtrationen billiger.

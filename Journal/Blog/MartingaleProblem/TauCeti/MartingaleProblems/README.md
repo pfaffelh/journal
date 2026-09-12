@@ -3993,24 +3993,41 @@ beiden zu trennen.
 Keine der drei folgt aus den beiden anderen, und **die Nichtexplosion ist keine
 von ihnen**.
 
-**Was zu beweisen bleibt, und es ist die Aussage mit den schwächsten
-Voraussetzungen, unter denen sie gilt:**
+**Die Aussage steht, und sie trägt eine vierte Voraussetzung, die die drei Zeugen
+nicht nennen:**
 
 ```
-pointFiltrationE_eq_stepPathFiltrationE
+pointFiltrationE_eq_stepPathFiltrationE [MeasurableEq E]
     (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
     (hmono : ∀ ω, StrictMono (T ω)) (hzero : ∀ ω, T ω 0 = 0)
     (hmove : ∀ ω n, y ω n ≠ y ω (n + 1)) (i : ℝ≥0) :
   pointFiltrationE T y hT hy i = stepPathFiltrationE T y hT hy i
 ```
 
+**Die vierte Voraussetzung ist über den Zustandsraum und nicht über den Prozeß.**
+„Der Pfad hat den Wert gewechselt" ist das Urbild des Komplements der Diagonale
+von `E × E`, und ob die Diagonale meßbar ist, steht über einer bloßen
+`[MeasurableSpace E]` nicht fest. Mathlib hat genau diesen Begriff als Klasse:
+`MeasurableEq` (`MeasureTheory/MeasurableSpace/Constructions.lean:1083`), mit
+`measurableSet_eq_fun` als Werkzeug und mit den Instanzen `Countable` +
+`MeasurableSingletonClass` (`:1104`), `StandardBorelSpace`
+(`Constructions/Polish/Basic.lean:157`) und `SecondCountableTopology` + `T2Space`
+(`BorelSpace/Basic.lean:620`). Sie ist notwendig, und der Zeuge steht daneben:
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq` —
+Sprungzeiten, die an **jedem** Stichprobenpunkt bei `0` beginnen und streng
+wachsen, eine Kette, die bei **jedem** Schritt springt, und trotzdem ist die
+Pfadfiltration die triviale σ-Algebra, weil der Zustandsraum seine beiden Punkte
+meßbar nicht auseinanderhält. Es scheitert also nicht das Abtastargument,
+sondern der Zustandsraum.
+
 Der Beweis ist die Rückrichtung; die Hinrichtung ist
 `stepPathFiltrationE_le_pointFiltrationE`. Zu zeigen ist, daß
-`{ω | T ω n ≤ i}` für die Pfadfiltration meßbar ist, und zwar so:
+`{ω | T ω n ≤ i}` für die Pfadfiltration meßbar ist
+(`measurableSet_le_stepPathFiltrationE`), und zwar so:
 
-> `T ω n ≤ i` genau dann, wenn es `0 = q₀ < q₁ < … < qₙ ≤ i` gibt, jedes `q` aus
-> `(ℚ≥0 ∩ [0,i]) ∪ {i}`, mit `stepPath (T ω) (y ω) q_{j-1} ≠ stepPath (T ω) (y ω) q_j`
-> für jedes `j`.
+> `T ω n ≤ i` genau dann, wenn es `q₀ < q₁ < … < qₙ ≤ i` gibt, jedes `q` aus
+> `gridPoints i = (ℚ≥0 ∪ {i}) ∩ [0,i]`, mit
+> `stepPath (T ω) (y ω) q_{j-1} ≠ stepPath (T ω) (y ω) q_j` für jedes `j`.
 
 Die Hinrichtung wählt in jedem Fenster `[T j, T (j+1))` einen solchen Punkt — das
 Fenster hat wegen `hmono` positive Länge —, und `hmove` macht die Werte an je zwei
@@ -4021,12 +4038,43 @@ Sprungzeit, also gibt es `n` Sprungzeiten unterhalb `i`, und mit `hmono` ist das
 Urbildern unter Auswertungen bei Indizes `≤ i`, liegt also in
 `stepPathFiltrationE T y hT hy i`.
 
+**Drei Einzelheiten, die der Beweis erzwungen hat und die auf Papier nicht
+stehen.**
+
+* **`i` gehört in die Gitterpunktmenge, die Rationalzahlen reichen nicht.** Ist
+  `T ω n = i`, so trifft das `n`-te Fenster `[T ω n, T ω (n+1))` das Intervall
+  `[0, i]` im **einzigen** Punkt `i`. Ein Gitter aus Rationalzahlen erreicht das
+  `n`-te Fenster dann nicht, und die Abtastung wäre genau an den
+  Stichprobenpunkten falsch, an denen der `n`-te Sprung am Ende des Intervalls
+  liegt. `gridPoints` (= `insert i (Set.range Real.toNNReal ∘ ℚ)`) ist deshalb so
+  gebaut; `exists_mem_gridPoints` ist die Fallunterscheidung.
+* **Das Gitter wird über `Fin (n+1)` indiziert und nicht über `ℕ`.** Gebraucht
+  wird eine **abzählbare** Vereinigung, und `ℕ → gridPoints i` ist nicht abzählbar,
+  während `Fin (n+1) → gridPoints i` es ist (`Pi.countable` bei endlichem
+  Definitionsbereich, `Data/Countable/Basic.lean:146`). Die Zählung läuft dann
+  über `Fin.induction`.
+* **`q₀ = 0` wird nicht gebraucht**, anders als auf Papier: die Rückrichtung
+  beginnt mit `0 ≤ stepIndex (q₀)`, und das ist umsonst. Was `hzero` leistet, ist
+  **allein der Fall `n = 0`** — der Pfad liest `T 0` überhaupt nicht
+  (`stepPath_update_zero`), also muß `{T 0 ≤ i}` von selbst trivial sein, und
+  `T 0 = 0` macht es zum ganzen Raum. `measurableSet_le_stepPathFiltrationE`
+  trägt `hzero` deshalb **nicht**; es steht erst im Zusammenbau.
+
 **Die Nichtexplosion kommt in diesem Beweis nicht vor**, und das ist der Grund,
 aus dem die Aussage hierher gehört: sie ist die einzige der sechs Stellen, an
 denen die Nichtexplosion im pfadabhängigen Fall auftritt, die sich ohne sie
 erledigen läßt. Explodiert `T` unterhalb `i`, so gilt `T n ≤ i` für jedes `n`, und
-die rechte Seite ist für jedes `n` erfüllt, weil vor der Explosionszeit unendlich
-viele Fenster positiver Länge liegen.
+die linke Seite ist für jedes `n ≠ 0` von selbst erfüllt; der Beweis führt diesen
+Fall getrennt und fragt dort nach gar keinem Gitter.
+
+**Die Leerheitsprobe ist mitgemacht.**
+`pointFiltrationE_eq_stepPathFiltrationE_counting` ist die Aussage für den reinen
+Zählprozeß `y ω n = n` über `E = ℕ`: `hmove` ist `Nat.succ_ne_self`,
+`MeasurableEq ℕ` ist die Instanz aus `Countable` und `MeasurableSingletonClass`,
+und übrig bleiben allein die beiden Voraussetzungen über die Sprungzeiten. Auf
+einem Stichprobenraum, auf dem die Kette **keine freie Koordinate** ist, sind
+also alle vier Voraussetzungen eingelöst und die Identität ist eine Identität von
+Filtrationen.
 
 **Die Instanzen, und der Befund, der sie alle zugleich betrifft.** Poisson,
 Geburt-Tod, M/M/1, Yule und Hawkes sind auf **einem** Stichprobenraum gebaut,
@@ -4047,10 +4095,21 @@ noch die Explosion sind daran schuld; es ist allein die freie Kettenkoordinate.
 Die Aussage `pointFiltrationE_eq_stepPathFiltrationE` greift daher bei einem
 Stichprobenraum, auf dem die Kette **nicht frei** ist — dem reinen Zählprozeß mit
 `E = ℕ` und `y ω n = n`, den `ex:hawkes` selbst vorschreibt
-(`mu (t, ω, ·) = dirac (ω t⁻ + 1)`). Dort ist `hmove` ein `Nat.succ_ne_self`,
-`hzero` ist `hawkesJumpTime_zero` (ein `rfl`), und `hmono` bleibt die einzige
-Voraussetzung über die Wartezeiten (`strictMono_hawkesJumpTime`, verlangt
-`0 < ξ n`).
+(`mu (t, ω, ·) = dirac (ω t⁻ + 1)`). Das ist
+`pointFiltrationE_eq_stepPathFiltrationE_counting`: dort ist `hmove` ein
+`Nat.succ_ne_self`, `MeasurableEq ℕ` eine Instanz, `hzero` ist
+`hawkesJumpTime_zero` (ein `rfl`), und `hmono` bleibt die einzige Voraussetzung
+über die Wartezeiten (`strictMono_hawkesJumpTime`, verlangt `0 < ξ n`).
+
+**Und damit steht, was für die Hawkes-Instanz noch fehlt, als eine einzige
+Aussage da:** die Kette der Hawkes-Konstruktion ist `ω.1` und nicht `fun n ↦ n`,
+also ist der Weg der über die Abänderung auf einer Nullmenge, den der siebte Lauf
+des 2026-09-12 gebaut hat (`naturalFiltration_augment_eq_of_ae_eq`). Zu zeigen
+bleibt, daß die abgeänderten Daten `(T', y')` — Wartezeiten `1` statt `≤ 0`,
+Kette `fun n ↦ n` — dieselben Erzeugerabbildungen f.s. liefern wie `(T, y)`.
+`pointFiltrationE_eq_stepPathFiltrationE_counting` ist an ihnen anwendbar; an den
+ursprünglichen Daten ist es nicht anwendbar, und das ist kein Mangel, sondern der
+Befund der drei Zeugen.
 
 **Die Folgerung für die Wahl der Filtration, denn sie ist der Anlaß der Frage:**
 über dem Produktraum bleibt die Punktfiltration die echt größere, und sie ist

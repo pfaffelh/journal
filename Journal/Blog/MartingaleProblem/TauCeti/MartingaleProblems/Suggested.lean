@@ -341,6 +341,17 @@ use the augmentation was built for: `naturalFiltration_augment_eq_of_ae_eq` says
 processes agreeing almost everywhere have the same augmented natural filtration, which is how a
 σ-algebra identity whose hypotheses hold only almost surely is repaired -- by modifying the data
 on a null set, not by weakening the statement.
+
+Seven more the same day are `section StepPathFiltrationIdentity`, that σ-algebra identity itself:
+`pointFiltrationE_eq_stepPathFiltrationE` says that the record of a step path process -- which
+jump happened when, and where to -- carries exactly what the path carries, and it says it for an
+arbitrary measurable family of jump times in `ℝ≥0∞` and an arbitrary measurable chain, with **no
+non explosion hypothesis**.  The proof is a sampling argument over `gridPoints`, the rationals
+together with the index itself.  A fourth hypothesis appears that the three earlier witnesses do
+not name, and it is about the state space and not about the process: the diagonal of `E × E` has
+to be measurable, which is Mathlib's `MeasurableEq`.  It is necessary
+(`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq`) and it is met by every
+instance of the construction (`pointFiltrationE_eq_stepPathFiltrationE_counting`).
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -20272,3 +20283,274 @@ theorem ProbabilityTheory.Locally.augment {p : (ι → Ω → F) → Prop} {𝓕
   exact ⟨τ, hτ.augment, hp⟩
 
 end AugmentationLocal
+
+section StepPathFiltrationIdentity
+
+/-! ## The point filtration of a step path process is the natural filtration of its path
+
+`stepPathFiltrationE_le_pointFiltrationE` is the easy half and holds with nothing assumed.  The
+reverse inclusion is **false as stated**, and three witnesses say why
+(`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_const_chain`,
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_coincident_times`,
+`stepPath_update_zero`).  This section proves what remains, under the hypotheses those witnesses
+force and no others.
+
+The proof is a **sampling argument**, and non explosion is not among its hypotheses: the event
+`{T n ≤ i}` is rewritten as "there is a finite increasing grid below `i` along which the path
+changes value `n` times", and such a grid is a countable object.  On the explosion set the event
+is the whole space and the grid is never asked for.
+
+A fourth hypothesis appears that the three witnesses do not name, and it is on the **state
+space**: "the path changed value" is the preimage of the complement of the diagonal of `E × E`,
+so the diagonal has to be measurable.  That is Mathlib's `MeasurableEq` class
+(`MeasureTheory/MeasurableSpace/Constructions.lean:1083`), it is necessary
+(`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq`), and every instance of
+the construction has it: the counting process has `E = ℕ`, which is `Countable` with
+`MeasurableSingletonClass` and therefore `MeasurableEq`. -/
+
+variable {Ω : Type*} [MeasurableSpace Ω] {E : Type*} [MeasurableSpace E]
+variable {T : Ω → ℕ → ENNReal} {y : Ω → ℕ → E}
+
+/-- **The countable set the sampling grid is taken from**: the nonnegative rationals together
+with the index `i` itself.
+
+`i` is not decoration.  When `T ω n = i` the `n`-th window `[T ω n, T ω (n + 1))` meets `[0, i]`
+in the single point `i`, so a grid of rationals alone cannot reach the `n`-th window, and the
+sampling characterisation of `{T n ≤ i}` would fail at exactly the sample points where the
+`n`-th jump happens at the very end of the interval. -/
+noncomputable def gridPoints (i : ℝ≥0) : Set ℝ≥0 :=
+  insert i (Set.range fun q : ℚ ↦ Real.toNNReal q)
+
+theorem countable_gridPoints (i : ℝ≥0) : (gridPoints i).Countable :=
+  (Set.countable_range _).insert i
+
+/-- **Every window that starts below `i` contains a grid point below `i`.**  The two cases are the
+two reasons `gridPoints` has the shape it has: if the window starts at `i` the only admissible
+point is `i` itself, and otherwise there is room for a rational. -/
+theorem exists_mem_gridPoints {a b : ENNReal} {i : ℝ≥0} (hab : a < b) (hai : a ≤ (i : ENNReal)) :
+    ∃ x ∈ gridPoints i, a ≤ ((x : ℝ≥0) : ENNReal) ∧ ((x : ℝ≥0) : ENNReal) < b ∧ x ≤ i := by
+  rcases eq_or_lt_of_le hai with heq | hlt
+  · exact ⟨i, Set.mem_insert _ _, heq.le, heq ▸ hab, le_rfl⟩
+  · obtain ⟨q, -, haq, hqb⟩ := ENNReal.lt_iff_exists_rat_btwn.1 (lt_min hab hlt)
+    refine ⟨Real.toNNReal q, Set.mem_insert_of_mem _ ⟨q, rfl⟩, haq.le,
+      hqb.trans_le (min_le_left _ _), ?_⟩
+    exact_mod_cast (hqb.trans_le (min_le_right _ _)).le
+
+/-- **The record of a point process is measurable for any σ-algebra that sees the events
+`{T n ≤ i}`**, and that is all it is asked to see.  `measurable_jumpRecordE` is this over the
+ambient σ-algebra; the target σ-algebra is carried because the σ-algebra wanted here is a
+filtration and not the ambient one. -/
+theorem measurable_jumpRecordE_of_measurableSet {Ω' : Type*} [m : MeasurableSpace Ω']
+    {T : Ω' → ℕ → ENNReal} {i : ℝ≥0}
+    (h : ∀ n, MeasurableSet[m] {ω | T ω n ≤ ((i : ℝ≥0) : ENNReal)}) :
+    Measurable[m] (jumpRecordE T i) := by
+  refine measurable_pi_lambda _ fun n ↦ measurable_to_bool ?_
+  have hset : (fun ω ↦ jumpRecordE T i ω n) ⁻¹' {true}
+      = {ω | T ω n ≤ ((i : ℝ≥0) : ENNReal)} := by
+    ext ω
+    simp [jumpRecordE]
+  rw [hset]
+  exact h n
+
+/-- **The event that the `n`-th jump has happened by `i` is read off the path alone**, for
+`n ≠ 0`.
+
+The hypotheses are exactly those the witnesses of the section force, minus the one about `T 0`,
+which concerns `n = 0` alone: the jump times are strictly increasing, the chain moves at every
+step, and the diagonal of the state space is measurable.  **Non explosion is not assumed**, and
+the proof shows where it would have been needed and is not: on the explosion set every `T n` lies
+below `i`, so the event is the whole space there and no grid is constructed.
+
+The grid is indexed by `Fin (n + 1)` and not by `ℕ` because a countable union is wanted, and
+`ℕ → gridPoints i` is not countable while `Fin (n + 1) → gridPoints i` is. -/
+theorem measurableSet_le_stepPathFiltrationE [MeasurableEq E]
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    (hmono : ∀ ω, StrictMono (T ω)) (hmove : ∀ ω n, y ω n ≠ y ω (n + 1))
+    (i : ℝ≥0) {n : ℕ} (hn : n ≠ 0) :
+    MeasurableSet[stepPathFiltrationE T y hT hy i] {ω | T ω n ≤ ((i : ℝ≥0) : ENNReal)} := by
+  classical
+  have hcount : Countable (gridPoints i) := (countable_gridPoints i).to_subtype
+  have hpath : ∀ x : ℝ≥0, x ≤ i →
+      Measurable[stepPathFiltrationE T y hT hy i]
+        fun ω ↦ stepPath (T ω) (y ω) ((x : ℝ≥0) : ENNReal) := fun x hx ↦
+    measurable_naturalFiltration
+      (X := fun j : ℝ≥0 ↦ fun ω ↦ stepPath (T ω) (y ω) ((j : ℝ≥0) : ENNReal)) _ hx
+  have hset : {ω | T ω n ≤ ((i : ℝ≥0) : ENNReal)} =
+      ⋃ q : {q : Fin (n + 1) → gridPoints i //
+              StrictMono (fun k ↦ ((q k : ℝ≥0))) ∧ ((q (Fin.last n) : ℝ≥0) ≤ i)},
+        ⋂ k : Fin n, {ω | stepPath (T ω) (y ω) (((q.1 k.castSucc : ℝ≥0) : ENNReal))
+          ≠ stepPath (T ω) (y ω) (((q.1 k.succ : ℝ≥0) : ENNReal))} := by
+    ext ω
+    simp only [Set.mem_ofPred_eq, Set.mem_iUnion, Set.mem_iInter]
+    constructor
+    · intro hTn
+      have hex : ∀ k : Fin (n + 1), ∃ x : gridPoints i,
+          T ω (k : ℕ) ≤ ((x : ℝ≥0) : ENNReal) ∧ ((x : ℝ≥0) : ENNReal) < T ω ((k : ℕ) + 1) ∧
+            (x : ℝ≥0) ≤ i := by
+        intro k
+        obtain ⟨x, hxmem, h1, h2, h3⟩ := exists_mem_gridPoints (hmono ω (Nat.lt_succ_self (k : ℕ)))
+          (((hmono ω).monotone k.is_le).trans hTn)
+        exact ⟨⟨x, hxmem⟩, h1, h2, h3⟩
+      choose q hq1 hq2 hq3 using hex
+      have hsm : StrictMono fun k : Fin (n + 1) ↦ ((q k : ℝ≥0)) := by
+        intro k l hkl
+        have h2 : T ω ((k : ℕ) + 1) ≤ T ω (l : ℕ) :=
+          (hmono ω).monotone (Nat.succ_le_of_lt (Fin.lt_def.1 hkl))
+        exact_mod_cast (hq2 k).trans_le (h2.trans (hq1 l))
+      have hidx : ∀ k : Fin (n + 1),
+          stepIndex (T ω) (((q k : ℝ≥0) : ENNReal)) = (k : ℕ) :=
+        fun k ↦ stepIndex_eq_of (Or.inr (hq1 k)) (hq2 k) (hmono ω).monotone
+      refine ⟨⟨q, hsm, hq3 _⟩, fun k ↦ ?_⟩
+      simp only [stepPath, hidx, Fin.val_castSucc, Fin.val_succ]
+      exact hmove ω (k : ℕ)
+    · rintro ⟨⟨q, hsm, hlast⟩, hdiff⟩
+      by_cases hexp : ∀ k, T ω (k + 1) ≤ ((i : ℝ≥0) : ENNReal)
+      · obtain ⟨m, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hn
+        exact hexp m
+      · push_neg at hexp
+        obtain ⟨k₀, hk₀⟩ := hexp
+        have hgle : ∀ k : Fin (n + 1), (((q k : ℝ≥0)) : ENNReal) ≤ ((i : ℝ≥0) : ENNReal) :=
+          fun k ↦ by exact_mod_cast (hsm.monotone (Fin.le_last k)).trans hlast
+        have hmonoidx : ∀ k l : Fin (n + 1), k ≤ l →
+            stepIndex (T ω) (((q k : ℝ≥0) : ENNReal))
+              ≤ stepIndex (T ω) (((q l : ℝ≥0) : ENNReal)) := by
+          intro k l hkl
+          refine stepIndex_le (lt_of_le_of_lt ?_ (lt_stepIndex_succ ⟨k₀, (hgle l).trans_lt hk₀⟩))
+          exact_mod_cast hsm.monotone hkl
+        have hcnt : ∀ k : Fin (n + 1), (k : ℕ) ≤ stepIndex (T ω) (((q k : ℝ≥0) : ENNReal)) := by
+          refine Fin.induction (by simp) fun k ih ↦ ?_
+          have hne : stepIndex (T ω) (((q k.castSucc : ℝ≥0) : ENNReal))
+              ≠ stepIndex (T ω) (((q k.succ : ℝ≥0) : ENNReal)) := by
+            intro h
+            exact hdiff k (by simp only [stepPath, h])
+          have hlt := lt_of_le_of_ne (hmonoidx k.castSucc k.succ Fin.castSucc_lt_succ.le) hne
+          have hstep := lt_of_le_of_lt (le_trans (le_of_eq (Fin.val_castSucc k).symm) ih) hlt
+          simpa [Fin.val_succ] using hstep
+        have hlastn := hcnt (Fin.last n)
+        rw [Fin.val_last] at hlastn
+        refine le_trans ((hmono ω).monotone hlastn) (le_trans (T_stepIndex_le ?_) (hgle _))
+        omega
+  rw [hset]
+  refine MeasurableSet.iUnion fun q ↦ MeasurableSet.iInter fun k ↦ ?_
+  have hle : ∀ l : Fin (n + 1), ((q.1 l : ℝ≥0)) ≤ i := fun l ↦
+    (q.2.1.monotone (Fin.le_last l)).trans q.2.2
+  exact (measurableSet_eq_fun (hpath _ (hle k.castSucc)) (hpath _ (hle k.succ))).compl
+
+/-- **The point filtration of a step path process is the natural filtration of its path.**
+
+The four hypotheses are each necessary, and each is witnessed:
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_const_chain` for `hmove`,
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_coincident_times` for `hmono`,
+`stepPath_update_zero` for `hzero`, and
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq` for `MeasurableEq E`.
+
+`hzero` is used at **one** index and nowhere else: `n = 0`.  The path never reads `T 0`
+(`stepPath_update_zero`), so the event `{T 0 ≤ i}` has to be trivial on its own, and `T 0 = 0`
+makes it the whole space.  Everything else is `measurableSet_le_stepPathFiltrationE`, which does
+not use it. -/
+theorem pointFiltrationE_eq_stepPathFiltrationE [MeasurableEq E]
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    (hmono : ∀ ω, StrictMono (T ω)) (hzero : ∀ ω, T ω 0 = 0)
+    (hmove : ∀ ω n, y ω n ≠ y ω (n + 1)) (i : ℝ≥0) :
+    pointFiltrationE T y hT hy i = stepPathFiltrationE T y hT hy i := by
+  refine le_antisymm ?_ (stepPathFiltrationE_le_pointFiltrationE hT hy i)
+  refine iSup₂_le fun j hj ↦ ?_
+  rintro A ⟨u, hu, rfl⟩
+  have hrec : ∀ m : ℕ,
+      MeasurableSet[stepPathFiltrationE T y hT hy i] {ω | T ω m ≤ ((j : ℝ≥0) : ENNReal)} := by
+    intro m
+    rcases eq_or_ne m 0 with rfl | hm
+    · have huniv : {ω | T ω 0 ≤ ((j : ℝ≥0) : ENNReal)} = (Set.univ : Set Ω) := by
+        ext ω
+        simp [hzero ω]
+      rw [huniv]
+      exact MeasurableSet.univ
+    · exact (stepPathFiltrationE T y hT hy).mono hj _
+        (measurableSet_le_stepPathFiltrationE hT hy hmono hmove j hm)
+  have hstate : Measurable[stepPathFiltrationE T y hT hy i] (jumpStateE T y j) :=
+    Measurable.prodMk
+      (measurable_jumpRecordE_of_measurableSet (m := stepPathFiltrationE T y hT hy i) hrec)
+      (measurable_naturalFiltration
+        (X := fun r : ℝ≥0 ↦ fun ω ↦ stepPath (T ω) (y ω) ((r : ℝ≥0) : ENNReal)) _ hj)
+  exact hstate hu
+
+/-- **The identity for a pure counting process**, the instance `ex:hawkes` prescribes
+(`mu (t, ω, ·) = dirac (ω t⁻ + 1)`): the chain is `y ω n = n`, so `hmove` is `Nat.succ_ne_self`
+and `MeasurableEq ℕ` is the `Countable`-plus-`MeasurableSingletonClass` instance.  Nothing is left
+but the two hypotheses on the jump times, and neither is about the state space.
+
+This is the emptiness test of the theorem above: on a sample space where the chain is *not* a free
+coordinate, all four hypotheses are discharged and the identity is an identity of filtrations. -/
+theorem pointFiltrationE_eq_stepPathFiltrationE_counting
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hmono : ∀ ω, StrictMono (T ω))
+    (hzero : ∀ ω, T ω 0 = 0) (i : ℝ≥0) :
+    pointFiltrationE T (fun _ n ↦ n) hT (fun _ ↦ measurable_const) i
+      = stepPathFiltrationE T (fun _ n ↦ n) hT (fun _ ↦ measurable_const) i :=
+  pointFiltrationE_eq_stepPathFiltrationE hT _ hmono hzero
+    (fun _ n ↦ (Nat.succ_ne_self n).symm) i
+
+/-- A two point state space carrying the indiscrete σ-algebra, so that `MeasurableEq` fails on
+it: the diagonal is neither empty nor everything. -/
+def IndiscreteBool : Type := Bool
+
+instance : MeasurableSpace IndiscreteBool := ⊥
+
+/-- **The fourth hypothesis is necessary, and it is about the state space and not about the
+process.**  The jump times of this witness are strictly increasing at every sample point, start at
+`0`, and the chain moves at every step -- the three hypotheses the other witnesses force are all
+met.  What fails is that the state space cannot tell its two points apart measurably, so the
+natural filtration of the path is trivial while the point filtration reads the jump times.
+
+This is the reason `pointFiltrationE_eq_stepPathFiltrationE` asks for `MeasurableEq E`, and the
+reason that hypothesis cannot be dropped by working harder on the sampling argument: the argument
+is not what fails. -/
+theorem exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq :
+    ∃ (T : ℝ≥0 → ℕ → ENNReal) (y : ℝ≥0 → ℕ → IndiscreteBool)
+      (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n),
+      (∀ ω, StrictMono (T ω)) ∧ (∀ ω, T ω 0 = 0) ∧ (∀ ω n, y ω n ≠ y ω (n + 1)) ∧
+        ¬ pointFiltrationE T y hT hy 2 ≤ stepPathFiltrationE T y hT hy 2 := by
+  classical
+  set T : ℝ≥0 → ℕ → ENNReal := fun ω n ↦ ((ω : ENNReal) + 1) * (n : ENNReal) with hTdef
+  set y : ℝ≥0 → ℕ → IndiscreteBool := fun _ n ↦ (decide (n % 2 = 0) : Bool) with hydef
+  have hT : ∀ n, Measurable fun ω ↦ T ω n := fun n ↦
+    (measurable_coe_nnreal_ennreal.add measurable_const).mul measurable_const
+  have hy : ∀ n, Measurable fun ω ↦ y ω n := fun n s hs ↦ by
+    rcases MeasurableSpace.measurableSet_bot_iff.1 hs with rfl | rfl <;> simp
+  have hne : ∀ ω : ℝ≥0, ((ω : ENNReal) + 1) ≠ 0 := fun ω ↦ by simp
+  have htop : ∀ ω : ℝ≥0, ((ω : ENNReal) + 1) ≠ ⊤ := fun ω ↦ by simp
+  refine ⟨T, y, hT, hy, fun ω a b hab ↦ ?_, fun ω ↦ by simp [hTdef], fun ω n ↦ ?_, ?_⟩
+  · exact ENNReal.mul_lt_mul_right (hne ω) (htop ω) (by exact_mod_cast hab)
+  · show (decide (n % 2 = 0) : Bool) ≠ (decide ((n + 1) % 2 = 0) : Bool)
+    simp only [ne_eq, decide_eq_decide]
+    omega
+  · intro hle
+    have hbot : (stepPathFiltrationE T y hT hy 2 : MeasurableSpace ℝ≥0) ≤ ⊥ := by
+      refine iSup₂_le fun j _ ↦ ?_
+      rintro A ⟨u, hu, rfl⟩
+      rcases MeasurableSpace.measurableSet_bot_iff.1 hu with rfl | rfl <;> simp
+    have hS : MeasurableSet[pointFiltrationE T y hT hy 2]
+        {ω : ℝ≥0 | T ω 1 ≤ ((2 : ℝ≥0) : ENNReal)} := by
+      have hms := (measurable_naturalFiltration (X := fun r : ℝ≥0 ↦ jumpStateE T y r)
+        (measurable_jumpStateE hT hy) (le_refl (2 : ℝ≥0)))
+        (((measurable_pi_apply 1).comp measurable_fst) (measurableSet_singleton true))
+      have hset : {ω : ℝ≥0 | T ω 1 ≤ ((2 : ℝ≥0) : ENNReal)}
+          = jumpStateE T y 2 ⁻¹' ((fun p : (ℕ → Bool) × IndiscreteBool ↦ p.1 1) ⁻¹' {true}) := by
+        ext ω
+        simp only [Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_singleton_iff, jumpStateE,
+          jumpRecordE]
+        exact ⟨fun h ↦ decide_eq_true h, fun h ↦ of_decide_eq_true h⟩
+      rw [hset]
+      exact hms
+    rcases MeasurableSpace.measurableSet_bot_iff.1 (hbot _ (hle _ hS)) with h | h
+    · have h0 : (0 : ℝ≥0) ∈ {ω : ℝ≥0 | T ω 1 ≤ ((2 : ℝ≥0) : ENNReal)} := by
+        simp only [hTdef, Set.mem_ofPred_eq, Nat.cast_one, mul_one, ENNReal.coe_zero, zero_add]
+        norm_num
+      rw [h] at h0
+      exact h0
+    · have h2 : (2 : ℝ≥0) ∉ {ω : ℝ≥0 | T ω 1 ≤ ((2 : ℝ≥0) : ENNReal)} := by
+        simp only [hTdef, Set.mem_ofPred_eq, Nat.cast_one, mul_one]
+        norm_num
+      rw [h] at h2
+      exact h2 (Set.mem_univ _)
+
+end StepPathFiltrationIdentity
