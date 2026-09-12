@@ -24509,3 +24509,244 @@ der Deklaration und im Meilenstein.
    offene Aussage des Abhängigkeitsbaums, unverändert gültig.
 3. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes und wird
    von keiner Entscheidung über Filtrationen billiger.
+
+### 2026-09-12, neunter Lauf des Tages — die vom Nutzer angeordnete Filtrationsidentität steht in der augmentierten Fassung, samt Hawkes-Instanz; und der erwartete Baustein war der falsche
+
+**Bearbeitet:** Vorschlag 1 des Vorlaufs und damit die Anordnung des Nutzers vom
+2026-09-12 („Die Antwort ist nicht, die Aussage abzuschwächen, sondern zu
+augmentieren"), in der Gestalt, in der sie nach der vierfachen Widerlegung des
+sechsten Laufs und der Vorarbeit des siebten und achten Laufs übrigbleibt.
+
+**Fünfzehn Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, in den
+beiden neuen Abschnitten `section AugmentedFiltrationIdentity` und
+`section HawkesAugmentedFiltration` am Ende der Datei; die ganze Datei ohne einen
+Fehler durch `lake env lean` gegen v4.33.1 (0 Fehler), alle fünfzehn mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl
+der `sorry` bleibt bei **neun**. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4, im neuen Abschnitt „Die Identität
+der beiden Filtrationen, modulo Nullmengen, und die Hawkes-Instanz".
+
+`upstream/master` frisch geholt: `141f6b6455959bfeb0b2a6b04118031191d62683`
+(2026-09-12 07:43 UTC) — **derselbe Commit wie im achten Lauf**, die Bibliothek
+hat sich seither nicht bewegt. Die beiden Negativbefunde, auf denen dieser Lauf
+ruht, sind an ihm nachgeprüft und gelten unverändert: `augmentedFiltration`,
+`Filtration.augment`, `usualConditions`, `UsualConditions` geben in ganz
+`Mathlib/` **null** Treffer; `MeasurableEq` steht auf master in
+`MeasureTheory/MeasurableSpace/Constructions.lean:1084`.
+
+#### Die Zielaussage
+
+```
+hawkesFiltration_augment_eq_hawkesPathFiltration_augment (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hφm : Measurable φ)
+    (hφint : ∀ a r, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+  (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonKernel nu)
+    = (hawkesPathFiltration (E := ℕ) hν hφ hφm hφint).augment
+        (jumpMeasure poissonKernel nu)
+```
+
+Voraussetzungen sind die Daten von `ex:hawkes` und nichts sonst. **Die
+Nichtexplosion kommt nicht vor** — weder die lokale Integrierbarkeit der
+selbstbezüglichen Rate noch die Divergenz der Sprungzeiten —, denn beide
+σ-Algebren sind aus der Aufzeichnung und aus dem Pfad erzeugt und beide sind
+erklärt, ob die Sprungzeiten sich häufen oder nicht. Die Aussage ist also keiner
+der fünfzehn offenen Aussagen des Abhängigkeitsbaums schuldig.
+
+Darunter die allgemeine Fassung, die der Nutzer verlangt hat („allgemein stellen,
+nicht für Hawkes"):
+
+```
+pointFiltrationE_augment_eq_stepPathFiltrationE_augment_of_ae [MeasurableEq E]
+    (hT) (hy) (P : Measure Ω) (y₀ : ℕ → E) (hy₀ : ∀ n, y₀ n ≠ y₀ (n + 1))
+    (hmono : ∀ᵐ ω ∂P, StrictMono (T ω)) (hzero : ∀ᵐ ω ∂P, T ω 0 = 0)
+    (hmove : ∀ᵐ ω ∂P, ∀ n, y ω n ≠ y ω (n + 1)) :
+  (pointFiltrationE T y hT hy).augment P = (stepPathFiltrationE T y hT hy).augment P
+```
+
+Die drei Voraussetzungen, die der sechste Lauf als notwendig ausgewiesen hatte,
+stehen hier als **fast sichere** Aussagen — genau die Abschwächung, die für die
+σ-Algebren selbst verboten ist und die die Augmentierung erlaubt. Poisson,
+Geburt-Tod, M/M/1, Yule und Hawkes sind Instanzen dieser einen Aussage.
+
+#### Der Befund: der erwartete Baustein war der falsche
+
+Der Vorlauf hatte angesagt, die Brücke laufe über
+`pointFiltrationE_eq_stepPathFiltrationE_counting`, die Identität für die Kette
+`y ω n = n`. **Sie wird nicht gebraucht und ist auch nicht die richtige
+Eingabe**, und der Grund ist der Kern der Abänderungstechnik:
+
+> Die Abänderung muß die Daten an den **guten** Stichprobenpunkten unangetastet
+> lassen. Die Kette `fun _ n ↦ n` tut das nicht — sie ersetzt die Kette überall,
+> auch dort, wo sie sich längst bewegt, und `naturalFiltration_augment_eq_of_ae_eq`
+> verlangt f.s. Gleichheit der Erzeugerabbildungen, die dann nicht mehr besteht.
+
+Gebraucht wird statt dessen die **Reparatur auf der schlechten Menge allein**,
+und dafür ist von `E` nur eines zu verlangen: daß *irgendeine* Kette `y₀` sich bei
+jedem Schritt bewegt. Ein Zustandsraum, in dem es keine gibt, ist ein Punkt, und
+dort sind beide Filtrationen trivial. Das ist schwächer als die spezielle
+Zählkette und erreicht dafür jede Instanz.
+
+Damit sie geht, müssen die beiden schlechten Mengen meßbar sein, und beide sind
+es aus je einem benannten Grund:
+
+* `measurableSet_strictMono_times` — strenges Wachstum einer Folge ist eine
+  **abzählbare** Konjunktion (`strictMono_nat_of_lt_succ`). Wäre der Index nicht
+  `ℕ`, ginge die Reparatur nicht.
+* `measurableSet_forall_ne_succ` — hier tritt `MeasurableEq E` ein **zweites** Mal
+  auf, und an einer Stelle, die der achte Lauf nicht gesehen hat: ohne meßbare
+  Diagonale ist nicht einmal die schlechte Menge eine Menge. Die Klasse trägt also
+  beide Hälften des Arguments, die Identität und ihre Reparatur.
+
+#### Der zweite Befund: `pointFiltration` und `pointFiltrationE` sind dieselbe Filtration, voraussetzungslos
+
+Der zustandsabhängige Fall liest seine Sprungzeiten in `ℝ≥0∞`, der pfadabhängige
+in `ℝ`, und die beiden Punktfiltrationen standen bisher nebeneinander. Sie sind
+**dieselbe**, sobald die reelle Familie durch `ENNReal.ofReal` gelesen wird, und
+zwar ohne jede Voraussetzung: eine negative Sprungzeit liegt auf beiden Seiten
+unter jedem `i : ℝ≥0`, also stimmen schon die Aufzeichnungen koordinatenweise
+überein (`pointFiltration_eq_pointFiltrationE_ofReal`,
+`stepPathFiltration_eq_stepPathFiltrationE_ofReal`, über `stepIndex_ofReal` und
+`stepPath_ofReal`). Das ist kein Hilfssatz für diesen einen Lauf: es heißt, daß
+jede über `pointFiltrationE` bewiesene Aussage der reellen Konstruktion
+unmittelbar zur Verfügung steht, und umgekehrt.
+
+`naturalFiltration_congr` gehört dazu — eine natürliche Filtration hängt am Prozeß
+und nicht am Beweis seiner Meßbarkeit. Trivial, aber ohne sie ist keine der
+beiden Gleichheiten hinschreibbar, weil `naturalFiltration` den Meßbarkeitsbeweis
+im Argument trägt.
+
+#### Der dritte Befund: die Bewegung der Kette ist eine Bedingung an den *Kern*
+
+`ae_move_jumpMeasure_of_ne` — eine Kette, deren Kern niemals stehenbleibt
+(`∀ z, ∀ᵐ x ∂(mu z), z ≠ x`), bewegt sich f.s. bei jedem Schritt. Das ist
+`ae_forall_step_comp_chainKernel` an der Eigenschaft „die beiden
+aufeinanderfolgenden Zustände sind verschieden", über `jumpMeasure_map_fst` von
+der Kettenrandverteilung auf den Stichprobenraum getragen; der Beweis ist drei
+Zeilen, weil die allgemeine Maschine seit dem 2026-09-10 dasteht.
+
+Die Bedingung ist **scharf** und sie ist keine Bedingung an die Konstruktion: bei
+`mu x {x} > 0` steht die Kette mit positiver Wahrscheinlichkeit still, der Pfad
+sieht den Sprung nicht, und die Identität ist falsch — das ist derselbe Defekt,
+den `exists_not_pointFiltrationE_le_stepPathFiltrationE_of_const_chain` an einem
+einzelnen Stichprobenpunkt vorführt, nur jetzt mit positiver Masse. Der Zählkern
+`poissonKernel` von `ex:hawkes` erfüllt sie (`ae_ne_poissonKernel`); der
+**Geburt-Tod-Kern am absorbierenden Zustand erfüllt sie nicht**, denn dort ist
+`birthDeathKernel b d x = dirac x`. Für den absorbierenden Fall ist die Identität
+der beiden Filtrationen also auch augmentiert falsch, und das ist kein Mangel des
+Beweises: der Pfad steht dort wirklich still, während die Aufzeichnung weiterzählt.
+
+#### Was das für die Wahl der Filtration heißt
+
+Der Nutzer hat am 2026-09-12 festgelegt: „Ein so elementarer Prozeß braucht genau
+*eine* Filtration." Für das Paar `hawkesFiltration` / `hawkesPathFiltration` ist
+das jetzt eingelöst — über der Augmentierung ist die Wahl keine mehr. Ein
+Martingal über der einen ist nach `Martingale.augment` eines über deren
+Augmentierung, nach dieser Identität eines über der Augmentierung der anderen und
+nach `Martingale.of_augment` — sobald es adaptiert ist — eines über der anderen
+selbst; dasselbe für `IsStoppingTime.augment` und `Locally.augment`.
+
+**Was damit *nicht* erledigt ist, und es gehört gesagt:** die Filtration der
+Gruppe E des Abhängigkeitsbaums ist `hawkesJumpFiltration`, nicht
+`hawkesPathFiltration`. `hawkesJumpFiltration` trägt `hint` im Argument seiner
+**Definition** und ist nach dem Papierzeugen des fünften Laufs über einer leeren
+Voraussetzung erklärt; es ist ein drittes Objekt, und dieser Lauf sagt über es
+nichts. Die Zahl der offenen Aussagen des Baums bleibt bei **fünfzehn**.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`summable_waiting_of_intervalIntegrable_hawkesSelfRate`** — unverändert die
+   billigste offene Aussage des Baums, und sie ist jetzt die einzige der beiden
+   Vorschläge des fünften Laufs, die noch offen ist. **Worauf sie ruht:**
+   `cumulativeRateF_hawkesSelfRate_eq_sum` (vierter Lauf),
+   `monotone_hawkesJumpTime`, die Monotonie der kumulierten Rate. **Warum jetzt:**
+   nach diesem Lauf ist die hint-freie Filtration `hawkesFiltration` die, über der
+   alles steht, was ohne `hint` auskommt; die Aussage entscheidet, ob `hint`
+   überhaupt erfüllbar ist, und damit, ob die hint-tragende Filtration
+   `hawkesJumpFiltration` je eine Instanz bekommt. **Prüfstein:** sie darf keine
+   Voraussetzung an `φ` tragen außer `hφ` und `hφ0`.
+2. **`Martingale.augment` auf eine Instanz anwenden** — der Prüfstein des eigenen
+   Ergebnisses. Genommen sei der Poissonprozeß, für den
+   `martingale_compensated_poisson` (`Suggested.lean:6914`) dasteht: das Martingal über
+   der augmentierten Filtration hinschreiben und über `Martingale.of_augment`
+   zurückholen. **Warum jetzt:** die Augmentierungsschicht ist siebzehn plus
+   fünfzehn Deklarationen stark und hat bis heute **keine einzige Anwendung**; ein
+   Turm ohne Last ist kein Ergebnis. **Prüfstein:** der Rückweg muß die
+   Adaptiertheit an die *kleine* Filtration wirklich brauchen, sonst ist
+   `Martingale.of_augment` falsch formuliert.
+3. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes und wird
+   von keiner Entscheidung über Filtrationen billiger. In `section PathDependent`
+   kommt bis heute keine einzige bedingte Erwartung vor.
+
+### Derselbe Lauf, zweiter Teil — der eigene Vorschlag sofort eingelöst: `hint` **ist** die Nichtexplosion, in Lean und nicht mehr auf Papier
+
+**Bearbeitet:** Vorschlag 1 desselben Laufs, im selben Lauf. **Zwei
+Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, im neuen Abschnitt
+`section HintIsNonExplosion` am Ende der Datei; die ganze Datei weiterhin ohne
+einen Fehler durch `lake env lean` gegen v4.33.1 (0 Fehler), beide mit
+`#print axioms` auf `propext`, `Classical.choice`, `Quot.sound` geprüft, die Zahl
+der `sorry` bleibt bei **neun**. Der Punkt steht in
+`MartingaleProblems/README.md`, Meilenstein 4, im Abschnitt zum Abhängigkeitsbaum,
+Punkt 0.
+
+```
+summable_waiting_of_intervalIntegrable_hawkesSelfRate (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ a r, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (hxi : ∀ k, 0 ≤ w.2 k)
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r)
+    {B : ℝ} (hB : ∀ n, hawkesJumpTime ν φ w.2 w n ≤ B) :
+  Summable w.2
+
+not_intervalIntegrable_hawkesSelfRate_of_not_summable … (hns : ¬ Summable w.2) :
+  ¬ ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r
+```
+
+**Der Prüfstein des fünften Laufs ist eingehalten:** über `φ` steht nichts als
+`hφ`, `hφ0` und die lokale Integrierbarkeit der Daten; über `w` nichts als die
+Nichtnegativität seiner Wartezeiten; über `E` nichts. Hätte die Aussage mehr
+gebraucht, wäre sie nicht die Aussage über `hint` gewesen, die verlangt war.
+
+**Der Weg war kürzer als angesagt.** Der fünfte Lauf hatte
+`cumulativeRateF_hawkesSelfRate_eq_sum` und `monotone_hawkesJumpTime` als Eingaben
+genannt — die Formel für die kumulierte Rate als endliche Summe über die
+Sprungzeiten. Gebraucht wird sie nicht. Es genügt `cumulativeRateF_jumpTimeF`,
+die **Zeitverwandlung**: die kumulierte Rate an der `n`-ten Sprungzeit *ist* die
+`n`-te Teilsumme der Wartezeiten, an jedem Stichprobenpunkt, an dem `hint`,
+Positivität und Divergenz stehen — und die beiden letzten kommen beim Hawkes-Fall
+aus der Grundrate `ν > 0` allein (`hawkesSelfRate_pos`,
+`tendsto_cumulativeRateF_hawkesSelfRate`). Der Fixpunkt tritt nur einmal auf, in
+`jumpTimeF_hawkesSelfRate`, um die beiden Sprungzeitfamilien zu identifizieren.
+Danach ist der Rest `monotoneOn_cumulativeRateF` und
+`summable_of_sum_range_le` (`Topology/Algebra/InfiniteSum/Real.lean:89`).
+
+**Was damit feststeht und was nicht.** Fest steht die Richtung, die der Baum
+gebraucht hat: **auf der Menge, auf der `hint` gilt, gibt es keine Explosion mit
+beschränkten Sprungzeiten.** `hint` steht damit nicht *neben* der Nichtexplosion,
+sondern ist sie. Nicht fest steht, ob die Konstruktion einen Stichprobenpunkt mit
+divergenter Wartezeitsumme und beschränkten Sprungzeiten wirklich hat — das ist
+der Zeuge des fünften Laufs, er ist gerechnet, aber auf Papier, und er ist die
+zweite Hälfte von Punkt 0. **Die Zahl der offenen Aussagen des Baums bleibt
+deshalb bei fünfzehn**: Punkt 0 ist nicht geschlossen, sondern halbiert, und die
+Hälfte, die bleibt, ist die teurere.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge — sie ersetzen die des ersten Teils
+
+1. **Der Zeuge zu Punkt 0**, und er ist jetzt der Engpaß: `φ = 1_{(0,1]}`,
+   `T n = 1 − 1/n`, die daraus zurückgerechnete Wartezeitfolge, und
+   `hawkesJumpTime` daran ausgewertet. **Worauf er ruht:** die Rekursion
+   `hawkesJumpTime_succ` und `rateInverse`; die Rechnung steht ausgeschrieben im
+   Baum. **Warum jetzt:** nach diesem Lauf ist die eine Hälfte von Punkt 0 in Lean,
+   und nur der Zeuge entscheidet, ob `hawkesJumpFiltration` je eine Instanz
+   bekommt — also ob Punkt 13 eine Entscheidung ist oder eine erledigte Frage.
+   **Prüfstein:** er darf `hint` nicht voraussetzen, sondern muß es widerlegen;
+   `not_intervalIntegrable_hawkesSelfRate_of_not_summable` ist die Form, in die er
+   einzusetzen ist, und braucht dafür `¬ Summable ξ` und eine Schranke an die
+   Sprungzeiten, beides an den gerechneten Daten.
+2. **`Martingale.augment` auf eine Instanz anwenden**, unverändert aus dem ersten
+   Teil: `martingale_compensated_poisson` (`Suggested.lean:6914`) über die
+   augmentierte Filtration und über `Martingale.of_augment` zurück. Die
+   Augmentierungsschicht ist inzwischen siebzehn plus fünfzehn Deklarationen stark
+   und hat **keine einzige Anwendung**.
+3. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes; in
+   `section PathDependent` kommt bis heute keine einzige bedingte Erwartung vor.

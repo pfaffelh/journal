@@ -20554,3 +20554,409 @@ theorem exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq :
       exact h2 (Set.mem_univ _)
 
 end StepPathFiltrationIdentity
+
+section AugmentedFiltrationIdentity
+
+/-! ## The identity of the two filtrations, modulo null sets
+
+`pointFiltrationE_eq_stepPathFiltrationE` carries four hypotheses on the *data*, and on the sample
+spaces of this file three of them hold only almost surely: the chain is a free coordinate, so
+"the chain moves" and "the jump times increase strictly" are statements about the driving measure
+and not about the construction.  An identity of σ-algebras cannot be weakened to an almost sure
+one -- `exists_not_pointFiltrationE_le_stepPathFiltrationE_of_const_chain` is a single sample
+point, and a single sample point is enough to break it.
+
+What can be done instead is the **augmentation**, and that is the usual condition anyway: the
+identity is stated for the filtrations enlarged by the `P`-null sets.  The whole of the passage is
+`naturalFiltration_augment_eq_of_ae_eq`: *repair* the data on a null set so that the four
+hypotheses hold everywhere, use the identity there, and transport it back.
+
+The repair is written out inside the proof of
+`pointFiltrationE_augment_eq_stepPathFiltrationE_augment_of_ae` and is the obvious one -- on the
+bad set the jump times become `n ↦ n` and the chain becomes a chain that moves.  The only thing
+asked of the state space beyond `MeasurableEq E` is that **some** chain in `E` moves at every
+step, which is what the repair puts on the bad set; for the counting process of `ex:hawkes` it is
+`fun n ↦ n`.
+
+The price of the augmentation is named at `Filtration.augment`: the statement is one about
+`(Ω, m₀, P)` and not about σ-algebras alone.  What it buys is that nothing above it breaks --
+`Martingale.augment`, `Martingale.of_augment`, `IsStoppingTime.augment`,
+`IsLocalizingSequence.augment` and `Locally.augment` carry the whole of the development across,
+in both directions. -/
+
+variable {Ω : Type*} [MeasurableSpace Ω] {E : Type*} [MeasurableSpace E]
+
+/-- **The sample points at which a family of jump times is strictly increasing and starts at `0`
+form a measurable event.**  Strict monotonicity of a sequence is a countable conjunction
+(`strictMono_nat_of_lt_succ`), which is the only reason the repair below is measurable. -/
+theorem measurableSet_strictMono_times {T : Ω → ℕ → ENNReal}
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) :
+    MeasurableSet {ω | StrictMono (T ω) ∧ T ω 0 = 0} := by
+  have h1 : MeasurableSet {ω | StrictMono (T ω)} := by
+    have hset : {ω | StrictMono (T ω)} = ⋂ n, {ω | T ω n < T ω (n + 1)} := by
+      ext ω
+      rw [Set.mem_iInter]
+      exact ⟨fun h n ↦ h (Nat.lt_succ_self n), fun h ↦ strictMono_nat_of_lt_succ h⟩
+    rw [hset]
+    exact MeasurableSet.iInter fun n ↦ measurableSet_lt (hT n) (hT (n + 1))
+  have h2 : MeasurableSet {ω | T ω 0 = 0} := (hT 0) (measurableSet_singleton 0)
+  exact h1.inter h2
+
+/-- **The sample points at which a chain moves at every step form a measurable event**, and this is
+where `MeasurableEq E` enters for the second time: without a measurable diagonal the event cannot
+even be stated measurably. -/
+theorem measurableSet_forall_ne_succ [MeasurableEq E] {y : Ω → ℕ → E}
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) :
+    MeasurableSet {ω | ∀ n, y ω n ≠ y ω (n + 1)} := by
+  have hset : {ω | ∀ n, y ω n ≠ y ω (n + 1)} = ⋂ n, {ω | y ω n = y ω (n + 1)}ᶜ := by
+    ext ω
+    rw [Set.mem_iInter]
+    exact ⟨fun h n ↦ h n, fun h n ↦ h n⟩
+  rw [hset]
+  exact MeasurableSet.iInter fun n ↦ (measurableSet_eq_fun (hy n) (hy (n + 1))).compl
+
+/-- **The augmented point filtration is the augmented path filtration**, given data that agree
+almost everywhere with data for which the identity holds.
+
+This is the transport step alone; the repair that produces such data is
+`pointFiltrationE_augment_eq_stepPathFiltrationE_augment_of_ae`.  Separating the two is not
+bookkeeping: the hypotheses on `T'` and `y'` are hypotheses **at every sample point**, and the
+statement makes visible that this is unavoidable. -/
+theorem pointFiltrationE_augment_eq_stepPathFiltrationE_augment [MeasurableEq E]
+    {T T' : Ω → ℕ → ENNReal} {y y' : Ω → ℕ → E}
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    (hT' : ∀ n, Measurable fun ω ↦ T' ω n) (hy' : ∀ n, Measurable fun ω ↦ y' ω n)
+    (hmono : ∀ ω, StrictMono (T' ω)) (hzero : ∀ ω, T' ω 0 = 0)
+    (hmove : ∀ ω n, y' ω n ≠ y' ω (n + 1)) (P : Measure Ω)
+    (hTae : ∀ᵐ ω ∂P, T ω = T' ω) (hyae : ∀ᵐ ω ∂P, y ω = y' ω) :
+    (pointFiltrationE T y hT hy).augment P = (stepPathFiltrationE T y hT hy).augment P := by
+  have hstate : ∀ i : ℝ≥0, jumpStateE T y i =ᵐ[P] jumpStateE T' y' i := by
+    intro i
+    filter_upwards [hTae, hyae] with ω h1 h2
+    have hrec : jumpRecordE T i ω = jumpRecordE T' i ω := by
+      funext n
+      show decide (T ω n ≤ ((i : ℝ≥0) : ENNReal)) = decide (T' ω n ≤ ((i : ℝ≥0) : ENNReal))
+      rw [h1]
+    show (jumpRecordE T i ω, stepPath (T ω) (y ω) ((i : ℝ≥0) : ENNReal))
+        = (jumpRecordE T' i ω, stepPath (T' ω) (y' ω) ((i : ℝ≥0) : ENNReal))
+    rw [hrec, h1, h2]
+  have hpath : ∀ i : ℝ≥0,
+      (fun ω ↦ stepPath (T ω) (y ω) ((i : ℝ≥0) : ENNReal))
+        =ᵐ[P] fun ω ↦ stepPath (T' ω) (y' ω) ((i : ℝ≥0) : ENNReal) := by
+    intro i
+    filter_upwards [hTae, hyae] with ω h1 h2
+    rw [h1, h2]
+  calc (pointFiltrationE T y hT hy).augment P
+      = (pointFiltrationE T' y' hT' hy').augment P :=
+        naturalFiltration_augment_eq_of_ae_eq (measurable_jumpStateE hT hy)
+          (measurable_jumpStateE hT' hy') hstate
+    _ = (stepPathFiltrationE T' y' hT' hy').augment P := by
+        congr 1
+        exact Filtration.ext (funext fun i ↦
+          pointFiltrationE_eq_stepPathFiltrationE hT' hy' hmono hzero hmove i)
+    _ = (stepPathFiltrationE T y hT hy).augment P :=
+        (naturalFiltration_augment_eq_of_ae_eq _ _ hpath).symm
+
+/-- **The augmented point filtration of a step path process is its augmented path filtration**,
+under the four hypotheses of `pointFiltrationE_eq_stepPathFiltrationE` weakened to almost sure
+ones -- which is the weakening the three witnesses of the section forbid for the σ-algebras
+themselves.
+
+`y₀` is the datum the repair needs and the only thing asked of the state space beyond
+`MeasurableEq E`: a chain that moves at every step.  A state space in which no such chain exists
+is a single point, where both filtrations are trivial anyway. -/
+theorem pointFiltrationE_augment_eq_stepPathFiltrationE_augment_of_ae [MeasurableEq E]
+    {T : Ω → ℕ → ENNReal} {y : Ω → ℕ → E}
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    (P : Measure Ω) (y₀ : ℕ → E) (hy₀ : ∀ n, y₀ n ≠ y₀ (n + 1))
+    (hmono : ∀ᵐ ω ∂P, StrictMono (T ω)) (hzero : ∀ᵐ ω ∂P, T ω 0 = 0)
+    (hmove : ∀ᵐ ω ∂P, ∀ n, y ω n ≠ y ω (n + 1)) :
+    (pointFiltrationE T y hT hy).augment P = (stepPathFiltrationE T y hT hy).augment P := by
+  classical
+  have hGm : MeasurableSet {ω | StrictMono (T ω) ∧ T ω 0 = 0} := measurableSet_strictMono_times hT
+  have hHm : MeasurableSet {ω | ∀ n, y ω n ≠ y ω (n + 1)} := measurableSet_forall_ne_succ hy
+  refine pointFiltrationE_augment_eq_stepPathFiltrationE_augment
+    (T' := fun ω n ↦ if StrictMono (T ω) ∧ T ω 0 = 0 then T ω n else (n : ENNReal))
+    (y' := fun ω n ↦ if ∀ k, y ω k ≠ y ω (k + 1) then y ω n else y₀ n)
+    hT hy (fun n ↦ Measurable.ite hGm (hT n) measurable_const)
+    (fun n ↦ Measurable.ite hHm (hy n) measurable_const) (fun ω ↦ ?_) (fun ω ↦ ?_)
+    (fun ω n ↦ ?_) P ?_ ?_
+  · by_cases hω : StrictMono (T ω) ∧ T ω 0 = 0
+    · simp only [if_pos hω]
+      exact hω.1
+    · simp only [if_neg hω]
+      intro a b hab
+      show ((a : ℕ) : ENNReal) < ((b : ℕ) : ENNReal)
+      exact_mod_cast hab
+  · by_cases hω : StrictMono (T ω) ∧ T ω 0 = 0
+    · simp only [if_pos hω]
+      exact hω.2
+    · simp only [if_neg hω, Nat.cast_zero]
+  · by_cases hω : ∀ k, y ω k ≠ y ω (k + 1)
+    · simp only [if_pos hω]
+      exact hω n
+    · simp only [if_neg hω]
+      exact hy₀ n
+  · filter_upwards [hmono, hzero] with ω h1 h2
+    exact funext fun n ↦ (if_pos ⟨h1, h2⟩).symm
+  · filter_upwards [hmove] with ω h
+    exact funext fun n ↦ (if_pos h).symm
+
+/-! ### The same identity for jump times in `ℝ`
+
+The state dependent construction reads its jump times in `ℝ≥0∞` (`jumpTimeE`), the path dependent
+one in `ℝ` (`hawkesJumpTime`), and `pointFiltration` and `pointFiltrationE` are the two filtrations
+that go with them.  They are the *same* filtration once the real family is read through
+`ENNReal.ofReal`, and that is what the two lemmas below say; nothing is assumed, because a negative
+jump time is below every `i : ℝ≥0` on both sides. -/
+
+/-- **The step index does not see the passage to `ℝ≥0∞`**, at a non negative time. -/
+theorem stepIndex_ofReal (T : ℕ → ℝ) {t : ℝ} (ht : 0 ≤ t) :
+    stepIndex (fun n ↦ ENNReal.ofReal (T n)) (ENNReal.ofReal t) = stepIndex T t := by
+  simp only [stepIndex]
+  congr 1
+  ext n
+  exact ENNReal.ofReal_lt_ofReal_iff_of_nonneg ht
+
+/-- **The step path does not see the passage to `ℝ≥0∞`**, at a non negative time. -/
+theorem stepPath_ofReal (T : ℕ → ℝ) (u : ℕ → E) {t : ℝ} (ht : 0 ≤ t) :
+    stepPath (fun n ↦ ENNReal.ofReal (T n)) u (ENNReal.ofReal t) = stepPath T u t := by
+  simp only [stepPath, stepIndex_ofReal T ht]
+
+/-- **A natural filtration depends on the process and not on the proof that it is measurable.** -/
+theorem naturalFiltration_congr {ι' : Type*} [Preorder ι'] {Ω' : Type*} {m' : MeasurableSpace Ω'}
+    {F : Type*} [MeasurableSpace F] {X X' : ι' → Ω' → F} (hX : ∀ i, Measurable (X i))
+    (hX' : ∀ i, Measurable (X' i)) (h : X = X') :
+    naturalFiltration (m' := m') X hX = naturalFiltration (m' := m') X' hX' := by
+  subst h
+  rfl
+
+/-- **The point filtration of a real valued family is the point filtration of the family read in
+`ℝ≥0∞`.**  No hypothesis: the record compares `T ω n ≤ i` on the left and
+`ENNReal.ofReal (T ω n) ≤ i` on the right, and for `i : ℝ≥0` the two agree even at a negative jump
+time, where both are true. -/
+theorem pointFiltration_eq_pointFiltrationE_ofReal {T : Ω → ℕ → ℝ} {y : Ω → ℕ → E}
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    (hTE : ∀ n, Measurable fun ω ↦ ENNReal.ofReal (T ω n)) :
+    pointFiltration T y hT hy
+      = pointFiltrationE (fun ω n ↦ ENNReal.ofReal (T ω n)) y hTE hy := by
+  refine naturalFiltration_congr _ _ (funext fun i ↦ funext fun ω ↦ ?_)
+  have hrec : jumpRecord T i ω = jumpRecordE (fun ω n ↦ ENNReal.ofReal (T ω n)) i ω := by
+    funext n
+    show decide (T ω n ≤ (i : ℝ)) = decide (ENNReal.ofReal (T ω n) ≤ ((i : ℝ≥0) : ENNReal))
+    rw [decide_eq_decide, ← ENNReal.ofReal_coe_nnreal]
+    exact (ENNReal.ofReal_le_ofReal_iff i.coe_nonneg).symm
+  have hp : stepPath (fun n ↦ ENNReal.ofReal (T ω n)) (y ω) ((i : ℝ≥0) : ENNReal)
+      = stepPath (T ω) (y ω) (i : ℝ) := by
+    rw [← ENNReal.ofReal_coe_nnreal]
+    exact stepPath_ofReal _ _ i.coe_nonneg
+  show jumpState T y i ω = jumpStateE (fun ω n ↦ ENNReal.ofReal (T ω n)) y i ω
+  rw [jumpState, jumpStateE, hrec, hp]
+
+/-- **The natural filtration of a real step path is the one of the step path read in `ℝ≥0∞`.** -/
+theorem stepPathFiltration_eq_stepPathFiltrationE_ofReal {T : Ω → ℕ → ℝ} {y : Ω → ℕ → E}
+    (hstep : ∀ i : ℝ≥0, Measurable fun ω ↦ stepPath (T ω) (y ω) (i : ℝ))
+    (hTE : ∀ n, Measurable fun ω ↦ ENNReal.ofReal (T ω n))
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) :
+    naturalFiltration (m' := (inferInstance : MeasurableSpace Ω))
+        (fun i : ℝ≥0 ↦ fun ω ↦ stepPath (T ω) (y ω) (i : ℝ)) hstep
+      = stepPathFiltrationE (fun ω n ↦ ENNReal.ofReal (T ω n)) y hTE hy := by
+  refine naturalFiltration_congr _ _ (funext fun i ↦ funext fun ω ↦ ?_)
+  show stepPath (T ω) (y ω) (i : ℝ)
+      = stepPath (fun n ↦ ENNReal.ofReal (T ω n)) (y ω) ((i : ℝ≥0) : ENNReal)
+  rw [← ENNReal.ofReal_coe_nnreal]
+  exact (stepPath_ofReal _ _ i.coe_nonneg).symm
+
+/-- **The augmented identity for jump times in `ℝ`**, the form the path dependent construction
+uses.  The non negativity of the jump times is not a hypothesis: it follows from `T ω 0 = 0` and
+the strict increase, which is why `ENNReal.ofReal` loses nothing here. -/
+theorem pointFiltration_augment_eq_stepPathFiltration_augment_of_ae [MeasurableEq E]
+    {T : Ω → ℕ → ℝ} {y : Ω → ℕ → E}
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    (hstep : ∀ i : ℝ≥0, Measurable fun ω ↦ stepPath (T ω) (y ω) (i : ℝ))
+    (P : Measure Ω) (y₀ : ℕ → E) (hy₀ : ∀ n, y₀ n ≠ y₀ (n + 1))
+    (hmono : ∀ᵐ ω ∂P, StrictMono (T ω)) (hzero : ∀ᵐ ω ∂P, T ω 0 = 0)
+    (hmove : ∀ᵐ ω ∂P, ∀ n, y ω n ≠ y ω (n + 1)) :
+    (pointFiltration T y hT hy).augment P
+      = (naturalFiltration (m' := (inferInstance : MeasurableSpace Ω))
+          (fun i : ℝ≥0 ↦ fun ω ↦ stepPath (T ω) (y ω) (i : ℝ)) hstep).augment P := by
+  have hTE : ∀ n, Measurable fun ω ↦ ENNReal.ofReal (T ω n) := fun n ↦
+    ENNReal.measurable_ofReal.comp (hT n)
+  rw [pointFiltration_eq_pointFiltrationE_ofReal hT hy hTE,
+    stepPathFiltration_eq_stepPathFiltrationE_ofReal hstep hTE hy]
+  refine pointFiltrationE_augment_eq_stepPathFiltrationE_augment_of_ae hTE hy P y₀ hy₀ ?_ ?_ hmove
+  · filter_upwards [hmono, hzero] with ω h1 h2
+    intro a b hab
+    have hnn : 0 ≤ T ω a := by
+      rcases Nat.eq_zero_or_pos a with rfl | ha
+      · exact h2.ge
+      · exact h2 ▸ (h1 ha).le
+    exact (ENNReal.ofReal_lt_ofReal_iff_of_nonneg hnn).2 (h1 hab)
+  · filter_upwards [hzero] with ω h2
+    rw [h2, ENNReal.ofReal_zero]
+
+end AugmentedFiltrationIdentity
+
+section HawkesAugmentedFiltration
+
+/-! ## The two filtrations of the Hawkes process agree modulo null sets
+
+`not_hawkesFiltration_le_hawkesPathFiltration` refutes the identity of `hawkesFiltration` and
+`hawkesPathFiltration` as σ-algebras, and the refutation stands: the chain and the waiting times
+are free coordinates of `(ℕ → E) × (ℕ → ℝ)`, and at a sample point with a vanishing waiting time
+the path does not move where the record does.
+
+Under the driving measure that is a null set, and the augmented filtrations agree.  That is the
+statement below, and it is what the development actually needs: by `Martingale.augment` and
+`Martingale.of_augment` a martingale over either one is a martingale over the other as soon as it
+is adapted, and by `Locally.augment` the same holds for the local martingale property of
+`jumpProcess_isLocalMPSolution`.
+
+The instance is the counting process of `ex:hawkes` -- `E = ℕ` and the jump kernel
+`poissonKernel`, the deterministic step `x ↦ x + 1` -- because that is where the chain moves
+almost surely.  Over a general state space `hmove` is a condition on the kernel and not on the
+construction, and `ae_move_jumpMeasure_of_ne` says exactly which one. -/
+
+/-- **A chain whose kernel never stays put moves at every step**, almost surely under the driving
+measure of the jump construction.  This is `ae_forall_step_comp_chainKernel` at the property
+"the two consecutive states differ", carried from the chain marginal to the sample space by
+`jumpMeasure_map_fst`. -/
+theorem ae_move_jumpMeasure_of_ne {E : Type*} [MeasurableSpace E] [MeasurableEq E]
+    [MeasurableSingletonClass E] (mu : Kernel E E) [IsMarkovKernel mu]
+    (hmu : ∀ z, ∀ᵐ x ∂(mu z), z ≠ x) (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), ∀ n, ω.1 n ≠ ω.1 (n + 1) := by
+  refine ae_of_ae_map (f := fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.1)
+    (p := fun y : ℕ → E ↦ ∀ n, y n ≠ y (n + 1)) measurable_fst.aemeasurable ?_
+  rw [jumpMeasure_map_fst]
+  exact ae_forall_step_comp_chainKernel mu (S := {p : E × E | p.1 ≠ p.2})
+    (measurableSet_eq_fun measurable_fst measurable_snd).compl hmu nu
+
+/-- **The counting kernel never stays put.** -/
+theorem ae_ne_poissonKernel (z : ℕ) : ∀ᵐ x ∂(poissonKernel z), z ≠ x := by
+  rw [poissonKernel, Kernel.deterministic_apply]
+  exact (ae_dirac_iff MeasurableSet.of_discrete).2 (Nat.succ_ne_self z).symm
+
+/-- **The chain of the counting process moves at every step**, almost surely. -/
+theorem ae_move_jumpMeasure_poissonKernel (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure poissonKernel nu), ∀ n, ω.1 n ≠ ω.1 (n + 1) :=
+  ae_move_jumpMeasure_of_ne poissonKernel ae_ne_poissonKernel nu
+
+variable {ν : ℝ} {φ : ℝ → ℝ}
+
+/-- **The Hawkes jump times increase strictly**, almost surely under the driving measure: the only
+thing needed of the sample point is that its waiting times be positive
+(`strictMono_hawkesJumpTime_of_kernel`), and that is `ae_pos_snd_jumpMeasure`. -/
+theorem ae_strictMono_hawkesJumpTime {E : Type*} [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), StrictMono (hawkesJumpTime ν φ ω.2 ω) := by
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+  exact strictMono_hawkesJumpTime_of_kernel hν hφ hφ0 hφint hω
+
+/-- **The augmented filtration of the Hawkes point process is the augmented filtration of its
+path.**
+
+This is the statement that survives the refutation `not_hawkesFiltration_le_hawkesPathFiltration`,
+and it is the one the development uses.  Its hypotheses are the data of `ex:hawkes` and nothing
+else: the strict increase of the jump times is almost sure by `ae_strictMono_hawkesJumpTime`, the
+start at `0` is `hawkesJumpTime_zero` and holds everywhere, the chain moves almost surely by
+`ae_move_jumpMeasure_poissonKernel`, and `MeasurableEq ℕ` is the instance from `Countable` and
+`MeasurableSingletonClass`.
+
+**Non explosion does not enter.**  Neither the local integrability of the self referential rate
+nor the divergence of the jump times is assumed; the identity is one between two σ-algebras
+generated by the *record* and by the *path*, and both are defined whether or not the jump times
+accumulate. -/
+theorem hawkesFiltration_augment_eq_hawkesPathFiltration_augment (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+    (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonKernel nu)
+      = (hawkesPathFiltration (E := ℕ) hν hφ hφm hφint).augment
+          (jumpMeasure poissonKernel nu) :=
+  pointFiltration_augment_eq_stepPathFiltration_augment_of_ae
+    (measurable_hawkesJumpTime_apply hν hφ hφm hφint)
+    (fun n ↦ (measurable_pi_apply n).comp measurable_fst)
+    (fun i ↦ measurable_stepPath_comp (u := fun _ : (ℕ → ℕ) × (ℕ → ℝ) ↦ (i : ℝ))
+      measurable_const (measurable_hawkesJumpTime_apply hν hφ hφm hφint)
+      fun n ↦ (measurable_pi_apply n).comp measurable_fst)
+    (jumpMeasure poissonKernel nu) (fun n ↦ n) (fun n ↦ (Nat.succ_ne_self n).symm)
+    (ae_strictMono_hawkesJumpTime hν hφ hφ0 hφint poissonKernel nu)
+    (Filter.Eventually.of_forall fun ω ↦ hawkesJumpTime_zero ν φ ω.2 ω)
+    (ae_move_jumpMeasure_poissonKernel nu)
+
+end HawkesAugmentedFiltration
+
+section HintIsNonExplosion
+
+/-! ## `hint` is the non explosion, and not a regularity beside it
+
+`hawkesJumpFiltration` carries
+`hint : ∀ w r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r`
+in the argument of its **definition**.  The statement below is the half of the question of its
+satisfiability that is cheap, and it is the half that matters: at a sample point where `hint`
+holds and the jump times stay below a bound, the waiting times are summable.
+
+Read contrapositively that is the finding: a sample point whose waiting times **diverge** while
+its jump times stay **bounded** violates `hint`.  Such a sample point is what explosion is, so
+`hint` is the non explosion written as a regularity of the rate, and the two are not independent
+hypotheses.
+
+The proof pays nothing beyond the data of `ex:hawkes`: `cumulativeRateF_jumpTimeF` at the self
+referential rate turns the `n`-th partial sum of the waiting times into the cumulated rate at the
+`n`-th jump time, `monotoneOn_cumulativeRateF` bounds that by the cumulated rate at `B`, and
+bounded partial sums of a non negative sequence are a summable sequence. -/
+
+variable {ν : ℝ} {φ : ℝ → ℝ}
+
+/-- **`hint` plus bounded jump times forces summable waiting times.**
+
+No hypothesis on `φ` beyond `hφ` and `hφ0` and the local integrability of the data, and none on
+the sample point beyond the non negativity of its waiting times: everything else is carried by
+`hint` itself.
+
+`B` is a bound on **all** the jump times, which is the situation at an explosive sample point; the
+conclusion says that this situation is incompatible with `hint` as soon as the waiting times do
+not sum. -/
+theorem summable_waiting_of_intervalIntegrable_hawkesSelfRate {E : Type*}
+    {w : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (hxi : ∀ k, 0 ≤ w.2 k)
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r)
+    {B : ℝ} (hB : ∀ n, hawkesJumpTime ν φ w.2 w n ≤ B) :
+    Summable w.2 := by
+  have hpos : ∀ u : ℝ, 0 < u → 0 < hawkesSelfRate ν φ u w := fun u _ ↦
+    hawkesSelfRate_pos hν hφ u w
+  have htop := tendsto_cumulativeRateF_hawkesSelfRate hν hφ hint
+  have hintF : ∀ m r, IntervalIntegrable
+      (fun u ↦ hawkesFrozen ν φ (hawkesJumpTime ν φ w.2 w) m u w) volume 0 r := fun m r ↦
+    intervalIntegrable_hawkesFrozen hφint _ m w r
+  have hB0 : (0 : ℝ) ≤ B := (hawkesJumpTime_nonneg ν φ w.2 w 0).trans (hB 0)
+  refine summable_of_sum_range_le (c := cumulativeRateF (hawkesSelfRate ν φ) w B) hxi fun n ↦ ?_
+  have hsum : ∑ k ∈ Finset.range n, w.2 k
+      = cumulativeRateF (hawkesSelfRate ν φ) w (hawkesJumpTime ν φ w.2 w n) := by
+    rw [← jumpTimeF_hawkesSelfRate hν hφ hφ0 hxi hintF hint n]
+    exact (cumulativeRateF_jumpTimeF (Λ := hawkesSelfRate ν φ) (ω := w) (xi := w.2)
+      hint hpos htop hxi n).symm
+  rw [hsum]
+  exact monotoneOn_cumulativeRateF hint hpos (hawkesJumpTime_nonneg ν φ w.2 w n) hB0 (hB n)
+
+/-- **The finding, read contrapositively: an explosive sample point violates `hint`.**
+
+Waiting times that do not sum while the jump times stay bounded -- that is exactly an explosion --
+are incompatible with the local integrability of the self referential rate.  `hint` is therefore
+not a regularity hypothesis standing beside the non explosion; on the set where it holds, the
+explosion with bounded jump times is excluded.
+
+What this does **not** settle is whether some sample point of the construction is of that kind;
+that is the second half of the question and needs a witness. -/
+theorem not_intervalIntegrable_hawkesSelfRate_of_not_summable {E : Type*}
+    {w : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (hxi : ∀ k, 0 ≤ w.2 k) {B : ℝ} (hB : ∀ n, hawkesJumpTime ν φ w.2 w n ≤ B)
+    (hns : ¬ Summable w.2) :
+    ¬ ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r := fun hint ↦
+  hns (summable_waiting_of_intervalIntegrable_hawkesSelfRate hν hφ hφ0 hφint hxi hint hB)
+
+end HintIsNonExplosion
