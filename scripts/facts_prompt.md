@@ -333,6 +333,47 @@ leeren Voraussetzung.
 
 **Der Weg:**
 
+**Neue Reihenfolge ab 2026-09-12 abends, vom Nutzer festgelegt** — er will bald
+zur *Theorie* des Martingalproblems, nicht länger zu Beispielen:
+
+> **C.5a → E → G**
+
+**C.5a — der beschränkte nichtlineare Hawkes-Prozeß.** Das ist der *letzte* Punkt
+von Teil C, und danach ist Teil C zu Ende.
+
+`Λ (t, ω) = h (ν + ∫₀^{t⁻} φ (t−s) dN s)` mit **beschränktem** `h`. Er kostet
+fast nichts und bringt viel:
+
+* Die Rate ist beschränkt, also ist die lokale Integrierbarkeit **trivial** —
+  `hint` ist erfüllbar statt unerfüllbar, an *jedem* Stichprobenpunkt. Punkt 0 des
+  Baums fällt weg.
+* Keine Explosion: die Sprungzeiten sind von einem Poissonprozeß der Rate `L`
+  dominiert. Alle sechs Nichtexplosionsstellen erledigen sich auf einmal.
+* Keine Lokalisierung, kein `rateInverse`-Turm, keine Augmentierung: der
+  **globale** Satz `thm:pathjumpMP`(b) gilt direkt, denn `𝔼[N t] ≤ L t < ∞`.
+* Und keine Volterra-Theorie.
+
+**Damit hat `thm:pathjumpMP` seinen ersten nicht-markovschen Zeugen, und zwar in
+der globalen Fassung.** Meilenstein 4 ist der Substanz nach fertig.
+
+*Und es ist kein Umweg vom linearen Fall weg, sondern der erste Schritt hinein:*
+mit `h = min (·) L` ist der beschränkte nichtlineare Fall genau die
+**Abschneidung** des linearen, und unterhalb der Trefferzeit `σ L` stimmen beide
+überein. `truncRateF` tut das schon, nur mit einem Indikator statt eines
+Minimums; prüfe, ob die beiden Lesarten zusammenfallen oder ob die
+Minimum-Fassung die bessere ist. Der lineare Fall ist dann der Grenzübergang
+`L → ∞` längs der lokalisierenden Folge.
+
+**E — Meilenstein 6.** Unmittelbar danach, siehe unten.
+
+**G — der lineare Hawkes-Prozeß, lokale Fassung.** **Nach E.** Was von Teil C
+übrigbleibt: die drei Umbauten (Hebung — steht seit dem 27. Lauf —,
+Augmentierung, eine Filtration) und der lokale Satz. Er behält, was nur er hat:
+die Clusterdarstellung, `thm:hawkesvolterra` und die Eindeutigkeit über die
+Dualität (`cor:uniqviadual`) — das ist der Grund, warum er nicht durch den
+nichtlinearen ersetzt wird, sondern neben ihm steht. Die globale Fassung wartet
+ohnehin auf die Volterra-Theorie.
+
 **Der Stand nach dem 26. Lauf, und er ändert die Aufgabe von einer Suche in einen
 Umbau** *(mit dem Nutzer am 2026-09-12 so festgehalten)*:
 
