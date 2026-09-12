@@ -3774,18 +3774,36 @@ streng wachsend, also ist `T (n+1)` genau die Inverse von `g n` am Pegel
 `T n → 1`. Also divergiert die Wartezeitsumme bei beschränkten Sprungzeiten, und
 `hint` fällt an diesem `w`.
 
-**Das ist eine Papierrechnung und kein Lean-Beweis.** Was in Lean billig ist und
-zuerst zu bauen: die **erste** Hälfte, die keine Konstruktion braucht —
+**Das ist eine Papierrechnung und kein Lean-Beweis.** Die **erste** Hälfte, die
+keine Konstruktion braucht, steht dagegen in Lean:
 
-> `summable_waiting_of_intervalIntegrable_hawkesSelfRate`: gilt `hint` an `w`,
-> sind die Wartezeiten nichtnegativ und die Sprungzeiten durch `B` beschränkt, so
-> ist `∑ ξ k < ∞`.
+```
+summable_waiting_of_intervalIntegrable_hawkesSelfRate (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ a r, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (hxi : ∀ k, 0 ≤ w.2 k)
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r)
+    {B : ℝ} (hB : ∀ n, hawkesJumpTime ν φ w.2 w n ≤ B) :
+  Summable w.2
+```
 
-Sie ruht ausschließlich auf `cumulativeRateF_hawkesSelfRate_eq_sum`,
-`monotone_hawkesJumpTime` und der Monotonie der kumulierten Rate. Sie sagt
-**genau**, daß `hint` die Nichtexplosion *ist* und nicht eine Regularität neben
-ihr, und sie ist die Aussage, an der die Zielaussage umgebaut wird. Der Zeuge
-selbst ist ein eigener, teurerer Punkt.
+und daneben die Gestalt, in der sie der Befund ist:
+`not_intervalIntegrable_hawkesSelfRate_of_not_summable` — **Wartezeiten, die nicht
+summieren, bei beschränkten Sprungzeiten, widerlegen `hint`.** Das ist die
+Explosion, und damit ist `hint` keine Regularität neben der Nichtexplosion,
+sondern die Nichtexplosion selbst, auf der Menge, auf der es steht.
+
+Über `φ` steht dabei nichts als `hφ`, `hφ0` und die lokale Integrierbarkeit der
+Daten, über `w` nichts als die Nichtnegativität seiner Wartezeiten. Der Weg ist
+kurz: `cumulativeRateF_jumpTimeF` an der selbstbezüglichen Rate macht aus der
+`n`-ten Teilsumme der Wartezeiten die kumulierte Rate an der `n`-ten Sprungzeit
+(über `jumpTimeF_hawkesSelfRate`, den Fixpunkt), `monotoneOn_cumulativeRateF`
+schätzt sie durch die kumulierte Rate an `B` ab, und beschränkte Teilsummen einer
+nichtnegativen Folge sind eine summierbare Folge (`summable_of_sum_range_le`).
+
+Was damit **nicht** entschieden ist: ob die Konstruktion einen solchen
+Stichprobenpunkt wirklich hat. Das ist die zweite Hälfte und verlangt den Zeugen;
+er ist ein eigener, teurerer Punkt.
 
 **Was daraus folgt, wenn es sich bestätigt:** `hint` darf nicht unter `∀ w` stehen.
 Die Nichtexplosion muß als `∀ᵐ w ∂(jumpMeasure mu nu)` eintreten, wie
@@ -3993,24 +4011,41 @@ beiden zu trennen.
 Keine der drei folgt aus den beiden anderen, und **die Nichtexplosion ist keine
 von ihnen**.
 
-**Was zu beweisen bleibt, und es ist die Aussage mit den schwächsten
-Voraussetzungen, unter denen sie gilt:**
+**Die Aussage steht, und sie trägt eine vierte Voraussetzung, die die drei Zeugen
+nicht nennen:**
 
 ```
-pointFiltrationE_eq_stepPathFiltrationE
+pointFiltrationE_eq_stepPathFiltrationE [MeasurableEq E]
     (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
     (hmono : ∀ ω, StrictMono (T ω)) (hzero : ∀ ω, T ω 0 = 0)
     (hmove : ∀ ω n, y ω n ≠ y ω (n + 1)) (i : ℝ≥0) :
   pointFiltrationE T y hT hy i = stepPathFiltrationE T y hT hy i
 ```
 
+**Die vierte Voraussetzung ist über den Zustandsraum und nicht über den Prozeß.**
+„Der Pfad hat den Wert gewechselt" ist das Urbild des Komplements der Diagonale
+von `E × E`, und ob die Diagonale meßbar ist, steht über einer bloßen
+`[MeasurableSpace E]` nicht fest. Mathlib hat genau diesen Begriff als Klasse:
+`MeasurableEq` (`MeasureTheory/MeasurableSpace/Constructions.lean:1083`), mit
+`measurableSet_eq_fun` als Werkzeug und mit den Instanzen `Countable` +
+`MeasurableSingletonClass` (`:1104`), `StandardBorelSpace`
+(`Constructions/Polish/Basic.lean:157`) und `SecondCountableTopology` + `T2Space`
+(`BorelSpace/Basic.lean:620`). Sie ist notwendig, und der Zeuge steht daneben:
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq` —
+Sprungzeiten, die an **jedem** Stichprobenpunkt bei `0` beginnen und streng
+wachsen, eine Kette, die bei **jedem** Schritt springt, und trotzdem ist die
+Pfadfiltration die triviale σ-Algebra, weil der Zustandsraum seine beiden Punkte
+meßbar nicht auseinanderhält. Es scheitert also nicht das Abtastargument,
+sondern der Zustandsraum.
+
 Der Beweis ist die Rückrichtung; die Hinrichtung ist
 `stepPathFiltrationE_le_pointFiltrationE`. Zu zeigen ist, daß
-`{ω | T ω n ≤ i}` für die Pfadfiltration meßbar ist, und zwar so:
+`{ω | T ω n ≤ i}` für die Pfadfiltration meßbar ist
+(`measurableSet_le_stepPathFiltrationE`), und zwar so:
 
-> `T ω n ≤ i` genau dann, wenn es `0 = q₀ < q₁ < … < qₙ ≤ i` gibt, jedes `q` aus
-> `(ℚ≥0 ∩ [0,i]) ∪ {i}`, mit `stepPath (T ω) (y ω) q_{j-1} ≠ stepPath (T ω) (y ω) q_j`
-> für jedes `j`.
+> `T ω n ≤ i` genau dann, wenn es `q₀ < q₁ < … < qₙ ≤ i` gibt, jedes `q` aus
+> `gridPoints i = (ℚ≥0 ∪ {i}) ∩ [0,i]`, mit
+> `stepPath (T ω) (y ω) q_{j-1} ≠ stepPath (T ω) (y ω) q_j` für jedes `j`.
 
 Die Hinrichtung wählt in jedem Fenster `[T j, T (j+1))` einen solchen Punkt — das
 Fenster hat wegen `hmono` positive Länge —, und `hmove` macht die Werte an je zwei
@@ -4021,12 +4056,43 @@ Sprungzeit, also gibt es `n` Sprungzeiten unterhalb `i`, und mit `hmono` ist das
 Urbildern unter Auswertungen bei Indizes `≤ i`, liegt also in
 `stepPathFiltrationE T y hT hy i`.
 
+**Drei Einzelheiten, die der Beweis erzwungen hat und die auf Papier nicht
+stehen.**
+
+* **`i` gehört in die Gitterpunktmenge, die Rationalzahlen reichen nicht.** Ist
+  `T ω n = i`, so trifft das `n`-te Fenster `[T ω n, T ω (n+1))` das Intervall
+  `[0, i]` im **einzigen** Punkt `i`. Ein Gitter aus Rationalzahlen erreicht das
+  `n`-te Fenster dann nicht, und die Abtastung wäre genau an den
+  Stichprobenpunkten falsch, an denen der `n`-te Sprung am Ende des Intervalls
+  liegt. `gridPoints` (= `insert i (Set.range Real.toNNReal ∘ ℚ)`) ist deshalb so
+  gebaut; `exists_mem_gridPoints` ist die Fallunterscheidung.
+* **Das Gitter wird über `Fin (n+1)` indiziert und nicht über `ℕ`.** Gebraucht
+  wird eine **abzählbare** Vereinigung, und `ℕ → gridPoints i` ist nicht abzählbar,
+  während `Fin (n+1) → gridPoints i` es ist (`Pi.countable` bei endlichem
+  Definitionsbereich, `Data/Countable/Basic.lean:146`). Die Zählung läuft dann
+  über `Fin.induction`.
+* **`q₀ = 0` wird nicht gebraucht**, anders als auf Papier: die Rückrichtung
+  beginnt mit `0 ≤ stepIndex (q₀)`, und das ist umsonst. Was `hzero` leistet, ist
+  **allein der Fall `n = 0`** — der Pfad liest `T 0` überhaupt nicht
+  (`stepPath_update_zero`), also muß `{T 0 ≤ i}` von selbst trivial sein, und
+  `T 0 = 0` macht es zum ganzen Raum. `measurableSet_le_stepPathFiltrationE`
+  trägt `hzero` deshalb **nicht**; es steht erst im Zusammenbau.
+
 **Die Nichtexplosion kommt in diesem Beweis nicht vor**, und das ist der Grund,
 aus dem die Aussage hierher gehört: sie ist die einzige der sechs Stellen, an
 denen die Nichtexplosion im pfadabhängigen Fall auftritt, die sich ohne sie
 erledigen läßt. Explodiert `T` unterhalb `i`, so gilt `T n ≤ i` für jedes `n`, und
-die rechte Seite ist für jedes `n` erfüllt, weil vor der Explosionszeit unendlich
-viele Fenster positiver Länge liegen.
+die linke Seite ist für jedes `n ≠ 0` von selbst erfüllt; der Beweis führt diesen
+Fall getrennt und fragt dort nach gar keinem Gitter.
+
+**Die Leerheitsprobe ist mitgemacht.**
+`pointFiltrationE_eq_stepPathFiltrationE_counting` ist die Aussage für den reinen
+Zählprozeß `y ω n = n` über `E = ℕ`: `hmove` ist `Nat.succ_ne_self`,
+`MeasurableEq ℕ` ist die Instanz aus `Countable` und `MeasurableSingletonClass`,
+und übrig bleiben allein die beiden Voraussetzungen über die Sprungzeiten. Auf
+einem Stichprobenraum, auf dem die Kette **keine freie Koordinate** ist, sind
+also alle vier Voraussetzungen eingelöst und die Identität ist eine Identität von
+Filtrationen.
 
 **Die Instanzen, und der Befund, der sie alle zugleich betrifft.** Poisson,
 Geburt-Tod, M/M/1, Yule und Hawkes sind auf **einem** Stichprobenraum gebaut,
@@ -4047,16 +4113,258 @@ noch die Explosion sind daran schuld; es ist allein die freie Kettenkoordinate.
 Die Aussage `pointFiltrationE_eq_stepPathFiltrationE` greift daher bei einem
 Stichprobenraum, auf dem die Kette **nicht frei** ist — dem reinen Zählprozeß mit
 `E = ℕ` und `y ω n = n`, den `ex:hawkes` selbst vorschreibt
-(`mu (t, ω, ·) = dirac (ω t⁻ + 1)`). Dort ist `hmove` ein `Nat.succ_ne_self`,
-`hzero` ist `hawkesJumpTime_zero` (ein `rfl`), und `hmono` bleibt die einzige
-Voraussetzung über die Wartezeiten (`strictMono_hawkesJumpTime`, verlangt
-`0 < ξ n`).
+(`mu (t, ω, ·) = dirac (ω t⁻ + 1)`). Das ist
+`pointFiltrationE_eq_stepPathFiltrationE_counting`: dort ist `hmove` ein
+`Nat.succ_ne_self`, `MeasurableEq ℕ` eine Instanz, `hzero` ist
+`hawkesJumpTime_zero` (ein `rfl`), und `hmono` bleibt die einzige Voraussetzung
+über die Wartezeiten (`strictMono_hawkesJumpTime`, verlangt `0 < ξ n`).
+
+**Für die Hawkes-Instanz führt der Weg über die Abänderung auf einer Nullmenge**,
+denn die Kette der Hawkes-Konstruktion ist `ω.1` und nicht `fun n ↦ n`. Er ist
+gebaut, und zwar anders, als dieser Absatz zunächst erwartet hatte: **nicht** über
+`pointFiltrationE_eq_stepPathFiltrationE_counting`, sondern über eine Reparatur,
+die die Daten allein auf der schlechten Menge ändert. Die Kette `fun _ n ↦ n`
+taugt dafür gerade nicht, weil sie die Kette auch dort ersetzt, wo sie sich
+bewegt, und dann keine f.s. Gleichheit der Erzeugerabbildungen mehr besteht. Der
+Abschnitt „Die Identität der beiden Filtrationen, modulo Nullmengen, und die
+Hawkes-Instanz" führt es aus; an den
+ursprünglichen Daten ist die Identität nicht anwendbar, und das ist kein Mangel, sondern der
+Befund der drei Zeugen.
 
 **Die Folgerung für die Wahl der Filtration, denn sie ist der Anlaß der Frage:**
 über dem Produktraum bleibt die Punktfiltration die echt größere, und sie ist
 zugleich die einzige, deren **Definition** kein `hint` trägt. `hawkesFiltration`
 ist damit die Filtration, über der der Satz zu führen ist, und
 `hawkesJumpFiltration` ist es nicht.
+
+### Die Augmentierung einer Filtration um die Nullmengen, und was sie trägt
+
+*(Vom Nutzer am 2026-09-12 angeordnet, nachdem die Filtrationsidentität des
+vorigen Abschnitts widerlegt war: „Die Antwort ist nicht, die Aussage
+abzuschwächen, sondern zu augmentieren." Und mit ihr die Anordnung, **zuerst** zu
+prüfen, ob der Rest der Entwicklung die augmentierte Filtration verträgt.)*
+
+Eine Gleichheit von σ-Algebren ist keine fast-sichere Aussage; die Augmentierung
+macht sie zu einer, indem sie die Nullmengen in jede Stufe aufnimmt:
+
+$$\bar{\mathcal F}_t = \sigma(\mathcal F_t \cup \mathcal N).$$
+
+**Der Baustein liegt in Mathlib, aber nicht unter dem Namen, unter dem man ihn
+sucht.** `augmentedFiltration`, `Filtration.augment`, `usualConditions`,
+`IsRightContinuousFiltration` gibt es nicht (geprüft 2026-09-12 an
+`upstream/master` `141f6b64`). Was es gibt, ist `eventuallyMeasurableSpace m l`
+(`MeasureTheory/MeasurableSpace/EventuallyMeasurable.lean`), die Meßbarkeit
+modulo einer σ-Filter `l`: die Mengen, die sich von einer `m`-Menge um eine Menge
+des dualen Ideals unterscheiden. Bei `l = ae μ` ist das die Augmentierung.
+`NullMeasurableSpace` ist nur ihr Spezialfall, bei dem `m` die ganze
+Grund-σ-Algebra ist, und deshalb hier unbrauchbar: gebraucht wird sie über einer
+**Teil**-σ-Algebra.
+
+**Der eine Zusatz, den es braucht, und der erste der beiden Preise.**
+`eventuallyMeasurableSpace (𝓕 i) (ae μ)` ist keine Teil-σ-Algebra von `𝓐`: eine
+Teilmenge einer Nullmenge ist f.s. gleich `∅`, ohne meßbar zu sein. Der Schnitt
+mit `𝓐` repariert das, und damit enthält die Augmentierung die **meßbaren**
+Nullmengen und keine anderen. Wer jede Teilmenge einer Nullmenge will,
+vervollständigt zuerst `(Ω, 𝓐, P)` — und ändert damit den Grundraum und den Sinn
+jeder Aussage darüber.
+
+**Was gebaut ist und gegen v4.33.1 übersetzt** (`Suggested.lean`,
+`section Augmentation` und `section AugmentationLocal`, siebzehn Deklarationen
+ohne `sorry`):
+
+* `Filtration.augment 𝓕 μ` — die Augmentierung, wieder eine `Filtration`;
+  `Filtration.le_augment` ist die Vergrößerung,
+  `Filtration.measurableSet_augment_of_measure_zero` sagt, daß die meßbaren
+  Nullmengen darin liegen, `Filtration.measurableSet_augment_iff` gibt ihre
+  Gestalt.
+* `condExp_eq_condExp_of_forall_exists_ae_eq` — **die bedingte Erwartung sieht
+  eine Vergrößerung um Nullmengen nicht.** Über beliebigem `m ≤ m' ≤ 𝓐`, von dem
+  nur verlangt wird, daß jede `m'`-Menge f.s. eine `m`-Menge ist. Mathlib hat
+  keine Aussage dieser Gestalt; `condExp_condExp_of_le` vergleicht zwei bedingte
+  Erwartungen über den Turmschluß und braucht die kleinere außen, was hier gerade
+  nicht zur Verfügung steht. Der Beweis ist die Eindeutigkeit der bedingten
+  Erwartung, und der einzige Schritt, der die Voraussetzung benutzt, ist
+  `Measure.restrict_congr_set`.
+* `condExp_augment` — dasselbe für die Augmentierung.
+* `Martingale.augment` — **ein Martingal bleibt eines unter der augmentierten
+  Filtration.**
+* `Martingale.of_augment` — **und es kommt zurück**, sobald der Prozeß an die
+  kleinere Filtration adaptiert ist. Das ist die Richtung, die gebraucht wird:
+  man beweist über der großen Filtration und liest über der kleinen ab. Die
+  Voraussetzung ist nicht zu streichen — ein Martingal über einer großen
+  Filtration ist genau dann eines über einer kleineren, wenn es an sie adaptiert
+  ist.
+* `IsStoppingTime.augment`, `IsLocalizingSequence.augment`, `Locally.augment` —
+  **die lokale Eigenschaft überlebt die Augmentierung, und zwar für jede
+  Eigenschaft `p`**, weil die Filtration in `Locally` allein über die
+  lokalisierende Folge eingeht. Damit trägt auch
+  `jumpProcess_isLocalMPSolution` in seiner augmentierten Fassung.
+
+**Damit ist die Vorfrage des Nutzers beantwortet: ja, die Entwicklung verträgt
+die augmentierte Filtration**, und zwar in beiden Richtungen. Es war keine
+einzige fehlende Mathlib-Aussage im Weg.
+
+**Der zweite Preis, und er benennt, was noch zu tun bleibt.** Die Augmentierung
+macht die widerlegte Identität nicht von selbst wahr. Was sie wahr macht, steht
+als `Filtration.augment_eq_augment_of_forall_exists_ae_eq`:
+
+```
+(∀ i s, MeasurableSet[𝓕 i] s → ∃ t, MeasurableSet[𝓖 i] t ∧ s =ᵐ[μ] t) →
+(∀ i s, MeasurableSet[𝓖 i] s → ∃ t, MeasurableSet[𝓕 i] t ∧ s =ᵐ[μ] t) →
+  𝓕.augment μ = 𝓖.augment μ
+```
+
+Zu zeigen ist also nicht, daß die beiden Filtrationen übereinstimmen, sondern daß
+**jede Menge der einen f.s. eine Menge der anderen ist**. Das ist mehr, als eine
+Nullmenge schlechter Stichprobenpunkte von selbst hergibt, und der Weg dorthin
+ist nicht, den Beweis von `pointFiltrationE_eq_stepPathFiltrationE` auf die gute
+Menge zu relativieren — seine drei Voraussetzungen sind global —, sondern die
+**Daten auf einer Nullmenge abzuändern**.
+
+**Diese Brücke steht**, und sie hängt an keiner der offenen Aussagen des
+Abhängigkeitsbaums:
+
+* `Filtration.augment_le_augment_of_le_eventuallyMeasurableSpace` — die
+  Augmentierung ist monoton unter Inklusion **modulo Nullmengen**, und das ist
+  die schwächste Voraussetzung, unter der sie es ist.
+* `naturalFiltration_le_eventuallyMeasurableSpace_of_ae_eq` — die natürliche
+  Filtration eines Prozesses liegt modulo Nullmengen in der jedes f.s. gleichen
+  Prozesses; der Beweis ist `Filter.EventuallyEq.preimage` auf den Erzeugern.
+* `naturalFiltration_augment_eq_of_ae_eq` — **zwei f.s. gleiche Prozesse haben
+  dieselbe augmentierte natürliche Filtration.**
+
+Ist also `(T', y')` ein Paar meßbarer Familien, das f.s. mit `(T, y)`
+übereinstimmt und die drei Voraussetzungen **überall** erfüllt, so sind die
+Augmentierungen von `pointFiltrationE T y` und `pointFiltrationE T' y'` gleich,
+ebenso die der Pfadfiltrationen, und die Identität an den abgeänderten Daten
+überträgt sich auf die augmentierten Filtrationen der ursprünglichen. Die
+Abänderung selbst und die Identität an den abgeänderten Daten stehen im folgenden
+Abschnitt.
+
+**Und die Aussage wird damit eine über `(Ω, 𝓐, P)` statt über σ-Algebren allein:
+sie braucht ein Maß.** Das ist der dritte Preis, und er ist zu nennen, weil
+`hawkesFiltration` und `hawkesPathFiltration` bisher ohne jedes Maß erklärt sind.
+
+### Die Identität der beiden Filtrationen, modulo Nullmengen, und die Hawkes-Instanz
+
+Die Identität des vorletzten Abschnitts und die Augmentierung des letzten setzen
+hier zusammen. Zu zeigen war eine Abänderung `(T', y')` der Daten auf einer
+Nullmenge, an der die vier Voraussetzungen von
+`pointFiltrationE_eq_stepPathFiltrationE` **überall** gelten.
+
+**Die Abänderung ist die naheliegende, und sie ist meßbar, weil beide schlechten
+Mengen meßbar sind:**
+
+* `measurableSet_strictMono_times` — `{ω | StrictMono (T ω) ∧ T ω 0 = 0}` ist
+  meßbar. Strenges Wachstum einer Folge ist eine **abzählbare** Konjunktion
+  (`strictMono_nat_of_lt_succ`), und das ist der ganze Grund, aus dem die
+  Abänderung überhaupt geht.
+* `measurableSet_forall_ne_succ` — `{ω | ∀ n, y ω n ≠ y ω (n+1)}` ist meßbar, und
+  hier tritt `MeasurableEq E` ein **zweites** Mal auf: ohne meßbare Diagonale ist
+  nicht einmal die schlechte Menge eine Menge.
+
+Auf der schlechten Menge werden die Sprungzeiten durch `n ↦ (n : ℝ≥0∞)` und die
+Kette durch eine feste, sich bewegende Kette `y₀` ersetzt.
+
+**Die beiden Aussagen:**
+
+```
+pointFiltrationE_augment_eq_stepPathFiltrationE_augment [MeasurableEq E]
+    (hT) (hy) (hT') (hy')
+    (hmono : ∀ ω, StrictMono (T' ω)) (hzero : ∀ ω, T' ω 0 = 0)
+    (hmove : ∀ ω n, y' ω n ≠ y' ω (n + 1)) (P : Measure Ω)
+    (hTae : ∀ᵐ ω ∂P, T ω = T' ω) (hyae : ∀ᵐ ω ∂P, y ω = y' ω) :
+  (pointFiltrationE T y hT hy).augment P = (stepPathFiltrationE T y hT hy).augment P
+
+pointFiltrationE_augment_eq_stepPathFiltrationE_augment_of_ae [MeasurableEq E]
+    (hT) (hy) (P : Measure Ω) (y₀ : ℕ → E) (hy₀ : ∀ n, y₀ n ≠ y₀ (n + 1))
+    (hmono : ∀ᵐ ω ∂P, StrictMono (T ω)) (hzero : ∀ᵐ ω ∂P, T ω 0 = 0)
+    (hmove : ∀ᵐ ω ∂P, ∀ n, y ω n ≠ y ω (n + 1)) :
+  (pointFiltrationE T y hT hy).augment P = (stepPathFiltrationE T y hT hy).augment P
+```
+
+Die erste trägt die Abänderung als Voraussetzung und macht damit sichtbar, daß
+die Hypothesen an `(T', y')` **an jedem Stichprobenpunkt** stehen; die zweite
+baut sie. Von der Trennung lebt der Prüfstein: die Identität wird nur an den
+abgeänderten Daten benutzt, und an den ursprünglichen ist sie nach den vier
+Zeugen nicht anwendbar.
+
+**Das einzige, was `E` über `MeasurableEq E` hinaus leisten muß, ist `y₀`: eine
+Kette, die sich bei jedem Schritt bewegt.** Ein Zustandsraum, in dem es keine
+gibt, ist ein Punkt, und dort sind beide Filtrationen ohnehin trivial. Das ist
+schwächer als das, was der Abschnitt zuvor erwartet hatte —
+`pointFiltrationE_eq_stepPathFiltrationE_counting`, also die Kette `y ω n = n`,
+wird **nicht** gebraucht und ist auch nicht die richtige Eingabe: die Abänderung
+muß die Kette an den *guten* Stichprobenpunkten unangetastet lassen, und die
+Kette `fun _ n ↦ n` tut das nicht.
+
+**Die Fassung über Sprungzeiten in `ℝ`.** Der zustandsabhängige Fall liest seine
+Sprungzeiten in `ℝ≥0∞` (`jumpTimeE`), der pfadabhängige in `ℝ`
+(`hawkesJumpTime`), und `pointFiltration` und `pointFiltrationE` sind die beiden
+Filtrationen dazu. Sie sind **dieselbe** Filtration, sobald die reelle Familie
+durch `ENNReal.ofReal` gelesen wird, und zwar voraussetzungslos, weil eine
+negative Sprungzeit auf beiden Seiten unter jedem `i : ℝ≥0` liegt:
+
+* `stepIndex_ofReal`, `stepPath_ofReal` — der Stufenindex und der Treppenpfad
+  sehen den Übergang nach `ℝ≥0∞` an einer nichtnegativen Zeit nicht.
+* `naturalFiltration_congr` — eine natürliche Filtration hängt am Prozeß und
+  nicht am Beweis seiner Meßbarkeit.
+* `pointFiltration_eq_pointFiltrationE_ofReal`,
+  `stepPathFiltration_eq_stepPathFiltrationE_ofReal` — die beiden Gleichheiten.
+* `pointFiltration_augment_eq_stepPathFiltration_augment_of_ae` — die augmentierte
+  Identität für reelle Sprungzeiten. Die Nichtnegativität der Sprungzeiten ist
+  dort **keine** Voraussetzung: sie folgt aus `T ω 0 = 0` und dem strengen
+  Wachstum, und das ist der Grund, aus dem `ENNReal.ofReal` hier nichts verliert.
+
+**Die Hawkes-Instanz, und sie ist die Antwort auf
+`not_hawkesFiltration_le_hawkesPathFiltration`:**
+
+```
+hawkesFiltration_augment_eq_hawkesPathFiltration_augment (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hφm : Measurable φ)
+    (hφint : ∀ a r, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r)
+    (nu : Measure ℕ) [IsProbabilityMeasure nu] :
+  (hawkesFiltration (E := ℕ) hν hφ hφm hφint).augment (jumpMeasure poissonKernel nu)
+    = (hawkesPathFiltration (E := ℕ) hν hφ hφm hφint).augment
+        (jumpMeasure poissonKernel nu)
+```
+
+Die Voraussetzungen sind die Daten von `ex:hawkes` und nichts sonst. Ihre
+Einlösung:
+
+* `ae_strictMono_hawkesJumpTime` — das strenge Wachstum der Sprungzeiten ist f.s.,
+  denn `strictMono_hawkesJumpTime_of_kernel` verlangt vom Stichprobenpunkt allein
+  positive Wartezeiten, und das ist `ae_pos_snd_jumpMeasure`.
+* `hawkesJumpTime_zero` — der Start bei `0` gilt **überall**.
+* `ae_move_jumpMeasure_of_ne` — eine Kette, deren Kern niemals stehenbleibt,
+  bewegt sich f.s. bei jedem Schritt. Das ist
+  `ae_forall_step_comp_chainKernel` an der Eigenschaft „die beiden
+  aufeinanderfolgenden Zustände sind verschieden", über `jumpMeasure_map_fst` von
+  der Kettenrandverteilung auf den Stichprobenraum getragen. Es ist die Bedingung
+  an den **Kern** und nicht an die Konstruktion, und sie ist scharf: bei
+  `mu x {x} > 0` ist die Kette mit positiver Wahrscheinlichkeit stehend und der
+  Pfad sieht den Sprung nicht.
+* `ae_ne_poissonKernel`, `ae_move_jumpMeasure_poissonKernel` — der Zählkern
+  `x ↦ x + 1` von `ex:hawkes` erfüllt sie.
+* `MeasurableEq ℕ` ist die Instanz aus `Countable` und
+  `MeasurableSingletonClass`, und `y₀ = fun n ↦ n` ist `Nat.succ_ne_self`.
+
+**Die Nichtexplosion kommt nicht vor.** Weder die lokale Integrierbarkeit der
+selbstbezüglichen Rate noch die Divergenz der Sprungzeiten wird verlangt; die
+Identität ist eine zwischen zwei σ-Algebren, die aus der **Aufzeichnung** und aus
+dem **Pfad** erzeugt sind, und beide sind erklärt, ob die Sprungzeiten sich häufen
+oder nicht. Damit ist sie keine der offenen Aussagen des Abhängigkeitsbaums
+schuldig.
+
+**Was daraus folgt, und warum die Aussage gebraucht wurde:** über der
+augmentierten Filtration ist die Wahl zwischen `hawkesFiltration` und
+`hawkesPathFiltration` keine mehr. Ein Martingal über der einen ist nach
+`Martingale.augment` eines über deren Augmentierung, nach dieser Identität eines
+über der Augmentierung der anderen, und nach `Martingale.of_augment` — sobald der
+Prozeß an sie adaptiert ist — eines über der anderen selbst. Dasselbe für
+`IsStoppingTime.augment` und `Locally.augment`. Der Prozeß dieser Konstruktion
+hat also, wie der Nutzer es verlangt hat, **eine** Filtration; der Preis ist das
+Maß, und er ist im Abschnitt zuvor benannt.
 
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
