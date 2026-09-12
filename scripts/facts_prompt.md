@@ -241,6 +241,46 @@ Was **nicht** zu tun ist: auf `master` umstellen. Wir sind an v4.33.1 gebunden,
 und die eine bewußt gegen `master` geschriebene Aussage in
 `WeakConvergence/Suggested.lean` bleibt, wie sie ist.
 
+**Die Richtung, nach dem Baum des 24. Laufs** *(vom Nutzer am 2026-09-12
+festgelegt; sie ersetzt die Suche nach der nächsten Eingabe)*
+
+> **Ein so elementarer Prozeß braucht genau *eine* Filtration, und zwar die
+> seiner eigenen Vergangenheit.**
+
+Das ist die Vorgabe, und alles Weitere richtet sich danach. Zwei Filtrationen
+sind kein Entwurf, sondern ein Symptom: `hawkesJumpFiltration` trägt `hint` im
+Argument seiner **Definition**, und `hint` ist nach dem Zeugen des 24. Laufs
+(`φ = 1_(0,1]`, `T n = 1 − 1/n`) unerfüllbar. Die Zielaussage stünde über einer
+leeren Voraussetzung.
+
+**Der Weg:**
+
+1. **Heben nach `ℝ≥0∞`.** `cumulativeRateF` wird `ℝ≥0∞`-wertig, so daß `Λ = ⊤`
+   an einem explosiven Stichprobenpunkt **zulässig** ist. Dann verschwindet
+   `hint` aus jeder *Definition*; `rateInverseE` ist schon `ℝ≥0∞`-wertig und
+   braucht nichts dazu.
+2. **Damit fallen die beiden Filtrationen zusammen** — nicht bloß vergleichbar,
+   sondern gleich, wenn der Fixpunkt `jumpTimeFE_hawkesSelfRate` ohne `hint`
+   gilt. Prüfe das zuerst; trägt es, so ist die Unvergleichbarkeit des 23. Laufs
+   gegenstandslos und der Schnitt geht über der einen Filtration.
+3. **Erst danach, und als Satz statt als Voraussetzung: die Rate ist fast sicher
+   endlich.** `{ω : ∀ r, Λ r ω < ⊤}` ist genau die Nichtexplosionsmenge, und für
+   die gibt es bereits `ae_mem_nonExplosiveE`-artige Kriterien. Was dort nicht
+   reicht, bleibt getragene Hypothese (Volterra, siehe unten) — aber es steht
+   dann *neben* der Aussage und nicht *in* einer Definition.
+
+**Und der Punkt, auf den dabei zu achten ist** *(Nutzer, wörtlich: „auf die
+Müllwerte muß man schon aufpassen")*: `⊤` in `ℝ≥0∞` ist **kein** Müllwert. Die
+Müllwerte dieser Arbeit — `sInf ∅ = 0`, `x / 0 = 0`, `∫ f = 0` für
+nichtintegrierbares `f`, `stepIndex = 0` jenseits der Explosion — **lügen**: sie
+geben eine plausible Zahl, wo keine Antwort existiert, und haben sechsmal eine
+Aussage still wahr gemacht. `Λ = ⊤` sagt die Wahrheit. Genau deshalb hat die
+Hebung jedesmal getragen: sie ersetzt eine lügende Vorgabe durch eine ehrliche.
+
+Beim Heben ist daher **jede** Stelle zu prüfen, an der bisher ein `0` für
+„undefiniert" stand — sie ist entweder durch `⊤` zu ersetzen oder als bewußte
+Wahl zu begründen. Stillschweigend darf keine bleiben.
+
 **VORRANGIG, vor allem anderen in Teil C: den Abhängigkeitsbaum von
 `hawkes_isLocalMPSolution` von unten aufschreiben** *(vom Nutzer am 2026-09-12
 angeordnet)*
