@@ -3645,6 +3645,419 @@ A concrete family of solutions, built without any of the theory above. Index
   of `φ`, so it is an instance of the **global** statement and not only of the
   local one.
 
+### Der Abhängigkeitsbaum von `hawkes_isLocalMPSolution`, von unten aufgeschrieben
+
+*(Angeordnet vom Nutzer am 2026-09-12, weil fünf Läufe hintereinander — 169,
+171, 172, 173, 177 — gemeldet hatten, es fehle „genau eine Eingabe", und jedesmal
+die eingelöste Eingabe eine neue erzeugt hat. Der Baum steht hier, damit er beim
+nächsten Mal dasteht, statt neu erschlossen zu werden. Aufgeschrieben am
+2026-09-12, fünfter Lauf des Tages; die Zahl am Schluß ist **15**.)*
+
+Das Ziel ist der lokale Satz `thm:pathjumpMP`(a) in der Gestalt
+
+```
+hawkes_isLocalMPSolution
+    (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφm : Measurable φ)
+    (hφint : ∀ c r, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hint : ∀ w r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+  IsLocalMPSolution (mpFamilyF …) (hawkesJumpFiltration hν hφ hφm hφint hint)
+    (jumpMeasure mu nu)
+```
+
+Der Beweisbauplan ist der des zustandsabhängigen Falls, also der von
+`jumpProcess_isLocalMPSolution`, und dessen sechs Eingaben sind die Gliederung
+dieses Baums: das lokalisierende System, die Identifikation der beiden gestoppten
+Testprozesse, das **Martingal** des gestutzten Problems, die Adaptiertheit des
+gestoppten Testprozesses an die lokale Filtration, der Schnitt `hcut` des
+Turmschlusses, und der Turmschluß selbst.
+
+#### Schicht 0 — abstrakt, ohne Bezug auf die Sprungkonstruktion. **Bewiesen.**
+
+`martingale_stoppedProcess`, `martingale_of_martingale_of_stopped`,
+`martingale_indicator_bot`, `isStronglyProgressive_of_measurable_uncurry_mpFamilyF`,
+`pointFiltrationE_inter_le`, `pointFiltrationE_inter_le_of_measurable`. Sie sind
+im zustandsabhängigen Fall entstanden und werden hier unverändert verbraucht.
+
+**Eine Eigenschaft von `martingale_stoppedProcess` bestimmt den ganzen Rest des
+Baums:** seine Rechtsstetigkeitsvoraussetzung
+`hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω))` wird an
+**jedem** Stichprobenpunkt gefragt und nicht fast sicher. Deshalb steht `hint` —
+die lokale Integrierbarkeit der Selbstrate, also die Nichtexplosion — in der
+Zielaussage unter einem `∀ w` und nicht unter einem `∀ᵐ w`.
+
+#### Schicht 1 — die pfadabhängige Konstruktion, pfadweise. **Bewiesen.**
+
+`cumulativeRateF`, `rateInverse`, `rateInverseE`, `jumpTimeF`, `jumpTimeFE`,
+`jumpProcessF`, `jumpProcessFE`, `truncRateF`, `stepPath`; dazu
+`rateInverseE_le_ofReal_iff`, `lt_jumpTimeFE_iff`,
+`jumpProcessFE_eq_stepPath_cumulativeRateF` (die Zeitverwandlung),
+`monotone_rateInverseE`, `tendsto_rateInverseE_atTop`,
+`intervalIntegrable_truncRateF`, `cumulativeRateF_truncRateF_eq_min`,
+`cumulativeRateF_jumpTimeF`, `cumulativeRateF_jumpTimeF_sub` (`eq:compensatorexp`),
+`cumulativeRateF_min_jumpTimeF_le`, `rateInverse_sum_eq_jumpTimeF`.
+
+#### Schicht 2 — die Hawkes-Rate als Fixpunkt. **Bewiesen.**
+
+`hawkesFrozen`, `hawkesStep`, `hawkesJumpTime`, `cumulativeRateF_hawkesJumpTime`,
+`hawkesRate_countingMeasure`, `monotone_hawkesJumpTime`,
+`strictMono_hawkesJumpTime`, `jumpTimeF_hawkesRate_eq_hawkesJumpTime`,
+`jumpTimeFE_hawkesSelfRate`, `intervalIntegrable_hawkesFrozen`,
+`hawkesSelfRate_pos`, `tendsto_cumulativeRateF_hawkesSelfRate`,
+`hawkesProcess_eq_stepPath`; dazu die geschlossene Form des 2026-09-12,
+`sum_eq_mul_add_setIntegral_hawkesJumpTime`,
+`cumulativeRateF_hawkesSelfRate_eq_sum` und
+`cumulativeRateF_hawkesSelfRate_congr_of_jumpTime_eq`.
+
+#### Schicht 3 — Meßbarkeit und Filtration. **Bewiesen, bis auf `hcum`.**
+
+`hawkesFiltration`, `isStoppingTime_hawkesJumpTime`,
+`not_isStoppingTime_hawkesJumpTime_pathFiltration`, `hawkesJumpFiltration`,
+`isStoppingTime_jumpTimeFE_hawkesSelfRate`, `measurable_rateInverseE`,
+`measurable_jumpTimeFE`, `measurable_jumpStateE_truncRateF`,
+`measurableSet_lt_rateInverseE_of_adapted`,
+`jumpFiltrationFE_inter_lt_rateInverseE`, `jumpFiltrationFE_hcut`. Dazu die
+Schranke, die den Weg begrenzt: `not_measurable_cumulativeRateF_jumpFiltrationFE`
+— über einer **beliebigen** Rate ist die kumulierte Masse für die Filtration der
+Sprungzeiten nicht meßbar, mit Zeugen. `hcum` ist also keine Formalität, sondern
+eine Aussage über die Hawkes-Rate.
+
+#### Schicht 4 — Regularität des **ungestutzten** Testprozesses. **Bewiesen.**
+
+`isStronglyProgressive_mpFamilyF_hawkesStepPath`,
+`tendsto_nhdsGE_mpFamilyF_hawkesStepPath`, `bdd_mpFamilyF_of_cumulated`,
+`abs_setIntegral_compensatorF_le_of_cumulated`.
+
+#### Schicht 5 — Lokalisierung und Identifikation. **Bewiesen.**
+
+`isStoppingTime_rateInverseE`, `isLocalizingSequence_rateInverseE`,
+`isLocalizingSequence_rateInverseE_hawkesSelfRate`,
+`stoppedProcess_mpFamilyF_truncRateF_eq`.
+
+#### Schicht 6 — das Maß tritt ein. **Teilweise bewiesen.**
+
+`jumpMeasure_snd_eval_preimage`, `jumpMeasure_map_cumulativeRateF_jumpTimeF` (die
+Zeitverwandlung im Gesetz, voraussetzungslos), `jumpMeasure_lt_jumpTimeFE_one` und
+`jumpMeasure_lt_jumpTimeFE` (unter der Voraussetzung, daß die kumulierte Masse den
+Stichprobenpunkt **nicht** liest — was die Hawkes-Rate gerade nicht tut),
+`jumpMeasure_lt_hawkesJumpTime_one`,
+`jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one`. Eine **bedingte** Aussage steht in
+dieser Schicht nicht; das ist der Grund, aus dem Gruppe A unten leer ist.
+
+#### Die offenen Aussagen, mit dem, woran jede hängt
+
+**0. Die Vorfrage: ist `hint : ∀ w r, IntervalIntegrable (hawkesSelfRate ν φ · w) volume 0 r`
+erfüllbar?** `hawkesJumpFiltration` trägt `hint` als Argument seiner
+**Definition**, nicht bloß als Voraussetzung eines Satzes; ist `hint` unerfüllbar,
+so ist die ganze Zielaussage leer.
+
+**Auf Papier ist die Antwort „nein", und der Zeuge ist gerechnet.** Das Argument
+ruht auf einer Aussage, die seit langem bewiesen ist: `cumulativeRateF_hawkesJumpTime`
+sagt `cumulativeRateF w (T n) = ∑_{k<n} ξ k`, und
+`cumulativeRateF_hawkesSelfRate_eq_sum` (2026-09-12) hebt das auf die Selbstrate.
+Gilt `hint` an `w` und bleiben die Sprungzeiten unter einer Schranke `B`, so ist
+
+> `∑_{k<n} ξ k = cumulativeRateF w (T n) ≤ cumulativeRateF w B < ∞` für jedes `n`,
+
+also `∑ ξ k < ∞`. **Umgekehrt gelesen:** an einem Stichprobenpunkt mit
+divergenter Wartezeitsumme und beschränkten Sprungzeiten ist `hint` **falsch**.
+Ein solcher Punkt existiert, und er ist nicht exotisch. Mit `φ = 1_{(0,1]}` —
+nichtnegativ, meßbar, auf der abgeschlossenen negativen Halbachse `0`, lokal
+integrierbar, also den Daten von `ex:hawkes` genügend — setze `T n = 1 − 1/n`. Die
+gefrorene kumulierte Rate `g n u = ν u + ∑_{l=1}^{n} ∫₀^{u−T l} φ` ist stetig und
+streng wachsend, also ist `T (n+1)` genau die Inverse von `g n` am Pegel
+`s (n+1) = g n (T (n+1))`, und die Rekursion gibt diese `T` zurück, wenn man
+`ξ n = s (n+1) − s n` setzt (nichtnegativ, weil `g` in `n` wächst). Dabei ist
+`s (n+1) = ν T (n+1) + ∑_{l=1}^{n} (1/l − 1/(n+1)) ∼ log n → ∞`, während
+`T n → 1`. Also divergiert die Wartezeitsumme bei beschränkten Sprungzeiten, und
+`hint` fällt an diesem `w`.
+
+**Das ist eine Papierrechnung und kein Lean-Beweis.** Was in Lean billig ist und
+zuerst zu bauen: die **erste** Hälfte, die keine Konstruktion braucht —
+
+> `summable_waiting_of_intervalIntegrable_hawkesSelfRate`: gilt `hint` an `w`,
+> sind die Wartezeiten nichtnegativ und die Sprungzeiten durch `B` beschränkt, so
+> ist `∑ ξ k < ∞`.
+
+Sie ruht ausschließlich auf `cumulativeRateF_hawkesSelfRate_eq_sum`,
+`monotone_hawkesJumpTime` und der Monotonie der kumulierten Rate. Sie sagt
+**genau**, daß `hint` die Nichtexplosion *ist* und nicht eine Regularität neben
+ihr, und sie ist die Aussage, an der die Zielaussage umgebaut wird. Der Zeuge
+selbst ist ein eigener, teurerer Punkt.
+
+**Was daraus folgt, wenn es sich bestätigt:** `hint` darf nicht unter `∀ w` stehen.
+Die Nichtexplosion muß als `∀ᵐ w ∂(jumpMeasure mu nu)` eintreten, wie
+`ae_mem_nonExplosiveE` es im zustandsabhängigen Fall tut — und dann ist
+`hawkesJumpFiltration` in seiner jetzigen Gestalt **nicht definierbar**, denn eine
+Filtration ist kein f.s.-Begriff. Das ist der Grund, aus dem Punkt 13 unten keine
+Bequemlichkeitsfrage ist.
+
+**Gruppe A — die Wahrscheinlichkeitsaussage. Sie fehlt vollständig.**
+In `section PathDependent` kommt ein Maß an genau zwei Stellen vor: als freie
+Variable von `isLocalizingSequence_rateInverseE` und in `section PathLaw`. Eine
+bedingte Erwartung kommt **nirgends** vor. Der Beweis des Manuskripts ist
+`E[D_n | ℋ_n] = 0` mit
+`D_n = (f(Y_{n+1}) − f(Y_n)) 1_{τ_{n+1} ≤ t} − ∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds`.
+Er ist **keine** Erneuerungszerlegung wie im zustandsabhängigen Fall; nach dem
+Sprung ist die Rate eine andere und es wird nichts neu gestartet.
+
+1. `condExp_lt_jumpTimeFE` — die bedingte Überlebensfunktion
+   `P(τ_{n+1} > s | ℋ_n) = exp (−(Λ_s − Λ_{τ_n}))` auf `{τ_n ≤ s}`. Hängt an einer
+   **Entscheidung** (was `ℋ_n` ist: `(hawkesJumpFiltration).stoppedσ` an
+   `jumpTimeFE`, oder die von `(y_0,…,y_n, ξ_0,…,ξ_{n−1})` erzeugte σ-Algebra) und
+   an einer **Rechnung** (`lt_jumpTimeFE_iff` schiebt das Ereignis auf
+   `{cumulativeRateF Λ w s < ∑_{k<n+1} ξ k}`; der Pegel ist dann `ℋ_n`-meßbar, und
+   `ξ n` ist unter `jumpMeasure mu nu` von `ℋ_n` unabhängig und Exp(1)).
+2. `condExp_jumpTimeFE_hasDensity` — die bedingte Dichte von `τ_{n+1}`,
+   `Λ_u exp (−(Λ_u − Λ_{τ_n}))` auf `(τ_n, ∞)`. Hängt an 1 und an einer
+   **Rechnung** (Variablenwechsel längs der kumulierten Rate).
+3. `condExp_jump_term` — `E[(f(Y_{n+1}) − f(Y_n)) 1_{τ_{n+1} ≤ t} | ℋ_n]` als
+   `∫_{τ_n}^{t} Λ_u e^{−A_n(u)} (μ_u f − f(Y_n)) du`. Hängt an 2 und am Kern der
+   Marken.
+4. `condExp_compensator_term` — `E[∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds | ℋ_n]` als
+   **dasselbe** Integral. Hängt an 1 und an Fubini.
+5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. Hängt an 3 und 4.
+6. `martingale_mpFamilyF_truncRateF` — die Summation über `n`, also das Martingal
+   des **gestutzten** Problems. Hängt an 5 und daran, daß unterhalb der
+   Deckelung `a` nur endlich viele Sprünge liegen.
+
+**Gruppe B — die Regularität des **gestutzten** Testprozesses.**
+Die Schicht-4-Aussagen sind auf `hawkesSelfRate` und `stepPath (hawkesJumpTime …)`
+zugeschnitten; `martingale_stoppedProcess` wird auf `truncRateF (hawkesSelfRate ν φ) a`
+angewandt und braucht sie dort.
+
+7. `isStronglyProgressive_mpFamilyF_truncRateF_hawkesSelfRate`. Hängt an einer
+   **Rechnung**; die Eingabe `measurable_jumpStateE_truncRateF` steht.
+8. `tendsto_nhdsGE_mpFamilyF_truncRateF_hawkesSelfRate`. Hängt an der
+   **Nichtexplosion** — und zwar an jedem Stichprobenpunkt, siehe Schicht 0. Die
+   Deckelung nimmt sie **nicht** ab: oberhalb des Pegels `a` gibt es keine Sprünge
+   mehr, aber unterhalb können sie sich immer noch häufen.
+
+**Gruppe C — `hcum` und der Schnitt.**
+
+9. `hcum` **unterhalb** der Explosionszeit: die Meßbarkeit von
+   `w ↦ cumulativeRateF (truncRateF (hawkesSelfRate ν φ) a) w i` bezüglich
+   `hawkesJumpFiltration i`, auf `{w | ∃ n, i ≤ hawkesJumpTime ν φ w.2 w (n+1)}`.
+   Hängt an einer **Rechnung**; `cumulativeRateF_hawkesSelfRate_eq_sum` macht die
+   Masse dort zu einer endlichen Summe über die Sprungzeiten unterhalb `i`.
+10. `hcum` **an und oberhalb** der Explosionszeit. Hängt an der
+    **Nichtexplosion**, und zwar an ihrer Umgehung: zu prüfen ist, ob die
+    Deckelung die Lage erledigt, weil dort die ungedeckelte Masse `≥ a` ist. Der
+    naheliegende Beleg trägt nicht, denn die Selbstrate ist dort der Müllwert `ν`.
+11. `hawkes_hcut` — die Instanz von `jumpFiltrationFE_hcut` an den Daten. Hängt an
+    9 und 10; `hpos` und `htop` stehen (`hawkesSelfRate_pos`,
+    `tendsto_cumulativeRateF_hawkesSelfRate`).
+
+**Gruppe D — die Adaptiertheit des gestoppten Testprozesses.**
+
+12. `stronglyAdapted_stoppedProcess_mpFamilyF_hawkesSelfRate` — das Gegenstück zu
+    `stronglyAdapted_stoppedProcess_mpFamily_jumpProcessE`. Hängt an einer
+    **Rechnung**: ein Fenster mit zufälligem oberen Ende ist ein Fenster fester
+    Länge mit abgeschnittenem Integranden.
+
+**Gruppe E — zwei Identifikationen, und beide sind Entscheidungen.**
+
+13. **Eine Filtration.** `isLocalizingSequence_rateInverseE_hawkesSelfRate` und
+    `isStronglyProgressive_mpFamilyF_hawkesStepPath` laufen über
+    `hawkesFiltration`, `jumpFiltrationFE_hcut` über `hawkesJumpFiltration`. Der
+    Zielsatz braucht **eine**. Die beiden stimmen nur überein, wo der Fixpunkt
+    gilt (`jumpTimeFE_hawkesSelfRate`, unter `hxi : ∀ k, 0 ≤ w.2 k`), und `hxi`
+    gilt nur fast sicher — Filtrationen sind keine f.s.-Begriffe. Hängt an einer
+    **Entscheidung**: entweder alles über `hawkesJumpFiltration` neu beweisen,
+    oder `hawkesFiltration` so umbauen, daß der Schnitt über ihr geht (der
+    dreiundzwanzigste Lauf des 2026-09-11 hat gezeigt, daß letzteres nicht geht).
+
+    **Und die Entscheidung ist durch Punkt 0 vermutlich schon getroffen, gegen
+    die bisher eingeschlagene Richtung.** Von den beiden Filtrationen ist
+    `hawkesFiltration` die **hint-freie**: sie ruht auf
+    `measurable_hawkesJumpTime_apply` und verlangt nichts als die Daten von
+    `ex:hawkes`. `hawkesJumpFiltration` ruht auf `measurable_jumpTimeFE`, und
+    dessen `hint` ist nicht wegzukürzen — es geht über `rateInverseE_le_ofReal_iff`
+    in die Gestalt der Subniveaumengen ein, und an einem nicht integrierbaren
+    Stichprobenpunkt ist die kumulierte Rate der Müllwert `0` und die Äquivalenz
+    falsch. Ist `hint` unerfüllbar, so ist von den beiden Filtrationen genau
+    **eine** instantiierbar, und es ist die, über der der Schnitt nicht geht. Das
+    ist die Bruchstelle, an der die fünf Läufe mit der Meldung „genau eine
+    Eingabe" tatsächlich standen, ohne sie zu sehen: sie liegt nicht oben im Baum,
+    sondern in der Wahl der Filtration, und sie ist nicht durch eine weitere
+    Eingabe zu schließen.
+
+    **Der dritte Ausweg — die Filtration des Pfades — ist geschlossen, und in
+    Lean:** `not_hawkesFiltration_le_hawkesPathFiltration`. Die Kette ist die
+    erste Koordinate des Stichprobenraums, also ist die konstante Kette ein
+    Stichprobenpunkt, und dort steht der Pfad still, während die Sprungzeiten
+    laufen. Es bleibt `stepPathFiltrationE_le_pointFiltrationE`, die Inklusion in
+    eine Richtung, und die ist voraussetzungslos. Siehe den Abschnitt „Die
+    Filtration eines Treppenpfadprozesses" unten.
+14. **Ein Prozeß.** Die Schicht-4-Aussagen sprechen über
+    `stepPath (hawkesJumpTime ν φ ω.2 ω) ω.1`,
+    `stoppedProcess_mpFamilyF_truncRateF_eq` über
+    `jumpProcessFE (hawkesSelfRate ν φ)`. `hawkesProcess_eq_stepPath` identifiziert
+    sie, trägt aber `hxi` und `hint`, gilt also nur fast sicher. Hängt an
+    derselben **Entscheidung** wie 13.
+
+#### Die Nichtexplosion, an einer Stelle gesammelt
+
+Sie tritt an **sechs** Stellen auf, nicht an vier:
+
+1. **Rechtsstetigkeit des Testprozesses** — `tendsto_nhdsGE_mpFamilyF_hawkesStepPath`
+   trägt `hint` am Stichprobenpunkt.
+2. **Übertragung des ersten Sprungzeitgesetzes** —
+   `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one`.
+3. **Formulierbarkeit von `hawkesJumpFiltration`** — `hint` steht im Argument der
+   **Definition**.
+4. **Gültigkeitsbereich der Formel für die kumulierte Rate** —
+   `cumulativeRateF_hawkesSelfRate_eq_sum` gilt für `r ≤ T (n+1)`, und daß das
+   jedes `r` ist, ist die Nichtexplosion (offener Punkt 10).
+5. **Identifikation des Prozesses mit dem Stufenpfad** — `hawkesProcess_eq_stepPath`
+   trägt `hint` (offener Punkt 14).
+6. **Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher** — weil
+   `martingale_stoppedProcess` seine Rechtsstetigkeit unter einem `∀ ω` fragt.
+   Das ist die schärfste Gestalt, in der sie auftritt, und sie ist der Grund, aus
+   dem offener Punkt 0 eine Vorfrage und keine Randnotiz ist.
+
+**Was daraus folgt, und es ist der Befund dieses Abschnitts:** die Nichtexplosion
+ist im pfadabhängigen Fall **keine Voraussetzung, die man an den Anfang stellen und
+dann vergessen kann**, wie `ae_mem_nonExplosiveE` es im zustandsabhängigen Fall
+ist. Dort ist sie eine f.s.-Aussage unter dem Maß und geht genau in das
+lokalisierende System ein; hier steht sie in der **Definition** einer Filtration
+und unter einem Allquantor. Das ist die Stelle, an der die pfadabhängige Variante
+teurer ist als die zustandsabhängige, und sie ist damit benannt.
+
+#### Die Zahl
+
+**Fünfzehn.** Offene Punkte 0 bis 14. Die Meldung „es fehlt genau eine Eingabe"
+war in jedem der fünf Läufe für die **jeweils oberste** Schicht richtig und für
+den Baum falsch: der Baum ist von oben abgearbeitet worden, und Gruppe A, die
+sechs Aussagen der Wahrscheinlichkeitsschicht, ist in keiner dieser Meldungen
+vorgekommen, weil keine Aussage über ihr auf sie **zeigt** — sie ist der Rumpf des
+Satzes und keine seiner Eingaben.
+
+Die billigste offene Aussage ist **0** (eine Rechnung an einem Zeugen, und wenn
+sie negativ ausgeht, fällt die Zielaussage in ihrer jetzigen Gestalt); die
+teuerste ist **Gruppe A** (sechs Aussagen, und keine von ihnen hat heute eine
+Eingabe im Bestand außer `lt_jumpTimeFE_iff`).
+
+### Die Filtration eines Treppenpfadprozesses: die Punktfiltration, und was der Pfad von ihr zurückgibt
+
+*(Vom Nutzer am 2026-09-12 als eigener Punkt des Meilensteins angeordnet, in der
+Gestalt „`naturalFiltration (stepPath T y) = pointFiltration T y` für beliebige
+meßbare `T` und `y`". Die Aussage ist in dieser Gestalt **falsch**; was von ihr
+bleibt, steht hier, und die drei Voraussetzungen, die sie braucht, sind je durch
+einen Zeugen als notwendig ausgewiesen.)*
+
+Die Frage ist keine über die Hawkes-Rate, sondern eine über **Treppenpfadprozesse
+schlechthin**: trägt die Aufzeichnung, welcher Sprung wann geschehen ist, mehr als
+der Pfad? Beide Filtrationen sind über beliebige `T : Ω → ℕ → ℝ≥0∞` und
+`y : Ω → ℕ → E` erklärt, `pointFiltrationE` aus Aufzeichnung und Pfad,
+`stepPathFiltrationE` aus dem Pfad allein.
+
+**Die eine Hälfte gilt voraussetzungslos und steht:**
+
+* `stepPathFiltrationE` — die natürliche Filtration des Treppenpfades über
+  Sprungzeiten in `ℝ≥0∞`, das Gegenstück zu `jumpFiltrationE` für eine beliebige
+  Familie von Sprungzeiten.
+* `measurable_stepPath_pointFiltrationE` — der Pfad ist die zweite Komponente des
+  Zustands, also für die Punktfiltration meßbar.
+* `stepPathFiltrationE_le_pointFiltrationE` — `stepPathFiltrationE T y i ≤
+  pointFiltrationE T y i` an jedem Index, **ohne jede Voraussetzung** an `T` oder
+  an `y`. Die Vergrößerung verliert also nichts.
+
+**Die andere Hälfte ist falsch, und drei Zeugen sagen, woran es liegt.** Das
+Kriterium ist `not_pointFiltrationE_le_stepPathFiltrationE`: zwei
+Stichprobenpunkte mit gleichem Pfad unterhalb `i` und verschiedener Aufzeichnung
+bei `i` trennen die beiden Filtrationen, denn `isStoppingTime_jumpTimeE` legt das
+Ereignis „der `n`-te Sprung ist geschehen" in die Punktfiltration und
+`eq_of_measurable_naturalFiltration` verbietet jedem Funktional des Pfades, die
+beiden zu trennen.
+
+1. **Die Kette muß sich bewegen.**
+   `exists_not_pointFiltrationE_le_stepPathFiltrationE_of_const_chain`: bei
+   konstanter Kette ist der Pfad konstant und sieht nichts, obwohl die
+   Sprungzeiten des Zeugen an **jedem** Stichprobenpunkt streng wachsen. Es ist
+   der Zeuge von `not_isStoppingTime_min_jumpTimeE` und von
+   `not_isStoppingTime_hawkesJumpTime_pathFiltration`, einmal für die allgemeine
+   Konstruktion und damit für jede ihrer Instanzen.
+2. **Die Sprungzeiten müssen streng wachsen.**
+   `exists_not_pointFiltrationE_le_stepPathFiltrationE_of_coincident_times`: hier
+   bewegt sich die Kette bei **jedem** Schritt, und der Pfad sieht trotzdem
+   nichts, weil alle Sprungzeiten zusammenfallen und die ganze Kette in einem
+   Augenblick durchlaufen wird. Das ist der äußerste Fall der Explosion, und der
+   Wert, den der Pfad dort zeigt, ist der Müllwert von `stepIndex`.
+3. **Die erste Sprungzeit ist unsichtbar.** `stepPath_update_zero`: `stepIndex`
+   ist durch die Ereignisse `t < T (n+1)` beschrieben, also liest der Pfad `T 0`
+   überhaupt nicht, während die Aufzeichnung es in ihrer nullten Koordinate liest.
+
+Keine der drei folgt aus den beiden anderen, und **die Nichtexplosion ist keine
+von ihnen**.
+
+**Was zu beweisen bleibt, und es ist die Aussage mit den schwächsten
+Voraussetzungen, unter denen sie gilt:**
+
+```
+pointFiltrationE_eq_stepPathFiltrationE
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n)
+    (hmono : ∀ ω, StrictMono (T ω)) (hzero : ∀ ω, T ω 0 = 0)
+    (hmove : ∀ ω n, y ω n ≠ y ω (n + 1)) (i : ℝ≥0) :
+  pointFiltrationE T y hT hy i = stepPathFiltrationE T y hT hy i
+```
+
+Der Beweis ist die Rückrichtung; die Hinrichtung ist
+`stepPathFiltrationE_le_pointFiltrationE`. Zu zeigen ist, daß
+`{ω | T ω n ≤ i}` für die Pfadfiltration meßbar ist, und zwar so:
+
+> `T ω n ≤ i` genau dann, wenn es `0 = q₀ < q₁ < … < qₙ ≤ i` gibt, jedes `q` aus
+> `(ℚ≥0 ∩ [0,i]) ∪ {i}`, mit `stepPath (T ω) (y ω) q_{j-1} ≠ stepPath (T ω) (y ω) q_j`
+> für jedes `j`.
+
+Die Hinrichtung wählt in jedem Fenster `[T j, T (j+1))` einen solchen Punkt — das
+Fenster hat wegen `hmono` positive Länge —, und `hmove` macht die Werte an je zwei
+aufeinanderfolgenden verschieden. Die Rückrichtung zählt: liegen die Werte an
+`q_{j-1}` und `q_j` auseinander, so liegt zwischen ihnen mindestens eine
+Sprungzeit, also gibt es `n` Sprungzeiten unterhalb `i`, und mit `hmono` ist das
+`T n ≤ i`. Die Menge ist eine abzählbare Vereinigung abzählbarer Durchschnitte von
+Urbildern unter Auswertungen bei Indizes `≤ i`, liegt also in
+`stepPathFiltrationE T y hT hy i`.
+
+**Die Nichtexplosion kommt in diesem Beweis nicht vor**, und das ist der Grund,
+aus dem die Aussage hierher gehört: sie ist die einzige der sechs Stellen, an
+denen die Nichtexplosion im pfadabhängigen Fall auftritt, die sich ohne sie
+erledigen läßt. Explodiert `T` unterhalb `i`, so gilt `T n ≤ i` für jedes `n`, und
+die rechte Seite ist für jedes `n` erfüllt, weil vor der Explosionszeit unendlich
+viele Fenster positiver Länge liegen.
+
+**Die Instanzen, und der Befund, der sie alle zugleich betrifft.** Poisson,
+Geburt-Tod, M/M/1, Yule und Hawkes sind auf **einem** Stichprobenraum gebaut,
+`(ℕ → E) × (ℕ → ℝ)`, und die Kette ist dort dessen **erste Koordinate**:
+`y ω = ω.1`. Damit ist `hmove : ∀ ω n, y ω n ≠ y ω (n+1)` für jede dieser
+Instanzen **falsch**, denn die konstante Kette ist ein Stichprobenpunkt des
+Raumes. Ebenso ist `hmono` dort falsch, weil die konstante Wartezeitfolge `0` ein
+Stichprobenpunkt ist. Beide gelten nur fast sicher unter `jumpMeasure mu nu`, und
+zwar `hmove` nur bei einem Kern mit `mu x {x} = 0`; die Gleichheit zweier
+σ-Algebren ist aber keine f.s.-Aussage.
+
+Für den Hawkes-Fall ist das in Lean ausgeführt:
+`not_hawkesFiltration_le_hawkesPathFiltration` — die Inklusion von
+`hawkesPathFiltration_le_hawkesFiltration` ist strikt, also trägt die
+pfadabhängige Variante zwei Filtrationen und nicht eine. Weder die Hawkes-Rate
+noch die Explosion sind daran schuld; es ist allein die freie Kettenkoordinate.
+
+Die Aussage `pointFiltrationE_eq_stepPathFiltrationE` greift daher bei einem
+Stichprobenraum, auf dem die Kette **nicht frei** ist — dem reinen Zählprozeß mit
+`E = ℕ` und `y ω n = n`, den `ex:hawkes` selbst vorschreibt
+(`mu (t, ω, ·) = dirac (ω t⁻ + 1)`). Dort ist `hmove` ein `Nat.succ_ne_self`,
+`hzero` ist `hawkesJumpTime_zero` (ein `rfl`), und `hmono` bleibt die einzige
+Voraussetzung über die Wartezeiten (`strictMono_hawkesJumpTime`, verlangt
+`0 < ξ n`).
+
+**Die Folgerung für die Wahl der Filtration, denn sie ist der Anlaß der Frage:**
+über dem Produktraum bleibt die Punktfiltration die echt größere, und sie ist
+zugleich die einzige, deren **Definition** kein `hint` trägt. `hawkesFiltration`
+ist damit die Filtration, über der der Satz zu führen ist, und
+`hawkesJumpFiltration` ist es nicht.
+
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
 *(Frage des Nutzers, 2026-09-10.)* Der Vorschlag war, den linearen

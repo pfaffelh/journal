@@ -1598,6 +1598,21 @@ theorem T_stepIndex_le (h : stepIndex T t ≠ 0) : T (stepIndex T t) ≤ t := by
 /-- The path that takes the value `y n` on `[T n, T (n + 1))`. -/
 noncomputable def stepPath (T : ℕ → α) (y : ℕ → E) (t : α) : E := y (stepIndex T t)
 
+/-- **The path does not read the first jump time.**  `stepIndex` is described by the events
+`t < T (n + 1)` alone, so `T 0` never enters, and the path is the same whatever value is put
+there.
+
+This is not a curiosity: the *record* of a point process reads `T 0` in its zeroth coordinate,
+so the path and the record part company at that coordinate for any family of jump times.  It is
+the reason the identification of the two filtrations carries the hypothesis `T 0 = 0`, and every
+construction here meets it (`jumpTime_zero`, `jumpTimeE_zero`, `hawkesJumpTime_zero`). -/
+@[simp] theorem stepPath_update_zero (T : ℕ → α) (y : ℕ → E) (a : α) (t : α) :
+    stepPath (Function.update T 0 a) y t = stepPath T y t := by
+  have hset : {n : ℕ | t < Function.update T 0 a (n + 1)} = {n : ℕ | t < T (n + 1)} := by
+    ext n
+    rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, Function.update_of_ne (Nat.succ_ne_zero n)]
+  simp only [stepPath, stepIndex, hset]
+
 /-- Every time lies in a window: the index it receives has its left endpoint below it (or is
 `0`) and its right endpoint above it.
 
@@ -15827,6 +15842,25 @@ theorem not_isStoppingTime_hawkesJumpTime_pathFiltration [MeasurableSpace E] (h�
   rw [Set.indicator_of_mem hmem₁, Set.indicator_of_notMem hmem₂] at hsep
   exact one_ne_zero hsep
 
+/-- **The two filtrations of the Hawkes construction are not the same one.**  The inclusion of
+`hawkesPathFiltration_le_hawkesFiltration` is strict, so the path dependent variant carries two
+filtrations and not one, and the larger of the two is the point filtration.
+
+This is `not_isStoppingTime_hawkesJumpTime_pathFiltration` read as a statement about the
+filtrations, and what it says is that the obstruction is neither the Hawkes rate nor the explosion.
+It is that the chain is a **free coordinate of the sample space**: a constant chain is a sample
+point of `(ℕ → E) × (ℕ → ℝ)`, and there the path stands still while the jump times move.  The
+identification of the two filtrations therefore cannot be had for these data at any price; it needs
+a sample space on which the chain is not free. -/
+theorem not_hawkesFiltration_le_hawkesPathFiltration [MeasurableSpace E] (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφm : Measurable φ)
+    (hφint : ∀ a r : ℝ, IntervalIntegrable (fun u ↦ φ (u - a)) volume 0 r) (x₀ : E) :
+    ¬ ∀ i : ℝ≥0, hawkesFiltration (E := E) hν hφ hφm hφint i
+      ≤ hawkesPathFiltration hν hφ hφm hφint i := by
+  intro hle
+  refine not_isStoppingTime_hawkesJumpTime_pathFiltration hν hφ hφm hφint x₀ fun i ↦ ?_
+  exact hle i _ (isStoppingTime_hawkesJumpTime hν hφ hφm hφint 1 i)
+
 end HawkesProcess
 
 /-! ### The generator of a path dependent jump process, and the family it generates
@@ -18429,6 +18463,131 @@ theorem pointFiltrationE_inter_le_of_measurable {T T' : Ω → ℕ → ENNReal} 
     exact hrec ω hω r hr n
   simp only [jumpStateE]
   rw [hrecr, hpath ω hω r hr]
+
+/-! ### The filtration of the path against the filtration of the point process
+
+The path dependent variant carries two filtrations -- the point filtration of the jump times and
+the natural filtration of the path -- and whether they coincide is not a question about the Hawkes
+rate.  It is a question about **step path processes as such**: does the record of which jumps have
+happened carry more than the path does?
+
+`stepPathFiltrationE_le_pointFiltrationE` is the easy half, and it holds with nothing assumed at
+all: the path is the second component of the state, so the path filtration sits inside the point
+filtration.
+
+The other half is **false as stated**, and `not_pointFiltrationE_le_stepPathFiltrationE` is the
+criterion that says so: two sample points with the same path below `i` and different records at `i`
+refute it.  The two corollaries feed it the two different ways this happens.
+
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_const_chain` is the constant chain.  The jump
+times are **strictly increasing** and the path still never moves, so the path sees nothing at all.
+It is the witness of `not_isStoppingTime_min_jumpTimeE` and of
+`not_isStoppingTime_hawkesJumpTime_pathFiltration`, stated once for the general construction and
+therefore for every instance of it.
+
+`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_coincident_times` is the other way.  The
+chain **moves at every step**, but all jump times coincide, so the whole chain is traversed in one
+instant and the path shows one value.  This is the extreme case of explosion -- the sum of the
+waiting times is `0` -- and it is exactly where `stepIndex` returns its junk value.
+
+Together the two name the two hypotheses an equality has to carry: the chain moves, and the jump
+times are strictly increasing.  Neither is implied by the other, and non explosion is not among
+them; see Milestone 4 of the roadmap for the statement that remains and how it is proved. -/
+
+/-- **The natural filtration of a step path**, over jump times in `ℝ≥0∞` and indexed by `ℝ≥0` as
+`pointFiltrationE` is.  This is the filtration the state dependent construction uses
+(`jumpFiltrationE`), read for an arbitrary family of jump times. -/
+noncomputable def stepPathFiltrationE (T : Ω → ℕ → ENNReal) (y : Ω → ℕ → E)
+    (hT : ∀ n, Measurable fun ω ↦ T ω n) (hy : ∀ n, Measurable fun ω ↦ y ω n) :
+    Filtration ℝ≥0 (inferInstance : MeasurableSpace Ω) :=
+  naturalFiltration (fun i : ℝ≥0 ↦ fun ω ↦ stepPath (T ω) (y ω) ((i : ℝ≥0) : ENNReal))
+    fun i ↦ measurable_stepPath_comp (u := fun _ : Ω ↦ ((i : ℝ≥0) : ENNReal))
+      measurable_const hT hy
+
+/-- **The path of a point process is adapted to the point filtration**, the path being the second
+component of the state.  The counterpart of `measurable_stepPath_pointFiltration`. -/
+theorem measurable_stepPath_pointFiltrationE (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) (i : ℝ≥0) :
+    Measurable[pointFiltrationE T y hT hy i] fun ω ↦ stepPath (T ω) (y ω) ((i : ℝ≥0) : ENNReal) :=
+  measurable_snd.comp (measurable_naturalFiltration (X := fun i : ℝ≥0 ↦ jumpStateE T y i)
+    (measurable_jumpStateE hT hy) le_rfl)
+
+/-- **The filtration of the path sits inside the filtration of the point process**, at every index
+and with no hypothesis whatever on the family of jump times or on the chain.  The enlargement
+therefore loses nothing. -/
+theorem stepPathFiltrationE_le_pointFiltrationE (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) (i : ℝ≥0) :
+    stepPathFiltrationE T y hT hy i ≤ pointFiltrationE T y hT hy i := by
+  refine iSup₂_le fun j hj ↦ ?_
+  rintro A ⟨u, hu, rfl⟩
+  exact (measurable_stepPath_pointFiltrationE hT hy j).mono
+    ((pointFiltrationE T y hT hy).mono hj) le_rfl hu
+
+/-- **The criterion that refutes the reverse inclusion.**  Two sample points whose paths agree at
+every time below `i`, and whose records at `i` differ in one coordinate, separate the two
+filtrations: the event that the `n`-th jump has happened is in the point filtration by
+`isStoppingTime_jumpTimeE`, and no functional of the path distinguishes the two sample points by
+`eq_of_measurable_naturalFiltration`.
+
+Nothing is assumed of the family of jump times or of the chain; the corollaries below supply the
+two sample points in the two different ways in which they exist. -/
+theorem not_pointFiltrationE_le_stepPathFiltrationE (hT : ∀ n, Measurable fun ω ↦ T ω n)
+    (hy : ∀ n, Measurable fun ω ↦ y ω n) {i : ℝ≥0} {n : ℕ} {ω₁ ω₂ : Ω}
+    (hpath : ∀ r ≤ i, stepPath (T ω₁) (y ω₁) ((r : ℝ≥0) : ENNReal)
+      = stepPath (T ω₂) (y ω₂) ((r : ℝ≥0) : ENNReal))
+    (h₁ : T ω₁ n ≤ ((i : ℝ≥0) : ENNReal)) (h₂ : ¬ T ω₂ n ≤ ((i : ℝ≥0) : ENNReal)) :
+    ¬ pointFiltrationE T y hT hy i ≤ stepPathFiltrationE T y hT hy i := by
+  classical
+  intro hle
+  set S : Set Ω := {ω : Ω | T ω n ≤ ((i : ℝ≥0) : ENNReal)} with hSdef
+  have hSm : MeasurableSet[pointFiltrationE T y hT hy i] S := isStoppingTime_jumpTimeE hT hy n i
+  have hGm : Measurable[stepPathFiltrationE T y hT hy i] (S.indicator fun _ ↦ (1 : ℝ)) :=
+    measurable_const.indicator (hle _ hSm)
+  have hsep := eq_of_measurable_naturalFiltration
+    (X := fun j : ℝ≥0 ↦ fun ω : Ω ↦ stepPath (T ω) (y ω) ((j : ℝ≥0) : ENNReal)) _ hGm hpath
+  rw [Set.indicator_of_mem (show ω₁ ∈ S from h₁),
+    Set.indicator_of_notMem (show ω₂ ∉ S from h₂)] at hsep
+  exact one_ne_zero hsep
+
+/-- **The chain has to move.**  With a constant chain the path is constant, so its natural
+filtration is trivial, while the point filtration sees every jump time.  The jump times of the
+witness are **strictly increasing** at every sample point, so strict monotonicity of the jump times
+is not what is missing. -/
+theorem exists_not_pointFiltrationE_le_stepPathFiltrationE_of_const_chain
+    {E : Type*} [MeasurableSpace E] (x₀ : E) :
+    ∃ (T : ℝ≥0 → ℕ → ENNReal) (y : ℝ≥0 → ℕ → E) (hT : ∀ n, Measurable fun ω ↦ T ω n)
+      (hy : ∀ n, Measurable fun ω ↦ y ω n),
+      (∀ ω, StrictMono (T ω)) ∧
+        ¬ pointFiltrationE T y hT hy 0 ≤ stepPathFiltrationE T y hT hy 0 := by
+  refine ⟨fun ω n ↦ (ω : ENNReal) + (n : ENNReal), fun _ _ ↦ x₀,
+    fun n ↦ measurable_coe_nnreal_ennreal.add_const _, fun _ ↦ measurable_const, ?_, ?_⟩
+  · intro ω a b hab
+    exact ENNReal.add_lt_add_left (by simp) (by exact_mod_cast hab)
+  · refine not_pointFiltrationE_le_stepPathFiltrationE _ _ (n := 0) (ω₁ := 0) (ω₂ := 1)
+      (fun r _ ↦ rfl) (by simp) (by simp)
+
+/-- **The jump times have to be strictly increasing.**  Here the chain moves at every step, and the
+path still sees nothing: all jump times coincide, so the whole chain is traversed in one instant.
+This is the extreme case of explosion, and the value the path shows there is the junk value of
+`stepIndex`. -/
+theorem exists_not_pointFiltrationE_le_stepPathFiltrationE_of_coincident_times :
+    ∃ (T : ℝ≥0 → ℕ → ENNReal) (y : ℝ≥0 → ℕ → ℕ) (hT : ∀ n, Measurable fun ω ↦ T ω n)
+      (hy : ∀ n, Measurable fun ω ↦ y ω n),
+      (∀ ω n, y ω n ≠ y ω (n + 1)) ∧
+        ¬ pointFiltrationE T y hT hy 0 ≤ stepPathFiltrationE T y hT hy 0 := by
+  refine ⟨fun ω _ ↦ (ω : ENNReal), fun _ n ↦ n,
+    fun _ ↦ measurable_coe_nnreal_ennreal, fun _ ↦ measurable_const, fun ω n ↦ n.succ_ne_self.symm,
+    ?_⟩
+  have hzero : stepIndex (fun _ : ℕ ↦ ((0 : ℝ≥0) : ENNReal)) ((0 : ℝ≥0) : ENNReal) = 0 := by
+    simp [stepIndex]
+  have hone : stepIndex (fun _ : ℕ ↦ ((1 : ℝ≥0) : ENNReal)) ((0 : ℝ≥0) : ENNReal) = 0 :=
+    Nat.le_zero.1 (Nat.sInf_le (by simp))
+  refine not_pointFiltrationE_le_stepPathFiltrationE _ _ (n := 0) (ω₁ := 0) (ω₂ := 1)
+    (fun r hr ↦ ?_) (by simp) (by simp)
+  obtain rfl : r = 0 := le_antisymm hr zero_le
+  show stepIndex (fun _ : ℕ ↦ ((0 : ℝ≥0) : ENNReal)) ((0 : ℝ≥0) : ENNReal)
+    = stepIndex (fun _ : ℕ ↦ ((1 : ℝ≥0) : ENNReal)) ((0 : ℝ≥0) : ENNReal)
+  rw [hzero, hone]
 
 end PointFiltrationE
 

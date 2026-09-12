@@ -241,6 +241,158 @@ Was **nicht** zu tun ist: auf `master` umstellen. Wir sind an v4.33.1 gebunden,
 und die eine bewußt gegen `master` geschriebene Aussage in
 `WeakConvergence/Suggested.lean` bleibt, wie sie ist.
 
+**Die Filtrationsgleichheit: augmentieren, nicht abschwächen** *(Nutzer,
+2026-09-12, nach der Widerlegung im 25. Lauf)*
+
+Der 25. Lauf hat `naturalFiltration (stepPath T y) = pointFiltration T y`
+**widerlegt**, in Lean, mit drei Zeugen für drei notwendige Voraussetzungen; für
+die echten Hawkes-Daten ist die Inklusion strikt. Der Grund: die Kette ist eine
+freie Koordinate des Stichprobenraums, „Kette bewegt sich" und „Sprungzeiten
+wachsen echt" gelten nur **fast sicher**, und Gleichheit von σ-Algebren ist keine
+fast-sichere Aussage.
+
+**Die Antwort ist nicht, die Aussage abzuschwächen, sondern zu augmentieren:**
+
+> Gleichheit der **vervollständigten** Filtrationen,
+> `𝓕̄ t = σ (𝓕 t ∪ 𝒩)` mit `𝒩` den `P`-Nullmengen.
+
+Die schlechten Stichprobenpunkte bilden eine Nullmenge; auf deren Komplement
+bestimmt der Pfad die Sprungzeiten, und der Rest verschwindet in `𝒩`. Das ist
+die übliche Bedingung und die richtige Antwort auf einen Beweis, der an einer
+Nullmenge scheitert.
+
+**Zum Startpunkt:** `T 0 = 0` ist in unserer Konstruktion Konvention, `T 0` also
+keine freie Größe. Der Zeuge `stepPath_update_zero` sagt nur, daß der Pfad ein
+*abweichendes* `T 0` nicht sieht — hält man die Konvention fest, gibt es keines.
+Von den drei notwendigen Voraussetzungen bleiben damit zwei, und beide sind f.s.
+
+**Was ZUERST zu prüfen ist, ehe irgend etwas umgestellt wird:**
+
+1. **Verträgt der Rest der Entwicklung die augmentierte Filtration?**
+   `Martingale X 𝓕 P` bei *größerer* Filtration ist nicht automatisch; bei
+   Vergrößerung um **Nullmengen** sollte es gelten, aber ich finde dafür in
+   Mathlib kein Lemma. Prüfe das am Quelltext und sag das Ergebnis, **ehe** Du
+   augmentierst — sonst repariert man den Filtrationssatz und bricht alles
+   darüber.
+2. **Mathlib hat die Augmentierung nicht** (geprüft 2026-09-12: weder
+   `augmentedFiltration` noch `Filtration.augment` noch `usualConditions`; nur
+   `NullMeasurableSpace` als Baustein). Sie wäre eigene, wenn auch elementare
+   Arbeit — und die neunte Lücke für `TODO.md` Punkt 8, falls sie gebaut wird.
+3. Und benenne den Preis: die Aussage wird damit eine über `(Ω, 𝓕, P)` statt
+   über σ-Algebren allein. Sie braucht ein Maß.
+
+**Die Richtung, nach dem Baum des 24. Laufs** *(vom Nutzer am 2026-09-12
+festgelegt; sie ersetzt die Suche nach der nächsten Eingabe)*
+
+> **Ein so elementarer Prozeß braucht genau *eine* Filtration.**
+
+**Präzisierung des Nutzers, 2026-09-12** — und sie berichtigt die erste Fassung
+dieses Satzes: die Filtration der *Konstruktion* kann **nicht** die des Prozesses
+selbst sein, weil er dabei noch nicht existiert. Sie ist notwendig die des
+zugrundeliegenden Materials: `hawkesFiltration`, die Punktfiltration der
+Sprungzeiten, die die Rekursion zurückgibt. Die ist hint-frei und existiert
+immer.
+
+**Was statt dessen zu zeigen ist, und zwar *nach* der Konstruktion:**
+
+> **`naturalFiltration (stepPath T y) = pointFiltration T y`**
+> für **beliebige** meßbare `T : Ω → ℕ → ℝ≥0∞` und `y : Ω → ℕ → E`.
+
+**Allgemein stellen, nicht für Hawkes** *(Nutzer, 2026-09-12, nach der Frage, ob
+es dasselbe Resultat für Geburt-Tod-Prozesse gibt)*. Es ist ein Satz über
+**Treppenpfadprozesse schlechthin**: die Aufzeichnung — welcher Sprung wann, und
+wohin — trägt genau dieselbe Information wie der Pfad. Poisson, Geburt-Tod,
+M/M/1, Yule und Hawkes sind dann **Instanzen**, und der pfadabhängige Fall
+bekommt seine Brücke als Spezialfall statt als Einzelbeweis.
+
+Der Baustein ist bewiesen: ein Treppenpfad bestimmt seine Sprungzeiten und
+umgekehrt (`hawkesProcess_eq_stepPath` für die eine Richtung).
+
+**Und beachte den Unterschied zwischen den beiden Fällen**, er erklärt, warum die
+Frage im markovschen Fall bisher gar nicht auftrat: dort ist
+`jumpFiltration = naturalFiltration jumpProcess` **per Definition** die kanonische
+— möglich, weil `jumpProcess` ohne jede Integrierbarkeitsvoraussetzung definiert
+ist (`τ (n+1) = τ n + ξ (n+1) / lam (Y n)`, eine Formel, kein Invertieren). Im
+pfadabhängigen Fall ist `T (n+1) = Λ⁻¹ (∑_{k≤n} ξ k)`, und zu invertieren
+verlangt Integrierbarkeit — daher die Rekursion, daher zwei Filtrationen. Der
+allgemeine Satz schließt die Lücke von beiden Seiten: er gibt dem markovschen
+Fall die Punktfiltration und dem pfadabhängigen die kanonische.
+
+Trage ihn als eigenen Punkt in Meilenstein 4 ein, mit den Instanzen darunter.
+
+*Zum Zusammenhang mit dem Manuskript:* `ssec:notation` hält für rechtsstetige `X`
+fest, daß `*𝓕^X_t = 𝓕^X_t = 𝓖_t`; Schritt 5 des Beweises von `thm:jumpMP` hat
+genau davon Gebrauch gemacht. Im markovschen Fall stand es also schon da, im
+pfadabhängigen fehlt es noch.
+
+Das ist die Vorgabe, und alles Weitere richtet sich danach. Zwei Filtrationen
+sind kein Entwurf, sondern ein Symptom: `hawkesJumpFiltration` trägt `hint` im
+Argument seiner **Definition**, und `hint` ist nach dem Zeugen des 24. Laufs
+(`φ = 1_(0,1]`, `T n = 1 − 1/n`) unerfüllbar. Die Zielaussage stünde über einer
+leeren Voraussetzung.
+
+**Der Weg:**
+
+1. **Heben nach `ℝ≥0∞`.** `cumulativeRateF` wird `ℝ≥0∞`-wertig, so daß `Λ = ⊤`
+   an einem explosiven Stichprobenpunkt **zulässig** ist. Dann verschwindet
+   `hint` aus jeder *Definition*; `rateInverseE` ist schon `ℝ≥0∞`-wertig und
+   braucht nichts dazu.
+2. **Damit fallen die beiden Filtrationen zusammen** — nicht bloß vergleichbar,
+   sondern gleich, wenn der Fixpunkt `jumpTimeFE_hawkesSelfRate` ohne `hint`
+   gilt. Prüfe das zuerst; trägt es, so ist die Unvergleichbarkeit des 23. Laufs
+   gegenstandslos und der Schnitt geht über der einen Filtration.
+3. **Erst danach, und als Satz statt als Voraussetzung: die Rate ist fast sicher
+   endlich.** `{ω : ∀ r, Λ r ω < ⊤}` ist genau die Nichtexplosionsmenge, und für
+   die gibt es bereits `ae_mem_nonExplosiveE`-artige Kriterien. Was dort nicht
+   reicht, bleibt getragene Hypothese (Volterra, siehe unten) — aber es steht
+   dann *neben* der Aussage und nicht *in* einer Definition.
+
+**Und der Punkt, auf den dabei zu achten ist** *(Nutzer, wörtlich: „auf die
+Müllwerte muß man schon aufpassen")*: `⊤` in `ℝ≥0∞` ist **kein** Müllwert. Die
+Müllwerte dieser Arbeit — `sInf ∅ = 0`, `x / 0 = 0`, `∫ f = 0` für
+nichtintegrierbares `f`, `stepIndex = 0` jenseits der Explosion — **lügen**: sie
+geben eine plausible Zahl, wo keine Antwort existiert, und haben sechsmal eine
+Aussage still wahr gemacht. `Λ = ⊤` sagt die Wahrheit. Genau deshalb hat die
+Hebung jedesmal getragen: sie ersetzt eine lügende Vorgabe durch eine ehrliche.
+
+Beim Heben ist daher **jede** Stelle zu prüfen, an der bisher ein `0` für
+„undefiniert" stand — sie ist entweder durch `⊤` zu ersetzen oder als bewußte
+Wahl zu begründen. Stillschweigend darf keine bleiben.
+
+**VORRANGIG, vor allem anderen in Teil C: den Abhängigkeitsbaum von
+`hawkes_isLocalMPSolution` von unten aufschreiben** *(vom Nutzer am 2026-09-12
+angeordnet)*
+
+Seit dem 2026-09-11 haben **fünf Läufe hintereinander** gemeldet, es fehle „genau
+eine Eingabe" — die Läufe 169, 171, 172, 173 und 177. Jede Meldung war im
+Augenblick richtig, und jedesmal hat die letzte Eingabe eine neue erzeugt. Das
+ist kein Vorwurf: die neuen Eingaben wurden beim Beweisen entdeckt, nicht
+übersehen. Aber es heißt, daß der Baum tiefer ist, als er von oben aussieht, und
+daß wir ihn von oben abarbeiten, statt ihn zu kennen.
+
+**Also zuerst, und ehe irgendetwas weiterbewiesen wird:**
+
+1. Schreibe den Abhängigkeitsbaum von `hawkes_isLocalMPSolution` **vollständig
+   und von unten** auf — jede Aussage, die gebraucht wird, mit ihrem Status
+   (bewiesen / offen / nicht formulierbar) und ihren eigenen Voraussetzungen.
+   Nicht die, die Du als nächstes angehen willst, sondern **alle**.
+2. Markiere bei jeder offenen, **woran** sie hängt: an einer Rechnung, an einer
+   Entscheidung (welche Filtration, welche Stoppzeit), oder an der
+   Nichtexplosion. Die Nichtexplosion ist bisher an **vier** Stellen aufgetreten
+   — Rechtsstetigkeit des Testprozesses, Übertragung des ersten
+   Sprungzeitgesetzes, Formulierbarkeit von `hawkesJumpFiltration`, und jetzt der
+   Gültigkeitsbereich der Formel für die kumulierte Rate. Sammle sie an einer
+   Stelle.
+3. Sag am Schluß **eine Zahl**: wie viele Aussagen sind noch offen. Ist es eine,
+   so beweise sie im selben Lauf. Sind es mehr, so ist die Liste das Ergebnis des
+   Laufs, und der nächste arbeitet sie ab.
+
+Der Baum gehört in `MartingaleProblems/README.md`, Meilenstein 4, als eigener
+Abschnitt, **nicht** in den Laufbericht allein — er soll beim nächsten Mal
+dastehen, statt neu erschlossen zu werden.
+
+**Erst danach** gilt wieder, was unten steht.
+
 **Zum Abschluß von Teil C — was bewiesen wird und was Voraussetzung bleibt**
 *(vom Nutzer am 2026-09-11 festgelegt)*
 
