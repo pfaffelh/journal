@@ -23727,3 +23727,117 @@ einer Widerlegung.
    2026-09-11.
 4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
    vierundzwanzigsten Laufs, unverändert.
+
+### 2026-09-12, dritter Lauf des Tages — die Entartung ist kein Hebel: sie bewegt das Protokoll und läßt die Masse, wo eine bloße Grundrate sie ließe; und der Fixpunkt hält an ihr
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des zweiten Laufs dieses Tages
+(`hawkesSelfRate_eq_of_forall_eq`, und die Entscheidung, ob die Entartung eine Widerlegung von
+`hcum` über `hawkesJumpFiltration` trägt). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Neun neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, neuer Abschnitt
+`PathCutDegenerate`. Die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1 (und
+ohne Warnung im neuen Abschnitt), alle neun mit `scripts/check_axioms.py` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl der `sorry` bleibt bei **neun**. Die
+Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+Neu: `countingMeasure_eq_top_smul_dirac`, `hawkesRate_countingMeasure_of_forall_eq`,
+`hawkesSelfRate_eq_of_forall_eq`, `hawkesSelfRate_eq_of_sum_eq`,
+`intervalIntegrable_hawkesSelfRate_of_forall_eq`, `cumulativeRateF_hawkesSelfRate_eq_of_forall_eq`,
+`cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq`,
+`cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair`,
+`jumpTimeF_hawkesSelfRate_of_forall_eq`.
+
+#### Der Befund: die Entartung bewegt die Masse nicht, und damit fällt der letzte Hebel
+
+Der Vorlauf hatte die Lage so hinterlassen: der Schritt vom Sprung kleinsten Index zum nächsten ruht
+darauf, daß die gefrorene Rate **unter** der Selbstrate liegt, und die einzige Lage, in der das
+verletzt sein kann, ist der Stichprobenpunkt mit sich häufenden Sprungzeiten — dort ist die
+Selbstrate durch den Müllwert von Bochner die bloße Grundrate `ν`, während die gefrorenen Raten,
+endliche Summen, ihre Masse behalten. Vorschlag 1 war, das zu beweisen und daran zu entscheiden, ob
+eine Widerlegung daraus zu bauen ist.
+
+**Der Satz steht, und er entscheidet gegen die Widerlegung.**
+
+* **`countingMeasure_eq_top_smul_dirac`** — sind alle Sprungzeiten ab der ersten gleich `t₀`, so ist
+  das Zählmaß `⊤ • dirac t₀`, und zwar als **Gleichheit von Maßen** und nicht bis auf Nullmengen.
+  Diese eine Identität trägt die ganze Rechnung.
+* **`hawkesRate_countingMeasure_of_forall_eq`** — also ist die Hawkes-Rate dieses Maßes `ν`. **Und
+  sie ist es ohne Fallunterscheidung.** Das Papierargument spaltet nach dem Integranden am Atom: ist
+  er `0`, so ist die Funktion fast überall `0`; ist er es nicht, so ist sie nicht integrierbar und
+  Bochner gibt den Müllwert. In Lean fällt die Spaltung weg, weil `integral_smul_measure` den
+  **reellen** Skalar `(⊤ : ENNReal).toReal = 0` vorzieht und beide Fälle in einem Zug erledigt. Über
+  `φ`, über `ν` und über das Vorzeichen von `t₀` wird **nichts** verlangt.
+* **`hawkesSelfRate_eq_of_sum_eq`** — der Zeuge: die Wartezeiten `(c, 0, 0, …)` erzeugen einen
+  solchen Punkt, über `hawkesJumpTime_eq_div_of_sum_eq` des Vorlaufs. Die Lage ist also nicht leer.
+* **`cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq`** — und hier steht die Antwort: die
+  **gedeckelte Masse** an einem entarteten Punkt ist `min (ν·r) a`. Die rechte Seite nennt weder die
+  gemeinsame Sprungzeit `t₀` noch die Höhe, auf die sich die Wartezeiten summieren. Es ist derselbe
+  Wert, den ein Stichprobenpunkt **ganz ohne Selbsterregung** trägt.
+
+Damit ist die Frage entschieden. Eine Widerlegung von `hcum` braucht zwei Punkte, die im Protokoll
+übereinstimmen und in der gedeckelten Masse auseinandergehen. Die Entartung bewegt das **Protokoll**
+— jeder Index meldet dieselbe Zeit — und läßt die **Masse** genau dort, wo eine bloße Grundrate sie
+ließe. Sie bewegt also die falsche der beiden Seiten.
+`cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair` schreibt die Folgerung hin: **zwei**
+entartete Punkte tragen dieselbe gedeckelte Masse, gleich welche Sprungzeiten und gleich welche
+Wartezeiten sie haben. Ein widerlegendes Paar kann also nicht aus zwei entarteten Punkten bestehen.
+
+#### Der zweite Befund, und er war nicht angesagt: an der Entartung **hält** der Fixpunkt
+
+`jumpTimeF_hawkesSelfRate_of_forall_eq` — an einem entarteten Punkt sind die Zeiten, die die
+**Rekursion** zurückgibt, und die Zeiten, die die **Inverse der Selbstrate** zurückgibt, dieselben.
+Und sie sind es ohne die Voraussetzungen, die `jumpTimeF_hawkesSelfRate` trägt: keine Positivität der
+Wartezeiten, keine Regularität der gefrorenen Raten, keine Divergenz. Der Grund ist billig — die
+Selbstrate ist die Konstante `ν`, ihre Inverse dividiert, und
+`sum_eq_mul_hawkesJumpTime_of_forall_le` sagt, daß die Höhe der Stufe `n` gerade `ν` mal die
+gemeinsame Zeit ist.
+
+Das ändert, wie die Entartung zu lesen ist. Sie ist **kein Artefakt neben dem Prozeß**, sondern ein
+Stichprobenpunkt, an dem die Konstruktion mit sich selbst verträglich ist. Was das unendliche Atom
+vernichtet, ist die Selbsterregung, nicht die Konsistenz der Konstruktion. Der Vorlauf hatte
+vermutet, „gerade in dieser Lage bricht der Fixpunkt"; das ist für **diese** Lage widerlegt. (Die
+Lage, in der er bricht, ist eine andere — spätere Stufen, die vor früheren springen —, und so steht
+es auch im Doc-Kommentar von `sum_eq_mul_hawkesJumpTime_of_forall_le`; die beiden sind verschieden.)
+
+Ein Nebenertrag, der beim nächsten Schritt Arbeit spart: die lokale Integrierbarkeit der Selbstrate,
+die **jede** Aussage des pfadabhängigen Zusammenbaus als Voraussetzung mitschleppt, ist an einem
+entarteten Punkt umsonst (`intervalIntegrable_hawkesSelfRate_of_forall_eq`) — eine konstante Rate ist
+intervallintegrierbar. Deshalb verlangen die Rechnungen dieses Laufs über `φ` nichts, was
+`hawkesJumpTime_eq_div_of_sum_eq` nicht ohnehin schon verlangt hat.
+
+#### Was offen bleibt
+
+Die Lage „ein Punkt entartet, der andere nicht" ist **nicht** geschlossen. Was dazu feststeht: ist
+`w` entartet, so ist seine gedeckelte Masse bei `i` gleich `min (ν·i) a`, und da
+`hawkesSelfRate ≥ ν` immer gilt (`le_hawkesSelfRate`), ist die ungedeckelte Masse jedes Punktes
+mindestens `ν·i`. Ein Partner `w'`, der sich in der gedeckelten Masse unterscheidet, muß also echte
+Selbsterregung im Fenster haben — und zugleich das Protokoll von `w` teilen, in dem **jeder** Index
+dieselbe Zeit meldet. Daß das unmöglich ist, ist am Quelltext der Definitionen plausibel (der
+Vorlauf hat es für die Wartezeiten `(s,0,0,…)` durchgerechnet), aber **nicht in Lean geführt**.
+
+Der Hauptteil bleibt Vorschlag 2 des Vorlaufs: die Vollständigkeit des Induktionsschritts. Er ist
+jetzt der einzige verbliebene Weg zu `hcum`, weil der Ausweg über die Entartung geschlossen ist.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`sum_eq_mul_hawkesJumpTime_of_forall_le` auf den zweitkleinsten Index heben** — der
+   Induktionsschritt in seiner kleinsten nichttrivialen Gestalt: ist `T l` die kleinste Sprungzeit im
+   Fenster und springt von den Stufen unter `m` nur `l` echt vor `T m`, so ist die gefrorene Rate der
+   Stufe `m` unterhalb von `T m` gleich `ν + φ(· − T l)`, und die Höhe der Stufe ist
+   `ν·T m + Φ(T m − T l)` mit `Φ` einer Stammfunktion von `φ`. **Warum jetzt:** der Befund dieses
+   Laufs hat den einzigen Einwand gegen den Induktionsschritt ausgeräumt, und dieser Schritt ist der,
+   an dem sich zeigt, ob die Induktion eine **Stammfunktion** von `φ` braucht — das wäre eine neue
+   Voraussetzung an die Daten von `ex:hawkes` und gehörte als solche in die Roadmap, ehe der
+   allgemeine Schritt begonnen wird. **Worauf er ruht:** `sum_eq_mul_hawkesJumpTime_of_forall_le` als
+   Muster, `hawkesFrozen_succ_eq_sum_range`, `cumulativeRateF_rateInverse` und ein
+   `intervalIntegral` für den einen verbleibenden Summanden. **Prüfstein:** die Aussage muß ohne
+   Monotonie der Sprungzeiten und ohne Vorzeichen der Wartezeiten auskommen, wie ihr Vorbild — sonst
+   ist sie für die Widerlegungsfrage wertlos.
+2. **Die Vollständigkeit des Induktionsschritts** — `hcum` über `hawkesJumpFiltration` als Satz, über
+   die Induktion nach den Sprungzeiten der Größe nach, mit
+   `sum_eq_mul_hawkesJumpTime_of_forall_le` als Induktionsanfang. Unverändert Vorschlag 2 des
+   Vorlaufs, jetzt ohne den Vorbehalt, unter dem er dort stand.
+3. **`hawkes_isLocalMPSolution`** als Zusammenbau, sobald 2 entschieden ist; die globale Fassung mit
+   `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   fünfundzwanzigsten Laufs, unverändert.

@@ -36,7 +36,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-11.  Every declaration elaborates; 9 declarations carry `sorry`, and
+2026-09-12.  Every declaration elaborates; 9 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -19209,7 +19209,9 @@ step of the induction a proof would run -- the earliest jump in index order -- a
 step from there, which is where the junk value of a non integrable self referential rate enters: at
 a sample point whose jump times accumulate, `hawkesSelfRate` is the baseline `ν` by
 `integral_undef`, and the frozen rates, being finite sums, are not.  That is the one place where a
-frozen rate can exceed the self rate, and it is the only remaining lever for a refutation.
+frozen rate can exceed the self rate, and it is the only lever for a refutation this section leaves.
+The next section computes what happens there, and the answer is that the lever does not move the
+mass; see `cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq`.
 -/
 
 section PathCutCap
@@ -19419,5 +19421,164 @@ theorem jumpTimeFE_truncRateF_hawkesSelfRate_one_le_or_cumulativeRateF_eq {E : T
   exact hwin
 
 end PathCutCap
+
+/-! ### The degenerate sample point, and what it does to the mass
+
+The one configuration that `jumpTimeFE_truncRateF_hawkesSelfRate_le_or_cumulativeRateF_eq` leaves
+open is the sample point whose jump times pile up: there the counting measure has an **infinite
+atom**, the self exciting integral is a Bochner integral of a function that is not integrable, and
+the junk value `0` makes `hawkesSelfRate` the bare baseline `ν` while the frozen rates -- finite
+sums -- keep their mass.  It is the only place where a frozen rate can exceed the self rate, and it
+was therefore the last lever for a refutation of `hcum` over `hawkesJumpFiltration`.
+
+This paragraph computes what happens there, and the computation settles the lever in the negative.
+
+* `countingMeasure_eq_top_smul_dirac` -- the counting measure of a family of coinciding jump times
+  is `⊤ • dirac t₀`, on the nose and not merely up to null sets.
+* `hawkesRate_countingMeasure_of_forall_eq` -- hence the Hawkes rate of that measure is `ν`.  The
+  two cases the paper argument distinguishes -- the integrand vanishes at the atom, or it does not
+  and the function is not integrable -- are **not** distinguished here: `⊤ • μ` carries the real
+  scalar `(⊤ : ENNReal).toReal = 0`, so `integral_smul_measure` returns `0` in both.  Nothing is
+  asked of `φ`, of `ν`, or of the sign of `t₀`.
+* `intervalIntegrable_hawkesSelfRate_of_forall_eq` -- the local integrability hypothesis that the
+  whole path dependent assembly carries is **free** at such a point, because the rate is constant
+  there.
+* `cumulativeRateF_hawkesSelfRate_eq_of_forall_eq` and
+  `cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq` -- the mass is `ν * r` and the capped
+  mass is `min (ν * r) a`.
+
+**The verdict, and it is `cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq` read twice.**
+The capped mass at a degenerate sample point mentions neither the common jump time `t₀` nor the
+common level: it is the value a sample point with no self excitation at all would carry.  The
+degeneracy therefore moves the **record** and leaves the **mass** where it was, and a refuting pair
+needs the opposite.  `cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair` states it
+outright: two degenerate sample points carry the same capped mass, whatever their jump times and
+whatever their waiting times.  The degeneracy is not a lever. -/
+
+section PathCutDegenerate
+
+variable {ν : ℝ} {φ : ℝ → ℝ}
+
+/-- **Coinciding jump times give an infinite atom.**  `T 0` is where the path starts and not an
+event of it (see the note at `hawkesFrozen`), so the hypothesis is asked from the first index on,
+and the measure is `⊤ • dirac t₀` exactly. -/
+theorem countingMeasure_eq_top_smul_dirac {T : ℕ → ℝ} {t₀ : ℝ} (hT : ∀ n, 1 ≤ n → T n = t₀) :
+    countingMeasure T = (⊤ : ENNReal) • Measure.dirac t₀ := by
+  have hrw : (fun k : ℕ ↦ Measure.dirac (T (k + 1))) = fun _ : ℕ ↦ Measure.dirac t₀ :=
+    funext fun k ↦ by rw [hT (k + 1) (Nat.le_add_left 1 k)]
+  ext1 A hA
+  rw [countingMeasure, hrw, Measure.sum_apply _ hA, Measure.smul_apply, smul_eq_mul]
+  rcases eq_or_ne (Measure.dirac t₀ A) 0 with h | h
+  · simp [h]
+  · rw [ENNReal.tsum_const_eq_top_of_ne_zero h, ENNReal.top_mul h]
+
+/-- **A Hawkes rate whose events all pile up is its own baseline.**  The self exciting term is an
+integral against a measure with an infinite atom, and Bochner returns `0` -- whether because the
+integrand vanishes at the atom or because it is not integrable, the scalar `(⊤ : ENNReal).toReal`
+is `0` and the two cases do not have to be separated.  No hypothesis on `φ`, on `ν`, or on the sign
+of `t₀`. -/
+theorem hawkesRate_countingMeasure_of_forall_eq {T : ℕ → ℝ} {t₀ : ℝ}
+    (hT : ∀ n, 1 ≤ n → T n = t₀) (u : ℝ) (w : Ω) :
+    hawkesRate ν φ (fun _ ↦ countingMeasure T) u w = ν := by
+  rw [hawkesRate, countingMeasure_eq_top_smul_dirac hT, Measure.restrict_smul,
+    integral_smul_measure]
+  simp
+
+/-- **The self referential rate loses its memory at a sample point whose jump times coincide.**
+This is the statement the open case of `jumpTimeFE_truncRateF_hawkesSelfRate_le_or_cumulativeRateF_eq`
+turns on: the rate that reads its own jump times reads an infinite atom and reports the baseline. -/
+theorem hawkesSelfRate_eq_of_forall_eq {E : Type*} {w : (ℕ → E) × (ℕ → ℝ)} {t₀ : ℝ}
+    (hT : ∀ n, 1 ≤ n → hawkesJumpTime ν φ w.2 w n = t₀) (u : ℝ) :
+    hawkesSelfRate ν φ u w = ν := by
+  rw [hawkesSelfRate_apply]
+  exact hawkesRate_countingMeasure_of_forall_eq hT u w
+
+/-- **The witness exists.**  Waiting times whose partial sums are all the same `c` produce such a
+sample point (`hawkesJumpTime_eq_div_of_sum_eq`), so the degenerate configuration is not vacuous:
+it is met at `(ξ 0, 0, 0, …)` with `ξ 0 = c`.  Nothing is asked of the signs of the waiting
+times. -/
+theorem hawkesSelfRate_eq_of_sum_eq {E : Type*} {w : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {c : ℝ} (hc : 0 ≤ c) (hsum : ∀ n, 1 ≤ n → ∑ k ∈ Finset.range n, w.2 k = c) (u : ℝ) :
+    hawkesSelfRate ν φ u w = ν :=
+  hawkesSelfRate_eq_of_forall_eq (hawkesJumpTime_eq_div_of_sum_eq hν hφ hφ0 hφint hc hsum) u
+
+/-- **At a degenerate sample point the local integrability of the self rate is free.**  Every
+statement of the path dependent assembly carries `hint` as a hypothesis; here the rate is the
+constant `ν` and the hypothesis costs nothing.  This is why the computations below ask for no
+regularity of `φ` beyond what `hawkesJumpTime_eq_div_of_sum_eq` already used. -/
+theorem intervalIntegrable_hawkesSelfRate_of_forall_eq {E : Type*} {w : (ℕ → E) × (ℕ → ℝ)}
+    {t₀ : ℝ} (hT : ∀ n, 1 ≤ n → hawkesJumpTime ν φ w.2 w n = t₀) (r : ℝ) :
+    IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r := by
+  have hfun : (fun u ↦ hawkesSelfRate ν φ u w) = fun _ ↦ ν :=
+    funext fun u ↦ hawkesSelfRate_eq_of_forall_eq hT u
+  rw [hfun]
+  exact intervalIntegrable_const
+
+/-- **The mass at a degenerate sample point is exactly linear**, and in particular it does not see
+the jump times at all. -/
+theorem cumulativeRateF_hawkesSelfRate_eq_of_forall_eq {E : Type*} {w : (ℕ → E) × (ℕ → ℝ)}
+    {t₀ : ℝ} (hT : ∀ n, 1 ≤ n → hawkesJumpTime ν φ w.2 w n = t₀) {r : ℝ} (hr : 0 ≤ r) :
+    cumulativeRateF (hawkesSelfRate ν φ) w r = ν * r :=
+  (cumulativeRateF_congr (Λ' := fun _ _ ↦ ν) (fun u ↦ hawkesSelfRate_eq_of_forall_eq hT u) r).trans
+    (cumulativeRateF_const w ν hr)
+
+/-- **And so is the capped mass.**  The right hand side mentions neither the common jump time `t₀`
+nor the level the waiting times add up to: it is the value carried by a sample point with no self
+excitation whatever.
+
+This is the answer to the question the cap posed.  A refutation of `hcum` over
+`hawkesJumpFiltration` needs two sample points that agree in the record and differ in the capped
+mass; the degenerate configuration moves the record -- every index reports the same time -- and
+leaves the mass exactly where a bare baseline would leave it. -/
+theorem cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq {E : Type*}
+    {w : (ℕ → E) × (ℕ → ℝ)} {t₀ : ℝ} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hT : ∀ n, 1 ≤ n → hawkesJumpTime ν φ w.2 w n = t₀) (ha : 0 ≤ a) {r : ℝ} (hr : 0 ≤ r) :
+    cumulativeRateF (truncRateF (hawkesSelfRate ν φ) a) w r = min (ν * r) a := by
+  have hint := intervalIntegrable_hawkesSelfRate_of_forall_eq hT
+  rw [cumulativeRateF_truncRateF_eq_min hint (fun u _ ↦ hawkesSelfRate_pos hν hφ u w)
+    (tendsto_cumulativeRateF_hawkesSelfRate hν hφ hint) ha r,
+    cumulativeRateF_hawkesSelfRate_eq_of_forall_eq hT hr]
+
+/-- **Two degenerate sample points carry the same capped mass**, whatever their jump times and
+whatever their waiting times.  A refuting pair for `hcum` over `hawkesJumpFiltration` therefore
+cannot have both of its members degenerate, and the configuration that
+`jumpTimeFE_truncRateF_hawkesSelfRate_le_or_cumulativeRateF_eq` left open is not a lever on the
+mass side. -/
+theorem cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair {E : Type*}
+    {w w' : (ℕ → E) × (ℕ → ℝ)} {t₀ t₁ : ℝ} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hT : ∀ n, 1 ≤ n → hawkesJumpTime ν φ w.2 w n = t₀)
+    (hT' : ∀ n, 1 ≤ n → hawkesJumpTime ν φ w'.2 w' n = t₁) (ha : 0 ≤ a) {r : ℝ} (hr : 0 ≤ r) :
+    cumulativeRateF (truncRateF (hawkesSelfRate ν φ) a) w r
+      = cumulativeRateF (truncRateF (hawkesSelfRate ν φ) a) w' r :=
+  (cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq hν hφ hT ha hr).trans
+    (cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq hν hφ hT' ha hr).symm
+
+/-- **The fixed point of the Hawkes construction holds at the degenerate sample point.**  The times
+the recursion returns and the times the inverse of the self referential rate returns are the same
+there, and they are the same for a reason that costs nothing: the self rate is the constant `ν`, its
+inverse divides, and `sum_eq_mul_hawkesJumpTime_of_forall_le` says the level at stage `n` is `ν`
+times the common time.
+
+This matters for how the degeneracy is to be read.  It is not an artefact of the junk value that
+sits outside the process: it is a sample point at which the construction is consistent with itself,
+and at which the self excitation has simply been annihilated by its own infinite atom.  The
+hypotheses `jumpTimeF_hawkesSelfRate` carries -- positivity of the waiting times, the regularity of
+the frozen rates, the divergence -- are **not** needed here. -/
+theorem jumpTimeF_hawkesSelfRate_of_forall_eq {E : Type*} {w : (ℕ → E) × (ℕ → ℝ)} {t₀ : ℝ}
+    (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hT : ∀ n, 1 ≤ n → hawkesJumpTime ν φ w.2 w n = t₀)
+    {n : ℕ} (hn : 1 ≤ n) (hS : 0 ≤ ∑ k ∈ Finset.range n, w.2 k) :
+    jumpTimeF (hawkesSelfRate ν φ) w w.2 n = hawkesJumpTime ν φ w.2 w n := by
+  have hsum : ∑ k ∈ Finset.range n, w.2 k = ν * hawkesJumpTime ν φ w.2 w n :=
+    sum_eq_mul_hawkesJumpTime_of_forall_le hν hφ hφ0 hφint hS
+      (fun k hk1 _ ↦ by rw [hT n hn, hT k hk1])
+  rw [jumpTimeF, rateInverse_congr (Λ' := fun _ _ ↦ ν)
+      (fun u ↦ hawkesSelfRate_eq_of_forall_eq hT u), rateInverse_const w hν hS, hsum,
+    mul_div_cancel_left₀ _ hν.ne']
+
+end PathCutDegenerate
 
 end PathDependent

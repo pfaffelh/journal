@@ -3180,8 +3180,48 @@ A concrete family of solutions, built without any of the theory above. Index
     so the counting measure has an infinite atom there, the self exciting term is an integral of a
     function that is not integrable and Bochner returns `0`, while the frozen rates, being finite
     sums, keep their mass. That is the only configuration in which a frozen rate exceeds the self
-    rate, and it is therefore the only remaining lever for a refutation and the only remaining gap
-    in a proof.
+    rate, and it is therefore the only lever for a refutation that the argument above leaves; the
+    bullet below computes what happens there.
+  * `countingMeasure_eq_top_smul_dirac`, `hawkesSelfRate_eq_of_forall_eq` and
+    `cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq`: **at a sample point whose jump
+    times coincide the self referential rate is the bare baseline, the mass is exactly linear, and
+    the capped mass is `min (ν·r) a`.** **In Lean** on 2026-09-12, third run, with
+    `hawkesRate_countingMeasure_of_forall_eq`, `hawkesSelfRate_eq_of_sum_eq`,
+    `intervalIntegrable_hawkesSelfRate_of_forall_eq`,
+    `cumulativeRateF_hawkesSelfRate_eq_of_forall_eq`,
+    `cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair` and
+    `jumpTimeF_hawkesSelfRate_of_forall_eq`.
+
+    The counting measure of a family of jump times that are all the same `t₀` is `⊤ • dirac t₀`, on
+    the nose and not up to null sets. That single identity settles the whole computation and it
+    settles it **without a case distinction**: the paper argument splits on whether the integrand
+    vanishes at the atom (then the integral is `0` because the function is null) or not (then it is
+    `0` because the function is not integrable and Bochner returns the junk value), and in Lean the
+    scalar `(⊤ : ENNReal).toReal = 0` of `integral_smul_measure` covers both at once. Nothing is
+    asked of `φ`, of `ν`, or of the sign of `t₀`. The waiting times `(c, 0, 0, …)` produce such a
+    point (`hawkesSelfRate_eq_of_sum_eq`, over `hawkesJumpTime_eq_div_of_sum_eq`), so the
+    configuration is not vacuous.
+
+    **What this decides, and it decides the lever in the negative.** The capped mass at such a point
+    is `min (ν·r) a` — a value that mentions neither the common jump time nor the level the waiting
+    times add up to, and the same value a sample point with no self excitation at all would carry.
+    The degeneracy moves the **record**, where every index reports the same time, and leaves the
+    **mass** exactly where a bare baseline leaves it; a refuting pair for `hcum` needs the opposite.
+    `cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair` states the consequence outright:
+    two degenerate sample points carry the same capped mass, whatever their jump times and whatever
+    their waiting times, so a refuting pair cannot have both of its members degenerate.
+
+    **And the degeneracy is a sample point of the process and not an artefact beside it.**
+    `jumpTimeF_hawkesSelfRate_of_forall_eq`: there the times the recursion returns and the times the
+    inverse of the self referential rate returns are the same, so the fixed point of the
+    construction **holds**. It holds without the hypotheses `jumpTimeF_hawkesSelfRate` carries —
+    positivity of the waiting times, regularity of the frozen rates, divergence — because the self
+    rate is the constant `ν` and its inverse divides. What the infinite atom annihilates is the self
+    excitation, not the consistency of the construction.
+
+    The local integrability of the self rate, which every statement of the path dependent assembly
+    carries as a hypothesis, is free at such a point
+    (`intervalIntegrable_hawkesSelfRate_of_forall_eq`): a constant rate is interval integrable.
   * `measurableSet_lt_rateInverseE_of_adapted` and `jumpFiltrationFE_hcut`: **the cutting set is an
     event of the truncated filtration, and with it the cut stands in the shape the tower consumes.**
     **In Lean** on 2026-09-11, twentieth run. The whole content of the first is that the level `a`
