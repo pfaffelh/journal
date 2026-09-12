@@ -255,15 +255,30 @@ immer.
 
 **Was statt dessen zu zeigen ist, und zwar *nach* der Konstruktion:**
 
-> `hawkesFiltration = naturalFiltration hawkesProcess`,
-> also `⨆ s ≤ t, σ(X s) = 𝓕 t` — die **kanonische** Filtration des
-> konstruierten Prozesses ist dieselbe.
+> **`naturalFiltration (stepPath T y) = pointFiltration T y`**
+> für **beliebige** meßbare `T : Ω → ℕ → ℝ≥0∞` und `y : Ω → ℕ → E`.
 
-Das ist der Satz, der die Sache in Ordnung bringt: er sagt, daß die Aufzeichnung
-(welcher Sprung wann, und wohin) genau dieselbe Information trägt wie der Pfad.
-Der Baustein dafür ist bewiesen — `hawkesProcess_eq_stepPath` —, denn ein
-Treppenpfad bestimmt seine Sprungzeiten und umgekehrt. Trage ihn als eigenen
-Punkt in Meilenstein 4 ein.
+**Allgemein stellen, nicht für Hawkes** *(Nutzer, 2026-09-12, nach der Frage, ob
+es dasselbe Resultat für Geburt-Tod-Prozesse gibt)*. Es ist ein Satz über
+**Treppenpfadprozesse schlechthin**: die Aufzeichnung — welcher Sprung wann, und
+wohin — trägt genau dieselbe Information wie der Pfad. Poisson, Geburt-Tod,
+M/M/1, Yule und Hawkes sind dann **Instanzen**, und der pfadabhängige Fall
+bekommt seine Brücke als Spezialfall statt als Einzelbeweis.
+
+Der Baustein ist bewiesen: ein Treppenpfad bestimmt seine Sprungzeiten und
+umgekehrt (`hawkesProcess_eq_stepPath` für die eine Richtung).
+
+**Und beachte den Unterschied zwischen den beiden Fällen**, er erklärt, warum die
+Frage im markovschen Fall bisher gar nicht auftrat: dort ist
+`jumpFiltration = naturalFiltration jumpProcess` **per Definition** die kanonische
+— möglich, weil `jumpProcess` ohne jede Integrierbarkeitsvoraussetzung definiert
+ist (`τ (n+1) = τ n + ξ (n+1) / lam (Y n)`, eine Formel, kein Invertieren). Im
+pfadabhängigen Fall ist `T (n+1) = Λ⁻¹ (∑_{k≤n} ξ k)`, und zu invertieren
+verlangt Integrierbarkeit — daher die Rekursion, daher zwei Filtrationen. Der
+allgemeine Satz schließt die Lücke von beiden Seiten: er gibt dem markovschen
+Fall die Punktfiltration und dem pfadabhängigen die kanonische.
+
+Trage ihn als eigenen Punkt in Meilenstein 4 ein, mit den Instanzen darunter.
 
 *Zum Zusammenhang mit dem Manuskript:* `ssec:notation` hält für rechtsstetige `X`
 fest, daß `*𝓕^X_t = 𝓕^X_t = 𝓖_t`; Schritt 5 des Beweises von `thm:jumpMP` hat
