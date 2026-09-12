@@ -244,8 +244,31 @@ und die eine bewußt gegen `master` geschriebene Aussage in
 **Die Richtung, nach dem Baum des 24. Laufs** *(vom Nutzer am 2026-09-12
 festgelegt; sie ersetzt die Suche nach der nächsten Eingabe)*
 
-> **Ein so elementarer Prozeß braucht genau *eine* Filtration, und zwar die
-> seiner eigenen Vergangenheit.**
+> **Ein so elementarer Prozeß braucht genau *eine* Filtration.**
+
+**Präzisierung des Nutzers, 2026-09-12** — und sie berichtigt die erste Fassung
+dieses Satzes: die Filtration der *Konstruktion* kann **nicht** die des Prozesses
+selbst sein, weil er dabei noch nicht existiert. Sie ist notwendig die des
+zugrundeliegenden Materials: `hawkesFiltration`, die Punktfiltration der
+Sprungzeiten, die die Rekursion zurückgibt. Die ist hint-frei und existiert
+immer.
+
+**Was statt dessen zu zeigen ist, und zwar *nach* der Konstruktion:**
+
+> `hawkesFiltration = naturalFiltration hawkesProcess`,
+> also `⨆ s ≤ t, σ(X s) = 𝓕 t` — die **kanonische** Filtration des
+> konstruierten Prozesses ist dieselbe.
+
+Das ist der Satz, der die Sache in Ordnung bringt: er sagt, daß die Aufzeichnung
+(welcher Sprung wann, und wohin) genau dieselbe Information trägt wie der Pfad.
+Der Baustein dafür ist bewiesen — `hawkesProcess_eq_stepPath` —, denn ein
+Treppenpfad bestimmt seine Sprungzeiten und umgekehrt. Trage ihn als eigenen
+Punkt in Meilenstein 4 ein.
+
+*Zum Zusammenhang mit dem Manuskript:* `ssec:notation` hält für rechtsstetige `X`
+fest, daß `*𝓕^X_t = 𝓕^X_t = 𝓖_t`; Schritt 5 des Beweises von `thm:jumpMP` hat
+genau davon Gebrauch gemacht. Im markovschen Fall stand es also schon da, im
+pfadabhängigen fehlt es noch.
 
 Das ist die Vorgabe, und alles Weitere richtet sich danach. Zwei Filtrationen
 sind kein Entwurf, sondern ein Symptom: `hawkesJumpFiltration` trägt `hint` im
