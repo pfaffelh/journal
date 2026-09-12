@@ -3144,9 +3144,44 @@ A concrete family of solutions, built without any of the theory above. Index
     `jumpTimeF_hawkesSelfRate` identifies the two only at a sample point with non negative waiting
     times — the hypothesis struck out of `jumpFiltrationFE_hcut` as unsatisfiable, and the same one
     that keeps `isStoppingTime_jumpTimeFE_hawkesSelfRate` off `hawkesFiltration`. This is the third
-    statement of the path dependent variant to meet that line, and the mechanism of the witness is
-    the reason to expect `hcum` to be **false** there: a negative waiting time makes the partial
-    sums the inverse reads non monotone while the recursion goes on.
+    statement of the path dependent variant to meet that line. The mechanism of the witness — a
+    negative waiting time makes the partial sums the inverse reads non monotone while the recursion
+    goes on — is what a refutation there would have to run on, and by
+    `jumpTimeFE_truncRateF_hawkesSelfRate_le_or_cumulativeRateF_eq` it does not suffice on its own.
+  * `cumulativeRateF_truncRateF_eq_of_not_le`, `sum_eq_mul_hawkesJumpTime_of_forall_le` and
+    `jumpTimeFE_truncRateF_hawkesSelfRate_le_or_cumulativeRateF_eq`: **a jump of the recursion that
+    the record does not report forces the capped mass to be the cap, and the in window jump of least
+    index is never such a jump.** **In Lean** on 2026-09-12, second run, with
+    `mul_le_cumulativeRateF`, `hawkesJumpTime_eq_div_of_sum_eq` and
+    `jumpTimeFE_truncRateF_hawkesSelfRate_one_le_or_cumulativeRateF_eq`.
+
+    `hcum` is a statement about the **capped** mass `min (cumulativeRateF Λ · i) a`, and that is
+    what makes the two halves close against each other. A level that the untruncated mass has
+    reached by `i` while the record has not reported it forces the minimum to be its second
+    argument, so the capped mass at `i` is the constant `a` and cannot differ between two sample
+    points (`cumulativeRateF_truncRateF_eq_of_not_le`, an arbitrary rate, no Hawkes data). And on
+    the Hawkes data such a level cannot be the one of the in window jump of **least index**: the
+    frozen rate of a stage counts only the earlier stages, so if none of them has jumped strictly
+    before it, that rate is the baseline `ν` on the whole interval below its jump time and the level
+    is exactly `ν` times it (`sum_eq_mul_hawkesJumpTime_of_forall_le`) — at most `ν·i`, which the
+    mass has reached by `i` because the Hawkes rate is at least `ν`.
+
+    **What this decides.** A refuting pair of sample points for `hcum` over `hawkesJumpFiltration`
+    differs in the capped mass at `i`, so at one of the two that mass is not `a`, and there the in
+    window jump of least index is reported by the record at its own level
+    (`jumpTimeFE_truncRateF_hawkesSelfRate_one_le_or_cumulativeRateF_eq` is the case `m = 1`, where
+    the hypothesis is vacuous). Non monotone partial sums alone therefore do not refute `hcum`
+    there: whatever hides, it is not the first jump.
+
+    **What is left, and it is one thing.** The step from the jump of least index to the next runs on
+    the frozen rate being **below** the self rate, which is causality and the non negativity of `φ`
+    — except at a sample point whose jump times accumulate. `hawkesJumpTime_eq_div_of_sum_eq`
+    exhibits such a point: constant levels make every jump time from the first on the same `s / ν`,
+    so the counting measure has an infinite atom there, the self exciting term is an integral of a
+    function that is not integrable and Bochner returns `0`, while the frozen rates, being finite
+    sums, keep their mass. That is the only configuration in which a frozen rate exceeds the self
+    rate, and it is therefore the only remaining lever for a refutation and the only remaining gap
+    in a proof.
   * `measurableSet_lt_rateInverseE_of_adapted` and `jumpFiltrationFE_hcut`: **the cutting set is an
     event of the truncated filtration, and with it the cut stands in the shape the tower consumes.**
     **In Lean** on 2026-09-11, twentieth run. The whole content of the first is that the level `a`
