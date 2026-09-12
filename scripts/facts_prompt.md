@@ -241,6 +241,40 @@ Was **nicht** zu tun ist: auf `master` umstellen. Wir sind an v4.33.1 gebunden,
 und die eine bewußt gegen `master` geschriebene Aussage in
 `WeakConvergence/Suggested.lean` bleibt, wie sie ist.
 
+**VORRANGIG, vor allem anderen in Teil C: den Abhängigkeitsbaum von
+`hawkes_isLocalMPSolution` von unten aufschreiben** *(vom Nutzer am 2026-09-12
+angeordnet)*
+
+Seit dem 2026-09-11 haben **fünf Läufe hintereinander** gemeldet, es fehle „genau
+eine Eingabe" — die Läufe 169, 171, 172, 173 und 177. Jede Meldung war im
+Augenblick richtig, und jedesmal hat die letzte Eingabe eine neue erzeugt. Das
+ist kein Vorwurf: die neuen Eingaben wurden beim Beweisen entdeckt, nicht
+übersehen. Aber es heißt, daß der Baum tiefer ist, als er von oben aussieht, und
+daß wir ihn von oben abarbeiten, statt ihn zu kennen.
+
+**Also zuerst, und ehe irgendetwas weiterbewiesen wird:**
+
+1. Schreibe den Abhängigkeitsbaum von `hawkes_isLocalMPSolution` **vollständig
+   und von unten** auf — jede Aussage, die gebraucht wird, mit ihrem Status
+   (bewiesen / offen / nicht formulierbar) und ihren eigenen Voraussetzungen.
+   Nicht die, die Du als nächstes angehen willst, sondern **alle**.
+2. Markiere bei jeder offenen, **woran** sie hängt: an einer Rechnung, an einer
+   Entscheidung (welche Filtration, welche Stoppzeit), oder an der
+   Nichtexplosion. Die Nichtexplosion ist bisher an **vier** Stellen aufgetreten
+   — Rechtsstetigkeit des Testprozesses, Übertragung des ersten
+   Sprungzeitgesetzes, Formulierbarkeit von `hawkesJumpFiltration`, und jetzt der
+   Gültigkeitsbereich der Formel für die kumulierte Rate. Sammle sie an einer
+   Stelle.
+3. Sag am Schluß **eine Zahl**: wie viele Aussagen sind noch offen. Ist es eine,
+   so beweise sie im selben Lauf. Sind es mehr, so ist die Liste das Ergebnis des
+   Laufs, und der nächste arbeitet sie ab.
+
+Der Baum gehört in `MartingaleProblems/README.md`, Meilenstein 4, als eigener
+Abschnitt, **nicht** in den Laufbericht allein — er soll beim nächsten Mal
+dastehen, statt neu erschlossen zu werden.
+
+**Erst danach** gilt wieder, was unten steht.
+
 **Zum Abschluß von Teil C — was bewiesen wird und was Voraussetzung bleibt**
 *(vom Nutzer am 2026-09-11 festgelegt)*
 
