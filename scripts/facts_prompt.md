@@ -333,19 +333,81 @@ leeren Voraussetzung.
 
 **Der Weg:**
 
-1. **Heben nach `ℝ≥0∞`.** `cumulativeRateF` wird `ℝ≥0∞`-wertig, so daß `Λ = ⊤`
-   an einem explosiven Stichprobenpunkt **zulässig** ist. Dann verschwindet
-   `hint` aus jeder *Definition*; `rateInverseE` ist schon `ℝ≥0∞`-wertig und
-   braucht nichts dazu.
-2. **Damit fallen die beiden Filtrationen zusammen** — nicht bloß vergleichbar,
-   sondern gleich, wenn der Fixpunkt `jumpTimeFE_hawkesSelfRate` ohne `hint`
-   gilt. Prüfe das zuerst; trägt es, so ist die Unvergleichbarkeit des 23. Laufs
-   gegenstandslos und der Schnitt geht über der einen Filtration.
-3. **Erst danach, und als Satz statt als Voraussetzung: die Rate ist fast sicher
-   endlich.** `{ω : ∀ r, Λ r ω < ⊤}` ist genau die Nichtexplosionsmenge, und für
-   die gibt es bereits `ae_mem_nonExplosiveE`-artige Kriterien. Was dort nicht
-   reicht, bleibt getragene Hypothese (Volterra, siehe unten) — aber es steht
-   dann *neben* der Aussage und nicht *in* einer Definition.
+**Neue Reihenfolge ab 2026-09-12 abends, vom Nutzer festgelegt** — er will bald
+zur *Theorie* des Martingalproblems, nicht länger zu Beispielen:
+
+> **C.5a → E → G**
+
+**C.5a — der beschränkte nichtlineare Hawkes-Prozeß.** Das ist der *letzte* Punkt
+von Teil C, und danach ist Teil C zu Ende.
+
+`Λ (t, ω) = h (ν + ∫₀^{t⁻} φ (t−s) dN s)` mit **beschränktem** `h`. Er kostet
+fast nichts und bringt viel:
+
+* Die Rate ist beschränkt, also ist die lokale Integrierbarkeit **trivial** —
+  `hint` ist erfüllbar statt unerfüllbar, an *jedem* Stichprobenpunkt. Punkt 0 des
+  Baums fällt weg.
+* Keine Explosion: die Sprungzeiten sind von einem Poissonprozeß der Rate `L`
+  dominiert. Alle sechs Nichtexplosionsstellen erledigen sich auf einmal.
+* Keine Lokalisierung, kein `rateInverse`-Turm, keine Augmentierung: der
+  **globale** Satz `thm:pathjumpMP`(b) gilt direkt, denn `𝔼[N t] ≤ L t < ∞`.
+* Und keine Volterra-Theorie.
+
+**Damit hat `thm:pathjumpMP` seinen ersten nicht-markovschen Zeugen, und zwar in
+der globalen Fassung.** Meilenstein 4 ist der Substanz nach fertig.
+
+*Und es ist kein Umweg vom linearen Fall weg, sondern der erste Schritt hinein:*
+mit `h = min (·) L` ist der beschränkte nichtlineare Fall genau die
+**Abschneidung** des linearen, und unterhalb der Trefferzeit `σ L` stimmen beide
+überein. `truncRateF` tut das schon, nur mit einem Indikator statt eines
+Minimums; prüfe, ob die beiden Lesarten zusammenfallen oder ob die
+Minimum-Fassung die bessere ist. Der lineare Fall ist dann der Grenzübergang
+`L → ∞` längs der lokalisierenden Folge.
+
+**E — Meilenstein 6.** Unmittelbar danach, siehe unten.
+
+**G — der lineare Hawkes-Prozeß, lokale Fassung.** **Nach E.** Was von Teil C
+übrigbleibt: die drei Umbauten (Hebung — steht seit dem 27. Lauf —,
+Augmentierung, eine Filtration) und der lokale Satz. Er behält, was nur er hat:
+die Clusterdarstellung, `thm:hawkesvolterra` und die Eindeutigkeit über die
+Dualität (`cor:uniqviadual`) — das ist der Grund, warum er nicht durch den
+nichtlinearen ersetzt wird, sondern neben ihm steht. Die globale Fassung wartet
+ohnehin auf die Volterra-Theorie.
+
+**Der Stand nach dem 26. Lauf, und er ändert die Aufgabe von einer Suche in einen
+Umbau** *(mit dem Nutzer am 2026-09-12 so festgehalten)*:
+
+`hawkes_isLocalMPSolution` **in der Gestalt, die im Baum steht, ist nicht
+abschließbar** — die Zielaussage stünde über `hint`, und `hint` ist nach Punkt 0
+des Baums unerfüllbar. Der Satz, der das erledigt, steht seit dem 26. Lauf in
+Lean: `not_intervalIntegrable_hawkesSelfRate_of_not_summable`. Seine Lesart ist
+die wichtigste Einsicht des Baums:
+
+> **`hint` ist keine Regularität *neben* der Nichtexplosion, sondern die
+> Nichtexplosion selbst**, auf der Menge, auf der sie steht.
+
+Damit ist auch erklärt, warum sechs Stellen dieselbe Bedingung verlangten: es war
+immer dieselbe.
+
+**Was statt dessen zu tun ist — drei Umbauten, keine drei Beweise:**
+
+1. **Heben nach `ℝ≥0∞`.** `cumulativeRateF` wird `ℝ≥0∞`-wertig, so daß `Λ = ⊤` an
+   einem explosiven Stichprobenpunkt zulässig ist und **`hint` aus jeder
+   Definition verschwindet**. `rateInverseE` ist schon `ℝ≥0∞`-wertig.
+   *Nicht* erwartet werden darf, daß damit die beiden Filtrationen zusammenfallen
+   — das war die Ansage vom Vormittag und der 25. Lauf hat sie widerlegt.
+2. **Augmentieren.** Die Filtrationsgleichheit auf der Nullmenge reparieren, wie
+   oben beschrieben. Beide Eingaben dafür stehen seit dem 26. Lauf
+   (`pointFiltrationE_eq_stepPathFiltrationE` mit seinen vier Voraussetzungen,
+   und die Abänderung auf einer Nullmenge).
+3. **Dann der lokale Satz über der *einen* Filtration**, mit der Nichtexplosion
+   als **fast sicherer Aussage** statt als Definitionsvoraussetzung.
+
+*Erledigt und nicht mehr zu beweisen:* die allgemeine Filtrationsidentität für
+Treppenpfadprozesse steht seit dem 26. Lauf — `pointFiltrationE_eq_stepPathFiltrationE`,
+mit **vier** notwendigen Voraussetzungen, die vierte `MeasurableEq E`, jede durch
+einen Zeugen als notwendig belegt. Die Nichtexplosion kommt in ihrem Beweis nicht
+vor.
 
 **Und der Punkt, auf den dabei zu achten ist** *(Nutzer, wörtlich: „auf die
 Müllwerte muß man schon aufpassen")*: `⊤` in `ℝ≥0∞` ist **kein** Müllwert. Die
