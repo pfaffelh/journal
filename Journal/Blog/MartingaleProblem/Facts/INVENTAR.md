@@ -24238,3 +24238,152 @@ ein, und der Grund liegt vor der Rate.
    Vorlaufs, unverändert gültig, und die billigste offene Aussage des Baums.
 4. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes und wird
    von keiner Entscheidung über Filtrationen billiger.
+
+### 2026-09-12, siebter Lauf des Tages — die Vorfrage des Nutzers ist beantwortet: die Entwicklung verträgt die augmentierte Filtration, in beiden Richtungen, und es stand keine einzige fehlende Mathlib-Aussage im Weg
+
+**Bearbeitet:** die vom Nutzer am 2026-09-12 als **zuerst zu prüfen** angeordnete
+Frage — „Verträgt der Rest der Entwicklung die augmentierte Filtration?
+`Martingale X 𝓕 P` bei größerer Filtration ist nicht automatisch; bei Vergrößerung
+um Nullmengen sollte es gelten, aber ich finde dafür in Mathlib kein Lemma. Prüfe
+das am Quelltext und sag das Ergebnis, **ehe** Du augmentierst."
+
+**Siebzehn Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, in den
+neuen Abschnitten `section Augmentation` und `section AugmentationLocal` am Ende
+der Datei; die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1
+(`rc=0`, 0 Fehler), alle siebzehn mit `#print axioms` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft, die Zahl der `sorry` bleibt bei **neun**.
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Die Augmentierung einer Filtration um die Nullmengen, und was sie
+trägt"; `TODO.md` Punkt 8, neunte Lücke, ist berichtigt.
+
+`upstream/master` frisch geholt und daran geprüft:
+`141f6b6455959bfeb0b2a6b04118031191d62683` (2026-09-12 07:43 UTC).
+
+#### Die Antwort: ja, und in beiden Richtungen
+
+* `Martingale.augment` — ein Martingal bleibt eines unter der augmentierten
+  Filtration.
+* `Martingale.of_augment` — **und es kommt zurück**, sobald der Prozeß an die
+  kleinere Filtration adaptiert ist. Das ist die Richtung, die gebraucht wird:
+  man beweist über der großen Filtration und liest über der kleinen ab. Der
+  Beweis ist der Turmschluß und nichts sonst.
+* `IsStoppingTime.augment`, `IsLocalizingSequence.augment`, `Locally.augment` —
+  die **lokale** Eigenschaft überlebt die Augmentierung, und zwar für **jede**
+  Eigenschaft `p`, weil die Filtration in `Locally` allein über die lokalisierende
+  Folge eingeht. Damit trägt auch `jumpProcess_isLocalMPSolution`, die Gestalt, in
+  der das Ziel des Meilensteins steht.
+
+#### Der Baustein, und die Berichtigung einer Angabe vom selben Tag
+
+Die Negativprüfung des Vorlaufs bleibt richtig: `augmentedFiltration`,
+`Filtration.augment`, `usualConditions`, `IsRightContinuousFiltration` gibt es auf
+`master` nicht. **Falsch war die Angabe, der vorhandene Baustein sei
+`NullMeasurableSpace`.** Der Baustein ist `eventuallyMeasurableSpace m l`
+(`MeasureTheory/MeasurableSpace/EventuallyMeasurable.lean:44`), die Meßbarkeit
+modulo einer σ-Filter; `NullMeasurableSpace` ist nur deren Spezialfall bei
+`l = ae μ` und `m` = der ganzen Grund-σ-Algebra
+(`MeasureTheory/Measure/NullMeasurable.lean:86`, wörtlich
+`fast_instance% @eventuallyMeasurableSpace α inferInstance (ae μ) _`) und hier
+unbrauchbar, weil die Augmentierung über einer **Teil**-σ-Algebra zu bilden ist.
+Das ist ein Fund der Sorte, die diese Läufe suchen sollen: die Bibliothek hat den
+allgemeinen Begriff, und der bekannte Name ist sein Spezialfall.
+
+Aus Mathlib fehlt genau eine Aussage, und sie ist der Kern:
+`condExp_eq_condExp_of_forall_exists_ae_eq` — die bedingte Erwartung ändert sich
+nicht, wenn man die σ-Algebra um Mengen vergrößert, die fast sicher schon da sind.
+`condExp_condExp_of_le` (`ConditionalExpectation/Basic.lean:345`) leistet es
+nicht: der Turmschluß braucht die kleinere σ-Algebra außen, und das ist gerade,
+was hier nicht zur Verfügung steht. Der Beweis ist die Eindeutigkeit
+(`ae_eq_condExp_of_forall_setIntegral_eq`, `:253`), und der einzige Schritt, der
+die Voraussetzung benutzt, ist `Measure.restrict_congr_set`
+(`Measure/Restrict.lean:102`): zwei f.s. gleiche Mengen schneiden dasselbe Maß
+aus, also ist ein Mengenintegral über eine Menge der großen σ-Algebra eines über
+eine Menge der kleinen.
+
+#### Drei Preise, und sie sind zu nennen, ehe augmentiert wird
+
+1. **Die Augmentierung enthält die *meßbaren* Nullmengen und keine anderen.**
+   `eventuallyMeasurableSpace (𝓕 i) (ae μ)` allein ist **keine** Teil-σ-Algebra
+   von `𝓐`: eine Teilmenge einer Nullmenge ist f.s. gleich `∅`, ohne meßbar zu
+   sein. Der Schnitt `⊓ 𝓐` in der Definition repariert das. Wer jede Teilmenge
+   einer Nullmenge will, vervollständigt zuerst `(Ω, 𝓐, P)` — und ändert damit
+   den Grundraum und den Sinn jeder Aussage darüber.
+2. **Die Aussage braucht ein Maß**, wie der Nutzer angesagt hat. `hawkesFiltration`
+   und `hawkesPathFiltration` sind bisher ohne jedes Maß erklärt.
+3. **Die Augmentierung macht die widerlegte Identität nicht von selbst wahr**, und
+   das ist der wichtigste der drei. Was sie wahr macht, steht als
+   `Filtration.augment_eq_augment_of_forall_exists_ae_eq`: zu zeigen ist nicht,
+   daß die beiden Filtrationen übereinstimmen, sondern daß **jede Menge der einen
+   f.s. eine Menge der anderen ist**. Das ist mehr, als eine Nullmenge schlechter
+   Stichprobenpunkte von selbst hergibt — aus `P(G) = 1` folgt nicht, daß eine
+   `pointFiltration`-Menge f.s. mit einer `pathFiltration`-Menge übereinstimmt;
+   dazu muß der Beweis der Identität **auf `G`** laufen, und seine drei
+   Voraussetzungen sind global.
+
+#### Woran die Identität also hängt, und es ist keine Relativierung, sondern eine Abänderung der Daten
+
+Der Beweisweg von `pointFiltrationE_eq_stepPathFiltrationE` läßt sich nicht auf
+die gute Menge einschränken — `hmono`, `hzero`, `hmove` stehen unter einem
+Allquantor über `Ω`, und eine σ-Algebra-Gleichheit auf einer Teilmenge ist keine
+Aussage über die σ-Algebren. Der Weg, der trägt, ist der umgekehrte: **die Daten
+auf einer Nullmenge abändern.** Ist `(T', y')` ein Paar meßbarer Familien, das
+f.s. mit `(T, y)` übereinstimmt und die drei Voraussetzungen **überall** erfüllt,
+so stimmen die erzeugenden Abbildungen `jumpStateE T y i` und `jumpStateE T' y' i`
+f.s. überein; damit ist jede Menge der einen Filtration f.s. eine der anderen,
+`augment_eq_augment_of_forall_exists_ae_eq` greift, und die Identität gilt für die
+augmentierten Filtrationen der ursprünglichen Daten.
+
+Für die Instanzen dieses Repos ist das billig: die Kette ist die erste Koordinate
+des Produktraums, und sie durch `y' ω n = n` zu ersetzen (reiner Zählprozeß)
+beziehungsweise die Wartezeiten auf der Nullmenge `{ω | ∃ n, ω.2 n ≤ 0}` durch `1`
+zu ersetzen, sind zwei Abänderungen auf Nullmengen, die `hmove` und `hmono`
+überall wahr machen. `hzero` ist in der Konstruktion Konvention
+(`hawkesJumpTime_zero`, ein `rfl`), also von vornherein erfüllt.
+
+#### Was dieser Lauf **nicht** getan hat, und zwar mit Absicht
+
+Er hat **nicht** augmentiert. Die Anordnung des Nutzers war, die Verträglichkeit
+zu prüfen und das Ergebnis zu sagen, ehe umgestellt wird; die Umstellung von
+`hawkes_isLocalMPSolution` auf eine augmentierte Filtration steht darum weiter
+aus. Sie ist nach diesem Lauf nicht mehr riskant — was darüber liegt, überlebt sie
+—, aber sie ist eine eigene Arbeit.
+
+#### Und die Brücke dorthin ist im selben Lauf gebaut
+
+Die drei letzten der siebzehn Deklarationen sind genau diese Abänderung, und sie
+hängen an **keiner** der fünfzehn offenen Aussagen des Abhängigkeitsbaums:
+
+* `Filtration.augment_le_augment_of_le_eventuallyMeasurableSpace` — die
+  Augmentierung ist monoton unter Inklusion **modulo Nullmengen**, und das ist
+  die schwächste Voraussetzung, unter der sie es ist.
+* `naturalFiltration_le_eventuallyMeasurableSpace_of_ae_eq` — die natürliche
+  Filtration eines Prozesses liegt modulo Nullmengen in der jedes f.s. gleichen
+  Prozesses. Der Beweis ist eine Zeile über den Erzeugern:
+  `Filter.EventuallyEq.preimage`.
+* `naturalFiltration_augment_eq_of_ae_eq` — **zwei f.s. gleiche Prozesse haben
+  dieselbe augmentierte natürliche Filtration.**
+
+Was für die Hawkes-Instanz damit noch fehlt, ist allein die Identität an den
+*abgeänderten* Daten, also `pointFiltrationE_eq_stepPathFiltrationE` — und der
+steht als Vorschlag 1.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`pointFiltrationE_eq_stepPathFiltrationE`** — Vorschlag 1 des Vorlaufs,
+   unverändert offen, und ohne ihn ist alles Weitere leer. **Warum jetzt:** die
+   drei Voraussetzungen sind je durch einen Zeugen als notwendig ausgewiesen, der
+   Abtastbeweis steht im Meilenstein ausgeschrieben, und nach diesem Lauf ist
+   klar, wofür er gebraucht wird — nicht für die Daten selbst, sondern für ihre
+   Abänderung auf einer Nullmenge.
+2. **`hawkesPathFiltration_augment_eq_hawkesFiltration_augment`** — die Gleichheit
+   der **augmentierten** Filtrationen der Hawkes-Daten, über die Abänderung der
+   Wartezeiten auf der Nullmenge `{ω | ∃ n, ω.2 n ≤ 0}`. **Worauf sie ruht:**
+   `naturalFiltration_augment_eq_of_ae_eq` (steht, dieser Lauf) und
+   `pointFiltrationE_eq_stepPathFiltrationE` (Vorschlag 1). **Prüfstein:** sie
+   darf `pointFiltrationE_eq_stepPathFiltrationE` nur an den
+   abgeänderten Daten benutzen; benutzt sie es an den ursprünglichen, ist sie
+   falsch geführt, denn dort sind die Voraussetzungen nachweislich verletzt.
+3. **`summable_waiting_of_intervalIntegrable_hawkesSelfRate`** — die billigste
+   offene Aussage des Abhängigkeitsbaums, unverändert gültig.
+4. **Gruppe A**, unverändert: `E[D_n | ℋ_n] = 0` ist der Rumpf des Satzes und wird
+   von keiner Entscheidung über Filtrationen billiger.

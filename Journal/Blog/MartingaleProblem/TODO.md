@@ -247,16 +247,30 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   im Hawkes-Beispiel.
 
 * **Die augmentierte Filtration, und die üblichen Bedingungen.** Der neunte.
-  Mathlib hat davon **nichts** (geprüft am 2026-09-12): weder
-  `augmentedFiltration` noch `Filtration.augment` noch `usualConditions` noch
-  `IsRightContinuousFiltration`. Vorhanden ist allein `NullMeasurableSpace`
-  (`MeasureTheory/Measure/NullMeasurable.lean`) als Baustein.
+  Mathlib hat davon **nichts** (geprüft am 2026-09-12, `upstream/master`
+  `141f6b64`): weder `augmentedFiltration` noch `Filtration.augment` noch
+  `usualConditions` noch `IsRightContinuousFiltration`.
+
+  *Der Baustein ist aber ein anderer, als hier zuerst stand:* nicht
+  `NullMeasurableSpace`, sondern `eventuallyMeasurableSpace`
+  (`MeasureTheory/MeasurableSpace/EventuallyMeasurable.lean`), die Meßbarkeit
+  modulo einer σ-Filter. `NullMeasurableSpace` ist nur ihr Spezialfall bei
+  `l = ae μ` und `m` = der ganzen Grund-σ-Algebra; gebraucht wird sie über einer
+  **Teil**-σ-Algebra, und das kann nur die allgemeine Fassung.
 
   Gebraucht wird `𝓕̄ t = σ (𝓕 t ∪ 𝒩)` mit `𝒩` den `P`-Nullmengen, dazu die
   beiden Sätze, die eine Bibliothek dafür braucht: daß die Augmentierung wieder
   eine Filtration ist, und daß **die Martingaleigenschaft unter Vergrößerung um
-  Nullmengen erhalten bleibt** — letzteres finde ich in Mathlib ebenfalls nicht,
-  und es ist das, woran die Umstellung bei uns hängt.
+  Nullmengen erhalten bleibt**. Beides ist am 2026-09-12, siebter Lauf, auf
+  unserer Seite gebaut und gegen v4.33.1 übersetzt
+  (`MartingaleProblems/Suggested.lean`, `section Augmentation`:
+  `Filtration.augment`, `condExp_augment`, `Martingale.augment`,
+  `Martingale.of_augment`, `Locally.augment`), siebzehn Deklarationen ohne
+  `sorry`. In Mathlib fehlt es weiterhin, und der Kern ist eine einzige Aussage,
+  die dort ebenfalls fehlt:
+  `condExp_eq_condExp_of_forall_exists_ae_eq` — die bedingte Erwartung ändert
+  sich nicht, wenn man die σ-Algebra um Mengen vergrößert, die f.s. schon da
+  sind.
 
   *Woran es bei uns hängt:* der 25. Lauf des 2026-09-12 hat in Lean widerlegt,
   daß die Punktfiltration eines Treppenpfadprozesses mit der kanonischen
@@ -266,6 +280,18 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   **vervollständigten** Filtrationen sollte die Gleichheit gelten, und dann hätte
   ein Sprungprozeß genau eine Filtration — die des eigenen Pfades. Der Preis ist,
   daß die Aussage ein Maß braucht statt nur σ-Algebren.
+
+  *Zwei Präzisierungen vom 2026-09-12, siebter Lauf, und beide sind Preise:*
+  die Augmentierung enthält die **meßbaren** Nullmengen und keine anderen; will
+  man jede Teilmenge einer Nullmenge, so ist zuerst `(Ω, 𝓐, P)` zu
+  vervollständigen, und das ändert den Grundraum und damit den Sinn jeder
+  Aussage darüber. Und die Gleichheit der augmentierten Filtrationen ist **nicht**
+  die widerlegte Gleichheit modulo Nullmengen, sondern
+  `augment_eq_augment_of_forall_exists_ae_eq`: jede Menge der einen ist f.s.
+  eine Menge der anderen. Das ist mehr, als eine Nullmenge schlechter
+  Stichprobenpunkte von selbst hergibt, und der Weg dorthin führt über eine
+  Abänderung der **Daten** auf einer Nullmenge, nicht über eine Relativierung des
+  Beweises.
 
   Das ist der kleinste der neun Punkte und zugleich der, der am breitesten
   nützt: die üblichen Bedingungen stehen in jedem Lehrbuch der stetigen
