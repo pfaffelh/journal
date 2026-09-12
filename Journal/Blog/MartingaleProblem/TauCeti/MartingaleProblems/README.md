@@ -3222,6 +3222,68 @@ A concrete family of solutions, built without any of the theory above. Index
     The local integrability of the self rate, which every statement of the path dependent assembly
     carries as a hypothesis, is free at such a point
     (`intervalIntegrable_hawkesSelfRate_of_forall_eq`): a constant rate is interval integrable.
+  * `cumulativeRateF_hawkesFrozen_eq`, `sum_eq_mul_add_sum_setIntegral_hawkesJumpTime` and
+    `cumulativeRateF_hawkesSelfRate_eq_sum`: **one computation gives both the level carried by the
+    `m`-th jump time, `ν·T m + ∑_{l=1}^{m−1} Φ(T m − T l)` with `Φ r = ∫_{(0,r]} φ`, and the
+    cumulated self referential rate up to a jump time, `ν·r + ∑_{l=1}^{n} Φ(r − T l)` for
+    `r ≤ T (n+1)` — a finite functional of the events below `r`, which is the shape `hcum` asks
+    for.** **In Lean** on 2026-09-12, fourth run, with `setIntegral_Ioc_sub_eq_zero_of_le`,
+    `setIntegral_Ioc_comp_sub_right_of_eq_zero`, `sum_eq_mul_add_cumulativeRateF_hawkesJumpTime`,
+    `sum_eq_mul_add_setIntegral_hawkesJumpTime`,
+    `sum_eq_mul_add_setIntegral_hawkesJumpTime_of_le` and
+    `cumulativeRateF_hawkesRate_countingMeasure` und
+    `cumulativeRateF_hawkesSelfRate_congr_of_jumpTime_eq`.
+
+    `sum_eq_mul_hawkesJumpTime_of_forall_le` computes the level of the in window jump of **least**
+    index, where the frozen rate is the bare baseline. What was expected from there was an induction
+    over the jump times in order of size, and the question asked before it was begun was whether that
+    induction needs a **primitive of `φ`** — which would be a new hypothesis on the data of
+    `ex:hawkes`. **There is no induction to run.** The frozen rate of stage `m` is a constant plus a
+    finite sum of translates of `φ`; each translate integrates over the window `(0, T m]` to the
+    cumulated kernel at the **gap** `T m − T l`, because `φ` vanishes on the closed negative half
+    line (`setIntegral_Ioc_comp_sub_right_of_eq_zero`, which asks no order between the two times);
+    and a stage that fires at or after `T m` contributes an **empty** window and drops out by the
+    arithmetic of the endpoints rather than by a hypothesis
+    (`setIntegral_Ioc_sub_eq_zero_of_le`). The closed formula therefore holds for every `m` under
+    the single hypothesis `0 ≤ ∑_{k<m} ξ k`, which is what the inverse needs to attain its level at
+    all.
+
+    **What this settles about the data of `ex:hawkes`.** The summand is
+    `cumulativeRateF (fun u _ ↦ φ u)`, the cumulated rate of the kernel read as a rate that ignores
+    its sample point (`sum_eq_mul_add_cumulativeRateF_hawkesJumpTime`), so the primitive the formula
+    needs is an object the path dependent theory already carries. A *differentiable* primitive of
+    `φ` is used nowhere, and **no hypothesis is added** beyond the local integrability of the
+    translates that `intervalIntegrable_hawkesFrozen` already asks.
+
+    **The touchstone is met more cheaply than by the least index step.** No monotonicity of the jump
+    times and no sign of the waiting times is used, so the formula holds at the sample points at
+    which the fixed point of the construction fails, where a later stage fires before an earlier one
+    — which is what makes it usable for the refutation question. Two specialisations record the
+    agreement with what stood before: `sum_eq_mul_add_setIntegral_hawkesJumpTime` is the case of
+    exactly one earlier stage below `T m`, and `sum_eq_mul_add_setIntegral_hawkesJumpTime_of_le`
+    collapses that to `sum_eq_mul_hawkesJumpTime_of_forall_le` when the stage turns out not to be
+    below `T m` after all.
+
+    **And the same computation gives the cumulated rate, which is what `hcum` is about.** Up to a
+    jump time the self referential rate *is* a frozen rate (`hawkesRate_countingMeasure`), so
+    `cumulativeRateF (hawkesSelfRate ν φ) w r = ν·r + ∑_{l=1}^{n} Φ(r − T l)` for `r ≤ T (n+1)`
+    — `cumulativeRateF_hawkesRate_countingMeasure` in the generality of an arbitrary monotone
+    family, `cumulativeRateF_hawkesSelfRate_eq_sum` on the Hawkes data. The right hand side is a
+    **finite** expression in the jump times, and the summands it keeps are exactly those with
+    `T l < r`: the cumulated rate up to `r` is a functional of the events **below** `r`, which is
+    the shape `hcum` over `hawkesJumpFiltration` asks for. What is paid for it is the monotonicity
+    of the jump times, hence the non negativity of the waiting times — the hypothesis the level
+    formula avoids. The non explosion is **not** paid: the window ends at a jump time, where the
+    rate is a finite sum, so the junk value of `integral_undef` at an accumulating sample point is
+    never reached from here.
+
+    `cumulativeRateF_hawkesSelfRate_congr_of_jumpTime_eq` states the consequence in its σ-algebra
+    free shape: two sample points whose jump times agree at the indices `1, …, n` carry the same
+    cumulated mass up to any `r` below the `(n+1)`-st jump time of either, whatever their waiting
+    times are and whatever their jump times do above `n`. That is the independence of the sample
+    point which `hcum` asserts, without the measurability layer; the layer is added through
+    `jumpTimeFE_hawkesSelfRate`, whose hypothesis `hxi` holds at a sample point and not on the whole
+    space, so what `hcum` gets is a statement on a set and not on the whole space.
   * `measurableSet_lt_rateInverseE_of_adapted` and `jumpFiltrationFE_hcut`: **the cutting set is an
     event of the truncated filtration, and with it the cut stands in the shape the tower consumes.**
     **In Lean** on 2026-09-11, twentieth run. The whole content of the first is that the level `a`

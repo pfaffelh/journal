@@ -19581,4 +19581,289 @@ theorem jumpTimeF_hawkesSelfRate_of_forall_eq {E : Type*} {w : (ℕ → E) × (�
 
 end PathCutDegenerate
 
+/-! ### The cumulated rate in closed form, and the level of a jump time with it
+
+`sum_eq_mul_hawkesJumpTime_of_forall_le` computes the level carried by the in window jump of
+**least** index: below it no earlier stage has fired, the frozen rate is the bare baseline, and the
+level is `ν` times the time.  A proof of `hcum` over `hawkesJumpFiltration` has to run an induction
+from there, and the question this paragraph was opened to answer is what that induction costs --
+specifically whether it needs a primitive of `φ`, which would be a new hypothesis on the data of
+`ex:hawkes`.
+
+**The answer is that there is no induction to run**, and that one computation
+(`cumulativeRateF_hawkesFrozen_eq`) settles both the level of a jump time and the cumulated rate up
+to one.  The level of the jump time of *every* stage is
+
+`∑_{k < m} ξ k = ν · T m + ∑_{l = 1}^{m - 1} Φ (T m - T l)`,    `Φ r = ∫_{(0, r]} φ`,
+
+and this holds with **no hypothesis on the order of the jump times whatsoever**
+(`sum_eq_mul_add_sum_setIntegral_hawkesJumpTime`).  The two facts that make the sum collapse to its
+in window part cost nothing: a stage that fires at or after `T m` contributes a window
+`(0, T m - T l]` that is **empty**, so its term is `0` without being excluded by a hypothesis
+(`setIntegral_Ioc_sub_eq_zero_of_le`); and a stage that fires before `T m` contributes the cumulated
+kernel over the gap, because `φ` vanishes on the closed negative half line and the shift of the
+window can be absorbed (`setIntegral_Ioc_comp_sub_right_of_eq_zero`).
+
+**What this settles about the data of `ex:hawkes`.**  The summand is `cumulativeRateF` of the kernel
+read as a rate that ignores its sample point (`sum_eq_mul_add_cumulativeRateF_hawkesJumpTime`), so
+the primitive the formula needs is an object the path dependent theory already carries.  A
+*differentiable* primitive of `φ` is used nowhere, and no hypothesis is added beyond the local
+integrability of the translates that `intervalIntegrable_hawkesFrozen` already asks.
+
+**The touchstone is met, and more cheaply than by its predecessor.**  No monotonicity of the jump
+times and no sign of the waiting times is used -- only that the partial sum at `m` is non negative,
+which is what the inverse needs to attain its level at all.  In particular the statement holds at the
+sample points at which the fixed point of the construction fails, where a later stage fires before an
+earlier one, and it is therefore usable for the refutation question it was written for.
+
+Two specialisations record the agreement with what stood before:
+`sum_eq_mul_add_setIntegral_hawkesJumpTime` is the case of exactly one earlier stage below `T m`, the
+step an induction would have taken second, and `sum_eq_mul_add_setIntegral_hawkesJumpTime_of_le`
+collapses it to `sum_eq_mul_hawkesJumpTime_of_forall_le` when that stage turns out not to be below
+`T m` after all.
+
+**And the same computation gives the cumulated rate, which is what `hcum` is about.**  Up to a jump
+time the self referential rate *is* a frozen rate (`hawkesRate_countingMeasure`), so
+
+`cumulativeRateF (hawkesSelfRate ν φ) w r = ν · r + ∑_{l=1}^{n} Φ (r - T l)`   for `r ≤ T (n+1)`
+
+(`cumulativeRateF_hawkesRate_countingMeasure`, `cumulativeRateF_hawkesSelfRate_eq_sum`).  The right
+hand side is a **finite** expression in the jump times, and the summands it keeps are exactly those
+with `T l < r`: the cumulated rate up to `r` is a functional of the events **below** `r`, which is
+the shape `hcum` over `hawkesJumpFiltration` asks for.  What is paid for it is the monotonicity of
+the jump times, hence the non negativity of the waiting times -- the hypothesis the level formula
+avoids.  The non explosion is **not** paid: the window ends at a jump time, where the rate is a
+finite sum, so the junk value of `integral_undef` at an accumulating sample point is never reached
+from here.  `cumulativeRateF_hawkesSelfRate_congr_of_jumpTime_eq` states the consequence in its
+σ-algebra free shape: two sample points whose jump times agree at the indices `1, …, n` carry the
+same cumulated mass up to any `r` below the `(n+1)`-st jump time of either. -/
+
+section PathCutSecond
+
+variable {ν : ℝ} {φ : ℝ → ℝ}
+
+/-- **A window that closes before it opens carries no mass.**  The form in which a stage that fires
+at or after `T m` drops out of the level formula: it drops out by the arithmetic of the endpoints,
+and not because a hypothesis excluded it. -/
+theorem setIntegral_Ioc_sub_eq_zero_of_le {a b : ℝ} (h : a ≤ b) (f : ℝ → ℝ) :
+    (∫ u in Set.Ioc (0 : ℝ) (a - b), f u) = 0 := by
+  rw [Set.Ioc_eq_empty (not_lt.2 (sub_nonpos.2 h)), setIntegral_empty]
+
+/-- **A translate of a causal kernel integrates to the cumulated kernel at the shifted endpoint.**
+`∫_{(0, r]} φ (u - a) du = ∫_{(0, r - a]} φ`, for `a ≥ 0` and `r ≥ 0`.  The shift moves the window
+to `(-a, r - a]`, and the part below the origin contributes nothing because `φ` vanishes there --
+the same causality that `hawkesFrozen_succ_of_le` spends.
+
+**No order between `a` and `r` is asked.**  If `r < a`, both sides are `0`: on the left the whole
+window sits below the origin after the shift, on the right the window is empty. -/
+theorem setIntegral_Ioc_comp_sub_right_of_eq_zero (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {a r : ℝ} (ha : 0 ≤ a) (hr : 0 ≤ r) :
+    (∫ u in Set.Ioc (0 : ℝ) r, φ (u - a)) = ∫ u in Set.Ioc (0 : ℝ) (r - a), φ u := by
+  have hφI0 : ∀ x : ℝ, IntervalIntegrable φ volume 0 x := fun x ↦ by
+    simpa using hφint 0 x
+  have hφI : ∀ s t : ℝ, IntervalIntegrable φ volume s t := fun s t ↦ (hφI0 s).symm.trans (hφI0 t)
+  have hzero : ∀ s t : ℝ, s ≤ 0 → t ≤ 0 → (∫ x in s..t, φ x) = 0 := by
+    intro s t hs ht
+    have h : (∫ x in s..t, φ x) = ∫ _ in s..t, (0 : ℝ) :=
+      intervalIntegral.integral_congr fun x hx ↦ hφ0 x (hx.2.trans (sup_le hs ht))
+    simpa using h
+  rw [← intervalIntegral.integral_of_le hr, intervalIntegral.integral_comp_sub_right, zero_sub,
+    ← intervalIntegral.integral_add_adjacent_intervals (hφI (-a) 0) (hφI 0 (r - a)),
+    hzero (-a) 0 (neg_nonpos.2 ha) le_rfl, zero_add]
+  rcases le_or_gt 0 (r - a) with h | h
+  · rw [intervalIntegral.integral_of_le h]
+  · rw [hzero 0 (r - a) le_rfl h.le, Set.Ioc_eq_empty (not_lt.2 h.le), setIntegral_empty]
+
+/-- **The cumulated frozen rate, in closed form.**  For an arbitrary family `T` of non negative
+times,
+
+`∫_{(0, r]} (ν + ∑_{l=1}^{m-1} φ (u - T l)) du = ν · r + ∑_{l=1}^{m-1} ∫_{(0, r - T l]} φ`,
+
+and **nothing is asked about the order of the times**: a time at or above `r` contributes an empty
+window and drops out by the arithmetic of the endpoints rather than by a hypothesis.  This is the
+whole computation of the paragraph; both the level formula for the jump times and the closed form of
+the cumulated self referential rate are read off it. -/
+theorem cumulativeRateF_hawkesFrozen_eq (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {T : ℕ → ℝ} {m : ℕ} (hT : ∀ l, 1 ≤ l → l < m → 0 ≤ T l) {r : ℝ} (hr : 0 ≤ r) (ω : Ω) :
+    cumulativeRateF (hawkesFrozen ν φ T m) ω r
+      = ν * r + ∑ l ∈ Finset.Ico 1 m, ∫ u in Set.Ioc (0 : ℝ) (r - T l), φ u := by
+  have hphi : ∀ l ∈ Finset.Ico 1 m,
+      IntegrableOn (fun u ↦ φ (u - T l)) (Set.Ioc (0 : ℝ) r) volume := fun l _ ↦
+    (intervalIntegrable_iff_integrableOn_Ioc_of_le hr).1 (hφint (T l) r)
+  rw [cumulativeRateF]
+  simp only [hawkesFrozen]
+  rw [integral_add (integrableOn_const (C := ν) measure_Ioc_lt_top.ne)
+    (integrable_finsetSum _ hphi), integral_finsetSum _ hphi]
+  congr 1
+  · exact cumulativeRateF_const ω ν hr
+  · exact Finset.sum_congr rfl fun l hl ↦ setIntegral_Ioc_comp_sub_right_of_eq_zero hφ0 hφint
+      (hT l (Finset.mem_Ico.1 hl).1 (Finset.mem_Ico.1 hl).2) hr
+
+/-- **The level carried by a jump time, in closed form.**  The `m`-th jump time solves
+
+`∑_{k < m} ξ k = ν · T m + ∑_{l = 1}^{m - 1} ∫_{(0, T m - T l]} φ`,
+
+and **nothing is asked about the order of the jump times**: the stages that fire at or after `T m`
+contribute empty windows and drop out of their own accord.
+
+This is `sum_eq_mul_hawkesJumpTime_of_forall_le` without its hypothesis `hmin`, and the proof is the
+same two steps -- the inverse attains its level (`cumulativeRateF_rateInverse`), and the frozen rate
+of stage `m` is a constant plus a finite sum of translates of `φ`, each of which integrates to the
+cumulated kernel at the gap (`setIntegral_Ioc_comp_sub_right_of_eq_zero`).  The only hypothesis is
+that the partial sum at `m` is non negative, which is what the inverse needs to attain its level at
+all; in particular the waiting times are not asked to be non negative and the jump times are not
+asked to be monotone. -/
+theorem sum_eq_mul_add_sum_setIntegral_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {xi : ℕ → ℝ} {m : ℕ} (hm : 0 ≤ ∑ k ∈ Finset.range m, xi k) :
+    ∑ k ∈ Finset.range m, xi k
+      = ν * hawkesJumpTime ν φ xi ω m
+        + ∑ l ∈ Finset.Ico 1 m,
+            ∫ u in Set.Ioc (0 : ℝ)
+              (hawkesJumpTime ν φ xi ω m - hawkesJumpTime ν φ xi ω l), φ u := by
+  rcases m with _ | n
+  · simp
+  set T := hawkesJumpTime ν φ xi ω with hT
+  have hnn : 0 ≤ T (n + 1) := hawkesJumpTime_nonneg ν φ xi ω (n + 1)
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesFrozen ν φ T (n + 1) u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesFrozen hφint T (n + 1) ω r
+  have hpos : ∀ u : ℝ, 0 < u → 0 < hawkesFrozen ν φ T (n + 1) u ω :=
+    fun u _ ↦ hν.trans_le (le_hawkesFrozen hφ T (n + 1) u ω)
+  have htop : Tendsto (cumulativeRateF (hawkesFrozen ν φ T (n + 1)) ω) atTop atTop :=
+    tendsto_cumulativeRateF_atTop_of_le hint hν fun u _ ↦ le_hawkesFrozen hφ T (n + 1) u ω
+  have hattain : cumulativeRateF (hawkesFrozen ν φ T (n + 1)) ω (T (n + 1))
+      = ∑ k ∈ Finset.range (n + 1), xi k := by
+    rw [hT, hawkesJumpTime_succ ν φ xi ω n]
+    exact cumulativeRateF_rateInverse hint hpos htop hm
+  rw [← hattain, cumulativeRateF_hawkesFrozen_eq hφ0 hφint
+    (fun l _ _ ↦ hawkesJumpTime_nonneg ν φ xi ω l) hnn ω]
+
+/-- **The same statement, with the summand named.**  The cumulated kernel is `cumulativeRateF` of
+the rate that ignores its sample point, so the primitive the level formula needs is an object the
+path dependent theory already has -- and in particular no differentiability of a primitive of `φ` is
+asked anywhere. -/
+theorem sum_eq_mul_add_cumulativeRateF_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {xi : ℕ → ℝ} {m : ℕ} (hm : 0 ≤ ∑ k ∈ Finset.range m, xi k) :
+    ∑ k ∈ Finset.range m, xi k
+      = ν * hawkesJumpTime ν φ xi ω m
+        + ∑ l ∈ Finset.Ico 1 m, cumulativeRateF (fun u (_ : Ω) ↦ φ u) ω
+            (hawkesJumpTime ν φ xi ω m - hawkesJumpTime ν φ xi ω l) :=
+  sum_eq_mul_add_sum_setIntegral_hawkesJumpTime hν hφ hφ0 hφint hm
+
+/-- **The jump of second least index**, the step an induction from
+`sum_eq_mul_hawkesJumpTime_of_forall_le` would have taken second: exactly one earlier stage `l`
+fires strictly below the time of stage `m`, and the level is `ν` times the time plus the cumulated
+kernel over the gap between the two.  It is a specialisation of
+`sum_eq_mul_add_sum_setIntegral_hawkesJumpTime` and not a separate argument -- every other summand
+is an empty window.
+
+The hypothesis does **not** say that `T l` and `T m` are the two smallest jump times: stages after
+`m` may fire before either, and it is exactly in that configuration that the fixed point of the
+construction fails. -/
+theorem sum_eq_mul_add_setIntegral_hawkesJumpTime (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {xi : ℕ → ℝ} {m l : ℕ} (hm : 0 ≤ ∑ k ∈ Finset.range m, xi k) (hl1 : 1 ≤ l) (hlm : l < m)
+    (hmin : ∀ k, 1 ≤ k → k < m → k ≠ l →
+      hawkesJumpTime ν φ xi ω m ≤ hawkesJumpTime ν φ xi ω k) :
+    ∑ k ∈ Finset.range m, xi k
+      = ν * hawkesJumpTime ν φ xi ω m
+        + ∫ u in Set.Ioc (0 : ℝ)
+            (hawkesJumpTime ν φ xi ω m - hawkesJumpTime ν φ xi ω l), φ u := by
+  rw [sum_eq_mul_add_sum_setIntegral_hawkesJumpTime hν hφ hφ0 hφint hm]
+  refine congrArg (ν * hawkesJumpTime ν φ xi ω m + ·)
+    (Finset.sum_eq_single l (fun k hk hkl ↦ ?_) (fun h ↦ ?_))
+  · exact setIntegral_Ioc_sub_eq_zero_of_le
+      (hmin k (Finset.mem_Ico.1 hk).1 (Finset.mem_Ico.1 hk).2 hkl) φ
+  · exact absurd (Finset.mem_Ico.2 ⟨hl1, hlm⟩) h
+
+/-- **The consistency check against the least index step.**  If stage `l` does not in fact fire
+below the time of stage `m`, the gap is non positive, the added term is the integral over an empty
+window, and the statement is `sum_eq_mul_hawkesJumpTime_of_forall_le` again.  The two steps therefore
+agree on their overlap. -/
+theorem sum_eq_mul_add_setIntegral_hawkesJumpTime_of_le (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x)
+    (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {xi : ℕ → ℝ} {m l : ℕ} (hm : 0 ≤ ∑ k ∈ Finset.range m, xi k) (hl1 : 1 ≤ l) (hlm : l < m)
+    (hmin : ∀ k, 1 ≤ k → k < m → k ≠ l →
+      hawkesJumpTime ν φ xi ω m ≤ hawkesJumpTime ν φ xi ω k)
+    (hle : hawkesJumpTime ν φ xi ω m ≤ hawkesJumpTime ν φ xi ω l) :
+    ∑ k ∈ Finset.range m, xi k = ν * hawkesJumpTime ν φ xi ω m := by
+  rw [sum_eq_mul_add_setIntegral_hawkesJumpTime hν hφ hφ0 hφint hm hl1 hlm hmin,
+    setIntegral_Ioc_sub_eq_zero_of_le hle φ, add_zero]
+
+/-- **The cumulated Hawkes rate of a counting measure, in closed form, below a jump time.**  Up to
+`T (n + 1)` the mass consumed is `ν · r` plus the cumulated kernel over the gap to each earlier
+event, and the events at or above `r` drop out on their own.
+
+**This is the shape `hcum` asks for.**  The right hand side is a *finite* expression in the jump
+times alone, and the terms it keeps are exactly those with `T l < r` -- so the cumulated rate up to
+`r` is a functional of the events **below** `r`.  Nothing enters but the monotonicity of the family,
+which is predictability read at the level of the record, and the causality of the kernel. -/
+theorem cumulativeRateF_hawkesRate_countingMeasure (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    {T : ℕ → ℝ} (hTmono : Monotone T) (hT0 : 0 ≤ T 0) {n : ℕ} {r : ℝ} (hr : 0 ≤ r)
+    (hrn : r ≤ T (n + 1)) (ω : Ω) :
+    cumulativeRateF (hawkesRate ν φ fun _ ↦ countingMeasure T) ω r
+      = ν * r + ∑ l ∈ Finset.Ico 1 (n + 1), ∫ u in Set.Ioc (0 : ℝ) (r - T l), φ u := by
+  have hcongr : cumulativeRateF (hawkesRate ν φ fun _ ↦ countingMeasure T) ω r
+      = cumulativeRateF (hawkesFrozen ν φ T (n + 1)) ω r :=
+    setIntegral_congr_fun measurableSet_Ioc fun u hu ↦
+      hawkesRate_countingMeasure hφ0 hTmono hT0 (hu.2.trans hrn) ω
+  rw [hcongr, cumulativeRateF_hawkesFrozen_eq hφ0 hφint
+    (fun l _ _ ↦ hT0.trans (hTmono (Nat.zero_le l))) hr ω]
+
+/-- **The cumulated self referential Hawkes rate, in closed form, below a jump time.**  The instance
+of `cumulativeRateF_hawkesRate_countingMeasure` at the counting measure of the process's own jump
+times, with the monotonicity discharged by `monotone_hawkesJumpTime`.
+
+Below `T (n + 1)` the mass the Hawkes process has consumed is `ν · r + ∑_{l=1}^{n} Φ (r - T l)` with
+`Φ` the cumulated kernel, and the summands with `r ≤ T l` vanish.  The non explosion does not enter:
+the statement is about a window that ends at a jump time, and there the self referential rate is a
+**finite** sum -- which is exactly why the junk value of `integral_undef` at an accumulating sample
+point (`hawkesRate_countingMeasure_of_forall_eq`) is not reached from here. -/
+theorem cumulativeRateF_hawkesSelfRate_eq_sum {E : Type*} {w : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hxi : ∀ k, 0 ≤ w.2 k) {n : ℕ} {r : ℝ} (hr : 0 ≤ r)
+    (hrn : r ≤ hawkesJumpTime ν φ w.2 w (n + 1)) :
+    cumulativeRateF (hawkesSelfRate ν φ) w r
+      = ν * r + ∑ l ∈ Finset.Ico 1 (n + 1),
+          ∫ u in Set.Ioc (0 : ℝ) (r - hawkesJumpTime ν φ w.2 w l), φ u := by
+  have hmono : Monotone (hawkesJumpTime ν φ w.2 w) := monotone_hawkesJumpTime hν hφ hφ0 hxi
+    fun m s ↦ intervalIntegrable_hawkesFrozen hφint (hawkesJumpTime ν φ w.2 w) m w s
+  rw [cumulativeRateF_congr (fun u ↦ hawkesSelfRate_apply ν φ u w) r]
+  exact cumulativeRateF_hawkesRate_countingMeasure hφ0 hφint hmono
+    (hawkesJumpTime_nonneg ν φ w.2 w 0) hr hrn w
+
+/-- **The cumulated rate is a functional of the record**, which is what `hcum` is about.  Two sample
+points whose jump times agree at the indices `1, …, n` carry the same cumulated mass up to any `r`
+below the `(n+1)`-st jump time of either -- whatever their waiting times are, and whatever their
+jump times do at the indices above `n`.
+
+It is `cumulativeRateF_hawkesSelfRate_eq_sum` read twice: the closed form mentions the sample point
+only through `T 1, …, T n`, and the terms with `r ≤ T l` are empty windows, so it mentions it only
+through the events **below** `r`.  This is the statement in its σ-algebra free shape; turning it
+into the measurability `hcum` asks for is the step that needs `jumpTimeFE_hawkesSelfRate`, and the
+hypothesis `hxi` there holds only at a sample point and not on the whole space. -/
+theorem cumulativeRateF_hawkesSelfRate_congr_of_jumpTime_eq {E : Type*}
+    {w w' : (ℕ → E) × (ℕ → ℝ)} (hν : 0 < ν) (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0)
+    (hφint : ∀ c r : ℝ, IntervalIntegrable (fun u ↦ φ (u - c)) volume 0 r)
+    (hxi : ∀ k, 0 ≤ w.2 k) (hxi' : ∀ k, 0 ≤ w'.2 k) {n : ℕ} {r : ℝ} (hr : 0 ≤ r)
+    (hrn : r ≤ hawkesJumpTime ν φ w.2 w (n + 1))
+    (hrn' : r ≤ hawkesJumpTime ν φ w'.2 w' (n + 1))
+    (heq : ∀ l, 1 ≤ l → l ≤ n → hawkesJumpTime ν φ w.2 w l = hawkesJumpTime ν φ w'.2 w' l) :
+    cumulativeRateF (hawkesSelfRate ν φ) w r = cumulativeRateF (hawkesSelfRate ν φ) w' r := by
+  rw [cumulativeRateF_hawkesSelfRate_eq_sum hν hφ hφ0 hφint hxi hr hrn,
+    cumulativeRateF_hawkesSelfRate_eq_sum hν hφ hφ0 hφint hxi' hr hrn']
+  refine congrArg (ν * r + ·) (Finset.sum_congr rfl fun l hl ↦ ?_)
+  rw [heq l (Finset.mem_Ico.1 hl).1 (Nat.lt_succ_iff.1 (Finset.mem_Ico.1 hl).2)]
+
+end PathCutSecond
+
 end PathDependent
