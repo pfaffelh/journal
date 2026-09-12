@@ -241,6 +241,46 @@ Was **nicht** zu tun ist: auf `master` umstellen. Wir sind an v4.33.1 gebunden,
 und die eine bewußt gegen `master` geschriebene Aussage in
 `WeakConvergence/Suggested.lean` bleibt, wie sie ist.
 
+**Die Filtrationsgleichheit: augmentieren, nicht abschwächen** *(Nutzer,
+2026-09-12, nach der Widerlegung im 25. Lauf)*
+
+Der 25. Lauf hat `naturalFiltration (stepPath T y) = pointFiltration T y`
+**widerlegt**, in Lean, mit drei Zeugen für drei notwendige Voraussetzungen; für
+die echten Hawkes-Daten ist die Inklusion strikt. Der Grund: die Kette ist eine
+freie Koordinate des Stichprobenraums, „Kette bewegt sich" und „Sprungzeiten
+wachsen echt" gelten nur **fast sicher**, und Gleichheit von σ-Algebren ist keine
+fast-sichere Aussage.
+
+**Die Antwort ist nicht, die Aussage abzuschwächen, sondern zu augmentieren:**
+
+> Gleichheit der **vervollständigten** Filtrationen,
+> `𝓕̄ t = σ (𝓕 t ∪ 𝒩)` mit `𝒩` den `P`-Nullmengen.
+
+Die schlechten Stichprobenpunkte bilden eine Nullmenge; auf deren Komplement
+bestimmt der Pfad die Sprungzeiten, und der Rest verschwindet in `𝒩`. Das ist
+die übliche Bedingung und die richtige Antwort auf einen Beweis, der an einer
+Nullmenge scheitert.
+
+**Zum Startpunkt:** `T 0 = 0` ist in unserer Konstruktion Konvention, `T 0` also
+keine freie Größe. Der Zeuge `stepPath_update_zero` sagt nur, daß der Pfad ein
+*abweichendes* `T 0` nicht sieht — hält man die Konvention fest, gibt es keines.
+Von den drei notwendigen Voraussetzungen bleiben damit zwei, und beide sind f.s.
+
+**Was ZUERST zu prüfen ist, ehe irgend etwas umgestellt wird:**
+
+1. **Verträgt der Rest der Entwicklung die augmentierte Filtration?**
+   `Martingale X 𝓕 P` bei *größerer* Filtration ist nicht automatisch; bei
+   Vergrößerung um **Nullmengen** sollte es gelten, aber ich finde dafür in
+   Mathlib kein Lemma. Prüfe das am Quelltext und sag das Ergebnis, **ehe** Du
+   augmentierst — sonst repariert man den Filtrationssatz und bricht alles
+   darüber.
+2. **Mathlib hat die Augmentierung nicht** (geprüft 2026-09-12: weder
+   `augmentedFiltration` noch `Filtration.augment` noch `usualConditions`; nur
+   `NullMeasurableSpace` als Baustein). Sie wäre eigene, wenn auch elementare
+   Arbeit — und die neunte Lücke für `TODO.md` Punkt 8, falls sie gebaut wird.
+3. Und benenne den Preis: die Aussage wird damit eine über `(Ω, 𝓕, P)` statt
+   über σ-Algebren allein. Sie braucht ein Maß.
+
 **Die Richtung, nach dem Baum des 24. Laufs** *(vom Nutzer am 2026-09-12
 festgelegt; sie ersetzt die Suche nach der nächsten Eingabe)*
 
