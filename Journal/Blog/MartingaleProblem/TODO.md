@@ -246,6 +246,31 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   2026-09-11 entschieden. Wer die Theorie baut, schließt damit die letzte Lücke
   im Hawkes-Beispiel.
 
+* **Die augmentierte Filtration, und die üblichen Bedingungen.** Der neunte.
+  Mathlib hat davon **nichts** (geprüft am 2026-09-12): weder
+  `augmentedFiltration` noch `Filtration.augment` noch `usualConditions` noch
+  `IsRightContinuousFiltration`. Vorhanden ist allein `NullMeasurableSpace`
+  (`MeasureTheory/Measure/NullMeasurable.lean`) als Baustein.
+
+  Gebraucht wird `𝓕̄ t = σ (𝓕 t ∪ 𝒩)` mit `𝒩` den `P`-Nullmengen, dazu die
+  beiden Sätze, die eine Bibliothek dafür braucht: daß die Augmentierung wieder
+  eine Filtration ist, und daß **die Martingaleigenschaft unter Vergrößerung um
+  Nullmengen erhalten bleibt** — letzteres finde ich in Mathlib ebenfalls nicht,
+  und es ist das, woran die Umstellung bei uns hängt.
+
+  *Woran es bei uns hängt:* der 25. Lauf des 2026-09-12 hat in Lean widerlegt,
+  daß die Punktfiltration eines Treppenpfadprozesses mit der kanonischen
+  Filtration des Pfades übereinstimmt — die Kette ist eine freie Koordinate des
+  Stichprobenraums, „Kette bewegt sich" und „Sprungzeiten wachsen echt" gelten
+  nur f.s., und Gleichheit von σ-Algebren ist keine f.s.-Aussage. Für die
+  **vervollständigten** Filtrationen sollte die Gleichheit gelten, und dann hätte
+  ein Sprungprozeß genau eine Filtration — die des eigenen Pfades. Der Preis ist,
+  daß die Aussage ein Maß braucht statt nur σ-Algebren.
+
+  Das ist der kleinste der neun Punkte und zugleich der, der am breitesten
+  nützt: die üblichen Bedingungen stehen in jedem Lehrbuch der stetigen
+  Martingaltheorie am Anfang.
+
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
 lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festliegt.
