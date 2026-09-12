@@ -3645,6 +3645,55 @@ A concrete family of solutions, built without any of the theory above. Index
   of `φ`, so it is an instance of the **global** statement and not only of the
   local one.
 
+### Notiz: was die beiden Fälle teilen und was nicht *(2026-09-12, mit dem Nutzer)*
+
+**Der Umbau führt den pfadabhängigen Fall auf die markovsche Gestalt.** Das ist
+das beste Argument dafür, daß er richtig ist, und keine nachträgliche
+Rechtfertigung:
+
+| | markovsch (fertig) | pfadabhängig (nach dem Umbau) |
+|---|---|---|
+| Sprungzeiten | Formel `τ (n+1) = τ n + ξ (n+1) / lam (Y n)` | `T (n+1) = Λ⁻¹ (∑ ξ)` |
+| Integrierbarkeit in **Definitionen** | keine | keine |
+| Filtration | kanonisch, per Definition | kanonisch, nach Augmentierung |
+| Nichtexplosion | `NonExplosiveE`, f.s. Aussage | ebenso |
+| Hebung nach `ℝ≥0∞` | `jumpTimeE`, `jumpProcessE` | `cumulativeRateFE` |
+
+Der markovsche Fall trug **nie** eine Integrierbarkeitsvoraussetzung, weil die
+Rate dort nur als *Wert* `lam (Y n)` eingeht und nicht als Integral.
+
+**Offene Frage für nach dem Umbau: haben beide Fälle denselben Lokalisierer?**
+Markovsch wird an `rateTime` lokalisiert, den Trefferzeiten des laufenden
+Ratensupremums; pfadabhängig an `rateInverse`, der Inversen der kumulierten Rate.
+Die kumulierte Rate ist aber in **beiden** Fällen die Uhr —
+`Λ t = ∫₀ᵗ lam (X s) ds` gilt markovsch genauso. Es könnte also sein, daß die
+markovsche Lokalisierung an der Uhr ebenfalls geht und einfacher ist als über das
+Ratensupremum; dann wären `rateSup`/`rateTime` entbehrlich. **Ungeprüft** — aber
+die natürliche Frage, sobald der Umbau steht.
+
+**Wobei die Argumente für die Nichtexplosion verschieden bleiben dürften**
+*(Einschätzung des Nutzers, 2026-09-12)*, und das ist kein Mangel der
+Vereinheitlichung, sondern liegt in der Sache:
+
+* **Markovsch** trägt das **Lyapunov-Kriterium** (`isNonExplosive_of_lyapunov`,
+  2026-09-11): `A f ≤ C • f` für ein `f` mit ausschöpfenden Subniveaumengen. Es
+  greift, weil der Erzeuger auf den Zustand wirkt und `f` am Zustand gemessen
+  wird. Der Reihenweg über `∑ (lam (y k))⁻¹` ist der Sonderfall für
+  Nachbarschritte.
+* **Bei Hawkes** hat die Rate kein Argument im Zustandsraum, an dem eine
+  Lyapunov-Funktion ansetzen könnte — sie ist ein Funktional der Vergangenheit.
+  Der Weg des Manuskripts ist statt dessen die **Erneuerungsgleichung**
+  `m = μ₀ + φ * m` für `m t = 𝔼[Λ t]` und die **Volterra-Resolvente** eines
+  Kerns in `L¹_loc`, die *ohne jede Bedingung an `∫ φ`* existiert. Sie gibt
+  `𝔼[N t] < ∞` für jedes `t`, also genau die Voraussetzung von
+  `thm:pathjumpMP`(b).
+
+Die Volterra-Theorie wäre für Hawkes mithin nicht Luxus, sondern **der** Weg; sie
+steht als neunter Punkt in `TODO.md` (Punkt 8, achter Spiegelstrich) und ist die
+einzige der Lücken, die eine kleine Theorie und nicht ein Lemma verlangt. Solange
+sie fehlt, trägt die globale Fassung ihre Hypothese, wie am 2026-09-11
+entschieden.
+
 ### Der Abhängigkeitsbaum von `hawkes_isLocalMPSolution`, von unten aufgeschrieben
 
 *(Angeordnet vom Nutzer am 2026-09-12, weil fünf Läufe hintereinander — 169,
