@@ -25152,3 +25152,239 @@ Durchlaufs.
    `0 < c ≤ h ≤ L` auf `[ν, ∞)`, und bis eine Instanz dasteht, ist das eine
    unbelegte Voraussetzungsfläche — dieselbe Probe, die
    `poissonProcess_isLocalMPSolution` für den lokalen Zweig ist.
+
+### 2026-09-12, zwölfter Lauf des Tages — die drei Vorschläge des Vorlaufs sind eingelöst: zwei Zeugen, **eine** Filtration, und das Maßresultat, an dem der lineare Fall die Nichtexplosion nicht loswurde
+
+**Bearbeitet:** die drei Vorschläge des elften Laufs, in umgekehrter Reihenfolge
+ihrer Nennung und mit Grund — der Zeuge zuerst, weil ohne ihn die
+zweiundfünfzig Deklarationen des Vorlaufs eine Annahme und kein Satz sind.
+
+**Einundvierzig Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+in den vier neuen Abschnitten `BoundedHawkesWitness` (22),
+`BoundedHawkesFiltration` (14), `BoundedHawkesLaw` (4) und
+`BoundedHawkesCounting` (1) am Ende der Datei; 553
+Zeilen. Die ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1
+(Rückgabewert 0, fünf Durchläufe), alle einundvierzig mit `#print axioms`
+geprüft und jede auf `propext`, `Classical.choice`, `Quot.sound` — mehr nicht,
+kein `sorryAx`. `scripts/check_suggested.py` meldet für die Datei `rc 0`,
+`0 Fehler`, `9 sorry` — die Zahl der `sorry` ist also unverändert **neun**.
+(`WeakConvergence/Suggested.lean` meldet weiter seine zwei Fehler; das ist die
+eine bewußt gegen `master` geschriebene Aussage und von diesem Lauf unberührt.)
+Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4, im neuen Abschnitt „Der
+beschränkte Fall bekommt **eine** Filtration, zwei Zeugen und das erste
+Maßresultat"; der Abhängigkeitsbaum des fünften Laufs trägt jetzt einen Vorspann,
+der sagt, welche seiner Punkte für den beschränkten Fall gegenstandslos geworden
+sind.
+
+`upstream/master` frisch geholt: unverändert
+`7d32461ad224e921eb05ead7ac02156702f4aa59` (2026-09-12 17:51 UTC), also derselbe
+Commit wie im elften Lauf.
+
+#### 1. Die Zeugen, und es sind zwei verschiedener Art
+
+Der Vorlauf hatte als dritten Vorschlag `h = min (·) L` genannt und dazu
+geschrieben, bis eine Instanz dastehe, sei die Voraussetzungsfläche unbelegt.
+Sie steht, und daneben eine zweite:
+
+* **`rateCap L = fun x ↦ min x L`**, `c = min ν L`. Die bei `L` abgeschnittene
+  lineare Rate von `ex:hawkes`, also der Zeuge, den das Manuskript selbst
+  liefert. `hawkesRateH_rateCap_of_le` sagt, wo beide Raten übereinstimmen.
+* **`rateSat L = fun x ↦ L * (1 − exp (−x))`**, `c = rateSat L ν`. Glatt, streng
+  wachsend, streng konkav.
+
+**Warum zwei, und das ist der Befund dieses Punktes.** Die Deckelung allein
+belegt die Nichtleerheit, aber sie belegt sie mit einer Funktion, die auf dem
+ganzen Bereich, in dem der Prozeß gewöhnlich lebt, die **Identität** ist. Ein
+Leser dürfte daraufhin vermuten, der Abschnitt sei eine Umschreibung des linearen
+Falls unter einem Schnitt — und der erste Zeuge entkräftet das nicht. Die
+Sättigung tut es. `rateSat_ne_rateCap` rechnet nach, daß die beiden verschieden
+sind, statt es zu behaupten; die Probe kostete vier Zeilen und ist die Art von
+Zeile, die ein Vorwort spart.
+
+Jede der vier tragenden Aussagen ist zweimal instantiiert: `hint`
+(`intervalIntegrable_hawkesSelfRateH_rateCap`/`_rateSat`), die Dominierung
+(`le_hawkesJumpTimeH_rateCap`/`_rateSat`), die Nichtexplosion
+(`tendsto_hawkesJumpTimeH_rateCap_atTop`/`_rateSat_atTop`) und die Pfade
+(`isStepPath_hawkesProcessH_rateCap`/`_rateSat`). Beide Zeugen verlangen von `φ`
+nichts über `ex:hawkes` hinaus und von den Konstanten nichts als `0 < ν` und
+`0 < L`.
+
+*Was der Punkt nicht liefert, und es steht so an der Deklaration:* die Aussage,
+daß der gedeckelte und der lineare **Prozeß** unterhalb der Trefferzeit des
+Pegels übereinstimmen. Das ist keine Folgerung aus `hawkesRateH_rateCap_of_le`,
+weil beide Konstruktionen ihre **eigenen** Sprungzeiten lesen und gerade die
+verglichen werden; es braucht eine Induktion über die Stufen der Rekursion und
+ist nicht gemacht.
+
+#### 2. Eine Filtration, und `hφint` verschwindet zum zweiten Mal
+
+`measurable_hawkesJumpTimeH` ist dieselbe Induktion wie
+`measurable_hawkesJumpTime`, mit **`hφint` und `0 < ν` gegen `Measurable h` und
+die beiden Schranken getauscht**. Nichts an der Induktion ist umgestellt: die
+Nichtlinearität sitzt außen, die Umkehrung ist dieselbe Umkehrung, und der
+gemeinsame Meßbarkeitsschritt bekommt ein `hhm.comp` davor.
+
+Der Tausch ist der Punkt. `hawkesFiltration` ist ein `Filtration`, dessen
+**Definition** `hφint` im Argument trägt; `hawkesFiltrationH` trägt statt dessen
+Bedingungen an die Daten des Modells. Das ist der Unterschied zwischen einer
+Filtration, die es gibt, und einer, die es gibt, wenn der Kern sich wohl verhält.
+
+Und die Vorgabe des Nutzers ist damit für den beschränkten Fall eingelöst:
+`hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment` sagt, daß die
+augmentierte Filtration der Aufzeichnung **die** augmentierte Filtration des
+Pfades ist. Die vier Voraussetzungen von
+`pointFiltration_augment_eq_stepPathFiltration_augment_of_ae` sind hier am
+billigsten zu erfüllen: `ae_strictMono_hawkesJumpTimeH` verlangt vom
+Stichprobenpunkt nichts als positive Wartezeiten, während
+`ae_strictMono_hawkesJumpTime` dafür zusätzlich `hφint` trägt.
+
+**Der Preis bleibt der benannte:** die Aussage ist eine über `(Ω, 𝓕, P)` und
+nicht über σ-Algebren allein. Das ist unverändert und war im siebten Lauf dieses
+Tages geprüft — die Entwicklung verträgt die Augmentierung in beiden Richtungen.
+
+#### 3. Das Maßresultat, und es ist die Stelle, an der der Vorlauf noch nichts hatte
+
+Der Doc-Kommentar von `jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` nennt sich
+selbst „die erste Aussage von `section PathDependent`, an der die Nichtexplosion
+nicht zu umgehen ist", und begründet es: um das Gesetz von der **Stufe der
+Rekursion** auf die Sprungzeit zu tragen, die das Martingalproblem liest, braucht
+es `jumpTimeF_hawkesSelfRate`, und das trägt `hintF` und `hint`.
+
+`jumpMeasure_lt_jumpTimeF_hawkesSelfRateH_one` trägt keine von beiden:
+
+```
+jumpMeasure mu nu {ω | t < jumpTimeF (hawkesSelfRateH h ν φ) ω ω.2 1}
+  = ENNReal.ofReal (exp (−(h ν * t)))
+```
+
+Voraussetzungen allein an `h`, `φ` und die beiden Schranken; keine an den
+Stichprobenpunkt, keine an das treibende Maß über `jumpMeasure mu nu` hinaus.
+`jumpMeasure_lt_hawkesJumpTimeH_one` ist die Fassung für die Rekursion,
+`jumpMeasure_lt_jumpTimeF_hawkesSelfRateH_one_rateCap` die Instanz an der
+Deckelung.
+
+**Der Wert der Aussage ist nicht die Formel, sondern die Buchführung.** Sie ist
+das erste **Maßresultat** des beschränkten Falls und zeigt, daß die Erledigung
+von `hint` nicht bloß Deklarationen aufräumt, sondern eine Aussage möglich macht,
+die vorher nicht formulierbar war, ohne die Nichtexplosion vorauszusetzen. Die
+Rate ist `h ν` und nicht `ν` — die Nichtlinearität wirkt auf die Grundrate mit.
+
+Dazu kommt die **Zeitänderung in Verteilung**,
+`jumpMeasure_map_cumulativeRateF_jumpTimeF_hawkesSelfRateH`: die kumulierte Rate
+an der `n`-ten Sprungzeit hat unter dem treibenden Maß das Gesetz einer Summe von
+`n` unabhängigen Standard-Exponentialverteilungen. Das ist der
+wahrscheinlichkeitstheoretische Gehalt von `eq:compensatorexp` und die **zweite**
+unabhängige Kontrolle des beschränkten Falls gegen etwas, das nicht aus dieser
+Konstruktion stammt. Der allgemeine Satz verlangt drei Dinge an *jedem*
+Stichprobenpunkt — Intervallintegrierbarkeit, Positivität und divergente
+kumulierte Masse —, und das erste davon ist im linearen Fall die Nichtexplosion;
+hier kommen alle drei aus den beiden Schranken.
+
+#### 4. Die Dominierung am Zählprozeß, und kein zweiter Stichprobenraum
+
+`le_hawkesJumpTimeH` vergleicht **Sprungzeiten**; `thm:pathjumpMP`(b) fragt nach
+dem **Zählprozeß**. `stepIndex_hawkesJumpTimeH_le` übersetzt das eine ins andere:
+
+```
+stepIndex (hawkesJumpTimeH h ν φ ω.2 ω) t
+  ≤ stepIndex (jumpTimeF (fun _ _ ↦ L) ω ω.2) t
+```
+
+an jedem Stichprobenpunkt mit positiven und divergenten Wartezeiten. Der
+Vergleichsprozeß ist die pfadabhängige Konstruktion an der **konstanten** Rate
+`L`, getrieben von denselben Wartezeiten desselben Stichprobenpunkts — nach
+`jumpTimeF_const_eq_jumpTime` ein Poissonprozeß der Rate `L`.
+
+**Das ist die Antwort auf die Frage des Nutzers vom 2026-09-12, ob eine Kopplung
+gebraucht wird: sie wird nicht gebraucht, und zwar aus einem stärkeren Grund als
+gedacht.** Nicht bloß, weil die Abschätzung punktweise ist, sondern weil beide
+Prozesse **auf demselben Stichprobenraum und aus denselben Daten** gebaut sind;
+eine gemeinsame Konstruktion zweier Prozesse ist genau das, was eine Kopplung
+leisten soll, und hier liegt sie schon da, weil die Konstruktion die Rate als
+Argument nimmt.
+
+*Was dabei nicht getan ist:* der Erwartungswert. `𝔼[Ñ t] = L * t` ist eine
+Aussage über das **Gesetz** des konstanten Prozesses, nicht über die
+Konstruktion, und erst mit ihr wird aus der pfadweisen Ungleichung die Hypothese
+`𝔼[N t] < ∞`. Das steht so an der Deklaration; die pfadweise Hälfte zu haben und
+die Gesetzeshälfte zu behaupten wäre der Fehler, vor dem der Auftrag warnt.
+
+#### Was an Mathlib nachgeprüft wurde
+
+Neu benutzt und am Quelltext belegt, in v4.33.1 **und** auf `upstream/master`
+`7d32461a`, keine davon `deprecated`:
+
+* `Measurable.min` — `MeasureTheory/Constructions/BorelSpace/Order.lean:599` in
+  v4.33.1, `:600` auf master (dort mit `@[fun_prop]`).
+* `Real.measurable_exp` — `MeasureTheory/Function/SpecialFunctions/Basic.lean:36`
+  in beiden.
+* `Real.exp_lt_one_iff` — `Analysis/Complex/Exponential.lean:337` in v4.33.1,
+  `:336` auf master.
+* `neg_neg_iff_pos` — auf master an drei Stellen in Gebrauch
+  (`Analysis/RCLike/Basic.lean:1001`, `MeasureTheory/Integral/ExpDecay.lean:38`,
+  `ModelTheory/Arithmetic/Presburger/Semilinear/Basic.lean:726`), also vorhanden
+  und nicht abgekündigt.
+* `min_le_min` — auf master in Gebrauch, u.a.
+  `Order/Interval/Set/ProjIcc.lean:141`.
+
+Ferner `Real.exp_le_exp`, `min_eq_left`, `min_le_right`, `min_self`, `lt_min`,
+`mul_le_mul_of_nonneg_left`, `mul_nonneg`, `mul_pos`, `lt_div_iff₀`,
+`Nat.lt_succ_iff_lt_or_eq` — sämtlich durch `lake env lean` gegen v4.33.1
+belegt.
+
+**Eine Stolperstelle, und sie ist dieselbe Art wie die des Vorlaufs:**
+`positivity` beweist `0 ≤ h ν * t` nicht, weil `h ν` für es ein Atom ist; die
+lineare Fassung `jumpMeasure_lt_hawkesJumpTime_one` kommt damit durch, weil dort
+`ν` eine Variable mit `hν : 0 < ν` im Kontext ist. Zu schreiben ist
+`mul_nonneg hhν.le ht`. Allgemein: wo eine Voraussetzung auf einen
+**zusammengesetzten** Term wandert, hört `positivity` auf zu helfen.
+
+#### Was offen bleibt, und es ist unverändert eine Gruppe
+
+**Gruppe A**, `E[D_n | ℋ_n] = 0`, sechs Aussagen. Nach diesem Lauf ist sie die
+einzige offene Gruppe des beschränkten Falls, gegen die noch etwas zu entscheiden
+wäre — und es ist nichts mehr zu entscheiden: die Filtration ist gewählt
+(`hawkesFiltrationH`), die Zeugen stehen, `hint` ist erledigt, und das erste
+Maßresultat ist da. Was fehlt, ist Rechnen, und es ist der Rumpf des Satzes.
+
+Die Gruppen B, C und D bleiben, was der elfte Lauf von ihnen sagte: sie betreffen
+sämtlich den *gestutzten* Testprozeß, und bei global beschränkter Rate ist nichts
+zu stutzen. Das ist weiterhin eine Einschätzung und kein Beweis.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`condExp_lt_jumpTimeFE_hawkesSelfRateH` — der Anfang von Gruppe A, und jetzt
+   ohne jede Vorfrage.** Die bedingte Fassung von
+   `jumpMeasure_lt_jumpTimeF_hawkesSelfRateH_one`: gegeben `ℋ_n`, die
+   Vergangenheit bis zur `n`-ten Sprungzeit, ist
+   `P (τ_{n+1} > t | ℋ_n) = exp (−(Λ_t − Λ_{τ_n}))` auf `{τ_n ≤ t}`.
+   **Worauf sie ruht:** `setOf_lt_jumpTimeFE_eq` (die Ereignisidentität
+   `{t < τ_{n+1}} = {Λ_t < ξ_0 + ⋯ + ξ_n}`, steht), die Unabhängigkeit der
+   Wartezeiten unter `jumpMeasure` (`jumpMeasure_snd_eval_preimage`, steht), und
+   `hawkesFiltrationH` als die eine Filtration, in der bedingt wird.
+   **Warum jetzt:** dies ist die einzige Aussage der Gruppe A, für die alle
+   Eingaben bereits dastehen, und sie ist genau der Schritt, den der
+   Manuskriptbeweis an dieser Stelle macht. **Prüfstein:** sie darf `hint`
+   nirgends nennen und keine Voraussetzung an die Sprungzeiten tragen; täte sie
+   es, wäre der beschränkte Fall an dieser Stelle nicht billiger als der lineare.
+2. **Die Identifikation des gedeckelten mit dem linearen Prozeß unterhalb der
+   Trefferzeit des Pegels.** Die Induktion über die Stufen der Rekursion, die
+   dieser Lauf ausgelassen hat. **Warum sie zählt:** ohne sie ist der Satz „der
+   lineare Fall ist der Grenzübergang `L → ∞`" eine Behauptung der Roadmap und
+   keine Aussage in Lean, und die Anordnung des Nutzers vom 2026-09-12 abends
+   stützt sich auf sie. **Worauf sie ruht:** `hawkesRateH_rateCap_of_le`,
+   `hawkesStepH` gegen `hawkesStep`, und die Monotonie der kumulierten Rate.
+3. **Die Unabhängigkeit von `ξ n` und `ℋ_n` unter `jumpMeasure mu nu`**, in der
+   Gestalt, die Punkt 1 braucht. **Worauf sie ruht:** `jumpMeasure_map_snd` und
+   `waitingMeasure` als Produktmaß von Standard-Exponentialverteilungen; über
+   `Mathlib.Probability.Independence.InfinitePi` (schon importiert) ist das die
+   Unabhängigkeit der Koordinaten eines Produktmaßes. **Warum getrennt von 1:**
+   sie ist eine Aussage über das treibende Maß allein, ohne jeden Bezug auf
+   Hawkes, und läßt sich deshalb prüfen und ablegen, ehe die bedingte
+   Überlebensfunktion daran hängt. Wenn Punkt 1 stecken bleibt, ist es fast
+   sicher hier.
+
+*(Der Vorschlag „Zeitänderung in Verteilung", der an dieser Stelle stehen
+sollte, ist im selben Lauf eingelöst —
+`jumpMeasure_map_cumulativeRateF_jumpTimeF_hawkesSelfRateH`, siehe oben.)*

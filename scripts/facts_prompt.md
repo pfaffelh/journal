@@ -347,8 +347,20 @@ fast nichts und bringt viel:
 * Die Rate ist beschränkt, also ist die lokale Integrierbarkeit **trivial** —
   `hint` ist erfüllbar statt unerfüllbar, an *jedem* Stichprobenpunkt. Punkt 0 des
   Baums fällt weg.
-* Keine Explosion: die Sprungzeiten sind von einem Poissonprozeß der Rate `L`
-  dominiert. Alle sechs Nichtexplosionsstellen erledigen sich auf einmal.
+* Keine Explosion — und **ohne Kopplung**, die teuer wäre und die hier niemand
+  braucht *(Frage des Nutzers, 2026-09-12; meine frühere Formulierung „von einem
+  Poissonprozeß dominiert" war irreführend)*. Die Abschätzung ist **punktweise**:
+  aus dem Fixpunkt `cumulativeRateF_jumpTimeF` ist
+  `Λ (T (n+1)) = ∑_{k ≤ n} ξ k`, und aus der Beschränktheit
+  (`cumulativeRateF_le_of_bdd`) ist `Λ t ≤ L * t`. Zusammen
+  `T (n+1) ≥ (1/L) * ∑_{k ≤ n} ξ k → ∞` f.s., weil die Wartezeitsummen f.s.
+  divergieren (`tendsto_sum_waiting_atTop`). **Eine Ungleichung und ein
+  Grenzwert, kein zweiter Prozeß** — alle drei Bausteine stehen bereits.
+  Dieselbe Struktur wie beim linearen Geburt-Tod-Prozeß, wo der Reihenweg die
+  Kopplung mit dem Yule-Prozeß ebenfalls überflüssig gemacht hat: die
+  Dominierung sitzt auf der *kumulierten* Rate und ist dort deterministisch, der
+  Zufall steckt allein in `∑ ξ k`.
+  Damit erledigen sich alle sechs Nichtexplosionsstellen auf einmal.
 * Keine Lokalisierung, kein `rateInverse`-Turm, keine Augmentierung: der
   **globale** Satz `thm:pathjumpMP`(b) gilt direkt, denn `𝔼[N t] ≤ L t < ∞`.
 * Und keine Volterra-Theorie.

@@ -3702,6 +3702,25 @@ die eingelöste Eingabe eine neue erzeugt hat. Der Baum steht hier, damit er bei
 nächsten Mal dasteht, statt neu erschlossen zu werden. Aufgeschrieben am
 2026-09-12, fünfter Lauf des Tages; die Zahl am Schluß ist **15**.)*
 
+**Dieser Baum ist der des *linearen* Falls, und er gilt unverändert für ihn.**
+Für den **beschränkten nichtlinearen** Fall, den der Nutzer am 2026-09-12 abends
+als Teil C.5a vorgezogen hat, sind drei seiner Punkte inzwischen erledigt, und
+zwar nicht durch Beweise, sondern weil sie gegenstandslos geworden sind:
+
+* **Punkt 0** — die Erfüllbarkeit von `hint` — fällt weg:
+  `intervalIntegrable_hawkesSelfRateH` gilt an jedem Stichprobenpunkt
+  (elfter Lauf des 2026-09-12).
+* **Die Entscheidung, die in Punkt 1 und in Gruppe E steht — welche Filtration —**
+  ist getroffen: es ist `hawkesFiltrationH`, die Punktfiltration der Sprungzeiten,
+  und `hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment` sagt, daß sie
+  modulo Nullmengen die Filtration des Pfades ist (zwölfter Lauf).
+* **Die Voraussetzung `hφint`** kommt im beschränkten Fall nirgends vor.
+
+Offen bleibt dort **Gruppe A**, und nur sie; die Gruppen B bis D betreffen den
+gestutzten Testprozeß, und bei global beschränkter Rate ist nichts zu stutzen.
+Einzelheiten im Abschnitt „Der beschränkte Fall bekommt **eine** Filtration, zwei
+Zeugen und das erste Maßresultat".
+
 Das Ziel ist der lokale Satz `thm:pathjumpMP`(a) in der Gestalt
 
 ```
@@ -4671,7 +4690,136 @@ Erledigt sind Punkt 0 des Baums und die Identifikation von Prozeß und Stufenpfa
 Wartezeiten). **Nicht** erledigt, sondern bloß von der Lokalisierung befreit, sind
 die Gruppen B, C und D: sie betreffen sämtlich den *gestutzten* Testprozeß, und
 bei global beschränkter Rate ist nichts zu stutzen. Welche Filtration der
-beschränkte Fall bekommt, ist offen.
+beschränkte Fall bekommt, steht im folgenden Abschnitt: es ist `hawkesFiltrationH`,
+und es ist genau eine.
+
+### Der beschränkte Fall bekommt **eine** Filtration, zwei Zeugen und das erste Maßresultat
+
+*(2026-09-12, zwölfter Lauf des Tages; er löst die drei Vorschläge des elften
+ein und schließt die drei Sätze, die dort als offen stehen blieben.)*
+
+**Die Zeugen zuerst, denn ohne sie ist der ganze Abschnitt eine unbelegte
+Voraussetzungsfläche.** Alle Aussagen des beschränkten Falls stehen unter vier
+Bedingungen an `h` — `Measurable h`, `0 < c`, `c ≤ h` und `h ≤ L` auf `[ν, ∞)` —,
+und bis ein Paar `(h, c)` dasteht, das sie erfüllt, ist das eine Annahme und kein
+Satz. Abschnitt `BoundedHawkesWitness` gibt zwei, absichtlich verschiedener Art:
+
+* **Die Deckelung** `rateCap L = fun x ↦ min x L` mit `c = min ν L`. Das ist die
+  bei `L` abgeschnittene lineare Rate von `ex:hawkes`, also der Zeuge, den das
+  Manuskript selbst liefert; `hawkesRateH_rateCap_of_le` sagt, daß beide Raten
+  übereinstimmen, wo die lineare unter `L` bleibt. Eine echte Nichtlinearität,
+  aber eine entartete: auf dem ganzen Bereich, in dem der Prozeß gewöhnlich lebt,
+  ist sie die Identität.
+* **Die Sättigung** `rateSat L = fun x ↦ L * (1 − exp (−x))` mit
+  `c = rateSat L ν`. Glatt, streng wachsend, streng konkav, und mit keiner
+  linearen Funktion auf irgendeinem Intervall übereinstimmend — die übliche
+  sättigende Nichtlinearität der nichtlinearen Hawkes-Literatur. Sie steht hier
+  aus einem Grund: mit der Deckelung allein könnte ein Leser vermuten, der
+  Abschnitt sei eine Umschreibung des linearen Falls unter einem Schnitt, und der
+  erste Zeuge entkräftet das nicht.
+
+`rateSat_ne_rateCap` rechnet nach, daß die beiden verschieden sind, statt es zu
+behaupten. Jede der vier tragenden Aussagen des Abschnitts ist zweimal
+instantiiert: `intervalIntegrable_hawkesSelfRateH_rateCap`/`_rateSat` (also
+`hint`), `le_hawkesJumpTimeH_rateCap`/`_rateSat` (die Dominierung),
+`tendsto_hawkesJumpTimeH_rateCap_atTop`/`_rateSat_atTop` (die Nichtexplosion),
+`isStepPath_hawkesProcessH_rateCap`/`_rateSat` (die Pfade). Beide Zeugen
+verlangen von `φ` nichts über `ex:hawkes` hinaus und von den Konstanten nichts
+als `0 < ν` und `0 < L`.
+
+**Und der beschränkte Fall bekommt genau eine Filtration.** Abschnitt
+`BoundedHawkesFiltration`:
+
+* `hawkesStepH_sample_congr`, `hawkesJumpTimeH_sample_congr` — die Sprungzeiten
+  sind eine Funktion der Wartezeiten allein.
+* `measurable_hawkesJumpTimeH` — dieselbe Induktion wie
+  `measurable_hawkesJumpTime`, mit **`hφint` und `0 < ν` gegen `Measurable h` und
+  die beiden Schranken getauscht**. Der Tausch ist der Punkt: `hφint` ist eine
+  Bedingung an den Kern, die der beschränkte Fall erledigt, `0 < ν` wird von
+  `0 < c` abgelöst.
+* `measurable_hawkesJumpTimeH_apply`, `hawkesFiltrationH` — die Punktfiltration
+  der Sprungzeiten samt Kette. **Sie ist ein `Filtration`, dessen *Definition*
+  keine Integrierbarkeitsvoraussetzung mehr im Argument trägt**; das ist der
+  Unterschied zwischen einer Filtration, die es gibt, und einer, die es gibt,
+  wenn der Prozeß nicht explodiert.
+* `isStoppingTime_hawkesJumpTimeH`,
+  `measurable_hawkesProcessH_hawkesFiltrationH`,
+  `measurable_uncurry_hawkesStepPathH_hawkesFiltrationH`,
+  `measurable_compensator_hawkesFiltrationH` — Stoppzeiten, Adaptiertheit und die
+  beiden Eingaben, aus denen der Testprozeß von `mpFamily` gebaut ist.
+* `hawkesPathFiltrationH`, `hawkesPathFiltrationH_le_hawkesFiltrationH`,
+  `ae_strictMono_hawkesJumpTimeH` und
+  **`hawkesFiltrationH_augment_eq_hawkesPathFiltrationH_augment`** — die
+  augmentierte Filtration der Aufzeichnung **ist** die augmentierte Filtration
+  des Pfades. Damit ist die Vorgabe des Nutzers („ein so elementarer Prozeß
+  braucht genau *eine* Filtration") für den beschränkten Fall eingelöst; sie
+  bleibt eine Aussage über `(Ω, 𝓕, P)` und nicht über σ-Algebren allein, und das
+  ist der im Abschnitt zur Augmentierung benannte Preis.
+
+  Gegen `ae_strictMono_hawkesJumpTime` ist auch hier `hφint` verschwunden: das
+  strenge Wachsen der Sprungzeiten verlangt vom Stichprobenpunkt nichts als
+  positive Wartezeiten.
+
+**Das erste Maßresultat, und es ist genau die Stelle, an der der lineare Fall
+nicht ohne die Nichtexplosion auskam.** Abschnitt `BoundedHawkesLaw`:
+
+`jumpMeasure_lt_jumpTimeF_hawkesSelfRate_one` trägt im linearen Fall `hintF` und
+`hint`, und der Doc-Kommentar dort sagt, warum: um das Gesetz von der **Stufe der
+Rekursion** auf die Sprungzeit zu tragen, die das Martingalproblem tatsächlich
+liest, braucht es `jumpTimeF_hawkesSelfRate`, und das ist die Identifikation, die
+die Nichtexplosion kostet. Das Gesetz der ersten Sprungzeit der Rekursion war
+unbedingt, das Gesetz der ersten Sprungzeit des Prozesses nicht.
+
+`jumpMeasure_lt_jumpTimeF_hawkesSelfRateH_one` trägt **keine** von beiden:
+
+```
+jumpMeasure mu nu {ω | t < jumpTimeF (hawkesSelfRateH h ν φ) ω ω.2 1}
+  = ENNReal.ofReal (exp (−(h ν * t)))
+```
+
+mit Voraussetzungen allein an `h`, `φ` und die beiden Schranken.
+`jumpMeasure_lt_hawkesJumpTimeH_one` ist die Fassung für die Rekursion, und
+`jumpMeasure_lt_jumpTimeF_hawkesSelfRateH_one_rateCap` die Instanz an der
+Deckelung, damit auch diese Aussage einen Zeugen hat. Die Rate ist `h ν` und
+nicht `ν`: die Nichtlinearität wirkt auf die Grundrate mit, und Stufe eins der
+Rekursion hat von Konstruktion wegen eine leere Vergangenheit.
+
+Dazu `jumpMeasure_map_cumulativeRateF_jumpTimeF_hawkesSelfRateH`, die
+**Zeitänderung in Verteilung**: die kumulierte Rate an der `n`-ten Sprungzeit hat
+das Gesetz einer Summe von `n` unabhängigen Standard-Exponentialverteilungen —
+der wahrscheinlichkeitstheoretische Gehalt von `eq:compensatorexp`. Der
+allgemeine Satz verlangt an *jedem* Stichprobenpunkt Intervallintegrierbarkeit,
+Positivität und divergente kumulierte Masse; im linearen Fall ist das erste davon
+die Nichtexplosion, hier kommen alle drei aus den beiden Schranken.
+
+**Und die Dominierung am Zählprozeß, nicht bloß an den Sprungzeiten.** Abschnitt
+`BoundedHawkesCounting`: `le_hawkesJumpTimeH` vergleicht **Sprungzeiten**, und
+was `thm:pathjumpMP`(b) braucht, ist eine Aussage über den **Zählprozeß**.
+`stepIndex_hawkesJumpTimeH_le` ist die Übersetzung —
+
+```
+stepIndex (hawkesJumpTimeH h ν φ ω.2 ω) t
+  ≤ stepIndex (jumpTimeF (fun _ _ ↦ L) ω ω.2) t
+```
+
+— an jedem Stichprobenpunkt mit positiven und divergenten Wartezeiten. Der
+Vergleichsprozeß ist keine Analogie, sondern die pfadabhängige Konstruktion an
+der **konstanten** Rate `L`, getrieben von *denselben* Wartezeiten *desselben*
+Stichprobenpunkts; nach `jumpTimeF_const_eq_jumpTime` ist das ein Poissonprozeß
+der Rate `L`. **Es ist also keine Kopplung zu bauen — beide Prozesse leben schon
+auf einem Stichprobenraum.**
+
+*Was dabei nicht getan ist, und es steht so an der Deklaration:* der
+Erwartungswert. `𝔼[Ñ t] = L * t` ist der Mittelwert eines Poissonschen
+Zählprozesses; die pfadweise Ungleichung ist die Hälfte des Arguments, die die
+Konstruktion liefert, die andere ist eine Aussage über das **Gesetz** des
+konstanten Prozesses. Erst beide zusammen geben `𝔼[N t] < ∞`, also die Hypothese,
+die das Manuskript im linearen Fall über die Volterra-Resolvente abarbeitet.
+
+**Was damit offen bleibt, und es ist unverändert Gruppe A.** `E[D_n | ℋ_n] = 0`,
+sechs Aussagen, der Rumpf des Satzes. Nach diesem Lauf ist sie die einzige offene
+Gruppe des beschränkten Falls, für die noch eine Entscheidung aussteht: die
+Filtration ist gewählt, die Zeugen stehen, und das erste Maßresultat ist da.
 
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
