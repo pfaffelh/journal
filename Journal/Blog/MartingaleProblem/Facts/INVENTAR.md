@@ -23991,3 +23991,124 @@ mehr die Aufgabe, die Formel zu beweisen, sondern die, `i ≥ T_∞` zu behandel
    `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
 4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
    fünfundzwanzigsten Laufs, unverändert.
+
+### 2026-09-12, fünfter Lauf des Tages — der Abhängigkeitsbaum von `hawkes_isLocalMPSolution`, von unten: es sind **fünfzehn** offene Aussagen und nicht eine, und die Bruchstelle liegt nicht oben im Baum, sondern in der Wahl der Filtration
+
+**Bearbeitet:** die vom Nutzer am 2026-09-12 angeordnete vorrangige Aufgabe — den
+Abhängigkeitsbaum vollständig und von unten aufschreiben, ehe irgendetwas
+weiterbewiesen wird. Kein Lean geschrieben; der Baum steht in
+`TauCeti/MartingaleProblems/README.md`, Meilenstein 4, als eigener Abschnitt
+„Der Abhängigkeitsbaum von `hawkes_isLocalMPSolution`, von unten aufgeschrieben".
+Die Zahl der `sorry` in `Suggested.lean` ist unverändert neun, die Datei ist nicht
+angefaßt.
+
+#### Die Zahl: fünfzehn
+
+Offene Punkte 0 bis 14, in fünf Gruppen und einer Vorfrage:
+
+* **0** — die Erfüllbarkeit von `hint`, siehe unten.
+* **Gruppe A, sechs Aussagen** — die Wahrscheinlichkeitsschicht:
+  `condExp_lt_jumpTimeFE`, `condExp_jumpTimeFE_hasDensity`, `condExp_jump_term`,
+  `condExp_compensator_term`, `condExp_mpFamilyF_increment_eq_zero`,
+  `martingale_mpFamilyF_truncRateF`.
+* **Gruppe B, zwei** — Regularität des **gestutzten** Testprozesses (progressive
+  Meßbarkeit und Rechtsstetigkeit); die vorhandenen Aussagen sind auf die
+  ungestutzte Selbstrate zugeschnitten.
+* **Gruppe C, drei** — `hcum` unterhalb der Explosionszeit, `hcum` darüber, und die
+  Instanz `hawkes_hcut`.
+* **Gruppe D, eine** — `stronglyAdapted_stoppedProcess_mpFamilyF_hawkesSelfRate`.
+* **Gruppe E, zwei** — eine Filtration (`hawkesFiltration` gegen
+  `hawkesJumpFiltration`) und ein Prozeß (`stepPath (hawkesJumpTime …)` gegen
+  `jumpProcessFE (hawkesSelfRate …)`).
+
+Es ist also **nicht** eine, und nach der Anweisung des Nutzers ist damit die Liste
+das Ergebnis dieses Laufs.
+
+#### Warum fünf Läufe hintereinander „genau eine Eingabe" melden konnten
+
+Jede Meldung war für die **jeweils oberste** Schicht richtig. **Gruppe A kam in
+keiner von ihnen vor**, und der Grund ist strukturell, nicht nachlässig: sie ist der
+*Rumpf* des Satzes und keine seiner Eingaben. Keine Aussage oberhalb von ihr
+**zeigt** auf sie, also findet man sie nicht, indem man von oben nach der nächsten
+fehlenden Voraussetzung sucht. In `section PathDependent` kommt bis heute **keine
+einzige bedingte Erwartung** vor; das Maß tritt an genau zwei Stellen ein
+(`isLocalizingSequence_rateInverseE` als freie Variable, und `section PathLaw`). Der
+Manuskriptbeweis `E[D_n | ℋ_n] = 0` ist damit vollständig ungebaut.
+
+#### Der Befund des Laufs, und er ist größer als der Baum: `hint` ist auf Papier **unerfüllbar**
+
+`hawkesJumpFiltration` trägt
+`hint : ∀ w r, IntervalIntegrable (fun u ↦ hawkesSelfRate ν φ u w) volume 0 r` im
+Argument seiner **Definition**. Das Argument gegen die Erfüllbarkeit ruht auf
+Bestand: `cumulativeRateF_hawkesJumpTime` gibt
+`cumulativeRateF w (T n) = ∑_{k<n} ξ k`, und `cumulativeRateF_hawkesSelfRate_eq_sum`
+(vierter Lauf desselben Tages) hebt es auf die Selbstrate. Gilt `hint` an `w` und
+bleiben die Sprungzeiten unter `B`, so ist `∑_{k<n} ξ k ≤ cumulativeRateF w B < ∞`
+für jedes `n`, also die Wartezeitsumme endlich. Ein Stichprobenpunkt mit
+**divergenter** Wartezeitsumme und **beschränkten** Sprungzeiten verletzt `hint`
+also, und ein solcher ist gerechnet: mit `φ = 1_{(0,1]}` und `T n = 1 − 1/n` gibt die
+Rekursion diese Sprungzeiten bei `s (n+1) ∼ log n → ∞` zurück. Die Rechnung steht
+ausgeschrieben im Baum.
+
+**Das ist Papier und kein Lean**, und es ist als solches gekennzeichnet. Die billige
+Hälfte ist in Lean in Reichweite und ist die, auf die es ankommt:
+`summable_waiting_of_intervalIntegrable_hawkesSelfRate` — `hint` plus beschränkte
+Sprungzeiten gibt eine summierbare Wartezeitfolge. Sie braucht keine Konstruktion,
+nur `cumulativeRateF_hawkesSelfRate_eq_sum` und `monotone_hawkesJumpTime`, und sie
+sagt genau, daß **`hint` die Nichtexplosion ist** und nicht eine Regularität neben
+ihr.
+
+#### Und damit ist die Bruchstelle benannt, an der die fünf Läufe tatsächlich standen
+
+Von den beiden Filtrationen ist `hawkesFiltration` die **hint-freie** — sie ruht auf
+`measurable_hawkesJumpTime_apply` und verlangt nichts als die Daten von `ex:hawkes`.
+`hawkesJumpFiltration` ruht auf `measurable_jumpTimeFE`, dessen `hint` über
+`rateInverseE_le_ofReal_iff` in die Gestalt der Subniveaumengen eingeht und nicht
+wegzukürzen ist: an einem nicht integrierbaren Stichprobenpunkt ist die kumulierte
+Rate der Müllwert `0` und die Äquivalenz falsch. Ist `hint` unerfüllbar, so ist von
+den beiden Filtrationen genau **eine** instantiierbar — und es ist die, über der der
+Schnitt nach dem dreiundzwanzigsten Lauf des 2026-09-11 gerade **nicht** geht. Die
+Lücke liegt also nicht oben im Baum und ist nicht durch eine weitere Eingabe zu
+schließen.
+
+#### Die Nichtexplosion, gesammelt: sechs Stellen, nicht vier
+
+Zu den vier vom Nutzer genannten — Rechtsstetigkeit des Testprozesses, Übertragung
+des ersten Sprungzeitgesetzes, Formulierbarkeit von `hawkesJumpFiltration`,
+Gültigkeitsbereich der Formel für die kumulierte Rate — kommen zwei:
+
+5. **Identifikation des Prozesses mit dem Stufenpfad**, `hawkesProcess_eq_stepPath`,
+   die `hint` trägt und die Gruppe E braucht.
+6. **Sie wird an *jedem* Stichprobenpunkt gebraucht, nicht fast sicher**, weil
+   `martingale_stoppedProcess` seine Rechtsstetigkeit unter
+   `hrc : ∀ (ω : Ω) (s : ℝ≥0), …` fragt. Das ist die schärfste Gestalt, in der sie
+   auftritt, und sie ist der Grund, aus dem Punkt 0 eine Vorfrage ist und keine
+   Randnotiz.
+
+Der Unterschied zum zustandsabhängigen Fall ist damit benannt: dort ist die
+Nichtexplosion eine f.s.-Aussage unter dem Maß (`ae_mem_nonExplosiveE`), die genau in
+das lokalisierende System eingeht und danach vergessen werden kann; hier steht sie in
+der **Definition einer Filtration** und unter einem Allquantor.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`summable_waiting_of_intervalIntegrable_hawkesSelfRate`** — gilt `hint` an `w`,
+   sind die Wartezeiten nichtnegativ und die Sprungzeiten durch `B` beschränkt, so ist
+   `∑ k, w.2 k < ∞`. **Warum jetzt:** sie entscheidet Punkt 0 des Baums zur Hälfte,
+   sie ist die billigste offene Aussage des ganzen Baums, und sie ist die einzige, die
+   eine *falsche* Voraussetzung als falsch ausweist, statt eine weitere richtige zu
+   beweisen. **Worauf sie ruht:** `cumulativeRateF_hawkesSelfRate_eq_sum`,
+   `monotone_hawkesJumpTime`, die Monotonie der kumulierten Rate. **Prüfstein:** sie
+   darf keine Voraussetzung an `φ` tragen außer `hφ` und `hφ0`; trägt sie mehr, ist
+   sie nicht die Aussage über `hint`, die gebraucht wird.
+2. **Der Zeuge** — `φ = 1_{(0,1]}`, `T n = 1 − 1/n`, und die daraus zurückgerechnete
+   Wartezeitfolge, mit `hawkesJumpTime` daran ausgewertet. Teurer als 1, aber erst er
+   schließt Punkt 0 ganz und entscheidet damit Punkt 13.
+3. **Der Umbau der Zielaussage**, falls 1 und 2 so ausgehen, wie die Papierrechnung
+   sagt: `hawkes_isLocalMPSolution` über `hawkesFiltration` statt über
+   `hawkesJumpFiltration`, mit der Nichtexplosion als `∀ᵐ w ∂(jumpMeasure mu nu)`, und
+   der Schnitt `hcut` neu über der hint-freien Filtration. Das ist der Punkt, an dem
+   eine Entscheidung des Nutzers hilfreich wäre; der Lauf trifft sie nicht von sich
+   aus.
+4. **Gruppe A**, und sie bleibt unabhängig von 1 bis 3 stehen: `E[D_n | ℋ_n] = 0` ist
+   der Rumpf des Satzes und wird von keiner Entscheidung über Filtrationen billiger.
