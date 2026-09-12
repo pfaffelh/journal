@@ -23451,3 +23451,543 @@ nach dem Befund oben nicht ineinander zu überführen.
    Vorschlag 2 nicht vorgezogen wird.
 4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
    zweiundzwanzigsten Laufs, unverändert.
+
+### 2026-09-12, erster Lauf des Tages — der Vorschlag des Vorlaufs ist nicht bloß offen, er ist **falsch**: die kumulierte Masse ist kein Funktional des Protokolls, und der Beleg ist ein Gegenbeispiel
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des dreiundzwanzigsten Laufs
+(`measurable_cumulativeRateF_jumpFiltrationFE`). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Fünfundzwanzig neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, neuer
+Abschnitt `PathCutObstruction` — vier Definitionen und einundzwanzig Sätze. Die ganze Datei **ohne
+einen Fehler** durch `lake env lean` gegen v4.33.1, alle einundzwanzig Sätze mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl
+der `sorry` bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+Neu: `eq_of_measurable_jumpFiltrationFE`, `constRateF`, `intervalIntegrable_constRateF`,
+`cumulativeRateF_constRateF`, `tendsto_cumulativeRateF_constRateF`, `rateInverse_constRateF`,
+`rateInverseE_constRateF`, `jumpTimeFE_constRateF`, `measurable_rateInverse_constRateF`,
+`hiddenWait`, `hiddenWait_nonneg`, `sum_hiddenWait_one`, `sum_hiddenWait_add_two`,
+`sum_hiddenWait_le`, `two_le_sum_hiddenWait`, `hiddenPoint`, `hiddenScale`, `one_le_hiddenScale`,
+`hiddenScale_pos`, `measurable_hiddenScale`, `hiddenScale_hiddenPoint`,
+`measurable_jumpTimeFE_truncRateF_hiddenRate`, `lt_jumpTimeFE_hiddenPoint`,
+`cumulativeRateF_truncRateF_hiddenPoint`, `not_measurable_cumulativeRateF_jumpFiltrationFE`.
+
+#### Der Befund: der Vorschlag war zu widerlegen und nicht zu beweisen
+
+Der dreiundzwanzigste Lauf hat `measurable_cumulativeRateF_jumpFiltrationFE` als **einzige** noch
+offene Eingabe von `jumpFiltrationFE_hcut` benannt und dazu selbst den Prüfstein gestellt: „*Ob das
+die Meßbarkeit **des Wertes** und nicht bloß der Sprungzeiten gibt, ist die erste Frage und ist zu
+begründen, nicht zu raten — die Masse zwischen zwei Sprüngen ist nicht durch das Protokoll
+bestimmt.*" Der Prüfstein trägt, und er trägt gegen den Vorschlag.
+
+`not_measurable_cumulativeRateF_jumpFiltrationFE` ist der Beleg. Die Sprungzeiten **sind** die
+Inverse der kumulierten Masse, und darum sieht es so aus, als müßte das Protokoll — welche von ihnen
+bis `i` stattgefunden haben — die Masse bei `i` festlegen. Das tut es nicht. Das Protokoll meldet die
+Zeitpunkte, an denen die Masse die Stufen `∑_{k<n} ξ_k` überschreitet; *zwischen* zwei Überschreitungen
+meldet es nichts, und `i` liegt im allgemeinen echt zwischen zweien. Eine Rate, die eine Wartezeit
+liest, die keine Überschreitung vor `i` verbraucht hat, verschiebt die Masse bei `i` und läßt jede
+Überschreitung vor `i` an ihrem Platz.
+
+#### Das Gegenbeispiel, und woran es liegt
+
+Der Zeuge ist `constRateF hiddenScale`: eine in der Zeit **konstante** Rate, deren Wert
+`1 + (ξ₁ ⊔ 0)` die **zweite** Wartezeit liest. Genommen an den zwei Stichprobenpunkten
+`hiddenPoint x₀ 0` und `hiddenPoint x₀ 1` mit den Wartezeiten `(2, d, 0, 0, …)`:
+
+| | Rate | erste Sprungzeit | Protokoll unter `1/2` | Masse bei `1/2` |
+|---|---|---|---|---|
+| `d = 0` | `1` | `2` | leer | `1/2` |
+| `d = 1` | `2` | `1` | leer | `1` |
+
+Jede spätere Sprungzeit liegt über der ersten (`monotone_jumpTimeFE`, die Wartezeiten sind
+nichtnegativ), die Kette ist konstant, also trägt die Pfadkomponente von `jumpStateE` nichts. Das
+ganze Protokoll unter `1/2` stimmt also überein, die Masse bei `1/2` nicht.
+
+**Was dabei *nicht* die Arbeit tut**, und beides ist eigens eingerichtet:
+
+* **der Zustandsraum** — `E` ist beliebig und der Satz ist über jedem bewohnten `E` bewiesen; die
+  Kette ist konstant, nicht der Raum trivial. Das unterscheidet den Zeugen von
+  `eq_of_measurable_jumpFiltrationE_of_subsingleton` und macht ihn zum Gegenstück von
+  `eq_of_measurable_jumpFiltrationE_const_chain`, demselben Mechanismus eine Konstruktion früher;
+* **die Stutzung** — die Stufe ist `4`, die Masse erreicht sie nie
+  (`cumulativeRateF_truncRateF_hiddenPoint` rechnet `min (c/2) 4 = c/2`), und die gestutzten
+  Sprungzeiten sind die ungestutzten (`jumpTimeFE_truncRateF_eq_of_le`, weil jede Teilsumme unter
+  `2 + d ≤ 3` bleibt). Die Aussage gilt für die gestutzte Filtration, also für genau die, an der
+  `jumpFiltrationFE_hcut` die Voraussetzung liest.
+
+Was die Arbeit tut, ist allein, daß die Rate eine **Wartezeit** liest — und das ist genau, was eine
+*pfadabhängige* Rate darf und eine zustandsabhängige nicht.
+
+#### Das Werkzeug, und es steht für sich
+
+`eq_of_measurable_jumpFiltrationFE` ist `eq_of_measurable_naturalFiltration`, gelesen für
+`jumpFiltrationFE`: zwei Stichprobenpunkte, deren **Protokolle** unter `i` übereinstimmen und deren
+**Pfade** unter `i` übereinstimmen, werden von keiner `jumpFiltrationFE Λ hT i`-meßbaren reellen
+Funktion getrennt. Über die Rate, die Wartezeiten und die Nichtexplosion wird nichts verlangt; es ist
+eine Aussage über eine von zwei Abbildungen erzeugte σ-Algebra und über nichts sonst. Das ist der
+Satz, den der dreiundzwanzigste Lauf als „*ein eigener Satz von der Bauart
+`eq_of_measurable_jumpFiltrationE_of_subsingleton`*" angekündigt hat, und er kostet elf Zeilen.
+
+`constRateF` und die sieben Sätze darüber sind der zweite Ertrag und sind allgemeiner als der Zeuge:
+eine in der Zeit konstante, vom Stichprobenpunkt abhängige Rate ist das Objekt, das
+`section ConstantRate` nicht ausdrücken konnte — dort war die Rate eine **Konstante**, hier ist sie
+ein Funktional des ganzen treibenden Datums, das in der Zeit flach ist. Jeder der sieben Sätze ist
+`section ConstantRate` durch `cumulativeRateF_congr` hindurchgereicht, und daß der Transport
+umsonst ist, ist die Probe darauf, daß „die kumulierte Rate liest die Rate an *einem*
+Stichprobenpunkt" die richtige Schnittstelle war.
+
+#### Was das für den Zusammenbau heißt, und es ist keine Sackgasse
+
+**`hcum` wird je Rate bewiesen, aus der Gestalt der Rate.** Für `hawkesSelfRate` ist die Masse bis
+`i` gleich `ν·i + ∑_k Φ(i − T_k)·1_{T_k ≤ i}` mit `Φ` einer Stammfunktion von `φ` — ein Funktional
+**der Sprungzeiten allein** und damit des Protokolls. Dort ist `hcum` wahr und beweisbar; es gibt
+nur keinen Satz über `jumpFiltrationFE`, aus dem es folgte.
+
+Das ist dieselbe Arbeitsteilung wie bei `hN` in `jumpFiltrationFE_inter_lt_rateInverseE`, das aus
+demselben Grund getragen und nicht bewiesen wird, und es ist das, was der zustandsabhängige Fall
+umsonst bekommt, weil `rateSup lam` ein Funktional des **Pfades** ist.
+
+**Zwei Stellen sind daraufhin berichtigt worden**, beide zu stark formuliert:
+
+* der Prosablock vor `section PathCutInstance` in `Suggested.lean` sagte, `hcum` sei „keine zweite
+  Pflicht: **eine Instanz, die überhaupt lokalisiert hat, hat es schon erfüllt**". Die Reduktion
+  `measurable_cumulativeRateF_truncRateF` ist eine Aussage über eine **gegebene** σ-Algebra; an der
+  natürlichen Filtration der gestutzten Sprungzeiten ist die Voraussetzung im allgemeinen falsch.
+* der gleichlautende Satz im `README.md`, Meilenstein 4, sowie die Überschrift „und das ist alles,
+  was `hcum` je war".
+
+#### Und ein zweiter Befund, der beim Aufschreiben des nächsten Schrittes herauskam: `hcum` auf den Hawkes-Daten ist über `hawkesJumpFiltration` nicht so zu haben, wie es aussieht
+
+Der naheliegende nächste Schritt wäre: die Hawkes-Masse bis `i` ist
+`ν·i + ∑_k Φ(i − τ_k)·1_{0 ≤ τ_k < i}` mit `Φ` einer Stammfunktion von `φ`, also ein Funktional
+**der Sprungzeiten allein**, also vom Protokoll gesehen. **Das ist so nicht richtig, und der Grund
+steht in der Definition.** `hawkesSelfRate` ist über `hawkesJumpTime ν φ ω.2 ω` gebaut — die Zeiten
+der **Rekursion** —, während `hawkesJumpFiltration` die Zeiten `jumpTimeFE (hawkesSelfRate ν φ)` der
+**Inversen** liest. Die beiden Familien werden von `jumpTimeF_hawkesSelfRate` identifiziert, und
+diese Aussage trägt `hxi : ∀ k, 0 ≤ ω.2 k` — genau die Hypothese, die der zweiundzwanzigste Lauf als
+über `(ℕ → E) × (ℕ → ℝ)` unerfüllbar gestrichen hat, und die der dreiundzwanzigste bereits an
+`isStoppingTime_jumpTimeFE_hawkesSelfRate` vorgefunden hat.
+
+Für `hawkesFiltration`, die Filtration der Rekursionszeiten, ist `hcum` seit dem einundzwanzigsten
+Lauf bewiesen (`measurable_cumulativeRateF_truncRateF_hawkesSelfRate`); es ist die **falsche**
+Filtration für `jumpFiltrationFE_hcut`, und der Weg über eine allgemeine Zielfiltration
+(`pointFiltrationE_inter_le_of_measurable`) ist nach dem Befund des dreiundzwanzigsten Laufs zu.
+Damit ist an dieser Stelle **dieselbe** Trennlinie erreicht wie schon zweimal zuvor, und zum dritten
+Mal an derselben Hypothese.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Entscheiden, ob `hcum` auf den Hawkes-Daten über `hawkesJumpFiltration` wahr ist** — und die
+   Vermutung ist **nein**, aus demselben Mechanismus wie heute. **Warum jetzt:** es ist die letzte
+   offene Eingabe von `jumpFiltrationFE_hcut`, also der vierten Eingabe von
+   `martingale_of_martingale_of_stopped`, und nach dem zweiten Befund oben ist sie nicht durch
+   Einsetzen zu haben. **Die Gestalt einer Widerlegung** liegt bereit: zwei Stichprobenpunkte, deren
+   Protokoll der Zeiten `jumpTimeFE (truncRateF (hawkesSelfRate ν φ) a)` unter `i` übereinstimmt,
+   deren `hawkesJumpTime` unter `i` aber nicht — erreichbar, weil eine **negative** Wartezeit die
+   Teilsummen `S_n`, an denen die Inverse abliest, nicht monoton macht, während die Rekursion
+   `hawkesStep` fortschreitet. `eq_of_measurable_jumpFiltrationFE` ist das Werkzeug dafür und steht
+   seit heute. **Prüfstein, und er entscheidet die Wegwahl:** trägt die Widerlegung, so ist der
+   Zusammenbau des Hawkes-Falls über `jumpFiltrationFE` **nicht** zu führen, und die Wahl ist dann
+   zwischen (a) einer Fassung von `jumpFiltrationFE_hcut` mit zwei getrennt getragenen
+   Filtrationen — der der Rekursion für die Rate, der der Inversen für die Sprungzeiten — und (b)
+   einem Stichprobenraum mit nichtnegativen Wartezeiten, `(ℕ → E) × (ℕ → ℝ≥0)`, auf dem die
+   gestrichene Hypothese keine Hypothese mehr ist, sondern der Typ. (b) ist der Eingriff in die
+   Konstruktion, (a) der in den Satz; welcher billiger ist, ist am Umfang der betroffenen
+   Deklarationen zu messen und nicht zu raten.
+2. **`hawkes_isLocalMPSolution`** als Zusammenbau, sobald 1 entschieden ist; die globale Fassung mit
+   `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
+3. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   dreiundzwanzigsten Laufs, unverändert.
+
+### 2026-09-12, zweiter Lauf des Tages — die angesetzte Widerlegung trägt nicht: die Deckelung fängt jeden verborgenen Sprung ab, und der Sprung mit dem kleinsten Index läuft auf der Grunduhr
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des ersten Laufs dieses Tages
+(entscheiden, ob `hcum` auf den Hawkes-Daten über `hawkesJumpFiltration` wahr ist). Die Reihenfolge
+D → F → C → E ist eingehalten.
+
+**Sechs neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, neuer Abschnitt
+`PathCutCap`. Die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1, alle sechs
+mit `scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound` geprüft (rc 0), die
+Zahl der `sorry` bleibt bei **neun**. Die Punkte stehen in `MartingaleProblems/README.md`,
+Meilenstein 4.
+
+Neu: `mul_le_cumulativeRateF`, `cumulativeRateF_truncRateF_eq_of_not_le`,
+`sum_eq_mul_hawkesJumpTime_of_forall_le`, `hawkesJumpTime_eq_div_of_sum_eq`,
+`jumpTimeFE_truncRateF_hawkesSelfRate_le_or_cumulativeRateF_eq`,
+`jumpTimeFE_truncRateF_hawkesSelfRate_one_le_or_cumulativeRateF_eq`.
+
+#### Der Befund: die angesetzte Widerlegung trägt nicht, und der Grund ist die Deckelung
+
+Der Vorlauf hat die Gestalt einer Widerlegung bereitgelegt: zwei Stichprobenpunkte, deren Protokoll
+der gestutzten Sprungzeiten unter `i` übereinstimmt, deren `hawkesJumpTime` unter `i` aber nicht —
+erreichbar, weil eine **negative** Wartezeit die Teilsummen, an denen die Inverse abliest, nicht
+monoton macht, während die Rekursion `hawkesStep` fortschreitet. Die Vermutung war „nein, `hcum`
+gilt dort nicht".
+
+**Dieser Mechanismus allein reicht nicht, und das ist jetzt ein Satz.** `hcum` fragt nicht nach der
+Masse, sondern nach der **gedeckelten** Masse `min (cumulativeRateF Λ · i) a`, und daran schließen
+sich die beiden Hälften gegeneinander:
+
+* **`cumulativeRateF_truncRateF_eq_of_not_le`** — eine Stufe, die die ungestutzte Masse bis `i`
+  erreicht hat, die das Protokoll bis `i` aber **nicht** meldet, zwingt das Minimum auf sein zweites
+  Argument: die gedeckelte Masse bei `i` ist die Konstante `a`. Ein verborgener Sprung im Fenster
+  kann also nicht die Quelle eines Unterschieds zwischen zwei Stichprobenpunkten sein — er macht den
+  Wert an seinem Punkt zu `a`. Der Satz ist über einer **beliebigen** Rate geführt, ohne Hawkes-Daten
+  und ohne ein Vorzeichen an der Stufe.
+* **`sum_eq_mul_hawkesJumpTime_of_forall_le`** — und auf den Hawkes-Daten kann diese Stufe nicht die
+  des Sprungs mit dem **kleinsten Index** im Fenster sein. Die gefrorene Rate einer Stufe zählt nur
+  die früheren Stufen; hat keine von ihnen echt vorher gesprungen, so ist sie auf dem ganzen
+  Intervall unterhalb ihrer Sprungzeit die Grundrate `ν`, und die Stufe ist genau `ν` mal diese Zeit.
+  Das ist `hawkesJumpTime_one` für beliebigen Index, und es verlangt **keine Monotonie der
+  Sprungzeiten und kein Vorzeichen der Wartezeiten** — nur die Nichtnegativität der Teilsumme, die
+  die Inverse ohnehin braucht, um ihre Stufe zu erreichen. Die Voraussetzung `hmin` sagt **nicht**,
+  daß `T m` die kleinste Sprungzeit ist: spätere Stufen dürfen vorher springen, und gerade in dieser
+  Lage bricht der Fixpunkt der Hawkes-Konstruktion.
+
+Zusammen ist es `jumpTimeFE_truncRateF_hawkesSelfRate_le_or_cumulativeRateF_eq`: an einem
+Stichprobenpunkt, dessen gedeckelte Masse bei `i` etwas anderes als `a` ist, **steht** der Sprung
+kleinsten Index aus dem Fenster im Protokoll, und zwar auf seiner eigenen Stufe. Der Zwischenschritt
+dorthin ist `mul_le_cumulativeRateF`, die Ungleichung aus dem Inneren von
+`tendsto_cumulativeRateF_atTop_of_le`, jetzt für sich: eine nach unten beschränkte Rate kumuliert
+mindestens linear, also ist `ν·i ≤ cumulativeRateF (hawkesSelfRate ν φ) w i`, und die Stufe `ν·τ_m`
+liegt darunter.
+
+`jumpTimeFE_truncRateF_hawkesSelfRate_one_le_or_cumulativeRateF_eq` ist der Fall `m = 1`, in dem
+`hmin` leer ist — es gibt keine frühere Stufe —, und er ist die Aussage, um die es geht: **der erste
+Sprung läßt sich nicht verbergen.** Ein widerlegendes Paar unterscheidet sich in der gedeckelten
+Masse, also ist sie an einem der beiden Punkte nicht `a`, und dort meldet das Protokoll den ersten
+Sprung, sobald er vor `i` überhaupt stattfindet. Was auch immer sich verbirgt: der erste Sprung ist
+es nicht.
+
+#### Was offen bleibt, und es ist eine einzige benannte Lage
+
+Der Schritt vom Sprung kleinsten Index zum nächsten ruht darauf, daß die gefrorene Rate **unter** der
+Selbstrate liegt. Das ist Kausalität und `φ ≥ 0` — mit **einer** Ausnahme: an einem Stichprobenpunkt,
+dessen Sprungzeiten sich häufen. Dort ist `hawkesSelfRate` die Grundrate `ν` schlechthin, weil der
+selbsterregende Term ein Integral gegen ein Zählmaß mit einem unendlichen Atom ist, die Funktion also
+nicht integrierbar und der Bochner-Wert `0`; die gefrorenen Raten dagegen sind endliche Summen und
+behalten ihre Masse. Das ist die **einzige** Lage, in der eine gefrorene Rate die Selbstrate
+übersteigt, und damit zugleich der letzte Hebel einer Widerlegung und die letzte Lücke eines
+Beweises.
+
+Am einfachsten ist sie an den Wartezeiten `(s, 0, 0, …)` zu sehen, und ihre erste Hälfte steht seit
+diesem Lauf: **`hawkesJumpTime_eq_div_of_sum_eq`** — sind alle Teilsummen ab der ersten gleich `s`,
+so ist `hawkesJumpTime ν φ xi ω n = s/ν` für **jedes** `n ≥ 1`. Der Beweis ist eine starke Induktion
+über `n` und derselbe Kausalitätsschluß wie oben: der Beitrag einer Stufe verschwindet unterhalb der
+gemeinsamen Zeit, also ist jede gefrorene Rate dort noch die Grundrate, und jede Stufe invertiert
+dieselbe Höhe gegen dieselbe Masse. Über die Wartezeiten wird nichts verlangt als die Summe, die sie
+bilden — insbesondere kein Vorzeichen. Das Zählmaß hat damit bei `s/ν` ein **unendliches Atom**, und
+die zweite Hälfte — daß die Selbstrate deshalb konstant `ν` ist, weil Bochner für ein nicht
+integrierbares `f` den Wert `0` gibt — ist der Satz aus Vorschlag 1. *(Diese zweite Hälfte ist am
+Quelltext der Definitionen begründet und nicht in Lean geführt.)*
+
+Damit ist die Lage zu Vorschlag 1 des Vorlaufs entschieden, aber nicht in seine Richtung: der
+angesagte Mechanismus reicht nicht, und die Frage, ob `hcum` dort gilt, hängt allein an dieser einen
+Entartung. Der Reihe nach ist das die dritte Stelle des pfadabhängigen Falls, an der die
+Nichtexplosion nicht als Voraussetzung, sondern als Bedingung an den **Müllwert** wiederkehrt.
+
+**Und die Entartung selbst ist, soweit sie hier durchgerechnet ist, starr.** An den Wartezeiten
+`(s, 0, 0, …)` mit `s ≤ a` meldet das Protokoll jeden Index `n ≥ 1` zur Zeit `s/ν`, und ein zweiter
+Stichprobenpunkt mit demselben Protokoll ist derselbe: aus `σ'_n = s/ν` für alle `n ≥ 1` folgt
+`S'_n = m'(s/ν)` für alle `n ≥ 1`, also sind alle Stufen gleich — nenne sie `c` —, also liegt der
+früheste Sprung von `w'` bei `c/ν` (die gefrorene Rate der zeitkleinsten Stufe ist die Grundrate).
+Ist `c < s`, so liegt ein Sprung echt vor `s/ν` und damit `m'(s/ν) > s > c = m'(s/ν)`; ist `c > s`,
+so liegt gar kein Sprung vor `s/ν` und damit `m'(s/ν) = s ≠ c`. Beides ist ein Widerspruch, also
+`c = s`, also hat `w'` dieselben Stufen und damit dieselbe Rate und dieselbe Masse. Für `s > a` ist
+das Protokoll leer und die Masse `ν·t` — dieselbe wie an einem Punkt ganz ohne Sprünge im Fenster.
+*(Am Quelltext der Definitionen begründet, nicht in Lean geführt.)*
+
+Das ist kein Beweis von `hcum`, aber es verschiebt die Erwartung: die Entartung bewegt Protokoll und
+Masse **gleichzeitig**, und das ist genau, was eine Widerlegung nicht gebrauchen kann. Vorschlag 1
+bleibt deshalb der nächste Schritt, aber er ist als **Prüfung** angesetzt und nicht als Baustein
+einer Widerlegung.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`hawkesSelfRate_eq_of_forall_eq`** — an einem Stichprobenpunkt, dessen Sprungzeiten ab dem
+   ersten alle gleich `t₀` sind, ist `hawkesSelfRate ν φ u ω = ν` für **jedes** `u`. **Warum jetzt:**
+   nach dem Befund dieses Laufs ist das die einzige Lage, in der eine gefrorene Rate die Selbstrate
+   übersteigen kann, und damit der einzige Hebel, an dem eine Widerlegung von `hcum` über
+   `hawkesJumpFiltration` noch ansetzen kann; steht der Satz, so ist an ihm zu entscheiden, ob eine
+   Widerlegung daraus zu bauen ist oder ob die Entartung die Masse gerade **nicht** bewegt.
+   **Worauf er ruht:** `hawkesJumpTime_eq_div_of_sum_eq`, das den Stichprobenpunkt seit diesem Lauf
+   liefert; `integral_undef` (`∫ f ∂μ = 0` für nicht integrierbares `f`); die Rechnung
+   `((countingMeasure T).restrict (Set.Ico 0 u)) {t₀} = ⊤` über `Measure.sum_apply` und
+   `ENNReal.tsum_const`; und für `u ≤ t₀` das leere Fenster. **Prüfstein, und er entscheidet mehr als
+   den Satz:** an demselben Punkt sind Protokoll und Masse **beide** entartet — die Masse ist `ν·t`,
+   dieselbe wie an einem Punkt ganz ohne Sprünge im Fenster. Ob die Entartung die beiden Seiten
+   gleichzeitig oder ungleichzeitig bewegt, ist die eigentliche Frage; die Rechnung oben sagt
+   gleichzeitig, und der Satz ist die Probe darauf.
+2. **Die Vollständigkeit des Induktionsschritts** — falls 1 zeigt, daß die Entartung keine
+   Widerlegung trägt: `hcum` über `hawkesJumpFiltration` als Satz, über die Induktion nach den
+   Sprungzeiten der Größe nach, mit `sum_eq_mul_hawkesJumpTime_of_forall_le` als Induktionsanfang.
+   Das ist der teure Weg, und er wird erst begonnen, wenn 1 die Entartung ausgeschlossen hat.
+3. **`hawkes_isLocalMPSolution`** als Zusammenbau, sobald 1 und 2 entschieden sind; die globale
+   Fassung mit `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom
+   2026-09-11.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   vierundzwanzigsten Laufs, unverändert.
+
+### 2026-09-12, dritter Lauf des Tages — die Entartung ist kein Hebel: sie bewegt das Protokoll und läßt die Masse, wo eine bloße Grundrate sie ließe; und der Fixpunkt hält an ihr
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des zweiten Laufs dieses Tages
+(`hawkesSelfRate_eq_of_forall_eq`, und die Entscheidung, ob die Entartung eine Widerlegung von
+`hcum` über `hawkesJumpFiltration` trägt). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Neun neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, neuer Abschnitt
+`PathCutDegenerate`. Die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1 (und
+ohne Warnung im neuen Abschnitt), alle neun mit `scripts/check_axioms.py` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl der `sorry` bleibt bei **neun**. Die
+Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4.
+
+Neu: `countingMeasure_eq_top_smul_dirac`, `hawkesRate_countingMeasure_of_forall_eq`,
+`hawkesSelfRate_eq_of_forall_eq`, `hawkesSelfRate_eq_of_sum_eq`,
+`intervalIntegrable_hawkesSelfRate_of_forall_eq`, `cumulativeRateF_hawkesSelfRate_eq_of_forall_eq`,
+`cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq`,
+`cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair`,
+`jumpTimeF_hawkesSelfRate_of_forall_eq`.
+
+#### Der Befund: die Entartung bewegt die Masse nicht, und damit fällt der letzte Hebel
+
+Der Vorlauf hatte die Lage so hinterlassen: der Schritt vom Sprung kleinsten Index zum nächsten ruht
+darauf, daß die gefrorene Rate **unter** der Selbstrate liegt, und die einzige Lage, in der das
+verletzt sein kann, ist der Stichprobenpunkt mit sich häufenden Sprungzeiten — dort ist die
+Selbstrate durch den Müllwert von Bochner die bloße Grundrate `ν`, während die gefrorenen Raten,
+endliche Summen, ihre Masse behalten. Vorschlag 1 war, das zu beweisen und daran zu entscheiden, ob
+eine Widerlegung daraus zu bauen ist.
+
+**Der Satz steht, und er entscheidet gegen die Widerlegung.**
+
+* **`countingMeasure_eq_top_smul_dirac`** — sind alle Sprungzeiten ab der ersten gleich `t₀`, so ist
+  das Zählmaß `⊤ • dirac t₀`, und zwar als **Gleichheit von Maßen** und nicht bis auf Nullmengen.
+  Diese eine Identität trägt die ganze Rechnung.
+* **`hawkesRate_countingMeasure_of_forall_eq`** — also ist die Hawkes-Rate dieses Maßes `ν`. **Und
+  sie ist es ohne Fallunterscheidung.** Das Papierargument spaltet nach dem Integranden am Atom: ist
+  er `0`, so ist die Funktion fast überall `0`; ist er es nicht, so ist sie nicht integrierbar und
+  Bochner gibt den Müllwert. In Lean fällt die Spaltung weg, weil `integral_smul_measure` den
+  **reellen** Skalar `(⊤ : ENNReal).toReal = 0` vorzieht und beide Fälle in einem Zug erledigt. Über
+  `φ`, über `ν` und über das Vorzeichen von `t₀` wird **nichts** verlangt.
+* **`hawkesSelfRate_eq_of_sum_eq`** — der Zeuge: die Wartezeiten `(c, 0, 0, …)` erzeugen einen
+  solchen Punkt, über `hawkesJumpTime_eq_div_of_sum_eq` des Vorlaufs. Die Lage ist also nicht leer.
+* **`cumulativeRateF_truncRateF_hawkesSelfRate_eq_of_forall_eq`** — und hier steht die Antwort: die
+  **gedeckelte Masse** an einem entarteten Punkt ist `min (ν·r) a`. Die rechte Seite nennt weder die
+  gemeinsame Sprungzeit `t₀` noch die Höhe, auf die sich die Wartezeiten summieren. Es ist derselbe
+  Wert, den ein Stichprobenpunkt **ganz ohne Selbsterregung** trägt.
+
+Damit ist die Frage entschieden. Eine Widerlegung von `hcum` braucht zwei Punkte, die im Protokoll
+übereinstimmen und in der gedeckelten Masse auseinandergehen. Die Entartung bewegt das **Protokoll**
+— jeder Index meldet dieselbe Zeit — und läßt die **Masse** genau dort, wo eine bloße Grundrate sie
+ließe. Sie bewegt also die falsche der beiden Seiten.
+`cumulativeRateF_truncRateF_hawkesSelfRate_eq_degenerate_pair` schreibt die Folgerung hin: **zwei**
+entartete Punkte tragen dieselbe gedeckelte Masse, gleich welche Sprungzeiten und gleich welche
+Wartezeiten sie haben. Ein widerlegendes Paar kann also nicht aus zwei entarteten Punkten bestehen.
+
+#### Der zweite Befund, und er war nicht angesagt: an der Entartung **hält** der Fixpunkt
+
+`jumpTimeF_hawkesSelfRate_of_forall_eq` — an einem entarteten Punkt sind die Zeiten, die die
+**Rekursion** zurückgibt, und die Zeiten, die die **Inverse der Selbstrate** zurückgibt, dieselben.
+Und sie sind es ohne die Voraussetzungen, die `jumpTimeF_hawkesSelfRate` trägt: keine Positivität der
+Wartezeiten, keine Regularität der gefrorenen Raten, keine Divergenz. Der Grund ist billig — die
+Selbstrate ist die Konstante `ν`, ihre Inverse dividiert, und
+`sum_eq_mul_hawkesJumpTime_of_forall_le` sagt, daß die Höhe der Stufe `n` gerade `ν` mal die
+gemeinsame Zeit ist.
+
+Das ändert, wie die Entartung zu lesen ist. Sie ist **kein Artefakt neben dem Prozeß**, sondern ein
+Stichprobenpunkt, an dem die Konstruktion mit sich selbst verträglich ist. Was das unendliche Atom
+vernichtet, ist die Selbsterregung, nicht die Konsistenz der Konstruktion. Der Vorlauf hatte
+vermutet, „gerade in dieser Lage bricht der Fixpunkt"; das ist für **diese** Lage widerlegt. (Die
+Lage, in der er bricht, ist eine andere — spätere Stufen, die vor früheren springen —, und so steht
+es auch im Doc-Kommentar von `sum_eq_mul_hawkesJumpTime_of_forall_le`; die beiden sind verschieden.)
+
+Ein Nebenertrag, der beim nächsten Schritt Arbeit spart: die lokale Integrierbarkeit der Selbstrate,
+die **jede** Aussage des pfadabhängigen Zusammenbaus als Voraussetzung mitschleppt, ist an einem
+entarteten Punkt umsonst (`intervalIntegrable_hawkesSelfRate_of_forall_eq`) — eine konstante Rate ist
+intervallintegrierbar. Deshalb verlangen die Rechnungen dieses Laufs über `φ` nichts, was
+`hawkesJumpTime_eq_div_of_sum_eq` nicht ohnehin schon verlangt hat.
+
+#### Was offen bleibt
+
+Die Lage „ein Punkt entartet, der andere nicht" ist **nicht** geschlossen. Was dazu feststeht: ist
+`w` entartet, so ist seine gedeckelte Masse bei `i` gleich `min (ν·i) a`, und da
+`hawkesSelfRate ≥ ν` immer gilt (`le_hawkesSelfRate`), ist die ungedeckelte Masse jedes Punktes
+mindestens `ν·i`. Ein Partner `w'`, der sich in der gedeckelten Masse unterscheidet, muß also echte
+Selbsterregung im Fenster haben — und zugleich das Protokoll von `w` teilen, in dem **jeder** Index
+dieselbe Zeit meldet. Daß das unmöglich ist, ist am Quelltext der Definitionen plausibel (der
+Vorlauf hat es für die Wartezeiten `(s,0,0,…)` durchgerechnet), aber **nicht in Lean geführt**.
+
+Der Hauptteil bleibt Vorschlag 2 des Vorlaufs: die Vollständigkeit des Induktionsschritts. Er ist
+jetzt der einzige verbliebene Weg zu `hcum`, weil der Ausweg über die Entartung geschlossen ist.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`sum_eq_mul_hawkesJumpTime_of_forall_le` auf den zweitkleinsten Index heben** — der
+   Induktionsschritt in seiner kleinsten nichttrivialen Gestalt: ist `T l` die kleinste Sprungzeit im
+   Fenster und springt von den Stufen unter `m` nur `l` echt vor `T m`, so ist die gefrorene Rate der
+   Stufe `m` unterhalb von `T m` gleich `ν + φ(· − T l)`, und die Höhe der Stufe ist
+   `ν·T m + Φ(T m − T l)` mit `Φ` einer Stammfunktion von `φ`. **Warum jetzt:** der Befund dieses
+   Laufs hat den einzigen Einwand gegen den Induktionsschritt ausgeräumt, und dieser Schritt ist der,
+   an dem sich zeigt, ob die Induktion eine **Stammfunktion** von `φ` braucht — das wäre eine neue
+   Voraussetzung an die Daten von `ex:hawkes` und gehörte als solche in die Roadmap, ehe der
+   allgemeine Schritt begonnen wird. **Worauf er ruht:** `sum_eq_mul_hawkesJumpTime_of_forall_le` als
+   Muster, `hawkesFrozen_succ_eq_sum_range`, `cumulativeRateF_rateInverse` und ein
+   `intervalIntegral` für den einen verbleibenden Summanden. **Prüfstein:** die Aussage muß ohne
+   Monotonie der Sprungzeiten und ohne Vorzeichen der Wartezeiten auskommen, wie ihr Vorbild — sonst
+   ist sie für die Widerlegungsfrage wertlos.
+2. **Die Vollständigkeit des Induktionsschritts** — `hcum` über `hawkesJumpFiltration` als Satz, über
+   die Induktion nach den Sprungzeiten der Größe nach, mit
+   `sum_eq_mul_hawkesJumpTime_of_forall_le` als Induktionsanfang. Unverändert Vorschlag 2 des
+   Vorlaufs, jetzt ohne den Vorbehalt, unter dem er dort stand.
+3. **`hawkes_isLocalMPSolution`** als Zusammenbau, sobald 2 entschieden ist; die globale Fassung mit
+   `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   fünfundzwanzigsten Laufs, unverändert.
+
+### 2026-09-12, vierter Lauf des Tages — der Induktionsschritt entfällt: die Höhe **jeder** Sprungzeit steht in geschlossener Form da, ohne eine einzige Voraussetzung an die Reihenfolge der Sprungzeiten; und dieselbe Rechnung gibt die kumulierte Selbstrate unterhalb einer Sprungzeit, also die Gestalt, die `hcum` verlangt
+
+**Bearbeitet:** Teil C des laufenden Auftrags, Vorschlag 1 des Vorlaufs
+(`sum_eq_mul_hawkesJumpTime_of_forall_le` auf den zweitkleinsten Index heben, und die Frage, ob die
+Induktion eine **Stammfunktion** von `φ` braucht). Die Reihenfolge D → F → C → E ist eingehalten.
+
+**Zehn neue Deklarationen** in `TauCeti/MartingaleProblems/Suggested.lean`, neuer Abschnitt
+`PathCutSecond`. Die ganze Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1 und
+**ohne eine Warnung** im neuen Abschnitt, alle zehn mit `scripts/check_axioms.py` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft (rc 0), die Zahl der `sorry` bleibt bei **neun**
+(`scripts/check_suggested.py`: rc 0, 0 Fehler, 9 `sorry`).
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`. Die Punkte stehen in
+`MartingaleProblems/README.md`, Meilenstein 4.
+
+Neu: `setIntegral_Ioc_sub_eq_zero_of_le`, `setIntegral_Ioc_comp_sub_right_of_eq_zero`,
+`cumulativeRateF_hawkesFrozen_eq`, `sum_eq_mul_add_sum_setIntegral_hawkesJumpTime`,
+`sum_eq_mul_add_cumulativeRateF_hawkesJumpTime`, `sum_eq_mul_add_setIntegral_hawkesJumpTime`,
+`sum_eq_mul_add_setIntegral_hawkesJumpTime_of_le`, `cumulativeRateF_hawkesRate_countingMeasure`,
+`cumulativeRateF_hawkesSelfRate_eq_sum`,
+`cumulativeRateF_hawkesSelfRate_congr_of_jumpTime_eq`.
+
+#### Der Befund, und er ist größer als die gestellte Aufgabe
+
+Der Auftrag war der **zweitkleinste** Index: die Höhe einer Sprungzeit, unter der genau eine frühere
+Stufe schon gefeuert hat. Beim Hinschreiben zeigte sich, daß die Einschränkung nichts trägt. Es gilt
+für **jedes** `m`, unter der einzigen Voraussetzung `0 ≤ ∑_{k<m} ξ k`:
+
+> `sum_eq_mul_add_sum_setIntegral_hawkesJumpTime`
+> `∑_{k<m} ξ k = ν · T m + ∑_{l=1}^{m−1} ∫_{(0, T m − T l]} φ`.
+
+Es ist `sum_eq_mul_hawkesJumpTime_of_forall_le` **ohne** dessen Voraussetzung `hmin`, und es ist
+derselbe Beweis. Zwei Beobachtungen machen den Unterschied, und beide kosten nichts:
+
+* **Eine Stufe, die bei oder nach `T m` feuert, fällt von selbst heraus** — ihr Fenster
+  `(0, T m − T l]` ist **leer** (`setIntegral_Ioc_sub_eq_zero_of_le`). Der Vorlauf hatte sie durch
+  eine Voraussetzung ausgeschlossen; die Arithmetik der Intervallgrenzen tut es umsonst. Das ist der
+  ganze Grund, aus dem die Induktion entfällt.
+* **Eine Stufe, die vorher feuert, trägt den kumulierten Kern an der Lücke** — die Verschiebung des
+  Fensters ist absorbierbar, weil `φ` auf der **abgeschlossenen** negativen Halbachse verschwindet
+  (`setIntegral_Ioc_comp_sub_right_of_eq_zero`). Auch diese Aussage verlangt **keine** Ordnung
+  zwischen den beiden Zeiten: ist die Lücke negativ, sind beide Seiten `0`.
+
+Die eingeplante Induktion nach der Größe der Sprungzeiten ist damit gegenstandslos. Die endliche
+Summe des gefrorenen Erzeugers wird gliedweise integriert (`integral_finsetSum`), und die
+Fallunterscheidung, die auf Papier die Induktion trägt, wird von der Definition von `Set.Ioc`
+erledigt.
+
+#### Die gestellte Frage ist beantwortet, und die Antwort ist „nein"
+
+Gefragt war, ob die Induktion eine **Stammfunktion** von `φ` braucht — das wäre eine neue
+Voraussetzung an die Daten von `ex:hawkes` und hätte vor dem allgemeinen Schritt in die Roadmap
+gehört. Sie braucht keine. Der Summand ist `cumulativeRateF (fun u _ ↦ φ u)`
+(`sum_eq_mul_add_cumulativeRateF_hawkesJumpTime`), also der kumulierte Kern, gelesen als Rate, die
+ihren Stichprobenpunkt nicht liest — ein Objekt, das die pfadabhängige Theorie ohnehin trägt. Eine
+*differenzierbare* Stammfunktion kommt nirgends vor, und über `φ` wird nichts verlangt, was
+`intervalIntegrable_hawkesFrozen` nicht schon verlangt hat. **Es kommt also nichts in die Roadmap,
+was dort nicht schon stünde.**
+
+#### Der Prüfstein des Vorlaufs ist gehalten
+
+Verlangt war, daß die Aussage ohne Monotonie der Sprungzeiten und ohne Vorzeichen der Wartezeiten
+auskommt, sonst sei sie für die Widerlegungsfrage wertlos. Sie tut es: die einzige Voraussetzung ist
+die Nichtnegativität der Partialsumme bei `m`, und die ist es, was die Inverse braucht, um ihre Höhe
+überhaupt zu erreichen. Insbesondere gilt die Formel auch an den Stichprobenpunkten, an denen der
+Fixpunkt der Konstruktion **bricht** — wo eine spätere Stufe vor einer früheren feuert —, und genau
+das war der Grund, sie so zu wollen.
+
+Zwei Spezialisierungen halten die Verträglichkeit mit dem Bestand fest:
+`sum_eq_mul_add_setIntegral_hawkesJumpTime` ist der Fall genau einer früheren Stufe unterhalb `T m`
+(der Schritt, den eine Induktion als zweiten genommen hätte, jetzt ein Dreizeiler über
+`Finset.sum_eq_single`), und `sum_eq_mul_add_setIntegral_hawkesJumpTime_of_le` fällt auf
+`sum_eq_mul_hawkesJumpTime_of_forall_le` zurück, wenn diese Stufe doch nicht unterhalb liegt.
+
+#### Und dieselbe Rechnung gibt die kumulierte Rate — das, worum es bei `hcum` geht
+
+Vorschlag 2 des Vorlaufs war „`hcum` über die Induktion nach den Sprungzeiten der Größe nach".
+Nachdem die Induktion entfallen war, blieb im Zeitbudget Raum, die Rechnung auf die **Selbstrate**
+zu ziehen, und der Weg dorthin geht nicht über Tonelli für das Zählmaß, sondern über den Bestand:
+**unterhalb einer Sprungzeit *ist* die Selbstrate eine gefrorene Rate** — das sagt
+`hawkesRate_countingMeasure`, seit langem bewiesen. Also gilt für `r ≤ T (n+1)`
+
+> `cumulativeRateF_hawkesSelfRate_eq_sum`
+> `cumulativeRateF (hawkesSelfRate ν φ) w r = ν · r + ∑_{l=1}^{n} ∫_{(0, r − T l]} φ`,
+
+und `cumulativeRateF_hawkesRate_countingMeasure` sagt es in der Allgemeinheit einer beliebigen
+monotonen Familie. Die rechte Seite ist eine **endliche** Formel in den Sprungzeiten, und die
+Summanden, die stehen bleiben, sind genau die mit `T l < r`: **die kumulierte Masse bis `r` ist ein
+Funktional der Ereignisse unterhalb `r`.** Das ist die Gestalt, die `hcum` über
+`hawkesJumpFiltration` verlangt.
+
+Was dafür bezahlt wird, ist die **Monotonie** der Sprungzeiten und damit die Nichtnegativität der
+Wartezeiten — die Voraussetzung, die die Höhenformel gerade vermeidet. Was **nicht** bezahlt wird,
+ist die Nichtexplosion: das Fenster endet an einer Sprungzeit, dort ist die Rate eine endliche
+Summe, und der Müllwert von `integral_undef` an einem sich häufenden Stichprobenpunkt wird von hier
+aus nie erreicht.
+
+**Und die Aussage, auf die es ankommt, steht in σ-algebrenfreier Gestalt schon da:**
+`cumulativeRateF_hawkesSelfRate_congr_of_jumpTime_eq` — zwei Stichprobenpunkte, deren Sprungzeiten
+an den Indizes `1, …, n` übereinstimmen, tragen bis zu jedem `r` unterhalb der `(n+1)`-ten
+Sprungzeit **dieselbe** kumulierte Masse, gleich welche Wartezeiten sie haben und gleich was ihre
+Sprungzeiten oberhalb `n` tun. Das ist die Unabhängigkeit vom Stichprobenpunkt, die `hcum`
+behauptet, ohne die Meßbarkeitsschicht.
+
+**Die verbliebene Lücke ist benannt und sie ist genau eine.** Die Formel steht für `r ≤ T (n+1)`,
+also für `r` unterhalb *irgendeiner* Sprungzeit. `hcum` verlangt sie für **jedes** `i`. Beides fällt
+zusammen, sobald die Sprungzeiten an `w` divergieren — und das ist die Nichtexplosion. Jenseits der
+Explosionszeit `T_∞ = sup T` ist die Aussage offen und kann in dieser Gestalt nicht gelten, denn
+dort ist die Selbstrate der Müllwert (`hawkesRate_countingMeasure_of_forall_eq` zeigt einen solchen
+Punkt), die rechte Seite aber eine Reihe, die nicht abbricht. Der nächste Lauf hat also **nicht**
+mehr die Aufgabe, die Formel zu beweisen, sondern die, `i ≥ T_∞` zu behandeln — und die
+**Deckelung** ist der naheliegende Hebel, denn dort geht es nicht um die Masse, sondern um
+`min (Masse) a`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`hcum` über `hawkesJumpFiltration` unterhalb der Explosionszeit** — die Meßbarkeit von
+   `w ↦ cumulativeRateF (truncRateF (hawkesSelfRate ν φ) a) w i` bezüglich `hawkesJumpFiltration i`,
+   auf der Menge `{w | ∃ n, i ≤ hawkesJumpTime ν φ w.2 w (n+1)}`. **Warum jetzt:** die Formel dieses
+   Laufs macht die Masse dort zu einer endlichen Summe über die Sprungzeiten unterhalb `i`, und
+   `cumulativeRateF_truncRateF_eq_min` setzt die Deckelung obendrauf. **Worauf er ruht:**
+   `cumulativeRateF_hawkesSelfRate_eq_sum`, `cumulativeRateF_truncRateF_eq_min`,
+   `measurable_hawkesJumpTime_apply` und die Meßbarkeit von `Φ` als Funktion der oberen Grenze.
+
+   **Die Brücke, die dabei zu schlagen wäre, liegt schon.** `hawkesJumpFiltration` ist über
+   `jumpFiltrationFE` aus `jumpTimeFE (hawkesSelfRate ν φ)` gebaut — den Zeiten, die die **Inverse**
+   meldet —, während die Formel dieses Laufs von `hawkesJumpTime`, den Zeiten der **Rekursion**,
+   spricht; das ist derselbe Unterschied, an dem der dreiundzwanzigste Lauf des 2026-09-11
+   hängengeblieben ist. Die Identifikation der beiden ist **in `ℝ≥0∞` bewiesen**
+   (`jumpTimeFE_hawkesSelfRate`, nicht bloß `jumpTimeF_hawkesSelfRate`), und ihre Voraussetzungen
+   sind genau die, die `cumulativeRateF_hawkesSelfRate_eq_sum` ohnehin trägt: `hxi` und die lokale
+   Integrierbarkeit der Selbstrate, `hintF` umsonst über `intervalIntegrable_hawkesFrozen`. Der
+   Schritt braucht also **keine neue Rechnung** — die beiden Seiten sprechen bereits über dieselben
+   Zeiten. Zu beachten bleibt, was am Doc-Kommentar von `jumpTimeFE_hawkesSelfRate` steht: `hxi`
+   gilt nicht auf dem ganzen Raum, die Identität transportiert also fast sichere Aussagen und keine
+   σ-Algebren — und das ist der Grund, aus dem die Aussage auf eine **Menge** eingeschränkt wird.
+
+   **Prüfstein:** die Aussage muß ohne die Nichtexplosion als Voraussetzung auskommen — sie wird auf
+   eine Menge eingeschränkt und nicht auf eine Voraussetzung gestützt, sonst ist sie für den
+   Zusammenbau wertlos, dessen Nichtexplosion erst hinterher kommt.
+2. **Der Rest jenseits der Explosionszeit** — die Lage `i ≥ T_∞`, und die Frage, ob die
+   **Deckelung** sie erledigt. Auf `{T_∞ ≤ i}` ist die ungedeckelte Masse mindestens `ν · T_∞` plus
+   die Beiträge unendlich vieler Ereignisse; ist sie stets `≥ a`, so ist die gedeckelte Masse
+   konstant `a` und trivial meßbar, und `hcum` ist ganz erledigt. Das ist zu prüfen und **nicht** zu
+   vermuten: die Selbstrate ist dort der Müllwert `ν`, also ist der naheliegende Beleg gerade der,
+   der nicht trägt. Genau hier liegt nach diesem Lauf der Angelpunkt von `hcum`.
+3. **`hawkes_isLocalMPSolution`** als Zusammenbau, sobald 2 entschieden ist; die globale Fassung mit
+   `(hN : ∀ t, 𝔼[N t] < ∞)` als **Hypothese**, nach der Festlegung des Nutzers vom 2026-09-11.
+4. **Die veralteten Namen in `section PathDependent` ersetzen** — Vorschlag 4 des sechzehnten bis
+   fünfundzwanzigsten Laufs, unverändert.
