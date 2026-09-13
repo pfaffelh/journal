@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Zehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Zwölf Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle zehn beim Beweisen aufgefallen, alle zehn gegen `upstream/master` geprüft,
+Alle zwölf beim Beweisen aufgefallen, alle zwölf gegen `upstream/master` geprüft,
 und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -319,6 +319,82 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   ist — ist der Grund, aus dem die Aussage sich lohnt: sie ist es, die jede
   Zeitverwandlung meßbar macht, und sie steht in keiner Bibliothek, obwohl jedes
   Lehrbuch sie benutzt.
+
+* **Das Einfrieren, und es ist der Kern jeder bedingten Sprungzeitrechnung.**
+  Der elfte. Mathlib hat den **einen** Satz, der eine bedingte Erwartung mit
+  Unabhängigkeit ausrechnet, nur im entarteten Fall:
+  `MeasureTheory.condExp_indep_eq`
+  (`Probability/ConditionalExpectation.lean:42`) sagt, daß `P[f | m₂]` die
+  **Konstante** `∫ f` ist, wenn `f` für eine von `m₂` unabhängige σ-Algebra
+  meßbar ist. Gebraucht wird die Fassung, in der der Integrand beide Seiten
+  liest:
+
+  > `P[F (Z, Y) | σ(Z)] (ω) = ∫ F (Z ω, y) dμ_Y(y)`, für `Y` unabhängig von `Z`.
+
+  Das ist das **Einfrieren** (englisch *freezing lemma*). Gesucht am 2026-09-13
+  an `upstream/master` `7d32461a` und in v4.33.1 nach `freezing`,
+  `condExp_indep`, `IndepFun.condExp`, `condExp_comp`: **null** Treffer über
+  `condExp_indep_eq` und seine einzige Verwendung in
+  `Probability/BorelCantelli.lean:50` hinaus. Am selben Tag am neueren Stand
+  `710c215f98a3947b3301a21454f1f2c3caf72d0a` (2026-09-13 00:31 UTC)
+  nachgeprüft: unverändert, und der einzige Treffer der Suche über
+  `Mathlib/Probability/` bleibt `iIndepFun.condExp_natural_ae_eq_of_lt` in
+  `Probability/BorelCantelli.lean:50` — wieder der entartete Fall.
+
+  *Woran es bei uns hängt:* die bedingte Überlebensfunktion
+  `P (τ_{n+1} > t | ℋ_n) = exp (−(Λ_t − Λ_{τ_n}))`, der Rumpf des Beweises von
+  `thm:pathjumpMP`. Das Ereignis ist `{Λ_t < ξ_n}`, und es mischt die beiden
+  Seiten — der **Pegel** wird aus der Vergangenheit gelesen, die **Wartezeit**
+  ist frisch. `condExp_indep_eq` reicht deshalb an keiner Stelle heran.
+
+  Wir haben es am 2026-09-13 für Indikatoren bewiesen
+  (`MartingaleProblems/Suggested.lean`, `section Freezing`:
+  `setIntegral_indicator_of_map_prod`, `condExp_indicator_of_map_prod`,
+  `setIntegral_indicator_lt_of_map_prod`), was alles ist, was ein
+  Martingalproblem braucht und was die Integrierbarkeitsbuchhaltung eines
+  allgemeinen `F` erspart: die Antwort ist dann eine Wahrscheinlichkeit und von
+  selbst durch `1` beschränkt. Für Mathlib wäre die richtige Fassung die für
+  integrierbares `F : γ × β → ℝ`, über `Measure.prod` und Fubini, und sie ist
+  mehr als unsere.
+
+* **Die Stammfunktion einer parametrisierten Familie, gemeinsam meßbar in
+  Parameter und oberer Grenze.** Der zwölfte, und der kleinste von allen.
+  Mathlib hat `MeasureTheory.StronglyMeasurable.integral_prod_right'`
+  (`MeasureTheory/Integral/Prod.lean:76`), also die Meßbarkeit von
+  `x ↦ ∫ y, f (x, y) ∂ν` bei **festem** Maß, und daraus die Meßbarkeit von
+  `x ↦ ∫ y in s, f (x, y)` bei **fester** Menge `s`. Gebraucht wird die Fassung,
+  in der das Fenster mitwandert:
+
+  > `x ↦ ∫_0^{a x} f x u du` ist meßbar, für meßbares `a` und eine Familie, die
+  > gemeinsam meßbar und in jedem Parameter lokal integrierbar ist.
+
+  Gesucht am 2026-09-13 an `upstream/master`
+  `710c215f98a3947b3301a21454f1f2c3caf72d0a` nach `measurable_primitive`,
+  `Measurable ... primitive`, `Measurable fun x ↦ ∫ y in ...` und nach
+  Meßbarkeitsaussagen im Umfeld von `intervalIntegral`: **null** Treffer.
+  Vorhanden ist allein die **Stetigkeit** der Stammfunktion in der oberen Grenze
+  (`intervalIntegral.continuousOn_primitive`,
+  `MeasureTheory/Integral/DominatedConvergence.lean:440` in v4.33.1, `:439` auf
+  master, samt `continuousOn_primitive_interval` ebendort), und genau sie ist der
+  halbe Beweis.
+
+  *Der Beweis, und er ist drei Zeilen lang:* meßbar im Parameter bei fester
+  Grenze, stetig in der Grenze bei festem Parameter — das ist eine
+  Carathéodory-Funktion, und
+  `MeasureTheory.measurable_uncurry_of_continuous_of_measurable`
+  (`MeasureTheory/Function/StronglyMeasurable/Basic.lean:1262` auf master,
+  `:1257` in v4.33.1) macht daraus eine gemeinsam meßbare. Daß die Aussage so
+  billig ist und trotzdem fehlt, ist der Grund, sie hier aufzuführen: sie wird
+  gebraucht, sobald eine Stoppzeit als Integrationsgrenze auftritt, und das ist
+  in der Theorie der Punktprozesse der Regelfall.
+
+  *Woran es bei uns hing:* `measurable_hawkesJumpLevel`. Der Pegel der bedingten
+  Überlebensfunktion ist die kumulierte Rate bei `t` abzüglich der kumulierten
+  Rate bei `τ_n`, und `τ_n` ist eine Funktion der Bedingungsgröße. Wir haben es
+  am 2026-09-13 als `measurable_cumulativeRateF_endpoint` bewiesen, mit
+  `continuous_cumulativeRateF` und `measurable_uncurry_cumulativeRateF` als den
+  beiden Hälften; unsere Fassung ist an `cumulativeRateF` geschrieben und für
+  Mathlib auf `intervalIntegral` umzustellen.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

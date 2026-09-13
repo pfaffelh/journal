@@ -3890,12 +3890,16 @@ Er ist **keine** Erneuerungszerlegung wie im zustandsabhängigen Fall; nach dem
 Sprung ist die Rate eine andere und es wird nichts neu gestartet.
 
 1. `condExp_lt_jumpTimeFE` — die bedingte Überlebensfunktion
-   `P(τ_{n+1} > s | ℋ_n) = exp (−(Λ_s − Λ_{τ_n}))` auf `{τ_n ≤ s}`. Hängt an einer
-   **Entscheidung** (was `ℋ_n` ist: `(hawkesJumpFiltration).stoppedσ` an
-   `jumpTimeFE`, oder die von `(y_0,…,y_n, ξ_0,…,ξ_{n−1})` erzeugte σ-Algebra) und
-   an einer **Rechnung** (`lt_jumpTimeFE_iff` schiebt das Ereignis auf
-   `{cumulativeRateF Λ w s < ∑_{k<n+1} ξ k}`; der Pegel ist dann `ℋ_n`-meßbar, und
-   `ξ n` ist unter `jumpMeasure mu nu` von `ℋ_n` unabhängig und Exp(1)).
+   `P(τ_{n+1} > s | ℋ_n) = exp (−(Λ_s − Λ_{τ_n}))` auf `{τ_n ≤ s}`. **Bewiesen im
+   vierten Lauf des 2026-09-13** für den beschränkten nichtlinearen Fall, als
+   `condExp_lt_jumpTimeFE_hawkesSelfRateH_block` und
+   `condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp`. Die **Entscheidung**, was
+   `ℋ_n` ist, ist damit gefallen und lautet: die von
+   `(Y_0, …, Y_n, τ_1, …, τ_n)` erzeugte σ-Algebra, **nicht** die gestoppte
+   σ-Algebra der Filtration des Prozesses. Der Grund steht im Abschnitt „Die
+   σ-Algebra, die der Martingalzuwachs tragen kann" — die Gleichheit der beiden
+   ist in **beiden** Richtungen falsch, in der einen an einer Nullmenge und in
+   der anderen daran, daß `σ(Kette, …)` die Marke `Y_{n+1}` kennt.
 2. `condExp_jumpTimeFE_hasDensity` — die bedingte Dichte von `τ_{n+1}`,
    `Λ_u exp (−(Λ_u − Λ_{τ_n}))` auf `(τ_n, ∞)`. Hängt an 1 und an einer
    **Rechnung** (Variablenwechsel längs der kumulierten Rate).
@@ -4045,6 +4049,16 @@ Die billigste offene Aussage ist **0** (eine Rechnung an einem Zeugen, und wenn
 sie negativ ausgeht, fällt die Zielaussage in ihrer jetzigen Gestalt); die
 teuerste ist **Gruppe A** (sechs Aussagen, und keine von ihnen hat heute eine
 Eingabe im Bestand außer `lt_jumpTimeFE_iff`).
+
+*Stand 2026-09-13, vierter Lauf des Tages: **vierzehn**.* Punkt 1 der Gruppe A —
+die bedingte Überlebensfunktion — ist für den **beschränkten nichtlinearen** Fall
+bewiesen, in der Gestalt des Manuskripts und über der σ-Algebra, die der
+Martingalzuwachs tragen kann. Die teuerste Gruppe bleibt Gruppe A mit fünf
+Aussagen; die nächste, Punkt 3, wartet nicht mehr auf eine Entscheidung, sondern
+auf die **Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe**, und
+die steht im Bestand bisher nur an der nullten (`comp_chainKernel_map_split`,
+`chainKernel_map_split`). Der Weg dorthin ist die Induktion über den
+Einschrittshift `chainKernel_map_shift`, der die Zeithomogenität schon trägt.
 
 ### Die Filtration eines Treppenpfadprozesses: die Punktfiltration, und was der Pfad von ihr zurückgibt
 
@@ -4820,6 +4834,331 @@ die das Manuskript im linearen Fall über die Volterra-Resolvente abarbeitet.
 sechs Aussagen, der Rumpf des Satzes. Nach diesem Lauf ist sie die einzige offene
 Gruppe des beschränkten Falls, für die noch eine Entscheidung aussteht: die
 Filtration ist gewählt, die Zeugen stehen, und das erste Maßresultat ist da.
+
+### Das Einfrieren: die bedingte Erwartung eines Ereignisses, das Vergangenheit und frische Wartezeit mischt
+
+Gruppe A — `E[D_n | ℋ_n] = 0` — ruht auf **einer** maßtheoretischen Aussage, und
+Mathlib hat sie nicht. Das Ereignis, um das es geht, ist
+`{t < τ_{n+1}} = {Λ_t < ξ_0 + ⋯ + ξ_n}` (`setOf_lt_jumpTimeFE_eq`): der
+**Pegel** links wird aus der Vergangenheit gelesen, die **Wartezeit** rechts ist
+frisch. Eine bedingte Erwartung eines solchen Ereignisses rechnet man aus, indem
+man die Vergangenheit einfriert und allein über die frische Koordinate
+integriert.
+
+Was Mathlib dazu hat, ist der entartete Fall: `MeasureTheory.condExp_indep_eq`
+(`Probability/ConditionalExpectation.lean:42`) gibt die **Konstante** `∫ f`,
+wenn der Integrand für eine von der Bedingung unabhängige σ-Algebra meßbar ist.
+Das trifft hier auf keine Stelle zu. Gesucht am 2026-09-13 an `upstream/master`
+`7d32461a` und in v4.33.1 nach `freezing`, `condExp_indep`, `IndepFun.condExp`,
+`condExp_comp`: keine weitere Aussage.
+
+**`setIntegral_indicator_of_map_prod` — das Einfrieren in der Form, die die
+bedingte Erwartung verlangt.** Für `Z : Ω → γ` die Bedingungsgröße, `Y : Ω → ℝ`
+mit Gesetz `μY`, gemeinsames Gesetz das Produkt der Ränder, `S ⊆ γ × ℝ` meßbar
+und `B ⊆ γ` meßbar:
+
+```
+∫ ω in Z ⁻¹' B, S.indicator 1 (Z ω, Y ω) ∂P
+  = ∫ ω in Z ⁻¹' B, (μY (Prod.mk (Z ω) ⁻¹' S)).toReal ∂P
+```
+
+Der ganze Inhalt ist Fubini für das Produktgesetz. Die **Mengenintegralform** ist
+die tragende, nicht die bedingte: `ae_eq_condExp_of_forall_setIntegral_eq` fragt
+nach genau diesen Integralen und nach nichts sonst.
+
+**`condExp_indicator_of_map_prod` — dieselbe Aussage als bedingte Erwartung**,
+über `MeasurableSpace.comap Z`, deren Mengen gerade die `Z ⁻¹' B` sind. Sie ist
+das Korollar der vorigen und keine eigene Arbeit.
+
+**`setIntegral_indicator_lt_of_map_prod` — die Gestalt, die die Konstruktion
+liest.** Das Ereignis ist `{G (Z ω) < Y ω}` — eine frische Wartezeit über einem
+aus der Vergangenheit gerechneten Pegel —, und die Antwort ist der Schwanz
+`μY (Ioi (G (Z ω)))`.
+
+**Warum für Indikatoren und nicht für allgemeines `F`.** Es ist alles, was ein
+Martingalproblem braucht, und es erspart die Integrierbarkeitsbuchhaltung: die
+Antwort ist dann eine Wahrscheinlichkeit und von selbst durch `1` beschränkt, in
+beiden Richtungen. Die allgemeine Fassung für integrierbares `F : γ × ℝ → ℝ` ist
+dieselbe Rechnung mit `Measure.prod` und Fubini und wäre mehr als diese.
+
+**Die Voraussetzung, und sie ist für die Sprungkonstruktion eingelöst.** Verlangt
+wird, daß das gemeinsame Gesetz von `(Z, Y)` das Produkt der Ränder ist — die
+Unabhängigkeit, über
+`ProbabilityTheory.indepFun_iff_map_prod_eq_prod_map_map`. Zwei Schritte lösen
+sie ein, und beide sind allgemein:
+
+* **`infinitePi_map_prodMk_range`** — eine Koordinate eines unendlichen Produkts
+  ist unabhängig von den Koordinaten unter ihr. Das ist
+  `ProbabilityTheory.iIndepFun_infinitePi` zusammen mit
+  `iIndepFun.indepFun_finset` an `Finset.range n` gegen `{n}`, geschrieben als
+  Identität von Gesetz und Produkt der Ränder.
+* **`map_prodMk_prod_of_map_prodMk`** — die Unabhängigkeit im zweiten Faktor
+  eines Produktmaßes überlebt, wenn man den ersten Faktor in die
+  Bedingungsgröße aufnimmt. Nichts daran ist über Wartezeiten: es ist die
+  Assoziativität des Maßprodukts (`MeasureTheory.Measure.prodAssoc_prod`),
+  gelesen durch die Abbildung, die den ersten Faktor hinüberträgt. Mathlib hat
+  beide Bausteine und nicht die Zusammensetzung.
+
+**`jumpMeasure_map_prodMk_range`** ist daraus die Instanz: unter
+`jumpMeasure mu nu` ist das Paar *(ganze Kette, erste `n` Wartezeiten)*
+unabhängig von `ξ n`, und `ξ n` ist standard-exponentiell.
+
+*Und es ist mehr, als `ℋ_n` braucht:* die Bedingungsgröße trägt die **ganze**
+Trajektorie der eingebetteten Kette und nicht bloß ihre ersten `n` Zustände. Das
+kostet hier nichts, weil die Kette im ersten Faktor eines Produkts mit den
+Wartezeiten sitzt; und jede daraus bewiesene bedingte Aussage gilt erst recht
+für die kleinere σ-Algebra, sobald der Turmschluß angewandt ist.
+
+### Der eingefrorene Pegel, und die bedingte Überlebensfunktion des beschränkten nichtlinearen Hawkes-Prozesses
+
+Das Einfrieren verlangt ein Ereignis der Gestalt `{G (Z ω) < Y ω}`, mit `Y` der
+frischen Wartezeit und `G` einer Funktion der Bedingungsgröße allein. Was
+`setOf_lt_jumpTimeFE_eq` gibt, ist `{t < τ_{n+1}} = {Λ_t < ξ_0 + ⋯ + ξ_n}`, und
+das ist **nicht** von dieser Gestalt: der Pegel `Λ_t` ist die kumulierte
+selbstbezügliche Rate, die jeden Sprung unter `t` liest, und auf `{τ_n ≤ t}` sind
+das nicht nur die ersten `n`.
+
+Repariert wird das dadurch, daß der Pegel auf dem Fenster durch den
+**eingefrorenen** ersetzt werden darf. Zwei Aussagen leisten es, und sie sind
+voneinander unabhängig:
+
+**`hawkesJumpTimeH_congr_range` — die `n`-te Sprungzeit liest nur
+`ξ_0, …, ξ_{n-1}`.** Stimmen zwei Wartezeitfolgen auf `Finset.range n` überein,
+so stimmen die Sprungzeiten aller Stufen `m ≤ n` überein
+(`hawkesJumpTimeH_congr_of_le`, eine Induktion über die Stufenschranke). Sie
+trägt **keine** Voraussetzung an `h`, `φ` oder die Schranken: die Abhängigkeit
+einer Rekursionsstufe von ihren Eingaben ist eine Aussage über die Formel und
+nicht über die Daten. Trüge sie eine, wäre die Rekursion falsch aufgeschrieben.
+
+**`lt_jumpTimeFE_hawkesSelfRateH_iff` — dasselbe Ereignis mit dem eingefrorenen
+Pegel.** Also `t < τ_{n+1}` genau dann, wenn die kumulierte **eingefrorene** Rate
+der Stufe `n+1` bei `t` unter `ξ_0 + ⋯ + ξ_n` liegt.
+
+> Die beiden Seiten stimmen aus **zwei verschiedenen Gründen** überein, und der
+> zweite ist der Punkt. Innerhalb des Fensters `t ≤ τ_{n+1}` sind die beiden
+> Pegel gleich (`hawkesRateH_countingMeasure`). Jenseits davon sind sie es nicht
+> — die selbstbezügliche Rate liest die Sprünge, die die eingefrorene fallen
+> gelassen hat, und die Nichtlinearität ist nicht als monoton vorausgesetzt —,
+> aber dort haben **beide** Pegel die Partialsumme schon erreicht, denn die
+> kumulierte eingefrorene Rate der Stufe `n+1` nimmt sie bei `τ_{n+1}` an
+> (`cumulativeRateF_hawkesJumpTimeH`) und wächst von dort weiter. Also sind beide
+> Seiten falsch, und die Äquivalenz hält trotzdem.
+
+**`hawkesFrozenLevel` — der Pegel als Funktion der Bedingungsgröße.** Die
+kumulierte eingefrorene Rate bei `t`, vermindert um die Partialsumme, die die
+ersten `n` Sprünge schon verbraucht haben; das Ereignis ist dann
+`{hawkesFrozenLevel < ξ n}` (`lt_jumpTimeFE_hawkesSelfRateH_iff_level`). Der
+Stichprobenpunkt geht nicht ein, denn `hawkesFrozen` verwirft ihn
+(`hawkesFrozenH_sample_congr`, `cumulativeRateF_hawkesFrozenH_congr_range`);
+`rangeExtend` ist die eine Übersetzung zwischen der Bedingungsgröße, die auf
+`Finset.range n` lebt, und der Folge, die die Rekursion nimmt.
+
+Die Meßbarkeit ist `measurable_hawkesFrozenLevel`, und sie ruht auf
+`measurable_cumulativeRateF_hawkesFrozenH`: `measurable_cumulativeRateF` fragt
+nach der gemeinsamen Meßbarkeit der Rate in Parameter und Zeit, und die ist die
+Rechnung aus `measurable_hawkesJumpTimeH`.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH` — die bedingte Überlebensfunktion.**
+Bedingt auf die Kette und die ersten `n` Wartezeiten liegt die `(n+1)`-ste
+Sprungzeit über `t` mit der Wahrscheinlichkeit, die eine Exponentialuhr dem Pegel
+gibt:
+
+```
+P[t < τ_{n+1} | ℋ_n] = expMeasure 1 (Ioi (hawkesFrozenLevel …))
+```
+
+Das ist die erste **bedingte** Gesetzmäßigkeit des pfadabhängigen Zweiges; alles
+davor war unbedingt. Drei Eingaben, und jede war eine eigene Hürde:
+`jumpMeasure_map_prodMk_range` (die Unabhängigkeit als Identität von Gesetzen),
+`lt_jumpTimeFE_hawkesSelfRateH_iff_level` (das Ereignis mit dem eingefrorenen
+Pegel) und `measurable_hawkesFrozenLevel` (der Pegel ist eine echte Zufallsgröße
+der Bedingungsgröße). Vorausgesetzt sind die Daten des beschränkten
+nichtlinearen Falls und nichts weiter — insbesondere **keine Nichtexplosion**,
+denn im beschränkten Fall gibt es keine anzunehmen.
+
+**`comap_hawkesJumpTimeH_le_comap_prodMk_range` — der Anschluß an die
+Sprungzeiten.** Die von *(Kette, erste `n` Sprungzeiten)* erzeugte σ-Algebra liegt
+unter der Bedingungsgröße des Einfrierens. Der Beweis ist die Faktorisierung über
+`rangeExtend`, mit `hawkesJumpTimeH_congr_of_le` und
+`hawkesJumpTimeH_sample_congr` als den beiden Gleichungen.
+
+> **Die Inklusion ist strikt.** Die Bedingungsgröße trägt die ganze Kette und die
+> Wartezeiten selbst; die Sprungzeiten bestimmen die Wartezeiten nur über die
+> Rate. Eine Gleichheit hinzuschreiben wäre derselbe Fehler, den der 25. Lauf des
+> 2026-09-12 an der Filtrationsgleichheit widerlegt hat.
+
+Der Turmschluß (`MeasureTheory.condExp_condExp_of_le`) zieht die bedingte
+Erwartung damit auf die kleinere σ-Algebra herunter, sobald `hawkesFrozenLevel`
+auch für sie meßbar ist — der Pegel ist
+`∫_0^t h (ν + ∑_{k ≤ n} φ (u − τ_k)) du − Λ(τ_n)` und liest also nur die
+Sprungzeiten; das steht im folgenden Abschnitt.
+
+### Die bedingte Überlebensfunktion über der σ-Algebra der Sprungzeiten
+
+Die Bedingungsgröße des Einfrierens sind die **Wartezeiten**; die Filtration des
+Prozesses ist von seinen **Sprungzeiten** erzeugt. Der Turmschluß überbrückt das,
+und er braucht dafür genau eine Aussage: der Pegel ist schon eine Funktion der
+Sprungzeiten.
+
+**`hawkesJumpLevel` — der Pegel, aus den Sprungzeiten gerechnet.** Beide
+Summanden werden an derselben eingefrorenen Rate abgelesen:
+
+```
+hawkesJumpLevel h ν φ n t (x, τ_1, …, τ_n)
+  = cumulativeRateF (hawkesFrozenH h ν φ T (n+1)) () t
+      − cumulativeRateF (hawkesFrozenH h ν φ T (n+1)) () (T n)
+```
+
+mit `T` der von `0` an indizierten Aufzählung der `τ_k` (`rangeShift`, mit
+`T 0 = 0`). Die Partialsumme `∑_{k < n} ξ_k` kommt darin nicht mehr vor, und das
+ist der ganze Inhalt: `cumulativeRateF_hawkesJumpTimeH_self` sagt, daß sie die
+kumulierte eingefrorene Rate bei `τ_n` **ist**. Der Weg dorthin geht eine Stufe
+tiefer und wieder herauf — unterhalb von `τ_n` hat die Translation von `φ` bei
+`τ_n` noch nicht eingesetzt, also stimmen die Raten der Stufen `n` und `n+1` auf
+dem ganzen Fenster überein (`cumulativeRateF_hawkesFrozenH_succ_of_le`) —, und
+oben steht die Fixpunktgleichung `cumulativeRateF_hawkesJumpTimeH`.
+
+> **Die Identifikation ist fast sicher und nicht punktweise, und das ist kein
+> Mangel des Beweises.** Die Fixpunktgleichung verlangt `0 ≤ ξ`, und das gilt
+> unter `jumpMeasure` nur fast sicher. `hawkesFrozenLevel` ist deshalb für die
+> σ-Algebra der Sprungzeiten **nicht** meßbar; es ist fast sicher gleich einer
+> Funktion, die es ist (`hawkesFrozenLevel_eq_hawkesJumpLevel`), und genau das
+> verbraucht der Turmschluß: `condExp_of_stronglyMeasurable` wird auf
+> `hawkesJumpLevel` angewandt, der eingefrorene Pegel tritt nur noch durch ein
+> `condExp_congr_ae` ein.
+
+**`hawkesJumpLevel_eq_intervalIntegral_sub_sum` — der Pegel in der Form, die
+`ex:hawkes` hinschreibt.**
+
+```
+hawkesJumpLevel h ν φ n t (x, τ_1, …, τ_n)
+  = (∫_0^t h (ν + ∑_{k ≤ n} φ (u − τ_k)) du) − ∑_{k < n} ξ_k
+```
+
+Sie trägt `0 ≤ ξ` und `0 ≤ t` als Voraussetzungen, die die **Definition** nicht
+hat, und das ist dieselbe Grenze noch einmal: die Partialsumme ist kein
+Funktional der Sprungzeiten. Deshalb ist die Zuwachsform die Definition und diese
+hier der Satz, und nicht umgekehrt.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH_jumpTimes` — dieselbe Aussage über der
+kleineren σ-Algebra.**
+
+```
+P[t < τ_{n+1} | σ(Kette, τ_1, …, τ_n)] = expMeasure 1 (Ioi (hawkesJumpLevel …))
+```
+
+Drei Eingaben: `condExp_condExp_of_le`, die Inklusion
+`comap_hawkesJumpTimeH_le_comap_prodMk_range`, und die Meßbarkeit
+`measurable_hawkesJumpLevel`. Gegenüber der Fassung über den Wartezeiten geht
+nichts verloren — die σ-Algebra ist kleiner und die rechte Seite nur umgeschrieben.
+
+**Die Meßbarkeit des Pegels verlangt einen Baustein, den Mathlib nicht hat, und
+der über den Hawkes-Fall hinausreicht: die kumulierte Rate an einem
+**beweglichen** Endpunkt.** `measurable_cumulativeRateF` liest sie bei einer
+festen Zeit; hier endet das Fenster bei `τ_n`, und das bewegt sich mit dem
+Parameter. Gebraucht ist also die **gemeinsame** Meßbarkeit in Parameter und
+Zeit, und sie gilt aus dem Grund, aus dem sie immer gilt:
+
+* `continuous_cumulativeRateF` — die kumulierte Rate ist in der Zeit stetig, auf
+  **ganz** `ℝ` und nicht nur auf der Halbachse: unterhalb des Ursprungs ist das
+  Fenster `Set.Ioc 0 t` leer, die kumulierte Rate dort also konstant `0`, und
+  `cumulativeRateF_max_zero` sagt, daß die Halbachse alles trägt.
+* `measurable_uncurry_cumulativeRateF` — meßbar im Parameter bei fester Zeit,
+  stetig in der Zeit bei festem Parameter, also eine Carathéodory-Funktion;
+  `MeasureTheory.measurable_uncurry_of_continuous_of_measurable` macht daraus
+  eine gemeinsam meßbare.
+* `measurable_cumulativeRateF_endpoint` — die Form, die gebraucht wird: für
+  meßbares `a` ist `g ↦ cumulativeRateF (Λ g) (p g) (a g)` meßbar.
+
+Die drei stehen ohne jeden Bezug auf die Hawkes-Konstruktion, über beliebigem
+Parameterraum und beliebigem Stichprobenraum, und verlangen an Voraussetzungen
+die lokale Integrierbarkeit der Rate und die gemeinsame Meßbarkeit von
+`(g, u) ↦ Λ g u`. Sie gehören damit zur Grundtheorie der kumulierten Rate und
+nicht zum Hawkes-Prozeß.
+
+### Die σ-Algebra, die der Martingalzuwachs tragen kann, und die Überlebensfunktion in der Gestalt des Manuskripts
+
+Die Bedingungsgröße des Einfrierens ist *(die ganze Kette, `τ_1, …, τ_n`)*. Die
+ganze Kette ist **mehr, als `E[D_n | ℋ_n] = 0` tragen kann**: der Zuwachs
+
+```
+D_n = (f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t} − ∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds
+```
+
+enthält `f (Y_{n+1})`, und über einer σ-Algebra, die `Y_{n+1}` schon kennt,
+bedingt der Sprungterm zu `(f (Y_{n+1}) − f (Y_n)) · P(τ_{n+1} ≤ t | ℋ_n)`,
+während der Kompensator `μ f (Y_n) − f (Y_n)` liefert. Beide stimmen erst
+überein, nachdem die Kette jenseits der `n`-ten Marke ausintegriert ist. `ℋ_n`
+muß also bei `Y_n` aufhören.
+
+**`hawkesLevelOf` — der Pegel ohne das Argument, das er nie liest.**
+`hawkesJumpLevel` trägt die Kette, weil die Einfrierung das Paar liefert; beide
+Summanden werden an `rangeShift n p.2` abgelesen, die Kette ist träge.
+`hawkesJumpLevel_eq_hawkesLevelOf` ist deshalb `rfl`.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH_block` — die bedingte
+Überlebensfunktion über `σ(Y_0, …, Y_n, τ_1, …, τ_n)`.**
+
+```
+P[t < τ_{n+1} | σ(Y_0, …, Y_n, τ_1, …, τ_n)] = expMeasure 1 (Ioi (hawkesLevelOf …))
+```
+
+Das ist `ℋ_n` des Manuskripts. Der Beweis ist ein Turmschluß **nach unten** und
+kostet nichts: die σ-Algebra wird kleiner, und die rechte Seite bleibt stehen,
+weil der Pegel die Kette nie gelesen hat. Die Inklusion
+`σ(Y_0, …, Y_n, τ_1, …, τ_n) ≤ σ(Kette, τ_1, …, τ_n)` gilt, weil die kleinere
+Abbildung über die größere faktorisiert.
+
+> **Warum nach unten und nicht nach oben, und das ist ein Befund.** Die
+> σ-Algebra, die man lieber hätte, ist die **gestoppte** σ-Algebra der Filtration
+> des Prozesses bei `τ_n`. Sie liegt **nicht** unter `σ(Kette, τ_1, …, τ_n)`, und
+> die Bruchstelle ist eine Nullmenge derselben Bauart wie im 25. Lauf des
+> 2026-09-12: das Ereignis `{τ_{n+1} ≤ τ_n}` liegt in der gestoppten σ-Algebra —
+> auf `{τ_n ≤ i}` werden beide Sprungzeiten aus dem Protokoll unterhalb `i`
+> abgelesen — und es ist **kein** Funktional von `(Kette, τ_1, …, τ_n)`, weil
+> `ξ_n = 0` und `ξ_n = 1` denselben Bedingungswert und verschiedene
+> Zugehörigkeit geben. In der anderen Richtung scheitert es schon ohne Nullmenge:
+> `σ(Kette, τ_1, …, τ_n)` kennt `Y_{n+1}`, die gestoppte σ-Algebra nicht. **Die
+> Gleichheit ist also in beiden Richtungen falsch**, und der Weg über die
+> gestoppte σ-Algebra verlangt die Augmentierung. Die σ-Algebra aus den
+> Koordinaten verlangt nichts.
+
+**Die beiden Zeugen, als benannte Punkte.** Beide sind ausgerechnet und in Lean
+nicht formalisiert; ein Negativbefund ohne Zeugen ist ein Versprechen, also
+stehen sie hier:
+
+* `measurableSet_stoppedAt_lt_jumpTimeH` — `{ω | τ_{n+1} ω ≤ τ_n ω}` liegt in der
+  gestoppten σ-Algebra von `hawkesFiltrationH` bei `ofReal τ_n`, und zwei
+  Stichprobenpunkte mit `ξ_n = 0` und `ξ_n = 1` haben denselben Wert von
+  `(Kette, τ_1, …, τ_n)` und verschiedene Zugehörigkeit. Ruht auf
+  `isStoppingTime_hawkesJumpTimeH`, der Bauart von `jumpRecord`, und einer
+  Vereinigung über rationale Zwischenzeiten samt der Randstelle `i` selbst.
+* `not_measurable_mark_stoppedAt_hawkesFiltrationH` — `Y_{n+1}` ist für die
+  gestoppte σ-Algebra bei `τ_n` nicht meßbar, weil `{Y_{n+1} ∈ B} ∩ {τ_n ≤ i}`
+  für kleines `i` nicht in `hawkesFiltrationH i` liegt: unterhalb `i` hat der
+  Pfad die Marke `Y_{n+1}` noch gar nicht angenommen. Ruht auf der Bauart von
+  `jumpState` und auf `stepPath`.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp` — dieselbe Aussage in der
+Gestalt, die `ex:hawkes` hinschreibt.** Auf `{τ_n ≤ t}`:
+
+```
+P[t < τ_{n+1} | σ(Y_0, …, Y_n, τ_1, …, τ_n)] = exp (−(Λ_t − Λ_{τ_n}))
+```
+
+Zwei Eingaben, und beide sind der Grund, aus dem die Aussage oben mit
+`expMeasure` und nicht mit `exp` steht:
+
+* `hawkesLevelOf_nonneg` — der Pegel ist auf `{τ_n ≤ t}` nichtnegativ, weil er
+  der Zuwachs der kumulierten Rate über `(τ_n, t]` ist und die beschränkte
+  nichtlineare Rate von unten durch `c > 0` beschränkt ist.
+* `toReal_expMeasure_Ioi_of_nonneg` — der exponentielle Schwanz, und er ist nur
+  für nichtnegatives Argument `exp (−x)`.
+
+Außerhalb von `{τ_n ≤ t}` ist die `expMeasure`-Gestalt weiterhin richtig — sie
+ist dort `1` —, während `exp (−Pegel)` größer als `1` und damit gar keine
+Wahrscheinlichkeit wäre. Das ist keine Feinheit des Beweises, sondern die
+Aussage: vor dem `n`-ten Sprung ist der `(n+1)`-ste sicher noch nicht gekommen.
 
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
