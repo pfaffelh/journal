@@ -27927,3 +27927,222 @@ unverändert seit dem vierten Lauf.
    `mulIndicator`, `add` ↔ `mul`). **Warum jetzt:** Teil D lebt von der
    Verläßlichkeit seiner Negativbefunde, und dies ist eine benannte Weise, auf
    die sie heute falsch ausfallen können.
+
+### 2026-09-13, zwölfter Lauf des Tages — Teil E beginnt, und die Vorgabe, auf der er aufsetzen sollte, trägt nicht: `restart` ist ein `sorry`. Gebaut ist deshalb der Teil des Meilensteins, der **unter** `restart` liegt, und er ist ganz — `prop:uniqfromprop` steht, ohne Markov, ohne Shift, ohne Erzeuger
+
+**Bearbeitet:** Teil E, Meilenstein 6, nach der Umstellung des Nutzers vom
+2026-09-13 abends („E zuerst. C.5a später, und dann über die Zeitverwandlung").
+Teil C.5a ist nicht angefaßt worden; die elf offenen Aussagen der Gruppe A
+stehen unverändert.
+
+**Zwölf Deklarationen** in zwei neuen Abschnitten `Propagation` und `Cylinders`
+am Ende von `TauCeti/MartingaleProblems/Suggested.lean`; 298 Zeilen, kein neuer
+Import. Die ganze Datei durch `scripts/check_suggested.py` mit `rc 0`,
+`0 Fehler`, `9 sorry` — die Zahl der `sorry` ist unverändert **neun**, und keine
+der zwölf trägt eines. Alle zwölf über `scripts/check_axioms.py` geprüft, jede
+auf `propext`, `Classical.choice`, `Quot.sound`; kein `sorryAx`.
+(`WeakConvergence/Suggested.lean` meldet weiter seine zwei Fehler; das ist die
+eine bewußt gegen `master` geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 6, in einer
+neuen Gruppe „The Markov free half, and it is the bottom of the milestone" vor
+den fünf schon dastehenden.
+
+#### Der Befund, und er berichtigt die Vorgabe des Auftrags
+
+Der Auftrag sagt zu Teil E: „sein Unterbau — Meilenstein 5, `restart` — bewiesen
+dasteht". **Das ist nicht so.** `restart` und `restart_canonical` sind zwei der
+neun `sorry` der Datei; von Meilenstein 5 steht die *Aussage*, nicht der Beweis.
+Wer Meilenstein 6 von oben angeht — bei `isMarkov_of_unique_onedim`, wie die
+Liste im `README.md` ihn aufzählt —, baut also auf einem `sorry` auf und merkt es
+erst am Ende.
+
+Das ist kein Hindernis, sondern eine Wegweisung, und sie fällt mit der
+Gliederung des Manuskripts zusammen: `ssec:absuniq` trennt ausdrücklich, was
+Markovsch ist und was nicht, und `rem:uniqnotmarkov` schreibt die Trennung als
+Tabelle aus. Die erste Zeile dieser Tabelle — Eindeutigkeit aus
+`eq:propagation`, **nicht** Markovsch — braucht `restart` an keiner Stelle.
+Genau sie ist in diesem Lauf gebaut worden, und sie ist ganz: von
+`PropagatesAgreement` bis `P = Q`, ohne eine offene Stelle.
+
+**Was damit steht und was nicht.** Es steht der ganze Weg von der Bedingung zur
+Eindeutigkeit. Es steht **nicht** die Bedingung selbst aus den eindimensionalen
+Verteilungen — das ist `lem:propagation`, und das ist die erste Aussage des
+Meilensteins, die Markovsch ist und die `restart` wirklich braucht.
+
+#### Die Aussagen
+
+> `PropagatesAgreement 𝓕° π N` — `def:propagation`: für `P, Q ∈ N`, `s ≤ t` und
+> jedes beschränkte nichtnegative `𝓕° s`-meßbare Gewicht `Z` folgt aus der
+> Gleichheit der `Z`-gewichteten Verteilung von `π s` die der `Z`-gewichteten
+> Verteilung von `π t`.
+>
+> `eq_of_propagatesAgreement` — `prop:uniqfromprop`: zwei Elemente von `N` mit
+> derselben Verteilung von `π ⊥` sind gleich.
+
+Dazwischen `weightedLaw` mit `weightedLaw_one` und
+`weightedLaw_indicator_apply`, die Induktion
+`measure_cylinder_inter_eq_of_propagatesAgreement` mit ihrem Korollar
+`measure_cylinder_eq_of_propagatesAgreement`, die drei Zylindersätze
+`pathCylinders`, `isPiSystem_pathCylinders`, `generateFrom_pathCylinders`, die
+Sortierung `measure_biInter_eq_of_propagatesAgreement` und die
+`Subsingleton`-Fassung `subsingleton_of_propagatesAgreement`.
+
+#### Drei Entscheidungen, jede gegen die naheliegende Fassung
+
+**Erstens: die Bedingung ist über Maße gestellt und nicht über Integrale.** Das
+Manuskript schreibt beide Seiten als `E^P[Z h(π_s)] = E^Q[Z h(π_s)]` für alle
+beschränkten meßbaren `h`. Für endliche Maße ist das dieselbe Aussage wie die
+Gleichheit der Bildmaße, und die Maßfassung ist die wohlfeilere: die Hypothese
+der Induktion wird an **Indikatoren** geprüft und die Konklusion an
+**Indikatoren** benutzt, also fällt die Approximation einer beschränkten
+meßbaren Funktion durch einfache **ganz weg**. Sie kommt in diesem Block an
+keiner einzigen Stelle vor. `weightedLaw_indicator_apply` ist die eine Richtung
+der Übersetzung, `MeasureTheory.integral_map` die andere.
+
+**Zweitens: das oberste Fenster der Induktion ist ein eigenes Argument.** Der
+Satz, den die Induktion trägt, ist nicht „die Zylinder über `t 0 … t (n-1)`
+stimmen überein", sondern
+
+> `P ((⋂ k ∈ range n, π (t k) ⁻¹' B k) ∩ π (t n) ⁻¹' C) = Q (…)`,
+
+mit `C` frei. Das ist es, was die Induktionsvoraussetzung benutzbar macht: der
+Schritt braucht sie mit `B n` durch `B n ∩ D` ersetzt — das Manuskript sagt
+„`f_n` durch `f_n h` ersetzen" —, und mit dem obersten Fenster als Argument ist
+das ein Aufruf statt einer Umschreibung mit `Function.update`. Die naive Fassung
+über `range n` allein zwingt zu dieser Umschreibung, und sie ist der einzige
+Grund, aus dem der Beweis lang aussieht.
+
+**Drittens: die Zylinder sind über `Finset ι` indiziert und nicht über Ketten.**
+Über Ketten wäre die π-System-Eigenschaft ein Verschmelzen zweier sortierter
+Folgen; über `Finset` ist sie eine Vereinigung von Indexmengen und drei Zeilen.
+Dafür ist die Sortierung an **einer** Stelle nötig,
+`measure_biInter_eq_of_propagatesAgreement`, und dort ist sie
+`Finset.orderIsoOfFin`. **Das ist zugleich die einzige Stelle, an der (T2a)
+verbraucht wird** — die Induktion selbst läuft über einem bloßen Preorder mit
+`OrderBot`, und das ist genau die Annotation, die das Manuskript ihr gibt:
+`prop:uniqfromprop` trägt (T2a), aber erst in Schritt 2 („unter (T2a) ist jede
+endliche Teilmenge von `T` eine Kette").
+
+#### Zwei Abschwächungen gegenüber der Roadmap, beide belegt
+
+* **Die kanonische Filtration wird nicht verlangt.** Alle zwölf Aussagen nehmen
+  die Filtration nur über `∀ u ≤ v, Measurable[𝓕° v] (π u)`. Der Beweis benutzt
+  von ihr nichts weiter: der Zylinder über `t 0 … t n` ist für die Vergangenheit
+  bei `t n` meßbar, und das ist alles. Die Aussagen gelten damit für **jede**
+  Filtration, an die der Koordinatenprozeß adaptiert ist — was
+  `rem:filtirrelevant` des Manuskripts für die Lösungsmenge sagt, hier für die
+  Eindeutigkeit.
+* **`E` trägt nichts als `[MeasurableSpace E]`,** keine Topologie und keine
+  polnische Struktur. Die Zerlegung `lem:disint` braucht (E1); dieser Weg nicht,
+  und er ist auch nicht derselbe — er geht über die Ausbreitung und nicht über
+  bedingte Verteilungen.
+
+Die Wahrscheinlichkeitsmaßvoraussetzung sitzt an der kleinstmöglichen Stelle:
+`measure_cylinder_inter_eq_of_propagatesAgreement` verlangt sie **nicht**, weil
+sie in ihrer Induktion nicht vorkommt. Erst das Korollar über `range n` braucht
+`P univ = Q univ`, also den Fall `n = 0`.
+
+#### Die eine Stelle, an der der Beweis Arbeit war
+
+Die Fin-Gleichheit in der Sortierung. `t j = e ⟨min j (k-1), _⟩`, und für
+`j < k` ist `min j (k-1) = j`; wer das als `rw` auf den `min`-Term ansetzt,
+bekommt „motive is not type correct", weil der Beweisterm `min j (k-1) < k` von
+der umgeschriebenen Zahl abhängt. Zu nehmen ist die Gleichheit **der
+Fin-Elemente** in einem Stück, über `Fin.ext`, und dann ist es ein `rw`. Das ist
+dieselbe Regel wie der Befund des achtzehnten Laufs vom 2026-09-10 („nicht am
+Ziel rewriten, sondern das Ziel treffen"), einmal mehr und an einer abhängigen
+Position.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf **frisch geholt**:
+`64401b008cded3daa998c178fe966fd4b0f89c3d` (der elfte Lauf stand auf
+`8d52ea9a145a9255c4d301c0d1a1b8bf6e59305a`).
+
+Die in diesem Lauf benutzten Mathlib-Namen, alle am Quelltext von v4.33.1 belegt,
+gegen den sie auch übersetzt sind, und keiner `deprecated`:
+
+* `MeasureTheory.withDensity_one` — `MeasureTheory/Measure/WithDensity.lean:175`,
+  auf master Datei und Zeile unverändert.
+* `MeasureTheory.withDensity_indicator_one` — ebenda `:198`, master unverändert.
+* `MeasureTheory.Measure.map_apply` — `MeasureTheory/Measure/Map.lean:161`,
+  master `:170`. Name und Datei unverändert.
+* `MeasureTheory.Measure.restrict_apply` —
+  `MeasureTheory/Measure/Restrict.lean:73`, master `:75`.
+* `MeasureTheory.ext_of_generate_finite` —
+  `MeasureTheory/Measure/Typeclasses/Finite.lean:448`, master `:455`.
+* `Finset.measurableSet_biInter` — `MeasureTheory/MeasurableSpace/Defs.lean:149`,
+  master unverändert.
+* `MeasurableSpace.generateFrom_le` und
+  `MeasurableSpace.measurableSet_generateFrom` —
+  `MeasureTheory/MeasurableSpace/Defs.lean:350` und `:336` auf master.
+* `Finset.orderIsoOfFin` — `Mathlib/Data/Finset/Sort.lean:186`, master
+  unverändert. Es gibt einen Namensvetter in
+  `Mathlib/Order/Hom/PowersetCard.lean:62`; gemeint ist der aus `Sort.lean`.
+* `Finset.set_biInter_insert` — `Mathlib/Order/CompleteLattice/Finset.lean:209`,
+  master unverändert.
+* `MeasureTheory.StronglyMeasurable.indicator` —
+  `MeasureTheory/Function/StronglyMeasurable/Basic.lean:905`, master `:910`.
+
+**Und ein Negativbefund, der ein Fund ist: `Finset.range_succ` gibt es nicht.**
+Weder auf v4.33.1 noch auf master. `Finset.range (n+1) = insert n (Finset.range n)`
+heißt `Finset.range_add_one` (`Mathlib/Data/Finset/Range.lean:79`, auf beiden
+Ständen). Was eine Suche nach `range_succ` findet, sind `Multiset.range_succ`,
+`Nat.range_succ` und `Finset.range_succ_eq_Iic` — drei andere Aussagen. Das ist
+die Sorte Fehlgriff, gegen die Regel 1 des Auftrags geschrieben ist, und sie ist
+in diesem Lauf zweimal aufgetreten, ehe der Quelltext sie berichtigt hat.
+
+**Zweite Bestätigung der `to_additive`-Lücke des Vorlaufs.** `Set.indicator_nonneg`
+steht auf beiden Ständen unter **keinem** `theorem`-Schlüsselwort: sie ist die
+additive Ableitung von `Set.one_le_mulIndicator`
+(`Mathlib/Algebra/Order/Group/Indicator.lean:96`, `@[to_additive indicator_nonneg]`).
+Eine Suche nach `theorem indicator_nonneg` meldet sie als abwesend. Der elfte Lauf
+hat dieselbe Ausprägung an `Set.indicator_of_notMem` gefunden; das sind jetzt zwei
+Fälle in zwei aufeinanderfolgenden Läufen, und der Vorschlag 2 des Vorlaufs — die
+Prüfung von `scripts/check_citations.py` auf die multiplikative Schwester — ist
+damit belegt und nicht mehr bloß vermutet.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**`lem:propagation`** — die Ausbreitung aus den eindimensionalen Verteilungen.
+Sie steht als benannter Punkt neu im `README.md`, ist aber nicht bewiesen, und
+sie ist die erste Aussage des Meilensteins, die `restart` braucht.
+
+**`thm:absuniq`(a), die Markoveigenschaft.** Unverändert ohne Deklaration.
+
+**Teil C.5a.** Geparkt, wie angeordnet; die elf offenen Aussagen sind unverändert
+elf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`restart_canonical` beweisen — Meilenstein 5.** Das ist jetzt die
+   Bruchstelle des ganzen Teils E, und sie ist benannt. **Worauf sie ruht:**
+   `IsShiftSystem.increment` gibt für `Y' ∈ 𝓧₀ r` ein `Y ∈ 𝓧₀ 0` und ein
+   `𝓕₀ r`-meßbares `κ` mit `Y' t (θ r f) = Y (r+t) f - Y r f + κ f`; zu zeigen
+   ist die Martingaleigenschaft von `Y'` unter `(Z • P).map (θ r)`, also eine
+   bedingte Erwartung unter einem Bildmaß mit Dichte. **Warum jetzt:** ohne sie
+   ist `lem:propagation` nicht beweisbar, und ohne `lem:propagation` bleibt der
+   Block dieses Laufs eine Bedingung ohne Erfüllungsnachweis. **Prüfstein:** die
+   Normalisierung `Z / E[Z]` und der entartete Fall `E[Z] = 0`, den das
+   Manuskript eigens abfängt — der Beweis ist erst richtig, wenn er ihn nennt.
+   **Und die Integrierbarkeitsvorbehalte** von `lem:mixture` und
+   `lem:restartmemory`, die `thm:absuniq` ausdrücklich mitführt, gehören dabei
+   als Hypothesen hingeschrieben und nicht stillschweigend angenommen.
+
+1. **`propagatesAgreement_of_unique_onedim` — `lem:propagation`.** Unmittelbar
+   nach 0. **Worauf sie ruht:** `restart_canonical`, `Shift.eval_comp` für
+   `π 0 ∘ θ s = π s`, und der Block dieses Laufs für den Anschluß. **Warum sie
+   billig ist, sobald 0 steht:** die Rechnung des Manuskripts ist vier Zeilen,
+   und die Gestalt von `weightedLaw` ist eigens so gewählt, daß die
+   Anfangsverteilung des neugestarteten Maßes `weightedLaw π P Z s` **auf den
+   Buchstaben** ist. Danach ist `thm:absuniq`(b) ein Aufruf von
+   `eq_of_propagatesAgreement`.
+
+2. **Das Akzeptanzbeispiel des Meilensteins: die Zweizustandskette.**
+   `E = {0,1}`, `lam ≡ 1`, `mu x = dirac (1-x)`. **Worauf es ruht:**
+   `exists_unique_of_bounded` aus Meilenstein 4 liefert die Eindeutigkeit der
+   eindimensionalen Verteilungen für jede Anfangsverteilung, also genau die
+   Hypothese von 1. **Warum es zählt:** es ist die einzige Probe darauf, daß die
+   Schnittstellen zwischen Meilenstein 4 und Meilenstein 6 zusammenpassen, und
+   sie ist bisher nirgends gelaufen.
