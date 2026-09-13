@@ -168,10 +168,10 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Zwölf Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Vierzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle zwölf beim Beweisen aufgefallen, alle zwölf gegen `upstream/master` geprüft,
-und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
+Alle vierzehn beim Beweisen aufgefallen, alle vierzehn gegen `upstream/master`
+geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
@@ -395,6 +395,54 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `continuous_cumulativeRateF` und `measurable_uncurry_cumulativeRateF` als den
   beiden Hälften; unsere Fassung ist an `cumulativeRateF` geschrieben und für
   Mathlib auf `intervalIntegral` umzustellen.
+
+* **Das Vorschieben des *ersten* Faktors eines `compProd`.** Der dreizehnte, und
+  der einzige der vierzehn, der nicht fehlt, sondern bloß keinen Namen hat.
+  Mathlib hat den zweiten Faktor als benannten Satz —
+  `Measure.compProd_map (hf : Measurable f) : μ ⊗ₘ (κ.map f) = (μ ⊗ₘ κ).map (Prod.map id f)`
+  (`Probability/Kernel/Composition/Lemmas.lean:120`, v4.33.1 wie `master`
+  `55a449c5f28`). Der erste fehlt:
+
+  > `(μ.map g) ⊗ₘ κ = (μ ⊗ₘ (κ.comap g hg)).map (Prod.map g id)`.
+
+  Er ist aber **bewiesen vorhanden**, als Zwischenschritt einer `calc`-Kette in
+  `HasCondDistrib.comp_right` (`Probability/HasCondDistrib.lean:98–102`, in
+  v4.33.1 und auf `master` wortgleich). Wir haben ihn am 2026-09-13 als
+  `map_compProd_comap` herausgezogen; der Beweis ist derselbe wie dort, vier
+  Umschreibungen und ein `rfl`. Der PR wäre: die Zeilen 98–102 durch den Aufruf
+  eines neuen Satzes neben `Measure.compProd_map` ersetzen. Das ist der billigste
+  Beitrag, den dieser Zweig bisher gefunden hat.
+
+  *Woran es bei uns hing:* `comp_chainKernel_map_split_range`, die
+  Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe. Mathlib rechnet
+  über `Finset.Iic n`, unsere bedingende σ-Algebra ist über `Finset.range (n+1)`
+  geschrieben, und das Umindizieren schiebt genau den ersten Faktor vor.
+
+* **Die bedingte Erwartung aus einer Desintegration, ohne standard-borelschen
+  Zielraum.** Der vierzehnte. `ProbabilityTheory.HasCondDistrib Y X κ P` ist
+  definiert als `P.map (fun ω ↦ (X ω, Y ω)) = P.map X ⊗ₘ κ`
+  (`Probability/HasCondDistrib.lean:41`) und verlangt an die Räume nichts als
+  ihre meßbare Struktur. Was daraus folgen sollte, folgt dort nicht:
+
+  > `P[f ∘ Y | MeasurableSpace.comap X inferInstance] =ᵐ[P] fun ω ↦ ∫ y, f y ∂(κ (X ω))`
+  > für meßbares, beschränktes `f`.
+
+  Die Datei enthält in v4.33.1 wie auf `master` **keinen einzigen Treffer** für
+  `condExp` (geprüft 2026-09-13). Den Schluß gibt es nur über `condDistrib`,
+  `ProbabilityTheory.condExp_ae_eq_integral_condDistrib`
+  (`Probability/Kernel/CondDistrib.lean:381`) — und `condDistrib` existiert nur
+  über einem `[StandardBorelSpace]`-Zielraum, weil es die Desintegration erst
+  **konstruiert**. Liegt sie schon vor, wird davon nichts gebraucht: der Beweis
+  ist `ae_eq_condExp_of_forall_setIntegral_eq`, `setIntegral_map` und
+  `Measure.setIntegral_compProd` an `A ×ˢ univ`.
+
+  *Woran es bei uns hing:* `condExp_chain_mark_range`, der Kettenfaktor des
+  Sprungterms von `thm:pathjumpMP`. Über unserem Zustandsraum steht nichts als
+  `[MeasurableSpace E]`, und der Satz geht trotzdem — was zeigt, daß die
+  Standardborel-Voraussetzung an dieser Stelle eine Voraussetzung von
+  `condDistrib` ist und keine der Aussage. Wir haben ihn am 2026-09-13 für
+  beschränktes `f : E → ℝ` bewiesen
+  (`MartingaleProblems/Suggested.lean`, `section ChainMarkov`).
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

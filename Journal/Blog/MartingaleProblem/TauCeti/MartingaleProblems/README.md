@@ -3911,9 +3911,16 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    `jumpMeasure_map_chain_jumpTimeH`, letztere getragen von der Trägheit des
    Kettenarguments in `jumpTimeFE (hawkesSelfRateH h ν φ)`
    (`jumpTimeFE_hawkesSelfRateH_snd_congr`,
-   `setOf_le_jumpTimeFE_hawkesSelfRateH_eq`). Offen ist der **Kettenfaktor**,
+   `setOf_le_jumpTimeFE_hawkesSelfRateH_eq`). Der **Kettenfaktor**,
    `E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)`, also die Markoveigenschaft der
-   eingebetteten Kette an der `n`-ten Stufe.
+   eingebetteten Kette an der `n`-ten Stufe, steht seit dem sechsten Lauf des
+   2026-09-13 als `condExp_chain_mark_range`, getragen von
+   `comp_chainKernel_map_split_range`; siehe den Abschnitt „Die Markoveigenschaft
+   der eingebetteten Kette an der `n`-ten Stufe, und daß sie keine Induktion ist".
+   Alle drei Eingaben sind damit beisammen, und alle drei stehen auf **demselben
+   Raum**: `condExp_chain_mark_jumpMeasure` trägt den Kettenfaktor über
+   `condExp_comap_fst_prod` von `ℕ → E` nach `(ℕ → E) × (ℕ → ℝ)`. Offen ist allein
+   der **Zusammenbau**.
 4. `condExp_compensator_term` — `E[∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds | ℋ_n]` als
    **dasselbe** Integral. Hängt an 1 und an Fubini.
 5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. Hängt an 3 und 4.
@@ -4077,6 +4084,15 @@ Lauf). Was fehlt, ist allein der Kettenfaktor, also die genannte
 Markoveigenschaft an der `n`-ten Stufe. Einzelheiten im Abschnitt „Die gemeinsame
 Meßbarkeit der Selbstrate, die bedingte Verteilungsfunktion, und die Trägheit der
 Kette".
+
+*Stand 2026-09-13, sechster Lauf des Tages: unverändert **vierzehn**.* Auch
+dieser Lauf hat keine der vierzehn bewiesen, sondern die letzte fehlende Eingabe
+von Punkt 3 der Gruppe A gewonnen: den Kettenfaktor, `condExp_chain_mark_range`.
+Punkt 3 hat damit **drei von drei** Eingaben, alle drei auf dem Raum, auf dem der
+Sprungterm lebt (`condExp_chain_mark_jumpMeasure`, über die allgemeine Aussage
+`condExp_comap_fst_prod`), und wartet allein auf den Zusammenbau. Einzelheiten im
+Abschnitt „Die Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe,
+und daß sie keine Induktion ist".
 
 ### Die Filtration eines Treppenpfadprozesses: die Punktfiltration, und was der Pfad von ihr zurückgibt
 
@@ -5516,6 +5532,137 @@ und als Einschrittshift (`chainKernel_map_shift`, `comp_chainKernel_map_shift`);
 die Induktion dazwischen ist nicht geführt. Sie erwähnt die Wartezeiten
 überhaupt nicht — `jumpMeasure` ist ein Produkt, und die Kette ist der eine
 Faktor.
+
+### Die Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe, und daß sie keine Induktion ist
+
+*(2026-09-13, sechster Lauf des Tages; er berichtigt die im Abschnitt davor
+angesagte Beweisführung.)*
+
+Der Kettenfaktor des Sprungterms — `E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)` —
+steht, und zwar über der σ-Algebra, auf die `ℋ_n` sich einschränkt:
+`condExp_chain_mark_range`. Er verlangt an `E` nichts als die meßbare Struktur, an
+`f` nichts als Meßbarkeit und eine Schranke, und **die Wartezeiten kommen in
+seinem Beweis nicht vor.**
+
+**Der angesagte Weg war der falsche, und das ist der Fund des Laufs.** Der
+Abschnitt oben nennt „die Induktion über den Einschrittshift
+`chainKernel_map_shift`, der die Zeithomogenität schon trägt". Die Induktion
+trägt nicht: sie verliert bei jedem Schritt die nullte Koordinate, die in der
+Zielaussage stehen bleiben muß, und sie müßte die Anfangsverteilung mitführen.
+Gebraucht wird sie auch nicht.
+
+`chainKernel` ist Mathlibs Ionescu--Tulcea-Kern in Verkleidung
+(`Kernel.traj (chainFam mu) 0`, gecomappt längs `fun z _ ↦ z`), und der
+Einschrittfortsatz der Trajektorie steht dort schon **an jeder Stufe**:
+
+> `Kernel.partialTraj_compProd_eq_map_traj`
+> (`Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean:670` in v4.33.1, `:669` auf
+> `master` `55a449c5f28`):
+> `(partialTraj κ a b x₀) ⊗ₘ (κ b) = (traj κ a x₀).map (fun x ↦ (frestrictLe b x, x (b + 1)))`
+> für `a ≤ b`.
+
+Das **ist** die Markoveigenschaft an der `b`-ten Stufe, als Desintegration der
+gemeinsamen Verteilung von (Pfad bis `b`, Marke bei `b+1`). Alles Übrige ist
+Buchhaltung, und sie zerfällt in drei Schritte, je einer je Deklaration:
+
+1. **Die Anfangsverteilung vorbeiziehen.** `comp_chainKernel_eq_comp_traj` schiebt
+   den `comap` von `chainKernel` über `comap_comp_measure` auf `nu`;
+   `comp_chainKernel_map_frestrictLe_compProd` ist dann der obige Satz mit `nu`
+   davor, über `Measure.compProd_eq_comp_prod` und `Measure.comp_assoc`.
+
+   *Nicht zitiert, sondern nachgebaut:*
+   `Kernel.map_frestrictLe_trajMeasure_compProd_eq_map_trajMeasure` (`:777` in
+   v4.33.1, `:773` auf master) ist
+   genau diese Aussage für `Kernel.trajMeasure`. Sie ist **nicht** anwendbar,
+   ohne vorher `chainKernel mu ∘ₘ nu = trajMeasure nu (chainFam mu)` zu zeigen:
+   `trajMeasure` legt die Hebung der Anfangsverteilung auf `Finset.Iic 0` über
+   `(MeasurableEquiv.piUnique _).symm` fest, `chainKernel` über
+   `fun z _ ↦ z`. Ob die beiden zusammenfallen, ist in diesem Lauf **nicht**
+   geprüft worden; der Nachbau des Beweises — sechs Zeilen, dieselben
+   Umschreibungen — war billiger als die Prüfung, und er bindet uns nicht an
+   `trajMeasure`.
+
+2. **Umindizieren.** Mathlib rechnet über `(i : Finset.Iic n) → E`, `ℋ_n` ist
+   über `(j : Finset.range (n+1)) → E` geschrieben. Die beiden Indexmengen sind
+   dieselbe Menge natürlicher Zahlen und **nicht** derselbe Typ; `iicToRange` ist
+   die Umschreibung, `iicToRange_frestrictLe` sagt, daß sie die Einschränkung in
+   die Projektion überführt, und `markKernel mu n` ist `chainFam mu n` über dem
+   neuen Index (`chainFam_eq_comap_markKernel`, `rfl`).
+
+   Der Baustein, der dabei gefehlt hat, ist allgemein und steht jetzt als
+   `map_compProd_comap`: **das Vorschieben des ersten Faktors eines `compProd`**,
+   `(μ.map g) ⊗ₘ κ = (μ ⊗ₘ (κ.comap g hg)).map (Prod.map g id)`. Mathlib hat das
+   Gegenstück für den **zweiten** Faktor als benannten Satz
+   (`Measure.compProd_map`, `Mathlib/Probability/Kernel/Composition/Lemmas.lean:120`,
+   in v4.33.1 wie auf `master` `55a449c5f28`).
+
+   **Und hier ist der Negativbefund zu schärfen, statt ihn zu behaupten.** Für den
+   ersten Faktor gibt es **keine benannte Deklaration**, aber die Aussage steht
+   bewiesen da — als Zwischenschritt einer `calc`-Kette in
+   `HasCondDistrib.comp_right`
+   (`Mathlib/Probability/HasCondDistrib.lean:98–102`, v4.33.1 **und** `master`),
+   mit genau denselben vier Umschreibungen: `Measure.map_apply`, zweimal
+   `Measure.compProd_apply`, `lintegral_map` an
+   `Kernel.measurable_kernel_prodMk_left`, und `rfl`. Die Lücke ist also nicht
+   „Mathlib kann das nicht", sondern „Mathlib hat es nicht herausgezogen"; das ist
+   die dreizehnte Lücke für `TODO.md` Punkt 8 und der billigste Beitrag nach oben, den
+   dieser Zweig bisher gefunden hat — eine Deklaration, die einen vorhandenen
+   Beweis bloß benennt.
+
+   Damit ist `comp_chainKernel_map_split_range` die Markoveigenschaft in der
+   Gestalt, die `ℋ_n` liest. **Und sie hat in Mathlib einen Namen**, den wir bei
+   der Suche zuerst nicht hatten: `ProbabilityTheory.HasCondDistrib Y X κ P` ist
+   definiert als `P.map (fun ω ↦ (X ω, Y ω)) = P.map X ⊗ₘ κ`
+   (`Mathlib/Probability/HasCondDistrib.lean:41`), also ist
+   `comp_chainKernel_map_split_range` wörtlich
+   `HasCondDistrib (fun x ↦ x (n+1)) (fun x ↦ fun j : Finset.range (n+1) ↦ x j)
+   (markKernel mu n) (chainKernel mu ∘ₘ nu)`. Die Umformulierung ist nachzutragen,
+   sobald jemand sie braucht; sie kostet nichts und gibt der Aussage Mathlibs
+   Vokabel.
+
+3. **Als bedingte Erwartung lesen.** `condExp_chain_mark_range` ist die
+   Desintegration, gelesen durch `ae_eq_condExp_of_forall_setIntegral_eq`: das
+   Mengenintegral über `proj ⁻¹' A` geht über `setIntegral_map` auf das Bildmaß,
+   und `Measure.setIntegral_compProd` an `A ×ˢ univ` zerlegt es in
+   `∫_A ∫ f dμ(v_n) dρ`. Auf der anderen Seite steht dasselbe Integral, weil
+   `markKernel mu n (proj x) = mu (x n)` definitionsgleich ist.
+
+   **Dieser Schritt ist die vierzehnte Lücke**, und er ist allgemeiner als sein Anlaß:
+   von `P.map (X, Y) = P.map X ⊗ₘ κ` auf
+   `P[f ∘ Y | σ(X)] = fun ω ↦ ∫ f dκ (X ω)` zu schließen, verlangt nichts als
+   Meßbarkeit und Integrierbarkeit. Mathlib hat den Schluß nur über
+   `condDistrib` (`ProbabilityTheory.condExp_ae_eq_integral_condDistrib`,
+   `Mathlib/Probability/Kernel/CondDistrib.lean:381`), und `condDistrib` gibt es nur über
+   einem **standard-borelschen** Zielraum; `HasCondDistrib` hat ihn gar nicht —
+   die Datei enthält in v4.33.1 wie auf `master` keinen einzigen Treffer für
+   `condExp`, geprüft am 2026-09-13. Über unserem `E` steht nichts als
+   `[MeasurableSpace E]`, und der Schluß geht trotzdem; das ist der Grund, aus dem
+   `condExp_chain_mark_range` seinen Beweis selbst führt und nicht bloß zitiert.
+
+**Was damit für Punkt 3 der Gruppe A dasteht:** alle drei Eingaben. Der
+Zeitfaktor (`condExp_le_jumpTimeFE_hawkesSelfRateH_block`), die Trennbarkeit
+(`jumpMeasure_map_chain_jumpTimeH`) und der Kettenfaktor
+(`condExp_chain_mark_range`). Was fehlt, ist der Zusammenbau — und ehe er möglich
+ist, stehen die drei nicht auf demselben Raum: der Kettenfaktor steht unter
+`chainKernel mu ∘ₘ nu` auf `ℕ → E`, die beiden anderen unter `jumpMeasure mu nu`
+auf `(ℕ → E) × (ℕ → ℝ)`. Beide, die Funktion und die σ-Algebra, gehen durch
+`Prod.fst`; der Übergang ist
+
+> **`condExp_comap_fst_prod`** — ist `Q` ein Wahrscheinlichkeitsmaß, `V` meßbar
+> und `g` integrierbar, so ist
+> `(P.prod Q)[g ∘ Prod.fst | comap (V ∘ Prod.fst)] = (P[g | comap V]) ∘ Prod.fst`
+> fast sicher.
+
+Sie ist allgemein, hat mit Hawkes nichts zu tun — und sie steht seit demselben
+Lauf, mit `setIntegral_comp_fst_prod` und `integrable_comp_fst_prod` als den
+beiden Eingaben: das Mengenintegral über einem Zylinder
+`(V ⁻¹' A) ×ˢ univ` ist nach `Measure.prod_restrict` und `Measure.map_fst_prod`
+das Mengenintegral über der Grundfläche, und das ist der ganze Inhalt. `Q` kommt
+in der Aussage nur über `Q Set.univ = 1` vor.
+
+`condExp_chain_mark_jumpMeasure` ist die Zusammensetzung: der Kettenfaktor auf dem
+Raum, auf dem der Sprungterm lebt. Damit stehen alle drei Eingaben von Punkt 3 der
+Gruppe A auf demselben Raum, und was fehlt, ist allein ihr Zusammenbau.
 
 ## Milestone 5: mixtures, shifts and the restart lemma
 

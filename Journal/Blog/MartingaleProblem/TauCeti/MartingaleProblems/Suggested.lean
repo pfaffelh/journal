@@ -23945,3 +23945,308 @@ theorem jumpMeasure_map_chain_jumpTimeH (hhm : Measurable h) (hφm : Measurable 
   exact hawkesJumpTimeH_sample_congr h ν φ ω.2 ω (() : Unit) ((i : ℕ) + 1)
 
 end BoundedHawkesChainInert
+
+/-! ### The Markov property of the embedded chain at the `n`-th stage
+
+`comp_chainKernel_map_split` splits the chain at its **zeroth** step and `comp_chainKernel_map_shift`
+carries one step of `mu` into the initial law; between the two the induction was never run, and the
+chain factor of the jump term -- `E[f (Y_{n+1}) | σ (Y_0, …, Y_n)] = μ f (Y_n)` -- asks exactly for
+the stage `n` statement.
+
+It does not need the induction.  `chainKernel` is Mathlib's Ionescu--Tulcea kernel in disguise, and
+`Kernel.partialTraj_compProd_eq_map_traj` is the one step extension of the trajectory kernel already
+proved there: the joint law of the path up to `n` and the value at `n + 1` is the law of the path up
+to `n` composed with the kernel that reads the last coordinate.  Everything below is bookkeeping
+around that single input -- first moving it past the initial law `nu`, then reindexing the tuple from
+`Finset.Iic n` to `Finset.range (n + 1)`, which is the index set `ℋ_n` is written over, and finally
+reading the disintegration as a conditional expectation.
+
+The waiting times do not appear anywhere, and neither does any hypothesis on `E` beyond its
+measurable structure: `jumpMeasure` is a product and the chain is one of its two factors. -/
+
+section ChainMarkov
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **Pushing the first factor of a `compProd` forward.**  The counterpart of `Measure.compProd_map`,
+which does the same for the second factor; `Kernel.comap` on the right is what keeps the kernel
+defined on the image. -/
+theorem map_compProd_comap {X Y Z : Type*} [MeasurableSpace X] [MeasurableSpace Y]
+    [MeasurableSpace Z] (μ : Measure X) [SFinite μ] {g : X → Y} (hg : Measurable g)
+    (κ : Kernel Y Z) [IsSFiniteKernel κ] :
+    (μ.map g) ⊗ₘ κ = (μ ⊗ₘ (κ.comap g hg)).map (Prod.map g id) := by
+  ext s hs
+  rw [Measure.map_apply (hg.prodMap measurable_id) hs, Measure.compProd_apply hs,
+    Measure.compProd_apply ((hg.prodMap measurable_id) hs),
+    lintegral_map (Kernel.measurable_kernel_prodMk_left hs) hg]
+  refine lintegral_congr fun x ↦ ?_
+  rw [Kernel.comap_apply]
+  rfl
+
+/-- **The law of the chain is a trajectory measure.**  `chainKernel` is `Kernel.traj` comapped along
+the map that turns a state into the constant family on `Finset.Iic 0`; composing with `nu` moves that
+comap onto the initial law, and the Ionescu--Tulcea lemmas apply verbatim from there. -/
+theorem comp_chainKernel_eq_comp_traj (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    chainKernel mu ∘ₘ nu
+      = (Kernel.traj (X := fun _ ↦ E) (chainFam mu) 0)
+          ∘ₘ (nu.map (fun z (_ : Finset.Iic 0) ↦ z)) :=
+  comap_comp_measure _ _ _
+
+/-- **The Markov property of the embedded chain at the `n`-th stage**, over `Finset.Iic n`: the joint
+law of the path up to `n` and the mark at `n + 1` is the law of the path up to `n` composed with
+`chainFam mu n`, the kernel that reads the last coordinate.  This is Mathlib's
+`Kernel.partialTraj_compProd_eq_map_traj` with the initial law `nu` carried along; it is the same
+proof as `Kernel.map_frestrictLe_trajMeasure_compProd_eq_map_trajMeasure`, which cannot be quoted
+directly because `trajMeasure` prescribes its own coercion of the initial law. -/
+theorem comp_chainKernel_map_frestrictLe_compProd (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    ((chainKernel mu ∘ₘ nu).map (Preorder.frestrictLe n)) ⊗ₘ (chainFam mu n)
+      = (chainKernel mu ∘ₘ nu).map
+          (fun x : ℕ → E ↦ (Preorder.frestrictLe n x, x (n + 1))) := by
+  rw [comp_chainKernel_eq_comp_traj mu nu, Measure.compProd_eq_comp_prod,
+    Measure.map_comp _ _ (by fun_prop), Kernel.traj_map_frestrictLe, Measure.comp_assoc,
+    Measure.map_comp _ _ (by fun_prop)]
+  congr with x₀ : 1
+  rw [Kernel.comp_apply, ← Measure.compProd_eq_comp_prod, Kernel.map_apply _ (by fun_prop),
+    Kernel.partialTraj_compProd_eq_map_traj (Nat.zero_le n)]
+
+/-- **The reindexing of a finite block of coordinates**, from `Finset.Iic n` to
+`Finset.range (n + 1)`.  The two index sets are the same set of naturals, but not the same type, and
+`ℋ_n` of `condExp_lt_jumpTimeFE_hawkesSelfRateH_block` is written over the second. -/
+def iicToRange (n : ℕ) (w : (i : Finset.Iic n) → E) : (j : Finset.range (n + 1)) → E :=
+  fun j ↦ w ⟨(j : ℕ), Finset.mem_Iic.2 (Nat.lt_succ_iff.1 (Finset.mem_range.1 j.2))⟩
+
+theorem measurable_iicToRange (n : ℕ) : Measurable (iicToRange (E := E) n) :=
+  measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+
+omit [MeasurableSpace E] in
+/-- **And it turns the restriction Mathlib uses into the projection `ℋ_n` uses**, at every path and
+by definition. -/
+theorem iicToRange_frestrictLe (n : ℕ) (x : ℕ → E) :
+    iicToRange n (Preorder.frestrictLe n x) = fun j : Finset.range (n + 1) ↦ x (j : ℕ) := rfl
+
+/-- **`chainFam` over the reindexed block**: the kernel of the `(n+1)`-st mark, reading the `n`-th
+coordinate of the block and nothing else. -/
+noncomputable def markKernel (mu : Kernel E E) (n : ℕ) :
+    Kernel ((j : Finset.range (n + 1)) → E) E :=
+  mu.comap (fun v : (j : Finset.range (n + 1)) → E ↦
+    v ⟨n, Finset.self_mem_range_succ n⟩) (measurable_pi_apply _)
+
+instance instIsMarkovKernelMarkKernel (mu : Kernel E E) [IsMarkovKernel mu] (n : ℕ) :
+    IsMarkovKernel (markKernel mu n) := by unfold markKernel; infer_instance
+
+theorem chainFam_eq_comap_markKernel (mu : Kernel E E) (n : ℕ) :
+    chainFam mu n = (markKernel mu n).comap (iicToRange n) (measurable_iicToRange n) := rfl
+
+/-- **The Markov property of the embedded chain at the `n`-th stage**, over the index set
+`Finset.range (n + 1)` that `ℋ_n` is written over.  At `n = 0` this is
+`comp_chainKernel_map_split` read through `chainKernel_map_zero`; the content beyond it is that the
+same disintegration holds at every stage, with the kernel still reading the **last** coordinate
+only. -/
+theorem comp_chainKernel_map_split_range (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    ((chainKernel mu ∘ₘ nu).map (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)))
+        ⊗ₘ (markKernel mu n)
+      = (chainKernel mu ∘ₘ nu).map
+          (fun x : ℕ → E ↦ ((fun j : Finset.range (n + 1) ↦ x (j : ℕ)), x (n + 1))) := by
+  have hproj : (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ))
+      = (iicToRange n) ∘ (Preorder.frestrictLe n) := rfl
+  rw [hproj, ← Measure.map_map (measurable_iicToRange n) (Preorder.measurable_frestrictLe n),
+    map_compProd_comap _ (measurable_iicToRange n), ← chainFam_eq_comap_markKernel,
+    comp_chainKernel_map_frestrictLe_compProd mu nu n,
+    Measure.map_map ((measurable_iicToRange n).prodMap measurable_id)
+      ((Preorder.measurable_frestrictLe n).prodMk (measurable_pi_apply (n + 1)))]
+  rfl
+
+/-- **The chain factor of the jump term**: `E[f (Y_{n+1}) | σ (Y_0, …, Y_n)] = μ f (Y_n)`, read off
+the disintegration of `comp_chainKernel_map_split_range` by
+`ae_eq_condExp_of_forall_setIntegral_eq`.  The σ-algebra is the one `ℋ_n` restricts to, the comap of
+the block of the first `n + 1` marks, and nothing but the boundedness of `f` and the measurable
+structure of `E` is assumed.
+
+This is the last open input of point 3 of group A of the dependency tree in
+`MartingaleProblems/README.md`; the other two, the time factor
+`condExp_le_jumpTimeFE_hawkesSelfRateH_block` and the separability
+`jumpMeasure_map_chain_jumpTimeH`, stand. -/
+theorem condExp_chain_mark_range (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (chainKernel mu ∘ₘ nu)[fun x : ℕ → E ↦ f (x (n + 1)) |
+        MeasurableSpace.comap
+          (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) inferInstance]
+      =ᵐ[chainKernel mu ∘ₘ nu] fun x : ℕ → E ↦ ∫ y, f y ∂(mu (x n)) := by
+  have hprojm : Measurable (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  have hm : MeasurableSpace.comap
+      (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) inferInstance
+      ≤ (inferInstance : MeasurableSpace (ℕ → E)) := hprojm.comap_le
+  have hg : StronglyMeasurable (fun v : (j : Finset.range (n + 1)) → E ↦
+      ∫ y, f y ∂(markKernel mu n v)) :=
+    StronglyMeasurable.integral_kernel (κ := markKernel mu n) hf.stronglyMeasurable
+  have hbnd : ∀ z : E, |∫ y, f y ∂(mu z)| ≤ C := by
+    intro z
+    have := norm_integral_le_of_norm_le_const (μ := mu z) (C := C)
+      (f := f) (.of_forall fun y ↦ by simpa [Real.norm_eq_abs] using hfb y)
+    simpa using this
+  have hFint : Integrable (fun x : ℕ → E ↦ f (x (n + 1))) (chainKernel mu ∘ₘ nu) :=
+    Integrable.mono' (integrable_const C)
+      ((hf.comp (measurable_pi_apply (n + 1))).aestronglyMeasurable)
+      (.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hfb (x (n + 1)))
+  have hgm : StronglyMeasurable[MeasurableSpace.comap
+      (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) inferInstance]
+      (fun x : ℕ → E ↦ ∫ y, f y ∂(mu (x n))) :=
+    hg.comp_measurable (Measurable.of_comap_le le_rfl)
+  have hGint : Integrable (fun x : ℕ → E ↦ ∫ y, f y ∂(mu (x n))) (chainKernel mu ∘ₘ nu) :=
+    Integrable.mono' (integrable_const C)
+      ((hgm.mono hm).aestronglyMeasurable)
+      (.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hbnd (x n))
+  refine (ae_eq_condExp_of_forall_setIntegral_eq hm hFint (fun s _ _ ↦ hGint.integrableOn) ?_
+    hgm.aestronglyMeasurable).symm
+  rintro s ⟨A, hA, rfl⟩ -
+  have : IsProbabilityMeasure ((chainKernel mu ∘ₘ nu).map
+      (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ))) :=
+    Measure.isProbabilityMeasure_map hprojm.aemeasurable
+  have hT : Measurable (fun x : ℕ → E ↦
+      ((fun j : Finset.range (n + 1) ↦ x (j : ℕ)), x (n + 1))) :=
+    hprojm.prodMk (measurable_pi_apply (n + 1))
+  have hFm : Measurable (fun p : ((j : Finset.range (n + 1)) → E) × E ↦ f p.2) :=
+    hf.comp measurable_snd
+  have hpre : (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) ⁻¹' A
+      = (fun x : ℕ → E ↦ ((fun j : Finset.range (n + 1) ↦ x (j : ℕ)), x (n + 1))) ⁻¹'
+        (A ×ˢ (Set.univ : Set E)) := by ext x; simp
+  have hIntProd : Integrable (fun p : ((j : Finset.range (n + 1)) → E) × E ↦ f p.2)
+      (((chainKernel mu ∘ₘ nu).map
+        (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ))) ⊗ₘ markKernel mu n) :=
+    Integrable.mono' (integrable_const C) hFm.aestronglyMeasurable
+      (.of_forall fun p ↦ by simpa [Real.norm_eq_abs] using hfb p.2)
+  calc ∫ x in (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) ⁻¹' A,
+        (∫ y, f y ∂(mu (x n))) ∂(chainKernel mu ∘ₘ nu)
+      = ∫ v in A, (∫ y, f y ∂(markKernel mu n v))
+          ∂((chainKernel mu ∘ₘ nu).map
+            (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ))) := by
+        rw [setIntegral_map hA hg.aestronglyMeasurable hprojm.aemeasurable]
+        rfl
+    _ = ∫ p in A ×ˢ (Set.univ : Set E), f p.2
+          ∂(((chainKernel mu ∘ₘ nu).map
+            (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ))) ⊗ₘ markKernel mu n) := by
+        rw [Measure.setIntegral_compProd hA MeasurableSet.univ hIntProd.integrableOn]
+        simp only [Measure.restrict_univ]
+    _ = ∫ x in (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) ⁻¹' A,
+          f (x (n + 1)) ∂(chainKernel mu ∘ₘ nu) := by
+        rw [comp_chainKernel_map_split_range mu nu n,
+          setIntegral_map (hA.prod MeasurableSet.univ) hFm.aestronglyMeasurable hT.aemeasurable,
+          ← hpre]
+
+end ChainMarkov
+
+/-! ### From the chain space to the product space
+
+`condExp_chain_mark_range` lives on `ℕ → E`, under `chainKernel mu ∘ₘ nu`; the jump term of the
+martingale problem lives on `(ℕ → E) × (ℕ → ℝ)`, under `jumpMeasure mu nu`.  Both the function and
+the σ-algebra factor through `Prod.fst`, and `jumpMeasure` is a product, so nothing is lost in the
+passage -- but it is a statement, and it is the one that carries the chain factor to where `ℋ_n`
+lives.  It has nothing to do with jump processes; `Q` enters only through `Q Set.univ = 1`. -/
+
+section CondExpProd
+
+variable {X Y S : Type*} [MeasurableSpace X] [MeasurableSpace Y] [MeasurableSpace S]
+
+/-- **A set integral over a cylinder above the first factor** is the set integral over the base. -/
+theorem setIntegral_comp_fst_prod (P : Measure X) [SFinite P] (Q : Measure Y)
+    [IsProbabilityMeasure Q] {F : X → ℝ} {s : Set X}
+    (hF : AEStronglyMeasurable F (P.restrict s)) :
+    ∫ p in s ×ˢ (Set.univ : Set Y), F p.1 ∂(P.prod Q) = ∫ x in s, F x ∂P := by
+  have hmap : ((P.restrict s).prod Q).map (Prod.fst : X × Y → X) = P.restrict s := by
+    rw [Measure.map_fst_prod, measure_univ, one_smul]
+  rw [← Measure.prod_restrict, Measure.restrict_univ,
+    ← integral_map measurable_fst.aemeasurable (by rw [hmap]; exact hF), hmap]
+
+theorem integrable_comp_fst_prod (P : Measure X) [SFinite P] (Q : Measure Y)
+    [IsProbabilityMeasure Q] {F : X → ℝ} (hF : Integrable F P) :
+    Integrable (fun p : X × Y ↦ F p.1) (P.prod Q) := by
+  have hmap : (P.prod Q).map (Prod.fst : X × Y → X) = P := by
+    rw [Measure.map_fst_prod, measure_univ, one_smul]
+  have haes : AEStronglyMeasurable F ((P.prod Q).map (Prod.fst : X × Y → X)) := by
+    rw [hmap]; exact hF.aestronglyMeasurable
+  exact (integrable_map_measure haes measurable_fst.aemeasurable).1 (by rw [hmap]; exact hF)
+
+/-- **Conditioning a function of the first factor on a σ-algebra of the first factor** is done in
+the first factor alone.  The second factor enters only through `Q Set.univ = 1`. -/
+theorem condExp_comap_fst_prod (P : Measure X) [IsProbabilityMeasure P] (Q : Measure Y)
+    [IsProbabilityMeasure Q] {V : X → S} (hV : Measurable V) {g : X → ℝ}
+    (hg : Integrable g P) :
+    (P.prod Q)[fun p : X × Y ↦ g p.1 |
+        MeasurableSpace.comap (fun p : X × Y ↦ V p.1) inferInstance]
+      =ᵐ[P.prod Q] fun p : X × Y ↦ (P[g | MeasurableSpace.comap V inferInstance]) p.1 := by
+  have hVf : Measurable (fun p : X × Y ↦ V p.1) := hV.comp measurable_fst
+  have hm : MeasurableSpace.comap (fun p : X × Y ↦ V p.1) inferInstance
+      ≤ (inferInstance : MeasurableSpace (X × Y)) := hVf.comap_le
+  have hcomap : MeasurableSpace.comap (fun p : X × Y ↦ V p.1) inferInstance
+      = MeasurableSpace.comap (Prod.fst : X × Y → X)
+          (MeasurableSpace.comap V inferInstance) :=
+    MeasurableSpace.comap_comp.symm
+  have hfstm : Measurable[MeasurableSpace.comap (fun p : X × Y ↦ V p.1) inferInstance,
+      MeasurableSpace.comap V inferInstance] (Prod.fst : X × Y → X) :=
+    Measurable.of_comap_le (le_of_eq hcomap.symm)
+  have hcm : StronglyMeasurable[MeasurableSpace.comap (fun p : X × Y ↦ V p.1) inferInstance]
+      (fun p : X × Y ↦ (P[g | MeasurableSpace.comap V inferInstance]) p.1) :=
+    stronglyMeasurable_condExp.comp_measurable hfstm
+  refine (ae_eq_condExp_of_forall_setIntegral_eq hm (integrable_comp_fst_prod P Q hg)
+    (fun s _ _ ↦ (integrable_comp_fst_prod P Q integrable_condExp).integrableOn) ?_
+    hcm.aestronglyMeasurable).symm
+  rintro s ⟨A, hA, rfl⟩ -
+  have hpre : (fun p : X × Y ↦ V p.1) ⁻¹' A = (V ⁻¹' A) ×ˢ (Set.univ : Set Y) := by
+    ext p; simp
+  rw [hpre, setIntegral_comp_fst_prod P Q
+      (stronglyMeasurable_condExp.mono hV.comap_le).aestronglyMeasurable.restrict,
+    setIntegral_comp_fst_prod P Q hg.aestronglyMeasurable.restrict,
+    setIntegral_condExp hV.comap_le hg ⟨A, hA, rfl⟩]
+
+end CondExpProd
+
+section ChainMarkovJump
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **The chain factor of the jump term, on the space the jump term lives on.**
+`condExp_chain_mark_range` carried to `jumpMeasure` by `condExp_comap_fst_prod`.  This is the third
+of the three inputs of point 3 of group A, in the shape the other two are written in. -/
+theorem condExp_chain_mark_jumpMeasure (mu : Kernel E E) [IsMarkovKernel mu]
+    (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) {f : E → ℝ} (hf : Measurable f)
+    {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (jumpMeasure mu nu)[fun ω : (ℕ → E) × (ℕ → ℝ) ↦ f (ω.1 (n + 1)) |
+        MeasurableSpace.comap
+          (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ))
+          inferInstance]
+      =ᵐ[jumpMeasure mu nu] fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ y, f y ∂(mu (ω.1 n)) := by
+  have hprojm : Measurable (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) :=
+    measurable_pi_lambda _ fun _ ↦ measurable_pi_apply _
+  have hFint : Integrable (fun x : ℕ → E ↦ f (x (n + 1))) (chainKernel mu ∘ₘ nu) :=
+    Integrable.mono' (integrable_const C)
+      ((hf.comp (measurable_pi_apply (n + 1))).aestronglyMeasurable)
+      (.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hfb (x (n + 1)))
+  have hjm : jumpMeasure mu nu = (chainKernel mu ∘ₘ nu).prod waitingMeasure := rfl
+  rw [hjm]
+  have hstep := condExp_comap_fst_prod (chainKernel mu ∘ₘ nu) waitingMeasure hprojm hFint
+  have hmap : ((chainKernel mu ∘ₘ nu).prod waitingMeasure).map
+      (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E)) = chainKernel mu ∘ₘ nu := by
+    rw [Measure.map_fst_prod, measure_univ, one_smul]
+  have htrans : ∀ᵐ ω ∂((chainKernel mu ∘ₘ nu).prod waitingMeasure),
+      ((chainKernel mu ∘ₘ nu)[fun x : ℕ → E ↦ f (x (n + 1)) |
+        MeasurableSpace.comap
+          (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) inferInstance]) ω.1
+        = ∫ y, f y ∂(mu (ω.1 n)) := by
+    refine ae_of_ae_map (f := (Prod.fst : (ℕ → E) × (ℕ → ℝ) → (ℕ → E)))
+      (p := fun x : ℕ → E ↦
+        ((chainKernel mu ∘ₘ nu)[fun x : ℕ → E ↦ f (x (n + 1)) |
+          MeasurableSpace.comap
+            (fun x : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ x (j : ℕ)) inferInstance]) x
+          = ∫ y, f y ∂(mu (x n)))
+      measurable_fst.aemeasurable ?_
+    rw [hmap]
+    exact condExp_chain_mark_range mu nu n hf hfb
+  filter_upwards [hstep, htrans] with ω h1 h2
+  rw [h1, h2]
+
+end ChainMarkovJump
