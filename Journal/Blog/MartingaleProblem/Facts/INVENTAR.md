@@ -27273,3 +27273,220 @@ unverändert seit dem vierten Lauf.
    ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung
    braucht ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der
    Roadmap steht, und ein Negativbefund ohne Zeugen ist ein Versprechen.
+
+### 2026-09-13, neunter Lauf des Tages — die Rechnung zwischen den beiden Hälften des Martingalzuwachses steht; und die Negativaussage, die sie verlangte, war zu weit gefaßt: Mathlib hat den Hauptsatz, nur nicht die Komposition
+
+**Bearbeitet:** Vorschlag 0 des Vorlaufs, `intervalIntegral_rate_mul_exp_neg_cumulative`
+— die Exponentialformel für eine bloß meßbare Rate. Sie steht, unter dem Namen
+`intervalIntegral_rate_mul_exp_neg_cumulativeRateF`, samt drei Zwischensätzen **und
+der Brücke zu den beiden Hälften des Martingalzuwachses**. Die Vorschläge 1 (Punkt 5
+der Gruppe A) und 2 (der Zeuge `measurableSet_stoppedAt_lt_jumpTimeH`) sind **nicht**
+angegangen worden und bleiben unverändert liegen.
+
+**Fünf Sätze** in `TauCeti/MartingaleProblems/Suggested.lean`, in zwei neuen
+Abschnitten `ExponentialFormula` und `HawkesBlockIntegral` am Ende der Datei; 227
+Zeilen, zwei neue Importe. Die ganze Datei ohne einen Fehler durch `lake env lean`
+gegen v4.33.1, alle fünf mit `#print axioms` geprüft und jeder auf `propext`,
+`Classical.choice`, `Quot.sound` — kein `sorryAx`. `scripts/check_suggested.py` meldet für die Datei `rc 0`,
+`0 Fehler`, `9 sorry` — die Zahl der `sorry` ist unverändert **neun**.
+(`WeakConvergence/Suggested.lean` meldet weiter seine zwei Fehler; das ist die eine
+bewußt gegen `master` geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Die Exponentialformel für eine bloß meßbare Rate, und warum Mathlibs
+Substitutionsregeln sie nicht hergeben"; die Punkte 2 und 5 der Gruppe A sind dort
+berichtigt. **Die Zahl der offenen Aussagen bleibt zwölf** — bewiesen ist keine von
+ihnen, wohl aber die Rechnung, an der zwei von ihnen gemeinsam hingen.
+
+#### Die Aussagen
+
+> `intervalIntegral_rate_mul_exp_neg_cumulativeRateF` — für `0 ≤ a ≤ t`, `Λ` längs
+> `ω` auf jedem Fenster von `0` aus intervallintegrierbar und
+> `C = cumulativeRateF Λ ω`:
+> `∫ u in a..t, Λ u ω * exp (−(C u − C a)) = 1 − exp (−(C t − C a))`.
+
+Links steht der bedingte Kompensator des Blocks `(τ_n, τ_{n+1}]`, rechts eins minus
+die bedingte Überlebensfunktion bei `t`; das ist die Stelle, an der
+`condExp_compensator_rate_block` (achter Lauf) und `condExp_jump_mark_block`
+(siebter Lauf) einander treffen. **Keine Stetigkeit der Rate, keine Positivität,
+keine Nichtexplosion** — die Aussage ist über **einen** Stichprobenpunkt, und der
+Stichprobenpunkt ist ein Parameter.
+
+Darunter, jeder für sich brauchbar und von der Hawkes-Konstruktion vollständig
+unabhängig:
+
+> `integral_mul_exp_neg_intervalIntegral` — dieselbe Formel ohne `cumulativeRateF`:
+> `∫ u in a..b, f u * exp (−(∫ v in a..u, f v)) = 1 − exp (−(∫ v in a..b, f v))`
+> für jedes intervallintegrierbare `f`, **ohne Vorzeichenbedingung**.
+
+> `integral_mul_deriv_comp_intervalIntegral` — die Substitutionsregel selbst, in
+> der Allgemeinheit, die Mathlib fehlt: für `g` von der Klasse `C¹`, `f` bloß
+> intervallintegrierbar auf `a..b` und `c ∈ uIcc a b`:
+> `∫ u in a..b, f u * deriv g (∫ v in c..u, f v) = g (∫ v in c..b, f v) − g (∫ v in c..a, f v)`.
+
+> `LipschitzOnWith.comp_absolutelyContinuousOnInterval` — ist `f` absolut stetig
+> auf `uIcc a b` und `g` lipschitz auf einer Menge `s`, in die `f` das Intervall
+> abbildet, so ist `g ∘ f` absolut stetig auf `uIcc a b`.
+
+#### Und die Brücke, im selben Lauf gelegt
+
+> `intervalIntegral_hawkesBlockDensity` — für `0 ≤ τ_n ≤ t`:
+> `∫ u in 0..t, hawkesBlockDensity h ν φ n u S`
+> `= 1 − (expMeasure 1 (Ioi (hawkesLevelOf h ν φ n t S))).toReal`.
+
+Links steht **genau** der Wert, den `condExp_compensator_rate_block` liefert, rechts
+**genau** der Faktor, den `condExp_jump_mark_block` liefert. Die beiden Hälften des
+Martingalzuwachses sind damit ineinander übersetzt; was von Punkt 5 der Gruppe A
+bleibt, ist der Kettenfaktor und die Identifikation von `X_u` mit `Y_n`, und beides
+ist Buchhaltung.
+
+**Und der Übergang vom Fenster `(0, t]` auf den Block `(τ_n, t]` kostet keine
+Integrierbarkeit** — das war die Stelle, an der der Beweis teuer zu werden drohte.
+Eine Zerlegung `∫_0^t = ∫_0^{τ_n} + ∫_{τ_n}^t` verlangt die Integrierbarkeit auf
+beiden Stücken, und für die Dichte wäre das ein eigener Satz gewesen
+(Beschränktheit des Exponentialschwanzes durch `1`, Beschränktheit der eingefrorenen
+Rate durch `L`, gemeinsame Meßbarkeit). Gebraucht wird nichts davon: der Schalter
+von `hawkesBlockRate` ist bei festem `S` ein Indikator **in `u`**, also schiebt
+`setIntegral_indicator` ihn in den Integrationsbereich und `Set.Ioc_inter_Ioi`
+rechnet `Ioc 0 t ∩ Ioi τ_n = Ioc τ_n t` aus. **Eine Zerlegung findet gar nicht
+statt.** Das ist dieselbe Bewegung wie im achten Lauf, wo ein Fenster mit zufälligem
+oberem Ende zu einem festen Fenster mit abgeschnittenem Integranden umgeschrieben
+wurde: zufällige Grenzen gehören in den Integranden, nicht ans Integralzeichen.
+
+#### Der Befund, und er ist eine Berichtigung an einer eigenen Negativaussage
+
+Der achte Lauf hat gemeldet: „**Und Mathlib hat das nicht.**" Diese Meldung war
+über die **Substitutionsregeln** richtig und ist an den Signaturen nachgeprüft —
+`intervalIntegral.integral_comp_mul_deriv` mit seinen drei gestrichenen Verwandten
+und `integral_comp_mul_deriv_of_deriv_nonneg`
+(`MeasureTheory/Integral/IntervalIntegral/IntegrationByParts.lean:496–548`),
+`integral_comp_mul_deriv_Ioi`
+(`MeasureTheory/Integral/IntegralEqImproper.lean:1121`),
+`integral_image_eq_integral_abs_deriv_smul`
+(`MeasureTheory/Function/JacobianOneDim.lean:66`) verlangen sämtlich `HasDerivAt`
+beziehungsweise `HasDerivWithinAt` an **jedem** Punkt.
+
+Über den **Hauptsatz** war sie falsch. Mathlib v4.33.1 hat ihn für absolut stetige
+Funktionen:
+
+* `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`
+  (`MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225`) —
+  `∫ x in a..b, deriv f x = f b − f a`, **ohne jede Ableitungsvoraussetzung**;
+* `IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral` (ebenda
+  `:412`) — eine Stammfunktion ist absolut stetig;
+* `IntervalIntegrable.ae_hasDerivAt_integral`
+  (`MeasureTheory/Integral/IntervalIntegral/LebesgueDifferentiationThm.lean:66`) —
+  die Intervallfassung des Lebesgueschen Differentiationssatzes;
+* und den Begriff samt seiner Algebra in
+  `MeasureTheory/Function/AbsolutelyContinuous.lean`.
+
+**Die Lehre, und sie ist dieselbe wie am 2026-08-29:** gesucht worden war nach
+*unserer* Vokabel — „Substitution", „change of variables" —, und die Aussage steht
+dort unter der Vokabel des *Begriffs*, unter dem sie hingehört: absolute
+Stetigkeit. Der Unterschied ist nicht Kosmetik: die Substitutionsregel ist ein Satz
+über eine Abbildung, der Hauptsatz einer über eine Funktionenklasse, und nur die
+zweite Lesart kommt ohne punktweise Ableitung aus.
+
+**Was wirklich fehlte, ist eine Zeile tiefer.** Die absolute Stetigkeit ist in
+Mathlib unter Summe, Produkt und Skalar abgeschlossen und es gibt „lipschitz ⇒
+absolut stetig" (`LipschitzOnWith.absolutelyContinuousOnInterval`, ebenda `:294`),
+aber **keine Kompositionsaussage**. Sie ist gebaut worden, aus der
+`ε`-`δ`-Fassung (`absolutelyContinuousOnInterval_iff`), in einer `calc`-Abschätzung
+von fünf Zeilen — derselben, die Mathlib eine Schicht tiefer führt. Die
+Lipschitzschranke wird **nur auf einer Menge `s`** verlangt, in die die innere
+Funktion das Intervall abbildet, und nicht global: `exp` ist nicht global
+lipschitz, und ohne diese Abschwächung käme die Anwendung nicht durch. Das
+Kompaktum wird im Beweis als `Icc (−R) R` um das Bild von `C` gewählt, mit `R` aus
+`IsCompact.exists_bound_of_continuousOn` und der Lipschitzkonstanten aus
+`ContDiffOn.exists_lipschitzOnWith` (`Analysis/Calculus/ContDiff/RCLike.lean:149`).
+
+`TODO.md` Punkt 8 ist entsprechend berichtigt: die siebzehnte Lücke heißt jetzt
+„Die Komposition einer absolut stetigen mit einer lipschitzstetigen Funktion" und
+nicht mehr „Der Hauptsatz für eine Stammfunktion mit bloß meßbarem Integranden".
+Sie bleibt eine Lücke, aber eine kleinere und eine, die als Mathlib-Beitrag
+zusammenhängend dasteht.
+
+#### Der Prüfstein des Vorschlags
+
+Er lautete: *in der Aussage darf keine Stetigkeitsvoraussetzung an `Λ` stehen.* Er
+ist eingehalten, in allen vier Deklarationen. Der Vorschlag hatte drei Wege
+angeboten — Teleskopsumme mit `|e^{−x} − 1 + x| ≤ x²/2`, Bildmaß, oder
+`L¹`-Approximation durch stetige Integranden —; **keiner von ihnen ist genommen
+worden**, und zwar weil der Befund oben einen vierten öffnete, der ohne
+Approximation und ohne Maßeindeutigkeit auskommt. Das ist der Ertrag davon, die
+Bibliothek zu prüfen, ehe der Weg gewählt wird, statt danach.
+
+#### Zwei Stolperstellen, beide klein
+
+* **`ContDiff.differentiable` nimmt `1 ≠ 0`, nicht `1 ≤ 1`.** In v4.33.1 ist die
+  Glattheitsstufe `WithTop ℕ∞`, und die Voraussetzung von `ContDiff.differentiable`
+  ist `n ≠ 0`; `le_rfl` scheitert mit einem Typfehler, `one_ne_zero` geht.
+* **`HasDerivAt` über `-f` gegen `fun y ↦ -f y` scheitert am Instanzenpfad.** Der
+  Versuch, `deriv (fun y ↦ −exp (−y))` über `HasDerivAt.neg` zu bekommen, endet in
+  einem Typfehler zwischen `Real.normedAddCommGroup.toAddCommGroup` und
+  `Real.instAddCommGroup` — dieselbe Aussage, zwei Wege durch dieselbe Diamant.
+  `simpa` räumt die Funktion nicht auf, weil `-f` als `Neg.neg f` stehen bleibt.
+  **Der Ausweg ist, die Funktion gar nicht erst zu negieren:** genommen ist
+  `g x = 1 − exp (−x)` und `HasDerivAt.const_sub`, das die Gestalt
+  `fun y ↦ c − f y` unmittelbar liefert. Der Nebengewinn ist, daß `g 0 = 0` ist und
+  die Schlußrechnung damit ganz entfällt.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+In diesem Lauf nicht wiederholt; der siebte Lauf hat `upstream/master` frisch
+geholt (`182c4c30cdc58b70f2ba77d56f31b1c4048e9522`) und beide Prüfskripte dagegen
+laufen lassen. Die in diesem Lauf zitierten Namen sind die sechs
+Substitutionsregeln des Vorlaufs und die sechs neuen der absoluten Stetigkeit; alle
+zwölf sind einzeln am Quelltext von v4.33.1 belegt (Datei und Zeile stehen oben),
+keine ist `deprecated`. **Die Negativaussage des Vorlaufs ist dabei als zu weit
+gefaßt erkannt und berichtigt worden** — das ist genau der Fund, den Teil D
+verlangt, und er ist diesmal gegen die eigene Roadmap ausgefallen und nicht gegen
+Mathlib.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Punkt 5 der Gruppe A** (`condExp_mpFamilyF_increment_eq_zero`). Die Aussage selbst
+steht nicht; ihre letzte *Rechnung* steht, als `intervalIntegral_hawkesBlockDensity`.
+Was ihr jetzt noch fehlt, ist ausschließlich Buchhaltung, und sie ist im README
+benannt: die Herausziehung des `ℋ_n`-meßbaren beschränkten Kettenfaktors
+`μ f (Y_n) − f (Y_n)` aus dem Kompensatorterm, und die Identifikation von `X_u ω`
+mit `Y_n` im Fenster.
+
+**Punkt 2 der Gruppe A** (die bedingte Dichte). Unverändert; die Rechnung, an der er
+hing, steht, die Übersetzung von Punkt 1 aus der Verteilungsfunktions- in die
+Dichtegestalt nicht.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`,
+unverändert seit dem vierten Lauf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`condExp_mpFamilyF_increment_eq_zero` — Punkt 5 der Gruppe A.** **Worauf er
+   ruht:** `condExp_jump_mark_block` (siebter Lauf), `condExp_compensator_rate_block`
+   (achter Lauf) und `intervalIntegral_hawkesBlockDensity` (dieser Lauf), das die
+   Werte der beiden ineinander übersetzt — alle drei stehen, und zwischen ihnen
+   steht keine Rechnung mehr. **Warum jetzt:** es ist die erste Aussage der Gruppe A,
+   vor der keine einzige unbewiesene Aussage mehr steht; was fehlt, ist zweimal
+   Buchhaltung. **Der erste Schritt, und er ist zu entscheiden und nicht zu raten:**
+   ob der Kettenfaktor vor oder hinter das Integralzeichen gezogen wird. Vorn ist er
+   `ℋ_n`-meßbar und beschränkt, also greift
+   `condExp_mul_of_stronglyMeasurable_left` unmittelbar; hinten müßte er durch
+   `condExp_intervalIntegral_comm` mitgeführt werden, und dessen Kandidat wäre dann
+   nicht mehr `hawkesBlockDensity` allein. **Prüfstein:** in der Aussage darf
+   `τ_{n+1}` als Integrationsgrenze nicht vorkommen — das ist derselbe Prüfstein wie
+   beim Kompensatorterm, und er ist dort eingehalten worden.
+
+1. **`condExp_jumpTimeFE_hasDensity` — Punkt 2 der Gruppe A.** **Worauf er ruht:**
+   Punkt 1 (`condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp`, vierter Lauf) und die
+   Rechnung dieses Laufs. **Warum jetzt:** er ist nach Punkt 5 der billigste, und er
+   ist der einzige der zwölf, dessen ganzer Inhalt eine Umschreibung ist. **Was zu
+   entscheiden ist:** ob die Dichte als `HasPDF` gegen das Lebesguemaß hingeschrieben
+   wird oder als Gleichung zwischen zwei bedingten Erwartungen. Die zweite Fassung
+   ist billiger und die, die Punkt 5 liest; die erste ist die, die ein Leser erwartet.
+   Steht beides da, ist der Punkt erledigt, und er ist es nicht, wenn nur die erste
+   dasteht.
+
+2. **`measurableSet_stoppedAt_lt_jumpTimeH` — der Zeuge, den der vierte Lauf nur
+   ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung braucht
+   ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der Roadmap steht,
+   und ein Negativbefund ohne Zeugen ist ein Versprechen.

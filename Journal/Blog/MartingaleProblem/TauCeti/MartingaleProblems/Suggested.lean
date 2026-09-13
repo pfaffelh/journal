@@ -28,6 +28,8 @@ import Mathlib.Probability.Moments.Variance
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Analysis.PSeries
 import Mathlib.Probability.Martingale.OptionalSampling
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.AbsolutelyContinuousFun
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.LebesgueDifferentiationThm
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -25265,3 +25267,228 @@ theorem condExp_compensator_rate_block (hhm : Measurable h) (hφm : Measurable �
     (fun u ↦ condExp_rate_indicator_block hhm hφm hφ hφ0 hcpos hc hL u mu nu n)
 
 end BlockCompensatorTerm
+
+section ExponentialFormula
+
+/-!
+## The exponential formula for a merely measurable rate
+
+This section closes the one gap between the two halves of the martingale increment of the path
+dependent jump process: the jump term `condExp_jump_mark_block` produces `exp (-(Λ t - Λ τ))` and
+the compensator term `condExp_compensator_rate_block` produces `∫ Λ_u exp (-(Λ_u - Λ_τ)) du`, and
+what holds them apart is the identity
+
+`∫ u in a..b, Λ u * exp (-(∫ v in a..u, Λ v)) = 1 - exp (-(∫ v in a..b, Λ v))`.
+
+On paper this is the substitution `v = ∫_a^u Λ` and one line.  In Lean it is not, and the reason is
+the hypothesis this development refuses to strengthen: **`Λ` is only measurable**.  `ex:hawkes` asks
+of the kernel `φ` nothing but local integrability, the whole path dependent branch is carried out
+with `Measurable φ`, and the rate `Λ_u = h (ν + ∑ φ (u - τ_k))` is therefore in general nowhere
+continuous.  Its primitive `u ↦ ∫_a^u Λ` is then differentiable only almost everywhere.
+
+**Every substitution rule Mathlib has asks for a derivative at every point.**
+`intervalIntegral.integral_comp_mul_deriv` and its four primed variants,
+`integral_comp_mul_deriv_of_deriv_nonneg`, `integral_comp_mul_deriv_Ioi` and
+`integral_image_eq_integral_abs_deriv_smul` all take `HasDerivAt` or `HasDerivWithinAt` on the whole
+interval; none of them takes an almost everywhere derivative together with absolute continuity.  So
+the substitution rule is not the road.
+
+**The road is the fundamental theorem for absolutely continuous functions**, which Mathlib *does*
+have: `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`.  A primitive is absolutely continuous
+(`IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral`), it is differentiable almost
+everywhere with the integrand as derivative (`IntervalIntegrable.ae_hasDerivAt_integral`, the
+interval form of the Lebesgue differentiation theorem), and the chain rule then identifies
+`deriv (g ∘ C)` almost everywhere.  The one piece Mathlib lacks is that a Lipschitz function
+composed with an absolutely continuous one is absolutely continuous; it is proved here from the
+`ε`-`δ` characterisation in three lines of estimate.
+
+`integral_mul_deriv_comp_intervalIntegral` is therefore the substitution rule this development
+needed, stated for a `C¹` outer function and a **merely integrable** inner integrand, and it is
+independent of everything else in this file. -/
+
+/-- **A Lipschitz function composed with an absolutely continuous one is absolutely continuous.**
+The Lipschitz bound is asked only on a set `s` that the inner function maps `uIcc a b` into, so the
+outer function need not be globally Lipschitz -- which is what makes the lemma usable for `exp`.
+
+Mathlib has `LipschitzOnWith.absolutelyContinuousOnInterval` (a Lipschitz function is absolutely
+continuous) and closure of absolute continuity under sums, products and scalars, but no composition
+lemma; this is the missing one, and the proof is the same estimate as in Mathlib's, one layer up. -/
+theorem LipschitzOnWith.comp_absolutelyContinuousOnInterval
+    {f : ℝ → ℝ} {g : ℝ → ℝ} {a b : ℝ} {s : Set ℝ} {K : NNReal}
+    (hg : LipschitzOnWith K g s) (hf : AbsolutelyContinuousOnInterval f a b)
+    (hfs : ∀ x ∈ Set.uIcc a b, f x ∈ s) :
+    AbsolutelyContinuousOnInterval (fun x ↦ g (f x)) a b := by
+  rw [absolutelyContinuousOnInterval_iff] at hf ⊢
+  intro ε hε
+  obtain ⟨δ, hδ, hmain⟩ := hf (ε / (K + 1)) (by positivity)
+  refine ⟨δ, hδ, fun E hE hsum ↦ ?_⟩
+  have hlt := hmain E hE hsum
+  calc ∑ i ∈ Finset.range E.1, dist (g (f (E.2 i).1)) (g (f (E.2 i).2))
+      ≤ ∑ i ∈ Finset.range E.1, K * dist (f (E.2 i).1) (f (E.2 i).2) := by
+        refine Finset.sum_le_sum fun i hi ↦ ?_
+        have h1 := hfs _ (hE.left i hi).left
+        have h2 := hfs _ (hE.left i hi).right
+        simpa [dist_edist, ENNReal.toReal_mul] using
+          ENNReal.toReal_mono (ENNReal.mul_ne_top (by simp) (edist_ne_top _ _)) (hg h1 h2)
+    _ = K * ∑ i ∈ Finset.range E.1, dist (f (E.2 i).1) (f (E.2 i).2) := (Finset.mul_sum _ _ _).symm
+    _ ≤ K * (ε / (K + 1)) := by
+        have : (0 : ℝ) ≤ K := K.coe_nonneg
+        nlinarith [hlt.le]
+    _ < (K + 1) * (ε / (K + 1)) := by
+        have hpos : (0 : ℝ) < ε / (K + 1) := by positivity
+        nlinarith [K.coe_nonneg]
+    _ = ε := by field_simp
+
+/-- **Substitution under a primitive whose integrand is merely integrable.**  For `g` of class `C¹`
+and `f` interval integrable on `a..b`,
+
+`∫ u in a..b, f u * deriv g (∫ v in c..u, f v) = g (∫ v in c..b, f v) - g (∫ v in c..a, f v)`.
+
+This is the change of variables `w = ∫ v in c..u, f v` without any regularity of `f` beyond
+integrability -- no continuity, no everywhere differentiability of the primitive.  Mathlib's
+substitution rules all ask for a derivative at every point of the interval and therefore do not
+reach this statement; the proof here goes through the fundamental theorem of calculus for absolutely
+continuous functions instead, and the almost everywhere derivative of the primitive comes from the
+Lebesgue differentiation theorem.
+
+The hypothesis `hc : c ∈ Set.uIcc a b` is exactly what
+`IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral` asks for, and it is no
+restriction in practice: taking `c = a` turns the inner integral into the increment of the
+primitive, which is the form every application wants. -/
+theorem integral_mul_deriv_comp_intervalIntegral
+    {f g : ℝ → ℝ} {a b c : ℝ}
+    (hf : IntervalIntegrable f volume a b) (hc : c ∈ Set.uIcc a b)
+    (hg : ContDiff ℝ 1 g) :
+    ∫ u in a..b, f u * deriv g (∫ v in c..u, f v) =
+      g (∫ v in c..b, f v) - g (∫ v in c..a, f v) := by
+  set C : ℝ → ℝ := fun x ↦ ∫ v in c..x, f v with hCdef
+  have hCac : AbsolutelyContinuousOnInterval C a b :=
+    hf.absolutelyContinuousOnInterval_intervalIntegral hc
+  obtain ⟨R, hR⟩ :=
+    (isCompact_uIcc (a := a) (b := b)).exists_bound_of_continuousOn hCac.continuousOn
+  obtain ⟨K, hK⟩ := (hg.contDiffOn (s := Set.Icc (-R) R)).exists_lipschitzOnWith
+    (by decide) (convex_Icc _ _) isCompact_Icc
+  have hmem : ∀ x ∈ Set.uIcc a b, C x ∈ Set.Icc (-R) R := by
+    intro x hx
+    have h := hR x hx
+    rw [Real.norm_eq_abs, abs_le] at h
+    exact ⟨h.1, h.2⟩
+  have hgCac : AbsolutelyContinuousOnInterval (fun x ↦ g (C x)) a b :=
+    hK.comp_absolutelyContinuousOnInterval hCac hmem
+  have hFTC := hgCac.integral_deriv_eq_sub
+  rw [← hFTC]
+  refine intervalIntegral.integral_congr_ae ?_
+  filter_upwards [hf.ae_hasDerivAt_integral] with x hx hxmem
+  have hxIcc : x ∈ Set.uIcc a b := uIoc_subset_uIcc hxmem
+  have hd : HasDerivAt C (f x) x := hx hxIcc c hc
+  have hgd : HasDerivAt g (deriv g (C x)) (C x) :=
+    (hg.differentiable one_ne_zero).differentiableAt.hasDerivAt
+  have hderiv : deriv (fun y ↦ g (C y)) x = deriv g (C x) * f x := (hgd.comp x hd).deriv
+  rw [hderiv, hCdef, mul_comm]
+
+/-- **The exponential formula**, in the form the compensator term needs:
+
+`∫ u in a..b, f u * exp (-(∫ v in a..u, f v)) = 1 - exp (-(∫ v in a..b, f v))`.
+
+Probabilistically: the survival function of the first point of a Poisson process of intensity `f`
+integrates its own intensity to `1` minus itself.  Note what is **not** assumed -- neither
+continuity nor positivity of `f`; the identity is an instance of
+`integral_mul_deriv_comp_intervalIntegral` at `g x = 1 - exp (-x)` and holds for any interval
+integrable `f`. -/
+theorem integral_mul_exp_neg_intervalIntegral
+    {f : ℝ → ℝ} {a b : ℝ} (hf : IntervalIntegrable f volume a b) :
+    ∫ u in a..b, f u * Real.exp (-(∫ v in a..u, f v))
+      = 1 - Real.exp (-(∫ v in a..b, f v)) := by
+  have hg : ContDiff ℝ 1 (fun x : ℝ ↦ 1 - Real.exp (-x)) := by fun_prop
+  have hgd : ∀ x : ℝ, deriv (fun y : ℝ ↦ 1 - Real.exp (-y)) x = Real.exp (-x) := by
+    intro x
+    exact (by simpa using ((hasDerivAt_neg x).exp).const_sub 1 :
+      HasDerivAt (fun y : ℝ ↦ 1 - Real.exp (-y)) (Real.exp (-x)) x).deriv
+  have h := integral_mul_deriv_comp_intervalIntegral hf Set.left_mem_uIcc hg
+  simp only [hgd] at h
+  simpa using h
+
+/-- **The exponential formula for the cumulated rate of the path dependent construction.**  For
+`0 ≤ a ≤ t` and a locally integrable rate,
+
+`∫ u in a..t, Λ u ω * exp (-(C u - C a)) = 1 - exp (-(C t - C a))`,  `C = cumulativeRateF Λ ω`.
+
+This is the shape in which `condExp_compensator_rate_block` and `condExp_jump_mark_block` meet: the
+left hand side is the conditional compensator of the block `(τ n, τ (n+1)]` and the right hand side
+is one minus the conditional survival function at `t`.  No continuity of the rate enters, and no
+non-explosion: the statement is about one sample point and the sample point is a parameter. -/
+theorem intervalIntegral_rate_mul_exp_neg_cumulativeRateF
+    {Ω : Type*} {Λ : ℝ → Ω → ℝ} {ω : Ω} {a t : ℝ}
+    (hint : ∀ r, IntervalIntegrable (fun u ↦ Λ u ω) volume 0 r) (ha : 0 ≤ a) (hat : a ≤ t) :
+    ∫ u in a..t, Λ u ω * Real.exp (-(cumulativeRateF Λ ω u - cumulativeRateF Λ ω a))
+      = 1 - Real.exp (-(cumulativeRateF Λ ω t - cumulativeRateF Λ ω a)) := by
+  have hfab : IntervalIntegrable (fun u ↦ Λ u ω) volume a t :=
+    (intervalIntegrable_iff_integrableOn_Ioc_of_le hat).2 (integrableOn_Ioc_of_rate hint ha hat)
+  have key : ∀ u ∈ Set.uIcc a t,
+      ∫ v in a..u, Λ v ω = cumulativeRateF Λ ω u - cumulativeRateF Λ ω a := by
+    intro u hu
+    rw [Set.uIcc_of_le hat] at hu
+    rw [cumulativeRateF_sub hint ha hu.1, intervalIntegral.integral_of_le hu.1]
+  have hLHS : ∫ u in a..t, Λ u ω * Real.exp (-(cumulativeRateF Λ ω u - cumulativeRateF Λ ω a))
+      = ∫ u in a..t, Λ u ω * Real.exp (-(∫ v in a..u, Λ v ω)) :=
+    intervalIntegral.integral_congr fun u hu ↦ by rw [key u hu]
+  rw [hLHS, integral_mul_exp_neg_intervalIntegral hfab, key t Set.right_mem_uIcc]
+
+end ExponentialFormula
+
+section HawkesBlockIntegral
+
+variable {ν c L t : ℝ} {φ h : ℝ → ℝ}
+
+/-- **The conditional compensator of the block integrates to the conditional distribution
+function.**  For `0 ≤ τ_n ≤ t`,
+
+`∫ u in 0..t, hawkesBlockDensity h ν φ n u S = 1 - (expMeasure 1 (Ioi (hawkesLevelOf … t S))).toReal`.
+
+This is the bridge between the two halves of the martingale increment: the left hand side is the
+value `condExp_compensator_rate_block` produces and the right hand side is the factor
+`condExp_jump_mark_block` produces.  It is `intervalIntegral_rate_mul_exp_neg_cumulativeRateF` at
+the frozen rate of stage `n+1`, and the passage from the window `(0, t]` to the block `(τ_n, t]`
+costs no integrability at all: the switch of `hawkesBlockRate` is an indicator **in `u`** once `S`
+is fixed, so `setIntegral_indicator` moves it into the domain and `Ioc 0 t ∩ Ioi τ_n = Ioc τ_n t`
+finishes. -/
+theorem intervalIntegral_hawkesBlockDensity (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) {n : ℕ} {S : Finset.range n → ℝ}
+    (hS : 0 ≤ rangeShift n S n) (hle : rangeShift n S n ≤ t) :
+    ∫ u in (0 : ℝ)..t, hawkesBlockDensity h ν φ n u S
+      = 1 - (expMeasure 1 (Set.Ioi (hawkesLevelOf h ν φ n t S))).toReal := by
+  classical
+  have hint : ∀ r : ℝ, IntervalIntegrable
+      (fun u ↦ hawkesFrozenH h ν φ (rangeShift n S) (n + 1) u (() : Unit)) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesFrozenH hhm hφm hφ hc hcpos.le hL _ (n + 1) _ r
+  have hD : (fun u ↦ hawkesBlockDensity h ν φ n u S)
+      = Set.indicator (Set.Ioi (rangeShift n S n)) (fun u ↦
+          (expMeasure 1 (Set.Ioi (hawkesLevelOf h ν φ n u S))).toReal
+            * hawkesFrozenH h ν φ (rangeShift n S) (n + 1) u (() : Unit)) := by
+    funext u
+    by_cases hu : rangeShift n S n < u <;>
+      simp [hawkesBlockDensity, hawkesBlockRate, Set.indicator_apply, hu]
+  rw [hD, intervalIntegral.integral_of_le (hS.trans hle),
+    setIntegral_indicator measurableSet_Ioi, Set.Ioc_inter_Ioi, max_eq_right hS,
+    ← intervalIntegral.integral_of_le hle]
+  have hcongr : ∫ u in (rangeShift n S n)..t,
+        (expMeasure 1 (Set.Ioi (hawkesLevelOf h ν φ n u S))).toReal
+          * hawkesFrozenH h ν φ (rangeShift n S) (n + 1) u (() : Unit)
+      = ∫ u in (rangeShift n S n)..t,
+        hawkesFrozenH h ν φ (rangeShift n S) (n + 1) u (() : Unit)
+          * Real.exp (-(cumulativeRateF (hawkesFrozenH h ν φ (rangeShift n S) (n + 1))
+                (() : Unit) u
+              - cumulativeRateF (hawkesFrozenH h ν φ (rangeShift n S) (n + 1)) (() : Unit)
+                  (rangeShift n S n))) := by
+    refine intervalIntegral.integral_congr fun u hu ↦ ?_
+    rw [Set.uIcc_of_le hle] at hu
+    rw [expMeasure_Ioi one_pos (hawkesLevelOf_nonneg hhm hφm hφ hcpos hc hL hS hu.1),
+      ENNReal.toReal_ofReal (Real.exp_pos _).le, one_mul, mul_comm]
+    rfl
+  rw [hcongr, intervalIntegral_rate_mul_exp_neg_cumulativeRateF hint hS hle,
+    expMeasure_Ioi one_pos (hawkesLevelOf_nonneg hhm hφm hφ hcpos hc hL hS hle),
+    ENNReal.toReal_ofReal (Real.exp_pos _).le, one_mul]
+  rfl
+
+end HawkesBlockIntegral
