@@ -3963,16 +3963,22 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    Lücke. Was noch fehlt, ist der **Kandidat**: die geschlossene Form der
    bedingten Erwartung des Integranden `𝒜_u f` bei festem `u`, und die ist Punkt
    1 mit dem Kettenfaktor `condExp_chain_mark_block` davor.
-5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. Hängt an 3 und 4,
-   beide bewiesen, und an der Rechnung, die die beiden gegeneinander hält; auch
-   sie steht seit dem neunten Lauf des 2026-09-13
-   (`intervalIntegral_rate_mul_exp_neg_cumulativeRateF`), und mit ihr die
-   **Brücke** `intervalIntegral_hawkesBlockDensity`, die den Wert des
-   Kompensatorterms in den Faktor des Sprungterms übersetzt. Was noch fehlt, ist
-   Buchhaltung: die Herausziehung des `ℋ_n`-meßbaren beschränkten Kettenfaktors
-   `μ f (Y_n) − f (Y_n)` aus dem Kompensatorterm, und die Identifikation von
-   `X_u ω` mit `Y_n` im Fenster `(τ_n, τ_{n+1}]` — eine pfadweise Aussage über
-   `stepPath`.
+5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. **Bewiesen im
+   zehnten Lauf des 2026-09-13** für den beschränkten nichtlinearen Fall, unter
+   demselben Namen und über derselben σ-Algebra `ℋ_n`. Er hängt an 3 und 4, an
+   der Rechnung zwischen ihnen
+   (`intervalIntegral_rate_mul_exp_neg_cumulativeRateF`) und an der Brücke
+   `intervalIntegral_hawkesBlockDensity`; dazugekommen ist die Herausziehung des
+   `ℋ_n`-meßbaren beschränkten Kettenfaktors `μ f (Y_n) − f (Y_n)`, der **vor**
+   dem Integralzeichen steht, und die Erweiterung der Brücke auf die
+   Stichprobenpunkte mit `t < τ_n`, an denen beide Seiten verschwinden
+   (`intervalIntegral_hawkesBlockDensity_of_nonneg`, `hawkesLevelOf_nonpos`,
+   `expMeasure_Ioi_of_nonpos`). Siehe den Abschnitt „Der Martingalzuwachs des
+   Blocks: zwei Hälften, ein Faktor davor, und ein Stichprobenpunkt, an dem beide
+   Seiten verschwinden". Eine pfadweise Aussage über `stepPath` kommt darin
+   **nicht** vor: der Kettenfaktor steht vor dem Integral, und die
+   Identifikation von `X_u` mit `Y_n` im Fenster wird erst gebraucht, wenn der
+   Erzeuger als `𝒜_u f` und nicht als Produkt geschrieben wird.
 6. `martingale_mpFamilyF_truncRateF` — die Summation über `n`, also das Martingal
    des **gestutzten** Problems. Hängt an 5 und daran, daß unterhalb der
    Deckelung `a` nur endlich viele Sprünge liegen.
@@ -4172,6 +4178,192 @@ schon bewiesenen Hälften des Martingalzuwachses stand — und dazu die **Brück
 `condExp_jump_mark_block` liefert. Einzelheiten im Abschnitt „Die
 Exponentialformel für eine bloß meßbare Rate, und warum Mathlibs
 Substitutionsregeln sie nicht hergeben".
+
+*Stand 2026-09-13, zehnter Lauf des Tages: **elf**.* Punkt 5 der Gruppe A — der
+Martingalzuwachs des Blocks — ist bewiesen, als
+`condExp_mpFamilyF_increment_eq_zero`, für den beschränkten nichtlinearen Fall
+und über derselben σ-Algebra `ℋ_n`. Gruppe A ist damit auf **zwei** Aussagen
+geschrumpft (2 und 6), und keine von ihnen ist mehr eine Rechnung: Punkt 2 ist
+eine Umschreibung von Punkt 1, Punkt 6 die Summation über `n`. Einzelheiten im
+Abschnitt „Der Martingalzuwachs des Blocks: zwei Hälften, ein Faktor davor, und
+ein Stichprobenpunkt, an dem beide Seiten verschwinden".
+
+*Stand 2026-09-13, elfter Lauf des Tages: unverändert **elf**.* Keine der elf ist
+bewiesen worden; was steht, ist die Überführung von Punkt 5 in die
+**Erzeugergestalt** des Manuskripts,
+`condExp_mpFamilyF_increment_eq_zero_generator`. Sie ist keine eigene offene
+Aussage gewesen, sondern die Zusage, mit der Punkt 5 im Vorlauf abgeschlossen
+wurde, und sie ist damit eingelöst: die Formalisierung des Zuwachses liest jetzt
+denselben Wortlaut wie `thm:pathjumpMP`. Einzelheiten im Abschnitt „Die
+Erzeugergestalt des Zuwachses, und warum sie keine Nullmenge kostet".
+
+### Die Erzeugergestalt des Zuwachses, und warum sie keine Nullmenge kostet
+
+*(Der Abschluß von Punkt 5 der Gruppe A, bewiesen am 2026-09-13 im elften Lauf
+des Tages.)*
+
+> `condExp_mpFamilyF_increment_eq_zero_generator` — für den beschränkten
+> nichtlinearen Hawkes-Prozeß, `f` meßbar und beschränkt, `0 ≤ t`:
+> `E[(f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t}`
+> `  − ∫_0^t (μ f (X_u) − f (X_u)) 1_{τ_n<u} Λ_u 1_{u<τ_{n+1}} du | ℋ_n] = 0`,
+> mit dem Erzeuger **unter** dem Integralzeichen.
+
+Gegen `condExp_mpFamilyF_increment_eq_zero` ist nichts abgeschwächt und nichts
+hinzugenommen: dieselben Voraussetzungen, dieselbe σ-Algebra, und der Beweis ist
+`condExp_congr_ae` über einer Gleichheit der beiden Integranden.
+
+**Die angesagte Nullmengen-Abänderung wird nicht gebraucht, und das ist der
+Befund.** Der Vorschlag des Vorlaufs hat sie erwartet, mit der richtigen
+Begründung: `stepPath` ist auf `[τ_n, τ_{n+1})` konstant, der Zuwachs `D_n` liest
+`(τ_n, τ_{n+1}]`, und die beiden unterscheiden sich in zwei Punkten. Nur trägt
+der Kompensator diese beiden Fenster gar nicht. Die Indikatoren, die wirklich
+dastehen, sind `τ_n < u` und `u < τ_{n+1}` — das **offene** Intervall, und das
+liegt auf **beiden** Seiten im Fenster von `stepPath`. Wo der Integrand überhaupt
+eingeschaltet ist, sitzt der Pfad also ohne weiteres bei `Y_n`; wo er
+ausgeschaltet ist, sind beide Seiten `0`. Die Gleichheit ist **punktweise in
+`u`**, und `intervalIntegral.integral_congr` genügt.
+
+Was an fast sicherer Voraussetzung übrigbleibt, ist allein die Positivität der
+Wartezeiten, die `hawkesProcessH_eq_stepPath` verlangt und die
+`ae_pos_snd_jumpMeasure` liefert. Die Nichtexplosion kommt nicht vor.
+
+**Der eine Schritt, der dabei zu tun war**, ist die Übersetzung zwischen den
+beiden Sprachen, in denen die Sprungzeit dasteht: der Kompensator trägt seinen
+oberen Indikator über `jumpTimeFE`, die nach `ℝ≥0∞` gehobene Sprungzeit,
+während `hawkesProcessH_eq_of_mem_Ico` die reelle `hawkesJumpTimeH` liest.
+
+> `lt_hawkesJumpTimeH_of_ofReal_lt_jumpTimeFE` — aus
+> `ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m` folgt
+> `u < hawkesJumpTimeH h ν φ ω.2 ω m`.
+
+Sie geht über `jumpTimeFE_eq_ofReal` — dessen Voraussetzung, die Divergenz der
+kumulierten Rate, die beschränkte Nichtlinearität aus `0 < c` gibt — und
+`jumpTimeF_hawkesSelfRateH`, und dann über `ENNReal.ofReal_lt_ofReal_iff'`, das
+`u < τ_m` und `0 < τ_m` in einem hergibt; eine Positivität der Sprungzeit ist
+daher nicht eigens zu beschaffen.
+
+**Die Zwischenaussage ist pfadweise gestellt und nicht bedingt**, und das ist
+Absicht: `intervalIntegral_generator_eq_mul` sagt an **jedem** Stichprobenpunkt
+mit positiven Wartezeiten, daß das Integral mit dem Erzeuger darin das Produkt
+aus Kettenfaktor und Integral ist. Sie verlangt weder ein Maß noch eine
+Markoveigenschaft des Kerns `mu` — `mu` tritt in ihr nur als Buchstabe auf —, und
+sie ist damit für den Zusammenbau von Punkt 6 ebenso brauchbar wie hier.
+
+### Die Blöcke sind disjunkt, und außerhalb der Sprungzeiten schöpfen sie aus
+
+*(Die pfadweise Hälfte von Punkt 6 der Gruppe A, bewiesen am 2026-09-13 im elften
+Lauf des Tages. Sie ist über **Treppenpfade schlechthin** gestellt; Poisson,
+Geburt-Tod, M/M/1 und Hawkes bekommen sie mit demselben Aufruf.)*
+
+Punkt 6 summiert den Blockzuwachs über `n`. Was diese Summation trägt, ist keine
+Wahrscheinlichkeitsaussage, sondern eine über die Fenster: zu jeder Zeit `u` ist
+**höchstens ein** Block eingeschaltet, und außerhalb der Sprungzeiten **genau
+einer**. Beides steht jetzt da, und beides liest von der Konstruktion nichts als
+die Monotonie der Zeiten:
+
+> `eq_stepIndex_of_mem_Ioo` — für `T` monoton und `T n < u < T (n+1)` ist
+> `n = stepIndex T u`. Das ist `stepIndex_eq_of` mit strikter linker
+> Ungleichung, und diese Gestalt ist die, die der Kompensator wirklich trägt.
+> `eq_of_mem_Ioo_of_mem_Ioo` — zwei offene Fenster um denselben Punkt haben
+> denselben Index. Die Disjunktheit.
+> `existsUnique_mem_Ioo` — unter drei Voraussetzungen `∃! n, T n < u < T (n+1)`.
+
+**Die drei Voraussetzungen von `existsUnique_mem_Ioo` sind genau die drei Weisen,
+auf die die Aussage scheitern kann**, und keine ist entbehrlich:
+
+* `hex : ∃ n, u < T (n+1)` — die Nichtexplosion, und zwar **am einzelnen Punkt
+  `u`** und nicht überall. Das ist die Stelle, an der die Nichtexplosion in
+  Punkt 6 zum ersten Mal wirklich auftritt: sie ist hier nicht zu umgehen,
+  sondern zu benennen. Im beschränkten nichtlinearen Fall ist sie aus
+  `le_hawkesJumpTimeH` zu haben, und dort pfadweise.
+* `h0 : T 0 < u` — unterhalb der ersten Zeit ist kein Block eingeschaltet. In
+  allen Konstruktionen hier ist `T 0 = 0`, also ist dies `0 < u`.
+* `hne : ∀ k, T k ≠ u` — an einer Sprungzeit selbst ist keiner eingeschaltet, denn
+  die Fenster sind offen. Das ist eine abzählbare Ausnahmemenge und damit eine
+  Lebesgue-Nullmenge; **hier**, und nicht bei der Erzeugergestalt, ist die Stelle,
+  an der die im zehnten Lauf angesagte Nullmenge tatsächlich gebraucht wird.
+
+Die Disjunktheit dagegen gilt **ohne jede** dieser drei: sie ist eine Zeile aus
+`stepIndex_eq_of`. Das ist die nützlichere Hälfte, weil sie an jedem
+Stichprobenpunkt steht, auch am explosiven.
+
+### Der Martingalzuwachs des Blocks: zwei Hälften, ein Faktor davor, und ein Stichprobenpunkt, an dem beide Seiten verschwinden
+
+*(Punkt 5 der Gruppe A, bewiesen am 2026-09-13 im zehnten Lauf des Tages.)*
+
+> `condExp_mpFamilyF_increment_eq_zero` — für den beschränkten nichtlinearen
+> Hawkes-Prozeß, `f` meßbar und beschränkt, `0 ≤ t`:
+> `E[(f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t}`
+> `  − (μ f (Y_n) − f (Y_n)) ∫_0^t 1_{τ_n<u} Λ_u 1_{u<τ_{n+1}} du | ℋ_n] = 0`.
+
+Der Beweis ist `condExp_sub` über den beiden schon bewiesenen Hälften, und
+zwischen ihnen steht keine Rechnung mehr. Was dazukam, ist **zweierlei
+Buchhaltung**, und beide Stücke waren im Vorlauf benannt.
+
+**Der Kettenfaktor steht vor dem Integral und nicht darin.** Das ist keine
+Abschwächung, sondern die Gestalt, die der Erzeuger im Fenster hat: auf
+`(τ_n, τ_{n+1}]` sitzt der Pfad bei `Y_n`, also ist
+`μ f (X_u) − f (X_u) = μ f (Y_n) − f (Y_n)` dort konstant in `u`, und der Faktor
+ist genau auf der Menge konstant, auf der der Integrand überhaupt eingeschaltet
+ist. Er ist `ℋ_n`-meßbar — er liest `Y_n`, und `n` liegt in `Finset.range (n+1)`
+— und beschränkt durch `2 C`, also nimmt ihn
+`condExp_mul_of_stronglyMeasurable_left` in **einem** Schritt heraus. Die im
+Vorlauf gestellte Entscheidung, ob der Faktor vor oder hinter das Integralzeichen
+gezogen wird, ist damit zugunsten von *vorn* gefallen, und der Prüfstein ist
+eingehalten: `τ_{n+1}` kommt in der Aussage nicht als Integrationsgrenze vor.
+
+**Und die Brücke mußte an einer Stelle erweitert werden, an der sie nicht galt.**
+`intervalIntegral_hawkesBlockDensity` verlangt `τ_n ≤ t`; die beiden bedingten
+Erwartungen aber stehen an **jedem** Stichprobenpunkt, und oberhalb von `t` ist
+der eine Wert nicht der andere, sondern beide sind `0`. Links, weil der Schalter
+von `hawkesBlockRate` im Fenster nie umgelegt wird; rechts, weil der Pegel
+`Λ_t − Λ_{τ_n}` dann **nichtpositiv** ist und die Exponentialverteilung oberhalb
+eines nichtpositiven Pegels ihre ganze Masse hat. Beides ist neu:
+`hawkesLevelOf_nonpos` (die kumulierte gefrorene Rate ist monoton auf `[0,∞)`)
+und `expMeasure_Ioi_of_nonpos`, das `expMeasure_Ioi` unterhalb von `0`
+fortsetzt — dort gibt es keine Masse mehr zu verlieren.
+`intervalIntegral_hawkesBlockDensity_of_nonneg` ist die Zusammensetzung und
+verlangt nur noch `0 ≤ τ_n`, was jede Sprungzeit erfüllt.
+
+**Eine Stolperstelle, und sie ist dieselbe wie im achtzehnten Lauf des
+2026-09-10.** Die Meßbarkeit der Rate auf dem **vertauschten** Paar,
+`fun q : ℝ × Ω ↦ hawkesSelfRateH h ν φ q.1 q.2`, darf nicht in einem Schritt aus
+`measurable_uncurry_hawkesSelfRateH` gewonnen werden: die Unifikation der
+Komposition mit der Zielgestalt **terminiert nicht** (`whnf`-Timeout, auch bei
+einer Million Herzschlägen — es ist keine langsame Rechnung, sondern eine
+Schleife). Zu nehmen ist der Umweg des Nachbarbeweises: erst die Komposition
+unter eigenem Namen, dann die Zielgestalt durch bloßes Hinschreiben. Dieselbe
+Lehre wie dort — **nicht am Ziel unifizieren, sondern das Ziel treffen.**
+
+**Und der Pfad im Fenster, im selben Lauf.** Daß die Produktgestalt und die
+Erzeugergestalt des Manuskripts dieselbe Zahl sind, ruht auf einer pfadweisen
+Aussage, und sie steht als Satz über **Treppenpfade schlechthin**:
+
+> `stepPath_eq_of_mem_Ico` — für `T` monoton und `T n ≤ t < T (n+1)` ist
+> `stepPath T y t = y n`, in einer Zeile aus `stepIndex_eq_of`.
+> `hawkesProcessH_eq_of_mem_Ico` — die Instanz für den Hawkes-Prozeß.
+
+Der allgemeine Satz ist kürzer als seine Instanz; Poisson, Geburt-Tod und M/M/1
+bekommen ihn mit demselben Aufruf. Die Nichtexplosion kommt darin nicht vor: der
+Müllwert von `stepIndex` wird genau dort zurückgegeben, wo *kein* Fenster `t`
+enthält, und `t < T (n+1)` sagt, daß dieses eines ist. **Zu beachten ist die
+Fensterkonvention:** `stepPath` liest `[τ_n, τ_{n+1})`, der Zuwachs `D_n` liest
+`(τ_n, τ_{n+1}]`; die beiden unterscheiden sich in zwei Punkten, das Integral über
+sie nicht. ~~Die Abänderung auf dieser Nullmenge ist der eine Schritt, der zwischen
+der Produkt- und der Erzeugergestalt noch fehlt.~~ *(Diese Ansage ist am
+2026-09-13 im elften Lauf des Tages widerlegt worden: eine Abänderung auf einer
+Nullmenge wird nicht gebraucht. Der Kompensator trägt als Indikatoren `τ_n < u`
+und `u < τ_{n+1}`, also das **offene** Intervall, und das liegt auf beiden Seiten
+im Fenster von `stepPath`; die Gleichheit der Integranden ist punktweise in `u`.
+Siehe den Abschnitt „Die Erzeugergestalt des Zuwachses, und warum sie keine
+Nullmenge kostet".)*
+
+**Was von Gruppe A bleibt**, sind Punkt 2 (die Dichtegestalt, eine Umschreibung
+von Punkt 1) und Punkt 6 (die Summation über `n`). Punkt 5 liest die Dichte
+nicht; er liest den Kompensator so, wie `condExp_compensator_rate_block` ihn
+liefert, und die Brücke übersetzt ihn. Punkt 2 bleibt damit das, was er im
+Vorlauf war: die Fassung, die ein Leser erwartet, und nicht die, die der Beweis
+braucht.
 
 ### Die Exponentialformel für eine bloß meßbare Rate, und warum Mathlibs Substitutionsregeln sie nicht hergeben
 

@@ -25492,3 +25492,542 @@ theorem intervalIntegral_hawkesBlockDensity (hhm : Measurable h) (hφm : Measura
   rfl
 
 end HawkesBlockIntegral
+
+section IncrementZero
+
+/-!
+## The martingale increment of the block is a martingale increment -- point 5 of group A
+
+`E[D_n | ℋ_n] = 0` with
+
+`D_n = (f (Y_{n+1}) - f (Y_n)) 1_{τ_{n+1} ≤ t} - (μ f (Y_n) - f (Y_n)) ∫_0^t 1_{τ_n < u} Λ_u
+       1_{u < τ_{n+1}} du`
+
+for the bounded nonlinear Hawkes process.  Both halves are conditioned separately --
+`condExp_jump_mark_block` and `condExp_compensator_rate_block` -- and
+`intervalIntegral_hawkesBlockDensity` translates the value of the second into the factor of the
+first.  What this section adds is the bookkeeping between them: the pull out of the `ℋ_n`-measurable
+bounded chain factor `μ f (Y_n) - f (Y_n)` in front of the compensator, and the extension of the
+bridge to the sample points with `t < τ_n`, where **both** sides vanish and the bridge as it stood
+did not apply.
+
+The chain factor stands in front of the integral and not inside it.  That is not a weakening: in
+the window `(τ_n, τ_{n+1}]` the path sits at `Y_n`, so `μ f (X_u) - f (X_u) = μ f (Y_n) - f (Y_n)`
+there, and the factor is constant in `u` exactly on the set where the integrand is switched on.
+-/
+
+variable {E : Type*} [MeasurableSpace E] {ν c L t : ℝ} {φ h : ℝ → ℝ}
+
+/-- **The exponential law puts its whole mass above a nonpositive level.**  `expMeasure_Ioi` asks
+for `0 ≤ x` and gives the tail; below `0` there is no mass to lose, and the tail is `1`. -/
+theorem expMeasure_Ioi_of_nonpos {r : ℝ} (hr : 0 < r) {x : ℝ} (hx : x ≤ 0) :
+    expMeasure r (Set.Ioi x) = 1 := by
+  have hprob : IsProbabilityMeasure (expMeasure r) := isProbabilityMeasure_expMeasure hr
+  refine le_antisymm prob_le_one ?_
+  have h0 : expMeasure r (Set.Ioi (0 : ℝ)) = 1 := by
+    rw [expMeasure_Ioi hr le_rfl]
+    simp
+  rw [← h0]
+  exact measure_mono (Set.Ioi_subset_Ioi hx)
+
+/-- **The level is nonpositive below the `n`-th jump time.**  The companion of
+`hawkesLevelOf_nonneg`, and the reason the bridge extends to every sample point: the cumulated
+frozen rate is monotone on `[0, ∞)`. -/
+theorem hawkesLevelOf_nonpos (hhm : Measurable h) (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x)
+    (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) {n : ℕ}
+    {S : Finset.range n → ℝ} (ht : 0 ≤ t) (hle : t ≤ rangeShift n S n) :
+    hawkesLevelOf h ν φ n t S ≤ 0 := by
+  have hint : ∀ r : ℝ, IntervalIntegrable
+      (fun u ↦ hawkesFrozenH h ν φ (rangeShift n S) (n + 1) u (() : Unit)) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesFrozenH hhm hφm hφ hc hcpos.le hL _ (n + 1) _ r
+  have hpos : ∀ u, 0 < u →
+      0 < hawkesFrozenH h ν φ (rangeShift n S) (n + 1) u (() : Unit) :=
+    fun u _ ↦ hcpos.trans_le (le_hawkesFrozenH (c := c) hφ hc _ _ u _)
+  have hmono := monotoneOn_cumulativeRateF hint hpos (Set.mem_Ici.2 ht)
+    (Set.mem_Ici.2 (ht.trans hle)) hle
+  have hdef : hawkesLevelOf h ν φ n t S
+      = cumulativeRateF (hawkesFrozenH h ν φ (rangeShift n S) (n + 1)) (() : Unit) t
+        - cumulativeRateF (hawkesFrozenH h ν φ (rangeShift n S) (n + 1)) (() : Unit)
+            (rangeShift n S n) := rfl
+  rw [hdef]
+  linarith
+
+/-- **The bridge, at every sample point.**  `intervalIntegral_hawkesBlockDensity` asks for
+`τ_n ≤ t`; above `t` both sides are `0`, the left one because the switch of `hawkesBlockRate` is
+never thrown inside the window and the right one because the level is nonpositive and the
+exponential tail is the whole mass. -/
+theorem intervalIntegral_hawkesBlockDensity_of_nonneg (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) {n : ℕ} {S : Finset.range n → ℝ}
+    (hS : 0 ≤ rangeShift n S n) (ht : 0 ≤ t) :
+    ∫ u in (0 : ℝ)..t, hawkesBlockDensity h ν φ n u S
+      = 1 - (expMeasure 1 (Set.Ioi (hawkesLevelOf h ν φ n t S))).toReal := by
+  rcases le_or_gt (rangeShift n S n) t with hle | hlt
+  · exact intervalIntegral_hawkesBlockDensity hhm hφm hφ hcpos hc hL hS hle
+  · have hzero : ∫ u in (0 : ℝ)..t, hawkesBlockDensity h ν φ n u S = 0 := by
+      have hcongr : ∫ u in (0 : ℝ)..t, hawkesBlockDensity h ν φ n u S
+          = ∫ _ in (0 : ℝ)..t, (0 : ℝ) := by
+        refine intervalIntegral.integral_congr fun u hu ↦ ?_
+        rw [Set.uIcc_of_le ht] at hu
+        have hnot : ¬ rangeShift n S n < u := not_lt.2 (hu.2.trans hlt.le)
+        simp [hawkesBlockDensity, hawkesBlockRate, hnot]
+      rw [hcongr, intervalIntegral.integral_zero]
+    rw [hzero, expMeasure_Ioi_of_nonpos one_pos
+      (hawkesLevelOf_nonpos hhm hφm hφ hcpos hc hL ht hlt.le)]
+    simp
+
+/-- **The martingale increment of the block, over `ℋ_n`** -- point 5 of group A.
+
+`E[(f (Y_{n+1}) - f (Y_n)) 1_{τ_{n+1} ≤ t} - (μ f (Y_n) - f (Y_n)) ∫_0^t 1_{τ_n<u} Λ_u
+1_{u<τ_{n+1}} du | ℋ_n] = 0`
+
+for the bounded nonlinear Hawkes process, with `ℋ_n` the σ-algebra generated by
+`(Y_0, …, Y_n, τ_1, …, τ_n)`.
+
+The two halves are `condExp_jump_mark_block` and `condExp_compensator_rate_block`, and
+`intervalIntegral_hawkesBlockDensity_of_nonneg` says that the value of the second is the factor of
+the first.  What is added here is the pull out of the chain factor, which is `ℋ_n`-measurable and
+bounded, so `condExp_mul_of_stronglyMeasurable_left` takes it out in one step.
+
+Neither `Y_{n+1}` nor `τ_{n+1}` occurs on the right hand side -- there is no right hand side for
+them to occur in; that is the test of the statement, and it is the same test the two halves passed
+separately. -/
+theorem condExp_mpFamilyF_increment_eq_zero (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ)
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (jumpMeasure mu nu)[
+        (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          (f (ω.1 (n + 1)) - f (ω.1 n)) *
+            Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t}
+              (fun _ ↦ (1 : ℝ)) ω)
+        - (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n))
+          * (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in (0 : ℝ)..t,
+              (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+                  (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+                * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                    ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+                  (fun _ ↦ (1 : ℝ)) ω)
+        | MeasurableSpace.comap
+            (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+              ((fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)),
+                fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+            inferInstance]
+      =ᵐ[jumpMeasure mu nu] 0 := by
+  classical
+  -- the two halves, taken before anything is named, so that `set` reaches them
+  have hAcond := condExp_jump_mark_block hhm hφm hφ hφ0 hcpos hc hL ht mu nu n hf hfb
+  have hKcond := condExp_compensator_rate_block (c := c) (L := L) hhm hφm hφ hφ0 hcpos hc hL ht
+    mu nu n
+  set Hmap : (ℕ → E) × (ℕ → ℝ) →
+      (((j : Finset.range (n + 1)) → E) × (Finset.range n → ℝ)) :=
+    fun ω ↦ ((fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)),
+      fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)) with hHmap
+  have hHmapm : Measurable Hmap :=
+    (measurable_pi_lambda _ fun j : Finset.range (n + 1) ↦
+      (measurable_pi_apply (j : ℕ)).comp measurable_fst).prodMk
+      (measurable_pi_lambda _ fun i ↦
+        measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL ((i : ℕ) + 1))
+  -- the measurable sets the three indicators read
+  have hsetA : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) |
+      jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t} :=
+    measurableSet_le (measurable_jumpTimeFE_hawkesSelfRateH hhm hφm hφ hcpos hc hL (n + 1))
+      measurable_const
+  have hS₁ : MeasurableSet {q : ℝ × ((ℕ → E) × (ℕ → ℝ)) |
+      hawkesJumpTimeH h ν φ q.2.2 q.2 n < q.1} :=
+    measurableSet_lt
+      ((measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL n).comp measurable_snd)
+      measurable_fst
+  have hS₂ : MeasurableSet {q : ℝ × ((ℕ → E) × (ℕ → ℝ)) |
+      ENNReal.ofReal q.1 < jumpTimeFE (hawkesSelfRateH h ν φ) q.2 q.2.2 (n + 1)} :=
+    measurableSet_lt (ENNReal.measurable_ofReal.comp measurable_fst)
+      ((measurable_jumpTimeFE_hawkesSelfRateH hhm hφm hφ hcpos hc hL (n + 1)).comp measurable_snd)
+  -- the rate, read off the swapped pair; the composition is named first and the target shape only
+  -- afterwards, because unifying the two in one step does not terminate
+  have hrate0 : Measurable ((fun p : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦ hawkesSelfRateH h ν φ p.2 p.1) ∘
+      (fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦ (q.2, q.1))) :=
+    (measurable_uncurry_hawkesSelfRateH hhm hφm hφ hcpos hc hL).comp
+      (measurable_snd.prodMk measurable_fst)
+  have hratem : Measurable fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦ hawkesSelfRateH h ν φ q.1 q.2 :=
+    hrate0
+  -- the compensator integrand, jointly measurable and bounded by `L`
+  have hgjoint : Measurable (Function.uncurry fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+      (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+          (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+        * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+          (fun _ ↦ (1 : ℝ)) ω) := by
+    have heq : (Function.uncurry fun (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) ↦
+        (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+            (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+          * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+              ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+            (fun _ ↦ (1 : ℝ)) ω)
+        = fun q : ℝ × ((ℕ → E) × (ℕ → ℝ)) ↦
+          (Set.indicator {q : ℝ × ((ℕ → E) × (ℕ → ℝ)) |
+              hawkesJumpTimeH h ν φ q.2.2 q.2 n < q.1} (fun _ ↦ (1 : ℝ)) q
+            * hawkesSelfRateH h ν φ q.1 q.2)
+          * Set.indicator {q : ℝ × ((ℕ → E) × (ℕ → ℝ)) |
+              ENNReal.ofReal q.1 < jumpTimeFE (hawkesSelfRateH h ν φ) q.2 q.2.2 (n + 1)}
+            (fun _ ↦ (1 : ℝ)) q := by
+      funext q
+      simp only [Function.uncurry, Set.indicator_apply, Set.mem_ofPred_eq]
+    rw [heq]
+    exact ((measurable_const.indicator hS₁).mul hratem).mul (measurable_const.indicator hS₂)
+  have hind : ∀ (s : Set ((ℕ → E) × (ℕ → ℝ))) (x : (ℕ → E) × (ℕ → ℝ)),
+      0 ≤ Set.indicator s (fun _ ↦ (1 : ℝ)) x ∧ Set.indicator s (fun _ ↦ (1 : ℝ)) x ≤ 1 := by
+    intro s x
+    rw [Set.indicator_apply]
+    split_ifs <;> norm_num
+  -- the two pieces of arithmetic, on abstract reals: the terms they are applied to are large, and
+  -- `nlinarith` on them is what makes the elaboration time explode
+  have harith : ∀ a r b : ℝ, 0 ≤ a → a ≤ 1 → 0 ≤ r → r ≤ L → 0 ≤ b → b ≤ 1 → a * r * b ≤ L := by
+    intro a r b ha0 ha1 hr0 hrL hb0 hb1
+    have h1 : 0 ≤ a * r := mul_nonneg ha0 hr0
+    calc a * r * b ≤ a * r * 1 := mul_le_mul_of_nonneg_left hb1 h1
+      _ = a * r := mul_one _
+      _ ≤ 1 * r := mul_le_mul_of_nonneg_right ha1 hr0
+      _ = r := one_mul _
+      _ ≤ L := hrL
+  have harith' : ∀ d e : ℝ, |d| ≤ 2 * C → 0 ≤ e → e ≤ 1 → |d| * e ≤ 2 * C := by
+    intro d e hd he0 he1
+    calc |d| * e ≤ |d| * 1 := mul_le_mul_of_nonneg_left he1 (abs_nonneg _)
+      _ = |d| := mul_one _
+      _ ≤ 2 * C := hd
+  have hgb : ∀ (u : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)),
+      ‖(Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+            (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+          * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+              ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+            (fun _ ↦ (1 : ℝ)) ω‖ ≤ L := by
+    intro u ω
+    obtain ⟨ha0, ha1⟩ := hind {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u} ω
+    obtain ⟨hb0, hb1⟩ := hind {ω : (ℕ → E) × (ℕ → ℝ) |
+      ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)} ω
+    have hr0 : 0 ≤ hawkesSelfRateH h ν φ u ω := hcpos.le.trans (le_hawkesSelfRateH hφ hc u ω)
+    have hrL : hawkesSelfRateH h ν φ u ω ≤ L := hawkesSelfRateH_le hφ hL u ω
+    have h1 : 0 ≤ Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+        (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω := mul_nonneg ha0 hr0
+    rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg h1 hb0)]
+    exact harith _ _ _ ha0 ha1 hr0 hrL hb0 hb1
+  -- the compensator, measurable and bounded by `L * t`
+  have hKm : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in (0 : ℝ)..t,
+      (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+          (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+        * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+          (fun _ ↦ (1 : ℝ)) ω := by
+    have hswap : Measurable (Function.uncurry fun (ω : (ℕ → E) × (ℕ → ℝ)) (u : ℝ) ↦
+        (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+            (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+          * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+              ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+            (fun _ ↦ (1 : ℝ)) ω) := hgjoint.comp measurable_swap
+    simp_rw [intervalIntegral.integral_of_le ht]
+    exact (hswap.stronglyMeasurable.integral_prod_right).measurable
+  have hKb : ∀ ω : (ℕ → E) × (ℕ → ℝ), |∫ u in (0 : ℝ)..t,
+      (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+          (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+        * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+          (fun _ ↦ (1 : ℝ)) ω| ≤ L * t := by
+    intro ω
+    have hbd := intervalIntegral.norm_integral_le_of_norm_le_const
+      (C := L) (a := (0 : ℝ)) (b := t)
+      (f := fun u ↦ (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            hawkesJumpTimeH h ν φ ω.2 ω n < u} (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+          * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+              ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+            (fun _ ↦ (1 : ℝ)) ω)
+      (fun u _ ↦ hgb u ω)
+    rw [Real.norm_eq_abs] at hbd
+    have habs : |t - 0| = t := by rw [sub_zero, abs_of_nonneg ht]
+    rwa [habs] at hbd
+  have hKint : Integrable (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in (0 : ℝ)..t,
+      (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+          (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+        * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+          (fun _ ↦ (1 : ℝ)) ω) (jumpMeasure mu nu) := integrable_of_abs_le hKm hKb
+  -- the chain factor: `ℋ`-measurable, bounded by `2 C`
+  have hGmeas : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n) :=
+    ((measurable_integral_kernel_apply hf).sub hf).comp
+      ((measurable_pi_apply n).comp measurable_fst)
+  have hGb : ∀ ω : (ℕ → E) × (ℕ → ℝ), |(∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n)| ≤ 2 * C := by
+    intro ω
+    have h1 := abs_le.1 (abs_integral_le_of_abs_le (μ := mu (ω.1 n)) hfb)
+    have h2 := abs_le.1 (hfb (ω.1 n))
+    rw [abs_le]
+    constructor <;> linarith [h1.1, h1.2, h2.1, h2.2]
+  -- integrability of the two halves
+  have hAint : Integrable (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      (f (ω.1 (n + 1)) - f (ω.1 n)) *
+        Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t}
+          (fun _ ↦ (1 : ℝ)) ω) (jumpMeasure mu nu) := by
+    refine integrable_of_abs_le (C := 2 * C)
+      (((hf.comp ((measurable_pi_apply (n + 1)).comp measurable_fst)).sub
+        (hf.comp ((measurable_pi_apply n).comp measurable_fst))).mul
+        (measurable_const.indicator hsetA)) fun ω ↦ ?_
+    have h1 : |f (ω.1 (n + 1)) - f (ω.1 n)| ≤ 2 * C := by
+      have ha := abs_le.1 (hfb (ω.1 (n + 1)))
+      have hb := abs_le.1 (hfb (ω.1 n))
+      rw [abs_le]
+      constructor <;> linarith [ha.1, ha.2, hb.1, hb.2]
+    obtain ⟨hb0, hb1⟩ := hind {ω : (ℕ → E) × (ℕ → ℝ) |
+      jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t} ω
+    rw [abs_mul, abs_of_nonneg hb0]
+    exact harith' _ _ h1 hb0 hb1
+  have hBint : Integrable
+      ((fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n))
+        * (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in (0 : ℝ)..t,
+            (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+                (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+              * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                  ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+                (fun _ ↦ (1 : ℝ)) ω)) (jumpMeasure mu nu) := by
+    refine integrable_of_abs_le (C := (2 * C) * (L * t)) (hGmeas.mul hKm) fun ω ↦ ?_
+    rw [Pi.mul_apply, abs_mul]
+    exact mul_le_mul (hGb ω) (hKb ω) (abs_nonneg _) (le_trans (abs_nonneg _) (hGb ω))
+  -- only now is the σ-algebra named: a local hypothesis of type `MeasurableSpace Ω` takes part in
+  -- instance resolution, and every measurability statement above would be read over it
+  set ℋ := MeasurableSpace.comap Hmap inferInstance with hℋ
+  have hGH : StronglyMeasurable[ℋ]
+      (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n)) := by
+    have hHm : Measurable[ℋ] Hmap := fun _ hs ↦ ⟨_, hs, rfl⟩
+    have heq : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n))
+        = (fun p : (((j : Finset.range (n + 1)) → E) × (Finset.range n → ℝ)) ↦
+            (∫ y, f y ∂(mu (p.1 ⟨n, Finset.self_mem_range_succ n⟩)))
+              - f (p.1 ⟨n, Finset.self_mem_range_succ n⟩)) ∘ Hmap := rfl
+    rw [heq]
+    exact ((((measurable_integral_kernel_apply hf).sub hf).comp
+      ((measurable_pi_apply _).comp measurable_fst)).comp hHm).stronglyMeasurable
+  -- the compensator with the chain factor in front
+  have hBcond : (jumpMeasure mu nu)[
+        (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n))
+          * (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in (0 : ℝ)..t,
+              (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+                  (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+                * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                    ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+                  (fun _ ↦ (1 : ℝ)) ω) | ℋ]
+      =ᵐ[jumpMeasure mu nu] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        ((∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n)) * ∫ u in (0 : ℝ)..t,
+          hawkesBlockDensity h ν φ n u
+            (fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)) := by
+    refine (condExp_mul_of_stronglyMeasurable_left hGH hBint hKint).trans ?_
+    filter_upwards [hKcond] with ω hω
+    simp only [Pi.mul_apply, hω]
+  -- and the two halves cancel
+  refine (condExp_sub hAint hBint ℋ).trans ?_
+  filter_upwards [hAcond, hBcond] with ω h1 h2
+  have hS0 : 0 ≤ rangeShift n
+      (fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)) n := by
+    rw [rangeShift_eq_hawkesJumpTimeH ω n n le_rfl]
+    exact hawkesJumpTimeH_nonneg h ν φ ω.2 ω n
+  have hbr := intervalIntegral_hawkesBlockDensity_of_nonneg hhm hφm hφ hcpos hc hL hS0 ht
+  simp only [Pi.sub_apply, Pi.zero_apply, h1, h2, hbr]
+  ring
+
+end IncrementZero
+
+section BlockWindow
+
+/-!
+## The path in the window, pathwise
+
+The martingale increment writes the compensator with the generator `𝒜_u f` under the integral
+sign, and `condExp_mpFamilyF_increment_eq_zero` writes the chain factor `μ f (Y_n) - f (Y_n)` in
+front of it.  The two are the same number because the path sits at `Y_n` throughout the window,
+and that is the statement of this section.  It is about `stepPath` and reads nothing of the Hawkes
+construction; the Hawkes process is an instance.
+
+The window is `[τ_n, τ_{n+1})` and not the `(τ_n, τ_{n+1}]` of the increment: `stepPath` is right
+continuous, so it takes the value `Y_{n+1}` at `τ_{n+1}` itself.  The two windows differ in two
+points, the integral over them does not, and it is the integral that the increment reads.
+-/
+
+variable {α E : Type*} [ConditionallyCompleteLinearOrder α]
+
+/-- **A step path is constant on its window**, at every sample point and without any hypothesis
+beyond the monotonicity of the times: for `T n ≤ t < T (n+1)` the path takes the value `y n`.
+The explosion is nowhere in sight -- the junk value of `stepIndex` is returned only where no
+window contains `t`, and `h2` says that this one does. -/
+theorem stepPath_eq_of_mem_Ico {T : ℕ → α} {y : ℕ → E} {n : ℕ} {t : α} (hT : Monotone T)
+    (h1 : T n ≤ t) (h2 : t < T (n + 1)) : stepPath T y t = y n := by
+  rw [stepPath, stepIndex_eq_of (Or.inr h1) h2 hT]
+
+/-- **An open window names its index**, and it names `stepIndex`.  This is `stepIndex_eq_of` with
+the left inequality strict, which is the shape the compensator carries: its two indicators are
+`T n < u` and `u < T (n+1)`. -/
+theorem eq_stepIndex_of_mem_Ioo {T : ℕ → α} {n : ℕ} {u : α} (hT : Monotone T) (h1 : T n < u)
+    (h2 : u < T (n + 1)) : n = stepIndex T u :=
+  (stepIndex_eq_of (Or.inr h1.le) h2 hT).symm
+
+/-- **The open windows are pairwise disjoint.**  At most one block of the martingale increment is
+switched on at any one time, and this is the reason: two open windows containing the same point
+have the same index.  Monotonicity of the times is all it reads. -/
+theorem eq_of_mem_Ioo_of_mem_Ioo {T : ℕ → α} {m n : ℕ} {u : α} (hT : Monotone T) (hm1 : T m < u)
+    (hm2 : u < T (m + 1)) (hn1 : T n < u) (hn2 : u < T (n + 1)) : m = n :=
+  (eq_stepIndex_of_mem_Ioo hT hm1 hm2).trans (eq_stepIndex_of_mem_Ioo hT hn1 hn2).symm
+
+/-- **And off the jump times they exhaust**: there is exactly one block switched on.  The three
+hypotheses are exactly the three ways the statement can fail, and each is necessary -- `hex` is non
+explosion **at the single point `u`**, `h0` puts `u` past the first time, and `hne` keeps it off the
+times themselves, where the path has already moved on.
+
+This is the pathwise half of the summation over `n`: it says that the indicators
+`1_{T n < u} 1_{u < T (n+1)}` of the blocks add up to `1`, and it says it without a measure. -/
+theorem existsUnique_mem_Ioo {T : ℕ → α} {u : α} (hT : Monotone T) (hex : ∃ n, u < T (n + 1))
+    (h0 : T 0 < u) (hne : ∀ k, T k ≠ u) : ∃! n, T n < u ∧ u < T (n + 1) := by
+  refine ⟨stepIndex T u, ⟨?_, lt_stepIndex_succ hex⟩, ?_⟩
+  · rcases eq_or_ne (stepIndex T u) 0 with hz | hz
+    · rw [hz]; exact h0
+    · exact lt_of_le_of_ne (T_stepIndex_le hz) (hne _)
+  · rintro m ⟨hm1, hm2⟩
+    exact eq_stepIndex_of_mem_Ioo hT hm1 hm2
+
+end BlockWindow
+
+section HawkesBlockWindow
+
+variable {E : Type*} [MeasurableSpace E] {ν c L : ℝ} {φ h : ℝ → ℝ}
+  {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **The bounded nonlinear Hawkes process sits at the `n`-th mark throughout the `n`-th window**:
+for `τ_n ≤ u < τ_{n+1}` it is `Y_n`.  This is what turns the product form of
+`condExp_mpFamilyF_increment_eq_zero` into the generator form of the manuscript, where
+`μ f (X_u) - f (X_u)` stands under the integral sign. -/
+theorem hawkesProcessH_eq_of_mem_Ico (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) {n : ℕ}
+    {u : ℝ} (h1 : hawkesJumpTimeH h ν φ ω.2 ω n ≤ u)
+    (h2 : u < hawkesJumpTimeH h ν φ ω.2 ω (n + 1)) :
+    hawkesProcessH h ν φ u ω = ω.1 n := by
+  rw [hawkesProcessH_eq_stepPath hhm hφm hφ hφ0 hcpos hc hL hxi u]
+  exact stepPath_eq_of_mem_Ico
+    (monotone_hawkesJumpTimeH hhm hφm hφ hφ0 hcpos hc hL hxi) h1 h2
+
+end HawkesBlockWindow
+
+section IncrementGenerator
+
+/-!
+## The martingale increment in the generator form of the manuscript
+
+`condExp_mpFamilyF_increment_eq_zero` writes the compensator as the **product** of the chain factor
+`μ f (Y_n) - f (Y_n)` with `∫_0^t 1_{τ_n < u} Λ_u 1_{u < τ_{n+1}} du`.  The manuscript writes it
+with the generator under the integral sign, `∫_0^t (μ f (X_u) - f (X_u)) 1_{τ_n < u} Λ_u
+1_{u < τ_{n+1}} du`.  This section says that the two are the same number, and therefore that the
+conditional expectation of the increment written the manuscript's way vanishes as well.
+
+**The passage costs no null set, and that was not expected.**  The proposal that asked for this
+statement expected an `integral_congr_ae` over the two end points of the window, because the
+increment reads `(τ_n, τ_{n+1}]` while `stepPath` is constant on `[τ_n, τ_{n+1})`.  But the two
+indicators the compensator actually carries are `τ_n < u` and `u < τ_{n+1}` -- the **open**
+interval, which sits inside the window of `stepPath` on both sides.  So wherever the integrand is
+switched on at all, the path is at `Y_n` outright, and where it is switched off both sides are `0`.
+The identity is pointwise in `u`; the only almost sure ingredient left is the positivity of the
+waiting times, which `hawkesProcessH_eq_stepPath` needs and `ae_pos_snd_jumpMeasure` supplies.
+-/
+
+variable {E : Type*} [MeasurableSpace E] {ν c L t : ℝ} {φ h : ℝ → ℝ}
+
+/-- **Below the `m`-th jump time in `ℝ≥0∞` is below it in `ℝ`.**  The compensator carries its upper
+indicator over `jumpTimeFE`, the lifted jump time, while `hawkesProcessH_eq_of_mem_Ico` reads the
+real valued `hawkesJumpTimeH`; this is the step between them.  It is the one direction that is
+needed, and it needs no positivity of the bound: `ENNReal.ofReal_lt_ofReal_iff'` hands out both
+`u < τ_m` and `0 < τ_m` at once. -/
+theorem lt_hawkesJumpTimeH_of_ofReal_lt_jumpTimeFE {ω : (ℕ → E) × (ℕ → ℝ)} (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) {u : ℝ}
+    {m : ℕ} (hu : ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m) :
+    u < hawkesJumpTimeH h ν φ ω.2 ω m := by
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRateH h ν φ u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL ω r
+  have htop : Tendsto (cumulativeRateF (hawkesSelfRateH h ν φ) ω) atTop atTop :=
+    tendsto_cumulativeRateF_atTop_of_le hint hcpos fun u _ ↦ le_hawkesSelfRateH hφ hc u ω
+  rw [jumpTimeFE_eq_ofReal htop, jumpTimeF_hawkesSelfRateH hhm hφm hφ hφ0 hcpos hc hL hxi] at hu
+  exact (ENNReal.ofReal_lt_ofReal_iff'.1 hu).1
+
+/-- **The compensator with the generator under the integral sign is the compensator with the chain
+factor in front**, at every sample point with positive waiting times.  Pointwise in `u`: where both
+indicators are on, `τ_n < u < τ_{n+1}`, so `hawkesProcessH_eq_of_mem_Ico` puts the path at `Y_n`;
+where either is off, both sides are `0`. -/
+theorem intervalIntegral_generator_eq_mul (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) {f : E → ℝ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ k, 0 < ω.2 k) (n : ℕ) :
+    (∫ u in (0 : ℝ)..t,
+        ((∫ y, f y ∂(mu (hawkesProcessH h ν φ u ω))) - f (hawkesProcessH h ν φ u ω))
+          * ((Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+                (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+            * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+              (fun _ ↦ (1 : ℝ)) ω))
+      = ((∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n)) * ∫ u in (0 : ℝ)..t,
+          (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+              (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+            * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+              (fun _ ↦ (1 : ℝ)) ω := by
+  rw [← intervalIntegral.integral_const_mul]
+  refine intervalIntegral.integral_congr fun u _ ↦ ?_
+  by_cases h1 : hawkesJumpTimeH h ν φ ω.2 ω n < u
+  · by_cases h2 : ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)
+    · rw [hawkesProcessH_eq_of_mem_Ico hhm hφm hφ hφ0 hcpos hc hL hxi h1.le
+        (lt_hawkesJumpTimeH_of_ofReal_lt_jumpTimeFE hhm hφm hφ hφ0 hcpos hc hL hxi h2)]
+    · have hnot : ω ∉ {ω : (ℕ → E) × (ℕ → ℝ) |
+          ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)} := h2
+      rw [Set.indicator_of_notMem hnot (fun _ ↦ (1 : ℝ))]
+      ring
+  · have hnot : ω ∉ {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u} := h1
+    rw [Set.indicator_of_notMem hnot (fun _ ↦ (1 : ℝ))]
+    ring
+
+/-- **The martingale increment of the block, in the generator form of the manuscript** -- point 5 of
+group A with the compensator written the way `thm:pathjumpMP` writes it:
+
+`E[(f (Y_{n+1}) - f (Y_n)) 1_{τ_{n+1} ≤ t} - ∫_0^t (μ f (X_u) - f (X_u)) 1_{τ_n < u} Λ_u
+1_{u < τ_{n+1}} du | ℋ_n] = 0`
+
+for the bounded nonlinear Hawkes process.  Against `condExp_mpFamilyF_increment_eq_zero` nothing is
+weakened and nothing new is assumed: the two integrands are equal at every sample point with
+positive waiting times, which is almost every one.
+
+The non explosion does not occur, and it cannot: `hawkesProcessH_eq_of_mem_Ico` reads nothing of
+the sample point but the monotonicity of the jump times, and that is `strictMono_hawkesJumpTimeH`,
+which the bounded rate gives outright. -/
+theorem condExp_mpFamilyF_increment_eq_zero_generator (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ)
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (jumpMeasure mu nu)[
+        (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          (f (ω.1 (n + 1)) - f (ω.1 n)) *
+            Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t}
+              (fun _ ↦ (1 : ℝ)) ω)
+        - (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in (0 : ℝ)..t,
+            ((∫ y, f y ∂(mu (hawkesProcessH h ν φ u ω))) - f (hawkesProcessH h ν φ u ω))
+              * ((Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+                    (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+                * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                    ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+                  (fun _ ↦ (1 : ℝ)) ω))
+        | MeasurableSpace.comap
+            (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+              ((fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)),
+                fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+            inferInstance]
+      =ᵐ[jumpMeasure mu nu] 0 := by
+  refine (condExp_congr_ae ?_).trans
+    (condExp_mpFamilyF_increment_eq_zero hhm hφm hφ hφ0 hcpos hc hL ht mu nu n hf hfb)
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+  simp only [Pi.sub_apply, Pi.mul_apply]
+  rw [intervalIntegral_generator_eq_mul hhm hφm hφ hφ0 hcpos hc hL mu hω n]
+
+end IncrementGenerator
