@@ -4895,6 +4895,90 @@ kostet hier nichts, weil die Kette im ersten Faktor eines Produkts mit den
 Wartezeiten sitzt; und jede daraus bewiesene bedingte Aussage gilt erst recht
 für die kleinere σ-Algebra, sobald der Turmschluß angewandt ist.
 
+### Der eingefrorene Pegel, und die bedingte Überlebensfunktion des beschränkten nichtlinearen Hawkes-Prozesses
+
+Das Einfrieren verlangt ein Ereignis der Gestalt `{G (Z ω) < Y ω}`, mit `Y` der
+frischen Wartezeit und `G` einer Funktion der Bedingungsgröße allein. Was
+`setOf_lt_jumpTimeFE_eq` gibt, ist `{t < τ_{n+1}} = {Λ_t < ξ_0 + ⋯ + ξ_n}`, und
+das ist **nicht** von dieser Gestalt: der Pegel `Λ_t` ist die kumulierte
+selbstbezügliche Rate, die jeden Sprung unter `t` liest, und auf `{τ_n ≤ t}` sind
+das nicht nur die ersten `n`.
+
+Repariert wird das dadurch, daß der Pegel auf dem Fenster durch den
+**eingefrorenen** ersetzt werden darf. Zwei Aussagen leisten es, und sie sind
+voneinander unabhängig:
+
+**`hawkesJumpTimeH_congr_range` — die `n`-te Sprungzeit liest nur
+`ξ_0, …, ξ_{n-1}`.** Stimmen zwei Wartezeitfolgen auf `Finset.range n` überein,
+so stimmen die Sprungzeiten aller Stufen `m ≤ n` überein
+(`hawkesJumpTimeH_congr_of_le`, eine Induktion über die Stufenschranke). Sie
+trägt **keine** Voraussetzung an `h`, `φ` oder die Schranken: die Abhängigkeit
+einer Rekursionsstufe von ihren Eingaben ist eine Aussage über die Formel und
+nicht über die Daten. Trüge sie eine, wäre die Rekursion falsch aufgeschrieben.
+
+**`lt_jumpTimeFE_hawkesSelfRateH_iff` — dasselbe Ereignis mit dem eingefrorenen
+Pegel.** Also `t < τ_{n+1}` genau dann, wenn die kumulierte **eingefrorene** Rate
+der Stufe `n+1` bei `t` unter `ξ_0 + ⋯ + ξ_n` liegt.
+
+> Die beiden Seiten stimmen aus **zwei verschiedenen Gründen** überein, und der
+> zweite ist der Punkt. Innerhalb des Fensters `t ≤ τ_{n+1}` sind die beiden
+> Pegel gleich (`hawkesRateH_countingMeasure`). Jenseits davon sind sie es nicht
+> — die selbstbezügliche Rate liest die Sprünge, die die eingefrorene fallen
+> gelassen hat, und die Nichtlinearität ist nicht als monoton vorausgesetzt —,
+> aber dort haben **beide** Pegel die Partialsumme schon erreicht, denn die
+> kumulierte eingefrorene Rate der Stufe `n+1` nimmt sie bei `τ_{n+1}` an
+> (`cumulativeRateF_hawkesJumpTimeH`) und wächst von dort weiter. Also sind beide
+> Seiten falsch, und die Äquivalenz hält trotzdem.
+
+**`hawkesFrozenLevel` — der Pegel als Funktion der Bedingungsgröße.** Die
+kumulierte eingefrorene Rate bei `t`, vermindert um die Partialsumme, die die
+ersten `n` Sprünge schon verbraucht haben; das Ereignis ist dann
+`{hawkesFrozenLevel < ξ n}` (`lt_jumpTimeFE_hawkesSelfRateH_iff_level`). Der
+Stichprobenpunkt geht nicht ein, denn `hawkesFrozen` verwirft ihn
+(`hawkesFrozenH_sample_congr`, `cumulativeRateF_hawkesFrozenH_congr_range`);
+`rangeExtend` ist die eine Übersetzung zwischen der Bedingungsgröße, die auf
+`Finset.range n` lebt, und der Folge, die die Rekursion nimmt.
+
+Die Meßbarkeit ist `measurable_hawkesFrozenLevel`, und sie ruht auf
+`measurable_cumulativeRateF_hawkesFrozenH`: `measurable_cumulativeRateF` fragt
+nach der gemeinsamen Meßbarkeit der Rate in Parameter und Zeit, und die ist die
+Rechnung aus `measurable_hawkesJumpTimeH`.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH` — die bedingte Überlebensfunktion.**
+Bedingt auf die Kette und die ersten `n` Wartezeiten liegt die `(n+1)`-ste
+Sprungzeit über `t` mit der Wahrscheinlichkeit, die eine Exponentialuhr dem Pegel
+gibt:
+
+```
+P[t < τ_{n+1} | ℋ_n] = expMeasure 1 (Ioi (hawkesFrozenLevel …))
+```
+
+Das ist die erste **bedingte** Gesetzmäßigkeit des pfadabhängigen Zweiges; alles
+davor war unbedingt. Drei Eingaben, und jede war eine eigene Hürde:
+`jumpMeasure_map_prodMk_range` (die Unabhängigkeit als Identität von Gesetzen),
+`lt_jumpTimeFE_hawkesSelfRateH_iff_level` (das Ereignis mit dem eingefrorenen
+Pegel) und `measurable_hawkesFrozenLevel` (der Pegel ist eine echte Zufallsgröße
+der Bedingungsgröße). Vorausgesetzt sind die Daten des beschränkten
+nichtlinearen Falls und nichts weiter — insbesondere **keine Nichtexplosion**,
+denn im beschränkten Fall gibt es keine anzunehmen.
+
+**`comap_hawkesJumpTimeH_le_comap_prodMk_range` — der Anschluß an die
+Sprungzeiten.** Die von *(Kette, erste `n` Sprungzeiten)* erzeugte σ-Algebra liegt
+unter der Bedingungsgröße des Einfrierens. Der Beweis ist die Faktorisierung über
+`rangeExtend`, mit `hawkesJumpTimeH_congr_of_le` und
+`hawkesJumpTimeH_sample_congr` als den beiden Gleichungen.
+
+> **Die Inklusion ist strikt.** Die Bedingungsgröße trägt die ganze Kette und die
+> Wartezeiten selbst; die Sprungzeiten bestimmen die Wartezeiten nur über die
+> Rate. Eine Gleichheit hinzuschreiben wäre derselbe Fehler, den der 25. Lauf des
+> 2026-09-12 an der Filtrationsgleichheit widerlegt hat.
+
+Der Turmschluß (`MeasureTheory.condExp_condExp_of_le`) zieht die bedingte
+Erwartung damit auf die kleinere σ-Algebra herunter, sobald `hawkesFrozenLevel`
+auch für sie meßbar ist — der Pegel ist
+`∫_0^t h (ν + ∑_{k ≤ n} φ (u − τ_k)) du − Λ(τ_n)` und liest also nur die
+Sprungzeiten; das ist der nächste Punkt.
+
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
 *(Frage des Nutzers, 2026-09-10.)* Der Vorschlag war, den linearen

@@ -25620,3 +25620,215 @@ zum Hawkes-Prozeß steht **nicht**.
    Punkten darüber. **Warum zuletzt:** sie ist nach 1 und 2 keine eigene Arbeit
    mehr, und sie vorzuziehen hieße, zum sechsten Mal zu melden, es fehle „genau
    eine Eingabe".
+
+### 2026-09-13, zweiter Lauf des Tages — die bedingte Überlebensfunktion steht; die drei Vorschläge des Vorlaufs sind eingelöst, und der Pegel war der einzige echte Schritt
+
+**Bearbeitet:** die drei Vorschläge des ersten Laufs vom 2026-09-13, in der dort
+angegebenen Reihenfolge — `hawkesJumpTimeH_congr_range`, die eingefrorene Rate auf
+dem Fenster, und daraus `condExp_lt_jumpTimeFE_hawkesSelfRateH`. Alle drei stehen.
+
+**Sechzehn Sätze und zwei Definitionen** in
+`TauCeti/MartingaleProblems/Suggested.lean`, in den drei neuen Abschnitten
+`BoundedHawkesFrozenLevel` (6), `BoundedHawkesFrozenEvent` (3) und
+`BoundedHawkesFreezingLevel` (7 Sätze, 2 Definitionen) am Ende der Datei; 387
+Zeilen. Die ganze
+Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1, alle sechzehn mit
+`#print axioms` geprüft und jede auf `propext`, `Classical.choice`, `Quot.sound`
+— mehr nicht, kein `sorryAx`. `scripts/check_suggested.py` meldet für die Datei
+`rc 0`, `0 Fehler`, `9 sorry` — die Zahl der `sorry` ist unverändert **neun**.
+(`WeakConvergence/Suggested.lean` meldet weiter seine zwei Fehler; das ist die
+eine bewußt gegen `master` geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Der eingefrorene Pegel, und die bedingte Überlebensfunktion des
+beschränkten nichtlinearen Hawkes-Prozesses", unmittelbar hinter dem Abschnitt
+über das Einfrieren.
+
+`upstream/master` frisch geholt: **neuer** Commit
+`710c215f98a3947b3301a21454f1f2c3caf72d0a` (2026-09-13 00:31 UTC), zuvor
+`7d32461a`. Der Negativbefund des Vorlaufs ist an diesem Stand nachgeprüft und
+gilt unverändert: `git grep` nach `freezing`, `IndepFun.condExp`, `condExp_comp`
+über `Mathlib/Probability/` gibt genau **eine** Datei, `Probability/BorelCantelli.lean`,
+und dort genau `iIndepFun.condExp_natural_ae_eq_of_lt` — wieder der entartete
+Fall, in dem der Integrand ganz auf der unabhängigen Seite sitzt. Das Einfrieren
+bleibt der elfte Eintrag von `TODO.md` Punkt 8.
+
+#### Der Satz, um den es geht
+
+```
+condExp_lt_jumpTimeFE_hawkesSelfRateH :
+  (jumpMeasure mu nu)[1_{t < τ_{n+1}} | comap (fun ω ↦ (ω.1, ω.2|_{range n}))]
+    =ᵐ fun ω ↦ (expMeasure 1 (Ioi (hawkesFrozenLevel h ν φ n t (ω.1, ω.2|_{range n})))).toReal
+```
+
+Das ist die **erste bedingte** Gesetzmäßigkeit des pfadabhängigen Zweiges; alles,
+was dort bisher stand — `jumpMeasure_lt_hawkesJumpTimeH_one`,
+`jumpMeasure_map_cumulativeRateF_jumpTimeF_hawkesSelfRateH` — war unbedingt.
+Vorausgesetzt sind `Measurable h`, `Measurable φ`, `0 ≤ φ`, `φ = 0` auf der
+negativen Halbachse, `0 < c ≤ h ≤ L` oberhalb von `ν`, `0 ≤ t`; über `E` steht
+nichts als `[MeasurableSpace E]`. **Keine Nichtexplosion** — im beschränkten Fall
+gibt es keine anzunehmen, und das ist genau der Grund, aus dem Teil C.5a vor dem
+linearen Fall steht.
+
+#### Der Befund, und er war im Vorlauf nicht vorhergesehen: die Äquivalenz gilt aus zwei verschiedenen Gründen
+
+Der Vorlauf hatte Punkt 2 so angesagt: „`Λ_t = hawkesFrozenH … n t` auf
+`{τ_n ≤ t < τ_{n+1}}`" — also eine Aussage **auf dem Fenster**, mit dem Fenster
+als Voraussetzung. So gestellt hätte sie die Zielaussage nicht getragen, denn das
+Ereignis, dessen bedingte Erwartung gesucht ist, ist nicht auf ein Fenster
+eingeschränkt; die Ersetzung muß **überall** gelten, oder wenigstens die beiden
+Ereignisse müssen überall dieselben sein.
+
+Sie sind es, und die untere Hälfte des Beweises ist die interessante:
+
+* **Innerhalb des Fensters `t ≤ τ_{n+1}`** sind die beiden Pegel gleich, und zwar
+  als Zahlen. Das ist `hawkesRateH_countingMeasure` unter dem Integral
+  (`cumulativeRateF_hawkesSelfRateH_eq_hawkesFrozenH`) und kostet vier Zeilen.
+* **Jenseits des Fensters** sind sie es **nicht**. Die selbstbezügliche Rate liest
+  die Sprünge ab Stufe `n+1`, die die eingefrorene fallen läßt, und da über `h`
+  nichts als zwei Schranken vorausgesetzt ist — insbesondere **keine Monotonie** —
+  ist zwischen den beiden Pegeln keine Ungleichung zu haben. Was statt dessen
+  trägt: **beide** haben die Partialsumme dort schon erreicht. Für die
+  selbstbezügliche ist das `cumulativeRateF_jumpTimeF` zusammen mit
+  `jumpTimeF_hawkesSelfRateH`, für die eingefrorene ist es
+  `cumulativeRateF_hawkesJumpTimeH` — der Fixpunkt selbst —, und beide Male
+  schiebt `monotoneOn_cumulativeRateF` von `τ_{n+1}` nach `t` weiter. Also sind
+  **beide Seiten falsch**, und die Äquivalenz hält, ohne daß die Pegel etwas
+  miteinander zu tun hätten.
+
+Das ist der Grund, aus dem `lt_jumpTimeFE_hawkesSelfRateH_iff` eine Äquivalenz
+**ohne** Fensterbedingung ist, und es ist mehr als eine Bequemlichkeit: das
+Einfrieren rechnet die bedingte Erwartung des Indikators einer Menge der Gestalt
+`{G (Z ω) < Y ω}` aus, und diese Menge ist eine Menge auf **ganz** `Ω`. Eine
+Identität der Pegel, die nur auf `{τ_n ≤ t < τ_{n+1}}` gilt, gäbe die
+Mengengleichheit außerhalb des Fensters nicht her, und ohne die außerhalb hätte
+`condExp_indicator_of_map_prod` keinen Angriffspunkt.
+
+#### Der zweite Befund: der Pegel liest die Kette überhaupt nicht
+
+`hawkesFrozen` nimmt einen Stichprobenpunkt und verwirft ihn — das stand seit dem
+elften Lauf des 2026-09-12 in `rateInverse_hawkesFrozenH_sample` für den
+Inversen, und es gilt eine Stufe tiefer genauso. `hawkesFrozenH_sample_congr` und
+`cumulativeRateF_hawkesFrozenH_congr_range` halten es fest, und zwar **über zwei
+verschiedene Typen** von Stichprobenräumen, denn der Pegel wird auf `Unit`
+gerechnet und auf `(ℕ → E) × (ℕ → ℝ)` gelesen.
+
+Die Folge: `hawkesFrozenLevel` trägt die Kette nur mit, weil
+`jumpMeasure_map_prodMk_range` sie umsonst liefert, nicht weil die Aussage sie
+braucht. Die bedingte Überlebensfunktion ist damit auch bedingt auf die **ganze**
+Trajektorie der Kette dieselbe — was für einen Prozeß, dessen Rate nur die
+Sprungzeiten liest und nicht die Zustände, die richtige Aussage ist, aber erst
+hier bewiesen dasteht statt behauptet.
+
+#### Die Übersetzung, und warum sie nicht umsonst war
+
+`jumpMeasure_map_prodMk_range` gibt die Bedingungsgröße als
+`(ω.1, fun i : Finset.range n ↦ ω.2 i)` — eine Funktion auf dem **Untertyp**
+`Finset.range n`. Die Hawkes-Rekursion nimmt eine Folge `ℕ → ℝ`. `rangeExtend`
+ist die Übersetzung, mit `0` jenseits des Blocks aufgefüllt, und
+`hawkesJumpTimeH_congr_of_le` ist genau die Aussage, die das Auffüllen harmlos
+macht: die Stufen `m ≤ n` sehen die Auffüllung nicht. Ohne sie wäre der Pegel
+keine Funktion der Bedingungsgröße, und das Einfrieren liefe leer.
+
+**`PUnit` geht nicht, `Unit` schon.** Der Pegel wird an einem beliebigen
+Stichprobenpunkt gerechnet; `PUnit.unit` läßt das Universum offen und Lean meldet
+`declaration ... contains universe level metavariables`. `(() : Unit)` ist
+`PUnit.{1}` und legt es fest. Eine Zeile, aber sie kostete einen Durchlauf.
+
+**Und `Set.indicator_of_mem` braucht eine Mitgliedschaft, keine Aussage.** Steht
+im Kontext `hcase : ENNReal.ofReal t < jumpTimeFE …` und wird
+`rw [Set.indicator_of_mem hcase]` geschrieben, so kann Lean die Menge nicht
+erraten — die Voraussetzung ist syntaktisch kein `a ∈ s`, obwohl sie
+definitionsgleich dazu ist —, und der `rw` meldet „Did not find an occurrence of
+the pattern". Die Mitgliedschaft ist mit ihrem Typ als `have` hinzuschreiben;
+dann trifft der `rw`.
+
+#### Was an Mathlib nachgeprüft wurde
+
+Neu benutzt und am Quelltext belegt, in v4.33.1 **und** auf `upstream/master`
+`710c215f`, keine davon `deprecated`:
+
+* `MeasureTheory.condExp_congr_ae` —
+  `MeasureTheory/Function/ConditionalExpectation/Basic.lean:201` in v4.33.1,
+  `:202` auf master. Sie ist es, die die fast sichere Umschreibung des Ereignisses
+  durch die bedingte Erwartung hindurchzieht.
+* `measurableSet_lt` — `MeasureTheory/Constructions/BorelSpace/Order.lean:245` auf
+  master; sie verlangt `SecondCountableTopology` und `OrderClosedTopology`, was
+  `ℝ` hat.
+* `Set.indicator_of_notMem` — die `to_additive`-Schwester von
+  `Set.mulIndicator_of_notMem`, `Mathlib/Algebra/Notation/Indicator.lean:70` auf
+  master. Der Name erscheint im Quelltext nicht wörtlich, weil er erzeugt wird;
+  `lake env lean` belegt ihn in v4.33.1.
+* `MeasureTheory.condExp_indep_eq` — `Probability/ConditionalExpectation.lean:42`,
+  am neuen Stand **erneut als Negativbefund** geprüft.
+* `ProbabilityTheory.iIndepFun.condExp_natural_ae_eq_of_lt` —
+  `Probability/BorelCantelli.lean:50` auf master, der einzige weitere Treffer der
+  Suche und wieder der entartete Fall.
+
+Ferner `Measurable.prodMk`, `measurable_pi_lambda`, `measurable_pi_apply`,
+`Finset.measurable_sum`, `Measurable.sub`, `Finset.sum_range_succ`,
+`Nat.eq_or_lt_of_le`, `Nat.lt_succ_iff`, `dif_pos`, `dif_neg`,
+`MeasureTheory.setIntegral_congr_fun`, `iff_of_false` — sämtlich durch
+`lake env lean` gegen v4.33.1 belegt.
+
+**Eine Namensberichtigung:** `le_or_lt` gibt es in v4.33.1 nicht mehr; zu nehmen
+ist `le_or_gt`, so wie es die Datei an neun früheren Stellen schon tut. Das war
+der einzige Fehler des ersten Durchlaufs der ersten neun Deklarationen.
+
+#### Der halbe Anschluß an die Filtration, und wo er stehenbleibt
+
+`comap_hawkesJumpTimeH_le_comap_prodMk_range` sagt, daß die von *(Kette, erste
+`n` Sprungzeiten)* erzeugte σ-Algebra unter der Bedingungsgröße des Einfrierens
+liegt. Der Beweis ist die Faktorisierung über `rangeExtend`, mit
+`hawkesJumpTimeH_congr_of_le` und `hawkesJumpTimeH_sample_congr` als den beiden
+Gleichungen, und `MeasurableSpace.comap_comp` als dem einen Mathlib-Schritt.
+
+**Die Inklusion ist strikt und ist als solche hingeschrieben.** Die
+Bedingungsgröße trägt die ganze Kette und die Wartezeiten selbst; die Sprungzeiten
+bestimmen die Wartezeiten nur über die Rate. Eine Gleichheit hinzuschreiben wäre
+derselbe Fehler, den der 25. Lauf des 2026-09-12 an der Filtrationsgleichheit
+widerlegt hat, und der Doc-Kommentar sagt das an der Deklaration.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Den Turmschluß.** `MeasureTheory.condExp_condExp_of_le`
+(`MeasureTheory/Function/ConditionalExpectation/Basic.lean:344` in v4.33.1,
+`:345` auf master) zieht die bedingte Erwartung auf die kleinere σ-Algebra
+herunter, aber die **rechte** Seite muß dabei mitkommen: gebraucht wird, daß
+`hawkesFrozenLevel` schon für die kleinere σ-Algebra meßbar ist. Auf Papier ist
+das klar — der Pegel ist `∫_0^t h (ν + ∑_{k ≤ n} φ (u − τ_k)) du − Λ(τ_n)`, und
+beide Summanden lesen nur die Sprungzeiten —, in Lean ist es die nächste
+Rechnung.
+
+**Und der Schritt von der Überlebensfunktion zu `E[D_n | ℋ_n] = 0`.** Die
+Überlebensfunktion ist die Eingabe von Gruppe A und nicht Gruppe A selbst.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`measurable_hawkesFrozenLevel_comap` — der Pegel ist schon für die von
+   *(Kette, erste `n` Sprungzeiten)* erzeugte σ-Algebra meßbar.** In Lean:
+   `hawkesFrozenLevel h ν φ n t (Z ω)` ist eine meßbare Funktion von
+   `(ω.1, fun i : Finset.range n ↦ τ_{i+1} ω)`. **Worauf sie ruht:** der erste
+   Summand ist `∫_0^t h (ν + ∑_{k ∈ Ico 1 (n+1)} φ (u − τ_k)) du`, also über
+   `measurable_cumulativeRateF` eine Funktion der `τ_k` allein; der zweite ist
+   `∑_{k < n} ξ_k`, und das ist nach `cumulativeRateF_hawkesJumpTimeH` die
+   kumulierte eingefrorene Rate bei `τ_n`, also wieder eine Funktion der `τ_k`.
+   **Warum jetzt:** sie ist die einzige fehlende Eingabe des Turmschlusses, und
+   ohne sie hängt `condExp_lt_jumpTimeFE_hawkesSelfRateH` an einer σ-Algebra, die
+   im Rest der Entwicklung nicht vorkommt. **Prüfstein:** sie darf die
+   Bedingungsgröße nur über die Sprungzeiten lesen; braucht der Beweis irgendwo
+   ein `ξ_k` selbst, so ist er falsch angesetzt, denn genau die zweite Umschreibung
+   ist der Inhalt.
+2. **`condExp_lt_jumpTimeFE_hawkesSelfRateH_jumpTimes` — dieselbe Aussage über
+   der kleineren σ-Algebra**, als Turmschluß aus 1,
+   `comap_hawkesJumpTimeH_le_comap_prodMk_range` (steht seit diesem Lauf) und
+   `MeasureTheory.condExp_condExp_of_le`. **Warum getrennt:** sie ist nach 1 keine
+   eigene Arbeit, und sie vorzuziehen hieße, den Turmschluß und die Meßbarkeit in
+   einem Beweis zu vermengen.
+3. **Der Pegel in geschlossener Form: `hawkesFrozenLevel` als
+   `∫_0^t h (ν + ∑_{k ≤ n} φ (u − τ_k)) du − ∑_{k < n} ξ_k`.** Eine Umschreibung
+   und kein Satz, aber die, die ein Leser sehen will und die das Manuskript in
+   `ex:hawkes` hinschreibt. **Worauf sie ruht:** `hawkesFrozen` und
+   `cumulativeRateF_eq_intervalIntegral` — beide stehen. **Warum zuletzt:** sie
+   ist kosmetisch und darf die beiden Schritte darüber nicht aufhalten; sie fällt
+   ohnehin bei 1 als Nebenprodukt ab.

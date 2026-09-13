@@ -335,7 +335,11 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   an `upstream/master` `7d32461a` und in v4.33.1 nach `freezing`,
   `condExp_indep`, `IndepFun.condExp`, `condExp_comp`: **null** Treffer über
   `condExp_indep_eq` und seine einzige Verwendung in
-  `Probability/BorelCantelli.lean:50` hinaus.
+  `Probability/BorelCantelli.lean:50` hinaus. Am selben Tag am neueren Stand
+  `710c215f98a3947b3301a21454f1f2c3caf72d0a` (2026-09-13 00:31 UTC)
+  nachgeprüft: unverändert, und der einzige Treffer der Suche über
+  `Mathlib/Probability/` bleibt `iIndepFun.condExp_natural_ae_eq_of_lt` in
+  `Probability/BorelCantelli.lean:50` — wieder der entartete Fall.
 
   *Woran es bei uns hängt:* die bedingte Überlebensfunktion
   `P (τ_{n+1} > t | ℋ_n) = exp (−(Λ_t − Λ_{τ_n}))`, der Rumpf des Beweises von

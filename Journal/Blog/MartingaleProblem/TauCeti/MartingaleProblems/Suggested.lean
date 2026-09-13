@@ -22663,3 +22663,390 @@ theorem jumpMeasure_map_prodMk_range (mu : Kernel E E) [IsMarkovKernel mu] (nu :
     (infinitePi_map_prodMk_range (expMeasure 1) n)
 
 end FreezingJump
+
+/-! ### The level the freezing lemma reads: the frozen rate of the bounded nonlinear Hawkes process
+
+`condExp_indicator_of_map_prod` asks for an event of the shape `{G (Z ω) < Y ω}`, with `Y` the fresh
+waiting time and `G` a function of the conditioning variable alone.  `setOf_lt_jumpTimeFE_eq` gives
+the event `{t < τ_{n+1}} = {Λ_t < ξ_0 + ⋯ + ξ_n}`, and that is **not** of that shape: the level `Λ_t`
+is the cumulated self referential rate, which reads every jump below `t`, and on `{τ_n ≤ t}` those
+are not only the first `n`.
+
+What repairs it is that on the window the level may be replaced by the **frozen** one.  Two
+statements do it, and they are independent of each other:
+
+* `hawkesJumpTimeH_congr_range` -- the `n`-th jump time reads only `ξ_0, …, ξ_{n-1}`.  This is a
+  statement about the recursion and carries no hypothesis at all on `h`, `φ` or the bounds; were it
+  to carry one, the recursion would be written down wrongly.
+* `lt_jumpTimeFE_hawkesSelfRateH_iff` -- the event of `setOf_lt_jumpTimeFE_eq` with the cumulated
+  **frozen** rate at stage `n+1` in place of the cumulated self rate.  Inside the window the two
+  agree (`hawkesRateH_countingMeasure`); outside it both levels have already passed the partial sum,
+  so both sides of the equivalence are false and the two agree there for a second reason.
+
+Together they say that the level is a function of `ξ_0, …, ξ_{n-1}` -- and of the sample point not
+at all, because `hawkesFrozen` discards it -- so the event is `{G (ξ_{<n}) < ξ_n}` after moving the
+first `n` summands of the partial sum to the left. -/
+
+section BoundedHawkesFrozenLevel
+
+variable {Ω : Type*} {ν c L : ℝ} {φ h : ℝ → ℝ}
+
+/-- **Every jump time up to stage `n` reads only the first `n` waiting times.**  The recursion of
+`hawkesStepH` produces stage `m+1` from `∑_{k ∈ range (m+1)} ξ k` and the stages below it, so an
+induction on the stage bound suffices; the statement is about the formula and about nothing else,
+which is why no hypothesis on the data appears. -/
+theorem hawkesJumpTimeH_congr_of_le {xi xi' : ℕ → ℝ} (ω : Ω) (n : ℕ)
+    (hxi : ∀ k, k < n → xi k = xi' k) :
+    ∀ m, m ≤ n → hawkesJumpTimeH h ν φ xi ω m = hawkesJumpTimeH h ν φ xi' ω m := by
+  induction n with
+  | zero =>
+      intro m hm
+      rw [Nat.le_zero.1 hm, hawkesJumpTimeH_zero, hawkesJumpTimeH_zero]
+  | succ p ih =>
+      have ihp : ∀ m, m ≤ p → hawkesJumpTimeH h ν φ xi ω m = hawkesJumpTimeH h ν φ xi' ω m :=
+        ih fun k hk ↦ hxi k (hk.trans (Nat.lt_succ_self p))
+      intro m hm
+      rcases Nat.eq_or_lt_of_le hm with rfl | hlt
+      · rw [hawkesJumpTimeH_succ, hawkesJumpTimeH_succ,
+          hawkesFrozenH_congr (Ω := Ω) (h := h) (ν := ν) (φ := φ) (n := p + 1)
+            (T := hawkesJumpTimeH h ν φ xi ω) (S := hawkesJumpTimeH h ν φ xi' ω)
+            fun k hk ↦ ihp k (Nat.lt_succ_iff.1 hk)]
+        exact congrArg
+          (rateInverse (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi' ω) (p + 1)) ω)
+          (Finset.sum_congr rfl fun k hk ↦ hxi k (Finset.mem_range.1 hk))
+      · exact ihp m (Nat.lt_succ_iff.1 hlt)
+
+/-- **The `n`-th jump time reads only the first `n` waiting times**, which is
+`hawkesJumpTimeH_congr_of_le` at the top stage. -/
+theorem hawkesJumpTimeH_congr_range {xi xi' : ℕ → ℝ} (ω : Ω) (n : ℕ)
+    (hxi : ∀ k, k < n → xi k = xi' k) :
+    hawkesJumpTimeH h ν φ xi ω n = hawkesJumpTimeH h ν φ xi' ω n :=
+  hawkesJumpTimeH_congr_of_le ω n hxi n le_rfl
+
+/-- **The frozen rate at stage `n+1` reads only the first `n` waiting times.**  It sums the
+translates of `φ` at the jump times `T 1, …, T n`, and `T n` reads `ξ_0, …, ξ_{n-1}`. -/
+theorem hawkesFrozenH_congr_range {xi xi' : ℕ → ℝ} (ω : Ω) (n : ℕ)
+    (hxi : ∀ k, k < n → xi k = xi' k) :
+    hawkesFrozenH (Ω := Ω) h ν φ (hawkesJumpTimeH h ν φ xi ω) (n + 1)
+      = hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi' ω) (n + 1) :=
+  hawkesFrozenH_congr fun k hk ↦
+    hawkesJumpTimeH_congr_of_le ω n hxi k (Nat.lt_succ_iff.1 hk)
+
+/-- **The frozen rate discards the sample point.**  `hawkesFrozen` takes `ω` and ignores it; this
+records that, because the freezing lemma needs the level to be a function of the conditioning
+variable and of nothing else, and the sample point of the bounded nonlinear construction carries the
+chain as well as the waiting times. -/
+theorem hawkesFrozenH_sample_congr {Ω' : Type*} (T : ℕ → ℝ) (n : ℕ) (u : ℝ) (ω : Ω) (ω' : Ω') :
+    hawkesFrozenH h ν φ T n u ω = hawkesFrozenH h ν φ T n u ω' := rfl
+
+/-- **The cumulated frozen rate reads only the first `n` waiting times, and not the sample point.**
+This is the level `G` of the freezing lemma. -/
+theorem cumulativeRateF_hawkesFrozenH_congr_range {Ω' : Type*} {xi xi' : ℕ → ℝ} (ω : Ω) (ω' : Ω')
+    (n : ℕ) (t : ℝ) (hxi : ∀ k, k < n → xi k = xi' k) :
+    cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (n + 1)) ω t
+      = cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi' ω') (n + 1)) ω' t := by
+  rw [cumulativeRateF, cumulativeRateF]
+  refine setIntegral_congr_fun measurableSet_Ioc fun u _ ↦ ?_
+  rw [hawkesFrozenH_sample_congr (Ω' := Ω') _ _ u ω ω',
+    hawkesFrozenH_congr (Ω := Ω') (h := h) (ν := ν) (φ := φ) (n := n + 1)
+      (T := hawkesJumpTimeH h ν φ xi ω) (S := hawkesJumpTimeH h ν φ xi' ω')
+      fun k hk ↦ (hawkesJumpTimeH_congr_of_le ω n hxi k (Nat.lt_succ_iff.1 hk)).trans
+        (hawkesJumpTimeH_sample_congr h ν φ xi' ω ω' k)]
+
+/-- **The cumulated frozen rate is measurable in the waiting times.**  `measurable_cumulativeRateF`
+asks for the joint measurability of the rate in the parameter and the time, and that is the
+computation inside `measurable_hawkesJumpTimeH`: the frozen rate is `h` of a constant plus a finite
+sum of translates of `φ` at jump times of stage at most `n`, each of them measurable in the waiting
+times. -/
+theorem measurable_cumulativeRateF_hawkesFrozenH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (ω : Ω) (n : ℕ) (t : ℝ) :
+    Measurable fun xi : ℕ → ℝ ↦
+      cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (n + 1)) ω t := by
+  refine measurable_cumulativeRateF
+    (Λ := fun xi ↦ hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ xi ω) (n + 1))
+    (p := fun _ ↦ ω) ?_ t
+  have hjoint : Measurable fun q : (ℕ → ℝ) × ℝ ↦
+      h (ν + ∑ k ∈ Finset.Ico 1 (n + 1), φ (q.2 - hawkesJumpTimeH h ν φ q.1 ω k)) := by
+    refine hhm.comp (measurable_const.add (Finset.measurable_sum _ fun k hk ↦ ?_))
+    refine hφm.comp (measurable_snd.sub ?_)
+    exact (measurable_hawkesJumpTimeH hhm hφm hφ hcpos hc hL ω n k
+      (Nat.lt_succ_iff.1 (Finset.mem_Ico.1 hk).2)).comp measurable_fst
+  simpa [hawkesFrozenH, hawkesFrozen] using hjoint
+
+end BoundedHawkesFrozenLevel
+
+section BoundedHawkesFrozenEvent
+
+variable {E : Type*} {ν c L t : ℝ} {φ h : ℝ → ℝ} {n : ℕ} {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **Inside the window the self referential rate is the frozen one.**  `hawkesRateH_countingMeasure`
+with the family the recursion produced, and the two hypotheses of that statement -- monotonicity of
+the family and a non negative start -- discharged from the bounds. -/
+theorem hawkesSelfRateH_eq_hawkesFrozenH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) {u : ℝ}
+    (hu : u ≤ hawkesJumpTimeH h ν φ ω.2 ω (n + 1)) :
+    hawkesSelfRateH h ν φ u ω
+      = hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ ω.2 ω) (n + 1) u ω := by
+  rw [hawkesSelfRateH_apply]
+  exact hawkesRateH_countingMeasure hφ0
+    (monotone_hawkesJumpTimeH hhm hφm hφ hφ0 hcpos hc hL hxi)
+    (le_of_eq (hawkesJumpTimeH_zero h ν φ ω.2 ω).symm) hu ω
+
+/-- **Inside the window the cumulated self referential rate is the cumulated frozen one.** -/
+theorem cumulativeRateF_hawkesSelfRateH_eq_hawkesFrozenH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k)
+    (ht : t ≤ hawkesJumpTimeH h ν φ ω.2 ω (n + 1)) :
+    cumulativeRateF (hawkesSelfRateH h ν φ) ω t
+      = cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ ω.2 ω) (n + 1)) ω t := by
+  rw [cumulativeRateF, cumulativeRateF]
+  exact setIntegral_congr_fun measurableSet_Ioc fun u hu ↦
+    hawkesSelfRateH_eq_hawkesFrozenH hhm hφm hφ hφ0 hcpos hc hL hxi (hu.2.trans ht)
+
+/-- **The event that `t` lies below the `(n+1)`-st jump time, with the level frozen at stage
+`n+1`.**  This is `setOf_lt_jumpTimeFE_eq` with the cumulated **frozen** rate in place of the
+cumulated self rate, and it is the form the freezing lemma reads: by
+`cumulativeRateF_hawkesFrozenH_congr_range` the left hand side is a function of `ξ_0, …, ξ_{n-1}`
+alone, so after moving `∑_{k < n} ξ k` across, the event is `{G (ξ_{<n}) < ξ_n}`.
+
+**The two sides agree for two different reasons, and the second is the point.**  Inside the window
+`t ≤ τ_{n+1}` the two levels are equal outright.  Beyond it they are not -- the self rate reads the
+jumps the frozen one has dropped, and nothing says the nonlinearity is monotone -- but there both
+levels have already reached the partial sum, because the cumulated frozen rate at stage `n+1`
+attains it at `τ_{n+1}` (`cumulativeRateF_hawkesJumpTimeH`) and grows from there.  So both sides are
+false, and the equivalence holds anyway. -/
+theorem lt_jumpTimeFE_hawkesSelfRateH_iff (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) (ht : 0 ≤ t)
+    (n : ℕ) :
+    ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)
+      ↔ cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ ω.2 ω) (n + 1)) ω t
+          < ∑ k ∈ Finset.range (n + 1), ω.2 k := by
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRateH h ν φ u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL ω r
+  have hpos : ∀ u, 0 < u → 0 < hawkesSelfRateH h ν φ u ω :=
+    fun u _ ↦ hcpos.trans_le (le_hawkesSelfRateH hφ hc u ω)
+  rw [lt_jumpTimeFE_iff hint (fun u hu ↦ (hpos u hu).le) ht]
+  rcases le_or_gt t (hawkesJumpTimeH h ν φ ω.2 ω (n + 1)) with hle | hgt
+  · rw [cumulativeRateF_hawkesSelfRateH_eq_hawkesFrozenH hhm hφm hφ hφ0 hcpos hc hL hxi hle]
+  · have hTn : (0 : ℝ) ≤ hawkesJumpTimeH h ν φ ω.2 ω (n + 1) :=
+      hawkesJumpTimeH_nonneg h ν φ ω.2 ω (n + 1)
+    have htop : Tendsto (cumulativeRateF (hawkesSelfRateH h ν φ) ω) atTop atTop :=
+      tendsto_cumulativeRateF_atTop_of_le hint hcpos fun u _ ↦ le_hawkesSelfRateH hφ hc u ω
+    have hA : cumulativeRateF (hawkesSelfRateH h ν φ) ω
+        (hawkesJumpTimeH h ν φ ω.2 ω (n + 1)) = ∑ k ∈ Finset.range (n + 1), ω.2 k := by
+      rw [← jumpTimeF_hawkesSelfRateH hhm hφm hφ hφ0 hcpos hc hL hxi (n + 1)]
+      exact cumulativeRateF_jumpTimeF hint hpos htop (fun k ↦ (hxi k).le) (n + 1)
+    have hintF : ∀ r, IntervalIntegrable
+        (fun u ↦ hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ ω.2 ω) (n + 1) u ω) volume 0 r :=
+      fun r ↦ intervalIntegrable_hawkesFrozenH hhm hφm hφ hc hcpos.le hL _ (n + 1) ω r
+    have hposF : ∀ u, 0 < u →
+        0 < hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ ω.2 ω) (n + 1) u ω :=
+      fun u _ ↦ hcpos.trans_le (le_hawkesFrozenH hφ hc _ (n + 1) u ω)
+    have hB : cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ ω.2 ω) (n + 1)) ω
+        (hawkesJumpTimeH h ν φ ω.2 ω (n + 1)) = ∑ k ∈ Finset.range (n + 1), ω.2 k :=
+      cumulativeRateF_hawkesJumpTimeH hhm hφm hφ hcpos hc hL fun k ↦ (hxi k).le
+    refine iff_of_false (not_lt.2 ?_) (not_lt.2 ?_)
+    · rw [← hA]; exact monotoneOn_cumulativeRateF hint hpos hTn ht hgt.le
+    · rw [← hB]; exact monotoneOn_cumulativeRateF hintF hposF hTn ht hgt.le
+
+end BoundedHawkesFrozenEvent
+
+/-! ### The conditional survival function of the bounded nonlinear Hawkes process
+
+The three pieces now meet.  `jumpMeasure_map_prodMk_range` supplies the hypothesis of the freezing
+lemma for the conditioning variable *(chain, first `n` waiting times)* against the fresh `ξ n`;
+`lt_jumpTimeFE_hawkesSelfRateH_iff` rewrites the event `{t < τ_{n+1}}` with the **frozen** level in
+place of the self referential one; and `hawkesJumpTimeH_congr_range` says that the frozen level is a
+function of the conditioning variable alone.  What comes out is the conditional survival function:
+
+`P[t < τ_{n+1} | ℋ_n] = exp (−(Λ^frozen_t − ξ_0 − ⋯ − ξ_{n-1}))` on the set where the level is
+non negative, written here as the exponential tail `expMeasure 1 (Ioi level)`.
+
+**Note what the level does not read.**  `hawkesFrozen` discards the sample point, so the level is a
+function of the waiting times and not of the chain -- the first component of the conditioning
+variable is carried because `jumpMeasure_map_prodMk_range` produces it for free, not because the
+statement needs it. -/
+
+section BoundedHawkesFreezingLevel
+
+variable {E : Type*} [MeasurableSpace E] {ν c L t : ℝ} {φ h : ℝ → ℝ}
+  {ω : (ℕ → E) × (ℕ → ℝ)}
+
+/-- **The first `n` waiting times, read back as a sequence**, padded with `0` beyond the block.  The
+conditioning variable of `jumpMeasure_map_prodMk_range` is a function on `Finset.range n` and the
+Hawkes recursion takes a sequence; this is the one translation between them, and
+`hawkesJumpTimeH_congr_of_le` is what makes the padding harmless. -/
+noncomputable def rangeExtend (n : ℕ) (ξ : Finset.range n → ℝ) : ℕ → ℝ :=
+  fun k ↦ if hk : k ∈ Finset.range n then ξ ⟨k, hk⟩ else 0
+
+theorem rangeExtend_apply_of_lt {n : ℕ} (ξ : ℕ → ℝ) {k : ℕ} (hk : k < n) :
+    rangeExtend n (fun i : Finset.range n ↦ ξ i) k = ξ k :=
+  dif_pos (Finset.mem_range.2 hk)
+
+theorem measurable_rangeExtend (n : ℕ) : Measurable (rangeExtend n) := by
+  refine measurable_pi_lambda _ fun k ↦ ?_
+  by_cases hk : k ∈ Finset.range n
+  · have hfun : (fun ξ : Finset.range n → ℝ ↦ rangeExtend n ξ k)
+        = fun ξ : Finset.range n → ℝ ↦ ξ ⟨k, hk⟩ := funext fun _ ↦ dif_pos hk
+    rw [hfun]
+    exact measurable_pi_apply _
+  · have hfun : (fun ξ : Finset.range n → ℝ ↦ rangeExtend n ξ k)
+        = fun _ : Finset.range n → ℝ ↦ (0 : ℝ) := funext fun _ ↦ dif_neg hk
+    rw [hfun]
+    exact measurable_const
+
+/-- **The level the freezing lemma reads**, as a function of the conditioning variable: the
+cumulated frozen rate at `t`, less the partial sum the first `n` jumps have already spent.  The
+event `{t < τ_{n+1}}` is `{level < ξ n}` (`lt_jumpTimeFE_hawkesSelfRateH_iff_level`).
+
+The sample point is taken in `PUnit` because the frozen rate discards it
+(`hawkesFrozenH_sample_congr`); `cumulativeRateF_hawkesFrozenH_congr_range` transports the value
+back to the sample space of the construction. -/
+noncomputable def hawkesFrozenLevel (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (n : ℕ) (t : ℝ)
+    (p : (ℕ → E) × (Finset.range n → ℝ)) : ℝ :=
+  cumulativeRateF
+      (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ (rangeExtend n p.2) (() : Unit)) (n + 1))
+      (() : Unit) t
+    - ∑ k ∈ Finset.range n, rangeExtend n p.2 k
+
+theorem hawkesFrozenLevel_apply (h : ℝ → ℝ) (ν : ℝ) (φ : ℝ → ℝ) (n : ℕ) (t : ℝ)
+    (ω : (ℕ → E) × (ℕ → ℝ)) :
+    hawkesFrozenLevel h ν φ n t (ω.1, fun i : Finset.range n ↦ ω.2 i)
+      = cumulativeRateF (hawkesFrozenH h ν φ (hawkesJumpTimeH h ν φ ω.2 ω) (n + 1)) ω t
+        - ∑ k ∈ Finset.range n, ω.2 k := by
+  have hxi : ∀ k, k < n → rangeExtend n (fun i : Finset.range n ↦ ω.2 i) k = ω.2 k :=
+    fun k hk ↦ rangeExtend_apply_of_lt ω.2 hk
+  refine congrArg₂ (· - ·) ?_ (Finset.sum_congr rfl fun k hk ↦ hxi k (Finset.mem_range.1 hk))
+  exact cumulativeRateF_hawkesFrozenH_congr_range (() : Unit) ω n t hxi
+
+theorem measurable_hawkesFrozenLevel (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (n : ℕ) (t : ℝ) :
+    Measurable (hawkesFrozenLevel (E := E) h ν φ n t) := by
+  refine Measurable.sub ?_ ?_
+  · exact (measurable_cumulativeRateF_hawkesFrozenH hhm hφm hφ hcpos hc hL (() : Unit) n t).comp
+      ((measurable_rangeExtend n).comp measurable_snd)
+  · exact Finset.measurable_sum _ fun k _ ↦
+      ((measurable_pi_apply k).comp (measurable_rangeExtend n)).comp measurable_snd
+
+/-- **The event `{t < τ_{n+1}}` in the shape the freezing lemma reads**: a level computed from the
+past, strictly below the fresh waiting time. -/
+theorem lt_jumpTimeFE_hawkesSelfRateH_iff_level (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) (ht : 0 ≤ t)
+    (n : ℕ) :
+    ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)
+      ↔ hawkesFrozenLevel h ν φ n t (ω.1, fun i : Finset.range n ↦ ω.2 i) < ω.2 n := by
+  rw [lt_jumpTimeFE_hawkesSelfRateH_iff hhm hφm hφ hφ0 hcpos hc hL hxi ht n,
+    hawkesFrozenLevel_apply, Finset.sum_range_succ]
+  constructor <;> intro H <;> linarith
+
+/-- **The conditional survival function of the bounded nonlinear Hawkes process.**  Conditionally on
+the chain and the first `n` waiting times, the `(n+1)`-st jump time lies above `t` with the
+probability an exponential clock gives to the level `hawkesFrozenLevel`.
+
+This is the statement the martingale problem of `thm:pathjumpMP` reads off the construction, and it
+is the first place in the path dependent branch where a **conditional** law appears rather than an
+unconditional one.  Three inputs, and each was a separate obstruction:
+`jumpMeasure_map_prodMk_range` (the independence, as an identity of laws),
+`lt_jumpTimeFE_hawkesSelfRateH_iff_level` (the event, with the frozen level), and
+`measurable_hawkesFrozenLevel` (the level is a genuine random variable of the conditioning
+variable).
+
+The hypotheses are those of the bounded nonlinear construction and nothing more; in particular no
+non explosion is assumed, because in the bounded case there is none to assume. -/
+theorem condExp_lt_jumpTimeFE_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    (jumpMeasure mu nu)[fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+          (fun _ ↦ (1 : ℝ)) ω
+        | MeasurableSpace.comap
+            (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (ω.1, fun i : Finset.range n ↦ ω.2 i)) inferInstance]
+      =ᵐ[jumpMeasure mu nu] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        (expMeasure 1 (Set.Ioi (hawkesFrozenLevel h ν φ n t
+          (ω.1, fun i : Finset.range n ↦ ω.2 i)))).toReal := by
+  have hZ : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (ω.1, fun i : Finset.range n ↦ ω.2 i) :=
+    measurable_fst.prodMk
+      (measurable_pi_lambda _ fun i ↦ (measurable_pi_apply (i : ℕ)).comp measurable_snd)
+  have hY : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ω.2 n :=
+    (measurable_pi_apply n).comp measurable_snd
+  have hG : Measurable (hawkesFrozenLevel (E := E) h ν φ n t) :=
+    measurable_hawkesFrozenLevel hhm hφm hφ hcpos hc hL n t
+  have hS : MeasurableSet {p : ((ℕ → E) × (Finset.range n → ℝ)) × ℝ |
+      hawkesFrozenLevel h ν φ n t p.1 < p.2} :=
+    measurableSet_lt (hG.comp measurable_fst) measurable_snd
+  have hae : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+          (fun _ ↦ (1 : ℝ)) ω)
+      =ᵐ[jumpMeasure mu nu] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        Set.indicator {p : ((ℕ → E) × (Finset.range n → ℝ)) × ℝ |
+            hawkesFrozenLevel h ν φ n t p.1 < p.2}
+          (fun _ ↦ (1 : ℝ)) ((ω.1, fun i : Finset.range n ↦ ω.2 i), ω.2 n) := by
+    filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+    have hiff := lt_jumpTimeFE_hawkesSelfRateH_iff_level hhm hφm hφ hφ0 hcpos hc hL hω ht n
+    by_cases hcase : ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)
+    · have hmem1 : ω ∈ {ω : (ℕ → E) × (ℕ → ℝ) |
+          ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)} := hcase
+      have hmem2 : ((ω.1, fun i : Finset.range n ↦ ω.2 i), ω.2 n) ∈
+          {p : ((ℕ → E) × (Finset.range n → ℝ)) × ℝ |
+            hawkesFrozenLevel h ν φ n t p.1 < p.2} := hiff.1 hcase
+      rw [Set.indicator_of_mem hmem1, Set.indicator_of_mem hmem2]
+    · have hmem1 : ω ∉ {ω : (ℕ → E) × (ℕ → ℝ) |
+          ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)} := hcase
+      have hmem2 : ((ω.1, fun i : Finset.range n ↦ ω.2 i), ω.2 n) ∉
+          {p : ((ℕ → E) × (Finset.range n → ℝ)) × ℝ |
+            hawkesFrozenLevel h ν φ n t p.1 < p.2} := fun hmem ↦ hcase (hiff.2 hmem)
+      rw [Set.indicator_of_notMem hmem1, Set.indicator_of_notMem hmem2]
+  exact (condExp_congr_ae hae).trans
+    (condExp_indicator_of_map_prod hZ hY (jumpMeasure_map_prodMk_range mu nu n) hS)
+
+/-- **The chain and the first `n` jump times are read off the conditioning variable of the freezing
+lemma.**  The `k`-th jump time for `k ≤ n` is a function of `ξ_0, …, ξ_{n-1}`
+(`hawkesJumpTimeH_congr_of_le`) and of the sample point not at all
+(`hawkesJumpTimeH_sample_congr`), so the map factors through
+`fun ω ↦ (ω.1, ω.2|_{range n})` and the σ-algebras compare.
+
+**The inclusion is strict and must not be written as an equality.**  The conditioning variable of
+`jumpMeasure_map_prodMk_range` carries the whole trajectory of the embedded chain and the waiting
+times themselves; the jump times determine the waiting times only through the rate, and on the set
+where the chain fails to move they determine nothing at all.  The 25th run of 2026-09-12 refuted the
+corresponding equality of filtrations with three witnesses, and this is the same boundary. -/
+theorem comap_hawkesJumpTimeH_le_comap_prodMk_range (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (n : ℕ) :
+    MeasurableSpace.comap
+        (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          (ω.1, fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+        inferInstance
+      ≤ MeasurableSpace.comap
+        (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (ω.1, fun i : Finset.range n ↦ ω.2 i)) inferInstance := by
+  have hF : Measurable fun p : (ℕ → E) × (Finset.range n → ℝ) ↦
+      (p.1, fun i : Finset.range n ↦
+        hawkesJumpTimeH h ν φ (rangeExtend n p.2) (() : Unit) ((i : ℕ) + 1)) :=
+    measurable_fst.prodMk (measurable_pi_lambda _ fun i ↦
+      (measurable_hawkesJumpTimeH hhm hφm hφ hcpos hc hL (() : Unit) n ((i : ℕ) + 1)
+        (Nat.succ_le_of_lt (Finset.mem_range.1 i.2))).comp
+        ((measurable_rangeExtend n).comp measurable_snd))
+  have hfac : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        (ω.1, fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+      = (fun p : (ℕ → E) × (Finset.range n → ℝ) ↦
+          (p.1, fun i : Finset.range n ↦
+            hawkesJumpTimeH h ν φ (rangeExtend n p.2) (() : Unit) ((i : ℕ) + 1)))
+        ∘ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ (ω.1, fun i : Finset.range n ↦ ω.2 i) := by
+    funext ω
+    refine Prod.ext rfl (funext fun i ↦ ?_)
+    exact (hawkesJumpTimeH_sample_congr h ν φ ω.2 ω (() : Unit) ((i : ℕ) + 1)).trans
+      (hawkesJumpTimeH_congr_of_le (() : Unit) n
+        (fun k hk ↦ (rangeExtend_apply_of_lt ω.2 hk).symm) ((i : ℕ) + 1)
+        (Nat.succ_le_of_lt (Finset.mem_range.1 i.2)))
+  rw [hfac, ← MeasurableSpace.comap_comp]
+  exact MeasurableSpace.comap_mono hF.comap_le
+
+end BoundedHawkesFreezingLevel
