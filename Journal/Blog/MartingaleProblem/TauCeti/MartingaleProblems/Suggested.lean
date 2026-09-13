@@ -38,7 +38,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-12.  Every declaration elaborates; 9 declarations carry `sorry`, and
+2026-09-13.  Every declaration elaborates; 9 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -354,6 +354,17 @@ not name, and it is about the state space and not about the process: the diagona
 to be measurable, which is Mathlib's `MeasurableEq`.  It is necessary
 (`exists_not_pointFiltrationE_le_stepPathFiltrationE_of_not_measurableEq`) and it is met by every
 instance of the construction (`pointFiltrationE_eq_stepPathFiltrationE_counting`).
+
+Twelve on 2026-09-13, in `section Propagation` and `section Cylinders` at the very end, are the
+**Markov free half of Milestone 6**: `PropagatesAgreement` (`def:propagation`) and the whole road
+from it to `eq_of_propagatesAgreement` (`prop:uniqfromprop`), that two members of a set which
+propagates agreement and share the law at `⊥` are equal.  Not one of them mentions a martingale,
+a shift or a generator, and in particular none of them rests on `restart`, which is still a
+`sorry`; what does rest on it is `lem:propagation`, the reduction of the condition to the one
+dimensional laws, and that is the first Markovian statement of the milestone.  The condition is
+stated as an equality of the *laws* of the coordinate under a reweighted measure rather than of
+the integrals against bounded functions -- for finite measures the same statement, and the shape
+in which no approximation by simple functions occurs anywhere in the block.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -26031,3 +26042,301 @@ theorem condExp_mpFamilyF_increment_eq_zero_generator (hhm : Measurable h) (hφm
   rw [intervalIntegral_generator_eq_mul hhm hφm hφ hφ0 hcpos hc hL mu hω n]
 
 end IncrementGenerator
+
+/-! ## Milestone 6: uniqueness without a Markov structure
+
+`def:propagation`, `prop:uniqfromprop` of the manuscript -- the half of Milestone 6 that carries
+**no** Markov structure at all.  It is the bottom of the tree: neither `restart` nor a shift
+system nor a determining set occurs in any statement or in any proof below, and none of the nine
+`sorry`s of this file is reachable from here.  What sits above it -- `lem:propagation`, which
+makes `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the
+Markov property -- is where the shift system enters, and it is not in this block.
+
+The manuscript's `rem:uniqnotmarkov` reads this decomposition off in a table; this block is its
+first row.
+-/
+
+section Propagation
+
+variable {ι : Type*} [Preorder ι] [OrderBot ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} {mF : MeasurableSpace F}
+
+/-- The law of the coordinate at time `t` under the measure reweighted by the density `Z`.
+
+The reweighting is written exactly as `restart` writes it -- `withDensity` against
+`ENNReal.ofReal ∘ Z` for a bounded non-negative real `Z` -- so that the initial law of a
+restarted solution is `weightedLaw π P Z r` on the nose: `π 0 ∘ θ r = π r` by `Shift.eval_comp`,
+so `((Z • P).map (θ r)).map (π 0) = weightedLaw π P Z r`.  That identity is what
+`lem:propagation` will consume, and it is the reason for this definition rather than an ad hoc
+integral. -/
+noncomputable def weightedLaw (π : ι → F → E) (P : Measure F) (Z : F → ℝ) (t : ι) :
+    Measure E :=
+  (P.withDensity fun f ↦ ENNReal.ofReal (Z f)).map (π t)
+
+omit [Preorder ι] [OrderBot ι] in
+theorem weightedLaw_one (π : ι → F → E) (P : Measure F) (t : ι) :
+    weightedLaw π P 1 t = P.map (π t) := by
+  unfold weightedLaw
+  congr 1
+  have : (fun f : F ↦ ENNReal.ofReal ((1 : F → ℝ) f)) = (1 : F → ENNReal) := by
+    funext f; simp
+  rw [this, withDensity_one]
+
+omit [Preorder ι] [OrderBot ι] in
+/-- Against the indicator of a set the weighted law is the restriction, and it reads a cylinder.
+This is the bridge between the measure form of `PropagatesAgreement` and the set form the
+induction of `prop:uniqfromprop` produces. -/
+theorem weightedLaw_indicator_apply {π : ι → F → E} {t : ι} (hπ : Measurable (π t))
+    (P : Measure F) {A : Set F} (hA : MeasurableSet A) {C : Set E} (hC : MeasurableSet C) :
+    weightedLaw π P (A.indicator 1) t C = P (A ∩ π t ⁻¹' C) := by
+  unfold weightedLaw
+  have h1 : (fun f : F ↦ ENNReal.ofReal (A.indicator (1 : F → ℝ) f))
+      = A.indicator (1 : F → ENNReal) := by
+    funext f
+    by_cases hf : f ∈ A <;> simp [Set.indicator_of_mem, Set.indicator_of_notMem, hf]
+  rw [h1, withDensity_indicator_one hA, Measure.map_apply hπ hC,
+    Measure.restrict_apply (hπ hC), Set.inter_comm]
+
+/-- **Propagation of agreement**, `def:propagation`.  A set `N` of measures propagates agreement
+if, for every weight `Z` observed up to `s`, agreement of the `Z`-weighted law of the coordinate
+at `s` forces agreement of the `Z`-weighted law of the coordinate at every later `t`.
+
+Two points of the manuscript are deliberately kept, and a third is a formulation choice.
+
+*The weight cannot be dropped* (`rem:whyZ`): the unconditional form
+`P = Q on 𝓕° s ⟹ P = Q on 𝓕° s ⊔ σ (π t)` is a *different and unusable* condition, because the
+induction below produces agreement on finitely many coordinates and that form demands agreement
+on the whole of `𝓕° s`.  Carrying the past in `Z` instead of in a σ-algebra is what closes the
+gap, and it is why `Z` is a parameter here.
+
+*The hypothesis is an implication, not a conjunction*: `N` is not asked to consist of solutions
+of anything.  Nothing below knows what a martingale problem is.
+
+*The formulation choice*: the manuscript states both sides as equality of the integrals
+`E[Z h(π s)]` against all bounded measurable `h`; here they are equalities of *measures*.  For
+finite measures the two are the same statement -- `weightedLaw_indicator_apply` takes an equality
+of measures to the indicator instances, and `MeasureTheory.integral_map` takes it back -- and the
+measure form is the one that lands directly on the cylinder sets, so that no approximation of a
+bounded measurable function by simple ones occurs anywhere in this block. -/
+def PropagatesAgreement (𝓕₀ : Filtration ι mF) (π : ι → F → E) (N : Set (Measure F)) : Prop :=
+  ∀ P ∈ N, ∀ Q ∈ N, ∀ s t : ι, s ≤ t → ∀ Z : F → ℝ, (∀ f, 0 ≤ Z f) → (∃ b, ∀ f, Z f ≤ b) →
+    StronglyMeasurable[𝓕₀ s] Z →
+      weightedLaw π P Z s = weightedLaw π Q Z s → weightedLaw π P Z t = weightedLaw π Q Z t
+
+variable {𝓕₀ : Filtration ι mF} {π : ι → F → E} {N : Set (Measure F)}
+
+/-- Step 1 of `prop:uniqfromprop`, in the shape the induction actually takes: a cylinder over the
+first `n` times of a chain, intersected with one further condition at the time `t n`, whose set
+is a **separate argument**.  That separation is the whole content of the step: the induction
+hypothesis is used with the top set shrunk from `B n` to `B n ∩ D`, and the manuscript's
+"replace `f n` by `f n · h`" is exactly this.
+
+The filtration enters through `hadapt` alone -- `π u` is measurable for the past at any later
+`v` -- and not as the canonical filtration, so the statement holds for every filtration to which
+the coordinate process is adapted.  No probability measure hypothesis is needed here; it is the
+corollary below that wants `P univ = Q univ`. -/
+theorem measure_cylinder_inter_eq_of_propagatesAgreement
+    (hN : PropagatesAgreement 𝓕₀ π N)
+    (hadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    {P Q : Measure F} (hP : P ∈ N) (hQ : Q ∈ N)
+    (hinit : P.map (π ⊥) = Q.map (π ⊥))
+    {t : ℕ → ι} (ht : Monotone t) :
+    ∀ (n : ℕ) (B : ℕ → Set E), (∀ k, MeasurableSet (B k)) → ∀ C : Set E, MeasurableSet C →
+      P ((⋂ k ∈ Finset.range n, π (t k) ⁻¹' B k) ∩ π (t n) ⁻¹' C)
+        = Q ((⋂ k ∈ Finset.range n, π (t k) ⁻¹' B k) ∩ π (t n) ⁻¹' C) := by
+  have hmeas : ∀ u : ι, Measurable (π u) := fun u ↦
+    (hadapt u u le_rfl).mono (𝓕₀.le u) le_rfl
+  intro n
+  induction n with
+  | zero =>
+      intro B _ C hC
+      have hset : (⋂ k ∈ Finset.range 0, π (t k) ⁻¹' B k) ∩ π (t 0) ⁻¹' C
+          = π (t 0) ⁻¹' C := by simp
+      rw [hset]
+      have h := hN P hP Q hQ ⊥ (t 0) bot_le 1 (fun _ ↦ zero_le_one) ⟨1, fun _ ↦ le_rfl⟩
+        stronglyMeasurable_const (by rw [weightedLaw_one, weightedLaw_one, hinit])
+      rw [weightedLaw_one, weightedLaw_one] at h
+      rw [← Measure.map_apply (hmeas (t 0)) hC, ← Measure.map_apply (hmeas (t 0)) hC, h]
+  | succ n ih =>
+      intro B hB C hC
+      set A : Set F := ⋂ k ∈ Finset.range (n + 1), π (t k) ⁻¹' B k with hAdef
+      have hAmeas : MeasurableSet[𝓕₀ (t n)] A := by
+        refine Finset.measurableSet_biInter _ fun k hk ↦ ?_
+        exact hadapt (t k) (t n) (ht (Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))) (hB k)
+      have hAmeas' : MeasurableSet A := 𝓕₀.le (t n) A hAmeas
+      have hhyp : weightedLaw π P (A.indicator 1) (t n)
+          = weightedLaw π Q (A.indicator 1) (t n) := by
+        ext D hD
+        rw [weightedLaw_indicator_apply (hmeas (t n)) P hAmeas' hD,
+          weightedLaw_indicator_apply (hmeas (t n)) Q hAmeas' hD]
+        have hsplit : A ∩ π (t n) ⁻¹' D
+            = (⋂ k ∈ Finset.range n, π (t k) ⁻¹' B k) ∩ π (t n) ⁻¹' (B n ∩ D) := by
+          rw [hAdef, Finset.range_add_one, Finset.set_biInter_insert]
+          rw [Set.preimage_inter]
+          ext x; simp only [Set.mem_inter_iff, Set.mem_iInter]; tauto
+        rw [hsplit]
+        exact ih B hB (B n ∩ D) ((hB n).inter hD)
+      have hconc := hN P hP Q hQ (t n) (t (n + 1)) (ht (Nat.le_succ n))
+        (A.indicator 1) (fun f ↦ Set.indicator_nonneg (fun _ _ ↦ zero_le_one) f)
+        ⟨1, fun f ↦ by by_cases hf : f ∈ A <;>
+          simp [Set.indicator_of_mem, Set.indicator_of_notMem, hf]⟩
+        (stronglyMeasurable_const.indicator hAmeas) hhyp
+      have := congrArg (fun m ↦ m C) hconc
+      simpa only [weightedLaw_indicator_apply (hmeas (t (n + 1))) _ hAmeas' hC] using this
+
+/-- Step 1 of `prop:uniqfromprop`: two members of a set that propagates agreement, with the same
+law at `⊥`, have the same finite dimensional distributions along every chain. -/
+theorem measure_cylinder_eq_of_propagatesAgreement
+    (hN : PropagatesAgreement 𝓕₀ π N)
+    (hadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    {P Q : Measure F} [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (hP : P ∈ N) (hQ : Q ∈ N) (hinit : P.map (π ⊥) = Q.map (π ⊥))
+    {t : ℕ → ι} (ht : Monotone t) (n : ℕ) (B : ℕ → Set E) (hB : ∀ k, MeasurableSet (B k)) :
+    P (⋂ k ∈ Finset.range n, π (t k) ⁻¹' B k)
+      = Q (⋂ k ∈ Finset.range n, π (t k) ⁻¹' B k) := by
+  cases n with
+  | zero => simp
+  | succ n =>
+      have h := measure_cylinder_inter_eq_of_propagatesAgreement hN hadapt hP hQ hinit ht
+        n B hB (B n) (hB n)
+      rw [Finset.range_add_one, Finset.set_biInter_insert, Set.inter_comm]
+      exact h
+
+end Propagation
+
+/-! ### Step 2 of `prop:uniqfromprop`: from the chains to the law -/
+
+section Cylinders
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} {mF : MeasurableSpace F}
+variable {𝓕₀ : Filtration ι mF} {π : ι → F → E} {N : Set (Measure F)}
+
+/-- The measurable cylinders of a path space: a finite set of times, a measurable set at each of
+them.  Indexed by a `Finset ι` and **not** by a chain, because in that shape the π-system
+property is a union of index sets and needs no sorting at all; the sorting happens once, in
+`measure_biInter_eq_of_propagatesAgreement`, which is where the linear order is consumed. -/
+def pathCylinders (π : ι → F → E) : Set (Set F) :=
+  {s | ∃ (u : Finset ι) (B : ι → Set E), (∀ i, MeasurableSet (B i)) ∧
+    s = ⋂ i ∈ u, π i ⁻¹' B i}
+
+omit [OrderBot ι] in
+theorem isPiSystem_pathCylinders (π : ι → F → E) : IsPiSystem (pathCylinders π) := by
+  rintro s ⟨u, B, hB, rfl⟩ t ⟨v, B', hB', rfl⟩ -
+  classical
+  refine ⟨u ∪ v, fun i ↦ (if i ∈ u then B i else Set.univ) ∩ (if i ∈ v then B' i else Set.univ),
+    fun i ↦ ?_, ?_⟩
+  · exact MeasurableSet.inter (by split <;> simp [hB]) (by split <;> simp [hB'])
+  · ext x
+    simp only [Set.mem_inter_iff, Set.mem_iInter, Finset.mem_union, Set.mem_preimage,
+      Set.preimage_inter]
+    constructor
+    · rintro ⟨h1, h2⟩ i hi
+      refine ⟨?_, ?_⟩
+      · by_cases hu : i ∈ u <;> simp [hu, h1 i]
+      · by_cases hv : i ∈ v <;> simp [hv, h2 i]
+    · intro h
+      exact ⟨fun i hi ↦ by simpa [hi] using (h i (Or.inl hi)).1,
+        fun i hi ↦ by simpa [hi] using (h i (Or.inr hi)).2⟩
+
+omit [LinearOrder ι] [OrderBot ι] in
+/-- The cylinders generate the σ-field of the path space, `eq:pathsigma` of the manuscript, in
+the form the extension theorem wants. -/
+theorem generateFrom_pathCylinders (π : ι → F → E) :
+    MeasurableSpace.generateFrom (pathCylinders π)
+      = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance := by
+  apply le_antisymm
+  · refine MeasurableSpace.generateFrom_le ?_
+    rintro s ⟨u, B, hB, rfl⟩
+    refine Finset.measurableSet_biInter _ fun i _ ↦ ?_
+    exact (le_iSup (fun i : ι ↦ MeasurableSpace.comap (π i) inferInstance) i) _
+      ⟨B i, hB i, rfl⟩
+  · refine iSup_le fun i ↦ ?_
+    rintro s ⟨B, hB, rfl⟩
+    classical
+    refine MeasurableSpace.measurableSet_generateFrom ⟨{i}, fun _ ↦ B, fun _ ↦ hB, ?_⟩
+    simp
+
+/-- Step 1 of `prop:uniqfromprop`, read on an **unordered** finite set of times.
+
+This is the one place where (T2a), the linear order on the index, is consumed, and it is consumed
+exactly once: `Finset.orderIsoOfFin` turns the finite set into the monotone chain the induction
+wants.  The manuscript says the same thing in one clause -- "under (T2a) every finite subset of
+`T` is a chain" -- and separating it out is what keeps (T2a) out of Step 1 entirely: the
+induction above runs over a preorder. -/
+theorem measure_biInter_eq_of_propagatesAgreement
+    (hN : PropagatesAgreement 𝓕₀ π N)
+    (hadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    {P Q : Measure F} [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (hP : P ∈ N) (hQ : Q ∈ N) (hinit : P.map (π ⊥) = Q.map (π ⊥))
+    (u : Finset ι) (B : ι → Set E) (hB : ∀ i, MeasurableSet (B i)) :
+    P (⋂ i ∈ u, π i ⁻¹' B i) = Q (⋂ i ∈ u, π i ⁻¹' B i) := by
+  rcases Nat.eq_zero_or_pos u.card with hc | hc
+  · rw [Finset.card_eq_zero] at hc
+    subst hc
+    simp
+  · set k := u.card with hk
+    set e := u.orderIsoOfFin (rfl : u.card = k) with he
+    have hlt : ∀ j : ℕ, min j (k - 1) < k := fun j ↦ lt_of_le_of_lt (min_le_right _ _) (by omega)
+    set t : ℕ → ι := fun j ↦ (e ⟨min j (k - 1), hlt j⟩ : ι) with hte
+    have ht : Monotone t := by
+      intro a b hab
+      exact Subtype.coe_le_coe.mpr (e.monotone (by simp only [Fin.mk_le_mk]; omega))
+    have htmem : ∀ j, t j ∈ u := fun j ↦ (e ⟨min j (k - 1), hlt j⟩).2
+    have hset : (⋂ j ∈ Finset.range k, π (t j) ⁻¹' B (t j)) = ⋂ i ∈ u, π i ⁻¹' B i := by
+      ext x
+      simp only [Set.mem_iInter, Finset.mem_range]
+      constructor
+      · intro h i hi
+        obtain ⟨j, hj⟩ := e.surjective ⟨i, hi⟩
+        have hjk : (j : ℕ) < k := j.2
+        have hfin : (⟨min (j : ℕ) (k - 1), hlt (j : ℕ)⟩ : Fin k) = j :=
+          Fin.ext (by simp only []; omega)
+        have hti : t (j : ℕ) = i := by
+          simp only [hte]
+          rw [hfin, hj]
+        rw [← hti]
+        exact h (j : ℕ) hjk
+      · intro h j _
+        exact h (t j) (htmem j)
+    rw [← hset]
+    exact measure_cylinder_eq_of_propagatesAgreement hN hadapt hP hQ hinit ht k
+      (fun j ↦ B (t j)) (fun j ↦ hB _)
+
+/-- **`prop:uniqfromprop`**: a set of measures that propagates agreement contains at most one
+element with a given law at `⊥`.
+
+Read with `N = mpSolutions 𝓧₀ 𝓕₀`, this is the uniqueness half of `thm:absuniq`(b) -- but the
+statement knows nothing about martingales, and that is the point of `rem:uniqnotmarkov`:
+uniqueness of the finite dimensional distributions is not a Markovian fact.  What is Markovian is
+only the reduction of `PropagatesAgreement` to the one dimensional laws, and that is
+`lem:propagation`, which is not this theorem. -/
+theorem eq_of_propagatesAgreement
+    (hN : PropagatesAgreement 𝓕₀ π N)
+    (hadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance)
+    {P Q : Measure F} [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (hP : P ∈ N) (hQ : Q ∈ N) (hinit : P.map (π ⊥) = Q.map (π ⊥)) :
+    P = Q := by
+  refine MeasureTheory.ext_of_generate_finite (pathCylinders π)
+    (by rw [generateFrom_pathCylinders, hgen]) (isPiSystem_pathCylinders π) ?_ (by simp)
+  rintro s ⟨u, B, hB, rfl⟩
+  exact measure_biInter_eq_of_propagatesAgreement hN hadapt hP hQ hinit u B hB
+
+/-- The same, as a `Subsingleton` statement on the solutions with a prescribed initial law:
+`subsingleton_mpSolutions_of_unique_onedim` of the roadmap, with `PropagatesAgreement` in place
+of the one dimensional hypothesis it will be derived from. -/
+theorem subsingleton_of_propagatesAgreement
+    (hN : PropagatesAgreement 𝓕₀ π N)
+    (hadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance)
+    (mu : Measure E) :
+    Set.Subsingleton {P ∈ N | IsProbabilityMeasure P ∧ P.map (π ⊥) = mu} := by
+  rintro P ⟨hP, hPp, hPi⟩ Q ⟨hQ, hQp, hQi⟩
+  have := hPp
+  have := hQp
+  exact eq_of_propagatesAgreement hN hadapt hgen hP hQ (hPi.trans hQi.symm)
+
+end Cylinders

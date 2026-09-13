@@ -333,6 +333,33 @@ leeren Voraussetzung.
 
 **Der Weg:**
 
+**UMSTELLUNG 2026-09-13 abends, vom Nutzer angeordnet: C.5a wird geparkt, Teil E
+beginnt jetzt.**
+
+> **E zuerst. C.5a später, und dann über die Zeitverwandlung.**
+
+**Warum geparkt:** `E[D_n | ℋ_n] = 0` über dem Produktraum ist auf Papier ein
+Absatz und in Lean viele kleine Schritte — elf Läufe, zwei von sechs Punkten der
+Gruppe A offen, und es taucht nichts Verborgenes mehr auf; es ist nur viel.
+Der Zustand zum Parken ist günstig: der Abhängigkeitsbaum steht ausgeschrieben in
+`MartingaleProblems/README.md`, elf Aussagen sind benannt, **alle Entscheidungen
+sind getroffen**. Wer zurückkommt, erschließt nichts neu.
+
+**Und wenn zurückgekommen wird, dann über den anderen Weg** *(Nutzer: „selbst
+wenn er nicht kürzer ist, ist der Beweis allgemeiner")*: die **Zeitverwandlung**.
+`jumpMeasure_map_cumulativeRateF_jumpTimeF` steht seit dem 2026-09-11,
+voraussetzungsfrei bis auf die Daten — ein Punktprozeß mit kumulierter Rate `Λ`
+ist ein zeittransformierter Einheits-Poissonprozeß, und die Martingaleigenschaft
+ist die des Poissonkompensators, transportiert. Das ist der Beweis von Watanabe,
+und er ersetzt die ganze `D_n`-Zerlegung. **Der Nutzer erwartet ausdrücklich
+nicht, daß er kürzer ist** — er ist allgemeiner, und das ist der Grund. Was daran
+schwer sein dürfte, ist, die Zeitverwandlung überhaupt zu *finden*, also den
+Transport der Martingaleigenschaft unter der Zeitänderung; das ist beim
+Wiederaufnehmen der erste zu klärende Punkt und keine Nebensache.
+
+Die `D_n`-Arbeit bleibt stehen und ist nicht verloren: Punkte 1 bis 4 der Gruppe
+A sind bewiesen und gelten unabhängig vom Weg.
+
 **Neue Reihenfolge ab 2026-09-12 abends, vom Nutzer festgelegt** — er will bald
 zur *Theorie* des Martingalproblems, nicht länger zu Beispielen:
 

@@ -6240,9 +6240,55 @@ sits directly on it, and this milestone supplies the converse. Neither roadmap
 has the full uniqueness theory alone. Whoever takes it up should state it there
 and cite this milestone, not the other way round.
 
-Hypotheses: a shift system, a determining set for every `𝓧° r`, and uniqueness
-of the one dimensional distributions of the shifted problems.
+**The Markov free half, and it is the bottom of the milestone.** Uniqueness of
+the finite dimensional distributions is not a Markovian fact, and the milestone
+is built so that this is visible: the condition the uniqueness argument consumes
+is `PropagatesAgreement`, and every statement in this group is free of shifts,
+of determining sets and of `restart`.
 
+* `PropagatesAgreement 𝓕° π N`: for `P, Q ∈ N`, `s ≤ t` and every bounded
+  non-negative `𝓕° s`-measurable weight `Z`, agreement of the `Z`-weighted law
+  of `π s` forces agreement of the `Z`-weighted law of `π t`. The weight is a
+  parameter and not a σ-algebra: the unconditional form
+  `P = Q on 𝓕° s ⟹ P = Q on 𝓕° s ⊔ σ (π t)` is a different and unusable
+  condition, because the induction below delivers agreement on finitely many
+  coordinates and that form demands agreement on the whole of `𝓕° s`.
+* `weightedLaw π P Z t`, the law of `π t` under `Z • P`, together with
+  `weightedLaw_one` and `weightedLaw_indicator_apply`. It is written as
+  `restart` writes the reweighting, so that the initial law of a restarted
+  solution is `weightedLaw π P Z r` on the nose.
+* `measure_cylinder_inter_eq_of_propagatesAgreement`: the induction over a
+  chain, with the top coordinate's set a separate argument. That separation is
+  the content of the step -- the induction hypothesis is used with the top set
+  shrunk -- and it runs over a **preorder**.
+* `measure_cylinder_eq_of_propagatesAgreement`: the finite dimensional
+  distributions agree along every monotone chain.
+* `pathCylinders`, `isPiSystem_pathCylinders`, `generateFrom_pathCylinders`: the
+  measurable cylinders of a path space, indexed by a `Finset` of times, and the
+  two facts the extension theorem asks for.
+* `measure_biInter_eq_of_propagatesAgreement`: the same over an unordered finite
+  set of times. This is the **one** place where the linear order on the index is
+  consumed, through `Finset.orderIsoOfFin`.
+* `eq_of_propagatesAgreement` and `subsingleton_of_propagatesAgreement`: two
+  members of `N` with the same law at `⊥` are equal. The σ-field of the path
+  space is a hypothesis, `mF = ⨆ i, comap (π i)`, and the filtration enters only
+  through `∀ u ≤ v, Measurable[𝓕° v] (π u)` -- not as the canonical filtration,
+  so the statements hold for every filtration the coordinate process is adapted
+  to.
+
+Hypotheses of the Markov half: a shift system, a determining set for every
+`𝓧° r`, and uniqueness of the one dimensional distributions of the shifted
+problems.
+
+* `propagatesAgreement_of_unique_onedim`: under a shift system with `𝓩°`
+  determining for each `𝓧° r`, and uniqueness of the one dimensional
+  distributions of every shifted problem, `mpSolutions 𝓧° 𝓕°` propagates
+  agreement. This is `lem:propagation`, it is the first statement of the
+  milestone that is Markovian, and it is what turns the group above into
+  `thm:absuniq`(b) by one application of `eq_of_propagatesAgreement`. It rests
+  on `restart_canonical`, on `Shift.eval_comp` for `π 0 ∘ θ s = π s`, and on the
+  normalisation `Z / E[Z]`, which needs the degenerate case `E[Z] = 0` treated
+  separately.
 * `isMarkov_of_unique_onedim`: every solution is Markov, in general time
   inhomogeneously — for `f` bounded measurable and `r, t : ι`,
   `𝔼[f (X (r + t)) | 𝓖 r] =ᵐ 𝔼[f (X (r + t)) | X r]`.
