@@ -188,6 +188,11 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `expMeasure_Ioi_add` bewiesen. Sie ist der einzige nicht buchhalterische
   Schritt im Beweis von `thm:jumpMP`, und sie ist elementar — ein Kandidat für
   einen Vier-Zeilen-PR neben `Probability/Distributions/Exponential.lean`.
+  Dazu gehört der Schwanz selbst, `expMeasure_Ioi`, den Mathlib ebenfalls nicht
+  hat (nur die Verteilungsfunktion `cdf_expMeasure_eq`), und seit dem zehnten
+  Lauf des 2026-09-13 seine Fortsetzung unterhalb von `0`,
+  `expMeasure_Ioi_of_nonpos`: oberhalb eines nichtpositiven Pegels liegt die ganze
+  Masse. Die drei gehören in **einen** PR; einzeln sind sie zu klein.
 
 * **Vollständigkeit der Konvergenz im Maß.** `ConvergenceInMeasure.lean` enthält
   das Wort `cauchy` nicht ein einziges Mal; der $L^p$-Fall verlangt eine

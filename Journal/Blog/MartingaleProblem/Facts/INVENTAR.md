@@ -27490,3 +27490,206 @@ unverändert seit dem vierten Lauf.
    ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung braucht
    ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der Roadmap steht,
    und ein Negativbefund ohne Zeugen ist ein Versprechen.
+
+
+### 2026-09-13, zehnter Lauf des Tages — der Martingalzuwachs des Blocks steht; die angesagte Buchhaltung war es, und die eine Stelle, an der sie nicht trug, lag außerhalb des Fensters
+
+**Bearbeitet:** Vorschlag 0 des Vorlaufs, `condExp_mpFamilyF_increment_eq_zero` —
+Punkt 5 der Gruppe A. Er steht, unter diesem Namen, samt den drei Zwischensätzen,
+die er brauchte. Die Vorschläge 1 (Punkt 2 der Gruppe A, die Dichtegestalt) und 2
+(der Zeuge `measurableSet_stoppedAt_lt_jumpTimeH`) sind **nicht** angegangen worden
+und bleiben unverändert liegen.
+
+Im selben Lauf ist der eigene Vorschlag 0 gleich mit eingelöst worden — die
+pfadweise Aussage über das Fenster, die Punkt 5 aus der Produktgestalt in die
+Erzeugergestalt des Manuskripts hebt. Sie steht als `stepPath_eq_of_mem_Ico` und
+`hawkesProcessH_eq_of_mem_Ico`; Einzelheiten unten unter „Der Nachtrag".
+
+**Sechs Sätze** in `TauCeti/MartingaleProblems/Suggested.lean`, in den drei neuen
+Abschnitten `IncrementZero`, `BlockWindow` und `HawkesBlockWindow` am Ende der
+Datei; 389 Zeilen, kein neuer Import. Die ganze Datei
+ohne einen Fehler durch `lake env lean` gegen v4.33.1 und **ohne erhöhte
+Herzschlaggrenze**, alle sechs mit `#print axioms` geprüft und jeder auf `propext`,
+`Classical.choice`, `Quot.sound` — kein `sorryAx`. `scripts/check_suggested.py`
+meldet für die Datei `rc 0`, `0 Fehler`, `9 sorry` — die Zahl der `sorry` ist
+unverändert **neun**. (`WeakConvergence/Suggested.lean` meldet weiter seine zwei
+Fehler; das ist die eine bewußt gegen `master` geschriebene Aussage und von diesem
+Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Der Martingalzuwachs des Blocks: zwei Hälften, ein Faktor davor, und ein
+Stichprobenpunkt, an dem beide Seiten verschwinden"; Punkt 5 der Gruppe A ist dort
+berichtigt. **Die Zahl der offenen Aussagen sinkt von zwölf auf elf**, und Gruppe A
+— die Wahrscheinlichkeitsschicht — von drei auf **zwei**.
+
+#### Die Aussage
+
+> `condExp_mpFamilyF_increment_eq_zero` — für den beschränkten nichtlinearen
+> Hawkes-Prozeß, `f` meßbar mit `|f| ≤ C`, `0 ≤ t`:
+> `E[(f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t}`
+> `  − (μ f (Y_n) − f (Y_n)) · ∫_0^t 1_{τ_n<u} Λ_u 1_{u<τ_{n+1}} du | ℋ_n] = 0`,
+> mit `ℋ_n = σ(Y_0, …, Y_n, τ_1, …, τ_n)`.
+
+Das ist `E[D_n | ℋ_n] = 0` des Manuskripts, in der **Produktgestalt**: der
+Kettenfaktor `μ f (Y_n) − f (Y_n)` steht vor dem Integral und nicht als `𝒜_u f`
+darin. Der Unterschied ist keiner der Aussage, sondern einer der Schreibweise, und
+er ist unter „Was dieser Lauf nicht getan hat" benannt.
+
+Darunter, jeder für sich brauchbar:
+
+> `expMeasure_Ioi_of_nonpos` — `expMeasure r (Ioi x) = 1` für `x ≤ 0`.
+> `hawkesLevelOf_nonpos` — der Pegel `Λ_t − Λ_{τ_n}` ist nichtpositiv für
+> `0 ≤ t ≤ τ_n`.
+> `intervalIntegral_hawkesBlockDensity_of_nonneg` — die Brücke des Vorlaufs, ohne
+> die Voraussetzung `τ_n ≤ t`, also an **jedem** Stichprobenpunkt.
+
+#### Der Befund, und er ist der Grund, aus dem der Satz drei Zwischensätze brauchte
+
+Die beiden Hälften des Martingalzuwachses sind bedingte Erwartungen, und die stehen
+**fast sicher auf dem ganzen Raum** — nicht auf `{τ_n ≤ t}`. Die Brücke des
+Vorlaufs galt aber nur dort. Oberhalb von `t` ist der Wert der einen Hälfte nicht
+der Wert der anderen, sondern **beide sind `0`**, und aus zwei verschiedenen
+Gründen: links wird der Schalter von `hawkesBlockRate` im Fenster nie umgelegt,
+rechts ist der Pegel nichtpositiv und die Exponentialverteilung hat oberhalb eines
+nichtpositiven Pegels ihre ganze Masse.
+
+**Das ist keine Randbemerkung, sondern die Stelle, an der der Beweis ohne
+Zwischensatz gescheitert wäre.** Eine Aussage, die auf `{τ_n ≤ t}` gilt, hilft
+nicht gegen eine bedingte Erwartung, die überall steht; man muß entweder die
+Aussage erweitern oder die Gleichheit auf die Menge einschränken, und das zweite
+wäre eine schwächere Aussage gewesen. Erweitert ist sie in zwei Zeilen, sobald man
+sieht, daß `expMeasure_Ioi` unterhalb von `0` nichts mehr zu verlieren hat.
+
+#### Die Stolperstelle, und sie ist die teuerste des Laufs gewesen
+
+Die Meßbarkeit der Rate auf dem **vertauschten** Paar,
+`fun q : ℝ × Ω ↦ hawkesSelfRateH h ν φ q.1 q.2`, aus
+`measurable_uncurry_hawkesSelfRateH` in **einem** Schritt zu gewinnen, terminiert
+nicht. Nicht „langsam": ein `whnf`-Timeout, der auch bei einer Million
+Herzschlägen in derselben Sekundenzahl wieder dasteht — die Unifikation der
+Komposition mit der Zielgestalt läuft im Kreis. Der Nachbarbeweis
+`condExp_compensator_rate_block` nimmt denselben Schritt in zwei: erst die
+Komposition unter eigenem Namen (`hrate0`), dann die Zielgestalt durch bloßes
+Hinschreiben. Das sah nach Umständlichkeit aus und ist keine.
+
+**Die Lehre ist dieselbe wie im achtzehnten Lauf des 2026-09-10** („nicht am Ziel
+rewriten, sondern das Ziel mit `exact` treffen"), und sie hat hier eine zweite
+Hälfte bekommen: **ein Umweg im Nachbarbeweis ist eine Mitteilung.** Wer ihn
+begradigt, ohne zu fragen, wovor er ausweicht, zahlt den Preis noch einmal. Der
+Umweg ist jetzt an beiden Stellen kommentiert.
+
+Die Bisektion selbst ist billig gewesen und gehört als Verfahren festgehalten: die
+Datei mit `sorry` an wechselnden Stellen abschneiden und übersetzen. Jeder Durchlauf
+kostet fünfzig Sekunden, acht Durchläufe haben den Schritt eingekreist, und das
+Ergebnis ist eine benannte Zeile statt eines Verdachts.
+
+#### Zwei weitere kleine Befunde
+
+* **`le_or_lt` gibt es in v4.33.1 nicht mehr**; die Fallunterscheidung heißt
+  `le_or_gt`. Das ist die Art von Fund, die Teil D sucht, nur an unserem eigenen
+  Text statt an einer Roadmap.
+* **`nlinarith` auf großen Termen ist teuer.** Beide Abschätzungen des Beweises
+  sind zuerst mit `nlinarith` über den vollen Indikatortermen geschrieben gewesen;
+  sie sind jetzt als zwei `have`s über **abstrakten** reellen Zahlen geführt und
+  werden angewandt. Das ist derselbe Kunstgriff, den `condExp_compensator_rate_block`
+  mit seinem `harith` schon macht.
+
+#### Der Prüfstein des Vorschlags
+
+Er lautete: *in der Aussage darf `τ_{n+1}` als Integrationsgrenze nicht vorkommen.*
+Er ist eingehalten — die Integrationsgrenzen sind `0` und `t`, und `τ_{n+1}` steht
+nur im Indikator des Integranden, wo es hingehört. Der Vorschlag hatte außerdem
+verlangt, zu **entscheiden** statt zu raten, ob der Kettenfaktor vor oder hinter das
+Integralzeichen gezogen wird. Die Entscheidung ist *vorn*, und die Begründung ist
+nicht Bequemlichkeit: der Faktor ist `ℋ_n`-meßbar und beschränkt, also nimmt ihn
+`condExp_mul_of_stronglyMeasurable_left` in einem Schritt heraus, während er hinten
+durch `condExp_intervalIntegral_comm` hätte mitgeführt werden müssen und der
+Kandidat dann nicht mehr `hawkesBlockDensity` gewesen wäre. Der billigere Weg ist
+hier auch der ehrlichere, weil er den Kandidaten des Vorlaufs unverändert liest.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+In diesem Lauf nicht wiederholt; der siebte Lauf hat `upstream/master` frisch geholt
+(`182c4c30cdc58b70f2ba77d56f31b1c4048e9522`). Die in diesem Lauf benutzten
+Mathlib-Namen sind `condExp_sub`
+(`MeasureTheory/Function/ConditionalExpectation/Basic.lean:335`),
+`condExp_mul_of_stronglyMeasurable_left`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:245`),
+`intervalIntegral.norm_integral_le_of_norm_le_const`
+(`MeasureTheory/Integral/IntervalIntegral/Basic.lean:769`) und `le_or_gt`; alle vier
+sind am Quelltext von v4.33.1 belegt, keiner ist `deprecated`. Der Fund gegen den
+eigenen Text ist `le_or_lt` (siehe oben).
+
+#### Der Nachtrag — der eigene Vorschlag im selben Lauf eingelöst
+
+Das Manuskript schreibt den Kompensator als `∫_{τ_n∧t}^{τ_{n+1}∧t} 𝒜_s f ds`, mit
+dem Erzeuger unter dem Integralzeichen; oben steht der Kettenfaktor davor. Daß
+beides dieselbe Zahl ist, ruht darauf, daß der Pfad im Fenster bei `Y_n` sitzt, und
+das steht jetzt:
+
+> `stepPath_eq_of_mem_Ico` — für `T` monoton und `T n ≤ t < T (n+1)` ist
+> `stepPath T y t = y n`.
+> `hawkesProcessH_eq_of_mem_Ico` — die Instanz: für
+> `τ_n ≤ u < τ_{n+1}` ist `hawkesProcessH h ν φ u ω = ω.1 n`.
+
+**Der allgemeine Satz ist kürzer als die Instanz** — eine Zeile, `stepIndex_eq_of`
+mit `Or.inr`. Das ist der Ertrag davon, ihn über `stepPath` und nicht über den
+Hawkes-Prozeß zu stellen: die Aussage liest von der Konstruktion nichts als die
+Monotonie der Zeiten, und Poisson, Geburt-Tod und M/M/1 bekommen sie mit
+demselben Aufruf. Der **Prüfstein** ist eingehalten: die Nichtexplosion kommt nicht
+vor, denn der Müllwert von `stepIndex` wird genau dort zurückgegeben, wo *kein*
+Fenster `t` enthält, und die Voraussetzung `t < T (n+1)` sagt, daß dieses eines ist.
+
+**Und die im Vorschlag angesagte Prüfung ist nötig gewesen.** Die Fenster von
+`stepPath` sind `[τ_n, τ_{n+1})`, der Zuwachs `D_n` liest `(τ_n, τ_{n+1}]`. Die
+beiden unterscheiden sich in **zwei Punkten**, und die Aussage ist über der Gestalt
+geführt, die `stepPath` wirklich hat, statt der, die der Zuwachs schreibt. Für das
+Integral ist der Unterschied keiner — zwei Punkte sind eine Lebesgue-Nullmenge —,
+aber das ist beim Zusammenbau ein eigener, wenn auch billiger Schritt, und er ist
+hier nicht getan. Die andere Lesart wäre falsch gewesen: bei `u = τ_{n+1}` ist der
+Pfad schon `Y_{n+1}`, weil er rechtsstetig ist.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Den Zusammenbau in die Erzeugergestalt.** Beide Bausteine stehen, die
+Nullmengen-Abänderung zwischen ihnen nicht.
+
+**Punkt 2 der Gruppe A** (die bedingte Dichte). Unverändert. Punkt 5 liest ihn
+nicht: er liest den Kompensator so, wie `condExp_compensator_rate_block` ihn
+liefert.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`,
+unverändert seit dem vierten Lauf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`condExp_mpFamilyF_increment_eq_zero_generator` — der Zuwachs in der
+   Erzeugergestalt des Manuskripts.** Die Aussage: dasselbe wie
+   `condExp_mpFamilyF_increment_eq_zero`, aber mit
+   `∫_0^t 1_{τ_n<u} (∫ f dμ(X_u) − f (X_u)) Λ_u 1_{u<τ_{n+1}} du` statt des
+   Produkts. **Worauf sie ruht:** `hawkesProcessH_eq_of_mem_Ico` (dieser Lauf) und
+   darauf, daß der Integrand nur auf `{τ_n} ∪ {τ_{n+1}}` abgeändert wird, also auf
+   einer Lebesgue-Nullmenge — `intervalIntegral.integral_congr_ae` mit
+   `Set.Finite.measure_zero` oder `MeasureTheory.ae_restrict_iff`. **Warum jetzt:**
+   es ist der letzte Schritt, der die Formalisierung des Zuwachses mit dem
+   Wortlaut des Manuskripts zur Deckung bringt, und er ist der billigste offene
+   Punkt überhaupt. **Prüfstein:** die Nichtexplosion darf auch hier nicht
+   vorkommen; sie tut es nicht, weil `hawkesProcessH_eq_of_mem_Ico` sie nicht
+   kennt.
+
+1. **`martingale_mpFamilyF_truncRateF` — Punkt 6 der Gruppe A, die Summation über
+   `n`.** **Worauf er ruht:** Punkt 5 (dieser Lauf) und darauf, daß unterhalb der
+   Deckelung `a` nur endlich viele Sprünge liegen. **Warum jetzt:** er ist die
+   letzte Aussage der Gruppe A, die noch eine Wahrscheinlichkeitsaussage ist, und
+   die erste, die aus dem Blockzuwachs ein **Martingal** macht statt einer Gleichung
+   je `n`. **Was zu entscheiden ist:** ob die Summation über den Turmschluß
+   (`condExp_condExp_of_le` über der wachsenden Folge `ℋ_n`) läuft oder über die
+   Zerlegung des Zuwachses zwischen zwei festen Zeiten in die Blöcke dazwischen. Das
+   erste ist die übliche Gestalt, das zweite die, die `isMPSolution` liest; sag im
+   Bericht, was Du genommen hast und warum.
+
+2. **`condExp_jumpTimeFE_hasDensity` — Punkt 2 der Gruppe A.** Unverändert aus dem
+   Vorlauf, und unverändert der billigste der verbliebenen: sein ganzer Inhalt ist
+   eine Umschreibung von Punkt 1 in die Dichtegestalt. Er wird von Punkt 5 nicht
+   gebraucht — das hat dieser Lauf gezeigt —, also steht er jetzt dort, wo er
+   hingehört: als die Fassung, die ein Leser erwartet, und nicht als Eingabe.
