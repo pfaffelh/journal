@@ -3905,7 +3905,15 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    **Rechnung** (Variablenwechsel längs der kumulierten Rate).
 3. `condExp_jump_term` — `E[(f(Y_{n+1}) − f(Y_n)) 1_{τ_{n+1} ≤ t} | ℋ_n]` als
    `∫_{τ_n}^{t} Λ_u e^{−A_n(u)} (μ_u f − f(Y_n)) du`. Hängt an 2 und am Kern der
-   Marken.
+   Marken. **Zwei seiner drei Eingaben stehen seit dem fünften Lauf des
+   2026-09-13** für den beschränkten nichtlinearen Fall: der Zeitfaktor
+   `condExp_le_jumpTimeFE_hawkesSelfRateH_block` und die Trennbarkeit
+   `jumpMeasure_map_chain_jumpTimeH`, letztere getragen von der Trägheit des
+   Kettenarguments in `jumpTimeFE (hawkesSelfRateH h ν φ)`
+   (`jumpTimeFE_hawkesSelfRateH_snd_congr`,
+   `setOf_le_jumpTimeFE_hawkesSelfRateH_eq`). Offen ist der **Kettenfaktor**,
+   `E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)`, also die Markoveigenschaft der
+   eingebetteten Kette an der `n`-ten Stufe.
 4. `condExp_compensator_term` — `E[∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds | ℋ_n]` als
    **dasselbe** Integral. Hängt an 1 und an Fubini.
 5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. Hängt an 3 und 4.
@@ -4059,6 +4067,16 @@ auf die **Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe**, und
 die steht im Bestand bisher nur an der nullten (`comp_chainKernel_map_split`,
 `chainKernel_map_split`). Der Weg dorthin ist die Induktion über den
 Einschrittshift `chainKernel_map_shift`, der die Zeithomogenität schon trägt.
+
+*Stand 2026-09-13, fünfter Lauf des Tages: unverändert **vierzehn**.* Bewiesen
+wurde keine der vierzehn; was dazukam, sind Eingaben. Punkt 3 der Gruppe A hat
+davon **zwei von drei** beisammen — den Zeitfaktor
+(`condExp_le_jumpTimeFE_hawkesSelfRateH_block`, dieser Lauf) und die
+Trennbarkeit der beiden Faktoren (`jumpMeasure_map_chain_jumpTimeH`, dieser
+Lauf). Was fehlt, ist allein der Kettenfaktor, also die genannte
+Markoveigenschaft an der `n`-ten Stufe. Einzelheiten im Abschnitt „Die gemeinsame
+Meßbarkeit der Selbstrate, die bedingte Verteilungsfunktion, und die Trägheit der
+Kette".
 
 ### Die Filtration eines Treppenpfadprozesses: die Punktfiltration, und was der Pfad von ihr zurückgibt
 
@@ -5409,6 +5427,95 @@ nur bei diskretem `E` eintritt. Wer sie dennoch untersuchen will, hat mit
 `mem_nonExplosiveE_iff_tsum_eq_top` und `ae_mem_nonExplosiveE` (2026-09-10) die
 Nichtexplosion schon bewiesen daliegen — es wäre eine zweite, unabhängige Route
 zum selben Beispiel, und der Vergleich beider wäre für sich lehrreich.
+
+### Die gemeinsame Meßbarkeit der Selbstrate, die bedingte Verteilungsfunktion, und die Trägheit der Kette
+
+Der vierte Lauf des 2026-09-13 ist an einer Eingabe abgeprallt, die weiter unten
+lag, als sie aussah: die Komplementaussage
+`P(τ_{n+1} ≤ t | ℋ_n) = 1 − exp (−(Λ_t − Λ_{τ_n}))` läuft über `condExp_sub`,
+`condExp_sub` verlangt die **Integrierbarkeit** des Indikators, also die
+Meßbarkeit des Ereignisses `{τ_{n+1} ≤ ofReal t}`, also `measurable_jumpTimeFE`
+an `hawkesSelfRateH` — und dessen dritte Voraussetzung ist die **gemeinsame**
+Meßbarkeit der Rate in Stichprobenpunkt und Zeit. Im Bestand standen die
+Meßbarkeit in der Zeit bei festem Stichprobenpunkt und die Integrierbarkeit auf
+jedem Fenster, ihre Verbindung nicht.
+
+**`measurable_uncurry_hawkesSelfRateH` — und sie ist billiger als im linearen
+Fall.** Die Aussage ist das Gegenstück zu `measurable_uncurry_hawkesSelfRate` und
+wird ebenso bewiesen, als Instanz von `measurable_uncurry_pointRate` an der
+Familie `hawkesJumpTimeH`. Der Unterschied sitzt in den Voraussetzungen: der
+lineare Fall braucht `hφint`, die Intervallintegrierbarkeit der Translate von
+`φ`, weil `measurable_hawkesJumpTime_apply` sie braucht; hier läuft
+`measurable_hawkesJumpTimeH_apply` statt dessen auf den beiden Schranken, und die
+Intervallintegrierbarkeit ist ein Satz. Weder der Fixpunkt noch die
+Nichtexplosion noch die Positivität der Wartezeiten geht ein.
+
+Daraus fallen `measurable_jumpTimeFE_hawkesSelfRateH` — die Instanz von
+`measurable_jumpTimeFE`, bei der im Unterschied zum linearen Fall **alle drei**
+Voraussetzungen aus den Daten kommen, `hint` eingeschlossen, das im linearen Fall
+die Nichtexplosion ist — sowie die Meßbarkeit des Sprungereignisses und seines
+Komplements.
+
+**`condExp_le_jumpTimeFE_hawkesSelfRateH_block` und `…_block_exp` — die bedingte
+Verteilungsfunktion.** Die Komplementaussage zu
+`condExp_lt_jumpTimeFE_hawkesSelfRateH_block`: `1_{τ ≤ t} = 1 − 1_{t < τ}`,
+`condExp_sub`, `condExp_const`. Die Einschränkung auf `{τ_n ≤ t}` in der
+`exp`-Fassung ist dieselbe und aus demselben Grund wie oben: außerhalb wäre
+`1 − exp (−Pegel)` negativ und keine Wahrscheinlichkeit.
+
+**Die Trägheit der Kette, und sie ist die zweite Hälfte des Sprungterms.**
+Punkt 3 der Gruppe A verlangt
+
+```
+E[(f (Y_{n+1}) − f (Y_n)) · 1_{τ_{n+1} ≤ t} | ℋ_n]
+  = (μ f (Y_n) − f (Y_n)) · P(τ_{n+1} ≤ t | ℋ_n),
+```
+
+und daß die beiden Faktoren sich trennen, hat zwei Gründe: die Sprungzeiten sind
+eine Funktion der **Wartezeiten allein**, `f (Y_{n+1}) − f (Y_n)` eine der
+**Kette allein**, und `jumpMeasure` ist das Produkt der beiden Gesetze.
+
+Für die Rekursion `hawkesJumpTimeH` ist das `hawkesJumpTimeH_sample_congr` und
+stand. Für `jumpTimeFE (hawkesSelfRateH h ν φ)` — die Familie, über der die
+Filtration, die Stoppzeiten und der Zuwachs geschrieben sind, definiert durch
+Invertieren der kumulierten Rate statt durch die Rekursion — stand es **nicht**:
+die Rate trägt den Stichprobenpunkt im Argument. Es steht jetzt, über die
+Kette `hawkesSelfRateH_snd_congr` → `cumulativeRateF_hawkesSelfRateH_snd_congr` →
+`jumpTimeFE_hawkesSelfRateH_snd_congr`, und in der Gestalt, die die
+Faktorisierung liest: `setOf_le_jumpTimeFE_hawkesSelfRateH_eq` schreibt das
+Ereignis `{τ_{n+1} ≤ t}` als Urbild unter `Prod.snd`.
+
+`jumpMeasure_map_chain_jumpTimeH` ist die Unabhängigkeit selbst: das Bildmaß des
+Paares *(Kette bis zur `n`-ten Marke, erste `n` Sprungzeiten)* unter
+`jumpMeasure` ist das Produkt der beiden Bildmaße. Der Beweis ist
+`Measure.map_prod_map` und die Trägheit des Kettenarguments.
+
+**Ein Nachtrag, und er berichtigt den Abschnitt, ehe er alt wird.** Beim
+Nachprüfen eines geplanten Negativbefunds ist
+`Mathlib/MeasureTheory/Function/ConditionalExpectation/PullOut.lean` aufgetaucht
+— die **Herausziehungseigenschaft** der bedingten Erwartung,
+`condExp_mul_of_stronglyMeasurable_left` (`:245`),
+`condExp_mul_of_aestronglyMeasurable_left` (`:235`) und die bilineare Fassung
+`condExp_bilin_of_aestronglyMeasurable_left` (`:199`), in v4.33.1 wie auf
+`master`. Mit ihr geht der Sprungterm in **zwei Herausziehungen**: über
+`σ(ganze Kette, τ_1, …, τ_n)` ist `f (Y_{n+1}) − f (Y_n)` meßbar und wird
+herausgezogen, übrig bleibt `P(τ_{n+1} ≤ t | 𝒢)`; dann der Turmschluß nach `ℋ_n`,
+wo der Pegelfaktor `ℋ_n`-meßbar ist und ein zweites Mal herausgezogen wird.
+Dieser Weg braucht die Unabhängigkeit **nicht**. `jumpMeasure_map_chain_jumpTimeH`
+und die Congruenzkette bleiben richtig und bleiben die strukturelle Aussage
+darüber, daß die Kette in die Sprungzeiten nicht eingeht; auf dem kürzesten Weg
+zum Sprungterm liegen sie nach diesem Befund nicht.
+
+**Was damit für Punkt 3 der Gruppe A noch fehlt, und es ist eine einzige
+Aussage.** Der Zeitfaktor steht (`condExp_le_jumpTimeFE_hawkesSelfRateH_block`),
+die Trennbarkeit steht (`jumpMeasure_map_chain_jumpTimeH`); der Kettenfaktor —
+`E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)` — fehlt. Er ist die
+Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe. Im Bestand steht
+sie an der **nullten** (`chainKernel_map_split`, `comp_chainKernel_map_split`)
+und als Einschrittshift (`chainKernel_map_shift`, `comp_chainKernel_map_shift`);
+die Induktion dazwischen ist nicht geführt. Sie erwähnt die Wartezeiten
+überhaupt nicht — `jumpMeasure` ist ein Produkt, und die Kette ist der eine
+Faktor.
 
 ## Milestone 5: mixtures, shifts and the restart lemma
 

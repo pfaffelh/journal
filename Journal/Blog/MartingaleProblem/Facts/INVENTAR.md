@@ -26355,3 +26355,221 @@ je für sich da, ihre Verbindung nicht.*
    Lauf ist an ihr vorbeigegangen —, aber sie ist der Beleg für einen
    Negativbefund, der jetzt in der Roadmap steht, und ein Negativbefund ohne
    Zeugen ist ein Versprechen.
+
+### 2026-09-13, fünfter Lauf des Tages — die Eingabe, an der der Vorlauf abgeprallt ist, steht; und mit ihr die zweite von drei Hälften des Sprungterms: die Kette ist in den Sprungzeiten träge
+
+**Bearbeitet:** Vorschlag 0 und, darüber hinaus, die Aussage, die der vierte Lauf
+des Tages angefangen und zurückgenommen hatte. Vorschlag 1
+(`comp_chainKernel_map_split_range`) ist **nicht** angegangen worden; was statt
+dessen dasteht, ist die *andere* fehlende Eingabe von Punkt 3 der Gruppe A, und
+sie war billiger und ist im Baum nicht als eigener Punkt geführt gewesen.
+Vorschlag 2 hängt an Vorschlag 1 und bleibt liegen; Vorschlag 3 (der Zeuge)
+ebenso, wie vorgesehen.
+
+**Elf Sätze** in `TauCeti/MartingaleProblems/Suggested.lean`, in zwei neuen
+Abschnitten am Ende der Datei — `BoundedHawkesJointMeasurable` (sechs) und
+`BoundedHawkesChainInert` (fünf); 284 Zeilen. Die ganze Datei ohne einen Fehler
+durch `lake env lean` gegen v4.33.1, alle elf mit `#print axioms` geprüft und
+jeder auf `propext`, `Classical.choice`, `Quot.sound` — kein `sorryAx`.
+`scripts/check_suggested.py` meldet für die Datei `rc 0`, `0 Fehler`, `9 sorry`
+— die Zahl der `sorry` ist unverändert **neun**. (`WeakConvergence/Suggested.lean`
+meldet weiter seine zwei Fehler; das ist die eine bewußt gegen `master`
+geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Die gemeinsame Meßbarkeit der Selbstrate, die bedingte
+Verteilungsfunktion, und die Trägheit der Kette"; Punkt 3 der Gruppe A ist dort
+berichtigt, und die Zahl der offenen Aussagen bleibt bei **vierzehn** — bewiesen
+wurde keine von ihnen, gewonnen wurden Eingaben.
+
+#### Was der Vorlauf nicht konnte, und warum es eine Zeile tiefer lag
+
+Der vierte Lauf des Tages hat die bedingte Verteilungsfunktion
+`P(τ_{n+1} ≤ t | ℋ_n) = 1 − exp (−(Λ_t − Λ_{τ_n}))` angefangen und
+zurückgenommen: `condExp_sub` verlangt die Integrierbarkeit des Indikators, also
+die Meßbarkeit von `{τ_{n+1} ≤ ofReal t}`, also `measurable_jumpTimeFE` an
+`hawkesSelfRateH`, und dessen dritte Voraussetzung ist die **gemeinsame**
+Meßbarkeit `(w, u) ↦ hawkesSelfRateH h ν φ u w`.
+
+Sie steht jetzt als `measurable_uncurry_hawkesSelfRateH`, und der Weg dorthin war
+kürzer als angesagt: der Vorschlag hatte „dieselbe Rechnung wie in
+`measurable_uncurry_hawkesFrozenH_rangeShift`, nur mit der laufenden statt der
+eingefrorenen Aufzählung" angekündigt — eine endliche Summe über die Stufen. Das
+war zuviel gedacht. `measurable_uncurry_pointRate` steht seit langem und ist
+**voll allgemein**: es verlangt von der Familie `T : Ω → ℕ → ℝ` nichts als die
+Meßbarkeit jedes `T n`, keine Monotonie und keine Nichtexplosion. Die Aussage ist
+seine Instanz an `T w = hawkesJumpTimeH h ν φ w.2 w`, drei Zeilen, und die
+einzige Eingabe ist `measurable_hawkesJumpTimeH_apply`.
+
+**Und sie ist billiger als im linearen Fall.**
+`measurable_uncurry_hawkesSelfRate` braucht `hφint`, die
+Intervallintegrierbarkeit der Translate von `φ`, weil
+`measurable_hawkesJumpTime_apply` sie braucht. Hier läuft
+`measurable_hawkesJumpTimeH_apply` statt dessen auf den beiden Schranken, und die
+Intervallintegrierbarkeit ist ein Satz. Der Prüfstein des Vorschlags ist
+eingehalten: weder Nichtexplosion noch Positivität der Wartezeiten kommt vor.
+
+Daraus fallen `measurable_jumpTimeFE_hawkesSelfRateH` — die Instanz von
+`measurable_jumpTimeFE`, bei der im Unterschied zum linearen Fall **alle drei**
+Voraussetzungen aus den Daten kommen, `hint` eingeschlossen, das im linearen Fall
+die Nichtexplosion *ist* —, die Meßbarkeit des Sprungereignisses und seines
+Komplements, und dann die beiden zurückgenommenen Sätze:
+`condExp_le_jumpTimeFE_hawkesSelfRateH_block` und `…_block_exp`.
+
+#### Der eigentliche Ertrag: die Kette ist in den Sprungzeiten träge, und das ist eine Aussage über `jumpTimeFE`, nicht über die Rekursion
+
+Punkt 3 der Gruppe A — der Sprungterm — hat **drei** Eingaben und nicht eine, und
+der Vorlauf hat nur eine davon benannt:
+
+1. den **Zeitfaktor** `P(τ_{n+1} ≤ t | ℋ_n)` — steht seit diesem Lauf;
+2. die **Trennbarkeit** der beiden Faktoren — steht seit diesem Lauf;
+3. den **Kettenfaktor** `E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)` — offen,
+   und das ist Vorschlag 1 des Vorlaufs.
+
+Die zweite ist die, die hier gewonnen wurde, und sie war nicht so frei, wie sie
+aussah. Der Vorlauf hat sie als „die Unabhängigkeit von Kette und Wartezeiten
+unter `jumpMeasure` (steht, sie ist die Produktgestalt der Definition)" geführt.
+Die Produktgestalt steht — aber sie nützt nur, wenn der Sprungterm wirklich in
+einen Faktor über `ω.1` und einen über `ω.2` zerfällt, und das ist für die
+Familie, die der Zuwachs liest, **nicht die Rekursion**.
+
+* `hawkesJumpTimeH h ν φ xi ω n` trägt `ω` nur als träges Argument, und
+  `hawkesJumpTimeH_sample_congr` sagt das. Das stand.
+* `jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 n` ist etwas anderes: es ist durch
+  **Invertieren der kumulierten Rate** definiert, nicht durch die Rekursion, und
+  die Rate trägt den Stichprobenpunkt im Argument. Über dieser Familie sind die
+  Filtration, die Stoppzeiten und der Zuwachs geschrieben. Daß auch hier die
+  Kette nicht eingeht, ist eine eigene Aussage.
+
+Sie steht jetzt, als Kette von drei Congruenzen:
+`hawkesSelfRateH_snd_congr` (die Rate) →
+`cumulativeRateF_hawkesSelfRateH_snd_congr` (das Fensterintegral) →
+`jumpTimeFE_hawkesSelfRateH_snd_congr` (das Infimum, das den Inversen
+definiert). Und in der Gestalt, die die Faktorisierung liest:
+`setOf_le_jumpTimeFE_hawkesSelfRateH_eq` schreibt `{τ_{n+1} ≤ t}` als Urbild
+unter `Prod.snd`, mit einem beliebigen Zeugen `y : ℕ → E` im Argument — daß die
+Aussage von ihm nicht abhängt, *ist* der Inhalt.
+
+`jumpMeasure_map_chain_jumpTimeH` ist dann die Unabhängigkeit selbst: das Bildmaß
+des Paares *(Kette bis zur `n`-ten Marke, erste `n` Sprungzeiten)* unter
+`jumpMeasure` ist das Produkt der beiden Bildmaße, über `Measure.map_prod_map`.
+
+**Warum `rateInverseE` und nicht `rateInverse`.** Die Congruenz geht durch die
+Definition `sInf (ENNReal.ofReal '' {r | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r})`
+hindurch, also über eine Gleichheit der beiden **Mengen**. Das ist der Ort, an
+dem die Hebung nach `ℝ≥0∞` sich zum zweiten Mal auszahlt: bei `rateInverse` wäre
+dieselbe Rechnung über `sInf ∅ = 0` gelaufen, also über einen Müllwert, der die
+Aussage an den explosiven Stichprobenpunkten still wahr gemacht hätte. Hier ist
+sie an *jedem* Stichprobenpunkt wahr, und aus dem richtigen Grund.
+
+#### Was an Mathlib nachgeprüft wurde
+
+Neu benutzt und am Quelltext belegt, in v4.33.1, keine davon `deprecated`:
+
+* `MeasureTheory.condExp_sub` —
+  `MeasureTheory/Function/ConditionalExpectation/Basic.lean:335`. Verlangt
+  `Integrable` auf **beiden** Seiten; das ist die Voraussetzung, an der der
+  Vorlauf abgeprallt ist.
+* `MeasureTheory.condExp_const` — dieselbe Datei, `:147`. Verlangt `hm : m ≤ m₀`
+  und `[IsFiniteMeasure μ]`; beides steht.
+* `MeasureTheory.Integrable.indicator` —
+  `MeasureTheory/Integral/IntegrableOn.lean:351`.
+* `MeasureTheory.Measure.map_prod_map` — `MeasureTheory/Measure/Prod.lean:833`.
+  Verlangt `[SFinite]` auf beiden Faktoren; unter Wahrscheinlichkeitsmaßen frei.
+
+Ferner die schon früher belegten `measurableSet_le`, `measurableSet_lt`,
+`measurable_pi_lambda`, `measurable_pi_apply`, `integrable_const`,
+`Measurable.comap_le`, `EventuallyEq.sub`.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` frisch geholt: **unverändert**
+`55a449c5f283959116e88a56660d122ec4172f98` (vom 2026-09-13 02:55 UTC), also
+derselbe Stand wie im vierten Lauf des Tages. `scripts/check_citations.py` gegen
+den vorhandenen Index: **1099** zitierte Namen, davon 731 in beiden Ständen,
+**0 nur in v4.33.1** — keine Zitierung zeigt auf einen Namen, den master nicht
+mehr hat. 17 nur auf master (die `Cadlag`-Datei der `SkorokhodSpace`-Roadmap,
+bewußt so), 1 als `deprecated` markiert (`Subgroup.isClosed_of_discrete`,
+unverändert), 350 sind unsere eigenen Namen. 80 zitierte Dateipfade, davon der
+eine bekannte auffällige (`Mathlib/Topology/Order/Cadlag.lean`, nur auf master).
+Da der Stand derselbe ist, ist auch der Befund derselbe; es ist keine neue
+Prüfung, sondern die Bestätigung, daß sich in vier Stunden nichts bewegt hat.
+
+#### Zwei Stolperstellen
+
+**`ext` auf einer Mengengleichheit läßt die Zugehörigkeit unreduziert stehen.**
+`ext r` auf `{r | P r} = {r | Q r}` gibt ein Ziel, in dem das Muster, auf das man
+umschreiben will, syntaktisch nicht vorkommt; `rw` scheitert mit „Did not find an
+occurrence of the pattern". Ein `simp only [Set.mem_ofPred_eq]` davor räumt das
+weg. Das ist dieselbe Krankheit wie die `measurable_pi_lambda`-Stelle des
+Vorlaufs, nur an der anderen Seite: dort hat die Elaboration zu wenig gewußt,
+hier steht zu viel unreduziert da.
+
+**`Set.mem_setOf_eq` ist in v4.33.1 `deprecated`** zugunsten von
+`Set.mem_ofPred_eq`. Der Rest der Datei benutzt schon die neue Form; die alte ist
+hier einmal durchgerutscht und berichtigt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe.** Vorschlag
+1 des Vorlaufs, unberührt, und nach diesem Lauf die **einzige** offene Eingabe
+von Punkt 3 der Gruppe A. Sie ist nicht angegangen worden, weil die andere
+Eingabe billiger war und weil ein Lauf, der beide anfängt, keine von beiden
+fertig bekommt.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`, wie im
+Vorlauf. Sie ist ausgerechnet und aufgeschrieben, nicht getippt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`comp_chainKernel_map_split_range` — die Markoveigenschaft der eingebetteten
+   Kette an der `n`-ten Stufe.** Unverändert der Vorschlag des Vorlaufs, und
+   jetzt ohne Konkurrenz: er ist die einzige offene Eingabe von Punkt 3 der
+   Gruppe A. **Worauf sie ruht:** `chainKernel_map_split` (die nullte Stufe,
+   steht), `chainKernel_map_shift` und `comp_chainKernel_map_shift` (der
+   Einschrittshift, steht, und er trägt die Zeithomogenität schon), und eine
+   Induktion über `n`. **Prüfstein:** der Beweis darf die Wartezeiten überhaupt
+   nicht erwähnen — `jumpMeasure` ist ein Produkt, und die Kette ist der eine
+   Faktor. **Warnung aus diesem Lauf:** die Zielgestalt lebt über
+   `Finset.range (n+1) → E`, also über einem abhängigen Funktionstyp; die
+   Stolperstelle des vierten Laufs (`measurable_pi_lambda` rät den Indextyp
+   falsch, wenn er nur aus einer Koerzierung kommt) ist dort zu erwarten. Der
+   Ausweg steht dort: ein eigenes `have` mit ausgeschriebenem Zieltyp.
+1. **`condExp_jump_mark_block` — der Sprungterm, und der Weg dorthin ist ein
+   anderer, als dieser Lauf gebaut hat.** Beim Nachprüfen des Negativbefunds zu
+   einer geplanten Produktaussage ist
+   `Mathlib/MeasureTheory/Function/ConditionalExpectation/PullOut.lean`
+   aufgetaucht — die **Herausziehungseigenschaft** der bedingten Erwartung,
+   `condExp_mul_of_stronglyMeasurable_left` (`:245` in v4.33.1 **und** auf
+   `master` `55a449c5f28`), `condExp_mul_of_aestronglyMeasurable_left` (`:235`)
+   und die bilineare Fassung `condExp_bilin_of_aestronglyMeasurable_left`
+   (`:199`). Damit geht der Sprungterm in zwei Herausziehungen statt über eine
+   Produktaussage:
+
+   * **über der großen σ-Algebra** `𝒢 = σ(ganze Kette, τ_1, …, τ_n)` ist
+     `f (Y_{n+1}) − f (Y_n)` meßbar, also herauszuziehen, und was stehen bleibt,
+     ist `P(τ_{n+1} ≤ t | 𝒢)` — die `le`-Fassung von
+     `condExp_lt_jumpTimeFE_hawkesSelfRateH_jumpTimes`, die nach dem Muster
+     dieses Laufs (`condExp_sub`) in wenigen Zeilen folgt;
+   * **dann der Turmschluß nach `ℋ_n`**, wo der Pegelfaktor `ℋ_n`-meßbar ist und
+     ein zweites Mal herausgezogen wird; übrig bleibt
+     `E[f (Y_{n+1}) − f (Y_n) | ℋ_n]`, also genau der Kettenfaktor aus 0.
+
+   **Worauf sie ruht:** auf 0, auf der `le`-Fassung über `𝒢`, und auf den beiden
+   Herausziehungen. **Prüfstein:** `Y_{n+1}` darf in der Aussage nicht mehr
+   vorkommen; steht es noch da, ist über der falschen σ-Algebra bedingt worden.
+
+   **Und der Preis dieses Befundes ist zu benennen**, weil er diesen Lauf
+   betrifft: geht der Sprungterm so, dann liegen
+   `jumpMeasure_map_chain_jumpTimeH` und die Congruenzkette dieses Laufs
+   **nicht** auf dem kürzesten Weg dorthin — die Herausziehung ersetzt die
+   Unabhängigkeit. Sie bleiben richtig und sie bleiben die strukturelle Aussage
+   („die Kette geht in die Sprungzeiten nicht ein"), die die Roadmap so oder so
+   schuldet; aber sie sind nach diesem Befund eine Eingabe weniger, als der
+   Abschnitt oben behauptet. Das ist der Fund des Laufs, den ich am wenigsten
+   erwartet habe, und er gehört so berichtet.
+
+2. **`measurableSet_stoppedAt_lt_jumpTimeH` — der Zeuge, den der vierte Lauf nur
+   ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung
+   braucht ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der
+   Roadmap steht, und ein Negativbefund ohne Zeugen ist ein Versprechen.

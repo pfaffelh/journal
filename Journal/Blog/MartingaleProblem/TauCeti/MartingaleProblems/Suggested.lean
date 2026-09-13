@@ -23661,3 +23661,287 @@ theorem condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp (hhm : Measurable h) (h�
     exact hτ
 
 end BoundedHawkesBlockCondExp
+
+/-! ### The self referential bounded rate, jointly measurable — and the conditional distribution
+function
+
+Everything above about the `(n+1)`-st jump time is a statement about the **survival** event
+`{t < τ_{n+1}}`, and it is stated that way for a reason that is not aesthetic: the complementary
+form `P(τ_{n+1} ≤ t | ℋ_n) = 1 − exp (−(Λ_t − Λ_{τ_n}))` runs through `condExp_sub`, which asks for
+the **integrability** of the indicator, hence for the measurability of the event
+`{τ_{n+1} ≤ ofReal t}`, hence for `measurable_jumpTimeFE` on `hawkesSelfRateH` -- whose third
+hypothesis is the **joint** measurability of the rate in the sample point and the time.
+
+The stock held `measurable_hawkesSelfRateH_time` (in the time, at a fixed sample point) and
+`intervalIntegrable_hawkesSelfRateH`; the joint statement was missing.  It is the exact counterpart
+of `measurable_uncurry_hawkesSelfRate` of the linear case, and it is proved the same way, from
+`measurable_uncurry_pointRate` with the family of jump times carried along.
+
+**And it asks nothing that the linear case had to assume.**  `measurable_uncurry_hawkesSelfRate`
+needs `hφint` -- the interval integrability of the translates of `φ` -- because
+`measurable_hawkesJumpTime_apply` needs it; here `measurable_hawkesJumpTimeH_apply` runs on the two
+bounds instead, and interval integrability is a theorem (`intervalIntegrable_hawkesFrozenH`).
+Neither the fixed point nor the non explosion nor the positivity of the waiting times enters: the
+rate is defined at every sample point, and so are its jump times. -/
+
+section BoundedHawkesJointMeasurable
+
+variable {E : Type*} [MeasurableSpace E] {ν c L t : ℝ} {φ h : ℝ → ℝ}
+
+/-- **The self referential bounded nonlinear rate is jointly measurable** in the sample point and
+the time, over the ambient σ-algebra and in the argument order `measurable_jumpTimeFE` consumes.
+The instance of `measurable_uncurry_pointRate` at the family `hawkesJumpTimeH`. -/
+theorem measurable_uncurry_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) :
+    Measurable fun q : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦ hawkesSelfRateH h ν φ q.2 q.1 := by
+  have hbase : Measurable fun q : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦
+      ν + ∫ u in Set.Ico (0 : ℝ) q.2, φ (q.2 - u)
+        ∂(countingMeasure (hawkesJumpTimeH h ν φ q.1.2 q.1)) :=
+    measurable_const.add
+      (measurable_uncurry_pointRate
+        (T := fun w : (ℕ → E) × (ℕ → ℝ) ↦ hawkesJumpTimeH h ν φ w.2 w)
+        (measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL) hφm)
+  exact hhm.comp hbase
+
+/-- **The jump times the path dependent martingale problem reads are measurable**, for the bounded
+nonlinear rate.  Against `measurable_jumpTimeFE_hawkesSelfRate` of the linear case **all three**
+hypotheses are discharged from the data: the non negativity is the lower bound `c`, the joint
+measurability is the statement above, and `hint` -- which in the linear case is the non explosion --
+is `intervalIntegrable_hawkesSelfRateH`. -/
+theorem measurable_jumpTimeFE_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (m : ℕ) :
+    Measurable fun w : (ℕ → E) × (ℕ → ℝ) ↦ jumpTimeFE (hawkesSelfRateH h ν φ) w w.2 m :=
+  measurable_jumpTimeFE
+    (fun w r ↦ intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL w r)
+    (fun w u _ ↦ hcpos.le.trans (le_hawkesSelfRateH hφ hc u w))
+    (measurable_uncurry_hawkesSelfRateH hhm hφm hφ hcpos hc hL) m
+
+/-- **The jump event is measurable.**  The half of the pair that `condExp_sub` needs and that the
+survival form never had to produce, because an indicator of a set one does not measure is still a
+function. -/
+theorem measurableSet_le_jumpTimeFE_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (m : ℕ) :
+    MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) |
+      jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m ≤ ENNReal.ofReal t} :=
+  measurableSet_le (measurable_jumpTimeFE_hawkesSelfRateH hhm hφm hφ hcpos hc hL m)
+    measurable_const
+
+/-- **And the survival event is its complement.** -/
+theorem measurableSet_lt_jumpTimeFE_hawkesSelfRateH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (m : ℕ) :
+    MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) |
+      ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m} :=
+  measurableSet_lt measurable_const
+    (measurable_jumpTimeFE_hawkesSelfRateH hhm hφm hφ hcpos hc hL m)
+
+/-- **The conditional distribution function of the `(n+1)`-st jump time over `ℋ_n`.**  The
+complement of `condExp_lt_jumpTimeFE_hawkesSelfRateH_block`, and it is a separate theorem only
+because the complement of an indicator is a difference and a difference of conditional expectations
+asks for integrability on both sides. -/
+theorem condExp_le_jumpTimeFE_hawkesSelfRateH_block (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    (jumpMeasure mu nu)[fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t}
+          (fun _ ↦ (1 : ℝ)) ω
+        | MeasurableSpace.comap
+            (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+              ((fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)),
+                fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+            inferInstance]
+      =ᵐ[jumpMeasure mu nu] fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        1 - (expMeasure 1 (Set.Ioi (hawkesLevelOf h ν φ n t
+          (fun i : Finset.range n ↦
+            hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1))))).toReal := by
+  have hchain : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      (fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)) :=
+    measurable_pi_lambda _ fun j : Finset.range (n + 1) ↦
+      (measurable_pi_apply (j : ℕ)).comp measurable_fst
+  have htimes : Measurable fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      (fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)) :=
+    measurable_pi_lambda _ fun i : Finset.range n ↦
+      measurable_hawkesJumpTimeH_apply hhm hφm hφ hcpos hc hL ((i : ℕ) + 1)
+  have hm := (hchain.prodMk htimes).comap_le
+  have hA : MeasurableSet {ω : (ℕ → E) × (ℕ → ℝ) |
+      ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)} :=
+    measurableSet_lt_jumpTimeFE_hawkesSelfRateH hhm hφm hφ hcpos hc hL (n + 1)
+  have hsplit : (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+            jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t}
+          (fun _ ↦ (1 : ℝ)) ω)
+      = (fun _ : (ℕ → E) × (ℕ → ℝ) ↦ (1 : ℝ))
+        - fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+            Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+              (fun _ ↦ (1 : ℝ)) ω := by
+    funext ω
+    simp only [Pi.sub_apply, Set.indicator_apply, Set.mem_ofPred_eq]
+    by_cases hω : jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t
+    · rw [if_pos hω, if_neg (not_lt.2 hω)]; ring
+    · rw [if_neg hω, if_pos (not_le.1 hω)]; ring
+  rw [hsplit]
+  have hint1 : Integrable (fun _ : (ℕ → E) × (ℕ → ℝ) ↦ (1 : ℝ)) (jumpMeasure mu nu) :=
+    integrable_const (1 : ℝ)
+  have hint2 : Integrable (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+      Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+          ENNReal.ofReal t < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+        (fun _ ↦ (1 : ℝ)) ω) (jumpMeasure mu nu) :=
+    (integrable_const (1 : ℝ)).indicator hA
+  refine (condExp_sub hint1 hint2 _).trans ?_
+  rw [condExp_const hm (1 : ℝ)]
+  exact EventuallyEq.sub EventuallyEq.rfl
+    (condExp_lt_jumpTimeFE_hawkesSelfRateH_block hhm hφm hφ hφ0 hcpos hc hL ht mu nu n)
+
+/-- **The conditional distribution function of `ex:hawkes`, verbatim.**  On `{τ_n ≤ t}`,
+
+`P[τ_{n+1} ≤ t | σ(Y_0, …, Y_n, τ_1, …, τ_n)] = 1 − exp (−(Λ_t − Λ_{τ_n}))`,
+
+with `Λ` the cumulated frozen rate of stage `n+1`.  The restriction is the one of
+`condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp` and for the same reason: off `{τ_n ≤ t}` the level
+is negative, and `1 − exp (−level)` would be negative and no probability at all. -/
+theorem condExp_le_jumpTimeFE_hawkesSelfRateH_block_exp (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ) :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), hawkesJumpTimeH h ν φ ω.2 ω n ≤ t →
+      (jumpMeasure mu nu)[fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+              jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t}
+            (fun _ ↦ (1 : ℝ)) ω
+          | MeasurableSpace.comap
+              (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+                ((fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)),
+                  fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+              inferInstance] ω
+        = 1 - Real.exp (-(hawkesLevelOf h ν φ n t
+            (fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))) := by
+  filter_upwards [condExp_le_jumpTimeFE_hawkesSelfRateH_block hhm hφm hφ hφ0 hcpos hc hL ht
+    mu nu n] with ω hω hτ
+  rw [hω]
+  congr 1
+  refine toReal_expMeasure_Ioi_of_nonneg (hawkesLevelOf_nonneg hhm hφm hφ hcpos hc hL ?_ ?_)
+  · rw [rangeShift_eq_hawkesJumpTimeH ω n n le_rfl]
+    exact hawkesJumpTimeH_nonneg h ν φ ω.2 ω n
+  · rw [rangeShift_eq_hawkesJumpTimeH ω n n le_rfl]
+    exact hτ
+
+end BoundedHawkesJointMeasurable
+
+/-! ### The chain does not enter the jump times, and therefore the two blocks are independent
+
+`condExp_le_jumpTimeFE_hawkesSelfRateH_block` computes the conditional law of the `(n+1)`-st jump
+time over `ℋ_n`.  The **jump term** of the manuscript's increment,
+
+`E[(f (Y_{n+1}) − f (Y_n)) · 1_{τ_{n+1} ≤ t} | ℋ_n] = (μ f (Y_n) − f (Y_n)) · P(τ_{n+1} ≤ t | ℋ_n)`,
+
+needs one thing more, and it is the reason the two factors separate: the jump times are a function
+of the **waiting times alone**, while `f (Y_{n+1}) − f (Y_n)` is a function of the **chain alone**,
+and `jumpMeasure` is the product of the two laws.
+
+For the recursion `hawkesJumpTimeH` that is `hawkesJumpTimeH_sample_congr` and stands.  For
+`jumpTimeFE (hawkesSelfRateH h ν φ)` -- the family the martingale problem actually reads, defined by
+inverting the cumulated rate rather than by the recursion -- it does not: the rate carries the
+sample point in its argument, and that the chain component of it is inert has to be proved.  It is,
+and by the same congruence, carried through the cumulated rate and the infimum that defines the
+inverse.
+
+**What this is not.**  It is not the Markov property of the chain, and it does not replace it: the
+chain factor of the jump term still asks for `E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)`, which is
+`comp_chainKernel_map_split` at the `n`-th stage and is open.  What stands here is the other half,
+the one that says the two factors may be treated separately at all. -/
+
+section BoundedHawkesChainInert
+
+variable {E : Type*} [MeasurableSpace E] {ν c L : ℝ} {φ h : ℝ → ℝ}
+
+/-- **The self referential bounded nonlinear rate reads the waiting times and nothing else.**  The
+chain component of the sample point enters `hawkesSelfRateH` only as the inert argument of
+`hawkesRateH`, and the family of jump times it counts is `hawkesJumpTimeH_sample_congr`. -/
+theorem hawkesSelfRateH_snd_congr (u : ℝ) {ω ω' : (ℕ → E) × (ℕ → ℝ)} (hω : ω.2 = ω'.2) :
+    hawkesSelfRateH h ν φ u ω = hawkesSelfRateH h ν φ u ω' := by
+  have hT : hawkesJumpTimeH h ν φ ω.2 ω = hawkesJumpTimeH h ν φ ω'.2 ω' := by
+    funext m
+    rw [hω]
+    exact hawkesJumpTimeH_sample_congr h ν φ ω'.2 ω ω' m
+  simp only [hawkesSelfRateH, hawkesRateH, hawkesRate]
+  rw [hT]
+
+/-- **And therefore so does the cumulated rate.** -/
+theorem cumulativeRateF_hawkesSelfRateH_snd_congr (r : ℝ) {ω ω' : (ℕ → E) × (ℕ → ℝ)}
+    (hω : ω.2 = ω'.2) :
+    cumulativeRateF (hawkesSelfRateH h ν φ) ω r = cumulativeRateF (hawkesSelfRateH h ν φ) ω' r := by
+  have hfun : (fun u ↦ hawkesSelfRateH h ν φ u ω) = fun u ↦ hawkesSelfRateH h ν φ u ω' :=
+    funext fun u ↦ hawkesSelfRateH_snd_congr u hω
+  simp only [cumulativeRateF]
+  rw [hfun]
+
+/-- **And therefore so do the jump times the martingale problem reads.**  Against
+`hawkesJumpTimeH_sample_congr`, which is about the recursion, this is about the family defined by
+inverting the cumulated rate -- the one the filtration, the stopping times and the increment are
+written over. -/
+theorem jumpTimeFE_hawkesSelfRateH_snd_congr (m : ℕ) {ω ω' : (ℕ → E) × (ℕ → ℝ)}
+    (hω : ω.2 = ω'.2) :
+    jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m = jumpTimeFE (hawkesSelfRateH h ν φ) ω' ω'.2 m := by
+  have hset : {r : ℝ | 0 ≤ r ∧ (∑ k ∈ Finset.range m, ω.2 k)
+        ≤ cumulativeRateF (hawkesSelfRateH h ν φ) ω r}
+      = {r : ℝ | 0 ≤ r ∧ (∑ k ∈ Finset.range m, ω'.2 k)
+        ≤ cumulativeRateF (hawkesSelfRateH h ν φ) ω' r} := by
+    ext r
+    simp only [Set.mem_ofPred_eq]
+    rw [cumulativeRateF_hawkesSelfRateH_snd_congr r hω, hω]
+  simp only [jumpTimeFE, rateInverseE, hset]
+
+/-- **The jump event is an event of the waiting times.**  This is the shape the factorisation of the
+jump term consumes: the indicator of `{τ_{n+1} ≤ t}` is a function pulled back along `Prod.snd`, so
+under the product law it is independent of everything the chain carries.
+
+The witness `y` is an arbitrary chain; the statement is an equality of sets and does not depend on
+it, which is exactly the content. -/
+theorem setOf_le_jumpTimeFE_hawkesSelfRateH_eq (y : ℕ → E) (t : ℝ) (m : ℕ) :
+    {ω : (ℕ → E) × (ℕ → ℝ) |
+        jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m ≤ ENNReal.ofReal t}
+      = Prod.snd ⁻¹' {xi : ℕ → ℝ |
+          jumpTimeFE (hawkesSelfRateH h ν φ) ((y, xi) : (ℕ → E) × (ℕ → ℝ)) xi m
+            ≤ ENNReal.ofReal t} := by
+  ext ω
+  simp only [Set.mem_ofPred_eq, Set.mem_preimage]
+  rw [jumpTimeFE_hawkesSelfRateH_snd_congr (ω := ω) (ω' := ((y, ω.2) : (ℕ → E) × (ℕ → ℝ))) m rfl]
+
+/-- **The chain block and the jump time block are independent under the driving law.**  The two
+maps read the two factors of `jumpMeasure` separately -- the first `ω.1`, the second `ω.2` by
+`hawkesJumpTimeH_sample_congr` -- so `Measure.map_prod_map` splits the image law.
+
+This is the input the factorisation of the jump term asks for, and it is the reason `ℋ_n` may be
+treated as a product σ-algebra at all. -/
+theorem jumpMeasure_map_chain_jumpTimeH (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hcpos : 0 < c) (hc : ∀ x, ν ≤ x → c ≤ h x)
+    (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E)
+    [IsProbabilityMeasure nu] (n : ℕ) :
+    (jumpMeasure mu nu).map (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+        ((fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)),
+          fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+      = ((chainKernel mu ∘ₘ nu).map
+            (fun y : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ y (j : ℕ))).prod
+        (waitingMeasure.map (fun xi : ℕ → ℝ ↦
+          fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ xi (() : Unit) ((i : ℕ) + 1))) := by
+  have hF : Measurable (fun y : ℕ → E ↦ fun j : Finset.range (n + 1) ↦ y (j : ℕ)) :=
+    measurable_pi_lambda _ fun j : Finset.range (n + 1) ↦ measurable_pi_apply (j : ℕ)
+  have hG : Measurable (fun xi : ℕ → ℝ ↦
+      fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ xi (() : Unit) ((i : ℕ) + 1)) :=
+    measurable_pi_lambda _ fun i : Finset.range n ↦
+      measurable_hawkesJumpTimeH (c := c) (L := L) hhm hφm hφ hcpos hc hL (() : Unit)
+        ((i : ℕ) + 1) ((i : ℕ) + 1) le_rfl
+  rw [Measure.map_prod_map _ _ hF hG, jumpMeasure]
+  congr 1
+  funext ω
+  refine Prod.ext rfl ?_
+  funext i
+  exact hawkesJumpTimeH_sample_congr h ν φ ω.2 ω (() : Unit) ((i : ℕ) + 1)
+
+end BoundedHawkesChainInert
