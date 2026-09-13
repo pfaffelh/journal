@@ -27693,3 +27693,237 @@ unverändert seit dem vierten Lauf.
    eine Umschreibung von Punkt 1 in die Dichtegestalt. Er wird von Punkt 5 nicht
    gebraucht — das hat dieser Lauf gezeigt —, also steht er jetzt dort, wo er
    hingehört: als die Fassung, die ein Leser erwartet, und nicht als Eingabe.
+
+### 2026-09-13, elfter Lauf des Tages — die Erzeugergestalt des Zuwachses steht, und die angesagte Nullmenge gibt es nicht: der Kompensator trägt das offene Fenster, und darauf ist die Gleichheit punktweise. Die Nullmenge sitzt einen Schritt weiter, bei der Summation, und auch die pfadweise Hälfte davon steht
+
+**Bearbeitet:** Vorschlag 0 des Vorlaufs,
+`condExp_mpFamilyF_increment_eq_zero_generator` — der Abschluß von Punkt 5 der
+Gruppe A. Er steht, unter diesem Namen, samt den beiden Zwischensätzen, die er
+brauchte. Die Vorschläge 1 (Punkt 6, die Summation über `n`) und 2 (Punkt 2, die
+Dichtegestalt) sind **nicht** angegangen worden und bleiben unverändert liegen.
+
+Im selben Lauf ist danach die **pfadweise Hälfte von Punkt 6** gebaut worden —
+drei Sätze über Treppenpfade, die sagen, daß zu jeder Zeit höchstens ein Block
+eingeschaltet ist und außerhalb der Sprungzeiten genau einer; Einzelheiten unten
+unter „Der Nachtrag".
+
+**Sechs Sätze** in `TauCeti/MartingaleProblems/Suggested.lean`: drei im neuen
+Abschnitt `IncrementGenerator` am Ende der Datei, drei im vorhandenen Abschnitt
+`BlockWindow`; 150 Zeilen, kein neuer Import. Die ganze
+Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1 und ohne erhöhte
+Herzschlaggrenze (49 Sekunden), alle sechs über `scripts/check_axioms.py` geprüft
+und jeder auf `propext`, `Classical.choice`, `Quot.sound` — kein `sorryAx`.
+`scripts/check_suggested.py` meldet für die Datei `rc 0`, `0 Fehler`, `9 sorry` —
+die Zahl der `sorry` ist unverändert **neun**. (`WeakConvergence/Suggested.lean`
+meldet weiter seine zwei Fehler; das ist die eine bewußt gegen `master`
+geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, in den beiden
+neuen Abschnitten „Die Erzeugergestalt des Zuwachses, und warum sie keine
+Nullmenge kostet" und „Die Blöcke sind disjunkt, und außerhalb der Sprungzeiten
+schöpfen sie aus". **Die Zahl der offenen Aussagen bleibt elf**, und Gruppe A bei
+zwei (Punkte 2 und 6): dieser Lauf hat keine der elf bewiesen, sondern die Zusage
+eingelöst, mit der Punkt 5 im Vorlauf abgeschlossen wurde, und für Punkt 6 die
+pfadweise Hälfte gelegt.
+
+#### Die Aussage
+
+> `condExp_mpFamilyF_increment_eq_zero_generator` — für den beschränkten
+> nichtlinearen Hawkes-Prozeß, `f` meßbar mit `|f| ≤ C`, `0 ≤ t`:
+> `E[(f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t}`
+> `  − ∫_0^t (μ f (X_u) − f (X_u)) · 1_{τ_n<u} Λ_u 1_{u<τ_{n+1}} du | ℋ_n] = 0`,
+> mit `ℋ_n = σ(Y_0, …, Y_n, τ_1, …, τ_n)`.
+
+Das ist `E[D_n | ℋ_n] = 0` in der **Erzeugergestalt**, also mit `𝒜_u f` unter dem
+Integralzeichen und nicht als Faktor davor. Damit liest die Formalisierung des
+Zuwachses denselben Wortlaut wie `thm:pathjumpMP`. Voraussetzungen, σ-Algebra und
+Maß sind dieselben wie bei `condExp_mpFamilyF_increment_eq_zero`; der Beweis ist
+`condExp_congr_ae` über einer Gleichheit der Integranden.
+
+Darunter, jeder für sich brauchbar:
+
+> `lt_hawkesJumpTimeH_of_ofReal_lt_jumpTimeFE` — aus
+> `ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m` folgt
+> `u < hawkesJumpTimeH h ν φ ω.2 ω m`.
+> `intervalIntegral_generator_eq_mul` — an **jedem** Stichprobenpunkt mit
+> positiven Wartezeiten ist das Integral mit dem Erzeuger darin das Produkt aus
+> Kettenfaktor und Integral.
+
+#### Der Befund, und er widerlegt die Begründung des eigenen Vorschlags
+
+**Die angesagte Abänderung auf einer Lebesgue-Nullmenge wird nicht gebraucht.**
+Der Vorschlag hat sie erwartet, und die Begründung war richtig gestellt:
+`stepPath` ist auf `[τ_n, τ_{n+1})` konstant, der Zuwachs `D_n` schreibt
+`(τ_n, τ_{n+1}]`, die beiden unterscheiden sich in zwei Punkten. Nur trägt der
+Kompensator diese Fenster gar nicht. Die Indikatoren, die in
+`condExp_compensator_rate_block` wirklich dastehen, sind `τ_n < u` und
+`u < τ_{n+1}` — das **offene** Intervall —, und das liegt auf beiden Seiten im
+Fenster von `stepPath`. Wo der Integrand eingeschaltet ist, sitzt der Pfad ohne
+weiteres bei `Y_n`; wo er ausgeschaltet ist, sind beide Seiten `0`, weil der
+ganze Summand den Indikator als Faktor trägt.
+
+Die Gleichheit der Integranden ist damit **punktweise in `u`**, und
+`intervalIntegral.integral_congr` genügt: kein `integral_congr_ae`, kein
+`Set.Finite.measure_zero`, keine Nullmenge. Der Vorschlag hat die Fenster der
+**Aussage** des Manuskripts mit den Fenstern der **Formalisierung** verwechselt,
+und die Formalisierung ist an dieser Stelle die günstigere.
+
+Das ist kein Zufall, sondern eine Eigenschaft der Gestalt, die der Kompensator im
+achten Lauf bekommen hat: er ist über `1_{τ_n<u}` und `1_{u<τ_{n+1}}` gebaut,
+weil das die Gestalt ist, in der die gemeinsame Meßbarkeit billig war — und
+dieselbe Wahl zahlt sich hier ein zweites Mal aus. Der entsprechende Satz in
+`MartingaleProblems/README.md` ist durchgestrichen und berichtigt worden; er stand
+seit dem zehnten Lauf desselben Tages.
+
+**Und die fast sichere Voraussetzung, die übrigbleibt, ist die kleinstmögliche:**
+`∀ k, 0 < ω.2 k`, die Positivität der Wartezeiten, die
+`hawkesProcessH_eq_stepPath` verlangt und `ae_pos_snd_jumpMeasure` liefert. Der
+**Prüfstein des Vorschlags ist eingehalten**: die Nichtexplosion kommt nicht vor,
+weder in der Aussage noch im Beweis.
+
+#### Der eine Schritt, der wirklich zu tun war
+
+Die beiden Hälften sprechen die Sprungzeit in **zwei verschiedenen Sprachen**:
+der Kompensator trägt seinen oberen Indikator über `jumpTimeFE`, die nach `ℝ≥0∞`
+gehobene Sprungzeit, während `hawkesProcessH_eq_of_mem_Ico` die reelle
+`hawkesJumpTimeH` liest. `lt_hawkesJumpTimeH_of_ofReal_lt_jumpTimeFE` ist die
+Übersetzung, und sie ist drei Zeilen: `jumpTimeFE_eq_ofReal` — dessen
+Voraussetzung, die Divergenz der kumulierten Rate, die beschränkte
+Nichtlinearität aus `0 < c` gibt —, dann `jumpTimeF_hawkesSelfRateH`, dann
+`ENNReal.ofReal_lt_ofReal_iff'`.
+
+**Das letzte Lemma ist die Wahl, auf die es ankam.** `ofReal_lt_ofReal_iff`
+verlangt `0 < q` als Hypothese, hier also eine eigens zu beschaffende Positivität
+der Sprungzeit; `ofReal_lt_ofReal_iff'` gibt `p < q ∧ 0 < q` heraus, ohne etwas
+zu verlangen. Die gestrichene Variante ist dieselbe Aussage, nur mit der
+Voraussetzung auf der falschen Seite.
+
+#### Warum die Zwischenaussage pfadweise gestellt ist
+
+`intervalIntegral_generator_eq_mul` ist bewußt **nicht** als bedingte Erwartung
+formuliert, sondern als Gleichheit zweier Zahlen an einem Stichprobenpunkt. Sie
+verlangt weder ein Maß noch `IsMarkovKernel mu` — `mu` tritt in ihr nur als
+Buchstabe auf, ohne eine einzige Instanz —, und sie ist damit für den Zusammenbau
+von Punkt 6 ebenso brauchbar wie hier. Das ist dieselbe Regel, nach der
+`stepPath_eq_of_mem_Ico` im Vorlauf über Treppenpfade und nicht über den
+Hawkes-Prozeß gestellt wurde.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf **frisch geholt**:
+`8d52ea9a145a9255c4d301c0d1a1b8bf6e59305a` (der siebte Lauf stand auf
+`182c4c30cdc58b70f2ba77d56f31b1c4048e9522`).
+
+Die in diesem Lauf benutzten Mathlib-Namen, alle am Quelltext von v4.33.1 belegt
+und keiner `deprecated`:
+
+* `ENNReal.ofReal_lt_ofReal_iff'` — v4.33.1 `Mathlib/Data/ENNReal/Real.lean:158`,
+  master `Mathlib/Basic/ENNReal/Real.lean:158`. **Der Name ist unverändert, die
+  Datei nicht**; das ist der schon vermerkte `deprecated_module`-Umzug von
+  `Mathlib/Data/ENNReal/…` nach `Mathlib/Basic/ENNReal/…`, hier am frischen
+  Commit bestätigt.
+* `MeasureTheory.condExp_congr_ae` —
+  `MeasureTheory/Function/ConditionalExpectation/Basic.lean:201` in v4.33.1,
+  `:202` auf master. Name und Datei unverändert.
+* `Set.indicator_of_notMem` — **auf beiden Ständen vorhanden** und nicht
+  umbenannt. Der Name ist von `@[to_additive]` erzeugt und steht daher unter
+  keinem `theorem`-Schlüsselwort; ein `grep` nach `theorem indicator_of_notMem`
+  findet allein `Finsupp.indicator_of_notMem` und legt einen Negativbefund nahe,
+  der falsch wäre. Belegt ist er über seine Benutzungen, auf master etwa
+  `Mathlib/Algebra/BigOperators/Pi.lean:90`. **Das ist eine weitere Ausprägung
+  der Regel für den Negativbefund:** eine `to_additive`-Ableitung ist am
+  Quelltext nicht als Deklaration zu sehen, und wer nur nach dem
+  Deklarationsschlüsselwort sucht, hält sie für abwesend.
+* `intervalIntegral.integral_congr` und `intervalIntegral.integral_const_mul` —
+  `MeasureTheory/Integral/IntervalIntegral/Basic.lean`, beide vorhanden, beide in
+  diesem Lauf gegen v4.33.1 übersetzt.
+
+#### Der Nachtrag — die pfadweise Hälfte von Punkt 6, im selben Lauf
+
+Der obige Befund hat sofort eine Anschlußaussage geliefert, und sie ist gebaut
+worden. Punkt 6 summiert den Blockzuwachs über `n`; was diese Summation trägt,
+ist keine Wahrscheinlichkeitsaussage, sondern eine über die **Fenster**:
+
+> `eq_stepIndex_of_mem_Ioo` — für `T` monoton und `T n < u < T (n+1)` ist
+> `n = stepIndex T u`.
+> `eq_of_mem_Ioo_of_mem_Ioo` — zwei offene Fenster um denselben Punkt haben
+> denselben Index; die **Disjunktheit** der Blöcke.
+> `existsUnique_mem_Ioo` — `∃! n, T n < u < T (n+1)`, unter drei
+> Voraussetzungen.
+
+Alle drei sind über **Treppenpfade schlechthin** gestellt, nicht über den
+Hawkes-Prozeß; Poisson, Geburt-Tod und M/M/1 bekommen sie mit demselben Aufruf.
+Das ist dieselbe Regel wie beim `stepPath_eq_of_mem_Ico` des Vorlaufs, und sie
+zahlt sich hier ein zweites Mal: die Disjunktheit ist **eine Zeile** aus
+`stepIndex_eq_of`.
+
+**Und die drei Voraussetzungen der Ausschöpfung sind genau die drei Weisen, auf
+die sie scheitern kann** — jede benannt, keine entbehrlich:
+
+* `∃ n, u < T (n+1)` — die **Nichtexplosion**, und zwar am einzelnen Punkt `u`.
+  Das ist die Stelle, an der sie in Punkt 6 zum ersten Mal wirklich auftritt:
+  nicht zu umgehen, sondern zu benennen. Im beschränkten nichtlinearen Fall ist
+  sie aus `le_hawkesJumpTimeH` pfadweise zu haben.
+* `T 0 < u` — unterhalb der ersten Zeit ist kein Block an. In allen
+  Konstruktionen hier ist `T 0 = 0`.
+* `∀ k, T k ≠ u` — an einer Sprungzeit selbst ist keiner an, weil die Fenster
+  offen sind. Eine abzählbare Menge, also eine Lebesgue-Nullmenge. **Hier** —
+  und nicht bei der Erzeugergestalt, wo der Vorlauf sie erwartet hatte — wird die
+  Nullmenge tatsächlich gebraucht. Die Vorhersage des zehnten Laufs war also
+  nicht falsch, sondern **am falschen Ort**: die zwei Randpunkte des Fensters
+  kosten nichts beim Übergang zur Erzeugergestalt und alles bei der Summation.
+
+Die **Disjunktheit** gilt ohne jede dieser drei und steht damit auch am
+explosiven Stichprobenpunkt. Das ist die brauchbarere Hälfte.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Punkt 6 der Gruppe A selbst** (die Summation über `n` als
+Wahrscheinlichkeitsaussage). Die pfadweise Hälfte steht, die Entscheidung
+zwischen Turmschluß und Blockzerlegung steht weiter aus, und keine bedingte
+Erwartung ist summiert worden. Die Zahl der offenen Aussagen bleibt deshalb
+**elf**.
+
+**Punkt 2 der Gruppe A** (die Dichtegestalt). Unverändert.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`,
+unverändert seit dem vierten Lauf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`martingale_mpFamilyF_truncRateF` — Punkt 6 der Gruppe A, die Summation über
+   `n`.** Unverändert aus dem Vorlauf, und jetzt die **einzige** offene Aussage
+   der Gruppe A, die noch eine Wahrscheinlichkeitsaussage ist. **Worauf sie
+   ruht:** Punkt 5 in beiden Gestalten (Vorlauf und dieser Lauf) und darauf, daß
+   unterhalb der Deckelung `a` nur endlich viele Sprünge liegen. **Was zu
+   entscheiden ist:** Turmschluß über der wachsenden Folge `ℋ_n`
+   (`condExp_condExp_of_le`) oder Zerlegung des Zuwachses zwischen zwei festen
+   Zeiten in die Blöcke dazwischen. Das erste ist die übliche Gestalt, das zweite
+   die, die `isMPSolution` liest. **Und die Zerlegung ist jetzt die wohlfeilere
+   von beiden**, denn ihre pfadweise Hälfte steht seit diesem Lauf: die
+   Erzeugergestalt hat über `n` **denselben** Integranden, und
+   `eq_of_mem_Ioo_of_mem_Ioo` samt `existsUnique_mem_Ioo` sagt, daß sich die
+   Indikatoren `1_{τ_n<u} 1_{u<τ_{n+1}}` über `n` zu `1` addieren. In der
+   Produktgestalt steht vor jedem Summanden ein anderer Faktor und diese Addition
+   ist nicht zu sehen. **Prüfstein:** die Nichtexplosion tritt hier zum ersten Mal
+   wirklich auf — als `hex` von `existsUnique_mem_Ioo`, also am einzelnen Punkt
+   `u` — und ist nicht zu umgehen, sondern zu **benennen**; im beschränkten
+   nichtlinearen Fall ist sie aus `le_hawkesJumpTimeH` pfadweise zu haben. **Was
+   noch zu bauen ist:** aus der punktweisen Eindeutigkeit die Summe der
+   Integrale, also die Vertauschung von `∑` und `∫`; das ist eine dominierte
+   Konvergenz mit der Majorante `L`, die `abs_hawkesBlockRate_le` schon liefert.
+
+1. **`condExp_jumpTimeFE_hasDensity` — Punkt 2 der Gruppe A.** Unverändert aus
+   den beiden Vorläufen: eine Umschreibung von Punkt 1 in die Dichtegestalt, von
+   keiner anderen Aussage als Eingabe gebraucht, und die Fassung, die ein Leser
+   erwartet.
+
+2. **Die `to_additive`-Lücke in der Zitatprüfung.** Der Befund oben zu
+   `Set.indicator_of_notMem` ist kein Einzelfall: jedes über `@[to_additive]`
+   erzeugte Lemma, das eine unserer Roadmaps zitiert, wird von einer Suche nach
+   dem Deklarationsschlüsselwort als fehlend gemeldet. **Worauf es ruht:** der
+   Skriptbestand (`scripts/check_citations.py`) steht, und die Prüfung ist, ob
+   auch die multiplikative Schwesteraussage gesucht wird (`indicator` ↔
+   `mulIndicator`, `add` ↔ `mul`). **Warum jetzt:** Teil D lebt von der
+   Verläßlichkeit seiner Negativbefunde, und dies ist eine benannte Weise, auf
+   die sie heute falsch ausfallen können.

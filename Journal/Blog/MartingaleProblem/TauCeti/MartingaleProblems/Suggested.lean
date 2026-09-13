@@ -25859,6 +25859,36 @@ theorem stepPath_eq_of_mem_Ico {T : ℕ → α} {y : ℕ → E} {n : ℕ} {t : �
     (h1 : T n ≤ t) (h2 : t < T (n + 1)) : stepPath T y t = y n := by
   rw [stepPath, stepIndex_eq_of (Or.inr h1) h2 hT]
 
+/-- **An open window names its index**, and it names `stepIndex`.  This is `stepIndex_eq_of` with
+the left inequality strict, which is the shape the compensator carries: its two indicators are
+`T n < u` and `u < T (n+1)`. -/
+theorem eq_stepIndex_of_mem_Ioo {T : ℕ → α} {n : ℕ} {u : α} (hT : Monotone T) (h1 : T n < u)
+    (h2 : u < T (n + 1)) : n = stepIndex T u :=
+  (stepIndex_eq_of (Or.inr h1.le) h2 hT).symm
+
+/-- **The open windows are pairwise disjoint.**  At most one block of the martingale increment is
+switched on at any one time, and this is the reason: two open windows containing the same point
+have the same index.  Monotonicity of the times is all it reads. -/
+theorem eq_of_mem_Ioo_of_mem_Ioo {T : ℕ → α} {m n : ℕ} {u : α} (hT : Monotone T) (hm1 : T m < u)
+    (hm2 : u < T (m + 1)) (hn1 : T n < u) (hn2 : u < T (n + 1)) : m = n :=
+  (eq_stepIndex_of_mem_Ioo hT hm1 hm2).trans (eq_stepIndex_of_mem_Ioo hT hn1 hn2).symm
+
+/-- **And off the jump times they exhaust**: there is exactly one block switched on.  The three
+hypotheses are exactly the three ways the statement can fail, and each is necessary -- `hex` is non
+explosion **at the single point `u`**, `h0` puts `u` past the first time, and `hne` keeps it off the
+times themselves, where the path has already moved on.
+
+This is the pathwise half of the summation over `n`: it says that the indicators
+`1_{T n < u} 1_{u < T (n+1)}` of the blocks add up to `1`, and it says it without a measure. -/
+theorem existsUnique_mem_Ioo {T : ℕ → α} {u : α} (hT : Monotone T) (hex : ∃ n, u < T (n + 1))
+    (h0 : T 0 < u) (hne : ∀ k, T k ≠ u) : ∃! n, T n < u ∧ u < T (n + 1) := by
+  refine ⟨stepIndex T u, ⟨?_, lt_stepIndex_succ hex⟩, ?_⟩
+  · rcases eq_or_ne (stepIndex T u) 0 with hz | hz
+    · rw [hz]; exact h0
+    · exact lt_of_le_of_ne (T_stepIndex_le hz) (hne _)
+  · rintro m ⟨hm1, hm2⟩
+    exact eq_stepIndex_of_mem_Ioo hT hm1 hm2
+
 end BlockWindow
 
 section HawkesBlockWindow
@@ -25881,3 +25911,123 @@ theorem hawkesProcessH_eq_of_mem_Ico (hhm : Measurable h) (hφm : Measurable φ)
     (monotone_hawkesJumpTimeH hhm hφm hφ hφ0 hcpos hc hL hxi) h1 h2
 
 end HawkesBlockWindow
+
+section IncrementGenerator
+
+/-!
+## The martingale increment in the generator form of the manuscript
+
+`condExp_mpFamilyF_increment_eq_zero` writes the compensator as the **product** of the chain factor
+`μ f (Y_n) - f (Y_n)` with `∫_0^t 1_{τ_n < u} Λ_u 1_{u < τ_{n+1}} du`.  The manuscript writes it
+with the generator under the integral sign, `∫_0^t (μ f (X_u) - f (X_u)) 1_{τ_n < u} Λ_u
+1_{u < τ_{n+1}} du`.  This section says that the two are the same number, and therefore that the
+conditional expectation of the increment written the manuscript's way vanishes as well.
+
+**The passage costs no null set, and that was not expected.**  The proposal that asked for this
+statement expected an `integral_congr_ae` over the two end points of the window, because the
+increment reads `(τ_n, τ_{n+1}]` while `stepPath` is constant on `[τ_n, τ_{n+1})`.  But the two
+indicators the compensator actually carries are `τ_n < u` and `u < τ_{n+1}` -- the **open**
+interval, which sits inside the window of `stepPath` on both sides.  So wherever the integrand is
+switched on at all, the path is at `Y_n` outright, and where it is switched off both sides are `0`.
+The identity is pointwise in `u`; the only almost sure ingredient left is the positivity of the
+waiting times, which `hawkesProcessH_eq_stepPath` needs and `ae_pos_snd_jumpMeasure` supplies.
+-/
+
+variable {E : Type*} [MeasurableSpace E] {ν c L t : ℝ} {φ h : ℝ → ℝ}
+
+/-- **Below the `m`-th jump time in `ℝ≥0∞` is below it in `ℝ`.**  The compensator carries its upper
+indicator over `jumpTimeFE`, the lifted jump time, while `hawkesProcessH_eq_of_mem_Ico` reads the
+real valued `hawkesJumpTimeH`; this is the step between them.  It is the one direction that is
+needed, and it needs no positivity of the bound: `ENNReal.ofReal_lt_ofReal_iff'` hands out both
+`u < τ_m` and `0 < τ_m` at once. -/
+theorem lt_hawkesJumpTimeH_of_ofReal_lt_jumpTimeFE {ω : (ℕ → E) × (ℕ → ℝ)} (hhm : Measurable h)
+    (hφm : Measurable φ) (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (hxi : ∀ k, 0 < ω.2 k) {u : ℝ}
+    {m : ℕ} (hu : ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m) :
+    u < hawkesJumpTimeH h ν φ ω.2 ω m := by
+  have hint : ∀ r, IntervalIntegrable (fun u ↦ hawkesSelfRateH h ν φ u ω) volume 0 r :=
+    fun r ↦ intervalIntegrable_hawkesSelfRateH hhm hφm hφ hc hcpos.le hL ω r
+  have htop : Tendsto (cumulativeRateF (hawkesSelfRateH h ν φ) ω) atTop atTop :=
+    tendsto_cumulativeRateF_atTop_of_le hint hcpos fun u _ ↦ le_hawkesSelfRateH hφ hc u ω
+  rw [jumpTimeFE_eq_ofReal htop, jumpTimeF_hawkesSelfRateH hhm hφm hφ hφ0 hcpos hc hL hxi] at hu
+  exact (ENNReal.ofReal_lt_ofReal_iff'.1 hu).1
+
+/-- **The compensator with the generator under the integral sign is the compensator with the chain
+factor in front**, at every sample point with positive waiting times.  Pointwise in `u`: where both
+indicators are on, `τ_n < u < τ_{n+1}`, so `hawkesProcessH_eq_of_mem_Ico` puts the path at `Y_n`;
+where either is off, both sides are `0`. -/
+theorem intervalIntegral_generator_eq_mul (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (mu : Kernel E E) {f : E → ℝ}
+    {ω : (ℕ → E) × (ℕ → ℝ)} (hxi : ∀ k, 0 < ω.2 k) (n : ℕ) :
+    (∫ u in (0 : ℝ)..t,
+        ((∫ y, f y ∂(mu (hawkesProcessH h ν φ u ω))) - f (hawkesProcessH h ν φ u ω))
+          * ((Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+                (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+            * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+              (fun _ ↦ (1 : ℝ)) ω))
+      = ((∫ y, f y ∂(mu (ω.1 n))) - f (ω.1 n)) * ∫ u in (0 : ℝ)..t,
+          (Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+              (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+            * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+              (fun _ ↦ (1 : ℝ)) ω := by
+  rw [← intervalIntegral.integral_const_mul]
+  refine intervalIntegral.integral_congr fun u _ ↦ ?_
+  by_cases h1 : hawkesJumpTimeH h ν φ ω.2 ω n < u
+  · by_cases h2 : ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)
+    · rw [hawkesProcessH_eq_of_mem_Ico hhm hφm hφ hφ0 hcpos hc hL hxi h1.le
+        (lt_hawkesJumpTimeH_of_ofReal_lt_jumpTimeFE hhm hφm hφ hφ0 hcpos hc hL hxi h2)]
+    · have hnot : ω ∉ {ω : (ℕ → E) × (ℕ → ℝ) |
+          ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)} := h2
+      rw [Set.indicator_of_notMem hnot (fun _ ↦ (1 : ℝ))]
+      ring
+  · have hnot : ω ∉ {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u} := h1
+    rw [Set.indicator_of_notMem hnot (fun _ ↦ (1 : ℝ))]
+    ring
+
+/-- **The martingale increment of the block, in the generator form of the manuscript** -- point 5 of
+group A with the compensator written the way `thm:pathjumpMP` writes it:
+
+`E[(f (Y_{n+1}) - f (Y_n)) 1_{τ_{n+1} ≤ t} - ∫_0^t (μ f (X_u) - f (X_u)) 1_{τ_n < u} Λ_u
+1_{u < τ_{n+1}} du | ℋ_n] = 0`
+
+for the bounded nonlinear Hawkes process.  Against `condExp_mpFamilyF_increment_eq_zero` nothing is
+weakened and nothing new is assumed: the two integrands are equal at every sample point with
+positive waiting times, which is almost every one.
+
+The non explosion does not occur, and it cannot: `hawkesProcessH_eq_of_mem_Ico` reads nothing of
+the sample point but the monotonicity of the jump times, and that is `strictMono_hawkesJumpTimeH`,
+which the bounded rate gives outright. -/
+theorem condExp_mpFamilyF_increment_eq_zero_generator (hhm : Measurable h) (hφm : Measurable φ)
+    (hφ : ∀ x, 0 ≤ φ x) (hφ0 : ∀ x, x ≤ 0 → φ x = 0) (hcpos : 0 < c)
+    (hc : ∀ x, ν ≤ x → c ≤ h x) (hL : ∀ x, ν ≤ x → h x ≤ L) (ht : 0 ≤ t)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] (n : ℕ)
+    {f : E → ℝ} (hf : Measurable f) {C : ℝ} (hfb : ∀ x, |f x| ≤ C) :
+    (jumpMeasure mu nu)[
+        (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+          (f (ω.1 (n + 1)) - f (ω.1 n)) *
+            Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1) ≤ ENNReal.ofReal t}
+              (fun _ ↦ (1 : ℝ)) ω)
+        - (fun ω : (ℕ → E) × (ℕ → ℝ) ↦ ∫ u in (0 : ℝ)..t,
+            ((∫ y, f y ∂(mu (hawkesProcessH h ν φ u ω))) - f (hawkesProcessH h ν φ u ω))
+              * ((Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) | hawkesJumpTimeH h ν φ ω.2 ω n < u}
+                    (fun _ ↦ (1 : ℝ)) ω * hawkesSelfRateH h ν φ u ω)
+                * Set.indicator {ω : (ℕ → E) × (ℕ → ℝ) |
+                    ENNReal.ofReal u < jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 (n + 1)}
+                  (fun _ ↦ (1 : ℝ)) ω))
+        | MeasurableSpace.comap
+            (fun ω : (ℕ → E) × (ℕ → ℝ) ↦
+              ((fun j : Finset.range (n + 1) ↦ ω.1 (j : ℕ)),
+                fun i : Finset.range n ↦ hawkesJumpTimeH h ν φ ω.2 ω ((i : ℕ) + 1)))
+            inferInstance]
+      =ᵐ[jumpMeasure mu nu] 0 := by
+  refine (condExp_congr_ae ?_).trans
+    (condExp_mpFamilyF_increment_eq_zero hhm hφm hφ hφ0 hcpos hc hL ht mu nu n hf hfb)
+  filter_upwards [ae_pos_snd_jumpMeasure mu nu] with ω hω
+  simp only [Pi.sub_apply, Pi.mul_apply]
+  rw [intervalIntegral_generator_eq_mul hhm hφm hφ hφ0 hcpos hc hL mu hω n]
+
+end IncrementGenerator
