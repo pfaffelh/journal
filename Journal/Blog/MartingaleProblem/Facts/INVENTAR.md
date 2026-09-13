@@ -26355,3 +26355,695 @@ je für sich da, ihre Verbindung nicht.*
    Lauf ist an ihr vorbeigegangen —, aber sie ist der Beleg für einen
    Negativbefund, der jetzt in der Roadmap steht, und ein Negativbefund ohne
    Zeugen ist ein Versprechen.
+
+### 2026-09-13, fünfter Lauf des Tages — die Eingabe, an der der Vorlauf abgeprallt ist, steht; und mit ihr die zweite von drei Hälften des Sprungterms: die Kette ist in den Sprungzeiten träge
+
+**Bearbeitet:** Vorschlag 0 und, darüber hinaus, die Aussage, die der vierte Lauf
+des Tages angefangen und zurückgenommen hatte. Vorschlag 1
+(`comp_chainKernel_map_split_range`) ist **nicht** angegangen worden; was statt
+dessen dasteht, ist die *andere* fehlende Eingabe von Punkt 3 der Gruppe A, und
+sie war billiger und ist im Baum nicht als eigener Punkt geführt gewesen.
+Vorschlag 2 hängt an Vorschlag 1 und bleibt liegen; Vorschlag 3 (der Zeuge)
+ebenso, wie vorgesehen.
+
+**Elf Sätze** in `TauCeti/MartingaleProblems/Suggested.lean`, in zwei neuen
+Abschnitten am Ende der Datei — `BoundedHawkesJointMeasurable` (sechs) und
+`BoundedHawkesChainInert` (fünf); 284 Zeilen. Die ganze Datei ohne einen Fehler
+durch `lake env lean` gegen v4.33.1, alle elf mit `#print axioms` geprüft und
+jeder auf `propext`, `Classical.choice`, `Quot.sound` — kein `sorryAx`.
+`scripts/check_suggested.py` meldet für die Datei `rc 0`, `0 Fehler`, `9 sorry`
+— die Zahl der `sorry` ist unverändert **neun**. (`WeakConvergence/Suggested.lean`
+meldet weiter seine zwei Fehler; das ist die eine bewußt gegen `master`
+geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Die gemeinsame Meßbarkeit der Selbstrate, die bedingte
+Verteilungsfunktion, und die Trägheit der Kette"; Punkt 3 der Gruppe A ist dort
+berichtigt, und die Zahl der offenen Aussagen bleibt bei **vierzehn** — bewiesen
+wurde keine von ihnen, gewonnen wurden Eingaben.
+
+#### Was der Vorlauf nicht konnte, und warum es eine Zeile tiefer lag
+
+Der vierte Lauf des Tages hat die bedingte Verteilungsfunktion
+`P(τ_{n+1} ≤ t | ℋ_n) = 1 − exp (−(Λ_t − Λ_{τ_n}))` angefangen und
+zurückgenommen: `condExp_sub` verlangt die Integrierbarkeit des Indikators, also
+die Meßbarkeit von `{τ_{n+1} ≤ ofReal t}`, also `measurable_jumpTimeFE` an
+`hawkesSelfRateH`, und dessen dritte Voraussetzung ist die **gemeinsame**
+Meßbarkeit `(w, u) ↦ hawkesSelfRateH h ν φ u w`.
+
+Sie steht jetzt als `measurable_uncurry_hawkesSelfRateH`, und der Weg dorthin war
+kürzer als angesagt: der Vorschlag hatte „dieselbe Rechnung wie in
+`measurable_uncurry_hawkesFrozenH_rangeShift`, nur mit der laufenden statt der
+eingefrorenen Aufzählung" angekündigt — eine endliche Summe über die Stufen. Das
+war zuviel gedacht. `measurable_uncurry_pointRate` steht seit langem und ist
+**voll allgemein**: es verlangt von der Familie `T : Ω → ℕ → ℝ` nichts als die
+Meßbarkeit jedes `T n`, keine Monotonie und keine Nichtexplosion. Die Aussage ist
+seine Instanz an `T w = hawkesJumpTimeH h ν φ w.2 w`, drei Zeilen, und die
+einzige Eingabe ist `measurable_hawkesJumpTimeH_apply`.
+
+**Und sie ist billiger als im linearen Fall.**
+`measurable_uncurry_hawkesSelfRate` braucht `hφint`, die
+Intervallintegrierbarkeit der Translate von `φ`, weil
+`measurable_hawkesJumpTime_apply` sie braucht. Hier läuft
+`measurable_hawkesJumpTimeH_apply` statt dessen auf den beiden Schranken, und die
+Intervallintegrierbarkeit ist ein Satz. Der Prüfstein des Vorschlags ist
+eingehalten: weder Nichtexplosion noch Positivität der Wartezeiten kommt vor.
+
+Daraus fallen `measurable_jumpTimeFE_hawkesSelfRateH` — die Instanz von
+`measurable_jumpTimeFE`, bei der im Unterschied zum linearen Fall **alle drei**
+Voraussetzungen aus den Daten kommen, `hint` eingeschlossen, das im linearen Fall
+die Nichtexplosion *ist* —, die Meßbarkeit des Sprungereignisses und seines
+Komplements, und dann die beiden zurückgenommenen Sätze:
+`condExp_le_jumpTimeFE_hawkesSelfRateH_block` und `…_block_exp`.
+
+#### Der eigentliche Ertrag: die Kette ist in den Sprungzeiten träge, und das ist eine Aussage über `jumpTimeFE`, nicht über die Rekursion
+
+Punkt 3 der Gruppe A — der Sprungterm — hat **drei** Eingaben und nicht eine, und
+der Vorlauf hat nur eine davon benannt:
+
+1. den **Zeitfaktor** `P(τ_{n+1} ≤ t | ℋ_n)` — steht seit diesem Lauf;
+2. die **Trennbarkeit** der beiden Faktoren — steht seit diesem Lauf;
+3. den **Kettenfaktor** `E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)` — offen,
+   und das ist Vorschlag 1 des Vorlaufs.
+
+Die zweite ist die, die hier gewonnen wurde, und sie war nicht so frei, wie sie
+aussah. Der Vorlauf hat sie als „die Unabhängigkeit von Kette und Wartezeiten
+unter `jumpMeasure` (steht, sie ist die Produktgestalt der Definition)" geführt.
+Die Produktgestalt steht — aber sie nützt nur, wenn der Sprungterm wirklich in
+einen Faktor über `ω.1` und einen über `ω.2` zerfällt, und das ist für die
+Familie, die der Zuwachs liest, **nicht die Rekursion**.
+
+* `hawkesJumpTimeH h ν φ xi ω n` trägt `ω` nur als träges Argument, und
+  `hawkesJumpTimeH_sample_congr` sagt das. Das stand.
+* `jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 n` ist etwas anderes: es ist durch
+  **Invertieren der kumulierten Rate** definiert, nicht durch die Rekursion, und
+  die Rate trägt den Stichprobenpunkt im Argument. Über dieser Familie sind die
+  Filtration, die Stoppzeiten und der Zuwachs geschrieben. Daß auch hier die
+  Kette nicht eingeht, ist eine eigene Aussage.
+
+Sie steht jetzt, als Kette von drei Congruenzen:
+`hawkesSelfRateH_snd_congr` (die Rate) →
+`cumulativeRateF_hawkesSelfRateH_snd_congr` (das Fensterintegral) →
+`jumpTimeFE_hawkesSelfRateH_snd_congr` (das Infimum, das den Inversen
+definiert). Und in der Gestalt, die die Faktorisierung liest:
+`setOf_le_jumpTimeFE_hawkesSelfRateH_eq` schreibt `{τ_{n+1} ≤ t}` als Urbild
+unter `Prod.snd`, mit einem beliebigen Zeugen `y : ℕ → E` im Argument — daß die
+Aussage von ihm nicht abhängt, *ist* der Inhalt.
+
+`jumpMeasure_map_chain_jumpTimeH` ist dann die Unabhängigkeit selbst: das Bildmaß
+des Paares *(Kette bis zur `n`-ten Marke, erste `n` Sprungzeiten)* unter
+`jumpMeasure` ist das Produkt der beiden Bildmaße, über `Measure.map_prod_map`.
+
+**Warum `rateInverseE` und nicht `rateInverse`.** Die Congruenz geht durch die
+Definition `sInf (ENNReal.ofReal '' {r | 0 ≤ r ∧ a ≤ cumulativeRateF Λ ω r})`
+hindurch, also über eine Gleichheit der beiden **Mengen**. Das ist der Ort, an
+dem die Hebung nach `ℝ≥0∞` sich zum zweiten Mal auszahlt: bei `rateInverse` wäre
+dieselbe Rechnung über `sInf ∅ = 0` gelaufen, also über einen Müllwert, der die
+Aussage an den explosiven Stichprobenpunkten still wahr gemacht hätte. Hier ist
+sie an *jedem* Stichprobenpunkt wahr, und aus dem richtigen Grund.
+
+#### Was an Mathlib nachgeprüft wurde
+
+Neu benutzt und am Quelltext belegt, in v4.33.1, keine davon `deprecated`:
+
+* `MeasureTheory.condExp_sub` —
+  `MeasureTheory/Function/ConditionalExpectation/Basic.lean:335`. Verlangt
+  `Integrable` auf **beiden** Seiten; das ist die Voraussetzung, an der der
+  Vorlauf abgeprallt ist.
+* `MeasureTheory.condExp_const` — dieselbe Datei, `:147`. Verlangt `hm : m ≤ m₀`
+  und `[IsFiniteMeasure μ]`; beides steht.
+* `MeasureTheory.Integrable.indicator` —
+  `MeasureTheory/Integral/IntegrableOn.lean:351`.
+* `MeasureTheory.Measure.map_prod_map` — `MeasureTheory/Measure/Prod.lean:833`.
+  Verlangt `[SFinite]` auf beiden Faktoren; unter Wahrscheinlichkeitsmaßen frei.
+
+Ferner die schon früher belegten `measurableSet_le`, `measurableSet_lt`,
+`measurable_pi_lambda`, `measurable_pi_apply`, `integrable_const`,
+`Measurable.comap_le`, `EventuallyEq.sub`.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` frisch geholt: **unverändert**
+`55a449c5f283959116e88a56660d122ec4172f98` (vom 2026-09-13 02:55 UTC), also
+derselbe Stand wie im vierten Lauf des Tages. `scripts/check_citations.py` gegen
+den vorhandenen Index: **1099** zitierte Namen, davon 731 in beiden Ständen,
+**0 nur in v4.33.1** — keine Zitierung zeigt auf einen Namen, den master nicht
+mehr hat. 17 nur auf master (die `Cadlag`-Datei der `SkorokhodSpace`-Roadmap,
+bewußt so), 1 als `deprecated` markiert (`Subgroup.isClosed_of_discrete`,
+unverändert), 350 sind unsere eigenen Namen. 80 zitierte Dateipfade, davon der
+eine bekannte auffällige (`Mathlib/Topology/Order/Cadlag.lean`, nur auf master).
+Da der Stand derselbe ist, ist auch der Befund derselbe; es ist keine neue
+Prüfung, sondern die Bestätigung, daß sich in vier Stunden nichts bewegt hat.
+
+#### Zwei Stolperstellen
+
+**`ext` auf einer Mengengleichheit läßt die Zugehörigkeit unreduziert stehen.**
+`ext r` auf `{r | P r} = {r | Q r}` gibt ein Ziel, in dem das Muster, auf das man
+umschreiben will, syntaktisch nicht vorkommt; `rw` scheitert mit „Did not find an
+occurrence of the pattern". Ein `simp only [Set.mem_ofPred_eq]` davor räumt das
+weg. Das ist dieselbe Krankheit wie die `measurable_pi_lambda`-Stelle des
+Vorlaufs, nur an der anderen Seite: dort hat die Elaboration zu wenig gewußt,
+hier steht zu viel unreduziert da.
+
+**`Set.mem_setOf_eq` ist in v4.33.1 `deprecated`** zugunsten von
+`Set.mem_ofPred_eq`. Der Rest der Datei benutzt schon die neue Form; die alte ist
+hier einmal durchgerutscht und berichtigt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe.** Vorschlag
+1 des Vorlaufs, unberührt, und nach diesem Lauf die **einzige** offene Eingabe
+von Punkt 3 der Gruppe A. Sie ist nicht angegangen worden, weil die andere
+Eingabe billiger war und weil ein Lauf, der beide anfängt, keine von beiden
+fertig bekommt.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`, wie im
+Vorlauf. Sie ist ausgerechnet und aufgeschrieben, nicht getippt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`comp_chainKernel_map_split_range` — die Markoveigenschaft der eingebetteten
+   Kette an der `n`-ten Stufe.** Unverändert der Vorschlag des Vorlaufs, und
+   jetzt ohne Konkurrenz: er ist die einzige offene Eingabe von Punkt 3 der
+   Gruppe A. **Worauf sie ruht:** `chainKernel_map_split` (die nullte Stufe,
+   steht), `chainKernel_map_shift` und `comp_chainKernel_map_shift` (der
+   Einschrittshift, steht, und er trägt die Zeithomogenität schon), und eine
+   Induktion über `n`. **Prüfstein:** der Beweis darf die Wartezeiten überhaupt
+   nicht erwähnen — `jumpMeasure` ist ein Produkt, und die Kette ist der eine
+   Faktor. **Warnung aus diesem Lauf:** die Zielgestalt lebt über
+   `Finset.range (n+1) → E`, also über einem abhängigen Funktionstyp; die
+   Stolperstelle des vierten Laufs (`measurable_pi_lambda` rät den Indextyp
+   falsch, wenn er nur aus einer Koerzierung kommt) ist dort zu erwarten. Der
+   Ausweg steht dort: ein eigenes `have` mit ausgeschriebenem Zieltyp.
+1. **`condExp_jump_mark_block` — der Sprungterm, und der Weg dorthin ist ein
+   anderer, als dieser Lauf gebaut hat.** Beim Nachprüfen des Negativbefunds zu
+   einer geplanten Produktaussage ist
+   `Mathlib/MeasureTheory/Function/ConditionalExpectation/PullOut.lean`
+   aufgetaucht — die **Herausziehungseigenschaft** der bedingten Erwartung,
+   `condExp_mul_of_stronglyMeasurable_left` (`:245` in v4.33.1 **und** auf
+   `master` `55a449c5f28`), `condExp_mul_of_aestronglyMeasurable_left` (`:235`)
+   und die bilineare Fassung `condExp_bilin_of_aestronglyMeasurable_left`
+   (`:199`). Damit geht der Sprungterm in zwei Herausziehungen statt über eine
+   Produktaussage:
+
+   * **über der großen σ-Algebra** `𝒢 = σ(ganze Kette, τ_1, …, τ_n)` ist
+     `f (Y_{n+1}) − f (Y_n)` meßbar, also herauszuziehen, und was stehen bleibt,
+     ist `P(τ_{n+1} ≤ t | 𝒢)` — die `le`-Fassung von
+     `condExp_lt_jumpTimeFE_hawkesSelfRateH_jumpTimes`, die nach dem Muster
+     dieses Laufs (`condExp_sub`) in wenigen Zeilen folgt;
+   * **dann der Turmschluß nach `ℋ_n`**, wo der Pegelfaktor `ℋ_n`-meßbar ist und
+     ein zweites Mal herausgezogen wird; übrig bleibt
+     `E[f (Y_{n+1}) − f (Y_n) | ℋ_n]`, also genau der Kettenfaktor aus 0.
+
+   **Worauf sie ruht:** auf 0, auf der `le`-Fassung über `𝒢`, und auf den beiden
+   Herausziehungen. **Prüfstein:** `Y_{n+1}` darf in der Aussage nicht mehr
+   vorkommen; steht es noch da, ist über der falschen σ-Algebra bedingt worden.
+
+   **Und der Preis dieses Befundes ist zu benennen**, weil er diesen Lauf
+   betrifft: geht der Sprungterm so, dann liegen
+   `jumpMeasure_map_chain_jumpTimeH` und die Congruenzkette dieses Laufs
+   **nicht** auf dem kürzesten Weg dorthin — die Herausziehung ersetzt die
+   Unabhängigkeit. Sie bleiben richtig und sie bleiben die strukturelle Aussage
+   („die Kette geht in die Sprungzeiten nicht ein"), die die Roadmap so oder so
+   schuldet; aber sie sind nach diesem Befund eine Eingabe weniger, als der
+   Abschnitt oben behauptet. Das ist der Fund des Laufs, den ich am wenigsten
+   erwartet habe, und er gehört so berichtet.
+
+2. **`measurableSet_stoppedAt_lt_jumpTimeH` — der Zeuge, den der vierte Lauf nur
+   ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung
+   braucht ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der
+   Roadmap steht, und ein Negativbefund ohne Zeugen ist ein Versprechen.
+
+### 2026-09-13, sechster Lauf des Tages — der Kettenfaktor steht, und der angesagte Weg dorthin war der falsche: es ist keine Induktion, sondern ein Satz, den Mathlib schon hat
+
+**Bearbeitet:** Vorschlag 0 des Vorlaufs, `comp_chainKernel_map_split_range` — die
+Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe —, und darüber
+hinaus die bedingte Erwartung, die daraus abzulesen ist. Die Vorschläge 1 (der
+Sprungterm über die Herausziehung) und 2 (der Zeuge) sind **nicht** angegangen
+worden.
+
+**Zwölf Sätze** in `TauCeti/MartingaleProblems/Suggested.lean`, in drei neuen
+Abschnitten am Ende der Datei — `ChainMarkov` (acht), `CondExpProd` (drei) und
+`ChainMarkovJump` (einer) —, dazu zwei Definitionen und eine Instanz; 297
+Zeilen. Die ganze Datei ohne einen Fehler durch `lake env lean`
+gegen v4.33.1, alle zwölf mit `#print axioms` geprüft und jeder auf `propext`,
+`Classical.choice`, `Quot.sound` — kein `sorryAx`. `scripts/check_suggested.py`
+meldet für die Datei `rc 0`, `0 Fehler`, `9 sorry` — die Zahl der `sorry` ist
+unverändert **neun**. (`WeakConvergence/Suggested.lean` meldet weiter seine zwei
+Fehler; das ist die eine bewußt gegen `master` geschriebene Aussage und von
+diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Die Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe,
+und daß sie keine Induktion ist"; Punkt 3 der Gruppe A ist dort berichtigt, und
+die Zahl der offenen Aussagen bleibt bei **vierzehn** — bewiesen wurde keine von
+ihnen, gewonnen wurde die letzte fehlende Eingabe von Punkt 3.
+
+#### Der Befund, und er berichtigt die Ansage des Vorlaufs
+
+Der Vorschlag lautete: „**Worauf sie ruht:** `chainKernel_map_split` (die nullte
+Stufe, steht), `chainKernel_map_shift` und `comp_chainKernel_map_shift` (der
+Einschrittshift, steht, und er trägt die Zeithomogenität schon), und eine
+Induktion über `n`."
+
+**Die Induktion trägt nicht, und sie wird auch nicht gebraucht.**
+
+Sie trägt nicht, weil der Shift bei jedem Schritt die **nullte Koordinate**
+verliert, die in der Zielaussage stehen bleiben muß: aus der Aussage über die
+verschobene Kette bekommt man das Gesetz von `(Y_1, …, Y_{n+1}, Y_{n+2})`, und
+`Y_0` ist daraus nicht zurückzuholen. Man müßte die Anfangsverteilung mitführen
+und bei jedem Schritt eine Koordinate vorn ankleben.
+
+Sie wird nicht gebraucht, weil `chainKernel` Mathlibs Ionescu--Tulcea-Kern in
+Verkleidung ist — `Kernel.traj (chainFam mu) 0`, gecomappt längs `fun z _ ↦ z` —
+und der Einschrittfortsatz der Trajektorie dort **an jeder Stufe** bewiesen
+dasteht:
+
+> `ProbabilityTheory.Kernel.partialTraj_compProd_eq_map_traj`
+> (`Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean:670` in v4.33.1, `:669`
+> auf `upstream/master` `55a449c5f28`, nicht `deprecated`):
+> `(partialTraj κ a b x₀) ⊗ₘ (κ b) = (traj κ a x₀).map (fun x ↦ (frestrictLe b x, x (b+1)))`
+> für `a ≤ b`.
+
+Das **ist** die Markoveigenschaft an der `b`-ten Stufe, als Desintegration der
+gemeinsamen Verteilung von (Pfad bis `b`, Marke bei `b+1`). Der Rest des Laufs
+ist Buchhaltung um diese eine Eingabe herum, in drei Schritten.
+
+**Erstens, die Anfangsverteilung vorbeiziehen.** `comp_chainKernel_eq_comp_traj`
+schiebt den `comap` von `chainKernel` über das schon vorhandene
+`comap_comp_measure` auf `nu`; `comp_chainKernel_map_frestrictLe_compProd` ist
+dann der obige Satz mit `nu` davor.
+
+*Und hier eine Stelle, an der ich nicht geprüft habe, was ich hätte prüfen
+können, und es gehört gesagt:*
+`Kernel.map_frestrictLe_trajMeasure_compProd_eq_map_trajMeasure` (`:777` in
+v4.33.1, `:773` auf master) ist genau diese Aussage für `Kernel.trajMeasure`. Sie ist nicht
+anwendbar, ohne vorher `chainKernel mu ∘ₘ nu = trajMeasure nu (chainFam mu)` zu
+zeigen — `trajMeasure` legt die Hebung der Anfangsverteilung auf `Finset.Iic 0`
+über `(MeasurableEquiv.piUnique _).symm` fest, `chainKernel` über
+`fun z _ ↦ z`. Ob die beiden zusammenfallen, ist **nicht** geprüft worden; der
+Nachbau ihres Beweises — sechs Zeilen, dieselben Umschreibungen — war billiger
+als die Prüfung, und er bindet die Entwicklung nicht an `trajMeasure`. Das ist
+eine bewußte Wahl und keine Auslassung, aber es ist eine Wahl.
+
+**Zweitens, umindizieren.** Mathlib rechnet über `(i : Finset.Iic n) → E`, `ℋ_n`
+ist über `(j : Finset.range (n+1)) → E` geschrieben. Dieselbe Menge natürlicher
+Zahlen, **nicht** derselbe Typ. `iicToRange` ist die Umschreibung,
+`iicToRange_frestrictLe` sagt `rfl`, und `markKernel mu n` ist `chainFam mu n`
+über dem neuen Index (`chainFam_eq_comap_markKernel`, ebenfalls `rfl`). Die
+Warnung des Vorlaufs vor der `measurable_pi_lambda`-Stolperstelle hat sich nicht
+eingelöst: die drei Umschreibungen sind Definitionsgleichheiten, und die
+Elaboration hat den Indextyp nie raten müssen, weil er in jeder Signatur
+ausgeschrieben dasteht.
+
+**Drittens, als bedingte Erwartung lesen.** `condExp_chain_mark_range` ist die
+Desintegration durch `ae_eq_condExp_of_forall_setIntegral_eq`: das Mengenintegral
+über `proj ⁻¹' A` geht über `setIntegral_map` auf das Bildmaß, und
+`Measure.setIntegral_compProd` an `A ×ˢ univ` zerlegt es. Voraussetzungen: an `E`
+nichts als `[MeasurableSpace E]`, an `f` Meßbarkeit und eine Schranke, an `mu`
+`IsMarkovKernel`. Die Wartezeiten kommen in keinem der acht Beweise des
+Abschnitts `ChainMarkov` vor — der Prüfstein des Vorschlags ist eingehalten.
+
+#### Zwei Negativbefunde, und der erste ist zu schärfen statt zu behaupten
+
+**Das Vorschieben des *ersten* Faktors eines `compProd`.** Gebraucht wird
+`(μ.map g) ⊗ₘ κ = (μ ⊗ₘ (κ.comap g hg)).map (Prod.map g id)`. Mathlib hat das
+Gegenstück für den **zweiten** Faktor als benannten Satz, `Measure.compProd_map`
+(`Probability/Kernel/Composition/Lemmas.lean:120`, beide Stände). Für den ersten
+gibt es **keine benannte Deklaration** — aber die Aussage steht bewiesen da, als
+Zwischenschritt einer `calc`-Kette in `HasCondDistrib.comp_right`
+(`Probability/HasCondDistrib.lean:98–102`, in v4.33.1 und auf `master`
+wortgleich), mit genau denselben vier Umschreibungen, die auch unser Beweis
+benutzt. Die Lücke ist also nicht „Mathlib kann das nicht", sondern „Mathlib hat
+es nicht herausgezogen". Sie steht als **dreizehnte** in `TODO.md` Punkt 8, und
+der PR bestünde darin, jene fünf Zeilen durch den Aufruf eines neuen Satzes neben
+`Measure.compProd_map` zu ersetzen.
+
+*Das ist der Fund, den ich am wenigsten erwartet habe, und er ist eine Mahnung an
+die eigene Suchweise:* die erste Suche nach `compProd_map|map_compProd` hat den
+Satz nicht gefunden, weil er keinen Namen hat. Gefunden hat ihn erst die Suche
+nach der **Gestalt** — `git grep "⊗ₘ" | grep -i comap` —, also die Regel dieses
+Auftrags, nach der Aussage und nicht nach der Vokabel zu suchen, angewandt auf
+einen Beweistext statt auf einen Satznamen.
+
+**Die bedingte Erwartung aus einer vorliegenden Desintegration.**
+`ProbabilityTheory.HasCondDistrib Y X κ P` ist definiert als
+`P.map (fun ω ↦ (X ω, Y ω)) = P.map X ⊗ₘ κ`
+(`Probability/HasCondDistrib.lean:41`) und verlangt an die Räume nichts als ihre
+meßbare Struktur — `comp_chainKernel_map_split_range` ist wörtlich eine Instanz
+davon. Was daraus folgen sollte, folgt dort nicht: die Datei enthält in v4.33.1
+wie auf `master` **keinen einzigen Treffer** für `condExp` (geprüft 2026-09-13,
+`git grep -c condExp upstream/master -- Mathlib/Probability/HasCondDistrib.lean`).
+Den Schluß gibt es nur über `condDistrib`, `condExp_ae_eq_integral_condDistrib`
+(`Probability/Kernel/CondDistrib.lean:381`), und `condDistrib` existiert nur über
+einem `[StandardBorelSpace]`-Zielraum, weil es die Desintegration erst
+**konstruiert**. Liegt sie schon vor, wird davon nichts gebraucht. Das ist die
+**vierzehnte** Lücke in `TODO.md` Punkt 8, und sie ist der Grund, aus dem
+`condExp_chain_mark_range` seinen Beweis selbst führt, statt zu zitieren.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` frisch geholt: **unverändert**
+`55a449c5f283959116e88a56660d122ec4172f98` (vom 2026-09-13 02:55 UTC), derselbe
+Stand wie im vierten und fünften Lauf des Tages. `scripts/check_citations.py`:
+**1099** zitierte Namen, 731 in beiden Ständen, **0 nur in v4.33.1**, 17 nur auf
+master (die `Cadlag`-Datei der `SkorokhodSpace`-Roadmap, bewußt so), 1
+`deprecated` (`Subgroup.isClosed_of_discrete`, unverändert), 350 eigene Namen; 80
+zitierte Dateipfade mit dem einen bekannten auffälligen. Die in diesem Lauf neu
+zitierten Namen —
+`Kernel.partialTraj_compProd_eq_map_traj`,
+`Kernel.map_frestrictLe_trajMeasure_compProd_eq_map_trajMeasure`,
+`Measure.compProd_map`, `Measure.setIntegral_compProd`,
+`StronglyMeasurable.integral_kernel`, `HasCondDistrib` und
+`condExp_ae_eq_integral_condDistrib` — sind einzeln am Quelltext beider Stände
+geprüft und keiner ist `deprecated`.
+
+#### Der Nachschlag: die drei Eingaben stehen jetzt auf **einem** Raum
+
+Beim Aufschreiben des Vorschlags für den nächsten Lauf ist aufgefallen, daß er
+klein genug ist, um ihn im selben Lauf zu erledigen, und er ist erledigt:
+`condExp_comap_fst_prod`. Ist `Q` ein Wahrscheinlichkeitsmaß, so ist die bedingte
+Erwartung einer Funktion des **ersten** Faktors eines Produktmaßes über einer
+σ-Algebra desselben Faktors die des Faktors allein,
+
+```
+(P.prod Q)[g ∘ fst | comap (V ∘ fst)] =ᵐ (P[g | comap V]) ∘ fst.
+```
+
+Der Inhalt sitzt in zwei Hilfssätzen: `setIntegral_comp_fst_prod` — ein
+Mengenintegral über einem Zylinder `s ×ˢ univ` ist das Mengenintegral über `s`,
+nach `Measure.prod_restrict` und `Measure.map_fst_prod` — und
+`integrable_comp_fst_prod`. `Q` kommt in der Aussage nur über `Q Set.univ = 1`
+vor; die σ-Algebren fallen über `MeasurableSpace.comap_comp` zusammen.
+
+`condExp_chain_mark_jumpMeasure` ist dann die Zusammensetzung: der Kettenfaktor
+unter `jumpMeasure mu nu` auf `(ℕ → E) × (ℕ → ℝ)`, also auf dem Raum, auf dem der
+Zeitfaktor und die Trennbarkeit schon stehen. **Damit sind die drei Eingaben von
+Punkt 3 der Gruppe A nicht nur alle bewiesen, sondern alle über demselben Maß
+und demselben Raum geschrieben**, und was fehlt, ist allein ihr Zusammenbau.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Den Zusammenbau des Sprungterms.** Die drei Eingaben stehen; die Herausziehung
+und der Turmschluß, die sie verbinden, sind nicht getippt — siehe Vorschlag 0.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`,
+unverändert seit dem vierten Lauf: ausgerechnet und aufgeschrieben, nicht
+getippt.
+
+**Die Umformulierung von `comp_chainKernel_map_split_range` als
+`HasCondDistrib`-Instanz.** Sie kostet nichts und gibt der Aussage Mathlibs
+Vokabel; sie ist nicht getippt worden, weil die Entwicklung sie nicht liest.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`condExp_jump_mark_block` — der Sprungterm, und nach diesem Lauf hat er
+   keine offene Eingabe mehr.** Der Vorschlag des Vorlaufs, jetzt mit allen drei
+   Eingaben im Bestand **und auf demselben Raum**
+   (`condExp_le_jumpTimeFE_hawkesSelfRateH_block`,
+   `jumpMeasure_map_chain_jumpTimeH`, `condExp_chain_mark_jumpMeasure`). Der Weg
+   ist die Herausziehungseigenschaft
+   (`condExp_mul_of_stronglyMeasurable_left`, `PullOut.lean:245`): über
+   `𝒢 = σ(ganze Kette, τ_1, …, τ_n)` wird `f (Y_{n+1}) − f (Y_n)` herausgezogen,
+   übrig bleibt `P(τ_{n+1} ≤ t | 𝒢)`; dann der Turmschluß nach `ℋ_n`, wo der
+   Pegelfaktor `ℋ_n`-meßbar ist und ein zweites Mal herausgezogen wird.
+   **Prüfstein:** `Y_{n+1}` darf in der Aussage nicht mehr vorkommen; steht es
+   noch da, ist über der falschen σ-Algebra bedingt worden. **Was zuerst zu tun
+   ist:** die `le`-Fassung von `condExp_lt_jumpTimeFE_hawkesSelfRateH_jumpTimes`
+   über `𝒢` hinschreiben — sie folgt nach dem Muster des fünften Laufs
+   (`condExp_sub`, `condExp_const`) in wenigen Zeilen.
+
+2. **`measurableSet_stoppedAt_lt_jumpTimeH` — der Zeuge, den der vierte Lauf nur
+   ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung
+   braucht ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der
+   Roadmap steht, und ein Negativbefund ohne Zeugen ist ein Versprechen.
+
+### 2026-09-13, siebter Lauf des Tages — der Sprungterm steht, und die Eingabe, die dabei fehlte, war maßtheoretisch und nicht prozeßbezogen: Mathlib kennt die Vergrößerung der bedingenden σ-Algebra um einen unabhängigen Block nicht
+
+**Bearbeitet:** Vorschlag 0 des Vorlaufs, `condExp_jump_mark_block` — der
+Sprungterm des Martingalzuwachses, Punkt 3 der Gruppe A des Abhängigkeitsbaums.
+Er steht. Vorschlag 2 (der Zeuge `measurableSet_stoppedAt_lt_jumpTimeH`) ist
+**nicht** angegangen worden und bleibt unverändert liegen.
+
+**Sieben Sätze** in `TauCeti/MartingaleProblems/Suggested.lean`, in drei neuen
+Abschnitten am Ende der Datei — `CondExpProdMap` (zwei), `BlockJumpTerm` (drei)
+und `CondExpFubini` (zwei, siehe den Nachschlag) —; 524 Zeilen. Die ganze Datei
+ohne einen Fehler durch `lake env lean`
+gegen v4.33.1, alle sieben mit `#print axioms` geprüft und jeder auf `propext`,
+`Classical.choice`, `Quot.sound` — kein `sorryAx`. `scripts/check_suggested.py`
+meldet für die Datei `rc 0`, `0 Fehler`, `9 sorry` — die Zahl der `sorry` ist
+unverändert **neun**. (`WeakConvergence/Suggested.lean` meldet weiter seine zwei
+Fehler; das ist die eine bewußt gegen `master` geschriebene Aussage und von
+diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Der Sprungterm: zwei Herausziehungen mit einem Turmschluß dazwischen";
+Punkt 3 der Gruppe A ist dort als bewiesen ausgewiesen, und **die Zahl der
+offenen Aussagen fällt von vierzehn auf dreizehn**. Es ist die erste der sechs
+Aussagen der Wahrscheinlichkeitsschicht, die nicht bloß Eingaben gewonnen hat,
+sondern dasteht.
+
+#### Die Aussage
+
+> `condExp_jump_mark_block` —
+> `E[(f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t} | ℋ_n] = (μ f (Y_n) − f (Y_n)) · (1 − e^{−(Λ_t − Λ_{τ_n})})`
+> für den beschränkten nichtlinearen Hawkes-Prozeß, mit
+> `ℋ_n = σ(Y_0, …, Y_n, τ_1, …, τ_n)`.
+
+Voraussetzungen: die Daten von `ex:hawkes` in der beschränkten Fassung
+(`Measurable h`, `Measurable φ`, `0 ≤ φ`, `φ = 0` links von `0`, `0 < c ≤ h ≤ L`
+oberhalb von `ν`), `0 ≤ t`, ein Markovkern `mu` und eine Anfangsverteilung `nu`;
+an `f` Meßbarkeit und eine Schranke, an `E` nichts als `[MeasurableSpace E]`.
+Keine Nichtexplosion — im beschränkten Fall gibt es keine anzunehmen.
+
+**Der Prüfstein des Vorschlags ist eingehalten: `Y_{n+1}` kommt auf der rechten
+Seite nicht vor.** Wäre er noch da, so wäre über der falschen σ-Algebra bedingt
+worden.
+
+**Die Gestalt ist die Produktgestalt und nicht die integrierte des Manuskripts.**
+`thm:pathjumpMP` schreibt den Sprungterm als
+`∫_{τ_n}^{t} Λ_u e^{−A_n(u)} (μ_u f − f(Y_n)) du`; hier steht der Kettenfaktor
+mal der bedingten Verteilungsfunktion. Die beiden sind dasselbe, sobald die
+bedingte Dichte dasteht — das ist Punkt 2 der Gruppe A, und er wird erst
+gebraucht, wenn der Sprungterm gegen den Kompensator gehalten wird. Der
+Zwischenschritt ist bewußt nicht übersprungen worden: die Produktgestalt ist die,
+in der der Beweis endet, und sie gegen das Integral zu halten ist eine eigene
+Rechnung.
+
+#### Der Weg, und warum es zwei σ-Algebren sind und nicht eine
+
+Der Beweis ist **zwei Herausziehungen mit einem Turmschluß dazwischen**:
+
+* Über `𝒢 = σ(ganze Kette, τ_1, …, τ_n)` ist `f (Y_{n+1}) − f (Y_n)` meßbar und
+  die Sprungzeit nicht. `condExp_mul_of_stronglyMeasurable_left`
+  (`PullOut.lean:245`) zieht den Kettenfaktor heraus, übrig bleibt
+  `P(τ_{n+1} ≤ t | 𝒢)`, und das ist
+  `condExp_le_jumpTimeFE_hawkesSelfRateH_jumpTimes` — die `le`-Fassung der
+  Überlebensaussage über `𝒢`, in diesem Lauf hinzugekommen und nach dem Muster
+  des fünften Laufs in zwanzig Zeilen (`condExp_sub`, `condExp_const`).
+* `condExp_condExp_of_le` steigt nach `ℋ_n` hinab; das geht, weil `ℋ_n ≤ 𝒢` ist
+  — die kleinere σ-Algebra liest von der Kette nur den Block bis zur `n`-ten
+  Marke.
+* Über `ℋ_n` ist die bedingte Verteilungsfunktion meßbar (der Pegel ist eine
+  Funktion der Sprungzeiten allein, `hawkesLevelOf`) und `Y_{n+1}` nicht.
+  `condExp_mul_of_stronglyMeasurable_right` zieht sie heraus, übrig bleibt
+  `E[f (Y_{n+1}) − f (Y_n) | ℋ_n]`, und das wertet der Kettenfaktor aus.
+
+Keiner der beiden Schritte ist über der jeweils anderen σ-Algebra zu führen. Das
+ist der ganze Grund, aus dem der Baum an dieser Stelle zwei σ-Algebren trägt, und
+er ist kein Entwurfsmangel.
+
+#### Der Befund, und er berichtigt die Ansage des Vorlaufs zweimal
+
+**Erstens: die dritte Eingabe, die der Vorlauf gewonnen hatte, wird vom
+Zusammenbau nicht gelesen.** Angesagt war `jumpMeasure_map_chain_jumpTimeH` — daß
+das **Bildgesetz** des Paares (Kettenblock, Sprungzeitblock) ein Produktmaß ist.
+Was der Zusammenbau liest, ist etwas anderes: die Produktgestalt des **Maßes
+selbst** (`jumpMeasure mu nu` ist `(chainKernel mu ∘ₘ nu).prod waitingMeasure`,
+definitionsgleich) zusammen mit der Trägheit des Kettenarguments in den
+Sprungzeiten (`hawkesJumpTimeH_sample_congr`). Die Bildgesetzfassung bleibt
+richtig und ist der billigere Beleg dafür, daß die beiden Blöcke unabhängig sind;
+`condExp_chain_mark_block` geht an ihr vorbei. Das gehört gesagt, weil die
+Roadmap sie als eine der drei Eingaben von Punkt 3 führte; sie ist dort
+berichtigt.
+
+**Zweitens: die Eingabe, die tatsächlich fehlte, ist maßtheoretisch und nicht
+prozeßbezogen — und Mathlib hat sie nicht.** Der Kettenfaktor stand über der
+σ-Algebra des **Kettenblocks allein** (`condExp_chain_mark_jumpMeasure`, sechster
+Lauf); `ℋ_n` liest zusätzlich die Sprungzeiten. Gebraucht wird also:
+
+> die Vergrößerung der bedingenden σ-Algebra um einen **unabhängigen** Block
+> ändert die bedingte Erwartung nicht.
+
+Mathlib hat den Fall, in dem die unabhängige σ-Algebra die bedingende
+**ersetzt** — `MeasureTheory.condExp_indep_eq`
+(`Probability/ConditionalExpectation.lean:42`, in v4.33.1 wie auf
+`upstream/master` `182c4c30cdc`, nicht `deprecated`): ist `f` `m₁`-meßbar und
+`m₁` unabhängig von `m₂`, so ist `μ[f | m₂]` die Konstante `μ[f]`. Den Fall, in
+dem sie **hinzukommt**, hat es nicht; eine Suche in beiden Ständen nach einem
+`condExp` über einem Supremum `m₁ ⊔ m₂` mit unabhängigem Summanden gibt **null
+Treffer**. Das ist die **fünfzehnte** Lücke in `TODO.md` Punkt 8.
+
+Bewiesen ist hier nicht die allgemeine Supremumsfassung, sondern die
+Produktfassung:
+
+> `condExp_comap_prodMap_prod` — unter `P.prod Q` und für meßbare `V : X → S`,
+> `W : Y → T` ist
+> `(P.prod Q)[fun p ↦ g p.1 | comap (fun p ↦ (V p.1, W p.2))] =ᵐ fun p ↦ (P[g | comap V]) p.1`.
+
+Sie ist die Verallgemeinerung von `condExp_comap_fst_prod` (der Fall, in dem der
+zweite Faktor gar nicht beobachtet wird) und hat mit Sprungprozessen nichts zu
+tun; `Q` geht nur über `Q Set.univ = 1` ein. Der Beweis ist Fubini
+(`setIntegral_comp_fst_prodMap`, über `integral_prod` und
+`measurable_measure_prodMk_left`) plus die Herausziehung: das Schnittmaß der
+bedingenden Menge ist ein beschränkter `comap V`-meßbarer Faktor, und ein
+beschränkter Faktor geht durch die bedingte Erwartung hindurch
+(`condExp_mul_of_stronglyMeasurable_left` und `integral_condExp`).
+
+*Warum die Produktfassung und nicht die Supremumsfassung:* die allgemeine Fassung
+`μ[f | m₁ ⊔ m₂] =ᵐ μ[f | m₁]` verlangt ein π-System-Argument, weil
+`ae_eq_condExp_of_forall_setIntegral_eq` die Gleichheit der Mengenintegrale über
+**allen** Mengen der bedingenden σ-Algebra fragt und die Rechtecke `A ×ˢ B` diese
+nicht erschöpfen. Die Produktfassung braucht das nicht: dort ist die bedingende
+σ-Algebra ein `comap` **einer** Abbildung, jede ihrer Mengen also ein Urbild, und
+Fubini erledigt jedes Urbild auf einmal. Der Preis ist, daß der unabhängige Block
+eine eigene Koordinate des Stichprobenraums sein muß — was er in jeder Anwendung
+dieses Zweigs ist.
+
+#### Eine Stolperstelle, die zweimal Zeit gekostet hat
+
+**Ein lokales `have`/`set` vom Typ `MeasurableSpace Ω` nimmt an der
+Instanzensuche teil.** Wird die bedingende σ-Algebra mit `set ℋ := …` benannt, so
+löst jedes spätere `inferInstance : MeasurableSpace Ω` nicht mehr auf die
+Produktstruktur auf, sondern auf `ℋ`. Der Fehler sieht dann aus wie ein
+Typfehler an einer ganz anderen Stelle — `measurableSet_le` wollte plötzlich
+`Measurable[𝒢]` statt `Measurable` —, und die Ursache steht dreißig Zeilen höher.
+Die Regel: **alle Aussagen, die die Umgebungs-σ-Algebra brauchen, vor die
+Benennung setzen**, oder gar nicht benennen. Sie steht so auch in der Roadmap.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` frisch geholt: **bewegt**, von
+`55a449c5f283959116e88a56660d122ec4172f98` auf
+`182c4c30cdc58b70f2ba77d56f31b1c4048e9522`. Der Master-Index ist neu gebaut
+(`scripts/mathlib_index.py master`, 230823 Deklarationen).
+`scripts/check_citations.py` gegen den neuen Stand, nach frisch gelaufenem
+`scripts/extract_citations.py` (das gehört dazu und ist in diesem Lauf einmal
+vergessen worden — der erste Durchgang las die alte `cands.json` und meldete
+darum unverändert 1099 Namen; die Zahlen unten sind die des zweiten): **1250**
+zitierte Namen, 801 in beiden Ständen, **0 nur in v4.33.1**, 17 nur auf master
+(die `Cadlag`-Datei der `SkorokhodSpace`-Roadmap, bewußt so), 1 `deprecated`
+(`Subgroup.isClosed_of_discrete`, unverändert), 431 eigene Namen; 85 zitierte
+Dateipfade mit dem einen bekannten auffälligen. **Kein Zitat ist durch den
+Master-Sprung falsch geworden.** `scripts/check_negatives.py` gegen den neuen
+Stand: alle Negativaussagen unverändert gültig, die Trefferzahlen identisch. Die
+in diesem Lauf neu zitierten Namen — `MeasureTheory.condExp_indep_eq`,
+`condExp_mul_of_stronglyMeasurable_left`,
+`condExp_mul_of_stronglyMeasurable_right`, `integral_prod`,
+`measurable_measure_prodMk_left`, `integral_condExp`, `Integrable.bdd_mul`,
+`Integrable.mul_bdd` — sind einzeln am Quelltext beider Stände geprüft und keiner
+ist `deprecated`.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die bedingte Dichte (Punkt 2 der Gruppe A).** Der Sprungterm steht in der
+Produktgestalt; die integrierte Gestalt des Manuskripts verlangt den
+Variablenwechsel längs der kumulierten Rate, und der ist nicht angefaßt worden.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`,
+unverändert seit dem vierten Lauf: ausgerechnet und aufgeschrieben, nicht
+getippt.
+
+**Die Umformulierung von `condExp_comap_prodMap_prod` als Supremumsfassung.** Sie
+wäre die Gestalt, in der Mathlib die Lücke schließen würde, und sie verlangt das
+π-System-Argument, das die Produktfassung umgeht.
+
+#### Der Nachschlag: die Fubini-Eingabe des eigenen Vorschlags 0, sofort geprüft und sofort gebaut
+
+Der Vorschlag 0 oben verlangt, den maßtheoretischen Baustein des Kompensatorterms
+zu **suchen und nicht vorauszusetzen**. Die Suche ist im selben Lauf gemacht
+worden, sie ging negativ aus, und die Lücke ist geschlossen.
+
+**Der Negativbefund.** Mathlib hat die Vertauschung eines Integrals über einen
+Parameter mit der bedingten Erwartung nicht, in keinem der beiden Stände. Geprüft
+ist (a) die Namensuche nach `condExp` und `integral` in einem Namen über ganz
+`Mathlib/` — sie gibt `condExp_ae_eq_integral_condDistrib`,
+`condExp_ae_eq_integral_condExpKernel`, `integral_condExp` und deren Verwandte,
+alle gegen einen **Kern** und damit die Desintegration; (b) die Gestaltsuche nach
+einem `condExp` eines Lambdaausdrucks mit einem Integral darin — drei Treffer,
+alle in `Probability/Kernel/CondDistrib.lean:359–377` und alle dieselbe
+Desintegration. Fubini für die bedingte Erwartung steht dort nicht. Das ist die
+**sechzehnte** Lücke in `TODO.md` Punkt 8.
+
+**Und das Fehlen hat einen Grund, der die Lücke erst interessant macht.** Die
+naive Fassung
+
+> `μ[fun ω ↦ ∫ u, g u ω ∂ν | m] =ᵐ[μ] fun ω ↦ ∫ u, (μ[g u | m]) ω ∂ν`
+
+ist **nicht wohlgestellt**: `μ[g u | m]` ist für jedes `u` einzeln nur bis auf
+eine Nullmenge festgelegt, also braucht `u ↦ (μ[g u | m]) ω` gar nicht meßbar zu
+sein, und die rechte Seite existiert im allgemeinen nicht. Es ist derselbe
+Defekt, an dem die reguläre bedingte Verteilung hängt. Eine Fassung, die in
+Mathlib gehört, muß eine gemeinsam meßbare **Version** mitbekommen — und das ist
+keine Schwächung, sondern die Gestalt, die jede Anwendung ohnehin hat, weil die
+Version dort in geschlossener Form bekannt ist.
+
+**Zwei weitere Sätze**, in einem dritten neuen Abschnitt `CondExpFubini` am Ende
+von `TauCeti/MartingaleProblems/Suggested.lean`:
+
+> `condExp_integral_comm` — sind `g` und `hcand` gemeinsam meßbar und beschränkt
+> und ist `hcand u` für jedes `u` eine Version von `μ[g u | m]`, so ist
+> `μ[fun ω ↦ ∫ u, g u ω ∂ν | m] =ᵐ[μ] fun ω ↦ ∫ u, hcand u ω ∂ν`,
+
+mit `condExp_intervalIntegral_comm` als Intervallfassung für `∫ u in a..b`. Der
+Beweis ist drei `calc`-Schritte: `integral_integral_swap` auf dem eingeschränkten
+Maß, `setIntegral_condExp` innen, zurückgetauscht. Voraussetzungen: `m ≤ m0`,
+`μ` endlich, `ν` endlich; über `Ω` und dem Parameterraum nichts als ihre meßbare
+Struktur.
+
+Beide gehen durch `lake env lean` gegen v4.33.1 und beide mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` — kein `sorryAx`. Damit stehen in
+diesem Lauf **sieben** Sätze in drei neuen Abschnitten, und die Zahl der `sorry`
+bleibt bei neun.
+
+**Was das für Vorschlag 0 heißt:** was Punkt 4 der Gruppe A jetzt noch fehlt, ist
+nicht die Vertauschung, sondern der **Kandidat** — die geschlossene Form von
+`E[𝒜_u f | ℋ_n]` bei festem `u`. Sie setzt sich aus Punkt 1 (der bedingten
+Überlebensfunktion, `condExp_lt_jumpTimeFE_hawkesSelfRateH_block`) und dem
+Kettenfaktor (`condExp_chain_mark_block`, dieser Lauf) zusammen, und beide
+stehen. Der Vorschlag 0 ist damit schärfer als beim Aufschreiben: er ist eine
+Rechnung und keine Suche mehr.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`condExp_compensator_term_block` — Punkt 4 der Gruppe A, der Kompensator,
+   und er ist die andere Hälfte desselben Zuwachses.** Zu zeigen ist
+   `E[∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds | ℋ_n]` als dasselbe Integral, das der
+   Sprungterm liefert. **Worauf er ruht:** die bedingte Überlebensfunktion
+   `condExp_lt_jumpTimeFE_hawkesSelfRateH_block` (steht seit dem vierten Lauf),
+   `condExp_chain_mark_block` (dieser Lauf, für den Kettenfaktor `μ f (Y_n)` im
+   Erzeuger) und **Fubini** — die Vertauschung von `∫₀^t … du` mit der bedingten
+   Erwartung. **Die Fubini-Eingabe steht seit dem Nachschlag dieses Laufs**
+   (`condExp_integral_comm`, `condExp_intervalIntegral_comm`); Mathlib hat sie
+   nicht, das ist die sechzehnte Lücke in `TODO.md` Punkt 8, und was jetzt noch
+   fehlt, ist der **Kandidat** — die geschlossene Form von `E[𝒜_u f | ℋ_n]` bei
+   festem `u`, die sich aus Punkt 1 und `condExp_chain_mark_block` zusammensetzt.
+   Der Vorschlag ist damit eine Rechnung und keine Suche. **Warum jetzt:** Punkt 5
+   (`E[D_n | ℋ_n] = 0`) hängt an 3 und 4, 3 steht seit diesem Lauf, und 4 ist die
+   einzige Eingabe, die ihm noch fehlt. **Prüfstein:** in der Aussage darf die
+   Sprungzeit `τ_{n+1}` nur noch unter dem Integralzeichen und nicht mehr als
+   obere Grenze vorkommen — steht sie noch als Grenze da, ist die Fubini-Stelle
+   übersprungen worden.
+
+1. **`condExp_jumpTimeFE_hasDensity` — Punkt 2 der Gruppe A**, die bedingte
+   Dichte `Λ_u e^{−(Λ_u − Λ_{τ_n})}` auf `(τ_n, ∞)`. **Worauf sie ruht:**
+   `condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp` und eine **Rechnung**, der
+   Variablenwechsel längs der kumulierten Rate. Sie ist es, die die
+   Produktgestalt des Sprungterms in die integrierte Gestalt des Manuskripts
+   überführt, und ohne sie steht Punkt 3 zwar da, aber nicht in der Gestalt, in
+   der Punkt 5 ihn gegen den Kompensator hält.
+
+2. **`measurableSet_stoppedAt_lt_jumpTimeH` — der Zeuge, den der vierte Lauf nur
+   ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung
+   braucht ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der
+   Roadmap steht, und ein Negativbefund ohne Zeugen ist ein Versprechen.
