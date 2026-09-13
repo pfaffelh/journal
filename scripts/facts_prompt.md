@@ -360,10 +360,88 @@ Wiederaufnehmen der erste zu klärende Punkt und keine Nebensache.
 Die `D_n`-Arbeit bleibt stehen und ist nicht verloren: Punkte 1 bis 4 der Gruppe
 A sind bewiesen und gelten unabhängig vom Weg.
 
+**UMFORMULIERUNG VON C.5/G, vom Nutzer am 2026-09-13 nachts angeordnet.**
+
+> **Nicht „der Hawkes-Prozeß löst sein Martingalproblem", sondern: ein
+> adaptierter Zeitwechsel eines Poissonprozesses löst sein Martingalproblem.**
+> Hawkes, der beschränkt-nichtlineare Fall und der Markovsche Sprungprozeß sind
+> dann drei Instanzen einer Aussage, nicht drei Aussagen.
+
+**Warum das keine Verallgemeinerung auf Verdacht ist, sondern die Form, die schon
+im Code steht.** Sieh nach, was `jumpTimeF` ist:
+
+```lean
+noncomputable def jumpTimeF (Λ : ℝ → Ω → ℝ) (ω : Ω) (xi : ℕ → ℝ) (n : ℕ) : ℝ :=
+  rateInverse Λ ω (∑ k ∈ Finset.range n, xi k)
+```
+
+mit `xi` i.i.d. `Exp 1` unter `waitingMeasure`. Das ist wörtlich: *die `n`-te
+Sprungzeit ist `Λ⁻¹` des `n`-ten Punktes eines Standard-Poissonprozesses.* Und
+`jumpProcessF Λ t ω = stepPath (jumpTimeF Λ ω ω.2) ω.1 t` ist damit bereits der
+allgemeine zeittransformierte Poissonprozeß; Hawkes ist nur die Instanz
+`Λ t = ∫₀ᵗ (ν + Σ φ (s - Sₖ)) ds`. Der Doc-Kommentar an `isStepPath_jumpProcessF`
+sagt es selbst: dort fehlt die Schranke `lam ≤ L`, die der zustandsabhängige Fall
+braucht, weil `cumulativeRateF_rateInverse` sagt, daß die kumulierte Rate zur
+`n`-ten Sprungzeit *die* `n`-te Partialsumme ist und nichts zu dividieren bleibt.
+
+Der Satz in der Zeitwechselrichtung steht ebenfalls schon, in Sprungketten-Form:
+`jumpMeasure_map_cumulativeRateF_jumpTimeF`. Was fehlt, ist zweierlei, und das
+ist die Arbeit von C.5/G in der neuen Fassung:
+
+1. **Adaptiertheit gehört in die Aussage.** `Λ : ℝ → Ω → ℝ` ist bisher eine freie
+   Funktion; die Adaptiertheit steckt nur in Hypothesen einzelner Sätze. Die
+   Klasse braucht sie als Bedingung: `Λ` adaptiert, stetig, wachsend.
+2. **Der Zeitwechselsatz für den ganzen Prozeß**, nicht für jedes feste `n`.
+   Das ist Meyer/Watanabe: hat ein Zählprozeß den stetigen, streng wachsenden
+   Kompensator `Λ` mit `Λ ∞ = ∞`, so ist `N ∘ Λ⁻¹` ein Standard-Poissonprozeß —
+   und umgekehrt löst `N t = Y (Λ t)` das zugehörige Martingalproblem. In der
+   Literatur ist das Kurtz' *random time change representation*, Ethier–Kurtz
+   Kapitel 6.2/6.4, und es ist der Gegenstand von Kurtz 1991.
+
+**Die Instanzen, in dieser Reihenfolge zu bedienen:** (i) der Markovsche
+Sprungprozeß — das ist die Gegenprobe, denn `jumpProcess_isMPSolution` steht
+bewiesen da und muß aus dem allgemeinen Satz folgen; (ii) der lineare
+Hawkes-Prozeß (bisheriges Teil G); (iii) der beschränkt-nichtlineare Fall
+(bisheriges C.5a).
+
+**Zum Thinning, das der Nutzer am 2026-09-13 vorgeschlagen hat** (Poissonprozeß
+der Rate `L`, an jedem Sprung eine unabhängige Gleichverteilung, Annahme genau
+dann, wenn sie `≤ Y/L` ist — Lewis–Shedler/Ogata): das ist die **beschränkte
+Darstellung derselben Klasse**, nicht ein dritter Weg. Sie darf benutzt werden,
+wo sie billiger ist, und zwei Dinge sind dazu festgehalten:
+
+* **Was sie schenkt:** die Nichtexplosion. Die angenommenen Sprungzeiten sind
+  eine *Teilmenge* der Poissonpunkte, und die sind lokal endlich. Kein Lyapunov,
+  kein Grönwall, kein Volterra, kein `rateInverse` — und vor allem **kein
+  `hint`**. Genau die Hypothese, an der C.5a hängengeblieben ist, entfällt
+  ersatzlos.
+* **Was sie kostet:** den Kompensator. Die Zerlegung in Münzmartingal plus
+  Integral gegen das Poissonmartingal führt auf ein stochastisches Integral eines
+  beschränkten vorhersagbaren Integranden, und das ist ohne Integrationstheorie
+  teuer. **Nicht zerlegen, sondern über die Sprungkette rechnen**, wie im
+  Markovfall: dort ist `hL : ∀ x, lam x ≤ L` wesentlich benutzt — für die
+  Integrierbarkeit, für die Schranke `|Aⁿ f| ≤ (2L)ⁿ C` der iterierten Erzeuger
+  und für `ae_mem_nonExplosive`. Der Markovbeweis *ist* bereits der beschränkte
+  Beweis; der nichtlineare Fall spiegelt seine Struktur.
+
+**Nicht Markov nennen, was keines ist.** Das Paar `(X, Y)` aus Poissonprozeß und
+momentaner Rate ist nur für exponentielles `φ` wirklich Markov — dann gilt
+`dY = -β (Y - ν) dt + α dN`. Für allgemeines `φ` braucht die Fortschreibung von
+`Y` alle vergangenen angenommenen Sprungzeiten, und „Markov" wäre nur im
+vakuumierten Sinn von `ssec:addednothing` (i) wahr, Zustand gleich Pfad. Die
+Konstruktion braucht Markov ohnehin nicht; sie braucht nur, daß das treibende
+Rauschen ein Produktobjekt ist und `Λ` vorhersagbar.
+
+
 **Neue Reihenfolge ab 2026-09-12 abends, vom Nutzer festgelegt** — er will bald
 zur *Theorie* des Martingalproblems, nicht länger zu Beispielen:
 
 > **C.5a → E → G**
+
+*(Ab 2026-09-13 nachts gilt dafür die Umformulierung oben: C.5a und G sind zwei
+Instanzen des einen Zeitwechselsatzes und werden nicht mehr als getrennte Sätze
+formuliert. Die Reihenfolge der Arbeit bleibt, die Gestalt der Aussage ändert
+sich.)*
 
 **C.5a — der beschränkte nichtlineare Hawkes-Prozeß.** Das ist der *letzte* Punkt
 von Teil C, und danach ist Teil C zu Ende.
