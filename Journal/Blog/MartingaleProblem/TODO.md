@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Elf Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Zwölf Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle elf beim Beweisen aufgefallen, alle elf gegen `upstream/master` geprüft,
+Alle zwölf beim Beweisen aufgefallen, alle zwölf gegen `upstream/master` geprüft,
 und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -356,6 +356,45 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   selbst durch `1` beschränkt. Für Mathlib wäre die richtige Fassung die für
   integrierbares `F : γ × β → ℝ`, über `Measure.prod` und Fubini, und sie ist
   mehr als unsere.
+
+* **Die Stammfunktion einer parametrisierten Familie, gemeinsam meßbar in
+  Parameter und oberer Grenze.** Der zwölfte, und der kleinste von allen.
+  Mathlib hat `MeasureTheory.StronglyMeasurable.integral_prod_right'`
+  (`MeasureTheory/Integral/Prod.lean:76`), also die Meßbarkeit von
+  `x ↦ ∫ y, f (x, y) ∂ν` bei **festem** Maß, und daraus die Meßbarkeit von
+  `x ↦ ∫ y in s, f (x, y)` bei **fester** Menge `s`. Gebraucht wird die Fassung,
+  in der das Fenster mitwandert:
+
+  > `x ↦ ∫_0^{a x} f x u du` ist meßbar, für meßbares `a` und eine Familie, die
+  > gemeinsam meßbar und in jedem Parameter lokal integrierbar ist.
+
+  Gesucht am 2026-09-13 an `upstream/master`
+  `710c215f98a3947b3301a21454f1f2c3caf72d0a` nach `measurable_primitive`,
+  `Measurable ... primitive`, `Measurable fun x ↦ ∫ y in ...` und nach
+  Meßbarkeitsaussagen im Umfeld von `intervalIntegral`: **null** Treffer.
+  Vorhanden ist allein die **Stetigkeit** der Stammfunktion in der oberen Grenze
+  (`intervalIntegral.continuousOn_primitive`,
+  `MeasureTheory/Integral/DominatedConvergence.lean:440` in v4.33.1, `:439` auf
+  master, samt `continuousOn_primitive_interval` ebendort), und genau sie ist der
+  halbe Beweis.
+
+  *Der Beweis, und er ist drei Zeilen lang:* meßbar im Parameter bei fester
+  Grenze, stetig in der Grenze bei festem Parameter — das ist eine
+  Carathéodory-Funktion, und
+  `MeasureTheory.measurable_uncurry_of_continuous_of_measurable`
+  (`MeasureTheory/Function/StronglyMeasurable/Basic.lean:1262` auf master,
+  `:1257` in v4.33.1) macht daraus eine gemeinsam meßbare. Daß die Aussage so
+  billig ist und trotzdem fehlt, ist der Grund, sie hier aufzuführen: sie wird
+  gebraucht, sobald eine Stoppzeit als Integrationsgrenze auftritt, und das ist
+  in der Theorie der Punktprozesse der Regelfall.
+
+  *Woran es bei uns hing:* `measurable_hawkesJumpLevel`. Der Pegel der bedingten
+  Überlebensfunktion ist die kumulierte Rate bei `t` abzüglich der kumulierten
+  Rate bei `τ_n`, und `τ_n` ist eine Funktion der Bedingungsgröße. Wir haben es
+  am 2026-09-13 als `measurable_cumulativeRateF_endpoint` bewiesen, mit
+  `continuous_cumulativeRateF` und `measurable_uncurry_cumulativeRateF` als den
+  beiden Hälften; unsere Fassung ist an `cumulativeRateF` geschrieben und für
+  Mathlib auf `intervalIntegral` umzustellen.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

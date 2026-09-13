@@ -4977,7 +4977,90 @@ Der Turmschluß (`MeasureTheory.condExp_condExp_of_le`) zieht die bedingte
 Erwartung damit auf die kleinere σ-Algebra herunter, sobald `hawkesFrozenLevel`
 auch für sie meßbar ist — der Pegel ist
 `∫_0^t h (ν + ∑_{k ≤ n} φ (u − τ_k)) du − Λ(τ_n)` und liest also nur die
-Sprungzeiten; das ist der nächste Punkt.
+Sprungzeiten; das steht im folgenden Abschnitt.
+
+### Die bedingte Überlebensfunktion über der σ-Algebra der Sprungzeiten
+
+Die Bedingungsgröße des Einfrierens sind die **Wartezeiten**; die Filtration des
+Prozesses ist von seinen **Sprungzeiten** erzeugt. Der Turmschluß überbrückt das,
+und er braucht dafür genau eine Aussage: der Pegel ist schon eine Funktion der
+Sprungzeiten.
+
+**`hawkesJumpLevel` — der Pegel, aus den Sprungzeiten gerechnet.** Beide
+Summanden werden an derselben eingefrorenen Rate abgelesen:
+
+```
+hawkesJumpLevel h ν φ n t (x, τ_1, …, τ_n)
+  = cumulativeRateF (hawkesFrozenH h ν φ T (n+1)) () t
+      − cumulativeRateF (hawkesFrozenH h ν φ T (n+1)) () (T n)
+```
+
+mit `T` der von `0` an indizierten Aufzählung der `τ_k` (`rangeShift`, mit
+`T 0 = 0`). Die Partialsumme `∑_{k < n} ξ_k` kommt darin nicht mehr vor, und das
+ist der ganze Inhalt: `cumulativeRateF_hawkesJumpTimeH_self` sagt, daß sie die
+kumulierte eingefrorene Rate bei `τ_n` **ist**. Der Weg dorthin geht eine Stufe
+tiefer und wieder herauf — unterhalb von `τ_n` hat die Translation von `φ` bei
+`τ_n` noch nicht eingesetzt, also stimmen die Raten der Stufen `n` und `n+1` auf
+dem ganzen Fenster überein (`cumulativeRateF_hawkesFrozenH_succ_of_le`) —, und
+oben steht die Fixpunktgleichung `cumulativeRateF_hawkesJumpTimeH`.
+
+> **Die Identifikation ist fast sicher und nicht punktweise, und das ist kein
+> Mangel des Beweises.** Die Fixpunktgleichung verlangt `0 ≤ ξ`, und das gilt
+> unter `jumpMeasure` nur fast sicher. `hawkesFrozenLevel` ist deshalb für die
+> σ-Algebra der Sprungzeiten **nicht** meßbar; es ist fast sicher gleich einer
+> Funktion, die es ist (`hawkesFrozenLevel_eq_hawkesJumpLevel`), und genau das
+> verbraucht der Turmschluß: `condExp_of_stronglyMeasurable` wird auf
+> `hawkesJumpLevel` angewandt, der eingefrorene Pegel tritt nur noch durch ein
+> `condExp_congr_ae` ein.
+
+**`hawkesJumpLevel_eq_intervalIntegral_sub_sum` — der Pegel in der Form, die
+`ex:hawkes` hinschreibt.**
+
+```
+hawkesJumpLevel h ν φ n t (x, τ_1, …, τ_n)
+  = (∫_0^t h (ν + ∑_{k ≤ n} φ (u − τ_k)) du) − ∑_{k < n} ξ_k
+```
+
+Sie trägt `0 ≤ ξ` und `0 ≤ t` als Voraussetzungen, die die **Definition** nicht
+hat, und das ist dieselbe Grenze noch einmal: die Partialsumme ist kein
+Funktional der Sprungzeiten. Deshalb ist die Zuwachsform die Definition und diese
+hier der Satz, und nicht umgekehrt.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH_jumpTimes` — dieselbe Aussage über der
+kleineren σ-Algebra.**
+
+```
+P[t < τ_{n+1} | σ(Kette, τ_1, …, τ_n)] = expMeasure 1 (Ioi (hawkesJumpLevel …))
+```
+
+Drei Eingaben: `condExp_condExp_of_le`, die Inklusion
+`comap_hawkesJumpTimeH_le_comap_prodMk_range`, und die Meßbarkeit
+`measurable_hawkesJumpLevel`. Gegenüber der Fassung über den Wartezeiten geht
+nichts verloren — die σ-Algebra ist kleiner und die rechte Seite nur umgeschrieben.
+
+**Die Meßbarkeit des Pegels verlangt einen Baustein, den Mathlib nicht hat, und
+der über den Hawkes-Fall hinausreicht: die kumulierte Rate an einem
+**beweglichen** Endpunkt.** `measurable_cumulativeRateF` liest sie bei einer
+festen Zeit; hier endet das Fenster bei `τ_n`, und das bewegt sich mit dem
+Parameter. Gebraucht ist also die **gemeinsame** Meßbarkeit in Parameter und
+Zeit, und sie gilt aus dem Grund, aus dem sie immer gilt:
+
+* `continuous_cumulativeRateF` — die kumulierte Rate ist in der Zeit stetig, auf
+  **ganz** `ℝ` und nicht nur auf der Halbachse: unterhalb des Ursprungs ist das
+  Fenster `Set.Ioc 0 t` leer, die kumulierte Rate dort also konstant `0`, und
+  `cumulativeRateF_max_zero` sagt, daß die Halbachse alles trägt.
+* `measurable_uncurry_cumulativeRateF` — meßbar im Parameter bei fester Zeit,
+  stetig in der Zeit bei festem Parameter, also eine Carathéodory-Funktion;
+  `MeasureTheory.measurable_uncurry_of_continuous_of_measurable` macht daraus
+  eine gemeinsam meßbare.
+* `measurable_cumulativeRateF_endpoint` — die Form, die gebraucht wird: für
+  meßbares `a` ist `g ↦ cumulativeRateF (Λ g) (p g) (a g)` meßbar.
+
+Die drei stehen ohne jeden Bezug auf die Hawkes-Konstruktion, über beliebigem
+Parameterraum und beliebigem Stichprobenraum, und verlangen an Voraussetzungen
+die lokale Integrierbarkeit der Rate und die gemeinsame Meßbarkeit von
+`(g, u) ↦ Λ g u`. Sie gehören damit zur Grundtheorie der kumulierten Rate und
+nicht zum Hawkes-Prozeß.
 
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 
