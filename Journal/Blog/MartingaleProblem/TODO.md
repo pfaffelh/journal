@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Sechzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Siebzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle sechzehn beim Beweisen aufgefallen, alle sechzehn gegen `upstream/master`
+Alle siebzehn beim Beweisen aufgefallen, alle siebzehn gegen `upstream/master`
 geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -397,7 +397,7 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   Mathlib auf `intervalIntegral` umzustellen.
 
 * **Das Vorschieben des *ersten* Faktors eines `compProd`.** Der dreizehnte, und
-  der einzige der sechzehn, der nicht fehlt, sondern bloß keinen Namen hat.
+  der einzige der siebzehn, der nicht fehlt, sondern bloß keinen Namen hat.
   Mathlib hat den zweiten Faktor als benannten Satz —
   `Measure.compProd_map (hf : Measurable f) : μ ⊗ₘ (κ.map f) = (μ ⊗ₘ κ).map (Prod.map id f)`
   (`Probability/Kernel/Composition/Lemmas.lean:120`, v4.33.1 wie `master`
@@ -503,10 +503,35 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   der Beweis ist `integral_integral_swap` auf dem eingeschränkten Maß,
   `setIntegral_condExp` innen, und zurückgetauscht — drei Zeilen `calc`.
 
-  *Woran es bei uns hängt:* `condExp_compensator_term_block`, der Kompensatorteil
+  *Woran es bei uns hing:* `condExp_compensator_rate_block`, der Kompensatorteil
   des Martingalzuwachses von `thm:pathjumpMP`, Punkt 4 der Gruppe A. Dort ist
   `ν` das Lebesguemaß auf `(0, t]` und die Version die bedingte
-  Überlebensfunktion.
+  Überlebensfunktion; der Satz steht seit dem 2026-09-13, und er ist die erste
+  Anwendung dieser Lücke.
+
+* **Der Hauptsatz für eine Stammfunktion mit bloß meßbarem Integranden.** Der
+  siebzehnte. Gebraucht wird, für `Λ ≥ 0` meßbar und auf jedem Kompaktum
+  integrierbar und `C_r = ∫_0^r Λ`,
+
+  > `∫_a^t Λ_u e^{−(C_u − C_a)} du = 1 − e^{−(C_t − C_a)}` für `0 ≤ a ≤ t`,
+
+  also die Substitution `v = C_u` in ihrer einfachsten Gestalt. Mathlib hat sie
+  nur mit einer Ableitung an **jedem** Punkt des Intervalls:
+  `intervalIntegral.integral_comp_mul_deriv` und seine drei gestrichenen
+  Verwandten sowie `integral_comp_mul_deriv_of_deriv_nonneg`
+  (`MeasureTheory/Integral/IntervalIntegral/IntegrationByParts.lean:496–539`),
+  `integral_comp_mul_deriv_Ioi`
+  (`MeasureTheory/Integral/IntegralEqImproper.lean:1121`) und
+  `integral_image_eq_integral_abs_deriv_smul`
+  (`MeasureTheory/Function/JacobianOneDim.lean:66`). Keine von ihnen kommt mit
+  einer fast überall gültigen Ableitung und absoluter Stetigkeit aus.
+
+  *Woran es bei uns hängt:* Punkt 5 der Gruppe A,
+  `condExp_mpFamilyF_increment_eq_zero`. Beide Hälften des Martingalzuwachses
+  stehen seit dem 2026-09-13; diese Rechnung ist das einzige, was sie noch
+  trennt. Der Integrand ist dort `h (ν + ∑ φ (u − τ_k))` mit meßbarem `h` und
+  `φ`, und eine Stetigkeitsvoraussetzung wäre eine Verschärfung der Hypothesen
+  von `ex:hawkes`.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

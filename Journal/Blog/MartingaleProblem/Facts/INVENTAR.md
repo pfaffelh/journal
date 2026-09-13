@@ -27047,3 +27047,229 @@ Rechnung und keine Suche mehr.
    ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung
    braucht ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der
    Roadmap steht, und ein Negativbefund ohne Zeugen ist ein Versprechen.
+
+### 2026-09-13, achter Lauf des Tages — der Kompensatorterm steht, und damit stehen beide Hälften des Martingalzuwachses; was sie noch trennt, ist eine Aussage der Analysis und keine der Wahrscheinlichkeitstheorie
+
+**Bearbeitet:** Vorschlag 0 des Vorlaufs, `condExp_compensator_term_block` — Punkt
+4 der Gruppe A des Abhängigkeitsbaums von `hawkes_isLocalMPSolution`. Er steht,
+unter dem Namen `condExp_compensator_rate_block`. Die Vorschläge 1 (die bedingte
+Dichte) und 2 (der Zeuge `measurableSet_stoppedAt_lt_jumpTimeH`) sind **nicht**
+angegangen worden und bleiben unverändert liegen.
+
+**Neun Sätze und zwei Definitionen** in `TauCeti/MartingaleProblems/Suggested.lean`,
+in einem neuen Abschnitt `BlockCompensatorTerm` am Ende der Datei; 331 Zeilen. Die
+ganze Datei ohne einen Fehler durch `lake env lean` gegen v4.33.1, alle neun Sätze
+mit `#print axioms` geprüft und jeder auf `propext`, `Classical.choice`,
+`Quot.sound` — kein `sorryAx`. `scripts/check_suggested.py` meldet für die Datei
+`rc 0`, `0 Fehler`, `9 sorry` — die Zahl der `sorry` ist unverändert **neun**.
+(`WeakConvergence/Suggested.lean` meldet weiter seine zwei Fehler; das ist die eine
+bewußt gegen `master` geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Der Kompensatorterm: ein Fenster mit zwei zufälligen Enden, und der Weg
+unter das Integralzeichen"; Punkt 4 der Gruppe A ist dort als bewiesen
+ausgewiesen, und **die Zahl der offenen Aussagen fällt von dreizehn auf zwölf**.
+Gruppe A ist damit auf **drei** Aussagen geschrumpft (2, 5, 6).
+
+#### Die Aussage
+
+> `condExp_compensator_rate_block` —
+> `E[∫_0^t 1_{τ_n < u} Λ_u 1_{u < τ_{n+1}} du | ℋ_n] = ∫_0^t 1_{τ_n < u} Λ^n_u e^{−(Λ^n_u − Λ^n_{τ_n})} du`
+> für den beschränkten nichtlinearen Hawkes-Prozeß, mit
+> `ℋ_n = σ(Y_0, …, Y_n, τ_1, …, τ_n)` und `Λ^n` der eingefrorenen Rate der Stufe
+> `n+1`.
+
+Voraussetzungen: die Daten von `ex:hawkes` in der beschränkten Fassung
+(`Measurable h`, `Measurable φ`, `0 ≤ φ`, `φ = 0` links von `0`, `0 < c ≤ h ≤ L`
+oberhalb von `ν`), `0 ≤ t`, ein Markovkern `mu` und eine Anfangsverteilung `nu`;
+über `E` nichts als `[MeasurableSpace E]`. Keine Nichtexplosion, keine
+Testfunktion, kein `hint` — der Kompensatorterm ist eine Aussage über die **Rate**
+allein, und der Kettenfaktor `μ f (Y_n) − f (Y_n)` des Erzeugers kommt in einer
+Herausziehung hinzu, weil er `ℋ_n`-meßbar und beschränkt ist.
+
+**Der Prüfstein des Vorschlags ist eingehalten, und schärfer als verlangt:** die
+Sprungzeit `τ_{n+1}` kommt auf der rechten Seite nicht als obere Grenze vor — sie
+kommt dort **überhaupt nicht** vor.
+
+#### Der Weg: ein Fenster mit zwei zufälligen Enden
+
+Der Kompensator des Blocks läuft von `τ_n ∧ t` bis `τ_{n+1} ∧ t`. Über `(0, t]`
+ist das der Integrand mal `1_{τ_n < u}` mal `1_{u < τ_{n+1}}`, und **beide Enden
+sind damit aus dem Integralzeichen heraus und in den Integranden hinein**. Der
+Nutzen der Umschreibung ist die Asymmetrie der beiden Indikatoren:
+
+* `1_{τ_n < u}` ist `ℋ_n`-meßbar, denn `τ_n` ist die `n`-te Koordinate der
+  bedingenden Variablen (`rangeShift_eq_hawkesJumpTimeH`);
+* `1_{u < τ_{n+1}}` ist es nicht, und das ist gerade der Faktor, dessen bedingte
+  Erwartung Punkt 1 liefert;
+* und die **Rate** ist es auch nicht — bis man bemerkt, daß sie es auf
+  `{u < τ_{n+1}}` doch ist. Dort ist die selbstbezügliche Rate die eingefrorene
+  der Stufe `n+1` (`hawkesSelfRateH_eq_hawkesFrozenH`), und die liest `τ_1, …, τ_n`
+  und sonst nichts.
+
+Damit ist die bedingte Erwartung bei **festem** `u` eine einzige Herausziehung
+(`condExp_mul_of_stronglyMeasurable_left`) über
+`condExp_lt_jumpTimeFE_hawkesSelfRateH_block`, und der Kandidat ist
+`hawkesBlockDensity h ν φ n u S`, eine Funktion der Sprungzeiten allein. Das ist
+`condExp_rate_indicator_block`. `condExp_intervalIntegral_comm` — die
+Fubini-Eingabe des siebten Laufs — trägt ihn dann unter das Integralzeichen, und
+damit ist der Satz fertig.
+
+**Der Satz gilt für jedes reelle `u`, auch für negatives**, und ohne Fallnahme in
+der Aussage: unterhalb von `0` ist der Schalter `1_{τ_n < u}` an *jedem*
+Stichprobenpunkt aus, weil die Sprungzeiten überall nichtnegativ sind
+(`hawkesJumpTimeH_nonneg`). Das ist nicht Kosmetik: `condExp_intervalIntegral_comm`
+fragt seinen Kandidaten für **alle** `u` ab und nicht nur für die des
+Integrationsfensters.
+
+#### Eine Eingabe, die dabei abfiel und eigenständig ist
+
+> `jumpTimeFE_hawkesSelfRateH_eq_ofReal` — die Sprungzeiten, die das
+> pfadabhängige Martingalproblem liest, sind die der Rekursion, in `ℝ≥0∞`:
+> `jumpTimeFE (hawkesSelfRateH h ν φ) ω ω.2 m = ENNReal.ofReal (hawkesJumpTimeH h ν φ ω.2 ω m)`.
+
+Sie ist `jumpTimeF_hawkesSelfRateH` mit `jumpTimeFE_eq_ofReal` davor, und
+bemerkenswert ist, **woran die Divergenzvoraussetzung der zweiten hängt**: nicht
+an einer Nichtexplosionsannahme, sondern an der unteren Schranke `c > 0` der
+Nichtlinearität, über `tendsto_cumulativeRateF_atTop_of_le`. Im beschränkten
+nichtlinearen Fall ist die Divergenz der kumulierten Rate also geschenkt — dasselbe
+Muster wie überall in diesem Zweig, und der Grund, aus dem er der billige ist.
+Die Aussage ist im linearen Fall `jumpTimeFE_hawkesSelfRate`, dort aber mit
+`hint` als Voraussetzung.
+
+#### Der Befund, und er benennt die Bruchstelle zu Punkt 5
+
+**Beide Hälften des Martingalzuwachses stehen jetzt**, der Sprungterm seit dem
+siebten und der Kompensatorterm seit diesem Lauf. Punkt 5 hält sie gegeneinander,
+und was dazu fehlt, ist **keine Aussage der Wahrscheinlichkeitstheorie mehr**,
+sondern eine der Analysis:
+
+> `∫_{τ_n}^{t} Λ^n_u e^{−(Λ^n_u − Λ^n_{τ_n})} du = 1 − e^{−(Λ^n_t − Λ^n_{τ_n})}`.
+
+Auf dem Papier ist das die Substitution `v = Λ^n_u` und eine Zeile. In Lean ist es
+der Hauptsatz der Differential- und Integralrechnung für eine Stammfunktion, deren
+Integrand **bloß meßbar** ist: `Λ^n_u = h (ν + ∑_{k ≤ n} φ (u − τ_k))` mit
+meßbarem `h` und `φ`, also im allgemeinen nirgends stetig, und `u ↦ ∫_0^u Λ^n`
+damit nur fast überall differenzierbar.
+
+**Und Mathlib hat das nicht.** Geprüft ist die Substitutionsregel in allen
+Fassungen, die es gibt: `intervalIntegral.integral_comp_mul_deriv`,
+`integral_comp_mul_deriv'`, `integral_comp_mul_deriv''`, `integral_comp_mul_deriv'''`,
+`integral_comp_mul_deriv_of_deriv_nonneg`
+(`MeasureTheory/Integral/IntervalIntegral/IntegrationByParts.lean:496–539`),
+`integral_comp_mul_deriv_Ioi` (`MeasureTheory/Integral/IntegralEqImproper.lean:1121`)
+und `integral_image_eq_integral_abs_deriv_smul`
+(`MeasureTheory/Function/JacobianOneDim.lean:66`). **Jede** von ihnen verlangt
+`HasDerivAt` beziehungsweise `HasDerivWithinAt` an **jedem** Punkt des Intervalls;
+keine kommt mit einer fast überall gültigen Ableitung und absoluter Stetigkeit
+aus. Damit ist die Aussage eigene Arbeit, und sie ist die **siebzehnte** Lücke für
+`TODO.md` Punkt 8, sobald sie gebaut wird.
+
+*Der billige Ausweg wäre, `h` und `φ` als stetig vorauszusetzen.* Er ist hier
+nicht genommen worden, und er sollte auch nicht genommen werden: `ex:hawkes`
+verlangt von `φ` nur lokale Integrierbarkeit, die ganze Entwicklung dieses Zweigs
+ist mit `Measurable φ` geführt, und eine Stetigkeitsvoraussetzung an dieser einen
+Stelle wäre eine Verschärfung der Hypothesen des Satzes um einer
+Beweisbequemlichkeit willen. Die stehende Regel dieser Läufe verbietet das.
+
+#### Eine Stolperstelle, und sie hat ein Viertel des Laufs gekostet
+
+**`Measurable.comp` gegen einen *erwarteten* Typ mit vertauschten Projektionen
+terminiert nicht.** Konkret:
+
+```
+have hG : Measurable fun q : ℝ × (Finset.range n → ℝ) ↦ hawkesLevelOf h ν φ n q.1 q.2 :=
+  (measurable_uncurry_hawkesLevelOf …).comp (measurable_snd.prodMk measurable_fst)
+```
+
+läuft in `(deterministic) timeout at whnf` — und zwar auch bei
+`maxHeartbeats 1000000`, es ist also kein zu knappes Budget, sondern eine
+Schleife. Der Elaborator muß die äußere Funktion von `Measurable.comp` aus dem
+erwarteten Typ zurückrechnen, und daran verbeißt er sich. Mit einem
+**ausgeschriebenen Zwischentyp**
+
+```
+have hG0 : Measurable ((fun p : (Finset.range n → ℝ) × ℝ ↦ hawkesLevelOf h ν φ n p.2 p.1) ∘
+    (fun q : ℝ × (Finset.range n → ℝ) ↦ (q.2, q.1))) := (…).comp (…)
+have hG : Measurable fun q : ℝ × (Finset.range n → ℝ) ↦ hawkesLevelOf h ν φ n q.1 q.2 := hG0
+```
+
+geht dieselbe Aussage in Sekunden durch: die Komposition wird strukturell
+unifiziert, und die Zuweisung danach ist eine billige
+Definitionsgleichheitsprüfung. Die Regel, die daraus folgt: **eine Vertauschung
+der Faktoren eines Produkts wird nie gegen einen erwarteten Typ elaboriert,
+sondern immer über einen ausgeschriebenen Zwischentyp.** Dieselbe Stelle tritt
+dreimal in diesem Lauf auf (Niveau, Dichte, Rate) und ist jedesmal so gelöst.
+
+**Und die Stolperstelle des siebten Laufs hat sich bestätigt**: `set ℋ := …` vom
+Typ `MeasurableSpace Ω` nimmt an der Instanzensuche teil, und
+`hm : ℋ ≤ inferInstance` löst danach auf `ℋ ≤ ℋ` auf statt auf die
+Produktstruktur. Die Ungleichung ist **vor** die Benennung zu setzen; `set`
+schreibt sie dann selbst um.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+In diesem Lauf nicht wiederholt: der Vorlauf hat `upstream/master` frisch geholt
+(`182c4c30cdc58b70f2ba77d56f31b1c4048e9522`), den Master-Index neu gebaut und
+`check_citations.py` wie `check_negatives.py` gegen ihn laufen lassen, mit dem
+Ergebnis, daß kein Zitat und keine Negativaussage durch den Sprung falsch geworden
+ist. Die in diesem Lauf neu zitierten Namen sind die sechs Substitutionsregeln
+oben; sie sind einzeln am Quelltext von v4.33.1 belegt (Datei und Zeile stehen im
+Befund), keine ist `deprecated`, und der Negativbefund über sie — daß keine mit
+einer fast überall gültigen Ableitung auskommt — ist an den Signaturen geprüft und
+nicht aus dem Gedächtnis.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die bedingte Dichte (Punkt 2 der Gruppe A).** Unverändert. Sie ist dieselbe
+Rechnung wie die oben benannte Bruchstelle, von der anderen Seite gelesen, und
+beide werden zusammen fallen.
+
+**Den Kettenfaktor an den Kompensatorterm gehängt.** `condExp_compensator_rate_block`
+steht über der Rate allein; `𝒜_u f = Λ_u (μ f (Y_n) − f (Y_n))` verlangt noch eine
+Herausziehung des `ℋ_n`-meßbaren beschränkten Faktors und die Identifikation von
+`X_u ω` mit `Y_n` im Fenster. Beides ist Buchhaltung — die Herausziehung ist
+dasselbe `condExp_mul_of_stronglyMeasurable_left` wie im Sprungterm, die
+Identifikation eine pfadweise Aussage über `stepPath` — und keines von beiden ist
+angefaßt worden.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`,
+unverändert seit dem vierten Lauf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`intervalIntegral_rate_mul_exp_neg_cumulative` — der Hauptsatz für eine
+   Stammfunktion mit bloß meßbarem Integranden, und er ist die einzige
+   Bruchstelle zwischen den beiden Hälften des Martingalzuwachses.** Zu zeigen
+   ist, für `Λ ≥ 0` meßbar und auf jedem Kompaktum integrierbar und
+   `C_r = ∫_0^r Λ`:
+   `∫_a^t Λ_u e^{−(C_u − C_a)} du = 1 − e^{−(C_t − C_a)}` für `0 ≤ a ≤ t`.
+   **Worauf er ruht:** nichts aus dieser Entwicklung — er ist eine Aussage über
+   `cumulativeRateF` und sonst nichts, und er ist von der Hawkes-Konstruktion
+   vollständig unabhängig. **Warum jetzt:** Punkt 5 der Gruppe A hängt an 3 und 4,
+   beide stehen seit dem siebten und diesem Lauf, und diese Rechnung ist das
+   einzige, was sie noch trennt; dazu fällt Punkt 2 (die bedingte Dichte) als
+   Korollar ab, denn sie ist dieselbe Substitution. **Was zu entscheiden ist, und
+   es ist zu begründen und nicht zu raten:** Mathlibs Substitutionsregeln
+   verlangen alle eine Ableitung an jedem Punkt (Befund oben), also ist der Weg
+   entweder (a) die Teleskopsumme über eine Zerlegung mit der Schranke
+   `|e^{−x} − 1 + x| ≤ x²/2` und der gleichmäßigen Stetigkeit von `C` auf `[a,t]`,
+   oder (b) der Bildmaßweg — `Λ_u du` unter `u ↦ C_u` ist das Lebesguemaß auf
+   `(C_a, C_t]` —, oder (c) eine Approximation von `Λ` durch stetige Integranden
+   in `L¹` mit dominierter Konvergenz auf beiden Seiten. **Prüfstein:** in der
+   Aussage darf keine Stetigkeitsvoraussetzung an `Λ` stehen. Steht eine da, ist
+   die Aufgabe nicht gelöst, sondern umgangen.
+
+1. **`condExp_mpFamilyF_increment_eq_zero` — Punkt 5 der Gruppe A**, sobald 0
+   steht. **Worauf sie ruht:** `condExp_jump_mark_block` (siebter Lauf),
+   `condExp_compensator_rate_block` (dieser Lauf), die Rechnung aus Vorschlag 0,
+   und zwei Stücke Buchhaltung — die Herausziehung des Kettenfaktors aus dem
+   Kompensatorterm und die Identifikation von `X_u` mit `Y_n` im Fenster, beide
+   oben unter „Was dieser Lauf nicht getan hat" benannt. **Warum jetzt:** es ist
+   die erste Aussage der Gruppe A, die keine neue Idee mehr braucht, sondern nur
+   noch das Zusammensetzen von Dastehendem.
+
+2. **`measurableSet_stoppedAt_lt_jumpTimeH` — der Zeuge, den der vierte Lauf nur
+   ausgerechnet hat.** Unverändert, und unverändert zuletzt: die Entwicklung
+   braucht ihn nicht, aber er ist der Beleg für einen Negativbefund, der in der
+   Roadmap steht, und ein Negativbefund ohne Zeugen ist ein Versprechen.

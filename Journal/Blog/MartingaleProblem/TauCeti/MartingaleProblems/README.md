@@ -3939,7 +3939,13 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    der billigere Beleg, daß die beiden Blöcke unabhängig sind; die
    Zusammenbauaussage `condExp_chain_mark_block` geht an ihr vorbei.
 4. `condExp_compensator_term` — `E[∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds | ℋ_n]` als
-   **dasselbe** Integral. Hängt an 1 und an Fubini. **Die Fubini-Eingabe steht
+   **dasselbe** Integral. **Bewiesen im achten Lauf des 2026-09-13** für den
+   beschränkten nichtlinearen Fall, als `condExp_compensator_rate_block`; der
+   Kettenfaktor `μ f (Y_n) − f (Y_n)` des Erzeugers ist dabei nicht mitgeführt,
+   weil er `ℋ_n`-meßbar und beschränkt ist und in einer Herausziehung
+   hinzukommt. Siehe den Abschnitt „Der Kompensatorterm: ein Fenster mit zwei
+   zufälligen Enden, und der Weg unter das Integralzeichen". Hängt an 1 und an
+   Fubini. **Die Fubini-Eingabe steht
    seit dem siebten Lauf des 2026-09-13** als `condExp_integral_comm` mit der
    Intervallfassung `condExp_intervalIntegral_comm`; Mathlib hat sie nicht, und
    die naive Fassung ohne mitgegebene Version ist nicht einmal wohlgestellt —
@@ -4126,6 +4132,60 @@ der sechs Aussagen der Wahrscheinlichkeitsschicht, die nicht bloß Eingaben
 gewonnen hat, sondern dasteht; Gruppe A ist damit auf **vier** Aussagen
 geschrumpft (2, 4, 5, 6) und bleibt die teuerste. Einzelheiten im Abschnitt „Der
 Sprungterm: zwei Herausziehungen mit einem Turmschluß dazwischen".
+
+*Stand 2026-09-13, achter Lauf des Tages: **zwölf**.* Punkt 4 der Gruppe A — der
+Kompensatorterm — ist bewiesen, als `condExp_compensator_rate_block`, für den
+beschränkten nichtlinearen Fall und über derselben σ-Algebra `ℋ_n`. Gruppe A ist
+damit auf **drei** Aussagen geschrumpft (2, 5, 6); die beiden Hälften des
+Martingalzuwachses stehen beide, und was sie noch trennt, ist eine Aussage der
+Analysis und keine der Wahrscheinlichkeitstheorie. Einzelheiten im Abschnitt „Der
+Kompensatorterm: ein Fenster mit zwei zufälligen Enden, und der Weg unter das
+Integralzeichen".
+
+### Der Kompensatorterm: ein Fenster mit zwei zufälligen Enden, und der Weg unter das Integralzeichen
+
+*(Punkt 4 der Gruppe A, bewiesen am 2026-09-13 im achten Lauf des Tages.)*
+
+> `condExp_compensator_rate_block` —
+> `E[∫_0^t 1_{τ_n < u} Λ_u 1_{u < τ_{n+1}} du | ℋ_n] = ∫_0^t 1_{τ_n < u} Λ^n_u e^{−(Λ^n_u − Λ^n_{τ_n})} du`
+
+Der Kompensator des Blocks läuft von `τ_n ∧ t` bis `τ_{n+1} ∧ t`. **Ein Fenster
+mit zwei zufälligen Enden ist ein Fenster mit festen Enden und zwei
+Indikatoren** — und der Nutzen der Umschreibung ist, daß der *erste* der beiden
+Indikatoren `ℋ_n`-meßbar ist, der zweite nicht, und die Rate es ebenfalls nicht
+ist, bis man bemerkt, daß sie es auf `{u < τ_{n+1}}` doch ist: dort ist die
+selbstbezügliche Rate die **eingefrorene** der Stufe `n+1`
+(`hawkesSelfRateH_eq_hawkesFrozenH`), und die liest `τ_1, …, τ_n` und sonst
+nichts.
+
+Damit ist die bedingte Erwartung bei **festem** `u` eine einzige Herausziehung
+über der bedingten Überlebensfunktion von Punkt 1
+(`condExp_rate_indicator_block`), und der Kandidat ist `hawkesBlockDensity`, eine
+Funktion der Sprungzeiten allein. `condExp_intervalIntegral_comm` trägt ihn unter
+das Integralzeichen. **`τ_{n+1}` kommt auf der rechten Seite überhaupt nicht mehr
+vor**; das ist die Probe auf die Aussage.
+
+Neue Deklarationen: `jumpTimeFE_hawkesSelfRateH_eq_ofReal` (die Sprungzeiten des
+Martingalproblems sind die der Rekursion, in `ℝ≥0∞`, ohne Nichtexplosions­vor­aus­setzung,
+weil die untere Schranke `c > 0` die kumulierte Rate divergieren läßt),
+`measurable_toReal_expMeasure_Ioi_comp`, `measurable_uncurry_hawkesLevelOf`,
+`hawkesBlockRate`, `hawkesBlockDensity` mit ihren Meßbarkeiten und Schranken,
+`condExp_rate_indicator_block` und `condExp_compensator_rate_block`.
+
+**Was damit noch fehlt, und es ist keine Aussage der Wahrscheinlichkeits­theorie
+mehr.** Punkt 5 hält den Kompensator gegen den Sprungterm. Dazu ist die rechte
+Seite auszuwerten:
+
+> `∫_{τ_n}^{t} Λ^n_u e^{−(Λ^n_u − Λ^n_{τ_n})} du = 1 − e^{−(Λ^n_t − Λ^n_{τ_n})}`.
+
+Das ist der Hauptsatz der Differential- und Integralrechnung für eine Stammfunktion,
+deren Integrand **bloß meßbar** ist: `Λ^n` ist `h (ν + ∑ φ (u − τ_k))` mit meßbarem
+`h` und `φ`, also nicht stetig, und `u ↦ ∫_0^u Λ^n` ist nirgends als fast überall
+differenzierbar. Jede Substitutionsregel in Mathlib —
+`intervalIntegral.integral_comp_mul_deriv` und ihre Verwandten,
+`integral_image_eq_integral_abs_deriv_smul` — verlangt `HasDerivAt` an **jedem**
+Punkt des Intervalls. Das ist die Bruchstelle, sie ist benannt, und sie ist der
+nächste Punkt.
 
 ### Der Sprungterm: zwei Herausziehungen mit einem Turmschluß dazwischen
 
