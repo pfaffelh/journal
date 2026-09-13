@@ -3890,12 +3890,16 @@ Er ist **keine** Erneuerungszerlegung wie im zustandsabhängigen Fall; nach dem
 Sprung ist die Rate eine andere und es wird nichts neu gestartet.
 
 1. `condExp_lt_jumpTimeFE` — die bedingte Überlebensfunktion
-   `P(τ_{n+1} > s | ℋ_n) = exp (−(Λ_s − Λ_{τ_n}))` auf `{τ_n ≤ s}`. Hängt an einer
-   **Entscheidung** (was `ℋ_n` ist: `(hawkesJumpFiltration).stoppedσ` an
-   `jumpTimeFE`, oder die von `(y_0,…,y_n, ξ_0,…,ξ_{n−1})` erzeugte σ-Algebra) und
-   an einer **Rechnung** (`lt_jumpTimeFE_iff` schiebt das Ereignis auf
-   `{cumulativeRateF Λ w s < ∑_{k<n+1} ξ k}`; der Pegel ist dann `ℋ_n`-meßbar, und
-   `ξ n` ist unter `jumpMeasure mu nu` von `ℋ_n` unabhängig und Exp(1)).
+   `P(τ_{n+1} > s | ℋ_n) = exp (−(Λ_s − Λ_{τ_n}))` auf `{τ_n ≤ s}`. **Bewiesen im
+   vierten Lauf des 2026-09-13** für den beschränkten nichtlinearen Fall, als
+   `condExp_lt_jumpTimeFE_hawkesSelfRateH_block` und
+   `condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp`. Die **Entscheidung**, was
+   `ℋ_n` ist, ist damit gefallen und lautet: die von
+   `(Y_0, …, Y_n, τ_1, …, τ_n)` erzeugte σ-Algebra, **nicht** die gestoppte
+   σ-Algebra der Filtration des Prozesses. Der Grund steht im Abschnitt „Die
+   σ-Algebra, die der Martingalzuwachs tragen kann" — die Gleichheit der beiden
+   ist in **beiden** Richtungen falsch, in der einen an einer Nullmenge und in
+   der anderen daran, daß `σ(Kette, …)` die Marke `Y_{n+1}` kennt.
 2. `condExp_jumpTimeFE_hasDensity` — die bedingte Dichte von `τ_{n+1}`,
    `Λ_u exp (−(Λ_u − Λ_{τ_n}))` auf `(τ_n, ∞)`. Hängt an 1 und an einer
    **Rechnung** (Variablenwechsel längs der kumulierten Rate).
@@ -4045,6 +4049,16 @@ Die billigste offene Aussage ist **0** (eine Rechnung an einem Zeugen, und wenn
 sie negativ ausgeht, fällt die Zielaussage in ihrer jetzigen Gestalt); die
 teuerste ist **Gruppe A** (sechs Aussagen, und keine von ihnen hat heute eine
 Eingabe im Bestand außer `lt_jumpTimeFE_iff`).
+
+*Stand 2026-09-13, vierter Lauf des Tages: **vierzehn**.* Punkt 1 der Gruppe A —
+die bedingte Überlebensfunktion — ist für den **beschränkten nichtlinearen** Fall
+bewiesen, in der Gestalt des Manuskripts und über der σ-Algebra, die der
+Martingalzuwachs tragen kann. Die teuerste Gruppe bleibt Gruppe A mit fünf
+Aussagen; die nächste, Punkt 3, wartet nicht mehr auf eine Entscheidung, sondern
+auf die **Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe**, und
+die steht im Bestand bisher nur an der nullten (`comp_chainKernel_map_split`,
+`chainKernel_map_split`). Der Weg dorthin ist die Induktion über den
+Einschrittshift `chainKernel_map_shift`, der die Zeithomogenität schon trägt.
 
 ### Die Filtration eines Treppenpfadprozesses: die Punktfiltration, und was der Pfad von ihr zurückgibt
 
@@ -5061,6 +5075,90 @@ Parameterraum und beliebigem Stichprobenraum, und verlangen an Voraussetzungen
 die lokale Integrierbarkeit der Rate und die gemeinsame Meßbarkeit von
 `(g, u) ↦ Λ g u`. Sie gehören damit zur Grundtheorie der kumulierten Rate und
 nicht zum Hawkes-Prozeß.
+
+### Die σ-Algebra, die der Martingalzuwachs tragen kann, und die Überlebensfunktion in der Gestalt des Manuskripts
+
+Die Bedingungsgröße des Einfrierens ist *(die ganze Kette, `τ_1, …, τ_n`)*. Die
+ganze Kette ist **mehr, als `E[D_n | ℋ_n] = 0` tragen kann**: der Zuwachs
+
+```
+D_n = (f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t} − ∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds
+```
+
+enthält `f (Y_{n+1})`, und über einer σ-Algebra, die `Y_{n+1}` schon kennt,
+bedingt der Sprungterm zu `(f (Y_{n+1}) − f (Y_n)) · P(τ_{n+1} ≤ t | ℋ_n)`,
+während der Kompensator `μ f (Y_n) − f (Y_n)` liefert. Beide stimmen erst
+überein, nachdem die Kette jenseits der `n`-ten Marke ausintegriert ist. `ℋ_n`
+muß also bei `Y_n` aufhören.
+
+**`hawkesLevelOf` — der Pegel ohne das Argument, das er nie liest.**
+`hawkesJumpLevel` trägt die Kette, weil die Einfrierung das Paar liefert; beide
+Summanden werden an `rangeShift n p.2` abgelesen, die Kette ist träge.
+`hawkesJumpLevel_eq_hawkesLevelOf` ist deshalb `rfl`.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH_block` — die bedingte
+Überlebensfunktion über `σ(Y_0, …, Y_n, τ_1, …, τ_n)`.**
+
+```
+P[t < τ_{n+1} | σ(Y_0, …, Y_n, τ_1, …, τ_n)] = expMeasure 1 (Ioi (hawkesLevelOf …))
+```
+
+Das ist `ℋ_n` des Manuskripts. Der Beweis ist ein Turmschluß **nach unten** und
+kostet nichts: die σ-Algebra wird kleiner, und die rechte Seite bleibt stehen,
+weil der Pegel die Kette nie gelesen hat. Die Inklusion
+`σ(Y_0, …, Y_n, τ_1, …, τ_n) ≤ σ(Kette, τ_1, …, τ_n)` gilt, weil die kleinere
+Abbildung über die größere faktorisiert.
+
+> **Warum nach unten und nicht nach oben, und das ist ein Befund.** Die
+> σ-Algebra, die man lieber hätte, ist die **gestoppte** σ-Algebra der Filtration
+> des Prozesses bei `τ_n`. Sie liegt **nicht** unter `σ(Kette, τ_1, …, τ_n)`, und
+> die Bruchstelle ist eine Nullmenge derselben Bauart wie im 25. Lauf des
+> 2026-09-12: das Ereignis `{τ_{n+1} ≤ τ_n}` liegt in der gestoppten σ-Algebra —
+> auf `{τ_n ≤ i}` werden beide Sprungzeiten aus dem Protokoll unterhalb `i`
+> abgelesen — und es ist **kein** Funktional von `(Kette, τ_1, …, τ_n)`, weil
+> `ξ_n = 0` und `ξ_n = 1` denselben Bedingungswert und verschiedene
+> Zugehörigkeit geben. In der anderen Richtung scheitert es schon ohne Nullmenge:
+> `σ(Kette, τ_1, …, τ_n)` kennt `Y_{n+1}`, die gestoppte σ-Algebra nicht. **Die
+> Gleichheit ist also in beiden Richtungen falsch**, und der Weg über die
+> gestoppte σ-Algebra verlangt die Augmentierung. Die σ-Algebra aus den
+> Koordinaten verlangt nichts.
+
+**Die beiden Zeugen, als benannte Punkte.** Beide sind ausgerechnet und in Lean
+nicht formalisiert; ein Negativbefund ohne Zeugen ist ein Versprechen, also
+stehen sie hier:
+
+* `measurableSet_stoppedAt_lt_jumpTimeH` — `{ω | τ_{n+1} ω ≤ τ_n ω}` liegt in der
+  gestoppten σ-Algebra von `hawkesFiltrationH` bei `ofReal τ_n`, und zwei
+  Stichprobenpunkte mit `ξ_n = 0` und `ξ_n = 1` haben denselben Wert von
+  `(Kette, τ_1, …, τ_n)` und verschiedene Zugehörigkeit. Ruht auf
+  `isStoppingTime_hawkesJumpTimeH`, der Bauart von `jumpRecord`, und einer
+  Vereinigung über rationale Zwischenzeiten samt der Randstelle `i` selbst.
+* `not_measurable_mark_stoppedAt_hawkesFiltrationH` — `Y_{n+1}` ist für die
+  gestoppte σ-Algebra bei `τ_n` nicht meßbar, weil `{Y_{n+1} ∈ B} ∩ {τ_n ≤ i}`
+  für kleines `i` nicht in `hawkesFiltrationH i` liegt: unterhalb `i` hat der
+  Pfad die Marke `Y_{n+1}` noch gar nicht angenommen. Ruht auf der Bauart von
+  `jumpState` und auf `stepPath`.
+
+**`condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp` — dieselbe Aussage in der
+Gestalt, die `ex:hawkes` hinschreibt.** Auf `{τ_n ≤ t}`:
+
+```
+P[t < τ_{n+1} | σ(Y_0, …, Y_n, τ_1, …, τ_n)] = exp (−(Λ_t − Λ_{τ_n}))
+```
+
+Zwei Eingaben, und beide sind der Grund, aus dem die Aussage oben mit
+`expMeasure` und nicht mit `exp` steht:
+
+* `hawkesLevelOf_nonneg` — der Pegel ist auf `{τ_n ≤ t}` nichtnegativ, weil er
+  der Zuwachs der kumulierten Rate über `(τ_n, t]` ist und die beschränkte
+  nichtlineare Rate von unten durch `c > 0` beschränkt ist.
+* `toReal_expMeasure_Ioi_of_nonneg` — der exponentielle Schwanz, und er ist nur
+  für nichtnegatives Argument `exp (−x)`.
+
+Außerhalb von `{τ_n ≤ t}` ist die `expMeasure`-Gestalt weiterhin richtig — sie
+ist dort `1` —, während `exp (−Pegel)` größer als `1` und damit gar keine
+Wahrscheinlichkeit wäre. Das ist keine Feinheit des Beweises, sondern die
+Aussage: vor dem `n`-ten Sprung ist der `(n+1)`-ste sicher noch nicht gekommen.
 
 ### Bemerkung: die Nichtexplosion des linearen Geburt-Tod-Prozesses, und ein Kontrollbeispiel
 

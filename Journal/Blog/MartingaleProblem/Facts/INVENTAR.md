@@ -26106,3 +26106,252 @@ Filtration des Prozesses zu einer Zeit. Das ist der nächste Punkt.
    Entwicklung entbehrlich — wir haben die Fassung, die wir brauchen — und lohnt
    sich als **Mathlib-Beitrag**, also erst, wenn der Baum von Teil C keine
    offenen Aussagen mehr hat, die sie aufhält.
+
+### 2026-09-13, vierter Lauf des Tages — Punkt 1 von Gruppe A steht, und der angesagte Weg dorthin war der falsche: die gestoppte σ-Algebra ist in **beiden** Richtungen nicht die richtige
+
+**Bearbeitet:** Vorschlag 1 und 2 des dritten Laufs vom 2026-09-13. Vorschlag 1 —
+`hawkesFiltrationH_stoppedAt_eq_comap` — ist **nicht bewiesen worden, weil er
+falsch ist**; was statt seiner dasteht, ist die Aussage, für die er gebraucht
+werden sollte, über einer anderen und billigeren σ-Algebra. Vorschlag 2 ist damit
+mit erledigt, und noch eine Aussage dazu, die nicht angesagt war: die
+Überlebensfunktion in der Gestalt, die `ex:hawkes` hinschreibt. Vorschlag 3
+(`measurable_intervalIntegral_endpoint`) bleibt liegen, wie er sollte — er ist
+als Mathlib-Beitrag vorgemerkt und nicht als Eingabe.
+
+**Sieben Sätze und eine Definition** in
+`TauCeti/MartingaleProblems/Suggested.lean`, im neuen Abschnitt
+`BoundedHawkesBlockCondExp` am Ende der Datei; 245 Zeilen. Die ganze Datei ohne
+einen Fehler durch `lake env lean` gegen v4.33.1, alle sieben Sätze mit
+`#print axioms` geprüft und jeder auf `propext`, `Classical.choice`, `Quot.sound`
+— kein `sorryAx`. `scripts/check_suggested.py` meldet für die Datei `rc 0`,
+`0 Fehler`, `9 sorry` — die Zahl der `sorry` ist unverändert **neun**.
+(`WeakConvergence/Suggested.lean` meldet weiter seine zwei Fehler; das ist die
+eine bewußt gegen `master` geschriebene Aussage und von diesem Lauf unberührt.)
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 4, im neuen
+Abschnitt „Die σ-Algebra, die der Martingalzuwachs tragen kann, und die
+Überlebensfunktion in der Gestalt des Manuskripts"; Gruppe A des
+Abhängigkeitsbaums ist an Punkt 1 berichtigt, und die Zahl der offenen Aussagen
+steht dort jetzt bei **vierzehn** statt fünfzehn.
+
+#### Der Befund, und er ist der Ertrag des Laufs: die angesagte Aussage ist in beiden Richtungen falsch
+
+Vorschlag 1 des Vorlaufs war
+`(hawkesFiltrationH …).measurableSpace (ofReal τ_n) = comap (Kette, τ_1, …, τ_n)`,
+hilfsweise eine Inklusion. **Beide Inklusionen gehen schief, und aus zwei
+verschiedenen Gründen.**
+
+* `σ(Kette, τ_1, …, τ_n) ≤ ℱ_{τ_n}` ist falsch **ohne jede Nullmenge**: die
+  linke Seite trägt die ganze Kette, also auch `Y_{n+1}`, und die gestoppte
+  σ-Algebra der Punktfiltration kennt zur Zeit `τ_n` nur `Y_0, …, Y_n`. Das ist
+  kein Unfall der Konstruktion, sondern der Sinn einer gestoppten σ-Algebra.
+* `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)` ist falsch **an einer Nullmenge**, und zwar
+  an derselben Bauart, die der 25. Lauf des 2026-09-12 schon einmal gefunden hat.
+  Das Ereignis `{τ_{n+1} ≤ τ_n}` liegt in `ℱ_{τ_n}` — auf `{τ_n ≤ i}` sind beide
+  Sprungzeiten aus dem Protokoll unterhalb `i` abzulesen, und der Rest ist eine
+  Vereinigung über rationale Zwischenzeiten samt der Randstelle `i` selbst —, und
+  es ist kein Funktional von `(Kette, τ_1, …, τ_n)`: `ξ_n = 0` gibt
+  `τ_{n+1} = τ_n`, `ξ_n = 1` gibt `τ_{n+1} > τ_n`, und beide haben denselben
+  Bedingungswert, weil `τ_1, …, τ_n` allein von `ξ_0, …, ξ_{n−1}` abhängen.
+  `ξ_n = 0` ist unter `jumpMeasure` eine Nullmenge, Gleichheit von σ-Algebren ist
+  aber keine fast sichere Aussage.
+
+**Beide Befunde sind auf Papier geführt und in Lean nicht formalisiert**, und das
+steht so da. Der Zeuge des zweiten ist ausgerechnet, die Zugehörigkeit von
+`{τ_{n+1} ≤ τ_n}` zu `ℱ_{τ_n}` ist argumentiert und nicht getippt; der erste
+ruht darauf, daß `{Y_{n+1} ∈ B} ∩ {τ_n ≤ i}` für kleines `i` nicht
+`ℱ_i`-meßbar ist, weil der Pfad unterhalb `i` die Marke `Y_{n+1}` noch gar nicht
+angenommen hat. Der zweite ist als benanntes Ziel unten aufgeführt. Was in Lean
+steht, ist die Aussage, die beide Zeugen überflüssig macht.
+
+#### Was statt dessen dasteht, und warum es billiger ist
+
+Die Richtung, die der Turmschluß wirklich braucht, ist **nach unten**: aus der
+großen σ-Algebra in eine kleinere, für die die rechte Seite meßbar bleibt. Und
+die kleinere ist ohnehin die richtige — `σ(Y_0, …, Y_n, τ_1, …, τ_n)`, weil der
+Martingalzuwachs
+
+```
+D_n = (f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t} − ∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds
+```
+
+über einer σ-Algebra, die `Y_{n+1}` kennt, gar nicht verschwinden **kann**: der
+Sprungterm gäbe dort `(f (Y_{n+1}) − f (Y_n)) · P(τ_{n+1} ≤ t | ℋ_n)`, der
+Kompensator `μ f (Y_n) − f (Y_n)`. Die Entscheidung, die der Baum an Punkt 1 der
+Gruppe A offengelassen hatte, ist damit gefallen, und sie ist nicht Geschmack:
+**`ℋ_n` muß bei `Y_n` aufhören, sonst ist die Aussage falsch.**
+
+```
+condExp_lt_jumpTimeFE_hawkesSelfRateH_block :
+  P[t < τ_{n+1} | σ(Y_0, …, Y_n, τ_1, …, τ_n)]
+    =ᵐ (expMeasure 1 (Ioi (hawkesLevelOf h ν φ n t (τ_1, …, τ_n)))).toReal
+```
+
+Der Beweis kostet nichts: die Inklusion
+`σ(Y_0, …, Y_n, τ_1, …, τ_n) ≤ σ(Kette, τ_1, …, τ_n)` ist drei Zeilen, weil die
+kleinere Abbildung über die größere faktorisiert (`rintro _ ⟨s, hs, rfl⟩`), und
+die rechte Seite kommt mit, weil der Pegel die Kette **nie gelesen** hat:
+`hawkesJumpLevel h ν φ n t p` benutzt `p.2` und sonst nichts, also ist
+`hawkesJumpLevel_eq_hawkesLevelOf` ein `rfl`. Das Argument war von Anfang an
+träge; es war da, weil die Einfrierung das Paar liefert.
+
+#### Die Zugabe: die Überlebensfunktion, wie das Manuskript sie schreibt
+
+`ex:hawkes` schreibt `exp (−(Λ_t − Λ_{τ_n}))`, die Einfrierung liefert
+`expMeasure 1 (Ioi ·)`. Die beiden stimmen **genau dort** überein, wo der Pegel
+nichtnegativ ist, und das ist genau `{τ_n ≤ t}`:
+
+```
+condExp_lt_jumpTimeFE_hawkesSelfRateH_block_exp :
+  ∀ᵐ ω, τ_n ω ≤ t →
+    P[t < τ_{n+1} | σ(Y_0, …, Y_n, τ_1, …, τ_n)] ω = exp (−(Λ_t − Λ_{τ_n}))
+```
+
+Zwei Eingaben: `hawkesLevelOf_nonneg` (der Pegel ist der Zuwachs der kumulierten
+Rate über `(τ_n, t]`, und die beschränkte nichtlineare Rate ist von unten durch
+`c > 0` beschränkt — `intervalIntegral.integral_add_adjacent_intervals` zerlegt,
+`integral_nonneg_of_forall` schließt ab) und `toReal_expMeasure_Ioi_of_nonneg`.
+
+**Und die Einschränkung auf `{τ_n ≤ t}` ist keine Schwäche des Beweises.**
+Außerhalb ist die `expMeasure`-Gestalt weiter richtig — sie ist dort `1` —,
+während `exp (−Pegel)` größer als `1` und damit gar keine Wahrscheinlichkeit
+wäre. Das ist die Aussage selbst: vor dem `n`-ten Sprung ist der `(n+1)`-ste
+sicher noch nicht gekommen. Es ist derselbe Grund, aus dem die allgemeine Fassung
+oben mit `expMeasure` und nicht mit `exp` hingeschrieben ist.
+
+#### Was an Mathlib nachgeprüft wurde
+
+Neu benutzt und am Quelltext belegt, in v4.33.1 und auf `upstream/master`
+`55a449c5f28`, keine davon `deprecated`:
+
+* `intervalIntegral.integral_add_adjacent_intervals` —
+  `MeasureTheory/Integral/IntervalIntegral/Basic.lean:1095` in v4.33.1, `:1097`
+  auf master. Verlangt `IntervalIntegrable` auf beiden Teilstücken; die zweite
+  entsteht aus zwei Fenstern am Ursprung über `IntervalIntegrable.symm` und
+  `.trans`.
+* `intervalIntegral.integral_nonneg_of_forall` — dieselbe Datei, `:1387` in
+  v4.33.1, `:1389` auf master. Die Fassung mit `∀ u, 0 ≤ f u` statt
+  `∀ u ∈ Icc a b`, und die ist hier die richtige, weil die Schranke `c ≤ Λ u`
+  global gilt.
+* `MeasurableSpace.comap_comp` — `MeasureTheory/MeasurableSpace/Basic.lean:102`;
+  am Ende nicht gebraucht, weil die Inklusion direkt über `rintro` geht, aber
+  nachgeschlagen und belegt.
+* `MeasurableSpace.comap_mono` — dieselbe Datei, `:119`.
+* `ENNReal.toReal_ofReal`, `Real.exp_nonneg`, `one_mul` — durch `lake env lean`
+  gegen v4.33.1 belegt.
+
+Ferner die schon im Vorlauf belegten `condExp_condExp_of_le`,
+`condExp_of_stronglyMeasurable`, `condExp_congr_ae`, `measurable_pi_lambda`,
+`measurable_pi_apply`, `measurable_measure_prodMk_left`, `Integrable.mono'`,
+`prob_le_one`, `ENNReal.toReal_one`, `EventuallyEq.of_eq`.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D), an einem **neuen** Stand
+
+`upstream/master` frisch geholt: **neu**, `55a449c5f283959116e88a56660d122ec4172f98`
+(zuvor `710c215f98a`). Der Index ist neu gebaut (230823 Deklarationen) und
+`scripts/check_citations.py` dagegen gelaufen: **1099** zitierte Namen, davon 731
+in beiden Ständen, **0 nur in v4.33.1** — also wieder keine einzige Zitierung, die
+auf einen Namen zeigt, den master nicht mehr hat. 17 nur auf master (die
+`Cadlag`-Datei der `SkorokhodSpace`-Roadmap, bewußt so), 1 als `deprecated`
+markiert (`Subgroup.isClosed_of_discrete`, unverändert), 350 sind unsere eigenen
+Namen. 80 zitierte Dateipfade, davon der eine bekannte auffällige
+(`Mathlib/Topology/Order/Cadlag.lean`, nur auf master).
+
+Gegenüber dem Vorlauf haben sich **nur Zeilennummern** verschoben, und zwar drei:
+`integral_map` (1045 → 1076), `integral_mono_ae` (629 → 659) und
+`integral_smul_measure` (1016 → 1047), alle drei in
+`Mathlib/MeasureTheory/Integral/Bochner/Basic.lean`. Kein Name verschwunden, kein
+Name umbenannt. `scripts/check_negatives.py` gegen denselben Stand: unverändert,
+keine Negativaussage ist falsch geworden.
+
+#### Zwei Stolperstellen
+
+**`measurable_pi_lambda` rät den Indextyp falsch, wenn er nur aus einer
+Koerzierung kommt.** `(measurable_pi_apply (j : ℕ)).comp measurable_fst` inline in
+einem `prodMk` läßt Lean den Index als `ℕ` elaborieren statt als
+`↥(Finset.range (n+1))`, und die Fehlermeldung zeigt es an der Stelle
+`fun (j : ℕ) => …` wörtlich. Als eigenes `have` mit ausgeschriebenem Zieltyp und
+`fun j : Finset.range (n + 1) ↦ …` geht es. Dieselbe Krankheit wie die
+`⟨_, hs, rfl⟩`-Stelle des Vorlaufs: eine Metavariable im erwarteten Typ.
+
+**Eine Aussage, die ihr Typargument verloren hat, verträgt kein `(E := E)`.**
+`measurable_expMeasure_Ioi_hawkesLevelOf` steht über `Finset.range n → ℝ` und
+kennt `E` nicht mehr — genau das war der Zweck. Der aus dem Vorlauf
+übernommene benannte Parameter bricht dann mit einer Fehlermeldung, die alle
+übrigen Parameternamen aufzählt. Das ist kein Ärgernis, sondern die Probe: wo
+`(E := E)` noch geht, ist die Kette noch im Argument.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Den Sprungterm.** Punkt 3 der Gruppe A — `E[(f(Y_{n+1}) − f(Y_n)) 1_{τ_{n+1} ≤ t} | ℋ_n]`
+— ist unberührt. Er wartet jetzt nicht mehr auf eine Entscheidung, sondern auf
+die Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe. Im Bestand
+steht sie an der **nullten** (`chainKernel_map_split`,
+`comp_chainKernel_map_split`) und als Einschrittshift
+(`chainKernel_map_shift`); die Induktion dazwischen ist nicht geführt.
+
+**Die Formalisierung des Zeugen** gegen `ℱ_{τ_n} ≤ σ(Kette, τ_1, …, τ_n)`. Sie
+ist ausgerechnet und aufgeschrieben, nicht getippt.
+
+**Die bedingte Verteilungsfunktion `P(τ_{n+1} ≤ t | ℋ_n) = 1 − exp(…)`,
+angefangen und wieder zurückgenommen.** Sie ist die Komplementaussage und auf
+Papier drei Zeilen: `1_{τ ≤ t} = 1 − 1_{t < τ}`, `condExp_sub`, `condExp_const`.
+In Lean scheitert sie an einer Eingabe, die weiter unten liegt, als sie aussieht:
+`condExp_sub` verlangt die **Integrierbarkeit** des Indikators, also die
+Meßbarkeit des Ereignisses `{τ_{n+1} ≤ ofReal t}`, also
+`measurable_jumpTimeFE` für `hawkesSelfRateH` — und dessen dritte Voraussetzung
+ist die **gemeinsame** Meßbarkeit `(w, u) ↦ hawkesSelfRateH h ν φ u w`. Im
+Bestand stehen `measurable_hawkesSelfRateH_time` (in der Zeit, bei festem
+Stichprobenpunkt) und `intervalIntegrable_hawkesSelfRateH`, die gemeinsame nicht.
+Der angefangene Abschnitt ist deshalb zurückgenommen und nicht als Entwurf
+liegengeblieben; die fehlende Eingabe steht unten als benanntes Ziel. *Das ist
+derselbe Befund wie im dritten Lauf des Tages, an anderer Stelle: die
+Rechtsstetigkeit in der einen Variablen und die Meßbarkeit in der anderen stehen
+je für sich da, ihre Verbindung nicht.*
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`measurable_uncurry_hawkesSelfRateH` — die gemeinsame Meßbarkeit der
+   selbstbezüglichen Rate in Stichprobenpunkt und Zeit.** Also
+   `Measurable fun q : ((ℕ → E) × (ℕ → ℝ)) × ℝ ↦ hawkesSelfRateH h ν φ q.2 q.1`.
+   **Worauf sie ruht:** die Meßbarkeit von `h` und `φ`, die Meßbarkeit der
+   Sprungzeiten im Stichprobenpunkt (`measurable_hawkesJumpTimeH_apply`, steht),
+   und die Gestalt der Rate als `h (ν + ∑_k φ (u − τ_k) 1_{τ_k < u})` — also
+   dieselbe Rechnung wie in `measurable_uncurry_hawkesFrozenH_rangeShift`, nur
+   mit der laufenden statt der eingefrorenen Aufzählung. **Warum ganz vorn:** sie
+   ist die Eingabe von `measurable_jumpTimeFE` für `hawkesSelfRateH`, und **jede**
+   Aussage der Gruppe A, die einen Indikator eines Sprungzeitereignisses
+   integriert, braucht sie. Dieser Lauf ist an ihr abgeprallt. **Prüfstein:**
+   sie darf keine Nichtexplosion und keine Positivität der Wartezeiten brauchen
+   — die Rate ist an jedem Stichprobenpunkt definiert.
+1. **`comp_chainKernel_map_split_range` — die Markoveigenschaft der eingebetteten
+   Kette an der `n`-ten Stufe.** Also
+   `(chainKernel mu ∘ₘ nu).map (fun x ↦ ((fun j : Finset.range (n+1) ↦ x j), fun k ↦ x (k + n + 1)))
+   = (…) ⊗ₘ (chainKernel mu ∘ₖ mu ∘ ·)`, in der Gestalt, die ein `Measure.compProd`
+   über dem `n`-ten Eintrag stehen läßt. **Worauf sie ruht:**
+   `chainKernel_map_split` (die nullte Stufe, steht), `chainKernel_map_shift` (der
+   Einschrittshift, steht, und er trägt die Zeithomogenität schon), und eine
+   Induktion über `n`. **Warum jetzt:** sie ist die **einzige** fehlende Eingabe
+   von Punkt 3 der Gruppe A, und Punkt 3 ist nach diesem Lauf der nächste offene
+   Punkt des Rumpfes. **Prüfstein:** der Beweis darf die Wartezeiten überhaupt
+   nicht erwähnen — `jumpMeasure` ist ein Produkt, und die Kette ist der eine
+   Faktor.
+2. **`condExp_jump_mark_block` — der Sprungterm, mit der Marke ausintegriert.**
+   `E[(f (Y_{n+1}) − f (Y_n)) · 1_{τ_{n+1} ≤ t} | ℋ_n] = (μ f (Y_n) − f (Y_n)) · P(τ_{n+1} ≤ t | ℋ_n)`.
+   **Worauf sie ruht:** auf 1, auf
+   `condExp_lt_jumpTimeFE_hawkesSelfRateH_block` (steht, dieser Lauf), und auf der
+   Unabhängigkeit von Kette und Wartezeiten unter `jumpMeasure` (steht, sie ist
+   die Produktgestalt der Definition). **Warum getrennt:** sie ist nach 1 keine
+   eigene Arbeit. **Prüfstein:** `Y_{n+1}` darf in der Aussage nicht mehr
+   vorkommen; steht es noch da, ist über der falschen σ-Algebra bedingt worden,
+   und der Abschnitt oben sagt, woran man das merkt.
+3. **`measurableSet_stoppedAt_lt_jumpTimeH` — der Zeuge, den dieser Lauf nur
+   ausgerechnet hat.** Also: `{ω | τ_{n+1} ω ≤ τ_n ω}` liegt in der gestoppten
+   σ-Algebra von `hawkesFiltrationH` bei `ofReal τ_n`, und zwei Stichprobenpunkte
+   mit `ξ_n = 0` und `ξ_n = 1` haben denselben Wert von `(Kette, τ_1, …, τ_n)` und
+   verschiedene Zugehörigkeit. **Worauf sie ruht:** `isStoppingTime_hawkesJumpTimeH`
+   (steht), die Bauart von `jumpRecord`, und eine Vereinigung über rationale
+   Zwischenzeiten. **Warum zuletzt:** die Entwicklung braucht sie nicht — dieser
+   Lauf ist an ihr vorbeigegangen —, aber sie ist der Beleg für einen
+   Negativbefund, der jetzt in der Roadmap steht, und ein Negativbefund ohne
+   Zeugen ist ein Versprechen.

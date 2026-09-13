@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `710c215f98a3947b3301a21454f1f2c3caf72d0a`
+# Negativaussagen gegen `upstream/master` `55a449c5f283959116e88a56660d122ec4172f98`
 
 ## `cadlag` — SkorokhodSpace/README.md:3
 
