@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Vierzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Sechzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle vierzehn beim Beweisen aufgefallen, alle vierzehn gegen `upstream/master`
+Alle sechzehn beim Beweisen aufgefallen, alle sechzehn gegen `upstream/master`
 geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -397,7 +397,7 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   Mathlib auf `intervalIntegral` umzustellen.
 
 * **Das Vorschieben des *ersten* Faktors eines `compProd`.** Der dreizehnte, und
-  der einzige der vierzehn, der nicht fehlt, sondern bloß keinen Namen hat.
+  der einzige der sechzehn, der nicht fehlt, sondern bloß keinen Namen hat.
   Mathlib hat den zweiten Faktor als benannten Satz —
   `Measure.compProd_map (hf : Measurable f) : μ ⊗ₘ (κ.map f) = (μ ⊗ₘ κ).map (Prod.map id f)`
   (`Probability/Kernel/Composition/Lemmas.lean:120`, v4.33.1 wie `master`
@@ -443,6 +443,70 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `condDistrib` ist und keine der Aussage. Wir haben ihn am 2026-09-13 für
   beschränktes `f : E → ℝ` bewiesen
   (`MartingaleProblems/Suggested.lean`, `section ChainMarkov`).
+
+* **Die bedingte Erwartung unter Vergrößerung der bedingenden σ-Algebra um einen
+  unabhängigen Block.** Der fünfzehnte. Mathlib hat den Fall, in dem die
+  unabhängige σ-Algebra die bedingende **ersetzt** —
+  `MeasureTheory.condExp_indep_eq` (`Probability/ConditionalExpectation.lean:42`,
+  in v4.33.1 wie auf `master` `182c4c30cdc`, nicht `deprecated`): ist `f`
+  `m₁`-meßbar und `m₁` unabhängig von `m₂`, so ist `μ[f | m₂]` die Konstante
+  `μ[f]`. Den Fall, in dem sie **hinzukommt**, hat es nicht:
+
+  > `μ[f | m₁ ⊔ m₂] =ᵐ[μ] μ[f | m₁]`, wenn `m₂` unabhängig von `σ(f) ⊔ m₁` ist.
+
+  Die beiden sind verschiedene Aussagen — die erste läßt die bedingte Erwartung
+  zu einer Zahl zusammenfallen, die zweite läßt sie stehen. Eine Suche in beiden
+  Ständen nach einem `condExp` über einem Supremum mit unabhängigem Summanden
+  gibt **null Treffer** (geprüft 2026-09-13).
+
+  *Woran es bei uns hing:* `condExp_chain_mark_block`, der Kettenfaktor des
+  Sprungterms von `thm:pathjumpMP` über der σ-Algebra `ℋ_n`, die außer der Kette
+  auch die ersten `n` Sprungzeiten liest. Wir haben die Produktfassung am
+  2026-09-13 als `condExp_comap_prodMap_prod` bewiesen
+  (`MartingaleProblems/Suggested.lean`, `section CondExpProdMap`): unter einem
+  Produktmaß `P.prod Q` und für meßbare `V : X → S`, `W : Y → T` ist
+
+  > `(P.prod Q)[fun p ↦ g p.1 | comap (fun p ↦ (V p.1, W p.2))] =ᵐ fun p ↦ (P[g | comap V]) p.1`.
+
+  Der Beweis ist Fubini plus die Herausziehung: das Schnittmaß der bedingenden
+  Menge ist ein beschränkter `comap V`-meßbarer Faktor, und ein beschränkter
+  Faktor geht durch die bedingte Erwartung hindurch. Die allgemeine Fassung über
+  `m₁ ⊔ m₂` verlangte statt dessen ein π-System-Argument; die Produktfassung
+  kommt ohne aus und deckt jede Anwendung ab, in der der unabhängige Block eine
+  eigene Koordinate des Stichprobenraums ist.
+
+* **Fubini für die bedingte Erwartung.** Der sechzehnte, und der einzige, bei dem
+  die Lücke einen benennbaren *Grund* hat. Gebraucht wird die Vertauschung eines
+  Integrals über einen Parameter mit der bedingten Erwartung,
+
+  > `μ[fun ω ↦ ∫ u, g u ω ∂ν | m] =ᵐ[μ] fun ω ↦ ∫ u, (μ[g u | m]) ω ∂ν`.
+
+  Mathlib hat sie nicht; eine Suche in beiden Ständen nach einem `condExp` eines
+  Parameterintegrals gibt nur `condExp_ae_eq_integral_condDistrib` und seine
+  Verwandten (`Probability/Kernel/CondDistrib.lean:377`), die gegen einen **Kern**
+  integrieren und die Desintegration sind, nicht Fubini.
+
+  **Und die naive Fassung oben ist nicht wohlgestellt.** `μ[g u | m]` ist für
+  jedes `u` einzeln nur bis auf eine Nullmenge festgelegt, also braucht
+  `u ↦ (μ[g u | m]) ω` überhaupt nicht meßbar zu sein, und die rechte Seite
+  existiert im allgemeinen nicht. Wer den Satz in Mathlib haben will, muß ihm
+  eine gemeinsam meßbare **Version** mitgeben:
+
+  > sind `g` und `hcand` gemeinsam meßbar und beschränkt und ist `hcand u` für
+  > jedes `u` eine Version von `μ[g u | m]`, so ist
+  > `μ[fun ω ↦ ∫ u, g u ω ∂ν | m] =ᵐ[μ] fun ω ↦ ∫ u, hcand u ω ∂ν`.
+
+  Das ist die Gestalt, die jede Anwendung ohnehin hat, weil die Version dort in
+  geschlossener Form bekannt ist. Wir haben sie am 2026-09-13 als
+  `condExp_integral_comm` bewiesen, mit `condExp_intervalIntegral_comm` als
+  Intervallfassung (`MartingaleProblems/Suggested.lean`, `section CondExpFubini`);
+  der Beweis ist `integral_integral_swap` auf dem eingeschränkten Maß,
+  `setIntegral_condExp` innen, und zurückgetauscht — drei Zeilen `calc`.
+
+  *Woran es bei uns hängt:* `condExp_compensator_term_block`, der Kompensatorteil
+  des Martingalzuwachses von `thm:pathjumpMP`, Punkt 4 der Gruppe A. Dort ist
+  `ν` das Lebesguemaß auf `(0, t]` und die Version die bedingte
+  Überlebensfunktion.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

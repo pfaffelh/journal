@@ -3904,8 +3904,15 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    `Λ_u exp (−(Λ_u − Λ_{τ_n}))` auf `(τ_n, ∞)`. Hängt an 1 und an einer
    **Rechnung** (Variablenwechsel längs der kumulierten Rate).
 3. `condExp_jump_term` — `E[(f(Y_{n+1}) − f(Y_n)) 1_{τ_{n+1} ≤ t} | ℋ_n]` als
-   `∫_{τ_n}^{t} Λ_u e^{−A_n(u)} (μ_u f − f(Y_n)) du`. Hängt an 2 und am Kern der
-   Marken. **Zwei seiner drei Eingaben stehen seit dem fünften Lauf des
+   `(μ f (Y_n) − f(Y_n)) · (1 − e^{−(Λ_t − Λ_{τ_n})})`. **Bewiesen im siebten Lauf
+   des 2026-09-13** für den beschränkten nichtlinearen Fall, als
+   `condExp_jump_mark_block`; siehe den Abschnitt „Der Sprungterm: zwei
+   Herausziehungen mit einem Turmschluß dazwischen" unten. Die Gestalt, in der er
+   hier steht, ist nicht die integrierte des Manuskripts, sondern die **Produkt**
+   gestalt — der Kettenfaktor mal der bedingten Verteilungsfunktion —; das
+   Integral gegen die bedingte Dichte ist Punkt 2, und er wird erst gebraucht,
+   wenn der Sprungterm gegen den Kompensator gehalten wird.
+   **Zwei seiner drei Eingaben standen seit dem fünften Lauf des
    2026-09-13** für den beschränkten nichtlinearen Fall: der Zeitfaktor
    `condExp_le_jumpTimeFE_hawkesSelfRateH_block` und die Trennbarkeit
    `jumpMeasure_map_chain_jumpTimeH`, letztere getragen von der Trägheit des
@@ -3919,10 +3926,28 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    der eingebetteten Kette an der `n`-ten Stufe, und daß sie keine Induktion ist".
    Alle drei Eingaben sind damit beisammen, und alle drei stehen auf **demselben
    Raum**: `condExp_chain_mark_jumpMeasure` trägt den Kettenfaktor über
-   `condExp_comap_fst_prod` von `ℕ → E` nach `(ℕ → E) × (ℕ → ℝ)`. Offen ist allein
-   der **Zusammenbau**.
+   `condExp_comap_fst_prod` von `ℕ → E` nach `(ℕ → E) × (ℕ → ℝ)`.
+
+   *Und eine Berichtigung aus dem siebten Lauf, die festgehalten gehört:* die
+   dritte Eingabe in der Gestalt, in der sie oben angekündigt war — die
+   Trennbarkeit `jumpMeasure_map_chain_jumpTimeH`, also daß das **Bildgesetz** des
+   Paares ein Produktmaß ist — wird vom Zusammenbau gar nicht gelesen. Was er
+   liest, ist die Produktgestalt des **Maßes selbst** (`jumpMeasure` ist
+   `(chainKernel mu ∘ₘ nu).prod waitingMeasure`, definitionsgleich) zusammen mit
+   der Trägheit des Kettenarguments in den Sprungzeiten
+   (`hawkesJumpTimeH_sample_congr`). Die Bildgesetzfassung bleibt richtig und ist
+   der billigere Beleg, daß die beiden Blöcke unabhängig sind; die
+   Zusammenbauaussage `condExp_chain_mark_block` geht an ihr vorbei.
 4. `condExp_compensator_term` — `E[∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds | ℋ_n]` als
-   **dasselbe** Integral. Hängt an 1 und an Fubini.
+   **dasselbe** Integral. Hängt an 1 und an Fubini. **Die Fubini-Eingabe steht
+   seit dem siebten Lauf des 2026-09-13** als `condExp_integral_comm` mit der
+   Intervallfassung `condExp_intervalIntegral_comm`; Mathlib hat sie nicht, und
+   die naive Fassung ohne mitgegebene Version ist nicht einmal wohlgestellt —
+   siehe den Abschnitt „Fubini für die bedingte Erwartung, und warum die naive
+   Fassung nicht wohlgestellt ist" unten und `TODO.md` Punkt 8, die sechzehnte
+   Lücke. Was noch fehlt, ist der **Kandidat**: die geschlossene Form der
+   bedingten Erwartung des Integranden `𝒜_u f` bei festem `u`, und die ist Punkt
+   1 mit dem Kettenfaktor `condExp_chain_mark_block` davor.
 5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. Hängt an 3 und 4.
 6. `martingale_mpFamilyF_truncRateF` — die Summation über `n`, also das Martingal
    des **gestutzten** Problems. Hängt an 5 und daran, daß unterhalb der
@@ -4093,6 +4118,107 @@ Sprungterm lebt (`condExp_chain_mark_jumpMeasure`, über die allgemeine Aussage
 `condExp_comap_fst_prod`), und wartet allein auf den Zusammenbau. Einzelheiten im
 Abschnitt „Die Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe,
 und daß sie keine Induktion ist".
+
+*Stand 2026-09-13, siebter Lauf des Tages: **dreizehn**.* Punkt 3 der Gruppe A —
+der Sprungterm — ist bewiesen, als `condExp_jump_mark_block`, für den
+beschränkten nichtlinearen Fall und über der σ-Algebra `ℋ_n`. Es ist die erste
+der sechs Aussagen der Wahrscheinlichkeitsschicht, die nicht bloß Eingaben
+gewonnen hat, sondern dasteht; Gruppe A ist damit auf **vier** Aussagen
+geschrumpft (2, 4, 5, 6) und bleibt die teuerste. Einzelheiten im Abschnitt „Der
+Sprungterm: zwei Herausziehungen mit einem Turmschluß dazwischen".
+
+### Der Sprungterm: zwei Herausziehungen mit einem Turmschluß dazwischen
+
+*(Punkt 3 der Gruppe A, bewiesen am 2026-09-13 im siebten Lauf des Tages.)*
+
+> `condExp_jump_mark_block` —
+> `E[(f (Y_{n+1}) − f (Y_n)) 1_{τ_{n+1} ≤ t} | ℋ_n] = (μ f (Y_n) − f (Y_n)) · (1 − e^{−(Λ_t − Λ_{τ_n})})`
+> für den beschränkten nichtlinearen Hawkes-Prozeß, mit `ℋ_n = σ(Y_0, …, Y_n, τ_1, …, τ_n)`.
+
+**Der Prüfstein ist eingehalten: `Y_{n+1}` kommt auf der rechten Seite nicht
+vor.** Das ist es, was der Beweis leistet, und es ist der Grund, aus dem er über
+**zwei** σ-Algebren läuft und nicht über eine:
+
+* Über `𝒢 = σ(ganze Kette, τ_1, …, τ_n)` ist `f (Y_{n+1}) − f (Y_n)` meßbar und
+  die Sprungzeit nicht. Dort kommt der Kettenfaktor heraus und übrig bleibt die
+  bedingte Verteilungsfunktion der Sprungzeit
+  (`condExp_le_jumpTimeFE_hawkesSelfRateH_jumpTimes`, in diesem Lauf als
+  Komplement der Überlebensfassung hinzugekommen).
+* Über `ℋ_n` ist die bedingte Verteilungsfunktion meßbar und `Y_{n+1}` nicht.
+  Dort kommt sie heraus und übrig bleibt der Kettenfaktor, den die
+  Markoveigenschaft der eingebetteten Kette auswertet.
+
+Keiner der beiden Schritte ist über der jeweils anderen σ-Algebra zu führen;
+dazwischen sitzt der Turmschluß `condExp_condExp_of_le`, und er geht, weil
+`ℋ_n ≤ 𝒢` ist — die kleinere σ-Algebra liest von der Kette nur den Block bis zur
+`n`-ten Marke.
+
+**Die Eingabe, die dabei neu war, ist maßtheoretisch und nicht prozeßbezogen.**
+Der Kettenfaktor stand über der σ-Algebra des **Kettenblocks allein**
+(`condExp_chain_mark_jumpMeasure`); `ℋ_n` liest zusätzlich die Sprungzeiten.
+Gebraucht wird also, daß die Vergrößerung um einen **unabhängigen** Block die
+bedingte Erwartung nicht ändert — und das hat Mathlib nicht (siehe `TODO.md`
+Punkt 8, die fünfzehnte Lücke). Bewiesen ist hier die Produktfassung
+
+> `condExp_comap_prodMap_prod` — unter `P.prod Q` und für meßbare `V : X → S`,
+> `W : Y → T` ist
+> `(P.prod Q)[fun p ↦ g p.1 | comap (fun p ↦ (V p.1, W p.2))] =ᵐ fun p ↦ (P[g | comap V]) p.1`,
+
+über Fubini (`setIntegral_comp_fst_prodMap`) und die Herausziehung: das
+Schnittmaß der bedingenden Menge ist ein beschränkter `comap V`-meßbarer Faktor.
+Sie ist die Verallgemeinerung von `condExp_comap_fst_prod` und hat mit
+Sprungprozessen nichts zu tun; `Q` geht nur über `Q Set.univ = 1` ein.
+`condExp_chain_mark_block` ist ihre Instanz, und daß die Sprungzeiten in den
+zweiten Faktor fallen, ist `hawkesJumpTimeH_sample_congr`.
+
+**Eine Stolperstelle, die zweimal Zeit gekostet hat und benannt gehört.** Ein
+lokales `have`/`set` vom Typ `MeasurableSpace Ω` nimmt an der Instanzensuche
+teil. Wird die bedingende σ-Algebra mit `set ℋ := …` benannt, so löst jedes
+spätere `inferInstance : MeasurableSpace Ω` nicht mehr auf die Produktstruktur
+auf, sondern auf `ℋ` — und Aussagen wie `Measurable[⊤] …` oder
+`MeasurableSet {ω | …}` werden dann über der falschen σ-Algebra elaboriert. Die
+Regel: **alle Aussagen, die die Umgebungs-σ-Algebra brauchen, vor die Benennung
+setzen**, oder gar nicht benennen.
+
+### Fubini für die bedingte Erwartung, und warum die naive Fassung nicht wohlgestellt ist
+
+*(Die Eingabe von Punkt 4 der Gruppe A, bewiesen am 2026-09-13 im siebten Lauf
+des Tages, nachdem die Suche nach ihr in Mathlib negativ ausging.)*
+
+Der Kompensatorteil des Zuwachses verlangt, das Integral über den Zeitparameter
+mit der bedingten Erwartung zu vertauschen. **Mathlib hat diese Vertauschung
+nicht**, in keinem der beiden Stände; was es hat, ist
+`condExp_ae_eq_integral_condDistrib` (`Probability/Kernel/CondDistrib.lean:377`)
+und dessen Verwandte, die gegen einen **Kern** integrieren — das ist die
+Desintegration und nicht Fubini.
+
+**Und das Fehlen hat einen Grund, der benannt gehört.** Die naive Fassung
+
+> `μ[fun ω ↦ ∫ u, g u ω ∂ν | m] =ᵐ[μ] fun ω ↦ ∫ u, (μ[g u | m]) ω ∂ν`
+
+ist **nicht wohlgestellt**: `μ[g u | m]` ist für jedes `u` einzeln nur bis auf
+eine Nullmenge festgelegt, also braucht `u ↦ (μ[g u | m]) ω` gar nicht meßbar zu
+sein, und die rechte Seite existiert im allgemeinen nicht. Das ist derselbe
+Defekt, an dem die Konstruktion einer regulären bedingten Verteilung hängt, und
+er ist der Grund, aus dem die Aussage in Mathlib nicht dasteht und auch nicht in
+dieser Gestalt dorthin gehört.
+
+Bewiesen ist daher die Fassung mit **mitgegebener Version**:
+
+> `condExp_integral_comm` — sind `g` und `hcand` gemeinsam meßbar und beschränkt
+> und ist `hcand u` für jedes `u` eine Version von `μ[g u | m]`, so ist
+> `μ[fun ω ↦ ∫ u, g u ω ∂ν | m] =ᵐ[μ] fun ω ↦ ∫ u, hcand u ω ∂ν`,
+
+samt der Intervallfassung `condExp_intervalIntegral_comm` für
+`∫ u in a..b`. Das ist die Gestalt, die jede Anwendung ohnehin hat, weil die
+Version dort in geschlossener Form bekannt ist — bei uns die bedingte
+Überlebensfunktion. Der Beweis ist `integral_integral_swap` auf dem
+eingeschränkten Maß, `setIntegral_condExp` innen, und zurückgetauscht.
+
+**Was Punkt 4 damit noch fehlt, ist nicht die Vertauschung, sondern der
+Kandidat**: die geschlossene Form von `E[𝒜_u f | ℋ_n]` bei festem `u`. Sie setzt
+sich aus Punkt 1 (der bedingten Überlebensfunktion) und
+`condExp_chain_mark_block` (dem Kettenfaktor) zusammen, und beide stehen.
 
 ### Die Filtration eines Treppenpfadprozesses: die Punktfiltration, und was der Pfad von ihr zurückgibt
 
