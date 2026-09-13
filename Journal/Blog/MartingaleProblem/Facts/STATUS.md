@@ -1,10 +1,10 @@
 # Formalisierungs-Inventar — Status
 
-- **Letzter Lauf (UTC):** 20260913T023301Z
-- **Zustand:** ok
-- **Notiz:** Lauf regulaer beendet
+- **Letzter Lauf (UTC):** 20260913T043301Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** fisher
-- **Laeufe bisher:** 188
+- **Laeufe bisher:** 189
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Facts/INVENTAR.md`.
