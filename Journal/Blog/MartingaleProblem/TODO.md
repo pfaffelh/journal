@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Sechzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Siebzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle sechzehn beim Beweisen aufgefallen, alle sechzehn gegen `upstream/master`
+Alle siebzehn beim Beweisen aufgefallen, alle siebzehn gegen `upstream/master`
 geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -397,7 +397,7 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   Mathlib auf `intervalIntegral` umzustellen.
 
 * **Das Vorschieben des *ersten* Faktors eines `compProd`.** Der dreizehnte, und
-  der einzige der sechzehn, der nicht fehlt, sondern bloß keinen Namen hat.
+  der einzige der siebzehn, der nicht fehlt, sondern bloß keinen Namen hat.
   Mathlib hat den zweiten Faktor als benannten Satz —
   `Measure.compProd_map (hf : Measurable f) : μ ⊗ₘ (κ.map f) = (μ ⊗ₘ κ).map (Prod.map id f)`
   (`Probability/Kernel/Composition/Lemmas.lean:120`, v4.33.1 wie `master`
@@ -503,10 +503,70 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   der Beweis ist `integral_integral_swap` auf dem eingeschränkten Maß,
   `setIntegral_condExp` innen, und zurückgetauscht — drei Zeilen `calc`.
 
-  *Woran es bei uns hängt:* `condExp_compensator_term_block`, der Kompensatorteil
+  *Woran es bei uns hing:* `condExp_compensator_rate_block`, der Kompensatorteil
   des Martingalzuwachses von `thm:pathjumpMP`, Punkt 4 der Gruppe A. Dort ist
   `ν` das Lebesguemaß auf `(0, t]` und die Version die bedingte
-  Überlebensfunktion.
+  Überlebensfunktion; der Satz steht seit dem 2026-09-13, und er ist die erste
+  Anwendung dieser Lücke.
+
+* **Die Komposition einer absolut stetigen mit einer lipschitzstetigen
+  Funktion.** Der siebzehnte, und er ist am 2026-09-13 **kleiner geworden, als er
+  gemeldet war** — die Berichtigung gehört hierher, weil eine Negativaussage ein
+  Versprechen an einen Leser ist.
+
+  *Was gemeldet war:* Mathlib habe den Hauptsatz der Differential- und
+  Integralrechnung für eine Stammfunktion mit bloß meßbarem Integranden nicht.
+  *Was stimmt:* über die **Substitutionsregeln** ist das richtig — sie verlangen
+  alle eine Ableitung an **jedem** Punkt des Intervalls
+  (`intervalIntegral.integral_comp_mul_deriv` mit seinen drei gestrichenen
+  Verwandten und `integral_comp_mul_deriv_of_deriv_nonneg`,
+  `MeasureTheory/Integral/IntervalIntegral/IntegrationByParts.lean:496–548`;
+  `integral_comp_mul_deriv_Ioi`,
+  `MeasureTheory/Integral/IntegralEqImproper.lean:1121`;
+  `integral_image_eq_integral_abs_deriv_smul`,
+  `MeasureTheory/Function/JacobianOneDim.lean:66`). Über den **Hauptsatz** ist es
+  falsch: Mathlib hat ihn für absolut stetige Funktionen, als
+  `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`
+  (`MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225`),
+  dazu `IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral`
+  (ebenda `:412`) und die Intervallfassung des Lebesgueschen
+  Differentiationssatzes `IntervalIntegrable.ae_hasDerivAt_integral`
+  (`MeasureTheory/Integral/IntervalIntegral/LebesgueDifferentiationThm.lean:66`).
+  Mit diesen dreien geht die Rechnung durch, ohne jede Stetigkeitsvoraussetzung
+  an den Integranden.
+
+  *Was wirklich fehlt,* und es ist der Rest der Lücke: die absolute Stetigkeit
+  ist in Mathlib unter Summe, Produkt und Skalar abgeschlossen
+  (`MeasureTheory/Function/AbsolutelyContinuous.lean`) und es gibt „lipschitz ⇒
+  absolut stetig" (`LipschitzOnWith.absolutelyContinuousOnInterval`, ebenda
+  `:294`), aber **keine Kompositionsaussage**. Gebraucht wird
+
+  > ist `f` absolut stetig auf `uIcc a b` und `g` lipschitz auf einer Menge `s`,
+  > in die `f` das Intervall abbildet, so ist `g ∘ f` absolut stetig auf
+  > `uIcc a b`.
+
+  Die Lipschitzschranke nur auf `s` zu verlangen ist nicht Bequemlichkeit: `exp`
+  ist nicht global lipschitz, und ohne die Einschränkung auf ein Kompaktum um
+  das Bild käme die Anwendung nicht durch. Wir haben sie am 2026-09-13 als
+  `LipschitzOnWith.comp_absolutelyContinuousOnInterval` bewiesen, aus der
+  `ε`-`δ`-Fassung (`absolutelyContinuousOnInterval_iff`), in einer
+  `calc`-Abschätzung von fünf Zeilen — dieselbe, die Mathlib eine Schicht
+  tiefer für `LipschitzOnWith.absolutelyContinuousOnInterval` führt.
+
+  Daraus fällt die Substitutionsregel in der Allgemeinheit ab, die Mathlib fehlt:
+
+  > `integral_mul_deriv_comp_intervalIntegral` — für `g` von der Klasse `C¹`,
+  > `f` bloß intervallintegrierbar auf `a..b` und `c ∈ uIcc a b`:
+  > `∫_a^b f_u · g' (∫_c^u f) du = g (∫_c^b f) − g (∫_c^a f)`.
+
+  *Woran es bei uns hing:* Punkt 5 der Gruppe A,
+  `condExp_mpFamilyF_increment_eq_zero`, und Punkt 2, die bedingte Dichte. Beide
+  Hälften des Martingalzuwachses stehen seit dem 2026-09-13; diese Rechnung war
+  das einzige, was sie trennte, und sie steht seit demselben Tag als
+  `intervalIntegral_rate_mul_exp_neg_cumulativeRateF`. Der Integrand ist dort
+  `h (ν + ∑ φ (u − τ_k))` mit meßbarem `h` und `φ`, und eine
+  Stetigkeitsvoraussetzung wäre eine Verschärfung der Hypothesen von
+  `ex:hawkes`; sie ist nicht genommen worden.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

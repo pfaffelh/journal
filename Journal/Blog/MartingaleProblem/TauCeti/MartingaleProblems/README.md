@@ -3902,7 +3902,16 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    der anderen daran, daß `σ(Kette, …)` die Marke `Y_{n+1}` kennt.
 2. `condExp_jumpTimeFE_hasDensity` — die bedingte Dichte von `τ_{n+1}`,
    `Λ_u exp (−(Λ_u − Λ_{τ_n}))` auf `(τ_n, ∞)`. Hängt an 1 und an einer
-   **Rechnung** (Variablenwechsel längs der kumulierten Rate).
+   **Rechnung** (Variablenwechsel längs der kumulierten Rate). **Die Rechnung
+   steht seit dem neunten Lauf des 2026-09-13**, als
+   `intervalIntegral_rate_mul_exp_neg_cumulativeRateF`; sie ist die
+   Exponentialformel für eine bloß meßbare Rate und geht nicht über eine
+   Substitutionsregel, sondern über den Hauptsatz für absolut stetige Funktionen
+   — siehe den Abschnitt „Die Exponentialformel für eine bloß meßbare Rate, und
+   warum Mathlibs Substitutionsregeln sie nicht hergeben". Was von Punkt 2 damit
+   noch fehlt, ist allein die Übersetzung von Punkt 1 aus der
+   Verteilungsfunktions- in die Dichtegestalt; eine neue Idee ist nicht mehr
+   darin.
 3. `condExp_jump_term` — `E[(f(Y_{n+1}) − f(Y_n)) 1_{τ_{n+1} ≤ t} | ℋ_n]` als
    `(μ f (Y_n) − f(Y_n)) · (1 − e^{−(Λ_t − Λ_{τ_n})})`. **Bewiesen im siebten Lauf
    des 2026-09-13** für den beschränkten nichtlinearen Fall, als
@@ -3939,7 +3948,13 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    der billigere Beleg, daß die beiden Blöcke unabhängig sind; die
    Zusammenbauaussage `condExp_chain_mark_block` geht an ihr vorbei.
 4. `condExp_compensator_term` — `E[∫_{τ_n ∧ t}^{τ_{n+1} ∧ t} 𝒜_s f ds | ℋ_n]` als
-   **dasselbe** Integral. Hängt an 1 und an Fubini. **Die Fubini-Eingabe steht
+   **dasselbe** Integral. **Bewiesen im achten Lauf des 2026-09-13** für den
+   beschränkten nichtlinearen Fall, als `condExp_compensator_rate_block`; der
+   Kettenfaktor `μ f (Y_n) − f (Y_n)` des Erzeugers ist dabei nicht mitgeführt,
+   weil er `ℋ_n`-meßbar und beschränkt ist und in einer Herausziehung
+   hinzukommt. Siehe den Abschnitt „Der Kompensatorterm: ein Fenster mit zwei
+   zufälligen Enden, und der Weg unter das Integralzeichen". Hängt an 1 und an
+   Fubini. **Die Fubini-Eingabe steht
    seit dem siebten Lauf des 2026-09-13** als `condExp_integral_comm` mit der
    Intervallfassung `condExp_intervalIntegral_comm`; Mathlib hat sie nicht, und
    die naive Fassung ohne mitgegebene Version ist nicht einmal wohlgestellt —
@@ -3948,7 +3963,16 @@ Sprung ist die Rate eine andere und es wird nichts neu gestartet.
    Lücke. Was noch fehlt, ist der **Kandidat**: die geschlossene Form der
    bedingten Erwartung des Integranden `𝒜_u f` bei festem `u`, und die ist Punkt
    1 mit dem Kettenfaktor `condExp_chain_mark_block` davor.
-5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. Hängt an 3 und 4.
+5. `condExp_mpFamilyF_increment_eq_zero` — `E[D_n | ℋ_n] = 0`. Hängt an 3 und 4,
+   beide bewiesen, und an der Rechnung, die die beiden gegeneinander hält; auch
+   sie steht seit dem neunten Lauf des 2026-09-13
+   (`intervalIntegral_rate_mul_exp_neg_cumulativeRateF`), und mit ihr die
+   **Brücke** `intervalIntegral_hawkesBlockDensity`, die den Wert des
+   Kompensatorterms in den Faktor des Sprungterms übersetzt. Was noch fehlt, ist
+   Buchhaltung: die Herausziehung des `ℋ_n`-meßbaren beschränkten Kettenfaktors
+   `μ f (Y_n) − f (Y_n)` aus dem Kompensatorterm, und die Identifikation von
+   `X_u ω` mit `Y_n` im Fenster `(τ_n, τ_{n+1}]` — eine pfadweise Aussage über
+   `stepPath`.
 6. `martingale_mpFamilyF_truncRateF` — die Summation über `n`, also das Martingal
    des **gestutzten** Problems. Hängt an 5 und daran, daß unterhalb der
    Deckelung `a` nur endlich viele Sprünge liegen.
@@ -4126,6 +4150,173 @@ der sechs Aussagen der Wahrscheinlichkeitsschicht, die nicht bloß Eingaben
 gewonnen hat, sondern dasteht; Gruppe A ist damit auf **vier** Aussagen
 geschrumpft (2, 4, 5, 6) und bleibt die teuerste. Einzelheiten im Abschnitt „Der
 Sprungterm: zwei Herausziehungen mit einem Turmschluß dazwischen".
+
+*Stand 2026-09-13, achter Lauf des Tages: **zwölf**.* Punkt 4 der Gruppe A — der
+Kompensatorterm — ist bewiesen, als `condExp_compensator_rate_block`, für den
+beschränkten nichtlinearen Fall und über derselben σ-Algebra `ℋ_n`. Gruppe A ist
+damit auf **drei** Aussagen geschrumpft (2, 5, 6); die beiden Hälften des
+Martingalzuwachses stehen beide, und was sie noch trennt, ist eine Aussage der
+Analysis und keine der Wahrscheinlichkeitstheorie. Einzelheiten im Abschnitt „Der
+Kompensatorterm: ein Fenster mit zwei zufälligen Enden, und der Weg unter das
+Integralzeichen".
+
+*Stand 2026-09-13, neunter Lauf des Tages: **zwölf**.* Die Zahl bleibt, denn
+keine der zwölf Aussagen ist bewiesen worden; was steht, ist die **Rechnung**,
+an der die Punkte 2 und 5 gemeinsam hingen —
+`intervalIntegral_rate_mul_exp_neg_cumulativeRateF`, die Exponentialformel für
+eine bloß meßbare Rate. Sie ist die einzige Eingabe von Punkt 2, die keine
+Wahrscheinlichkeitsaussage ist, und sie ist die einzige, die zwischen den beiden
+schon bewiesenen Hälften des Martingalzuwachses stand — und dazu die **Brücke**
+`intervalIntegral_hawkesBlockDensity`, die den Wert, den
+`condExp_compensator_rate_block` liefert, in den Faktor übersetzt, den
+`condExp_jump_mark_block` liefert. Einzelheiten im Abschnitt „Die
+Exponentialformel für eine bloß meßbare Rate, und warum Mathlibs
+Substitutionsregeln sie nicht hergeben".
+
+### Die Exponentialformel für eine bloß meßbare Rate, und warum Mathlibs Substitutionsregeln sie nicht hergeben
+
+*(Die Rechnung, an der die Punkte 2 und 5 der Gruppe A hängen; bewiesen am
+2026-09-13 im neunten Lauf des Tages.)*
+
+Zu zeigen ist, für `0 ≤ a ≤ t` und `C = cumulativeRateF Λ ω`:
+
+> `intervalIntegral_rate_mul_exp_neg_cumulativeRateF` —
+> `∫ u in a..t, Λ u ω * exp (−(C u − C a)) = 1 − exp (−(C t − C a))`.
+
+Links steht der bedingte Kompensator des Blocks `(τ_n, τ_{n+1}]`, rechts eins
+minus die bedingte Überlebensfunktion bei `t`; das ist die Stelle, an der
+`condExp_compensator_rate_block` und `condExp_jump_mark_block` einander treffen.
+Auf dem Papier ist es die Substitution `v = C u` und eine Zeile.
+
+**Der Befund, und er ist der Grund, warum es keine Zeile ist.** Die Entwicklung
+dieses Zweiges verlangt von `φ` nichts als Meßbarkeit — `ex:hawkes` verlangt
+lokale Integrierbarkeit, und die Rate `Λ_u = h (ν + ∑_k φ (u − τ_k))` ist damit
+im allgemeinen nirgends stetig. Ihre Stammfunktion ist dann nur **fast überall**
+differenzierbar. **Jede** Substitutionsregel, die Mathlib hat, verlangt eine
+Ableitung an **jedem** Punkt:
+`intervalIntegral.integral_comp_mul_deriv` samt seinen vier gestrichenen
+Fassungen, `integral_comp_mul_deriv_of_deriv_nonneg`
+(`MeasureTheory/Integral/IntervalIntegral/IntegrationByParts.lean:496–539`),
+`integral_comp_mul_deriv_Ioi`
+(`MeasureTheory/Integral/IntegralEqImproper.lean:1121`) und
+`integral_image_eq_integral_abs_deriv_smul`
+(`MeasureTheory/Function/JacobianOneDim.lean:66`). Über die Substitution ist die
+Aussage also nicht zu erreichen.
+
+**Der Weg, und er berichtigt eine Negativaussage des achten Laufs.** Der achte
+Lauf hat gemeldet, Mathlib habe „das" nicht, und diese Meldung war über die
+*Substitutionsregeln* richtig und über den *Hauptsatz* falsch: Mathlib **hat**
+den Hauptsatz der Differential- und Integralrechnung für absolut stetige
+Funktionen, als `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub`
+(`MeasureTheory/Integral/IntervalIntegral/AbsolutelyContinuousFun.lean:225`),
+und dazu den Begriff samt Algebra in
+`MeasureTheory/Function/AbsolutelyContinuous.lean`. Damit steht der Weg offen:
+
+* eine Stammfunktion ist absolut stetig
+  (`IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral`, ebenda
+  `:412`);
+* sie ist fast überall differenzierbar mit dem Integranden als Ableitung
+  (`IntervalIntegrable.ae_hasDerivAt_integral`,
+  `MeasureTheory/Integral/IntervalIntegral/LebesgueDifferentiationThm.lean:66`
+  — die Intervallfassung des Lebesgueschen Differentiationssatzes);
+* die Kettenregel identifiziert `deriv (g ∘ C)` fast überall;
+* und `integral_deriv_eq_sub` schließt.
+
+**Die eine Lücke, die dabei blieb, und sie ist die siebzehnte für `TODO.md`
+Punkt 8.** Mathlib hat die Abgeschlossenheit der absoluten Stetigkeit unter
+Summe, Produkt und Skalar, und es hat „lipschitz ⇒ absolut stetig"
+(`LipschitzOnWith.absolutelyContinuousOnInterval`), aber **keine
+Kompositionsaussage**. Gebraucht wird sie, weil `g ∘ C` mit `g = 1 − exp(−·)`
+gebildet wird:
+
+> `LipschitzOnWith.comp_absolutelyContinuousOnInterval` — ist `f` absolut stetig
+> auf `uIcc a b` und `g` lipschitz auf einer Menge `s`, in die `f` das Intervall
+> abbildet, so ist `g ∘ f` absolut stetig auf `uIcc a b`.
+
+Die Lipschitzschranke wird **nur auf `s`** verlangt und nicht global; das ist
+genau die Abschwächung, ohne die `exp` nicht durchkäme, und `s` wird im
+Anwendungsfall als Kompaktum um das Bild von `C` gewählt.
+
+**Und was dabei abgefallen ist, ist mehr als die Rechnung.** Der Zwischensatz ist
+die Substitutionsregel selbst, in der Allgemeinheit, die Mathlib fehlt:
+
+> `integral_mul_deriv_comp_intervalIntegral` — für `g` von der Klasse `C¹` und
+> `f` bloß intervallintegrierbar auf `a..b` und `c ∈ uIcc a b`:
+> `∫ u in a..b, f u * deriv g (∫ v in c..u, f v) = g (∫ v in c..b, f v) − g (∫ v in c..a, f v)`.
+
+Keine Stetigkeit, keine Positivität, keine überall gültige Ableitung der
+Stammfunktion. Die Exponentialformel ist der Fall `g x = 1 − exp (−x)`, und sie
+steht in der von `cumulativeRateF` freien Gestalt als
+`integral_mul_exp_neg_intervalIntegral` daneben — auch dort ohne
+Vorzeichenbedingung an `f`.
+
+**Der Prüfstein des Vorschlags ist eingehalten:** in keiner der vier
+Deklarationen steht eine Stetigkeitsvoraussetzung an die Rate.
+
+**Und die Brücke ist im selben Lauf gelegt worden.** Was die beiden Hälften des
+Martingalzuwachses trennte, war nicht die Formel als solche, sondern ihre
+Anwendung auf die eingefrorene Rate der Stufe `n+1`:
+
+> `intervalIntegral_hawkesBlockDensity` — für `0 ≤ τ_n ≤ t`:
+> `∫ u in 0..t, hawkesBlockDensity h ν φ n u S = 1 − (expMeasure 1 (Ioi (hawkesLevelOf h ν φ n t S))).toReal`.
+
+Links steht genau der Wert, den `condExp_compensator_rate_block` liefert; rechts
+steht genau der Faktor, den `condExp_jump_mark_block` liefert. Die beiden Hälften
+sind damit **ineinander übersetzt**, und was von Punkt 5 noch bleibt, ist der
+Kettenfaktor und die Identifikation von `X_u` mit `Y_n`.
+
+*Und der Übergang vom Fenster `(0, t]` auf den Block `(τ_n, t]` kostet keine
+Integrierbarkeit.* Das war die Stelle, an der der Beweis teuer zu werden drohte —
+eine Zerlegung des Integrals verlangt die Integrierbarkeit auf beiden Stücken.
+Sie wird nicht gebraucht: der Schalter von `hawkesBlockRate` ist, bei festem `S`,
+ein Indikator **in `u`**, also schiebt `setIntegral_indicator` ihn in den
+Integrationsbereich und `Set.Ioc_inter_Ioi` rechnet `Ioc 0 t ∩ Ioi τ_n = Ioc τ_n t`
+aus. Eine Zerlegung findet gar nicht statt.
+
+### Der Kompensatorterm: ein Fenster mit zwei zufälligen Enden, und der Weg unter das Integralzeichen
+
+*(Punkt 4 der Gruppe A, bewiesen am 2026-09-13 im achten Lauf des Tages.)*
+
+> `condExp_compensator_rate_block` —
+> `E[∫_0^t 1_{τ_n < u} Λ_u 1_{u < τ_{n+1}} du | ℋ_n] = ∫_0^t 1_{τ_n < u} Λ^n_u e^{−(Λ^n_u − Λ^n_{τ_n})} du`
+
+Der Kompensator des Blocks läuft von `τ_n ∧ t` bis `τ_{n+1} ∧ t`. **Ein Fenster
+mit zwei zufälligen Enden ist ein Fenster mit festen Enden und zwei
+Indikatoren** — und der Nutzen der Umschreibung ist, daß der *erste* der beiden
+Indikatoren `ℋ_n`-meßbar ist, der zweite nicht, und die Rate es ebenfalls nicht
+ist, bis man bemerkt, daß sie es auf `{u < τ_{n+1}}` doch ist: dort ist die
+selbstbezügliche Rate die **eingefrorene** der Stufe `n+1`
+(`hawkesSelfRateH_eq_hawkesFrozenH`), und die liest `τ_1, …, τ_n` und sonst
+nichts.
+
+Damit ist die bedingte Erwartung bei **festem** `u` eine einzige Herausziehung
+über der bedingten Überlebensfunktion von Punkt 1
+(`condExp_rate_indicator_block`), und der Kandidat ist `hawkesBlockDensity`, eine
+Funktion der Sprungzeiten allein. `condExp_intervalIntegral_comm` trägt ihn unter
+das Integralzeichen. **`τ_{n+1}` kommt auf der rechten Seite überhaupt nicht mehr
+vor**; das ist die Probe auf die Aussage.
+
+Neue Deklarationen: `jumpTimeFE_hawkesSelfRateH_eq_ofReal` (die Sprungzeiten des
+Martingalproblems sind die der Rekursion, in `ℝ≥0∞`, ohne Nichtexplosions­vor­aus­setzung,
+weil die untere Schranke `c > 0` die kumulierte Rate divergieren läßt),
+`measurable_toReal_expMeasure_Ioi_comp`, `measurable_uncurry_hawkesLevelOf`,
+`hawkesBlockRate`, `hawkesBlockDensity` mit ihren Meßbarkeiten und Schranken,
+`condExp_rate_indicator_block` und `condExp_compensator_rate_block`.
+
+**Was damit noch fehlt, und es ist keine Aussage der Wahrscheinlichkeits­theorie
+mehr.** Punkt 5 hält den Kompensator gegen den Sprungterm. Dazu ist die rechte
+Seite auszuwerten:
+
+> `∫_{τ_n}^{t} Λ^n_u e^{−(Λ^n_u − Λ^n_{τ_n})} du = 1 − e^{−(Λ^n_t − Λ^n_{τ_n})}`.
+
+Das ist der Hauptsatz der Differential- und Integralrechnung für eine Stammfunktion,
+deren Integrand **bloß meßbar** ist: `Λ^n` ist `h (ν + ∑ φ (u − τ_k))` mit meßbarem
+`h` und `φ`, also nicht stetig, und `u ↦ ∫_0^u Λ^n` ist nirgends als fast überall
+differenzierbar. Jede Substitutionsregel in Mathlib —
+`intervalIntegral.integral_comp_mul_deriv` und ihre Verwandten,
+`integral_image_eq_integral_abs_deriv_smul` — verlangt `HasDerivAt` an **jedem**
+Punkt des Intervalls. Das ist die Bruchstelle, sie ist benannt, und sie ist der
+nächste Punkt.
 
 ### Der Sprungterm: zwei Herausziehungen mit einem Turmschluß dazwischen
 
