@@ -28146,3 +28146,212 @@ elf.
    Hypothese von 1. **Warum es zählt:** es ist die einzige Probe darauf, daß die
    Schnittstellen zwischen Meilenstein 4 und Meilenstein 6 zusammenpassen, und
    sie ist bisher nirgends gelaufen.
+
+### 2026-09-14, erster Lauf des Tages — `restart` und `restart_canonical` sind bewiesen, Meilenstein 5 steht; und die Aussage, wie sie dastand, war **falsch** — es fehlten vier Voraussetzungen, und eine, die dastand, wird nicht gebraucht
+
+**Bearbeitet:** Vorschlag 0 des Vorlaufs, also Meilenstein 5, `restart_canonical`
+— die vom zwölften Lauf des 2026-09-13 benannte Bruchstelle des ganzen Teils E.
+Teil C.5a ist nicht angefaßt worden.
+
+**Sieben Deklarationen** in `section Restart` von
+`TauCeti/MartingaleProblems/Suggested.lean`, davon zwei, die vorher ein `sorry`
+trugen. Die Zahl der `sorry` der Datei geht damit von **neun auf sieben**; die
+ganze Datei durch `scripts/check_suggested.py` mit `rc 0` und `0 Fehler`. Alle
+sieben über `scripts/check_axioms.py` geprüft, jede auf `propext`,
+`Classical.choice`, `Quot.sound`; kein `sorryAx`.
+(`WeakConvergence/Suggested.lean` meldet weiter seine zwei Fehler — die eine
+bewußt gegen `master` geschriebene Aussage, von diesem Lauf unberührt.)
+
+Die Punkte stehen berichtigt in `MartingaleProblems/README.md`, Meilenstein 5.
+
+#### Die Aussagen
+
+> `restart` — `lem:restart`: löst `X` das Martingalproblem für `𝓧°` bezüglich
+> `𝓖`, so löst die Verteilung von `X (r + ·)` unter `Z · P` das bei `r`
+> gestellte Problem.
+>
+> `restart_canonical` — der kanonische Fall `Ω = F`, `X = id`.
+
+Dazu die fünf Eingaben, die sie brauchten und die es in Mathlib in dieser
+Gestalt nicht gibt: `shiftMeasurable_of_natural`,
+`integral_map_withDensity_ofReal`, `integrable_map_withDensity_ofReal`,
+`isProbabilityMeasure_map_withDensity_ofReal` und
+`integral_smul_martingale_eq`.
+
+#### Der Befund, und er ist der eigentliche Ertrag des Laufs
+
+**Die Aussage, wie sie seit dem 2026-09-06 in der Datei stand, ist nicht
+beweisbar.** Es fehlten vier Voraussetzungen, und keine davon ist eine
+Bequemlichkeit — jede wird an genau einer Stelle verbraucht, und drei von ihnen
+stehen ausdrücklich im Beweis des Manuskripts, nur eben in Prosa und nicht in
+der Signatur:
+
+1. **`hXadapt`, `X` ist adaptiert** — `Measurable[𝓖 u, 𝓕° u] X` für jedes `u`.
+   Das Manuskript sagt: „`(Z°_s ∘ θ_r)(X)` ist `σ(X(u) : u ≤ r+s)`-meßbar, also
+   `𝓖_{r+s}`-meßbar". Ohne diese Voraussetzung sind die beiden Filtrationen
+   `𝓖` auf `Ω` und `𝓕°` auf `F` in keiner Beziehung, und das Gewicht des
+   Beweises ist für die Vergangenheit bei `r+s` nicht meßbar.
+2. **`hr : ∀ u, r ≤ r + u`** — die andere Hälfte desselben Satzes, `𝓖_r ⊂
+   𝓖_{r+s}`. Über einem allgemeinen `AddCommMonoid` ist das **falsch** (nimm
+   `ι = ℝ`, `s < 0`); es ist `0 ≤ u`, und für einen kanonisch geordneten Index
+   wie `ℝ≥0` ist es umsonst. Es ist die schwächste Fassung: gefordert wird sie
+   nur für das eine `r` der Aussage, nicht für den ganzen Index.
+3. **`hint`, die Integrierbarkeit der Grundfamilie längs `X`.** Das Manuskript
+   sagt es in der letzten Zeile seines Beweises („integrability of `Ŷ°_t` under
+   `R` holds because `Z` is bounded and `Ỹ°_{r+t}, Ỹ°_r, κ̃ ∈ L¹(P)`"), und in
+   Lean **muß** es eine Voraussetzung sein: `MeasureTheory.Martingale`
+   (`Probability/Martingale/Basic.lean:52`) ist `StronglyAdapted` **plus** die
+   Identität der bedingten Erwartung und trägt **keine** Integrierbarkeit —
+   anders als `Supermartingale` und `Submartingale` in derselben Datei, die sie
+   als drittes Feld führen. Das ist eine Asymmetrie in Mathlib, die man beim
+   Lesen der Definition leicht übersieht, und sie hat hier unmittelbare Folgen:
+   `hsol` liefert die Integrierbarkeit nicht, obwohl es „Martingal" sagt.
+4. **Zwei neue Felder von `IsShiftSystem`.** `shiftMeasurable`, daß `θ r` die
+   Vergangenheit bei `s` in die bei `r+s` schiebt — das ist \JS, III.2.39(i),
+   im Manuskript ausdrücklich zitiert, in unserer Übertragung aber verlorengegangen.
+   Und eine **Schranke an `κ`**: das Manuskript verlangt `κ̃ ∈ L¹(P)`, und eine
+   Struktur, die kein Maß kennt, kann das nicht sagen; die Beschränktheit ist
+   der maßfreie Stellvertreter und in `ex:shiftXA` (`κ = f ∘ π_r` mit `f`
+   beschränkt) umsonst zu haben.
+
+**Und eine Voraussetzung, die dastand, wird nicht gebraucht: `∫ Z dP = 1`.** Die
+Normierung kommt in der Martingaleigenschaft an keiner Stelle vor. Sie ist
+abgetrennt zu `isProbabilityMeasure_map_withDensity_ofReal`, und damit ist
+`restart` eine Aussage über eine beliebige beschränkte nichtnegative Dichte.
+Was von der Beschränktheit wirklich gebraucht wird, ist zweierlei und nicht die
+Normierung: die Endlichkeit von `R` (für `SigmaFinite (R.trim _)`, das die
+Identifikation der bedingten Erwartung verlangt) und die Übertragung der
+Integrierbarkeit.
+
+#### Die Vereinfachung: **die bestimmende Menge wird nicht gebraucht**
+
+Das Manuskript führt den letzten Schritt über `def:canonical`(ii) — aus
+`E^R[Ŷ°_t Z°_s] = E^R[Ŷ°_s Z°_s]` für alle `Z°_s` einer bestimmenden Menge
+folgt die bedingte Erwartung. In Lean ist das der teurere Weg: getestet wird
+direkt gegen **jede** Menge von `𝓕° s`, über
+`ae_eq_condExp_of_forall_setIntegral_eq`
+(`MeasureTheory/Function/ConditionalExpectation/Basic.lean:253`, auf master
+`:254`). Damit fällt `𝓩°` aus den Voraussetzungen von `restart` **und** aus
+denen von `lem:propagation`, das darauf aufsetzt. Was die bestimmende Menge auf
+Papier kauft — gegen eine kleine Klasse zu testen —, kauft hier die σ-Algebra
+selbst, und `def:canonical` muß dafür nicht existieren.
+
+#### Die eine Stelle, an der der Beweis Arbeit war
+
+Das Gewicht. `W = 1_{θ_r(X) ∈ A} · Z` ist **kein Indikator**, sondern eine
+Dichte mal einen Indikator, und dafür hat Mathlib nichts. In
+`Mathlib/Probability/Martingale/` steht über `Martingale` **keine einzige**
+`setIntegral`-Aussage; es gibt `Supermartingale.setIntegral_le`
+(`Basic.lean:163`) und `Submartingale.setIntegral_le` (`:242`), beide
+Ungleichungen und beide für einen Indikator. Der Schritt ist deshalb die
+Herausziehregel `condExp_smul_of_aestronglyMeasurable_left`
+(`ConditionalExpectation/PullOut.lean:223`) und danach `integral_condExp`
+(`Basic.lean:236`) — das ist `integral_smul_martingale_eq`, und es ist die
+einzige wahrscheinlichkeitstheoretische Zeile des ganzen Beweises. Alles andere
+ist Maßtheorie und Buchhaltung.
+
+**Zwei Fallen beim Rechnen, beide alt und beide wieder aufgetreten.** Erstens:
+`ENNReal.ofReal (Z ω)` **ist** definitionsgleich `((Z ω).toNNReal : ℝ≥0∞)`, aber
+`rw` findet das Muster nicht; ein `have … := rfl` und ein `rw` damit tut es.
+Zweitens die schon dreimal notierte Regel „nicht am Ziel rewriten, sondern das
+Ziel treffen": nach `integral_congr_ae` steht das Ziel unbetareduziert da
+(`(fun a => …) ω = (fun ω => …) ω`), und jedes `rw` prallt ab; ein `show` mit
+der reduzierten Gestalt räumt es weg. Das ist an drei Stellen dieses Laufs
+passiert.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf **frisch geholt**:
+`7d22123e148c78424d2bd4a7bc78f790e6ba45cf` (der zwölfte Lauf des 2026-09-13
+stand auf `64401b008cded3daa998c178fe966fd4b0f89c3d`).
+
+Alle in diesem Lauf benutzten Namen sind am Quelltext von v4.33.1 belegt, gegen
+den sie auch übersetzt sind, und gegen master nachgeprüft; keiner `deprecated`:
+
+* `condExp_smul_of_aestronglyMeasurable_left` —
+  `ConditionalExpectation/PullOut.lean:223`, master Datei und Zeile unverändert.
+* `ae_eq_condExp_of_forall_setIntegral_eq` — `…/Basic.lean:253`, master `:254`.
+* `integral_condExp` — ebenda `:236`, master `:237`.
+* `integral_withDensity_eq_integral_smul` —
+  `Integral/Bochner/ContinuousLinearMap.lean:250`, master unverändert.
+* `integrable_withDensity_iff_integrable_smul` —
+  `Function/L1Space/Integrable.lean:803`, master `:802`.
+* `integrable_map_measure` — ebenda `:356`, master `:359`.
+* `integral_map` — `Integral/Bochner/Basic.lean:1043`, master `:1076`.
+* `ofReal_integral_eq_lintegral_ofReal` — ebenda `:702`, master `:734`.
+* `integral_indicator` — `Integral/Bochner/Set.lean:172`, master unverändert.
+* `MeasurableSpace.comap_iSup` — `MeasurableSpace/Basic.lean:134`, master `:136`.
+* `MeasurableSpace.comap_comp` — ebenda `:102`, master `:104`.
+* `measurable_iff_comap_le` — ebenda `:187`, master `:189`.
+* `le_iSup₂` — `Order/CompleteLattice/Basic.lean:248`, master unverändert.
+* `Set.image_id'` — `Data/Set/Image.lean:307`, master unverändert.
+* `Measurable.real_toNNReal` — `Constructions/BorelSpace/Real.lean:147`.
+* `MeasureTheory.Martingale` — `Probability/Martingale/Basic.lean:52`.
+
+**Ein Negativbefund, und er ist ein Fund: `Martingale.setIntegral_eq` gibt es
+nicht.** Weder auf v4.33.1 noch auf master, und auch nicht unter einem anderen
+Namen: `Mathlib/Probability/Martingale/` enthält über `Martingale` überhaupt
+keine `setIntegral`-Aussage. Der Name lag nahe genug, um ihn beim Schreiben der
+Roadmap aus dem Gedächtnis hinzuschreiben — genau das ist in diesem Lauf
+passiert und am Quelltext berichtigt worden, ehe es committet wurde. Das ist der
+vierte Fall dieser Art in vier Läufen (`Finset.range_succ`,
+`Set.indicator_nonneg`, `Set.indicator_of_notMem`, jetzt dieser), und drei davon
+haben dieselbe Ursache: **ein plausibler Name ist kein Beleg.**
+
+**Dritte Bestätigung der `to_additive`-Lücke.** `Set.indicator_of_notMem`, in
+diesem Lauf zweimal benutzt, steht auf beiden Ständen unter **keinem**
+`theorem`-Schlüsselwort: sie ist die additive Ableitung von
+`Set.mulIndicator_of_notMem` (`Mathlib/Algebra/Notation/Indicator.lean:70`, auf
+beiden Ständen dieselbe Datei und Zeile). Der elfte und der zwölfte Lauf des
+2026-09-13 haben dieselbe Ausprägung an `Set.indicator_of_notMem` und
+`Set.indicator_nonneg` gefunden; das sind jetzt drei Fälle in drei Läufen, und
+die Prüfung von `scripts/check_citations.py` auf die multiplikative Schwester
+ist damit dreifach belegt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**`lem:propagation`** — `propagatesAgreement_of_unique_onedim`. Sie ist jetzt die
+**einzige** Aussage zwischen dem Markov-freien Block des Vorlaufs und
+`thm:absuniq`(b), und ihre Eingabe steht.
+
+**`thm:absuniq`(a), die Markoveigenschaft.** Unverändert ohne Deklaration.
+
+**Der Nachweis, daß `mpFamily A Q c` ein Schiftsystem trägt.** Er steht als Punkt
+im Meilenstein und ist durch die beiden neuen Felder von `IsShiftSystem` teurer
+geworden als er war; `shiftMeasurable_of_natural` erledigt das eine, die
+Schranke an den Kompensator ist die Beschränktheit von `p.2` mal
+`Q.measure_interval_ne_top` und sollte billig sein.
+
+**Teil C.5a.** Geparkt, wie angeordnet; die elf offenen Aussagen sind unverändert
+elf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`propagatesAgreement_of_unique_onedim` — `lem:propagation`.** **Worauf sie
+   ruht:** `restart_canonical`, das seit diesem Lauf bewiesen ist,
+   `Shift.eval_comp` für `π 0 ∘ θ s = π s`, und der Block des Vorlaufs für den
+   Anschluß. **Warum jetzt:** sie ist die einzige noch fehlende Aussage vor
+   `thm:absuniq`(b), und ihre Gestalt ist durch `weightedLaw` schon
+   festgeschrieben — die Anfangsverteilung des neugestarteten Maßes ist
+   `weightedLaw π P Z s` **auf den Buchstaben**. **Prüfstein:** die Normierung
+   `Z / E[Z]` und der entartete Fall `E[Z] = 0`, den das Manuskript eigens
+   abfängt; mit `restart` ohne `hZ1` ist der erste Teil davon jetzt
+   *überflüssig* geworden — man restartet mit `Z` selbst und normiert erst am
+   Ende, wenn überhaupt. Das ist zu prüfen und, wenn es trägt, der Grund, aus
+   dem die Abtrennung von `hZ1` nicht bloß Kosmetik war.
+
+1. **`isShiftSystem_mpFamily`.** **Worauf sie ruht:** `Clock.IsShiftInvariant`,
+   `shiftMeasurable_of_natural` für das zweite Feld, und für das dritte die
+   Rechnung von `ex:shiftXA` mit `κ = f ∘ π_r`. **Warum sie jetzt dran ist:**
+   `restart` steht über einer Struktur, von der noch **kein** Zeuge existiert;
+   solange keiner dasteht, ist der Meilenstein gegen Leerheit nicht gesichert.
+   Der Poissonprozeß aus Meilenstein 4 ist der Zeuge, den der Meilenstein selbst
+   nennt.
+
+2. **`isMarkov_of_unique_onedim` — `thm:absuniq`(a).** Danach, und mit der
+   Warnung aus dem Auftrag: Markov ist die **Konklusion**, und das Gewicht ist
+   `Z = 1_{F₀}` mit `F₀ ∈ 𝓖 r`, also gerade der Fall, für den
+   `rem:restarttwolevel` sagt, daß die beiden Ebenen nicht zusammenfallen — ein
+   solches `Z` ist kein Funktional des Pfades. `restart` in der allgemeinen
+   Fassung (mit `X`, nicht `restart_canonical`) ist dafür gebaut, und das ist
+   der Grund, aus dem beide Fassungen dastehen.

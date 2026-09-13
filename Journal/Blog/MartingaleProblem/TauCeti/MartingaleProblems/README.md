@@ -6187,15 +6187,62 @@ Gruppe A auf demselben Raum, und was fehlt, ist allein ihr Zusammenbau.
   notion since 2026-01-13, see Milestone 9) with
   `𝓧° 0 = 𝓧°` such that every `Ŷ ∈ 𝓧° r` satisfies
   `Ŷ t ∘ θ r = Y (r + t) - Y r + κ` for some `Y ∈ 𝓧°` and some `𝓕° r`-measurable
-  `κ`. Prove that `mpFamily A q c` carries a shift system when the clock is
-  shift invariant, with `κ` the compensator up to `r`.
-* `restart`: let `X` solve the martingale problem for `𝓧°` with respect to `𝓖`,
-  let `r : ι`, and let `Z ≥ 0` be bounded, `𝓖 r`-measurable with `𝔼[Z] = 1`.
+  and bounded `κ`, and such that `θ r` is measurable from the past at `r + s` to
+  the past at `s`. Prove that `mpFamily A q c` carries a shift system when the
+  clock is shift invariant, with `κ` the compensator up to `r`.
+
+  The two extra clauses are the ones a first draft of this milestone left out.
+  The measurability clause is `\JS`, III.2.39(i); the manuscript's proof of
+  `lem:restart` uses it in the sentence "`(Z°_s ∘ θ r)(X)` is
+  `σ(X(u) : u ≤ r+s)`-measurable". The bound on `κ` is the measure free
+  surrogate for the manuscript's `κ̃ ∈ L¹(P)`, which a structure that knows no
+  measure cannot state; in `ex:shiftXA` it is `κ = f ∘ π r` with `f` bounded.
+* `shiftMeasurable_of_natural`: the natural filtration of the coordinates
+  satisfies the measurability clause, and the whole content is
+  `Shift.eval_comp`. This is why the clause costs nothing in the canonical case.
+* `restart`: let `X` be adapted and solve the martingale problem for `𝓧°` with
+  respect to `𝓖`, with `Y u ∘ X` integrable for every `Y ∈ 𝓧°`; let `r : ι` with
+  `r ≤ r + u` for every `u`, and let `Z ≥ 0` be bounded and `𝓖 r`-measurable.
   Then the law of `X (r + ·)` under `Z • P` solves the martingale problem for
-  `𝓧° r`. The proof is the definition of a shift system plus the martingale
-  property; it is four lines and everything in Milestone 6 rests on it.
+  `𝓧° r`. Everything in Milestone 6 rests on it.
+
+  Three hypotheses beyond the shift system, each used once. `X` adapted and
+  `r ≤ r + u` are the two halves of the manuscript's step "so is `Z`, because
+  `𝓖 r ⊂ 𝓖 (r+s)`". Integrability of the base family is the last line of the
+  manuscript's proof, and it has to be a hypothesis because Mathlib's
+  `Martingale` is `StronglyAdapted` plus the conditional expectation identity
+  and carries no integrability.
+
+  The normalisation `𝔼[Z] = 1` is **not** among the hypotheses: it plays no part
+  in the martingale property. It is `isProbabilityMeasure_map_withDensity_ofReal`,
+  which says that the restarted measure is a probability measure exactly when the
+  density has expectation one.
+
+  The determining set `𝓩°` of the manuscript's proof is not needed: the
+  conditional expectation is identified against *all* sets of `𝓕° s` through
+  `ae_eq_condExp_of_forall_setIntegral_eq`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:253`). What the
+  determining set buys on paper — testing against a small class — is bought here
+  by the σ-algebra itself, and `def:canonical` does not have to exist first.
 * `restart_canonical`, the special case `Ω = F`, `X = id`, where the conclusion
-  reads `(Z • P).map (θ r) ∈ MPSolutions (𝓧° r)`.
+  reads `(Z • P).map (θ r) ∈ MPSolutions (𝓧° r)`. The two hypotheses of `restart`
+  that speak of `X` become `Measurable id`.
+* The three measure theoretic inputs, each stated for a general reweighted image
+  measure `(Z · P) ∘ ψ⁻¹` and none of them in Mathlib in this shape:
+  `integral_map_withDensity_ofReal` and `integrable_map_withDensity_ofReal`,
+  which transport an integral and integrability through the density and the map
+  at once, and `integral_smul_martingale_eq`, that a martingale tested against a
+  **bounded weight** measurable for the earlier past has equal integrals at the
+  two times. Mathlib has no lemma of that shape — not even for an indicator
+  weight: `Mathlib/Probability/Martingale/` contains no `setIntegral` statement
+  about `Martingale` at all, only `Supermartingale.setIntegral_le`
+  (`Probability/Martingale/Basic.lean:163`) and `Submartingale.setIntegral_le`
+  (`:242`), both inequalities and both for an indicator. The step is
+  the pull-out property `condExp_smul_of_aestronglyMeasurable_left`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:223`) followed by
+  `integral_condExp` (`…/ConditionalExpectation/Basic.lean:236`), and the weight
+  of the restart lemma — a density times an indicator — is exactly why the
+  indicator form would not have sufficed.
 
 **Acceptance examples.**
 
@@ -6280,15 +6327,22 @@ Hypotheses of the Markov half: a shift system, a determining set for every
 `𝓧° r`, and uniqueness of the one dimensional distributions of the shifted
 problems.
 
-* `propagatesAgreement_of_unique_onedim`: under a shift system with `𝓩°`
-  determining for each `𝓧° r`, and uniqueness of the one dimensional
-  distributions of every shifted problem, `mpSolutions 𝓧° 𝓕°` propagates
-  agreement. This is `lem:propagation`, it is the first statement of the
-  milestone that is Markovian, and it is what turns the group above into
-  `thm:absuniq`(b) by one application of `eq_of_propagatesAgreement`. It rests
-  on `restart_canonical`, on `Shift.eval_comp` for `π 0 ∘ θ s = π s`, and on the
-  normalisation `Z / E[Z]`, which needs the degenerate case `E[Z] = 0` treated
-  separately.
+* `propagatesAgreement_of_unique_onedim`: under a shift system and uniqueness of
+  the one dimensional distributions of every shifted problem,
+  `mpSolutions 𝓧° 𝓕°` propagates agreement. This is `lem:propagation`, it is the
+  first statement of the milestone that is Markovian, and it is what turns the
+  group above into `thm:absuniq`(b) by one application of
+  `eq_of_propagatesAgreement`. It rests on `restart_canonical`, on
+  `Shift.eval_comp` for `π 0 ∘ θ s = π s`, and on the normalisation `Z / E[Z]`,
+  which needs the degenerate case `E[Z] = 0` treated separately.
+
+  A determining set is **not** among its inputs. It was, as long as `restart`
+  was stated after the manuscript, whose proof identifies the conditional
+  expectation through `def:canonical`(ii); the proof of `restart` in Milestone 5
+  tests against every set of `𝓕° s` instead, so `𝓩°` never enters.
+
+  With `restart_canonical` proved, this is the one statement between the
+  Markov free group above and `thm:absuniq`(b).
 * `isMarkov_of_unique_onedim`: every solution is Markov, in general time
   inhomogeneously — for `f` bounded measurable and `r, t : ι`,
   `𝔼[f (X (r + t)) | 𝓖 r] =ᵐ 𝔼[f (X (r + t)) | X r]`.
