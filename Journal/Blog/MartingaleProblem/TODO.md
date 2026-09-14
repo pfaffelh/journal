@@ -579,7 +579,7 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   diskreten Index (`..._of_discrete`, `:376`) und aus einem Grenzwert
   (`isStronglyProgressive_of_tendsto`, `:359`) — aus **Rechtsstetigkeit** nicht,
   weder in `v4.33.1` noch auf `master`
-  (`147cccedb04098422b4baaf4cd1760785f344a42`, geprüft am 2026-09-14). Das ist
+  (`9cb3970b1fb61911f7e8892dffcde5aa4a0661cc`, geprüft am 2026-09-14). Das ist
   die Lücke, an der jeder Sprungprozeß steht: seine Pfade sind nie stetig, sein
   Index ist nie diskret, und das Kompensatorintegral verlangt gerade diese
   Aussage.
@@ -604,6 +604,17 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   an `Nat.measurable_floor` sieht entbehrlich aus — der Beweis ist
   `measurable_to_countable` über `Nat.preimage_floor_of_ne_zero` —, und das wäre
   ein Einzeiler-PR.
+
+  *Und seit #43352 hat die Lücke einen Namen, in den sie hineinpaßt:*
+  `Mathlib/Topology/Order/Cadlag.lean` trägt auf `master` `IsRightContinuous`
+  (`:36`, `∀ a, ContinuousWithinAt f (Set.Ioi a) a`) und `IsCadlag` (`:104`) mit
+  rund zwanzig Abschlußeigenschaften. Die Aussage, die fehlt, ist damit
+  formulierbar geworden, ohne daß ein Begriff erst zu stiften wäre:
+  *rechtsstetige Pfade in einem metrisierbaren Zielraum sind fortschreitend
+  meßbar.* In `v4.33.1`, an das wir gebunden sind, gibt es die Datei nicht, und
+  `IsRightContinuous` kommt dort nur als `Filtration.IsRightContinuous`
+  (`Probability/Process/Filtration.lean:373`) vor — eine Klasse über
+  Filtrationen und keine über Funktionen. Am 2026-09-14 geprüft.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

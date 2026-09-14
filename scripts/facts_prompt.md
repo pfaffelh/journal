@@ -360,6 +360,92 @@ Wiederaufnehmen der erste zu klärende Punkt und keine Nebensache.
 Die `D_n`-Arbeit bleibt stehen und ist nicht verloren: Punkte 1 bis 4 der Gruppe
 A sind bewiesen und gelten unabhängig vom Weg.
 
+**REIHENFOLGE AB 2026-09-14 ABENDS, vom Nutzer angeordnet: erst der
+Pfadraum, dann Meilenstein 3, dann zurück zu C.5/G.**
+
+> **`jumpPath` → Meilenstein 3 → Meilenstein 9 → C.5/G**
+
+*(Fortgeschrieben 2026-09-15, vom Nutzer angeordnet. Der Pfadraum selbst ist am
+2026-09-14 im sechsten Lauf gebaut: `RightContinuousPath E`, `pathShift`, und
+damit der erste Zeuge für `Shift`. Was davon noch aussteht, ist `jumpPath` — das
+Pfadabbild des Sprungprozesses in den neuen Raum, die einzige fehlende Verbindung
+zwischen Meilenstein 4 und 6; ohne es ist der Pfadraum ein Raum ohne Prozeß
+darauf. Das ist ein halber Lauf und geht Meilenstein 3 voran.)*
+
+**1. Der kanonische Pfadraum, sofort.** `Shift F π` hat in der ganzen Datei
+**keinen einzigen Zeugen**; es kommt zehnmal vor, jedesmal als Hypothese. Damit
+ruht der ganze Meilenstein 6 — `restart`, `thm:absuniq`(a) und (b) — auf einer
+Struktur, von der niemand weiß, ob sie bewohnt ist. Die Sätze sind richtig und
+bis dahin auf nichts anwendbar. Das ist kein Fortschritts-, sondern ein
+Integritätsproblem, und es ist ein Lauf: die vier Punkte stehen benannt in
+`MartingaleProblems/README.md`, Meilenstein 6, unter „The canonical path space",
+der Unterbau (`IsRightLocallyConstant`, `measurable_uncurry_of_isRightLocallyConstant`,
+`dyadAbove`) liegt seit dem fünften Lauf des 2026-09-14, `generateFrom_coordinate`
+ist `comap_iSup` plus `comap_comp`, und `pathShift`s `eval_comp` ist `rfl`.
+
+**2. Danach Meilenstein 3 — die beiden `sorry` des fdd-Kriteriums.**
+`isMPSolution_iff_forall_fdd` (`prop:fddchar`) und
+`isMPSolution_iff_forall_fdd_continuous`. Drei Gründe, in dieser Ordnung:
+
+* **Das Werkzeug ist fertig.** Die schwere Richtung (←) ist ein
+  multiplikatives-System-Argument: Produkte beschränkter meßbarer Funktionen
+  vergangener Koordinaten erzeugen `𝓕 s` (das ist die Hypothese `h𝓕`), dann
+  funktionaler monotoner Klassensatz, dann `ae_eq_condExp_of_forall_setIntegral_eq`.
+  Der Klassensatz **steht bewiesen** als `induction_on_mulSystem` in
+  `WeakConvergence/Suggested.lean:6001`, mit genau der Signatur, die gebraucht
+  wird. **Ihn benutzen, nicht nachbauen.**
+* **Die Hypothesen sind schon durchdebuggt.** `hXprog` (`Clock.IsProgressive`)
+  fehlte bis zum 2026-09-07 und wurde gefunden; `h𝓕` ist die natürliche
+  Filtration, ohne die (←) falsch ist. Der Zustand ist „Aussage geklärt, Beweis
+  offen" — der billigste, den ein `sorry` haben kann.
+* **Es macht aus zwei `sorry` drei.** Die zweite Aussage ist laut ihrem eigenen
+  Doc-Kommentar „die vorige zusammen mit `induction_on_mulSystem`", also
+  derselbe Lauf; und sie ist, was ein Konvergenzargument liefert (stetige
+  Testfunktionen). Damit wird `mpSolution_of_tendsto` aus Meilenstein 10
+  angreifbar — „ein Limes von Lösungen ist eine Lösung", dessen Standardweg
+  über das fdd-Kriterium mit stetigen Testfunktionen führt.
+
+**Ersparnis in dieser Reihenfolge:** das π-System, das die schwere Richtung
+braucht, ist dasselbe wie `isPiSystem_pathCylinders`/`generateFrom_pathCylinders`
+aus dem 2026-09-13 — endliche Produkte von Koordinatenbedingungen. Wer den
+Pfadraum gebaut hat, hat den Erzeugungsschritt schon einmal geschrieben.
+
+**3. Dann Meilenstein 9 — die càdlàg-Modifikation.** Drei `sorry`:
+`exists_cadlag_modification_of_isRegularizingClass` (Doobs Regularisierung) und
+die beiden Quasi-Linksstetigkeiten. Der Grund, warum er hierher gehört und nicht
+ans Ende:
+
+* **Er ist das Tor zu Meilenstein 11, und damit zu allem, was `SkorokhodSpace`
+  kann.** Dort stehen **10 167 Zeilen und 351 Deklarationen ohne ein einziges
+  `sorry`**, und *nichts* verbraucht sie bisher. Ohne die càdlàg-Modifikation
+  leben die Lösungen im vollen Funktionenraum und keiner der 351 Sätze ist
+  anwendbar. Das ist die einzige Stelle im Projekt, an der eine **fertige**
+  Roadmap brachliegt, weil ein Satz in einer anderen fehlt.
+* **Der Gegenzeuge steht schon.** `isQuasiLeftContinuous_of_isMPSolutionFor`
+  (EK 4.3.12) trägt `hQ : Q.IsAtomless`, und der Abschnitt „The witness of
+  `not_isQuasiLeftContinuous_of_atom`" darunter ist gebaut — die Münze, die zur
+  Zeit `u` geworfen wird, mit càdlàg-Pfaden für *jede* Uhr und ohne
+  Quasi-Linksstetigkeit. Es fehlt nur der positive Satz.
+* **Und er steht nach Meilenstein 3 aus einem technischen Grund:** die
+  Modifikation muß am Ende zeigen, daß `X'` *dieselbe* Lösung ist, und die
+  natürliche Formulierung dafür ist das fdd-Kriterium — „`X` und `X'` haben
+  dieselben endlichdimensionalen Verteilungen, also löst `X'` dasselbe Problem".
+  Mit `isMPSolution_iff_forall_fdd` in der Hand ist das eine Zeile; ohne es
+  müßte der Regularisierungslauf es nebenbei mitbeweisen.
+
+Der Weg von Doobs Regularisierung, damit kein Lauf ihn neu erschließt:
+Aufkreuzungsungleichung über **endlichen** Teilmengen von `D` (diskret, Mathlib
+hat `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part`) → monotoner
+Grenzübergang auf ganz `D`, daraus die f.s. Existenz einseitiger Limiten längs
+`D` → `X'` als Rechtslimes längs `D`, wobei `hcc : CompactContainment` die
+Limiten in `E` hält → Modifikation über die regularisierende Klasse → càdlàg.
+Schätzung drei bis fünf Läufe; Schritt 2 ist der, an dem sich zeigt, wie weit
+sich Mathlibs Aufkreuzungs-API über einen beliebigen linear geordneten Index
+ziehen läßt. **Nicht der ganze Meilenstein 9 ist offen:** optionales Sampling in
+stetiger Zeit und die Stabilität unter Stoppen stehen seit dem 2026-09-10.
+
+**4. Erst danach C.5/G**, in der Gestalt, die unmittelbar darunter steht.
+
 **UMFORMULIERUNG VON C.5/G, vom Nutzer am 2026-09-13 nachts angeordnet.**
 
 > **Nicht „der Hawkes-Prozeß löst sein Martingalproblem", sondern: ein

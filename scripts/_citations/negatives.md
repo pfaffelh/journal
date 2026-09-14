@@ -1,25 +1,11 @@
-# Negativaussagen gegen `upstream/master` `147cccedb04098422b4baaf4cd1760785f344a42`
+# Negativaussagen gegen `upstream/master` `9cb3970b1fb61911f7e8892dffcde5aa4a0661cc`
 
-## `cadlag` — SkorokhodSpace/README.md:3
+## `skorokhod-space` — SkorokhodSpace/README.md:3
 
-> Der String `cadlag` kommt in Mathlib nicht vor.
+> Der Skorokhodraum selbst — die càdlàg-Pfade mit der J₁-Topologie — kommt in Mathlib nicht vor; nur das Prädikat.
 
-Suche `cadlag` unter `Mathlib/`: **23 Treffer** in 2 Dateien.
+Suche `SkorokhodSpace|skorokhodSpace|J1Topology|Skorokhod` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
 
-* `Mathlib/Tactic/Translate/ToDual.lean`
-* `Mathlib/Topology/Order/Cadlag.lean`
-
-## `IsCadlag` — SkorokhodSpace/Suggested.lean:341
-
-> `Function.RightContinuous` und `IsCadlag` sind nicht in Mathlib.
-
-Suche `IsCadlag|IsRightContinuous` unter `Mathlib/`: **80 Treffer** in 5 Dateien.
-
-* `Mathlib/Probability/Process/Filtration.lean`
-* `Mathlib/Probability/Process/LocalProperty.lean`
-* `Mathlib/Probability/Process/Stopping.lean`
-* `Mathlib/Tactic/Translate/ToDual.lean`
-* `Mathlib/Topology/Order/Cadlag.lean`
 
 ## `memoryless` — MartingaleProblems/README.md:743
 
