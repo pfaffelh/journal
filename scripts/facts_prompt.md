@@ -363,7 +363,14 @@ A sind bewiesen und gelten unabhängig vom Weg.
 **REIHENFOLGE AB 2026-09-14 ABENDS, vom Nutzer angeordnet: erst der
 Pfadraum, dann Meilenstein 3, dann zurück zu C.5/G.**
 
-> **Pfadraum (ein Lauf) → Meilenstein 3 (zwei Läufe) → C.5/G**
+> **`jumpPath` → Meilenstein 3 → Meilenstein 9 → C.5/G**
+
+*(Fortgeschrieben 2026-09-15, vom Nutzer angeordnet. Der Pfadraum selbst ist am
+2026-09-14 im sechsten Lauf gebaut: `RightContinuousPath E`, `pathShift`, und
+damit der erste Zeuge für `Shift`. Was davon noch aussteht, ist `jumpPath` — das
+Pfadabbild des Sprungprozesses in den neuen Raum, die einzige fehlende Verbindung
+zwischen Meilenstein 4 und 6; ohne es ist der Pfadraum ein Raum ohne Prozeß
+darauf. Das ist ein halber Lauf und geht Meilenstein 3 voran.)*
 
 **1. Der kanonische Pfadraum, sofort.** `Shift F π` hat in der ganzen Datei
 **keinen einzigen Zeugen**; es kommt zehnmal vor, jedesmal als Hypothese. Damit
@@ -403,7 +410,41 @@ braucht, ist dasselbe wie `isPiSystem_pathCylinders`/`generateFrom_pathCylinders
 aus dem 2026-09-13 — endliche Produkte von Koordinatenbedingungen. Wer den
 Pfadraum gebaut hat, hat den Erzeugungsschritt schon einmal geschrieben.
 
-**3. Erst danach C.5/G**, in der Gestalt, die unmittelbar darunter steht.
+**3. Dann Meilenstein 9 — die càdlàg-Modifikation.** Drei `sorry`:
+`exists_cadlag_modification_of_isRegularizingClass` (Doobs Regularisierung) und
+die beiden Quasi-Linksstetigkeiten. Der Grund, warum er hierher gehört und nicht
+ans Ende:
+
+* **Er ist das Tor zu Meilenstein 11, und damit zu allem, was `SkorokhodSpace`
+  kann.** Dort stehen **10 167 Zeilen und 351 Deklarationen ohne ein einziges
+  `sorry`**, und *nichts* verbraucht sie bisher. Ohne die càdlàg-Modifikation
+  leben die Lösungen im vollen Funktionenraum und keiner der 351 Sätze ist
+  anwendbar. Das ist die einzige Stelle im Projekt, an der eine **fertige**
+  Roadmap brachliegt, weil ein Satz in einer anderen fehlt.
+* **Der Gegenzeuge steht schon.** `isQuasiLeftContinuous_of_isMPSolutionFor`
+  (EK 4.3.12) trägt `hQ : Q.IsAtomless`, und der Abschnitt „The witness of
+  `not_isQuasiLeftContinuous_of_atom`" darunter ist gebaut — die Münze, die zur
+  Zeit `u` geworfen wird, mit càdlàg-Pfaden für *jede* Uhr und ohne
+  Quasi-Linksstetigkeit. Es fehlt nur der positive Satz.
+* **Und er steht nach Meilenstein 3 aus einem technischen Grund:** die
+  Modifikation muß am Ende zeigen, daß `X'` *dieselbe* Lösung ist, und die
+  natürliche Formulierung dafür ist das fdd-Kriterium — „`X` und `X'` haben
+  dieselben endlichdimensionalen Verteilungen, also löst `X'` dasselbe Problem".
+  Mit `isMPSolution_iff_forall_fdd` in der Hand ist das eine Zeile; ohne es
+  müßte der Regularisierungslauf es nebenbei mitbeweisen.
+
+Der Weg von Doobs Regularisierung, damit kein Lauf ihn neu erschließt:
+Aufkreuzungsungleichung über **endlichen** Teilmengen von `D` (diskret, Mathlib
+hat `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part`) → monotoner
+Grenzübergang auf ganz `D`, daraus die f.s. Existenz einseitiger Limiten längs
+`D` → `X'` als Rechtslimes längs `D`, wobei `hcc : CompactContainment` die
+Limiten in `E` hält → Modifikation über die regularisierende Klasse → càdlàg.
+Schätzung drei bis fünf Läufe; Schritt 2 ist der, an dem sich zeigt, wie weit
+sich Mathlibs Aufkreuzungs-API über einen beliebigen linear geordneten Index
+ziehen läßt. **Nicht der ganze Meilenstein 9 ist offen:** optionales Sampling in
+stetiger Zeit und die Stabilität unter Stoppen stehen seit dem 2026-09-10.
+
+**4. Erst danach C.5/G**, in der Gestalt, die unmittelbar darunter steht.
 
 **UMFORMULIERUNG VON C.5/G, vom Nutzer am 2026-09-13 nachts angeordnet.**
 
