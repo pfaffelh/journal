@@ -38,7 +38,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-14.  Every declaration elaborates; 7 declarations carry `sorry`, and
+2026-09-15.  Every declaration elaborates; 7 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -27924,3 +27924,242 @@ theorem integrable_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))} (c
 end RightContinuousPath
 
 end CanonicalPathSpace
+
+/-! ### The path map of the jump process, and the seam between Milestone 4 and Milestone 6
+
+The canonical path space of the previous section is a space, and until here it carried no
+process: every hypothesis of Milestone 6 was discharged on it, and no solution of a martingale
+problem was known to live on it.  That is the objection the shift invariance of `lebesgueClock`
+answered for the clock and the previous section answered for `Shift`, one storey up, and this
+section answers it.
+
+The map is `jumpPath`, the path of the local jump construction read as a point of
+`RightContinuousPath E`.  Three things make it go, and none of them is new work:
+
+* the paths are **right locally constant at every sample point and under no hypothesis**
+  (`eventuallyEq_nhdsGE_jumpProcessE`), so they are points of the path space -- not almost
+  surely, but everywhere, which is what a map into a subtype needs;
+* the coordinate of the image **is** the process, by `rfl`, so a test process of Milestone 6
+  composed with the map is a test process of Milestone 4, as a member of a set and not up to a
+  null set;
+* and the natural filtration of the construction is the **pull back** of the path filtration
+  (`naturalFiltration_comp`), so the map is measurable from one past to the other.
+
+What remains is the transport of the martingale property **forwards** along the map, and that is
+`martingale_map_of_martingale_comp` below.  `martingale_comp_of_map_eq` goes the other way -- it
+pulls a martingale back -- and the two are not the same statement: the pull back needs the
+filtration downstairs to be exactly the comap, the push forward needs only that the map is
+measurable from one past to the other, and it needs the adaptedness upstairs as an input, because
+a push forward cannot produce it.
+-/
+
+section MartingalePushforward
+
+/-- **A martingale pushes forward along a measurable map.**  If `Y ∘ θ` is a martingale for `𝓖`
+under `P`, and `θ` is measurable from `𝓖 i` to `𝓕 i` at every `i`, then `Y` is a martingale for
+`𝓕` under the image measure `P.map θ`.
+
+The converse direction of `martingale_comp_of_map_eq`, and it is cheaper in one hypothesis and
+dearer in another.  Cheaper: the filtration upstairs need only *pull back into* `𝓖` and not be
+equal to the comap, because a set of the past upstairs is only ever used through its preimage.
+Dearer: `hadp` has to be supplied, since adaptedness upstairs does not follow from adaptedness
+downstairs -- the image measure sees the map, the σ-algebra does not.
+
+Integrability is **not** a hypothesis: `integrable_map_measure` reads it off the martingale
+downstairs, which is the only place the finiteness of `P` is used.  No topology on the index. -/
+theorem martingale_map_of_martingale_comp {Ω' Ω'' : Type*} {m' : MeasurableSpace Ω'}
+    {m'' : MeasurableSpace Ω''} {ι' : Type*} [Preorder ι'] {θ : Ω'' → Ω'}
+    (hθ : Measurable θ) {P : Measure Ω''} [IsFiniteMeasure P]
+    {𝓕 : Filtration ι' m'} {𝓖 : Filtration ι' m''}
+    (hθi : ∀ i, Measurable[𝓖 i, 𝓕 i] θ)
+    {Y : ι' → Ω' → ℝ} (hadp : StronglyAdapted 𝓕 Y)
+    (hY : Martingale (fun i ω ↦ Y i (θ ω)) 𝓖 P) :
+    Martingale Y 𝓕 (P.map θ) := by
+  haveI : IsFiniteMeasure (P.map θ) := P.isFiniteMeasure_map θ
+  have haes : ∀ i, AEStronglyMeasurable (Y i) (P.map θ) := fun i ↦
+    ((hadp i).mono (𝓕.le i)).aestronglyMeasurable
+  have hint : ∀ i, Integrable (Y i) (P.map θ) := fun i ↦
+    (integrable_map_measure (haes i) hθ.aemeasurable).2 (hY.integrable i)
+  refine ⟨hadp, fun i j hij ↦ ?_⟩
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le i) (hint j)
+    (fun S _ _ ↦ (hint i).integrableOn) ?_ (hadp i).aestronglyMeasurable).symm
+  intro A hA _
+  have hAm : MeasurableSet A := 𝓕.le i A hA
+  have hswap : ∀ k, ∫ y in A, Y k y ∂(P.map θ) = ∫ ω in θ ⁻¹' A, Y k (θ ω) ∂P := fun k ↦
+    setIntegral_map hAm (haes k) hθ.aemeasurable
+  rw [hswap i, hswap j]
+  exact hY.setIntegral_eq hij (hθi i hA)
+
+end MartingalePushforward
+
+section JumpPath
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **Every path of the local jump construction is a point of the canonical path space.**  Under
+no hypothesis whatever -- neither positivity of the rate nor non explosion -- and at *every*
+sample point, which is what a map into a subtype needs: an almost sure statement would only give
+a map defined off a null set.
+
+`exists_Ico_jumpProcessE_eq` is the whole content; the rest is the passage from `ℝ` to `ℝ≥0`,
+where the right neighbourhood `[u, b)` becomes the width `(b - u)⁺`. -/
+theorem isRightLocallyConstantPath_jumpProcessE (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    IsRightLocallyConstantPath fun t : ℝ≥0 ↦ jumpProcessE lam (t : ℝ) ω := by
+  intro u
+  obtain ⟨b, hb, hconst⟩ := exists_Ico_jumpProcessE_eq lam ω (u : ℝ)
+  refine ⟨Real.toNNReal (b - (u : ℝ)), Real.toNNReal_pos.2 (by linarith), fun v huv hv ↦ ?_⟩
+  refine hconst (v : ℝ) ⟨by exact_mod_cast huv, ?_⟩
+  have hcast : ((v : ℝ≥0) : ℝ) < ((u + Real.toNNReal (b - (u : ℝ)) : ℝ≥0) : ℝ) := by
+    exact_mod_cast hv
+  rw [NNReal.coe_add, Real.coe_toNNReal _ (by linarith)] at hcast
+  linarith
+
+/-- **The path map of the local jump construction**: the sample point read as a point of the
+canonical path space of Milestone 6.  This is the missing link between the two milestones -- the
+solution of Milestone 4 lives on `(ℕ → E) × (ℕ → ℝ)`, the uniqueness and Markov statements of
+Milestone 6 live on a path space, and nothing carried one to the other. -/
+noncomputable def jumpPath (lam : E → ℝ) (ω : (ℕ → E) × (ℕ → ℝ)) : RightContinuousPath E :=
+  ⟨fun t : ℝ≥0 ↦ jumpProcessE lam (t : ℝ) ω, isRightLocallyConstantPath_jumpProcessE lam ω⟩
+
+/-- **The coordinate of the image is the process**, by `rfl`.  This is what makes the transport of
+the test processes an identity of sets rather than an almost sure identity. -/
+@[simp] theorem coordinate_jumpPath (lam : E → ℝ) (t : ℝ≥0) (ω : (ℕ → E) × (ℕ → ℝ)) :
+    RightContinuousPath.coordinate t (jumpPath lam ω) = jumpProcessE lam (t : ℝ) ω := rfl
+
+theorem measurable_jumpPath {lam : E → ℝ} (hlam : Measurable lam) :
+    Measurable (jumpPath lam) :=
+  RightContinuousPath.measurable_of_measurable_toFun
+    (measurable_pi_lambda _ fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ))
+
+/-- **The filtration of the construction is the pull back of the path filtration.**  Both are
+natural filtrations of processes that agree along the map, so `naturalFiltration_comp` is the
+whole proof, and the identity is one of σ-algebras and not an inclusion. -/
+theorem jumpFiltrationE_eq_comap_jumpPath {lam : E → ℝ} (hlam : Measurable lam) (t : ℝ≥0) :
+    (jumpFiltrationE lam hlam t : MeasurableSpace ((ℕ → E) × (ℕ → ℝ)))
+      = MeasurableSpace.comap (jumpPath lam)
+          (RightContinuousPath.pathFiltration (E := E) t) :=
+  naturalFiltration_comp RightContinuousPath.measurable_coordinate
+    (fun t ↦ measurable_jumpProcessE_apply hlam (t : ℝ)) (fun _ _ ↦ rfl) t
+
+/-- **The path map is measurable from the past of the construction to the past of the path
+space**, which is the hypothesis `hθi` of `martingale_map_of_martingale_comp`. -/
+theorem measurable_pathFiltration_jumpPath {lam : E → ℝ} (hlam : Measurable lam) (t : ℝ≥0) :
+    Measurable[jumpFiltrationE lam hlam t, RightContinuousPath.pathFiltration (E := E) t]
+      (jumpPath lam) :=
+  measurable_iff_comap_le.2 (jumpFiltrationE_eq_comap_jumpPath hlam t).ge
+
+/-- **A test process of the path space, composed with the path map, is a test process of the
+construction.**  Membership in `mpFamily` is transported as an identity of the defining data: the
+pair `p` is the same pair, because the coordinate of the image is the process by `rfl`. -/
+theorem mem_mpFamily_comp_jumpPath {A : Set ((E → ℝ) × (E → ℝ))} (lam : E → ℝ) (c : Clock.Conv)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock c
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E)) :
+    (fun t ω ↦ Y t (jumpPath lam ω))
+      ∈ mpFamily A lebesgueClock c
+          (fun t : ℝ≥0 ↦ fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam (t : ℝ) ω) := by
+  obtain ⟨p, hp, hYeq⟩ := hY
+  exact ⟨p, hp, fun t ω ↦ hYeq t (jumpPath lam ω)⟩
+
+/-- The first components of the jump operator are measurable. -/
+theorem measurable_fst_jumpOperator {lam : E → ℝ} {mu : Kernel E E}
+    {p : (E → ℝ) × (E → ℝ)} (hp : p ∈ jumpOperator lam mu) : Measurable p.1 := hp.1
+
+/-- The second components of the jump operator are measurable. -/
+theorem measurable_snd_jumpOperator {lam : E → ℝ} (hlam : Measurable lam) {mu : Kernel E E}
+    [IsMarkovKernel mu] {p : (E → ℝ) × (E → ℝ)} (hp : p ∈ jumpOperator lam mu) :
+    Measurable p.2 := by
+  obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hp
+  rw [hp2]
+  exact measurable_jumpApply hlam hf hC
+
+/-- The second components of the jump operator are bounded, by `abs_jumpApply_le`: a bounded rate
+takes a bounded function to a bounded one. -/
+theorem bddAbove_snd_jumpOperator {lam : E → ℝ} {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x)
+    (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    {p : (E → ℝ) × (E → ℝ)} (hp : p ∈ jumpOperator lam mu) : ∃ b, ∀ x, ‖p.2 x‖ ≤ b := by
+  obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hp
+  refine ⟨2 * L * C, fun x ↦ ?_⟩
+  rw [Real.norm_eq_abs, hp2]
+  exact abs_jumpApply_le hlam0 hL hC x
+
+/-- The first components of the jump operator are bounded, which is carried by the members. -/
+theorem bddAbove_fst_jumpOperator {lam : E → ℝ} {mu : Kernel E E}
+    {p : (E → ℝ) × (E → ℝ)} (hp : p ∈ jumpOperator lam mu) : ∃ b, ∀ x, ‖p.1 x‖ ≤ b := by
+  obtain ⟨hf, ⟨C, hC⟩, hp2⟩ := hp
+  exact ⟨C, fun x ↦ by rw [Real.norm_eq_abs]; exact hC x⟩
+
+/-- **The solution of Milestone 4, carried onto the canonical path space of Milestone 6.**  The
+image of the jump measure under the path map solves the martingale problem of the jump operator
+for the coordinate process and the natural filtration of the coordinates.
+
+This is the first martingale problem solution in this file that lives on a path space, and it is
+what makes the Markov and uniqueness statements of Milestone 6 non vacuous on data: every
+hypothesis those statements carry about `(F, π, 𝓕₀)` is discharged for
+`(RightContinuousPath E, coordinate, pathFiltration)` by the previous section, and this theorem
+supplies the measure.
+
+The rate is bounded and nonnegative and the kernel is Dirac at an absorbing state, which are the
+hypotheses of `jumpProcessE_isMPSolution_of_nonneg` and nothing more; in particular the rate is
+allowed to vanish. -/
+theorem jumpPath_isMPSolution [MeasurableEq E] {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      (RightContinuousPath.pathFiltration (E := E))
+      ((jumpMeasure mu nu).map (jumpPath lam)) := by
+  intro Y hY
+  have hup : Martingale (fun t ω ↦ Y t (jumpPath lam ω)) (jumpFiltrationE lam hlam)
+      (jumpMeasure mu nu) :=
+    jumpProcessE_isMPSolution_of_nonneg hlam hlam0 hL mu habs nu _
+      (mem_mpFamily_comp_jumpPath lam Clock.Conv.optional hY)
+  refine martingale_map_of_martingale_comp (measurable_jumpPath hlam)
+    (measurable_pathFiltration_jumpPath hlam) ?_ hup
+  exact RightContinuousPath.stronglyAdapted_mpFamily_coordinate Clock.Conv.optional
+    (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ measurable_snd_jumpOperator hlam hp) hY
+
+/-- **The image measure has the prescribed initial law.**  The hypothesis `hinit` of
+`onedim_mpFamily_jumpOperator`, discharged: the coordinate at `⊥` of the image is the process at
+time `0`, and `jumpMeasure_map_jumpProcessE_zero` gives its law under no hypothesis on the
+rate. -/
+theorem map_coordinate_bot_jumpPath {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    ((jumpMeasure mu nu).map (jumpPath lam)).map
+        (RightContinuousPath.coordinate (E := E) ⊥) = nu := by
+  rw [Measure.map_map (RightContinuousPath.measurable_coordinate ⊥) (measurable_jumpPath hlam)]
+  have h : (RightContinuousPath.coordinate (E := E) ⊥) ∘ jumpPath lam
+      = fun ω : (ℕ → E) × (ℕ → ℝ) ↦ jumpProcessE lam 0 ω := by
+    funext ω
+    show jumpProcessE lam ((⊥ : ℝ≥0) : ℝ) ω = jumpProcessE lam 0 ω
+    norm_num
+  rw [h]
+  exact jumpMeasure_map_jumpProcessE_zero lam mu nu
+
+/-- **`hint` of Milestone 6, discharged on the data of Milestone 4.**  Every test process of the
+jump operator is integrable on the canonical path space under every finite measure.  This is
+`integrable_mpFamily_coordinate` with the four properties of the members of `jumpOperator`
+supplied, and it is the form the uniqueness statements of Milestone 6 consume: their `hint`
+quantifies over the solutions of the problem, and the bound here is uniform in the measure. -/
+theorem integrable_mpFamily_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    (c : Clock.Conv) {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock c
+      (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+    (P : Measure (RightContinuousPath E)) [IsFiniteMeasure P] (t : ℝ≥0) :
+    Integrable (Y t) P :=
+  RightContinuousPath.integrable_mpFamily_coordinate c
+    (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp)
+    (fun _ hp ↦ measurable_snd_jumpOperator hlam hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp) hY P t
+
+/-- The image measure is a probability measure, which the statements of Milestone 6 ask for. -/
+theorem isProbabilityMeasure_map_jumpPath {lam : E → ℝ} (hlam : Measurable lam)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsProbabilityMeasure ((jumpMeasure mu nu).map (jumpPath lam)) :=
+  Measure.isProbabilityMeasure_map (measurable_jumpPath hlam).aemeasurable
+
+end JumpPath

@@ -6564,10 +6564,41 @@ one, and they are what the instances of the milestone stand on.
   `RightContinuousPath E`, with the right local constancy of its paths — true
   there because nothing happens between two jump times — and its measurability,
   which is `measurable_of_measurable_toFun` on
-  `measurable_uncurry_jumpProcessE`. This is what carries the solution of
-  Milestone 4 onto the path space of Milestone 6: without it the path space is a
-  space with no process on it, and the milestone's hypotheses are discharged
-  about nothing.
+  `measurable_jumpProcessE_apply`. The right local constancy holds at **every**
+  sample point and under no hypothesis, which is what a map into a subtype
+  needs: an almost sure statement would define the map off a null set only.
+  `coordinate_jumpPath`, the statement that the coordinate of the image is the
+  process, is `rfl`.
+* `jumpFiltrationE_eq_comap_jumpPath` and `measurable_pathFiltration_jumpPath`:
+  the natural filtration of the construction **is** the pull back of
+  `pathFiltration` along `jumpPath`, by `naturalFiltration_comp`, so the path map
+  is measurable from one past to the other. An identity of σ-algebras, not an
+  inclusion, because both sides are natural filtrations of processes that agree
+  along the map.
+* `martingale_map_of_martingale_comp`: a martingale **pushes forward** along a
+  measurable map. If `Y ∘ θ` is a martingale for `𝓖` under `P` and `θ` is
+  measurable from `𝓖 i` to `𝓕 i` at every `i`, then `Y` is a martingale for `𝓕`
+  under `P.map θ`. This is not `martingale_comp_of_map_eq` read backwards: the
+  pull back needs the filtration downstairs to be exactly the comap, the push
+  forward needs only that the map is measurable from one past to the other — and
+  it needs the adaptedness upstairs as an input, because a push forward cannot
+  produce it. Integrability is no hypothesis; `integrable_map_measure` reads it
+  off the martingale downstairs, and that is the only use of the finiteness of
+  `P`. No topology on the index.
+* `jumpPath_isMPSolution`: the image of the jump measure under the path map
+  solves the martingale problem of the jump operator for the coordinate process
+  and `pathFiltration`. This is the **seam**: the first martingale problem
+  solution of this file that lives on a path space, and what makes the Markov
+  and uniqueness statements of this milestone non vacuous on data. The
+  hypotheses are those of `jumpProcessE_isMPSolution_of_nonneg` and nothing more
+  — bounded nonnegative rate, Dirac kernel at an absorbing state — so a
+  vanishing rate is admitted. `mem_mpFamily_comp_jumpPath` is the transport of
+  the test processes, and it is an identity of the defining data and not an
+  almost sure identity, because `coordinate_jumpPath` is `rfl`.
+* `map_coordinate_bot_jumpPath` and `isProbabilityMeasure_map_jumpPath`: the
+  image measure has initial law `nu` — which is `hinit` of
+  `onedim_mpFamily_jumpOperator` — and is a probability measure, which every
+  statement of this milestone asks for.
 
 **Acceptance examples.**
 

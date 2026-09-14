@@ -29630,3 +29630,225 @@ elf.
 2. **`eq_of_forall_onedim`.** Unverändert Buchhaltung, unverändert offen;
    `measure_biInter_eq_of_propagatesAgreement` gibt die endlichdimensionalen
    Verteilungen schon her.
+
+### 2026-09-15, erster Lauf des Tages — `jumpPath` steht: der Sprungprozeß lebt auf dem kanonischen Pfadraum, und die Naht zwischen Meilenstein 4 und Meilenstein 6 ist auf der Lösungsseite geschlossen
+
+**Vorrangige Aufgabe, Vorschlag 0 des Vorlaufs**, und die vom Nutzer am
+2026-09-15 vorangestellte: `jumpPath`, das Pfadabbild des Sprungprozesses in den
+am 2026-09-14 gebauten Raum. Der Einwand des Vorlaufs war, daß der Pfadraum bis
+dahin ein **Raum ohne Prozeß darauf** war: jede Voraussetzung von Meilenstein 6
+war auf ihm eingelöst, und von keinem Maß auf ihm war bewiesen, daß es ein
+Martingalproblem löst.
+
+**Er steht, und mit ihm mehr als das Abbild** — der Transport der
+Martingaleigenschaft ist als eigener, von der Sprungkonstruktion freier Satz
+abgetrennt.
+
+#### Was gebaut ist — 16 Deklarationen, 239 Zeilen, zwei neue Abschnitte
+
+Alle in `TauCeti/MartingaleProblems/Suggested.lean`, am Ende der Datei, die ganze
+Datei **ohne einen Fehler** durch `lake env lean` gegen v4.33.1. Die Zahl der
+`sorry` bleibt bei **sieben**, und es sind dieselben sieben wie zuvor — die
+Zeilen 734, 754 (Meilenstein 3), 1145, 1256, 1270 (Meilenstein 9), 1669, 1699
+(Meilenstein 10); keine der sechzehn neuen Deklarationen trägt eines, und von
+keiner ist eines erreichbar.
+
+Alle sechzehn sind mit `scripts/check_axioms.py` geprüft und hängen sämtlich an
+`propext`, `Classical.choice`, `Quot.sound` und an nichts sonst.
+
+*Genau gesagt, damit niemand mehr behauptet bekommt, als geprüft ist:* die
+einzige Änderung an der Datei nach dem erfolgreichen Durchlauf ist die
+Jahreszahl im **Modulkommentar** des Kopfes — die Zeile „last on 2026-09-14"
+wird „2026-09-15", Text zwischen `/-!` und `-/`, keine Deklaration. Der
+Durchlauf, der die sechzehn Deklarationen und die sieben `sorry` gemeldet hat,
+ist der davor; er war fehlerfrei.
+
+Abschnitt `MartingalePushforward`, eine Deklaration:
+
+* `martingale_map_of_martingale_comp` — **ein Martingal schiebt sich längs einer
+  meßbaren Abbildung vor**. Ist `Y ∘ θ` ein `𝓖`-Martingal unter `P` und ist `θ`
+  an jedem `i` von `𝓖 i` nach `𝓕 i` meßbar, so ist `Y` ein `𝓕`-Martingal unter
+  `P.map θ`.
+
+Abschnitt `JumpPath`, fünfzehn:
+
+* `isRightLocallyConstantPath_jumpProcessE` — die Pfade der Konstruktion sind
+  Punkte des Pfadraums.
+* `jumpPath`, `coordinate_jumpPath` (`rfl`), `measurable_jumpPath` — das Abbild.
+* `jumpFiltrationE_eq_comap_jumpPath`, `measurable_pathFiltration_jumpPath` — die
+  Filtration der Konstruktion **ist** der Rückzug der Pfadfiltration.
+* `mem_mpFamily_comp_jumpPath` — der Transport der Testprozesse, als Zugehörigkeit
+  zu einer Menge und nicht fast sicher.
+* `measurable_fst_jumpOperator`, `measurable_snd_jumpOperator`,
+  `bddAbove_fst_jumpOperator`, `bddAbove_snd_jumpOperator` — die vier
+  Eigenschaften der Mitglieder von `jumpOperator`, die der Pfadraum abfragt.
+* **`jumpPath_isMPSolution`** — das Bild des Sprungmaßes unter dem Pfadabbild löst
+  das Martingalproblem des Sprungoperators für den Koordinatenprozeß und
+  `pathFiltration`.
+* `map_coordinate_bot_jumpPath`, `isProbabilityMeasure_map_jumpPath`,
+  `integrable_mpFamily_jumpOperator_coordinate` — Anfangsgesetz, Normierung und
+  `hint` auf den Daten von Meilenstein 4.
+
+#### Erstens: der Vorschub ist nicht der Rückzug rückwärts gelesen, und der Unterschied ist eine Voraussetzung in jeder Richtung
+
+Die Datei trug seit dem 2026-09-10 `martingale_comp_of_map_eq`: ein Martingal
+**zieht sich zurück** längs einer Abbildung, die das Maß aufs Maß wirft. Das ist
+die falsche Richtung für diese Naht — dort liegt die Lösung *oben*, auf dem
+Konstruktionsraum, und gebraucht wird sie *unten*, auf dem Bildraum.
+
+Die beiden Sätze sind nicht dieselbe Aussage, und keiner folgt aus dem anderen:
+
+* Der **Rückzug** verlangt `𝓖 i = comap θ (𝓕 i)`, eine **Gleichheit** von
+  σ-Algebren, denn er muß eine Menge der Vergangenheit unten als Urbild
+  schreiben können.
+* Der **Vorschub** verlangt nur `Measurable[𝓖 i, 𝓕 i] θ`, also
+  `comap θ (𝓕 i) ≤ 𝓖 i` — eine **Inklusion** —, denn eine Menge der
+  Vergangenheit oben wird ohnehin nur durch ihr Urbild benutzt. Das ist die
+  schwächere Voraussetzung, und sie ist nach der stehenden Regel dieses Branchs
+  genommen, obwohl der Anwendungsfall die Gleichheit hergäbe
+  (`jumpFiltrationE_eq_comap_jumpPath`).
+* Dafür verlangt der Vorschub die **Adaptiertheit oben** als Eingabe. Sie folgt
+  nicht aus der unten: der Bildraum sieht die Abbildung nicht, und
+  `StronglyMeasurable[𝓕 i] (Y i)` ist eine Aussage über `𝓕 i` allein. Hier
+  kommt sie aus `stronglyAdapted_mpFamily_coordinate` des Vorlaufs — und *das*
+  ist der Grund, warum jener Satz zuerst gebraucht wurde.
+
+Die **Integrierbarkeit** ist in beiden Richtungen keine Voraussetzung:
+`integrable_map_measure` liest sie am Martingal der anderen Seite ab. Sie ist die
+einzige Stelle, an der die Endlichkeit von `P` verbraucht wird. Über dem Index
+steht nichts als `[Preorder ι']`.
+
+#### Zweitens: die Regularität der Pfade gilt an *jedem* Stichprobenpunkt, und das ist es, was das Abbild überhaupt zu einer Abbildung macht
+
+`RightContinuousPath E` ist ein Untertyp. Eine Abbildung dorthin muß an jedem
+Punkt des Urbildraums einen Beweis der Regularität mitliefern — eine fast sichere
+Aussage gäbe **keine Abbildung**, sondern nur eine außerhalb einer Nullmenge
+erklärte, und dann wäre `Measure.map` nicht anwendbar und der ganze Transport
+hinfällig.
+
+`eventuallyEq_nhdsGE_jumpProcessE` trägt genau deshalb, und der Doc-Kommentar
+dort sagt es seit dem 2026-09-10 voraus: **keine Voraussetzung, auch nicht die
+Nichtexplosion.** Jenseits der Explosionszeit gibt `stepIndex` den Müllwert, der
+Pfad ist von dort an konstant, und konstant ist rechtsseitig lokal konstant. Der
+Müllwert, der an sechs anderen Stellen eine Aussage still wahr gemacht hat,
+schadet hier nicht — er macht den Pfad *regulärer*, nicht weniger regulär.
+
+Das ist der Grund, aus dem `jumpPath_isMPSolution` über `0 ≤ lam` steht und nicht
+über `0 < lam`: nichts am Pfadabbild verlangt Positivität, und die einzige
+Voraussetzung, die der Satz über die Konstruktion erbt, ist die von
+`jumpProcessE_isMPSolution_of_nonneg`.
+
+#### Drittens, und das ist der Befund für den nächsten Lauf: es fehlt genau noch **eine** Änderung, und sie ist die, die der Vorlauf schon benannt hat
+
+Mit diesem Lauf sind alle Eingaben von
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` auf den Daten von Meilenstein 4
+eingelöst — `hgen`, `hjoint`/`hpath`, `hsm`, `hadapt`, `hY`, `honedim`
+(`onedim_mpFamily_jumpOperator`), `hfm`/`hfb`/`hgb`, und jetzt auch das Maß
+selbst samt Anfangsgesetz. **Bis auf `hint`.**
+
+`hint` steht in beiden Sätzen — `subsingleton_mpSolutions_of_unique_onedim`
+(`Suggested.lean:26878`) und `subsingleton_mpSolutions_mpFamily_lebesgueClock`
+(`:27449`) — als
+
+```
+hint : ∀ P : Measure F, IsMPSolution … P → ∀ Y ∈ …, ∀ u, Integrable (Y u) P
+```
+
+also über **alle** Maße ohne Endlichkeit. Der Vorlauf hat gezeigt, daß das für
+kein unendliches Lösungsmaß wahr ist; dieser Lauf liefert den Zeugen von der
+anderen Seite: `integrable_mpFamily_jumpOperator_coordinate` beweist die Aussage
+auf genau diesen Daten und **unter `[IsFiniteMeasure P]`**, was die schwächste
+Voraussetzung ist, unter der sie gilt. Die Lücke zwischen beidem ist der ganze
+Rest.
+
+Verbraucht wird `hint` in beiden Sätzen an einer einzigen Stelle,
+`fun P hP ↦ hint P hP.1`, und dort ist `hP.2 : IsProbabilityMeasure P`. Die
+Änderung ist darum wörtlich: `IsProbabilityMeasure P` in den Binder von `hint`
+aufnehmen und die Anwendung auf `fun P hP ↦ hint P hP.2 hP.1` bringen. Sie macht
+beide Sätze **stärker** und keinen Beweis länger. Sie ist nicht in diesem Lauf
+gemacht, weil sie die Signatur zweier bewiesener Sätze ändert und der Vorlauf
+dazu ausdrücklich gesagt hat, das gehöre in einen Lauf, der sie übersetzt, und
+nicht in die letzte Viertelstunde eines anderen. Sie steht unverändert als
+Vorschlag 1.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf frisch geholt:
+`d5eca6991ffb769b38d582f83a4ea035cfa2e52d` (der Vorlauf stand auf
+`9cb3970b1fb61911f7e8892dffcde5aa4a0661cc`).
+
+**Alle in diesem Lauf neu benutzten Mathlib-Namen** sind gegen v4.33.1 übersetzt
+und gegen master nachgeschlagen; keiner ist `deprecated`:
+
+* `Measure.isFiniteMeasure_map`
+  (v4.33.1 `MeasureTheory/Measure/Typeclasses/Finite.lean:119`, master `:124`),
+* `Measure.isProbabilityMeasure_map`
+  (`MeasureTheory/Measure/Typeclasses/Probability.lean:124`),
+* `integrable_map_measure`
+  (master `MeasureTheory/Function/L1Space/Integrable.lean:359`),
+* `setIntegral_map` (v4.33.1 `MeasureTheory/Integral/Bochner/Set.lean:557`,
+  master `:556`; die gleichnamige Aussage in `VectorMeasure/SetIntegral.lean:345`
+  ist eine andere und nicht gemeint),
+* `Martingale.setIntegral_eq` und `Martingale.integrable`
+  (`Probability/Martingale/Basic.lean:100` und `:97`),
+* `StronglyAdapted` (master `Probability/Process/Adapted.lean:105`),
+* `Real.toNNReal_pos` (v4.33.1 `Data/NNReal/Defs.lean:548`, im `namespace Real`
+  — master hat die Datei nach `Basic/NNReal/Defs.lean` verschoben, der Name
+  steht unverändert),
+* `Real.coe_toNNReal` (master `Basic/NNReal/Defs.lean:158`),
+* `measurable_iff_comap_le` (master `MeasureTheory/MeasurableSpace/Basic.lean:189`),
+* `Measure.map_map` (master `MeasureTheory/Measure/Map.lean:208`),
+* `NNReal.coe_add`, `measurable_pi_lambda`,
+  `ae_eq_condExp_of_forall_setIntegral_eq` — unverändert auf beiden Ständen.
+
+**Ein Befund am Rande, und er ist eine Warnung und kein Satz:** von den sechzehn
+Deklarationen ist genau **eine** am Quelltext falsch geraten worden, und es war
+ein Namensraum — `isProbabilityMeasure_map` statt
+`Measure.isProbabilityMeasure_map`. In Mathlib steht der Satz als
+`Measure.isProbabilityMeasure_map` in `namespace MeasureTheory`; die Stellen in
+Mathlib selbst, die ihn unqualifiziert schreiben, stehen unter dem
+`Measure.`-Präfix ihrer eigenen Deklaration und sind deshalb **kein Beleg** für
+die Kurzform. Die Datei schreibt ihn an allen sechs älteren Stellen qualifiziert.
+Der Fehler ist vor dem ersten Durchlauf durch Vergleich mit diesen sechs Stellen
+gefunden worden, und das ist die billigere Reihenfolge: **wer einen Namen neu
+benutzt, sieht nach, wie die eigene Datei ihn schon schreibt**, ehe er den
+Übersetzer fragt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Den Umbau von `hint`.** Begründet oben; er ist Vorschlag 1.
+
+**Das Akzeptanzbeispiel der Zweizustandskette.** Es ist nicht abgeschlossen. Was
+ihm jetzt noch fehlt, ist allein `hint` — das Maß, die Adaptiertheit, die
+Erzeugung, der Schift, das Anfangsgesetz und `honedim` stehen sämtlich.
+
+**Meilenstein 3, Meilenstein 9, C.5/G.** Unberührt; sie sind nach der Anordnung
+des Nutzers vom 2026-09-15 die Punkte 2, 3 und 4 und kommen nach diesem.
+
+**`eq_of_forall_onedim`.** Unverändert ohne Deklaration.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Die Abschwächung von `hint`, und dann das Akzeptanzbeispiel ganz.**
+   `IsProbabilityMeasure P` in den Binder von `hint` in
+   `subsingleton_mpSolutions_of_unique_onedim` (`Suggested.lean:26878`) und
+   `subsingleton_mpSolutions_mpFamily_lebesgueClock` (`:27449`), die Anwendung
+   von `fun P hP ↦ hint P hP.1` auf `fun P hP ↦ hint P hP.2 hP.1`. **Worauf es
+   ruht:** dem Befund des Vorlaufs und dem Zeugen dieses Laufs, beide am
+   Quelltext. **Warum jetzt:** danach ist die Zweizustandskette in *einem* Zug
+   durchzurechnen — jede Voraussetzung von Meilenstein 6 hat dann einen Zeugen
+   auf den Daten von Meilenstein 4 —, und Meilenstein 6 hört auf, ein Satz über
+   eine Struktur zu sein, von der man nicht weiß, ob sie je erfüllt wird. Es ist
+   ein halber Lauf, und es ist der letzte Schritt dieser Naht.
+
+1. **Meilenstein 3, die beiden `sorry` des fdd-Kriteriums**
+   (`isMPSolution_iff_forall_fdd`, `Suggested.lean:734`, und
+   `isMPSolution_iff_forall_fdd_continuous`, `:754`) — die Anordnung des
+   Nutzers, Punkt 2, und sie gilt ab jetzt unverändert. Das Werkzeug ist fertig
+   (`induction_on_mulSystem`, `WeakConvergence/Suggested.lean:6001`), die
+   Hypothesen sind durchdebuggt, und das π-System der schweren Richtung ist
+   dasselbe wie `isPiSystem_pathCylinders`.
+
+2. **Meilenstein 9, die càdlàg-Modifikation** (`:1145`, `:1256`, `:1270`), Punkt
+   3 der Anordnung — das Tor zu Meilenstein 11, wo 10 167 Zeilen und 351
+   Deklarationen ohne `sorry` bisher von nichts verbraucht werden.
