@@ -2115,9 +2115,10 @@ already.
 
 \begin{theorem}[Borel equals cylinder]
   \label{thm:fdd}
-  Assume \eqref{T3p}, let $(E,r)$ be Polish and let $D \subset \T$ be countable and
-  dense.  Then $\pi_D : \DT \to E^D$, $f \mapsto (f(t))_{t \in D}$, is a
-  measurable embedding, and consequently
+  Assume \eqref{T3p}, let $(E,r)$ be Polish and let $D \subset \T$ be countable
+  and dense, and \emph{containing every maximal element of $\T$ and every
+  right-isolated point that is not isolated}.  Then $\pi_D : \DT \to E^D$,
+  $f \mapsto (f(t))_{t \in D}$, is a measurable embedding, and consequently
   \[
     \Bor(\DT) = \sigma(\pi_t : t \in \T) = \sigma(\pi_t : t \in D).
   \]
@@ -2135,6 +2136,26 @@ structure is to use $t \in D$ only and to invoke right continuity, which is what
 the statement is arranged to allow.  Injectivity of $\pi_D$ is right continuity
 again, and a measurable injection between standard Borel spaces is a measurable
 embedding.
+
+\begin{remark}[Why $D$ is not merely dense]
+  \label{rem:fdddense}
+  Injectivity of $\pi_D$ is right continuity, and right continuity says nothing
+  at a point that has no points of $\T$ above it.  On $\T = [0,1]$ with
+  $D = [0,1) \cap \Q$ the functions $f \equiv 0$ and $g = \mathbb 1_{\{1\}}$ are
+  both c\`adl\`ag --- right continuity at $1$ is vacuous, because
+  $\mathcal N_{>1} = \bot$ --- they agree on $D$, and they differ; so $\pi_D$ is
+  not injective.  \eqref{T2b} provides for a maximal element expressly (``a
+  maximal element is allowed \dots\ and is the one point at which a right limit
+  is not available''), but the consequence for $D$ has to be drawn separately.
+  Billingsley asks the same of $D$ for $D([0,1])$.
+
+  The second clause is needed because \eqref{T3p} does not require \eqref{T2b}.
+  On $\T = [0,1] \cup \{2\}$, a closed subset of $\R$ and hence a model of
+  \eqref{T3p}, the point $1$ is right isolated without being isolated, and
+  $D = ([0,1) \cap \Q) \cup \{2\}$ is separated by the same two functions.  For
+  $\T = [0,\infty)$ and $\T = [0,T]$ --- that is, under \eqref{T3} --- only the
+  first clause can occur, and for $\T = [0,\infty)$ it is empty.
+\end{remark}
 
 Theorem~\ref{thm:fdd} is what Proposition~\ref{prop:fddchar} consumes, and it is
 the one result of this section that the abstract theory of
@@ -3803,7 +3824,7 @@ uniqueness theory cannot do without.
   Remark~\ref{rem:absuniqgain}(ii) and Example~\ref{ex:shiftXA}.
 \end{remark}
 
-\begin{example}[The shifted problem for $\XX_A$; \eqref{T0} + \eqref{T4}]
+\begin{example}[The shifted problem for $\XX_A$; \eqref{T0} + \eqref{T4} + \eqref{T2a}]
   \label{ex:shiftXA}
   Let $q$ be a clock on $\T$, let $A \subset \Meas(\T \times E) \times \Meas(E)$
   allow a time-dependent coefficient, and put
@@ -3820,7 +3841,9 @@ uniqueness theory cannot do without.
       \;:\; (f,g) \in A \Bigr\} .
   \]
   Then $(\XX^\circ_r)$ is a shift system, with $\kappa = f(\pi_r)$: substituting
-  $v = r+u$,
+  $v = r+u$, which uses \eqref{T2a} through
+  $r + \langle 0,t \rangle_\iota = \langle r,\,r+t \rangle_\iota$ (see
+  Remark~\ref{rem:shiftXAtotal}),
   \begin{align*}
     \hat{Y}^\circ_t(\theta_r\omega)
       &= f(\omega(r+t)) - \int_{\langle 0,t \rangle_\iota} g(r+u,\omega(r+u))\, q_r(\dif u) \\
@@ -3837,14 +3860,51 @@ uniqueness theory cannot do without.
   measurable $g$ is automatic.
 \end{example}
 
+\begin{remark}[The substitution needs totality, and a partial order breaks it]
+  \label{rem:shiftXAtotal}
+  The step $v = r+u$ identifies $r + \langle 0,t \rangle_\iota$ with
+  $\langle r,\,r+t \rangle_\iota$.  That asks every $v$ with $v \leq r+t$ and
+  $\neg (v \leq r)$ to be of the form $r+u$, hence to satisfy $r \leq v$ --- a
+  totality condition, and not a consequence of \eqref{T4}.
+
+  The witness is Example~\ref{ex:clocks}(iv), an instance of this manuscript.
+  Take $\T = \Rp^2$ with the product order, $q$ Lebesgue measure,
+  $\iota = \mathrm{o}$, $f = 0$ and $g \equiv 1$.  Then $Y_t(\omega) = -t_1t_2$,
+  and since $q$ is shift invariant and $g$ time independent, $q_r = q$ and
+  $\XX^\circ_r = \XX^\circ$, so $\hat Y = Y$.  What \eqref{eq:shiftstable}
+  demands therefore reads
+  \[
+    -t_1t_2 \;=\; -(r_1+t_1)(r_2+t_2) + r_1r_2 + \kappa(\omega),
+    \qquad\text{that is}\qquad
+    \kappa(\omega) \;=\; r_1t_2 + t_1r_2 .
+  \]
+  The right-hand side depends on $t$ and $\kappa$ must not, so for $r \neq 0$ no
+  $\kappa$ exists and $(\XX^\circ_r)$ is not a shift system.  The failure is not
+  a null set question: with $r = (1,0)$ and $t = (2,2)$ the point $(0,1)$ lies in
+  $\langle r,\,r+t \rangle_\mathrm{o}$ --- it satisfies $(0,1) \leq (3,2)$ and
+  $\neg\bigl((0,1) \leq (1,0)\bigr)$ --- but not in
+  $r + \langle 0,t \rangle_\mathrm{o}$, and the difference has positive Lebesgue
+  measure.
+
+  Example~\ref{ex:clocks}(iv) is nevertheless shift invariant in the sense of
+  Definition~\ref{def:clock}, since $q(r+B) = q(B)$: \emph{shift invariance of
+  the clock and shift stability of the family come apart over a partial order},
+  and it is the latter that \eqref{eq:shiftstable} asks for.  Consequently the
+  claim of Remark~\ref{rem:absuniqgain}(ii) that for $\XX_A$ shift stability
+  never fails holds under \eqref{T2a} and not below it.  Proposition~\ref{prop:uniqfromprop},
+  which needs no shift system at all, is untouched.
+\end{remark}
+
 \begin{lemma}[Restart; \eqref{T0} + \eqref{T4} + \eqref{E0}]
   \label{lem:restart}
-  Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$ and let $\ZZ^\circ$ be a
-  determining set for every $\XX^\circ_r$ (Definition~\ref{def:canonical}).  Let
-  $X$ be a process with paths in $F$ on a filtered probability space
-  $(\Omega,\Filt,\mathbb{G},P)$, solving the martingale problem for $\XX^\circ$
-  with respect to $\mathbb{G}$; let $r \in \T$ and let $Z \geq 0$ be bounded and
-  $\Gilt_r$-measurable with $E^P[Z] = 1$.  Then
+  Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$.  Let $X$ be a process
+  with paths in $F$ on a filtered probability space
+  $(\Omega,\Filt,\mathbb{G},P)$, \emph{adapted} in the sense that $X$ is
+  $\Gilt_u/\Filt^\circ_u$-measurable for every $u \in \T$, solving the martingale
+  problem for $\XX^\circ$ with respect to $\mathbb{G}$, and such that
+  $Y^\circ_u(X) \in L^1(P)$ for every $Y^\circ \in \XX^\circ$ and every
+  $u \in \T$.  Let $r \in \T$ satisfy $r \leq r+u$ for all $u \in \T$, and let
+  $Z \geq 0$ be bounded and $\Gilt_r$-measurable.  Then
   \begin{equation}
     \label{eq:restart}
     R \;\coloneqq\; (Z \cdot P) \circ \bigl( X(r+\cdot) \bigr)^{-1}
@@ -3852,8 +3912,29 @@ uniqueness theory cannot do without.
   \end{equation}
   In the canonical case $\Omega = F$, $\mathbb{G} = \mathbb{F}^\circ$, $X = \pi$
   this reads $R = (Z \cdot P) \circ \theta_r^{-1}$ with $Z$ being
-  $\Filt^\circ_r$-measurable.
+  $\Filt^\circ_r$-measurable.  $R$ is a probability measure precisely when
+  $E^P[Z] = 1$.
 \end{lemma}
+
+\begin{remark}[What the hypotheses are, and what they are not]
+  \label{rem:restarthyp}
+  Three of the four conditions on $X$ and $r$ are what the proof below uses in
+  passing and are stated here because they do not follow from the rest.
+  Adaptedness of $X$ and $r \leq r+u$ are the two halves of the step ``so is
+  $Z$, because $\Gilt_r \subset \Gilt_{r+s}$''.  Integrability of the base family
+  is the last line of the proof; it cannot be read off the martingale property,
+  which is a statement about conditional expectations that already presupposes
+  it.
+
+  Two conditions that earlier versions of this lemma carried are \emph{not}
+  needed.  The normalisation $E^P[Z] = 1$ plays no part in the martingale
+  property; it decides only whether $R$ has total mass one, and is separated off
+  above.  And a determining set $\ZZ^\circ$ is not required: the proof below
+  identifies $E^R[\hat Y^\circ_t \mid \Filt^\circ_s]$ by testing against
+  \emph{every} set of $\Filt^\circ_s$, so Definition~\ref{def:canonical} need not
+  be available.  What a determining set buys on paper --- testing against a small
+  class --- is bought here by the $\sigma$-algebra itself.
+\end{remark}
 
 \begin{remark}
   \label{rem:restarttwolevel}
@@ -3867,8 +3948,8 @@ uniqueness theory cannot do without.
 
 
 \begin{proof}
-  Let $\hat{Y}^\circ \in \XX^\circ_r$, let $s \leq t$ and let
-  $Z^\circ_s \in \ZZ^\circ_s$.  Choose $Y^\circ \in \XX^\circ$ and $\kappa$ as in
+  Let $\hat{Y}^\circ \in \XX^\circ_r$, let $s \leq t$ and let $Z^\circ_s$ be
+  bounded and $\Filt^\circ_s$-measurable.  Choose $Y^\circ \in \XX^\circ$ and $\kappa$ as in
   \eqref{eq:shiftstable}, and evaluate everything along $X$; to keep the notation
   readable write $\tilde{V} = V(X)$ for a functional $V$ on $F$, so that
   $\tilde{Y}^\circ_u$ is a $\mathbb{G}$-martingale by hypothesis.
@@ -3890,17 +3971,21 @@ uniqueness theory cannot do without.
        = E^R\bigl[ \hat{Y}^\circ_s Z^\circ_s \bigr] ,
   \end{align*}
   the second equality by \eqref{eq:shiftstable} and the third by the display
-  above.  As $Z^\circ_s \in \ZZ^\circ_s$ was arbitrary, part~(ii) of
-  Definition~\ref{def:canonical} yields
-  $E^R[\hat{Y}^\circ_t \mid \Filt^\circ_s] = \hat{Y}^\circ_s$; integrability of
+  above.  Taking $Z^\circ_s = \one_{B}$ for $B \in \Filt^\circ_s$ arbitrary
+  yields $E^R[\hat{Y}^\circ_t \mid \Filt^\circ_s] = \hat{Y}^\circ_s$, since two
+  integrable $\Filt^\circ_s$-measurable variables with equal integrals over every
+  set of $\Filt^\circ_s$ agree almost surely; integrability of
   $\hat{Y}^\circ_t$ under $R$ holds because $Z$ is bounded and
   $\tilde{Y}^\circ_{r+t}, \tilde{Y}^\circ_r, \tilde\kappa \in L^1(P)$.
 \end{proof}
 
-Note where the two hypotheses act.  Shift stability is used only to rewrite
-$\hat{Y}^\circ_t \circ \theta_r$; the determining set is used only in the last
-step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
-\EK.  Everything else is the tower property.
+Note where the hypotheses act.  Shift stability is used only to rewrite
+$\hat{Y}^\circ_t \circ \theta_r$; adaptedness and $r \leq r+u$ only to place $W$
+in $\Gilt_{r+s}$; integrability only in the last line.  Everything else is the
+tower property.  A determining set would shorten the last step --- that is
+exactly the r\^ole Proposition~\ref{prop:fddchar} plays in \EK{} --- but it is
+not needed, because the test class here is all of $\Filt^\circ_s$; see
+Remark~\ref{rem:restarthyp}.
 
 \begin{remark}[Submartingale problems: a different direction, not a wider one]
   \label{rem:inequalitystable}
@@ -4060,28 +4145,49 @@ step, and it is exactly the r\^ole that Proposition~\ref{prop:fddchar} plays in
 
 \begin{theorem}[Abstract uniqueness and Markov property; \eqref{T0} + \eqref{T4}, and \eqref{T2a} for \ref{it:absuniq_b}]
   \label{thm:absuniq}
-  Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$, let $\ZZ^\circ$ be
-  determining for every $\XX^\circ_r$, and suppose \eqref{eq:absonedim} holds for
-  every $r \in \T$.  Then, subject to the integrability provisos of
-  Lemmas~\ref{lem:mixture} and \ref{lem:restart}:
+  Let $(\XX^\circ_r)$ be a shift system for $\XX^\circ$.  Then, subject to the
+  integrability provisos of Lemmas~\ref{lem:mixture} and \ref{lem:restart}:
   \begin{enumerate}[label=(\alph*)]
   \item \label{it:absuniq_a}
-    every solution is Markov --- in general \emph{time inhomogeneously} so: if
-    $X$ has paths in $F$ and solves the martingale problem with respect to
-    $(\Gilt_t)$, then for $f \in \Bdd(E)$, $r,t \in \T$,
+    let $r \in \T$ be \emph{one} time for which \eqref{eq:absonedim} holds.  Then
+    every solution is Markov at $r$ --- in general \emph{time inhomogeneously}
+    so: if $X$ has paths in $F$ and solves the martingale problem with respect to
+    $(\Gilt_t)$, then for $f \in \Bdd(E)$ and $t \in \T$,
     \[
       E\bigl[ f(X(r+t)) \bigm| \Gilt_r \bigr]
         \;=\; E\bigl[ f(X(r+t)) \bigm| X(r) \bigr] ;
     \]
+    in particular, if \eqref{eq:absonedim} holds for every $r$, every solution is
+    Markov;
   \item \label{it:absuniq_b}
-    if $\T$ satisfies \eqref{T2a}, then $\Msol(\XX^\circ,\mu)$ contains at most one
-    element, for every $\mu \in \Prob(E)$.
+    if $\ZZ^\circ$ is determining for every $\XX^\circ_r$, if
+    \eqref{eq:absonedim} holds for every $r \in \T$, and if $\T$ satisfies
+    \eqref{T2a}, then $\Msol(\XX^\circ,\mu)$ contains at most one element, for
+    every $\mu \in \Prob(E)$.
   \end{enumerate}
 \end{theorem}
 
+\begin{remark}[One shift suffices for the Markov property]
+  \label{rem:absuniqoner}
+  Part~\ref{it:absuniq_a} consumes \eqref{eq:absonedim} at a \emph{single} $r$,
+  because both applications of Lemma~\ref{lem:restart} in its proof sit at the
+  same $r$: the two weights $Z_1$ and $Z_2$ differ, the shift does not.  Earlier
+  versions asked for \eqref{eq:absonedim} at every $r$, which is what
+  part~\ref{it:absuniq_b} needs and what the chain argument of
+  Proposition~\ref{prop:uniqfromprop} consumes, but part~\ref{it:absuniq_a} does
+  not.  This is the sharp form of Remark~\ref{rem:chainonly}: what the Markov
+  property at $r$ needs is uniqueness of the one-dimensional distributions of the
+  problem posed \emph{at $r$}, and nothing about the other shifts.
+
+  The shift system is a hypothesis here and not a conclusion.  For $\XX_A$ it is
+  available under \eqref{T2a} and, by Remark~\ref{rem:shiftXAtotal}, not below
+  it; so although part~\ref{it:absuniq_a} carries no order condition of its own,
+  its standard instance does.
+\end{remark}
+
 \begin{proof}
   \emph{\ref{it:absuniq_a}.}
-  Fix $r \in \T$ and $F_0 \in \Gilt_r$ with $P(F_0)>0$, and put
+  Let $r$ be as in the statement, fix $F_0 \in \Gilt_r$ with $P(F_0)>0$, and put
   \[
     Z_1 = \frac{\one_{F_0}}{P(F_0)} , \qquad
     Z_2 = \frac{E[\one_{F_0} \mid X(r)]}{P(F_0)} .
