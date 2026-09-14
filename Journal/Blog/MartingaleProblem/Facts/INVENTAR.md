@@ -29400,3 +29400,233 @@ elf.
 2. **`eq_of_forall_onedim`.** Unverändert Buchhaltung, unverändert offen;
    `measure_biInter_eq_of_propagatesAgreement` gibt die endlichdimensionalen
    Verteilungen schon her.
+
+### 2026-09-14, sechster Lauf des Tages — der kanonische Pfadraum steht, `Shift` hat seinen ersten Zeugen, und die Hypothese, die ihn nicht loswird, ist `hint`
+
+**Vorrangige Aufgabe, Vorschlag 0 des Vorlaufs.** Der kanonische Pfadraum, und mit
+ihm der erste Zeuge für `Shift`. Der Vorlauf hatte den Einwand benannt: die
+Struktur steht seit Meilenstein 5, gebaut war nie eine, und die ganze
+Markovhälfte des Meilensteins stand damit über einer Voraussetzung, die
+möglicherweise nichts erfüllt.
+
+**Er steht, samt den vier Voraussetzungen des Meilensteins, die er tragen
+kann — und die fünfte ist der Fund des Laufs.**
+
+#### Was gebaut ist — 24 Deklarationen, ein neuer Abschnitt
+
+Alle in `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei **ohne einen
+Fehler** durch `lake env lean` gegen v4.33.1, die Zahl der `sorry` bleibt bei
+**sieben**, und keiner ist von den neuen Deklarationen aus erreichbar: die
+dreiundzwanzig benannten (die vierundzwanzigste ist die Instanz
+`instMeasurableSpace`) sind mit `scripts/check_axioms.py` geprüft und hängen
+sämtlich an `propext`, `Classical.choice`, `Quot.sound` und an nichts sonst.
+
+*Genau gesagt, damit niemand mehr behauptet bekommt, als geprüft ist:* die
+letzte Änderung an der Datei nach dem erfolgreichen Durchlauf ist ein Zusatz im
+**Modulkommentar** des Kopfes — Text zwischen `/-!` und `-/`, keine
+Deklaration. Der Durchlauf, der die 24 Deklarationen übersetzt hat, ist der
+davor; er war fehlerfrei.
+
+Abschnitt `RightContinuousPaths`, zwei Nachträge:
+
+* `min_add_le` — `min (a + c) b ≤ min a b + c` in `ℝ≥0`.
+* `measurable_uncurry_min_of_isRightLocallyConstant` — die **abgeschnittene**
+  gemeinsame Meßbarkeit: `(u, f) ↦ h (π (min u t) f)` ist meßbar für
+  `Borel ℝ≥0 ⊗ m` an **jeder** σ-Algebra `m`, für die die Koordinaten unterhalb
+  von `t` meßbar sind.
+
+Abschnitt `CanonicalPathSpace`, zweiundzwanzig:
+
+* `IsRightLocallyConstantPath`, `RightContinuousPath E` und `instMeasurableSpace`
+  — der Pfadraum, mit der **Spur der Produkt-σ-Algebra** als σ-Algebra.
+* `coordinate`, `measurable_toFun`, `measurable_coordinate` — die Koordinaten.
+* `generateFrom_coordinate` — **`hgen`**. Der Beweis ist
+  `MeasurableSpace.comap_process_pi`, einmal angewandt.
+* `isRightLocallyConstant_coordinate`, `measurable_uncurry_coordinate` —
+  **`hjoint`**, die Eingabe von `onedim_mpFamily_jumpOperator`.
+* `measurable_comp_coordinate` — **`hpath`**, und es ist ein Korollar von
+  `hjoint` und keine zweite Voraussetzung.
+* `isRightLocallyConstantPath_comp_add`, `shift`,
+  `measurable_of_measurable_toFun`, `measurable_shift`, `pathShift` — **der erste
+  Zeuge für `Shift`**.
+* `pathFiltration`, `pathFiltration_eq`, `measurable_pathFiltration`,
+  `shiftMeasurable_pathFiltration` — **`hadapt`** und **`hsm`**.
+* `measurable_compensator_coordinate`, `stronglyAdapted_mpFamily_coordinate` —
+  **`hY`**, der Vorschlag 1 des Vorlaufs, und er ging so, wie er angesagt war.
+* `integrable_mpFamily_coordinate` — **`hint`**, mit dem Vorbehalt unten.
+
+#### Erstens: der Zeuge ist billig, und das ist kein Zufall der Ausführung
+
+`eval_comp` von `pathShift` ist `rfl`. `pathFiltration_eq` ist `rfl`.
+`generateFrom_coordinate` ist ein Lemma der Bibliothek, einmal angewandt. Der
+Grund für alle drei ist **eine Entwurfsentscheidung**: die σ-Algebra des
+Pfadraums ist als `MeasurableSpace.comap toFun` *definiert* und nicht als die von
+den Koordinaten erzeugte. Beide σ-Algebren sind dieselbe — das sagt
+`generateFrom_coordinate` —, aber die eine Fassung macht die drei Aussagen zu
+Einzeilern und die andere zu Beweisen. Wer den Raum als Untertyp mit der von den
+Koordinaten erzeugten σ-Algebra aufsetzt, beweist dieselben Sätze teurer.
+
+#### Zweitens: die Regularität ist keine Zutat, sondern die Aussage selbst
+
+`RightContinuousPath` trägt `IsRightLocallyConstantPath` und nicht bloß
+Meßbarkeit in der Zeit, und der Vorlauf hat gezeigt, warum: auf dem vollen
+Funktionenraum `ℝ≥0 → E` ist `hpath` falsch, auf dem Unterraum der zeitmeßbaren
+Pfade ist die Auswertung nicht gemeinsam meßbar. Der Raum, an dem Meilenstein 4
+und Meilenstein 6 sich treffen, ist damit **notwendig** ein Unterraum des
+Funktionenraums.
+
+Bemerkenswert ist, was die Regularität **nicht** verlangt: keine Topologie auf
+`E`. `IsRightLocallyConstantPath f` sagt „`f` ist auf einer Rechtsumgebung jeder
+Zeit konstant"; über einem diskreten Zustandsraum ist das die Rechtsstetigkeit,
+und es ist, was ein Treppenpfadprozeß erfüllt. Die Aussage steht damit über
+`[MeasurableSpace E]` allein — die schwächste Voraussetzung, unter der sie gilt,
+und dieselbe, unter der Meilenstein 4 seine Sprungprozesse baut.
+
+#### Drittens, und das ist der Fund: `hint` ist die Voraussetzung, die dieser Raum nicht einlösen kann — und sie ist zu weit gefaßt
+
+`subsingleton_mpSolutions_of_unique_onedim` trägt
+
+```
+hint : ∀ P : Measure F, IsMPSolution (𝓧₀ 0) 𝓕₀ P → ∀ Y ∈ 𝓧₀ 0, ∀ u, Integrable (Y u) P
+```
+
+— ein Quantor über **alle** Maße, die das Problem lösen, ohne Endlichkeit. Das
+ist nicht einlösbar, und zwar aus einem Grund, der nichts mit dem Pfadraum zu tun
+hat: ein Testprozeß von `mpFamily` ist eine **beschränkte** Funktion (beschränkt
+durch `‖p.1‖ + ‖p.2‖ · q(Fenster)`, und beides ist endlich), und eine beschränkte
+Funktion, die nicht fast überall verschwindet, ist gegen ein unendliches Maß
+nicht integrierbar. Die Voraussetzung ist also für jedes unendliche Lösungsmaß
+falsch.
+
+**Gebraucht wird sie so auch nicht.** Im Beweis von
+`subsingleton_mpSolutions_of_unique_onedim` wird `hint` an genau einer Stelle
+angewandt, `fun P hP ↦ hint P hP.1`, und dort ist `hP : P ∈ N` mit
+`N = {P | IsMPSolution … ∧ IsProbabilityMeasure P}`. Der Quantor läuft also über
+alle Maße und wird nur an Wahrscheinlichkeitsmaßen verbraucht. Nach der
+stehenden Regel dieses Branchs — eine Aussage trägt die schwächsten Hypothesen,
+unter denen sie gilt — gehört `IsProbabilityMeasure P` in die Voraussetzung
+`hint`; das macht den Satz **stärker** und den Beweis nicht länger.
+
+`integrable_mpFamily_coordinate` ist deshalb über `[IsFiniteMeasure P]` gestellt,
+was die schwächste Voraussetzung ist, unter der die Aussage gilt, und die
+Abweichung steht im Doc-Kommentar und in `MartingaleProblems/README.md`,
+Meilenstein 6. Der Umbau von `hint` selbst ist **nicht** gemacht: er ändert die
+Signatur eines bewiesenen Satzes und seines Spezialfalls
+`subsingleton_mpSolutions_mpFamily_lebesgueClock`, und das gehört in einen Lauf,
+der ihn übersetzt und nicht in die letzte Viertelstunde eines anderen.
+
+#### Ein Nebenbefund zur Technik, der weitergegeben gehört
+
+`exact hcnt.comp hpair` — die Zeile, die in
+`measurable_uncurry_of_isRightLocallyConstant` trägt — läuft in der
+abgeschnittenen Fassung in einen `whnf`-Timeout. Der Unterschied ist das `min`:
+der Unifikator versucht, `Function.comp` und `dyadAbove` gleichzeitig zu
+entfalten, und `min` auf `ℝ≥0` führt ihn dabei durch die `Subtype`-Maschinerie.
+`simpa only [dyadAbove, Function.comp_def] using hcnt.comp hpair` geht in
+Sekunden. **Nicht den Unifikator zwei Definitionen auf einmal entfalten
+lassen**, wenn eine davon durch einen Untertyp geht.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D) — und hier steht der wertvollste Fund
+
+`upstream/master` ist in diesem Lauf frisch geholt:
+`9cb3970b1fb61911f7e8892dffcde5aa4a0661cc` (der Vorlauf stand auf
+`147cccedb04098422b4baaf4cd1760785f344a42`).
+
+**`scripts/check_negatives.py` hat zwei seiner eigenen Behauptungen widerlegt** —
+und der Fund ist nicht, daß die Roadmap falsch wäre, sondern daß das **Prüfskript
+hinter ihr her war**:
+
+* `cadlag`: „Der String `cadlag` kommt in Mathlib nicht vor." — falsch, 23
+  Treffer in `Mathlib/Topology/Order/Cadlag.lean` und
+  `Mathlib/Tactic/Translate/ToDual.lean`.
+* `IsCadlag`: „`Function.RightContinuous` und `IsCadlag` sind nicht in Mathlib."
+  — falsch, 80 Treffer in fünf Dateien.
+
+`Mathlib/Topology/Order/Cadlag.lean` trägt auf master `IsRightContinuous`
+(`:36`, `∀ a, ContinuousWithinAt f (Set.Ioi a) a`), `IsLeftContinuous`,
+`IsCaglad` (`:98`), `IsCadlag` (`:104`) und rund zwanzig Abschlußeigenschaften.
+**`SkorokhodSpace/README.md` und `SkorokhodSpace/Suggested.lean` wissen das
+bereits** und nennen die PR-Nummer #43352; die beiden Behauptungen im Skript
+waren Kopien eines älteren Standes. Sie sind entfernt und durch die Aussage
+ersetzt, die noch gilt und die der Roadmap-Kopf wirklich macht:
+
+> `skorokhod-space` — der Skorokhodraum selbst, die càdlàg-Pfade mit der
+> J₁-Topologie, kommt in Mathlib nicht vor; nur das Prädikat. **0 Treffer.**
+
+Damit sind es **siebzehn** Behauptungen, und keine ist widerlegt.
+
+*Und der Befund berührt diesen Lauf unmittelbar:* auf v4.33.1, an das wir
+gebunden sind, gibt es `Mathlib/Topology/Order/Cadlag.lean` **nicht** — geprüft,
+die Datei fehlt, und `IsRightContinuous` kommt dort nur als
+`Filtration.IsRightContinuous` vor (`Probability/Process/Filtration.lean:373`),
+eine Klasse über *Filtrationen* und keine über Funktionen. Der eigene Begriff
+dieses Laufs ist also nicht überflüssig, und er bleibt es auch gegen master:
+`IsRightContinuous` verlangt `[TopologicalSpace Y]` am Zustandsraum,
+`IsRightLocallyConstantPath` verlangt dort gar nichts. Über einem diskreten
+Zustandsraum fallen die beiden zusammen.
+
+**Die Negativaussage des Vorlaufs wird durch den Fund schärfer, nicht hinfällig:**
+Mathlib hat jetzt die Rechtsstetigkeit als Prädikat und leitet aus ihr die
+fortschreitende Meßbarkeit **immer noch nicht** her (`progressive-rightcontinuous`,
+0 Treffer auf dem neuen Stand).
+
+**Alle in diesem Lauf neu benutzten Namen** sind gegen v4.33.1 übersetzt und
+gegen master nachgeschlagen; keiner ist `deprecated`:
+
+* `MeasurableSpace.comap_process_pi`
+  (v4.33.1 `MeasureTheory/MeasurableSpace/Constructions.lean:601`, master `:602`),
+* `comap_measurable` (`MeasurableSpace/Basic.lean`, master `:203`),
+* `measurable_from_prod_countable_right` (`Constructions.lean`, master `:510`),
+* `norm_setIntegral_le_of_norm_le_const`
+  (`MeasureTheory/Integral/Bochner/Set.lean:616`, master `:615`; die Fassung in
+  `VectorMeasure/SetIntegral.lean:450` ist eine andere und nicht gemeint),
+* `measurable_pi_apply`, `measurable_pi_lambda`, `measurable_iff_comap_le`,
+  `MeasurableSpace.comap_comp` — unverändert auf beiden Ständen.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Das Akzeptanzbeispiel selbst.** Es ist nicht abgeschlossen. Was ihm jetzt noch
+fehlt, ist benannt und klein: die Zweizustandskette als Instanz von
+`onedim_mpFamily_jumpOperator` über `RightContinuousPath`, und dafür der Nachweis,
+daß die dortige Lösung *auf diesem Raum* lebt — also ein Bildmaß des
+Konstruktionsraums unter dem Pfadabbild. Das ist die nächste Naht und der
+Vorschlag 0 unten.
+
+**Der Umbau von `hint`.** Begründet oben.
+
+**`eq_of_forall_onedim`.** Unverändert ohne Deklaration.
+
+**Teil C.5a.** Geparkt, wie angeordnet; die elf offenen Aussagen sind unverändert
+elf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Das Pfadabbild des Sprungprozesses: `jumpPath`.** Die Abbildung
+   `ω ↦ ⟨fun t ↦ jumpProcessE lam t ω, _⟩` vom Konstruktionsraum
+   `(ℕ → E) × (ℕ → ℝ)` nach `RightContinuousPath E`, ihre Meßbarkeit
+   (`measurable_of_measurable_toFun` und `measurable_uncurry_jumpProcessE`), und
+   die Rechtsstetigkeit der Sprungpfade — `isRightLocallyConstantPath_jumpProcessE`,
+   die auf der Sprungkonstruktion nachzurechnen ist und dort wahr ist, weil
+   zwischen zwei Sprungzeiten nichts passiert. **Worauf es ruht:** alles aus
+   diesem Lauf, `measurable_uncurry_jumpProcessE` (seit dem 2026-09-10) und
+   `jumpProcessE_eq_of_lt_nextJump` oder was die Konstante-zwischen-Sprüngen-Aussage
+   dort heißt. **Warum jetzt:** es ist die **einzige** fehlende Verbindung
+   zwischen Meilenstein 4 und Meilenstein 6. Alles andere steht: die Lösung
+   (Meilenstein 4), die Eindeutigkeit der eindimensionalen Verteilungen (die
+   Naht des Vorlaufs), der Pfadraum mit allen fünf Voraussetzungen (dieser Lauf).
+   Ohne das Bildmaß ist der Pfadraum ein Raum ohne Prozeß darauf — derselbe
+   Einwand, den der dritte Lauf dieses Tages gegen `Clock.IsShiftInvariant`
+   erhoben hat, eine Stufe höher.
+
+1. **Die Abschwächung von `hint`.** `IsProbabilityMeasure P` in die
+   Voraussetzung von `subsingleton_mpSolutions_of_unique_onedim` und von
+   `subsingleton_mpSolutions_mpFamily_lebesgueClock`, der Beweis unverändert bis
+   auf `hP.1` → `hP.2 ▸ hP.1`. **Worauf es ruht:** dem Befund oben, der am
+   Quelltext steht. **Warum jetzt:** danach löst `integrable_mpFamily_coordinate`
+   die Voraussetzung wirklich ein, statt sie nur zu streifen; und solange sie
+   dasteht, wie sie dasteht, ist sie eine Voraussetzung, die **kein** Pfadraum
+   erfüllen kann — was schlimmer ist als eine ohne Zeugen.
+
+2. **`eq_of_forall_onedim`.** Unverändert Buchhaltung, unverändert offen;
+   `measure_biInter_eq_of_propagatesAgreement` gibt die endlichdimensionalen
+   Verteilungen schon her.

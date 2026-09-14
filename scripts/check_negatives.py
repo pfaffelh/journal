@@ -19,12 +19,17 @@ OUT = 'scripts/_citations'
 
 # (Kurzname, Fundstelle der Behauptung, Behauptung, Suchmuster, Pfadfilter)
 CLAIMS = [
-    ('cadlag', 'SkorokhodSpace/README.md:3',
-     'Der String `cadlag` kommt in Mathlib nicht vor.',
-     'cadlag', 'Mathlib/'),
-    ('IsCadlag', 'SkorokhodSpace/Suggested.lean:341',
-     '`Function.RightContinuous` und `IsCadlag` sind nicht in Mathlib.',
-     'IsCadlag|IsRightContinuous', 'Mathlib/'),
+    # Die beiden Behauptungen über `cadlag` und `IsCadlag` sind mit #43352
+    # hinfällig geworden: `Mathlib/Topology/Order/Cadlag.lean` trägt
+    # `IsRightContinuous`, `IsLeftContinuous`, `IsCadlag` und `IsCaglad`.  Die
+    # Roadmap sagt das seit dem 2026-09-07 selbst; hier stehen sie nicht mehr,
+    # weil eine Behauptung, die von ihrem eigenen Fundort widerrufen ist, in
+    # dieser Liste nur Lärm erzeugt.  Was von ihr bleibt, ist die Aussage über
+    # den *Raum*, und die steht als `skorokhod-space` da.
+    ('skorokhod-space', 'SkorokhodSpace/README.md:3',
+     'Der Skorokhodraum selbst — die càdlàg-Pfade mit der J₁-Topologie — kommt '
+     'in Mathlib nicht vor; nur das Prädikat.',
+     'SkorokhodSpace|skorokhodSpace|J1Topology|Skorokhod', 'Mathlib/'),
     ('memoryless', 'MartingaleProblems/README.md:743',
      'Eine Suche nach `memoryless` über `Mathlib/` liefert nichts.',
      'memoryless', 'Mathlib/'),

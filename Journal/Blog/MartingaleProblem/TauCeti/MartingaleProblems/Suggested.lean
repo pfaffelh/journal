@@ -405,6 +405,24 @@ hypothesis about the index or the clock discharged: `(⊥ : ℝ≥0) = 0` is `NN
 `r ≤ r + u` is `le_self_add`, (T4) is `exists_add_of_le`, and (T2a) is the order `ℝ≥0` carries.
 What survives is about the data alone.  Before this the whole uniqueness half rested on a
 hypothesis satisfied, as far as anything proved here went, only by the zero measure.
+
+Twenty four more on 2026-09-14, in `section CanonicalPathSpace` and two additions to
+`section RightContinuousPaths`, are the **path space** the same emptiness check asks for one
+level up: `Shift` had stood since Milestone 5 with no witness at all.
+`RightContinuousPath E` is one, and it discharges `hgen` (`generateFrom_coordinate`), `hjoint`
+(`measurable_uncurry_coordinate`), `hpath` (`measurable_comp_coordinate`), `hadapt`
+(`measurable_pathFiltration`), `hsm` (`shiftMeasurable_pathFiltration`) and `hY`
+(`stronglyAdapted_mpFamily_coordinate`, through the truncated joint measurability
+`measurable_uncurry_min_of_isRightLocallyConstant`).  `eval_comp` of `pathShift` is `rfl` and so
+is `pathFiltration_eq`, because the σ-field is *defined* as the trace `comap toFun` of the
+product σ-field; `generateFrom_coordinate` says the two readings agree.
+
+The one hypothesis of Milestone 6 that this space does not discharge is `hint`, and the reason
+is in the statement and not in the space: it quantifies over **all** solving measures, and a
+test process of `mpFamily` is bounded, hence not integrable against an infinite one.  Its proof
+applies it only at probability measures, so `IsProbabilityMeasure` belongs in it;
+`integrable_mpFamily_coordinate` is stated over `IsFiniteMeasure`, which is the weakest
+hypothesis under which it is true.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -27616,4 +27634,293 @@ theorem measurable_uncurry_of_isRightLocallyConstant {π : ℝ≥0 → F → E}
     lt_of_le_of_lt (pow_le_pow_right_of_le_one' (by norm_num) hn) hn₀
   rw [hconst (dyadAbove n u) (le_dyadAbove n u) (lt_trans (dyadAbove_lt n u) (by gcongr))]
 
+theorem min_add_le (a b c : ℝ≥0) : min (a + c) b ≤ min a b + c := by
+  rcases le_total a b with h | h
+  · rw [min_eq_left h]
+    exact min_le_left _ _
+  · rw [min_eq_right h]
+    exact le_trans (min_le_right _ _) le_self_add
+
+/-- **The coordinate process truncated at `t` is jointly measurable for the past at `t`.**  The
+form `measurable_compensator_coordinate` needs, and the reason the truncation is there: a
+compensating window ends at `t`, so the integrand is only ever evaluated below `t`, where the
+coordinates are measurable for `𝓕₀ t` -- above `t` they are not, and the untruncated process is
+not jointly measurable for that σ-algebra at all.
+
+The proof is the one of `measurable_uncurry_of_isRightLocallyConstant` with `min · t` carried
+through: `min (dyadAbove n u) t` still takes countably many values, still lies below `t`, and
+still decreases to `min u t` from above, the last by `min_add_le`.  The σ-algebra on the sample
+space is the section variable, so the statement is about an arbitrary one and is applied at a
+sub-σ-algebra. -/
+theorem measurable_uncurry_min_of_isRightLocallyConstant {π : ℝ≥0 → F → E} {t : ℝ≥0}
+    (hπ : ∀ u, u ≤ t → Measurable (π u)) (hrc : IsRightLocallyConstant π)
+    {h : E → ℝ} (hh : Measurable h) :
+    Measurable fun p : ℝ≥0 × F ↦ h (π (min p.1 t) p.2) := by
+  have hstage : ∀ n : ℕ, Measurable fun p : ℝ≥0 × F ↦ h (π (min (dyadAbove n p.1) t) p.2) := by
+    intro n
+    have hcnt : Measurable fun q : ℕ × F ↦ h (π (min ((q.1 : ℝ≥0) / 2 ^ n) t) q.2) :=
+      measurable_from_prod_countable_right
+        (fun k ↦ hh.comp (hπ (min ((k : ℝ≥0) / 2 ^ n) t) (min_le_right _ _)))
+    have hceil : Measurable fun u : ℝ≥0 ↦ ⌈(2 : ℝ≥0) ^ n * u⌉₊ :=
+      Nat.measurable_ceil.comp (measurable_const.mul measurable_id)
+    have hpair : Measurable fun p : ℝ≥0 × F ↦ ((⌈(2 : ℝ≥0) ^ n * p.1⌉₊ : ℕ), p.2) :=
+      ((hceil.comp measurable_fst).prodMk measurable_snd)
+    simpa only [dyadAbove, Function.comp_def] using hcnt.comp hpair
+  refine measurable_of_tendsto_metrizable hstage ?_
+  rw [tendsto_pi_nhds]
+  rintro ⟨u, f⟩
+  obtain ⟨ε, hε, hconst⟩ := hrc f (min u t)
+  obtain ⟨n₀, hn₀⟩ := NNReal.exists_pow_lt_of_lt_one hε (by norm_num : (1 / 2 : ℝ≥0) < 1)
+  refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+  filter_upwards [Filter.eventually_ge_atTop n₀] with n hn
+  have hsmall : (1 / 2 : ℝ≥0) ^ n < ε :=
+    lt_of_le_of_lt (pow_le_pow_right_of_le_one' (by norm_num) hn) hn₀
+  have hge : min u t ≤ min (dyadAbove n u) t := min_le_min (le_dyadAbove n u) le_rfl
+  have hlt : min (dyadAbove n u) t < min u t + ε := by
+    refine lt_of_le_of_lt (le_trans (min_le_min (le_of_lt (dyadAbove_lt n u)) le_rfl)
+      (min_add_le u t _)) ?_
+    gcongr
+  rw [hconst (min (dyadAbove n u) t) hge hlt]
+
 end RightContinuousPaths
+
+/-! ### The canonical path space, and the first witness for `Shift`
+
+Milestone 6 states its hypotheses about a path space: a measurable space `F`, coordinates
+`π : ℝ≥0 → F → E`, a `Shift F π`, a filtration `𝓕₀`.  Until here `Shift` had **no witness** in
+this file at all -- the structure has stood since Milestone 5 and nothing was ever built -- and
+a hypothesis without a witness is worse than a missing theorem, which is the objection the shift
+invariance of `lebesgueClock` answered for the clock.  This section answers it for the path
+space.
+
+The space is the **right continuous** one, and the regularity is not decoration: it is exactly
+what `measurable_uncurry_of_isRightLocallyConstant` needs, hence what the seam
+`onedim_mpFamily_jumpOperator` needs, and on the full function space `ℝ≥0 → E` it is false.  So
+the canonical space of Milestone 6 is a subspace of the function space and not the function
+space, and the discrete state space of Milestone 4 is what makes right continuity and right
+local constancy the same condition.
+
+Everything here is cheap, and that is the point: `eval_comp` of the shift is `rfl`, the
+generation statement is `MeasurableSpace.comap_process_pi` applied once, and the shift clause of
+`IsShiftSystem` is `shiftMeasurable_of_natural` applied once.  The σ-field is **defined** as the
+trace `comap toFun` of the product σ-field, which is what makes the first two of those `rfl` and
+one-liners; taking it as the σ-field generated by the coordinates instead would prove the same
+theorems with more work.
+-/
+
+section CanonicalPathSpace
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **Right local constancy of a single path**, the pointwise form of
+`IsRightLocallyConstant`. -/
+def IsRightLocallyConstantPath (f : ℝ≥0 → E) : Prop :=
+  ∀ u : ℝ≥0, ∃ ε : ℝ≥0, 0 < ε ∧ ∀ v, u ≤ v → v < u + ε → f v = f u
+
+/-- **The canonical path space**: the paths that are constant on a right neighbourhood of every
+time.  Over a discrete state space these are the right continuous paths, and a step path process
+produces them. -/
+structure RightContinuousPath (E : Type*) [MeasurableSpace E] where
+  /-- The underlying path. -/
+  toFun : ℝ≥0 → E
+  /-- Right local constancy, the regularity that makes the coordinate process jointly
+  measurable. -/
+  rightLocallyConstant' : IsRightLocallyConstantPath toFun
+
+namespace RightContinuousPath
+
+/-- The σ-field of the path space: the trace of the product σ-field. -/
+instance instMeasurableSpace : MeasurableSpace (RightContinuousPath E) :=
+  MeasurableSpace.comap RightContinuousPath.toFun inferInstance
+
+/-- **The coordinates**, the `π` of Milestone 6. -/
+def coordinate (u : ℝ≥0) (f : RightContinuousPath E) : E := f.toFun u
+
+theorem measurable_toFun :
+    Measurable (RightContinuousPath.toFun : RightContinuousPath E → ℝ≥0 → E) :=
+  comap_measurable _
+
+theorem measurable_coordinate (u : ℝ≥0) :
+    Measurable (coordinate u : RightContinuousPath E → E) :=
+  (measurable_pi_apply u).comp measurable_toFun
+
+/-- **The σ-field is the one the coordinates generate**, which is the hypothesis `hgen` of
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` and of `isMarkov_of_unique_onedim`.
+
+The whole proof is `MeasurableSpace.comap_process_pi`: the trace of the product σ-field along
+`toFun` is the supremum of the comaps of the evaluations, because `fun f u ↦ coordinate u f` is
+`toFun`. -/
+theorem generateFrom_coordinate :
+    (instMeasurableSpace : MeasurableSpace (RightContinuousPath E))
+      = ⨆ u : ℝ≥0, MeasurableSpace.comap (coordinate u) inferInstance :=
+  MeasurableSpace.comap_process_pi (fun u : ℝ≥0 ↦ (coordinate u : RightContinuousPath E → E))
+
+theorem isRightLocallyConstant_coordinate :
+    IsRightLocallyConstant (coordinate : ℝ≥0 → RightContinuousPath E → E) :=
+  fun f u ↦ f.rightLocallyConstant' u
+
+/-- **The coordinate process of the canonical path space is jointly measurable**, which is the
+hypothesis `hjoint` of `onedim_mpFamily_jumpOperator` -- the one the abstract path space of
+Milestone 6 does not supply, and the reason this space carries a regularity. -/
+theorem measurable_uncurry_coordinate {h : E → ℝ} (hh : Measurable h) :
+    Measurable fun p : ℝ≥0 × RightContinuousPath E ↦ h (coordinate p.1 p.2) :=
+  measurable_uncurry_of_isRightLocallyConstant measurable_coordinate
+    isRightLocallyConstant_coordinate hh
+
+/-- **Measurability along a single path**, the hypothesis `hpath` of `isShiftSystem_mpFamily`.
+It is a consequence of the joint statement and not a second assumption: fixing the path is a
+measurable map into the product. -/
+theorem measurable_comp_coordinate {h : E → ℝ} (hh : Measurable h)
+    (f : RightContinuousPath E) : Measurable fun u : ℝ≥0 ↦ h (coordinate u f) :=
+  (measurable_uncurry_coordinate hh).comp (measurable_id.prodMk measurable_const)
+
+omit [MeasurableSpace E] in
+/-- **The path space is closed under translation.**  The neighbourhood at `u` of the translated
+path is the one at `r + u` of the original, unshrunk: translation on `ℝ≥0` preserves the distance
+to the right. -/
+theorem isRightLocallyConstantPath_comp_add {f : ℝ≥0 → E}
+    (hf : IsRightLocallyConstantPath f) (r : ℝ≥0) :
+    IsRightLocallyConstantPath fun u ↦ f (r + u) := by
+  intro u
+  obtain ⟨ε, hε, hconst⟩ := hf (r + u)
+  refine ⟨ε, hε, fun v huv hv ↦ hconst (r + v) (by gcongr) ?_⟩
+  rw [add_assoc]
+  gcongr
+
+/-- **The shift on paths**, `θ r f = f (r + ·)`. -/
+def shift (r : ℝ≥0) (f : RightContinuousPath E) : RightContinuousPath E :=
+  ⟨fun u ↦ f.toFun (r + u), isRightLocallyConstantPath_comp_add f.rightLocallyConstant' r⟩
+
+/-- A map into the path space is measurable as soon as the paths are, which is the trace σ-field
+read backwards. -/
+theorem measurable_of_measurable_toFun {α : Type*} [MeasurableSpace α]
+    {G : α → RightContinuousPath E} (h : Measurable fun a ↦ (G a).toFun) : Measurable G := by
+  rw [measurable_iff_comap_le]
+  show MeasurableSpace.comap G (MeasurableSpace.comap RightContinuousPath.toFun _) ≤ _
+  rw [MeasurableSpace.comap_comp]
+  exact measurable_iff_comap_le.mp h
+
+theorem measurable_shift (r : ℝ≥0) :
+    Measurable (shift r : RightContinuousPath E → RightContinuousPath E) :=
+  measurable_of_measurable_toFun
+    (measurable_pi_lambda _ fun u ↦ measurable_coordinate (r + u))
+
+/-- **The first witness for `Shift`.**  The compatibility field `eval_comp`, which is what makes
+`θ` a shift and not an arbitrary measurable self map, is `rfl` here: `coordinate t (shift r f)`
+and `coordinate (r + t) f` are the same term. -/
+def pathShift : Shift (RightContinuousPath E) (coordinate : ℝ≥0 → RightContinuousPath E → E) where
+  θ := shift
+  measurable := measurable_shift
+  eval_comp _ _ _ := rfl
+
+/-- The natural filtration of the coordinates, the `𝓕₀` of Milestone 6. -/
+def pathFiltration :
+    Filtration ℝ≥0 (instMeasurableSpace : MeasurableSpace (RightContinuousPath E)) :=
+  naturalFiltration coordinate measurable_coordinate
+
+theorem pathFiltration_eq (s : ℝ≥0) :
+    ((pathFiltration s : MeasurableSpace (RightContinuousPath E)))
+      = ⨆ u ∈ Set.Iic s, MeasurableSpace.comap (coordinate u) inferInstance := rfl
+
+/-- **`hadapt`**: every coordinate at a time below `v` is measurable for the past at `v`. -/
+theorem measurable_pathFiltration {u v : ℝ≥0} (huv : u ≤ v) :
+    Measurable[pathFiltration v] (coordinate u : RightContinuousPath E → E) :=
+  measurable_naturalFiltration measurable_coordinate huv
+
+/-- **`hsm`**, the shift clause of `IsShiftSystem`: on the natural filtration it costs nothing,
+and `shiftMeasurable_of_natural` is the whole proof because `pathFiltration_eq` is `rfl`. -/
+theorem shiftMeasurable_pathFiltration (r s : ℝ≥0) :
+    Measurable[pathFiltration (r + s), pathFiltration s]
+      (pathShift.θ r : RightContinuousPath E → RightContinuousPath E) :=
+  shiftMeasurable_of_natural (S := pathShift) (fun s ↦ pathFiltration_eq s) r s
+
+/-- **The compensator is measurable for the past.**  The half of `StronglyAdapted` that is not
+the state term, and the expensive one: it asks for the joint measurability of the integrand
+**relative to the sub-σ-algebra** `pathFiltration t`, which
+`measurable_uncurry_min_of_isRightLocallyConstant` supplies because the window ends at `t`. -/
+theorem measurable_compensator_coordinate {h : E → ℝ} (hh : Measurable h) (c : Clock.Conv)
+    (t : ℝ≥0) :
+    Measurable[pathFiltration t] fun f : RightContinuousPath E ↦
+      ∫ u in lebesgueClock.interval c ⊥ t, h (coordinate u f) ∂lebesgueClock.q := by
+  set S := lebesgueClock.interval c ⊥ t with hS
+  haveI hfin : IsFiniteMeasure (lebesgueClock.q.restrict S) := by
+    refine ⟨?_⟩
+    rw [Measure.restrict_apply_univ]
+    exact lt_top_iff_ne_top.2 (lebesgueClock.measure_interval_ne_top c ⊥ t)
+  have hW : Measurable[(inferInstance : MeasurableSpace ℝ≥0).prod (pathFiltration t)]
+      fun p : ℝ≥0 × RightContinuousPath E ↦ h (coordinate (min p.1 t) p.2) :=
+    @measurable_uncurry_min_of_isRightLocallyConstant E _ (RightContinuousPath E)
+      (pathFiltration t) coordinate t (fun u hu ↦ measurable_pathFiltration hu)
+      isRightLocallyConstant_coordinate h hh
+  have hsm : StronglyMeasurable[pathFiltration t] fun f : RightContinuousPath E ↦
+      ∫ u in S, h (coordinate (min u t) f) ∂lebesgueClock.q :=
+    @stronglyMeasurable_integral_comp ℝ≥0 lebesgueClock.measurableSpace
+      (RightContinuousPath E) (pathFiltration t) ℝ _ ℝ _
+      (lebesgueClock.q.restrict S) _
+      (fun u f ↦ h (coordinate (min u t) f)) hW id measurable_id
+  have hcongr : (fun f : RightContinuousPath E ↦
+        ∫ u in S, h (coordinate (min u t) f) ∂lebesgueClock.q)
+      = fun f ↦ ∫ u in S, h (coordinate u f) ∂lebesgueClock.q := by
+    funext f
+    refine setIntegral_congr_fun (lebesgueClock.measurableSet_interval c ⊥ t) fun u hu ↦ ?_
+    rw [min_eq_left (lebesgueClock.interval_subset_Iic c ⊥ t hu)]
+  rw [← hcongr]
+  exact hsm.measurable
+
+/-- **`hY`: the test processes are adapted to the natural filtration of the coordinates.**  The
+state term is `measurable_pathFiltration` at `u = v = t`; the compensator is
+`measurable_compensator_coordinate`. -/
+theorem stronglyAdapted_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))} (c : Clock.Conv)
+    (hfm : ∀ p ∈ A, Measurable p.1) (hgm : ∀ p ∈ A, Measurable p.2)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock c (coordinate : ℝ≥0 → RightContinuousPath E → E)) :
+    StronglyAdapted (pathFiltration (E := E)) Y := by
+  obtain ⟨p, hp, hYeq⟩ := hY
+  intro t
+  have h1 : Measurable[pathFiltration t] fun f : RightContinuousPath E ↦ p.1 (coordinate t f) :=
+    (hfm p hp).comp (measurable_pathFiltration le_rfl)
+  have h2 := measurable_compensator_coordinate (hgm p hp) c t
+  have hYt : Y t = fun f : RightContinuousPath E ↦ p.1 (coordinate t f)
+      - ∫ u in lebesgueClock.interval c ⊥ t, p.2 (coordinate u f) ∂lebesgueClock.q :=
+    funext fun f ↦ hYeq t f
+  rw [hYt]
+  exact (h1.sub h2).stronglyMeasurable
+
+/-- **`hint`: the test processes are integrable.**  Both terms are bounded -- the state term by
+the bound on `p.1`, the compensator by the bound on `p.2` times the mass of the window, which is
+finite by `Clock.measure_interval_ne_top` -- so nothing but finiteness of the measure is needed.
+
+The hypothesis is `IsFiniteMeasure` and not `IsProbabilityMeasure`, which is the weakest form
+under which the statement is true: an infinite measure makes a bounded non-zero function not
+integrable, so the quantifier over *all* measures that `hint` carries in
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` cannot be discharged, and does not have to be
+-- the conclusion there is about probability measures. -/
+theorem integrable_mpFamily_coordinate {A : Set ((E → ℝ) × (E → ℝ))} (c : Clock.Conv)
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgm : ∀ p ∈ A, Measurable p.2) (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    {Y : ℝ≥0 → RightContinuousPath E → ℝ}
+    (hY : Y ∈ mpFamily A lebesgueClock c (coordinate : ℝ≥0 → RightContinuousPath E → E))
+    (P : Measure (RightContinuousPath E)) [IsFiniteMeasure P] (t : ℝ≥0) :
+    Integrable (Y t) P := by
+  have hadp := stronglyAdapted_mpFamily_coordinate c hfm hgm hY
+  obtain ⟨p, hp, hYeq⟩ := hY
+  obtain ⟨b1, hb1⟩ := hfb p hp
+  obtain ⟨b2, hb2⟩ := hgb p hp
+  have hYm : Measurable (Y t) := ((hadp t).mono (pathFiltration.le t)).measurable
+  refine integrable_of_abs_le hYm
+    (C := b1 + b2 * (lebesgueClock.q.real (lebesgueClock.interval c ⊥ t))) fun f ↦ ?_
+  have hb : ‖∫ u in lebesgueClock.interval c ⊥ t, p.2 (coordinate u f) ∂lebesgueClock.q‖
+      ≤ b2 * lebesgueClock.q.real (lebesgueClock.interval c ⊥ t) :=
+    norm_setIntegral_le_of_norm_le_const
+      (lt_top_iff_ne_top.2 (lebesgueClock.measure_interval_ne_top c ⊥ t))
+      (fun u _ ↦ hb2 _)
+  have h1 := hb1 (coordinate t f)
+  have h2 := abs_sub (p.1 (coordinate t f))
+    (∫ u in lebesgueClock.interval c ⊥ t, p.2 (coordinate u f) ∂lebesgueClock.q)
+  rw [hYeq t f]
+  rw [Real.norm_eq_abs] at hb h1
+  linarith
+
+end RightContinuousPath
+
+end CanonicalPathSpace
