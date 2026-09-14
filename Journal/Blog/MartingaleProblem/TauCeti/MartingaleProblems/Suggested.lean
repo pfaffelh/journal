@@ -394,6 +394,17 @@ is inhabited by anything other than a triviality.  The order condition hidden in
 manuscript's proof is isolated there rather than assumed: `isShiftSystem_mpFamily` holds over a
 preorder, and it is `Clock.IsShiftInvariant` that a partial order cannot satisfy.  See the
 module note above that section for the counterexample on `[0,∞)^2`.
+
+Five more on 2026-09-14, in `section LebesgueShift`, are the **emptiness check** for all of
+that: `lebesgueClock_isShiftInvariant` exhibits `lebesgueClock` as a witness of
+`Clock.IsShiftInvariant` under both conventions -- via `lebesgueClock_apply` and
+`lebesgueClock_preimage_const_add`, the statement that translating a set lying above `r` back by
+`r` preserves its mass -- and
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` is `thm:absuniq`(b) at `ι = ℝ≥0` with every
+hypothesis about the index or the clock discharged: `(⊥ : ℝ≥0) = 0` is `NNReal.bot_eq_zero`,
+`r ≤ r + u` is `le_self_add`, (T4) is `exists_add_of_le`, and (T2a) is the order `ℝ≥0` carries.
+What survives is about the data alone.  Before this the whole uniqueness half rested on a
+hypothesis satisfied, as far as anything proved here went, only by the zero measure.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -17306,7 +17317,9 @@ theorem rateInverseE_eq_top_of_forall_lt (h : ∀ r : ℝ, 0 ≤ r → cumulativ
 asks for nothing but the attainment: no integrability, no positivity, no divergence.
 
 Mathlib carries the whole content, in the indexed form `ENNReal.ofReal_iInf`
-(`Mathlib/Data/ENNReal/Operations.lean:526`), and it carries it **without a hypothesis on the
+(v4.33.1 `Mathlib/Data/ENNReal/Operations.lean:526`; on master that file is a `deprecated_module`
+since 2026-08-27 and the declaration stands, at the same line, in
+`Mathlib/Basic/ENNReal/Operations.lean`), and it carries it **without a hypothesis on the
 family**: below the origin both sides collapse to `0`, on the left because `ENNReal.ofReal` does
 and on the right because the infimum of the reals does.  The only work left is the passage from an
 image to an indexed infimum in both directions, `sInf_image'` on one side and the definition of
@@ -26982,3 +26995,167 @@ theorem isShiftSystem_mpFamily {A : Set ((E → 𝕂) × (E → 𝕂))} {Q : Clo
   ring
 
 end ShiftSystemMpFamily
+
+/-! ### The witness: `lebesgueClock` is shift invariant, and milestone 6 stands over a real clock
+
+`isShiftSystem_mpFamily` is a theorem about a hypothesis, `Clock.IsShiftInvariant`, and a
+hypothesis with no witness is worse than a missing theorem: the zero measure satisfies it, so the
+whole uniqueness half of the milestone could in principle have been about nothing.  This section
+exhibits `lebesgueClock` as a witness -- **under both conventions** -- and then discharges, at
+`ι = ℝ≥0`, every hypothesis of `thm:absuniq`(b) that speaks of the clock or of the order.
+
+What remains after that are hypotheses about the *data* (the operator `A`, the shift `S`, the
+filtration `𝓕₀`), which is where they belong.  Nothing about `ℝ≥0` and nothing about Lebesgue
+measure is left in the statement, and that is what the emptiness check was to establish.
+
+Two things are worth recording about the proof.
+
+*Shift invariance is not translation invariance of `lebesgueClock.q`.*  The map `u ↦ r + u` on
+`ℝ≥0` is injective but not surjective -- its image is `Set.Ici r` -- so `Measure.map (r + ·) q` is
+not `q`.  What is true, and what `lebesgueClock_preimage_const_add` says, is that translating
+back preserves mass for sets that already lie **above** `r`, and the compensating window from
+`r + s` to `r + t` does.  The restriction in `Clock.IsShiftInvariant.map_interval` is not a
+convenience: without it the statement is false.
+
+*`Clock` carries its measurable space as a field, and `rw` cannot see through it.*  This is the
+same obstruction as at `Clock.measurableSet_interval`: `Measure.map_apply` and
+`Measure.restrict_apply` do not rewrite against `lebesgueClock.q`, because unification of their
+instance arguments with `lebesgueClock.measurableSpace` runs at reducible transparency.  Both are
+therefore restated at the field level inside the proof, where `exact` -- which is not so fussy --
+supplies them. -/
+
+section LebesgueShift
+
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ℝ≥0 → F → E}
+
+/-- The mass `lebesgueClock` gives a measurable set of `ℝ≥0`, read as a Lebesgue measure on `ℝ`.
+The unrestricted companion of `lebesgueClock_apply_Ioc`. -/
+theorem lebesgueClock_apply {A : Set ℝ≥0} (hA : MeasurableSet A) :
+    lebesgueClock.q A = volume ((Real.toNNReal ⁻¹' A) ∩ Set.Ici (0 : ℝ)) := by
+  show ((volume : Measure ℝ).restrict (Set.Ici (0 : ℝ))).map Real.toNNReal A = _
+  rw [Measure.map_apply measurable_real_toNNReal hA,
+    Measure.restrict_apply (measurable_real_toNNReal hA)]
+
+/-- **Translating a set that lies above `r` back by `r` preserves its `lebesgueClock` mass.**
+
+The hypothesis `B ⊆ Set.Ici r` is necessary and not cosmetic: `u ↦ r + u` is not surjective on
+`ℝ≥0`, so for `B = Set.Iic r` the left hand side is the mass of `{0}` and the right hand side is
+`r`.  Every use below meets it because a compensating window starting at `r + s` does. -/
+theorem lebesgueClock_preimage_const_add {r : ℝ≥0} {B : Set ℝ≥0} (hB : MeasurableSet B)
+    (hBr : B ⊆ Set.Ici r) :
+    lebesgueClock.q ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B) = lebesgueClock.q B := by
+  have hmeas : MeasurableSet ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B) := measurable_const_add r hB
+  rw [lebesgueClock_apply hmeas, lebesgueClock_apply hB]
+  have hset : (Real.toNNReal ⁻¹' ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B)) ∩ Set.Ici (0 : ℝ)
+      = (fun x : ℝ ↦ (r : ℝ) + x) ⁻¹' ((Real.toNNReal ⁻¹' B) ∩ Set.Ici (0 : ℝ)) := by
+    have hadd : ∀ x : ℝ, 0 ≤ x → ((r : ℝ) + x).toNNReal = r + x.toNNReal := by
+      intro x hx
+      rw [Real.toNNReal_add r.coe_nonneg hx, Real.toNNReal_coe]
+    ext x
+    simp only [Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ici]
+    constructor
+    · rintro ⟨hx, hx0⟩
+      exact ⟨by rw [hadd x hx0]; exact hx, by positivity⟩
+    · rintro ⟨hx, hx0⟩
+      have hxr : (r : ℝ) ≤ (((r : ℝ) + x).toNNReal : ℝ) := by exact_mod_cast hBr hx
+      rw [Real.coe_toNNReal _ hx0] at hxr
+      have hx0' : (0 : ℝ) ≤ x := by linarith
+      refine ⟨?_, hx0'⟩
+      rw [hadd x hx0'] at hx
+      exact hx
+  rw [hset, measure_preimage_add]
+
+/-- **The emptiness check for `Clock.IsShiftInvariant`**: `lebesgueClock` satisfies it, under both
+conventions.  So `isShiftSystem_mpFamily` -- and with it the whole uniqueness half of milestone 6
+-- is not a theorem about the zero measure.
+
+The proof is two set identities and one application of translation invariance of Lebesgue measure:
+`u ↦ r + u` carries the window from `s` to `t` onto the window from `r + s` to `r + t`, in the
+strong sense that the preimage of the second **is** the first, which is `add_le_add_iff_left`; and
+the second window lies above `r`, which is what `lebesgueClock_preimage_const_add` asks for. -/
+theorem lebesgueClock_isShiftInvariant (c : Clock.Conv) :
+    lebesgueClock.IsShiftInvariant c := by
+  refine ⟨fun r ↦ measurable_const_add r, fun r s t ↦ ?_⟩
+  refine Measure.ext fun A hA ↦ ?_
+  have hA' : MeasurableSet A := hA
+  have hpreA : MeasurableSet ((fun u : ℝ≥0 ↦ r + u) ⁻¹' A) := measurable_const_add r hA'
+  -- `Clock` carries its measurable space as a field, so `rw` will not see through the instance
+  -- arguments of these two; both are restated at the field level.
+  have hmap : ∀ (μ : @Measure ℝ≥0 lebesgueClock.measurableSpace) (B : Set ℝ≥0),
+      MeasurableSet[lebesgueClock.measurableSpace] B →
+      (@Measure.map ℝ≥0 ℝ≥0 lebesgueClock.measurableSpace lebesgueClock.measurableSpace
+        (fun u ↦ r + u) μ) B = μ ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B) :=
+    fun _ _ hB ↦ Measure.map_apply (measurable_const_add r) hB
+  have hres : ∀ (B S : Set ℝ≥0), MeasurableSet[lebesgueClock.measurableSpace] B →
+      (@Measure.restrict ℝ≥0 lebesgueClock.measurableSpace lebesgueClock.q S) B
+        = lebesgueClock.q (B ∩ S) :=
+    fun _ _ hB ↦ Measure.restrict_apply hB
+  rw [hmap _ A hA, hres _ _ hpreA, hres _ _ hA]
+  have hpre : (fun u : ℝ≥0 ↦ r + u) ⁻¹' A ∩ lebesgueClock.interval c s t
+      = (fun u : ℝ≥0 ↦ r + u) ⁻¹' (A ∩ lebesgueClock.interval c (r + s) (r + t)) := by
+    ext u
+    cases c <;> simp [Clock.interval, Set.mem_inter_iff, Set.mem_preimage]
+  rw [hpre]
+  refine lebesgueClock_preimage_const_add
+    (hA.inter (lebesgueClock.measurableSet_interval c _ _)) ?_
+  rintro v ⟨-, hv⟩
+  cases c with
+  | optional =>
+      obtain ⟨-, hv2⟩ := hv
+      simp only [Set.mem_Iic, not_le] at hv2
+      exact le_of_lt (lt_of_le_of_lt le_self_add hv2)
+  | predictable =>
+      obtain ⟨-, hv2⟩ := hv
+      simp only [Set.mem_Iio, not_lt] at hv2
+      exact le_trans le_self_add hv2
+
+/-- The shift system of `ex:shiftXA` at the concrete clock: `hbot` and the clock hypothesis of
+`isShiftSystem_mpFamily` are gone, and what is left speaks only of the operator and the shift. -/
+theorem isShiftSystem_mpFamily_lebesgueClock {A : Set ((E → 𝕂) × (E → 𝕂))} {c : Clock.Conv}
+    {S : Shift F π} {𝓕₀ : Filtration ℝ≥0 mF}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    (hpath : ∀ p ∈ A, ∀ f : F,
+      Measurable[lebesgueClock.measurableSpace] fun u ↦ p.2 (π u f))
+    (hπ : ∀ r : ℝ≥0, Measurable[𝓕₀ r] (π r))
+    (hsm : ∀ r s : ℝ≥0, Measurable[𝓕₀ (r + s), 𝓕₀ s] (S.θ r))
+    (hY : ∀ Y ∈ mpFamily A lebesgueClock c π, StronglyAdapted 𝓕₀ Y) :
+    IsShiftSystem S 𝓕₀ (fun _ ↦ mpFamily A lebesgueClock c π) :=
+  isShiftSystem_mpFamily NNReal.bot_eq_zero (lebesgueClock_isShiftInvariant c) hfm hfb hgb
+    hpath hπ hsm hY
+
+/-- **`thm:absuniq`(b) at a clock that exists.**  Milestone 6, with (T0), (T2a) and (T4) supplied
+by `ℝ≥0` and the shift system supplied by `lebesgueClock`: `hbot` is `NNReal.bot_eq_zero`, `hadd`
+is `le_self_add`, `hsub` is `exists_add_of_le`, and the linear order is the one `ℝ≥0` carries.
+
+This is the statement that makes the milestone non vacuous.  Every surviving hypothesis is about
+the data -- the operator `A`, the shift `S`, the filtration `𝓕₀`, the integrability proviso of
+`lem:restart` and `eq:absonedim` itself -- and none about the index or the clock. -/
+theorem subsingleton_mpSolutions_mpFamily_lebesgueClock
+    {A : Set ((E → 𝕂) × (E → 𝕂))} {c : Clock.Conv}
+    {S : Shift F π} {𝓕₀ : Filtration ℝ≥0 mF}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    (hpath : ∀ p ∈ A, ∀ f : F,
+      Measurable[lebesgueClock.measurableSpace] fun u ↦ p.2 (π u f))
+    (hsm : ∀ r s : ℝ≥0, Measurable[𝓕₀ (r + s), 𝓕₀ s] (S.θ r))
+    (hY : ∀ Y ∈ mpFamily A lebesgueClock c π, StronglyAdapted 𝓕₀ Y)
+    (hadapt : ∀ u v : ℝ≥0, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ℝ≥0, MeasurableSpace.comap (π i) inferInstance)
+    (hint : ∀ P : Measure F, IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ P →
+      ∀ Y ∈ mpFamily A lebesgueClock c π, ∀ u : ℝ≥0, Integrable (Y u) P)
+    (honedim : ∀ r : ℝ≥0, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ R →
+      IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ℝ≥0, R.map (π u) = R'.map (π u))
+    (mu : Measure E) :
+    Set.Subsingleton {P ∈ mpSolutions (mpFamily A lebesgueClock c π) 𝓕₀ |
+      IsProbabilityMeasure P ∧ P.map (π ⊥) = mu} :=
+  subsingleton_mpSolutions_of_unique_onedim
+    (isShiftSystem_mpFamily_lebesgueClock hfm hfb hgb hpath
+      (fun r ↦ hadapt r r le_rfl) hsm hY)
+    NNReal.bot_eq_zero (fun _ _ ↦ le_self_add) (fun _ _ h ↦ exists_add_of_le h)
+    hadapt hgen hint honedim mu
+
+end LebesgueShift

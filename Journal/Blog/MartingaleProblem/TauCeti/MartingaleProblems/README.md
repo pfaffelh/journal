@@ -169,13 +169,25 @@ Lebesgue measure. Fix `[Preorder ι]`.
   which is what makes the substitution `v = r + u` a single application of
   `MeasureTheory.integral_map`; that is `Clock.setIntegral_shift`. State it that
   way, and the order condition sits in the clock and nowhere else.
-* `Clock.isShiftInvariant_lebesgueClock` and the counting measure on `ℕ`: the
+* `lebesgueClock_isShiftInvariant` and the counting measure on `ℕ`: the
   two instances of `Clock.IsShiftInvariant`, and the two that keep the shift
-  system of Milestone 5 from resting on an uninhabited condition. Over `[0,∞)`
-  the window `interval q .optional s t` is `Set.Ioc s t` and the identity is
-  translation invariance of Lebesgue measure together with
-  `Set.image_const_add_Ioc`
-  (`Mathlib/Algebra/Order/Interval/Set/Monoid.lean:110`).
+  system of Milestone 5 from resting on an uninhabited condition. The first is
+  proved (`Suggested.lean`, `section LebesgueShift`, 2026-09-14) and holds for
+  **both** conventions at once. Its two inputs are `lebesgueClock_apply`, which
+  reads the mass of a measurable set of `ℝ≥0` as a Lebesgue measure on `ℝ`, and
+  `lebesgueClock_preimage_const_add`, which says that translating a set lying
+  above `r` back by `r` preserves its mass.
+
+  The route is the **preimage** and not the image: `(r + ·) ⁻¹' interval q c
+  (r + s) (r + t) = interval q c s t` is `add_le_add_iff_left` and needs no
+  interval lemma, after which the mass is `measure_preimage_add`
+  (`Mathlib/MeasureTheory/Group/Measure.lean:230`) applied to Lebesgue measure
+  on `ℝ`. The hypothesis `B ⊆ Set.Ici r` of `lebesgueClock_preimage_const_add`
+  is necessary: `u ↦ r + u` is injective and not surjective on `ℝ≥0`, so for
+  `B = Set.Iic r` the two sides are the mass of `{0}` and `r`. A compensating
+  window starting at `r + s` meets the hypothesis, which is why the restriction
+  in `Clock.IsShiftInvariant.map_interval` is part of the statement and not a
+  convenience.
 * The instances: counting measure on `ℕ`, Lebesgue measure on `[0,∞)`,
   `∑ n, δ (n : ℝ)` on `[0,∞)`, and every locally finite Borel measure on a
   closed subset of `ℝ`.
@@ -6408,6 +6420,18 @@ problems.
   `thm:absuniq`(b), and it is `propagatesAgreement_of_unique_onedim` composed
   with `subsingleton_of_propagatesAgreement`; the linear order is (T2a) and is
   spent only in the sorting step `measure_biInter_eq_of_propagatesAgreement`.
+* `isShiftSystem_mpFamily_lebesgueClock` and
+  `subsingleton_mpSolutions_mpFamily_lebesgueClock`: the same two statements at
+  `ι = ℝ≥0` and the clock of Milestone 4, with every hypothesis about the index
+  or the clock discharged. `⊥ = 0` is `NNReal.bot_eq_zero`, `r ≤ r + u` is
+  `le_self_add`, (T4) is `exists_add_of_le`, (T2a) is the order `ℝ≥0` carries,
+  and the shift system is `lebesgueClock_isShiftInvariant` of Milestone 1. What
+  survives speaks of the operator, the shift and the filtration alone.
+
+  This is the measure of the milestone against emptiness, and it is a different
+  question from provability: the abstract statements above hold over a preorder
+  and a clock hypothesis that the zero measure satisfies, so without a witness
+  for that hypothesis one cannot tell a theorem from a vacuity.
 * `eq_of_forall_onedim`: two solutions with the same initial law have the same
   finite dimensional distributions.
 * The classical statement, as an instance: for `E` metrizable and

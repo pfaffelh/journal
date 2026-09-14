@@ -28736,3 +28736,247 @@ elf.
    zur Gleichheit der Maße, also **ohne** `hgen`. Sie ist es wert, eigens zu
    stehen, weil sie die einzige Aussage des Meilensteins ist, die ohne eine
    Voraussetzung über die σ-Algebra des Pfadraums auskommt.
+
+### 2026-09-14, dritter Lauf des Tages — die Leerheitsprobe von Meilenstein 6: `lebesgueClock` ist schiftinvariant, und `thm:absuniq`(b) steht über einer Uhr, die es gibt
+
+**Vorrangige Aufgabe, Teil E.** Der Vorlauf hatte als Vorschlag 0 die
+Leerheitsprobe hinterlassen, mit der Begründung, ein Meilenstein, dessen
+Hauptsatz bewiesen ist und dessen tragende Voraussetzung keinen Zeugen hat, sei
+schlechter dran als einer, dessen Hauptsatz fehlt — im ersten Fall könne man sich
+täuschen. Sie ist eingelöst, und sie ist weiter gegangen als angesagt.
+
+**Fünf Deklarationen** im neuen Abschnitt `LebesgueShift` am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die ganze Datei geht ohne einen
+Fehler durch `lake env lean` gegen v4.33.1; alle fünf sind mit `#print axioms`
+auf `propext`, `Classical.choice`, `Quot.sound` geprüft. Die Zahl der `sorry`
+bleibt bei **sieben**, und keiner davon ist von den fünf aus erreichbar.
+
+* `lebesgueClock_apply` — die Masse einer meßbaren Menge von `ℝ≥0` unter der Uhr,
+  als Lebesguemaß auf `ℝ` gelesen; der unbeschränkte Gefährte von
+  `lebesgueClock_apply_Ioc`.
+* `lebesgueClock_preimage_const_add` — das Zurückschieben einer Menge, die
+  **oberhalb** von `r` liegt, erhält ihre Masse.
+* `lebesgueClock_isShiftInvariant` — **die Leerheitsprobe**, und zwar für
+  **beide** Konventionen zugleich.
+* `isShiftSystem_mpFamily_lebesgueClock` — `ex:shiftXA` an der konkreten Uhr.
+* `subsingleton_mpSolutions_mpFamily_lebesgueClock` — **`thm:absuniq`(b) an
+  einer Uhr, die es gibt.**
+
+#### Warum die Probe mehr ist als Buchhaltung, und was sie beinahe verfehlt hätte
+
+Der Vorlauf hatte den Weg über `Set.image_const_add_Ioc` angesagt, also über die
+**Bild**form. Er trägt nicht, und der Grund ist derselbe, den der Vorlauf schon
+bei der Berichtigung der Roadmap gefunden hatte, nur eine Stufe tiefer:
+
+> **`u ↦ r + u` ist auf `ℝ≥0` injektiv und nicht surjektiv.** Sein Bild ist
+> `Set.Ici r`. Also ist `Measure.map (r + ·) q` **nicht** `q`, und es steht keine
+> Translationsinvarianz eines Maßes auf `ℝ≥0` zur Verfügung, die man zitieren
+> könnte.
+
+Wahr ist nur die eingeschränkte Fassung, und `lebesgueClock_preimage_const_add`
+ist genau sie: für meßbares `B ⊆ Set.Ici r` ist `q ((r + ·) ⁻¹' B) = q B`. Die
+Voraussetzung ist **notwendig und nicht Zierat** — für `B = Set.Iic r` ist die
+linke Seite die Masse von `{0}` und die rechte `r`. Das ist der Beleg dafür, daß
+die Einschränkung auf das Kompensationsfenster in
+`Clock.IsShiftInvariant.map_interval` zur Aussage gehört und nicht bloß bequem
+ist: ohne sie wäre die Bedingung an `lebesgueClock` **falsch**, und die
+Leerheitsprobe hätte den Begriff widerlegt statt ihn zu bewohnen.
+
+**Und der Weg, der trägt, ist der über das Urbild.** Er ist kürzer als der
+angesagte und braucht kein Intervall-Lemma:
+
+* `(r + ·) ⁻¹' interval q c (r+s) (r+t) = interval q c s t` ist
+  `add_le_add_iff_left`, für **beide** Konventionen dieselbe Zeile;
+* die Masse ist dann `measure_preimage_add`, angewandt auf das Lebesguemaß auf
+  `ℝ` nach dem Durchgang durch `lebesgueClock_apply`;
+* und die Mengenrechnung dazwischen ist `(r + x).toNNReal = r + x.toNNReal` für
+  `x ≥ 0`, mit der Rückrichtung aus `B ⊆ Set.Ici r`.
+
+Daß die Bildform des Manuskripts (`def:clock`: `q(r + B) = q(B)`) hier nicht die
+arbeitende Gestalt ist, hatte der Vorlauf schon festgestellt. Dieser Lauf setzt
+hinzu, **warum**: die Bildform ist über `ℝ≥0` wahr, aber sie gibt die Gleichheit
+der eingeschränkten *Maße* erst über einen Zwischenschritt, und dieser
+Zwischenschritt ist genau die Injektivität, die man dann doch braucht.
+
+#### Der dritte Befund, und er ist die eigentliche Ernte
+
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` ist `thm:absuniq`(b) an
+`ι = ℝ≥0`, und **jede** Voraussetzung, die von der Ordnung oder der Uhr spricht,
+ist eingelöst:
+
+| Voraussetzung des abstrakten Satzes | Eingelöst durch |
+|---|---|
+| `hS`, das Schiftsystem | `isShiftSystem_mpFamily_lebesgueClock` |
+| `hsi`, die schiftinvariante Uhr | `lebesgueClock_isShiftInvariant` |
+| `hbot`, `(⊥ : ι) = 0` | `NNReal.bot_eq_zero` |
+| `hadd`, `r ≤ r + u` | `le_self_add` |
+| `hsub`, (T4) | `exists_add_of_le` |
+| (T2a), die lineare Ordnung | die Ordnung von `ℝ≥0` |
+
+Was stehenbleibt, spricht **allein von den Daten**: vom Operator `A`, vom Schift
+`S`, von der Filtration `𝓕₀`, von der Integrierbarkeitsvorgabe aus `lem:restart`
+und von `eq:absonedim` selbst. Der Prüfstein des Vorlaufs — `hbot` und `hsub` an
+`ℝ≥0` einzulösen — ist damit nicht bloß bestanden, sondern *an der
+Zusammensetzung* bestanden, und das ist der Unterschied: einzeln sind beide
+trivial, zusammen mit der Uhrenbedingung sind sie die Aussage, daß Meilenstein 5
+und Meilenstein 6 an derselben Instanz zusammenpassen.
+
+**`hsub` ist der Grund, warum die drei als Hypothesen und nicht als Typklassen
+geführt sind**, und der Vorlauf hatte das schon gesagt; hier ist es nachgeprüft:
+`exists_add_of_le` kommt aus der Klasse `ExistsAddOfLE`
+(`Mathlib/Algebra/Order/Monoid/Unbundled/ExistsOfLE.lean:30`, auf master
+unverändert), die `ℝ≥0` hat und `ℤ` mit künstlich angehängtem `⊥` nicht.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D) — und der erste **veraltete Pfad**
+
+`upstream/master` ist in diesem Lauf frisch geholt:
+`3a33b9d429567334f36d10d5143d63baed20ae3e` (der Vorlauf stand auf
+`fe17e590176eea00b6912e09ed52280cc0d60128`).
+
+`scripts/check_citations.py` gegen diesen Stand: 1250 geprüfte Namen, davon 801
+auf beiden Ständen, **0 auf v4.33.1 und nicht mehr auf master**, 17 nur auf
+master (die bewußten `IsCadlag`-Zitate von `SkorokhodSpace`), ein `deprecated` —
+`Subgroup.isClosed_of_discrete`, der bekannte Fall. Von 85 zitierten Dateipfaden
+ist einer auffällig, und auch der ist der bekannte.
+`scripts/check_negatives.py` ist ganz durchgelaufen: siebzehn Behauptungen, keine
+widerlegt.
+
+**Der Fund des Laufs steht in keinem der beiden Prüfberichte, und das ist der
+Fund.** Master hat seit dem 2026-08-27 ein neues oberstes Verzeichnis
+`Mathlib/Basic/`, in das `Data/NNReal`, `Data/Real`, `Data/ENNReal`,
+`Data/Complex` und weiteres wandern. Die alten Dateien sind **nicht
+verschwunden** — sie stehen als Weiterleitung da:
+
+```
+module -- shake: keep-all
+public import Mathlib.Basic.ENNReal.Operations
+deprecated_module (since := "2026-08-27")
+```
+
+Von unseren beiden `Mathlib/Data/...`-Zitaten ist **eines betroffen**:
+`ENNReal.ofReal_iInf` (`MartingaleProblems/Suggested.lean:17320`). Der Name steht
+weiter und sogar auf derselben Zeile 526, aber in
+`Mathlib/Basic/ENNReal/Operations.lean`; die zitierte Datei ist auf master ein
+`deprecated_module`. Berichtigt, mit beiden Pfaden genannt.
+`Mathlib/Data/Nat/Find.lean`, unser anderes, ist keine Weiterleitung.
+
+**Und die Lücke in der Prüfung, die daraus folgt:** `check_citations.py` prüft
+Pfade auf **Existenz**. Eine Weiterleitung existiert. Das Skript hat den Fall
+also nicht gemeldet und konnte ihn nicht melden — er ist von Hand gefunden
+worden, beim Nachschlagen von `NNReal.bot_eq_zero` für diesen Lauf. Das ist die
+erste Sorte Veralterung, die der maschinellen Prüfung entgeht, seit sie läuft.
+Der Vorlauf hatte an zwei Dateiumzügen (`Measure/MeasureSpace.lean` →
+`Measure/CompleteLattice.lean` und `Measure/Module.lean`) die Regel belegt, im
+Beleg trage der **Name**, die Datei sei Beiwerk. Dieser Lauf belegt sie ein
+zweites Mal und schärft sie: ein Pfad kann nicht nur ins Leere zeigen, er kann
+auch auf eine Datei zeigen, die es noch gibt und die Mathlib selbst für veraltet
+erklärt hat. **Das ist der Punkt, an dem `check_citations.py` erweitert gehört:
+ein zitierter Pfad, dessen Datei auf master `deprecated_module` enthält, ist zu
+melden.** Eingetragen ist das hier und nicht im Skript, weil es eine Änderung am
+Prüfwerkzeug ist und dieser Lauf sie nicht mehr geprüft bekäme.
+
+Alle in diesem Lauf neu benutzten Namen sind gegen v4.33.1 **übersetzt** und
+gegen master nachgeprüft; keiner ist `deprecated`:
+
+* `measure_preimage_add` — `MeasureTheory/Group/Measure.lean`, v4.33.1 `:230`,
+  master `:234`; sie ist die `to_additive`-Schwester von `measure_preimage_mul`
+  und hat deshalb keine eigene Zeile im Quelltext.
+* `NNReal.bot_eq_zero` — v4.33.1 `Mathlib/Data/NNReal/Defs.lean:505`, master
+  `Mathlib/Basic/NNReal/Defs.lean:505`; das ist der Umzug oben.
+* `exists_add_of_le` — `Mathlib/Algebra/Order/Monoid/Unbundled/ExistsOfLE.lean:30`,
+  master unverändert.
+* `withDensity_congr_ae` — `Mathlib/MeasureTheory/Measure/WithDensity.lean:88`,
+  master dieselbe Datei und Zeile (für Vorschlag 0 nachgeschlagen, hier noch
+  nicht benutzt).
+* `Real.toNNReal_add`, `Real.toNNReal_coe`, `Real.coe_toNNReal`,
+  `measurable_const_add`, `le_self_add`, `add_le_add_iff_left` — unverändert auf
+  beiden Ständen.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**`isMarkov_of_unique_onedim`, `thm:absuniq`(a).** Unverändert ohne Deklaration.
+Sie ist damit weiterhin die einzige der fünf Aussagen von Meilenstein 6, die den
+Hauptstrang trägt. Der Beweisweg ist in diesem Lauf aber **durchgesehen** und hat
+zwei Befunde ergeben, die ihn von einer Richtung in eine Liste verwandeln; sie
+stehen als Vorschlag 0 unten.
+
+**Ein Zeuge für die zweite Uhr, das Zählmaß auf `ℕ`.** Meilenstein 1 führt beide
+Instanzen; bewiesen ist die erste.
+
+**Teil C.5a.** Geparkt, wie angeordnet; die elf offenen Aussagen sind unverändert
+elf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`isMarkov_of_unique_onedim` — `thm:absuniq`(a).** **Worauf sie ruht:**
+   `restart` in der allgemeinen, zweistufigen Fassung (mit `X`, nicht
+   `restart_canonical`), `condExp`, und die Beobachtung des Manuskripts, daß
+   `Z₂ = E[1_{F₀} | X r]/P(F₀)` sogar `σ(X r)`-meßbar ist. **Warum jetzt:** sie
+   ist die einzige Aussage des Meilensteins, die die zweistufige Fassung von
+   `restart` wirklich braucht, und damit die einzige Probe darauf, daß `restart`
+   mit allgemeinem `X` nicht umsonst allgemeiner ist.
+
+   **Zwei Befunde aus der Durchsicht dieses Laufs, und beide ändern den Plan.**
+
+   *Erstens: `restart` verlangt die Schranken an `Z` **punktweise**, nicht fast
+   sicher* — `hZ0 : ∀ ω, 0 ≤ Z ω` und `hZb : ∃ b, ∀ ω, Z ω ≤ b`. Eine bedingte
+   Erwartung erfüllt `0 ≤ · ≤ 1` aber nur **fast sicher**. Für
+   `Z₁ = 1_{F₀}/P(F₀)` ist das kein Problem, für `Z₂` schon, und es ist die erste
+   Stelle, an der die Formulierungsentscheidung von `restart` etwas kostet. Der
+   Ausweg ist billig und benannt: man nimmt die abgeschnittene Fassung
+   `Z₂' = fun ω ↦ max 0 (min (1/P F₀) (Z₂ ω))`, die punktweise beschränkt und
+   weiter `StronglyMeasurable[σ(X r)]` ist, und trägt sie über
+   `withDensity_congr_ae` in die Konklusion von `restart` hinein —
+   `Z₂' =ᵐ[P] Z₂` gibt dasselbe `withDensity`, also dasselbe `R₂`. Drei bis vier
+   Zeilen, aber sie müssen **vor** dem Hauptbeweis stehen, nicht in ihm.
+   *Die Alternative ist, `restart` auf f.s.-Schranken abzuschwächen*; dann ist zu
+   prüfen, ob sein Beweis die punktweise Schranke wirklich nur zur
+   Integrierbarkeit benutzt. Die Entscheidung zwischen beiden ist zu begründen
+   und nicht zu raten, und sie ist der erste Schritt.
+
+   *Zweitens: die „Selbstadjungiertheit" der bedingten Erwartung, die der letzte
+   Schritt des Manuskriptbeweises braucht, **hat Mathlib**.* Gesucht war
+   `E[U · E[V|𝓜]] = E[E[U|𝓜] · V]`; sie folgt in zwei Zeilen aus der
+   Herausziehregel, und die steht in
+   `Mathlib/MeasureTheory/Function/ConditionalExpectation/PullOut.lean` in sechs
+   Fassungen, darunter `condExp_mul_of_stronglyMeasurable_left` (`:245`),
+   `condExp_stronglyMeasurable_mul_of_bound` (`:260`) und — für den hier
+   gebrauchten Fall `𝕂`-wertiges `g` mit reellem Gewicht —
+   `condExp_smul_of_aestronglyMeasurable_left` (`:224`). Das ist die Aussage, von
+   der ich erwartet hatte, sie sei die Lücke; sie ist keine. **Damit ist der Weg
+   frei bis auf den Abschneideschritt**, und die Aufgabe ist keine Suche mehr,
+   sondern eine Rechnung.
+
+   **Prüfstein:** `P(F₀) = 0`, das das Manuskript durch die Voraussetzung
+   `P(F₀) > 0` abfängt. Nach der Abtrennung von `hZ1` aus `restart` ist zu
+   prüfen, ob man statt dessen mit `Z = 1_{F₀}` **unnormiert** arbeiten und den
+   entarteten Fall ganz vermeiden kann — in `lem:propagation` hat genau das
+   getragen. Unnormiert heißt hier aber: `R₁` und `R₂` sind dann endliche Maße
+   statt Wahrscheinlichkeitsmaße, und `eq:absonedim` ist für
+   Wahrscheinlichkeitsmaße formuliert. Also ist entweder doch zu normieren oder
+   `honedim` auf endliche Maße gleicher Gesamtmasse zu heben. **Das ist die
+   Stelle, an der dieser Satz sich von `lem:propagation` unterscheidet**, und sie
+   ist vor dem ersten Beweisschritt zu entscheiden.
+
+1. **`eq_of_forall_onedim`.** Danach, und es ist Buchhaltung:
+   `measure_biInter_eq_of_propagatesAgreement` gibt die endlichdimensionalen
+   Verteilungen schon her; die Aussage ist deren Umformulierung ohne den Schritt
+   zur Gleichheit der Maße, also **ohne** `hgen`. Sie ist es wert, eigens zu
+   stehen, weil sie die einzige Aussage des Meilensteins ist, die ohne eine
+   Voraussetzung über die σ-Algebra des Pfadraums auskommt.
+
+2. **Die zweite Uhr: `Clock.IsShiftInvariant` für das Zählmaß auf `ℕ`.**
+   **Worauf sie ruht:** dieselbe Zerlegung wie in diesem Lauf — das Urbild des
+   Fensters ist das Fenster (`add_le_add_iff_left`, hier über `ℕ`), und die Masse
+   ist die Translationsinvarianz des Zählmaßes, die über die **Injektivität** von
+   `n ↦ r + n` geht und nicht über eine Gruppenstruktur. **Warum danach:**
+   Meilenstein 1 führt beide Uhren als Instanzen, und der diskrete Fall ist der,
+   an dem sich zeigt, ob `lebesgueClock_isShiftInvariant` zufällig oder der Form
+   nach gelungen ist — steht der Beweis über der Injektivität allein, so ist die
+   gemeinsame Fassung `Clock.isShiftInvariant_of_injective` der eigentliche Satz
+   und die beiden Uhren sind Einsetzen. **Prüfstein:** `∑ n, δ (n : ℝ)` auf
+   `[0,∞)` erfüllt die Bedingung nach der Roadmap **nur für ganzzahlige**
+   Verschiebungen, `volume + Measure.dirac 1` für keine. Wer die Bedingung für
+   das Zählmaß beweist, hat diese beiden mitzuprüfen — geht der Beweis auch für
+   sie durch, so ist die Bedingung zu schwach formuliert und der Fund ist
+   wertvoller als der Satz.
