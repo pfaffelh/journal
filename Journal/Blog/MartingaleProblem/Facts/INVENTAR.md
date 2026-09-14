@@ -28980,3 +28980,215 @@ elf.
    das Zählmaß beweist, hat diese beiden mitzuprüfen — geht der Beweis auch für
    sie durch, so ist die Bedingung zu schwach formuliert und der Fund ist
    wertvoller als der Satz.
+
+### 2026-09-14, vierter Lauf des Tages — `thm:absuniq`(a) steht: jede Lösung ist markovsch, und die Eindeutigkeitsvoraussetzung wird an **einem** Shift verbraucht, nicht an allen
+
+**Vorrangige Aufgabe, Teil E.** Der Vorlauf hatte `isMarkov_of_unique_onedim` als
+Vorschlag 0 hinterlassen — die einzige der fünf Aussagen von Meilenstein 6, die
+den Hauptstrang trägt und noch ohne Deklaration war. Sie steht.
+
+**Vier Deklarationen** im neuen Abschnitt `MarkovFromOnedim` von
+`TauCeti/MartingaleProblems/Suggested.lean` (247 Zeilen, eingefügt zwischen
+`UniquenessFromOnedim` und dem Schiftsystem, wo der Meilenstein sie hinstellt).
+Die ganze Datei geht ohne einen Fehler durch `lake env lean` gegen v4.33.1; alle
+vier sind mit `scripts/check_axioms.py` auf `propext`, `Classical.choice`,
+`Quot.sound` geprüft. Die Zahl der `sorry` bleibt bei **sieben**, und keiner
+davon ist von den vieren aus erreichbar.
+
+* `map_withDensity_ofReal_eq_of_setIntegral_eq` — zwei beschränkte nichtnegative
+  Dichten, die über jeder Menge einer Unter-σ-Algebra gleich integrieren, geben
+  jeder für diese σ-Algebra meßbaren Abbildung dasselbe Bildmaß.
+* `stateSigma`, mit `stateSigma_eq_comap` — die σ-Algebra `σ(X r)`, auf die
+  bedingt wird, als **Definition**.
+* `isMarkov_of_unique_onedim` — **`thm:absuniq`(a)**:
+  `P[f (π (r+t) ∘ X) | 𝓖 r] =ᵐ P[f (π (r+t) ∘ X) | σ(X r)]`.
+
+#### Der Befund, der die Aussage verändert: die Voraussetzung wird an **einem** Shift verbraucht
+
+Der Meilenstein führte `eq:absonedim` bisher überall in der Gestalt „für jedes
+`r`", weil `lem:propagation` sie so braucht: dessen Induktion läuft durch die
+geschifteten Probleme. Teil (a) braucht sie **nur an dem `r`, an dem er die
+Markoveigenschaft behauptet** — beide Restarts sitzen an demselben Shift, und der
+Vergleich ist zwischen ihnen und nicht längs einer Kette.
+
+Damit fällt mehr weg als ein Quantor:
+
+| Voraussetzung | (a) | (b) |
+|---|---|---|
+| Schiftsystem | ja | ja |
+| `⊥ = 0`, `r ≤ r + u` | ja | ja |
+| (T4), also `hsub` | **nein** | ja |
+| (T2a), lineare Ordnung | **nein** | ja |
+| `eq:absonedim` für jedes `r` | **nein**, nur für das eine | ja |
+
+Das ist genau die Lesart von `rem:chainonly` — dort steht, (a) brauche vom
+Index nichts über (T0) und (T4) hinaus. In der Formalisierung braucht es nicht
+einmal (T4): `hsub` kommt im Beweis nicht vor, weil die Zeit, an der das
+geschiftete Problem gelesen wird, hier `t` selbst ist und nicht erst aus `s ≤ t`
+benannt werden muß. Die Roadmap ist danach berichtigt.
+
+#### Die drei Stellen, an denen die Formalisierung eine Entscheidung treffen mußte
+
+**Erstens: der zweite Gewichtsfaktor ist abgeschnitten, und das war der
+angesagte Schritt.** Der Vorlauf hatte ihn benannt: `restart` verlangt
+`hZ0 : ∀ ω, 0 ≤ Z ω` und `hZb : ∃ b, ∀ ω, Z ω ≤ b` **punktweise**, eine bedingte
+Erwartung erfüllt das nur fast sicher. Genommen ist
+`Z₂ = p⁻¹ · max 0 (min 1 (P[1_A | σ(X r)]))`; sie ist `StronglyMeasurable[σ(X r)]`
+und punktweise in `[0, p⁻¹]` und fast sicher gleich der bedingten Erwartung.
+
+Die vom Vorlauf erwogene Alternative — `restart` auf f.s.-Schranken abschwächen —
+ist **nicht** genommen, und der Grund ist nachgeprüft und nicht geraten: die
+punktweise Schranke wird dort an drei Stellen für eine **Dominierung** benutzt
+(`integrable_map_withDensity_ofReal`, `hWb`, `hWint`), nicht bloß für die
+Integrierbarkeit; eine f.s.-Fassung hätte jede davon umzubauen. Das Abschneiden
+kostet drei Zeilen und ändert an `restart` nichts.
+
+**Zweitens: der entartete Fall wird abgespalten und nicht vorausgesetzt.** Das
+Manuskript nimmt `P(F₀) > 0` in die Voraussetzung. Hier ist `P A = 0` durch
+`Measure.restrict_eq_zero` erledigt — beide Seiten sind das Integral über dem
+Nullmaß —, und die Konklusion gilt für **jede** Menge von `𝓖 r`. Die Normierung
+durch `P(A)` bleibt dabei nötig und ist nicht wegzukürzen: `honedim` spricht von
+Wahrscheinlichkeitsmaßen, und die Rücknahme der Normierung geht über
+`p • (p⁻¹ • ·)` und nicht über eine Injektivität des Skalierens, die es in
+Mathlib nicht gibt (siehe den Negativbefund `measure-smul-cancel` des zweiten
+Laufs dieses Tages).
+
+**Drittens: die Selbstadjungiertheit ist zweimal dieselbe Herausziehregel, von
+verschiedenen Seiten.** Der Vorlauf hatte richtig gesehen, daß Mathlib sie hat.
+Benutzt sind genau zwei Fassungen, und sie treffen sich an demselben Produkt
+`g • P[V | σ(X r)]`:
+
+* `condExp_smul_of_aestronglyMeasurable_left` zieht den **meßbaren** Faktor `g'`
+  heraus: `∫ g' · V = ∫ g' · P[V|𝓜]`;
+* `condExp_smul_of_aestronglyMeasurable_right` zieht den **anderen** heraus:
+  `∫ 1_A · P[V|𝓜] = ∫ P[1_A|𝓜] · P[V|𝓜]`.
+
+Die zweite ist die, die den Beweis trägt, und sie ist die, die man auf Papier
+nicht sieht: dort steht `P[V|𝓜]` als beschränkte Funktion da, in Lean ist sie
+bloß integrierbar, und die `right`-Fassung ist die einzige der sechs
+Herausziehregeln in `PullOut.lean`, die mit einem bloß `AEStronglyMeasurable[m]`
+**rechten** Faktor auskommt. Wäre sie nicht da, brauchte es eine f.s.-Schranke an
+`P[V|𝓜]` und damit `condExp_stronglyMeasurable_mul_of_bound`, also einen Umweg
+über `𝕂 = ℝ`.
+
+#### Der teuerste Fehler des Laufs, und er ist eine Regel für die nächsten
+
+Der erste Entwurf führte die σ-Algebra `σ(X r)` im Beweis mit
+`set mm : MeasurableSpace Ω := MeasurableSpace.comap …` ein. Das ist falsch, und
+zwar nicht bloß unschön:
+
+> **Eine lokale Hypothese vom Typ einer Klasse geht in den lokalen
+> Instanzenspeicher ein, auch wenn sie nicht `[…]`-gebunden ist.** `mm` hat damit
+> die ambiente `MeasurableSpace Ω` verdrängt, und jedes folgende `Measurable f`
+> war stillschweigend eine Aussage über die Unter-σ-Algebra.
+
+Der Schaden war zweifach. Sichtbar: drei Typfehler, die auf `mm` statt `m`
+zeigten. Unsichtbar und teurer: der Durchlauf der Datei stieg von **53 Sekunden
+auf über zwanzig Minuten**, weil die Unifikation an jeder Stelle zwischen den
+beiden Instanzen zu vermitteln versuchte. Ein Lauf, der nur auf Fehler schaut,
+hätte das für „Mathlib ist groß" gehalten.
+
+Die Abhilfe ist `stateSigma` als **Definition** auf oberster Ebene: ein Term ist
+keine lokale Hypothese und tritt in keinen Instanzenspeicher ein. Sie steht mit
+`stateSigma_eq_comap` daneben, damit der Leser die Definition sieht, und der
+Doc-Kommentar nennt den Grund.
+
+**Und die Arbeitsregel, die daraus folgt und die dieser Lauf zum ersten Mal
+angewandt hat:** eine Deklaration, die in einer 27000-Zeilen-Datei entsteht, wird
+**nicht** in ihr entwickelt. Gebaut ist sie in einer eigenen Datei von 80 Zeilen,
+die dieselben Importe hat und die drei gebrauchten Sätze — `restart`,
+`integral_map_withDensity_ofReal`,
+`isProbabilityMeasure_map_withDensity_ofReal` — als wörtlich abgeschriebene
+Signaturen mit `sorry` führt. Ein Durchlauf davon kostet knapp zwei Minuten statt
+einer Stunde, und die vier Fehlerrunden dieses Laufs haben zusammen weniger
+gekostet als der eine Durchlauf, mit dem er anfing. Die Übersetzung der ganzen
+Datei kommt danach und einmal.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf frisch geholt:
+`f4a240391885f7de0ab4b0ab821485924a8cbd62` (der Vorlauf stand auf
+`3a33b9d429567334f36d10d5143d63baed20ae3e`).
+
+`scripts/check_citations.py` gegen diesen Stand: 1305 geprüfte Namen, davon 834
+auf beiden Ständen, **0 auf v4.33.1 und nicht mehr auf master**, 17 nur auf
+master (die bewußten `IsCadlag`-Zitate von `SkorokhodSpace`), ein `deprecated` —
+`Subgroup.isClosed_of_discrete`, der bekannte Fall. Von 87 zitierten Dateipfaden
+sind zwei auffällig, und beide sind die bekannten: `Mathlib/Basic/ENNReal/…` und
+`Mathlib/Topology/Order/Cadlag.lean`, beide auf master und nicht auf v4.33.1, beide
+so gewollt. `scripts/check_negatives.py` ist ganz durchgelaufen: siebzehn
+Behauptungen, keine widerlegt.
+
+Alle in diesem Lauf neu benutzten Namen sind gegen v4.33.1 **übersetzt** und
+gegen master nachgeschlagen; keiner ist `deprecated`:
+
+* `condExp_smul_of_aestronglyMeasurable_left` und
+  `condExp_smul_of_aestronglyMeasurable_right` —
+  `Mathlib/MeasureTheory/Function/ConditionalExpectation/PullOut.lean`, v4.33.1
+  `:224` und `:230`, auf master dieselbe Datei.
+* `condExp_mono` (`ConditionalExpectation/Basic.lean:486`), `condExp_nonneg`
+  (`:495`), `condExp_const` (`:147`), `setIntegral_condExp` (`:231`),
+  `integral_condExp` (`:236`),
+  `ae_eq_condExp_of_forall_setIntegral_eq` (`:253`) — alle auf beiden Ständen.
+* `Measurable.of_comap_le`, `measurable_iff_comap_le`
+  (`MeasureTheory/MeasurableSpace/Basic.lean:187`), `Measurable.max` und
+  `Measurable.min` (`Constructions/BorelSpace/Order.lean:588`, `:599`),
+  `Measurable.stronglyMeasurable`
+  (`Function/StronglyMeasurable/Basic.lean:686`),
+  `integral_indicator_const` (`Integral/Bochner/Set.lean:531`),
+  `ae_restrict_of_ae` (`Measure/Restrict.lean:652`) — unverändert.
+
+**Ein Negativbefund, den dieser Lauf nachgeprüft hat:** `StronglyMeasurable.max`
+und `StronglyMeasurable.min` gibt es **nicht**, weder auf v4.33.1 noch auf
+master; die Verbandsoperationen stehen nur für `Measurable`. Über einem
+metrisierbaren, zweitabzählbaren Zielraum ist das kein Verlust —
+`Measurable.stronglyMeasurable` schließt die Lücke in einer Zeile —, aber wer
+`.max` an einer `StronglyMeasurable`-Hypothese ansetzt, bekommt eine Fehlermeldung
+über `Exists.max`, weil `StronglyMeasurable` ein `∃` ist und die Projektion am
+entfalteten Typ ansetzt. Das ist die unlesbarste Fehlermeldung des Laufs gewesen
+und gehört deshalb hier vermerkt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**`eq_of_forall_onedim`.** Unverändert ohne Deklaration; sie war Vorschlag 1 des
+Vorlaufs und bleibt es.
+
+**Ein Zeuge für die zweite Uhr, das Zählmaß auf `ℕ`.** Unverändert.
+
+**Teil C.5a.** Geparkt, wie angeordnet; die elf offenen Aussagen sind unverändert
+elf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Das Akzeptanzbeispiel von Meilenstein 6: die Zweizustandskette, ganz
+   hindurch.** **Worauf es ruht:** `exists_unique_of_bounded` aus Meilenstein 4,
+   das die Eindeutigkeit der eindimensionalen Verteilungen für jede Anfangsvertei
+   lung liefert, und `isMarkov_of_unique_onedim` samt
+   `subsingleton_mpSolutions_of_unique_onedim`. **Warum jetzt:** seit diesem Lauf
+   sind **beide** Hälften von `thm:absuniq` bewiesen, und der Meilenstein nennt
+   dieses Beispiel ausdrücklich als das, „das prüft, ob die Schnittstellen
+   zwischen Meilenstein 4 und Meilenstein 6 zusammenpassen". Bisher konnte es
+   nicht laufen, weil (a) fehlte. **Der Prüfstein, und er ist der Grund, warum
+   das Beispiel mehr ist als Buchhaltung:** `honedim` in der Fassung dieses
+   Laufs verlangt die Eindeutigkeit für das bei `r` **gestellte** Problem
+   `𝓧₀ r`, nicht für das bei `0` gestellte. `exists_unique_of_bounded` spricht
+   vom Problem bei `0`. Die Brücke ist der Schift, und es ist zu prüfen, ob
+   `isShiftSystem_mpFamily` sie wirklich schlägt oder ob dazwischen eine Aussage
+   fehlt. Fehlt eine, so ist **das** der Fund, und er sitzt an der Naht der
+   beiden Meilensteine.
+
+1. **`eq_of_forall_onedim`.** Danach, und es bleibt Buchhaltung:
+   `measure_biInter_eq_of_propagatesAgreement` gibt die endlichdimensionalen
+   Verteilungen schon her; die Aussage ist deren Umformulierung ohne den Schritt
+   zur Gleichheit der Maße, also **ohne** `hgen`.
+
+2. **`check_citations.py` um die Weiterleitungen erweitern.** Der Vorlauf hat den
+   Fall gefunden und ausdrücklich in den Bericht und nicht ins Skript
+   geschrieben, weil er die Änderung nicht mehr geprüft bekäme: ein zitierter
+   Pfad, dessen Datei auf master `deprecated_module` enthält, wird heute nicht
+   gemeldet, weil das Skript Pfade auf **Existenz** prüft und eine Weiterleitung
+   existiert. Das ist zwei Läufe alt und jeder weitere Lauf prüft mit einem
+   Werkzeug, von dem bekannt ist, daß es diese Sorte Veralterung übersieht.
+   **Worauf es ruht:** `git show upstream/master:<pfad>` und ein
+   `grep deprecated_module`; drei Zeilen in `check_citations.py`. **Warum jetzt:**
+   es ist die einzige benannte Lücke im Prüfwerkzeug selbst.

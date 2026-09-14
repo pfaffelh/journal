@@ -26341,7 +26341,7 @@ system nor a determining set occurs in any statement or in any proof in `section
 `section Cylinders`, and none of the seven `sorry`s of this file is reachable from here.  What
 sits above it -- `lem:propagation` in `section PropagationFromOnedim`, which makes
 `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the Markov
-property, which is still without a declaration -- is where the shift system enters.
+property, in `section MarkovFromOnedim` -- is where the shift system enters.
 
 The manuscript's `rem:uniqnotmarkov` reads this decomposition off in a table; this block is its
 first row.
@@ -26884,6 +26884,292 @@ theorem subsingleton_mpSolutions_of_unique_onedim
   exact eq_of_propagatesAgreement hN hadapt hgen ⟨hPsol, hPp⟩ ⟨hQsol, hQp⟩ (hPi.trans hQi.symm)
 
 end UniquenessFromOnedim
+
+/-! ### `thm:absuniq`(a): every solution of the martingale problem is Markov
+
+The other half of the abstract theorem, and the half that carries the Markov structure.  It is
+`restart` applied **twice at the same shift `r`**, to the two weights of the manuscript proof --
+the normalised indicator of a set of the past at `r`, and its conditional expectation given the
+state at `r`.  The two restarted laws solve the *same* shifted problem and have the *same*
+initial law, so `eq:absonedim` identifies them, and reading them at `t` is the Markov property.
+
+Four points of the formalisation, and each of them is a decision.
+
+*The one dimensional hypothesis is consumed at the single shift `r`*, not at all of them.  That
+is the difference to `lem:propagation`, whose induction walks through every shifted problem, and
+it is why `honedim` below is quantified over the two measures only.  The index carries a
+preorder, `OrderBot`, and the additive structure; there is **no** (T2a) and **no** (T4) -- this
+is `rem:chainonly` of the manuscript, which says that part (a) needs nothing of the index beyond
+(T0) and (T4), and in this formalisation not even (T4): `hsub` does not appear.
+
+*`restart` wants the bounds on the weight pointwise, and a conditional expectation has them only
+almost surely.*  The second weight is therefore the truncation `max 0 (min 1 ·)` of
+`P[1_{F₀} | σ(X r)]`, which is `StronglyMeasurable[σ(X r)]` and bounded on the nose and agrees
+with the conditional expectation almost everywhere.  That suffices, because every use of the
+weight is an integral -- and it is cheaper than weakening `restart`, whose pointwise bound is
+used there for a domination and not merely for integrability.
+
+*The degenerate case is split off and not hypothesised away.*  The manuscript takes `P(F₀) > 0`;
+here the sets with `P(F₀) = 0` are disposed of by `Measure.restrict_eq_zero`, so the conclusion
+is the Markov property for **all** of `𝓖 r` and not for a subfamily.  Normalisation by `P(F₀)`
+is then genuine division, and it is needed: `honedim` speaks of probability measures.
+
+*The last step of the manuscript proof is the self adjointness of the conditional expectation*,
+`E[U · E[V|𝓜]] = E[E[U|𝓜] · V]`.  Mathlib has it, in both directions, as the pull-out property:
+`condExp_smul_of_aestronglyMeasurable_left` and `condExp_smul_of_aestronglyMeasurable_right`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:224` and `:230`).  The two are
+applied to the same product `g • P[V|𝓜]` from opposite sides.
+-/
+
+section MarkovFromOnedim
+
+variable {ι : Type*} [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+variable {Ω : Type*} {m : MeasurableSpace Ω} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- Two bounded non-negative densities that integrate alike over every set of a sub-σ-algebra
+give the same law to any map measurable for that sub-σ-algebra.
+
+This is the step of `thm:absuniq`(a) that says the two restarted measures have the same initial
+law.  It is stated for a general sub-σ-algebra because that is all the proof uses: the initial
+coordinate of the shifted path is `X r`, and `σ(X r)` is exactly the σ-algebra against which the
+second weight was built. -/
+theorem map_withDensity_ofReal_eq_of_setIntegral_eq {α : Type*} {mm m0 : MeasurableSpace α}
+    (hmm : mm ≤ m0) {P : Measure α}
+    {β : Type*} [MeasurableSpace β] {h : α → β} (hh : Measurable[mm] h)
+    {Z₁ Z₂ : α → ℝ} (hZ₁ : Integrable Z₁ P) (hZ₂ : Integrable Z₂ P)
+    (h₁ : 0 ≤ᵐ[P] Z₁) (h₂ : 0 ≤ᵐ[P] Z₂)
+    (heq : ∀ s, MeasurableSet[mm] s → ∫ a in s, Z₁ a ∂P = ∫ a in s, Z₂ a ∂P) :
+    (P.withDensity fun a ↦ ENNReal.ofReal (Z₁ a)).map h
+      = (P.withDensity fun a ↦ ENNReal.ofReal (Z₂ a)).map h := by
+  have hhm : Measurable[m0] h := hh.mono hmm le_rfl
+  refine Measure.ext fun B hB ↦ ?_
+  have hBm : MeasurableSet[mm] (h ⁻¹' B) := hh hB
+  rw [Measure.map_apply hhm hB, Measure.map_apply hhm hB,
+    withDensity_apply (μ := P) _ (hmm _ hBm), withDensity_apply (μ := P) _ (hmm _ hBm),
+    ← ofReal_integral_eq_lintegral_ofReal hZ₁.restrict (ae_restrict_of_ae h₁),
+    ← ofReal_integral_eq_lintegral_ofReal hZ₂.restrict (ae_restrict_of_ae h₂),
+    heq _ hBm]
+
+set_option warn.classDefReducibility false in
+/-- The σ-algebra generated by the state at time `r`, the one the Markov property conditions on.
+
+It is `MeasurableSpace.comap (fun ω ↦ π r (X ω)) inferInstance` and nothing else -- see
+`stateSigma_eq_comap` -- but it is given a name because a σ-algebra introduced inside a proof by
+`set` or `let` enters the local instance cache and silently displaces the ambient
+`MeasurableSpace Ω`, which turns every subsequent `Measurable` into a statement about the wrong
+space. -/
+def stateSigma (π : ι → F → E) (X : Ω → F) (r : ι) : MeasurableSpace Ω :=
+  MeasurableSpace.comap (fun ω ↦ π r (X ω)) inferInstance
+
+omit [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι] mF in
+theorem stateSigma_eq_comap (π : ι → F → E) (X : Ω → F) (r : ι) :
+    stateSigma π X r = MeasurableSpace.comap (fun ω ↦ π r (X ω)) inferInstance := rfl
+
+/-- **`thm:absuniq`(a)**: if the one dimensional laws of the problem posed at `r` are determined
+by the initial law, then every solution is Markov at `r` -- in general time inhomogeneously so.
+
+The hypotheses are those of `restart`, which is applied twice, together with `honedim` at the
+single shift `r`.  `hadapt` is the adaptedness of the coordinate maps, which supplies both the
+measurability of `π u` and the `𝓖 r`-measurability of the state `X r`; `hbot` identifies the
+initial time of the shifted problem with the neutral element of the shift.
+
+Note what is **absent**: no linear order, no (T4), no determining set, no topology on `E`, and no
+hypothesis that `P` is the law of the path -- `X` is an arbitrary measurable process, which is
+`rem:restarttwolevel` of the manuscript. -/
+theorem isMarkov_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    {X : Ω → F} (hX : Measurable X) {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] (hXadapt : ∀ u : ι, Measurable[𝓖 u, 𝓕₀ u] X)
+    (hsol : IsMPSolution ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (X ω)) '' 𝓧₀ 0) 𝓖 P)
+    (hint : ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (fun ω ↦ Y u (X ω)) P)
+    (r : ι)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {f : E → 𝕂} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι) :
+    P[fun ω ↦ f (π (r + t) (X ω)) | 𝓖 r]
+      =ᵐ[P] P[fun ω ↦ f (π (r + t) (X ω)) | stateSigma π X r] := by
+  classical
+  have hπm : ∀ u : ι, Measurable (π u) := fun u ↦ (hadapt u).mono (𝓕₀.le u) le_rfl
+  have hXrG : Measurable[𝓖 r] fun ω ↦ π r (X ω) := (hadapt r).comp (hXadapt r)
+  have hmmG : stateSigma π X r ≤ 𝓖 r := measurable_iff_comap_le.mp hXrG
+  have hmm : stateSigma π X r ≤ m := hmmG.trans (𝓖.le r)
+  have hXrmm : Measurable[stateSigma π X r] fun ω ↦ π r (X ω) := Measurable.of_comap_le le_rfl
+  set V : Ω → 𝕂 := fun ω ↦ f (π (r + t) (X ω)) with hVdef
+  have hVmeas : Measurable V := hf.comp ((hπm (r + t)).comp hX)
+  have hVb : ∀ ω, ‖V ω‖ ≤ cf := fun ω ↦ hfb _
+  have hVint : Integrable V P :=
+    Integrable.mono' (integrable_const cf) hVmeas.aestronglyMeasurable
+      (Filter.Eventually.of_forall hVb)
+  have hWint : Integrable (P[V | stateSigma π X r]) P := integrable_condExp
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓖.le r) hVint
+    (fun A _ _ ↦ hWint.integrableOn) ?_
+    (stronglyMeasurable_condExp.mono hmmG).aestronglyMeasurable).symm
+  intro A hA _
+  have hA' : MeasurableSet A := 𝓖.le r A hA
+  by_cases hA0 : P A = 0
+  · rw [Measure.restrict_eq_zero.mpr hA0, integral_zero_measure, integral_zero_measure]
+  set u1 : Ω → ℝ := A.indicator fun _ ↦ (1 : ℝ) with hu1def
+  have hu1m : StronglyMeasurable[𝓖 r] u1 := stronglyMeasurable_const.indicator hA
+  have hu1meas : Measurable u1 := (hu1m.mono (𝓖.le r)).measurable
+  have hu1int : Integrable u1 P := (integrable_const (1 : ℝ)).indicator hA'
+  have hu10 : ∀ ω, 0 ≤ u1 ω := by
+    intro ω
+    by_cases h : ω ∈ A
+    · simp [hu1def, Set.indicator_of_mem h]
+    · simp [hu1def, Set.indicator_of_notMem h]
+  have hu1b : ∀ ω, u1 ω ≤ 1 := by
+    intro ω
+    by_cases h : ω ∈ A
+    · simp [hu1def, Set.indicator_of_mem h]
+    · simp [hu1def, Set.indicator_of_notMem h]
+  have hind : ∀ W : Ω → 𝕂, (fun ω ↦ u1 ω • W ω) = A.indicator W := by
+    intro W
+    funext ω
+    by_cases h : ω ∈ A
+    · simp [hu1def, Set.indicator_of_mem h]
+    · simp [hu1def, Set.indicator_of_notMem h]
+  set g : Ω → ℝ := P[u1 | stateSigma π X r] with hgdef
+  have hgm : StronglyMeasurable[stateSigma π X r] g := stronglyMeasurable_condExp
+  set g' : Ω → ℝ := fun ω ↦ max 0 (min 1 (g ω)) with hg'def
+  have hg'm : StronglyMeasurable[stateSigma π X r] g' :=
+    (measurable_const.max (measurable_const.min hgm.measurable)).stronglyMeasurable
+  have hg'meas : Measurable g' := (hg'm.mono hmm).measurable
+  have hg'0 : ∀ ω, 0 ≤ g' ω := fun ω ↦ le_max_left _ _
+  have hg'b : ∀ ω, g' ω ≤ 1 := fun ω ↦ max_le zero_le_one (min_le_left _ _)
+  have hgg' : g' =ᵐ[P] g := by
+    have h0 : (0 : Ω → ℝ) ≤ᵐ[P] g := condExp_nonneg (Filter.Eventually.of_forall hu10)
+    have h1 : g ≤ᵐ[P] P[fun _ ↦ (1 : ℝ) | stateSigma π X r] :=
+      condExp_mono hu1int (integrable_const (1 : ℝ)) (Filter.Eventually.of_forall hu1b)
+    filter_upwards [h0, h1] with ω h0ω h1ω
+    have h1ω' : g ω ≤ 1 := by rwa [condExp_const hmm] at h1ω
+    have h0ω' : (0 : ℝ) ≤ g ω := by simpa using h0ω
+    simp only [hg'def]
+    rw [min_eq_right h1ω', max_eq_right h0ω']
+  have hAfin : P A ≠ ⊤ := measure_ne_top P A
+  have hp : 0 < (P A).toReal := ENNReal.toReal_pos hA0 hAfin
+  have hpinv : (0 : ℝ) ≤ (P A).toReal⁻¹ := le_of_lt (inv_pos.mpr hp)
+  set Z₁ : Ω → ℝ := fun ω ↦ (P A).toReal⁻¹ * u1 ω with hZ₁def
+  set Z₂ : Ω → ℝ := fun ω ↦ (P A).toReal⁻¹ * g' ω with hZ₂def
+  have hZ₁0 : ∀ ω, 0 ≤ Z₁ ω := fun ω ↦ mul_nonneg hpinv (hu10 ω)
+  have hZ₂0 : ∀ ω, 0 ≤ Z₂ ω := fun ω ↦ mul_nonneg hpinv (hg'0 ω)
+  have hZ₁c : ∀ ω, Z₁ ω ≤ (P A).toReal⁻¹ := fun ω ↦ by
+    simpa [hZ₁def] using mul_le_mul_of_nonneg_left (hu1b ω) hpinv
+  have hZ₂c : ∀ ω, Z₂ ω ≤ (P A).toReal⁻¹ := fun ω ↦ by
+    simpa [hZ₂def] using mul_le_mul_of_nonneg_left (hg'b ω) hpinv
+  have hZ₁m : StronglyMeasurable[𝓖 r] Z₁ := stronglyMeasurable_const.mul hu1m
+  have hZ₂m : StronglyMeasurable[𝓖 r] Z₂ := stronglyMeasurable_const.mul (hg'm.mono hmmG)
+  have hZ₁meas : Measurable Z₁ := hu1meas.const_mul _
+  have hZ₂meas : Measurable Z₂ := hg'meas.const_mul _
+  have hZ₁int : Integrable Z₁ P := hu1int.const_mul _
+  have hZ₂int : Integrable Z₂ P := by
+    refine Integrable.const_mul ?_ _
+    exact (integrable_congr hgg').mpr (hgdef ▸ integrable_condExp)
+  have hu1I : ∫ ω, u1 ω ∂P = (P A).toReal := by
+    rw [hu1def, integral_indicator_const (1 : ℝ) hA', smul_eq_mul, mul_one, measureReal_def]
+  have hg'I : ∫ ω, g' ω ∂P = (P A).toReal := by
+    rw [integral_congr_ae hgg', hgdef, integral_condExp hmm, hu1I]
+  have hZ₁1 : ∫ ω, Z₁ ω ∂P = 1 := by
+    rw [hZ₁def, integral_const_mul, hu1I, inv_mul_cancel₀ (ne_of_gt hp)]
+  have hZ₂1 : ∫ ω, Z₂ ω ∂P = 1 := by
+    rw [hZ₂def, integral_const_mul, hg'I, inv_mul_cancel₀ (ne_of_gt hp)]
+  have hψ : Measurable fun ω ↦ S.θ r (X ω) := (S.measurable r).comp hX
+  have hsol₁ : IsMPSolution (𝓧₀ r) 𝓕₀
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    restart hS hX hXadapt hsol hint r (hadd r) hZ₁0 ⟨_, hZ₁c⟩ hZ₁m
+  have hsol₂ : IsMPSolution (𝓧₀ r) 𝓕₀
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    restart hS hX hXadapt hsol hint r (hadd r) hZ₂0 ⟨_, hZ₂c⟩ hZ₂m
+  have hprob₁ : IsProbabilityMeasure
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    isProbabilityMeasure_map_withDensity_ofReal hψ hZ₁meas hZ₁0 hZ₁c hZ₁1
+  have hprob₂ : IsProbabilityMeasure
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    isProbabilityMeasure_map_withDensity_ofReal hψ hZ₂meas hZ₂0 hZ₂c hZ₂1
+  have hinit : ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map
+        fun ω ↦ S.θ r (X ω)).map (π ⊥)
+      = ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map
+        fun ω ↦ S.θ r (X ω)).map (π ⊥) := by
+    have hcomp : (π ⊥ ∘ fun ω ↦ S.θ r (X ω)) = fun ω ↦ π r (X ω) := by
+      funext ω
+      show π ⊥ (S.θ r (X ω)) = π r (X ω)
+      rw [S.eval_comp r ⊥, hbot, add_zero]
+    rw [Measure.map_map (hπm ⊥) hψ, Measure.map_map (hπm ⊥) hψ, hcomp]
+    refine map_withDensity_ofReal_eq_of_setIntegral_eq hmm hXrmm hZ₁int hZ₂int
+      (Filter.Eventually.of_forall hZ₁0) (Filter.Eventually.of_forall hZ₂0) ?_
+    intro s hs
+    rw [hZ₁def, hZ₂def, integral_const_mul, integral_const_mul]
+    congr 1
+    rw [integral_congr_ae (ae_restrict_of_ae hgg'), hgdef, setIntegral_condExp hmm hu1int hs]
+  have hread : ∀ Z : Ω → ℝ, Measurable Z → (∀ ω, 0 ≤ Z ω) →
+      ∫ x, f x ∂(((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map
+        fun ω ↦ S.θ r (X ω)).map (π t)) = ∫ ω, Z ω • V ω ∂P := by
+    intro Z hZm hZ0
+    have hfg : Measurable fun x ↦ f (π t x) := hf.comp (hπm t)
+    rw [integral_map (hπm t).aemeasurable hf.aestronglyMeasurable,
+      integral_map_withDensity_ofReal hψ hZm hZ0 hfg]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp only [hVdef]
+    rw [S.eval_comp r t (X ω)]
+  have hmain : ∫ ω, Z₁ ω • V ω ∂P = ∫ ω, Z₂ ω • V ω ∂P := by
+    rw [← hread Z₁ hZ₁meas hZ₁0, ← hread Z₂ hZ₂meas hZ₂0,
+      honedim _ _ hprob₁ hprob₂ hsol₁ hsol₂ hinit t]
+  have hscale₁ : ∫ ω, Z₁ ω • V ω ∂P = (P A).toReal⁻¹ • ∫ ω, u1 ω • V ω ∂P := by
+    rw [← integral_smul]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp [hZ₁def, smul_smul]
+  have hscale₂ : ∫ ω, Z₂ ω • V ω ∂P = (P A).toReal⁻¹ • ∫ ω, g' ω • V ω ∂P := by
+    rw [← integral_smul]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp [hZ₂def, smul_smul]
+  have hmain' : ∫ ω, u1 ω • V ω ∂P = ∫ ω, g' ω • V ω ∂P := by
+    calc ∫ ω, u1 ω • V ω ∂P
+        = (P A).toReal • ((P A).toReal⁻¹ • ∫ ω, u1 ω • V ω ∂P) := by
+          rw [smul_smul, mul_inv_cancel₀ (ne_of_gt hp), one_smul]
+      _ = (P A).toReal • ((P A).toReal⁻¹ • ∫ ω, g' ω • V ω ∂P) := by
+          rw [← hscale₁, ← hscale₂, hmain]
+      _ = ∫ ω, g' ω • V ω ∂P := by
+          rw [smul_smul, mul_inv_cancel₀ (ne_of_gt hp), one_smul]
+  have hsmA : Integrable (fun ω ↦ g' ω • V ω) P := by
+    refine Integrable.mono' (hVint.norm.const_mul 1)
+      ((hg'm.mono hmm).aestronglyMeasurable.smul hVint.1) ?_
+    filter_upwards with ω
+    rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (hg'0 ω)]
+    exact mul_le_mul_of_nonneg_right (hg'b ω) (norm_nonneg _)
+  have hstepA : ∫ ω, g' ω • V ω ∂P = ∫ ω, g' ω • (P[V | stateSigma π X r]) ω ∂P := by
+    have hpull := condExp_smul_of_aestronglyMeasurable_left (m := stateSigma π X r) (μ := P)
+      (f := g') (g := V) hg'm.aestronglyMeasurable hsmA hVint
+    calc ∫ ω, g' ω • V ω ∂P = ∫ ω, (P[g' • V | stateSigma π X r]) ω ∂P := (integral_condExp hmm).symm
+      _ = ∫ ω, g' ω • (P[V | stateSigma π X r]) ω ∂P := integral_congr_ae hpull
+  have hsmB : Integrable (fun ω ↦ u1 ω • (P[V | stateSigma π X r]) ω) P := by
+    refine Integrable.mono' (hWint.norm.const_mul 1)
+      (hu1meas.aestronglyMeasurable.smul hWint.1) ?_
+    filter_upwards with ω
+    rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (hu10 ω)]
+    exact mul_le_mul_of_nonneg_right (hu1b ω) (norm_nonneg _)
+  have hstepB : ∫ ω, u1 ω • (P[V | stateSigma π X r]) ω ∂P = ∫ ω, g ω • (P[V | stateSigma π X r]) ω ∂P := by
+    have hpull := condExp_smul_of_aestronglyMeasurable_right (m := stateSigma π X r) (μ := P)
+      (f := u1) (g := P[V | stateSigma π X r]) hu1int hsmB stronglyMeasurable_condExp.aestronglyMeasurable
+    calc ∫ ω, u1 ω • (P[V | stateSigma π X r]) ω ∂P = ∫ ω, (P[u1 • P[V | stateSigma π X r] | stateSigma π X r]) ω ∂P :=
+          (integral_condExp hmm).symm
+      _ = ∫ ω, g ω • (P[V | stateSigma π X r]) ω ∂P := integral_congr_ae hpull
+  calc ∫ x in A, (P[V | stateSigma π X r]) x ∂P = ∫ ω, u1 ω • (P[V | stateSigma π X r]) ω ∂P := by
+        rw [hind, integral_indicator hA']
+    _ = ∫ ω, g ω • (P[V | stateSigma π X r]) ω ∂P := hstepB
+    _ = ∫ ω, g' ω • (P[V | stateSigma π X r]) ω ∂P :=
+        integral_congr_ae (hgg'.mono fun ω hω ↦ by simp only [hω])
+    _ = ∫ ω, g' ω • V ω ∂P := hstepA.symm
+    _ = ∫ ω, u1 ω • V ω ∂P := hmain'.symm
+    _ = ∫ x in A, V x ∂P := by rw [hind, integral_indicator hA']
+
+end MarkovFromOnedim
+
+
 
 /-! ### The shift system carried by `mpFamily`, and the order condition it hides
 

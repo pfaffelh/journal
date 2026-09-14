@@ -6414,7 +6414,45 @@ problems.
   tests against every set of `𝓕° s` instead, so `𝓩°` never enters.
 * `isMarkov_of_unique_onedim`: every solution is Markov, in general time
   inhomogeneously — for `f` bounded measurable and `r, t : ι`,
-  `𝔼[f (X (r + t)) | 𝓖 r] =ᵐ 𝔼[f (X (r + t)) | X r]`.
+  `𝔼[f (X (r + t)) | 𝓖 r] =ᵐ 𝔼[f (X (r + t)) | X r]`. This is `thm:absuniq`(a).
+  It rests on `restart` in the two level form, applied **twice at the same
+  shift `r`** to the two weights of the manuscript proof, and on the pull-out
+  property of the conditional expectation in both directions
+  (`condExp_smul_of_aestronglyMeasurable_left` and `..._right`), which is the
+  self adjointness `E[U · E[V|𝓜]] = E[E[U|𝓜] · V]` that the last step asks for.
+
+  The one dimensional hypothesis is consumed **at the single shift `r`** and not
+  at every shift. That is the difference to `lem:propagation`, whose induction
+  walks through the shifted problems, and it is why this statement needs neither
+  (T2a) nor (T4): the index carries a preorder, a bottom element and the
+  additive structure, and `hsub` does not occur. `rem:chainonly` says as much of
+  the manuscript proof; here it is the shape of the hypothesis.
+
+  `X` is an arbitrary measurable process and not the coordinate process, which
+  is `rem:restarttwolevel`: the first weight `1_{F₀}` is `𝓖 r`-measurable and
+  need not be a functional of the path.
+
+  Two auxiliary statements carry it.
+  * `map_withDensity_ofReal_eq_of_setIntegral_eq`: two bounded non-negative
+    densities that integrate alike over every set of a sub-σ-algebra give the
+    same law to every map measurable for that sub-σ-algebra. It is the step that
+    identifies the initial laws of the two restarted measures, and it is stated
+    for a general sub-σ-algebra because that is all its proof uses.
+  * `stateSigma`, with `stateSigma_eq_comap`: the σ-algebra
+    `σ(X r) = MeasurableSpace.comap (X r)` the Markov property conditions on,
+    as a definition rather than a local abbreviation. A σ-algebra introduced
+    inside a proof by `set` or `let` enters the local instance cache and
+    displaces the ambient `MeasurableSpace Ω`, so that `Measurable f` silently
+    becomes a statement about the sub-σ-algebra; the named definition is a term
+    and not a local hypothesis, and the ambiguity does not arise.
+
+  The weight `Z₂ = E[1_{F₀} | σ(X r)]` is carried in the truncated form
+  `max 0 (min 1 ·)`. `restart` asks for the bounds on the weight pointwise and a
+  conditional expectation has them almost everywhere; the truncation is
+  `StronglyMeasurable[σ(X r)]` and bounded on the nose and almost everywhere
+  equal, and every use of the weight is an integral. The degenerate case
+  `P(F₀) = 0`, which the manuscript excludes by hypothesis, is split off instead,
+  so the conclusion holds for every set of `𝓖 r`.
 * `subsingleton_mpSolutions_of_unique_onedim`: when `ι` is linearly ordered, the
   set of solutions with a given initial law has at most one element. This is
   `thm:absuniq`(b), and it is `propagatesAgreement_of_unique_onedim` composed
