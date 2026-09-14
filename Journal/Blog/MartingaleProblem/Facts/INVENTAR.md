@@ -29192,3 +29192,211 @@ elf.
    **Worauf es ruht:** `git show upstream/master:<pfad>` und ein
    `grep deprecated_module`; drei Zeilen in `check_citations.py`. **Warum jetzt:**
    es ist die einzige benannte Lücke im Prüfwerkzeug selbst.
+
+### 2026-09-14, fünfter Lauf des Tages — die Naht zwischen Meilenstein 4 und Meilenstein 6: der Schift kostet nichts, die Buchhaltung eine Zeile, und der Pfadraum ist die eigentliche Lücke
+
+**Vorrangige Aufgabe, Vorschlag 0 des Vorlaufs.** Das Akzeptanzbeispiel von
+Meilenstein 6, die Zweizustandskette, ganz hindurch. Der Vorlauf hatte den
+Prüfstein genau benannt: `honedim` verlangt die Eindeutigkeit für das bei `r`
+**gestellte** Problem `𝓧₀ r`, `exists_unique_of_bounded` spricht vom Problem bei
+`0`, und es sei zu prüfen, ob `isShiftSystem_mpFamily` die Brücke wirklich
+schlägt oder ob dazwischen eine Aussage fehlt.
+
+**Die Antwort ist dreiteilig, und keiner der drei Teile ist der erwartete.**
+
+#### Erstens: die Brücke über den Schift gibt es nicht, weil nichts zu überqueren ist
+
+`isShiftSystem_mpFamily` liefert `𝓧₀ = fun _ ↦ mpFamily A Q c π`. Das geschiftete
+Problem ist das **ursprüngliche**, als Menge und nicht bis auf irgend etwas. Der
+Quantor über `r` in `honedim` läuft also über eine konstante Familie, und `r`
+kommt im Beweis der neuen Aussage nirgends vor — der Linter meldet es sogar.
+
+Das ist kein Zufall der Formalisierung, sondern die Gestalt von `ex:shiftXA`: der
+Zusatzterm des geschifteten Testprozesses ist `κ = p.1 ∘ π r`, ein Summand, und
+die *Menge* der Testprozesse ändert sich nicht. Die vom Vorlauf vermutete Naht
+liegt also nicht dort.
+
+#### Zweitens: die Naht, die es wirklich gibt, ist Buchhaltung — und sie fehlte
+
+Meilenstein 4 bestimmt die eindimensionalen Verteilungen über **Integrale**
+beschränkter Funktionen (`integral_eq_of_isMPSolution_of_map_eq`), Meilenstein 6
+verlangt sie als **Maße** (`R.map (π u) = R'.map (π u)`). Beides ist dieselbe
+Aussage, aber erst nach dem Testen gegen Indikatoren, und diese Umrechnung stand
+nirgends.
+
+`measure_map_eq_of_forall_integral_eq` ist sie, in acht Zeilen: Indikatoren sind
+die Testfunktionen, `integral_indicator_const` gibt `(P (g ⁻¹' s)).toReal`, und
+die Endlichkeit macht `ENNReal.toReal_eq_toReal_iff'` anwendbar. Sie ist über
+einem beliebigen meßbaren Zielraum gestellt und nennt weder Topologie noch
+Martingalproblem.
+
+#### Drittens, und das ist der Fund: die eigentliche Lücke ist der **Pfadraum**
+
+`integral_eq_of_isMPSolution_of_map_eq` verlangt
+
+```
+hX : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × Ω ↦ h (X p.1 p.2),
+```
+
+also **gemeinsame** Meßbarkeit in Zeit und Stichprobenpunkt. Meilenstein 6 gibt
+über seinen Pfadraum nur `hgen : mF = ⨆ i, comap (π i)` — jede Koordinate
+meßbar, über das Paar nichts. Und daraus folgt die gemeinsame Meßbarkeit nicht:
+
+* Auf dem **vollen** Funktionenraum `ℝ≥0 → E` scheitert schon die schwächere
+  Voraussetzung `hpath` von `isShiftSystem_mpFamily`: ein Element ist eine
+  beliebige Funktion, `u ↦ p.2 (π u f)` also im allgemeinen nicht meßbar. Für die
+  Zweizustandskette ist das kein abstraktes Bedenken — mit
+  `p.2 = jumpApply flipRate flipKernel (1_{true})` ist der Integrand `±1` auf
+  einer beliebig vorgebbaren Menge.
+* Auf dem **Unterraum der zeitmeßbaren** Pfade gilt `hpath`, die Auswertung
+  bleibt aber nicht gemeinsam meßbar.
+
+**Ein Pfadraum, an dem die beiden Meilensteine sich treffen, trägt daher eine
+Pfadregularität.** Das ist der Grund, aus dem die Frage im markovschen Fall
+bisher nicht auftrat: dort ist `Ω` der Konstruktionsraum `(ℕ → E) × (ℕ → ℝ)`, und
+die gemeinsame Meßbarkeit ist dort bewiesen (`measurable_uncurry_jumpProcessE`).
+Erst der Pfadraum von Meilenstein 6 stellt sie neu.
+
+#### Was gebaut ist — sieben Deklarationen, zwei Abschnitte
+
+Alle in `TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen
+Fehler durch `lake env lean` gegen v4.33.1, alle sieben mit
+`scripts/check_axioms.py` auf `propext`, `Classical.choice`, `Quot.sound`
+geprüft. Die Zahl der `sorry` bleibt bei **sieben**, und keiner ist von den
+sieben aus erreichbar.
+
+Abschnitt `OnedimSeam`:
+
+* `measure_map_eq_of_forall_integral_eq` — von den Integralen zum Maß.
+* `onedim_mpFamily_jumpOperator` — **`eq:absonedim` für den Sprungoperator**, die
+  Voraussetzung `honedim` von `subsingleton_mpSolutions_mpFamily_lebesgueClock`
+  und von `isMarkov_of_unique_onedim`, eingelöst auf den Daten von Meilenstein 4
+  bei beschränkter Rate. Sie trägt `hjoint` und benennt damit die Lücke, statt sie
+  zu verstecken.
+
+Abschnitt `RightContinuousPaths`:
+
+* `dyadAbove`, `le_dyadAbove`, `dyadAbove_lt` — die dyadische Näherung von oben.
+* `IsRightLocallyConstant` — jeder Pfad ist auf einer Rechtsumgebung jeder Zeit
+  konstant. Über einem diskreten Zustandsraum ist das die Rechtsstetigkeit, und
+  es ist, was ein Treppenpfadprozeß erfüllt.
+* `measurable_uncurry_of_isRightLocallyConstant` — **die gemeinsame Meßbarkeit**,
+  also genau `hjoint`.
+
+#### Der Beweis der gemeinsamen Meßbarkeit, und warum er billiger ist, als er aussieht
+
+Die Regularität wird an **einer** Stelle gebraucht und an keiner zweiten. Jede
+Stufe `(u, f) ↦ h (π (dyadAbove n u) f)` ist gemeinsam meßbar **ohne jede
+Voraussetzung an die Pfade**, weil `dyadAbove n` abzählbar viele Werte annimmt:
+sie faktorisiert über `ℕ × F`, und dort ist `measurable_from_prod_countable_right`
+alles. Die Rechtsstetigkeit sagt nur, daß die Stufen gegen den Grenzwert gehen,
+und `measurable_of_tendsto_metrizable` schließt ab. Die Näherung **muß** von oben
+sein: Rechtsstetigkeit sagt über die linke Seite einer Zeit nichts.
+
+#### Ein Nebenbefund über `ℝ≥0`, der Zeit gekostet hat und weitergegeben gehört
+
+`Nat.measurable_floor` trägt `[IsStrictOrderedRing R]`
+(`MeasureTheory/Function/Floor.lean:69`); `ℝ≥0` ist ein **Halbring**, also gilt
+es dort nicht. `Nat.measurable_ceil` (`:78`) hat die Hypothese nicht. Der erste
+Entwurf stand auf `⌊2ⁿ u⌋₊ + 1` und brach mit der unlesbaren Meldung
+`Unknown constant 'Nat.measurable_floor.comp'` — Lean löst den ganzen gepunkteten
+Namen als Konstante auf, wenn der Kopf nicht existiert, und sagt darum nichts
+darüber, daß eine Instanz fehlt. Die Näherung von oben ist damit auch die, die
+die Bibliothek trägt; die Hypothese an `Nat.measurable_floor` sieht entbehrlich
+aus (der Beweis ist `measurable_to_countable` über
+`Nat.preimage_floor_of_ne_zero`) und ist als Einzeiler-PR in `TODO.md` Punkt 8
+vermerkt.
+
+#### Die Negativaussage, und sie ist die achtzehnte für `TODO.md` Punkt 8
+
+> **Mathlib leitet fortschreitende Meßbarkeit aus Rechtsstetigkeit der Pfade
+> nicht her.**
+
+`Probability/Process/Adapted.lean` hat sie aus **Stetigkeit**
+(`StronglyAdapted.isStronglyProgressive_of_continuous`, `:365`), aus einem
+**diskreten Index** (`..._of_discrete`, `:376`) und aus einem **Grenzwert**
+(`isStronglyProgressive_of_tendsto`, `:359`) — aus Rechtsstetigkeit nicht, weder
+in v4.33.1 noch auf `master`. Das ist die Lücke, an der jeder Sprungprozeß steht:
+seine Pfade sind nie stetig, sein Index ist nie diskret. Die Behauptung ist als
+`progressive-rightcontinuous` in `scripts/check_negatives.py` aufgenommen, damit
+sie in jedem weiteren Lauf mitgeprüft wird.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf frisch geholt:
+`147cccedb04098422b4baaf4cd1760785f344a42` (der Vorlauf stand auf
+`f4a240391885f7de0ab4b0ab821485924a8cbd62`). `scripts/check_negatives.py` ist
+ganz durchgelaufen: **achtzehn** Behauptungen, keine widerlegt.
+
+Alle in diesem Lauf neu benutzten Namen sind gegen v4.33.1 **übersetzt** und
+gegen master nachgeschlagen; keiner ist `deprecated`:
+
+* `measurable_from_prod_countable_right`
+  (`MeasureTheory/MeasurableSpace/Constructions.lean:511`),
+  `measurable_of_tendsto_metrizable`
+  (`MeasureTheory/Constructions/BorelSpace/Metrizable.lean:51`),
+  `Nat.measurable_ceil` (`MeasureTheory/Function/Floor.lean:78`) — auf beiden
+  Ständen.
+* `ENNReal.toReal_eq_toReal_iff'` (`Data/ENNReal/Basic.lean:425`),
+  `NNReal.exists_pow_lt_of_lt_one` (`Data/NNReal/Defs.lean:720`),
+  `Nat.le_ceil` (`Algebra/Order/Floor/Semiring.lean:178`),
+  `Nat.ceil_lt_add_one` (`:357`), `pow_le_pow_right_of_le_one'`
+  (`Algebra/Order/Monoid/Unbundled/Pow.lean:71`) — unverändert.
+* **Ein Name, der nicht existiert:** `ENNReal.toReal_eq_toReal` gibt es in
+  v4.33.1 nicht; es sind `toReal_eq_toReal_iff` und `toReal_eq_toReal_iff'`.
+
+**Ein Negativbefund am Rande:** `StronglyMeasurable.max` und `.min` fehlen auch
+auf dem neuen Stand; der Befund des Vorlaufs gilt weiter.
+
+#### Der methodische Punkt, den der Vorlauf aufgestellt hat und der sich hier bestätigt
+
+Entwickelt ist alles in `scratch/Seam.lean`, 100 Zeilen mit zwei Importen; ein
+Durchlauf kostet dort **unter zwanzig Sekunden**, in der 27000-Zeilen-Datei
+Stunden. Die sechs Fehlerrunden dieses Laufs — ein fehlender Import, zwei falsche
+Lemmanamen, die `floor`/`ceil`-Instanz, ein `isDefEq`-Timeout an einer zu langen
+Komposition, zwei `gcongr`-Stellen — haben zusammen weniger gekostet als ein
+einziger Durchlauf der großen Datei. Die Übertragung kam danach und einmal, und
+sie ging beim ersten Versuch durch.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Das Akzeptanzbeispiel selbst.** Es ist nicht abgeschlossen, und der Grund ist
+benannt und nicht vermutet: der Pfadraum fehlt. `Shift F π` hat in der ganzen
+Datei **keinen einzigen Zeugen** — die Struktur steht seit Meilenstein 5 da, und
+gebaut ist nie eine. Für `Clock.IsShiftInvariant` hat der dritte Lauf dieses
+Tages den Zeugen nachgeliefert, gerade weil eine Hypothese ohne Zeugen schlimmer
+ist als ein fehlender Satz; für `Shift` steht er aus.
+
+**`eq_of_forall_onedim`.** Unverändert ohne Deklaration.
+
+**Teil C.5a.** Geparkt, wie angeordnet; die elf offenen Aussagen sind unverändert
+elf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Der kanonische Pfadraum, und mit ihm der erste Zeuge für `Shift`.**
+   `RightContinuousPath ℝ≥0 E`, der Untertyp von `ℝ≥0 → E`, auf dem
+   `IsRightLocallyConstant` gilt, mit `coordinate`, `measurable_coordinate`,
+   `generateFrom_coordinate` (das ist `hgen`, und der Beweis ist
+   `MeasurableSpace.comap_iSup` und `comap_comp`) und `pathShift`, dessen
+   `eval_comp` `rfl` ist. **Worauf es ruht:** nichts als
+   `measurable_uncurry_of_isRightLocallyConstant` aus diesem Lauf und
+   `shiftMeasurable_of_natural`, das seit Meilenstein 5 dasteht. **Warum jetzt:**
+   es ist die einzige Voraussetzung von Meilenstein 6, für die es keinen Zeugen
+   gibt, und ohne sie ist die ganze Markovhälfte formal wahr und leer — genau der
+   Einwand, den der dritte Lauf dieses Tages gegen `Clock.IsShiftInvariant`
+   erhoben und eingelöst hat. Die Punkte stehen ausgeschrieben in
+   `MartingaleProblems/README.md`, Meilenstein 6, unter „The canonical path
+   space".
+
+1. **`stronglyAdapted_mpFamily_coordinate`**, die Voraussetzung `hY`. Danach, und
+   es ist der teuerste der vier Punkte: der Zustandsterm ist umsonst, der
+   Kompensator verlangt die gemeinsame Meßbarkeit **relativ zur Unter-σ-Algebra**
+   `𝓕₀ t`. Die Näherung dafür ist `min (dyadAbove n s) t` — sie nimmt immer noch
+   abzählbar viele Werte an und bleibt im Fenster, also trägt derselbe Beweis.
+   Das ist die einzige Stelle, an der dieser Lauf eine Fortsetzung *angesagt* und
+   nicht geprüft hat, und sie ist als solche gekennzeichnet.
+
+2. **`eq_of_forall_onedim`.** Unverändert Buchhaltung, unverändert offen;
+   `measure_biInter_eq_of_propagatesAgreement` gibt die endlichdimensionalen
+   Verteilungen schon her.

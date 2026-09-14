@@ -6483,11 +6483,76 @@ problems.
   stopping time. State the transition operator `T t f x = ∫ f (ω t) ∂(P x)` and
   prove `𝔼[f (X (τ + t)) | 𝓖 τ] =ᵐ T t f (X τ)`.
 
+**The seam with Milestone 4: what `eq:absonedim` costs on the data.** The
+hypothesis `honedim` is a statement about the *path space*, and Milestone 4
+proves uniqueness of the one dimensional laws for an *arbitrary* process. Three
+statements join them, and they are of three different kinds — an accounting
+step, a step that is free, and a path regularity that neither milestone states.
+
+* `measure_map_eq_of_forall_integral_eq`: two finite measures whose push
+  forwards integrate every measurable real function bounded by `1` alike are
+  equal. Milestone 4 determines the one dimensional distributions through
+  integrals of bounded functions and Milestone 6 asks for them as measures;
+  indicators are the test functions and finiteness is what undoes
+  `ENNReal.toReal`. It is the only genuinely new accounting between the two.
+* `onedim_mpFamily_jumpOperator`: `honedim` discharged on the data of
+  Milestone 4 for a rate bounded by `L`. The quantifier over the shift `r` costs
+  nothing and `r` does not occur in the proof, because `isShiftSystem_mpFamily`
+  makes the shifted problem the original one: `𝓧₀ = fun _ ↦ mpFamily A Q c π` as
+  a set. So the shift is not a step, and `eq:absonedim` at every `r` is one
+  statement about `mpFamily` and not a family of them.
+* `IsRightLocallyConstant` and `measurable_uncurry_of_isRightLocallyConstant`:
+  the coordinate process of a right continuous path space is measurable in time
+  and sample point **jointly**. This is the input `onedim_mpFamily_jumpOperator`
+  carries and the path space of this milestone does not supply:
+  `hgen : mF = ⨆ i, comap (π i)` gives measurability of each coordinate and
+  nothing about the pair. On the full function space `ℝ≥0 → E` even the weaker
+  `hpath` of `isShiftSystem_mpFamily` fails, since a path need not be measurable
+  in time; on the subspace of time measurable paths the evaluation map is still
+  not jointly measurable. Path regularity is therefore a hypothesis of the seam
+  and not a convenience. The proof is the dyadic approximation `dyadAbove` from
+  **above** — right continuity controls the path to the right of a time and
+  nothing to the left — with `le_dyadAbove` and `dyadAbove_lt`; each stage
+  factors through the countable grid and is jointly measurable by
+  `measurable_from_prod_countable_right` with no regularity at all, and the
+  regularity enters only in the limit.
+
+  `Nat.ceil` and not `Nat.floor`, and the reason is the library:
+  `Nat.measurable_floor` carries `[IsStrictOrderedRing R]` and `ℝ≥0` is a
+  semiring, while `Nat.measurable_ceil` has no such hypothesis.
+
+**The canonical path space.** The milestone's path space is a hypothesis — `F`,
+`π`, `Shift F π`, `𝓕₀` — and `Shift` has no witness. These four statements build
+one, and they are what the instances of the milestone stand on.
+
+* `RightContinuousPath ι E`, the subtype of `ι → E` on which
+  `IsRightLocallyConstant` holds, with `coordinate`, the evaluation map, and
+  `measurable_coordinate`.
+* `generateFrom_coordinate`: the σ-field of `RightContinuousPath ι E` is the one
+  the coordinates generate, which is `hgen`. It is the trace of the product
+  σ-field, and `MeasurableSpace.comap_iSup` and `comap_comp` are the whole
+  proof.
+* `pathShift`, the `Shift` structure on it: `θ r f = fun u ↦ f (r + u)`, whose
+  `eval_comp` is `rfl` and whose measurability is `measurable_pi_lambda`. Right
+  local constancy is preserved by translation, so the subtype is closed under
+  it.
+* `stronglyAdapted_mpFamily_coordinate`: the test processes of `mpFamily` are
+  adapted to the natural filtration of the coordinates, which is `hY`. The state
+  term is adapted by `measurable_coordinate`; the compensator asks for the joint
+  measurability of `measurable_uncurry_of_isRightLocallyConstant` **relative to
+  the sub-σ-algebra** `𝓕₀ t`, for which the approximation is `min (dyadAbove n
+  s) t` — still countably valued, and inside the window.
+* `integrable_mpFamily_coordinate`: the test processes are integrable under
+  every probability measure, which is `hint`. Both terms are bounded, the state
+  term by the bound on `p.1` and the compensator by `t` times the bound on
+  `p.2`.
+
 **Acceptance examples.**
 
 * **The two state chain of Milestone 4, all the way through.** `E = {0,1}`,
   `lam ≡ 1`, `mu x = Measure.dirac (1 - x)`. `exists_unique_of_bounded` supplies
-  uniqueness of the one dimensional distributions for every initial law, so
+  uniqueness of the one dimensional distributions for every initial law — in
+  Lean through `integral_eq_of_isMPSolution_of_map_eq` and the seam above — so
   `isMarkov_of_unique_onedim` must return the Markov property and
   `subsingleton_mpSolutions_of_unique_onedim` uniqueness, with transition
   operator `T t = exp (t • A)` — which is the `T t f x = ∫ f (ω t) ∂(P x)` of

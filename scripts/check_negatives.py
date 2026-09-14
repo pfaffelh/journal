@@ -90,6 +90,17 @@ CLAIMS = [
      'Normierung punktweise über `Measure.ext` zurücknimmt.',
      'smul_right_injective|smul_left_cancel|smul_right_inj|smul_eq_smul_iff',
      'Mathlib/MeasureTheory/Measure/'),
+    ('progressive-rightcontinuous',
+     'MartingaleProblems/README.md, Meilenstein 6, Naht zu Meilenstein 4',
+     'Mathlib leitet fortschreitende Meßbarkeit aus **Stetigkeit** der Pfade ab '
+     '(`StronglyAdapted.isStronglyProgressive_of_continuous`), aus einem '
+     'diskreten Index (`..._of_discrete`) und aus einem Grenzwert '
+     '(`isStronglyProgressive_of_tendsto`), aber aus **Rechtsstetigkeit** der '
+     'Pfade nicht — obwohl das der Standardfall der Sprungprozesse ist und der '
+     'Beweis die dyadische Näherung von oben plus `..._of_tendsto` ist.',
+     'isStronglyProgressive.*[Rr]ight|progMeasurable.*[Rr]ight'
+     '|[Rr]ightContinuous.*[Pp]rogressive',
+     'Mathlib/'),
 ]
 
 

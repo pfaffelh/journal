@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `f4a240391885f7de0ab4b0ab821485924a8cbd62`
+# Negativaussagen gegen `upstream/master` `147cccedb04098422b4baaf4cd1760785f344a42`
 
 ## `cadlag` — SkorokhodSpace/README.md:3
 
@@ -127,5 +127,12 @@ Suche `hawkes|selfExciting|self-exciting|PointProcess|pointProcess|countingProce
 > Mathlib hat keine Kürzungsregel für das Skalieren von Maßen: `c • μ = c • ν ↔ μ = ν` für `c ≠ 0`, `c ≠ ⊤` steht nirgends, weder als Äquivalenz noch als Injektivität, weshalb `lem:propagation` die Normierung punktweise über `Measure.ext` zurücknimmt.
 
 Suche `smul_right_injective|smul_left_cancel|smul_right_inj|smul_eq_smul_iff` unter `Mathlib/MeasureTheory/Measure/`: **0 Treffer** in 0 Dateien.
+
+
+## `progressive-rightcontinuous` — MartingaleProblems/README.md, Meilenstein 6, Naht zu Meilenstein 4
+
+> Mathlib leitet fortschreitende Meßbarkeit aus **Stetigkeit** der Pfade ab (`StronglyAdapted.isStronglyProgressive_of_continuous`), aus einem diskreten Index (`..._of_discrete`) und aus einem Grenzwert (`isStronglyProgressive_of_tendsto`), aber aus **Rechtsstetigkeit** der Pfade nicht — obwohl das der Standardfall der Sprungprozesse ist und der Beweis die dyadische Näherung von oben plus `..._of_tendsto` ist.
+
+Suche `isStronglyProgressive.*[Rr]ight|progMeasurable.*[Rr]ight|[Rr]ightContinuous.*[Pp]rogressive` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
 
 
