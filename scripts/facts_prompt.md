@@ -360,6 +360,51 @@ Wiederaufnehmen der erste zu klärende Punkt und keine Nebensache.
 Die `D_n`-Arbeit bleibt stehen und ist nicht verloren: Punkte 1 bis 4 der Gruppe
 A sind bewiesen und gelten unabhängig vom Weg.
 
+**REIHENFOLGE AB 2026-09-14 ABENDS, vom Nutzer angeordnet: erst der
+Pfadraum, dann Meilenstein 3, dann zurück zu C.5/G.**
+
+> **Pfadraum (ein Lauf) → Meilenstein 3 (zwei Läufe) → C.5/G**
+
+**1. Der kanonische Pfadraum, sofort.** `Shift F π` hat in der ganzen Datei
+**keinen einzigen Zeugen**; es kommt zehnmal vor, jedesmal als Hypothese. Damit
+ruht der ganze Meilenstein 6 — `restart`, `thm:absuniq`(a) und (b) — auf einer
+Struktur, von der niemand weiß, ob sie bewohnt ist. Die Sätze sind richtig und
+bis dahin auf nichts anwendbar. Das ist kein Fortschritts-, sondern ein
+Integritätsproblem, und es ist ein Lauf: die vier Punkte stehen benannt in
+`MartingaleProblems/README.md`, Meilenstein 6, unter „The canonical path space",
+der Unterbau (`IsRightLocallyConstant`, `measurable_uncurry_of_isRightLocallyConstant`,
+`dyadAbove`) liegt seit dem fünften Lauf des 2026-09-14, `generateFrom_coordinate`
+ist `comap_iSup` plus `comap_comp`, und `pathShift`s `eval_comp` ist `rfl`.
+
+**2. Danach Meilenstein 3 — die beiden `sorry` des fdd-Kriteriums.**
+`isMPSolution_iff_forall_fdd` (`prop:fddchar`) und
+`isMPSolution_iff_forall_fdd_continuous`. Drei Gründe, in dieser Ordnung:
+
+* **Das Werkzeug ist fertig.** Die schwere Richtung (←) ist ein
+  multiplikatives-System-Argument: Produkte beschränkter meßbarer Funktionen
+  vergangener Koordinaten erzeugen `𝓕 s` (das ist die Hypothese `h𝓕`), dann
+  funktionaler monotoner Klassensatz, dann `ae_eq_condExp_of_forall_setIntegral_eq`.
+  Der Klassensatz **steht bewiesen** als `induction_on_mulSystem` in
+  `WeakConvergence/Suggested.lean:6001`, mit genau der Signatur, die gebraucht
+  wird. **Ihn benutzen, nicht nachbauen.**
+* **Die Hypothesen sind schon durchdebuggt.** `hXprog` (`Clock.IsProgressive`)
+  fehlte bis zum 2026-09-07 und wurde gefunden; `h𝓕` ist die natürliche
+  Filtration, ohne die (←) falsch ist. Der Zustand ist „Aussage geklärt, Beweis
+  offen" — der billigste, den ein `sorry` haben kann.
+* **Es macht aus zwei `sorry` drei.** Die zweite Aussage ist laut ihrem eigenen
+  Doc-Kommentar „die vorige zusammen mit `induction_on_mulSystem`", also
+  derselbe Lauf; und sie ist, was ein Konvergenzargument liefert (stetige
+  Testfunktionen). Damit wird `mpSolution_of_tendsto` aus Meilenstein 10
+  angreifbar — „ein Limes von Lösungen ist eine Lösung", dessen Standardweg
+  über das fdd-Kriterium mit stetigen Testfunktionen führt.
+
+**Ersparnis in dieser Reihenfolge:** das π-System, das die schwere Richtung
+braucht, ist dasselbe wie `isPiSystem_pathCylinders`/`generateFrom_pathCylinders`
+aus dem 2026-09-13 — endliche Produkte von Koordinatenbedingungen. Wer den
+Pfadraum gebaut hat, hat den Erzeugungsschritt schon einmal geschrieben.
+
+**3. Erst danach C.5/G**, in der Gestalt, die unmittelbar darunter steht.
+
 **UMFORMULIERUNG VON C.5/G, vom Nutzer am 2026-09-13 nachts angeordnet.**
 
 > **Nicht „der Hawkes-Prozeß löst sein Martingalproblem", sondern: ein
