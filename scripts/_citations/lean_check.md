@@ -2,7 +2,7 @@
 
 | Datei | rc | Fehler | `sorry` |
 | --- | --- | --- | --- |
-| `MartingaleProblems/Suggested.lean` | 0 | 0 | 9 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 7 |
 | `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 |
 | `WeakConvergence/Suggested.lean` | 1 | 2 | 0 |
 
