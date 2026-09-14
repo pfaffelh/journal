@@ -168,9 +168,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Siebzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Achtzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle siebzehn beim Beweisen aufgefallen, alle siebzehn gegen `upstream/master`
+Alle achtzehn beim Beweisen aufgefallen, alle achtzehn gegen `upstream/master`
 geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -572,6 +572,38 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `h (ν + ∑ φ (u − τ_k))` mit meßbarem `h` und `φ`, und eine
   Stetigkeitsvoraussetzung wäre eine Verschärfung der Hypothesen von
   `ex:hawkes`; sie ist nicht genommen worden.
+
+* **Fortschreitende Meßbarkeit aus Rechtsstetigkeit der Pfade.**
+  `Probability/Process/Adapted.lean` leitet sie aus **Stetigkeit** der Pfade her
+  (`StronglyAdapted.isStronglyProgressive_of_continuous`, `:365`), aus einem
+  diskreten Index (`..._of_discrete`, `:376`) und aus einem Grenzwert
+  (`isStronglyProgressive_of_tendsto`, `:359`) — aus **Rechtsstetigkeit** nicht,
+  weder in `v4.33.1` noch auf `master`
+  (`147cccedb04098422b4baaf4cd1760785f344a42`, geprüft am 2026-09-14). Das ist
+  die Lücke, an der jeder Sprungprozeß steht: seine Pfade sind nie stetig, sein
+  Index ist nie diskret, und das Kompensatorintegral verlangt gerade diese
+  Aussage.
+
+  Der Beweis ist der Grenzwertsatz plus eine Näherung von **oben**, und mehr
+  nicht: mit `d_n u = ⌈2ⁿ u⌉/2ⁿ` ist `(u, ω) ↦ h (X (d_n u) ω)` schon ohne jede
+  Regularität gemeinsam meßbar, weil `d_n` abzählbar viele Werte annimmt
+  (`measurable_from_prod_countable_right`), und die Rechtsstetigkeit sagt nur,
+  daß die Stufen gegen den Grenzwert gehen. Wir haben es am 2026-09-14 in der
+  gemeinsamen Meßbarkeitsfassung als
+  `measurable_uncurry_of_isRightLocallyConstant` bewiesen, mit `dyadAbove`,
+  `le_dyadAbove` und `dyadAbove_lt`; für Mathlib wäre die richtige Fassung die
+  über `IsStronglyProgressive` und über einem rechtsstetigen Pfad in einem
+  metrisierbaren Zielraum statt über der lokal konstanten Fassung, die ein
+  diskreter Zustandsraum erlaubt.
+
+  *Ein Nebenbefund über `ℝ≥0`, der beim Beweisen Zeit gekostet hat:*
+  `Nat.measurable_floor` trägt `[IsStrictOrderedRing R]`
+  (`MeasureTheory/Function/Floor.lean:69`), `ℝ≥0` ist ein Halbring, also gilt es
+  dort **nicht**; `Nat.measurable_ceil` (`:78`) hat die Hypothese nicht. Die
+  Näherung von oben ist damit auch die, die die Bibliothek trägt. Die Hypothese
+  an `Nat.measurable_floor` sieht entbehrlich aus — der Beweis ist
+  `measurable_to_countable` über `Nat.preimage_floor_of_ne_zero` —, und das wäre
+  ein Einzeiler-PR.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

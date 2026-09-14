@@ -169,13 +169,25 @@ Lebesgue measure. Fix `[Preorder ι]`.
   which is what makes the substitution `v = r + u` a single application of
   `MeasureTheory.integral_map`; that is `Clock.setIntegral_shift`. State it that
   way, and the order condition sits in the clock and nowhere else.
-* `Clock.isShiftInvariant_lebesgueClock` and the counting measure on `ℕ`: the
+* `lebesgueClock_isShiftInvariant` and the counting measure on `ℕ`: the
   two instances of `Clock.IsShiftInvariant`, and the two that keep the shift
-  system of Milestone 5 from resting on an uninhabited condition. Over `[0,∞)`
-  the window `interval q .optional s t` is `Set.Ioc s t` and the identity is
-  translation invariance of Lebesgue measure together with
-  `Set.image_const_add_Ioc`
-  (`Mathlib/Algebra/Order/Interval/Set/Monoid.lean:110`).
+  system of Milestone 5 from resting on an uninhabited condition. The first is
+  proved (`Suggested.lean`, `section LebesgueShift`, 2026-09-14) and holds for
+  **both** conventions at once. Its two inputs are `lebesgueClock_apply`, which
+  reads the mass of a measurable set of `ℝ≥0` as a Lebesgue measure on `ℝ`, and
+  `lebesgueClock_preimage_const_add`, which says that translating a set lying
+  above `r` back by `r` preserves its mass.
+
+  The route is the **preimage** and not the image: `(r + ·) ⁻¹' interval q c
+  (r + s) (r + t) = interval q c s t` is `add_le_add_iff_left` and needs no
+  interval lemma, after which the mass is `measure_preimage_add`
+  (`Mathlib/MeasureTheory/Group/Measure.lean:230`) applied to Lebesgue measure
+  on `ℝ`. The hypothesis `B ⊆ Set.Ici r` of `lebesgueClock_preimage_const_add`
+  is necessary: `u ↦ r + u` is injective and not surjective on `ℝ≥0`, so for
+  `B = Set.Iic r` the two sides are the mass of `{0}` and `r`. A compensating
+  window starting at `r + s` meets the hypothesis, which is why the restriction
+  in `Clock.IsShiftInvariant.map_interval` is part of the statement and not a
+  convenience.
 * The instances: counting measure on `ℕ`, Lebesgue measure on `[0,∞)`,
   `∑ n, δ (n : ℝ)` on `[0,∞)`, and every locally finite Borel measure on a
   closed subset of `ℝ`.
@@ -6402,12 +6414,62 @@ problems.
   tests against every set of `𝓕° s` instead, so `𝓩°` never enters.
 * `isMarkov_of_unique_onedim`: every solution is Markov, in general time
   inhomogeneously — for `f` bounded measurable and `r, t : ι`,
-  `𝔼[f (X (r + t)) | 𝓖 r] =ᵐ 𝔼[f (X (r + t)) | X r]`.
+  `𝔼[f (X (r + t)) | 𝓖 r] =ᵐ 𝔼[f (X (r + t)) | X r]`. This is `thm:absuniq`(a).
+  It rests on `restart` in the two level form, applied **twice at the same
+  shift `r`** to the two weights of the manuscript proof, and on the pull-out
+  property of the conditional expectation in both directions
+  (`condExp_smul_of_aestronglyMeasurable_left` and `..._right`), which is the
+  self adjointness `E[U · E[V|𝓜]] = E[E[U|𝓜] · V]` that the last step asks for.
+
+  The one dimensional hypothesis is consumed **at the single shift `r`** and not
+  at every shift. That is the difference to `lem:propagation`, whose induction
+  walks through the shifted problems, and it is why this statement needs neither
+  (T2a) nor (T4): the index carries a preorder, a bottom element and the
+  additive structure, and `hsub` does not occur. `rem:chainonly` says as much of
+  the manuscript proof; here it is the shape of the hypothesis.
+
+  `X` is an arbitrary measurable process and not the coordinate process, which
+  is `rem:restarttwolevel`: the first weight `1_{F₀}` is `𝓖 r`-measurable and
+  need not be a functional of the path.
+
+  Two auxiliary statements carry it.
+  * `map_withDensity_ofReal_eq_of_setIntegral_eq`: two bounded non-negative
+    densities that integrate alike over every set of a sub-σ-algebra give the
+    same law to every map measurable for that sub-σ-algebra. It is the step that
+    identifies the initial laws of the two restarted measures, and it is stated
+    for a general sub-σ-algebra because that is all its proof uses.
+  * `stateSigma`, with `stateSigma_eq_comap`: the σ-algebra
+    `σ(X r) = MeasurableSpace.comap (X r)` the Markov property conditions on,
+    as a definition rather than a local abbreviation. A σ-algebra introduced
+    inside a proof by `set` or `let` enters the local instance cache and
+    displaces the ambient `MeasurableSpace Ω`, so that `Measurable f` silently
+    becomes a statement about the sub-σ-algebra; the named definition is a term
+    and not a local hypothesis, and the ambiguity does not arise.
+
+  The weight `Z₂ = E[1_{F₀} | σ(X r)]` is carried in the truncated form
+  `max 0 (min 1 ·)`. `restart` asks for the bounds on the weight pointwise and a
+  conditional expectation has them almost everywhere; the truncation is
+  `StronglyMeasurable[σ(X r)]` and bounded on the nose and almost everywhere
+  equal, and every use of the weight is an integral. The degenerate case
+  `P(F₀) = 0`, which the manuscript excludes by hypothesis, is split off instead,
+  so the conclusion holds for every set of `𝓖 r`.
 * `subsingleton_mpSolutions_of_unique_onedim`: when `ι` is linearly ordered, the
   set of solutions with a given initial law has at most one element. This is
   `thm:absuniq`(b), and it is `propagatesAgreement_of_unique_onedim` composed
   with `subsingleton_of_propagatesAgreement`; the linear order is (T2a) and is
   spent only in the sorting step `measure_biInter_eq_of_propagatesAgreement`.
+* `isShiftSystem_mpFamily_lebesgueClock` and
+  `subsingleton_mpSolutions_mpFamily_lebesgueClock`: the same two statements at
+  `ι = ℝ≥0` and the clock of Milestone 4, with every hypothesis about the index
+  or the clock discharged. `⊥ = 0` is `NNReal.bot_eq_zero`, `r ≤ r + u` is
+  `le_self_add`, (T4) is `exists_add_of_le`, (T2a) is the order `ℝ≥0` carries,
+  and the shift system is `lebesgueClock_isShiftInvariant` of Milestone 1. What
+  survives speaks of the operator, the shift and the filtration alone.
+
+  This is the measure of the milestone against emptiness, and it is a different
+  question from provability: the abstract statements above hold over a preorder
+  and a clock hypothesis that the zero measure satisfies, so without a witness
+  for that hypothesis one cannot tell a theorem from a vacuity.
 * `eq_of_forall_onedim`: two solutions with the same initial law have the same
   finite dimensional distributions.
 * The classical statement, as an instance: for `E` metrizable and
@@ -6421,11 +6483,76 @@ problems.
   stopping time. State the transition operator `T t f x = ∫ f (ω t) ∂(P x)` and
   prove `𝔼[f (X (τ + t)) | 𝓖 τ] =ᵐ T t f (X τ)`.
 
+**The seam with Milestone 4: what `eq:absonedim` costs on the data.** The
+hypothesis `honedim` is a statement about the *path space*, and Milestone 4
+proves uniqueness of the one dimensional laws for an *arbitrary* process. Three
+statements join them, and they are of three different kinds — an accounting
+step, a step that is free, and a path regularity that neither milestone states.
+
+* `measure_map_eq_of_forall_integral_eq`: two finite measures whose push
+  forwards integrate every measurable real function bounded by `1` alike are
+  equal. Milestone 4 determines the one dimensional distributions through
+  integrals of bounded functions and Milestone 6 asks for them as measures;
+  indicators are the test functions and finiteness is what undoes
+  `ENNReal.toReal`. It is the only genuinely new accounting between the two.
+* `onedim_mpFamily_jumpOperator`: `honedim` discharged on the data of
+  Milestone 4 for a rate bounded by `L`. The quantifier over the shift `r` costs
+  nothing and `r` does not occur in the proof, because `isShiftSystem_mpFamily`
+  makes the shifted problem the original one: `𝓧₀ = fun _ ↦ mpFamily A Q c π` as
+  a set. So the shift is not a step, and `eq:absonedim` at every `r` is one
+  statement about `mpFamily` and not a family of them.
+* `IsRightLocallyConstant` and `measurable_uncurry_of_isRightLocallyConstant`:
+  the coordinate process of a right continuous path space is measurable in time
+  and sample point **jointly**. This is the input `onedim_mpFamily_jumpOperator`
+  carries and the path space of this milestone does not supply:
+  `hgen : mF = ⨆ i, comap (π i)` gives measurability of each coordinate and
+  nothing about the pair. On the full function space `ℝ≥0 → E` even the weaker
+  `hpath` of `isShiftSystem_mpFamily` fails, since a path need not be measurable
+  in time; on the subspace of time measurable paths the evaluation map is still
+  not jointly measurable. Path regularity is therefore a hypothesis of the seam
+  and not a convenience. The proof is the dyadic approximation `dyadAbove` from
+  **above** — right continuity controls the path to the right of a time and
+  nothing to the left — with `le_dyadAbove` and `dyadAbove_lt`; each stage
+  factors through the countable grid and is jointly measurable by
+  `measurable_from_prod_countable_right` with no regularity at all, and the
+  regularity enters only in the limit.
+
+  `Nat.ceil` and not `Nat.floor`, and the reason is the library:
+  `Nat.measurable_floor` carries `[IsStrictOrderedRing R]` and `ℝ≥0` is a
+  semiring, while `Nat.measurable_ceil` has no such hypothesis.
+
+**The canonical path space.** The milestone's path space is a hypothesis — `F`,
+`π`, `Shift F π`, `𝓕₀` — and `Shift` has no witness. These four statements build
+one, and they are what the instances of the milestone stand on.
+
+* `RightContinuousPath ι E`, the subtype of `ι → E` on which
+  `IsRightLocallyConstant` holds, with `coordinate`, the evaluation map, and
+  `measurable_coordinate`.
+* `generateFrom_coordinate`: the σ-field of `RightContinuousPath ι E` is the one
+  the coordinates generate, which is `hgen`. It is the trace of the product
+  σ-field, and `MeasurableSpace.comap_iSup` and `comap_comp` are the whole
+  proof.
+* `pathShift`, the `Shift` structure on it: `θ r f = fun u ↦ f (r + u)`, whose
+  `eval_comp` is `rfl` and whose measurability is `measurable_pi_lambda`. Right
+  local constancy is preserved by translation, so the subtype is closed under
+  it.
+* `stronglyAdapted_mpFamily_coordinate`: the test processes of `mpFamily` are
+  adapted to the natural filtration of the coordinates, which is `hY`. The state
+  term is adapted by `measurable_coordinate`; the compensator asks for the joint
+  measurability of `measurable_uncurry_of_isRightLocallyConstant` **relative to
+  the sub-σ-algebra** `𝓕₀ t`, for which the approximation is `min (dyadAbove n
+  s) t` — still countably valued, and inside the window.
+* `integrable_mpFamily_coordinate`: the test processes are integrable under
+  every probability measure, which is `hint`. Both terms are bounded, the state
+  term by the bound on `p.1` and the compensator by `t` times the bound on
+  `p.2`.
+
 **Acceptance examples.**
 
 * **The two state chain of Milestone 4, all the way through.** `E = {0,1}`,
   `lam ≡ 1`, `mu x = Measure.dirac (1 - x)`. `exists_unique_of_bounded` supplies
-  uniqueness of the one dimensional distributions for every initial law, so
+  uniqueness of the one dimensional distributions for every initial law — in
+  Lean through `integral_eq_of_isMPSolution_of_map_eq` and the seam above — so
   `isMarkov_of_unique_onedim` must return the Markov property and
   `subsingleton_mpSolutions_of_unique_onedim` uniqueness, with transition
   operator `T t = exp (t • A)` — which is the `T t f x = ∫ f (ω t) ∂(P x)` of

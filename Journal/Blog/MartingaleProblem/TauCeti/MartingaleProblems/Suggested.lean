@@ -394,6 +394,17 @@ is inhabited by anything other than a triviality.  The order condition hidden in
 manuscript's proof is isolated there rather than assumed: `isShiftSystem_mpFamily` holds over a
 preorder, and it is `Clock.IsShiftInvariant` that a partial order cannot satisfy.  See the
 module note above that section for the counterexample on `[0,∞)^2`.
+
+Five more on 2026-09-14, in `section LebesgueShift`, are the **emptiness check** for all of
+that: `lebesgueClock_isShiftInvariant` exhibits `lebesgueClock` as a witness of
+`Clock.IsShiftInvariant` under both conventions -- via `lebesgueClock_apply` and
+`lebesgueClock_preimage_const_add`, the statement that translating a set lying above `r` back by
+`r` preserves its mass -- and
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` is `thm:absuniq`(b) at `ι = ℝ≥0` with every
+hypothesis about the index or the clock discharged: `(⊥ : ℝ≥0) = 0` is `NNReal.bot_eq_zero`,
+`r ≤ r + u` is `le_self_add`, (T4) is `exists_add_of_le`, and (T2a) is the order `ℝ≥0` carries.
+What survives is about the data alone.  Before this the whole uniqueness half rested on a
+hypothesis satisfied, as far as anything proved here went, only by the zero measure.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -17306,7 +17317,9 @@ theorem rateInverseE_eq_top_of_forall_lt (h : ∀ r : ℝ, 0 ≤ r → cumulativ
 asks for nothing but the attainment: no integrability, no positivity, no divergence.
 
 Mathlib carries the whole content, in the indexed form `ENNReal.ofReal_iInf`
-(`Mathlib/Data/ENNReal/Operations.lean:526`), and it carries it **without a hypothesis on the
+(v4.33.1 `Mathlib/Data/ENNReal/Operations.lean:526`; on master that file is a `deprecated_module`
+since 2026-08-27 and the declaration stands, at the same line, in
+`Mathlib/Basic/ENNReal/Operations.lean`), and it carries it **without a hypothesis on the
 family**: below the origin both sides collapse to `0`, on the left because `ENNReal.ofReal` does
 and on the right because the infimum of the reals does.  The only work left is the passage from an
 image to an indexed infimum in both directions, `sInf_image'` on one side and the definition of
@@ -26328,7 +26341,7 @@ system nor a determining set occurs in any statement or in any proof in `section
 `section Cylinders`, and none of the seven `sorry`s of this file is reachable from here.  What
 sits above it -- `lem:propagation` in `section PropagationFromOnedim`, which makes
 `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the Markov
-property, which is still without a declaration -- is where the shift system enters.
+property, in `section MarkovFromOnedim` -- is where the shift system enters.
 
 The manuscript's `rem:uniqnotmarkov` reads this decomposition off in a table; this block is its
 first row.
@@ -26872,6 +26885,292 @@ theorem subsingleton_mpSolutions_of_unique_onedim
 
 end UniquenessFromOnedim
 
+/-! ### `thm:absuniq`(a): every solution of the martingale problem is Markov
+
+The other half of the abstract theorem, and the half that carries the Markov structure.  It is
+`restart` applied **twice at the same shift `r`**, to the two weights of the manuscript proof --
+the normalised indicator of a set of the past at `r`, and its conditional expectation given the
+state at `r`.  The two restarted laws solve the *same* shifted problem and have the *same*
+initial law, so `eq:absonedim` identifies them, and reading them at `t` is the Markov property.
+
+Four points of the formalisation, and each of them is a decision.
+
+*The one dimensional hypothesis is consumed at the single shift `r`*, not at all of them.  That
+is the difference to `lem:propagation`, whose induction walks through every shifted problem, and
+it is why `honedim` below is quantified over the two measures only.  The index carries a
+preorder, `OrderBot`, and the additive structure; there is **no** (T2a) and **no** (T4) -- this
+is `rem:chainonly` of the manuscript, which says that part (a) needs nothing of the index beyond
+(T0) and (T4), and in this formalisation not even (T4): `hsub` does not appear.
+
+*`restart` wants the bounds on the weight pointwise, and a conditional expectation has them only
+almost surely.*  The second weight is therefore the truncation `max 0 (min 1 ·)` of
+`P[1_{F₀} | σ(X r)]`, which is `StronglyMeasurable[σ(X r)]` and bounded on the nose and agrees
+with the conditional expectation almost everywhere.  That suffices, because every use of the
+weight is an integral -- and it is cheaper than weakening `restart`, whose pointwise bound is
+used there for a domination and not merely for integrability.
+
+*The degenerate case is split off and not hypothesised away.*  The manuscript takes `P(F₀) > 0`;
+here the sets with `P(F₀) = 0` are disposed of by `Measure.restrict_eq_zero`, so the conclusion
+is the Markov property for **all** of `𝓖 r` and not for a subfamily.  Normalisation by `P(F₀)`
+is then genuine division, and it is needed: `honedim` speaks of probability measures.
+
+*The last step of the manuscript proof is the self adjointness of the conditional expectation*,
+`E[U · E[V|𝓜]] = E[E[U|𝓜] · V]`.  Mathlib has it, in both directions, as the pull-out property:
+`condExp_smul_of_aestronglyMeasurable_left` and `condExp_smul_of_aestronglyMeasurable_right`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:224` and `:230`).  The two are
+applied to the same product `g • P[V|𝓜]` from opposite sides.
+-/
+
+section MarkovFromOnedim
+
+variable {ι : Type*} [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+variable {Ω : Type*} {m : MeasurableSpace Ω} {𝕂 : Type*} [RCLike 𝕂]
+
+/-- Two bounded non-negative densities that integrate alike over every set of a sub-σ-algebra
+give the same law to any map measurable for that sub-σ-algebra.
+
+This is the step of `thm:absuniq`(a) that says the two restarted measures have the same initial
+law.  It is stated for a general sub-σ-algebra because that is all the proof uses: the initial
+coordinate of the shifted path is `X r`, and `σ(X r)` is exactly the σ-algebra against which the
+second weight was built. -/
+theorem map_withDensity_ofReal_eq_of_setIntegral_eq {α : Type*} {mm m0 : MeasurableSpace α}
+    (hmm : mm ≤ m0) {P : Measure α}
+    {β : Type*} [MeasurableSpace β] {h : α → β} (hh : Measurable[mm] h)
+    {Z₁ Z₂ : α → ℝ} (hZ₁ : Integrable Z₁ P) (hZ₂ : Integrable Z₂ P)
+    (h₁ : 0 ≤ᵐ[P] Z₁) (h₂ : 0 ≤ᵐ[P] Z₂)
+    (heq : ∀ s, MeasurableSet[mm] s → ∫ a in s, Z₁ a ∂P = ∫ a in s, Z₂ a ∂P) :
+    (P.withDensity fun a ↦ ENNReal.ofReal (Z₁ a)).map h
+      = (P.withDensity fun a ↦ ENNReal.ofReal (Z₂ a)).map h := by
+  have hhm : Measurable[m0] h := hh.mono hmm le_rfl
+  refine Measure.ext fun B hB ↦ ?_
+  have hBm : MeasurableSet[mm] (h ⁻¹' B) := hh hB
+  rw [Measure.map_apply hhm hB, Measure.map_apply hhm hB,
+    withDensity_apply (μ := P) _ (hmm _ hBm), withDensity_apply (μ := P) _ (hmm _ hBm),
+    ← ofReal_integral_eq_lintegral_ofReal hZ₁.restrict (ae_restrict_of_ae h₁),
+    ← ofReal_integral_eq_lintegral_ofReal hZ₂.restrict (ae_restrict_of_ae h₂),
+    heq _ hBm]
+
+set_option warn.classDefReducibility false in
+/-- The σ-algebra generated by the state at time `r`, the one the Markov property conditions on.
+
+It is `MeasurableSpace.comap (fun ω ↦ π r (X ω)) inferInstance` and nothing else -- see
+`stateSigma_eq_comap` -- but it is given a name because a σ-algebra introduced inside a proof by
+`set` or `let` enters the local instance cache and silently displaces the ambient
+`MeasurableSpace Ω`, which turns every subsequent `Measurable` into a statement about the wrong
+space. -/
+def stateSigma (π : ι → F → E) (X : Ω → F) (r : ι) : MeasurableSpace Ω :=
+  MeasurableSpace.comap (fun ω ↦ π r (X ω)) inferInstance
+
+omit [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι] mF in
+theorem stateSigma_eq_comap (π : ι → F → E) (X : Ω → F) (r : ι) :
+    stateSigma π X r = MeasurableSpace.comap (fun ω ↦ π r (X ω)) inferInstance := rfl
+
+/-- **`thm:absuniq`(a)**: if the one dimensional laws of the problem posed at `r` are determined
+by the initial law, then every solution is Markov at `r` -- in general time inhomogeneously so.
+
+The hypotheses are those of `restart`, which is applied twice, together with `honedim` at the
+single shift `r`.  `hadapt` is the adaptedness of the coordinate maps, which supplies both the
+measurability of `π u` and the `𝓖 r`-measurability of the state `X r`; `hbot` identifies the
+initial time of the shifted problem with the neutral element of the shift.
+
+Note what is **absent**: no linear order, no (T4), no determining set, no topology on `E`, and no
+hypothesis that `P` is the law of the path -- `X` is an arbitrary measurable process, which is
+`rem:restarttwolevel` of the manuscript. -/
+theorem isMarkov_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hadapt : ∀ u : ι, Measurable[𝓕₀ u] (π u))
+    {X : Ω → F} (hX : Measurable X) {𝓖 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P] (hXadapt : ∀ u : ι, Measurable[𝓖 u, 𝓕₀ u] X)
+    (hsol : IsMPSolution ((fun (Y : ι → F → 𝕂) t ω ↦ Y t (X ω)) '' 𝓧₀ 0) 𝓖 P)
+    (hint : ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (fun ω ↦ Y u (X ω)) P)
+    (r : ι)
+    (honedim : ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    {f : E → 𝕂} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ι) :
+    P[fun ω ↦ f (π (r + t) (X ω)) | 𝓖 r]
+      =ᵐ[P] P[fun ω ↦ f (π (r + t) (X ω)) | stateSigma π X r] := by
+  classical
+  have hπm : ∀ u : ι, Measurable (π u) := fun u ↦ (hadapt u).mono (𝓕₀.le u) le_rfl
+  have hXrG : Measurable[𝓖 r] fun ω ↦ π r (X ω) := (hadapt r).comp (hXadapt r)
+  have hmmG : stateSigma π X r ≤ 𝓖 r := measurable_iff_comap_le.mp hXrG
+  have hmm : stateSigma π X r ≤ m := hmmG.trans (𝓖.le r)
+  have hXrmm : Measurable[stateSigma π X r] fun ω ↦ π r (X ω) := Measurable.of_comap_le le_rfl
+  set V : Ω → 𝕂 := fun ω ↦ f (π (r + t) (X ω)) with hVdef
+  have hVmeas : Measurable V := hf.comp ((hπm (r + t)).comp hX)
+  have hVb : ∀ ω, ‖V ω‖ ≤ cf := fun ω ↦ hfb _
+  have hVint : Integrable V P :=
+    Integrable.mono' (integrable_const cf) hVmeas.aestronglyMeasurable
+      (Filter.Eventually.of_forall hVb)
+  have hWint : Integrable (P[V | stateSigma π X r]) P := integrable_condExp
+  refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓖.le r) hVint
+    (fun A _ _ ↦ hWint.integrableOn) ?_
+    (stronglyMeasurable_condExp.mono hmmG).aestronglyMeasurable).symm
+  intro A hA _
+  have hA' : MeasurableSet A := 𝓖.le r A hA
+  by_cases hA0 : P A = 0
+  · rw [Measure.restrict_eq_zero.mpr hA0, integral_zero_measure, integral_zero_measure]
+  set u1 : Ω → ℝ := A.indicator fun _ ↦ (1 : ℝ) with hu1def
+  have hu1m : StronglyMeasurable[𝓖 r] u1 := stronglyMeasurable_const.indicator hA
+  have hu1meas : Measurable u1 := (hu1m.mono (𝓖.le r)).measurable
+  have hu1int : Integrable u1 P := (integrable_const (1 : ℝ)).indicator hA'
+  have hu10 : ∀ ω, 0 ≤ u1 ω := by
+    intro ω
+    by_cases h : ω ∈ A
+    · simp [hu1def, Set.indicator_of_mem h]
+    · simp [hu1def, Set.indicator_of_notMem h]
+  have hu1b : ∀ ω, u1 ω ≤ 1 := by
+    intro ω
+    by_cases h : ω ∈ A
+    · simp [hu1def, Set.indicator_of_mem h]
+    · simp [hu1def, Set.indicator_of_notMem h]
+  have hind : ∀ W : Ω → 𝕂, (fun ω ↦ u1 ω • W ω) = A.indicator W := by
+    intro W
+    funext ω
+    by_cases h : ω ∈ A
+    · simp [hu1def, Set.indicator_of_mem h]
+    · simp [hu1def, Set.indicator_of_notMem h]
+  set g : Ω → ℝ := P[u1 | stateSigma π X r] with hgdef
+  have hgm : StronglyMeasurable[stateSigma π X r] g := stronglyMeasurable_condExp
+  set g' : Ω → ℝ := fun ω ↦ max 0 (min 1 (g ω)) with hg'def
+  have hg'm : StronglyMeasurable[stateSigma π X r] g' :=
+    (measurable_const.max (measurable_const.min hgm.measurable)).stronglyMeasurable
+  have hg'meas : Measurable g' := (hg'm.mono hmm).measurable
+  have hg'0 : ∀ ω, 0 ≤ g' ω := fun ω ↦ le_max_left _ _
+  have hg'b : ∀ ω, g' ω ≤ 1 := fun ω ↦ max_le zero_le_one (min_le_left _ _)
+  have hgg' : g' =ᵐ[P] g := by
+    have h0 : (0 : Ω → ℝ) ≤ᵐ[P] g := condExp_nonneg (Filter.Eventually.of_forall hu10)
+    have h1 : g ≤ᵐ[P] P[fun _ ↦ (1 : ℝ) | stateSigma π X r] :=
+      condExp_mono hu1int (integrable_const (1 : ℝ)) (Filter.Eventually.of_forall hu1b)
+    filter_upwards [h0, h1] with ω h0ω h1ω
+    have h1ω' : g ω ≤ 1 := by rwa [condExp_const hmm] at h1ω
+    have h0ω' : (0 : ℝ) ≤ g ω := by simpa using h0ω
+    simp only [hg'def]
+    rw [min_eq_right h1ω', max_eq_right h0ω']
+  have hAfin : P A ≠ ⊤ := measure_ne_top P A
+  have hp : 0 < (P A).toReal := ENNReal.toReal_pos hA0 hAfin
+  have hpinv : (0 : ℝ) ≤ (P A).toReal⁻¹ := le_of_lt (inv_pos.mpr hp)
+  set Z₁ : Ω → ℝ := fun ω ↦ (P A).toReal⁻¹ * u1 ω with hZ₁def
+  set Z₂ : Ω → ℝ := fun ω ↦ (P A).toReal⁻¹ * g' ω with hZ₂def
+  have hZ₁0 : ∀ ω, 0 ≤ Z₁ ω := fun ω ↦ mul_nonneg hpinv (hu10 ω)
+  have hZ₂0 : ∀ ω, 0 ≤ Z₂ ω := fun ω ↦ mul_nonneg hpinv (hg'0 ω)
+  have hZ₁c : ∀ ω, Z₁ ω ≤ (P A).toReal⁻¹ := fun ω ↦ by
+    simpa [hZ₁def] using mul_le_mul_of_nonneg_left (hu1b ω) hpinv
+  have hZ₂c : ∀ ω, Z₂ ω ≤ (P A).toReal⁻¹ := fun ω ↦ by
+    simpa [hZ₂def] using mul_le_mul_of_nonneg_left (hg'b ω) hpinv
+  have hZ₁m : StronglyMeasurable[𝓖 r] Z₁ := stronglyMeasurable_const.mul hu1m
+  have hZ₂m : StronglyMeasurable[𝓖 r] Z₂ := stronglyMeasurable_const.mul (hg'm.mono hmmG)
+  have hZ₁meas : Measurable Z₁ := hu1meas.const_mul _
+  have hZ₂meas : Measurable Z₂ := hg'meas.const_mul _
+  have hZ₁int : Integrable Z₁ P := hu1int.const_mul _
+  have hZ₂int : Integrable Z₂ P := by
+    refine Integrable.const_mul ?_ _
+    exact (integrable_congr hgg').mpr (hgdef ▸ integrable_condExp)
+  have hu1I : ∫ ω, u1 ω ∂P = (P A).toReal := by
+    rw [hu1def, integral_indicator_const (1 : ℝ) hA', smul_eq_mul, mul_one, measureReal_def]
+  have hg'I : ∫ ω, g' ω ∂P = (P A).toReal := by
+    rw [integral_congr_ae hgg', hgdef, integral_condExp hmm, hu1I]
+  have hZ₁1 : ∫ ω, Z₁ ω ∂P = 1 := by
+    rw [hZ₁def, integral_const_mul, hu1I, inv_mul_cancel₀ (ne_of_gt hp)]
+  have hZ₂1 : ∫ ω, Z₂ ω ∂P = 1 := by
+    rw [hZ₂def, integral_const_mul, hg'I, inv_mul_cancel₀ (ne_of_gt hp)]
+  have hψ : Measurable fun ω ↦ S.θ r (X ω) := (S.measurable r).comp hX
+  have hsol₁ : IsMPSolution (𝓧₀ r) 𝓕₀
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    restart hS hX hXadapt hsol hint r (hadd r) hZ₁0 ⟨_, hZ₁c⟩ hZ₁m
+  have hsol₂ : IsMPSolution (𝓧₀ r) 𝓕₀
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    restart hS hX hXadapt hsol hint r (hadd r) hZ₂0 ⟨_, hZ₂c⟩ hZ₂m
+  have hprob₁ : IsProbabilityMeasure
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    isProbabilityMeasure_map_withDensity_ofReal hψ hZ₁meas hZ₁0 hZ₁c hZ₁1
+  have hprob₂ : IsProbabilityMeasure
+      ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map fun ω ↦ S.θ r (X ω)) :=
+    isProbabilityMeasure_map_withDensity_ofReal hψ hZ₂meas hZ₂0 hZ₂c hZ₂1
+  have hinit : ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₁ ω)).map
+        fun ω ↦ S.θ r (X ω)).map (π ⊥)
+      = ((P.withDensity fun ω ↦ ENNReal.ofReal (Z₂ ω)).map
+        fun ω ↦ S.θ r (X ω)).map (π ⊥) := by
+    have hcomp : (π ⊥ ∘ fun ω ↦ S.θ r (X ω)) = fun ω ↦ π r (X ω) := by
+      funext ω
+      show π ⊥ (S.θ r (X ω)) = π r (X ω)
+      rw [S.eval_comp r ⊥, hbot, add_zero]
+    rw [Measure.map_map (hπm ⊥) hψ, Measure.map_map (hπm ⊥) hψ, hcomp]
+    refine map_withDensity_ofReal_eq_of_setIntegral_eq hmm hXrmm hZ₁int hZ₂int
+      (Filter.Eventually.of_forall hZ₁0) (Filter.Eventually.of_forall hZ₂0) ?_
+    intro s hs
+    rw [hZ₁def, hZ₂def, integral_const_mul, integral_const_mul]
+    congr 1
+    rw [integral_congr_ae (ae_restrict_of_ae hgg'), hgdef, setIntegral_condExp hmm hu1int hs]
+  have hread : ∀ Z : Ω → ℝ, Measurable Z → (∀ ω, 0 ≤ Z ω) →
+      ∫ x, f x ∂(((P.withDensity fun ω ↦ ENNReal.ofReal (Z ω)).map
+        fun ω ↦ S.θ r (X ω)).map (π t)) = ∫ ω, Z ω • V ω ∂P := by
+    intro Z hZm hZ0
+    have hfg : Measurable fun x ↦ f (π t x) := hf.comp (hπm t)
+    rw [integral_map (hπm t).aemeasurable hf.aestronglyMeasurable,
+      integral_map_withDensity_ofReal hψ hZm hZ0 hfg]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp only [hVdef]
+    rw [S.eval_comp r t (X ω)]
+  have hmain : ∫ ω, Z₁ ω • V ω ∂P = ∫ ω, Z₂ ω • V ω ∂P := by
+    rw [← hread Z₁ hZ₁meas hZ₁0, ← hread Z₂ hZ₂meas hZ₂0,
+      honedim _ _ hprob₁ hprob₂ hsol₁ hsol₂ hinit t]
+  have hscale₁ : ∫ ω, Z₁ ω • V ω ∂P = (P A).toReal⁻¹ • ∫ ω, u1 ω • V ω ∂P := by
+    rw [← integral_smul]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp [hZ₁def, smul_smul]
+  have hscale₂ : ∫ ω, Z₂ ω • V ω ∂P = (P A).toReal⁻¹ • ∫ ω, g' ω • V ω ∂P := by
+    rw [← integral_smul]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω ↦ ?_)
+    simp [hZ₂def, smul_smul]
+  have hmain' : ∫ ω, u1 ω • V ω ∂P = ∫ ω, g' ω • V ω ∂P := by
+    calc ∫ ω, u1 ω • V ω ∂P
+        = (P A).toReal • ((P A).toReal⁻¹ • ∫ ω, u1 ω • V ω ∂P) := by
+          rw [smul_smul, mul_inv_cancel₀ (ne_of_gt hp), one_smul]
+      _ = (P A).toReal • ((P A).toReal⁻¹ • ∫ ω, g' ω • V ω ∂P) := by
+          rw [← hscale₁, ← hscale₂, hmain]
+      _ = ∫ ω, g' ω • V ω ∂P := by
+          rw [smul_smul, mul_inv_cancel₀ (ne_of_gt hp), one_smul]
+  have hsmA : Integrable (fun ω ↦ g' ω • V ω) P := by
+    refine Integrable.mono' (hVint.norm.const_mul 1)
+      ((hg'm.mono hmm).aestronglyMeasurable.smul hVint.1) ?_
+    filter_upwards with ω
+    rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (hg'0 ω)]
+    exact mul_le_mul_of_nonneg_right (hg'b ω) (norm_nonneg _)
+  have hstepA : ∫ ω, g' ω • V ω ∂P = ∫ ω, g' ω • (P[V | stateSigma π X r]) ω ∂P := by
+    have hpull := condExp_smul_of_aestronglyMeasurable_left (m := stateSigma π X r) (μ := P)
+      (f := g') (g := V) hg'm.aestronglyMeasurable hsmA hVint
+    calc ∫ ω, g' ω • V ω ∂P = ∫ ω, (P[g' • V | stateSigma π X r]) ω ∂P := (integral_condExp hmm).symm
+      _ = ∫ ω, g' ω • (P[V | stateSigma π X r]) ω ∂P := integral_congr_ae hpull
+  have hsmB : Integrable (fun ω ↦ u1 ω • (P[V | stateSigma π X r]) ω) P := by
+    refine Integrable.mono' (hWint.norm.const_mul 1)
+      (hu1meas.aestronglyMeasurable.smul hWint.1) ?_
+    filter_upwards with ω
+    rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (hu10 ω)]
+    exact mul_le_mul_of_nonneg_right (hu1b ω) (norm_nonneg _)
+  have hstepB : ∫ ω, u1 ω • (P[V | stateSigma π X r]) ω ∂P = ∫ ω, g ω • (P[V | stateSigma π X r]) ω ∂P := by
+    have hpull := condExp_smul_of_aestronglyMeasurable_right (m := stateSigma π X r) (μ := P)
+      (f := u1) (g := P[V | stateSigma π X r]) hu1int hsmB stronglyMeasurable_condExp.aestronglyMeasurable
+    calc ∫ ω, u1 ω • (P[V | stateSigma π X r]) ω ∂P = ∫ ω, (P[u1 • P[V | stateSigma π X r] | stateSigma π X r]) ω ∂P :=
+          (integral_condExp hmm).symm
+      _ = ∫ ω, g ω • (P[V | stateSigma π X r]) ω ∂P := integral_congr_ae hpull
+  calc ∫ x in A, (P[V | stateSigma π X r]) x ∂P = ∫ ω, u1 ω • (P[V | stateSigma π X r]) ω ∂P := by
+        rw [hind, integral_indicator hA']
+    _ = ∫ ω, g ω • (P[V | stateSigma π X r]) ω ∂P := hstepB
+    _ = ∫ ω, g' ω • (P[V | stateSigma π X r]) ω ∂P :=
+        integral_congr_ae (hgg'.mono fun ω hω ↦ by simp only [hω])
+    _ = ∫ ω, g' ω • V ω ∂P := hstepA.symm
+    _ = ∫ ω, u1 ω • V ω ∂P := hmain'.symm
+    _ = ∫ x in A, V x ∂P := by rw [hind, integral_indicator hA']
+
+end MarkovFromOnedim
+
+
+
 /-! ### The shift system carried by `mpFamily`, and the order condition it hides
 
 `ex:shiftXA` of the manuscript, and the witness that `IsShiftSystem` is not an empty structure.
@@ -26982,3 +27281,339 @@ theorem isShiftSystem_mpFamily {A : Set ((E → 𝕂) × (E → 𝕂))} {Q : Clo
   ring
 
 end ShiftSystemMpFamily
+
+/-! ### The witness: `lebesgueClock` is shift invariant, and milestone 6 stands over a real clock
+
+`isShiftSystem_mpFamily` is a theorem about a hypothesis, `Clock.IsShiftInvariant`, and a
+hypothesis with no witness is worse than a missing theorem: the zero measure satisfies it, so the
+whole uniqueness half of the milestone could in principle have been about nothing.  This section
+exhibits `lebesgueClock` as a witness -- **under both conventions** -- and then discharges, at
+`ι = ℝ≥0`, every hypothesis of `thm:absuniq`(b) that speaks of the clock or of the order.
+
+What remains after that are hypotheses about the *data* (the operator `A`, the shift `S`, the
+filtration `𝓕₀`), which is where they belong.  Nothing about `ℝ≥0` and nothing about Lebesgue
+measure is left in the statement, and that is what the emptiness check was to establish.
+
+Two things are worth recording about the proof.
+
+*Shift invariance is not translation invariance of `lebesgueClock.q`.*  The map `u ↦ r + u` on
+`ℝ≥0` is injective but not surjective -- its image is `Set.Ici r` -- so `Measure.map (r + ·) q` is
+not `q`.  What is true, and what `lebesgueClock_preimage_const_add` says, is that translating
+back preserves mass for sets that already lie **above** `r`, and the compensating window from
+`r + s` to `r + t` does.  The restriction in `Clock.IsShiftInvariant.map_interval` is not a
+convenience: without it the statement is false.
+
+*`Clock` carries its measurable space as a field, and `rw` cannot see through it.*  This is the
+same obstruction as at `Clock.measurableSet_interval`: `Measure.map_apply` and
+`Measure.restrict_apply` do not rewrite against `lebesgueClock.q`, because unification of their
+instance arguments with `lebesgueClock.measurableSpace` runs at reducible transparency.  Both are
+therefore restated at the field level inside the proof, where `exact` -- which is not so fussy --
+supplies them. -/
+
+section LebesgueShift
+
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ℝ≥0 → F → E}
+
+/-- The mass `lebesgueClock` gives a measurable set of `ℝ≥0`, read as a Lebesgue measure on `ℝ`.
+The unrestricted companion of `lebesgueClock_apply_Ioc`. -/
+theorem lebesgueClock_apply {A : Set ℝ≥0} (hA : MeasurableSet A) :
+    lebesgueClock.q A = volume ((Real.toNNReal ⁻¹' A) ∩ Set.Ici (0 : ℝ)) := by
+  show ((volume : Measure ℝ).restrict (Set.Ici (0 : ℝ))).map Real.toNNReal A = _
+  rw [Measure.map_apply measurable_real_toNNReal hA,
+    Measure.restrict_apply (measurable_real_toNNReal hA)]
+
+/-- **Translating a set that lies above `r` back by `r` preserves its `lebesgueClock` mass.**
+
+The hypothesis `B ⊆ Set.Ici r` is necessary and not cosmetic: `u ↦ r + u` is not surjective on
+`ℝ≥0`, so for `B = Set.Iic r` the left hand side is the mass of `{0}` and the right hand side is
+`r`.  Every use below meets it because a compensating window starting at `r + s` does. -/
+theorem lebesgueClock_preimage_const_add {r : ℝ≥0} {B : Set ℝ≥0} (hB : MeasurableSet B)
+    (hBr : B ⊆ Set.Ici r) :
+    lebesgueClock.q ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B) = lebesgueClock.q B := by
+  have hmeas : MeasurableSet ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B) := measurable_const_add r hB
+  rw [lebesgueClock_apply hmeas, lebesgueClock_apply hB]
+  have hset : (Real.toNNReal ⁻¹' ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B)) ∩ Set.Ici (0 : ℝ)
+      = (fun x : ℝ ↦ (r : ℝ) + x) ⁻¹' ((Real.toNNReal ⁻¹' B) ∩ Set.Ici (0 : ℝ)) := by
+    have hadd : ∀ x : ℝ, 0 ≤ x → ((r : ℝ) + x).toNNReal = r + x.toNNReal := by
+      intro x hx
+      rw [Real.toNNReal_add r.coe_nonneg hx, Real.toNNReal_coe]
+    ext x
+    simp only [Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ici]
+    constructor
+    · rintro ⟨hx, hx0⟩
+      exact ⟨by rw [hadd x hx0]; exact hx, by positivity⟩
+    · rintro ⟨hx, hx0⟩
+      have hxr : (r : ℝ) ≤ (((r : ℝ) + x).toNNReal : ℝ) := by exact_mod_cast hBr hx
+      rw [Real.coe_toNNReal _ hx0] at hxr
+      have hx0' : (0 : ℝ) ≤ x := by linarith
+      refine ⟨?_, hx0'⟩
+      rw [hadd x hx0'] at hx
+      exact hx
+  rw [hset, measure_preimage_add]
+
+/-- **The emptiness check for `Clock.IsShiftInvariant`**: `lebesgueClock` satisfies it, under both
+conventions.  So `isShiftSystem_mpFamily` -- and with it the whole uniqueness half of milestone 6
+-- is not a theorem about the zero measure.
+
+The proof is two set identities and one application of translation invariance of Lebesgue measure:
+`u ↦ r + u` carries the window from `s` to `t` onto the window from `r + s` to `r + t`, in the
+strong sense that the preimage of the second **is** the first, which is `add_le_add_iff_left`; and
+the second window lies above `r`, which is what `lebesgueClock_preimage_const_add` asks for. -/
+theorem lebesgueClock_isShiftInvariant (c : Clock.Conv) :
+    lebesgueClock.IsShiftInvariant c := by
+  refine ⟨fun r ↦ measurable_const_add r, fun r s t ↦ ?_⟩
+  refine Measure.ext fun A hA ↦ ?_
+  have hA' : MeasurableSet A := hA
+  have hpreA : MeasurableSet ((fun u : ℝ≥0 ↦ r + u) ⁻¹' A) := measurable_const_add r hA'
+  -- `Clock` carries its measurable space as a field, so `rw` will not see through the instance
+  -- arguments of these two; both are restated at the field level.
+  have hmap : ∀ (μ : @Measure ℝ≥0 lebesgueClock.measurableSpace) (B : Set ℝ≥0),
+      MeasurableSet[lebesgueClock.measurableSpace] B →
+      (@Measure.map ℝ≥0 ℝ≥0 lebesgueClock.measurableSpace lebesgueClock.measurableSpace
+        (fun u ↦ r + u) μ) B = μ ((fun u : ℝ≥0 ↦ r + u) ⁻¹' B) :=
+    fun _ _ hB ↦ Measure.map_apply (measurable_const_add r) hB
+  have hres : ∀ (B S : Set ℝ≥0), MeasurableSet[lebesgueClock.measurableSpace] B →
+      (@Measure.restrict ℝ≥0 lebesgueClock.measurableSpace lebesgueClock.q S) B
+        = lebesgueClock.q (B ∩ S) :=
+    fun _ _ hB ↦ Measure.restrict_apply hB
+  rw [hmap _ A hA, hres _ _ hpreA, hres _ _ hA]
+  have hpre : (fun u : ℝ≥0 ↦ r + u) ⁻¹' A ∩ lebesgueClock.interval c s t
+      = (fun u : ℝ≥0 ↦ r + u) ⁻¹' (A ∩ lebesgueClock.interval c (r + s) (r + t)) := by
+    ext u
+    cases c <;> simp [Clock.interval, Set.mem_inter_iff, Set.mem_preimage]
+  rw [hpre]
+  refine lebesgueClock_preimage_const_add
+    (hA.inter (lebesgueClock.measurableSet_interval c _ _)) ?_
+  rintro v ⟨-, hv⟩
+  cases c with
+  | optional =>
+      obtain ⟨-, hv2⟩ := hv
+      simp only [Set.mem_Iic, not_le] at hv2
+      exact le_of_lt (lt_of_le_of_lt le_self_add hv2)
+  | predictable =>
+      obtain ⟨-, hv2⟩ := hv
+      simp only [Set.mem_Iio, not_lt] at hv2
+      exact le_trans le_self_add hv2
+
+/-- The shift system of `ex:shiftXA` at the concrete clock: `hbot` and the clock hypothesis of
+`isShiftSystem_mpFamily` are gone, and what is left speaks only of the operator and the shift. -/
+theorem isShiftSystem_mpFamily_lebesgueClock {A : Set ((E → 𝕂) × (E → 𝕂))} {c : Clock.Conv}
+    {S : Shift F π} {𝓕₀ : Filtration ℝ≥0 mF}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    (hpath : ∀ p ∈ A, ∀ f : F,
+      Measurable[lebesgueClock.measurableSpace] fun u ↦ p.2 (π u f))
+    (hπ : ∀ r : ℝ≥0, Measurable[𝓕₀ r] (π r))
+    (hsm : ∀ r s : ℝ≥0, Measurable[𝓕₀ (r + s), 𝓕₀ s] (S.θ r))
+    (hY : ∀ Y ∈ mpFamily A lebesgueClock c π, StronglyAdapted 𝓕₀ Y) :
+    IsShiftSystem S 𝓕₀ (fun _ ↦ mpFamily A lebesgueClock c π) :=
+  isShiftSystem_mpFamily NNReal.bot_eq_zero (lebesgueClock_isShiftInvariant c) hfm hfb hgb
+    hpath hπ hsm hY
+
+/-- **`thm:absuniq`(b) at a clock that exists.**  Milestone 6, with (T0), (T2a) and (T4) supplied
+by `ℝ≥0` and the shift system supplied by `lebesgueClock`: `hbot` is `NNReal.bot_eq_zero`, `hadd`
+is `le_self_add`, `hsub` is `exists_add_of_le`, and the linear order is the one `ℝ≥0` carries.
+
+This is the statement that makes the milestone non vacuous.  Every surviving hypothesis is about
+the data -- the operator `A`, the shift `S`, the filtration `𝓕₀`, the integrability proviso of
+`lem:restart` and `eq:absonedim` itself -- and none about the index or the clock. -/
+theorem subsingleton_mpSolutions_mpFamily_lebesgueClock
+    {A : Set ((E → 𝕂) × (E → 𝕂))} {c : Clock.Conv}
+    {S : Shift F π} {𝓕₀ : Filtration ℝ≥0 mF}
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    (hpath : ∀ p ∈ A, ∀ f : F,
+      Measurable[lebesgueClock.measurableSpace] fun u ↦ p.2 (π u f))
+    (hsm : ∀ r s : ℝ≥0, Measurable[𝓕₀ (r + s), 𝓕₀ s] (S.θ r))
+    (hY : ∀ Y ∈ mpFamily A lebesgueClock c π, StronglyAdapted 𝓕₀ Y)
+    (hadapt : ∀ u v : ℝ≥0, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ℝ≥0, MeasurableSpace.comap (π i) inferInstance)
+    (hint : ∀ P : Measure F, IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ P →
+      ∀ Y ∈ mpFamily A lebesgueClock c π, ∀ u : ℝ≥0, Integrable (Y u) P)
+    (honedim : ∀ r : ℝ≥0, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ R →
+      IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ℝ≥0, R.map (π u) = R'.map (π u))
+    (mu : Measure E) :
+    Set.Subsingleton {P ∈ mpSolutions (mpFamily A lebesgueClock c π) 𝓕₀ |
+      IsProbabilityMeasure P ∧ P.map (π ⊥) = mu} :=
+  subsingleton_mpSolutions_of_unique_onedim
+    (isShiftSystem_mpFamily_lebesgueClock hfm hfb hgb hpath
+      (fun r ↦ hadapt r r le_rfl) hsm hY)
+    NNReal.bot_eq_zero (fun _ _ ↦ le_self_add) (fun _ _ h ↦ exists_add_of_le h)
+    hadapt hgen hint honedim mu
+
+end LebesgueShift
+
+/-! ### The seam between Milestone 4 and Milestone 6
+
+Milestone 6 asks for `eq:absonedim` -- that the one dimensional laws of the shifted problems are
+determined by the initial law -- and Milestone 4 proves it, for a bounded jump rate, as
+`integral_eq_of_isMPSolution_of_map_eq`.  Putting the two together is the acceptance example of
+Milestone 6, and it consists of three steps and not of one.  This section is the first two of
+them; the third is named and is not here.
+
+*The shift is not a step.*  `isShiftSystem_mpFamily` gives `𝓧₀ = fun _ ↦ mpFamily A Q c π`: the
+shifted problem is the *same* problem, as a set and not up to anything.  So `honedim`, which
+Milestone 6 states for every shift `r`, is one statement about `mpFamily` and not a family of
+them, and the bridge across the shift that the acceptance example seemed to need does not exist
+because there is nothing to cross.
+
+*The step that is real is the one from integrals to measures.*  Milestone 4 speaks of
+`∫ f (X t)` for bounded measurable `f`, Milestone 6 of `R.map (π u)`.  The two are the same
+statement only after testing against indicators, and that is
+`measure_map_eq_of_forall_integral_eq`.
+
+*The step that is missing is the path space.*  `integral_eq_of_isMPSolution_of_map_eq` asks for
+**joint** measurability of the process in time and sample point, and Milestone 6's path space
+carries only `hgen : mF = ⨆ i, comap (π i)`, from which joint measurability does not follow: on
+the full function space `ℝ≥0 → E` even the weaker `hpath` of `isShiftSystem_mpFamily` fails,
+because a path need not be measurable in time, and on the subspace of time measurable paths the
+evaluation map is still not jointly measurable.  A path space at which the two milestones meet
+therefore carries a path regularity, and `measurable_uncurry_of_isRightLocallyConstant` below is
+the cheapest form of it: right continuity, in the shape a discrete state space affords.
+-/
+
+section OnedimSeam
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **From bounded integrals to the law.**  Two finite measures whose push forwards integrate
+every measurable real function bounded by `1` alike are equal as measures.
+
+This is the accounting step between the two milestones: Milestone 4 determines the one
+dimensional distributions through integrals of bounded functions, Milestone 6 asks for them as
+measures.  Indicators are the test functions, and finiteness is what lets `ENNReal.toReal` be
+undone. -/
+theorem measure_map_eq_of_forall_integral_eq
+    {Ω Ω' : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
+    {P : Measure Ω} {P' : Measure Ω'} [IsFiniteMeasure P] [IsFiniteMeasure P']
+    {g : Ω → E} {g' : Ω' → E} (hg : Measurable g) (hg' : Measurable g')
+    (h : ∀ f : E → ℝ, Measurable f → (∀ x, |f x| ≤ 1) →
+      ∫ ω, f (g ω) ∂P = ∫ ω, f (g' ω) ∂P') :
+    P.map g = P'.map g' := by
+  ext s hs
+  have hf : Measurable (s.indicator (fun _ : E ↦ (1 : ℝ))) := measurable_const.indicator hs
+  have hb : ∀ x : E, |s.indicator (fun _ : E ↦ (1 : ℝ)) x| ≤ 1 := by
+    intro x
+    by_cases hx : x ∈ s <;> simp [Set.indicator_of_mem, Set.indicator_of_notMem, hx]
+  have key := h _ hf hb
+  have e1 : ∀ ω : Ω, s.indicator (fun _ : E ↦ (1 : ℝ)) (g ω)
+      = (g ⁻¹' s).indicator (fun _ : Ω ↦ (1 : ℝ)) ω := by
+    intro ω
+    by_cases hx : g ω ∈ s <;>
+      simp [Set.indicator_of_mem, Set.indicator_of_notMem, hx, Set.mem_preimage]
+  have e2 : ∀ ω : Ω', s.indicator (fun _ : E ↦ (1 : ℝ)) (g' ω)
+      = (g' ⁻¹' s).indicator (fun _ : Ω' ↦ (1 : ℝ)) ω := by
+    intro ω
+    by_cases hx : g' ω ∈ s <;>
+      simp [Set.indicator_of_mem, Set.indicator_of_notMem, hx, Set.mem_preimage]
+  simp only [e1, e2] at key
+  rw [integral_indicator_const (1 : ℝ) (hs.preimage hg),
+    integral_indicator_const (1 : ℝ) (hs.preimage hg')] at key
+  simp only [smul_eq_mul, mul_one] at key
+  rw [Measure.map_apply hg hs, Measure.map_apply hg' hs]
+  exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).1 key
+
+/-- **`eq:absonedim` for the jump operator.**  The hypothesis `honedim` of
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` and of `isMarkov_of_unique_onedim`, discharged
+on the data of Milestone 4 for a bounded rate.
+
+The quantifier over the shift `r` costs nothing -- `isShiftSystem_mpFamily` makes the shifted
+problem the original one -- and `r` does not occur in the proof.  What the statement does carry,
+and what Milestone 6 does not supply, is `hjoint`: the coordinate process must be measurable in
+time and sample point **jointly**, which the σ-field generated by the coordinates does not give.
+-/
+theorem onedim_mpFamily_jumpOperator {lam : E → ℝ} {mu : Kernel E E} [IsMarkovKernel mu] {L : ℝ}
+    {F : Type*} [mF : MeasurableSpace F] {π : ℝ≥0 → F → E} {𝓕₀ : Filtration ℝ≥0 mF}
+    (hlam : Measurable lam) (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (hπ : ∀ t : ℝ≥0, Measurable (π t))
+    (hjoint : ∀ h : E → ℝ, Measurable h → Measurable fun p : ℝ≥0 × F ↦ h (π p.1 p.2))
+    (r : ℝ≥0) (R R' : Measure F) (hR : IsProbabilityMeasure R) (hR' : IsProbabilityMeasure R')
+    (hsol : IsMPSolution
+      (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional π) 𝓕₀ R)
+    (hsol' : IsMPSolution
+      (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional π) 𝓕₀ R')
+    (hinit : R.map (π ⊥) = R'.map (π ⊥)) (u : ℝ≥0) :
+    R.map (π u) = R'.map (π u) := by
+  haveI := hR
+  haveI := hR'
+  rw [NNReal.bot_eq_zero] at hinit
+  refine measure_map_eq_of_forall_integral_eq (hπ u) (hπ u) fun f hf hb ↦ ?_
+  exact integral_eq_of_isMPSolution_of_map_eq hlam hlam0 hL hjoint (hπ 0) hsol hjoint (hπ 0)
+    hsol' hinit hf hb u
+
+end OnedimSeam
+
+/-! ### Joint measurability of a right continuous coordinate process
+
+The input `hjoint` of `onedim_mpFamily_jumpOperator`, supplied from a regularity of the paths.
+
+The approximation is from **above**, `dyadAbove`, and that is forced: right continuity controls
+the path to the right of a time and nothing to the left of it.  Each stage factors through the
+countable dyadic grid, so `measurable_from_prod_countable_right` makes it jointly measurable
+without any regularity at all, and the regularity enters only in the limit.
+
+`Nat.ceil` and not `Nat.floor`, and the reason is the library and not the mathematics:
+`Nat.measurable_floor` carries `[IsStrictOrderedRing R]`
+(`MeasureTheory/Function/Floor.lean:69`) and `ℝ≥0` is a semiring, so it does not apply, while
+`Nat.measurable_ceil` (`:78`) has no such hypothesis.
+-/
+
+section RightContinuousPaths
+
+/-- The dyadic approximation of `u` from above at resolution `2⁻ⁿ`. -/
+noncomputable def dyadAbove (n : ℕ) (u : ℝ≥0) : ℝ≥0 := ((⌈(2 : ℝ≥0) ^ n * u⌉₊ : ℕ) : ℝ≥0) / 2 ^ n
+
+theorem le_dyadAbove (n : ℕ) (u : ℝ≥0) : u ≤ dyadAbove n u := by
+  have h2 : (0 : ℝ≥0) < 2 ^ n := by positivity
+  rw [dyadAbove, le_div_iff₀ h2, mul_comm]
+  exact Nat.le_ceil ((2 : ℝ≥0) ^ n * u)
+
+theorem dyadAbove_lt (n : ℕ) (u : ℝ≥0) : dyadAbove n u < u + (1 / 2 : ℝ≥0) ^ n := by
+  have h2 : (0 : ℝ≥0) < 2 ^ n := by positivity
+  rw [dyadAbove, div_lt_iff₀ h2]
+  have hrw : (u + (1 / 2 : ℝ≥0) ^ n) * 2 ^ n = (2 : ℝ≥0) ^ n * u + 1 := by
+    rw [add_mul, div_pow, one_pow, div_mul_cancel₀ _ (by positivity), mul_comm u]
+  rw [hrw]
+  exact Nat.ceil_lt_add_one (by positivity)
+
+variable {E : Type*} [MeasurableSpace E] {F : Type*} [MeasurableSpace F]
+
+/-- **Every path is constant on a right neighbourhood of every time.**  Over a state space with
+the discrete topology this is right continuity of the paths, and it is what a step path process
+satisfies: the construction of `set:jumpdata` produces paths that are constant between
+consecutive jump times and right continuous at them. -/
+def IsRightLocallyConstant (π : ℝ≥0 → F → E) : Prop :=
+  ∀ (f : F) (u : ℝ≥0), ∃ ε : ℝ≥0, 0 < ε ∧ ∀ v, u ≤ v → v < u + ε → π v f = π u f
+
+/-- **A right continuous coordinate process is jointly measurable.**  This is the input `hjoint`
+of `onedim_mpFamily_jumpOperator`, and the statement that Milestone 6's path space does not
+supply on its own. -/
+theorem measurable_uncurry_of_isRightLocallyConstant {π : ℝ≥0 → F → E}
+    (hπ : ∀ t : ℝ≥0, Measurable (π t)) (hrc : IsRightLocallyConstant π)
+    {h : E → ℝ} (hh : Measurable h) :
+    Measurable fun p : ℝ≥0 × F ↦ h (π p.1 p.2) := by
+  have hstage : ∀ n : ℕ, Measurable fun p : ℝ≥0 × F ↦ h (π (dyadAbove n p.1) p.2) := by
+    intro n
+    have hcnt : Measurable fun q : ℕ × F ↦ h (π ((q.1 : ℝ≥0) / 2 ^ n) q.2) :=
+      measurable_from_prod_countable_right fun k ↦ hh.comp (hπ ((k : ℝ≥0) / 2 ^ n))
+    have hscale : Measurable fun u : ℝ≥0 ↦ (2 : ℝ≥0) ^ n * u :=
+      measurable_const.mul measurable_id
+    have hceil : Measurable fun u : ℝ≥0 ↦ ⌈(2 : ℝ≥0) ^ n * u⌉₊ := Nat.measurable_ceil.comp hscale
+    have hpair : Measurable fun p : ℝ≥0 × F ↦ ((⌈(2 : ℝ≥0) ^ n * p.1⌉₊ : ℕ), p.2) :=
+      (hceil.comp measurable_fst).prodMk measurable_snd
+    exact hcnt.comp hpair
+  refine measurable_of_tendsto_metrizable hstage ?_
+  rw [tendsto_pi_nhds]
+  rintro ⟨u, f⟩
+  obtain ⟨ε, hε, hconst⟩ := hrc f u
+  obtain ⟨n₀, hn₀⟩ := NNReal.exists_pow_lt_of_lt_one hε (by norm_num : (1 / 2 : ℝ≥0) < 1)
+  refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+  filter_upwards [Filter.eventually_ge_atTop n₀] with n hn
+  have hsmall : (1 / 2 : ℝ≥0) ^ n < ε :=
+    lt_of_le_of_lt (pow_le_pow_right_of_le_one' (by norm_num) hn) hn₀
+  rw [hconst (dyadAbove n u) (le_dyadAbove n u) (lt_trans (dyadAbove_lt n u) (by gcongr))]
+
+end RightContinuousPaths
