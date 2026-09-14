@@ -377,6 +377,23 @@ hypotheses had to be added and each is used: `X` adapted, the base family integr
 part in the martingale property and is now the separate
 `isProbabilityMeasure_map_withDensity_ofReal`.  The determining set `𝓩°` of the manuscript proof
 is not used at all.
+
+Four more on 2026-09-14, in `section PropagationFromOnedim` and `section UniquenessFromOnedim`,
+**close the uniqueness half of Milestone 6**: `propagatesAgreement_of_unique_onedim`
+(`lem:propagation`) joins the two blocks, and `subsingleton_mpSolutions_of_unique_onedim` is
+`thm:absuniq`(b).  The two inputs are `weightedLaw_univ`, which reads the manuscript's "take
+`h ≡ 1`" off the hypothesis, and `weightedLaw_const_mul`, which makes the normalisation
+`E^P[Z] = 1` a change of variables.  Every statement from `PropagatesAgreement` to
+`thm:absuniq`(b) is now proved and none of the seven `sorry`s of this file is reachable from any
+of them.
+
+Three more on 2026-09-14, in `section ShiftInvariantClock` and `section ShiftSystemMpFamily`,
+are `ex:shiftXA`: `Clock.IsShiftInvariant`, the change of variables
+`Clock.setIntegral_shift`, and `isShiftSystem_mpFamily`, the first witness that `IsShiftSystem`
+is inhabited by anything other than a triviality.  The order condition hidden in the
+manuscript's proof is isolated there rather than assumed: `isShiftSystem_mpFamily` holds over a
+preorder, and it is `Clock.IsShiftInvariant` that a partial order cannot satisfy.  See the
+module note above that section for the counterexample on `[0,∞)^2`.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -26307,10 +26324,11 @@ end IncrementGenerator
 
 `def:propagation`, `prop:uniqfromprop` of the manuscript -- the half of Milestone 6 that carries
 **no** Markov structure at all.  It is the bottom of the tree: neither `restart` nor a shift
-system nor a determining set occurs in any statement or in any proof below, and none of the nine
-`sorry`s of this file is reachable from here.  What sits above it -- `lem:propagation`, which
-makes `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the
-Markov property -- is where the shift system enters, and it is not in this block.
+system nor a determining set occurs in any statement or in any proof in `section Propagation` or
+`section Cylinders`, and none of the seven `sorry`s of this file is reachable from here.  What
+sits above it -- `lem:propagation` in `section PropagationFromOnedim`, which makes
+`PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the Markov
+property, which is still without a declaration -- is where the shift system enters.
 
 The manuscript's `rem:uniqnotmarkov` reads this decomposition off in a table; this block is its
 first row.
@@ -26600,3 +26618,367 @@ theorem subsingleton_of_propagatesAgreement
   exact eq_of_propagatesAgreement hN hadapt hgen hP hQ (hPi.trans hQi.symm)
 
 end Cylinders
+
+/-! ### `lem:propagation`: propagation of agreement out of the one dimensional laws
+
+The Markovian row of the table of `rem:uniqnotmarkov`, and the bridge between Milestone 5 and
+the Markov free block above.  `PropagatesAgreement` is a hypothesis about *every* weight `Z`
+observed up to `s`; `lem:propagation` makes it checkable from a hypothesis about *initial laws
+only*, at the price of a shift system.
+
+The index carries, besides the preorder and the bottom element that `PropagatesAgreement`
+already needs, the additive structure of `section Restart`.  Three hypotheses on it replace the
+manuscript's (T4):
+
+* `hbot`, that `⊥ = 0` -- the initial time of `PropagatesAgreement` and the neutral element of
+  the shift are the same point.  It is what makes `π ⊥ ∘ θ s = π s`;
+* `hadd`, `r ≤ r + u`, which is `restart`'s own hypothesis;
+* `hsub`, that `s ≤ t` yields `u` with `t = s + u`.  This is (T4) and it is used exactly
+  once, in the last line, to name the time at which the shifted problem is read.
+-/
+
+section PropagationFromOnedim
+
+variable {ι : Type*} [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+
+omit [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι] in
+/-- The total mass of a weighted law is the mass of the density, and in particular it does not
+depend on the time at which the coordinate is read.  This is the manuscript's "taking `h ≡ 1`
+gives `c := E^P[Z] = E^Q[Z]`", and it is the only consequence of the hypothesis of
+`PropagatesAgreement` that is used before the restart. -/
+theorem weightedLaw_univ {t : ι} (hπ : Measurable (π t)) (P : Measure F) (Z : F → ℝ) :
+    weightedLaw π P Z t Set.univ = ∫⁻ f, ENNReal.ofReal (Z f) ∂P := by
+  unfold weightedLaw
+  rw [Measure.map_apply hπ MeasurableSet.univ, Set.preimage_univ,
+    withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
+
+omit [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι] in
+/-- The weighted law is positively homogeneous in the weight.  This is what makes the
+normalisation `E^P[Z] = 1` of the manuscript proof a change of variables and not a restriction:
+one proves the conclusion for `Z / c` and multiplies back. -/
+theorem weightedLaw_const_mul (π : ι → F → E) (P : Measure F) {Z : F → ℝ} (hZm : Measurable Z)
+    {a : ℝ} (ha : 0 ≤ a) (t : ι) :
+    weightedLaw π P (fun f ↦ a * Z f) t = ENNReal.ofReal a • weightedLaw π P Z t := by
+  unfold weightedLaw
+  have h1 : (fun f ↦ ENNReal.ofReal (a * Z f))
+      = (ENNReal.ofReal a) • (fun f ↦ ENNReal.ofReal (Z f)) := by
+    funext f
+    simp only [Pi.smul_apply, smul_eq_mul]
+    exact ENNReal.ofReal_mul ha
+  rw [h1, withDensity_smul _ hZm.ennreal_ofReal, Measure.map_smul]
+
+/-- **`lem:propagation`**: under a shift system, uniqueness of the one dimensional laws of the
+shifted problems propagates agreement.
+
+This is the statement that turns `eq_of_propagatesAgreement` -- which knows nothing about
+martingales -- into `thm:absuniq`(b).  Its hypothesis `honedim` is `eq:absonedim` of the
+manuscript: for **every** shift `r`, two probability solutions of the problem posed at `r` with
+the same law at `⊥` have the same law at every time.  The quantifier over `r` cannot be dropped
+to `r = ⊥`; the induction of `prop:uniqfromprop` consumes the shifted problems.
+
+Three points of the proof are worth recording.
+
+*The normalisation is free.*  The manuscript takes `h ≡ 1` to get `c = E^P[Z] = E^Q[Z]`, splits
+off `c = 0`, and divides.  Here `c` is `weightedLaw_univ` applied to the hypothesis, the case
+`c = 0` is `measure_univ_eq_zero` on the density, and the division is `weightedLaw_const_mul`.
+It is the only reason the proof is longer than the restart it rests on.
+
+*The determining set does not appear.*  The manuscript compares `E[Z h(π_s)]` against all
+`h ∈ Bdd(E)`; `PropagatesAgreement` compares measures, and `restart_canonical` identifies the
+conditional expectation against all sets of the past.  Neither `def:canonical`(ii) nor the
+determining set occurs.
+
+*Where (T4) sits.*  Only in `hsub`, and only in the last step: `π u ∘ θ s = π (s + u)`, so
+reading the shifted problem at `u` reads the original at `t = s + u`.  Everything before that is
+true for a `t` that is not a shift of `s` -- it is the *conclusion* that would then speak of the
+wrong time. -/
+theorem propagatesAgreement_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
+    (hπ : ∀ t : ι, Measurable (π t))
+    {N : Set (Measure F)}
+    (hNprob : ∀ P ∈ N, IsProbabilityMeasure P)
+    (hNsol : ∀ P ∈ N, IsMPSolution (𝓧₀ 0) 𝓕₀ P)
+    (hNint : ∀ P ∈ N, ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (Y u) P)
+    (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u)) :
+    PropagatesAgreement 𝓕₀ π N := by
+  intro P hP Q hQ s t hst Z hZ0 hZb hZm hagree
+  haveI hPp : IsProbabilityMeasure P := hNprob P hP
+  haveI hQp : IsProbabilityMeasure Q := hNprob Q hQ
+  have hZmeas : Measurable Z := (hZm.mono (𝓕₀.le s)).measurable
+  obtain ⟨b, hb⟩ := hZb
+  have hb' : ∀ f, Z f ≤ max b 0 := fun f ↦ (hb f).trans (le_max_left _ _)
+  set c : ENNReal := ∫⁻ f, ENNReal.ofReal (Z f) ∂P with hcdef
+  have hcQ : ∫⁻ f, ENNReal.ofReal (Z f) ∂Q = c := by
+    rw [hcdef, ← weightedLaw_univ (hπ s) P Z, ← weightedLaw_univ (hπ s) Q Z, hagree]
+  have hcfin : c ≠ ⊤ := by
+    have hle : c ≤ ENNReal.ofReal (max b 0) := by
+      rw [hcdef]
+      calc ∫⁻ f, ENNReal.ofReal (Z f) ∂P ≤ ∫⁻ _ : F, ENNReal.ofReal (max b 0) ∂P :=
+            lintegral_mono fun f ↦ ENNReal.ofReal_le_ofReal (hb' f)
+        _ = ENNReal.ofReal (max b 0) := by simp
+    exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top hle
+  by_cases hc0 : c = 0
+  · have hzeroP : (P.withDensity fun f ↦ ENNReal.ofReal (Z f)) = 0 := by
+      rw [← Measure.measure_univ_eq_zero, withDensity_apply _ MeasurableSet.univ,
+        Measure.restrict_univ]
+      exact hc0
+    have hzeroQ : (Q.withDensity fun f ↦ ENNReal.ofReal (Z f)) = 0 := by
+      rw [← Measure.measure_univ_eq_zero, withDensity_apply _ MeasurableSet.univ,
+        Measure.restrict_univ]
+      exact hcQ.trans hc0
+    unfold weightedLaw
+    rw [hzeroP, hzeroQ]
+  · set a : ℝ := c.toReal with hadef
+    have hapos : 0 < a := ENNReal.toReal_pos hc0 hcfin
+    have hainv : (0 : ℝ) ≤ a⁻¹ := le_of_lt (inv_pos.mpr hapos)
+    have hZint : ∀ R : Measure F, IsProbabilityMeasure R → Integrable Z R := by
+      intro R _
+      exact integrable_of_abs_le (μ := R) hZmeas (C := max b 0)
+        (fun f ↦ by rw [abs_of_nonneg (hZ0 f)]; exact hb' f)
+    have hIP : ∫ f, Z f ∂P = a := by
+      have h := ofReal_integral_eq_lintegral_ofReal (hZint P hPp)
+        (Filter.Eventually.of_forall hZ0)
+      rw [← hcdef] at h
+      rw [hadef, ← h, ENNReal.toReal_ofReal (integral_nonneg hZ0)]
+    have hIQ : ∫ f, Z f ∂Q = a := by
+      have h := ofReal_integral_eq_lintegral_ofReal (hZint Q hQp)
+        (Filter.Eventually.of_forall hZ0)
+      rw [hcQ] at h
+      rw [hadef, ← h, ENNReal.toReal_ofReal (integral_nonneg hZ0)]
+    set Z' : F → ℝ := fun f ↦ a⁻¹ * Z f with hZ'def
+    have hZ'0 : ∀ f, 0 ≤ Z' f := fun f ↦ mul_nonneg hainv (hZ0 f)
+    have hZ'c : ∀ f, Z' f ≤ a⁻¹ * max b 0 := fun f ↦
+      mul_le_mul_of_nonneg_left (hb' f) hainv
+    have hZ'b : ∃ b', ∀ f, Z' f ≤ b' := ⟨a⁻¹ * max b 0, hZ'c⟩
+    have hZ'm : StronglyMeasurable[𝓕₀ s] Z' := stronglyMeasurable_const.mul hZm
+    have hZ'meas : Measurable Z' := hZmeas.const_mul _
+    have hnorm : ∀ R : Measure F, ∫ f, Z f ∂R = a → ∫ f, Z' f ∂R = 1 := by
+      intro R hR
+      have h1 : ∫ f, Z' f ∂R = a⁻¹ * ∫ f, Z f ∂R := by
+        rw [hZ'def]; exact integral_const_mul _ _
+      rw [h1, hR, inv_mul_cancel₀ (ne_of_gt hapos)]
+    have hsolP : IsMPSolution (𝓧₀ s) 𝓕₀
+        ((P.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)) :=
+      restart_canonical hS (hNsol P hP) (hNint P hP) s (hadd s) hZ'0 hZ'b hZ'm
+    have hsolQ : IsMPSolution (𝓧₀ s) 𝓕₀
+        ((Q.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)) :=
+      restart_canonical hS (hNsol Q hQ) (hNint Q hQ) s (hadd s) hZ'0 hZ'b hZ'm
+    have hprobP : IsProbabilityMeasure
+        ((P.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)) :=
+      isProbabilityMeasure_map_withDensity_ofReal (S.measurable s) hZ'meas hZ'0 hZ'c
+        (hnorm P hIP)
+    have hprobQ : IsProbabilityMeasure
+        ((Q.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)) :=
+      isProbabilityMeasure_map_withDensity_ofReal (S.measurable s) hZ'meas hZ'0 hZ'c
+        (hnorm Q hIQ)
+    have hread : ∀ (R : Measure F) (u : ι),
+        ((R.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)).map (π u)
+          = weightedLaw π R Z' (s + u) := by
+      intro R u
+      rw [Measure.map_map (hπ u) (S.measurable s)]
+      unfold weightedLaw
+      congr 1
+      funext f
+      exact S.eval_comp s u f
+    have hscale : ∀ (R : Measure F) (u : ι),
+        weightedLaw π R Z' u = ENNReal.ofReal a⁻¹ • weightedLaw π R Z u := by
+      intro R u
+      rw [hZ'def]
+      exact weightedLaw_const_mul π R hZmeas hainv u
+    have hinit : ((P.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)).map (π ⊥)
+        = ((Q.withDensity fun f ↦ ENNReal.ofReal (Z' f)).map (S.θ s)).map (π ⊥) := by
+      rw [hbot, hread P 0, hread Q 0, add_zero, hscale P s, hscale Q s, hagree]
+    obtain ⟨u, rfl⟩ := hsub s t hst
+    have hkey : weightedLaw π P Z' (s + u) = weightedLaw π Q Z' (s + u) := by
+      rw [← hread P u, ← hread Q u]
+      exact honedim s _ _ hprobP hprobQ hsolP hsolQ hinit u
+    rw [hscale P (s + u), hscale Q (s + u)] at hkey
+    refine Measure.ext fun C hC ↦ ?_
+    have h1 := congrArg (fun m : Measure E ↦ m C) hkey
+    simp only [Measure.smul_apply, smul_eq_mul] at h1
+    have h2 : ENNReal.ofReal a * (ENNReal.ofReal a⁻¹ * weightedLaw π P Z (s + u) C)
+        = ENNReal.ofReal a * (ENNReal.ofReal a⁻¹ * weightedLaw π Q Z (s + u) C) := by rw [h1]
+    rw [← mul_assoc, ← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt hapos),
+      mul_inv_cancel₀ (ne_of_gt hapos), ENNReal.ofReal_one, one_mul, one_mul] at h2
+    exact h2
+
+end PropagationFromOnedim
+
+/-! ### `thm:absuniq`(b): abstract uniqueness
+
+The two halves meet.  `eq_of_propagatesAgreement` is Markov free and
+`propagatesAgreement_of_unique_onedim` is where the shift system sits; composing them is the
+uniqueness half of the abstract theorem, and no further idea enters.
+
+`(T2a)`, the linear order, is consumed exactly once and not here: in
+`measure_biInter_eq_of_propagatesAgreement`, which sorts a finite set of times into a chain.
+That is why this section, and only this section of Milestone 6, asks for it.
+-/
+
+section UniquenessFromOnedim
+
+variable {ι : Type*} [LinearOrder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+
+/-- **`thm:absuniq`(b)**: if the one dimensional laws of every shifted problem are determined by
+the initial law, then the martingale problem has at most one solution with a prescribed initial
+law.
+
+The hypotheses are exactly those of the manuscript, and each is named where it is spent:
+
+* `hS`, the shift system, and `hbot`/`hadd`/`hsub` -- (T0) and (T4) -- go into
+  `propagatesAgreement_of_unique_onedim`;
+* `hadapt` and `hgen`, that the coordinate process is adapted and that the σ-field of the path
+  space is the one the coordinates generate, go into `eq_of_propagatesAgreement`;
+* `hint` is the integrability proviso of `lem:restart`, which the manuscript also carries
+  ("subject to the integrability provisos of Lemmas 4.3 and 4.5");
+* `honedim` is `eq:absonedim`.
+
+The linear order is (T2a) and is used nowhere but in the sorting step of
+`measure_biInter_eq_of_propagatesAgreement`. -/
+theorem subsingleton_mpSolutions_of_unique_onedim
+    {S : Shift F π} {𝓕₀ : Filtration ι mF} {𝓧₀ : ι → Set (ι → F → 𝕂)}
+    (hS : IsShiftSystem S 𝓕₀ 𝓧₀)
+    (hbot : (⊥ : ι) = 0) (hadd : ∀ r u : ι, r ≤ r + u)
+    (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
+    (hadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
+    (hgen : mF = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance)
+    (hint : ∀ P : Measure F, IsMPSolution (𝓧₀ 0) 𝓕₀ P → ∀ Y ∈ 𝓧₀ 0, ∀ u : ι,
+      Integrable (Y u) P)
+    (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
+      IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
+      R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
+    (mu : Measure E) :
+    Set.Subsingleton {P ∈ mpSolutions (𝓧₀ 0) 𝓕₀ |
+      IsProbabilityMeasure P ∧ P.map (π ⊥) = mu} := by
+  have hπ : ∀ t : ι, Measurable (π t) := fun t ↦ (hadapt t t le_rfl).mono (𝓕₀.le t) le_rfl
+  set N : Set (Measure F) :=
+    {P | IsMPSolution (𝓧₀ 0) 𝓕₀ P ∧ IsProbabilityMeasure P} with hNdef
+  have hN : PropagatesAgreement 𝓕₀ π N :=
+    propagatesAgreement_of_unique_onedim hS hbot hadd hsub hπ
+      (fun P hP ↦ hP.2) (fun P hP ↦ hP.1) (fun P hP ↦ hint P hP.1) honedim
+  rintro P ⟨hPsol, hPp, hPi⟩ Q ⟨hQsol, hQp, hQi⟩
+  haveI := hPp
+  haveI := hQp
+  exact eq_of_propagatesAgreement hN hadapt hgen ⟨hPsol, hPp⟩ ⟨hQsol, hQp⟩ (hPi.trans hQi.symm)
+
+end UniquenessFromOnedim
+
+/-! ### The shift system carried by `mpFamily`, and the order condition it hides
+
+`ex:shiftXA` of the manuscript, and the witness that `IsShiftSystem` is not an empty structure.
+
+**The order condition, which the manuscript's heading does not carry.**  The proof of
+`ex:shiftXA` substitutes `v = r + u` and thereby identifies `r + ⟨0,t⟩` with `⟨r, r+t⟩`.  That
+identification asks every `v` with `v ≤ r + t` and `¬ (v ≤ r)` to satisfy `r ≤ v`, and over a
+partial order it is false: on `ι = [0,∞)^2` with Lebesgue measure, `f = 0` and `g = 1` the test
+process is `Y t ω = - t₁ t₂` and the shift identity forces `κ ω = r₁ t₂ + t₁ r₂`, which depends
+on `t` while `κ` may not.  So no `κ` exists for `r ≠ 0`, and the multiparameter clock -- an
+instance of `ex:clocks` -- carries **no** shift system.
+
+The statements below therefore isolate the condition in `Clock.IsShiftInvariant` rather than
+assume a linear order: `isShiftSystem_mpFamily` holds over a preorder, and it is the
+*satisfiability* of `Clock.IsShiftInvariant` that needs totality.  Shift invariance of the
+**measure**, `q (r + B) = q B`, is a strictly weaker condition -- Lebesgue measure on `[0,∞)^2`
+has it -- and is not what the shift system consumes.
+-/
+
+section ShiftInvariantClock
+
+variable {ι : Type*} [Preorder ι] [AddCommMonoid ι]
+
+/-- A clock is **shift invariant for the convention `c`** when translation by `r` carries the
+compensating window from `s` to `t` onto the one from `r + s` to `r + t`, measure preservingly.
+
+This is the form in which the change of variables `v = r + u` is a single application of
+`MeasureTheory.integral_map`, and it is deliberately *not* the measure level condition
+`q ((r + ·) '' B) = q B` of `def:clock`: the two agree over a linearly ordered index and come
+apart over a partial one, which is the whole content of the note above. -/
+structure Clock.IsShiftInvariant (Q : Clock ι) (c : Clock.Conv) : Prop where
+  measurable_add : ∀ r : ι, Measurable[Q.measurableSpace, Q.measurableSpace] (r + ·)
+  map_interval : ∀ r s t : ι,
+    @Measure.map ι ι Q.measurableSpace Q.measurableSpace (fun u ↦ r + u)
+        (Q.q.restrict (Q.interval c s t))
+      = Q.q.restrict (Q.interval c (r + s) (r + t))
+
+/-- The change of variables `v = r + u` on a compensating window.  One application of
+`integral_map`, and the only place where `Clock.IsShiftInvariant` is used. -/
+theorem Clock.setIntegral_shift {Q : Clock ι} {c : Clock.Conv} (hsi : Q.IsShiftInvariant c)
+    (r s t : ι) {g : ι → 𝕂} (hg : Measurable[Q.measurableSpace] g) :
+    ∫ u in Q.interval c s t, g (r + u) ∂Q.q
+      = ∫ v in Q.interval c (r + s) (r + t), g v ∂Q.q := by
+  letI : MeasurableSpace ι := Q.measurableSpace
+  conv_rhs => rw [← hsi.map_interval r s t]
+  rw [integral_map (hsi.measurable_add r).aemeasurable hg.aestronglyMeasurable]
+
+end ShiftInvariantClock
+
+section ShiftSystemMpFamily
+
+variable {ι : Type*} [Preorder ι] [OrderBot ι] [AddCommMonoid ι] [AddLeftMono ι]
+variable {E : Type*} [MeasurableSpace E]
+variable {F : Type*} [mF : MeasurableSpace F] {π : ι → F → E}
+
+/-- **`ex:shiftXA`**: the family `mpFamily A Q c π` carries a shift system, with the shifted
+problem equal to the original one and `κ = p.1 ∘ π r` the value of the test function at the
+shift.
+
+Every hypothesis is spent once and none is decoration.
+
+* `hsi` is where the substitution `v = r + u` happens, and it is the hypothesis the note above
+  is about.
+* `hbot` identifies the initial time of the compensating window with the neutral element of the
+  shift; without it `r + ⊥` is not `r` and the two windows do not meet.
+* `hpath`, that `u ↦ p.2 (π u f)` is measurable for the clock, is what makes both compensators
+  something other than the junk value `0`; it is the pointwise form of `Clock.IsProgressive`.
+* `hY`, that the test processes are adapted, is **not** proved here on purpose: it is a
+  statement about the filtration and the clock alone, it is where `Clock.IsProgressive` belongs,
+  and separating it keeps this theorem about the shift.
+
+What the proof does **not** need is a bound on `p.1`, except to bound `κ`, and a linear order. -/
+theorem isShiftSystem_mpFamily {A : Set ((E → 𝕂) × (E → 𝕂))} {Q : Clock ι} {c : Clock.Conv}
+    {S : Shift F π} {𝓕₀ : Filtration ι mF}
+    (hbot : (⊥ : ι) = 0) (hsi : Q.IsShiftInvariant c)
+    (hfm : ∀ p ∈ A, Measurable p.1) (hfb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.1 x‖ ≤ b)
+    (hgb : ∀ p ∈ A, ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
+    (hpath : ∀ p ∈ A, ∀ f : F, Measurable[Q.measurableSpace] fun u ↦ p.2 (π u f))
+    (hπ : ∀ r : ι, Measurable[𝓕₀ r] (π r))
+    (hsm : ∀ r s : ι, Measurable[𝓕₀ (r + s), 𝓕₀ s] (S.θ r))
+    (hY : ∀ Y ∈ mpFamily A Q c π, StronglyAdapted 𝓕₀ Y) :
+    IsShiftSystem S 𝓕₀ (fun _ ↦ mpFamily A Q c π) := by
+  refine ⟨fun r Y' hY' ↦ hY Y' hY', hsm, ?_⟩
+  intro r Y' hY'
+  obtain ⟨p, hp, hYp⟩ := hY'
+  obtain ⟨bf, hbf⟩ := hfb p hp
+  obtain ⟨bg, hbg⟩ := hgb p hp
+  refine ⟨Y', ⟨p, hp, hYp⟩, fun f ↦ p.1 (π r f), ((hfm p hp).comp (hπ r)).stronglyMeasurable,
+    ⟨bf, fun f ↦ hbf _⟩, ?_⟩
+  intro t f
+  have h0t : (0 : ι) ≤ t := hbot ▸ bot_le
+  have hrt : r ≤ r + t := by
+    have h := add_le_add_left h0t r
+    simpa [add_comm] using h
+  have hsub := mpFamily_sub_of_measurable_path (Q := Q) (c := c) (X := π) (Y := Y')
+    (f := p.1) (g := p.2) hYp hbg hrt (ω := f) (hpath p hp f)
+  have hshift : ∫ u in Q.interval c ⊥ t, p.2 (π u (S.θ r f)) ∂Q.q
+      = ∫ v in Q.interval c r (r + t), p.2 (π v f) ∂Q.q := by
+    simp only [S.eval_comp]
+    have h := Clock.setIntegral_shift hsi r ⊥ t (g := fun v ↦ p.2 (π v f)) (hpath p hp f)
+    have hr0 : r + (⊥ : ι) = r := by rw [hbot, add_zero]
+    rw [hr0] at h
+    exact h
+  have hlhs : Y' t (S.θ r f)
+      = p.1 (π (r + t) f) - ∫ v in Q.interval c r (r + t), p.2 (π v f) ∂Q.q := by
+    rw [hYp t (S.θ r f), S.eval_comp r t f, hshift]
+  rw [hlhs, hsub]
+  ring
+
+end ShiftSystemMpFamily

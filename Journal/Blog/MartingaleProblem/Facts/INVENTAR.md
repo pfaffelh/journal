@@ -102,6 +102,49 @@ unserer Konstruktion. Daher:
 
 ## Offene Auffälligkeiten
 
+* **`ex:shiftXA` ist unter \eqref{T0}+\eqref{T4} falsch; es braucht
+  \eqref{T2a}. Gefunden am 2026-09-14, zweiter Lauf, beim Prüfen der Roadmap
+  gegen das Manuskript.**
+  Die Überschrift von `ex:shiftXA` nennt \eqref{T0} + \eqref{T4}, die lineare
+  Ordnung also ausdrücklich **nicht**. Der Beweis substituiert aber $v = r+u$
+  und setzt dabei $r + \langle 0,t\rangle_\iota = \langle r, r+t\rangle_\iota$.
+  Diese Gleichheit verlangt, daß jedes $v$ mit $v \leq r+t$ und
+  $\neg(v \leq r)$ von der Gestalt $r+u$ ist, also $r \leq v$ erfüllt — und das
+  ist eine **Totalitätsbedingung**, keine Folgerung aus \eqref{T4}.
+
+  **Der Zeuge ist `ex:clocks`(iv), also ein Beispiel des Manuskripts selbst.**
+  $\T = \Rp^2$ mit der Produktordnung, $q$ = Lebesguemaß, $\iota = \mathrm{o}$,
+  $f = 0$ und $g \equiv 1$. Dann ist $Y_t(\omega) = -t_1t_2$, und weil $q$
+  verschiebungsinvariant und $g$ zeitunabhängig ist, ist $q_r = q$ und
+  $\XX^\circ_r = \XX^\circ$, also $\hat Y = Y$. Die geforderte Identität
+  \eqref{eq:shiftstable} lautet damit
+  \[ -t_1t_2 \;=\; -(r_1+t_1)(r_2+t_2) + r_1r_2 + \kappa(\omega), \]
+  also $\kappa(\omega) = r_1t_2 + t_1r_2$. Die rechte Seite hängt von $t$ ab,
+  $\kappa$ nach `def:shiftstable` nicht. Für $r \neq 0$ gibt es also **kein**
+  $\kappa$, und $(\XX^\circ_r)$ ist kein Schiftsystem.
+
+  Die Mengen, an denen es scheitert, sind konkret: mit $r = (1,0)$, $s = 0$,
+  $t = (2,2)$ liegt $(0,1)$ in $\langle r, r+t\rangle_\mathrm{o}$
+  — denn $(0,1) \leq (3,2)$ und $\neg((0,1) \leq (1,0))$ — aber nicht in
+  $r + \langle 0,t\rangle_\mathrm{o}$, weil $(0,1) - (1,0) \notin \Rp^2$. Die
+  Differenz hat positives Lebesguemaß, es ist also keine Nullmengenfrage.
+
+  **Folgen.** `ex:clocks`(iv) heißt im Manuskript „shift invariant" — das ist
+  richtig, denn $q(r+B) = q(B)$ gilt —, aber Verschiebungsinvarianz des Maßes
+  und Schiftstabilität der Familie fallen über einer Halbordnung auseinander.
+  `rem:absuniqgain`(ii) sagt „For $\XX_A$ it never fails"; das gilt unter
+  \eqref{T2a} und nicht darunter. Betroffen ist damit auch
+  `thm:absuniq`\ref{it:absuniq_a}, die \eqref{T2a} **nicht** führt, während
+  \ref{it:absuniq_b} sie führt: die Markoveigenschaft ruht über das
+  Schiftsystem ebenfalls auf der Totalität. **Nicht** betroffen ist
+  `prop:uniqfromprop`, das ohne Schiftsystem auskommt, und nicht die
+  Eindeutigkeit selbst, die \eqref{T2a} ohnehin verlangt.
+
+  Das Manuskript wird von diesen Läufen nicht geändert; die Roadmap
+  `MartingaleProblems/README.md` trägt die Bedingung seit diesem Lauf, in
+  Meilenstein 1 bei `Clock.interval_add` und in Meilenstein 5 beim
+  Akzeptanzbeispiel zu `ex:shiftXA`.
+
 * **`fact:convdet` verlangt Separabilität, die sein Beweis nicht braucht;
   gefunden am 2026-09-07, fünfzehnter Lauf, beim Beweisen der ersten Hälfte.**
   Das Manuskript schreibt (Zeile 1423, nach EK Prop. 3.4.4): „If $(S,d)$ is
@@ -28355,3 +28398,341 @@ elf.
    solches `Z` ist kein Funktional des Pfades. `restart` in der allgemeinen
    Fassung (mit `X`, nicht `restart_canonical`) ist dafür gebaut, und das ist
    der Grund, aus dem beide Fassungen dastehen.
+
+### 2026-09-14, zweiter Lauf des Tages — `lem:propagation` und `thm:absuniq`(b): die Eindeutigkeitshälfte von Meilenstein 6 ist geschlossen
+
+**Vorrangige Aufgabe, Teil E.** Der Vorlauf hatte
+`propagatesAgreement_of_unique_onedim` als Vorschlag 0 hinterlassen, mit der
+Begründung, sie sei die **einzige** noch fehlende Aussage zwischen dem
+markovfreien Block und `thm:absuniq`(b). Das war richtig, und sie steht jetzt —
+zusammen mit `thm:absuniq`(b) selbst, die danach vier Zeilen kostet.
+
+**Sieben Deklarationen**, in vier neuen Abschnitten
+`PropagationFromOnedim`, `UniquenessFromOnedim`, `ShiftInvariantClock` und
+`ShiftSystemMpFamily` am Ende von `TauCeti/MartingaleProblems/Suggested.lean`.
+Die ganze Datei geht ohne einen Fehler durch `lake env lean` gegen v4.33.1; alle
+sieben sind mit `#print axioms` auf `propext`, `Classical.choice`, `Quot.sound`
+geprüft. Die Zahl der `sorry` bleibt bei **sieben**, und keiner davon ist von den
+sieben aus erreichbar.
+
+* `weightedLaw_univ` — die Gesamtmasse einer gewichteten Verteilung ist die Masse
+  der Dichte und hängt nicht davon ab, zu welcher Zeit die Koordinate gelesen
+  wird.
+* `weightedLaw_const_mul` — die gewichtete Verteilung ist positiv homogen im
+  Gewicht.
+* `propagatesAgreement_of_unique_onedim` — **`lem:propagation`**.
+* `subsingleton_mpSolutions_of_unique_onedim` — **`thm:absuniq`(b)**.
+* `Clock.IsShiftInvariant` und `Clock.setIntegral_shift` — der Wechsel der
+  Veränderlichen `v = r + u` auf einem Kompensationsfenster.
+* `isShiftSystem_mpFamily` — **`ex:shiftXA`**, der erste Zeuge dafür, daß
+  `IsShiftSystem` von etwas anderem als einer Trivialität bewohnt ist.
+
+#### Was der Beweis wirklich gekostet hat, und wo
+
+Der Beweis des Manuskripts ist ein Absatz mit vier Schritten; in Lean sind drei
+davon je eine Zeile und der vierte ist der ganze Rest.
+
+* **Der Restart selbst: eine Zeile.** `restart_canonical hS (hNsol P hP)
+  (hNint P hP) s (hadd s) hZ'0 hZ'b hZ'm`. Das ist die Ernte des Vorlaufs.
+* **`π 0 ∘ θ s = π s`: eine Zeile**, `S.eval_comp`, und die allgemeinere Form
+  `π u ∘ θ s = π (s + u)` ist dieselbe Zeile. Sie erledigt die Anfangsverteilung
+  *und* den Schluß, weil `hread` sie für **alle** `u` zugleich beweist.
+* **Der Anschluß an `eq:absonedim`: eine Zeile**, `honedim s _ _ …`.
+* **Die Normierung: alles übrige.** Das Manuskript sagt „nimm `h ≡ 1`, setze
+  `c = E^P[Z] = E^Q[Z]`, behandle `c = 0` gesondert und ersetze `Z` durch
+  `Z/c`". Das sind in Lean rund vierzig Zeilen, und sie zerfallen in genau die
+  drei genannten Stücke:
+
+  * *„nimm `h ≡ 1`"* ist `weightedLaw_univ`, an die Voraussetzung angelegt. Daß
+    die Massengleichheit **aus** der Voraussetzung folgt und nicht eigens
+    verlangt werden muß, liegt daran, daß `PropagatesAgreement` Maße vergleicht
+    und nicht Integrale: `hagree` an `Set.univ` ist die Aussage über `h ≡ 1`,
+    ohne daß eine Testfunktion vorkommt. Das ist der erste Ertrag der
+    Formulierungsentscheidung des Vorvorlaufs.
+  * *„`c = 0` gesondert"* ist `Measure.measure_univ_eq_zero` auf der Dichte:
+    verschwindet die Gesamtmasse, so ist `P.withDensity (ofReal ∘ Z)` **das
+    Nullmaß**, nicht bloß fast sicher null, und beide Seiten sind `0`. Das
+    Manuskript argumentiert über „`Z = 0` `P`- und `Q`-f.s."; über die Dichte ist
+    es kürzer und braucht keine f.s.-Aussage.
+  * *„ersetze `Z` durch `Z/c`"* ist `weightedLaw_const_mul`, also
+    `withDensity_smul` gefolgt von `Measure.map_smul`. Das Zurückmultiplizieren
+    am Ende geht **nicht** über eine Kürzungsregel für `•` auf Maßen — die ich
+    nicht belegen konnte —, sondern punktweise: `Measure.ext`, dann
+    `ENNReal.ofReal a * (ENNReal.ofReal a⁻¹ * ·)` auf beide Seiten und
+    `ENNReal.ofReal_mul` rückwärts.
+
+**Der Befund daraus, und er ist ein Meßwert für das Manuskript:** die einzige
+Stelle des Beweises, die in Lean spürbar teurer ist als auf Papier, ist die
+Normierung — und sie ist auf Papier ein Halbsatz. Alles, was das Manuskript als
+Arbeit ausweist (der Restart, die Verschiebungsidentität, die Anwendung von
+`eq:absonedim`), ist hier je eine Zeile. Das ist die Umkehrung des üblichen
+Verhältnisses und liegt daran, daß der Vorlauf `restart` **ohne** die Normierung
+`E^P[Z] = 1` bewiesen hat: hätte `restart` sie verlangt, so stünde dieselbe
+Rechnung dort *und* hier.
+
+#### Die Voraussetzungen, und welche davon (T4) ist
+
+`PropagatesAgreement` lebt über `[Preorder ι] [OrderBot ι]`; der Restart über
+`[AddCommMonoid ι] [AddLeftMono ι]`. Die Brücke braucht drei Verträglichkeiten,
+und jede ist benannt und wird genau einmal verbraucht:
+
+* `hbot : (⊥ : ι) = 0` — die Anfangszeit von `PropagatesAgreement` und das
+  neutrale Element der Verschiebung sind derselbe Punkt. Ohne sie ist
+  `π ⊥ ∘ θ s = π s` nicht einmal hinschreibbar.
+* `hadd : ∀ r u, r ≤ r + u` — das ist `restart`s eigene Voraussetzung, wörtlich
+  durchgereicht.
+* `hsub : ∀ s t, s ≤ t → ∃ u, t = s + u` — **das ist (T4)**, und es steht an
+  genau einer Stelle: in der letzten Zeile, um die Zeit zu benennen, an der das
+  verschobene Problem gelesen wird. Alles davor gilt für ein `t`, das keine
+  Verschiebung von `s` ist; es ist die *Konklusion*, die dann von der falschen
+  Zeit spräche.
+
+Für `ι = ℝ≥0` sind alle drei wahr und billig. Sie sind bewußt als Hypothesen und
+nicht als Typklassen geführt: `OrderedAddCommMonoid` mit `⊥ = 0` gibt `hbot` und
+`hadd`, aber `hsub` ist eine echte Zusatzbedingung (sie ist falsch für `ι = ℤ`
+mit `⊥` künstlich angehängt), und sie zusammenzufassen würde die Stelle
+verstecken, an der (T4) sitzt.
+
+**Die Integrierbarkeitsvorgabe wird getragen, nicht bewiesen** — `hNint`, daß
+jede Testprozeßfamilie längs jedes Elements der Menge integrierbar ist. Das ist
+wörtlich der Vorbehalt, den auch das Manuskript führt („subject to the
+integrability provisos of Lemmas 4.3 and 4.5"), und er ist unvermeidlich, weil
+Mathlibs `Martingale` keine Integrierbarkeit enthält.
+
+#### `thm:absuniq`(b), und was (T2a) wirklich kostet
+
+`subsingleton_mpSolutions_of_unique_onedim` ist
+`propagatesAgreement_of_unique_onedim` gefolgt von
+`subsingleton_of_propagatesAgreement`, und dazwischen steht nichts. Die
+Voraussetzung `Measurable (π t)` muß nicht eigens gestellt werden — sie folgt aus
+der Adaptiertheit `hadapt u u le_rfl`.
+
+Die lineare Ordnung (T2a) steht in der Signatur dieser einen Aussage und in
+keiner anderen des Meilensteins. Verbraucht wird sie in
+`measure_biInter_eq_of_propagatesAgreement`, dem Sortierschritt, und
+`propagatesAgreement_of_unique_onedim` selbst kommt mit der Halbordnung aus. Das
+ist die Aufteilung, die das Manuskript in der Überschrift von `thm:absuniq`
+ankündigt („(T0) + (T4), and (T2a) for (b)"), und sie ist jetzt in den Signaturen
+nachprüfbar und nicht bloß behauptet.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf **frisch geholt**:
+`fe17e590176eea00b6912e09ed52280cc0d60128` (der Vorlauf stand auf
+`7d22123e148c78424d2bd4a7bc78f790e6ba45cf`).
+
+Alle in diesem Lauf neu benutzten Namen sind gegen v4.33.1 **übersetzt** und
+gegen master nachgeprüft; keiner ist `deprecated`:
+
+* `withDensity_smul` — `MeasureTheory/Measure/WithDensity.lean:122`, master
+  Datei und Zeile unverändert.
+* `MeasureTheory.Measure.map_smul` — `Measure/Map.lean:128`, master `:142`.
+* `Measurable.ennreal_ofReal` — `Constructions/BorelSpace/Real.lean:183`, master
+  unverändert.
+* `ofReal_integral_eq_lintegral_ofReal` — `Integral/Bochner/Basic.lean:702`,
+  master `:734`.
+
+**Zwei Dateiumzüge, und sie sind der Fund des Tages für Teil D.** Beide Namen
+existieren weiter und heißen weiter so, aber sie stehen auf master **in einer
+anderen Datei**:
+
+* `MeasureTheory.Measure.measure_univ_eq_zero` — v4.33.1
+  `Measure/MeasureSpace.lean:1276`, master
+  **`Measure/CompleteLattice.lean:226`**.
+* `MeasureTheory.Measure.smul_apply` — v4.33.1 `Measure/MeasureSpace.lean:949`,
+  master **`Measure/Module.lean:120`**.
+
+`MeasureSpace.lean` wird also aufgeteilt. Das ist kein Bruch für uns — wir binden
+an v4.33.1, und der Name entscheidet —, aber es ist genau die Sorte Veränderung,
+gegen die Teil D prüft: eine Roadmap, die auf `Measure/MeasureSpace.lean` als
+Fundort zeigt, zeigt für einen master-Leser ins Leere. **Regel, die daraus
+folgt und die schon dastand, hier aber zum ersten Mal an einem Umzug und nicht an
+einer Umbenennung belegt ist:** im Beleg trägt der **Name**, die Datei ist
+Beiwerk. Die Angabe „Datei und Zeile" ist eine Bequemlichkeit für den Leser und
+kein Teil der Aussage.
+
+**Die maschinelle Prüfung ist mitgelaufen und ist sauber.**
+`scripts/check_citations.py` gegen den frisch geholten Stand: 1250 geprüfte
+Namen, davon 801 auf beiden Ständen, **0 auf v4.33.1 und nicht mehr auf master**,
+17 nur auf master (die bewußt gegen master geschriebenen `IsCadlag`-Zitate von
+`SkorokhodSpace`), ein `deprecated` — `Subgroup.isClosed_of_discrete`, seit
+Wochen dokumentiert und in `SkorokhodSpace/README.md` mit beiden Namen und
+beiden Hypothesenbündeln geführt. Von 85 zitierten Dateipfaden ist einer
+auffällig, `Mathlib/Topology/Order/Cadlag.lean`, und auch der ist der bekannte
+Fall. **Es ist damit der erste Lauf, in dem die Zitatprüfung nichts Neues
+findet**, und das ist ein Ergebnis: die beiden Dateiumzüge oben hat sie nicht
+gemeldet, weil sie auf Namen prüft und nicht auf Fundorte — genau so, wie es
+gedacht ist, und genau deshalb muß der Fundort im Text Beiwerk bleiben.
+
+**Ein Negativbefund, geprüft und stehengeblieben: Mathlib hat keine
+Kürzungsregel für das Skalieren von Maßen.** Gesucht wurde nach der Aussage
+`c • μ = c • ν ↔ μ = ν` für `c ≠ 0`, `c ≠ ⊤` in
+`Mathlib/MeasureTheory/Measure/`; gesucht auf beiden Ständen nach
+`smul_right_injective`, `smul_left_cancel`, `smul_right_inj` und
+`smul_eq_smul_iff`, null Treffer. Vorhanden sind `Measure.smul_apply` und die Rechenregeln in
+`ℝ≥0∞`, also geht es punktweise über `Measure.ext` — drei Zeilen statt einer.
+Das ist die neunte Lücke für `TODO.md` Punkt 8, falls sie je gebaut wird; sie ist
+zu klein, um dafür einen Meilenstein zu öffnen, und steht deshalb hier und nicht
+in einer Roadmap. **Eingetragen ist sie trotzdem** — als `measure-smul-cancel`
+in `scripts/check_negatives.py`, damit sie von jetzt an bei jedem Lauf
+maschinell gegen master nachgeprüft wird, statt in einem Laufbericht zu
+versanden. Das ist der Punkt der Regel „jede Negativaussage ist ein Versprechen
+an einen Leser": ein Versprechen, das nur in einem Bericht steht, prüft niemand
+nach.
+
+`scripts/check_negatives.py` ist im übrigen ganz durchgelaufen: siebzehn
+Behauptungen, und keine ist widerlegt. Die einzigen Treffer sind die bekannten —
+`cadlag` und `IsCadlag` auf master, wo `SkorokhodSpace` sie bewußt zitiert; zwei
+Treffer für `eLpNorm_iSup` und zwei für „partial differential equation" in
+`Sobolev.lean` und `LaxMilgram.lean`, beide ohne Bezug zur Behauptung.
+
+#### Zwei Korrekturen an der Roadmap, und eine davon ist ein Befund gegen das Manuskript
+
+Beim Suchen nach dem Zeugen für `IsShiftSystem` — dem nächsten Punkt der Liste —
+war zuerst zu klären, was Verschiebungsinvarianz einer Uhr eigentlich heißt.
+Dabei sind zwei Dinge herausgekommen, und das zweite ist mehr als eine
+Korrektur.
+
+**Erstens: die Roadmap hatte Bild und Urbild vertauscht.** Meilenstein 1 nannte
+`Clock.IsShiftInvariant q` mit der Festsetzung `q ((r + ·) ⁻¹' B) = q B`. Das
+Manuskript schreibt in `def:clock` `q(r + B) = q(B)`, also die **Bild**form, und
+die Urbildform ist nicht bloß eine andere Schreibweise, sondern **falsch an den
+eigenen Beispielen der Roadmap**: für das Lebesguemaß auf `[0,∞)` mit `r = 2`
+und `B = [0,1]` ist das Urbild leer und `q B = 1`; für das Zählmaß auf `ℕ` mit
+`r = 2` und `B = {0}` ebenso. Die Roadmap behauptete also, ihre beiden
+Standardinstanzen erfüllten eine Bedingung, die keine von beiden erfüllt.
+Berichtigt, mit beiden Gegenbeispielen an der Stelle.
+
+**Zweitens, und das ist der Fund: `ex:shiftXA` braucht (T2a), und seine
+Überschrift führt sie nicht.** Der Beweis substituiert `v = r + u` und setzt
+dabei `r + ⟨0,t⟩ = ⟨r, r+t⟩`. Diese Gleichheit verlangt, daß jedes `v` mit
+`v ≤ r+t` und `¬(v ≤ r)` schon `r ≤ v` erfüllt — eine **Totalitätsbedingung**,
+die aus (T4) nicht folgt. Der Zeuge dagegen ist `ex:clocks`(iv), also ein
+Beispiel des Manuskripts selbst: über `ℝ₊²` mit dem Lebesguemaß, `f = 0` und
+`g ≡ 1` ist `Y t ω = -t₁t₂`, und `eq:shiftstable` verlangt
+`κ ω = r₁t₂ + t₁r₂` — eine Größe, die von `t` abhängt, während `κ` es nach
+`def:shiftstable` nicht darf. Für `r ≠ 0` gibt es also kein `κ`.
+
+**Die Unterscheidung, an der es liegt, und sie ist der eigentliche Inhalt:**
+Verschiebungsinvarianz des **Maßes** (`q(r+B) = q(B)`, für `ℝ₊²` wahr) und
+Schiftstabilität der **Familie** (`eq:shiftstable`) fallen über einer
+Halbordnung auseinander. Das Manuskript nennt `ex:clocks`(iv) „shift
+invariant" — zu Recht — und schließt daraus in `rem:absuniqgain`(ii), für
+`𝕏_A` versage das Schiftsystem nie. Das gilt unter (T2a) und nicht darunter.
+Betroffen ist dadurch `thm:absuniq`(a), dessen Überschrift (T2a) ausdrücklich
+nur für (b) führt; **nicht** betroffen ist `prop:uniqfromprop`, das ohne
+Schiftsystem auskommt. Die Zeile in `rem:uniqnotmarkov`, daß die
+Markoveigenschaft ein Schiftsystem braucht und die Eindeutigkeit nicht, bekommt
+damit eine zweite Lesart: über einer Halbordnung ist der Unterschied nicht
+bloß begrifflich, sondern der zwischen wahr und falsch.
+
+Der Befund steht ausgeschrieben unter „Offene Auffälligkeiten"; die Roadmap
+trägt die Bedingung seit diesem Lauf an zwei Stellen, bei `Clock.interval_add`
+in Meilenstein 1 und beim Akzeptanzbeispiel zu `ex:shiftXA` in Meilenstein 5.
+Das Manuskript ist nicht angefaßt.
+
+**Und daraus ist `isShiftSystem_mpFamily` geworden, im selben Lauf.** Der Befund
+hat die Aussage nicht nur berichtigt, sondern **allgemeiner** gemacht, und das
+ist der unerwartete Teil. Der naheliegende Schluß aus dem Gegenbeispiel wäre
+gewesen, `[LinearOrder ι]` in die Signatur zu schreiben. Das ist nicht nötig:
+die Totalität wird **allein** beim Wechsel der Veränderlichen gebraucht, also
+läßt sie sich in den Uhrenbegriff sperren. Genommen ist deshalb
+
+```
+structure Clock.IsShiftInvariant (Q : Clock ι) (c : Clock.Conv) : Prop where
+  measurable_add : ∀ r, Measurable[Q.measurableSpace, Q.measurableSpace] (r + ·)
+  map_interval : ∀ r s t,
+    (Q.q.restrict (Q.interval c s t)).map (r + ·)
+      = Q.q.restrict (Q.interval c (r + s) (r + t))
+```
+
+und `isShiftSystem_mpFamily` steht **über einem Präorder**. Die Halbordnung
+scheitert dann nicht am Satz, sondern an seiner Voraussetzung — was der richtige
+Ort dafür ist, weil dort auch die Gegenbeispiele hingehören.
+
+`Clock.setIntegral_shift`, der Wechsel der Veränderlichen, ist zwei Zeilen: ein
+`conv_rhs => rw [← hsi.map_interval]` und `integral_map`. Das ist die ganze
+Ernte dieser Formulierung, und sie ist der Grund, aus dem die Bildform
+`q ((r+·) '' B) = q B` des Manuskripts hier **nicht** die richtige Gestalt ist:
+aus ihr folgt die Maßgleichheit der eingeschränkten Maße erst über einen
+Zwischenschritt, den man sich sparen kann.
+
+**Was `isShiftSystem_mpFamily` nicht beweist und wo das steht:** die
+Adaptiertheit der Testprozesse (`hY`) ist Voraussetzung und nicht Konklusion.
+Sie ist eine Aussage über Filtration und Uhr allein, sie gehört zu
+`Clock.IsProgressive`, und sie hier mitzubeweisen hätte den Satz mit einer
+Sache vermengt, die mit der Verschiebung nichts zu tun hat. Ebenso `hpath`, die
+punktweise Meßbarkeit `Measurable[q] (fun u ↦ g (π u f))`: ohne sie ist **jeder**
+der beiden Kompensatoren der Müllwert `0` und die Identität falsch — es ist
+dieselbe Stelle, an der schon `mpFamily_sub_of_measurable_path` sie verlangt.
+
+**Was jetzt fehlt, und es ist eine Leerheitsprobe, kein Satz:** ein Zeuge von
+`Clock.IsShiftInvariant`, der nicht das Nullmaß ist. `lebesgueClock` ist der
+erste, und über `[0,∞)` ist `interval q .optional s t` gerade `Set.Ioc s t`, die
+Aussage also Translationsinvarianz des Lebesguemaßes plus
+`Set.image_const_add_Ioc` (`Mathlib/Algebra/Order/Interval/Set/Monoid.lean:110`,
+auf master dieselbe Datei und Zeile). Solange der nicht steht, ist
+`isShiftSystem_mpFamily` bewiesen und der Meilenstein trotzdem nicht gegen
+Leerheit gesichert — das ist die Unterscheidung, auf die es hier ankommt, und
+sie ist in der Roadmap als eigener Punkt von Meilenstein 1 vermerkt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**`thm:absuniq`(a), die Markoveigenschaft.** Unverändert ohne Deklaration, und
+sie ist jetzt die einzige der fünf Aussagen von Meilenstein 6, die den
+Hauptstrang trägt. Ihr Gewicht ist `Z₁ = 1_{F₀}/P(F₀)` gegen
+`Z₂ = E[1_{F₀} | X r]/P(F₀)`, und `Z₁` ist **kein** Funktional des Pfades — das
+ist der Fall, für den `restart` in der allgemeinen Fassung (mit `X`, nicht
+`restart_canonical`) gebaut ist, und der Grund, aus dem beide Fassungen
+dastehen.
+
+**Ein nichttrivialer Zeuge von `Clock.IsShiftInvariant`.** Der Zeuge von
+`IsShiftSystem` steht seit diesem Lauf (`isShiftSystem_mpFamily`), aber er steht
+über einer Uhrenbedingung, die bislang nur das Nullmaß erfüllt, soweit bewiesen
+ist. Damit ist die Leerheitsfrage einen Schritt weitergeschoben und nicht
+beantwortet; sie ist Vorschlag 0 unten und der kürzeste Punkt der Liste.
+
+**Teil C.5a.** Geparkt, wie angeordnet; die elf offenen Aussagen sind unverändert
+elf.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`Clock.isShiftInvariant_lebesgueClock` — die Leerheitsprobe.** **Worauf sie
+   ruht:** `lebesgueClock`, das in der Datei steht, und über `[0,∞)` die
+   Identifikation `Q.interval q .optional s t = Set.Ioc s t`, die in
+   `lebesgueClock_interval_optional_eq` schon bewiesen ist. Dann ist die Aussage
+   Translationsinvarianz des Lebesguemaßes plus `Set.image_const_add_Ioc`.
+   **Warum zuerst:** seit diesem Lauf steht die ganze Eindeutigkeitshälfte von
+   Meilenstein 6 über `IsShiftSystem`, und `isShiftSystem_mpFamily` steht über
+   `Clock.IsShiftInvariant` — von dem noch **kein** nichttrivialer Zeuge
+   existiert. Das Nullmaß erfüllt die Bedingung, also ist sie nicht leer, aber
+   damit ist nichts gesichert. Ein Meilenstein, dessen Hauptsatz bewiesen ist und
+   dessen tragende Voraussetzung keinen Zeugen hat, ist schlechter dran als
+   einer, dessen Hauptsatz noch fehlt: im ersten Fall kann man sich täuschen.
+   **Prüfstein:** `hbot`, also `(⊥ : ℝ≥0) = 0`, und `hsub`, also
+   `s ≤ t → ∃ u, t = s + u` — beide an `ℝ≥0` einzulösen. Sie sind der Anschluß
+   zwischen Meilenstein 5 und dem, was dieser Lauf gebaut hat, und wenn eine von
+   ihnen an der Uhr scheitert, ist das der wertvollste Fund.
+
+1. **`isMarkov_of_unique_onedim` — `thm:absuniq`(a).** **Worauf sie ruht:**
+   `restart` in der allgemeinen Fassung, `condExp` und die Beobachtung des
+   Manuskripts, daß `Z₂` sogar `σ(X r)`-meßbar ist. **Warum danach:** sie ist die
+   einzige Aussage des Meilensteins, die die *zweistufige* Fassung von `restart`
+   wirklich braucht, und damit die einzige Probe darauf, daß `restart` mit
+   allgemeinem `X` nicht umsonst allgemeiner ist. **Prüfstein:** `P(F₀) = 0`, das
+   das Manuskript durch die Voraussetzung `P(F₀) > 0` abfängt; nach der
+   Abtrennung von `hZ1` aus `restart` ist zu prüfen, ob man statt dessen mit
+   `Z = 1_{F₀}` unnormiert arbeiten und den entarteten Fall ganz vermeiden kann —
+   in `lem:propagation` hat genau das getragen, und wenn es hier auch trägt, ist
+   die Abtrennung zum zweiten Mal keine Kosmetik. **Und der Befund dieses Laufs
+   berührt sie:** `thm:absuniq`(a) führt \eqref{T2a} nicht, ruht aber über das
+   Schiftsystem auf der Totalität; in Lean verschwindet das in
+   `Clock.IsShiftInvariant`, und der Satz selbst darf über einem Präorder
+   stehen. Das ist zu prüfen und nicht zu übernehmen.
+
+2. **`eq_of_forall_onedim`.** Danach, und es ist Buchhaltung:
+   `measure_biInter_eq_of_propagatesAgreement` gibt die endlichdimensionalen
+   Verteilungen schon her, die Aussage ist deren Umformulierung ohne den Schritt
+   zur Gleichheit der Maße, also **ohne** `hgen`. Sie ist es wert, eigens zu
+   stehen, weil sie die einzige Aussage des Meilensteins ist, die ohne eine
+   Voraussetzung über die σ-Algebra des Pfadraums auskommt.

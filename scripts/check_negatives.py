@@ -83,6 +83,13 @@ CLAIMS = [
      'ihr Beispiel nichts zu übernehmen.',
      'hawkes|selfExciting|self-exciting|PointProcess|pointProcess'
      '|countingProcess|compensator', 'Mathlib/'),
+    ('measure-smul-cancel', 'Facts/INVENTAR.md, Lauf 2026-09-14 (zweiter)',
+     'Mathlib hat keine Kürzungsregel für das Skalieren von Maßen: '
+     '`c • μ = c • ν ↔ μ = ν` für `c ≠ 0`, `c ≠ ⊤` steht nirgends, weder als '
+     'Äquivalenz noch als Injektivität, weshalb `lem:propagation` die '
+     'Normierung punktweise über `Measure.ext` zurücknimmt.',
+     'smul_right_injective|smul_left_cancel|smul_right_inj|smul_eq_smul_iff',
+     'Mathlib/MeasureTheory/Measure/'),
 ]
 
 

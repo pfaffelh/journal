@@ -1,4 +1,4 @@
-# Negativaussagen gegen `upstream/master` `182c4c30cdc58b70f2ba77d56f31b1c4048e9522`
+# Negativaussagen gegen `upstream/master` `fe17e590176eea00b6912e09ed52280cc0d60128`
 
 ## `cadlag` — SkorokhodSpace/README.md:3
 
@@ -120,5 +120,12 @@ Suche `quantile|generalized inverse|generalised inverse|rightContinuousInverse|m
 > Mathlib hat keinen Punktprozeß, keinen Zählprozeß, keinen Kompensator und keinen Hawkes-Prozeß; die pfadabhängige Variante hat daher auch für ihr Beispiel nichts zu übernehmen.
 
 Suche `hawkes|selfExciting|self-exciting|PointProcess|pointProcess|countingProcess|compensator` unter `Mathlib/`: **0 Treffer** in 0 Dateien.
+
+
+## `measure-smul-cancel` — Facts/INVENTAR.md, Lauf 2026-09-14 (zweiter)
+
+> Mathlib hat keine Kürzungsregel für das Skalieren von Maßen: `c • μ = c • ν ↔ μ = ν` für `c ≠ 0`, `c ≠ ⊤` steht nirgends, weder als Äquivalenz noch als Injektivität, weshalb `lem:propagation` die Normierung punktweise über `Measure.ext` zurücknimmt.
+
+Suche `smul_right_injective|smul_left_cancel|smul_right_inj|smul_eq_smul_iff` unter `Mathlib/MeasureTheory/Measure/`: **0 Treffer** in 0 Dateien.
 
 

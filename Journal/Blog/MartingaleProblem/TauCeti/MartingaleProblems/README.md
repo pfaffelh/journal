@@ -147,8 +147,35 @@ Lebesgue measure. Fix `[Preorder ι]`.
   together with `Clock.interval_eq_of_isAtomless`: the two conventions give the
   same measure of every interval exactly when the clock is atomless.
 * For `[AddMonoid ι]` with a compatible order, `Clock.IsShiftInvariant q`,
-  defined as `q ((r + ·) ⁻¹' B) = q B`, and `Clock.interval_add` expressing
-  `interval q c (r + s) (r + t) = (r + ·) '' interval q c s t` up to a null set.
+  defined as `q ((r + ·) '' B) = q B` for measurable `B` — the **image** of `B`
+  under the shift, not its preimage. The preimage form `q ((r + ·) ⁻¹' B) = q B`
+  is a different and false condition: for Lebesgue measure on `[0,∞)`, `r = 2`
+  and `B = [0,1]` the preimage is empty while `q B = 1`, and for counting
+  measure on `ℕ`, `r = 2` and `B = {0}` likewise. The image form is what the
+  manuscript's `def:clock` states and what the instances below satisfy.
+* `Clock.interval_add`, expressing
+  `interval q c (r + s) (r + t) = (r + ·) '' interval q c s t` up to a null set,
+  **under (T2a)**. The linear order is not decoration: over
+  `ι = [0,∞)^2` with the product order the identity is false on a set of
+  positive measure, because a `v` with `v ≤ r + t` and `¬ (v ≤ r)` need not
+  satisfy `r ≤ v` and so need not be of the form `r + u`. With `r = (1,0)`,
+  `s = 0`, `t = (2,2)` the point `(0,1)` lies in the left hand side and not in
+  the right. What the proof needs is exactly that `¬ (v ≤ r)` implies `r ≤ v`,
+  which over a linear order is totality and over a product order is false.
+
+  The form the shift system consumes is neither of the two above but the
+  identity of measures
+  `(q.restrict (interval q c s t)).map (r + ·) = q.restrict (interval q c (r+s) (r+t))`,
+  which is what makes the substitution `v = r + u` a single application of
+  `MeasureTheory.integral_map`; that is `Clock.setIntegral_shift`. State it that
+  way, and the order condition sits in the clock and nowhere else.
+* `Clock.isShiftInvariant_lebesgueClock` and the counting measure on `ℕ`: the
+  two instances of `Clock.IsShiftInvariant`, and the two that keep the shift
+  system of Milestone 5 from resting on an uninhabited condition. Over `[0,∞)`
+  the window `interval q .optional s t` is `Set.Ioc s t` and the identity is
+  translation invariance of Lebesgue measure together with
+  `Set.image_const_add_Ioc`
+  (`Mathlib/Algebra/Order/Interval/Set/Monoid.lean:110`).
 * The instances: counting measure on `ℕ`, Lebesgue measure on `[0,∞)`,
   `∑ n, δ (n : ℝ)` on `[0,∞)`, and every locally finite Borel measure on a
   closed subset of `ℝ`.
@@ -6188,8 +6215,18 @@ Gruppe A auf demselben Raum, und was fehlt, ist allein ihr Zusammenbau.
   `𝓧° 0 = 𝓧°` such that every `Ŷ ∈ 𝓧° r` satisfies
   `Ŷ t ∘ θ r = Y (r + t) - Y r + κ` for some `Y ∈ 𝓧°` and some `𝓕° r`-measurable
   and bounded `κ`, and such that `θ r` is measurable from the past at `r + s` to
-  the past at `s`. Prove that `mpFamily A q c` carries a shift system when the
-  clock is shift invariant, with `κ` the compensator up to `r`.
+  the past at `s`.
+* `isShiftSystem_mpFamily`: `mpFamily A q c π` carries a shift system, with the
+  shifted problem equal to the original one and `κ = f ∘ π r`. It rests on
+  `Clock.IsShiftInvariant` of Milestone 1 through the single change of variables
+  `Clock.setIntegral_shift`, on `⊥ = 0`, on the pointwise path measurability
+  `Measurable[q] (fun u ↦ g (π u f))` that keeps both compensators away from the
+  junk value `0`, and on the adaptedness of the test processes, which is a
+  statement about the filtration and the clock and belongs with
+  `Clock.IsProgressive` rather than here. It needs **no** order beyond a
+  preorder: the totality that `ex:shiftXA` uses sits inside
+  `Clock.IsShiftInvariant` and nowhere else, which is the point of stating the
+  clock condition as the identity of windows rather than as `q (r + B) = q B`.
 
   The two extra clauses are the ones a first draft of this milestone left out.
   The measurability clause is `\JS`, III.2.39(i); the manuscript's proof of
@@ -6247,9 +6284,20 @@ Gruppe A auf demselben Raum, und was fehlt, ist allein ihr Zusammenbau.
 **Acceptance examples.**
 
 * **The shifted problem of the manuscript's `ex:shiftXA`.** For the family
-  `mpFamily A q c X` with a shift invariant clock, the shifted family `𝓧° r` is
-  again `mpFamily A q c X` up to the `𝓕° r`-measurable constant `κ` = the
-  compensator up to `r`. Instantiated at the Poisson process of Milestone 4 and
+  `mpFamily A q c X` with a shift invariant clock **over a linearly ordered
+  index**, the shifted family `𝓧° r` is again `mpFamily A q c X` up to the
+  `𝓕° r`-measurable constant `κ` = the compensator up to `r`.
+
+  The linear order belongs in that sentence, and the multiparameter clock is the
+  instance that shows it. Over `ι = [0,∞)^2` with Lebesgue measure, `f = 0` and
+  `g = 1`, the test process is `Y t ω = - t₁ t₂`, and the shift identity
+  `Y' t (θ r ω) = Y (r + t) ω - Y r ω + κ ω` reads
+  `t₁ t₂ = (r₁ + t₁)(r₂ + t₂) - r₁ r₂ - κ ω`, that is
+  `κ ω = r₁ t₂ + t₁ r₂`. The right hand side depends on `t` and `κ` does not, so
+  no `κ` exists unless `r = 0`. The step that fails is the substitution
+  `v = r + u` of `ex:shiftXA`, which identifies `r + ⟨0,t⟩` with `⟨r, r+t⟩`; see
+  `Clock.interval_add` in Milestone 1 for what that identification costs.
+  Instantiated at the Poisson process of Milestone 4 and
   `r = 1`: `θ 1` is the time shift, and `restart` says that under `Z • P` the
   process `N (1 + ·) - N 1` is again a Poisson process. That the constant `κ`
   cannot be dropped is visible there — `N (1 + t)` is not a martingale after
@@ -6304,6 +6352,11 @@ of determining sets and of `restart`.
   `weightedLaw_one` and `weightedLaw_indicator_apply`. It is written as
   `restart` writes the reweighting, so that the initial law of a restarted
   solution is `weightedLaw π P Z r` on the nose.
+* `weightedLaw_univ`, that the total mass of a weighted law is the mass of the
+  density and so does not depend on the time at which the coordinate is read;
+  and `weightedLaw_const_mul`, that the weighted law is positively homogeneous
+  in the weight. These two are what the normalisation of `lem:propagation`
+  consists of: the first is "take `h ≡ 1`", the second is "divide by `E[Z]`".
 * `measure_cylinder_inter_eq_of_propagatesAgreement`: the induction over a
   chain, with the top coordinate's set a separate argument. That separation is
   the content of the step -- the induction hypothesis is used with the top set
@@ -6328,26 +6381,33 @@ Hypotheses of the Markov half: a shift system, a determining set for every
 problems.
 
 * `propagatesAgreement_of_unique_onedim`: under a shift system and uniqueness of
-  the one dimensional distributions of every shifted problem,
-  `mpSolutions 𝓧° 𝓕°` propagates agreement. This is `lem:propagation`, it is the
-  first statement of the milestone that is Markovian, and it is what turns the
-  group above into `thm:absuniq`(b) by one application of
-  `eq_of_propagatesAgreement`. It rests on `restart_canonical`, on
-  `Shift.eval_comp` for `π 0 ∘ θ s = π s`, and on the normalisation `Z / E[Z]`,
-  which needs the degenerate case `E[Z] = 0` treated separately.
+  the one dimensional distributions of every shifted problem, a set of
+  probability solutions of `𝓧° 0` propagates agreement. This is
+  `lem:propagation`, it is the first statement of the milestone that is
+  Markovian, and it is what turns the group above into `thm:absuniq`(b) by one
+  application of `eq_of_propagatesAgreement`. It rests on `restart_canonical`,
+  on `Shift.eval_comp` for `π 0 ∘ θ s = π s`, and on the normalisation
+  `Z / E[Z]`, which needs the degenerate case `E[Z] = 0` treated separately.
+
+  Three hypotheses on the index replace (T4): `⊥ = 0`, which is what makes
+  `π ⊥ ∘ θ s = π s`; `r ≤ r + u`, which is `restart`'s own; and `s ≤ t` yields
+  `u` with `t = s + u`, which is (T4) itself and is used exactly once, to name
+  the time at which the shifted problem is read. The integrability proviso of
+  `lem:restart` is carried as a hypothesis on the members of the set, as the
+  manuscript carries it.
 
   A determining set is **not** among its inputs. It was, as long as `restart`
   was stated after the manuscript, whose proof identifies the conditional
   expectation through `def:canonical`(ii); the proof of `restart` in Milestone 5
   tests against every set of `𝓕° s` instead, so `𝓩°` never enters.
-
-  With `restart_canonical` proved, this is the one statement between the
-  Markov free group above and `thm:absuniq`(b).
 * `isMarkov_of_unique_onedim`: every solution is Markov, in general time
   inhomogeneously — for `f` bounded measurable and `r, t : ι`,
   `𝔼[f (X (r + t)) | 𝓖 r] =ᵐ 𝔼[f (X (r + t)) | X r]`.
 * `subsingleton_mpSolutions_of_unique_onedim`: when `ι` is linearly ordered, the
-  set of solutions with a given initial law has at most one element.
+  set of solutions with a given initial law has at most one element. This is
+  `thm:absuniq`(b), and it is `propagatesAgreement_of_unique_onedim` composed
+  with `subsingleton_of_propagatesAgreement`; the linear order is (T2a) and is
+  spent only in the sorting step `measure_biInter_eq_of_propagatesAgreement`.
 * `eq_of_forall_onedim`: two solutions with the same initial law have the same
   finite dimensional distributions.
 * The classical statement, as an instance: for `E` metrizable and
