@@ -444,6 +444,61 @@ sich Mathlibs Aufkreuzungs-API über einen beliebigen linear geordneten Index
 ziehen läßt. **Nicht der ganze Meilenstein 9 ist offen:** optionales Sampling in
 stetiger Zeit und die Stabilität unter Stoppen stehen seit dem 2026-09-10.
 
+**Nachtrag 2026-09-15 zu Meilenstein 9: was im brownian-motion-Repo wirklich
+steht, nachgesehen und gezählt.** Die Roadmap nennt das Repo bisher pauschal und
+mit einem Pfadverweis, der auf dem ausgecheckten Stand nicht stimmt. Richtig ist:
+
+* Der **ausgecheckte Branch ist `paper`** (`55dde5d`, 2026-07-31) und trägt von
+  alldem **nichts** — `StochasticIntegral/Cadlag.lean` hat dort 32 Zeilen,
+  `DoobLp.lean` 48 Zeilen mit vier `sorry`, und ein Verzeichnis
+  `Quasimartingale/` gibt es nicht. Auch `origin/master` (`eaa4391`,
+  2026-06-09) hat es nicht.
+* Der **lokale Branch `master`** (`314f04a`, 2026-08-01) hat es. Drei Dateien,
+  Apache-2.0, Copyright Rémy Degenne, Header in jeder:
+  - `BrownianMotion/StochasticIntegral/Quasimartingale/Basic.lean` — 54 Zeilen,
+    **0 `sorry`**; `IsRealQuasimartingale` als Adaptiertheit + Integrierbarkeit +
+    beschränkte Variation über `ElementaryPredictableSet`.
+  - `…/Quasimartingale/MaximalInequality.lean` — 895 Zeilen, **0 `sorry`**. Das
+    ist Doobs Maximalungleichung in stetiger Zeit, also der dritte Punkt unseres
+    Gesichts 1, den die Roadmap als „Mathlib has neither" führt.
+  - `…/Quasimartingale/CadlagModification.lean` — 1162 Zeilen, **4 `sorry`**
+    (Zeilen 41, 1002, 1138, 1152). Enthält die ganze Kette: `regularitySet`,
+    `ae_right_limit`, `ae_left_limit`, `measurable_rightLimWithin`,
+    `adapted_rightLimWithin`, `rightContModif`, und dann die Konstruktion
+    `cadlagModif` mit `isCadlag_cadlagModif`, `measurable_cadlagModif`,
+    `adapted_cadlagModif`, `stronglyAdapted_cadlagModif` — **genau die Namen,
+    die unsere Roadmap für Meilenstein 9 vorsieht.**
+* **Der Satz „Modifikation genau dort, wo `t ↦ 𝔼[X t]` rechtsstetig ist", ist
+  dort ausgesprochen und nicht bewiesen:**
+  `cadlagModif_ae_eq_of_continuousWithinAt_integral`, Zeile 1133, `sorry` in
+  1138. Ebenso offen ist `Martingale.isRealQuasimartingale` (Zeile 1148,
+  `sorry` in 1152), die beschränkte Variation eines Martingals. Die Folgerung
+  `Martingale.cadlagModif_ae_eq` ist vier Zeilen und benutzt beide, ist also
+  formal bewiesen und hängt an zwei `sorry`.
+
+**Was daraus folgt.** Der analytische Kern — der monotone Grenzübergang der
+Aufkreuzungen über ganz `D`, den ich als das Risiko von Meilenstein 9 benannt
+hatte — ist dort durchgeführt und nachlesbar. Die Schätzung sinkt damit von
+drei bis fünf auf **zwei bis drei Läufe**. Was dort **nicht** steht und unsere
+Arbeit bleibt: alles ist **reellwertig** (`X : ι → Ω → ℝ`). Unser
+`exists_cadlag_modification_of_isRegularizingClass` braucht die `E`-wertige
+Fassung — für jedes `f` aus einer abzählbaren trennenden Klasse `Φ` das reelle
+`f ∘ X` regularisieren und daraus den `E`-wertigen Pfad zusammensetzen, mit
+`CompactContainment` dafür, daß die Limiten in `E` bleiben. Diese Zusammensetzung
+steht dort nirgends.
+
+**Die Regel bleibt, wie sie ist:** einsehen ja, Copyright-Header erhalten, und
+**nichts übernehmen, bloß weil es dort so steht.** Jeder Beweis wird hier
+selbständig geführt und geprüft. Und weiterhin gilt: **kein Verweis auf das Repo
+in einer Roadmap-Signatur** — die Roadmap darf es als Vorarbeit nennen, wie sie
+es tut, aber keine Aussage darf darauf zeigen.
+
+**Aufgabe für den Lauf, der Meilenstein 9 beginnt:** den Abschnitt zu
+`brownian-motion` in `MartingaleProblems/README.md`, Meilenstein 9, durch die
+obigen Angaben ersetzen — Branch `master` statt des ausgecheckten, die drei
+Dateinamen, die Zeilenzahlen, die vier `sorry` mit ihren Zeilen, und der Satz,
+daß das Reellwertige dort steht und das `E`-Wertige nicht.
+
 **4. Erst danach C.5/G**, in der Gestalt, die unmittelbar darunter steht.
 
 **UMFORMULIERUNG VON C.5/G, vom Nutzer am 2026-09-13 nachts angeordnet.**
