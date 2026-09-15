@@ -1,10 +1,10 @@
 # Task 23 — Status
 
-- **Letzter Lauf (UTC):** 20260915T214110Z
-- **Zustand:** ok
-- **Notiz:** Lauf regulaer beendet
+- **Letzter Lauf (UTC):** 20260915T220303Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** P14sGen6
-- **Laeufe bisher:** 0
+- **Laeufe bisher:** 1
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Task23/PROTOKOLL.md`.
