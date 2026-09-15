@@ -694,11 +694,36 @@ unter dieser Approximation klären.
 Nichts im Manuskript hängt daran — §7 benutzt Lebesgue-Uhren, §7.2 nur
 \eqref{eq:clockadd}.
 
-**Stand 2026-09-15** (Protokoll `Task23/PROTOKOLL.md`, 28 Läufe): Kette,
+**Stand 2026-09-16** (Protokoll `Task23/PROTOKOLL.md`, 29 Läufe): Kette,
 endliche Halbordnung ($\iota=\mathrm p$) und gemischte Uhr sind bewiesen und im
 Manuskript (`prop:atomicdual`, `prop:atomicposet`); die Tabelle oben ist
 insoweit überholt. Offen ist die unendliche Halbordnung ohne (F) und die
-Leiter. Nächstes Lean-Ziel, aus dem achtundzwanzigsten Lauf:
+Leiter. Der neunundzwanzigste Lauf hat gezeigt, daß das explizite Zertifikat
+des sechsten Laufs das **einzige** im Krylow-Raum von $e_{t^*}$ ist
+(Hankel-Normalform, Theorem 28) und auf der Leiter auch bei getrennten Skalen
+explodiert — bei $(\tfrac13,\tfrac12)$ erst ab $n=18$, nach zwölf stabilen
+Stellen. Das LP-Minimum über **alle** Zertifikate der Trunkierung
+(`Task23/ladder_lp.py`, mpmath, 80 Stellen) bleibt dagegen stehen: $18{,}0$
+bei $(\tfrac12,\tfrac13)$ bis $n=18$ (Krylow dort $7\cdot10^9$),
+$11{,}85094912$ bei $(\tfrac13,\tfrac12)$ bis $n=18$ (Krylow $353$). Die
+Vermutung „fundiert $\Rightarrow$ Zertifikat" (Lauf 26) steht damit auf der
+Leiter gemessen, nicht bewiesen. **Nächste Rechnung:** das LP-optimale $T$
+selbst herausgeben (primale Lösung statt nur des Werts) und als
+$T_K+\sum_k\lambda_kD_k$ lesen — Träger der Korrektur, aktive Ungleichungen,
+Konvergenz der $\lambda_k$ in $n$ —, um das beschränkte Zertifikat der Leiter
+als Objekt zu identifizieren; erst dann ist Proposition 19.3 (Ausschöpfung
+unter (F) mit gleichmäßig beschränkten Zertifikaten) auf der Leiter
+beweisbar. Lean-Ziele:
+
+- **`krylovCertificate_unique`** (Roadmap `MartingaleProblems`, Meilenstein 8,
+  eingetragen als `Matrix.krylovCertificate_unique`): für nilpotentes $V$,
+  $\psi_k=(V^{\mathsf T})^ke_t$ und $c_k=\psi_k\cdot\mathbb 1$ hat jedes
+  Zertifikat $T=\sum B_{kl}\psi_k\psi_l^{\mathsf T}$ die Hankelgestalt
+  $B_{kl}=b_{k+l}$, $b_j=0$ für $j<r-1$, $\sum_lb_{k+l}c_l=[k=0]$, und dieses
+  Dreieckssystem ist eindeutig lösbar. Reine endlichdimensionale lineare
+  Algebra (lineare Unabhängigkeit von Krylow-Vektoren, Koeffizientenvergleich);
+  identifiziert das Objekt, das alle 29 Läufe gerechnet haben, und ist die
+  Grundlage für die Lean-Fassung der Spektralform (Theorem 27).
 
 - **`convex_recursion_bound`** — für $x,y:\N\to\R$, $\theta:\N\to(0,1)$ mit
   $x_i=(1-\theta_i)x_{i+1}+\theta_iy_{i+1}$ ($i\ge i_1$), $|y|\le B$ und

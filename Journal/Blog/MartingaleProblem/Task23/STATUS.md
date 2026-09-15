@@ -1,8 +1,8 @@
 # Task 23 — Status
 
 - **Letzter Lauf (UTC):** 20260915T220303Z
-- **Zustand:** laeuft
-- **Notiz:** Lauf gestartet
+- **Zustand:** ok
+- **Notiz:** Lauf regulaer beendet
 - **Host:** P14sGen6
 - **Laeufe bisher:** 1
 

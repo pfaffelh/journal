@@ -6985,6 +6985,36 @@ order.
   third depends on `k + l` only. In the third sum `V` meets the second factor on
   one side and the first on the other, and the free index runs over the full
   range on both; the boundary terms cancel because `c j = 0` for `j ≥ r`.
+* `Matrix.krylovCertificate_unique`: let `V : Matrix n n ℝ` with `V ^ r = 0`,
+  `ψ k = (Vᵀ) ^ k *ᵥ Pi.single t 1` for `k < r` with `ψ (r-1) ≠ 0`, and
+  `c k = ψ k ⬝ᵥ 1`. If `T = ∑ k, ∑ l, B k l • vecMulVec (ψ k) (ψ l)` is symmetric
+  with `T * V = Vᵀ * T` and `T *ᵥ 1 = Pi.single t 1`, then `B k l = b (k + l)`
+  for a `b : ℕ → ℝ` with `b j = 0` for `j < r - 1` and
+  `∑ l, b (k + l) * c l = if k = 0 then 1 else 0` for `k < r`; this triangular
+  system with diagonal `c (r-1) = ψ (r-1) ⬝ᵥ 1` has exactly one solution, and
+  conversely every such `b` gives a `T` with the three properties. Two facts
+  carry it: the `ψ k` are linearly independent (apply `(Vᵀ) ^ (r-1-k₀)` to a
+  vanishing combination with least index `k₀`), so the `vecMulVec (ψ k) (ψ l)`
+  are too and coefficients may be compared in `T * V = Vᵀ * T`, which reads
+  `B (k-1) l = B k (l-1)` and `B 0 (l-1) = 0`; and `c (r-1) ≠ 0` when `t` is
+  the greatest element of the poset and `V s a = if a < s then m a else 0`,
+  because every longest chain ends at `t`. Consequences: the `T` of
+  `Matrix.exists_isSymm_mulVec_one_eq_single` lies in this class (there
+  `i = t`, so `p k = c • ψ (r-1-k)`), hence does not depend on any choice and
+  has vanishing row `0`; and `b j = (-1) ^ j * q j` where
+  `1 / P(c) = ∑ j, q j * c ^ (-j)` is the expansion at `∞` of the reciprocal of
+  the chain polynomial `P(c) = ∑ k, (-c) ^ k * c k = (1 + c • Vᵀ)⁻¹ *ᵥ Pi.single t 1 ⬝ᵥ 1`,
+  which makes `T` the residue at `∞` of
+  `vecMulVec (z c) (z c) / (c * P c)` with `z c = (1 + c • Vᵀ)⁻¹ *ᵥ Pi.single t 1`,
+  and, when `P` has simple zeros `c k`, the real matrix
+  `vecMulVec (Pi.single t 1) (Pi.single t 1) - ∑ k, (-c k / P' (c k)) • vecMulVec (x k) (x k)`
+  with `x k = -(c k)⁻¹ • z (c k)` (Task 23, run 29, Theorems 27 and 28; on a
+  chain `P c = ∏ l, (1 - c * m l)` and this is `Clock.omegaChainPotential`'s
+  certificate). The chain polynomial is the weighted independence polynomial
+  of the incomparability graph evaluated at `-c`; it need not be real-rooted
+  (the ladder `a i < b j ↔ i < j` with `m (a i) = (2/3) ^ i`, `m (b j) = 2 ^ (-j)`
+  has complex zeros already at eight atoms per chain), and `T` is real all the
+  same.
 * `dualityDefect_eq_zero_of_nonneg`: let `α` be a finite partial order,
   `m : α → ℝ` with `0 ≤ m`, and `κ : α → α → ℝ` with `κ a b = - κ b a`. Put
   `Ψ s t = ∑ a ∈ Finset.Iio s, m a * κ a t`. If

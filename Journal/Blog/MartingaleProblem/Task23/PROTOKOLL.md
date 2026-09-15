@@ -5181,3 +5181,651 @@ weil derselbe Schritt auf der Leiter wiederkehren wird, sobald dort die
 $b$-Block-Rekursion in Konvexform steht — die Rechnung, die als Nächstes
 inhaltlich ansteht (Eigenvektoren von $V^{\mathsf T}$ auf der Leiter,
 siebenundzwanzigster Lauf).
+
+## Das Kettenpolynom, 2026-09-16 (neunundzwanzigster Lauf): die Spektralkonstruktion der $\omega$-Kette gilt auf jeder Halbordnung — ihre Frequenzen sind die Nullstellen des massengewichteten Kettenpolynoms, und auf endlichen Halbordnungen ist sie immer ein Zertifikat
+
+Der siebenundzwanzigste Lauf hat das Zertifikat der $\omega$-Kette als Summe
+$-\sum_k\gamma_kx_kx_k^{\mathsf T}+e_{t^*}e_{t^*}^{\mathsf T}$ über
+verallgemeinerte Eigenvektoren $x_k$ von $V^{\mathsf T}$ zu den Eigenwerten
+$-m_k$ geschrieben und als „verallgemeinerbaren Teil" die Eigenvektoren
+benannt; der achtundzwanzigste hat die Leiter als nächste Rechnung gestellt.
+Dieser Lauf macht die Rechnung, und sie ergibt zuerst etwas Allgemeineres als
+die Leiter: die Eigenwerte sind auf einer beliebigen Halbordnung **nicht** die
+$-m_k$, sondern die Kehrwerte der Nullstellen eines Polynoms, das die Ketten
+der Halbordnung zählt. Auf der Kette fallen beide zusammen, weil das Polynom
+dort in Linearfaktoren zerfällt.
+
+### Lemma 27.1: die Resolvente und das Kettenpolynom
+
+Rahmen des fünfundzwanzigsten Laufs: $\T=\{0\}\cup A\cup\{t^*\}$ abzählbar,
+$m_0=m_{t^*}=0$, $m_a>0$ auf $A$, $M=\sum m_a<\infty$, $V_{s,a}=[a<s]m_a$.
+Auf den Atomen sei $W$ der Atomblock von $V^{\mathsf T}$,
+$(Wv)_c=m_c\sum_{s>c}v_s$. Für $c\in\C$ setze, wo die Reihe konvergiert,
+
+$$y^c:=(I+cW)^{-1}m=\sum_{k\ge0}(-c)^kW^km,\qquad
+  x^c:=\bigl(0;\ y^c;\ -\tfrac1c\bigr)\ \text{über }(0;\,A;\,t^*),$$
+
+und $e_k:=\mathbb 1^{\mathsf T}W^{k-1}m$ für $k\ge1$, $e_0:=1$; das ist die
+Summe der Massenprodukte $m_{c_0}\cdots m_{c_{k-1}}$ über alle **Ketten**
+$c_0<\dots<c_{k-1}$ aus $k$ Atomen. Das **Kettenpolynom** ist
+
+$$P_\T(c):=\sum_{k\ge0}(-c)^ke_k .$$
+
+> **Lemma 27.1.** (i) $(V^{\mathsf T}x^c)_a=-\tfrac1c\,x^c_a$ für jedes Atom
+> $a$, $(V^{\mathsf T}x^c)_0=0=x^c_0$, und $(V^{\mathsf T}x^c)_{t^*}=0$.
+> (ii) $x^c\cdot\mathbb 1=-P_\T(c)/c$.
+
+*Beweis.* (i) $(V^{\mathsf T}x^c)_a=m_a\bigl(\sum_{s>a,\,s\in A}y^c_s+x^c_{t^*}\bigr)
+=(Wy^c)_a-m_a/c$, und aus $(I+cW)y^c=m$ ist $Wy^c=(m-y^c)/c$; also
+$(V^{\mathsf T}x^c)_a=(m_a-y^c_a)/c-m_a/c=-y^c_a/c$. Die Zeile $t^*$ von
+$V^{\mathsf T}$ ist null. (ii) $x^c\cdot\mathbb 1=\sum_k(-c)^k\mathbb 1^{\mathsf T}W^km-1/c
+=\sum_{k\ge0}(-c)^ke_{k+1}-1/c=-P_\T(c)/c$. $\square$
+
+Auf der Kette ist $e_k$ die elementarsymmetrische Funktion der Massen, also
+$P_\T(c)=\prod_l(1-cm_l)$ mit den Nullstellen $c_k=1/m_k$, und
+$y^{c}_{a_i}=m_i\prod_{l>i}(1-cm_l)$ — genau die $x_k$ des
+siebenundzwanzigsten Laufs, einschließlich des Indikators $[i\ge k]$, der dort
+von Hand gesetzt war und hier von der Nullstelle $(1-m_k/m_k)$ im Produkt
+erzeugt wird. Auf der Antikette ist $P_\T(c)=1-cM$ mit der einen Nullstelle
+$1/M$, und die Konstruktion unten gibt wörtlich Theorem 20. Auf einem
+Stufenstapel ist $P_\T=\prod_j(1-c\lambda_j)$ über die Stufenmassen.
+**Ketten in $A$ sind Cliquen des Vergleichbarkeitsgraphen**, $P_\T(-c)$ ist
+also das gewichtete Unabhängigkeitspolynom des Unvergleichbarkeitsgraphen.
+
+### Theorem 27: das Spektralzertifikat
+
+> **Theorem 27.** Sei $A$ endlich, $d$ die Höhe von $A$ (maximale Kettenlänge)
+> und seien die Nullstellen $c_1,\dots,c_d$ von $P_\T$ einfach. Mit
+> $$\gamma_k:=-\frac{c_k}{P_\T'(c_k)},\qquad
+>   T:=-\sum_{k=1}^d\gamma_k\,x^{c_k}(x^{c_k})^{\mathsf T}+e_{t^*}e_{t^*}^{\mathsf T}$$
+> ist $T$ reell, symmetrisch, $T\mathbb 1=e_{t^*}$ und $TV=V^{\mathsf T}T$ —
+> also ein Zertifikat an der Stelle $t^*$ im Sinn des sechsten Laufs.
+
+*Beweis.* $P_\T$ hat reelle Koeffizienten und den Grad $d$ (Leitkoeffizient
+$(-1)^de_d\ne0$). Nichtreelle Nullstellen treten in konjugierten Paaren auf,
+und $\gamma_{\bar k}=\overline{\gamma_k}$, $x^{\bar c}=\overline{x^c}$; also
+ist $T$ reell. Symmetrie ist klar. $T\mathbb 1=e_{t^*}$, weil
+$x^{c_k}\cdot\mathbb 1=-P_\T(c_k)/c_k=0$ nach Lemma 27.1(ii).
+
+Für $TV=V^{\mathsf T}T$: nach Lemma 27.1(i) ist
+$V^{\mathsf T}x^{c_k}=\lambda_kx^{c_k}+\mu_ke_{t^*}$ mit $\lambda_k=-1/c_k$ und
+$\mu_k=-\lambda_kx^{c_k}_{t^*}=-1/c_k^2$ (die Zeile $t^*$ von
+$V^{\mathsf T}x^{c_k}$ ist $0$, die von $\lambda_kx^{c_k}$ ist $1/c_k^2$).
+Daher $V^{\mathsf T}(x_kx_k^{\mathsf T})-(x_kx_k^{\mathsf T})V
+=\mu_k\bigl(e_{t^*}x_k^{\mathsf T}-x_ke_{t^*}^{\mathsf T}\bigr)$, und mit
+$V^{\mathsf T}e_{t^*}=\tilde m$ (Massenvektor, $0$ an $0$ und $t^*$) ist
+$V^{\mathsf T}(e_{t^*}e_{t^*}^{\mathsf T})-(e_{t^*}e_{t^*}^{\mathsf T})V
+=\tilde me_{t^*}^{\mathsf T}-e_{t^*}\tilde m^{\mathsf T}$. Zusammen
+
+$$V^{\mathsf T}T-TV=e_{t^*}\,v^{\mathsf T}-v\,e_{t^*}^{\mathsf T},\qquad
+  v:=-\sum_k\gamma_k\mu_kx^{c_k}-\tilde m
+    =\sum_k\frac{\gamma_k}{c_k^2}\,x^{c_k}-\tilde m .$$
+
+Die Komponente $v_{t^*}$ ist in $e_{t^*}v^{\mathsf T}-ve_{t^*}^{\mathsf T}$
+unsichtbar, $v_0=0$; zu zeigen bleibt $v=0$ auf den Atomen, d.h.
+
+$$\sum_k\frac{\gamma_k}{c_k^2}\,y^{c_k}=m .\tag{R}$$
+
+Nun ist $\gamma_k/c_k^2=-1/(c_kP_\T'(c_k))=-\operatorname{Res}_{c=c_k}\frac1{cP_\T(c)}$,
+also $\frac{\gamma_k}{c_k^2}y^{c_k}=-\operatorname{Res}_{c=c_k}\frac{y^c}{cP_\T(c)}$
+(einfache Nullstelle, $y^c$ holomorph), und
+$\operatorname{Res}_{c=0}\frac{y^c}{cP_\T(c)}=y^0/P_\T(0)=m$. (R) sagt also,
+daß **die Summe aller Residuen von $y^c/(cP_\T(c))$ verschwindet**. Für
+endliches $A$ ist $y^c_a$ ein Polynom in $c$ vom Grad $\le h(a)-1$, wo $h(a)$
+die Länge der längsten Kette mit kleinstem Element $a$ ist, und $h(a)\le d$;
+also ist $y^c_a/(cP_\T(c))$ rational vom Grad $\le h(a)-1-1-d\le-2$, sein
+Residuum in $\infty$ ist $0$, und (R) gilt. $\square$
+
+**Was das ist, und was nicht.** Auf der Kette ist $T$ das Zertifikat des
+siebenundzwanzigsten Laufs (dort $c_k=1/m_k$, $\gamma_k=\beta_k/m_k$), auf der
+Antikette Theorem 20, und auf jeder endlichen Halbordnung mit einfachen
+Nullstellen von $P_\T$ eine **zweite geschlossene Form** neben der Formel des
+sechsten Laufs — mit $d$ Rang-1-Summanden statt der $r^2$ Terme jener Formel,
+und ohne die Wahl eines $i^*$. Für die *Konklusion* im Endlichen ist das
+nichts Neues. Der Gewinn liegt im **Unendlichen**: die Formel des sechsten
+Laufs braucht $V^r=0$ (Theorem 23) und existiert auf der $\omega$-Kette nicht;
+die Spektralform braucht nur die Nullstellen von $P_\T$ und die Identität
+(R), und beides ist auf der $\omega$-Kette da (Theorem 25). Was auf einer
+unendlichen Halbordnung zu prüfen bleibt, ist genau dreierlei: (a) $P_\T$ ist
+ganz mit einfachen Nullstellen $c_k$ und $y^{c_k}$ existiert; (b) die
+Residuenidentität (R); (c) die Schranke $|T_{su}|\le Cw_sw_u$.
+
+### Gemessen: `Task23/spectral.py A`
+
+mpmath mit 50 Stellen, Nullstellen von $P_\T$ per `polyroots`, Toleranz
+$10^{-30}$; rc=0. Zwanzig endliche Halbordnungen: zwei Ketten, die Antikette
+$(\frac12,\frac13,\frac16)$, das N, die Leiter ($n=3,5$ mit
+$\alpha=\frac12,\beta=\frac13$; $n=4$ mit $\alpha=\beta=\frac12$), die Krone,
+zwölf zufällige transitiv abgeschlossene Halbordnungen mit $4\le n\le8$ und
+zufälligen rationalen Massen.
+
+* Lemma 27.1(ii) an je fünf zufälligen komplexen $c$: $|x^c\cdot\mathbb 1+P_\T(c)/c|<10^{-47}$
+  überall.
+* Theorem 27 auf allen zwanzig Fällen: $T$ symmetrisch, reell
+  (Imaginärteil exakt $0$ nach Summation der konjugierten Paare),
+  $|T\mathbb 1-e_{t^*}|<3\cdot10^{-46}$, $|TV-V^{\mathsf T}T|<2\cdot10^{-46}$.
+* Nullstellen: **reell und einfach** auf Ketten, Antikette, N, allen drei
+  Leitern, der Krone und neun der zwölf zufälligen Halbordnungen; **komplex**
+  bei drei zufälligen (etwa $0{,}286$ und $1{,}143\pm0{,}831i$). Das
+  Spektralzertifikat ist dort trotzdem reell und ein Zertifikat, wie der
+  Beweis sagt. Mehrfache Nullstellen kamen nicht vor (bei gleichen Massen auf
+  einer Kette kämen sie vor; dann ist die Formel mit Residuen höherer Ordnung
+  zu ersetzen, was hier nicht ausgeführt ist).
+* Antikette: $T$ stimmt eintragsweise mit Theorem 20 überein
+  ($1{,}7\cdot10^{-52}$), $P_\T=1-cM$.
+* Ketten: $T$ stimmt auf $A\cup\{t^*\}$ eintragsweise mit dem Zertifikat des
+  sechsten Laufs überein ($4\cdot10^{-49}$) — die eine Freiheit $T_{0a_1}$
+  ist im Spektralzertifikat $0$ —, und die Nullstellen sind die $1/m_k$.
+
+### Lemma 27.2: dieselbe Konstruktion als Resolvente von $V^{\mathsf T}$
+
+Die Atomform von Lemma 27.1 versteckt, wie einfach das Objekt ist. Mit dem
+Krylow-Vektor $z(c):=(I+cV^{\mathsf T})^{-1}e_{t^*}$ (auf endlichen
+Halbordnungen ein Polynom in $c$, weil $V$ nilpotent ist) gilt
+
+> **Lemma 27.2.** $x^c=-\tfrac1c\,z(c)$ und $P_\T(c)=\mathbb 1^{\mathsf T}z(c)
+> =\bigl((I+cV)^{-1}\mathbb 1\bigr)_{t^*}$.
+
+*Beweis.* $(V^{\mathsf T})^{j+1}e_{t^*}$ hat den Atomanteil $W^jm$ und
+verschwindende $0$- und $t^*$-Komponente ($m=V^{\mathsf T}e_{t^*}$ auf den
+Atomen), also $z(c)=e_{t^*}+\sum_{j\ge0}(-c)^{j+1}W^jm$ auf den Atomen
+$=e_{t^*}-c\,y^c$, d.h. $-z(c)/c=(0;\,y^c;\,-1/c)=x^c$. Die zweite Aussage ist
+Lemma 27.1(ii). $\square$
+
+> **Lemma 27.3.** $y^c_a=m_a\,P_{\uparrow a}(c)$, wo $P_{\uparrow a}$ das
+> Kettenpolynom der Atome **echt über** $a$ ist.
+
+*Beweis.* $(W^km)_a=m_a\sum_{a<c_1<\dots<c_k}m_{c_1}\cdots m_{c_k}$ (Induktion
+über $k$ aus $(Wv)_a=m_a\sum_{s>a}v_s$), also
+$y^c_a=\sum_k(-c)^k(W^km)_a=m_aP_{\uparrow a}(c)$. $\square$
+
+Folge: $x^{c_k}(a)=0$ genau dann, wenn $c_k$ Nullstelle von $P_{\uparrow a}$
+ist. Auf der Kette ist $P_{\uparrow a_i}=\prod_{l>i}(1-cm_l)$ ein Teiler von
+$P_\T$, daher verschwindet $x^{c_k}(a_i)$ für $k>i$ und die Summen in
+Theorem 25 sind endlich; auf der Leiter ist $P_{\uparrow b_j}=P^\beta_{>j}$
+kein Teiler von $P_\T$, und die Summen sind unendlich — das ist die
+strukturelle Wurzel der unten gemessenen Divergenz. Probe `spectral.py D`
+(elf Halbordnungen, je drei komplexe $c$, alle Atome): Abweichung
+$<10^{-47}$.
+
+Damit ist das Spektralzertifikat, mit $\gamma_k/c_k^2=-\operatorname{Res}_{c_k}\frac1{cP_\T}$,
+
+$$T=e_{t^*}e_{t^*}^{\mathsf T}+\sum_k\operatorname*{Res}_{c=c_k}
+   \frac{z(c)z(c)^{\mathsf T}}{c\,P_\T(c)}
+ =-\operatorname*{Res}_{c=\infty}\frac{z(c)z(c)^{\mathsf T}}{c\,\mathbb 1^{\mathsf T}z(c)}$$
+
+(der Pol bei $0$ trägt $z(0)z(0)^{\mathsf T}/P_\T(0)=e_{t^*}e_{t^*}^{\mathsf T}$):
+**das Zertifikat ist das Residuum im Unendlichen der Rang-1-Resolvente.**
+Gemessen (mpmath, neun Halbordnungen, vier komplexe $c$ je Fall):
+$|z(c)+c\,x^c|<3\cdot10^{-50}$, $|\mathbb 1^{\mathsf T}z(c)-P_\T(c)|<7\cdot10^{-50}$.
+
+### Theorem 28: im Krylow-Raum ist das Zertifikat eindeutig — Spektralform, Hankel-Normalform und die Formel des sechsten Laufs sind dasselbe Objekt
+
+Sei $A$ endlich, $r$ der Nilpotenzindex von $V$, $\psi_k:=(V^{\mathsf T})^ke_{t^*}$
+($k=0,\dots,r-1$), $c_k:=\psi_k\cdot\mathbb 1=(V^k\mathbb 1)_{t^*}$. Da $t^*$ das
+Maximum von $\T$ ist, endet jede längste Kette in $t^*$; also ist
+$u=V^{r-1}\mathbb 1=c_{r-1}e_{t^*}$ mit $c_{r-1}>0$, und $\psi_0,\dots,\psi_{r-1}$
+sind linear unabhängig (aus $\sum a_k\psi_k=0$ mit kleinstem $k_0$,
+$a_{k_0}\ne0$, folgt nach Anwendung von $(V^{\mathsf T})^{r-1-k_0}$ der
+Widerspruch $a_{k_0}\psi_{r-1}=0$).
+
+> **Theorem 28.** (i) Ein Zertifikat der Gestalt
+> $T=\sum_{k,l<r}B_{kl}\psi_k\psi_l^{\mathsf T}$ ($T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_{t^*}$) hat notwendig
+> $B_{kl}=b_{k+l}$ mit $b_j=0$ für $j<r-1$ und
+> $$\sum_{l<r}b_{k+l}\,c_l=[k=0]\qquad(k=0,\dots,r-1);$$
+> dieses Dreieckssystem (Diagonale $c_{r-1}\ne0$) hat genau eine Lösung
+> $b_{r-1},\dots,b_{2r-2}$, und umgekehrt ist das so definierte $T$ ein
+> Zertifikat. **Im Krylow-Raum von $e_{t^*}$ gibt es also genau ein
+> Zertifikat.**
+>
+> (ii) Das Spektralzertifikat von Theorem 27 und die Formel des sechsten
+> Laufs liegen beide in dieser Klasse; sie sind daher gleich, und
+> $b_j=(-1)^jq_j$, wo $1/P_\T(c)=\sum_{j\ge d}q_jc^{-j}$ die
+> Laurent-Entwicklung bei $\infty$ ist ($d=\deg P_\T=r-1$).
+
+*Beweis.* (i) $V^{\mathsf T}\psi_k=\psi_{k+1}$ ($\psi_r=0$), also
+$V^{\mathsf T}T=\sum_{k\ge1,l}B_{k-1,l}\psi_k\psi_l^{\mathsf T}$ und
+$TV=\sum_{k,l\ge1}B_{k,l-1}\psi_k\psi_l^{\mathsf T}$. Die
+$\psi_k\psi_l^{\mathsf T}$ sind linear unabhängig; Koeffizientenvergleich gibt
+$B_{0,l-1}=0$ für $l\ge1$ und $B_{k-1,l}=B_{k,l-1}$ für $k,l\ge1$, also
+$B_{kl}=b_{k+l}$ mit $b_j=0$ für $j\le r-2$. $T\mathbb 1=\sum_kb_{k+l}c_l\psi_k
+=\psi_0$ gibt das System. Umgekehrt erfüllt jedes Hankel-$B$ mit $b_j=0$
+($j<r-1$) die Relation $TV=V^{\mathsf T}T$ nach derselben Rechnung, und das
+System ist $T\mathbb 1=e_{t^*}$.
+
+(ii) Spektralform: $x^{c_k}=-z(c_k)/c_k$ mit $z(c)=\sum_j(-c)^j\psi_j$
+(Lemma 27.2), also liegt $x^{c_k}(x^{c_k})^{\mathsf T}$ und
+$e_{t^*}e_{t^*}^{\mathsf T}=\psi_0\psi_0^{\mathsf T}$ in der Klasse. Sechster
+Lauf: die Formel benutzt $\lambda=e_{i^*}/u_{i^*}$ mit $u_{i^*}\ne0$, hier also
+$i^*=t^*$ und $p_k=(V^{\mathsf T})^{r-1-k}\lambda=\psi_{r-1-k}/c_{r-1}$; alle
+ihre Bausteine $\hat p_k,\psi_k$ liegen im Krylow-Raum, und $T$ ist bilinear
+darin. Beide sind Zertifikate, also nach (i) gleich. Die Formel für $b_j$:
+das Residuum bei $\infty$ von $z(c)z(c)^{\mathsf T}/(cP_\T(c))$ mit
+$z=\sum(-c)^k\psi_k$ und $1/P_\T=\sum q_jc^{-j}$ ist
+$-\sum_{k,l}(-1)^{k+l}q_{k+l}\psi_k\psi_l^{\mathsf T}$ (Koeffizient von
+$c^{-1}$), also $b_j=(-1)^jq_j$; $q_j=0$ für $j<d$ paßt zu $b_j=0$ für
+$j<r-1$. $\square$
+
+**Was das für die bisherigen Läufe heißt.**
+
+* Die „Formel des sechsten Laufs" ist keine Wahl mehr, sondern **das**
+  Krylow-Zertifikat, und sie hat drei Gesichter: Hankel-Normalform
+  (Dreieckssystem, exakt in Brüchen, ohne Nullstellen), Spektralform (Summe
+  über die Nullstellen des Kettenpolynoms), Residuum im Unendlichen.
+  Insbesondere hängt sie **nicht** von der Wahl von $i^*$ ab, und ihre Zeile
+  $0$ ist identisch null.
+* Der sechsundzwanzigste Lauf hat den Ausfall dieser Formel auf der Leiter mit
+  „die Formel greift blind in den Spielraum $\dim=n+2$" erklärt. Richtiger:
+  sie greift überhaupt nicht hinein — sie ist das einzige Zertifikat, das
+  den Spielraum *nicht* benutzt. Ein beschränktes Zertifikat auf der Leiter,
+  falls es existiert, muß den Krylow-Raum verlassen.
+* Die Vermutung des fünfundzwanzigsten Laufs („Hankelform
+  $B(V^k\mathbb 1,V^l\mathbb 1)=c_{k+l}$") war das duale Bild derselben
+  Struktur; hier steht sie mit den $\psi_k$ statt der $V^k\mathbb 1$ und mit
+  den Laurent-Koeffizienten von $1/P_\T$ statt der Momente $c_k$.
+
+Gemessen: `spectral.py C`, exakt in `Fraction`, rc=0, fünfzehn endliche
+Halbordnungen (Kette, Antikette, N, Leiter $n=5$, Krone, zehn zufällige):
+Hankel-Normalform ist ein Zertifikat, **stimmt exakt** mit der Formel des
+sechsten Laufs überein, mit dem Spektral-$T$ auf $<10^{-48}$, $b_j=(-1)^jq_j$
+exakt, $r-1=\deg P_\T$ überall.
+
+### Die Leiter, gemessen: `spectral_ladder.py` und die Trunkierungen
+
+Leiter $a_i<b_j\iff i<j$, $m_{a_i}=\alpha^i$, $m_{b_j}=\beta^j$, normiert mit
+$M_\infty=\alpha/(1-\alpha)+\beta/(1-\beta)$ (dieselbe Normierung für alle
+$n$; der sechsundzwanzigste Lauf normierte je Trunkierung, daher dort
+$17{,}90$ statt $18{,}00$ bei $n=8$).
+
+**Auf der unendlichen Leiter** (Produkte bis $N=300$, mpmath 50 Stellen):
+$P_\T(c)=P^\beta(c)-c\sum_i\alpha_iP^\alpha_{<i}(c)P^\beta_{>i}(c)$ und
+$y^c_{a_i}=\alpha_iQ_i(c)$, $y^c_{b_j}=\beta_jP^\beta_{>j}(c)$ mit der
+Rekursion $Q_{i-1}=(1-c\alpha_i)Q_i-c\beta_iP^\beta_{>i}$ (allgemein:
+$y^c_a=m_a\,P_{\uparrow a}(c)$, das Kettenpolynom der Atome **echt über**
+$a$); beides an der endlichen Leiter $n=6$ gegen `spectral.Poset` geprüft
+($3\cdot10^{-50}$).
+
+* **Nullstellen.** Für $(\tfrac12,\tfrac13)$, $(\tfrac13,\tfrac12)$,
+  $(\tfrac12,\tfrac23)$ und $(\tfrac12,\tfrac12)$ sind die ersten $24$
+  Nullstellen reell und einfach und werden von den Trunkierungen $n=8,12$
+  (exakt, `polyroots`) angelaufen (Abstände $10^{-2}$ bis $10^{-6}$). Für
+  $(\tfrac23,\tfrac12)$ haben **schon die Trunkierungen komplexe Nullstellen**
+  ($n=8$ und $n=12$), und der reelle Scan findet nur einen Teil des
+  Spektrums; (R) bleibt dort bei $0{,}10$ stehen. Das gewichtete
+  Unabhängigkeitspolynom der Leiter ist also **nicht** reellwurzelig, anders
+  als das jeder Kette und jedes Stufenstapels.
+* **Die Residuenidentität (R)** $\sum_k\gamma_kc_k^{-2}y^{c_k}=m$ konvergiert
+  bei getrennten Skalen superexponentiell: relativer Fehler auf den ersten
+  $24$ Atomen je Kette $2\cdot10^{-7}$, $2\cdot10^{-21}$, $1{,}5\cdot10^{-42}$
+  mit $K=8,16,24$ Nullstellen bei $(\tfrac12,\tfrac13)$; ebenso bei
+  $(\tfrac13,\tfrac12)$ ($1{,}8\cdot10^{-47}$) und $(\tfrac12,\tfrac23)$
+  ($2\cdot10^{-31}$). Bei $\alpha=\beta=\tfrac12$ nur $1{,}7\cdot10^{-10}$
+  bei $K=24$ — langsam.
+* **Aber die Spektralreihe für $T$ selbst divergiert**, auch bei getrennten
+  Skalen: die Terme $-\gamma_k\,x^{c_k}(a_1)^2$ wachsen mit wechselndem
+  Vorzeichen superexponentiell — bei $(\tfrac12,\tfrac13)$ ab $k\approx8$
+  ($7$, $28$, $10^3$, $10^4$, $6\cdot10^5$, $\dots$, $3\cdot10^{17}$ bei
+  $k=23$, $3\cdot10^{36}$ bei $k=29$), bei $(\tfrac13,\tfrac12)$ ab
+  $k\approx14$ ($0{,}13$, $2{,}5$, $26$, $2766$, $2\cdot10^4$, $9\cdot10^4$,
+  $\dots$), bei $\alpha=\beta=\tfrac12$ ebenso. Bei $(\tfrac12,\tfrac23)$
+  sind die Terme bis $k=23$ noch klein, wachsen aber ab $k\approx12$ von
+  $10^{-5}$ auf $10^{-3}$ — der Beginn desselben Verhaltens, bei $K=24$ noch
+  nicht entschieden (Probe (B5) weist es als „nur gemessen" aus). Bei $50$ und
+  bei $120$ Stellen zifferngleich — kein Rundungseffekt. Der Grund ist sichtbar: auf der Kette ist
+  $x^{c_k}(a_i)=0$ für $k>i$ (das Kettenpolynom von $\uparrow a_i$ teilt
+  $P_\T$), die Summe für $T_{a_ia_j}$ ist endlich. Auf der Leiter ist
+  $x^{c_k}(b_1)=\beta_1P^\beta_{>1}(c_k)$ und
+  $x^{c_k}(a_1)=\alpha_1\beta_1c_kP^\beta_{>1}(c_k)/(1-c_k\alpha_1)$ (aus
+  $Q_0(c_k)=0$), beide ohne Auslöschung superexponentiell groß, und
+  $\gamma_k$ fällt nicht schnell genug. **Die Residuensumme im Unendlichen,
+  die im Endlichen $T$ definiert, existiert auf der unendlichen Leiter
+  nicht.**
+
+**Auf den Trunkierungen** (exakt bzw. mpmath $160$–$220$ Stellen, Zertifikat
+jeweils bis $<10^{-140}$ verifiziert), $\|T\|_m=\max|T_{su}|/(w_sw_u)$ des
+Krylow-Zertifikats:
+
+| $(\alpha,\beta)$ | $\|T\|_m$ bei $n=8,12,16,20,24$ | Eckeintrag $T_{a_1a_1}/w_{a_1}^2$ |
+|---|---|---|
+| $(\tfrac12,\tfrac13)$ | $18{,}0$; $6192$; — | explodiert ab $n=9$ ($49{,}6$; $67{,}3$; $161$; $6192$) |
+| $(\tfrac13,\tfrac12)$ | $11{,}8509491159$ bis $n=16$; dann $353$, $4{,}3\cdot10^4$, $9{,}5\cdot10^5$, $5{,}2\cdot10^8$ | $0{,}44$; $0{,}48$; $0{,}55$; $-1{,}27$ ($n=10\dots16$), dann $353$ |
+| $(\tfrac12,\tfrac23)$ | $19{,}982477478$ bis $n=26$ | $1{,}79$; $1{,}72$; $1{,}68$; $1{,}67$; $1{,}66$; $1{,}66$; **$1{,}53$** ($n=26$) |
+| $(\tfrac14,\tfrac12)$ | $9{,}81622708914$ bei $n=8,12,16,20,24$ | $-0{,}46561$; $-0{,}46791$; $-0{,}46806$; $-0{,}468069$; $-0{,}468070$ |
+
+Drei Dinge daran.
+
+* **Der sechsundzwanzigste Lauf ist an einer Stelle zu korrigieren.** Er hat
+  für $(\tfrac13,\tfrac12)$, $(\tfrac12,\tfrac23)$, $(\tfrac23,\tfrac12)$
+  notiert, die explizite Formel treffe „bis $n=12$ genau das Minimum", und
+  daraus Konvergenz gelesen. Bei $(\tfrac13,\tfrac12)$ ist $\|T\|_m$ bis
+  $n=16$ auf zwölf Stellen stabil ($11{,}8509491159$) — und explodiert ab
+  $n=18$. Die Stabilität der Norm täuscht, weil das Supremum an $(a_2,b_n)$
+  sitzt, während die Eckeinträge $(a_1,a_1)$, $(b_1,b_1)$, $(a_1,b_1)$ schon
+  ab $n=12$ driften; die Ecke übernimmt das Supremum erst, wenn sie die
+  $11{,}85$ überholt. Bei $(\tfrac12,\tfrac23)$ beginnt dieselbe Drift bei
+  $n=26$ ($1{,}66\to1{,}53$, $-1{,}355\to-1{,}426$). **Konvergenz der Norm
+  bis $n=12$ oder $16$ ist auf der Leiter kein Beleg** — zum neunten Mal die
+  Trunkierung als falsche Prämisse, diesmal in der schärfsten Form: zwölf
+  stabile Stellen über acht Trunkierungen, dann Explosion.
+* Bei $(\tfrac14,\tfrac12)$ konvergieren Norm **und** Eckeinträge
+  monoton auf sechs Stellen bis $n=24$. Ob das echte Konvergenz ist oder
+  eine Drift, die erst jenseits $n=24$ einsetzt, ist nach dem vorigen Punkt
+  **nicht entscheidbar**; die Zuwächse der Ecke fallen geometrisch
+  ($2{,}3\cdot10^{-3}$, $1{,}5\cdot10^{-4}$, $9\cdot10^{-6}$,
+  $6\cdot10^{-7}$), was für Konvergenz spricht, aber bei $(\tfrac13,\tfrac12)$
+  fielen sie bis $n=10$ auch.
+* Die Spitzenzeile $T_{t^*\cdot}$ konvergiert in allen Fällen sofort
+  ($T_{t^*a_1}=0{,}51704641$ bei $(\tfrac13,\tfrac12)$ ab $n=7$; $1$ bzw.
+  $0$ auf $a_1$ bzw. $b_1$ bei $(\tfrac12,\tfrac13)$) — sie ist das Residuum
+  im Unendlichen von $z(c)_a/P_\T(c)$, dessen Grad $\le-1$ ist, und hängt
+  nur von den Leitkoeffizienten ab. Die Explosion sitzt ausschließlich in den
+  Ecken $(a_1,a_1),(b_1,b_1),(a_1,b_1)$, deren Residuen im Unendlichen im
+  Endlichen von den *sämtlichen* Koeffizienten abhängen — genau die Einträge,
+  deren Spektralreihe auf der unendlichen Leiter divergiert.
+
+`spectral_ladder.py` (Probe (B), rc=0, $16$ Prüfungen) und
+`spectral_ladder.py trunc` (rc=0, $17$ Trunkierungszertifikate verifiziert)
+reproduzieren die Tabellen; die Fälle $(\tfrac23,\tfrac12)$ (komplexe
+Nullstellen $17{,}74\pm11{,}49i$ bei $n=8$, $16{,}21\pm14{,}21i$ bei $n=12$)
+und $\alpha=\beta$ werden dort nur gemessen und nicht als Aussage geführt.
+
+### Ergebnis
+
+* **Bewiesen.** Lemma 27.1 und 27.2 (jede abzählbare Halbordnung, sobald die
+  Resolvente existiert): die verallgemeinerten Eigenvektoren von
+  $V^{\mathsf T}$ sind $x^c=-\tfrac1c(I+cV^{\mathsf T})^{-1}e_{t^*}$, und
+  $x^c\cdot\mathbb 1=-P_\T(c)/c$ mit dem Kettenpolynom $P_\T$. Theorem 27
+  (endlich, einfache Nullstellen): die Spektralsumme über die Nullstellen von
+  $P_\T$ ist ein reelles Zertifikat — Residuenkalkül, zwei Zeilen. Theorem 28
+  (endlich): im Krylow-Raum von $e_{t^*}$ gibt es genau ein Zertifikat, es hat
+  Hankel-Normalform mit Dreieckssystem, es **ist** die Formel des sechsten
+  Laufs (unabhängig von $i^*$, Zeile $0$ null) **und** die Spektralform, mit
+  $b_j=(-1)^jq_j$ aus $1/P_\T$ bei $\infty$. Alles exakt bzw. auf $10^{-46}$
+  an 20 bzw. 15 Halbordnungen nachgerechnet.
+* **Widerlegt bzw. korrigiert.** (a) Die Lesart des sechsundzwanzigsten Laufs,
+  die explizite Formel „greife blind in den Spielraum": sie ist das einzige
+  Zertifikat, das ihn nicht benutzt. (b) Die Konvergenz der expliziten Formel
+  bei $(\tfrac13,\tfrac12)$: zwölf stabile Stellen bis $n=16$, Explosion ab
+  $n=18$. (c) Die Hoffnung, die Spektralkonstruktion der $\omega$-Kette
+  (Theorem 25) übertrage sich als Residuenreihe auf die Leiter: die Reihe
+  divergiert in den Eckeinträgen, weil die Teilbarkeit
+  $P_{\uparrow a}\mid P_\T$ der Kette auf der Leiter fehlt. (d) Die
+  Reellwurzeligkeit des Kettenpolynoms: falsch schon für die endliche Leiter
+  $(\tfrac23,\tfrac12)$.
+* **Offen geblieben.** Ob die Leiter überhaupt ein beschränktes Zertifikat
+  trägt. Das Krylow-Zertifikat scheidet für $(\tfrac12,\tfrac13)$ und
+  $(\tfrac13,\tfrac12)$ aus und — Nachtrag unten — auch für
+  $(\tfrac12,\tfrac23)$; bei $(\tfrac14,\tfrac12)$ ist Konvergenz bis
+  $n=32$ nach diesem Lauf kein Beweis, aber der einzige Fall, in dem nichts
+  driftet. Ein beschränktes Zertifikat muß außerhalb des Krylow-Raums
+  liegen — und **gemessen gibt es eines** (dritter Nachtrag,
+  `ladder_lp.py`, 80–160 Stellen): das Minimum über alle Zertifikate der
+  Trunkierung bleibt bei $18{,}0$ ($(\tfrac12,\tfrac13)$, bis $n=22$, Krylow
+  dort $5\cdot10^{14}$) bzw. $11{,}85094912$ ($(\tfrac13,\tfrac12)$, bis
+  $n=20$, Krylow $4\cdot10^4$). Die Vermutung „fundiert $\Rightarrow$
+  Zertifikat" steht auf der Leiter also gemessen; bewiesen ist die
+  gleichmäßige Schranke nicht, und das optimale Zertifikat ist als Objekt
+  nicht identifiziert (vierter Nachtrag). Für $(\tfrac12,\tfrac23)$ bei
+  $n=26,30$ ist das LP im Budget nicht fertig geworden (Nullraum mit
+  $1400$ Unbekannten).
+
+### Sackgassen, siebenundzwanzigster Nachtrag
+
+* **Die Spektralreihe über die Nullstellen des Kettenpolynoms als Definition
+  des Zertifikats auf der unendlichen Leiter.** Sie divergiert in den
+  Eckeinträgen $(a_1,a_1),(b_1,b_1),(a_1,b_1)$ bei allen geprüften Profilen
+  mit sichtbarem Wachstum, obwohl die Residuenidentität (R) — eine Potenz
+  von $y$ weniger, $c^{-2}$ statt $c$ — auf $10^{-42}$ konvergiert. Die
+  endlichen Summen der $\omega$-Kette (Theorem 25) waren ein
+  Kettenphänomen: dort teilt das Kettenpolynom von $\uparrow a_i$ das von
+  $\T$, und $x^{c_k}(a_i)=0$ für $k>i$. Auf der Leiter gilt statt dessen
+  $x^{c_k}(a_1)/x^{c_k}(b_1)=\alpha_1c_k/(1-c_k\alpha_1)$, beide Faktoren
+  superexponentiell.
+* **Konvergenz der Zertifikatsnorm auf Trunkierungen bis $n\approx16$ als
+  Beleg.** $(\tfrac13,\tfrac12)$: $11{,}8509491159$ auf zwölf Stellen über
+  $n=7,\dots,16$, dann $353$, $4\cdot10^4$, $10^6$, $5\cdot10^8$. Das
+  Supremum sitzt an $(a_2,b_n)$ und sieht die Drift der Ecke erst, wenn sie
+  es überholt. Wer Trunkierungen mißt, führe die Eckeinträge an den
+  minimalen Atomen als eigene Spalte — sie driften ab $n=12$. Zum neunten
+  Mal die Trunkierung als falsche Prämisse, und zum ersten Mal mit zwölf
+  stabilen Stellen als Köder.
+* **Im Krylow-Raum nach einem besseren Zertifikat suchen** — etwa $i^*$
+  anders wählen, die $\hat p_k$ anders normieren, Nullstellen umgewichten.
+  Es gibt dort genau eines (Theorem 28). Der Spielraum $\dim=n+2$ des
+  sechsundzwanzigsten Laufs liegt vollständig **außerhalb**.
+* **Reellwurzeligkeit des Kettenpolynoms voraussetzen** (etwa für einen
+  reellen Nullstellenscan oder eine Vorzeichenstruktur wie in Theorem 25.2).
+  Sie gilt für Ketten und Stufenstapel (Produkte) und fällt auf der Leiter
+  $(\tfrac23,\tfrac12)$ schon bei $n=8$ und auf drei von zwölf zufälligen
+  Halbordnungen; das Spektralzertifikat bleibt reell, aber ein reeller Scan
+  findet nicht alle Frequenzen ((R) bleibt bei $0{,}10$ stehen).
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `Matrix.krylovCertificate_unique`** — Theorem 28(i), eingetragen
+in `TauCeti/MartingaleProblems/README.md` (Meilenstein 8, direkt nach
+`Matrix.exists_isSymm_mulVec_one_eq_single`) und in `PLAN.md`, Task 23:
+
+> Für $V:\mathrm{Matrix}\ n\ n\ \R$ mit $V^r=0$, $\psi_k=(V^{\mathsf T})^ke_t$
+> ($k<r$, $\psi_{r-1}\ne0$) und $c_k=\psi_k\cdot\mathbb 1$ hat jedes
+> $T=\sum_{k,l}B_{kl}\,\psi_k\psi_l^{\mathsf T}$ mit $T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_t$ die Gestalt $B_{kl}=b_{k+l}$ mit
+> $b_j=0$ für $j<r-1$ und $\sum_lb_{k+l}c_l=[k=0]$; ist $c_{r-1}\ne0$, so
+> ist dieses Dreieckssystem eindeutig lösbar, und umgekehrt liefert jede
+> Lösung ein solches $T$.
+
+Es ruht auf nichts als der linearen Unabhängigkeit von Krylow-Vektoren eines
+nilpotenten Endomorphismus (`LinearMap.IsNilpotent`, ein Induktionsargument)
+und Koeffizientenvergleich in `Matrix.vecMulVec`; keine Analysis, keine
+Reihe. Es ist jetzt dran, weil es das Objekt identifiziert, das alle
+neunundzwanzig Läufe gerechnet haben — die Formel des sechsten Laufs, das
+Zertifikat der $\omega$-Kette, die Spektralsumme — und weil es die Aussage
+ist, an der das Roadmap-Item `Matrix.exists_isSymm_mulVec_one_eq_single`
+seine Wahlfreiheit ($i^*$) verliert: der Lean-Beweis jenes Items wird
+einfacher, wenn man $i^*=t$ setzen darf, und Theorem 28 sagt, daß man darf.
+Die Spektralform (Theorem 27) folgt danach als Korollar über die
+Laurent-Entwicklung von $1/P_\T$.
+
+**Nächste Rechnung** (in `PLAN.md`, Task 23, eingetragen). Ursprünglich
+stand hier: das LP-Minimum jenseits $n=16$. Das ist im dritten Nachtrag
+unten **erledigt** (`Task23/ladder_lp.py`, bis $n=18$ bei beiden Profilen,
+weitere $n$ soweit im Budget): das Minimum bleibt stehen, wo das
+Krylow-Zertifikat explodiert. Die nächste Rechnung ist deshalb: **das
+LP-optimale $T$ als Objekt**. `ladder_lp.py` gibt bisher nur den Wert; es
+soll die primale Lösung $\lambda$ ausgeben, damit $T^{\mathrm{opt}}
+=T_K+\sum_k\lambda_kD_k$ gelesen werden kann — Träger der Korrektur,
+aktive Ungleichungen, Verhalten der $\lambda_k$ in $n$. Erst mit einer
+Vermutung über die Gestalt von $T^{\mathrm{opt}}$ ist die gleichmäßige
+Schranke beweisbar, die Proposition 19.3 auf der Leiter braucht.
+(Das LP des sechsundzwanzigsten Laufs lief über `scipy`; `numpy`/`scipy`
+sind in der Umgebung dieses Laufs nicht installiert, `ladder_lp.py` braucht
+nur `mpmath`.)
+
+### Nachtrag desselben Laufs: $n=28,32$ und $n=30$
+
+Mit 260 Stellen nachgerechnet (Zertifikatsfehler $<10^{-203}$):
+
+* $(\tfrac14,\tfrac12)$, $n=28$ und $n=32$: $\|T\|_m=9{,}81622708914$,
+  Eckeinträge $-0{,}468069809$ / $-0{,}468069812$, $-1{,}29951222$ (beide),
+  $-1{,}10003486$ (beide) — auf neun Stellen stabil, keine Drift. Das ist der
+  Fall, in dem die Frequenzen $1/\alpha_i=1/\beta_{2i}$ **exakt**
+  zusammenfallen ($\beta=\alpha^{1/2}$); ob das der Grund ist, ist offen,
+  aber es ist die einzige Konfiguration ohne Drift.
+* $(\tfrac12,\tfrac23)$, $n=30$: $\|T\|_m=31{,}78$ an $(a_1,a_1)$,
+  Eckeinträge $31{,}78$, $15{,}59$, $-23{,}47$ — die bei $n=26$ gemeldete
+  Drift ($1{,}66\to1{,}53$) war der Beginn der Explosion, wie vorhergesagt.
+  Damit scheidet das Krylow-Zertifikat für drei der vier getrennten Profile
+  des sechsundzwanzigsten Laufs aus.
+
+Die vier Sätze dieses Laufs (Lemma 27.1, 27.2, Theorem 27, Theorem 28) sind
+davon nicht berührt; sie handeln vom endlichen Objekt und sind exakt
+verifiziert.
+
+### Zweiter Nachtrag: die Drift hängt am Skalenverhältnis, nicht an zusammenfallenden Frequenzen
+
+Die Vermutung des ersten Nachtrags („kein Drift, weil $1/\alpha_i=1/\beta_{2i}$
+exakt zusammenfallen") ist **falsch**. Vier weitere Profile, $n=12,18,24$,
+220 Stellen, Zertifikatsfehler $<10^{-174}$, alle Nullstellen reell:
+
+| $(\alpha,\beta)$ | $\alpha/\beta$ | $\|T\|_m$ | $T_{a_1a_1}/w^2$ bei $n=12,18,24$ |
+|---|---|---|---|
+| $(\tfrac19,\tfrac13)$ | $\tfrac13$ | $7{,}976868727$ | $-1{,}0526519$; $-1{,}0526503$; $-1{,}0526503$ |
+| $(\tfrac18,\tfrac12)$ | $\tfrac14$ | $8{,}383864439$ | $-1{,}0894162$; $-1{,}0890365$; $-1{,}0890306$ |
+| $(\tfrac16,\tfrac12)$ | $\tfrac13$ | $8{,}712867815$ | $-0{,}96078255$; $-0{,}96052346$; $-0{,}96051941$ |
+| $(\tfrac15,\tfrac12)$ | $\tfrac25$ | $9{,}072791863$ | $-0{,}80690347$; $-0{,}80677695$; $-0{,}80677497$ |
+
+Die Frequenzen fallen bei $(\tfrac15,\tfrac12)$ und $(\tfrac16,\tfrac12)$
+nirgends zusammen, und die Eckeinträge konvergieren trotzdem geometrisch
+(Zuwächse $10^{-4}$, $2\cdot10^{-6}$). Zusammen mit den Explosionen bei
+$\alpha/\beta=\tfrac23$ (ab $n=18$) und $\tfrac34$ (ab $n=30$) und der
+Explosion bei $\alpha/\beta=\tfrac32$ (ab $n=9$) legt das **gemessen** eine
+Schwelle im Skalenverhältnis nahe: bei $\alpha/\beta\le\tfrac25$ konvergiert
+das Krylow-Zertifikat auf allen geprüften Trunkierungen, bei
+$\alpha/\beta\ge\tfrac23$ explodiert es — und die Einsatzstelle wandert mit
+$\alpha/\beta\downarrow$ nach außen ($n=9$; $18$; $30$), so daß auch die
+Konvergenz bei $\tfrac25$ bis $n=24$ nach der Lehre dieses Laufs kein Beweis
+ist. **Ein Satz dazu fehlt**; die Hankel-Normalform ($b_j=(-1)^jq_j$ aus
+$1/P_\T$ bei $\infty$) ist der Ort, an dem er zu suchen wäre: die Explosion
+der Ecke ist das Wachstum der Laurent-Koeffizienten $q_j$ gegen die
+Kettenmomente $c_k$ der Trunkierung. Für die Konklusion — Dualität auf der
+Leiter unter (F) — genügte bereits **ein** konvergentes Skalenverhältnis, wenn
+die Konvergenz bewiesen wäre (Proposition 19.3 mit Theorem 22); das ist der
+zweite benannte Angriffspunkt neben dem LP jenseits $n=16$.
+
+### Dritter Nachtrag: das LP-Minimum, hochstellig — `Task23/ladder_lp.py`
+
+Der Zertifikatsraum der Trunkierung ist $T_K+\operatorname{span}\{D_1,\dots,D_{n+2}\}$
+($T_K$ das Krylow-Zertifikat, exakt; $D_k$ eine Basis von
+$\{D=D^{\mathsf T},\,DV=V^{\mathsf T}D,\,D\mathbb 1=0\}$ per Gauß in
+mpmath), und $\min\|T\|_m$ ist das Tschebyscheff-Problem
+$\min C$ unter $|T_K+\sum_k\lambda_kD_k|_{su}\le Cw_sw_u$ in $n+3$
+Variablen; gelöst wird das **duale** LP ($n+3$ Zeilen, $2\cdot\#$Einträge
+Spalten) mit Bland-Regel bei 50 Stellen. Kontrollen: $\dim=n+2$ für alle
+$n$ (wie im sechsundzwanzigsten Lauf), und für $n\le8$ fällt das Minimum
+mit der Krylow-Norm zusammen ($17{,}3994448$ bei $n=4$, $17{,}99181924$ bei
+$n=6$, $17{,}99998022$ bei $n=8$) — was nach Umrechnung der Normierung
+genau die $17{,}60$ und $17{,}90$ des sechsundzwanzigsten Laufs sind.
+
+$(\tfrac12,\tfrac13)$, Normierung $M_\infty=\tfrac32$:
+
+| $n$ | $\|T_K\|_m$ (Krylow) | $\min\|T\|_m$ (LP) |
+|---|---|---|
+| 8 | $17{,}99998022$ | $17{,}99998022$ |
+| 9 | $49{,}57$ | $17{,}99999948$ |
+| 10 | $67{,}30$ | $17{,}99999999$ |
+| 11 | $160{,}9$ | $18{,}0$ |
+| 12 | $6192$ | $18{,}0$ |
+| 14 | $7{,}4\cdot10^4$ | $18{,}0$ |
+| 16 | $3{,}1\cdot10^6$ | $18{,}0$ |
+| 18 | $7{,}2\cdot10^9$ | $18{,}0$ |
+| 20 | $4{,}2\cdot10^{12}$ | $18{,}0$ |
+| 22 | $5{,}3\cdot10^{14}$ | $18{,}0$ |
+
+$(\tfrac13,\tfrac12)$: bei $n=12,14,16$ fallen Minimum und Krylow-Norm
+zusammen ($11{,}85094912$); bei $n=18$ ist die Krylow-Norm $352{,}59$, bei
+$n=20$ (160 Stellen nötig, bei 80 bricht der Simplex numerisch ab)
+$43016$, und das **Minimum bleibt beide Male $11{,}85094912$**, auf zehn
+Stellen unverändert.
+
+Das Minimum konvergiert also **von unten** mit geometrisch fallenden
+Zuwächsen, während das Krylow-Zertifikat davonläuft: ab $n=9$ bzw. $n=18$
+verläßt das optimale Zertifikat den Krylow-Raum, und zwar ohne daß sein Wert
+davon etwas merkt. Das ist die Messung, die dieser Lauf oben als
+„entscheidend" benannt hat, und sie fällt **für** die Vermutung des
+sechsundzwanzigsten Laufs aus („fundiert $\Rightarrow$ Zertifikat"): auf
+der kleinsten offenen Instanz gibt es, soweit gemessen, gleichmäßig
+beschränkte Zertifikate — nur eben keine im Krylow-Raum. Was nach
+Proposition 19.3 für die Dualität auf der Leiter unter (F) fehlt, ist der
+**Beweis** dieser Gleichmäßigkeit, und dafür muß das optimale Zertifikat
+erst als Objekt verstanden werden: es ist $T_K$ plus eine Korrektur im
+$(n{+}2)$-dimensionalen Nullraum, die genau die explodierenden Eckeinträge
+$(a_1,a_1),(b_1,b_1),(a_1,b_1)$ wegnimmt.
+
+Zur Numerik, damit es kein zweiter Lauf wiederholt: die erste Fassung des
+Simplex hat bei $(\tfrac13,\tfrac12)$, $n\ge18$, „unbeschränkt" gemeldet —
+falsch, denn $T_K$ ist zulässig. Ursache war die Skalierung: die dualen
+Variablen zu Einträgen mit Gewicht $w_sw_u\sim10^{-17}$ werden $\sim10^{17}$
+groß, das Tableau $\sim10^{34}$, und bei 80 Stellen liegen die Rundungsfehler
+an der Toleranz. Nach Substitution $\nu_j=w_j\mu_j$ (alles in der gewichteten
+Norm, $O(1)$) läuft es durch. Der Wert $18$ ist
+$1/(\alpha_1\alpha_2)$ der normierten $a$-Kette ($\alpha_1=\tfrac13$,
+$\alpha_2=\tfrac16$) — dieselbe Zahl, die Theorem 26 als $\sup|G|$ der
+**Kette** $\alpha$ allein gibt. Ob das Zufall ist oder das optimale
+Zertifikat der Leiter bei $\alpha>\beta$ im Kern das $\omega$-Ketten-Zertifikat
+(Theorem 25) der langsam fallenden Kette ist, ist **nicht** geprüft; bei
+$(\tfrac13,\tfrac12)$ paßt die entsprechende Zahl ($1/(\beta_1\beta_2)=18$)
+nicht zu den gemessenen $11{,}85$. Größere $n$ (bis $16$ bzw. $18$) laufen;
+Ergebnisse folgen unten, sofern sie im Budget fertig werden.
+
+### Vierter Nachtrag: das LP-optimale Zertifikat, erste Sicht (`ladder_lp.py --show`)
+
+Aus den Schattenpreisen des dualen Simplex wird das optimale
+$T^{\mathrm{opt}}=T_K+\sum_k\lambda_kD_k$ rekonstruiert (Kontrolle:
+$\max|T^{\mathrm{opt}}_{su}|/(w_sw_u)$ stimmt mit dem LP-Wert auf zehn
+Stellen überein). Weitere Werte: $(\tfrac12,\tfrac13)$, $n=20$:
+Krylow $4{,}2\cdot10^{12}$, Minimum $18{,}0$; $(\tfrac14,\tfrac12)$, $n=12$:
+beide $9{,}816227089$.
+
+* **Wo die Schranke aktiv ist.** Bei $(\tfrac12,\tfrac13)$ ($n=8,10,12$):
+  $T^{\mathrm{opt}}/w=-18$ **exakt** an $(a_1,a_1)$, $(b_1,b_1)$, $(a_1,b_1)$
+  und an $(a_1,b_j)$ für **alle** $j$, dazu $(a_2,b_n)$ und $(a_2,a_n)$ —
+  also die ganze Ecke $\{a_1,b_1\}^2$ und die Zeile $a_1$ gegen die
+  $b$-Kette. Bei $(\tfrac13,\tfrac12)$ ($n=12,18$): $\pm11{,}85$ an der
+  Ecke und an $(a_i,b_1)$ für **alle** $i$ — die Spalte $b_1$ gegen die
+  $a$-Kette. Das Zertifikat ist also am Rand gesättigt, wo die beiden
+  minimalen Atome sitzen, und entlang der Zeile des minimalen Atoms der
+  **langsam** fallenden Kette gegen die schnell fallende. Die Spitzenzeile
+  $T_{t^*\cdot}$ ist in allen Fällen die des Krylow-Zertifikats (sie ist
+  durch Bedingung 2 an den Nullmassezeilen erzwungen, Proposition 24.1(1)).
+* **Nicht eindeutig.** Bei $(\tfrac13,\tfrac12)$ hat $T^{\mathrm{opt}}_{b_1b_1}/w^2$
+  bei $n=12$ den Wert $-11{,}85$ und bei $n=18$ den Wert $+11{,}85$; bei
+  $n=18$ sind zusätzlich $(a_1,a_2)$ und $(a_1,a_3)$ aktiv. Der Optimalwert
+  ist stabil, die Optimalmenge eine Seite positiver Dimension — der Simplex
+  gibt irgendeine Ecke zurück. Wer die Gestalt des beschränkten Zertifikats
+  bestimmen will, muß eine **Auswahl** treffen (etwa das $\lambda$ minimaler
+  Norm oder das $T$ mit größtem Träger auf $\{a_1,b_1\}$), sonst springt das
+  Objekt von $n$ zu $n$.
+* **Was das nahelegt, ungeprüft.** Die Korrektur $T^{\mathrm{opt}}-T_K$ muß in
+  den Eckeinträgen die superexponentielle Explosion von $T_K$ aufheben; der
+  Nullraum hat die Dimension $n+2$, und die Zahl der bei $(\tfrac12,\tfrac13)$
+  aktiven Ungleichungen ist $n+4$ ($3$ Ecke, $n$ Zeile $a_1$ gegen $b$, $2$
+  Spitze) — passend zu $n+3$ Variablen an einer nicht entarteten Ecke. Eine
+  Vermutung über $T^{\mathrm{opt}}$ ist damit **nicht** aufgestellt; der Weg
+  ist beschrieben, nicht gegangen.
+
+**Numerische Sackgasse, damit sie niemand wiederholt:** der dichte Simplex
+mit Bland-Regel meldet bei ungünstiger Skalierung „unbeschränkt", obwohl das
+Dual beschränkt ist ($T_K$ ist zulässig). Zwei Ursachen, beide behoben:
+(1) Skalierung — die dualen Variablen müssen in der gewichteten Norm
+geführt werden ($\nu_j=w_j\mu_j$); (2) das Ausräumen der künstlichen
+Variablen nach Phase I muß über den größten Zeileneintrag pivotieren und
+redundante Zeilen stehen lassen, sonst entstehen Pivots auf $10^{-30}$ und
+das Tableau wird Rauschen. Beides steht im Kopf von `ladder_lp.py`.
+
+### Fünfter Nachtrag: bei $(\tfrac12,\tfrac13)$ konvergiert das optimale Zertifikat eintragsweise
+
+`ladder_lp.py 1/2 1/3 8 10 12 14 16 18 --show`, 80 Stellen. Der LP-Wert ist
+$18{,}0$ durchweg; die Einträge von $T^{\mathrm{opt}}/w$ an zwei
+nicht-aktiven Stellen:
+
+| $n$ | 8 | 10 | 12 | 14 | 16 | 18 |
+|---|---|---|---|---|---|---|
+| $(a_2,a_2)$ | $-9{,}3110$ | $-9{,}3654$ | $-9{,}3799$ | $-9{,}3836$ | $-9{,}3845$ | $-9{,}3848$ |
+| $(a_1,a_2)$ | $3{,}1140$ | $3{,}1471$ | $3{,}1550$ | $3{,}1569$ | $3{,}1574$ | $3{,}1575$ |
+| Krylow $(a_1,a_2)$ | $1{,}32$ | $1{,}74$ | $-5{,}28$ | $-23{,}7$ | $627$ | $-1{,}1\cdot10^5$ |
+
+Die Zuwächse fallen um den Faktor $\approx4$ je Schritt $n\to n+2$ (also wie
+$\alpha^{\,n}=2^{-n}$), während dieselben Einträge des Krylow-Zertifikats
+davonlaufen. Die aktive Menge ist bei jedem $n$ dieselbe: die Ecke
+$\{a_1,b_1\}^2$ ($3$ Einträge), die Zeile $(a_1,b_j)$ für $2\le j\le n$
+($n-1$ Einträge; $(a_1,b_1)$ zählt zur Ecke) und die zwei Einträge
+$(a_2,b_n)$, $(a_2,a_n)$ — zusammen $n+4$ Einträge bei $n+3$ Variablen, die
+beiden letzten am Rand der Trunkierung, also Trunkierungsartefakte. Anders als bei $(\tfrac13,\tfrac12)$ (vierter Nachtrag)
+springt hier nichts: das optimale Zertifikat ist bei $(\tfrac12,\tfrac13)$
+gemessen eindeutig und konvergiert eintragsweise mit geometrischer Rate.
+**Das ist die Instanz, an der eine Vermutung über $T^{\mathrm{opt}}$ auf der
+unendlichen Leiter aufzustellen ist**: ein $T$ mit $|T_{su}|=18\,w_sw_u$ auf
+$\{a_1,b_1\}^2\cup\{(a_1,b_j)\}_j$ und $T_{t^*\cdot}=e_{a_1}$, Grenzwert der
+Trunkierungen — die Zahl $18=2/\alpha_1^2=1/(\alpha_1\alpha_2)$ wartet auf
+eine Erklärung. Nichts davon ist bewiesen.
