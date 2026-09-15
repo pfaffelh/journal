@@ -30105,3 +30105,237 @@ offen; ausgerechnet ist es nicht.
    Grund, aus dem er nach Meilenstein 3 steht, ist jetzt eingelöst: die
    Modifikation muß zeigen, daß `X'` **dieselbe** Lösung ist, und mit
    `isMPSolution_iff_forall_fdd` in der Hand ist das eine Zeile.
+
+### 2026-09-15, dritter Lauf des Tages — das erste Martingalproblem dieser Entwicklung mit **genau einer** Lösung, und das Akzeptanzbeispiel endet in einer Zahl
+
+**Vorschlag 0 des Vorlaufs, wörtlich eingelöst**, und er trug weiter als angesagt.
+Der Vorlauf hatte „die Zweizustandskette, ganz" als halben Lauf veranschlagt, weil
+nach der Abschwächung von `hint` jede Eingabe von
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` auf den Daten von Meilenstein 4
+einen Zeugen hatte. Das stimmte; und weil es stimmte, fällt nicht nur die
+Kettenaussage heraus, sondern zuvor der **allgemeine** Satz, dessen Instanz sie
+ist.
+
+#### Was steht — acht Deklarationen, kein `sorry`, keine Änderung an einer bestehenden Aussage
+
+Alles in `TauCeti/MartingaleProblems/Suggested.lean`, in den beiden neuen
+Abschnitten `JumpUniqueness` und `TwoStateSolution` am Dateiende. Die Zahl der
+`sorry` bleibt bei **sechs** — die Zeilen 1116, 1500, 1611, 1626, 2035, 2055 —,
+und keiner von ihnen ist von einer der acht neuen Aussagen aus erreichbar.
+
+Der geprüfte Durchlauf ist `lake env lean` gegen v4.33.1 über die **ganze** Datei,
+**ohne einen Fehler**, Rückgabewert `0`; `scripts/check_suggested.py` meldet für
+`MartingaleProblems/Suggested.lean` `rc 0`, `0` Fehler, `6` `sorry`. Alle acht
+Deklarationen sind mit `scripts/check_axioms.py` geprüft und hängen sämtlich an
+`propext`, `Classical.choice`, `Quot.sound` und an nichts sonst. *Genau gesagt:*
+die Änderungen an der Datei **nach** dem letzten Durchlauf sind ausschließlich
+Kommentartext im Modulkopf; keine Deklaration, keine Signatur, kein Beweis.
+
+Im Abschnitt `JumpUniqueness`:
+
+* `onedim_mpFamily_jumpOperator_coordinate` — `eq:absonedim` am Koordinatenprozeß
+  des kanonischen Pfadraums.
+* `subsingleton_mpSolutions_jumpOperator_coordinate` — `thm:absuniq`(b) auf den
+  Daten von Meilenstein 4.
+* `mpSolutions_jumpOperator_coordinate_eq_singleton` — **die Aussage des Laufs**:
+
+  ```
+  {P | P löst das Sprungproblem, P Wahrscheinlichkeitsmaß, P ∘ X₀⁻¹ = ν}
+    = {(jumpMeasure mu nu).map (jumpPath lam)}
+  ```
+
+* `map_coordinate_map_jumpPath` — das eindimensionale Gesetz der Lösung ist das
+  des Prozesses, `Measure.map_map`, weil die Koordinate des Bildes der Prozeß
+  **ist**, per `rfl`.
+* `isMarkov_jumpOperator_coordinate` — `thm:absuniq`(a) auf denselben Daten: jede
+  Lösung ist markovsch.
+
+Im Abschnitt `TwoStateSolution`:
+
+* `mpSolutions_flip_coordinate_eq_singleton` — dasselbe an
+  `lam ≡ 1`, `mu = Kernel.deterministic (!·)`.
+* `map_coordinate_map_jumpPath_flip` — `jumpProcessE` und `jumpProcess` fallen
+  unter `jumpMeasure` f.s. zusammen, also auch ihre Bildmaße.
+* `real_map_coordinate_flip_eq` — **das Akzeptanzbeispiel, und es endet in einer
+  Zahl**; dazu ein ausgeschriebenes `example` als Probe bei `t = 0`.
+
+#### Erstens: der Unterschied zwischen „es gibt eine Lösung" und „es gibt genau eine", und warum er hier eine Zeile kostet
+
+Bis zu diesem Lauf stand in der ganzen Entwicklung **keine** Aussage der Gestalt
+„dieses Martingalproblem hat genau eine Lösung". Es standen zwei Hälften: der
+Existenzsatz `jumpPath_isMPSolution` (Vorlauf) und der Eindeutigkeitssatz
+`subsingleton_mpSolutions_mpFamily_lebesgueClock` (2026-09-14, dritter Lauf), und
+zwischen ihnen zehn Hypothesen über `(F, π, 𝓕₀, S)`, von denen niemand
+nachgerechnet hatte, daß sie **gleichzeitig** auf denselben Daten erfüllbar sind.
+
+Genau das ist der Punkt, an dem eine Formalisierung etwas zeigt, was auf Papier
+nicht zu sehen ist: zwei Sätze mit zusammenpassenden Konklusionen können
+Voraussetzungen tragen, die kein gemeinsames Modell haben, und der Text merkt es
+nicht. Der Zusammenbau ist deshalb **absichtlich** als Gleichheit von **Mengen**
+hingeschrieben und nicht als zwei Implikationen: eine Menge, die gleich einem
+Singleton ist, ist weder leer noch mehrelementig, und beide Fehler sind damit in
+einer Aussage ausgeschlossen. `Set.eq_singleton_iff_unique_mem`
+(`Mathlib/Data/Set/Insert.lean:260` in v4.33.1) ist der ganze Zusammenbau.
+
+Der Lauf hat das Zusammenpassen nachgerechnet, und es paßte: **alle zehn
+Hypothesen gingen ohne eine einzige Anpassung an einer bestehenden Deklaration
+durch**, und die ganze Datei übersetzte beim **ersten** Versuch fehlerfrei. Das
+ist berichtenswert, weil es sonst nicht so ist; es ist die Auszahlung darauf, daß
+die Läufe des 2026-09-14 und des Vorlaufs jede Hypothese einzeln und *vor* dem
+Zusammenbau eingelöst haben, statt sie beim Zusammenbau zu entdecken.
+
+#### Zweitens: was der Satz **nicht** verlangt, und das ist die stehende Regel dieses Branchs von der Ertragsseite
+
+`mpSolutions_jumpOperator_coordinate_eq_singleton` trägt über den Zustandsraum
+`E` genau zwei Voraussetzungen: `[MeasurableSpace E]` und `[MeasurableEq E]`.
+**Keine** Topologie, keine Vollständigkeit, keine Separabilität, kein
+Standard-Borel-Raum, keine Abzählbarkeit. Über die Rate: meßbar, `0 ≤ lam ≤ L`,
+und die absorbierende Verabredung `habs` — **keine** Positivität.
+
+Das ist kein Zufall und keine Sparsamkeit um ihrer selbst willen. Jede dieser
+Abschwächungen ist einzeln erkämpft worden und in den Läufen belegt: die
+Nichtpositivität im achtzehnten Lauf des 2026-09-10 und danach
+(`jumpProcessE_isMPSolution_of_nonneg`), die Topologiefreiheit dadurch, daß der
+Pfadraum als **Untertyp mit einer Regularität** gebaut ist statt als Menge
+stetiger oder càdlàg-Abbildungen in einen metrischen Raum — `RightContinuousPath`
+verlangt Rechtskonstanz auf einer Umgebung und nicht Rechtsstetigkeit, und über
+einem diskreten Zustandsraum ist das dasselbe, über einem beliebigen meßbaren
+Raum ist es das einzige, was sich überhaupt sagen läßt.
+
+`[MeasurableEq E]` — Mathlibs Klasse für die meßbare Diagonale
+(`MeasureTheory/MeasurableSpace/Constructions.lean:1083`, auf
+`upstream/master 7801e840` unverändert an `:1084`) — wird an **einer** Stelle
+gebraucht und nur für die **Existenz**: sie macht „die Kette bewegt sich nicht"
+zu einer meßbaren Aussage. Die Eindeutigkeitshälfte
+(`subsingleton_mpSolutions_jumpOperator_coordinate`) trägt sie **nicht**, und sie
+trägt auch `habs` nicht. Das steht so an der Deklaration, weil es der Sache nach
+richtig ist, daß Eindeutigkeit weniger über die Daten weiß als Existenz.
+
+#### Drittens, und das ist der eigentliche Ertrag: das Akzeptanzbeispiel spricht nicht mehr über die Konstruktion
+
+`TwoStateExample` hatte seit langem die Zahl: gestartet in `false` ist die
+Wahrscheinlichkeit, zur Zeit `t` in `true` zu sein, gleich `(1 − exp(−2t))/2`
+(`jumpMeasure_map_jumpProcess_flip`), gerechnet aus der Exponentialreihe des
+Erzeugers, deren Iterierte mit dem Faktor `−2` zyklisch sind
+(`iterate_jumpApply_flip`, `expJumpApply_flip`). Was dieser Abschnitt **nicht**
+sagen konnte, ist, **wessen** Gesetz das ist: es war das Gesetz von
+`jumpProcess flipRate t` unter `jumpMeasure` — einer Konstruktion unter
+möglicherweise vielen.
+
+`real_map_coordinate_flip_eq` sagt es jetzt. Seine Voraussetzung ist, daß `P`
+**irgendein** Wahrscheinlichkeitsmaß auf `RightContinuousPath Bool` ist, das das
+Martingalproblem von `A f x = f (!x) − f x` löst und in `false` startet; seine
+Konklusion ist eine Zahl. In der Aussage kommen `jumpMeasure`, `jumpProcess` und
+das Wort Kette **nicht vor**. Sie spricht von einem Maß auf Pfaden, einem
+Erzeuger und `(1 − exp(−2t))/2`.
+
+**Und die Zahl kommt aus einer anderen Richtung als der Satz.** Der Satz kommt
+über die Pfadkonstruktion, die Zahl über die Exponentialreihe des Erzeugers; die
+einzige Stelle, an der sich beide berühren, ist
+`jumpMeasure_integral_jumpProcess_eq_expJumpApply`. Zwei unabhängige Wege zu
+demselben Wert ist, wozu ein Akzeptanzbeispiel da ist — und die ausgeschriebene
+Probe bei `t = 0` (die Lösung sitzt in `false`) ist der billigste Test, den eine
+Formel mit einer Exponentialfunktion zuläßt.
+
+Der Preis dafür war eine einzige Zeile Maßtheorie: `jumpProcessE` (die gehobene
+Konstruktion, die eine verschwindende Rate verträgt) und `jumpProcess` (die alte,
+die sie nicht verträgt) fallen unter `jumpMeasure` f.s. zusammen, weil die Rate
+hier `1` ist und die Wartezeiten f.s. positiv sind
+(`ae_pos_snd_jumpMeasure`, `jumpProcessE_eq_jumpProcess`); `Measure.map_congr`
+(`MeasureTheory/Measure/Map.lean:118`) macht daraus die Gleichheit der Bildmaße.
+
+#### Viertens: die Markovhälfte fiel im selben Lauf, und `eq:absonedim` wird **zweimal** verbraucht
+
+`isMarkov_jumpOperator_coordinate` — `thm:absuniq`(a) auf denselben Daten. Jede
+Lösung des Sprungproblems auf dem kanonischen Pfadraum ist markovsch: das
+Bedingen des Zustands zur Zeit `r + t` auf die **ganze** Vergangenheit bei `r`
+ist dasselbe wie das Bedingen auf den **Zustand** bei `r`, für jedes beschränkte
+meßbare `f` und alle `r, t`.
+
+Der Beweis ist `isMarkov_of_unique_onedim` bei `Ω = F = RightContinuousPath E`
+und `X = id`, und die Buchhaltung dazu ist eine Zeile (`Set.image_id'`: das Bild
+der Testprozeßfamilie unter `Y ↦ Y ∘ id` ist sie selbst). Bemerkenswert daran ist
+nicht der Beweis, sondern **daß die Eingabe dieselbe ist**:
+`onedim_mpFamily_jumpOperator_coordinate` ist wörtlich das, was auch
+`subsingleton_mpSolutions_jumpOperator_coordinate` verbraucht. Beide Hälften von
+Meilenstein 6 — Eindeutigkeit und Markov — hängen an **einem** Lemma, und das ist
+die Gestalt, die `thm:absuniq` im Manuskript hat.
+
+Zu betonen ist, in welche Richtung das läuft, weil das Manuskript in `rem:noch1`
+ausdrücklich darauf besteht: **Markov ist hier die Konklusion.** Die Eingabe ist
+die Eindeutigkeit der eindimensionalen Verteilungen, und die kommt aus
+Meilenstein 4 über `integral_eq_of_isMPSolution_of_map_eq` — aus dem beschränkten
+Erzeuger und der Exponentialreihe, nicht aus einer Halbgruppe und nicht aus
+Hille–Yosida. Ethier–Kurtz 4.4.1 läuft andersherum und ist nicht unser Satz. Auf
+Papier ist diese Unterscheidung eine Bemerkung; hier ist sie nachprüfbar, weil
+der Abhängigkeitsgraph der Deklaration sie zeigt.
+
+Die Voraussetzung ist, daß `P` **eine** Lösung ist. Nichts in der Aussage sagt,
+daß es die konstruierte ist, und der Beweis benutzt es nicht — obwohl es nach
+`mpSolutions_jumpOperator_coordinate_eq_singleton` die einzige ist.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf frisch geholt:
+`7801e8406155c31b340d28e2762f754d02b5e9b0` (der Vorlauf stand auf
+`1cf325a0cf67aca2b04d76b5380ff6a9e410aefa`).
+
+**Alle in diesem Lauf neu benutzten Mathlib-Namen**, gegen v4.33.1 übersetzt, am
+Quelltext belegt und **zusätzlich auf `upstream/master` nachgeschlagen**; keiner
+ist `deprecated`, keiner ist verschwunden oder umbenannt:
+
+* `Set.eq_singleton_iff_unique_mem` — v4.33.1 `Mathlib/Data/Set/Insert.lean:260`,
+  master `:266`;
+* `MeasureTheory.Measure.map_congr` — v4.33.1
+  `Mathlib/MeasureTheory/Measure/Map.lean:118`, master `:130`;
+* `MeasureTheory.Measure.map_map` — master `Mathlib/MeasureTheory/Measure/Map.lean:208`;
+* `MeasureTheory.MeasurableEq` (Klasse) und die Instanz aus
+  `[MeasurableSingletonClass] [Countable]` — v4.33.1
+  `Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:1083` und `:1104`,
+  master `:1084` und `:1105`. Das ist die Instanz, über die `Bool` den
+  Existenzsatz erfüllt.
+
+Verschoben sind nur **Zeilennummern**, und die sind nach der stehenden Regel
+dieses Auftrags nachrangig. Eine Negativaussage ist in diesem Lauf nicht neu
+aufgestellt worden.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die stetige Fassung des fdd-Kriteriums** (`:1116`). Unberührt; sie ist nach wie
+vor eine Entscheidung über die Anordnung der Dateien und keine offene Mathematik,
+und der Vorlauf hat die Reduktion vollständig aufgeschrieben.
+
+**Meilenstein 9** (`:1500`, `:1611`, `:1626`). Unberührt; er ist Punkt 3 der
+Anordnung des Nutzers vom 2026-09-15 und der nächste Vorschlag.
+
+**Die starke Markoveigenschaft.** `isStrongMarkov` ist die fünfte der im
+Meilenstein ausformulierten Aussagen und hat nach wie vor keine Deklaration;
+dieser Lauf hat die **einfache** Markoveigenschaft eingelöst und nicht die starke.
+Das ist keine Buchhaltung, sondern ein eigener Beweis über Stoppzeiten.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Meilenstein 9, die càdlàg-Modifikation** (`:1500`, `:1611`, `:1626`), Punkt
+   3 der Anordnung des Nutzers. Der Weg steht ausgeschrieben im Auftrag
+   (Aufkreuzungsungleichung über endlichen Teilmengen von `D`, monotoner
+   Grenzübergang, `X'` als Rechtslimes längs `D`, `CompactContainment` hält die
+   Limiten in `E`), und der technische Grund, aus dem er nach Meilenstein 3
+   steht, ist seit dem Vorlauf eingelöst: die Modifikation muß zeigen, daß `X'`
+   dieselbe Lösung ist, und mit `isMPSolution_iff_forall_fdd` ist das eine
+   Zeile. **Warum jetzt:** er ist das Tor zu Meilenstein 11, wo 10 167 Zeilen
+   und 351 Deklarationen ohne `sorry` von nichts verbraucht werden — die einzige
+   Stelle des Projekts, an der eine **fertige** Roadmap brachliegt, weil ein
+   Satz in einer anderen fehlt.
+
+1. **Die stetige Fassung des fdd-Kriteriums**, über die Entscheidung, wie
+   `MartingaleProblems/Suggested.lean` und `WeakConvergence/Suggested.lean`
+   zusammenkommen. Unverändert der Vorschlag des Vorlaufs, und er wartet auf eine
+   Entscheidung des Nutzers und nicht auf einen Beweis.
+
+2. **`isStrongMarkov` auf denselben Daten.** **Worauf es ruht:** auf
+   `isMarkov_jumpOperator_coordinate` dieses Laufs und auf dem optionalen
+   Sampling in stetiger Zeit, das seit dem 2026-09-10 in Meilenstein 9 steht.
+   **Warum jetzt:** es ist die letzte der fünf im Meilenstein ausformulierten
+   Aussagen ohne Deklaration, und die Pfade des Sprungprozesses sind
+   stückweise konstant — die Stoppzeitapproximation, die der allgemeine Beweis
+   braucht, ist auf ihnen billig.

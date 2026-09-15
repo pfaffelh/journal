@@ -417,12 +417,40 @@ level up: `Shift` had stood since Milestone 5 with no witness at all.
 is `pathFiltration_eq`, because the σ-field is *defined* as the trace `comap toFun` of the
 product σ-field; `generateFrom_coordinate` says the two readings agree.
 
-The one hypothesis of Milestone 6 that this space does not discharge is `hint`, and the reason
-is in the statement and not in the space: it quantifies over **all** solving measures, and a
-test process of `mpFamily` is bounded, hence not integrable against an infinite one.  Its proof
-applies it only at probability measures, so `IsProbabilityMeasure` belongs in it;
-`integrable_mpFamily_coordinate` is stated over `IsFiniteMeasure`, which is the weakest
-hypothesis under which it is true.
+The one hypothesis of Milestone 6 that this space did not discharge was `hint`, and the reason
+was in the statement and not in the space: as it stood it quantified over **all** solving
+measures, and a test process of `mpFamily` is bounded, hence not integrable against an infinite
+one.  Its proof applies it only at probability measures, so `IsProbabilityMeasure` now stands in
+its binder, and `integrable_mpFamily_coordinate` -- stated over `IsFiniteMeasure`, the weakest
+hypothesis under which it is true -- fits into it.
+
+Eight more on 2026-09-15, in `section JumpUniqueness` and `section TwoStateSolution`, close
+Milestone 6 on the data of Milestone 4 and turn the two milestones into one statement:
+
+```
+{P | P solves the jump problem, P is a probability measure, P ∘ X₀⁻¹ = ν}
+  = {(jumpMeasure mu nu).map (jumpPath lam)}
+```
+
+(`mpSolutions_jumpOperator_coordinate_eq_singleton`).  This is the first martingale problem in
+this file shown to have **exactly one** solution: existence is `jumpPath_isMPSolution` of the
+preceding section, uniqueness is `subsingleton_mpSolutions_jumpOperator_coordinate`, and
+`eq:absonedim` comes from `onedim_mpFamily_jumpOperator_coordinate`.  No topology on `E`, no
+standard Borel structure, no positivity of the rate, no countability -- a measurable structure
+with measurable diagonal and nothing else.
+
+`real_map_coordinate_flip_eq` is the acceptance example, and it is the point of the exercise:
+**any** probability measure on `RightContinuousPath Bool` that solves the martingale problem of
+`A f x = f (!x) - f x` and starts at `false` puts mass `(1 - exp (-2t))/2` on `{true}` at time
+`t`.  The hypothesis is that it is *a* solution; the conclusion is a number, and the number is
+`jumpMeasure_map_jumpProcess_flip`, computed from the exponential series of the generator and
+not from the path construction.
+
+`isMarkov_jumpOperator_coordinate` is the other half of Milestone 6 on the same data --
+`thm:absuniq`(a), every solution is Markov -- and it consumes the *same* input,
+`onedim_mpFamily_jumpOperator_coordinate`.  Markov is the **conclusion** there and not a
+hypothesis, which is `rem:noch1`; Ethier--Kurtz 4.4.1 runs the other way and is a different
+theorem.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -28444,3 +28472,295 @@ theorem isProbabilityMeasure_map_jumpPath {lam : E → ℝ} (hlam : Measurable l
   Measure.isProbabilityMeasure_map (measurable_jumpPath hlam).aemeasurable
 
 end JumpPath
+
+/-! ### Milestone 6 on the data of Milestone 4: the solution set is a singleton
+
+The previous section put a solution on the canonical path space; this one puts the *only* one
+there.  Every hypothesis of `subsingleton_mpSolutions_mpFamily_lebesgueClock` is discharged on
+`(RightContinuousPath E, coordinate, pathFiltration, pathShift)` and on `jumpOperator lam mu`,
+and `jumpPath_isMPSolution` supplies the member.  What comes out is an identity of **sets**,
+
+```
+{P | P solves the problem, P is a probability measure, P ∘ X₀⁻¹ = ν}
+  = {(jumpMeasure mu nu).map (jumpPath lam)},
+```
+
+which is existence and uniqueness in one line, and is the first place in this file where a
+martingale problem is shown to have *exactly* one solution.
+
+Two remarks on what this costs and what it does not.
+
+* It does **not** cost a topology on `E`, a standard Borel hypothesis, or a positivity hypothesis
+  on the rate: the rate is bounded, nonnegative and measurable, the kernel is Dirac at the states
+  where the rate vanishes, and `[MeasurableEq E]` is what makes "the chain does not move" a
+  measurable statement.  Those are the hypotheses of `jumpProcessE_isMPSolution_of_nonneg`, and
+  the uniqueness half adds none.
+* It does **not** go through `isMarkov_of_unique_onedim`.  Uniqueness here is `thm:absuniq`(b),
+  whose input `eq:absonedim` is `onedim_mpFamily_jumpOperator` -- the one dimensional laws of the
+  jump problem are determined by the initial law -- and the Markov property is a *consequence*
+  further down, not an assumption.  That is `rem:noch1` honoured on data.
+-/
+
+section JumpUniqueness
+
+variable {E : Type*} [MeasurableSpace E]
+
+/-- **`eq:absonedim` on the canonical path space.**  The hypothesis `honedim` of
+`subsingleton_mpSolutions_mpFamily_lebesgueClock`, discharged for the jump operator at the
+coordinate process.
+
+`onedim_mpFamily_jumpOperator` carries two hypotheses about the pair `(F, π)` that the abstract
+path space of Milestone 6 does not supply -- measurability of each coordinate, and **joint**
+measurability in time and path -- and the canonical path space supplies both, the second because
+its points carry a regularity.  That is the whole reason the space is a subtype and not a
+function space. -/
+theorem onedim_mpFamily_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    (r : ℝ≥0) (R R' : Measure (RightContinuousPath E))
+    (hR : IsProbabilityMeasure R) (hR' : IsProbabilityMeasure R')
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      (RightContinuousPath.pathFiltration (E := E)) R)
+    (hsol' : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      (RightContinuousPath.pathFiltration (E := E)) R')
+    (hinit : R.map (RightContinuousPath.coordinate (E := E) ⊥)
+      = R'.map (RightContinuousPath.coordinate (E := E) ⊥)) (u : ℝ≥0) :
+    R.map (RightContinuousPath.coordinate (E := E) u)
+      = R'.map (RightContinuousPath.coordinate (E := E) u) :=
+  onedim_mpFamily_jumpOperator hlam hlam0 hL RightContinuousPath.measurable_coordinate
+    (fun _ hh ↦ RightContinuousPath.measurable_uncurry_coordinate hh)
+    r R R' hR hR' hsol hsol' hinit u
+
+/-- **`thm:absuniq`(b) on the data of Milestone 4.**  At most one probability measure on the
+canonical path space solves the martingale problem of a bounded jump operator with a prescribed
+initial law.
+
+Every hypothesis of `subsingleton_mpSolutions_mpFamily_lebesgueClock` is met here, and each by a
+theorem of the two preceding sections and by nothing ad hoc: the shift is `pathShift`, the clock
+is `lebesgueClock`, the σ-field is the one the coordinates generate, and the integrability
+proviso of `lem:restart` is uniform in the measure.  The absorbing convention `habs` is **not**
+among them -- uniqueness does not need it, only the existence half does. -/
+theorem subsingleton_mpSolutions_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    (nu : Measure E) :
+    Set.Subsingleton {P ∈ mpSolutions (mpFamily (jumpOperator lam mu) lebesgueClock
+          Clock.Conv.optional
+          (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+        (RightContinuousPath.pathFiltration (E := E)) |
+      IsProbabilityMeasure P ∧ P.map (RightContinuousPath.coordinate (E := E) ⊥) = nu} :=
+  subsingleton_mpSolutions_mpFamily_lebesgueClock
+    (S := RightContinuousPath.pathShift)
+    (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp)
+    (fun _ hp f ↦ RightContinuousPath.measurable_comp_coordinate
+      (measurable_snd_jumpOperator hlam hp) f)
+    RightContinuousPath.shiftMeasurable_pathFiltration
+    (fun _ hY ↦ RightContinuousPath.stronglyAdapted_mpFamily_coordinate Clock.Conv.optional
+      (fun _ hp ↦ measurable_fst_jumpOperator hp)
+      (fun _ hp ↦ measurable_snd_jumpOperator hlam hp) hY)
+    (fun _ _ huv ↦ RightContinuousPath.measurable_pathFiltration huv)
+    RightContinuousPath.generateFrom_coordinate
+    (fun P hP _ _ hY u ↦ by
+      haveI := hP
+      exact integrable_mpFamily_jumpOperator_coordinate hlam hlam0 hL Clock.Conv.optional hY P u)
+    (onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL) nu
+
+/-- **The martingale problem of a bounded jump operator has exactly one solution on the canonical
+path space, and it is the one the construction produces.**
+
+This is the statement the two milestones were built to meet.  Existence is
+`jumpPath_isMPSolution`, uniqueness is `subsingleton_mpSolutions_jumpOperator_coordinate`, and
+the identity of sets says that neither leaves room for the other: the solution set is not merely
+small and not merely inhabited, it is the singleton whose point is the image of the jump measure
+under the path map.
+
+It is worth saying what is *not* assumed.  No topology on `E`, no completeness, no separability,
+no standard Borel structure, no positivity of the rate, and no countability of the state space --
+the state space carries a measurable structure with measurable diagonal and nothing else.  The
+absorbing convention `habs` is data the generator cannot see, and it is the price of letting the
+rate vanish. -/
+theorem mpSolutions_jumpOperator_coordinate_eq_singleton [MeasurableEq E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu]
+    (habs : ∀ x, lam x = 0 → mu x = Measure.dirac x)
+    (nu : Measure E) [IsProbabilityMeasure nu] :
+    {P ∈ mpSolutions (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+          (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+        (RightContinuousPath.pathFiltration (E := E)) |
+      IsProbabilityMeasure P ∧ P.map (RightContinuousPath.coordinate (E := E) ⊥) = nu}
+    = {(jumpMeasure mu nu).map (jumpPath lam)} := by
+  have hmem : (jumpMeasure mu nu).map (jumpPath lam) ∈
+      {P ∈ mpSolutions (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+            (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+          (RightContinuousPath.pathFiltration (E := E)) |
+        IsProbabilityMeasure P ∧ P.map (RightContinuousPath.coordinate (E := E) ⊥) = nu} :=
+    ⟨jumpPath_isMPSolution hlam hlam0 hL mu habs nu,
+      isProbabilityMeasure_map_jumpPath hlam mu nu, map_coordinate_bot_jumpPath hlam mu nu⟩
+  refine Set.eq_singleton_iff_unique_mem.2 ⟨hmem, fun P hP ↦ ?_⟩
+  exact subsingleton_mpSolutions_jumpOperator_coordinate hlam hlam0 hL nu hP hmem
+
+/-- **The one dimensional laws of the unique solution are those of the construction.**  The
+coordinate at `t` of the image measure has the law of the process at `t`, because the coordinate
+of the image **is** the process by `rfl`; `Measure.map_map` is the whole proof.
+
+This is what turns the singleton above into something a reader can check against a number: any
+closed form for the law of `jumpProcessE lam t` under `jumpMeasure mu nu` is a closed form for
+the law of the unique solution at `t`. -/
+theorem map_coordinate_map_jumpPath {lam : E → ℝ} (hlam : Measurable lam) (mu : Kernel E E)
+    [IsMarkovKernel mu] (nu : Measure E) (t : ℝ≥0) :
+    ((jumpMeasure mu nu).map (jumpPath lam)).map (RightContinuousPath.coordinate (E := E) t)
+      = (jumpMeasure mu nu).map (fun ω ↦ jumpProcessE lam (t : ℝ) ω) :=
+  Measure.map_map (RightContinuousPath.measurable_coordinate t) (measurable_jumpPath hlam)
+
+/-- **`thm:absuniq`(a) on the data of Milestone 4: every solution of the jump problem is
+Markov.**  Conditioning the state at `r + t` on the whole past at `r` is the same as conditioning
+it on the state at `r` alone, for every bounded measurable `f`, every `r` and every `t`.
+
+`isMarkov_of_unique_onedim` at `Ω = F = RightContinuousPath E` and `X = id`, with
+`onedim_mpFamily_jumpOperator_coordinate` as its `eq:absonedim` -- literally the input that
+`subsingleton_mpSolutions_jumpOperator_coordinate` consumes, so both halves of Milestone 6 are
+discharged on one set of data by one lemma.
+
+**The direction is the point.**  Markov is the *conclusion*.  What goes in is uniqueness of the
+one dimensional laws, and that comes from Milestone 4 through
+`integral_eq_of_isMPSolution_of_map_eq` -- from the bounded generator and the exponential series,
+not from a semigroup and not from Hille--Yosida.  Ethier--Kurtz 4.4.1 runs the other way and is a
+different theorem; that is `rem:noch1`, and here it is checkable.
+
+The hypothesis is that `P` is *a* solution.  Nothing says it is the one the construction
+produces, and the proof does not use that it is -- although, by
+`mpSolutions_jumpOperator_coordinate_eq_singleton`, it is. -/
+theorem isMarkov_jumpOperator_coordinate {lam : E → ℝ} (hlam : Measurable lam) {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L) {mu : Kernel E E} [IsMarkovKernel mu]
+    {P : Measure (RightContinuousPath E)} [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      (RightContinuousPath.pathFiltration (E := E)) P)
+    (r : ℝ≥0) {f : E → ℝ} (hf : Measurable f) {cf : ℝ} (hfb : ∀ x, ‖f x‖ ≤ cf) (t : ℝ≥0) :
+    P[fun ω ↦ f (RightContinuousPath.coordinate (E := E) (r + t) ω) |
+        RightContinuousPath.pathFiltration (E := E) r]
+      =ᵐ[P] P[fun ω ↦ f (RightContinuousPath.coordinate (E := E) (r + t) ω) |
+        stateSigma (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E) id r] := by
+  have hS := isShiftSystem_mpFamily_lebesgueClock (A := jumpOperator lam mu)
+    (c := Clock.Conv.optional) (S := RightContinuousPath.pathShift)
+    (𝓕₀ := RightContinuousPath.pathFiltration (E := E))
+    (fun _ hp ↦ measurable_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_fst_jumpOperator hp)
+    (fun _ hp ↦ bddAbove_snd_jumpOperator hlam0 hL hp)
+    (fun _ hp g ↦ RightContinuousPath.measurable_comp_coordinate
+      (measurable_snd_jumpOperator hlam hp) g)
+    (fun _ ↦ RightContinuousPath.measurable_pathFiltration le_rfl)
+    RightContinuousPath.shiftMeasurable_pathFiltration
+    (fun _ hY ↦ RightContinuousPath.stronglyAdapted_mpFamily_coordinate Clock.Conv.optional
+      (fun _ hp ↦ measurable_fst_jumpOperator hp)
+      (fun _ hp ↦ measurable_snd_jumpOperator hlam hp) hY)
+  have himg : ((fun (Y : ℝ≥0 → RightContinuousPath E → ℝ) s ω ↦ Y s (id ω)) ''
+      mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      = mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E) := Set.image_id' _
+  have hsol' : IsMPSolution ((fun (Y : ℝ≥0 → RightContinuousPath E → ℝ) s ω ↦ Y s (id ω)) ''
+      mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath E → E))
+      (RightContinuousPath.pathFiltration (E := E)) P := by rw [himg]; exact hsol
+  refine isMarkov_of_unique_onedim hS NNReal.bot_eq_zero (fun _ _ ↦ le_self_add)
+    (fun _ ↦ RightContinuousPath.measurable_pathFiltration le_rfl) measurable_id
+    (fun _ ↦ measurable_id) hsol'
+    (fun _ hY u ↦ integrable_mpFamily_jumpOperator_coordinate hlam hlam0 hL
+      Clock.Conv.optional hY P u)
+    r (onedim_mpFamily_jumpOperator_coordinate hlam hlam0 hL r) hf hfb t
+
+end JumpUniqueness
+
+/-! ### The acceptance example: the two state chain, existence and uniqueness and a number
+
+`TwoStateExample` computed the one dimensional law of the flip chain in closed form,
+`(1 - exp (-2t))/2`, from the exponential series of the generator -- a number a reader checks
+against a source that is not this construction.  What that section could not say is *whose* law
+it is: it was the law of `jumpProcess flipRate t` under `jumpMeasure`, a particular construction
+among possibly many.
+
+Here it becomes the law of **the** solution.  The martingale problem of the flip generator on the
+canonical path space, started at `false`, has exactly one solution, and at time `t` that solution
+puts mass `(1 - exp (-2t))/2` on `{true}`.  Nothing in the statement mentions
+`jumpMeasure`, `jumpProcess` or a chain: it speaks of a measure on paths, the generator, and a
+number.
+
+This is the emptiness probe of Milestone 6 discharged on data, and it is the answer to the
+objection the milestone carried since it was written -- that `thm:absuniq` is a theorem about a
+structure of which no inhabited instance was known. -/
+
+section TwoStateSolution
+
+/-- **The martingale problem of the two state chain has exactly one solution** on the canonical
+path space for each initial law.  `mpSolutions_jumpOperator_coordinate_eq_singleton` at
+`lam = flipRate`, `mu = flipKernel`; the absorbing convention is vacuous because the rate is
+`1`. -/
+theorem mpSolutions_flip_coordinate_eq_singleton (nu : Measure Bool) [IsProbabilityMeasure nu] :
+    {P ∈ mpSolutions (mpFamily (jumpOperator flipRate flipKernel) lebesgueClock
+          Clock.Conv.optional
+          (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath Bool → Bool))
+        (RightContinuousPath.pathFiltration (E := Bool)) |
+      IsProbabilityMeasure P ∧ P.map (RightContinuousPath.coordinate (E := Bool) ⊥) = nu}
+    = {(jumpMeasure flipKernel nu).map (jumpPath flipRate)} :=
+  mpSolutions_jumpOperator_coordinate_eq_singleton measurable_flipRate
+    (fun x ↦ (flipRate_pos x).le) flipRate_le_one flipKernel
+    (fun x hx ↦ absurd hx (flipRate_pos x).ne') nu
+
+/-- **The law of the solution at time `t` is the law computed in `TwoStateExample`.**  The two
+constructions `jumpProcessE` and `jumpProcess` agree almost surely under `jumpMeasure`, because
+the rate is positive and the waiting times are almost surely positive, and that is the only step:
+the passage from the path space to the construction is `map_coordinate_map_jumpPath`, which is
+`rfl` underneath. -/
+theorem map_coordinate_map_jumpPath_flip (t : ℝ≥0) :
+    ((jumpMeasure flipKernel (Measure.dirac false)).map (jumpPath flipRate)).map
+        (RightContinuousPath.coordinate (E := Bool) t)
+      = (jumpMeasure flipKernel (Measure.dirac false)).map (jumpProcess flipRate (t : ℝ)) := by
+  rw [map_coordinate_map_jumpPath measurable_flipRate flipKernel (Measure.dirac false) t]
+  refine Measure.map_congr ?_
+  filter_upwards [ae_pos_snd_jumpMeasure flipKernel (Measure.dirac false)] with ω hω
+  exact jumpProcessE_eq_jumpProcess (y := ω.1) (xi := ω.2) flipRate_pos hω (t : ℝ)
+
+/-- **The acceptance example of Milestone 6, as a number.**  Let `P` be *any* probability measure
+on the canonical path space over `Bool` that solves the martingale problem of the generator
+`A f x = f (!x) - f x` for the coordinate process and starts at `false`.  Then
+
+```
+P (X t = true) = (1 - exp (-2 t)) / 2.
+```
+
+The hypothesis is that `P` is *a* solution; the conclusion is a number.  In between sits
+`mpSolutions_flip_coordinate_eq_singleton`, which says there is only one, and
+`jumpMeasure_map_jumpProcess_flip`, which computes it from the exponential series of the
+generator and not from the path construction.  Two independent routes to the same value is what
+an acceptance example is for. -/
+theorem real_map_coordinate_flip_eq (P : Measure (RightContinuousPath Bool))
+    [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator flipRate flipKernel) lebesgueClock
+        Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath Bool → Bool))
+      (RightContinuousPath.pathFiltration (E := Bool)) P)
+    (hinit : P.map (RightContinuousPath.coordinate (E := Bool) ⊥) = Measure.dirac false)
+    (t : ℝ≥0) :
+    (P.map (RightContinuousPath.coordinate (E := Bool) t)).real {true}
+      = (1 - Real.exp (-2 * (t : ℝ))) / 2 := by
+  have hP : P = (jumpMeasure flipKernel (Measure.dirac false)).map (jumpPath flipRate) := by
+    have := mpSolutions_flip_coordinate_eq_singleton (Measure.dirac false)
+    rw [Set.eq_singleton_iff_unique_mem] at this
+    exact this.2 P ⟨hsol, ‹IsProbabilityMeasure P›, hinit⟩
+  rw [hP, map_coordinate_map_jumpPath_flip t, jumpMeasure_map_jumpProcess_flip t]
+
+/-- The cheapest probe on the statement above: at `t = 0` the solution sits at `false`. -/
+example (P : Measure (RightContinuousPath Bool)) [IsProbabilityMeasure P]
+    (hsol : IsMPSolution (mpFamily (jumpOperator flipRate flipKernel) lebesgueClock
+        Clock.Conv.optional
+        (RightContinuousPath.coordinate : ℝ≥0 → RightContinuousPath Bool → Bool))
+      (RightContinuousPath.pathFiltration (E := Bool)) P)
+    (hinit : P.map (RightContinuousPath.coordinate (E := Bool) ⊥) = Measure.dirac false) :
+    (P.map (RightContinuousPath.coordinate (E := Bool) 0)).real {true} = 0 := by
+  rw [real_map_coordinate_flip_eq P hsol hinit 0]
+  norm_num
+
+end TwoStateSolution

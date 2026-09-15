@@ -6638,18 +6638,70 @@ one, and they are what the instances of the milestone stand on.
   `onedim_mpFamily_jumpOperator` — and is a probability measure, which every
   statement of this milestone asks for.
 
+**The solution set of the jump problem is a singleton.** The seam above puts a
+solution on the canonical path space; these put the *only* one there, and the
+statement is an identity of sets and not two implications.
+
+* `onedim_mpFamily_jumpOperator_coordinate`: `eq:absonedim` at the coordinate
+  process of the canonical path space, which is `onedim_mpFamily_jumpOperator`
+  with its two hypotheses about `(F, π)` discharged — measurability of each
+  coordinate (`measurable_coordinate`) and **joint** measurability in time and
+  path (`measurable_uncurry_coordinate`). The second is the one the abstract
+  path space does not supply, and it is why the space is a subtype carrying a
+  regularity and not a function space.
+* `subsingleton_mpSolutions_jumpOperator_coordinate`: `thm:absuniq`(b) on the
+  data of Milestone 4. At most one probability measure on the canonical path
+  space solves the martingale problem of a bounded jump operator with a
+  prescribed initial law. Every hypothesis of
+  `subsingleton_mpSolutions_mpFamily_lebesgueClock` is met by a theorem of the
+  two blocks above: the shift is `pathShift`, the clock is `lebesgueClock`, the
+  σ-field is `generateFrom_coordinate`, the integrability proviso is
+  `integrable_mpFamily_jumpOperator_coordinate`. The absorbing convention
+  `habs` is **not** among them — uniqueness does not need it, only existence
+  does.
+* `mpSolutions_jumpOperator_coordinate_eq_singleton`: the solution set **is**
+  `{(jumpMeasure mu nu).map (jumpPath lam)}`. Existence and uniqueness in one
+  statement, and the first martingale problem in this development shown to have
+  exactly one solution. What is not assumed: no topology on `E`, no
+  completeness, no separability, no standard Borel structure, no positivity of
+  the rate and no countability of the state space — a measurable structure with
+  measurable diagonal and nothing else.
+* `map_coordinate_map_jumpPath`: the law of the unique solution at `t` is the
+  law of `jumpProcessE lam t` under `jumpMeasure mu nu`, by `Measure.map_map`,
+  because the coordinate of the image is the process by `rfl`. This is what
+  makes a closed form computed on the construction a closed form for the
+  solution.
+* `isMarkov_jumpOperator_coordinate`: the Markov half of the same instance.
+  `isMarkov_of_unique_onedim` at the data of Milestone 4, with
+  `onedim_mpFamily_jumpOperator_coordinate` as its `eq:absonedim` — literally
+  the input the uniqueness half consumes, so the two halves of this milestone
+  are discharged on one set of data by one lemma. Markov is the **conclusion**:
+  the input is uniqueness of the one dimensional laws, which comes from
+  Milestone 4 through `integral_eq_of_isMPSolution_of_map_eq`, and not from a
+  semigroup and not from Hille–Yosida. That is `rem:noch1` checkable in Lean,
+  and Ethier–Kurtz 4.4.1 runs the other way and is a different theorem.
+
 **Acceptance examples.**
 
-* **The two state chain of Milestone 4, all the way through.** `E = {0,1}`,
-  `lam ≡ 1`, `mu x = Measure.dirac (1 - x)`. `exists_unique_of_bounded` supplies
-  uniqueness of the one dimensional distributions for every initial law — in
-  Lean through `integral_eq_of_isMPSolution_of_map_eq` and the seam above — so
-  `isMarkov_of_unique_onedim` must return the Markov property and
-  `subsingleton_mpSolutions_of_unique_onedim` uniqueness, with transition
-  operator `T t = exp (t • A)` — which is the `T t f x = ∫ f (ω t) ∂(P x)` of
-  `isStrongMarkov` computed. Every hypothesis of the milestone is discharged by
-  Milestone 4 on this instance, so it is the one that checks the interfaces
-  between the two match.
+* **The two state chain of Milestone 4, all the way through** —
+  `mpSolutions_flip_coordinate_eq_singleton` and
+  `real_map_coordinate_flip_eq`. `E = Bool`, `lam ≡ 1`,
+  `mu = Kernel.deterministic (!·)`, so the generator is
+  `A f x = f (!x) - f x`. The martingale problem on the canonical path space
+  started at `false` has exactly one solution, and at time `t` that solution
+  puts mass `(1 - exp (-2t))/2` on `{true}`. The hypothesis of the second
+  statement is that `P` is *a* solution; the conclusion is a number, and the
+  number comes from `jumpMeasure_map_jumpProcess_flip` — the exponential series
+  of the generator — and not from the path construction. Two independent routes
+  to one value is what an acceptance example is for. The probe at `t = 0` is
+  written out: the solution sits at `false`.
+* **The transition operator of that example, computed.**
+  `isMarkov_jumpOperator_coordinate` gives the Markov property on these data;
+  its transition operator is `T t = exp (t • A)`, which is the
+  `T t f x = ∫ f (ω t) ∂(P x)` of `isStrongMarkov`, and `expJumpApply_flip` is
+  that exponential in closed form on the two state chain. The acceptance test is
+  that the two readings of `T t f false` at `f = 1_{true}` agree, which is the
+  number above.
 * **Uniqueness of the one dimensional laws is genuinely weaker than uniqueness.**
   The hypothesis of this milestone is that the one dimensional distributions of
   the shifted problems are determined, for **every** shift; dropping the shift
