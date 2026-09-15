@@ -1,8 +1,11 @@
 # Was am Wochenende bei Dir liegt
 
-Stand 2026-09-08. Alles, was ich vorbereiten konnte, ist vorbereitet und
-gepusht; was hier steht, braucht Dich. Die Läufe arbeiten unterdessen weiter,
-seit dem 7. September stündlich, und sammeln auf `facts-inventory`.
+Stand 2026-09-08; die Zahlen im letzten Abschnitt sind am 2026-09-15
+nachgeführt. Alles, was ich vorbereiten konnte, ist vorbereitet und gepusht; was
+hier steht, braucht Dich. Die Läufe sammeln auf `facts-inventory` — seit dem
+7. September zunächst stündlich, dann gestreckt, und seit dem Abend des
+15. September durch die Zeitschranke auf fisher **angehalten**; siehe den
+letzten Abschnitt.
 
 ## 1. Die Einreichung bei Tau Ceti — der einzige echte Engpass
 
@@ -622,33 +625,82 @@ lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festlie
 
 ## Was inzwischen ohne Dich läuft
 
-78 Läufe bisher, seit dem 7. September stündlich, Opus 5. Am 7./8. September
-sind in einem Tag rund 4000 Zeilen Lean dazugekommen. Vier Läufe fielen am
-7. September an der Sitzungsgrenze des Kontos aus; der Runner erkennt sie jetzt,
-merkt sich den Rücksetzzeitpunkt und setzt bis dahin aus, statt stündlich
-dagegenzulaufen.
+*(Die Zahlen dieses Abschnitts sind am 2026-09-15 nachgeführt und einzeln
+nachgeprüft; der Rest der Datei ist der Stand vom 8. September.)*
 
-Lean-Stand, alle drei Dateien gegen Mathlib v4.33.1 geprüft:
+**208 Läufe** bisher (`Facts/STATUS.md`, zuletzt `20260915T210301Z`), Opus 5;
+von den 209 Laufcommits tragen 190 `rc=0`, dreizehn `rc=1`, drei einen Timeout
+und zwei die überlange Argumentliste vom 10. September. Am 7./8. September sind in
+einem Tag rund 4000 Zeilen Lean dazugekommen.
 
-| | Deklarationen | bewiesen | `sorry` |
-|---|---:|---:|---:|
-| `WeakConvergence` | 133 | 131 | 2 |
-| `SkorokhodSpace` | 109 | 98 | 11 |
-| `MartingaleProblems` | 67 | 58 | 9 |
+**Stündlich war der Takt aber nicht geblieben.** Die Laufstempel zeigen ihn
+gestreckt: stündlich bis zum 11. September, zweistündlich am 12./13.,
+vierstündlich am 14. (sechs Läufe, `02:33` bis `22:33` UTC). Am 15. September
+liefen nur `02:33` und `06:33`, dann nichts mehr, und der letzte Lauf des Tages
+— `20:03` UTC, also 22:03 Ortszeit — steht neben dem Raster.
 
-Ganz bewiesen sind seither `fact:monotoneclass` (der funktionale
-Monotone-Klassen-Satz, den Mathlib nur für Mengen hat), `fact:stoneweierstrass`
-und die erste Hälfte von `fact:convdet`; `fact:PSpolish` steht bis auf den
-Übergang vom atomaren zum allgemeinen Fall.
+**Der Grund saß in der Zeitschranke, nicht im Runner:** `~/bin/facts_gate.sh`
+auf fisher stand auf `NOT_BEFORE='2026-09-16 22:03'` und übersprang jeden Slot
+stillschweigend. Die Crontab dort feuert `3 * * * *`, also **stündlich**;
+gebremst hat allein die Schranke.
 
-Drei Stellen im Manuskript sind dabei korrigiert worden, alle in dieselbe
-Richtung — die Formalisierung war schärfer als die Prosa: `rem:skorokhodform`
-(die Sprungtheorie braucht (T2b) nicht, nur Properness), `fact:monotoneclass`
-(stand fälschlich unter „was Mathlib hat"), `fact:convdet` (die Separabilität
-ist für die erste Hälfte entbehrlich).
+**Was am Abend des 15. September damit geschah**, der Vollständigkeit halber:
+die Schranke wurde um 22:55 aufgehoben, der Slot um 23:03 lief daraufhin
+(`20260915T210301Z`, `rc=0`, dreiundzwanzig Minuten) — und gegen 23:30 hat der
+Nutzer sie wieder gesetzt, zurück auf `2026-09-16 22:03`. **Stand jetzt ruhen
+die Läufe also**, die Crontab-Zeile bleibt unangetastet, und sie greift von
+selbst wieder, sobald `NOT_BEFORE` überschritten ist. Eine Zeile in
+`~/bin/facts_gate.sh` entscheidet das; die Fassung ohne Schranke liegt als
+`~/bin/facts_gate.sh.bak` daneben.
 
-Kein `sorry` steht mehr in einer *Aussage*, nur noch in Beweisen.
+Lean-Stand, alle drei Dateien am 2026-09-15 nach dem Lauf `20260915T210301Z`
+über
+`lake --dir=~/Code/lean/journal env lean` gegen das gebaute Mathlib v4.33.1 des
+Hauptcheckouts geprüft (dort wurde nichts geschrieben):
 
-Manuskript: 132 Seiten, `check.py` clean. `master` und `facts-inventory` sind
-synchron; wenn Du zurückkommst, frag nach einem Update, dann merge ich, was
-sich angesammelt hat.
+| | Zeilen | Deklarationen | `sorry` | Fehler |
+|---|---:|---:|---:|---:|
+| `WeakConvergence` | 6 964 | 195 | 1 | 2 |
+| `SkorokhodSpace` | 10 167 | 353 | 0 | 0 |
+| `MartingaleProblems` | 29 092 | 1 359 | 6 | 0 |
+
+`SkorokhodSpace` ist damit **ganz bewiesen** und seit dem 10. September
+unberührt; `WeakConvergence` seit dem 9. Die zwei Fehler dort sind die **eine**
+bewußt gegen `upstream/master` geschriebene Aussage
+`tendsto_map_of_measure_setOf_continuousAt_eq_one` (Zeile 2181) — sie
+elaboriert gegen v4.33.1 nicht, weil `ProbabilityMeasure.map` dort noch ein
+`AEMeasurable`-Argument nimmt, und darum meldet Lean ihr `sorry` gar nicht
+erst. Nachgeprüft, absichtlich, bleibt so.
+
+Die ganze Bewegung steckt seither in `MartingaleProblems`: **1 036 Zeilen am
+8. September, 29 092 heute.** Die sechs verbliebenen `sorry` stehen in
+`isMPSolution_iff_forall_fdd_continuous` (die stetige Fassung des
+fdd-Kriteriums — eine Entscheidung über die Anordnung der Dateien, keine offene
+Mathematik), `exists_cadlag_modification_of_isRegularizingClass` (wartet auf
+die reellwertige Regularisierung, Meilenstein 9), den beiden
+Quasi-Linksstetigkeiten und den beiden Konvergenzsätzen `mpSolution_of_tendsto`
+und `isMPSolution_of_forall_condExp_eq_of_dense`.
+
+Inhaltlich geschlossen sind seit dem 8. September: **Meilenstein 5**
+(`restart`, `restart_canonical` — dabei zeigte sich, daß der Aussage, wie sie
+dastand, vier Voraussetzungen fehlten und eine überflüssige dastand),
+**Meilenstein 6** (`lem:propagation`, `thm:absuniq` (a) und (b), samt
+Leerheitsprobe an `lebesgueClock`), der kanonische Pfadraum mit `jumpPath`, das
+fdd-Kriterium in meßbarer Fassung und — am 15. September — das **erste
+Martingalproblem dieser Entwicklung mit genau einer Lösung**. **Meilenstein 9**
+hat begonnen: erst der Schritt, der aus reellen Grenzwerten einen `E`-wertigen
+macht, dann im Lauf `20260915T210301Z` die **deterministische Hälfte von Doobs
+Regularisierung** — Oszillation längs eines einseitigen Filters *ist*
+Aufkreuzung eines rationalen Intervalls, und dieser Teil kommt ohne
+Wahrscheinlichkeit aus. Was zwischen
+`exists_cadlag_modification_of_isRegularizingClass` und seinem Beweis noch
+steht, sind nach diesem Lauf zwei Aussagen: `Submartingale.comp_monotone` und
+`Submartingale.ae_exists_not_hasUpcrossings`.
+
+Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle sechs sitzen in
+`theorem`en.
+
+Manuskript: **134 Seiten**, `check.py` clean — der Runner verwirft `.tex` und
+`.pdf` eines Laufs, der durchfällt, und behält den Rest. `master`,
+`origin/master` und `facts-inventory` sind synchron; am 2026-09-15 nachgesehen,
+es liegt nichts Unmerged herum.
