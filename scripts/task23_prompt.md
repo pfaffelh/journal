@@ -1,7 +1,7 @@
 Du arbeitest autonom und unbeaufsichtigt an **Task 23** des Manuskripts
 `Journal/Blog/MartingaleProblem/MartingaleProblem.tex`: dem Beweis der
 Dualitätsidentität für eine **rein atomare Uhr**. Du bist in einem
-git-Worktree auf dem Branch `task23-atomic-duality`. Zeitbudget: 30 Minuten.
+git-Worktree auf dem Branch `task23-atomic-duality`. Zeitbudget: 120 Minuten.
 
 ## Zuerst
 
@@ -17,6 +17,13 @@ viele, insbesondere ordnungsdichte Atommengen, (3) gemischte Uhr. Arbeite an
 der niedrigsten Stufe, die noch offen ist. Ein Lauf muss keine Stufe
 abschließen — ein sauber verifizierter Teilschritt plus ein ehrlicher
 Protokolleintrag ist ein guter Lauf.
+
+**Das Budget ist aber da, um benutzt zu werden.** Steht ein Teilschritt und ist
+weniger als die Hälfte der Zeit verbraucht, nimm den nächsten offenen Punkt in
+Angriff, statt den Lauf zu beenden. Schreibe den Protokolleintrag dabei
+**fortlaufend** — nach jedem verifizierten Ergebnis, nicht erst am Schluß:
+läuft die Zeit ab, committet der Runner, was dasteht, und ein Ergebnis ohne
+Eintrag ist verloren.
 
 ## Regeln, die nicht verhandelbar sind
 

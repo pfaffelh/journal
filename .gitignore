@@ -16,3 +16,4 @@ logs/
 *.fdb_latexmk
 
 __pycache__/
+.task23.lock

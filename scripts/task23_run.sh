@@ -82,11 +82,18 @@ ALLOWED=(
 MODEL="${TASK23_MODEL:-claude-opus-5}"
 FALLBACK="${TASK23_FALLBACK_MODEL:-sonnet}"
 
-timeout "${TIMEOUT_MIN}m" claude -p "$PROMPT" \
+# Der Prompt geht ueber stdin, nicht als Argument, aus zwei Gruenden.  Erstens
+# begrenzt Linux ein einzelnes Argument auf MAX_ARG_STRLEN = 128 KiB -- daran
+# sind am 2026-09-10 zwei Faktenlaeufe gestorben, als deren Prompt darueber
+# wuchs.  Zweitens ist --allowedTools variadisch und verschluckt ein folgendes
+# positionales Argument als weiteren Werkzeugnamen; der Lauf endet dann mit
+# einer Fehlermeldung, die nach etwas ganz anderem aussieht (gemessen
+# 2026-09-15).
+timeout "${TIMEOUT_MIN}m" claude -p \
     --model "$MODEL" \
     --fallback-model "$FALLBACK" \
     --allowedTools "${ALLOWED[@]}" \
-    >> "$RUNLOG" 2>&1
+    >> "$RUNLOG" 2>&1 <<< "$PROMPT"
 RC=$?
 
 case "$RC" in
