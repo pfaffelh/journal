@@ -38,7 +38,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-15.  Every declaration elaborates; 6 declarations carry `sorry`, and
+2026-09-15 (fifth run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -451,6 +451,21 @@ not from the path construction.
 `onedim_mpFamily_jumpOperator_coordinate`.  Markov is the **conclusion** there and not a
 hypothesis, which is `rem:noch1`; Ethier--Kurtz 4.4.1 runs the other way and is a different
 theorem.
+
+Seven more on 2026-09-15, in the new `section DoobRegularization`, are the **deterministic half of
+Doob's regularization** and carry no probability at all.  `HasUpcrossings a b g S n` records an
+increasing tuple inside `S` along which `g` alternates between below `a` and above `b`;
+`exists_chain_alternating` builds such a tuple greedily along any filter, over an abstract
+relation, because the two one sided filters `𝓝[S ∩ Set.Iio t] t` and `𝓝[S ∩ Set.Ioi t] t` need
+opposite ones -- the second chain descends and is read backwards, which exchanges the parities.
+`exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound` and its `Ioi` twin are the conclusion:
+boundedness on `S` plus a bound on the upcrossings of every rational interval inside `S` give one
+sided limits at **every** point, through Mathlib's `tendsto_of_no_upcrossings`, which is stated
+over an arbitrary filter.  Both hypotheses are read over `S` and not over `S ∩ Set.Iio t`, so one
+hypothesis serves every `t`; that is what will make the almost sure version a statement about one
+null set instead of one for each `t`.  `le_upcrossingsBefore_of_alternating` is the bridge to the
+probabilistic half: Mathlib's upcrossing count is indexed by `ℕ`, and an explicit alternating
+tuple forces it to be at least `n`.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -1421,6 +1436,203 @@ theorem restart_canonical {S : Shift F π} {𝓕₀ : Filtration ι mF}
     (fun Y hY u ↦ hint Y hY u) r hr hZ0 hZb hZm
 
 end Restart
+
+/-! ## Milestone 9, the real valued core: oscillation and one sided limits
+
+Doob's regularization splits in two, and the split is along the value space, not
+along the difficulty.  The `E` valued assembly is `section Regularizing` below:
+`exists_tendsto_of_forall_tendsto_comp` makes an `E` valued limit out of real
+ones, and `ae_exists_tendsto_of_forall_ae_exists_tendsto` collects the
+exceptional sets.  What they consume is a **real valued** statement: along a
+countable set `D` the real process has one sided limits at every point.
+
+This section is the deterministic half of that statement, and it is complete:
+oscillation of a real function along a one sided filter is *the same thing* as
+upcrossings of a rational interval, in both directions.  The probabilistic half
+-- that the upcrossings of a submartingale along a countable set are almost
+surely bounded -- is Doob's estimate, and `le_upcrossingsBefore_of_alternating`
+is the bridge to it, since Mathlib's upcrossing count is indexed by `ℕ`.
+
+`HasUpcrossings` is stated with an explicit alternating tuple rather than as a
+count.  That is not a matter of taste: the count exists only after a monotone
+enumeration of the time set has been chosen, while the tuple exists as soon as
+the times do, and the tuple is what the greedy construction produces.  It is
+also monotone in `S` by inspection, which the count is not. -/
+
+section DoobRegularization
+
+variable {ι : Type*} [LinearOrder ι]
+
+/-- `g` performs at least `n` upcrossings of the interval `[a, b]` at times taken
+from `S`: an increasing tuple `u 0 < ⋯ < u (2 n - 1)` inside `S` along which `g`
+alternates between below `a` and above `b`. -/
+def HasUpcrossings (a b : ℝ) (g : ι → ℝ) (S : Set ι) (n : ℕ) : Prop :=
+  ∃ u : ℕ → ι, (∀ k, k + 1 < 2 * n → u k < u (k + 1)) ∧ (∀ k, k < 2 * n → u k ∈ S) ∧
+    ∀ k, k < n → g (u (2 * k)) < a ∧ b < g (u (2 * k + 1))
+
+/-- **The greedy alternating chain.**  Along a filter `L` whose points eventually
+lie in `S`, and on which every point of `S` is eventually overtaken in the sense
+of a relation `R`, two properties that each hold frequently can be interleaved
+into an `R`-chain that alternates between them.
+
+The relation is left abstract because the two one sided filters need opposite
+ones: `𝓝[S ∩ Iio t] t` overtakes upwards and `𝓝[S ∩ Ioi t] t` downwards.  No
+order and no topology enter here; the whole content is that `hR` turns a
+frequently true property into a strictly `R`-later witness. -/
+theorem exists_chain_alternating {α : Type*} {L : Filter α} [L.NeBot] {S : Set α}
+    (hS : ∀ᶠ s in L, s ∈ S) {R : α → α → Prop} (hR : ∀ x ∈ S, ∀ᶠ s in L, R x s)
+    {p q : α → Prop} (hp : ∃ᶠ s in L, p s) (hq : ∃ᶠ s in L, q s) :
+    ∃ v : ℕ → α, (∀ j, v j ∈ S) ∧ (∀ j, R (v j) (v (j + 1))) ∧
+      (∀ j, j % 2 = 0 → p (v j)) ∧ ∀ j, j % 2 = 1 → q (v j) := by
+  have step : ∀ (x : α), x ∈ S → ∀ r : α → Prop, (∃ᶠ s in L, r s) →
+      ∃ y, y ∈ S ∧ R x y ∧ r y := by
+    intro x hx r hr
+    obtain ⟨y, hy, hyS, hyR⟩ := (hr.and_eventually (hS.and (hR x hx))).exists
+    exact ⟨y, hyS, hyR, hy⟩
+  choose! nextp hnextpS hnextpR hnextpp using fun (x : α) (hx : x ∈ S) => step x hx p hp
+  choose! nextq hnextqS hnextqR hnextqq using fun (x : α) (hx : x ∈ S) => step x hx q hq
+  obtain ⟨x₀, hx₀⟩ := hS.exists
+  -- `w 0` is a seed that is discarded; the chain is `v j = w (j + 1)`.
+  let w : ℕ → α := fun j => Nat.rec x₀ (fun n ih => if n % 2 = 0 then nextp ih else nextq ih) j
+  have hwS : ∀ j, w j ∈ S := by
+    intro j
+    induction j with
+    | zero => exact hx₀
+    | succ n ih =>
+        show (if n % 2 = 0 then nextp (w n) else nextq (w n)) ∈ S
+        split
+        · exact hnextpS _ ih
+        · exact hnextqS _ ih
+  refine ⟨fun j => w (j + 1), fun j => hwS (j + 1), ?_, ?_, ?_⟩
+  · intro j
+    show R (w (j + 1)) (if (j + 1) % 2 = 0 then nextp (w (j + 1)) else nextq (w (j + 1)))
+    split
+    · exact hnextpR _ (hwS (j + 1))
+    · exact hnextqR _ (hwS (j + 1))
+  · intro j hj
+    have hj' : j % 2 = 0 := hj
+    show p (if j % 2 = 0 then nextp (w j) else nextq (w j))
+    rw [if_pos hj']
+    exact hnextpp _ (hwS j)
+  · intro j hj
+    have hj' : ¬ j % 2 = 0 := by omega
+    show q (if j % 2 = 0 then nextp (w j) else nextq (w j))
+    rw [if_neg hj']
+    exact hnextqq _ (hwS j)
+
+variable [TopologicalSpace ι] [OrderTopology ι] {g : ι → ℝ} {S : Set ι} {t : ι} {a b : ℝ}
+
+/-- Frequent oscillation from the left forces upcrossings of every order.  The
+witnesses lie in `S ∩ Iio t`, hence in `S`, which is why the conclusion can be
+read over `S` alone and therefore serve every `t` at once. -/
+theorem hasUpcrossings_of_frequently_nhdsWithin_Iio [(𝓝[S ∩ Set.Iio t] t).NeBot]
+    (h₁ : ∃ᶠ s in 𝓝[S ∩ Set.Iio t] t, g s < a)
+    (h₂ : ∃ᶠ s in 𝓝[S ∩ Set.Iio t] t, b < g s) (n : ℕ) :
+    HasUpcrossings a b g S n := by
+  have hS : ∀ᶠ s in 𝓝[S ∩ Set.Iio t] t, s ∈ S ∩ Set.Iio t := self_mem_nhdsWithin
+  have hR : ∀ x ∈ S ∩ Set.Iio t, ∀ᶠ s in 𝓝[S ∩ Set.Iio t] t, x < s := by
+    intro x hx
+    exact nhdsWithin_le_nhds (Ioi_mem_nhds hx.2)
+  obtain ⟨v, hvS, hvR, hvp, hvq⟩ := exists_chain_alternating hS hR h₁ h₂
+  exact ⟨v, fun k _ => hvR k, fun k _ => (hvS k).1,
+    fun k _ => ⟨hvp _ (by omega), hvq _ (by omega)⟩⟩
+
+/-- Frequent oscillation from the right forces upcrossings of every order.  The
+chain is built descending and read backwards, which is why the two parities are
+exchanged against the left hand statement: what is an upcrossing when read
+towards `t` is the same tuple read away from it. -/
+theorem hasUpcrossings_of_frequently_nhdsWithin_Ioi [(𝓝[S ∩ Set.Ioi t] t).NeBot]
+    (h₁ : ∃ᶠ s in 𝓝[S ∩ Set.Ioi t] t, g s < a)
+    (h₂ : ∃ᶠ s in 𝓝[S ∩ Set.Ioi t] t, b < g s) (n : ℕ) :
+    HasUpcrossings a b g S n := by
+  have hS : ∀ᶠ s in 𝓝[S ∩ Set.Ioi t] t, s ∈ S ∩ Set.Ioi t := self_mem_nhdsWithin
+  have hR : ∀ x ∈ S ∩ Set.Ioi t, ∀ᶠ s in 𝓝[S ∩ Set.Ioi t] t, s < x := by
+    intro x hx
+    exact nhdsWithin_le_nhds (Iio_mem_nhds hx.2)
+  obtain ⟨v, hvS, hvR, hvp, hvq⟩ :=
+    exists_chain_alternating (R := fun x s => s < x) hS hR h₂ h₁
+  refine ⟨fun k => v (2 * n - 1 - k), ?_, fun k _ => (hvS _).1, ?_⟩
+  · intro k hk
+    have h1 : 2 * n - 1 - (k + 1) + 1 = 2 * n - 1 - k := by omega
+    have := hvR (2 * n - 1 - (k + 1))
+    rwa [h1] at this
+  · intro k hk
+    exact ⟨hvq _ (by omega), hvp _ (by omega)⟩
+
+/-- **The deterministic half of Doob's regularization**, left hand version: a
+function bounded on `S` whose number of upcrossings of every rational interval
+inside `S` is bounded has a limit along `S` from the left at every point.
+
+The two hypotheses are read over `S` and not over `S ∩ Iio t`, so one hypothesis
+serves every `t` at once.  That is what makes the almost sure version a statement
+about **one** null set rather than one for each `t`, and it is the reason the
+probabilistic input is formulated as a global bound on a countable time set and
+not as a family of local ones.  Mathlib supplies the conversion from "no
+oscillation across a dense set of levels" to convergence,
+`tendsto_of_no_upcrossings` (`Topology/Order/LiminfLimsup.lean:318`), over an
+arbitrary filter; the rational levels are `Rat.denseRange_cast`. -/
+theorem exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound
+    (hbdd : ∃ M, ∀ s ∈ S, |g s| ≤ M)
+    (H : ∀ a b : ℚ, a < b → ∃ n, ¬ HasUpcrossings (a : ℝ) (b : ℝ) g S n) (t : ι) :
+    ∃ c : ℝ, Tendsto g (𝓝[S ∩ Set.Iio t] t) (𝓝 c) := by
+  rcases (𝓝[S ∩ Set.Iio t] t).eq_or_neBot with h | h
+  · rw [h]; exact ⟨0, tendsto_bot⟩
+  have := h
+  obtain ⟨M, hM⟩ := hbdd
+  have hmem : ∀ᶠ s in 𝓝[S ∩ Set.Iio t] t, s ∈ S ∩ Set.Iio t := self_mem_nhdsWithin
+  have hub : IsBoundedUnder (· ≤ ·) (𝓝[S ∩ Set.Iio t] t) g :=
+    ⟨M, hmem.mono fun s hs => (le_abs_self _).trans (hM s hs.1)⟩
+  have hlb : IsBoundedUnder (· ≥ ·) (𝓝[S ∩ Set.Iio t] t) g :=
+    ⟨-M, hmem.mono fun s hs => neg_le_of_abs_le (hM s hs.1)⟩
+  refine tendsto_of_no_upcrossings Rat.denseRange_cast ?_ hub hlb
+  rintro _ ⟨a, rfl⟩ _ ⟨b, rfl⟩ hab ⟨h₁, h₂⟩
+  obtain ⟨n, hn⟩ := H a b (by exact_mod_cast hab)
+  exact hn (hasUpcrossings_of_frequently_nhdsWithin_Iio h₁ h₂ n)
+
+/-- **The deterministic half of Doob's regularization**, right hand version.  The
+hypotheses are literally those of the left hand version; only the filter
+changes, and with it which of the two oscillation lemmas is used. -/
+theorem exists_tendsto_nhdsWithin_Ioi_of_hasUpcrossings_bound
+    (hbdd : ∃ M, ∀ s ∈ S, |g s| ≤ M)
+    (H : ∀ a b : ℚ, a < b → ∃ n, ¬ HasUpcrossings (a : ℝ) (b : ℝ) g S n) (t : ι) :
+    ∃ c : ℝ, Tendsto g (𝓝[S ∩ Set.Ioi t] t) (𝓝 c) := by
+  rcases (𝓝[S ∩ Set.Ioi t] t).eq_or_neBot with h | h
+  · rw [h]; exact ⟨0, tendsto_bot⟩
+  have := h
+  obtain ⟨M, hM⟩ := hbdd
+  have hmem : ∀ᶠ s in 𝓝[S ∩ Set.Ioi t] t, s ∈ S ∩ Set.Ioi t := self_mem_nhdsWithin
+  have hub : IsBoundedUnder (· ≤ ·) (𝓝[S ∩ Set.Ioi t] t) g :=
+    ⟨M, hmem.mono fun s hs => (le_abs_self _).trans (hM s hs.1)⟩
+  have hlb : IsBoundedUnder (· ≥ ·) (𝓝[S ∩ Set.Ioi t] t) g :=
+    ⟨-M, hmem.mono fun s hs => neg_le_of_abs_le (hM s hs.1)⟩
+  refine tendsto_of_no_upcrossings Rat.denseRange_cast ?_ hub hlb
+  rintro _ ⟨a, rfl⟩ _ ⟨b, rfl⟩ hab ⟨h₁, h₂⟩
+  obtain ⟨n, hn⟩ := H a b (by exact_mod_cast hab)
+  exact hn (hasUpcrossings_of_frequently_nhdsWithin_Ioi h₁ h₂ n)
+
+/-- The bridge to Mathlib's upcrossing count, which is indexed by `ℕ`: an
+explicit alternating pattern of length `2 n` forces `upcrossingsBefore` to be at
+least `n`.  This is the induction inside
+`ProbabilityTheory.not_frequently_of_upcrossings_lt_top`
+(`Probability/Martingale/Convergence.lean:112`) read as a positive statement, and
+it is the step by which Doob's estimate will bound `HasUpcrossings`: an
+alternating tuple in a countable time set lies in the range of some monotone
+`ℕ`-enumeration, and there Mathlib's count applies. -/
+theorem le_upcrossingsBefore_of_alternating {Ω₀ : Type*} {f : ℕ → Ω₀ → ℝ} {ω : Ω₀} {a b : ℝ}
+    (hab : a < b) {n : ℕ} (h : ∀ k, k < n → f (2 * k) ω < a ∧ b < f (2 * k + 1) ω) :
+    n ≤ upcrossingsBefore a b f (2 * n) ω := by
+  induction n with
+  | zero => simp
+  | succ m ih =>
+      have hm : m ≤ upcrossingsBefore a b f (2 * m) ω := ih fun k hk => h k (by omega)
+      obtain ⟨h1, h2⟩ := h m (by omega)
+      have hstep := upcrossingsBefore_lt_of_exists_upcrossing (f := f) (ω := ω) (a := a) (b := b)
+        hab (N := 2 * m) (N₁ := 2 * m) le_rfl h1 (N₂ := 2 * m + 1) (by omega) h2
+      have h3 : 2 * m + 1 + 1 = 2 * (m + 1) := by ring
+      rw [h3] at hstep
+      omega
+
+end DoobRegularization
 
 /-! ## Milestone 9: the regularizing class and quasi-left-continuity
 

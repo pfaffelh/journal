@@ -35,7 +35,12 @@ Mathlib supplies the probabilistic base, which is **not** to be rebuilt:
   estimates `Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
   and `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part` — and the
   convergence theorems of `Mathlib/Probability/Martingale/Convergence.lean` fix
-  `Filtration ℕ` as well. Doob's `Lᵖ` inequality is absent for every index.
+  `Filtration ℕ` as well. What is **not** tied to `ℕ` is the step from "no
+  oscillation" to convergence: `tendsto_of_no_upcrossings`
+  (`Mathlib/Topology/Order/LiminfLimsup.lean:318`) holds along an arbitrary
+  filter, over a densely ordered target and a dense set of levels. Only the
+  *counting* of upcrossings is discrete, which is what Milestone 9 splits along.
+  Doob's `Lᵖ` inequality is absent for every index.
 * **Localization is already there.**
   `Mathlib/Probability/Process/LocalProperty.lean` has
   `ProbabilityTheory.IsPreLocalizingSequence`,
@@ -7601,15 +7606,60 @@ and 11 use them.
   uses is the corollary for a right continuous martingale `X`, applied to the
   non-negative submartingale `‖X ·‖`; state `Martingale.measure_iSup_norm_le` and
   `Martingale.eLpNorm_iSup_norm_le` for it.
+* Oscillation of a real function along a one sided filter, which is the
+  deterministic content of regularization and carries no probability at all.
+  `HasUpcrossings a b g S n` says that `g` runs through an increasing tuple
+  `u 0 < ⋯ < u (2 n - 1)` inside `S` alternating between below `a` and above
+  `b`. It is stated with the tuple and not with a count, because the count
+  exists only after a monotone enumeration of `S` has been chosen while the
+  tuple exists as soon as the times do, and because it is monotone in `S` by
+  inspection.
+
+  `exists_chain_alternating` builds the tuple greedily: along a filter `L` whose
+  points eventually lie in `S`, and on which every point of `S` is eventually
+  overtaken in the sense of a relation `R`, two frequently true properties
+  interleave into an alternating `R`-chain. The relation is abstract because the
+  two one sided filters need opposite ones, and neither order nor topology
+  enters. `hasUpcrossings_of_frequently_nhdsWithin_Iio` and
+  `hasUpcrossings_of_frequently_nhdsWithin_Ioi` instantiate it at
+  `𝓝[S ∩ Set.Iio t] t` and `𝓝[S ∩ Set.Ioi t] t`; the second builds the chain
+  descending and reads it backwards, which exchanges the two parities.
+
+  `exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound` and
+  `exists_tendsto_nhdsWithin_Ioi_of_hasUpcrossings_bound` are the conclusion: a
+  function bounded on `S` whose upcrossings of every rational interval inside
+  `S` are bounded in number has one sided limits along `S` at **every** point.
+  Both hypotheses are read over `S` and not over `S ∩ Set.Iio t`, so one
+  hypothesis serves every `t`; that is what makes the almost sure version a
+  statement about one null set instead of one for each `t`. Mathlib supplies the
+  passage from "no oscillation across a dense set of levels" to convergence,
+  `tendsto_of_no_upcrossings` (`Topology/Order/LiminfLimsup.lean:318`), over an
+  arbitrary filter, and `Rat.denseRange_cast` supplies the levels.
 * Submartingale regularization, which Mathlib does not have, although the
-  ingredient does. For a submartingale `Y` indexed by `ι`, the restriction to
-  `D` has almost surely finite one sided limits along `D` at every point. The
-  input is the Doob upcrossing estimate, in Mathlib as
+  ingredient does. For a submartingale `Y` indexed by `ι` and a countable
+  `S ⊆ ι` bounded above by `T`, almost surely the path is bounded on `S` and the
+  number of upcrossings of every rational interval inside `S` is bounded:
+  `Submartingale.ae_bddOn` and `Submartingale.ae_exists_not_hasUpcrossings`.
+  With the two deterministic theorems above this is
+  `Submartingale.ae_exists_tendsto_nhdsWithin`, the real valued input of
+  `exists_cadlag_modification_of_isRegularizingClass`.
+
+  The input is the Doob upcrossing estimate, in Mathlib as
   `MeasureTheory.Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
   and `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part`, together
-  with `upcrossings_lt_top_iff`. State `Submartingale.exists_rightLim_along` and
-  `Submartingale.exists_leftLim_along`, phrased through `Function.leftLim` and
-  `Function.rightLim` as in the roadmap **SkorokhodSpace**.
+  with `upcrossings_lt_top_iff`; all of these are indexed by `ℕ`, and the two
+  steps that carry them to an arbitrary `ι` are named separately.
+  `le_upcrossingsBefore_of_alternating` is the first: an explicit alternating
+  tuple of length `2 n` forces `upcrossingsBefore` to be at least `n`, which is
+  the induction inside `ProbabilityTheory.not_frequently_of_upcrossings_lt_top`
+  (`Probability/Martingale/Convergence.lean:112`) read as a positive statement.
+  The second is `Submartingale.comp_monotone`: for monotone `e : ℕ → ι`, the
+  process `fun k ↦ Y (e k)` is a submartingale for the filtration
+  `Filtration.comp 𝓕 e`, so that a tuple inside a countable `S` — which lies in
+  the range of a monotone enumeration of a finite subset of `S` — is measured by
+  Mathlib's count. The uniform bound on the count over the finite subsets is
+  Doob's estimate at the last time of the subset, which the submartingale
+  property bounds by the estimate at `T`.
 * The modification as a **construction**, not an existential: `cadlagModif Y`,
   defined from the right limits along a countable dense set, together with
   `isCadlag_cadlagModif`, `measurable_cadlagModif`, `adapted_cadlagModif` for a
