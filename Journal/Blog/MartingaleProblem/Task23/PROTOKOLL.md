@@ -5007,3 +5007,177 @@ ihre Limiten aus Korollar 25.1.
   Eigenvektoren; die ganze Konstruktion dieses Laufs existiert **nur** im
   Unendlichen. Zum siebten Mal dieselbe Lehre: eine Prämisse, die aus der
   Rechnung stammt statt aus dem Beweisbedarf.
+
+## Das Maximumprinzip, 2026-09-15 (achtundzwanzigster Lauf): Bedingung 1 ist bewiesen für jedes streng fallende summierbare Massenprofil, und $\sup|G|=1/(m_1m_2)$
+
+Der siebenundzwanzigste Lauf hat die Existenz des Zertifikats auf der
+$\omega$-Kette an **Bedingung 1**, $\sup_{i,j}|G(i,j)|<\infty$, gehängt und sie
+nur bei geometrischem Abfall bewiesen (Korollar 25.3), mit der Vermutung
+$\sup|G|=\max(1/m_1^2,1/(m_1m_2))$ für nicht wachsende Profile. Dieser Lauf
+beweist die Vermutung. Das Mittel ist keine Abschätzung der Spektralreihe und
+keine Kontur, sondern die Rekursion selbst, **in der richtigen Richtung
+gelesen**.
+
+### Was versucht wurde
+
+Aus $\Phi(i,j)-\Phi(i,j-1)=m_jG(i,j)$ und $\Phi(i,j)-\Phi(i-1,j)=m_iG(i,j)$
+($G$ symmetrisch) folgt durch zweimaliges Abschreiten von $(i,j)$ nach
+$(i-1,j-1)$ — einmal über $(i,j-1)$, einmal über $(i-1,j)$ —
+
+$$m_jG(i,j)+m_iG(i,j-1)=m_iG(i,j)+m_jG(i-1,j),$$
+
+also erfüllt $G$ **dieselbe** Zwei-Diagonalen-Rekursion wie $\Phi$. Nach
+$G(i-1,j)$ aufgelöst:
+
+$$G(i-1,j)=\Bigl(1-\frac{m_i}{m_j}\Bigr)G(i,j)+\frac{m_i}{m_j}\,G(i,j-1).
+\tag{K}$$
+
+Bei streng fallenden Massen und $i>j$ ist $0<m_i/m_j<1$: **(K) ist eine
+Konvexkombination.** Abwärts in $i$ gelesen ist die Rekursion also ein
+Mittelungsschritt, und Mittelungsschritte erfüllen ein Maximumprinzip. Das
+Orakel hat (K) auf allen fünf Profilen des siebenundzwanzigsten Laufs bei $N=40$
+mit Residuum $\le1{,}5\cdot10^{-37}$ (40 Stellen) bestätigt; (K) ist
+algebraisch äquivalent zur $\Phi$-Rekursion und hängt daher nicht von den
+Startwerten $\pi_k(N)$ ab.
+
+### Theorem 26: das Maximumprinzip
+
+> **Theorem 26.** Seien $m_1>m_2>\dots>0$ mit $\sum_lm_l<\infty$, und sei $G$
+> die Funktion aus Theorem 25 (bzw. jede symmetrische Lösung von (K) mit
+> $G(i,1)=\pi_1(i)/m_1^2$, für die $L_j:=\lim_{i\to\infty}G(i,j)$ für jedes $j$
+> existiert). Setze $S_j:=\sup_{i\ge j}|G(i,j)|$. Dann gilt
+> $$S_j\le\max\bigl(S_{j-1},\,|L_j|\bigr)\quad(j\ge2),\qquad S_1=\frac1{m_1^2},$$
+> und mit Korollar 25.1 ($L_1=1/m_1^2$, $L_2=-1/(m_1m_2)$, $L_j=0$ für $j\ge3$)
+> $$\sup_{i,j\ge1}|G(i,j)|=\frac1{m_1m_2}.$$
+
+*Beweis.* $S_1$: $G(i,1)=\pi_1(i)/m_1^2$ mit $\pi_1(i)=\prod_{l>i}(1-m_l/m_1)
+\in(0,1]$ und $\pi_1(i)\uparrow1$, also $S_1=1/m_1^2$ (nicht angenommen).
+
+Sei $j\ge2$ und $B:=\max(S_{j-1},|L_j|)$. Angenommen, $|G(i_0,j)|>B$ für ein
+$i_0\ge j$. Setze $\theta:=m_{i_0+1}/m_j\in(0,1)$ (da $i_0+1>j$). Aus (K) an der
+Stelle $i=i_0+1$ und $|G(i_0+1,j-1)|\le S_{j-1}\le B<|G(i_0,j)|$:
+
+$$|G(i_0,j)|\le(1-\theta)|G(i_0+1,j)|+\theta S_{j-1}
+   <(1-\theta)|G(i_0+1,j)|+\theta|G(i_0,j)|,$$
+
+also $|G(i_0+1,j)|>|G(i_0,j)|>B$. Induktiv ist $(|G(i,j)|)_{i\ge i_0}$ streng
+wachsend, und $|L_j|=\lim_i|G(i,j)|\ge|G(i_0,j)|>B\ge|L_j|$ — Widerspruch. Also
+$S_j\le B$.
+
+Iteration: $S_2\le\max(1/m_1^2,1/(m_1m_2))=1/(m_1m_2)$ (da $m_2<m_1$), und
+$S_j\le\max(S_{j-1},0)$ für $j\ge3$; somit $S_j\le1/(m_1m_2)$ für alle $j$, und
+nach Symmetrie $\sup_{i,j}|G|=\sup_jS_j\le1/(m_1m_2)$. Umgekehrt ist
+$|L_2|=1/(m_1m_2)$ ein Grenzwert von Werten $|G(i,2)|$, also
+$\sup|G|\ge1/(m_1m_2)$. $\square$
+
+**Wo die Monotonie eingeht, und nur dort:** in $\theta\in(0,1)$, d.h.
+$m_{i}<m_j$ für $i>j$. Die Summierbarkeit geht nur über Theorem 25 und
+Korollar 25.1 ein (Existenz von $G$ und der Limiten). Die Dreiecksungleichung
+kommt nicht vor; die Auslöschung, an der Probe (F) des siebenundzwanzigsten
+Laufs gescheitert ist, wird gar nicht erst aufgelöst — das Maximumprinzip sieht
+nur die Rekursion, nicht die Reihe.
+
+> **Korollar 26.1 (Korollar 25.3 ohne geometrische Hypothese).** Für jedes
+> streng fallende summierbare Massenprofil erfüllt das $\Phi$ aus Theorem 25
+> alle fünf Forderungen von Proposition 24.2 mit
+> $C=\max(1/m_1,\,1/(m_1m_2))=1/(m_1m_2)$; die $\omega$-Kette trägt also ein
+> unendliches Zertifikat an $t^*$ in der Gewichtsklasse $Z=\{0,t^*\}$, und nach
+> Theorem 22 gilt unter (F) und $\rho_0,\rho_{t^*}<\infty$ die Dualität
+> $\delta(t^*)=0$.
+
+*Beweis.* Bedingung 1 ist $|\Phi(i,j)-\Phi(i,j-1)|=m_j|G(i,j)|\le m_j/(m_1m_2)$
+nach Theorem 26, zusammen mit $C\ge1/m_1$ für $T_{t^*a_1}=1$. $\square$
+
+Für die *Konklusion* ändert das nichts (Theorem 17 erledigt jede Kette unter
+(F)); für den **Weg** ist es der zweite Baustein nach den Eigenvektoren des
+siebenundzwanzigsten Laufs: auf der Leiter wird die $b$-Block-Rekursion
+dieselbe Gestalt (K) haben, und dort ist als Erstes zu prüfen, ob sie wieder
+eine Konvexkombination ist.
+
+### Gemessen: `Task23/maxprinciple.py`
+
+`python3 maxprinciple.py 40`, rc=0, mpmath mit 40 Stellen, Trunkierung
+$N=40$; Startwerte $\pi_k(N)$ wie in `omega_chain.py`.
+
+* **(K)** auf allen fünf Profilen: größtes Residuum $1{,}5\cdot10^{-37}$
+  (bei $m_i=1/(i(i+1))$), sonst $\le10^{-38}$.
+* **(sup)** $\sup_{i,j\le N}|G|\le1/(m_1m_2)$ auf allen fünf Profilen; bei
+  $m_i=2^{-i}$ und $2\cdot3^{-i}$ mit Gleichheit ($8$; $6{,}75$), bei den
+  langsamen Profilen von unten: $9{,}83$ gegen $12$; $1{,}05$ gegen $2{,}83$;
+  $1{,}40$ gegen $3{,}48$. In allen fünf Fällen ist $G(N,2)=-S_2$ oder strebt
+  dorthin — das Supremum sitzt in Spalte 2 im Limes, wie Theorem 26 sagt.
+* **(S)**, die Spaltenschranke — hier hat der Lauf sich zuerst selbst
+  getäuscht, und das gehört ins Protokoll. Auf der Trunkierung ist $S_{j-1}^{(N)}$
+  zu klein, wenn die Spalte $j-1$ ihr Supremum erst im Limes erreicht; bei
+  $m_i=i^{-3/2}$, $N=40$ ist $S_2^{(N)}=0{,}667$, aber $|L_2|=2{,}83$, und
+  $S_3^{(N)}=1{,}049$ „verletzt" die naive Prüfung. Korrekt prüfbar ist
+  $S_j^{(N)}\le\max(S_{j-1}^{(N)},|L_{j-1}|,|L_j|)$. Aber auch das reicht bei
+  $N=40$ nicht: bei $m_i=1/((i+1)\log^2(i+1))$ ist $S_4^{(40)}=1{,}3975>
+  S_3^{(40)}=1{,}3583$, und $L_3=L_4=0$. Nachgerechnet bei **$N=110$**:
+  $S_3^{(110)}=1{,}5327$, angenommen bei $i=110$ und dort noch wachsend,
+  $S_4^{(110)}=1{,}40004$; die Spaltensuprema sind dort
+  $(0{,}760;\,1{,}237;\,1{,}533;\,1{,}400;\,1{,}338;\,1{,}311)$, und die
+  Schranke gilt in jeder Spalte ($S_2\le|L_2|=3{,}48$, $S_3\le|L_2|$,
+  $S_4\le S_3$, …). Bei $m_i=i^{-3/2}$, $N=110$:
+  $(0{,}827;\,1{,}275;\,1{,}169;\,0{,}986;\,0{,}922;\,0{,}893)$, ebenfalls
+  konform. Die Spalte 3 des Log-Profils steigt also über $1{,}53$ hinaus,
+  bevor sie gegen $L_3=0$ fällt — der Satz verlangt nur $S_3\le|L_2|=3{,}48$.
+  Das Skript schaltet (S) bei $N<110$ auf „nur gemessen".
+* **(N), Gegenprobe ohne Monotonie**, Paare vertauscht
+  ($m_1=\rho^{-2},m_2=\rho^{-1},m_3=\rho^{-4},m_4=\rho^{-3},\dots$), Schwanz
+  explizit bis $N+3000$, bei $N=20$ und $N=40$ zifferngleich:
+  $\rho=2$: $\sup|G|=16=1/m_1^2$, $S_2=8=1/(m_1m_2)$.
+  $\rho=3$: $\sup|G|=90{,}74$, aber $1/m_1^2=81$ und $1/(m_1m_2)=27$ —
+  **die Formel $\max(1/m_1^2,1/(m_1m_2))$ ist ohne Monotonie falsch**, und
+  zwar schon in Spalte 1 ($S_1=90{,}74$, weil $\pi_1(i)$ für $i=1$ den Faktor
+  $1-m_2/m_1=-2$ enthält); $S_3=51{,}8>S_2=27$. Beschränkt bleibt $G$ auf
+  allen drei geprüften Profilen (auch $1/(i(i+1))$ vertauscht: $S_1\to36=1/m_1^2$,
+  $S_2\to12$), aber dafür gibt es keinen Beweis: (K) ist dort an den
+  vertauschten Stellen eine *Extrapolation* mit Gewicht $m_i/m_j>1$.
+
+### Ergebnis
+
+* **Bewiesen:** Theorem 26 und Korollar 26.1. Der erste offene Punkt des
+  siebenundzwanzigsten Laufs („Bedingung 1 ohne geometrische Hypothese") ist
+  geschlossen, mit dem exakten Wert $\sup|G|=1/(m_1m_2)$.
+* **Widerlegt:** die Verallgemeinerung der Formel auf nicht monotone Profile
+  ($90{,}74\ne\max(81,27)$).
+* **Offen geblieben:** Beschränktheit von $G$ bei nicht monotonen Profilen
+  (gemessen ja, drei Profile); gleiche Massen; die Leiter; die nackte Klasse auf
+  Ketten; das Gegenbeispiel mit positiven Abwärtsmassen.
+
+### Sackgassen, sechsundzwanzigster Nachtrag
+
+* **Die Spaltenschranke $S_j\le\max(S_{j-1},|L_j|)$ auf Trunkierungen
+  prüfen.** $S_{j-1}^{(N)}$ unterschätzt das wahre $S_{j-1}$ um den Limes
+  $|L_{j-1}|$ (bei $i^{-3/2}$, $N=40$: $0{,}667$ statt $\ge2{,}83$), und
+  selbst mit $|L_{j-1}|$ ergänzt braucht das Log-Profil $N\ge110$, weil
+  Spalte 3 bei $N=40$ ihr Supremum noch nicht erreicht hat
+  ($1{,}358\to1{,}533$). Eine „Verletzung" bei kleinem $N$ ist kein
+  Gegenbeispiel; die Trunkierung ist hier zum achten Mal die falsche Prämisse.
+* **$\sup|G|=\max(1/m_1^2,1/(m_1m_2))$ ohne Monotonie.** Falsch, Zeuge
+  $\rho=3$ mit vertauschten Paaren: $90{,}74$ gegen $81$. Das Maximumprinzip
+  braucht $m_i<m_j$ für $i>j$; wo es fehlt, ist (K) eine Extrapolation.
+* **Theorem 26 über die Spektralreihe oder die dividierte Differenz führen
+  wollen.** Unnötig: die Rekursion (K) allein trägt, und sie ist der Teil der
+  Konstruktion, der auch auf der Leiter noch da sein wird. Die Reihe war für
+  die *Existenz* nötig (Theorem 25), nicht für die *Schranke*.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `convex_recursion_bound`** (neuer Punkt in `PLAN.md`, Task 23):
+das abstrakte Maximumprinzip hinter Theorem 26, frei von Massen und Atomen —
+
+> Seien $x,y:\N\to\R$, $\theta:\N\to(0,1)$ mit $x_i=(1-\theta_i)x_{i+1}
+> +\theta_i\,y_{i+1}$ für alle $i\ge i_1$, $|y_i|\le B$ für alle $i$, und
+> $x_i\to L$. Dann $|x_i|\le\max(B,|L|)$ für alle $i\ge i_1$.
+
+Es ruht auf nichts als `Filter.Tendsto` und der Monotonie einer reellen Folge
+(Mathlib: `tendsto_atTop_ciSup`/`le_of_tendsto`); Theorem 26 ist dann eine
+Induktion über $j$ mit $x_i=G(i,j)$, $y_i=G(i,j-1)$, $\theta_i=m_{i+1}/m_j$.
+Es ist jetzt dran, weil es der erste Satz der ganzen Zertifikatsmethode ist,
+der **keine** unendliche Reihe, kein Residuum und keine Kontur braucht, und
+weil derselbe Schritt auf der Leiter wiederkehren wird, sobald dort die
+$b$-Block-Rekursion in Konvexform steht — die Rechnung, die als Nächstes
+inhaltlich ansteht (Eigenvektoren von $V^{\mathsf T}$ auf der Leiter,
+siebenundzwanzigster Lauf).

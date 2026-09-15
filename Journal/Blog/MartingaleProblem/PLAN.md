@@ -694,6 +694,19 @@ unter dieser Approximation klären.
 Nichts im Manuskript hängt daran — §7 benutzt Lebesgue-Uhren, §7.2 nur
 \eqref{eq:clockadd}.
 
+**Stand 2026-09-15** (Protokoll `Task23/PROTOKOLL.md`, 28 Läufe): Kette,
+endliche Halbordnung ($\iota=\mathrm p$) und gemischte Uhr sind bewiesen und im
+Manuskript (`prop:atomicdual`, `prop:atomicposet`); die Tabelle oben ist
+insoweit überholt. Offen ist die unendliche Halbordnung ohne (F) und die
+Leiter. Nächstes Lean-Ziel, aus dem achtundzwanzigsten Lauf:
+
+- **`convex_recursion_bound`** — für $x,y:\N\to\R$, $\theta:\N\to(0,1)$ mit
+  $x_i=(1-\theta_i)x_{i+1}+\theta_iy_{i+1}$ ($i\ge i_1$), $|y|\le B$ und
+  $x_i\to L$ gilt $|x_i|\le\max(B,|L|)$. Ruht nur auf `Filter.Tendsto`
+  und Monotonie reeller Folgen; ist das Maximumprinzip hinter Theorem 26
+  (Protokoll, Lauf 28: $\sup|G|=1/(m_1m_2)$ auf der $\omega$-Kette für jedes
+  streng fallende summierbare Massenprofil) und kehrt auf der Leiter wieder.
+
 
 ---
 
