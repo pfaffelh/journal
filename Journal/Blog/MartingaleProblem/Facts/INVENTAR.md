@@ -30339,3 +30339,205 @@ Das ist keine Buchhaltung, sondern ein eigener Beweis über Stoppzeiten.
    Aussagen ohne Deklaration, und die Pfade des Sprungprozesses sind
    stückweise konstant — die Stoppzeitapproximation, die der allgemeine Beweis
    braucht, ist auf ihnen billig.
+
+### 2026-09-15, vierter Lauf des Tages — Meilenstein 9 beginnt: der Schritt, der aus reellen Grenzwerten einen `E`-wertigen macht, und der Abschnitt über `brownian-motion`, der jetzt Zahlen nennt statt einer Pauschale
+
+Punkt 3 der Anordnung des Nutzers vom 2026-09-15 (`jumpPath` → Meilenstein 3 →
+Meilenstein 9 → C.5/G) und Vorschlag 0 des Vorlaufs. Der Auftrag stellte diesem
+Lauf zwei Aufgaben, eine ausdrücklich benannte und eine der Sache nach; beide
+sind eingelöst.
+
+#### Erstens, die ausdrücklich benannte: was im `brownian-motion`-Repo steht, nachgezählt und in die Roadmap geschrieben
+
+Der Auftrag verlangte, den Abschnitt zu `RemyDegenne/brownian-motion` in
+`MartingaleProblems/README.md`, Meilenstein 9, durch geprüfte Angaben zu
+ersetzen. Jede Angabe des Auftrags ist in diesem Lauf am Repo **nachgeprüft**
+und keine von ihnen war falsch:
+
+* der ausgecheckte Branch ist `paper` (`55dde5d`, 2026-07-31), der Branch mit dem
+  Material ist der **lokale** `master` (`314f04a`, 2026-08-01); `origin/master`
+  (`eaa4391`, 2026-06-09) hat das Verzeichnis
+  `BrownianMotion/StochasticIntegral/Quasimartingale/` nicht;
+* `Quasimartingale/Basic.lean` — 54 Zeilen, `0` `sorry`;
+  `IsRealQuasimartingale` ist Adaptiertheit, Integrierbarkeit und beschränkte
+  Variation über `ElementaryPredictableSet`;
+* `Quasimartingale/MaximalInequality.lean` — 895 Zeilen, `0` `sorry`;
+* `Quasimartingale/CadlagModification.lean` — 1162 Zeilen, `sorry` in den Zeilen
+  **41, 1002, 1138, 1152**, und die Namenskette `regularitySet`,
+  `ae_right_limit`, `ae_left_limit`, `measurable_rightLimWithin`,
+  `adapted_rightLimWithin`, `rightContModif`, `cadlagModif`,
+  `isCadlag_cadlagModif`, `measurable_cadlagModif`, `adapted_cadlagModif`,
+  `stronglyAdapted_cadlagModif` steht dort so;
+* `cadlagModif_ae_eq_of_continuousWithinAt_integral` (Zeile 1133) ist eines der
+  vier `sorry` (Zeile 1138), `Martingale.isRealQuasimartingale` (Zeile 1148) ein
+  zweites (Zeile 1152), und `Martingale.cadlagModif_ae_eq` — vier Zeilen — ruht
+  auf beiden.
+
+Der Abschnitt in der Roadmap sagt das jetzt, und er sagt auch, **was dort nicht
+steht**: die Entwicklung ist durchweg `X : ι → Ω → ℝ`. Der `E`-wertige
+Zusammenbau kommt dort nicht vor. Das ist keine Nebenbemerkung, sondern die
+Aufteilung der Arbeit von Meilenstein 9 in einen nachlesbaren und einen eigenen
+Teil.
+
+#### Zweitens, die Sache: der eigene Teil ist gebaut, und er ist kleiner, als er aussah
+
+Drei Deklarationen im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean`, zwischen `CompactContainment` und
+`exists_cadlag_modification_of_isRegularizingClass`. Die **ganze Datei** geht
+ohne einen Fehler durch `lake env lean` gegen v4.33.1, Rückgabewert `0`; die Zahl
+der `sorry` bleibt bei **sechs** (Zeilen 1102, 1607, 1718, 1732, 2131, 2161),
+und keiner der drei neuen Sätze benutzt einen: `scripts/check_axioms.py` gibt für
+alle drei `propext`, `Classical.choice`, `Quot.sound` und nichts sonst, `rc 0`.
+
+* **`exists_tendsto_of_forall_tendsto_comp`** — die Aussage des Laufs. Läuft ein
+  Pfad `g` längs eines Filters `l` schließlich in einem **kompakten** `K`, und
+  konvergiert `f ∘ g` für jedes `f` einer Familie, die die Punkte von `K` durch
+  stetige Funktionen trennt, so konvergiert `g` selbst.
+
+  Der Beweis ist kurz und benennt genau, woran es liegt: ein Kompaktum fängt
+  einen Häufungspunkt (`IsCompact.exists_mapClusterPt`), ein stetiges `f` trägt
+  einen Häufungspunkt von `g` in einen von `f ∘ g` hinüber
+  (`MapClusterPt.continuousAt_comp`), und ein konvergenter Filter in einem
+  Hausdorffraum hat genau einen (`ClusterPt.mono` in den Grenzwertfilter hinein,
+  dann `eq_of_nhds_neBot`). Also stimmen zwei Häufungspunkte von `g` in `K` unter
+  jedem `f` überein, also überein — und
+  `IsCompact.tendsto_nhds_of_unique_mapClusterPt` macht aus der Eindeutigkeit
+  die Konvergenz.
+
+  **Was er nicht verlangt, und das ist der Ertrag:** keine Abzählbarkeit der
+  Familie, keine Metrik auf `E`, kein Trennungsaxiom auf `E`. Die
+  Hausdorff-Eigenschaft, die der Schluß braucht, ist die von `𝕂`; die
+  Trennungsvoraussetzung wird nur zwischen **zwei Punkten von `K`** gelesen. Über
+  den Index steht nichts — der Satz ist über einem beliebigen Filter auf einem
+  beliebigen Typ formuliert und wird von der càdlàg-Aussage zweimal verbraucht,
+  einmal für `𝓝[D ∩ Ioi t] t` und einmal für `𝓝[D ∩ Iio t] t`.
+
+* **`CompactContainment.ae_exists_isCompact`** — die Kompaktheitsbedingung, längs
+  `ε = (n+1)⁻¹` durchlaufen, ist eine **fast sichere** Aussage: fast jeder Pfad
+  trifft auf `Iic T ∩ D` *irgendein* Kompaktum, und welches, hängt vom Pfad ab.
+
+  **Hier sitzt die einzige Falle, die dieser Lauf gefunden hat, und sie ist
+  keine Formsache.** `CompactContainment` schätzt `(P {ω | …}).toReal` ab, und
+  diese Menge ist in der Definition **nicht** als meßbar behauptet. Für eine
+  nichtmeßbare Menge ist `P` das äußere Maß, und eine untere Schranke an das
+  äußere Maß einer Vereinigung sagt über deren Komplement **nichts** — `∀ᵐ` ist
+  aber genau eine Aussage über das Komplement. Der Satz trägt deshalb vier
+  Voraussetzungen, und jede wird gebraucht: `D.Countable` macht
+  `{ω | ∀ t ∈ Iic T ∩ D, X t ω ∈ K}` zu einem **abzählbaren** Schnitt, die
+  Meßbarkeit jedes `X t` macht die Glieder zu Urbildern, und `[T2Space E]` mit
+  `[OpensMeasurableSpace E]` macht das Kompaktum abgeschlossen und damit meßbar.
+  Erst dann greift `prob_compl_eq_zero_iff`.
+
+  Das ist ein Befund über die **Definition**: `CompactContainment` ist, wie sie
+  dasteht, eine Aussage über das äußere Maß, und wer sie ohne diese vier Zusätze
+  benutzt, benutzt sie falsch. In der Roadmap steht das jetzt an der Aussage.
+
+* **`ae_exists_tendsto_of_forall_ae_exists_tendsto`** — der Zusammenbau. Längs
+  eines Filters, der schließlich in `Iic T ∩ D` sitzt, gibt fast sichere
+  Konvergenz von `f ∘ X` für jedes `f` einer **abzählbaren** trennenden Klasse
+  die fast sichere Konvergenz von `X`.
+
+  **Die Abzählbarkeit tritt hier auf und sonst nirgends**, und der Lauf kann
+  jetzt sagen, wozu: sie ist es, die die Ausnahmemengen der einzelnen `f` zu
+  **einer** zusammenfaßt (`ae_ball_iff`). Das ist der Grund, aus dem
+  `exists_cadlag_modification_of_isRegularizingClass` eine abzählbare trennende
+  Teilklasse verlangt und `isQuasiLeftContinuous_of_isRegularizingClass` nicht —
+  die Roadmap hat diesen Unterschied bisher behauptet, ohne ihn zu begründen.
+
+#### Was damit von `exists_cadlag_modification_of_isRegularizingClass` noch fehlt
+
+Die Aufteilung ist jetzt eine Zeile lang zu sagen, und das ist der eigentliche
+Gewinn des Laufs. Was fehlt, ist der **reellwertige** Teil und nur er: für jedes
+`f` der abzählbaren Teilklasse hat der reelle Prozeß `f ∘ X = Y + C` — ein
+Element von `𝓧` plus den Kompensator von `IsCompensatorFor` — f.s. einseitige
+Grenzwerte längs `D`. Das ist die Aufkreuzungsungleichung über endlichen
+Teilmengen von `D` und der monotone Grenzübergang auf ganz `D`, und **das** ist
+der Teil, der im `brownian-motion`-Repo durchgeführt und nachlesbar ist
+(`ae_right_limit`, `ae_left_limit`). Alles danach ist in diesem Lauf gebaut.
+
+Die Schätzung des Vorlaufs — zwei bis drei Läufe für Meilenstein 9 — bleibt; der
+nächste Lauf hat davon den analytischen Teil, nicht mehr den Zusammenbau.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` in diesem Lauf frisch geholt:
+`695d840c1dabb4c98dc38ff1874d51e0d465d6a4` (der Vorlauf stand auf
+`7801e8406155c31b340d28e2762f754d02b5e9b0`).
+
+Alle in diesem Lauf benutzten Mathlib-Namen, gegen v4.33.1 übersetzt, am
+Quelltext belegt und **zusätzlich auf `upstream/master` nachgeschlagen**; keiner
+ist `deprecated`, keiner verschwunden oder umbenannt:
+
+* `IsCompact.exists_mapClusterPt` — v4.33.1 und master
+  `Mathlib/Topology/Compactness/Compact.lean:43`;
+* `IsCompact.tendsto_nhds_of_unique_mapClusterPt` — v4.33.1 und master
+  `ibid.:181`;
+* `MapClusterPt.continuousAt_comp` — v4.33.1
+  `Mathlib/Topology/ClusterPt.lean:148`, master `:150`;
+* `ClusterPt.mono` — v4.33.1 `ibid.:108`;
+* `eq_of_nhds_neBot` — v4.33.1 `Mathlib/Topology/Separation/Hausdorff.lean:142`,
+  master `:143`;
+* `prob_compl_eq_zero_iff` — v4.33.1
+  `Mathlib/MeasureTheory/Measure/Typeclasses/Probability.lean:157`, master
+  `:161`;
+* `ae_ball_iff` — v4.33.1 `Mathlib/MeasureTheory/OuterMeasure/AE.lean:109`,
+  master `:164`;
+* `MeasurableSet.biInter` — v4.33.1 und master
+  `Mathlib/MeasureTheory/MeasurableSpace/Defs.lean:141`;
+* `le_of_tendsto'` — v4.33.1 und master
+  `Mathlib/Topology/Order/OrderClosed.lean:138`;
+* `tendsto_one_div_add_atTop_nhds_zero_nat` — master
+  `Mathlib/Analysis/SpecificLimits/Basic.lean:71`.
+
+**Ein Fund, und es ist eine Dateiverschiebung, kein Namensverlust:**
+`Filter.Tendsto.const_sub` — die `to_additive`-Fassung von
+`Filter.Tendsto.const_div'` — steht in v4.33.1 in
+`Mathlib/Topology/Algebra/Group/Basic.lean:1054` und auf `master` in
+`Mathlib/Topology/Algebra/Group/ContinuousDiv.lean:46`. Der Name ist unverändert,
+die **Datei** ist eine andere. Nach der stehenden Regel dieses Auftrags ist das
+kein Fehler in einer Roadmap (dort wird der Name nicht zitiert), aber es ist die
+Art Bewegung, die die nächste Zitatprüfung an den Namen zu suchen hat, die mit
+Datei zitiert werden: Mathlib teilt derzeit `Topology/Algebra/Group/Basic.lean`
+auf.
+
+Eine Negativaussage ist in diesem Lauf nicht neu aufgestellt und keine bestehende
+widerlegt worden.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die reellwertige Regularisierung** — die Aufkreuzungsungleichung und der
+monotone Grenzübergang. Unberührt; sie ist der Vorschlag 0 unten.
+
+**Die beiden Quasi-Linksstetigkeiten** (`:1718`, `:1732`). Unberührt.
+
+**Die stetige Fassung des fdd-Kriteriums** (`:1102`). Unberührt; sie ist nach wie
+vor eine Entscheidung über die Anordnung der Dateien und keine offene Mathematik.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`Submartingale.exists_rightLim_along` und
+   `Submartingale.exists_leftLim_along`** — die reellwertige Regularisierung, in
+   Meilenstein 9 als eigener Punkt ausformuliert. **Worauf sie ruhen:** auf
+   Mathlibs Aufkreuzungsschätzung
+   `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part` und
+   `upcrossings_lt_top_iff`, beide für `Filtration ℕ`, und auf dem monotonen
+   Grenzübergang von endlichen Teilmengen von `D` auf ganz `D`.
+   **Warum jetzt:** nach diesem Lauf ist es das **einzige**, was zwischen
+   `exists_cadlag_modification_of_isRegularizingClass` und seinem Beweis steht —
+   der Zusammenbau ist gebaut, und die drei neuen Sätze warten auf ihre Eingabe.
+   Der Schritt, an dem sich zeigt, wie weit Mathlibs Aufkreuzungs-API über einen
+   beliebigen linear geordneten Index zu ziehen ist, ist der Grenzübergang; er
+   ist im `brownian-motion`-Repo durchgeführt und darf eingesehen, nicht
+   übernommen werden.
+
+1. **Eine Meßbarkeitsprobe an `CompactContainment`.** **Worauf sie ruht:** auf
+   dem Befund dieses Laufs, daß `CompactContainment` eine Aussage über das
+   **äußere** Maß ist. **Warum jetzt:** es ist zu entscheiden, ob die Definition
+   so bleibt oder die Meßbarkeit der Menge fordert — die Alternative verschiebt
+   vier Voraussetzungen von `ae_exists_isCompact` in die Definition und löst sie
+   dort einmal statt an jeder Benutzungsstelle. Das ist eine Entscheidung des
+   Nutzers und kein Beweis.
+
+2. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert der
+   Vorschlag 2 des Vorlaufs; er ist die letzte der fünf im Meilenstein 6
+   ausformulierten Aussagen ohne Deklaration.
