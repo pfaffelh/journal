@@ -30541,3 +30541,202 @@ vor eine Entscheidung über die Anordnung der Dateien und keine offene Mathemati
 2. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert der
    Vorschlag 2 des Vorlaufs; er ist die letzte der fünf im Meilenstein 6
    ausformulierten Aussagen ohne Deklaration.
+
+### 2026-09-15, fünfter Lauf des Tages — die deterministische Hälfte von Doobs Regularisierung steht, und sie braucht keine Wahrscheinlichkeit: Oszillation längs eines einseitigen Filters **ist** Aufkreuzung eines rationalen Intervalls
+
+Vorschlag 0 des Vorlaufs, Punkt 3 der Anordnung des Nutzers vom 2026-09-15
+(`jumpPath` → Meilenstein 3 → Meilenstein 9 → C.5/G). Der Vorlauf hatte den
+`E`-wertigen Zusammenbau gebaut und die verbleibende Arbeit auf eine Zeile
+gebracht: den **reellwertigen** Teil, also die Aufkreuzungsungleichung und den
+Grenzübergang. Dieser Lauf hat davon die deterministische Hälfte ganz, und er
+hat dabei einen Fund gemacht, der die Arbeit für den Rest verkleinert.
+
+#### Der Fund: Mathlib hat den Grenzübergang schon, und zwar über einem **beliebigen Filter**
+
+`tendsto_of_no_upcrossings` (`Topology/Order/LiminfLimsup.lean:318` in v4.33.1,
+`:317` auf `master`) sagt: kann eine Funktion längs eines Filters `f` nicht
+zugleich unendlich oft unter `a` und über `b` liegen, für `a < b` aus einer
+**dichten** Teilmenge der Werte, und ist sie längs `f` beschränkt, so
+konvergiert sie. Der Filter ist frei — kein `atTop`, keine Abzählbarkeit, keine
+Metrik auf dem Indexraum.
+
+Das ist die Stelle, an der die Roadmap bisher eigene Arbeit vorgesehen hat, und
+sie ist keine. Was in Mathlib an `ℕ` gebunden ist, ist nur die
+**Aufkreuzungszählung** (`upcrossingsBefore`, `upcrossings`), nicht der Schluß
+von ihr auf die Konvergenz. Damit zerfällt die Regularisierung von Meilenstein 9
+in
+
+* einen deterministischen Teil, der über `𝓝[S ∩ Iio t] t` und `𝓝[S ∩ Ioi t] t`
+  läuft und in diesem Lauf gebaut ist, und
+* einen probabilistischen Teil, der ausschließlich Doobs Schätzung ist und den
+  Index `ℕ` nie verläßt.
+
+#### Was gebaut ist: sieben Deklarationen im neuen Abschnitt `DoobRegularization`
+
+Sie stehen in `TauCeti/MartingaleProblems/Suggested.lean` **vor**
+`section Regularizing`, weil sie von `E`, von `𝕂` und vom Martingalproblem
+nichts wissen. Die ganze Datei geht ohne einen Fehler durch `lake env lean`
+gegen v4.33.1; die Zahl der `sorry` bleibt bei **sechs** (Zeilen 1131, 1826, 1937, 1952, 2361,
+2381), und `#print axioms` gibt für alle sieben neuen Deklarationen `propext`,
+`Classical.choice`, `Quot.sound` und nichts sonst (`scripts/check_axioms.py`,
+`rc 0`).
+
+* **`HasUpcrossings a b g S n`** — `g` durchläuft ein aufsteigendes Tupel
+  `u 0 < ⋯ < u (2n−1)` in `S` und wechselt dabei zwischen „unter `a`" und „über
+  `b`".
+
+  **Warum ein Tupel und keine Zahl, und das ist kein Geschmacksurteil:** die
+  Zahl gibt es erst, nachdem eine monotone Aufzählung von `S` gewählt ist — das
+  ist es, was Mathlibs `upcrossingsBefore` an `ℕ` bindet. Das Tupel gibt es,
+  sobald es die Zeiten gibt. Und das Tupel ist in `S` monoton **durch
+  Hinsehen**, was die Zahl nicht ist; die Monotonie unter Vergrößerung der
+  Zeitmenge ist genau der Schritt, an dem der Weg über die Zahl teuer wird.
+
+* **`exists_chain_alternating`** — die greedy gebaute alternierende Kette, und
+  der Satz, der beide einseitigen Fälle trägt. Längs eines Filters `L`, dessen
+  Punkte schließlich in `S` liegen und auf dem jeder Punkt von `S` schließlich
+  im Sinne einer Relation `R` überholt wird, lassen sich zwei je häufig geltende
+  Eigenschaften zu einer alternierenden `R`-Kette verschränken.
+
+  **Die Relation ist abstrakt gelassen, und das ist der Ertrag:** die beiden
+  einseitigen Filter brauchen **entgegengesetzte** Relationen. Weder eine
+  Ordnung noch eine Topologie kommt in diesem Satz vor; der ganze Inhalt ist,
+  daß `hR` aus einer häufig wahren Eigenschaft einen echt späteren Zeugen macht.
+
+* **`hasUpcrossings_of_frequently_nhdsWithin_Iio`** und **`…_Ioi`** — die
+  Instanzen. Die rechte baut die Kette **absteigend** und liest sie rückwärts;
+  deshalb sind dort die beiden Paritäten vertauscht. Was von `t` aus gesehen
+  eine Aufkreuzung ist, ist dasselbe Tupel, von `t` weg gelesen.
+
+* **`exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound`** und **`…_Ioi`** —
+  der Schluß: eine auf `S` beschränkte Funktion, deren Aufkreuzungen jedes
+  rationalen Intervalls **in `S`** der Anzahl nach beschränkt sind, hat an
+  **jedem** Punkt einseitige Grenzwerte längs `S`.
+
+  **Beide Voraussetzungen werden über `S` gelesen und nicht über `S ∩ Iio t`.**
+  Das ist die eine Entwurfsentscheidung dieses Laufs, und sie entscheidet über
+  die Gestalt der fast sicheren Fassung: eine Voraussetzung bedient **jedes**
+  `t`, also ist die fast sichere Aussage eine über **eine** Nullmenge und nicht
+  über eine je `t`. Lokal formuliert stünde am Ende ein überabzählbarer Schnitt
+  von Nullmengen.
+
+  Beide Sätze kommen ohne `NeBot` aus: ist der einseitige Filter `⊥` — bei
+  `t = ⊥` etwa, oder an einem isolierten Punkt —, so ist die Konvergenz trivial
+  (`tendsto_bot`), und das ist im Beweis abgefangen. Damit gilt die Aussage
+  wörtlich „an jedem Punkt" und nicht „an jedem Häufungspunkt".
+
+* **`le_upcrossingsBefore_of_alternating`** — die Brücke zur probabilistischen
+  Hälfte. Ein ausdrückliches alternierendes Tupel der Länge `2n` erzwingt
+  `n ≤ upcrossingsBefore a b f (2n) ω`. Das ist die Induktion aus
+  `ProbabilityTheory.not_frequently_of_upcrossings_lt_top`
+  (`Probability/Martingale/Convergence.lean:112`), positiv gelesen: dort wird
+  aus „häufig unter `a`, häufig über `b`" ein Widerspruch zu endlich vielen
+  Aufkreuzungen gezogen, hier wird derselbe Schritt als Ungleichung stehen
+  gelassen. Der einzige benutzte Baustein ist
+  `upcrossingsBefore_lt_of_exists_upcrossing`.
+
+#### Was von `exists_cadlag_modification_of_isRegularizingClass` jetzt noch fehlt
+
+Zwei Aussagen, und beide sind reine Doob-Schätzung über `ℕ`:
+
+1. **`Submartingale.comp_monotone`** — für monotones `e : ℕ → ι` ist
+   `fun k ↦ Y (e k)` ein Submartingal für `Filtration.comp 𝓕 e`. Das ist die
+   zweite Brücke: ein Tupel in einem abzählbaren `S` liegt im Bild einer
+   monotonen Aufzählung einer **endlichen** Teilmenge von `S`, und dort greift
+   Mathlibs Zählung.
+2. **`Submartingale.ae_exists_not_hasUpcrossings`** und
+   **`Submartingale.ae_bddOn`** — die gleichmäßige Schranke über die endlichen
+   Teilmengen, durch Markov und monotonen Grenzübergang. Die Schranke ist Doobs
+   Schätzung an der **letzten** Zeit der endlichen Teilmenge, und die
+   Submartingaleigenschaft schätzt sie durch die Schätzung an `T` ab.
+
+**Zur Umbenennung, damit sie niemanden aufhält:** der Vorlauf hatte
+`Submartingale.exists_rightLim_along` und `Submartingale.exists_leftLim_along`
+vorgeschlagen, über `Function.rightLim` und `Function.leftLim`. Diese Namen sind
+aus dem Meilenstein 9 entfernt und durch die obigen ersetzt, und der Grund ist
+kein Geschmack: `Function.leftLim` ist **total** und gibt jenseits des
+Definitionsbereichs einen Müllwert zurück — genau die Falle, an der
+`exists_finite_setOf_leftLim_ne_not_isCadlagPath` in dieser Datei schon einmal
+einen Zeugen gebaut hat. Die Existenzaussage `∃ l, Tendsto …` sagt dasselbe ohne
+den Müllwert, und sie ist die Gestalt, in der `IsCompensatorFor.exists_limits`
+sie ohnehin verlangt.
+
+Beides steht als benannter Punkt im Meilenstein 9. Die Schätzung des Vorlaufs —
+zwei bis drei Läufe für Meilenstein 9 — bleibt; von diesem Lauf ist die
+deterministische Hälfte ab.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` in diesem Lauf frisch geholt:
+`dbc2b2ba8bdecf880fc07bf897333d139ae33843` (der Vorlauf stand auf
+`695d840c1dabb4c98dc38ff1874d51e0d465d6a4`).
+
+Alle in diesem Lauf benutzten Mathlib-Namen, gegen v4.33.1 übersetzt und
+**zusätzlich auf `upstream/master` nachgeschlagen**; keiner ist `deprecated`,
+keiner verschwunden oder umbenannt:
+
+* `tendsto_of_no_upcrossings` — v4.33.1
+  `Mathlib/Topology/Order/LiminfLimsup.lean:318`, master `:317`;
+* `Rat.denseRange_cast` — master
+  `Mathlib/Topology/Algebra/Order/Archimedean.lean:33`;
+* `MeasureTheory.upcrossingsBefore_lt_of_exists_upcrossing` — v4.33.1 und master
+  `Mathlib/Probability/Martingale/Upcrossing.lean:521`;
+* `ProbabilityTheory.not_frequently_of_upcrossings_lt_top` — v4.33.1 und master
+  `Mathlib/Probability/Martingale/Convergence.lean:112`;
+* `Filter.eq_or_neBot` — master `Mathlib/Order/Filter/Basic.lean:287`;
+* `Filter.Frequently.and_eventually` — master `ibid.:793`;
+* `self_mem_nhdsWithin` — master `Mathlib/Topology/NhdsWithin.lean:150`;
+* `nhdsWithin_le_nhds` — master `ibid.:188`;
+* `Ioi_mem_nhds` — master `Mathlib/Topology/Order/OrderClosed.lean:227`.
+
+**Ein Befund, und er ist eine Notiz wert:** `neg_le_of_abs_le` wird auf `master`
+an fünf Stellen **benutzt** (unter anderem
+`Mathlib/MeasureTheory/Measure/Prokhorov.lean:98`), ist aber in `Mathlib/`
+**nicht deklariert** — der Name kommt aus Lean core oder Batteries. Er ist also
+gültig und nicht `deprecated`, aber er ist mit `git grep` in `Mathlib/` nicht
+als Deklaration zu belegen. Das ist die Art Name, die eine Zitatprüfung, die nur
+in `Mathlib/` sucht, fälschlich als verschwunden meldet; wo ein Name in den
+Roadmaps mit Datei zitiert wird, ist deshalb zuerst zu prüfen, ob er überhaupt
+aus Mathlib stammt.
+
+`scripts/check_negatives.py` ist gegen denselben Commit gelaufen: **alle**
+darin verzeichneten Negativaussagen gelten weiter, jede mit `0` Treffern. Die
+Probe auf das Werkzeug ist mitgemacht — dieselbe Suche nach `condExp` liefert
+Treffer —, damit „0 Treffer" nicht heißt, daß nichts durchsucht wurde.
+
+Eine Negativaussage ist in diesem Lauf aufgestellt und sofort **widerlegt**: der
+Meilenstein 9 hat den Grenzübergang von „endlich viele Aufkreuzungen" auf
+„Grenzwert existiert" als eigene Arbeit geführt. Er steht in Mathlib, über
+beliebigem Filter, und ist in diesem Lauf benutzt statt gebaut. Der Meilenstein
+sagt das jetzt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die probabilistische Hälfte** — `Submartingale.comp_monotone` und die
+gleichmäßige Schranke. Unberührt; sie ist der Vorschlag 0 unten.
+
+**Die beiden Quasi-Linksstetigkeiten** (`:1937`, `:1952`). Unberührt.
+
+**Die stetige Fassung des fdd-Kriteriums** (`:1131`). Unberührt.
+
+**Die Meßbarkeitsprobe an `CompactContainment`** (Vorschlag 1 des Vorlaufs).
+Unberührt; sie ist eine Entscheidung des Nutzers und kein Beweis.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`Submartingale.comp_monotone`, dann `Submartingale.ae_exists_not_hasUpcrossings`.**
+   **Worauf sie ruhen:** auf `le_upcrossingsBefore_of_alternating` aus diesem
+   Lauf, auf `Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
+   und auf `Filtration.comp`, das mit ihnen zu bauen ist.
+   **Warum jetzt:** nach diesem Lauf sind es die **einzigen** beiden Aussagen
+   zwischen `exists_cadlag_modification_of_isRegularizingClass` und seinem
+   Beweis. Der Zusammenbau steht seit dem vierten Lauf, die Deterministik seit
+   diesem; was fehlt, ist eine Schätzung und eine Umindizierung, beide über `ℕ`.
+   Die Umindizierung ist billig und sollte im selben Lauf noch die Schranke
+   tragen.
+
+1. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   1 des Vorlaufs.
+
+2. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
+   der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.
