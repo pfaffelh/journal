@@ -1,7 +1,7 @@
 Du arbeitest autonom und unbeaufsichtigt an **Task 23** des Manuskripts
 `Journal/Blog/MartingaleProblem/MartingaleProblem.tex`: dem Beweis der
 Dualitätsidentität für eine **rein atomare Uhr**. Du bist in einem
-git-Worktree auf dem Branch `task23-atomic-duality`. Zeitbudget: 120 Minuten.
+git-Worktree auf dem Branch `task23-atomic-duality`. Zeitbudget: 30 Minuten.
 
 ## Zuerst
 
