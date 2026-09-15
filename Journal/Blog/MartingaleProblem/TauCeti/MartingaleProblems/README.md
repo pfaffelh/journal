@@ -447,7 +447,16 @@ generating its σ-algebra, and `X : Ω → F`.
   𝔼[(f (X t) - f (X s) - ∫ u in Clock.interval q c s t, g (X u) ∂q) * ∏ k, h k (X (t k))] = 0
   ```
   for every `(f,g) ∈ A`; and the same with `h k` bounded continuous when `E` is
-  metrizable. This is the statement that turns every later theorem into a
+  metrizable. The continuous form rests on the measurable one through exactly two
+  statements of the roadmap **WeakConvergence**, and on nothing else:
+  `integral_mul_eq_zero_of_isMulSystem`, which carries the vanishing of
+  `∫ g · f` from a multiplicative system to the whole σ-algebra it generates, and
+  `generateFromFuns_setOf_continuous_bounded`, which says that on a
+  pseudo-metrizable space the bounded continuous real functions generate the
+  Borel σ-algebra. The multiplicative system is the set of products
+  `ω ↦ ∏ k, h k (X (r k) ω)` with `r k ≤ s` and `h k` bounded continuous, and the
+  σ-algebra it generates is `𝓕 s` by `MeasurableSpace.comap_iSup` applied to that
+  second statement. Metrizability is consumed there and nowhere else. This is the statement that turns every later theorem into a
   statement about finite dimensional distributions, and it is the reason the
   index needs no order structure beyond a preorder. The filtration is the
   natural one of `X`, `𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) _`,
@@ -460,6 +469,35 @@ generating its σ-algebra, and `X : Ω → F`.
   `fun u ↦ g (X u ω)` need not be `Q.measurableSpace`-measurable under
   `∀ t, Measurable (X t)` alone, so that both compensators are the junk value `0`
   and the increment identity fails.
+* `pathCylinders`, `isPiSystem_pathCylinders` and `generateFrom_pathCylinders`:
+  the finite intersections `⋂ i ∈ u, π i ⁻¹' B i` over a `Finset` of times form a
+  π-system, and they generate `⨆ i, MeasurableSpace.comap (π i) _`. They are
+  attached to a family of coordinates `π : ι → F → E` and to nothing else — no
+  order on the index, no measure, no process — and they are the π-system of the
+  finite dimensional criterion as well as of `prop:uniqfromprop` in Milestone 6.
+* `mpFamily_sub_of_isProgressive`, `stronglyAdapted_mpFamily_of_isProgressive`
+  and `integrable_mpFamily_of_bounded`: the increment identity, the adaptedness
+  and the integrability of the test processes, each read off
+  `Clock.IsProgressive` and the bounds on `(f,g)`, with no hypothesis on `P`
+  beyond `IsFiniteMeasure`. The first of them is `mpFamily_sub_of_measurable_path`
+  with the path measurability supplied instead of assumed, and it is where the
+  agreement of the progressive version `Z` with `X` below `t` is consumed: both
+  compensating windows lie in `Set.Iic t`, so `setIntegral_congr_fun` exchanges
+  the two.
+* `integral_sub_mul_eq_zero_of_martingale`: a martingale increment integrates to
+  zero against every bounded real `𝓕 s`-measurable test function. This is the
+  whole of the direction from left to right of the criterion, and it is a
+  statement about martingales alone. Its proof is the pull-out property
+  `condExp_smul_of_aestronglyMeasurable_left` together with `integral_condExp`:
+  `∫ Z • (Y t - Y s) = ∫ P[Z • (Y t - Y s) | 𝓕 s] = ∫ Z • P[Y t - Y s | 𝓕 s]`,
+  and the last conditional expectation is `0`.
+* `setIntegral_eq_of_forall_cylinder`: two integrable functions whose set
+  integrals agree on the cylinders of the past agree on the whole past. This is
+  the direction from right to left, and it is `MeasurableSpace.induction_on_inter`
+  over `pathCylinders` read on the times below `s`: the complement step is
+  `integral_add_compl` against the empty cylinder — which is why the criterion
+  has to be tested at `n = 0` as well, the total integrals being the base of the
+  complement — and the countable step is `integral_iUnion`.
 * The consequence that the solution property depends only on the finite
   dimensional distributions of `X`.
 

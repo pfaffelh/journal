@@ -29852,3 +29852,256 @@ des Nutzers vom 2026-09-15 die Punkte 2, 3 und 4 und kommen nach diesem.
 2. **Meilenstein 9, die càdlàg-Modifikation** (`:1145`, `:1256`, `:1270`), Punkt
    3 der Anordnung — das Tor zu Meilenstein 11, wo 10 167 Zeilen und 351
    Deklarationen ohne `sorry` bisher von nichts verbraucht werden.
+
+### 2026-09-15, zweiter Lauf des Tages — das fdd-Kriterium steht in seiner meßbaren Fassung; und der zweite `sorry` von Meilenstein 3 ist keine offene Mathematik, sondern eine Dateigrenze
+
+**Vorrangige Aufgabe, Punkt 2 der Anordnung des Nutzers vom 2026-09-15**
+(`jumpPath` → Meilenstein 3 → Meilenstein 9 → C.5/G): die beiden `sorry` des
+fdd-Kriteriums. `jumpPath` ist im Vorlauf gebaut, also ist dies der laufende
+Punkt.
+
+**Der erste steht.** `isMPSolution_iff_forall_fdd` (`prop:fddchar`) ist bewiesen,
+in beiden Richtungen, ohne eine Änderung an der Aussage. Der zweite,
+`isMPSolution_iff_forall_fdd_continuous`, ist **nicht** gebaut, und der Grund ist
+im Bericht unten benannt und in der Datei selbst festgehalten: er ist keine
+offene Frage, sondern eine Dateigrenze.
+
+#### Was gebaut ist — sechs Deklarationen und ein Beweis, drei Deklarationen verschoben
+
+Alles in `TauCeti/MartingaleProblems/Suggested.lean`, Meilenstein 3. Die Zahl der
+`sorry` fällt von **sieben** auf **sechs**; die sechs sind die Zeilen 1074
+(Meilenstein 3, stetige Fassung), 1465, 1576, 1590 (Meilenstein 9), 1989, 2019
+(Meilenstein 10).
+
+Der geprüfte Durchlauf ist `lake env lean` gegen v4.33.1 über die **ganze** Datei,
+**ohne einen Fehler**, Rückgabewert `0`. Alle acht betroffenen Deklarationen sind
+mit `scripts/check_axioms.py` geprüft und hängen sämtlich an `propext`,
+`Classical.choice`, `Quot.sound` und an nichts sonst. *Genau gesagt, damit niemand mehr
+behauptet bekommt, als geprüft ist:* die Änderungen an der Datei **nach** diesem
+Durchlauf sind ausschließlich Kommentartext — die drei Stellen im Modulkopf, die
+„sieben `sorry`" auf „sechs" berichtigen. Keine Deklaration, keine Signatur, kein
+Beweis.
+
+Neu, im Abschnitt `Cylinders` und `FddPieces` vor dem Kriterium:
+
+* `mpFamily_sub_of_isProgressive` — die Zuwachsidentität, mit der Pfadmeßbarkeit
+  **geliefert** statt vorausgesetzt. Sie ist `mpFamily_sub_of_measurable_path`
+  angewandt auf die progressive Fassung `Z` von `X`, und die Stelle, an der die
+  Übereinstimmung von `Z` und `X` unterhalb von `t` verbraucht wird: beide
+  Kompensatorfenster liegen in `Set.Iic t`, also tauscht `setIntegral_congr_fun`
+  die beiden aus.
+* `stronglyAdapted_mpFamily_of_isProgressive` — die Adaptiertheit der
+  Testprozesse. Der Zustandsterm ist `Measurable[𝓕 t] (X t)`, der Kompensator
+  `stronglyMeasurable_integral_comp` über `Clock.IsProgressive`.
+* `integrable_mpFamily_of_bounded` — die Integrierbarkeit, unter
+  `[IsFiniteMeasure P]` und nichts sonst.
+* `integral_sub_mul_eq_zero_of_martingale` — **die ganze Richtung von links nach
+  rechts**, und sie ist eine Aussage über Martingale allein, ohne jeden Bezug auf
+  Uhr, Erzeuger oder Prozeß.
+* `setIntegral_eq_of_forall_cylinder` — **die ganze Richtung von rechts nach
+  links**, und sie ist eine Aussage über zwei integrierbare Funktionen allein.
+* `isMPSolution_iff_forall_fdd` — der Satz, 86 Zeilen Beweis.
+
+Verschoben, aus `section Cylinders` (Meilenstein 6) nach Meilenstein 3, wo sie
+zuerst gebraucht werden: `pathCylinders`, `isPiSystem_pathCylinders`,
+`generateFrom_pathCylinders`. An der alten Stelle steht ein Verweis.
+
+#### Erstens: die schwere Richtung braucht den funktionalen monotonen Klassensatz **nicht**, und das war der Befund, der den Lauf billig gemacht hat
+
+Die Vorgabe sagte: „Die schwere Richtung (←) ist ein multiplikatives-System-Argument
+… der Klassensatz **steht bewiesen** als `induction_on_mulSystem`. **Ihn benutzen,
+nicht nachbauen.**"
+
+Für die **meßbare** Fassung ist das nicht nötig, und zwar aus einem Grund, der
+der Aussage selbst anzusehen ist: die Testfunktionen sind dort schon **beliebige
+beschränkte meßbare**. Man braucht also gar nicht von einer kleinen Klasse auf
+alle beschränkten meßbaren Funktionen zu schließen — man braucht nur von den
+**Indikatoren** auf die Mengen zu schließen, und das ist Dynkin und nicht
+Stone–Weierstraß. Der Weg ist:
+
+1. Setze `h k = 1_{B k}`. Das Produkt ist dann der Indikator des Zylinders
+   `⋂ i ∈ u, X i ⁻¹' B i`, und die Voraussetzung sagt
+   `∫_S Y t = ∫_S Y s` für jeden Zylinder `S` der Vergangenheit.
+2. `MeasurableSpace.induction_on_inter` über `pathCylinders` trägt das auf ganz
+   `𝓕 s`. Der Komplementschritt ist `integral_add_compl`, der abzählbare
+   `integral_iUnion`.
+3. `ae_eq_condExp_of_forall_setIntegral_eq` macht daraus
+   `P[Y t | 𝓕 s] =ᵐ Y s`.
+
+**Und der Schritt, an dem es hängt, ist der Fall `n = 0`.** Der Komplementschritt
+braucht die Gleichheit der **Gesamtintegrale**, und die ist genau die
+Voraussetzung mit leerem Produkt: `∏ k : Fin 0, … = 1`. Daß die Aussage über
+`∀ n : ℕ` und nicht über `n ≥ 1` quantifiziert, ist deshalb keine Bequemlichkeit,
+sondern die Basis der Induktion. Ein Leser, der `n = 0` für entbehrlich hält,
+bricht den Beweis.
+
+`induction_on_mulSystem` wird erst für die **stetige** Fassung gebraucht, und
+dort ist es unvermeidlich; siehe unten.
+
+#### Zweitens: die leichte Richtung ist die Ausziehregel der bedingten Erwartung, und Mathlib hat sie in der Gestalt, die hier gebraucht wird
+
+`integral_sub_mul_eq_zero_of_martingale` geht in drei Zeilen Mathematik:
+
+```
+∫ Z • (Y t - Y s) = ∫ P[Z • (Y t - Y s) | 𝓕 s] = ∫ Z • P[Y t - Y s | 𝓕 s] = 0.
+```
+
+Die mittlere Gleichheit ist `condExp_smul_of_aestronglyMeasurable_left`
+(`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:223` in v4.33.1),
+die erste `integral_condExp`, die letzte `condExp_sub` zusammen mit
+`Martingale.condExp_ae_eq` bei `s ≤ t` **und** bei `s ≤ s`.
+
+**Das `•` und nicht das `*` ist der Punkt.** Der Testprozeß ist `𝕂`-wertig für
+`[RCLike 𝕂]`, die Testfunktion `ℝ`-wertig. Mathlibs Ausziehregel für das
+**Produkt** (`condExp_mul_of_stronglyMeasurable_left`) steht nur für `ℝ`; die für
+die **Skalarmultiplikation** steht über einem beliebigen Banachraum und trägt
+darum den `RCLike`-Fall. Die Brücke ist `RCLike.real_smul_eq_coe_mul`, eine
+Zeile. Wer hier `*` nimmt, muß in Real- und Imaginärteil zerlegen; wer `•` nimmt,
+nicht.
+
+Dieselbe Beobachtung trägt die Umrechnung des Produkts:
+`RCLike.ofReal_prod` (`Analysis/RCLike/Basic.lean:208`) macht aus
+`∏ k, ((h k …) : 𝕂)` die Einbettung des reellen Produkts, und damit ist die
+Testfunktion des Satzes wörtlich das `Z` der Ausziehregel.
+
+#### Drittens: `isPiSystem_pathCylinders` trug zwei Voraussetzungen, die sein Beweis nicht benutzt — und ohne die Abschwächung geht das Kriterium nicht
+
+Der Satz stand mit `omit [OrderBot ι] in`, also über `[LinearOrder ι]`. Sein
+Beweis ist reine Mengenalgebra über einer `Finset ι` und benutzt keine Ordnung.
+Gebraucht wird er hier über dem Indextyp `↥(Set.Iic s)` — dem Untertyp der Zeiten
+unterhalb von `s` —, und der trägt **keine** `LinearOrder`, weil der Index des
+abstrakten Meilensteins nur `[Preorder ι]` hat. Die Abschwächung auf
+`omit [LinearOrder ι] [OrderBot ι] in` ist deshalb nicht Kosmetik, sondern die
+Bedingung dafür, daß der Satz an der Stelle überhaupt anwendbar ist. Sie ist
+gemacht, und der alte Gebrauch in Meilenstein 6 merkt nichts davon.
+
+Das ist ein Beleg für die stehende Regel dieses Branchs von der anderen Seite als
+sonst: eine zu starke Hypothese ist nicht bloß unschön, sie schließt Anwendungen
+aus, die man beim Hinschreiben nicht vorhergesehen hat.
+
+#### Viertens, und das ist der Befund des Laufs: der zweite `sorry` ist eine Dateigrenze und keine offene Frage
+
+`isMPSolution_iff_forall_fdd_continuous` ruht auf der meßbaren Fassung über
+**genau eine** Implikation — rechte Seite für beschränkte stetige `h k` ⟹ rechte
+Seite für beschränkte meßbare `h k` —, und diese ruht auf **genau zwei** Sätzen
+der Roadmap **WeakConvergence**, Meilenstein 5, und auf nichts sonst:
+
+* `integral_mul_eq_zero_of_isMulSystem`
+  (`TauCeti/WeakConvergence/Suggested.lean:6141`) — das Verschwinden von
+  `∫ g · f` wandert vom multiplikativen System auf jede beschränkte Funktion, die
+  für die erzeugte σ-Algebra meßbar ist. Anzuwenden mit `g = Y t - Y s` und
+  `K = {ω ↦ ∏ k, h k (X (r k) ω) | r k ≤ s, h k beschränkt stetig}`.
+* `generateFromFuns_setOf_continuous_bounded` (`:6241`) — auf einem
+  pseudometrisierbaren Raum erzeugen die beschränkten stetigen reellen Funktionen
+  die Borelsche σ-Algebra. Das gibt `𝓕 s ≤ generateFromFuns K` über
+  `MeasurableSpace.comap_iSup` und `comap_comp`, und es ist die **einzige**
+  Stelle, an der die Topologie von `E` verbraucht wird.
+
+**Beide sind bewiesen — aber nicht in dieser Datei.** Die vier Roadmaps werden
+einzeln gegen Mathlib übersetzt; `MartingaleProblems/Suggested.lean` importiert
+Mathlib und sonst nichts, und ein `import` der anderen Roadmap gibt es nicht, weil
+diese Dateien nicht zum Lake-Paket gehören. Der `sorry` steht also nicht für eine
+Lücke im Wissen, sondern für eine Grenze zwischen zwei Dateien, und der Unterschied
+ist berichtenswert: er ist nicht durch Nachdenken zu schließen, sondern durch eine
+Entscheidung über die Anordnung der Dateien.
+
+**Drei Wege, und der dritte ist der ehrlichste:** (i) die beiden Sätze samt
+`induction_on_mulSystem` und dessen vier Hilfsschritten hierher kopieren — das
+sind rund siebenhundert Zeilen und eine Verdopplung, die beim nächsten Umbau
+auseinanderläuft; (ii) die Reduktion als eigenen Satz mit den beiden Aussagen als
+**Hypothesen** hinschreiben — das ist ehrlich, aber es macht aus einem Satz eine
+Buchhaltung; (iii) die Abhängigkeit **benennen** und den `sorry` stehenlassen, bis
+die Dateien zusammengeführt werden. Dieser Lauf hat (iii) gewählt und die
+Reduktion vollständig aufgeschrieben — im Doc-Kommentar an der Deklaration und in
+`MartingaleProblems/README.md`, Meilenstein 3 —, so daß der Lauf, der sie einlöst,
+nichts neu erschließt.
+
+#### Fünftens: die Abschwächung von `hint` ist gemacht
+
+Vorschlag 0 des Vorlaufs, wörtlich eingelöst. `IsProbabilityMeasure P` steht jetzt
+im Binder von `hint` in `subsingleton_mpSolutions_of_unique_onedim` und in
+`subsingleton_mpSolutions_mpFamily_lebesgueClock`, und die eine Anwendung ist von
+`fun P hP ↦ hint P hP.1` auf `fun P hP ↦ hint P hP.2 hP.1` gebracht. Beide Sätze
+sind damit **stärker**, kein Beweis wird länger, und
+`integrable_mpFamily_jumpOperator_coordinate` des Vorlaufs — der die Aussage auf
+den Daten von Meilenstein 4 unter `[IsFiniteMeasure P]` beweist — paßt jetzt in
+den Binder. Das Akzeptanzbeispiel der Zweizustandskette ist damit nicht mehr von
+`hint` aufgehalten.
+
+#### Die laufende Zitatprüfung der Roadmaps (Teil D)
+
+`upstream/master` ist in diesem Lauf frisch geholt:
+`1cf325a0cf67aca2b04d76b5380ff6a9e410aefa` (der Vorlauf stand auf
+`d5eca6991ffb769b38d582f83a4ea035cfa2e52d`).
+
+**Alle in diesem Lauf neu benutzten Mathlib-Namen**, gegen v4.33.1 übersetzt und
+am Quelltext belegt; keiner ist `deprecated`:
+
+* `MeasureTheory.condExp_smul_of_aestronglyMeasurable_left`
+  (`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:223`),
+* `MeasureTheory.condExp_sub`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:335`),
+* `MeasureTheory.integral_condExp` (`:236`),
+* `MeasureTheory.ae_eq_condExp_of_forall_setIntegral_eq` (`:253`),
+* `MeasureTheory.Martingale.condExp_ae_eq` und `Martingale.integrable`
+  (`Probability/Martingale/Basic.lean:92` und `:97`),
+* `MeasurableSpace.induction_on_inter` (`MeasureTheory/PiSystem.lean:692`),
+* `MeasureTheory.integral_add_compl` (`MeasureTheory/Integral/Bochner/Set.lean:158`),
+* `MeasureTheory.integral_indicator` (`:172`),
+* `MeasureTheory.integral_iUnion` (`:333`),
+* `Measurable.of_uncurry_right`
+  (`MeasureTheory/MeasurableSpace/Constructions.lean:436`),
+* `RCLike.real_smul_eq_coe_mul` (`Analysis/RCLike/Basic.lean:107`),
+* `RCLike.ofReal_prod` (`:208`),
+* `Finset.equivFin`, `Finset.measurable_prod`, `Finset.prod_eq_zero`,
+  `Finset.prod_eq_one`, `norm_prod`, `measurable_iff_comap_le`,
+  `Set.indicator_of_mem`/`_notMem`, `Set.mem_iInter₂` — unverändert.
+
+**Eine Negativaussage, geprüft und bestätigt:** Mathlib hat **keine** Fassung der
+Erweiterung „zwei integrierbare Funktionen, deren Mengenintegrale auf einem
+π-System übereinstimmen, stimmen auf der erzeugten σ-Algebra überein". Gesucht ist
+in `MeasureTheory/Function/AEEqOfIntegral.lean`,
+`MeasureTheory/Integral/SetIntegral.lean` und im ganzen Verzeichnis
+`MeasureTheory/Function/ConditionalExpectation/` nach `IsPiSystem`: **null
+Treffer**. Die Bibliothek hat das π-λ-Argument für **Maße**
+(`Measure.ext_of_generateFrom_of_iUnion` und Verwandte) und für **bedingte
+Erwartungen** die σ-endliche Fassung, aber nicht die Zwischenstufe. Das ist die
+zehnte Lücke für `TODO.md` Punkt 8, und `setIntegral_eq_of_forall_cylinder` ist
+ihr Ersatz in der Gestalt, die dieser Beweis braucht.
+
+#### Was dieser Lauf **nicht** getan hat
+
+**Die stetige Fassung.** Begründet oben; sie ist Vorschlag 1 und braucht eine
+Entscheidung über die Dateien, nicht über die Mathematik.
+
+**Meilenstein 9, C.5/G.** Unberührt; sie sind nach der Anordnung des Nutzers vom
+2026-09-15 die Punkte 3 und 4.
+
+**Das Akzeptanzbeispiel der Zweizustandskette.** Nach der Abschwächung von `hint`
+ist keine Voraussetzung von Meilenstein 6 auf den Daten von Meilenstein 4 mehr
+offen; ausgerechnet ist es nicht.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Die Zweizustandskette, ganz.** Jede Eingabe von
+   `subsingleton_mpSolutions_mpFamily_lebesgueClock` hat nach diesem Lauf einen
+   Zeugen auf den Daten von Meilenstein 4. **Worauf es ruht:** auf
+   `jumpPath_isMPSolution` und `integrable_mpFamily_jumpOperator_coordinate` des
+   Vorlaufs und auf der Abschwächung von `hint` dieses Laufs. **Warum jetzt:**
+   es ist ein halber Lauf, und danach ist Meilenstein 6 kein Satz mehr über eine
+   Struktur, von der niemand weiß, ob sie je erfüllt wird.
+
+1. **Die stetige Fassung des fdd-Kriteriums, und zwar über die Entscheidung, wie
+   die beiden Roadmaps zusammenkommen.** Die Reduktion steht ausgeschrieben, die
+   beiden Eingaben sind benannt und bewiesen. **Warum jetzt:** sie ist die
+   Eingabe von `mpSolution_of_tendsto` aus Meilenstein 10 („ein Limes von Lösungen
+   ist eine Lösung"), also der nächste `sorry` nach diesem, und sie ist der
+   einzige Punkt des Projekts, an dem zwei Roadmaps eine Deklaration teilen
+   müßten.
+
+2. **Meilenstein 9, die càdlàg-Modifikation** (`:1465`, `:1576`, `:1590`), Punkt
+   3 der Anordnung — das Tor zu Meilenstein 11, wo 10 167 Zeilen und 351
+   Deklarationen ohne `sorry` bisher von nichts verbraucht werden. Der technische
+   Grund, aus dem er nach Meilenstein 3 steht, ist jetzt eingelöst: die
+   Modifikation muß zeigen, daß `X'` **dieselbe** Lösung ist, und mit
+   `isMPSolution_iff_forall_fdd` in der Hand ist das eine Zeile.

@@ -38,7 +38,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-15.  Every declaration elaborates; 7 declarations carry `sorry`, and
+2026-09-15.  Every declaration elaborates; 6 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -384,7 +384,7 @@ Four more on 2026-09-14, in `section PropagationFromOnedim` and `section Uniquen
 `thm:absuniq`(b).  The two inputs are `weightedLaw_univ`, which reads the manuscript's "take
 `h ≡ 1`" off the hypothesis, and `weightedLaw_const_mul`, which makes the normalisation
 `E^P[Z] = 1` a change of variables.  Every statement from `PropagatesAgreement` to
-`thm:absuniq`(b) is now proved and none of the seven `sorry`s of this file is reachable from any
+`thm:absuniq`(b) is now proved and none of the six `sorry`s of this file is reachable from any
 of them.
 
 Three more on 2026-09-14, in `section ShiftInvariantClock` and `section ShiftSystemMpFamily`,
@@ -717,6 +717,221 @@ theorem mpFamily_sub_of_measurable_path [OrderBot ι] {Q : Clock ι} {c : Clock.
     setIntegral_union hdisj (Q.measurableSet_interval c s t) (hint ⊥ s) (hint s t)]
   ring
 
+/-! ### The cylinders of a family of coordinates
+
+The finite dimensional criterion of Milestone 3 and the uniqueness argument of
+`prop:uniqfromprop` (Milestone 6) need the same π-system, and it is a π-system attached to a
+family of maps `π : ι → F → E` and to nothing else: no order on the index, no measure, no
+process.  It is stated here, where the first of the two uses it, and read again on the path
+space further down. -/
+
+section Cylinders
+
+variable {F : Type*} {mF : MeasurableSpace F}
+
+/-- The measurable cylinders of a path space: a finite set of times, a measurable set at each of
+them.  Indexed by a `Finset ι` and **not** by a chain, because in that shape the π-system
+property is a union of index sets and needs no sorting at all; the sorting happens once, in
+`measure_biInter_eq_of_propagatesAgreement`, which is where the linear order is consumed. -/
+def pathCylinders (π : ι → F → E) : Set (Set F) :=
+  {s | ∃ (u : Finset ι) (B : ι → Set E), (∀ i, MeasurableSet (B i)) ∧
+    s = ⋂ i ∈ u, π i ⁻¹' B i}
+
+omit [Preorder ι] in
+theorem isPiSystem_pathCylinders (π : ι → F → E) : IsPiSystem (pathCylinders π) := by
+  rintro s ⟨u, B, hB, rfl⟩ t ⟨v, B', hB', rfl⟩ -
+  classical
+  refine ⟨u ∪ v, fun i ↦ (if i ∈ u then B i else Set.univ) ∩ (if i ∈ v then B' i else Set.univ),
+    fun i ↦ ?_, ?_⟩
+  · exact MeasurableSet.inter (by split <;> simp [hB]) (by split <;> simp [hB'])
+  · ext x
+    simp only [Set.mem_inter_iff, Set.mem_iInter, Finset.mem_union, Set.mem_preimage,
+      Set.preimage_inter]
+    constructor
+    · rintro ⟨h1, h2⟩ i hi
+      refine ⟨?_, ?_⟩
+      · by_cases hu : i ∈ u <;> simp [hu, h1 i]
+      · by_cases hv : i ∈ v <;> simp [hv, h2 i]
+    · intro h
+      exact ⟨fun i hi ↦ by simpa [hi] using (h i (Or.inl hi)).1,
+        fun i hi ↦ by simpa [hi] using (h i (Or.inr hi)).2⟩
+
+omit [Preorder ι] in
+/-- The cylinders generate the σ-field of the path space, `eq:pathsigma` of the manuscript, in
+the form the extension theorem wants. -/
+theorem generateFrom_pathCylinders (π : ι → F → E) :
+    MeasurableSpace.generateFrom (pathCylinders π)
+      = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance := by
+  apply le_antisymm
+  · refine MeasurableSpace.generateFrom_le ?_
+    rintro s ⟨u, B, hB, rfl⟩
+    refine Finset.measurableSet_biInter _ fun i _ ↦ ?_
+    exact (le_iSup (fun i : ι ↦ MeasurableSpace.comap (π i) inferInstance) i) _
+      ⟨B i, hB i, rfl⟩
+  · refine iSup_le fun i ↦ ?_
+    rintro s ⟨B, hB, rfl⟩
+    classical
+    refine MeasurableSpace.measurableSet_generateFrom ⟨{i}, fun _ ↦ B, fun _ ↦ hB, ?_⟩
+    simp
+
+end Cylinders
+
+
+/-! ### The pieces of the finite dimensional criterion
+
+Four statements, none of which mentions the criterion: the increment of a test process over
+`[s,t]` read off `Clock.IsProgressive`, the adaptedness and the integrability of the test
+processes, and -- the whole of the direction from left to right -- the fact that a martingale
+increment integrates to zero against every bounded test function of the past. -/
+
+section FddPieces
+
+/-- The increment identity of `mpFamily`, with the path measurability supplied by
+`Clock.IsProgressive` instead of assumed at each sample point. -/
+theorem mpFamily_sub_of_isProgressive [OrderBot ι] {Q : Clock ι} {c : Clock.Conv}
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} {f g : E → 𝕂} {Y : ι → Ω → 𝕂}
+    (hY : ∀ t ω, Y t ω = f (X t ω) - ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+    (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    (hXprog : Q.IsProgressive X 𝓕) {s t : ι} (hst : s ≤ t) (ω : Ω) :
+    Y t ω - Y s ω =
+      f (X t ω) - f (X s ω) - ∫ u in Q.interval c s t, g (X u ω) ∂Q.q := by
+  obtain ⟨Z, hZeq, hZm⟩ := hXprog t
+  have hsec : Measurable[Q.measurableSpace] fun u => g (Z u ω) :=
+    hg.comp (@Measurable.of_uncurry_right ι Ω E Q.measurableSpace (𝓕 t) _ Z hZm ω)
+  have hint : ∀ (s' t' : ι), t' ≤ t →
+      (∫ u in Q.interval c s' t', g (X u ω) ∂Q.q)
+        = ∫ u in Q.interval c s' t', g (Z u ω) ∂Q.q := by
+    intro s' t' ht'
+    refine setIntegral_congr_fun (Q.measurableSet_interval c s' t') fun u hu => ?_
+    rw [hZeq u ((Q.interval_subset_Iic c s' t' hu).trans ht')]
+  rw [hY t ω, hY s ω, hint ⊥ t le_rfl, hint ⊥ s hst, hint s t le_rfl,
+    ← hZeq t le_rfl, ← hZeq s hst]
+  exact mpFamily_sub_of_measurable_path (Q := Q) (c := c) (X := Z) (f := f) (g := g)
+    (Y := fun t' ω' => f (Z t' ω') - ∫ u in Q.interval c ⊥ t', g (Z u ω') ∂Q.q)
+    (fun _ _ => rfl) hgb hst hsec
+
+/-- The test processes of `mpFamily` are adapted, the compensator by
+`Clock.IsProgressive` and the state term by the measurability of `X t` for `𝓕 t`. -/
+theorem stronglyAdapted_mpFamily_of_isProgressive [OrderBot ι] {Q : Clock ι} {c : Clock.Conv}
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} {f g : E → 𝕂} {Y : ι → Ω → 𝕂}
+    (hY : ∀ t ω, Y t ω = f (X t ω) - ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+    (hf : Measurable f) (hg : Measurable g)
+    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t)) :
+    StronglyAdapted 𝓕 Y := by
+  intro t
+  obtain ⟨Z, hZeq, hZm⟩ := hXprog t
+  have h1 : Measurable[𝓕 t] fun ω => f (X t ω) := hf.comp (hXm t)
+  have hfin : IsFiniteMeasure (Q.q.restrict (Q.interval c ⊥ t)) :=
+    ⟨by rw [Measure.restrict_apply_univ]
+        exact lt_top_iff_ne_top.2 (Q.measure_interval_ne_top c ⊥ t)⟩
+  have h2 : StronglyMeasurable[𝓕 t] fun ω =>
+      ∫ u in Q.interval c ⊥ t, g (Z u ω) ∂Q.q :=
+    @stronglyMeasurable_integral_comp ι Q.measurableSpace Ω (𝓕 t) E _ 𝕂 _
+      (Q.q.restrict (Q.interval c ⊥ t)) (by have := hfin; infer_instance) Z hZm g hg
+  have hcongr : (fun ω => ∫ u in Q.interval c ⊥ t, g (Z u ω) ∂Q.q)
+      = fun ω => ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q := by
+    funext ω
+    refine setIntegral_congr_fun (Q.measurableSet_interval c ⊥ t) fun u hu => ?_
+    rw [hZeq u (Q.interval_subset_Iic c ⊥ t hu)]
+  rw [hcongr] at h2
+  have hYt : Y t = fun ω => f (X t ω) - ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q :=
+    funext (hY t)
+  rw [hYt]
+  exact h1.stronglyMeasurable.sub h2
+
+/-- The test processes of `mpFamily` are integrable against a finite measure, both
+terms being bounded. -/
+theorem integrable_mpFamily_of_bounded [OrderBot ι] {Q : Clock ι} {c : Clock.Conv}
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} {f g : E → 𝕂} {Y : ι → Ω → 𝕂}
+    (hY : ∀ t ω, Y t ω = f (X t ω) - ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+    (hf : Measurable f) (hg : Measurable g)
+    {b1 b2 : ℝ} (hfb : ∀ x, ‖f x‖ ≤ b1) (hgb : ∀ x, ‖g x‖ ≤ b2)
+    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
+    {P : Measure Ω} [IsFiniteMeasure P] (t : ι) : Integrable (Y t) P := by
+  have hadp := stronglyAdapted_mpFamily_of_isProgressive hY hf hg hXprog hXm t
+  refine Integrable.mono' (g := fun _ => b1 + b2 * Q.q.real (Q.interval c ⊥ t))
+    (integrable_const _) ((hadp.mono (𝓕.le t)).aestronglyMeasurable)
+    (Filter.Eventually.of_forall fun ω => ?_)
+  rw [hY t ω]
+  refine (norm_sub_le _ _).trans (add_le_add (hfb _) ?_)
+  exact norm_setIntegral_le_of_norm_le_const
+    (lt_top_iff_ne_top.2 (Q.measure_interval_ne_top c ⊥ t)) fun u _ => hgb _
+
+/-- **The forward half of the fdd criterion.**  A martingale increment integrates to
+zero against every bounded real test function of the past. -/
+theorem integral_sub_mul_eq_zero_of_martingale {Y : ι → Ω → 𝕂}
+    {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] (hY : Martingale Y 𝓕 P)
+    {s t : ι} (hst : s ≤ t) {Z : Ω → ℝ} (hZ : StronglyMeasurable[𝓕 s] Z)
+    {b : ℝ} (hb : ∀ ω, ‖Z ω‖ ≤ b) :
+    ∫ ω, (Y t ω - Y s ω) * (Z ω : 𝕂) ∂P = 0 := by
+  have hYt := hY.integrable t
+  have hYs := hY.integrable s
+  have hW : Integrable (Y t - Y s) P := hYt.sub hYs
+  have hZm : AEStronglyMeasurable Z P := (hZ.mono (𝓕.le s)).aestronglyMeasurable
+  have hZW : Integrable (Z • (Y t - Y s)) P := by
+    refine Integrable.mono' (hW.norm.const_mul b) (hZm.smul hW.aestronglyMeasurable)
+      (Filter.Eventually.of_forall fun ω => ?_)
+    have hns : ‖(Z • (Y t - Y s)) ω‖ = ‖Z ω‖ * ‖(Y t - Y s) ω‖ := norm_smul _ _
+    rw [hns]
+    exact mul_le_mul_of_nonneg_right (hb ω) (norm_nonneg _)
+  have hpull := condExp_smul_of_aestronglyMeasurable_left (m := 𝓕 s)
+    hZ.aestronglyMeasurable hZW hW
+  have hcond : P[(Y t - Y s) | 𝓕 s] =ᵐ[P] 0 := by
+    filter_upwards [condExp_sub hYt hYs (𝓕 s), hY.condExp_ae_eq hst,
+      hY.condExp_ae_eq (le_refl s)] with ω h1 h2 h3
+    simp [h1, h2, h3]
+  calc ∫ ω, (Y t ω - Y s ω) * (Z ω : 𝕂) ∂P
+      = ∫ ω, (Z • (Y t - Y s)) ω ∂P := by
+        refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+        simp [RCLike.real_smul_eq_coe_mul, mul_comm]
+    _ = ∫ ω, (P[(Z • (Y t - Y s)) | 𝓕 s]) ω ∂P := (integral_condExp (𝓕.le s)).symm
+    _ = ∫ ω, (Z • P[(Y t - Y s) | 𝓕 s]) ω ∂P := integral_congr_ae hpull
+    _ = 0 := by
+        refine (integral_congr_ae (g := fun _ => (0 : 𝕂)) ?_).trans (integral_zero _ _)
+        filter_upwards [hcond] with ω hω
+        simp [hω]
+
+end FddPieces
+
+section FddPiSystem
+
+/-- **Two integrals that agree on the cylinders of the past agree on the whole past.**
+The π-system is `pathCylinders` read on the times below `s`, and the extension is
+`MeasurableSpace.induction_on_inter`: the complement step is `integral_add_compl`
+against the empty cylinder, the countable step is `integral_iUnion`. -/
+theorem setIntegral_eq_of_forall_cylinder {X : ι → Ω → E} {𝓕 : Filtration ι m}
+    {P : Measure Ω} [IsFiniteMeasure P] {s : ι}
+    (h𝓕 : 𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) inferInstance)
+    {F G : Ω → 𝕂} (hF : Integrable F P) (hG : Integrable G P)
+    (hcyl : ∀ (u : Finset (Set.Iic s)) (B : Set.Iic s → Set E), (∀ i, MeasurableSet (B i)) →
+      (∫ ω in (⋂ i ∈ u, (fun ω => X (i : ι) ω) ⁻¹' B i), F ω ∂P)
+        = ∫ ω in (⋂ i ∈ u, (fun ω => X (i : ι) ω) ⁻¹' B i), G ω ∂P) :
+    ∀ S, MeasurableSet[𝓕 s] S → (∫ ω in S, F ω ∂P) = ∫ ω in S, G ω ∂P := by
+  set π : Set.Iic s → Ω → E := fun r ω => X (r : ι) ω with hπ
+  have heq : 𝓕 s = MeasurableSpace.generateFrom (pathCylinders π) := by
+    rw [generateFrom_pathCylinders π, h𝓕, iSup_subtype']
+  have htot : (∫ ω, F ω ∂P) = ∫ ω, G ω ∂P := by
+    have := hcyl ∅ (fun _ => Set.univ) (fun _ => MeasurableSet.univ)
+    simpa using this
+  refine MeasurableSpace.induction_on_inter (C := fun S _ =>
+      (∫ ω in S, F ω ∂P) = ∫ ω in S, G ω ∂P) heq (isPiSystem_pathCylinders π) (by simp) ?_ ?_ ?_
+  · rintro S ⟨u, B, hB, rfl⟩
+    exact hcyl u B hB
+  · intro S hS hSeq
+    have hSm : MeasurableSet S := 𝓕.le s S (heq ▸ hS)
+    have h1 := integral_add_compl hSm hF
+    have h2 := integral_add_compl hSm hG
+    rw [htot] at h1
+    rw [← hSeq] at h2
+    linear_combination (norm := module) h1 - h2
+  · intro g hdisj hgm hgeq
+    have hgm' : ∀ i, MeasurableSet (g i) := fun i => 𝓕.le s _ (heq ▸ hgm i)
+    rw [integral_iUnion hgm' hdisj hF.integrableOn,
+      integral_iUnion hgm' hdisj hG.integrableOn]
+    exact tsum_congr hgeq
+
+end FddPiSystem
+
 /-- The finite dimensional criterion, `isMPSolutionFor_iff_forall_fdd` of the
 roadmap: solving the martingale problem is an identity among finitely many
 coordinates.  It is what turns every later theorem into a statement about finite
@@ -744,13 +959,118 @@ theorem isMPSolution_iff_forall_fdd [OrderBot ι] {A : Set ((E → 𝕂) × (E �
         (∀ k, ∃ b, ∀ x, ‖h k x‖ ≤ b) →
         ∫ ω, (p.1 (X t ω) - p.1 (X s ω)
               - ∫ u in Q.interval c s t, p.2 (X u ω) ∂Q.q) *
-            ∏ k, (h k (X (r k) ω) : 𝕂) ∂P = 0 := sorry
+            ∏ k, (h k (X (r k) ω) : 𝕂) ∂P = 0 := by
+  classical
+  have hXmle : ∀ s r : ι, r ≤ s → Measurable[𝓕 s] (X r) := by
+    intro s r hr
+    refine (@measurable_iff_comap_le Ω E (𝓕 s) _ (X r)).2 ?_
+    rw [h𝓕 s]
+    exact le_iSup₂ (f := fun (r : ι) (_ : r ∈ Set.Iic s) =>
+      MeasurableSpace.comap (X r) (inferInstance : MeasurableSpace E)) r (Set.mem_Iic.2 hr)
+  constructor
+  · intro hsol p hp s t hst n r hr h hhm hhb
+    obtain ⟨⟨hfm, b1, hfb⟩, hgm, b2, hgb⟩ := hA p hp
+    obtain ⟨Y, hYeq⟩ : ∃ Y : ι → Ω → 𝕂, ∀ t' ω,
+        Y t' ω = p.1 (X t' ω) - ∫ u in Q.interval c ⊥ t', p.2 (X u ω) ∂Q.q :=
+      ⟨_, fun _ _ => rfl⟩
+    have hmart : Martingale Y 𝓕 P := hsol Y ⟨p, hp, hYeq⟩
+    have hZsm : StronglyMeasurable[𝓕 s] fun ω => ∏ k, h k (X (r k) ω) :=
+      (Finset.measurable_prod _ fun k _ =>
+        (hhm k).comp (hXmle s (r k) (hr k))).stronglyMeasurable
+    obtain ⟨bb, hbb⟩ : ∃ bb : ℝ, ∀ ω, ‖∏ k, h k (X (r k) ω)‖ ≤ bb := by
+      choose bk hbk using hhb
+      refine ⟨∏ k, bk k, fun ω => ?_⟩
+      rw [norm_prod]
+      exact Finset.prod_le_prod (fun k _ => norm_nonneg _) (fun k _ => hbk k _)
+    have key := integral_sub_mul_eq_zero_of_martingale hmart hst hZsm hbb
+    refine Eq.trans (integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)) key
+    rw [mpFamily_sub_of_isProgressive hYeq hgm hgb hXprog hst ω, RCLike.ofReal_prod]
+  · intro hfdd Y hYmem
+    obtain ⟨p, hp, hYeq⟩ := hYmem
+    obtain ⟨⟨hfm, b1, hfb⟩, hgm, b2, hgb⟩ := hA p hp
+    have hXm : ∀ t, Measurable[𝓕 t] (X t) := fun t => hXmle t t le_rfl
+    have hadp := stronglyAdapted_mpFamily_of_isProgressive hYeq hfm hgm hXprog hXm
+    have hintY : ∀ t, Integrable (Y t) P := fun t =>
+      integrable_mpFamily_of_bounded hYeq hfm hgm hfb hgb hXprog hXm t
+    refine ⟨hadp, fun s t hst => ?_⟩
+    refine (ae_eq_condExp_of_forall_setIntegral_eq (𝓕.le s) (hintY t)
+      (fun S _ _ => (hintY s).integrableOn) (fun S hS _ => ?_)
+      (hadp s).aestronglyMeasurable).symm
+    refine setIntegral_eq_of_forall_cylinder (X := X) (h𝓕 s) (hintY s) (hintY t) ?_ S hS
+    intro u B hB
+    set S' : Set Ω := ⋂ i ∈ u, (fun ω => X (i : ι) ω) ⁻¹' B i with hS'def
+    have hS'm : MeasurableSet S' :=
+      Finset.measurableSet_biInter _ fun i _ => (hX (i : ι)) (hB i)
+    set e := u.equivFin with hedef
+    obtain ⟨rf, hrf⟩ : ∃ rf : Fin u.card → ι, ∀ k, rf k = ((e.symm k : ↥u) : Set.Iic s).1 :=
+      ⟨_, fun _ => rfl⟩
+    obtain ⟨hf, hhf⟩ : ∃ hf : Fin u.card → E → ℝ, ∀ k,
+        hf k = Set.indicator (B ((e.symm k : ↥u) : Set.Iic s)) (fun _ => (1 : ℝ)) :=
+      ⟨_, fun _ => rfl⟩
+    have hrfle : ∀ k, rf k ≤ s := by
+      intro k; rw [hrf k]; exact ((e.symm k : ↥u) : Set.Iic s).2
+    have hhfm : ∀ k, Measurable (hf k) := by
+      intro k; rw [hhf k]; exact measurable_const.indicator (hB _)
+    have hhfb : ∀ k, ∃ b, ∀ x, ‖hf k x‖ ≤ b := by
+      intro k
+      refine ⟨1, fun x => ?_⟩
+      rw [hhf k]
+      by_cases hx : x ∈ B ((e.symm k : ↥u) : Set.Iic s) <;>
+        simp [Set.indicator_of_mem, Set.indicator_of_notMem, hx]
+    have hfdd' := hfdd p hp s t hst u.card rf hrfle hf hhfm hhfb
+    have hprod : ∀ ω, (∏ k, (hf k (X (rf k) ω) : 𝕂)) = S'.indicator (fun _ => (1 : 𝕂)) ω := by
+      intro ω
+      by_cases hω : ω ∈ S'
+      · rw [Set.indicator_of_mem hω]
+        refine Finset.prod_eq_one fun k _ => ?_
+        rw [hhf k, hrf k]
+        rw [hS'def, Set.mem_iInter₂] at hω
+        have hmem : X (((e.symm k : ↥u) : Set.Iic s) : ι) ω ∈ B ((e.symm k : ↥u) : Set.Iic s) :=
+          hω ((e.symm k : ↥u) : Set.Iic s) (e.symm k).2
+        rw [Set.indicator_of_mem hmem]
+        norm_num
+      · rw [Set.indicator_of_notMem hω]
+        rw [hS'def, Set.mem_iInter₂] at hω
+        push Not at hω
+        obtain ⟨i, hiu, hi⟩ := hω
+        have hnot : X (i : ι) ω ∉ B i := hi
+        refine Finset.prod_eq_zero (Finset.mem_univ (e ⟨i, hiu⟩)) ?_
+        rw [hhf, hrf, Equiv.symm_apply_apply]
+        rw [Set.indicator_of_notMem hnot]
+        norm_num
+    have hchain : (∫ ω in S', Y t ω ∂P) - ∫ ω in S', Y s ω ∂P = 0 := by
+      rw [← integral_sub (hintY t).integrableOn (hintY s).integrableOn,
+        ← integral_indicator hS'm]
+      refine Eq.trans (integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)) hfdd'
+      rw [hprod ω, ← mpFamily_sub_of_isProgressive hYeq hgm hgb hXprog hst ω]
+      by_cases hω : ω ∈ S' <;>
+        simp [Set.indicator_of_mem, Set.indicator_of_notMem, hω]
+    exact (sub_eq_zero.1 hchain).symm
 
 /-- The same criterion with bounded **continuous** test functions, which is what
-a weak convergence argument delivers.  It is the previous statement together with
-the functional monotone class theorem `induction_on_mulSystem` of the roadmap
-**WeakConvergence**, Milestone 5, and it needs the Borel structure of a
-metrizable state space, where the previous one needs no topology at all. -/
+a weak convergence argument delivers.  It needs the Borel structure of a
+metrizable state space, where the previous one needs no topology at all.
+
+It rests on `isMPSolution_iff_forall_fdd` above through exactly one implication,
+that the right hand side for bounded **continuous** `h k` gives the right hand
+side for bounded **measurable** `h k`; and that implication rests on exactly two
+statements of the roadmap **WeakConvergence**, Milestone 5, and on nothing else:
+
+* `integral_mul_eq_zero_of_isMulSystem`, which carries `∫ g * f = 0` from a
+  multiplicative system of bounded measurable functions to every bounded
+  function measurable for the σ-algebra it generates; applied with
+  `g = Y t - Y s` and the multiplicative system
+  `K = {ω ↦ ∏ k, h k (X (r k) ω) | r k ≤ s, h k bounded continuous}`, whose
+  members are products because `Fin.append` concatenates two families;
+* `generateFromFuns_setOf_continuous_bounded`, that on a pseudo-metrizable space
+  the bounded continuous real functions generate the Borel σ-algebra; it gives
+  `𝓕 s ≤ generateFromFuns K` through `MeasurableSpace.comap_iSup` and
+  `MeasurableSpace.comap_comp`, and it is the only place where the topology of
+  `E` is consumed.
+
+Neither is available in this file: the two roadmaps are typechecked separately,
+and this file imports Mathlib alone.  That is what the `sorry` records — a file
+boundary and not an open mathematical question. -/
 theorem isMPSolution_iff_forall_fdd_continuous [OrderBot ι] [TopologicalSpace E]
     [TopologicalSpace.PseudoMetrizableSpace E] [BorelSpace E]
     {A : Set ((E → 𝕂) × (E → 𝕂))} {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E}
@@ -26356,7 +26676,7 @@ end IncrementGenerator
 `def:propagation`, `prop:uniqfromprop` of the manuscript -- the half of Milestone 6 that carries
 **no** Markov structure at all.  It is the bottom of the tree: neither `restart` nor a shift
 system nor a determining set occurs in any statement or in any proof in `section Propagation` or
-`section Cylinders`, and none of the seven `sorry`s of this file is reachable from here.  What
+`section Cylinders`, and none of the six `sorry`s of this file is reachable from here.  What
 sits above it -- `lem:propagation` in `section PropagationFromOnedim`, which makes
 `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the Markov
 property, in `section MarkovFromOnedim` -- is where the shift system enters.
@@ -26523,50 +26843,10 @@ variable {E : Type*} [MeasurableSpace E]
 variable {F : Type*} {mF : MeasurableSpace F}
 variable {𝓕₀ : Filtration ι mF} {π : ι → F → E} {N : Set (Measure F)}
 
-/-- The measurable cylinders of a path space: a finite set of times, a measurable set at each of
-them.  Indexed by a `Finset ι` and **not** by a chain, because in that shape the π-system
-property is a union of index sets and needs no sorting at all; the sorting happens once, in
-`measure_biInter_eq_of_propagatesAgreement`, which is where the linear order is consumed. -/
-def pathCylinders (π : ι → F → E) : Set (Set F) :=
-  {s | ∃ (u : Finset ι) (B : ι → Set E), (∀ i, MeasurableSet (B i)) ∧
-    s = ⋂ i ∈ u, π i ⁻¹' B i}
-
-omit [OrderBot ι] in
-theorem isPiSystem_pathCylinders (π : ι → F → E) : IsPiSystem (pathCylinders π) := by
-  rintro s ⟨u, B, hB, rfl⟩ t ⟨v, B', hB', rfl⟩ -
-  classical
-  refine ⟨u ∪ v, fun i ↦ (if i ∈ u then B i else Set.univ) ∩ (if i ∈ v then B' i else Set.univ),
-    fun i ↦ ?_, ?_⟩
-  · exact MeasurableSet.inter (by split <;> simp [hB]) (by split <;> simp [hB'])
-  · ext x
-    simp only [Set.mem_inter_iff, Set.mem_iInter, Finset.mem_union, Set.mem_preimage,
-      Set.preimage_inter]
-    constructor
-    · rintro ⟨h1, h2⟩ i hi
-      refine ⟨?_, ?_⟩
-      · by_cases hu : i ∈ u <;> simp [hu, h1 i]
-      · by_cases hv : i ∈ v <;> simp [hv, h2 i]
-    · intro h
-      exact ⟨fun i hi ↦ by simpa [hi] using (h i (Or.inl hi)).1,
-        fun i hi ↦ by simpa [hi] using (h i (Or.inr hi)).2⟩
-
-omit [LinearOrder ι] [OrderBot ι] in
-/-- The cylinders generate the σ-field of the path space, `eq:pathsigma` of the manuscript, in
-the form the extension theorem wants. -/
-theorem generateFrom_pathCylinders (π : ι → F → E) :
-    MeasurableSpace.generateFrom (pathCylinders π)
-      = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance := by
-  apply le_antisymm
-  · refine MeasurableSpace.generateFrom_le ?_
-    rintro s ⟨u, B, hB, rfl⟩
-    refine Finset.measurableSet_biInter _ fun i _ ↦ ?_
-    exact (le_iSup (fun i : ι ↦ MeasurableSpace.comap (π i) inferInstance) i) _
-      ⟨B i, hB i, rfl⟩
-  · refine iSup_le fun i ↦ ?_
-    rintro s ⟨B, hB, rfl⟩
-    classical
-    refine MeasurableSpace.measurableSet_generateFrom ⟨{i}, fun _ ↦ B, fun _ ↦ hB, ?_⟩
-    simp
+/-! The measurable cylinders `pathCylinders`, their π-system property and the σ-field they
+generate are stated once, at Milestone 3, where the finite dimensional criterion first needs
+them; they are attached to a family of coordinates and to nothing else, and they are read here
+on the path space a second time. -/
 
 /-- Step 1 of `prop:uniqfromprop`, read on an **unordered** finite set of times.
 
@@ -26882,8 +27162,8 @@ theorem subsingleton_mpSolutions_of_unique_onedim
     (hsub : ∀ s t : ι, s ≤ t → ∃ u : ι, t = s + u)
     (hadapt : ∀ u v : ι, u ≤ v → Measurable[𝓕₀ v] (π u))
     (hgen : mF = ⨆ i : ι, MeasurableSpace.comap (π i) inferInstance)
-    (hint : ∀ P : Measure F, IsMPSolution (𝓧₀ 0) 𝓕₀ P → ∀ Y ∈ 𝓧₀ 0, ∀ u : ι,
-      Integrable (Y u) P)
+    (hint : ∀ P : Measure F, IsProbabilityMeasure P →
+      IsMPSolution (𝓧₀ 0) 𝓕₀ P → ∀ Y ∈ 𝓧₀ 0, ∀ u : ι, Integrable (Y u) P)
     (honedim : ∀ r : ι, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
       IsMPSolution (𝓧₀ r) 𝓕₀ R → IsMPSolution (𝓧₀ r) 𝓕₀ R' →
       R.map (π ⊥) = R'.map (π ⊥) → ∀ u : ι, R.map (π u) = R'.map (π u))
@@ -26895,7 +27175,7 @@ theorem subsingleton_mpSolutions_of_unique_onedim
     {P | IsMPSolution (𝓧₀ 0) 𝓕₀ P ∧ IsProbabilityMeasure P} with hNdef
   have hN : PropagatesAgreement 𝓕₀ π N :=
     propagatesAgreement_of_unique_onedim hS hbot hadd hsub hπ
-      (fun P hP ↦ hP.2) (fun P hP ↦ hP.1) (fun P hP ↦ hint P hP.1) honedim
+      (fun P hP ↦ hP.2) (fun P hP ↦ hP.1) (fun P hP ↦ hint P hP.2 hP.1) honedim
   rintro P ⟨hPsol, hPp, hPi⟩ Q ⟨hQsol, hQp, hQi⟩
   haveI := hPp
   haveI := hQp
@@ -27447,7 +27727,8 @@ theorem subsingleton_mpSolutions_mpFamily_lebesgueClock
     (hY : ∀ Y ∈ mpFamily A lebesgueClock c π, StronglyAdapted 𝓕₀ Y)
     (hadapt : ∀ u v : ℝ≥0, u ≤ v → Measurable[𝓕₀ v] (π u))
     (hgen : mF = ⨆ i : ℝ≥0, MeasurableSpace.comap (π i) inferInstance)
-    (hint : ∀ P : Measure F, IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ P →
+    (hint : ∀ P : Measure F, IsProbabilityMeasure P →
+      IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ P →
       ∀ Y ∈ mpFamily A lebesgueClock c π, ∀ u : ℝ≥0, Integrable (Y u) P)
     (honedim : ∀ r : ℝ≥0, ∀ R R' : Measure F, IsProbabilityMeasure R → IsProbabilityMeasure R' →
       IsMPSolution (mpFamily A lebesgueClock c π) 𝓕₀ R →
