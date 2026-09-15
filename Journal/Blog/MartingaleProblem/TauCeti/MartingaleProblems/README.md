@@ -7623,12 +7623,40 @@ and 11 use them.
 * `Martingale.cadlagModif_ae_eq`: for a martingale the condition is automatic.
   The three points above state what is wanted in full and are to be reviewed on
   their own terms. As prior art, cited and not presupposed: the repository
-  `RemyDegenne/brownian-motion` (Apache-2.0) carries a development of this for
-  quasimartingales in `BrownianMotion/StochasticIntegral/Quasimartingale/`, in
-  the shape described above and with four remaining gaps. An implementer may
-  consult it and, the licence permitting, draw on it with its copyright header
-  preserved; nothing here should be accepted merely because it matches that
-  file.
+  `RemyDegenne/brownian-motion` (Apache-2.0, copyright Rémy Degenne) carries a
+  development of this for real valued quasimartingales, on its branch `master`
+  (`314f04a`, 2026-08-01) and not on `paper` (`55dde5d`, 2026-07-31) nor on
+  `origin/master` (`eaa4391`, 2026-06-09), which have no
+  `BrownianMotion/StochasticIntegral/Quasimartingale/` at all. On `master` that
+  directory holds three files, each with an Apache-2.0 header:
+  `Quasimartingale/Basic.lean`, 54 lines and no `sorry`, defining
+  `IsRealQuasimartingale` as adaptedness together with integrability and
+  bounded variation over `ElementaryPredictableSet`;
+  `Quasimartingale/MaximalInequality.lean`, 895 lines and no `sorry`, which is
+  Doob's maximal inequality in continuous time, the third item of this milestone
+  above; and `Quasimartingale/CadlagModification.lean`, 1162 lines with four
+  `sorry` at lines 41, 1002, 1138 and 1152. That last file carries the whole
+  chain — `regularitySet`, `ae_right_limit`, `ae_left_limit`,
+  `measurable_rightLimWithin`, `adapted_rightLimWithin`, `rightContModif`, and
+  then `cadlagModif` with `isCadlag_cadlagModif`, `measurable_cadlagModif`,
+  `adapted_cadlagModif` and `stronglyAdapted_cadlagModif` — under the names this
+  milestone uses. The statement that the modification is one exactly where
+  `t ↦ 𝔼[X t]` is right continuous is there as
+  `cadlagModif_ae_eq_of_continuousWithinAt_integral` (line 1133) and is one of
+  the four `sorry` (line 1138); `Martingale.isRealQuasimartingale` (line 1148)
+  is a second (line 1152), so the four line corollary
+  `Martingale.cadlagModif_ae_eq` rests on both. The monotone passage from the
+  upcrossing estimate on finite subsets of `D` to all of `D` — the analytic core
+  of this milestone — is carried out there and can be read.
+  What is **not** there is everything `E` valued: that development is
+  `X : ι → Ω → ℝ` throughout, while
+  `exists_cadlag_modification_of_isRegularizingClass` below regularizes the real
+  process `f ∘ X` for each `f` in a countable separating subclass of `Φ` and
+  assembles an `E` valued path from the results, with `CompactContainment`
+  keeping the limits inside `E`. That assembly appears nowhere in that
+  repository. An implementer may consult it and, the licence permitting, draw on
+  it with its copyright header preserved; nothing here should be accepted merely
+  because it matches that file, and no statement of this roadmap refers to it.
 * `IsRegularizingClass Φ X 𝓧`: a set `Φ` of bounded continuous functions on `E`
   such that for every `f ∈ Φ` there are `Y ∈ 𝓧` and a `StronglyAdapted`
   `𝕂`-valued `C`
@@ -7651,6 +7679,41 @@ and 11 use them.
   for every `ε` and `T` a compact `K` with
   `P {∀ t ∈ Iic T ∩ D, X t ∈ K} > 1 - ε`, and the version over `[0,T]` for a
   family of processes. A lemma relating them for right continuous processes.
+* `CompactContainment.ae_exists_isCompact`: run along `ε = (n+1)⁻¹`, compact
+  containment says that almost every path meets **some** compact set on
+  `Iic T ∩ D`, the set depending on the path. It carries `D.Countable`, the
+  measurability of each `X t`, `[T2Space E]` and `[OpensMeasurableSpace E]`, and
+  none of the four is a convenience: `CompactContainment` bounds the outer
+  measure of a set that is not asserted to be measurable, and a lower bound on
+  the outer measure of a union bounds nothing on its complement. What makes the
+  set measurable is that `{ω | ∀ t ∈ Iic T ∩ D, X t ω ∈ K}` is a **countable**
+  intersection of preimages of a compact, hence closed, hence measurable set.
+  Proved on 2026-09-15.
+* `exists_tendsto_of_forall_tendsto_comp`, the step that makes an `E` valued
+  limit out of real ones and the one part of the càdlàg theorem that no amount
+  of real valued regularization supplies. Along a filter on which the path
+  eventually sits inside a compact `K`, convergence of `f ∘ g` for every `f` of a
+  family that separates the points of `K` by continuous functions forces
+  convergence of `g`. A compact set catches a cluster point, a continuous `f`
+  carries a cluster point of `g` to one of `f ∘ g`, and a convergent filter in a
+  Hausdorff space has exactly one; so any two cluster points of `g` in `K` agree
+  under every `f`, hence agree, and
+  `IsCompact.tendsto_nhds_of_unique_mapClusterPt`
+  (`Mathlib/Topology/Compactness/Compact.lean:181`) turns that uniqueness into
+  convergence. No countability of the family, no metric on `E` and no separation
+  axiom on `E`: the Hausdorff property the argument uses is the one of `𝕂`, and
+  the separation hypothesis is read only between two points of `K`.
+  Proved on 2026-09-15.
+* `ae_exists_tendsto_of_forall_ae_exists_tendsto`, the assembly, and the
+  statement the càdlàg theorem consumes twice — once for the right limits and
+  once for the left. Along a filter that eventually stays inside `Iic T ∩ D`,
+  almost sure convergence of `f ∘ X` for every `f` of a **countable** class
+  separating the points of `E` gives almost sure convergence of `X`. Countability
+  enters here and nowhere else: it is what lets the exceptional sets of the
+  individual `f` be collected into one, and it is the reason
+  `exists_cadlag_modification_of_isRegularizingClass` asks for a countable
+  separating subclass while `isQuasiLeftContinuous_of_isRegularizingClass` does
+  not. Proved on 2026-09-15.
 * `exists_cadlag_modification_of_isRegularizingClass`: if `Φ` is a regularizing
   class containing a countable subset that separates points, `Φ` is separating
   in the sense of the roadmap **WeakConvergence**, and `X` satisfies compact

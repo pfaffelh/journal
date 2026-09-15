@@ -1486,6 +1486,120 @@ def CompactContainment (X : ι → Ω → E) (P : Measure Ω) (D : Set ι) : Pro
   ∀ (ε : ℝ), 0 < ε → ∀ T : ι, ∃ K : Set E, IsCompact K ∧
     1 - ε < (P {ω | ∀ t ∈ Set.Iic T ∩ D, X t ω ∈ K}).toReal
 
+omit [MeasurableSpace E] in
+/-- **The step that makes an `E` valued limit out of the real ones**, and the one
+piece of the càdlàg theorem that no amount of real valued regularization
+supplies.
+
+Along a filter `l` on which the path eventually sits inside a **compact** `K`,
+convergence of `f ∘ g` for every `f` in a family that separates the points of `K`
+by continuous functions forces convergence of `g` itself.  The proof is that a
+compact set catches a cluster point, that a continuous `f` carries a cluster
+point of `g` to one of `f ∘ g`, and that a convergent filter in a Hausdorff space
+has exactly one cluster point -- so any two cluster points of `g` in `K` agree
+under every `f`, hence agree, and `IsCompact.tendsto_nhds_of_unique_mapClusterPt`
+turns the uniqueness into convergence.
+
+No countability of the family, no metric on `E`, and no separation axiom on `E`
+are assumed: `hsep` is used only between two points of `K`, and the Hausdorff
+property that the argument needs is the one of `𝕂`.  Compactness is not a
+convenience -- without it a family of real limits says nothing, as the constant
+sequence of an unbounded escape shows. -/
+theorem exists_tendsto_of_forall_tendsto_comp {α : Type*} {l : Filter α} [l.NeBot]
+    {g : α → E} {K : Set E} (hK : IsCompact K) (hmem : ∀ᶠ a in l, g a ∈ K)
+    {Φ₀ : Set (E → 𝕂)} (hcont : ∀ f ∈ Φ₀, Continuous f)
+    (hsep : ∀ x ∈ K, ∀ y ∈ K, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
+    (hlim : ∀ f ∈ Φ₀, ∃ c : 𝕂, Tendsto (fun a ↦ f (g a)) l (𝓝 c)) :
+    ∃ x ∈ K, Tendsto g l (𝓝 x) := by
+  obtain ⟨x, hxK, hx⟩ := hK.exists_mapClusterPt (u := g) (le_principal_iff.2 hmem)
+  refine ⟨x, hxK, hK.tendsto_nhds_of_unique_mapClusterPt hmem ?_⟩
+  intro y hyK hy
+  by_contra hne
+  obtain ⟨f, hfΦ, hfne⟩ := hsep y hyK x hxK hne
+  obtain ⟨c, hc⟩ := hlim f hfΦ
+  have key : ∀ z : E, MapClusterPt z l g → f z = c := by
+    intro z hz
+    have : ClusterPt (f z) (𝓝 c) :=
+      (hz.continuousAt_comp (hcont f hfΦ).continuousAt).clusterPt.mono hc
+    exact eq_of_nhds_neBot this
+  exact hfne ((key y hy).trans (key x hx).symm)
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- Compact containment is an **almost sure** statement once it is run along the
+sequence `ε = (n+1)⁻¹`: almost every path meets *some* compact set on
+`Iic T ∩ D`.  The compact set depends on the path, which is all the assembly
+below needs and all that compact containment can give.
+
+Measurability is where the hypotheses come from and it cannot be dispensed with:
+`CompactContainment` bounds the outer measure of a set that is not asserted to be
+measurable, and a lower bound on the outer measure of a union says nothing about
+its complement.  Here `{ω | ∀ t ∈ Iic T ∩ D, X t ω ∈ K}` is a **countable**
+intersection -- that is what `hD` is for -- of preimages of a compact set, which
+is closed in a Hausdorff space and therefore measurable under
+`[OpensMeasurableSpace E]`. -/
+theorem CompactContainment.ae_exists_isCompact [T2Space E] [OpensMeasurableSpace E]
+    {X : ι → Ω → E} {P : Measure Ω} [IsProbabilityMeasure P] {D : Set ι}
+    (hcc : CompactContainment X P D) (hD : D.Countable)
+    (hXm : ∀ t : ι, Measurable (X t)) (T : ι) :
+    ∀ᵐ ω ∂P, ∃ K : Set E, IsCompact K ∧ ∀ t ∈ Set.Iic T ∩ D, X t ω ∈ K := by
+  have hDT : (Set.Iic T ∩ D).Countable := hD.mono Set.inter_subset_right
+  choose K hKc hKP using fun n : ℕ ↦ hcc (1 / ((n : ℝ) + 1)) (by positivity) T
+  set A : ℕ → Set Ω := fun n ↦ {ω | ∀ t ∈ Set.Iic T ∩ D, X t ω ∈ K n} with hA
+  have hAeq : ∀ n, A n = ⋂ t ∈ Set.Iic T ∩ D, X t ⁻¹' (K n) := by
+    intro n; ext ω; simp [hA]
+  have hAm : ∀ n, MeasurableSet (A n) := by
+    intro n
+    rw [hAeq n]
+    exact MeasurableSet.biInter hDT fun t _ ↦ (hKc n).isClosed.measurableSet.preimage (hXm t)
+  set S : Set Ω := ⋃ n, A n with hS
+  have hSm : MeasurableSet S := MeasurableSet.iUnion hAm
+  have hle : ∀ n : ℕ, 1 - 1 / ((n : ℝ) + 1) ≤ (P S).toReal := by
+    intro n
+    refine (hKP n).le.trans (ENNReal.toReal_mono (measure_ne_top P S) ?_)
+    exact measure_mono (Set.subset_iUnion A n)
+  have hone : (1 : ℝ) ≤ (P S).toReal := by
+    have htend : Tendsto (fun n : ℕ ↦ 1 - 1 / ((n : ℝ) + 1)) atTop (𝓝 (1 : ℝ)) := by
+      simpa using tendsto_one_div_add_atTop_nhds_zero_nat.const_sub (1 : ℝ)
+    exact le_of_tendsto' htend hle
+  have hPS : P S = 1 := by
+    refine le_antisymm prob_le_one ?_
+    rw [← ENNReal.ofReal_one, ← ENNReal.ofReal_toReal (measure_ne_top P S)]
+    exact ENNReal.ofReal_le_ofReal hone
+  have : P Sᶜ = 0 := (prob_compl_eq_zero_iff hSm).2 hPS
+  filter_upwards [this] with ω hω
+  obtain ⟨n, hn⟩ := Set.mem_iUnion.1 hω
+  exact ⟨K n, hKc n, hn⟩
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- **The assembly**, and the statement the càdlàg theorem consumes twice, once
+for the right limits and once for the left ones.
+
+Along a filter `l` that eventually stays inside `Iic T ∩ D`, almost sure
+convergence of `f ∘ X` for every `f` of a **countable** class separating the
+points of `E` gives almost sure convergence of `X` itself.  Countability enters
+here and nowhere else: it is what lets the exceptional sets of the individual `f`
+be collected into one, and it is the reason
+`exists_cadlag_modification_of_isRegularizingClass` asks for a countable
+separating subclass while `isQuasiLeftContinuous_of_isRegularizingClass` does
+not.  Compactness is supplied by `CompactContainment.ae_exists_isCompact`. -/
+theorem ae_exists_tendsto_of_forall_ae_exists_tendsto [T2Space E]
+    [OpensMeasurableSpace E] {X : ι → Ω → E} {P : Measure Ω} [IsProbabilityMeasure P]
+    {D : Set ι} {Φ₀ : Set (E → 𝕂)} {T : ι} {l : Filter ι} [l.NeBot]
+    (hcc : CompactContainment X P D) (hD : D.Countable)
+    (hXm : ∀ t : ι, Measurable (X t)) (hl : ∀ᶠ s in l, s ∈ Set.Iic T ∩ D)
+    (hΦ₀ : Φ₀.Countable) (hcont : ∀ f ∈ Φ₀, Continuous f)
+    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
+    (hlim : ∀ f ∈ Φ₀, ∀ᵐ ω ∂P, ∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) l (𝓝 c)) :
+    ∀ᵐ ω ∂P, ∃ x : E, Tendsto (fun s ↦ X s ω) l (𝓝 x) := by
+  have hall : ∀ᵐ ω ∂P, ∀ f ∈ Φ₀, ∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) l (𝓝 c) :=
+    (ae_ball_iff hΦ₀).2 hlim
+  filter_upwards [hcc.ae_exists_isCompact hD hXm T, hall] with ω hωK hωf
+  obtain ⟨K, hKc, hKmem⟩ := hωK
+  obtain ⟨x, -, hx⟩ := exists_tendsto_of_forall_tendsto_comp (g := fun s ↦ X s ω)
+    hKc (hl.mono fun s hs ↦ hKmem s hs) hcont
+    (fun a _ b _ hab ↦ hsep a b hab) hωf
+  exact ⟨x, hx⟩
+
 /-- A regularizing class whose countable subset separates the points of `E`, and
 compact containment, give a modification with càdlàg paths.  The conclusion is
 the path property rather than membership in `D(ι, E)`, which is the object of the
