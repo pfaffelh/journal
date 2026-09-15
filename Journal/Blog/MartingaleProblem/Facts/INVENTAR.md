@@ -30740,3 +30740,75 @@ Unberührt; sie ist eine Entscheidung des Nutzers und kein Beweis.
 
 2. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
    der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.
+
+#### Nachtrag des Nutzers, 2026-09-15 abends — zu Vorschlag 1: die Fassung mit dem meßbaren Zeugen
+
+Vorschlag 1 der beiden letzten Läufe stellt die Frage, ob `CompactContainment`
+(`MartingaleProblems/Suggested.lean:1697`) die Meßbarkeit der Menge fordern
+soll. Die Frage ist besprochen worden, und die Antwort ist eine dritte Fassung,
+die keiner der beiden vorgeschlagenen gleicht. **Sie ist ein Vorschlag, keine
+Anordnung: geändert ist nichts.**
+
+**Der Befund, von dem auszugehen ist**, steht schon im Doc-String von
+`ae_exists_isCompact` und wird hier nicht widerrufen, sondern zugespitzt: `P`
+auf eine nicht als meßbar behauptete Menge angewandt ist das **äußere** Maß, und
+aus $P^*(S) > 1-\varepsilon$ folgt über $P^*(S^{c})$ nichts — eine Vitali-artige
+Menge hat volles äußeres Maß und ihr Komplement auch. „Ohne Meßbarkeit" ist der
+Satz also **nicht allgemeiner, sondern unbeweisbar**; die vier Voraussetzungen
+sind die Brücke und keine Bequemlichkeit. Zu entscheiden ist allein, **wo** die
+Meßbarkeit sitzt, und dafür gibt es drei Stellen, nicht zwei:
+
+| | Die Definition verlangt | Kosten an der Benutzungsstelle |
+|---|---|---|
+| **(a)**, heute | nur $P^*\{\dots\} > 1-\varepsilon$ | `D.Countable`, `∀ t, Measurable (X t)`, `[T2Space E]`, `[OpensMeasurableSpace E]` — an *jeder* Stelle |
+| **(b)** | die Menge selbst ist meßbar | keine, aber die Hypothese wird stärker als nötig |
+| **(c)** | ein **meßbarer Zeuge** darin | keine |
+
+**(c) ausgeschrieben:**
+
+```lean
+def CompactContainment (X : ι → Ω → E) (P : Measure Ω) (D : Set ι) : Prop :=
+  ∀ (ε : ℝ), 0 < ε → ∀ T : ι, ∃ K : Set E, IsCompact K ∧
+    ∃ A : Set Ω, MeasurableSet A ∧
+      A ⊆ {ω | ∀ t ∈ Set.Iic T ∩ D, X t ω ∈ K} ∧ 1 - ε < (P A).toReal
+```
+
+**Warum sie trägt.** Der Beweis von `CompactContainment.ae_exists_isCompact`
+geht wörtlich durch, mit $A_n$ statt der kanonischen Menge: $S=\bigcup_n A_n$ ist
+meßbar, $P(S)=1$ nach demselben Grenzübergang, $S^{c}$ ist Nullmenge, und für
+$\omega\in S$ liegt $\omega$ in einem $A_n$ und damit der Pfad in $K_n$. Was
+dabei **entfällt**, sind alle vier Voraussetzungen: kein `hD`, kein `hXm`, kein
+`[T2Space E]`, kein `[OpensMeasurableSpace E]`. Die Meßbarkeit wird nicht mehr
+hergestellt, sondern mitgebracht.
+
+**Wo sie steht.** (c) ist echt schwächer als (b) — sie verlangt nicht die
+Meßbarkeit der kanonischen Menge, nur *irgendein* Ereignis, das sie bezeugt — und
+echt stärker als (a). Unter den vier Voraussetzungen fallen alle drei zusammen
+(die kanonische Menge ist dann selbst der Zeuge), es geht also **keine Anwendung
+verloren**; gespart wird die vierfache Buchhaltung. Formal sind die Sätze unter
+(a) die allgemeinsten, aber es ist eine Allgemeinheit ohne Anwendungsfall: an
+allen drei Benutzungsstellen — `ae_exists_isCompact`,
+`ae_exists_tendsto_of_forall_ae_exists_tendsto` (`:1797`) und
+`exists_cadlag_modification_of_isRegularizingClass` (`:1819`, noch `sorry`) —
+stehen die vier ohnehin da, `hD` und die Meßbarkeit für den Rest des Beweises.
+
+**Was ein Lauf zu tun hätte, wenn (c) angeordnet wird**, in dieser Reihenfolge:
+
+1. Das Brückenlemma **zuerst**, und zwar unter (a) formuliert: aus (a) plus den
+   vier Voraussetzungen folgt (c). Es ist der vorhandene Meßbarkeitsschritt aus
+   `ae_exists_isCompact`, nur herausgezogen, und es ist der Beleg, daß beim
+   Umbau nichts verlorengeht.
+2. Erst dann die Definition umstellen und die vier Voraussetzungen an den drei
+   Stellen streichen.
+3. `CompactContainment.family` — in `MartingaleProblems/README.md`,
+   Meilenstein 9 angekündigt, in Lean **noch nicht deklariert**. Sie erbt die
+   Schreibweise; deshalb ist die Entscheidung vor ihr fällig und nicht nach ihr.
+
+**Und das Manuskript bleibt, wie es ist.** Definition~\ref{def:cc} schreibt
+$P\{X(t)\in K \text{ für alle } t\in\T_{\leq T}\cap D\} > 1-\varepsilon$ und
+setzt, wie die Prosa es darf, stillschweigend voraus, daß das ein Ereignis ist;
+\eqref{eq:cc} wird an sechs Stellen zitiert. (a) ist die wörtliche Übersetzung
+und macht genau diese stillschweigende Voraussetzung sichtbar — (c) ist die
+Fassung, die sie ausspricht. Ein Umbau in Lean verlangt also keine Änderung am
+Manuskript, wohl aber eine Bemerkung bei \ref{def:cc}, die sagt, daß die
+Formalisierung den Zeugen fordert und warum.
