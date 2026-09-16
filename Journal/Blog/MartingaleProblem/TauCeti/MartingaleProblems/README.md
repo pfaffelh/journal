@@ -7647,19 +7647,59 @@ and 11 use them.
   The input is the Doob upcrossing estimate, in Mathlib as
   `MeasureTheory.Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
   and `Submartingale.mul_lintegral_upcrossings_le_lintegral_pos_part`, together
-  with `upcrossings_lt_top_iff`; all of these are indexed by `ℕ`, and the two
-  steps that carry them to an arbitrary `ι` are named separately.
-  `le_upcrossingsBefore_of_alternating` is the first: an explicit alternating
-  tuple of length `2 n` forces `upcrossingsBefore` to be at least `n`, which is
+  with `upcrossings_lt_top_iff`; all of these are indexed by `ℕ`, and three steps
+  carry them to an arbitrary `ι`, each named separately.
+
+  `le_upcrossingsBefore_of_alternating'` is the first: an alternating pattern of
+  length `2 n` read off at strictly increasing indices `j 0 < ⋯ < j (2 n - 1)`,
+  all below `M`, forces `upcrossingsBefore a b f M` to be at least `n`. This is
   the induction inside `ProbabilityTheory.not_frequently_of_upcrossings_lt_top`
-  (`Probability/Martingale/Convergence.lean:112`) read as a positive statement.
-  The second is `Submartingale.comp_monotone`: for monotone `e : ℕ → ι`, the
-  process `fun k ↦ Y (e k)` is a submartingale for the filtration
-  `Filtration.comp 𝓕 e`, so that a tuple inside a countable `S` — which lies in
-  the range of a monotone enumeration of a finite subset of `S` — is measured by
-  Mathlib's count. The uniform bound on the count over the finite subsets is
-  Doob's estimate at the last time of the subset, which the submartingale
-  property bounds by the estimate at `T`.
+  (`Probability/Martingale/Convergence.lean:112`) read as a positive statement,
+  and the free indices are what it needs: the tuple of a path lies at indices
+  that depend on the sample point, while the reindexing it is measured against
+  must not. `le_upcrossingsBefore_of_alternating` is its case `j = id`.
+
+  The second is `Filtration.comp`, the reindexing of a filtration along a
+  monotone map, with `Submartingale.comp_monotone`: a submartingale read along a
+  monotone `e : ℕ → ι` is a submartingale for `Filtration.comp 𝓕 e`. Mathlib has
+  neither; `Probability/Process/Filtration.lean` carries no `comp`.
+
+  The third is `Finset.monoEnum`, the monotone enumeration of a nonempty finite
+  set of times, **constant from its last element on**, with
+  `Finset.monotone_monoEnum`, `Finset.monoEnum_mem` and
+  `Finset.exists_lt_card_monoEnum_eq`. That it saturates rather than stopping at
+  `Fin (card)` is not cosmetic: it makes the enumeration a monotone map on all of
+  `ℕ`, which is what `Filtration.comp` asks for, and it bounds the indices of a
+  tuple inside the set by the cardinality, which is the time at which Doob's
+  estimate is read. `le_upcrossingsBefore_monoEnum` joins the three: an
+  alternating tuple inside a finite `s` satisfies
+  `n ≤ upcrossingsBefore a b (Y ∘ Finset.monoEnum hs) s.card`.
+
+  `Submartingale.ae_exists_not_hasUpcrossings_of_lt` is then the estimate for one
+  pair of levels and `Submartingale.ae_exists_not_hasUpcrossings` for all
+  rational pairs at once. The passage from the finite sets to `S` uses **no**
+  monotonicity of the counts in the exhausting index — different finite sets
+  carry different enumerations, and comparing their counts would be work.
+  Instead the bad event is written as the increasing union
+  `⋃ N, ⋂ M ≥ N, {n ≤ V M}`, whose measure is a supremum of measures each bounded
+  by Markov's inequality; continuity from below (`Monotone.measure_iUnion`,
+  `MeasureTheory/Measure/Continuity.lean:71`) replaces Fatou's lemma and needs no
+  measurability. The uniform bound on the count is Doob's estimate at the last
+  time of the finite set, which `Submartingale.setIntegral_le` applied to the
+  submartingale `(Y - a)⁺` bounds by the estimate at `T`.
+
+  `Submartingale.ae_bddOn` is the other half, and it is a **maximal**
+  inequality and not an upcrossing one. Its upper side is
+  `MeasureTheory.maximal_ineq` (`Probability/Martingale/OptionalStopping.lean:144`
+  on master) applied to the non-negative submartingale `Y⁺` along
+  `Finset.monoEnum`; its lower side, `ε * P {min_{k ≤ n} Y k ≤ -ε} ≤ 𝔼[Y n⁺] - 𝔼[Y 0]`,
+  Mathlib does not have in any form, and it is
+  `Submartingale.mul_meas_inf_le_le_integral_pos_part`, to be proved from
+  `Submartingale.expected_stoppedValue_mono` (`ibid.:43`) at the constant stopping
+  time `0` and the hitting time of `Iic (-ε)`, splitting the stopped value over
+  the event that the level is reached. Both sides are then collected over the
+  finite sets by the same increasing union, which is here even simpler, since the
+  maximum over an increasing family of finite sets is monotone by inspection.
 * The modification as a **construction**, not an existential: `cadlagModif Y`,
   defined from the right limits along a countable dense set, together with
   `isCadlag_cadlagModif`, `measurable_cadlagModif`, `adapted_cadlagModif` for a

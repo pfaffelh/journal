@@ -171,9 +171,9 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Achtzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Zwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle achtzehn beim Beweisen aufgefallen, alle achtzehn gegen `upstream/master`
+Alle zwanzig beim Beweisen aufgefallen, alle zwanzig gegen `upstream/master`
 geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
 thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
@@ -618,6 +618,42 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `IsRightContinuous` kommt dort nur als `Filtration.IsRightContinuous`
   (`Probability/Process/Filtration.lean:373`) vor — eine Klasse über
   Filtrationen und keine über Funktionen. Am 2026-09-14 geprüft.
+
+* **Die Umindizierung einer Filtration.** Der neunzehnte, und der billigste von
+  allen. `Filtration` ist eine Struktur aus einer monotonen Familie von
+  σ-Algebren; ihre Vorschaltung mit einer monotonen Abbildung `e : ι' → ι` ist
+  wieder eine, und die drei Felder sind die alten. `def comp` kommt in
+  `Mathlib/Probability/Process/Filtration.lean` **nicht** vor, und die Suche nach
+  `Filtration` zusammen mit `comp`, `reindex` oder `precomp` in ganz `Mathlib/`
+  gibt einen einzigen Treffer, und der ist ein `Measurable.comp` in
+  `Kernel/Disintegration/Density.lean:154`. Am 2026-09-16 gegen
+  `upstream/master` `09a9e06` geprüft.
+
+  Der Grund, warum das mehr als eine Bequemlichkeit ist: **jede** Aussage über
+  einen stetigzeitlichen Prozeß, die über einen diskret indizierten Satz geführt
+  wird — und das sind in `Probability/Martingale/` alle, die Aufkreuzungen oder
+  Maxima zählen —, muß den Prozeß längs einer monotonen `ℕ → ι` lesen, und dazu
+  braucht sie die Filtration daneben. Ohne `Filtration.comp` ist der Satz, den
+  man anwenden will, nicht einmal hinschreibbar. Wir haben es am 2026-09-16 als
+  `Filtration.comp` mit `Submartingale.comp_monotone` gebaut; für Mathlib gehören
+  beide zusammen in einen PR, und die Martingal- und Supermartingalfassungen
+  daneben.
+
+* **Die Minimalungleichung für Submartingale.** Der zwanzigste, und der
+  Gegenpol zu einem Satz, den Mathlib hat. `MeasureTheory.maximal_ineq`
+  (`Probability/Martingale/OptionalStopping.lean:144` auf master) ist Doobs
+  Maximalungleichung für ein nichtnegatives Submartingal; die Gegenrichtung,
+  `ε · P{min_{k ≤ n} Y_k ≤ −ε} ≤ 𝔼[Y_n⁺] − 𝔼[Y_0]`, fehlt in jeder Fassung —
+  die Zeichenkette `inf'` kommt in `Mathlib/Probability/Martingale/` gar nicht
+  vor (0 Treffer, am 2026-09-16 gegen `upstream/master` `09a9e06` geprüft).
+
+  Ihr Beweis ist `Submartingale.expected_stoppedValue_mono` (`ibid.:43`) an der
+  konstanten Stoppzeit `0` gegen die Trefferzeit von `Set.Iic (−ε)`, gefolgt von
+  der Zerlegung des gestoppten Wertes über das Ereignis, daß der Pegel erreicht
+  wird — also derselbe Baustein, aus dem die vorhandene Ungleichung gebaut ist,
+  nur an der anderen Seite angesetzt. Zusammen sind die beiden erst das, was ein
+  Leser unter „ein Submartingal ist auf einem endlichen Zeitfenster fast sicher
+  beschränkt" versteht, und genau das verlangt Doobs Regularisierung.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

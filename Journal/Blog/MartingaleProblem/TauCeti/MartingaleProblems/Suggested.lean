@@ -38,7 +38,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-15 (fifth run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
+2026-09-16 (first run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -1470,6 +1470,14 @@ def HasUpcrossings (a b : ℝ) (g : ι → ℝ) (S : Set ι) (n : ℕ) : Prop :=
   ∃ u : ℕ → ι, (∀ k, k + 1 < 2 * n → u k < u (k + 1)) ∧ (∀ k, k < 2 * n → u k ∈ S) ∧
     ∀ k, k < n → g (u (2 * k)) < a ∧ b < g (u (2 * k + 1))
 
+/-- Monotone in the time set **by inspection**: the same tuple serves a larger
+one.  This is what the tuple buys over a count, whose monotonicity under
+enlarging the time set is a theorem about enumerations and not a remark. -/
+lemma HasUpcrossings.mono {a b : ℝ} {g : ι → ℝ} {S S' : Set ι} {n : ℕ}
+    (h : HasUpcrossings a b g S n) (hSS : S ⊆ S') : HasUpcrossings a b g S' n := by
+  obtain ⟨u, h1, h2, h3⟩ := h
+  exact ⟨u, h1, fun k hk ↦ hSS (h2 k hk), h3⟩
+
 /-- **The greedy alternating chain.**  Along a filter `L` whose points eventually
 lie in `S`, and on which every point of `S` is eventually overtaken in the sense
 of a relation `R`, two properties that each hold frequently can be interleaved
@@ -1611,28 +1619,352 @@ theorem exists_tendsto_nhdsWithin_Ioi_of_hasUpcrossings_bound
   exact hn (hasUpcrossings_of_frequently_nhdsWithin_Ioi h₁ h₂ n)
 
 /-- The bridge to Mathlib's upcrossing count, which is indexed by `ℕ`: an
-explicit alternating pattern of length `2 n` forces `upcrossingsBefore` to be at
-least `n`.  This is the induction inside
+explicit alternating pattern of length `2 n`, read off at **strictly increasing
+indices** `j 0 < j 1 < ⋯ < j (2 n - 1)` all below `M`, forces
+`upcrossingsBefore a b f M` to be at least `n`.  This is the induction inside
 `ProbabilityTheory.not_frequently_of_upcrossings_lt_top`
 (`Probability/Martingale/Convergence.lean:112`) read as a positive statement, and
 it is the step by which Doob's estimate will bound `HasUpcrossings`: an
 alternating tuple in a countable time set lies in the range of some monotone
 `ℕ`-enumeration, and there Mathlib's count applies. -/
+theorem le_upcrossingsBefore_of_alternating' {Ω₀ : Type*} {f : ℕ → Ω₀ → ℝ} {ω : Ω₀} {a b : ℝ}
+    (hab : a < b) {n : ℕ} {j : ℕ → ℕ} (hj : ∀ k, k + 1 < 2 * n → j k < j (k + 1))
+    (h : ∀ k, k < n → f (j (2 * k)) ω < a ∧ b < f (j (2 * k + 1)) ω)
+    {M : ℕ} (hM : ∀ k, k < 2 * n → j k < M) :
+    n ≤ upcrossingsBefore a b f M ω := by
+  set J : ℕ → ℕ := fun p ↦ if p = 0 then 0 else j (2 * p - 1) + 1 with hJ
+  have key : ∀ p, p ≤ n → p ≤ upcrossingsBefore a b f (J p) ω := by
+    intro p
+    induction p with
+    | zero => intro _; simp
+    | succ q ih =>
+        intro hq
+        have hqn : q < n := by omega
+        have hIH : q ≤ upcrossingsBefore a b f (J q) ω := ih (by omega)
+        have hN₁ : J q ≤ j (2 * q) := by
+          rcases Nat.eq_zero_or_pos q with hq0 | hq0
+          · simp [hJ, hq0]
+          · obtain ⟨r, rfl⟩ : ∃ r, q = r + 1 := ⟨q - 1, by omega⟩
+            have hr : j (2 * r + 1) < j (2 * r + 1 + 1) := hj (2 * r + 1) (by omega)
+            simp only [hJ, if_neg (Nat.succ_ne_zero r)]
+            have h2 : 2 * (r + 1) - 1 = 2 * r + 1 := by omega
+            have h3 : 2 * (r + 1) = 2 * r + 1 + 1 := by omega
+            rw [h2, h3]
+            omega
+        have hN₂ : j (2 * q) ≤ j (2 * q + 1) := (hj (2 * q) (by omega)).le
+        obtain ⟨h1, h2⟩ := h q hqn
+        have hstep := upcrossingsBefore_lt_of_exists_upcrossing (f := f) (ω := ω) (a := a) (b := b)
+          hab (N := J q) (N₁ := j (2 * q)) hN₁ h1 (N₂ := j (2 * q + 1)) hN₂ h2
+        have h5 : 2 * (q + 1) - 1 = 2 * q + 1 := by omega
+        have h4 : J (q + 1) = j (2 * q + 1) + 1 := by
+          simp only [hJ, if_neg (Nat.succ_ne_zero q), h5]
+        rw [h4]
+        omega
+  have hJn : J n ≤ M := by
+    rcases Nat.eq_zero_or_pos n with hn0 | hn0
+    · simp [hJ, hn0]
+    · simp only [hJ, if_neg (by omega : ¬ n = 0)]
+      exact hM (2 * n - 1) (by omega)
+  exact (key n le_rfl).trans (upcrossingsBefore_mono hab hJn ω)
+
+/-- The pattern read at the indices `2 k, 2 k + 1` themselves. -/
 theorem le_upcrossingsBefore_of_alternating {Ω₀ : Type*} {f : ℕ → Ω₀ → ℝ} {ω : Ω₀} {a b : ℝ}
     (hab : a < b) {n : ℕ} (h : ∀ k, k < n → f (2 * k) ω < a ∧ b < f (2 * k + 1) ω) :
-    n ≤ upcrossingsBefore a b f (2 * n) ω := by
-  induction n with
-  | zero => simp
-  | succ m ih =>
-      have hm : m ≤ upcrossingsBefore a b f (2 * m) ω := ih fun k hk => h k (by omega)
-      obtain ⟨h1, h2⟩ := h m (by omega)
-      have hstep := upcrossingsBefore_lt_of_exists_upcrossing (f := f) (ω := ω) (a := a) (b := b)
-        hab (N := 2 * m) (N₁ := 2 * m) le_rfl h1 (N₂ := 2 * m + 1) (by omega) h2
-      have h3 : 2 * m + 1 + 1 = 2 * (m + 1) := by ring
-      rw [h3] at hstep
-      omega
+    n ≤ upcrossingsBefore a b f (2 * n) ω :=
+  le_upcrossingsBefore_of_alternating' (j := id) hab (fun k _ ↦ Nat.lt_succ_self k) h
+    (fun _ hk ↦ hk)
 
 end DoobRegularization
+
+/-! ## Milestone 9, the probabilistic half: Doob's estimate over a countable time set
+
+What the deterministic half consumes is a bound, valid almost surely and for
+every rational interval at once, on the number of upcrossings a submartingale
+performs at times taken from a countable `S`.  Mathlib's estimate
+(`Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`) is indexed
+by `ℕ`, and the two steps that carry it to an arbitrary linear order are here.
+
+The first is `Filtration.comp`, the reindexing of a filtration along a monotone
+map, with `Submartingale.comp_monotone`: a submartingale read along a monotone
+`e : ℕ → ι` is a submartingale.  Mathlib has neither (checked against
+`upstream/master` `09a9e06e4e5ccd5b783f25e52ad3ebecfb1e2d68`, 2026-09-16:
+`Probability/Process/Filtration.lean` carries no `comp`).
+
+The second is `Finset.monoEnum`, the monotone enumeration of a nonempty finite
+set of times, **constant from its last element on**, so that it is a monotone map
+defined on all of `ℕ` and not on a `Fin`.  That the enumeration saturates is not
+cosmetic: it is what bounds the indices of an alternating tuple by the
+cardinality, and the cardinality is the time at which Doob's estimate is read.
+
+The passage from the finite sets to `S` uses no monotonicity of the counts in
+the exhausting index -- different finite sets carry different enumerations, and
+comparing their counts would be work.  Instead the bad event is written as the
+**increasing** union `⋃ N, ⋂ M ≥ N, {n ≤ V M}`, whose measure is a supremum of
+measures each bounded by Markov's inequality.  Continuity from below replaces
+Fatou's lemma, and it needs no measurability
+(`MeasureTheory.Monotone.measure_iUnion`). -/
+
+section DoobUpcrossingBound
+
+variable {ι : Type*} [LinearOrder ι]
+
+/-- The monotone enumeration of a nonempty finite set of times, constant from the
+last element on.  It is a monotone map `ℕ → ι`, which is what `Filtration.comp`
+and `Submartingale.comp_monotone` ask for, and it saturates, which is what bounds
+the indices of a tuple inside the set by the cardinality of the set. -/
+noncomputable def Finset.monoEnum {s : Finset ι} (hs : s.Nonempty) (i : ℕ) : ι :=
+  s.orderEmbOfFin rfl ⟨min i (s.card - 1), by
+    have : 0 < s.card := Finset.card_pos.2 hs
+    omega⟩
+
+lemma Finset.monotone_monoEnum {s : Finset ι} (hs : s.Nonempty) :
+    Monotone (Finset.monoEnum hs) := by
+  intro i j hij
+  exact (s.orderEmbOfFin rfl).monotone (Fin.mk_le_mk.2 (by omega))
+
+lemma Finset.monoEnum_mem {s : Finset ι} (hs : s.Nonempty) (i : ℕ) :
+    Finset.monoEnum hs i ∈ s :=
+  s.orderEmbOfFin_mem rfl _
+
+/-- Every element of the set is reached, and at an index below the cardinality.
+That is the half of the construction that saturation delivers. -/
+lemma Finset.exists_lt_card_monoEnum_eq {s : Finset ι} (hs : s.Nonempty) {x : ι} (hx : x ∈ s) :
+    ∃ i < s.card, Finset.monoEnum hs i = x := by
+  have hmem : x ∈ Set.range (s.orderEmbOfFin (rfl : s.card = s.card)) := by
+    rw [s.range_orderEmbOfFin rfl]; exact hx
+  obtain ⟨i, hi⟩ := hmem
+  have hii : (i : ℕ) < s.card := i.2
+  refine ⟨i, hii, ?_⟩
+  have hmin : min (i : ℕ) (s.card - 1) = (i : ℕ) := by omega
+  rw [Finset.monoEnum, ← hi]
+  congr 1
+  exact Fin.ext hmin
+
+namespace MeasureTheory
+
+/-- A filtration reindexed along a monotone map.  Mathlib has no such
+construction; it is what carries a statement indexed by `ℕ` to one indexed by an
+arbitrary preorder, and back. -/
+def Filtration.comp {ι' : Type*} [Preorder ι'] (𝓕 : Filtration ι m)
+    {e : ι' → ι} (he : Monotone e) : Filtration ι' m where
+  seq k := 𝓕 (e k)
+  mono' _ _ h := 𝓕.mono (he h)
+  le' k := 𝓕.le (e k)
+
+@[simp] lemma Filtration.comp_apply {ι' : Type*} [Preorder ι'] (𝓕 : Filtration ι m)
+    {e : ι' → ι} (he : Monotone e) (k : ι') : (𝓕.comp he) k = 𝓕 (e k) := rfl
+
+/-- **A submartingale read along a monotone reindexing is a submartingale.**  All
+three fields are the old ones at the reindexed times; nothing is proved, and that
+is the point -- the content sits entirely in `Filtration.comp`. -/
+theorem Submartingale.comp_monotone {ι' : Type*} [Preorder ι']
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} {P : Measure Ω} (hY : Submartingale Y 𝓕 P)
+    {e : ι' → ι} (he : Monotone e) :
+    Submartingale (fun k ↦ Y (e k)) (𝓕.comp he) P :=
+  ⟨fun k ↦ hY.1 (e k), fun _ _ hij ↦ hY.2.1 _ _ (he hij), fun k ↦ hY.2.2 (e k)⟩
+
+end MeasureTheory
+
+/-- An alternating tuple inside a **finite** set of times is counted by Mathlib's
+`upcrossingsBefore` along the monotone enumeration of that set, read at the
+cardinality.  The indices of the tuple are recovered as the least indices at
+which the enumeration takes its values; they are strictly increasing because the
+enumeration is monotone and the tuple strictly increasing, and they are below the
+cardinality because the enumeration reaches every element there. -/
+theorem le_upcrossingsBefore_monoEnum {a b : ℝ} {Y : ι → Ω → ℝ} {s : Finset ι} (hs : s.Nonempty)
+    (hab : a < b) {n : ℕ} {ω : Ω} (h : HasUpcrossings a b (fun t ↦ Y t ω) (↑s) n) :
+    n ≤ upcrossingsBefore a b (fun i ω ↦ Y (Finset.monoEnum hs i) ω) s.card ω := by
+  rcases Nat.eq_zero_or_pos n with rfl | hn
+  · simp
+  obtain ⟨u, hu1, hu2, hu3⟩ := h
+  set u' : ℕ → ι := fun k ↦ u (min k (2 * n - 1)) with hu'
+  have hu'mem : ∀ k, u' k ∈ s := fun k ↦ hu2 _ (by omega)
+  have hex : ∀ k, ∃ i, Finset.monoEnum hs i = u' k := by
+    intro k
+    obtain ⟨i, -, hi⟩ := Finset.exists_lt_card_monoEnum_eq hs (hu'mem k)
+    exact ⟨i, hi⟩
+  set j : ℕ → ℕ := fun k ↦ Nat.find (hex k) with hj
+  have hjspec : ∀ k, Finset.monoEnum hs (j k) = u' k := fun k ↦ Nat.find_spec (hex k)
+  have hjlt : ∀ k, j k < s.card := by
+    intro k
+    obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq hs (hu'mem k)
+    exact lt_of_le_of_lt (Nat.find_le hie) hi
+  have hu'lt : ∀ k, k + 1 < 2 * n → u' k < u' (k + 1) := by
+    intro k hk
+    have e1 : min k (2 * n - 1) = k := by omega
+    have e2 : min (k + 1) (2 * n - 1) = k + 1 := by omega
+    simp only [hu', e1, e2]
+    exact hu1 k hk
+  have hjmono : ∀ k, k + 1 < 2 * n → j k < j (k + 1) := by
+    intro k hk
+    rcases Nat.lt_or_ge (j k) (j (k + 1)) with hlt | hge
+    · exact hlt
+    · exfalso
+      have hle := Finset.monotone_monoEnum hs hge
+      rw [hjspec, hjspec] at hle
+      exact absurd hle (not_le.2 (hu'lt k hk))
+  refine le_upcrossingsBefore_of_alternating' hab hjmono ?_ (fun k _ ↦ hjlt k)
+  intro k hk
+  have e1 : min (2 * k) (2 * n - 1) = 2 * k := by omega
+  have e2 : min (2 * k + 1) (2 * n - 1) = 2 * k + 1 := by omega
+  obtain ⟨p1, p2⟩ := hu3 k hk
+  refine ⟨?_, ?_⟩
+  · show Y (Finset.monoEnum hs (j (2 * k))) ω < a
+    rw [hjspec]; simp only [hu', e1]; exact p1
+  · show b < Y (Finset.monoEnum hs (j (2 * k + 1))) ω
+    rw [hjspec]; simp only [hu', e2]; exact p2
+
+namespace MeasureTheory
+
+/-- **Doob's estimate over a countable set of times**, for one pair of levels: a
+submartingale almost surely performs only finitely many upcrossings of `[a, b]`
+at times taken from a countable `S` bounded above by `T`.
+
+Nothing is assumed of `S` beyond countability -- no density, no order type -- and
+the bound `T` enters only through `∫ (Y T - a)⁺`, which the submartingale
+property produces at every time of `S` at once.  The exceptional set is **one**
+null set and not one for each time, which is what
+`exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound` needs. -/
+theorem Submartingale.ae_exists_not_hasUpcrossings_of_lt {a b : ℝ} {P : Measure Ω}
+    [IsFiniteMeasure P] {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {S : Set ι} (hS : S.Countable) {T : ι} (hST : ∀ s ∈ S, s ≤ T) (hab : a < b) :
+    ∀ᵐ ω ∂P, ∃ n, ¬ HasUpcrossings a b (fun t ↦ Y t ω) S n := by
+  rcases S.eq_empty_or_nonempty with rfl | hne
+  · filter_upwards with ω
+    refine ⟨1, ?_⟩
+    rintro ⟨u, -, hu, -⟩
+    simpa using hu 0 (by norm_num)
+  obtain ⟨σ, rfl⟩ := hS.exists_eq_range hne
+  -- the increasing exhaustion of `S` by finite sets, and their enumerations
+  set F : ℕ → Finset ι := fun N ↦ (Finset.range (N + 1)).image σ with hF
+  have hFne : ∀ N, (F N).Nonempty := by
+    intro N
+    refine ⟨σ 0, ?_⟩
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨0, by omega, rfl⟩
+  have hFsub : ∀ N, ∀ x ∈ F N, x ∈ Set.range σ := by
+    intro N x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx
+    obtain ⟨p, -, rfl⟩ := hx
+    exact ⟨p, rfl⟩
+  have hFmono : Monotone F := by
+    intro N M hNM x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx ⊢
+    obtain ⟨p, hp, hpx⟩ := hx
+    exact ⟨p, by omega, hpx⟩
+  set g : ℕ → ℕ → Ω → ℝ := fun N i ω ↦ Y (Finset.monoEnum (hFne N) i) ω with hg
+  have hsub : ∀ N, Submartingale (g N) (𝓕.comp (Finset.monotone_monoEnum (hFne N))) P :=
+    fun N ↦ hY.comp_monotone _
+  set V : ℕ → Ω → ℕ := fun N ω ↦ upcrossingsBefore a b (g N) (F N).card ω with hV
+  -- Doob's estimate, uniformly in `N`, through the submartingale `(Y - a)⁺`
+  set K : ℝ := ∫ ω, ((Y T ω - a)⁺) ∂P with hK
+  have hK0 : 0 ≤ K := integral_nonneg fun _ ↦ posPart_nonneg _
+  have hpos := (hY.sub_martingale (martingale_const 𝓕 P a)).pos
+  have hmono : ∀ s : ι, s ≤ T → ∫ ω, ((Y s ω - a)⁺) ∂P ≤ K := by
+    intro s hs
+    have h := hpos.setIntegral_le (i := s) (j := T) hs (s := (Set.univ : Set Ω))
+      MeasurableSet.univ
+    simpa [hK] using h
+  have hdoob : ∀ N, (b - a) * ∫ ω, (V N ω : ℝ) ∂P ≤ K := by
+    intro N
+    refine ((hsub N).mul_integral_upcrossingsBefore_le_integral_pos_part a b
+      ((F N).card)).trans ?_
+    exact hmono _ (hST _ (hFsub N _ (Finset.monoEnum_mem _ _)))
+  -- Markov's inequality, uniformly in `N`
+  have hint : ∀ N, Integrable (fun ω ↦ (V N ω : ℝ)) P :=
+    fun N ↦ (hsub N).stronglyAdapted.integrable_upcrossingsBefore hab
+  set c : ℝ := K / (b - a) with hc
+  have hc0 : 0 ≤ c := div_nonneg hK0 (by linarith)
+  have hmarkov : ∀ (n N : ℕ), (n : ℝ) * (P.real {ω | n ≤ V N ω}) ≤ c := by
+    intro n N
+    have h := mul_meas_ge_le_integral_of_nonneg
+      (f := fun ω ↦ (V N ω : ℝ)) (ae_of_all _ fun ω ↦ Nat.cast_nonneg _) (hint N) (n : ℝ)
+    have hset : {ω | (n : ℝ) ≤ (V N ω : ℝ)} = {ω | n ≤ V N ω} := by
+      ext ω; simp
+    rw [hset] at h
+    refine h.trans ?_
+    rw [hc, le_div_iff₀ (by linarith)]
+    linarith [hdoob N]
+  -- the bad event, written as an increasing union
+  set C : ℕ → ℕ → Set Ω := fun n N ↦ ⋂ M, ⋂ (_ : N ≤ M), {ω | n ≤ V M ω} with hC
+  have hCmono : ∀ n, Monotone (C n) := by
+    intro n N N' hNN'
+    refine Set.iInter_mono fun M ↦ ?_
+    exact Set.iInter_mono' fun hM ↦ ⟨hNN'.trans hM, le_rfl⟩
+  have hCsub : ∀ n N, C n N ⊆ {ω | n ≤ V N ω} := fun n N ω hω ↦ Set.mem_iInter₂.1 hω N le_rfl
+  have hCbound : ∀ n N, 0 < n → P (C n N) ≤ ENNReal.ofReal (c / n) := by
+    intro n N hn
+    have h1 : P.real {ω | n ≤ V N ω} ≤ c / n := by
+      rw [le_div_iff₀ (by exact_mod_cast hn)]
+      simpa [mul_comm] using hmarkov n N
+    have h2 : P.real (C n N) ≤ c / n :=
+      le_trans (ENNReal.toReal_mono (measure_ne_top _ _) (measure_mono (hCsub n N))) h1
+    rw [← ENNReal.ofReal_toReal (measure_ne_top P (C n N))]
+    exact ENNReal.ofReal_le_ofReal h2
+  set U : ℕ → Set Ω := fun n ↦ ⋃ N, C n N with hU
+  set Z : Set Ω := ⋂ n, U n with hZ
+  have hZ0 : P Z = 0 := by
+    have hle : ∀ n : ℕ, 0 < n → P Z ≤ ENNReal.ofReal (c / n) := by
+      intro n hn
+      refine le_trans (measure_mono (Set.iInter_subset _ n)) ?_
+      rw [hU, (hCmono n).measure_iUnion]
+      exact iSup_le fun N ↦ hCbound n N hn
+    have htend : Tendsto (fun n : ℕ ↦ ENNReal.ofReal (c / n)) atTop (𝓝 0) := by
+      have h : Tendsto (fun n : ℕ ↦ c / (n : ℝ)) atTop (𝓝 0) :=
+        tendsto_const_div_atTop_nhds_zero_nat c
+      simpa [Function.comp_def] using (ENNReal.continuous_ofReal.tendsto 0).comp h
+    refine nonpos_iff_eq_zero.1 (ge_of_tendsto htend ?_)
+    filter_upwards [eventually_gt_atTop 0] with n hn using hle n hn
+  -- a path with upcrossings of every order lies in `Z`
+  rw [ae_iff]
+  refine measure_mono_null (fun ω hω ↦ ?_) hZ0
+  simp only [Set.mem_ofPred_eq, not_exists, not_not] at hω
+  refine Set.mem_iInter.2 fun n ↦ ?_
+  rcases Nat.eq_zero_or_pos n with rfl | hn
+  · exact Set.mem_iUnion.2 ⟨0, Set.mem_iInter₂.2 fun M _ ↦ Nat.zero_le _⟩
+  obtain ⟨u, hu1, hu2, hu3⟩ := hω n
+  set u' : ℕ → ι := fun k ↦ u (min k (2 * n - 1)) with hu'
+  have hexp : ∀ k, ∃ p, σ p = u' k := fun k ↦ hu2 _ (by omega)
+  set p : ℕ → ℕ := fun k ↦ Nat.find (hexp k) with hp
+  have hpspec : ∀ k, σ (p k) = u' k := fun k ↦ Nat.find_spec (hexp k)
+  set N : ℕ := (Finset.range (2 * n)).sup p with hN
+  refine Set.mem_iUnion.2 ⟨N, Set.mem_iInter₂.2 fun M hM ↦ ?_⟩
+  have hmemF : ∀ k, k < 2 * n → u k ∈ F M := by
+    intro k hk
+    have hpk : p k ≤ N := Finset.le_sup (Finset.mem_range.2 hk)
+    have hek : min k (2 * n - 1) = k := by omega
+    have hsk : σ (p k) = u k := by rw [hpspec k]; simp only [hu', hek]
+    refine hFmono hM ?_
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨p k, by omega, hsk⟩
+  exact le_upcrossingsBefore_monoEnum (hFne M) hab
+    ⟨u, hu1, fun k hk ↦ hmemF k hk, hu3⟩
+
+/-- **Doob's estimate over a countable set of times**, for all rational intervals
+at once.  This is the hypothesis `H` of
+`exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound` and of its right hand
+companion, and it is the whole probabilistic input of Doob's regularization.
+What is still missing for `exists_cadlag_modification_of_isRegularizingClass` is
+the other hypothesis of those theorems, the almost sure boundedness on `S`. -/
+theorem Submartingale.ae_exists_not_hasUpcrossings {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {S : Set ι} (hS : S.Countable) {T : ι} (hST : ∀ s ∈ S, s ≤ T) :
+    ∀ᵐ ω ∂P, ∀ p q : ℚ, p < q →
+      ∃ n, ¬ HasUpcrossings (p : ℝ) (q : ℝ) (fun t ↦ Y t ω) S n := by
+  rw [ae_all_iff]
+  intro p
+  rw [ae_all_iff]
+  intro q
+  by_cases hpq : p < q
+  · filter_upwards [hY.ae_exists_not_hasUpcrossings_of_lt hS hST
+      (show (p : ℝ) < (q : ℝ) by exact_mod_cast hpq)] with ω hω
+    exact fun _ ↦ hω
+  · filter_upwards with ω h
+    exact absurd h hpq
+
+end MeasureTheory
+
+end DoobUpcrossingBound
 
 /-! ## Milestone 9: the regularizing class and quasi-left-continuity
 
