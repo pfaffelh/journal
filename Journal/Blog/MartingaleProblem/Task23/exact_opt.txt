@@ -1,0 +1,97 @@
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 3196014994831778821258167366/177556388691837482617308107 = C? True   (C = 3196014994831778821258167366/177556388691837482617308107 = 17.999999990869)
+n=12: dim Nullraum 14, 14 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 297922896711968349694860342324488947842/16551272039554552783907278161261355129 = C? True   (C = 297922896711968349694860342324488947842/16551272039554552783907278161261355129 = 17.999999999999)
+n=14: dim Nullraum 16, 16 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 2262023205791509071356618386683653863784277676397814/125667955877306059621224180611794677885529460674403 = C? True   (C = 2262023205791509071356618386683653863784277676397814/125667955877306059621224180611794677885529460674403 = 18.000000000000)
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 46179720/1658101 = C? True   (C = 46179720/1658101 = 27.850969271474)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 165547529495640/5474531918647 = C? True   (C = 165547529495640/5474531918647 = 30.239577000503)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 160177692959394591219912/5273689906721687770621 = C? True   (C = 160177692959394591219912/5273689906721687770621 = 30.372982824651)
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 256174439132/1839302721 = C? False   (C = 49538952/2523049 = 19.634558028798)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 6433217256258141000064892/1375558140343425174873 = C? False   (C = 212766234821208/10651667989171 = 19.974921771643)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 7609645197647360525961695723883566706139292/21196310220707222976584697328792423761 = C? False   (C = 228574758126141215075016/11438790763440507111121 = 19.982423217032)
+== 1/3 1/2 --b
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 1440018/122119 = C? True   (C = 1440018/122119 = 11.791924270589)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 256673458854/21658999517 = C? True   (C = 256673458854/21658999517 = 11.850660906684)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 3683094758377963362/310784799706981471 = C? True   (C = 3683094758377963362/310784799706981471 = 11.850948829706)
+== 1/2 2/3 --b
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 49538952/2523049 = C? True   (C = 49538952/2523049 = 19.634558028798)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 212766234821208/10651667989171 = C? True   (C = 212766234821208/10651667989171 = 19.974921771643)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 228574758126141215075016/11438790763440507111121 = C? True   (C = 228574758126141215075016/11438790763440507111121 = 19.982423217032)
+== 1/4 1/2 --b
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 7770977/671580 = C? False   (C = 148480/15129 = 9.814263996299)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 598354165281111253676507/49509597920424115568640 = C? False   (C = 304153600/30984777 = 9.816226852302)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 44808695458879296563279593833484260977147943229159/3670526891571156082011697157963040588394324295680 = C? False   (C = 9966505427968/1015309175049 = 9.816227089140)
+n=16: dim Nullraum 18, 18 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 1394521915525890488143401511949778955232795957141375610025204572498/77473439751438360452411412889035882469105280845380734666388919201 = C? True   (C = 1394521915525890488143401511949778955232795957141375610025204572498/77473439751438360452411412889035882469105280845380734666388919201 = 18.000000000000)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=18: dim Nullraum 20, 20 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 69710969403644339375239409925006516033071810019035529019627870457596564156841577126/3872831633535796631957744995841178223553790335109843367433944616704891938889013627 = C? True   (C = 69710969403644339375239409925006516033071810019035529019627870457596564156841577126/3872831633535796631957744995841178223553790335109843367433944616704891938889013627 = 18.000000000000)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+== 1/2 2/5
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 17178720942028/851855671875 = C? False   (C = 3162725000/163556289 = 19.337226463973)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 133632861759025000/6102539221005981 = C? True   (C = 133632861759025000/6102539221005981 = 21.897911167705)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 3542151488404845713289725000/159492444899496167413614969 = C? True   (C = 3542151488404845713289725000/159492444899496167413614969 = 22.208898300085)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 62445274896008187796157913737202366025000/2810063656323214783391975553811773147861 = C? True   (C = 62445274896008187796157913737202366025000/2810063656323214783391975553811773147861 = 22.222014350278)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+== 1/2 1/4
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 150992/9891 = C? False   (C = 140288/9891 = 14.183399049641)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 295411837/19179171 = C? False   (C = 272770048/19179171 = 14.222202200502)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 153063034608253/9934566222384 = C? False   (C = 8830725530624/620910388899 = 14.222222221604)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 1280224200459634211453/83091572078045209344 = C? False   (C = 4616198448780289024/324576453429864099 = 14.222222222222)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+== 3/4 1/2
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 2812928/76729 = C? True   (C = 2812928/76729 = 36.660558589321)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 437307974656/11535824243 = C? True   (C = 437307974656/11535824243 = 37.908689092707)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 5928919353100209152/156329100054263761 = C? True   (C = 5928919353100209152/156329100054263761 = 37.925884247029)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 6733990441785476364132434944/177556388691837482617308107 = C? True   (C = 6733990441785476364132434944/177556388691837482617308107 = 37.925925906687)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+== 1/3 1/9
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 81288475/3827776 = C? False   (C = 40368375/3827776 = 10.546169629571)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 1153368275213725/54301165788096 = C? False   (C = 7070464292625/670384762816 = 10.546874995972)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 1338877056098918611335175/63034948194804555683904 = C? False   (C = 101329327730845797975/9607521444109824064 = 10.546875000000)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 126029060831997382088963519469329425/5933506129316833630491077230885824 = C? False   (C = 117755211693562370416632474225/11164938590204432158021449664 = 10.546875000000)
+      Lemma 33 (Zeile b_1 und T_(0,b_1) geschlossen): exakt

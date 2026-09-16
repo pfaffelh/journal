@@ -171,11 +171,12 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Achtzehn Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Einundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle achtzehn beim Beweisen aufgefallen, alle achtzehn gegen `upstream/master`
-geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
-thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
+Alle einundzwanzig beim Beweisen aufgefallen, die ersten zwanzig gegen
+`upstream/master` geprüft und der einundzwanzigste gegen v4.33.1, und die ersten
+vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören thematisch zu
+`KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
   Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
@@ -618,6 +619,76 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `IsRightContinuous` kommt dort nur als `Filtration.IsRightContinuous`
   (`Probability/Process/Filtration.lean:373`) vor — eine Klasse über
   Filtrationen und keine über Funktionen. Am 2026-09-14 geprüft.
+
+* **Die Umindizierung einer Filtration.** Der neunzehnte, und der billigste von
+  allen. `Filtration` ist eine Struktur aus einer monotonen Familie von
+  σ-Algebren; ihre Vorschaltung mit einer monotonen Abbildung `e : ι' → ι` ist
+  wieder eine, und die drei Felder sind die alten. `def comp` kommt in
+  `Mathlib/Probability/Process/Filtration.lean` **nicht** vor, und die Suche nach
+  `Filtration` zusammen mit `comp`, `reindex` oder `precomp` in ganz `Mathlib/`
+  gibt einen einzigen Treffer, und der ist ein `Measurable.comp` in
+  `Kernel/Disintegration/Density.lean:154`. Am 2026-09-16 gegen
+  `upstream/master` `09a9e06` geprüft.
+
+  Der Grund, warum das mehr als eine Bequemlichkeit ist: **jede** Aussage über
+  einen stetigzeitlichen Prozeß, die über einen diskret indizierten Satz geführt
+  wird — und das sind in `Probability/Martingale/` alle, die Aufkreuzungen oder
+  Maxima zählen —, muß den Prozeß längs einer monotonen `ℕ → ι` lesen, und dazu
+  braucht sie die Filtration daneben. Ohne `Filtration.comp` ist der Satz, den
+  man anwenden will, nicht einmal hinschreibbar. Wir haben es am 2026-09-16 als
+  `Filtration.comp` mit `Submartingale.comp_monotone` gebaut; für Mathlib gehören
+  beide zusammen in einen PR, und die Martingal- und Supermartingalfassungen
+  daneben.
+
+* **Die Minimalungleichung für Submartingale.** Der zwanzigste, und der
+  Gegenpol zu einem Satz, den Mathlib hat. `MeasureTheory.maximal_ineq`
+  (`Probability/Martingale/OptionalStopping.lean:144` auf master) ist Doobs
+  Maximalungleichung für ein nichtnegatives Submartingal; die Gegenrichtung,
+  `ε · P{min_{k ≤ n} Y_k ≤ −ε} ≤ 𝔼[Y_n⁺] − 𝔼[Y_0]`, fehlt in jeder Fassung —
+  die Zeichenkette `inf'` kommt in `Mathlib/Probability/Martingale/` gar nicht
+  vor (0 Treffer, am 2026-09-16 gegen `upstream/master` `09a9e06` geprüft).
+
+  Ihr Beweis ist `Submartingale.expected_stoppedValue_mono` (`ibid.:43`) an der
+  konstanten Stoppzeit `0` gegen die Trefferzeit von `Set.Iic (−ε)`, gefolgt von
+  der Zerlegung des gestoppten Wertes über das Ereignis, daß der Pegel erreicht
+  wird — also derselbe Baustein, aus dem die vorhandene Ungleichung gebaut ist,
+  nur an der anderen Seite angesetzt. Zusammen sind die beiden erst das, was ein
+  Leser unter „ein Submartingal ist auf einem endlichen Zeitfenster fast sicher
+  beschränkt" versteht, und genau das verlangt Doobs Regularisierung.
+
+  **Am 2026-09-16 gebaut**, und der PR sollte **beide** Seiten tragen:
+  `Submartingale.mul_measReal_exists_le_neg_le_integral_posPart_sub` ist die
+  fehlende Ungleichung, `Submartingale.mul_measReal_exists_ge_le_integral_posPart`
+  die vorhandene noch einmal — reellwertig, über dem Ereignis
+  `{ω | ∃ k ≤ n, ε ≤ f k ω}` statt über `Finset.sup'`, **ohne** Nichtnegativität
+  des Prozesses und **ohne** Vorzeichenbedingung an `ε`. Der Grund, die zweite
+  mitzunehmen, ist nicht Bequemlichkeit: die Brücke von `maximal_ineq` in
+  `ℝ≥0∞` über `Y⁺` zu der Fassung, die eine zweiseitige Schranke braucht,
+  kostet mehr als der Beweis, und die beiden Beweise sind derselbe, an den
+  beiden Enden angesetzt. Beide gehen durch `lake env lean` gegen v4.33.1.
+
+* **Ein Martingal hinter einer stetigen linearen Abbildung.** Der
+  einundzwanzigste, und der kleinste von allen. Mathlib hat
+  `ContinuousLinearMap.comp_condExp_comm`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359`), also
+  `T ∘ μ[f | m] =ᵐ μ[T ∘ f | m]` — die Aussage über die **bedingte Erwartung**.
+  Die Aussage über den **Prozeß**, `Martingale f ℱ μ → Martingale (T ∘ f) ℱ μ`,
+  fehlt: in `Mathlib/Probability/Martingale/` und `Mathlib/Probability/Process/`
+  hat die Suche nach `Martingale` neben `ContinuousLinearMap` **null Treffer**
+  (am 2026-09-17 gegen v4.33.1 geprüft; dieser Lauf hat `upstream/master` nicht
+  geholt, die Negativaussage steht daher gegen den Release und nicht gegen
+  master). `Martingale.smul` und `Martingale.add` stehen da, die lineare
+  Abbildung nicht.
+
+  Der Beweis ist vier Zeilen und steht bei uns als
+  `MeasureTheory.Martingale.comp_continuousLinearMap`. Was ohne ihn fehlt, ist
+  der Übergang von einem `RCLike`-wertigen Martingal zu seinen beiden reellen
+  Teilen — in `Mathlib/Probability/Martingale/` kommt `RCLike` **gar nicht** vor
+  —, und damit jeder Satz, der ein komplexwertiges Martingal an einen
+  reellwertigen Satz übergeben will. Doobs Regularisierung ist genau so ein
+  Satz. Der PR sollte die Martingal-, die Sub- und die Supermartingalfassung
+  tragen; die letzten beiden verlangen eine Positivitätsbedingung an `T` und
+  sind daher nicht dasselbe Lemma.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

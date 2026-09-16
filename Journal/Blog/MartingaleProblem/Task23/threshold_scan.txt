@@ -1,0 +1,66 @@
+Leiter (1/2,2/5), M_oo = 5/3
+      LP-Minimum = 21.897911167705,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 21.897911167705,  |kappa_n|/alpha_2 = 21.897911167705,  rel. Abstand 1.54e-81
+  ok    n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 22.208898300085,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 22.208898300085,  |kappa_n|/alpha_2 = 22.208898300085,  rel. Abstand 0.0
+  ok    n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 22.222014350278,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 22.222014350278,  |kappa_n|/alpha_2 = 22.222014350278,  rel. Abstand 1.52e-81
+  ok    n=10: LP-Minimum = Schranke auf 1e-9
+Leiter (1/2,9/20), M_oo = 20/11
+      LP-Minimum = 36.802702612772,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 23.934607281344,  |kappa_n|/alpha_2 = 23.934607281344,  rel. Abstand 0.538
+  FEHL  n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 53.700067352119,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 25.794998733301,  |kappa_n|/alpha_2 = 25.794998733301,  rel. Abstand 1.08
+  FEHL  n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 56.982394404934,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 26.340719292704,  |kappa_n|/alpha_2 = 26.340719292704,  rel. Abstand 1.16
+  FEHL  n=10: LP-Minimum = Schranke auf 1e-9
+FEHL: ['n=6: LP-Minimum = Schranke auf 1e-9', 'n=8: LP-Minimum = Schranke auf 1e-9', 'n=10: LP-Minimum = Schranke auf 1e-9']
+Leiter (1/2,19/40), M_oo = 40/21
+      LP-Minimum = 37.672380375714,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 23.773201652345,  |kappa_n|/alpha_2 = 23.773201652345,  rel. Abstand 0.585
+  FEHL  n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 80.164237636076,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 26.302898499709,  |kappa_n|/alpha_2 = 26.302898499709,  rel. Abstand 2.05
+  FEHL  n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 173.82448417957,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 27.802568950987,  |kappa_n|/alpha_2 = 27.802568950987,  rel. Abstand 5.25
+  FEHL  n=10: LP-Minimum = Schranke auf 1e-9
+FEHL: ['n=6: LP-Minimum = Schranke auf 1e-9', 'n=8: LP-Minimum = Schranke auf 1e-9', 'n=10: LP-Minimum = Schranke auf 1e-9']
+Leiter (1/2,21/40), M_oo = 40/19
+      LP-Minimum = 24.857931459832,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 21.656931371965,  |kappa_n|/alpha_2 = 21.656931371965,  rel. Abstand 0.148
+  FEHL  n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 33.731471770375,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 22.741236761675,  |kappa_n|/alpha_2 = 22.741236761675,  rel. Abstand 0.483
+  FEHL  n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 43.961776734023,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 23.147386043956,  |kappa_n|/alpha_2 = 23.147386043956,  rel. Abstand 0.899
+  FEHL  n=10: LP-Minimum = Schranke auf 1e-9
+FEHL: ['n=6: LP-Minimum = Schranke auf 1e-9', 'n=8: LP-Minimum = Schranke auf 1e-9', 'n=10: LP-Minimum = Schranke auf 1e-9']
+Leiter (1/2,11/20), M_oo = 20/9
+      LP-Minimum = 20.579722156858,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 20.579722156858,  |kappa_n|/alpha_2 = 20.579722156858,  rel. Abstand 1.64e-81
+  ok    n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 21.050690881378,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 21.050690881378,  |kappa_n|/alpha_2 = 21.050690881378,  rel. Abstand 1.6e-81
+  ok    n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 21.136137147489,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 21.136137147489,  |kappa_n|/alpha_2 = 21.136137147489,  rel. Abstand 1.6e-81
+  ok    n=10: LP-Minimum = Schranke auf 1e-9
+Leiter (1/2,5/8), M_oo = 8/3
+      LP-Minimum = 19.32367150585,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 19.32367150585,  |kappa_n|/alpha_2 = 19.32367150585,  rel. Abstand 0.0
+  ok    n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 19.35477361823,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 19.35477361823,  |kappa_n|/alpha_2 = 19.35477361823,  rel. Abstand 0.0
+  ok    n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 19.355437190977,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 19.355437190977,  |kappa_n|/alpha_2 = 19.355437190977,  rel. Abstand 0.0
+  ok    n=10: LP-Minimum = Schranke auf 1e-9
+Leiter (1/2,3/4), M_oo = 4
+      LP-Minimum = 24.969293762231,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 24.969293762231,  |kappa_n|/alpha_2 = 24.969293762231,  rel. Abstand 0.0
+  ok    n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 24.969900414854,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 24.969900414854,  |kappa_n|/alpha_2 = 24.969900414854,  rel. Abstand 0.0
+  ok    n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 24.969901017733,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 24.969901017733,  |kappa_n|/alpha_2 = 24.969901017733,  rel. Abstand 0.0
+  ok    n=10: LP-Minimum = Schranke auf 1e-9
+Leiter (1/2,4/5), M_oo = 5
+      LP-Minimum = 32.367017503401,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 32.367017503401,  |kappa_n|/alpha_2 = 32.367017503401,  rel. Abstand 0.0
+  ok    n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 32.367187904117,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 32.367187904117,  |kappa_n|/alpha_2 = 32.367187904117,  rel. Abstand 0.0
+  ok    n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 32.36718796105,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 32.36718796105,  |kappa_n|/alpha_2 = 32.36718796105,  rel. Abstand 0.0
+  ok    n=10: LP-Minimum = Schranke auf 1e-9
+Leiter (1/2,9/10), M_oo = 10
+      LP-Minimum = 92.67925803807,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 92.67925803807,  |kappa_n|/alpha_2 = 92.67925803807,  rel. Abstand 0.0
+  ok    n=6: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 92.679286914953,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 92.679286914953,  |kappa_n|/alpha_2 = 92.679286914953,  rel. Abstand 0.0
+  ok    n=8: LP-Minimum = Schranke auf 1e-9
+      LP-Minimum = 92.679286916266,  Schranke max(|kappa_n|/alpha_2, (1-p_n)/(beta_1 beta_2)) = 92.679286916266,  |kappa_n|/alpha_2 = 92.679286916266,  rel. Abstand 1.46e-81
+  ok    n=10: LP-Minimum = Schranke auf 1e-9

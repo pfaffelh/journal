@@ -1,0 +1,40 @@
+== (D) Kontrolle des Orakels
+Diamant, m = (0,1,-1,0): Dualitaet faellt bei t = 3 (erwartet: 3)
+Diamant, m = (0,1, 1,0): Dualitaet faellt bei t = None (erwartet: None)
+== (A)/(A') stumme Ketten auf Trunkierungen ohne Spitze
+  1 Doppelschleife(n), Ketten n=2                dim= 13: (A)   18 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 12/16
+  1 Doppelschleife(n), Ketten n=3                dim= 14: (A)   34 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 14/18
+  1 Doppelschleife(n), Ketten n=4                dim= 15: (A)   52 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 16/24
+  2 Doppelschleife(n), Ketten n=2                dim= 54: (A)   76 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 56/64
+  2 Doppelschleife(n), Ketten n=3                dim= 60: (A)  140 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 68/76
+  haengende Doppelschleife, n=2                  dim= 14: (A)   20 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 10/14
+  haengende Doppelschleife, n=3                  dim= 15: (A)   34 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 12/20
+  2 haengende Doppelschleifen, n=2               dim= 60: (A)   80 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 52/60
+  Antikette(3) + Kette n=3                       dim= 10: (A)   13 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 3/7
+  Antikette(4) + Kette n=4                       dim= 15: (A)   24 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 4/8
+  Antikette(3) + Kette n=5                       dim= 10: (A)   27 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 3/9
+  zwei omega-Ketten, n=3                         dim=  6: (A)   20 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 8/16
+  zwei omega-Ketten, n=4                         dim=  7: (A)   36 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 10/18
+  zwei omega-Ketten, n=5                         dim=  8: (A)   54 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 12/24
+  zufaellige Kerne x2, n=2 (#0)                  dim= 28: (A)   44 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 37/48
+  zufaellige Kerne x2, n=3 (#1)                  dim= 67: (A)  189 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 64/136
+  zufaellige Kerne x2, n=2 (#2)                  dim= 36: (A)   71 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 39/71
+  zufaellige Kerne x2, n=3 (#3)                  dim= 51: (A)  156 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 69/105
+  zufaellige Kerne x2, n=2 (#4)                  dim= 36: (A)   71 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 39/71
+  zufaellige Kerne x2, n=3 (#5)                  dim= 67: (A)  206 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 88/142
+== (B) haengende Doppelschleife: r_0 ist stumm, r und p nicht
+  haengende Doppelschleife x2, n=2: kappa(r_0, r') erzwungen 0: True; kappa(r_0, r_0') erzwungen 0: True; kappa(r, r') erzwungen 0: False (erwartet: nein); kappa(p, r') erzwungen 0: False (erwartet: nein)
+  haengende Doppelschleife x2, n=3: kappa(r_0, r') erzwungen 0: True; kappa(r_0, r_0') erzwungen 0: True; kappa(r, r') erzwungen 0: False (erwartet: nein); kappa(p, r') erzwungen 0: False (erwartet: nein)
+== (C) Stapel: Tuerme statt Ketten, Stufensummen
+  Doppelschleifen mit Tuermen x2, n=2, dim=154: Haken kappa(a,b) erzwungen 0 (44 Paare) und Stufensummen erzwungen 0 (32 Paare): ja; Einzelwerte kappa(alpha_i,b) frei: 64/64
+  Doppelschleifen mit Tuermen x2, n=3, dim=234: Haken kappa(a,b) erzwungen 0 (76 Paare) und Stufensummen erzwungen 0 (80 Paare): ja; Einzelwerte kappa(alpha_i,b) frei: 128/160
+  Doppelschleifen mit Tuermen x2, n=4, dim=330: Haken kappa(a,b) erzwungen 0 (108 Paare) und Stufensummen erzwungen 0 (152 Paare): ja; Einzelwerte kappa(alpha_i,b) frei: 240/304
+== (E) Lemma 40' jenseits der Stapel: verschraenkte Doppelkette und Dreierzopf
+  Doppelschleife mit shift-Armen, n=2, dim=29: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 0/1 erzwungen 0; kappa(a, arm'_1): 0/1 erzwungen 0
+  Doppelschleife mit shift-Armen, n=3, dim=35: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+  Doppelschleife mit shift-Armen, n=4, dim=41: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+  Doppelschleife mit braid-Armen, n=2, dim=53: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 0/1 erzwungen 0; kappa(a, arm'_1): 0/1 erzwungen 0
+  Doppelschleife mit braid-Armen, n=3, dim=68: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+  Doppelschleife mit braid-Armen, n=4, dim=83: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+rc = 0
+finished

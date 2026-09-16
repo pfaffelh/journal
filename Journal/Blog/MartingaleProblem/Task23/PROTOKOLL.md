@@ -5007,3 +5007,3211 @@ ihre Limiten aus Korollar 25.1.
   Eigenvektoren; die ganze Konstruktion dieses Laufs existiert **nur** im
   Unendlichen. Zum siebten Mal dieselbe Lehre: eine Prämisse, die aus der
   Rechnung stammt statt aus dem Beweisbedarf.
+
+## Das Maximumprinzip, 2026-09-15 (achtundzwanzigster Lauf): Bedingung 1 ist bewiesen für jedes streng fallende summierbare Massenprofil, und $\sup|G|=1/(m_1m_2)$
+
+Der siebenundzwanzigste Lauf hat die Existenz des Zertifikats auf der
+$\omega$-Kette an **Bedingung 1**, $\sup_{i,j}|G(i,j)|<\infty$, gehängt und sie
+nur bei geometrischem Abfall bewiesen (Korollar 25.3), mit der Vermutung
+$\sup|G|=\max(1/m_1^2,1/(m_1m_2))$ für nicht wachsende Profile. Dieser Lauf
+beweist die Vermutung. Das Mittel ist keine Abschätzung der Spektralreihe und
+keine Kontur, sondern die Rekursion selbst, **in der richtigen Richtung
+gelesen**.
+
+### Was versucht wurde
+
+Aus $\Phi(i,j)-\Phi(i,j-1)=m_jG(i,j)$ und $\Phi(i,j)-\Phi(i-1,j)=m_iG(i,j)$
+($G$ symmetrisch) folgt durch zweimaliges Abschreiten von $(i,j)$ nach
+$(i-1,j-1)$ — einmal über $(i,j-1)$, einmal über $(i-1,j)$ —
+
+$$m_jG(i,j)+m_iG(i,j-1)=m_iG(i,j)+m_jG(i-1,j),$$
+
+also erfüllt $G$ **dieselbe** Zwei-Diagonalen-Rekursion wie $\Phi$. Nach
+$G(i-1,j)$ aufgelöst:
+
+$$G(i-1,j)=\Bigl(1-\frac{m_i}{m_j}\Bigr)G(i,j)+\frac{m_i}{m_j}\,G(i,j-1).
+\tag{K}$$
+
+Bei streng fallenden Massen und $i>j$ ist $0<m_i/m_j<1$: **(K) ist eine
+Konvexkombination.** Abwärts in $i$ gelesen ist die Rekursion also ein
+Mittelungsschritt, und Mittelungsschritte erfüllen ein Maximumprinzip. Das
+Orakel hat (K) auf allen fünf Profilen des siebenundzwanzigsten Laufs bei $N=40$
+mit Residuum $\le1{,}5\cdot10^{-37}$ (40 Stellen) bestätigt; (K) ist
+algebraisch äquivalent zur $\Phi$-Rekursion und hängt daher nicht von den
+Startwerten $\pi_k(N)$ ab.
+
+### Theorem 26: das Maximumprinzip
+
+> **Theorem 26.** Seien $m_1>m_2>\dots>0$ mit $\sum_lm_l<\infty$, und sei $G$
+> die Funktion aus Theorem 25 (bzw. jede symmetrische Lösung von (K) mit
+> $G(i,1)=\pi_1(i)/m_1^2$, für die $L_j:=\lim_{i\to\infty}G(i,j)$ für jedes $j$
+> existiert). Setze $S_j:=\sup_{i\ge j}|G(i,j)|$. Dann gilt
+> $$S_j\le\max\bigl(S_{j-1},\,|L_j|\bigr)\quad(j\ge2),\qquad S_1=\frac1{m_1^2},$$
+> und mit Korollar 25.1 ($L_1=1/m_1^2$, $L_2=-1/(m_1m_2)$, $L_j=0$ für $j\ge3$)
+> $$\sup_{i,j\ge1}|G(i,j)|=\frac1{m_1m_2}.$$
+
+*Beweis.* $S_1$: $G(i,1)=\pi_1(i)/m_1^2$ mit $\pi_1(i)=\prod_{l>i}(1-m_l/m_1)
+\in(0,1]$ und $\pi_1(i)\uparrow1$, also $S_1=1/m_1^2$ (nicht angenommen).
+
+Sei $j\ge2$ und $B:=\max(S_{j-1},|L_j|)$. Angenommen, $|G(i_0,j)|>B$ für ein
+$i_0\ge j$. Setze $\theta:=m_{i_0+1}/m_j\in(0,1)$ (da $i_0+1>j$). Aus (K) an der
+Stelle $i=i_0+1$ und $|G(i_0+1,j-1)|\le S_{j-1}\le B<|G(i_0,j)|$:
+
+$$|G(i_0,j)|\le(1-\theta)|G(i_0+1,j)|+\theta S_{j-1}
+   <(1-\theta)|G(i_0+1,j)|+\theta|G(i_0,j)|,$$
+
+also $|G(i_0+1,j)|>|G(i_0,j)|>B$. Induktiv ist $(|G(i,j)|)_{i\ge i_0}$ streng
+wachsend, und $|L_j|=\lim_i|G(i,j)|\ge|G(i_0,j)|>B\ge|L_j|$ — Widerspruch. Also
+$S_j\le B$.
+
+Iteration: $S_2\le\max(1/m_1^2,1/(m_1m_2))=1/(m_1m_2)$ (da $m_2<m_1$), und
+$S_j\le\max(S_{j-1},0)$ für $j\ge3$; somit $S_j\le1/(m_1m_2)$ für alle $j$, und
+nach Symmetrie $\sup_{i,j}|G|=\sup_jS_j\le1/(m_1m_2)$. Umgekehrt ist
+$|L_2|=1/(m_1m_2)$ ein Grenzwert von Werten $|G(i,2)|$, also
+$\sup|G|\ge1/(m_1m_2)$. $\square$
+
+**Wo die Monotonie eingeht, und nur dort:** in $\theta\in(0,1)$, d.h.
+$m_{i}<m_j$ für $i>j$. Die Summierbarkeit geht nur über Theorem 25 und
+Korollar 25.1 ein (Existenz von $G$ und der Limiten). Die Dreiecksungleichung
+kommt nicht vor; die Auslöschung, an der Probe (F) des siebenundzwanzigsten
+Laufs gescheitert ist, wird gar nicht erst aufgelöst — das Maximumprinzip sieht
+nur die Rekursion, nicht die Reihe.
+
+> **Korollar 26.1 (Korollar 25.3 ohne geometrische Hypothese).** Für jedes
+> streng fallende summierbare Massenprofil erfüllt das $\Phi$ aus Theorem 25
+> alle fünf Forderungen von Proposition 24.2 mit
+> $C=\max(1/m_1,\,1/(m_1m_2))=1/(m_1m_2)$; die $\omega$-Kette trägt also ein
+> unendliches Zertifikat an $t^*$ in der Gewichtsklasse $Z=\{0,t^*\}$, und nach
+> Theorem 22 gilt unter (F) und $\rho_0,\rho_{t^*}<\infty$ die Dualität
+> $\delta(t^*)=0$.
+
+*Beweis.* Bedingung 1 ist $|\Phi(i,j)-\Phi(i,j-1)|=m_j|G(i,j)|\le m_j/(m_1m_2)$
+nach Theorem 26, zusammen mit $C\ge1/m_1$ für $T_{t^*a_1}=1$. $\square$
+
+Für die *Konklusion* ändert das nichts (Theorem 17 erledigt jede Kette unter
+(F)); für den **Weg** ist es der zweite Baustein nach den Eigenvektoren des
+siebenundzwanzigsten Laufs: auf der Leiter wird die $b$-Block-Rekursion
+dieselbe Gestalt (K) haben, und dort ist als Erstes zu prüfen, ob sie wieder
+eine Konvexkombination ist.
+
+### Gemessen: `Task23/maxprinciple.py`
+
+`python3 maxprinciple.py 40`, rc=0, mpmath mit 40 Stellen, Trunkierung
+$N=40$; Startwerte $\pi_k(N)$ wie in `omega_chain.py`.
+
+* **(K)** auf allen fünf Profilen: größtes Residuum $1{,}5\cdot10^{-37}$
+  (bei $m_i=1/(i(i+1))$), sonst $\le10^{-38}$.
+* **(sup)** $\sup_{i,j\le N}|G|\le1/(m_1m_2)$ auf allen fünf Profilen; bei
+  $m_i=2^{-i}$ und $2\cdot3^{-i}$ mit Gleichheit ($8$; $6{,}75$), bei den
+  langsamen Profilen von unten: $9{,}83$ gegen $12$; $1{,}05$ gegen $2{,}83$;
+  $1{,}40$ gegen $3{,}48$. In allen fünf Fällen ist $G(N,2)=-S_2$ oder strebt
+  dorthin — das Supremum sitzt in Spalte 2 im Limes, wie Theorem 26 sagt.
+* **(S)**, die Spaltenschranke — hier hat der Lauf sich zuerst selbst
+  getäuscht, und das gehört ins Protokoll. Auf der Trunkierung ist $S_{j-1}^{(N)}$
+  zu klein, wenn die Spalte $j-1$ ihr Supremum erst im Limes erreicht; bei
+  $m_i=i^{-3/2}$, $N=40$ ist $S_2^{(N)}=0{,}667$, aber $|L_2|=2{,}83$, und
+  $S_3^{(N)}=1{,}049$ „verletzt" die naive Prüfung. Korrekt prüfbar ist
+  $S_j^{(N)}\le\max(S_{j-1}^{(N)},|L_{j-1}|,|L_j|)$. Aber auch das reicht bei
+  $N=40$ nicht: bei $m_i=1/((i+1)\log^2(i+1))$ ist $S_4^{(40)}=1{,}3975>
+  S_3^{(40)}=1{,}3583$, und $L_3=L_4=0$. Nachgerechnet bei **$N=110$**:
+  $S_3^{(110)}=1{,}5327$, angenommen bei $i=110$ und dort noch wachsend,
+  $S_4^{(110)}=1{,}40004$; die Spaltensuprema sind dort
+  $(0{,}760;\,1{,}237;\,1{,}533;\,1{,}400;\,1{,}338;\,1{,}311)$, und die
+  Schranke gilt in jeder Spalte ($S_2\le|L_2|=3{,}48$, $S_3\le|L_2|$,
+  $S_4\le S_3$, …). Bei $m_i=i^{-3/2}$, $N=110$:
+  $(0{,}827;\,1{,}275;\,1{,}169;\,0{,}986;\,0{,}922;\,0{,}893)$, ebenfalls
+  konform. Die Spalte 3 des Log-Profils steigt also über $1{,}53$ hinaus,
+  bevor sie gegen $L_3=0$ fällt — der Satz verlangt nur $S_3\le|L_2|=3{,}48$.
+  Das Skript schaltet (S) bei $N<110$ auf „nur gemessen".
+* **(N), Gegenprobe ohne Monotonie**, Paare vertauscht
+  ($m_1=\rho^{-2},m_2=\rho^{-1},m_3=\rho^{-4},m_4=\rho^{-3},\dots$), Schwanz
+  explizit bis $N+3000$, bei $N=20$ und $N=40$ zifferngleich:
+  $\rho=2$: $\sup|G|=16=1/m_1^2$, $S_2=8=1/(m_1m_2)$.
+  $\rho=3$: $\sup|G|=90{,}74$, aber $1/m_1^2=81$ und $1/(m_1m_2)=27$ —
+  **die Formel $\max(1/m_1^2,1/(m_1m_2))$ ist ohne Monotonie falsch**, und
+  zwar schon in Spalte 1 ($S_1=90{,}74$, weil $\pi_1(i)$ für $i=1$ den Faktor
+  $1-m_2/m_1=-2$ enthält); $S_3=51{,}8>S_2=27$. Beschränkt bleibt $G$ auf
+  allen drei geprüften Profilen (auch $1/(i(i+1))$ vertauscht: $S_1\to36=1/m_1^2$,
+  $S_2\to12$), aber dafür gibt es keinen Beweis: (K) ist dort an den
+  vertauschten Stellen eine *Extrapolation* mit Gewicht $m_i/m_j>1$.
+
+### Ergebnis
+
+* **Bewiesen:** Theorem 26 und Korollar 26.1. Der erste offene Punkt des
+  siebenundzwanzigsten Laufs („Bedingung 1 ohne geometrische Hypothese") ist
+  geschlossen, mit dem exakten Wert $\sup|G|=1/(m_1m_2)$.
+* **Widerlegt:** die Verallgemeinerung der Formel auf nicht monotone Profile
+  ($90{,}74\ne\max(81,27)$).
+* **Offen geblieben:** Beschränktheit von $G$ bei nicht monotonen Profilen
+  (gemessen ja, drei Profile); gleiche Massen; die Leiter; die nackte Klasse auf
+  Ketten; das Gegenbeispiel mit positiven Abwärtsmassen.
+
+### Sackgassen, sechsundzwanzigster Nachtrag
+
+* **Die Spaltenschranke $S_j\le\max(S_{j-1},|L_j|)$ auf Trunkierungen
+  prüfen.** $S_{j-1}^{(N)}$ unterschätzt das wahre $S_{j-1}$ um den Limes
+  $|L_{j-1}|$ (bei $i^{-3/2}$, $N=40$: $0{,}667$ statt $\ge2{,}83$), und
+  selbst mit $|L_{j-1}|$ ergänzt braucht das Log-Profil $N\ge110$, weil
+  Spalte 3 bei $N=40$ ihr Supremum noch nicht erreicht hat
+  ($1{,}358\to1{,}533$). Eine „Verletzung" bei kleinem $N$ ist kein
+  Gegenbeispiel; die Trunkierung ist hier zum achten Mal die falsche Prämisse.
+* **$\sup|G|=\max(1/m_1^2,1/(m_1m_2))$ ohne Monotonie.** Falsch, Zeuge
+  $\rho=3$ mit vertauschten Paaren: $90{,}74$ gegen $81$. Das Maximumprinzip
+  braucht $m_i<m_j$ für $i>j$; wo es fehlt, ist (K) eine Extrapolation.
+* **Theorem 26 über die Spektralreihe oder die dividierte Differenz führen
+  wollen.** Unnötig: die Rekursion (K) allein trägt, und sie ist der Teil der
+  Konstruktion, der auch auf der Leiter noch da sein wird. Die Reihe war für
+  die *Existenz* nötig (Theorem 25), nicht für die *Schranke*.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `convex_recursion_bound`** (neuer Punkt in `PLAN.md`, Task 23):
+das abstrakte Maximumprinzip hinter Theorem 26, frei von Massen und Atomen —
+
+> Seien $x,y:\N\to\R$, $\theta:\N\to(0,1)$ mit $x_i=(1-\theta_i)x_{i+1}
+> +\theta_i\,y_{i+1}$ für alle $i\ge i_1$, $|y_i|\le B$ für alle $i$, und
+> $x_i\to L$. Dann $|x_i|\le\max(B,|L|)$ für alle $i\ge i_1$.
+
+Es ruht auf nichts als `Filter.Tendsto` und der Monotonie einer reellen Folge
+(Mathlib: `tendsto_atTop_ciSup`/`le_of_tendsto`); Theorem 26 ist dann eine
+Induktion über $j$ mit $x_i=G(i,j)$, $y_i=G(i,j-1)$, $\theta_i=m_{i+1}/m_j$.
+Es ist jetzt dran, weil es der erste Satz der ganzen Zertifikatsmethode ist,
+der **keine** unendliche Reihe, kein Residuum und keine Kontur braucht, und
+weil derselbe Schritt auf der Leiter wiederkehren wird, sobald dort die
+$b$-Block-Rekursion in Konvexform steht — die Rechnung, die als Nächstes
+inhaltlich ansteht (Eigenvektoren von $V^{\mathsf T}$ auf der Leiter,
+siebenundzwanzigster Lauf).
+
+## Das Kettenpolynom, 2026-09-16 (neunundzwanzigster Lauf): die Spektralkonstruktion der $\omega$-Kette gilt auf jeder Halbordnung — ihre Frequenzen sind die Nullstellen des massengewichteten Kettenpolynoms, und auf endlichen Halbordnungen ist sie immer ein Zertifikat
+
+Der siebenundzwanzigste Lauf hat das Zertifikat der $\omega$-Kette als Summe
+$-\sum_k\gamma_kx_kx_k^{\mathsf T}+e_{t^*}e_{t^*}^{\mathsf T}$ über
+verallgemeinerte Eigenvektoren $x_k$ von $V^{\mathsf T}$ zu den Eigenwerten
+$-m_k$ geschrieben und als „verallgemeinerbaren Teil" die Eigenvektoren
+benannt; der achtundzwanzigste hat die Leiter als nächste Rechnung gestellt.
+Dieser Lauf macht die Rechnung, und sie ergibt zuerst etwas Allgemeineres als
+die Leiter: die Eigenwerte sind auf einer beliebigen Halbordnung **nicht** die
+$-m_k$, sondern die Kehrwerte der Nullstellen eines Polynoms, das die Ketten
+der Halbordnung zählt. Auf der Kette fallen beide zusammen, weil das Polynom
+dort in Linearfaktoren zerfällt.
+
+### Lemma 27.1: die Resolvente und das Kettenpolynom
+
+Rahmen des fünfundzwanzigsten Laufs: $\T=\{0\}\cup A\cup\{t^*\}$ abzählbar,
+$m_0=m_{t^*}=0$, $m_a>0$ auf $A$, $M=\sum m_a<\infty$, $V_{s,a}=[a<s]m_a$.
+Auf den Atomen sei $W$ der Atomblock von $V^{\mathsf T}$,
+$(Wv)_c=m_c\sum_{s>c}v_s$. Für $c\in\C$ setze, wo die Reihe konvergiert,
+
+$$y^c:=(I+cW)^{-1}m=\sum_{k\ge0}(-c)^kW^km,\qquad
+  x^c:=\bigl(0;\ y^c;\ -\tfrac1c\bigr)\ \text{über }(0;\,A;\,t^*),$$
+
+und $e_k:=\mathbb 1^{\mathsf T}W^{k-1}m$ für $k\ge1$, $e_0:=1$; das ist die
+Summe der Massenprodukte $m_{c_0}\cdots m_{c_{k-1}}$ über alle **Ketten**
+$c_0<\dots<c_{k-1}$ aus $k$ Atomen. Das **Kettenpolynom** ist
+
+$$P_\T(c):=\sum_{k\ge0}(-c)^ke_k .$$
+
+> **Lemma 27.1.** (i) $(V^{\mathsf T}x^c)_a=-\tfrac1c\,x^c_a$ für jedes Atom
+> $a$, $(V^{\mathsf T}x^c)_0=0=x^c_0$, und $(V^{\mathsf T}x^c)_{t^*}=0$.
+> (ii) $x^c\cdot\mathbb 1=-P_\T(c)/c$.
+
+*Beweis.* (i) $(V^{\mathsf T}x^c)_a=m_a\bigl(\sum_{s>a,\,s\in A}y^c_s+x^c_{t^*}\bigr)
+=(Wy^c)_a-m_a/c$, und aus $(I+cW)y^c=m$ ist $Wy^c=(m-y^c)/c$; also
+$(V^{\mathsf T}x^c)_a=(m_a-y^c_a)/c-m_a/c=-y^c_a/c$. Die Zeile $t^*$ von
+$V^{\mathsf T}$ ist null. (ii) $x^c\cdot\mathbb 1=\sum_k(-c)^k\mathbb 1^{\mathsf T}W^km-1/c
+=\sum_{k\ge0}(-c)^ke_{k+1}-1/c=-P_\T(c)/c$. $\square$
+
+Auf der Kette ist $e_k$ die elementarsymmetrische Funktion der Massen, also
+$P_\T(c)=\prod_l(1-cm_l)$ mit den Nullstellen $c_k=1/m_k$, und
+$y^{c}_{a_i}=m_i\prod_{l>i}(1-cm_l)$ — genau die $x_k$ des
+siebenundzwanzigsten Laufs, einschließlich des Indikators $[i\ge k]$, der dort
+von Hand gesetzt war und hier von der Nullstelle $(1-m_k/m_k)$ im Produkt
+erzeugt wird. Auf der Antikette ist $P_\T(c)=1-cM$ mit der einen Nullstelle
+$1/M$, und die Konstruktion unten gibt wörtlich Theorem 20. Auf einem
+Stufenstapel ist $P_\T=\prod_j(1-c\lambda_j)$ über die Stufenmassen.
+**Ketten in $A$ sind Cliquen des Vergleichbarkeitsgraphen**, $P_\T(-c)$ ist
+also das gewichtete Unabhängigkeitspolynom des Unvergleichbarkeitsgraphen.
+
+### Theorem 27: das Spektralzertifikat
+
+> **Theorem 27.** Sei $A$ endlich, $d$ die Höhe von $A$ (maximale Kettenlänge)
+> und seien die Nullstellen $c_1,\dots,c_d$ von $P_\T$ einfach. Mit
+> $$\gamma_k:=-\frac{c_k}{P_\T'(c_k)},\qquad
+>   T:=-\sum_{k=1}^d\gamma_k\,x^{c_k}(x^{c_k})^{\mathsf T}+e_{t^*}e_{t^*}^{\mathsf T}$$
+> ist $T$ reell, symmetrisch, $T\mathbb 1=e_{t^*}$ und $TV=V^{\mathsf T}T$ —
+> also ein Zertifikat an der Stelle $t^*$ im Sinn des sechsten Laufs.
+
+*Beweis.* $P_\T$ hat reelle Koeffizienten und den Grad $d$ (Leitkoeffizient
+$(-1)^de_d\ne0$). Nichtreelle Nullstellen treten in konjugierten Paaren auf,
+und $\gamma_{\bar k}=\overline{\gamma_k}$, $x^{\bar c}=\overline{x^c}$; also
+ist $T$ reell. Symmetrie ist klar. $T\mathbb 1=e_{t^*}$, weil
+$x^{c_k}\cdot\mathbb 1=-P_\T(c_k)/c_k=0$ nach Lemma 27.1(ii).
+
+Für $TV=V^{\mathsf T}T$: nach Lemma 27.1(i) ist
+$V^{\mathsf T}x^{c_k}=\lambda_kx^{c_k}+\mu_ke_{t^*}$ mit $\lambda_k=-1/c_k$ und
+$\mu_k=-\lambda_kx^{c_k}_{t^*}=-1/c_k^2$ (die Zeile $t^*$ von
+$V^{\mathsf T}x^{c_k}$ ist $0$, die von $\lambda_kx^{c_k}$ ist $1/c_k^2$).
+Daher $V^{\mathsf T}(x_kx_k^{\mathsf T})-(x_kx_k^{\mathsf T})V
+=\mu_k\bigl(e_{t^*}x_k^{\mathsf T}-x_ke_{t^*}^{\mathsf T}\bigr)$, und mit
+$V^{\mathsf T}e_{t^*}=\tilde m$ (Massenvektor, $0$ an $0$ und $t^*$) ist
+$V^{\mathsf T}(e_{t^*}e_{t^*}^{\mathsf T})-(e_{t^*}e_{t^*}^{\mathsf T})V
+=\tilde me_{t^*}^{\mathsf T}-e_{t^*}\tilde m^{\mathsf T}$. Zusammen
+
+$$V^{\mathsf T}T-TV=e_{t^*}\,v^{\mathsf T}-v\,e_{t^*}^{\mathsf T},\qquad
+  v:=-\sum_k\gamma_k\mu_kx^{c_k}-\tilde m
+    =\sum_k\frac{\gamma_k}{c_k^2}\,x^{c_k}-\tilde m .$$
+
+Die Komponente $v_{t^*}$ ist in $e_{t^*}v^{\mathsf T}-ve_{t^*}^{\mathsf T}$
+unsichtbar, $v_0=0$; zu zeigen bleibt $v=0$ auf den Atomen, d.h.
+
+$$\sum_k\frac{\gamma_k}{c_k^2}\,y^{c_k}=m .\tag{R}$$
+
+Nun ist $\gamma_k/c_k^2=-1/(c_kP_\T'(c_k))=-\operatorname{Res}_{c=c_k}\frac1{cP_\T(c)}$,
+also $\frac{\gamma_k}{c_k^2}y^{c_k}=-\operatorname{Res}_{c=c_k}\frac{y^c}{cP_\T(c)}$
+(einfache Nullstelle, $y^c$ holomorph), und
+$\operatorname{Res}_{c=0}\frac{y^c}{cP_\T(c)}=y^0/P_\T(0)=m$. (R) sagt also,
+daß **die Summe aller Residuen von $y^c/(cP_\T(c))$ verschwindet**. Für
+endliches $A$ ist $y^c_a$ ein Polynom in $c$ vom Grad $\le h(a)-1$, wo $h(a)$
+die Länge der längsten Kette mit kleinstem Element $a$ ist, und $h(a)\le d$;
+also ist $y^c_a/(cP_\T(c))$ rational vom Grad $\le h(a)-1-1-d\le-2$, sein
+Residuum in $\infty$ ist $0$, und (R) gilt. $\square$
+
+**Was das ist, und was nicht.** Auf der Kette ist $T$ das Zertifikat des
+siebenundzwanzigsten Laufs (dort $c_k=1/m_k$, $\gamma_k=\beta_k/m_k$), auf der
+Antikette Theorem 20, und auf jeder endlichen Halbordnung mit einfachen
+Nullstellen von $P_\T$ eine **zweite geschlossene Form** neben der Formel des
+sechsten Laufs — mit $d$ Rang-1-Summanden statt der $r^2$ Terme jener Formel,
+und ohne die Wahl eines $i^*$. Für die *Konklusion* im Endlichen ist das
+nichts Neues. Der Gewinn liegt im **Unendlichen**: die Formel des sechsten
+Laufs braucht $V^r=0$ (Theorem 23) und existiert auf der $\omega$-Kette nicht;
+die Spektralform braucht nur die Nullstellen von $P_\T$ und die Identität
+(R), und beides ist auf der $\omega$-Kette da (Theorem 25). Was auf einer
+unendlichen Halbordnung zu prüfen bleibt, ist genau dreierlei: (a) $P_\T$ ist
+ganz mit einfachen Nullstellen $c_k$ und $y^{c_k}$ existiert; (b) die
+Residuenidentität (R); (c) die Schranke $|T_{su}|\le Cw_sw_u$.
+
+### Gemessen: `Task23/spectral.py A`
+
+mpmath mit 50 Stellen, Nullstellen von $P_\T$ per `polyroots`, Toleranz
+$10^{-30}$; rc=0. Zwanzig endliche Halbordnungen: zwei Ketten, die Antikette
+$(\frac12,\frac13,\frac16)$, das N, die Leiter ($n=3,5$ mit
+$\alpha=\frac12,\beta=\frac13$; $n=4$ mit $\alpha=\beta=\frac12$), die Krone,
+zwölf zufällige transitiv abgeschlossene Halbordnungen mit $4\le n\le8$ und
+zufälligen rationalen Massen.
+
+* Lemma 27.1(ii) an je fünf zufälligen komplexen $c$: $|x^c\cdot\mathbb 1+P_\T(c)/c|<10^{-47}$
+  überall.
+* Theorem 27 auf allen zwanzig Fällen: $T$ symmetrisch, reell
+  (Imaginärteil exakt $0$ nach Summation der konjugierten Paare),
+  $|T\mathbb 1-e_{t^*}|<3\cdot10^{-46}$, $|TV-V^{\mathsf T}T|<2\cdot10^{-46}$.
+* Nullstellen: **reell und einfach** auf Ketten, Antikette, N, allen drei
+  Leitern, der Krone und neun der zwölf zufälligen Halbordnungen; **komplex**
+  bei drei zufälligen (etwa $0{,}286$ und $1{,}143\pm0{,}831i$). Das
+  Spektralzertifikat ist dort trotzdem reell und ein Zertifikat, wie der
+  Beweis sagt. Mehrfache Nullstellen kamen nicht vor (bei gleichen Massen auf
+  einer Kette kämen sie vor; dann ist die Formel mit Residuen höherer Ordnung
+  zu ersetzen, was hier nicht ausgeführt ist).
+* Antikette: $T$ stimmt eintragsweise mit Theorem 20 überein
+  ($1{,}7\cdot10^{-52}$), $P_\T=1-cM$.
+* Ketten: $T$ stimmt auf $A\cup\{t^*\}$ eintragsweise mit dem Zertifikat des
+  sechsten Laufs überein ($4\cdot10^{-49}$) — die eine Freiheit $T_{0a_1}$
+  ist im Spektralzertifikat $0$ —, und die Nullstellen sind die $1/m_k$.
+
+### Lemma 27.2: dieselbe Konstruktion als Resolvente von $V^{\mathsf T}$
+
+Die Atomform von Lemma 27.1 versteckt, wie einfach das Objekt ist. Mit dem
+Krylow-Vektor $z(c):=(I+cV^{\mathsf T})^{-1}e_{t^*}$ (auf endlichen
+Halbordnungen ein Polynom in $c$, weil $V$ nilpotent ist) gilt
+
+> **Lemma 27.2.** $x^c=-\tfrac1c\,z(c)$ und $P_\T(c)=\mathbb 1^{\mathsf T}z(c)
+> =\bigl((I+cV)^{-1}\mathbb 1\bigr)_{t^*}$.
+
+*Beweis.* $(V^{\mathsf T})^{j+1}e_{t^*}$ hat den Atomanteil $W^jm$ und
+verschwindende $0$- und $t^*$-Komponente ($m=V^{\mathsf T}e_{t^*}$ auf den
+Atomen), also $z(c)=e_{t^*}+\sum_{j\ge0}(-c)^{j+1}W^jm$ auf den Atomen
+$=e_{t^*}-c\,y^c$, d.h. $-z(c)/c=(0;\,y^c;\,-1/c)=x^c$. Die zweite Aussage ist
+Lemma 27.1(ii). $\square$
+
+> **Lemma 27.3.** $y^c_a=m_a\,P_{\uparrow a}(c)$, wo $P_{\uparrow a}$ das
+> Kettenpolynom der Atome **echt über** $a$ ist.
+
+*Beweis.* $(W^km)_a=m_a\sum_{a<c_1<\dots<c_k}m_{c_1}\cdots m_{c_k}$ (Induktion
+über $k$ aus $(Wv)_a=m_a\sum_{s>a}v_s$), also
+$y^c_a=\sum_k(-c)^k(W^km)_a=m_aP_{\uparrow a}(c)$. $\square$
+
+Folge: $x^{c_k}(a)=0$ genau dann, wenn $c_k$ Nullstelle von $P_{\uparrow a}$
+ist. Auf der Kette ist $P_{\uparrow a_i}=\prod_{l>i}(1-cm_l)$ ein Teiler von
+$P_\T$, daher verschwindet $x^{c_k}(a_i)$ für $k>i$ und die Summen in
+Theorem 25 sind endlich; auf der Leiter ist $P_{\uparrow b_j}=P^\beta_{>j}$
+kein Teiler von $P_\T$, und die Summen sind unendlich — das ist die
+strukturelle Wurzel der unten gemessenen Divergenz. Probe `spectral.py D`
+(elf Halbordnungen, je drei komplexe $c$, alle Atome): Abweichung
+$<10^{-47}$.
+
+Damit ist das Spektralzertifikat, mit $\gamma_k/c_k^2=-\operatorname{Res}_{c_k}\frac1{cP_\T}$,
+
+$$T=e_{t^*}e_{t^*}^{\mathsf T}+\sum_k\operatorname*{Res}_{c=c_k}
+   \frac{z(c)z(c)^{\mathsf T}}{c\,P_\T(c)}
+ =-\operatorname*{Res}_{c=\infty}\frac{z(c)z(c)^{\mathsf T}}{c\,\mathbb 1^{\mathsf T}z(c)}$$
+
+(der Pol bei $0$ trägt $z(0)z(0)^{\mathsf T}/P_\T(0)=e_{t^*}e_{t^*}^{\mathsf T}$):
+**das Zertifikat ist das Residuum im Unendlichen der Rang-1-Resolvente.**
+Gemessen (mpmath, neun Halbordnungen, vier komplexe $c$ je Fall):
+$|z(c)+c\,x^c|<3\cdot10^{-50}$, $|\mathbb 1^{\mathsf T}z(c)-P_\T(c)|<7\cdot10^{-50}$.
+
+### Theorem 28: im Krylow-Raum ist das Zertifikat eindeutig — Spektralform, Hankel-Normalform und die Formel des sechsten Laufs sind dasselbe Objekt
+
+Sei $A$ endlich, $r$ der Nilpotenzindex von $V$, $\psi_k:=(V^{\mathsf T})^ke_{t^*}$
+($k=0,\dots,r-1$), $c_k:=\psi_k\cdot\mathbb 1=(V^k\mathbb 1)_{t^*}$. Da $t^*$ das
+Maximum von $\T$ ist, endet jede längste Kette in $t^*$; also ist
+$u=V^{r-1}\mathbb 1=c_{r-1}e_{t^*}$ mit $c_{r-1}>0$, und $\psi_0,\dots,\psi_{r-1}$
+sind linear unabhängig (aus $\sum a_k\psi_k=0$ mit kleinstem $k_0$,
+$a_{k_0}\ne0$, folgt nach Anwendung von $(V^{\mathsf T})^{r-1-k_0}$ der
+Widerspruch $a_{k_0}\psi_{r-1}=0$).
+
+> **Theorem 28.** (i) Ein Zertifikat der Gestalt
+> $T=\sum_{k,l<r}B_{kl}\psi_k\psi_l^{\mathsf T}$ ($T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_{t^*}$) hat notwendig
+> $B_{kl}=b_{k+l}$ mit $b_j=0$ für $j<r-1$ und
+> $$\sum_{l<r}b_{k+l}\,c_l=[k=0]\qquad(k=0,\dots,r-1);$$
+> dieses Dreieckssystem (Diagonale $c_{r-1}\ne0$) hat genau eine Lösung
+> $b_{r-1},\dots,b_{2r-2}$, und umgekehrt ist das so definierte $T$ ein
+> Zertifikat. **Im Krylow-Raum von $e_{t^*}$ gibt es also genau ein
+> Zertifikat.**
+>
+> (ii) Das Spektralzertifikat von Theorem 27 und die Formel des sechsten
+> Laufs liegen beide in dieser Klasse; sie sind daher gleich, und
+> $b_j=(-1)^jq_j$, wo $1/P_\T(c)=\sum_{j\ge d}q_jc^{-j}$ die
+> Laurent-Entwicklung bei $\infty$ ist ($d=\deg P_\T=r-1$).
+
+*Beweis.* (i) $V^{\mathsf T}\psi_k=\psi_{k+1}$ ($\psi_r=0$), also
+$V^{\mathsf T}T=\sum_{k\ge1,l}B_{k-1,l}\psi_k\psi_l^{\mathsf T}$ und
+$TV=\sum_{k,l\ge1}B_{k,l-1}\psi_k\psi_l^{\mathsf T}$. Die
+$\psi_k\psi_l^{\mathsf T}$ sind linear unabhängig; Koeffizientenvergleich gibt
+$B_{0,l-1}=0$ für $l\ge1$ und $B_{k-1,l}=B_{k,l-1}$ für $k,l\ge1$, also
+$B_{kl}=b_{k+l}$ mit $b_j=0$ für $j\le r-2$. $T\mathbb 1=\sum_kb_{k+l}c_l\psi_k
+=\psi_0$ gibt das System. Umgekehrt erfüllt jedes Hankel-$B$ mit $b_j=0$
+($j<r-1$) die Relation $TV=V^{\mathsf T}T$ nach derselben Rechnung, und das
+System ist $T\mathbb 1=e_{t^*}$.
+
+(ii) Spektralform: $x^{c_k}=-z(c_k)/c_k$ mit $z(c)=\sum_j(-c)^j\psi_j$
+(Lemma 27.2), also liegt $x^{c_k}(x^{c_k})^{\mathsf T}$ und
+$e_{t^*}e_{t^*}^{\mathsf T}=\psi_0\psi_0^{\mathsf T}$ in der Klasse. Sechster
+Lauf: die Formel benutzt $\lambda=e_{i^*}/u_{i^*}$ mit $u_{i^*}\ne0$, hier also
+$i^*=t^*$ und $p_k=(V^{\mathsf T})^{r-1-k}\lambda=\psi_{r-1-k}/c_{r-1}$; alle
+ihre Bausteine $\hat p_k,\psi_k$ liegen im Krylow-Raum, und $T$ ist bilinear
+darin. Beide sind Zertifikate, also nach (i) gleich. Die Formel für $b_j$:
+das Residuum bei $\infty$ von $z(c)z(c)^{\mathsf T}/(cP_\T(c))$ mit
+$z=\sum(-c)^k\psi_k$ und $1/P_\T=\sum q_jc^{-j}$ ist
+$-\sum_{k,l}(-1)^{k+l}q_{k+l}\psi_k\psi_l^{\mathsf T}$ (Koeffizient von
+$c^{-1}$), also $b_j=(-1)^jq_j$; $q_j=0$ für $j<d$ paßt zu $b_j=0$ für
+$j<r-1$. $\square$
+
+**Was das für die bisherigen Läufe heißt.**
+
+* Die „Formel des sechsten Laufs" ist keine Wahl mehr, sondern **das**
+  Krylow-Zertifikat, und sie hat drei Gesichter: Hankel-Normalform
+  (Dreieckssystem, exakt in Brüchen, ohne Nullstellen), Spektralform (Summe
+  über die Nullstellen des Kettenpolynoms), Residuum im Unendlichen.
+  Insbesondere hängt sie **nicht** von der Wahl von $i^*$ ab, und ihre Zeile
+  $0$ ist identisch null.
+* Der sechsundzwanzigste Lauf hat den Ausfall dieser Formel auf der Leiter mit
+  „die Formel greift blind in den Spielraum $\dim=n+2$" erklärt. Richtiger:
+  sie greift überhaupt nicht hinein — sie ist das einzige Zertifikat, das
+  den Spielraum *nicht* benutzt. Ein beschränktes Zertifikat auf der Leiter,
+  falls es existiert, muß den Krylow-Raum verlassen.
+* Die Vermutung des fünfundzwanzigsten Laufs („Hankelform
+  $B(V^k\mathbb 1,V^l\mathbb 1)=c_{k+l}$") war das duale Bild derselben
+  Struktur; hier steht sie mit den $\psi_k$ statt der $V^k\mathbb 1$ und mit
+  den Laurent-Koeffizienten von $1/P_\T$ statt der Momente $c_k$.
+
+Gemessen: `spectral.py C`, exakt in `Fraction`, rc=0, fünfzehn endliche
+Halbordnungen (Kette, Antikette, N, Leiter $n=5$, Krone, zehn zufällige):
+Hankel-Normalform ist ein Zertifikat, **stimmt exakt** mit der Formel des
+sechsten Laufs überein, mit dem Spektral-$T$ auf $<10^{-48}$, $b_j=(-1)^jq_j$
+exakt, $r-1=\deg P_\T$ überall.
+
+### Die Leiter, gemessen: `spectral_ladder.py` und die Trunkierungen
+
+Leiter $a_i<b_j\iff i<j$, $m_{a_i}=\alpha^i$, $m_{b_j}=\beta^j$, normiert mit
+$M_\infty=\alpha/(1-\alpha)+\beta/(1-\beta)$ (dieselbe Normierung für alle
+$n$; der sechsundzwanzigste Lauf normierte je Trunkierung, daher dort
+$17{,}90$ statt $18{,}00$ bei $n=8$).
+
+**Auf der unendlichen Leiter** (Produkte bis $N=300$, mpmath 50 Stellen):
+$P_\T(c)=P^\beta(c)-c\sum_i\alpha_iP^\alpha_{<i}(c)P^\beta_{>i}(c)$ und
+$y^c_{a_i}=\alpha_iQ_i(c)$, $y^c_{b_j}=\beta_jP^\beta_{>j}(c)$ mit der
+Rekursion $Q_{i-1}=(1-c\alpha_i)Q_i-c\beta_iP^\beta_{>i}$ (allgemein:
+$y^c_a=m_a\,P_{\uparrow a}(c)$, das Kettenpolynom der Atome **echt über**
+$a$); beides an der endlichen Leiter $n=6$ gegen `spectral.Poset` geprüft
+($3\cdot10^{-50}$).
+
+* **Nullstellen.** Für $(\tfrac12,\tfrac13)$, $(\tfrac13,\tfrac12)$,
+  $(\tfrac12,\tfrac23)$ und $(\tfrac12,\tfrac12)$ sind die ersten $24$
+  Nullstellen reell und einfach und werden von den Trunkierungen $n=8,12$
+  (exakt, `polyroots`) angelaufen (Abstände $10^{-2}$ bis $10^{-6}$). Für
+  $(\tfrac23,\tfrac12)$ haben **schon die Trunkierungen komplexe Nullstellen**
+  ($n=8$ und $n=12$), und der reelle Scan findet nur einen Teil des
+  Spektrums; (R) bleibt dort bei $0{,}10$ stehen. Das gewichtete
+  Unabhängigkeitspolynom der Leiter ist also **nicht** reellwurzelig, anders
+  als das jeder Kette und jedes Stufenstapels.
+* **Die Residuenidentität (R)** $\sum_k\gamma_kc_k^{-2}y^{c_k}=m$ konvergiert
+  bei getrennten Skalen superexponentiell: relativer Fehler auf den ersten
+  $24$ Atomen je Kette $2\cdot10^{-7}$, $2\cdot10^{-21}$, $1{,}5\cdot10^{-42}$
+  mit $K=8,16,24$ Nullstellen bei $(\tfrac12,\tfrac13)$; ebenso bei
+  $(\tfrac13,\tfrac12)$ ($1{,}8\cdot10^{-47}$) und $(\tfrac12,\tfrac23)$
+  ($2\cdot10^{-31}$). Bei $\alpha=\beta=\tfrac12$ nur $1{,}7\cdot10^{-10}$
+  bei $K=24$ — langsam.
+* **Aber die Spektralreihe für $T$ selbst divergiert**, auch bei getrennten
+  Skalen: die Terme $-\gamma_k\,x^{c_k}(a_1)^2$ wachsen mit wechselndem
+  Vorzeichen superexponentiell — bei $(\tfrac12,\tfrac13)$ ab $k\approx8$
+  ($7$, $28$, $10^3$, $10^4$, $6\cdot10^5$, $\dots$, $3\cdot10^{17}$ bei
+  $k=23$, $3\cdot10^{36}$ bei $k=29$), bei $(\tfrac13,\tfrac12)$ ab
+  $k\approx14$ ($0{,}13$, $2{,}5$, $26$, $2766$, $2\cdot10^4$, $9\cdot10^4$,
+  $\dots$), bei $\alpha=\beta=\tfrac12$ ebenso. Bei $(\tfrac12,\tfrac23)$
+  sind die Terme bis $k=23$ noch klein, wachsen aber ab $k\approx12$ von
+  $10^{-5}$ auf $10^{-3}$ — der Beginn desselben Verhaltens, bei $K=24$ noch
+  nicht entschieden (Probe (B5) weist es als „nur gemessen" aus). Bei $50$ und
+  bei $120$ Stellen zifferngleich — kein Rundungseffekt. Der Grund ist sichtbar: auf der Kette ist
+  $x^{c_k}(a_i)=0$ für $k>i$ (das Kettenpolynom von $\uparrow a_i$ teilt
+  $P_\T$), die Summe für $T_{a_ia_j}$ ist endlich. Auf der Leiter ist
+  $x^{c_k}(b_1)=\beta_1P^\beta_{>1}(c_k)$ und
+  $x^{c_k}(a_1)=\alpha_1\beta_1c_kP^\beta_{>1}(c_k)/(1-c_k\alpha_1)$ (aus
+  $Q_0(c_k)=0$), beide ohne Auslöschung superexponentiell groß, und
+  $\gamma_k$ fällt nicht schnell genug. **Die Residuensumme im Unendlichen,
+  die im Endlichen $T$ definiert, existiert auf der unendlichen Leiter
+  nicht.**
+
+**Auf den Trunkierungen** (exakt bzw. mpmath $160$–$220$ Stellen, Zertifikat
+jeweils bis $<10^{-140}$ verifiziert), $\|T\|_m=\max|T_{su}|/(w_sw_u)$ des
+Krylow-Zertifikats:
+
+| $(\alpha,\beta)$ | $\|T\|_m$ bei $n=8,12,16,20,24$ | Eckeintrag $T_{a_1a_1}/w_{a_1}^2$ |
+|---|---|---|
+| $(\tfrac12,\tfrac13)$ | $18{,}0$; $6192$; — | explodiert ab $n=9$ ($49{,}6$; $67{,}3$; $161$; $6192$) |
+| $(\tfrac13,\tfrac12)$ | $11{,}8509491159$ bis $n=16$; dann $353$, $4{,}3\cdot10^4$, $9{,}5\cdot10^5$, $5{,}2\cdot10^8$ | $0{,}44$; $0{,}48$; $0{,}55$; $-1{,}27$ ($n=10\dots16$), dann $353$ |
+| $(\tfrac12,\tfrac23)$ | $19{,}982477478$ bis $n=26$ | $1{,}79$; $1{,}72$; $1{,}68$; $1{,}67$; $1{,}66$; $1{,}66$; **$1{,}53$** ($n=26$) |
+| $(\tfrac14,\tfrac12)$ | $9{,}81622708914$ bei $n=8,12,16,20,24$ | $-0{,}46561$; $-0{,}46791$; $-0{,}46806$; $-0{,}468069$; $-0{,}468070$ |
+
+Drei Dinge daran.
+
+* **Der sechsundzwanzigste Lauf ist an einer Stelle zu korrigieren.** Er hat
+  für $(\tfrac13,\tfrac12)$, $(\tfrac12,\tfrac23)$, $(\tfrac23,\tfrac12)$
+  notiert, die explizite Formel treffe „bis $n=12$ genau das Minimum", und
+  daraus Konvergenz gelesen. Bei $(\tfrac13,\tfrac12)$ ist $\|T\|_m$ bis
+  $n=16$ auf zwölf Stellen stabil ($11{,}8509491159$) — und explodiert ab
+  $n=18$. Die Stabilität der Norm täuscht, weil das Supremum an $(a_2,b_n)$
+  sitzt, während die Eckeinträge $(a_1,a_1)$, $(b_1,b_1)$, $(a_1,b_1)$ schon
+  ab $n=12$ driften; die Ecke übernimmt das Supremum erst, wenn sie die
+  $11{,}85$ überholt. Bei $(\tfrac12,\tfrac23)$ beginnt dieselbe Drift bei
+  $n=26$ ($1{,}66\to1{,}53$, $-1{,}355\to-1{,}426$). **Konvergenz der Norm
+  bis $n=12$ oder $16$ ist auf der Leiter kein Beleg** — zum neunten Mal die
+  Trunkierung als falsche Prämisse, diesmal in der schärfsten Form: zwölf
+  stabile Stellen über acht Trunkierungen, dann Explosion.
+* Bei $(\tfrac14,\tfrac12)$ konvergieren Norm **und** Eckeinträge
+  monoton auf sechs Stellen bis $n=24$. Ob das echte Konvergenz ist oder
+  eine Drift, die erst jenseits $n=24$ einsetzt, ist nach dem vorigen Punkt
+  **nicht entscheidbar**; die Zuwächse der Ecke fallen geometrisch
+  ($2{,}3\cdot10^{-3}$, $1{,}5\cdot10^{-4}$, $9\cdot10^{-6}$,
+  $6\cdot10^{-7}$), was für Konvergenz spricht, aber bei $(\tfrac13,\tfrac12)$
+  fielen sie bis $n=10$ auch.
+* Die Spitzenzeile $T_{t^*\cdot}$ konvergiert in allen Fällen sofort
+  ($T_{t^*a_1}=0{,}51704641$ bei $(\tfrac13,\tfrac12)$ ab $n=7$; $1$ bzw.
+  $0$ auf $a_1$ bzw. $b_1$ bei $(\tfrac12,\tfrac13)$) — sie ist das Residuum
+  im Unendlichen von $z(c)_a/P_\T(c)$, dessen Grad $\le-1$ ist, und hängt
+  nur von den Leitkoeffizienten ab. Die Explosion sitzt ausschließlich in den
+  Ecken $(a_1,a_1),(b_1,b_1),(a_1,b_1)$, deren Residuen im Unendlichen im
+  Endlichen von den *sämtlichen* Koeffizienten abhängen — genau die Einträge,
+  deren Spektralreihe auf der unendlichen Leiter divergiert.
+
+`spectral_ladder.py` (Probe (B), rc=0, $16$ Prüfungen) und
+`spectral_ladder.py trunc` (rc=0, $17$ Trunkierungszertifikate verifiziert)
+reproduzieren die Tabellen; die Fälle $(\tfrac23,\tfrac12)$ (komplexe
+Nullstellen $17{,}74\pm11{,}49i$ bei $n=8$, $16{,}21\pm14{,}21i$ bei $n=12$)
+und $\alpha=\beta$ werden dort nur gemessen und nicht als Aussage geführt.
+
+### Ergebnis
+
+* **Bewiesen.** Lemma 27.1 und 27.2 (jede abzählbare Halbordnung, sobald die
+  Resolvente existiert): die verallgemeinerten Eigenvektoren von
+  $V^{\mathsf T}$ sind $x^c=-\tfrac1c(I+cV^{\mathsf T})^{-1}e_{t^*}$, und
+  $x^c\cdot\mathbb 1=-P_\T(c)/c$ mit dem Kettenpolynom $P_\T$. Theorem 27
+  (endlich, einfache Nullstellen): die Spektralsumme über die Nullstellen von
+  $P_\T$ ist ein reelles Zertifikat — Residuenkalkül, zwei Zeilen. Theorem 28
+  (endlich): im Krylow-Raum von $e_{t^*}$ gibt es genau ein Zertifikat, es hat
+  Hankel-Normalform mit Dreieckssystem, es **ist** die Formel des sechsten
+  Laufs (unabhängig von $i^*$, Zeile $0$ null) **und** die Spektralform, mit
+  $b_j=(-1)^jq_j$ aus $1/P_\T$ bei $\infty$. Alles exakt bzw. auf $10^{-46}$
+  an 20 bzw. 15 Halbordnungen nachgerechnet.
+* **Widerlegt bzw. korrigiert.** (a) Die Lesart des sechsundzwanzigsten Laufs,
+  die explizite Formel „greife blind in den Spielraum": sie ist das einzige
+  Zertifikat, das ihn nicht benutzt. (b) Die Konvergenz der expliziten Formel
+  bei $(\tfrac13,\tfrac12)$: zwölf stabile Stellen bis $n=16$, Explosion ab
+  $n=18$. (c) Die Hoffnung, die Spektralkonstruktion der $\omega$-Kette
+  (Theorem 25) übertrage sich als Residuenreihe auf die Leiter: die Reihe
+  divergiert in den Eckeinträgen, weil die Teilbarkeit
+  $P_{\uparrow a}\mid P_\T$ der Kette auf der Leiter fehlt. (d) Die
+  Reellwurzeligkeit des Kettenpolynoms: falsch schon für die endliche Leiter
+  $(\tfrac23,\tfrac12)$.
+* **Offen geblieben.** Ob die Leiter überhaupt ein beschränktes Zertifikat
+  trägt. Das Krylow-Zertifikat scheidet für $(\tfrac12,\tfrac13)$ und
+  $(\tfrac13,\tfrac12)$ aus und — Nachtrag unten — auch für
+  $(\tfrac12,\tfrac23)$; bei $(\tfrac14,\tfrac12)$ ist Konvergenz bis
+  $n=32$ nach diesem Lauf kein Beweis, aber der einzige Fall, in dem nichts
+  driftet. Ein beschränktes Zertifikat muß außerhalb des Krylow-Raums
+  liegen — und **gemessen gibt es eines** (dritter Nachtrag,
+  `ladder_lp.py`, 80–160 Stellen): das Minimum über alle Zertifikate der
+  Trunkierung bleibt bei $18{,}0$ ($(\tfrac12,\tfrac13)$, bis $n=22$, Krylow
+  dort $5\cdot10^{14}$) bzw. $11{,}85094912$ ($(\tfrac13,\tfrac12)$, bis
+  $n=20$, Krylow $4\cdot10^4$). Die Vermutung „fundiert $\Rightarrow$
+  Zertifikat" steht auf der Leiter also gemessen; bewiesen ist die
+  gleichmäßige Schranke nicht, und das optimale Zertifikat ist als Objekt
+  nicht identifiziert (vierter Nachtrag). Für $(\tfrac12,\tfrac23)$ bei
+  $n=26,30$ ist das LP im Budget nicht fertig geworden (Nullraum mit
+  $1400$ Unbekannten).
+
+### Sackgassen, siebenundzwanzigster Nachtrag
+
+* **Die Spektralreihe über die Nullstellen des Kettenpolynoms als Definition
+  des Zertifikats auf der unendlichen Leiter.** Sie divergiert in den
+  Eckeinträgen $(a_1,a_1),(b_1,b_1),(a_1,b_1)$ bei allen geprüften Profilen
+  mit sichtbarem Wachstum, obwohl die Residuenidentität (R) — eine Potenz
+  von $y$ weniger, $c^{-2}$ statt $c$ — auf $10^{-42}$ konvergiert. Die
+  endlichen Summen der $\omega$-Kette (Theorem 25) waren ein
+  Kettenphänomen: dort teilt das Kettenpolynom von $\uparrow a_i$ das von
+  $\T$, und $x^{c_k}(a_i)=0$ für $k>i$. Auf der Leiter gilt statt dessen
+  $x^{c_k}(a_1)/x^{c_k}(b_1)=\alpha_1c_k/(1-c_k\alpha_1)$, beide Faktoren
+  superexponentiell.
+* **Konvergenz der Zertifikatsnorm auf Trunkierungen bis $n\approx16$ als
+  Beleg.** $(\tfrac13,\tfrac12)$: $11{,}8509491159$ auf zwölf Stellen über
+  $n=7,\dots,16$, dann $353$, $4\cdot10^4$, $10^6$, $5\cdot10^8$. Das
+  Supremum sitzt an $(a_2,b_n)$ und sieht die Drift der Ecke erst, wenn sie
+  es überholt. Wer Trunkierungen mißt, führe die Eckeinträge an den
+  minimalen Atomen als eigene Spalte — sie driften ab $n=12$. Zum neunten
+  Mal die Trunkierung als falsche Prämisse, und zum ersten Mal mit zwölf
+  stabilen Stellen als Köder.
+* **Im Krylow-Raum nach einem besseren Zertifikat suchen** — etwa $i^*$
+  anders wählen, die $\hat p_k$ anders normieren, Nullstellen umgewichten.
+  Es gibt dort genau eines (Theorem 28). Der Spielraum $\dim=n+2$ des
+  sechsundzwanzigsten Laufs liegt vollständig **außerhalb**.
+* **Reellwurzeligkeit des Kettenpolynoms voraussetzen** (etwa für einen
+  reellen Nullstellenscan oder eine Vorzeichenstruktur wie in Theorem 25.2).
+  Sie gilt für Ketten und Stufenstapel (Produkte) und fällt auf der Leiter
+  $(\tfrac23,\tfrac12)$ schon bei $n=8$ und auf drei von zwölf zufälligen
+  Halbordnungen; das Spektralzertifikat bleibt reell, aber ein reeller Scan
+  findet nicht alle Frequenzen ((R) bleibt bei $0{,}10$ stehen).
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `Matrix.krylovCertificate_unique`** — Theorem 28(i), eingetragen
+in `TauCeti/MartingaleProblems/README.md` (Meilenstein 8, direkt nach
+`Matrix.exists_isSymm_mulVec_one_eq_single`) und in `PLAN.md`, Task 23:
+
+> Für $V:\mathrm{Matrix}\ n\ n\ \R$ mit $V^r=0$, $\psi_k=(V^{\mathsf T})^ke_t$
+> ($k<r$, $\psi_{r-1}\ne0$) und $c_k=\psi_k\cdot\mathbb 1$ hat jedes
+> $T=\sum_{k,l}B_{kl}\,\psi_k\psi_l^{\mathsf T}$ mit $T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_t$ die Gestalt $B_{kl}=b_{k+l}$ mit
+> $b_j=0$ für $j<r-1$ und $\sum_lb_{k+l}c_l=[k=0]$; ist $c_{r-1}\ne0$, so
+> ist dieses Dreieckssystem eindeutig lösbar, und umgekehrt liefert jede
+> Lösung ein solches $T$.
+
+Es ruht auf nichts als der linearen Unabhängigkeit von Krylow-Vektoren eines
+nilpotenten Endomorphismus (`LinearMap.IsNilpotent`, ein Induktionsargument)
+und Koeffizientenvergleich in `Matrix.vecMulVec`; keine Analysis, keine
+Reihe. Es ist jetzt dran, weil es das Objekt identifiziert, das alle
+neunundzwanzig Läufe gerechnet haben — die Formel des sechsten Laufs, das
+Zertifikat der $\omega$-Kette, die Spektralsumme — und weil es die Aussage
+ist, an der das Roadmap-Item `Matrix.exists_isSymm_mulVec_one_eq_single`
+seine Wahlfreiheit ($i^*$) verliert: der Lean-Beweis jenes Items wird
+einfacher, wenn man $i^*=t$ setzen darf, und Theorem 28 sagt, daß man darf.
+Die Spektralform (Theorem 27) folgt danach als Korollar über die
+Laurent-Entwicklung von $1/P_\T$.
+
+**Nächste Rechnung** (in `PLAN.md`, Task 23, eingetragen). Ursprünglich
+stand hier: das LP-Minimum jenseits $n=16$. Das ist im dritten Nachtrag
+unten **erledigt** (`Task23/ladder_lp.py`, bis $n=18$ bei beiden Profilen,
+weitere $n$ soweit im Budget): das Minimum bleibt stehen, wo das
+Krylow-Zertifikat explodiert. Die nächste Rechnung ist deshalb: **das
+LP-optimale $T$ als Objekt**. `ladder_lp.py` gibt bisher nur den Wert; es
+soll die primale Lösung $\lambda$ ausgeben, damit $T^{\mathrm{opt}}
+=T_K+\sum_k\lambda_kD_k$ gelesen werden kann — Träger der Korrektur,
+aktive Ungleichungen, Verhalten der $\lambda_k$ in $n$. Erst mit einer
+Vermutung über die Gestalt von $T^{\mathrm{opt}}$ ist die gleichmäßige
+Schranke beweisbar, die Proposition 19.3 auf der Leiter braucht.
+(Das LP des sechsundzwanzigsten Laufs lief über `scipy`; `numpy`/`scipy`
+sind in der Umgebung dieses Laufs nicht installiert, `ladder_lp.py` braucht
+nur `mpmath`.)
+
+### Nachtrag desselben Laufs: $n=28,32$ und $n=30$
+
+Mit 260 Stellen nachgerechnet (Zertifikatsfehler $<10^{-203}$):
+
+* $(\tfrac14,\tfrac12)$, $n=28$ und $n=32$: $\|T\|_m=9{,}81622708914$,
+  Eckeinträge $-0{,}468069809$ / $-0{,}468069812$, $-1{,}29951222$ (beide),
+  $-1{,}10003486$ (beide) — auf neun Stellen stabil, keine Drift. Das ist der
+  Fall, in dem die Frequenzen $1/\alpha_i=1/\beta_{2i}$ **exakt**
+  zusammenfallen ($\beta=\alpha^{1/2}$); ob das der Grund ist, ist offen,
+  aber es ist die einzige Konfiguration ohne Drift.
+* $(\tfrac12,\tfrac23)$, $n=30$: $\|T\|_m=31{,}78$ an $(a_1,a_1)$,
+  Eckeinträge $31{,}78$, $15{,}59$, $-23{,}47$ — die bei $n=26$ gemeldete
+  Drift ($1{,}66\to1{,}53$) war der Beginn der Explosion, wie vorhergesagt.
+  Damit scheidet das Krylow-Zertifikat für drei der vier getrennten Profile
+  des sechsundzwanzigsten Laufs aus.
+
+Die vier Sätze dieses Laufs (Lemma 27.1, 27.2, Theorem 27, Theorem 28) sind
+davon nicht berührt; sie handeln vom endlichen Objekt und sind exakt
+verifiziert.
+
+### Zweiter Nachtrag: die Drift hängt am Skalenverhältnis, nicht an zusammenfallenden Frequenzen
+
+Die Vermutung des ersten Nachtrags („kein Drift, weil $1/\alpha_i=1/\beta_{2i}$
+exakt zusammenfallen") ist **falsch**. Vier weitere Profile, $n=12,18,24$,
+220 Stellen, Zertifikatsfehler $<10^{-174}$, alle Nullstellen reell:
+
+| $(\alpha,\beta)$ | $\alpha/\beta$ | $\|T\|_m$ | $T_{a_1a_1}/w^2$ bei $n=12,18,24$ |
+|---|---|---|---|
+| $(\tfrac19,\tfrac13)$ | $\tfrac13$ | $7{,}976868727$ | $-1{,}0526519$; $-1{,}0526503$; $-1{,}0526503$ |
+| $(\tfrac18,\tfrac12)$ | $\tfrac14$ | $8{,}383864439$ | $-1{,}0894162$; $-1{,}0890365$; $-1{,}0890306$ |
+| $(\tfrac16,\tfrac12)$ | $\tfrac13$ | $8{,}712867815$ | $-0{,}96078255$; $-0{,}96052346$; $-0{,}96051941$ |
+| $(\tfrac15,\tfrac12)$ | $\tfrac25$ | $9{,}072791863$ | $-0{,}80690347$; $-0{,}80677695$; $-0{,}80677497$ |
+
+Die Frequenzen fallen bei $(\tfrac15,\tfrac12)$ und $(\tfrac16,\tfrac12)$
+nirgends zusammen, und die Eckeinträge konvergieren trotzdem geometrisch
+(Zuwächse $10^{-4}$, $2\cdot10^{-6}$). Zusammen mit den Explosionen bei
+$\alpha/\beta=\tfrac23$ (ab $n=18$) und $\tfrac34$ (ab $n=30$) und der
+Explosion bei $\alpha/\beta=\tfrac32$ (ab $n=9$) legt das **gemessen** eine
+Schwelle im Skalenverhältnis nahe: bei $\alpha/\beta\le\tfrac25$ konvergiert
+das Krylow-Zertifikat auf allen geprüften Trunkierungen, bei
+$\alpha/\beta\ge\tfrac23$ explodiert es — und die Einsatzstelle wandert mit
+$\alpha/\beta\downarrow$ nach außen ($n=9$; $18$; $30$), so daß auch die
+Konvergenz bei $\tfrac25$ bis $n=24$ nach der Lehre dieses Laufs kein Beweis
+ist. **Ein Satz dazu fehlt**; die Hankel-Normalform ($b_j=(-1)^jq_j$ aus
+$1/P_\T$ bei $\infty$) ist der Ort, an dem er zu suchen wäre: die Explosion
+der Ecke ist das Wachstum der Laurent-Koeffizienten $q_j$ gegen die
+Kettenmomente $c_k$ der Trunkierung. Für die Konklusion — Dualität auf der
+Leiter unter (F) — genügte bereits **ein** konvergentes Skalenverhältnis, wenn
+die Konvergenz bewiesen wäre (Proposition 19.3 mit Theorem 22); das ist der
+zweite benannte Angriffspunkt neben dem LP jenseits $n=16$.
+
+### Dritter Nachtrag: das LP-Minimum, hochstellig — `Task23/ladder_lp.py`
+
+Der Zertifikatsraum der Trunkierung ist $T_K+\operatorname{span}\{D_1,\dots,D_{n+2}\}$
+($T_K$ das Krylow-Zertifikat, exakt; $D_k$ eine Basis von
+$\{D=D^{\mathsf T},\,DV=V^{\mathsf T}D,\,D\mathbb 1=0\}$ per Gauß in
+mpmath), und $\min\|T\|_m$ ist das Tschebyscheff-Problem
+$\min C$ unter $|T_K+\sum_k\lambda_kD_k|_{su}\le Cw_sw_u$ in $n+3$
+Variablen; gelöst wird das **duale** LP ($n+3$ Zeilen, $2\cdot\#$Einträge
+Spalten) mit Bland-Regel bei 50 Stellen. Kontrollen: $\dim=n+2$ für alle
+$n$ (wie im sechsundzwanzigsten Lauf), und für $n\le8$ fällt das Minimum
+mit der Krylow-Norm zusammen ($17{,}3994448$ bei $n=4$, $17{,}99181924$ bei
+$n=6$, $17{,}99998022$ bei $n=8$) — was nach Umrechnung der Normierung
+genau die $17{,}60$ und $17{,}90$ des sechsundzwanzigsten Laufs sind.
+
+$(\tfrac12,\tfrac13)$, Normierung $M_\infty=\tfrac32$:
+
+| $n$ | $\|T_K\|_m$ (Krylow) | $\min\|T\|_m$ (LP) |
+|---|---|---|
+| 8 | $17{,}99998022$ | $17{,}99998022$ |
+| 9 | $49{,}57$ | $17{,}99999948$ |
+| 10 | $67{,}30$ | $17{,}99999999$ |
+| 11 | $160{,}9$ | $18{,}0$ |
+| 12 | $6192$ | $18{,}0$ |
+| 14 | $7{,}4\cdot10^4$ | $18{,}0$ |
+| 16 | $3{,}1\cdot10^6$ | $18{,}0$ |
+| 18 | $7{,}2\cdot10^9$ | $18{,}0$ |
+| 20 | $4{,}2\cdot10^{12}$ | $18{,}0$ |
+| 22 | $5{,}3\cdot10^{14}$ | $18{,}0$ |
+
+$(\tfrac13,\tfrac12)$: bei $n=12,14,16$ fallen Minimum und Krylow-Norm
+zusammen ($11{,}85094912$); bei $n=18$ ist die Krylow-Norm $352{,}59$, bei
+$n=20$ (160 Stellen nötig, bei 80 bricht der Simplex numerisch ab)
+$43016$, und das **Minimum bleibt beide Male $11{,}85094912$**, auf zehn
+Stellen unverändert.
+
+Das Minimum konvergiert also **von unten** mit geometrisch fallenden
+Zuwächsen, während das Krylow-Zertifikat davonläuft: ab $n=9$ bzw. $n=18$
+verläßt das optimale Zertifikat den Krylow-Raum, und zwar ohne daß sein Wert
+davon etwas merkt. Das ist die Messung, die dieser Lauf oben als
+„entscheidend" benannt hat, und sie fällt **für** die Vermutung des
+sechsundzwanzigsten Laufs aus („fundiert $\Rightarrow$ Zertifikat"): auf
+der kleinsten offenen Instanz gibt es, soweit gemessen, gleichmäßig
+beschränkte Zertifikate — nur eben keine im Krylow-Raum. Was nach
+Proposition 19.3 für die Dualität auf der Leiter unter (F) fehlt, ist der
+**Beweis** dieser Gleichmäßigkeit, und dafür muß das optimale Zertifikat
+erst als Objekt verstanden werden: es ist $T_K$ plus eine Korrektur im
+$(n{+}2)$-dimensionalen Nullraum, die genau die explodierenden Eckeinträge
+$(a_1,a_1),(b_1,b_1),(a_1,b_1)$ wegnimmt.
+
+Zur Numerik, damit es kein zweiter Lauf wiederholt: die erste Fassung des
+Simplex hat bei $(\tfrac13,\tfrac12)$, $n\ge18$, „unbeschränkt" gemeldet —
+falsch, denn $T_K$ ist zulässig. Ursache war die Skalierung: die dualen
+Variablen zu Einträgen mit Gewicht $w_sw_u\sim10^{-17}$ werden $\sim10^{17}$
+groß, das Tableau $\sim10^{34}$, und bei 80 Stellen liegen die Rundungsfehler
+an der Toleranz. Nach Substitution $\nu_j=w_j\mu_j$ (alles in der gewichteten
+Norm, $O(1)$) läuft es durch. Der Wert $18$ ist
+$1/(\alpha_1\alpha_2)$ der normierten $a$-Kette ($\alpha_1=\tfrac13$,
+$\alpha_2=\tfrac16$) — dieselbe Zahl, die Theorem 26 als $\sup|G|$ der
+**Kette** $\alpha$ allein gibt. Ob das Zufall ist oder das optimale
+Zertifikat der Leiter bei $\alpha>\beta$ im Kern das $\omega$-Ketten-Zertifikat
+(Theorem 25) der langsam fallenden Kette ist, ist **nicht** geprüft; bei
+$(\tfrac13,\tfrac12)$ paßt die entsprechende Zahl ($1/(\beta_1\beta_2)=18$)
+nicht zu den gemessenen $11{,}85$. Größere $n$ (bis $16$ bzw. $18$) laufen;
+Ergebnisse folgen unten, sofern sie im Budget fertig werden.
+
+### Vierter Nachtrag: das LP-optimale Zertifikat, erste Sicht (`ladder_lp.py --show`)
+
+Aus den Schattenpreisen des dualen Simplex wird das optimale
+$T^{\mathrm{opt}}=T_K+\sum_k\lambda_kD_k$ rekonstruiert (Kontrolle:
+$\max|T^{\mathrm{opt}}_{su}|/(w_sw_u)$ stimmt mit dem LP-Wert auf zehn
+Stellen überein). Weitere Werte: $(\tfrac12,\tfrac13)$, $n=20$:
+Krylow $4{,}2\cdot10^{12}$, Minimum $18{,}0$; $(\tfrac14,\tfrac12)$, $n=12$:
+beide $9{,}816227089$.
+
+* **Wo die Schranke aktiv ist.** Bei $(\tfrac12,\tfrac13)$ ($n=8,10,12$):
+  $T^{\mathrm{opt}}/w=-18$ **exakt** an $(a_1,a_1)$, $(b_1,b_1)$, $(a_1,b_1)$
+  und an $(a_1,b_j)$ für **alle** $j$, dazu $(a_2,b_n)$ und $(a_2,a_n)$ —
+  also die ganze Ecke $\{a_1,b_1\}^2$ und die Zeile $a_1$ gegen die
+  $b$-Kette. Bei $(\tfrac13,\tfrac12)$ ($n=12,18$): $\pm11{,}85$ an der
+  Ecke und an $(a_i,b_1)$ für **alle** $i$ — die Spalte $b_1$ gegen die
+  $a$-Kette. Das Zertifikat ist also am Rand gesättigt, wo die beiden
+  minimalen Atome sitzen, und entlang der Zeile des minimalen Atoms der
+  **langsam** fallenden Kette gegen die schnell fallende. Die Spitzenzeile
+  $T_{t^*\cdot}$ ist in allen Fällen die des Krylow-Zertifikats (sie ist
+  durch Bedingung 2 an den Nullmassezeilen erzwungen, Proposition 24.1(1)).
+* **Nicht eindeutig.** Bei $(\tfrac13,\tfrac12)$ hat $T^{\mathrm{opt}}_{b_1b_1}/w^2$
+  bei $n=12$ den Wert $-11{,}85$ und bei $n=18$ den Wert $+11{,}85$; bei
+  $n=18$ sind zusätzlich $(a_1,a_2)$ und $(a_1,a_3)$ aktiv. Der Optimalwert
+  ist stabil, die Optimalmenge eine Seite positiver Dimension — der Simplex
+  gibt irgendeine Ecke zurück. Wer die Gestalt des beschränkten Zertifikats
+  bestimmen will, muß eine **Auswahl** treffen (etwa das $\lambda$ minimaler
+  Norm oder das $T$ mit größtem Träger auf $\{a_1,b_1\}$), sonst springt das
+  Objekt von $n$ zu $n$.
+* **Was das nahelegt, ungeprüft.** Die Korrektur $T^{\mathrm{opt}}-T_K$ muß in
+  den Eckeinträgen die superexponentielle Explosion von $T_K$ aufheben; der
+  Nullraum hat die Dimension $n+2$, und die Zahl der bei $(\tfrac12,\tfrac13)$
+  aktiven Ungleichungen ist $n+4$ ($3$ Ecke, $n$ Zeile $a_1$ gegen $b$, $2$
+  Spitze) — passend zu $n+3$ Variablen an einer nicht entarteten Ecke. Eine
+  Vermutung über $T^{\mathrm{opt}}$ ist damit **nicht** aufgestellt; der Weg
+  ist beschrieben, nicht gegangen.
+
+**Numerische Sackgasse, damit sie niemand wiederholt:** der dichte Simplex
+mit Bland-Regel meldet bei ungünstiger Skalierung „unbeschränkt", obwohl das
+Dual beschränkt ist ($T_K$ ist zulässig). Zwei Ursachen, beide behoben:
+(1) Skalierung — die dualen Variablen müssen in der gewichteten Norm
+geführt werden ($\nu_j=w_j\mu_j$); (2) das Ausräumen der künstlichen
+Variablen nach Phase I muß über den größten Zeileneintrag pivotieren und
+redundante Zeilen stehen lassen, sonst entstehen Pivots auf $10^{-30}$ und
+das Tableau wird Rauschen. Beides steht im Kopf von `ladder_lp.py`.
+
+### Fünfter Nachtrag: bei $(\tfrac12,\tfrac13)$ konvergiert das optimale Zertifikat eintragsweise
+
+`ladder_lp.py 1/2 1/3 8 10 12 14 16 18 --show`, 80 Stellen. Der LP-Wert ist
+$18{,}0$ durchweg; die Einträge von $T^{\mathrm{opt}}/w$ an zwei
+nicht-aktiven Stellen:
+
+| $n$ | 8 | 10 | 12 | 14 | 16 | 18 |
+|---|---|---|---|---|---|---|
+| $(a_2,a_2)$ | $-9{,}3110$ | $-9{,}3654$ | $-9{,}3799$ | $-9{,}3836$ | $-9{,}3845$ | $-9{,}3848$ |
+| $(a_1,a_2)$ | $3{,}1140$ | $3{,}1471$ | $3{,}1550$ | $3{,}1569$ | $3{,}1574$ | $3{,}1575$ |
+| Krylow $(a_1,a_2)$ | $1{,}32$ | $1{,}74$ | $-5{,}28$ | $-23{,}7$ | $627$ | $-1{,}1\cdot10^5$ |
+
+Die Zuwächse fallen um den Faktor $\approx4$ je Schritt $n\to n+2$ (also wie
+$\alpha^{\,n}=2^{-n}$), während dieselben Einträge des Krylow-Zertifikats
+davonlaufen. Die aktive Menge ist bei jedem $n$ dieselbe: die Ecke
+$\{a_1,b_1\}^2$ ($3$ Einträge), die Zeile $(a_1,b_j)$ für $2\le j\le n$
+($n-1$ Einträge; $(a_1,b_1)$ zählt zur Ecke) und die zwei Einträge
+$(a_2,b_n)$, $(a_2,a_n)$ — zusammen $n+4$ Einträge bei $n+3$ Variablen, die
+beiden letzten am Rand der Trunkierung, also Trunkierungsartefakte. Anders als bei $(\tfrac13,\tfrac12)$ (vierter Nachtrag)
+springt hier nichts: das optimale Zertifikat ist bei $(\tfrac12,\tfrac13)$
+gemessen eindeutig und konvergiert eintragsweise mit geometrischer Rate.
+**Das ist die Instanz, an der eine Vermutung über $T^{\mathrm{opt}}$ auf der
+unendlichen Leiter aufzustellen ist**: ein $T$ mit $|T_{su}|=18\,w_sw_u$ auf
+$\{a_1,b_1\}^2\cup\{(a_1,b_j)\}_j$ und $T_{t^*\cdot}=e_{a_1}$, Grenzwert der
+Trunkierungen — die Zahl $18=2/\alpha_1^2=1/(\alpha_1\alpha_2)$ wartet auf
+eine Erklärung. Nichts davon ist bewiesen.
+
+## Die Leiter blockweise, 2026-09-16 (dreißigster Lauf): die Spitzenzeile jedes Zertifikats ist die Kettenzählung, und das Zertifikat der Leiter ist ein gekoppeltes System zweier Kettenrekursionen
+
+Der neunundzwanzigste Lauf hat auf der Leiter $(\tfrac12,\tfrac13)$ ein
+eintragsweise konvergierendes LP-optimales Zertifikat gemessen (Wert $18$,
+aktive Menge: Ecke $\{a_1,b_1\}^2$ und Zeile $(a_1,b_j)$) und als nächste
+Rechnung „das LP-optimale $T$ als Objekt" gestellt; der achtundzwanzigste die
+„$b$-Block-Rekursion der Leiter". Dieser Lauf macht das Zweite vollständig
+und das Erste zum Teil. Zuerst aber ein Satz, der bei der Vorbereitung
+abfiel und der für **jede** endliche Halbordnung gilt.
+
+### Proposition 29: die Spitzenzeile jedes Zertifikats ist erzwungen, und sie zählt längste Ketten
+
+Rahmen des fünfundzwanzigsten Laufs, $\T=\{0\}\cup A\cup\{t^*\}$ endlich mit
+Maximum $t^*$, $m_0=m_{t^*}=0$, $m_a>0$ auf $A$ (nur $0$ und $t^*$ sind
+masselos), $V^r=0$, $V^{r-1}\ne0$; $d:=r-1$ ist die Höhe (Länge der
+längsten Atomkette). Für ein Atom $a$ sei $h(a)$ die Länge der längsten
+Atomkette mit kleinstem Element $a$ und
+$$\omega(a):=\sum_{a=c_0<c_1<\dots<c_{d-1}}m_{c_0}m_{c_1}\cdots m_{c_{d-1}}$$
+das Massengewicht der **längsten** Ketten, die in $a$ beginnen ($\omega(a)=0$,
+falls $h(a)<d$), und $\Omega:=\sum_a\omega(a)=e_d$ das Gewicht aller längsten
+Ketten (der Leitkoeffizient des Kettenpolynoms, bis auf das Vorzeichen).
+
+> **Proposition 29.** Jedes Zertifikat $T$ an der Stelle $t^*$ ($T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_{t^*}$) hat die Spitzenzeile
+> $$T_{t^*a}=\frac{\omega(a)}{\Omega}\quad(a\text{ Atom}),\qquad
+>   T_{t^*0}=T_{t^*t^*}=0 .$$
+> Insbesondere ist die Spitzenzeile eine Wahrscheinlichkeitsverteilung auf
+> den Atomen minimaler Lage: $T_{t^*a}$ ist der massengewichtete Anteil der
+> längsten Ketten, die in $a$ beginnen. Der Nullraum $\{D=D^{\mathsf T},\,
+> DV=V^{\mathsf T}D,\,D\mathbb 1=0\}$ verschwindet also in der Zeile $t^*$
+> identisch.
+
+*Beweis.* $(V^k\mathbb 1)_s$ ist das Gewicht der Atomketten aus $k$ Punkten
+unterhalb $s$; da $t^*$ das Maximum ist, endet jede längste Kette unter
+$t^*$, und kein anderer Punkt hat $d$ Atome in einer Kette unter sich (sonst
+gäbe es mit $t^*$ eine Kette aus $d+1$ Atomen, wenn der Punkt ein Atom ist;
+ist er kein Atom, so ist er $0$ oder $t^*$). Also $V^d\mathbb 1=\Omega\,e_{t^*}$,
+$\Omega>0$. Aus $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_{t^*}$ folgt
+$TV^d\mathbb 1=(V^{\mathsf T})^dT\mathbb 1=(V^{\mathsf T})^de_{t^*}=\psi_d$,
+also $\Omega\,Te_{t^*}=\psi_d$, und $(\psi_d)_a=m_a\cdot(\text{Gewicht der
+Ketten aus }d-1\text{ Atomen echt über }a)=\omega(a)$; $(\psi_d)_0=(\psi_d)_{t^*}=0$.
+Symmetrie von $T$ macht aus der Spalte die Zeile. $\square$
+
+Das ist die im neunundzwanzigsten Lauf beobachtete „sofortige Konvergenz der
+Spitzenzeile" mit Beweis, und es ist mehr: nicht nur das Krylow-Zertifikat,
+**jedes** Zertifikat hat diese Zeile. Proposition 24.2(a) ($T_{t^*\cdot}=e_{a_1}$
+auf der Kette) ist der Fall $\omega=m_1\cdots m_n\,e_{a_1}$; auf der Antikette
+($d=1$) ist $T_{t^*a}=m_a/M$, Theorem 20.
+
+> **Korollar 29.1 (die Leiter).** Auf der Trunkierung der Leiter
+> $a_i<b_j\iff i<j$ mit $n$ Stufen sind die längsten Ketten genau
+> $a_1<\dots<a_i<b_{i+1}<\dots<b_n$ ($0\le i\le n$), und
+> $$T_{t^*b_1}=\pi_n:=\frac{1}{\sum_{i=0}^n\prod_{l\le i}\alpha_l/\beta_l},\qquad
+>   T_{t^*a_1}=1-\pi_n,$$
+> für **jedes** Zertifikat der Trunkierung. Bei $\alpha_l=\alpha^l,\beta_l=\beta^l$
+> ist $\prod_{l\le i}\alpha_l/\beta_l=(\alpha/\beta)^{i(i+1)/2}$. Für
+> $\alpha<\beta$ konvergiert $\pi_n\to\pi_\infty=1/\sum_{i\ge0}(\alpha/\beta)^{i(i+1)/2}$
+> (eine partielle Thetareihe), für $\alpha\ge\beta$ ist $\pi_n\to0$.
+
+Gemessen (`Task23/toprow.py`, exakt in `Fraction`, rc=0): Proposition 29 auf
+acht zufälligen Halbordnungen ($3\le n\le7$, Höhen $2$–$5$), Kette, Antikette,
+Krone und zwölf Leiter-Trunkierungen — Krylow-Spitzenzeile $=$ Kettenformel
+exakt, Nullraum in der Zeile $t^*$ exakt null (Dimensionen $1$ bis $11$);
+Korollar 29.1 exakt für vier Profile und $n=3,5,8$. Der Limes für
+$(\tfrac13,\tfrac12)$ ist $1-\pi_\infty=0{,}517046411021$ — der
+neunundzwanzigste Lauf hat $0{,}51704641$ gemessen, ohne die Zahl zu kennen.
+Für $(\tfrac12,\tfrac23)$: $0{,}587162519666$; für $(\tfrac14,\tfrac12)$:
+$0{,}390850288934$.
+
+**Was das für die unendliche Leiter heißt, und was nicht.** Auf der
+unendlichen Leiter gibt es kein $d$ mit $V^d\mathbb 1\propto e_{t^*}$; ob dort
+$T_{t^*a_1}$ erzwungen ist, ist **offen**. Ist ein unendliches Zertifikat
+aber ein eintragsweiser Limes von Trunkierungszertifikaten (Proposition 19.3,
+der Weg, den die LP-Messung stützt), so hat es $T_{t^*b_1}=\pi_\infty$.
+Bei $\alpha>\beta$ heißt das $T_{t^*\cdot}=e_{a_1}$ — die Spitze sieht nur die
+langsam fallende Kette —, bei $\alpha<\beta$ trägt die Spitze auf **beiden**
+minimalen Atomen. Das ist, nebenbei, die Erklärung für die Beobachtung des
+neunundzwanzigsten Laufs, daß bei $(\tfrac12,\tfrac13)$ die aktive Zeile die
+$a_1$-Zeile ist und bei $(\tfrac13,\tfrac12)$ die $b_1$-Spalte: aktiv ist die
+Zeile des minimalen Atoms, das die Spitze **nicht** vollständig trägt.
+
+### Proposition 30: das Zertifikat der Leiter in Potentialen — die $b$-Block-Rekursion, und woran sie hängt
+
+Leiter wie im sechsundzwanzigsten Lauf, $m_{a_i}=\alpha_i$, $m_{b_j}=\beta_j$,
+$m_0=m_{t^*}=0$, endlich ($n$ Stufen) oder unendlich; $T$ ein Zertifikat an
+$t^*$ (im Unendlichen: ein unendliches Zertifikat, Gewichtsklasse $\{0,t^*\}$).
+Blöcke $P=T_{AA}$, $Q=T_{AB}$ ($Q_{ij}=T_{a_ib_j}$), $R=T_{BB}$;
+$p:=T_{t^*a_1}$. Setze für $i,j,l\ge1$, $k\ge0$:
+
+$$H(j,l):=\frac1{\beta_j}\Bigl(\sum_{j'>l}R_{jj'}+T_{b_jt^*}\Bigr),\quad
+  J(i,l):=\frac1{\alpha_i}\Bigl(\sum_{j>l}Q_{ij}+T_{a_it^*}\Bigr),\quad
+  K(l,i):=\frac1{\beta_l}\sum_{i'>i}Q_{i'l},\quad
+  \Phi(i,k):=\frac1{\alpha_i}\sum_{i'>k}P_{ii'},$$
+
+($H(j,0)$, $J(i,0)$, $K(l,0)$ mit derselben Formel).
+
+> **Proposition 30.** (a) Die Zeilen $T_{t^*\cdot}$ und $T_{0\cdot}$ sind auf
+> $\{0,a_1,b_1\}$ getragen, $T_{0t^*}=0$, $T_{t^*a_1}+T_{t^*b_1}=1$,
+> $T_{00}+T_{0a_1}+T_{0b_1}=0$; also $T_{a_it^*}=p[i=1]$,
+> $T_{b_jt^*}=(1-p)[j=1]$. Die beiden Zahlen $T_{0a_1},T_{0b_1}$ sind nicht
+> erzwungen (auf der Trunkierung ist der Nullraum an beiden Stellen von null
+> verschieden).
+>
+> (b) Bei $T_{0a_1}=T_{0b_1}=0$ sind die Bedingungen 2 und 3 äquivalent zu
+> den fünf Gleichungen
+> $$\text{(BB)}\ \ H(j,l)=H(l,j),\qquad
+>   \text{(AB)}\ \ J(i,l)=K(l,i)+H(l,i),\qquad
+>   \text{(AA)}\ \ F:=\Phi+J\ \text{ist symmetrisch},$$
+> $$\text{(3a)}\ \ F(i,0)=0,\qquad
+>   \text{(3b)}\ \ \beta_lH(l,0)=-\sum_iQ_{il}$$
+> für alle $i,j,l\ge1$, zusammen mit der Symmetrie von $T$, die in den Blöcken
+> $P$ und $R$ die Zwei-Diagonalen-Rekursionen
+> $$\alpha_i\bigl(\Phi(i,k{-}1)-\Phi(i,k)\bigr)=\alpha_k\bigl(\Phi(k,i{-}1)-\Phi(k,i)\bigr),\qquad
+>   \beta_j\bigl(H(j,l{-}1)-H(j,l)\bigr)=\beta_l\bigl(H(l,j{-}1)-H(l,j)\bigr)$$
+> ist, und $Q_{il}=\alpha_i\bigl(J(i,l{-}1)-J(i,l)\bigr)$.
+
+*Beweis.* (a) ist Schritt (1) von Proposition 24.1: für $m_s=0$ gibt
+Bedingung 2 an $(s,u)$ $\theta_s(\uparrow u)=0$ für jedes Atom $u$; mit
+$\uparrow b_j=\{b_{j'}\}_{j'>j}\cup\{t^*\}$ folgt $\theta_s(b_j)=0$ ($j\ge2$),
+$\theta_s(t^*)=0$; mit $\uparrow a_i\setminus\uparrow a_{i+1}=\{a_{i+1},b_{i+1}\}$
+dann $\theta_s(a_{i+1})=0$. Bedingung 3 und Symmetrie geben die Summen.
+(b) Bedingung 2 an $(b_j,b_l)$: $\beta_l\sum_{x>b_l}T_{b_jx}=\beta_j\sum_{x>b_j}T_{xb_l}$,
+beide Seiten sind $\beta_j\beta_lH(j,l)$ bzw. $\beta_j\beta_lH(l,j)$. An
+$(a_i,b_l)$: links $\beta_l\alpha_iJ(i,l)$, rechts
+$\alpha_i\bigl(\sum_{i'>i}Q_{i'l}+\sum_{j>i}R_{jl}+T_{t^*b_l}\bigr)
+=\alpha_i\beta_l\bigl(K(l,i)+H(l,i)\bigr)$ — hier geht ein, daß
+$\uparrow a_i$ **beide** Ketten oberhalb der Stufe $i$ enthält. An $(a_i,a_k)$:
+$\alpha_k\sum_{x>a_k}T_{a_ix}=\alpha_k\alpha_i\bigl(\Phi(i,k)+J(i,k)\bigr)$,
+symmetrisch dazu rechts. Bedingung 3 an $a_i$ bzw. $b_l$ ist (3a) bzw. (3b)
+(mit $T_{a_i0}=T_{b_l0}=0$). Die Rekursionen sind die Symmetrie von $P$ bzw.
+$R$, wie in Proposition 24.2(b). $\square$
+
+**Was das ist.** Der $b$-Block $R$ erfüllt wörtlich die Kettenrekursion der
+$\omega$-Kette (Proposition 24.2) in den Massen $\beta$ — aber mit
+**inhomogenem Rand**: an der Stelle $H(l,0)=0$ der Kette steht (3b),
+$H(l,0)=-\frac1{\beta_l}\sum_iQ_{il}$, die Spaltensumme des Kreuzblocks. Der
+$a$-Block $P$ erfüllt dieselbe Rekursion in $\alpha$, sein Potential $\Phi$
+ist aber **nicht** symmetrisch — symmetrisch ist $F=\Phi+J$, und der Rand ist
+$\Phi(i,0)=-J(i,0)$. Der Kreuzblock $Q$ koppelt beides über (AB):
+$J(i,l)-K(l,i)=H(l,i)$ — Zeilenpotential minus Spaltenpotential von $Q$ ist
+das Kettenpotential des $b$-Blocks. Das ist die Gestalt, die der
+achtundzwanzigste Lauf erfragt hat: die Rekursion (K) ist auf der Leiter
+wieder da, in beiden Blöcken, und wieder eine Konvexkombination bei streng
+fallenden Massen, wenn man sie abwärts liest — **aber die Ränder, an denen
+das Maximumprinzip ansetzt, sind jetzt selbst Unbekannte** ($H(\cdot,0)$ und
+$J(\cdot,0)$), und sie hängen über $Q$ voneinander ab. Die Schranke kann also
+nicht Block für Block gewonnen werden; sie braucht eine Aussage über $Q$.
+
+Gemessen (`Task23/ladder_blocks.py 1/2 1/3 4 6 8 --lp`, rc=0): (a), (BB),
+(AB), (AA), (3a), (3b) **exakt** am Krylow-Zertifikat und auf $10^{-30}$
+(80 Stellen) am LP-optimalen Zertifikat, $n=4,6,8$. Der Nullraum hat an
+$(t^*,a_1)$, $(t^*,b_1)$ exakt $0$ und an $(0,a_1)$, $(0,b_1)$ jeweils volle
+Freiheit.
+
+### Sackgasse, geprüft: der $a$-Block des optimalen Zertifikats ist nicht das Kettenzertifikat der $\alpha$-Kette
+
+Der neunundzwanzigste Lauf hat notiert, der LP-Wert $18$ bei $(\tfrac12,\tfrac13)$
+sei $1/(\alpha_1\alpha_2)$ — genau $\sup|G|$ der $\alpha$-Kette allein
+(Theorem 26) — und gefragt, ob das optimale Zertifikat „im Kern das
+$\omega$-Ketten-Zertifikat der langsam fallenden Kette" sei. **Nein**, in der
+naheliegenden Lesart: $\max|T^{\mathrm{opt}}_{AA}-T^{\mathrm{Kette}}_{\alpha}|/(w w)
+=15{,}4$ bei $n=6,8$ (gegen $\|T\|_m=18$), und die Zeilensummen des
+$a$-Blocks sind $(-2{,}34;\ 0{,}11;\ -0{,}11;\ -0{,}06;\dots)$ statt
+$(-1;0;0;\dots)$. Auch das Krylow-Zertifikat der Leiter hat nicht den
+$a$-Block des Krylow-Zertifikats der Kette. Die Zahl $18$ bleibt unerklärt.
+Bemerkenswert, aber ungeklärt: alle drei Blöcke $AA$, $AB$, $BB$ des
+Optimums haben **dieselbe** gewichtete Norm wie das Ganze (die Ecke ist in
+jedem Block aktiv).
+
+### Theorem 31: die Randeinträge jedes Zertifikats sind erzwungen, und sie erklären den LP-Wert
+
+Die Tail-Bedingungen der Potentiale sind auf der Trunkierung **exakte
+Randwerte**: $J(i,n)=p[i=1]/\alpha_1$, $H(j,n)=(1-p)[j=1]/\beta_1$,
+$\Phi(i,n)=0$ (leere Summen). Setzt man sie in (AB), (BB), (AA) ein, so
+fallen die Einträge der letzten Stufe heraus — für **jedes** Zertifikat, ohne
+Normierung von $T_{0\cdot}$ und ohne Bedingung 3 an den Atomen.
+
+> **Theorem 31.** Auf der Trunkierung der Leiter mit $n$ Stufen sei $T$ ein
+> Zertifikat an $t^*$, $p_n=T_{t^*a_1}$ (nach Korollar 29.1 erzwungen) und
+> $$\kappa_n:=\frac{p_n}{\alpha_1}-\frac{1-p_n}{\beta_1}.$$
+> Dann gilt exakt
+> $$\text{(E1)}\ \ T_{a_2b_n}=\kappa_n\beta_n,\quad T_{a_ib_n}=0\ (i\ge3);\qquad
+>   \text{(E2)}\ \ T_{b_2b_n}=\frac{1-p_n}{\beta_1}\beta_n,\quad T_{b_lb_n}=0\ (3\le l<n);$$
+> $$\text{(E3)}\ \ T_{a_na_2}+T_{a_nb_2}=\frac{p_n}{\alpha_1}\alpha_n,\quad
+>   T_{a_na_k}+T_{a_nb_k}=0\ (3\le k<n),$$
+> und folglich für jedes Zertifikat
+> $$\|T\|_m\ \ge\ \max\Bigl(\frac{|\kappa_n|}{\alpha_2},\ \frac{1-p_n}{\beta_1\beta_2}\Bigr).$$
+
+*Beweis.* (AB) an $(i,n)$: $K(n,i)=J(i,n)-H(n,i)=J(i,n)-H(i,n)
+=[i=1]\bigl(p/\alpha_1-(1-p)/\beta_1\bigr)=[i=1]\kappa_n$ für $i\ge1$; also
+$T_{a_ib_n}=\beta_n\bigl(K(n,i{-}1)-K(n,i)\bigr)=\beta_n\kappa_n[i=2]$ für
+$i\ge2$. (E2): $T_{b_nb_l}=\beta_n\bigl(H(n,l{-}1)-H(n,l)\bigr)$ und
+$H(n,l)=H(l,n)=(1-p)[l=1]/\beta_1$ für $l\ge1$. (E3): $F(n,k)=F(k,n)
+=\Phi(k,n)+J(k,n)=p[k=1]/\alpha_1$, also $\Phi(n,k)=p[k=1]/\alpha_1-J(n,k)$
+und $T_{a_na_k}=\alpha_n\bigl(\Phi(n,k{-}1)-\Phi(n,k)\bigr)
+=\alpha_n\bigl(p[k=2]/\alpha_1-J(n,k{-}1)+J(n,k)\bigr)=p\alpha_n[k=2]/\alpha_1-T_{a_nb_k}$
+für $k\ge2$. Die Schranke: $|T_{a_2b_n}|\le C\alpha_2\beta_n$ und
+$|T_{b_2b_n}|\le C\beta_2\beta_n$. $\square$
+
+**Was die Schranke ist.** Für $\alpha>\beta$ ist $p_n\to1$ und
+$\kappa_n/\alpha_2\to1/(\alpha_1\alpha_2)$ — die Zahl $18$ des
+neunundzwanzigsten Laufs ist **kein** Zufall und **kein** Kettenzertifikat im
+$a$-Block, sondern der erzwungene Randeintrag $T_{a_2b_n}/(\alpha_2\beta_n)$;
+und es ist dieselbe Zahl wie $\sup|G|$ der $\alpha$-Kette allein
+(Theorem 26), aus demselben Grund: dort ist $\lim_iG(i,2)=-1/(m_1m_2)$ der
+erzwungene Limes, hier ist es der erzwungene Rand. Die im neunundzwanzigsten
+Lauf als „Trunkierungsartefakte" bezeichneten aktiven Einträge $(a_2,b_n)$ und
+$(a_2,a_n)$ sind also das Gegenteil: sie sind die einzigen Einträge, deren Wert
+in jedem Zertifikat feststeht, und das Optimum ist genau dann erreicht, wenn
+kein anderer Eintrag darüber hinausgeht.
+
+**Gemessen: die Schranke ist das LP-Minimum, auf 80 Stellen.**
+`Task23/ladder_lowerbound.py`, rc=0: (E1)–(E3) exakt (`Fraction`) am
+Krylow-Zertifikat und auf $10^{-40}$ an Krylow plus zufälliger
+Nullraumrichtung (Dimensionen $6$–$12$), sechs Profile, $n=4..10$. Und das
+LP-Minimum aus `ladder_lp.py` stimmt mit $|\kappa_n|/\alpha_2$ überein, relativer
+Abstand $\le2\cdot10^{-81}$:
+
+| $(\alpha,\beta)$ | $n$ | LP-Minimum $=|\kappa_n|/\alpha_2$ | Limes $|\kappa_\infty|/\alpha_2$ |
+|---|---|---|---|
+| $(\tfrac12,\tfrac13)$ | $4,6,8,10,12$ | $17{,}3994448$; $17{,}9918192$; $17{,}9999802$; $17{,}99999999$; $18{,}0$ | $18=1/(\alpha_1\alpha_2)$ |
+| $(\tfrac13,\tfrac12)$ | $6,8,10$ | $11{,}850949115838$ (ab $n=8$ stabil) | $11{,}8509491158$ |
+| $(\tfrac12,\tfrac23)$ | $6,8,10$ | $19{,}97492$; $19{,}98242$; $19{,}98248$ | $19{,}9825$ |
+| $(\tfrac14,\tfrac12)$ | $6,8,10$ | $9{,}81622685$; $9{,}8162270891$; $9{,}8162270891$ | $9{,}81622709$ |
+| $(\tfrac23,\tfrac12)$ | $6,8,10$ | $30{,}2396$; $30{,}3730$; $30{,}37499$ | $30{,}375=243/8$ |
+| $(\tfrac15,\tfrac12)$ | $6,8$ | $9{,}0727918619$; $9{,}0727918628$ | $9{,}07279186$ |
+
+Damit sind **alle** LP-Werte des sechsundzwanzigsten und neunundzwanzigsten
+Laufs bei getrennten Skalen erklärt, einschließlich der dort unverstandenen
+$11{,}85$ und $9{,}816$ (der Wert $30{,}06$ des sechsundzwanzigsten Laufs bei
+$(\tfrac23,\tfrac12)$, $n=12$, ist $30{,}375$ in der dortigen Normierung je
+Trunkierung, Faktor $(M_{12}/M_\infty)^2=0{,}9895$). Die zweite Schranke
+$(1-p_n)/(\beta_1\beta_2)$ ist in allen sechs Fällen die kleinere ($8{,}69$
+gegen $11{,}85$ bei $(\tfrac13,\tfrac12)$).
+
+**Wo die Schranke nicht greift: gleiche und fast gleiche Skalen.** Bei
+$(\tfrac12,\tfrac12)$ ist $p_n=n/(n+1)$, $\kappa_n/\alpha_2=(n-1)/((n+1)\alpha_1\alpha_2)$
+beschränkt ($19{,}2$; $22{,}86$; $24{,}89$ bei $n=4,6,8$), das LP-Minimum aber
+$19{,}2$; $32{,}0$; $62{,}81$ — bei $n=4$ gleich, ab $n=6$ darüber und
+wachsend. Bei $(\tfrac12,\tfrac{49}{100})$: Schranke $23{,}29$; $25{,}64$;
+$27{,}24$, LP $34{,}75$; $74{,}46$; $192{,}34$ ($n=6,8,10$) — das ist das
+Wachstum des sechsundzwanzigsten Laufs ($33{,}7$; $73{,}9$; $192$), jetzt
+hochstellig bestätigt: **kein Konditionierungsartefakt**, sondern real. Die
+Frage des sechsundzwanzigsten Laufs („echte Resonanz oder Artefakt") ist damit
+entschieden: echt. Bei fast gleichen Skalen wächst das Minimum, obwohl die
+erzwungenen Randwerte beschränkt bleiben; das Wachstum sitzt in anderen
+Einträgen. Wo genau die Schwelle liegt, mißt `threshold_scan.txt` (unten).
+
+**Für die unendliche Leiter.** Dieselbe Rechnung mit Tail-Bedingungen statt
+Randwerten: ist $T$ ein unendliches Zertifikat mit $p=T_{t^*a_1}$, so ist jede
+Zeile absolut summierbar, also $J(i,l)\to p[i=1]/\alpha_1$ und
+$H(i,l)\to(1-p)[i=1]/\beta_1$ für $l\to\infty$, und aus (AB)
+$$\lim_{l\to\infty}\frac{T_{a_2b_l}}{\beta_l}=\kappa(p):=\frac p{\alpha_1}-\frac{1-p}{\beta_1},\qquad
+  \lim_{l\to\infty}\frac{T_{b_2b_l}}{\beta_l}=\frac{1-p}{\beta_1},$$
+also $C\ge\max\bigl(|\kappa(p)|/\alpha_2,\ (1-p)/(\beta_1\beta_2)\bigr)$.
+Ob $p$ auf der unendlichen Leiter erzwungen ist, ist offen (siehe oben); ist
+$T$ ein Limes von Trunkierungszertifikaten, so ist $p=1-\pi_\infty$ und die
+Schranke die Limesspalte der Tabelle. Insbesondere: **kein beschränktes
+Zertifikat der unendlichen Leiter bei $\alpha>\beta$ hat eine kleinere
+Konstante als die $\alpha$-Kette allein.**
+
+**Der Skalen-Scan** (`threshold_scan.txt`, aus `ladder_lowerbound.py`, $n=6,8,10$,
+$\alpha=\tfrac12$, 80 Stellen): LP-Minimum $=|\kappa_n|/\alpha_2$ auf
+$10^{-81}$ für $\beta/\alpha\in\{0{,}8;\ 1{,}1;\ 1{,}25;\ 1{,}5;\ 1{,}6;\ 1{,}8\}$
+(dazu die sechs Profile der Tabelle mit $\beta/\alpha\in\{\tfrac23,\tfrac32,
+\tfrac43,2,\tfrac34,\tfrac52\}$); LP-Minimum **größer** als die Schranke und
+wachsend für $\beta/\alpha\in\{0{,}9;\ 0{,}95;\ 0{,}98;\ 1;\ 1{,}05\}$:
+
+| $\beta/\alpha$ | Schranke $n=6,8,10$ | LP-Minimum $n=6,8,10$ |
+|---|---|---|
+| $0{,}9$ | $23{,}93$; $25{,}79$; $26{,}34$ | $36{,}80$; $53{,}70$; $56{,}98$ |
+| $0{,}95$ | $23{,}77$; $26{,}30$; $27{,}80$ | $37{,}67$; $80{,}16$; $173{,}8$ |
+| $1$ | $22{,}86$; $24{,}89$ ($n=6,8$) | $32{,}0$; $62{,}81$ |
+| $1{,}05$ | $21{,}66$; $22{,}74$; $23{,}15$ | $24{,}86$; $33{,}73$; $43{,}96$ |
+| $1{,}1$ | $20{,}58$; $21{,}05$; $21{,}14$ | $=$ Schranke |
+
+Das Fenster, in dem die Schranke nicht das Minimum ist, liegt also gemessen
+in $0{,}8<\beta/\alpha<1{,}1$ und ist **asymmetrisch** um $1$. Bemerkenswert:
+bei $\beta/\alpha=0{,}9$ scheint das Minimum zu sättigen ($53{,}7\to57{,}0$),
+bei $0{,}95$ wächst es weiter — ob das Fenster der Nichtbeschränktheit
+kleiner ist als das Fenster, in dem die Schranke nicht greift, ist mit
+$n\le10$ nicht zu entscheiden. Zum Vergleich: das **Krylow**-Zertifikat
+explodiert nach dem neunundzwanzigsten Lauf schon ab $\alpha/\beta\ge\tfrac23$
+— das ist ein anderes Phänomen (Auswahl im Zertifikatsraum), nicht die Frage
+nach dem Minimum.
+
+### Das optimale Zertifikat, exakt: bei $\alpha>\beta$ ist es das einzige Zertifikat mit gesättigter Zeile $a_1$ — und es erreicht die Schranke
+
+Das LP-Optimum bei $(\tfrac12,\tfrac13)$, vollständig ausgedruckt
+(`Task23/ladder_full_view.py 1/2 1/3 12`, 80 Stellen), zeigt folgende Gestalt
+in $T/(w_sw_u)$:
+
+* Zeile $a_1$ auf $\{a_1\}\cup B$: **exakt** $-C$ an jeder Stelle, also
+  $T_{a_1u}=-C\alpha_1m_u$ für $u\in\{a_1,b_1,b_2,\dots\}$; Ecke
+  $T_{b_1b_1}=-C\beta_1^2$; $T_{a_1t^*}=1$ ($p=1$).
+* Zeile $a_2$ strebt in beiden Blöcken gegen $+C$: $T_{a_2a_i}/(\alpha_2\alpha_i)
+  \to18$, $T_{a_2b_j}/(\alpha_2\beta_j)\to18$ (Theorem 31 im Fernfeld).
+* Zeile $a_1$ gegen $A$: $3{,}155;\ -8{,}31;\ -11{,}55;\ -10{,}06;\ -8{,}73;
+  \dots;\ -8{,}93$, gegen $-9=-1/\alpha_1^2$ — der Limes $\lim_iG(i,1)=1/m_1^2$
+  der $\omega$-Kette (Korollar 25.1), hier gemessen.
+* Zeile $b_1$ gegen $B$: $16{,}5;\ 14{,}5;\ 13{,}83;\ 13{,}61;\ 13{,}54;\dots
+  \to13{,}5=1/(\alpha_1\beta_1)$, mit Abständen $3,1,\tfrac13,\tfrac19,\dots$ —
+  also gemessen $T_{b_1b_j}/(\beta_1\beta_j)=1/(\alpha_1\beta_1)+3^{2-j}$ im
+  Limes $n\to\infty$. Zeile $b_1$ gegen $A$ fällt geometrisch mit Quotient
+  $\alpha/\beta=\tfrac23$.
+* $T_{0b_1}/\beta_1=9{,}0=1/\alpha_1^2$, $T_{0a_1}/\alpha_1=10{,}04$,
+  $T_{00}=-5{,}346$; alle übrigen Einträge der Nullzeile sind $0$.
+* **Antidreiecksträger**: $T_{su}=0$ für Stufen $i+j>n+2$ in allen drei
+  Blöcken, außer in den Zeilen $a_1,a_2,b_1,b_2$ — derselbe Träger wie das
+  Krylow-Zertifikat ($\psi_k\psi_l^{\mathsf T}$ mit $k+l\ge r-1$), obwohl das
+  Optimum bei $n=12$ **nicht** das Krylow-Zertifikat ist (dessen Norm dort
+  $6192$ ist).
+
+Die Sättigungen sind $n+2$ lineare Gleichungen auf dem $(n+2)$-dimensionalen
+Zertifikatsraum. `Task23/ladder_exact_opt.py`, exakt in `Fraction`, löst
+das System
+
+$$T\ \text{Zertifikat},\qquad T_{a_1u}=-C_n\alpha_1m_u\ (u\in\{a_1\}\cup B),\qquad
+  T_{b_1b_1}=-C_n\beta_1^2,\qquad C_n:=\kappa_n/\alpha_2,$$
+
+und prüft, ob die Lösung die Norm $C_n$ hat.
+
+> **Satz 32 (exakt nachgerechnet für $n\le14$), Vermutung 32 (alle $n$).**
+> Für $(\alpha,\beta)=(\tfrac12,\tfrac13)$, $n=4,6,8,10,12,14$, und für
+> $(\tfrac23,\tfrac12)$, $n=4,6,8$, ist das System **eindeutig lösbar**
+> (Rangdefekt $0$, konsistent), und die Lösung $T_n$ erfüllt
+> $$\|T_n\|_m=C_n=\frac{\kappa_n}{\alpha_2}\quad\text{exakt}.$$
+> Zusammen mit Theorem 31 ist also $\min\|T\|_m=\kappa_n/\alpha_2$ für diese
+> $n$ **bewiesen**, nicht nur gemessen; und $\kappa_n\uparrow1/\alpha_1$, also
+> $\|T_n\|_m\le1/(\alpha_1\alpha_2)$ für alle geprüften $n$.
+
+Für $(\tfrac12,\tfrac13)$, $n=14$: $\|T_{14}\|_m=C_{14}$ mit
+$C_{14}=18{,}000000000000$ (Bruch mit 52-stelligem Zähler). Die Nenner der
+Einträge sind, wie die Beispiele oben zeigen, $2$-glatt mal Potenzen der
+Zahl $\sum_i(\alpha/\beta)^{i(i+1)/2}\cdot(\ldots)$ — geschlossene Formen sind
+nicht gesucht worden; die exakten Einträge für $n\le14$ liegen im Skript bereit.
+
+**Bei $\alpha<\beta$** ist die Gestalt gespiegelt, aber nicht einheitlich.
+Bei $(\tfrac13,\tfrac12)$ (`ladder_full_view.py 1/3 1/2 8`) ist die Zeile
+$b_1$ auf $A\cup\{b_1\}$ exakt $-C$ und $(a_1,a_1)=-C$; das gespiegelte System
+(`ladder_exact_opt.py --b`: $T_{b_1u}=-C\beta_1m_u$ auf $A\cup\{b_1\}$,
+$T_{a_1a_1}=-C\alpha_1^2$) ist für $(\tfrac13,\tfrac12)$ und
+$(\tfrac12,\tfrac23)$ bei $n=4,6,8$ eindeutig lösbar mit Norm exakt $C_n$.
+Bei $(\tfrac14,\tfrac12)$ dagegen **nicht**: dort ist die Zeile $b_1$ gegen
+$A$ nur ab $a_4$ gesättigt ($-9{,}816$), $(b_1,a_2)=-8{,}60$,
+$(b_1,a_3)=-9{,}37$, und statt dessen sind $(a_1,a_2)=(a_1,a_3)=+C$ aktiv;
+die gespiegelte Lösung hat Norm $11{,}57>9{,}816$. Der neunundzwanzigste Lauf
+hat bei $(\tfrac13,\tfrac12)$ eine nicht eindeutige Optimalmenge gemessen
+(Vorzeichenwechsel von $(b_1,b_1)$ zwischen $n=12$ und $n=18$); bei
+$\alpha<\beta$ ist die aktive Menge also profilabhängig, und Satz 32 ist
+dort nur für zwei Profile und $n\le8$ nachgerechnet.
+
+**Was das für die unendliche Leiter heißt.** Proposition 19.3
+(dreiundzwanzigster Lauf): gilt (F) und gibt es auf einer Ausschöpfung
+$F_n\uparrow\T$ Zertifikate $T_n$ mit $\sup_n\|T_n\|_m<\infty$, so ist
+$\delta(t^*)=0$. Die Trunkierungen $F_n=\{0\}\cup\{a_{\le n}\}\cup\{b_{\le n}\}
+\cup\{t^*\}$ mit den **wahren** Massen $\alpha^i/M_\infty$ sind eine solche
+Ausschöpfung, und $\|T_n\|_m=\kappa_n/\alpha_2<1/(\alpha_1\alpha_2)$.
+**Vermutung 32 impliziert also die Dualität auf der unendlichen Leiter bei
+$\alpha>\beta$ unter (F)**, ohne Kompaktheitsargument und ohne das
+unendliche Zertifikat hinzuschreiben; das unendliche Zertifikat existiert
+dann ebenfalls (eintragsweiser Limes einer beschränkten Folge, dominierte
+Konvergenz in den Bedingungen 2 und 3, wie im fünfundzwanzigsten Lauf für die
+Richtung „Zertifikat $\Rightarrow$ Dualität" ausgeführt), mit $C=1/(\alpha_1\alpha_2)$
+und $T_{t^*\cdot}=e_{a_1}$. Was fehlt, ist genau **ein** Beweis für alle $n$:
+daß das Sättigungssystem lösbar ist und seine Lösung die Schranke einhält.
+
+### Ergebnis
+
+* **Bewiesen.** Proposition 29 (Spitzenzeile jedes Zertifikats einer
+  endlichen Halbordnung $=$ massengewichtete Verteilung der Startpunkte
+  längster Ketten; der Nullraum verschwindet in Zeile $t^*$), Korollar 29.1
+  (Leiter: $T_{t^*b_1}=1/\sum_{i\le n}\prod_{l\le i}\alpha_l/\beta_l$, eine
+  partielle Thetareihe; Limes $0{,}517046411021$ bei $(\tfrac13,\tfrac12)$,
+  vom neunundzwanzigsten Lauf gemessen, hier erklärt). Proposition 30 (das
+  Zertifikat der Leiter als gekoppeltes System zweier Kettenrekursionen mit
+  Rändern $H(\cdot,0)$, $J(\cdot,0)$, gekoppelt über den Kreuzblock;
+  die „$b$-Block-Rekursion" des achtundzwanzigsten Laufs). Theorem 31
+  (erzwungene Randeinträge $T_{a_2b_n}=\kappa_n\beta_n$, $T_{b_2b_n}=(1-p_n)\beta_n/\beta_1$;
+  untere Schranke $\|T\|_m\ge\max(|\kappa_n|/\alpha_2,(1-p_n)/(\beta_1\beta_2))$
+  für jedes Zertifikat; auf der unendlichen Leiter dieselbe Schranke aus den
+  Tail-Bedingungen). Satz 32 für $n\le14$ bei $(\tfrac12,\tfrac13)$: das
+  Minimum **ist** die Schranke, exakt in Brüchen.
+* **Erklärt.** Alle LP-Werte bei getrennten Skalen aus Lauf 26 und 29:
+  $18=1/(\alpha_1\alpha_2)$, $11{,}85094912$, $19{,}9825$, $9{,}81623$,
+  $30{,}06$ — sie sind $|\kappa_n|/\alpha_2$, auf $10^{-81}$. Die „sofortige
+  Konvergenz der Spitzenzeile" (Lauf 29): Proposition 29. Die als
+  Trunkierungsartefakte gelesenen aktiven Einträge $(a_2,b_n),(a_2,a_n)$:
+  die erzwungenen Randwerte.
+* **Widerlegt.** „$a$-Block des Optimums $=$ Kettenzertifikat der
+  $\alpha$-Kette" (Abstand $15{,}4$ bei Norm $18$). „Das Wachstum des
+  LP-Minimums bei $\beta\to\alpha$ ist ein Konditionierungsartefakt" (Lauf 26,
+  offen gelassen): es ist real, hochstellig bestätigt ($192{,}34$ bei
+  $(\tfrac12,\tfrac{49}{100})$, $n=10$), Fenster gemessen $0{,}8<\beta/\alpha<1{,}1$.
+* **Offen.** Vermutung 32 für alle $n$ (der einzige fehlende Schritt zur
+  Dualität auf der Leiter bei $\alpha>\beta$ unter (F)); die aktive Menge bei
+  $\alpha<\beta$ (profilabhängig, bei $(\tfrac14,\tfrac12)$ anders als bei
+  $(\tfrac13,\tfrac12)$); ob $p=T_{t^*a_1}$ auf der unendlichen Leiter
+  erzwungen ist; das Fenster fast gleicher Skalen (wächst das Minimum dort
+  unbeschränkt, oder sättigt es wie bei $\beta/\alpha=0{,}9$ gemessen?);
+  gleiche Massen auf der $\omega$-Kette; die nackte Klasse auf Ketten; das
+  Gegenbeispiel mit positiven Abwärtsmassen.
+
+### Sackgassen, achtundzwanzigster Nachtrag
+
+* **Den $a$-Block des optimalen Leiterzertifikats für das Kettenzertifikat
+  der $\alpha$-Kette halten.** Falsch (Abstand $15{,}4$ in der gewichteten
+  Norm, Zeilensummen $(-2{,}34;\,0{,}11;\dots)$ statt $(-1;0;\dots)$). Die
+  Gleichheit $18=1/(\alpha_1\alpha_2)$ hat einen anderen Grund: den
+  erzwungenen Randeintrag $T_{a_2b_n}$ (Theorem 31). Nur das **Fernfeld**
+  ($\lim_iT_{a_ia_k}/(\alpha_i\alpha_k)$ für $k=1,2$) stimmt mit der Kette
+  überein, nicht das Nahfeld.
+* **Aktive Einträge am Rand der Trunkierung als Artefakte verwerfen.** Die
+  Einträge $(a_2,b_n)$, $(b_2,b_n)$, $(a_2,a_n)+(a_2,b_n)$-Summe sind in
+  **jedem** Zertifikat erzwungen (Theorem 31); sie sind die Schranke, nicht
+  ihr Rauschen. Wer aktive Mengen liest, prüfe zuerst, welche Einträge der
+  Zertifikatsraum überhaupt freiläßt.
+* **Ein einheitliches Sättigungsmuster für $\alpha<\beta$ annehmen.** Das
+  gespiegelte System (Zeile $b_1$ auf $A\cup\{b_1\}$, Ecke $(a_1,a_1)$) trifft
+  das Optimum bei $(\tfrac13,\tfrac12)$ und $(\tfrac12,\tfrac23)$, nicht bei
+  $(\tfrac14,\tfrac12)$ (Norm $11{,}57$ gegen $9{,}816$). Bei $\alpha<\beta$
+  ist die aktive Menge profilabhängig; Vermutung 32 ist dort so nicht zu
+  formulieren.
+* **„Minimum $=$ Schranke" ohne Skalentrennung beweisen wollen.** Für
+  $0{,}8<\beta/\alpha<1{,}1$ (gemessen) liegt das Minimum über der Schranke
+  und wächst mit $n$; jede Fassung von Vermutung 32 braucht eine Hypothese
+  an $\beta/\alpha$. Bemerkenswert: die Schwelle des **Krylow**-Zertifikats
+  ($\alpha/\beta\ge\tfrac23$, Lauf 29) ist eine andere und liegt außerhalb
+  dieses Fensters — Krylow-Explosion und LP-Wachstum sind zwei Phänomene.
+* **Aus dem LP-Wert (80 Stellen) auf Erreichbarkeit der Schranke schließen.**
+  Der Abstand $10^{-81}$ ist ein Indiz, kein Beweis; der Beweis für die
+  einzelne Trunkierung ist die exakte Lösung des Sättigungssystems in Brüchen
+  (`ladder_exact_opt.py`) plus Theorem 31. So ist Satz 32 für $n\le14$
+  zustande gekommen, und nur so.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `Matrix.certificate_mulVec_single_top`** (Proposition 29), neuer
+Punkt in `TauCeti/MartingaleProblems/README.md`, Meilenstein 8, direkt nach
+`Matrix.krylovCertificate_unique`, und in `PLAN.md`, Task 23:
+
+> Sei `V : Matrix n n ℝ`, `t : n`, `d : ℕ` und `Ω : ℝ`, `Ω ≠ 0`, mit
+> `V ^ d *ᵥ 1 = Ω • Pi.single t 1`. Ist `T` symmetrisch mit `T * V = Vᵀ * T`
+> und `T *ᵥ 1 = Pi.single t 1`, so gilt
+> `T *ᵥ Pi.single t 1 = Ω⁻¹ • ((Vᵀ) ^ d *ᵥ Pi.single t 1)`.
+> Insbesondere ist die Spalte (und Zeile) `t` jedes Zertifikats dieselbe, und
+> die Differenz zweier Zertifikate hat verschwindende Zeile `t`.
+
+Beweis: `T *ᵥ (V ^ d *ᵥ 1) = (Vᵀ) ^ d *ᵥ (T *ᵥ 1)` durch Induktion über
+`d` aus `T * V = Vᵀ * T` (`Matrix.mulVec_mulVec`), dann beide Seiten
+auswerten. Es ruht auf nichts als `Matrix.mulVec` und `pow_succ`; keine
+Nichtnegativität, keine Nilpotenz. Für die Halbordnung mit Maximum `t`,
+`V s a = if a < s then m a else 0`, ist `V ^ d *ᵥ 1 = Ω • Pi.single t 1` mit
+`d` der Höhe und `Ω` dem Gewicht der längsten Ketten (Kettenzählung, wie in
+`Matrix.krylovCertificate_unique` für `c (r-1) ≠ 0` schon gebraucht), und
+`((Vᵀ) ^ d *ᵥ Pi.single t 1) a = m a * (Gewicht der längsten Ketten über a)`.
+Es ist jetzt dran, weil es der **erste Satz über alle Zertifikate** ist
+(alle bisherigen Roadmap-Punkte konstruieren eines oder klassifizieren die im
+Krylow-Raum), weil er die Zutat von Theorem 31 ist, und weil er zwei Zeilen
+lang ist.
+
+**Nächste Rechnung** (in `PLAN.md`, Task 23, eingetragen): **Vermutung 32
+beweisen**, d.h. für alle $n$ und $\alpha>\beta$ zeigen, daß das
+Sättigungssystem (Zeile $a_1$ auf $\{a_1\}\cup B$ gleich $-C_n\alpha_1m$,
+$T_{b_1b_1}=-C_n\beta_1^2$) eindeutig lösbar ist und die Lösung
+$|T_{su}|\le C_nw_sw_u$ erfüllt. Der Weg: die Lösung in den Potentialen von
+Proposition 30 schreiben — die Sättigung der Zeile $a_1$ heißt
+$J(1,l)=p/\alpha_1-C_n\sigma^\beta_l$ mit $\sigma^\beta_l=\sum_{j>l}\beta_j$,
+also ist der Rand $J(1,\cdot)$ **bekannt**, und $(3\mathrm b)$ liefert dann
+$H(\cdot,0)$ aus den übrigen Zeilen des Kreuzblocks —, dann die beiden
+Kettenrekursionen mit dem Maximumprinzip von Theorem 26 abschätzen. Die
+exakten Brüche für $n\le14$ (`ladder_exact_opt.py`) sind das Material, an dem
+zuerst die Zeile $b_1$ ($T_{b_1b_j}/(\beta_1\beta_j)\to1/(\alpha_1\beta_1)+3^{2-j}$
+gemessen) und die Nullzeile ($T_{0b_1}/\beta_1=1/\alpha_1^2$) in geschlossener
+Form zu erraten sind. Gelingt der Beweis, ist die Leiter bei $\alpha>\beta$
+unter (F) **geschlossen** (Proposition 19.3) — der erste Fall unendlicher
+Höhe mit nicht transitiver Unvergleichbarkeit.
+
+Skripte dieses Laufs, alle rc=0: `ladder_blocks.py` (Proposition 30, Test
+$a$-Block), `toprow.py` (Proposition 29, Korollar 29.1), `ladder_lowerbound.py`
+(Theorem 31, LP $=$ Schranke; `threshold_scan.txt`), `ladder_opt_view.py`,
+`ladder_full_view.py` (Gestalt des Optimums), `ladder_exact_opt.py`
+(Satz 32 exakt; `exact_opt.txt`).
+
+### Nachtrag desselben Laufs: Lemma 33 — die Sättigung der Zeile $a_1$ legt die Zeile $b_1$ und $T_{0b_1}$ fest, in geschlossener Form
+
+Die Sättigung $Q_{1j}=-C\alpha_1\beta_j$ ($j\ge1$) macht das Zeilenpotential
+$J(1,\cdot)$ **bekannt**: $J(1,l)=p/\alpha_1-C\sigma_l$ mit
+$\sigma_l:=\sum_{j>l}\beta_j$ (auf der Trunkierung bis $n$). Zwei Zeilen
+Proposition 30 machen daraus die Zeile $b_1$ des $b$-Blocks:
+
+> **Lemma 33.** Sei $T$ ein Zertifikat der Trunkierung mit $Q_{1j}=-C\alpha_1\beta_j$
+> für alle $j$ und $T_{0b_l}=0$ für $l\ge2$. Dann gilt für $2\le l\le n$
+> $$T_{b_1b_l}=\beta_l\Bigl(C\alpha_1-\frac p{\alpha_1}+C\sigma_l\Bigr),$$
+> und ist außerdem $T_{b_1b_1}=-C\beta_1^2$, so ist
+> $$T_{0b_1}=\beta_1\Bigl(C\alpha_1-\frac p{\alpha_1}+C\,M_\beta\Bigr),\qquad M_\beta=\sigma_0=\sum_j\beta_j .$$
+
+*Beweis.* (AB) bei $i=1$: $K(l,1)+H(l,1)=J(1,l)=p/\alpha_1-C\sigma_l$.
+(3b) bei $l$: $\beta_lH(l,0)=-Q_{1l}-\beta_lK(l,1)-T_{0b_l}=C\alpha_1\beta_l-\beta_lK(l,1)-T_{0b_l}$.
+Subtraktion: $H(l,0)-H(l,1)=C\alpha_1-p/\alpha_1+C\sigma_l-T_{0b_l}/\beta_l$,
+und $T_{b_lb_1}=\beta_l(H(l,0)-H(l,1))$. Für $l=1$ mit $T_{b_1b_1}=-C\beta_1^2$
+nach $T_{0b_1}$ aufgelöst, $\sigma_1+\beta_1=M_\beta$. $\square$
+
+Bei $(\tfrac12,\tfrac13)$ ($C=1/(\alpha_1\alpha_2)$, $p=1$ im Limes) heißt das
+$$\frac{T_{b_1b_l}}{\beta_1\beta_l}\to\frac1{\beta_1}\Bigl(\frac1{\alpha_2}-\frac1{\alpha_1}\Bigr)+\frac{\sigma_l}{\alpha_1\alpha_2\beta_1}
+ =13{,}5+3^{3-l},\qquad \frac{T_{0b_1}}{\beta_1}\to\frac1{\beta_1}\Bigl(\frac1{\alpha_2}-\frac1{\alpha_1}+\frac{M_\beta}{\alpha_1\alpha_2}\Bigr)=9,$$
+genau die oben gemessenen $16{,}5;\,14{,}5;\,13{,}83;\dots$ und $9{,}0$ — die
+Zahl $13{,}5$ ist also $\frac1{\beta_1}(\frac1{\alpha_2}-\frac1{\alpha_1})$ und
+nur zufällig $1/(\alpha_1\beta_1)$ (weil $\alpha_2=\alpha_1/2$). Exakt
+nachgerechnet (`ladder_exact_opt.py`, Zeile „Lemma 33") an allen
+Sättigungslösungen für $(\tfrac12,\tfrac13)$, $n=4..14$, und $(\tfrac23,\tfrac12)$,
+$n=4,6,8$: Gleichheit in `Fraction`.
+
+### Zweiter Nachtrag: nicht-geometrische Profile — die Schranke ist nicht immer das Minimum, und das Sättigungsmuster ist geometrisch
+
+`ladder_exact_general.py` und `ladder_lp_general.py` (rc=0; $p_n$ aus der
+Kettenzählung von Proposition 29, nicht aus der Thetaformel), $n=4,6,8$:
+
+| Profil | $p_8$ | LP-Min / Schranke bei $n=4,6,8$ | Sättigungssystem erreicht $C_n$? |
+|---|---|---|---|
+| $\alpha_i=1/(i(i+1))$, $\beta_j=3^{-j}$ | $1{,}000000$ | $1;\ 1;\ 1$ | **nein** ($13{,}997$ gegen $12{,}0$) |
+| $\alpha_i=2^{-i}$, $\beta_j=3^{-j}(1+(-1)^j/5)$ | $1{,}000000$ | $1;\ 1;\ 1$ | nein ($8{,}998$ gegen $8{,}0$) |
+| $\alpha_i=2^{-i}(1+(-1)^i/5)$, $\beta_j=3^{-j}$ | $0{,}999999$ | $1{,}151;\ 1{,}053;\ 1{,}037$ | nein |
+| $\alpha_i=2^{-i}$, $\beta_j=1/(j(j+1))$ (Spiegelfall) | $0{,}928$ | $1{,}014;\ 1{,}044;\ 1{,}0085$ | nein |
+
+Drei Lehren. **(i)** Theorem 31 ist scharf auch außerhalb der geometrischen
+Profile — bei $\alpha_i=1/(i(i+1))$ ist das LP-Minimum exakt die Schranke
+($11{,}99999711$ bei $n=8$, Limes $1/(\alpha_1\alpha_2)=12$) —, aber **nicht
+immer**: bei gestörtem $\alpha$ liegt es $4$–$15\,\%$ darüber (Quotient fällt
+mit $n$; ob gegen $1$, ist offen), im Spiegelfall $1$–$4\,\%$ (nicht monoton in
+$n$). **(ii)** Das Sättigungsmuster von Satz 32 (ganze Zeile $a_1$ gegen
+$\{a_1\}\cup B$) ist eine Eigenschaft der **geometrischen** Profile: bei
+$\alpha_i=1/(i(i+1))$ ist die Zeile $a_1$ nur an $(a_1,a_1),(a_1,b_1),(a_1,b_n)$
+aktiv, dafür $(b_1,b_2),(b_1,b_4),(b_1,b_5),\dots$ und $(a_2,b_1)$; die Lösung
+des Sättigungssystems ist dort ein Zertifikat, aber kein optimales. **(iii)**
+Lemma 33 gilt trotzdem exakt, wo immer das Sättigungssystem gelöst wird (es
+ist eine Identität, keine Optimalitätsaussage). Vermutung 32 ist deshalb
+**auf geometrische Profile $\alpha^i,\beta^j$ mit $\beta/\alpha\le0{,}8$
+einzuschränken**; für den Schluß auf die Dualität der unendlichen Leiter
+reicht das, denn Proposition 19.3 braucht nur $\sup_n\|T_n\|_m<\infty$, nicht
+das Minimum — und bei $\alpha_i=1/(i(i+1))$ liefert das LP gemessen ebenfalls
+die gleichmäßige Schranke $12$.
+
+*Sackgasse, ergänzt:* **das Sättigungsmuster der geometrischen Leiter auf
+andere Profile übertragen.** Es trifft dort ein Zertifikat, aber nicht das
+Optimum (Norm $14{,}0$ statt $12{,}0$ bei $\alpha_i=1/(i(i+1))$); die aktive
+Menge hängt vom Profil ab, auch bei $p_n\to1$. Skripte: `ladder_exact_general.py`,
+`ladder_lp_general.py`. Die Log-Dateien dieses Laufs liegen als
+`threshold_scan.txt` und `exact_opt.txt` bei (`*.log` ist in `.gitignore`).
+
+### Dritter Nachtrag: zwei Regime — bei stark getrennten Skalen ist das Krylow-Zertifikat exakt optimal
+
+Weitere exakte Läufe (`exact_opt.txt`, `exact_opt_bb.txt`, `krylov_vs_bound.txt`):
+
+* **Satz 32 hält bis $n=18$** bei $(\tfrac12,\tfrac13)$ (Sättigungssystem
+  eindeutig lösbar, Norm exakt $C_n$, Lemma 33 exakt; Brüche mit 80-stelligen
+  Zählern). Ebenso für $(\tfrac34,\tfrac12)$, $n=4..10$, und $(\tfrac12,\tfrac25)$,
+  $n=6,8,10$ — bei $(\tfrac12,\tfrac25)$, $n=4$, liegt das LP-Minimum
+  ($19{,}78$) über der Schranke ($19{,}34$): am Rand des Fensters greift die
+  Schranke erst ab $n=6$.
+* **Bei stark getrennten Skalen ist das Muster ein anderes.** Für
+  $(\tfrac12,\tfrac14)$ und $(\tfrac13,\tfrac19)$ ist das LP-Minimum wieder
+  exakt die Schranke (auf $10^{-81}$), aber die aktive Menge ist die **Zeile
+  $b_1$ gegen $B$** ($+C$ an $(b_1,b_j)$, $j\ge2$; $-C$ an $(b_1,b_1)$),
+  dazu $(a_1,a_1)$, $(a_1,b_1)$ und die erzwungenen $(a_2,b_n)$, $(a_2,a_n)$;
+  das Sättigungssystem der Zeile $a_1$ (Satz 32) liefert dort ein Zertifikat
+  der Norm $15{,}4$ bzw. $21{,}2$ statt $14{,}22$ bzw. $10{,}55$. Das
+  Muster „Zeile $b_1$" (`ladder_exact_opt.py --bb`) trifft das Optimum bei
+  $(\tfrac13,\tfrac19)$ exakt ($n=4..10$), bei $(\tfrac12,\tfrac14)$ bis auf
+  $10^{-10}$ relativ (ein weiterer Eintrag ist aktiv) — und der Grund ist
+  einfacher als jedes Sättigungsmuster:
+* **Das Krylow-Zertifikat erreicht die Schranke exakt** (`krylov_vs_bound.py`,
+  `Fraction`, $n=4,6,\dots,16$): $\|T_K\|_m=|\kappa_n|/\alpha_2$ **für alle
+  geprüften $n$** bei $\beta/\alpha\in\{\tfrac13,\tfrac25,\tfrac12\}$ und
+  $\beta/\alpha\in\{\tfrac32,2,\tfrac52,3\}$; bei $(\tfrac12,\tfrac13)$
+  ($\beta/\alpha=\tfrac23$) nur bis $n=8$, dann $3{,}7$; $344$; $4101$;
+  $1{,}7\cdot10^5$ mal die Schranke. Bei $(\tfrac13,\tfrac12)$ bis $n=16$
+  exakt — konsistent mit dem neunundzwanzigsten Lauf, der dort die Explosion
+  erst ab $n=18$ sah.
+
+> **Satz 34 (exakt für $n\le16$), Vermutung 34 (alle $n$).** Für geometrische
+> Profile mit $\beta/\alpha\le\tfrac12$ oder $\beta/\alpha\ge2$ ist das
+> Krylow-Zertifikat $T_K$ der Trunkierung (Theorem 28: Hankel-Normalform,
+> $b_j=(-1)^jq_j$ aus $1/P_\T$ bei $\infty$) **optimal**:
+> $\|T_K\|_m=|\kappa_n|/\alpha_2=\min\|T\|_m$. Insbesondere
+> $\sup_n\|T_K^{(n)}\|_m\le\max\bigl(1/(\alpha_1\alpha_2),\,|\kappa_\infty|/\alpha_2\bigr)<\infty$,
+> und nach Proposition 19.3 gilt dann unter (F) die Dualität auf der
+> unendlichen Leiter.
+
+Das ändert den Angriffspunkt für Vermutung 32/34 grundlegend: bei stark
+getrennten Skalen muß kein Sättigungssystem gelöst werden — das optimale
+Zertifikat ist das **eine** Krylow-Zertifikat, dessen Einträge geschlossen
+vorliegen (Theorem 28(ii): $T_K=\sum_{k,l}(-1)^{k+l}q_{k+l}\psi_k\psi_l^{\mathsf T}$),
+und zu zeigen ist die Ungleichung $|T_{K,su}|\le C_nw_sw_u$ für diese
+Formel. Der zweite Nachtrag des neunundzwanzigsten Laufs hat die Explosion
+bei $\beta/\alpha\ge\tfrac23$ als „Wachstum der Laurent-Koeffizienten $q_j$
+gegen die Kettenmomente" beschrieben; Satz 34 sagt, daß dasselbe Wachstum
+für $\beta/\alpha\le\tfrac12$ **genau** die Schranke $|\kappa_n|/\alpha_2$
+einhält, und zwar mit Gleichheit — der Eintrag $(a_2,b_n)$ ist ja in jedem
+Zertifikat gleich $\kappa_n\beta_n$. Es gibt also drei Regime:
+$\beta/\alpha\le\tfrac12$ oder $\ge\tfrac32$: Krylow optimal, Schranke scharf;
+$\tfrac23\le\beta/\alpha\le0{,}8$ (gemessen): Krylow explodiert, Schranke
+scharf, Optimum $=$ Sättigung der Zeile $a_1$ (Satz 32);
+$0{,}8<\beta/\alpha<1{,}1$: Schranke nicht scharf, Minimum wächst.
+Wo die erste Grenze genau liegt (zwischen $\tfrac12$ und $\tfrac23$ bzw.
+zwischen $1{,}1$ und $\tfrac32$), ist nicht gemessen.
+
+**Vorschlag, präzisiert.** Die nächste Rechnung ist damit Vermutung 34 —
+für $\beta/\alpha\le\tfrac12$ zeigen, daß das Krylow-Zertifikat der
+Trunkierung $|T_{K,su}|\le(\kappa_n/\alpha_2)\,w_sw_u$ erfüllt. Das Objekt
+ist vollständig explizit (Hankel-Normalform, Laurent-Koeffizienten von
+$1/P_\T$ mit $P_\T(c)=P^\beta(c)-c\sum_i\alpha_iP^\alpha_{<i}(c)P^\beta_{>i}(c)$,
+neunundzwanzigster Lauf), die Aussage ist eine Ungleichung zwischen
+Koeffizienten zweier Potenzreihen, und ihre Schärfe ist bekannt (Gleichheit
+an $(a_2,b_n)$). Gelingt sie, ist die Leiter bei stark getrennten Skalen
+unter (F) geschlossen — mit dem **schon vorhandenen** Zertifikat, ohne neue
+Konstruktion. Satz 32 (Zeile $a_1$) bleibt der Weg für das mittlere Regime.
+
+### Vierter Nachtrag: Vermutung 34 als Aussage über einen Laurent-Koeffizienten
+
+Nach Theorem 28(ii) und Lemma 27.3 ($z(c)_s=-c\,m_sP_{\uparrow s}(c)$) ist das
+Krylow-Zertifikat das Residuum bei $\infty$ von $z(c)z(c)^{\mathsf T}/(cP_\T(c))$;
+ausgeschrieben für zwei Atome $s,u$:
+
+$$\frac{T_{K,su}}{m_sm_u}=\bigl[c^{-2}\bigr]\ \frac{P_{\uparrow s}(c)\,P_{\uparrow u}(c)}{P_\T(c)}
+  \qquad(\text{Entwicklung bei }c=\infty),$$
+
+wo $P_{\uparrow s}$ das Kettenpolynom der Atome echt über $s$ ist. Exakt
+geprüft (`krylov_laurent.py`, `Fraction`, Leitern $(\tfrac12,\tfrac13)$ $n=5$,
+$(\tfrac12,\tfrac14)$ $n=6$, $(\tfrac13,\tfrac12)$ $n=5$, alle Atompaare; rc=0),
+und das Maximum des Koeffizienten über die Atompaare ist bei $(\tfrac12,\tfrac14)$,
+$n=6$, genau der LP-Wert $14{,}2222022$. Da $\deg P_{\uparrow s}P_{\uparrow u}-\deg P_\T
+=n-i-j$ für $s,u$ auf den Stufen $i,j$, ist der Koeffizient $0$ für $i+j>n+2$
+— der Antidreiecksträger, jetzt mit Grund.
+
+**Vermutung 34, geschlossene Form.** Für die Leiter mit $\beta/\alpha\le\tfrac12$
+(oder $\ge2$) und alle Atompaare $s,u$ der Trunkierung gilt
+$$\Bigl|\bigl[c^{-2}\bigr]\frac{P_{\uparrow s}(c)P_{\uparrow u}(c)}{P_\T(c)}\Bigr|
+  \ \le\ \frac{|\kappa_n|}{\alpha_2},$$
+mit Gleichheit für $(s,u)=(a_2,b_n)$. Auf der Leiter sind alle Zutaten
+explizit: $P_{\uparrow b_j}=P^\beta_{>j}=\prod_{l>j}(1-c\beta_l)$,
+$P_{\uparrow a_i}$ ist das Kettenpolynom der Leiter ab Stufe $i+1$ (Rekursion
+$Q_{i-1}=(1-c\alpha_i)Q_i-c\beta_iP^\beta_{>i}$, neunundzwanzigster Lauf), und
+$P_\T=Q_0$. Das ist die Form, in der Vermutung 34 anzugehen ist — eine
+Koeffizientenungleichung für rationale Funktionen in einer Variablen, ohne
+Matrizen, ohne LP, ohne Nullraum.
+
+### Fünfter Nachtrag: die Grenze des Krylow-Regimes liegt zwischen $\beta/\alpha=\tfrac12$ und $0{,}55$
+
+`krylov_scan.py` (exakt, `Fraction`, Leiter $\alpha=\tfrac12$, $\beta=q\alpha$;
+Ergebnis in `krylov_scan.txt`), $\|T_K\|_m$ gegen $|\kappa_n|/\alpha_2$:
+
+| $\beta/\alpha$ | $n=10$ | $n=16$ | $n=22$ | $n=28$ |
+|---|---|---|---|---|
+| $\tfrac13$, $0{,}4$, $\tfrac12$ | $=$ | $=$ | $=$ | $=$ |
+| $0{,}55$ | $=$ | $2{,}1\times$ | $5{,}6\times$ | $4512\times$ |
+| $0{,}6$ | $1{,}65\times$ | $43\times$ | $4\cdot10^6\times$ | — |
+| $0{,}625$ | $=$ | $7519\times$ | — | — |
+| $\tfrac23$ | $3{,}7\times$ | $1{,}7\cdot10^5\times$ | — | — |
+| $1{,}5$ | $=$ | $=$ | $=$ | $=$ |
+
+Satz 34 gilt also exakt bis $n=28$ für $\beta/\alpha\le\tfrac12$ und für
+$\tfrac32$ (und nach `krylov_vs_bound.py` bis $n=16$ für $2$, $2{,}5$, $3$;
+`krylov_scan.txt` für $2$ und $3$ bis $n=22$).
+Die Grenze des Krylow-Regimes liegt zwischen $\tfrac12$ und $0{,}55$; jenseits
+davon setzt die Explosion ein, und zwar **später**, je näher $\beta/\alpha$
+an $\tfrac12$ liegt ($n=16$ bei $0{,}55$; $n\le10$ bei $0{,}6$; $n=16$ bei
+$0{,}625$ nach Gleichheit bei $n=10$ — nicht monoton in $q$ bei festem $n$).
+Bei $0{,}55$ und $0{,}625$ ist Gleichheit bei $n=10$ also **kein** Beleg:
+zum zehnten Mal die Trunkierung als falsche Prämisse, hier in der Form
+„Krylow trifft die Schranke bei $n=10$".
+
+Ob die Grenze genau $\tfrac12$ ist (plausibel: bei $\beta=\alpha/2$ fallen
+die Frequenzen $1/\beta_j=1/\alpha_{j+1}$ der beiden Ketten **exakt**
+zusammen, $P^\beta_{>j}$ teilt dann $P^\alpha_{>j+1}$ — der zweite Nachtrag des
+neunundzwanzigsten Laufs hat diese Koinzidenz als Erklärung verworfen, weil
+auch $\tfrac13,\tfrac25$ konvergieren; als **Rand** des Regimes kommt sie
+wieder in Frage), ist die erste Frage an Vermutung 34, und sie ist mit dem
+Skript zwischen $0{,}5$ und $0{,}55$ zu messen.
+
+**Nachgemessen** (`krylov_scan.txt`, exakt):
+Satz 34 hält bis $n=22$ für $\beta/\alpha=2$ ($(\tfrac14,\tfrac12)$) und $3$
+($(\tfrac16,\tfrac12)$), und bis $n=28$ für $\beta/\alpha=0{,}51$ und $0{,}52$
+— die Grenze des Krylow-Regimes liegt also **nicht** bei $\tfrac12$, sondern
+zwischen $0{,}52$ und $0{,}55$ (bei $0{,}53$ siehe `krylov_scan.txt`,
+sofern im Budget fertig). Die Koinzidenz der Frequenzen bei $\beta=\alpha/2$
+ist damit als Erklärung des Randes ebenfalls erledigt: die Grenze ist eine
+Schwelle im Skalenverhältnis, kein arithmetischer Zufall. Vermutung 34 ist
+daher mit „$\beta/\alpha\le\tfrac12$" **konservativ** formuliert; die wahre
+Schwelle $q^*\in(0{,}52,\,0{,}55)$ zu bestimmen ist ein eigener, mit
+`krylov_scan.py` mechanisch angehbarer Punkt — und ihr Wert wäre der erste
+Hinweis, welcher Term in $1/P_\T$ die Explosion trägt.
+
+**Korrektur, dieselbe Stunde.** $\beta/\alpha=0{,}53$: Gleichheit bei $n=16,22$,
+Explosion bei $n=28$ ($6{,}0\times$). Die Einsatzstelle der Explosion wandert
+also mit $q\downarrow\tfrac12$ nach außen — $n\le10$ bei $0{,}6$, $n=16$ bei
+$0{,}55$, $n=28$ bei $0{,}53$ —, und „Gleichheit bis $n=28$" bei $0{,}51$ und
+$0{,}52$ ist deshalb **kein** Beleg für ein Regime oberhalb von $\tfrac12$.
+Der vorige Absatz ist insoweit zurückzunehmen: die Messung ist mit einer
+Schwelle **genau bei $q^*=\tfrac12$** verträglich (Einsatzstelle
+$\to\infty$ für $q\downarrow\tfrac12$), und die Frequenzkoinzidenz
+$1/\beta_j=1/\alpha_{j+1}$ bei $\beta=\alpha/2$ bleibt als Erklärung des
+Randes im Spiel. Entscheidbar ist das nur mit einem Beweis, nicht mit
+Trunkierungen — zum elften Mal. Vermutung 34 steht mit
+$\beta/\alpha\le\tfrac12$ so, wie sie formuliert ist.
+
+## Der Krylow-Raum von $\mathbb 1$, 2026-09-16 (einunddreißigster Lauf): jedes Zertifikat ist auf ihm festgelegt, und auf der unendlichen Leiter ist die Spitzenzeile erzwungen
+
+Der dreißigste Lauf hat als offen notiert, ob $p=T_{t^*a_1}$ auf der
+**unendlichen** Leiter erzwungen ist — Proposition 29 braucht
+$V^d\mathbb 1=\Omega e_{t^*}$, und ein solches $d$ gibt es dort nicht. Dieser
+Lauf schließt den Punkt: $p$ ist erzwungen, für jedes beschränkte Zertifikat,
+und zwar durch dieselbe Rechnung wie Proposition 29, nur ohne bei $k=d$
+anzuhalten.
+
+### Proposition 35: $TV^k\mathbb 1=\psi_k$ für jedes Zertifikat
+
+Rahmen des fünfundzwanzigsten Laufs ($\T=\{0\}\cup A\cup\{t^*\}$ abzählbar,
+$t^*$ Maximum, $m_0=m_{t^*}=0$, $M<\infty$, $V_{s,a}=[a<s]m_a$),
+$\psi_k:=(V^{\mathsf T})^ke_{t^*}$, $e_k:=(V^k\mathbb 1)_{t^*}$ das Gewicht der
+Ketten aus $k$ Atomen.
+
+> **Proposition 35.** Ist $T$ ein Zertifikat an $t^*$ (endlich: $T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_{t^*}$; unendlich: ein unendliches
+> Zertifikat in einer Gewichtsklasse $Z$), so gilt für alle $k\ge0$
+> $$TV^k\mathbb 1=\psi_k,\qquad (V^k\mathbb 1)^{\mathsf T}T(V^l\mathbb 1)=e_{k+l}.$$
+> Zwei Zertifikate stimmen also auf dem Krylow-Raum
+> $\mathcal K(\mathbb 1)=\operatorname{span}\{V^k\mathbb 1\}$ überein, und der
+> Nullraum $\{D=D^{\mathsf T},\,DV=V^{\mathsf T}D,\,D\mathbb 1=0\}$ ist genau
+> die Menge der symmetrischen Verflechter mit $D\,\mathcal K(\mathbb 1)=0$.
+
+*Beweis.* $TV^k\mathbb 1=(V^{\mathsf T})^kT\mathbb 1=(V^{\mathsf T})^ke_{t^*}$
+durch $k$-faches Anwenden von $TV=V^{\mathsf T}T$; die bilineare Form ist
+$(V^k\mathbb 1)\cdot\psi_l=\mathbb 1\cdot(V^{\mathsf T})^{k+l}e_{t^*}=e_{k+l}$.
+Im Unendlichen ist $V^{k-1}\mathbb 1$ eintragsweise durch $e_{k-1}$ beschränkt,
+und $\sum_{x,u}|T_{sx}|\,V_{xu}\,|f_u|\le Cw_s\sum_xw_x\sum_{u<x}m_u|f_u|
+\le Cw_sW\,M\,\|f\|_\infty<\infty$, so daß $(TV)f=T(Vf)=V^{\mathsf T}(Tf)$
+nach Fubini gilt. $\square$
+
+Das ist Proposition 29 ohne die Voraussetzung $V^d\mathbb 1\propto e_{t^*}$ —
+sie ist der Fall $k=d$ — und Theorem 31 ohne Blockrechnung: die dort
+„erzwungenen Randeinträge" sind die Zeile $k=d-1$ dieses Systems
+($V^{d-1}\mathbb 1$ ist auf der Leiter auf $\{a_n,b_n,t^*\}$ getragen,
+$\psi_{d-1}$ auf $\{a_1,a_2,b_1,b_2\}$). Es ist zugleich die Hankelform des
+fünfundzwanzigsten Laufs, jetzt **für jedes** Zertifikat bewiesen, nicht nur
+für die im Krylow-Raum von $e_{t^*}$; der sechsundzwanzigste Lauf hatte recht,
+daß sie auf der Leiter nur einen Teil von $T$ festlegt ($\dim\mathcal K(\mathbb 1)
+=n+1$ gegen $2n+2$), aber dieser Teil enthält, wie sich gleich zeigt, im
+Unendlichen die Spitzenzeile.
+
+Gemessen (`Task23/krylov_moments.py`, Teil A, rc der Prüfungen: alle `ok`):
+sechs zufällige Halbordnungen ($3\le n\le6$), Kette, Antikette, Krone, sechs
+Leiter-Trunkierungen ($n=3,5,7$, zwei Profile). $T_KV^k\mathbb 1=\psi_k$ und
+$(V^k\mathbb 1)^{\mathsf T}T_K(V^l\mathbb 1)=e_{k+l}$ **exakt** in `Fraction`
+für alle $k,l\le r$; für $T_K+\sum_j\lambda_jD_j$ mit zufälligem $\lambda$
+(Nullraumdimensionen $1$ bis $9$, mpmath 60 Stellen) Abweichung
+$<10^{-59}$; $DV^k\mathbb 1=0$ für jede Nullraumrichtung exakt.
+
+### Theorem 36: die Spitzenzeile im Unendlichen ist der Limes der normierten Kettenzählung
+
+> **Theorem 36.** Sei $T$ ein unendliches Zertifikat an $t^*$ in der
+> Gewichtsklasse $Z=\{0,t^*\}$ (Definition des fünfundzwanzigsten Laufs).
+> Dann existiert für jedes $s\in\T$ der Limes
+> $$T_{st^*}=\lim_{k\to\infty}\frac{(\psi_k)_s}{e_k},\qquad\text{also}\qquad
+>   T_{t^*a}=m_a\lim_{k\to\infty}\frac{e_{k-1}(\uparrow a)}{e_k}\quad(a\in A),$$
+> wo $e_{k-1}(\uparrow a)$ das Gewicht der Ketten aus $k-1$ Atomen echt über
+> $a$ ist. Die Spitzenzeile ist damit durch die Massen allein bestimmt; und
+> **existiert der Limes nicht, so gibt es kein beschränktes Zertifikat.**
+
+*Beweis.* $(V^k\mathbb 1)_a=e_k(\downarrow a)$ ist das Gewicht der $k$-Ketten
+echt unter $a$, $(V^k\mathbb 1)_0=0$ für $k\ge1$, $(V^k\mathbb 1)_{t^*}=e_k$.
+Jede $(k{+}1)$-Kette hat genau ein größtes Atom $a$, also
+$\sum_{a\in A}m_a\,e_k(\downarrow a)=e_{k+1}$. Ferner gilt für jede Halbordnung
+$(k{+}1)\,e_{k+1}\le M\,e_k$ (Entfernen eines der $k+1$ Atome einer Kette
+liefert eine $k$-Kette; jede $k$-Kette entsteht so höchstens $\sum_am_a$-gewichtet).
+Damit
+$$\sum_{u\ne t^*}w_u\Bigl|\frac{(V^k\mathbb 1)_u}{e_k}\Bigr|
+  =\frac{e_{k+1}}{e_k}\le\frac{M}{k+1}\longrightarrow0,$$
+d.h. $V^k\mathbb 1/e_k\to e_{t^*}$ in der gewichteten $\ell^1$-Norm. Aus
+Bedingung 1 folgt $|(T(V^k\mathbb 1/e_k)-Te_{t^*})_s|\le Cw_s\,e_{k+1}/e_k\to0$,
+und nach Proposition 35 ist $T(V^k\mathbb 1)/e_k=\psi_k/e_k$. Schließlich
+$(\psi_k)_a=m_a\,e_{k-1}(\uparrow a)$. $\square$
+
+> **Korollar 36.1.** (a) Ist $a$ nicht minimal in $A$, etwa $b<a$, so ist
+> $T_{t^*a}=0$: denn $e_k\ge m_bm_a\,e_{k-2}(\uparrow a)$ und
+> $e_{k-1}(\uparrow a)\le\tfrac{M}{k-1}e_{k-2}(\uparrow a)$, also
+> $m_ae_{k-1}(\uparrow a)/e_k\le\tfrac{M}{(k-1)m_b}\to0$. (Das ist Schritt (1) von
+> Proposition 24.1 noch einmal, jetzt aus der Kettenzählung.)
+> (b) Auf der **Leiter** ($a_i<b_j\iff i<j$, beliebige Massen) ist
+> $$T_{t^*a_1}=\lim_k\frac{\alpha_1e_{k-1}(\uparrow a_1)}{e_k},\qquad
+>   T_{t^*b_1}=\lim_k\frac{\beta_1e_{k-1}(B_{\ge2})}{e_k},\qquad
+>   1-T_{t^*a_1}-T_{t^*b_1}=\lim_k\frac{e_k(\uparrow a_1)}{e_k}=0,$$
+> letzteres wegen $e_k(\uparrow a_1)\le\tfrac{M}{k\alpha_1}\,\alpha_1e_{k-1}(\uparrow a_1)
+> \le\tfrac{M}{k\alpha_1}e_k$.
+> (c) Für $\alpha_l=\alpha^l$, $\beta_l=\beta^l$ mit $\alpha>\beta$ ist
+> $T_{t^*a_1}=1$: $e_k\ge\prod_{l\le k}\alpha_l=\alpha^{k(k+1)/2}$ und
+> $\beta_1e_{k-1}(B_{\ge2})\le\beta^{k(k+1)/2}/(\beta;\beta)_\infty$, also
+> $T_{t^*b_1}\le(\beta/\alpha)^{k(k+1)/2}/(\beta;\beta)_\infty\to0$.
+> Für $\alpha=\beta$ ist **exakt** $\beta_1e_{k-1}(B_{\ge2})/e_k=(1-\beta^k)/(k+1)\to0$,
+> also ebenfalls $T_{t^*a_1}=1$ (Beweis unten, Lemma 36.2).
+
+Insbesondere ist die Schranke von Theorem 31 auf der unendlichen Leiter jetzt
+**unbedingt**: bei $\alpha\ge\beta$ hat jedes beschränkte Zertifikat
+$p=1$ und $C\ge\kappa(1)/\alpha_2=1/(\alpha_1\alpha_2)$ — **kein beschränktes
+Zertifikat der unendlichen Leiter ist besser als die $\alpha$-Kette allein**,
+ohne die Hypothese „Limes von Trunkierungszertifikaten".
+
+### Lemma 36.2: die Ketten der Leiter sind Stufenmengen mit Schnitt
+
+> **Lemma 36.2.** Die Ketten aus $k$ Atomen der Leiter stehen in Bijektion zu
+> den Paaren (Stufenmenge $S=\{s_1<\dots<s_k\}$, Schnitt $r\in\{0,\dots,k\}$)
+> vermöge $\{a_{s_1},\dots,a_{s_r},b_{s_{r+1}},\dots,b_{s_k}\}$; also
+> $$e_k(\T)=\sum_{|S|=k}\ \sum_{r=0}^{k}\ \prod_{l\le r}\alpha_{s_l}\prod_{l>r}\beta_{s_l}.$$
+
+*Beweis.* $a_i,b_i$ sind unvergleichbar, eine Kette trifft jede Stufe höchstens
+einmal; $a_i<b_j$ verlangt $i<j$ und $b_j<a_i$ gilt nie, also liegen in einer
+Kette alle $a$ unter allen $b$; umgekehrt ist jede solche Menge eine Kette.
+$\square$
+
+Bei $\alpha_l=\beta_l$ hängt das Gewicht nur von $S$ ab, $e_k=(k+1)e_k(\beta)$,
+und $\beta_1e_{k-1}(B_{\ge2})=\sum_{S\ni1}\prod_l\beta_{s_l}=(1-\beta^k)e_k(\beta)$
+(aus $e_k(\beta)=\beta e_{k-1}(\beta^{\ge2})+\beta^ke_k(\beta)$); das gibt die
+Formel $(1-\beta^k)/(k+1)$ in Korollar 36.1(c). Bei $\alpha=q\beta$ mit $q<1$
+ist $\sum_r\prod_{l\le r}\alpha_{s_l}/\beta_{s_l}=\sum_rq^{s_1+\dots+s_r}$, für
+$S=\{1,\dots,k\}$ die partielle Thetareihe $\sum_rq^{r(r+1)/2}$ aus
+Korollar 29.1; da die $k$-Mengen, denen eine feste Stufe $l$ fehlt, relatives
+Gewicht $\le\frac{M/k}{\beta_l+M/k}\to0$ haben, und $q^{s_1+\dots+s_r}\le
+q^{r(r+1)/2}$ summierbar in $r$ ist, folgt
+$$T_{t^*b_1}=\frac1{\sum_{r\ge0}q^{r(r+1)/2}}=\pi_\infty,\qquad T_{t^*a_1}=1-\pi_\infty$$
+— **derselbe Wert wie der Limes der Trunkierungen** (Korollar 29.1), jetzt
+als erzwungener Wert jedes beschränkten Zertifikats der unendlichen Leiter.
+(Die Abschätzung ist hier nur skizziert; die Zahlen unten stimmen auf $10^{-13}$.)
+
+### Gemessen: `Task23/krylov_moments.py`, Teil B
+
+mpmath 60 Stellen, Kettenzählung der unendlichen Leiter durch die Rekursion
+$Z_n=(1+x\beta_n)Z_{n-1}+x\alpha_nA_{n-1}$ mit $N=200$ und $N=400$ Stufen
+(Unterschied $<10^{-35}$, meist $<10^{-60}$), $k\le40$:
+
+| $(\alpha,\beta)$ | $\alpha_1e_{39}(\uparrow a_1)/e_{40}$ | $1-\pi_\infty$ (Korollar 29.1) | $e_{40}(\uparrow a_1)/e_{40}$ | $e_{41}/e_{40}$ |
+|---|---|---|---|---|
+| $(\tfrac12,\tfrac13)$ | $0{,}999999999999091$ | $1$ | $9\cdot10^{-13}$ | $4{,}6\cdot10^{-13}$ |
+| $(\tfrac13,\tfrac12)$ | $0{,}5170464110207$ | $0{,}517046411021183$ | $7\cdot10^{-13}$ | $4{,}6\cdot10^{-13}$ |
+| $(\tfrac12,\tfrac23)$ | $0{,}587162468525$ | $0{,}587162519666$ | $7\cdot10^{-8}$ | $6\cdot10^{-8}$ |
+| $(\tfrac14,\tfrac12)$ | $0{,}39085028893343$ | $0{,}390850288933771$ | $7\cdot10^{-13}$ | $4{,}6\cdot10^{-13}$ |
+| $(\tfrac12,\tfrac12)$ | $0{,}975609756=40/41$ | $1$ | $9\cdot10^{-13}$ | $4{,}7\cdot10^{-13}$ |
+| $(\tfrac12,\tfrac{49}{100})$ | $0{,}999999966$ | $1$ | $9\cdot10^{-13}$ | $4{,}5\cdot10^{-13}$ |
+
+Bei $(\tfrac12,\tfrac23)$ ist die Abweichung $5\cdot10^{-8}$ genau der noch
+nicht abgeklungene Rest $e_k(\uparrow a_1)/e_k\approx(2/3)^{40}$; bei
+$(\tfrac12,\tfrac12)$ ist der Wert $k/(k+1)$ für alle $k\le40$ exakt
+(Lemma 36.2), bei $(\tfrac12,\tfrac{49}{100})$ fällt $T_{t^*b_1}$ wie
+$(0{,}98)^{k(k+1)/2}$. Die Kandidaten $\alpha_2e_{k-1}(\uparrow a_2)/e_k$ für
+$T_{t^*a_2}$ fallen in allen sechs Fällen wie $e_{k+1}/e_k$ gegen $0$
+(Korollar 36.1(a)). Kontrolle auf der $\omega$-Kette: $m_1e_{k-1}(m_{\ge2})/e_k\to1$
+(Proposition 24.2(a)), bei $2^{-i}$ auf $10^{-12}$, bei $1/(i(i+1))$ und
+$i^{-3/2}$ nur wie $1/k$ ($0{,}9974$; $0{,}9897$ bei $k=40$) — die
+Konvergenzrate $M/(k+1)$ aus dem Beweis ist dort scharf.
+
+### Theorem 37: eine fundierte Halbordnung ohne beschränktes Zertifikat — die Vermutung „fundiert $\Rightarrow$ Zertifikat" ist falsch
+
+Theorem 36 hat eine **notwendige Bedingung** für die Existenz eines
+beschränkten Zertifikats hervorgebracht: die normierten Krylow-Vektoren
+$\psi_k/e_k$ müssen konvergieren. Auf der Leiter tun sie das (oben). Es gibt
+aber fundierte Halbordnungen, auf denen sie es nicht tun.
+
+> **Theorem 37.** Sei $\T=\{0\}\cup\{a_1<a_2<\dots\}\cup\{b_1<b_2<\dots\}\cup\{t^*\}$
+> die **disjunkte Vereinigung zweier $\omega$-Ketten** ($a_i\parallel b_j$ für
+> alle $i,j$; $0$ Minimum, $t^*$ Maximum, $m_0=m_{t^*}=0$) mit
+> $$\alpha_i=B^{-i},\qquad \beta_j=B^{-j}\cdot2^{(-1)^{j+1}}\quad(\beta_1=2/B,\ \beta_2=1/(2B^2),\ \beta_3=2/B^3,\dots),\qquad B\ge16 .$$
+> Alle Massen sind positiv und summierbar, $A$ ist fundiert (zwei minimale
+> Atome, jede absteigende Kette endlich). Dann gibt es **kein** unendliches
+> Zertifikat an $t^*$, in keiner endlichen Gewichtsklasse; und für **jede**
+> Wahl von Zertifikaten $T_n$ auf den Trunkierungen $\{a_{\le n},b_{\le n}\}$
+> ist $\sup_n\|T_n\|_m=\infty$.
+
+*Beweis.* Nach Theorem 36 hätte ein Zertifikat
+$T_{t^*a_1}=\lim_kq_k$ mit
+$$q_k=\frac{\alpha_1e_{k-1}(\alpha_{\ge2})}{e_k(\alpha)+e_k(\beta)}
+   =\frac{\alpha_1e_{k-1}(\alpha_{\ge2})/e_k(\alpha)}{1+e_k(\beta)/e_k(\alpha)},$$
+denn die $k$-Ketten der disjunkten Vereinigung sind die $k$-Ketten der einen
+oder der anderen Kette. Der Zähler strebt gegen $1$ (Kettenfall,
+$1-\alpha_1e_{k-1}(\alpha_{\ge2})/e_k(\alpha)=e_k(\alpha_{\ge2})/e_k(\alpha)\le M/(k\alpha_1)$).
+Für den Quotienten schreibe $q:=1/B$ und jede $k$-Teilmenge der Indizes als
+$s_l=l+t_l$ mit $0\le t_1\le\dots\le t_k$; dann ist
+$e_k(\alpha)=\prod_{l\le k}\alpha_l\cdot\sum_tq^{\sum t_l}=\prod_{l\le k}\alpha_l/(q;q)_k$
+und, weil $\beta_{s}/\beta_l=q^{s-l}\,2^{(-1)^{s+1}-(-1)^{l+1}}$ für
+$s-l$ ungerade den Faktor $4^{(-1)^{l}}$ und sonst $1$ trägt,
+$$e_k(\beta)=\prod_{l\le k}\beta_l\cdot R_k,\qquad
+  R_k:=\sum_{0\le t_1\le\dots\le t_k}q^{\sum_lt_l}\prod_{l:\,t_l\text{ ungerade}}4^{(-1)^l}.$$
+Alle Summanden sind positiv, der Summand $t\equiv0$ ist $1$, und
+$\#\{l:t_l\text{ ungerade}\}\le\sum_lt_l$; also $1\le R_k\le\sum_t(4q)^{\sum t}=1/(4q;4q)_k\le1/(4q;4q)_\infty$.
+Mit $\prod_{l\le k}\beta_l/\alpha_l=\prod_{l\le k}2^{(-1)^{l+1}}=2^{[k\text{ ungerade}]}$:
+$$\frac{e_k(\beta)}{e_k(\alpha)}=2^{[k\text{ ungerade}]}\,R_k\,(q;q)_k,\qquad
+  \limsup_{k\text{ gerade}}\frac{e_k(\beta)}{e_k(\alpha)}\le\frac1{(4q;4q)_\infty},\qquad
+  \liminf_{k\text{ ungerade}}\frac{e_k(\beta)}{e_k(\alpha)}\ge2\,(q;q)_\infty .$$
+Für $B=16$ ist $1/(4q;4q)_\infty=1/(\tfrac14;\tfrac14)_\infty=1{,}4524<1{,}8672=2\,(\tfrac1{16};\tfrac1{16})_\infty$
+(und die Trennung wird mit $B$ besser: $1{,}164<1{,}936$ bei $B=32$). Also
+$\liminf_{k\text{ gerade}}q_k>\limsup_{k\text{ ungerade}}q_k$, der Limes
+existiert nicht, und nach Theorem 36 gibt es kein Zertifikat. Die zweite
+Aussage: wären die $T_n$ gleichmäßig beschränkt, $|T^{(n)}_{su}|\le Cw_sw_u$,
+so hätte eine Teilfolge einen eintragsweisen Limes $T$; Bedingung 1 überträgt
+sich, und die Bedingungen 2 und 3 sind Gleichungen zwischen Reihen, die durch
+$Cw_s\sum_uw_u$ dominiert werden — der Limes wäre ein unendliches Zertifikat.
+$\square$
+
+**Was der Zeuge ist, und was nicht.** Die Multimenge der Massen ist harmlos:
+sortiert fallend haben $\alpha$ und $\beta$ die Quotienten
+$\beta_{(j)}/\alpha_{(j)}=2,\tfrac12,2,\tfrac12,\dots$ (das braucht $B>4$; bei
+$B=2$ ist $\{2^{-j}2^{(-1)^{j+1}}\}$ nur eine **Umordnung** von
+$\{1\}\cup\{2^{-j}\}_{j\ge2}$, die Partialprodukte sortiert sind $2,2,2,\dots$,
+und der Limes existiert — der erste Ansatz dieses Laufs ist daran gescheitert;
+siehe Sackgassen). Der Mechanismus ist nicht Ordnungsdichte, nicht fehlende
+Minimalität (Proposition 24.1), nicht unendliche Höhe an sich: es ist die
+**Konkurrenz zweier minimaler Atome um die Spitze**, deren längste-Ketten-Gewichte
+auf keinen festen Anteil konvergieren. Auf jeder Trunkierung mit $n$ Stufen
+ist die Spitzenzeile exakt $T_{t^*a_1}=1/(1+\prod_{l\le n}\beta_l/\alpha_l)\in\{\tfrac12,\tfrac13\}$
+(Proposition 29), alternierend in $n$.
+
+**Für die Vermutung des sechsundzwanzigsten Laufs** („ist $A$ fundiert, so gibt
+es zu jedem $t$ ein unendliches Zertifikat") heißt das: **falsch**. Die
+Fundiertheit schließt Proposition 24.1 aus, aber nicht das Oszillieren. Die
+richtige notwendige Bedingung ist Theorem 36: Konvergenz von $\psi_k/e_k$.
+Hinreichend ist sie nicht (auf der Leiter bei $0{,}8<\beta/\alpha<1{,}1$
+existiert der Limes, $p=1$, und das LP-Minimum wächst trotzdem, Lauf 30).
+
+**Für die Dualität** sagt Theorem 37 nichts Negatives: sie ist auf der
+disjunkten Vereinigung zweier Ketten unter (F) **offen** — die
+Zertifikatsmethode (Theorem 22 wie Proposition 19.3) ist dort nachweislich
+unanwendbar, Theorem 17 sieht nur eine Kette, Theorem 21 verlangt transitive
+Unvergleichbarkeit ($a_1\parallel b_1\parallel a_2$, aber $a_1<a_2$). Das ist
+die kleinste Halbordnung, auf der die Frage „Dualität ohne Zertifikat" scharf
+gestellt ist.
+
+### Gemessen: `Task23/two_chains.py`
+
+`python3 two_chains.py 16 3 4 5 6` (mpmath 80 Stellen; Ergebnis in
+`two_chains16.txt`) und `python3 two_chains.py 8 3 4 5 6 7 8` (`two_chains.txt`):
+
+* **Teil (i)**, $N=400$ Stufen, $k\le80$: bei $B=16$ ist $q_k$ entlang gerader
+  $k$ auf $20$ Stellen konstant $0{,}459504218406622$ (ab $k=40$), entlang
+  ungerader $0{,}343269470059173$; $e_k(\beta)/e_k(\alpha)\to1{,}17626$
+  (gerade) bzw. $1{,}91316$ (ungerade) — innerhalb der bewiesenen Schranken
+  $\le1{,}4524$ bzw. $\ge1{,}8672$. Bei $B=8$: $0{,}42891$ / $0{,}35162$,
+  Quotienten $1{,}33151$ / $1{,}84402$ (die grobe Schranke trennt dort nicht,
+  $3{,}46$ gegen $1{,}72$; gemessen ist die Trennung deutlich). Kontrollen:
+  $(2^{-i},3^{-j})$ gibt $q_k\to1$, identische Ketten $q_k\to\tfrac12$.
+* **Teil (ii)**, exakt: $T^{(n)}_{t^*a_1}=\tfrac12,\tfrac13,\tfrac12,\dots$ für
+  $n=2,\dots,10$, beide Basen.
+* **Teil (iii)**, LP-Minimum über alle Zertifikate der Trunkierung
+  (`ladder_lp.chebyshev_lp`, Nullraumdimension $n+2$):
+
+| $n$ | $B=16$, gestört | $B=8$, gestört | $(2^{-i},3^{-j})$ | identisch $(2^{-i},2^{-i})$ |
+|---|---|---|---|---|
+| 3 | $6315$ | $341{,}3$ | $7{,}3868$ | $4$ |
+| 4 | $2{,}55\cdot10^5$ | $7832$ | $7{,}8636$ | $4$ |
+| 5 | $1{,}64\cdot10^6$ | $22172$ | $7{,}9818$ | $4$ |
+| 6 | $6{,}53\cdot10^7$ | $4{,}99\cdot10^5$ | $7{,}9984$ | $4$ |
+| 7 | — (Simplex bricht ab) | $1{,}42\cdot10^6$ | $7{,}9999$ | $4$ |
+| 8 | — | $1{,}97\cdot10^{12}$ | $8{,}0000$ | $4$ |
+
+Die Kontrollspalten konvergieren gegen $8=1/(\alpha_1\alpha_2)$ (die Konstante
+der $\alpha$-Kette allein, Theorem 26 — dort $q_k\to1$, die Spitze sitzt auf
+$a_1$) bzw. $4$; die gestörten Spalten wachsen um Größenordnungen. Der Wert
+$\|T\|_m$ ist nicht skaleninvariant ($\propto$ Massenskala$^{-2}$), die
+Spalten sind also untereinander nicht zu vergleichen, wohl aber ihr Verlauf
+in $n$. Der Simplexabbruch bei $B=16$, $n=7$ („unbeschränkt", $80$ Stellen)
+ist die numerische Sackgasse des neunundzwanzigsten Laufs (Skalierung
+$w_sw_u\sim16^{-14}$), kein Befund; Theorem 37 braucht die LP-Messung nicht.
+
+### Ergebnis
+
+* **Bewiesen.** Proposition 35 ($TV^k\mathbb 1=\psi_k$ und
+  $(V^k\mathbb 1)^{\mathsf T}T(V^l\mathbb 1)=e_{k+l}$ für **jedes** Zertifikat,
+  endlich wie unendlich; Proposition 29 und Theorem 31 sind Spezialfälle).
+  Theorem 36 (die Spalte $t^*$ jedes unendlichen Zertifikats ist
+  $\lim_k\psi_k/e_k$, also $T_{t^*a}=m_a\lim_ke_{k-1}(\uparrow a)/e_k$; der
+  Limes muß existieren; gilt in jeder **endlichen** Gewichtsklasse $Z$, denn
+  für ein Atom $z\in Z$ ist $(V^k\mathbb 1)_z/e_k\le M/((k+1)m_z)\to0$).
+  Korollar 36.1 (nicht-minimale Atome tragen $0$; auf der unendlichen Leiter
+  ist $p=T_{t^*a_1}$ erzwungen, $p=1$ für $\alpha\ge\beta$ bewiesen, für
+  $\alpha<\beta$ gleich dem Trunkierungslimes $1-\pi_\infty$ — dort mit
+  skizzierter Abschätzung und auf $10^{-13}$ gemessen). Lemma 36.2 (Ketten der
+  Leiter $=$ Stufenmengen mit Schnitt). **Theorem 37**: die disjunkte
+  Vereinigung zweier $\omega$-Ketten mit $\alpha_i=B^{-i}$,
+  $\beta_j=B^{-j}2^{(-1)^{j+1}}$, $B\ge16$, trägt kein unendliches Zertifikat,
+  und ihre Trunkierungszertifikate sind nie gleichmäßig beschränkt.
+* **Widerlegt.** Die Vermutung des sechsundzwanzigsten Laufs „$A$ fundiert
+  $\Rightarrow$ es gibt ein unendliches Zertifikat" (Theorem 37). Nebenbei die
+  Annahme dieses Laufs selbst, eine Störung mit Basis $2$ oszilliere — sie
+  war eine Umordnung (Sackgassen).
+* **Geschlossen** (offener Punkt aus Lauf 30): $p$ ist auf der unendlichen
+  Leiter erzwungen. Die Schranke von Theorem 31 gilt dort unbedingt:
+  $C\ge1/(\alpha_1\alpha_2)$ für $\alpha\ge\beta$, $C\ge|\kappa(1-\pi_\infty)|/\alpha_2$
+  für $\alpha<\beta$.
+* **Offen.** Vermutung 34 und 32 (Leiter, Existenz) unverändert. **Neu und
+  scharf:** die Dualität $\delta(t^*)=0$ auf der disjunkten Vereinigung zweier
+  $\omega$-Ketten unter (F) — dort ist die Zertifikatsmethode nachweislich
+  unanwendbar; entweder trägt ein anderes Argument, oder dort liegt das
+  erste Gegenbeispiel unter (F) mit lauter positiven Massen (der offene Punkt
+  „Gegenbeispiel mit durchweg positiven Abwärtsmassen" aus Lauf 23, jetzt mit
+  einem konkreten Kandidaten). Ob die Konvergenz von $\psi_k/e_k$ zusammen
+  mit einer Skalentrennung hinreichend ist, ist die Frage nach der richtigen
+  Hypothese anstelle der Fundiertheit.
+
+### Sackgassen, neunundzwanzigster Nachtrag
+
+* **Eine 2-periodische Störung der Massen einer Kette, $\beta_j=2^{-j}2^{(-1)^{j+1}}$,
+  für einen oszillierenden Zeugen halten.** Die Multimenge ist
+  $\{1\}\cup\{2^{-j}\}_{j\ge2}$, also eine Umordnung; $e_k$ sieht nur die
+  Multimenge, $e_k(\beta)/e_k(\alpha)\to2$, der Limes existiert. Wer mit
+  Kettenzählungen argumentiert, **sortiere die Massen zuerst**; oszillierende
+  Quotienten braucht man in der sortierten Folge, und dafür muß die Basis
+  größer als der Störfaktor$^2$ sein ($B>4$ bei Faktor $2$).
+* **Theorem 37 über das LP der Trunkierungen beweisen wollen.** Der dichte
+  Simplex bricht bei $B=16$ schon bei $n=7$ ab (Skalierung $16^{-14}$), bei
+  $B=8$ reicht er bis $n=8$; die Werte wachsen, beweisen aber nichts. Der
+  Beweis ist Theorem 36 plus der Teilfolgenschluß; die LP-Messung ist
+  Illustration.
+* **Aus Proposition 29 auf die unendliche Halbordnung schließen, indem man
+  $d\to\infty$ schickt.** Auf der unendlichen Leiter ist $p_n\to1-\pi_\infty$
+  richtig, aber der Grund ist nicht die Trunkierung, sondern Theorem 36 (der
+  Limes in $k$ auf der **unendlichen** Halbordnung, bei festem $\T$). Die beiden
+  Limiten stimmen auf der Leiter überein, auf der disjunkten Vereinigung
+  existiert der eine nicht und der andere auch nicht — aber im allgemeinen
+  ist „Limes der Trunkierungsspitzen" keine Eigenschaft eines unendlichen
+  Zertifikats, „Limes von $\psi_k/e_k$" schon.
+* **„Fundiert" als Hypothese der Zertifikatsexistenz.** Erledigt durch
+  Theorem 37; die Sperre von Proposition 24.1 (fehlende Minimalität) ist eine
+  von mindestens zwei, die andere ist die Nichtkonvergenz der normierten
+  Kettenzählung bei mehreren minimalen Atomen.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `Matrix.certificate_mulVec_pow_one`** (Proposition 35), eingetragen
+in `TauCeti/MartingaleProblems/README.md` (Meilenstein 8, direkt nach
+`Matrix.certificate_mulVec_single_top`) und in `PLAN.md`, Task 23:
+
+> Für `V : Matrix n n ℝ`, `t : n` und jedes symmetrische `T` mit
+> `T * V = Vᵀ * T` und `T *ᵥ 1 = Pi.single t 1` gilt für alle `k`
+> `T *ᵥ (V ^ k *ᵥ 1) = (Vᵀ) ^ k *ᵥ Pi.single t 1` und
+> `(V ^ k *ᵥ 1) ⬝ᵥ (T *ᵥ (V ^ l *ᵥ 1)) = (V ^ (k + l) *ᵥ 1) t`.
+
+Beweis: Induktion über `k` mit `Matrix.mulVec_mulVec`; keine Nilpotenz, keine
+Nichtnegativität. `Matrix.certificate_mulVec_single_top` ist der Fall `k = d`
+und sollte als Korollar daraus geführt werden. Es ist jetzt dran, weil es die
+Aussage ist, die im Unendlichen (Theorem 36) die Spitzenzeile erzwingt und
+(Theorem 37) die Vermutung „fundiert $\Rightarrow$ Zertifikat" widerlegt —
+der erste Satz der Roadmap, dessen unendliche Fassung nicht aus der
+Formalisierung des endlichen Falls, sondern aus einem Grenzübergang in $k$
+kommt; und weil er zwei Zeilen lang ist.
+
+**Nächste Rechnung** (in `PLAN.md`, Task 23, eingetragen): **die Dualität auf
+der disjunkten Vereinigung zweier $\omega$-Ketten entscheiden**, mit dem
+Zeugen von Theorem 37 ($B=16$) unter (F). Zwei Wege, beide ohne Zertifikat:
+(a) direkt — aus Theorem 17 auf jeder der beiden Ketten folgt $\delta(a_i)=\delta(b_j)=0$,
+und $(\diamondsuit)$ an den Kreuzpaaren $(a_i,b_j)$ und an $(t^*,\cdot)$ gibt
+$\delta(t^*)=\lim_i[\Psi(t^*,a_i)+\Psi(a_i,t^*)]$; zu klären ist, ob die
+Kreuzrelationen $\Psi(a_i,b_j)+\Psi(b_j,a_i)=0$ das erzwingen; (b) ein
+Gegenbeispiel $\kappa$ unter (F) mit dem Ansatz des dreiundzwanzigsten Laufs
+(dort die Antikette ohne (F)) — die Nichtexistenz des Zertifikats sagt, daß
+das lineare System der $(\diamondsuit)$-Relationen dort einen Lösungsraum
+hat, den kein beschränktes $T$ annulliert, also ist der Kern explizit zu
+berechnen (Trunkierungen mit freiem Schwanz, wie in `adjudicate.py`). Gelingt
+(b), ist es das erste Gegenbeispiel zur Dualität unter (F) mit lauter positiven
+Massen, und `prop:atomicposet` hat seine scharfe Grenze; gelingt (a), ist
+klar, daß die Zertifikatsmethode nicht die ganze Wahrheit ist und wo sie zu
+ersetzen ist.
+
+Skripte dieses Laufs, alle rc=0: `krylov_moments.py` (Proposition 35, Theorem 36,
+Korollar 36.1; `krylov_moments.txt`), `two_chains.py` (Theorem 37;
+`two_chains.txt` für $B=8$, `two_chains16.txt` für $B=16$).
+
+## Die Idealausschöpfung, 2026-09-16 (zweiunddreißigster Lauf): zwei disjunkte $\omega$-Ketten und die Leiter fallen ohne Zertifikat und ohne (F) — der Defekt an $t^*$ ist die $g$-Masse des Ideals unter $t^*$, und die Ideale darunter tragen keine
+
+Der einunddreißigste Lauf hat als nächste Rechnung gestellt, die Dualität auf
+der disjunkten Vereinigung zweier $\omega$-Ketten zu entscheiden — mit den
+Massen von Theorem 37, unter (F), auf einem der zwei Wege „(a) direkt über
+Theorem 17 auf beiden Ketten plus die Kreuzrelationen" oder „(b)
+Gegenbeispiel". Dieser Lauf entscheidet sie **positiv**, auf Weg (a), aber in
+einer Gestalt, die kürzer ist als die dort skizzierte: die Kreuzrelationen
+$(a_i,b_j)$ werden nicht gebraucht, (F) wird nicht gebraucht, Theorem 17 wird
+nicht gebraucht, und derselbe Beweis erledigt die **Leiter** für jedes
+Massenprofil — einschließlich des Fensters $0{,}8<\beta/\alpha<1{,}1$, in dem
+das LP-Minimum wächst, und einschließlich $\alpha=\beta$. Damit ist die Frage
+der Läufe 25–31 nach beschränkten Zertifikaten auf der Leiter für die Dualität
+gegenstandslos: Vermutung 32 und Vermutung 34 bleiben Aussagen über die
+Zertifikatsstruktur, aber die Dualität hängt nicht mehr an ihnen.
+
+Neu ist `Task23/ideal_exhaustion.py` (exakt in `Fraction`, Proben (A)–(F),
+rc=0, Ausgabe in `ideal_exhaustion.txt`).
+
+### Die Beobachtung, in drei Zeilen
+
+Rahmen des fünfundzwanzigsten Laufs: $\T$ abzählbare Halbordnung mit kleinstem
+Element $0$, $m\ge0$, $\kappa$ antisymmetrisch, $\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$
+je Paar absolut konvergent, $(\diamondsuit)$ an **allen** Paaren,
+$\delta=\operatorname{diag}\Psi$. Setze
+
+$$g(c):=m_c\,\kappa(c,0)\qquad(c\in\T).$$
+
+1. $(\diamondsuit)$ an $(t,0)$ lautet $\Psi(t,0)=\delta(t)$ (denn $\Psi(0,\cdot)\equiv0$),
+   also **$\delta(t)=g(\T_{<t})$**: der Defekt an $t$ ist die $g$-Masse des
+   strikten Ideals unter $t$. Das ist die Definition des Defekts im
+   $\Phi$-Bild ($\Phi(t,0)-\Phi(0,t)=\sum_{c<t}m_c(\gamma(c,0)-\gamma(0,c))$,
+   dritter Lauf), hier noch einmal aus $(\diamondsuit)$.
+2. Ist $\T_{\le a}$ **endlich**, so ist $\delta(a)=0$ — Idealreduktion des
+   vierten Laufs (eine Lösung auf $\T$ schränkt sich auf das Ideal ein) plus
+   `prop:atomicposet` (sechster Lauf) auf dem endlichen Ideal, $m\ge0$. Also
+   **$g(\T_{<a})=0$ für jedes $a$ mit endlichem Ideal.**
+3. Der vierte Lauf hat notiert: „der Defekt sitzt genau auf der Antikette der
+   maximalen Elemente von $\T_{<z}$". Hat $W:=\T_{<t^*}$ **keine** maximalen
+   Elemente, so hat er nirgends zu sitzen — und was das genau heißt, ist
+   dominierte Konvergenz gegen die absolut summierbare Funktion $g$.
+
+### Theorem 38 (Idealausschöpfung)
+
+Sei $t\in\T$, $W:=\T_{<t}$, und sei $L$ der lineare Spann der
+Idealindikatoren $\{\mathbb 1_{\T_{<a}}:a\in W\}$, aufgefaßt als Funktionen auf
+$W\setminus\{0\}$; $\overline L$ sei die kleinste Klasse beschränkter
+Funktionen auf $W\setminus\{0\}$, die $L$ enthält und unter beschränkten
+punktweisen Limiten von Folgen abgeschlossen ist. Es gelte
+
+* **(i)** $\delta(a)=0$ für jedes $a\in W$;
+* **(ii)** es gibt eine Menge $X\subseteq W$ **minimaler Atome** ($\T_{<x}=\{0\}$
+  für $x\in X$), leer oder nicht, mit $\mathbb 1_{W\setminus X}\in\overline L$,
+  und im Fall $X\neq\emptyset$ zusätzlich $m_0=0$ und: $X$ endlich, oder
+  $\sum_{x,x'\in X}m_xm_{x'}|\kappa(x,x')|<\infty$.
+
+> **Theorem 38.** Dann ist $\delta(t)=0$.
+
+*Beweis.* **Fall $X=\emptyset$ (oder $m(X)=0$).** $g$ ist auf $W$ absolut
+summierbar (das ist die absolute Konvergenz von $\Psi(t,0)$), und
+$g(0)=m_0\kappa(0,0)=0$. Sei $N$ die Menge der beschränkten $f$ auf
+$W\setminus\{0\}$ mit $\sum_{c}g(c)f(c)=0$. Nach (i) und Zeile 1 ist
+$g(\T_{<a})=\delta(a)=0$ für $a\in W$, also $L\subseteq N$; $N$ ist unter
+beschränkten punktweisen Folgenlimiten abgeschlossen (dominierte Konvergenz,
+Majorante $\sup_n\|f_n\|_\infty\cdot|g|$), also $\overline L\subseteq N$, also
+$\mathbb 1_W\in N$ (bei $m(X)=0$ ist $\mathbb 1_W=\mathbb 1_{W\setminus X}$ auf
+$\{g\ne0\}$), und Zeile 1 an $t$ gibt $\delta(t)=g(W)=0$.
+
+**Fall $X\ne\emptyset$, $m(X)>0$.** Für $x\in X$ setze
+$\varphi_x(c):=m_c\kappa(c,x)$, absolut summierbar auf $W$ (absolute
+Konvergenz von $\Psi(t,x)$). Für $y\in W$ gibt $(\diamondsuit)$ an $(y,x)$:
+$\Psi(y,x)+\Psi(x,y)=\delta(y)+\delta(x)=0$ nach (i), und
+$\Psi(x,y)=m_0\kappa(0,y)=0$ wegen $m_0=0$; also
+$\varphi_x(\T_{<y})=\Psi(y,x)=0$ für alle $y\in W$ — **$\varphi_x$ hat
+dieselben verschwindenden Idealsummen wie $g$**, und dieselbe dominierte
+Konvergenz gibt $\varphi_x(W\setminus X)=0$. $(\diamondsuit)$ an $(x,t)$:
+$\Psi(x,t)+\Psi(t,x)=\delta(x)+\delta(t)=\delta(t)$ mit $\Psi(x,t)=0$, also
+$$\delta(t)=\Psi(t,x)=\varphi_x(W)=\varphi_x(X)=\sum_{x'\in X}m_{x'}\kappa(x',x)
+\qquad\text{für jedes }x\in X.$$
+Multiplikation mit $m_x$ und Summation über $X$: links $m(X)\,\delta(t)$, rechts
+$\sum_{x,x'\in X}m_xm_{x'}\kappa(x',x)=0$ durch Antisymmetrie — bei endlichem $X$
+unmittelbar, bei unendlichem $X$ nach Fubini unter der Summierbarkeitshypothese.
+Also $\delta(t)=0$. $\square$
+
+Der Fall $X\ne\emptyset$ ist der Zweizeiler der „flachen Spitze" (fünfter
+Lauf) bzw. von Proposition 19.1 (dreiundzwanzigster Lauf), auf einen Sockel
+$W\setminus X$ gestellt, den die Ideale ausschöpfen.
+
+### Korollar 38.1: wo (i) herkommt
+
+* $\T_{\le a}$ endlich für jedes $a\in W$: `prop:atomicposet` auf dem Ideal,
+  $m\ge0$, **ohne (F)**.
+* $\T_{\le a}$ eine intervallendliche Kette: vierzehnter Lauf, ohne (F).
+* $\T_{\le a}$ eine beliebige Kette mit (F) auf ihr: Theorem 17 auf dem Ideal
+  mit Spitze $a$.
+* $\T_{\le a}$ von endlicher Höhe oder eine schwache Ordnung, jeweils mit (F):
+  Theorem 23 bzw. Theorem 21 auf dem Ideal.
+
+### Korollar 38.2: wo (ii) herkommt, mit $X=\emptyset$
+
+* **$W$ nach oben gerichtet und ohne Maximum.** Dann gibt es eine streng
+  wachsende kofinale Folge $a_n$ (abzählbar; Aufzählung $w_n$, $a_{n+1}$ eine
+  obere Schranke von $a_n$, $w_{n+1}$ und einem $u_n>a_n$), und
+  $\mathbb 1_{\T_{<a_n}}\uparrow\mathbb 1_W$.
+* **$W\setminus\{0\}=\bigsqcup_kW_k$ paarweise unvergleichbar, jedes
+  $W_k\cup\{0\}$ nach oben gerichtet und $W_k$ ohne Maximum** (endlich oder
+  abzählbar viele $k$). Mit kofinalen $a_{k,n}\in W_k$ ist
+  $f_n:=\sum_{k\le n}\mathbb 1_{\T_{<a_{k,n}}}$ auf $W\setminus\{0\}$ mit Werten in
+  $\{0,1\}$ (die Ideale schneiden sich nur in $\{0\}$) und $\to\mathbb 1_W$.
+* **Jedes $c\in W\setminus\{0\}$ ist kettenüberdeckt**: es gibt $a\in W$ mit
+  $\T_{<a}=\T_{\le c}$. Dann $\mathbb 1_c=\mathbb 1_{\T_{<a}}-\mathbb 1_{\T_{<c}}\in L$
+  und $\mathbb 1_{D_n}\in L$ für endliche $D_n\uparrow W$. Das umfaßt jede
+  Kette vom Typ $\omega$, jede disjunkte Vereinigung solcher Ketten und jeden
+  nach oben wachsenden Baum ohne Blätter.
+
+### Korollar 38.3: die Anwendungen, alle ohne (F) und für beliebige $m\ge0$
+
+1. **Die Leiter** $a_i<b_j\iff i<j$, beliebige positive summierbare Massen:
+   alle Ideale endlich, $W$ gerichtet ($a_i,b_j<b_{\max(i,j)+1}$), ohne
+   Maximum. $\delta(t^*)=0$. Das schließt das Fenster
+   $0{,}8<\beta/\alpha<1{,}1$ und $\alpha=\beta$ ein, in dem das LP-Minimum der
+   Trunkierungen wächst (dreißigster Lauf) — die Dualität gilt dort trotzdem.
+2. **Die disjunkte Vereinigung zweier (oder abzählbar vieler)
+   $\omega$-Ketten**, insbesondere die Halbordnung von Theorem 37 mit
+   $\alpha_i=B^{-i}$, $\beta_j=B^{-j}2^{(-1)^{j+1}}$: **kein Zertifikat, aber
+   Dualität.** Die Zertifikatsmethode (Theorem 22, Proposition 19.3) ist
+   dort nachweislich unanwendbar und die Aussage trotzdem wahr; das
+   Kriterium „$\mathcal L=\R^\T$ genau dann, wenn $\delta$ erzwungen" des
+   sechsten Laufs ist ein **endliches** Kriterium und überträgt sich nicht.
+3. **Bäume ohne Blätter** (jeder Knoten hat einen Nachfolger, endliche Ideale),
+   etwa der unendliche Binärbaum über $0$ mit Spitze: unendliche Höhe, nicht
+   transitive Unvergleichbarkeit, ein minimales Atom und unendlich viele
+   Verzweigungen — von keinem der bisherigen Sätze erfaßt.
+4. **Schwache Ordnungen vom Stufentyp $\omega$ mit endlichen Stufen**:
+   gerichtet, endliche Ideale — Theorem 21 brauchte dort (F), hier fällt es.
+5. **Die „Doppelschleife"** $0<p,q,r,s$; $p,q,r<a$; $p,q,s<a'$; $\omega$-Ketten
+   über $a$ und über $a'$: keine maximalen Elemente, endliche Ideale — und
+   $\mathbb 1_W\notin\overline L$ (die Idealsummen erzwingen $g(W)$ **nicht**:
+   $g(r)=g(s)=1$, $g(p)=-1$, Rest $0$ ist zulässig; Probe (E)). Aber mit
+   $X=\{r\}$: $\mathbb 1_{W\setminus\{r\}}=\mathbb 1_{\T_{<a'}}+\mathbb 1_a+\mathbb 1_{a'}+\sum\mathbb 1_{c}+\sum\mathbb 1_{c'}\in L$
+   ($a$, $a'$ und alle Kettenpunkte sind kettenüberdeckt), also $\delta(t^*)=0$.
+   Mit $X=\{p\}$ ginge es **nicht** — $p$ und $q$ liegen in denselben Idealen,
+   $\mathbb 1_{W\setminus\{p\}}\notin L$ (Probe (E2)): die Wahl des minimalen
+   Atoms ist Teil des Beweises.
+
+Mit (F) zusätzlich: zwei nebeneinander liegende **ordnungsdichte** Ketten
+(Theorem 17 gibt (i) auf jedem Ideal, Korollar 38.2 zweiter Punkt gibt (ii));
+und die unendliche Antikette ($X=$ alle Atome, $W\setminus X=\{0\}$,
+$\mathbb 1_{\{0\}}=\mathbb 1_{\T_{<x}}\in L$) — das ist Proposition 19.1 als
+Spezialfall.
+
+**Was nicht erfaßt ist.** Zwei **gestapelte** $\zeta$-Ketten und Blockstapel:
+dort ist (i) für die Punkte der oberen Kette die Frage selbst (ihre Ideale
+sind weder endlich noch intervallendlich), und Korollar 14/16 (beschränktes
+$\Phi$) bzw. Theorem 17 ((F)) bleiben die Sätze. Halbordnungen, in denen $W$
+maximale Elemente hat, die keine minimalen Atome sind (unendliche Krone,
+unendliches N): dort ist $\mathbb 1_{W\setminus X}\notin\overline L$ für jedes
+zulässige $X$, und Theorem 23 ((F), endliche Höhe) bleibt der Satz. Ob es eine
+Halbordnung mit **endlichen Idealen** gibt, auf der die Dualität fällt, ist
+offen; Theorem 38 sagt, daß sie weder gerichtet noch eine disjunkte Vereinigung
+gerichteter Stücke noch kettenüberdeckt sein darf und daß ihr Sockel unter
+keiner Wahl minimaler Atome ausschöpfbar ist.
+
+### Gemessen: `Task23/ideal_exhaustion.py`, exakt, rc=0
+
+Alle Proben auf Trunkierungen $W_n$ **ohne Spitze**, Rangvergleich in
+`Fraction` (Systemaufbau aus `antisym.py`):
+
+* **(A)** zwei disjunkte $\omega$-Ketten ($2^{-i},3^{-j}$ und die Massen von
+  Theorem 37, $B=16$), $n=2..6$: $g(c)$ erzwungen **genau** für die
+  nicht-maximalen $c$ von $W_n$, frei für die beiden maximalen (deren
+  überdeckende Ideale in $W_n$ fehlen) — die Mechanik von Korollar 38.2, Punkt
+  für Punkt.
+* **(B)** die Leiter, drei Profile einschließlich $\alpha=\beta$, $n=2..6$:
+  ebenso.
+* **(C)** Binärbaum, Tiefe $2,3,4$: ebenso (innere Knoten erzwungen, Blätter
+  frei).
+* **(D)** Kanarienvogel Antikette: kein $g(a_i)$ erzwungen.
+* **(E)** Doppelschleife, Ketten der Länge $1,2,3$: $g(p),g(q),g(r),g(s)$
+  einzeln frei, $g(\T_{<a})$ erzwungen, $g(r)-g(s)$ erzwungen, **die Summe
+  über die nicht-maximalen Punkte nicht erzwungen** — die Idealsummen allein
+  genügen dort nicht, wie behauptet.
+* **(E2)** Doppelschleife, der Ausweg über ein minimales Atom: für $x\in\{r,s\}$
+  sind die Idealsummen von $\varphi_x$ erzwungen und
+  $\varphi_x(W_n\setminus\max\setminus\{x\})$ ist erzwungen; für $x=p$ ist es
+  **nicht** erzwungen (erwartet: $\mathbb 1_{W\setminus\{p\}}\notin L$); für
+  das nicht-minimale $x=a$ ebenfalls nicht (Kontrolle).
+* **(F)** 40 zufällige Halbordnungen mit kleinstem Element, $3\le n\le6$,
+  alle $1088$ Teilmengen $S$: liegt $\mathbb 1_S$ im Spann der
+  Idealindikatoren ($188$ Fälle), so ist $g(S)$ erzwungen — ausnahmslos. Und
+  umgekehrt in **keinem** Fall $g(S)$ erzwungen ohne Spannzugehörigkeit: ohne
+  Spitze erzwingen die Relationen von $g$ genau die Idealsummen, nichts mehr.
+  (Das ist strukturell klar — die Variablen $\kappa(c,0)$ kommen im System nur
+  in den Kombinationen $\Psi(s,0)=g(\T_{<s})$ vor — und hier gemessen.)
+
+Die Proben sind bewußt dünn: der Beweis von Theorem 38 ruht auf
+`prop:atomicposet` (sechster Lauf, dort an $89\,440+$ Fällen geprüft) und auf
+dominierter Konvergenz; das Orakel prüft die Mechanik von (ii) auf den
+endlichen Stücken und die beiden Kanarienvögel (D), (E), an denen sie versagen
+muß.
+
+### Ergebnis
+
+* **Bewiesen.** Theorem 38 und die Korollare 38.1–38.3. Insbesondere gilt die
+  Dualität $\Phi(t^*,0)=\Phi(0,t^*)$ ohne (F) und für jedes Massenprofil auf
+  der **Leiter**, auf der **disjunkten Vereinigung zweier $\omega$-Ketten**
+  (Theorem 37: kein Zertifikat — die Aussage gilt trotzdem), auf Bäumen ohne
+  Blätter, auf schwachen Ordnungen vom Typ $\omega$ mit endlichen Stufen und
+  auf der Doppelschleife.
+* **Erledigt.** Die „nächste Rechnung" des einunddreißigsten Laufs (positiv,
+  Weg (a), ohne Kreuzrelationen). Der Kandidat für ein „Gegenbeispiel mit
+  durchweg positiven Abwärtsmassen" (Lauf 23, konkretisiert in Lauf 31) ist
+  keiner. Die Vermutungen 32 und 34 und der Weg über Proposition 19.3 sind für
+  die Dualität auf der Leiter **nicht mehr nötig**; sie bleiben als Aussagen
+  über das LP-optimale bzw. Krylow-Zertifikat stehen.
+* **Offen.** Die nackte Klasse auf Ketten (unverändert). Eine Halbordnung mit
+  endlichen Idealen, auf der die Dualität fällt — oder der Satz, daß es keine
+  gibt. Die gestapelten $\zeta$-Ketten ohne (F) und ohne beschränktes $\Phi$.
+  Ein Gegenbeispiel unter (F) mit positiven Massen: der einzige verbliebene
+  Kandidatentyp hat maximale Elemente in $W$, die keine minimalen Atome sind,
+  **und** unendliche Höhe (sonst Theorem 23) — etwa eine unendliche Krone über
+  einer $\omega$-Kette.
+
+### Sackgassen, dreißigster Nachtrag
+
+* **Die unendliche Halbordnung mit endlichen Idealen über Zertifikate angehen.**
+  Sieben Läufe (25–31) haben die Leiter über beschränkte Zertifikate,
+  LP-Minima, Hankel-Normalformen und Sättigungssysteme angegangen — für eine
+  Aussage, die aus der Idealreduktion des vierten Laufs, `prop:atomicposet` und
+  dominierter Konvergenz in zehn Zeilen folgt. Zum zwölften Mal eine Prämisse
+  aus der Rechnung statt aus dem Beweisbedarf: „eine unendliche Halbordnung
+  braucht ein unendliches Zertifikat". Sie braucht endliche Ideale und eine
+  Ausschöpfung.
+* **Die Kreuzrelationen $(a_i,b_j)$ für den Schluß brauchen** (Weg (a) des
+  einunddreißigsten Laufs, wie dort skizziert). Unnötig: die Relationen an
+  $(a,0)$ — d.h. $\delta(a)=g(\T_{<a})$ — tragen alles. Die Kreuzrelationen
+  stecken im Beweis von `prop:atomicposet` auf dem Ideal, nicht im Grenzübergang.
+* **Beim Handrechnen $\kappa(a_n,a_\omega)$ und $\kappa(a_\omega,a_n)$
+  unabhängig ansetzen.** Dieser Lauf hat auf der Kette vom Typ $\omega+1$
+  (Atome $a_1<a_2<\dots<a_\omega$ unter $t^*$) zwanzig Minuten lang ein
+  „Gegenbeispiel" zu Theorem 17 unter (F) in der Hand gehabt — $v_n$-Werte, die
+  aus $\kappa(a_\omega,a_n)$ kamen, während die Relationen an $(a_n,a_\omega)$
+  längst $\kappa(a_n,a_\omega)=0$ gegeben hatten. Mit der Antisymmetrie bricht
+  es zusammen ($v_n=0$, dann $y=0$). Wer $\kappa$ von Hand belegt, führe die
+  Unbekannten als Paare $i<j$ wie `antisym.py`, nicht als Matrix.
+* **„Keine maximalen Elemente plus endliche Ideale genügt für (ii) mit
+  $X=\emptyset$."** Falsch: die Doppelschleife (Probe (E)). Die richtige
+  Bedingung ist $\mathbb 1_{W\setminus X}\in\overline L$, und die Wahl von $X$
+  ist nicht beliebig (Probe (E2), $x=p$ gegen $x=r$).
+* **Aus der Nichtexistenz eines Zertifikats (Theorem 37) auf einen Ausfall der
+  Dualität hoffen.** Das Kriterium „$\delta(t)$ erzwungen $\iff e_t\in\mathcal L$"
+  ist ein Satz über endliche Matrizen (sechster Lauf, Probe 1 von
+  `selfadjoint.py`). Im Unendlichen ist $\delta(t^*)$ hier durch eine
+  **unendliche** Kombination von Relationen erzwungen (eine je Ideal), und die
+  hat kein beschränktes $T$.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `duality_of_atomic_idealExhaustion`**, eingetragen in
+`TauCeti/MartingaleProblems/README.md` (Meilenstein 8, vor
+`Lagrange.sum_inv_prod_sub_eq_zero`) und in `PLAN.md`, Task 23:
+
+> Rein atomare Uhr auf einer abzählbaren Halbordnung mit kleinstem Element,
+> $m\ge0$, $t$ ein Punkt, unter dem jedes Ideal $\T_{\le a}$ ($a<t$) endlich
+> ist und $\T_{<t}$ nach oben gerichtet ohne Maximum. Dann
+> $\Phi(t,0)=\Phi(0,t)$.
+
+Es ruht auf `duality_of_atomic` (auf dem endlichen Ideal, das ist
+`prop:atomicposet`) und auf einem einzigen analytischen Schritt, dem Schwanz
+einer absolut konvergenten Reihe längs einer kofinalen Folge
+(`tendsto_tsum_compl_atTop_zero`); keine Matrixanalysis, keine
+Zertifikate, keine komplexe Analysis. Zwei Geschwister mit wörtlich demselben
+Beweis (disjunkte Vereinigung gerichteter Stücke ohne Maxima; kettenüberdeckte
+Punkte) gehören daneben. Es ist jetzt dran, weil es (a) die kleinste offene
+Instanz von sieben Läufen — die Leiter — für **alle** Massen schließt, (b) das
+erste Roadmap-Item ist, das eine unendliche Halbordnung unendlicher Höhe mit
+nicht transitiver Unvergleichbarkeit ohne jede Hypothese jenseits der Existenz
+der Integrale erreicht, und (c) mit dem Abnahmebeispiel „zwei $\omega$-Ketten
+mit den Massen von Theorem 37" festhält, daß die Zertifikatsmethode hinreichend
+und nicht notwendig ist — ein Punkt, den die Roadmap bisher nicht enthielt.
+
+**Nächste Rechnung** (in `PLAN.md` benannt): gibt es eine Halbordnung mit
+**endlichen Idealen**, auf der die Dualität fällt? Der Stand dazu steht im
+Nachtrag unten: drei immer trickreichere Kandidaten sind in diesem Lauf
+gefallen (Dreifachschleife, hängende Doppelschleife, doppelt hängende
+Doppelschleife), jeder durch einen anderen Mechanismus, und die Vermutung
+lautet jetzt: **endliche Ideale unter $t^*$ und $m\ge0$ genügen.** Der Weg
+dorthin und das Werkzeug stehen im Nachtrag.
+
+### Nachtrag desselben Laufs: die $\lambda$-Fassung von Theorem 38, drei gefallene Kandidaten, eine Sackgasse
+
+**Theorem 38$''$ (die $\lambda$-Fassung).** Rahmen wie in Theorem 38, $m_0=0$,
+(i) $\delta\equiv0$ auf $W$. Es gebe endlich viele paarweise disjunkte Mengen
+$X_1,\dots,X_k$ minimaler Atome, reelle $\lambda_1,\dots,\lambda_k$ und
+$h\in\overline L$ mit
+$$\mathbb 1_W=h+\sum_j\lambda_j\mathbb 1_{X_j}\quad\text{auf }W\setminus\{0\},
+\qquad \sum_j\lambda_j\,m(X_j)\neq0,$$
+jedes $X_j$ endlich oder $\sum_{x\in X_i,x'\in X_j}m_xm_{x'}|\kappa(x,x')|<\infty$
+für alle $i,j$. Dann $\delta(t)=0$.
+
+*Beweis.* Für $x\in X_i$ ist wie in Theorem 38 $\delta(t)=\varphi_x(W)$ und
+$\varphi_x(h)=0$, also $\delta(t)=\sum_j\lambda_j\varphi_x(X_j)$. Multipliziere
+mit $\lambda_i m_x$ und summiere über alle $x\in\bigcup_iX_i$:
+$$\delta(t)\sum_i\lambda_im(X_i)=\sum_{i,j}\lambda_i\lambda_j
+  \sum_{x\in X_i,\,x'\in X_j}m_xm_{x'}\kappa(x',x)=0$$
+durch Antisymmetrie der Doppelsumme (die Gewichte $\lambda_i\lambda_jm_xm_{x'}$
+sind symmetrisch in $(x,x')$; Fubini unter der Summierbarkeitshypothese).
+$\square$ — Theorem 38 ist der Fall $k=1$, $\lambda_1=1$ (und $X=\emptyset$
+der Fall $k=0$ mit $g$ statt $\varphi_x$).
+
+**Anwendung 1: die hängende Doppelschleife.** $p,q,r_0,s_0$ minimal, $r_0<r$,
+$s_0<s$, $a>p,q,r$, $a'>p,q,s$, $\omega$-Ketten über $a$ und $a'$. Hier sind
+$r,s$ nicht mehr minimal, also nicht durch ein $X$ entfernbar, und
+$\overline L$ verlangt $f(p)=f(q)=f(r)+f(s)$ ($1_{\T_{<a}}$, $1_{\T_{<a'}}$
+sind die einzigen Idealindikatoren, die $p,q,r,s$ treffen). Also
+$\mathbb 1_{W\setminus X}\notin\overline L$ für jedes $X$ — aber
+$\mathbb 1_W+\mathbb 1_{\{p,q\}}=\mathbb 1_{\T_{<a}}+\mathbb 1_{\T_{<a'}}+\mathbb 1_U\in\overline L$
+($U$ die kettenüberdeckten Punkte $r_0,s_0,a,a'$ und die Ketten), d.h.
+$X=\{p,q\}$, $\lambda=-1$: **Dualität für alle Massen.** Gemessen
+(`bowties.py` (1), $n=2,3,4$, exakt): $h_n$ liegt im Spann, die gewichtete
+Summe $\sum_{x\in X}\lambda m_x\varphi_x(h_n)$ ist erzwungen, die einzelnen
+$\varphi_x(W_n\setminus\max)$ und $g(W_n\setminus\max)$ sind es nicht.
+
+**Anwendung 2: zwei Zwillingsstrukturen mit verschiedenen Defiziten.**
+Struktur A wie eben; Struktur B mit $p',q'$ und **drei** privaten hängenden
+Zweigen $u_0<u$, $v_0<v$, $w_0<w$ ($b>p',q',u$; $b'>p',q',v$; $b''>p',q',w$),
+Ketten über $a,a',b,b',b''$. $\overline L$ verlangt $f(p)=f(q)=f(r)+f(s)$ und
+$f(p')=f(q')=f(u)+f(v)+f(w)$; ein einzelnes $\lambda$ scheitert ($1-\lambda=2$
+gegen $1-\lambda=3$), aber $X_1=\{p,q\}$, $\lambda_1=-1$, $X_2=\{p',q'\}$,
+$\lambda_2=-2$ mit $\sum\lambda_jm(X_j)<0$ schließt. Gemessen (`bowties.py`
+(2), $n=1,2$): $h_n$ im Spann und gewichtete Summe erzwungen; Kontrolle mit
+$\lambda=(-1,-1)$: nicht im Spann, nicht erzwungen.
+
+**Anwendung 3, und sie fällt aus dem Satz heraus: die doppelt hängende
+Doppelschleife.** $p_0<p$, $q_0<q$, $r_0<r$, $s_0<s$ (nur $p_0,q_0,r_0,s_0$
+minimal), $a>p,q,r$, $a'>p,q,s$, Ketten über $a,a'$. Alle minimalen Atome
+sind kettenüberdeckt, also ändert kein $X$ etwas an $p,q,r,s$, und
+$\overline L$ verlangt dort $f(p)=f(q)=f(r)+f(s)$ gegen
+$\mathbb 1_W(p)=1=\mathbb 1_W(r)+\mathbb 1_W(s)-1$: **kein** $h+\sum\lambda_j\mathbb 1_{X_j}$
+stellt $\mathbb 1_W$ dar. Trotzdem gilt die Dualität, und der Beweis ist
+sechs Zeilen: für jedes minimale $x$ ist $\delta(t^*)=\varphi_x(W)$
+($(\diamondsuit)$ an $(x,t^*)$), $\varphi_x$ verschwindet auf allen
+kettenüberdeckten Punkten und hat $\varphi_x(p)+\varphi_x(q)+\varphi_x(r)=0
+=\varphi_x(p)+\varphi_x(q)+\varphi_x(s)$ (Ideale $a$, $a'$), also
+$$\delta(t^*)=\varphi_{r_0}(s)=m_s\kappa(s,r_0),\qquad
+  \delta(t^*)=\varphi_{s_0}(r)=m_r\kappa(r,s_0).$$
+Und $(\diamondsuit)$ an $(r,s)$ lautet $\Psi(r,s)+\Psi(s,r)=0$, d.h.
+$m_{r_0}\kappa(r_0,s)+m_{s_0}\kappa(s_0,r)=0$; mit der Antisymmetrie
+$$-\frac{m_{r_0}}{m_s}\,\delta(t^*)-\frac{m_{s_0}}{m_r}\,\delta(t^*)=0,
+\qquad\text{also}\qquad\delta(t^*)=0 .$$
+**Die privaten Zweige reden über die Relation $(r,s)$ miteinander** — das ist
+ein dritter Mechanismus neben den Idealsummen (Theorem 38) und den
+Zwillingsmengen (Theorem 38$''$), und er benutzt eine Relation an einem
+Paar **nicht-minimaler, unvergleichbarer** Punkte. Gemessen (`resonance.py`,
+exakt, $n=2,3$, drei Massenprofile): $\varphi_{r_0}(W_n\setminus\max)$ ist
+erzwungen, und ebenso die daneben gefundene Identität
+$m_{r_0}m_r\varphi_{r_0}(W)=m_pm_{p_0}\varphi_{p_0}(W)+m_qm_{q_0}\varphi_{q_0}(W)$
+(aus $(\diamondsuit)$ an $(r,p)$, $(r,q)$; für sich allein gäbe sie nur
+$\delta\cdot[m_{r_0}m_r-m_pm_{p_0}-m_qm_{q_0}]=0$, also Dualität außerhalb
+einer **Resonanz** der Massen wie beim o-Diamanten des achten Laufs — die
+Resonanz ist hier durch die $(r,s)$-Relation unschädlich, das Orakel sieht bei
+resonanten Massen keinen Unterschied). Die Dreifachschleife
+($p,q,r<a$; $p,q,s<a'$; $r,s<a''$; `triple_bowtie.py`) fällt schon unter
+Theorem 38 mit $X=\emptyset$: die dritte Schleife trennt $r$ und $s$,
+$\mathbb 1_W$ liegt im Spann.
+
+**Die Vermutung, die daraus wird.** *Ist $\T$ abzählbar mit kleinstem Element,
+$m\ge0$, und ist jedes Ideal $\T_{\le a}$ mit $a<t^*$ endlich, so ist
+$\delta(t^*)=0$* — ohne (F), ohne Bedingung an die Gestalt von $W$. Alle
+in diesem Lauf betrachteten Instanzen bestätigen sie, jede mit einem anderen
+Mechanismus. Die unendliche Antikette (Theorem 19) hat ebenfalls endliche
+Ideale und **fällt** — aber ihre Atome sind maximal in $W$, und $t^*$ ist das
+einzige, was darüber liegt. Die Vermutung ist also mit „und $W$ hat keine
+maximalen Elemente" zu lesen; hat $W$ maximale Elemente, die minimale Atome
+sind, so braucht es auf diesen (F) (Theorem 38 mit $X$ = diese Atome). Der Beweis, wenn es einen gibt, muß die drei
+Mechanismen vereinen: $\delta(t^*)=\varphi_x(W)$ für jedes minimale $x$,
+$\varphi_x$ verschwindet auf kettenüberdeckten Punkten und hat verschwindende
+Idealsummen, und die Relationen an Paaren nicht-minimaler Punkte koppeln die
+$\varphi_x$ untereinander. Werkzeug für Kandidaten: die Rangprobe
+„$\varphi_x(W_n\setminus\max\setminus\{x\})$ erzwungen" auf Trunkierungen ohne
+Spitze (`bowties.py`, `resonance.py`) — ist sie für alle $n$ erfüllt, folgt
+$\delta(t^*)=\lim_n\varphi_x(W_n\setminus\max)=0$ **rigoros** (absolute
+Konvergenz); ist sie verletzt, sagt das über das unendliche System nichts.
+
+### Sackgassen, einunddreißigster Nachtrag
+
+* **Die Kettenwerte für null halten und das unendliche System auf den Kern
+  reduzieren.** Dieser Lauf hat eine Stunde lang ein Skript (`hanging.py`,
+  gelöscht) betrieben, das für „endlicher Kern plus hängende $\omega$-Ketten"
+  annahm, alle $\kappa$-Werte an Kettenpunkten verschwänden, und daraus ein
+  endliches System ableitete, das $\delta(t^*)=0$ „für jeden Kern" erzwang.
+  Beides falsch bzw. leer: die Kettenwerte $\kappa(v,c_i)$ sind auf
+  Trunkierungen **nicht** erzwungen (`chainvals.py`: alle Kreuzwerte zwischen
+  den beiden Ketten und zwischen einer Kette und dem fremden Zweig bleiben
+  frei), und das reduzierte System war eine **Einschränkung** des unendlichen
+  auf kernträgerige Lösungen, deren Relationen die des endlichen
+  Kern-mit-Spitze-Systems enthalten — sein „erzwungen" ist `prop:atomicposet`
+  und sagt über das unendliche System nichts. Verschwindende Idealsummen hat
+  $\varphi_x$ nur für **minimale** $x$ ($\Psi(x,\cdot)\equiv0$); für andere
+  $y$ ist $\varphi_y(\T_{<z})=-\Psi(y,z)\neq0$. Zum dreizehnten Mal eine
+  Prämisse aus der Rechnung statt aus dem Beweisbedarf.
+* **„Keine maximalen Elemente plus endliche Ideale $\Rightarrow$ Theorem 38
+  anwendbar."** Falsch in jeder Fassung: die Doppelschleife schlägt $X=\emptyset$,
+  die hängende Doppelschleife schlägt $\lambda=1$, die doppelt hängende schlägt
+  jedes $\sum\lambda_j\mathbb 1_{X_j}$. Die Dualität gilt auf allen dreien —
+  aus je einem anderen Grund.
+* **Ein Zertifikat für $\varphi_{r_0}(W)$ per Gauß ablesen wollen**
+  (`bowtie_cert.py`): die Elimination liefert irgendein Urbild mit fünfzig
+  Termen und Nennern wie $1799915307008$, aus dem der Mechanismus nicht zu
+  erkennen ist. Der Mechanismus war von Hand in sechs Zeilen zu finden, sobald
+  die Frage richtig gestellt war (welche Relation koppelt $r$ und $s$?). Wer
+  Zertifikate lesen will, minimiere zuerst den Träger.
+
+Skripte dieses Laufs, alle exakt in `Fraction`: `ideal_exhaustion.py`
+(Proben (A)–(F), rc=0, Ausgabe `ideal_exhaustion.txt`), `triple_bowtie.py`,
+`bowties.py` (rc=0), `resonance.py`, `chainvals.py`, `bowtie_cert.py`.
+
+### Manuskript
+
+`thm:idealexhaustion` (Theorem 38 in der Fassung mit einem $X$),
+`cor:idealexhaustion` (gerichtet / disjunkte Vereinigung / kettenüberdeckt;
+Leiter, $\omega$-Ketten, Bäume) und `rem:idealexhaustion` (die disjunkte
+Vereinigung zweier $\omega$-Ketten: kein Zertifikat, Dualität; die
+Zertifikatsmethode ist hinreichend, nicht notwendig) stehen nach
+`prop:nocertificate` und vor `rem:twomethods`; `rem:twomethods` nennt die
+dritte Methode und ihren blinden Fleck; die Statustabelle von
+`rem:atomsnotchange` hat zwei neue Zeilen. `python3 check.py`: **clean**,
+136 Seiten, größte Überlänge 7.7pt wie zuvor (eine erste Fassung der
+Tabellenzeile war 80pt zu breit und ist geteilt). Die $\lambda$-Fassung und
+die drei Schleifen stehen nur hier.
+
+### Zweiter Nachtrag: die Klasse „Kern plus hängende Ketten" hat einen endlichen Kern — Vermutung C(K), erschöpfend bis sechs Punkte
+
+**Die Zufallssuche** (`random_hanging.py`, exakt): zufällige endliche Kerne $K$
+($4\le|K|\le9$, zufällige Aufwärtskanten mit Dichte $0{,}15$–$0{,}5$, dazu
+stufenweise gebaute zwillingsfreundliche Kerne), über **jedem** maximalen
+Element eine $\omega$-Kette, Trunkierung $W_n$ ohne Spitze, zufällige
+rationale Massen. Probe (a): gibt es ein minimales Atom $x$ mit
+$\varphi_x(W_n\setminus\max\setminus\{x\})$ erzwungen? Probe (b): ist
+$g(W_n\setminus\max)$ erzwungen (Theorem 38 mit $X=\emptyset$)?
+
+| Lauf | Kerne | (a) für ein $x$ | (b) | weder (a) noch (b) |
+|---|---|---|---|---|
+| $n=2$, seed 32 | 60 | 60 | 60 | 0 |
+| $n=2$, seed 7 | 500 | 500 | 490 | 0 |
+| $n=2$, seed 11, mit Stufenkernen | 300 | 300 | 281 | 0 |
+| $n=3$, seed 5, mit Stufenkernen | 120 | 120 | 109 | 0 |
+
+Also: in $39$ von $980$ Kernen versagt die Idealausschöpfung ($X=\emptyset$),
+in **keinem** die Probe über ein minimales Atom. Kein Kandidat.
+
+**Der endliche Kern der Frage.** Für die Klasse „endlicher Kern $K$ (mit
+kleinstem Element $0$, $m_0=0$), über jedem maximalen Element von $K$ eine
+$\omega$-Kette, Spitze $t^*$" ist das unendliche System auf ein **endliches**
+zurückführbar — nicht durch Nullsetzen der Kettenwerte (Sackgasse oben),
+sondern durch Weglassen: alle folgenden Relationen sind Relationen des
+unendlichen Systems, und sie reden nur über $\kappa$ auf $K\times K$.
+
+1. $(\diamondsuit)$ an allen Paaren von $K$; daraus $\delta\equiv0$ auf $K$
+   (`prop:atomicposet` auf jedem Ideal), also $\Psi=VK$ **antisymmetrisch**
+   auf $K$, d.h. $VK=KV^{\mathsf T}$.
+2. Für $x$ minimal und $k$ maximal in $K$: $(\diamondsuit)$ an $(c_1,x)$ mit
+   der ersten Kettenstelle $c_1$ über $k$ ($\T_{<c_1}=\T_{\le k}$) gibt
+   $\sum_{v\le k}m_v\kappa(v,x)=0$; wegen $(VK)_{kx}=-(VK)_{xk}=0$ ist das
+   **$\kappa(k,x)=0$** — minimale Atome und maximale Kernpunkte reden nicht
+   miteinander.
+3. Für $x$ minimal: $(\diamondsuit)$ an $(x,t^*)$ gibt
+   $\delta(t^*)=\varphi_x(W)=\varphi_x(K)=\sum_{v\in K}m_v\kappa(v,x)$, weil
+   $\varphi_x$ auf den kettenüberdeckten Kettenpunkten verschwindet (Ideale
+   $\T_{<c_{i+1}}\setminus\T_{<c_i}=\{c_i\}$, Relationen $(c_i,x)$).
+
+> **Vermutung C(K).** Sei $K$ eine endliche Halbordnung mit kleinstem Element
+> $0$, $m\ge0$ mit $m_0=0$ und $m>0$ sonst, $\kappa$ antisymmetrisch auf
+> $K\times K$ mit $VK=KV^{\mathsf T}$ und $\kappa(k,x)=0$ für alle maximalen
+> $k$ und minimalen $x$. Ist dann $\sum_{v\in K}m_v\kappa(v,x)$ für alle
+> minimalen $x$ **derselbe** Wert $\theta$, so ist $\theta=0$.
+
+Gilt C(K) für alle endlichen $K$, so gilt die Dualität auf **jeder**
+Halbordnung der Klasse — mit Theorem 38 zusammen also auf allem, was dieser
+Lauf gesehen hat, ohne (F). Gemessen (`core_conjecture.py`, exakt, rc=0):
+**alle** Halbordnungen mit kleinstem Element auf $2,3,4,5$ Punkten
+($2+6+38+438$ Konfigurationen mit je zwei zufälligen Massenvektoren), $150$
+zufällige auf $6$ und $60$ auf $7$ Punkten, dazu die vier Schleifen des Laufs
+(Doppelschleife, hängende, doppelt hängende, A+B) je mit $2^{-i}$ und mit
+lauter Einsen: **kein Ausfall.** Danach erschöpfend auf **sechs** Punkten
+(`core_conjecture_n6.txt`): alle $4231$ beschrifteten Halbordnungen mit
+kleinstem Element, je ein zufälliger Massenvektor, **kein Ausfall** (3 s).
+Das Skript stellt genau das System 1–3 auf
+(die Relationen $\varphi_x(K)=\varphi_{x'}(K)$ eingeschlossen) und prüft per
+Rangvergleich, ob $\varphi_{x_1}(K)$ erzwungen ist.
+
+**Warum das der richtige nächste Satz ist.** C(K) ist endlichdimensionale
+lineare Algebra ohne Grenzübergang, in derselben Sprache wie
+`lem:selfadjoint` ($V$ nilpotent, $K$ antisymmetrisch, $VK=KV^{\mathsf T}$ —
+$K$ ist ein *Verflechter* zwischen $V^{\mathsf T}$ und $V$, wie die Zertifikate
+$T$ zwischen $V$ und $V^{\mathsf T}$), und die drei Mechanismen dieses Laufs
+sind Spezialfälle: Zwillingsmengen (die Konstanz von $\theta$ über $X$ plus
+Antisymmetrie), die $(r,s)$-Kopplung ($(VK)_{rs}=-(VK)_{sr}$), die
+Idealsummen ($(VK)_{sx}=0$). Ein Beweis von C(K) wäre der zweite Satz der
+Roadmap über alle Verflechter nach `Matrix.certificate_mulVec_pow_one`; ein
+Gegenbeispiel wäre auf sieben oder mehr Punkten zu suchen, denn bis sechs ist
+die Aussage erschöpfend wahr (bei je einem Massenvektor; auf fünf Punkten bei
+zweien).
+
+Skripte dieses Nachtrags: `random_hanging.py`, `core_conjecture.py` (rc=0).
+
+**Wo in C(K) die Schwierigkeit sitzt, in einer Zeile.** Für $k\in\max K$ ist
+$\varphi_x(\T_{\le k})=\varphi_x(\T_{<k})+m_k\kappa(k,x)=0+0$ (Idealsumme und
+Haken). Mit $z:=\sum_{k\in\max K}\mathbb 1_{\T_{\le k}}-\mathbb 1_K$ — an $v$
+steht die Zahl der maximalen Elemente über $v$, minus eins — folgt
+$$\theta=\varphi_x(K)=-\varphi_x(z)=-\sum_{v}z(v)\,m_v\kappa(v,x)
+\qquad\text{für jedes minimale }x,$$
+und $z$ ist genau auf den **geteilten** Punkten getragen (unter mindestens zwei
+maximalen Elementen). Liegt kein Punkt unter zwei maximalen Elementen, so ist
+$z=0$ und $\theta=0$ (die disjunkte Vereinigung). Sind alle geteilten Punkte
+minimal, so ist $\theta=-\sum_{v\in X}z(v)\varphi_x(v)$ mit $X$ den geteilten
+minimalen Atomen — das ist Theorem 38$''$ mit $\lambda_j=-z$ auf $X_j$, und
+die Antisymmetrie schließt. Die offene Arbeit von C(K) sind die geteilten
+**nicht-minimalen** Punkte $v$, deren $\kappa(v,x)$ nur über die
+Verflechtungsrelation $VK=KV^{\mathsf T}$ an anderen Paaren gebunden ist — in
+der doppelt hängenden Doppelschleife über $(r,p),(r,q),(r,s)$. Ein Beweis wird
+dort ansetzen: Induktion über die Höhe der geteilten Punkte, mit den Paaren
+$(v,y)$, $y$ minimal oder privat, als Relationen.
+
+## Die endliche Kernreduktion, 2026-09-16 (dreiunddreißigster Lauf): die Klasse „endlicher Kern plus hängende Ketten" fällt ohne C(K) — die Kettenrelationen machen $K\cup\{t^*\}$ zu einem endlichen System
+
+Der zweiunddreißigste Lauf hat die Klasse „endlicher Kern $K$, über jedem
+maximalen Element eine $\omega$-Kette" auf die endliche Vermutung C(K)
+zurückgeführt und C(K) bis sechs Punkte erschöpfend bestätigt. Dieser Lauf
+**beweist die Dualität auf der ganzen Klasse für jedes $m\ge0$, ohne (F) und
+ohne C(K)** — mit einem Argument, das C(K) gerade nicht braucht, weil es die
+Relationen benutzt, die C(K) weggelassen hat: die Kettenrelationen $(c_i,s)$
+für **nicht-minimale** $s\in K$. Der Satz ist allgemeiner und subsumiert
+Theorem 38 (Fall $X=\emptyset$) als den Fall $K=\{0\}$.
+
+Neu ist `Task23/core_reduction.py` (exakt in `Fraction`, Proben (A), (B),
+(B$'$), (B$''$), (C), rc=0, Ausgabe `core_reduction.txt`).
+
+### Die Beobachtung, in vier Zeilen
+
+Rahmen des fünfundzwanzigsten Laufs; $t^*$ die Spitze, $W=\T_{<t^*}$,
+$\theta:=\delta(t^*)$, und **(i)** $\delta\equiv0$ auf $W$ (etwa: alle Ideale
+$\T_{\le a}$, $a\in W$, endlich und `prop:atomicposet`). Sei $K\subseteq W$ ein
+**endliches** Abwärtsideal mit $0\in K$, $P:=K\setminus\{0\}$, und
+$Z_K:\R^P\to\R^K$, $(Zf)(s)=\sum_{a<s}f(a)$, mit Bild $R:=\operatorname{ran}Z_K$.
+
+1. Für jedes $d\in W$ ist $s\mapsto\Psi(d,s)$ auf $K$ gleich $-Z_K\psi_d$ mit
+   $\psi_d(b)=m_b\kappa(b,d)$: das ist $(\diamondsuit)$ an $(d,s)$ mit
+   $\delta(d)=\delta(s)=0$ und $\Psi(s,d)=\sum_{b<s}m_b\kappa(b,d)$, wobei
+   $b<s\in K$ nach $b\in K$ zwingt ($K$ Abwärtsideal). Also
+   $F_{\mathbb 1_{\T_{<d}}}\in R$ für $F_f(s):=\sum_{a\in W}f(a)\,m_a\kappa(a,s)$.
+2. $f\mapsto F_f$ ist linear und stetig unter beschränkten punktweisen
+   Folgenlimiten (dominierte Konvergenz gegen $m_a|\kappa(a,s)|$, summierbar
+   für jedes der endlich vielen $s\in K$), und $R$ ist als Unterraum eines
+   endlichdimensionalen Raums abgeschlossen. Also $F_f\in R$ für alle
+   $f\in\overline L$ ($\overline L$ wie in Theorem 38, Funktionen auf
+   $W\setminus\{0\}$).
+3. Ist $\mathbb 1_{W\setminus K}\in\overline L$, so liegt
+   $\chi(s):=\sum_{c\in W\setminus K}m_c\kappa(c,s)$ ($s\in K$) in $R$:
+   $\chi=Z_K\psi''$ für ein $\psi''$ auf $P$. Wegen $Z_Ke_k=0$ für maximale
+   $k\in K$ darf $\psi''(P)$ frei gewählt werden (falls $P\neq\emptyset$).
+4. Setze $\kappa'(a,t^*):=\kappa(a,t^*)+\psi''(a)/m_a$ für $a\in P$ und
+   $\kappa'=\kappa$ auf $K\times K$. Dann erfüllt $\kappa'$ $(\diamondsuit)$ an
+   **allen** Paaren des endlichen $K':=K\cup\{t^*\}$ mit $\delta'(t^*)=\theta$,
+   und `prop:atomicposet` auf $K'$ ($m\ge0$) gibt $\theta=0$.
+
+### Theorem 39 (endliche Kernreduktion)
+
+> **Theorem 39.** Rahmen wie oben. Es gelte (i) $\delta(a)=0$ für alle $a\in W$
+> und (ii$'$): es gibt ein endliches Abwärtsideal $K\subseteq W$ mit $0\in K$
+> und $\mathbb 1_{W\setminus K}\in\overline L$. Dann $\delta(t^*)=0$.
+
+*Beweis.* Schritte 1–3 oben liefern $\chi=Z_K\psi''$; insbesondere
+$\chi(0)=0$, d.h. $g(W\setminus K)=0$, denn jedes Element von $R$ verschwindet
+bei $0$. Ist $P=\emptyset$, so ist $K=\{0\}$, $R=\{0\}$ und
+$\theta=g(W)=g(W\setminus\{0\})=\chi(0)=0$ (Relation $(0,t^*)$: $\theta=g(W)$).
+Sei $P\neq\emptyset$. Schreibe $\psi_\infty(a):=m_a\kappa(a,t^*)$ und wähle
+$\psi''$ mit $Z_K\psi''=\chi$ und $\psi''(P)=\theta-\psi_\infty(K)
+=\sum_{c\in W\setminus K}m_c\kappa(c,t^*)$ (Korrektur um ein Vielfaches von
+$e_k$, $k$ maximal in $K$). Für $s\in K$ ist die Relation $(s,t^*)$ des
+unendlichen Systems
+$$\Psi(s,t^*)+\Psi(t^*,s)=\theta,\qquad
+  \Psi(t^*,s)=\varphi_s(K)+\chi(s),\qquad
+  \Psi(s,t^*)=(Z_K\psi_\infty)(s).$$
+Auf $K'$ mit $\kappa'$ ist $\Psi'(s,t^*)=(Z_K(\psi_\infty+\psi''))(s)
+=\Psi(s,t^*)+\chi(s)$ und $\Psi'(t^*,s)=\varphi_s(K)$, also
+$\Psi'(s,t^*)+\Psi'(t^*,s)=\theta$; und
+$\delta'(t^*)=\psi_\infty(K)+\psi''(P)=\theta$, $\delta'=\delta=0$ auf $K$.
+Damit gilt $(\diamondsuit)$ an allen Paaren von $K'$ (auf $K\times K$ durch
+Einschränkung, an $(t^*,t^*)$ trivial). $K'$ ist eine endliche Halbordnung
+mit kleinstem Element und $m\ge0$; `prop:atomicposet` gibt $\delta'\equiv0$,
+insbesondere $\theta=\delta'(t^*)=0$. $\square$
+
+**Wo $m\ge0$ eingeht, und nur dort:** in `prop:atomicposet` auf $K'$. Die
+Reduktion selbst (Schritte 1–4) ist vorzeichenfrei; Probe (B$'$) prüft sie
+mit gemischten Vorzeichen.
+
+**Theorem 38, Fall $X=\emptyset$, ist $K=\{0\}$.** Theorem 38 mit endlichem
+$X\neq\emptyset$ ist $K=\{0\}\cup X$ — ohne die dortige Zusatzhypothese
+$m_0=0$. Nur der Fall eines **unendlichen** $X$ (unendliche Antikette unter
+(F)) bleibt Theorem 38 vorbehalten.
+
+### Korollar 39.1: die Klasse „endlicher Kern plus hängende Ketten" — Vermutung C(K) ist für die Dualität gegenstandslos
+
+$K$ endliche Halbordnung mit kleinstem Element, über jedem maximalen Element
+von $K$ eine $\omega$-Kette $c_1<c_2<\dots$, Spitze $t^*$, $m\ge0$ beliebig.
+Alle Ideale sind endlich, also (i). Jeder Kettenpunkt ist kettenüberdeckt
+($\T_{<c_{i+1}}=\T_{\le c_i}$, $\T_{<c_1}=\T_{\le k}$), also
+$\mathbb 1_{c_i}\in L$ und $\mathbb 1_{W\setminus K}=\sum_i\mathbb 1_{c_i}\in\overline L$
+(beschränkter Limes endlicher Summen). Theorem 39: $\delta(t^*)=0$.
+
+Das erledigt alle Instanzen des zweiunddreißigsten Laufs auf einen Schlag —
+Doppelschleife, hängende, doppelt hängende Doppelschleife, A+B, die $39$ von
+$980$ zufälligen Kerne, in denen die Idealausschöpfung ($X=\emptyset$)
+versagte — und **macht die Vermutung C(K) für die Dualität überflüssig.** C(K)
+bleibt als Aussage über das endliche System (1)–(3) des zweiunddreißigsten
+Laufs eine offene, aber nicht mehr tragende Frage; ein Gegenbeispiel zu C(K)
+auf sieben oder mehr Punkten würde die Dualität nicht berühren, weil das
+unendliche System mehr Relationen hat als C(K) behält. Der Mechanismus der
+sechs Zeilen zur doppelt hängenden Doppelschleife (die Relation $(r,s)$
+zwischen nicht-minimalen, unvergleichbaren Punkten) ist ein Spezialfall von
+Schritt 1: $(r,s)$ ist eine der Relationen, die `prop:atomicposet` auf $K'$
+verbraucht.
+
+### Korollar 39.2: weitere Instanzen
+
+* **Alle bis auf endlich viele Punkte von $W$ kettenüberdeckt**, Ideale
+  endlich: $K$ := Abwärtsabschluss der nicht überdeckten Punkte (endlich, weil
+  die Ideale endlich sind).
+* **$W\setminus K$ zerfällt in Stücke, die Korollar 38.2 erfaßt** (gerichtet
+  ohne Maximum; disjunkte Vereinigung solcher; kettenüberdeckt), plus ein
+  endliches Abwärtsideal $K$, das den Rest enthält.
+* **$W$ hat endlich viele maximale Elemente** ist *notwendig* für (ii$'$):
+  ein maximales Element von $W$ liegt in keinem $\T_{<d}$, $d\in W$, also
+  verschwindet jedes $f\in\overline L$ dort, und $K$ muß $\max W$ enthalten.
+  Das ist konsistent mit der unendlichen Antikette (Theorem 19) und der
+  unendlichen Krone, wo die Dualität ohne (F) fällt bzw. offen ist.
+
+**Was Theorem 39 nicht erfaßt:** unendlich viele disjunkte Kerne, etwa
+$\bigsqcup_n(\text{Doppelschleife}_n+\text{Ketten})$. Dort ist
+$\mathbb 1_{W\setminus K}\notin\overline L$ für jedes endliche $K$, und
+Theorem 38 mit $X=\{r_n\}$ braucht die Summierbarkeit
+$\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|<\infty$, also (F)-artiges. Die
+Vermutung „endliche Ideale, $W$ ohne maximale Elemente $\Rightarrow$
+Dualität" ist damit weiterhin offen, aber ihr kleinster offener Fall ist jetzt
+benannt: **die unendliche disjunkte Vereinigung endlicher Kerne mit Ketten.**
+
+### Gemessen: `Task23/core_reduction.py`, exakt, rc=0
+
+* **(C)** Kontrolle des Orakels: `antisym.check_diamond` (Diamant
+  $m=(0,1,-1,0)$ fällt bei $t^*$, $m=(0,1,1,0)$ nicht).
+* **(A)** Trunkierungen $W_n$ **ohne Spitze**, $K$ = Kern, $n=1,2,3$, je
+  zwei Massenvektoren, fünf Kerne (Doppelschleife, hängende, doppelt hängende,
+  Dreifachschleife, Krone) und $40$ zufällige Kerne ($4\le|K|\le7$): für
+  jeden kettenüberdeckten Kettenpunkt $c$ und jedes $h\in\ker Z_K^{\mathsf T}$
+  ist $\sum_{s\in K}h(s)\,m_c\kappa(c,s)$ erzwungen ($=0$), d.h.
+  $m_c\kappa(c,\cdot)|_K\in R$ — Schritt 1 für $d=c_{i+1}$ minus $d=c_i$;
+  ebenso $\Psi(d,\cdot)|_K\in R$ für **jedes** $d\in W_n$ (Schritt 1 direkt).
+  Für den **obersten** Kettenpunkt $c_n$ (in $W_n$ nicht überdeckt) ist das
+  Funktional in $91$ von $93$ Proben **frei** — die Überdeckung ist der
+  Grund, nicht die Kettenlage. $\dim\ker Z_K^{\mathsf T}=5$ bzw. $4$: die
+  Bedingung $\chi\in R$ ist keine leere.
+* **(B)** Endliches Reduktionslemma auf zufälligen endlichen Halbordnungen
+  **mit Spitze** ($5\le n\le7$, $60$ Stück) und **allen** Abwärtsidealen $K$
+  ($612$ Paare): liegt $\mathbb 1_K$ im Spann der Idealindikatoren ($148$
+  Paare; im endlichen $T$ ist das die richtige Bedingung, weil dort
+  $\mathbb 1_W=\mathbb 1_{\T_{<t^*}}$ selbst ein Idealindikator ist), so ist
+  $\chi\in R$ für eine ganze Kernbasis, und das konstruierte $\kappa'$ erfüllt
+  $(\diamondsuit)$ an allen Paaren von $K'$ mit $\delta'(t^*)=\theta$ und
+  $\delta'\equiv0$ auf $K$ — ausnahmslos. Umgekehrt in **keinem** der $464$
+  Paare ohne Spannzugehörigkeit $\chi\in R$ für alle Lösungen: die Hypothese
+  ist im Endlichen scharf (Messung, kein Satz). Dazu die fünf Kerne mit
+  Ketten der Länge $2$ und Spitze, $K=\T_{<c_1}$ (Ideal) und $K$ = Kern:
+  beim Ideal stets $\chi\in R$ und Reduktion ok; beim Kern genau dann
+  $\chi\in R$, wenn $\mathbb 1_{\text{Kern}}$ im Idealspann liegt
+  (Dreifachschleife, Krone: ja; die drei Doppelschleifen: nein — im
+  *endlichen* $T$ sind die obersten Kettenpunkte nicht überdeckt, im
+  unendlichen sind es alle).
+* **(B$'$)** Dasselbe mit **gemischten Vorzeichen** ($124$ Paare mit
+  $\mathbb 1_K$ im Spann): Reduktion ok, einschließlich $\delta'(t^*)=\theta$;
+  die Reduktion ist vorzeichenfrei.
+* **(B$''$)** Kontrolle, daß die Hypothese mit $d\in W$ und nicht mit
+  $d=t^*$ zu lesen ist: Diamant $m_a=1,m_b=-1$ unter einer Kette mit Spitze,
+  seitlich zufällige Punkte, $K=\T_{<d}$; $211$ Basisvektoren, $\theta\ne0$ bei
+  $54$, $\chi\notin R$ bei $54$, **Abweichung zwischen beiden: $0$** — im
+  endlichen $T$ ist $\chi\in R\iff\theta=0$, Vektor für Vektor, weil
+  $F_{\mathbb 1_W}(s)=\theta-(Z\psi_\infty)(s)$ genau bei $\theta=0$ in $R$
+  liegt.
+
+Die Proben sind wie im zweiunddreißigsten Lauf bewußt auf die endliche
+Mechanik beschränkt: der Grenzübergang (Schritt 2) ist dominierte Konvergenz
+in einen endlichdimensionalen Raum, und der Schluß ist `prop:atomicposet`
+($89\,440+$ Fälle, sechster Lauf). Kein endliches Orakel kann $\theta$ auf
+einer Trunkierung ohne Spitze sehen (Probe (F) des zweiunddreißigsten Laufs);
+was es sehen kann — daß $\chi$ im Bild von $Z_K$ liegt und daß die
+Korrektur $(\diamondsuit)$ auf $K'$ herstellt — sieht es ausnahmslos.
+
+### Ergebnis
+
+* **Bewiesen.** Theorem 39 (endliche Kernreduktion) und die Korollare
+  39.1–39.2. Insbesondere gilt die Dualität für **jedes** $m\ge0$ und ohne (F)
+  auf jeder Halbordnung „endlicher Kern plus $\omega$-Kette über jedem
+  maximalen Kernpunkt" — der Klasse, für die der zweiunddreißigste Lauf die
+  Vermutung C(K) aufgestellt hat.
+* **Erledigt.** Die „nächste Rechnung" des zweiunddreißigsten Laufs (C(K)
+  beweisen oder auf sieben Punkten widerlegen) ist für die Dualität
+  **gegenstandslos**: das unendliche System hat Relationen, die C(K) wegläßt,
+  und mit ihnen ist die Frage endlich. C(K) bleibt eine offene, aber nicht
+  mehr tragende Aussage über das reduzierte System.
+* **Offen.** Die nackte Klasse auf Ketten (unverändert). Die gestapelten
+  $\zeta$-Ketten ohne (F) und ohne beschränktes $\Phi$ (unverändert). Die
+  Vermutung „endliche Ideale unter $t^*$, $W$ ohne maximale Elemente
+  $\Rightarrow$ Dualität": ihr kleinster offener Fall ist jetzt die
+  **unendliche disjunkte Vereinigung endlicher Kerne mit Ketten** (siehe
+  unten, Nachtrag).
+
+### Sackgassen, zweiunddreißigster Nachtrag
+
+* **Die Klasse „Kern plus Ketten" über ein endliches System *ohne die
+  Kettenrelationen an nicht-minimalen Punkten* angehen (C(K)).** Der
+  zweiunddreißigste Lauf hat die Relationen $(c_i,s)$ nur für minimale $s$
+  behalten („$\varphi_x$ verschwindet auf Kettenpunkten") und für
+  nicht-minimale $s$ weggelassen, weil dort Kettenunbekannte $\kappa(b,c_i)$
+  auftreten. Gerade diese Relationen tragen: sie sagen nicht, daß die
+  Kettenwerte verschwinden, sondern daß sie im Bild von $Z_K$ liegen — und
+  das genügt, um sie in die Spalte $t^*$ zu absorbieren. Zum vierzehnten Mal
+  eine Prämisse aus der Rechnung statt aus dem Beweisbedarf: „Relationen mit
+  fremden Unbekannten sind für den Kern unbrauchbar." Wer ein unendliches
+  System auf einen endlichen Kern reduziert, frage zuerst, in welchem
+  **Unterraum** die fremden Beiträge liegen, nicht ob sie null sind.
+* **Die Hypothese von Theorem 39 im endlichen $T$ mit $d=t^*$ lesen.** Im
+  endlichen $T$ ist $\mathbb 1_W=\mathbb 1_{\T_{<t^*}}$ ein Idealindikator, und
+  mit ihm ist $\mathbb 1_{W\setminus K}$ für jedes Ideal $K$ „im Spann" — aber
+  $F_{\mathbb 1_W}=\theta-Z\psi_\infty$ liegt nur bei $\theta=0$ in $R$
+  (Probe (B$''$): $\chi\in R\iff\theta=0$, $54=54$). Die Hypothese verlangt
+  $d\in W$, d.h. $\delta(d)=0$ an jedem benutzten $d$; im Unendlichen ist
+  das (i), im Endlichen erzwingt es $K\supseteq\max W$, also $K=W$. Ein
+  endliches Orakel kann die Hypothese deshalb nur für die **Mechanik** prüfen,
+  nicht für die Aussage — dieselbe Lage wie bei Theorem 38.
+* **Theorem 39 auf ein unendliches $K$ ausdehnen wollen** (etwa
+  $K=\bigsqcup_n K_n$ für unendlich viele Kerne). Die Reduktion selbst
+  ginge durch (Bild von $Z_K$ ist dann nicht mehr automatisch abgeschlossen —
+  das wäre zu zeigen), aber sie reduziert auf $K\cup\{t^*\}$, ein $W$ mit
+  **unendlich vielen maximalen Elementen**, also auf den Typ der unendlichen
+  Antikette, wo die Dualität ohne (F) fällt. Die Reduktion ist nur so gut wie
+  `prop:atomicposet` auf dem Ziel; sie erzeugt keine Positivität.
+
+### Manuskript
+
+`thm:corereduction` (Theorem 39), `cor:corereduction` (Kern mit hängenden
+Ketten; endlich viele nicht überdeckte Punkte) und `rem:corereduction` (die
+doppelt hängende Doppelschleife als Beispiel, das jede Fassung von
+`thm:idealexhaustion` schlägt; der offene Fall) stehen nach
+`rem:idealexhaustion` und vor `rem:twomethods`; `rem:twomethods` nennt die
+Erweiterung in einem Halbsatz; die Statustabelle von `rem:atomsnotchange` hat
+eine neue Zeile. `python3 check.py`: **clean**, 137 Seiten, größte Überlänge
+7.7pt wie zuvor (eine erste Fassung der Tabellenzeile war 24.5pt zu breit und
+ist gekürzt).
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `duality_of_atomic_finiteCoreReduction`**, eingetragen in
+`TauCeti/MartingaleProblems/README.md` (Meilenstein 8, direkt nach
+`duality_of_atomic_idealExhaustion`) und in `PLAN.md`, Task 23:
+
+> Rein atomare Uhr auf einer abzählbaren Halbordnung mit kleinstem Element,
+> $m\ge0$, $t$ mit $\Phi(a,0)=\Phi(0,a)$ für alle $a<t$, und ein endliches
+> Abwärtsideal $K\ni0$ von $W=\T_{<t}$ mit $\mathbb 1_{W\setminus K}$ im
+> beschränkten punktweisen Folgenabschluß des Spanns der Idealindikatoren.
+> Dann $\Phi(t,0)=\Phi(0,t)$. Zuerst als Instanz: endlicher Kern mit
+> $\omega$-Kette über jedem maximalen Element.
+
+Es ruht auf `duality_of_atomic` (auf dem endlichen $K\cup\{t\}$) und einem
+Schritt dominierter Konvergenz in den endlichdimensionalen Raum $K\to\R$
+(`tendsto_tsum_of_dominated_convergence`), sonst auf nichts; es enthält
+`duality_of_atomic_idealExhaustion` als $K=\{0\}$. Es ist jetzt dran, weil es
+(a) die Klasse schließt, für die der letzte Lauf eine eigene endliche
+Vermutung als „nächsten Satz" vorgeschlagen hat — die soll **nicht**
+formalisiert werden —, (b) das erste Roadmap-Item ist, das eine Halbordnung
+erreicht, auf der jede Ausschöpfungshypothese nachweislich versagt (die
+doppelt hängende Doppelschleife, Abnahmebeispiel), und (c) den Beweis der
+Hauptaussage `duality_of_atomic` als **Baustein** wiederverwendet statt ihn zu
+umgehen: die Idealreduktion des vierten Laufs, rückwärts gelesen.
+
+**Nächste Rechnung** (in `PLAN.md` benannt): die unendliche disjunkte
+Vereinigung endlicher Kerne mit Ketten, $\bigsqcup_n(\text{Doppelschleife}_n
++\text{Ketten})$, ohne (F). Dort greift weder Theorem 39 (kein endliches $K$)
+noch Theorem 38 mit $X=\emptyset$ ($\mathbb 1_{\text{Kern}}\notin\overline L$),
+und Theorem 38 mit $X=\{r_n\}$ braucht die Summierbarkeit der
+$X\times X$-Doppelsumme. Entweder ein Beweis, der die Kerne einzeln
+behandelt (was einen Satz vom Typ „$\theta$ zerfällt in Beiträge der Kerne"
+verlangte, den es bisher nicht gibt), oder ein Gegenbeispiel — das dann das
+erste mit endlichen Idealen, ohne maximale Elemente in $W$ und lauter
+positiven Massen wäre.
+
+## Die stummen Stapel, 2026-09-16 (vierunddreißigster Lauf): auf einer hängenden Kette verschwindet $\kappa$ vollständig, der Defekt ist die $\psi$-Masse unter jedem Stapelfuß, und die unendliche disjunkte Vereinigung beliebiger endlicher Kerne mit Ketten oder Türmen fällt
+
+Der dreiunddreißigste Lauf hat als „nächste Rechnung" die unendliche disjunkte
+Vereinigung endlicher Kerne mit Ketten benannt und in seinen letzten Minuten
+dazu `Task23/disjoint_cores.py` angelegt (Docstring: „Theorem 41", „Lemma
+C"), aber **keinen Protokolleintrag** mehr geschrieben; die Ausgabedatei war
+leer. Dieser Lauf hat das Skript ausgeführt (rc=0, Ausgabe jetzt in
+`disjoint_cores.txt`), die dort skizzierten Aussagen nachgerechnet — und
+dabei eine wesentlich stärkere gefunden. Die Skizze des vorigen Laufs lautete:
+für Punkte $v$ der Höhe eins in einem $W$, dessen nicht-minimale Punkte alle
+kettenüberdeckt sind, ist $\Psi(t^*,v)=0$; und gibt es unendlich viele $v_n$
+mit $\Psi(t^*,v_n)=0$ und paarweise disjunkten Idealen, so ist $\delta(t^*)=0$,
+weil $\sum_n\theta$ konvergieren muß. Beides stimmt, aber die Hypothesen sind
+viel zu eng: **es kommt weder auf die Höhe noch auf die Überdeckung der
+übrigen Punkte an, sondern nur darauf, daß über $v$ selbst ein hängender
+Stapel steht.**
+
+Neu ist `Task23/silent_chains.py` (exakt in `Fraction`, Kernbasis des
+Lösungsraums, Proben (A), (A$'$), (B), (C), (D), rc=0, Ausgabe in
+`silent_chains.txt`).
+
+### Der Rahmen
+
+Der des fünfundzwanzigsten Laufs: $\T$ abzählbare Halbordnung mit kleinstem
+Element $0$, $m\ge0$ mit $m_0=0$ und $m>0$ sonst, $\kappa$ antisymmetrisch,
+$\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$ je Paar absolut konvergent,
+$(\diamondsuit)$ an allen Paaren. $t^*$ die Spitze, $W=\T_{<t^*}$,
+$\theta:=\delta(t^*)$, $\psi(a):=m_a\kappa(a,t^*)$ (absolut summierbar auf $W$,
+das ist die absolute Konvergenz von $\delta(t^*)=\Psi(t^*,t^*)$). Vorausgesetzt
+ist **(i)** $\delta\equiv0$ auf $W$, also $\Psi$ antisymmetrisch auf $W\times W$;
+das gilt, sobald jedes Ideal $\T_{\le a}$, $a\in W$, endlich ist
+(`prop:atomicposet`), und die Ideale seien endlich, damit $W$ fundiert ist.
+
+**Definition (hängender Stapel).** Endliche nichtleere Mengen
+$S_0,S_1,S_2,\dots\subseteq W\setminus\{0\}$ heißen ein *hängender Stapel*, wenn
+alle Punkte einer Stufe $S_i$ dasselbe Ideal $I_i:=\T_{<s}$ ($s\in S_i$) haben
+und $I_{i+1}=I_i\sqcup S_i$ für alle $i\ge0$. Der *Fuß* ist $I_0$. Sind alle
+Stufen einelementig, $S_i=\{u_i\}$, so ist das eine *hängende Kette*
+$u_0<u_1<\dots$ mit $\T_{<u_{i+1}}=\T_{\le u_i}$ — die „kettenüberdeckten"
+Punkte der Läufe 32/33, jetzt aber mit der Forderung, daß die Überdeckung
+**nie abbricht**. Für eine Stufe $S$ schreibe
+$\sigma_S(b):=\sum_{s\in S}m_s\kappa(s,b)$ (Stufensumme) und
+$\Psi_S(b):=\Psi(s,b)$, $s\in S$ (unabhängig von $s$, weil das Ideal gemeinsam
+ist).
+
+### Lemma 40 (stumme Stapel)
+
+> **Lemma 40.** Unter (i) gilt für jeden hängenden Stapel $(S_i)$ in $W$:
+> $\sigma_{S_i}(b)=0$ für alle $i\ge0$ und **alle** $b\in W$. Ist $S_0=\{a\}$
+> einelementig, so ist also $\kappa(a,\cdot)\equiv0$ auf $W$; auf einer
+> hängenden Kette ist $\kappa(u_i,\cdot)\equiv0$ auf $W$ für jedes $i$.
+
+*Beweis.* Fundierte Induktion über $b$ (die Ideale sind endlich). Sei
+$\sigma_{S_i}(c)=0$ für alle $i$ und alle $c<b$ (leer, wenn $b$ minimal oder
+$b=0$). Für jedes $i$ ist
+$$\sum_{s\in S_i}m_s\,\Psi(b,s)=\sum_{c<b}m_c\sum_{s\in S_i}m_s\kappa(c,s)
+ =-\sum_{c<b}m_c\,\sigma_{S_i}(c)=0$$
+(endliche Summen). Andererseits ist $\Psi(b,s)=-\Psi(s,b)=-\Psi_{S_i}(b)$ für
+jedes $s\in S_i$ nach (i), also $m(S_i)\,\Psi_{S_i}(b)=0$ und, da $m(S_i)>0$,
+$\Psi_{S_i}(b)=0$ für alle $i$. Wegen $I_{i+1}=I_i\sqcup S_i$ ist
+$\sigma_{S_i}(b)=\Psi_{S_{i+1}}(b)-\Psi_{S_i}(b)=0$. $\square$
+
+Der Beweis benutzt an $b$ **nichts** — $b$ darf minimal, maximal, im Stapel,
+unvergleichbar zu ihm oder $0$ sein. Für $b=0$ sagt das Lemma $g(S_i)=0$, die
+bekannte Aussage, daß $g$ auf kettenüberdeckten Punkten verschwindet
+(Korollar 38.2); für $b$ minimal sagt es Lemma C des vorigen Laufs. Der
+Gehalt sitzt in den übrigen $b$, und dort lautet die Aussage: **die
+Kettenwerte sind im unendlichen System null.** Der zweiunddreißigste Lauf hat
+genau das als Prämisse benutzt und dann als Sackgasse verworfen, weil
+`chainvals.py` die Kreuzwerte zwischen zwei Ketten auf Trunkierungen frei
+fand. Sie *sind* auf Trunkierungen frei — die Induktion reicht dort nur so
+weit, wie Kette über dem Punkt steht (Probe (A$'$) unten) — und im
+unendlichen System null. Die Prämisse war richtig, die Verwerfung ein
+Fehlschluß von „frei auf jeder Trunkierung" auf „frei"; siehe Sackgassen.
+
+Wo die Positivität eingeht, und nur dort: $m(S_i)>0$, um durch die
+Stufenmasse zu teilen, und (i), also `prop:atomicposet` auf den endlichen
+Idealen. Kein (F), keine Schranke an $\Phi$.
+
+### Theorem 41 (der Defekt am Fuß eines Stapels)
+
+> **Theorem 41.** Unter (i) gilt für jeden hängenden Stapel $(S_i)$ in $W$
+> $$\theta=\psi(I_i)\quad\text{für jedes }i\ge0,\qquad\text{insbesondere }
+>   \theta=\psi(I_0)\ \text{ und }\ \psi(S_i)=0\ \text{für alle }i .$$
+> Der Dualitätsdefekt ist die $\psi$-Masse unter dem Fuß des Stapels, und
+> die Stapelpunkte tragen keine $\psi$-Masse.
+
+*Beweis.* $(\diamondsuit)$ an $(s,t^*)$ für $s\in S_i$ lautet
+$\Psi(s,t^*)+\Psi(t^*,s)=\theta$ mit $\Psi(s,t^*)=\psi(I_i)$. Also ist
+$\Psi(t^*,s)=\theta-\psi(I_i)$ **unabhängig von $s\in S_i$**. Ferner
+$\Psi(t^*,s)=\sum_{b\in W}m_b\kappa(b,s)=-\sum_bm_b\kappa(s,b)$ (absolut
+konvergent), und nach Lemma 40
+$$\sum_{s\in S_i}m_s\,\Psi(t^*,s)=-\sum_{b\in W}m_b\,\sigma_{S_i}(b)=0 .$$
+Beides zusammen: $m(S_i)\bigl(\theta-\psi(I_i)\bigr)=0$, also
+$\theta=\psi(I_i)$. Mit $I_{i+1}=I_i\sqcup S_i$ folgt $\psi(S_i)=0$. $\square$
+
+Für eine hängende Kette heißt das: $\Psi(t^*,u_i)=0$ und $\psi(u_i)=0$ für
+jedes $i$ — die Kette ist gegenüber der Spitze **vollständig stumm**, nach
+beiden Seiten. Das ist die Aussage „$\Psi(t^*,v)=0$" des vorigen Laufs ohne
+jede Bedingung an die Höhe von $v$ oder an die übrigen Punkte von $W$.
+
+### Theorem 42 (Stapelausschöpfung)
+
+> **Theorem 42.** Unter (i) ist $\theta=0$, sobald eines gilt:
+>
+> **(a)** es gibt einen hängenden Stapel mit Fuß $I_0=\{0\}$ (Stapel, der
+> an minimalen Atomen beginnt; etwa eine hängende Kette ab einem minimalen
+> Atom, oder eine schwache Ordnung vom Typ $\omega$ mit endlichen Stufen
+> von unten);
+>
+> **(b)** es gibt hängende Stapel $(S^{(n)}_i)_i$, $n\in\N$, deren Füße
+> $I^{(n)}_0$ **entweichen**: jedes $a\in W\setminus\{0\}$ liegt nur in
+> endlich vielen $I^{(n)}_0$ (etwa: die $I^{(n)}_0\setminus\{0\}$ paarweise
+> disjunkt).
+
+*Beweis.* (a) $\theta=\psi(\{0\})=m_0\kappa(0,t^*)=0$. (b) $\theta=\psi(I^{(n)}_0)$
+für jedes $n$, und $\psi(I^{(n)}_0)\to\psi(\{0\})=0$ nach dominierter
+Konvergenz gegen $|\psi|\in\ell^1(W)$ — bei disjunkten Füßen schon wegen
+$\sum_n|\psi(I^{(n)}_0)|\le\|\psi\|_1<\infty$. $\square$
+
+Allgemeiner gilt für jede Folge von Stapelfüßen $I^{(n)}_0$ mit
+$\mathbb 1_{I^{(n)}_0}\to\mathbb 1_F$ punktweise (Teilfolge; $F$ ist ein
+Abwärtsideal): $\theta=\psi(F)$. Nützlich ist das nur, wenn $\psi(F)$
+unabhängig kontrolliert ist, also $F=\{0\}$.
+
+### Korollar 42.1: die Anwendungen, alle ohne (F), für jedes $m>0$
+
+1. **Die unendliche disjunkte Vereinigung beliebiger endlicher Kerne mit
+   hängenden $\omega$-Ketten** über jedem maximalen Kernpunkt — die „nächste
+   Rechnung" des dreiunddreißigsten Laufs, und mehr: der Kern darf beliebig
+   sein (Doppelschleife, hängende, doppelt hängende Doppelschleife, A+B,
+   Zufallskerne), und die Kerne dürfen verschieden sein. Die Ketten $c_{n,1}<
+   c_{n,2}<\dots$ über einem maximalen Punkt $k_n$ des $n$-ten Kerns sind
+   hängend mit Fuß $\T_{\le k_n}\subseteq K_n$, die Füße sind paarweise
+   disjunkt außer $0$: Theorem 42(b). — Vermutung C(K) und die
+   Summierbarkeit $\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|$ aus Theorem 38
+   mit $X=\{r_n\}$ werden nicht gebraucht.
+2. **Dasselbe mit Türmen statt Ketten**: über jedem maximalen Kernpunkt eine
+   schwache Ordnung $S_1<S_2<\dots$ mit endlichen Stufen (etwa
+   $\{\alpha_i,\beta_i\}$, $\alpha_i,\beta_i<\alpha_{i+1},\beta_{i+1}$). Dort
+   ist **kein** Punkt oberhalb des Hakens überdeckt, die Klasse
+   „kettenüberdeckt" der Läufe 32/33 ist leer — und der Stapel
+   $S_0=\{k_n\},S_1,S_2,\dots$ ist hängend. Theorem 42(b).
+3. **Theorem 19 mit einer Kette daneben.** Der Antikettenzeuge
+   $\T=\{0\}\cup A\cup\{t^*\}$ mit $\delta(t^*)=1/M$ verliert die Dualität
+   **nicht** — sie kehrt zurück, sobald neben der Antikette eine einzige
+   hängende Kette $0<c_1<c_2<\dots$ steht: Theorem 42(a) mit Fuß $\{0\}$.
+   Der Defekt der Antikette lebt davon, daß **jeder** Punkt von $W$ maximal
+   ist; ein einziger nicht maximaler Punkt mit unendlicher Kette darüber
+   löscht ihn. (Nachgerechnet: Probe (A) in der Familie „Antikette + Kette",
+   $\kappa(c_i,a_j)$ erzwungen $0$, soweit die Trunkierung reicht.)
+4. **Korollar 38.2/38.3 neu gelesen:** die Leiter ($a_i<b_j\iff i<j$; die
+   $a$-Kette ist hängend ab dem minimalen $a_1$), zwei oder abzählbar viele
+   disjunkte $\omega$-Ketten, Bäume ohne Blätter, schwache Ordnungen vom Typ
+   $\omega$ mit endlichen Stufen — alles Theorem 42(a). Theorem 38 mit
+   $X=\emptyset$ bleibt für gerichtete $W$ **ohne** Stapel der Satz
+   (interleaved Doppelketten, Nachtrag unten).
+
+### Lemma 40$'$: die allgemeine Fassung — Blöcke im Abschluß des Idealspanns
+
+Der Beweis von Lemma 40 benutzt von der Stapelgestalt nur zweierlei: daß die
+Punkte einer Stufe dasselbe Ideal haben, und daß die Stufenindikatoren
+Differenzen von Idealindikatoren sind. Beides läßt sich abstrahieren.
+
+> **Lemma 40$'$.** Unter (i) sei $D\subseteq W\setminus\{0\}$ in endliche
+> **Blöcke** $S$ zerlegt, deren Punkte jeweils dasselbe Ideal haben, und es
+> sei $L_D$ der Spann der Idealindikatoren $\{\mathbb 1_{\T_{<v}}:v\in D\}$
+> (Funktionen auf $W\setminus\{0\}$), $\overline L_D$ sein Abschluß unter
+> beschränkten punktweisen Folgenlimiten. Gilt $\mathbb 1_S\in\overline L_D$
+> für jeden Block $S$, so ist
+> $$\Psi(v,\cdot)\equiv0\ \text{ auf }W\ \text{ für alle }v\in D,\qquad
+>   \sigma_S(\cdot)\equiv0\ \text{ auf }W\ \text{ für alle Blöcke }S .$$
+> Sind die Blöcke einelementig, so ist also $\kappa(a,\cdot)\equiv0$ für alle
+> $a\in D$.
+
+*Beweis.* Fundierte Induktion über $b\in W$ mit der Aussage $P(b)$:
+„$\Psi(v,b)=0$ für alle $v\in D$ und $\sigma_S(b)=0$ für alle Blöcke $S$."
+Gelte $P(c)$ für alle $c<b$. Für einen Block $S$ mit gemeinsamem Ideal $I$ ist
+$\Psi(v,b)=\sum_{a\in I}m_a\kappa(a,b)$ dasselbe für alle $v\in S$, also nach
+(i) auch $\Psi(b,v)$, und
+$$m(S)\,\Psi(b,v)=\sum_{v'\in S}m_{v'}\Psi(b,v')
+ =\sum_{c<b}m_c\sum_{v'\in S}m_{v'}\kappa(c,v')=-\sum_{c<b}m_c\,\sigma_S(c)=0 ,$$
+also $\Psi(v,b)=0$ für alle $v\in D$. Damit verschwindet das Funktional
+$f_b(u):=m_u\kappa(u,b)$ (absolut summierbar auf $W$: Zeile $b$) auf allen
+$\mathbb 1_{\T_{<v}}$, $v\in D$, nach dominierter Konvergenz auf ganz
+$\overline L_D$, insbesondere $\sigma_S(b)=f_b(\mathbb 1_S)=0$. $\square$
+
+Lemma 40 ist der Fall $D=\bigcup_iS_i$ mit den Stufen als Blöcken:
+$\mathbb 1_{S_i}=\mathbb 1_{I_{i+1}}-\mathbb 1_{I_i}\in L_D$. Theorem 41 überträgt
+sich wörtlich — $\Psi(t^*,v)=\theta-\psi(\T_{<v})$ ist auf einem Block
+konstant, $\sum_{v\in S}m_v\Psi(t^*,v)=-\sum_bm_b\sigma_S(b)=0$, also
+$$\theta=\psi(\T_{<v})\qquad\text{für jedes }v\in D ,$$
+und Theorem 42 ebenso: $\theta=0$, sobald $D$ ein minimales Atom enthält
+oder die Ideale $\T_{<v_n}$ einer Folge in $D$ entweichen.
+
+**Was Lemma 40$'$ mehr erfaßt als die Stapel.** Über einem Haken $k$ stehe eine
+*verschränkte Doppelkette* $a_i<a_{i+1}$, $b_i<b_{i+1}$, $b_i<a_{i+1}$,
+$a_i<b_{i+2}$: gerichtet, ohne Überdeckungen und ohne hängenden Stapel
+(der Stapel $\{k\},\{a_1,b_1\},\{a_2\}$ bricht ab). Aber die Ideale der
+Armpunkte bilden eine Kette $\T_{\le k}=\T_{<a_1}=\T_{<b_1}\subset\T_{<b_2}
+\subset\T_{<a_2}\subset\T_{<b_3}\subset\cdots$ mit einelementigen Differenzen
+$\{b_1\},\{a_1\},\{b_2\},\{a_2\},\dots$, also $\mathbb 1_a\in L_D$ für jeden
+Armpunkt und $\mathbb 1_k=\mathbb 1_{\T_{<a_1}}-\mathbb 1_{\T_{<k}}$: Lemma 40$'$
+mit einelementigen Blöcken, $\theta=\psi(\T_{<k})$. Noch weiter: der
+*Dreierzopf* $a_i<b_{i+1}$, $b_i<c_{i+1}$, $c_i<a_{i+1}$ (plus die drei
+Ketten), dessen Ideale **keine** Kette bilden — dort ist
+$\mathbb 1_{b_i}-\mathbb 1_{c_i}$, $\mathbb 1_{c_i}-\mathbb 1_{a_i}$ und
+$\mathbb 1_{a_i}+\mathbb 1_{c_i}+\mathbb 1_{b_{i-1}}$ in $L_D$ (Differenzen
+benachbarter Ideale), woraus $2\,\mathbb 1_{a_i}+\mathbb 1_{a_{i-1}}\equiv0$
+modulo $L_D$ und mit $2\,\mathbb 1_{a_1}\equiv0$ schließlich
+$\mathbb 1_{a_i},\mathbb 1_{b_i},\mathbb 1_{c_i}\in L_D$ für alle $i$ folgt.
+Der Dreierzopf über jedem Haken unendlich vieler Doppelschleifen — die
+Struktur, die dieser Lauf zunächst als kleinsten offenen Fall notiert hatte —
+fällt also ebenfalls: Theorem 42(b) mit $D$ = alle Arme samt Haken.
+
+### Theorem 42$'$: der ganz allgemeine Schluß, und was er über ein Gegenbeispiel sagt
+
+Vereinigungen zulässiger Mengen $D$ sind zulässig ($L_{D_1\cup D_2}\supseteq
+L_{D_i}$), es gibt also eine größte, $D^*$. Auf $D^*$ ist $\Psi(v,\cdot)\equiv0$:
+**die Punkte von $D^*$ verhalten sich wie minimale Atome**, und
+$\theta=\psi(\T_{<v})$ für jedes $v\in D^*$. Ein $W$ mit endlichen Idealen,
+ohne maximale Elemente und $\theta\ne0$ muß daher erfüllen:
+
+* $D^*$ enthält kein minimales Atom und keine Folge mit entweichenden
+  Idealen; da $\theta=\psi(\T_{<v})$ auf $D^*$ konstant ist, tragen die
+  Ideale zweier Punkte von $D^*$ dieselbe $\psi$-Masse;
+* $W$ ist nicht gerichtet (Theorem 38), nicht bis auf endlich viele Punkte
+  ausschöpfbar (Theorem 39);
+* kein Punkt trägt einen hängenden Stapel, keine Kette von Idealen mit
+  blockweise gemeinsamen Idealen — die „Arme" über den Kernen müssen so
+  verflochten sein, daß kein Punktindikator im Abschluß des Idealspanns
+  seines Arms liegt.
+
+Ob es ein solches $W$ gibt, bleibt offen. Der einfachste Arm, der Lemma
+40$'$ schlägt, ist eine **Leiter ohne hängende Seite**, etwa
+$a_i<b_j\iff i<j$ und $b_i<a_j\iff i<j-1$ (beide Seiten „hinken" um eins,
+keine Seite ist eine hängende Kette). Ob dort $\mathbb 1_{a_i}\in\overline L$,
+ist in diesem Lauf nicht mehr entschieden worden; das ist die nächste
+Rechnung (siehe unten).
+
+*(Die folgenden Abschnitte dieses Eintrags hat der Abschlußlauf vom
+2026-09-16 nachgetragen, aus dem Eintrag und den Meßdateien, nicht aus neuer
+Rechnung; der vierunddreißigste Lauf ist an der Sitzungsgrenze hinter
+Theorem 42$'$ abgebrochen.)*
+
+### Gemessen: `Task23/silent_chains.py` und `Task23/disjoint_cores.py`, exakt, rc=0
+
+Beide Skripte rechnen in `Fraction` über eine Kernbasis des Lösungsraums auf
+Trunkierungen $W_n$ **ohne Spitze** (Systemaufbau aus `antisym.py`,
+Kettenanbau aus `bowties.py`); Ausgaben in `silent_chains.txt` und
+`disjoint_cores.txt`. Mit $h(b)$ sei die Höhe von $b$ bezeichnet ($h=0$ für
+minimale Atome). Auf $W_n$ reicht die Induktion von Lemma 40 genau so weit,
+wie Kette über dem Punkt steht: $\kappa(u_i,b)$ ist erzwungen $0$, sobald
+$i+h(b)\le n-1$.
+
+* **(D)** Kontrolle des Orakels in beiden Skripten: `antisym.check_diamond`
+  (Diamant $m=(0,1,-1,0)$ fällt bei $t=3$, $m=(0,1,1,0)$ nicht).
+* **(A)** `silent_chains.py`, zwanzig Familien — disjunkte Doppelschleifen
+  ($k=1$, $n=2,3,4$; $k=2$, $n=2,3$), hängende Doppelschleife ($n=2,3$), zwei
+  hängende Doppelschleifen ($n=2$), Antikette plus hängende Kette über $0$
+  ($3+3$, $4+4$, $3+5$), zwei $\omega$-Ketten ($n=3,4,5$), sechs Paare
+  zufälliger Kerne ($n=2,3$): **alle** $1365$ Paare $(u_i,b)$ mit
+  $i+h(b)\le n-1$ sind erzwungen $0$, in jeder Familie.
+* **(A$'$)** An der Grenze $i+h(b)=n$ ist $\kappa(u_i,b)$ in $616$ von $947$
+  Paaren **frei** (etwa $12/16$ bei einer Doppelschleife mit $n=2$, $88/142$
+  bei zwei Zufallskernen mit $n=3$). Das ist die Grenze der Induktion auf der
+  Trunkierung, nicht die des Lemmas: sie wandert mit $n$ nach oben. Genau
+  diese freien Randwerte hat `chainvals.py` im zweiunddreißigsten Lauf
+  gesehen und als „die Kettenwerte sind frei" gelesen.
+* **(B)** Zwei hängende Doppelschleifen, $n=2,3$: $\kappa(r_0,r')$ und
+  $\kappa(r_0,r_0')$ (Fuß eines Stapels, Punkt des fremden Kerns) erzwungen
+  $0$; $\kappa(r,r')$ und $\kappa(p,r')$ frei, wie erwartet — $r$ und $p$
+  tragen keinen hängenden Stapel.
+* **(C)** Doppelschleifen mit **Türmen** ($\{\alpha_i,\beta_i\}$ statt
+  Kette), $n=2,3,4$, $\dim=154,234,330$: die Hakenwerte $\kappa(a,b)$ ($44$,
+  $76$, $108$ Paare) und die Stufensummen $\sigma_{S_i}(b)$ ($32$, $80$, $152$
+  Paare) sind erzwungen $0$; die Einzelwerte $\kappa(\alpha_i,b)$ sind frei
+  ($64/64$, $128/160$, $240/304$). Der Docstring des Skripts hatte für (C)
+  noch die Erwartung „der Haken bleibt frei" (aus der Kettenfassung des
+  Lemmas); die Messung widerspricht ihr, und Lemma 40 in der Stapelfassung
+  erklärt sie: $S_0=\{a\},S_1,S_2,\dots$ ist ein hängender Stapel, nur die
+  Stufensumme ist stumm, nicht der einzelne Turmpunkt.
+* **(E)** Verschränkte Doppelkette („shift") und Dreierzopf („braid") über
+  den Haken einer Doppelschleife, $n=2,3,4$: $\kappa(a,x)$ für minimale $x$
+  ($4/4$), $\kappa(a,a')$, $\kappa(a,s)$ und $\kappa(\mathrm{arm}_1,x)$ ($4/4$)
+  erzwungen $0$ bei jedem $n$; $\kappa(\mathrm{arm}_1,a')$ und
+  $\kappa(a,\mathrm{arm}'_1)$ bei $n=2$ frei ($0/1$), bei $n=3,4$ erzwungen
+  ($1/1$) — die Reichweite von Lemma 40$'$ wächst mit der Trunkierung, wie
+  bei (A$'$).
+* `disjoint_cores.py` (die Skizze des dreiunddreißigsten Laufs, jetzt ein
+  Spezialfall von Lemma 40 und Theorem 41): $k=1,2,3$ Doppelschleifen mit
+  Ketten, $n=2,3$, generische und resonante Massen ($m_r=m_s$): **(A)**
+  $\kappa(u,z)$ erzwungen $0$ für alle in $W_n$ kettenüberdeckten $u$ und
+  minimalen $z$ ($16$ bis $144$ Paare je Fall, alle zehn Fälle); **(B)** für
+  jeden Punkt der Höhe eins ist $\sum_{a\in D_n}m_a\kappa(a,v)$ erzwungen $0$
+  ($2$ bis $6$ Punkte je Fall); **(C)** Kontrolle: für Kettenpunkte $c_1$ ist
+  dieselbe Summe frei ($2/2$ bis $8/8$). Resonanz der Massen ändert nichts.
+
+Die Proben sind wie in den Läufen 32 und 33 auf die endliche Mechanik
+beschränkt: den Schluß auf $\theta$ trägt dominierte Konvergenz gegen
+$|\psi|\in\ell^1(W)$, und den Anfang `prop:atomicposet` auf den endlichen
+Idealen. Was ein endliches Orakel sehen kann — daß die Induktion von Lemma 40
+auf $W_n$ genau bis $i+h(b)\le n-1$ reicht und dort ausnahmslos $0$ erzwingt —
+sieht es in allen $1365$ Paaren.
+
+### Ergebnis
+
+* **Bewiesen.** Lemma 40 (stumme Stapel), Theorem 41 (der Defekt ist die
+  $\psi$-Masse unter dem Fuß), Theorem 42 (Stapelausschöpfung), Korollar 42.1,
+  Lemma 40$'$ (Blöcke im Abschluß des Idealspanns) und Theorem 42$'$ (der
+  größte zulässige Bereich $D^*$ und die Gestalt eines Gegenbeispiels).
+  Insbesondere gilt die Dualität ohne (F) und für jedes $m>0$ auf der
+  **unendlichen disjunkten Vereinigung beliebiger endlicher Kerne mit
+  hängenden Ketten oder Türmen**, auf der Antikette von Theorem 19 **mit einer
+  Kette daneben**, auf der verschränkten Doppelkette und dem Dreierzopf über
+  unendlich vielen Kernen.
+* **Erledigt.** Die „nächste Rechnung" des dreiunddreißigsten Laufs, positiv
+  und allgemeiner als gestellt. Weder C(K) noch die Summierbarkeit
+  $\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|$ aus Theorem 38 mit $X=\{r_n\}$
+  wird gebraucht. Die im zweiunddreißigsten Lauf als Sackgasse verworfene
+  Prämisse „die Kettenwerte verschwinden" war **richtig** (im unendlichen
+  System; auf Trunkierungen ist sie unsichtbar); die Verwerfung war der
+  Fehler, siehe Sackgassen.
+* **Offen.** Die nackte Klasse auf Ketten (unverändert). Die gestapelten
+  $\zeta$-Ketten ohne (F) und ohne beschränktes $\Phi$ (unverändert: dort ist
+  (i) für die obere Kette die Frage selbst). Die Vermutung „endliche Ideale
+  unter $t^*$, $W$ ohne maximale Elemente $\Rightarrow$ Dualität": nicht
+  bewiesen, aber durch Theorem 42$'$ eingeengt — ein Gegenbeispiel darf keinen
+  hängenden Stapel, keinen Block im Abschluß des Idealspanns seines Arms und
+  keine Ausschöpfung nach Theorem 38 oder 39 zulassen. Kleinster benannter
+  Kandidat: die **Leiter ohne hängende Seite** ($a_i<b_j\iff i<j$,
+  $b_i<a_j\iff i<j-1$) als Arm über unendlich vielen Kernen; ob dort
+  $\mathbb 1_{a_i}\in\overline L$ liegt, ist **nicht entschieden** — weder im
+  vierunddreißigsten Lauf noch im Abschlußlauf, der nicht rechnet.
+
+### Sackgassen, dreiunddreißigster Nachtrag
+
+* **Von „frei auf jeder Trunkierung" auf „frei" schließen.** Der
+  zweiunddreißigste Lauf hat die richtige Prämisse (Kettenwerte sind null)
+  verworfen, weil `chainvals.py` sie auf $W_n$ frei fand. Auf $W_n$ ohne
+  Spitze reicht die Induktion von Lemma 40 nur bis $i+h(b)\le n-1$; die
+  Werte an der Grenze $i+h(b)=n$ sind frei ($616$ von $947$ in (A$'$)), und
+  zwar bei **jedem** $n$ — im unendlichen System gibt es die Grenze nicht.
+  Ein Wert, der auf jeder Trunkierung frei ist, kann im unendlichen System
+  erzwungen sein, wenn ihn erst die Relationen *oberhalb* der Trunkierung
+  binden. Zum fünfzehnten Mal eine Prämisse aus der Rechnung statt aus dem
+  Beweisbedarf, und zum ersten Mal in der Gegenrichtung: die Rechnung hat
+  einen richtigen Satz verworfen.
+* **Die Skizze des dreiunddreißigsten Laufs** („Höhe eins", „alle
+  nicht-minimalen Punkte kettenüberdeckt"): beides stimmt und beides ist
+  unnötig eng. Weder die Höhe von $v$ noch die übrigen Punkte von $W$ spielen
+  eine Rolle, sondern allein der Stapel **über** $v$.
+* **Theorem 38 mit $X=\{r_n\}$ auf die unendliche disjunkte Vereinigung
+  anwenden wollen.** Verlangt eine $X\times X$-Summierbarkeit, die (F)-artig
+  ist und nicht zur Verfügung steht. Theorem 42(b) braucht nur die
+  $\ell^1$-Norm von $\psi$, also die Existenz von $\delta(t^*)$ selbst.
+* **Die Erwartung (C) im Docstring von `silent_chains.py`** („im Turm bleibt
+  der Haken frei"). Falsch — der Haken ist der Fuß eines hängenden Stapels
+  und stumm; frei sind die Einzelwerte $\kappa(\alpha_i,b)$, nicht ihre
+  Stufensumme. Wer ein Lemma vom Ketten- auf den Stapelfall verallgemeinert,
+  passe die Probe an, bevor er sie liest.
+
+### Manuskript (nachgetragen vom Abschlußlauf)
+
+`lem:silentstacks` (Lemma 40), `thm:stackdefect` (Theorem 41),
+`thm:stackexhaustion` (Theorem 42), `cor:stackexhaustion` (Korollar 42.1),
+`prop:silentblocks` (Lemma 40$'$ und Theorem 42$'$ in einer Aussage) und
+`rem:stackexhaustion` (verschränkte Doppelkette, Dreierzopf, die Gestalt eines
+Gegenbeispiels, der offene Kandidat) stehen nach `rem:corereduction` und vor
+`rem:twomethods`; `rem:corereduction` verweist am Ende auf
+`thm:stackexhaustion` statt „offen" zu sagen; `rem:twomethods` nennt den
+dritten Mechanismus in einem Halbsatz. Die Statustabelle von
+`rem:atomsnotchange` und die Schlußbemerkung `rem:statusboundary` stehen im
+Abschnitt „Abschluß von Task 23" unten. Im Manuskript steht die Aussage mit
+Beweis; der Dreierzopf, die Rechnung zur verschränkten Doppelkette im Detail
+und die Meßtabellen stehen nur hier. Eine Formulierung von Theorem 42$'$ ist
+im Manuskript enger gefaßt: „Vereinigungen zulässiger $D$ sind zulässig"
+verlangte eine Blockzerlegung der Vereinigung, die nicht automatisch
+existiert; die Aussage, die gebraucht wird und gilt, ist, daß
+$\theta=\psi(\T_{<v})$ für jeden Punkt $v$ gilt, der in irgendeinem
+zulässigen $D$ liegt — so steht es in `prop:silentblocks`.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Kein neues Lean-Ziel.** Die zwei eingetragenen Ziele
+`duality_of_atomic_idealExhaustion` und `duality_of_atomic_finiteCoreReduction`
+(README, Meilenstein 8) sind weiterhin die richtigen ersten Schritte, und
+Theorem 42(a) — hängende Kette ab einem minimalen Atom — ist ein drittes
+Geschwister mit demselben Beweismuster (fundierte Induktion für Lemma 40,
+dann eine Zeile), das unter dem ersten Ziel als Variante notiert werden
+sollte, sobald die README das nächste Mal angefaßt wird; dieser Lauf ändert die
+README nicht. Was **nicht** formalisiert werden soll: C(K), die
+Zertifikatsfrage auf der Leiter (Vermutungen 32, 34) und Theorem 42$'$ — es
+ist eine Aussage über die Gestalt eines noch nicht gefundenen Gegenbeispiels,
+kein Satz mit Anwendung.
+
+## Abschluß von Task 23, 2026-09-16
+
+*(Fortlaufend geschrieben; der letzte Stand steht jeweils unten.)*
+
+### Was ins Manuskript gewandert ist
+
+* Eintrag 34 des Protokolls ist vervollständigt (Gemessen, Ergebnis,
+  Sackgassen, Manuskript, Vorschlag), aus dem Eintrag und aus
+  `silent_chains.txt` / `disjoint_cores.txt`.
+* Theoreme 40 bis 42$'$ stehen in §6 nach `rem:corereduction` und vor
+  `rem:twomethods`: `lem:silentstacks` (Lemma 40), `thm:stackdefect`
+  (Theorem 41), `thm:stackexhaustion` (Theorem 42), `cor:stackexhaustion`
+  (Korollar 42.1 mit den Fällen (a) unendlich viele Kerne mit Ketten, (b)
+  mit Türmen, (c) Antikette mit einer Kette daneben, (d) hängende Kette ab
+  einem minimalen Atom: Leiter, $\omega$-Ketten, Bäume, Stufenordnungen),
+  `prop:silentblocks` (Lemma 40$'$ und Theorem 42$'$ in einer Aussage),
+  `rem:stackexhaustion` (verschränkte Doppelkette; die Gestalt eines
+  Gegenbeispiels; die Leiter ohne hängende Seite als offener Kandidat).
+  Theoreme 38 und 39 standen bereits (`thm:idealexhaustion`,
+  `cor:idealexhaustion`, `rem:idealexhaustion`, `thm:corereduction`,
+  `cor:corereduction`, `rem:corereduction`).
+* `rem:corereduction` endet jetzt mit dem Verweis auf `thm:stackexhaustion`
+  statt mit „offen"; `rem:twomethods` nennt den dritten Mechanismus in einem
+  Halbsatz.
+* Neue Schlußbemerkung `rem:statusboundary` („Status and boundary of the
+  atomic case") am Ende von §6, vor §7: die drei Mechanismen und ihre
+  gemeinsame Gestalt (endliche Ideale liefern $\delta\equiv0$ auf $W$,
+  ein Schritt dominierter Konvergenz führt nach $t$); daß sie weder (F) noch
+  eine Schranke an $\Phi$ noch ein Zertifikat brauchen und das Vorzeichen von
+  $m$ nur über `prop:atomicposet` auf den Idealen und über $m(S)>0$ eingeht;
+  die Zertifikatsmethode als hinreichend, nicht notwendig
+  (`prop:nocertificate`, `rem:idealexhaustion`); die zwei Gegenbeispiele
+  (`ex:antichain` — mit einer Kette daneben kehrt die Dualität zurück,
+  `cor:stackexhaustion`(c); `rem:atomicposet` für $\iota=\mathrm o$); und
+  das Offene, benannt.
+* `PLAN.md`, Task 23: Status `abgeschlossen mit benannter Grenze`
+  (2026-09-16); die Vier-Zeilen-Tabelle ist durch den Verweis auf
+  `rem:atomsnotchange` und die vier Lean-Ziele ersetzt; Schlußabsatz zum
+  34. Lauf und Abschluß angefügt. Die alten Standsmeldungen bleiben als
+  Geschichte stehen.
+
+### Die Statustabelle von `rem:atomsnotchange`, vollständig
+
+| Clock | Status |
+|---|---|
+| Haar (Lebesgue, counting) | proved, `prop:haar` |
+| atomless, (T3) | proved, `cor:atomless` (a time change) |
+| purely atomic, atoms a chain | proved, `prop:atomicdual` (either $\iota$) |
+| purely atomic, *finite* index, $m\ge0$ | proved, `prop:atomicposet` ($\iota=\mathrm p$) |
+| the same for $\iota=\mathrm o$ | *false*; counterexample in `rem:atomicposet` |
+| mixed, finitely many atoms | proved, `prop:mixeddual` ($\iota=\mathrm p$) |
+| the same, atoms accumulating only at $t^*$ | proved, `rem:mixeddual` |
+| countable chain, any order type, with (F) | proved, `thm:densechain` |
+| countable, finite height, with (F) | proved, `thm:finiteheight` |
+| countable, without (F) | *false*; `ex:antichain` |
+| countable, finite ideals, $\T_{<t^*}$ directed | proved, `thm:idealexhaustion`, no (F) |
+| the same, $\T_{<t^*}$ a union of directed pieces | proved, `cor:idealexhaustion`(b) |
+| the same, a finite core with hanging chains | proved, `cor:corereduction` |
+| the same, a stack from a minimal atom | proved, `thm:stackexhaustion`(a) |
+| the same, infinitely many cores with chains | proved, `cor:stackexhaustion` |
+| the same, no maximal element, no stack | *open*; shape: `rem:stackexhaustion` |
+| countable chain, without (F) | *open*; cf. `thm:densechain` |
+| two $\zeta$-chains stacked, without (F) | *open*; `rem:idealexhaustion` |
+
+Die frühere Zeile „countable with atoms lacking a minimum — open" ist durch
+die drei letzten Zeilen ersetzt: sie faßte die drei losen Enden des
+Protokolls in einer Zeile ohne Beleg zusammen. Geprüft wurde zuerst, was die
+Theoreme 40 bis 42$'$ davon erledigt haben: **keines der drei vollständig.**
+Die nackte Klasse auf Ketten und die gestapelten $\zeta$-Ketten berühren sie
+nicht (dort sind die Ideale unendlich, (i) fehlt); die Vermutung „endliche
+Ideale, $W$ ohne maximale Elemente" ist eingeengt, nicht entschieden. Erledigt
+haben sie dagegen den vorher kleinsten offenen Fall dieser Vermutung
+(unendliche disjunkte Vereinigung endlicher Kerne mit Ketten) — der ist als
+eigene bewiesene Zeile eingetragen.
+
+### Was offen bleibt, und warum
+
+1. **Die nackte Klasse auf Ketten** — abzählbare Kette ohne (F) und ohne
+   beschränktes $\Phi$. Theorem 17 (`thm:densechain`) braucht (F) für die
+   Umordnungen, Korollar 14/16 (Protokoll, Läufe 14 und 20/21) brauchen ein
+   beschränktes $\Phi$ bzw. einen beschränkten Fluß nach Norden; die
+   Mechanismen 38–42 brauchen endliche Ideale. Kein Werkzeug greift, kein
+   Gegenbeispiel ist bekannt.
+2. **Zwei gestapelte $\zeta$-Ketten ohne (F).** Die Ideale der oberen Kette
+   sind unendlich, (i) ist dort die Frage selbst; Theorem 17 gilt für eine
+   Kette, nicht für zwei übereinander.
+3. **Endliche Ideale, $W$ ohne maximale Elemente $\Rightarrow$ Dualität.**
+   Weder bewiesen noch widerlegt. Theorem 42$'$ (`prop:silentblocks`,
+   `rem:stackexhaustion`) sagt, wie ein Gegenbeispiel aussehen müßte: nicht
+   gerichtet, nicht bis auf endlich viele Punkte ausschöpfbar, ohne hängenden
+   Stapel, mit Armen, in deren Idealspann-Abschluß kein Punktindikator liegt.
+   Kleinster benannter Kandidat: die Leiter ohne hängende Seite über
+   unendlich vielen Kernen; ob dort $\mathbb 1_{a_i}\in\overline L$, ist
+   nicht entschieden.
+4. **Ein Gegenbeispiel unter (F) mit positiven Massen** müßte maximale
+   Elemente in $W$ haben, die keine minimalen Atome sind, und unendliche Höhe
+   (Theorem 23 schließt endliche Höhe aus): etwa eine unendliche Krone über
+   einer $\omega$-Kette (Lauf 32).
+5. Nicht Teil von Task 23, aber angrenzend: die ordnungsdichte Atommenge im
+   gemischten Fall (`rem:dualscope`) und die o-Konvention auf unendlichen
+   Indizes.
+
+### Nicht untergebracht
+
+* `convex_recursion_bound` (Lauf 28) steht nur im Protokoll und jetzt in
+  `PLAN.md`; in `TauCeti/MartingaleProblems/README.md` ist es **nicht**
+  eingetragen, anders als der Abschlußauftrag annahm. Die README wurde in
+  diesem Lauf nicht geändert.
+* Theorem 42(a) als drittes Lean-Geschwister ist in `PLAN.md` benannt, nicht
+  in der README.
+* Der Dreierzopf (Lauf 34, Lemma 40$'$) steht nur im Protokoll; seine
+  Rechnung ist in diesem Lauf nicht nachgeprüft worden und deshalb nicht ins
+  Manuskript übernommen.
+
+### `check.py`
+
+`python3 Journal/Blog/MartingaleProblem/check.py`: **clean**, **140 Seiten**
+(vorher 137), 12 Überlängen, größte 7.7pt wie zuvor. Zwischenfassungen der
+Tabelle waren 31.7pt und 18.0pt zu breit und sind gekürzt worden; eine
+dreiteilige Formelzeile in `prop:silentblocks` (50.1pt) ist in ein
+`gather*` mit zwei Zeilen zerlegt.
