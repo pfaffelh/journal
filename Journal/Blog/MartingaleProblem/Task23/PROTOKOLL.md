@@ -5829,3 +5829,709 @@ unendlichen Leiter aufzustellen ist**: ein $T$ mit $|T_{su}|=18\,w_sw_u$ auf
 $\{a_1,b_1\}^2\cup\{(a_1,b_j)\}_j$ und $T_{t^*\cdot}=e_{a_1}$, Grenzwert der
 Trunkierungen — die Zahl $18=2/\alpha_1^2=1/(\alpha_1\alpha_2)$ wartet auf
 eine Erklärung. Nichts davon ist bewiesen.
+
+## Die Leiter blockweise, 2026-09-16 (dreißigster Lauf): die Spitzenzeile jedes Zertifikats ist die Kettenzählung, und das Zertifikat der Leiter ist ein gekoppeltes System zweier Kettenrekursionen
+
+Der neunundzwanzigste Lauf hat auf der Leiter $(\tfrac12,\tfrac13)$ ein
+eintragsweise konvergierendes LP-optimales Zertifikat gemessen (Wert $18$,
+aktive Menge: Ecke $\{a_1,b_1\}^2$ und Zeile $(a_1,b_j)$) und als nächste
+Rechnung „das LP-optimale $T$ als Objekt" gestellt; der achtundzwanzigste die
+„$b$-Block-Rekursion der Leiter". Dieser Lauf macht das Zweite vollständig
+und das Erste zum Teil. Zuerst aber ein Satz, der bei der Vorbereitung
+abfiel und der für **jede** endliche Halbordnung gilt.
+
+### Proposition 29: die Spitzenzeile jedes Zertifikats ist erzwungen, und sie zählt längste Ketten
+
+Rahmen des fünfundzwanzigsten Laufs, $\T=\{0\}\cup A\cup\{t^*\}$ endlich mit
+Maximum $t^*$, $m_0=m_{t^*}=0$, $m_a>0$ auf $A$ (nur $0$ und $t^*$ sind
+masselos), $V^r=0$, $V^{r-1}\ne0$; $d:=r-1$ ist die Höhe (Länge der
+längsten Atomkette). Für ein Atom $a$ sei $h(a)$ die Länge der längsten
+Atomkette mit kleinstem Element $a$ und
+$$\omega(a):=\sum_{a=c_0<c_1<\dots<c_{d-1}}m_{c_0}m_{c_1}\cdots m_{c_{d-1}}$$
+das Massengewicht der **längsten** Ketten, die in $a$ beginnen ($\omega(a)=0$,
+falls $h(a)<d$), und $\Omega:=\sum_a\omega(a)=e_d$ das Gewicht aller längsten
+Ketten (der Leitkoeffizient des Kettenpolynoms, bis auf das Vorzeichen).
+
+> **Proposition 29.** Jedes Zertifikat $T$ an der Stelle $t^*$ ($T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_{t^*}$) hat die Spitzenzeile
+> $$T_{t^*a}=\frac{\omega(a)}{\Omega}\quad(a\text{ Atom}),\qquad
+>   T_{t^*0}=T_{t^*t^*}=0 .$$
+> Insbesondere ist die Spitzenzeile eine Wahrscheinlichkeitsverteilung auf
+> den Atomen minimaler Lage: $T_{t^*a}$ ist der massengewichtete Anteil der
+> längsten Ketten, die in $a$ beginnen. Der Nullraum $\{D=D^{\mathsf T},\,
+> DV=V^{\mathsf T}D,\,D\mathbb 1=0\}$ verschwindet also in der Zeile $t^*$
+> identisch.
+
+*Beweis.* $(V^k\mathbb 1)_s$ ist das Gewicht der Atomketten aus $k$ Punkten
+unterhalb $s$; da $t^*$ das Maximum ist, endet jede längste Kette unter
+$t^*$, und kein anderer Punkt hat $d$ Atome in einer Kette unter sich (sonst
+gäbe es mit $t^*$ eine Kette aus $d+1$ Atomen, wenn der Punkt ein Atom ist;
+ist er kein Atom, so ist er $0$ oder $t^*$). Also $V^d\mathbb 1=\Omega\,e_{t^*}$,
+$\Omega>0$. Aus $TV=V^{\mathsf T}T$ und $T\mathbb 1=e_{t^*}$ folgt
+$TV^d\mathbb 1=(V^{\mathsf T})^dT\mathbb 1=(V^{\mathsf T})^de_{t^*}=\psi_d$,
+also $\Omega\,Te_{t^*}=\psi_d$, und $(\psi_d)_a=m_a\cdot(\text{Gewicht der
+Ketten aus }d-1\text{ Atomen echt über }a)=\omega(a)$; $(\psi_d)_0=(\psi_d)_{t^*}=0$.
+Symmetrie von $T$ macht aus der Spalte die Zeile. $\square$
+
+Das ist die im neunundzwanzigsten Lauf beobachtete „sofortige Konvergenz der
+Spitzenzeile" mit Beweis, und es ist mehr: nicht nur das Krylow-Zertifikat,
+**jedes** Zertifikat hat diese Zeile. Proposition 24.2(a) ($T_{t^*\cdot}=e_{a_1}$
+auf der Kette) ist der Fall $\omega=m_1\cdots m_n\,e_{a_1}$; auf der Antikette
+($d=1$) ist $T_{t^*a}=m_a/M$, Theorem 20.
+
+> **Korollar 29.1 (die Leiter).** Auf der Trunkierung der Leiter
+> $a_i<b_j\iff i<j$ mit $n$ Stufen sind die längsten Ketten genau
+> $a_1<\dots<a_i<b_{i+1}<\dots<b_n$ ($0\le i\le n$), und
+> $$T_{t^*b_1}=\pi_n:=\frac{1}{\sum_{i=0}^n\prod_{l\le i}\alpha_l/\beta_l},\qquad
+>   T_{t^*a_1}=1-\pi_n,$$
+> für **jedes** Zertifikat der Trunkierung. Bei $\alpha_l=\alpha^l,\beta_l=\beta^l$
+> ist $\prod_{l\le i}\alpha_l/\beta_l=(\alpha/\beta)^{i(i+1)/2}$. Für
+> $\alpha<\beta$ konvergiert $\pi_n\to\pi_\infty=1/\sum_{i\ge0}(\alpha/\beta)^{i(i+1)/2}$
+> (eine partielle Thetareihe), für $\alpha\ge\beta$ ist $\pi_n\to0$.
+
+Gemessen (`Task23/toprow.py`, exakt in `Fraction`, rc=0): Proposition 29 auf
+acht zufälligen Halbordnungen ($3\le n\le7$, Höhen $2$–$5$), Kette, Antikette,
+Krone und zwölf Leiter-Trunkierungen — Krylow-Spitzenzeile $=$ Kettenformel
+exakt, Nullraum in der Zeile $t^*$ exakt null (Dimensionen $1$ bis $11$);
+Korollar 29.1 exakt für vier Profile und $n=3,5,8$. Der Limes für
+$(\tfrac13,\tfrac12)$ ist $1-\pi_\infty=0{,}517046411021$ — der
+neunundzwanzigste Lauf hat $0{,}51704641$ gemessen, ohne die Zahl zu kennen.
+Für $(\tfrac12,\tfrac23)$: $0{,}587162519666$; für $(\tfrac14,\tfrac12)$:
+$0{,}390850288934$.
+
+**Was das für die unendliche Leiter heißt, und was nicht.** Auf der
+unendlichen Leiter gibt es kein $d$ mit $V^d\mathbb 1\propto e_{t^*}$; ob dort
+$T_{t^*a_1}$ erzwungen ist, ist **offen**. Ist ein unendliches Zertifikat
+aber ein eintragsweiser Limes von Trunkierungszertifikaten (Proposition 19.3,
+der Weg, den die LP-Messung stützt), so hat es $T_{t^*b_1}=\pi_\infty$.
+Bei $\alpha>\beta$ heißt das $T_{t^*\cdot}=e_{a_1}$ — die Spitze sieht nur die
+langsam fallende Kette —, bei $\alpha<\beta$ trägt die Spitze auf **beiden**
+minimalen Atomen. Das ist, nebenbei, die Erklärung für die Beobachtung des
+neunundzwanzigsten Laufs, daß bei $(\tfrac12,\tfrac13)$ die aktive Zeile die
+$a_1$-Zeile ist und bei $(\tfrac13,\tfrac12)$ die $b_1$-Spalte: aktiv ist die
+Zeile des minimalen Atoms, das die Spitze **nicht** vollständig trägt.
+
+### Proposition 30: das Zertifikat der Leiter in Potentialen — die $b$-Block-Rekursion, und woran sie hängt
+
+Leiter wie im sechsundzwanzigsten Lauf, $m_{a_i}=\alpha_i$, $m_{b_j}=\beta_j$,
+$m_0=m_{t^*}=0$, endlich ($n$ Stufen) oder unendlich; $T$ ein Zertifikat an
+$t^*$ (im Unendlichen: ein unendliches Zertifikat, Gewichtsklasse $\{0,t^*\}$).
+Blöcke $P=T_{AA}$, $Q=T_{AB}$ ($Q_{ij}=T_{a_ib_j}$), $R=T_{BB}$;
+$p:=T_{t^*a_1}$. Setze für $i,j,l\ge1$, $k\ge0$:
+
+$$H(j,l):=\frac1{\beta_j}\Bigl(\sum_{j'>l}R_{jj'}+T_{b_jt^*}\Bigr),\quad
+  J(i,l):=\frac1{\alpha_i}\Bigl(\sum_{j>l}Q_{ij}+T_{a_it^*}\Bigr),\quad
+  K(l,i):=\frac1{\beta_l}\sum_{i'>i}Q_{i'l},\quad
+  \Phi(i,k):=\frac1{\alpha_i}\sum_{i'>k}P_{ii'},$$
+
+($H(j,0)$, $J(i,0)$, $K(l,0)$ mit derselben Formel).
+
+> **Proposition 30.** (a) Die Zeilen $T_{t^*\cdot}$ und $T_{0\cdot}$ sind auf
+> $\{0,a_1,b_1\}$ getragen, $T_{0t^*}=0$, $T_{t^*a_1}+T_{t^*b_1}=1$,
+> $T_{00}+T_{0a_1}+T_{0b_1}=0$; also $T_{a_it^*}=p[i=1]$,
+> $T_{b_jt^*}=(1-p)[j=1]$. Die beiden Zahlen $T_{0a_1},T_{0b_1}$ sind nicht
+> erzwungen (auf der Trunkierung ist der Nullraum an beiden Stellen von null
+> verschieden).
+>
+> (b) Bei $T_{0a_1}=T_{0b_1}=0$ sind die Bedingungen 2 und 3 äquivalent zu
+> den fünf Gleichungen
+> $$\text{(BB)}\ \ H(j,l)=H(l,j),\qquad
+>   \text{(AB)}\ \ J(i,l)=K(l,i)+H(l,i),\qquad
+>   \text{(AA)}\ \ F:=\Phi+J\ \text{ist symmetrisch},$$
+> $$\text{(3a)}\ \ F(i,0)=0,\qquad
+>   \text{(3b)}\ \ \beta_lH(l,0)=-\sum_iQ_{il}$$
+> für alle $i,j,l\ge1$, zusammen mit der Symmetrie von $T$, die in den Blöcken
+> $P$ und $R$ die Zwei-Diagonalen-Rekursionen
+> $$\alpha_i\bigl(\Phi(i,k{-}1)-\Phi(i,k)\bigr)=\alpha_k\bigl(\Phi(k,i{-}1)-\Phi(k,i)\bigr),\qquad
+>   \beta_j\bigl(H(j,l{-}1)-H(j,l)\bigr)=\beta_l\bigl(H(l,j{-}1)-H(l,j)\bigr)$$
+> ist, und $Q_{il}=\alpha_i\bigl(J(i,l{-}1)-J(i,l)\bigr)$.
+
+*Beweis.* (a) ist Schritt (1) von Proposition 24.1: für $m_s=0$ gibt
+Bedingung 2 an $(s,u)$ $\theta_s(\uparrow u)=0$ für jedes Atom $u$; mit
+$\uparrow b_j=\{b_{j'}\}_{j'>j}\cup\{t^*\}$ folgt $\theta_s(b_j)=0$ ($j\ge2$),
+$\theta_s(t^*)=0$; mit $\uparrow a_i\setminus\uparrow a_{i+1}=\{a_{i+1},b_{i+1}\}$
+dann $\theta_s(a_{i+1})=0$. Bedingung 3 und Symmetrie geben die Summen.
+(b) Bedingung 2 an $(b_j,b_l)$: $\beta_l\sum_{x>b_l}T_{b_jx}=\beta_j\sum_{x>b_j}T_{xb_l}$,
+beide Seiten sind $\beta_j\beta_lH(j,l)$ bzw. $\beta_j\beta_lH(l,j)$. An
+$(a_i,b_l)$: links $\beta_l\alpha_iJ(i,l)$, rechts
+$\alpha_i\bigl(\sum_{i'>i}Q_{i'l}+\sum_{j>i}R_{jl}+T_{t^*b_l}\bigr)
+=\alpha_i\beta_l\bigl(K(l,i)+H(l,i)\bigr)$ — hier geht ein, daß
+$\uparrow a_i$ **beide** Ketten oberhalb der Stufe $i$ enthält. An $(a_i,a_k)$:
+$\alpha_k\sum_{x>a_k}T_{a_ix}=\alpha_k\alpha_i\bigl(\Phi(i,k)+J(i,k)\bigr)$,
+symmetrisch dazu rechts. Bedingung 3 an $a_i$ bzw. $b_l$ ist (3a) bzw. (3b)
+(mit $T_{a_i0}=T_{b_l0}=0$). Die Rekursionen sind die Symmetrie von $P$ bzw.
+$R$, wie in Proposition 24.2(b). $\square$
+
+**Was das ist.** Der $b$-Block $R$ erfüllt wörtlich die Kettenrekursion der
+$\omega$-Kette (Proposition 24.2) in den Massen $\beta$ — aber mit
+**inhomogenem Rand**: an der Stelle $H(l,0)=0$ der Kette steht (3b),
+$H(l,0)=-\frac1{\beta_l}\sum_iQ_{il}$, die Spaltensumme des Kreuzblocks. Der
+$a$-Block $P$ erfüllt dieselbe Rekursion in $\alpha$, sein Potential $\Phi$
+ist aber **nicht** symmetrisch — symmetrisch ist $F=\Phi+J$, und der Rand ist
+$\Phi(i,0)=-J(i,0)$. Der Kreuzblock $Q$ koppelt beides über (AB):
+$J(i,l)-K(l,i)=H(l,i)$ — Zeilenpotential minus Spaltenpotential von $Q$ ist
+das Kettenpotential des $b$-Blocks. Das ist die Gestalt, die der
+achtundzwanzigste Lauf erfragt hat: die Rekursion (K) ist auf der Leiter
+wieder da, in beiden Blöcken, und wieder eine Konvexkombination bei streng
+fallenden Massen, wenn man sie abwärts liest — **aber die Ränder, an denen
+das Maximumprinzip ansetzt, sind jetzt selbst Unbekannte** ($H(\cdot,0)$ und
+$J(\cdot,0)$), und sie hängen über $Q$ voneinander ab. Die Schranke kann also
+nicht Block für Block gewonnen werden; sie braucht eine Aussage über $Q$.
+
+Gemessen (`Task23/ladder_blocks.py 1/2 1/3 4 6 8 --lp`, rc=0): (a), (BB),
+(AB), (AA), (3a), (3b) **exakt** am Krylow-Zertifikat und auf $10^{-30}$
+(80 Stellen) am LP-optimalen Zertifikat, $n=4,6,8$. Der Nullraum hat an
+$(t^*,a_1)$, $(t^*,b_1)$ exakt $0$ und an $(0,a_1)$, $(0,b_1)$ jeweils volle
+Freiheit.
+
+### Sackgasse, geprüft: der $a$-Block des optimalen Zertifikats ist nicht das Kettenzertifikat der $\alpha$-Kette
+
+Der neunundzwanzigste Lauf hat notiert, der LP-Wert $18$ bei $(\tfrac12,\tfrac13)$
+sei $1/(\alpha_1\alpha_2)$ — genau $\sup|G|$ der $\alpha$-Kette allein
+(Theorem 26) — und gefragt, ob das optimale Zertifikat „im Kern das
+$\omega$-Ketten-Zertifikat der langsam fallenden Kette" sei. **Nein**, in der
+naheliegenden Lesart: $\max|T^{\mathrm{opt}}_{AA}-T^{\mathrm{Kette}}_{\alpha}|/(w w)
+=15{,}4$ bei $n=6,8$ (gegen $\|T\|_m=18$), und die Zeilensummen des
+$a$-Blocks sind $(-2{,}34;\ 0{,}11;\ -0{,}11;\ -0{,}06;\dots)$ statt
+$(-1;0;0;\dots)$. Auch das Krylow-Zertifikat der Leiter hat nicht den
+$a$-Block des Krylow-Zertifikats der Kette. Die Zahl $18$ bleibt unerklärt.
+Bemerkenswert, aber ungeklärt: alle drei Blöcke $AA$, $AB$, $BB$ des
+Optimums haben **dieselbe** gewichtete Norm wie das Ganze (die Ecke ist in
+jedem Block aktiv).
+
+### Theorem 31: die Randeinträge jedes Zertifikats sind erzwungen, und sie erklären den LP-Wert
+
+Die Tail-Bedingungen der Potentiale sind auf der Trunkierung **exakte
+Randwerte**: $J(i,n)=p[i=1]/\alpha_1$, $H(j,n)=(1-p)[j=1]/\beta_1$,
+$\Phi(i,n)=0$ (leere Summen). Setzt man sie in (AB), (BB), (AA) ein, so
+fallen die Einträge der letzten Stufe heraus — für **jedes** Zertifikat, ohne
+Normierung von $T_{0\cdot}$ und ohne Bedingung 3 an den Atomen.
+
+> **Theorem 31.** Auf der Trunkierung der Leiter mit $n$ Stufen sei $T$ ein
+> Zertifikat an $t^*$, $p_n=T_{t^*a_1}$ (nach Korollar 29.1 erzwungen) und
+> $$\kappa_n:=\frac{p_n}{\alpha_1}-\frac{1-p_n}{\beta_1}.$$
+> Dann gilt exakt
+> $$\text{(E1)}\ \ T_{a_2b_n}=\kappa_n\beta_n,\quad T_{a_ib_n}=0\ (i\ge3);\qquad
+>   \text{(E2)}\ \ T_{b_2b_n}=\frac{1-p_n}{\beta_1}\beta_n,\quad T_{b_lb_n}=0\ (3\le l<n);$$
+> $$\text{(E3)}\ \ T_{a_na_2}+T_{a_nb_2}=\frac{p_n}{\alpha_1}\alpha_n,\quad
+>   T_{a_na_k}+T_{a_nb_k}=0\ (3\le k<n),$$
+> und folglich für jedes Zertifikat
+> $$\|T\|_m\ \ge\ \max\Bigl(\frac{|\kappa_n|}{\alpha_2},\ \frac{1-p_n}{\beta_1\beta_2}\Bigr).$$
+
+*Beweis.* (AB) an $(i,n)$: $K(n,i)=J(i,n)-H(n,i)=J(i,n)-H(i,n)
+=[i=1]\bigl(p/\alpha_1-(1-p)/\beta_1\bigr)=[i=1]\kappa_n$ für $i\ge1$; also
+$T_{a_ib_n}=\beta_n\bigl(K(n,i{-}1)-K(n,i)\bigr)=\beta_n\kappa_n[i=2]$ für
+$i\ge2$. (E2): $T_{b_nb_l}=\beta_n\bigl(H(n,l{-}1)-H(n,l)\bigr)$ und
+$H(n,l)=H(l,n)=(1-p)[l=1]/\beta_1$ für $l\ge1$. (E3): $F(n,k)=F(k,n)
+=\Phi(k,n)+J(k,n)=p[k=1]/\alpha_1$, also $\Phi(n,k)=p[k=1]/\alpha_1-J(n,k)$
+und $T_{a_na_k}=\alpha_n\bigl(\Phi(n,k{-}1)-\Phi(n,k)\bigr)
+=\alpha_n\bigl(p[k=2]/\alpha_1-J(n,k{-}1)+J(n,k)\bigr)=p\alpha_n[k=2]/\alpha_1-T_{a_nb_k}$
+für $k\ge2$. Die Schranke: $|T_{a_2b_n}|\le C\alpha_2\beta_n$ und
+$|T_{b_2b_n}|\le C\beta_2\beta_n$. $\square$
+
+**Was die Schranke ist.** Für $\alpha>\beta$ ist $p_n\to1$ und
+$\kappa_n/\alpha_2\to1/(\alpha_1\alpha_2)$ — die Zahl $18$ des
+neunundzwanzigsten Laufs ist **kein** Zufall und **kein** Kettenzertifikat im
+$a$-Block, sondern der erzwungene Randeintrag $T_{a_2b_n}/(\alpha_2\beta_n)$;
+und es ist dieselbe Zahl wie $\sup|G|$ der $\alpha$-Kette allein
+(Theorem 26), aus demselben Grund: dort ist $\lim_iG(i,2)=-1/(m_1m_2)$ der
+erzwungene Limes, hier ist es der erzwungene Rand. Die im neunundzwanzigsten
+Lauf als „Trunkierungsartefakte" bezeichneten aktiven Einträge $(a_2,b_n)$ und
+$(a_2,a_n)$ sind also das Gegenteil: sie sind die einzigen Einträge, deren Wert
+in jedem Zertifikat feststeht, und das Optimum ist genau dann erreicht, wenn
+kein anderer Eintrag darüber hinausgeht.
+
+**Gemessen: die Schranke ist das LP-Minimum, auf 80 Stellen.**
+`Task23/ladder_lowerbound.py`, rc=0: (E1)–(E3) exakt (`Fraction`) am
+Krylow-Zertifikat und auf $10^{-40}$ an Krylow plus zufälliger
+Nullraumrichtung (Dimensionen $6$–$12$), sechs Profile, $n=4..10$. Und das
+LP-Minimum aus `ladder_lp.py` stimmt mit $|\kappa_n|/\alpha_2$ überein, relativer
+Abstand $\le2\cdot10^{-81}$:
+
+| $(\alpha,\beta)$ | $n$ | LP-Minimum $=|\kappa_n|/\alpha_2$ | Limes $|\kappa_\infty|/\alpha_2$ |
+|---|---|---|---|
+| $(\tfrac12,\tfrac13)$ | $4,6,8,10,12$ | $17{,}3994448$; $17{,}9918192$; $17{,}9999802$; $17{,}99999999$; $18{,}0$ | $18=1/(\alpha_1\alpha_2)$ |
+| $(\tfrac13,\tfrac12)$ | $6,8,10$ | $11{,}850949115838$ (ab $n=8$ stabil) | $11{,}8509491158$ |
+| $(\tfrac12,\tfrac23)$ | $6,8,10$ | $19{,}97492$; $19{,}98242$; $19{,}98248$ | $19{,}9825$ |
+| $(\tfrac14,\tfrac12)$ | $6,8,10$ | $9{,}81622685$; $9{,}8162270891$; $9{,}8162270891$ | $9{,}81622709$ |
+| $(\tfrac23,\tfrac12)$ | $6,8,10$ | $30{,}2396$; $30{,}3730$; $30{,}37499$ | $30{,}375=243/8$ |
+| $(\tfrac15,\tfrac12)$ | $6,8$ | $9{,}0727918619$; $9{,}0727918628$ | $9{,}07279186$ |
+
+Damit sind **alle** LP-Werte des sechsundzwanzigsten und neunundzwanzigsten
+Laufs bei getrennten Skalen erklärt, einschließlich der dort unverstandenen
+$11{,}85$ und $9{,}816$ (der Wert $30{,}06$ des sechsundzwanzigsten Laufs bei
+$(\tfrac23,\tfrac12)$, $n=12$, ist $30{,}375$ in der dortigen Normierung je
+Trunkierung, Faktor $(M_{12}/M_\infty)^2=0{,}9895$). Die zweite Schranke
+$(1-p_n)/(\beta_1\beta_2)$ ist in allen sechs Fällen die kleinere ($8{,}69$
+gegen $11{,}85$ bei $(\tfrac13,\tfrac12)$).
+
+**Wo die Schranke nicht greift: gleiche und fast gleiche Skalen.** Bei
+$(\tfrac12,\tfrac12)$ ist $p_n=n/(n+1)$, $\kappa_n/\alpha_2=(n-1)/((n+1)\alpha_1\alpha_2)$
+beschränkt ($19{,}2$; $22{,}86$; $24{,}89$ bei $n=4,6,8$), das LP-Minimum aber
+$19{,}2$; $32{,}0$; $62{,}81$ — bei $n=4$ gleich, ab $n=6$ darüber und
+wachsend. Bei $(\tfrac12,\tfrac{49}{100})$: Schranke $23{,}29$; $25{,}64$;
+$27{,}24$, LP $34{,}75$; $74{,}46$; $192{,}34$ ($n=6,8,10$) — das ist das
+Wachstum des sechsundzwanzigsten Laufs ($33{,}7$; $73{,}9$; $192$), jetzt
+hochstellig bestätigt: **kein Konditionierungsartefakt**, sondern real. Die
+Frage des sechsundzwanzigsten Laufs („echte Resonanz oder Artefakt") ist damit
+entschieden: echt. Bei fast gleichen Skalen wächst das Minimum, obwohl die
+erzwungenen Randwerte beschränkt bleiben; das Wachstum sitzt in anderen
+Einträgen. Wo genau die Schwelle liegt, mißt `threshold_scan.txt` (unten).
+
+**Für die unendliche Leiter.** Dieselbe Rechnung mit Tail-Bedingungen statt
+Randwerten: ist $T$ ein unendliches Zertifikat mit $p=T_{t^*a_1}$, so ist jede
+Zeile absolut summierbar, also $J(i,l)\to p[i=1]/\alpha_1$ und
+$H(i,l)\to(1-p)[i=1]/\beta_1$ für $l\to\infty$, und aus (AB)
+$$\lim_{l\to\infty}\frac{T_{a_2b_l}}{\beta_l}=\kappa(p):=\frac p{\alpha_1}-\frac{1-p}{\beta_1},\qquad
+  \lim_{l\to\infty}\frac{T_{b_2b_l}}{\beta_l}=\frac{1-p}{\beta_1},$$
+also $C\ge\max\bigl(|\kappa(p)|/\alpha_2,\ (1-p)/(\beta_1\beta_2)\bigr)$.
+Ob $p$ auf der unendlichen Leiter erzwungen ist, ist offen (siehe oben); ist
+$T$ ein Limes von Trunkierungszertifikaten, so ist $p=1-\pi_\infty$ und die
+Schranke die Limesspalte der Tabelle. Insbesondere: **kein beschränktes
+Zertifikat der unendlichen Leiter bei $\alpha>\beta$ hat eine kleinere
+Konstante als die $\alpha$-Kette allein.**
+
+**Der Skalen-Scan** (`threshold_scan.txt`, aus `ladder_lowerbound.py`, $n=6,8,10$,
+$\alpha=\tfrac12$, 80 Stellen): LP-Minimum $=|\kappa_n|/\alpha_2$ auf
+$10^{-81}$ für $\beta/\alpha\in\{0{,}8;\ 1{,}1;\ 1{,}25;\ 1{,}5;\ 1{,}6;\ 1{,}8\}$
+(dazu die sechs Profile der Tabelle mit $\beta/\alpha\in\{\tfrac23,\tfrac32,
+\tfrac43,2,\tfrac34,\tfrac52\}$); LP-Minimum **größer** als die Schranke und
+wachsend für $\beta/\alpha\in\{0{,}9;\ 0{,}95;\ 0{,}98;\ 1;\ 1{,}05\}$:
+
+| $\beta/\alpha$ | Schranke $n=6,8,10$ | LP-Minimum $n=6,8,10$ |
+|---|---|---|
+| $0{,}9$ | $23{,}93$; $25{,}79$; $26{,}34$ | $36{,}80$; $53{,}70$; $56{,}98$ |
+| $0{,}95$ | $23{,}77$; $26{,}30$; $27{,}80$ | $37{,}67$; $80{,}16$; $173{,}8$ |
+| $1$ | $22{,}86$; $24{,}89$ ($n=6,8$) | $32{,}0$; $62{,}81$ |
+| $1{,}05$ | $21{,}66$; $22{,}74$; $23{,}15$ | $24{,}86$; $33{,}73$; $43{,}96$ |
+| $1{,}1$ | $20{,}58$; $21{,}05$; $21{,}14$ | $=$ Schranke |
+
+Das Fenster, in dem die Schranke nicht das Minimum ist, liegt also gemessen
+in $0{,}8<\beta/\alpha<1{,}1$ und ist **asymmetrisch** um $1$. Bemerkenswert:
+bei $\beta/\alpha=0{,}9$ scheint das Minimum zu sättigen ($53{,}7\to57{,}0$),
+bei $0{,}95$ wächst es weiter — ob das Fenster der Nichtbeschränktheit
+kleiner ist als das Fenster, in dem die Schranke nicht greift, ist mit
+$n\le10$ nicht zu entscheiden. Zum Vergleich: das **Krylow**-Zertifikat
+explodiert nach dem neunundzwanzigsten Lauf schon ab $\alpha/\beta\ge\tfrac23$
+— das ist ein anderes Phänomen (Auswahl im Zertifikatsraum), nicht die Frage
+nach dem Minimum.
+
+### Das optimale Zertifikat, exakt: bei $\alpha>\beta$ ist es das einzige Zertifikat mit gesättigter Zeile $a_1$ — und es erreicht die Schranke
+
+Das LP-Optimum bei $(\tfrac12,\tfrac13)$, vollständig ausgedruckt
+(`Task23/ladder_full_view.py 1/2 1/3 12`, 80 Stellen), zeigt folgende Gestalt
+in $T/(w_sw_u)$:
+
+* Zeile $a_1$ auf $\{a_1\}\cup B$: **exakt** $-C$ an jeder Stelle, also
+  $T_{a_1u}=-C\alpha_1m_u$ für $u\in\{a_1,b_1,b_2,\dots\}$; Ecke
+  $T_{b_1b_1}=-C\beta_1^2$; $T_{a_1t^*}=1$ ($p=1$).
+* Zeile $a_2$ strebt in beiden Blöcken gegen $+C$: $T_{a_2a_i}/(\alpha_2\alpha_i)
+  \to18$, $T_{a_2b_j}/(\alpha_2\beta_j)\to18$ (Theorem 31 im Fernfeld).
+* Zeile $a_1$ gegen $A$: $3{,}155;\ -8{,}31;\ -11{,}55;\ -10{,}06;\ -8{,}73;
+  \dots;\ -8{,}93$, gegen $-9=-1/\alpha_1^2$ — der Limes $\lim_iG(i,1)=1/m_1^2$
+  der $\omega$-Kette (Korollar 25.1), hier gemessen.
+* Zeile $b_1$ gegen $B$: $16{,}5;\ 14{,}5;\ 13{,}83;\ 13{,}61;\ 13{,}54;\dots
+  \to13{,}5=1/(\alpha_1\beta_1)$, mit Abständen $3,1,\tfrac13,\tfrac19,\dots$ —
+  also gemessen $T_{b_1b_j}/(\beta_1\beta_j)=1/(\alpha_1\beta_1)+3^{2-j}$ im
+  Limes $n\to\infty$. Zeile $b_1$ gegen $A$ fällt geometrisch mit Quotient
+  $\alpha/\beta=\tfrac23$.
+* $T_{0b_1}/\beta_1=9{,}0=1/\alpha_1^2$, $T_{0a_1}/\alpha_1=10{,}04$,
+  $T_{00}=-5{,}346$; alle übrigen Einträge der Nullzeile sind $0$.
+* **Antidreiecksträger**: $T_{su}=0$ für Stufen $i+j>n+2$ in allen drei
+  Blöcken, außer in den Zeilen $a_1,a_2,b_1,b_2$ — derselbe Träger wie das
+  Krylow-Zertifikat ($\psi_k\psi_l^{\mathsf T}$ mit $k+l\ge r-1$), obwohl das
+  Optimum bei $n=12$ **nicht** das Krylow-Zertifikat ist (dessen Norm dort
+  $6192$ ist).
+
+Die Sättigungen sind $n+2$ lineare Gleichungen auf dem $(n+2)$-dimensionalen
+Zertifikatsraum. `Task23/ladder_exact_opt.py`, exakt in `Fraction`, löst
+das System
+
+$$T\ \text{Zertifikat},\qquad T_{a_1u}=-C_n\alpha_1m_u\ (u\in\{a_1\}\cup B),\qquad
+  T_{b_1b_1}=-C_n\beta_1^2,\qquad C_n:=\kappa_n/\alpha_2,$$
+
+und prüft, ob die Lösung die Norm $C_n$ hat.
+
+> **Satz 32 (exakt nachgerechnet für $n\le14$), Vermutung 32 (alle $n$).**
+> Für $(\alpha,\beta)=(\tfrac12,\tfrac13)$, $n=4,6,8,10,12,14$, und für
+> $(\tfrac23,\tfrac12)$, $n=4,6,8$, ist das System **eindeutig lösbar**
+> (Rangdefekt $0$, konsistent), und die Lösung $T_n$ erfüllt
+> $$\|T_n\|_m=C_n=\frac{\kappa_n}{\alpha_2}\quad\text{exakt}.$$
+> Zusammen mit Theorem 31 ist also $\min\|T\|_m=\kappa_n/\alpha_2$ für diese
+> $n$ **bewiesen**, nicht nur gemessen; und $\kappa_n\uparrow1/\alpha_1$, also
+> $\|T_n\|_m\le1/(\alpha_1\alpha_2)$ für alle geprüften $n$.
+
+Für $(\tfrac12,\tfrac13)$, $n=14$: $\|T_{14}\|_m=C_{14}$ mit
+$C_{14}=18{,}000000000000$ (Bruch mit 52-stelligem Zähler). Die Nenner der
+Einträge sind, wie die Beispiele oben zeigen, $2$-glatt mal Potenzen der
+Zahl $\sum_i(\alpha/\beta)^{i(i+1)/2}\cdot(\ldots)$ — geschlossene Formen sind
+nicht gesucht worden; die exakten Einträge für $n\le14$ liegen im Skript bereit.
+
+**Bei $\alpha<\beta$** ist die Gestalt gespiegelt, aber nicht einheitlich.
+Bei $(\tfrac13,\tfrac12)$ (`ladder_full_view.py 1/3 1/2 8`) ist die Zeile
+$b_1$ auf $A\cup\{b_1\}$ exakt $-C$ und $(a_1,a_1)=-C$; das gespiegelte System
+(`ladder_exact_opt.py --b`: $T_{b_1u}=-C\beta_1m_u$ auf $A\cup\{b_1\}$,
+$T_{a_1a_1}=-C\alpha_1^2$) ist für $(\tfrac13,\tfrac12)$ und
+$(\tfrac12,\tfrac23)$ bei $n=4,6,8$ eindeutig lösbar mit Norm exakt $C_n$.
+Bei $(\tfrac14,\tfrac12)$ dagegen **nicht**: dort ist die Zeile $b_1$ gegen
+$A$ nur ab $a_4$ gesättigt ($-9{,}816$), $(b_1,a_2)=-8{,}60$,
+$(b_1,a_3)=-9{,}37$, und statt dessen sind $(a_1,a_2)=(a_1,a_3)=+C$ aktiv;
+die gespiegelte Lösung hat Norm $11{,}57>9{,}816$. Der neunundzwanzigste Lauf
+hat bei $(\tfrac13,\tfrac12)$ eine nicht eindeutige Optimalmenge gemessen
+(Vorzeichenwechsel von $(b_1,b_1)$ zwischen $n=12$ und $n=18$); bei
+$\alpha<\beta$ ist die aktive Menge also profilabhängig, und Satz 32 ist
+dort nur für zwei Profile und $n\le8$ nachgerechnet.
+
+**Was das für die unendliche Leiter heißt.** Proposition 19.3
+(dreiundzwanzigster Lauf): gilt (F) und gibt es auf einer Ausschöpfung
+$F_n\uparrow\T$ Zertifikate $T_n$ mit $\sup_n\|T_n\|_m<\infty$, so ist
+$\delta(t^*)=0$. Die Trunkierungen $F_n=\{0\}\cup\{a_{\le n}\}\cup\{b_{\le n}\}
+\cup\{t^*\}$ mit den **wahren** Massen $\alpha^i/M_\infty$ sind eine solche
+Ausschöpfung, und $\|T_n\|_m=\kappa_n/\alpha_2<1/(\alpha_1\alpha_2)$.
+**Vermutung 32 impliziert also die Dualität auf der unendlichen Leiter bei
+$\alpha>\beta$ unter (F)**, ohne Kompaktheitsargument und ohne das
+unendliche Zertifikat hinzuschreiben; das unendliche Zertifikat existiert
+dann ebenfalls (eintragsweiser Limes einer beschränkten Folge, dominierte
+Konvergenz in den Bedingungen 2 und 3, wie im fünfundzwanzigsten Lauf für die
+Richtung „Zertifikat $\Rightarrow$ Dualität" ausgeführt), mit $C=1/(\alpha_1\alpha_2)$
+und $T_{t^*\cdot}=e_{a_1}$. Was fehlt, ist genau **ein** Beweis für alle $n$:
+daß das Sättigungssystem lösbar ist und seine Lösung die Schranke einhält.
+
+### Ergebnis
+
+* **Bewiesen.** Proposition 29 (Spitzenzeile jedes Zertifikats einer
+  endlichen Halbordnung $=$ massengewichtete Verteilung der Startpunkte
+  längster Ketten; der Nullraum verschwindet in Zeile $t^*$), Korollar 29.1
+  (Leiter: $T_{t^*b_1}=1/\sum_{i\le n}\prod_{l\le i}\alpha_l/\beta_l$, eine
+  partielle Thetareihe; Limes $0{,}517046411021$ bei $(\tfrac13,\tfrac12)$,
+  vom neunundzwanzigsten Lauf gemessen, hier erklärt). Proposition 30 (das
+  Zertifikat der Leiter als gekoppeltes System zweier Kettenrekursionen mit
+  Rändern $H(\cdot,0)$, $J(\cdot,0)$, gekoppelt über den Kreuzblock;
+  die „$b$-Block-Rekursion" des achtundzwanzigsten Laufs). Theorem 31
+  (erzwungene Randeinträge $T_{a_2b_n}=\kappa_n\beta_n$, $T_{b_2b_n}=(1-p_n)\beta_n/\beta_1$;
+  untere Schranke $\|T\|_m\ge\max(|\kappa_n|/\alpha_2,(1-p_n)/(\beta_1\beta_2))$
+  für jedes Zertifikat; auf der unendlichen Leiter dieselbe Schranke aus den
+  Tail-Bedingungen). Satz 32 für $n\le14$ bei $(\tfrac12,\tfrac13)$: das
+  Minimum **ist** die Schranke, exakt in Brüchen.
+* **Erklärt.** Alle LP-Werte bei getrennten Skalen aus Lauf 26 und 29:
+  $18=1/(\alpha_1\alpha_2)$, $11{,}85094912$, $19{,}9825$, $9{,}81623$,
+  $30{,}06$ — sie sind $|\kappa_n|/\alpha_2$, auf $10^{-81}$. Die „sofortige
+  Konvergenz der Spitzenzeile" (Lauf 29): Proposition 29. Die als
+  Trunkierungsartefakte gelesenen aktiven Einträge $(a_2,b_n),(a_2,a_n)$:
+  die erzwungenen Randwerte.
+* **Widerlegt.** „$a$-Block des Optimums $=$ Kettenzertifikat der
+  $\alpha$-Kette" (Abstand $15{,}4$ bei Norm $18$). „Das Wachstum des
+  LP-Minimums bei $\beta\to\alpha$ ist ein Konditionierungsartefakt" (Lauf 26,
+  offen gelassen): es ist real, hochstellig bestätigt ($192{,}34$ bei
+  $(\tfrac12,\tfrac{49}{100})$, $n=10$), Fenster gemessen $0{,}8<\beta/\alpha<1{,}1$.
+* **Offen.** Vermutung 32 für alle $n$ (der einzige fehlende Schritt zur
+  Dualität auf der Leiter bei $\alpha>\beta$ unter (F)); die aktive Menge bei
+  $\alpha<\beta$ (profilabhängig, bei $(\tfrac14,\tfrac12)$ anders als bei
+  $(\tfrac13,\tfrac12)$); ob $p=T_{t^*a_1}$ auf der unendlichen Leiter
+  erzwungen ist; das Fenster fast gleicher Skalen (wächst das Minimum dort
+  unbeschränkt, oder sättigt es wie bei $\beta/\alpha=0{,}9$ gemessen?);
+  gleiche Massen auf der $\omega$-Kette; die nackte Klasse auf Ketten; das
+  Gegenbeispiel mit positiven Abwärtsmassen.
+
+### Sackgassen, achtundzwanzigster Nachtrag
+
+* **Den $a$-Block des optimalen Leiterzertifikats für das Kettenzertifikat
+  der $\alpha$-Kette halten.** Falsch (Abstand $15{,}4$ in der gewichteten
+  Norm, Zeilensummen $(-2{,}34;\,0{,}11;\dots)$ statt $(-1;0;\dots)$). Die
+  Gleichheit $18=1/(\alpha_1\alpha_2)$ hat einen anderen Grund: den
+  erzwungenen Randeintrag $T_{a_2b_n}$ (Theorem 31). Nur das **Fernfeld**
+  ($\lim_iT_{a_ia_k}/(\alpha_i\alpha_k)$ für $k=1,2$) stimmt mit der Kette
+  überein, nicht das Nahfeld.
+* **Aktive Einträge am Rand der Trunkierung als Artefakte verwerfen.** Die
+  Einträge $(a_2,b_n)$, $(b_2,b_n)$, $(a_2,a_n)+(a_2,b_n)$-Summe sind in
+  **jedem** Zertifikat erzwungen (Theorem 31); sie sind die Schranke, nicht
+  ihr Rauschen. Wer aktive Mengen liest, prüfe zuerst, welche Einträge der
+  Zertifikatsraum überhaupt freiläßt.
+* **Ein einheitliches Sättigungsmuster für $\alpha<\beta$ annehmen.** Das
+  gespiegelte System (Zeile $b_1$ auf $A\cup\{b_1\}$, Ecke $(a_1,a_1)$) trifft
+  das Optimum bei $(\tfrac13,\tfrac12)$ und $(\tfrac12,\tfrac23)$, nicht bei
+  $(\tfrac14,\tfrac12)$ (Norm $11{,}57$ gegen $9{,}816$). Bei $\alpha<\beta$
+  ist die aktive Menge profilabhängig; Vermutung 32 ist dort so nicht zu
+  formulieren.
+* **„Minimum $=$ Schranke" ohne Skalentrennung beweisen wollen.** Für
+  $0{,}8<\beta/\alpha<1{,}1$ (gemessen) liegt das Minimum über der Schranke
+  und wächst mit $n$; jede Fassung von Vermutung 32 braucht eine Hypothese
+  an $\beta/\alpha$. Bemerkenswert: die Schwelle des **Krylow**-Zertifikats
+  ($\alpha/\beta\ge\tfrac23$, Lauf 29) ist eine andere und liegt außerhalb
+  dieses Fensters — Krylow-Explosion und LP-Wachstum sind zwei Phänomene.
+* **Aus dem LP-Wert (80 Stellen) auf Erreichbarkeit der Schranke schließen.**
+  Der Abstand $10^{-81}$ ist ein Indiz, kein Beweis; der Beweis für die
+  einzelne Trunkierung ist die exakte Lösung des Sättigungssystems in Brüchen
+  (`ladder_exact_opt.py`) plus Theorem 31. So ist Satz 32 für $n\le14$
+  zustande gekommen, und nur so.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `Matrix.certificate_mulVec_single_top`** (Proposition 29), neuer
+Punkt in `TauCeti/MartingaleProblems/README.md`, Meilenstein 8, direkt nach
+`Matrix.krylovCertificate_unique`, und in `PLAN.md`, Task 23:
+
+> Sei `V : Matrix n n ℝ`, `t : n`, `d : ℕ` und `Ω : ℝ`, `Ω ≠ 0`, mit
+> `V ^ d *ᵥ 1 = Ω • Pi.single t 1`. Ist `T` symmetrisch mit `T * V = Vᵀ * T`
+> und `T *ᵥ 1 = Pi.single t 1`, so gilt
+> `T *ᵥ Pi.single t 1 = Ω⁻¹ • ((Vᵀ) ^ d *ᵥ Pi.single t 1)`.
+> Insbesondere ist die Spalte (und Zeile) `t` jedes Zertifikats dieselbe, und
+> die Differenz zweier Zertifikate hat verschwindende Zeile `t`.
+
+Beweis: `T *ᵥ (V ^ d *ᵥ 1) = (Vᵀ) ^ d *ᵥ (T *ᵥ 1)` durch Induktion über
+`d` aus `T * V = Vᵀ * T` (`Matrix.mulVec_mulVec`), dann beide Seiten
+auswerten. Es ruht auf nichts als `Matrix.mulVec` und `pow_succ`; keine
+Nichtnegativität, keine Nilpotenz. Für die Halbordnung mit Maximum `t`,
+`V s a = if a < s then m a else 0`, ist `V ^ d *ᵥ 1 = Ω • Pi.single t 1` mit
+`d` der Höhe und `Ω` dem Gewicht der längsten Ketten (Kettenzählung, wie in
+`Matrix.krylovCertificate_unique` für `c (r-1) ≠ 0` schon gebraucht), und
+`((Vᵀ) ^ d *ᵥ Pi.single t 1) a = m a * (Gewicht der längsten Ketten über a)`.
+Es ist jetzt dran, weil es der **erste Satz über alle Zertifikate** ist
+(alle bisherigen Roadmap-Punkte konstruieren eines oder klassifizieren die im
+Krylow-Raum), weil er die Zutat von Theorem 31 ist, und weil er zwei Zeilen
+lang ist.
+
+**Nächste Rechnung** (in `PLAN.md`, Task 23, eingetragen): **Vermutung 32
+beweisen**, d.h. für alle $n$ und $\alpha>\beta$ zeigen, daß das
+Sättigungssystem (Zeile $a_1$ auf $\{a_1\}\cup B$ gleich $-C_n\alpha_1m$,
+$T_{b_1b_1}=-C_n\beta_1^2$) eindeutig lösbar ist und die Lösung
+$|T_{su}|\le C_nw_sw_u$ erfüllt. Der Weg: die Lösung in den Potentialen von
+Proposition 30 schreiben — die Sättigung der Zeile $a_1$ heißt
+$J(1,l)=p/\alpha_1-C_n\sigma^\beta_l$ mit $\sigma^\beta_l=\sum_{j>l}\beta_j$,
+also ist der Rand $J(1,\cdot)$ **bekannt**, und $(3\mathrm b)$ liefert dann
+$H(\cdot,0)$ aus den übrigen Zeilen des Kreuzblocks —, dann die beiden
+Kettenrekursionen mit dem Maximumprinzip von Theorem 26 abschätzen. Die
+exakten Brüche für $n\le14$ (`ladder_exact_opt.py`) sind das Material, an dem
+zuerst die Zeile $b_1$ ($T_{b_1b_j}/(\beta_1\beta_j)\to1/(\alpha_1\beta_1)+3^{2-j}$
+gemessen) und die Nullzeile ($T_{0b_1}/\beta_1=1/\alpha_1^2$) in geschlossener
+Form zu erraten sind. Gelingt der Beweis, ist die Leiter bei $\alpha>\beta$
+unter (F) **geschlossen** (Proposition 19.3) — der erste Fall unendlicher
+Höhe mit nicht transitiver Unvergleichbarkeit.
+
+Skripte dieses Laufs, alle rc=0: `ladder_blocks.py` (Proposition 30, Test
+$a$-Block), `toprow.py` (Proposition 29, Korollar 29.1), `ladder_lowerbound.py`
+(Theorem 31, LP $=$ Schranke; `threshold_scan.txt`), `ladder_opt_view.py`,
+`ladder_full_view.py` (Gestalt des Optimums), `ladder_exact_opt.py`
+(Satz 32 exakt; `exact_opt.txt`).
+
+### Nachtrag desselben Laufs: Lemma 33 — die Sättigung der Zeile $a_1$ legt die Zeile $b_1$ und $T_{0b_1}$ fest, in geschlossener Form
+
+Die Sättigung $Q_{1j}=-C\alpha_1\beta_j$ ($j\ge1$) macht das Zeilenpotential
+$J(1,\cdot)$ **bekannt**: $J(1,l)=p/\alpha_1-C\sigma_l$ mit
+$\sigma_l:=\sum_{j>l}\beta_j$ (auf der Trunkierung bis $n$). Zwei Zeilen
+Proposition 30 machen daraus die Zeile $b_1$ des $b$-Blocks:
+
+> **Lemma 33.** Sei $T$ ein Zertifikat der Trunkierung mit $Q_{1j}=-C\alpha_1\beta_j$
+> für alle $j$ und $T_{0b_l}=0$ für $l\ge2$. Dann gilt für $2\le l\le n$
+> $$T_{b_1b_l}=\beta_l\Bigl(C\alpha_1-\frac p{\alpha_1}+C\sigma_l\Bigr),$$
+> und ist außerdem $T_{b_1b_1}=-C\beta_1^2$, so ist
+> $$T_{0b_1}=\beta_1\Bigl(C\alpha_1-\frac p{\alpha_1}+C\,M_\beta\Bigr),\qquad M_\beta=\sigma_0=\sum_j\beta_j .$$
+
+*Beweis.* (AB) bei $i=1$: $K(l,1)+H(l,1)=J(1,l)=p/\alpha_1-C\sigma_l$.
+(3b) bei $l$: $\beta_lH(l,0)=-Q_{1l}-\beta_lK(l,1)-T_{0b_l}=C\alpha_1\beta_l-\beta_lK(l,1)-T_{0b_l}$.
+Subtraktion: $H(l,0)-H(l,1)=C\alpha_1-p/\alpha_1+C\sigma_l-T_{0b_l}/\beta_l$,
+und $T_{b_lb_1}=\beta_l(H(l,0)-H(l,1))$. Für $l=1$ mit $T_{b_1b_1}=-C\beta_1^2$
+nach $T_{0b_1}$ aufgelöst, $\sigma_1+\beta_1=M_\beta$. $\square$
+
+Bei $(\tfrac12,\tfrac13)$ ($C=1/(\alpha_1\alpha_2)$, $p=1$ im Limes) heißt das
+$$\frac{T_{b_1b_l}}{\beta_1\beta_l}\to\frac1{\beta_1}\Bigl(\frac1{\alpha_2}-\frac1{\alpha_1}\Bigr)+\frac{\sigma_l}{\alpha_1\alpha_2\beta_1}
+ =13{,}5+3^{3-l},\qquad \frac{T_{0b_1}}{\beta_1}\to\frac1{\beta_1}\Bigl(\frac1{\alpha_2}-\frac1{\alpha_1}+\frac{M_\beta}{\alpha_1\alpha_2}\Bigr)=9,$$
+genau die oben gemessenen $16{,}5;\,14{,}5;\,13{,}83;\dots$ und $9{,}0$ — die
+Zahl $13{,}5$ ist also $\frac1{\beta_1}(\frac1{\alpha_2}-\frac1{\alpha_1})$ und
+nur zufällig $1/(\alpha_1\beta_1)$ (weil $\alpha_2=\alpha_1/2$). Exakt
+nachgerechnet (`ladder_exact_opt.py`, Zeile „Lemma 33") an allen
+Sättigungslösungen für $(\tfrac12,\tfrac13)$, $n=4..14$, und $(\tfrac23,\tfrac12)$,
+$n=4,6,8$: Gleichheit in `Fraction`.
+
+### Zweiter Nachtrag: nicht-geometrische Profile — die Schranke ist nicht immer das Minimum, und das Sättigungsmuster ist geometrisch
+
+`ladder_exact_general.py` und `ladder_lp_general.py` (rc=0; $p_n$ aus der
+Kettenzählung von Proposition 29, nicht aus der Thetaformel), $n=4,6,8$:
+
+| Profil | $p_8$ | LP-Min / Schranke bei $n=4,6,8$ | Sättigungssystem erreicht $C_n$? |
+|---|---|---|---|
+| $\alpha_i=1/(i(i+1))$, $\beta_j=3^{-j}$ | $1{,}000000$ | $1;\ 1;\ 1$ | **nein** ($13{,}997$ gegen $12{,}0$) |
+| $\alpha_i=2^{-i}$, $\beta_j=3^{-j}(1+(-1)^j/5)$ | $1{,}000000$ | $1;\ 1;\ 1$ | nein ($8{,}998$ gegen $8{,}0$) |
+| $\alpha_i=2^{-i}(1+(-1)^i/5)$, $\beta_j=3^{-j}$ | $0{,}999999$ | $1{,}151;\ 1{,}053;\ 1{,}037$ | nein |
+| $\alpha_i=2^{-i}$, $\beta_j=1/(j(j+1))$ (Spiegelfall) | $0{,}928$ | $1{,}014;\ 1{,}044;\ 1{,}0085$ | nein |
+
+Drei Lehren. **(i)** Theorem 31 ist scharf auch außerhalb der geometrischen
+Profile — bei $\alpha_i=1/(i(i+1))$ ist das LP-Minimum exakt die Schranke
+($11{,}99999711$ bei $n=8$, Limes $1/(\alpha_1\alpha_2)=12$) —, aber **nicht
+immer**: bei gestörtem $\alpha$ liegt es $4$–$15\,\%$ darüber (Quotient fällt
+mit $n$; ob gegen $1$, ist offen), im Spiegelfall $1$–$4\,\%$ (nicht monoton in
+$n$). **(ii)** Das Sättigungsmuster von Satz 32 (ganze Zeile $a_1$ gegen
+$\{a_1\}\cup B$) ist eine Eigenschaft der **geometrischen** Profile: bei
+$\alpha_i=1/(i(i+1))$ ist die Zeile $a_1$ nur an $(a_1,a_1),(a_1,b_1),(a_1,b_n)$
+aktiv, dafür $(b_1,b_2),(b_1,b_4),(b_1,b_5),\dots$ und $(a_2,b_1)$; die Lösung
+des Sättigungssystems ist dort ein Zertifikat, aber kein optimales. **(iii)**
+Lemma 33 gilt trotzdem exakt, wo immer das Sättigungssystem gelöst wird (es
+ist eine Identität, keine Optimalitätsaussage). Vermutung 32 ist deshalb
+**auf geometrische Profile $\alpha^i,\beta^j$ mit $\beta/\alpha\le0{,}8$
+einzuschränken**; für den Schluß auf die Dualität der unendlichen Leiter
+reicht das, denn Proposition 19.3 braucht nur $\sup_n\|T_n\|_m<\infty$, nicht
+das Minimum — und bei $\alpha_i=1/(i(i+1))$ liefert das LP gemessen ebenfalls
+die gleichmäßige Schranke $12$.
+
+*Sackgasse, ergänzt:* **das Sättigungsmuster der geometrischen Leiter auf
+andere Profile übertragen.** Es trifft dort ein Zertifikat, aber nicht das
+Optimum (Norm $14{,}0$ statt $12{,}0$ bei $\alpha_i=1/(i(i+1))$); die aktive
+Menge hängt vom Profil ab, auch bei $p_n\to1$. Skripte: `ladder_exact_general.py`,
+`ladder_lp_general.py`. Die Log-Dateien dieses Laufs liegen als
+`threshold_scan.txt` und `exact_opt.txt` bei (`*.log` ist in `.gitignore`).
+
+### Dritter Nachtrag: zwei Regime — bei stark getrennten Skalen ist das Krylow-Zertifikat exakt optimal
+
+Weitere exakte Läufe (`exact_opt.txt`, `exact_opt_bb.txt`, `krylov_vs_bound.txt`):
+
+* **Satz 32 hält bis $n=18$** bei $(\tfrac12,\tfrac13)$ (Sättigungssystem
+  eindeutig lösbar, Norm exakt $C_n$, Lemma 33 exakt; Brüche mit 80-stelligen
+  Zählern). Ebenso für $(\tfrac34,\tfrac12)$, $n=4..10$, und $(\tfrac12,\tfrac25)$,
+  $n=6,8,10$ — bei $(\tfrac12,\tfrac25)$, $n=4$, liegt das LP-Minimum
+  ($19{,}78$) über der Schranke ($19{,}34$): am Rand des Fensters greift die
+  Schranke erst ab $n=6$.
+* **Bei stark getrennten Skalen ist das Muster ein anderes.** Für
+  $(\tfrac12,\tfrac14)$ und $(\tfrac13,\tfrac19)$ ist das LP-Minimum wieder
+  exakt die Schranke (auf $10^{-81}$), aber die aktive Menge ist die **Zeile
+  $b_1$ gegen $B$** ($+C$ an $(b_1,b_j)$, $j\ge2$; $-C$ an $(b_1,b_1)$),
+  dazu $(a_1,a_1)$, $(a_1,b_1)$ und die erzwungenen $(a_2,b_n)$, $(a_2,a_n)$;
+  das Sättigungssystem der Zeile $a_1$ (Satz 32) liefert dort ein Zertifikat
+  der Norm $15{,}4$ bzw. $21{,}2$ statt $14{,}22$ bzw. $10{,}55$. Das
+  Muster „Zeile $b_1$" (`ladder_exact_opt.py --bb`) trifft das Optimum bei
+  $(\tfrac13,\tfrac19)$ exakt ($n=4..10$), bei $(\tfrac12,\tfrac14)$ bis auf
+  $10^{-10}$ relativ (ein weiterer Eintrag ist aktiv) — und der Grund ist
+  einfacher als jedes Sättigungsmuster:
+* **Das Krylow-Zertifikat erreicht die Schranke exakt** (`krylov_vs_bound.py`,
+  `Fraction`, $n=4,6,\dots,16$): $\|T_K\|_m=|\kappa_n|/\alpha_2$ **für alle
+  geprüften $n$** bei $\beta/\alpha\in\{\tfrac13,\tfrac25,\tfrac12\}$ und
+  $\beta/\alpha\in\{\tfrac32,2,\tfrac52,3\}$; bei $(\tfrac12,\tfrac13)$
+  ($\beta/\alpha=\tfrac23$) nur bis $n=8$, dann $3{,}7$; $344$; $4101$;
+  $1{,}7\cdot10^5$ mal die Schranke. Bei $(\tfrac13,\tfrac12)$ bis $n=16$
+  exakt — konsistent mit dem neunundzwanzigsten Lauf, der dort die Explosion
+  erst ab $n=18$ sah.
+
+> **Satz 34 (exakt für $n\le16$), Vermutung 34 (alle $n$).** Für geometrische
+> Profile mit $\beta/\alpha\le\tfrac12$ oder $\beta/\alpha\ge2$ ist das
+> Krylow-Zertifikat $T_K$ der Trunkierung (Theorem 28: Hankel-Normalform,
+> $b_j=(-1)^jq_j$ aus $1/P_\T$ bei $\infty$) **optimal**:
+> $\|T_K\|_m=|\kappa_n|/\alpha_2=\min\|T\|_m$. Insbesondere
+> $\sup_n\|T_K^{(n)}\|_m\le\max\bigl(1/(\alpha_1\alpha_2),\,|\kappa_\infty|/\alpha_2\bigr)<\infty$,
+> und nach Proposition 19.3 gilt dann unter (F) die Dualität auf der
+> unendlichen Leiter.
+
+Das ändert den Angriffspunkt für Vermutung 32/34 grundlegend: bei stark
+getrennten Skalen muß kein Sättigungssystem gelöst werden — das optimale
+Zertifikat ist das **eine** Krylow-Zertifikat, dessen Einträge geschlossen
+vorliegen (Theorem 28(ii): $T_K=\sum_{k,l}(-1)^{k+l}q_{k+l}\psi_k\psi_l^{\mathsf T}$),
+und zu zeigen ist die Ungleichung $|T_{K,su}|\le C_nw_sw_u$ für diese
+Formel. Der zweite Nachtrag des neunundzwanzigsten Laufs hat die Explosion
+bei $\beta/\alpha\ge\tfrac23$ als „Wachstum der Laurent-Koeffizienten $q_j$
+gegen die Kettenmomente" beschrieben; Satz 34 sagt, daß dasselbe Wachstum
+für $\beta/\alpha\le\tfrac12$ **genau** die Schranke $|\kappa_n|/\alpha_2$
+einhält, und zwar mit Gleichheit — der Eintrag $(a_2,b_n)$ ist ja in jedem
+Zertifikat gleich $\kappa_n\beta_n$. Es gibt also drei Regime:
+$\beta/\alpha\le\tfrac12$ oder $\ge\tfrac32$: Krylow optimal, Schranke scharf;
+$\tfrac23\le\beta/\alpha\le0{,}8$ (gemessen): Krylow explodiert, Schranke
+scharf, Optimum $=$ Sättigung der Zeile $a_1$ (Satz 32);
+$0{,}8<\beta/\alpha<1{,}1$: Schranke nicht scharf, Minimum wächst.
+Wo die erste Grenze genau liegt (zwischen $\tfrac12$ und $\tfrac23$ bzw.
+zwischen $1{,}1$ und $\tfrac32$), ist nicht gemessen.
+
+**Vorschlag, präzisiert.** Die nächste Rechnung ist damit Vermutung 34 —
+für $\beta/\alpha\le\tfrac12$ zeigen, daß das Krylow-Zertifikat der
+Trunkierung $|T_{K,su}|\le(\kappa_n/\alpha_2)\,w_sw_u$ erfüllt. Das Objekt
+ist vollständig explizit (Hankel-Normalform, Laurent-Koeffizienten von
+$1/P_\T$ mit $P_\T(c)=P^\beta(c)-c\sum_i\alpha_iP^\alpha_{<i}(c)P^\beta_{>i}(c)$,
+neunundzwanzigster Lauf), die Aussage ist eine Ungleichung zwischen
+Koeffizienten zweier Potenzreihen, und ihre Schärfe ist bekannt (Gleichheit
+an $(a_2,b_n)$). Gelingt sie, ist die Leiter bei stark getrennten Skalen
+unter (F) geschlossen — mit dem **schon vorhandenen** Zertifikat, ohne neue
+Konstruktion. Satz 32 (Zeile $a_1$) bleibt der Weg für das mittlere Regime.
+
+### Vierter Nachtrag: Vermutung 34 als Aussage über einen Laurent-Koeffizienten
+
+Nach Theorem 28(ii) und Lemma 27.3 ($z(c)_s=-c\,m_sP_{\uparrow s}(c)$) ist das
+Krylow-Zertifikat das Residuum bei $\infty$ von $z(c)z(c)^{\mathsf T}/(cP_\T(c))$;
+ausgeschrieben für zwei Atome $s,u$:
+
+$$\frac{T_{K,su}}{m_sm_u}=\bigl[c^{-2}\bigr]\ \frac{P_{\uparrow s}(c)\,P_{\uparrow u}(c)}{P_\T(c)}
+  \qquad(\text{Entwicklung bei }c=\infty),$$
+
+wo $P_{\uparrow s}$ das Kettenpolynom der Atome echt über $s$ ist. Exakt
+geprüft (`krylov_laurent.py`, `Fraction`, Leitern $(\tfrac12,\tfrac13)$ $n=5$,
+$(\tfrac12,\tfrac14)$ $n=6$, $(\tfrac13,\tfrac12)$ $n=5$, alle Atompaare; rc=0),
+und das Maximum des Koeffizienten über die Atompaare ist bei $(\tfrac12,\tfrac14)$,
+$n=6$, genau der LP-Wert $14{,}2222022$. Da $\deg P_{\uparrow s}P_{\uparrow u}-\deg P_\T
+=n-i-j$ für $s,u$ auf den Stufen $i,j$, ist der Koeffizient $0$ für $i+j>n+2$
+— der Antidreiecksträger, jetzt mit Grund.
+
+**Vermutung 34, geschlossene Form.** Für die Leiter mit $\beta/\alpha\le\tfrac12$
+(oder $\ge2$) und alle Atompaare $s,u$ der Trunkierung gilt
+$$\Bigl|\bigl[c^{-2}\bigr]\frac{P_{\uparrow s}(c)P_{\uparrow u}(c)}{P_\T(c)}\Bigr|
+  \ \le\ \frac{|\kappa_n|}{\alpha_2},$$
+mit Gleichheit für $(s,u)=(a_2,b_n)$. Auf der Leiter sind alle Zutaten
+explizit: $P_{\uparrow b_j}=P^\beta_{>j}=\prod_{l>j}(1-c\beta_l)$,
+$P_{\uparrow a_i}$ ist das Kettenpolynom der Leiter ab Stufe $i+1$ (Rekursion
+$Q_{i-1}=(1-c\alpha_i)Q_i-c\beta_iP^\beta_{>i}$, neunundzwanzigster Lauf), und
+$P_\T=Q_0$. Das ist die Form, in der Vermutung 34 anzugehen ist — eine
+Koeffizientenungleichung für rationale Funktionen in einer Variablen, ohne
+Matrizen, ohne LP, ohne Nullraum.
+
+### Fünfter Nachtrag: die Grenze des Krylow-Regimes liegt zwischen $\beta/\alpha=\tfrac12$ und $0{,}55$
+
+`krylov_scan.py` (exakt, `Fraction`, Leiter $\alpha=\tfrac12$, $\beta=q\alpha$;
+Ergebnis in `krylov_scan.txt`), $\|T_K\|_m$ gegen $|\kappa_n|/\alpha_2$:
+
+| $\beta/\alpha$ | $n=10$ | $n=16$ | $n=22$ | $n=28$ |
+|---|---|---|---|---|
+| $\tfrac13$, $0{,}4$, $\tfrac12$ | $=$ | $=$ | $=$ | $=$ |
+| $0{,}55$ | $=$ | $2{,}1\times$ | $5{,}6\times$ | $4512\times$ |
+| $0{,}6$ | $1{,}65\times$ | $43\times$ | $4\cdot10^6\times$ | — |
+| $0{,}625$ | $=$ | $7519\times$ | — | — |
+| $\tfrac23$ | $3{,}7\times$ | $1{,}7\cdot10^5\times$ | — | — |
+| $1{,}5$ | $=$ | $=$ | $=$ | $=$ |
+
+Satz 34 gilt also exakt bis $n=28$ für $\beta/\alpha\le\tfrac12$ und für
+$\tfrac32$ (und nach `krylov_vs_bound.py` bis $n=16$ für $2$, $2{,}5$, $3$;
+`krylov_scan.txt` für $2$ und $3$ bis $n=22$).
+Die Grenze des Krylow-Regimes liegt zwischen $\tfrac12$ und $0{,}55$; jenseits
+davon setzt die Explosion ein, und zwar **später**, je näher $\beta/\alpha$
+an $\tfrac12$ liegt ($n=16$ bei $0{,}55$; $n\le10$ bei $0{,}6$; $n=16$ bei
+$0{,}625$ nach Gleichheit bei $n=10$ — nicht monoton in $q$ bei festem $n$).
+Bei $0{,}55$ und $0{,}625$ ist Gleichheit bei $n=10$ also **kein** Beleg:
+zum zehnten Mal die Trunkierung als falsche Prämisse, hier in der Form
+„Krylow trifft die Schranke bei $n=10$".
+
+Ob die Grenze genau $\tfrac12$ ist (plausibel: bei $\beta=\alpha/2$ fallen
+die Frequenzen $1/\beta_j=1/\alpha_{j+1}$ der beiden Ketten **exakt**
+zusammen, $P^\beta_{>j}$ teilt dann $P^\alpha_{>j+1}$ — der zweite Nachtrag des
+neunundzwanzigsten Laufs hat diese Koinzidenz als Erklärung verworfen, weil
+auch $\tfrac13,\tfrac25$ konvergieren; als **Rand** des Regimes kommt sie
+wieder in Frage), ist die erste Frage an Vermutung 34, und sie ist mit dem
+Skript zwischen $0{,}5$ und $0{,}55$ zu messen.
+
+**Nachgemessen** (`krylov_scan.txt`, exakt):
+Satz 34 hält bis $n=22$ für $\beta/\alpha=2$ ($(\tfrac14,\tfrac12)$) und $3$
+($(\tfrac16,\tfrac12)$), und bis $n=28$ für $\beta/\alpha=0{,}51$ und $0{,}52$
+— die Grenze des Krylow-Regimes liegt also **nicht** bei $\tfrac12$, sondern
+zwischen $0{,}52$ und $0{,}55$ (bei $0{,}53$ siehe `krylov_scan.txt`,
+sofern im Budget fertig). Die Koinzidenz der Frequenzen bei $\beta=\alpha/2$
+ist damit als Erklärung des Randes ebenfalls erledigt: die Grenze ist eine
+Schwelle im Skalenverhältnis, kein arithmetischer Zufall. Vermutung 34 ist
+daher mit „$\beta/\alpha\le\tfrac12$" **konservativ** formuliert; die wahre
+Schwelle $q^*\in(0{,}52,\,0{,}55)$ zu bestimmen ist ein eigener, mit
+`krylov_scan.py` mechanisch angehbarer Punkt — und ihr Wert wäre der erste
+Hinweis, welcher Term in $1/P_\T$ die Explosion trägt.
+
+**Korrektur, dieselbe Stunde.** $\beta/\alpha=0{,}53$: Gleichheit bei $n=16,22$,
+Explosion bei $n=28$ ($6{,}0\times$). Die Einsatzstelle der Explosion wandert
+also mit $q\downarrow\tfrac12$ nach außen — $n\le10$ bei $0{,}6$, $n=16$ bei
+$0{,}55$, $n=28$ bei $0{,}53$ —, und „Gleichheit bis $n=28$" bei $0{,}51$ und
+$0{,}52$ ist deshalb **kein** Beleg für ein Regime oberhalb von $\tfrac12$.
+Der vorige Absatz ist insoweit zurückzunehmen: die Messung ist mit einer
+Schwelle **genau bei $q^*=\tfrac12$** verträglich (Einsatzstelle
+$\to\infty$ für $q\downarrow\tfrac12$), und die Frequenzkoinzidenz
+$1/\beta_j=1/\alpha_{j+1}$ bei $\beta=\alpha/2$ bleibt als Erklärung des
+Randes im Spiel. Entscheidbar ist das nur mit einem Beweis, nicht mit
+Trunkierungen — zum elften Mal. Vermutung 34 steht mit
+$\beta/\alpha\le\tfrac12$ so, wie sie formuliert ist.

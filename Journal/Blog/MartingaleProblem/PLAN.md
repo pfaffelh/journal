@@ -732,6 +732,48 @@ beweisbar. Lean-Ziele:
   (Protokoll, Lauf 28: $\sup|G|=1/(m_1m_2)$ auf der $\omega$-Kette für jedes
   streng fallende summierbare Massenprofil) und kehrt auf der Leiter wieder.
 
+**Stand 2026-09-16, dreißigster Lauf** (Protokoll, „Die Leiter blockweise"):
+die LP-Werte der Leiter sind erklärt. Die Spitzenzeile **jedes** Zertifikats
+einer endlichen Halbordnung ist erzwungen (Proposition 29:
+$T_{t^*a}=$ massengewichteter Anteil der längsten Ketten, die in $a$ beginnen),
+auf der Leiter $T_{t^*b_1}=1/\sum_{i\le n}(\alpha/\beta)^{i(i+1)/2}$; die
+Randeinträge $T_{a_2b_n}=\kappa_n\beta_n$ mit
+$\kappa_n=p_n/\alpha_1-(1-p_n)/\beta_1$ sind in jedem Zertifikat erzwungen
+(Theorem 31), also $\|T\|_m\ge|\kappa_n|/\alpha_2$ — und das LP-Minimum
+**ist** diese Schranke, auf $10^{-81}$ bei allen Profilen mit
+$\beta/\alpha\notin(0{,}8;1{,}1)$, exakt in Brüchen für $n\le14$ bei
+$(\tfrac12,\tfrac13)$ (`Task23/ladder_exact_opt.py`: das Optimum ist das
+einzige Zertifikat mit $T_{a_1u}=-C\alpha_1m_u$ auf $\{a_1\}\cup B$ und
+$T_{b_1b_1}=-C\beta_1^2$). Bei $\alpha>\beta$ ist der Limes
+$1/(\alpha_1\alpha_2)$ — die Konstante der $\alpha$-Kette allein. Das
+Zertifikat der Leiter ist ein gekoppeltes System zweier Kettenrekursionen
+(Proposition 30). Im Fenster $0{,}8<\beta/\alpha<1{,}1$ liegt das Minimum
+über der Schranke und wächst (real, kein Artefakt). **Nächste Rechnung:
+Vermutung 34 beweisen** — für geometrische Profile mit $\beta/\alpha\le\tfrac12$
+(oder $\ge2$) erfüllt das **Krylow-Zertifikat** der Trunkierung
+$|T_{K,su}|\le(|\kappa_n|/\alpha_2)w_sw_u$ (exakt nachgerechnet bis $n=28$
+für $\beta/\alpha\le\tfrac12$; es ist dort das Optimum; für $\beta/\alpha>\tfrac12$
+explodiert es, mit Einsatzstelle $\to\infty$ für $\beta/\alpha\downarrow\tfrac12$;
+Lauf 30, dritter und fünfter Nachtrag): eine Ungleichung für
+die explizite Hankel-Normalform $b_j=(-1)^jq_j$ aus $1/P_\T$. Damit wäre
+die Leiter bei stark getrennten Skalen unter (F) geschlossen, mit dem
+vorhandenen Zertifikat. Für das mittlere Regime $\tfrac23\le\beta/\alpha\le0{,}8$
+(Krylow explodiert) gilt statt dessen Vermutung 32: das Sättigungssystem
+(Zeile $a_1$) ist eindeutig lösbar mit Norm $\kappa_n/\alpha_2$ (exakt bis
+$n=18$ bei $(\tfrac12,\tfrac13)$; bei nicht-geometrischen Profilen ist das
+Muster ein anderes); der Weg
+geht über die Potentiale (Zeile $a_1$ gesättigt heißt
+$J(1,l)=p/\alpha_1-C\sigma^\beta_l$, also bekannter Rand) und das
+Maximumprinzip von Theorem 26. Damit wäre die Leiter bei $\alpha>\beta$
+unter (F) geschlossen (Proposition 19.3). Lean-Ziel:
+
+- **`Matrix.certificate_mulVec_single_top`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, nach `krylovCertificate_unique`): aus
+  $V^d\mathbb 1=\Omega e_t$, $\Omega\ne0$, folgt für jedes Zertifikat
+  $Te_t=\Omega^{-1}(V^{\mathsf T})^de_t$ — zwei Zeilen
+  (`Matrix.mulVec_mulVec`, Induktion über $d$), der erste Satz über **alle**
+  Zertifikate statt über eine Konstruktion, und die Zutat von Theorem 31.
+
 
 ---
 

@@ -7015,6 +7015,26 @@ order.
   (the ladder `a i < b j ↔ i < j` with `m (a i) = (2/3) ^ i`, `m (b j) = 2 ^ (-j)`
   has complex zeros already at eight atoms per chain), and `T` is real all the
   same.
+* `Matrix.certificate_mulVec_single_top`: let `V : Matrix n n ℝ`, `t : n`,
+  `d : ℕ` and `Ω : ℝ` with `Ω ≠ 0` and `V ^ d *ᵥ 1 = Ω • Pi.single t 1`. If `T`
+  is symmetric with `T * V = Vᵀ * T` and `T *ᵥ 1 = Pi.single t 1`, then
+  `T *ᵥ Pi.single t 1 = Ω⁻¹ • ((Vᵀ) ^ d *ᵥ Pi.single t 1)`. Proof:
+  `T *ᵥ (V ^ d *ᵥ 1) = (Vᵀ) ^ d *ᵥ (T *ᵥ 1)` by induction on `d` from
+  `T * V = Vᵀ * T` (`Matrix.mulVec_mulVec`), then evaluate both sides. Nothing
+  else is used — no nonnegativity, no nilpotency. So the row `t` of *every*
+  certificate is the same, and two certificates differ by a matrix with
+  vanishing row `t`. For the partial order with greatest element `t`,
+  `V s a = if a < s then m a else 0`, `d` the height and `Ω` the mass-weight of
+  the longest chains (the chain count already used for `c (r-1) ≠ 0` above),
+  the row is `T t a = m a * (weight of the longest chains starting at a) / Ω`
+  — the mass-weighted distribution of the starting points of longest chains
+  (Task 23, run 30, Proposition 29). On the ladder `a i < b j ↔ i < j` with `n`
+  levels this is `T t (b 1) = 1 / ∑ i ≤ n, ∏ l ≤ i, m (a l) / m (b l)`, a partial
+  theta sum, and it explains the measured `0.51704641` of run 29; the same run-30
+  computation shows that the boundary entries `T (a 2) (b n)` and `T (b 2) (b n)`
+  of every certificate of the truncation are forced as well (Theorem 31), which
+  gives the lower bound `‖T‖_m ≥ |κ_n| / m (a 2)` that the LP minimum attains
+  exactly (verified in rationals for `n ≤ 14` at `(α, β) = (1/2, 1/3)`).
 * `dualityDefect_eq_zero_of_nonneg`: let `α` be a finite partial order,
   `m : α → ℝ` with `0 ≤ m`, and `κ : α → α → ℝ` with `κ a b = - κ b a`. Put
   `Ψ s t = ∑ a ∈ Finset.Iio s, m a * κ a t`. If
