@@ -31413,3 +31413,179 @@ anders. `ℝ≥0` und `ℝ` haben es. Das ist die dritte Eintragung im Meilenste
 
 3. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
    der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.
+
+### 2026-09-17, zweiter Lauf des Tages — die Kompensatorhälfte der Modifikation steht, und die Voraussetzung, die sie verlangte, gab das Feld selbst nicht her: der Bochner-Müllwert
+
+**Eine neue Deklaration**, **eine geänderte Strukturdefinition** und **eine
+berichtigte Signatur** im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die Zahl der `sorry` bleibt bei
+sechs. Das waren die Vorschläge 0 und 1 des Vorlaufs; Vorschlag 0 ist ganz
+eingelöst, Vorschlag 1 zur Hälfte, und die Hälfte, die steht, ist die, die der
+Vorlauf für die schwierigere gehalten hatte.
+
+#### Wie geprüft wurde
+
+Entwickelt in einer kleinen Datei mit denselben Voraussetzungen (Struktur,
+Variablen, `IsMPSolution`, `IsSeparating`, `IsRegularizingClass`,
+`CompactContainment`), dort ohne einen Fehler und mit
+`#print axioms IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` auf `propext`,
+`Classical.choice`, `Quot.sound` geprüft; die berichtigte Signatur des Zielsatzes
+ist in derselben Datei als `sigcheck` mit `sorry` elaboriert worden, also ist sie
+typkorrekt und nicht bloß hingeschrieben. Danach der Durchlauf über die **ganze**
+Datei: **Exitcode 0, kein einziger Fehler**, und weiterhin genau sechs
+Deklarationen mit `sorry`. Die geänderte Stelle steht bei den Zeilen 2335 bis
+2760.
+
+#### Befund 1: `l1_rightContinuous` stand über dem Bochner-Integral, und in dieser Gestalt ist das Feld gehaltlos
+
+Das Feld lautete
+
+```lean
+l1_rightContinuous : ∀ t : ι,
+    Tendsto (fun s ↦ ∫ ω, ‖C s ω - C t ω‖ ∂P) (𝓝[>] t) (𝓝 0)
+```
+
+`∫ ω, ‖C s ω - C t ω‖ ∂P` gibt für nichtintegrierbaren Integranden den
+**Müllwert `0`** zurück. Also ist das Feld von Kompensatoren erfüllt, die von
+Rechtsstetigkeit weit entfernt sind. Der Zeuge, und er ist so kurz, wie er
+aussieht:
+
+> `C s := g` für `s ≠ t`, mit `g` meßbar und **nicht** integrierbar, `C t := 0`,
+> und `Y := f ∘ X - C`.
+
+`stronglyAdapted` gilt, weil `g` meßbar ist; `decomposition` gilt nach Wahl von
+`Y`; `exists_limits` gilt, weil die Pfade abseits von `t` in `s` konstant sind;
+und `l1_rightContinuous` gilt, weil jedes Glied der Müllwert `0` ist. Der
+Rechtsgrenzwert von `C` bei `t` ist aber `g` und nicht `C t = 0`. Damit ist der
+Schritt `C_{t+} = C t`, den der Vorlauf als „die einzige Stelle, an der
+`l1_rightContinuous` gebraucht wird" ausgewiesen hatte, unter der alten Fassung
+des Feldes **falsch**.
+
+Das Feld steht jetzt in `ℝ≥0∞`:
+
+```lean
+l1_rightContinuous : ∀ t : ι,
+    Tendsto (fun s ↦ ∫⁻ ω, ‖C s ω - C t ω‖ₑ ∂P) (𝓝[>] t) (𝓝 0)
+```
+
+Das untere Integral hat keinen Müllwert, der Zeuge stirbt sofort, und — das ist
+die zweite Hälfte des Befundes — es ist zugleich die Gestalt, in der **Fatou**
+dasteht. Formulierung und Beweis wollen dasselbe Objekt.
+
+Das ist derselbe Befund wie beim Heben von `cumulativeRateF` nach `ℝ≥0∞` am
+2026-09-12: eine lügende Vorgabe durch eine ehrliche ersetzt. Neu ist, daß er
+zum ersten Mal **außerhalb** der Sprungkonstruktion auftritt.
+
+**Der Preis, und er gehört genannt:** `IsCompensatorFor` ist damit eine
+**stärkere** Voraussetzung, also `IsRegularizingClass` stärker und der Zielsatz
+schwächer. Für den Gebrauch kostet das nichts — der Kompensator einer Anwendung
+ist `f ∘ X - Y` mit integrierbarem `f ∘ X` und integrierbarem Martingal `Y` —,
+aber es ist eine Änderung der Aussage und keine der Schreibweise.
+
+#### Befund 2: `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` ist Fatou und sonst nichts
+
+```lean
+theorem IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi [FirstCountableTopology ι]
+    (hC : IsCompensatorFor X 𝓕 P D f Y C) {t : ι}
+    [(𝓝[D ∩ Set.Ioi t] t).NeBot] {W : Ω → 𝕂}
+    (hW : ∀ᵐ ω ∂P, Tendsto (fun s ↦ C s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (W ω))) :
+    W =ᵐ[P] C t
+```
+
+Der Vorlauf hatte den Weg als „`L¹`-Konvergenz gibt eine f.s. konvergente
+**Teilfolge**" angesagt und dafür `[FirstCountableTopology ι]` verlangt. Die
+Teilfolge wird nicht gebraucht. Längs einer Folge `u`, die in den Filter
+hineinläuft, geht `‖C (u n) ω - C t ω‖ₑ` f.s. gegen `‖W ω - C t ω‖ₑ`,
+insbesondere ist der `liminf` das; die unteren Integrale gehen gegen `0`;
+`lintegral_liminf_le` (`MeasureTheory/Integral/Lebesgue/Add.lean:231`, gegen
+v4.33.1 belegt) setzt `∫⁻ ‖W - C t‖ₑ ≤ 0`, und ein verschwindendes unteres
+Integral hat f.ü. verschwindenden Integranden. Achtzehn Zeilen.
+
+**Was dabei nirgends vorkommt:** Integrierbarkeit von `C`, Meßbarkeit von `W`,
+Endlichkeit des Maßes. `W` ist als Funktion völlig frei; die Meßbarkeit, die
+Fatou verlangt, ist die von `C (u n) - C t`, und die kommt aus
+`stronglyAdapted`. Das ist der zweite Gewinn der `ℝ≥0∞`-Fassung: der Bochner-Weg
+hätte `MemLp` des Grenzwerts gebraucht, und den hat man an dieser Stelle nicht.
+
+**`[(𝓝[D ∩ Set.Ioi t] t).NeBot]` ist keine Technikalität.** An einem von rechts
+isolierten Punkt ist `hW` gehaltlos und `W` beliebig; der Satz wäre falsch. Wo
+der càdlàg-Satz ihn benutzt, ist `D` dicht und `t` nicht größtes Element, also
+ist er da.
+
+**`Measurable.liminf'` trägt hier nicht**, und das ist der Grund, warum die Folge
+doch gebraucht wird: es verlangt eine **abzählbare Basis aus abzählbaren Mengen**
+(`MeasureTheory/Constructions/BorelSpace/Order.lean:997`), und die Basismengen
+von `𝓝[D ∩ Ioi t] t` sind nicht abzählbar. `Measurable.liminf` über `ℕ`
+(`ibid.:1057`) trägt. `Filter.exists_seq_tendsto`
+(`Order/Filter/AtTopBot/CountablyGenerated.lean:68`) macht aus dem Filter die
+Folge, und dafür ist `[FirstCountableTopology ι]` da — nicht für eine Teilfolge.
+
+#### Befund 3: die Signatur des Zielsatzes ist berichtigt, und zwar in der Fassung (i)
+
+`exists_cadlag_modification_of_isRegularizingClass` trägt jetzt die drei
+Voraussetzungen, die der Vorlauf als fehlend benannt hatte:
+
+* `[FirstCountableTopology ι]` und `[(atTop : Filter ι).IsCountablyGenerated]` —
+  **zwei verschiedene** Voraussetzungen, und das ist im Doc-Kommentar gesagt:
+  Kofinalität ist nicht Erstabzählbarkeit. `ℝ≥0` und `ℝ` haben beide.
+* `hΦsq : ∀ f ∈ Φ, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Φ` — die Fassung (i),
+  die der Vorlauf als die billigere ausgewiesen hatte. Sie verlangt nichts von
+  der Filtration.
+* `hΦcount` um `∀ f ∈ Φ₀, Continuous f` erweitert.
+
+Die Signatur ist als `sigcheck` elaboriert; sie ist typkorrekt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Die Martingalhälfte**, `P[Y_{t+} | 𝓕 t] =ᵐ[P] Y t`. Sie ist nicht
+  angefangen, und der Grund ist gemessen: sie braucht Vitali
+  (`tendsto_Lp_finite_of_tendsto_ae`,
+  `MeasureTheory/Function/UniformIntegrable.lean:518`, gegen v4.33.1 belegt),
+  und der liest **drei** Eingaben, die hier je eigene Arbeit sind —
+  `UnifIntegrable` der Familie, `MemLp` des **Grenzwerts**, und die
+  Reell-Imaginär-Zerlegung, weil
+  `Integrable.uniformIntegrable_condExp_filtration`
+  (`Probability/Process/Filtration.lean:214`) reellwertig ist. Das ist der
+  Unterschied zur Kompensatorhälfte, die mit Fatou auskam: Fatou braucht keine
+  der drei.
+* **`X'` als Konstruktion.** Unberührt.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die Zitatprüfung der Roadmaps gegen `upstream/master` (Teil D).** Dieser
+  Lauf hat `upstream` nicht neu geholt. Die fünf neu zitierten Mathlib-Namen —
+  `lintegral_liminf_le`, `Measurable.liminf`, `Measurable.liminf'`,
+  `Filter.exists_seq_tendsto`, `tendsto_Lp_finite_of_tendsto_ae` — sind am
+  Quelltext von v4.33.1 belegt, mit Datei und Zeile; die ersten drei werden in
+  der Datei benutzt oder sind an ihr entlang geprüft, sind also nicht bloß
+  zitiert.
+* **Keine neue Lücke für `TODO.md` Punkt 8.** Er bleibt bei einundzwanzig
+  Punkten. Der Befund dieses Laufs ist keine fehlende Mathlib-Aussage, sondern
+  eine falsch geschriebene eigene.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`condExp_rightLim_eq`** — die Martingalhälfte, und zwar in der Gestalt, die
+   von `X'` nicht abhängt: ist `Y` ein Martingal, `t < T`, `𝓝[D ∩ Set.Ioi t] t`
+   nicht `⊥`, und `Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (V ω))` f.s.,
+   so ist `P[V | 𝓕 t] =ᵐ[P] Y t`. *Worauf sie ruht:* nichts, was noch fehlt.
+   Drei benannte Schritte, jeder mit seinem Mathlib-Baustein:
+   (a) `UnifIntegrable` von `fun n ↦ Y (u n)` aus
+   `Integrable.uniformIntegrable_condExp_filtration` an Real- und Imaginärteil,
+   über `Y s = P[Y T | 𝓕 s]` für `s ≤ T` — dafür wird gebraucht, daß `u n`
+   schließlich unter `T` liegt, und das gibt die Ordnungstopologie aus `T > t`;
+   (b) `MemLp V 1 P` aus Fatou, genau wie in diesem Lauf;
+   (c) `tendsto_Lp_finite_of_tendsto_ae` und die `L¹`-Stetigkeit von `condExp`.
+   *Warum jetzt:* nach dem heutigen Lauf ist sie der **einzige** noch unbewiesene
+   Schritt zwischen `ae_exists_tendsto_comp_of_isRegularizingClass` und dem
+   Zielsatz. Die Kompensatorhälfte steht.
+
+2. **Die Ausquadrierung**, `condExp_sub_eq_zero_of_condExp_mul_conj`: aus
+   `P[g | 𝓕 t] =ᵐ f` und `P[g * conj g | 𝓕 t] =ᵐ f * conj f` mit `f` meßbar für
+   `𝓕 t` folgt `g =ᵐ f`. Das ist der Schritt, für den `hΦsq` heute in die
+   Signatur gekommen ist, und er ist eine Rechnung mit `condExp` ohne jeden
+   Prozeßbegriff — also billig und unabhängig von Vorschlag 1 zu haben.
+   *Worauf er ruht:* das Herausziehen des `𝓕 t`-meßbaren Faktors aus der
+   bedingten Erwartung, und `condExp_nonneg`.
+
+3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten sechs Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
+   zur Fassung (c) mit dem meßbaren Zeugen.
