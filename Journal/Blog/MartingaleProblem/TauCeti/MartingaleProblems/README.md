@@ -7637,10 +7637,11 @@ and 11 use them.
   arbitrary filter, and `Rat.denseRange_cast` supplies the levels.
 * Submartingale regularization, which Mathlib does not have, although the
   ingredient does. For a submartingale `Y` indexed by `ι` and a countable
-  `S ⊆ ι` bounded above by `T`, almost surely the path is bounded on `S` and the
-  number of upcrossings of every rational interval inside `S` is bounded:
-  `Submartingale.ae_bddOn` and `Submartingale.ae_exists_not_hasUpcrossings`.
-  With the two deterministic theorems above this is
+  `S ⊆ ι` bounded above by `T`, almost surely the number of upcrossings of every
+  rational interval inside `S` is bounded
+  (`Submartingale.ae_exists_not_hasUpcrossings`); if `S` is in addition bounded
+  below by `R`, the path is almost surely bounded on `S`
+  (`Submartingale.ae_bddOn`). With the two deterministic theorems above this is
   `Submartingale.ae_exists_tendsto_nhdsWithin`, the real valued input of
   `exists_cadlag_modification_of_isRegularizingClass`.
 
@@ -7689,17 +7690,39 @@ and 11 use them.
   submartingale `(Y - a)⁺` bounds by the estimate at `T`.
 
   `Submartingale.ae_bddOn` is the other half, and it is a **maximal**
-  inequality and not an upcrossing one. Its upper side is
-  `MeasureTheory.maximal_ineq` (`Probability/Martingale/OptionalStopping.lean:144`
-  on master) applied to the non-negative submartingale `Y⁺` along
-  `Finset.monoEnum`; its lower side, `ε * P {min_{k ≤ n} Y k ≤ -ε} ≤ 𝔼[Y n⁺] - 𝔼[Y 0]`,
-  Mathlib does not have in any form, and it is
-  `Submartingale.mul_meas_inf_le_le_integral_pos_part`, to be proved from
-  `Submartingale.expected_stoppedValue_mono` (`ibid.:43`) at the constant stopping
-  time `0` and the hitting time of `Iic (-ε)`, splitting the stopped value over
-  the event that the level is reached. Both sides are then collected over the
-  finite sets by the same increasing union, which is here even simpler, since the
-  maximum over an increasing family of finite sets is monotone by inspection.
+  inequality and not an upcrossing one. Both sides are taken in the same shape,
+  real valued, over the event `{ω | ∃ k ≤ n, ε ≤ f k ω}` rather than over a
+  `Finset.sup'`, and with **no** sign assumption on `ε` or on the process:
+  `Submartingale.mul_measReal_exists_ge_le_integral_posPart`,
+  `ε · P.real {∃ k ≤ n, ε ≤ Y k} ≤ 𝔼[(Y n)⁺]`, and
+  `Submartingale.mul_measReal_exists_le_neg_le_integral_posPart_sub`,
+  `ε · P.real {∃ k ≤ n, Y k ≤ -ε} ≤ 𝔼[(Y n)⁺] - 𝔼[Y 0]`. Each is
+  `Submartingale.expected_stoppedValue_mono`
+  (`Probability/Martingale/OptionalStopping.lean:43`) read at the hitting time of
+  a half line, with the stopped value split over the event that the level is
+  reached; the extra `𝔼[Y 0]` in the second is what the asymmetry costs, a
+  submartingale being pushed up.
+
+  Mathlib has the upper side, as `MeasureTheory.maximal_ineq` (`ibid.:144` on
+  master, `:155` in v4.33.1), but in `ℝ≥0∞` and for a **non-negative**
+  submartingale over `Finset.sup'`; bridging that to the two sided bound through
+  `Y⁺` costs more than the six line proof does. The lower side Mathlib does not
+  have in any form: the string `inf'` does not occur in
+  `Mathlib/Probability/Martingale/`.
+
+  The collection over the finite sets is here a plain increasing union, and not
+  the `⋃ N, ⋂ M ≥ N` of the upcrossing bound: the event that some time of `F N`
+  carries `|Y| ≥ k` is monotone in `N` by inspection, being a condition over a
+  set rather than a count read along an enumeration.
+
+  **The lower bound `hRS : ∀ s ∈ S, R ≤ s` belongs to the statement**, and
+  `Submartingale.ae_bddOn` is false without it. Witness: `ι = ℤ` with the trivial
+  filtration, `Y k ω = k`, which is a submartingale, and `S = Set.Iic 0`,
+  countable and bounded above by `0`; then `s ↦ |Y s ω|` is unbounded on `S` at
+  every sample point. What fails is the bound `𝔼[Y R] ≤ 𝔼[Y (min F)]`, the only
+  place where the first time of a finite piece is controlled, and it has to be
+  uniform in the piece while `min F` runs downwards. Under `[OrderBot ι]`, the
+  index of this milestone's last block, `R = ⊥` serves.
 * The modification as a **construction**, not an existential: `cadlagModif Y`,
   defined from the right limits along a countable dense set, together with
   `isCadlag_cadlagModif`, `measurable_cadlagModif`, `adapted_cadlagModif` for a
@@ -7804,10 +7827,31 @@ and 11 use them.
   `exists_cadlag_modification_of_isRegularizingClass` asks for a countable
   separating subclass while `isQuasiLeftContinuous_of_isRegularizingClass` does
   not. Proved on 2026-09-15.
-* `exists_cadlag_modification_of_isRegularizingClass`: if `Φ` is a regularizing
-  class containing a countable subset that separates points, `Φ` is separating
-  in the sense of the roadmap **WeakConvergence**, and `X` satisfies compact
-  containment, then `X` has a modification with paths in the càdlàg space.
+* `exists_cadlag_modification_of_isRegularizingClass`: if `P` is a probability
+  measure solving the martingale problem for `𝓧`, `Φ` is a regularizing class
+  for `X` along `𝓧` containing a countable subset that separates points, `Φ` is
+  separating in the sense of the roadmap **WeakConvergence**, and `X` satisfies
+  compact containment, then `X` has a modification with paths in the càdlàg
+  space.
+
+  **`IsMPSolution 𝓧 𝓕 P` belongs to the statement**, and the theorem is false
+  without it; it was missing until 2026-09-16. `IsRegularizingClass` constrains
+  `𝓧` only through the membership `Y ∈ 𝓧` and says nothing about what a member
+  of `𝓧` is, so `𝓧 = Set.univ`, `Y = f ∘ X` and `C = 0` satisfy it for **every**
+  process and every class — all four fields of `IsCompensatorFor` are trivial at
+  `C = 0`. The witness that the conclusion then fails: `ι = E = ℝ`, `P` any
+  probability measure, `X t ω = 1` for rational `t` and `0` otherwise,
+  deterministic and valued in `Set.Icc 0 1`, so compact containment holds;
+  `Φ` the bounded continuous functions, `Φ₀ = {Real.arctan}`. A càdlàg
+  modification would be `1` almost surely at every rational at once and `0`
+  almost surely at an irrational `t₀`, and right continuity along rationals
+  decreasing to `t₀` forces `0 = 1` on a set of positive measure.
+
+  What the hypothesis supplies is the regularization of `Y`: a member of `𝓧` is
+  a `𝕂`-valued martingale, its real and imaginary parts are real submartingales,
+  and `Submartingale.ae_exists_tendsto_nhdsWithin` gives them one sided limits
+  along `D`. The compensator carries its own by a field of `IsCompensatorFor`,
+  and `f ∘ X = Y + C` inherits them.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has

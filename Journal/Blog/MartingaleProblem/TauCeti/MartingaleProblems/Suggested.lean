@@ -38,7 +38,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-16 (first run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
+2026-09-16 (second run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -466,6 +466,19 @@ hypothesis serves every `t`; that is what will make the almost sure version a st
 null set instead of one for each `t`.  `le_upcrossingsBefore_of_alternating` is the bridge to the
 probabilistic half: Mathlib's upcrossing count is indexed by `ℕ`, and an explicit alternating
 tuple forces it to be at least `n`.
+
+Four more on 2026-09-16, second run of that day, close the probabilistic half and with it the
+input of `exists_cadlag_modification_of_isRegularizingClass`.
+`Submartingale.mul_measReal_exists_ge_le_integral_posPart` and
+`Submartingale.mul_measReal_exists_le_neg_le_integral_posPart_sub` are Doob's maximal and
+**minimal** inequalities in one shape -- real valued, over `{ω | ∃ k ≤ n, ε ≤ f k ω}` rather
+than over `Finset.sup'`, with no non-negativity of the process and no sign condition on `ε`.
+Mathlib has the first only in `ℝ≥0∞` for a non-negative submartingale (`maximal_ineq`) and the
+second in no form at all.  `Submartingale.ae_bddOn` collects both over the countable time set,
+and it carries a **lower** order bound `hRS` beside the upper one: without it the statement is
+false, the witness being `ι = ℤ`, `Y k ω = k`, `S = Set.Iic 0`.
+`Submartingale.ae_exists_tendsto_nhdsWithin` is the two halves joined -- almost surely, at every
+point of the index at once, the path has one sided limits along `S`.
 -/
 
 open Filter Topology MeasureTheory ProbabilityTheory Set
@@ -1962,6 +1975,317 @@ theorem Submartingale.ae_exists_not_hasUpcrossings {P : Measure Ω} [IsFiniteMea
   · filter_upwards with ω h
     exact absurd h hpq
 
+/-! ### Doob's two sided estimate, and boundedness over a countable time set
+
+The second hypothesis of `exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound`
+is the almost sure boundedness of the path on `S`, and it is a **maximal**
+inequality, not an upcrossing one.  Both halves are taken here in the same shape,
+real valued and with no sign assumption on the process, because the two are
+added: the upper one bounds `μ.real {∃ k ≤ n, ε ≤ f k}` and the lower one bounds
+`μ.real {∃ k ≤ n, f k ≤ -ε}`, and their sum bounds `μ.real {∃ k ≤ n, ε ≤ |f k|}`.
+
+Mathlib has the upper half, as `MeasureTheory.maximal_ineq`
+(`Probability/Martingale/OptionalStopping.lean:155` in v4.33.1, `:144` on
+`upstream/master`), but in `ℝ≥0∞` and for a **non-negative** submartingale, over
+`Finset.sup'`; the passage to a two sided bound through `f⁺` costs more than the
+proof does, and the proof is the same six lines as the lower half.  The lower
+half Mathlib does not have in any form: the string `inf'` does not occur in
+`Mathlib/Probability/Martingale/` (checked against `upstream/master`
+`09a9e06e4e5ccd5b783f25e52ad3ebecfb1e2d68`, 2026-09-16, 0 hits).
+
+Both rest on `Submartingale.expected_stoppedValue_mono` read at the hitting time
+of a half line, and neither needs a sign on `ε`: for `ε ≤ 0` the statements are
+true and vacuous, and demanding `0 < ε` would be a hypothesis the proof does not
+use.
+
+**The lower time bound is not cosmetic.**  `Submartingale.ae_bddOn` carries
+`hRS : ∀ s ∈ S, R ≤ s` beside `hST : ∀ s ∈ S, s ≤ T`, and without it the
+statement is **false**: take `ι = ℤ` with the trivial filtration, `Y k ω = k`,
+which is a submartingale, and `S = Set.Iic 0`, countable and bounded above by
+`0`; then `s ↦ |Y s ω|` is unbounded on `S` at every sample point.  What fails is
+the lower bound `∫ Y R ≤ ∫ Y (min F)`, which is what the submartingale property
+gives over a finite piece `F` and what has to be uniform in the piece.  Under
+`[OrderBot ι]`, the index of Milestone 9's last block, `R = ⊥` serves. -/
+
+/-- **Doob's maximal inequality**, real valued and without a sign assumption on
+the process: the submartingale reaches the level `ε` at some time below `n` with
+probability at most `∫ (f n)⁺ / ε`.
+
+Mathlib's `maximal_ineq` is this bound in `ℝ≥0∞` for a non-negative
+submartingale; here the level set is `{ω | ∃ k ≤ n, ε ≤ f k ω}` rather than a
+`Finset.sup'`, which is the form in which the countable time set consumes it, and
+`(f n)⁺` on the right replaces the non-negativity on the left.  Nothing is
+assumed of `ε`. -/
+theorem Submartingale.mul_measReal_exists_ge_le_integral_posPart {m : MeasurableSpace Ω}
+    {μ : Measure Ω} [IsFiniteMeasure μ] {𝒢 : Filtration ℕ m} {f : ℕ → Ω → ℝ}
+    (hsub : Submartingale f 𝒢 μ) (ε : ℝ) (n : ℕ) :
+    ε * μ.real {ω | ∃ k ≤ n, ε ≤ f k ω} ≤ ∫ ω, (f n ω)⁺ ∂μ := by
+  classical
+  set s : Set ℝ := {y : ℝ | ε ≤ y} with hs
+  set τ : Ω → ℕ∞ := fun ω ↦ ((hittingBtwn f s 0 n ω : ℕ) : ℕ∞) with hτdef
+  have hτ : IsStoppingTime 𝒢 τ :=
+    hsub.stronglyAdapted.adapted.isStoppingTime_hittingBtwn measurableSet_Ici
+  have hbdd : ∀ ω, τ ω ≤ (n : ℕ∞) := by
+    intro ω
+    simp only [hτdef]
+    exact_mod_cast hittingBtwn_le (u := f) (s := s) (n := 0) (m := n) ω
+  have hmono := hsub.expected_stoppedValue_mono hτ (isStoppingTime_const 𝒢 n) hbdd
+    (fun _ ↦ le_rfl)
+  rw [stoppedValue_const] at hmono
+  set A : Set Ω := {ω | ∃ k ≤ n, ε ≤ f k ω} with hA
+  have hAmeas : MeasurableSet A := by
+    have hrw : A = ⋃ k ∈ Set.Iic n, {ω | ε ≤ f k ω} := by
+      ext ω; simp [hA]
+    rw [hrw]
+    exact MeasurableSet.biUnion (Set.to_countable _) fun k _ ↦
+      measurableSet_le measurable_const ((hsub.stronglyMeasurable k).measurable.le (𝒢.le k))
+  have hstop_int : Integrable (stoppedValue f τ) μ := hsub.integrable_stoppedValue hτ hbdd
+  have hfn_int : Integrable (f n) μ := hsub.integrable n
+  have hpos_int : Integrable (fun ω ↦ (f n ω)⁺) μ := hfn_int.pos_part
+  have hA1 : ε * μ.real A ≤ ∫ ω in A, stoppedValue f τ ω ∂μ := by
+    have hle : ∀ ω ∈ A, ε ≤ stoppedValue f τ ω := by
+      intro ω hω
+      obtain ⟨k, hk, hkv⟩ := hω
+      exact stoppedValue_hittingBtwn_mem (u := f) (s := s) (n := 0) (m := n) (ω := ω)
+        ⟨k, ⟨Nat.zero_le _, hk⟩, hkv⟩
+    calc ε * μ.real A = ∫ _ω in A, ε ∂μ := by rw [setIntegral_const, smul_eq_mul, mul_comm]
+      _ ≤ ∫ ω in A, stoppedValue f τ ω ∂μ :=
+          setIntegral_mono_on (integrable_const _).integrableOn hstop_int.integrableOn hAmeas hle
+  have hA2 : ∫ ω in Aᶜ, stoppedValue f τ ω ∂μ = ∫ ω in Aᶜ, f n ω ∂μ := by
+    refine setIntegral_congr_fun hAmeas.compl ?_
+    intro ω hω
+    have hno : ¬ ∃ j ∈ Set.Icc 0 n, f j ω ∈ s := by
+      rintro ⟨j, ⟨-, hj⟩, hjv⟩
+      exact hω ⟨j, hj, hjv⟩
+    have hend : hittingBtwn f s 0 n ω = n := hittingBtwn_eq_end_iff.2 fun h ↦ absurd h hno
+    simp [stoppedValue, hτdef, hend]
+  have hsplit : ∫ ω, stoppedValue f τ ω ∂μ
+      = ∫ ω in A, stoppedValue f τ ω ∂μ + ∫ ω in Aᶜ, stoppedValue f τ ω ∂μ :=
+    (integral_add_compl hAmeas hstop_int).symm
+  have hsplit' : ∫ ω, f n ω ∂μ = ∫ ω in A, f n ω ∂μ + ∫ ω in Aᶜ, f n ω ∂μ :=
+    (integral_add_compl hAmeas hfn_int).symm
+  rw [hsplit, hA2, hsplit'] at hmono
+  have hfin : ∫ ω in A, f n ω ∂μ ≤ ∫ ω, (f n ω)⁺ ∂μ :=
+    le_trans (setIntegral_mono_on hfn_int.integrableOn hpos_int.integrableOn hAmeas
+        (fun ω _ ↦ le_posPart _))
+      (setIntegral_le_integral hpos_int (Filter.Eventually.of_forall fun ω ↦ posPart_nonneg _))
+  have h1 : ε * μ.real A ≤ ∫ ω in A, f n ω ∂μ :=
+    hA1.trans (by linarith [hmono] :
+      ∫ ω in A, stoppedValue f τ ω ∂μ ≤ ∫ ω in A, f n ω ∂μ)
+  linarith
+
+/-- **Doob's minimal inequality for a submartingale.**  Mathlib has no version of
+it: the string `inf'` does not occur in `Mathlib/Probability/Martingale/`.
+
+The proof is the maximal one read at the other end -- optional stopping between
+the constant time `0` and the hitting time of `Set.Iic (-ε)` -- and the extra
+term `∫ f 0` on the right is exactly what that asymmetry costs: a submartingale
+is pushed **up**, so its minimum is controlled by where it starts and its maximum
+is not.  Nothing is assumed of `ε`. -/
+theorem Submartingale.mul_measReal_exists_le_neg_le_integral_posPart_sub
+    {m : MeasurableSpace Ω} {μ : Measure Ω} [IsFiniteMeasure μ] {𝒢 : Filtration ℕ m}
+    {f : ℕ → Ω → ℝ} (hsub : Submartingale f 𝒢 μ) (ε : ℝ) (n : ℕ) :
+    ε * μ.real {ω | ∃ k ≤ n, f k ω ≤ -ε} ≤ ∫ ω, (f n ω)⁺ ∂μ - ∫ ω, f 0 ω ∂μ := by
+  classical
+  set s : Set ℝ := {y : ℝ | y ≤ -ε} with hs
+  set τ : Ω → ℕ∞ := fun ω ↦ ((hittingBtwn f s 0 n ω : ℕ) : ℕ∞) with hτdef
+  have hτ : IsStoppingTime 𝒢 τ :=
+    hsub.stronglyAdapted.adapted.isStoppingTime_hittingBtwn measurableSet_Iic
+  have hbdd : ∀ ω, τ ω ≤ (n : ℕ∞) := by
+    intro ω
+    simp only [hτdef]
+    exact_mod_cast hittingBtwn_le (u := f) (s := s) (n := 0) (m := n) ω
+  have hmono := hsub.expected_stoppedValue_mono (isStoppingTime_const 𝒢 (0 : ℕ)) hτ
+    (fun ω ↦ by simp only [hτdef]; exact _root_.zero_le) hbdd
+  rw [stoppedValue_const] at hmono
+  set A : Set Ω := {ω | ∃ k ≤ n, f k ω ≤ -ε} with hA
+  have hAmeas : MeasurableSet A := by
+    have hrw : A = ⋃ k ∈ Set.Iic n, {ω | f k ω ≤ -ε} := by
+      ext ω; simp [hA]
+    rw [hrw]
+    exact MeasurableSet.biUnion (Set.to_countable _) fun k _ ↦
+      measurableSet_le ((hsub.stronglyMeasurable k).measurable.le (𝒢.le k)) measurable_const
+  have hstop_int : Integrable (stoppedValue f τ) μ := hsub.integrable_stoppedValue hτ hbdd
+  have hfn_int : Integrable (f n) μ := hsub.integrable n
+  have hpos_int : Integrable (fun ω ↦ (f n ω)⁺) μ := hfn_int.pos_part
+  have hA1 : ∫ ω in A, stoppedValue f τ ω ∂μ ≤ -ε * μ.real A := by
+    have hle : ∀ ω ∈ A, stoppedValue f τ ω ≤ -ε := by
+      intro ω hω
+      obtain ⟨k, hk, hkv⟩ := hω
+      exact stoppedValue_hittingBtwn_mem (u := f) (s := s) (n := 0) (m := n) (ω := ω)
+        ⟨k, ⟨Nat.zero_le _, hk⟩, hkv⟩
+    calc ∫ ω in A, stoppedValue f τ ω ∂μ ≤ ∫ _ω in A, (-ε) ∂μ :=
+          setIntegral_mono_on hstop_int.integrableOn (integrable_const _).integrableOn hAmeas hle
+      _ = -ε * μ.real A := by rw [setIntegral_const, smul_eq_mul, mul_comm]
+  have hA2 : ∫ ω in Aᶜ, stoppedValue f τ ω ∂μ ≤ ∫ ω, (f n ω)⁺ ∂μ := by
+    have hcongr : ∀ ω ∈ Aᶜ, stoppedValue f τ ω = f n ω := by
+      intro ω hω
+      have hno : ¬ ∃ j ∈ Set.Icc 0 n, f j ω ∈ s := by
+        rintro ⟨j, ⟨-, hj⟩, hjv⟩
+        exact hω ⟨j, hj, hjv⟩
+      have hend : hittingBtwn f s 0 n ω = n := hittingBtwn_eq_end_iff.2 fun h ↦ absurd h hno
+      simp [stoppedValue, hτdef, hend]
+    calc ∫ ω in Aᶜ, stoppedValue f τ ω ∂μ = ∫ ω in Aᶜ, f n ω ∂μ :=
+          setIntegral_congr_fun hAmeas.compl hcongr
+      _ ≤ ∫ ω in Aᶜ, (f n ω)⁺ ∂μ :=
+          setIntegral_mono_on hfn_int.integrableOn hpos_int.integrableOn hAmeas.compl
+            (fun ω _ ↦ le_posPart _)
+      _ ≤ ∫ ω, (f n ω)⁺ ∂μ :=
+          setIntegral_le_integral hpos_int (Filter.Eventually.of_forall fun ω ↦ posPart_nonneg _)
+  have hsplit : ∫ ω, stoppedValue f τ ω ∂μ
+      = ∫ ω in A, stoppedValue f τ ω ∂μ + ∫ ω in Aᶜ, stoppedValue f τ ω ∂μ :=
+    (integral_add_compl hAmeas hstop_int).symm
+  rw [hsplit] at hmono
+  have hfinal := hmono.trans (add_le_add hA1 hA2)
+  nlinarith [hfinal]
+
+/-- **A submartingale is almost surely bounded on a countable set of times**, the
+second and last hypothesis of the deterministic half of Doob's regularization.
+
+Nothing is assumed of `S` beyond countability and the two order bounds, and the
+two bounds are both used: `T` through `∫ (Y T)⁺`, which the submartingale
+property carries to every later-read time at once, and `R` through `∫ Y R`, which
+bounds the **first** time of each finite piece from below.  Dropping `hRS` makes
+the statement false; the witness is in the block comment above.
+
+The passage from the finite pieces to `S` is a plain increasing union here, and
+not the `⋃ N, ⋂ M ≥ N` of the upcrossing bound: the event "some time in `F N`
+carries `|Y| ≥ k`" is monotone in `N` by inspection, because it is a condition
+over a set and not a count read along an enumeration. -/
+theorem Submartingale.ae_bddOn {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {S : Set ι} (hS : S.Countable) {R T : ι} (hRS : ∀ s ∈ S, R ≤ s) (hST : ∀ s ∈ S, s ≤ T) :
+    ∀ᵐ ω ∂P, ∃ M, ∀ s ∈ S, |Y s ω| ≤ M := by
+  classical
+  rcases S.eq_empty_or_nonempty with rfl | hne
+  · filter_upwards with ω
+    exact ⟨0, by simp⟩
+  obtain ⟨σ, rfl⟩ := hS.exists_eq_range hne
+  set F : ℕ → Finset ι := fun N ↦ (Finset.range (N + 1)).image σ with hF
+  have hFne : ∀ N, (F N).Nonempty := by
+    intro N
+    refine ⟨σ 0, ?_⟩
+    simp only [hF, Finset.mem_image, Finset.mem_range]
+    exact ⟨0, by omega, rfl⟩
+  have hFsub : ∀ N, ∀ x ∈ F N, x ∈ Set.range σ := by
+    intro N x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx
+    obtain ⟨p, -, rfl⟩ := hx
+    exact ⟨p, rfl⟩
+  have hFmono : Monotone F := by
+    intro N M hNM x hx
+    simp only [hF, Finset.mem_image, Finset.mem_range] at hx ⊢
+    obtain ⟨p, hp, hpx⟩ := hx
+    exact ⟨p, by omega, hpx⟩
+  set c : ℝ := (∫ ω, (Y T ω)⁺ ∂P) + ((∫ ω, (Y T ω)⁺ ∂P) - ∫ ω, Y R ω ∂P) with hc
+  -- the uniform bound over the finite pieces
+  have key : ∀ (ε : ℝ), 0 ≤ ε → ∀ N,
+      ε * P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ c := by
+    intro ε hε N
+    set e : ℕ → ι := Finset.monoEnum (hFne N) with he
+    have hemono : Monotone e := Finset.monotone_monoEnum (hFne N)
+    have hemem : ∀ i, e i ∈ F N := Finset.monoEnum_mem (hFne N)
+    set g : ℕ → Ω → ℝ := fun i ω ↦ Y (e i) ω with hg
+    have hgsub : Submartingale g (𝓕.comp hemono) P := hY.comp_monotone hemono
+    set n : ℕ := (F N).card with hn
+    set B₁ : Set Ω := {ω | ∃ k ≤ n, ε ≤ g k ω} with hB₁
+    set B₂ : Set Ω := {ω | ∃ k ≤ n, g k ω ≤ -ε} with hB₂
+    have hsubset : {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ⊆ B₁ ∪ B₂ := by
+      rintro ω ⟨t, htF, hta⟩
+      obtain ⟨i, hi, hie⟩ := Finset.exists_lt_card_monoEnum_eq (hFne N) htF
+      rcases le_or_gt ε (Y t ω) with h | h
+      · refine Or.inl ⟨i, by omega, ?_⟩
+        show ε ≤ Y (e i) ω
+        rw [he, hie]; exact h
+      · refine Or.inr ⟨i, by omega, ?_⟩
+        show Y (e i) ω ≤ -ε
+        rw [he, hie]
+        rcases abs_cases (Y t ω) with ⟨habs, -⟩ | ⟨habs, -⟩
+        · rw [habs] at hta; linarith
+        · rw [habs] at hta; linarith
+    have hmeas : ε * P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ ε * P.real B₁ + ε * P.real B₂ := by
+      have h1 : P.real {ω | ∃ t ∈ F N, ε ≤ |Y t ω|} ≤ P.real B₁ + P.real B₂ :=
+        le_trans (measureReal_mono hsubset (measure_ne_top _ _)) (measureReal_union_le _ _)
+      nlinarith [h1]
+    have hb1 : ε * P.real B₁ ≤ ∫ ω, (g n ω)⁺ ∂P :=
+      hgsub.mul_measReal_exists_ge_le_integral_posPart ε n
+    have hb2 : ε * P.real B₂ ≤ (∫ ω, (g n ω)⁺ ∂P) - ∫ ω, g 0 ω ∂P :=
+      hgsub.mul_measReal_exists_le_neg_le_integral_posPart_sub ε n
+    have hgn : ∫ ω, (g n ω)⁺ ∂P ≤ ∫ ω, (Y T ω)⁺ ∂P := by
+      have h := hY.pos.setIntegral_le (i := e n) (j := T) (hST _ (hFsub N _ (hemem n)))
+        (s := (Set.univ : Set Ω)) MeasurableSet.univ
+      simpa using h
+    have hg0 : ∫ ω, Y R ω ∂P ≤ ∫ ω, g 0 ω ∂P := by
+      have h := hY.setIntegral_le (i := R) (j := e 0) (hRS _ (hFsub N _ (hemem 0)))
+        (s := (Set.univ : Set Ω)) MeasurableSet.univ
+      simpa using h
+    rw [hc]
+    linarith
+  -- the bad events, an increasing union by inspection
+  set Bad : ℕ → Set Ω := fun k ↦ {ω | ∃ t ∈ Set.range σ, (k : ℝ) ≤ |Y t ω|} with hBad
+  set AN : ℕ → ℕ → Set Ω := fun k N ↦ {ω | ∃ t ∈ F N, (k : ℝ) ≤ |Y t ω|} with hAN
+  have hANmono : ∀ k, Monotone (AN k) := by
+    intro k N M hNM ω hω
+    obtain ⟨t, ht, hta⟩ := hω
+    exact ⟨t, hFmono hNM ht, hta⟩
+  have hBadeq : ∀ k, Bad k = ⋃ N, AN k N := by
+    intro k
+    ext ω
+    constructor
+    · rintro ⟨t, ⟨p, rfl⟩, hta⟩
+      refine Set.mem_iUnion.2 ⟨p, ⟨σ p, ?_, hta⟩⟩
+      simp only [hF, Finset.mem_image, Finset.mem_range]
+      exact ⟨p, by omega, rfl⟩
+    · rintro hω
+      obtain ⟨N, t, ht, hta⟩ := Set.mem_iUnion.1 hω
+      exact ⟨t, hFsub N _ ht, hta⟩
+  have hBadbound : ∀ k : ℕ, 0 < k → P (Bad k) ≤ ENNReal.ofReal (c / k) := by
+    intro k hk
+    rw [hBadeq k, (hANmono k).measure_iUnion]
+    refine iSup_le fun N ↦ ?_
+    have h1 : P.real (AN k N) ≤ c / k := by
+      rw [le_div_iff₀ (by exact_mod_cast hk)]
+      have h2 := key (k : ℝ) (by positivity) N
+      rw [mul_comm]
+      exact h2
+    rw [← ENNReal.ofReal_toReal (measure_ne_top P (AN k N))]
+    exact ENNReal.ofReal_le_ofReal h1
+  have hZ0 : P (⋂ k, Bad k) = 0 := by
+    have htend : Tendsto (fun k : ℕ ↦ ENNReal.ofReal (c / k)) atTop (𝓝 0) := by
+      have h : Tendsto (fun k : ℕ ↦ c / (k : ℝ)) atTop (𝓝 0) :=
+        tendsto_const_div_atTop_nhds_zero_nat c
+      simpa [Function.comp_def] using (ENNReal.continuous_ofReal.tendsto 0).comp h
+    refine nonpos_iff_eq_zero.1 (ge_of_tendsto htend ?_)
+    filter_upwards [eventually_gt_atTop 0] with k hk
+    exact le_trans (measure_mono (Set.iInter_subset _ k)) (hBadbound k hk)
+  rw [ae_iff]
+  refine measure_mono_null (fun ω hω ↦ ?_) hZ0
+  simp only [Set.mem_ofPred_eq, not_exists] at hω
+  refine Set.mem_iInter.2 fun k ↦ ?_
+  obtain ⟨t, hta⟩ := not_forall.1 (hω (k : ℝ))
+  exact ⟨t, (Classical.not_imp.1 hta).1, le_of_lt (not_le.1 (Classical.not_imp.1 hta).2)⟩
+
+/-- **Doob's regularization, the almost sure one sided limits.**  A submartingale
+read at times from a countable set `S` has, almost surely and at **every** point
+of the index at once, a limit from the left and a limit from the right along `S`.
+
+This is the two halves put together, and it is the whole of Doob's regularization
+that is probabilistic: `exists_cadlag_modification_of_isRegularizingClass` is the
+`E`-valued assembly of this statement over a countable separating class, and no
+further estimate enters it.  That the exceptional set is **one** null set and not
+one for each `t` comes from the deterministic half, whose hypotheses are read
+over `S` and not over `S ∩ Set.Iio t`. -/
+theorem Submartingale.ae_exists_tendsto_nhdsWithin [TopologicalSpace ι] [OrderTopology ι]
+    {P : Measure Ω} [IsFiniteMeasure P]
+    {Y : ι → Ω → ℝ} {𝓕 : Filtration ι m} (hY : Submartingale Y 𝓕 P)
+    {S : Set ι} (hS : S.Countable) {R T : ι} (hRS : ∀ s ∈ S, R ≤ s) (hST : ∀ s ∈ S, s ≤ T) :
+    ∀ᵐ ω ∂P, ∀ t : ι,
+      (∃ c : ℝ, Tendsto (fun s ↦ Y s ω) (𝓝[S ∩ Set.Iio t] t) (𝓝 c)) ∧
+      (∃ c : ℝ, Tendsto (fun s ↦ Y s ω) (𝓝[S ∩ Set.Ioi t] t) (𝓝 c)) := by
+  filter_upwards [hY.ae_bddOn hS hRS hST, hY.ae_exists_not_hasUpcrossings hS hST] with ω h1 h2
+  exact fun t ↦ ⟨exists_tendsto_nhdsWithin_Iio_of_hasUpcrossings_bound h1 h2 t,
+    exists_tendsto_nhdsWithin_Ioi_of_hasUpcrossings_bound h1 h2 t⟩
+
 end MeasureTheory
 
 end DoobUpcrossingBound
@@ -2147,10 +2471,34 @@ theorem ae_exists_tendsto_of_forall_ae_exists_tendsto [T2Space E]
 /-- A regularizing class whose countable subset separates the points of `E`, and
 compact containment, give a modification with càdlàg paths.  The conclusion is
 the path property rather than membership in `D(ι, E)`, which is the object of the
-roadmap **SkorokhodSpace**. -/
+roadmap **SkorokhodSpace**.
+
+**`h𝓧` belongs to the statement**, and the theorem is false without it (found
+2026-09-16, second run of that day).  `IsRegularizingClass` constrains `𝓧` only
+through the membership `Y ∈ 𝓧`; nothing in it says what a member of `𝓧` is, so
+taking `𝓧 = Set.univ`, `Y = fun t ω ↦ f (X t ω)` and `C = 0` makes the hypothesis
+hold for **every** process `X` and every `Φ`, all four fields of
+`IsCompensatorFor` being trivial for `C = 0`.  The witness that the conclusion
+then fails: `ι = E = ℝ`, `P` any probability measure, `X t ω = if t ∈ Set.range
+((↑) : ℚ → ℝ) then 1 else 0`, deterministic and with values in the compact
+`Set.Icc 0 1`, so `CompactContainment` holds; `Φ` the bounded continuous
+functions, which is separating, with `Φ₀ = {Real.arctan}`, which separates points
+by itself.  A càdlàg modification `X'` would satisfy `X' q ω = 1` almost surely
+for each rational `q`, hence -- countably many -- for all of them at once almost
+surely, and `X' t₀ ω = 0` almost surely at an irrational `t₀`; right continuity
+along a rational sequence decreasing to `t₀` forces `0 = 1` on a set of positive
+measure.
+
+What `h𝓧` supplies is the regularization of `Y`: a member of `𝓧` is a
+`𝕂`-valued martingale, its real and imaginary parts are real submartingales, and
+`Submartingale.ae_exists_tendsto_nhdsWithin` gives them one sided limits along
+`D`.  The compensator `C` carries its own limits as a field of
+`IsCompensatorFor`, and `f ∘ X = Y + C` inherits them. -/
 theorem exists_cadlag_modification_of_isRegularizingClass {Φ : Set (E → 𝕂)}
     {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m} {P : Measure Ω}
+    [IsProbabilityMeasure P]
     {D : Set ι} (hD : D.Countable) (hD' : Dense D)
+    (h𝓧 : IsMPSolution 𝓧 𝓕 P)
     (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D) (hΦsep : IsSeparating Φ)
     (hΦcount : ∃ Φ₀ ⊆ Φ, Φ₀.Countable ∧ ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
     (hcc : CompactContainment X P D) :

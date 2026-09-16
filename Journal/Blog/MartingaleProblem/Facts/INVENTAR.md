@@ -31056,3 +31056,171 @@ Läufe). Unberührt; sie ist eine Entscheidung des Nutzers und kein Beweis.
 
 2. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
    der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.
+
+### 2026-09-16, zweiter Lauf des Tages — die probabilistische Hälfte ist fertig; und der Satz, auf den sie zuläuft, war falsch
+
+**Vier Deklarationen** im Abschnitt `DoobUpcrossingBound` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+durch `lake env lean` gegen v4.33.1, die Zahl der `sorry` bleibt bei sechs, und
+alle vier hängen laut `#print axioms` allein an `propext`, `Classical.choice`,
+`Quot.sound`. Das war Vorschlag 0 des Vorlaufs, und er ist eingelöst.
+
+#### Was steht
+
+* **`Submartingale.mul_measReal_exists_ge_le_integral_posPart`** —
+  `ε · P.real {ω | ∃ k ≤ n, ε ≤ Y k ω} ≤ 𝔼[(Y n)⁺]`.
+* **`Submartingale.mul_measReal_exists_le_neg_le_integral_posPart_sub`** —
+  `ε · P.real {ω | ∃ k ≤ n, Y k ω ≤ −ε} ≤ 𝔼[(Y n)⁺] − 𝔼[Y 0]`.
+* **`Submartingale.ae_bddOn`** — fast sichere Beschränktheit des Pfades auf einer
+  abzählbaren Zeitmenge.
+* **`Submartingale.ae_exists_tendsto_nhdsWithin`** — fast sicher, an **jedem**
+  Punkt des Index zugleich, einseitige Grenzwerte längs `S`. Das ist die
+  deterministische und die probabilistische Hälfte zusammen und der ganze
+  reellwertige Beitrag zu `exists_cadlag_modification_of_isRegularizingClass`.
+
+#### Befund 1: die beiden Ungleichungen sind **derselbe** Beweis, und beide brauchen kein Vorzeichen
+
+Der Vorlauf hatte die Oberseite als „steht in Mathlib" (`maximal_ineq`) und nur
+die Unterseite als zu bauen geführt. Gebaut sind jetzt **beide**, und das ist
+keine Doppelarbeit:
+
+* Mathlibs `maximal_ineq` (`Probability/Martingale/OptionalStopping.lean:155` in
+  v4.33.1, `:144` auf master) steht in `ℝ≥0∞`, für ein **nichtnegatives**
+  Submartingal, über `Finset.sup'`. Die Brücke von dort zu der Fassung, die eine
+  zweiseitige Schranke braucht — `Y⁺` einsetzen, das `sup'` der Positivteile mit
+  dem Positivteil des `sup'` identifizieren, von `ℝ≥0∞` nach `ℝ` zurückrechnen —
+  ist länger als der Beweis selbst, der sechs Zeilen hat.
+* Beide Beweise sind `Submartingale.expected_stoppedValue_mono` an der
+  Trefferzeit einer Halbgeraden, einmal von der konstanten Zeit `0` gegen die
+  Trefferzeit und einmal von der Trefferzeit gegen `n`, mit
+  `stoppedValue_hittingBtwn_mem` auf dem Ereignis und `hittingBtwn_eq_end_iff`
+  auf seinem Komplement.
+* **Keine von beiden braucht `0 < ε`.** Das war beim Hinschreiben als Hypothese
+  vorgesehen und beim Beweisen übriggeblieben: für `ε ≤ 0` sind die Aussagen wahr
+  und gehaltlos, und eine Hypothese, die der Beweis nicht verbraucht, gehört
+  nicht in die Aussage. Ebensowenig steht über dem Prozeß eine
+  Nichtnegativität; `(Y n)⁺` auf der rechten Seite ersetzt sie.
+
+Beide sind Punkt 20 von `TODO.md` Punkt 8, und der Eintrag dort ist
+entsprechend fortgeschrieben: der PR nach Mathlib sollte **beide** Seiten
+tragen, nicht nur die fehlende.
+
+#### Befund 2: `ae_bddOn` braucht eine **untere** Zeitschranke, und der Vorlauf hatte sie nicht vorgesehen
+
+Der Vorlauf hatte `Submartingale.ae_bddOn` mit denselben Voraussetzungen wie
+`ae_exists_not_hasUpcrossings` angesagt — `S` abzählbar und durch `T` nach oben
+beschränkt. **So ist die Aussage falsch.** Zeuge, elementar und vollständig:
+`ι = ℤ` mit der trivialen Filtration, `Y k ω = k`, ein Submartingal, und
+`S = Set.Iic 0`, abzählbar und durch `0` nach oben beschränkt; dann ist
+`s ↦ |Y s ω|` an **jedem** Stichprobenpunkt unbeschränkt auf `S`.
+
+Die Stelle, an der es bricht, ist benennbar: die gleichmäßige Schranke über die
+endlichen Stücke `F` von `S` lautet
+`ε · P.real {∃ t ∈ F, ε ≤ |Y t|} ≤ 2·𝔼[(Y T)⁺] − 𝔼[Y R]`, und der Term
+`𝔼[Y R]` kommt aus der Minimalungleichung, die den Prozeß am **ersten** Zeitpunkt
+des Stückes liest. `𝔼[Y (min F)]` ist in `F` fallend, also nicht gleichmäßig
+nach unten beschränkt; erst `R ≤ min F` für ein festes `R` macht daraus
+`𝔼[Y R] ≤ 𝔼[Y (min F)]`. Die Aufkreuzungsschranke hat den Defekt nicht, weil
+Doobs Aufkreuzungsungleichung nur die **rechte** Seite liest.
+
+Die Aussage trägt daher `hRS : ∀ s ∈ S, R ≤ s` neben `hST`. Für Meilenstein 9
+kostet das nichts: der Index seines letzten Blocks hat `[OrderBot ι]`, und
+`R = ⊥` erfüllt es.
+
+Das Einsammeln über die endlichen Stücke ist hier eine gewöhnliche wachsende
+Vereinigung und nicht das `⋃ N, ⋂ M ≥ N` der Aufkreuzungsschranke — genau wie es
+der Vorlauf vorhergesagt hat: „`∃ t ∈ F N` mit `|Y t| ≥ k`" ist eine Bedingung
+über eine **Menge** und nicht eine Zählung längs einer Aufzählung, also in `N`
+monoton durch Hinsehen.
+
+#### Befund 3: `exists_cadlag_modification_of_isRegularizingClass` war **falsch**, und die fehlende Voraussetzung ist die Martingaleigenschaft
+
+Beim Nachsehen, was der neue Satz in den Zielsatz einzusetzen hat, ist
+aufgefallen, daß dieser gar keine Verbindung zwischen `𝓧` und `(𝓕, P)` trägt.
+`IsRegularizingClass Φ X 𝓧 𝓕 P D` verlangt nur, daß es zu jedem `f ∈ Φ` ein
+`Y ∈ 𝓧` und einen Kompensator `C` mit `f ∘ X = Y + C` gibt — und über `Y` sagt
+sie nichts weiter als die Mitgliedschaft. Mit `𝓧 = Set.univ`,
+`Y = fun t ω ↦ f (X t ω)` und `C = 0` ist sie also für **jeden** Prozeß und jede
+Klasse erfüllt, weil alle vier Felder von `IsCompensatorFor` bei `C = 0` trivial
+sind.
+
+Der Zeuge, daß die Folgerung dann falsch ist: `ι = E = ℝ`, `P` irgendein
+Wahrscheinlichkeitsmaß, `X t ω = 1` für rationales `t` und `0` sonst —
+deterministisch, mit Werten in `Set.Icc 0 1`, also ist `CompactContainment`
+erfüllt; `Φ` die beschränkten stetigen Funktionen, die separierend sind, mit
+`Φ₀ = {Real.arctan}`, das die Punkte von `ℝ` allein trennt; `D = ℚ`, abzählbar
+und dicht. Eine càdlàg-Modifikation `X'` erfüllte `X' q = 1` f.s. für jedes
+rationale `q`, also — abzählbar viele — f.s. für alle zugleich, und `X' t₀ = 0`
+f.s. an einem irrationalen `t₀`; die Rechtsstetigkeit längs einer Folge von
+Rationalen, die gegen `t₀` fällt, gibt `0 = 1` auf einer Menge positiven Maßes.
+
+**Berichtigt** in `Suggested.lean` und in `README.md`, Meilenstein 9: der Satz
+trägt jetzt `[IsProbabilityMeasure P]` — auch die fehlte — und
+`h𝓧 : IsMPSolution 𝓧 𝓕 P`. Das ist genau die Voraussetzung, die der Beweis
+braucht und die der Zeuge verletzt: ein Element von `𝓧` ist dann ein
+`𝕂`-wertiges Martingal, Real- und Imaginärteil sind reelle Submartingale, und
+`Submartingale.ae_exists_tendsto_nhdsWithin` gibt ihnen die einseitigen
+Grenzwerte längs `D`. Der Kompensator bringt seine eigenen als Feld von
+`IsCompensatorFor` mit, und `f ∘ X = Y + C` erbt sie. Die Datei geht mit der
+neuen Signatur unverändert durch `lake env lean`.
+
+Das ist der Grund, aus dem die Regel „eine Roadmap-Aussage trägt die schwächsten
+Hypothesen, unter denen sie gilt" eine zweite Hälfte hat: *unter denen sie
+gilt*. Eine weggelassene Hypothese ist keine Abschwächung, sondern ein Fehler,
+und er fällt erst auf, wenn jemand die Eingaben abzählt.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **Den Beweis von `exists_cadlag_modification_of_isRegularizingClass`.** Er ist
+  jetzt angreifbar, aber er ist kein halber Lauf: `X'` muß als Rechtslimes längs
+  `D` *konstruiert* werden, und dann sind drei Dinge zu zeigen — die
+  càdlàg-Eigenschaft, die Modifikationseigenschaft und die Meßbarkeit. Siehe
+  Vorschlag 0.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die stetige Fassung des fdd-Kriteriums.** Unberührt.
+* **Die Meßbarkeitsprobe an `CompactContainment`.** Unberührt; sie ist eine
+  Entscheidung des Nutzers und kein Beweis.
+* **Die Zitatprüfung der Roadmaps gegen `upstream/master` (Teil D).** Dieser Lauf
+  hat `upstream` nicht neu geholt; die Mathlib-Namen, die er benutzt, sind
+  sämtlich gegen v4.33.1 übersetzt, und die beiden neuen Negativaussagen sind die
+  des Vorlaufs gegen `09a9e06e4e5ccd5b783f25e52ad3ebecfb1e2d68`, nicht neu
+  aufgestellt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **`exists_cadlag_modification_of_isRegularizingClass`**, und zwar in drei
+   benannten Schritten, damit ein Abbruch nicht alles verliert:
+
+   a. **`ae_exists_tendsto_comp_of_isRegularizingClass`** — für jedes `f ∈ Φ₀`
+      und jedes `t` hat `f ∘ X` f.s. beide einseitigen Grenzwerte längs `D`.
+      *Worauf sie ruht:* `h𝓧` gibt `Martingale Y 𝓕 P`, also über `RCLike.re`
+      und `RCLike.im` zwei reelle Submartingale;
+      `Submartingale.ae_exists_tendsto_nhdsWithin` gibt deren Grenzwerte,
+      `IsCompensatorFor.exists_limits` die des Kompensators,
+      `IsCompensatorFor.decomposition` setzt sie zusammen. **Die eine
+      Entscheidung, die dabei zu treffen ist:** `ae_exists_tendsto_nhdsWithin`
+      verlangt `S` beidseitig beschränkt, der Zielsatz will Grenzwerte an
+      *jedem* `t`. Über `ι = ℝ≥0` ist das `S = D ∩ Set.Iic n` längs `n : ℕ` und
+      eine abzählbare Vereinigung von Nullmengen; über beliebigem `ι` braucht es
+      eine abzählbare kofinale Familie, und ob die Roadmap die verlangt oder den
+      Index einschränkt, ist zu begründen und nicht zu raten.
+   b. **`X'` als Konstruktion**, nicht als Existenzaussage: der Rechtslimes
+      längs `D`, über `ae_exists_tendsto_of_forall_ae_exists_tendsto` am Filter
+      `𝓝[D ∩ Set.Ioi t] t`, mit `CompactContainment.ae_exists_isCompact` dafür,
+      daß der Limes in `E` bleibt. Beides steht seit dem 2026-09-15 bewiesen da.
+   c. **Modifikation und càdlàg.** Daß `X' t = X t` f.s. ist, ist der Punkt, an
+      dem `l1_rightContinuous` von `IsCompensatorFor` gebraucht wird und sonst
+      nirgends — das ist zugleich die Probe, ob das Feld an der richtigen Stelle
+      sitzt.
+
+   **Warum jetzt:** nach diesem Lauf gibt es zwischen dem Satz und seinem Beweis
+   keine unbewiesene *Ungleichung* mehr, nur noch eine Konstruktion. Und er ist
+   das Tor zu Meilenstein 11, wo 10 167 Zeilen ohne ein `sorry` bisher von nichts
+   verbraucht werden.
+
+1. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   1 der letzten vier Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
+   zur Fassung (c) mit dem meßbaren Zeugen.
+
+2. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
+   der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.

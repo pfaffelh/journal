@@ -655,6 +655,17 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   Leser unter „ein Submartingal ist auf einem endlichen Zeitfenster fast sicher
   beschränkt" versteht, und genau das verlangt Doobs Regularisierung.
 
+  **Am 2026-09-16 gebaut**, und der PR sollte **beide** Seiten tragen:
+  `Submartingale.mul_measReal_exists_le_neg_le_integral_posPart_sub` ist die
+  fehlende Ungleichung, `Submartingale.mul_measReal_exists_ge_le_integral_posPart`
+  die vorhandene noch einmal — reellwertig, über dem Ereignis
+  `{ω | ∃ k ≤ n, ε ≤ f k ω}` statt über `Finset.sup'`, **ohne** Nichtnegativität
+  des Prozesses und **ohne** Vorzeichenbedingung an `ε`. Der Grund, die zweite
+  mitzunehmen, ist nicht Bequemlichkeit: die Brücke von `maximal_ineq` in
+  `ℝ≥0∞` über `Y⁺` zu der Fassung, die eine zweiseitige Schranke braucht,
+  kostet mehr als der Beweis, und die beiden Beweise sind derselbe, an den
+  beiden Enden angesetzt. Beide gehen durch `lake env lean` gegen v4.33.1.
+
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine
 lokal endliche lineare Ordnung geschrieben ist und `Traj.lean` auf `ℕ` festliegt.
