@@ -7937,3 +7937,281 @@ $a_i<b_j\iff i<j$ und $b_i<a_j\iff i<j-1$ (beide Seiten „hinken" um eins,
 keine Seite ist eine hängende Kette). Ob dort $\mathbb 1_{a_i}\in\overline L$,
 ist in diesem Lauf nicht mehr entschieden worden; das ist die nächste
 Rechnung (siehe unten).
+
+*(Die folgenden Abschnitte dieses Eintrags hat der Abschlußlauf vom
+2026-09-16 nachgetragen, aus dem Eintrag und den Meßdateien, nicht aus neuer
+Rechnung; der vierunddreißigste Lauf ist an der Sitzungsgrenze hinter
+Theorem 42$'$ abgebrochen.)*
+
+### Gemessen: `Task23/silent_chains.py` und `Task23/disjoint_cores.py`, exakt, rc=0
+
+Beide Skripte rechnen in `Fraction` über eine Kernbasis des Lösungsraums auf
+Trunkierungen $W_n$ **ohne Spitze** (Systemaufbau aus `antisym.py`,
+Kettenanbau aus `bowties.py`); Ausgaben in `silent_chains.txt` und
+`disjoint_cores.txt`. Mit $h(b)$ sei die Höhe von $b$ bezeichnet ($h=0$ für
+minimale Atome). Auf $W_n$ reicht die Induktion von Lemma 40 genau so weit,
+wie Kette über dem Punkt steht: $\kappa(u_i,b)$ ist erzwungen $0$, sobald
+$i+h(b)\le n-1$.
+
+* **(D)** Kontrolle des Orakels in beiden Skripten: `antisym.check_diamond`
+  (Diamant $m=(0,1,-1,0)$ fällt bei $t=3$, $m=(0,1,1,0)$ nicht).
+* **(A)** `silent_chains.py`, zwanzig Familien — disjunkte Doppelschleifen
+  ($k=1$, $n=2,3,4$; $k=2$, $n=2,3$), hängende Doppelschleife ($n=2,3$), zwei
+  hängende Doppelschleifen ($n=2$), Antikette plus hängende Kette über $0$
+  ($3+3$, $4+4$, $3+5$), zwei $\omega$-Ketten ($n=3,4,5$), sechs Paare
+  zufälliger Kerne ($n=2,3$): **alle** $1365$ Paare $(u_i,b)$ mit
+  $i+h(b)\le n-1$ sind erzwungen $0$, in jeder Familie.
+* **(A$'$)** An der Grenze $i+h(b)=n$ ist $\kappa(u_i,b)$ in $616$ von $947$
+  Paaren **frei** (etwa $12/16$ bei einer Doppelschleife mit $n=2$, $88/142$
+  bei zwei Zufallskernen mit $n=3$). Das ist die Grenze der Induktion auf der
+  Trunkierung, nicht die des Lemmas: sie wandert mit $n$ nach oben. Genau
+  diese freien Randwerte hat `chainvals.py` im zweiunddreißigsten Lauf
+  gesehen und als „die Kettenwerte sind frei" gelesen.
+* **(B)** Zwei hängende Doppelschleifen, $n=2,3$: $\kappa(r_0,r')$ und
+  $\kappa(r_0,r_0')$ (Fuß eines Stapels, Punkt des fremden Kerns) erzwungen
+  $0$; $\kappa(r,r')$ und $\kappa(p,r')$ frei, wie erwartet — $r$ und $p$
+  tragen keinen hängenden Stapel.
+* **(C)** Doppelschleifen mit **Türmen** ($\{\alpha_i,\beta_i\}$ statt
+  Kette), $n=2,3,4$, $\dim=154,234,330$: die Hakenwerte $\kappa(a,b)$ ($44$,
+  $76$, $108$ Paare) und die Stufensummen $\sigma_{S_i}(b)$ ($32$, $80$, $152$
+  Paare) sind erzwungen $0$; die Einzelwerte $\kappa(\alpha_i,b)$ sind frei
+  ($64/64$, $128/160$, $240/304$). Der Docstring des Skripts hatte für (C)
+  noch die Erwartung „der Haken bleibt frei" (aus der Kettenfassung des
+  Lemmas); die Messung widerspricht ihr, und Lemma 40 in der Stapelfassung
+  erklärt sie: $S_0=\{a\},S_1,S_2,\dots$ ist ein hängender Stapel, nur die
+  Stufensumme ist stumm, nicht der einzelne Turmpunkt.
+* **(E)** Verschränkte Doppelkette („shift") und Dreierzopf („braid") über
+  den Haken einer Doppelschleife, $n=2,3,4$: $\kappa(a,x)$ für minimale $x$
+  ($4/4$), $\kappa(a,a')$, $\kappa(a,s)$ und $\kappa(\mathrm{arm}_1,x)$ ($4/4$)
+  erzwungen $0$ bei jedem $n$; $\kappa(\mathrm{arm}_1,a')$ und
+  $\kappa(a,\mathrm{arm}'_1)$ bei $n=2$ frei ($0/1$), bei $n=3,4$ erzwungen
+  ($1/1$) — die Reichweite von Lemma 40$'$ wächst mit der Trunkierung, wie
+  bei (A$'$).
+* `disjoint_cores.py` (die Skizze des dreiunddreißigsten Laufs, jetzt ein
+  Spezialfall von Lemma 40 und Theorem 41): $k=1,2,3$ Doppelschleifen mit
+  Ketten, $n=2,3$, generische und resonante Massen ($m_r=m_s$): **(A)**
+  $\kappa(u,z)$ erzwungen $0$ für alle in $W_n$ kettenüberdeckten $u$ und
+  minimalen $z$ ($16$ bis $144$ Paare je Fall, alle zehn Fälle); **(B)** für
+  jeden Punkt der Höhe eins ist $\sum_{a\in D_n}m_a\kappa(a,v)$ erzwungen $0$
+  ($2$ bis $6$ Punkte je Fall); **(C)** Kontrolle: für Kettenpunkte $c_1$ ist
+  dieselbe Summe frei ($2/2$ bis $8/8$). Resonanz der Massen ändert nichts.
+
+Die Proben sind wie in den Läufen 32 und 33 auf die endliche Mechanik
+beschränkt: den Schluß auf $\theta$ trägt dominierte Konvergenz gegen
+$|\psi|\in\ell^1(W)$, und den Anfang `prop:atomicposet` auf den endlichen
+Idealen. Was ein endliches Orakel sehen kann — daß die Induktion von Lemma 40
+auf $W_n$ genau bis $i+h(b)\le n-1$ reicht und dort ausnahmslos $0$ erzwingt —
+sieht es in allen $1365$ Paaren.
+
+### Ergebnis
+
+* **Bewiesen.** Lemma 40 (stumme Stapel), Theorem 41 (der Defekt ist die
+  $\psi$-Masse unter dem Fuß), Theorem 42 (Stapelausschöpfung), Korollar 42.1,
+  Lemma 40$'$ (Blöcke im Abschluß des Idealspanns) und Theorem 42$'$ (der
+  größte zulässige Bereich $D^*$ und die Gestalt eines Gegenbeispiels).
+  Insbesondere gilt die Dualität ohne (F) und für jedes $m>0$ auf der
+  **unendlichen disjunkten Vereinigung beliebiger endlicher Kerne mit
+  hängenden Ketten oder Türmen**, auf der Antikette von Theorem 19 **mit einer
+  Kette daneben**, auf der verschränkten Doppelkette und dem Dreierzopf über
+  unendlich vielen Kernen.
+* **Erledigt.** Die „nächste Rechnung" des dreiunddreißigsten Laufs, positiv
+  und allgemeiner als gestellt. Weder C(K) noch die Summierbarkeit
+  $\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|$ aus Theorem 38 mit $X=\{r_n\}$
+  wird gebraucht. Die im zweiunddreißigsten Lauf als Sackgasse verworfene
+  Prämisse „die Kettenwerte verschwinden" war **richtig** (im unendlichen
+  System; auf Trunkierungen ist sie unsichtbar); die Verwerfung war der
+  Fehler, siehe Sackgassen.
+* **Offen.** Die nackte Klasse auf Ketten (unverändert). Die gestapelten
+  $\zeta$-Ketten ohne (F) und ohne beschränktes $\Phi$ (unverändert: dort ist
+  (i) für die obere Kette die Frage selbst). Die Vermutung „endliche Ideale
+  unter $t^*$, $W$ ohne maximale Elemente $\Rightarrow$ Dualität": nicht
+  bewiesen, aber durch Theorem 42$'$ eingeengt — ein Gegenbeispiel darf keinen
+  hängenden Stapel, keinen Block im Abschluß des Idealspanns seines Arms und
+  keine Ausschöpfung nach Theorem 38 oder 39 zulassen. Kleinster benannter
+  Kandidat: die **Leiter ohne hängende Seite** ($a_i<b_j\iff i<j$,
+  $b_i<a_j\iff i<j-1$) als Arm über unendlich vielen Kernen; ob dort
+  $\mathbb 1_{a_i}\in\overline L$ liegt, ist **nicht entschieden** — weder im
+  vierunddreißigsten Lauf noch im Abschlußlauf, der nicht rechnet.
+
+### Sackgassen, dreiunddreißigster Nachtrag
+
+* **Von „frei auf jeder Trunkierung" auf „frei" schließen.** Der
+  zweiunddreißigste Lauf hat die richtige Prämisse (Kettenwerte sind null)
+  verworfen, weil `chainvals.py` sie auf $W_n$ frei fand. Auf $W_n$ ohne
+  Spitze reicht die Induktion von Lemma 40 nur bis $i+h(b)\le n-1$; die
+  Werte an der Grenze $i+h(b)=n$ sind frei ($616$ von $947$ in (A$'$)), und
+  zwar bei **jedem** $n$ — im unendlichen System gibt es die Grenze nicht.
+  Ein Wert, der auf jeder Trunkierung frei ist, kann im unendlichen System
+  erzwungen sein, wenn ihn erst die Relationen *oberhalb* der Trunkierung
+  binden. Zum fünfzehnten Mal eine Prämisse aus der Rechnung statt aus dem
+  Beweisbedarf, und zum ersten Mal in der Gegenrichtung: die Rechnung hat
+  einen richtigen Satz verworfen.
+* **Die Skizze des dreiunddreißigsten Laufs** („Höhe eins", „alle
+  nicht-minimalen Punkte kettenüberdeckt"): beides stimmt und beides ist
+  unnötig eng. Weder die Höhe von $v$ noch die übrigen Punkte von $W$ spielen
+  eine Rolle, sondern allein der Stapel **über** $v$.
+* **Theorem 38 mit $X=\{r_n\}$ auf die unendliche disjunkte Vereinigung
+  anwenden wollen.** Verlangt eine $X\times X$-Summierbarkeit, die (F)-artig
+  ist und nicht zur Verfügung steht. Theorem 42(b) braucht nur die
+  $\ell^1$-Norm von $\psi$, also die Existenz von $\delta(t^*)$ selbst.
+* **Die Erwartung (C) im Docstring von `silent_chains.py`** („im Turm bleibt
+  der Haken frei"). Falsch — der Haken ist der Fuß eines hängenden Stapels
+  und stumm; frei sind die Einzelwerte $\kappa(\alpha_i,b)$, nicht ihre
+  Stufensumme. Wer ein Lemma vom Ketten- auf den Stapelfall verallgemeinert,
+  passe die Probe an, bevor er sie liest.
+
+### Manuskript (nachgetragen vom Abschlußlauf)
+
+`lem:silentstacks` (Lemma 40), `thm:stackdefect` (Theorem 41),
+`thm:stackexhaustion` (Theorem 42), `cor:stackexhaustion` (Korollar 42.1),
+`prop:silentblocks` (Lemma 40$'$ und Theorem 42$'$ in einer Aussage) und
+`rem:stackexhaustion` (verschränkte Doppelkette, Dreierzopf, die Gestalt eines
+Gegenbeispiels, der offene Kandidat) stehen nach `rem:corereduction` und vor
+`rem:twomethods`; `rem:corereduction` verweist am Ende auf
+`thm:stackexhaustion` statt „offen" zu sagen; `rem:twomethods` nennt den
+dritten Mechanismus in einem Halbsatz. Die Statustabelle von
+`rem:atomsnotchange` und die Schlußbemerkung `rem:statusboundary` stehen im
+Abschnitt „Abschluß von Task 23" unten. Im Manuskript steht die Aussage mit
+Beweis; der Dreierzopf, die Rechnung zur verschränkten Doppelkette im Detail
+und die Meßtabellen stehen nur hier. Eine Formulierung von Theorem 42$'$ ist
+im Manuskript enger gefaßt: „Vereinigungen zulässiger $D$ sind zulässig"
+verlangte eine Blockzerlegung der Vereinigung, die nicht automatisch
+existiert; die Aussage, die gebraucht wird und gilt, ist, daß
+$\theta=\psi(\T_{<v})$ für jeden Punkt $v$ gilt, der in irgendeinem
+zulässigen $D$ liegt — so steht es in `prop:silentblocks`.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Kein neues Lean-Ziel.** Die zwei eingetragenen Ziele
+`duality_of_atomic_idealExhaustion` und `duality_of_atomic_finiteCoreReduction`
+(README, Meilenstein 8) sind weiterhin die richtigen ersten Schritte, und
+Theorem 42(a) — hängende Kette ab einem minimalen Atom — ist ein drittes
+Geschwister mit demselben Beweismuster (fundierte Induktion für Lemma 40,
+dann eine Zeile), das unter dem ersten Ziel als Variante notiert werden
+sollte, sobald die README das nächste Mal angefaßt wird; dieser Lauf ändert die
+README nicht. Was **nicht** formalisiert werden soll: C(K), die
+Zertifikatsfrage auf der Leiter (Vermutungen 32, 34) und Theorem 42$'$ — es
+ist eine Aussage über die Gestalt eines noch nicht gefundenen Gegenbeispiels,
+kein Satz mit Anwendung.
+
+## Abschluß von Task 23, 2026-09-16
+
+*(Fortlaufend geschrieben; der letzte Stand steht jeweils unten.)*
+
+### Was ins Manuskript gewandert ist
+
+* Eintrag 34 des Protokolls ist vervollständigt (Gemessen, Ergebnis,
+  Sackgassen, Manuskript, Vorschlag), aus dem Eintrag und aus
+  `silent_chains.txt` / `disjoint_cores.txt`.
+* Theoreme 40 bis 42$'$ stehen in §6 nach `rem:corereduction` und vor
+  `rem:twomethods`: `lem:silentstacks` (Lemma 40), `thm:stackdefect`
+  (Theorem 41), `thm:stackexhaustion` (Theorem 42), `cor:stackexhaustion`
+  (Korollar 42.1 mit den Fällen (a) unendlich viele Kerne mit Ketten, (b)
+  mit Türmen, (c) Antikette mit einer Kette daneben, (d) hängende Kette ab
+  einem minimalen Atom: Leiter, $\omega$-Ketten, Bäume, Stufenordnungen),
+  `prop:silentblocks` (Lemma 40$'$ und Theorem 42$'$ in einer Aussage),
+  `rem:stackexhaustion` (verschränkte Doppelkette; die Gestalt eines
+  Gegenbeispiels; die Leiter ohne hängende Seite als offener Kandidat).
+  Theoreme 38 und 39 standen bereits (`thm:idealexhaustion`,
+  `cor:idealexhaustion`, `rem:idealexhaustion`, `thm:corereduction`,
+  `cor:corereduction`, `rem:corereduction`).
+* `rem:corereduction` endet jetzt mit dem Verweis auf `thm:stackexhaustion`
+  statt mit „offen"; `rem:twomethods` nennt den dritten Mechanismus in einem
+  Halbsatz.
+* Neue Schlußbemerkung `rem:statusboundary` („Status and boundary of the
+  atomic case") am Ende von §6, vor §7: die drei Mechanismen und ihre
+  gemeinsame Gestalt (endliche Ideale liefern $\delta\equiv0$ auf $W$,
+  ein Schritt dominierter Konvergenz führt nach $t$); daß sie weder (F) noch
+  eine Schranke an $\Phi$ noch ein Zertifikat brauchen und das Vorzeichen von
+  $m$ nur über `prop:atomicposet` auf den Idealen und über $m(S)>0$ eingeht;
+  die Zertifikatsmethode als hinreichend, nicht notwendig
+  (`prop:nocertificate`, `rem:idealexhaustion`); die zwei Gegenbeispiele
+  (`ex:antichain` — mit einer Kette daneben kehrt die Dualität zurück,
+  `cor:stackexhaustion`(c); `rem:atomicposet` für $\iota=\mathrm o$); und
+  das Offene, benannt.
+* `PLAN.md`, Task 23: Status `abgeschlossen mit benannter Grenze`
+  (2026-09-16); die Vier-Zeilen-Tabelle ist durch den Verweis auf
+  `rem:atomsnotchange` und die vier Lean-Ziele ersetzt; Schlußabsatz zum
+  34. Lauf und Abschluß angefügt. Die alten Standsmeldungen bleiben als
+  Geschichte stehen.
+
+### Die Statustabelle von `rem:atomsnotchange`, vollständig
+
+| Clock | Status |
+|---|---|
+| Haar (Lebesgue, counting) | proved, `prop:haar` |
+| atomless, (T3) | proved, `cor:atomless` (a time change) |
+| purely atomic, atoms a chain | proved, `prop:atomicdual` (either $\iota$) |
+| purely atomic, *finite* index, $m\ge0$ | proved, `prop:atomicposet` ($\iota=\mathrm p$) |
+| the same for $\iota=\mathrm o$ | *false*; counterexample in `rem:atomicposet` |
+| mixed, finitely many atoms | proved, `prop:mixeddual` ($\iota=\mathrm p$) |
+| the same, atoms accumulating only at $t^*$ | proved, `rem:mixeddual` |
+| countable chain, any order type, with (F) | proved, `thm:densechain` |
+| countable, finite height, with (F) | proved, `thm:finiteheight` |
+| countable, without (F) | *false*; `ex:antichain` |
+| countable, finite ideals, $\T_{<t^*}$ directed | proved, `thm:idealexhaustion`, no (F) |
+| the same, $\T_{<t^*}$ a union of directed pieces | proved, `cor:idealexhaustion`(b) |
+| the same, a finite core with hanging chains | proved, `cor:corereduction` |
+| the same, a stack from a minimal atom | proved, `thm:stackexhaustion`(a) |
+| the same, infinitely many cores with chains | proved, `cor:stackexhaustion` |
+| the same, no maximal element, no stack | *open*; shape: `rem:stackexhaustion` |
+| countable chain, without (F) | *open*; cf. `thm:densechain` |
+| two $\zeta$-chains stacked, without (F) | *open*; `rem:idealexhaustion` |
+
+Die frühere Zeile „countable with atoms lacking a minimum — open" ist durch
+die drei letzten Zeilen ersetzt: sie faßte die drei losen Enden des
+Protokolls in einer Zeile ohne Beleg zusammen. Geprüft wurde zuerst, was die
+Theoreme 40 bis 42$'$ davon erledigt haben: **keines der drei vollständig.**
+Die nackte Klasse auf Ketten und die gestapelten $\zeta$-Ketten berühren sie
+nicht (dort sind die Ideale unendlich, (i) fehlt); die Vermutung „endliche
+Ideale, $W$ ohne maximale Elemente" ist eingeengt, nicht entschieden. Erledigt
+haben sie dagegen den vorher kleinsten offenen Fall dieser Vermutung
+(unendliche disjunkte Vereinigung endlicher Kerne mit Ketten) — der ist als
+eigene bewiesene Zeile eingetragen.
+
+### Was offen bleibt, und warum
+
+1. **Die nackte Klasse auf Ketten** — abzählbare Kette ohne (F) und ohne
+   beschränktes $\Phi$. Theorem 17 (`thm:densechain`) braucht (F) für die
+   Umordnungen, Korollar 14/16 (Protokoll, Läufe 14 und 20/21) brauchen ein
+   beschränktes $\Phi$ bzw. einen beschränkten Fluß nach Norden; die
+   Mechanismen 38–42 brauchen endliche Ideale. Kein Werkzeug greift, kein
+   Gegenbeispiel ist bekannt.
+2. **Zwei gestapelte $\zeta$-Ketten ohne (F).** Die Ideale der oberen Kette
+   sind unendlich, (i) ist dort die Frage selbst; Theorem 17 gilt für eine
+   Kette, nicht für zwei übereinander.
+3. **Endliche Ideale, $W$ ohne maximale Elemente $\Rightarrow$ Dualität.**
+   Weder bewiesen noch widerlegt. Theorem 42$'$ (`prop:silentblocks`,
+   `rem:stackexhaustion`) sagt, wie ein Gegenbeispiel aussehen müßte: nicht
+   gerichtet, nicht bis auf endlich viele Punkte ausschöpfbar, ohne hängenden
+   Stapel, mit Armen, in deren Idealspann-Abschluß kein Punktindikator liegt.
+   Kleinster benannter Kandidat: die Leiter ohne hängende Seite über
+   unendlich vielen Kernen; ob dort $\mathbb 1_{a_i}\in\overline L$, ist
+   nicht entschieden.
+4. **Ein Gegenbeispiel unter (F) mit positiven Massen** müßte maximale
+   Elemente in $W$ haben, die keine minimalen Atome sind, und unendliche Höhe
+   (Theorem 23 schließt endliche Höhe aus): etwa eine unendliche Krone über
+   einer $\omega$-Kette (Lauf 32).
+5. Nicht Teil von Task 23, aber angrenzend: die ordnungsdichte Atommenge im
+   gemischten Fall (`rem:dualscope`) und die o-Konvention auf unendlichen
+   Indizes.
+
+### Nicht untergebracht
+
+* `convex_recursion_bound` (Lauf 28) steht nur im Protokoll und jetzt in
+  `PLAN.md`; in `TauCeti/MartingaleProblems/README.md` ist es **nicht**
+  eingetragen, anders als der Abschlußauftrag annahm. Die README wurde in
+  diesem Lauf nicht geändert.
+* Theorem 42(a) als drittes Lean-Geschwister ist in `PLAN.md` benannt, nicht
+  in der README.
+* Der Dreierzopf (Lauf 34, Lemma 40$'$) steht nur im Protokoll; seine
+  Rechnung ist in diesem Lauf nicht nachgeprüft worden und deshalb nicht ins
+  Manuskript übernommen.
+
+### `check.py`
+
+`python3 Journal/Blog/MartingaleProblem/check.py`: **clean**, **140 Seiten**
+(vorher 137), 12 Überlängen, größte 7.7pt wie zuvor. Zwischenfassungen der
+Tabelle waren 31.7pt und 18.0pt zu breit und sind gekürzt worden; eine
+dreiteilige Formelzeile in `prop:silentblocks` (50.1pt) ist in ein
+`gather*` mit zwei Zeilen zerlegt.

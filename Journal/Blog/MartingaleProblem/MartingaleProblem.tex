@@ -5686,11 +5686,16 @@ the arguments stop.
   countable, finite ideals, $\T_{<t^*}$ directed & proved, Theorem~\ref{thm:idealexhaustion}, no \eqref{eq:Fcond} \\
   the same, $\T_{<t^*}$ a union of directed pieces & proved, Corollary~\ref{cor:idealexhaustion}(b) \\
   the same, a finite core with hanging chains & proved, Corollary~\ref{cor:corereduction} \\
-  countable with atoms lacking a minimum & open \\
+  the same, a stack from a minimal atom & proved, Theorem~\ref{thm:stackexhaustion}(a) \\
+  the same, infinitely many cores with chains & proved, Corollary~\ref{cor:stackexhaustion} \\
+  the same, no maximal element, no stack & \emph{open}; shape: Remark~\ref{rem:stackexhaustion} \\
+  countable chain, without \eqref{eq:Fcond} & \emph{open}; cf.\ Theorem~\ref{thm:densechain} \\
+  two $\zeta$-chains stacked, without \eqref{eq:Fcond} & \emph{open}; Remark~\ref{rem:idealexhaustion} \\
   \bottomrule
   \end{tabular}
   \end{center}
-  Nothing in this manuscript depends on the last six rows:
+  Nothing in this manuscript depends on the rows from
+  Theorem~\ref{thm:densechain} downwards:
   Theorem~\ref{thm:duality} and Corollary~\ref{cor:uniqviadual} use Lebesgue
   measure, Corollary~\ref{cor:dualdiscrete} counting measure, and
   Section~\ref{ssec:exduality} uses only the additivity \eqref{eq:clockadd}.
@@ -6836,11 +6841,222 @@ shape of $\Psi$ itself.
   $(r,s)$ couples the two private branches.  Theorem~\ref{thm:corereduction}
   explains why: that relation is one of those Proposition~\ref{prop:atomicposet}
   consumes on $K'$, and the chain relations at $(c_i, s)$ for non-minimal $s$
-  are what place the chain contribution $\chi$ in the range of $Z$.  What the
-  reduction does not reach is an infinite disjoint union of such cores: there
-  $\one_{W \setminus K} \notin \overline{L}$ for every finite $K$, and whether
-  finite ideals below $t$ suffice for the duality when $W$ has no maximal
-  element remains open.
+  are what place the chain contribution $\chi$ in the range of $Z$.  The
+  reduction does not reach an infinite disjoint union of such cores, since
+  $\one_{W \setminus K} \notin \overline{L}$ for every finite $K$;
+  Theorem~\ref{thm:stackexhaustion} does, by a third mechanism.
+\end{remark}
+
+\begin{lemma}[Silent stacks; \eqref{T0} + \eqref{E0} + clock]
+  \label{lem:silentstacks}
+  Let $\T$ be countable with least element $0$, let $t \in \T$ and
+  $W = \T_{<t}$, let $m_0 = 0$ and $m > 0$ on $W \setminus \{0\}$, let every
+  ideal $\T_{\leq a}$, $a \in W$, be finite --- so that $W$ is well-founded
+  and $\delta \equiv 0$ on $W$ by Proposition~\ref{prop:atomicposet} --- and
+  let all series defining $\Psi$ converge absolutely.  Call finite nonempty
+  sets $S_0, S_1, S_2, \dots \subseteq W \setminus \{0\}$ a \emph{hanging
+  stack} with \emph{foot} $I_0$ if all points of $S_i$ have the same ideal
+  $I_i := \T_{<s}$, $s \in S_i$, and $I_{i+1} = I_i \sqcup S_i$ for every
+  $i \geq 0$.  If every $S_i = \{u_i\}$ is a singleton, this is a
+  \emph{hanging chain} $u_0 < u_1 < \dots$ with
+  $\T_{<u_{i+1}} = \T_{\leq u_i}$ for all $i$.  For a finite $S \subseteq W$
+  write $\sigma_S(b) = \sum_{s \in S} m_s\kappa(s,b)$.  Then, for every
+  hanging stack in $W$, every $i \geq 0$ and \emph{every} $b \in W$,
+  \[
+    \sigma_{S_i}(b) = 0 .
+  \]
+  In particular $\kappa(u_i,\cdot) \equiv 0$ on $W$ along a hanging chain.
+\end{lemma}
+
+\begin{proof}
+  Since $\delta \equiv 0$ on $W$, the relation
+  $\Psi(s,u) + \Psi(u,s) = \delta(s) + \delta(u)$ says that $\Psi$ is
+  antisymmetric on $W \times W$.  For $s \in S_i$ the value
+  $\Psi(s,b) = \sum_{a \in I_i} m_a\kappa(a,b)$ does not depend on $s$; call
+  it $\Psi_{S_i}(b)$.  We prove $\sigma_{S_i}(b) = 0$ for all $i$ by
+  well-founded induction on $b$; nothing is assumed about $b$, which may be
+  minimal, maximal, in the stack, incomparable to it, or $0$.  Suppose
+  $\sigma_{S_i}(c) = 0$ for all $i$ and all $c < b$.  Then, all sums being
+  finite,
+  \[
+    \sum_{s \in S_i} m_s\,\Psi(b,s)
+      = \sum_{c < b} m_c \sum_{s \in S_i} m_s\kappa(c,s)
+      = -\sum_{c < b} m_c\,\sigma_{S_i}(c) = 0 ,
+  \]
+  while $\Psi(b,s) = -\Psi_{S_i}(b)$ for each $s \in S_i$ by antisymmetry.
+  Hence $m(S_i)\,\Psi_{S_i}(b) = 0$, and $m(S_i) > 0$ gives
+  $\Psi_{S_i}(b) = 0$ for every $i$.  Finally
+  $\sigma_{S_i}(b) = \Psi_{S_{i+1}}(b) - \Psi_{S_i}(b) = 0$, because
+  $I_{i+1} = I_i \sqcup S_i$.
+\end{proof}
+
+\begin{theorem}[The defect at the foot of a stack; \eqref{T0} + \eqref{E0} + clock]
+  \label{thm:stackdefect}
+  Under the hypotheses of Lemma~\ref{lem:silentstacks} write
+  $\theta = \delta(t)$ and $\psi(a) = m_a\kappa(a,t)$, absolutely summable
+  on $W$ because $\delta(t) = \Psi(t,t)$ is.  Then for every hanging stack
+  $(S_i)$ in $W$ and every $i \geq 0$,
+  \[
+    \theta = \psi(I_i) := \sum_{a \in I_i} \psi(a) ;
+  \]
+  in particular $\theta = \psi(I_0)$ is the $\psi$-mass below the foot, and
+  $\psi(S_i) = 0$ for every $i$.
+\end{theorem}
+
+\begin{proof}
+  For $s \in S_i$ the relation at $(s,t)$ reads
+  $\Psi(s,t) + \Psi(t,s) = \delta(s) + \delta(t) = \theta$, and
+  $\Psi(s,t) = \psi(I_i)$; so $\Psi(t,s) = \theta - \psi(I_i)$ is the same
+  for all $s \in S_i$.  On the other hand
+  $\Psi(t,s) = \sum_{b \in W} m_b\kappa(b,s) = -\sum_{b \in W} m_b\kappa(s,b)$,
+  absolutely convergent, and Lemma~\ref{lem:silentstacks} gives
+  \[
+    \sum_{s \in S_i} m_s\,\Psi(t,s)
+      = -\sum_{b \in W} m_b\,\sigma_{S_i}(b) = 0 .
+  \]
+  Together, $m(S_i)\bigl(\theta - \psi(I_i)\bigr) = 0$, so
+  $\theta = \psi(I_i)$; and $I_{i+1} = I_i \sqcup S_i$ gives $\psi(S_i) = 0$.
+\end{proof}
+
+\begin{theorem}[Stack exhaustion; \eqref{T0} + \eqref{E0} + clock]
+  \label{thm:stackexhaustion}
+  Assume the hypotheses of Lemma~\ref{lem:silentstacks}.  Then
+  $\Phi(t,0) = \Phi(0,t)$ as soon as one of the following holds;
+  \eqref{eq:Fcond} is not assumed.
+  \begin{enumerate}[label=(\alph*)]
+  \item There is a hanging stack in $W$ with foot $I_0 = \{0\}$, that is, a
+    stack starting at minimal atoms --- for instance a hanging chain
+    $u_0 < u_1 < \dots$ with $u_0$ a minimal atom.
+  \item There are hanging stacks $(S^{(n)}_i)_i$, $n \in \N$, whose feet
+    $I^{(n)}_0$ \emph{escape}: every $a \in W \setminus \{0\}$ lies in only
+    finitely many of them --- for instance, the sets
+    $I^{(n)}_0 \setminus \{0\}$ are pairwise disjoint.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  (a) By Theorem~\ref{thm:stackdefect},
+  $\theta = \psi(\{0\}) = m_0\kappa(0,t) = 0$.
+  (b) $\theta = \psi(I^{(n)}_0)$ for every $n$, and
+  $\one_{I^{(n)}_0} \to \one_{\{0\}}$ pointwise, so dominated convergence
+  against $\lvert\psi\rvert \in \ell^1(W)$ gives $\theta = \psi(\{0\}) = 0$.
+  With pairwise disjoint feet this is already
+  $\sum_n \lvert\theta\rvert \leq \lVert\psi\rVert_1 < \infty$.
+\end{proof}
+
+\begin{corollary}[Infinitely many cores; towers; the antichain with a chain beside it; \eqref{T0} + \eqref{E0} + clock]
+  \label{cor:stackexhaustion}
+  Let $\T$ be countable with least element $0$, $m_0 = 0$, $m > 0$ on the
+  atoms, and let every ideal $\T_{\leq a}$ with $a < t$ be finite.  Then
+  $\Phi(t,0) = \Phi(0,t)$ for every mass profile and without
+  \eqref{eq:Fcond} in each of the following cases.
+  \begin{enumerate}[label=(\alph*)]
+  \item $W \setminus \{0\}$ is the disjoint union of infinitely many pairwise
+    incomparable finite cores $K_n$, arbitrary and possibly all different,
+    with an $\omega$-chain attached above each maximal element of each core.
+  \item The same with \emph{towers} in place of chains: above each maximal
+    element of $K_n$ a weak order $S_1 < S_2 < \dots$ with finite levels,
+    every point of $S_j$ below every point of $S_{j+1}$.
+  \item $W \setminus \{0\}$ is the antichain of Example~\ref{ex:antichain}
+    together with one hanging chain $0 < c_1 < c_2 < \dots$ beside it.
+  \item $W$ contains a hanging stack with foot $\{0\}$, for instance a
+    hanging chain starting at a minimal atom; this covers the ladder
+    $a_i < b_j \iff i < j$, the disjoint union of $\omega$-chains, trees
+    without leaves, and weak orders of level type $\omega$ with finite
+    levels, whose levels form the stack.
+  \end{enumerate}
+\end{corollary}
+
+\begin{proof}
+  (a) The chain $c_1 < c_2 < \dots$ above a maximal element $k$ of $K_n$ is a
+  hanging chain with foot $\T_{\leq k} \subseteq K_n$, and the feet of
+  different cores meet only in $\{0\}$: Theorem~\ref{thm:stackexhaustion}(b).
+  (b) $S_0 = \{k\}, S_1, S_2, \dots$ is a hanging stack with the same foot,
+  and (b) applies again; note that here no point above $k$ is chain-covered
+  in the sense of Corollary~\ref{cor:idealexhaustion}(c).  (c) and (d) are
+  Theorem~\ref{thm:stackexhaustion}(a), the foot being $\{0\}$; in the
+  ladder the chain $a_1 < a_2 < \dots$ is hanging from the minimal atom
+  $a_1$, and in a tree every infinite branch is.
+\end{proof}
+
+\begin{proposition}[Blocks in the closure of the ideal span; \eqref{T0} + \eqref{E0} + clock]
+  \label{prop:silentblocks}
+  Under the hypotheses of Lemma~\ref{lem:silentstacks}, let
+  $D \subseteq W \setminus \{0\}$ be partitioned into finite \emph{blocks}
+  $S$ whose points share the same ideal $\T_{<v}$, let $L_D$ be the span of
+  $\{\one_{\T_{<v}} : v \in D\}$, as functions on $W \setminus \{0\}$, and
+  $\overline{L_D}$ its closure under bounded pointwise limits of sequences.
+  If $\one_S \in \overline{L_D}$ for every block $S$, then
+  \begin{gather*}
+    \Psi(v,\cdot) \equiv 0 \ \text{ on } W \ \text{ for all } v \in D,
+    \qquad
+    \sigma_S \equiv 0 \ \text{ on } W \ \text{ for all blocks } S, \\
+    \theta = \psi(\T_{<v}) \ \text{ for all } v \in D .
+  \end{gather*}
+  Consequently $\theta = 0$ if $D$ contains a minimal atom, or if the ideals
+  $\T_{<v_n}$ of some sequence in $D$ escape in the sense of
+  Theorem~\ref{thm:stackexhaustion}(b).  Writing $D^*$ for the set of all
+  points that belong to some such $D$, one has $\theta = \psi(\T_{<v})$ for
+  every $v \in D^*$.
+\end{proposition}
+
+\begin{proof}
+  Well-founded induction on $b \in W$ for the statement $P(b)$:
+  $\Psi(v,b) = 0$ for all $v \in D$ and $\sigma_S(b) = 0$ for all blocks $S$.
+  Assume $P(c)$ for all $c < b$.  For a block $S$ with common ideal $I$ the
+  value $\Psi(v,b) = \sum_{a \in I} m_a\kappa(a,b)$ is the same for all
+  $v \in S$, hence so is $\Psi(b,v) = -\Psi(v,b)$, and
+  \[
+    m(S)\,\Psi(b,v)
+      = \sum_{v' \in S} m_{v'}\Psi(b,v')
+      = \sum_{c < b} m_c \sum_{v' \in S} m_{v'}\kappa(c,v')
+      = -\sum_{c < b} m_c\,\sigma_S(c) = 0 ,
+  \]
+  so $\Psi(v,b) = 0$ for all $v \in D$.  The functional
+  $f \mapsto \sum_{u \in W} f(u)\,m_u\kappa(u,b)$ on bounded $f$ --- defined
+  because $\Psi(t,b)$ converges absolutely --- vanishes on every
+  $\one_{\T_{<v}}$, $v \in D$, this being $\Psi(v,b) = 0$; by dominated
+  convergence it vanishes on $\overline{L_D}$, and at $\one_S$ it equals
+  $\sigma_S(b)$.  This proves $P(b)$.
+
+  For the defect, the proof of Theorem~\ref{thm:stackdefect} applies to a
+  block $S$ with common ideal $I$ word for word: $\Psi(t,v) = \theta - \psi(I)$
+  for $v \in S$, and $\sum_{v \in S} m_v\Psi(t,v) = -\sum_b m_b\sigma_S(b) = 0$,
+  so $\theta = \psi(I)$.  The two consequences follow as in
+  Theorem~\ref{thm:stackexhaustion}, and the statement about $D^*$ is the
+  third identity applied to each admissible $D$ separately.
+  Lemma~\ref{lem:silentstacks} is the case $D = \bigcup_i S_i$ with the
+  levels as blocks, since $\one_{S_i} = \one_{I_{i+1}} - \one_{I_i} \in L_D$.
+\end{proof}
+
+\begin{remark}[What the stacks reach, and the shape of a counterexample]
+  \label{rem:stackexhaustion}
+  Proposition~\ref{prop:silentblocks} reaches arms over a hook $k$ that carry
+  no hanging stack.  Over $k$ let two chains $a_1 < a_2 < \dots$ and
+  $b_1 < b_2 < \dots$ be interleaved by $b_i < a_{i+1}$ and $a_i < b_{i+2}$;
+  the stack $\{k\}, \{a_1,b_1\}, \{a_2\}$ breaks off, but the ideals of the
+  arm points form a chain
+  $\T_{\leq k} = \T_{<a_1} = \T_{<b_1} \subset \T_{<b_2} \subset \T_{<a_2}
+  \subset \T_{<b_3} \subset \cdots$ with singleton differences
+  $\{b_1\}, \{a_1\}, \{b_2\}, \{a_2\}, \dots$, so every singleton of the arm
+  and $\one_{\{k\}} = \one_{\T_{<a_1}} - \one_{\T_{<k}}$ lie in $L_D$, and
+  $\theta = \psi(\T_{<k})$.  Over infinitely many disjoint cores this gives
+  the duality by escape of the feet.
+
+  Conversely, the three theorems say what an index with finite ideals, $W$
+  without maximal element and $\theta \neq 0$ would have to look like.  On
+  $D^*$ the rows $\Psi(v,\cdot)$ vanish --- its points behave like minimal
+  atoms --- and $\theta = \psi(\T_{<v})$ is constant there; so $D^*$ contains
+  no minimal atom and no sequence with escaping ideals, and the ideals of any
+  two points of $D^*$ carry the same $\psi$-mass.  $W$ is not directed
+  (Theorem~\ref{thm:idealexhaustion}) and not exhaustible up to a finite core
+  (Theorem~\ref{thm:corereduction}); no point carries a hanging stack, and
+  the arms above the cores must be so entangled that no point indicator lies
+  in the closure of the ideal span of its arm.  The simplest arm that escapes
+  Proposition~\ref{prop:silentblocks} is a ladder in which both sides lag,
+  $a_i < b_j \iff i < j$ and $b_i < a_j \iff i < j-1$; whether
+  $\one_{\{a_i\}}$ lies in $\overline{L}$ there has not been decided, and
+  whether such an index exists at all is open.
 \end{remark}
 
 \begin{remark}[Two methods, disjoint blind spots]
@@ -6868,7 +7084,9 @@ shape of $\Psi$ itself.
   $\omega$-chains, where no certificate exists
   (Remark~\ref{rem:idealexhaustion}); Theorem~\ref{thm:corereduction} extends
   it by a finite core, on which Proposition~\ref{prop:atomicposet} does the
-  finite-dimensional work.
+  finite-dimensional work; and Theorem~\ref{thm:stackexhaustion} adds a third
+  mechanism, in which a hanging stack silences the rows of its points and pins
+  the defect to the mass below its foot.
 \end{remark}
 
 \begin{remark}[Scope of Section~\ref{sec:duality}]
@@ -7264,6 +7482,59 @@ We can now close the circle with Section~\ref{sec:uniqueness}.
   for $(A,\delta_x)$ by Theorem~\ref{thm:uniqueness}\ref{it:uniq_a}.  Now apply
   Theorem~\ref{thm:uniqueness}.
 \end{proof}
+
+\begin{remark}[Status and boundary of the atomic case]
+  \label{rem:statusboundary}
+  Section~\ref{ssec:antidiag} settles the duality $\Phi(t,0) = \Phi(0,t)$ for
+  a purely atomic clock on a countable index by three mechanisms that share
+  one shape.  Each starts from $\delta \equiv 0$ on $W = \T_{<t}$, which
+  Proposition~\ref{prop:atomicposet} supplies whenever the ideals below $t$
+  are finite, and each passes to $t$ by a single step of dominated
+  convergence against an absolutely summable row: \emph{ideal exhaustion}
+  (Theorem~\ref{thm:idealexhaustion}) when the ideals below $t$ exhaust $W$;
+  \emph{finite core reduction} (Theorem~\ref{thm:corereduction}) when they
+  exhaust all but a finite down-set, which is then absorbed into a finite
+  instance; \emph{stack exhaustion} (Theorem~\ref{thm:stackexhaustion}) when
+  a hanging stack silences the rows of its points and pins the defect to the
+  $\psi$-mass below its foot.  None of the three uses the summability
+  \eqref{eq:Fcond}, a bound on $\Phi$, or a certificate, and none uses the
+  sign of $m$ in the passage to $t$: the sign enters only where the finite
+  theory does, through Proposition~\ref{prop:atomicposet} on the ideals, and
+  through $m(S) > 0$ for the levels of a stack, which a clock grants.
+
+  The certificate method (Definition~\ref{def:certificate},
+  Theorem~\ref{thm:certificate}) is sufficient and not necessary: the
+  disjoint union of two $\omega$-chains of Remark~\ref{rem:idealexhaustion}
+  carries no certificate and satisfies the duality, and
+  Proposition~\ref{prop:nocertificate} draws the boundary of that method at a
+  set of atoms without minimal element.  Two counterexamples make the
+  boundary of the duality itself sharp.  On the infinite antichain of
+  Example~\ref{ex:antichain} the duality fails for positive masses without
+  \eqref{eq:Fcond}, and every point of $W$ is maximal there; a single hanging
+  chain beside it restores the duality
+  (Corollary~\ref{cor:stackexhaustion}(c)), so what the antichain exploits is
+  exactly the absence of anything above its atoms.  Under the convention
+  $\iota = \mathrm{o}$ the duality fails already on a finite index
+  (Remark~\ref{rem:atomicposet}), so $\iota = \mathrm{p}$ is part of the
+  statement and not a simplification.
+
+  What remains open is recorded in the table of
+  Remark~\ref{rem:atomsnotchange} and repeated here by name.  A countable
+  chain of atoms without \eqref{eq:Fcond} and without a bound on $\Phi$:
+  Theorem~\ref{thm:densechain} needs \eqref{eq:Fcond}, and the question is
+  open.  Two $\zeta$-chains stacked one above the other, or any index with
+  infinite ideals below $t$, without \eqref{eq:Fcond}: there $\delta \equiv 0$
+  on $W$ is the question itself for the upper chain, and the three mechanisms
+  have nothing to start from.  An index with finite ideals in which $W$ has
+  no maximal element but carries neither a stack nor a block structure in the
+  sense of Proposition~\ref{prop:silentblocks};
+  Remark~\ref{rem:stackexhaustion} names the smallest candidate.  And a
+  counterexample with positive masses under \eqref{eq:Fcond}, if one exists,
+  must have maximal elements in $W$ that are not minimal atoms and infinite
+  height, since Theorem~\ref{thm:finiteheight} excludes finite height; an
+  infinite crown over an $\omega$-chain is the shape.  Nothing in the rest of
+  this manuscript depends on any of these.
+\end{remark}
 
 % =====================================================================
 \section{Existence}

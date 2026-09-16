@@ -665,34 +665,46 @@ Offen ist allein das Eindeutigkeitskriterium — Def. `propagation` vergleicht
 Stroock–Varadhan-Formulierung reflektierter Diffusionen als Testobjekt.
 
 
-## Task 23 — §6: der gemischte Fall — `todo`
+## Task 23 — §6: der gemischte Fall — `abgeschlossen mit benannter Grenze` *(2026-09-16)*
 
-Nach D54 ist der Stand von §6:
+**Maßgebliche Bilanz:** die Statustabelle in `rem:atomsnotchange` des
+Manuskripts (Stand 2026-09-16, nach 36 Läufen und 54 numerierten Resultaten
+in `Task23/PROTOKOLL.md`). Sie ersetzt die frühere Vier-Zeilen-Tabelle an
+dieser Stelle; jede ihrer Zeilen zitiert ein Resultat oder ein Gegenbeispiel.
+Die Schlußbemerkung `rem:statusboundary` am Ende von §6 sagt in Prosa, was die
+drei Mechanismen (Idealausschöpfung `thm:idealexhaustion`, endliche
+Kernreduktion `thm:corereduction`, Stapelausschöpfung `thm:stackexhaustion`)
+brauchen — weder (F) noch ein Vorzeichen an $m$ im Grenzübergang —, warum die
+Zertifikatsmethode hinreichend und nicht notwendig ist
+(`prop:nocertificate`, `rem:idealexhaustion`), und was offen bleibt.
 
-| Uhr | Status |
-|---|---|
-| Haar (Lebesgue, Zählmaß) | bewiesen, `prop:haar` |
-| atomlos, (T3) | bewiesen, `cor:atomless` — aber nur ein **Zeitwechsel** (D55) |
-| rein atomar | symbolisch verifiziert, **nicht bewiesen**, `rem:atomicdual` |
-| gemischt | **offen** |
+**Task 23 endet als Mathematik und geht als Formalisierung weiter.** Die vier
+Lean-Ziele, in dieser Reihenfolge:
 
-Die beiden vorhandenen Argumente kombinieren sich nicht: der Zeitwechsel
-scheitert an Atomen (`rem:atomsnotchange`, mit Gegenbeispiel), die
-Linearalgebra der Atomrelationen hat keinen diffusen Gegenpart.
+- `duality_of_atomic_idealExhaustion` — Theorem 38 des Protokolls
+  (`thm:idealexhaustion`, `cor:idealexhaustion`); in
+  `TauCeti/MartingaleProblems/README.md`, Meilenstein 8.
+- `duality_of_atomic_finiteCoreReduction` — Theorem 39
+  (`thm:corereduction`, `cor:corereduction`); README, Meilenstein 8, direkt
+  danach. Theorem 42(a) (`thm:stackexhaustion`, hängende Kette ab einem
+  minimalen Atom) ist ein drittes Geschwister mit demselben Beweismuster und
+  soll beim nächsten Anfassen der README als Variante unter dem ersten Ziel
+  notiert werden.
+- `Matrix.krylovCertificate_unique` — Theorem 28 (im Krylow-Raum ist das
+  Zertifikat eindeutig); README, Meilenstein 8.
+- `convex_recursion_bound` — das abstrakte Maximumprinzip hinter Theorem 26
+  (Lauf 28). Im Protokoll vorgeschlagen; **in der README noch nicht
+  eingetragen** (Stand 2026-09-16), das ist beim nächsten Anfassen der README
+  nachzuholen.
 
-*Zur Einordnung (D55):* die Zeile „atomlos" ist billiger, als sie aussieht — unter
-(T3) ist eine atomlose Uhr das Bild von Lebesgue unter $\tau$. Echten Inhalt hat
-nur die Zeile „rein atomar", und nur sie führt über Lebesgue hinaus.
+Nicht formalisiert werden sollen: C(K), die Zertifikatsfrage auf der Leiter
+(Vermutungen 32, 34) und Theorem 42$'$.
 
-**Zwei Ansätze.** (a) Den atomaren Fall wirklich beweisen — die Relationen
-$m_l\,\Delta_1F(k,l-1)=m_k\,\Delta_2F(k-1,l-1)$ sind ein lineares System, dessen
-Lösungsraum die Konklusion enthalten sollte; Induktion über die Atome scheitert
-bisher an ordnungsdichten Atommengen. (b) Approximation: eine gemischte Uhr
-durch atomlose approximieren und die Stabilität von \eqref{eq:incrementrep}
-unter dieser Approximation klären.
-
-Nichts im Manuskript hängt daran — §7 benutzt Lebesgue-Uhren, §7.2 nur
+Nichts im Manuskript hängt an §6: §7 benutzt Lebesgue-Uhren, §7.2 nur
 \eqref{eq:clockadd}.
+
+*Die folgenden Absätze sind die Standsmeldungen der Läufe und bleiben als
+Geschichte stehen; die Bilanz oben und `rem:atomsnotchange` gehen vor.*
 
 **Stand 2026-09-16** (Protokoll `Task23/PROTOKOLL.md`, 29 Läufe): Kette,
 endliche Halbordnung ($\iota=\mathrm p$) und gemischte Uhr sind bewiesen und im
@@ -889,6 +901,24 @@ Elemente $\Rightarrow$ Dualität": die **unendliche disjunkte Vereinigung
 endlicher Kerne mit Ketten** ($\bigsqcup_n$ Doppelschleife$_n$); dort ist
 $\mathbb 1_{W\setminus K}$ für kein endliches $K$ im Abschluß, und Theorem 38
 mit $X=\{r_n\}$ braucht $\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|<\infty$.
+
+**Stand 2026-09-16, 34. Lauf und Abschluß:** der kleinste offene Fall des
+33. Laufs ist gefallen, ohne (F) und ohne C(K): Lemma 40 (auf einem hängenden
+Stapel verschwinden die Stufensummen $\sigma_{S_i}(b)$ für **jedes** $b\in W$),
+Theorem 41 ($\delta(t^*)=\psi(I_0)$, die $\psi$-Masse unter dem Stapelfuß),
+Theorem 42 (Stapel mit Fuß $\{0\}$ oder mit entweichenden Füßen $\Rightarrow$
+Dualität), im Manuskript `lem:silentstacks`, `thm:stackdefect`,
+`thm:stackexhaustion`, `cor:stackexhaustion`, `prop:silentblocks`,
+`rem:stackexhaustion`. Damit fallen die unendliche disjunkte Vereinigung
+beliebiger endlicher Kerne mit Ketten oder Türmen und die Antikette von
+Theorem 19 mit einer Kette daneben. Offen bleiben, benannt in
+`rem:atomsnotchange` und `rem:statusboundary`: die nackte Klasse auf Ketten
+(ohne (F), ohne beschränktes $\Phi$), die gestapelten $\zeta$-Ketten ohne (F),
+und die Vermutung „endliche Ideale, $W$ ohne maximale Elemente $\Rightarrow$
+Dualität", deren kleinster Kandidat jetzt die Leiter ohne hängende Seite
+über unendlich vielen Kernen ist. Task 23 ist damit **abgeschlossen mit
+benannter Grenze**; Abschlußprotokoll in `Task23/PROTOKOLL.md`, Abschnitt
+„Abschluß von Task 23".
 
 ---
 
