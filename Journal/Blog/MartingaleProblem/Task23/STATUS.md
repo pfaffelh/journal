@@ -1,10 +1,10 @@
 # Task 23 — Status
 
-- **Letzter Lauf (UTC):** 20260916T060301Z
-- **Zustand:** limit
-- **Notiz:** Nutzungsgrenze erreicht (Code 1) -- Lauf nicht gelaufen, naechster Cron-Slot versucht es erneut
+- **Letzter Lauf (UTC):** 20260916T100301Z
+- **Zustand:** laeuft
+- **Notiz:** Lauf gestartet
 - **Host:** P14sGen6
-- **Laeufe bisher:** 3
+- **Laeufe bisher:** 4
 
 Logs unter `logs/`. Der inhaltliche Stand steht in
 `Journal/Blog/MartingaleProblem/Task23/PROTOKOLL.md`.
