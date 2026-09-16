@@ -96,7 +96,11 @@ git pull -q --rebase origin "$BRANCH" >/dev/null 2>&1
 status "laeuft" "Lauf gestartet"
 publish "Task23 STATUS: Lauf $STAMP gestartet"
 
-PROMPT="$(cat "$REPO/scripts/task23_prompt.md")"
+# Der Auftrag ist umstellbar, ohne die stehende Datei anzufassen -- gebraucht
+# fuer Sonderlaeufe wie den Abschlusslauf (task23_close_prompt.md).
+PROMPT_FILE="${TASK23_PROMPT:-$REPO/scripts/task23_prompt.md}"
+[ -r "$PROMPT_FILE" ] || { echo "Auftragsdatei $PROMPT_FILE fehlt"; status "fehler" "Auftragsdatei $PROMPT_FILE fehlt"; publish "Task23 $STAMP (Auftragsdatei fehlt)"; exit 1; }
+PROMPT="$(cat "$PROMPT_FILE")"
 
 # Enge Werkzeug-Freigabe statt pauschalem Abschalten der Rechtepruefung.  Im
 # -p-Modus wird ein nicht freigegebenes Werkzeug verweigert, nicht nachgefragt

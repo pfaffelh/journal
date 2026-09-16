@@ -21,3 +21,20 @@ Diamant, m = (0,1, 1,0): Dualitaet faellt bei t = None (erwartet: None)
   zufaellige Kerne x2, n=2 (#2)                  dim= 36: (A)   71 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 39/71
   zufaellige Kerne x2, n=3 (#3)                  dim= 51: (A)  156 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 69/105
   zufaellige Kerne x2, n=2 (#4)                  dim= 36: (A)   71 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 39/71
+  zufaellige Kerne x2, n=3 (#5)                  dim= 67: (A)  206 Paare mit i+h(b)<=n-1 erzwungen 0: ja; (A') an der Grenze i+h(b)=n frei: 88/142
+== (B) haengende Doppelschleife: r_0 ist stumm, r und p nicht
+  haengende Doppelschleife x2, n=2: kappa(r_0, r') erzwungen 0: True; kappa(r_0, r_0') erzwungen 0: True; kappa(r, r') erzwungen 0: False (erwartet: nein); kappa(p, r') erzwungen 0: False (erwartet: nein)
+  haengende Doppelschleife x2, n=3: kappa(r_0, r') erzwungen 0: True; kappa(r_0, r_0') erzwungen 0: True; kappa(r, r') erzwungen 0: False (erwartet: nein); kappa(p, r') erzwungen 0: False (erwartet: nein)
+== (C) Stapel: Tuerme statt Ketten, Stufensummen
+  Doppelschleifen mit Tuermen x2, n=2, dim=154: Haken kappa(a,b) erzwungen 0 (44 Paare) und Stufensummen erzwungen 0 (32 Paare): ja; Einzelwerte kappa(alpha_i,b) frei: 64/64
+  Doppelschleifen mit Tuermen x2, n=3, dim=234: Haken kappa(a,b) erzwungen 0 (76 Paare) und Stufensummen erzwungen 0 (80 Paare): ja; Einzelwerte kappa(alpha_i,b) frei: 128/160
+  Doppelschleifen mit Tuermen x2, n=4, dim=330: Haken kappa(a,b) erzwungen 0 (108 Paare) und Stufensummen erzwungen 0 (152 Paare): ja; Einzelwerte kappa(alpha_i,b) frei: 240/304
+== (E) Lemma 40' jenseits der Stapel: verschraenkte Doppelkette und Dreierzopf
+  Doppelschleife mit shift-Armen, n=2, dim=29: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 0/1 erzwungen 0; kappa(a, arm'_1): 0/1 erzwungen 0
+  Doppelschleife mit shift-Armen, n=3, dim=35: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+  Doppelschleife mit shift-Armen, n=4, dim=41: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+  Doppelschleife mit braid-Armen, n=2, dim=53: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 0/1 erzwungen 0; kappa(a, arm'_1): 0/1 erzwungen 0
+  Doppelschleife mit braid-Armen, n=3, dim=68: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+  Doppelschleife mit braid-Armen, n=4, dim=83: kappa(a, x) fuer minimale x: 4/4 erzwungen 0; kappa(a, a'): 1/1 erzwungen 0; kappa(a, s): 1/1 erzwungen 0; kappa(arm_1, x) fuer minimale x: 4/4 erzwungen 0; kappa(arm_1, a'): 1/1 erzwungen 0; kappa(a, arm'_1): 1/1 erzwungen 0
+rc = 0
+finished
