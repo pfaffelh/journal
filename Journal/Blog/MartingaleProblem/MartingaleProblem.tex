@@ -5685,6 +5685,7 @@ the arguments stop.
   countable, without \eqref{eq:Fcond} & \emph{false}; Example~\ref{ex:antichain} \\
   countable, finite ideals, $\T_{<t^*}$ directed & proved, Theorem~\ref{thm:idealexhaustion}, no \eqref{eq:Fcond} \\
   the same, $\T_{<t^*}$ a union of directed pieces & proved, Corollary~\ref{cor:idealexhaustion}(b) \\
+  the same, a finite core with hanging chains & proved, Corollary~\ref{cor:corereduction} \\
   countable with atoms lacking a minimum & open \\
   \bottomrule
   \end{tabular}
@@ -6743,6 +6744,105 @@ shape of $\Psi$ itself.
   and~\ref{thm:finiteheight} remain the statements.
 \end{remark}
 
+\begin{theorem}[Finite core reduction; \eqref{T0} + \eqref{E0} + clock]
+  \label{thm:corereduction}
+  In the setting of Theorem~\ref{thm:idealexhaustion} --- $\T$ countable with
+  least element $0$, $m \geq 0$, $t \in \T$, $W = \T_{<t}$, all series defining
+  $\Psi$ absolutely convergent, $L$ and $\overline{L}$ as there --- assume
+  \begin{enumerate}[label=(\roman*)]
+  \item $\delta(a) = 0$ for every $a \in W$;
+  \item[(ii$'$)] there is a \emph{finite} down-set $K \subseteq W$ with
+    $0 \in K$ and $\one_{W \setminus K} \in \overline{L}$.
+  \end{enumerate}
+  Then $\delta(t) = 0$.  Theorem~\ref{thm:idealexhaustion} with
+  $X = \emptyset$ is the case $K = \{0\}$, and with a finite $X$ the case
+  $K = \{0\} \cup X$, without the hypothesis $m_0 = 0$ there.
+\end{theorem}
+
+\begin{proof}
+  Write $P = K \setminus \{0\}$ and let $Z \colon \R^P \to \R^K$,
+  $(Zf)(s) = \sum_{a < s} f(a)$, with range $R$; every element of $R$ vanishes
+  at $0$, and $Z e_k = 0$ for each maximal $k \in K$.  For a bounded $f$ on
+  $W \setminus \{0\}$ put $F_f(s) = \sum_{a \in W} f(a)\, m_a \kappa(a,s)$,
+  $s \in K$, absolutely convergent because $\Psi(t,s)$ is.
+
+  \emph{Step 1: $F_f \in R$ for $f \in \overline{L}$.}  For $d \in W$ and
+  $s \in K$ the relation at $(d,s)$ reads $\Psi(d,s) + \Psi(s,d) = 0$ by (i),
+  and $\Psi(s,d) = \sum_{b < s} m_b \kappa(b,d)$ runs over $b \in K$ because
+  $K$ is a down-set; so $F_{\one_{\T_{<d}}} = \Psi(d,\cdot)|_K = -Z\psi_d$ with
+  $\psi_d(b) = m_b\kappa(b,d)$, and $L$ is mapped into $R$.  The map
+  $f \mapsto F_f$ is linear and, by dominated convergence at each of the
+  finitely many $s \in K$, continuous under bounded pointwise limits of
+  sequences; $R$ is a subspace of a finite-dimensional space, hence closed.
+  So $F_f \in R$ for all $f \in \overline{L}$.
+
+  \emph{Step 2: the correction.}  By (ii$'$) the function
+  $\chi := F_{\one_{W \setminus K}}$ lies in $R$; in particular
+  $\chi(0) = \sum_{c \in W \setminus K} g(c) = 0$, with $g$ as in the proof of
+  Theorem~\ref{thm:idealexhaustion}.  If
+  $P = \emptyset$ this is already $\delta(t) = g(W) = 0$.  Otherwise write
+  $\theta = \delta(t)$ and $\psi_\infty(a) = m_a\kappa(a,t)$, and choose
+  $\psi''$ on $P$ with $Z\psi'' = \chi$ and
+  $\sum_{a \in P} \psi''(a) = \theta - \sum_{a \in K} \psi_\infty(a)$, which is
+  possible by adding a multiple of $e_k$ for a maximal $k \in K$.  Define
+  $\kappa'$ on $K' = K \cup \{t\}$ by $\kappa' = \kappa$ on $K \times K$ and
+  $\kappa'(a,t) = \kappa(a,t) + \psi''(a)/m_a$ for $a \in P$, antisymmetric.
+
+  \emph{Step 3: $K'$ is a finite instance.}  For $s \in K$ the relation of the
+  original system at $(s,t)$ is $\Psi(s,t) + \Psi(t,s) = \theta$ with
+  $\Psi(t,s) = \sum_{a \in K} m_a\kappa(a,s) + \chi(s)$.  On $K'$ one has
+  $\Psi'(s,t) = \Psi(s,t) + (Z\psi'')(s) = \Psi(s,t) + \chi(s)$ and
+  $\Psi'(t,s) = \sum_{a \in K} m_a\kappa(a,s)$, so
+  $\Psi'(s,t) + \Psi'(t,s) = \theta$; and $\delta'(t) = \sum_{a \in K}
+  \psi_\infty(a) + \sum_{a \in P} \psi''(a) = \theta$, while
+  $\delta' = \delta = 0$ on $K$.  Thus $\kappa'$ satisfies the relations at all
+  pairs of the finite poset $K'$ with least element $0$ and $m \geq 0$, and
+  Proposition~\ref{prop:atomicposet} gives $\delta'(t) = 0$, that is,
+  $\theta = 0$.
+\end{proof}
+
+\begin{corollary}[Finite core with hanging chains; \eqref{T0} + \eqref{E0} + clock]
+  \label{cor:corereduction}
+  Let $K$ be a finite partial order with least element $0$, let an
+  $\omega$-chain $c_1 < c_2 < \dots$ be attached above each maximal element of
+  $K$, and let $t$ lie above everything.  Then $\Phi(t,0) = \Phi(0,t)$ for
+  every $m \geq 0$, without \eqref{eq:Fcond}.  More generally, (ii$'$) holds
+  whenever all but finitely many points of $W$ are chain-covered in the sense
+  of Corollary~\ref{cor:idealexhaustion}(c), or $W \setminus K$ is a union of
+  pieces of the kinds (a)--(c) there.
+\end{corollary}
+
+\begin{proof}
+  All ideals are finite, so (i) holds by Proposition~\ref{prop:atomicposet}.
+  Each chain point is chain-covered ($\T_{<c_{i+1}} = \T_{\leq c_i}$ and
+  $\T_{<c_1} = \T_{\leq k}$), so $\one_{\{c_i\}} \in L$ and
+  $\one_{W \setminus K} = \sum_i \one_{\{c_i\}}$ is a bounded pointwise limit of
+  finite sums.  For the general statement take $K$ to be the down-closure of
+  the finitely many points not covered by the pieces; it is finite because the
+  ideals are.
+\end{proof}
+
+\begin{remark}[Why the core reduction is needed]
+  \label{rem:corereduction}
+  Corollary~\ref{cor:corereduction} contains indices on which every version of
+  Theorem~\ref{thm:idealexhaustion} fails.  Take $K = \{0, p_0, p, q_0, q,
+  r_0, r, s_0, s, a, a'\}$ with $p_0 < p$, $q_0 < q$, $r_0 < r$, $s_0 < s$,
+  $p, q, r < a$ and $p, q, s < a'$, and chains above $a$ and $a'$.  The only
+  ideal indicators meeting $\{p,q,r,s\}$ are $\one_{\T_{<a}}$ and
+  $\one_{\T_{<a'}}$, so every $f \in \overline{L}$ has
+  $f(p) = f(q) = f(r) + f(s)$ there, while $\one_W$ has $1 = 1 + 1$; no set of
+  minimal atoms changes this, since all minimal atoms are chain-covered.  The
+  duality nevertheless holds: the relation at the incomparable non-minimal pair
+  $(r,s)$ couples the two private branches.  Theorem~\ref{thm:corereduction}
+  explains why: that relation is one of those Proposition~\ref{prop:atomicposet}
+  consumes on $K'$, and the chain relations at $(c_i, s)$ for non-minimal $s$
+  are what place the chain contribution $\chi$ in the range of $Z$.  What the
+  reduction does not reach is an infinite disjoint union of such cores: there
+  $\one_{W \setminus K} \notin \overline{L}$ for every finite $K$, and whether
+  finite ideals below $t$ suffice for the duality when $W$ has no maximal
+  element remains open.
+\end{remark}
+
 \begin{remark}[Two methods, disjoint blind spots]
   \label{rem:twomethods}
   Theorem~\ref{thm:densechain} and Theorem~\ref{thm:finiteheight} are not
@@ -6766,7 +6866,9 @@ shape of $\Psi$ itself.
   nothing of $\gamma$ beyond the existence of the integrals, and reaches the
   ladder over two $\omega$-chains and the disjoint union of two
   $\omega$-chains, where no certificate exists
-  (Remark~\ref{rem:idealexhaustion}).
+  (Remark~\ref{rem:idealexhaustion}); Theorem~\ref{thm:corereduction} extends
+  it by a finite core, on which Proposition~\ref{prop:atomicposet} does the
+  finite-dimensional work.
 \end{remark}
 
 \begin{remark}[Scope of Section~\ref{sec:duality}]

@@ -1,0 +1,40 @@
+== (C) Kontrolle des Orakels (antisym.check_diamond)
+Diamant, m = (0,1,-1,0): Dualitaet faellt bei t = 3 (erwartet: 3)
+Diamant, m = (0,1, 1,0): Dualitaet faellt bei t = None (erwartet: None)
+== (A) Trunkierungen ohne Spitze: kettenueberdeckte Werte liegen im Bild von Z_K
+  (A) Doppelschleife                     n=1: dim ker Z_K^T = 5; 0 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 45 Proben ok; oberste Kettenpunkte frei in 10/10 Proben
+  (A) Doppelschleife                     n=2: dim ker Z_K^T = 5; 10 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 55 Proben ok; oberste Kettenpunkte frei in 10/10 Proben
+  (A) Doppelschleife                     n=3: dim ker Z_K^T = 5; 20 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 65 Proben ok; oberste Kettenpunkte frei in 10/10 Proben
+  (A) haengende Doppelschleife           n=1: dim ker Z_K^T = 5; 0 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 55 Proben ok; oberste Kettenpunkte frei in 8/10 Proben
+  (A) haengende Doppelschleife           n=2: dim ker Z_K^T = 5; 10 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 65 Proben ok; oberste Kettenpunkte frei in 8/10 Proben
+  (A) haengende Doppelschleife           n=3: dim ker Z_K^T = 5; 20 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 75 Proben ok; oberste Kettenpunkte frei in 8/10 Proben
+  (A) doppelt haengende Doppelschleife   n=1: dim ker Z_K^T = 5; 0 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 65 Proben ok; oberste Kettenpunkte frei in 10/10 Proben
+  (A) doppelt haengende Doppelschleife   n=2: dim ker Z_K^T = 5; 10 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 75 Proben ok; oberste Kettenpunkte frei in 10/10 Proben
+  (A) doppelt haengende Doppelschleife   n=3: dim ker Z_K^T = 5; 20 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 85 Proben ok; oberste Kettenpunkte frei in 10/10 Proben
+  (A) Dreifachschleife                   n=1: dim ker Z_K^T = 5; 0 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 55 Proben ok; oberste Kettenpunkte frei in 15/15 Proben
+  (A) Dreifachschleife                   n=2: dim ker Z_K^T = 5; 15 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 70 Proben ok; oberste Kettenpunkte frei in 15/15 Proben
+  (A) Dreifachschleife                   n=3: dim ker Z_K^T = 5; 30 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 85 Proben ok; oberste Kettenpunkte frei in 15/15 Proben
+  (A) Krone                              n=1: dim ker Z_K^T = 4; 0 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 28 Proben ok; oberste Kettenpunkte frei in 8/8 Proben
+  (A) Krone                              n=2: dim ker Z_K^T = 4; 8 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 36 Proben ok; oberste Kettenpunkte frei in 8/8 Proben
+  (A) Krone                              n=3: dim ker Z_K^T = 4; 16 Proben an ueberdeckten c: alle erzwungen: True; Psi(d,.)|_K: 44 Proben ok; oberste Kettenpunkte frei in 8/8 Proben
+  (A) 40 zufaellige Kerne, n=2: Ausfaelle 0
+== (B) endliches Reduktionslemma
+  (B) zufaellig: 612 Paare (T,K); 1_K im Spann: 148 (chi in R und Reduktion ok in allen); chi in R ohne Spannzugehoerigkeit: 0 (Reduktion dort ebenfalls ok); Ausfaelle: 0
+  (B) Doppelschleife, n=2, K = T_{<c_1}: Kerndim 13, chi in R fuer alle: True, Reduktion ok: True
+  (B) Doppelschleife, n=2, K = Kern: Kerndim 13, chi in R fuer alle: False, Reduktion ok: True
+      1_Kern im Idealspann (endliches T mit Spitze): False
+  (B) haengende Doppelschleife, n=2, K = T_{<c_1}: Kerndim 14, chi in R fuer alle: True, Reduktion ok: True
+  (B) haengende Doppelschleife, n=2, K = Kern: Kerndim 14, chi in R fuer alle: False, Reduktion ok: True
+      1_Kern im Idealspann (endliches T mit Spitze): False
+  (B) doppelt haengende Doppelschleife, n=2, K = T_{<c_1}: Kerndim 19, chi in R fuer alle: True, Reduktion ok: True
+  (B) doppelt haengende Doppelschleife, n=2, K = Kern: Kerndim 19, chi in R fuer alle: False, Reduktion ok: True
+      1_Kern im Idealspann (endliches T mit Spitze): False
+  (B) Dreifachschleife, n=2, K = T_{<c_1}: Kerndim 19, chi in R fuer alle: True, Reduktion ok: True
+  (B) Dreifachschleife, n=2, K = Kern: Kerndim 19, chi in R fuer alle: True, Reduktion ok: True
+      1_Kern im Idealspann (endliches T mit Spitze): True
+  (B) Krone, n=2, K = T_{<c_1}: Kerndim 8, chi in R fuer alle: True, Reduktion ok: True
+  (B) Krone, n=2, K = Kern: Kerndim 8, chi in R fuer alle: True, Reduktion ok: True
+      1_Kern im Idealspann (endliches T mit Spitze): True
+  (B') vorzeichenbehaftet: 1 Halbordnungen mit freiem theta von 60; 124 Paare (T,K) mit 1_K im Spann, davon chi in R bei allen Loesungen: 122, Reduktion (inkl. delta'(t*) = theta) ok; Ausfaelle: 0
+  (B'') Kontrolle Diamantfamilie: 211 Basisvektoren, theta != 0 bei 54, chi nicht in R bei 54, Abweichungen zwischen beiden: 0 (erwartet 0); wo chi in R: Reduktion ok, Ausfaelle 0
+rc = 0

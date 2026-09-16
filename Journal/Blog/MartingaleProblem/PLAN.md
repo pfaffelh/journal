@@ -861,6 +861,35 @@ Zufallskerne ohne Gegenbeispiel (`random_hanging.py`). C(K) ist der nächste zu
 beweisende Satz; er ist reine endliche lineare Algebra in der Sprache von
 `lem:selfadjoint`.
 
+**Stand 2026-09-16, 33. Lauf:** C(K) ist für die Dualität **überflüssig**.
+Theorem 39 (Protokoll; im Manuskript `thm:corereduction`,
+`cor:corereduction`, `rem:corereduction`): gilt (i) $\delta\equiv0$ auf
+$W=\T_{<t^*}$ und gibt es ein **endliches** Abwärtsideal $K\ni0$ mit
+$\mathbb 1_{W\setminus K}$ im Abschluß des Idealspanns, so ist
+$\delta(t^*)=0$ — für jedes $m\ge0$, ohne (F). Beweis: die Relationen $(d,s)$,
+$s\in K$, legen $\Psi(d,\cdot)|_K$ ins Bild von $Z_K$; dominierte Konvergenz
+trägt das auf $\chi=\sum_{c\notin K}m_c\kappa(c,\cdot)$; eine Korrektur der
+Spalte $t^*$ um ein Urbild von $\chi$ macht $K\cup\{t^*\}$ zu einem
+**endlichen** $(\diamondsuit)$-System mit demselben Defekt, und
+`prop:atomicposet` schließt. Das erledigt die ganze Klasse „endlicher Kern
+plus hängende Ketten" (Korollar 39.1), subsumiert Theorem 38 ($X=\emptyset$,
+oder $X$ endlich) und erklärt die sechs Zeilen zur doppelt hängenden
+Doppelschleife. `Task23/core_reduction.py` (exakt, rc=0). Lean-Ziel:
+
+- **`duality_of_atomic_finiteCoreReduction`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, direkt nach `duality_of_atomic_idealExhaustion`): endliches
+  Abwärtsideal $K$, $\mathbb 1_{W\setminus K}$ im Abschluß des Idealspanns
+  $\Rightarrow$ $\Phi(t,0)=\Phi(0,t)$; zuerst als Instanz „endlicher Kern mit
+  hängenden $\omega$-Ketten". Ruht auf `duality_of_atomic` (auf $K\cup\{t\}$)
+  und einem Schritt dominierter Konvergenz in den endlichdimensionalen Raum
+  $K\to\R$. Abnahmebeispiel: die doppelt hängende Doppelschleife.
+
+Kleinster offener Fall der Vermutung „endliche Ideale, $W$ ohne maximale
+Elemente $\Rightarrow$ Dualität": die **unendliche disjunkte Vereinigung
+endlicher Kerne mit Ketten** ($\bigsqcup_n$ Doppelschleife$_n$); dort ist
+$\mathbb 1_{W\setminus K}$ für kein endliches $K$ im Abschluß, und Theorem 38
+mit $X=\{r_n\}$ braucht $\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|<\infty$.
+
 ---
 
 ## Task 24 — Tau Ceti roadmaps — `done` *(2026-08-29)*

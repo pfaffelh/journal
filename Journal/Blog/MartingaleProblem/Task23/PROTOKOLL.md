@@ -7426,3 +7426,274 @@ Verflechtungsrelation $VK=KV^{\mathsf T}$ an anderen Paaren gebunden ist — in
 der doppelt hängenden Doppelschleife über $(r,p),(r,q),(r,s)$. Ein Beweis wird
 dort ansetzen: Induktion über die Höhe der geteilten Punkte, mit den Paaren
 $(v,y)$, $y$ minimal oder privat, als Relationen.
+
+## Die endliche Kernreduktion, 2026-09-16 (dreiunddreißigster Lauf): die Klasse „endlicher Kern plus hängende Ketten" fällt ohne C(K) — die Kettenrelationen machen $K\cup\{t^*\}$ zu einem endlichen System
+
+Der zweiunddreißigste Lauf hat die Klasse „endlicher Kern $K$, über jedem
+maximalen Element eine $\omega$-Kette" auf die endliche Vermutung C(K)
+zurückgeführt und C(K) bis sechs Punkte erschöpfend bestätigt. Dieser Lauf
+**beweist die Dualität auf der ganzen Klasse für jedes $m\ge0$, ohne (F) und
+ohne C(K)** — mit einem Argument, das C(K) gerade nicht braucht, weil es die
+Relationen benutzt, die C(K) weggelassen hat: die Kettenrelationen $(c_i,s)$
+für **nicht-minimale** $s\in K$. Der Satz ist allgemeiner und subsumiert
+Theorem 38 (Fall $X=\emptyset$) als den Fall $K=\{0\}$.
+
+Neu ist `Task23/core_reduction.py` (exakt in `Fraction`, Proben (A), (B),
+(B$'$), (B$''$), (C), rc=0, Ausgabe `core_reduction.txt`).
+
+### Die Beobachtung, in vier Zeilen
+
+Rahmen des fünfundzwanzigsten Laufs; $t^*$ die Spitze, $W=\T_{<t^*}$,
+$\theta:=\delta(t^*)$, und **(i)** $\delta\equiv0$ auf $W$ (etwa: alle Ideale
+$\T_{\le a}$, $a\in W$, endlich und `prop:atomicposet`). Sei $K\subseteq W$ ein
+**endliches** Abwärtsideal mit $0\in K$, $P:=K\setminus\{0\}$, und
+$Z_K:\R^P\to\R^K$, $(Zf)(s)=\sum_{a<s}f(a)$, mit Bild $R:=\operatorname{ran}Z_K$.
+
+1. Für jedes $d\in W$ ist $s\mapsto\Psi(d,s)$ auf $K$ gleich $-Z_K\psi_d$ mit
+   $\psi_d(b)=m_b\kappa(b,d)$: das ist $(\diamondsuit)$ an $(d,s)$ mit
+   $\delta(d)=\delta(s)=0$ und $\Psi(s,d)=\sum_{b<s}m_b\kappa(b,d)$, wobei
+   $b<s\in K$ nach $b\in K$ zwingt ($K$ Abwärtsideal). Also
+   $F_{\mathbb 1_{\T_{<d}}}\in R$ für $F_f(s):=\sum_{a\in W}f(a)\,m_a\kappa(a,s)$.
+2. $f\mapsto F_f$ ist linear und stetig unter beschränkten punktweisen
+   Folgenlimiten (dominierte Konvergenz gegen $m_a|\kappa(a,s)|$, summierbar
+   für jedes der endlich vielen $s\in K$), und $R$ ist als Unterraum eines
+   endlichdimensionalen Raums abgeschlossen. Also $F_f\in R$ für alle
+   $f\in\overline L$ ($\overline L$ wie in Theorem 38, Funktionen auf
+   $W\setminus\{0\}$).
+3. Ist $\mathbb 1_{W\setminus K}\in\overline L$, so liegt
+   $\chi(s):=\sum_{c\in W\setminus K}m_c\kappa(c,s)$ ($s\in K$) in $R$:
+   $\chi=Z_K\psi''$ für ein $\psi''$ auf $P$. Wegen $Z_Ke_k=0$ für maximale
+   $k\in K$ darf $\psi''(P)$ frei gewählt werden (falls $P\neq\emptyset$).
+4. Setze $\kappa'(a,t^*):=\kappa(a,t^*)+\psi''(a)/m_a$ für $a\in P$ und
+   $\kappa'=\kappa$ auf $K\times K$. Dann erfüllt $\kappa'$ $(\diamondsuit)$ an
+   **allen** Paaren des endlichen $K':=K\cup\{t^*\}$ mit $\delta'(t^*)=\theta$,
+   und `prop:atomicposet` auf $K'$ ($m\ge0$) gibt $\theta=0$.
+
+### Theorem 39 (endliche Kernreduktion)
+
+> **Theorem 39.** Rahmen wie oben. Es gelte (i) $\delta(a)=0$ für alle $a\in W$
+> und (ii$'$): es gibt ein endliches Abwärtsideal $K\subseteq W$ mit $0\in K$
+> und $\mathbb 1_{W\setminus K}\in\overline L$. Dann $\delta(t^*)=0$.
+
+*Beweis.* Schritte 1–3 oben liefern $\chi=Z_K\psi''$; insbesondere
+$\chi(0)=0$, d.h. $g(W\setminus K)=0$, denn jedes Element von $R$ verschwindet
+bei $0$. Ist $P=\emptyset$, so ist $K=\{0\}$, $R=\{0\}$ und
+$\theta=g(W)=g(W\setminus\{0\})=\chi(0)=0$ (Relation $(0,t^*)$: $\theta=g(W)$).
+Sei $P\neq\emptyset$. Schreibe $\psi_\infty(a):=m_a\kappa(a,t^*)$ und wähle
+$\psi''$ mit $Z_K\psi''=\chi$ und $\psi''(P)=\theta-\psi_\infty(K)
+=\sum_{c\in W\setminus K}m_c\kappa(c,t^*)$ (Korrektur um ein Vielfaches von
+$e_k$, $k$ maximal in $K$). Für $s\in K$ ist die Relation $(s,t^*)$ des
+unendlichen Systems
+$$\Psi(s,t^*)+\Psi(t^*,s)=\theta,\qquad
+  \Psi(t^*,s)=\varphi_s(K)+\chi(s),\qquad
+  \Psi(s,t^*)=(Z_K\psi_\infty)(s).$$
+Auf $K'$ mit $\kappa'$ ist $\Psi'(s,t^*)=(Z_K(\psi_\infty+\psi''))(s)
+=\Psi(s,t^*)+\chi(s)$ und $\Psi'(t^*,s)=\varphi_s(K)$, also
+$\Psi'(s,t^*)+\Psi'(t^*,s)=\theta$; und
+$\delta'(t^*)=\psi_\infty(K)+\psi''(P)=\theta$, $\delta'=\delta=0$ auf $K$.
+Damit gilt $(\diamondsuit)$ an allen Paaren von $K'$ (auf $K\times K$ durch
+Einschränkung, an $(t^*,t^*)$ trivial). $K'$ ist eine endliche Halbordnung
+mit kleinstem Element und $m\ge0$; `prop:atomicposet` gibt $\delta'\equiv0$,
+insbesondere $\theta=\delta'(t^*)=0$. $\square$
+
+**Wo $m\ge0$ eingeht, und nur dort:** in `prop:atomicposet` auf $K'$. Die
+Reduktion selbst (Schritte 1–4) ist vorzeichenfrei; Probe (B$'$) prüft sie
+mit gemischten Vorzeichen.
+
+**Theorem 38, Fall $X=\emptyset$, ist $K=\{0\}$.** Theorem 38 mit endlichem
+$X\neq\emptyset$ ist $K=\{0\}\cup X$ — ohne die dortige Zusatzhypothese
+$m_0=0$. Nur der Fall eines **unendlichen** $X$ (unendliche Antikette unter
+(F)) bleibt Theorem 38 vorbehalten.
+
+### Korollar 39.1: die Klasse „endlicher Kern plus hängende Ketten" — Vermutung C(K) ist für die Dualität gegenstandslos
+
+$K$ endliche Halbordnung mit kleinstem Element, über jedem maximalen Element
+von $K$ eine $\omega$-Kette $c_1<c_2<\dots$, Spitze $t^*$, $m\ge0$ beliebig.
+Alle Ideale sind endlich, also (i). Jeder Kettenpunkt ist kettenüberdeckt
+($\T_{<c_{i+1}}=\T_{\le c_i}$, $\T_{<c_1}=\T_{\le k}$), also
+$\mathbb 1_{c_i}\in L$ und $\mathbb 1_{W\setminus K}=\sum_i\mathbb 1_{c_i}\in\overline L$
+(beschränkter Limes endlicher Summen). Theorem 39: $\delta(t^*)=0$.
+
+Das erledigt alle Instanzen des zweiunddreißigsten Laufs auf einen Schlag —
+Doppelschleife, hängende, doppelt hängende Doppelschleife, A+B, die $39$ von
+$980$ zufälligen Kerne, in denen die Idealausschöpfung ($X=\emptyset$)
+versagte — und **macht die Vermutung C(K) für die Dualität überflüssig.** C(K)
+bleibt als Aussage über das endliche System (1)–(3) des zweiunddreißigsten
+Laufs eine offene, aber nicht mehr tragende Frage; ein Gegenbeispiel zu C(K)
+auf sieben oder mehr Punkten würde die Dualität nicht berühren, weil das
+unendliche System mehr Relationen hat als C(K) behält. Der Mechanismus der
+sechs Zeilen zur doppelt hängenden Doppelschleife (die Relation $(r,s)$
+zwischen nicht-minimalen, unvergleichbaren Punkten) ist ein Spezialfall von
+Schritt 1: $(r,s)$ ist eine der Relationen, die `prop:atomicposet` auf $K'$
+verbraucht.
+
+### Korollar 39.2: weitere Instanzen
+
+* **Alle bis auf endlich viele Punkte von $W$ kettenüberdeckt**, Ideale
+  endlich: $K$ := Abwärtsabschluss der nicht überdeckten Punkte (endlich, weil
+  die Ideale endlich sind).
+* **$W\setminus K$ zerfällt in Stücke, die Korollar 38.2 erfaßt** (gerichtet
+  ohne Maximum; disjunkte Vereinigung solcher; kettenüberdeckt), plus ein
+  endliches Abwärtsideal $K$, das den Rest enthält.
+* **$W$ hat endlich viele maximale Elemente** ist *notwendig* für (ii$'$):
+  ein maximales Element von $W$ liegt in keinem $\T_{<d}$, $d\in W$, also
+  verschwindet jedes $f\in\overline L$ dort, und $K$ muß $\max W$ enthalten.
+  Das ist konsistent mit der unendlichen Antikette (Theorem 19) und der
+  unendlichen Krone, wo die Dualität ohne (F) fällt bzw. offen ist.
+
+**Was Theorem 39 nicht erfaßt:** unendlich viele disjunkte Kerne, etwa
+$\bigsqcup_n(\text{Doppelschleife}_n+\text{Ketten})$. Dort ist
+$\mathbb 1_{W\setminus K}\notin\overline L$ für jedes endliche $K$, und
+Theorem 38 mit $X=\{r_n\}$ braucht die Summierbarkeit
+$\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|<\infty$, also (F)-artiges. Die
+Vermutung „endliche Ideale, $W$ ohne maximale Elemente $\Rightarrow$
+Dualität" ist damit weiterhin offen, aber ihr kleinster offener Fall ist jetzt
+benannt: **die unendliche disjunkte Vereinigung endlicher Kerne mit Ketten.**
+
+### Gemessen: `Task23/core_reduction.py`, exakt, rc=0
+
+* **(C)** Kontrolle des Orakels: `antisym.check_diamond` (Diamant
+  $m=(0,1,-1,0)$ fällt bei $t^*$, $m=(0,1,1,0)$ nicht).
+* **(A)** Trunkierungen $W_n$ **ohne Spitze**, $K$ = Kern, $n=1,2,3$, je
+  zwei Massenvektoren, fünf Kerne (Doppelschleife, hängende, doppelt hängende,
+  Dreifachschleife, Krone) und $40$ zufällige Kerne ($4\le|K|\le7$): für
+  jeden kettenüberdeckten Kettenpunkt $c$ und jedes $h\in\ker Z_K^{\mathsf T}$
+  ist $\sum_{s\in K}h(s)\,m_c\kappa(c,s)$ erzwungen ($=0$), d.h.
+  $m_c\kappa(c,\cdot)|_K\in R$ — Schritt 1 für $d=c_{i+1}$ minus $d=c_i$;
+  ebenso $\Psi(d,\cdot)|_K\in R$ für **jedes** $d\in W_n$ (Schritt 1 direkt).
+  Für den **obersten** Kettenpunkt $c_n$ (in $W_n$ nicht überdeckt) ist das
+  Funktional in $91$ von $93$ Proben **frei** — die Überdeckung ist der
+  Grund, nicht die Kettenlage. $\dim\ker Z_K^{\mathsf T}=5$ bzw. $4$: die
+  Bedingung $\chi\in R$ ist keine leere.
+* **(B)** Endliches Reduktionslemma auf zufälligen endlichen Halbordnungen
+  **mit Spitze** ($5\le n\le7$, $60$ Stück) und **allen** Abwärtsidealen $K$
+  ($612$ Paare): liegt $\mathbb 1_K$ im Spann der Idealindikatoren ($148$
+  Paare; im endlichen $T$ ist das die richtige Bedingung, weil dort
+  $\mathbb 1_W=\mathbb 1_{\T_{<t^*}}$ selbst ein Idealindikator ist), so ist
+  $\chi\in R$ für eine ganze Kernbasis, und das konstruierte $\kappa'$ erfüllt
+  $(\diamondsuit)$ an allen Paaren von $K'$ mit $\delta'(t^*)=\theta$ und
+  $\delta'\equiv0$ auf $K$ — ausnahmslos. Umgekehrt in **keinem** der $464$
+  Paare ohne Spannzugehörigkeit $\chi\in R$ für alle Lösungen: die Hypothese
+  ist im Endlichen scharf (Messung, kein Satz). Dazu die fünf Kerne mit
+  Ketten der Länge $2$ und Spitze, $K=\T_{<c_1}$ (Ideal) und $K$ = Kern:
+  beim Ideal stets $\chi\in R$ und Reduktion ok; beim Kern genau dann
+  $\chi\in R$, wenn $\mathbb 1_{\text{Kern}}$ im Idealspann liegt
+  (Dreifachschleife, Krone: ja; die drei Doppelschleifen: nein — im
+  *endlichen* $T$ sind die obersten Kettenpunkte nicht überdeckt, im
+  unendlichen sind es alle).
+* **(B$'$)** Dasselbe mit **gemischten Vorzeichen** ($124$ Paare mit
+  $\mathbb 1_K$ im Spann): Reduktion ok, einschließlich $\delta'(t^*)=\theta$;
+  die Reduktion ist vorzeichenfrei.
+* **(B$''$)** Kontrolle, daß die Hypothese mit $d\in W$ und nicht mit
+  $d=t^*$ zu lesen ist: Diamant $m_a=1,m_b=-1$ unter einer Kette mit Spitze,
+  seitlich zufällige Punkte, $K=\T_{<d}$; $211$ Basisvektoren, $\theta\ne0$ bei
+  $54$, $\chi\notin R$ bei $54$, **Abweichung zwischen beiden: $0$** — im
+  endlichen $T$ ist $\chi\in R\iff\theta=0$, Vektor für Vektor, weil
+  $F_{\mathbb 1_W}(s)=\theta-(Z\psi_\infty)(s)$ genau bei $\theta=0$ in $R$
+  liegt.
+
+Die Proben sind wie im zweiunddreißigsten Lauf bewußt auf die endliche
+Mechanik beschränkt: der Grenzübergang (Schritt 2) ist dominierte Konvergenz
+in einen endlichdimensionalen Raum, und der Schluß ist `prop:atomicposet`
+($89\,440+$ Fälle, sechster Lauf). Kein endliches Orakel kann $\theta$ auf
+einer Trunkierung ohne Spitze sehen (Probe (F) des zweiunddreißigsten Laufs);
+was es sehen kann — daß $\chi$ im Bild von $Z_K$ liegt und daß die
+Korrektur $(\diamondsuit)$ auf $K'$ herstellt — sieht es ausnahmslos.
+
+### Ergebnis
+
+* **Bewiesen.** Theorem 39 (endliche Kernreduktion) und die Korollare
+  39.1–39.2. Insbesondere gilt die Dualität für **jedes** $m\ge0$ und ohne (F)
+  auf jeder Halbordnung „endlicher Kern plus $\omega$-Kette über jedem
+  maximalen Kernpunkt" — der Klasse, für die der zweiunddreißigste Lauf die
+  Vermutung C(K) aufgestellt hat.
+* **Erledigt.** Die „nächste Rechnung" des zweiunddreißigsten Laufs (C(K)
+  beweisen oder auf sieben Punkten widerlegen) ist für die Dualität
+  **gegenstandslos**: das unendliche System hat Relationen, die C(K) wegläßt,
+  und mit ihnen ist die Frage endlich. C(K) bleibt eine offene, aber nicht
+  mehr tragende Aussage über das reduzierte System.
+* **Offen.** Die nackte Klasse auf Ketten (unverändert). Die gestapelten
+  $\zeta$-Ketten ohne (F) und ohne beschränktes $\Phi$ (unverändert). Die
+  Vermutung „endliche Ideale unter $t^*$, $W$ ohne maximale Elemente
+  $\Rightarrow$ Dualität": ihr kleinster offener Fall ist jetzt die
+  **unendliche disjunkte Vereinigung endlicher Kerne mit Ketten** (siehe
+  unten, Nachtrag).
+
+### Sackgassen, zweiunddreißigster Nachtrag
+
+* **Die Klasse „Kern plus Ketten" über ein endliches System *ohne die
+  Kettenrelationen an nicht-minimalen Punkten* angehen (C(K)).** Der
+  zweiunddreißigste Lauf hat die Relationen $(c_i,s)$ nur für minimale $s$
+  behalten („$\varphi_x$ verschwindet auf Kettenpunkten") und für
+  nicht-minimale $s$ weggelassen, weil dort Kettenunbekannte $\kappa(b,c_i)$
+  auftreten. Gerade diese Relationen tragen: sie sagen nicht, daß die
+  Kettenwerte verschwinden, sondern daß sie im Bild von $Z_K$ liegen — und
+  das genügt, um sie in die Spalte $t^*$ zu absorbieren. Zum vierzehnten Mal
+  eine Prämisse aus der Rechnung statt aus dem Beweisbedarf: „Relationen mit
+  fremden Unbekannten sind für den Kern unbrauchbar." Wer ein unendliches
+  System auf einen endlichen Kern reduziert, frage zuerst, in welchem
+  **Unterraum** die fremden Beiträge liegen, nicht ob sie null sind.
+* **Die Hypothese von Theorem 39 im endlichen $T$ mit $d=t^*$ lesen.** Im
+  endlichen $T$ ist $\mathbb 1_W=\mathbb 1_{\T_{<t^*}}$ ein Idealindikator, und
+  mit ihm ist $\mathbb 1_{W\setminus K}$ für jedes Ideal $K$ „im Spann" — aber
+  $F_{\mathbb 1_W}=\theta-Z\psi_\infty$ liegt nur bei $\theta=0$ in $R$
+  (Probe (B$''$): $\chi\in R\iff\theta=0$, $54=54$). Die Hypothese verlangt
+  $d\in W$, d.h. $\delta(d)=0$ an jedem benutzten $d$; im Unendlichen ist
+  das (i), im Endlichen erzwingt es $K\supseteq\max W$, also $K=W$. Ein
+  endliches Orakel kann die Hypothese deshalb nur für die **Mechanik** prüfen,
+  nicht für die Aussage — dieselbe Lage wie bei Theorem 38.
+* **Theorem 39 auf ein unendliches $K$ ausdehnen wollen** (etwa
+  $K=\bigsqcup_n K_n$ für unendlich viele Kerne). Die Reduktion selbst
+  ginge durch (Bild von $Z_K$ ist dann nicht mehr automatisch abgeschlossen —
+  das wäre zu zeigen), aber sie reduziert auf $K\cup\{t^*\}$, ein $W$ mit
+  **unendlich vielen maximalen Elementen**, also auf den Typ der unendlichen
+  Antikette, wo die Dualität ohne (F) fällt. Die Reduktion ist nur so gut wie
+  `prop:atomicposet` auf dem Ziel; sie erzeugt keine Positivität.
+
+### Manuskript
+
+`thm:corereduction` (Theorem 39), `cor:corereduction` (Kern mit hängenden
+Ketten; endlich viele nicht überdeckte Punkte) und `rem:corereduction` (die
+doppelt hängende Doppelschleife als Beispiel, das jede Fassung von
+`thm:idealexhaustion` schlägt; der offene Fall) stehen nach
+`rem:idealexhaustion` und vor `rem:twomethods`; `rem:twomethods` nennt die
+Erweiterung in einem Halbsatz; die Statustabelle von `rem:atomsnotchange` hat
+eine neue Zeile. `python3 check.py`: **clean**, 137 Seiten, größte Überlänge
+7.7pt wie zuvor (eine erste Fassung der Tabellenzeile war 24.5pt zu breit und
+ist gekürzt).
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `duality_of_atomic_finiteCoreReduction`**, eingetragen in
+`TauCeti/MartingaleProblems/README.md` (Meilenstein 8, direkt nach
+`duality_of_atomic_idealExhaustion`) und in `PLAN.md`, Task 23:
+
+> Rein atomare Uhr auf einer abzählbaren Halbordnung mit kleinstem Element,
+> $m\ge0$, $t$ mit $\Phi(a,0)=\Phi(0,a)$ für alle $a<t$, und ein endliches
+> Abwärtsideal $K\ni0$ von $W=\T_{<t}$ mit $\mathbb 1_{W\setminus K}$ im
+> beschränkten punktweisen Folgenabschluß des Spanns der Idealindikatoren.
+> Dann $\Phi(t,0)=\Phi(0,t)$. Zuerst als Instanz: endlicher Kern mit
+> $\omega$-Kette über jedem maximalen Element.
+
+Es ruht auf `duality_of_atomic` (auf dem endlichen $K\cup\{t\}$) und einem
+Schritt dominierter Konvergenz in den endlichdimensionalen Raum $K\to\R$
+(`tendsto_tsum_of_dominated_convergence`), sonst auf nichts; es enthält
+`duality_of_atomic_idealExhaustion` als $K=\{0\}$. Es ist jetzt dran, weil es
+(a) die Klasse schließt, für die der letzte Lauf eine eigene endliche
+Vermutung als „nächsten Satz" vorgeschlagen hat — die soll **nicht**
+formalisiert werden —, (b) das erste Roadmap-Item ist, das eine Halbordnung
+erreicht, auf der jede Ausschöpfungshypothese nachweislich versagt (die
+doppelt hängende Doppelschleife, Abnahmebeispiel), und (c) den Beweis der
+Hauptaussage `duality_of_atomic` als **Baustein** wiederverwendet statt ihn zu
+umgehen: die Idealreduktion des vierten Laufs, rückwärts gelesen.
+
+**Nächste Rechnung** (in `PLAN.md` benannt): die unendliche disjunkte
+Vereinigung endlicher Kerne mit Ketten, $\bigsqcup_n(\text{Doppelschleife}_n
++\text{Ketten})$, ohne (F). Dort greift weder Theorem 39 (kein endliches $K$)
+noch Theorem 38 mit $X=\emptyset$ ($\mathbb 1_{\text{Kern}}\notin\overline L$),
+und Theorem 38 mit $X=\{r_n\}$ braucht die Summierbarkeit der
+$X\times X$-Doppelsumme. Entweder ein Beweis, der die Kerne einzeln
+behandelt (was einen Satz vom Typ „$\theta$ zerfällt in Beiträge der Kerne"
+verlangte, den es bisher nicht gibt), oder ein Gegenbeispiel — das dann das
+erste mit endlichen Idealen, ohne maximale Elemente in $W$ und lauter
+positiven Massen wäre.

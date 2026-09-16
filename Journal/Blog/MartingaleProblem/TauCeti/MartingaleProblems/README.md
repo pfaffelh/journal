@@ -7556,6 +7556,46 @@ order.
   is the first in this milestone that reaches an infinite index of infinite
   height with non-transitive incomparability without any hypothesis beyond the
   existence of the integrals.
+* `duality_of_atomic_finiteCoreReduction`: the setting of
+  `duality_of_atomic_idealExhaustion` — countable partial order with least
+  element `0`, `m ≥ 0`, `t` with `W = Iio t`, (i) `Φ a 0 = Φ 0 a` for every
+  `a ∈ W` — and, in place of the shape hypothesis on `W`, a **finite down-set
+  `K ⊆ W` with `0 ∈ K`** such that `𝟙_{W \ K}` lies in the bounded pointwise
+  sequential closure of the span of the ideal indicators `𝟙_{Iio d}`, `d ∈ W`
+  (as functions on `W \ {0}`). Then `Φ t 0 = Φ 0 t`. The concrete instance to
+  formalise first, as its own lemma: **a finite core `K` with an `ω`-chain
+  hanging above each maximal element of `K`**, every `m ≥ 0`, no
+  integrability — there every chain point `c` is chain-covered
+  (`Iio c' = Iic c`), so `𝟙_{W \ K}` is the pointwise limit of finite sums of
+  `𝟙_{Iio c'} - 𝟙_{Iio c}`. Proof (Task 23, run 33, Theorem 39): write
+  `P = K \ {0}`, `Z : (P → ℝ) →ₗ (K → ℝ)`, `Z f s = ∑ a ∈ Iio s, f a`, and
+  `κ` for the antisymmetric part of `γ`. For `d ∈ W` the relation at `(d, s)`,
+  `s ∈ K`, together with (i) says that `s ↦ ∑ a ∈ Iio d, m a * κ a s` restricted
+  to `K` equals `-(Z ψ_d)` with `ψ_d b = m b * κ b d` — so it lies in
+  `LinearMap.range Z`, which is a closed subspace of the finite-dimensional
+  `K → ℝ`; dominated convergence (`tendsto_tsum_of_dominated_convergence`) at
+  each of the finitely many `s ∈ K` carries this to the closure, hence to
+  `χ s = ∑' c ∈ W \ K, m c * κ c s`. Pick `ψ''` with `Z ψ'' = χ` and, adding a
+  multiple of `Pi.single k 1` for a maximal `k ∈ K` (which `Z` kills), with
+  `∑ a ∈ P, ψ'' a = ∑' c ∈ W \ K, m c * κ c t`. Then `κ'` on `K ∪ {t}`, equal to
+  `κ` on `K × K` and to `κ a t + ψ'' a / m a` in the column `t`, satisfies the
+  relations at **all** pairs of the finite poset `K ∪ {t}` with the same
+  defect at `t`, and `duality_of_atomic` on that finite poset closes. So the
+  item is `duality_of_atomic` plus one dominated-convergence step, exactly like
+  its sibling, and it contains `duality_of_atomic_idealExhaustion` as the case
+  `K = {0}`. What it settles that nothing above reaches: the doubly hanging
+  double bow-tie of run 32 (`p₀ < p`, `q₀ < q`, `r₀ < r`, `s₀ < s`;
+  `p, q, r < a`; `p, q, s < a'`; chains above `a` and `a'`), on which every
+  exhaustion hypothesis fails and the duality holds through the relation at
+  the incomparable pair `(r, s)` — the reduction is what explains that; and all
+  980 random cores of `Task23/random_hanging.py`, including the 39 where the
+  plain exhaustion failed. The finite conjecture C(K) of run 32
+  (`Task23/core_conjecture.py`) is **not** needed for this and should not be
+  formalised. Mechanics verified exactly in `Task23/core_reduction.py`
+  (rc = 0): the chain values lie in `range Z` on every truncation, and the
+  corrected `κ'` satisfies the finite relations on random posets with
+  arbitrary down-sets `K`, with mixed signs included (the reduction itself uses
+  `m ≥ 0` nowhere; only `duality_of_atomic` does).
 * `Lagrange.sum_inv_prod_sub_eq_zero`: for a `Finset s` with `2 ≤ #s` and an
   `x : ι → F` injective on `s`, `∑ k ∈ s, (∏ l ∈ s.erase k, (x k - x l))⁻¹ = 0`,
   while the sum is `(1 : F)` for `#s = 1`. It is `Lagrange.coeff_eq_sum`
