@@ -774,6 +774,38 @@ unter (F) geschlossen (Proposition 19.3). Lean-Ziel:
   (`Matrix.mulVec_mulVec`, Induktion über $d$), der erste Satz über **alle**
   Zertifikate statt über eine Konstruktion, und die Zutat von Theorem 31.
 
+**Stand 2026-09-16, einunddreißigster Lauf** (Protokoll, „Der Krylow-Raum von
+$\mathbb 1$"): jedes Zertifikat, endlich oder unendlich, erfüllt
+$TV^k\mathbb 1=\psi_k$ für alle $k$ (Proposition 35; Proposition 29 und
+Theorem 31 sind Spezialfälle). Im Unendlichen folgt daraus mit
+$e_{k+1}/e_k\le M/(k+1)$, daß die Spalte $t^*$ **jedes** beschränkten
+Zertifikats der Limes $\lim_k\psi_k/e_k$ der normierten Kettenzählung ist
+(Theorem 36) — auf der unendlichen Leiter ist $p=T_{t^*a_1}$ also erzwungen
+($p=1$ für $\alpha\ge\beta$ bewiesen, $p=1-\pi_\infty$ für $\alpha<\beta$,
+gleich dem Trunkierungslimes), und die Schranke $C\ge1/(\alpha_1\alpha_2)$
+gilt dort unbedingt. **Die Vermutung „fundiert $\Rightarrow$ Zertifikat"
+(Lauf 26) ist falsch** (Theorem 37): auf der disjunkten Vereinigung zweier
+$\omega$-Ketten mit $\alpha_i=B^{-i}$, $\beta_j=B^{-j}2^{(-1)^{j+1}}$, $B\ge16$,
+oszilliert $\psi_k/e_k$ zwischen zwei Limiten, es gibt kein unendliches
+Zertifikat, und keine Folge von Trunkierungszertifikaten ist gleichmäßig
+beschränkt (`Task23/two_chains.py`: LP-Minimum $6315$, $2{,}6\cdot10^5$,
+$1{,}6\cdot10^6$, $6{,}5\cdot10^7$ bei $n=3..6$). Die Dualität ist dort unter
+(F) **offen**, und die Zertifikatsmethode kann sie nicht entscheiden.
+**Nächste Rechnung:** die Dualität auf dieser Halbordnung entscheiden — direkt
+über Theorem 17 auf beiden Ketten plus die Kreuzrelationen
+$\Psi(a_i,b_j)+\Psi(b_j,a_i)=0$, oder als Gegenbeispiel $\kappa$ unter (F)
+(Kern der $(\diamondsuit)$-Relationen auf Trunkierungen mit freiem Schwanz,
+wie in `adjudicate.py`); ein Gegenbeispiel wäre das erste unter (F) mit lauter
+positiven Massen. Lean-Ziel:
+
+- **`Matrix.certificate_mulVec_pow_one`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, nach `certificate_mulVec_single_top`): für jedes symmetrische
+  $T$ mit $TV=V^{\mathsf T}T$, $T\mathbb 1=e_t$ gilt
+  $T(V^k\mathbb 1)=(V^{\mathsf T})^ke_t$ und
+  $(V^k\mathbb 1)\cdot T(V^l\mathbb 1)=(V^{k+l}\mathbb 1)_t$ für alle $k,l$
+  — Induktion über $k$ mit `Matrix.mulVec_mulVec`; `certificate_mulVec_single_top`
+  ist der Fall $k=d$. Es ist die endliche Aussage hinter Theorem 36 und 37.
+
 
 ---
 

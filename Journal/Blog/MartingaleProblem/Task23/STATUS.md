@@ -1,8 +1,8 @@
 # Task 23 — Status
 
 - **Letzter Lauf (UTC):** 20260916T060301Z
-- **Zustand:** laeuft
-- **Notiz:** Lauf gestartet
+- **Zustand:** limit
+- **Notiz:** Nutzungsgrenze erreicht (Code 1) -- Lauf nicht gelaufen, naechster Cron-Slot versucht es erneut
 - **Host:** P14sGen6
 - **Laeufe bisher:** 3
 

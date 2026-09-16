@@ -7035,6 +7035,32 @@ order.
   of every certificate of the truncation are forced as well (Theorem 31), which
   gives the lower bound `‖T‖_m ≥ |κ_n| / m (a 2)` that the LP minimum attains
   exactly (verified in rationals for `n ≤ 14` at `(α, β) = (1/2, 1/3)`).
+* `Matrix.certificate_mulVec_pow_one`: let `V : Matrix n n ℝ` and `t : n`. If
+  `T` is symmetric with `T * V = Vᵀ * T` and `T *ᵥ 1 = Pi.single t 1`, then for
+  every `k`
+  ```
+  T *ᵥ (V ^ k *ᵥ 1) = (Vᵀ) ^ k *ᵥ Pi.single t 1,
+  (V ^ k *ᵥ 1) ⬝ᵥ (T *ᵥ (V ^ l *ᵥ 1)) = (V ^ (k + l) *ᵥ 1) t .
+  ```
+  Proof: induction on `k` with `Matrix.mulVec_mulVec`; nothing else. So every
+  certificate is determined on `Submodule.span ℝ (Set.range fun k => V ^ k *ᵥ 1)`,
+  the Krylov space of `1`, and `Matrix.certificate_mulVec_single_top` is the
+  instance `k = d` and should be derived from it. Its interest is the infinite
+  case (Task 23, run 31, Theorems 36 and 37), which is not formalised here but
+  fixes what the finite statement is for: on a countable partial order with
+  greatest element `t`, summable masses and `e k = (V ^ k *ᵥ 1) t` the weight of
+  the `k`-chains, one has `∑ a, m a * (V ^ k *ᵥ 1) a = e (k+1)` and
+  `(k+1) * e (k+1) ≤ (∑ a, m a) * e k`, hence `V ^ k *ᵥ 1 / e k → Pi.single t 1`
+  in the mass-weighted `ℓ¹` norm, and every certificate bounded by
+  `|T s u| ≤ C * w s * w u` has column `t` equal to `lim_k ((Vᵀ) ^ k *ᵥ Pi.single t 1) / e k`,
+  i.e. `T t a = m a * lim_k e_{k-1}(atoms above a) / e k`. The limit must
+  therefore exist; on the disjoint union of two `ω`-chains with
+  `m (a i) = B ^ (-i)`, `m (b j) = B ^ (-j) * 2 ^ ((-1) ^ (j+1))`, `B ≥ 16`, it
+  does not (the even and odd subsequences of `e_k(b)/e_k(a)` are separated by
+  `1/(4/B;4/B)_∞ < 2 (1/B;1/B)_∞`), so that well-founded partial order carries
+  no bounded certificate and no uniformly bounded family of truncation
+  certificates; well-foundedness is not the right hypothesis for the existence
+  of certificates, convergence of the normalised chain count is a necessary one.
 * `dualityDefect_eq_zero_of_nonneg`: let `α` be a finite partial order,
   `m : α → ℝ` with `0 ≤ m`, and `κ : α → α → ℝ` with `κ a b = - κ b a`. Put
   `Ψ s t = ∑ a ∈ Finset.Iio s, m a * κ a t`. If

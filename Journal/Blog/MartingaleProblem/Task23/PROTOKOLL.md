@@ -6535,3 +6535,370 @@ $1/\beta_j=1/\alpha_{j+1}$ bei $\beta=\alpha/2$ bleibt als Erklärung des
 Randes im Spiel. Entscheidbar ist das nur mit einem Beweis, nicht mit
 Trunkierungen — zum elften Mal. Vermutung 34 steht mit
 $\beta/\alpha\le\tfrac12$ so, wie sie formuliert ist.
+
+## Der Krylow-Raum von $\mathbb 1$, 2026-09-16 (einunddreißigster Lauf): jedes Zertifikat ist auf ihm festgelegt, und auf der unendlichen Leiter ist die Spitzenzeile erzwungen
+
+Der dreißigste Lauf hat als offen notiert, ob $p=T_{t^*a_1}$ auf der
+**unendlichen** Leiter erzwungen ist — Proposition 29 braucht
+$V^d\mathbb 1=\Omega e_{t^*}$, und ein solches $d$ gibt es dort nicht. Dieser
+Lauf schließt den Punkt: $p$ ist erzwungen, für jedes beschränkte Zertifikat,
+und zwar durch dieselbe Rechnung wie Proposition 29, nur ohne bei $k=d$
+anzuhalten.
+
+### Proposition 35: $TV^k\mathbb 1=\psi_k$ für jedes Zertifikat
+
+Rahmen des fünfundzwanzigsten Laufs ($\T=\{0\}\cup A\cup\{t^*\}$ abzählbar,
+$t^*$ Maximum, $m_0=m_{t^*}=0$, $M<\infty$, $V_{s,a}=[a<s]m_a$),
+$\psi_k:=(V^{\mathsf T})^ke_{t^*}$, $e_k:=(V^k\mathbb 1)_{t^*}$ das Gewicht der
+Ketten aus $k$ Atomen.
+
+> **Proposition 35.** Ist $T$ ein Zertifikat an $t^*$ (endlich: $T=T^{\mathsf T}$,
+> $TV=V^{\mathsf T}T$, $T\mathbb 1=e_{t^*}$; unendlich: ein unendliches
+> Zertifikat in einer Gewichtsklasse $Z$), so gilt für alle $k\ge0$
+> $$TV^k\mathbb 1=\psi_k,\qquad (V^k\mathbb 1)^{\mathsf T}T(V^l\mathbb 1)=e_{k+l}.$$
+> Zwei Zertifikate stimmen also auf dem Krylow-Raum
+> $\mathcal K(\mathbb 1)=\operatorname{span}\{V^k\mathbb 1\}$ überein, und der
+> Nullraum $\{D=D^{\mathsf T},\,DV=V^{\mathsf T}D,\,D\mathbb 1=0\}$ ist genau
+> die Menge der symmetrischen Verflechter mit $D\,\mathcal K(\mathbb 1)=0$.
+
+*Beweis.* $TV^k\mathbb 1=(V^{\mathsf T})^kT\mathbb 1=(V^{\mathsf T})^ke_{t^*}$
+durch $k$-faches Anwenden von $TV=V^{\mathsf T}T$; die bilineare Form ist
+$(V^k\mathbb 1)\cdot\psi_l=\mathbb 1\cdot(V^{\mathsf T})^{k+l}e_{t^*}=e_{k+l}$.
+Im Unendlichen ist $V^{k-1}\mathbb 1$ eintragsweise durch $e_{k-1}$ beschränkt,
+und $\sum_{x,u}|T_{sx}|\,V_{xu}\,|f_u|\le Cw_s\sum_xw_x\sum_{u<x}m_u|f_u|
+\le Cw_sW\,M\,\|f\|_\infty<\infty$, so daß $(TV)f=T(Vf)=V^{\mathsf T}(Tf)$
+nach Fubini gilt. $\square$
+
+Das ist Proposition 29 ohne die Voraussetzung $V^d\mathbb 1\propto e_{t^*}$ —
+sie ist der Fall $k=d$ — und Theorem 31 ohne Blockrechnung: die dort
+„erzwungenen Randeinträge" sind die Zeile $k=d-1$ dieses Systems
+($V^{d-1}\mathbb 1$ ist auf der Leiter auf $\{a_n,b_n,t^*\}$ getragen,
+$\psi_{d-1}$ auf $\{a_1,a_2,b_1,b_2\}$). Es ist zugleich die Hankelform des
+fünfundzwanzigsten Laufs, jetzt **für jedes** Zertifikat bewiesen, nicht nur
+für die im Krylow-Raum von $e_{t^*}$; der sechsundzwanzigste Lauf hatte recht,
+daß sie auf der Leiter nur einen Teil von $T$ festlegt ($\dim\mathcal K(\mathbb 1)
+=n+1$ gegen $2n+2$), aber dieser Teil enthält, wie sich gleich zeigt, im
+Unendlichen die Spitzenzeile.
+
+Gemessen (`Task23/krylov_moments.py`, Teil A, rc der Prüfungen: alle `ok`):
+sechs zufällige Halbordnungen ($3\le n\le6$), Kette, Antikette, Krone, sechs
+Leiter-Trunkierungen ($n=3,5,7$, zwei Profile). $T_KV^k\mathbb 1=\psi_k$ und
+$(V^k\mathbb 1)^{\mathsf T}T_K(V^l\mathbb 1)=e_{k+l}$ **exakt** in `Fraction`
+für alle $k,l\le r$; für $T_K+\sum_j\lambda_jD_j$ mit zufälligem $\lambda$
+(Nullraumdimensionen $1$ bis $9$, mpmath 60 Stellen) Abweichung
+$<10^{-59}$; $DV^k\mathbb 1=0$ für jede Nullraumrichtung exakt.
+
+### Theorem 36: die Spitzenzeile im Unendlichen ist der Limes der normierten Kettenzählung
+
+> **Theorem 36.** Sei $T$ ein unendliches Zertifikat an $t^*$ in der
+> Gewichtsklasse $Z=\{0,t^*\}$ (Definition des fünfundzwanzigsten Laufs).
+> Dann existiert für jedes $s\in\T$ der Limes
+> $$T_{st^*}=\lim_{k\to\infty}\frac{(\psi_k)_s}{e_k},\qquad\text{also}\qquad
+>   T_{t^*a}=m_a\lim_{k\to\infty}\frac{e_{k-1}(\uparrow a)}{e_k}\quad(a\in A),$$
+> wo $e_{k-1}(\uparrow a)$ das Gewicht der Ketten aus $k-1$ Atomen echt über
+> $a$ ist. Die Spitzenzeile ist damit durch die Massen allein bestimmt; und
+> **existiert der Limes nicht, so gibt es kein beschränktes Zertifikat.**
+
+*Beweis.* $(V^k\mathbb 1)_a=e_k(\downarrow a)$ ist das Gewicht der $k$-Ketten
+echt unter $a$, $(V^k\mathbb 1)_0=0$ für $k\ge1$, $(V^k\mathbb 1)_{t^*}=e_k$.
+Jede $(k{+}1)$-Kette hat genau ein größtes Atom $a$, also
+$\sum_{a\in A}m_a\,e_k(\downarrow a)=e_{k+1}$. Ferner gilt für jede Halbordnung
+$(k{+}1)\,e_{k+1}\le M\,e_k$ (Entfernen eines der $k+1$ Atome einer Kette
+liefert eine $k$-Kette; jede $k$-Kette entsteht so höchstens $\sum_am_a$-gewichtet).
+Damit
+$$\sum_{u\ne t^*}w_u\Bigl|\frac{(V^k\mathbb 1)_u}{e_k}\Bigr|
+  =\frac{e_{k+1}}{e_k}\le\frac{M}{k+1}\longrightarrow0,$$
+d.h. $V^k\mathbb 1/e_k\to e_{t^*}$ in der gewichteten $\ell^1$-Norm. Aus
+Bedingung 1 folgt $|(T(V^k\mathbb 1/e_k)-Te_{t^*})_s|\le Cw_s\,e_{k+1}/e_k\to0$,
+und nach Proposition 35 ist $T(V^k\mathbb 1)/e_k=\psi_k/e_k$. Schließlich
+$(\psi_k)_a=m_a\,e_{k-1}(\uparrow a)$. $\square$
+
+> **Korollar 36.1.** (a) Ist $a$ nicht minimal in $A$, etwa $b<a$, so ist
+> $T_{t^*a}=0$: denn $e_k\ge m_bm_a\,e_{k-2}(\uparrow a)$ und
+> $e_{k-1}(\uparrow a)\le\tfrac{M}{k-1}e_{k-2}(\uparrow a)$, also
+> $m_ae_{k-1}(\uparrow a)/e_k\le\tfrac{M}{(k-1)m_b}\to0$. (Das ist Schritt (1) von
+> Proposition 24.1 noch einmal, jetzt aus der Kettenzählung.)
+> (b) Auf der **Leiter** ($a_i<b_j\iff i<j$, beliebige Massen) ist
+> $$T_{t^*a_1}=\lim_k\frac{\alpha_1e_{k-1}(\uparrow a_1)}{e_k},\qquad
+>   T_{t^*b_1}=\lim_k\frac{\beta_1e_{k-1}(B_{\ge2})}{e_k},\qquad
+>   1-T_{t^*a_1}-T_{t^*b_1}=\lim_k\frac{e_k(\uparrow a_1)}{e_k}=0,$$
+> letzteres wegen $e_k(\uparrow a_1)\le\tfrac{M}{k\alpha_1}\,\alpha_1e_{k-1}(\uparrow a_1)
+> \le\tfrac{M}{k\alpha_1}e_k$.
+> (c) Für $\alpha_l=\alpha^l$, $\beta_l=\beta^l$ mit $\alpha>\beta$ ist
+> $T_{t^*a_1}=1$: $e_k\ge\prod_{l\le k}\alpha_l=\alpha^{k(k+1)/2}$ und
+> $\beta_1e_{k-1}(B_{\ge2})\le\beta^{k(k+1)/2}/(\beta;\beta)_\infty$, also
+> $T_{t^*b_1}\le(\beta/\alpha)^{k(k+1)/2}/(\beta;\beta)_\infty\to0$.
+> Für $\alpha=\beta$ ist **exakt** $\beta_1e_{k-1}(B_{\ge2})/e_k=(1-\beta^k)/(k+1)\to0$,
+> also ebenfalls $T_{t^*a_1}=1$ (Beweis unten, Lemma 36.2).
+
+Insbesondere ist die Schranke von Theorem 31 auf der unendlichen Leiter jetzt
+**unbedingt**: bei $\alpha\ge\beta$ hat jedes beschränkte Zertifikat
+$p=1$ und $C\ge\kappa(1)/\alpha_2=1/(\alpha_1\alpha_2)$ — **kein beschränktes
+Zertifikat der unendlichen Leiter ist besser als die $\alpha$-Kette allein**,
+ohne die Hypothese „Limes von Trunkierungszertifikaten".
+
+### Lemma 36.2: die Ketten der Leiter sind Stufenmengen mit Schnitt
+
+> **Lemma 36.2.** Die Ketten aus $k$ Atomen der Leiter stehen in Bijektion zu
+> den Paaren (Stufenmenge $S=\{s_1<\dots<s_k\}$, Schnitt $r\in\{0,\dots,k\}$)
+> vermöge $\{a_{s_1},\dots,a_{s_r},b_{s_{r+1}},\dots,b_{s_k}\}$; also
+> $$e_k(\T)=\sum_{|S|=k}\ \sum_{r=0}^{k}\ \prod_{l\le r}\alpha_{s_l}\prod_{l>r}\beta_{s_l}.$$
+
+*Beweis.* $a_i,b_i$ sind unvergleichbar, eine Kette trifft jede Stufe höchstens
+einmal; $a_i<b_j$ verlangt $i<j$ und $b_j<a_i$ gilt nie, also liegen in einer
+Kette alle $a$ unter allen $b$; umgekehrt ist jede solche Menge eine Kette.
+$\square$
+
+Bei $\alpha_l=\beta_l$ hängt das Gewicht nur von $S$ ab, $e_k=(k+1)e_k(\beta)$,
+und $\beta_1e_{k-1}(B_{\ge2})=\sum_{S\ni1}\prod_l\beta_{s_l}=(1-\beta^k)e_k(\beta)$
+(aus $e_k(\beta)=\beta e_{k-1}(\beta^{\ge2})+\beta^ke_k(\beta)$); das gibt die
+Formel $(1-\beta^k)/(k+1)$ in Korollar 36.1(c). Bei $\alpha=q\beta$ mit $q<1$
+ist $\sum_r\prod_{l\le r}\alpha_{s_l}/\beta_{s_l}=\sum_rq^{s_1+\dots+s_r}$, für
+$S=\{1,\dots,k\}$ die partielle Thetareihe $\sum_rq^{r(r+1)/2}$ aus
+Korollar 29.1; da die $k$-Mengen, denen eine feste Stufe $l$ fehlt, relatives
+Gewicht $\le\frac{M/k}{\beta_l+M/k}\to0$ haben, und $q^{s_1+\dots+s_r}\le
+q^{r(r+1)/2}$ summierbar in $r$ ist, folgt
+$$T_{t^*b_1}=\frac1{\sum_{r\ge0}q^{r(r+1)/2}}=\pi_\infty,\qquad T_{t^*a_1}=1-\pi_\infty$$
+— **derselbe Wert wie der Limes der Trunkierungen** (Korollar 29.1), jetzt
+als erzwungener Wert jedes beschränkten Zertifikats der unendlichen Leiter.
+(Die Abschätzung ist hier nur skizziert; die Zahlen unten stimmen auf $10^{-13}$.)
+
+### Gemessen: `Task23/krylov_moments.py`, Teil B
+
+mpmath 60 Stellen, Kettenzählung der unendlichen Leiter durch die Rekursion
+$Z_n=(1+x\beta_n)Z_{n-1}+x\alpha_nA_{n-1}$ mit $N=200$ und $N=400$ Stufen
+(Unterschied $<10^{-35}$, meist $<10^{-60}$), $k\le40$:
+
+| $(\alpha,\beta)$ | $\alpha_1e_{39}(\uparrow a_1)/e_{40}$ | $1-\pi_\infty$ (Korollar 29.1) | $e_{40}(\uparrow a_1)/e_{40}$ | $e_{41}/e_{40}$ |
+|---|---|---|---|---|
+| $(\tfrac12,\tfrac13)$ | $0{,}999999999999091$ | $1$ | $9\cdot10^{-13}$ | $4{,}6\cdot10^{-13}$ |
+| $(\tfrac13,\tfrac12)$ | $0{,}5170464110207$ | $0{,}517046411021183$ | $7\cdot10^{-13}$ | $4{,}6\cdot10^{-13}$ |
+| $(\tfrac12,\tfrac23)$ | $0{,}587162468525$ | $0{,}587162519666$ | $7\cdot10^{-8}$ | $6\cdot10^{-8}$ |
+| $(\tfrac14,\tfrac12)$ | $0{,}39085028893343$ | $0{,}390850288933771$ | $7\cdot10^{-13}$ | $4{,}6\cdot10^{-13}$ |
+| $(\tfrac12,\tfrac12)$ | $0{,}975609756=40/41$ | $1$ | $9\cdot10^{-13}$ | $4{,}7\cdot10^{-13}$ |
+| $(\tfrac12,\tfrac{49}{100})$ | $0{,}999999966$ | $1$ | $9\cdot10^{-13}$ | $4{,}5\cdot10^{-13}$ |
+
+Bei $(\tfrac12,\tfrac23)$ ist die Abweichung $5\cdot10^{-8}$ genau der noch
+nicht abgeklungene Rest $e_k(\uparrow a_1)/e_k\approx(2/3)^{40}$; bei
+$(\tfrac12,\tfrac12)$ ist der Wert $k/(k+1)$ für alle $k\le40$ exakt
+(Lemma 36.2), bei $(\tfrac12,\tfrac{49}{100})$ fällt $T_{t^*b_1}$ wie
+$(0{,}98)^{k(k+1)/2}$. Die Kandidaten $\alpha_2e_{k-1}(\uparrow a_2)/e_k$ für
+$T_{t^*a_2}$ fallen in allen sechs Fällen wie $e_{k+1}/e_k$ gegen $0$
+(Korollar 36.1(a)). Kontrolle auf der $\omega$-Kette: $m_1e_{k-1}(m_{\ge2})/e_k\to1$
+(Proposition 24.2(a)), bei $2^{-i}$ auf $10^{-12}$, bei $1/(i(i+1))$ und
+$i^{-3/2}$ nur wie $1/k$ ($0{,}9974$; $0{,}9897$ bei $k=40$) — die
+Konvergenzrate $M/(k+1)$ aus dem Beweis ist dort scharf.
+
+### Theorem 37: eine fundierte Halbordnung ohne beschränktes Zertifikat — die Vermutung „fundiert $\Rightarrow$ Zertifikat" ist falsch
+
+Theorem 36 hat eine **notwendige Bedingung** für die Existenz eines
+beschränkten Zertifikats hervorgebracht: die normierten Krylow-Vektoren
+$\psi_k/e_k$ müssen konvergieren. Auf der Leiter tun sie das (oben). Es gibt
+aber fundierte Halbordnungen, auf denen sie es nicht tun.
+
+> **Theorem 37.** Sei $\T=\{0\}\cup\{a_1<a_2<\dots\}\cup\{b_1<b_2<\dots\}\cup\{t^*\}$
+> die **disjunkte Vereinigung zweier $\omega$-Ketten** ($a_i\parallel b_j$ für
+> alle $i,j$; $0$ Minimum, $t^*$ Maximum, $m_0=m_{t^*}=0$) mit
+> $$\alpha_i=B^{-i},\qquad \beta_j=B^{-j}\cdot2^{(-1)^{j+1}}\quad(\beta_1=2/B,\ \beta_2=1/(2B^2),\ \beta_3=2/B^3,\dots),\qquad B\ge16 .$$
+> Alle Massen sind positiv und summierbar, $A$ ist fundiert (zwei minimale
+> Atome, jede absteigende Kette endlich). Dann gibt es **kein** unendliches
+> Zertifikat an $t^*$, in keiner endlichen Gewichtsklasse; und für **jede**
+> Wahl von Zertifikaten $T_n$ auf den Trunkierungen $\{a_{\le n},b_{\le n}\}$
+> ist $\sup_n\|T_n\|_m=\infty$.
+
+*Beweis.* Nach Theorem 36 hätte ein Zertifikat
+$T_{t^*a_1}=\lim_kq_k$ mit
+$$q_k=\frac{\alpha_1e_{k-1}(\alpha_{\ge2})}{e_k(\alpha)+e_k(\beta)}
+   =\frac{\alpha_1e_{k-1}(\alpha_{\ge2})/e_k(\alpha)}{1+e_k(\beta)/e_k(\alpha)},$$
+denn die $k$-Ketten der disjunkten Vereinigung sind die $k$-Ketten der einen
+oder der anderen Kette. Der Zähler strebt gegen $1$ (Kettenfall,
+$1-\alpha_1e_{k-1}(\alpha_{\ge2})/e_k(\alpha)=e_k(\alpha_{\ge2})/e_k(\alpha)\le M/(k\alpha_1)$).
+Für den Quotienten schreibe $q:=1/B$ und jede $k$-Teilmenge der Indizes als
+$s_l=l+t_l$ mit $0\le t_1\le\dots\le t_k$; dann ist
+$e_k(\alpha)=\prod_{l\le k}\alpha_l\cdot\sum_tq^{\sum t_l}=\prod_{l\le k}\alpha_l/(q;q)_k$
+und, weil $\beta_{s}/\beta_l=q^{s-l}\,2^{(-1)^{s+1}-(-1)^{l+1}}$ für
+$s-l$ ungerade den Faktor $4^{(-1)^{l}}$ und sonst $1$ trägt,
+$$e_k(\beta)=\prod_{l\le k}\beta_l\cdot R_k,\qquad
+  R_k:=\sum_{0\le t_1\le\dots\le t_k}q^{\sum_lt_l}\prod_{l:\,t_l\text{ ungerade}}4^{(-1)^l}.$$
+Alle Summanden sind positiv, der Summand $t\equiv0$ ist $1$, und
+$\#\{l:t_l\text{ ungerade}\}\le\sum_lt_l$; also $1\le R_k\le\sum_t(4q)^{\sum t}=1/(4q;4q)_k\le1/(4q;4q)_\infty$.
+Mit $\prod_{l\le k}\beta_l/\alpha_l=\prod_{l\le k}2^{(-1)^{l+1}}=2^{[k\text{ ungerade}]}$:
+$$\frac{e_k(\beta)}{e_k(\alpha)}=2^{[k\text{ ungerade}]}\,R_k\,(q;q)_k,\qquad
+  \limsup_{k\text{ gerade}}\frac{e_k(\beta)}{e_k(\alpha)}\le\frac1{(4q;4q)_\infty},\qquad
+  \liminf_{k\text{ ungerade}}\frac{e_k(\beta)}{e_k(\alpha)}\ge2\,(q;q)_\infty .$$
+Für $B=16$ ist $1/(4q;4q)_\infty=1/(\tfrac14;\tfrac14)_\infty=1{,}4524<1{,}8672=2\,(\tfrac1{16};\tfrac1{16})_\infty$
+(und die Trennung wird mit $B$ besser: $1{,}164<1{,}936$ bei $B=32$). Also
+$\liminf_{k\text{ gerade}}q_k>\limsup_{k\text{ ungerade}}q_k$, der Limes
+existiert nicht, und nach Theorem 36 gibt es kein Zertifikat. Die zweite
+Aussage: wären die $T_n$ gleichmäßig beschränkt, $|T^{(n)}_{su}|\le Cw_sw_u$,
+so hätte eine Teilfolge einen eintragsweisen Limes $T$; Bedingung 1 überträgt
+sich, und die Bedingungen 2 und 3 sind Gleichungen zwischen Reihen, die durch
+$Cw_s\sum_uw_u$ dominiert werden — der Limes wäre ein unendliches Zertifikat.
+$\square$
+
+**Was der Zeuge ist, und was nicht.** Die Multimenge der Massen ist harmlos:
+sortiert fallend haben $\alpha$ und $\beta$ die Quotienten
+$\beta_{(j)}/\alpha_{(j)}=2,\tfrac12,2,\tfrac12,\dots$ (das braucht $B>4$; bei
+$B=2$ ist $\{2^{-j}2^{(-1)^{j+1}}\}$ nur eine **Umordnung** von
+$\{1\}\cup\{2^{-j}\}_{j\ge2}$, die Partialprodukte sortiert sind $2,2,2,\dots$,
+und der Limes existiert — der erste Ansatz dieses Laufs ist daran gescheitert;
+siehe Sackgassen). Der Mechanismus ist nicht Ordnungsdichte, nicht fehlende
+Minimalität (Proposition 24.1), nicht unendliche Höhe an sich: es ist die
+**Konkurrenz zweier minimaler Atome um die Spitze**, deren längste-Ketten-Gewichte
+auf keinen festen Anteil konvergieren. Auf jeder Trunkierung mit $n$ Stufen
+ist die Spitzenzeile exakt $T_{t^*a_1}=1/(1+\prod_{l\le n}\beta_l/\alpha_l)\in\{\tfrac12,\tfrac13\}$
+(Proposition 29), alternierend in $n$.
+
+**Für die Vermutung des sechsundzwanzigsten Laufs** („ist $A$ fundiert, so gibt
+es zu jedem $t$ ein unendliches Zertifikat") heißt das: **falsch**. Die
+Fundiertheit schließt Proposition 24.1 aus, aber nicht das Oszillieren. Die
+richtige notwendige Bedingung ist Theorem 36: Konvergenz von $\psi_k/e_k$.
+Hinreichend ist sie nicht (auf der Leiter bei $0{,}8<\beta/\alpha<1{,}1$
+existiert der Limes, $p=1$, und das LP-Minimum wächst trotzdem, Lauf 30).
+
+**Für die Dualität** sagt Theorem 37 nichts Negatives: sie ist auf der
+disjunkten Vereinigung zweier Ketten unter (F) **offen** — die
+Zertifikatsmethode (Theorem 22 wie Proposition 19.3) ist dort nachweislich
+unanwendbar, Theorem 17 sieht nur eine Kette, Theorem 21 verlangt transitive
+Unvergleichbarkeit ($a_1\parallel b_1\parallel a_2$, aber $a_1<a_2$). Das ist
+die kleinste Halbordnung, auf der die Frage „Dualität ohne Zertifikat" scharf
+gestellt ist.
+
+### Gemessen: `Task23/two_chains.py`
+
+`python3 two_chains.py 16 3 4 5 6` (mpmath 80 Stellen; Ergebnis in
+`two_chains16.txt`) und `python3 two_chains.py 8 3 4 5 6 7 8` (`two_chains.txt`):
+
+* **Teil (i)**, $N=400$ Stufen, $k\le80$: bei $B=16$ ist $q_k$ entlang gerader
+  $k$ auf $20$ Stellen konstant $0{,}459504218406622$ (ab $k=40$), entlang
+  ungerader $0{,}343269470059173$; $e_k(\beta)/e_k(\alpha)\to1{,}17626$
+  (gerade) bzw. $1{,}91316$ (ungerade) — innerhalb der bewiesenen Schranken
+  $\le1{,}4524$ bzw. $\ge1{,}8672$. Bei $B=8$: $0{,}42891$ / $0{,}35162$,
+  Quotienten $1{,}33151$ / $1{,}84402$ (die grobe Schranke trennt dort nicht,
+  $3{,}46$ gegen $1{,}72$; gemessen ist die Trennung deutlich). Kontrollen:
+  $(2^{-i},3^{-j})$ gibt $q_k\to1$, identische Ketten $q_k\to\tfrac12$.
+* **Teil (ii)**, exakt: $T^{(n)}_{t^*a_1}=\tfrac12,\tfrac13,\tfrac12,\dots$ für
+  $n=2,\dots,10$, beide Basen.
+* **Teil (iii)**, LP-Minimum über alle Zertifikate der Trunkierung
+  (`ladder_lp.chebyshev_lp`, Nullraumdimension $n+2$):
+
+| $n$ | $B=16$, gestört | $B=8$, gestört | $(2^{-i},3^{-j})$ | identisch $(2^{-i},2^{-i})$ |
+|---|---|---|---|---|
+| 3 | $6315$ | $341{,}3$ | $7{,}3868$ | $4$ |
+| 4 | $2{,}55\cdot10^5$ | $7832$ | $7{,}8636$ | $4$ |
+| 5 | $1{,}64\cdot10^6$ | $22172$ | $7{,}9818$ | $4$ |
+| 6 | $6{,}53\cdot10^7$ | $4{,}99\cdot10^5$ | $7{,}9984$ | $4$ |
+| 7 | — (Simplex bricht ab) | $1{,}42\cdot10^6$ | $7{,}9999$ | $4$ |
+| 8 | — | $1{,}97\cdot10^{12}$ | $8{,}0000$ | $4$ |
+
+Die Kontrollspalten konvergieren gegen $8=1/(\alpha_1\alpha_2)$ (die Konstante
+der $\alpha$-Kette allein, Theorem 26 — dort $q_k\to1$, die Spitze sitzt auf
+$a_1$) bzw. $4$; die gestörten Spalten wachsen um Größenordnungen. Der Wert
+$\|T\|_m$ ist nicht skaleninvariant ($\propto$ Massenskala$^{-2}$), die
+Spalten sind also untereinander nicht zu vergleichen, wohl aber ihr Verlauf
+in $n$. Der Simplexabbruch bei $B=16$, $n=7$ („unbeschränkt", $80$ Stellen)
+ist die numerische Sackgasse des neunundzwanzigsten Laufs (Skalierung
+$w_sw_u\sim16^{-14}$), kein Befund; Theorem 37 braucht die LP-Messung nicht.
+
+### Ergebnis
+
+* **Bewiesen.** Proposition 35 ($TV^k\mathbb 1=\psi_k$ und
+  $(V^k\mathbb 1)^{\mathsf T}T(V^l\mathbb 1)=e_{k+l}$ für **jedes** Zertifikat,
+  endlich wie unendlich; Proposition 29 und Theorem 31 sind Spezialfälle).
+  Theorem 36 (die Spalte $t^*$ jedes unendlichen Zertifikats ist
+  $\lim_k\psi_k/e_k$, also $T_{t^*a}=m_a\lim_ke_{k-1}(\uparrow a)/e_k$; der
+  Limes muß existieren; gilt in jeder **endlichen** Gewichtsklasse $Z$, denn
+  für ein Atom $z\in Z$ ist $(V^k\mathbb 1)_z/e_k\le M/((k+1)m_z)\to0$).
+  Korollar 36.1 (nicht-minimale Atome tragen $0$; auf der unendlichen Leiter
+  ist $p=T_{t^*a_1}$ erzwungen, $p=1$ für $\alpha\ge\beta$ bewiesen, für
+  $\alpha<\beta$ gleich dem Trunkierungslimes $1-\pi_\infty$ — dort mit
+  skizzierter Abschätzung und auf $10^{-13}$ gemessen). Lemma 36.2 (Ketten der
+  Leiter $=$ Stufenmengen mit Schnitt). **Theorem 37**: die disjunkte
+  Vereinigung zweier $\omega$-Ketten mit $\alpha_i=B^{-i}$,
+  $\beta_j=B^{-j}2^{(-1)^{j+1}}$, $B\ge16$, trägt kein unendliches Zertifikat,
+  und ihre Trunkierungszertifikate sind nie gleichmäßig beschränkt.
+* **Widerlegt.** Die Vermutung des sechsundzwanzigsten Laufs „$A$ fundiert
+  $\Rightarrow$ es gibt ein unendliches Zertifikat" (Theorem 37). Nebenbei die
+  Annahme dieses Laufs selbst, eine Störung mit Basis $2$ oszilliere — sie
+  war eine Umordnung (Sackgassen).
+* **Geschlossen** (offener Punkt aus Lauf 30): $p$ ist auf der unendlichen
+  Leiter erzwungen. Die Schranke von Theorem 31 gilt dort unbedingt:
+  $C\ge1/(\alpha_1\alpha_2)$ für $\alpha\ge\beta$, $C\ge|\kappa(1-\pi_\infty)|/\alpha_2$
+  für $\alpha<\beta$.
+* **Offen.** Vermutung 34 und 32 (Leiter, Existenz) unverändert. **Neu und
+  scharf:** die Dualität $\delta(t^*)=0$ auf der disjunkten Vereinigung zweier
+  $\omega$-Ketten unter (F) — dort ist die Zertifikatsmethode nachweislich
+  unanwendbar; entweder trägt ein anderes Argument, oder dort liegt das
+  erste Gegenbeispiel unter (F) mit lauter positiven Massen (der offene Punkt
+  „Gegenbeispiel mit durchweg positiven Abwärtsmassen" aus Lauf 23, jetzt mit
+  einem konkreten Kandidaten). Ob die Konvergenz von $\psi_k/e_k$ zusammen
+  mit einer Skalentrennung hinreichend ist, ist die Frage nach der richtigen
+  Hypothese anstelle der Fundiertheit.
+
+### Sackgassen, neunundzwanzigster Nachtrag
+
+* **Eine 2-periodische Störung der Massen einer Kette, $\beta_j=2^{-j}2^{(-1)^{j+1}}$,
+  für einen oszillierenden Zeugen halten.** Die Multimenge ist
+  $\{1\}\cup\{2^{-j}\}_{j\ge2}$, also eine Umordnung; $e_k$ sieht nur die
+  Multimenge, $e_k(\beta)/e_k(\alpha)\to2$, der Limes existiert. Wer mit
+  Kettenzählungen argumentiert, **sortiere die Massen zuerst**; oszillierende
+  Quotienten braucht man in der sortierten Folge, und dafür muß die Basis
+  größer als der Störfaktor$^2$ sein ($B>4$ bei Faktor $2$).
+* **Theorem 37 über das LP der Trunkierungen beweisen wollen.** Der dichte
+  Simplex bricht bei $B=16$ schon bei $n=7$ ab (Skalierung $16^{-14}$), bei
+  $B=8$ reicht er bis $n=8$; die Werte wachsen, beweisen aber nichts. Der
+  Beweis ist Theorem 36 plus der Teilfolgenschluß; die LP-Messung ist
+  Illustration.
+* **Aus Proposition 29 auf die unendliche Halbordnung schließen, indem man
+  $d\to\infty$ schickt.** Auf der unendlichen Leiter ist $p_n\to1-\pi_\infty$
+  richtig, aber der Grund ist nicht die Trunkierung, sondern Theorem 36 (der
+  Limes in $k$ auf der **unendlichen** Halbordnung, bei festem $\T$). Die beiden
+  Limiten stimmen auf der Leiter überein, auf der disjunkten Vereinigung
+  existiert der eine nicht und der andere auch nicht — aber im allgemeinen
+  ist „Limes der Trunkierungsspitzen" keine Eigenschaft eines unendlichen
+  Zertifikats, „Limes von $\psi_k/e_k$" schon.
+* **„Fundiert" als Hypothese der Zertifikatsexistenz.** Erledigt durch
+  Theorem 37; die Sperre von Proposition 24.1 (fehlende Minimalität) ist eine
+  von mindestens zwei, die andere ist die Nichtkonvergenz der normierten
+  Kettenzählung bei mehreren minimalen Atomen.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `Matrix.certificate_mulVec_pow_one`** (Proposition 35), eingetragen
+in `TauCeti/MartingaleProblems/README.md` (Meilenstein 8, direkt nach
+`Matrix.certificate_mulVec_single_top`) und in `PLAN.md`, Task 23:
+
+> Für `V : Matrix n n ℝ`, `t : n` und jedes symmetrische `T` mit
+> `T * V = Vᵀ * T` und `T *ᵥ 1 = Pi.single t 1` gilt für alle `k`
+> `T *ᵥ (V ^ k *ᵥ 1) = (Vᵀ) ^ k *ᵥ Pi.single t 1` und
+> `(V ^ k *ᵥ 1) ⬝ᵥ (T *ᵥ (V ^ l *ᵥ 1)) = (V ^ (k + l) *ᵥ 1) t`.
+
+Beweis: Induktion über `k` mit `Matrix.mulVec_mulVec`; keine Nilpotenz, keine
+Nichtnegativität. `Matrix.certificate_mulVec_single_top` ist der Fall `k = d`
+und sollte als Korollar daraus geführt werden. Es ist jetzt dran, weil es die
+Aussage ist, die im Unendlichen (Theorem 36) die Spitzenzeile erzwingt und
+(Theorem 37) die Vermutung „fundiert $\Rightarrow$ Zertifikat" widerlegt —
+der erste Satz der Roadmap, dessen unendliche Fassung nicht aus der
+Formalisierung des endlichen Falls, sondern aus einem Grenzübergang in $k$
+kommt; und weil er zwei Zeilen lang ist.
+
+**Nächste Rechnung** (in `PLAN.md`, Task 23, eingetragen): **die Dualität auf
+der disjunkten Vereinigung zweier $\omega$-Ketten entscheiden**, mit dem
+Zeugen von Theorem 37 ($B=16$) unter (F). Zwei Wege, beide ohne Zertifikat:
+(a) direkt — aus Theorem 17 auf jeder der beiden Ketten folgt $\delta(a_i)=\delta(b_j)=0$,
+und $(\diamondsuit)$ an den Kreuzpaaren $(a_i,b_j)$ und an $(t^*,\cdot)$ gibt
+$\delta(t^*)=\lim_i[\Psi(t^*,a_i)+\Psi(a_i,t^*)]$; zu klären ist, ob die
+Kreuzrelationen $\Psi(a_i,b_j)+\Psi(b_j,a_i)=0$ das erzwingen; (b) ein
+Gegenbeispiel $\kappa$ unter (F) mit dem Ansatz des dreiundzwanzigsten Laufs
+(dort die Antikette ohne (F)) — die Nichtexistenz des Zertifikats sagt, daß
+das lineare System der $(\diamondsuit)$-Relationen dort einen Lösungsraum
+hat, den kein beschränktes $T$ annulliert, also ist der Kern explizit zu
+berechnen (Trunkierungen mit freiem Schwanz, wie in `adjudicate.py`). Gelingt
+(b), ist es das erste Gegenbeispiel zur Dualität unter (F) mit lauter positiven
+Massen, und `prop:atomicposet` hat seine scharfe Grenze; gelingt (a), ist
+klar, daß die Zertifikatsmethode nicht die ganze Wahrheit ist und wo sie zu
+ersetzen ist.
+
+Skripte dieses Laufs, alle rc=0: `krylov_moments.py` (Proposition 35, Theorem 36,
+Korollar 36.1; `krylov_moments.txt`), `two_chains.py` (Theorem 37;
+`two_chains.txt` für $B=8$, `two_chains16.txt` für $B=16$).
