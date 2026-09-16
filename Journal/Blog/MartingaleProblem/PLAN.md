@@ -665,35 +665,260 @@ Offen ist allein das Eindeutigkeitskriterium — Def. `propagation` vergleicht
 Stroock–Varadhan-Formulierung reflektierter Diffusionen als Testobjekt.
 
 
-## Task 23 — §6: der gemischte Fall — `todo`
+## Task 23 — §6: der gemischte Fall — `abgeschlossen mit benannter Grenze` *(2026-09-16)*
 
-Nach D54 ist der Stand von §6:
+**Maßgebliche Bilanz:** die Statustabelle in `rem:atomsnotchange` des
+Manuskripts (Stand 2026-09-16, nach 36 Läufen und 54 numerierten Resultaten
+in `Task23/PROTOKOLL.md`). Sie ersetzt die frühere Vier-Zeilen-Tabelle an
+dieser Stelle; jede ihrer Zeilen zitiert ein Resultat oder ein Gegenbeispiel.
+Die Schlußbemerkung `rem:statusboundary` am Ende von §6 sagt in Prosa, was die
+drei Mechanismen (Idealausschöpfung `thm:idealexhaustion`, endliche
+Kernreduktion `thm:corereduction`, Stapelausschöpfung `thm:stackexhaustion`)
+brauchen — weder (F) noch ein Vorzeichen an $m$ im Grenzübergang —, warum die
+Zertifikatsmethode hinreichend und nicht notwendig ist
+(`prop:nocertificate`, `rem:idealexhaustion`), und was offen bleibt.
 
-| Uhr | Status |
-|---|---|
-| Haar (Lebesgue, Zählmaß) | bewiesen, `prop:haar` |
-| atomlos, (T3) | bewiesen, `cor:atomless` — aber nur ein **Zeitwechsel** (D55) |
-| rein atomar | symbolisch verifiziert, **nicht bewiesen**, `rem:atomicdual` |
-| gemischt | **offen** |
+**Task 23 endet als Mathematik und geht als Formalisierung weiter.** Die vier
+Lean-Ziele, in dieser Reihenfolge:
 
-Die beiden vorhandenen Argumente kombinieren sich nicht: der Zeitwechsel
-scheitert an Atomen (`rem:atomsnotchange`, mit Gegenbeispiel), die
-Linearalgebra der Atomrelationen hat keinen diffusen Gegenpart.
+- `duality_of_atomic_idealExhaustion` — Theorem 38 des Protokolls
+  (`thm:idealexhaustion`, `cor:idealexhaustion`); in
+  `TauCeti/MartingaleProblems/README.md`, Meilenstein 8.
+- `duality_of_atomic_finiteCoreReduction` — Theorem 39
+  (`thm:corereduction`, `cor:corereduction`); README, Meilenstein 8, direkt
+  danach. Theorem 42(a) (`thm:stackexhaustion`, hängende Kette ab einem
+  minimalen Atom) ist ein drittes Geschwister mit demselben Beweismuster und
+  soll beim nächsten Anfassen der README als Variante unter dem ersten Ziel
+  notiert werden.
+- `Matrix.krylovCertificate_unique` — Theorem 28 (im Krylow-Raum ist das
+  Zertifikat eindeutig); README, Meilenstein 8.
+- `convex_recursion_bound` — das abstrakte Maximumprinzip hinter Theorem 26
+  (Lauf 28). Im Protokoll vorgeschlagen; **in der README noch nicht
+  eingetragen** (Stand 2026-09-16), das ist beim nächsten Anfassen der README
+  nachzuholen.
 
-*Zur Einordnung (D55):* die Zeile „atomlos" ist billiger, als sie aussieht — unter
-(T3) ist eine atomlose Uhr das Bild von Lebesgue unter $\tau$. Echten Inhalt hat
-nur die Zeile „rein atomar", und nur sie führt über Lebesgue hinaus.
+Nicht formalisiert werden sollen: C(K), die Zertifikatsfrage auf der Leiter
+(Vermutungen 32, 34) und Theorem 42$'$.
 
-**Zwei Ansätze.** (a) Den atomaren Fall wirklich beweisen — die Relationen
-$m_l\,\Delta_1F(k,l-1)=m_k\,\Delta_2F(k-1,l-1)$ sind ein lineares System, dessen
-Lösungsraum die Konklusion enthalten sollte; Induktion über die Atome scheitert
-bisher an ordnungsdichten Atommengen. (b) Approximation: eine gemischte Uhr
-durch atomlose approximieren und die Stabilität von \eqref{eq:incrementrep}
-unter dieser Approximation klären.
-
-Nichts im Manuskript hängt daran — §7 benutzt Lebesgue-Uhren, §7.2 nur
+Nichts im Manuskript hängt an §6: §7 benutzt Lebesgue-Uhren, §7.2 nur
 \eqref{eq:clockadd}.
 
+*Die folgenden Absätze sind die Standsmeldungen der Läufe und bleiben als
+Geschichte stehen; die Bilanz oben und `rem:atomsnotchange` gehen vor.*
+
+**Stand 2026-09-16** (Protokoll `Task23/PROTOKOLL.md`, 29 Läufe): Kette,
+endliche Halbordnung ($\iota=\mathrm p$) und gemischte Uhr sind bewiesen und im
+Manuskript (`prop:atomicdual`, `prop:atomicposet`); die Tabelle oben ist
+insoweit überholt. Offen ist die unendliche Halbordnung ohne (F) und die
+Leiter. Der neunundzwanzigste Lauf hat gezeigt, daß das explizite Zertifikat
+des sechsten Laufs das **einzige** im Krylow-Raum von $e_{t^*}$ ist
+(Hankel-Normalform, Theorem 28) und auf der Leiter auch bei getrennten Skalen
+explodiert — bei $(\tfrac13,\tfrac12)$ erst ab $n=18$, nach zwölf stabilen
+Stellen. Das LP-Minimum über **alle** Zertifikate der Trunkierung
+(`Task23/ladder_lp.py`, mpmath, 80 Stellen) bleibt dagegen stehen: $18{,}0$
+bei $(\tfrac12,\tfrac13)$ bis $n=18$ (Krylow dort $7\cdot10^9$),
+$11{,}85094912$ bei $(\tfrac13,\tfrac12)$ bis $n=18$ (Krylow $353$). Die
+Vermutung „fundiert $\Rightarrow$ Zertifikat" (Lauf 26) steht damit auf der
+Leiter gemessen, nicht bewiesen. **Nächste Rechnung:** das LP-optimale $T$
+selbst herausgeben (primale Lösung statt nur des Werts) und als
+$T_K+\sum_k\lambda_kD_k$ lesen — Träger der Korrektur, aktive Ungleichungen,
+Konvergenz der $\lambda_k$ in $n$ —, um das beschränkte Zertifikat der Leiter
+als Objekt zu identifizieren; erst dann ist Proposition 19.3 (Ausschöpfung
+unter (F) mit gleichmäßig beschränkten Zertifikaten) auf der Leiter
+beweisbar. Lean-Ziele:
+
+- **`krylovCertificate_unique`** (Roadmap `MartingaleProblems`, Meilenstein 8,
+  eingetragen als `Matrix.krylovCertificate_unique`): für nilpotentes $V$,
+  $\psi_k=(V^{\mathsf T})^ke_t$ und $c_k=\psi_k\cdot\mathbb 1$ hat jedes
+  Zertifikat $T=\sum B_{kl}\psi_k\psi_l^{\mathsf T}$ die Hankelgestalt
+  $B_{kl}=b_{k+l}$, $b_j=0$ für $j<r-1$, $\sum_lb_{k+l}c_l=[k=0]$, und dieses
+  Dreieckssystem ist eindeutig lösbar. Reine endlichdimensionale lineare
+  Algebra (lineare Unabhängigkeit von Krylow-Vektoren, Koeffizientenvergleich);
+  identifiziert das Objekt, das alle 29 Läufe gerechnet haben, und ist die
+  Grundlage für die Lean-Fassung der Spektralform (Theorem 27).
+
+- **`convex_recursion_bound`** — für $x,y:\N\to\R$, $\theta:\N\to(0,1)$ mit
+  $x_i=(1-\theta_i)x_{i+1}+\theta_iy_{i+1}$ ($i\ge i_1$), $|y|\le B$ und
+  $x_i\to L$ gilt $|x_i|\le\max(B,|L|)$. Ruht nur auf `Filter.Tendsto`
+  und Monotonie reeller Folgen; ist das Maximumprinzip hinter Theorem 26
+  (Protokoll, Lauf 28: $\sup|G|=1/(m_1m_2)$ auf der $\omega$-Kette für jedes
+  streng fallende summierbare Massenprofil) und kehrt auf der Leiter wieder.
+
+**Stand 2026-09-16, dreißigster Lauf** (Protokoll, „Die Leiter blockweise"):
+die LP-Werte der Leiter sind erklärt. Die Spitzenzeile **jedes** Zertifikats
+einer endlichen Halbordnung ist erzwungen (Proposition 29:
+$T_{t^*a}=$ massengewichteter Anteil der längsten Ketten, die in $a$ beginnen),
+auf der Leiter $T_{t^*b_1}=1/\sum_{i\le n}(\alpha/\beta)^{i(i+1)/2}$; die
+Randeinträge $T_{a_2b_n}=\kappa_n\beta_n$ mit
+$\kappa_n=p_n/\alpha_1-(1-p_n)/\beta_1$ sind in jedem Zertifikat erzwungen
+(Theorem 31), also $\|T\|_m\ge|\kappa_n|/\alpha_2$ — und das LP-Minimum
+**ist** diese Schranke, auf $10^{-81}$ bei allen Profilen mit
+$\beta/\alpha\notin(0{,}8;1{,}1)$, exakt in Brüchen für $n\le14$ bei
+$(\tfrac12,\tfrac13)$ (`Task23/ladder_exact_opt.py`: das Optimum ist das
+einzige Zertifikat mit $T_{a_1u}=-C\alpha_1m_u$ auf $\{a_1\}\cup B$ und
+$T_{b_1b_1}=-C\beta_1^2$). Bei $\alpha>\beta$ ist der Limes
+$1/(\alpha_1\alpha_2)$ — die Konstante der $\alpha$-Kette allein. Das
+Zertifikat der Leiter ist ein gekoppeltes System zweier Kettenrekursionen
+(Proposition 30). Im Fenster $0{,}8<\beta/\alpha<1{,}1$ liegt das Minimum
+über der Schranke und wächst (real, kein Artefakt). **Nächste Rechnung:
+Vermutung 34 beweisen** — für geometrische Profile mit $\beta/\alpha\le\tfrac12$
+(oder $\ge2$) erfüllt das **Krylow-Zertifikat** der Trunkierung
+$|T_{K,su}|\le(|\kappa_n|/\alpha_2)w_sw_u$ (exakt nachgerechnet bis $n=28$
+für $\beta/\alpha\le\tfrac12$; es ist dort das Optimum; für $\beta/\alpha>\tfrac12$
+explodiert es, mit Einsatzstelle $\to\infty$ für $\beta/\alpha\downarrow\tfrac12$;
+Lauf 30, dritter und fünfter Nachtrag): eine Ungleichung für
+die explizite Hankel-Normalform $b_j=(-1)^jq_j$ aus $1/P_\T$. Damit wäre
+die Leiter bei stark getrennten Skalen unter (F) geschlossen, mit dem
+vorhandenen Zertifikat. Für das mittlere Regime $\tfrac23\le\beta/\alpha\le0{,}8$
+(Krylow explodiert) gilt statt dessen Vermutung 32: das Sättigungssystem
+(Zeile $a_1$) ist eindeutig lösbar mit Norm $\kappa_n/\alpha_2$ (exakt bis
+$n=18$ bei $(\tfrac12,\tfrac13)$; bei nicht-geometrischen Profilen ist das
+Muster ein anderes); der Weg
+geht über die Potentiale (Zeile $a_1$ gesättigt heißt
+$J(1,l)=p/\alpha_1-C\sigma^\beta_l$, also bekannter Rand) und das
+Maximumprinzip von Theorem 26. Damit wäre die Leiter bei $\alpha>\beta$
+unter (F) geschlossen (Proposition 19.3). Lean-Ziel:
+
+- **`Matrix.certificate_mulVec_single_top`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, nach `krylovCertificate_unique`): aus
+  $V^d\mathbb 1=\Omega e_t$, $\Omega\ne0$, folgt für jedes Zertifikat
+  $Te_t=\Omega^{-1}(V^{\mathsf T})^de_t$ — zwei Zeilen
+  (`Matrix.mulVec_mulVec`, Induktion über $d$), der erste Satz über **alle**
+  Zertifikate statt über eine Konstruktion, und die Zutat von Theorem 31.
+
+**Stand 2026-09-16, einunddreißigster Lauf** (Protokoll, „Der Krylow-Raum von
+$\mathbb 1$"): jedes Zertifikat, endlich oder unendlich, erfüllt
+$TV^k\mathbb 1=\psi_k$ für alle $k$ (Proposition 35; Proposition 29 und
+Theorem 31 sind Spezialfälle). Im Unendlichen folgt daraus mit
+$e_{k+1}/e_k\le M/(k+1)$, daß die Spalte $t^*$ **jedes** beschränkten
+Zertifikats der Limes $\lim_k\psi_k/e_k$ der normierten Kettenzählung ist
+(Theorem 36) — auf der unendlichen Leiter ist $p=T_{t^*a_1}$ also erzwungen
+($p=1$ für $\alpha\ge\beta$ bewiesen, $p=1-\pi_\infty$ für $\alpha<\beta$,
+gleich dem Trunkierungslimes), und die Schranke $C\ge1/(\alpha_1\alpha_2)$
+gilt dort unbedingt. **Die Vermutung „fundiert $\Rightarrow$ Zertifikat"
+(Lauf 26) ist falsch** (Theorem 37): auf der disjunkten Vereinigung zweier
+$\omega$-Ketten mit $\alpha_i=B^{-i}$, $\beta_j=B^{-j}2^{(-1)^{j+1}}$, $B\ge16$,
+oszilliert $\psi_k/e_k$ zwischen zwei Limiten, es gibt kein unendliches
+Zertifikat, und keine Folge von Trunkierungszertifikaten ist gleichmäßig
+beschränkt (`Task23/two_chains.py`: LP-Minimum $6315$, $2{,}6\cdot10^5$,
+$1{,}6\cdot10^6$, $6{,}5\cdot10^7$ bei $n=3..6$). Die Dualität ist dort unter
+(F) **offen**, und die Zertifikatsmethode kann sie nicht entscheiden.
+**Nächste Rechnung:** die Dualität auf dieser Halbordnung entscheiden — direkt
+über Theorem 17 auf beiden Ketten plus die Kreuzrelationen
+$\Psi(a_i,b_j)+\Psi(b_j,a_i)=0$, oder als Gegenbeispiel $\kappa$ unter (F)
+(Kern der $(\diamondsuit)$-Relationen auf Trunkierungen mit freiem Schwanz,
+wie in `adjudicate.py`); ein Gegenbeispiel wäre das erste unter (F) mit lauter
+positiven Massen. Lean-Ziel:
+
+- **`Matrix.certificate_mulVec_pow_one`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, nach `certificate_mulVec_single_top`): für jedes symmetrische
+  $T$ mit $TV=V^{\mathsf T}T$, $T\mathbb 1=e_t$ gilt
+  $T(V^k\mathbb 1)=(V^{\mathsf T})^ke_t$ und
+  $(V^k\mathbb 1)\cdot T(V^l\mathbb 1)=(V^{k+l}\mathbb 1)_t$ für alle $k,l$
+  — Induktion über $k$ mit `Matrix.mulVec_mulVec`; `certificate_mulVec_single_top`
+  ist der Fall $k=d$. Es ist die endliche Aussage hinter Theorem 36 und 37.
+
+
+**Stand 2026-09-16, zweiunddreißigster Lauf** (Protokoll, „Die
+Idealausschöpfung"): die Rechnung des einunddreißigsten Laufs ist **positiv**
+entschieden, und zwar ohne (F), ohne Zertifikat und ohne Kreuzrelationen. Mit
+$g(c)=m_c\kappa(c,0)$ ist $\delta(t)=g(\T_{<t})$ für jedes $t$; sind die
+Ideale $\T_{\le a}$, $a<t^*$, endlich, so gibt `prop:atomicposet` auf jedem
+Ideal $g(\T_{<a})=0$, und $\delta(t^*)=g(\T_{<t^*})$ verschwindet durch
+dominierte Konvergenz, sobald $\mathbb 1_{\T_{<t^*}}$ im beschränkten
+Folgenabschluß des Spanns der Idealindikatoren liegt (Theorem 38) — etwa wenn
+$\T_{<t^*}$ gerichtet ohne Maximum ist, eine disjunkte Vereinigung solcher
+Stücke, oder jeder Punkt kettenüberdeckt. Damit gilt die Dualität für jedes
+Massenprofil auf der **Leiter** (auch im Fenster $0{,}8<\beta/\alpha<1{,}1$)
+und auf der **disjunkten Vereinigung zweier $\omega$-Ketten** mit den Massen
+von Theorem 37, wo kein Zertifikat existiert: die Zertifikatsmethode ist
+hinreichend, nicht notwendig. Die Vermutungen 32 und 34 sind für die Dualität
+gegenstandslos (sie bleiben Aussagen über LP- und Krylow-Zertifikat); der
+Kandidat für ein Gegenbeispiel mit positiven Massen ist keiner. Offen bleiben
+die nackte Klasse auf Ketten, die gestapelten $\zeta$-Ketten ohne (F) und ohne
+beschränktes $\Phi$, und die Frage, ob es eine Halbordnung mit endlichen
+Idealen gibt, auf der die Dualität fällt. `Task23/ideal_exhaustion.py`
+(exakt, rc=0). Lean-Ziel:
+
+- **`duality_of_atomic_idealExhaustion`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, vor `Lagrange.sum_inv_prod_sub_eq_zero`): $\T_{<t}$
+  gerichtet ohne Maximum, alle $\T_{\le a}$ ($a<t$) endlich, $m\ge0$
+  $\Rightarrow$ $\Phi(t,0)=\Phi(0,t)$; ruht auf `duality_of_atomic` (auf dem
+  Ideal) und `tendsto_tsum_compl_atTop_zero`. Zwei Geschwister mit demselben
+  Beweis: disjunkte Vereinigung gerichteter Stücke, kettenüberdeckte Punkte.
+  Abnahmebeispiel: die disjunkte Vereinigung zweier $\omega$-Ketten mit den
+  Massen von Theorem 37 (kein Zertifikat, Dualität gilt).
+
+*Nachtrag desselben Laufs:* Theorem 38 hat eine $\lambda$-Fassung
+($\mathbb 1_W=h+\sum_j\lambda_j\mathbb 1_{X_j}$, $h$ im Abschluß, $X_j$
+Zwillingsmengen minimaler Atome, $\sum\lambda_jm(X_j)\ne0$), und drei
+Kandidaten gegen die Vermutung „endliche Ideale unter $t^*$, keine maximalen
+Elemente in $W$, $m\ge0$ $\Rightarrow$ Dualität" sind gefallen — die
+Doppelschleife (Theorem 38, $X=\{r\}$), die hängende Doppelschleife
+($\lambda=-1$) und die doppelt hängende Doppelschleife, die jede Fassung des
+Satzes schlägt und trotzdem trägt, weil die Relation am unvergleichbaren Paar
+$(r,s)$ die beiden privaten Zweige koppelt (sechs Zeilen, Protokoll). Die
+Vermutung steht damit als **nächste Rechnung**; Werkzeug ist die exakte
+Rangprobe „$\varphi_x(W_n\setminus\max\setminus\{x\})$ erzwungen" auf
+Trunkierungen ohne Spitze (`Task23/bowties.py`, `resonance.py`), die im
+positiven Fall rigoros auf das unendliche System schließt. Für die Klasse
+„endlicher Kern plus $\omega$-Kette über jedem maximalen Kernpunkt" ist die
+Frage auf eine **endliche** Aussage reduziert — Vermutung C(K): $K$
+antisymmetrisch mit $VK=KV^{\mathsf T}$ und $\kappa(k,x)=0$ für maximale $k$,
+minimale $x$; ist $\sum_vm_v\kappa(v,x)$ auf den minimalen $x$ konstant, so
+ist die Konstante $0$ — erschöpfend wahr auf allen Halbordnungen mit kleinstem
+Element bis sechs Punkte (`Task23/core_conjecture.py`, exakt; $4231$
+Halbordnungen auf sechs Punkten), $980$
+Zufallskerne ohne Gegenbeispiel (`random_hanging.py`). C(K) ist der nächste zu
+beweisende Satz; er ist reine endliche lineare Algebra in der Sprache von
+`lem:selfadjoint`.
+
+**Stand 2026-09-16, 33. Lauf:** C(K) ist für die Dualität **überflüssig**.
+Theorem 39 (Protokoll; im Manuskript `thm:corereduction`,
+`cor:corereduction`, `rem:corereduction`): gilt (i) $\delta\equiv0$ auf
+$W=\T_{<t^*}$ und gibt es ein **endliches** Abwärtsideal $K\ni0$ mit
+$\mathbb 1_{W\setminus K}$ im Abschluß des Idealspanns, so ist
+$\delta(t^*)=0$ — für jedes $m\ge0$, ohne (F). Beweis: die Relationen $(d,s)$,
+$s\in K$, legen $\Psi(d,\cdot)|_K$ ins Bild von $Z_K$; dominierte Konvergenz
+trägt das auf $\chi=\sum_{c\notin K}m_c\kappa(c,\cdot)$; eine Korrektur der
+Spalte $t^*$ um ein Urbild von $\chi$ macht $K\cup\{t^*\}$ zu einem
+**endlichen** $(\diamondsuit)$-System mit demselben Defekt, und
+`prop:atomicposet` schließt. Das erledigt die ganze Klasse „endlicher Kern
+plus hängende Ketten" (Korollar 39.1), subsumiert Theorem 38 ($X=\emptyset$,
+oder $X$ endlich) und erklärt die sechs Zeilen zur doppelt hängenden
+Doppelschleife. `Task23/core_reduction.py` (exakt, rc=0). Lean-Ziel:
+
+- **`duality_of_atomic_finiteCoreReduction`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, direkt nach `duality_of_atomic_idealExhaustion`): endliches
+  Abwärtsideal $K$, $\mathbb 1_{W\setminus K}$ im Abschluß des Idealspanns
+  $\Rightarrow$ $\Phi(t,0)=\Phi(0,t)$; zuerst als Instanz „endlicher Kern mit
+  hängenden $\omega$-Ketten". Ruht auf `duality_of_atomic` (auf $K\cup\{t\}$)
+  und einem Schritt dominierter Konvergenz in den endlichdimensionalen Raum
+  $K\to\R$. Abnahmebeispiel: die doppelt hängende Doppelschleife.
+
+Kleinster offener Fall der Vermutung „endliche Ideale, $W$ ohne maximale
+Elemente $\Rightarrow$ Dualität": die **unendliche disjunkte Vereinigung
+endlicher Kerne mit Ketten** ($\bigsqcup_n$ Doppelschleife$_n$); dort ist
+$\mathbb 1_{W\setminus K}$ für kein endliches $K$ im Abschluß, und Theorem 38
+mit $X=\{r_n\}$ braucht $\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|<\infty$.
+
+**Stand 2026-09-16, 34. Lauf und Abschluß:** der kleinste offene Fall des
+33. Laufs ist gefallen, ohne (F) und ohne C(K): Lemma 40 (auf einem hängenden
+Stapel verschwinden die Stufensummen $\sigma_{S_i}(b)$ für **jedes** $b\in W$),
+Theorem 41 ($\delta(t^*)=\psi(I_0)$, die $\psi$-Masse unter dem Stapelfuß),
+Theorem 42 (Stapel mit Fuß $\{0\}$ oder mit entweichenden Füßen $\Rightarrow$
+Dualität), im Manuskript `lem:silentstacks`, `thm:stackdefect`,
+`thm:stackexhaustion`, `cor:stackexhaustion`, `prop:silentblocks`,
+`rem:stackexhaustion`. Damit fallen die unendliche disjunkte Vereinigung
+beliebiger endlicher Kerne mit Ketten oder Türmen und die Antikette von
+Theorem 19 mit einer Kette daneben. Offen bleiben, benannt in
+`rem:atomsnotchange` und `rem:statusboundary`: die nackte Klasse auf Ketten
+(ohne (F), ohne beschränktes $\Phi$), die gestapelten $\zeta$-Ketten ohne (F),
+und die Vermutung „endliche Ideale, $W$ ohne maximale Elemente $\Rightarrow$
+Dualität", deren kleinster Kandidat jetzt die Leiter ohne hängende Seite
+über unendlich vielen Kernen ist. Task 23 ist damit **abgeschlossen mit
+benannter Grenze**; Abschlußprotokoll in `Task23/PROTOKOLL.md`, Abschnitt
+„Abschluß von Task 23".
 
 ---
 

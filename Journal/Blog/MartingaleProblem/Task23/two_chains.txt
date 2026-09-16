@@ -1,0 +1,83 @@
+Teil (i), gestoert8: q_k = alpha_1 e_(k-1)(alpha_>=2) / (e_k(alpha)+e_k(beta)), N=400 Stufen
+     k= 1  q_k=0.30882352941176470588   e_k(beta)/e_k(alpha)=1.83333333333
+     k= 2  q_k=0.4230371900826446281   e_k(beta)/e_k(alpha)=1.32692307692
+     k= 3  q_k=0.35094939446366782007   e_k(beta)/e_k(alpha)=1.84384840306
+     k= 4  q_k=0.42881585571278929062   e_k(beta)/e_k(alpha)=1.33143398514
+     k= 9  q_k=0.35161558275810888116   e_k(beta)/e_k(alpha)=1.84401500271
+     k=10  q_k=0.42890742378549449083   e_k(beta)/e_k(alpha)=1.33150545692
+     k=19  q_k=0.35161558529927861742   e_k(beta)/e_k(alpha)=1.84401500334
+     k=20  q_k=0.42890742413479101063   e_k(beta)/e_k(alpha)=1.33150545719
+     k=39  q_k=0.35161558529927861979   e_k(beta)/e_k(alpha)=1.84401500334
+     k=40  q_k=0.42890742413479101096   e_k(beta)/e_k(alpha)=1.33150545719
+     k=59  q_k=0.35161558529927861979   e_k(beta)/e_k(alpha)=1.84401500334
+     k=60  q_k=0.42890742413479101096   e_k(beta)/e_k(alpha)=1.33150545719
+     k=79  q_k=0.35161558529927861979   e_k(beta)/e_k(alpha)=1.84401500334
+     k=80  q_k=0.42890742413479101096   e_k(beta)/e_k(alpha)=1.33150545719
+  ok    gestoert8: gerade und ungerade Teilfolge konvergieren (Zuwaechse 0.0, 0.0)
+  ok    gestoert8: die Limiten sind verschieden: gerade 0.428907424134791, ungerade 0.351615585299279 -- kein Limes, kein Zertifikat (Theorem 36)
+Teil (i), drittel: q_k = alpha_1 e_(k-1)(alpha_>=2) / (e_k(alpha)+e_k(beta)), N=400 Stufen
+     k= 1  q_k=0.33333333333333333333   e_k(beta)/e_k(alpha)=0.5
+     k= 2  q_k=0.63157894736842105263   e_k(beta)/e_k(alpha)=0.1875
+     k= 3  q_k=0.83295194508009153318   e_k(beta)/e_k(alpha)=0.0504807692308
+     k= 4  q_k=0.92870962940913826462   e_k(beta)/e_k(alpha)=0.00946514423077
+     k= 9  q_k=0.99804686885990277908   e_k(beta)/e_k(alpha)=6.1521131046e-9
+     k=10  q_k=0.99902343739351941471   e_k(beta)/e_k(alpha)=1.06584671894e-10
+     k=19  q_k=0.9999980926513671875   e_k(beta)/e_k(alpha)=1.79868495041e-34
+     k=20  q_k=0.99999904632568359375   e_k(beta)/e_k(alpha)=5.40915598875e-38
+     k=39  q_k=0.9999999999981810106   e_k(beta)/e_k(alpha)=2.29673786232e-138
+     k=40  q_k=0.9999999999990905053   e_k(beta)/e_k(alpha)=2.07711751411e-145
+     k=59  q_k=0.99999999999999999827   e_k(beta)/e_k(alpha)=1.0734083388e-312
+     k=60  q_k=0.99999999999999999913   e_k(beta)/e_k(alpha)=2.91937188644e-323
+     k=79  q_k=1.0   e_k(beta)/e_k(alpha)=1.83617841336e-557
+     k=80  q_k=1.0   e_k(beta)/e_k(alpha)=1.50180709916e-571
+  ok    drittel: q_k -> 1 (k=80: 1.0)
+Teil (i), gleich: q_k = alpha_1 e_(k-1)(alpha_>=2) / (e_k(alpha)+e_k(beta)), N=400 Stufen
+     k= 1  q_k=0.25   e_k(beta)/e_k(alpha)=1.0
+     k= 2  q_k=0.375   e_k(beta)/e_k(alpha)=1.0
+     k= 3  q_k=0.4375   e_k(beta)/e_k(alpha)=1.0
+     k= 4  q_k=0.46875   e_k(beta)/e_k(alpha)=1.0
+     k= 9  q_k=0.4990234375   e_k(beta)/e_k(alpha)=1.0
+     k=10  q_k=0.49951171875   e_k(beta)/e_k(alpha)=1.0
+     k=19  q_k=0.49999904632568359375   e_k(beta)/e_k(alpha)=1.0
+     k=20  q_k=0.49999952316284179687   e_k(beta)/e_k(alpha)=1.0
+     k=39  q_k=0.4999999999990905053   e_k(beta)/e_k(alpha)=1.0
+     k=40  q_k=0.49999999999954525265   e_k(beta)/e_k(alpha)=1.0
+     k=59  q_k=0.49999999999999999913   e_k(beta)/e_k(alpha)=1.0
+     k=60  q_k=0.49999999999999999957   e_k(beta)/e_k(alpha)=1.0
+     k=79  q_k=0.5   e_k(beta)/e_k(alpha)=1.0
+     k=80  q_k=0.5   e_k(beta)/e_k(alpha)=1.0
+  ok    gleich: q_k -> 1/2 (Symmetrie; k=80: 0.5)
+Teil (ii), gestoert8: Spitzenzeile der Trunkierungen (Proposition 29), exakt
+  ok    gestoert8 n=2: T_(t*,a_1) = 1/2 = 1/(1+prod beta/alpha), r=3
+  ok    gestoert8 n=3: T_(t*,a_1) = 1/3 = 1/(1+prod beta/alpha), r=4
+  ok    gestoert8 n=4: T_(t*,a_1) = 1/2 = 1/(1+prod beta/alpha), r=5
+  ok    gestoert8 n=5: T_(t*,a_1) = 1/3 = 1/(1+prod beta/alpha), r=6
+  ok    gestoert8 n=6: T_(t*,a_1) = 1/2 = 1/(1+prod beta/alpha), r=7
+  ok    gestoert8 n=7: T_(t*,a_1) = 1/3 = 1/(1+prod beta/alpha), r=8
+  ok    gestoert8 n=8: T_(t*,a_1) = 1/2 = 1/(1+prod beta/alpha), r=9
+  ok    gestoert8 n=9: T_(t*,a_1) = 1/3 = 1/(1+prod beta/alpha), r=10
+  ok    gestoert8 n=10: T_(t*,a_1) = 1/2 = 1/(1+prod beta/alpha), r=11
+  ok    gestoert8: Spitzenzeile der Trunkierungen alterniert 1/2, 1/3 -- konvergiert nicht
+Teil (iii), gestoert8: LP-Minimum ueber alle Zertifikate der Trunkierung
+     n=3: dim Nullraum=5, Krylow ||T||_m=613.34568, LP-Minimum=341.3333333 (primal 341.33333)
+     n=4: dim Nullraum=6, Krylow ||T||_m=4383145.9, LP-Minimum=7832.0 (primal 7832.0)
+     n=5: dim Nullraum=7, Krylow ||T||_m=6.2879725e+8, LP-Minimum=22172.44444 (primal 22172.444)
+     n=6: dim Nullraum=8, Krylow ||T||_m=1.335157e+15, LP-Minimum=499352.0 (primal 499352.0)
+     n=7: dim Nullraum=9, Krylow ||T||_m=2.611549e+18, LP-Minimum=1420273.778 (primal 1420273.8)
+     n=8: dim Nullraum=10, Krylow ||T||_m=1.6703035e+27, LP-Minimum=1.966855734e+12 (primal 1.9668595e+12)
+  ok    gestoert8: LP-Minimum waechst (341.333 -> 1.96686e+12)
+Teil (iii), drittel: LP-Minimum ueber alle Zertifikate der Trunkierung
+     n=3: dim Nullraum=5, Krylow ||T||_m=7.3868099, LP-Minimum=7.38680987 (primal 7.3868099)
+     n=4: dim Nullraum=6, Krylow ||T||_m=7.8636326, LP-Minimum=7.86363258 (primal 7.8636326)
+     n=5: dim Nullraum=7, Krylow ||T||_m=7.9817724, LP-Minimum=7.98177236 (primal 7.9817724)
+     n=6: dim Nullraum=8, Krylow ||T||_m=7.9983964, LP-Minimum=7.998396435 (primal 7.9983964)
+     n=7: dim Nullraum=9, Krylow ||T||_m=7.9999061, LP-Minimum=7.999906129 (primal 7.9999061)
+     n=8: dim Nullraum=10, Krylow ||T||_m=7.9999963, LP-Minimum=7.999996337 (primal 7.9999963)
+Teil (iii), gleich: LP-Minimum ueber alle Zertifikate der Trunkierung
+     n=3: dim Nullraum=5, Krylow ||T||_m=4.0, LP-Minimum=4.0 (primal 4.0)
+     n=4: dim Nullraum=6, Krylow ||T||_m=4.0, LP-Minimum=4.0 (primal 4.0)
+     n=5: dim Nullraum=7, Krylow ||T||_m=4.0, LP-Minimum=4.0 (primal 4.0)
+     n=6: dim Nullraum=8, Krylow ||T||_m=4.0, LP-Minimum=4.0 (primal 4.0)
+     n=7: dim Nullraum=9, Krylow ||T||_m=4.0, LP-Minimum=4.0 (primal 4.0)
+     n=8: dim Nullraum=10, Krylow ||T||_m=4.0, LP-Minimum=4.0 (primal 4.0)
+FEHLER: 0

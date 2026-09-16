@@ -1,0 +1,14 @@
+== (D) Kontrolle des Orakels
+Diamant, m = (0,1,-1,0): Dualitaet faellt bei t = 3 (erwartet: 3)
+Diamant, m = (0,1, 1,0): Dualitaet faellt bei t = None (erwartet: None)
+  k=1 Kerne, n=2, generisch: (A) 16 Paare erzwungen: True; (B) 2 Hoehe-eins-Punkte, |D_n|=6 von 10, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 2/2
+  k=1 Kerne, n=2, resonant: (A) 16 Paare erzwungen: True; (B) 2 Hoehe-eins-Punkte, |D_n|=6 von 10, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 2/2
+  k=1 Kerne, n=3, generisch: (A) 24 Paare erzwungen: True; (B) 2 Hoehe-eins-Punkte, |D_n|=8 von 12, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 4/4
+  k=1 Kerne, n=3, resonant: (A) 24 Paare erzwungen: True; (B) 2 Hoehe-eins-Punkte, |D_n|=8 von 12, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 4/4
+  k=2 Kerne, n=2, generisch: (A) 64 Paare erzwungen: True; (B) 4 Hoehe-eins-Punkte, |D_n|=12 von 20, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 4/4
+  k=2 Kerne, n=2, resonant: (A) 64 Paare erzwungen: True; (B) 4 Hoehe-eins-Punkte, |D_n|=12 von 20, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 4/4
+  k=2 Kerne, n=3, generisch: (A) 96 Paare erzwungen: True; (B) 4 Hoehe-eins-Punkte, |D_n|=16 von 24, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 8/8
+  k=2 Kerne, n=3, resonant: (A) 96 Paare erzwungen: True; (B) 4 Hoehe-eins-Punkte, |D_n|=16 von 24, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 8/8
+  k=3 Kerne, n=2, generisch: (A) 144 Paare erzwungen: True; (B) 6 Hoehe-eins-Punkte, |D_n|=18 von 30, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 6/6
+  k=3 Kerne, n=2, resonant: (A) 144 Paare erzwungen: True; (B) 6 Hoehe-eins-Punkte, |D_n|=18 von 30, Summe erzwungen: True; (C) Kontrolle Kettenpunkte: frei in 6/6
+rc = 0
