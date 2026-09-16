@@ -171,11 +171,12 @@ Arbeitsteilung der beiden Sätze, keine Lücke:
 | Ionescu--Tulcea | Ordnungstyp $\omega$ | **keine** |
 | Kolmogorov | beliebig | standard-borelsch o. ä. |
 
-## 8. Zwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
+## 8. Einundzwanzig Lücken in Mathlibs Kernschicht, gefunden beim Bauen der Sprungprozesse
 
-Alle zwanzig beim Beweisen aufgefallen, alle zwanzig gegen `upstream/master`
-geprüft, und die ersten vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören
-thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
+Alle einundzwanzig beim Beweisen aufgefallen, die ersten zwanzig gegen
+`upstream/master` geprüft und der einundzwanzigste gegen v4.33.1, und die ersten
+vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören thematisch zu
+`KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben.
 
 * **Zeithomogenität von `Kernel.traj`.** Daß die Verschiebung einer homogenen
   Markovkette wieder dieselbe Kette ist, steht dort nicht — weder in `v4.33.1`
@@ -665,6 +666,29 @@ thematisch zu `KolmogorovExtension` und **nicht** in eine der laufenden Aufgaben
   `ℝ≥0∞` über `Y⁺` zu der Fassung, die eine zweiseitige Schranke braucht,
   kostet mehr als der Beweis, und die beiden Beweise sind derselbe, an den
   beiden Enden angesetzt. Beide gehen durch `lake env lean` gegen v4.33.1.
+
+* **Ein Martingal hinter einer stetigen linearen Abbildung.** Der
+  einundzwanzigste, und der kleinste von allen. Mathlib hat
+  `ContinuousLinearMap.comp_condExp_comm`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359`), also
+  `T ∘ μ[f | m] =ᵐ μ[T ∘ f | m]` — die Aussage über die **bedingte Erwartung**.
+  Die Aussage über den **Prozeß**, `Martingale f ℱ μ → Martingale (T ∘ f) ℱ μ`,
+  fehlt: in `Mathlib/Probability/Martingale/` und `Mathlib/Probability/Process/`
+  hat die Suche nach `Martingale` neben `ContinuousLinearMap` **null Treffer**
+  (am 2026-09-17 gegen v4.33.1 geprüft; dieser Lauf hat `upstream/master` nicht
+  geholt, die Negativaussage steht daher gegen den Release und nicht gegen
+  master). `Martingale.smul` und `Martingale.add` stehen da, die lineare
+  Abbildung nicht.
+
+  Der Beweis ist vier Zeilen und steht bei uns als
+  `MeasureTheory.Martingale.comp_continuousLinearMap`. Was ohne ihn fehlt, ist
+  der Übergang von einem `RCLike`-wertigen Martingal zu seinen beiden reellen
+  Teilen — in `Mathlib/Probability/Martingale/` kommt `RCLike` **gar nicht** vor
+  —, und damit jeder Satz, der ein komplexwertiges Martingal an einen
+  reellwertigen Satz übergeben will. Doobs Regularisierung ist genau so ein
+  Satz. Der PR sollte die Martingal-, die Sub- und die Supermartingalfassung
+  tragen; die letzten beiden verlangen eine Positivitätsbedingung an `T` und
+  sind daher nicht dasselbe Lemma.
 
 Dazu, aus derselben Baustelle und schon oben unter Punkt 6 vermerkt: die
 Indexverallgemeinerung von Ionescu--Tulcea, wo `Maps.lean` bereits für eine

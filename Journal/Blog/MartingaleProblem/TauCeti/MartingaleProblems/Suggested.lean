@@ -2468,6 +2468,154 @@ theorem ae_exists_tendsto_of_forall_ae_exists_tendsto [T2Space E]
     (fun a _ b _ hab ↦ hsep a b hab) hωf
   exact ⟨x, hx⟩
 
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- A martingale composed with a continuous `ℝ` linear map is a martingale.
+Mathlib has the conditional expectation half
+(`ContinuousLinearMap.comp_condExp_comm`,
+`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` in v4.33.1) and
+not the process half; this is the process half and nothing more. -/
+theorem MeasureTheory.Martingale.comp_continuousLinearMap {F : Type*} [NormedAddCommGroup F]
+    [NormedSpace ℝ F] [CompleteSpace F] {Y : ι → Ω → 𝕂} {𝓕 : Filtration ι m}
+    {P : Measure Ω} (hY : Martingale Y 𝓕 P) (T : 𝕂 →L[ℝ] F) :
+    Martingale (fun t ω ↦ T (Y t ω)) 𝓕 P := by
+  refine ⟨fun t ↦ T.continuous.comp_stronglyMeasurable (hY.stronglyMeasurable t),
+    fun i j hij ↦ ?_⟩
+  have h1 : (fun ω ↦ T (P[Y j | 𝓕 i] ω)) =ᵐ[P] P[(fun ω ↦ T (Y j ω)) | 𝓕 i] :=
+    T.comp_condExp_comm (hY.integrable j)
+  filter_upwards [h1, hY.condExp_ae_eq hij] with ω h1ω h2ω
+  rw [← h1ω, h2ω]
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- The real part of a `𝕂` valued martingale is a real submartingale -- a
+martingale, in fact, but the submartingale is what Doob's regularization reads.
+This is `RCLike.reCLM` fed to `Martingale.comp_continuousLinearMap`. -/
+theorem MeasureTheory.Martingale.submartingale_re {Y : ι → Ω → 𝕂} {𝓕 : Filtration ι m}
+    {P : Measure Ω} (hY : Martingale Y 𝓕 P) :
+    Submartingale (fun t ω ↦ RCLike.re (Y t ω)) 𝓕 P := by
+  have h := (hY.comp_continuousLinearMap (RCLike.reCLM (K := 𝕂))).submartingale
+  simpa only [RCLike.reCLM_apply] using h
+
+omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
+/-- The imaginary part of a `𝕂` valued martingale is a real submartingale. -/
+theorem MeasureTheory.Martingale.submartingale_im {Y : ι → Ω → 𝕂} {𝓕 : Filtration ι m}
+    {P : Measure Ω} (hY : Martingale Y 𝓕 P) :
+    Submartingale (fun t ω ↦ RCLike.im (Y t ω)) 𝓕 P := by
+  have h := (hY.comp_continuousLinearMap (RCLike.imCLM (K := 𝕂))).submartingale
+  simpa only [RCLike.imCLM_apply] using h
+
+/-- A `𝕂` valued function converges along a filter as soon as its real and its
+imaginary part do.  The limit has to be named because `RCLike` has no
+`ofRealIm` constructor: it is `re_add_im` read backwards. -/
+theorem exists_tendsto_of_tendsto_re_of_tendsto_im {α : Type*} {l : Filter α} {g : α → 𝕂}
+    {a b : ℝ} (hre : Tendsto (fun s ↦ RCLike.re (g s)) l (𝓝 a))
+    (him : Tendsto (fun s ↦ RCLike.im (g s)) l (𝓝 b)) :
+    ∃ c : 𝕂, Tendsto g l (𝓝 c) := by
+  refine ⟨(a : 𝕂) + (b : 𝕂) * RCLike.I, ?_⟩
+  have h1 : Tendsto (fun s ↦ ((RCLike.re (g s) : ℝ) : 𝕂)) l (𝓝 (a : 𝕂)) :=
+    (RCLike.continuous_ofReal.tendsto a).comp hre
+  have h2 : Tendsto (fun s ↦ ((RCLike.im (g s) : ℝ) : 𝕂)) l (𝓝 (b : 𝕂)) :=
+    (RCLike.continuous_ofReal.tendsto b).comp him
+  have h3 := h1.add (h2.mul (tendsto_const_nhds (x := (RCLike.I : 𝕂)) (f := l)))
+  simpa only [RCLike.re_add_im] using h3
+
+omit [TopologicalSpace E] [MeasurableSpace E] in
+/-- **The real valued half of Doob's regularization, read through a regularizing
+class.**  For one `f` of the class, `f ∘ X` has almost surely, at **every** point
+of the index at once, both one sided limits along `D`.
+
+This is the statement that `exists_cadlag_modification_of_isRegularizingClass`
+assembles over a countable separating subclass, and it is where `h𝓧` is spent:
+`h𝓧` turns the member `Y` of `𝓧` into a martingale, `Martingale.submartingale_re`
+and `Martingale.submartingale_im` into two real submartingales,
+`Submartingale.ae_exists_tendsto_nhdsWithin` gives them their one sided limits
+along `D`, and `IsCompensatorFor.exists_limits` carries those of the compensator.
+
+**The countable cofinal family is the hypothesis that cannot be dropped, and it
+is `[(atTop : Filter ι).IsCountablyGenerated]`.**
+`Submartingale.ae_exists_tendsto_nhdsWithin` reads its time set between two
+bounds -- the lower one is `⊥`, the upper one is an honest hypothesis -- while
+the conclusion here is quantified over **every** `t : ι`.  One null set for each
+`t` is not a null set; a countable cofinal `u : ℕ → ι` makes it a countable
+union.  The instance holds for `ℝ≥0` and for `ℝ` through
+`atTop_isCountablyGenerated_of_archimedean`
+(`Order/Filter/AtTopBot/Archimedean.lean:147`).
+
+**A greatest element of `ι`, if there is one, costs nothing.**  Where no `u n`
+exceeds `t`, cofinality makes `t` the greatest element, `Set.Ioi t` is empty, the
+filter is `⊥` and the right limit is vacuous.  That is why no `NoMaxOrder`
+appears. -/
+theorem ae_exists_tendsto_comp_of_isRegularizingClass
+    [(atTop : Filter ι).IsCountablyGenerated]
+    {Φ : Set (E → 𝕂)} {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m}
+    {P : Measure Ω} [IsProbabilityMeasure P] {D : Set ι} (hD : D.Countable)
+    (h𝓧 : IsMPSolution 𝓧 𝓕 P) (hΦ : IsRegularizingClass Φ X 𝓧 𝓕 P D)
+    {f : E → 𝕂} (hf : f ∈ Φ) :
+    ∀ᵐ ω ∂P, ∀ t : ι,
+      (∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) (𝓝[D ∩ Set.Iio t] t) (𝓝 c)) ∧
+      (∃ c : 𝕂, Tendsto (fun s ↦ f (X s ω)) (𝓝[D ∩ Set.Ioi t] t) (𝓝 c)) := by
+  obtain ⟨Y, hY𝓧, C, hC⟩ := hΦ f hf
+  have hYm : Martingale Y 𝓕 P := h𝓧 Y hY𝓧
+  obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (atTop : Filter ι)
+  have hucof : ∀ t : ι, ∃ n : ℕ, t ≤ u n := fun t ↦ (hu.eventually_ge_atTop t).exists
+  have hstep : ∀ n : ℕ, ∀ᵐ ω ∂P, ∀ t : ι,
+      (∃ c : 𝕂, Tendsto (fun s ↦ Y s ω)
+        (𝓝[D ∩ Set.Iic (u n) ∩ Set.Iio t] t) (𝓝 c)) ∧
+      (∃ c : 𝕂, Tendsto (fun s ↦ Y s ω)
+        (𝓝[D ∩ Set.Iic (u n) ∩ Set.Ioi t] t) (𝓝 c)) := by
+    intro n
+    have hre := hYm.submartingale_re.ae_exists_tendsto_nhdsWithin
+      (S := D ∩ Set.Iic (u n)) (hD.mono Set.inter_subset_left) (R := ⊥)
+      (fun s _ ↦ bot_le) (fun s hs ↦ hs.2)
+    have him := hYm.submartingale_im.ae_exists_tendsto_nhdsWithin
+      (S := D ∩ Set.Iic (u n)) (hD.mono Set.inter_subset_left) (R := ⊥)
+      (fun s _ ↦ bot_le) (fun s hs ↦ hs.2)
+    filter_upwards [hre, him] with ω hreω himω
+    intro t
+    obtain ⟨⟨a1, ha1⟩, ⟨a2, ha2⟩⟩ := hreω t
+    obtain ⟨⟨b1, hb1⟩, ⟨b2, hb2⟩⟩ := himω t
+    exact ⟨exists_tendsto_of_tendsto_re_of_tendsto_im ha1 hb1,
+      exists_tendsto_of_tendsto_re_of_tendsto_im ha2 hb2⟩
+  have hdec : ∀ᵐ ω ∂P, ∀ s ∈ D, f (X s ω) = Y s ω + C s ω :=
+    (ae_ball_iff hD).2 fun s _ ↦ hC.decomposition s
+  filter_upwards [ae_all_iff.2 hstep, hC.exists_limits, hdec] with ω hYω hCω hdecω
+  intro t
+  constructor
+  · obtain ⟨n, hn⟩ := hucof t
+    obtain ⟨c, hc⟩ := (hYω n t).1
+    obtain ⟨l, hl⟩ := (hCω t).1
+    refine ⟨c + l, ?_⟩
+    have hset : D ∩ Set.Iic (u n) ∩ Set.Iio t = D ∩ Set.Iio t := by
+      ext s
+      simp only [Set.mem_inter_iff, Set.mem_Iic, Set.mem_Iio]
+      exact ⟨fun h ↦ ⟨h.1.1, h.2⟩, fun h ↦ ⟨⟨h.1, h.2.le.trans hn⟩, h.2⟩⟩
+    rw [hset] at hc
+    refine (hc.add hl).congr' ?_
+    filter_upwards [self_mem_nhdsWithin] with s hs
+    exact (hdecω s hs.1).symm
+  · by_cases hmax : ∃ n : ℕ, t < u n
+    · obtain ⟨n, hn⟩ := hmax
+      obtain ⟨c, hc⟩ := (hYω n t).2
+      obtain ⟨l, hl⟩ := (hCω t).2
+      refine ⟨c + l, ?_⟩
+      have hmem : Set.Iio (u n) ∈ 𝓝[D ∩ Set.Ioi t] t :=
+        mem_nhdsWithin_of_mem_nhds (isOpen_Iio.mem_nhds hn)
+      have hsub : Set.Iio (u n) ∩ (D ∩ Set.Ioi t) ⊆ D ∩ Set.Iic (u n) ∩ Set.Ioi t :=
+        fun s hs ↦ ⟨⟨hs.2.1, hs.1.le⟩, hs.2.2⟩
+      have hmono : 𝓝[D ∩ Set.Ioi t] t ≤ 𝓝[D ∩ Set.Iic (u n) ∩ Set.Ioi t] t := by
+        rw [← nhdsWithin_inter_of_mem hmem]
+        exact nhdsWithin_mono t hsub
+      refine ((hc.mono_left hmono).add hl).congr' ?_
+      filter_upwards [self_mem_nhdsWithin] with s hs
+      exact (hdecω s hs.1).symm
+    · simp only [not_exists, not_lt] at hmax
+      have hempty : D ∩ Set.Ioi t = ∅ := by
+        refine Set.eq_empty_of_forall_notMem fun s hs ↦ ?_
+        obtain ⟨n, hn⟩ := hucof s
+        exact absurd (hn.trans (hmax n)) (not_le.2 hs.2)
+      refine ⟨0, ?_⟩
+      rw [hempty, nhdsWithin_empty]
+      exact tendsto_bot
+
 /-- A regularizing class whose countable subset separates the points of `E`, and
 compact containment, give a modification with càdlàg paths.  The conclusion is
 the path property rather than membership in `D(ι, E)`, which is the object of the
@@ -2493,7 +2641,40 @@ What `h𝓧` supplies is the regularization of `Y`: a member of `𝓧` is a
 `𝕂`-valued martingale, its real and imaginary parts are real submartingales, and
 `Submartingale.ae_exists_tendsto_nhdsWithin` gives them one sided limits along
 `D`.  The compensator `C` carries its own limits as a field of
-`IsCompensatorFor`, and `f ∘ X = Y + C` inherits them. -/
+`IsCompensatorFor`, and `f ∘ X = Y + C` inherits them.  That half is done and is
+`ae_exists_tendsto_comp_of_isRegularizingClass` above.
+
+**Two hypotheses are still missing, found 2026-09-17 by writing the proof of the
+modification half.  Do not attempt the proof before they are put in; the
+statement below is not yet the one that is provable.**
+
+* **`Φ₀` has to be continuous.**  `hΦcount` asks only for point separation, and
+  the one route from the real limits to an `E`-valued one is
+  `ae_exists_tendsto_of_forall_ae_exists_tendsto`, which reads
+  `∀ f ∈ Φ₀, Continuous f`.  Neither `IsSeparating Φ` nor `IsRegularizingClass`
+  gives the continuity of a single member.
+* **Point separation does not reach the modification.**  With `X'` the right
+  limit along `D` the chain is `f (X' t) = Y_{t+} + C_{t+}`, then
+  `C_{t+} = C t` almost surely -- the only place `l1_rightContinuous` is used,
+  so the field sits where it belongs -- and `P[Y_{t+} | 𝓕 t] = Y t` by the
+  uniform integrability of `{Y s}`, which is
+  `Integrable.uniformIntegrable_condExp_filtration`
+  (`Probability/Process/Filtration.lean:214`) read at the real and imaginary
+  parts.  Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)`.  From
+  there to `X' t = X t` almost surely one needs either `Φ` closed under
+  `f ↦ f * conj f` -- expanding the square gives
+  `P[‖f (X' t) - f (X t)‖ ^ 2 | 𝓕 t] = 0` and point separation finishes -- or a
+  right continuous filtration, which is the usual conditions and a milestone of
+  its own.  The null set of the identity depends on `f`, and a countable point
+  separating family does not determine a conditional law.
+* **And `[FirstCountableTopology ι]`**, because `C_{t+} = C t` passes through an
+  almost surely convergent subsequence of an `L¹` convergent one, hence through
+  a sequence, hence through a countably generated `𝓝[D ∩ Set.Ioi t] t`.
+
+That the theorem is **false** without these is not claimed; no witness is known.
+The nearest candidates die on `IsSeparating Φ` itself: for `X t = 1_{t > 1} Z`
+with `Z` centred, the hypotheses force `f 0 = 𝔼[f Z]` for every `f ∈ Φ`, and a
+class with that property does not separate `δ₀` from the law of `Z`. -/
 theorem exists_cadlag_modification_of_isRegularizingClass {Φ : Set (E → 𝕂)}
     {X : ι → Ω → E} {𝓧 : Set (ι → Ω → 𝕂)} {𝓕 : Filtration ι m} {P : Measure Ω}
     [IsProbabilityMeasure P]

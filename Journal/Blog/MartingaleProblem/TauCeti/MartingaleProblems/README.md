@@ -7988,6 +7988,36 @@ and 11 use them.
   `exists_cadlag_modification_of_isRegularizingClass` asks for a countable
   separating subclass while `isQuasiLeftContinuous_of_isRegularizingClass` does
   not. Proved on 2026-09-15.
+* `ae_exists_tendsto_comp_of_isRegularizingClass`, the real valued half of
+  Doob's regularization read through a regularizing class: for one `f` of the
+  class, `f ∘ X` has almost surely, at **every** point of the index at once,
+  both one sided limits along `D`. This is where `IsMPSolution 𝓧 𝓕 P` is spent.
+  It turns the member `Y` of `𝓧` into a martingale,
+  `Martingale.submartingale_re` and `Martingale.submartingale_im` into two real
+  submartingales, `Submartingale.ae_exists_tendsto_nhdsWithin` gives them their
+  one sided limits along `D`, and `IsCompensatorFor.exists_limits` carries
+  those of the compensator; `f ∘ X = Y + C` holds at every point of the
+  countable `D` at once and therefore inherits both.
+
+  The index carries `[(atTop : Filter ι).IsCountablyGenerated]`, and that
+  hypothesis cannot be dropped: the upcrossing bound reads its time set between
+  two bounds, while the conclusion is quantified over **every** `t : ι`, and one
+  null set for each `t` is not a null set. A countable cofinal `u : ℕ → ι` makes
+  it a countable union. The instance holds for `ℝ≥0` and for `ℝ` through
+  `atTop_isCountablyGenerated_of_archimedean`
+  (`Order/Filter/AtTopBot/Archimedean.lean:147`). A greatest element of `ι`
+  costs nothing: where no `u n` exceeds `t`, cofinality makes `t` greatest,
+  `Set.Ioi t` is empty, the filter is `⊥` and the right limit is vacuous — so no
+  `NoMaxOrder` appears.
+
+  Three of its inputs are the process half of a Mathlib statement that exists
+  only in the conditional expectation half:
+  `Martingale.comp_continuousLinearMap`, a martingale composed with a
+  continuous `ℝ` linear map is a martingale, and `Martingale.submartingale_re`
+  and `Martingale.submartingale_im` reading it at `RCLike.reCLM` and
+  `RCLike.imCLM`. Mathlib has `ContinuousLinearMap.comp_condExp_comm`
+  (`MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` in v4.33.1)
+  and no process version. Proved on 2026-09-17.
 * `exists_cadlag_modification_of_isRegularizingClass`: if `P` is a probability
   measure solving the martingale problem for `𝓧`, `Φ` is a regularizing class
   for `X` along `𝓧` containing a countable subset that separates points, `Φ` is
@@ -8013,6 +8043,47 @@ and 11 use them.
   and `Submartingale.ae_exists_tendsto_nhdsWithin` gives them one sided limits
   along `D`. The compensator carries its own by a field of `IsCompensatorFor`,
   and `f ∘ X = Y + C` inherits them.
+
+  **Two hypotheses are still missing, and they were found on 2026-09-17 by
+  writing the proof of the modification half.** The statement above is the one
+  that stands in `Suggested.lean`, and it is not yet the one that is provable.
+
+  * **`Φ₀` has to be continuous.** `hΦcount` asks only that the countable
+    subclass separate the points of `E`. The one route from the real limits to
+    an `E`-valued limit is `ae_exists_tendsto_of_forall_ae_exists_tendsto`, and
+    it reads `∀ f ∈ Φ₀, Continuous f`: a compact set catches a cluster point and
+    a **continuous** `f` carries it. Neither `IsSeparating Φ` nor
+    `IsRegularizingClass` gives continuity of a single member, so the hypothesis
+    belongs in `hΦcount` and nowhere else.
+  * **The modification half needs more than point separation.** The chain is:
+    for `f ∈ Φ` and `X'` the right limit along `D`,
+    `f (X' t) = Y_{t+} + C_{t+}`; then `C_{t+} = C t` almost surely, and this is
+    the **only** place where `l1_rightContinuous` of `IsCompensatorFor` is used,
+    so the field does sit where it belongs; then `P[Y_{t+} | 𝓕 t] = Y t`, which
+    is the uniform integrability of `{Y s}` between `t` and an upper bound.
+    Together `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)`. **From here
+    point separation does not reach `X' t = X t` almost surely**, because the
+    null set of that identity depends on `f`, and a countable family that
+    separates points does not determine a conditional law. Two repairs:
+    - `Φ` closed under `f ↦ f * conj f`. Then expanding the square gives
+      `P[fun ω ↦ ‖f (X' t ω) − f (X t ω)‖ ^ 2 | 𝓕 t] =ᵐ[P] 0`, so
+      `f (X' t) = f (X t)` almost surely for each of the countably many
+      `f ∈ Φ₀`, and point separation finishes. No condition on the filtration,
+      no regular conditional distribution, and the whole step is a computation
+      with `condExp`.
+    - The filtration right continuous up to null sets. Then `Y_{t+}`, which is
+      measurable for `𝓕_{t+}`, is measurable for `𝓕 t`, and
+      `Y_{t+} = P[Y_{t+} | 𝓕 t] = Y t`. These are the usual conditions, and
+      Mathlib has neither them nor the augmentation (checked 2026-09-12); that
+      is a milestone of its own.
+
+    The first is the cheaper one and is the one this roadmap should carry.
+  * **The modification half reads `D` through sequences.** `C_{t+} = C t` comes
+    from `L¹` convergence along `s ↓ t` in `D`, and `L¹` convergence yields an
+    almost sure **subsequence**. Over a general linearly ordered `ι` the filter
+    `𝓝[D ∩ Set.Ioi t] t` need not be countably generated; either `ι` carries
+    `[FirstCountableTopology ι]` or the step is done another way. `ℝ≥0` and `ℝ`
+    have it.
 * The classical statement as a one line instance: for `A ⊆ Cb(E) × Bdd(E)` whose
   domain is separating and contains a countable subset separating points, every
   solution of the martingale problem for `A` satisfying compact containment has

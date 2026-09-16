@@ -31224,3 +31224,192 @@ und er fällt erst auf, wenn jemand die Eingaben abzählt.
 
 2. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
    der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.
+
+### 2026-09-17, erster Lauf des Tages — die reellwertige Hälfte von Doobs Regularisierung liegt jetzt an der Klasse an; und der Satz, auf den sie zuläuft, verlangt zwei Voraussetzungen, die er nicht trägt
+
+**Fünf Deklarationen** im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean`, die ganze Datei ohne einen Fehler
+durch `lake env lean` gegen v4.33.1, die Zahl der `sorry` bleibt bei sechs. Das
+war Vorschlag 0a des Vorlaufs, und er ist eingelöst.
+
+**Wie in diesem Lauf geprüft wurde, und es gehört gesagt, weil es von den
+früheren Läufen abweicht.** Ein Durchlauf über die Datei kostet inzwischen über
+eine halbe Stunde, und in ein Zeitbudget von zwei Stunden passen davon nicht
+beliebig viele.
+
+* Die fünf neuen Deklarationen stehen an den Zeilen 2471 bis 2620. Der
+  Durchlauf, der sie geprüft hat, ist über sie hinweg bis Zeile 3430 gekommen,
+  **ohne einen einzigen Fehler** — Lean meldet in Dateireihenfolge, also ist das
+  eine Aussage über alles davor. Beim Entwickeln waren sie außerdem in einer
+  kleinen Datei mit denselben Voraussetzungen durchgeprüft, mit
+  `Submartingale.ae_exists_tendsto_nhdsWithin` als `sorry`-Platzhalter; dort
+  gingen sie ohne Fehler durch.
+* Der Doc-Kommentar an `exists_cadlag_modification_of_isRegularizingClass` —
+  Befund 2 — ist **danach** eingefügt und für sich geprüft: der Kommentar
+  allein, mit einer Probedeklaration dahinter, geht durch `lake env lean`. Ein
+  Doc-Kommentar kann nur am Parser scheitern, und daran scheitert er nicht.
+* Der abschließende Durchlauf über die **ganze** Datei, mit den fünf
+  `#print axioms` am Ende, ist fertig geworden: **Exitcode 0, kein einziger
+  Fehler**, und alle fünf Deklarationen hängen allein an `propext`,
+  `Classical.choice`, `Quot.sound`. Die fünf `#print axioms`-Zeilen sind danach
+  wieder entfernt; sie standen am Dateiende und können nichts vor sich
+  beeinflussen.
+
+#### Was steht
+
+* **`MeasureTheory.Martingale.comp_continuousLinearMap`** — ein Martingal, hinter
+  eine stetige `ℝ`-lineare Abbildung gesetzt, ist ein Martingal. Mathlib hat die
+  Aussage über die bedingte Erwartung (`ContinuousLinearMap.comp_condExp_comm`,
+  `MeasureTheory/Function/ConditionalExpectation/Basic.lean:359` in v4.33.1) und
+  **nicht** die über den Prozeß.
+* **`MeasureTheory.Martingale.submartingale_re`** und
+  **`…submartingale_im`** — Real- und Imaginärteil eines `𝕂`-wertigen Martingals
+  sind reelle Submartingale; das ist die vorige Aussage an `RCLike.reCLM` und
+  `RCLike.imCLM`.
+* **`exists_tendsto_of_tendsto_re_of_tendsto_im`** — eine `𝕂`-wertige Funktion
+  konvergiert, sobald Real- und Imaginärteil konvergieren. Der Grenzwert muß
+  hingeschrieben werden, weil `RCLike` keinen Konstruktor aus Real- und
+  Imaginärteil hat; es ist `re_add_im`, rückwärts gelesen.
+* **`ae_exists_tendsto_comp_of_isRegularizingClass`** — für ein `f` der
+  regularisierenden Klasse hat `f ∘ X` fast sicher, an **jedem** Punkt des Index
+  zugleich, beide einseitigen Grenzwerte längs `D`. Das ist die reellwertige
+  Hälfte von Doobs Regularisierung, durch die Klasse gelesen, und die Stelle, an
+  der `IsMPSolution 𝓧 𝓕 P` verbraucht wird.
+
+#### Befund 1: der Index braucht eine abzählbare kofinale Familie, und sie ist eine Instanz
+
+Der Vorlauf hatte die Entscheidung ausdrücklich offengelassen:
+`Submartingale.ae_exists_tendsto_nhdsWithin` liest seine Zeitmenge zwischen zwei
+Schranken, die Zielaussage ist über **jedes** `t : ι` quantifiziert, und eine
+Nullmenge je `t` ist keine Nullmenge. Genommen ist
+`[(atTop : Filter ι).IsCountablyGenerated]` — nicht eine Einschränkung des
+Index, sondern die Bedingung selbst, in Mathlibs Vokabel. `Filter.exists_seq_tendsto`
+gibt daraus eine Folge `u : ℕ → ι` mit `Tendsto u atTop atTop`, also zu jedem `t`
+ein `n` mit `t ≤ u n`, und die Ausnahmemenge wird eine abzählbare Vereinigung.
+Für `ℝ≥0` und `ℝ` ist die Instanz da
+(`atTop_isCountablyGenerated_of_archimedean`,
+`Order/Filter/AtTopBot/Archimedean.lean:147`), also kostet sie an der Stelle, an
+der der Meilenstein sie verbraucht, nichts.
+
+**Und ein größtes Element von `ι` kostet ebenfalls nichts.** Wo kein `u n` über
+`t` hinausgeht, ist `t` nach der Kofinalität das größte Element, `Set.Ioi t` ist
+leer, der Filter ist `⊥` und der Rechtsgrenzwert gehaltlos. Kein `NoMaxOrder`,
+keine Fallunterscheidung im Satz — nur eine im Beweis.
+
+Die Schranke nach unten, die der Vorlauf eigens eingebaut hatte, ist hier `⊥` und
+damit umsonst; das ist genau die Ersparnis, die er vorhergesagt hatte.
+
+#### Befund 2: zwei Voraussetzungen fehlen dem Zielsatz, und die erste ist nicht zu diskutieren
+
+Beim Hinschreiben des Beweises von
+`exists_cadlag_modification_of_isRegularizingClass` — dem nächsten Schritt, nicht
+diesem — fielen zwei Lücken in seiner **Aussage** auf. Beide sind in
+`MartingaleProblems/README.md`, Meilenstein 9, ausgeschrieben; hier das Wesen.
+
+* **`Φ₀` muß stetig sein.** `hΦcount` verlangt nur, daß die abzählbare
+  Teilklasse die Punkte von `E` trennt. Der einzige Weg von den reellen
+  Grenzwerten zu einem `E`-wertigen ist
+  `ae_exists_tendsto_of_forall_ae_exists_tendsto`, und der liest
+  `∀ f ∈ Φ₀, Continuous f`: eine kompakte Menge fängt einen Häufungspunkt, und
+  eine **stetige** Funktion trägt ihn. Weder `IsSeparating Φ` noch
+  `IsRegularizingClass` gibt die Stetigkeit eines einzigen Mitglieds her. Das ist
+  keine Vermutung, sondern das Abzählen der Eingaben des einzigen vorhandenen
+  Zusammenbaus.
+* **Die Modifikationseigenschaft reicht mit Punkttrennung nicht.** Die Kette ist
+  benannt: mit `X'` dem Rechtsgrenzwert längs `D` ist
+  `f (X' t) = Y_{t+} + C_{t+}`; `C_{t+} = C t` f.s. — und das ist die
+  **einzige** Stelle, an der `l1_rightContinuous` von `IsCompensatorFor` gebraucht
+  wird, das Feld sitzt also richtig; `P[Y_{t+} | 𝓕 t] = Y t`, die gleichgradige
+  Integrierbarkeit des Martingals. Zusammen
+  `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] fun ω ↦ f (X t ω)`. **Von dort kommt man
+  mit Punkttrennung nicht nach `X' t = X t` f.s.**, weil die Nullmenge dieser
+  Identität von `f` abhängt und eine abzählbare punkttrennende Familie keine
+  bedingte Verteilung festlegt.
+
+  Zwei Reparaturen, und die Wahl ist die erste Entscheidung des nächsten Laufs:
+  **(i)** `Φ` abgeschlossen unter `f ↦ f * conj f` — dann gibt das Ausquadrieren
+  `P[‖f (X' t) − f (X t)‖² | 𝓕 t] = 0`, also `f (X' t) = f (X t)` f.s. für jedes
+  der abzählbar vielen `f ∈ Φ₀`, und die Punkttrennung schließt ab. Keine
+  Bedingung an die Filtration, keine reguläre bedingte Verteilung, alles eine
+  Rechnung mit `condExp`. **(ii)** Die Filtration rechtsstetig bis auf
+  Nullmengen — dann ist `Y_{t+}`, meßbar für `𝓕_{t+}`, meßbar für `𝓕 t`, und
+  `Y_{t+} = P[Y_{t+} | 𝓕 t] = Y t`. Das sind die üblichen Bedingungen, und
+  Mathlib hat weder sie noch die Augmentierung (geprüft 2026-09-12); das wäre ein
+  eigener Meilenstein. **(i) ist billiger und gehört in die Roadmap.**
+
+**Was dabei nicht behauptet wird:** daß der Satz ohne diese Zusätze *falsch* ist.
+Ein Zeuge fehlt, und die naheliegenden Versuche scheitern an der
+Trennungsvoraussetzung selbst: nimmt man `X t = 1_{t>1} Z` mit zentriertem `Z`,
+so erzwingen die Hypothesen `f 0 = 𝔼[f Z]` für **jedes** `f ∈ Φ`, und eine Klasse
+mit dieser Eigenschaft trennt `δ₀` nicht von der Verteilung von `Z`, ist also
+nicht trennend. Der Befund ist daher: **der Beweis geht so nicht**, und die
+Bruchstelle ist benannt. Das ist schwächer als der Befund des Vorlaufs, der einen
+Zeugen hatte, und es steht hier so, wie es ist.
+
+#### Die einundzwanzigste Lücke für `TODO.md` Punkt 8
+
+Mathlib hat `ContinuousLinearMap.comp_condExp_comm` — die Aussage über die
+**bedingte Erwartung** — und nicht die über den **Prozeß**:
+`Martingale f ℱ μ → Martingale (T ∘ f) ℱ μ` fehlt, und in
+`Mathlib/Probability/Martingale/` und `Mathlib/Probability/Process/` gibt die
+Suche nach `Martingale` neben `ContinuousLinearMap` **null Treffer** (2026-09-17,
+gegen v4.33.1). Dieselbe Suche zeigt, daß `RCLike` in
+`Mathlib/Probability/Martingale/` **gar nicht** vorkommt — es gibt dort also
+keinen Weg von einem komplexwertigen Martingal zu seinen beiden reellen Teilen.
+Der Beweis ist vier Zeilen; eingetragen in `TODO.md` Punkt 8, der damit
+einundzwanzig Punkte hat.
+
+#### Befund 3: die Modifikationshälfte liest `D` über Folgen
+
+`C_{t+} = C t` kommt aus `L¹`-Konvergenz längs `s ↓ t` in `D`, und
+`L¹`-Konvergenz gibt eine f.s. konvergente **Teilfolge**. Über einem beliebigen
+linear geordneten `ι` ist `𝓝[D ∩ Set.Ioi t] t` nicht notwendig abzählbar
+erzeugt; entweder trägt `ι` `[FirstCountableTopology ι]` oder der Schritt geht
+anders. `ℝ≥0` und `ℝ` haben es. Das ist die dritte Eintragung im Meilenstein.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **`X'` als Konstruktion** (Vorschlag 0b des Vorlaufs) und die
+  Modifikationseigenschaft (0c). Beide sind jetzt auf einen benannten Punkt
+  zurückgeführt, und der Punkt ist eine **Voraussetzung** und keine Rechnung.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die stetige Fassung des fdd-Kriteriums.** Unberührt.
+* **Die Zitatprüfung der Roadmaps gegen `upstream/master` (Teil D).** Dieser Lauf
+  hat `upstream` nicht neu geholt. Die drei neu zitierten Mathlib-Namen —
+  `ContinuousLinearMap.comp_condExp_comm`,
+  `atTop_isCountablyGenerated_of_archimedean` und
+  `Integrable.uniformIntegrable_condExp_filtration` — sind am Quelltext von
+  v4.33.1 belegt, mit Datei und Zeile; die ersten beiden werden in der Datei
+  benutzt, sind also nicht bloß zitiert, sondern übersetzt. Die **neue
+  Negativaussage** von `TODO.md` Punkt 8 — Mathlib hat kein
+  `Martingale (T ∘ f)` — steht ebenfalls nur gegen v4.33.1, und das ist an ihr
+  vermerkt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+0. **Die Signatur von `exists_cadlag_modification_of_isRegularizingClass`
+   berichtigen**, und zwar in der Fassung (i): `hΦcount` um
+   `∀ f ∈ Φ₀, Continuous f` erweitern, `Φ` um `∀ f ∈ Φ, (fun x ↦ f x * conj (f x)) ∈ Φ`
+   ergänzen, und `[FirstCountableTopology ι]` an den Index. Das ist ein halber
+   Lauf und macht den Satz erst angreifbar. *Worauf es ruht:* nichts, was noch
+   fehlt — die drei Punkte stehen mit ihrer Begründung im Meilenstein.
+
+1. **`condExp_comp_rightLim_eq`** — `P[fun ω ↦ f (X' t ω) | 𝓕 t] =ᵐ[P] f ∘ X t`,
+   die Aussage, die die ganze Modifikationseigenschaft trägt. *Worauf sie ruht:*
+   `l1_rightContinuous` für den Kompensator, und für das Martingal die
+   gleichgradige Integrierbarkeit von `{Y s : t ≤ s ≤ T}`, die aus
+   `Y s = P[Y T | 𝓕 s]` kommt. **Mathlib hat sie**, und zwar genau in dieser
+   Gestalt: `Integrable.uniformIntegrable_condExp_filtration`
+   (`Probability/Process/Filtration.lean:214` in v4.33.1),
+   `UniformIntegrable (fun i ↦ μ[g | 𝓕 i]) 1 μ` für integrierbares reelles `g`
+   über beliebigem `[Preorder ι]` und endlichem Maß. Sie ist **reellwertig**;
+   über `𝕂` geht sie wie in diesem Lauf über Real- und Imaginärteil.
+   *Warum jetzt:* nach Vorschlag 0 ist das der einzige noch unbewiesene Schritt
+   zwischen `ae_exists_tendsto_comp_of_isRegularizingClass` und dem Zielsatz.
+
+2. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   1 der letzten fünf Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
+   zur Fassung (c) mit dem meßbaren Zeugen.
+
+3. **`isStrongMarkov` auf den Daten von Meilenstein 4.** Unverändert; die letzte
+   der fünf im Meilenstein 6 ausformulierten Aussagen ohne Deklaration.
