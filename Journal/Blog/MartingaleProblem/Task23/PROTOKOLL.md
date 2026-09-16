@@ -7697,3 +7697,243 @@ behandelt (was einen Satz vom Typ „$\theta$ zerfällt in Beiträge der Kerne"
 verlangte, den es bisher nicht gibt), oder ein Gegenbeispiel — das dann das
 erste mit endlichen Idealen, ohne maximale Elemente in $W$ und lauter
 positiven Massen wäre.
+
+## Die stummen Stapel, 2026-09-16 (vierunddreißigster Lauf): auf einer hängenden Kette verschwindet $\kappa$ vollständig, der Defekt ist die $\psi$-Masse unter jedem Stapelfuß, und die unendliche disjunkte Vereinigung beliebiger endlicher Kerne mit Ketten oder Türmen fällt
+
+Der dreiunddreißigste Lauf hat als „nächste Rechnung" die unendliche disjunkte
+Vereinigung endlicher Kerne mit Ketten benannt und in seinen letzten Minuten
+dazu `Task23/disjoint_cores.py` angelegt (Docstring: „Theorem 41", „Lemma
+C"), aber **keinen Protokolleintrag** mehr geschrieben; die Ausgabedatei war
+leer. Dieser Lauf hat das Skript ausgeführt (rc=0, Ausgabe jetzt in
+`disjoint_cores.txt`), die dort skizzierten Aussagen nachgerechnet — und
+dabei eine wesentlich stärkere gefunden. Die Skizze des vorigen Laufs lautete:
+für Punkte $v$ der Höhe eins in einem $W$, dessen nicht-minimale Punkte alle
+kettenüberdeckt sind, ist $\Psi(t^*,v)=0$; und gibt es unendlich viele $v_n$
+mit $\Psi(t^*,v_n)=0$ und paarweise disjunkten Idealen, so ist $\delta(t^*)=0$,
+weil $\sum_n\theta$ konvergieren muß. Beides stimmt, aber die Hypothesen sind
+viel zu eng: **es kommt weder auf die Höhe noch auf die Überdeckung der
+übrigen Punkte an, sondern nur darauf, daß über $v$ selbst ein hängender
+Stapel steht.**
+
+Neu ist `Task23/silent_chains.py` (exakt in `Fraction`, Kernbasis des
+Lösungsraums, Proben (A), (A$'$), (B), (C), (D), rc=0, Ausgabe in
+`silent_chains.txt`).
+
+### Der Rahmen
+
+Der des fünfundzwanzigsten Laufs: $\T$ abzählbare Halbordnung mit kleinstem
+Element $0$, $m\ge0$ mit $m_0=0$ und $m>0$ sonst, $\kappa$ antisymmetrisch,
+$\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$ je Paar absolut konvergent,
+$(\diamondsuit)$ an allen Paaren. $t^*$ die Spitze, $W=\T_{<t^*}$,
+$\theta:=\delta(t^*)$, $\psi(a):=m_a\kappa(a,t^*)$ (absolut summierbar auf $W$,
+das ist die absolute Konvergenz von $\delta(t^*)=\Psi(t^*,t^*)$). Vorausgesetzt
+ist **(i)** $\delta\equiv0$ auf $W$, also $\Psi$ antisymmetrisch auf $W\times W$;
+das gilt, sobald jedes Ideal $\T_{\le a}$, $a\in W$, endlich ist
+(`prop:atomicposet`), und die Ideale seien endlich, damit $W$ fundiert ist.
+
+**Definition (hängender Stapel).** Endliche nichtleere Mengen
+$S_0,S_1,S_2,\dots\subseteq W\setminus\{0\}$ heißen ein *hängender Stapel*, wenn
+alle Punkte einer Stufe $S_i$ dasselbe Ideal $I_i:=\T_{<s}$ ($s\in S_i$) haben
+und $I_{i+1}=I_i\sqcup S_i$ für alle $i\ge0$. Der *Fuß* ist $I_0$. Sind alle
+Stufen einelementig, $S_i=\{u_i\}$, so ist das eine *hängende Kette*
+$u_0<u_1<\dots$ mit $\T_{<u_{i+1}}=\T_{\le u_i}$ — die „kettenüberdeckten"
+Punkte der Läufe 32/33, jetzt aber mit der Forderung, daß die Überdeckung
+**nie abbricht**. Für eine Stufe $S$ schreibe
+$\sigma_S(b):=\sum_{s\in S}m_s\kappa(s,b)$ (Stufensumme) und
+$\Psi_S(b):=\Psi(s,b)$, $s\in S$ (unabhängig von $s$, weil das Ideal gemeinsam
+ist).
+
+### Lemma 40 (stumme Stapel)
+
+> **Lemma 40.** Unter (i) gilt für jeden hängenden Stapel $(S_i)$ in $W$:
+> $\sigma_{S_i}(b)=0$ für alle $i\ge0$ und **alle** $b\in W$. Ist $S_0=\{a\}$
+> einelementig, so ist also $\kappa(a,\cdot)\equiv0$ auf $W$; auf einer
+> hängenden Kette ist $\kappa(u_i,\cdot)\equiv0$ auf $W$ für jedes $i$.
+
+*Beweis.* Fundierte Induktion über $b$ (die Ideale sind endlich). Sei
+$\sigma_{S_i}(c)=0$ für alle $i$ und alle $c<b$ (leer, wenn $b$ minimal oder
+$b=0$). Für jedes $i$ ist
+$$\sum_{s\in S_i}m_s\,\Psi(b,s)=\sum_{c<b}m_c\sum_{s\in S_i}m_s\kappa(c,s)
+ =-\sum_{c<b}m_c\,\sigma_{S_i}(c)=0$$
+(endliche Summen). Andererseits ist $\Psi(b,s)=-\Psi(s,b)=-\Psi_{S_i}(b)$ für
+jedes $s\in S_i$ nach (i), also $m(S_i)\,\Psi_{S_i}(b)=0$ und, da $m(S_i)>0$,
+$\Psi_{S_i}(b)=0$ für alle $i$. Wegen $I_{i+1}=I_i\sqcup S_i$ ist
+$\sigma_{S_i}(b)=\Psi_{S_{i+1}}(b)-\Psi_{S_i}(b)=0$. $\square$
+
+Der Beweis benutzt an $b$ **nichts** — $b$ darf minimal, maximal, im Stapel,
+unvergleichbar zu ihm oder $0$ sein. Für $b=0$ sagt das Lemma $g(S_i)=0$, die
+bekannte Aussage, daß $g$ auf kettenüberdeckten Punkten verschwindet
+(Korollar 38.2); für $b$ minimal sagt es Lemma C des vorigen Laufs. Der
+Gehalt sitzt in den übrigen $b$, und dort lautet die Aussage: **die
+Kettenwerte sind im unendlichen System null.** Der zweiunddreißigste Lauf hat
+genau das als Prämisse benutzt und dann als Sackgasse verworfen, weil
+`chainvals.py` die Kreuzwerte zwischen zwei Ketten auf Trunkierungen frei
+fand. Sie *sind* auf Trunkierungen frei — die Induktion reicht dort nur so
+weit, wie Kette über dem Punkt steht (Probe (A$'$) unten) — und im
+unendlichen System null. Die Prämisse war richtig, die Verwerfung ein
+Fehlschluß von „frei auf jeder Trunkierung" auf „frei"; siehe Sackgassen.
+
+Wo die Positivität eingeht, und nur dort: $m(S_i)>0$, um durch die
+Stufenmasse zu teilen, und (i), also `prop:atomicposet` auf den endlichen
+Idealen. Kein (F), keine Schranke an $\Phi$.
+
+### Theorem 41 (der Defekt am Fuß eines Stapels)
+
+> **Theorem 41.** Unter (i) gilt für jeden hängenden Stapel $(S_i)$ in $W$
+> $$\theta=\psi(I_i)\quad\text{für jedes }i\ge0,\qquad\text{insbesondere }
+>   \theta=\psi(I_0)\ \text{ und }\ \psi(S_i)=0\ \text{für alle }i .$$
+> Der Dualitätsdefekt ist die $\psi$-Masse unter dem Fuß des Stapels, und
+> die Stapelpunkte tragen keine $\psi$-Masse.
+
+*Beweis.* $(\diamondsuit)$ an $(s,t^*)$ für $s\in S_i$ lautet
+$\Psi(s,t^*)+\Psi(t^*,s)=\theta$ mit $\Psi(s,t^*)=\psi(I_i)$. Also ist
+$\Psi(t^*,s)=\theta-\psi(I_i)$ **unabhängig von $s\in S_i$**. Ferner
+$\Psi(t^*,s)=\sum_{b\in W}m_b\kappa(b,s)=-\sum_bm_b\kappa(s,b)$ (absolut
+konvergent), und nach Lemma 40
+$$\sum_{s\in S_i}m_s\,\Psi(t^*,s)=-\sum_{b\in W}m_b\,\sigma_{S_i}(b)=0 .$$
+Beides zusammen: $m(S_i)\bigl(\theta-\psi(I_i)\bigr)=0$, also
+$\theta=\psi(I_i)$. Mit $I_{i+1}=I_i\sqcup S_i$ folgt $\psi(S_i)=0$. $\square$
+
+Für eine hängende Kette heißt das: $\Psi(t^*,u_i)=0$ und $\psi(u_i)=0$ für
+jedes $i$ — die Kette ist gegenüber der Spitze **vollständig stumm**, nach
+beiden Seiten. Das ist die Aussage „$\Psi(t^*,v)=0$" des vorigen Laufs ohne
+jede Bedingung an die Höhe von $v$ oder an die übrigen Punkte von $W$.
+
+### Theorem 42 (Stapelausschöpfung)
+
+> **Theorem 42.** Unter (i) ist $\theta=0$, sobald eines gilt:
+>
+> **(a)** es gibt einen hängenden Stapel mit Fuß $I_0=\{0\}$ (Stapel, der
+> an minimalen Atomen beginnt; etwa eine hängende Kette ab einem minimalen
+> Atom, oder eine schwache Ordnung vom Typ $\omega$ mit endlichen Stufen
+> von unten);
+>
+> **(b)** es gibt hängende Stapel $(S^{(n)}_i)_i$, $n\in\N$, deren Füße
+> $I^{(n)}_0$ **entweichen**: jedes $a\in W\setminus\{0\}$ liegt nur in
+> endlich vielen $I^{(n)}_0$ (etwa: die $I^{(n)}_0\setminus\{0\}$ paarweise
+> disjunkt).
+
+*Beweis.* (a) $\theta=\psi(\{0\})=m_0\kappa(0,t^*)=0$. (b) $\theta=\psi(I^{(n)}_0)$
+für jedes $n$, und $\psi(I^{(n)}_0)\to\psi(\{0\})=0$ nach dominierter
+Konvergenz gegen $|\psi|\in\ell^1(W)$ — bei disjunkten Füßen schon wegen
+$\sum_n|\psi(I^{(n)}_0)|\le\|\psi\|_1<\infty$. $\square$
+
+Allgemeiner gilt für jede Folge von Stapelfüßen $I^{(n)}_0$ mit
+$\mathbb 1_{I^{(n)}_0}\to\mathbb 1_F$ punktweise (Teilfolge; $F$ ist ein
+Abwärtsideal): $\theta=\psi(F)$. Nützlich ist das nur, wenn $\psi(F)$
+unabhängig kontrolliert ist, also $F=\{0\}$.
+
+### Korollar 42.1: die Anwendungen, alle ohne (F), für jedes $m>0$
+
+1. **Die unendliche disjunkte Vereinigung beliebiger endlicher Kerne mit
+   hängenden $\omega$-Ketten** über jedem maximalen Kernpunkt — die „nächste
+   Rechnung" des dreiunddreißigsten Laufs, und mehr: der Kern darf beliebig
+   sein (Doppelschleife, hängende, doppelt hängende Doppelschleife, A+B,
+   Zufallskerne), und die Kerne dürfen verschieden sein. Die Ketten $c_{n,1}<
+   c_{n,2}<\dots$ über einem maximalen Punkt $k_n$ des $n$-ten Kerns sind
+   hängend mit Fuß $\T_{\le k_n}\subseteq K_n$, die Füße sind paarweise
+   disjunkt außer $0$: Theorem 42(b). — Vermutung C(K) und die
+   Summierbarkeit $\sum m_{r_n}m_{r_{n'}}|\kappa(r_n,r_{n'})|$ aus Theorem 38
+   mit $X=\{r_n\}$ werden nicht gebraucht.
+2. **Dasselbe mit Türmen statt Ketten**: über jedem maximalen Kernpunkt eine
+   schwache Ordnung $S_1<S_2<\dots$ mit endlichen Stufen (etwa
+   $\{\alpha_i,\beta_i\}$, $\alpha_i,\beta_i<\alpha_{i+1},\beta_{i+1}$). Dort
+   ist **kein** Punkt oberhalb des Hakens überdeckt, die Klasse
+   „kettenüberdeckt" der Läufe 32/33 ist leer — und der Stapel
+   $S_0=\{k_n\},S_1,S_2,\dots$ ist hängend. Theorem 42(b).
+3. **Theorem 19 mit einer Kette daneben.** Der Antikettenzeuge
+   $\T=\{0\}\cup A\cup\{t^*\}$ mit $\delta(t^*)=1/M$ verliert die Dualität
+   **nicht** — sie kehrt zurück, sobald neben der Antikette eine einzige
+   hängende Kette $0<c_1<c_2<\dots$ steht: Theorem 42(a) mit Fuß $\{0\}$.
+   Der Defekt der Antikette lebt davon, daß **jeder** Punkt von $W$ maximal
+   ist; ein einziger nicht maximaler Punkt mit unendlicher Kette darüber
+   löscht ihn. (Nachgerechnet: Probe (A) in der Familie „Antikette + Kette",
+   $\kappa(c_i,a_j)$ erzwungen $0$, soweit die Trunkierung reicht.)
+4. **Korollar 38.2/38.3 neu gelesen:** die Leiter ($a_i<b_j\iff i<j$; die
+   $a$-Kette ist hängend ab dem minimalen $a_1$), zwei oder abzählbar viele
+   disjunkte $\omega$-Ketten, Bäume ohne Blätter, schwache Ordnungen vom Typ
+   $\omega$ mit endlichen Stufen — alles Theorem 42(a). Theorem 38 mit
+   $X=\emptyset$ bleibt für gerichtete $W$ **ohne** Stapel der Satz
+   (interleaved Doppelketten, Nachtrag unten).
+
+### Lemma 40$'$: die allgemeine Fassung — Blöcke im Abschluß des Idealspanns
+
+Der Beweis von Lemma 40 benutzt von der Stapelgestalt nur zweierlei: daß die
+Punkte einer Stufe dasselbe Ideal haben, und daß die Stufenindikatoren
+Differenzen von Idealindikatoren sind. Beides läßt sich abstrahieren.
+
+> **Lemma 40$'$.** Unter (i) sei $D\subseteq W\setminus\{0\}$ in endliche
+> **Blöcke** $S$ zerlegt, deren Punkte jeweils dasselbe Ideal haben, und es
+> sei $L_D$ der Spann der Idealindikatoren $\{\mathbb 1_{\T_{<v}}:v\in D\}$
+> (Funktionen auf $W\setminus\{0\}$), $\overline L_D$ sein Abschluß unter
+> beschränkten punktweisen Folgenlimiten. Gilt $\mathbb 1_S\in\overline L_D$
+> für jeden Block $S$, so ist
+> $$\Psi(v,\cdot)\equiv0\ \text{ auf }W\ \text{ für alle }v\in D,\qquad
+>   \sigma_S(\cdot)\equiv0\ \text{ auf }W\ \text{ für alle Blöcke }S .$$
+> Sind die Blöcke einelementig, so ist also $\kappa(a,\cdot)\equiv0$ für alle
+> $a\in D$.
+
+*Beweis.* Fundierte Induktion über $b\in W$ mit der Aussage $P(b)$:
+„$\Psi(v,b)=0$ für alle $v\in D$ und $\sigma_S(b)=0$ für alle Blöcke $S$."
+Gelte $P(c)$ für alle $c<b$. Für einen Block $S$ mit gemeinsamem Ideal $I$ ist
+$\Psi(v,b)=\sum_{a\in I}m_a\kappa(a,b)$ dasselbe für alle $v\in S$, also nach
+(i) auch $\Psi(b,v)$, und
+$$m(S)\,\Psi(b,v)=\sum_{v'\in S}m_{v'}\Psi(b,v')
+ =\sum_{c<b}m_c\sum_{v'\in S}m_{v'}\kappa(c,v')=-\sum_{c<b}m_c\,\sigma_S(c)=0 ,$$
+also $\Psi(v,b)=0$ für alle $v\in D$. Damit verschwindet das Funktional
+$f_b(u):=m_u\kappa(u,b)$ (absolut summierbar auf $W$: Zeile $b$) auf allen
+$\mathbb 1_{\T_{<v}}$, $v\in D$, nach dominierter Konvergenz auf ganz
+$\overline L_D$, insbesondere $\sigma_S(b)=f_b(\mathbb 1_S)=0$. $\square$
+
+Lemma 40 ist der Fall $D=\bigcup_iS_i$ mit den Stufen als Blöcken:
+$\mathbb 1_{S_i}=\mathbb 1_{I_{i+1}}-\mathbb 1_{I_i}\in L_D$. Theorem 41 überträgt
+sich wörtlich — $\Psi(t^*,v)=\theta-\psi(\T_{<v})$ ist auf einem Block
+konstant, $\sum_{v\in S}m_v\Psi(t^*,v)=-\sum_bm_b\sigma_S(b)=0$, also
+$$\theta=\psi(\T_{<v})\qquad\text{für jedes }v\in D ,$$
+und Theorem 42 ebenso: $\theta=0$, sobald $D$ ein minimales Atom enthält
+oder die Ideale $\T_{<v_n}$ einer Folge in $D$ entweichen.
+
+**Was Lemma 40$'$ mehr erfaßt als die Stapel.** Über einem Haken $k$ stehe eine
+*verschränkte Doppelkette* $a_i<a_{i+1}$, $b_i<b_{i+1}$, $b_i<a_{i+1}$,
+$a_i<b_{i+2}$: gerichtet, ohne Überdeckungen und ohne hängenden Stapel
+(der Stapel $\{k\},\{a_1,b_1\},\{a_2\}$ bricht ab). Aber die Ideale der
+Armpunkte bilden eine Kette $\T_{\le k}=\T_{<a_1}=\T_{<b_1}\subset\T_{<b_2}
+\subset\T_{<a_2}\subset\T_{<b_3}\subset\cdots$ mit einelementigen Differenzen
+$\{b_1\},\{a_1\},\{b_2\},\{a_2\},\dots$, also $\mathbb 1_a\in L_D$ für jeden
+Armpunkt und $\mathbb 1_k=\mathbb 1_{\T_{<a_1}}-\mathbb 1_{\T_{<k}}$: Lemma 40$'$
+mit einelementigen Blöcken, $\theta=\psi(\T_{<k})$. Noch weiter: der
+*Dreierzopf* $a_i<b_{i+1}$, $b_i<c_{i+1}$, $c_i<a_{i+1}$ (plus die drei
+Ketten), dessen Ideale **keine** Kette bilden — dort ist
+$\mathbb 1_{b_i}-\mathbb 1_{c_i}$, $\mathbb 1_{c_i}-\mathbb 1_{a_i}$ und
+$\mathbb 1_{a_i}+\mathbb 1_{c_i}+\mathbb 1_{b_{i-1}}$ in $L_D$ (Differenzen
+benachbarter Ideale), woraus $2\,\mathbb 1_{a_i}+\mathbb 1_{a_{i-1}}\equiv0$
+modulo $L_D$ und mit $2\,\mathbb 1_{a_1}\equiv0$ schließlich
+$\mathbb 1_{a_i},\mathbb 1_{b_i},\mathbb 1_{c_i}\in L_D$ für alle $i$ folgt.
+Der Dreierzopf über jedem Haken unendlich vieler Doppelschleifen — die
+Struktur, die dieser Lauf zunächst als kleinsten offenen Fall notiert hatte —
+fällt also ebenfalls: Theorem 42(b) mit $D$ = alle Arme samt Haken.
+
+### Theorem 42$'$: der ganz allgemeine Schluß, und was er über ein Gegenbeispiel sagt
+
+Vereinigungen zulässiger Mengen $D$ sind zulässig ($L_{D_1\cup D_2}\supseteq
+L_{D_i}$), es gibt also eine größte, $D^*$. Auf $D^*$ ist $\Psi(v,\cdot)\equiv0$:
+**die Punkte von $D^*$ verhalten sich wie minimale Atome**, und
+$\theta=\psi(\T_{<v})$ für jedes $v\in D^*$. Ein $W$ mit endlichen Idealen,
+ohne maximale Elemente und $\theta\ne0$ muß daher erfüllen:
+
+* $D^*$ enthält kein minimales Atom und keine Folge mit entweichenden
+  Idealen; da $\theta=\psi(\T_{<v})$ auf $D^*$ konstant ist, tragen die
+  Ideale zweier Punkte von $D^*$ dieselbe $\psi$-Masse;
+* $W$ ist nicht gerichtet (Theorem 38), nicht bis auf endlich viele Punkte
+  ausschöpfbar (Theorem 39);
+* kein Punkt trägt einen hängenden Stapel, keine Kette von Idealen mit
+  blockweise gemeinsamen Idealen — die „Arme" über den Kernen müssen so
+  verflochten sein, daß kein Punktindikator im Abschluß des Idealspanns
+  seines Arms liegt.
+
+Ob es ein solches $W$ gibt, bleibt offen. Der einfachste Arm, der Lemma
+40$'$ schlägt, ist eine **Leiter ohne hängende Seite**, etwa
+$a_i<b_j\iff i<j$ und $b_i<a_j\iff i<j-1$ (beide Seiten „hinken" um eins,
+keine Seite ist eine hängende Kette). Ob dort $\mathbb 1_{a_i}\in\overline L$,
+ist in diesem Lauf nicht mehr entschieden worden; das ist die nächste
+Rechnung (siehe unten).
