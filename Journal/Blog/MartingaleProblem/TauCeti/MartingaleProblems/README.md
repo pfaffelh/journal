@@ -7511,6 +7511,51 @@ order.
   over, and the two are genuinely different tools: neither hypothesis implies
   the other. It contains the case of a chain `A` with neither a least nor a
   greatest element.
+* `duality_of_atomic_idealExhaustion`: with `Φ, γ` as in `chain_identity` and
+  `γ₁ = γ₂ = γ`, a purely atomic clock on a countable partial order with least
+  element `0`, `m ≥ 0`, and a `t` such that (i) `Φ a 0 = Φ 0 a` for every
+  `a < t` — supplied by `duality_of_atomic` on the ideal `Iic a` whenever that
+  ideal is finite — and (ii) the set `W = Iio t` is **directed upwards and has
+  no maximum**, one has `Φ t 0 = Φ 0 t`. No `m ⊗ m`-integrability, no bound on
+  `Φ`, no certificate. Proof: put `g c = m c * (γ c 0 - γ 0 c)`; the increment
+  representation at `(t, 0)` reads `Φ t 0 - Φ 0 t = ∑' c ∈ Iio t, g c`
+  (absolutely convergent — it is the existence of the integrals), and (i) says
+  `∑ c ∈ Iio a, g c = 0` for every `a ∈ W`. A countable directed set without
+  maximum has a strictly increasing cofinal sequence `a n` (Mathlib:
+  `IsDirected`, `exists_seq_strictMono_tendsto` in spirit; here build it by
+  hand from an enumeration), `Iio (a n) ↑ W`, and `tendsto_tsum_compl_atTop_zero`
+  (or `Summable.tendsto_sum_tsum_nat` along the increasing sets) gives
+  `∑' c ∈ W, g c = lim n, ∑ c ∈ Iio (a n), g c = 0`. The same two lines cover
+  two further shapes of `W`, which should be separate lemmas sharing the proof:
+  `W \ {0}` a disjoint union of pairwise incomparable directed pieces without
+  maxima (the finite sums over `⋃ k ≤ n, Iio (a k n)` are sums over the pieces
+  because the ideals meet only in `{0}`, where `g 0 = 0`), and every
+  `c ∈ W \ {0}` **chain-covered**, i.e. with an `a ∈ W` such that
+  `Iio a = Iic c` (then `g c = 0` for each `c` singly, and the tail of the
+  absolutely convergent series does the rest). The general form behind all
+  three — `δ t = 0` whenever `𝟙_W` lies in the bounded pointwise sequential
+  closure of the span of the ideal indicators `𝟙_{Iio a}`, `a ∈ W`, and its
+  extension by a set `X` of minimal atoms with `𝟙_{W \ X}` in that closure
+  (Task 23, run 32, Theorem 38) — is not what should be formalised first; the
+  three concrete shapes are. What they settle, all for arbitrary summable
+  masses: the **ladder** `a i < b j ↔ i < j` (directed: `a i, b j < b (max i j + 1)`;
+  every `Iic` finite), on which no item above applies for `m ⊗ m`-non-integrable
+  `γ` and on which the certificate question of runs 25–31 stays open; the
+  **disjoint union of two `ω`-chains**, in particular with the masses
+  `m (a i) = B ^ (-i)`, `m (b j) = B ^ (-j) * 2 ^ ((-1) ^ (j+1))`, `B ≥ 16`,
+  where `Matrix.certificate_mulVec_pow_one` shows that **no** bounded
+  certificate exists — so the certificate method is sufficient and not
+  necessary, and this pair is the acceptance test for that; trees without
+  leaves, and weak orders of level type `ω` with finite levels, where
+  `duality_of_atomic_weakOrder_of_integrable` needed the integrability. It does
+  **not** reach two stacked `ζ`-chains (there (i) is the question itself for
+  the upper chain), and it does not reach an index in which `W` has maximal
+  elements that are not minimal atoms (infinite crown, infinite `N`), which
+  remain with `duality_of_atomic_finiteHeight_of_integrable`. The item is two
+  lines on top of `duality_of_atomic` and a dominated-convergence step, and it
+  is the first in this milestone that reaches an infinite index of infinite
+  height with non-transitive incomparability without any hypothesis beyond the
+  existence of the integrals.
 * `Lagrange.sum_inv_prod_sub_eq_zero`: for a `Finset s` with `2 ≤ #s` and an
   `x : ι → F` injective on `s`, `∑ k ∈ s, (∏ l ∈ s.erase k, (x k - x l))⁻¹ = 0`,
   while the sum is `(1 : F)` for `#s = 1`. It is `Lagrange.coeff_eq_sum`

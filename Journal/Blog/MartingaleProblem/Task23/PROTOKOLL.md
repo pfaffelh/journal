@@ -6902,3 +6902,527 @@ ersetzen ist.
 Skripte dieses Laufs, alle rc=0: `krylov_moments.py` (Proposition 35, Theorem 36,
 Korollar 36.1; `krylov_moments.txt`), `two_chains.py` (Theorem 37;
 `two_chains.txt` für $B=8$, `two_chains16.txt` für $B=16$).
+
+## Die Idealausschöpfung, 2026-09-16 (zweiunddreißigster Lauf): zwei disjunkte $\omega$-Ketten und die Leiter fallen ohne Zertifikat und ohne (F) — der Defekt an $t^*$ ist die $g$-Masse des Ideals unter $t^*$, und die Ideale darunter tragen keine
+
+Der einunddreißigste Lauf hat als nächste Rechnung gestellt, die Dualität auf
+der disjunkten Vereinigung zweier $\omega$-Ketten zu entscheiden — mit den
+Massen von Theorem 37, unter (F), auf einem der zwei Wege „(a) direkt über
+Theorem 17 auf beiden Ketten plus die Kreuzrelationen" oder „(b)
+Gegenbeispiel". Dieser Lauf entscheidet sie **positiv**, auf Weg (a), aber in
+einer Gestalt, die kürzer ist als die dort skizzierte: die Kreuzrelationen
+$(a_i,b_j)$ werden nicht gebraucht, (F) wird nicht gebraucht, Theorem 17 wird
+nicht gebraucht, und derselbe Beweis erledigt die **Leiter** für jedes
+Massenprofil — einschließlich des Fensters $0{,}8<\beta/\alpha<1{,}1$, in dem
+das LP-Minimum wächst, und einschließlich $\alpha=\beta$. Damit ist die Frage
+der Läufe 25–31 nach beschränkten Zertifikaten auf der Leiter für die Dualität
+gegenstandslos: Vermutung 32 und Vermutung 34 bleiben Aussagen über die
+Zertifikatsstruktur, aber die Dualität hängt nicht mehr an ihnen.
+
+Neu ist `Task23/ideal_exhaustion.py` (exakt in `Fraction`, Proben (A)–(F),
+rc=0, Ausgabe in `ideal_exhaustion.txt`).
+
+### Die Beobachtung, in drei Zeilen
+
+Rahmen des fünfundzwanzigsten Laufs: $\T$ abzählbare Halbordnung mit kleinstem
+Element $0$, $m\ge0$, $\kappa$ antisymmetrisch, $\Psi(s,t)=\sum_{a<s}m_a\kappa(a,t)$
+je Paar absolut konvergent, $(\diamondsuit)$ an **allen** Paaren,
+$\delta=\operatorname{diag}\Psi$. Setze
+
+$$g(c):=m_c\,\kappa(c,0)\qquad(c\in\T).$$
+
+1. $(\diamondsuit)$ an $(t,0)$ lautet $\Psi(t,0)=\delta(t)$ (denn $\Psi(0,\cdot)\equiv0$),
+   also **$\delta(t)=g(\T_{<t})$**: der Defekt an $t$ ist die $g$-Masse des
+   strikten Ideals unter $t$. Das ist die Definition des Defekts im
+   $\Phi$-Bild ($\Phi(t,0)-\Phi(0,t)=\sum_{c<t}m_c(\gamma(c,0)-\gamma(0,c))$,
+   dritter Lauf), hier noch einmal aus $(\diamondsuit)$.
+2. Ist $\T_{\le a}$ **endlich**, so ist $\delta(a)=0$ — Idealreduktion des
+   vierten Laufs (eine Lösung auf $\T$ schränkt sich auf das Ideal ein) plus
+   `prop:atomicposet` (sechster Lauf) auf dem endlichen Ideal, $m\ge0$. Also
+   **$g(\T_{<a})=0$ für jedes $a$ mit endlichem Ideal.**
+3. Der vierte Lauf hat notiert: „der Defekt sitzt genau auf der Antikette der
+   maximalen Elemente von $\T_{<z}$". Hat $W:=\T_{<t^*}$ **keine** maximalen
+   Elemente, so hat er nirgends zu sitzen — und was das genau heißt, ist
+   dominierte Konvergenz gegen die absolut summierbare Funktion $g$.
+
+### Theorem 38 (Idealausschöpfung)
+
+Sei $t\in\T$, $W:=\T_{<t}$, und sei $L$ der lineare Spann der
+Idealindikatoren $\{\mathbb 1_{\T_{<a}}:a\in W\}$, aufgefaßt als Funktionen auf
+$W\setminus\{0\}$; $\overline L$ sei die kleinste Klasse beschränkter
+Funktionen auf $W\setminus\{0\}$, die $L$ enthält und unter beschränkten
+punktweisen Limiten von Folgen abgeschlossen ist. Es gelte
+
+* **(i)** $\delta(a)=0$ für jedes $a\in W$;
+* **(ii)** es gibt eine Menge $X\subseteq W$ **minimaler Atome** ($\T_{<x}=\{0\}$
+  für $x\in X$), leer oder nicht, mit $\mathbb 1_{W\setminus X}\in\overline L$,
+  und im Fall $X\neq\emptyset$ zusätzlich $m_0=0$ und: $X$ endlich, oder
+  $\sum_{x,x'\in X}m_xm_{x'}|\kappa(x,x')|<\infty$.
+
+> **Theorem 38.** Dann ist $\delta(t)=0$.
+
+*Beweis.* **Fall $X=\emptyset$ (oder $m(X)=0$).** $g$ ist auf $W$ absolut
+summierbar (das ist die absolute Konvergenz von $\Psi(t,0)$), und
+$g(0)=m_0\kappa(0,0)=0$. Sei $N$ die Menge der beschränkten $f$ auf
+$W\setminus\{0\}$ mit $\sum_{c}g(c)f(c)=0$. Nach (i) und Zeile 1 ist
+$g(\T_{<a})=\delta(a)=0$ für $a\in W$, also $L\subseteq N$; $N$ ist unter
+beschränkten punktweisen Folgenlimiten abgeschlossen (dominierte Konvergenz,
+Majorante $\sup_n\|f_n\|_\infty\cdot|g|$), also $\overline L\subseteq N$, also
+$\mathbb 1_W\in N$ (bei $m(X)=0$ ist $\mathbb 1_W=\mathbb 1_{W\setminus X}$ auf
+$\{g\ne0\}$), und Zeile 1 an $t$ gibt $\delta(t)=g(W)=0$.
+
+**Fall $X\ne\emptyset$, $m(X)>0$.** Für $x\in X$ setze
+$\varphi_x(c):=m_c\kappa(c,x)$, absolut summierbar auf $W$ (absolute
+Konvergenz von $\Psi(t,x)$). Für $y\in W$ gibt $(\diamondsuit)$ an $(y,x)$:
+$\Psi(y,x)+\Psi(x,y)=\delta(y)+\delta(x)=0$ nach (i), und
+$\Psi(x,y)=m_0\kappa(0,y)=0$ wegen $m_0=0$; also
+$\varphi_x(\T_{<y})=\Psi(y,x)=0$ für alle $y\in W$ — **$\varphi_x$ hat
+dieselben verschwindenden Idealsummen wie $g$**, und dieselbe dominierte
+Konvergenz gibt $\varphi_x(W\setminus X)=0$. $(\diamondsuit)$ an $(x,t)$:
+$\Psi(x,t)+\Psi(t,x)=\delta(x)+\delta(t)=\delta(t)$ mit $\Psi(x,t)=0$, also
+$$\delta(t)=\Psi(t,x)=\varphi_x(W)=\varphi_x(X)=\sum_{x'\in X}m_{x'}\kappa(x',x)
+\qquad\text{für jedes }x\in X.$$
+Multiplikation mit $m_x$ und Summation über $X$: links $m(X)\,\delta(t)$, rechts
+$\sum_{x,x'\in X}m_xm_{x'}\kappa(x',x)=0$ durch Antisymmetrie — bei endlichem $X$
+unmittelbar, bei unendlichem $X$ nach Fubini unter der Summierbarkeitshypothese.
+Also $\delta(t)=0$. $\square$
+
+Der Fall $X\ne\emptyset$ ist der Zweizeiler der „flachen Spitze" (fünfter
+Lauf) bzw. von Proposition 19.1 (dreiundzwanzigster Lauf), auf einen Sockel
+$W\setminus X$ gestellt, den die Ideale ausschöpfen.
+
+### Korollar 38.1: wo (i) herkommt
+
+* $\T_{\le a}$ endlich für jedes $a\in W$: `prop:atomicposet` auf dem Ideal,
+  $m\ge0$, **ohne (F)**.
+* $\T_{\le a}$ eine intervallendliche Kette: vierzehnter Lauf, ohne (F).
+* $\T_{\le a}$ eine beliebige Kette mit (F) auf ihr: Theorem 17 auf dem Ideal
+  mit Spitze $a$.
+* $\T_{\le a}$ von endlicher Höhe oder eine schwache Ordnung, jeweils mit (F):
+  Theorem 23 bzw. Theorem 21 auf dem Ideal.
+
+### Korollar 38.2: wo (ii) herkommt, mit $X=\emptyset$
+
+* **$W$ nach oben gerichtet und ohne Maximum.** Dann gibt es eine streng
+  wachsende kofinale Folge $a_n$ (abzählbar; Aufzählung $w_n$, $a_{n+1}$ eine
+  obere Schranke von $a_n$, $w_{n+1}$ und einem $u_n>a_n$), und
+  $\mathbb 1_{\T_{<a_n}}\uparrow\mathbb 1_W$.
+* **$W\setminus\{0\}=\bigsqcup_kW_k$ paarweise unvergleichbar, jedes
+  $W_k\cup\{0\}$ nach oben gerichtet und $W_k$ ohne Maximum** (endlich oder
+  abzählbar viele $k$). Mit kofinalen $a_{k,n}\in W_k$ ist
+  $f_n:=\sum_{k\le n}\mathbb 1_{\T_{<a_{k,n}}}$ auf $W\setminus\{0\}$ mit Werten in
+  $\{0,1\}$ (die Ideale schneiden sich nur in $\{0\}$) und $\to\mathbb 1_W$.
+* **Jedes $c\in W\setminus\{0\}$ ist kettenüberdeckt**: es gibt $a\in W$ mit
+  $\T_{<a}=\T_{\le c}$. Dann $\mathbb 1_c=\mathbb 1_{\T_{<a}}-\mathbb 1_{\T_{<c}}\in L$
+  und $\mathbb 1_{D_n}\in L$ für endliche $D_n\uparrow W$. Das umfaßt jede
+  Kette vom Typ $\omega$, jede disjunkte Vereinigung solcher Ketten und jeden
+  nach oben wachsenden Baum ohne Blätter.
+
+### Korollar 38.3: die Anwendungen, alle ohne (F) und für beliebige $m\ge0$
+
+1. **Die Leiter** $a_i<b_j\iff i<j$, beliebige positive summierbare Massen:
+   alle Ideale endlich, $W$ gerichtet ($a_i,b_j<b_{\max(i,j)+1}$), ohne
+   Maximum. $\delta(t^*)=0$. Das schließt das Fenster
+   $0{,}8<\beta/\alpha<1{,}1$ und $\alpha=\beta$ ein, in dem das LP-Minimum der
+   Trunkierungen wächst (dreißigster Lauf) — die Dualität gilt dort trotzdem.
+2. **Die disjunkte Vereinigung zweier (oder abzählbar vieler)
+   $\omega$-Ketten**, insbesondere die Halbordnung von Theorem 37 mit
+   $\alpha_i=B^{-i}$, $\beta_j=B^{-j}2^{(-1)^{j+1}}$: **kein Zertifikat, aber
+   Dualität.** Die Zertifikatsmethode (Theorem 22, Proposition 19.3) ist
+   dort nachweislich unanwendbar und die Aussage trotzdem wahr; das
+   Kriterium „$\mathcal L=\R^\T$ genau dann, wenn $\delta$ erzwungen" des
+   sechsten Laufs ist ein **endliches** Kriterium und überträgt sich nicht.
+3. **Bäume ohne Blätter** (jeder Knoten hat einen Nachfolger, endliche Ideale),
+   etwa der unendliche Binärbaum über $0$ mit Spitze: unendliche Höhe, nicht
+   transitive Unvergleichbarkeit, ein minimales Atom und unendlich viele
+   Verzweigungen — von keinem der bisherigen Sätze erfaßt.
+4. **Schwache Ordnungen vom Stufentyp $\omega$ mit endlichen Stufen**:
+   gerichtet, endliche Ideale — Theorem 21 brauchte dort (F), hier fällt es.
+5. **Die „Doppelschleife"** $0<p,q,r,s$; $p,q,r<a$; $p,q,s<a'$; $\omega$-Ketten
+   über $a$ und über $a'$: keine maximalen Elemente, endliche Ideale — und
+   $\mathbb 1_W\notin\overline L$ (die Idealsummen erzwingen $g(W)$ **nicht**:
+   $g(r)=g(s)=1$, $g(p)=-1$, Rest $0$ ist zulässig; Probe (E)). Aber mit
+   $X=\{r\}$: $\mathbb 1_{W\setminus\{r\}}=\mathbb 1_{\T_{<a'}}+\mathbb 1_a+\mathbb 1_{a'}+\sum\mathbb 1_{c}+\sum\mathbb 1_{c'}\in L$
+   ($a$, $a'$ und alle Kettenpunkte sind kettenüberdeckt), also $\delta(t^*)=0$.
+   Mit $X=\{p\}$ ginge es **nicht** — $p$ und $q$ liegen in denselben Idealen,
+   $\mathbb 1_{W\setminus\{p\}}\notin L$ (Probe (E2)): die Wahl des minimalen
+   Atoms ist Teil des Beweises.
+
+Mit (F) zusätzlich: zwei nebeneinander liegende **ordnungsdichte** Ketten
+(Theorem 17 gibt (i) auf jedem Ideal, Korollar 38.2 zweiter Punkt gibt (ii));
+und die unendliche Antikette ($X=$ alle Atome, $W\setminus X=\{0\}$,
+$\mathbb 1_{\{0\}}=\mathbb 1_{\T_{<x}}\in L$) — das ist Proposition 19.1 als
+Spezialfall.
+
+**Was nicht erfaßt ist.** Zwei **gestapelte** $\zeta$-Ketten und Blockstapel:
+dort ist (i) für die Punkte der oberen Kette die Frage selbst (ihre Ideale
+sind weder endlich noch intervallendlich), und Korollar 14/16 (beschränktes
+$\Phi$) bzw. Theorem 17 ((F)) bleiben die Sätze. Halbordnungen, in denen $W$
+maximale Elemente hat, die keine minimalen Atome sind (unendliche Krone,
+unendliches N): dort ist $\mathbb 1_{W\setminus X}\notin\overline L$ für jedes
+zulässige $X$, und Theorem 23 ((F), endliche Höhe) bleibt der Satz. Ob es eine
+Halbordnung mit **endlichen Idealen** gibt, auf der die Dualität fällt, ist
+offen; Theorem 38 sagt, daß sie weder gerichtet noch eine disjunkte Vereinigung
+gerichteter Stücke noch kettenüberdeckt sein darf und daß ihr Sockel unter
+keiner Wahl minimaler Atome ausschöpfbar ist.
+
+### Gemessen: `Task23/ideal_exhaustion.py`, exakt, rc=0
+
+Alle Proben auf Trunkierungen $W_n$ **ohne Spitze**, Rangvergleich in
+`Fraction` (Systemaufbau aus `antisym.py`):
+
+* **(A)** zwei disjunkte $\omega$-Ketten ($2^{-i},3^{-j}$ und die Massen von
+  Theorem 37, $B=16$), $n=2..6$: $g(c)$ erzwungen **genau** für die
+  nicht-maximalen $c$ von $W_n$, frei für die beiden maximalen (deren
+  überdeckende Ideale in $W_n$ fehlen) — die Mechanik von Korollar 38.2, Punkt
+  für Punkt.
+* **(B)** die Leiter, drei Profile einschließlich $\alpha=\beta$, $n=2..6$:
+  ebenso.
+* **(C)** Binärbaum, Tiefe $2,3,4$: ebenso (innere Knoten erzwungen, Blätter
+  frei).
+* **(D)** Kanarienvogel Antikette: kein $g(a_i)$ erzwungen.
+* **(E)** Doppelschleife, Ketten der Länge $1,2,3$: $g(p),g(q),g(r),g(s)$
+  einzeln frei, $g(\T_{<a})$ erzwungen, $g(r)-g(s)$ erzwungen, **die Summe
+  über die nicht-maximalen Punkte nicht erzwungen** — die Idealsummen allein
+  genügen dort nicht, wie behauptet.
+* **(E2)** Doppelschleife, der Ausweg über ein minimales Atom: für $x\in\{r,s\}$
+  sind die Idealsummen von $\varphi_x$ erzwungen und
+  $\varphi_x(W_n\setminus\max\setminus\{x\})$ ist erzwungen; für $x=p$ ist es
+  **nicht** erzwungen (erwartet: $\mathbb 1_{W\setminus\{p\}}\notin L$); für
+  das nicht-minimale $x=a$ ebenfalls nicht (Kontrolle).
+* **(F)** 40 zufällige Halbordnungen mit kleinstem Element, $3\le n\le6$,
+  alle $1088$ Teilmengen $S$: liegt $\mathbb 1_S$ im Spann der
+  Idealindikatoren ($188$ Fälle), so ist $g(S)$ erzwungen — ausnahmslos. Und
+  umgekehrt in **keinem** Fall $g(S)$ erzwungen ohne Spannzugehörigkeit: ohne
+  Spitze erzwingen die Relationen von $g$ genau die Idealsummen, nichts mehr.
+  (Das ist strukturell klar — die Variablen $\kappa(c,0)$ kommen im System nur
+  in den Kombinationen $\Psi(s,0)=g(\T_{<s})$ vor — und hier gemessen.)
+
+Die Proben sind bewußt dünn: der Beweis von Theorem 38 ruht auf
+`prop:atomicposet` (sechster Lauf, dort an $89\,440+$ Fällen geprüft) und auf
+dominierter Konvergenz; das Orakel prüft die Mechanik von (ii) auf den
+endlichen Stücken und die beiden Kanarienvögel (D), (E), an denen sie versagen
+muß.
+
+### Ergebnis
+
+* **Bewiesen.** Theorem 38 und die Korollare 38.1–38.3. Insbesondere gilt die
+  Dualität $\Phi(t^*,0)=\Phi(0,t^*)$ ohne (F) und für jedes Massenprofil auf
+  der **Leiter**, auf der **disjunkten Vereinigung zweier $\omega$-Ketten**
+  (Theorem 37: kein Zertifikat — die Aussage gilt trotzdem), auf Bäumen ohne
+  Blätter, auf schwachen Ordnungen vom Typ $\omega$ mit endlichen Stufen und
+  auf der Doppelschleife.
+* **Erledigt.** Die „nächste Rechnung" des einunddreißigsten Laufs (positiv,
+  Weg (a), ohne Kreuzrelationen). Der Kandidat für ein „Gegenbeispiel mit
+  durchweg positiven Abwärtsmassen" (Lauf 23, konkretisiert in Lauf 31) ist
+  keiner. Die Vermutungen 32 und 34 und der Weg über Proposition 19.3 sind für
+  die Dualität auf der Leiter **nicht mehr nötig**; sie bleiben als Aussagen
+  über das LP-optimale bzw. Krylow-Zertifikat stehen.
+* **Offen.** Die nackte Klasse auf Ketten (unverändert). Eine Halbordnung mit
+  endlichen Idealen, auf der die Dualität fällt — oder der Satz, daß es keine
+  gibt. Die gestapelten $\zeta$-Ketten ohne (F) und ohne beschränktes $\Phi$.
+  Ein Gegenbeispiel unter (F) mit positiven Massen: der einzige verbliebene
+  Kandidatentyp hat maximale Elemente in $W$, die keine minimalen Atome sind,
+  **und** unendliche Höhe (sonst Theorem 23) — etwa eine unendliche Krone über
+  einer $\omega$-Kette.
+
+### Sackgassen, dreißigster Nachtrag
+
+* **Die unendliche Halbordnung mit endlichen Idealen über Zertifikate angehen.**
+  Sieben Läufe (25–31) haben die Leiter über beschränkte Zertifikate,
+  LP-Minima, Hankel-Normalformen und Sättigungssysteme angegangen — für eine
+  Aussage, die aus der Idealreduktion des vierten Laufs, `prop:atomicposet` und
+  dominierter Konvergenz in zehn Zeilen folgt. Zum zwölften Mal eine Prämisse
+  aus der Rechnung statt aus dem Beweisbedarf: „eine unendliche Halbordnung
+  braucht ein unendliches Zertifikat". Sie braucht endliche Ideale und eine
+  Ausschöpfung.
+* **Die Kreuzrelationen $(a_i,b_j)$ für den Schluß brauchen** (Weg (a) des
+  einunddreißigsten Laufs, wie dort skizziert). Unnötig: die Relationen an
+  $(a,0)$ — d.h. $\delta(a)=g(\T_{<a})$ — tragen alles. Die Kreuzrelationen
+  stecken im Beweis von `prop:atomicposet` auf dem Ideal, nicht im Grenzübergang.
+* **Beim Handrechnen $\kappa(a_n,a_\omega)$ und $\kappa(a_\omega,a_n)$
+  unabhängig ansetzen.** Dieser Lauf hat auf der Kette vom Typ $\omega+1$
+  (Atome $a_1<a_2<\dots<a_\omega$ unter $t^*$) zwanzig Minuten lang ein
+  „Gegenbeispiel" zu Theorem 17 unter (F) in der Hand gehabt — $v_n$-Werte, die
+  aus $\kappa(a_\omega,a_n)$ kamen, während die Relationen an $(a_n,a_\omega)$
+  längst $\kappa(a_n,a_\omega)=0$ gegeben hatten. Mit der Antisymmetrie bricht
+  es zusammen ($v_n=0$, dann $y=0$). Wer $\kappa$ von Hand belegt, führe die
+  Unbekannten als Paare $i<j$ wie `antisym.py`, nicht als Matrix.
+* **„Keine maximalen Elemente plus endliche Ideale genügt für (ii) mit
+  $X=\emptyset$."** Falsch: die Doppelschleife (Probe (E)). Die richtige
+  Bedingung ist $\mathbb 1_{W\setminus X}\in\overline L$, und die Wahl von $X$
+  ist nicht beliebig (Probe (E2), $x=p$ gegen $x=r$).
+* **Aus der Nichtexistenz eines Zertifikats (Theorem 37) auf einen Ausfall der
+  Dualität hoffen.** Das Kriterium „$\delta(t)$ erzwungen $\iff e_t\in\mathcal L$"
+  ist ein Satz über endliche Matrizen (sechster Lauf, Probe 1 von
+  `selfadjoint.py`). Im Unendlichen ist $\delta(t^*)$ hier durch eine
+  **unendliche** Kombination von Relationen erzwungen (eine je Ideal), und die
+  hat kein beschränktes $T$.
+
+### Vorschlag: was als Nächstes formalisiert werden soll
+
+**Lean-Ziel `duality_of_atomic_idealExhaustion`**, eingetragen in
+`TauCeti/MartingaleProblems/README.md` (Meilenstein 8, vor
+`Lagrange.sum_inv_prod_sub_eq_zero`) und in `PLAN.md`, Task 23:
+
+> Rein atomare Uhr auf einer abzählbaren Halbordnung mit kleinstem Element,
+> $m\ge0$, $t$ ein Punkt, unter dem jedes Ideal $\T_{\le a}$ ($a<t$) endlich
+> ist und $\T_{<t}$ nach oben gerichtet ohne Maximum. Dann
+> $\Phi(t,0)=\Phi(0,t)$.
+
+Es ruht auf `duality_of_atomic` (auf dem endlichen Ideal, das ist
+`prop:atomicposet`) und auf einem einzigen analytischen Schritt, dem Schwanz
+einer absolut konvergenten Reihe längs einer kofinalen Folge
+(`tendsto_tsum_compl_atTop_zero`); keine Matrixanalysis, keine
+Zertifikate, keine komplexe Analysis. Zwei Geschwister mit wörtlich demselben
+Beweis (disjunkte Vereinigung gerichteter Stücke ohne Maxima; kettenüberdeckte
+Punkte) gehören daneben. Es ist jetzt dran, weil es (a) die kleinste offene
+Instanz von sieben Läufen — die Leiter — für **alle** Massen schließt, (b) das
+erste Roadmap-Item ist, das eine unendliche Halbordnung unendlicher Höhe mit
+nicht transitiver Unvergleichbarkeit ohne jede Hypothese jenseits der Existenz
+der Integrale erreicht, und (c) mit dem Abnahmebeispiel „zwei $\omega$-Ketten
+mit den Massen von Theorem 37" festhält, daß die Zertifikatsmethode hinreichend
+und nicht notwendig ist — ein Punkt, den die Roadmap bisher nicht enthielt.
+
+**Nächste Rechnung** (in `PLAN.md` benannt): gibt es eine Halbordnung mit
+**endlichen Idealen**, auf der die Dualität fällt? Der Stand dazu steht im
+Nachtrag unten: drei immer trickreichere Kandidaten sind in diesem Lauf
+gefallen (Dreifachschleife, hängende Doppelschleife, doppelt hängende
+Doppelschleife), jeder durch einen anderen Mechanismus, und die Vermutung
+lautet jetzt: **endliche Ideale unter $t^*$ und $m\ge0$ genügen.** Der Weg
+dorthin und das Werkzeug stehen im Nachtrag.
+
+### Nachtrag desselben Laufs: die $\lambda$-Fassung von Theorem 38, drei gefallene Kandidaten, eine Sackgasse
+
+**Theorem 38$''$ (die $\lambda$-Fassung).** Rahmen wie in Theorem 38, $m_0=0$,
+(i) $\delta\equiv0$ auf $W$. Es gebe endlich viele paarweise disjunkte Mengen
+$X_1,\dots,X_k$ minimaler Atome, reelle $\lambda_1,\dots,\lambda_k$ und
+$h\in\overline L$ mit
+$$\mathbb 1_W=h+\sum_j\lambda_j\mathbb 1_{X_j}\quad\text{auf }W\setminus\{0\},
+\qquad \sum_j\lambda_j\,m(X_j)\neq0,$$
+jedes $X_j$ endlich oder $\sum_{x\in X_i,x'\in X_j}m_xm_{x'}|\kappa(x,x')|<\infty$
+für alle $i,j$. Dann $\delta(t)=0$.
+
+*Beweis.* Für $x\in X_i$ ist wie in Theorem 38 $\delta(t)=\varphi_x(W)$ und
+$\varphi_x(h)=0$, also $\delta(t)=\sum_j\lambda_j\varphi_x(X_j)$. Multipliziere
+mit $\lambda_i m_x$ und summiere über alle $x\in\bigcup_iX_i$:
+$$\delta(t)\sum_i\lambda_im(X_i)=\sum_{i,j}\lambda_i\lambda_j
+  \sum_{x\in X_i,\,x'\in X_j}m_xm_{x'}\kappa(x',x)=0$$
+durch Antisymmetrie der Doppelsumme (die Gewichte $\lambda_i\lambda_jm_xm_{x'}$
+sind symmetrisch in $(x,x')$; Fubini unter der Summierbarkeitshypothese).
+$\square$ — Theorem 38 ist der Fall $k=1$, $\lambda_1=1$ (und $X=\emptyset$
+der Fall $k=0$ mit $g$ statt $\varphi_x$).
+
+**Anwendung 1: die hängende Doppelschleife.** $p,q,r_0,s_0$ minimal, $r_0<r$,
+$s_0<s$, $a>p,q,r$, $a'>p,q,s$, $\omega$-Ketten über $a$ und $a'$. Hier sind
+$r,s$ nicht mehr minimal, also nicht durch ein $X$ entfernbar, und
+$\overline L$ verlangt $f(p)=f(q)=f(r)+f(s)$ ($1_{\T_{<a}}$, $1_{\T_{<a'}}$
+sind die einzigen Idealindikatoren, die $p,q,r,s$ treffen). Also
+$\mathbb 1_{W\setminus X}\notin\overline L$ für jedes $X$ — aber
+$\mathbb 1_W+\mathbb 1_{\{p,q\}}=\mathbb 1_{\T_{<a}}+\mathbb 1_{\T_{<a'}}+\mathbb 1_U\in\overline L$
+($U$ die kettenüberdeckten Punkte $r_0,s_0,a,a'$ und die Ketten), d.h.
+$X=\{p,q\}$, $\lambda=-1$: **Dualität für alle Massen.** Gemessen
+(`bowties.py` (1), $n=2,3,4$, exakt): $h_n$ liegt im Spann, die gewichtete
+Summe $\sum_{x\in X}\lambda m_x\varphi_x(h_n)$ ist erzwungen, die einzelnen
+$\varphi_x(W_n\setminus\max)$ und $g(W_n\setminus\max)$ sind es nicht.
+
+**Anwendung 2: zwei Zwillingsstrukturen mit verschiedenen Defiziten.**
+Struktur A wie eben; Struktur B mit $p',q'$ und **drei** privaten hängenden
+Zweigen $u_0<u$, $v_0<v$, $w_0<w$ ($b>p',q',u$; $b'>p',q',v$; $b''>p',q',w$),
+Ketten über $a,a',b,b',b''$. $\overline L$ verlangt $f(p)=f(q)=f(r)+f(s)$ und
+$f(p')=f(q')=f(u)+f(v)+f(w)$; ein einzelnes $\lambda$ scheitert ($1-\lambda=2$
+gegen $1-\lambda=3$), aber $X_1=\{p,q\}$, $\lambda_1=-1$, $X_2=\{p',q'\}$,
+$\lambda_2=-2$ mit $\sum\lambda_jm(X_j)<0$ schließt. Gemessen (`bowties.py`
+(2), $n=1,2$): $h_n$ im Spann und gewichtete Summe erzwungen; Kontrolle mit
+$\lambda=(-1,-1)$: nicht im Spann, nicht erzwungen.
+
+**Anwendung 3, und sie fällt aus dem Satz heraus: die doppelt hängende
+Doppelschleife.** $p_0<p$, $q_0<q$, $r_0<r$, $s_0<s$ (nur $p_0,q_0,r_0,s_0$
+minimal), $a>p,q,r$, $a'>p,q,s$, Ketten über $a,a'$. Alle minimalen Atome
+sind kettenüberdeckt, also ändert kein $X$ etwas an $p,q,r,s$, und
+$\overline L$ verlangt dort $f(p)=f(q)=f(r)+f(s)$ gegen
+$\mathbb 1_W(p)=1=\mathbb 1_W(r)+\mathbb 1_W(s)-1$: **kein** $h+\sum\lambda_j\mathbb 1_{X_j}$
+stellt $\mathbb 1_W$ dar. Trotzdem gilt die Dualität, und der Beweis ist
+sechs Zeilen: für jedes minimale $x$ ist $\delta(t^*)=\varphi_x(W)$
+($(\diamondsuit)$ an $(x,t^*)$), $\varphi_x$ verschwindet auf allen
+kettenüberdeckten Punkten und hat $\varphi_x(p)+\varphi_x(q)+\varphi_x(r)=0
+=\varphi_x(p)+\varphi_x(q)+\varphi_x(s)$ (Ideale $a$, $a'$), also
+$$\delta(t^*)=\varphi_{r_0}(s)=m_s\kappa(s,r_0),\qquad
+  \delta(t^*)=\varphi_{s_0}(r)=m_r\kappa(r,s_0).$$
+Und $(\diamondsuit)$ an $(r,s)$ lautet $\Psi(r,s)+\Psi(s,r)=0$, d.h.
+$m_{r_0}\kappa(r_0,s)+m_{s_0}\kappa(s_0,r)=0$; mit der Antisymmetrie
+$$-\frac{m_{r_0}}{m_s}\,\delta(t^*)-\frac{m_{s_0}}{m_r}\,\delta(t^*)=0,
+\qquad\text{also}\qquad\delta(t^*)=0 .$$
+**Die privaten Zweige reden über die Relation $(r,s)$ miteinander** — das ist
+ein dritter Mechanismus neben den Idealsummen (Theorem 38) und den
+Zwillingsmengen (Theorem 38$''$), und er benutzt eine Relation an einem
+Paar **nicht-minimaler, unvergleichbarer** Punkte. Gemessen (`resonance.py`,
+exakt, $n=2,3$, drei Massenprofile): $\varphi_{r_0}(W_n\setminus\max)$ ist
+erzwungen, und ebenso die daneben gefundene Identität
+$m_{r_0}m_r\varphi_{r_0}(W)=m_pm_{p_0}\varphi_{p_0}(W)+m_qm_{q_0}\varphi_{q_0}(W)$
+(aus $(\diamondsuit)$ an $(r,p)$, $(r,q)$; für sich allein gäbe sie nur
+$\delta\cdot[m_{r_0}m_r-m_pm_{p_0}-m_qm_{q_0}]=0$, also Dualität außerhalb
+einer **Resonanz** der Massen wie beim o-Diamanten des achten Laufs — die
+Resonanz ist hier durch die $(r,s)$-Relation unschädlich, das Orakel sieht bei
+resonanten Massen keinen Unterschied). Die Dreifachschleife
+($p,q,r<a$; $p,q,s<a'$; $r,s<a''$; `triple_bowtie.py`) fällt schon unter
+Theorem 38 mit $X=\emptyset$: die dritte Schleife trennt $r$ und $s$,
+$\mathbb 1_W$ liegt im Spann.
+
+**Die Vermutung, die daraus wird.** *Ist $\T$ abzählbar mit kleinstem Element,
+$m\ge0$, und ist jedes Ideal $\T_{\le a}$ mit $a<t^*$ endlich, so ist
+$\delta(t^*)=0$* — ohne (F), ohne Bedingung an die Gestalt von $W$. Alle
+in diesem Lauf betrachteten Instanzen bestätigen sie, jede mit einem anderen
+Mechanismus. Die unendliche Antikette (Theorem 19) hat ebenfalls endliche
+Ideale und **fällt** — aber ihre Atome sind maximal in $W$, und $t^*$ ist das
+einzige, was darüber liegt. Die Vermutung ist also mit „und $W$ hat keine
+maximalen Elemente" zu lesen; hat $W$ maximale Elemente, die minimale Atome
+sind, so braucht es auf diesen (F) (Theorem 38 mit $X$ = diese Atome). Der Beweis, wenn es einen gibt, muß die drei
+Mechanismen vereinen: $\delta(t^*)=\varphi_x(W)$ für jedes minimale $x$,
+$\varphi_x$ verschwindet auf kettenüberdeckten Punkten und hat verschwindende
+Idealsummen, und die Relationen an Paaren nicht-minimaler Punkte koppeln die
+$\varphi_x$ untereinander. Werkzeug für Kandidaten: die Rangprobe
+„$\varphi_x(W_n\setminus\max\setminus\{x\})$ erzwungen" auf Trunkierungen ohne
+Spitze (`bowties.py`, `resonance.py`) — ist sie für alle $n$ erfüllt, folgt
+$\delta(t^*)=\lim_n\varphi_x(W_n\setminus\max)=0$ **rigoros** (absolute
+Konvergenz); ist sie verletzt, sagt das über das unendliche System nichts.
+
+### Sackgassen, einunddreißigster Nachtrag
+
+* **Die Kettenwerte für null halten und das unendliche System auf den Kern
+  reduzieren.** Dieser Lauf hat eine Stunde lang ein Skript (`hanging.py`,
+  gelöscht) betrieben, das für „endlicher Kern plus hängende $\omega$-Ketten"
+  annahm, alle $\kappa$-Werte an Kettenpunkten verschwänden, und daraus ein
+  endliches System ableitete, das $\delta(t^*)=0$ „für jeden Kern" erzwang.
+  Beides falsch bzw. leer: die Kettenwerte $\kappa(v,c_i)$ sind auf
+  Trunkierungen **nicht** erzwungen (`chainvals.py`: alle Kreuzwerte zwischen
+  den beiden Ketten und zwischen einer Kette und dem fremden Zweig bleiben
+  frei), und das reduzierte System war eine **Einschränkung** des unendlichen
+  auf kernträgerige Lösungen, deren Relationen die des endlichen
+  Kern-mit-Spitze-Systems enthalten — sein „erzwungen" ist `prop:atomicposet`
+  und sagt über das unendliche System nichts. Verschwindende Idealsummen hat
+  $\varphi_x$ nur für **minimale** $x$ ($\Psi(x,\cdot)\equiv0$); für andere
+  $y$ ist $\varphi_y(\T_{<z})=-\Psi(y,z)\neq0$. Zum dreizehnten Mal eine
+  Prämisse aus der Rechnung statt aus dem Beweisbedarf.
+* **„Keine maximalen Elemente plus endliche Ideale $\Rightarrow$ Theorem 38
+  anwendbar."** Falsch in jeder Fassung: die Doppelschleife schlägt $X=\emptyset$,
+  die hängende Doppelschleife schlägt $\lambda=1$, die doppelt hängende schlägt
+  jedes $\sum\lambda_j\mathbb 1_{X_j}$. Die Dualität gilt auf allen dreien —
+  aus je einem anderen Grund.
+* **Ein Zertifikat für $\varphi_{r_0}(W)$ per Gauß ablesen wollen**
+  (`bowtie_cert.py`): die Elimination liefert irgendein Urbild mit fünfzig
+  Termen und Nennern wie $1799915307008$, aus dem der Mechanismus nicht zu
+  erkennen ist. Der Mechanismus war von Hand in sechs Zeilen zu finden, sobald
+  die Frage richtig gestellt war (welche Relation koppelt $r$ und $s$?). Wer
+  Zertifikate lesen will, minimiere zuerst den Träger.
+
+Skripte dieses Laufs, alle exakt in `Fraction`: `ideal_exhaustion.py`
+(Proben (A)–(F), rc=0, Ausgabe `ideal_exhaustion.txt`), `triple_bowtie.py`,
+`bowties.py` (rc=0), `resonance.py`, `chainvals.py`, `bowtie_cert.py`.
+
+### Manuskript
+
+`thm:idealexhaustion` (Theorem 38 in der Fassung mit einem $X$),
+`cor:idealexhaustion` (gerichtet / disjunkte Vereinigung / kettenüberdeckt;
+Leiter, $\omega$-Ketten, Bäume) und `rem:idealexhaustion` (die disjunkte
+Vereinigung zweier $\omega$-Ketten: kein Zertifikat, Dualität; die
+Zertifikatsmethode ist hinreichend, nicht notwendig) stehen nach
+`prop:nocertificate` und vor `rem:twomethods`; `rem:twomethods` nennt die
+dritte Methode und ihren blinden Fleck; die Statustabelle von
+`rem:atomsnotchange` hat zwei neue Zeilen. `python3 check.py`: **clean**,
+136 Seiten, größte Überlänge 7.7pt wie zuvor (eine erste Fassung der
+Tabellenzeile war 80pt zu breit und ist geteilt). Die $\lambda$-Fassung und
+die drei Schleifen stehen nur hier.
+
+### Zweiter Nachtrag: die Klasse „Kern plus hängende Ketten" hat einen endlichen Kern — Vermutung C(K), erschöpfend bis sechs Punkte
+
+**Die Zufallssuche** (`random_hanging.py`, exakt): zufällige endliche Kerne $K$
+($4\le|K|\le9$, zufällige Aufwärtskanten mit Dichte $0{,}15$–$0{,}5$, dazu
+stufenweise gebaute zwillingsfreundliche Kerne), über **jedem** maximalen
+Element eine $\omega$-Kette, Trunkierung $W_n$ ohne Spitze, zufällige
+rationale Massen. Probe (a): gibt es ein minimales Atom $x$ mit
+$\varphi_x(W_n\setminus\max\setminus\{x\})$ erzwungen? Probe (b): ist
+$g(W_n\setminus\max)$ erzwungen (Theorem 38 mit $X=\emptyset$)?
+
+| Lauf | Kerne | (a) für ein $x$ | (b) | weder (a) noch (b) |
+|---|---|---|---|---|
+| $n=2$, seed 32 | 60 | 60 | 60 | 0 |
+| $n=2$, seed 7 | 500 | 500 | 490 | 0 |
+| $n=2$, seed 11, mit Stufenkernen | 300 | 300 | 281 | 0 |
+| $n=3$, seed 5, mit Stufenkernen | 120 | 120 | 109 | 0 |
+
+Also: in $39$ von $980$ Kernen versagt die Idealausschöpfung ($X=\emptyset$),
+in **keinem** die Probe über ein minimales Atom. Kein Kandidat.
+
+**Der endliche Kern der Frage.** Für die Klasse „endlicher Kern $K$ (mit
+kleinstem Element $0$, $m_0=0$), über jedem maximalen Element von $K$ eine
+$\omega$-Kette, Spitze $t^*$" ist das unendliche System auf ein **endliches**
+zurückführbar — nicht durch Nullsetzen der Kettenwerte (Sackgasse oben),
+sondern durch Weglassen: alle folgenden Relationen sind Relationen des
+unendlichen Systems, und sie reden nur über $\kappa$ auf $K\times K$.
+
+1. $(\diamondsuit)$ an allen Paaren von $K$; daraus $\delta\equiv0$ auf $K$
+   (`prop:atomicposet` auf jedem Ideal), also $\Psi=VK$ **antisymmetrisch**
+   auf $K$, d.h. $VK=KV^{\mathsf T}$.
+2. Für $x$ minimal und $k$ maximal in $K$: $(\diamondsuit)$ an $(c_1,x)$ mit
+   der ersten Kettenstelle $c_1$ über $k$ ($\T_{<c_1}=\T_{\le k}$) gibt
+   $\sum_{v\le k}m_v\kappa(v,x)=0$; wegen $(VK)_{kx}=-(VK)_{xk}=0$ ist das
+   **$\kappa(k,x)=0$** — minimale Atome und maximale Kernpunkte reden nicht
+   miteinander.
+3. Für $x$ minimal: $(\diamondsuit)$ an $(x,t^*)$ gibt
+   $\delta(t^*)=\varphi_x(W)=\varphi_x(K)=\sum_{v\in K}m_v\kappa(v,x)$, weil
+   $\varphi_x$ auf den kettenüberdeckten Kettenpunkten verschwindet (Ideale
+   $\T_{<c_{i+1}}\setminus\T_{<c_i}=\{c_i\}$, Relationen $(c_i,x)$).
+
+> **Vermutung C(K).** Sei $K$ eine endliche Halbordnung mit kleinstem Element
+> $0$, $m\ge0$ mit $m_0=0$ und $m>0$ sonst, $\kappa$ antisymmetrisch auf
+> $K\times K$ mit $VK=KV^{\mathsf T}$ und $\kappa(k,x)=0$ für alle maximalen
+> $k$ und minimalen $x$. Ist dann $\sum_{v\in K}m_v\kappa(v,x)$ für alle
+> minimalen $x$ **derselbe** Wert $\theta$, so ist $\theta=0$.
+
+Gilt C(K) für alle endlichen $K$, so gilt die Dualität auf **jeder**
+Halbordnung der Klasse — mit Theorem 38 zusammen also auf allem, was dieser
+Lauf gesehen hat, ohne (F). Gemessen (`core_conjecture.py`, exakt, rc=0):
+**alle** Halbordnungen mit kleinstem Element auf $2,3,4,5$ Punkten
+($2+6+38+438$ Konfigurationen mit je zwei zufälligen Massenvektoren), $150$
+zufällige auf $6$ und $60$ auf $7$ Punkten, dazu die vier Schleifen des Laufs
+(Doppelschleife, hängende, doppelt hängende, A+B) je mit $2^{-i}$ und mit
+lauter Einsen: **kein Ausfall.** Danach erschöpfend auf **sechs** Punkten
+(`core_conjecture_n6.txt`): alle $4231$ beschrifteten Halbordnungen mit
+kleinstem Element, je ein zufälliger Massenvektor, **kein Ausfall** (3 s).
+Das Skript stellt genau das System 1–3 auf
+(die Relationen $\varphi_x(K)=\varphi_{x'}(K)$ eingeschlossen) und prüft per
+Rangvergleich, ob $\varphi_{x_1}(K)$ erzwungen ist.
+
+**Warum das der richtige nächste Satz ist.** C(K) ist endlichdimensionale
+lineare Algebra ohne Grenzübergang, in derselben Sprache wie
+`lem:selfadjoint` ($V$ nilpotent, $K$ antisymmetrisch, $VK=KV^{\mathsf T}$ —
+$K$ ist ein *Verflechter* zwischen $V^{\mathsf T}$ und $V$, wie die Zertifikate
+$T$ zwischen $V$ und $V^{\mathsf T}$), und die drei Mechanismen dieses Laufs
+sind Spezialfälle: Zwillingsmengen (die Konstanz von $\theta$ über $X$ plus
+Antisymmetrie), die $(r,s)$-Kopplung ($(VK)_{rs}=-(VK)_{sr}$), die
+Idealsummen ($(VK)_{sx}=0$). Ein Beweis von C(K) wäre der zweite Satz der
+Roadmap über alle Verflechter nach `Matrix.certificate_mulVec_pow_one`; ein
+Gegenbeispiel wäre auf sieben oder mehr Punkten zu suchen, denn bis sechs ist
+die Aussage erschöpfend wahr (bei je einem Massenvektor; auf fünf Punkten bei
+zweien).
+
+Skripte dieses Nachtrags: `random_hanging.py`, `core_conjecture.py` (rc=0).
+
+**Wo in C(K) die Schwierigkeit sitzt, in einer Zeile.** Für $k\in\max K$ ist
+$\varphi_x(\T_{\le k})=\varphi_x(\T_{<k})+m_k\kappa(k,x)=0+0$ (Idealsumme und
+Haken). Mit $z:=\sum_{k\in\max K}\mathbb 1_{\T_{\le k}}-\mathbb 1_K$ — an $v$
+steht die Zahl der maximalen Elemente über $v$, minus eins — folgt
+$$\theta=\varphi_x(K)=-\varphi_x(z)=-\sum_{v}z(v)\,m_v\kappa(v,x)
+\qquad\text{für jedes minimale }x,$$
+und $z$ ist genau auf den **geteilten** Punkten getragen (unter mindestens zwei
+maximalen Elementen). Liegt kein Punkt unter zwei maximalen Elementen, so ist
+$z=0$ und $\theta=0$ (die disjunkte Vereinigung). Sind alle geteilten Punkte
+minimal, so ist $\theta=-\sum_{v\in X}z(v)\varphi_x(v)$ mit $X$ den geteilten
+minimalen Atomen — das ist Theorem 38$''$ mit $\lambda_j=-z$ auf $X_j$, und
+die Antisymmetrie schließt. Die offene Arbeit von C(K) sind die geteilten
+**nicht-minimalen** Punkte $v$, deren $\kappa(v,x)$ nur über die
+Verflechtungsrelation $VK=KV^{\mathsf T}$ an anderen Paaren gebunden ist — in
+der doppelt hängenden Doppelschleife über $(r,p),(r,q),(r,s)$. Ein Beweis wird
+dort ansetzen: Induktion über die Höhe der geteilten Punkte, mit den Paaren
+$(v,y)$, $y$ minimal oder privat, als Relationen.

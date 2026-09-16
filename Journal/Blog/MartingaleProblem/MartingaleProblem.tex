@@ -5683,11 +5683,13 @@ the arguments stop.
   countable chain, any order type, with \eqref{eq:Fcond} & proved, Theorem~\ref{thm:densechain} \\
   countable, finite height, with \eqref{eq:Fcond} & proved, Theorem~\ref{thm:finiteheight} \\
   countable, without \eqref{eq:Fcond} & \emph{false}; Example~\ref{ex:antichain} \\
+  countable, finite ideals, $\T_{<t^*}$ directed & proved, Theorem~\ref{thm:idealexhaustion}, no \eqref{eq:Fcond} \\
+  the same, $\T_{<t^*}$ a union of directed pieces & proved, Corollary~\ref{cor:idealexhaustion}(b) \\
   countable with atoms lacking a minimum & open \\
   \bottomrule
   \end{tabular}
   \end{center}
-  Nothing in this manuscript depends on the last four rows:
+  Nothing in this manuscript depends on the last six rows:
   Theorem~\ref{thm:duality} and Corollary~\ref{cor:uniqviadual} use Lebesgue
   measure, Corollary~\ref{cor:dualdiscrete} counting measure, and
   Section~\ref{ssec:exduality} uses only the additivity \eqref{eq:clockadd}.
@@ -6621,6 +6623,126 @@ shape of $\Psi$ itself.
   reads $\sum_a T_{t^* a} = 1$, a contradiction.
 \end{proof}
 
+\begin{theorem}[Ideal exhaustion; \eqref{T0} + \eqref{E0} + clock]
+  \label{thm:idealexhaustion}
+  Let $\T$ be countable with least element $0$ and $m \geq 0$, let $t \in \T$
+  and $W = \T_{<t}$, and let all series defining $\Psi$ converge absolutely.
+  Write $L$ for the linear span of the indicators $\one_{\T_{<a}}$, $a \in W$,
+  regarded as functions on $W \setminus \{0\}$, and $\overline{L}$ for the
+  smallest class of bounded functions on $W \setminus \{0\}$ that contains $L$
+  and is closed under bounded pointwise limits of sequences.  Assume
+  \begin{enumerate}[label=(\roman*)]
+  \item $\delta(a) = 0$ for every $a \in W$ --- for instance because every
+    ideal $\T_{\leq a}$, $a \in W$, is finite, in which case
+    Proposition~\ref{prop:atomicposet} applied to the ideal gives it;
+  \item there is a set $X \subseteq W$ of minimal atoms, $\T_{<x} = \{0\}$ for
+    $x \in X$, possibly empty, with $\one_{W \setminus X} \in \overline{L}$;
+    if $X \neq \emptyset$, assume moreover $m_0 = 0$ and either $X$ finite or
+    $\sum_{x,x' \in X} m_x m_{x'} \lvert\kappa(x,x')\rvert < \infty$.
+  \end{enumerate}
+  Then $\delta(t) = 0$.  Hypothesis \eqref{eq:Fcond} is not assumed.
+\end{theorem}
+
+\begin{proof}
+  Put $g(c) = m_c \kappa(c,0)$.  The relation
+  $\Psi(s,u) + \Psi(u,s) = \delta(s) + \delta(u)$ at $(s,0)$ reads
+  $\Psi(s,0) = \delta(s)$, since $\Psi(0,\cdot) \equiv 0$; that is,
+  \[
+    \delta(s) \;=\; g(\T_{<s}) \;:=\; \sum_{c < s} g(c)
+    \qquad\text{for every } s \in \T ,
+  \]
+  the series being absolutely convergent because $\Psi(s,0)$ is.  So (i) says
+  that $g$ annihilates every ideal $\T_{<a}$, $a \in W$, and the claim is
+  $g(W) = 0$.
+
+  \emph{$X = \emptyset$.}  Let $N$ be the set of bounded $f$ on
+  $W \setminus \{0\}$ with $\sum_c g(c) f(c) = 0$; the point $0$ plays no role
+  because $g(0) = m_0\kappa(0,0) = 0$.  By (i), $L \subseteq N$; by dominated
+  convergence, with $\sup_n \lVert f_n \rVert_\infty \cdot \lvert g\rvert$ as
+  the dominating function, $N$ is closed under bounded pointwise limits of
+  sequences; hence $\overline{L} \subseteq N$ and $\one_W \in N$, which is
+  $g(W) = 0$.
+
+  \emph{$X \neq \emptyset$.}  For $x \in X$ put $\varphi_x(c) = m_c\kappa(c,x)$,
+  absolutely summable on $W$ because $\Psi(t,x)$ is.  For $y \in W$ the
+  relation at $(y,x)$ gives $\Psi(y,x) + \Psi(x,y) = \delta(y) + \delta(x) = 0$
+  by (i), and $\Psi(x,y) = m_0 \kappa(0,y) = 0$; so
+  $\varphi_x(\T_{<y}) = \Psi(y,x) = 0$ for every $y \in W$, and the argument of
+  the first case gives $\varphi_x(W \setminus X) = 0$.  The relation at $(x,t)$
+  gives $\Psi(t,x) = \delta(t)$, since $\Psi(x,t) = 0$ and $\delta(x) = 0$;
+  hence
+  \[
+    \delta(t) \;=\; \varphi_x(W) \;=\; \varphi_x(X)
+    \;=\; \sum_{x' \in X} m_{x'} \kappa(x',x)
+    \qquad\text{for every } x \in X .
+  \]
+  Multiply by $m_x$ and sum over $x \in X$: the left side is
+  $m(X)\,\delta(t)$, the right side vanishes by antisymmetry of $\kappa$ ---
+  outright if $X$ is finite, by Fubini under the summability hypothesis
+  otherwise.  If $m(X) > 0$ this gives $\delta(t) = 0$; if $m(X) = 0$ then $g$
+  vanishes on $X$ and the first case applies with $\one_{W \setminus X}$ in
+  place of $\one_W$.
+\end{proof}
+
+\begin{corollary}[Directed ideals, disjoint unions, trees; \eqref{T0} + \eqref{E0} + clock]
+  \label{cor:idealexhaustion}
+  Let $\T$ be countable with least element $0$ and $m \geq 0$, and let
+  $t \in \T$ be such that every ideal $\T_{\leq a}$ with $a < t$ is finite.
+  Then $\Phi(t,0) = \Phi(0,t)$ in each of the following cases, for every mass
+  profile and without \eqref{eq:Fcond}:
+  \begin{enumerate}[label=(\alph*)]
+  \item $W = \T_{<t}$ is directed upwards and has no maximum;
+  \item $W \setminus \{0\}$ is a disjoint union of pairwise incomparable sets
+    $W_k$, each $W_k \cup \{0\}$ directed upwards and each $W_k$ without
+    maximum;
+  \item every $c \in W \setminus \{0\}$ has an upper cover $a \in W$ with
+    $\T_{<a} = \T_{\leq c}$.
+  \end{enumerate}
+  Case (a) contains the ladder $a_i < b_j \iff i < j$ over two $\omega$-chains
+  $a_1 < a_2 < \dots$ and $b_1 < b_2 < \dots$, for arbitrary positive summable
+  masses; case (b) the disjoint union of finitely or countably many
+  $\omega$-chains; case (c) every upward growing tree without leaves.
+\end{corollary}
+
+\begin{proof}
+  Hypothesis (i) of Theorem~\ref{thm:idealexhaustion} holds by
+  Proposition~\ref{prop:atomicposet} on each finite ideal; take $X = \emptyset$
+  and verify (ii).  (a) A countable directed set without maximum has a strictly
+  increasing cofinal sequence $a_n$, and $\one_{\T_{<a_n}} \uparrow \one_W$.
+  (b) With cofinal $a_{k,n} \in W_k$, the functions
+  $f_n = \sum_{k \leq n} \one_{\T_{<a_{k,n}}}$ take values in $\{0,1\}$ on
+  $W \setminus \{0\}$, the ideals meeting only in $\{0\}$, and $f_n \to \one_W$.
+  (c) $\one_{\{c\}} = \one_{\T_{<a}} - \one_{\T_{<c}} \in L$ for every $c$, so
+  $\one_D \in L$ for every finite $D \subseteq W \setminus \{0\}$, and finite
+  sets exhaust $W$.  For the ladder, $a_i$ and $b_j$ both lie below
+  $b_{\max(i,j)+1}$, and every ideal is finite.
+\end{proof}
+
+\begin{remark}[What the exhaustion says about the certificate]
+  \label{rem:idealexhaustion}
+  The disjoint union of two $\omega$-chains with masses $m_{a_i} = B^{-i}$,
+  $m_{b_j} = B^{-j}2^{(-1)^{j+1}}$, $B \geq 16$, carries no infinite
+  certificate at $t^*$: the column $t^*$ of any bounded certificate is forced
+  to be $\lim_k (V^{\mathsf T})^k e_{t^*} / (V^k\one)_{t^*}$ --- apply
+  $TV = V^{\mathsf T}T$ $k$ times to $T\one = e_{t^*}$ and use that
+  $V^k\one/(V^k\one)_{t^*} \to e_{t^*}$ in the mass-weighted $\ell^1$ norm ---
+  and on this index the even and odd subsequences of that quotient have
+  different limits.  Corollary~\ref{cor:idealexhaustion}(b) nevertheless gives
+  $\Phi(t^*,0) = \Phi(0,t^*)$ there.  The certificate of
+  Definition~\ref{def:certificate} is therefore sufficient and not necessary:
+  in the finite case of Lemma~\ref{lem:selfadjoint} the defect is forced
+  exactly when $e_{t^*} \in \mathcal{L}$, but on an infinite index the defect
+  can be forced by an infinite combination of relations, one for each ideal,
+  which no bounded $T$ realises.  The same corollary settles the ladder for
+  every mass profile, including the profiles with nearly equal scales on which
+  the least norm of a certificate on finite sections grows without bound.  What
+  the exhaustion does not reach is an index in which $W$ has maximal elements
+  that are not minimal atoms --- the infinite crown $a_i < b_j \iff i \neq j$
+  --- or in which the ideals are infinite, such as two $\zeta$-chains stacked
+  one above the other; there Theorems~\ref{thm:densechain}
+  and~\ref{thm:finiteheight} remain the statements.
+\end{remark}
+
 \begin{remark}[Two methods, disjoint blind spots]
   \label{rem:twomethods}
   Theorem~\ref{thm:densechain} and Theorem~\ref{thm:finiteheight} are not
@@ -6639,7 +6761,12 @@ shape of $\Psi$ itself.
   other, and the exhaustion route that eleven attempts pursued is closed for a
   reason that is now visible: it built certificates on finite sections and hoped
   for uniform bounds, where the certificate can simply be written down on the
-  infinite index at once.
+  infinite index at once.  Theorem~\ref{thm:idealexhaustion} is a third method
+  with a third blind spot: it needs the ideals below $t$ to be finite, asks
+  nothing of $\gamma$ beyond the existence of the integrals, and reaches the
+  ladder over two $\omega$-chains and the disjoint union of two
+  $\omega$-chains, where no certificate exists
+  (Remark~\ref{rem:idealexhaustion}).
 \end{remark}
 
 \begin{remark}[Scope of Section~\ref{sec:duality}]

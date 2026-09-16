@@ -807,6 +807,60 @@ positiven Massen. Lean-Ziel:
   ist der Fall $k=d$. Es ist die endliche Aussage hinter Theorem 36 und 37.
 
 
+**Stand 2026-09-16, zweiunddreißigster Lauf** (Protokoll, „Die
+Idealausschöpfung"): die Rechnung des einunddreißigsten Laufs ist **positiv**
+entschieden, und zwar ohne (F), ohne Zertifikat und ohne Kreuzrelationen. Mit
+$g(c)=m_c\kappa(c,0)$ ist $\delta(t)=g(\T_{<t})$ für jedes $t$; sind die
+Ideale $\T_{\le a}$, $a<t^*$, endlich, so gibt `prop:atomicposet` auf jedem
+Ideal $g(\T_{<a})=0$, und $\delta(t^*)=g(\T_{<t^*})$ verschwindet durch
+dominierte Konvergenz, sobald $\mathbb 1_{\T_{<t^*}}$ im beschränkten
+Folgenabschluß des Spanns der Idealindikatoren liegt (Theorem 38) — etwa wenn
+$\T_{<t^*}$ gerichtet ohne Maximum ist, eine disjunkte Vereinigung solcher
+Stücke, oder jeder Punkt kettenüberdeckt. Damit gilt die Dualität für jedes
+Massenprofil auf der **Leiter** (auch im Fenster $0{,}8<\beta/\alpha<1{,}1$)
+und auf der **disjunkten Vereinigung zweier $\omega$-Ketten** mit den Massen
+von Theorem 37, wo kein Zertifikat existiert: die Zertifikatsmethode ist
+hinreichend, nicht notwendig. Die Vermutungen 32 und 34 sind für die Dualität
+gegenstandslos (sie bleiben Aussagen über LP- und Krylow-Zertifikat); der
+Kandidat für ein Gegenbeispiel mit positiven Massen ist keiner. Offen bleiben
+die nackte Klasse auf Ketten, die gestapelten $\zeta$-Ketten ohne (F) und ohne
+beschränktes $\Phi$, und die Frage, ob es eine Halbordnung mit endlichen
+Idealen gibt, auf der die Dualität fällt. `Task23/ideal_exhaustion.py`
+(exakt, rc=0). Lean-Ziel:
+
+- **`duality_of_atomic_idealExhaustion`** (Roadmap `MartingaleProblems`,
+  Meilenstein 8, vor `Lagrange.sum_inv_prod_sub_eq_zero`): $\T_{<t}$
+  gerichtet ohne Maximum, alle $\T_{\le a}$ ($a<t$) endlich, $m\ge0$
+  $\Rightarrow$ $\Phi(t,0)=\Phi(0,t)$; ruht auf `duality_of_atomic` (auf dem
+  Ideal) und `tendsto_tsum_compl_atTop_zero`. Zwei Geschwister mit demselben
+  Beweis: disjunkte Vereinigung gerichteter Stücke, kettenüberdeckte Punkte.
+  Abnahmebeispiel: die disjunkte Vereinigung zweier $\omega$-Ketten mit den
+  Massen von Theorem 37 (kein Zertifikat, Dualität gilt).
+
+*Nachtrag desselben Laufs:* Theorem 38 hat eine $\lambda$-Fassung
+($\mathbb 1_W=h+\sum_j\lambda_j\mathbb 1_{X_j}$, $h$ im Abschluß, $X_j$
+Zwillingsmengen minimaler Atome, $\sum\lambda_jm(X_j)\ne0$), und drei
+Kandidaten gegen die Vermutung „endliche Ideale unter $t^*$, keine maximalen
+Elemente in $W$, $m\ge0$ $\Rightarrow$ Dualität" sind gefallen — die
+Doppelschleife (Theorem 38, $X=\{r\}$), die hängende Doppelschleife
+($\lambda=-1$) und die doppelt hängende Doppelschleife, die jede Fassung des
+Satzes schlägt und trotzdem trägt, weil die Relation am unvergleichbaren Paar
+$(r,s)$ die beiden privaten Zweige koppelt (sechs Zeilen, Protokoll). Die
+Vermutung steht damit als **nächste Rechnung**; Werkzeug ist die exakte
+Rangprobe „$\varphi_x(W_n\setminus\max\setminus\{x\})$ erzwungen" auf
+Trunkierungen ohne Spitze (`Task23/bowties.py`, `resonance.py`), die im
+positiven Fall rigoros auf das unendliche System schließt. Für die Klasse
+„endlicher Kern plus $\omega$-Kette über jedem maximalen Kernpunkt" ist die
+Frage auf eine **endliche** Aussage reduziert — Vermutung C(K): $K$
+antisymmetrisch mit $VK=KV^{\mathsf T}$ und $\kappa(k,x)=0$ für maximale $k$,
+minimale $x$; ist $\sum_vm_v\kappa(v,x)$ auf den minimalen $x$ konstant, so
+ist die Konstante $0$ — erschöpfend wahr auf allen Halbordnungen mit kleinstem
+Element bis sechs Punkte (`Task23/core_conjecture.py`, exakt; $4231$
+Halbordnungen auf sechs Punkten), $980$
+Zufallskerne ohne Gegenbeispiel (`random_hanging.py`). C(K) ist der nächste zu
+beweisende Satz; er ist reine endliche lineare Algebra in der Sprache von
+`lem:selfadjoint`.
+
 ---
 
 ## Task 24 — Tau Ceti roadmaps — `done` *(2026-08-29)*
