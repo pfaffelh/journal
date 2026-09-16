@@ -1,0 +1,159 @@
+Teil A: T V^k 1 = psi_k fuer jedes Zertifikat endlicher Halbordnungen
+  ok    zufaellig #0 n=3: V^k 1 und psi_k verschwinden ab demselben k (r=3)
+  ok    zufaellig #0 n=3: T_K V^k 1 = psi_k exakt, k=0..3
+  ok    zufaellig #0 n=3: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    zufaellig #0 n=3: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 3), max Abw. 7.78e-62
+  ok    zufaellig #0 n=3: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    zufaellig #1 n=4: V^k 1 und psi_k verschwinden ab demselben k (r=5)
+  ok    zufaellig #1 n=4: T_K V^k 1 = psi_k exakt, k=0..5
+  ok    zufaellig #1 n=4: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    zufaellig #1 n=4: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 1), max Abw. 4.67e-61
+  ok    zufaellig #1 n=4: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    zufaellig #2 n=4: V^k 1 und psi_k verschwinden ab demselben k (r=4)
+  ok    zufaellig #2 n=4: T_K V^k 1 = psi_k exakt, k=0..4
+  ok    zufaellig #2 n=4: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    zufaellig #2 n=4: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 3), max Abw. 6.22e-61
+  ok    zufaellig #2 n=4: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    zufaellig #3 n=4: V^k 1 und psi_k verschwinden ab demselben k (r=3)
+  ok    zufaellig #3 n=4: T_K V^k 1 = psi_k exakt, k=0..3
+  ok    zufaellig #3 n=4: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    zufaellig #3 n=4: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 6), max Abw. 1.24e-60
+  ok    zufaellig #3 n=4: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    zufaellig #4 n=6: V^k 1 und psi_k verschwinden ab demselben k (r=6)
+  ok    zufaellig #4 n=6: T_K V^k 1 = psi_k exakt, k=0..6
+  ok    zufaellig #4 n=6: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    zufaellig #4 n=6: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 3), max Abw. 9.96e-60
+  ok    zufaellig #4 n=6: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    zufaellig #5 n=3: V^k 1 und psi_k verschwinden ab demselben k (r=3)
+  ok    zufaellig #5 n=3: T_K V^k 1 = psi_k exakt, k=0..3
+  ok    zufaellig #5 n=3: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    zufaellig #5 n=3: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 3), max Abw. 1.56e-61
+  ok    zufaellig #5 n=3: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Kette: V^k 1 und psi_k verschwinden ab demselben k (r=5)
+  ok    Kette: T_K V^k 1 = psi_k exakt, k=0..5
+  ok    Kette: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Kette: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 1), max Abw. 0.0
+  ok    Kette: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Antikette: V^k 1 und psi_k verschwinden ab demselben k (r=2)
+  ok    Antikette: T_K V^k 1 = psi_k exakt, k=0..2
+  ok    Antikette: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Antikette: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 6), max Abw. 4.08e-61
+  ok    Antikette: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Krone: V^k 1 und psi_k verschwinden ab demselben k (r=3)
+  ok    Krone: T_K V^k 1 = psi_k exakt, k=0..3
+  ok    Krone: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Krone: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 9), max Abw. 7.78e-62
+  ok    Krone: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Leiter (1/2,1/3) n=3: V^k 1 und psi_k verschwinden ab demselben k (r=4)
+  ok    Leiter (1/2,1/3) n=3: T_K V^k 1 = psi_k exakt, k=0..4
+  ok    Leiter (1/2,1/3) n=3: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Leiter (1/2,1/3) n=3: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 5), max Abw. 1.75e-61
+  ok    Leiter (1/2,1/3) n=3: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Leiter (1/2,1/3) n=5: V^k 1 und psi_k verschwinden ab demselben k (r=6)
+  ok    Leiter (1/2,1/3) n=5: T_K V^k 1 = psi_k exakt, k=0..6
+  ok    Leiter (1/2,1/3) n=5: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Leiter (1/2,1/3) n=5: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 7), max Abw. 1.09e-60
+  ok    Leiter (1/2,1/3) n=5: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Leiter (1/2,1/3) n=7: V^k 1 und psi_k verschwinden ab demselben k (r=8)
+  ok    Leiter (1/2,1/3) n=7: T_K V^k 1 = psi_k exakt, k=0..8
+  ok    Leiter (1/2,1/3) n=7: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Leiter (1/2,1/3) n=7: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 9), max Abw. 2.02e-60
+  ok    Leiter (1/2,1/3) n=7: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Leiter (1/3,1/2) n=3: V^k 1 und psi_k verschwinden ab demselben k (r=4)
+  ok    Leiter (1/3,1/2) n=3: T_K V^k 1 = psi_k exakt, k=0..4
+  ok    Leiter (1/3,1/2) n=3: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Leiter (1/3,1/2) n=3: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 5), max Abw. 3.5e-61
+  ok    Leiter (1/3,1/2) n=3: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Leiter (1/3,1/2) n=5: V^k 1 und psi_k verschwinden ab demselben k (r=6)
+  ok    Leiter (1/3,1/2) n=5: T_K V^k 1 = psi_k exakt, k=0..6
+  ok    Leiter (1/3,1/2) n=5: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Leiter (1/3,1/2) n=5: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 7), max Abw. 3.89e-61
+  ok    Leiter (1/3,1/2) n=5: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+  ok    Leiter (1/3,1/2) n=7: V^k 1 und psi_k verschwinden ab demselben k (r=8)
+  ok    Leiter (1/3,1/2) n=7: T_K V^k 1 = psi_k exakt, k=0..8
+  ok    Leiter (1/3,1/2) n=7: (V^k 1)^T T_K (V^l 1) = e_{k+l} exakt
+  ok    Leiter (1/3,1/2) n=7: T V^k 1 = psi_k fuer Krylow + Nullraum (dim 9), max Abw. 1.08e-60
+  ok    Leiter (1/3,1/2) n=7: D V^k 1 = 0 fuer Nullraumrichtung, max 0.0
+Teil B: die Spitzenzeile auf der unendlichen Leiter, p_a = alpha_1 e_{k-1}(up a_1)/e_k, p_b = beta_1 e_{k-1}(B_{>=2})/e_k
+  (1/2,1/3): 1-pi_oo = 1.0, pi_oo = 0.0;  Stabilitaet N=200 vs 400: 7.0e-61
+     k= 1  p_a=0.333333333333333  p_b=0.222222222222222  1-p_a-p_b=0.444  T_(t*,a_2)-Kandidat=0.167  e_(k+1)/e_k=0.331
+     k= 2  p_a=0.672268907563025  p_b=0.112044817927171  1-p_a-p_b=0.216  T_(t*,a_2)-Kandidat=0.154  e_(k+1)/e_k=0.127
+     k= 3  p_a=0.85160040373238  p_b=0.0368658183433931  1-p_a-p_b=0.112  T_(t*,a_2)-Kandidat=0.0971  e_(k+1)/e_k=0.0597
+     k= 5  p_a=0.968811954701466  p_b=0.00109399427899257  1-p_a-p_b=0.0301  T_(t*,a_2)-Kandidat=0.0292  e_(k+1)/e_k=0.0153
+     k= 8  p_a=0.996127113255613  p_b=2.31035406241901e-7  1-p_a-p_b=0.00387  T_(t*,a_2)-Kandidat=0.00386  e_(k+1)/e_k=0.00194
+     k=12  p_a=0.999756251316126  p_b=9.44491146247652e-15  1-p_a-p_b=0.000244  T_(t*,a_2)-Kandidat=0.000244  e_(k+1)/e_k=0.000122
+     k=16  p_a=0.999984746001035  p_b=5.80069761924594e-25  1-p_a-p_b=1.53e-5  T_(t*,a_2)-Kandidat=1.53e-5  e_(k+1)/e_k=7.63e-6
+     k=20  p_a=0.999999046384705  p_b=5.40815196404261e-38  1-p_a-p_b=9.54e-7  T_(t*,a_2)-Kandidat=9.54e-7  e_(k+1)/e_k=4.77e-7
+     k=30  p_a=0.999999999068678  p_b=6.75859830740188e-83  1-p_a-p_b=9.31e-10  T_(t*,a_2)-Kandidat=9.31e-10  e_(k+1)/e_k=4.66e-10
+     k=40  p_a=0.999999999999091  p_b=2.07711739819135e-145  1-p_a-p_b=9.09e-13  T_(t*,a_2)-Kandidat=9.09e-13  e_(k+1)/e_k=4.55e-13
+  ok    (1/2,1/3): Raten e_k(up a_1)/e_k <= M/(k alpha_1) und e_(k+1)/e_k <= M/(k+1) fuer alle k<=40
+  ok    (1/2,1/3): p_b(k) <= (beta/alpha)^(k(k+1)/2)/(beta;beta)_oo (Korollar 36.1(c)), also p = 1
+  (1/3,1/2): 1-pi_oo = 0.517046411021183, pi_oo = 0.482953588978817;  Stabilitaet N=200 vs 400: 5.83e-61
+     k= 1  p_a=0.222222222222222  p_b=0.333333333333333  1-p_a-p_b=0.444  T_(t*,a_2)-Kandidat=0.0741  e_(k+1)/e_k=0.397
+     k= 2  p_a=0.372960372960373  p_b=0.41958041958042  1-p_a-p_b=0.207  T_(t*,a_2)-Kandidat=0.057  e_(k+1)/e_k=0.155
+     k= 3  p_a=0.447425581976925  p_b=0.452452835707002  1-p_a-p_b=0.1  T_(t*,a_2)-Kandidat=0.0328  e_(k+1)/e_k=0.0691
+     k= 5  p_a=0.500241708106537  p_b=0.475339583443026  1-p_a-p_b=0.0244  T_(t*,a_2)-Kandidat=0.00891  e_(k+1)/e_k=0.016
+     k= 8  p_a=0.514966506690663  p_b=0.482001153163634  1-p_a-p_b=0.00303  T_(t*,a_2)-Kandidat=0.00114  e_(k+1)/e_k=0.00196
+     k=12  p_a=0.516916577260098  p_b=0.482894063899161  1-p_a-p_b=0.000189  T_(t*,a_2)-Kandidat=7.14e-5  e_(k+1)/e_k=0.000122
+     k=16  p_a=0.51703829703142  p_b=0.482949868673259  1-p_a-p_b=1.18e-5  T_(t*,a_2)-Kandidat=4.46e-6  e_(k+1)/e_k=7.63e-6
+     k=20  p_a=0.517045903899245  p_b=0.482953356459767  1-p_a-p_b=7.4e-7  T_(t*,a_2)-Kandidat=2.79e-7  e_(k+1)/e_k=4.77e-7
+     k=30  p_a=0.517046410525947  p_b=0.482953588751747  1-p_a-p_b=7.22e-10  T_(t*,a_2)-Kandidat=2.73e-10  e_(k+1)/e_k=4.66e-10
+     k=40  p_a=0.5170464110207  p_b=0.482953588978595  1-p_a-p_b=7.05e-13  T_(t*,a_2)-Kandidat=2.66e-13  e_(k+1)/e_k=4.55e-13
+  ok    (1/3,1/2): Raten e_k(up a_1)/e_k <= M/(k alpha_1) und e_(k+1)/e_k <= M/(k+1) fuer alle k<=40
+  ok    (1/3,1/2): lim_k = Trunkierungslimes 1-pi_oo (Abw. 4.84e-13, Rest 7.05e-13)
+  (1/2,2/3): 1-pi_oo = 0.587162519666469, pi_oo = 0.412837480333531;  Stabilitaet N=200 vs 400: 4.74e-36
+     k= 1  p_a=0.166666666666667  p_b=0.222222222222222  1-p_a-p_b=0.611  T_(t*,a_2)-Kandidat=0.0833  e_(k+1)/e_k=0.978
+     k= 2  p_a=0.3125  p_b=0.303030303030303  1-p_a-p_b=0.384  T_(t*,a_2)-Kandidat=0.0971  e_(k+1)/e_k=0.47
+     k= 3  p_a=0.409075757575758  p_b=0.343919191919192  1-p_a-p_b=0.247  T_(t*,a_2)-Kandidat=0.0812  e_(k+1)/e_k=0.262
+     k= 5  p_a=0.510770265605326  p_b=0.383453894046537  1-p_a-p_b=0.106  T_(t*,a_2)-Kandidat=0.0434  e_(k+1)/e_k=0.0985
+     k= 8  p_a=0.564940761489403  p_b=0.404290088416155  1-p_a-p_b=0.0308  T_(t*,a_2)-Kandidat=0.014  e_(k+1)/e_k=0.0269
+     k=12  p_a=0.582798112294505  p_b=0.411159414718356  1-p_a-p_b=0.00604  T_(t*,a_2)-Kandidat=0.00283  e_(k+1)/e_k=0.00517
+     k=16  p_a=0.586301367423925  p_b=0.412506409259207  1-p_a-p_b=0.00119  T_(t*,a_2)-Kandidat=0.000563  e_(k+1)/e_k=0.00102
+     k=20  p_a=0.586992452516486  p_b=0.412772099102568  1-p_a-p_b=0.000235  T_(t*,a_2)-Kandidat=0.000111  e_(k+1)/e_k=0.000201
+     k=30  p_a=0.587159570596931  p_b=0.412836346588051  1-p_a-p_b=4.08e-6  T_(t*,a_2)-Kandidat=1.93e-6  e_(k+1)/e_k=3.48e-6
+     k=40  p_a=0.587162468525138  p_b=0.41283746067267  1-p_a-p_b=7.08e-8  T_(t*,a_2)-Kandidat=3.35e-8  e_(k+1)/e_k=6.03e-8
+  ok    (1/2,2/3): Raten e_k(up a_1)/e_k <= M/(k alpha_1) und e_(k+1)/e_k <= M/(k+1) fuer alle k<=40
+  ok    (1/2,2/3): lim_k = Trunkierungslimes 1-pi_oo (Abw. 5.11e-8, Rest 7.08e-8)
+  (1/4,1/2): 1-pi_oo = 0.390850288933771, pi_oo = 0.609149711066229;  Stabilitaet N=200 vs 400: 5.83e-61
+     k= 1  p_a=0.1875  p_b=0.375  1-p_a-p_b=0.438  T_(t*,a_2)-Kandidat=0.0469  e_(k+1)/e_k=0.374
+     k= 2  p_a=0.292595541401274  p_b=0.501592356687898  1-p_a-p_b=0.206  T_(t*,a_2)-Kandidat=0.034  e_(k+1)/e_k=0.15
+     k= 3  p_a=0.342834936872528  p_b=0.557023881959233  1-p_a-p_b=0.1  T_(t*,a_2)-Kandidat=0.0193  e_(k+1)/e_k=0.0682
+     k= 5  p_a=0.379048982124617  p_b=0.596378464683275  1-p_a-p_b=0.0246  T_(t*,a_2)-Kandidat=0.00526  e_(k+1)/e_k=0.016
+     k= 8  p_a=0.389382115207566  p_b=0.60756214185916  1-p_a-p_b=0.00306  T_(t*,a_2)-Kandidat=0.000672  e_(k+1)/e_k=0.00196
+     k=12  p_a=0.390758585693103  p_b=0.609050560763743  1-p_a-p_b=0.000191  T_(t*,a_2)-Kandidat=4.21e-5  e_(k+1)/e_k=0.000122
+     k=16  p_a=0.390844557705869  p_b=0.609143514456019  1-p_a-p_b=1.19e-5  T_(t*,a_2)-Kandidat=2.63e-6  e_(k+1)/e_k=7.63e-6
+     k=20  p_a=0.390849930732905  p_b=0.609149323779199  1-p_a-p_b=7.45e-7  T_(t*,a_2)-Kandidat=1.65e-7  e_(k+1)/e_k=4.77e-7
+     k=30  p_a=0.390850288583966  p_b=0.609149710688019  1-p_a-p_b=7.28e-10  T_(t*,a_2)-Kandidat=1.61e-10  e_(k+1)/e_k=4.66e-10
+     k=40  p_a=0.39085028893343  p_b=0.609149711065859  1-p_a-p_b=7.11e-13  T_(t*,a_2)-Kandidat=1.57e-13  e_(k+1)/e_k=4.55e-13
+  ok    (1/4,1/2): Raten e_k(up a_1)/e_k <= M/(k alpha_1) und e_(k+1)/e_k <= M/(k+1) fuer alle k<=40
+  ok    (1/4,1/2): lim_k = Trunkierungslimes 1-pi_oo (Abw. 3.42e-13, Rest 7.11e-13)
+  (1/2,1/2): 1-pi_oo = 1.0, pi_oo = 0.0;  Stabilitaet N=200 vs 400: 7.15e-61
+     k= 1  p_a=0.25  p_b=0.25  1-p_a-p_b=0.5  T_(t*,a_2)-Kandidat=0.125  e_(k+1)/e_k=0.5
+     k= 2  p_a=0.5  p_b=0.25  1-p_a-p_b=0.25  T_(t*,a_2)-Kandidat=0.125  e_(k+1)/e_k=0.19
+     k= 3  p_a=0.65625  p_b=0.21875  1-p_a-p_b=0.125  T_(t*,a_2)-Kandidat=0.082  e_(k+1)/e_k=0.0833
+     k= 5  p_a=0.807291666666667  p_b=0.161458333333333  1-p_a-p_b=0.0313  T_(t*,a_2)-Kandidat=0.0252  e_(k+1)/e_k=0.0185
+     k= 8  p_a=0.885416666666667  p_b=0.110677083333333  1-p_a-p_b=0.00391  T_(t*,a_2)-Kandidat=0.00346  e_(k+1)/e_k=0.00217
+     k=12  p_a=0.9228515625  p_b=0.076904296875  1-p_a-p_b=0.000244  T_(t*,a_2)-Kandidat=0.000225  e_(k+1)/e_k=0.000131
+     k=16  p_a=0.941162109375  p_b=0.0588226318359375  1-p_a-p_b=1.53e-5  T_(t*,a_2)-Kandidat=1.44e-5  e_(k+1)/e_k=8.08e-6
+     k=20  p_a=0.952380044119699  p_b=0.0476190022059849  1-p_a-p_b=9.54e-7  T_(t*,a_2)-Kandidat=9.08e-7  e_(k+1)/e_k=5.0e-7
+     k=30  p_a=0.967741934582591  p_b=0.0322580644860864  1-p_a-p_b=9.31e-10  T_(t*,a_2)-Kandidat=9.01e-10  e_(k+1)/e_k=4.81e-10
+     k=40  p_a=0.975609756096674  p_b=0.0243902439024168  1-p_a-p_b=9.09e-13  T_(t*,a_2)-Kandidat=8.87e-13  e_(k+1)/e_k=4.66e-13
+  ok    (1/2,1/2): Raten e_k(up a_1)/e_k <= M/(k alpha_1) und e_(k+1)/e_k <= M/(k+1) fuer alle k<=40
+  ok    (1/2,1/2): p_b(k) = (1-beta^k)/(k+1) exakt (Lemma 36.2), also p = 1
+  (1/2,49/100): 1-pi_oo = 1.0, pi_oo = 0.0;  Stabilitaet N=200 vs 400: 2.99e-56
+     k= 1  p_a=0.255  p_b=0.2499  1-p_a-p_b=0.495  T_(t*,a_2)-Kandidat=0.127  e_(k+1)/e_k=0.484
+     k= 2  p_a=0.511648440362167  p_b=0.243162703939279  1-p_a-p_b=0.245  T_(t*,a_2)-Kandidat=0.127  e_(k+1)/e_k=0.182
+     k= 3  p_a=0.672131833569552  p_b=0.206401330964043  1-p_a-p_b=0.121  T_(t*,a_2)-Kandidat=0.0824  e_(k+1)/e_k=0.079
+     k= 5  p_a=0.829152018208632  p_b=0.140994168129901  1-p_a-p_b=0.0299  T_(t*,a_2)-Kandidat=0.025  e_(k+1)/e_k=0.0172
+     k= 8  p_a=0.915457872344417  p_b=0.0808850161880654  1-p_a-p_b=0.00366  T_(t*,a_2)-Kandidat=0.00337  e_(k+1)/e_k=0.00196
+     k=12  p_a=0.962322842352841  p_b=0.0374514222411092  1-p_a-p_b=0.000226  T_(t*,a_2)-Kandidat=0.000219  e_(k+1)/e_k=0.000116
+     k=16  p_a=0.985506875073917  p_b=0.0144789335636742  1-p_a-p_b=1.42e-5  T_(t*,a_2)-Kandidat=1.4e-5  e_(k+1)/e_k=7.17e-6
+     k=20  p_a=0.99588136719434  p_b=0.00411773108966319  1-p_a-p_b=9.02e-7  T_(t*,a_2)-Kandidat=8.99e-7  e_(k+1)/e_k=4.52e-7
+     k=30  p_a=0.99996462496095  p_b=3.53741322620346e-5  1-p_a-p_b=9.07e-10  T_(t*,a_2)-Kandidat=9.07e-10  e_(k+1)/e_k=4.53e-10
+     k=40  p_a=0.999999966341392  p_b=3.36577133825131e-8  1-p_a-p_b=8.95e-13  T_(t*,a_2)-Kandidat=8.95e-13  e_(k+1)/e_k=4.47e-13
+  ok    (1/2,49/100): Raten e_k(up a_1)/e_k <= M/(k alpha_1) und e_(k+1)/e_k <= M/(k+1) fuer alle k<=40
+  ok    (1/2,49/100): p_b(k) <= (beta/alpha)^(k(k+1)/2)/(beta;beta)_oo (Korollar 36.1(c)), also p = 1
+  ok    omega-Kette 0.5,0.25,...: 1 - m_1 e_(k-1)(m_>=2)/e_k <= M/(k m_1) (k=40: Wert 0.999999999999)
+  ok    omega-Kette 0.5,0.167,...: 1 - m_1 e_(k-1)(m_>=2)/e_k <= M/(k m_1) (k=40: Wert 0.997415192017)
+  ok    omega-Kette 1.0,0.354,...: 1 - m_1 e_(k-1)(m_>=2)/e_k <= M/(k m_1) (k=40: Wert 0.989740807979)
+FEHLER: 0

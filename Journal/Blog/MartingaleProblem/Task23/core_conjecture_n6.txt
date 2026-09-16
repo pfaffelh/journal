@@ -1,0 +1,1 @@
+n=6 erschoepfend: 4231 Halbordnungen mit kleinstem Element, 0 Ausfaelle von C(K), 3 s

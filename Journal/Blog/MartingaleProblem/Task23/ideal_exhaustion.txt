@@ -1,0 +1,91 @@
+(A) zwei disjunkte omega-Ketten, ohne Spitze: g(c) erzwungen genau fuer nicht-maximale c
+  n=2 2^-i, 3^-j               |W|= 5  erzwungen: a1 b1
+                                      frei:      a2 b2
+  n=2 Theorem 37, B=16         |W|= 5  erzwungen: a1 b1
+                                      frei:      a2 b2
+  n=3 2^-i, 3^-j               |W|= 7  erzwungen: a1 a2 b1 b2
+                                      frei:      a3 b3
+  n=3 Theorem 37, B=16         |W|= 7  erzwungen: a1 a2 b1 b2
+                                      frei:      a3 b3
+  n=4 2^-i, 3^-j               |W|= 9  erzwungen: a1 a2 a3 b1 b2 b3
+                                      frei:      a4 b4
+  n=4 Theorem 37, B=16         |W|= 9  erzwungen: a1 a2 a3 b1 b2 b3
+                                      frei:      a4 b4
+  n=5 2^-i, 3^-j               |W|=11  erzwungen: a1 a2 a3 a4 b1 b2 b3 b4
+                                      frei:      a5 b5
+  n=5 Theorem 37, B=16         |W|=11  erzwungen: a1 a2 a3 a4 b1 b2 b3 b4
+                                      frei:      a5 b5
+  n=6 2^-i, 3^-j               |W|=13  erzwungen: a1 a2 a3 a4 a5 b1 b2 b3 b4 b5
+                                      frei:      a6 b6
+  n=6 Theorem 37, B=16         |W|=13  erzwungen: a1 a2 a3 a4 a5 b1 b2 b3 b4 b5
+                                      frei:      a6 b6
+(B) Leiter a_i<b_j <=> i<j, ohne Spitze
+  n=2 (1/2,1/3)                |W|= 5  erzwungen: a1 b1
+                                      frei:      a2 b2
+  n=2 (1/3,1/2)                |W|= 5  erzwungen: a1 b1
+                                      frei:      a2 b2
+  n=2 (1/2,1/2)                |W|= 5  erzwungen: a1 b1
+                                      frei:      a2 b2
+  n=3 (1/2,1/3)                |W|= 7  erzwungen: a1 a2 b1 b2
+                                      frei:      a3 b3
+  n=3 (1/3,1/2)                |W|= 7  erzwungen: a1 a2 b1 b2
+                                      frei:      a3 b3
+  n=3 (1/2,1/2)                |W|= 7  erzwungen: a1 a2 b1 b2
+                                      frei:      a3 b3
+  n=4 (1/2,1/3)                |W|= 9  erzwungen: a1 a2 a3 b1 b2 b3
+                                      frei:      a4 b4
+  n=4 (1/3,1/2)                |W|= 9  erzwungen: a1 a2 a3 b1 b2 b3
+                                      frei:      a4 b4
+  n=4 (1/2,1/2)                |W|= 9  erzwungen: a1 a2 a3 b1 b2 b3
+                                      frei:      a4 b4
+  n=5 (1/2,1/3)                |W|=11  erzwungen: a1 a2 a3 a4 b1 b2 b3 b4
+                                      frei:      a5 b5
+  n=5 (1/3,1/2)                |W|=11  erzwungen: a1 a2 a3 a4 b1 b2 b3 b4
+                                      frei:      a5 b5
+  n=5 (1/2,1/2)                |W|=11  erzwungen: a1 a2 a3 a4 b1 b2 b3 b4
+                                      frei:      a5 b5
+  n=6 (1/2,1/3)                |W|=13  erzwungen: a1 a2 a3 a4 a5 b1 b2 b3 b4 b5
+                                      frei:      a6 b6
+  n=6 (1/3,1/2)                |W|=13  erzwungen: a1 a2 a3 a4 a5 b1 b2 b3 b4 b5
+                                      frei:      a6 b6
+  n=6 (1/2,1/2)                |W|=13  erzwungen: a1 a2 a3 a4 a5 b1 b2 b3 b4 b5
+                                      frei:      a6 b6
+(C) Binaerbaum ohne Spitze (Heap-Numerierung, Masse 2^-v)
+  Tiefe 2                      |W|= 4  erzwungen: v1
+                                      frei:      v2 v3
+  Tiefe 3                      |W|= 8  erzwungen: v1 v2 v3
+                                      frei:      v4 v5 v6 v7
+  Tiefe 4                      |W|=16  erzwungen: v1 v2 v3 v4 v5 v6 v7
+                                      frei:      v8 v9 v10 v11 v12 v13 v14 v15
+(D) Kanarienvogel: Antikette ohne Spitze -- nichts erzwungen
+  n=2  erzwungen: [0]   ok
+  n=3  erzwungen: [0]   ok
+  n=4  erzwungen: [0]   ok
+  n=5  erzwungen: [0]   ok
+  n=6  erzwungen: [0]   ok
+(E) Doppelschleife: Einzelwerte frei, g(T_<a) erzwungen, Gesamtsumme ueber die nicht-maximalen Punkte NICHT erzwungen
+  Ketten der Laenge 1          |W|= 9  erzwungen: a a'
+                                      frei:      p q r s c1 c'1
+  n=1  p,q,r,s frei: True | g(T_<a) erzwungen: True | g(r)-g(s) erzwungen: True | Summe ueber nicht-maximale erzwungen: False   ok
+  Ketten der Laenge 2          |W|=11  erzwungen: a a' c1 c'1
+                                      frei:      p q r s c2 c'2
+  n=2  p,q,r,s frei: True | g(T_<a) erzwungen: True | g(r)-g(s) erzwungen: True | Summe ueber nicht-maximale erzwungen: False   ok
+  Ketten der Laenge 3          |W|=13  erzwungen: a a' c1 c2 c'1 c'2
+                                      frei:      p q r s c3 c'3
+  n=3  p,q,r,s frei: True | g(T_<a) erzwungen: True | g(r)-g(s) erzwungen: True | Summe ueber nicht-maximale erzwungen: False   ok
+(E2) Doppelschleife, der Ausweg ueber ein minimales Atom x (Theorem 38, Fall X={x}): phi_x(c) = m_c kappa(c,x) hat verschwindende Idealsummen, und phi_x(W_n minus maximale minus x) ist erzwungen
+  n=1  x=r  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: True (erwartet True)   ok
+  n=1  x=s  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: True (erwartet True)   ok
+  n=1  x=p  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: False (erwartet False)   ok
+  n=1  Kontrolle x=a (nicht minimal): phi_a(W_n\max\{a}) erzwungen: False   ok
+  n=2  x=r  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: True (erwartet True)   ok
+  n=2  x=s  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: True (erwartet True)   ok
+  n=2  x=p  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: False (erwartet False)   ok
+  n=2  Kontrolle x=a (nicht minimal): phi_a(W_n\max\{a}) erzwungen: False   ok
+  n=3  x=r  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: True (erwartet True)   ok
+  n=3  x=s  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: True (erwartet True)   ok
+  n=3  x=p  Idealsummen von phi_x erzwungen: True | phi_x(W_n\max\{x}) erzwungen: False (erwartet False)   ok
+  n=3  Kontrolle x=a (nicht minimal): phi_a(W_n\max\{a}) erzwungen: False   ok
+(F) zufaellige Halbordnungen mit kleinstem Element: 1_S im Spann der Idealindikatoren  =>  g(S) erzwungen
+  1088 Teilmengen, davon 188 mit 1_S im Spann (alle erzwungen), 0 erzwungen ohne Spann-Zugehoerigkeit (die (.,.)-Relationen geben mehr)
+rc = 0

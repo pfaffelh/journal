@@ -6985,6 +6985,82 @@ order.
   third depends on `k + l` only. In the third sum `V` meets the second factor on
   one side and the first on the other, and the free index runs over the full
   range on both; the boundary terms cancel because `c j = 0` for `j ≥ r`.
+* `Matrix.krylovCertificate_unique`: let `V : Matrix n n ℝ` with `V ^ r = 0`,
+  `ψ k = (Vᵀ) ^ k *ᵥ Pi.single t 1` for `k < r` with `ψ (r-1) ≠ 0`, and
+  `c k = ψ k ⬝ᵥ 1`. If `T = ∑ k, ∑ l, B k l • vecMulVec (ψ k) (ψ l)` is symmetric
+  with `T * V = Vᵀ * T` and `T *ᵥ 1 = Pi.single t 1`, then `B k l = b (k + l)`
+  for a `b : ℕ → ℝ` with `b j = 0` for `j < r - 1` and
+  `∑ l, b (k + l) * c l = if k = 0 then 1 else 0` for `k < r`; this triangular
+  system with diagonal `c (r-1) = ψ (r-1) ⬝ᵥ 1` has exactly one solution, and
+  conversely every such `b` gives a `T` with the three properties. Two facts
+  carry it: the `ψ k` are linearly independent (apply `(Vᵀ) ^ (r-1-k₀)` to a
+  vanishing combination with least index `k₀`), so the `vecMulVec (ψ k) (ψ l)`
+  are too and coefficients may be compared in `T * V = Vᵀ * T`, which reads
+  `B (k-1) l = B k (l-1)` and `B 0 (l-1) = 0`; and `c (r-1) ≠ 0` when `t` is
+  the greatest element of the poset and `V s a = if a < s then m a else 0`,
+  because every longest chain ends at `t`. Consequences: the `T` of
+  `Matrix.exists_isSymm_mulVec_one_eq_single` lies in this class (there
+  `i = t`, so `p k = c • ψ (r-1-k)`), hence does not depend on any choice and
+  has vanishing row `0`; and `b j = (-1) ^ j * q j` where
+  `1 / P(c) = ∑ j, q j * c ^ (-j)` is the expansion at `∞` of the reciprocal of
+  the chain polynomial `P(c) = ∑ k, (-c) ^ k * c k = (1 + c • Vᵀ)⁻¹ *ᵥ Pi.single t 1 ⬝ᵥ 1`,
+  which makes `T` the residue at `∞` of
+  `vecMulVec (z c) (z c) / (c * P c)` with `z c = (1 + c • Vᵀ)⁻¹ *ᵥ Pi.single t 1`,
+  and, when `P` has simple zeros `c k`, the real matrix
+  `vecMulVec (Pi.single t 1) (Pi.single t 1) - ∑ k, (-c k / P' (c k)) • vecMulVec (x k) (x k)`
+  with `x k = -(c k)⁻¹ • z (c k)` (Task 23, run 29, Theorems 27 and 28; on a
+  chain `P c = ∏ l, (1 - c * m l)` and this is `Clock.omegaChainPotential`'s
+  certificate). The chain polynomial is the weighted independence polynomial
+  of the incomparability graph evaluated at `-c`; it need not be real-rooted
+  (the ladder `a i < b j ↔ i < j` with `m (a i) = (2/3) ^ i`, `m (b j) = 2 ^ (-j)`
+  has complex zeros already at eight atoms per chain), and `T` is real all the
+  same.
+* `Matrix.certificate_mulVec_single_top`: let `V : Matrix n n ℝ`, `t : n`,
+  `d : ℕ` and `Ω : ℝ` with `Ω ≠ 0` and `V ^ d *ᵥ 1 = Ω • Pi.single t 1`. If `T`
+  is symmetric with `T * V = Vᵀ * T` and `T *ᵥ 1 = Pi.single t 1`, then
+  `T *ᵥ Pi.single t 1 = Ω⁻¹ • ((Vᵀ) ^ d *ᵥ Pi.single t 1)`. Proof:
+  `T *ᵥ (V ^ d *ᵥ 1) = (Vᵀ) ^ d *ᵥ (T *ᵥ 1)` by induction on `d` from
+  `T * V = Vᵀ * T` (`Matrix.mulVec_mulVec`), then evaluate both sides. Nothing
+  else is used — no nonnegativity, no nilpotency. So the row `t` of *every*
+  certificate is the same, and two certificates differ by a matrix with
+  vanishing row `t`. For the partial order with greatest element `t`,
+  `V s a = if a < s then m a else 0`, `d` the height and `Ω` the mass-weight of
+  the longest chains (the chain count already used for `c (r-1) ≠ 0` above),
+  the row is `T t a = m a * (weight of the longest chains starting at a) / Ω`
+  — the mass-weighted distribution of the starting points of longest chains
+  (Task 23, run 30, Proposition 29). On the ladder `a i < b j ↔ i < j` with `n`
+  levels this is `T t (b 1) = 1 / ∑ i ≤ n, ∏ l ≤ i, m (a l) / m (b l)`, a partial
+  theta sum, and it explains the measured `0.51704641` of run 29; the same run-30
+  computation shows that the boundary entries `T (a 2) (b n)` and `T (b 2) (b n)`
+  of every certificate of the truncation are forced as well (Theorem 31), which
+  gives the lower bound `‖T‖_m ≥ |κ_n| / m (a 2)` that the LP minimum attains
+  exactly (verified in rationals for `n ≤ 14` at `(α, β) = (1/2, 1/3)`).
+* `Matrix.certificate_mulVec_pow_one`: let `V : Matrix n n ℝ` and `t : n`. If
+  `T` is symmetric with `T * V = Vᵀ * T` and `T *ᵥ 1 = Pi.single t 1`, then for
+  every `k`
+  ```
+  T *ᵥ (V ^ k *ᵥ 1) = (Vᵀ) ^ k *ᵥ Pi.single t 1,
+  (V ^ k *ᵥ 1) ⬝ᵥ (T *ᵥ (V ^ l *ᵥ 1)) = (V ^ (k + l) *ᵥ 1) t .
+  ```
+  Proof: induction on `k` with `Matrix.mulVec_mulVec`; nothing else. So every
+  certificate is determined on `Submodule.span ℝ (Set.range fun k => V ^ k *ᵥ 1)`,
+  the Krylov space of `1`, and `Matrix.certificate_mulVec_single_top` is the
+  instance `k = d` and should be derived from it. Its interest is the infinite
+  case (Task 23, run 31, Theorems 36 and 37), which is not formalised here but
+  fixes what the finite statement is for: on a countable partial order with
+  greatest element `t`, summable masses and `e k = (V ^ k *ᵥ 1) t` the weight of
+  the `k`-chains, one has `∑ a, m a * (V ^ k *ᵥ 1) a = e (k+1)` and
+  `(k+1) * e (k+1) ≤ (∑ a, m a) * e k`, hence `V ^ k *ᵥ 1 / e k → Pi.single t 1`
+  in the mass-weighted `ℓ¹` norm, and every certificate bounded by
+  `|T s u| ≤ C * w s * w u` has column `t` equal to `lim_k ((Vᵀ) ^ k *ᵥ Pi.single t 1) / e k`,
+  i.e. `T t a = m a * lim_k e_{k-1}(atoms above a) / e k`. The limit must
+  therefore exist; on the disjoint union of two `ω`-chains with
+  `m (a i) = B ^ (-i)`, `m (b j) = B ^ (-j) * 2 ^ ((-1) ^ (j+1))`, `B ≥ 16`, it
+  does not (the even and odd subsequences of `e_k(b)/e_k(a)` are separated by
+  `1/(4/B;4/B)_∞ < 2 (1/B;1/B)_∞`), so that well-founded partial order carries
+  no bounded certificate and no uniformly bounded family of truncation
+  certificates; well-foundedness is not the right hypothesis for the existence
+  of certificates, convergence of the normalised chain count is a necessary one.
 * `dualityDefect_eq_zero_of_nonneg`: let `α` be a finite partial order,
   `m : α → ℝ` with `0 ≤ m`, and `κ : α → α → ℝ` with `κ a b = - κ b a`. Put
   `Ψ s t = ∑ a ∈ Finset.Iio s, m a * κ a t`. If
@@ -7435,6 +7511,91 @@ order.
   over, and the two are genuinely different tools: neither hypothesis implies
   the other. It contains the case of a chain `A` with neither a least nor a
   greatest element.
+* `duality_of_atomic_idealExhaustion`: with `Φ, γ` as in `chain_identity` and
+  `γ₁ = γ₂ = γ`, a purely atomic clock on a countable partial order with least
+  element `0`, `m ≥ 0`, and a `t` such that (i) `Φ a 0 = Φ 0 a` for every
+  `a < t` — supplied by `duality_of_atomic` on the ideal `Iic a` whenever that
+  ideal is finite — and (ii) the set `W = Iio t` is **directed upwards and has
+  no maximum**, one has `Φ t 0 = Φ 0 t`. No `m ⊗ m`-integrability, no bound on
+  `Φ`, no certificate. Proof: put `g c = m c * (γ c 0 - γ 0 c)`; the increment
+  representation at `(t, 0)` reads `Φ t 0 - Φ 0 t = ∑' c ∈ Iio t, g c`
+  (absolutely convergent — it is the existence of the integrals), and (i) says
+  `∑ c ∈ Iio a, g c = 0` for every `a ∈ W`. A countable directed set without
+  maximum has a strictly increasing cofinal sequence `a n` (Mathlib:
+  `IsDirected`, `exists_seq_strictMono_tendsto` in spirit; here build it by
+  hand from an enumeration), `Iio (a n) ↑ W`, and `tendsto_tsum_compl_atTop_zero`
+  (or `Summable.tendsto_sum_tsum_nat` along the increasing sets) gives
+  `∑' c ∈ W, g c = lim n, ∑ c ∈ Iio (a n), g c = 0`. The same two lines cover
+  two further shapes of `W`, which should be separate lemmas sharing the proof:
+  `W \ {0}` a disjoint union of pairwise incomparable directed pieces without
+  maxima (the finite sums over `⋃ k ≤ n, Iio (a k n)` are sums over the pieces
+  because the ideals meet only in `{0}`, where `g 0 = 0`), and every
+  `c ∈ W \ {0}` **chain-covered**, i.e. with an `a ∈ W` such that
+  `Iio a = Iic c` (then `g c = 0` for each `c` singly, and the tail of the
+  absolutely convergent series does the rest). The general form behind all
+  three — `δ t = 0` whenever `𝟙_W` lies in the bounded pointwise sequential
+  closure of the span of the ideal indicators `𝟙_{Iio a}`, `a ∈ W`, and its
+  extension by a set `X` of minimal atoms with `𝟙_{W \ X}` in that closure
+  (Task 23, run 32, Theorem 38) — is not what should be formalised first; the
+  three concrete shapes are. What they settle, all for arbitrary summable
+  masses: the **ladder** `a i < b j ↔ i < j` (directed: `a i, b j < b (max i j + 1)`;
+  every `Iic` finite), on which no item above applies for `m ⊗ m`-non-integrable
+  `γ` and on which the certificate question of runs 25–31 stays open; the
+  **disjoint union of two `ω`-chains**, in particular with the masses
+  `m (a i) = B ^ (-i)`, `m (b j) = B ^ (-j) * 2 ^ ((-1) ^ (j+1))`, `B ≥ 16`,
+  where `Matrix.certificate_mulVec_pow_one` shows that **no** bounded
+  certificate exists — so the certificate method is sufficient and not
+  necessary, and this pair is the acceptance test for that; trees without
+  leaves, and weak orders of level type `ω` with finite levels, where
+  `duality_of_atomic_weakOrder_of_integrable` needed the integrability. It does
+  **not** reach two stacked `ζ`-chains (there (i) is the question itself for
+  the upper chain), and it does not reach an index in which `W` has maximal
+  elements that are not minimal atoms (infinite crown, infinite `N`), which
+  remain with `duality_of_atomic_finiteHeight_of_integrable`. The item is two
+  lines on top of `duality_of_atomic` and a dominated-convergence step, and it
+  is the first in this milestone that reaches an infinite index of infinite
+  height with non-transitive incomparability without any hypothesis beyond the
+  existence of the integrals.
+* `duality_of_atomic_finiteCoreReduction`: the setting of
+  `duality_of_atomic_idealExhaustion` — countable partial order with least
+  element `0`, `m ≥ 0`, `t` with `W = Iio t`, (i) `Φ a 0 = Φ 0 a` for every
+  `a ∈ W` — and, in place of the shape hypothesis on `W`, a **finite down-set
+  `K ⊆ W` with `0 ∈ K`** such that `𝟙_{W \ K}` lies in the bounded pointwise
+  sequential closure of the span of the ideal indicators `𝟙_{Iio d}`, `d ∈ W`
+  (as functions on `W \ {0}`). Then `Φ t 0 = Φ 0 t`. The concrete instance to
+  formalise first, as its own lemma: **a finite core `K` with an `ω`-chain
+  hanging above each maximal element of `K`**, every `m ≥ 0`, no
+  integrability — there every chain point `c` is chain-covered
+  (`Iio c' = Iic c`), so `𝟙_{W \ K}` is the pointwise limit of finite sums of
+  `𝟙_{Iio c'} - 𝟙_{Iio c}`. Proof (Task 23, run 33, Theorem 39): write
+  `P = K \ {0}`, `Z : (P → ℝ) →ₗ (K → ℝ)`, `Z f s = ∑ a ∈ Iio s, f a`, and
+  `κ` for the antisymmetric part of `γ`. For `d ∈ W` the relation at `(d, s)`,
+  `s ∈ K`, together with (i) says that `s ↦ ∑ a ∈ Iio d, m a * κ a s` restricted
+  to `K` equals `-(Z ψ_d)` with `ψ_d b = m b * κ b d` — so it lies in
+  `LinearMap.range Z`, which is a closed subspace of the finite-dimensional
+  `K → ℝ`; dominated convergence (`tendsto_tsum_of_dominated_convergence`) at
+  each of the finitely many `s ∈ K` carries this to the closure, hence to
+  `χ s = ∑' c ∈ W \ K, m c * κ c s`. Pick `ψ''` with `Z ψ'' = χ` and, adding a
+  multiple of `Pi.single k 1` for a maximal `k ∈ K` (which `Z` kills), with
+  `∑ a ∈ P, ψ'' a = ∑' c ∈ W \ K, m c * κ c t`. Then `κ'` on `K ∪ {t}`, equal to
+  `κ` on `K × K` and to `κ a t + ψ'' a / m a` in the column `t`, satisfies the
+  relations at **all** pairs of the finite poset `K ∪ {t}` with the same
+  defect at `t`, and `duality_of_atomic` on that finite poset closes. So the
+  item is `duality_of_atomic` plus one dominated-convergence step, exactly like
+  its sibling, and it contains `duality_of_atomic_idealExhaustion` as the case
+  `K = {0}`. What it settles that nothing above reaches: the doubly hanging
+  double bow-tie of run 32 (`p₀ < p`, `q₀ < q`, `r₀ < r`, `s₀ < s`;
+  `p, q, r < a`; `p, q, s < a'`; chains above `a` and `a'`), on which every
+  exhaustion hypothesis fails and the duality holds through the relation at
+  the incomparable pair `(r, s)` — the reduction is what explains that; and all
+  980 random cores of `Task23/random_hanging.py`, including the 39 where the
+  plain exhaustion failed. The finite conjecture C(K) of run 32
+  (`Task23/core_conjecture.py`) is **not** needed for this and should not be
+  formalised. Mechanics verified exactly in `Task23/core_reduction.py`
+  (rc = 0): the chain values lie in `range Z` on every truncation, and the
+  corrected `κ'` satisfies the finite relations on random posets with
+  arbitrary down-sets `K`, with mixed signs included (the reduction itself uses
+  `m ≥ 0` nowhere; only `duality_of_atomic` does).
 * `Lagrange.sum_inv_prod_sub_eq_zero`: for a `Finset s` with `2 ≤ #s` and an
   `x : ι → F` injective on `s`, `∑ k ∈ s, (∏ l ∈ s.erase k, (x k - x l))⁻¹ = 0`,
   while the sum is `(1 : F)` for `#s = 1`. It is `Lagrange.coeff_eq_sum`

@@ -18,6 +18,13 @@ der niedrigsten Stufe, die noch offen ist. Ein Lauf muss keine Stufe
 abschließen — ein sauber verifizierter Teilschritt plus ein ehrlicher
 Protokolleintrag ist ein guter Lauf.
 
+**Das Budget ist aber da, um benutzt zu werden.** Steht ein Teilschritt und ist
+weniger als die Hälfte der Zeit verbraucht, nimm den nächsten offenen Punkt in
+Angriff, statt den Lauf zu beenden. Schreibe den Protokolleintrag dabei
+**fortlaufend** — nach jedem verifizierten Ergebnis, nicht erst am Schluß:
+läuft die Zeit ab, committet der Runner, was dasteht, und ein Ergebnis ohne
+Eintrag ist verloren.
+
 ## Regeln, die nicht verhandelbar sind
 
 1. **Jede Behauptung wird am Orakel geprüft, bevor sie aufgeschrieben wird.**

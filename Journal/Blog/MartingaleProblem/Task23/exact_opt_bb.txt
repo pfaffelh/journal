@@ -1,0 +1,36 @@
+== 1/2 1/4 --bb
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 140416/9891 = C? False   (C = 140288/9891 = 14.183399049641)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 90923392/6393057 = C? False   (C = 272770048/19179171 = 14.222202200502)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 8830725530752/620910388899 = C? False   (C = 8830725530624/620910388899 = 14.222222221604)
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 1538732816260096384/108192151143288033 = C? False   (C = 4616198448780289024/324576453429864099 = 14.222222222222)
+== 1/3 1/9 --bb
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 40368375/3827776 = C? True   (C = 40368375/3827776 = 10.546169629571)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 7070464292625/670384762816 = C? True   (C = 7070464292625/670384762816 = 10.546874995972)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 101329327730845797975/9607521444109824064 = C? True   (C = 101329327730845797975/9607521444109824064 = 10.546875000000)
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 117755211693562370416632474225/11164938590204432158021449664 = C? True   (C = 117755211693562370416632474225/11164938590204432158021449664 = 10.546875000000)
+== 1/2 1/3 --bb
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 1571373/76729 = C? False   (C = 1335042/76729 = 17.399444799228)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 242170520175/11535824243 = C? False   (C = 207550464534/11535824243 = 17.991819237359)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 3282908421079946277/156329100054263761 = C? False   (C = 2813920708600294578/156329100054263761 = 17.999980218805)
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 3728684161123464051223875495/177556388691837482617308107 = C? False   (C = 3196014994831778821258167366/177556388691837482617308107 = 17.999999990869)
+== 1/2 2/5 --bb
+n=4: dim Nullraum 6, 6 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 184461500/7111143 = C? False   (C = 3162725000/163556289 = 19.337226463973)
+n=6: dim Nullraum 8, 8 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 19363608455624500/678059913445109 = C? False   (C = 133632861759025000/6102539221005981 = 21.897911167705)
+n=8: dim Nullraum 10, 10 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 4605387230736658132928354500/159492444899496167413614969 = C? False   (C = 3542151488404845713289725000/159492444899496167413614969 = 22.208898300085)
+n=10: dim Nullraum 12, 12 Saettigungsgleichungen: konsistent=True, Rangdefekt=0
+      ||T||_m = 9019891069343052594263186604041484884500/312229295147023864821330617090197016429 = C? False   (C = 62445274896008187796157913737202366025000/2810063656323214783391975553811773147861 = 22.222014350278)
