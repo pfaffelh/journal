@@ -109,8 +109,35 @@ angeben (`WeakConvergence` zuerst, es hängt nur an Mathlib), und die
 Meilensteine benennen, die als *roadmap-for-a-roadmap* gekennzeichnet sind.
 
 Was die Entscheidung unmittelbar einlöst: zwei Aussagen, deren `sorry` **keine
-offene Mathematik war, sondern eine Dateigrenze**, sind damit beweisbar. Siehe
-`scripts/facts_prompt.md`, Abschnitt zur Dateigrenze.
+offene Mathematik war, sondern eine Dateigrenze**, sind damit beweisbar. Die
+erste, `isMPSolution_iff_forall_fdd_continuous`, ist seit dem 2026-09-17
+bewiesen.
+
+### Wie die Kette hier gebaut wird
+
+Die Importzeile lautet `import TauCetiRoadmap.WeakConvergence.Suggested` — mit
+dem Präfix, unter dem das Zielrepositorium baut (`lakefile.toml` dort:
+`lean_lib TauCetiRoadmap` mit `globs = ["TauCetiRoadmap.*"]` über dem
+Verzeichnis `TauCetiRoadmap/`). Hier löst sie sich auf, ohne daß unser
+Quellverzeichnis so heißen müßte, denn **der Modulname kommt aus der Lage der
+`.olean` in `LEAN_PATH` und nicht aus der Lage des Quelltextes**;
+`scripts/check_suggested.py` baut die Dateien in Abhängigkeitsordnung und legt
+jede `.olean` unter `scratch/_lean/TauCetiRoadmap/<Roadmap>/` ab.
+
+Ein `lean_lib`-Target in `lakefile.lean` gibt es dafür **nicht**, und das ist
+Absicht: `lake` bildet Modulnamen auf Quellpfade ab und kennt keine Umlenkung,
+also verlangte ein Target ein Verzeichnis `TauCetiRoadmap/` über den vier
+Roadmaps — entweder als Symlink auf `TauCeti/` oder durch Umbenennung, die 826
+Verweise im Repositorium berührt. Das ist zu entscheiden, ehe es geschrieben
+wird. Für die Einreichung selbst ist es gegenstandslos: dort liegen die
+Verzeichnisse ohnehin unter `TauCetiRoadmap/`.
+
+**Eine Aufräumarbeit, die der Import nach sich zieht.** `MartingaleProblems`
+bildet mehrere Begriffe der beiden Roadmaps unter ihm nach, mit dem Doc-Satz
+„restated so that this file stands against Mathlib alone" — `IsSeparating`,
+`IsCadlagPath` und Nachbarn. Dieser Grund ist entfallen. Bei `IsSeparating`
+kollidieren die beiden Namen bereits; die Auflösung, die keine Aussage doppelt
+stehen läßt, ist, die `WeakConvergence`-Fassung von `ℝ` auf `RCLike` zu heben.
 
 ## Steps
 

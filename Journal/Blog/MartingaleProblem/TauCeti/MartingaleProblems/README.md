@@ -469,14 +469,21 @@ generating its σ-algebra, and `X : Ω → F`.
   for every `(f,g) ∈ A`; and the same with `h k` bounded continuous when `E` is
   metrizable. The continuous form rests on the measurable one through exactly two
   statements of the roadmap **WeakConvergence**, and on nothing else:
-  `integral_mul_eq_zero_of_isMulSystem`, which carries the vanishing of
-  `∫ g · f` from a multiplicative system to the whole σ-algebra it generates, and
+  `integral_mul_ofReal_eq_zero_of_isMulSystem`, which carries the vanishing of
+  `∫ g · f` from a multiplicative system of **real** functions to the whole
+  σ-algebra it generates while the other factor stays `𝕂` valued, and
   `generateFromFuns_setOf_continuous_bounded`, which says that on a
   pseudo-metrizable space the bounded continuous real functions generate the
   Borel σ-algebra. The multiplicative system is the set of products
-  `ω ↦ ∏ k, h k (X (r k) ω)` with `r k ≤ s` and `h k` bounded continuous, and the
-  σ-algebra it generates is `𝓕 s` by `MeasurableSpace.comap_iSup` applied to that
-  second statement. Metrizability is consumed there and nowhere else. This is the statement that turns every later theorem into a
+  `ω ↦ ∏ k, h k (X (r k) ω)` with `r k ≤ s` and `h k` bounded continuous; it is
+  multiplicative because `Fin.append` concatenates two families, and
+  `Fin.prod_univ_add` splits the product back. What is needed of the σ-algebra
+  it generates is **one inequality and not an equality with `𝓕 s`**:
+  `MeasurableSpace.comap (X r) _ ≤ generateFromFuns K` for every `r ≤ s`, by
+  `MeasurableSpace.comap_iSup` and `MeasurableSpace.comap_comp` applied to that
+  second statement. The hypothesis of the first on the constant function,
+  `∫ g = 0`, is the right hand side at `n = 0`, where the empty product is `1`.
+  Metrizability is consumed in the second and nowhere else. This is the statement that turns every later theorem into a
   statement about finite dimensional distributions, and it is the reason the
   index needs no order structure beyond a preorder. The filtration is the
   natural one of `X`, `𝓕 s = ⨆ r ∈ Set.Iic s, MeasurableSpace.comap (X r) _`,

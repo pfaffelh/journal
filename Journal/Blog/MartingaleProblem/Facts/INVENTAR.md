@@ -34228,3 +34228,206 @@ das ist nach dem obigen Befund die falsche Bedingung.
    nicht, so ist die Bruchstelle zu benennen und gehört in den Meilenstein.
 3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 der drei
    Vorläufe.
+
+### 2026-09-17, achtzehnter Lauf des Tages — die Dateigrenze fällt, und der Preis der einen gegen `master` geschriebenen Aussage war nicht die Aussage, sondern die **Datei**: ein `error` gibt keine `.olean`, und damit war `WeakConvergence` von niemandem importierbar
+
+Der Lauf hat die vom Nutzer als **erste Aufgabe** gestellte Werkzeugarbeit
+gemacht und dann den ersten der beiden `sorry` geschlossen. Die Zahl der `sorry`
+in `MartingaleProblems/Suggested.lean` sinkt von **zwei auf eins**; in
+`WeakConvergence/Suggested.lean` von einem, den niemand gezählt hatte, auf
+**null**. Beide Dateien und `SkorokhodSpace` gehen fehlerfrei durch
+`lake env lean` gegen v4.33.1, jetzt **in Abhängigkeitsordnung und mit einem
+echten `import` zwischen ihnen**.
+
+#### Der Befund, und er ist der Grund, warum die Werkzeugarbeit vorne stand
+
+`WeakConvergence/Suggested.lean` **hat nicht übersetzt**, seit dem 2026-09-08
+nicht, und das war bekannt: die eine bewußt gegen `upstream/master` geschriebene
+Aussage `tendsto_map_of_measure_setOf_continuousAt_eq_one` benutzte
+`ProbabilityMeasure.map`, das auf master die *Funktion* nimmt
+(`MeasureTheory/Measure/ProbabilityMeasure.lean:627` auf `upstream/master`,
+Commit `8018f6ac06b`, 2026-09-17) und in v4.33.1 zusätzlich einen
+`AEMeasurable`-Beweis (`ibid.:608`). `TODO.md` hielt das fest mit dem Satz
+„Nachgeprüft, absichtlich, bleibt so".
+
+Als Aussage über die *Aussage* war das richtig. Als Aussage über die *Datei* war
+es falsch, und der Unterschied ist erst sichtbar, seit die Dateien aufeinander
+aufbauen dürfen:
+
+> **Ein `error` gibt keine `.olean`.** Solange eine einzige Deklaration der Datei
+> nicht elaboriert, ist die **ganze** Datei von keiner anderen importierbar.
+
+Die Kette `WeakConvergence → SkorokhodSpace → MartingaleProblems`, die der
+Nutzer am 2026-09-17 angeordnet hat, war also an ihrer Wurzel blockiert, und
+zwar von einer Deklaration, die niemand braucht — sie ist die *verpackte* Form
+eines Satzes, der daneben steht und bewiesen ist.
+
+Zwei kleinere Folgen desselben Umstands, beide zu berichtigen:
+
+* Der Modulkopf von `WeakConvergence/Suggested.lean` sagte, keine Deklaration
+  trage mehr ein `sorry`. Die Zählung stimmte, weil Lean für eine Deklaration,
+  die gar nicht elaboriert, **kein** `declaration uses sorry` meldet. Der
+  `:= sorry` stand in Zeile 2181 und wurde von keiner Prüfung erfaßt.
+* `TODO.md` führte die Datei mit „1 `sorry`, 2 Fehler" und nannte das
+  absichtlich. Der Eintrag ist ersetzt.
+
+**Die Reparatur ist keine Anpassung an v4.33.1**, und darauf kam es an: die
+Aussage nimmt die Bildmaße jetzt als **Daten mit ihren definierenden
+Gleichungen**, genau wie der Hauptsatz
+`tendsto_of_measure_setOf_not_continuousAt_eq_zero` daneben, der das seit dem
+2026-09-08 tut. Damit nennt sie keine Bildkonstruktion mehr, elaboriert gegen
+**beide** Fassungen und ist bewiesen statt `sorry`:
+`tendsto_of_measure_setOf_continuousAt_eq_one`, aus dem Hauptsatz durch
+`prob_compl_eq_zero_iff`
+(`MeasureTheory/Measure/Typeclasses/Probability.lean:157`) und
+`measurableSet_of_continuousAt`
+(`MeasureTheory/Constructions/BorelSpace/Basic.lean:252`, auf
+`upstream/master` an derselben Zeile). Die Voraussetzungen sind dabei nach der
+stehenden Regel geschwächt worden: statt `[BorelSpace E]`,
+`[TopologicalSpace.SeparableSpace E]`, `[MetricSpace E']`, `[BorelSpace E']` nun
+`[OpensMeasurableSpace E]`, `[HasOuterApproxClosed E]`, `[PseudoEMetricSpace E']`,
+`[OpensMeasurableSpace E']` — die Separabilität von `E` kam im Beweis nie vor,
+und die Metrik auf `E'` wird allein dafür gebraucht, daß die Stetigkeitsmenge
+`Gδ` und damit borelsch ist.
+
+#### Das Werkzeug: wie die Kette gebaut wird, ohne `.lake` im Worktree
+
+`scripts/check_suggested.py` prüfte bisher jede Datei freistehend. Es baut sie
+jetzt **der Reihe nach** und hängt den `.olean`-Baum der schon gebauten an
+`LEAN_PATH` der nächsten. Die Prüfung ist dabei nicht schwächer geworden: jede
+Datei wird ganz übersetzt, ungefiltert, ohne Zwischenspeicher — jeder Lauf baut
+alles neu, damit keine veraltete `.olean` eine Prüfung vortäuscht — und wo eine
+`.olean` fehlt, sagt der Bericht ausdrücklich, daß das Ergebnis der Dateien
+darunter nichts über deren Inhalt aussagt.
+
+**Der Befund, der die Bauweise entschieden hat, und er ist am Zeugen geprüft:**
+
+> Der **Modulname** einer importierten Datei kommt aus der Lage ihrer `.olean`
+> in `LEAN_PATH`, **nicht** aus der Lage ihres Quelltextes.
+
+Geprüft mit einer Datei, deren Quelltext unter `TauCetiRoadmap/Foo/Suggested.lean`
+liegt und deren `.olean` nach `Other/Place/Suggested.olean` kopiert wurde: sie
+importiert sich als `Other.Place.Suggested`, und `lean` sieht den Quellbaum
+überhaupt nicht an. Nur `lake` bildet Modulnamen auf Quellpfade ab.
+
+Das löst die Frage, die der Nutzer gestellt hat — „den Modulnamen an dem prüfen,
+was `TauCetiRoadmap` erwartet". Erwartet wird dort das Präfix
+`TauCetiRoadmap.`: die `lakefile.toml` des Zielrepositoriums (am 2026-09-17
+gelesen) erklärt `lean_lib TauCetiRoadmap` mit `globs = ["TauCetiRoadmap.*"]`
+über dem Verzeichnis `TauCetiRoadmap/`, und eine eingereichte Datei heißt dort
+`TauCetiRoadmap.WeakConvergence.Suggested`. **Genau diese Importzeile steht
+jetzt in `MartingaleProblems/Suggested.lean`**, und sie löst sich hier über den
+`.olean`-Baum auf, den das Prüfskript unter `scratch/_lean/TauCetiRoadmap/`
+anlegt. Unser Quellverzeichnis darf `TauCeti/` heißen, wie es heißt; es baut
+hier und dort.
+
+**Was dieser Lauf *nicht* getan hat, und warum.** Ein `lean_lib`-Target in
+`lakefile.lean` ist **nicht** angelegt. Ein solches Target braucht ein
+Verzeichnis namens `TauCetiRoadmap` über den vier Roadmaps, denn `lake` — anders
+als `lean` — bildet Modulnamen auf Quellpfade ab und kennt keine Umlenkung. Dafür
+gäbe es zwei Wege, und beide sind Entscheidungen des Nutzers und nicht eines
+Laufs:
+
+* ein Symlink `Journal/Blog/MartingaleProblem/TauCetiRoadmap → TauCeti`, eine
+  Datei, kein Umbau. Der Lauf konnte ihn nicht anlegen: `ln` ist in dieser
+  Umgebung nicht freigegeben.
+* die Umbenennung des Verzeichnisses. Sie kostet **826** Verweise auf `TauCeti/`
+  im Repositorium, darunter `scripts/facts_prompt.md` — also den Auftrag, unter
+  dem diese Läufe stehen. Ein Lauf, der ihn umschreibt, hinterläßt einen
+  Auftrag, der auf Pfade zeigt, die es nicht mehr gibt.
+
+Ein Target hinzuschreiben, das erst nach einer dieser beiden Änderungen baut,
+wäre genau das, was die Regel „hinterlasse nichts, was auf Ungeschriebenes
+verweist" verbietet. **Und es fehlt dem Lauf auch nichts:** der Worktree hat kein
+`.lake`, ein Lake-Target wäre hier ohnehin nicht zu bauen, und die Kette wird von
+`check_suggested.py` gebaut und geprüft. Das Target ist Bequemlichkeit für den
+Hauptcheckout nach dem Merge, nicht die Fähigkeit selbst.
+
+#### Der geschlossene `sorry`: `isMPSolution_iff_forall_fdd_continuous`
+
+Die stetige Fassung des fdd-Kriteriums, Meilenstein 3. Der Lauf vom 2026-09-15
+hatte die Reduktion ausgeschrieben, und sie hat getragen, wie sie dastand — mit
+drei Abweichungen im einzelnen.
+
+Die leichte Richtung ist eine Zeile: eine stetige Funktion ist meßbar. Die
+schwere geht über
+`integral_mul_ofReal_eq_zero_of_isMulSystem` und
+`generateFromFuns_setOf_continuous_bounded`, beide aus `WeakConvergence`,
+Meilenstein 5, und über nichts sonst. Das multiplikative System ist
+`K = {ω ↦ ∏ k, h k (X (r k) ω) : r k ≤ s, h k stetig und beschränkt}`;
+multiplikativ ist es, weil `Fin.append` zwei Familien aneinanderhängt und
+`Fin.prod_univ_add` das Produkt wieder zerlegt.
+
+**Erstens: `∫ g = 0` ist nicht zu beweisen, sondern einzusetzen.** Die
+`hg0`-Voraussetzung des Übertragungssatzes — die Bedingung an die konstante
+Funktion, die dort ausdrücklich als nicht streichbar vermerkt ist — ist die
+rechte Seite des Kriteriums bei `n = 0`, wo das leere Produkt `1` ist.
+
+**Zweitens: die Roadmap verlangte mehr, als der Beweis braucht.** Der Eintrag zu
+Meilenstein 3 sagte, die von `K` erzeugte σ-Algebra **sei `𝓕 s`**. Gebraucht wird
+davon nur **eine Ungleichung**, und zwar die leichte:
+`MeasurableSpace.comap (X r) _ ≤ generateFromFuns K` für jedes `r ≤ s`, über
+`MeasurableSpace.comap_iSup` und `MeasurableSpace.comap_comp`. Die Gleichheit
+wäre zusätzlich zu zeigen und käme in keinem Schritt vor. Der Eintrag ist
+berichtigt.
+
+**Drittens, und es ist der erste gemessene Preis des Imports: eine
+Namenskollision.** `MartingaleProblems` erklärt im Wurzelnamensraum ein
+`IsSeparating` über `Set (E → 𝕂)`, `WeakConvergence` eines über `Set (E → ℝ)` in
+`MeasureTheory`; mit `open MeasureTheory` ist der nackte Name mehrdeutig, und
+drei Stellen der Datei brachen daran. Sie lesen jetzt `_root_.IsSeparating`. Das
+ist eine Notlösung und als solche vermerkt: vor der Einreichung sollte eine der
+beiden weichen, und die bessere Richtung ist, die `WeakConvergence`-Fassung von
+`ℝ` auf `RCLike` zu heben — dann ist die reelle der Fall `𝕂 = ℝ` und keine
+Aussage steht zweimal da. Das ist ein Eingriff in Meilenstein 1 dieser Roadmap
+und gehört dem Nutzer vorgelegt, nicht nebenbei gemacht.
+
+Die drei Sätze `IsSeparating`, `IsCadlagPath` und ihre Nachbarn tragen in
+`MartingaleProblems` alle denselben Doc-Satz „restated so that this file stands
+against Mathlib alone". Dieser Grund ist mit dem Import entfallen; welche
+dieser Nachbildungen jetzt durch das Original zu ersetzen sind, ist die
+natürliche Aufräumarbeit und ist **nicht** Teil dieses Laufs.
+
+#### Der Durchlauf
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 1 | 65 |
+
+`#print axioms` gibt für `isMPSolution_iff_forall_fdd_continuous` und für
+`MeasureTheory.tendsto_of_measure_setOf_continuousAt_eq_one` je
+`propext`, `Classical.choice`, `Quot.sound` und nichts sonst.
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Entwickelt gegen eine an Zeile 1213 abgeschnittene Kopie (`scratch/mktrunc.py`),
+die Prüfung über die ganze Datei und über die ganze Kette. Der eine verbliebene
+`sorry` ist `mpSolution_of_tendsto`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`mpSolution_of_tendsto` schließen — der letzte `sorry` der Datei.**
+   *Aussage:* aus den drei Konvergenzhypothesen die Martingalidentität längs `D`,
+   dann `isMPSolution_of_forall_condExp_eq_of_dense`. *Worauf sie ruht:* beide
+   Bausteine stehen seit dem siebzehnten Lauf, und das
+   Continuous-Mapping-Theorem, an dem die `pContinuous`-Fassung hängt, ist seit
+   diesem Lauf **importierbar und bewiesen**. *Warum jetzt:* der Vorlauf hat
+   diesen Schritt als den einen von zweien benannt, der überhaupt Mathematik
+   ist, und der andere ist seit diesem Lauf erledigt. *Zu entscheiden, ehe
+   gebaut wird:* ob der Satz seine Konklusion von der Identität längs `D` auf
+   `IsMPSolution` verstärkt oder ob ein Korollar danebentritt — die Frage steht
+   seit dem siebzehnten Lauf offen und ist nicht beantwortet.
+2. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink oder
+   Umbenennung, siehe oben), und erst danach das Target anlegen. Es ist eine
+   Frage und keine Arbeit; sie steht hier, damit sie nicht jeder Lauf neu
+   erschließt.
+3. **Die Doppelung `IsSeparating` auflösen**, nach derselben Vorlage: die
+   `WeakConvergence`-Fassung auf `RCLike` heben und die Nachbildung in
+   `MartingaleProblems` streichen. Dabei ist zu prüfen, welche der übrigen
+   Nachbildungen dort — `IsCadlagPath` und die Nachbarn — mit dem Import
+   ebenfalls entbehrlich geworden sind.
+4. **Die Aufrufe veralteter Namen**, unverändert Vorschlag 3 der vier Vorläufe.
+   `WeakConvergence` allein meldet `push_neg`, `Set.mem_setOf_eq`,
+   `_root_.not_imp` und zwölf `haveI`-Stilwarnungen; sie sind jetzt, da die
+   Datei fehlerfrei durchläuft, zum ersten Mal vollständig sichtbar.

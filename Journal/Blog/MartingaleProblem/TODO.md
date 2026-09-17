@@ -787,17 +787,21 @@ Hauptcheckouts geprüft (dort wurde nichts geschrieben):
 
 | | Zeilen | Deklarationen | `sorry` | Fehler |
 |---|---:|---:|---:|---:|
-| `WeakConvergence` | 6 964 | 195 | 1 | 2 |
+| `WeakConvergence` | 6 989 | 196 | 0 | 0 |
 | `SkorokhodSpace` | 10 167 | 353 | 0 | 0 |
-| `MartingaleProblems` | 29 092 | 1 359 | 6 | 0 |
+| `MartingaleProblems` | 33 009 | — | 1 | 0 |
 
-`SkorokhodSpace` ist damit **ganz bewiesen** und seit dem 10. September
-unberührt; `WeakConvergence` seit dem 9. Die zwei Fehler dort sind die **eine**
-bewußt gegen `upstream/master` geschriebene Aussage
-`tendsto_map_of_measure_setOf_continuousAt_eq_one` (Zeile 2181) — sie
-elaboriert gegen v4.33.1 nicht, weil `ProbabilityMeasure.map` dort noch ein
-`AEMeasurable`-Argument nimmt, und darum meldet Lean ihr `sorry` gar nicht
-erst. Nachgeprüft, absichtlich, bleibt so.
+`SkorokhodSpace` ist **ganz bewiesen** und seit dem 10. September unberührt.
+`WeakConvergence` ist es seit dem 2026-09-17, achtzehntem Lauf des Tages, und
+die Zeile davor ist zu berichtigen: sie nannte die zwei Fehler dort „nachgeprüft,
+absichtlich, bleibt so". Das war als Aussage über die *Aussage* richtig und als
+Aussage über die *Datei* falsch. Ein `error` gibt keine `.olean`; solange die
+eine gegen `upstream/master` geschriebene Deklaration nicht elaborierte, war
+`WeakConvergence` von keiner anderen Datei importierbar, und seit der
+Entscheidung des Nutzers vom 2026-09-17, daß die vier Roadmaps aufeinander
+aufbauen dürfen, hing daran die ganze Kette. Die Aussage ist jetzt über die
+Bildmaße als Daten geschrieben, elaboriert gegen **beide** Fassungen und ist
+bewiesen: `tendsto_of_measure_setOf_continuousAt_eq_one`.
 
 Die ganze Bewegung steckt seither in `MartingaleProblems`: **1 036 Zeilen am
 8. September, 29 092 heute.** Die **fünf** verbliebenen `sorry` stehen in

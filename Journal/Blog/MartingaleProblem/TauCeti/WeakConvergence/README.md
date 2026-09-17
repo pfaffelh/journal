@@ -707,19 +707,22 @@ which is `IsGδ.setOfPred_continuousAt`
 (`Mathlib/Topology/GDelta/MetrizableSpace.lean:51`) followed by
 `IsGδ.measurableSet` (`BorelSpace/Basic.lean:248`).
 
-* `MeasureTheory.ProbabilityMeasure.tendsto_map_of_measure_setOf_continuousAt_eq_one`:
-  for `E`, `E'` separable metric, `h : E → E'` Borel, `μ n → μ` weakly and
-  `μ {x | ContinuousAt h x} = 1`, one has `(μ n).map h → μ.map h` weakly.
-  Recover `tendsto_map_of_tendsto_of_continuous` as the case where the set is
-  everything.
+* `MeasureTheory.tendsto_of_measure_setOf_continuousAt_eq_one`:
+  for `E` with `HasOuterApproxClosed`, `E'` pseudo-emetric, `h : E → E'` Borel,
+  `μ n → μ` weakly and `μ {x | ContinuousAt h x} = 1`, the image measures
+  converge weakly. Recover `tendsto_map_of_tendsto_of_continuous` as the case
+  where the set is everything.
 
   Its content is `MeasureTheory.tendsto_of_measure_setOf_not_continuousAt_eq_zero`,
   **proved** on 2026-09-08, first run: the image measures enter as data with
   their defining equations `(μ' n : Measure E') = (μ n : Measure E).map h`, so
   that the statement names no image *construction* and elaborates against both
   `v4.33.1` and `upstream/master`, whose `ProbabilityMeasure.map` differ in
-  signature. The packaged form is that theorem at `μ' n = (μ n).map h`, where
-  the equations are `rfl`.
+  signature. Instantiate `μ'` and `ν'` with the pushforwards in whichever
+  spelling the version at hand uses; the equations are `rfl`. The form with the
+  continuity set of full measure is that theorem with `prob_compl_eq_zero_iff`
+  in front of it, the continuity set being Borel by
+  `measurableSet_of_continuousAt`, and it is **proved** since 2026-09-17.
 
   The proof is portmanteau on both sides. For `F` closed,
   `closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x}` — a continuity point
@@ -773,7 +776,7 @@ continuous image `TendstoInDistribution.continuous_comp_prodMk_of_tendstoInMeasu
   hypothesis is there for.
 * **Continuous `h` recovers Mathlib's theorem.** For `h` continuous the
   continuity set is `Set.univ`, whose measure is `1`, so
-  `tendsto_map_of_measure_setOf_continuousAt_eq_one` must reproduce
+  `tendsto_of_measure_setOf_continuousAt_eq_one` must reproduce
   `ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous` with no further
   hypothesis. This is the collapse test for the generalisation.
 * **Evaluation on the Skorokhod space, which is the downstream use.** This is the

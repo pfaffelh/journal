@@ -3,6 +3,7 @@ Copyright (c) 2026 Peter Pfaffelhuber. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Peter Pfaffelhuber
 -/
+import TauCetiRoadmap.WeakConvergence.Suggested
 import Mathlib.Probability.Martingale.Basic
 import Mathlib.Probability.Process.Stopping
 import Mathlib.Probability.Process.LocalProperty
@@ -42,9 +43,17 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (seventeenth run of that day), over the **whole** file and without an error.  Every
-declaration elaborates; 2 declarations carry `sorry`, and every one of those `sorry`s is a
-**proof** -- no statement carries one.  The seventeenth run of 2026-09-17 **removed** one: the
+2026-09-17 (eighteenth run of that day), over the **whole** file and without an error.  Every
+declaration elaborates; 1 declaration carries `sorry`, and that `sorry` is a
+**proof** -- no statement carries one.
+
+Since the eighteenth run of 2026-09-17 this file **imports** the roadmap
+`WeakConvergence`, in the chain `WeakConvergence -> SkorokhodSpace ->
+MartingaleProblems` the user settled on that day; the import is spelled with the
+module prefix the target repository builds under, and the chain is built in
+dependency order by `scripts/check_suggested.py`.  That run closed the `sorry` of
+`isMPSolution_iff_forall_fdd_continuous`, which recorded a file boundary and no
+open mathematics, and it is what the import is for.  The seventeenth run of 2026-09-17 **removed** one: the
 passage from the martingale identity along a dense `D` to the whole index is proved
 (`isMPSolution_of_forall_condExp_eq_of_dense`), and with it the two steps it runs on,
 `tendsto_eLpNorm_sub_of_forall_condExp_eq` and `exists_seq_mem_of_nhdsWithin_Ioi_neBot`.  Its
@@ -1181,21 +1190,25 @@ that the right hand side for bounded **continuous** `h k` gives the right hand
 side for bounded **measurable** `h k`; and that implication rests on exactly two
 statements of the roadmap **WeakConvergence**, Milestone 5, and on nothing else:
 
-* `integral_mul_eq_zero_of_isMulSystem`, which carries `∫ g * f = 0` from a
-  multiplicative system of bounded measurable functions to every bounded
+* `integral_mul_ofReal_eq_zero_of_isMulSystem`, which carries `∫ g * f = 0` from
+  a multiplicative system of bounded measurable functions to every bounded
   function measurable for the σ-algebra it generates; applied with
   `g = Y t - Y s` and the multiplicative system
   `K = {ω ↦ ∏ k, h k (X (r k) ω) | r k ≤ s, h k bounded continuous}`, whose
-  members are products because `Fin.append` concatenates two families;
+  members are products because `Fin.append` concatenates two families.  Its
+  hypothesis on the constant, `∫ g = 0`, is the right hand side at `n = 0`,
+  where the empty product is `1`;
 * `generateFromFuns_setOf_continuous_bounded`, that on a pseudo-metrizable space
   the bounded continuous real functions generate the Borel σ-algebra; it gives
-  `𝓕 s ≤ generateFromFuns K` through `MeasurableSpace.comap_iSup` and
-  `MeasurableSpace.comap_comp`, and it is the only place where the topology of
-  `E` is consumed.
+  `MeasurableSpace.comap (X r) inferInstance ≤ generateFromFuns K` for `r ≤ s`
+  through `MeasurableSpace.comap_iSup` and `MeasurableSpace.comap_comp`, and it
+  is the only place where the topology of `E` is consumed.
 
-Neither is available in this file: the two roadmaps are typechecked separately,
-and this file imports Mathlib alone.  That is what the `sorry` records — a file
-boundary and not an open mathematical question. -/
+Both are imported since 2026-09-17: the chain
+`WeakConvergence → SkorokhodSpace → MartingaleProblems` is a build order, not
+three separate files.  Until then the two statements were out of reach here and
+the proof stood as a `sorry` that recorded a file boundary and not an open
+mathematical question. -/
 theorem isMPSolution_iff_forall_fdd_continuous [OrderBot ι] [TopologicalSpace E]
     [TopologicalSpace.PseudoMetrizableSpace E] [BorelSpace E]
     {A : Set ((E → 𝕂) × (E → 𝕂))} {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E}
@@ -1210,7 +1223,105 @@ theorem isMPSolution_iff_forall_fdd_continuous [OrderBot ι] [TopologicalSpace E
         (∀ k, ∃ b, ∀ x, ‖h k x‖ ≤ b) →
         ∫ ω, (p.1 (X t ω) - p.1 (X s ω)
               - ∫ u in Q.interval c s t, p.2 (X u ω) ∂Q.q) *
-            ∏ k, (h k (X (r k) ω) : 𝕂) ∂P = 0 := sorry
+            ∏ k, (h k (X (r k) ω) : 𝕂) ∂P = 0 := by
+  classical
+  rw [isMPSolution_iff_forall_fdd hA hX hXprog h𝓕]
+  refine ⟨fun hm p hp s t hst n r hr h hcont hb =>
+    hm p hp s t hst n r hr h (fun k => (hcont k).measurable) hb, ?_⟩
+  intro hc p hp s t hst n r hr h hhm hhb
+  obtain ⟨⟨hfm, b1, hfb⟩, hgm, b2, hgb⟩ := hA p hp
+  have hXm : ∀ t, Measurable[𝓕 t] (X t) := by
+    intro t
+    refine (@measurable_iff_comap_le Ω E (𝓕 t) _ (X t)).2 ?_
+    rw [h𝓕 t]
+    exact le_iSup₂ (f := fun (r : ι) (_ : r ∈ Set.Iic t) =>
+      MeasurableSpace.comap (X r) (inferInstance : MeasurableSpace E)) t (Set.mem_Iic.2 le_rfl)
+  -- The multiplicative system: products of bounded continuous functions of
+  -- coordinates at times up to `s`.
+  set K : Set (Ω → ℝ) := {φ | ∃ (n : ℕ) (r : Fin n → ι), (∀ k, r k ≤ s) ∧
+    ∃ h : Fin n → E → ℝ, (∀ k, Continuous (h k)) ∧ (∀ k, ∃ b, ∀ x, ‖h k x‖ ≤ b) ∧
+      φ = fun ω => ∏ k, h k (X (r k) ω)} with hKdef
+  have hKmul : IsMulSystem K := by
+    rintro f ⟨n₁, r₁, hr₁, h₁, hc₁, hb₁, rfl⟩ f' ⟨n₂, r₂, hr₂, h₂, hc₂, hb₂, rfl⟩
+    refine ⟨n₁ + n₂, Fin.append r₁ r₂, ?_, Fin.append h₁ h₂, ?_, ?_, ?_⟩
+    · refine Fin.addCases (fun k => ?_) (fun k => ?_)
+      · rw [Fin.append_left]; exact hr₁ k
+      · rw [Fin.append_right]; exact hr₂ k
+    · refine Fin.addCases (fun k => ?_) (fun k => ?_)
+      · rw [Fin.append_left]; exact hc₁ k
+      · rw [Fin.append_right]; exact hc₂ k
+    · refine Fin.addCases (fun k => ?_) (fun k => ?_)
+      · rw [Fin.append_left]; exact hb₁ k
+      · rw [Fin.append_right]; exact hb₂ k
+    · funext ω
+      rw [Pi.mul_apply, Fin.prod_univ_add]
+      simp only [Fin.append_left, Fin.append_right]
+  have hKm : ∀ f ∈ K, Measurable f := by
+    rintro f ⟨n', r', hr', h', hc', hb', rfl⟩
+    exact Finset.measurable_prod _ fun k _ => (hc' k).measurable.comp (hX (r' k))
+  have habs : ∀ (n' : ℕ) (r' : Fin n' → ι) (h' : Fin n' → E → ℝ),
+      (∀ k, ∃ b, ∀ x, ‖h' k x‖ ≤ b) → ∃ C, ∀ ω, |∏ k, h' k (X (r' k) ω)| ≤ C := by
+    intro n' r' h' hb'
+    choose bk hbk using hb'
+    refine ⟨∏ k, bk k, fun ω => ?_⟩
+    rw [← Real.norm_eq_abs, norm_prod]
+    exact Finset.prod_le_prod (fun k _ => norm_nonneg _) (fun k _ => hbk k _)
+  have hKbdd : ∀ f ∈ K, ∃ C, ∀ x, |f x| ≤ C := by
+    rintro f ⟨n', r', hr', h', hc', hb', rfl⟩
+    exact habs n' r' h' hb'
+  -- The increment is integrable and, by the hypothesis at `n = 0`, centred.
+  set Y : ι → Ω → 𝕂 := fun t ω =>
+    p.1 (X t ω) - ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q with hYdef
+  have hYeq : ∀ t ω, Y t ω = p.1 (X t ω) - ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q :=
+    fun _ _ => rfl
+  have hYint : ∀ t, Integrable (Y t) P := fun t =>
+    integrable_mpFamily_of_bounded hYeq hfm hgm hfb hgb hXprog hXm t
+  have hsub : ∀ ω, Y t ω - Y s ω = p.1 (X t ω) - p.1 (X s ω)
+      - ∫ u in Q.interval c s t, p.2 (X u ω) ∂Q.q :=
+    fun ω => mpFamily_sub_of_isProgressive hYeq hgm hgb hXprog hst ω
+  have hgint : Integrable (fun ω => p.1 (X t ω) - p.1 (X s ω)
+      - ∫ u in Q.interval c s t, p.2 (X u ω) ∂Q.q) P :=
+    ((hYint t).sub (hYint s)).congr (Filter.Eventually.of_forall hsub)
+  have hg0 : ∫ ω, (p.1 (X t ω) - p.1 (X s ω)
+      - ∫ u in Q.interval c s t, p.2 (X u ω) ∂Q.q) ∂P = 0 := by
+    have h0 := hc p hp s t hst 0 (fun k => k.elim0) (fun k => k.elim0)
+      (fun k => k.elim0) (fun k => k.elim0) (fun k => k.elim0)
+    simpa using h0
+  have hmem : ∀ f ∈ K, ∫ ω, (p.1 (X t ω) - p.1 (X s ω)
+      - ∫ u in Q.interval c s t, p.2 (X u ω) ∂Q.q) * (f ω : 𝕂) ∂P = 0 := by
+    rintro f ⟨n', r', hr', h', hc', hb', rfl⟩
+    refine Eq.trans (integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_))
+      (hc p hp s t hst n' r' hr' h' hc' hb')
+    simp only [RCLike.ofReal_prod]
+  have key := integral_mul_ofReal_eq_zero_of_isMulSystem hKmul hKm hKbdd P hgint hg0 hmem
+  -- Every coordinate up to `s` is measurable for the σ-algebra the system
+  -- generates: that is where the topology of `E` is consumed.
+  have hcomap : ∀ r' : ι, r' ≤ s →
+      MeasurableSpace.comap (X r') (inferInstance : MeasurableSpace E) ≤ generateFromFuns K := by
+    intro r' hr'
+    have hmemK : ∀ f : E → ℝ, Continuous f → (∃ C, ∀ x, ‖f x‖ ≤ C) →
+        (fun ω => f (X r' ω)) ∈ K := by
+      intro f hf hfb
+      exact ⟨1, fun _ => r', fun _ => hr', fun _ => f, fun _ => hf, fun _ => hfb, by
+        funext ω; simp⟩
+    conv_lhs => rw [show (inferInstance : MeasurableSpace E)
+      = generateFromFuns {f : E → ℝ | Continuous f ∧ ∃ C, ∀ x, |f x| ≤ C} from
+        generateFromFuns_setOf_continuous_bounded.symm]
+    rw [generateFromFuns, MeasurableSpace.comap_iSup]
+    refine iSup_le fun f => ?_
+    rw [MeasurableSpace.comap_iSup]
+    refine iSup_le fun hf => ?_
+    rw [MeasurableSpace.comap_comp]
+    refine measurable_iff_comap_le.1 (measurable_generateFromFuns_of_mem ?_)
+    exact hmemK f hf.1 (by
+      obtain ⟨C, hC⟩ := hf.2
+      exact ⟨C, fun x => by rw [Real.norm_eq_abs]; exact hC x⟩)
+  have hprodm : Measurable[generateFromFuns K] fun ω => ∏ k, h k (X (r k) ω) :=
+    Finset.measurable_prod _ fun k _ =>
+      (hhm k).comp (measurable_iff_comap_le.2 (hcomap (r k) (hr k)))
+  refine Eq.trans (integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_))
+    (key (fun ω => ∏ k, h k (X (r k) ω)) hprodm (habs n r h hhb))
+  rw [RCLike.ofReal_prod]
 
 /-! ## Milestone 5: shifts and the restart lemma -/
 
@@ -2376,9 +2487,19 @@ variable {ι : Type*} [ConditionallyCompleteLinearOrder ι] [OrderBot ι]
   [TopologicalSpace ι] [OrderTopology ι]
 variable {E : Type*} [TopologicalSpace E] [MeasurableSpace E]
 
-/-- Separating, as `IsSeparating` of the roadmap **WeakConvergence**,
-Milestone 1 -- there over `Set (E → ℝ)`, here over `Set (E → 𝕂)`.  Restated so
-that this file stands against Mathlib alone; it is the same proposition. -/
+/-- Separating, as `MeasureTheory.IsSeparating` of the roadmap
+**WeakConvergence**, Milestone 1 -- there over `Set (E → ℝ)`, here over
+`Set (E → 𝕂)`.  It is the same proposition, over a wider scalar field, and the
+`𝕂`-valued one is what the operator `A : Set ((E → 𝕂) × (E → 𝕂))` of a
+martingale problem needs.
+
+Since 2026-09-17 this file imports that roadmap, so the two names coexist and
+`open MeasureTheory` makes the bare name ambiguous; the uses below read
+`_root_.IsSeparating`.  Before the submission one of the two should give way:
+either the `WeakConvergence` definition is generalized from `ℝ` to `RCLike`, at
+the price of touching every statement of its Milestone 1, or this one is
+renamed.  The first is the better of the two, since `IsSeparating` over `ℝ` is
+then the instance `𝕂 = ℝ` and no proposition is stated twice. -/
 def IsSeparating (Γ : Set (E → 𝕂)) : Prop :=
   ∀ (μ ν : Measure E) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν],
     (∀ f ∈ Γ, ∫ x, f x ∂μ = ∫ x, f x ∂ν) → μ = ν
@@ -5035,7 +5156,7 @@ noncomputable def coinClass : Set ((Bool → ℝ) × (Bool → ℝ)) := {coinPai
 /-- A single indicator separates the probability measures on `Bool`: it pins the
 mass of `{true}`, and the mass of `{false}` is what is left of the total mass.
 This is what forces `A ≠ ∅` in `not_isQuasiLeftContinuous_of_atom`. -/
-theorem isSeparating_coinClass : IsSeparating (Prod.fst '' coinClass) := by
+theorem isSeparating_coinClass : _root_.IsSeparating (Prod.fst '' coinClass) := by
   have key : ∀ ρ : Measure Bool, ∫ ω, coinPair.1 ω ∂ρ = ρ.real {true} := by
     intro ρ
     have hind : coinPair.1 = Set.indicator {true} fun _ ↦ (1 : ℝ) := by
@@ -5231,7 +5352,7 @@ theorem not_isQuasiLeftContinuous_of_atom (u : ι)
       Q.q {u} ≠ 0 ∧ ¬ Q.IsContinuousFor c ∧
         (∀ p ∈ A, Continuous p.1 ∧ (∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧
           ∃ b, ∀ x, ‖p.2 x‖ ≤ b) ∧
-        IsSeparating (Prod.fst '' A) ∧
+        _root_.IsSeparating (Prod.fst '' A) ∧
         (∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω) ∧
         @IsMPSolution ι _ Ω' m' ℝ _ (mpFamily A Q c X) 𝓕 P ∧
         ¬ IsQuasiLeftContinuous X 𝓕 P := by
@@ -5296,7 +5417,7 @@ theorem not_isQuasiLeftContinuous_of_isRegularizingClass_of_free_solutionSet :
     ∃ (Φ : Set (Bool → ℝ)) (𝓧 : Set (ENNReal → Bool → ℝ))
       (𝓕 : Filtration ENNReal (inferInstance : MeasurableSpace Bool))
       (D : Set ENNReal) (X : ENNReal → Bool → Bool),
-      IsSeparating Φ ∧
+      _root_.IsSeparating Φ ∧
       (∀ᵐ ω ∂AtomWitness.coinMeasure, IsCadlagPath fun t ↦ X t ω) ∧
       (∀ f ∈ Φ, ∃ Y ∈ 𝓧, ∃ C : ENNReal → Bool → ℝ,
         IsCompensatorFor X 𝓕 AtomWitness.coinMeasure D f Y C ∧
