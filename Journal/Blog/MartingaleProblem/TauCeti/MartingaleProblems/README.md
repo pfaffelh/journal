@@ -8049,6 +8049,93 @@ and 11 use them.
   càdlàg theorem uses it, `D` being dense and `t` not greatest.
   `[FirstCountableTopology ι]` is what makes the filter countably generated and
   so produces `u`. Proved on 2026-09-17.
+* `MeasureTheory.UnifIntegrable.of_norm_le_ae`, uniform integrability passes to a
+  family dominated in norm: if `‖g i x‖ ≤ ‖f i x‖` almost everywhere for every
+  `i` and `f` is uniformly integrable, so is `g`. Nothing is assumed of `g` —
+  neither measurability nor integrability — and the two families may take their
+  values in different normed groups, which is what the use below needs.
+
+  In **v4.33.1**, the binding of this development, Mathlib has
+  `UnifIntegrable.add`, `.neg`, `.sub`, `.ae_eq`, `.indicator` and `.restrict`
+  (`MeasureTheory/Function/UniformIntegrable.lean:104` to `:155`) and **no
+  domination lemma**. On `upstream/master` it has one, `UnifIntegrable.ae_mono`
+  (`ibid.:142` at `92fc6042c1d`, 2026-09-16) — so this is not a gap to be
+  reported upstream, and the entry says so rather than claiming an absence that
+  has since been filled. Two differences remain and are the reason the lemma
+  stands here rather than being waited for: `ae_mono` asks
+  `∀ i, AEStronglyMeasurable (f i) μ` of the **dominated** family, which this one
+  does not, and it quantifies both families over the **same** normed group, while
+  the use below has a real dominating family and a `𝕂` valued dominated one.
+  `UnifIntegrable` itself is restated on master, so the two proofs are not the
+  same proof.
+
+  The proof is `eLpNorm_mono_ae` applied to the indicators, which are dominated
+  on the set by hypothesis and off it because both vanish. Proved on 2026-09-17.
+* `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`, the right limit of a
+  martingale along `D` has the martingale value for its conditional expectation:
+  if `Y` is a martingale, `t < T`, `𝓝[D ∩ Set.Ioi t] t` is not `⊥`, and `Y s ω`
+  converges to `V ω` along that filter for almost every `ω`, then
+  `P[V | 𝓕 t] =ᵐ[P] Y t`. In the notation of the càdlàg theorem this is
+  `P[Y_{t+} | 𝓕 t] = Y t`, and together with
+  `IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` it is the whole modification
+  half of `f ∘ X = Y + C`. The statement mentions neither `X` nor the
+  regularizing class, so it stands before any modification is constructed.
+
+  **`t < T` is what carries the uniform integrability**, and is why a bound
+  appears in a statement about a limit at `t`: the family of a martingale is
+  uniformly integrable on an order ideal, `Y s =ᵐ[P] P[Y T | 𝓕 s]` holding for
+  `s ≤ T`. The order topology turns `t < T` into
+  `Set.Iio T ∈ 𝓝[D ∩ Set.Ioi t] t`, so a sequence running into the filter is
+  eventually below `T`, and shifting the sequence by that index is cheaper than
+  carrying an `Eventually` through Vitali.
+
+  **The real and imaginary parts are not split**, although
+  `Integrable.uniformIntegrable_condExp_filtration`
+  (`Probability/Process/Filtration.lean:214`) is real valued and the martingale
+  is `𝕂` valued. What carries uniform integrability across is domination:
+  `norm_condExp_le`
+  (`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`) gives
+  `‖P[Y T | 𝓕 s]‖ ≤ᵐ[P] P[‖Y T‖ | 𝓕 s]`, whose right hand side is the
+  conditional expectation family of one fixed integrable real function, and
+  `UnifIntegrable.of_norm_le_ae` above does the rest. A real–imaginary split
+  would need a recombination lemma that Mathlib does not have either, so
+  domination is strictly the cheaper route.
+
+  The remaining three steps are Mathlib's: `Lp.eLpNorm_le_of_ae_tendsto`
+  (`MeasureTheory/Function/LpSpace/Complete.lean:89`) puts the limit in `L¹`,
+  `tendsto_Lp_finite_of_tendsto_ae`
+  (`MeasureTheory/Function/UniformIntegrable.lean:518`) is Vitali, and
+  `eLpNorm_condExp_le_eLpNorm`
+  (`MeasureTheory/Function/ConditionalExpectation/Real.lean:288`) is the `L¹`
+  contraction that carries the convergence through the conditional expectation.
+  `[(𝓝[D ∩ Set.Ioi t] t).NeBot]` cannot be dropped, for the reason it cannot be
+  dropped in the compensator half. Proved on 2026-09-17.
+* `ae_eq_of_condExp_eq_of_condExp_mul_conj`, squaring out: a function is
+  determined almost surely by its conditional expectation together with that of
+  its squared modulus. If `f` is `m'` measurable, `f` and `g` are square
+  integrable, `P[g | m'] =ᵐ[P] f` and `P[g * conj g | m'] =ᵐ[P] f * conj f`, then
+  `g =ᵐ[P] f`. This is the step for which `hΦsq` sits in the hypotheses of the
+  càdlàg theorem: read at `f` and at `f * conj f`, the two conditional
+  expectations of the modification half give the two hypotheses, and the
+  conclusion is agreement with **one** null set and not one per member of the
+  class.
+
+  The proof is an expansion and carries no process notion. With `d := g − f`,
+  `∫ d conj d` is `∫ g conj g − ∫ g conj f − ∫ f conj g + ∫ f conj f`; the first
+  is `∫ f conj f` by the second hypothesis and `integral_condExp`, the second is
+  `∫ f conj f` by pulling the `m'` measurable factor `conj f` out
+  (`condExp_bilin_of_aestronglyMeasurable_right`,
+  `MeasureTheory/Function/ConditionalExpectation/PullOut.lean:215`) and the first
+  hypothesis, the third is the conjugate of the second and `∫ f conj f` is real.
+  So `∫ ‖g − f‖ ^ 2 = 0`, and a vanishing integral of a nonnegative integrand has
+  a vanishing integrand.
+
+  **`MemLp _ 2 P` is the right hypothesis and `Integrable` is not.** All four
+  products must be integrable, and the cross terms are integrable exactly because
+  both factors are square integrable (`MemLp.integrable_mul`,
+  `MeasureTheory/Function/L1Space/Integrable.lean:1085`); the hypothesis on
+  `g * conj g` constrains a conditional expectation, not the integrability of a
+  product. Proved on 2026-09-17.
 * `exists_cadlag_modification_of_isRegularizingClass`: if `P` is a probability
   measure solving the martingale problem for `𝓧`, `Φ` is a regularizing class
   for `X` along `𝓧` containing a countable subset that separates points, `Φ` is

@@ -30,6 +30,7 @@ import Mathlib.Analysis.PSeries
 import Mathlib.Probability.Martingale.OptionalSampling
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.AbsolutelyContinuousFun
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.LebesgueDifferentiationThm
+import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
 
 /-!
 # Suggested signatures for the martingale problems roadmap
@@ -38,7 +39,7 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (second run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
+2026-09-17 (third run of that day).  Every declaration elaborates; 6 declarations carry `sorry`, and
 Five more the same day, in `section JumpFiltration`, are the four bookkeeping
 facts about `lebesgueClock` that the conditional expectation of
 `jumpProcess_isMPSolution` still needed, plus their assembly:
@@ -2674,6 +2675,240 @@ theorem IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi [FirstCountableTopology
     (continuous_enorm.tendsto _).comp ((hWω.comp hu).sub tendsto_const_nhds)
   have : ‖W ω - C t ω‖ₑ = 0 := by rw [← hconv.liminf_eq]; simpa using hω
   simpa [sub_eq_zero] using this
+
+/-- **Uniform integrability passes to a family dominated in norm.**  In v4.33.1,
+against which this file is checked, Mathlib has `UnifIntegrable.add`, `.neg`,
+`.sub`, `.ae_eq`, `.indicator` and `.restrict`
+(`MeasureTheory/Function/UniformIntegrable.lean:104` to `:155`) and no domination
+lemma.  On `upstream/master` it has one, `UnifIntegrable.ae_mono` (`ibid.:142` at
+`92fc6042c1d`, 2026-09-16), so this is **not** a gap in the library; two
+differences keep the statement here.  `ae_mono` asks
+`∀ i, AEStronglyMeasurable (f i) μ` of the dominated family, which this does not,
+and it quantifies both families over the same normed group, while the use below
+has a real dominating family and a `𝕂`-valued dominated one.
+
+Nothing is assumed of `g` -- not measurability, not integrability.  The proof is
+`eLpNorm_mono_ae` applied to the indicator, and the indicator of a dominated
+function is dominated by the indicator, on `s` by hypothesis and off `s` because
+both sides vanish.  The dominating family may take its values in one normed group
+and the dominated one in another; that is what makes the lemma usable for a
+`𝕂`-valued martingale dominated by a real conditional expectation. -/
+theorem MeasureTheory.UnifIntegrable.of_norm_le_ae {α : Type*} [MeasurableSpace α]
+    {μ : Measure α} {p : ENNReal} {β γ : Type*} [NormedAddCommGroup β]
+    [NormedAddCommGroup γ] {ι' : Type*} {f : ι' → α → β} {g : ι' → α → γ}
+    (hf : UnifIntegrable f p μ) (h : ∀ i, ∀ᵐ x ∂μ, ‖g i x‖ ≤ ‖f i x‖) :
+    UnifIntegrable g p μ := by
+  intro ε hε
+  obtain ⟨δ, hδ, hδ'⟩ := hf hε
+  refine ⟨δ, hδ, fun i s hs hμs ↦ le_trans (eLpNorm_mono_ae ?_) (hδ' i s hs hμs)⟩
+  filter_upwards [h i] with x hx
+  by_cases hxs : x ∈ s
+  · simpa [Set.indicator_of_mem hxs] using hx
+  · simp [Set.indicator_of_notMem hxs]
+
+omit [OrderBot ι] in
+/-- **The right limit of a martingale along `D` has the martingale value for its
+conditional expectation**: `P[Y_{t+} | 𝓕 t] = Y t`.  With
+`IsCompensatorFor.ae_eq_of_tendsto_nhdsWithin_Ioi` above this is the whole of the
+modification half of the càdlàg theorem, `f ∘ X = Y + C` being the decomposition.
+
+The statement is about the martingale alone and mentions neither `X` nor the
+regularizing class, so it is available before the modification is constructed.
+
+**`t < T` is what carries the uniform integrability** and is why the bound `T`
+appears at all: the family `{Y s}` of a martingale is uniformly integrable only
+on an order ideal, and `Y s =ᵐ[P] P[Y T | 𝓕 s]` holds for `s ≤ T`.  The order
+topology turns `t < T` into `Set.Iio T ∈ 𝓝[D ∩ Set.Ioi t] t`, so a sequence
+running into that filter is eventually below `T`; shifting the sequence by that
+index makes "eventually" into "always", which is cheaper than carrying the
+`Eventually` through Vitali.
+
+**The real--imaginary split is not needed**, although
+`Integrable.uniformIntegrable_condExp_filtration`
+(`Probability/Process/Filtration.lean:214`) is real valued and the martingale is
+`𝕂`-valued.  What carries the uniform integrability across is domination:
+`norm_condExp_le` (`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`)
+gives `‖P[Y T | 𝓕 s]‖ ≤ᵐ[P] P[‖Y T‖ | 𝓕 s]` and the right hand side is a real
+conditional expectation of a fixed integrable function, hence a uniformly
+integrable family; `UnifIntegrable.of_norm_le_ae` above does the rest.  Splitting
+into real and imaginary parts would need a recombination lemma that Mathlib does
+not have either, so the domination route is strictly the cheaper one.
+
+The three remaining steps are Mathlib's: `Lp.eLpNorm_le_of_ae_tendsto`
+(`MeasureTheory/Function/LpSpace/Complete.lean:89`) puts the limit in `L¹`,
+`tendsto_Lp_finite_of_tendsto_ae` (`MeasureTheory/Function/UniformIntegrable.lean:518`)
+is Vitali, and `eLpNorm_condExp_le_eLpNorm`
+(`MeasureTheory/Function/ConditionalExpectation/Real.lean:288`) is the `L¹`
+contraction that carries the convergence through the conditional expectation.
+`[(𝓝[D ∩ Set.Ioi t] t).NeBot]` cannot be dropped, for the reason it cannot be
+dropped in the compensator half: at a point isolated from the right `hV` is
+vacuous and `V` is arbitrary. -/
+theorem Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi [FirstCountableTopology ι]
+    {Y : ι → Ω → 𝕂} {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P]
+    (hY : Martingale Y 𝓕 P) {D : Set ι} {t T : ι} (htT : t < T)
+    [(𝓝[D ∩ Set.Ioi t] t).NeBot] {V : Ω → 𝕂}
+    (hV : ∀ᵐ ω ∂P, Tendsto (fun s ↦ Y s ω) (𝓝[D ∩ Set.Ioi t] t) (𝓝 (V ω))) :
+    P[V | 𝓕 t] =ᵐ[P] Y t := by
+  obtain ⟨u, hu⟩ := Filter.exists_seq_tendsto (𝓝[D ∩ Set.Ioi t] t)
+  have hIio : Set.Iio T ∈ 𝓝[D ∩ Set.Ioi t] t :=
+    mem_nhdsWithin_of_mem_nhds (isOpen_Iio.mem_nhds htT)
+  have hev : ∀ᶠ n in atTop, u n < T ∧ t < u n := by
+    filter_upwards [hu hIio, hu self_mem_nhdsWithin] with n h1 h2 using ⟨h1, h2.2⟩
+  obtain ⟨N, hN⟩ := eventually_atTop.1 hev
+  set v : ℕ → ι := fun n ↦ u (n + N) with hvdef
+  have hv : Tendsto v atTop (𝓝[D ∩ Set.Ioi t] t) := hu.comp (tendsto_add_atTop_nat N)
+  have hvT : ∀ n, v n ≤ T := fun n ↦ (hN (n + N) (Nat.le_add_left N n)).1.le
+  have hvt : ∀ n, t ≤ v n := fun n ↦ (hN (n + N) (Nat.le_add_left N n)).2.le
+  -- the dominating real family is uniformly integrable
+  have hYT : Integrable (Y T) P := hY.integrable T
+  have hnorm : Integrable (fun ω ↦ ‖Y T ω‖) P := hYT.norm
+  have hUI0 : UnifIntegrable (fun n : ℕ ↦ P[fun ω ↦ ‖Y T ω‖ | 𝓕 (v n)]) 1 P := by
+    intro ε hε
+    obtain ⟨δ, hδ, hδ'⟩ :=
+      (hnorm.uniformIntegrable_condExp_filtration (f := 𝓕)).2.1 hε
+    exact ⟨δ, hδ, fun n s hs hμs ↦ hδ' (v n) s hs hμs⟩
+  -- and it dominates the martingale
+  have hdom : ∀ n : ℕ, ∀ᵐ ω ∂P,
+      ‖Y (v n) ω‖ ≤ ‖P[fun ω ↦ ‖Y T ω‖ | 𝓕 (v n)] ω‖ := by
+    intro n
+    filter_upwards [hY.condExp_ae_eq (hvT n), norm_condExp_le (m := 𝓕 (v n)) (Y T),
+      condExp_nonneg (m := 𝓕 (v n)) (μ := P) (Eventually.of_forall fun ω ↦ norm_nonneg (Y T ω))]
+      with ω h1 h2 h3
+    rw [← h1, Real.norm_of_nonneg h3]
+    exact h2
+  have hUI : UnifIntegrable (fun n : ℕ ↦ Y (v n)) 1 P := hUI0.of_norm_le_ae hdom
+  have hae : ∀ᵐ ω ∂P, Tendsto (fun n ↦ Y (v n) ω) atTop (𝓝 (V ω)) := by
+    filter_upwards [hV] with ω hω using hω.comp hv
+  have hmeas : ∀ n : ℕ, AEStronglyMeasurable (Y (v n)) P := fun n ↦ (hY.integrable (v n)).1
+  have hVmeas : AEStronglyMeasurable V P :=
+    aestronglyMeasurable_of_tendsto_ae atTop hmeas hae
+  -- the limit is in `L¹`
+  have hbound : ∀ n : ℕ, eLpNorm (Y (v n)) 1 P ≤ eLpNorm (Y T) 1 P := by
+    intro n
+    calc eLpNorm (Y (v n)) 1 P = eLpNorm (P[Y T | 𝓕 (v n)]) 1 P :=
+          eLpNorm_congr_ae (hY.condExp_ae_eq (hvT n)).symm
+      _ ≤ eLpNorm (Y T) 1 P := eLpNorm_condExp_le_eLpNorm _ le_rfl
+  have hVLp : MemLp V 1 P :=
+    ⟨hVmeas, lt_of_le_of_lt
+      (Lp.eLpNorm_le_of_ae_tendsto (Eventually.of_forall hbound) hmeas hae)
+      (memLp_one_iff_integrable.2 hYT).2⟩
+  have hVint : Integrable V P := memLp_one_iff_integrable.1 hVLp
+  -- Vitali, and the `L¹` contraction
+  have hL1 : Tendsto (fun n ↦ eLpNorm (Y (v n) - V) 1 P) atTop (𝓝 0) :=
+    tendsto_Lp_finite_of_tendsto_ae le_rfl ENNReal.one_ne_top hmeas hVLp hUI hae
+  have hcontr : ∀ n : ℕ, eLpNorm (Y t - P[V | 𝓕 t]) 1 P ≤ eLpNorm (Y (v n) - V) 1 P := by
+    intro n
+    calc eLpNorm (Y t - P[V | 𝓕 t]) 1 P
+        = eLpNorm (P[Y (v n) - V | 𝓕 t]) 1 P := by
+          refine eLpNorm_congr_ae ?_
+          filter_upwards [condExp_sub (hY.integrable (v n)) hVint (𝓕 t),
+            hY.condExp_ae_eq (hvt n)] with ω h1 h2
+          simp only [Pi.sub_apply] at h1 ⊢
+          rw [h1, h2]
+      _ ≤ eLpNorm (Y (v n) - V) 1 P := eLpNorm_condExp_le_eLpNorm _ le_rfl
+  have hzero : eLpNorm (Y t - P[V | 𝓕 t]) 1 P = 0 :=
+    le_antisymm (ge_of_tendsto hL1 (Eventually.of_forall hcontr)) bot_le
+  have hfin := (eLpNorm_eq_zero_iff
+    (((hY.integrable t).1).sub (integrable_condExp.1)) one_ne_zero).1 hzero
+  filter_upwards [hfin] with ω hω
+  simp only [Pi.sub_apply] at hω
+  exact (sub_eq_zero.1 hω).symm
+
+/-- **Squaring out**: a function is determined almost surely by its conditional
+expectation together with that of its squared modulus.  This is the step for
+which `hΦsq` sits in the hypotheses of the càdlàg theorem below -- read at `f` and
+at `f * conj f`, the two conditional expectations of the modification half give
+exactly `h1` and `h2`, and the conclusion is that the modification agrees with the
+process almost surely, with **one** null set and not one per member of the class.
+
+The proof is an expansion and carries no process notion.  With `d := g - f`,
+`∫ d * conj d` is `∫ g conj g - ∫ g conj f - ∫ f conj g + ∫ f conj f`; the first
+integral is `∫ f conj f` by `h2` and `integral_condExp`, the second is `∫ f conj f`
+by pulling the `m'`-measurable factor `conj f` out of the conditional expectation
+(`condExp_bilin_of_aestronglyMeasurable_right`,
+`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:215`) and then `h1`,
+the third is the conjugate of the second and `∫ f conj f` is real.  So
+`∫ ‖g - f‖ ^ 2 = 0`, and a vanishing integral of a nonnegative integrand has a
+vanishing integrand.
+
+**`MemLp _ 2 P` is the right hypothesis and `Integrable` is not**: all four
+products have to be integrable, and the cross terms are integrable exactly because
+both factors are square integrable (`MemLp.integrable_mul`,
+`MeasureTheory/Function/L1Space/Integrable.lean:1085`).  `h2` alone does not give
+this -- it constrains a conditional expectation, not the integrability of the
+product.
+
+`let _ : MeasurableSpace Ω := m` at the head of the proof is not decoration.  A
+local `{m' : MeasurableSpace Ω}` is a candidate for instance search, and being the
+later binder it wins, so `∫ ω, _ ∂P` inside the proof would be elaborated against
+`m'` while `P : @Measure Ω m`.  Rebinding the ambient σ-algebra last makes the
+search find it again. -/
+theorem ae_eq_of_condExp_eq_of_condExp_mul_conj {P : Measure Ω} [IsFiniteMeasure P]
+    {m' : MeasurableSpace Ω} (hm' : m' ≤ m) {f g : Ω → 𝕂}
+    (hfm : AEStronglyMeasurable[m'] f P) (hf2 : MemLp f 2 P) (hg2 : MemLp g 2 P)
+    (h1 : P[g | m'] =ᵐ[P] f)
+    (h2 : P[fun ω ↦ g ω * (starRingEnd 𝕂) (g ω) | m']
+      =ᵐ[P] fun ω ↦ f ω * (starRingEnd 𝕂) (f ω)) :
+    g =ᵐ[P] f := by
+  let _ : MeasurableSpace Ω := m
+  have hfi : Integrable f P := hf2.integrable one_le_two
+  have hgi : Integrable g P := hg2.integrable one_le_two
+  have hcf2 : MemLp (fun ω ↦ (starRingEnd 𝕂) (f ω)) 2 P :=
+    hf2.of_le (RCLike.continuous_conj.comp_aestronglyMeasurable hf2.1)
+      (.of_forall fun ω ↦ by simp)
+  have hcfm : AEStronglyMeasurable[m'] (fun ω ↦ (starRingEnd 𝕂) (f ω)) P :=
+    RCLike.continuous_conj.comp_aestronglyMeasurable hfm
+  have hcg2 : MemLp (fun ω ↦ (starRingEnd 𝕂) (g ω)) 2 P :=
+    hg2.of_le (RCLike.continuous_conj.comp_aestronglyMeasurable hg2.1)
+      (.of_forall fun ω ↦ by simp)
+  have hgg : Integrable (fun ω ↦ g ω * (starRingEnd 𝕂) (g ω)) P := hg2.integrable_mul hcg2
+  have hgf : Integrable (fun ω ↦ g ω * (starRingEnd 𝕂) (f ω)) P := hg2.integrable_mul hcf2
+  have hff : Integrable (fun ω ↦ f ω * (starRingEnd 𝕂) (f ω)) P := hf2.integrable_mul hcf2
+  have hfg : Integrable (fun ω ↦ f ω * (starRingEnd 𝕂) (g ω)) P := hf2.integrable_mul hcg2
+  have hA : ∫ ω, g ω * (starRingEnd 𝕂) (g ω) ∂P = ∫ ω, f ω * (starRingEnd 𝕂) (f ω) ∂P := by
+    rw [← integral_condExp (μ := P) hm' (f := fun ω ↦ g ω * (starRingEnd 𝕂) (g ω))]
+    exact integral_congr_ae h2
+  have hB : ∫ ω, g ω * (starRingEnd 𝕂) (f ω) ∂P = ∫ ω, f ω * (starRingEnd 𝕂) (f ω) ∂P := by
+    rw [← integral_condExp (μ := P) hm' (f := fun ω ↦ g ω * (starRingEnd 𝕂) (f ω))]
+    refine integral_congr_ae ?_
+    have hpull := condExp_bilin_of_aestronglyMeasurable_right
+      (ContinuousLinearMap.mul ℝ 𝕂) hcfm (by simpa using hgf) hgi
+    simp only [ContinuousLinearMap.mul_apply'] at hpull
+    filter_upwards [hpull, h1] with ω hω hω1
+    rw [hω, hω1]
+  have hB' : ∫ ω, f ω * (starRingEnd 𝕂) (g ω) ∂P = ∫ ω, f ω * (starRingEnd 𝕂) (f ω) ∂P := by
+    have h1' : ∫ ω, f ω * (starRingEnd 𝕂) (g ω) ∂P
+        = (starRingEnd 𝕂) (∫ ω, g ω * (starRingEnd 𝕂) (f ω) ∂P) := by
+      rw [← integral_conj]
+      exact integral_congr_ae (.of_forall fun ω ↦ by simp [mul_comm])
+    rw [h1', hB]
+    simp_rw [RCLike.mul_conj, ← RCLike.ofReal_pow]
+    rw [integral_ofReal, RCLike.conj_ofReal]
+  have hkey : ∫ ω, ((‖g ω - f ω‖ ^ 2 : ℝ) : 𝕂) ∂P = 0 := by
+    have hexp : ∀ ω, ((‖g ω - f ω‖ ^ 2 : ℝ) : 𝕂)
+        = (g ω * (starRingEnd 𝕂) (g ω) - g ω * (starRingEnd 𝕂) (f ω))
+          - (f ω * (starRingEnd 𝕂) (g ω) - f ω * (starRingEnd 𝕂) (f ω)) := by
+      intro ω
+      rw [RCLike.ofReal_pow, ← RCLike.mul_conj]
+      simp only [map_sub]
+      ring
+    have i1 : Integrable
+        (fun ω ↦ g ω * (starRingEnd 𝕂) (g ω) - g ω * (starRingEnd 𝕂) (f ω)) P := hgg.sub hgf
+    have i2 : Integrable
+        (fun ω ↦ f ω * (starRingEnd 𝕂) (g ω) - f ω * (starRingEnd 𝕂) (f ω)) P := hfg.sub hff
+    simp_rw [hexp]
+    rw [integral_sub i1 i2, integral_sub hgg hgf, integral_sub hfg hff, hA, hB, hB']
+    ring
+  rw [integral_ofReal] at hkey
+  have hkey' : ∫ ω, ‖g ω - f ω‖ ^ 2 ∂P = 0 := by exact_mod_cast hkey
+  have hint : Integrable (fun ω ↦ ‖g ω - f ω‖ ^ 2) P :=
+    (memLp_two_iff_integrable_sq_norm (hg2.1.sub hf2.1)).1 (hg2.sub hf2)
+  have hae := (integral_eq_zero_iff_of_nonneg (fun ω ↦ by positivity) hint).1 hkey'
+  filter_upwards [hae] with ω hω
+  have hn : ‖g ω - f ω‖ = 0 := by
+    have h0 : ‖g ω - f ω‖ ^ 2 = 0 := hω
+    nlinarith [norm_nonneg (g ω - f ω)]
+  rwa [norm_sub_eq_zero_iff] at hn
 
 /-- A regularizing class whose countable subset separates the points of `E`, and
 compact containment, give a modification with càdlàg paths.  The conclusion is

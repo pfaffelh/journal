@@ -31589,3 +31589,190 @@ Die Signatur ist als `sigcheck` elaboriert; sie ist typkorrekt.
 3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
    der letzten sechs Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
    zur Fassung (c) mit dem meßbaren Zeugen.
+
+### 2026-09-17, dritter Lauf des Tages — die Martingalhälfte der Modifikation steht, und der Weg, den der Vorlauf für nötig hielt, war der teurere: Dominierung statt Real-Imaginär-Zerlegung
+
+**Drei neue Deklarationen** im Abschnitt `Regularizing` von
+`TauCeti/MartingaleProblems/Suggested.lean`, **ein neuer Import**. Die Zahl der
+`sorry` bleibt bei sechs. Das waren die Vorschläge 1 und 2 des Vorlaufs, beide
+ganz eingelöst; damit ist **jeder** Schritt zwischen
+`ae_exists_tendsto_comp_of_isRegularizingClass` und
+`exists_cadlag_modification_of_isRegularizingClass` bewiesen, und was von dem
+Zielsatz noch fehlt, ist der Zusammenbau und nicht mehr eine offene Aussage.
+
+#### Wie geprüft wurde
+
+Beide Sätze zuerst in eigenen kleinen Dateien gegen v4.33.1 entwickelt, dort
+ohne einen Fehler und ohne eine Warnung, jeder mit `#print axioms` auf
+`propext`, `Classical.choice`, `Quot.sound` geprüft. Danach in die große Datei
+eingesetzt und diese als ganze durch `lake env lean` geschickt: **Exitcode 0,
+kein einziger Fehler**, und weiterhin genau sechs Deklarationen mit `sorry`
+(Zeilen 1131, 2980, 3096, 3110, 3509, 3539). Die drei neuen Deklarationen stehen
+bei den Zeilen 2696, 2746 und 2846; der Zielsatz
+`exists_cadlag_modification_of_isRegularizingClass` steht jetzt bei 2980 und ist
+der zweite der sechs.
+
+#### Befund 1: `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi`, und die angesagte Zerlegung wird nicht gebraucht
+
+Die Aussage ist die des Vorschlags: ist `Y` ein Martingal, `t < T`, ist
+`𝓝[D ∩ Set.Ioi t] t` nicht `⊥` und geht `Y s ω` längs dieses Filters f.s. gegen
+`V ω`, so ist `P[V | 𝓕 t] =ᵐ[P] Y t`. Sie nennt weder `X` noch die
+regularisierende Klasse und steht daher, ehe irgendeine Modifikation gebaut ist.
+
+Der Vorlauf hatte drei Eingaben benannt und die dritte — die
+**Real-Imaginär-Zerlegung** — als eigene Arbeit veranschlagt, weil
+`Integrable.uniformIntegrable_condExp_filtration`
+(`Probability/Process/Filtration.lean:214`) reellwertig ist. Sie wird **nicht**
+gebraucht, und der Grund ist, daß gleichgradige Integrierbarkeit nicht zerlegt,
+sondern **dominiert** werden will:
+
+> `norm_condExp_le`
+> (`MeasureTheory/Function/ConditionalExpectation/CondJensen.lean:246`) gibt
+> `‖P[Y T | 𝓕 s]‖ ≤ᵐ[P] P[‖Y T‖ | 𝓕 s]`. Rechts steht die
+> Bedingt-Erwartungs-Familie **einer festen integrierbaren reellen Funktion**,
+> also genau das, worauf der reellwertige Satz paßt. Links steht der Betrag des
+> Martingals. Eine Dominierungsaussage schließt die Lücke.
+
+Die Zerlegung hätte am Ende ein **Rekombinationslemma** verlangt — aus
+gleichgradiger Integrierbarkeit von Real- und Imaginärteil die des Ganzen —, und
+das hat Mathlib in v4.33.1 ebensowenig wie die Dominierung. Der
+Dominierungsweg ist damit nicht bloß kürzer, sondern braucht eine Aussage
+weniger.
+
+**`t < T` gehört in die Aussage** und ist keine technische Zutat. Die Familie
+eines Martingals ist nur über einem Ordnungsideal gleichgradig integrierbar; das
+Trägerlemma ist `Y s =ᵐ[P] P[Y T | 𝓕 s]` für `s ≤ T`. Die Ordnungstopologie macht
+aus `t < T` die Zugehörigkeit `Set.Iio T ∈ 𝓝[D ∩ Set.Ioi t] t`, also liegt eine
+in den Filter laufende Folge schließlich unter `T`; die Folge um diesen Index zu
+**verschieben** ist billiger, als ein `Eventually` durch Vitali zu tragen.
+
+Der Rest sind drei Mathlib-Bausteine, jeder an einer Stelle:
+`Lp.eLpNorm_le_of_ae_tendsto` (`MeasureTheory/Function/LpSpace/Complete.lean:89`)
+setzt den Grenzwert nach `L¹`, `tendsto_Lp_finite_of_tendsto_ae`
+(`MeasureTheory/Function/UniformIntegrable.lean:518`) ist Vitali, und
+`eLpNorm_condExp_le_eLpNorm`
+(`MeasureTheory/Function/ConditionalExpectation/Real.lean:288`) ist die
+`L¹`-Kontraktion, die die Konvergenz durch die bedingte Erwartung zieht. Das
+Ende ist, daß eine **von `n` unabhängige** Zahl unter einer Nullfolge liegt.
+
+#### Befund 2, und er ist der wertvollste des Laufs: die Negativaussage zur Dominierung ist gegen `master` **falsch**
+
+`upstream` frisch geholt, **`92fc6042c1d`, 2026-09-16 20:50 UTC**. Die
+Dominierung ist als eigener Satz eingetragen,
+`MeasureTheory.UnifIntegrable.of_norm_le_ae`, und die Prüfung gegen v4.33.1 gab
+her, was zu erwarten war: `UnifIntegrable` hat dort `add`, `neg`, `sub`,
+`ae_eq`, `indicator`, `restrict`
+(`MeasureTheory/Function/UniformIntegrable.lean:104` bis `:155`) und **keine**
+Dominierung. Gegen `master` ist das nicht mehr wahr:
+
+> `UnifIntegrable.ae_mono` (`ibid.:142` auf `master`) — genau die Dominierung,
+> und dazu `UnifIntegrable.comp` (`ibid.:176`), das die Umindizierung längs einer
+> Folge erledigt, die dieser Lauf noch von Hand aufgeschrieben hat. Die ganze
+> Definition von `UnifIntegrable` ist dort umgeschrieben (`Tendsto` eines
+> Supremums gegen `⊥` statt `∀ ε ∃ δ`), weshalb `add` dort ohne
+> Meßbarkeitsvoraussetzungen auskommt und `indicator` dafür `MeasurableSet s`
+> verlangt.
+
+**Also kein zweiundzwanzigster Punkt für `TODO.md` Punkt 8.** Er bleibt bei
+einundzwanzig. Die Lücke, die dieser Lauf gefunden hat, ist in der Bibliothek
+schon geschlossen — nur nicht in der Fassung, an die wir gebunden sind. Das ist
+der Fall, vor dem Teil D des Auftrags warnt; er ist hier eingetreten, ehe eine
+Roadmap die Behauptung aufstellen konnte, und die Aussage steht jetzt von
+vornherein mit ihrem Datum und ihrer Quelle da.
+
+**Zwei Unterschiede bleiben**, und sie sind der Grund, warum die eigene Fassung
+stehenbleibt statt auf `master` zu warten: `ae_mono` verlangt
+`∀ i, AEStronglyMeasurable (f i) μ` von der **dominierten** Familie, unsere
+nicht; und `ae_mono` quantifiziert beide Familien über **derselben** normierten
+Gruppe, während der Gebrauch hier eine reelle dominierende und eine
+`𝕂`-wertige dominierte Familie hat. Der Beweis ist in beiden Fällen
+`eLpNorm_mono_ae` am Indikator, aber über verschiedenen Definitionen.
+
+#### Befund 3: `ae_eq_of_condExp_eq_of_condExp_mul_conj`, und `MemLp _ 2` ist die richtige Voraussetzung
+
+Das Ausquadrieren des Vorschlags 2, und es ist eine Rechnung ohne jeden
+Prozeßbegriff: aus `P[g | m'] =ᵐ f` und `P[g * conj g | m'] =ᵐ f * conj f` mit
+`f` meßbar für `m'` folgt `g =ᵐ f`. Mit `d := g − f` ist `∫ d conj d` gleich
+`∫ g conj g − ∫ g conj f − ∫ f conj g + ∫ f conj f`; das erste ist `∫ f conj f`
+nach der zweiten Voraussetzung und `integral_condExp`, das zweite nach dem
+Herausziehen des `m'`-meßbaren Faktors
+(`condExp_bilin_of_aestronglyMeasurable_right`,
+`MeasureTheory/Function/ConditionalExpectation/PullOut.lean:215`) und der ersten
+Voraussetzung, das dritte ist das Konjugierte des zweiten und `∫ f conj f` ist
+reell. Also `∫ ‖g − f‖² = 0`.
+
+**Die Voraussetzung ist `MemLp _ 2 P` und nicht `Integrable`**, und das ist keine
+Bequemlichkeit: alle vier Produkte müssen integrierbar sein, und die
+**Kreuzterme** sind es genau deshalb, weil beide Faktoren quadratintegrierbar
+sind (`MemLp.integrable_mul`,
+`MeasureTheory/Function/L1Space/Integrable.lean:1085`). Die Voraussetzung an
+`g * conj g` gibt das nicht her — sie bindet eine bedingte Erwartung und nicht
+die Integrierbarkeit eines Produkts.
+
+**Und eine Falle, die nichts mit Mathematik zu tun hat.** Ein lokales
+`{m' : MeasurableSpace Ω}` ist ein Kandidat der Instanzensuche und gewinnt als
+**späterer** Binder gegen das umgebende `m`. Damit wird `P : Measure Ω` in der
+Signatur gegen `m'` elaboriert statt gegen `m`, und jedes `∫ … ∂P` im Beweis
+ebenso — der Satz ist dann ein anderer, als er aussieht. Zwei Vorkehrungen
+stehen jetzt da und sind im Doc-Kommentar begründet: `P` wird **vor** `m'`
+gebunden, und der Beweis beginnt mit `let _ : MeasurableSpace Ω := m`, das die
+umgebende σ-Algebra zuletzt bindet und sie damit der Suche zurückgibt. Das ist
+derselbe Fehlertyp wie die Müllwerte, nur eine Ebene tiefer: nicht eine lügende
+Vorgabe, sondern eine lügende Signatur.
+
+#### Zitatprüfung gegen `upstream/master` (ein Stück von Teil D)
+
+Bei der Gelegenheit alle zwölf in diesem und im vorigen Lauf zitierten
+Mathlib-Namen gegen `92fc6042c1d` geprüft. **Alle zwölf existieren dort noch,
+unter demselben Namen, in derselben Datei, keiner `deprecated`**:
+`norm_condExp_le`, `condExp_nonneg`, `condExp_bilin_of_aestronglyMeasurable_right`,
+`eLpNorm_condExp_le_eLpNorm`, `MemLp.integrable_mul`,
+`memLp_two_iff_integrable_sq_norm`, `Lp.eLpNorm_le_of_ae_tendsto`,
+`tendsto_Lp_finite_of_tendsto_ae`, `integral_eq_zero_iff_of_nonneg`,
+`lintegral_liminf_le`, `Filter.exists_seq_tendsto`,
+`Integrable.uniformIntegrable_condExp_filtration`. Verschoben sind nur
+Zeilennummern (`tendsto_Lp_finite_of_tendsto_ae` 518 → 540,
+`Lp.eLpNorm_le_of_ae_tendsto` 89 → 92, `exists_seq_tendsto` 68 → 55,
+`lintegral_liminf_le` 231 → 233, `MemLp.integrable_mul` 1085 → 1086), und die
+sind nach dem Auftrag nachrangig. Die einzige **inhaltliche** Abweichung ist die
+von Befund 2.
+
+#### Was dieser Lauf **nicht** getan hat
+
+* **`X'` als Konstruktion und der Zusammenbau des Zielsatzes.** Unberührt. Nach
+  diesem Lauf fehlt dort keine Aussage mehr, sondern die Montage: den Rechtslimes
+  längs `D` als `X'` hinschreiben, `hcc` die Grenzwerte in `E` halten lassen, die
+  beiden Hälften `C_{t+} = C t` und `P[Y_{t+} | 𝓕 t] = Y t` an jedem `f ∈ Φ`
+  lesen, dann `ae_eq_of_condExp_eq_of_condExp_mul_conj` an `f` und `f * conj f`,
+  und die abzählbare punktetrennende Familie einsammeln.
+* **Die beiden Quasi-Linksstetigkeiten.** Unberührt.
+* **Die volle Zitatprüfung der Roadmaps (Teil D).** Nur die zwölf oben genannten
+  Namen sind geprüft, nicht die vier `README.md` als ganze und nicht die drei
+  `Suggested.lean`.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`exists_cadlag_modification_of_isRegularizingClass` selbst**, und zwar in
+   der Reihenfolge, in der die Eingaben jetzt dastehen. *Worauf er ruht:* nichts,
+   was noch fehlt — das ist der Unterschied zu allen vorigen Läufen an diesem
+   Meilenstein. Drei benannte Schritte: (a) `X'` als Rechtslimes längs `D` auf der
+   f.s. Menge, auf der `ae_exists_tendsto_of_forall_ae_exists_tendsto` ihn
+   liefert, und `X t` außerhalb, damit `X'` überall definiert ist; (b) für jedes
+   `f ∈ Φ` die Kette `f (X' t) = Y_{t+} + C_{t+}`, also
+   `P[f ∘ X' t | 𝓕 t] =ᵐ f ∘ X t` aus den beiden Hälften dieses und des vorigen
+   Laufs; (c) das Ausquadrieren an `f` und `f * conj f`, dann die abzählbare
+   trennende Familie. *Warum jetzt:* jede andere Reihenfolge riskiert, daß beim
+   Zusammenbau eine weitere Voraussetzung auffällt und die Signatur ein viertes
+   Mal berichtigt wird; sie fällt billiger auf, wenn alle Eingaben stehen.
+
+2. **`UnifIntegrable.comp` nachbauen**, drei Zeilen: aus `UnifIntegrable f p μ`
+   und `g : ι' → ι` folgt `UnifIntegrable (f ∘ g) p μ`. *Worauf sie ruht:*
+   nichts. *Warum:* dieser Lauf hat sie im Beweis von
+   `Martingale.condExp_ae_eq_of_tendsto_nhdsWithin_Ioi` von Hand ausgeschrieben,
+   und `master` hat sie inzwischen (`UniformIntegrable.lean:176`). Als eigene
+   Deklaration ist sie ein Zeilengewinn und dokumentiert zugleich den Abstand
+   zwischen v4.33.1 und `master` an einer Stelle, an der wir ihn gemessen haben.
+
+3. **Eine Meßbarkeitsprobe an `CompactContainment`.** Unverändert der Vorschlag
+   der letzten sieben Läufe, samt dem Nachtrag des Nutzers vom 2026-09-15 abends
+   zur Fassung (c) mit dem meßbaren Zeugen.

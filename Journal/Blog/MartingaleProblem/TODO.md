@@ -675,10 +675,11 @@ vier sind kleine, in sich abgeschlossene Beiträge. Sie gehören thematisch zu
   Die Aussage über den **Prozeß**, `Martingale f ℱ μ → Martingale (T ∘ f) ℱ μ`,
   fehlt: in `Mathlib/Probability/Martingale/` und `Mathlib/Probability/Process/`
   hat die Suche nach `Martingale` neben `ContinuousLinearMap` **null Treffer**
-  (am 2026-09-17 gegen v4.33.1 geprüft; dieser Lauf hat `upstream/master` nicht
-  geholt, die Negativaussage steht daher gegen den Release und nicht gegen
-  master). `Martingale.smul` und `Martingale.add` stehen da, die lineare
-  Abbildung nicht.
+  (am 2026-09-17 gegen v4.33.1 geprüft und im dritten Lauf desselben Tages gegen
+  `upstream/master`, `92fc6042c1d` vom 2026-09-16 — die Zeichenkette
+  `ContinuousLinearMap` kommt in keiner der beiden Verzeichnisse dort vor, und
+  `RCLike` in `Mathlib/Probability/Martingale/` ebensowenig). `Martingale.smul`
+  und `Martingale.add` stehen da, die lineare Abbildung nicht.
 
   Der Beweis ist vier Zeilen und steht bei uns als
   `MeasureTheory.Martingale.comp_continuousLinearMap`. Was ohne ihn fehlt, ist
