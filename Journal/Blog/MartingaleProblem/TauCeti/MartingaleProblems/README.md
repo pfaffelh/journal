@@ -9386,6 +9386,69 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   no topology, no metric, no separability, and `E` a bare measurable space. That
   is this milestone's own acceptance test for hypothesis (a), "`F` a bare
   measurable space", carried out on (c).
+* `coordChain`, `measurable_coordChain`, `indep_comap_coordChain` and
+  `condExp_coordChain`, the **i.i.d. chain** — the coordinates `Ξ i ω = ω i` of
+  an infinite product measure — and its Markov property in the form
+  `martingale_chainCompensated` reads. The one step kernel sends every state to
+  `ν`, so the compensator is the *constant* `∫ f dν`; the conditional
+  expectation identity is `MeasureTheory.condExp_indep_eq` on the independence
+  of a coordinate from its past, which is `ProbabilityTheory.indep_iSup_of_disjoint`
+  on the disjoint index sets `{i + 1}` and `Set.Iic i` fed by
+  `ProbabilityTheory.iIndepFun_infinitePi` at the identity. **In Lean** on
+  2026-09-17, twenty-fourth run.
+  **The passage from `iIndepFun` to `iIndep` of the comap σ-algebras is
+  definitional** — Mathlib defines the first as the second
+  (`Probability/Independence/Kernel/IndepFun.lean`) — so no bridge lemma is
+  needed and none exists.
+* `tendsto_integral_mul_coordChain`, the **emptiness probe** of the acceptance
+  example: the nine hypotheses of `tendsto_integral_mul_rescaledChain_natural`
+  discharged together on the i.i.d. chain, with a bounded measurable test
+  function, a bounded measurable weight read at the coordinate at time `0` — a
+  functional of the path before `s` for every `s`, since `0 ≤ s` in `ℝ≥0` — and
+  `(K3)` discharged by taking the canonical increment to *be* the martingale
+  increment. **In Lean** on 2026-09-17, twenty-fourth run.
+  **What it establishes is joint satisfiability and not a hard limit.** With
+  `(K3)` exact the conclusion is a limit of zeros; that is the honest reading,
+  and it is the reading a probe is for. A statement over hypotheses that cannot
+  hold at once is true and empty, and this branch has met that twice — `Shift`
+  was assumed ten times before it had an inhabitant, and `hint` of the path
+  dependent case turned out to be unsatisfiable.
+* `tendsto_integral_mul_coordChain_perturbed`, the same probe with a **nonzero**
+  `(K3)`: the canonical increment differs from the martingale increment by the
+  constant `(n + 1)⁻¹`, so the `L¹` distance is `(n + 1)⁻¹` and not `0`, and the
+  conclusion is a limit and not a sequence of zeros. **In Lean** on 2026-09-17,
+  twenty-fourth run.
+  **This is what makes the theorem do work rather than merely hold.** With
+  `(K3)` exact the estimate `‖∫ (G n - H n) · W n‖ ≤ b · ∫ ‖G n - H n‖` inside
+  `tendsto_integral_mul_of_integral_eq_zero` is `0 ≤ 0` and the bound `b` on the
+  weight is never read; here it is. A probe that only shows the hypotheses
+  consistent is weaker than one that also shows the estimate carrying something.
+* `measure_chainCompensated_ne_pos` and
+  `measure_chainCompensated_ne_pos_of_two_atoms`, the statements that keep the
+  probe from being about a degenerate object: the compensated chain is **not**
+  almost surely constant. Its increment from `0` to `1` is `f (ω 1) - ∫ f dν`,
+  so it is nonzero on the cylinder over any set on which `f` avoids its own
+  mean, and two atoms carrying different values of `f` suffice because the mean
+  cannot equal both. **In Lean** on 2026-09-17, twenty-fourth run.
+  **This is what a deterministic witness would not give.** A constant or
+  deterministic chain satisfies the nine hypotheses as well, and proves nothing:
+  its Doob decomposition is constant, the martingale identity of (c) is `0 = 0`,
+  and the orthogonality the example is about is never used. The probe has to be
+  random to be a probe.
+  **The target set is not required to be measurable**: a measure in Mathlib is
+  monotone on arbitrary sets, so `measure_mono` from the cylinder suffices.
+* `integral_coinPair_coinMeasure`, `norm_coinPair_le`,
+  `tendsto_integral_mul_coordChain_coin` and
+  `measure_chainCompensated_ne_pos_coin`, the probe **on data**: the fair coin
+  of `AtomWitness`, the indicator of `true`, and the mean `2⁻¹`, so that the
+  approximating martingale is the centred simple random walk read along the
+  grid. Neither statement carries a hypothesis of any kind. **In Lean** on
+  2026-09-17, twenty-fourth run.
+  **The coin is reused and not rebuilt.** `AtomWitness.coinMeasure` and
+  `AtomWitness.integral_coinMeasure` were built for the counterexample of
+  Milestone 9 and serve here unchanged; the two witnesses of this file — the one
+  that fails quasi-left-continuity and the one that inhabits the convergence
+  theorem — sit on the same coin.
 * **Hypothesis (a) is about real random variables and carries no topology.** In
   the example above the path space `F` is `D ι E` and the functionals
   `Y° t` are evaluations, but the statement of (a) never mentions `F`'s

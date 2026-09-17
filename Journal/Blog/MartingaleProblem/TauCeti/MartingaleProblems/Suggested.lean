@@ -34149,3 +34149,273 @@ theorem tendsto_integral_mul_rescaledChain_natural {Ω' : ℕ → Type*}
   simpa using happrox
 
 end GridEmbedding
+
+/-! ### The emptiness probe of the acceptance example: an i.i.d. chain
+
+`tendsto_integral_mul_rescaledChain_natural` carries nine hypotheses, and until they are
+discharged *together* on data, the statement is true and possibly empty.  This branch has met
+that failure twice -- `Shift` had no inhabitant at all while ten statements assumed it, and
+`hint` of the path dependent case turned out to be unsatisfiable -- so the example is held to
+the same test.
+
+The witness is the **i.i.d. chain**: the coordinates `Ξ i ω = ω i` of an infinite product
+measure.  It is the cheapest genuinely random chain there is, and it is Markov for a trivial
+reason -- the one step kernel sends every state to `ν`, so `Pf` is the *constant* `∫ f dν`.
+What makes it a probe and not a tautology is that its Doob decomposition
+
+    chainCompensated (fun _ ↦ ∫ f dν) f Ξ n ω = f (ω n) - ∑ j < n, (∫ f dν - f (ω j))
+
+is a genuine random walk with centred increments, and `measure_chainCompensated_ne_pos` says
+so: the compensated chain is *not* almost surely constant.  A deterministic chain would
+satisfy the nine hypotheses too, and would prove nothing -- its Doob decomposition is
+constant, the martingale identity of hypothesis (c) is `0 = 0`, and the orthogonality that the
+example is about never gets used.
+
+The probe is closed on data at the end of the section, over the fair coin of `AtomWitness` and
+the indicator of `true`: no hypothesis of any kind is carried there.
+-/
+
+section IIDProbe
+
+variable {𝕂 : Type*} [RCLike 𝕂] {F : Type*} [mF : MeasurableSpace F]
+
+/-- **The i.i.d. chain**: the coordinates of a product space, `Ξ i ω = ω i`. -/
+def coordChain (F : Type*) [MeasurableSpace F] (i : ℕ) (ω : ℕ → F) : F := ω i
+
+theorem measurable_coordChain (i : ℕ) : Measurable (coordChain F i) := measurable_pi_apply i
+
+/-- **A coordinate is independent of the past.**  This is `indep_iSup_of_disjoint` on the
+disjoint index sets `{i + 1}` and `Set.Iic i`, and the independence it is fed is
+`iIndepFun_infinitePi` at the identity -- the same route `iIndepFun_waiting` takes for the
+waiting times.
+
+The passage from `iIndepFun` to `iIndep` of the comap σ-algebras is definitional: Mathlib
+defines the first as the second (`Probability/Independence/Kernel/IndepFun.lean`), so no
+bridge lemma is needed, and none exists. -/
+theorem indep_comap_coordChain (ν : Measure F) [IsProbabilityMeasure ν] (i : ℕ) :
+    Indep (MeasurableSpace.comap (coordChain F (i + 1)) mF)
+      (naturalFiltration (coordChain F) (measurable_coordChain (F := F)) i)
+      (Measure.infinitePi fun _ : ℕ ↦ ν) := by
+  have hiid : iIndepFun (coordChain F) (Measure.infinitePi fun _ : ℕ ↦ ν) :=
+    iIndepFun_infinitePi (X := fun (_ : ℕ) (x : F) ↦ x) fun _ ↦ measurable_id
+  have hle : ∀ j : ℕ, MeasurableSpace.comap (coordChain F j) mF ≤
+      (inferInstance : MeasurableSpace (ℕ → F)) :=
+    fun j ↦ (measurable_coordChain (F := F) j).comap_le
+  have h := indep_iSup_of_disjoint (m := fun j ↦ MeasurableSpace.comap (coordChain F j) mF)
+    hle hiid (S := {i + 1}) (T := Set.Iic i) (Set.disjoint_singleton_left.2 (by simp))
+  rwa [iSup_singleton] at h
+
+/-- **The Markov property of the i.i.d. chain**, in the form `martingale_chainCompensated`
+reads it: the conditional expectation identity, with the one step kernel acting on the test
+function as the *constant* `∫ f dν`.
+
+`MeasureTheory.condExp_indep_eq` is the whole proof; what is left over is that the mean of
+`f (ω (i + 1))` under the product measure is the mean of `f` under `ν`, which is
+`Measure.infinitePi_map_eval` and `integral_map`. -/
+theorem condExp_coordChain (ν : Measure F) [IsProbabilityMeasure ν] {f : F → 𝕂}
+    (hf : Measurable f) (i : ℕ) :
+    (Measure.infinitePi fun _ : ℕ ↦ ν)[fun ω ↦ f (coordChain F (i + 1) ω) |
+        naturalFiltration (coordChain F) (measurable_coordChain (F := F)) i]
+      =ᵐ[Measure.infinitePi fun _ : ℕ ↦ ν] fun _ ↦ ∫ x, f x ∂ν := by
+  have hsm : StronglyMeasurable[MeasurableSpace.comap (coordChain F (i + 1)) mF]
+      fun ω ↦ f (coordChain F (i + 1) ω) :=
+    (hf.comp (comap_measurable _)).stronglyMeasurable
+  have h := condExp_indep_eq ((measurable_coordChain (F := F) (i + 1)).comap_le)
+      ((naturalFiltration (coordChain F) (measurable_coordChain (F := F))).le i) hsm
+      (indep_comap_coordChain ν i)
+  refine h.trans (Eventually.of_forall fun ω ↦ ?_)
+  show ∫ ω', f (coordChain F (i + 1) ω') ∂(Measure.infinitePi fun _ : ℕ ↦ ν) = ∫ x, f x ∂ν
+  conv_rhs => rw [← Measure.infinitePi_map_eval (fun _ : ℕ ↦ ν) (i + 1)]
+  rw [integral_map (measurable_pi_apply _).aemeasurable hf.aestronglyMeasurable]
+  rfl
+
+/-- **The nine hypotheses of `tendsto_integral_mul_rescaledChain_natural` hold together.**
+The chain is the i.i.d. one, the test function is bounded measurable, the weight is a bounded
+measurable function of the coordinate at time `0` -- which is a functional of the path before
+`s` for every `s`, since `0 ≤ s` in `ℝ≥0` -- and `(K3)` is discharged by taking the canonical
+increment to *be* the martingale increment, so that the `L¹` distance is `0` for every `n`.
+
+The conclusion is therefore a limit of zeros, and that is the honest reading of the probe:
+what it establishes is that the hypotheses are jointly satisfiable, not that the limit is
+hard.  What keeps it from being a statement about a degenerate object is
+`measure_chainCompensated_ne_pos` below. -/
+theorem tendsto_integral_mul_coordChain (ν : Measure F) [IsProbabilityMeasure ν]
+    {f : F → 𝕂} (hf : Measurable f) {c : ℝ} (hfb : ∀ x, ‖f x‖ ≤ c)
+    {g : F → ℝ} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω, (chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F)
+            ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F)
+            ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) * ((g (ω 0) : ℝ) : 𝕂)
+        ∂(Measure.infinitePi fun _ : ℕ ↦ ν)) atTop (𝓝 0) := by
+  set P : Measure (ℕ → F) := Measure.infinitePi fun _ : ℕ ↦ ν with hP
+  have hfint : ∀ i : ℕ, Integrable (fun ω ↦ f (coordChain F i ω)) P := fun i ↦
+    (integrable_const c).mono'
+      ((hf.comp (measurable_coordChain (F := F) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ hfb _)
+  have hMint : ∀ k : ℕ,
+      Integrable (chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F) k) P := by
+    intro k
+    show Integrable (fun ω ↦ f (coordChain F k ω) - ∑ j ∈ Finset.range k,
+      ((∫ x, f x ∂ν) - f (coordChain F j ω))) P
+    exact (hfint k).sub (integrable_finsetSum _ fun j _ ↦ (integrable_const _).sub (hfint j))
+  have h := tendsto_integral_mul_rescaledChain_natural
+    (Ω' := fun _ : ℕ ↦ (ℕ → F)) (P' := fun _ : ℕ ↦ P)
+    (Ξ := fun _ : ℕ ↦ coordChain F) (fun _ i ↦ measurable_coordChain (F := F) i)
+    (fn := fun _ : ℕ ↦ f) (Pfn := fun _ : ℕ ↦ fun _ : F ↦ ∫ x, f x ∂ν)
+    (fun _ ↦ hf) (fun _ ↦ measurable_const) hst
+    (Z := fun x : ℝ≥0 → F ↦ g (x 0))
+    (hg.comp (measurable_naturalFiltration (fun u : ℝ≥0 ↦ measurable_pi_apply u)
+      (zero_le : (0 : ℝ≥0) ≤ s)))
+    (fun x ↦ hgb _) (fun _ i ↦ hfint i) (fun _ _ ↦ integrable_const _)
+    (fun _ i ↦ condExp_coordChain ν hf i)
+    (G := fun n ↦ chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F)
+        ⌊(n : ℝ) * (t : ℝ)⌋₊
+      - chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F) ⌊(n : ℝ) * (s : ℝ)⌋₊)
+    (fun n ↦ (hMint _).sub (hMint _)) (by simp)
+  simpa [gridPath, coordChain] using h
+
+/-- **The probe with a nonzero `(K3)`**, so that the squeeze of
+`tendsto_integral_mul_of_integral_eq_zero` is actually exercised.  The canonical increment
+differs from the martingale increment by the constant `(n + 1)⁻¹`, whose `L¹` distance to `0`
+is `(n + 1)⁻¹` and not `0`; the conclusion is therefore a limit and not a sequence of zeros.
+
+This is the difference between a probe that shows the hypotheses consistent and one that shows
+the theorem doing work.  With `(K3)` exact, as in `tendsto_integral_mul_coordChain`, the
+estimate `‖∫ (G n - H n) · W n‖ ≤ b · ∫ ‖G n - H n‖` is `0 ≤ 0` and the bound `b` on the weight
+is never used; here it is. -/
+theorem tendsto_integral_mul_coordChain_perturbed (ν : Measure F) [IsProbabilityMeasure ν]
+    {f : F → 𝕂} (hf : Measurable f) {c : ℝ} (hfb : ∀ x, ‖f x‖ ≤ c)
+    {g : F → ℝ} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω, (chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F)
+            ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F)
+            ⌊(n : ℝ) * (s : ℝ)⌋₊ ω
+          + ((((n : ℝ) + 1)⁻¹ : ℝ) : 𝕂)) * ((g (ω 0) : ℝ) : 𝕂)
+        ∂(Measure.infinitePi fun _ : ℕ ↦ ν)) atTop (𝓝 0) := by
+  set P : Measure (ℕ → F) := Measure.infinitePi fun _ : ℕ ↦ ν with hP
+  set M : ℕ → (ℕ → F) → 𝕂 :=
+    chainCompensated (fun _ : F ↦ ∫ x, f x ∂ν) f (coordChain F) with hM
+  have hfint : ∀ i : ℕ, Integrable (fun ω ↦ f (coordChain F i ω)) P := fun i ↦
+    (integrable_const c).mono'
+      ((hf.comp (measurable_coordChain (F := F) i)).aestronglyMeasurable)
+      (Eventually.of_forall fun ω ↦ hfb _)
+  have hMint : ∀ k : ℕ, Integrable (M k) P := by
+    intro k
+    show Integrable (fun ω ↦ f (coordChain F k ω) - ∑ j ∈ Finset.range k,
+      ((∫ x, f x ∂ν) - f (coordChain F j ω))) P
+    exact (hfint k).sub (integrable_finsetSum _ fun j _ ↦ (integrable_const _).sub (hfint j))
+  refine tendsto_integral_mul_rescaledChain_natural
+    (Ω' := fun _ : ℕ ↦ (ℕ → F)) (P' := fun _ : ℕ ↦ P)
+    (Ξ := fun _ : ℕ ↦ coordChain F) (fun _ i ↦ measurable_coordChain (F := F) i)
+    (fn := fun _ : ℕ ↦ f) (Pfn := fun _ : ℕ ↦ fun _ : F ↦ ∫ x, f x ∂ν)
+    (fun _ ↦ hf) (fun _ ↦ measurable_const) hst
+    (Z := fun x : ℝ≥0 → F ↦ g (x 0))
+    (hg.comp (measurable_naturalFiltration (fun u : ℝ≥0 ↦ measurable_pi_apply u)
+      (zero_le : (0 : ℝ≥0) ≤ s)))
+    (fun x ↦ hgb _) (fun _ i ↦ hfint i) (fun _ _ ↦ integrable_const _)
+    (fun _ i ↦ condExp_coordChain ν hf i)
+    (G := fun n ω ↦ (M ⌊(n : ℝ) * (t : ℝ)⌋₊ ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ ω)
+      + ((((n : ℝ) + 1)⁻¹ : ℝ) : 𝕂))
+    (fun n ↦ ((hMint _).sub (hMint _)).add (integrable_const _)) ?_ |>.congr ?_
+  · have hcalc : ∀ n : ℕ, ∫ ω : ℕ → F,
+        ‖(M ⌊(n : ℝ) * (t : ℝ)⌋₊ ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ ω + ((((n : ℝ) + 1)⁻¹ : ℝ) : 𝕂))
+          - (M ⌊(n : ℝ) * (t : ℝ)⌋₊ ω - M ⌊(n : ℝ) * (s : ℝ)⌋₊ ω)‖ ∂P = ((n : ℝ) + 1)⁻¹ := by
+      intro n
+      simp only [add_sub_cancel_left, RCLike.norm_ofReal, abs_of_nonneg
+        (show (0 : ℝ) ≤ ((n : ℝ) + 1)⁻¹ by positivity), integral_const, probReal_univ,
+        smul_eq_mul, one_mul]
+    refine Tendsto.congr (fun n ↦ (hcalc n).symm) ?_
+    simpa using tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)
+  · intro n
+    simp [gridPath, coordChain]
+
+/-- **The martingale of the probe is not almost surely constant**, so the probe is not the
+degenerate one.  The increment from `0` to `1` is `f (ω 1) - ∫ f dν`, and it is nonzero on the
+cylinder over any set on which `f` avoids its own mean.
+
+The target set is not required to be measurable: a measure in Mathlib is monotone on arbitrary
+sets, so `measure_mono` from the cylinder suffices. -/
+theorem measure_chainCompensated_ne_pos (ν : Measure F) [IsProbabilityMeasure ν] {f : F → 𝕂}
+    {A : Set F} (hA : MeasurableSet A) (hAν : 0 < ν A)
+    (hAf : ∀ x ∈ A, f x ≠ ∫ z, f z ∂ν) :
+    0 < (Measure.infinitePi fun _ : ℕ ↦ ν)
+      {ω | chainCompensated (fun _ : F ↦ ∫ z, f z ∂ν) f (coordChain F) 1 ω
+        ≠ chainCompensated (fun _ : F ↦ ∫ z, f z ∂ν) f (coordChain F) 0 ω} := by
+  have hpre : (Measure.infinitePi fun _ : ℕ ↦ ν) {ω : ℕ → F | ω 1 ∈ A} = ν A := by
+    conv_rhs => rw [← Measure.infinitePi_map_eval (fun _ : ℕ ↦ ν) 1]
+    rw [Measure.map_apply (measurable_pi_apply 1) hA]
+    rfl
+  refine lt_of_lt_of_le ?_ (measure_mono (s := {ω : ℕ → F | ω 1 ∈ A}) ?_)
+  · rw [hpre]; exact hAν
+  · intro ω hω
+    show chainCompensated (fun _ : F ↦ ∫ z, f z ∂ν) f (coordChain F) 1 ω
+      ≠ chainCompensated (fun _ : F ↦ ∫ z, f z ∂ν) f (coordChain F) 0 ω
+    simp only [chainCompensated, coordChain, Finset.range_one, Finset.sum_range_zero,
+      Finset.sum_singleton, sub_zero]
+    intro hcon
+    exact hAf _ hω (by linear_combination hcon)
+
+/-- **Two atoms on which the test function differs make the probe non-degenerate**, and this
+version needs no knowledge of the mean: the mean cannot equal both values. -/
+theorem measure_chainCompensated_ne_pos_of_two_atoms (ν : Measure F) [IsProbabilityMeasure ν]
+    {f : F → 𝕂} {x y : F} (hx : MeasurableSet ({x} : Set F)) (hy : MeasurableSet ({y} : Set F))
+    (hxν : 0 < ν {x}) (hyν : 0 < ν {y}) (hxy : f x ≠ f y) :
+    0 < (Measure.infinitePi fun _ : ℕ ↦ ν)
+      {ω | chainCompensated (fun _ : F ↦ ∫ z, f z ∂ν) f (coordChain F) 1 ω
+        ≠ chainCompensated (fun _ : F ↦ ∫ z, f z ∂ν) f (coordChain F) 0 ω} := by
+  rcases ne_or_eq (f x) (∫ z, f z ∂ν) with hfx | hfx
+  · exact measure_chainCompensated_ne_pos ν hx hxν (by rintro z rfl; exact hfx)
+  · exact measure_chainCompensated_ne_pos ν hy hyν
+      (by rintro z rfl; exact fun h ↦ hxy (hfx.trans h.symm))
+
+end IIDProbe
+
+/-! ### The probe on data: the fair coin
+
+The coin, the indicator of `true` and the mean `2⁻¹` are the witness of `AtomWitness`, reused
+rather than rebuilt.  Nothing is carried in either statement below -- no measure, no test
+function, no hypothesis -- so the acceptance example of Milestone 10 is inhabited.
+-/
+
+section CoinProbe
+
+open AtomWitness
+
+/-- The mean of the indicator of `true` under the fair coin. -/
+theorem integral_coinPair_coinMeasure :
+    ∫ x, coinPair.1 x ∂coinMeasure = (2 : ℝ)⁻¹ := by
+  rw [integral_coinMeasure]
+  norm_num [coinPair]
+
+theorem norm_coinPair_le (x : Bool) : ‖coinPair.1 x‖ ≤ 1 := by
+  cases x <;> norm_num [coinPair]
+
+/-- **Hypothesis (c) of `mpSolution_of_tendsto` on data.**  The chain is a fair coin tossed
+once per step, the test function is the indicator of `true`, and the compensator is its mean
+`2⁻¹`; so the approximating martingale is the centred simple random walk read along the grid.
+Every hypothesis of `tendsto_integral_mul_rescaledChain_natural` is discharged. -/
+theorem tendsto_integral_mul_coordChain_coin {s t : ℝ≥0} (hst : s ≤ t) :
+    Tendsto (fun n : ℕ ↦ ∫ ω, (chainCompensated (fun _ : Bool ↦ (2 : ℝ)⁻¹) coinPair.1
+            (coordChain Bool) ⌊(n : ℝ) * (t : ℝ)⌋₊ ω
+          - chainCompensated (fun _ : Bool ↦ (2 : ℝ)⁻¹) coinPair.1
+            (coordChain Bool) ⌊(n : ℝ) * (s : ℝ)⌋₊ ω) * coinPair.1 (ω 0)
+        ∂(Measure.infinitePi fun _ : ℕ ↦ coinMeasure)) atTop (𝓝 0) := by
+  have h := tendsto_integral_mul_coordChain coinMeasure (measurable_of_finite coinPair.1)
+    norm_coinPair_le (measurable_of_finite coinPair.1) norm_coinPair_le hst
+  rwa [integral_coinPair_coinMeasure] at h
+
+/-- **And the martingale of the coin probe is genuinely random.**  Its increment from `0` to
+`1` is `1 - 2⁻¹` on half the space, so the example does not hold vacuously over a constant
+chain. -/
+theorem measure_chainCompensated_ne_pos_coin :
+    0 < (Measure.infinitePi fun _ : ℕ ↦ coinMeasure)
+      {ω | chainCompensated (fun _ : Bool ↦ (2 : ℝ)⁻¹) coinPair.1 (coordChain Bool) 1 ω
+        ≠ chainCompensated (fun _ : Bool ↦ (2 : ℝ)⁻¹) coinPair.1 (coordChain Bool) 0 ω} := by
+  have h := measure_chainCompensated_ne_pos (f := coinPair.1) coinMeasure
+    (A := {true}) trivial (by rw [coinMeasure_singleton_true]; simp)
+    (by rintro z rfl; rw [integral_coinPair_coinMeasure]; norm_num [coinPair])
+  rwa [integral_coinPair_coinMeasure] at h
+
+end CoinProbe

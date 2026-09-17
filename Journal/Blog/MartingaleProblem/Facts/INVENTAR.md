@@ -35278,3 +35278,164 @@ bewiesen — so, wie das Manuskript sie trägt.
 3. **Die vierte Roadmap gegen dieselbe Probe halten.** `KolmogorovExtension` hat
    keine `Suggested.lean` und kommt in `check_suggested.py` nicht vor; die
    Prüfung dieses Laufs sagt über sie nichts.
+
+### 2026-09-17, vierundzwanzigster Lauf des Tages — die Leerheitsprobe des Akzeptanzbeispiels steht, und sie brauchte eine **zufällige** Kette: die konstante, die der Vorlauf vorschlug, hätte nichts belegt
+
+**Vorschlag 1 des Vorlaufs ist eingelöst**, und in einer schärferen Fassung, als er
+gestellt war. **Zwölf Deklarationen**, 270 Zeilen, in zwei neuen Abschnitten am
+Ende von `TauCeti/MartingaleProblems/Suggested.lean`. Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 8 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 66 |
+
+Alle zwölf mit `scripts/check_axioms.py` geprüft: `propext`, `Classical.choice`,
+`Quot.sound`, sonst nichts.
+
+#### Was gebaut ist
+
+* `coordChain`, `measurable_coordChain` — die **i.i.d.-Kette**, die Koordinaten
+  `Ξ i ω = ω i` eines unendlichen Produktmaßes.
+* `indep_comap_coordChain` — eine Koordinate ist von ihrer Vergangenheit
+  unabhängig.
+* `condExp_coordChain` — die Markoveigenschaft in der Gestalt, die
+  `martingale_chainCompensated` liest; der Kompensator ist die **Konstante**
+  `∫ f dν`.
+* `tendsto_integral_mul_coordChain` — die neun Voraussetzungen von
+  `tendsto_integral_mul_rescaledChain_natural` zugleich eingelöst.
+* `tendsto_integral_mul_coordChain_perturbed` — dasselbe mit **nichtverschwindendem**
+  `(K3)`.
+* `measure_chainCompensated_ne_pos`,
+  `measure_chainCompensated_ne_pos_of_two_atoms` — die kompensierte Kette ist
+  **nicht** f.s. konstant.
+* `integral_coinPair_coinMeasure`, `norm_coinPair_le`,
+  `tendsto_integral_mul_coordChain_coin`, `measure_chainCompensated_ne_pos_coin`
+  — die Probe **auf Daten**, über der fairen Münze von `AtomWitness`.
+
+#### Befund 1, und er ist der Fund des Laufs: die vorgeschlagene konstante Kette hätte die Probe nicht bestanden
+
+Der Vorlauf schlug vor, die neun Voraussetzungen an einer **konstanten** Kette
+einzulösen (`Ξ n i = Ξ n 0`, Kern die Identität, `(K3)` mit `G n = 0`). Das geht,
+und es belegt nichts. Der Grund ist nicht Geschmack, sondern eine Rechnung: die
+Doob-Zerlegung einer **deterministischen** Kette ist konstant. Dann ist der
+Martingalzuwachs überall `0`, die Martingalidentität von (c) lautet `0 = 0`, und
+die Orthogonalität, um die das Beispiel geht — `integral_sub_mul_eq_zero_of_condExp_eq`,
+der ganze Motor des dreiundzwanzigsten Laufs — wird in der Probe **nie benutzt**.
+Eine Probe, die den Motor nicht anwirft, sagt über ihn nichts.
+
+Gewählt ist deshalb die i.i.d.-Kette: die billigste wirklich zufällige Kette, die
+es gibt. Sie ist markovsch aus einem trivialen Grund — der Einschrittkern schickt
+jeden Zustand nach `ν`, also ist `Pf` die Konstante `∫ f dν` —, aber ihre
+Doob-Zerlegung
+
+    f (ω n) - ∑ j < n, (∫ f dν - f (ω j))
+
+ist eine echte Irrfahrt mit zentrierten Zuwächsen. Und damit die Probe das nicht
+bloß behauptet, steht `measure_chainCompensated_ne_pos` daneben: der Zuwachs von
+`0` nach `1` ist `f (ω 1) - ∫ f dν`, und er ist auf dem Zylinder über jeder Menge
+ungleich null, auf der `f` seinen eigenen Mittelwert meidet.
+
+**Die Lehre, und sie gilt über dieses Beispiel hinaus:** eine Leerheitsprobe muß
+nicht nur zeigen, daß die Voraussetzungen zugleich erfüllbar sind, sondern daß sie
+es an Daten sind, an denen der Beweis etwas zu tun hat. Beides ist zu prüfen, und
+das zweite ist das, was übersehen wird.
+
+#### Befund 2: dieselbe Lehre noch einmal, eine Ebene tiefer — `(K3)` exakt läßt die Abschätzung leerlaufen
+
+`tendsto_integral_mul_coordChain` löst `(K3)` ein, indem es den kanonischen
+Zuwachs **gleich** dem Martingalzuwachs setzt; dann ist `∫ ‖G n - H n‖ = 0` für
+jedes `n`, und die Einschnürung in `tendsto_integral_mul_of_integral_eq_zero`
+lautet `0 ≤ 0`. Die Schranke `b` an das Gewicht wird dabei **nicht gelesen**.
+
+Deshalb steht `tendsto_integral_mul_coordChain_perturbed` daneben: der kanonische
+Zuwachs weicht dort um die Konstante `(n + 1)⁻¹` ab, der `L¹`-Abstand ist
+`(n + 1)⁻¹` und nicht `0`, und die Aussage ist ein Grenzwert und keine Folge von
+Nullen. Das ist die billigste Störung, die die Abschätzung anwirft — eine
+Konstante, kein zweites Zufallsobjekt —, und sie kostet 46 Zeilen.
+
+#### Befund 3: die Münze war schon da, und beide Zeugen der Datei sitzen jetzt auf ihr
+
+Die Probe auf Daten sollte zuerst eine eigene faire Münze bekommen; beim Prüfen
+auf Namenskollisionen stellte sich heraus, daß `AtomWitness.coinMeasure` seit dem
+Gegenbeispiel von Meilenstein 9 dasteht, samt `integral_coinMeasure` — der
+Mittelwertformel, die den Entwurf überflüssig machte und dazu noch mehr kann als
+er (sie **rechnet** den Mittelwert aus, statt ihn symbolisch stehen zu lassen).
+Der Entwurf ist verworfen und die vorhandene Münze benutzt.
+
+Damit sitzen die beiden Zeugen dieser Datei auf demselben Objekt: die Münze, die
+zur Zeit `u` geworfen wird und die Quasi-Linksstetigkeit **widerlegt**, und die
+Münze, die einmal je Schritt geworfen wird und das Konvergenzbeispiel
+**bewohnt**. Das ist kein Zufall, sondern das, was ein zweizuständiger Raum kann:
+er ist das kleinste Ding, an dem etwas passieren kann.
+
+#### Befund 4: der Übergang von `iIndepFun` zu `iIndep` ist definitionell, und es gibt dafür kein Lemma
+
+`indep_comap_coordChain` ist `ProbabilityTheory.indep_iSup_of_disjoint` auf den
+disjunkten Indexmengen `{i + 1}` und `Set.Iic i`, gefüttert mit
+`ProbabilityTheory.iIndepFun_infinitePi` an der Identität — derselbe Weg, den
+`iIndepFun_waiting` für die Wartezeiten nimmt. Dazwischen liegt ein Schritt, der
+nach einer Brücke aussieht und keine braucht: Mathlib **definiert**
+`iIndepFun f μ` als `iIndep (fun x ↦ comap (f x) _) μ`
+(`Probability/Independence/Kernel/IndepFun.lean:47–50`, am Quelltext nachgesehen),
+also nimmt `indep_iSup_of_disjoint` den Term unverändert. Ein Lemma dieses Namens
+existiert nicht, und es fehlt auch nicht.
+
+Die übrigen Bausteine, alle am Quelltext belegt:
+`MeasureTheory.condExp_indep_eq` (`Probability/ConditionalExpectation.lean:42`),
+`ProbabilityTheory.indep_iSup_of_disjoint` (`Probability/Independence/Basic.lean:511`),
+`ProbabilityTheory.iIndepFun_infinitePi` (`Probability/Independence/InfinitePi.lean:127`),
+`MeasureTheory.Measure.infinitePi_map_eval`, `MeasureTheory.probReal_univ`
+(`MeasureTheory/Measure/Typeclasses/Probability.lean:118`).
+
+#### Befund 5: die Zielmenge der Nichtdegeneriertheit braucht keine Meßbarkeit
+
+`measure_chainCompensated_ne_pos` schließt von einem Zylinder auf die Menge, auf
+der die kompensierte Kette sich bewegt, und diese Menge ist **nicht** als meßbar
+vorausgesetzt. Sie muß es nicht sein: ein `MeasureTheory.Measure` ist in Lean ein
+äußeres Maß und auf **beliebigen** Mengen monoton, also trägt `measure_mono`. Das
+ist eine der Stellen, an denen Mathlibs Wahl der Darstellung eine Voraussetzung
+spart, die auf Papier selbstverständlich dastehen würde.
+
+#### Werkzeug: `scripts/build_probe_oleans.sh`
+
+Neu und klein. Es baut die drei `Suggested.lean` in Abhängigkeitsordnung in einen
+eigenen `.olean`-Baum unter `scratch/_probe`, damit ein **Entwurf** gegen sie
+übersetzt werden kann, ohne die große Datei jedesmal neu zu übersetzen: 66
+Sekunden je Durchlauf gegen etwa fünf für einen Entwurf. Es **ersetzt
+`check_suggested.py` nicht** und sagt das in seinem eigenen Kopf; die Prüfung, die
+zählt, ist die ungefilterte über die ganzen Dateien, und sie ist für diesen Lauf
+zweimal gelaufen. `scratch/` ist ignoriert, es bleibt also nichts liegen.
+
+#### Was offen bleibt
+
+* **Eine Kette, deren Kern nicht konstant ist.** Die i.i.d.-Kette ist markovsch
+  mit `Pf ≡ ∫ f dν`; die Voraussetzung `hPf` — `Pf ∘ Ξ i` ist `Γ i`-meßbar — ist
+  damit `measurable_const` und wird nicht wirklich gelesen. Das ist die letzte
+  Voraussetzung des Satzes, die noch keine nichttriviale Instanz hat.
+* Die Voraussetzungen **(a) und (b)** von `mpSolution_of_tendsto` bleiben, wie der
+  Vorlauf sie hinterlassen hat: sie sind die Eingabe eines Straffheitsarguments,
+  das das Manuskript ausdrücklich nicht liefert.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Probe an einer Kette mit nichtkonstantem Kern**, und zwar an der, die
+   dieses Repositorium schon hat: der **eingebetteten Sprungkette** von
+   Meilenstein 4. *Aussage:* `tendsto_integral_mul_rescaledChain_natural` auf
+   `Ξ i = Y i` unter `jumpMeasure mu nu`, mit `Pf x = ∫ f d(mu x)`. *Worauf es
+   ruht:* auf der Markoveigenschaft der eingebetteten Kette an der `n`-ten Stufe,
+   die seit dem 2026-09-13 als `condExp_chain_mark_range` bewiesen dasteht —
+   `E[f (Y_{n+1}) | σ(Y_0, …, Y_n)] = μ f (Y_n)`, an `E` nichts als die meßbare
+   Struktur, an `f` nichts als Meßbarkeit und eine Schranke. *Warum jetzt:* es ist die einzige
+   Voraussetzung des Satzes (`hPf`), die bisher nur in ihrer trivialen Gestalt
+   eingelöst ist — und es verbindet Meilenstein 10 mit Meilenstein 4, also die
+   Konvergenztheorie mit der einzigen Konstruktion von Hand, die dieses Projekt
+   hat. Das ist mehr als eine weitere Probe: es ist die Frage, ob der reskalierte
+   Sprungprozeß im Rahmen des Konvergenzsatzes überhaupt ausdrückbar ist.
+2. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert
+   seit fünf Läufen. Es ist eine Frage und keine Arbeit.
+3. **Die vierte Roadmap gegen dieselbe Probe halten.** `KolmogorovExtension` hat
+   keine `Suggested.lean` und kommt in `check_suggested.py` nicht vor; die
+   Prüfung dieses Laufs sagt über sie nichts.
