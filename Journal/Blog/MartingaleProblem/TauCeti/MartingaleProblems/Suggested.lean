@@ -42,9 +42,17 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (fifteenth run of that day), over the **whole** file and without an error.  Every
+2026-09-17 (sixteenth run of that day), over the **whole** file and without an error.  Every
 declaration elaborates; 3 declarations carry `sorry`, and every one of those `sorry`s is a
-**proof** -- no statement carries one.  The fifteenth run of 2026-09-17 took the count from four
+**proof** -- no statement carries one.  The sixteenth run of 2026-09-17 added no `sorry` and
+removed none: it applied `isQuasiLeftContinuous_of_isMPSolutionFor` to the local jump process over
+the Lebesgue clock and a countable state space (`isQuasiLeftContinuous_jumpProcessE`), whose
+instance on two states (`isQuasiLeftContinuous_flip`) is the positive half of the pair whose
+negative half is `not_isQuasiLeftContinuous_of_atom`.  The two hypotheses that theorem carries on
+account of its general index are discharged over `ℝ≥0` by
+`isOptionalSamplingFor_of_martingale` and
+`isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive`.  The fifteenth run of
+2026-09-17 took the count from four
 to three: `isQuasiLeftContinuous_of_isMPSolutionFor`, Ethier--Kurtz 4.3.12 on the data of a
 bounded operator, is proved -- and **without atomlessness of the clock**, which its own statement
 had carried since it was written.  The fourteenth run of 2026-09-17 took the count from
@@ -5448,6 +5456,44 @@ theorem IsStepPath.isCadlagPath {f : ι → E} (hf : IsStepPath f) : IsCadlagPat
     exact Filter.Tendsto.congr' (h.mono fun y hy => hy.symm) tendsto_const_nhds
   · obtain ⟨c, hc⟩ := hf.2 t
     exact ⟨c, Filter.Tendsto.congr' (hc.mono fun y hy => hy.symm) tendsto_const_nhds⟩
+
+/-! ### Reading a path on `ℝ` as a path on `ℝ≥0`
+
+The jump construction runs on `ℝ` -- `jumpProcessE lam (t : ℝ) ω` -- while every statement of
+Milestones 3, 6 and 9 is indexed by `ℝ≥0`, which is the index the clock and the filtration carry.
+The two path properties have to cross that coercion, and the crossing is not formal: `IsCadlagPath`
+is a statement about the one sided neighbourhood filters, and what has to be produced is that the
+coercion carries `𝓝[>] t` into `𝓝[>] (t : ℝ)` and `𝓝[<] t` into `𝓝[<] (t : ℝ)`.  It does, for the
+same reason twice: it is continuous and strictly monotone. -/
+
+/-- The coercion `ℝ≥0 → ℝ` carries the right neighbourhood filter into the right neighbourhood
+filter. -/
+theorem tendsto_coe_nnreal_nhdsWithin_Ioi (t : ℝ≥0) :
+    Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[>] t) (𝓝[>] ((t : ℝ))) :=
+  tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+    ((NNReal.continuous_coe.tendsto t).mono_left nhdsWithin_le_nhds)
+    (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_lt_coe.2 hr)
+
+/-- The coercion `ℝ≥0 → ℝ` carries the left neighbourhood filter into the left neighbourhood
+filter.  At `t = 0` the source filter is `⊥` and the statement is empty, which is the right
+answer: a path indexed by `ℝ≥0` has no left limit to take at `0`, and `IsCadlagPath` asks for one
+only because the quantifier is over all of `ℝ≥0`. -/
+theorem tendsto_coe_nnreal_nhdsWithin_Iio (t : ℝ≥0) :
+    Tendsto (fun r : ℝ≥0 ↦ (r : ℝ)) (𝓝[<] t) (𝓝[<] ((t : ℝ))) :=
+  tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _
+    ((NNReal.continuous_coe.tendsto t).mono_left nhdsWithin_le_nhds)
+    (by filter_upwards [self_mem_nhdsWithin] with r hr using NNReal.coe_lt_coe.2 hr)
+
+/-- **A càdlàg path on `ℝ` restricts to a càdlàg path on `ℝ≥0`.**  The bridge between the index
+the jump construction is written over and the index the martingale problem is stated over.
+
+Only one direction is available and only one is wanted: the restriction forgets the negative
+times, and nothing on `[0, ∞)` can recover them. -/
+theorem IsCadlagPath.comp_coe_nnreal {g : ℝ → E} (hg : IsCadlagPath g) :
+    IsCadlagPath fun t : ℝ≥0 ↦ g (t : ℝ) := by
+  refine ⟨fun t ↦ (hg.1 (t : ℝ)).tendsto.comp (tendsto_coe_nnreal_nhdsWithin_Ioi t), fun t ↦ ?_⟩
+  obtain ⟨l, hl⟩ := hg.2 (t : ℝ)
+  exact ⟨l, hl.comp (tendsto_coe_nnreal_nhdsWithin_Iio t)⟩
 
 /-- **A step path is discontinuous at only finitely many points of a compact
 set.**  This is the property the construction is built for, and on the present
@@ -11931,6 +11977,21 @@ theorem ae_isCadlagPath_jumpProcessE [MeasurableSpace E] [TopologicalSpace E] {l
   filter_upwards [ae_isStepPath_jumpProcessE hL0 hlam hL mu nu] with ω hω
   exact hω.isCadlagPath
 
+/-- **Almost every path of the local process is càdlàg over the index `ℝ≥0`**, which is the index
+the martingale problem, the clock and the filtration are stated over.
+
+This is `ae_isCadlagPath_jumpProcessE` read through `IsCadlagPath.comp_coe_nnreal`, and it is the
+hypothesis `hX` of `isQuasiLeftContinuous_of_isMPSolutionFor` and of
+`isQuasiLeftContinuous_of_isRegularizingClass` on the data of Milestone 4.  It is worth stating
+separately because the process the two theorems are applied to is
+`fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω` and not `jumpProcessE lam` itself. -/
+theorem ae_isCadlagPath_nnreal_jumpProcessE [MeasurableSpace E] [TopologicalSpace E]
+    {lam : E → ℝ} {L : ℝ} (hL0 : 0 < L) (hlam : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    ∀ᵐ ω ∂(jumpMeasure mu nu), IsCadlagPath fun t : ℝ≥0 ↦ jumpProcessE lam (t : ℝ) ω := by
+  filter_upwards [ae_isCadlagPath_jumpProcessE hL0 hlam hL mu nu] with ω hω
+  exact hω.comp_coe_nnreal
+
 /-! ### The two deterministic steps of the local non explosion criterion
 
 What is left of the local case is one probabilistic statement: for `0 ≤ c` not summable,
@@ -14107,6 +14168,52 @@ theorem stoppedValue_ae_eq_condExp (hY : Martingale Y 𝓕 P) (hprog : IsStrongl
   stoppedValue_ae_eq_condExp_of_forall_integral_eq hprog hbdd
     (fun _ hρ hρj ↦ integral_stoppedValue_eq hY hprog hrc hbdd hρ hρj) hσ hσj
 
+/-- **`IsOptionalSamplingFor` holds over `ℝ≥0`**, for a bounded right continuous martingale.
+
+`IsOptionalSamplingFor` is a hypothesis of `isQuasiLeftContinuous_of_isRegularizingClass` and of
+`isQuasiLeftContinuous_of_isMPSolutionFor` because over a general index the martingale property
+does not give optional sampling; this is the statement that the index `ℝ≥0` pays for it.  The
+proof is `stoppedValue_ae_eq_condExp` with the level chosen by the bound: the definition
+quantifies over a time `t` and a stopping time below it, and `hbdd` produces a constant at that
+very `t`.
+
+The bound is the local one -- a constant per level, not one constant for all time -- which is
+what `mpFamily` supplies, and `ENNReal` is `WithTop ℝ≥0`, so the stopping time of the definition
+is the stopping time of the theorem. -/
+theorem isOptionalSamplingFor_of_martingale (hY : Martingale Y 𝓕 P)
+    (hprog : IsStronglyProgressive 𝓕 Y)
+    (hrc : ∀ (ω : Ω) (s : ℝ≥0), Tendsto (fun r ↦ Y r ω) (𝓝[≥] s) (𝓝 (Y s ω)))
+    (hbdd : ∀ j : ℝ≥0, ∃ C, ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C) :
+    IsOptionalSamplingFor Y 𝓕 P := by
+  intro t σ hσ hσt
+  obtain ⟨C, hC⟩ := hbdd t
+  exact stoppedValue_ae_eq_condExp hY hprog hrc hC hσ hσt
+
+/-- **Emptiness check for `isOptionalSamplingFor_of_martingale`.**  The zero process satisfies
+the four hypotheses, so the conclusion is not vacuous. -/
+theorem isOptionalSamplingFor_zero :
+    IsOptionalSamplingFor (fun (_ : ℝ≥0) (_ : Ω) ↦ (0 : ℝ)) 𝓕 P :=
+  isOptionalSamplingFor_of_martingale (martingale_zero ℝ 𝓕 P)
+    (isStronglyProgressive_const 𝓕 0) (fun _ _ ↦ tendsto_const_nhds)
+    (fun _ ↦ ⟨0, fun _ _ _ ↦ by simp⟩)
+
+/-- **`IsStronglyMeasurableAlongStoppingTimes` holds over `ℝ≥0` for a real valued progressive
+process**, and it is Mathlib's `measurable_stoppedValue` with nothing added.
+
+The docstring of `IsStronglyMeasurableAlongStoppingTimes` records why it has to be a hypothesis
+of `isQuasiLeftContinuous_of_isRegularizingClass`: there the codomain is a bare `RCLike 𝕂`, which
+carries a topology and no `MeasurableSpace`, so the `[BorelSpace β]` hypothesis of
+`measurable_stoppedValue` cannot even be written down.  Over `𝕂 = ℝ` it can, and the passage from
+`Measurable` to `StronglyMeasurable` is `Measurable.stronglyMeasurable`, available because `ℝ` is
+second countable.
+
+Together with `isOptionalSamplingFor_of_martingale` this discharges both of the hypotheses that
+`isQuasiLeftContinuous_of_isMPSolutionFor` carries on account of its general index. -/
+theorem isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive {C : ℝ≥0 → Ω → ℝ}
+    (hC : IsStronglyProgressive 𝓕 C) :
+    IsStronglyMeasurableAlongStoppingTimes C 𝓕 :=
+  fun _ hσ ↦ (measurable_stoppedValue hC hσ).stronglyMeasurable
+
 /-! ### The stopped martingale theorem -/
 
 /-- **The stopped process of a martingale is a martingale**, in continuous time. -/
@@ -14453,6 +14560,71 @@ theorem tendsto_nhdsGE_sub_intervalIntegral_jumpProcessE {lam : E → ℝ} (hlam
     ((hcont.comp (continuous_id.max continuous_const)).tendsto s).mono_left nhdsWithin_le_nhds
   exact h1.sub h2
 
+/-- **The compensator of the local jump problem is strongly progressive on its own**, and not
+only as a summand of the test process.
+
+`isStronglyProgressive_mpFamily_jumpProcessE` says it for the difference `f ∘ X - C`; this says it
+for `C`, which is what `IsStronglyMeasurableAlongStoppingTimes` -- the hypothesis `hCm` of
+`isQuasiLeftContinuous_of_isMPSolutionFor` -- is a statement about.  The two proofs are the same
+one with the first summand deleted, and the deletion costs the bound on the rate: the test
+function is gone, so `abs_jumpApply_le` is not needed and the bound `D` on the integrand is a
+hypothesis rather than a consequence.  Over `E` nothing is assumed, and over the sample point
+nothing either -- the explosion set included, as at `measurable_compensatorE`. -/
+theorem isStronglyProgressive_compensatorE {lam : E → ℝ} (hlam : Measurable lam) {g : E → ℝ}
+    (hg : Measurable g) {D : ℝ} (hD : ∀ x, |g x| ≤ D) :
+    IsStronglyProgressive (jumpFiltrationE lam hlam)
+      (fun t : ℝ≥0 ↦ fun ω ↦ ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q) := by
+  refine isStronglyProgressive_of_measurable_uncurry_min fun t ↦ ?_
+  obtain ⟨G, hG⟩ : ∃ G : ℝ → ((ℕ → E) × (ℕ → ℝ)) → ℝ, ∀ r ω, G r ω =
+      ∫ x in (0 : ℝ)..(max r 0), g (jumpProcessE lam x ω) := ⟨_, fun _ _ ↦ rfl⟩
+  have hGC : ∀ (r : ℝ) (ω : (ℕ → E) × (ℕ → ℝ)), G r ω =
+      ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ (Real.toNNReal r),
+        g (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q := by
+    intro r ω
+    rw [hG, compensatorE_eq_intervalIntegral hlam hg (Real.toNNReal r) ω, Real.coe_toNNReal']
+  have hmeas : ∀ r : ℝ, r ≤ (t : ℝ) → Measurable[jumpFiltrationE lam hlam t] (G r) := by
+    intro r hr
+    have hu : Real.toNNReal r ≤ t := Real.toNNReal_le_iff_le_coe.2 hr
+    have hfun : G r = fun ω ↦ ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥
+        (Real.toNNReal r), g (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q :=
+      funext fun ω ↦ hGC r ω
+    rw [hfun]
+    exact (measurable_compensatorE hlam hg Clock.Conv.optional (Real.toNNReal r)).mono
+      ((jumpFiltrationE lam hlam).mono hu) le_rfl
+  have hrc : ∀ (ω : (ℕ → E) × (ℕ → ℝ)) (s : ℝ), Tendsto (fun r ↦ G r ω) (𝓝[≥] s)
+      (𝓝 (G s ω)) := by
+    intro ω s
+    simp only [hG]
+    have hcont : Continuous fun b : ℝ ↦ ∫ x in (0 : ℝ)..b, g (jumpProcessE lam x ω) :=
+      continuous_intervalIntegral_of_bounded
+        (hg.comp ((measurable_jumpProcessE hlam).comp (measurable_id.prodMk measurable_const)))
+        (fun x ↦ hD _)
+    exact ((hcont.comp (continuous_id.max continuous_const)).tendsto s).mono_left
+      nhdsWithin_le_nhds
+  have key := measurable_uncurry_min_of_rightContinuous (φ := fun u : ℝ≥0 ↦ (u : ℝ))
+    measurable_coe_nnreal_real hmeas hrc
+  have heq : (fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦
+        ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ (min q.1 t),
+          g (jumpProcessE lam (u : ℝ) q.2) ∂lebesgueClock.q)
+      = fun q : ℝ≥0 × ((ℕ → E) × (ℕ → ℝ)) ↦ G (min (q.1 : ℝ) (t : ℝ)) q.2 := by
+    funext q
+    rw [hGC, ← NNReal.coe_min, Real.toNNReal_coe]
+  rw [heq]
+  exact key
+
+/-- **The compensator of the local jump problem is strongly measurable at every stopping time.**
+The hypothesis `hCm` of `isQuasiLeftContinuous_of_isMPSolutionFor` on the data of Milestone 4,
+and it is `isStronglyProgressive_compensatorE` fed to
+`isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive`. -/
+theorem isStronglyMeasurableAlongStoppingTimes_compensatorE {lam : E → ℝ}
+    (hlam : Measurable lam) {g : E → ℝ} (hg : Measurable g) {D : ℝ} (hD : ∀ x, |g x| ≤ D) :
+    IsStronglyMeasurableAlongStoppingTimes
+      (fun t : ℝ≥0 ↦ fun ω ↦ ∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ t,
+        g (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q) (jumpFiltrationE lam hlam) :=
+  isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive
+    (isStronglyProgressive_compensatorE hlam hg hD)
+
 variable {mu : Kernel E E} [IsMarkovKernel mu]
 
 /-- **The test processes of the local jump martingale problem are adapted to the natural
@@ -14576,6 +14748,43 @@ theorem abs_setIntegral_compensatorE_le {lam : E → ℝ} {g : E → ℝ} {D : �
     show ((⊥ : ℝ≥0) : ℝ) = 0 from rfl, sub_zero,
     ENNReal.toReal_ofReal (NNReal.coe_nonneg t)] at hle
 
+/-- **A test process of the local jump martingale problem is bounded on every bounded stretch of
+time**, by `C + 2LC·j` with `C` a bound for the test function and `L` one for the rate.
+
+This is the third hypothesis of `martingale_stoppedProcess` and the fourth of
+`isOptionalSamplingFor_of_martingale`, and it is *local* -- one constant per level, not one
+constant for all time, which is all either statement asks for and all that is true: the
+compensator grows with the window.
+
+Nothing is assumed about the state space.  The two positivity facts the estimate needs, `0 ≤ L`
+and `0 ≤ C`, are read off the sample point itself, whose first coordinate is a chain of states;
+the empty state space is therefore not a case to be excluded, and no measure is needed to
+produce a point. -/
+theorem exists_bound_mpFamily_jumpProcessE {lam : E → ℝ} {L : ℝ}
+    (hlam0 : ∀ x, 0 ≤ lam x) (hL : ∀ x, lam x ≤ L)
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω))
+    (j : ℝ≥0) :
+    ∃ C', ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C' := by
+  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
+  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
+    rw [hp2]; exact fun x ↦ abs_jumpApply_le hlam0 hL hC x
+  refine ⟨C + 2 * L * C * (j : ℝ), fun s hs ω ↦ ?_⟩
+  have hL0 : (0 : ℝ) ≤ L := (hlam0 (ω.1 0)).trans (hL (ω.1 0))
+  have hC0 : (0 : ℝ) ≤ C := (abs_nonneg _).trans (hC (ω.1 0))
+  have hcoef : (0 : ℝ) ≤ 2 * L * C := mul_nonneg (mul_nonneg (by norm_num) hL0) hC0
+  have hb := abs_setIntegral_compensatorE_le (lam := lam) hgb s ω
+  have h1 := hC (jumpProcessE lam (s : ℝ) ω)
+  have h2 := abs_sub (p.1 (jumpProcessE lam (s : ℝ) ω))
+    (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
+      p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)
+  have hsj : ((s : ℝ)) ≤ (j : ℝ) := by exact_mod_cast hs
+  have hmul : 2 * L * C * (s : ℝ) ≤ 2 * L * C * (j : ℝ) :=
+    mul_le_mul_of_nonneg_left hsj hcoef
+  rw [hYeq s ω]
+  linarith
+
 /-- **The stopped test process of the local jump martingale problem is a martingale**, at every
 stopping time of its natural filtration and under the hypotheses of `jumpProcessE_isMPSolution`.
 
@@ -14605,33 +14814,31 @@ theorem martingale_stoppedProcess_mpFamily_jumpProcessE {lam : E → ℝ} (hlam 
   have hmart := jumpProcessE_isMPSolution hlam hlam0 hL mu nu Y hY
   have hprog := isStronglyProgressive_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
   have hrcY := tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY
-  have hne : Nonempty E := by
-    by_contra hcon
-    rw [not_nonempty_iff] at hcon
-    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
-    rw [measure_univ] at h0
-    exact one_ne_zero h0
-  obtain ⟨x0⟩ := hne
-  have hL0 : (0 : ℝ) ≤ L := (hlam0 x0).le.trans (hL x0)
-  obtain ⟨p, ⟨hf, ⟨C, hC⟩, hp2⟩, hYeq⟩ := hY
-  have hC0 : (0 : ℝ) ≤ C := (abs_nonneg _).trans (hC x0)
-  have hgb : ∀ x, |p.2 x| ≤ 2 * L * C := by
-    rw [hp2]; exact fun x ↦ abs_jumpApply_le (fun y ↦ (hlam0 y).le) hL hC x
-  have hcoef : (0 : ℝ) ≤ 2 * L * C := mul_nonneg (mul_nonneg (by norm_num) hL0) hC0
-  have hbdd : ∀ j : ℝ≥0, ∃ C', ∀ s ≤ j, ∀ ω, |Y s ω| ≤ C' := by
-    intro j
-    refine ⟨C + 2 * L * C * (j : ℝ), fun s hs ω ↦ ?_⟩
-    have hb := abs_setIntegral_compensatorE_le (lam := lam) hgb s ω
-    have h1 := hC (jumpProcessE lam (s : ℝ) ω)
-    have h2 := abs_sub (p.1 (jumpProcessE lam (s : ℝ) ω))
-      (∫ u in lebesgueClock.interval Clock.Conv.optional ⊥ s,
-        p.2 (jumpProcessE lam (u : ℝ) ω) ∂lebesgueClock.q)
-    have hsj : ((s : ℝ)) ≤ (j : ℝ) := by exact_mod_cast hs
-    have hmul : 2 * L * C * (s : ℝ) ≤ 2 * L * C * (j : ℝ) :=
-      mul_le_mul_of_nonneg_left hsj hcoef
-    rw [hYeq s ω]
-    linarith
-  exact martingale_stoppedProcess hmart hprog hrcY hbdd hτ
+  exact martingale_stoppedProcess hmart hprog hrcY
+    (exists_bound_mpFamily_jumpProcessE (fun x ↦ (hlam0 x).le) hL hY) hτ
+
+/-- **Optional sampling holds for the test processes of the local jump martingale problem.**  The
+hypothesis `hOS` of `isQuasiLeftContinuous_of_isMPSolutionFor` on the data of Milestone 4, and the
+place where the concrete index `ℝ≥0` pays for what a general index does not give.
+
+The four inputs of `isOptionalSamplingFor_of_martingale` are the four statements this section
+produces: the martingale property is `jumpProcessE_isMPSolution`, the progressivity is
+`isStronglyProgressive_mpFamily_jumpProcessE`, the right continuity of the paths is
+`tendsto_nhdsGE_mpFamily_jumpProcessE`, and the local bound is
+`exists_bound_mpFamily_jumpProcessE`.  They are the same four that
+`martingale_stoppedProcess_mpFamily_jumpProcessE` spends, which is why this costs no hypothesis
+beyond the ones already carried. -/
+theorem isOptionalSamplingFor_mpFamily_jumpProcessE {lam : E → ℝ} (hlam : Measurable lam)
+    {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (nu : Measure E) [IsProbabilityMeasure nu]
+    {Y : ℝ≥0 → ((ℕ → E) × (ℕ → ℝ)) → ℝ}
+    (hY : Y ∈ mpFamily (jumpOperator lam mu) lebesgueClock Clock.Conv.optional
+      (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)) :
+    IsOptionalSamplingFor Y (jumpFiltrationE lam hlam) (jumpMeasure mu nu) :=
+  isOptionalSamplingFor_of_martingale (jumpProcessE_isMPSolution hlam hlam0 hL mu nu Y hY)
+    (isStronglyProgressive_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY)
+    (tendsto_nhdsGE_mpFamily_jumpProcessE hlam (fun x ↦ (hlam0 x).le) hL hY)
+    (exists_bound_mpFamily_jumpProcessE (fun x ↦ (hlam0 x).le) hL hY)
 
 /-- **The hitting time of the running supremum is a stopping time of the *truncated*
 filtration** as well as of the local one.  `isStoppingTime_rateTime` says it for
@@ -32386,5 +32593,109 @@ theorem exists_cadlag_modification_flip (nu : Measure Bool) [IsProbabilityMeasur
     (fun _ _ ↦ mem_image_fst_jumpOperator_bool _)
     (fun x y hxy ↦ ⟨fun z ↦ if z = x then (1 : ℝ) else 0, ⟨x, rfl⟩, by simp [hxy.symm]⟩)
     hcc
+
+/-- **The point indicators of a countable state space lie in the domain of the generator.**  The
+countable separating class `Φ₀` of the probe below, and the generalisation of
+`mem_image_fst_jumpOperator_bool` away from `Bool`: over an infinite state space boundedness of a
+test function is no longer free, but for an indicator it is, the bound being `1`.
+
+It is written as a `Set.indicator` and not as an `if`, because a general state space carries no
+`DecidableEq`. -/
+theorem mem_image_fst_jumpOperator_indicator {E : Type*} [MeasurableSpace E] [Countable E]
+    [MeasurableSingletonClass E] {lam : E → ℝ} {mu : Kernel E E} (y : E) :
+    Set.indicator ({y} : Set E) (fun _ ↦ (1 : ℝ)) ∈ Prod.fst '' jumpOperator lam mu :=
+  ⟨_, mem_jumpOperator (measurable_of_countable _) (C := 1)
+    (fun x ↦ by
+      show |Set.indicator ({y} : Set E) (fun _ ↦ (1 : ℝ)) x| ≤ 1
+      by_cases h : x ∈ ({y} : Set E)
+      · rw [Set.indicator_of_mem h]; simp
+      · rw [Set.indicator_of_notMem h]; simp), rfl⟩
+
+/-- **The local jump process with bounded rate is quasi left continuous**, over any countable
+state space, and this is Ethier--Kurtz 4.3.12 for Markovian jump processes rather than for one
+example of them.
+
+Every hypothesis of `isQuasiLeftContinuous_of_isMPSolutionFor` is discharged on the data of
+Milestone 4, and the three that the abstract theorem cannot discharge for itself are the three the
+index `ℝ≥0` supplies: the càdlàg paths are `ae_isCadlagPath_nnreal_jumpProcessE` -- *the paths of
+the process itself*, not of a modification, since a step path is càdlàg to begin with -- the
+optional sampling is `isOptionalSamplingFor_mpFamily_jumpProcessE`, and the strong measurability
+of the compensator at a stopping time is `isStronglyMeasurableAlongStoppingTimes_compensatorE`.
+
+The state space carries the discrete topology, which is what makes `Continuous p.1` free; the
+separating class is the point indicators, countable because `E` is, idempotent so that `hsq` is
+about them and not about a larger class, and separating because a point is determined by its own
+indicator.  `Nonempty E` is not a hypothesis: `nu` is a probability measure, so the empty state
+space is excluded by `measure_univ`, and `0 < L` is read off any state. -/
+theorem isQuasiLeftContinuous_jumpProcessE {E : Type*} [MeasurableSpace E] [Countable E]
+    [MeasurableSingletonClass E] [TopologicalSpace E] [DiscreteTopology E] {lam : E → ℝ}
+    (hlam : Measurable lam) {L : ℝ} (hlam0 : ∀ x, 0 < lam x) (hL : ∀ x, lam x ≤ L)
+    (mu : Kernel E E) [IsMarkovKernel mu] (nu : Measure E) [IsProbabilityMeasure nu] :
+    IsQuasiLeftContinuous (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE lam (t : ℝ) ω)
+      (jumpFiltrationE lam hlam) (jumpMeasure mu nu) := by
+  obtain ⟨D, hDc, hDr⟩ := LiftWitness.exists_countable_right_dense
+  have hne : Nonempty E := by
+    by_contra hcon
+    rw [not_nonempty_iff] at hcon
+    have h0 : nu Set.univ = 0 := by rw [Set.univ_eq_empty_iff.2 hcon, measure_empty]
+    rw [measure_univ] at h0
+    exact one_ne_zero h0
+  obtain ⟨x0⟩ := hne
+  have hL0 : (0 : ℝ) < L := (hlam0 x0).trans_le (hL x0)
+  refine isQuasiLeftContinuous_of_isMPSolutionFor
+    (Φ₀ := Set.range fun y : E ↦ Set.indicator ({y} : Set E) (fun _ ↦ (1 : ℝ)))
+    (D := D) hDc hDr ?_ ?_ (Set.countable_range _) ?_
+    (fun x y hxy ↦ ⟨Set.indicator ({x} : Set E) (fun _ ↦ (1 : ℝ)), ⟨x, rfl⟩, by
+      rw [Set.indicator_of_mem (Set.mem_singleton_iff.2 rfl),
+        Set.indicator_of_notMem fun hy ↦ hxy (Set.mem_singleton_iff.1 hy).symm]
+      exact one_ne_zero⟩)
+    (lebesgueClock_isProgressive_jumpProcessE hlam) (measurable_jumpFiltrationE_self hlam)
+    lebesgueClock_isContinuousFor_optional
+    (ae_isCadlagPath_nnreal_jumpProcessE hL0 hlam0 hL mu nu)
+    (fun _ hY ↦ isOptionalSamplingFor_mpFamily_jumpProcessE hlam hlam0 hL nu hY) ?_
+  · rintro p ⟨hf, ⟨C, hC⟩, hp2⟩
+    refine ⟨continuous_of_discreteTopology, ⟨C, fun x ↦ by rw [Real.norm_eq_abs]; exact hC x⟩,
+      ?_, 2 * L * C, fun x ↦ ?_⟩
+    · rw [hp2]; exact measurable_jumpApply hlam hf hC
+    · rw [hp2, Real.norm_eq_abs]
+      exact abs_jumpApply_le (fun z ↦ (hlam0 z).le) hL hC x
+  · rintro f ⟨y, rfl⟩
+    exact mem_image_fst_jumpOperator_indicator y
+  · rintro f ⟨y, rfl⟩
+    have hidem : (fun x : E ↦ Set.indicator ({y} : Set E) (fun _ ↦ (1 : ℝ)) x *
+          (starRingEnd ℝ) (Set.indicator ({y} : Set E) (fun _ ↦ (1 : ℝ)) x))
+        = Set.indicator ({y} : Set E) (fun _ ↦ (1 : ℝ)) := by
+      funext x
+      by_cases h : x ∈ ({y} : Set E)
+      · rw [Set.indicator_of_mem h]; simp
+      · rw [Set.indicator_of_notMem h]; simp
+    rw [hidem]
+    exact mem_image_fst_jumpOperator_indicator y
+  · rintro p ⟨hf, ⟨C, hC⟩, hp2⟩
+    refine isStronglyMeasurableAlongStoppingTimes_compensatorE hlam ?_ (D := 2 * L * C) ?_
+    · rw [hp2]; exact measurable_jumpApply hlam hf hC
+    · intro x
+      rw [hp2]
+      exact abs_jumpApply_le (fun z ↦ (hlam0 z).le) hL hC x
+
+/-- **The solution of the two state martingale problem is quasi left continuous**, and with it
+Ethier--Kurtz 4.3.12 has an inhabited instance.
+
+This is the positive half of the pair whose negative half is
+`not_isQuasiLeftContinuous_of_atom`: the same two state process, once over a clock with an atom
+and once over the Lebesgue clock.  There the conclusion fails; here it holds, and the only thing
+that differs is the clock -- which is what
+`isQuasiLeftContinuous_of_isMPSolutionFor` claims is decisive, since
+`Clock.IsContinuousFor` is the one hypothesis the atom clock fails
+(`AtomWitness.not_isContinuousFor_atomClock`).
+
+It is `isQuasiLeftContinuous_jumpProcessE` on the two state data and nothing else, and it is kept
+as a named statement because it is one half of a *pair*: the general theorem says nothing about
+the clock beyond `Clock.IsContinuousFor`, and it is precisely on these data that the other clock
+makes the conclusion fail. -/
+theorem isQuasiLeftContinuous_flip (nu : Measure Bool) [IsProbabilityMeasure nu] :
+    IsQuasiLeftContinuous (fun t : ℝ≥0 ↦ fun ω ↦ jumpProcessE flipRate (t : ℝ) ω)
+      (jumpFiltrationE flipRate measurable_flipRate) (jumpMeasure flipKernel nu) :=
+  isQuasiLeftContinuous_jumpProcessE measurable_flipRate flipRate_pos flipRate_le_one flipKernel nu
 
 end CadlagWitness

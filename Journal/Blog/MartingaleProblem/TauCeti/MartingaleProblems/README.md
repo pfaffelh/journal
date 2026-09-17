@@ -8877,6 +8877,78 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   is added: the first because over a general index the martingale property does
   not give optional sampling, the second because the compensator is a Bochner
   integral of `p.2 ∘ X`. **In Lean** on 2026-09-17, fifteenth run.
+* `isOptionalSamplingFor_of_martingale`, the discharge of the first of those two
+  hypotheses over the index `ℝ≥0`: for a martingale `Y` that is progressively
+  measurable, has right continuous paths and is bounded on every bounded stretch
+  of time, `IsOptionalSamplingFor Y 𝓕 P`. It is `stoppedValue_ae_eq_condExp` with
+  the level chosen by the bound, since the definition quantifies over a time and
+  a stopping time below it. The bound is the **local** one, one constant per
+  level and not one for all time, which is what the compensator of a test process
+  permits: it grows with the window. `isOptionalSamplingFor_zero` is the
+  emptiness check. **In Lean** on 2026-09-17, sixteenth run.
+* `isStronglyMeasurableAlongStoppingTimes_of_isStronglyProgressive`, the
+  discharge of the second over `ℝ≥0` and a real codomain: a progressively
+  measurable real process is strongly measurable at every stopping time for the
+  σ-algebra of that stopping time. It is Mathlib's `measurable_stoppedValue`
+  (`Probability/Process/Stopping.lean:1048`) followed by
+  `Measurable.stronglyMeasurable`, and it is available here and not in the
+  abstract theorem for the reason the docstring of
+  `IsStronglyMeasurableAlongStoppingTimes` records: `RCLike 𝕂` carries a topology
+  and no `MeasurableSpace`, so the `[BorelSpace β]` hypothesis of that theorem
+  cannot be written down over a general `𝕂`, while over `ℝ` it can. **In Lean**
+  on 2026-09-17, sixteenth run.
+* `IsCadlagPath.comp_coe_nnreal`, the restriction of a càdlàg path on `ℝ` to a
+  càdlàg path on `ℝ≥0`, with `tendsto_coe_nnreal_nhdsWithin_Ioi` and
+  `tendsto_coe_nnreal_nhdsWithin_Iio` as its two halves. The jump construction is
+  written over `ℝ` and every statement of Milestones 3, 6 and 9 is indexed by
+  `ℝ≥0`, which is the index the clock and the filtration carry; the crossing is
+  not formal, since `IsCadlagPath` is a statement about the one sided
+  neighbourhood filters and what has to be produced is that the coercion carries
+  each of them into its counterpart. It does, because it is continuous and
+  strictly monotone. At `t = 0` the left filter is `⊥` and the second half is
+  empty, which is the right answer. Only the restriction is available and only it
+  is wanted: nothing on `[0, ∞)` recovers the negative times. **In Lean** on
+  2026-09-17, sixteenth run.
+* `ae_isCadlagPath_nnreal_jumpProcessE`, `isOptionalSamplingFor_mpFamily_jumpProcessE`
+  and `isStronglyMeasurableAlongStoppingTimes_compensatorE`, the three
+  hypotheses of `isQuasiLeftContinuous_of_isMPSolutionFor` read off the data of
+  Milestone 4. The first is `ae_isCadlagPath_jumpProcessE` through
+  `IsCadlagPath.comp_coe_nnreal`. The second spends the same four statements that
+  `martingale_stoppedProcess_mpFamily_jumpProcessE` spends —
+  `jumpProcessE_isMPSolution`, `isStronglyProgressive_mpFamily_jumpProcessE`,
+  `tendsto_nhdsGE_mpFamily_jumpProcessE` and the local bound
+  `exists_bound_mpFamily_jumpProcessE` — so it costs no hypothesis beyond the
+  ones the jump construction already carries. The third rests on
+  `isStronglyProgressive_compensatorE`, which says of the compensator alone what
+  `isStronglyProgressive_mpFamily_jumpProcessE` says of the difference
+  `f ∘ X - C`; the two proofs are the same one with the first summand deleted,
+  and the deletion costs the bound on the rate, the bound on the integrand
+  becoming a hypothesis instead of a consequence of `abs_jumpApply_le`. **In
+  Lean** on 2026-09-17, sixteenth run.
+* `isQuasiLeftContinuous_jumpProcessE`, Ethier–Kurtz 4.3.12 for the Markovian
+  jump processes: over a countable state space with the discrete topology and
+  measurable points, and for a measurable rate with `0 < lam ≤ L`, the local jump
+  process is quasi-left-continuous. Every hypothesis of
+  `isQuasiLeftContinuous_of_isMPSolutionFor` is read off the data of Milestone 4.
+  The separating class is the point indicators
+  (`mem_image_fst_jumpOperator_indicator`): countable because `E` is, idempotent
+  so that `hsq` is about them and not about a larger class, separating because a
+  point is determined by its own indicator, and bounded by `1` — which is what
+  makes them usable where a general test function over an infinite `E` is not.
+  They are written as `Set.indicator` and not as an `if`, a general state space
+  carrying no `DecidableEq`. The discrete topology is what makes `Continuous p.1`
+  free. `Nonempty E` is not a hypothesis: the initial distribution is a
+  probability measure, so the empty state space is excluded by `measure_univ`,
+  and `0 < L` is read off any state. **In Lean** on 2026-09-17, sixteenth run.
+* `exists_bound_mpFamily_jumpProcessE`, the local bound of a test process of the
+  local jump problem, `C + 2LC·j` on `[0, j]` with `C` a bound for the test
+  function and `L` one for the rate. It is the third hypothesis of
+  `martingale_stoppedProcess` and the fourth of
+  `isOptionalSamplingFor_of_martingale`, and both spend it. Nothing is assumed
+  about the state space: the two positivity facts the estimate needs, `0 ≤ L` and
+  `0 ≤ C`, are read off the sample point, whose first coordinate is a chain of
+  states, so the empty state space is not a case to be excluded and no measure is
+  needed to produce a point. **In Lean** on 2026-09-17, sixteenth run.
 * `not_isQuasiLeftContinuous_of_not_ae_tendsto`, the contrapositive of
   `IsQuasiLeftContinuous.ae_eq_leftLim` and the half of the counterexample that
   is independent of the martingale problem: for a nondecreasing `s : ℕ → ι` with
@@ -9002,6 +9074,19 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   and it is `Clock.IsContinuousFor` and not `Clock.IsAtomless` that the positive
   theorem asks for — `lebesgueClock_isContinuousFor_optional` gives it for
   `q = volume`, `not_isContinuousFor_atomClock` denies it for the dirac.
+
+  The positive half is `isQuasiLeftContinuous_flip`: the two state jump process
+  of Milestone 4 over `lebesgueClock` is quasi-left-continuous, every hypothesis
+  discharged on data. The paths it is applied to are **the paths of the process
+  itself** and not of a modification — a step path is càdlàg to begin with, so
+  `exists_cadlag_modification_flip` is not an input here. It is an instance of
+  `isQuasiLeftContinuous_jumpProcessE`, which says the same over **any** countable
+  state space and is therefore a statement about the Markovian jump processes and
+  not about one example: the Poisson process and M/M/1 of Milestone 4 are covered
+  by it, both having bounded rate. It is kept as a named statement because it is
+  one half of a *pair* — the general theorem says nothing about the clock beyond
+  `Clock.IsContinuousFor`, and it is on precisely these data that the other clock
+  makes the conclusion fail. **In Lean** on 2026-09-17, sixteenth run.
 * **Cutting down to an open subset.** `E = ℝ`, `U = Set.Ioo (-1) 1`, and the
   bump sequence `f n x = min 1 (n * Metric.infDist x Uᶜ)` of Milestone 2 with
   `g n = 0`. For a solution started inside `U` whose paths do not leave it,
