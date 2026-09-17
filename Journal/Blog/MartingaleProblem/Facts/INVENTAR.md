@@ -35106,3 +35106,175 @@ nicht am Namen.)
    Prüfung dieses Laufs sagt über sie nichts. Ob das so bleiben soll, ist zu
    entscheiden, ehe eingereicht wird — eine Roadmap ohne zeilengeprüfte Datei
    ist nicht dasselbe wie eine mit einer fehlerfreien.
+
+### 2026-09-17, dreiundzwanzigster Lauf des Tages — das Akzeptanzbeispiel von Meilenstein 10 hat seine martingaltheoretische Hälfte; und die Begründung, die die Roadmap für Voraussetzung (c) gab, war unvollständig
+
+**Vorschlag 1 der vier Vorläufe ist angegangen**, und zwar der Teil, der Arbeit
+und nicht Buchhaltung ist: Voraussetzung (c) von `mpSolution_of_tendsto` für die
+reskalierte Markovkette des Manuskripts (`ex:invariance`). **Dreizehn
+Deklarationen**, gut 400 Zeilen, in vier neuen Abschnitten am Ende von
+`TauCeti/MartingaleProblems/Suggested.lean`. Die Kette ohne einen Fehler:
+
+| Datei | rc | Fehler | `sorry` | Sekunden |
+| --- | ---: | ---: | ---: | ---: |
+| `WeakConvergence/Suggested.lean` | 0 | 0 | 0 | 7 |
+| `SkorokhodSpace/Suggested.lean` | 0 | 0 | 0 | 13 |
+| `MartingaleProblems/Suggested.lean` | 0 | 0 | 0 | 66 |
+
+Alle dreizehn mit `scripts/check_axioms.py` geprüft: `propext`,
+`Classical.choice`, `Quot.sound`, sonst nichts.
+
+#### Was gebaut ist
+
+* `integral_mul_eq_of_condExp_eq` — eine beschränkte Variable der Vergangenheit
+  darf unter dem Integral durch die bedingte Erwartung gezogen werden.
+* `integral_sub_mul_eq_zero_of_condExp_eq` — der Martingalzuwachs steht senkrecht
+  auf jeder beschränkten Variablen seiner Vergangenheit. Das ist der Motor von
+  (c).
+* `chainCompensated` — die Doob-Zerlegung `f (Ξ n) − ∑_{j<n} (Pf − f)(Ξ j)`
+  längs der Kette.
+* `martingale_chainCompensated` — sie ist ein Martingal.
+* `tendsto_integral_mul_of_integral_eq_zero` — (c) aus einem exakt orthogonalen
+  Approximanten.
+* `tendsto_integral_mul_of_martingale` — dasselbe aus einer Familie exakter
+  Martingale, an zwei Gitterindizes gelesen.
+* `tendsto_integral_mul_rescaledChain` — (c) für die reskalierte Kette, mit den
+  Gitterindizes `⌊n s⌋` und `⌊n t⌋`.
+* `gridPath`, `measurable_gridPath` — die Kette als Pfad im **rohen** Raum
+  `ℝ≥0 → E`, `gridPath Ξ r ω t = Ξ ⌊r t⌋ ω`, und ihre Meßbarkeit.
+* `coordFiltration` — die Koordinatenfiltration des rohen Pfadraums; sie ist
+  `naturalFiltration` des Auswertungsprozesses und nichts weiter.
+* `comap_gridPath_le`, `measurable_comp_gridPath` — ein Funktional des Pfades
+  vor `s` ist, auf dem Gitterpfad gelesen, eine Variable der Kette vor `⌊r s⌋`.
+* `tendsto_integral_mul_rescaledChain_natural` — das Akzeptanzbeispiel
+  zusammengesetzt, über der **eigenen** natürlichen Filtration der Kette.
+
+#### Befund 1, und er ist der Fund des Laufs: Voraussetzung (c) ist **nicht** die exakte Martingaleigenschaft allein
+
+Die Roadmap sagte bisher: „Hypothesis (c) of `mpSolution_of_tendsto` is that the
+tested increments vanish, and it holds because each `Y n` is an exact
+martingale." Der zweite Halbsatz trägt nicht, und das sieht man erst, wenn man
+die Voraussetzung hinschreibt.
+
+(c) lautet in Lean
+
+    Tendsto (fun n ↦ ∫ ω, (Y₀ t (X' n ω) − Y₀ s (X' n ω)) * Z (X' n ω) ∂(P' n)) atTop (𝓝 0)
+
+und spricht von der **kanonischen Fassung `Y₀`** — *einer* Funktion auf *einem*
+Pfadraum, für jedes `n` derselben. Das exakte Martingal `Y n` der Kette ist für
+jedes `n` eine **andere** Funktion, weil `P n` und das Gitter es sind. Die
+beiden sind nicht dasselbe, und (c) zerfällt deshalb in zwei Summanden:
+
+* `𝔼[(Y n t − Y n s) · Z (X n)] = 0`, die Martingalidentität — die ist umsonst;
+* `𝔼[‖(Y₀ t − Y₀ s)(X n) − (Y n t − Y n s)‖] → 0` — und **das** ist die
+  Voraussetzung `(K3)` des Manuskripts, die Konvergenz `n (P n f − f) → A f` der
+  reskalierten Erzeuger.
+
+Das Manuskript sagt es selbst, nur an anderer Stelle: `\ref{it:K2}` hält
+`ξ^n − f(X^n) ≡ 0` fest und `\ref{it:K3}` ist die Erzeugerkonvergenz. Die
+Formalisierung hat (K2) in (c) hineingefaltet, und damit wandert der Rest von
+(K3) mit hinein. Die Roadmap hat das beim Ausschreiben von
+`mpSolution_of_tendsto` nicht nachgezogen; sie ist jetzt berichtigt, und
+`tendsto_integral_mul_of_martingale` ist die Aussage, in der sich die beiden
+Summanden treffen.
+
+**Was daran mehr ist als eine Formulierungsfrage:** wer (c) für geschenkt hält,
+hält das Beispiel für Buchhaltung. Es ist keine — die Analysis des
+Invarianzprinzips sitzt genau in dem Summanden, den die Roadmap unterschlagen
+hat.
+
+#### Befund 2: `MeasureTheory.Martingale` trägt **keine** Integrierbarkeit
+
+Am Quelltext nachgesehen, `Probability/Martingale/Basic.lean`:
+
+```
+def Martingale (f : ι → Ω → E) (ℱ : Filtration ι m0) (μ : Measure Ω) : Prop :=
+  StronglyAdapted ℱ f ∧ ∀ i j, i ≤ j → μ[f j | ℱ i] =ᵐ[μ] f i
+```
+
+`Submartingale` und `Supermartingale` tragen sie (`∀ i, Integrable (f i) μ` als
+dritten Konjunkten), `Martingale` nicht. Ein Satz, der ein Martingal
+**integriert**, muß sie also eigens verlangen;
+`tendsto_integral_mul_of_martingale` tut das mit `hMint` und sagt im
+Doc-Kommentar, warum. Das ist keine Schwäche der Aussage, sondern eine
+Asymmetrie von Mathlib, und sie gehört benannt, damit kein späterer Lauf sie für
+einen Fehler unserer Formulierung hält.
+
+#### Befund 3: die Vorgabe der minimalen Voraussetzungen zahlt sich hier zweimal aus
+
+* **Die Markoveigenschaft steht in der Gestalt, in der sie benutzt wird** — als
+  bedingte Erwartungsidentität `μ[f (Ξ (n+1)) | 𝓖 n] =ᵐ (Pf)(Ξ n)` — und nicht
+  über einen `ProbabilityTheory.Kernel`. Das ist echt schwächer: eine Kette mit
+  Kern liefert sie, und ebenso eine Kette, die nur **längs der Testfunktion `f`**
+  markovsch ist. Mehr liest der Beweis nicht.
+* **Der Zustandsraum `E` trägt gar nichts** — keinen Meßraum, keine Topologie.
+  Die Kette kommt nur über die Kompositionen `f ∘ Ξ n i` und `Pf ∘ Ξ n i` vor,
+  deren Meßbarkeit Voraussetzung ist. Das ist dieselbe Lesart, die der
+  Meilenstein für den Pfadraum unter „hypothesis (a) carries no topology"
+  festhält, eine Ebene tiefer.
+
+#### Befund 4: die Doob-Zerlegung wird als **Formel** gebaut, nicht als `martingalePart`
+
+Mathlib hat sie (`Probability/Martingale/Centering.lean`,
+`martingalePart`/`predictablePart`, mit `martingale_martingalePart`). Sie ist
+hier **nicht** genommen, und das ist eine Entscheidung mit Grund:
+`predictablePart` ist aus `μ[· | ℱ j]` gebaut und damit nur **fast sicher**
+bestimmt, während `chainCompensated` aus dem Kernzuwachs `Pf − f` gebaut und
+damit eine Funktion ist. `StronglyAdapted` ist keine f.s.-Aussage, und das
+Martingal, das (c) liest, muß eine Funktion sein und keine Klasse. Dieselbe
+Unterscheidung, an der der achtzehnte Lauf des 2026-09-10 die Identifikation der
+gestoppten Testprozesse aufgehängt hat.
+
+#### Befund 5: der Prüfstein des Meilensteins ist eingelöst — der Pfadraum ist roh
+
+Der Meilenstein nennt als Akzeptanztest ausdrücklich, daß `mpSolution_of_tendsto`
+mit **`F` a bare measurable space** anwendbar sein muß.
+`tendsto_integral_mul_rescaledChain_natural` tut das: der Pfadraum ist `ℝ≥0 → E`
+mit der Produkt-σ-Algebra und **sonst nichts** — keine Topologie, keine Metrik,
+keine Separabilität —, und `E` ist ein bloßer Meßraum. Die Voraussetzung `hW`
+wird darin nicht angenommen, sondern aus `measurable_comp_gridPath` erzeugt.
+
+Daß das geht, hängt an einer Beobachtung, die eine Zeile ist und leicht zu
+übersehen wäre: die Koordinatenfiltration des rohen Pfadraums ist
+`naturalFiltration` des **Auswertungsprozesses**, also dieselbe Konstruktion, die
+die Kette schon benutzt, nur auf dem Pfadraum statt auf dem Stichprobenraum.
+`coordFiltration` ist deshalb drei Zeilen und kein eigener Begriff.
+
+Der einzige Punkt, an dem der Beweis mehr als Buchhaltung ist, ist `0 ≤ r`: ohne
+sie trägt `Nat.floor_mono` die Ungleichung `u ≤ s` nicht über die Multiplikation,
+und die Vergangenheit des Pfades landet nicht in der Vergangenheit der Kette.
+Für `r = n` ist sie `Nat.cast_nonneg` und damit frei — aber sie steht in der
+Aussage, weil sie dort gebraucht wird und nicht, weil die Instanz sie schenkt.
+
+#### Was vom Beispiel offen bleibt, und es ist genau eine Sorte Aussage
+
+Gebaut ist (c), samt der Einbettung. **Nicht** gebaut sind die Voraussetzungen
+**(a) und (b)** — Verteilungskonvergenz und gleichgradige Integrierbarkeit
+endlich vieler reeller Variablen. Sie sind kein Satz über die Kette, sondern die
+Eingabe, die ein Straffheitsargument liefert, und das Manuskript liefert es
+ausdrücklich nicht (`rem:invariancepay`, letzter Absatz: „What is *not* supplied
+here is tightness"). Ebenso offen bleibt `(K3)` selbst, die `L¹`-Konvergenz
+`happrox`; sie ist die Analysis des Invarianzprinzips und getragen, nicht
+bewiesen — so, wie das Manuskript sie trägt.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **Die Leerheitsprobe des Beispiels:** `tendsto_integral_mul_rescaledChain_natural`
+   auf Daten einlösen, an denen alle Voraussetzungen zugleich erfüllt sind.
+   *Aussage:* für eine **konstante** Kette (`Ξ n i = Ξ n 0`, Kern die Identität,
+   also `Pfn = fn`) ist `chainCompensated` konstant, `(K3)` gilt mit `G n = 0`,
+   und der Schluß ist wahr und nicht leer. *Worauf es ruht:* auf nichts als der
+   schon gebauten Kette. *Warum jetzt:* dreizehn Deklarationen mit neun
+   Voraussetzungen sind gebaut, und es ist bisher **nicht** belegt, daß die neun
+   gemeinsam erfüllbar sind — genau der Einwand, den dieser Zweig bei
+   `Shift` (sechster Lauf des 2026-09-14) und bei `hint` selbst erhoben hat.
+   Eine Aussage über einer unerfüllbaren Voraussetzung ist wahr und leer, und
+   dieser Zweig hat das schon zweimal erlebt. Der nächste Schritt danach wäre
+   eine **nichttriviale** Kette, etwa die einfache Irrfahrt auf `ℤ` mit
+   `fn n = Pfn n = id`, an der die Doob-Zerlegung wirklich etwas abzieht.
+2. **Die Entscheidung über das Lake-Target dem Nutzer vorlegen** (Symlink
+   `TauCetiRoadmap → TauCeti` oder Umbenennung des Verzeichnisses), unverändert
+   seit vier Läufen. Es ist eine Frage und keine Arbeit.
+3. **Die vierte Roadmap gegen dieselbe Probe halten.** `KolmogorovExtension` hat
+   keine `Suggested.lean` und kommt in `check_suggested.py` nicht vor; die
+   Prüfung dieses Laufs sagt über sie nichts.
