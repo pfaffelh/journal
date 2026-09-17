@@ -9172,22 +9172,50 @@ Fix `[Preorder ι]`, a measurable path space `F`, and processes `X n` on spaces
   below by `c`, is never zero. **In Lean** on 2026-09-17, nineteenth run, with
   `integrable_tail`, `integral_tail_antitone` and
   `abs_integral_sub_integral_radialTrunc_le`.
-* `integral_eq_zero_of_tendstoLaw`, the analytic core: for variables on different
-  probability spaces converging in distribution, uniformly integrable by the
-  tails, integrable on each space and with vanishing integrals, the limit has
-  vanishing integral. The `𝕂`-valued statement is obtained by testing against
-  `RCLike.reCLM` and `RCLike.imCLM`, since `TendstoLaw` tests against **real**
-  functions; the truncation level is chosen for the sequence by the uniform
-  integrability and for the limit by `tendsto_integral_tail`, and the larger of
-  the two serves both sides. Mathlib's `MeasureTheory.UnifIntegrable` is a
-  predicate about one fixed measure and does not apply across a sequence of
-  spaces. **In Lean** on 2026-09-17, nineteenth run.
-* `integrable_of_tendstoLaw`: a family with a uniform `L¹` bound has an
-  integrable limit. This is the half of (b) that is spent before any martingale
-  identity, and nothing else in the statement makes `Y s` and `Y t` integrable.
-  The bound travels by the bounded continuous truncations `min ‖x‖ M`, and the
-  passage `M → ∞` is monotone convergence. **In Lean** on 2026-09-17, nineteenth
-  run.
+* `integral_eq_zero_of_tendstoInDistribution`, the analytic core: for variables
+  on different probability spaces converging in distribution, uniformly
+  integrable by the tails, integrable on each space and with vanishing
+  integrals, the limit has vanishing integral. The `𝕂`-valued statement is
+  obtained by testing against `RCLike.reCLM` and `RCLike.imCLM`, since the test
+  functions carried by convergence in distribution are **real**; the truncation
+  level is chosen for the sequence by the uniform integrability and for the
+  limit by `tendsto_integral_tail`, and the larger of the two serves both sides.
+  Mathlib's `MeasureTheory.UnifIntegrable` is a predicate about one fixed
+  measure and does not apply across a sequence of spaces. **In Lean** on
+  2026-09-17, nineteenth run; restated on convergence in distribution in the
+  twentieth.
+* `integrable_of_tendstoInDistribution`: a family with a uniform `L¹` bound has
+  an integrable limit. This is the half of (b) that is spent before any
+  martingale identity, and nothing else in the statement makes `Y s` and `Y t`
+  integrable. The bound travels by the bounded continuous truncations
+  `min ‖x‖ M`, and the passage `M → ∞` is monotone convergence. Measurability of
+  the limit is not a hypothesis: it is the field `aemeasurable_limit` of
+  `MeasureTheory.TendstoInDistribution`, which over `𝕂` upgrades to
+  `AEStronglyMeasurable` by `AEMeasurable.aestronglyMeasurable`. **In Lean** on
+  2026-09-17, nineteenth run; restated on convergence in distribution in the
+  twentieth.
+* `MeasureTheory.TendstoInDistribution.tendsto_integral_comp`: convergence in
+  distribution carries the integrals of bounded continuous test functions, for
+  variables living on a family of spaces. This is the whole interface through
+  which the theorem above reads its convergence hypothesis, and it is
+  `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`
+  (`MeasureTheory/Measure/ProbabilityMeasure.lean`) composed with `integral_map`,
+  whose measurability side condition is the field `forall_aemeasurable` of the
+  structure. It belongs in Mathlib beside the structure. **In Lean** on
+  2026-09-17, twentieth run.
+  **Convergence in distribution is Mathlib's, not this roadmap's.** The file
+  carried its own predicate until the twentieth run of 2026-09-17, on the ground
+  that `MeasureTheory.TendstoInDistribution` was the same notion for one fixed
+  space. That ground was false: the structure is declared over a family
+  `{Ω : ι → Type*}` with `{μ : (i : ι) → Measure (Ω i)}` and
+  `[∀ i, IsProbabilityMeasure (μ i)]`
+  (`MeasureTheory/Function/ConvergenceInDistribution.lean`, the variable block
+  above the structure), so the family case is the stated case there. Using it
+  costs a `MeasurableSpace` with `OpensMeasurableSpace` on the value space and
+  probability measures on the approximating spaces; over `𝕂` both hold by
+  instance (`RCLike.measurableSpace`, `RCLike.borelSpace`,
+  `MeasureTheory/Constructions/BorelSpace/Complex.lean`), and the approximating
+  measures were already asked to be probability measures.
 * `tendsto_integral_tail`: the tails of a single integrable function vanish. It
   is what lets the limit carry the same truncation level as the sequence, and it
   is dominated convergence. **In Lean** on 2026-09-17, nineteenth run.

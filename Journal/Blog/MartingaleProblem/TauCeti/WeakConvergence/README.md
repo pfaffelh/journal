@@ -751,7 +751,28 @@ which is `IsGδ.setOfPred_continuousAt`
   `TendstoInDistribution (fun i ↦ h ∘ X i) l (h ∘ Z) μ μ'`. It is the previous
   item read through the three fields of the structure, and it generalises
   `TendstoInDistribution.continuous_comp` in the way that one does
-  `tendsto_map_of_tendsto_of_continuous`.
+  `tendsto_map_of_tendsto_of_continuous`. **In Lean** on 2026-09-17, twentieth
+  run.
+
+  **State the continuity hypothesis on the sample space** as
+  `μ' {ω | ContinuousAt h (Z ω)} = 1` and not on `E` as
+  `(μ'.map Z) {x | ContinuousAt h x} = 1`. The two are the same statement -- the
+  continuity set is Borel by `measurableSet_of_continuousAt` and `Z` is
+  `AEMeasurable` by the field `aemeasurable_limit`, so `Measure.map_apply₀`
+  carries one to the other -- and the first is the form a user of the structure
+  has, since the structure speaks of the variables and not of their laws.
+  `Measurable h` is a hypothesis and no longer follows from the continuity,
+  which is only almost everywhere; that is the one thing the generalisation
+  costs against `continuous_comp`.
+
+**The index of the two measure-level theorems is an arbitrary countably
+generated filter** and not `ℕ` with `atTop`. That is the index of the
+portmanteau implication underneath, `tendsto_of_forall_isClosed_limsup_le'`
+(`MeasureTheory/Measure/Portmanteau.lean`, stated over `{L : Filter ι}` with
+`[L.IsCountablyGenerated]`), so nothing in the proof asks for a sequence;
+restricting to one would have been a hypothesis the proof does not read, and
+`TendstoInDistribution` carries a filter, so the random-variable form needs the
+general index anyway. Generalised on 2026-09-17, twentieth run.
 
 The Slutsky statements belong to this circle and are Mathlib's, so they are not
 part of this milestone. `X n → Z` in distribution together with `Y n - X n → 0`

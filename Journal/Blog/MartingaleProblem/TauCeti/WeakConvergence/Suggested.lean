@@ -185,6 +185,13 @@ against both `v4.33.1` and `upstream/master`.  The form with the continuity set
 of full measure, `tendsto_of_measure_setOf_continuousAt_eq_one`, is that theorem
 with `prob_compl_eq_zero_iff` in front of it.
 
+The twentieth run of 2026-09-17 finished Milestone 2: both statements now carry
+an arbitrary countably generated filter instead of a sequence -- that is the
+index of the portmanteau implication they run on and hence the weakest -- and
+the random-variable form on Mathlib's structure,
+`MeasureTheory.TendstoInDistribution.continuousAt_comp`, is proved on top of
+them.
+
 The same run also proved the first point of Milestone 3,
 `isTightMeasureSet_of_forall_exists_finite_iUnion_ball`, which turned out to be
 the relaxed tightness criterion of Milestone 1 in four lines, and weakened that
@@ -2142,13 +2149,14 @@ continuity set is Borel.  Where it is wanted, Mathlib supplies the passage:
 theorem tendsto_of_measure_setOf_not_continuousAt_eq_zero
     [TopologicalSpace E] [OpensMeasurableSpace E] [HasOuterApproxClosed E]
     [TopologicalSpace E'] [OpensMeasurableSpace E']
-    {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E} {h : E → E'}
-    (hh : Measurable h) (hconv : Tendsto μ atTop (𝓝 ν))
+    {γ : Type*} {L : Filter γ} [L.IsCountablyGenerated]
+    {μ : γ → ProbabilityMeasure E} {ν : ProbabilityMeasure E} {h : E → E'}
+    (hh : Measurable h) (hconv : Tendsto μ L (𝓝 ν))
     (hcont : (ν : Measure E) {x | ¬ ContinuousAt h x} = 0)
-    {μ' : ℕ → ProbabilityMeasure E'} {ν' : ProbabilityMeasure E'}
+    {μ' : γ → ProbabilityMeasure E'} {ν' : ProbabilityMeasure E'}
     (hμ' : ∀ n, (μ' n : Measure E') = (μ n : Measure E).map h)
     (hν' : (ν' : Measure E') = (ν : Measure E).map h) :
-    Tendsto μ' atTop (𝓝 ν') := by
+    Tendsto μ' L (𝓝 ν') := by
   refine tendsto_of_forall_isClosed_limsup_le' fun F hF => ?_
   have hsub : closure (h ⁻¹' F) ⊆ h ⁻¹' F ∪ {x | ¬ ContinuousAt h x} := by
     intro x hx
@@ -2160,8 +2168,8 @@ theorem tendsto_of_measure_setOf_not_continuousAt_eq_zero
       exact hcl hmem
     · exact Or.inr hc
   simp only [hμ', hν', Measure.map_apply hh hF.measurableSet]
-  calc Filter.limsup (fun n => (μ n : Measure E) (h ⁻¹' F)) atTop
-      ≤ Filter.limsup (fun n => (μ n : Measure E) (closure (h ⁻¹' F))) atTop :=
+  calc Filter.limsup (fun n => (μ n : Measure E) (h ⁻¹' F)) L
+      ≤ Filter.limsup (fun n => (μ n : Measure E) (closure (h ⁻¹' F))) L :=
         limsup_le_limsup (Eventually.of_forall fun n => measure_mono subset_closure)
     _ ≤ (ν : Measure E) (closure (h ⁻¹' F)) :=
         ProbabilityMeasure.limsup_measure_closed_le_of_tendsto hconv isClosed_closure
@@ -2194,16 +2202,67 @@ defining equations are `rfl`. -/
 theorem tendsto_of_measure_setOf_continuousAt_eq_one
     [TopologicalSpace E] [OpensMeasurableSpace E] [HasOuterApproxClosed E]
     [PseudoEMetricSpace E'] [OpensMeasurableSpace E']
-    {μ : ℕ → ProbabilityMeasure E} {ν : ProbabilityMeasure E} {h : E → E'}
-    (hh : Measurable h) (hconv : Tendsto μ atTop (𝓝 ν))
+    {γ : Type*} {L : Filter γ} [L.IsCountablyGenerated]
+    {μ : γ → ProbabilityMeasure E} {ν : ProbabilityMeasure E} {h : E → E'}
+    (hh : Measurable h) (hconv : Tendsto μ L (𝓝 ν))
     (hcont : (ν : Measure E) {x | ContinuousAt h x} = 1)
-    {μ' : ℕ → ProbabilityMeasure E'} {ν' : ProbabilityMeasure E'}
+    {μ' : γ → ProbabilityMeasure E'} {ν' : ProbabilityMeasure E'}
     (hμ' : ∀ n, (μ' n : Measure E') = (μ n : Measure E).map h)
     (hν' : (ν' : Measure E') = (ν : Measure E).map h) :
-    Tendsto μ' atTop (𝓝 ν') := by
+    Tendsto μ' L (𝓝 ν') := by
   refine tendsto_of_measure_setOf_not_continuousAt_eq_zero hh hconv ?_ hμ' hν'
   have hms : MeasurableSet {x : E | ContinuousAt h x} := measurableSet_of_continuousAt h
   exact (prob_compl_eq_zero_iff hms).2 hcont
+
+/-- **The continuous mapping theorem for random variables, on Mathlib's
+structure.**  `X i → Z` in distribution and `h` continuous `Z`-almost everywhere
+give `h ∘ X i → h ∘ Z` in distribution.
+
+This is the previous theorem read through the three fields of
+`MeasureTheory.TendstoInDistribution`, and it generalises
+`MeasureTheory.TendstoInDistribution.continuous_comp`
+(`MeasureTheory/Function/ConvergenceInDistribution.lean`) in the way that the
+previous theorem generalises
+`ProbabilityMeasure.tendsto_map_of_tendsto_of_continuous`: the continuity of `h`
+is asked only on a set that carries the whole mass of the law of the limit.
+
+**The hypothesis is stated on `Ω₀` and not on `E`**, as
+`P₀ {ω | ContinuousAt h (Z ω)} = 1` rather than
+`(P₀.map Z) {x | ContinuousAt h x} = 1`.  The two are the same statement here --
+the continuity set is Borel by `measurableSet_of_continuousAt` and `Z` is
+`AEMeasurable` by the field `aemeasurable_limit`, so `Measure.map_apply₀` carries
+one to the other -- and the first is the form a user of the structure has, since
+the structure speaks of the variables and not of their laws.
+
+**No metric on `E`** and none of the measurability hypotheses that
+`continuous_comp` gets from `Continuous h`: what is needed is
+`HasOuterApproxClosed E`, which every pseudo-EMetric space has, and `Measurable h`,
+which no longer follows from the continuity since the continuity is only almost
+everywhere.  The filter is arbitrary and countably generated, as in the
+portmanteau implication underneath. -/
+theorem TendstoInDistribution.continuousAt_comp
+    [TopologicalSpace E] [OpensMeasurableSpace E] [HasOuterApproxClosed E]
+    [PseudoEMetricSpace E'] [OpensMeasurableSpace E']
+    {γ : Type*} {Ω : γ → Type*} {mΩ : ∀ i, MeasurableSpace (Ω i)}
+    {P : (i : γ) → Measure (Ω i)} [∀ i, IsProbabilityMeasure (P i)]
+    {Ω₀ : Type*} {mΩ₀ : MeasurableSpace Ω₀} {P₀ : Measure Ω₀} [IsProbabilityMeasure P₀]
+    {X : (i : γ) → Ω i → E} {Z : Ω₀ → E} {L : Filter γ} [L.IsCountablyGenerated]
+    (hX : TendstoInDistribution X L Z P P₀) {h : E → E'} (hh : Measurable h)
+    (hcont : P₀ {ω | ContinuousAt h (Z ω)} = 1) :
+    TendstoInDistribution (fun i ω ↦ h (X i ω)) L (fun ω ↦ h (Z ω)) P P₀ where
+  forall_aemeasurable i := hh.comp_aemeasurable (hX.forall_aemeasurable i)
+  aemeasurable_limit := hh.comp_aemeasurable hX.aemeasurable_limit
+  tendsto := by
+    have hms : MeasurableSet {x : E | ContinuousAt h x} := measurableSet_of_continuousAt h
+    have hlaw : (P₀.map Z) {x : E | ContinuousAt h x} = 1 := by
+      rw [Measure.map_apply₀ hX.aemeasurable_limit hms.nullMeasurableSet]
+      exact hcont
+    refine tendsto_of_measure_setOf_continuousAt_eq_one hh hX.tendsto hlaw
+      (fun i ↦ ?_) ?_
+    · exact (AEMeasurable.map_map_of_aemeasurable hh.aemeasurable
+        (hX.forall_aemeasurable i)).symm
+    · exact (AEMeasurable.map_map_of_aemeasurable hh.aemeasurable
+        hX.aemeasurable_limit).symm
 
 /-! ## Milestone 3: the space of laws, and the Skorokhod representation theorem
 
