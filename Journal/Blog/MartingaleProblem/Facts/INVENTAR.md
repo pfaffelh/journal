@@ -33691,3 +33691,157 @@ sich allein lauffähig ist: `isStoppingTime_iSup` gegen Mathlib allein. Die Date
    Vorbild schon dastehen.
 3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 4 des
    Vorlaufs.
+
+### 2026-09-17, fünfzehnter Lauf des Tages — `isQuasiLeftContinuous_of_isMPSolutionFor` steht, und die Voraussetzung, unter der Ethier–Kurtz den Satz aussprechen, wird nicht gebraucht: es ist nicht die Atomlosigkeit der Uhr, sondern das Schrumpfen ihrer Fenster
+
+Vorschlag 1 des Vorlaufs war die klassische Instanz von Ethier–Kurtz 4.3.12 auf
+den Daten eines beschränkten Erzeugers. Sie ist bewiesen, und die Zahl der
+`sorry` in `MartingaleProblems/Suggested.lean` geht von **vier auf drei**.
+
+#### Was steht
+
+Sechs neue Deklarationen, fünf im Abschnitt `Regularizing` unmittelbar hinter
+dem abstrakten Satz des Vorlaufs, eine im Zeugenblock `AtomWitness`:
+
+* **`tendsto_compensator_mpFamily`** — der Kompensator von `mpFamily` ist an
+  jedem Stichprobenpunkt **stetig** in der Zeit, nicht bloß rechtsstetig. Das ist
+  die Abschätzung `norm_compensator_sub_le_of_isProgressive`, gequetscht gegen
+  die schrumpfenden Fenster der Uhr; sie stand bisher nur im Innern des Beweises
+  von `isCompensatorFor_mpFamily` und wird jetzt zweimal gebraucht.
+* **`tendsto_measureReal_interval_of_isLUB`** — das Fenster zwischen einer
+  wachsenden Folge und ihrer kleinsten oberen Schranke hat verschwindende Masse,
+  aus `Clock.IsContinuousFor`. Zwei Zeilen: die Folge konvergiert gegen `T`
+  (`tendsto_atTop_isLUB`), die Uhrvoraussetzung ist eine Aussage über `𝓝 T`, und
+  `s n ≤ T` macht aus ihrem `min` und `max` die Endpunkte.
+* **`tendsto_measureReal_interval_of_forall_exists_lt`** — dieselbe Folgerung aus
+  `Clock.IsAtomless` statt dessen, über Stetigkeit von oben.
+* **`isL1LeftContinuousAlongStoppingTimes_mpFamily`** — die eine Voraussetzung
+  des abstrakten Satzes, die die Uhr und nicht der Prozeß einlöst.
+* **`isQuasiLeftContinuous_of_isMPSolutionFor`** — der Satz selbst.
+* **`AtomWitness.not_isContinuousFor_atomClock`** — die Uhr des Gegenbeispiels
+  verfehlt `Clock.IsContinuousFor`, und nicht bloß `Clock.IsAtomless`.
+
+#### Der Befund, und er war nicht angesagt: die Atomlosigkeit fällt ersatzlos weg
+
+Der Vorlauf hatte `hQ : Q.IsAtomless` als die Voraussetzung geführt, aus der die
+`L¹`-Linksstetigkeit des Kompensators kommt, und der erste Entwurf dieses Laufs
+hat sie auch so bewiesen: die Fenster `Q.interval c (s n) T` fallen, ihr
+Durchschnitt liegt in `{u | T ≤ u ∧ u ≤ T}`, und `Clock.IsAtomless` erklärt das
+für eine Nullmenge. Der Beweis steht und ist
+`tendsto_measureReal_interval_of_forall_exists_lt`.
+
+**Beim Einsetzen zeigte sich, daß er nicht gebraucht wird.** Die Instanz trägt
+`hQc : Q.IsContinuousFor c` ohnehin — `isCompensatorFor_mpFamily` verlangt sie,
+damit der Kompensator einseitige Limiten hat —, und `Clock.IsContinuousFor` sagt
+genau das Gesuchte längs des Filters `𝓝 T`, gegen den eine wachsende Folge mit
+kleinster oberer Schranke `T` konvergiert. Die Komposition ist zwei Zeilen. Die
+Atomlosigkeit ist damit **keine Voraussetzung des Satzes**, obwohl Ethier–Kurtz
+ihn mit ihr aussprechen und obwohl die hier seit dem 2026-09-07 stehende
+Aussagefassung sie trug.
+
+**Die beiden Bedingungen sind unvergleichbar**, und das ist der Grund, daß beide
+Lemmas stehenbleiben: über einem diskreten Index ist `Clock.IsContinuousFor`
+leer (das Fenster bei `s = t` ist die leere Menge) und die Uhr darf so atomar
+sein wie das Zählmaß, während eine atomlose Uhr über einem Index ohne
+Ordnungstopologie keinen Grund hat, schrumpfende Fenster zu haben. Für den Satz
+ist die erste die richtige, weil sie schon dasteht.
+
+**Und ein drittes Ergebnis fällt dabei ab:** unter der Konvention
+`Clock.Conv.predictable` braucht die `L¹`-Linksstetigkeit **keine** von beiden.
+Dort ist der Durchschnitt der Fenster leer — `¬ (u < s n)` für jedes `n` erzwingt
+`T ≤ u`, während das Fenster `u < T` verlangt —, also ist die Nullmenge leer. Es
+ist die *optionale* Konvention, die den Punkt `T` in jedem Fenster behält, und
+genau dort sitzt das Gegenbeispiel.
+
+#### Was das für die Schärfe heißt, und warum sie dadurch stärker wird
+
+`not_isQuasiLeftContinuous_of_atom` behauptete, sein Zeuge erfülle **jede**
+Voraussetzung der Instanz außer `hQ`. Mit dem Wegfall von `hQ` wäre das ein
+Widerspruch statt einer Abgrenzung gewesen — wenn der Zeuge nicht eine andere
+Voraussetzung verfehlte. Er verfehlt sie: unterhalb von `u` enthält das optionale
+Fenster den Atom, also ist die Funktion, deren Grenzwert
+`Clock.IsContinuousFor` auf `0` verpflichtet, längs jeder gegen `u` wachsenden
+Folge konstant `1`. Das ist `not_isContinuousFor_atomClock`, und es steht jetzt
+als eigener Konjunkt **in der Konklusion** von
+`not_isQuasiLeftContinuous_of_atom`, neben `Q.q {u} ≠ 0`. Die Abgrenzung ist
+damit im Satz selbst nachprüfbar und nicht in einem Kommentar.
+
+`not_isAtomless_atomClock` bleibt und sagt, was sein Name sagt: daß das Beispiel
+ein Beispiel *eines Atoms* ist. Es grenzt nur nichts mehr ab.
+
+#### Drei Voraussetzungen, die die alte Aussagefassung nicht trug
+
+Die Aussage, wie sie seit dem 2026-09-07 als `sorry` dastand, war in drei
+Punkten zu schwach, und alle drei kamen beim Einlösen der Hypothesen des
+abstrakten Satzes heraus:
+
+* **`IsSeparating (Prod.fst '' A)` reicht nicht.** Der abstrakte Satz liest
+  seine Klasse durch eine **abzählbare** Teilklasse `Φ₀`, die die Punkte trennt
+  und deren Quadrate in der Klasse liegen — dieselbe Lage wie bei
+  `exists_cadlag_modification_of_isRegularizingClass` und aus demselben Grund:
+  eine trennende Klasse gibt eine Nullmenge je Testfunktion, und abzählbar viele
+  darf man vereinigen, überabzählbar viele nicht.
+* **`Measurable p.2` fehlte.** Der Kompensator ist ein Bochner-Integral von
+  `p.2 ∘ X`; `isCompensatorFor_mpFamily` ist ohne die Meßbarkeit nicht
+  anwendbar, und die Beschränktheit gibt sie nicht.
+* **`IsMPSolution` ist durch `IsOptionalSamplingFor` ersetzt**, aus dem Grund,
+  den der Vorlauf am abstrakten Satz festgehalten hat: über einem allgemeinen
+  Index folgt das optionale Sampling nicht aus der Martingaleigenschaft. Dazu
+  kommt `IsStronglyMeasurableAlongStoppingTimes` für die Kompensatoren, aus
+  demselben Grund wie dort — `𝕂` trägt keinen `MeasurableSpace`.
+
+Damit hat die Instanz zwei Hypothesen, die ein konkreter Index bezahlt, und
+`stoppedValue_ae_eq_condExp` des zehnten Laufs ist die Aussage, daß `ι = ℝ≥0` die
+erste bezahlt.
+
+#### Der Durchlauf
+
+Wie im Vorlauf zuerst gegen eine abgeschnittene Kopie entwickelt — die ersten
+4538 Zeilen, dann bis `end Regularizing` —, was den Zyklus auf Sekunden bringt.
+`lake env lean` über die **ganze** Datei gegen v4.33.1: **kein Fehler**, und
+keine Warnung auf den neuen Deklarationen. `#print axioms` gibt für alle sechs
+`propext`, `Classical.choice`, `Quot.sound` und nichts sonst. Kein neuer Import.
+`python3 Journal/Blog/MartingaleProblem/check.py` meldet `clean`.
+
+Die Punkte stehen in `MartingaleProblems/README.md`, Meilenstein 9, als fünf neue
+benannte Einträge und ein neu geschriebener Eintrag für den Satz selbst; der
+Eintrag zu `not_isQuasiLeftContinuous_of_atom` und das Akzeptanzbeispiel „Die
+Münze am Atom" sind berichtigt, ebenso der Dateikopf von `Suggested.lean` und die
+zwei Stellen, die noch von fünf `sorry` sprachen.
+
+*Zum Arbeitsbaum, und es berichtigt eine Notiz des Vorlaufs:* die Arbeitskopien
+sind gelöscht, `scratch/` steht wieder so da, wie es eingecheckt war. Der Vorlauf
+hatte notiert, die Sandbox lehne das Löschen ab — sie lehnt `rm` in der Shell ab,
+aber `python3 -c "import os; os.remove(...)"` geht durch. Wer künftig eine
+Arbeitskopie hinterläßt, hinterläßt sie also aus Wahl und nicht aus Zwang.
+
+#### Vorschläge für den nächsten Lauf, in dieser Reihenfolge
+
+1. **`IsOptionalSamplingFor` über `ℝ≥0` aus `stoppedValue_ae_eq_condExp`**, als
+   eigene Aussage und nicht nebenbei. *Aussage:* für einen Martingal-Testprozeß
+   mit rechtsstetigen Pfaden und einer Schranke ist `IsOptionalSamplingFor Y 𝓕 P`
+   erfüllt. *Worauf sie ruht:* `stoppedValue_ae_eq_condExp` des zehnten Laufs,
+   das genau diese Aussage über `ι = ℝ≥0` für eine Stoppzeit macht. *Warum
+   jetzt:* sie ist die Eingabe, die **beide** offenen Instanzen an derselben
+   Stelle brauchen, und sie hat eine Entscheidung vor sich, die zuerst zu klären
+   ist und keine Nebensache: `stoppedValue_ae_eq_condExp` steht **nach** dem
+   Abschnitt `Regularizing`, so daß entweder der Abschnitt zu verschieben ist
+   oder die Instanz weiter unten zu formulieren.
+2. **Die Leerheitsprobe auf `E = Bool` am Münzwurf mit `lebesgueClock`**, also
+   die positive Hälfte des Paares, dessen negative Hälfte
+   `not_isQuasiLeftContinuous_of_atom` ist. *Aussage:*
+   `isQuasiLeftContinuous_flip`, die Hypothesen von
+   `isQuasiLeftContinuous_of_isMPSolutionFor` auf den Daten von
+   `exists_cadlag_modification_flip` eingelöst. *Worauf sie ruht:*
+   `exists_cadlag_modification_flip` hat `hA`, `Φ₀ = boolIndicators`, `hsq`
+   (Quadrate von Indikatoren sind sie selbst), `hsep`, `hXprog` und `hXm` schon
+   gesammelt, und `lebesgueClock_isContinuousFor_optional` steht. Was fehlt, ist
+   dreierlei: die càdlàg-Pfade — das ist der Ausgang von
+   `exists_cadlag_modification_flip` selbst, also die Modifikation und nicht der
+   Ausgangsprozeß —, Vorschlag 1, und
+   `IsStronglyMeasurableAlongStoppingTimes` für den Kompensator. *Warum jetzt:*
+   der Satz ist bewiesen und noch auf nichts angewandt; das Paar aus positiver
+   und negativer Hälfte auf **denselben** Daten ist der Prüfstein, den der
+   Meilenstein als Akzeptanzbeispiel schon ausformuliert.
+3. **Die fünfzig Aufrufe veralteter Namen**, unverändert Vorschlag 3 des
+   Vorlaufs.

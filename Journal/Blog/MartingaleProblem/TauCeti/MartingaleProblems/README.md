@@ -8679,6 +8679,14 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   this milestone supplies it over `ℝ≥0` and over no other index. Naming the
   consequence rather than the cause is what removes the solution set `𝓧` from
   the theorem below. **In Lean** on 2026-09-17, fourteenth run.
+* `isOptionalSamplingFor_of_martingale`, the property over `ι = ℝ≥0`: for `Y` a
+  martingale with right continuous paths, strongly progressively measurable and
+  bounded, `IsOptionalSamplingFor Y 𝓕 P`. It is `stoppedValue_ae_eq_condExp` of
+  this milestone quantified over the stopping times bounded by a `t`, and it is
+  the one input every instance of the two theorems below needs. The statement
+  belongs where both of its ends are visible: `stoppedValue_ae_eq_condExp` is
+  proved after the block in which `IsOptionalSamplingFor` is defined, so either
+  that block moves or the instances are stated after it.
 * `IsStronglyMeasurableAlongStoppingTimes C 𝓕`: for every stopping time `σ`,
   `stoppedValue C σ` is `hσ.measurableSpace`-strongly measurable.
   `IsCompensatorFor` gives `StronglyAdapted 𝓕 C`, and adaptedness at a *time* is
@@ -8804,15 +8812,71 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `MeasureTheory.measurable_stoppedValue` is not used: the limit is taken in `𝕂`
   and not in `E`, and what has to be measurable is a scalar function, which the
   conditional expectation supplies for free.
+* `tendsto_compensator_mpFamily`, the compensator of `mpFamily` as a **continuous**
+  function of time at every sample point: for `g` measurable with `‖g x‖ ≤ b`, a
+  progressively measurable `X` and a clock with `Clock.IsContinuousFor c`,
+  ```
+  Tendsto (fun s ↦ ∫ u in Clock.interval q c ⊥ s, g (X u ω) ∂q) (𝓝 t)
+    (𝓝 (∫ u in Clock.interval q c ⊥ t, g (X u ω) ∂q)) .
+  ```
+  It is `norm_compensator_sub_le_of_isProgressive` squeezed against the shrinking
+  windows, and it is continuity and not right continuity: the window between `s`
+  and `t` is small on both sides. **In Lean** on 2026-09-17, fifteenth run.
+* `tendsto_measureReal_interval_of_isLUB`, the mass of the window between a
+  nondecreasing sequence and its least upper bound: for `s` monotone with
+  `∀ n, s n ≤ T` and `IsLUB (Set.range s) T`, and a clock with
+  `Clock.IsContinuousFor c`,
+  `Tendsto (fun n ↦ q.real (Clock.interval q c (s n) T)) atTop (𝓝 0)`. The
+  sequence converges to `T` (`tendsto_atTop_isLUB`) and the clock hypothesis is a
+  statement about `𝓝 T`; `s n ≤ T` turns its `min` and `max` into the endpoints.
+* `tendsto_measureReal_interval_of_forall_exists_lt`, the same conclusion from
+  `Clock.IsAtomless` instead, by continuity from above: the windows decrease, and
+  their intersection sits inside `{u | T ≤ u ∧ u ≤ T}`, which atomlessness
+  declares null. Neither hypothesis implies the other — over a discrete index
+  `Clock.IsContinuousFor` is vacuous and atomlessness may fail — and **under
+  `Clock.Conv.predictable` neither is needed**, the intersection being empty.
+* `isL1LeftContinuousAlongStoppingTimes_mpFamily`, the hypothesis of
+  `isQuasiLeftContinuous_of_isRegularizingClass` that the clock and not the
+  process discharges: for a bounded measurable `g`, a progressively measurable
+  `X` and `Clock.IsContinuousFor c`, the compensator
+  `C t = ∫ u in Clock.interval q c ⊥ t, g (X u) ∂q` is left continuous in `L¹`
+  along stopping times. Dominated convergence over the pointwise estimate
+  `‖C (min τ' t) - C (min (τ n) t)‖ ≤ b * q.real (Clock.interval q c (min (τ n) t) (min τ' t))`,
+  with `q.real (Set.Iic t)` as the majorant, finite by `Clock.measure_Iic_ne_top`.
+  The least upper bound is read off the stopping times and **no interchange of
+  `min` with `⨆` is performed**, which is what would need the index to be a
+  complete lattice. Strong measurability along stopping times is an input, since
+  `𝕂` carries no `MeasurableSpace`.
 * `isQuasiLeftContinuous_of_isMPSolutionFor`, the classical instance
-  (Ethier–Kurtz, Theorem 4.3.12). For `A ⊆ Cb(E) × Bdd(E)` with separating
-  domain and a solution `X` with càdlàg paths, `IsQuasiLeftContinuous X 𝓕 P`
-  **provided the clock has no atoms**, `∀ u, q {u} = 0`. The compensator is
-  `C t = ∫ u in Clock.interval q c ⊥ t, g (X u) ∂q`, so
-  `‖C (min τ' t) - C (min (τ n) t)‖ ≤ ‖g‖ * q (Clock.interval q c (min (τ n) t) (min τ' t))`,
-  the sets on the right decrease to the single point `min τ' t`, and continuity
-  from above of the clock on `Clock.interval q c ⊥ t`, which has finite measure,
-  finishes it.
+  (Ethier–Kurtz, Theorem 4.3.12). For `A` with every `p ∈ A` carrying a
+  continuous bounded `p.1` and a measurable bounded `p.2`, a countable
+  `Φ₀ ⊆ Prod.fst '' A` that separates the points of `E` and whose squares lie in
+  `Prod.fst '' A`, a progressively measurable and adapted `X` with càdlàg paths,
+  a clock with `Clock.IsContinuousFor c`, optional sampling for the members of
+  `mpFamily A Q c X` and strong measurability of the compensators along stopping
+  times: `IsQuasiLeftContinuous X 𝓕 P`. Every hypothesis of the abstract theorem
+  is read off the data by `isCompensatorFor_mpFamily`,
+  `tendsto_compensator_mpFamily` and
+  `isL1LeftContinuousAlongStoppingTimes_mpFamily`.
+
+  **The clock is not asked to be atomless**, although Ethier–Kurtz state the
+  theorem for a clock without atoms. What the `L¹` left continuity needs is that
+  the windows shrink, and `Clock.IsContinuousFor` — which the compensator needs
+  anyway, for its one sided limits — says exactly that along the filter a
+  nondecreasing sequence converges along. The sharpness is unaffected: the clock
+  of `not_isQuasiLeftContinuous_of_atom` fails `Clock.IsContinuousFor` and not
+  merely `Clock.IsAtomless`, which is `AtomWitness.not_isContinuousFor_atomClock`.
+
+  **The separating class must be countable**, as for
+  `exists_cadlag_modification_of_isRegularizingClass` and for the same reason: a
+  separating class gives one null set per test function and countably many of
+  them may be combined, uncountably many may not. `IsSeparating` alone, which
+  this statement carried until 2026-09-17, does not suffice.
+
+  **`IsMPSolution` is replaced by `IsOptionalSamplingFor`**, and `Measurable p.2`
+  is added: the first because over a general index the martingale property does
+  not give optional sampling, the second because the compensator is a Bochner
+  integral of `p.2 ∘ X`. **In Lean** on 2026-09-17, fifteenth run.
 * `not_isQuasiLeftContinuous_of_not_ae_tendsto`, the contrapositive of
   `IsQuasiLeftContinuous.ae_eq_leftLim` and the half of the counterexample that
   is independent of the martingale problem: for a nondecreasing `s : ℕ → ι` with
@@ -8831,8 +8895,10 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   the statement, `∃ s : ℕ → ι, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop
   (𝓝 u)`; at `u = ⊥` the example does not exist, because there is no sequence
   `s n ↑ u` and quasi-left-continuity asks nothing there. The conclusion carries
-  every hypothesis of `isQuasiLeftContinuous_of_isMPSolutionFor` except `hQ` —
-  `IsProbabilityMeasure P`, the bounds and the continuity of `hA`,
+  `¬ Q.IsContinuousFor c` beside `Q.q {u} ≠ 0`, and that is the conjunct that
+  makes the delimitation exact, since atomlessness is not a hypothesis of
+  `isQuasiLeftContinuous_of_isMPSolutionFor` and shrinking windows are. It also
+  carries `IsProbabilityMeasure P`, the bounds and the continuity of `hA`,
   `IsSeparating (Prod.fst '' A)` and the almost sure càdlàg paths — because
   without them the example is empty: for `A = ∅` the family `mpFamily A Q c X`
   is empty, `IsMPSolution` holds of every measure, and any process that fails
@@ -8845,11 +8911,16 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   `⊤` and whose measure is `Measure.dirac u`, with
   `atomClock_apply_singleton : (atomClock u).q {u} = 1`, so that the atom is
   there and every down-set is measurable for free, together with
-  `not_isAtomless_atomClock : ¬ (atomClock u).IsAtomless`, which is what binds
-  the sharpness to the hypothesis it is sharp against: without it the example
-  might still satisfy `hQ` of `isQuasiLeftContinuous_of_isMPSolutionFor` and
-  contradict that theorem instead of delimiting it. It is `measure_mono` from
-  the singleton into the degenerate interval `{v | u ≤ v ∧ v ≤ u}`;
+  `not_isAtomless_atomClock : ¬ (atomClock u).IsAtomless`, which says that the
+  example is an example *of an atom*, as its name claims — `measure_mono` from
+  the singleton into the degenerate interval `{v | u ≤ v ∧ v ≤ u}` — and
+  `not_isContinuousFor_atomClock : ¬ (atomClock u).IsContinuousFor
+  Clock.Conv.optional`, which is what binds the sharpness to the hypothesis it is
+  sharp against: without it the example might satisfy every hypothesis of
+  `isQuasiLeftContinuous_of_isMPSolutionFor` and contradict that theorem instead
+  of delimiting it. Below `u` the window `Set.Iic u \ Set.Iic s` still contains
+  the atom, so the function the clock hypothesis asks to vanish is constantly `1`
+  along a sequence increasing to `u`;
   `coinProcess u t ω = if u ≤ t then ω else false`,
   the path over `Ω = E = Bool`, where the coin is both the sample point and the
   state; `isCadlagPath_coinProcess`, which holds for every `u` and every `ω`
@@ -8927,7 +8998,10 @@ write `X (min (τ n ω) t) ω` for `stoppedValue X (fun ω ↦ min (τ n ω) t) 
   probability `1/2` for any `s n ↑ 1`. This is
   `not_isQuasiLeftContinuous_of_atom`, and the same process with `q = volume` is
   quasi-left-continuous by `isQuasiLeftContinuous_of_isMPSolutionFor`. The pair
-  fixes where atomlessness is a hypothesis and where it is not.
+  fixes where the regularity of the clock is a hypothesis and where it is not,
+  and it is `Clock.IsContinuousFor` and not `Clock.IsAtomless` that the positive
+  theorem asks for — `lebesgueClock_isContinuousFor_optional` gives it for
+  `q = volume`, `not_isContinuousFor_atomClock` denies it for the dirac.
 * **Cutting down to an open subset.** `E = ℝ`, `U = Set.Ioo (-1) 1`, and the
   bump sequence `f n x = min 1 (n * Metric.infDist x Uᶜ)` of Milestone 2 with
   `g n = 0`. For a solution started inside `U` whose paths do not leave it,

@@ -830,9 +830,17 @@ Regularisierung** — Oszillation längs eines einseitigen Filters *ist*
 Aufkreuzung eines rationalen Intervalls, und dieser Teil kommt ohne
 Wahrscheinlichkeit aus. Am 2026-09-17 ist der Meilenstein dann in fünf Läufen
 bis zu `exists_cadlag_modification_of_isRegularizingClass` durchgezogen worden;
-offen bleiben dort die beiden Quasi-Linksstetigkeiten.
+im vierzehnten und fünfzehnten Lauf desselben Tages sind auch die **beiden
+Quasi-Linksstetigkeiten** gefallen —
+`isQuasiLeftContinuous_of_isRegularizingClass` und die klassische Instanz
+`isQuasiLeftContinuous_of_isMPSolutionFor`, letztere **ohne** Atomlosigkeit der
+Uhr, die Ethier–Kurtz dort verlangen und die die hiesige Aussagefassung trug.
+**Meilenstein 9 hat damit kein `sorry` mehr.** Die Zahl in `MartingaleProblems`
+steht seither bei **drei**: die stetige Fassung des fdd-Kriteriums und die beiden
+Konvergenzsätze `mpSolution_of_tendsto` und
+`isMPSolution_of_forall_condExp_eq_of_dense`.
 
-Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle fünf sitzen in
+Kein `sorry` steht in einer *Aussage*, nur in Beweisen: alle sitzen in
 `theorem`en.
 
 Manuskript: **134 Seiten**, `check.py` clean — der Runner verwirft `.tex` und

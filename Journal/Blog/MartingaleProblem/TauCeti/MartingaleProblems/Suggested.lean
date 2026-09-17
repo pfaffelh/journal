@@ -42,9 +42,12 @@ Prototypes only. The abstract layer takes a family of test processes and never
 mentions a state space; the Markovian layer specialises it.
 
 **Status: type-checked** with `lake env lean` against Mathlib `v4.33.1`, last on
-2026-09-17 (fourteenth run of that day), over the **whole** file and without an error.  Every
-declaration elaborates; 4 declarations carry `sorry`, and every one of those `sorry`s is a
-**proof** -- no statement carries one.  The fourteenth run of 2026-09-17 took the count from
+2026-09-17 (fifteenth run of that day), over the **whole** file and without an error.  Every
+declaration elaborates; 3 declarations carry `sorry`, and every one of those `sorry`s is a
+**proof** -- no statement carries one.  The fifteenth run of 2026-09-17 took the count from four
+to three: `isQuasiLeftContinuous_of_isMPSolutionFor`, Ethier--Kurtz 4.3.12 on the data of a
+bounded operator, is proved -- and **without atomlessness of the clock**, which its own statement
+had carried since it was written.  The fourteenth run of 2026-09-17 took the count from
 five to four: `isQuasiLeftContinuous_of_isRegularizingClass` is proved, over a countable,
 bounded, continuous, point separating and square closed class rather than over
 `IsSeparating Φ`, and without a solution set -- `IsOptionalSamplingFor` names the one
@@ -201,10 +204,12 @@ it later the same day -- the operator `coinPair`, the class `coinClass` and its
 separation, the filtration, the two clock masses, the two integrals, the
 integrability of everything on `Bool`, and `isMPSolution_coinProcess` -- so that
 `not_isQuasiLeftContinuous_of_atom` itself now carries a proof.  The eighth run
-of that day added `not_isAtomless_atomClock`, which is what makes the sharpness
-a delimitation rather than a contradiction: the clock of the witness fails the
-hypothesis `hQ` of `isQuasiLeftContinuous_of_isMPSolutionFor`, and that is now a
-theorem instead of an observation about the definition.  No statement in this
+of that day added `not_isAtomless_atomClock`, and 2026-09-17, fifteenth run,
+`not_isContinuousFor_atomClock` beside it: these are what make the sharpness a
+delimitation rather than a contradiction, for the clock of the witness fails
+`Clock.IsContinuousFor` and not merely `Clock.IsAtomless`, and it is the first of
+the two that `isQuasiLeftContinuous_of_isMPSolutionFor` asks for.  Atomlessness
+is not a hypothesis of that theorem, although Ethier--Kurtz state it with one.  No statement in this
 file is `True` or `sorry` any more: the drafts of Milestones 3, 5, 9 and 10 were
 turned into propositions on 2026-09-06.  `Shift` now takes the coordinate maps
 `π` as a parameter, so that its compatibility field can be stated at all;
@@ -410,7 +415,7 @@ Four more on 2026-09-14, in `section PropagationFromOnedim` and `section Uniquen
 `thm:absuniq`(b).  The two inputs are `weightedLaw_univ`, which reads the manuscript's "take
 `h ≡ 1`" off the hypothesis, and `weightedLaw_const_mul`, which makes the normalisation
 `E^P[Z] = 1` a change of variables.  Every statement from `PropagatesAgreement` to
-`thm:absuniq`(b) is now proved and none of the five `sorry`s of this file is reachable from any
+`thm:absuniq`(b) is now proved and none of the three `sorry`s of this file is reachable from any
 of them.
 
 Three more on 2026-09-14, in `section ShiftInvariantClock` and `section ShiftSystemMpFamily`,
@@ -4536,20 +4541,330 @@ theorem isQuasiLeftContinuous_of_isRegularizingClass {Φ Φ₀ : Set (E → 𝕂
   rw [heq]
   exact hl'
 
-/-- The classical instance (Ethier--Kurtz, Theorem 4.3.12), for an operator with
-separating domain and a solution with càdlàg paths, **provided the clock has no
-atoms**.  The compensator is `∫ u in Q.interval c ⊥ t, g (X u) ∂q`, and it is
-continuity from above of the clock along the shrinking intervals that gives the
-`L¹` hypothesis of the abstract form. -/
+/-! ### The instance on the data of a bounded operator
+
+What `isQuasiLeftContinuous_of_isRegularizingClass` asks of the class, read off
+`mpFamily`.  Three of its six fields are already proved for this compensator --
+`isCompensatorFor_mpFamily` -- and of the remaining three, one is the clock and
+two are hypotheses over a general index.  The clock one is the only mathematics
+here: `IsL1LeftContinuousAlongStoppingTimes`, and it costs no hypothesis the
+compensator did not already have. -/
+
+omit [TopologicalSpace E] [OrderTopology ι] in
+/-- **The compensator of `mpFamily` is continuous in time at every sample
+point.**  The estimate `norm_compensator_sub_le_of_isProgressive` squeezed
+against the shrinking windows of the clock, and nothing else.  Continuity, not
+merely right continuity: the window between `s` and `t` is small on both sides
+of `t`. -/
+theorem tendsto_compensator_mpFamily {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E}
+    {𝓕 : Filtration ι m} {g : E → 𝕂} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    (hXprog : Q.IsProgressive X 𝓕) (hQc : Q.IsContinuousFor c) (t : ι) (ω : Ω) :
+    Tendsto (fun s ↦ ∫ u in Q.interval c ⊥ s, g (X u ω) ∂Q.q) (𝓝 t)
+      (𝓝 (∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)) := by
+  have key : ∀ s : ι, ‖(∫ u in Q.interval c ⊥ s, g (X u ω) ∂Q.q) -
+      ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q‖
+      ≤ b * Q.q.real (Q.interval c (min s t) (max s t)) := by
+    intro s
+    rcases le_total s t with h | h
+    · rw [norm_sub_rev, min_eq_left h, max_eq_right h]
+      exact norm_compensator_sub_le_of_isProgressive hg hgb hXprog h ω
+    · rw [min_eq_right h, max_eq_left h]
+      exact norm_compensator_sub_le_of_isProgressive hg hgb hXprog h ω
+  rw [← tendsto_sub_nhds_zero_iff]
+  exact squeeze_zero_norm key (by simpa using (hQc t).const_mul b)
+
+omit [TopologicalSpace E] [MeasurableSpace E] [OrderBot ι] [TopologicalSpace ι]
+  [OrderTopology ι] in
+/-- **The window of an atomless clock between a nondecreasing sequence and its
+least upper bound has vanishing mass.**  Continuity from above of `Q.q` along
+the decreasing windows; the limit window is contained in `{u | T ≤ u ∧ u ≤ T}`,
+which `Clock.IsAtomless` declares null.
+
+The least upper bound property is carried in the form the stopping times deliver
+it, as `hlt`, and not as `IsLUB`: no completeness of the index is read.
+
+**Under `Clock.Conv.predictable` the atomlessness is not needed.**  There the
+limit window is empty -- `¬ (u < s n)` for every `n` forces `T ≤ u`, while the
+window asks `u < T` -- so the null set is `∅` and `hQ` is spent on nothing.  It
+is the *optional* convention that keeps the point `T` inside every window, and
+that is exactly where `not_isQuasiLeftContinuous_of_atom` lives.
+
+**It is not the hypothesis the instance below uses.**  `Clock.IsContinuousFor`,
+which `isCompensatorFor_mpFamily` asks for anyway, gives the same conclusion in
+four lines (`tendsto_measureReal_interval_of_isLUB`), and neither of the two
+implies the other: over a discrete index `IsContinuousFor` is vacuous and
+`IsAtomless` may fail, while an atomless clock over an index with no order
+topology has no reason to have shrinking windows. -/
+theorem tendsto_measureReal_interval_of_forall_exists_lt (Q : Clock ι) (c : Clock.Conv)
+    (hQ : Q.IsAtomless) {s : ℕ → ι} {T : ι} (hmono : Monotone s)
+    (hlt : ∀ u : ι, u < T → ∃ n, u < s n) :
+    Tendsto (fun n ↦ Q.q.real (Q.interval c (s n) T)) atTop (𝓝 0) := by
+  have hanti : Antitone fun n ↦ Q.interval c (s n) T := by
+    intro a b hab x hx
+    cases c with
+    | optional => exact ⟨hx.1, fun h ↦ hx.2 (h.trans (hmono hab))⟩
+    | predictable => exact ⟨hx.1, fun h ↦ hx.2 (h.trans_le (hmono hab))⟩
+  have hsub : (⋂ n, Q.interval c (s n) T) ⊆ {u | T ≤ u ∧ u ≤ T} := by
+    intro x hx
+    simp only [Set.mem_iInter] at hx
+    have hxT : x ≤ T := by
+      cases c with
+      | optional => exact (hx 0).1
+      | predictable => exact le_of_lt (hx 0).1
+    refine ⟨?_, hxT⟩
+    by_contra hTx
+    obtain ⟨n, hn⟩ := hlt x (lt_of_le_of_ne hxT fun h ↦ hTx h.ge)
+    cases c with
+    | optional => exact (hx n).2 hn.le
+    | predictable => exact (hx n).2 hn
+  have hnull : Q.q (⋂ n, Q.interval c (s n) T) = 0 := measure_mono_null hsub (hQ T)
+  have htend := tendsto_measure_iInter_atTop (μ := Q.q)
+    (s := fun n ↦ Q.interval c (s n) T)
+    (fun n ↦ (Q.measurableSet_interval c (s n) T).nullMeasurableSet) hanti
+    ⟨0, Q.measure_interval_ne_top c (s 0) T⟩
+  rw [hnull] at htend
+  have hreal : Tendsto (fun n ↦ (Q.q (Q.interval c (s n) T)).toReal) atTop
+      (𝓝 (0 : ENNReal).toReal) := (ENNReal.tendsto_toReal (by simp)).comp htend
+  simpa only [measureReal_def, ENNReal.toReal_zero] using hreal
+
+omit [TopologicalSpace E] [MeasurableSpace E] [OrderBot ι] in
+/-- **The window of a clock with shrinking windows between a nondecreasing
+sequence and its least upper bound has vanishing mass**, and this is the form
+the instance uses.  `Clock.IsContinuousFor` is a statement about the filter
+`𝓝 T`, a nondecreasing sequence with least upper bound `T` converges to `T`
+(`tendsto_atTop_isLUB`), and composing the two is the whole proof: the window
+between `s n` and `T` *is* the window the clock hypothesis measures, because
+`s n ≤ T` turns `min` and `max` into the endpoints.
+
+**`Clock.IsAtomless` is not needed**, and that is the only reason the instance
+below carries no atomlessness: the hypothesis it would replace,
+`Clock.IsContinuousFor`, is already there for the compensator.  The two are the
+same statement at a point approachable from the left and differ nowhere the
+instance looks. -/
+theorem tendsto_measureReal_interval_of_isLUB (Q : Clock ι) (c : Clock.Conv)
+    (hQc : Q.IsContinuousFor c) {s : ℕ → ι} {T : ι} (hmono : Monotone s)
+    (hle : ∀ n, s n ≤ T) (hlub : IsLUB (Set.range s) T) :
+    Tendsto (fun n ↦ Q.q.real (Q.interval c (s n) T)) atTop (𝓝 0) := by
+  refine ((hQc T).comp (tendsto_atTop_isLUB hmono hlub)).congr fun n ↦ ?_
+  simp only [Function.comp_apply, min_eq_left (hle n), max_eq_right (hle n)]
+
+omit [TopologicalSpace E] in
+/-- **The compensator of `mpFamily` is left continuous in `L¹` along stopping
+times.**  This is the one hypothesis of
+`isQuasiLeftContinuous_of_isRegularizingClass` that the clock and not the process
+discharges, and it is discharged by the *same* hypothesis that makes the
+compensator a compensator, `Clock.IsContinuousFor`.  **No atomlessness of the
+clock is used**, here or in the instance below.
+
+The proof is dominated convergence over a pointwise estimate: the increment of
+the compensator between `min (τ n) t` and `min (⨆ τ) t` is bounded by `b` times
+the mass of the window between them, the windows shrink to nothing
+(`tendsto_measureReal_interval_of_isLUB`), and they all sit inside
+`Set.Iic t`, whose mass is finite by `Clock.measure_Iic_ne_top`.  That last
+containment is the majorant, and it is the reason the statement is bounded by a
+`t` rather than quantified over `{τ < ∞}`.
+
+The least upper bound the windows shrink to is read off the stopping times and
+not computed: `min (τ n) t` is nondecreasing, bounded by `min (⨆ τ) t`, and any
+smaller bound is beaten by some `τ n`, because `⨆ τ` is a least upper bound.
+**No interchange of `min` with `⨆` is performed**, which is what would need the
+index to be a complete lattice.
+
+**`b` is replaced by `max b 0` throughout** and not assumed non-negative: for an
+empty state space the bound `∀ x, ‖g x‖ ≤ b` is vacuous and `b` may be negative,
+while the majorant must not be.
+
+The strong measurability along stopping times is an input and not a consequence:
+`𝕂` carries no `MeasurableSpace` here, so `MeasureTheory.measurable_stoppedValue`
+cannot be stated, let alone applied.  It is the same hypothesis the abstract
+theorem carries, at the same place and for the same reason. -/
+theorem isL1LeftContinuousAlongStoppingTimes_mpFamily {Q : Clock ι} {c : Clock.Conv}
+    {X : ι → Ω → E} {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P]
+    {g : E → 𝕂} (hg : Measurable g) {b : ℝ} (hgb : ∀ x, ‖g x‖ ≤ b)
+    (hXprog : Q.IsProgressive X 𝓕) (hQc : Q.IsContinuousFor c)
+    (hCm : IsStronglyMeasurableAlongStoppingTimes
+      (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q) 𝓕) :
+    IsL1LeftContinuousAlongStoppingTimes
+      (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q) 𝓕 P := by
+  intro τ hτ hmono t
+  have hgb' : ∀ x, ‖g x‖ ≤ max b 0 := fun x ↦ (hgb x).trans (le_max_left _ _)
+  have hb0 : (0 : ℝ) ≤ max b 0 := le_max_right _ _
+  have hσ : ∀ n, IsStoppingTime 𝓕 (fun ω ↦ min (τ n ω) (t : WithTop ι)) :=
+    fun n ↦ (hτ n).min_const t
+  have hσ' : IsStoppingTime 𝓕 (fun ω ↦ min (⨆ k, τ k ω) (t : WithTop ι)) :=
+    (isStoppingTime_iSup hτ).min_const t
+  have hne : ∀ (n : ℕ) (ω : Ω), min (τ n ω) (t : WithTop ι) ≠ ⊤ := fun n ω ↦
+    ne_top_of_le_ne_top WithTop.coe_ne_top (min_le_right _ _)
+  have hne' : ∀ ω : Ω, min (⨆ k, τ k ω) (t : WithTop ι) ≠ ⊤ := fun ω ↦
+    ne_top_of_le_ne_top WithTop.coe_ne_top (min_le_right _ _)
+  set s : ℕ → Ω → ι := fun n ω ↦ (min (τ n ω) (t : WithTop ι)).untopA with hsdef
+  set T : Ω → ι := fun ω ↦ (min (⨆ k, τ k ω) (t : WithTop ι)).untopA with hTdef
+  have hcoe : ∀ (n : ℕ) (ω : Ω), ((s n ω : ι) : WithTop ι) = min (τ n ω) (t : WithTop ι) :=
+    fun n ω ↦ coe_untopA (hne n ω)
+  have hcoeT : ∀ ω : Ω, ((T ω : ι) : WithTop ι) = min (⨆ k, τ k ω) (t : WithTop ι) :=
+    fun ω ↦ coe_untopA (hne' ω)
+  have hsle : ∀ (n : ℕ) (ω : Ω), s n ω ≤ T ω := by
+    intro n ω
+    have h : min (τ n ω) (t : WithTop ι) ≤ min (⨆ k, τ k ω) (t : WithTop ι) :=
+      min_le_min (le_ciSup (f := fun k ↦ τ k ω) (OrderTop.bddAbove _) n) le_rfl
+    rw [← hcoe n ω, ← hcoeT ω] at h
+    exact_mod_cast h
+  have hTt : ∀ ω : Ω, T ω ≤ t := by
+    intro ω
+    have h : min (⨆ k, τ k ω) (t : WithTop ι) ≤ (t : WithTop ι) := min_le_right _ _
+    rw [← hcoeT ω] at h
+    exact_mod_cast h
+  have hsmono : ∀ ω : Ω, Monotone fun n ↦ s n ω := by
+    intro ω a b hab
+    have h : min (τ a ω) (t : WithTop ι) ≤ min (τ b ω) (t : WithTop ι) :=
+      min_le_min (hmono hab ω) le_rfl
+    rw [← hcoe a ω, ← hcoe b ω] at h
+    exact_mod_cast h
+  have hlt : ∀ (ω : Ω) (u : ι), u < T ω → ∃ n, u < s n ω := by
+    intro ω u hu
+    have hu' : (u : WithTop ι) < min (⨆ k, τ k ω) (t : WithTop ι) := by
+      rw [← hcoeT ω]
+      exact_mod_cast hu
+    have hut : (u : WithTop ι) < (t : WithTop ι) := lt_of_lt_of_le hu' (min_le_right _ _)
+    have huS : (u : WithTop ι) < ⨆ k, τ k ω := lt_of_lt_of_le hu' (min_le_left _ _)
+    have hex : ∃ n, (u : WithTop ι) < τ n ω := by
+      by_contra hcon
+      exact absurd (ciSup_le fun n ↦ not_lt.1 (not_exists.1 hcon n)) (not_le.2 huS)
+    obtain ⟨n, hn⟩ := hex
+    refine ⟨n, ?_⟩
+    have h : (u : WithTop ι) < min (τ n ω) (t : WithTop ι) := lt_min hn hut
+    rw [← hcoe n ω] at h
+    exact_mod_cast h
+  have hlub : ∀ ω : Ω, IsLUB (Set.range fun n ↦ s n ω) (T ω) := by
+    intro ω
+    refine ⟨?_, ?_⟩
+    · rintro _ ⟨n, rfl⟩
+      exact hsle n ω
+    · intro v hv
+      by_contra hvT
+      obtain ⟨n, hn⟩ := hlt ω v (not_le.1 hvT)
+      exact absurd (hv ⟨n, rfl⟩) (not_le.2 hn)
+  -- the pointwise estimate
+  have hkey : ∀ (n : ℕ) (ω : Ω),
+      ‖stoppedValue (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+          (fun ω ↦ min (⨆ k, τ k ω) (t : WithTop ι)) ω -
+        stoppedValue (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+          (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω‖
+        ≤ max b 0 * Q.q.real (Q.interval c (s n ω) (T ω)) := fun n ω ↦
+    norm_compensator_sub_le_of_isProgressive hg hgb' hXprog (hsle n ω) ω
+  -- the majorant
+  have hmaj : ∀ (n : ℕ) (ω : Ω),
+      max b 0 * Q.q.real (Q.interval c (s n ω) (T ω))
+        ≤ max b 0 * Q.q.real (Set.Iic t) := by
+    intro n ω
+    refine mul_le_mul_of_nonneg_left ?_ hb0
+    exact measureReal_mono ((Q.interval_subset_Iic c (s n ω) (T ω)).trans
+      (Set.Iic_subset_Iic.2 (hTt ω))) (Q.measure_Iic_ne_top t)
+  -- measurability
+  have hmC : ∀ (ρ : Ω → WithTop ι), IsStoppingTime 𝓕 ρ →
+      AEStronglyMeasurable
+        (stoppedValue (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q) ρ) P :=
+    fun ρ hρ ↦ ((hCm ρ hρ).mono hρ.measurableSpace_le).aestronglyMeasurable
+  have hlim : ∀ ω : Ω, Tendsto (fun n ↦
+      ‖stoppedValue (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+          (fun ω ↦ min (⨆ k, τ k ω) (t : WithTop ι)) ω -
+        stoppedValue (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+          (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω‖) atTop (𝓝 0) := by
+    intro ω
+    refine squeeze_zero (fun n ↦ norm_nonneg _) (fun n ↦ hkey n ω) ?_
+    have h := tendsto_measureReal_interval_of_isLUB Q c hQc (hsmono ω)
+      (fun n ↦ hsle n ω) (hlub ω)
+    simpa using h.const_mul (max b 0)
+  have hres := tendsto_integral_of_dominated_convergence
+    (F := fun (n : ℕ) (ω : Ω) ↦
+      ‖stoppedValue (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+          (fun ω ↦ min (⨆ k, τ k ω) (t : WithTop ι)) ω -
+        stoppedValue (fun t ω ↦ ∫ u in Q.interval c ⊥ t, g (X u ω) ∂Q.q)
+          (fun ω ↦ min (τ n ω) (t : WithTop ι)) ω‖)
+    (f := fun _ : Ω ↦ (0 : ℝ)) (bound := fun _ : Ω ↦ max b 0 * Q.q.real (Set.Iic t))
+    (fun n ↦ (((hmC _ hσ').sub (hmC _ (hσ n))).norm))
+    (integrable_const _)
+    (fun n ↦ Filter.Eventually.of_forall fun ω ↦ by
+      rw [Real.norm_eq_abs, abs_of_nonneg (norm_nonneg _)]
+      exact (hkey n ω).trans (hmaj n ω))
+    (Filter.Eventually.of_forall hlim)
+  simpa using hres
+
+/-- The classical instance (Ethier--Kurtz, Theorem 4.3.12), for a bounded
+operator and a process whose test processes admit optional sampling.  The
+compensator is `∫ u in Q.interval c ⊥ t, p.2 (X u) ∂q`, and it is the shrinking
+of the windows of the clock, `Clock.IsContinuousFor`, that gives the `L¹`
+hypothesis of the abstract form.
+
+**Four differences from the statement this replaces**, each found by supplying
+the hypotheses of `isQuasiLeftContinuous_of_isRegularizingClass` on data:
+
+* **`Clock.IsAtomless` is not a hypothesis**, although the statement this
+  replaces carried it and Ethier--Kurtz state the theorem for a clock without
+  atoms.  The `L¹` left continuity of the compensator needs the windows between
+  `min (τ n) t` and `min (⨆ τ) t` to shrink to nothing, and
+  `Clock.IsContinuousFor` -- which `isCompensatorFor_mpFamily` asks for in any
+  case, so that the compensator have one sided limits -- says exactly that along
+  the filter `𝓝 T`, which a nondecreasing sequence with least upper bound `T`
+  converges along.  Atomlessness would give the same conclusion by continuity
+  from above (`tendsto_measureReal_interval_of_forall_exists_lt` above), and it
+  is neither needed nor implied.  **The sharpness is unaffected**: the witness of
+  `not_isQuasiLeftContinuous_of_atom` fails `Clock.IsContinuousFor` and not only
+  `Clock.IsAtomless`, which is `AtomWitness.not_isContinuousFor_atomClock` below.
+* **`IsSeparating (Prod.fst '' A)` is not enough.**  The abstract theorem reads
+  its class through a *countable* subclass `Φ₀` that separates points and whose
+  squares lie in the class, exactly as
+  `exists_cadlag_modification_of_isRegularizingClass` does.  A separating class
+  gives a null set per test function and there is no way to take countably many
+  of them without countability.
+* **`Measurable p.2` is needed** and was not asked: the compensator is a Bochner
+  integral of `p.2 ∘ X` and `isCompensatorFor_mpFamily` cannot be applied
+  without it.  Boundedness of `p.2` alone does not give it.
+* **`IsMPSolution` is replaced by `IsOptionalSamplingFor`**, for the reason
+  recorded at the abstract theorem: over a general index the martingale property
+  does not give optional sampling.  Over `ι = ℝ≥0` it does, and
+  `stoppedValue_ae_eq_condExp` below is the statement that it does; the
+  hypothesis is where a concrete index pays for it.
+
+`hCm` is the second hypothesis that the general index costs, and the docstring
+of `IsStronglyMeasurableAlongStoppingTimes` says why it cannot be discharged
+here: `𝕂` carries no `MeasurableSpace`. -/
 theorem isQuasiLeftContinuous_of_isMPSolutionFor {A : Set ((E → 𝕂) × (E → 𝕂))}
-    {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E} {𝓕 : Filtration ι m}
-    {P : Measure Ω}
-    (hA : ∀ p ∈ A, Continuous p.1 ∧ (∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧ ∃ b, ∀ x, ‖p.2 x‖ ≤ b)
-    (hsep : IsSeparating (Prod.fst '' A))
-    (hsol : IsMPSolution (mpFamily A Q c X) 𝓕 P)
-    (hX : ∀ᵐ ω ∂P, IsCadlagPath (fun t ↦ X t ω))
-    (hQ : Q.IsAtomless) :
-    IsQuasiLeftContinuous X 𝓕 P := sorry
+    {Φ₀ : Set (E → 𝕂)} {Q : Clock ι} {c : Clock.Conv} {X : ι → Ω → E}
+    {𝓕 : Filtration ι m} {P : Measure Ω} [IsFiniteMeasure P] {D : Set ι}
+    (hDcount : D.Countable) (hD : ∀ t : ι, t ∈ D ∨ (𝓝[D ∩ Set.Ioi t] t).NeBot)
+    (hA : ∀ p ∈ A, Continuous p.1 ∧ (∃ M : ℝ, ∀ x, ‖p.1 x‖ ≤ M) ∧
+      Measurable p.2 ∧ ∃ b : ℝ, ∀ x, ‖p.2 x‖ ≤ b)
+    (hΦ₀ : Φ₀ ⊆ Prod.fst '' A) (hΦ₀c : Φ₀.Countable)
+    (hsq : ∀ f ∈ Φ₀, (fun x ↦ f x * (starRingEnd 𝕂) (f x)) ∈ Prod.fst '' A)
+    (hsep : ∀ x y : E, x ≠ y → ∃ f ∈ Φ₀, f x ≠ f y)
+    (hXprog : Q.IsProgressive X 𝓕) (hXm : ∀ t, Measurable[𝓕 t] (X t))
+    (hQc : Q.IsContinuousFor c)
+    (hX : ∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω)
+    (hOS : ∀ Y ∈ mpFamily A Q c X, IsOptionalSamplingFor Y 𝓕 P)
+    (hCm : ∀ p ∈ A, IsStronglyMeasurableAlongStoppingTimes
+      (fun t ω ↦ ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q) 𝓕) :
+    IsQuasiLeftContinuous X 𝓕 P := by
+  refine isQuasiLeftContinuous_of_isRegularizingClass (Φ := Prod.fst '' A) hDcount hD
+    hΦ₀ hΦ₀c ?_ ?_ hsq hsep hX ?_
+  · rintro f hf
+    obtain ⟨p, hp, rfl⟩ := hΦ₀ hf
+    exact (hA p hp).1
+  · rintro f hf
+    obtain ⟨p, hp, rfl⟩ := hΦ₀ hf
+    exact (hA p hp).2.1
+  · rintro _ ⟨p, hp, rfl⟩
+    obtain ⟨hpc, -, hg, b, hgb⟩ := hA p hp
+    refine ⟨fun t ω ↦ p.1 (X t ω) - ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q,
+      fun t ω ↦ ∫ u in Q.interval c ⊥ t, p.2 (X u ω) ∂Q.q,
+      isCompensatorFor_mpFamily hg hgb hXprog hXm hQc, ?_, ?_,
+      hOS _ ⟨p, hp, fun t ω ↦ rfl⟩, hCm p hp,
+      isL1LeftContinuousAlongStoppingTimes_mpFamily hg hgb hXprog hQc (hCm p hp)⟩
+    · filter_upwards [hX] with ω hω t
+      exact (hpc.continuousAt.comp_continuousWithinAt (hω.1 t)).sub
+        ((tendsto_compensator_mpFamily hg hgb hXprog hQc t ω).mono_left nhdsWithin_le_nhds)
+    · exact Filter.Eventually.of_forall fun ω t ↦
+        (tendsto_compensator_mpFamily hg hgb hXprog hQc t ω).mono_left nhdsWithin_le_nhds
 
 /-! ### The witness of `not_isQuasiLeftContinuous_of_atom`
 
@@ -4596,10 +4911,12 @@ theorem atomClock_apply_singleton_ne_zero (u : ι) : (atomClock u).q {u} ≠ 0 :
 
 omit [OrderBot ι] [TopologicalSpace ι] [OrderTopology ι] in
 /-- The clock of the witness is **not** atomless, and at the very point where it
-carries its mass.  This is what makes the sharpness claim a theorem instead of a
-remark: `not_isQuasiLeftContinuous_of_atom` and
-`isQuasiLeftContinuous_of_isMPSolutionFor` do not overlap, because the clock of
-the first fails the hypothesis `hQ` of the second.  The proof is the singleton
+carries its mass.  It says that the example is an example *of an atom*, which is
+what the name of `not_isQuasiLeftContinuous_of_atom` claims; the statement that
+the two theorems do not overlap is the stronger
+`not_isContinuousFor_atomClock` below, since
+`isQuasiLeftContinuous_of_isMPSolutionFor` asks for `Clock.IsContinuousFor` and
+not for atomlessness.  The proof is the singleton
 inside the degenerate interval `{v | u ≤ v ∧ v ≤ u}` and `measure_mono`; note
 that the interval is the same set for a preorder as for a partial order only
 because nothing here needs antisymmetry. -/
@@ -4745,6 +5062,34 @@ theorem atomClock_real_of_notMem (u : ι) {S : Set ι} (h : u ∉ S) :
   rw [measureReal_def, hq, Set.indicator_of_notMem h]
   simp
 
+omit [OrderBot ι] [OrderTopology ι] in
+/-- **The clock of the witness fails `Clock.IsContinuousFor` as well**, and that
+is what keeps `not_isQuasiLeftContinuous_of_atom` from contradicting
+`isQuasiLeftContinuous_of_isMPSolutionFor` now that the latter carries no
+atomlessness.  Below `u` the optional window `Set.Iic u \ Set.Iic s` still
+contains the atom, so the function whose limit `Clock.IsContinuousFor` asks to
+be `0` is constantly `1` along a sequence increasing to `u`.
+
+It is the sharper of the two non-overlap statements and the one the positive
+theorem now needs: `not_isAtomless_atomClock` rules out a hypothesis that theorem
+no longer has.  The hypothesis `hu` is the one the example carries anyway -- at a
+`u` unapproachable from the left the window is eventually empty, the clock *is*
+continuous there, and quasi-left-continuity asks nothing. -/
+theorem not_isContinuousFor_atomClock (u : ι)
+    (hu : ∃ s : ℕ → ι, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop (𝓝 u)) :
+    ¬ (atomClock u).IsContinuousFor Clock.Conv.optional := by
+  obtain ⟨s, -, hlt, hs⟩ := hu
+  intro h
+  have hcomp := (h u).comp hs
+  have hone : ∀ n, (atomClock u).q.real
+      ((atomClock u).interval Clock.Conv.optional (min (s n) u) (max (s n) u)) = 1 := by
+    intro n
+    refine atomClock_real_of_mem u ?_
+    rw [min_eq_left (hlt n).le, max_eq_right (hlt n).le]
+    exact ⟨le_rfl, not_le.2 (hlt n)⟩
+  exact zero_ne_one
+    (tendsto_nhds_unique (Filter.Tendsto.congr hone hcomp) tendsto_const_nhds)
+
 omit [TopologicalSpace ι] [OrderTopology ι] in
 /-- The compensator of the witness: it fires once, at `u`, and it fires in the
 optional convention only.  `hu` says that `u` is not the bottom of the index,
@@ -4845,9 +5190,8 @@ the existence of a càdlàg modification -- which holds for **every** clock -- a
 quasi-left-continuity separate exactly at the atoms.  The witness is a fair coin
 flipped at `u`, constant on either side of it, over `E = Bool`.
 
-**The witness must satisfy every hypothesis of
-`isQuasiLeftContinuous_of_isMPSolutionFor` except `hQ`, and the statement says
-so.**  Without that the example is empty: with `A = ∅` the family
+**The witness must not be vacuous, and the statement says so.**  Without that the
+example is empty: with `A = ∅` the family
 `mpFamily A Q c X` is empty, `IsMPSolution` holds of everything, and any process
 that is not quasi-left-continuous -- a fair coin over the one point index, with
 `Q.q = Measure.dirac u` -- proves the statement while showing nothing about
@@ -4856,21 +5200,28 @@ claim, so `hA`, `hsep` and the càdlàg paths are carried in the conclusion.
 `hsep` is what forces `A ≠ ∅`: on `Bool` the empty class does not separate,
 since the two probability measures `Measure.dirac true` and `Measure.dirac
 false` are distinct.  `IsProbabilityMeasure P` rules out `P = 0` for the same
-reason.  Found on 2026-09-07, sixth run of the day. -/
+reason.  Found on 2026-09-07, sixth run of the day.
+
+**`¬ Q.IsContinuousFor c` is in the conclusion** since 2026-09-17, fifteenth run,
+and it is what makes the delimitation exact: with the atomlessness gone from
+`isQuasiLeftContinuous_of_isMPSolutionFor`, `Q.q {u} ≠ 0` no longer names a
+hypothesis of that theorem, and a sharpness claim that contradicts nothing is not
+one.  The windows of this clock do not shrink, and that is the hypothesis the
+witness breaks. -/
 theorem not_isQuasiLeftContinuous_of_atom (u : ι)
     (hu : ∃ s : ℕ → ι, StrictMono s ∧ (∀ n, s n < u) ∧ Tendsto s atTop (𝓝 u)) :
     ∃ (Ω' : Type) (m' : MeasurableSpace Ω') (P : @Measure Ω' m')
       (_ : @IsProbabilityMeasure Ω' m' P)
       (𝓕 : @Filtration Ω' ι _ m') (Q : Clock ι) (c : Clock.Conv)
       (A : Set ((Bool → ℝ) × (Bool → ℝ))) (X : ι → Ω' → Bool),
-      Q.q {u} ≠ 0 ∧
+      Q.q {u} ≠ 0 ∧ ¬ Q.IsContinuousFor c ∧
         (∀ p ∈ A, Continuous p.1 ∧ (∃ b, ∀ x, ‖p.1 x‖ ≤ b) ∧
           ∃ b, ∀ x, ‖p.2 x‖ ≤ b) ∧
         IsSeparating (Prod.fst '' A) ∧
         (∀ᵐ ω ∂P, IsCadlagPath fun t ↦ X t ω) ∧
         @IsMPSolution ι _ Ω' m' ℝ _ (mpFamily A Q c X) 𝓕 P ∧
         ¬ IsQuasiLeftContinuous X 𝓕 P := by
-  obtain ⟨s, hmono, hlt, hs⟩ := hu
+  obtain ⟨s, hmono, hlt, hs⟩ := id hu
   have hbot : ¬ u ≤ (⊥ : ι) := fun h ↦ not_lt_bot ((hlt 0).trans_le h)
   have hbdd : BddAbove (Set.range s) := ⟨u, by rintro _ ⟨n, rfl⟩; exact (hlt n).le⟩
   have hsup : ⨆ n, s n = u :=
@@ -4878,7 +5229,8 @@ theorem not_isQuasiLeftContinuous_of_atom (u : ι)
   refine ⟨Bool, inferInstance, AtomWitness.coinMeasure, inferInstance,
     AtomWitness.coinFiltration u, AtomWitness.atomClock u, Clock.Conv.optional,
     AtomWitness.coinClass, AtomWitness.coinProcess u,
-    AtomWitness.atomClock_apply_singleton_ne_zero u, ?_, AtomWitness.isSeparating_coinClass,
+    AtomWitness.atomClock_apply_singleton_ne_zero u,
+    AtomWitness.not_isContinuousFor_atomClock u hu, ?_, AtomWitness.isSeparating_coinClass,
     Filter.Eventually.of_forall (AtomWitness.isCadlagPath_coinProcess u),
     AtomWitness.isMPSolution_coinProcess u hbot,
     AtomWitness.not_isQuasiLeftContinuous_coinProcess u hmono.monotone hlt hsup _⟩
@@ -29878,7 +30230,7 @@ end IncrementGenerator
 `def:propagation`, `prop:uniqfromprop` of the manuscript -- the half of Milestone 6 that carries
 **no** Markov structure at all.  It is the bottom of the tree: neither `restart` nor a shift
 system nor a determining set occurs in any statement or in any proof in `section Propagation` or
-`section Cylinders`, and none of the five `sorry`s of this file is reachable from here.  What
+`section Cylinders`, and none of the three `sorry`s of this file is reachable from here.  What
 sits above it -- `lem:propagation` in `section PropagationFromOnedim`, which makes
 `PropagatesAgreement` checkable from the one dimensional laws, and `thm:absuniq`(a), the Markov
 property, in `section MarkovFromOnedim` -- is where the shift system enters.
